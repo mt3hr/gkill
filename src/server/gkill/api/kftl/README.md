@@ -38,6 +38,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 |---|---|---|
 | `。` | Tag | タグ付け |
 | `ーー` | Text | テキスト開始 |
+| `～～` | MiReKyou | 既存の記録をタスク化（開始・終了とも同じ記号） |
 | `？` | RelatedTime | 関連時刻 |
 | `、` | Split | 区切り（次ステートメントへ） |
 | `、、` | SplitNextSecond | 区切り（次秒へ） |
@@ -62,6 +63,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 |---|---|---|
 | `#` | `。` | Tag |
 | `--` | `ーー` | Text |
+| `~~` | `～～` | MiReKyou |
 | `?` | `？` | RelatedTime |
 | `,` | `、` | Split |
 | `,,` | `、、` | SplitNextSecond |
@@ -78,7 +80,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `/url` | `ーう` | URLog |
 | `!` | `！` | Save |
 
-## ファイル一覧（22ファイル）
+## ファイル一覧（24ファイル）
 
 ### コア構造
 
@@ -105,6 +107,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `kftl_kc.go` | KC | 数値記録行の解釈・リクエスト生成 |
 | `kftl_lantana.go` | Lantana | 気分値行の解釈・リクエスト生成 |
 | `kftl_mi.go` | Mi | タスク行の解釈・リクエスト生成 |
+| `kftl_mirekyou.go` | MiReKyou | 既存の記録をタスク化する行の解釈・リクエスト生成（`～～` で開いて閉じるブロック。タイトル行は無く、ブロック内のタグは MiReKyou 自身に付く） |
 | `kftl_nlog.go` | Nlog | 支出記録行の解釈・リクエスト生成 |
 | `kftl_timeis.go` | TimeIs | タイムスタンプ行の解釈・リクエスト生成（Start/End/EndIfExist/EndByTag/EndByTagIfExist） |
 | `kftl_urlog.go` | URLog | ブックマーク行の解釈・リクエスト生成 |
@@ -119,13 +122,14 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `kftl_split_statement_lines.go` | Split / SplitNextSecond 行（`、` / `、、` プレフィックス） |
 | `kftl_none_statement_line.go` | None 行 — 認識できないプレフィックスの行（スキップ） |
 
-### テスト（3ファイル）
+### テスト（4ファイル）
 
 | ファイル | 説明 |
 |---------|------|
 | `kftl_factory_test.go` | ファクトリのプレフィックス判定テスト |
 | `kftl_request_map_test.go` | リクエストマップの集約テスト |
 | `kftl_statement_test.go` | KFTL テキスト全体のパース・実行テスト |
+| `kftl_mirekyou_test.go` | MiReKyou ブロックの行の並び・タグの帰属・対象の解決テスト |
 
 ## 開発ガイドライン
 

@@ -19,6 +19,8 @@ import { KFTLStartLantanaStatementLine } from '@/classes/kftl/kftl_lantana/kftl-
 import { KFTLStartNlogStatementLine } from '@/classes/kftl/kftl_nlog/kftl-start-nlog-statement-line'
 import { KFTLStartURLogStatementLine } from '@/classes/kftl/kftl_urlog/kftl-start-ur-log-statement-line'
 import { KFTLKmemoStatementLine } from '@/classes/kftl/kftl_kmemo/kftl-kmemo-statement-line'
+import { KFTLStartMiReKyouStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-start-mi-re-kyou-statement-line'
+import { KFTLEndMiReKyouStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-end-mi-re-kyou-statement-line'
 
 describe('KFTL Statement Line Type Detection', () => {
   // All is_this_type methods use either startsWith or == against i18n translated prefixes.
@@ -117,6 +119,27 @@ describe('KFTL Statement Line Type Detection', () => {
     })
   })
 
+  describe('MiReKyou (exact "～～")', () => {
+    test('matches exact', () => {
+      expect(KFTLStartMiReKyouStatementLine.is_this_type('～～')).toBe(true)
+    })
+    test('rejects with extra text', () => {
+      expect(KFTLStartMiReKyouStatementLine.is_this_type('～～タスク')).toBe(false)
+    })
+    // 「～」はWindowsのIMEがU+FF5E、macOS/iOSのIMEがU+301Cを出す。
+    // 正規化を落とすとiOSからだけ記法が効かなくなる
+    test('matches wave dash (U+301C) written by the macOS/iOS IME', () => {
+      expect(KFTLStartMiReKyouStatementLine.is_this_type('〜〜')).toBe(true)
+      expect(KFTLEndMiReKyouStatementLine.is_this_type('〜〜')).toBe(true)
+    })
+    test('matches mixed wave dash and fullwidth tilde', () => {
+      expect(KFTLStartMiReKyouStatementLine.is_this_type('〜～')).toBe(true)
+    })
+    test('end line matches the same splitter', () => {
+      expect(KFTLEndMiReKyouStatementLine.is_this_type('～～')).toBe(true)
+    })
+  })
+
   describe('Lantana (exact "ーら")', () => {
     test('matches exact', () => {
       expect(KFTLStartLantanaStatementLine.is_this_type('ーら')).toBe(true)
@@ -160,6 +183,16 @@ describe('KFTL Statement Line Type Detection', () => {
     test('Mi splitter is not KC', () => {
       expect(KFTLStartKCStatementLine.is_this_type('ーみ')).toBe(false)
     })
+    // リポストタスクの「～～」とテキストの「ーー」は形が似ているので取り違えを見張る
+    test('MiReKyou splitter is not Text', () => {
+      expect(KFTLStartTextStatementLine.is_this_type('～～')).toBe(false)
+    })
+    test('Text splitter is not MiReKyou', () => {
+      expect(KFTLStartMiReKyouStatementLine.is_this_type('ーー')).toBe(false)
+    })
+    test('Mi splitter is not MiReKyou', () => {
+      expect(KFTLStartMiReKyouStatementLine.is_this_type('ーみ')).toBe(false)
+    })
   })
 
   // MCP(Go側パーサー)と同じASCIIプレフィックスを受け付けること
@@ -172,6 +205,10 @@ describe('KFTL Statement Line Type Detection', () => {
     })
     test('Text matches exact "--"', () => {
       expect(KFTLStartTextStatementLine.is_this_type('--')).toBe(true)
+    })
+    test('MiReKyou matches exact "~~"', () => {
+      expect(KFTLStartMiReKyouStatementLine.is_this_type('~~')).toBe(true)
+      expect(KFTLEndMiReKyouStatementLine.is_this_type('~~')).toBe(true)
     })
     test('Split matches exact ","', () => {
       expect(KFTLSplitStatementLine.is_this_type(',')).toBe(true)
@@ -240,6 +277,13 @@ describe('KFTL Statement Line Type Detection', () => {
     })
     test('"/mi" with trailing text is rejected', () => {
       expect(KFTLStartMiStatementLine.is_this_type('/mi task')).toBe(false)
+    })
+    test('"~~" is not Text and "--" is not MiReKyou', () => {
+      expect(KFTLStartTextStatementLine.is_this_type('~~')).toBe(false)
+      expect(KFTLStartMiReKyouStatementLine.is_this_type('--')).toBe(false)
+    })
+    test('"~~" with trailing text is rejected', () => {
+      expect(KFTLStartMiReKyouStatementLine.is_this_type('~~ task')).toBe(false)
     })
   })
 })

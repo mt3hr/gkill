@@ -10,6 +10,7 @@ export const KFTL_ASCII_SPLIT_PREFIX = ","
 export const KFTL_ASCII_SPLIT_APPEND_TIME_PREFIX = ",,"
 export const KFTL_ASCII_KC_SPLITTER_TITLE = "/num"
 export const KFTL_ASCII_MI_SPLITTER_TITLE = "/mi"
+export const KFTL_ASCII_MI_REKYOU_SPLITTER_TITLE = "~~"
 export const KFTL_ASCII_LANTANA_SPLITTER_TITLE = "/mood"
 export const KFTL_ASCII_NLOG_SPLITTER_TITLE = "/expense"
 export const KFTL_ASCII_TIMEIS_START_SPLITTER_TITLE = "/start"
@@ -21,6 +22,18 @@ export const KFTL_ASCII_TIMEIS_END_IF_TAG_END_SPLITTER_TITLE = "/endt?"
 export const KFTL_ASCII_URLOG_SPLITTER_TITLE = "/url"
 export const KFTL_ASCII_SAVE_CHARACTOR = "!"
 export const KFTL_ASCII_TIMEIS_TIME_PREFIX = "?"
+
+/**
+ * 波ダッシュ(U+301C)を全角チルダ(U+FF5E)に揃える。
+ *
+ * 「～」はWindowsのIMEがU+FF5E、macOS/iOSのIMEがU+301Cを出す。見た目が同じで
+ * 打った端末によって別の文字になるので、揃えずに比較すると
+ * iOSのPWAからだけリポストタスクの記法が効かない。i18nに入れている値はU+FF5E。
+ * Go側 src/server/gkill/api/kftl/kftl_factory.go の normalizeWaveDash と対応
+ */
+export function normalize_wave_dash(line_text: string): string {
+    return line_text.replaceAll("〜", "～")
+}
 
 // 行全体がプレフィックスと一致するか(日本語はi18nキー、ASCIIは定数)
 export function matches_exact(line_text: string, i18n_key: string, ascii_prefix: string): boolean {

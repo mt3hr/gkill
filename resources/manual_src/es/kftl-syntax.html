@@ -5,7 +5,7 @@
 
 <h1>Referencia de sintaxis del bloc de notas</h1>
 
-<p>La sintaxis del bloc de notas es un formato de registro basado en texto utilizado en gkill. Mediante prefijos al inicio de cada línea, puede introducir varios tipos de datos a la vez. A continuacion se presentan los 18 tipos de sentencias.</p>
+<p>La sintaxis del bloc de notas es un formato de registro basado en texto utilizado en gkill. Mediante prefijos al inicio de cada línea, puede introducir varios tipos de datos a la vez. A continuacion se presentan los 19 tipos de sentencias.</p>
 
 <h2>Resumen de sentencias</h2>
 
@@ -28,6 +28,7 @@
   <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>Finalizar registro por etiqueta</td><td>Finalizar registro de tiempo por nombre de etiqueta</td></tr>
   <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>Finalizar registro por etiqueta (si existe)</td><td>Finalizar por etiqueta si existe</td></tr>
   <tr><td><code>ーう</code></td><td><code>/url</code></td><td>Marcador</td><td>Registrar un marcador de URL</td></tr>
+  <tr><td><code>～～</code></td><td><code>~~</code></td><td>Tarea de repost</td><td>Convertir un registro existente en tarea</td></tr>
   <tr><td><code>！</code></td><td><code>!</code></td><td>Guardar</td><td>Terminar documento y guardar</td></tr>
 </table>
 
@@ -140,7 +141,18 @@ trabajo</pre>
 https://example.com
 Sitio favorito</pre>
 
-<h3>18. Guardar: <code>!</code></h3>
+<h3>18. Tarea de repost: <code>~~</code></h3>
+<p>Comienza con <code>~~</code> y termina con <code>~~</code>. Convierte el registro escrito justo encima en una tarea sin reescribir su contenido. No hay linea de titulo: el registro original se muestra tal cual. Dentro del bloque se escriben el nombre del tablero, la fecha de inicio prevista, la fecha de fin prevista y la fecha limite, en ese orden (todos opcionales). No hace falta <code>?</code> delante de una fecha. Una linea que empieza por <code>#</code> se convierte en una etiqueta de la propia tarea, y puede escribirse antes o despues del nombre del tablero.</p>
+<pre>Nota sobre un articulo para leer mas tarde
+~~
+#trabajo
+Compras
+2025-03-20
+
+2025-03-22
+~~</pre>
+
+<h3>19. Guardar: <code>!</code></h3>
 <p>Termina el documento y ejecuta el proceso de guardado.</p>
 <pre>!</pre>
 

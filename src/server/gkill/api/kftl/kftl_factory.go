@@ -8,6 +8,7 @@ import "strings"
 const (
 	splitterTag                   = "。"
 	splitterStartText             = "ーー"
+	splitterMiReKyou              = "～～"
 	splitterRelatedTime           = "？"
 	splitterSplit                 = "、"
 	splitterSplitNextSecond       = "、、"
@@ -29,6 +30,7 @@ const (
 const (
 	splitterTagAscii                   = "#"
 	splitterStartTextAscii             = "--"
+	splitterMiReKyouAscii              = "~~"
 	splitterRelatedTimeAscii           = "?"
 	splitterSplitAscii                 = ","
 	splitterSplitNextSecondAscii       = ",,"
@@ -45,6 +47,22 @@ const (
 	splitterURLogAscii                 = "/url"
 	splitterSaveCharacterAscii         = "!"
 )
+
+// normalizeWaveDash rewrites the wave dash (U+301C) to the fullwidth tilde (U+FF5E).
+//
+// 「～」はWindowsのIMEがU+FF5E、macOS/iOSのIMEがU+301Cを出す。見た目が同じで
+// 打った端末によって別の文字になるので、揃えずに比較するとiOSからだけ
+// リポストタスクの記法が効かない。定数側はU+FF5E。
+// Mirrors: normalize_wave_dash in src/client/classes/kftl/kftl-prefixes.ts
+func normalizeWaveDash(lineText string) string {
+	return strings.ReplaceAll(lineText, "〜", "～")
+}
+
+// isMiReKyouSplitter reports whether the line opens or closes a MiReKyou block.
+func isMiReKyouSplitter(lineText string) bool {
+	normalized := normalizeWaveDash(lineText)
+	return normalized == splitterMiReKyou || normalized == splitterMiReKyouAscii
+}
 
 // kftlFactory tracks the prev_line_is_meta_info state across lines.
 // Mirrors: KFTLStatementLineConstructorFactory in TS (singleton with state).
@@ -108,6 +126,12 @@ func (f *kftlFactory) generateDefaultConstructor(nextLineText string, lastFunc S
 	case nextLineText == splitterStartText || nextLineText == splitterStartTextAscii:
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			return newKFTLStartTextStatementLine(lineText, ctx, f.prevLineIsMetaInfo)
+		}
+	case isMiReKyouSplitter(nextLineText):
+		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
+			// リポストタスクはKyou本体ではなく付随情報なので、タグやテキストと同じく
+			// prevLineIsMetaInfo は書き換えずに渡すだけにする
+			return newKFTLStartMiReKyouStatementLine(lineText, ctx, f.prevLineIsMetaInfo)
 		}
 	case strings.HasPrefix(nextLineText, splitterRelatedTime) || strings.HasPrefix(nextLineText, splitterRelatedTimeAscii):
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {

@@ -7,7 +7,7 @@ KFTL（gkill 独自テキストフォーマット）のクライアント側パ�
 サーバ側の対応実装: `src/server/gkill/api/kftl/`
 
 日本語プレフィックス（`。` `ーー` `ーみ` 等、i18n キー経由）に加えて、非日本語ロケール向けの
-**ASCII プレフィックス**（`#` `--` `/mi` `/mood` `/expense` `/num` `/url` `/start` `/end` `/timeis`
+**ASCII プレフィックス**（`#` `--` `~~` `/mi` `/mood` `/expense` `/num` `/url` `/start` `/end` `/timeis`
 `/end?` `/endt` `/endt?` `,` `,,` `?` `!`）も受け付ける。ASCII 定数と判定・除去ヘルパーは
 `kftl-prefixes.ts` に集約されており、Go 側 `kftl_factory.go` の `splitter*Ascii` 定数と対応する
 （対応表はサーバ側 [README](../../../server/gkill/api/kftl/README.md) を参照）。
@@ -21,6 +21,7 @@ kftl/
 ├── kftl_kc/                    # KC 行（4ファイル）
 ├── kftl_lantana/               # Lantana 行（3ファイル）
 ├── kftl_mi/                    # Mi 行（7ファイル）
+├── kftl_mirekyou/              # MiReKyou 行（8ファイル）
 ├── kftl_nlog/                  # Nlog 行（5ファイル）
 ├── kftl_urlog/                 # URLog 行（4ファイル）
 ├── kftl_timeis/                # TimeIs 行（5ファイル）
@@ -89,6 +90,24 @@ kftl/
 | `kftl-mi-estimate-start-time-statement-line.ts` | Mi 見積開始時刻行 |
 | `kftl-mi-estimate-end-time-statement-line.ts` | Mi 見積終了時刻行 |
 | `kftl-mi-request.ts` | Mi リクエスト生成 |
+
+### `kftl_mirekyou/`（8ファイル）— 既存の記録をタスク化
+
+`～～`（ASCII は `~~`）で開いて同じ記号で閉じるブロック。同じレコードで書いた Kyou を
+タスク化するので、対象の id はバケツリレーされてきたものを使い、MiReKyou 自身の id は
+別に採番される（`request_map` のキーは MiReKyou 自身の id）。
+Mi と違ってタイトル行を持たず、ブロックの中に書いたタグは MiReKyou 自身に付く。
+
+| ファイル | 役割 |
+|---------|------|
+| `kftl-start-mi-re-kyou-statement-line.ts` | MiReKyou 開始行（`～～` プレフィックス） |
+| `kftl-mi-re-kyou-board-name-statement-line.ts` | MiReKyou ボード名行 |
+| `kftl-mi-re-kyou-estimate-start-time-statement-line.ts` | MiReKyou 見積開始時刻行 |
+| `kftl-mi-re-kyou-estimate-end-time-statement-line.ts` | MiReKyou 見積終了時刻行 |
+| `kftl-mi-re-kyou-limit-time-statement-line.ts` | MiReKyou 期限行 |
+| `kftl-mi-re-kyou-tag-statement-line.ts` | ブロック内のタグ行（前置・後置とも）。次の行の先読みもここ |
+| `kftl-end-mi-re-kyou-statement-line.ts` | MiReKyou 終了行（`～～` プレフィックス） |
+| `kftl-mi-re-kyou-request.ts` | MiReKyou リクエスト生成 |
 
 ### `kftl_nlog/`（5ファイル）— 支出記録
 

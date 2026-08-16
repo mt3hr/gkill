@@ -5,7 +5,7 @@
 
 <h1>Memo Pad Syntax Reference</h1>
 
-<p>Memo Pad Syntax is a text-based recording format used in gkill. By using line prefixes, you can input various types of data at once. Below are all 18 statement types.</p>
+<p>Memo Pad Syntax is a text-based recording format used in gkill. By using line prefixes, you can input various types of data at once. Below are all 19 statement types.</p>
 
 <h2>Statement Overview</h2>
 
@@ -28,6 +28,7 @@
   <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>End Time Log by Tag</td><td>End a time log by tag name</td></tr>
   <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>End Time Log by Tag (if exists)</td><td>End a time log by tag if it exists</td></tr>
   <tr><td><code>ーう</code></td><td><code>/url</code></td><td>Bookmark</td><td>Record a URL bookmark</td></tr>
+  <tr><td><code>～～</code></td><td><code>~~</code></td><td>Repost Task</td><td>Turn an existing record into a task</td></tr>
   <tr><td><code>！</code></td><td><code>!</code></td><td>Save</td><td>Terminate document and trigger save</td></tr>
 </table>
 
@@ -139,7 +140,18 @@ work</pre>
 https://example.com
 Favorite site</pre>
 
-<h3>18. Save: <code>!</code></h3>
+<h3>18. Repost Task: <code>~~</code></h3>
+<p>Opens with <code>~~</code> and closes with <code>~~</code>. Turns the record written just above into a task without rewriting its content. There is no title line: the original record is shown as it is. Inside the block, write the board name, estimated start time, estimated end time and deadline in that order (all optional). No <code>?</code> is needed before a date. A line starting with <code>#</code> becomes a tag on the task itself, and may be written before or after the board name.</p>
+<pre>Note about an article to read later
+~~
+#work
+Shopping
+2025-03-20
+
+2025-03-22
+~~</pre>
+
+<h3>19. Save: <code>!</code></h3>
 <p>Terminates the document and triggers the save process.</p>
 <pre>!</pre>
 

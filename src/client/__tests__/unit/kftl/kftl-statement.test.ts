@@ -9,13 +9,23 @@ import { KFTLMiBoardNameStatementLine } from '@/classes/kftl/kftl_mi/kftl-mi-boa
 import { KFTLMiEstimateStartTimeStatementLine } from '@/classes/kftl/kftl_mi/kftl-mi-estimate-start-time-statement-line'
 import { KFTLMiEstimateEndTimeStatementLine } from '@/classes/kftl/kftl_mi/kftl-mi-estimate-end-time-statement-line'
 import { KFTLMiLimitTimeStatementLine } from '@/classes/kftl/kftl_mi/kftl-mi-limit-time-statement-line'
+import { KFTLStartMiReKyouStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-start-mi-re-kyou-statement-line'
+import { KFTLMiReKyouBoardNameStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-board-name-statement-line'
+import { KFTLMiReKyouEstimateStartTimeStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-estimate-start-time-statement-line'
+import { KFTLMiReKyouEstimateEndTimeStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-estimate-end-time-statement-line'
+import { KFTLMiReKyouLimitTimeStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-limit-time-statement-line'
+import { KFTLMiReKyouTagStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-tag-statement-line'
+import { KFTLEndMiReKyouStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-end-mi-re-kyou-statement-line'
 
 /**
  * 行のつながりは各クラスのコンストラクタに散っていて、どこにも一覧が無い。
  * KFTLStatement.generate_kftl_lines と同じ手順で1行ずつ組み立てて、
  * 次の行のコンストラクタを辿った結果が期待通りの並びかを見る。
  */
-function build_statement_lines(line_texts: Array<string>): Array<KFTLStatementLine> {
+function build_statement_lines(
+  line_texts: Array<string>,
+  first_line_constructor: { (line_text: string, context: KFTLStatementLineContext): KFTLStatementLine } = (line_text, context) => new KFTLStartMiStatementLine(line_text, context),
+): Array<KFTLStatementLine> {
   const tx_id = 'test_tx'
   const lines = new Array<KFTLStatementLine>()
   let prev_context: KFTLStatementLineContext | null = null
@@ -26,10 +36,15 @@ function build_statement_lines(line_texts: Array<string>): Array<KFTLStatementLi
     const is_prototype = prev_context ? prev_context.is_next_prototype() : true
     const context = new KFTLStatementLineContext(tx_id, line_text, target_id, next_line_text, lines.slice(0, i), is_prototype)
     const next_constructor = prev_context?.get_next_statement_line_constructor() ?? null
-    lines.push(next_constructor ? next_constructor(line_text, context) : new KFTLStartMiStatementLine(line_text, context))
+    lines.push(next_constructor ? next_constructor(line_text, context) : first_line_constructor(line_text, context))
     prev_context = context
   }
   return lines
+}
+
+// リポストタスクのブロックは「先頭行が開始行」から組み立てる
+function build_mi_re_kyou_lines(line_texts: Array<string>): Array<KFTLStatementLine> {
+  return build_statement_lines(line_texts, (line_text, context) => new KFTLStartMiReKyouStatementLine(line_text, context, false))
 }
 
 describe('KFTLStatement', () => {
@@ -66,5 +81,80 @@ describe('KFTLStatement', () => {
     expect(lines[6]).not.toBeInstanceOf(KFTLMiEstimateStartTimeStatementLine)
     expect(lines[6]).not.toBeInstanceOf(KFTLMiEstimateEndTimeStatementLine)
     expect(lines[6]).not.toBeInstanceOf(KFTLMiLimitTimeStatementLine)
+  })
+})
+
+/**
+ * リポストタスク(「～～」)のブロック。
+ * Mi と違ってタイトル行が無く、タグ行を板名の前にも後にも書ける。
+ * Go 側(kftl_mirekyou.go)も同じ並びなので、崩したら両方直すこと
+ */
+describe('リポストタスクのブロック', () => {
+  test('行順が 板名→見積開始→見積終了→期日→タグ→終了 になっている', () => {
+    const lines = build_mi_re_kyou_lines(['～～', '仕事', '2025-03-20', '2025-03-21', '2025-03-22', '。今日中', '～～'])
+    expect(lines[0]).toBeInstanceOf(KFTLStartMiReKyouStatementLine)
+    expect(lines[1]).toBeInstanceOf(KFTLMiReKyouBoardNameStatementLine)
+    expect(lines[2]).toBeInstanceOf(KFTLMiReKyouEstimateStartTimeStatementLine)
+    expect(lines[3]).toBeInstanceOf(KFTLMiReKyouEstimateEndTimeStatementLine)
+    expect(lines[4]).toBeInstanceOf(KFTLMiReKyouLimitTimeStatementLine)
+    expect(lines[5]).toBeInstanceOf(KFTLMiReKyouTagStatementLine)
+    expect(lines[6]).toBeInstanceOf(KFTLEndMiReKyouStatementLine)
+  })
+
+  // MiReKyou はタイトルを持たない(対象の記録をそのまま表示する)ので、
+  // 板名の前にタイトル行を挟んではいけない
+  test('タイトル行が無く、最初の非タグ行が板名になる', () => {
+    const lines = build_mi_re_kyou_lines(['～～', '仕事', '～～'])
+    expect(lines[1]).toBeInstanceOf(KFTLMiReKyouBoardNameStatementLine)
+    expect(lines[1]).not.toBeInstanceOf(KFTLMiTitleStatementLine)
+  })
+
+  test('タグ行は項目の位置を消費しないので、板名の前に書いても次の非タグ行が板名になる', () => {
+    const lines = build_mi_re_kyou_lines(['～～', '。今日中', '。重要', '仕事', '2025-03-20', '～～'])
+    expect(lines[1]).toBeInstanceOf(KFTLMiReKyouTagStatementLine)
+    expect(lines[2]).toBeInstanceOf(KFTLMiReKyouTagStatementLine)
+    expect(lines[3]).toBeInstanceOf(KFTLMiReKyouBoardNameStatementLine)
+    expect(lines[4]).toBeInstanceOf(KFTLMiReKyouEstimateStartTimeStatementLine)
+    expect(lines[5]).toBeInstanceOf(KFTLEndMiReKyouStatementLine)
+  })
+
+  test('項目行の合間にタグ行を挟んでも次の非タグ行が次の項目になる', () => {
+    const lines = build_mi_re_kyou_lines(['～～', '仕事', '。今日中', '2025-03-20', '～～'])
+    expect(lines[1]).toBeInstanceOf(KFTLMiReKyouBoardNameStatementLine)
+    expect(lines[2]).toBeInstanceOf(KFTLMiReKyouTagStatementLine)
+    expect(lines[3]).toBeInstanceOf(KFTLMiReKyouEstimateStartTimeStatementLine)
+  })
+
+  test('開始行の次が「～～」なら空のブロックとして閉じる', () => {
+    const lines = build_mi_re_kyou_lines(['～～', '～～'])
+    expect(lines[1]).toBeInstanceOf(KFTLEndMiReKyouStatementLine)
+  })
+
+  test('板名だけ書いて途中で閉じられる', () => {
+    const lines = build_mi_re_kyou_lines(['～～', '仕事', '～～'])
+    expect(lines[2]).toBeInstanceOf(KFTLEndMiReKyouStatementLine)
+  })
+
+  test('閉じたあとはリポストタスクの入力は終わる', () => {
+    const lines = build_mi_re_kyou_lines(['～～', '仕事', '～～', 'ただのメモ'])
+    expect(lines[3]).not.toBeInstanceOf(KFTLMiReKyouBoardNameStatementLine)
+    expect(lines[3]).not.toBeInstanceOf(KFTLMiReKyouEstimateStartTimeStatementLine)
+    expect(lines[3]).not.toBeInstanceOf(KFTLMiReKyouTagStatementLine)
+    expect(lines[3]).not.toBeInstanceOf(KFTLEndMiReKyouStatementLine)
+  })
+
+  // 「～」はWindowsのIMEがU+FF5E、macOS/iOSのIMEがU+301Cを出す。
+  // 正規化を落とすと iOS からだけ記法が効かなくなる
+  test('波ダッシュ(U+301C)で書いても開始行・終了行として扱う', () => {
+    const lines = build_mi_re_kyou_lines(['〜〜', '仕事', '〜〜'])
+    expect(lines[0]).toBeInstanceOf(KFTLStartMiReKyouStatementLine)
+    expect(lines[2]).toBeInstanceOf(KFTLEndMiReKyouStatementLine)
+  })
+
+  test('ASCII の ~~ でも同じ並びになる', () => {
+    const lines = build_mi_re_kyou_lines(['~~', '仕事', '。今日中', '~~'])
+    expect(lines[1]).toBeInstanceOf(KFTLMiReKyouBoardNameStatementLine)
+    expect(lines[2]).toBeInstanceOf(KFTLMiReKyouTagStatementLine)
+    expect(lines[3]).toBeInstanceOf(KFTLEndMiReKyouStatementLine)
   })
 })

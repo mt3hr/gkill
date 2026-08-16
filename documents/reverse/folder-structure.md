@@ -93,7 +93,7 @@ src/client/
 │   ├── dnote/              # Dnote集計ユーティリティ（dnote-trend-aggregator.ts, dnote-predicate/ 等）
 │   ├── dto/                # データ転送オブジェクト
 │   ├── lantana/            # 気分値関連クラス
-│   ├── kftl/               # KFTLパーサー（41ステートメント型）
+│   ├── kftl/               # KFTLパーサー（48ステートメント型）
 │   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
 │   └── use-*.ts            # Composition関数群（255ファイル）
@@ -128,7 +128,7 @@ src/server/
     │   ├── find/                   # 検索クエリ構造体
     │   ├── message/                # メッセージ/エラー構造体
     │   ├── req_res/                # リクエスト/レスポンス構造体（186ファイル）
-    │   ├── kftl/                   # KFTLパーサー（バックエンド側、39ステートメント型）
+    │   ├── kftl/                   # KFTLパーサー（バックエンド側、46ステートメント型）
     │   │   ├── kftl_factory.go     # ファクトリ（ステートメント生成、日本語/ASCII両プレフィックス）
     │   │   └── *.go                # 各ステートメント型実装
     │   ├── gkill_plugin/           # プラグインプロトコル型
@@ -293,7 +293,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-910キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+913キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 

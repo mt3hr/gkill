@@ -23,6 +23,7 @@ flowchart TD
     CheckPrefix -->|「、、」| SplitNextSec[区切り行<br>AddSecond++]
     CheckPrefix -->|「ーか」| KCLine[KC開始行]
     CheckPrefix -->|「ーみ」| MiLine[Mi開始行]
+    CheckPrefix -->|「～～」| MiReKyouLine[MiReKyou開始行<br>同じ記号で閉じる]
     CheckPrefix -->|「ーら」| LantanaLine[Lantana開始行]
     CheckPrefix -->|「ーん」| NlogLine[Nlog開始行]
     CheckPrefix -->|「ーた」| TimeIsStartLine[TimeIs開始行]
@@ -41,6 +42,7 @@ flowchart TD
     SplitNextSec --> ApplyToMap
     KCLine --> ApplyToMap
     MiLine --> ApplyToMap
+    MiReKyouLine --> ApplyToMap
     LantanaLine --> ApplyToMap
     NlogLine --> ApplyToMap
     TimeIsStartLine --> ApplyToMap
@@ -74,7 +76,7 @@ flowchart TD
 上図のプレフィックス分岐は日本語表記で示しているが、
 **ASCII 系のプレフィックスも同じ分岐に入る**（`kftl-prefixes.ts` / `kftl_factory.go`）。
 
-`。`=`#` / `ーー`=`--` / `？`=`?` / `、`=`,` / `、、`=`,,` / `ーか`=`/num` / `ーみ`=`/mi` /
+`。`=`#` / `ーー`=`--` / `～～`=`~~` / `？`=`?` / `、`=`,` / `、、`=`,,` / `ーか`=`/num` / `ーみ`=`/mi` /
 `ーら`=`/mood` / `ーん`=`/expense` / `ーう`=`/url` / `ーた`=`/start` / `ーえ`=`/end` /
 `ーいえ`=`/end?` / `ーたえ`=`/endt` / `ーいたえ`=`/endt?` / `ーち`=`/timeis` / `！`=`!`
 

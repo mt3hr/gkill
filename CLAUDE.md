@@ -142,7 +142,7 @@ Key packages:
 - `gkill/api/` — Shared infrastructure: `embed.go` (`//go:embed` serves Vue SPA at `/`), `version.go`, `gkill_version_data.go`, `find_filter.go`, `find_filter_helpers.go`, `find_kyou_context.go`
 - `gkill/api/gkill_server_api/` — HTTP API handlers (99 files incl. tests, 1 handler per file). `GkillServerAPI` struct with `serve.go`, `close.go`, route definitions in `gkill_server_api_address.go`. Auth middleware (`auth.go`, `auth_context.go`, `auth_middleware.go`) extracts session→account→device→repositories via `AuthContext`, `authMiddleware`, `authWithReposMiddleware`. Handler registration uses wrapper functions: `wrapNoAuth` (no session), `wrapAuth` (session + account), `wrapAuthRepos` (session + account + device + repositories). Utility files: `filter_local_only.go`, `utils.go`, `web_push.go`. ZIP browsing: `handle_browse_zip_contents.go` (path traversal prevention, Shift_JIS→UTF-8, singleflight dedup).
 - `gkill/api/req_res/` — Request/response structs for every endpoint (186 files)
-- `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes
+- `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- ~~ /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes
 - `gkill/api/gkill_plugin/` — Plugin protocol types: `PluginManifest`, `PluginRequest`, `PluginResponse`, `PluginKyou`, `PluginTypedData`, `PluginGPSLog` (stdio newline-delimited JSON)
 
 **プラグインの型別/付随データ:** `manifest.json` の `provides`（既定は空＝従来どおり）に種別を書くと、そのプラグインの記録が **native と同じ型別リポジトリに載る**。`kc` を宣言して `data_type: "kc"` を返せば `typed_kc` が埋まり Dnote の推移グラフで集計できる。`tag` を宣言すればタグ一覧（`get_all_tag_names`）に載るので、rykv の既定の絞り込み「タグ無し」から漏れる問題が起きない。`gpslog` は Kyou ではないので専用コマンド `get_gps_logs`（ページング必須）で受け渡す。
@@ -175,7 +175,7 @@ Key packages:
 - `PeriodOfTimeWeekOfDays` は **nil を先行ガードで弾く**こと。`len==0` / `len!=7` の分岐へ落とすと全件が消える（`find_filter.go` の `sortAndTrimKyousMap` と `sqlite3impl_util.go` の両方に同じ罠がある）
 - TypeScript 側で `undefined` は禁止。`JSON.stringify` でキーが落ち、localStorage 往復でコンストラクタ既定値が復活し、`deep_equals` のキー数比較が壊れてサイドバーの機械的 re-emit ガードが死ぬ。未使用は必ず `null` で表現する
 - ただし `FindKyouQuery` のコンストラクタ既定は `tags` / `reps` だけ **`null` ではなく `[]`**（旧 `use_tags=true` + 空配列と厳密等価にするため）
-- Mi の板名は `mi_board_name: null` が「すべて」。番兵文字列 `MI_ALL_BOARD_NAME_TITLE` は**表示層専用**で、null への変換は `use-mi-query-editor-sidebar.ts` の1点に集約されている
+- Mi の板名は `mi_board_name: null` が「すべて」。番兵は `classes/mi-board-names.ts` の **`MI_ALL_BOARD_KEY`（= ハードコードの `"すべて"`。ロケール非依存）** でサイドバー専用、null への変換は `use-mi-query-editor-sidebar.ts` の1点に集約されている。**i18n の訳語（`MI_ALL_BOARD_NAME_TITLE`）と比較してはいけない** ―― ツリーが emit するのはノードの `key` で、それは `append_all_mi_board()` が入れた `"すべて"` 固定なので、訳語と比べると日本語以外のロケールで「すべて」が全件に戻らず 0 件になる（表示名だけが `ALL_MI_BOARD_NAME` / `MI_ALL_TITLE`）
 - 旧形式JSONの移行は3実装が**同じ16キー**を扱う: Go `api/find/find_query_legacy_json.go`、client `classes/api/find_query/normalize-legacy-find-kyou-query-json.ts`、MCP `mcp/lib/constants.mjs` の `LEGACY_USE_FLAG_KEYS`。どれかが欠けると、そのフラグを送る古いクライアントの保存クエリが移行されない（MCP では未知キー扱いで throw する）。共有URL用の `share_kyou_info.db` は起動時にスキーマ 1.0.0→1.1.0 で**保存済みJSONそのものを書き換える**（共有URLは配布済みで再発行できないため）
 
 ### Frontend (Vue 3 + TypeScript) — `src/client/`
@@ -185,7 +185,7 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + 
 - `router/index.ts` — 13 page routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, dashboard, set_new_password, register_first_account, shared_page, shared_mi) + 1 redirect-only route (`/regist_first_account` → `/register_first_account`, query preserved)
 - `pages/views/` — 202 view components, `pages/dialogs/` — 115 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend/correlation graph components (client-side aggregation, no server API)
 - `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,300 lines), client-side API wrapper
-- `classes/kftl/` — KFTL parser (41 statement types; the Go side has 39). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
+- `classes/kftl/` — KFTL parser (48 statement types; the Go side has 46). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
 - `classes/cascade-delete-kyou.ts` — cascade delete for Kyou. The attached Tag / Text / Notification and the ReKyou / MiReKyou that reference the Kyou are looked up in reverse via `GetReKyousByTargetID` / `GetMiReKyousByTargetID` and logically deleted together with it. Depth cap 32 (`max_cascade_depth`), 16 lookups in flight per level (`request_chunk_size`). **The Kyou itself is deleted last** (deleting it first makes the server's `FindKyous` drop the referencing records from its results, so the reverse lookup can no longer find them). No TXID / `commit_tx` is used, so a partial commit is possible. On failure: ERR900093 `cascade_delete_depth_exceeded` / ERR900094 `cascade_delete_failed`, i18n key `FAILED_CASCADE_DELETE_KYOU_MESSAGE`
 - `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target; `/zip_cache/.*` on NavigationRoute denylist)
 
@@ -257,6 +257,21 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 - E2E で `clickFabButton()` を使ってはいけない ―― 先に `dismissFloatingDialogs()` を呼ぶので、開いているメモ帳ウィンドウを閉じてしまい枚数が増えない
 - 守るテスト: `floating-dialog-z-order.test.ts` / `kftl-dialog-host.test.ts` / `e2e/kftl-multi-dialog.spec.ts`
 
+**Mi の板名の並び順と板ツリーのクリック**（2026-08-16）。純関数は `classes/mi-board-names.ts`、守るテストは `mi-board-names.test.ts` / `mi-board-query.test.ts`。
+- **板名プルダウンの並び順は ApplicationConfig の板ツリーが正。** `get_mi_board_list` は Go の map を回して集めているので**順序を保証しない**（`dao/reps/mi_repositories.go` / `mi_re_kyou_repositories.go`。interface の doc コメントにも明記）。素で `:items` に渡すと読み込むたびに並びが入れ替わるので、5箇所の `v-select`（add/edit Mi・add/edit MiReKyou・設定の既定の板）はどれも `sort_mi_board_names_by_config_order()` を通す
+- 並べ替えは **`computed`** で表現する。`use-edit-mi-view.ts` / `use-mi-re-kyou-schedule-fields.ts` には `application_config` の watch が無く、ある側の watch も**参照同一性**しか見ないので（設定ダイアログでの並べ替えのような deep な変更では発火しない）、代入時に1回ソートすると板を並べ替えても追随しない。API の生の一覧は `mi_board_names_source` に持ち、`update_board_name()` の push 先もそちら
+- 設定画面だけは並べ替えの基準が **`cloned_application_config`**。子の板構成ダイアログの「適用」は clone にだけ書くので、props を見ると並べ替え直後に既定板のプルダウンだけ古い順で取り残される
+- **設定にしか無い名前を候補へ足さない。** とくに「すべて」は `append_all_mi_board()` が入れる仮想ノードで実在の板ではないので、Mi/MiReKyou の板名候補に混ぜてはいけない
+- **サイドバーの板ツリーのルート行では何も開かない**（`resolve_clicked_mi_board_names()`）。ルートは `folder_name=''` で描いていて見た目は空白だが `.tree_item { min-width: 200px }` のクリック領域が残っており、踏むと `click_group_by_user()` が**自分自身の key（`__root__`）を含めて**サブツリー全部の key を上げてくる。素通しすると `__root__` という名前の列 + 板の数だけの列が一度に開く。判定は「フォルダ扱いのノード（`is_dir` か `board_name` が空）の key が混ざっていたらグループ行のクリック → 何も開かない」。**ツリーに無い key は開く** ―― 作った直後で `append_not_found_mi_boards()` がまだ拾えていないだけかもしれず、落とすと「板をクリックしても何も起きない」（エラーも出ない）になる
+- 共有の `use-foldable-struct.ts` の `click_group_by_user` は**触らない**。自分の key を含める挙動は tag/rep/timeis のチェックボックス経路も使っており、そちらは「フォルダ行クリックで配下を一括チェック」が意図された機能（`foldable-struct-check.test.ts` が等価性を固定している）。直すのは読み取り側（下記）
+
+**ツリーの「入れ物」を検索条件へ混ぜない**（2026-08-16）。判定は `pages/views/foldable-struct-model.ts` の **`is_struct_container_node(struct)`**（`is_dir` またはキーが `__root__`）の1つだけ。守るテストは `foldable-struct-selected-items.test.ts` / `collect-inited-tag-names.test.ts`。
+- ルートとフォルダは並べ替えのための器でしかないのに、`key` にはフォルダ名が（ルートは `__root__` が）そのまま入る。チェックの入ったノードの key は**そのまま検索条件（`tags` / `reps` / `devices_in_sidebar` / `rep_types_in_sidebar` / `timeis_tags`）として流れる**ので、入れ物を混ぜると実在しない名前の条件が紛れ込む。**OR検索では無害だが AND検索（`tags_and` 等）では必ず0件になる**ため、症状が出るときだけ出る
+- ルート行は `folder_name=''` の空白帯（`.tree_item { min-width: 200px }`）としてクリックでき、踏むと `click_group_by_user` が `__root__` を載せてくる。**誤クリックだけで条件に入る**
+- 除外する場所は4つ: `use-foldable-struct.ts` の `get_selected_items()`（対話経路。tag/rep/timeis の3コンポーザブルが**唯一この関数から**条件を読む）、`collect-inited-tag-names.ts`、`find-kyou-query.ts` の `device_name_walk` / `rep_type_name_walk`（既定クエリ経路）、同 `apply_rep_summary_to_detaul` の `collect_checked_keys`。**最後のものは `indeterminate=false` のクリアが入れ物にも要るので、walk は打ち切らず集合へ入れないだけにする**
+- **フォルダ名と同名のタグが実在しても条件は落ちない。** `apply_check_state_to_struct` が key 一致でツリー全体を走査して葉のほうにもチェックを入れるため。実運用の `TAG_STRUCT` ではフォルダの大半が同名タグを持たない純粋な入れ物で、しかもその一部は `check_when_inited=true` で保存されている ―― つまり誤クリックしなくても既定の検索条件に幽霊タグが入りうる
+- 入れ物かどうかを `is_dir` だけで見ないこと。保存済みJSONのルートに `is_dir` が無い実例があり（`gkill-api.ts` は `children` が falsy のときしか立てない）、そのときルートは**葉として描かれて `__root__` がそのまま条件に入る**
+
 **Context menus:** never compute the popup position by hand. Call `useContextMenuPosition()` (`classes/use-context-menu-position.ts`) for `is_show` / `menu_target` / `open_at(e)`, and bind the template as `<v-menu v-model="is_show" :target="menu_target" location="bottom start">`. Vuetify's connected location strategy measures the rendered menu and flips/shifts it to stay inside the viewport. The previous approach copy-pasted `left: min(innerWidth - 130, x); top: min(max(50, innerHeight - (8 + 48 * N)), y)` into all 25 context-menu composables — the 130px width was unrelated to the real list width, and `N` had to be hand-synced with the template's item count (the struct-family menus sat at `N=2` while actually having 5 items). `.gkill_context_menu_list { max-height: 70vh; overflow-y: scroll }` in `App.vue` still caps very long menus.
 
 **チェックツリーへの適用は単一パスで:** サイドバーのチェック状態をツリーへ書き戻すときは `classes/foldable-struct-check.ts` の `apply_check_state_to_struct(root, items, state, pre_uncheck_all)` を使い、**「項目1つごとにツリー全体を再帰走査」を書かない**。旧実装は O(項目数×ノード数) で、全ノード訪問が Vue の deep reactive proxy 越しになるため、rep 376個の実環境では列フォーカス切替の click が同期6.5秒（トレース実測）に達していた（2026-08-10 修正。rep/tag/timeis の3コンポーザブルと `apply_rep_summary_to_detaul` が対象。旧実装との等価性は `foldable-struct-check.test.ts` が担保）。なお `InfoBase` 系データクラスに TS `private` フィールドを足してはいけない —— `ref()` の UnwrapRef が private を落とし `Ref<Array<Kyou>>` への代入が全所で型エラーになる（ES `#` も reactive Proxy 越しの `this` で壊れる）。内部フィールドは underscore 公開 + getter/setter にする。
@@ -275,7 +290,7 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 
 **Naming convention (identifiers):** データクラスのプロパティ/メソッド・ローカル変数・通常関数は snake_case（Go 側 JSON タグとの写像）。コンポーザブルは `useXxx`、イベントコールバックは `onXxx`、CRUD リレーハンドラ束は `xxxHandlers`（束の生成は `kyou-view-relay.ts` に一元化。いずれも camelCase）。型は PascalCase、enum メンバーは snake_case。`@typescript-eslint/naming-convention` で機械検査される（`eslint.config.js` の `app/naming-convention` ブロック。対象は `src/client` 本体のみで、`__tests__`・`src/mcp`・`src/tools`・`*.d.ts` は別流儀として対象外）。
 
-**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 910 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
+**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 913 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
 
 ### MCP Server — `src/mcp/`
 

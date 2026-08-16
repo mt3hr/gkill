@@ -38,6 +38,7 @@ function make_api(log: CallLog, overrides: Record<string, unknown> = {}) {
         add_kc: record('add_kc'),
         add_lantana: record('add_lantana'),
         add_mi: record('add_mi'),
+        add_mirekyou: record('add_mirekyou'),
         add_nlog: record('add_nlog'),
         add_urlog: record('add_urlog'),
         add_timeis: record('add_timeis'),
@@ -478,5 +479,147 @@ describe('KFTLを複数のウィンドウで開く', () => {
 
         expect(log.calls.filter(call => call === 'add_kmemo').length).toBe(1)
         expect(log.calls.filter(call => call === 'commit_tx').length).toBe(1)
+    })
+})
+
+/**
+ * リポストタスク(「～～」で開いて「～～」で閉じるブロック)の送信。
+ *
+ * MiReKyou は対象の Kyou とは別の Kyou なので、1回の送信で2件登録される。
+ * ブロックの中に書いたタグは対象ではなく MiReKyou 自身に付く。
+ */
+describe('KFTLのリポストタスク', () => {
+    interface AddMiReKyouCall { mirekyou: Record<string, unknown> }
+    interface AddKmemoCall { kmemo: Record<string, unknown> }
+    interface AddTagCall { tag: Record<string, unknown> }
+
+    function make_capturing_api(log: CallLog) {
+        const ok = { messages: null, errors: null }
+        const mirekyou_calls = new Array<AddMiReKyouCall>()
+        const kmemo_calls = new Array<AddKmemoCall>()
+        const tag_calls = new Array<AddTagCall>()
+        const api = make_api(log, {
+            add_mirekyou: vi.fn(async (req: AddMiReKyouCall) => {
+                log.calls.push('add_mirekyou')
+                mirekyou_calls.push(req)
+                return ok
+            }),
+            add_kmemo: vi.fn(async (req: AddKmemoCall) => {
+                log.calls.push('add_kmemo')
+                kmemo_calls.push(req)
+                return ok
+            }),
+            add_tag: vi.fn(async (req: AddTagCall) => {
+                log.calls.push('add_tag')
+                tag_calls.push(req)
+                return ok
+            }),
+        })
+        return { api, mirekyou_calls, kmemo_calls, tag_calls }
+    }
+
+    test('メモとリポストタスクの両方を登録し、registered_kyou を2件上げる', async () => {
+        const log: CallLog = { calls: [] }
+        const { view, emits } = mount_view(make_api(log))
+
+        await submit_text(view, '牛乳を買う\n～～\n仕事\n～～')
+
+        expect(log.calls).toContain('add_kmemo')
+        expect(log.calls).toContain('add_mirekyou')
+        expect(emitted(emits, 'registered_kyou').length).toBe(2)
+    })
+
+    test('target_id が同じレコードで書いたメモの id を指す', async () => {
+        const log: CallLog = { calls: [] }
+        const { api, mirekyou_calls, kmemo_calls } = make_capturing_api(log)
+        const { view } = mount_view(api)
+
+        await submit_text(view, '牛乳を買う\n～～\n仕事\n～～')
+
+        expect(mirekyou_calls.length).toBe(1)
+        expect(kmemo_calls.length).toBe(1)
+        expect(mirekyou_calls[0].mirekyou.target_id).toBe(kmemo_calls[0].kmemo.id)
+        expect(mirekyou_calls[0].mirekyou.id).not.toBe(kmemo_calls[0].kmemo.id)
+        expect(mirekyou_calls[0].mirekyou.is_checked).toBe(false)
+        expect(mirekyou_calls[0].mirekyou.board_name).toBe('仕事')
+    })
+
+    // Mi の KFTL と同じく、日時の前の「？」は要らない
+    test('日時は「？」なしのベタ書きでも解釈される', async () => {
+        const log: CallLog = { calls: [] }
+        const { api, mirekyou_calls } = make_capturing_api(log)
+        const { view } = mount_view(api)
+
+        await submit_text(view, '牛乳を買う\n～～\n仕事\n2025-03-20\n\n2025-03-22\n～～')
+
+        const mirekyou = mirekyou_calls[0].mirekyou
+        expect((mirekyou.estimate_start_time as Date).getFullYear()).toBe(2025)
+        expect((mirekyou.estimate_start_time as Date).getDate()).toBe(20)
+        expect(mirekyou.estimate_end_time).toBeNull()
+        expect((mirekyou.limit_time as Date).getDate()).toBe(22)
+    })
+
+    test('日時に「？」を付けても同じ結果になる', async () => {
+        const log: CallLog = { calls: [] }
+        const { api, mirekyou_calls } = make_capturing_api(log)
+        const { view } = mount_view(api)
+
+        await submit_text(view, '牛乳を買う\n～～\n仕事\n？2025-03-20\n\n？2025-03-22\n～～')
+
+        const mirekyou = mirekyou_calls[0].mirekyou
+        expect((mirekyou.estimate_start_time as Date).getDate()).toBe(20)
+        expect((mirekyou.limit_time as Date).getDate()).toBe(22)
+    })
+
+    test('ブロックの中のタグはリポストタスクに、閉じたあとのタグはメモに付く', async () => {
+        const log: CallLog = { calls: [] }
+        const { api, mirekyou_calls, kmemo_calls, tag_calls } = make_capturing_api(log)
+        const { view } = mount_view(api)
+
+        await submit_text(view, '牛乳を買う\n～～\n。今日中\n仕事\n～～\n。買い物')
+
+        const mi_re_kyou_id = mirekyou_calls[0].mirekyou.id
+        const kmemo_id = kmemo_calls[0].kmemo.id
+        const tag_of = (name: string) => tag_calls.find(call => call.tag.tag === name)
+        expect(tag_of('今日中')?.tag.target_id).toBe(mi_re_kyou_id)
+        expect(tag_of('買い物')?.tag.target_id).toBe(kmemo_id)
+    })
+
+    // 対象の無いMiReKyouは検索でターゲット解決に失敗して結果から落ちるので、
+    // 画面に出ないのに消せない行が残る。書く前にエラーにしてトランザクションごと捨てる
+    test('レコードに対象のメモが無ければ何も保存せず破棄する', async () => {
+        const log: CallLog = { calls: [] }
+        const { view, emits } = mount_view(make_api(log))
+
+        await submit_text(view, '～～\n仕事\n～～')
+
+        expect(log.calls).not.toContain('add_mirekyou')
+        expect(log.calls).toContain('discard_tx')
+        expect(log.calls).not.toContain('commit_tx')
+        expect(emitted(emits, 'registered_kyou').length).toBe(0)
+    })
+
+    // 板名行は自由入力なので、打ち間違いがそのまま新しい板になる。
+    // Mi と同じくリポストタスクでも送信前に確認を出す
+    test('まだ無い板名なら送信前に確認を出して保存しない', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        view.text_area_content.value = '牛乳を買う\n～～\n未知の板\n～～'
+        await view.submit()
+
+        expect(view.unknown_mi_boards.value).toEqual(['未知の板'])
+        expect(log.calls).not.toContain('add_mirekyou')
+    })
+
+    test('ブロックの中の知らないタグでも送信前に確認を出す', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        view.text_area_content.value = '牛乳を買う\n～～\n。知らないタグ\n仕事\n～～'
+        await view.submit()
+
+        expect(view.unknown_tags.value).toContain('知らないタグ')
+        expect(log.calls).not.toContain('add_mirekyou')
     })
 })

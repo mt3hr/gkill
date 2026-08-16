@@ -38,16 +38,22 @@ func (uc *UsecaseContext) AddMiReKyou(ctx context.Context, repositories *reps.Gk
 		return gkillErrors, nil
 	}
 
+	// MiReKyouは後から追加されたrep種別なので、既存の設定DBには書き込み用repが無いことがある。
+	// tx中でも「commitできない予約」を積ませないため、txIDの有無によらずここで先に弾く。
+	// commit_txはDBトランザクションではなく決まった順の逐次書き込みで、MiReKyouはKyou本体より後・
+	// タグ/テキストより前に書かれる。ここを通してしまうとcommitがその位置で止まり、
+	// Kyou本体だけ書かれてタグと本文が落ちる
+	if repositories.WriteMiReKyouRep == nil {
+		err = fmt.Errorf("not exist write mirekyou rep user id = %s device = %s", userID, device)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.AddMiReKyouError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_REKYOU_MESSAGE"}),
+		})
+		return gkillErrors, nil
+	}
+
 	if txID == nil {
-		if repositories.WriteMiReKyouRep == nil {
-			err = fmt.Errorf("not exist write mirekyou rep user id = %s device = %s", userID, device)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			gkillErrors = append(gkillErrors, &message.GkillError{
-				ErrorCode:    message.AddMiReKyouError,
-				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_REKYOU_MESSAGE"}),
-			})
-			return gkillErrors, nil
-		}
 		err = repositories.WriteMiReKyouRep.AddMiReKyouInfo(ctx, mirekyou)
 		if err != nil {
 			err = fmt.Errorf("error at add mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
@@ -110,16 +116,18 @@ func (uc *UsecaseContext) UpdateMiReKyou(ctx context.Context, repositories *reps
 		return gkillErrors, nil
 	}
 
+	// AddMiReKyouと同じ理由で、txIDの有無によらずここで先に弾く
+	if repositories.WriteMiReKyouRep == nil {
+		err = fmt.Errorf("not exist write mirekyou rep user id = %s device = %s", userID, device)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.UpdateMiReKyouError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_REKYOU_MESSAGE"}),
+		})
+		return gkillErrors, nil
+	}
+
 	if txID == nil {
-		if repositories.WriteMiReKyouRep == nil {
-			err = fmt.Errorf("not exist write mirekyou rep user id = %s device = %s", userID, device)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			gkillErrors = append(gkillErrors, &message.GkillError{
-				ErrorCode:    message.UpdateMiReKyouError,
-				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_REKYOU_MESSAGE"}),
-			})
-			return gkillErrors, nil
-		}
 		err = repositories.WriteMiReKyouRep.AddMiReKyouInfo(ctx, mirekyou)
 		if err != nil {
 			err = fmt.Errorf("error at update mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
