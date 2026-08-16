@@ -250,17 +250,17 @@ describe('useCalendarQuery: calendar日付の null 判定とローカル保持',
     expect(moment(view.get_end_date()).format('YYYY-MM-DD')).toBe('2026-07-03')
   })
 
-  test('同一query_idの両null着信では日付選択を保持し、query_idが変わればリセットする', async () => {
+  test('同一query_idの両null着信では日付選択もチェック状態も触らず、query_idが変わればリセットする', async () => {
     const { props, view } = create_view(new FindKyouQuery())
     props.find_kyou_query = make_dated_query('q1')
     await flush_watchers()
 
-    // チェックオフ: クエリ上は両方 null
+    // 同一列での両null着信（チェックオフ / ピッカーでの選択解除）
     const q_off = new FindKyouQuery()
     q_off.query_id = 'q1'
     props.find_kyou_query = q_off
     await flush_watchers()
-    expect(view.get_use_calendar()).toBe(false)
+    expect(view.get_use_calendar(), '着信クエリでチェックを外すと同じ日付の2回クリックでチェックが勝手に外れる').toBe(true)
     expect(moment(view.get_start_date()).format('YYYY-MM-DD'), '同一query_id内の即時トグルで値が復活する').toBe('2026-07-01')
 
     // 別列（query_id変化）へは着信値（null=選択なし）でリセット
@@ -268,7 +268,46 @@ describe('useCalendarQuery: calendar日付の null 判定とローカル保持',
     q2.query_id = 'q2'
     props.find_kyou_query = q2
     await flush_watchers()
+    expect(view.get_use_calendar()).toBe(false)
     expect(view.get_start_date()).toBeNull()
+    expect(view.get_end_date()).toBeNull()
+  })
+
+  test('同じ日付の連続クリック（Vuetifyのレンジ解除）でチェックは外れない', async () => {
+    const { props, view } = create_view(new FindKyouQuery())
+
+    // 単一日選択の状態。同日なので dates は1要素で保持される
+    const single_day = new FindKyouQuery()
+    single_day.query_id = 'q1'
+    single_day.calendar_start_date = new Date(2026, 7, 1)
+    single_day.calendar_end_date = new Date(2026, 7, 1, 23, 59, 59, 999)
+    props.find_kyou_query = single_day
+    await flush_watchers()
+    expect(view.dates.value).toHaveLength(1)
+    expect(view.get_use_calendar()).toBe(true)
+
+    // 同じ日付をもう一度クリックすると Vuetify が空配列を返す
+    view.clicked_date([])
+    expect(view.get_start_date()).toBeNull()
+    expect(view.get_end_date()).toBeNull()
+    expect(view.get_use_calendar(), '選択が空になってもカレンダー条件は有効なまま').toBe(true)
+
+    // 列のクエリが null/null で返ってきてもチェックは外れない
+    const echo = new FindKyouQuery()
+    echo.query_id = 'q1'
+    props.find_kyou_query = echo
+    await flush_watchers()
+    expect(view.get_use_calendar()).toBe(true)
+    expect(view.get_start_date()).toBeNull()
+  })
+
+  test('クリアはローカルの日付選択を捨てる', async () => {
+    const { props, view } = create_view(new FindKyouQuery())
+    props.find_kyou_query = make_dated_query('q1')
+    await flush_watchers()
+
+    view.clicked_clear_calendar_button()
+    expect(view.get_start_date(), '既定期間が未設定だと着信はnull/nullなので、ここで落とさないと古い選択が残る').toBeNull()
     expect(view.get_end_date()).toBeNull()
   })
 })
