@@ -183,13 +183,31 @@ Key packages:
 Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + PWA (vite-plugin-pwa + Workbox)
 
 - `router/index.ts` — 13 page routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, dashboard, set_new_password, register_first_account, shared_page, shared_mi) + 1 redirect-only route (`/regist_first_account` → `/register_first_account`, query preserved)
-- `pages/views/` — 201 view components, `pages/dialogs/` — 114 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend/correlation graph components (client-side aggregation, no server API)
+- `pages/views/` — 202 view components, `pages/dialogs/` — 115 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend/correlation graph components (client-side aggregation, no server API)
 - `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,300 lines), client-side API wrapper
 - `classes/kftl/` — KFTL parser (41 statement types; the Go side has 39). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
 - `classes/cascade-delete-kyou.ts` — cascade delete for Kyou. The attached Tag / Text / Notification and the ReKyou / MiReKyou that reference the Kyou are looked up in reverse via `GetReKyousByTargetID` / `GetMiReKyousByTargetID` and logically deleted together with it. Depth cap 32 (`max_cascade_depth`), 16 lookups in flight per level (`request_chunk_size`). **The Kyou itself is deleted last** (deleting it first makes the server's `FindKyous` drop the referencing records from its results, so the reverse lookup can no longer find them). No TXID / `commit_tx` is used, so a partial commit is possible. On failure: ERR900093 `cascade_delete_depth_exceeded` / ERR900094 `cascade_delete_failed`, i18n key `FAILED_CASCADE_DELETE_KYOU_MESSAGE`
 - `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target; `/zip_cache/.*` on NavigationRoute denylist)
 
 **State management:** Props/Emit only. No Pinia/Vuex. `GkillAPI` singleton for backend communication.
+
+**Android共有（Web Share Target）の二重保存対策**（2026-08-16）。`POST /share-target` は `serviceWorker.ts` が
+`respondWith` で丸ごと処理し、その場で `add_urlog` / `add_kmemo` を叩いてから `/saihate` へ 303 で送る。
+**Android はタスク（アプリ履歴）から復帰すると同じ共有インテントを再配送する**ので、初回とビット単位で同じ
+multipart POST がもう一度届き、素直に保存すると2件目ができる。台帳は `classes/share-target-dedup.ts`。守るべき約束:
+- **再配送と意図的な再共有は内容から区別できない。** 見分ける手は「保存済みの内容を覚えておく」以外に無いので、
+  台帳（`gkill-share-dedup-cache` の `/__gkill_share_dedup/ledger`、直近100件・24時間）と内容の完全一致で判定する
+- **台帳へ載せるのは保存が成功したときだけ。** 応答を見ずに載せると、保存できていないのに次の共有が24時間弾かれる
+  （`is_successful_gkill_response` で HTTP ok と `errors` 空を確認する）
+- **重複は黙って捨てず最果てで確認を出す**（`confirm-save-duplicated-shared-data-dialog.vue`）。
+  黙って捨てると意図的な再共有が理由なく消える
+- **「それでも保存する」も `/share-target` を通す**（フォームに `gkill_force` を立て、応答は 303 ではなく JSON）。
+  ページ側で `add_urlog` / `add_kmemo` を組み立て直すと保存が2実装に割れる
+- **共有由来のクエリ（`is_saved` / `share_result`）は最果てに入った瞬間に落とす。** 残したままアプリ履歴から
+  開き直されると「保存しました」がもう一度出て、保存していないのに二重保存に見える
+- 台帳は Kyou キャッシュとは**別のキャッシュ**に置く（`activate` が `KYOU_CACHE_NAME` を丸ごと消すので、
+  同居させると版が上がるたびに台帳が飛ぶ）
+- 守るテスト: `share-target-dedup.test.ts`
 
 **Composable pattern:** Each view/dialog has a corresponding `classes/use-*.ts` composable with the component logic. Props and emits are defined in `-props.ts` / `-emits.ts` files alongside the `.vue` file (many components share a common props/emits type instead of having their own pair). Template refs to child components use the `ComponentRef` type (`classes/component-ref.ts`). Never hand-write the CRUD relay handler bundle that only forwards child events to the parent: call `build_kyou_view_relay(emits, overrides?)` (view layer, 18 events) or `build_kyou_dialog_relay(emits, overrides?)` (dialog layer, those 18 plus `focused_kyou` / `clicked_kyou` = 20 events) from `classes/kyou-view-relay.ts`, assign it as `const crudRelayHandlers = build_kyou_view_relay(emits)`, and pass it to the template as `v-on="crudRelayHandlers"` (one line replaces the whole `@…` list). Swap out only the events whose behavior differs via `overrides`. Of the 21 events in `KyouViewEmits`, `requested_close_dialog` is not relayed (the dialog wires it to itself with `@requested_close_dialog="hide()"`), and `focused_kyou` / `clicked_kyou` are not relayed by the view layer (a nested view would fire them twice — only the dialog layer relays them). When adding an event, add it to **both** `KyouViewRelayArgs` and `kyou_view_relay_event_names`; adding it to only one breaks the build through the `Exclude` exhaustiveness check. どちらの束を使うかの基準は「ダイアログかどうか」ではなく **「自分がフォーカスの発火源かどうか」**。子が上げてきた `focused_kyou` / `clicked_kyou` を素通しするだけの中間層（`dnote-item-list-view` 等）は自分では発火しないので `build_kyou_dialog_relay` が正しい（名前に `dialog` と付いているせいで誤読されやすい）。ページ最上位の `RykvDialogHost` には `build_kyou_dialog_host_handlers(required, overrides?)` を使う ―― ページには emit 先の親がいないので未指定イベントは no-op で埋まるが、`updated_kyou` / `deleted_kyou` / `requested_reload_kyou` / `requested_open_rykv_dialog` / `closed` の5件は型で必須にしてあり、書き忘れるとコンパイルエラーになる。`__tests__/unit/classes/relay-bundle-source-scan.test.ts` が「`v-on` で渡した束と `@中継イベント` を同じ要素に併記していないか（両方登録されて二重に発火する）」をソース走査で検査する。
 
@@ -256,7 +274,7 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + 
 
 **Naming convention (identifiers):** データクラスのプロパティ/メソッド・ローカル変数・通常関数は snake_case（Go 側 JSON タグとの写像）。コンポーザブルは `useXxx`、イベントコールバックは `onXxx`、CRUD リレーハンドラ束は `xxxHandlers`（束の生成は `kyou-view-relay.ts` に一元化。いずれも camelCase）。型は PascalCase、enum メンバーは snake_case。`@typescript-eslint/naming-convention` で機械検査される（`eslint.config.js` の `app/naming-convention` ブロック。対象は `src/client` 本体のみで、`__tests__`・`src/mcp`・`src/tools`・`*.d.ts` は別流儀として対象外）。
 
-**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 906 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
+**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 910 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
 
 ### MCP Server — `src/mcp/`
 

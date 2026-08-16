@@ -98,6 +98,8 @@ export enum GkillErrorCodes {
     failed_delete_tag = "ERR900095",
     failed_delete_text = "ERR900096",
     failed_delete_notification = "ERR900097",
-    failed_add_rekyou = "ERR900098"
+    failed_add_rekyou = "ERR900098",
+    // Android共有の保存に失敗したとき。黙って閉じると共有が失われたことに気づけない
+    failed_save_shared_data = "ERR900099"
 }
 

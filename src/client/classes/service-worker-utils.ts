@@ -13,12 +13,27 @@ export const KYOU_CACHE_NAME = 'gkill-post-kyou-cache'
 /** Cache name for POST responses that have no id (/cache/api/{data_type}). */
 export const CONFIG_CACHE_NAME = 'gkill-post-config-cache'
 
-/** Validate whether a Response should be cached. Does not consume the body (reads via clone). */
-export async function should_cache_response(response: Response, check_histories: boolean): Promise<boolean> {
+/**
+ * gkill API の応答が成功か。HTTP ok かつ errors が空。
+ * 成功時 errors は null で返る（omitempty が無い）ので、長さを見る前に null を通すこと。
+ * Does not consume the body (reads via clone).
+ */
+export async function is_successful_gkill_response(response: Response): Promise<boolean> {
   if (!response.ok) return false
   try {
     const json = await response.clone().json()
     if (json.errors && json.errors.length > 0) return false
+  } catch {
+    return false
+  }
+  return true
+}
+
+/** Validate whether a Response should be cached. Does not consume the body (reads via clone). */
+export async function should_cache_response(response: Response, check_histories: boolean): Promise<boolean> {
+  if (!await is_successful_gkill_response(response)) return false
+  try {
+    const json = await response.clone().json()
     if (check_histories) {
       for (const key of Object.keys(json)) {
         if (key.endsWith('_histories')) {

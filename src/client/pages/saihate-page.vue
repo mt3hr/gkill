@@ -108,6 +108,9 @@
                 ref="upload_file_dialog" />
             <ConfirmLogoutDialog @requested_logout="(close_database: boolean) => logout(close_database)"
                 ref="confirm_logout_dialog" />
+            <ConfirmSaveDuplicatedSharedDataDialog :entry="duplicated_shared_entry"
+                @requested_save="save_duplicated_shared_data" @requested_cancel="skip_duplicated_shared_data"
+                ref="confirm_save_duplicated_shared_data_dialog" />
             <HelpDialog screen_name="saihate" ref="help_dialog" />
             <TutorialDialog :application_config="application_config" :gkill_api="gkill_api"
                 ref="tutorial_dialog" />
@@ -143,6 +146,7 @@ import KFTLDialogHost from './views/kftl-dialog-host.vue'
 import mkflDialog from './dialogs/mkfl-dialog.vue'
 import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 import ConfirmLogoutDialog from './dialogs/confirm-logout-dialog.vue'
+import ConfirmSaveDuplicatedSharedDataDialog from './dialogs/confirm-save-duplicated-shared-data-dialog.vue'
 import HelpDialog from './dialogs/help-dialog.vue'
 import TutorialDialog from './dialogs/tutorial-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
@@ -165,6 +169,7 @@ const {
     mkfl_dialog,
     upload_file_dialog,
     confirm_logout_dialog,
+    confirm_save_duplicated_shared_data_dialog,
 
     // State
     enable_context_menu,
@@ -177,6 +182,7 @@ const {
     app_content_width,
     is_loading,
     messages,
+    duplicated_shared_entry,
 
     // Methods
     write_errors,
@@ -197,6 +203,10 @@ const {
     show_lantana_dialog,
     show_upload_file_dialog,
     show_confirm_logout_dialog,
+
+    // Android共有の受け取り
+    save_duplicated_shared_data,
+    skip_duplicated_shared_data,
 
     // Reload
     reload_repositories,
