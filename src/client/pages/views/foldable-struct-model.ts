@@ -26,3 +26,24 @@ export interface FoldableStructModel {
     indeterminate: boolean
     is_dir: boolean
 }
+
+/**
+ * ツリーの「入れ物」ノード（ルートとフォルダ）かどうか。
+ *
+ * 入れ物は並べ替えのための器でしかないのに、`key` にはフォルダ名が
+ * （ルートは `__root__` が）そのまま入る。チェックの入ったノードの key は
+ * **そのまま検索条件（タグ名 / リポジトリ名 / 端末名 / 記録種別名）として流れる**ので、
+ * 入れ物を混ぜると「そんな名前のタグは存在しない」という条件が紛れ込む。
+ * OR検索では無害だが、**AND検索（`tags_and` 等）では必ず0件になる**。
+ * ルート行は folder_name='' の空白帯として描かれていてクリックできてしまうため、
+ * `__root__` は誤クリックだけで条件に入る。
+ *
+ * 実データを持つのは必ず葉。フォルダは編集ダイアログの「フォルダ追加」でしか作られず
+ * （`add_folder_struct_element` が `is_dir=true` 固定で新規ノードを足す）、
+ * 葉が後から入れ物に変わることはない。フォルダ名と同名のタグが実在する場合も、
+ * `apply_check_state_to_struct` が key 一致でツリー全体を走査して葉のほうにも
+ * チェックを入れるので、入れ物を除いても条件は落ちない。
+ */
+export function is_struct_container_node(struct: FoldableStructModel): boolean {
+    return struct.is_dir || struct.key === FOLDABLE_STRUCT_ROOT_KEY
+}

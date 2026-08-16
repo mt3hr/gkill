@@ -16,6 +16,7 @@ import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import type NewBoardNameDialog from '@/pages/dialogs/new-board-name-dialog.vue'
 import type { ComponentRef } from '@/classes/component-ref'
 import { useConfirmUnknownMiBoard } from '@/classes/use-confirm-unknown-mi-board'
+import { sort_mi_board_names_by_config_order } from '@/classes/mi-board-names'
 
 export function useAddMiView(options: {
     props: AddMiViewProps,
@@ -44,7 +45,13 @@ export function useAddMiView(options: {
         m.id = id.value
         return m
     })())
-    const mi_board_names: Ref<Array<string>> = ref(props.application_config.mi_default_board !== "" ? [props.application_config.mi_default_board] : [])
+    // APIが返した生の板名一覧。表示順は mi_board_names（設定順に並べ替えたcomputed）を使う
+    const mi_board_names_source: Ref<Array<string>> = ref(props.application_config.mi_default_board !== "" ? [props.application_config.mi_default_board] : [])
+    // 板の並び順は ApplicationConfig（設定の板構成の「上へ / 下へ」）が正。
+    // get_mi_board_list はマップ反復順で返すので、素で渡すと呼ぶたびに並びが変わる。
+    // watchではなくcomputedにしているのは、設定ダイアログでの並べ替えのような
+    // deepな変更では watch(() => props.application_config, ...) が発火しないため
+    const mi_board_names = computed(() => sort_mi_board_names_by_config_order(mi_board_names_source.value, props.application_config.mi_board_struct))
 
     const mi_title: Ref<string> = ref(mi.value ? mi.value.title : "")
     const mi_board_name: Ref<string> = ref(props.application_config.mi_default_board !== "" ? props.application_config.mi_default_board : "Inbox")
@@ -95,11 +102,11 @@ export function useAddMiView(options: {
             res.boards.push(props.application_config.mi_default_board)
         }
 
-        mi_board_names.value = res.boards
+        mi_board_names_source.value = res.boards
     }
 
     function update_board_name(board_name: string): void {
-        mi_board_names.value.push(board_name)
+        mi_board_names_source.value.push(board_name)
         mi_board_name.value = board_name
     }
 

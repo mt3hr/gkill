@@ -92,7 +92,10 @@ describe('collect_inited_tag_names', () => {
         expect(collect_inited_tag_names(struct)).toEqual(['タグA', 'タグC'])
     })
 
-    test('フォルダ自身に初期チェックが立っていればフォルダ名も入る（配下は別途walkされる）', () => {
+    // フォルダは並べ替えのための入れ物で、tag_name にはフォルダ名がそのまま入っているだけ。
+    // 実在するタグではないので既定の検索条件へ混ぜてはいけない（AND検索が必ず0件になる）。
+    // check_when_inited=true のフォルダは実運用の設定にも保存されている
+    test('フォルダ自身に初期チェックが立っていてもフォルダ名は入らない', () => {
         const struct = tag_node('__root__', {
             is_dir: true,
             children: [
@@ -105,7 +108,24 @@ describe('collect_inited_tag_names', () => {
                 }),
             ],
         })
-        expect(collect_inited_tag_names(struct)).toEqual(['フォルダ', 'タグA'])
+        expect(collect_inited_tag_names(struct), 'フォルダ名が検索条件へ混入している').toEqual(['タグA'])
+    })
+
+    test('フォルダ名と同名のタグが実在すればそのタグは入る', () => {
+        const struct = tag_node('__root__', {
+            is_dir: true,
+            children: [
+                tag_node('フォルダ', {
+                    is_dir: true,
+                    check_when_inited: true,
+                    children: [
+                        tag_node('タグA', { check_when_inited: true }),
+                    ],
+                }),
+                tag_node('フォルダ', { check_when_inited: true }),
+            ],
+        })
+        expect(collect_inited_tag_names(struct)).toEqual(['タグA', 'フォルダ'])
     })
 
     test('ルート自身の check_when_inited は集めない（走査は子から始まる）', () => {

@@ -6,6 +6,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import type { GkillPropsBase } from '@/pages/views/gkill-props-base'
 import type { ComponentRef } from '@/classes/component-ref'
+import { sort_mi_board_names_by_config_order } from '@/classes/mi-board-names'
 
 /**
  * MiReKyouの板名・開始/終了/期限のフォーム状態をまとめたもの。
@@ -26,7 +27,13 @@ export function useMiReKyouScheduleFields(options: {
     const new_board_name_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
-    const mi_board_names: Ref<Array<string>> = ref(props.application_config.mi_default_board !== "" ? [props.application_config.mi_default_board] : [])
+    // APIが返した生の板名一覧。表示順は mi_board_names（設定順に並べ替えたcomputed）を使う
+    const mi_board_names_source: Ref<Array<string>> = ref(props.application_config.mi_default_board !== "" ? [props.application_config.mi_default_board] : [])
+    // 板の並び順は ApplicationConfig（設定の板構成の「上へ / 下へ」）が正。
+    // get_mi_board_list はマップ反復順で返すので、素で渡すと呼ぶたびに並びが変わる。
+    // 編集ダイアログ側には application_config の watch が無いが、computed なので
+    // 板ツリーが差し替わればそのまま追随する
+    const mi_board_names = computed(() => sort_mi_board_names_by_config_order(mi_board_names_source.value, props.application_config.mi_board_struct))
     const mi_board_name: Ref<string> = ref(options.default_board_name ?? (props.application_config.mi_default_board !== "" ? props.application_config.mi_default_board : "Inbox"))
 
     const mi_estimate_start_date_typed: Ref<Date | null> = ref(null)
@@ -66,11 +73,11 @@ export function useMiReKyouScheduleFields(options: {
             res.boards.push(props.application_config.mi_default_board)
         }
 
-        mi_board_names.value = res.boards
+        mi_board_names_source.value = res.boards
     }
 
     function update_board_name(board_name: string): void {
-        mi_board_names.value.push(board_name)
+        mi_board_names_source.value.push(board_name)
         mi_board_name.value = board_name
     }
 
