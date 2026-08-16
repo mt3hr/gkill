@@ -15,7 +15,10 @@ import { KFTLMiReKyouEstimateStartTimeStatementLine } from '@/classes/kftl/kftl_
 import { KFTLMiReKyouEstimateEndTimeStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-estimate-end-time-statement-line'
 import { KFTLMiReKyouLimitTimeStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-limit-time-statement-line'
 import { KFTLMiReKyouTagStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-tag-statement-line'
+import { KFTLMiReKyouNoneStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-none-statement-line'
 import { KFTLEndMiReKyouStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-end-mi-re-kyou-statement-line'
+import { TextAreaInfo } from '@/classes/kftl/text-area-info'
+import { i18n } from '@/i18n'
 
 /**
  * 行のつながりは各クラスのコンストラクタに散っていて、どこにも一覧が無い。
@@ -135,6 +138,28 @@ describe('リポストタスクのブロック', () => {
     expect(lines[2]).toBeInstanceOf(KFTLEndMiReKyouStatementLine)
   })
 
+  // 項目行のあとの受け皿をタグ行にすると、その行が「次もタグ行」を指し続けるので、
+  // 行ラベルの先読み(generate_line_label_data)が「タグ」を上限ぶん並べてしまう。
+  // 受け皿はMiの期日行のあとと同じく「**********」の行にする
+  test('項目を書き終えたあとの空行はタグ行ではなく「**********」の行になる', () => {
+    const lines = build_mi_re_kyou_lines(['～～', '仕事', '2025-03-20', '2025-03-21', '2025-03-22', '', ''])
+    expect(lines[5]).toBeInstanceOf(KFTLMiReKyouNoneStatementLine)
+    expect(lines[6]).toBeInstanceOf(KFTLMiReKyouNoneStatementLine)
+  })
+
+  // 素の KFTLNoneStatementLine を受け皿にすると「～～」が閉じる行ではなく
+  // 新しいブロックの開始行として解釈され、ブロックを閉じられなくなる
+  test('空行を挟んでも「～～」で閉じられる', () => {
+    const lines = build_mi_re_kyou_lines(['～～', '仕事', '2025-03-20', '2025-03-21', '2025-03-22', '', '～～'])
+    expect(lines[6]).toBeInstanceOf(KFTLEndMiReKyouStatementLine)
+  })
+
+  test('空行を挟んだあとに書いた後置タグもリポストタスクのタグ行になる', () => {
+    const lines = build_mi_re_kyou_lines(['～～', '仕事', '2025-03-20', '2025-03-21', '2025-03-22', '', '。今日中', '～～'])
+    expect(lines[6]).toBeInstanceOf(KFTLMiReKyouTagStatementLine)
+    expect(lines[7]).toBeInstanceOf(KFTLEndMiReKyouStatementLine)
+  })
+
   test('閉じたあとはリポストタスクの入力は終わる', () => {
     const lines = build_mi_re_kyou_lines(['～～', '仕事', '～～', 'ただのメモ'])
     expect(lines[3]).not.toBeInstanceOf(KFTLMiReKyouBoardNameStatementLine)
@@ -156,5 +181,40 @@ describe('リポストタスクのブロック', () => {
     expect(lines[1]).toBeInstanceOf(KFTLMiReKyouBoardNameStatementLine)
     expect(lines[2]).toBeInstanceOf(KFTLMiReKyouTagStatementLine)
     expect(lines[3]).toBeInstanceOf(KFTLEndMiReKyouStatementLine)
+  })
+})
+
+/**
+ * 行ラベルの先読み。
+ * generate_line_label_data は「次の行のコンストラクタ」がある限り空行を組み立てて
+ * ラベルを並べるので、自分自身を次に指す行があると先読み上限(50行)ぶん並ぶ。
+ */
+describe('リポストタスクの行ラベルの先読み', () => {
+  function label_names(text: string): Array<string> {
+    return new KFTLStatement(text).generate_line_label_data(new TextAreaInfo()).map(label_data => label_data.label)
+  }
+
+  const tag_label = i18n.global.t('KFTL_TAG_LABEL_TITLE')
+  const none_label = i18n.global.t('KFTL_NONE_LABEL_TITLE')
+
+  test('項目行のあとに「タグ」が並ばない', () => {
+    const labels = label_names('メモ\n～～\n')
+    expect(labels).not.toContain(tag_label)
+    expect(labels[labels.length - 1]).toBe(none_label)
+  })
+
+  // 先読みの見た目はMiの期日行のあとと揃える
+  test('期日行より先の先読みはすべて「**********」になる', () => {
+    const labels = label_names('メモ\n～～\n')
+    const limit_index = labels.indexOf(i18n.global.t('KFTL_MI_NO_LIMIT_TIME_TITLE'))
+    expect(limit_index).toBeGreaterThan(0)
+    const lookahead_after_limit = labels.slice(limit_index + 1)
+    expect(lookahead_after_limit.length).toBeGreaterThan(1)
+    expect(lookahead_after_limit.every(label => label === none_label)).toBe(true)
+  })
+
+  test('実際に書いた後置タグのラベルは「タグ」のまま', () => {
+    const labels = label_names('メモ\n～～\n仕事\n2025-03-20\n2025-03-21\n2025-03-22\n。今日中\n～～\n')
+    expect(labels.filter(label => label === tag_label)).toHaveLength(1)
   })
 })

@@ -183,9 +183,9 @@ Key packages:
 Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + PWA (vite-plugin-pwa + Workbox)
 
 - `router/index.ts` — 13 page routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, dashboard, set_new_password, register_first_account, shared_page, shared_mi) + 1 redirect-only route (`/regist_first_account` → `/register_first_account`, query preserved)
-- `pages/views/` — 202 view components, `pages/dialogs/` — 115 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend/correlation graph components (client-side aggregation, no server API)
+- `pages/views/` — 203 view components, `pages/dialogs/` — 116 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend/correlation graph components (client-side aggregation, no server API)
 - `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,300 lines), client-side API wrapper
-- `classes/kftl/` — KFTL parser (48 statement types; the Go side has 46). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
+- `classes/kftl/` — KFTL parser (49 statement types; the Go side has 46). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
 - `classes/cascade-delete-kyou.ts` — cascade delete for Kyou. The attached Tag / Text / Notification and the ReKyou / MiReKyou that reference the Kyou are looked up in reverse via `GetReKyousByTargetID` / `GetMiReKyousByTargetID` and logically deleted together with it. Depth cap 32 (`max_cascade_depth`), 16 lookups in flight per level (`request_chunk_size`). **The Kyou itself is deleted last** (deleting it first makes the server's `FindKyous` drop the referencing records from its results, so the reverse lookup can no longer find them). No TXID / `commit_tx` is used, so a partial commit is possible. On failure: ERR900093 `cascade_delete_depth_exceeded` / ERR900094 `cascade_delete_failed`, i18n key `FAILED_CASCADE_DELETE_KYOU_MESSAGE`
 - `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target; `/zip_cache/.*` on NavigationRoute denylist)
 
@@ -230,6 +230,19 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 - `add_*` の応答は **hydrate を通っていない生 JSON**（`related_time` が文字列、`clone()` も無い）。受け口で必ず実体化する
 - KFTL は送信全体を tx で包むが、**tx 中の `add_*` は `added_kyou` を返せない**。リクエストクラスが id だけ積み（`get_result_kyou_ids()`）、`commit_tx` の**あと**に `get_kyou` で引いてから emit する。「終了」系は既存 TimeIs の更新なので `updated_kyou`
 - 守るテスト: `kyou-local-insert.test.ts` / `kyou-local-insert-mi-parity.test.ts`（Go の `find_filter_mi_test.go` と対）/ `registered-kyou-local-insert.test.ts`（rykv・mi 両方でパラメタライズ）/ `kftl-submit-emits.test.ts`
+
+**Kyou の追加/編集画面のタグ欄**（2026-08-17）。タグが付く追加/編集画面 **18本すべて**（追加7 = kc/lantana/nlog/time-is/ur-log/mi/mi-re-kyou、編集10 = 前記＋kmemo/idf-kyou/re-kyou、ReKyou作成の `confirm-re-kyou-view`）に共通の子ビュー `pages/views/edit-kyou-tags-view.vue` を1行置くだけで、保存の一度の操作で Kyou とタグをまとめて登録できる。子は値を集めるだけで、実際の登録は親の `save()` が `classes/kyou-tags.ts` 経由で行う（`add-notification-for-add-mi-view.vue` と同じ形）。守るべき約束:
+- **`add_tag` が完了してから `registered_kyou` を emit する。** 局所挿入（`use-registered-kyou-local-insert.ts`）は渡された Kyou をそのまま使わず `refresh_kyou` で引き直すので、その時点でサーバにタグが入っていれば `attached_tags` 込みで差し込まれる。逆に先に emit すると `kyou-local-insert.ts` の `matches_tags()` が空のタグ列を見て「一致しない」と判定し、**エラーも警告も出ないまま行が現れない**。順序が唯一の防御線
+- **編集画面の「更新がなかったらエラー」ガードはタグの変更でも通す**（10本すべて、エラーコードは `*_is_no_update`）。ただし**本体が無変更なら `update_*` を呼ばない** —— 呼ぶと中身の同じ新しい版が1つ増える。判定は各コンポーザブルの `is_body_changed()` に切り出してある
+- **タグの変更は `updated_kyou` を出さない。** 反映信号は `requested_reload_kyou` だけなので、タグだけ変えたときも必ず出す
+- **`tx_id` は使わない。** TXID指定時のタグ／Kyou は一時リポジトリにしか無いので `add_tag` は `added_tag` を返せず（`handle_add_tag.go`）、`registered_tag` を上げられない。しかも `commit_tx` はDBトランザクションではなく部分確定しうる（`handle_commit_tx.go`）ので束ねても原子性は買えない
+- **同じ名前の重複はクライアントで落とす。** サーバの重複チェックはタグIDだけを見る（`usecase/tag.go`）ので、入力欄の中の重複も、削除マークの付いていない既存タグと同名のものも `get_tag_names()` が落とす
+- **既存タグは `get_tags_by_target_id` で子ビューが自分で引く。** 編集ビューの `load()` が呼ぶのは `load_typed_datas()` だけで `props.kyou.attached_tags` は空のまま
+- **⊗ を押した既存タグは保存を押すまで消さない**（押し間違えを戻せるように）。実削除は `is_deleted=true` の版を足す `update_tag`
+- **確認はタグ → 板名の順に1つずつ**（`use-kftl-view.ts` の `do_submit` と同じ）。mi / mi-re-kyou の4画面は `do_save(skip_unknown_tag_check, skip_unknown_mi_board_check)` の再入フラグで表現する。確認ダイアログは非モーダルなので、再入のたびに子ビューから値を取り直すこと
+- **タグ欄は既存フィールドより後ろ（アクション行の直前）に置く。** E2E ヘルパ `fillDialogField(dialog, N, ...)` は入力欄の位置インデックスで掴むので、前に挿すと既存 spec が総崩れになる
+- 未知タグ確認は共有部品 `pages/dialogs/confirm-unknown-tag-dialog.vue` + `classes/use-confirm-unknown-tag.ts`（板名版と対）。`add-tag-view` / KFTL に手書き複製されていたマークアップはここへ寄せた
+- 守るテスト: `kyou-tags.test.ts` / `edit-kyou-tags-view.test.ts` / `add-views.test.ts` の「registered_kyou は add_tag が終わってから emit される」/ `edit-views.test.ts` の「タグ欄」節 / `e2e/add-dialog-crud.spec.ts` の「URLogを本文とタグ入りで一度に追加できる」
 
 **KFTL（メモ帳）のタブ**（2026-08-16）。`kftl-view.vue` がタブのホストで、`/kftl` ページ・各画面のメモ帳ダイアログ（`kftl-dialog.vue`）・打刻メモ帳（`mkfl-view.vue`）の**3系統すべて**に効く。純関数は `classes/kftl-tabs.ts`、状態は `classes/use-kftl-tabs.ts`。守るべき約束:
 - **`v-window` を使わず、アクティブなタブ1枚だけを描画する。** 非表示の textarea は `clientWidth` が0になり、`kftl-statement-line.ts` の `1 + parseInt(text_width / 0)` が **`NaN`**（`Infinity` ではない）を返して行ラベルが丸ごと消える
