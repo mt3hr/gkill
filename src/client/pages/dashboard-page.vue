@@ -46,7 +46,15 @@
         <v-main class="main pa-0 ma-0">
             <div class="overlay_target">
                 <v-overlay v-model="is_loading" class="align-center justify-center" persistent contained>
-                    <v-progress-circular indeterminate color="primary" />
+                    <!-- 設定が取れないと is_loaded が立たず初期化が一度も走らない。
+                         スピナーのままにすると永久に固まるので、再試行の導線を出す -->
+                    <div v-if="application_config_load_failed" class="text-center">
+                        <div class="mb-2">{{ i18n.global.t('FAILED_GET_APPLICATION_CONFIG_MESSAGE') }}</div>
+                        <v-btn color="primary" @click="load_application_config()">
+                            {{ i18n.global.t('RELOAD_TITLE') }}
+                        </v-btn>
+                    </div>
+                    <v-progress-circular v-else indeterminate color="primary" />
                 </v-overlay>
             </div>
             <div :class="is_loading ? 'hide' : 'show'" class="dashboard-content-scroll">
@@ -250,6 +258,7 @@ const {
     // State
     is_loading,
     is_fetching,
+    application_config_load_failed,
     actual_height,
     app_title_bar_height,
     gkill_api,
