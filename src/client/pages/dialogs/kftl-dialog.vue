@@ -2,11 +2,12 @@
   <Teleport to="body" v-if="is_show_dialog">
     <div class="gkill-float-scrim" :class="ui.isTransparent.value ? 'is-transparent' : ''" />
 
-    <div :ref="ui.containerRef" :style="ui.fixedStyle.value" class="gkill-floating-dialog"
+    <div :ref="ui.containerRef" :style="ui.fixedStyle.value" class="gkill-floating-dialog kftl_dialog"
       :class="ui.isTransparent.value ? 'is-transparent' : ''">
       <div class="gkill-floating-dialog__header pa-0 ma-0" @mousedown="ui.onHeaderPointerDown"
         @touchstart="ui.onHeaderPointerDown">
-        <div class="gkill-floating-dialog__title"></div>
+        <!-- 複数枚開けるので、空のままだと aria-label が "kftl dialog" にフォールバックして見分けられない -->
+        <div class="gkill-floating-dialog__title">{{ i18n.global.t('KFTL_APP_NAME') }}</div>
         <div class="gkill-floating-dialog__spacer"></div>
   <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
@@ -37,7 +38,7 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { computed, nextTick, onBeforeUnmount, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, type Ref, ref, watch } from 'vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { Kyou } from '@/classes/datas/kyou'
@@ -98,10 +99,19 @@ onBeforeUnmount(() => { body_ro?.disconnect(); body_ro = null })
 import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
+// 閉じ方（×・Escape・ブラウザバック）を問わずちょうど1回。ホストがここで一覧から外す
+useDialogHistoryStack(is_show_dialog, { onClosed: () => emits('closed') })
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("kftl-dialog", {
+// 1枚目は従来のキーのまま（保存済みのサイズを引き継ぐ）。
+// 2枚目以降はスロットごとに分ける ―― 同じキーだと位置とサイズを奪い合う
+const floating_dialog_key = props.slot_index === 0 ? "kftl-dialog" : `kftl-dialog-${props.slot_index + 1}`
+const KFTL_DIALOG_CASCADE_STEP = 28
+const ui = useFloatingDialog(floating_dialog_key, {
   centerMode: "always",
+  centerOffset: {
+    x: props.slot_index * KFTL_DIALOG_CASCADE_STEP,
+    y: props.slot_index * KFTL_DIALOG_CASCADE_STEP,
+  },
   onEscape: () => hide(),
 })
 watch(ui.isTransparent, () => {
@@ -117,4 +127,8 @@ async function show(): Promise<void> {
 async function hide(): Promise<void> {
   close_dialog_via_history(is_show_dialog)
 }
+
+// ホストは配列へ1件足すだけ。開くのは自分の役目
+// （rykv-dialog-host-item と同じ形）
+onMounted(() => show())
 </script>

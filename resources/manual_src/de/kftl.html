@@ -34,7 +34,53 @@
       <td>Speicherschaltfläche</td>
       <td>Klicken Sie auf die Speicherschaltfläche, um den eingegebenen Notizblock-Text zu analysieren und zu speichern.</td>
     </tr>
+    <tr>
+      <td>Registerkarten</td>
+      <td>Damit können Sie mehrere Entwürfe gleichzeitig offen halten. Jede Registerkarte enthält einen eigenen Text.</td>
+    </tr>
+    <tr>
+      <td>Schaltfläche zum Hinzufügen einer Registerkarte</td>
+      <td>Fügt eine neue leere Registerkarte hinzu.</td>
+    </tr>
+    <tr>
+      <td>Schaltfläche zum Schließen einer Registerkarte</td>
+      <td>Schließt diese Registerkarte. Enthält sie noch Text, wird vorher nachgefragt.</td>
+    </tr>
   </table>
+
+  <h2>Umgang mit Registerkarten</h2>
+  <p>Sie können mehrere Entwürfe nebeneinander offen halten. Fällt Ihnen beim Schreiben eines Eintrags etwas anderes ein, fügen Sie eine Registerkarte hinzu, schreiben Sie es dort und kehren Sie später zur ursprünglichen zurück.</p>
+  <table>
+    <tr>
+      <th>Aktion</th>
+      <th>Ergebnis</th>
+    </tr>
+    <tr>
+      <td>Schaltfläche zum Hinzufügen drücken</td>
+      <td>Eine leere Registerkarte kommt hinzu.</td>
+    </tr>
+    <tr>
+      <td>Auf den Namen einer Registerkarte klicken</td>
+      <td>Der Editor wechselt zu deren Inhalt.</td>
+    </tr>
+    <tr>
+      <td>Schaltfläche zum Schließen drücken</td>
+      <td>Diese Registerkarte wird geschlossen. Enthält sie noch Text, wird vorher nachgefragt.</td>
+    </tr>
+    <tr>
+      <td>Speichern-Schaltfläche drücken</td>
+      <td>Nur der Inhalt dieser Registerkarte wird gespeichert, danach wird sie geschlossen. Die übrigen bleiben erhalten.</td>
+    </tr>
+    <tr>
+      <td>Eine Vorlage auswählen</td>
+      <td>Eine neue Registerkarte öffnet sich mit der Vorlage darin. Der begonnene Text geht nicht verloren.</td>
+    </tr>
+  </table>
+  <p>Eine Registerkarte wird nach der Vorlage benannt, wenn sie aus einer Vorlage geöffnet wurde, sonst nach der ersten Zeile ihres Textes. Noch leere Registerkarten erhalten eine Nummer.</p>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Begonnener Text bleibt auch nach dem Schließen des Bildschirms erhalten. Beim nächsten Öffnen sind die zuvor geöffneten Registerkarten wieder da.
+  </div>
 
   <h2>Über den Notizblock</h2>
   <p>Der Notizblock verwendet ein gkill-eigenes Textformat, mit dem mehrere Datensätze in einem einzigen Text massenhaft erstellt werden können. Jede Zeile stellt einen Befehl oder einen Dateneintrag dar.</p>
@@ -46,10 +92,10 @@
   <h2>Bedienschritte</h2>
   <ol>
     <li>Geben Sie den Inhalt des Eintrags mit der Notizblock-Syntax in den Texteingabebereich ein.</li>
-    <li>Fügen Sie bei Bedarf über die Vorlagenschaltfläche einen Textbaustein ein.</li>
+    <li>Fügen Sie bei Bedarf über die Vorlagenschaltfläche einen Textbaustein ein. Die Vorlage wird in einer neuen Registerkarte geöffnet, der begonnene Text geht also nicht verloren.</li>
     <li>Klicken Sie auf die Speichern-Schaltfläche, um den Eintrag zu erstellen.</li>
     <li>Enthält der Text ein bisher nie verwendetes Tag, erscheint die Rückfrage „Dies ist ein neues Tag. Möchten Sie es hinzufügen?" Wenn das Tag stimmt, fahren Sie fort.</li>
-    <li>Nach erfolgreichem Speichern wird der Textbereich geleert.</li>
+    <li>Nach erfolgreichem Speichern wird diese Registerkarte geschlossen. Die übrigen behalten ihren Text. Bleibt keine übrig, wird eine leere Registerkarte bereitgestellt.</li>
   </ol>
 
   <div class="tip">
@@ -58,6 +104,10 @@
 
   <div class="tip">
     <strong>Tipp:</strong> Mit Vorlagen können Sie effizienter eingeben. Es ist praktisch, häufig verwendete Eintragsmuster als Vorlage zu hinterlegen.
+  </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Auf anderen Bildschirmen öffnet jede Auswahl von „Notizblock" im Menü + ein weiteres Notizblock-Fenster. Jedes Fenster kann eine andere Registerkarte zeigen; zeigen zwei Fenster dieselbe Registerkarte, erscheint das Getippte sofort in beiden.
   </div>
 
   <h2>Verwandte Dokumente</h2>

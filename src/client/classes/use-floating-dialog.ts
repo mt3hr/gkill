@@ -7,8 +7,9 @@
 // - ヘッダー内の操作要素（checkbox / btn 等）タップ時はドラッグを開始しない（モバイル対策）
 // - 右下コーナーのリサイズハンドルでユーザがダイアログサイズを変更可能
 
-import { computed, onBeforeUnmount, onMounted, ref, watch, type ComputedRef, type Ref } from "vue"
+import { computed, getCurrentInstance, inject, onBeforeUnmount, onMounted, provide, ref, watch, type ComputedRef, type InjectionKey, type Ref } from "vue"
 import { find_autofocus_target, has_focus_inside } from "@/classes/dialog-autofocus"
+import { raise_dialog_history_entries } from "@/classes/use-dialog-history-stack"
 
 type Point = { x: number; y: number }
 export type Size = { w: number; h: number }
@@ -138,6 +139,91 @@ function save_size(key: string, s: Size): void {
   safe_set(key, JSON.stringify(s))
 }
 
+// ── 重なり順 ───────────────────────────────────────────────────────────────
+//
+// z-index は「開いているダイアログの並び順」から出す。
+// **単調増加のカウンタにしてはいけない** —— Vuetify の overlay（メニュー / ツールチップ）が
+// 2400 なので、上へ伸ばし続けるとダイアログの中のメニューがダイアログの下へ潜る。
+// 並び順から出せば、伸びるのは同時に開いている枚数ぶんだけで済む。
+const FLOATING_DIALOG_BASE_Z_INDEX = 1100
+
+/** 開いているダイアログ。末尾が最前面 */
+const z_order: Array<object> = []
+
+/** z_order は生の配列なので、変更を computed へ伝えるためのカウンタ */
+const z_order_version = ref(0)
+
+/**
+ * 入れ子のダイアログの親。
+ *
+ * 確認ダイアログは `Teleport to="body"` で親ダイアログの**兄弟**になるので、DOM からは
+ * 親子が分からない。コンポーネント木は Teleport をまたいでも保たれるので provide/inject で持つ
+ */
+const floating_dialog_parents = new WeakMap<object, object>()
+
+/**
+ * z_token → コンポーネントインスタンス。
+ *
+ * バックと Escape が閉じる対象（履歴スタックの末尾）を、見た目の最前面に合わせるために使う。
+ * `useDialogHistoryStack` も同じコンポーネントの setup で呼ばれるので、
+ * インスタンスを鍵にすれば両者が結べる
+ */
+const floating_dialog_owners = new WeakMap<object, object>()
+
+const FLOATING_DIALOG_PARENT_KEY: InjectionKey<object> = Symbol("gkill_floating_dialog_parent")
+
+function is_descendant_of(token: object, ancestor: object): boolean {
+  let current = floating_dialog_parents.get(token)
+  while (current !== undefined) {
+    if (current === ancestor) return true
+    current = floating_dialog_parents.get(current)
+  }
+  return false
+}
+
+function enter_z_order(token: object): void {
+  leave_z_order(token)
+  z_order.push(token)
+  z_order_version.value++
+}
+
+function leave_z_order(token: object): void {
+  const index = z_order.indexOf(token)
+  if (index === -1) return
+  z_order.splice(index, 1)
+  z_order_version.value++
+}
+
+/**
+ * 自分と、自分から開いた子孫のダイアログをまとめて最前面へ出す（相対順は保つ）。
+ *
+ * 子孫を連れていかないと、親をクリックしただけで確認ダイアログが後ろへ隠れる。
+ */
+function raise_z_order(token: object): Array<object> {
+  if (z_order.indexOf(token) === -1) return []
+
+  const raised = z_order.filter((item) => item === token || is_descendant_of(item, token))
+  if (raised.length === 0) return []
+
+  // すでに最前面なら触らない（pointerdown のたびに全ダイアログの style を打ち直さない）
+  const tail_start = z_order.length - raised.length
+  let already_top = true
+  for (let i = 0; i < raised.length; i++) {
+    if (z_order[tail_start + i] !== raised[i]) {
+      already_top = false
+      break
+    }
+  }
+  if (already_top) return []
+
+  for (const item of raised) {
+    z_order.splice(z_order.indexOf(item), 1)
+  }
+  z_order.push(...raised)
+  z_order_version.value++
+  return raised
+}
+
 export function useFloatingDialog(
   storage_key: string,
   opts?: {
@@ -152,6 +238,8 @@ export function useFloatingDialog(
     centerMode?: "first" | "always" | "never"
     // centerMode="always" で「中央に出しても保存しない」方が良い場合 true
     dontPersistWhenAlwaysCenter?: boolean
+    // 中央からずらす量。同じ種類を複数枚開くとき、完全に重ならないようにする
+    centerOffset?: Point
     // リサイズ可能にするか（デフォルト true）
     resizable?: boolean
     // 最小サイズ（デフォルト { w: 200, h: 150 }）
@@ -166,8 +254,29 @@ export function useFloatingDialog(
   }
 ): UseFloatingDialogResult {
   const margin = opts?.margin ?? 8
-  // Teleport to body 前提なので、Vuetify の overlay より前面に出る値にする
-  const z_index = opts?.zIndex ?? 1100
+  const center_offset = opts?.centerOffset ?? { x: 0, y: 0 }
+
+  // Teleport to body 前提なので、Vuetify の overlay より前面に出る値にする。
+  // 実際の値は開いているダイアログの並び順から出す（z_order の解説を参照）
+  const z_token = {}
+  const parent_z_token = inject(FLOATING_DIALOG_PARENT_KEY, null)
+  if (parent_z_token !== null) {
+    floating_dialog_parents.set(z_token, parent_z_token)
+  }
+  provide(FLOATING_DIALOG_PARENT_KEY, z_token)
+
+  const z_owner = getCurrentInstance() as unknown as object | null
+  if (z_owner !== null) {
+    floating_dialog_owners.set(z_token, z_owner)
+  }
+
+  const z_index = computed<number>(() => {
+    if (opts?.zIndex !== undefined) return opts.zIndex
+    // z_order は生の配列なので、この参照で変更を購読する
+    void z_order_version.value
+    return FLOATING_DIALOG_BASE_Z_INDEX + Math.max(0, z_order.indexOf(z_token))
+  })
+
   const center_mode = opts?.centerMode ?? "first"
   const dont_persist_when_always_center = opts?.dontPersistWhenAlwaysCenter ?? false
   const resizable = opts?.resizable ?? true
@@ -337,7 +446,7 @@ export function useFloatingDialog(
       position: "fixed",
       left: `${Math.round(pos.value.x)}px`,
       top: `${Math.round(pos.value.y)}px`,
-      zIndex: String(z_index),
+      zIndex: String(z_index.value),
       willChange: "left, top",
     }
     if (user_size.value) {
@@ -432,8 +541,8 @@ export function useFloatingDialog(
     const estimate_h = r0.h > 0 ? r0.h : window.innerHeight * 0.6
 
     pos.value = {
-      x: Math.round((window.innerWidth - estimate_w) / 2),
-      y: Math.round((window.innerHeight - estimate_h) / 2),
+      x: Math.round((window.innerWidth - estimate_w) / 2) + center_offset.x,
+      y: Math.round((window.innerHeight - estimate_h) / 2) + center_offset.y,
     }
     clamp_to_viewport()
     persist_pos()
@@ -442,8 +551,8 @@ export function useFloatingDialog(
       const r1 = read_rect()
       if (r1.w > 0 && r1.h > 0) {
         pos.value = {
-          x: Math.round((window.innerWidth - r1.w) / 2),
-          y: Math.round((window.innerHeight - r1.h) / 2),
+          x: Math.round((window.innerWidth - r1.w) / 2) + center_offset.x,
+          y: Math.round((window.innerHeight - r1.h) / 2) + center_offset.y,
         }
         clamp_to_viewport()
         persist_pos()
@@ -523,6 +632,36 @@ export function useFloatingDialog(
     resize_handle = null
   }
 
+  // 触ったダイアログを最前面へ。capture で拾うのは、中の要素が
+  // stopPropagation していても取りこぼさないため
+  let bring_to_front_target: HTMLElement | null = null
+
+  function onBringToFront(): void {
+    const raised = raise_z_order(z_token)
+    if (raised.length === 0) return
+    // バックと Escape が閉じる対象も、見た目の最前面に合わせる
+    const owners: Array<object> = []
+    for (const token of raised) {
+      const owner = floating_dialog_owners.get(token)
+      if (owner !== undefined) owners.push(owner)
+    }
+    raise_dialog_history_entries(owners)
+  }
+
+  function attach_bring_to_front(el: HTMLElement): void {
+    detach_bring_to_front()
+    bring_to_front_target = el
+    el.addEventListener("pointerdown", onBringToFront, true)
+    el.addEventListener("focusin", onBringToFront, true)
+  }
+
+  function detach_bring_to_front(): void {
+    if (!bring_to_front_target) return
+    bring_to_front_target.removeEventListener("pointerdown", onBringToFront, true)
+    bring_to_front_target.removeEventListener("focusin", onBringToFront, true)
+    bring_to_front_target = null
+  }
+
   onMounted(() => {
     ro = new ResizeObserver(() => {
       // リサイズ中はユーザ操作を優先し、clamp を抑制
@@ -543,6 +682,8 @@ export function useFloatingDialog(
   onBeforeUnmount(() => {
     detach_autofocus()
     detach_escape_handler()
+    detach_bring_to_front()
+    leave_z_order(z_token)
     remove_resize_handle()
     detach_observer()
     if (ro) ro.disconnect()
@@ -562,10 +703,16 @@ export function useFloatingDialog(
       if (!el) {
         detach_autofocus()
         detach_escape_handler()
+        detach_bring_to_front()
+        leave_z_order(z_token)
         remove_resize_handle()
         detach_observer()
         return
       }
+
+      // 後から開いたものが前に出る（従来の「Teleport の mount 順」と同じ結果）
+      enter_z_order(z_token)
+      attach_bring_to_front(el)
 
       if (ro) attach_observer(el)
 

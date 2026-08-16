@@ -485,3 +485,9 @@ stateDiagram-v2
 重複登録される。以前は保存マーカー（「！」）検出経路でしかフラグを立てておらず、保存ボタン経由では
 実質ノーガードだった（`use-kftl-view.ts` の `do_submit`）。なお KFTL だけは初期値が `true` で、
 `application_config` の読み込みが終わるまで送信できない。
+
+タブのロックは `is_requested_submit` **ではなく** `is_submitting || show_confirm_unknown_tag_dialog`
+で判定する。`is_requested_submit` は設定の読み込みが終わるまで `true` なので、これを鍵にすると
+起動直後にタブを追加できない。板名確認（`unknown_mi_boards`）はブラウザバックで閉じても空に
+ならないため、ロック条件に入れると永久ロックになる。送信対象タブは `do_submit()` の引数で渡し、
+確認からの続行だけが `submit_target_tab_id` を読む。
