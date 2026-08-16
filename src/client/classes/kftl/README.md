@@ -21,7 +21,7 @@ kftl/
 ├── kftl_kc/                    # KC 行（4ファイル）
 ├── kftl_lantana/               # Lantana 行（3ファイル）
 ├── kftl_mi/                    # Mi 行（7ファイル）
-├── kftl_mirekyou/              # MiReKyou 行（8ファイル）
+├── kftl_mirekyou/              # MiReKyou 行（9ファイル）
 ├── kftl_nlog/                  # Nlog 行（5ファイル）
 ├── kftl_urlog/                 # URLog 行（4ファイル）
 ├── kftl_timeis/                # TimeIs 行（5ファイル）
@@ -91,7 +91,7 @@ kftl/
 | `kftl-mi-estimate-end-time-statement-line.ts` | Mi 見積終了時刻行 |
 | `kftl-mi-request.ts` | Mi リクエスト生成 |
 
-### `kftl_mirekyou/`（8ファイル）— 既存の記録をタスク化
+### `kftl_mirekyou/`（9ファイル）— 既存の記録をタスク化
 
 `～～`（ASCII は `~~`）で開いて同じ記号で閉じるブロック。同じレコードで書いた Kyou を
 タスク化するので、対象の id はバケツリレーされてきたものを使い、MiReKyou 自身の id は
@@ -106,6 +106,7 @@ Mi と違ってタイトル行を持たず、ブロックの中に書いたタ�
 | `kftl-mi-re-kyou-estimate-end-time-statement-line.ts` | MiReKyou 見積終了時刻行 |
 | `kftl-mi-re-kyou-limit-time-statement-line.ts` | MiReKyou 期限行 |
 | `kftl-mi-re-kyou-tag-statement-line.ts` | ブロック内のタグ行（前置・後置とも）。次の行の先読みもここ |
+| `kftl-mi-re-kyou-none-statement-line.ts` | 項目行を書き終えたあとの受け皿。行ラベルは「**********」で、閉じる行は引き続き `～～` |
 | `kftl-end-mi-re-kyou-statement-line.ts` | MiReKyou 終了行（`～～` プレフィックス） |
 | `kftl-mi-re-kyou-request.ts` | MiReKyou リクエスト生成 |
 
