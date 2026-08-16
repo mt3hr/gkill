@@ -10,8 +10,8 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 15 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（201 .vue）
-└── dialogs/                        # Dialog コンポーネント（113 .vue）
+├── views/                          # View コンポーネント（202 .vue）
+└── dialogs/                        # Dialog コンポーネント（114 .vue）
 ```
 
 ## 設計パターン
@@ -69,7 +69,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（201 .vue）
+## views/ — 全 View コンポーネント一覧（202 .vue）
 
 ### データ追加系（23コンポーネント）
 
@@ -232,7 +232,8 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 
 | コンポーネント | 説明 |
 |--------------|------|
-| `kftl-view.vue` / `kftl-line-label.vue` / `kftl-template-view.vue` | KFTL エディタ |
+| `kftl-view.vue` / `kftl-line-label.vue` / `kftl-template-view.vue` | KFTL エディタ。`kftl-view.vue` はタブのホストも兼ね、**アクティブなタブ1枚だけ**を描画する（`v-window` で全タブを同時マウントすると、非表示の textarea の `clientWidth` が0になって行ラベルの行数が NaN になる）。タブ列はタイトル行に同居させ、テキストエリアの縦幅を削らない |
+| `kftl-dialog-host.vue` | メモ帳ダイアログの複数枚化。`show()` を呼ぶたびに1枚増える（配列に push して開くのは `rykv-dialog-host` と同じ形）。5画面はこれを1個置くだけでよい |
 | `mkfl-view.vue` | Mkfl ビュー |
 | `mi-kyou-count-calendar.vue` | Mi 件数カレンダー（検索条件に合致する日毎の件数表示） |
 | `plaing-time-is-view.vue` / `end-time-is-plaing-view.vue` | 稼働中 TimeIs |
@@ -251,7 +252,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
 | `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（113 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（114 .vue）
 
 ### データ追加ダイアログ（22コンポーネント）
 
@@ -261,9 +262,9 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 
 `edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-mi-re-kyou-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-folder-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`, `edit-mi-board-struct-dialog.vue`
 
-### 削除確認ダイアログ（22コンポーネント）
+### 削除確認ダイアログ（23コンポーネント）
 
-`confirm-delete-idf-kyou-dialog.vue`, `confirm-delete-tag-dialog.vue`, `confirm-delete-text-dialog.vue`, `confirm-delete-notification-dialog.vue`, `confirm-delete-share-kyou-list-dialog.vue`, `confirm-delete-device-struct-dialog.vue`, `confirm-delete-kftl-template-struct-dialog.vue`, `confirm-delete-rep-dialog.vue`, `confirm-delete-rep-struct-dialog.vue`, `confirm-delete-rep-type-struct-dialog.vue`, `confirm-delete-tag-struct-dialog.vue`, `confirm-delete-mi-board-struct-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `confirm-delete-dnote-trend-graph-dialog.vue`, `confirm-delete-ryuu-item-dialog.vue`（+ `select-move-target-folder-dialog.vue` は移動先フォルダ選択、+ `confirm-unknown-mi-board-dialog.vue` は「まだ実在しない板名で保存してよいか」の確認）
+`confirm-delete-idf-kyou-dialog.vue`, `confirm-delete-tag-dialog.vue`, `confirm-delete-text-dialog.vue`, `confirm-delete-notification-dialog.vue`, `confirm-delete-share-kyou-list-dialog.vue`, `confirm-delete-device-struct-dialog.vue`, `confirm-delete-kftl-template-struct-dialog.vue`, `confirm-delete-rep-dialog.vue`, `confirm-delete-rep-struct-dialog.vue`, `confirm-delete-rep-type-struct-dialog.vue`, `confirm-delete-tag-struct-dialog.vue`, `confirm-delete-mi-board-struct-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `confirm-delete-dnote-trend-graph-dialog.vue`, `confirm-delete-ryuu-item-dialog.vue`（+ `select-move-target-folder-dialog.vue` は移動先フォルダ選択、+ `confirm-unknown-mi-board-dialog.vue` は「まだ実在しない板名で保存してよいか」の確認、+ `confirm-close-kftl-tab-dialog.vue` は「内容が残っているメモ帳のタブを閉じてよいか」の確認）
 
 ### その他ダイアログ
 
