@@ -123,8 +123,8 @@
                                     :enable_context_menu="enable_context_menu" :show_update_time="false"
                                     :show_related_time="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
                                     :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
-                                    :show_attached_tags="false" :show_attached_texts="false"
-                                    :show_attached_notifications="false"
+                                    :show_attached_tags="true" :show_attached_texts="true"
+                                    :show_attached_notifications="true"
                                     v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykv_dialog_handler }" />
                             </div>
                         </td>
