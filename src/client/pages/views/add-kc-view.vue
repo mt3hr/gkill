@@ -62,6 +62,8 @@
                 </table>
             </v-col>
         </v-row>
+        <EditKyouTagsView :application_config="application_config" :gkill_api="gkill_api" :kyou="null"
+            :is_readonly="is_requested_submit" ref="kyou_tags_view" v-on="crudRelayHandlers" />
         <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
@@ -75,12 +77,17 @@
                     }}</v-btn>
             </v-col>
         </v-row>
+        <ConfirmUnknownTagDialog :unknown_tags="unknown_tags" :is_requested_submit="is_requested_submit"
+            @requested_confirm="confirm_save()" @requested_cancel="cancel_save()"
+            ref="confirm_unknown_tag_dialog" />
     </v-card>
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
 import type { EditKCViewProps } from './edit-kc-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
+import EditKyouTagsView from './edit-kyou-tags-view.vue'
+import ConfirmUnknownTagDialog from '../dialogs/confirm-unknown-tag-dialog.vue'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/components'
 import { useAddKcView } from '@/classes/use-add-kc-view'
@@ -89,6 +96,15 @@ const props = defineProps<EditKCViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const {
+    // Template refs
+    kyou_tags_view,
+    confirm_unknown_tag_dialog,
+
+    // Confirm unknown tag
+    unknown_tags,
+    cancel_save,
+    confirm_save,
+
     // State
     is_requested_submit,
     kc: _kc,
@@ -109,5 +125,8 @@ const {
     // Template event handlers
     onUpdateRelatedDateMenu: _on_update_related_date_menu,
     onUpdateRelatedTimeMenu: _on_update_related_time_menu,
+
+    // Event relay objects
+    crudRelayHandlers,
 } = useAddKcView({ props, emits })
 </script>

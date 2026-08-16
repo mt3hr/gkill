@@ -303,7 +303,7 @@ describe('KFTLのタブ', () => {
 
         // タグ確認で中断する
         await view.submit()
-        expect(view.show_confirm_unknown_tag_dialog.value).toBe(true)
+        expect(view.is_confirm_unknown_tag_open.value).toBe(true)
 
         // 確認中にタブを切り替えようとしてもロックされている
         view.activate_tab(other_tab_id)
@@ -315,6 +315,29 @@ describe('KFTLのタブ', () => {
 
         expect(tabs.tabs.value.map(tab => tab.id)).toEqual([other_tab_id])
         expect(tabs.get_tab_content(other_tab_id)).toBe('別のタブ')
+    })
+
+    // 確認ダイアログは共有部品(ConfirmUnknownTagDialog)なので、ブラウザバックで閉じられると
+    // cancel_submit を通らない。`closed` でロックを倒さないとタブが二度と切り替えられなくなる
+    test('確認をブラウザバックで閉じてもタブ操作のロックが外れる', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+        const tabs = useKftlTabs()
+
+        const target_tab_id = view.active_tab_id.value
+        tabs.set_tab_content(target_tab_id, '。未知のタグ\n送るほう')
+        const other_tab_id = tabs.add_tab('別のタブ')
+        view.activate_tab(target_tab_id)
+
+        await view.submit()
+        expect(view.is_tab_locked.value).toBe(true)
+
+        // ダイアログが「閉じた」と言ってきただけ（cancel_submit は通らない）
+        view.onConfirmUnknownTagClosed()
+
+        expect(view.is_tab_locked.value).toBe(false)
+        view.activate_tab(other_tab_id)
+        expect(view.active_tab_id.value).toBe(other_tab_id)
     })
 
     test('保存マーカーで終わるタブへ切り替えただけでは送信しない', async () => {
