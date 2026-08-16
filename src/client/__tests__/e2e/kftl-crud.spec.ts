@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
-import { submitKftlText, navigateToRykv, navigateToMi, navigateToPlaing, makeUniqueLabel, pageContainsText, expectPageToContainText } from './crud-helpers'
+import { submitKftlText, navigateToRykv, navigateToMi, navigateToPlaing, makeUniqueLabel, pageContainsText, expectPageToContainText, searchByKeyword } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
@@ -47,6 +47,20 @@ test.describe('KFTL CRUD Flows', () => {
     await submitKftlText(page, `ーみ\n${label}`)
     await navigateToMi(page)
     await expectPageToContainText(page, label)
+  })
+
+  test('submit mirekyou via KFTL and verify the memo is tasked', async ({ page }) => {
+    // 「～～」で開いて閉じるブロック。板名は空にして既定の板へ落とすので、
+    // 新しい板名の確認ダイアログを踏まない（submitKftlText はタグの確認しか通さない）
+    const label = makeUniqueLabel('mirekyou_kftl')
+    await submitKftlText(page, `${label}\n～～\n～～`)
+    await navigateToRykv(page)
+    await searchByKeyword(page, label)
+    // タスク化した行は元の記録と同じ本文で表示されるので、リポジトリ名で特定する
+    await expect(page.locator('.kyou_rep_name').filter({ hasText: /^\s*MiReKyou\s*$/ }), 'タスク化した行が作られていない')
+      .toHaveCount(1, { timeout: 30000 })
+    await expect(page.locator('.kyou_rep_name').filter({ hasText: /^\s*Kmemo\s*$/ }), '元のメモが作られていない')
+      .toHaveCount(1, { timeout: 30000 })
   })
 
   test('submit timeis start via KFTL', async ({ page }) => {

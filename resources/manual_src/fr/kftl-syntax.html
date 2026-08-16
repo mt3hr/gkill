@@ -5,7 +5,7 @@
 
 <h1>Référence de syntaxe du bloc-notes</h1>
 
-<p>La syntaxe du bloc-notes est un format d'enregistrement textuel utilise dans gkill. Grace aux prefixes en debut de ligne, vous pouvez saisir differents types de données en une seule fois. Voici les 18 types d'instructions.</p>
+<p>La syntaxe du bloc-notes est un format d'enregistrement textuel utilise dans gkill. Grace aux prefixes en debut de ligne, vous pouvez saisir differents types de données en une seule fois. Voici les 19 types d'instructions.</p>
 
 <h2>Apercu des instructions</h2>
 
@@ -28,6 +28,7 @@
   <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>Terminer journal par étiquette</td><td>Terminer un journal de temps par nom d'étiquette</td></tr>
   <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>Terminer journal par étiquette (si existant)</td><td>Terminer par étiquette si existant</td></tr>
   <tr><td><code>ーう</code></td><td><code>/url</code></td><td>Signet</td><td>Enregistrer un signet URL</td></tr>
+  <tr><td><code>～～</code></td><td><code>~~</code></td><td>Tâche de repost</td><td>Transformer un enregistrement existant en tâche</td></tr>
   <tr><td><code>！</code></td><td><code>!</code></td><td>Sauvegarder</td><td>Terminer le document et sauvegarder</td></tr>
 </table>
 
@@ -140,7 +141,18 @@ travail</pre>
 https://example.com
 Site favori</pre>
 
-<h3>18. Sauvegarder : <code>!</code></h3>
+<h3>18. Tâche de repost : <code>~~</code></h3>
+<p>Commence par <code>~~</code> et se termine par <code>~~</code>. Transforme l'enregistrement écrit juste au-dessus en tâche sans réécrire son contenu. Il n'y a pas de ligne de titre : l'enregistrement d'origine est affiché tel quel. Dans le bloc, indiquez le nom du tableau, la date de début prévue, la date de fin prévue et la date limite, dans cet ordre (tous facultatifs). Aucun <code>?</code> n'est nécessaire devant une date. Une ligne commençant par <code>#</code> devient une étiquette de la tâche elle-même, et peut être écrite avant ou après le nom du tableau.</p>
+<pre>Note sur un article à lire plus tard
+~~
+#travail
+Courses
+2025-03-20
+
+2025-03-22
+~~</pre>
+
+<h3>19. Sauvegarder : <code>!</code></h3>
 <p>Termine le document et exécuté le processus de sauvegarde.</p>
 <pre>!</pre>
 

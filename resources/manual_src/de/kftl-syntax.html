@@ -5,7 +5,7 @@
 
 <h1>Notizblock-Syntaxreferenz</h1>
 
-<p>Die Notizblock-Syntax ist ein textbasiertes Aufzeichnungsformat, das in gkill verwendet wird. Durch Präfixe am Zeilenanfang können Sie verschiedene Datentypen auf einmal eingeben. Im Folgenden werden alle 18 Anweisungstypen vorgestellt.</p>
+<p>Die Notizblock-Syntax ist ein textbasiertes Aufzeichnungsformat, das in gkill verwendet wird. Durch Präfixe am Zeilenanfang können Sie verschiedene Datentypen auf einmal eingeben. Im Folgenden werden alle 19 Anweisungstypen vorgestellt.</p>
 
 <h2>Anweisungsübersicht</h2>
 
@@ -28,6 +28,7 @@
   <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>Zeitprotokoll per Tag beenden</td><td>Zeitprotokoll nach Tag-Name beenden</td></tr>
   <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>Zeitprotokoll per Tag beenden (falls vorhanden)</td><td>Per Tag beenden falls vorhanden</td></tr>
   <tr><td><code>ーう</code></td><td><code>/url</code></td><td>Lesezeichen</td><td>URL-Lesezeichen aufzeichnen</td></tr>
+  <tr><td><code>～～</code></td><td><code>~~</code></td><td>Repost-Aufgabe</td><td>Einen vorhandenen Eintrag zur Aufgabe machen</td></tr>
   <tr><td><code>！</code></td><td><code>!</code></td><td>Speichern</td><td>Dokument beenden und speichern</td></tr>
 </table>
 
@@ -140,7 +141,18 @@ Arbeit</pre>
 https://example.com
 Lieblingsseite</pre>
 
-<h3>18. Speichern: <code>!</code></h3>
+<h3>18. Repost-Aufgabe: <code>~~</code></h3>
+<p>Beginnt mit <code>~~</code> und endet mit <code>~~</code>. Macht den unmittelbar darüber geschriebenen Eintrag zu einer Aufgabe, ohne seinen Inhalt neu zu schreiben. Es gibt keine Titelzeile: der ursprüngliche Eintrag wird unverändert angezeigt. Im Block werden Boardname, geplanter Startzeitpunkt, geplanter Endzeitpunkt und Fälligkeitsdatum in dieser Reihenfolge eingetragen (alle optional). Vor einem Datum ist kein <code>?</code> nötig. Eine Zeile, die mit <code>#</code> beginnt, wird zu einem Schlagwort der Aufgabe selbst und darf vor oder nach dem Boardnamen stehen.</p>
+<pre>Notiz zu einem Artikel für später
+~~
+#arbeit
+Einkaufen
+2025-03-20
+
+2025-03-22
+~~</pre>
+
+<h3>19. Speichern: <code>!</code></h3>
 <p>Beendet das Dokument und führt den Speichervorgang aus.</p>
 <pre>!</pre>
 

@@ -14,6 +14,7 @@ import { KFTLSplitAndNextSecondStatementLine } from "./kftl_split/kftl-split-and
 import { KFTLSplitStatementLine } from "./kftl_split/kftl-split-statement-line"
 import { KFTLTagStatementLine } from "./kftl_tag/kftl-tag-statement-line"
 import { KFTLStartTextStatementLine } from "./kftl_text/kftl-start-text-statement-line"
+import { KFTLStartMiReKyouStatementLine } from "./kftl_mirekyou/kftl-start-mi-re-kyou-statement-line"
 import { KFTLStartTimeIsStatementLine } from "./kftl_timeis/kftl-start-time-is-statement-line"
 import { KFTLStartTimeIsEndStatementLine } from "./kftl_timeis/kftl_timeis_end/kftl-start-time-is-end-statement-line"
 import { KFTLStartTimeIsEndIfExistStatementLine } from "./kftl_timeis/kftl_timeis_end/kftl_timeis_end_exist/kftl-start-time-is-end-if-exist-statement-line"
@@ -75,6 +76,11 @@ export class KFTLStatementLineConstructorFactory {
         }
         if (KFTLStartTextStatementLine.is_this_type(line_text)) {
             return (line_text: string, context: KFTLStatementLineContext) => { return new KFTLStartTextStatementLine(line_text, context, this.prev_line_is_meta_info) }
+        }
+        if (KFTLStartMiReKyouStatementLine.is_this_type(line_text)) {
+            // リポストタスクはKyou本体ではなく付随情報なので、Tag/StartTextと同じく
+            // prev_line_is_meta_info は書き換えずに渡すだけにする
+            return (line_text: string, context: KFTLStatementLineContext) => { return new KFTLStartMiReKyouStatementLine(line_text, context, this.prev_line_is_meta_info) }
         }
         if (KFTLRelatedTimeStatementLine.is_this_type(line_text)) {
             return (line_text: string, context: KFTLStatementLineContext) => { return new KFTLRelatedTimeStatementLine(line_text, context, this.prev_line_is_meta_info) }

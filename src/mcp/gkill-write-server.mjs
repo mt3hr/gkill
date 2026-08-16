@@ -378,6 +378,7 @@ const TOOLS = [
       "(4) To create SEPARATE records, insert a separator line (、 or ,) between them. Without separators, consecutive lines merge into one kmemo. " +
       "Supported prefix lines (must be the ENTIRE line, not part of a line): " +
       "/mi or ーみ → next line is task title, " +
+      "~~ or ～～ → turn the record written just ABOVE into a task (repost task). Opens AND closes with the same ~~ marker, and is meaningless on its own — the record it tasks must come first. There is NO title line (the original record is shown as-is). Inside the block: board name, estimated start, estimated end, deadline (all optional, no ? needed before a date). Lines starting with # inside the block become tags on the TASK itself and may appear before or after the board name. Use /mi for a brand new task and ~~ to task an existing record, " +
       "/mood or ーら → next line is mood value (0-10), " +
       "/expense or ーん → next 3 lines: shop name, then title/description, then amount as integer (IMPORTANT: the prefix is /expense, NOT /nlog), " +
       "/url or ーう → next line is URL, " +

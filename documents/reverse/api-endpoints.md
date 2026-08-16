@@ -140,6 +140,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 | 区切り（+1秒） | `、、` | `,,` |
 | 数値（KC） | `ーか` | `/num` |
 | タスク（Mi） | `ーみ` | `/mi` |
+| 既存の記録をタスク化（MiReKyou） | `～～` | `~~` |
 | 気分（Lantana） | `ーら` | `/mood` |
 | 支出（Nlog） | `ーん` | `/expense` |
 | ブックマーク（URLog） | `ーう` | `/url` |

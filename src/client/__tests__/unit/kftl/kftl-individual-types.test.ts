@@ -14,6 +14,7 @@ import { KFTLStartTextStatementLine } from '@/classes/kftl/kftl_text/kftl-start-
 import { KFTLStartTimeIsStatementLine } from '@/classes/kftl/kftl_timeis/kftl-start-time-is-statement-line'
 import { KFTLStartKCStatementLine } from '@/classes/kftl/kftl_kc/kftl-start-kc-statement-line'
 import { KFTLStartMiStatementLine } from '@/classes/kftl/kftl_mi/kftl-start-mi-statement-line'
+import { KFTLStartMiReKyouStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-start-mi-re-kyou-statement-line'
 import { KFTLStartLantanaStatementLine } from '@/classes/kftl/kftl_lantana/kftl-start-lantana-statement-line'
 import { KFTLStartNlogStatementLine } from '@/classes/kftl/kftl_nlog/kftl-start-nlog-statement-line'
 import { KFTLStartURLogStatementLine } from '@/classes/kftl/kftl_urlog/kftl-start-ur-log-statement-line'
@@ -105,6 +106,7 @@ describe('KFTL Individual Type Supplementary Tests', () => {
       { name: 'TimeIs', prefix: i18n.global.t('KFTL_TIMEIS_SPLITTER_TITLE') },
       { name: 'KC', prefix: i18n.global.t('KFTL_KC_SPLITTER_TITLE') },
       { name: 'Mi', prefix: i18n.global.t('KFTL_MI_SPLITTER_TITLE') },
+      { name: 'MiReKyou', prefix: i18n.global.t('KFTL_MI_REKYOU_SPLITTER_TITLE') },
       { name: 'Lantana', prefix: i18n.global.t('KFTL_LANTANA_SPLITTER_TITLE') },
       { name: 'Nlog', prefix: i18n.global.t('KFTL_NLOG_SPLITTER_TITLE') },
       { name: 'URLog', prefix: i18n.global.t('KFTL_URLOG_SPLITTER_TITLE') },
@@ -148,6 +150,10 @@ describe('KFTL Individual Type Supplementary Tests', () => {
 
     test('Mi (exact) rejects content after prefix', () => {
       expect(KFTLStartMiStatementLine.is_this_type('ーみextra')).toBe(false)
+    })
+
+    test('MiReKyou (exact) rejects content after prefix', () => {
+      expect(KFTLStartMiReKyouStatementLine.is_this_type('～～extra')).toBe(false)
     })
 
     test('Lantana (exact) rejects content after prefix', () => {

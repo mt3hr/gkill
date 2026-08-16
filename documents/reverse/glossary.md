@@ -100,7 +100,8 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | `、` | `,` | Split | 区切り。現在のステートメントを終了し、次のステートメントを開始する |
 | `、、` | `,,` | SplitNextSecond | 区切り＋時刻の `AddSecond` を +1 する |
 | `ーか` | `/num` | KC | 数値記録の開始。後続行でタイトル → 数値を入力 |
-| `ーみ` | `/mi` | Mi | タスクの開始。後続行でタイトル → [ボード名] → [期限] → [開始予定] → [終了予定] を入力 |
+| `ーみ` | `/mi` | Mi | タスクの開始。後続行でタイトル → [ボード名] → [開始予定] → [終了予定] → [期限] を入力 |
+| `～～` | `~~` | MiReKyou | 既存の記録をタスク化。同じ記号で開いて閉じるブロックで、中に [ボード名] → [開始予定] → [終了予定] → [期限] とタグを書く（タイトル行は無い） |
 | `ーら` | `/mood` | Lantana | 気分値の開始。後続行で気分値（0〜10）を入力 |
 | `ーん` | `/expense` | Nlog | 支出の開始。後続行で店名 → タイトル → 金額を入力 |
 | `ーう` | `/url` | URLog | ブックマークの開始。後続行でタイトル → URL を入力 |
@@ -280,12 +281,12 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | EditSavedFindQueryListDialog | `src/client/pages/dialogs/edit-saved-find-query-list-dialog.vue` | 保存済み検索条件の一覧管理ダイアログ（`query_type` prop で rykv/mi の2インスタンス） |
 | MiFindQueryEditorView | `src/client/pages/views/mi-find-query-editor-view.vue` | MI専用検索条件エディタビュー |
 | MiFindQueryEditorDialog | `src/client/pages/dialogs/mi-find-query-editor-dialog.vue` | MI専用検索条件エディタダイアログ |
-| KFTLパーサー（フロント） | `src/client/classes/kftl/` | フロントエンド版KFTLパーサー（41ステートメント型。`kftl_*/` 配下の具象クラス数） |
+| KFTLパーサー（フロント） | `src/client/classes/kftl/` | フロントエンド版KFTLパーサー（48ステートメント型。`kftl_*/` 配下の具象クラス数） |
 | Dnote ユーティリティ | `src/client/classes/dnote/` | 集計機能ユーティリティ |
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（910キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（913キー/言語） |
 
 ### その他
 
