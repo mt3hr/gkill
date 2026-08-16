@@ -1,5 +1,5 @@
 <template>
-    <div class="dashboard_view_wrap" ref="dashboard_root">
+    <div class="dashboard_view_wrap" ref="dashboard_root" :data-gkill-view-ready="is_view_ready ? 'true' : 'false'">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-btn icon="mdi-menu" :ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }"
                 class="d-none d-md-flex" />
@@ -249,6 +249,7 @@ const {
 
     // State
     is_loading,
+    is_fetching,
     actual_height,
     app_title_bar_height,
     gkill_api,
@@ -262,6 +263,7 @@ const {
     opened_dialogs,
 
     // Computed
+    is_view_ready,
     panel_height,
     page_list,
     target_date_start,
@@ -323,15 +325,23 @@ async function fetch_for_date(): Promise<void> {
     clear_dashboard_datas()
     dnote_view.value?.set_loading(true)
     mi_list_view.value?.set_loading(true)
+    is_fetching.value = true
     await nextTick()
-    await Promise.all([
-        fetch_mi_kyous().then(() => {
-            if (my_id === fetch_id) mi_list_view.value?.set_loading(false)
-        }),
-        fetch_dnote_kyous().then((kyous) => {
-            if (my_id === fetch_id) dnote_view.value?.reload(kyous, dnote_query.value)
-        }),
-    ])
+    try {
+        await Promise.all([
+            fetch_mi_kyous().then(() => {
+                if (my_id === fetch_id) mi_list_view.value?.set_loading(false)
+            }),
+            fetch_dnote_kyous().then((kyous) => {
+                if (my_id === fetch_id) dnote_view.value?.reload(kyous, dnote_query.value)
+            }),
+        ])
+    } finally {
+        // 追い越された取得は自分では倒さない。最新の取得だけが準備完了を宣言する
+        if (my_id === fetch_id) {
+            is_fetching.value = false
+        }
+    }
 }
 
 // 日付変更時にデータを再取得
@@ -345,15 +355,23 @@ watch(application_config, (config) => {
     }
 })
 
-watch(() => application_config.value.is_loaded, async () => {
+watch(() => application_config.value.is_loaded, async (is_loaded) => {
+    if (!is_loaded) {
+        return
+    }
     await nextTick(() => { })
     gps_log_map.value?.centering()
     // 初期データ取得: application_config ロード完了後にデータを取得する
     // is_loading は use-dashboard-page.ts 側で false にしない（fetch完了後に隠す）
-    await Promise.all([
-        fetch_mi_kyous().then(() => mi_list_view.value?.set_loading(false)),
-        fetch_dnote_kyous().then((kyous) => dnote_view.value?.reload(kyous, dnote_query.value)),
-    ])
+    is_fetching.value = true
+    try {
+        await Promise.all([
+            fetch_mi_kyous().then(() => mi_list_view.value?.set_loading(false)),
+            fetch_dnote_kyous().then((kyous) => dnote_view.value?.reload(kyous, dnote_query.value)),
+        ])
+    } finally {
+        is_fetching.value = false
+    }
     is_loading.value = false
 })
 
