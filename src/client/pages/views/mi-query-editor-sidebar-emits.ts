@@ -11,5 +11,4 @@ export interface MiQueryEditorSidebarEmits {
     (e: 'requested_search', update_cache: boolean): void
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
-    (e: 'inited'): void
 }

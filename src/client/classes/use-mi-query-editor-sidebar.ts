@@ -1,6 +1,6 @@
 import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"
-import { computed, nextTick, type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { deep_equals } from '@/classes/deep-equals'
 import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
@@ -36,9 +36,17 @@ export function useMiQueryEditorSidebar(options: {
     // ── State refs ──
     const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
     const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
-    const is_mounted = ref(false)
-    nextTick(() => is_mounted.value = true)
 
+    // 各節の「描けた」フラグ。子へ :inited prop として降り、子は
+    // 「初回同期か再同期か」の判定に使う(use-tag-query.ts / use-calendar-query.ts)。
+    // 消してはいけない。
+    // かつてはこれらの AND を親への @inited イベントにしていたが、
+    // 「設定が来た」を表していたのは immediate の付いていない
+    // application_config watch から emit する子がいるという偶然で、
+    // mi では実質 CalendarQuery 1つが律速していた(しかもその節は
+    // application_config のフィールドを1つも読まない)。
+    // 画面の初期化は use-mi-view.ts が application_config.is_loaded を
+    // 直接 watch して起こすので、集約もイベントも不要になった。
     const inited_sidebar_header_for_query_sidebar = ref(true)
     const inited_keyword_query_for_query_sidebar = ref(true)
     const inited_tag_query_for_query_sidebar = ref(false)
@@ -56,29 +64,7 @@ export function useMiQueryEditorSidebar(options: {
     // 保存済み検索条件(タスク用)。0件なら呼び出しFABごと非表示にする
     const saved_find_querys = computed(() => SavedFindQueryConfig.parse(props.application_config.saved_find_query_json_data).saved_mi_find_kyou_querys)
 
-    const inited = computed(() => {
-        if (!is_mounted.value) {
-            return false
-        }
-
-        // ここに載せてよいのは実際に @inited を発火する子だけ。
-        // 画面から消した子のフラグを残すと永久にfalseのままで inited が立たず、
-        // mi画面が init() を走らせられずスピナーのまま固まる
-        return inited_keyword_query_for_query_sidebar.value &&
-            inited_tag_query_for_query_sidebar.value &&
-            inited_calendar_query_for_query_sidebar.value &&
-            inited_check_state_query_for_query_sidebar.value &&
-            inited_sort_query_for_query_sidebar.value &&
-            inited_board_query_for_query_sidebar.value
-    })
-
     // ── Watchers ──
-    watch(() => inited.value, async (new_value: boolean, old_value: boolean) => {
-        if (old_value !== new_value && new_value) {
-            nextTick(() => { emits('inited') })
-        }
-    })
-
     // immediate必須。マウント時点で設定が既に渡っているとwatcherは発火せず、
     // default_queryが空のFindKyouQueryのまま列追加・クリアに使われてしまう
     watch(() => props.application_config, () => {
@@ -334,7 +320,6 @@ export function useMiQueryEditorSidebar(options: {
         // State
         default_query,
         query,
-        is_mounted,
         inited_sidebar_header_for_query_sidebar,
         inited_keyword_query_for_query_sidebar,
         inited_tag_query_for_query_sidebar,
@@ -350,7 +335,6 @@ export function useMiQueryEditorSidebar(options: {
         header_top_px,
         sidebar_top_px,
         saved_find_querys,
-        inited,
 
         // Exposed methods (for defineExpose)
         generate_query,

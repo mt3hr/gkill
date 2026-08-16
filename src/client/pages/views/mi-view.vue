@@ -59,7 +59,6 @@
                 :inited="false /* これは見られないのでfalseのままでOK */"
                 @requested_search="onSidebarRequestedSearch"
                 @updated_query="onSidebarUpdatedQuery"
-                @inited="onSidebarInited"
                 @request_open_focus_board="(board_name: string) => open_or_focus_board(board_name)"
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
@@ -315,7 +314,6 @@ const {
     navigate_to_page,
     onSidebarRequestedSearch,
     onSidebarUpdatedQuery,
-    onSidebarInited,
     onColumnScrollList,
     onColumnClickedListView,
     onColumnClickedKyou,
