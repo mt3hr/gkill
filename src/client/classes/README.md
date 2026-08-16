@@ -90,9 +90,9 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | ファイル | 対応ページ |
 |---------|-----------|
 | `use-login-page.ts` / `use-login-view.ts` | ログインページ |
-| `use-kftl-page.ts` / `use-kftl-view.ts` | KFTL エディタ。`use-kftl-view.ts` はタブのホストも兼ねる（送信対象タブは `do_submit()` の引数で渡す。確認ダイアログの往復中も誤配送しないため） |
+| `use-kftl-page.ts` / `use-kftl-view.ts` | KFTL エディタ。`use-kftl-view.ts` はタブのホストも兼ねる（送信対象タブは `do_submit()` の引数で渡す。確認ダイアログの往復中も誤配送しないため）。保存マーカーの自動送信の入口は textarea の `@input` とテンプレート貼り付けの2つで、テンプレートは watch の印に相乗りせず直接判定を呼ぶ |
 | `use-kftl-dialog-host.ts` | メモ帳ダイアログの一覧（開いているウィンドウ）。スロット番号は空いている最小のものを払い出す ―― `useFloatingDialog` の保存キーとカスケード量がこれで決まる。上限8枚 |
-| `use-kftl-tabs.ts` | KFTL のタブを持つ**共有シングルトン**ストア。`/mkfl` ではインラインの KFTLView と plaing 側のメモ帳ダイアログが同時にマウントされるので、インスタンスごとに配列を持つと片方の古い配列でもう片方のタブが消える。独立した `effectScope(true)` で作る（setup 直下に watch を張ると最初のコンポーネントの unmount で永続化が止まる） |
+| `use-kftl-tabs.ts` | KFTL のタブを持つ**共有シングルトン**ストア。`/mkfl` ではインラインの KFTLView と plaing 側のメモ帳ダイアログが同時にマウントされるので、インスタンスごとに配列を持つと片方の古い配列でもう片方のタブが消える。独立した `effectScope(true)` で作る（setup 直下に watch を張ると最初のコンポーネントの unmount で永続化が止まる）。送信中のタブ id の排他（`try_begin_submit` / `end_submit`）もここが持つ ―― 送信中フラグはビューごとなので、ウィンドウをまたいだ二重送信を止められるのはここだけ |
 | `use-mi-page.ts` | Mi ページ |
 | `use-kyou-page.ts` | Kyou ページ |
 | `use-rykv-page.ts` / `use-rykv-view.ts` | Rykv ページ |

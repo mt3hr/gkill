@@ -486,6 +486,15 @@ stateDiagram-v2
 実質ノーガードだった（`use-kftl-view.ts` の `do_submit`）。なお KFTL だけは初期値が `true` で、
 `application_config` の読み込みが終わるまで送信できない。
 
+さらに KFTL は**メモ帳ダイアログを複数枚開ける**ので、`is_requested_submit` がビューごとであることが
+そのまま穴になる ―― 2枚が同じタブを映していると、両方が別々の TXID で commit して同じ記録が
+2セット登録されうる。そこで送信中のタブ id は共有ストア（`use-kftl-tabs.ts`）が持ち、`do_submit` は
+`try_begin_submit(target_tab_id)` で掴めたときだけ進み、`finally` で `end_submit` する。
+掴む位置には制約があり、**`is_requested_submit` のガードより後、かつ `try` の外**でなければならない
+（前だとガードの return が `finally` を通らず永久ロック、`try` の中だと掴めなかった側の `finally` が
+勝った側の分を解放してしまう）。タグ確認・板名確認で抜けるときは手放し、確認からの再入で取り直す
+（持ち越すと再入で自己デッドロックする）。
+
 タブのロックは `is_requested_submit` **ではなく** `is_submitting || show_confirm_unknown_tag_dialog`
 で判定する。`is_requested_submit` は設定の読み込みが終わるまで `true` なので、これを鍵にすると
 起動直後にタブを追加できない。板名確認（`unknown_mi_boards`）はブラウザバックで閉じても空に

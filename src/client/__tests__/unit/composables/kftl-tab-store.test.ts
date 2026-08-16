@@ -129,6 +129,55 @@ describe('useKftlTabs', () => {
         expect(store.has_content()).toBe(true)
     })
 
+    // is_requested_submit はビューごとなので、同じタブを映している別ウィンドウの保存は
+    // 止められない。KFTLはtxで束ねて送るため、二重送信するとKyouが丸ごと重複登録される
+    test('送信中のタブは1つのウィンドウしか掴めない', () => {
+        const store = useKftlTabs()
+        const tab_id = store.last_active_tab_id.value
+
+        expect(store.try_begin_submit(tab_id)).toBe(true)
+        expect(store.try_begin_submit(tab_id), '2枚目も掴めてしまった').toBe(false)
+    })
+
+    test('別のタブなら同時に掴める', () => {
+        const store = useKftlTabs()
+        const first_tab_id = store.last_active_tab_id.value
+        const second_tab_id = store.add_tab('別のタブ')
+
+        expect(store.try_begin_submit(first_tab_id)).toBe(true)
+        expect(store.try_begin_submit(second_tab_id)).toBe(true)
+    })
+
+    // 確認ダイアログで抜けるときも finally で手放し、確認からの再入で取り直す。
+    // 持ち越すと再入で自己デッドロックする
+    test('end_submit で解放され、掴み直せる（冪等）', () => {
+        const store = useKftlTabs()
+        const tab_id = store.last_active_tab_id.value
+
+        expect(store.try_begin_submit(tab_id)).toBe(true)
+        store.end_submit(tab_id)
+        expect(store.try_begin_submit(tab_id)).toBe(true)
+
+        store.end_submit(tab_id)
+        expect(() => store.end_submit(tab_id), '二重解放で落ちた').not.toThrow()
+        expect(() => store.end_submit('no-such-tab')).not.toThrow()
+    })
+
+    // 永続化すると、リロードで掴んだままのタブが二度と保存できなくなる
+    test('送信中の印は localStorage に出ない', async () => {
+        const store = useKftlTabs()
+        const tab_id = store.last_active_tab_id.value
+        store.set_tab_content(tab_id, 'メモ')
+        await nextTick()
+        const before = localStorage.getItem(KFTL_TABS_STORAGE_KEY)
+
+        store.try_begin_submit(tab_id)
+        await nextTick()
+
+        expect(localStorage.getItem(KFTL_TABS_STORAGE_KEY)).toBe(before)
+        expect(JSON.stringify(saved_tabs())).not.toContain('submitting')
+    })
+
     // プライベートモード等では localStorage が throw する。setup 中に落ちると KFTLView ごと死ぬ
     test('localStorage が使えない環境でも落ちない', async () => {
         vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('denied') })
