@@ -6,8 +6,10 @@
       :class="ui.isTransparent.value ? 'is-transparent' : ''">
       <div class="gkill-floating-dialog__header pa-0 ma-0" @mousedown="ui.onHeaderPointerDown"
         @touchstart="ui.onHeaderPointerDown">
-        <!-- 複数枚開けるので、空のままだと aria-label が "kftl dialog" にフォールバックして見分けられない -->
-        <div class="gkill-floating-dialog__title">{{ i18n.global.t('KFTL_APP_NAME') }}</div>
+        <!-- タイトルは出さない（他のフローティングダイアログと揃える）。
+             空にすると aria-label は useFloatingDialog のキーへフォールバックするので、
+             複数枚でも "kftl dialog" / "kftl dialog 2" … と区別は付く -->
+        <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
   <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />

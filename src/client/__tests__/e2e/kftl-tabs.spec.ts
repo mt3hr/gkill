@@ -148,6 +148,29 @@ test.describe('KFTL Tabs', () => {
     await expect(textarea).toHaveValue(keep)
   })
 
+  // 保存マーカー（「！」だけの行）で終わる本文を打つと、保存ボタンを押さなくても送信される。
+  //
+  // マーカーの部分は `fill()` ではなく実際の打鍵で入れること。`fill()` の合成 input は
+  // Vue の v-model 側だけが先に走り、`@input`（＝自動送信の印を立てる onTextAreaInput）が
+  // watch より後に着地するので、利用者の打鍵を再現できない
+  test('保存マーカーで終わる本文を打つと自動で保存される', async ({ page }) => {
+    await openKftl(page)
+
+    const keep = makeUniqueLabel('marker_keep')
+    const textarea = page.locator(TEXT_AREA)
+    await textarea.fill(keep)
+    await expect(textarea).toHaveValue(keep)
+
+    await addTab(page)
+    await textarea.fill(makeUniqueLabel('marker_saved'))
+    await textarea.press('End')
+    await textarea.pressSequentially('\n！\n')
+
+    // 保存ボタンは押していないが、保存できたタブは閉じる
+    await expect(page.locator(TAB)).toHaveCount(1)
+    await expect(textarea).toHaveValue(keep)
+  })
+
   test('リロードしてもタブが復元される', async ({ page }) => {
     await openKftl(page)
     const first = makeUniqueLabel('reload_first')

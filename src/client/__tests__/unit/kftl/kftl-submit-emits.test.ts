@@ -131,6 +131,21 @@ async function submit_text(view: ReturnType<typeof useKftlView>, text: string): 
     await view.confirm_mi_board_submit()
 }
 
+/** テンプレートの葉。paste_template に渡す */
+function make_template(template: string, title: string = '買い物') {
+    return {
+        name: 'template_name',
+        id: 'template_id',
+        title: title,
+        template: template,
+        children: null,
+        key: '',
+        is_checked: false,
+        indeterminate: false,
+        is_dir: false,
+    }
+}
+
 describe('KFTL送信後のイベント', () => {
     test('作ったKyouの件数だけ registered_kyou を上げる', async () => {
         const log: CallLog = { calls: [] }
@@ -326,22 +341,53 @@ describe('KFTLのタブ', () => {
         const first_tab_id = view.active_tab_id.value
         tabs.set_tab_content(first_tab_id, '書きかけ')
 
-        view.paste_template({
-            name: 'template_name',
-            id: 'template_id',
-            title: '買い物',
-            template: 'ーみ\n買い物',
-            children: null,
-            key: '',
-            is_checked: false,
-            indeterminate: false,
-            is_dir: false,
-        })
+        view.paste_template(make_template('ーみ\n買い物'))
 
         expect(tabs.tabs.value.length).toBe(2)
         expect(tabs.get_tab_content(first_tab_id), '書きかけが上書きされている').toBe('書きかけ')
         expect(view.text_area_content.value).toBe('ーみ\n買い物')
         expect(view.tab_label(tabs.tabs.value[1], 1)).toBe('買い物')
+    })
+
+    // テンプレートは textarea の @input を起こさないので、保存マーカーの自動送信を
+    // watch の印（user_input_tab_id）だけに任せると発火しない
+    test('保存マーカーで終わるテンプレートを選ぶと保存が走る', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+        const tabs = useKftlTabs()
+
+        await view.paste_template(make_template('メモ\n！\n'))
+        await flush_microtasks()
+
+        expect(log.calls).toContain('add_kmemo')
+        expect(log.calls).toContain('commit_tx')
+        expect(tabs.tabs.value.length, '保存できたタブが閉じていない').toBe(1)
+    })
+
+    test('保存マーカーが無いテンプレートでは保存しない', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+        const tabs = useKftlTabs()
+
+        await view.paste_template(make_template('ーみ\n買い物'))
+        await flush_microtasks()
+
+        expect(log.calls).not.toContain('add_kmemo')
+        expect(tabs.tabs.value.length).toBe(2)
+    })
+
+    // 判定を watch 経由に戻すと、watch の `new_value === old_value` 早期returnで
+    // ここだけが黙って落ちる。差し戻しによる静かな再発を止めるための見張り
+    test('貼る前のタブの本文がテンプレートと同じでも保存が走る', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+        const tabs = useKftlTabs()
+        tabs.set_tab_content(view.active_tab_id.value, 'メモ\n！\n')
+
+        await view.paste_template(make_template('メモ\n！\n'))
+        await flush_microtasks()
+
+        expect(log.calls.filter(call => call === 'add_kmemo').length).toBe(1)
     })
 })
 
@@ -393,5 +439,44 @@ describe('KFTLを複数のウィンドウで開く', () => {
         expect(tabs.tabs.value.map(tab => tab.id)).toEqual([first_tab_id])
         expect(second_window.view.active_tab_id.value, 'タブが宙に浮いた').toBe(first_tab_id)
         expect(second_window.view.text_area_content.value).toBe('')
+    })
+
+    // テンプレートは毎回一意な新しいタブを作り、それをアクティブにするのは貼ったウィンドウだけ。
+    // 1回の選択で開いている枚数ぶん保存されることは構造的に起きない
+    test('テンプレートを貼っても、もう1枚のウィンドウは送信しない', async () => {
+        const log: CallLog = { calls: [] }
+        const api = make_api(log)
+        const first_window = mount_view(api)
+        const second_window = mount_view(api)
+
+        const second_tab_id = second_window.view.active_tab_id.value
+
+        await first_window.view.paste_template(make_template('メモ\n！\n'))
+        await flush_microtasks()
+
+        expect(log.calls.filter(call => call === 'add_kmemo').length).toBe(1)
+        expect(second_window.view.active_tab_id.value, '別のウィンドウまで貼り先へ移った').toBe(second_tab_id)
+    })
+
+    // is_requested_submit はビューごとなので、これだけではウィンドウをまたいだ二重送信を防げない。
+    // KFTLはtxで束ねて送るので、二重送信するとKyouが丸ごと重複登録される
+    test('同じタブを2枚のウィンドウが同時に保存しても登録は1回', async () => {
+        const log: CallLog = { calls: [] }
+        const api = make_api(log)
+        const first_window = mount_view(api)
+        const second_window = mount_view(api)
+
+        expect(second_window.view.active_tab_id.value, '前提: 2枚が同じタブを映している')
+            .toBe(first_window.view.active_tab_id.value)
+        first_window.view.text_area_content.value = 'メモ'
+
+        await Promise.all([
+            first_window.view.submit(),
+            second_window.view.submit(),
+        ])
+        await flush_microtasks()
+
+        expect(log.calls.filter(call => call === 'add_kmemo').length).toBe(1)
+        expect(log.calls.filter(call => call === 'commit_tx').length).toBe(1)
     })
 })

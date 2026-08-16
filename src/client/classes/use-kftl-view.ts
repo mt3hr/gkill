@@ -183,9 +183,12 @@ export function useKftlView(options: {
     /**
      * 保存マーカーによる自動送信を「利用者が打ったとき」だけに限るための印。
      *
-     * この判定を watch に置くと、タブ切替・localStorage からの復元・テンプレート貼り付けでも
+     * この判定を watch の内容変化そのものに戻すと、タブ切替・localStorage からの復元でも
      * `text_area_content` が変わるので発火してしまい、末尾にマーカーが残ったタブを
-     * クリックしただけで保存が走る（設定の読み込み前はマーカー付きのまま保存されうる）
+     * クリックしただけで保存が走る（設定の読み込み前はマーカー付きのまま保存されうる）。
+     *
+     * 立てるのは `onTextAreaInput()` **だけ**。テンプレート貼り付けはこの印に相乗りさせず、
+     * `paste_template` から `maybe_submit_by_save_marker()` を直接呼ぶ（理由はそちらのコメント）
      */
     let user_input_tab_id: string | null = null
 
@@ -201,7 +204,7 @@ export function useKftlView(options: {
         await refresh_invalid_lines()
 
         if (input_tab_id !== null && input_tab_id === active_tab_id.value) {
-            maybe_submit_by_save_marker()
+            await maybe_submit_by_save_marker()
         }
     }, { flush: 'post' })
 
@@ -475,14 +478,20 @@ export function useKftlView(options: {
         user_input_tab_id = active_tab_id.value
     }
 
-    function maybe_submit_by_save_marker(): void {
+    /**
+     * 保存マーカーで終わっていれば送信する。
+     *
+     * 入口は「textarea の `@input` 起点の watch」と「テンプレート貼り付け」の2つだけ。
+     * 判定そのものはここ1箇所に閉じている
+     */
+    async function maybe_submit_by_save_marker(): Promise<void> {
         if (is_requested_submit.value) {
             return
         }
         const content = text_area_content.value
         if (content.endsWith("\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n")
             || content.endsWith("\n" + KFTL_ASCII_SAVE_CHARACTOR + "\n")) {
-            submit()
+            await submit()
         }
     }
 
@@ -547,6 +556,17 @@ export function useKftlView(options: {
     //   以前は保存マーカー検出経路でしか立てておらず、保存ボタン経由では実質ノーガードだった）
     async function do_submit(target_tab_id: string, skip_unknown_tag_check: boolean, skip_unknown_mi_board_check: boolean): Promise<void> {
         if (is_requested_submit.value) {
+            return
+        }
+        // 同じタブを映しているもう1枚のウィンドウが送信中なら見送る。
+        // フラグはビューごとなので、ウィンドウをまたいだ排他は共有ストアにしか置けない。
+        //
+        // 掴む位置を間違えると壊れる:
+        //   - `is_requested_submit` のガードより前に掴むと、上の return が finally を通らず
+        //     掴んだままになり、そのタブが全ウィンドウで永久に保存できなくなる
+        //   - try の中で掴むと、掴めなかった側も finally を通るので
+        //     **勝ったウィンドウの分を解放**してしまい、排他が無意味になる
+        if (!tabs_store.try_begin_submit(target_tab_id)) {
             return
         }
         const get_submitting_content = () => tabs_store.get_tab_content(target_tab_id)
@@ -650,6 +670,13 @@ export function useKftlView(options: {
             is_submitting.value = false
             await emit_saved_kyous(result_kyou_ids)
         } finally {
+            // 解放点はここ1箇所だけ。タグ確認・板名確認で抜ける return もここを通るので
+            // 確認待ちの間は手放され、confirm_submit / confirm_mi_board_submit からの
+            // 再入で取り直す（**持ち越すと再入で自己デッドロックする**）。
+            // 確認が開いている隙に別ウィンドウが同じタブを送れるが、そのときは本文から
+            // 保存マーカーが除去済みで、後続の確認は消えたタブを対象にするため
+            // get_tab_content が "" を返してリクエスト0件で無害に終わる
+            tabs_store.end_submit(target_tab_id)
             is_requested_submit.value = false
             is_submitting.value = false
         }
@@ -712,13 +739,22 @@ export function useKftlView(options: {
      * テンプレートは上書きではなく新しいタブで開く。
      * 表示名は kftl-template-view.vue のボタンに出ている `title` を使う
      */
-    function paste_template(template: KFTLTemplateElementData): void {
+    function paste_template(template: KFTLTemplateElementData): Promise<void> {
         capture_editor_view_state()
         const template_name = template.title !== "" ? template.title
             : (template.name !== "" ? template.name : null)
         active_tab_id.value = tabs_store.add_tab(template.template as string, template_name)
         kftl_template_dialog.value?.hide()
         focus_active_tab_editor()
+        // テンプレート選択は利用者の明示的な操作なので、保存マーカーで終わっていればそのまま送信する。
+        //
+        // `user_input_tab_id` を立てて watch に任せてはいけない ―― watch は
+        // `new_value === old_value` で早期returnするので、貼る前のタブの本文が
+        // テンプレートと同一文字列だと黙って発火しない（タブ化する前も同じ理由で取りこぼしていた）。
+        // また watch は flush: 'post' かつ await を挟むので、判定までにタブを切り替えられると
+        // 「印のタブ == アクティブタブ」が偽になって、これも黙って発火しない。
+        // ここは add_tab / active_tab_id 代入が同期で済んでいるので、直接呼べば窓が開かない
+        return maybe_submit_by_save_marker()
     }
 
     async function focus_kftl_text_area(): Promise<void> {
