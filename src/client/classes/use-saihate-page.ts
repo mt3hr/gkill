@@ -4,10 +4,13 @@ import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
-import type { GkillError } from '@/classes/api/gkill-error'
+import { GkillError } from '@/classes/api/gkill-error'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { useTheme } from 'vuetify'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { parse_bool_loose } from '@/classes/service-worker-utils'
+import { find_share_ledger_entry_by_id, force_save_shared_payload, type ShareLedgerEntry } from '@/classes/share-target-dedup'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import { useRoute } from 'vue-router'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
@@ -35,6 +38,7 @@ export function useSaihatePage() {
     const mkfl_dialog = ref<ComponentRef | null>(null)
     const upload_file_dialog = ref<ComponentRef | null>(null)
     const confirm_logout_dialog = ref<ComponentRef | null>(null)
+    const confirm_save_duplicated_shared_data_dialog = ref<ComponentRef | null>(null)
     const saihate_root = ref<HTMLElement | null>(null)
 
     // ── State refs ──
@@ -50,6 +54,8 @@ export function useSaihatePage() {
     const app_content_height: Ref<number> = ref(0)
     const app_content_width: Ref<number> = ref(0)
 
+    /** 重複と判定された共有。確認ダイアログに中身と保存済み時刻を出すために持つ */
+    const duplicated_shared_entry: Ref<ShareLedgerEntry | null> = ref(null)
 
     const is_loading = ref(true)
 
@@ -92,17 +98,9 @@ export function useSaihatePage() {
 
     async function show_dialog(): Promise<void> {
         const dialog = new URL(location.href).searchParams.get('dialog')
-        const is_saved = new URL(location.href).searchParams.get('is_saved')
-        if (is_saved && parse_bool_loose(is_saved)) {
-            const message = new GkillMessage()
-            message.message = i18n.global.t("SAVED_MESSAGE")
-            message.message_code = GkillMessageCodes.saved_shared_data
-            write_messages([message])
-
-            await sleep(2500)
-            await reset_dialog_history()
-            await router.replace('/saihate')
-            window.close()
+        if (await handle_shared_data()) {
+            // 共有由来のURLに ?dialog= は付かない。以降の追加ダイアログは開かない
+            return
         }
         switch (dialog) {
             case 'kc':
@@ -135,6 +133,102 @@ export function useSaihatePage() {
             default:
                 break
         }
+    }
+
+    // ── Android共有の受け取り ──
+
+    /**
+     * 共有由来のクエリを処理する。共有由来だったら true。
+     * ServiceWorker が保存まで済ませたうえで /saihate?is_saved=... へ 303 で送ってくる。
+     * 重複と判定された共有は保存されておらず ?share_result=duplicate で送られてくるので、
+     * 保存し直すかをここで選ばせる（再配送と意図的な再共有は内容から見分けられないため）。
+     */
+    async function handle_shared_data(): Promise<boolean> {
+        const search_params = new URL(location.href).searchParams
+        const is_saved = search_params.get('is_saved')
+        const share_result = search_params.get('share_result')
+        const share_entry_id = search_params.get('share_entry_id')
+        if (is_saved === null && share_result === null) {
+            return false
+        }
+
+        // 共有由来のクエリは真っ先に落とす。
+        // 残したままアプリ履歴から開き直されると「保存しました」がもう一度出て、
+        // 保存されていないのに二重保存されたように見える
+        await reset_dialog_history()
+        await router.replace('/saihate')
+
+        if (share_result === 'duplicate') {
+            const entry = share_entry_id ? await find_share_ledger_entry_by_id(share_entry_id) : null
+            if (!entry) {
+                // 台帳が消えていると保存し直す中身が無い。訊いても選べないので閉じる
+                await skip_duplicated_shared_data()
+                return true
+            }
+            duplicated_shared_entry.value = entry
+            confirm_save_duplicated_shared_data_dialog.value?.show()
+            return true
+        }
+
+        if (is_saved !== null && parse_bool_loose_or_false(is_saved)) {
+            await notify_saved_shared_data()
+            return true
+        }
+
+        // 保存できていない。黙って閉じると共有が失われたことに気づけないので閉じずに残す
+        notify_failed_save_shared_data()
+        return true
+    }
+
+    /** URLを手で書き換えられても投げないようにする。判定できない値は保存失敗として扱う */
+    function parse_bool_loose_or_false(value: string): boolean {
+        try {
+            return parse_bool_loose(value)
+        } catch {
+            return false
+        }
+    }
+
+    async function notify_saved_shared_data(): Promise<void> {
+        const message = new GkillMessage()
+        message.message = i18n.global.t("SAVED_MESSAGE")
+        message.message_code = GkillMessageCodes.saved_shared_data
+        write_messages([message])
+
+        await sleep(2500)
+        window.close()
+    }
+
+    function notify_failed_save_shared_data(): void {
+        const error = new GkillError()
+        error.error_code = GkillErrorCodes.failed_save_shared_data
+        error.error_message = i18n.global.t("FAILED_SAVE_MESSAGE")
+        error.show_keep = true
+        write_errors([error])
+    }
+
+    /** 重複を承知で保存し直す。保存はServiceWorkerの共有ハンドラを通す（実装を2つに割らない） */
+    async function save_duplicated_shared_data(): Promise<void> {
+        const entry = duplicated_shared_entry.value
+        if (!entry) {
+            notify_failed_save_shared_data()
+            return
+        }
+        if (await force_save_shared_payload(entry.payload)) {
+            await notify_saved_shared_data()
+            return
+        }
+        notify_failed_save_shared_data()
+    }
+
+    async function skip_duplicated_shared_data(): Promise<void> {
+        const message = new GkillMessage()
+        message.message = i18n.global.t("SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE")
+        message.message_code = GkillMessageCodes.skipped_duplicated_shared_data
+        write_messages([message])
+
+        await sleep(2500)
+        window.close()
     }
 
     async function load_application_config(): Promise<void> {
@@ -317,17 +411,6 @@ export function useSaihatePage() {
         confirm_logout_dialog.value?.show(close_database)
     }
 
-    function parse_bool_loose(value: unknown): boolean {
-        if (typeof value === "boolean") return value
-        if (typeof value === "number") return value !== 0
-        if (typeof value === "string") {
-            const v = value.trim().toLowerCase()
-            if (["true", "1", "yes", "y"].includes(v)) return true
-            if (["false", "0", "no", "n"].includes(v)) return false
-        }
-        throw new SyntaxError(`Boolean expected, got ${JSON.stringify(value)}`)
-    }
-
     async function reload_repositories(clear_file_caches: boolean): Promise<void> {
         const requested_reload_message = new GkillMessage()
         requested_reload_message.message = i18n.global.t("REQUESTED_RELOAD_TITLE")
@@ -408,6 +491,7 @@ export function useSaihatePage() {
         mkfl_dialog,
         upload_file_dialog,
         confirm_logout_dialog,
+        confirm_save_duplicated_shared_data_dialog,
 
         // State
         enable_context_menu,
@@ -420,6 +504,7 @@ export function useSaihatePage() {
         app_content_width,
         is_loading,
         messages,
+        duplicated_shared_entry,
 
         // Methods
         write_errors,
@@ -438,6 +523,10 @@ export function useSaihatePage() {
         show_lantana_dialog,
         show_upload_file_dialog,
         show_confirm_logout_dialog,
+
+        // Android共有の受け取り
+        save_duplicated_shared_data,
+        skip_duplicated_shared_data,
 
         // Reload
         reload_repositories,

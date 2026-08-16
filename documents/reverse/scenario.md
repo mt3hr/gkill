@@ -283,14 +283,25 @@ sequenceDiagram
 
     User->>OS: ページを「gkill へ共有」
     OS->>SW: POST /share-target<br>(url / text / title)
-    alt URL を含む
-        SW->>API: POST /api/add_urlog
-    else テキストのみ
-        SW->>API: POST /api/add_kmemo
+    SW->>SW: 重複台帳を照会<br>(gkill-share-dedup-cache)
+    alt 24時間以内に同じ内容を保存済み
+        SW-->>Saihate: /saihate?share_result=duplicate へリダイレクト
+        Saihate-->>User: 「それでも保存する」か確認
+    else 未保存
+        alt URL を含む
+            SW->>API: POST /api/add_urlog
+        else テキストのみ
+            SW->>API: POST /api/add_kmemo
+        end
+        API-->>SW: {AddedKyou, messages}
+        SW->>SW: 保存成功なら台帳へ追記
+        SW-->>User: /saihate?is_saved=... へリダイレクト
     end
-    API-->>SW: {AddedKyou, messages}
-    SW-->>User: /saihate?is_saved=... へリダイレクト
 ```
+
+> Android はタスク（アプリ履歴）から復帰すると同じ共有インテントを再配送し、初回とまったく同じ POST が
+> もう一度届く。台帳が無いと素直に2件目を保存してしまうため、内容の完全一致で照会してから保存する。
+> 詳細は `frontend-architecture.md` の「Web Share Target」を参照。
 
 ## シナリオ4. 検索・振り返り（rykv）
 

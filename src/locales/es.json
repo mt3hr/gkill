@@ -904,5 +904,9 @@
     "EDIT_SAVED_FIND_QUERY_QUERY_TITLE": "Editar condición de búsqueda",
     "SAVED_FIND_QUERY_NAME_LABEL": "Nombre",
     "SAVED_FIND_QUERY_DEFAULT_NAME": "Nueva condición de búsqueda",
-    "OPEN_SAVED_FIND_QUERY_LIST_TITLE": "Condiciones de búsqueda guardadas"
+    "OPEN_SAVED_FIND_QUERY_LIST_TITLE": "Condiciones de búsqueda guardadas",
+    "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_TITLE": "El contenido compartido está duplicado",
+    "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_MESSAGE": "El mismo contenido ya se ha guardado. ¿Guardarlo de nuevo?",
+    "SAVE_ANYWAY_TITLE": "Guardar de todos modos",
+    "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "No se guardó por estar duplicado"
 }

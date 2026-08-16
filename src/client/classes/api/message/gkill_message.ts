@@ -22,5 +22,6 @@ export enum GkillMessageCodes {
     requested_reload = "MSG9000021",
     start_export_kyous = "MSG9000022",
     finish_export_kyous = "MSG9000023",
-    copied_kyou_content = "MSG9000024"
+    copied_kyou_content = "MSG9000024",
+    skipped_duplicated_shared_data = "MSG9000025"
 }
