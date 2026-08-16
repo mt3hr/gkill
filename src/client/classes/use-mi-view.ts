@@ -25,6 +25,7 @@ import { useRegisteredKyouLocalInsert } from '@/classes/use-registered-kyou-loca
 import { apply_mi_projection, insert_kyou_sorted } from '@/classes/kyou-local-insert'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ComponentRef } from '@/classes/component-ref'
+import { MI_ALL_BOARD_KEY } from '@/classes/mi-board-names'
 
 // ドラッグ&ドロップで受け取ったJSONからMiに写してよいフィールド。
 // 内容は Mi.clone() が複製しているフィールドと同じ
@@ -674,8 +675,9 @@ export function useMiView(options: {
     }
 
     function open_or_focus_board(board_name: string): void {
-        // 「すべて」の番兵はサイドバーのgenerate_queryが比較に使うキーと揃える
-        const all_board_sentinel = i18n.global.t("MI_ALL_BOARD_NAME_TITLE")
+        // 「すべて」の番兵はサイドバーのgenerate_queryが比較に使うキーと揃える。
+        // ロケール非依存の MI_ALL_BOARD_KEY（＝ツリーのノードが持つkey）であること
+        const all_board_sentinel = MI_ALL_BOARD_KEY
         if (board_name === "") {
             board_name = all_board_sentinel
         }

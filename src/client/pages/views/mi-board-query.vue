@@ -5,7 +5,7 @@
             <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                 :is_open="true" :struct_obj="mi_board_struct" :is_editable="false" :is_root="true"
                 :is_show_checkbox="false"
-                @clicked_items="(event: MouseEvent, items: string[], check_state: CheckState, is_by_user: boolean) => { if (is_by_user && check_state === CheckState.checked) { items.forEach((board) => { board_name = board; emits('request_open_focus_board', board) }) } }"
+                @clicked_items="onClickedItems"
                 @requested_update_check_state="[]"
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
@@ -19,7 +19,6 @@ import type { MiBoardQueryEmits } from './mi-board-query-emits'
 import type { MiBoardQueryProps } from './mi-board-query-props'
 import { ref } from 'vue'
 import FoldableStruct from './foldable-struct.vue'
-import { CheckState } from './check-state'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { useMiBoardQuery } from '@/classes/use-mi-board-query'
@@ -31,9 +30,9 @@ const emits = defineEmits<MiBoardQueryEmits>()
 
 const {
     mi_board_struct,
-    board_name,
     use_board,
     get_board_name,
+    onClickedItems,
 } = useMiBoardQuery({ props, emits })
 
 defineExpose({ get_board_name })

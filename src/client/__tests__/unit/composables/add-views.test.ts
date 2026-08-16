@@ -115,6 +115,38 @@ describe('useAddMiView', () => {
     expect(props.gkill_api.get_mi_board_list).toHaveBeenCalled()
   })
 
+  // サーバの板一覧はマップ反復順で返るので、並び順は ApplicationConfig の板ツリーが正
+  test('板名は ApplicationConfig の設定順に並ぶ', async () => {
+    props.gkill_api.get_mi_board_list.mockResolvedValue({
+      boards: ['Work', 'Inbox'],
+      messages: [],
+      errors: [],
+    })
+    const view = useAddMiView({ props, emits })
+    await view.load_mi_board_names()
+    expect(view.mi_board_names.value).toStrictEqual(['Inbox', 'Work'])
+  })
+
+  test('設定に無い板はAPIの順のまま末尾へ', async () => {
+    props.gkill_api.get_mi_board_list.mockResolvedValue({
+      boards: ['新板B', 'Work', '新板A', 'Inbox'],
+      messages: [],
+      errors: [],
+    })
+    const view = useAddMiView({ props, emits })
+    await view.load_mi_board_names()
+    expect(view.mi_board_names.value).toStrictEqual(['Inbox', 'Work', '新板B', '新板A'])
+  })
+
+  // ＋ボタンで作った板はまだ板ツリーに無いので末尾に出るが、候補には必ず入る
+  test('update_board_name() で足した板が候補に入り選択される', async () => {
+    const view = useAddMiView({ props, emits })
+    await view.load_mi_board_names()
+    view.update_board_name('新しい板')
+    expect(view.mi_board_names.value).toStrictEqual(['Inbox', 'Work', '新しい板'])
+    expect(view.mi_board_name.value).toBe('新しい板')
+  })
+
   test('returns expected interface', () => {
     const view = useAddMiView({ props, emits })
     expect(view.mi_title).toBeDefined()
