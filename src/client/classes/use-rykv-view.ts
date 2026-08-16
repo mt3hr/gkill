@@ -465,7 +465,6 @@ export function useRykvView(options: {
                 match_kyous_list_top_list.value = props.gkill_api.get_saved_rykv_scroll_indexs()
 
                 // 前回開いていた列があれば復元する
-                skip_search_this_tick.value = true
                 const saved_querys = props.gkill_api.get_saved_rykv_find_kyou_querys()
                 default_query.value = sidebar.get_default_query()!.clone()
                 default_query.value.query_id = props.gkill_api.generate_uuid()
@@ -475,12 +474,45 @@ export function useRykvView(options: {
                     saved_querys.push(cloned_default_query)
                 }
 
+                // 列の骨組みを先に確定させる。hot reloadのON/OFFで分けずここで作る。
+                // 検索を投げながら1本ずつ足すと「列が確定した瞬間」が定義できず、
+                // 復元中にユーザが列を足したとき search(i, ...) の固定indexと衝突する。
+                // querys_backup も先に埋める(サイドバーの機械的な残響が
+                // search() の deep_equals 早期returnで落ちる)
+                querys.value = saved_querys.concat()
+                querys_backup.value = saved_querys.map(query => query.clone())
+                match_kyous_list.value = saved_querys.map(() => new Array<Kyou>())
+
+                // focused_queryの差し替えはサイドバーのprops同期を誘発するので抑止で包む。
+                // 初期化の間じゅう skip_search_this_tick を立てっぱなしにしてはいけない
+                // (機械的なemitが1つ届いただけで onSidebarUpdatedQuery が消費してしまい、
+                //  抑止が途中で解ける)。抑止はこのコールバック式だけを使う
+                run_with_sidebar_search_suppressed(() => {
+                    focused_column_index.value = 0
+                    focused_query.value = querys.value[0]
+                })
+                if (querys.value[0].calendar_start_date && querys.value[0].calendar_end_date) {
+                    gps_log_map_start_time.value = querys.value[0].calendar_start_date!
+                    gps_log_map_end_time.value = querys.value[0].calendar_end_date!
+                }
+
+                // ここで画面を見せる。初期検索の完了は待たない。
+                // 待つと検索が1本でも解決しないだけで画面全体が固まる。
+                // 進行は列ごとのスピナーとフッタの「取得中」で見せる
+                drawer_mode_is_mobile.value = !(props.app_content_width.valueOf() >= 760)
+                drawer.value = props.app_content_width.valueOf() >= 760
+                inited.value = true
+                is_loading.value = false
+
                 if (props.application_config.rykv_hot_reload) {
                     for (let i = 0; i < saved_querys.length; i++) {
                         await nextTick(() => {
-                            skip_search_this_tick.value = true
-                            wait_promises.push(search(i, saved_querys[i], true).then(async () => {
+                            // 復元は「位置を保つ再検索」。preserve_scrollを落とすと
+                            // search()がscroll_to(0)を撃って保存済みの復元先を潰す
+                            wait_promises.push(search(i, saved_querys[i], true, false, true).then(async () => {
                                 return nextTick(() => {
+                                    // 検索がエラーで早期returnしたときの保険。
+                                    // 正常系ではsearch()側が同じ位置へ戻している
                                     const kyou_list_view = get_kyou_list_view(saved_querys[i].query_id)
                                     kyou_list_view?.scroll_to(match_kyous_list_top_list.value[i] ?? 0)
                                     kyou_list_view?.set_loading(false)
@@ -488,33 +520,9 @@ export function useRykvView(options: {
                             }))
                         })
                     }
-                } else {
-                    querys.value = saved_querys.concat()
-                    // バックアップは複製で持つ。同一参照だと差分検知が機能しない
-                    querys_backup.value = saved_querys.map(query => query.clone())
-                    for (let i = 0; i < saved_querys.length; i++) {
-                        match_kyous_list.value.push([])
-                    }
                 }
             } finally {
-                Promise.all(wait_promises).then(async () => {
-                    focused_column_index.value = 0
-                    // サイドバーを列0の保存済み条件へ同期する。hot reload OFFではsearch()を
-                    // 通らずfocused_queryが初期値のままになり、検索ボタンがサイドバーの
-                    // 既定値から条件を組んで保存済み条件を上書きしてしまう
-                    if (querys.value[0]) {
-                        focused_query.value = querys.value[0]
-                    }
-                    if (querys.value[focused_column_index.value].calendar_start_date && querys.value[focused_column_index.value].calendar_end_date) {
-                        gps_log_map_start_time.value = querys.value[focused_column_index.value].calendar_start_date!
-                        gps_log_map_end_time.value = querys.value[focused_column_index.value].calendar_end_date!
-                    }
-
-                    inited.value = true
-                    drawer_mode_is_mobile.value = !(props.app_content_width.valueOf() >= 760)
-                    drawer.value = props.app_content_width.valueOf() >= 760
-                    is_loading.value = false
-                    skip_search_this_tick.value = false
+                Promise.all(wait_promises).then(() => {
                     is_restoring_columns.value = false
                 })
                 nextTick(() => {
@@ -661,9 +669,9 @@ export function useRykvView(options: {
                         }
                     }
                 }
-                if (inited.value) {
-                    skip_search_this_tick.value = false
-                }
+                // 抑止を倒すのは run_with_sidebar_search_suppressed の1tickが本筋。
+                // ここは「検索が終わったのに抑止が残っている」を掃除する保険
+                skip_search_this_tick.value = false
                 if (column_index === focused_column_index.value) {
                     reload_dnote_for_column(column_index)
                 }
@@ -822,9 +830,12 @@ export function useRykvView(options: {
     }
 
     function onSidebarUpdatedQuery(new_query: FindKyouQuery): void {
-        if (!inited.value) {
-            return
-        }
+        // 「初期化が終わるまで捨てる」ガードは置かない。初期検索の飛行中でも
+        // ユーザの編集は通してよく、むしろ通すのが正しい。復元検索とユーザ検索は
+        // 同じ query_id を共有するので、search() の abort_controllers が復元を中断し、
+        // search_seqs の世代照合が遅れて届いた復元結果を捨てる(=ユーザが勝つ)。
+        // サイドバーの機械的な残響は emits_current_query の値比較ガードと
+        // search() の deep_equals 早期returnで落ちる
         if (skip_search_this_tick.value || !props.application_config.rykv_hot_reload) {
             nextTick(() => skip_search_this_tick.value = false)
             return
@@ -843,10 +854,14 @@ export function useRykvView(options: {
     }
 
     function onColumnScrollList(index: number, scroll_top: number): void {
-        match_kyous_list_top_list.value[index] = scroll_top
-        if (inited.value) {
-            props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
+        // 検索中の列のスクロール通知は、リストを空にした副作用で届く機械的なもの。
+        // 取り込むと preserve_scroll の復元先が0で潰れ、そのまま保存位置にも焼き付く
+        const column_query = querys.value[index]
+        if (column_query && get_kyou_list_view(column_query.query_id)?.get_is_loading()) {
+            return
         }
+        match_kyous_list_top_list.value[index] = scroll_top
+        props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
     }
 
     function onColumnClickedListView(index: number): void {
