@@ -553,6 +553,7 @@
     "KFTL_NLOG_INVALID_AMOUNT_MESSAGE_TITLE": "El monto es inválido",
     "KFTL_NLOG_INVALID_RECORD_COUNT_MESSAGE_TITLE": "La cantidad de títulos y montos no coincide",
     "KFTL_NLOG_BLANK_SKIP_SAVE_MESSAGE_TITLE": "Se omitió el gasto sin contenido",
+    "KFTL_NLOG_META_INFO_MUST_BE_AFTER_AMOUNT_MESSAGE_TITLE": "Escriba las etiquetas y los textos de un gasto después de su línea de importe",
     "KFTL_NLOG_SHOP_NAME_TITLE": "Nombre de la tienda",
     "KFTL_NLOG_TITLE_TITLE": "Título",
     "KFTL_NLOG_NLOG_LABEL_TITLE": "Gasto",

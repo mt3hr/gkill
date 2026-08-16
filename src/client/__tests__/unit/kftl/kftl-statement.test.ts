@@ -218,3 +218,36 @@ describe('リポストタスクの行ラベルの先読み', () => {
     expect(labels.filter(label => label === tag_label)).toHaveLength(1)
   })
 })
+
+/**
+ * 支出の行ラベルの先読み。
+ * 支払い(品名と金額のペア)が繰り返す記法なので、先読みは「タイトル」と「金額」の交互で
+ * 埋まるのが正しい。ブロックに留まる行を足したせいで、書いてもいないタグが
+ * 上限(50行)ぶん並ばないことを固定する。
+ */
+describe('支出の行ラベルの先読み', () => {
+  function label_names(text: string): Array<string> {
+    return new KFTLStatement(text).generate_line_label_data(new TextAreaInfo()).map(label_data => label_data.label)
+  }
+
+  const tag_label = i18n.global.t('KFTL_TAG_LABEL_TITLE')
+  const title_label = i18n.global.t('KFTL_NLOG_TITLE_TITLE')
+  const amount_label = i18n.global.t('KFTL_NLOG_AMOUNT_LABEL_TITLE')
+
+  test('金額のあとの先読みに「タグ」が並ばない', () => {
+    const labels = label_names('ーん\nコンビニ\nおにぎり\n150\n')
+    expect(labels).not.toContain(tag_label)
+  })
+
+  test('先読みは「タイトル」と「金額」の交互のまま', () => {
+    const labels = label_names('ーん\nコンビニ\nおにぎり\n150\n')
+    const lookahead = labels.slice(4)
+    expect(lookahead.length).toBeGreaterThan(1)
+    expect(lookahead.every(label => label === title_label || label === amount_label)).toBe(true)
+  })
+
+  test('実際に書いたタグ行のラベルは「タグ」のまま', () => {
+    const labels = label_names('ーん\nコンビニ\nおにぎり\n150\n。食費\nお茶\n120\n')
+    expect(labels.filter(label => label === tag_label)).toHaveLength(1)
+  })
+})

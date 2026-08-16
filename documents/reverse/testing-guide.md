@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 867 | 106 | Go `testing` |
-| フロントエンド ユニット | 1726 | 147 | Vitest |
-| フロントエンド E2E | 231 | 42（+auth.setup.ts） | Playwright |
+| Go バックエンド | 881 | 107 | Go `testing` |
+| フロントエンド ユニット | 1753 | 148 | Vitest |
+| フロントエンド E2E | 232 | 42（+auth.setup.ts） | Playwright |
 | MCP サーバ | 724 | 20 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 123 | 9 | JUnit 4 + MockK |
-| **合計** | **3,683** | **326** | |
+| **合計** | **3,725** | **328** | |
 
 数え直すコマンド:
 
@@ -251,7 +251,7 @@ src/client/__tests__/
 │   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
 │   │   ├── find-kyou-query.test.ts   ← 検索クエリビルダー
 │   │   └── hydrate.test.ts           ← hydrate() / hydrate_all()（JSON→クラス詰め替え）
-│   ├── classes/                       ← ユーティリティ（39ファイル）
+│   ├── classes/                       ← ユーティリティ（40ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
