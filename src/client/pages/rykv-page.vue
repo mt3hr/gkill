@@ -3,6 +3,7 @@
         <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
             :is_shared_rykv_view="false" :share_title="''"
+            :application_config_load_failed="application_config_load_failed"
             v-on="rykvViewHandlers" />
         <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height" :app_content_width="app_content_width"
@@ -50,6 +51,7 @@ const {
     app_title_bar_height,
     gkill_api,
     application_config,
+    application_config_load_failed,
     app_content_height,
     app_content_width,
     is_show_application_config_dialog,

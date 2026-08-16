@@ -171,6 +171,9 @@ export function useDashboardPage(options?: {
     const is_loading = ref(true)
     // パネルのデータ取得が飛行中。表示制御には使わず、E2Eの準備完了信号にだけ使う
     const is_fetching = ref(false)
+    // 設定取得に失敗した。取得できないと is_loaded が立たず画面の初期化が走らないので、
+    // オーバーレイをスピナーからエラー表示＋再試行へ差し替えるために使う
+    const application_config_load_failed = ref(false)
 
     // 「操作してよい状態」をE2Eが決定論的に待つための信号。
     // 画面の表示/非表示には一切使わない(使うと取得完了を待たなくした意味がなくなる)
@@ -197,10 +200,15 @@ export function useDashboardPage(options?: {
         const loaded_raw_value = useRoute().query.loaded
         const loaded = loaded_raw_value && (loaded_raw_value == 'true')
         req.force_reget = !loaded
+        application_config_load_failed.value = false
         return gkill_api.value.get_application_config(req)
             .then(res => {
                 if (res.errors && res.errors.length != 0) {
                     write_errors(res.errors)
+                    // 設定が来ないと画面の初期化(is_loadedのwatch)が一度も走らない。
+                    // 黙って戻ると読み込み中オーバーレイのまま永久に固まるので、
+                    // 失敗を画面へ伝えて再試行できるようにする
+                    application_config_load_failed.value = true
                     return
                 }
                 const use_dark_theme = res.application_config.use_dark_theme
@@ -216,6 +224,12 @@ export function useDashboardPage(options?: {
                     write_messages(res.messages)
                     return
                 }
+            })
+            .catch((err: unknown) => {
+                // 通信例外もここで受ける。catchが無いと呼び出し元がawaitしていないぶん
+                // unhandled rejectionになり、やはり画面が固まったままになる
+                console.error(err)
+                application_config_load_failed.value = true
             })
     }
 
@@ -680,6 +694,7 @@ export function useDashboardPage(options?: {
         // State
         is_loading,
         is_fetching,
+        application_config_load_failed,
         actual_height,
         app_title_bar_height,
         gkill_api,
