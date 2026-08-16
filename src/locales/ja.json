@@ -904,5 +904,9 @@
     "EDIT_SAVED_FIND_QUERY_QUERY_TITLE": "検索条件を編集",
     "SAVED_FIND_QUERY_NAME_LABEL": "名前",
     "SAVED_FIND_QUERY_DEFAULT_NAME": "新しい検索条件",
-    "OPEN_SAVED_FIND_QUERY_LIST_TITLE": "保存済み検索条件"
+    "OPEN_SAVED_FIND_QUERY_LIST_TITLE": "保存済み検索条件",
+    "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_TITLE": "共有内容が重複しています",
+    "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_MESSAGE": "同じ内容が既に保存されています。もう一度保存しますか？",
+    "SAVE_ANYWAY_TITLE": "それでも保存する",
+    "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "重複のため保存しませんでした"
 }

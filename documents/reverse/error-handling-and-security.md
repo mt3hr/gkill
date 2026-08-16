@@ -415,6 +415,10 @@ Wear OS companion アプリの gkill サーバー接続は、デフォルトで�
 ### 3.3 Share Target エラーハンドリング
 
 `serviceWorker.ts` の share-target POST ハンドラを try-catch で囲み、例外発生時は `is_saved=false` でリダイレクト。
+保存 API の応答も `is_successful_gkill_response`（HTTP ok かつ `errors` 空）で検査し、失敗した共有は
+重複台帳へ載せない（載せると保存できていないのに次の共有が24時間弾かれる）。最果ては `is_saved=false` を
+`ERR900099 failed_save_shared_data` として `show_keep` 付きで表示し、画面を閉じない（黙って閉じると
+共有が失われたことに気づけないため）。
 
 ### 3.4 Service Worker のキャッシュエラー処理
 
@@ -430,7 +434,7 @@ Wear OS companion アプリの gkill サーバー接続は、デフォルトで�
 
 ### 3.6 クライアント側エラーコード（ERR9xxxxx）
 
-サーバの `ERR0xxxxx` とは別系統で、クライアントだけで発生するエラーに `ERR9xxxxx` を割り当てている。定義は `src/client/classes/api/message/gkill_error.ts` の `GkillErrorCodes` enum（`ERR900001`〜`ERR900098` の98件）。サーバには存在しないコードで、`received_errors` イベントに乗ってそのまま画面に出る。
+サーバの `ERR0xxxxx` とは別系統で、クライアントだけで発生するエラーに `ERR9xxxxx` を割り当てている。定義は `src/client/classes/api/message/gkill_error.ts` の `GkillErrorCodes` enum（`ERR900001`〜`ERR900099` の99件）。サーバには存在しないコードで、`received_errors` イベントに乗ってそのまま画面に出る。
 
 | コード | 名前 | 説明 |
 |---|---|---|

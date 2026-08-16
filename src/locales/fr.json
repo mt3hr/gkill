@@ -904,5 +904,9 @@
     "EDIT_SAVED_FIND_QUERY_QUERY_TITLE": "Modifier la condition de recherche",
     "SAVED_FIND_QUERY_NAME_LABEL": "Nom",
     "SAVED_FIND_QUERY_DEFAULT_NAME": "Nouvelle condition de recherche",
-    "OPEN_SAVED_FIND_QUERY_LIST_TITLE": "Conditions de recherche enregistrées"
+    "OPEN_SAVED_FIND_QUERY_LIST_TITLE": "Conditions de recherche enregistrées",
+    "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_TITLE": "Le contenu partagé est en double",
+    "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_MESSAGE": "Le même contenu a déjà été enregistré. L’enregistrer à nouveau ?",
+    "SAVE_ANYWAY_TITLE": "Enregistrer quand même",
+    "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "Non enregistré car en double"
 }

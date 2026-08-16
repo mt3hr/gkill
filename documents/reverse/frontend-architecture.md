@@ -154,7 +154,7 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 
 ### ダイアログ アクセシビリティ
 
-114ダイアログ中86件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
+115ダイアログ中90件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
 
 | 機能 | 説明 |
 |------|------|
@@ -292,16 +292,33 @@ Props/Emit のみで状態を持ち回すため、Kyou の CRUD イベントは 
   - キャッシュキー: `/cache/api/plugin_content_html/{kyou_id}`
 
 **SPAフォールバック:**
-- `/`、`/api/*`、`/files/*`、`/zip_cache/*`、`/resources/manual/*` 以外の全パスを `index.html` にフォールバック（`/resources/manual/*` はヘルプHTMLの実体なので除外）
+- `/`、`/api/*`、`/files/*`、`/zip_cache/*`、`/resources/manual/*`、`/share-target` 以外の全パスを `index.html` にフォールバック（`/resources/manual/*` はヘルプHTMLの実体なので除外、`/share-target` は専用ハンドラが `respondWith` する）
 - `/zip_cache/.*` パターンは Service Worker の denylist に追加されており、キャッシュされない
 
 ### Web Share Target
 
 Service Worker が `/share-target` POSTを処理：
-1. 共有されたテキストからURLを検出
-2. URL → URLog（ブックマーク）として保存
-3. テキストのみ → Kmemo（メモ）として保存
-4. 保存結果に応じて `/saihate?is_saved=true/false` にリダイレクト
+1. 重複台帳（後述）に同じ内容が期間内に残っていれば保存せず `/saihate?share_result=duplicate&share_entry_id=...` にリダイレクト
+2. 共有されたテキストからURLを検出（`decide_share_save_target`）
+3. URL → URLog（ブックマーク）として保存
+4. テキストのみ → Kmemo（メモ）として保存
+5. 保存に成功したときだけ台帳へ追記
+6. 保存結果に応じて `/saihate?is_saved=true/false` にリダイレクト
+
+**重複台帳（`src/client/classes/share-target-dedup.ts`）**
+
+Android はタスク（アプリ履歴）から復帰すると同じ共有インテントを再配送するため、初回とまったく同じ
+multipart POST がもう一度届く。届く内容が同一なので、再配送と「利用者が意図的にもう一度共有した」を
+区別する手段は「保存済みの内容を覚えておく」以外に無い。
+
+- 保管先: Cache Storage の `gkill-share-dedup-cache` / キー `/__gkill_share_dedup/ledger`（JSON配列1件）
+- 同一判定: `title` / `text` / `url` の3つが完全一致、かつ保存から24時間以内。台帳は直近100件まで
+- 台帳へ載せるのは保存が成功したときだけ（HTTP ok かつ `errors` 空を `is_successful_gkill_response` で確認）
+- 重複と判定された共有は保存されず、最果てが `confirm-save-duplicated-shared-data-dialog.vue` で
+  「それでも保存する」かを訊く。押されるとフォームに `gkill_force` を立てて同じ `/share-target` を叩き直し
+  （保存の実装を2つに割らないため）、応答は 303 ではなく `{ "is_saved": boolean }` の JSON で返る
+- 最果ては `is_saved` / `share_result` を読んだ直後にクエリを落とす。残すとアプリ履歴からの復帰で
+  「保存しました」が再表示され、保存していないのに二重保存に見える
 
 ### Push通知
 
