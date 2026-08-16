@@ -41,7 +41,8 @@ import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import {
   createColumnViewMockApi,
   makeColumnQuery,
-  makeViewApplicationConfig,
+  makeColumnViewProps,
+  finish_application_config_load,
   setupColumns,
   flushAsync,
 } from '../../helpers/rykv-mi-harness'
@@ -65,15 +66,12 @@ function makeBoardColumnQuery(query_id: string, board_name: string): FindKyouQue
 
 function createView(config_overrides: Record<string, unknown> = {}) {
   const { api, pending_get_kyous } = createColumnViewMockApi()
-  const props = {
-    gkill_api: api,
-    application_config: makeViewApplicationConfig(config_overrides),
-    app_title_bar_height: 50,
-    app_content_height: 600,
-    app_content_width: 800,
-  } as unknown as MiViewProps
+  const raw_props = makeColumnViewProps(api, config_overrides)
+  const props = raw_props as unknown as MiViewProps
   const view = useMiView({ props, emits: noop_emits })
-  return { api, pending_get_kyous, view }
+  // init() は application_config.is_loaded の watch で起動する
+  const start_init = () => finish_application_config_load(raw_props)
+  return { api, pending_get_kyous, view, start_init }
 }
 
 describe('useMiView 列(板)×検索ルーティング', () => {
@@ -203,12 +201,12 @@ describe('useMiView 列(板)×検索ルーティング', () => {
   test('init(hot reload OFF)後、focused_queryが列0の保存済み条件に同期される', async () => {
     // 同期しないと検索ボタンがサイドバーの既定値から条件を組み、保存済み条件を上書きする
     // (miでは板絞り込みの列が「すべて」列へ化ける)
-    const { api, view } = createView({ rykv_hot_reload: false })
+    const { api, view, start_init } = createView({ rykv_hot_reload: false })
     const saved = makeBoardColumnQuery('saved-col', 'saved-board')
     api.get_saved_mi_find_kyou_querys.mockReturnValue([saved])
     view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
 
-    view.onSidebarInited()
+    start_init()
     await flushAsync()
 
     expect(view.inited.value).toBe(true)

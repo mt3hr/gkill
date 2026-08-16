@@ -160,6 +160,29 @@ export function useRykvView(options: {
         }
     })
 
+    // ── Init trigger ──
+    // ApplicationConfig が来たことが初期化の唯一の前提条件なので、それを直接待つ。
+    // 以前はサイドバーの @inited を起動条件にしていたが、あれは子ビューの
+    // 「その節が描けた」の集約でしかない。設定の到着を表していたのは
+    // 「immediateの付いていない application_config watch から emit する子がいる」
+    // という偶然で、mi では実質 CalendarQuery 1つが律速していた(しかもその節は
+    // application_config のフィールドを1つも読まない)。
+    // immediate は「setup時点で既にロード済み」の将来ケースへの保険
+    watch(() => props.application_config.is_loaded, (is_loaded: boolean) => {
+        if (!is_loaded) {
+            return
+        }
+        if (props.is_shared_rykv_view) {
+            // 共有画面は下の Shared view init が別途初期化する
+            return
+        }
+        if (received_init_request.value) {
+            return
+        }
+        received_init_request.value = true
+        init()
+    }, { immediate: true })
+
     // ── Shared view init ──
     if (props.is_shared_rykv_view) {
         nextTick(async () => {
@@ -425,6 +448,17 @@ export function useRykvView(options: {
         // もう一度呼ばれたときに二重初期化できてしまう
         is_restoring_columns.value = true
         return nextTick(async () => {
+            // 起動条件がサイドバー自身の @inited ではなくなったので、テンプレートrefが
+            // 埋まっていることを型の上では当てにできない。既定クエリはApplicationConfig
+            // 由来なので、空のFindKyouQueryへフォールバックすると既定期間も強制非表示
+            // タグも落ちた列ができる(しかもエラーは出ない)。列を作らずに戻し、
+            // 次のApplicationConfig再取得でやり直せるようにする
+            const sidebar = query_editor_sidebar.value
+            if (!sidebar) {
+                is_restoring_columns.value = false
+                received_init_request.value = false
+                return
+            }
             const wait_promises = new Array<Promise<unknown>>()
             try {
                 // スクロール位置の復元
@@ -433,7 +467,7 @@ export function useRykvView(options: {
                 // 前回開いていた列があれば復元する
                 skip_search_this_tick.value = true
                 const saved_querys = props.gkill_api.get_saved_rykv_find_kyou_querys()
-                default_query.value = query_editor_sidebar.value!.get_default_query()!.clone()
+                default_query.value = sidebar.get_default_query()!.clone()
                 default_query.value.query_id = props.gkill_api.generate_uuid()
                 if (saved_querys.length.valueOf() === 0) {
                     const cloned_default_query = default_query.value.clone()
@@ -483,7 +517,12 @@ export function useRykvView(options: {
                     skip_search_this_tick.value = false
                     is_restoring_columns.value = false
                 })
-                nextTick(() => default_query.value = query_editor_sidebar.value!.get_default_query()!.clone())
+                nextTick(() => {
+                    const refreshed_default_query = query_editor_sidebar.value?.get_default_query()
+                    if (refreshed_default_query) {
+                        default_query.value = refreshed_default_query.clone()
+                    }
+                })
             }
         })
     }
@@ -803,11 +842,6 @@ export function useRykvView(options: {
         }
     }
 
-    function onSidebarInited(): void {
-        if (!received_init_request.value) { init() }
-        received_init_request.value = true
-    }
-
     function onColumnScrollList(index: number, scroll_top: number): void {
         match_kyous_list_top_list.value[index] = scroll_top
         if (inited.value) {
@@ -1073,7 +1107,6 @@ export function useRykvView(options: {
         toggle_dnote,
         onSidebarRequestedSearch,
         onSidebarUpdatedQuery,
-        onSidebarInited,
         onColumnScrollList,
         onColumnClickedListView,
         onColumnClickedKyou,

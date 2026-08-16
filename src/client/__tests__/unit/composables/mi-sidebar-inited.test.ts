@@ -1,13 +1,22 @@
 /**
- * miサイドバーの inited 集約の検証。
+ * miサイドバーの節ごとの inited フラグの検証。
  *
- * inited が true にならないと '@inited' が飛ばず、use-mi-view.ts の onSidebarInited() が
- * init() を呼べないため、mi画面が is_loading=true のままスピナーで固まる（見た目ではなく画面ハング）。
- * 画面から節を消したときに、その節の inited_* フラグを computed から外し忘れると
- * 誰も true にしないフラグが残って必ずこうなるので、フラグ集合をここで固定する。
+ * このフラグは子へ :inited prop として降り、子（use-tag-query.ts /
+ * use-calendar-query.ts）は「初回同期か再同期か」の判定に使う。立たないと
+ * props 同期のたびにチェックが列をまたいで累積する。
  *
- * 状況(TimeIs)・時間帯・場所の3節は mi から外したので、そのフラグは集約に含めない。
- * 同じ理由で use-mi-find-query-editor-view.ts 側も検査する。
+ * かつてはこれらの AND を親への '@inited' イベントにして画面の初期化を起動
+ * していたが、その集約は「設定が来た」を表していたわけではなく、
+ * 「immediateの付いていない application_config watch から emit する子がいる」
+ * という偶然に乗っていただけだった（miでは実質 CalendarQuery 1つが律速し、
+ * しかもその節は application_config のフィールドを1つも読まない）。
+ * そのため節を1つ画面から外すだけで画面ごとスピナーで固まっていた。
+ * いまは use-mi-view.ts が application_config.is_loaded を直接 watch して
+ * 初期化するので、集約が復活していないこともここで固定する。
+ *
+ * 状況(TimeIs)・時間帯・場所の3節は mi から外した。
+ * use-mi-find-query-editor-view.ts の inited 集約は別コンポーネント
+ * （検索条件エディタダイアログ）のもので、画面の初期化とは無関係なので残っている。
  */
 import { describe, expect, test, vi } from 'vitest'
 
@@ -44,8 +53,8 @@ function collect_emits(emitted: Array<string>) {
     return ((event: string) => { emitted.push(event) }) as unknown as never
 }
 
-describe('miサイドバーの inited 集約', () => {
-    test('画面に残っている節の @inited が揃えば inited が true になる', async () => {
+describe('miサイドバーの節ごとの inited フラグ', () => {
+    test('各節の @inited が対応するフラグを立てる', async () => {
         const emitted: Array<string> = []
         const props = reactive(make_props()) as unknown as MiQueryEditorSidebarProps
         const view = useMiQueryEditorSidebar({
@@ -55,7 +64,13 @@ describe('miサイドバーの inited 集約', () => {
         await nextTick()
 
         // キーワードとヘッダは最初から true。残りは子の @inited を待つ
-        expect(view.inited.value, '何も来ていないのに inited が立っている').toBe(false)
+        expect(view.inited_keyword_query_for_query_sidebar.value).toBe(true)
+        expect(view.inited_sidebar_header_for_query_sidebar.value).toBe(true)
+        expect(view.inited_tag_query_for_query_sidebar.value, '何も来ていないのにタグ節が立っている').toBe(false)
+        expect(view.inited_calendar_query_for_query_sidebar.value).toBe(false)
+        expect(view.inited_check_state_query_for_query_sidebar.value).toBe(false)
+        expect(view.inited_sort_query_for_query_sidebar.value).toBe(false)
+        expect(view.inited_board_query_for_query_sidebar.value).toBe(false)
 
         view.onInitedTag()
         view.onInitedCalendar()
@@ -64,9 +79,39 @@ describe('miサイドバーの inited 集約', () => {
         view.onInitedBoard()
         await nextTick()
 
-        expect(view.inited.value, '画面に残る節が揃っても inited が立たない（消した節のフラグが残っている疑い）').toBe(true)
+        // このフラグは子へ :inited prop として降り、子は「初回同期か再同期か」の
+        // 判定に使う。立たないと props 同期のたびにチェックが累積する
+        expect(view.inited_tag_query_for_query_sidebar.value, 'タグ節のフラグが立たない').toBe(true)
+        expect(view.inited_calendar_query_for_query_sidebar.value).toBe(true)
+        expect(view.inited_check_state_query_for_query_sidebar.value).toBe(true)
+        expect(view.inited_sort_query_for_query_sidebar.value).toBe(true)
+        expect(view.inited_board_query_for_query_sidebar.value).toBe(true)
+    })
+
+    test('サイドバーは画面の初期化トリガを持たない', async () => {
+        // 画面の初期化は use-mi-view.ts が application_config.is_loaded を直接
+        // watch して起こす。以前はこのサイドバーの集約 inited を @inited として
+        // 上げて起動していたが、「設定が来た」を表していたのは
+        // 「immediateの付いていない application_config watch から emit する子がいる」
+        // という偶然で、実質 CalendarQuery 1つが律速していた。
+        // 集約が復活すると、その節を画面から外したときに画面ごと固まる形へ戻る
+        const emitted: Array<string> = []
+        const props = reactive(make_props()) as unknown as MiQueryEditorSidebarProps
+        const view = useMiQueryEditorSidebar({
+            props: props,
+            emits: collect_emits(emitted) as unknown as MiQueryEditorSidebarEmits,
+        }) as unknown as Record<string, unknown>
+        expect(view.inited, '集約 inited が復活している').toBeUndefined()
+
+        const typed_view = view as unknown as ReturnType<typeof useMiQueryEditorSidebar>
+        typed_view.onInitedTag()
+        typed_view.onInitedCalendar()
+        typed_view.onInitedCheckState()
+        typed_view.onInitedSort()
+        typed_view.onInitedBoard()
         await nextTick()
-        expect(emitted, "inited が立ったのに '@inited' を emit していない").toContain('inited')
+        await nextTick()
+        expect(emitted, "'@inited' を emit している").not.toContain('inited')
     })
 
     test('状況・時間帯・場所のハンドラはもう公開されていない', () => {
