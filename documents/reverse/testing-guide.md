@@ -13,12 +13,12 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
 | Go バックエンド | 881 | 107 | Go `testing` |
-| フロントエンド ユニット | 1753 | 148 | Vitest |
-| フロントエンド E2E | 232 | 42（+auth.setup.ts） | Playwright |
+| フロントエンド ユニット | 1785 | 151 | Vitest |
+| フロントエンド E2E | 234 | 43（+auth.setup.ts） | Playwright |
 | MCP サーバ | 724 | 20 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 123 | 9 | JUnit 4 + MockK |
-| **合計** | **3,725** | **328** | |
+| **合計** | **3,759** | **332** | |
 
 数え直すコマンド:
 
@@ -251,7 +251,7 @@ src/client/__tests__/
 │   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
 │   │   ├── find-kyou-query.test.ts   ← 検索クエリビルダー
 │   │   └── hydrate.test.ts           ← hydrate() / hydrate_all()（JSON→クラス詰め替え）
-│   ├── classes/                       ← ユーティリティ（40ファイル）
+│   ├── classes/                       ← ユーティリティ（41ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
@@ -272,7 +272,7 @@ src/client/__tests__/
 │   ├── datas/                         ← データモデル（31ファイル）
 │   ├── dnote/                         ← D-note モジュール（7ファイル、trend-aggregator.test.ts 含む）
 │   ├── kftl/                          ← KFTL パーサ（5ファイル）
-│   ├── composables/                   ← Vue Composable（50ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（52ファイル。add-views / edit-views /
 │   │                                     confirm-delete / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /
