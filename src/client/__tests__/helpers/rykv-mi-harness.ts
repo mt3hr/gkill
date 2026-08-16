@@ -10,6 +10,7 @@
  * @/classes/kyou-reload 等を mock してからこのヘルパーを使うこと。
  */
 import { vi } from 'vitest'
+import { reactive } from 'vue'
 import { createMockGkillAPI } from './mock-api'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 
@@ -89,8 +90,17 @@ export function makeColumnQuery(query_id: string): FindKyouQuery {
   return query
 }
 
+/**
+ * 列ビュー用の ApplicationConfig もどき。
+ *
+ * `is_loaded` は既定 false。列ビューの init() は
+ * `watch(() => props.application_config.is_loaded)` で起動するので、
+ * 初期化を起こすテストは props を reactive で組んでこれを true にすること
+ * (`makeColumnViewProps` + `finish_application_config_load` を使う)。
+ */
 export function makeViewApplicationConfig(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
+    is_loaded: false,
     rykv_hot_reload: true,
     rykv_image_list_column_number: 3,
     device: 'test-device',
@@ -98,6 +108,30 @@ export function makeViewApplicationConfig(overrides: Record<string, unknown> = {
     is_show_share_footer: false,
     ...overrides,
   }
+}
+
+/**
+ * 列ビュー(rykv / mi)の props。reactive で組むので、
+ * `finish_application_config_load` の書き込みが init のwatchへ届く。
+ */
+export function makeColumnViewProps(
+  api: unknown,
+  config_overrides: Record<string, unknown> = {},
+  extra: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return reactive({
+    gkill_api: api,
+    application_config: makeViewApplicationConfig(config_overrides),
+    app_title_bar_height: 50,
+    app_content_height: 600,
+    app_content_width: 800,
+    ...extra,
+  })
+}
+
+/** ApplicationConfig の読み込み完了。列ビューの init() はこれで起動する */
+export function finish_application_config_load(props: Record<string, unknown>): void {
+  (props.application_config as Record<string, unknown>).is_loaded = true
 }
 
 /** composable の返り値のうちハーネスが触る部分 */
@@ -109,6 +143,8 @@ export interface ColumnViewLike {
   focused_query: { value: FindKyouQuery }
   kyou_list_views: { value: FakeKyouListView[] }
   query_editor_sidebar: { value: unknown }
+  is_restoring_columns?: { value: boolean }
+  is_view_ready?: { value: boolean }
 }
 
 /**
@@ -131,6 +167,23 @@ export function setupColumns(
   view.focused_column_index.value = 0
   view.focused_query.value = querys[0]
   view.inited.value = true
+  return fakes
+}
+
+/**
+ * init() 経由の試験用。列は init() が作るので、テンプレートrefだけを後から生やす。
+ * setupColumns と違い querys / match_kyous_list には触らない。
+ */
+export function attachFakeKyouListViews(
+  view: ColumnViewLike,
+  query_ids: string[],
+): Map<string, FakeKyouListView> {
+  const fakes = new Map<string, FakeKyouListView>()
+  view.kyou_list_views.value = query_ids.map((query_id) => {
+    const fake = makeFakeKyouListView(query_id)
+    fakes.set(query_id, fake)
+    return fake
+  })
   return fakes
 }
 

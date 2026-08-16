@@ -1,6 +1,6 @@
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { deep_equals } from '@/classes/deep-equals'
-import { computed, nextTick, onMounted, type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 import { CheckState } from '@/pages/views/check-state'
 import moment from 'moment'
 import type { RykvQueryEditorSidebarEmits } from '@/pages/views/rykv-query-editor-sidebar-emits'
@@ -44,28 +44,14 @@ export function useRykvQueryEditorSideBar(options: {
     const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
     const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
-    const is_mounted = ref(false)
-    onMounted(() => is_mounted.value = true)
-
-    const inited = computed(() => {
-        if (!is_mounted.value) {
-            return false
-        }
-        return inited_keyword_query_for_query_sidebar.value &&
-            inited_rep_query_for_query_sidebar.value &&
-            inited_tag_query_for_query_sidebar.value &&
-            inited_timeis_query_for_query_sidebar.value &&
-            inited_calendar_query_for_query_sidebar.value &&
-            inited_map_query_for_query_sidebar.value &&
-            inited_period_of_time_query_for_query_sidebar.value
-    })
-
-    watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
-        if (old_value !== new_value && new_value) {
-            nextTick(() => { emits('inited') })
-        }
-    })
-
+    // 各節の「描けた」フラグ。子へ :inited prop として降り、子は
+    // 「初回同期か再同期か」の判定に使う(use-rep-query.ts / use-tag-query.ts /
+    // use-time-is-query.ts / use-calendar-query.ts)。消してはいけない。
+    // かつてはこれらの AND を親への @inited イベントにしていたが、
+    // 「設定が来た」を表していたのは immediate の付いていない
+    // application_config watch から emit する子がいるという偶然だった。
+    // 画面の初期化は use-rykv-view.ts が application_config.is_loaded を
+    // 直接 watch して起こすので、集約もイベントも不要になった。
     const inited_sidebar_header_for_query_sidebar = ref(true)
     const inited_keyword_query_for_query_sidebar = ref(true)
     const inited_timeis_query_for_query_sidebar = ref(false)

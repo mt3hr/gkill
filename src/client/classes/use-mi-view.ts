@@ -133,6 +133,25 @@ export function useMiView(options: {
         { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
     ])
 
+    // ── Init trigger ──
+    // ApplicationConfig が来たことが初期化の唯一の前提条件なので、それを直接待つ。
+    // 以前はサイドバーの @inited を起動条件にしていたが、あれは子ビューの
+    // 「その節が描けた」の集約でしかない。設定の到着を表していたのは
+    // 「immediateの付いていない application_config watch から emit する子がいる」
+    // という偶然で、mi では実質 CalendarQuery 1つが律速していた(しかもその節は
+    // application_config のフィールドを1つも読まない)。
+    // immediate は「setup時点で既にロード済み」の将来ケースへの保険
+    watch(() => props.application_config.is_loaded, (is_loaded: boolean) => {
+        if (!is_loaded) {
+            return
+        }
+        if (received_init_request.value) {
+            return
+        }
+        received_init_request.value = true
+        init()
+    }, { immediate: true })
+
     // ── Watchers ──
     watch(() => is_show_kyou_count_calendar.value, () => {
         if (is_show_kyou_count_calendar.value) {
@@ -424,6 +443,17 @@ export function useMiView(options: {
         // もう一度呼ばれたときに二重初期化できてしまう
         is_restoring_columns.value = true
         return nextTick(async () => {
+            // 起動条件がサイドバー自身の @inited ではなくなったので、テンプレートrefが
+            // 埋まっていることを型の上では当てにできない。既定クエリはApplicationConfig
+            // 由来なので、空のFindKyouQueryへフォールバックすると既定期間も強制非表示
+            // タグも落ちた列ができる(しかもエラーは出ない)。列を作らずに戻し、
+            // 次のApplicationConfig再取得でやり直せるようにする
+            const sidebar = query_editor_sidebar.value
+            if (!sidebar) {
+                is_restoring_columns.value = false
+                received_init_request.value = false
+                return
+            }
             const wait_promises = new Array<Promise<void>>()
             try {
                 // スクロール位置の復元
@@ -433,7 +463,7 @@ export function useMiView(options: {
                 skip_search_this_tick.value = true
                 const saved_querys = props.gkill_api.get_saved_mi_find_kyou_querys()
                 if (saved_querys.length.valueOf() === 0) {
-                    const default_query = query_editor_sidebar.value!.get_default_query()!.clone()
+                    const default_query = sidebar.get_default_query()!.clone()
                     default_query.query_id = props.gkill_api.generate_uuid()
                     saved_querys.push(default_query)
                 }
@@ -934,11 +964,6 @@ export function useMiView(options: {
         search(column_index, new_query)
     }
 
-    function onSidebarInited(): void {
-        if (!received_init_request.value) { init() }
-        received_init_request.value = true
-    }
-
     function onColumnScrollList(index: number, scroll_top: number): void {
         match_kyous_list_top_list.value[index] = scroll_top
         if (inited.value) {
@@ -1130,7 +1155,6 @@ export function useMiView(options: {
         navigate_to_page,
         onSidebarRequestedSearch,
         onSidebarUpdatedQuery,
-        onSidebarInited,
         onColumnScrollList,
         onColumnClickedListView,
         onColumnClickedKyou,
