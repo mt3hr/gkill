@@ -89,6 +89,8 @@ export function createMockGkillAPI() {
     // Context menu helpers
     get_saved_tag_history: vi.fn(() => []),
     push_tag_to_history: vi.fn(),
+    get_saved_last_added_tag: vi.fn(() => ''),
+    set_saved_last_added_tag: vi.fn(),
     open_directory: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
     open_file: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
 

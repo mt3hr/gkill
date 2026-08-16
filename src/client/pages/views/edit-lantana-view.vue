@@ -70,6 +70,8 @@
                 </table>
             </v-col>
         </v-row>
+        <EditKyouTagsView :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
+            :is_readonly="is_busy" ref="kyou_tags_view" v-on="crudRelayHandlers" />
         <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_busy">{{
@@ -96,6 +98,9 @@
                 :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"
                 v-on="crudRelayHandlers" />
         </v-card>
+        <ConfirmUnknownTagDialog :unknown_tags="unknown_tags" :is_requested_submit="is_busy"
+            @requested_confirm="confirm_save()" @requested_cancel="cancel_save()"
+            ref="confirm_unknown_tag_dialog" />
     </v-card>
     </div>
 </template>
@@ -105,6 +110,8 @@ import type { EditLantanaViewProps } from './edit-lantana-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import LantanaFlowersView from './lantana-flowers-view.vue'
+import EditKyouTagsView from './edit-kyou-tags-view.vue'
+import ConfirmUnknownTagDialog from '../dialogs/confirm-unknown-tag-dialog.vue'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/components'
 import { useEditLantanaView } from '@/classes/use-edit-lantana-view'
@@ -115,6 +122,13 @@ const emits = defineEmits<KyouViewEmits>()
 const {
     // Template refs
     edit_lantana_flowers,
+    kyou_tags_view,
+    confirm_unknown_tag_dialog,
+
+    // Confirm unknown tag
+    unknown_tags,
+    cancel_save,
+    confirm_save,
 
     // State
     is_loading,

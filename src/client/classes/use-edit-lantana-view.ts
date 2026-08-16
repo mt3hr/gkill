@@ -10,6 +10,8 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { ComponentRef } from '@/classes/component-ref'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
+import { useConfirmUnknownTag } from '@/classes/use-confirm-unknown-tag'
+import { apply_kyou_tag_changes } from '@/classes/kyou-tags'
 
 export function useEditLantanaView(options: {
     props: EditLantanaViewProps,
@@ -19,6 +21,10 @@ export function useEditLantanaView(options: {
 
     // ── Template refs ──
     const edit_lantana_flowers = ref<ComponentRef | null>(null)
+    const kyou_tags_view = ref<ComponentRef | null>(null)
+
+    // ── Confirm unknown tag ──
+    const confirm_unknown_tag = useConfirmUnknownTag({ application_config: () => props.application_config })
 
     // ── State refs ──
     const is_loading = ref(true)
@@ -47,6 +53,21 @@ export function useEditLantanaView(options: {
         } finally {
             is_loading.value = false
         }
+    }
+
+    /**
+     * 気分か関連日時が変わっているか。
+     *
+     * タグだけを足したときにこれが偽なら update_lantana は呼ばない。
+     * 呼ぶと中身の同じ新しい版が1つ増えてしまう
+     */
+    async function is_body_changed(): Promise<boolean> {
+        const lantana = cloned_kyou.value.typed_lantana
+        if (!lantana) {
+            return false
+        }
+        return !(lantana.mood === await edit_lantana_flowers.value?.get_mood() &&
+            moment(lantana.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime())
     }
 
     async function save(): Promise<void> {
@@ -79,9 +100,10 @@ export function useEditLantanaView(options: {
             }
 
             // 更新がなかったらエラーメッセージを出力する。
-            // 関連日時もこの画面で編集できるので比較に含める（含めないと日時だけ変えても保存できない）
-            if (lantana.mood === await edit_lantana_flowers.value?.get_mood() &&
-                moment(lantana.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime()) {
+            // 関連日時もこの画面で編集できるので比較に含める（含めないと日時だけ変えても保存できない）。
+            // タグだけを足した/外したときもここで弾かれないよう、タグの変更も更新とみなす
+            const has_tag_changes = kyou_tags_view.value?.has_pending_changes() ?? false
+            if (!await is_body_changed() && !has_tag_changes) {
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.lantana_is_no_update
                 error.error_message = i18n.global.t("LANTANA_IS_NO_UPDATE_MESSAGE")
@@ -91,36 +113,96 @@ export function useEditLantanaView(options: {
                 return
             }
 
-            // 更新後Lantana情報を用意する
-            const updated_lantana = lantana.clone()
-            // refがnullでも例外にしない。throwするとダイアログが閉じないまま固まる
-            updated_lantana.mood = await edit_lantana_flowers.value?.get_mood() ?? lantana.mood
-            updated_lantana.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
-            updated_lantana.update_app = "gkill"
-            updated_lantana.update_device = props.application_config.device
-            updated_lantana.update_time = new Date(Date.now())
-            updated_lantana.update_user = props.application_config.user_id
-
-            // 更新リクエストを飛ばす
-            await delete_gkill_kyou_cache(updated_lantana.id)
-            const req = new UpdateLantanaRequest()
-            req.want_response_kyou = true
-            req.lantana = updated_lantana
-
-            const res = await props.gkill_api.update_lantana(req)
-            if (res.errors && res.errors.length !== 0) {
-                emits('received_errors', res.errors)
+            // タグツリーに無いタグ名なら、保存する前に確認を取る
+            const tag_names = kyou_tags_view.value?.get_tag_names() ?? []
+            const unknown_tags = confirm_unknown_tag.collect_unknown_tags(tag_names)
+            if (unknown_tags.length !== 0) {
+                confirm_unknown_tag.open_confirm(unknown_tags)
                 return
             }
-            if (res.messages && res.messages.length !== 0) {
-                emits('received_messages', res.messages)
+
+            await execute_save()
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
+
+    function cancel_save(): void {
+        confirm_unknown_tag.close_confirm()
+    }
+
+    async function confirm_save(): Promise<void> {
+        confirm_unknown_tag.close_confirm()
+        try {
+            is_requested_submit.value = true
+            await execute_save()
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
+
+    async function execute_save(): Promise<void> {
+        try {
+            is_requested_submit.value = true
+            const lantana = cloned_kyou.value.typed_lantana
+            if (!lantana) {
+                return
             }
-            emits('updated_kyou', res.updated_kyou!)
+
+            // 中身が変わったときだけ更新リクエストを飛ばす
+            if (await is_body_changed()) {
+                const updated_lantana = lantana.clone()
+                // refがnullでも例外にしない。throwするとダイアログが閉じないまま固まる
+                updated_lantana.mood = await edit_lantana_flowers.value?.get_mood() ?? lantana.mood
+                updated_lantana.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
+                updated_lantana.update_app = "gkill"
+                updated_lantana.update_device = props.application_config.device
+                updated_lantana.update_time = new Date(Date.now())
+                updated_lantana.update_user = props.application_config.user_id
+
+                await delete_gkill_kyou_cache(updated_lantana.id)
+                const req = new UpdateLantanaRequest()
+                req.want_response_kyou = true
+                req.lantana = updated_lantana
+
+                const res = await props.gkill_api.update_lantana(req)
+                if (res.errors && res.errors.length !== 0) {
+                    emits('received_errors', res.errors)
+                    return
+                }
+                if (res.messages && res.messages.length !== 0) {
+                    emits('received_messages', res.messages)
+                }
+                emits('updated_kyou', res.updated_kyou!)
+            }
+
+            // 確認ダイアログは非モーダルなので、確認中にタグ欄を書き換えられる。取り直す
+            await apply_tag_changes()
+
+            // タグの変更は updated_kyou を出さないので、これが唯一の反映信号になる
             emits('requested_reload_kyou', props.kyou)
             emits('requested_close_dialog')
             return
         } finally {
             is_requested_submit.value = false
+        }
+    }
+
+    /** タグ欄で足したもの・外したものをサーバへ反映する */
+    async function apply_tag_changes(): Promise<void> {
+        const tags_view = kyou_tags_view.value
+        if (!tags_view) {
+            return
+        }
+        const result = await apply_kyou_tag_changes(props.gkill_api, props.application_config, cloned_kyou.value.id,
+            tags_view.get_tag_names(), tags_view.get_removed_tags())
+        result.added_tags.forEach(added_tag => emits('registered_tag', added_tag))
+        result.removed_tags.forEach(removed_tag => emits('deleted_tag', removed_tag))
+        if (result.messages.length !== 0) {
+            emits('received_messages', result.messages)
+        }
+        if (result.errors.length !== 0) {
+            emits('received_errors', result.errors)
         }
     }
 
@@ -138,6 +220,7 @@ export function useEditLantanaView(options: {
         mood.value = cloned_kyou.value.typed_lantana ? cloned_kyou.value.typed_lantana.mood : 0
         related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
         related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+        kyou_tags_view.value?.reset()
     }
 
     // ── Event relay objects ──
@@ -150,6 +233,13 @@ export function useEditLantanaView(options: {
     return {
         // Template refs
         edit_lantana_flowers,
+        kyou_tags_view,
+        confirm_unknown_tag_dialog: confirm_unknown_tag.confirm_unknown_tag_dialog,
+
+        // Confirm unknown tag
+        unknown_tags: confirm_unknown_tag.unknown_tags,
+        cancel_save,
+        confirm_save,
 
         // State
         is_loading,
