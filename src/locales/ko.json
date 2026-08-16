@@ -553,6 +553,7 @@
     "KFTL_NLOG_INVALID_AMOUNT_MESSAGE_TITLE": "금액이 잘못되었습니다",
     "KFTL_NLOG_INVALID_RECORD_COUNT_MESSAGE_TITLE": "제목과 금액의 개수가 일치하지 않습니다",
     "KFTL_NLOG_BLANK_SKIP_SAVE_MESSAGE_TITLE": "내용이 없는 지출의 저장이 건너뛰어졌습니다",
+    "KFTL_NLOG_META_INFO_MUST_BE_AFTER_AMOUNT_MESSAGE_TITLE": "지출의 태그와 텍스트는 금액 행 뒤에 작성해 주세요",
     "KFTL_NLOG_SHOP_NAME_TITLE": "가게 이름",
     "KFTL_NLOG_TITLE_TITLE": "제목",
     "KFTL_NLOG_NLOG_LABEL_TITLE": "지출",

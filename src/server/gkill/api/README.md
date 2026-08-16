@@ -104,7 +104,7 @@ handle_*.go は99ファイル（実装91 + テスト8）で、1ハンドラ1フ�
 | `message_codes.go` | メッセージコード定数（88定数） |
 | `message_test.go` | コード形式テスト |
 
-### `kftl/`（24ファイル）— KFTL パーサ
+### `kftl/`（25ファイル）— KFTL パーサ
 
 詳細は [kftl/README.md](kftl/README.md) を参照。
 

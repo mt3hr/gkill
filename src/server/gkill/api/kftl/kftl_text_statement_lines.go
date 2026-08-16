@@ -15,14 +15,16 @@ type kftlStartTextStatementLine struct {
 	textID   string
 }
 
-func newKFTLStartTextStatementLine(lineText string, ctx *KFTLStatementLineContext, prevLineIsMetaInfo bool) *kftlStartTextStatementLine {
+// resume はブロックの中で開かれたテキストブロックのために、終了行まで持ち回る。
+// 出口を決めるのは終了行なので、ここで使わなくても最後まで渡す必要がある
+func newKFTLStartTextStatementLine(lineText string, ctx *KFTLStatementLineContext, prevLineIsMetaInfo bool, resume resumeConstructorFunc) *kftlStartTextStatementLine {
 	ctx.NextIsPrototype = ctx.ThisIsPrototype
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
 
 	textID := sqlite3impl.GenerateNewID()
 	ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
-		return newKFTLTextStatementLine(lt, c, textID, prevLineIsMetaInfo)
+		return newKFTLTextStatementLine(lt, c, textID, prevLineIsMetaInfo, resume)
 	}
 
 	return &kftlStartTextStatementLine{lineText: lineText, ctx: ctx, textID: textID}
@@ -52,7 +54,7 @@ type kftlTextStatementLine struct {
 	prevLineIsMetaInfo bool
 }
 
-func newKFTLTextStatementLine(lineText string, ctx *KFTLStatementLineContext, textID string, prevLineIsMetaInfo bool) *kftlTextStatementLine {
+func newKFTLTextStatementLine(lineText string, ctx *KFTLStatementLineContext, textID string, prevLineIsMetaInfo bool, resume resumeConstructorFunc) *kftlTextStatementLine {
 	ctx.NextIsPrototype = ctx.ThisIsPrototype
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
@@ -60,11 +62,11 @@ func newKFTLTextStatementLine(lineText string, ctx *KFTLStatementLineContext, te
 	// If next line is "ーー" or "--", it ends the text block; otherwise continue accumulating
 	if ctx.NextStatementLineText == splitterStartText || ctx.NextStatementLineText == splitterStartTextAscii {
 		ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
-			return newKFTLEndTextStatementLine(lt, c, prevLineIsMetaInfo)
+			return newKFTLEndTextStatementLine(lt, c, prevLineIsMetaInfo, resume)
 		}
 	} else {
 		ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
-			return newKFTLTextStatementLine(lt, c, textID, prevLineIsMetaInfo)
+			return newKFTLTextStatementLine(lt, c, textID, prevLineIsMetaInfo, resume)
 		}
 	}
 
@@ -96,16 +98,12 @@ type kftlEndTextStatementLine struct {
 	ctx      *KFTLStatementLineContext
 }
 
-func newKFTLEndTextStatementLine(lineText string, ctx *KFTLStatementLineContext, prevLineIsMetaInfo bool) *kftlEndTextStatementLine {
+func newKFTLEndTextStatementLine(lineText string, ctx *KFTLStatementLineContext, prevLineIsMetaInfo bool, resume resumeConstructorFunc) *kftlEndTextStatementLine {
 	ctx.NextIsPrototype = ctx.ThisIsPrototype
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
 
-	if prevLineIsMetaInfo {
-		ctx.NextStatementLineConstructor = ctx.factory.generateKmemoConstructor(ctx.NextStatementLineText)
-	} else {
-		ctx.NextStatementLineConstructor = ctx.factory.generateNoneConstructor(ctx.NextStatementLineText)
-	}
+	ctx.NextStatementLineConstructor = afterMetaInfoConstructor(ctx.factory, ctx.NextStatementLineText, prevLineIsMetaInfo, resume)
 
 	return &kftlEndTextStatementLine{lineText: lineText, ctx: ctx}
 }

@@ -106,11 +106,32 @@ func (f *kftlFactory) generateNoneConstructor(nextLineText string) StatementLine
 // prefixes are recognised; only when none match does it fall through to
 // creating another nlog title line.
 // Mirrors: KFTLStatementLineConstructorFactory.generate_nlog_constructor()
-func (f *kftlFactory) generateNlogConstructor(nextLineText string, req *kftlNlogRequest) StatementLineConstructorFunc {
+func (f *kftlFactory) generateNlogConstructor(nextLineText string, block *kftlNlogBlock) StatementLineConstructorFunc {
 	return f.generateDefaultConstructor(nextLineText, func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 		f.prevLineIsMetaInfo = false
-		return newKFTLNlogTitleStatementLine(lineText, ctx, req)
+		return newKFTLNlogTitleStatementLine(lineText, ctx, block)
 	})
+}
+
+// resumeConstructorFunc はブロックの中に書かれたメタ情報行(タグ・テキスト)から
+// ブロックへ復帰するための「次の行」の決め方。
+//
+// 素のメタ情報行は次の行を Kmemo か None にするので、ブロックの途中に書くと
+// そこでブロックが切れる。ブロック側がこれを渡すと、メタ情報行のあとも
+// ブロックの中に留まれる。nil なら今までどおり Kmemo / None へ抜ける。
+// Mirrors: KFTLBlockReentryProvider (kftl-statement-line.ts)
+type resumeConstructorFunc func(nextLineText string) StatementLineConstructorFunc
+
+// afterMetaInfoConstructor はメタ情報行の「次の行」の決め方を1箇所に集約する。
+// Mirrors: kftl-tag-statement-line.ts / kftl-end-text-statement-line.ts の分岐
+func afterMetaInfoConstructor(f *kftlFactory, nextLineText string, prevLineIsMetaInfo bool, resume resumeConstructorFunc) StatementLineConstructorFunc {
+	if resume != nil {
+		return resume(nextLineText)
+	}
+	if prevLineIsMetaInfo {
+		return f.generateKmemoConstructor(nextLineText)
+	}
+	return f.generateNoneConstructor(nextLineText)
 }
 
 // generateDefaultConstructor checks nextLineText against all known patterns
@@ -121,11 +142,11 @@ func (f *kftlFactory) generateDefaultConstructor(nextLineText string, lastFunc S
 	switch {
 	case strings.HasPrefix(nextLineText, splitterTag) || strings.HasPrefix(nextLineText, splitterTagAscii):
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
-			return newKFTLTagStatementLine(lineText, ctx, f.prevLineIsMetaInfo)
+			return newKFTLTagStatementLine(lineText, ctx, f.prevLineIsMetaInfo, nil)
 		}
 	case nextLineText == splitterStartText || nextLineText == splitterStartTextAscii:
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
-			return newKFTLStartTextStatementLine(lineText, ctx, f.prevLineIsMetaInfo)
+			return newKFTLStartTextStatementLine(lineText, ctx, f.prevLineIsMetaInfo, nil)
 		}
 	case isMiReKyouSplitter(nextLineText):
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {

@@ -646,3 +646,90 @@ describe('KFTLのリポストタスク', () => {
         expect(log.calls).not.toContain('add_mirekyou')
     })
 })
+
+/**
+ * 支出は1つの「ーん」ブロックから支払いの数だけ Kyou が出る唯一の記法。
+ * タグとテキストは支払いごとに付くので、add_tag / add_text の target_id が
+ * その支払いの add_nlog の id と一致していなければならない。
+ * 一致していないと、エラーも警告も出ないままタグだけが宙に浮く。
+ */
+describe('KFTLの支出', () => {
+    interface NlogCallLog {
+        nlog_ids: Array<string>
+        tags: Array<{ tag: string, target_id: string }>
+        texts: Array<{ id: string, target_id: string, text: string }>
+    }
+
+    function make_nlog_api(log: CallLog, nlog_log: NlogCallLog) {
+        return make_api(log, {
+            add_nlog: vi.fn(async (req: { nlog: { id: string } }) => {
+                log.calls.push('add_nlog')
+                nlog_log.nlog_ids.push(req.nlog.id)
+                return { messages: null, errors: null }
+            }),
+            add_tag: vi.fn(async (req: { tag: { tag: string, target_id: string } }) => {
+                log.calls.push('add_tag')
+                nlog_log.tags.push({ tag: req.tag.tag, target_id: req.tag.target_id })
+                return { messages: null, errors: null }
+            }),
+            add_text: vi.fn(async (req: { text: { id: string, target_id: string, text: string } }) => {
+                log.calls.push('add_text')
+                nlog_log.texts.push({ id: req.text.id, target_id: req.text.target_id, text: req.text.text })
+                return { messages: null, errors: null }
+            }),
+        })
+    }
+
+    test('支払いの数だけ add_nlog と registered_kyou が出る', async () => {
+        const log: CallLog = { calls: [] }
+        const nlog_log: NlogCallLog = { nlog_ids: [], tags: [], texts: [] }
+        const { view, emits } = mount_view(make_nlog_api(log, nlog_log))
+
+        await submit_text(view, 'ーん\nコンビニ\nおにぎり\n150\nお茶\n120')
+
+        expect(nlog_log.nlog_ids.length).toBe(2)
+        expect(new Set(nlog_log.nlog_ids).size).toBe(2)
+        expect(emitted(emits, 'registered_kyou').length).toBe(2)
+    })
+
+    // 以前は Nlog だけ id を採番し直していたので、タグがどの Nlog にも紐づいていなかった
+    test('タグの target_id がその支払いの Nlog の id と一致する', async () => {
+        const log: CallLog = { calls: [] }
+        const nlog_log: NlogCallLog = { nlog_ids: [], tags: [], texts: [] }
+        const { view } = mount_view(make_nlog_api(log, nlog_log))
+
+        await submit_text(view, 'ーん\nコンビニ\nおにぎり\n150\n。食費\nお茶\n120\n。飲み物')
+
+        expect(nlog_log.nlog_ids.length).toBe(2)
+        expect(nlog_log.tags.length).toBe(2)
+        const food = nlog_log.tags.find(tag => tag.tag === '食費')!
+        const drink = nlog_log.tags.find(tag => tag.tag === '飲み物')!
+        expect(nlog_log.nlog_ids).toContain(food.target_id)
+        expect(nlog_log.nlog_ids).toContain(drink.target_id)
+        expect(food.target_id).not.toBe(drink.target_id)
+    })
+
+    test('テキストの target_id もその支払いの Nlog の id と一致する', async () => {
+        const log: CallLog = { calls: [] }
+        const nlog_log: NlogCallLog = { nlog_ids: [], tags: [], texts: [] }
+        const { view } = mount_view(make_nlog_api(log, nlog_log))
+
+        await submit_text(view, 'ーん\nコンビニ\nおにぎり\n150\nーー\n朝ごはん用\nーー\nお茶\n120')
+
+        expect(nlog_log.texts.length).toBe(1)
+        expect(nlog_log.texts[0].text).toBe('朝ごはん用')
+        expect(nlog_log.nlog_ids).toContain(nlog_log.texts[0].target_id)
+    })
+
+    test('ブロックの中の知らないタグでも送信前に確認を出す', async () => {
+        const log: CallLog = { calls: [] }
+        const nlog_log: NlogCallLog = { nlog_ids: [], tags: [], texts: [] }
+        const { view } = mount_view(make_nlog_api(log, nlog_log))
+
+        view.text_area_content.value = 'ーん\nコンビニ\nおにぎり\n150\n。知らないタグ'
+        await view.submit()
+
+        expect(view.unknown_tags.value).toContain('知らないタグ')
+        expect(log.calls).not.toContain('add_nlog')
+    })
+})
