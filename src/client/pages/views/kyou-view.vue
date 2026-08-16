@@ -8,11 +8,15 @@
             <v-progress-circular indeterminate size="16" />
         </div>
         <div v-if="!show_content_only" :class="kyou_class">
-            <AttachedTag v-for="attached_tag in cloned_kyou.attached_tags" :tag="attached_tag" :key="attached_tag.id"
-                :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
-                :highlight_targets="highlight_targets"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers" />
+            <!-- 一覧の行で1行ellipsisに詰めるための容れ物。折り返しの抑止はコンテナに掛ける必要があるので、
+                 個々のタグではなくここを kyou-list-view.vue が :deep() で掴む -->
+            <div class="kyou_attached_tags">
+                <AttachedTag v-for="attached_tag in cloned_kyou.attached_tags" :tag="attached_tag" :key="attached_tag.id"
+                    :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
+                    :highlight_targets="highlight_targets"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    v-on="crudRelayHandlers" />
+            </div>
             <div v-if="show_attached_timeis">
                 <AttachedTimeIsPlaing v-for="attached_timeis_plaing in cloned_kyou.attached_timeis_kyou"
                     :key="attached_timeis_plaing.id" :timeis_kyou="attached_timeis_plaing"
