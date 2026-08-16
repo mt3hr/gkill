@@ -219,6 +219,15 @@ defineExpose({ scroll_to, scroll_to_kyou, scroll_to_time, set_loading, get_is_lo
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* リスト内ではタグも折り返さず1行ellipsis表示にする。
+   行は高さ固定でoverflow:hiddenなので、タグが2行になるとその分だけ本文が下へ押し出されて
+   切り落とされ、内容が読めなくなる。全文はKyou詳細ペイン / Kyouダイアログで読める */
+:deep(.kyou_attached_tags) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 </style>
 <style lang="css" scoped>
 .kyou_list_view_card_wrap .kyou_list_view_card {
