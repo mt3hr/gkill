@@ -1,4 +1,4 @@
-import { computed, nextTick, onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, useId, watch, type Ref } from 'vue'
 import { i18n } from '@/i18n'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillMessage } from '@/classes/api/gkill-message'
@@ -21,6 +21,18 @@ import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { ComponentRef } from '@/classes/component-ref'
 import { useConfirmUnknownMiBoard } from '@/classes/use-confirm-unknown-mi-board'
+import { useKftlTabs } from '@/classes/use-kftl-tabs'
+import { derive_kftl_tab_label, type KFTLEditorViewState, type KFTLTabState } from '@/classes/kftl-tabs'
+
+/**
+ * textarea の id の接頭辞。
+ *
+ * メモ帳ダイアログは複数枚開けるので、id を固定すると document 内で重複する。
+ * 内部のロジックはもう id を引かない（テンプレート ref を使う）が、
+ * 重複した id は Playwright の strict mode に引っかかる。
+ * E2E は class の `.kftl_text_area` で掴むこと
+ */
+export const KFTL_TEXT_AREA_ELEMENT_ID_PREFIX = "kftl_text_area"
 
 export function useKftlView(options: {
     props: KFTLProps,
@@ -30,19 +42,71 @@ export function useKftlView(options: {
 
     // ── Template refs ──
     const kftl_template_dialog = ref<ComponentRef | null>(null)
+    const confirm_close_kftl_tab_dialog = ref<ComponentRef | null>(null)
+    const kftl_text_area = ref<HTMLTextAreaElement | null>(null)
+    const kftl_line_label_wrap = ref<HTMLElement | null>(null)
+
+    // 複数枚のメモ帳ウィンドウで重複しないよう、インスタンスごとに採番する
+    const text_area_element_id = `${KFTL_TEXT_AREA_ELEMENT_ID_PREFIX}-${useId()}`
 
     // ── Confirm unknown mi board ──
     const confirm_unknown_mi_board = useConfirmUnknownMiBoard({ application_config: () => props.application_config })
 
+    // ── Tabs ──
+    // タブの一覧と中身は共有シングルトン（use-kftl-tabs.ts のコメント参照）。
+    // メモ帳ダイアログは複数枚開けるので、インスタンスごとに配列を持つと
+    // 片方の古い配列でもう片方のタブを消してしまう。
+    //
+    // 一方「いま映しているタブ」はこのビューだけのもの。ウィンドウごとに別の下書きを
+    // 開いて並べられるようにするため、ここで持つ
+    const tabs_store = useKftlTabs()
+    const tabs = tabs_store.tabs
+    const active_tab_id: Ref<string> = ref(tabs_store.last_active_tab_id.value)
+
+    // キャレットとスクロールもビューごと。同じタブを2枚のウィンドウで開いても奪い合わない
+    const editor_view_states = new Map<string, KFTLEditorViewState>()
+
+    /**
+     * 確認ダイアログをまたいで持ち越す送信対象タブ。
+     *
+     * 送信は未知タグ確認・未知板名確認でいったん `do_submit` を抜けて応答を待つ。
+     * gkill のフローティングダイアログは非モーダル（App.vue の `.gkill-float-scrim` が
+     * `pointer-events: none`）なので、確認中でも背後のタブバーは押せてしまう。
+     *
+     * **`do_submit` には引数で渡す。** ここを見に行くのは確認からの続行（`confirm_submit` /
+     * `confirm_mi_board_submit`）だけなので、ダイアログを Escape やブラウザバックで
+     * 閉じられて古い値が残っても、次の送信が別のタブへ誤配送されることはない
+     */
+    const submit_target_tab_id: Ref<string | null> = ref(null)
+
+    /**
+     * 送信が飛んでいる間だけ真。
+     *
+     * タブ操作のロックに `is_requested_submit` は使えない ―― あれは
+     * `application_config` の読み込みが終わるまで真なので、起動直後にタブを足せなくなる
+     */
+    const is_submitting: Ref<boolean> = ref(false)
+
+    /** 内容が残っているタブを × したときの確認待ち */
+    const pending_close_tab_id: Ref<string | null> = ref(null)
+
     // ── State refs ──
-    const text_area_content: Ref<string> = ref("")
     const text_area_width: Ref<number | 'unset'> = ref(0)
     const text_area_height: Ref<number> = ref(0)
     const line_label_width: Ref<number> = ref(0)
     const line_label_height: Ref<number> = ref(0)
 
-    const title_height = 52
+    // v-tabs の既定高さは48px。テンプレート側で :height に渡して、タイトル行に収める。
+    // 測った値をフィードバックすると kftl-dialog.vue の ResizeObserver が縮小ループに入る
+    const tab_bar_height = 40
+    // タブ列はタイトル行に同居しているので、引くのはタイトル行のぶんだけ。
+    // タブバー＋上下2pxずつの余白ちょうどにする ―― 大きくすると
+    // タイトルとテキストエリアのあいだに何も無い帯ができる。
+    // 実寸は kftl-view.vue の .kftl_title に CSS で固定してある（v-card-title に height prop は無い）
+    const title_height = tab_bar_height + 4
     const action_height = 10
+    // /mkfl は app_content_height を半分にして渡してくる。小さい画面で負値にしない
+    const min_text_area_height = 80
     const kftl_input_height: Ref<number> = ref(0)
     const kftl_input_width: Ref<number | 'unset'> = ref(0)
 
@@ -66,6 +130,45 @@ export function useKftlView(options: {
     const line_label_height_px = computed(() => line_label_height.value.toString().concat("px"))
     const kftl_input_height_px = computed(() => kftl_input_height.value.toString().concat("px"))
     const kftl_input_width_px = computed(() => kftl_input_width.value.toString().concat("px"))
+    const title_height_px = computed(() => title_height.toString().concat("px"))
+
+    /**
+     * タブの切替・追加・クローズを止める条件。
+     *
+     * タグ確認が開いている間も止めるが、これは `show_confirm_unknown_tag_dialog` が
+     * **どの閉じ方でも false になる**（`useDialogHistoryStack`）ので固まらない。
+     * 板名確認はブラウザバックで閉じても `unknown_mi_boards` が空にならないため、
+     * ロック条件に入れていない（入れると永久ロックになる）
+     */
+    const is_tab_locked = computed(() => is_submitting.value || show_confirm_unknown_tag_dialog.value)
+
+    /** アクティブなタブの本文。setter があるので v-model にそのまま渡せる */
+    const text_area_content = computed<string>({
+        get: () => tabs_store.get_tab_content(active_tab_id.value),
+        set: (value: string) => tabs_store.set_tab_content(active_tab_id.value, value),
+    })
+
+    /** v-tabs の v-model。切替のたびにキャレットとスクロールを退避・復元したいので computed を挟む */
+    const active_tab_id_model = computed<string>({
+        get: () => active_tab_id.value,
+        set: (value: string) => activate_tab(value),
+    })
+
+    const pending_close_tab_label = computed(() => {
+        const tab_id = pending_close_tab_id.value
+        if (tab_id === null) {
+            return ""
+        }
+        const index = tabs.value.findIndex(tab => tab.id === tab_id)
+        if (index === -1) {
+            return ""
+        }
+        return derive_kftl_tab_label(tabs.value[index], index)
+    })
+
+    function tab_label(tab: KFTLTabState, index: number): string {
+        return derive_kftl_tab_label(tab, index)
+    }
 
     // ── Watchers ──
     if (props.application_config.is_loaded) {
@@ -76,13 +179,52 @@ export function useKftlView(options: {
             is_requested_submit.value = false
         }
     })
-    watch(() => text_area_content.value, (new_value, old_value) => {
+
+    /**
+     * 保存マーカーによる自動送信を「利用者が打ったとき」だけに限るための印。
+     *
+     * この判定を watch に置くと、タブ切替・localStorage からの復元・テンプレート貼り付けでも
+     * `text_area_content` が変わるので発火してしまい、末尾にマーカーが残ったタブを
+     * クリックしただけで保存が走る（設定の読み込み前はマーカー付きのまま保存されうる）
+     */
+    let user_input_tab_id: string | null = null
+
+    // flush: 'post' なのは、コールバックの中で textarea の実寸とスクロール位置を読むため
+    watch(() => text_area_content.value, async (new_value, old_value) => {
         if (new_value === old_value) {
             return
         }
+        const input_tab_id = user_input_tab_id
+        user_input_tab_id = null
+
         update_line_labels()
-        save_content_to_localstorage()
+        await refresh_invalid_lines()
+
+        if (input_tab_id !== null && input_tab_id === active_tab_id.value) {
+            maybe_submit_by_save_marker()
+        }
+    }, { flush: 'post' })
+
+    /**
+     * 消えたタブへの追随。
+     *
+     * タブは共有なので、**別のウィンドウが閉じたり、保存でタブが閉じたり**すると、
+     * このウィンドウが映していたタブが無くなる。放っておくと `text_area_content` が
+     * 空文字を返し続ける（存在しないタブへの読み書きは no-op）ので、
+     * 消える前の位置へクランプして隣のタブへ移る。
+     */
+    watch(() => tabs.value.map(tab => tab.id), (new_tab_ids, old_tab_ids) => {
+        if (new_tab_ids.includes(active_tab_id.value)) {
+            return
+        }
+        if (new_tab_ids.length === 0) {
+            return
+        }
+        const old_index = old_tab_ids ? old_tab_ids.indexOf(active_tab_id.value) : -1
+        const next_index = old_index === -1 ? 0 : Math.min(old_index, new_tab_ids.length - 1)
+        active_tab_id.value = new_tab_ids[Math.max(0, next_index)]
     })
+
     watch(line_label_datas, async () => {
         line_label_styles.value.splice(0)
         let prev_target_id = ""
@@ -116,15 +258,6 @@ export function useKftlView(options: {
     })
 
     // ── Lifecycle ──
-    nextTick(() => {
-        const kftl_text_area_element_id = "kftl_text_area"
-        const kftl_text_area_element = document.getElementById(kftl_text_area_element_id)!
-        kftl_text_area_element.addEventListener("scroll", update_line_labels)
-        update_line_labels()
-    })
-
-    restore_content_from_localstorage()
-
     function onResize() {
         resize()
         update_line_labels()
@@ -136,64 +269,81 @@ export function useKftlView(options: {
     })
 
     // ── beforeunload guard ──
-    // テキストエリアに未保存の内容がある場合、ページ離脱時に警告を表示する
+    // どれかのタブに未保存の内容がある場合、ページ離脱時に警告を表示する
     function onBeforeunload(e: BeforeUnloadEvent) {
-        if (text_area_content.value.trim() !== "") {
+        if (tabs_store.has_content()) {
             e.preventDefault()
         }
     }
     window.addEventListener("beforeunload", onBeforeunload)
 
-    onMounted(() => resize())
+    onMounted(async () => {
+        resize()
+        await nextTick()
+        update_line_labels()
+        await refresh_invalid_lines()
+    })
     onUnmounted(() => {
         window.removeEventListener("resize", onResize)
         window.removeEventListener("beforeunload", onBeforeunload)
     })
 
     // ── Internal helpers ──
-    async function restore_content_from_localstorage(): Promise<void> {
-        const saved_content = localStorage.getItem("kftl_content")
-        if (saved_content) {
-            text_area_content.value = saved_content
-        }
+    function sync_line_label_scroll(text_area_element: HTMLElement): void {
+        kftl_line_label_wrap.value?.scrollTo(0, text_area_element.scrollTop)
     }
 
-    async function save_content_to_localstorage(): Promise<void> {
-        localStorage.setItem("kftl_content", text_area_content.value)
-    }
-
-    function sync_line_label_scroll(kftl_text_area_element: HTMLElement): void {
-        const kftl_line_label_elements = document.getElementsByClassName("kftl_line_label")!
-        for (let i = 0; i < kftl_line_label_elements.length; i++) {
-            const kftl_line_label_element = kftl_line_label_elements.item(i)
-            if (kftl_line_label_element) {
-                kftl_line_label_element.scrollTo(0, kftl_text_area_element.scrollTop)
-            }
-        }
-    }
-
+    /**
+     * 行ラベルの再生成。textarea の実寸を測るので DOM が要る。
+     *
+     * 世代トークンを持つのは、await を挟むあいだにタブが切り替わると
+     * 前のタブぶんのラベルが後から着地するため
+     */
+    let line_label_generation = 0
     async function update_line_labels(): Promise<void> {
-        const kftl_text_area_element_id = "kftl_text_area"
-        const kftl_text_area_element = document.getElementById(kftl_text_area_element_id)!
+        const generation = ++line_label_generation
+        const text_area_element = kftl_text_area.value
+        if (text_area_element === null) {
+            return
+        }
 
-        sync_line_label_scroll(kftl_text_area_element)
+        sync_line_label_scroll(text_area_element)
 
         const statement = new KFTLStatement(text_area_content.value)
         const textarea_info = new TextAreaInfo()
-        textarea_info.text_area_element_id = kftl_text_area_element_id
+        textarea_info.text_area_element = text_area_element
+        textarea_info.text_area_element_id = text_area_element_id
 
-        line_label_datas.value = statement.generate_line_label_data(textarea_info)
+        const label_datas = statement.generate_line_label_data(textarea_info)
+        if (generation !== line_label_generation) {
+            return
+        }
+        line_label_datas.value = label_datas
 
         // ラベル再生成後、DOM更新を待ってスクロール位置を再同期する
         await nextTick()
-        sync_line_label_scroll(kftl_text_area_element)
-
-        invalid_line_numbers.value = await statement.get_invalid_line_indexs()
-
-        // 送信中の再トリガーを避ける。フラグ自体は do_submit が立てる
-        if ((text_area_content.value.endsWith("\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n") || text_area_content.value.endsWith("\n" + KFTL_ASCII_SAVE_CHARACTOR + "\n")) && !is_requested_submit.value) {
-            submit()
+        if (generation !== line_label_generation) {
+            return
         }
+        sync_line_label_scroll(text_area_element)
+    }
+
+    /**
+     * 不正な行の洗い出し。DOM に依存しないので、textarea がまだ無くても動く。
+     *
+     * `do_submit` の先頭でこの結果を見て中断するため、タブを切り替えた直後に
+     * 前のタブぶんの結果が着地すると「おかしな行があります」で保存できなくなる。
+     * 世代トークンで最後の1回だけを書き戻す
+     */
+    let invalid_line_generation = 0
+    async function refresh_invalid_lines(): Promise<void> {
+        const generation = ++invalid_line_generation
+        const statement = new KFTLStatement(text_area_content.value)
+        const invalid_lines = await statement.get_invalid_line_indexs()
+        if (generation !== invalid_line_generation) {
+            return
+        }
+        invalid_line_numbers.value = invalid_lines
     }
 
     function is_invalid_line(line_index: number): boolean {
@@ -206,12 +356,108 @@ export function useKftlView(options: {
     }
 
     async function resize(): Promise<void> {
+        const content_height = Math.max(
+            min_text_area_height,
+            props.app_content_height.valueOf() - title_height - action_height,
+        )
         line_label_width.value = 100
-        line_label_height.value = props.app_content_height.valueOf() - title_height - action_height
+        line_label_height.value = content_height
         text_area_width.value = props.app_content_width.valueOf() - line_label_width.value.valueOf() - 7 // 7はマジックナンバー
-        text_area_height.value = props.app_content_height.valueOf() - title_height - action_height
+        text_area_height.value = content_height
         kftl_input_width.value = line_label_width.value.valueOf() + text_area_width.value.valueOf()
-        kftl_input_height.value = props.app_content_height.valueOf() - title_height - action_height
+        kftl_input_height.value = content_height
+    }
+
+    // ── Editor view state（キャレットとスクロール。永続化はしない） ──
+    function capture_editor_view_state(): void {
+        const text_area_element = kftl_text_area.value
+        if (text_area_element === null) {
+            return
+        }
+        editor_view_states.set(active_tab_id.value, {
+            selection_start: text_area_element.selectionStart,
+            selection_end: text_area_element.selectionEnd,
+            scroll_top: text_area_element.scrollTop,
+        })
+    }
+
+    async function focus_active_tab_editor(): Promise<void> {
+        await nextTick()
+        const text_area_element = kftl_text_area.value
+        if (text_area_element === null) {
+            return
+        }
+        text_area_element.focus()
+        const view_state = editor_view_states.get(active_tab_id.value) ?? null
+        if (view_state === null) {
+            const caret = text_area_element.value.length
+            text_area_element.setSelectionRange(caret, caret)
+            text_area_element.scrollTop = 0
+        } else {
+            text_area_element.setSelectionRange(view_state.selection_start, view_state.selection_end)
+            text_area_element.scrollTop = view_state.scroll_top
+        }
+        sync_line_label_scroll(text_area_element)
+    }
+
+    // ── Tab operations ──
+    function add_tab(): void {
+        if (is_tab_locked.value) {
+            return
+        }
+        capture_editor_view_state()
+        active_tab_id.value = tabs_store.add_tab()
+        focus_active_tab_editor()
+    }
+
+    function activate_tab(tab_id: string): void {
+        if (is_tab_locked.value) {
+            return
+        }
+        if (tab_id === active_tab_id.value) {
+            return
+        }
+        if (!tabs_store.has_tab(tab_id)) {
+            return
+        }
+        capture_editor_view_state()
+        active_tab_id.value = tab_id
+        tabs_store.note_active_tab(tab_id)
+        focus_active_tab_editor()
+    }
+
+    /** 中身が残っているタブだけ確認を挟む。空のタブは黙って閉じる */
+    function request_close_tab(tab_id: string): void {
+        if (is_tab_locked.value) {
+            return
+        }
+        if (tabs_store.get_tab_content(tab_id).trim() === "") {
+            close_tab(tab_id)
+            return
+        }
+        pending_close_tab_id.value = tab_id
+        confirm_close_kftl_tab_dialog.value?.show()
+    }
+
+    function confirm_close_tab(): void {
+        const tab_id = pending_close_tab_id.value
+        pending_close_tab_id.value = null
+        if (tab_id === null) {
+            return
+        }
+        close_tab(tab_id)
+    }
+
+    function cancel_close_tab(): void {
+        pending_close_tab_id.value = null
+    }
+
+    function close_tab(tab_id: string): void {
+        capture_editor_view_state()
+        editor_view_states.delete(tab_id)
+        // アクティブなタブを閉じたときの行き先は、下の「消えたタブへの追随」が決める
+        tabs_store.close_tab(tab_id)
+        focus_active_tab_editor()
     }
 
     // ── Business logic ──
@@ -222,6 +468,22 @@ export function useKftlView(options: {
             return text.replace(ja_marker, "\n")
         }
         return text.replace("\n" + KFTL_ASCII_SAVE_CHARACTOR + "\n", "\n")
+    }
+
+    /** textarea の入力イベント。ここで印をつけ、watch 側で保存マーカーを判定する */
+    function onTextAreaInput(): void {
+        user_input_tab_id = active_tab_id.value
+    }
+
+    function maybe_submit_by_save_marker(): void {
+        if (is_requested_submit.value) {
+            return
+        }
+        const content = text_area_content.value
+        if (content.endsWith("\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n")
+            || content.endsWith("\n" + KFTL_ASCII_SAVE_CHARACTOR + "\n")) {
+            submit()
+        }
     }
 
     // 追加されるタグのうち、TagStructに存在しないものを重複なく集める
@@ -247,50 +509,64 @@ export function useKftlView(options: {
     }
 
     async function submit(): Promise<void> {
-        await do_submit(false, false)
+        // 新しい送信は必ずアクティブなタブが対象。持ち越した値は見ない
+        await do_submit(active_tab_id.value, false, false)
     }
 
     function cancel_submit(): void {
         close_dialog_via_history(show_confirm_unknown_tag_dialog)
         unknown_tags.value = []
+        submit_target_tab_id.value = null
     }
 
     async function confirm_submit(): Promise<void> {
+        const target_tab_id = submit_target_tab_id.value ?? active_tab_id.value
         close_dialog_via_history(show_confirm_unknown_tag_dialog)
         unknown_tags.value = []
+        submit_target_tab_id.value = null
         // タグの確認を通しただけ。板名の確認はこの後の do_submit で改めて出る
-        await do_submit(true, false)
+        await do_submit(target_tab_id, true, false)
     }
 
     function cancel_mi_board_submit(): void {
         confirm_unknown_mi_board.close_confirm()
+        submit_target_tab_id.value = null
     }
 
     async function confirm_mi_board_submit(): Promise<void> {
+        const target_tab_id = submit_target_tab_id.value ?? active_tab_id.value
         confirm_unknown_mi_board.remember_confirmed_mi_boards()
         confirm_unknown_mi_board.close_confirm()
-        await do_submit(true, true)
+        submit_target_tab_id.value = null
+        await do_submit(target_tab_id, true, true)
     }
 
     // 保存本体。KFTLは複数リクエストをtxで束ねて送るので、二重送信すると
     // Kyouが丸ごと重複登録される。フラグはここで立てる
     // （テンプレートの :disabled / :readonly はこのフラグを見ている。
     //   以前は保存マーカー検出経路でしか立てておらず、保存ボタン経由では実質ノーガードだった）
-    async function do_submit(skip_unknown_tag_check: boolean, skip_unknown_mi_board_check: boolean): Promise<void> {
+    async function do_submit(target_tab_id: string, skip_unknown_tag_check: boolean, skip_unknown_mi_board_check: boolean): Promise<void> {
         if (is_requested_submit.value) {
             return
         }
+        const get_submitting_content = () => tabs_store.get_tab_content(target_tab_id)
+        const set_submitting_content = (content: string) => tabs_store.set_tab_content(target_tab_id, content)
+
         is_requested_submit.value = true
+        is_submitting.value = true
         try {
-            if (invalid_line_numbers.value.length != 0) {
+            // 表示用の invalid_line_numbers はアクティブなタブのもので、しかも await をまたいで
+            // 遅れて着地する。送信の可否は送信対象タブから引き直して判定する
+            const invalid_lines = await new KFTLStatement(get_submitting_content()).get_invalid_line_indexs()
+            if (invalid_lines.length != 0) {
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.kftl_has_invalid_line
                 error.error_message = i18n.global.t("KFTL_FOUND_INVALID_LINE_MESSAGE")
-                text_area_content.value = remove_save_marker(text_area_content.value)
+                set_submitting_content(remove_save_marker(get_submitting_content()))
                 emits('received_errors', [error])
                 return
             }
-            const statement = new KFTLStatement(text_area_content.value)
+            const statement = new KFTLStatement(get_submitting_content())
             const kftl_requests = await statement.generate_requests()
 
             // TagStructに存在しないタグを検出したら、送信前に確認を取る
@@ -299,7 +575,8 @@ export function useKftlView(options: {
                 if (not_found.length > 0) {
                     unknown_tags.value = not_found
                     // 保存マーカーを消しておかないと、確認中の入力で再度submitされてしまう
-                    text_area_content.value = remove_save_marker(text_area_content.value)
+                    set_submitting_content(remove_save_marker(get_submitting_content()))
+                    submit_target_tab_id.value = target_tab_id
                     show_confirm_unknown_tag_dialog.value = true
                     return
                 }
@@ -313,7 +590,8 @@ export function useKftlView(options: {
                 const not_found_boards = confirm_unknown_mi_board.collect_unknown_mi_boards(board_names)
                 if (not_found_boards.length > 0) {
                     // タグ確認と同じ理由で保存マーカーを消しておく
-                    text_area_content.value = remove_save_marker(text_area_content.value)
+                    set_submitting_content(remove_save_marker(get_submitting_content()))
+                    submit_target_tab_id.value = target_tab_id
                     confirm_unknown_mi_board.open_confirm(not_found_boards)
                     return
                 }
@@ -334,7 +612,7 @@ export function useKftlView(options: {
             }
             if (errors.length != 0) {
                 emits('received_errors', errors)
-                text_area_content.value = remove_save_marker(text_area_content.value)
+                set_submitting_content(remove_save_marker(get_submitting_content()))
 
                 if (tx_id) {
                     const deiscard_req = new DiscardTXRequest()
@@ -352,12 +630,14 @@ export function useKftlView(options: {
                 const commit_res = await props.gkill_api.commit_tx(commit_req)
                 if (commit_res.errors && commit_res.errors.length != 0) {
                     emits('received_errors', commit_res.errors)
-                    text_area_content.value = remove_save_marker(text_area_content.value)
+                    set_submitting_content(remove_save_marker(get_submitting_content()))
                     return
                 }
             }
 
-            clear()
+            // 保存できたタブは閉じる。0枚になるなら空のタブが1枚できる（use-kftl-tabs.ts）
+            tabs_store.close_tab(target_tab_id)
+            focus_active_tab_editor()
             const message = new GkillMessage()
             message.message_code = GkillMessageCodes.saved_kftls
             message.message = i18n.global.t("SAVED_MESSAGE")
@@ -367,9 +647,11 @@ export function useKftlView(options: {
             // 入力欄と各ボタンをreadonly/disabledのまま待たせない
             // （引き直しはKyouの件数ぶん往復するので、待たせると体感で数秒固まる）
             is_requested_submit.value = false
+            is_submitting.value = false
             await emit_saved_kyous(result_kyou_ids)
         } finally {
             is_requested_submit.value = false
+            is_submitting.value = false
         }
     }
 
@@ -422,21 +704,25 @@ export function useKftlView(options: {
         }
     }
 
-    async function clear(): Promise<void> {
-        text_area_content.value = ""
-    }
-
     function show_kftl_template_dialog(): void {
         kftl_template_dialog.value?.show()
     }
 
+    /**
+     * テンプレートは上書きではなく新しいタブで開く。
+     * 表示名は kftl-template-view.vue のボタンに出ている `title` を使う
+     */
     function paste_template(template: KFTLTemplateElementData): void {
-        text_area_content.value = template.template as string
+        capture_editor_view_state()
+        const template_name = template.title !== "" ? template.title
+            : (template.name !== "" ? template.name : null)
+        active_tab_id.value = tabs_store.add_tab(template.template as string, template_name)
         kftl_template_dialog.value?.hide()
+        focus_active_tab_editor()
     }
 
     async function focus_kftl_text_area(): Promise<void> {
-        document.getElementById("kftl_text_area")?.focus()
+        kftl_text_area.value?.focus()
     }
 
     // ── Event relay objects ──
@@ -449,6 +735,9 @@ export function useKftlView(options: {
     return {
         // Template refs
         kftl_template_dialog,
+        confirm_close_kftl_tab_dialog,
+        kftl_text_area,
+        kftl_line_label_wrap,
         confirm_unknown_mi_board_dialog: confirm_unknown_mi_board.confirm_unknown_mi_board_dialog,
 
         // Confirm unknown mi board
@@ -456,8 +745,23 @@ export function useKftlView(options: {
         cancel_mi_board_submit,
         confirm_mi_board_submit,
 
+        // Tabs
+        tabs,
+        active_tab_id,
+        active_tab_id_model,
+        is_tab_locked,
+        tab_bar_height,
+        tab_label,
+        add_tab,
+        activate_tab,
+        request_close_tab,
+        confirm_close_tab,
+        cancel_close_tab,
+        pending_close_tab_label,
+
         // State
         text_area_content,
+        text_area_element_id,
         line_label_datas,
         line_label_styles,
         is_requested_submit,
@@ -475,6 +779,7 @@ export function useKftlView(options: {
         line_label_height_px,
         kftl_input_height_px,
         kftl_input_width_px,
+        title_height_px,
 
         // Business logic
         submit,
@@ -483,6 +788,8 @@ export function useKftlView(options: {
         show_kftl_template_dialog,
         paste_template,
         focus_kftl_text_area,
+        onTextAreaInput,
+        update_line_labels,
 
         // Event relay objects
         errorMessageRelayHandlers,

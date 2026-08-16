@@ -89,7 +89,7 @@
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 v-on="saihateKyouHandlers"
                 ref="add_nlog_dialog" />
-            <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            <KFTLDialogHost :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :app_content_width="app_content_width"
                 v-on="saihateKyouHandlers"
@@ -139,7 +139,7 @@ import AddLantanaDialog from './dialogs/add-lantana-dialog.vue'
 import AddUrlogDialog from './dialogs/add-ur-log-dialog.vue'
 import AddMiDialog from './dialogs/add-mi-dialog.vue'
 import AddNlogDialog from './dialogs/add-nlog-dialog.vue'
-import kftlDialog from './dialogs/kftl-dialog.vue'
+import KFTLDialogHost from './views/kftl-dialog-host.vue'
 import mkflDialog from './dialogs/mkfl-dialog.vue'
 import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 import ConfirmLogoutDialog from './dialogs/confirm-logout-dialog.vue'

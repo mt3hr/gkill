@@ -37,7 +37,53 @@
       <td>Save button</td>
       <td>Sends what you typed to the server and creates the records.</td>
     </tr>
+    <tr>
+      <td>Tabs</td>
+      <td>Lets you keep several drafts at once. Each tab holds its own text.</td>
+    </tr>
+    <tr>
+      <td>Add tab button</td>
+      <td>Adds a new empty tab.</td>
+    </tr>
+    <tr>
+      <td>Close tab button</td>
+      <td>Closes that tab. You are asked first if it still has text.</td>
+    </tr>
   </table>
+
+  <h2>Working with tabs</h2>
+  <p>You can keep several drafts side by side. If you remember something else while writing one record, press the add tab button, write it in a new tab, and come back to the original tab later.</p>
+  <table>
+    <tr>
+      <th>Action</th>
+      <th>Result</th>
+    </tr>
+    <tr>
+      <td>Press the add tab button</td>
+      <td>An empty tab is added.</td>
+    </tr>
+    <tr>
+      <td>Click a tab name</td>
+      <td>The editor switches to that tab.</td>
+    </tr>
+    <tr>
+      <td>Press the close tab button</td>
+      <td>That tab is closed. You are asked first if it still has text.</td>
+    </tr>
+    <tr>
+      <td>Press the save button</td>
+      <td>Only that tab is saved, and the saved tab is closed. The other tabs stay as they are.</td>
+    </tr>
+    <tr>
+      <td>Choose a template</td>
+      <td>A new tab opens with the template in it. Your unfinished text is not lost.</td>
+    </tr>
+  </table>
+  <p>A tab is named after the template when it was opened from one, otherwise after the first line of its text. Tabs with nothing written yet are numbered.</p>
+
+  <div class="tip">
+    <strong>Tip:</strong> Unfinished text is kept when you close the screen. The tabs you had open come back the next time you open it.
+  </div>
 
   <h2>Memo Pad Syntax Overview</h2>
   <p>Memo pad syntax is a text format structured line by line. A single text entry can create all of the following records at once.</p>
@@ -55,10 +101,10 @@
   <h2>Steps</h2>
   <ol>
     <li>Enter the content of your records in the text input area using memo pad syntax.</li>
-    <li>Insert a predefined text with the template button if you need one.</li>
+    <li>Insert a predefined text with the template button if you need one. The template opens in a new tab, so your unfinished text is not lost.</li>
     <li>Click the save button to create the records.</li>
     <li>If the text contains a tag you have never used before, you are asked "This is a new tag. Do you want to add it?". If the tag is what you meant, carry on.</li>
-    <li>Once saved successfully, the text area is cleared.</li>
+    <li>Once saved successfully, that tab is closed. The other tabs keep their text. When no tab is left, an empty one is prepared for you.</li>
   </ol>
 
   <div class="tip">
@@ -71,6 +117,10 @@
 
   <div class="tip">
     <strong>Tip:</strong> You do not have to memorise memo pad syntax; with templates you can start recording straight away.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> On other screens, choosing "Memo Pad" from the + menu opens another memo pad window each time. Each window can show a different tab, and when two windows show the same tab, what you type in one appears in the other.
   </div>
 
   <h2>Related Documents</h2>

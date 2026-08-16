@@ -1,4 +1,4 @@
-import { onBeforeUnmount, onMounted, type Ref, watch } from "vue"
+import { getCurrentInstance, onBeforeUnmount, onMounted, type Ref, watch } from "vue"
 
 /**
  * Dialog history stack manager (lightweight, router-friendly)
@@ -103,6 +103,49 @@ function get_ref_id(r: object): string {
 
 // Prevent multi-registration for same Ref<boolean>
 const watched_refs = new WeakSet<object>()
+
+// --- 最前面のダイアログを閉じるための対応付け ---
+//
+// バックと Escape は `stack` の末尾を閉じる。ダイアログはクリックで前面へ出せる
+// （use-floating-dialog.ts の z_order）ので、「積んだ順の末尾」と
+// 「見た目の最前面」がずれる。ずれたままだと、奥のダイアログをバックで閉じてしまう。
+//
+// `useDialogHistoryStack` と `useFloatingDialog` は同じコンポーネントの setup で
+// 呼ばれるので、コンポーネントインスタンスを鍵にして両者を結ぶ。
+const ref_owner_map = new WeakMap<object, object>()
+
+/**
+ * 前面へ出たダイアログ（とその子孫）の履歴エントリを末尾へ移す。
+ *
+ * 引数は奥から手前の順。相対順を保ったまま末尾へ積み直すので、
+ * 親を前面へ出しても、その親から開いた確認ダイアログは親より手前に残る。
+ */
+export function raise_dialog_history_entries(owners: ReadonlyArray<object>): void {
+  if (owners.length === 0) return
+
+  const moved: Entry[] = []
+  for (const owner of owners) {
+    const entry = stack.find((e) => ref_owner_map.get(e.dialog as unknown as object) === owner)
+    if (entry && !moved.includes(entry)) moved.push(entry)
+  }
+  if (moved.length === 0) return
+
+  // すでに同じ並びで末尾に居るなら触らない
+  const tail_start = stack.length - moved.length
+  let already_top = true
+  for (let i = 0; i < moved.length; i++) {
+    if (stack[tail_start + i] !== moved[i]) {
+      already_top = false
+      break
+    }
+  }
+  if (already_top) return
+
+  for (const entry of moved) {
+    stack.splice(stack.indexOf(entry), 1)
+  }
+  stack.push(...moved)
+}
 
 // When we close a dialog because of popstate, watcher should NOT call history.go again.
 const closing_from_pop = new WeakSet<object>()
@@ -430,6 +473,11 @@ export function useDialogHistoryStack(
 ): void {
   const ref_obj = dialog as unknown as object
   const id = get_ref_id(ref_obj)
+
+  // 同じコンポーネントの useFloatingDialog と結ぶための鍵。
+  // これで「クリックで前面へ出したダイアログ」をバック/Escape の対象にできる
+  const owner = getCurrentInstance() as unknown as object | null
+  if (owner !== null) ref_owner_map.set(ref_obj, owner)
 
   if (options?.onClosed) onClosedMap.set(ref_obj, options.onClosed)
 

@@ -16,4 +16,7 @@ export interface KFTLDialogEmits {
     // KFTL はタグを registered_tag で上げてこないので、保存完了のこの合図で
     // 板ツリー/タグツリーを取り直す（受け側は useConfigStructSync の resync_structs）
     (e: 'saved_kyou_by_kftl', last_added_request_time: Date): void
+    // ×・Escape・ブラウザバックのどれで閉じても1回だけ上がる。
+    // ホスト（kftl-dialog-host.vue）が開いているウィンドウの一覧から取り除く
+    (e: 'closed'): void
 }
