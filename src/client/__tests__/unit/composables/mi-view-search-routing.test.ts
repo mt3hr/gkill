@@ -288,8 +288,9 @@ describe('useMiView 列(板)×検索ルーティング', () => {
     view.open_or_focus_board('board-x')
     expect(kyouIds(view.focused_kyous_list.value)).toEqual(['x1'])
 
-    // 「すべて」(i18n mockはキーをそのまま返す)は板絞り込みのない列へ
-    view.open_or_focus_board('MI_ALL_BOARD_NAME_TITLE')
+    // 「すべて」の番兵はロケール非依存のハードコード値(ツリーのノードが持つkeyと同じ)。
+    // これは板絞り込みのない列へ寄せる
+    view.open_or_focus_board('すべて')
     expect(view.focused_column_index.value).toBe(0)
   })
 

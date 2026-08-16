@@ -24,6 +24,7 @@ import type { ComponentRef } from '@/classes/component-ref'
 import { DashboardConfig } from '@/classes/datas/config/dashboard-config'
 import { PlaingTimeIsConfig } from '@/classes/datas/config/plaing-time-is-config'
 import { SavedFindQueryConfig } from '@/classes/datas/config/saved-find-query-config'
+import { sort_mi_board_names_by_config_order } from '@/classes/mi-board-names'
 
 export function useApplicationConfigView(options: {
     props: ApplicationConfigViewProps,
@@ -67,7 +68,14 @@ export function useApplicationConfigView(options: {
     const rykv_hot_reload: Ref<boolean> = ref(cloned_application_config.value.rykv_hot_reload)
     const show_tags_in_list: Ref<boolean> = ref(cloned_application_config.value.show_tags_in_list)
     const mi_default_board: Ref<string> = ref(cloned_application_config.value.mi_default_board)
-    const mi_board_names: Ref<Array<string>> = ref([])
+    // APIが返した生の板名一覧。表示順は mi_board_names（設定順に並べ替えたcomputed）を使う
+    const mi_board_names_source: Ref<Array<string>> = ref([])
+    // 板の並び順は ApplicationConfig（板構成の「上へ / 下へ」）が正。
+    // get_mi_board_list はマップ反復順で返すので、素で渡すと呼ぶたびに並びが変わる。
+    // 基準が props ではなく clone なのは、子の板構成ダイアログの「適用」が
+    // clone にだけ並べ替え済みの struct を書くため（props を見ると並べ替え直後の
+    // ここのプルダウンだけ古い順で取り残される）
+    const mi_board_names = computed(() => sort_mi_board_names_by_config_order(mi_board_names_source.value, cloned_application_config.value.mi_board_struct))
     const rykv_default_period: Ref<number> = ref(cloned_application_config.value.rykv_default_period)
     const mi_default_period: Ref<number> = ref(cloned_application_config.value.mi_default_period)
     const is_checked_use_rykv_period: Ref<boolean> = ref(cloned_application_config.value.rykv_default_period !== -1)
@@ -216,7 +224,7 @@ javascript: (function () {
         rykv_hot_reload.value = cloned_application_config.value.rykv_hot_reload
         show_tags_in_list.value = cloned_application_config.value.show_tags_in_list
         mi_default_board.value = cloned_application_config.value.mi_default_board
-        mi_board_names.value = []
+        mi_board_names_source.value = []
         rykv_default_period.value = cloned_application_config.value.rykv_default_period
         mi_default_period.value = cloned_application_config.value.mi_default_period
         is_checked_use_rykv_period.value = cloned_application_config.value.rykv_default_period !== -1
@@ -260,7 +268,7 @@ javascript: (function () {
         if (res.messages && res.messages.length !== 0) {
             // emits('received_messages', res.messages)
         }
-        mi_board_names.value = res.boards
+        mi_board_names_source.value = res.boards
     }
 
     async function update_application_config(): Promise<void> {
@@ -422,7 +430,7 @@ javascript: (function () {
 
     // ── Event handlers ──
     function update_board_name(board_name: string): void {
-        mi_board_names.value.push(board_name)
+        mi_board_names_source.value.push(board_name)
         mi_default_board.value = board_name
     }
 

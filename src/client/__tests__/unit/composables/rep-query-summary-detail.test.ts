@@ -17,6 +17,7 @@ import { createApp, defineComponent, h, nextTick, reactive } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { CheckState } from '@/pages/views/check-state'
+import { is_struct_container_node, type FoldableStructModel } from '@/pages/views/foldable-struct-model'
 import { useRepQuery } from '@/classes/use-rep-query'
 import type { RepQueryProps } from '@/pages/views/rep-query-props'
 import type { RepQueryEmits } from '@/pages/views/rep-query-emits'
@@ -26,12 +27,15 @@ import {
     makeRepTypeStructElement,
 } from '../../helpers/factory'
 
-interface StructNode { key: string, is_checked: boolean, children: Array<StructNode> | null }
+interface StructNode { key: string, is_checked: boolean, is_dir: boolean, children: Array<StructNode> | null }
 
+// FoldableStruct.get_selected_items() の写し。
+// 本番と同じく入れ物(ルート / フォルダ)は返さない。ここがずれると、
+// 本番では起きえないキー集合でコンポーザブルを検証してしまう
 function collect_checked_keys(root: StructNode): Array<string> {
     const checked: Array<string> = []
     const walk = (node: StructNode): void => {
-        if (node.is_checked) {
+        if (node.is_checked && !is_struct_container_node(node as unknown as FoldableStructModel)) {
             checked.push(node.key)
         }
         node.children?.forEach((child) => walk(child))

@@ -2,7 +2,7 @@ import { computed, ref, watch, type Ref } from 'vue'
 import type { FoldableStructEmits } from '@/pages/views/foldable-struct-emits'
 import type { FoldableStructProps } from '@/pages/views/foldable-struct-props'
 import { CheckState } from '@/pages/views/check-state'
-import type { FoldableStructModel } from '@/pages/views/foldable-struct-model'
+import { is_struct_container_node, type FoldableStructModel } from '@/pages/views/foldable-struct-model'
 import { DropTypeFoldableStruct } from '@/classes/api/drop-type-foldable-struct'
 import { useDeviceKind } from '@/classes/use-device-kind'
 import type { GkillError } from '@/classes/api/gkill-error'
@@ -204,11 +204,18 @@ export function useFoldableStruct(options: {
     }
 
     // 現在チェックの入っているアイテム名を配列で取得します。
+    //
+    // **入れ物（ルートとフォルダ）は含めません。** ここが返す key はそのまま
+    // 検索条件（tags / reps / devices_in_sidebar / rep_types_in_sidebar / timeis_tags）に
+    // なるので、入れ物を混ぜると実在しない名前の条件が紛れ込む。
+    // とくにルート行は folder_name='' の空白帯としてクリックでき、踏むだけで
+    // `__root__` がタグ名として条件に入っていた（OR検索では無害だがAND検索では0件になる）。
+    // 詳細は is_struct_container_node のコメント。
     function get_selected_items(): Array<string> {
         const items = new Array<string>()
         let f = (_struct: FoldableStructModel) => { }
         const func = (struct: FoldableStructModel) => {
-            if (struct.is_checked) {
+            if (struct.is_checked && !is_struct_container_node(struct)) {
                 items.push(struct.key)
             }
             if (struct.children) {
