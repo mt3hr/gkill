@@ -1,5 +1,5 @@
 <template>
-    <div class="mi_view_wrap" ref="mi_root">
+    <div class="mi_view_wrap" ref="mi_root" :data-gkill-view-ready="is_view_ready ? 'true' : 'false'">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_SIDEBAR')">
                 <template v-slot:activator="{ props }">
@@ -308,6 +308,7 @@ const {
     // Computed
     kyou_list_view_height,
     page_list,
+    is_view_ready,
 
     // Template event handlers
     toggle_drawer,

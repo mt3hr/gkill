@@ -140,11 +140,32 @@ async function waitForLoadingOverlayToFinish(page: Page): Promise<void> {
   await expect(overlay).toBeHidden({ timeout: 60000 })
 }
 
+/**
+ * 列ビュー(rykv / mi / dashboard)の準備完了を待つ。
+ *
+ * ページ全体のオーバーレイは初期検索の完了を待たないので、
+ * `.v-overlay .v-progress-circular` の `.first()` は列ごとのスピナーを掴む。
+ * 列スピナーは1tick遅れて出るため「出る前に toBeHidden が通る」窓があり、
+ * オーバーレイだけでは行が出る前に次の操作へ進んでしまう。
+ * ビューのルートが出す data-gkill-view-ready なら
+ * 「inited かつ 復元中でない かつ 飛行中の検索が0本」を決定論的に待てる。
+ */
+export async function waitForColumnViewReady(page: Page): Promise<void> {
+  await expect(
+    page.locator('[data-gkill-view-ready="true"]').first(),
+    '列ビューの準備が終わらない',
+  ).toBeAttached({ timeout: 60000 })
+}
+
 /** ページ遷移してアプリの読み込み完了を待つ共通処理。 */
-async function navigateTo(page: Page, path: string): Promise<void> {
+async function navigateTo(page: Page, path: string, wait_column_view = false): Promise<void> {
   await page.goto(path, { waitUntil: 'domcontentloaded' })
   await page.waitForSelector('#app', { timeout: 15000 })
   await waitForLoadingOverlayToFinish(page)
+  if (wait_column_view) {
+    await waitForColumnViewReady(page)
+  }
+  // 準備完了の「後」に閉じる。復元中に閉じに行くと直後の可視化で状態が動く
   await dismissFloatingDialogs(page)
 }
 
@@ -152,14 +173,14 @@ async function navigateTo(page: Page, path: string): Promise<void> {
  * Navigate to RYKV page and wait for it to load.
  */
 export async function navigateToRykv(page: Page): Promise<void> {
-  await navigateTo(page, '/rykv')
+  await navigateTo(page, '/rykv', true)
 }
 
 /**
  * Navigate to Mi board page and wait for it to load.
  */
 export async function navigateToMi(page: Page): Promise<void> {
-  await navigateTo(page, '/mi')
+  await navigateTo(page, '/mi', true)
 }
 
 /**
@@ -362,7 +383,7 @@ export async function searchByKeyword(page: Page, keyword: string): Promise<void
   await keywordField.press('Enter')
   await expect(keywordField).toHaveValue(keyword)
 
-  await waitForLoadingOverlayToFinish(page)
+  await waitForColumnViewReady(page)
 }
 
 /**
@@ -379,6 +400,8 @@ export async function clickSidebarSearchButton(page: Page): Promise<void> {
   const responsePromise = page.waitForResponse((res) => res.url().includes('/api/get_kyous'), { timeout: 30000 })
   await searchButton.click()
   await responsePromise
+  // 応答が返っただけでは列への書き戻しが終わっていない
+  await waitForColumnViewReady(page)
 }
 
 /**
