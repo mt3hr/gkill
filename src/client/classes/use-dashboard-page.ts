@@ -169,6 +169,12 @@ export function useDashboardPage(options?: {
 
     // ── Loading state ──
     const is_loading = ref(true)
+    // パネルのデータ取得が飛行中。表示制御には使わず、E2Eの準備完了信号にだけ使う
+    const is_fetching = ref(false)
+
+    // 「操作してよい状態」をE2Eが決定論的に待つための信号。
+    // 画面の表示/非表示には一切使わない(使うと取得完了を待たなくした意味がなくなる)
+    const is_view_ready = computed(() => application_config.value.is_loaded && !is_fetching.value)
 
     // ── Lifecycle ──
     onMounted(async () => {
@@ -673,6 +679,7 @@ export function useDashboardPage(options?: {
 
         // State
         is_loading,
+        is_fetching,
         actual_height,
         app_title_bar_height,
         gkill_api,
@@ -687,6 +694,7 @@ export function useDashboardPage(options?: {
         opened_dialogs,
 
         // Computed
+        is_view_ready,
         panel_height,
         page_list,
         target_date_start,
