@@ -6,6 +6,7 @@ import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import type { KFTLMiReKyouRequest } from './kftl-mi-re-kyou-request'
 import { KFTLEndMiReKyouStatementLine } from './kftl-end-mi-re-kyou-statement-line'
+import { KFTLMiReKyouNoneStatementLine } from './kftl-mi-re-kyou-none-statement-line'
 import { KFTL_ASCII_TAG_PREFIX, matches_prefix, split_tags, strip_prefix } from '../kftl-prefixes'
 
 // ブロックの次の行を組み立てる関数。項目行(板名・見積開始・見積終了・期日)ごとに中身が違う
@@ -72,10 +73,15 @@ export class KFTLMiReKyouTagStatementLine extends KFTLStatementLine {
 
     /**
      * 項目行を書き終えたあとの「次の行」。タグ行か閉じる行しか来られない。
-     * それ以外の行はタグ行として作られてapply時におかしな行になる
+     * それ以外の行は「**********」の行として作られてapply時におかしな行になる。
+     *
+     * ここの受け皿をタグ行にすると、行ラベルの先読みが「タグ」を上限(50行)ぶん並べる。
+     * 書いてもいない後置タグを並べないため、受け皿は KFTLMiReKyouNoneStatementLine にする
+     * (実際にタグ行を書けば下の generate_next_constructor がタグ行を組み立てるので、
+     * 後置タグはこれまでどおり書ける)
      */
     static generate_after_last_field_constructor(next_line_text: string, request: KFTLMiReKyouRequest, prev_line_is_meta_info: boolean): KFTLMiReKyouNextLineConstructor {
-        const stay_in_block: KFTLMiReKyouNextLineConstructor = (line_text: string, context: KFTLStatementLineContext) => new KFTLMiReKyouTagStatementLine(line_text, context, request, prev_line_is_meta_info, stay_in_block)
+        const stay_in_block: KFTLMiReKyouNextLineConstructor = (line_text: string, context: KFTLStatementLineContext) => new KFTLMiReKyouNoneStatementLine(line_text, context, (next_line_text: string) => KFTLMiReKyouTagStatementLine.generate_after_last_field_constructor(next_line_text, request, prev_line_is_meta_info))
         return KFTLMiReKyouTagStatementLine.generate_next_constructor(next_line_text, request, prev_line_is_meta_info, stay_in_block)
     }
 }

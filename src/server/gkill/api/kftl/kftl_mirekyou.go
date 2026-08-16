@@ -125,6 +125,9 @@ func generateMiReKyouNextConstructor(nextLineText string, req *kftlMiReKyouReque
 
 // generateMiReKyouAfterLastFieldConstructor decides the constructor for the line after the last field.
 // タグ行か閉じる行しか来られない。それ以外の行はタグ行として作られてApply時にエラーになる。
+// クライアント側は受け皿だけ KFTLMiReKyouNoneStatementLine にしている
+// (行ラベルの先読みが「タグ」で埋まるのを避けるため)。解釈は同じで、
+// 空行は無視・タグ以外の行はエラーなので、ここを合わせる必要はない。
 // Mirrors: KFTLMiReKyouTagStatementLine.generate_after_last_field_constructor
 func generateMiReKyouAfterLastFieldConstructor(nextLineText string, req *kftlMiReKyouRequest, prevLineIsMetaInfo bool) StatementLineConstructorFunc {
 	var stayInBlock StatementLineConstructorFunc
