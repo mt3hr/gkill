@@ -13,6 +13,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 import { useConfirmUnknownMiBoard } from '@/classes/use-confirm-unknown-mi-board'
+import { sort_mi_board_names_by_config_order } from '@/classes/mi-board-names'
 
 export function useEditMiView(options: {
     props: EditMiViewProps,
@@ -33,7 +34,13 @@ export function useEditMiView(options: {
 
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const show_kyou: Ref<boolean> = ref(false)
-    const mi_board_names: Ref<Array<string>> = ref(props.application_config.mi_default_board !== "" ? [props.application_config.mi_default_board] : [])
+    // APIが返した生の板名一覧。表示順は mi_board_names（設定順に並べ替えたcomputed）を使う
+    const mi_board_names_source: Ref<Array<string>> = ref(props.application_config.mi_default_board !== "" ? [props.application_config.mi_default_board] : [])
+    // 板の並び順は ApplicationConfig（設定の板構成の「上へ / 下へ」）が正。
+    // get_mi_board_list はマップ反復順で返すので、素で渡すと呼ぶたびに並びが変わる。
+    // このコンポーザブルには application_config の watch が無いが、computed なので
+    // 板ツリーが差し替わればそのまま追随する
+    const mi_board_names = computed(() => sort_mi_board_names_by_config_order(mi_board_names_source.value, props.application_config.mi_board_struct))
 
     const mi_title: Ref<string> = ref(cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.title : "")
     const mi_board_name: Ref<string> = ref(cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.board_name : "")
@@ -95,11 +102,11 @@ export function useEditMiView(options: {
             res.boards.push(props.application_config.mi_default_board)
         }
 
-        mi_board_names.value = res.boards
+        mi_board_names_source.value = res.boards
     }
 
     function update_board_name(board_name: string): void {
-        mi_board_names.value.push(board_name)
+        mi_board_names_source.value.push(board_name)
         mi_board_name.value = board_name
     }
 
