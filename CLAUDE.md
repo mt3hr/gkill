@@ -323,6 +323,7 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 - **ホストしたビューの画面切替メニューは `router.replace` しない。** `navigate_to_page` は `reset_dialog_history()`（モジュール共有）を呼ぶので、ポートで開いている他のウィンドウまで一斉に閉じる。`requested_navigate_page` を上げてホストに決めさせる
 - **位置とサイズの保存キー（`slot_index`）と、中央からずらす段数（`cascade_index`）は別物。** 前者は種類ごと、後者は種類をまたいだ採番。ずらす量を `slot_index` で決めると4種類とも 0 になり、**4枚が完全に重なって1枚にしか見えない**
 - **ウィンドウの未リサイズ時サイズは非スコープ CSS で確定させる**（Teleport 先には `data-v-` が付かない）。確定させたぶん ResizeObserver の実測をそのまま子へ渡す。`kftl-dialog.vue:72-82` の「`userSize` が無いときは既定値」ガードと**併用しない**（併用すると固定した高さが無視される）
+- **ウィンドウの中の `v-card` を一括リセットする規則は「自前でレイアウトを組むカード」を壊す。** ポートは `.rudbeckia-page-dialog .gkill-floating-dialog__body .v-card { display: block; … }` で App.vue の「中身はカード1枚」前提の規則を打ち消しているが、これは詳細度3で **Dnote のルート（`v-card.dnote_view`）にも当たる**。Dnote は `fill_height` のとき自分が flex column の器になって残り高さを集計リストへ配る作り（`.dnote_list_view` = `height:0` + `flex-grow:1`）なので、`display:block` へ戻されると `.dnote-scroll-wrap` までの `height:100%` の鎖が auto に落ち、`flex-basis:0` の `.dnote_list_table_root` が**高さちょうど0**になって**集計リストだけが消える**（集計項目とグラフは自然高さのまま残るので気付きにくい）。例外は `.v-card.fill_height_mode` の1つだけ足してある。守るテストは `e2e/rudbeckia.spec.ts` の「集計ビューの集計リスト区画が高さ0に潰れない」
 
 **複数枚（列状態の分離）**
 - **列の検索条件とスクロール位置の保存キーはインスタンスごとに分ける。** `gkill-api.ts` の `set/get_saved_{rykv,mi}_{find_kyou_querys,scroll_indexs}` は `instance_key` を**必須引数**で取る（省略可能にすると渡し忘れが黙って通り、2枚目が1枚目を上書きする）。空文字＝従来キーで、単独ページと1枚目が今までの保存内容を引き継ぐ
