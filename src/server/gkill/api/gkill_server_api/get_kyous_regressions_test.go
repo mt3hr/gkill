@@ -282,7 +282,8 @@ func TestHandleGetKyous_PlaingTimeNullMeansNoPlaingFilter(t *testing.T) {
 // TimeIsタグ検索は、Kyouのタグ絞り込み（tags）を使わなくても機能すること。
 //
 // タグ取得（getAllTags）の起動条件は
-// `Tags != nil || (HasTimeIsFilter() && TimeIsTags != nil)` になっている。
+// `containsNoTags(Tags) || (HasTimeIsFilter() && containsNoTags(TimeIsTags))` になっている
+// （RelatedTagIDs の読み手は NoTags 分岐しか無いので、それ以外では走らせない）。
 // 以前は Kyouタグ側の条件だけを見ていたため、tags 未使用 + TimeIsタグ検索のとき
 // 「どのTimeIsにタグが付いているか」の集合（RelatedTagIDs）が空のままになり、
 // 全TimeIsが「タグなし」と判定されていた。
