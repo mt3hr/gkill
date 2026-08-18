@@ -18,6 +18,7 @@ vi.mock('@/pages/plaing-time-is-page.vue', () => ({ default: { name: 'plaing-tim
 vi.mock('@/pages/mkfl-page.vue', () => ({ default: { name: 'mkfl-page' } }))
 vi.mock('@/pages/register-first-account-page.vue', () => ({ default: { name: 'register-first-account-page' } }))
 vi.mock('@/pages/dashboard-page.vue', () => ({ default: { name: 'dashboard-page' } }))
+vi.mock('@/pages/rudbeckia-page.vue', () => ({ default: { name: 'rudbeckia-page' } }))
 
 import router from '@/router/index'
 
@@ -27,15 +28,15 @@ describe('router', () => {
   const page_routes = routes.filter(r => r.components)
   const redirect_routes = routes.filter(r => !r.components)
 
-  test('defines exactly 13 page routes', () => {
-    expect(page_routes.length).toBe(13)
+  test('defines exactly 14 page routes', () => {
+    expect(page_routes.length).toBe(14)
   })
 
   test('all route names match expected set', () => {
     const names = page_routes.map(r => r.name).sort()
     const expected = [
       'dashboard', 'kftl', 'kyou', 'login', 'mi', 'mkfl', 'plaing',
-      'register_first_account', 'rykv', 'saihate',
+      'register_first_account', 'rudbeckia', 'rykv', 'saihate',
       'set_new_password', 'shared_mi', 'shared_page',
     ].sort()
     expect(names).toEqual(expected)

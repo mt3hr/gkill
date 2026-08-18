@@ -2236,8 +2236,8 @@ describe('GkillAPI', () => {
     })
 
     test.each([
-      { key: 'rykv_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_rykv_find_kyou_querys() },
-      { key: 'mi_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_mi_find_kyou_querys() },
+      { key: 'rykv_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_rykv_find_kyou_querys('') },
+      { key: 'mi_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_mi_find_kyou_querys('') },
     ])('$key: 重複query_idは読み込み時に振り直され、永続化も直る', ({ key, load }) => {
       window.localStorage.setItem(key, JSON.stringify([makeSavedQuery('dup'), makeSavedQuery('dup'), makeSavedQuery('unique')]))
 
@@ -2257,8 +2257,8 @@ describe('GkillAPI', () => {
     })
 
     test.each([
-      { key: 'rykv_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_rykv_find_kyou_querys() },
-      { key: 'mi_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_mi_find_kyou_querys() },
+      { key: 'rykv_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_rykv_find_kyou_querys('') },
+      { key: 'mi_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_mi_find_kyou_querys('') },
     ])('$key: 空のquery_idも振り直される', ({ key, load }) => {
       window.localStorage.setItem(key, JSON.stringify([makeSavedQuery(''), makeSavedQuery('a')]))
 
@@ -2272,7 +2272,7 @@ describe('GkillAPI', () => {
       const stored = JSON.stringify([makeSavedQuery('a'), makeSavedQuery('b')])
       window.localStorage.setItem('rykv_find_kyou_querys', stored)
 
-      const loaded = GkillAPI.get_instance().get_saved_rykv_find_kyou_querys()
+      const loaded = GkillAPI.get_instance().get_saved_rykv_find_kyou_querys('')
 
       expect(loaded.map((query) => query.query_id)).toEqual(['a', 'b'])
       expect(window.localStorage.getItem('rykv_find_kyou_querys')).toBe(stored)
@@ -2282,8 +2282,8 @@ describe('GkillAPI', () => {
     // 正規化のうえ新形式で書き戻される。旧キーがインスタンスへ生えると
     // deep_equals のキー数比較が崩れ、サイドバーの機械的emitガードが効かなくなる
     test.each([
-      { key: 'rykv_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_rykv_find_kyou_querys() },
-      { key: 'mi_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_mi_find_kyou_querys() },
+      { key: 'rykv_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_rykv_find_kyou_querys('') },
+      { key: 'mi_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_mi_find_kyou_querys('') },
     ])('$key: 旧形式(use_*入り)は正規化して読まれ、新形式で書き戻される', ({ key, load }) => {
       const legacy_query = {
         query_id: 'legacy-col',
@@ -2320,6 +2320,81 @@ describe('GkillAPI', () => {
       expect(persisted[0].words).toBeNull()
       expect(persisted[0].tags).toEqual([])
       expect(persisted[0].plaing_time).toBeNull()
+    })
+  })
+
+  /**
+   * ポート(rudbeckia)は同じ画面を複数枚開ける。列の検索条件とスクロール位置は
+   * 単一の localStorage キーに入っていたので、2枚目が1枚目を上書きしていた。
+   * 枝番で分ける約束をここで固定する。
+   */
+  describe('列状態の保存キーのインスタンス分離', () => {
+    const base_keys = [
+      { base: 'rykv_find_kyou_querys', set: (v: unknown, k: string) => GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(v as never, k), get: (k: string) => GkillAPI.get_instance().get_saved_rykv_find_kyou_querys(k) },
+      { base: 'mi_find_kyou_querys', set: (v: unknown, k: string) => GkillAPI.get_instance().set_saved_mi_find_kyou_querys(v as never, k), get: (k: string) => GkillAPI.get_instance().get_saved_mi_find_kyou_querys(k) },
+    ]
+
+    beforeEach(() => {
+      window.localStorage.clear()
+    })
+
+    function make_query(query_id: string): FindKyouQuery {
+      const query = new FindKyouQuery()
+      query.query_id = query_id
+      return query
+    }
+
+    // 空文字は従来キーそのまま。単独ページと1枚目が今までの保存内容を引き継ぐ
+    test.each(base_keys)('$base: 空の枝番は従来キーへ書く', ({ base, set }) => {
+      set([make_query('a')], '')
+      expect(window.localStorage.getItem(base), '従来キーに書かれていない').not.toBeNull()
+    })
+
+    test.each(base_keys)('$base: 枝番つきは別のキーへ書く', ({ base, set }) => {
+      set([make_query('a')], '2')
+      expect(window.localStorage.getItem(`${base}_2`), '枝番つきのキーに書かれていない').not.toBeNull()
+      expect(window.localStorage.getItem(base), '枝番つきの保存が従来キーを汚している').toBeNull()
+    })
+
+    test.each(base_keys)('$base: 別インスタンスの保存は互いを上書きしない', ({ set, get }) => {
+      set([make_query('first')], '')
+      set([make_query('second')], '2')
+
+      expect(get('').map((query) => query.query_id)).toEqual(['first'])
+      expect(get('2').map((query) => query.query_id)).toEqual(['second'])
+    })
+
+    // 2枚目は最初まっさら。ここで1枚目の内容を種付けすると query_id が重複し、
+    // query_id→列の逆引きが別インスタンスへ誤配送する
+    test.each(base_keys)('$base: 未保存の枝番は空で返る（1枚目から種付けしない）', ({ set, get }) => {
+      set([make_query('first')], '')
+      expect(get('2')).toEqual([])
+    })
+
+    test('スクロール位置も枝番で分かれる', () => {
+      const api = GkillAPI.get_instance()
+      api.set_saved_rykv_scroll_indexs([10], '')
+      api.set_saved_rykv_scroll_indexs([20], '2')
+      api.set_saved_mi_scroll_indexs([30], '')
+      api.set_saved_mi_scroll_indexs([40], '2')
+
+      expect(api.get_saved_rykv_scroll_indexs('')).toEqual([10])
+      expect(api.get_saved_rykv_scroll_indexs('2')).toEqual([20])
+      expect(api.get_saved_mi_scroll_indexs('')).toEqual([30])
+      expect(api.get_saved_mi_scroll_indexs('2')).toEqual([40])
+    })
+
+    // 旧形式JSONの移行は「読んだキーへ」書き戻すこと。従来キーへ書き戻すと
+    // 2枚目を開くたびに1枚目の保存内容が壊れる
+    test('枝番つきでも修復結果は同じ枝番のキーへ書き戻る', () => {
+      window.localStorage.setItem('rykv_find_kyou_querys_2', JSON.stringify([make_query('dup'), make_query('dup')]))
+
+      const loaded = GkillAPI.get_instance().get_saved_rykv_find_kyou_querys('2')
+
+      expect(new Set(loaded.map((query) => query.query_id)).size).toBe(2)
+      const persisted = JSON.parse(window.localStorage.getItem('rykv_find_kyou_querys_2')!) as Array<{ query_id: string }>
+      expect(persisted.map((query) => query.query_id)).toEqual(loaded.map((query) => query.query_id))
+      expect(window.localStorage.getItem('rykv_find_kyou_querys'), '従来キーへ書き戻している').toBeNull()
     })
   })
 

@@ -1,0 +1,492 @@
+/**
+ * useDashboardView の再読込まわりの検証（画面全機能は狙わない）。
+ *
+ * 1. registered_kyou のデバウンス。KFTLで複数行を一度に投げると registered_kyou が
+ *    連続発火するので、300ms まとめて1回だけ取り直す。まとめないと行数ぶん全体検索が走る。
+ * 2. アンマウント後にタイマーが残らないこと。残ると画面を離れたあとに検索が飛ぶ。
+ * 3. reload_kyou は Mi リスト / チェック済み / 開いているダイアログの3箇所を、
+ *    同じ requested_at で引き直す。同じ値を渡さないと3系統が別々に往復する。
+ * 4. dashboardKyouHandlers の結線。以前は RykvDialogHost に closed と
+ *    received_* しか配線しておらず、何を編集しても画面が更新されなかった。
+ *
+ * ApplicationConfig の取得とメッセージ表示はページ側（dashboard-page-reload.test.ts）。
+ */
+import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
+
+// req_res は GkillAPIRequest を継承する。GkillAPIRequest→GkillAPI→ApplicationConfig→req_res の
+// 循環importがあるため、本番同様に gkill-api を先に評価させる
+import '@/classes/api/gkill-api'
+
+vi.mock('@/i18n', () => ({
+    i18n: { global: { t: (key: string) => key, locale: 'ja' } },
+}))
+// router は全ページを引き込むので、この画面が使う replace だけ差し替える
+vi.mock('@/router', () => ({
+    default: { replace: vi.fn(), push: vi.fn() },
+}))
+vi.mock('@/classes/delete-gkill-cache', () => ({
+    default: vi.fn().mockResolvedValue(undefined),
+    delete_gkill_config_cache: vi.fn().mockResolvedValue(undefined),
+    delete_gkill_all_tag_names_cache: vi.fn().mockResolvedValue(undefined),
+    delete_gkill_attached_datas_cache: vi.fn().mockResolvedValue(undefined),
+}))
+vi.mock('@/classes/use-dialog-history-stack', () => ({
+    reset_dialog_history: vi.fn().mockResolvedValue(undefined),
+}))
+vi.mock('@/classes/use-scoped-enter-for-kftl', () => ({ useScopedEnterForKFTL: vi.fn() }))
+vi.mock('@/classes/use-scoped-ctrl-v-for-clipboard', () => ({ useScopedCtrlVForClipboard: vi.fn() }))
+// 引き直しの手順そのものは kyou-reload.test.ts が見る。ここでは呼ばれ方だけ見る
+vi.mock('@/classes/kyou-reload', () => ({
+    new_reload_batch: vi.fn(),
+    refresh_kyou: vi.fn(),
+    refresh_kyou_in_list: vi.fn(),
+    build_mi_reload_query: vi.fn((query: unknown) => query),
+}))
+
+import { createApp, defineComponent, h, reactive } from 'vue'
+import { useDashboardView } from '@/classes/use-dashboard-view'
+import { GkillAPI } from '@/classes/api/gkill-api'
+import { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
+import type { Kyou } from '@/classes/datas/kyou'
+import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import type { OpenedRykvDialog } from '@/pages/views/rykv-dialog-kind'
+import type { DashboardViewProps } from '@/pages/views/dashboard-view-props'
+import type { DashboardViewEmits } from '@/pages/views/dashboard-view-emits'
+
+const new_reload_batch_mock = vi.mocked(new_reload_batch)
+const refresh_kyou_mock = vi.mocked(refresh_kyou)
+const refresh_kyou_in_list_mock = vi.mocked(refresh_kyou_in_list)
+
+interface RefreshInListOptions {
+    requested_at?: number
+    query?: unknown
+    replace?: (next_list: Array<Kyou>) => void
+}
+
+/** Kyou の実クラスは通信を伴うので、この画面が触るフィールドだけの構造フェイクを使う */
+function make_kyou(id: string, data_type = 'kmemo'): Kyou {
+    return {
+        id: id,
+        data_type: data_type,
+        related_time: new Date('2026-03-15T09:00:00+09:00'),
+        attached_tags: [],
+    } as unknown as Kyou
+}
+
+/**
+ * 局所挿入の対象になれるMi。ダッシュボードのMiリストは for_mi 検索なので、
+ * mi_* の data_type と typed_mi が要る
+ */
+function make_insertable_kyou(id: string): Kyou {
+    const now = new Date()
+    const typed_mi = {
+        board_name: 'board_a',
+        is_checked: false,
+        create_time: now,
+        update_time: now,
+        limit_time: null,
+        estimate_start_time: null,
+        estimate_end_time: null,
+    }
+    const kyou = {
+        id: id,
+        data_type: 'mi_create',
+        rep_name: 'mi_rep',
+        related_time: now,
+        create_time: now,
+        update_time: now,
+        is_deleted: false,
+        attached_tags: [],
+        typed_mi: typed_mi,
+        typed_mirekyou: null,
+        clone: () => make_insertable_kyou(id),
+    }
+    return kyou as unknown as Kyou
+}
+
+function make_fake_api() {
+    return {
+        get_session_id: vi.fn(() => 'test-session'),
+        generate_uuid: vi.fn(() => 'generated-uuid'),
+        set_use_dark_theme: vi.fn(),
+        set_saved_application_config: vi.fn(),
+        get_kyous: vi.fn().mockResolvedValue({ kyous: [], messages: null, errors: null }),
+        get_kyou: vi.fn().mockResolvedValue({ kyou_histories: [], messages: null, errors: null }),
+        get_all_tag_names: vi.fn().mockResolvedValue({ messages: null, errors: null }),
+        get_mi_board_list: vi.fn().mockResolvedValue({ boards: [], messages: null, errors: null }),
+    }
+}
+
+/**
+ * 設定済みのダッシュボード相当。
+ *
+ * ビューは ApplicationConfig を **props で** 受け取る（自分では取りに行かない）。
+ * 未設定だと mi_kyou_query.tags がコンストラクタ既定の [] (=有効かつ0件) のままになり、
+ * Miリストは元から0件 ―― 「局所挿入できたときは全体検索を投げない」がフォールバック側を
+ * 通ってしまい、緑のまま何も検証しなくなる
+ */
+function make_view_application_config(): ApplicationConfig {
+    const application_config = new ApplicationConfig()
+    application_config.is_loaded = true
+    application_config.dashboard_json_data = {
+        dashboard_mi_find_kyou_query: {
+            tags: null,
+            mi_check_state: 'all',
+            mi_sort_type: 'create_time',
+            include_create_mi: true,
+        },
+    }
+    return application_config
+}
+
+let mounted_apps = new Array<ReturnType<typeof createApp>>()
+
+function mount_view(options?: { reload_all?: () => Promise<void>, reload_dnote?: () => Promise<void> }) {
+    let view: ReturnType<typeof useDashboardView> | null = null
+    const emitted = new Array<{ event: string, args: Array<unknown> }>()
+    const props = reactive({
+        gkill_api: make_fake_api() as unknown as GkillAPI,
+        application_config: make_view_application_config(),
+        app_title_bar_height: 50,
+        app_content_height: 900,
+        app_content_width: 1200,
+        application_config_load_failed: false,
+        is_hosted_in_dialog: false,
+    }) as unknown as DashboardViewProps
+    const emits = ((event: string, ...args: Array<unknown>) => {
+        emitted.push({ event: event, args: args })
+    }) as unknown as DashboardViewEmits
+    const Host = defineComponent({
+        setup() {
+            view = useDashboardView({ props, emits, ...options })
+            return () => h('div')
+        },
+    })
+    const app = createApp(Host)
+    app.mount(document.createElement('div'))
+    mounted_apps.push(app)
+    return { app: app, view: view!, emitted: emitted }
+}
+
+beforeEach(() => {
+    vi.useFakeTimers()
+    vi.spyOn(GkillAPI, 'get_instance').mockReturnValue(make_fake_api() as unknown as GkillAPI)
+    // 引き直しのバッチ時刻は連番にして、3箇所へ同じ値が渡っていることを見分けられるようにする
+    let batch_counter = 0
+    new_reload_batch_mock.mockReset()
+    new_reload_batch_mock.mockImplementation(() => ++batch_counter)
+    refresh_kyou_mock.mockReset()
+    refresh_kyou_mock.mockResolvedValue(null)
+    refresh_kyou_in_list_mock.mockReset()
+    refresh_kyou_in_list_mock.mockResolvedValue(undefined)
+})
+
+afterEach(() => {
+    for (const app of mounted_apps) {
+        app.unmount()
+    }
+    mounted_apps = []
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+})
+
+describe('registered_kyou のデバウンス', () => {
+    // Dnoteは集計なので局所挿入できず、追加のたびにまとめて取り直す。
+    // Miリストのほうは局所挿入で済ませ、引き直せなかったときだけ reload_all へ落とす
+    test('連続して登録されてもDnoteの取り直しは1回にまとまる', async () => {
+        const reload_dnote = vi.fn().mockResolvedValue(undefined)
+        const { view } = mount_view({ reload_dnote: reload_dnote })
+
+        view.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-1'))
+        view.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-2'))
+
+        await vi.advanceTimersByTimeAsync(299)
+        expect(reload_dnote, '300ms 経つ前に取り直している').not.toHaveBeenCalled()
+
+        await vi.advanceTimersByTimeAsync(1)
+        expect(reload_dnote, '登録のたびにDnoteの再集計が走っている（まとめられていない）').toHaveBeenCalledTimes(1)
+    })
+
+    test('間隔を空けた登録はそれぞれ取り直す', async () => {
+        const reload_dnote = vi.fn().mockResolvedValue(undefined)
+        const { view } = mount_view({ reload_dnote: reload_dnote })
+
+        view.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-1'))
+        await vi.advanceTimersByTimeAsync(300)
+        view.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-2'))
+        await vi.advanceTimersByTimeAsync(300)
+
+        expect(reload_dnote).toHaveBeenCalledTimes(2)
+    })
+
+    test('局所挿入できたときは全体検索を投げない', async () => {
+        const reload_all = vi.fn().mockResolvedValue(undefined)
+        const reload_dnote = vi.fn().mockResolvedValue(undefined)
+        refresh_kyou_mock.mockResolvedValue(make_insertable_kyou('kyou-1'))
+        const { view } = mount_view({ reload_all: reload_all, reload_dnote: reload_dnote })
+
+        view.dashboardKyouHandlers.registered_kyou(make_insertable_kyou('kyou-1'))
+        await vi.advanceTimersByTimeAsync(1000)
+
+        expect(view.mi_kyous.value.map(kyou => kyou.id)).toEqual(['kyou-1'])
+        expect(reload_all, '差し込めたのに全体検索まで投げている').not.toHaveBeenCalled()
+        expect(reload_dnote).toHaveBeenCalledTimes(1)
+    })
+
+    test('引き直せなかったときは全体検索へフォールバックする', async () => {
+        const reload_all = vi.fn().mockResolvedValue(undefined)
+        refresh_kyou_mock.mockResolvedValue(null)
+        const { view } = mount_view({ reload_all: reload_all })
+
+        view.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-1'))
+        await vi.advanceTimersByTimeAsync(300)
+
+        expect(reload_all).toHaveBeenCalledTimes(1)
+    })
+
+    test('アンマウント後はタイマーが残らない', async () => {
+        const reload_all = vi.fn().mockResolvedValue(undefined)
+        const reload_dnote = vi.fn().mockResolvedValue(undefined)
+        const { app, view } = mount_view({ reload_all: reload_all, reload_dnote: reload_dnote })
+
+        view.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-1'))
+        app.unmount()
+
+        await vi.advanceTimersByTimeAsync(1000)
+        expect(reload_all, '画面を離れたあとに検索が飛んでいる').not.toHaveBeenCalled()
+        expect(reload_dnote, '画面を離れたあとにDnoteの再集計が飛んでいる').not.toHaveBeenCalled()
+    })
+})
+
+describe('reload_kyou', () => {
+    test('Mi リスト / チェック済み / 開いているダイアログを同じ requested_at で引き直す', async () => {
+        const { view } = mount_view()
+        const kyou = make_kyou('kyou-1', 'mi_create')
+        view.mi_kyous.value = [make_kyou('kyou-1', 'mi_create')]
+        view.checked_kyous.value = [make_kyou('kyou-1', 'mi_create')]
+        view.opened_dialogs.value = [{
+            id: 'dialog-1',
+            kind: 'kyou',
+            kyou: make_kyou('kyou-1', 'mi_create'),
+            payload: null,
+            opened_at: 0,
+        } as OpenedRykvDialog]
+        const refreshed = make_kyou('kyou-1', 'mi_create')
+        refresh_kyou_mock.mockResolvedValue(refreshed)
+
+        await view.reload_kyou(kyou)
+
+        expect(new_reload_batch_mock, '1回の更新でバッチ時刻を取り直している').toHaveBeenCalledTimes(1)
+        const batch = new_reload_batch_mock.mock.results[0].value as number
+
+        expect(refresh_kyou_in_list_mock, 'Mi リストとチェック済みの2箇所を引き直していない').toHaveBeenCalledTimes(2)
+        for (let i = 0; i < 2; i++) {
+            const options = refresh_kyou_in_list_mock.mock.calls[i][2] as RefreshInListOptions
+            expect(options.requested_at, 'リストの引き直しが別バッチになっている（合流せず往復が増える）').toBe(batch)
+        }
+
+        expect(refresh_kyou_mock, '開いているダイアログを引き直していない').toHaveBeenCalledTimes(1)
+        expect(
+            refresh_kyou_mock.mock.calls[0][2],
+            'ダイアログの引き直しが別バッチになっている',
+        ).toBe(batch)
+    })
+
+    test('Mi リストの引き直しには Mi 用の検索条件を渡す（並び順が変わらないように）', async () => {
+        const { view } = mount_view()
+        view.mi_kyous.value = [make_kyou('kyou-1', 'mi_create')]
+
+        await view.reload_kyou(make_kyou('kyou-1', 'mi_create'))
+
+        const options = refresh_kyou_in_list_mock.mock.calls[0][2] as RefreshInListOptions
+        const query = options.query as FindKyouQuery
+        expect(query, 'Mi リストの引き直しに検索条件を渡していない').toBeTruthy()
+        expect(query.for_mi).toBe(true)
+    })
+
+    test('Mi リストは replace で copy-on-write する', async () => {
+        const { view } = mount_view()
+        view.mi_kyous.value = [make_kyou('kyou-1', 'mi_create')]
+        const next_list = [make_kyou('kyou-1', 'mi_create')]
+        refresh_kyou_in_list_mock.mockImplementation(async (_list, _kyou, options) => {
+            const replace = (options as RefreshInListOptions | undefined)?.replace
+            if (replace) {
+                replace(next_list)
+            }
+        })
+
+        await view.reload_kyou(make_kyou('kyou-1', 'mi_create'))
+
+        expect(view.mi_kyous.value, 'replace が配線されていない（列が再描画されない）').toHaveLength(1)
+    })
+
+    test('開いているダイアログの Kyou を引き直した結果で差し替える', async () => {
+        const { view } = mount_view()
+        view.opened_dialogs.value = [{
+            id: 'dialog-1',
+            kind: 'kyou',
+            kyou: make_kyou('kyou-1'),
+            payload: null,
+            opened_at: 0,
+        } as OpenedRykvDialog]
+        const refreshed = make_kyou('kyou-1')
+        refresh_kyou_mock.mockResolvedValue(refreshed)
+
+        await view.reload_kyou(make_kyou('kyou-1'))
+
+        expect(view.opened_dialogs.value[0].kyou.id).toBe('kyou-1')
+        expect(view.opened_dialogs.value[0].id, 'ダイアログ自体を作り直してはいけない').toBe('dialog-1')
+    })
+
+    test('id が違うダイアログは引き直さない', async () => {
+        const { view } = mount_view()
+        view.opened_dialogs.value = [{
+            id: 'dialog-1',
+            kind: 'kyou',
+            kyou: make_kyou('kyou-other'),
+            payload: null,
+            opened_at: 0,
+        } as OpenedRykvDialog]
+
+        await view.reload_kyou(make_kyou('kyou-1'))
+
+        expect(refresh_kyou_mock, '無関係なダイアログまで引き直している').not.toHaveBeenCalled()
+    })
+})
+
+describe('dashboardKyouHandlers の結線', () => {
+    test('updated_kyou で該当 Kyou を引き直す', async () => {
+        const { view } = mount_view()
+        view.mi_kyous.value = [make_kyou('kyou-1')]
+
+        view.dashboardKyouHandlers.updated_kyou(make_kyou('kyou-1'))
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(refresh_kyou_in_list_mock, '編集しても画面が更新されない').toHaveBeenCalled()
+        expect((refresh_kyou_in_list_mock.mock.calls[0][1] as Kyou).id).toBe('kyou-1')
+    })
+
+    // タグ/テキスト/通知の変更は updated_kyou を出さない。唯一の信号がこれ
+    test('requested_reload_kyou でも引き直す', async () => {
+        const { view } = mount_view()
+        view.mi_kyous.value = [make_kyou('kyou-1')]
+
+        view.dashboardKyouHandlers.requested_reload_kyou(make_kyou('kyou-1'))
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(refresh_kyou_in_list_mock, 'タグを足しても表示が変わらない').toHaveBeenCalled()
+    })
+
+    test('deleted_kyou で3つのリストから消える', async () => {
+        const { view } = mount_view()
+        view.mi_kyous.value = [make_kyou('kyou-1'), make_kyou('kyou-2')]
+        view.checked_kyous.value = [make_kyou('kyou-1')]
+        view.dnote_kyous.value = [make_kyou('kyou-1')]
+
+        view.dashboardKyouHandlers.deleted_kyou(make_kyou('kyou-1'))
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(view.mi_kyous.value.map((kyou) => kyou.id)).toEqual(['kyou-2'])
+        expect(view.checked_kyous.value).toHaveLength(0)
+        expect(view.dnote_kyous.value).toHaveLength(0)
+    })
+
+    test('requested_reload_list は待たずに取り直す（デバウンスしない）', async () => {
+        const reload_all = vi.fn().mockResolvedValue(undefined)
+        const { view } = mount_view({ reload_all: reload_all })
+
+        view.dashboardKyouHandlers.requested_reload_list()
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(reload_all, '明示的な再検索まで300ms待たされている').toHaveBeenCalledTimes(1)
+    })
+
+    test('closed で開いているダイアログを閉じる', async () => {
+        const { view } = mount_view()
+        view.opened_dialogs.value = [{
+            id: 'dialog-1',
+            kind: 'kyou',
+            kyou: make_kyou('kyou-1'),
+            payload: null,
+            opened_at: 0,
+        } as OpenedRykvDialog]
+
+        view.dashboardKyouHandlers.closed('dialog-1')
+
+        expect(view.opened_dialogs.value).toHaveLength(0)
+    })
+
+    test('requested_update_check_kyous でチェック済みが増減する', async () => {
+        const { view } = mount_view()
+        const kyou = make_kyou('kyou-1')
+
+        view.dashboardKyouHandlers.requested_update_check_kyous([kyou], true)
+        expect(view.checked_kyous.value.map((checked) => checked.id)).toEqual(['kyou-1'])
+
+        view.dashboardKyouHandlers.requested_update_check_kyous([kyou], false)
+        expect(view.checked_kyous.value).toHaveLength(0)
+    })
+
+    // メッセージの表示はページが持っている。ビューは上げるだけ
+    test('received_errors はページへ上げる', async () => {
+        const { view, emitted } = mount_view()
+
+        view.dashboardKyouHandlers.received_errors([
+            { error_code: 'ERR000001', error_message: 'テストエラー', show_keep: true },
+        ] as unknown as Parameters<typeof view.dashboardKyouHandlers.received_errors>[0])
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(emitted.filter((entry) => entry.event === 'received_errors')).toHaveLength(1)
+    })
+
+    // 板ツリー/タグツリーの追随はページの useConfigStructSync が持っている。
+    // ローカルの反映だけで済ませて上げ忘れると、新しい板やタグがツリーに出てこない
+    test('registered_kyou / updated_kyou はローカル反映に加えてページへも上げる', async () => {
+        const { view, emitted } = mount_view()
+
+        view.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-1'))
+        view.dashboardKyouHandlers.updated_kyou(make_kyou('kyou-2'))
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(emitted.filter((entry) => entry.event === 'registered_kyou')).toHaveLength(1)
+        expect(emitted.filter((entry) => entry.event === 'updated_kyou')).toHaveLength(1)
+    })
+})
+
+describe('ポートに載せたとき', () => {
+    // ツールバーの画面切替メニューはページ遷移せず親へ委ねる。
+    // ここで router.replace すると reset_dialog_history() が走り、
+    // ポートで開いている他のウィンドウまで一斉に閉じる
+    test('画面切替は requested_navigate_page を上げるだけ', async () => {
+        let view: ReturnType<typeof useDashboardView> | null = null
+        const emitted = new Array<{ event: string, args: Array<unknown> }>()
+        const props = reactive({
+            gkill_api: make_fake_api() as unknown as GkillAPI,
+            application_config: make_view_application_config(),
+            app_title_bar_height: 50,
+            app_content_height: 900,
+            app_content_width: 1200,
+            application_config_load_failed: false,
+            is_hosted_in_dialog: true,
+        }) as unknown as DashboardViewProps
+        const emits = ((event: string, ...args: Array<unknown>) => {
+            emitted.push({ event: event, args: args })
+        }) as unknown as DashboardViewEmits
+        const Host = defineComponent({
+            setup() {
+                view = useDashboardView({ props, emits })
+                return () => h('div')
+            },
+        })
+        const app = createApp(Host)
+        app.mount(document.createElement('div'))
+        mounted_apps.push(app)
+
+        await view!.navigate_to_page('rykv')
+
+        expect(emitted.filter((entry) => entry.event === 'requested_navigate_page')).toEqual([
+            { event: 'requested_navigate_page', args: ['rykv'] },
+        ])
+    })
+})

@@ -63,7 +63,7 @@ const COLUMN_VIEW_COMPOSABLES = [
 const VIEW_READY_TEMPLATES = [
     'src/client/pages/views/rykv-view.vue',
     'src/client/pages/views/mi-view.vue',
-    'src/client/pages/dashboard-page.vue',
+    'src/client/pages/views/dashboard-view.vue',
 ]
 
 /** 設定取得の失敗を画面へ伝えるページ */

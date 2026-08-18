@@ -1,4 +1,6 @@
-import { i18n } from '@/i18n'
+import { gkill_page_list } from '@/classes/gkill-page-list'
+import type { KyouChange } from '@/classes/kyou-change-bus'
+import { useKyouChangeSubscriber } from '@/classes/use-kyou-change-subscriber'
 import router from '@/router'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { computed, nextTick, onBeforeUnmount, type Ref, ref, watch } from 'vue'
@@ -67,7 +69,10 @@ export function useRykvView(options: {
     const is_show_gps_log_map: Ref<boolean> = ref(false)
     const is_show_dnote: Ref<boolean> = ref(false)
     const drawer: Ref<boolean | null> = ref(false)
-    const drawer_mode_is_mobile: Ref<boolean | null> = ref(false)
+    // 一時表示(オーバーレイ)モードにするかは「今の内容領域の幅」で決まる。
+    // 初期化時に1回代入するだけにしてはいけない ―― このビューはポート(rudbeckia)の
+    // リサイズできるダイアログの中でも描かれるので、幅はあとから変わる
+    const drawer_mode_is_mobile = computed<boolean>(() => !(props.app_content_width.valueOf() >= 760))
     const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
     const is_loading: Ref<boolean> = ref(true)
     const inited = ref(false)
@@ -88,15 +93,8 @@ export function useRykvView(options: {
     const is_view_ready = computed(() =>
         inited.value && !is_restoring_columns.value && running_search_count.value === 0)
 
-    const page_list = computed(() => [
-        { app_name: i18n.global.t('RYKV_APP_NAME'), page_name: 'rykv' },
-        { app_name: i18n.global.t('MI_APP_NAME'), page_name: 'mi' },
-        { app_name: i18n.global.t('KFTL_APP_NAME'), page_name: 'kftl' },
-        { app_name: i18n.global.t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
-        { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
-        { app_name: i18n.global.t('DASHBOARD_APP_NAME'), page_name: 'dashboard' },
-        { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
-    ])
+    // 画面切替メニューの一覧は classes/gkill-page-list.ts に1つだけ置いてある
+    const page_list = gkill_page_list
 
     // ── Watchers ──
     // KyouDetailViewはCSSのresizeでユーザが幅を変えるため、実寸をResizeObserverで追う。
@@ -120,6 +118,12 @@ export function useRykvView(options: {
     onBeforeUnmount(() => {
         kyou_detail_view_resize_observer?.disconnect()
         kyou_detail_view_resize_observer = null
+        // 飛行中の検索を止める。ポート(rudbeckia)ではこのビューごと閉じられるので、
+        // 放っておくと閉じたウィンドウぶんの数十万件の取得が最後まで走る
+        for (const abort_controller of abort_controllers.values()) {
+            abort_controller.abort()
+        }
+        abort_controllers.clear()
     })
 
     watch(() => focused_time.value, () => {
@@ -319,12 +323,21 @@ export function useRykvView(options: {
     }
 
     // ── Business logic ──
-    function onDeletedKyou(deleted_kyou: Kyou): void {
+    /**
+     * 一覧から取り除くだけ。**emit を含めないこと** ―― ポート(rudbeckia)の
+     * 変更通知はこの関数を直接呼ぶので、ここで emit するとホストが再 publish して
+     * 通知が無限に往復する
+     */
+    function apply_deleted_kyou(deleted_kyou: Kyou): void {
         remove_kyou_from_multi_column_lists(match_kyous_list.value, deleted_kyou.id)
         remove_kyou_from_list_by_id(focused_kyous_list.value, deleted_kyou.id)
         if (focused_kyou.value?.id === deleted_kyou.id) {
             focused_kyou.value = null
         }
+    }
+
+    function onDeletedKyou(deleted_kyou: Kyou): void {
+        apply_deleted_kyou(deleted_kyou)
         emits('deleted_kyou', deleted_kyou)
     }
 
@@ -339,10 +352,15 @@ export function useRykvView(options: {
         return undefined
     }
 
-    async function reload_kyou(kyou: Kyou): Promise<void> {
+    /**
+     * @param requested_at 引き直しの合流キー。ポートの変更通知から呼ぶときは
+     *   **発生元が採番した値**を渡す。渡さないとここで採番され、
+     *   kyou-reload.ts の合流が成立せず画面の枚数ぶん往復する
+     */
+    async function reload_kyou(kyou: Kyou, requested_at_arg?: number): Promise<void> {
         // 列・focused・開いているダイアログは同じ更新を受けて独立に引き直す。
         // 同じ値を渡して1往復に合流させる（渡さないと系統ごとに往復が増える）
-        const requested_at = new_reload_batch();
+        const requested_at = requested_at_arg ?? new_reload_batch();
         (async (): Promise<void> => {
             for (let i = 0; i < match_kyous_list.value.length; i++) {
                 const column_query = querys.value[i]
@@ -423,7 +441,9 @@ export function useRykvView(options: {
     // 追加されたKyouは再検索せず、各列の正しい位置へ差し込む。
     // 再検索するとヒット集合もスクロール位置も変わるし、KyouListViewは
     // 配列参照の差し替えでフル再描画する(reload_kyou と同じ理由)
-    const { onRegisteredKyou, insert_registered_kyou } = useRegisteredKyouLocalInsert({
+    // onRegisteredKyou は使わない。中継ハンドラ側で requested_at を採番して
+    // insert_registered_kyou を直接呼び、同じ値を変更通知にも載せる
+    const { insert_registered_kyou } = useRegisteredKyouLocalInsert({
         querys: querys,
         match_kyous_list: match_kyous_list,
         reload_list_by_query_id: reload_list_by_query_id,
@@ -462,10 +482,10 @@ export function useRykvView(options: {
             const wait_promises = new Array<Promise<unknown>>()
             try {
                 // スクロール位置の復元
-                match_kyous_list_top_list.value = props.gkill_api.get_saved_rykv_scroll_indexs()
+                match_kyous_list_top_list.value = props.gkill_api.get_saved_rykv_scroll_indexs(props.column_state_instance_key)
 
                 // 前回開いていた列があれば復元する
-                const saved_querys = props.gkill_api.get_saved_rykv_find_kyou_querys()
+                const saved_querys = props.gkill_api.get_saved_rykv_find_kyou_querys(props.column_state_instance_key)
                 default_query.value = sidebar.get_default_query()!.clone()
                 default_query.value.query_id = props.gkill_api.generate_uuid()
                 if (saved_querys.length.valueOf() === 0) {
@@ -499,7 +519,7 @@ export function useRykvView(options: {
                 // ここで画面を見せる。初期検索の完了は待たない。
                 // 待つと検索が1本でも解決しないだけで画面全体が固まる。
                 // 進行は列ごとのスピナーとフッタの「取得中」で見せる
-                drawer_mode_is_mobile.value = !(props.app_content_width.valueOf() >= 760)
+                // (drawer_mode_is_mobile は app_content_width の computed。ここでは触らない)
                 drawer.value = props.app_content_width.valueOf() >= 760
                 inited.value = true
                 is_loading.value = false
@@ -575,7 +595,7 @@ export function useRykvView(options: {
                 })
             }
 
-            props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value)
+            props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value, props.column_state_instance_key)
 
             focused_column_checked_kyous.value = []
 
@@ -716,8 +736,8 @@ export function useRykvView(options: {
             match_kyous_list.value.splice(column_index, 1)
             match_kyous_list_top_list.value.splice(column_index, 1)
 
-            props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value)
-            props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
+            props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value, props.column_state_instance_key)
+            props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value, props.column_state_instance_key)
             nextTick(() => {
                 // 閉じた列の最近傍の列へフォーカスを移す。
                 // 削除で-1にしてあるのでfocus_columnが「切り替わった」と判定しDnoteを再集計する
@@ -755,8 +775,8 @@ export function useRykvView(options: {
             // 列追加もフォーカス切り替えなのでDnoteを追従させる
             focus_column(querys.value.length - 1)
         }
-        props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value)
-        props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
+        props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value, props.column_state_instance_key)
+        props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value, props.column_state_instance_key)
     }
 
     async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Promise<void> {
@@ -803,6 +823,13 @@ export function useRykvView(options: {
     }
 
     async function navigate_to_page(page_name: string): Promise<void> {
+        // ポート(rudbeckia)の中では行き先を親が決める。
+        // ここで reset_dialog_history() を呼んではいけない ―― モジュール共有の履歴スタックを
+        // 巻き戻すので、ポートで開いている他のウィンドウまで一斉に閉じる
+        if (props.is_hosted_in_dialog) {
+            emits('requested_navigate_page', page_name)
+            return
+        }
         await reset_dialog_history()
         router.replace('/' + page_name + '?loaded=true')
     }
@@ -861,7 +888,7 @@ export function useRykvView(options: {
             return
         }
         match_kyous_list_top_list.value[index] = scroll_top
-        props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
+        props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value, props.column_state_instance_key)
     }
 
     function onColumnClickedListView(index: number): void {
@@ -1030,15 +1057,27 @@ export function useRykvView(options: {
 
     // ── Event relay objects ──
     const crudRelayHandlers = {
-        'deleted_kyou': (kyou: Kyou) => onDeletedKyou(kyou),
+        'deleted_kyou': (kyou: Kyou) => { onDeletedKyou(kyou); publish_kyou_change({ kind: 'deleted', kyou: kyou }, new_reload_batch()) },
         'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
         'deleted_text': (text: Text) => emits('deleted_text', text),
         'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
-        'registered_kyou': (kyou: Kyou) => { onRegisteredKyou(kyou); emits('registered_kyou', kyou) },
+        'registered_kyou': (kyou: Kyou) => {
+            // 引き直しの合流キーはここで採番する。ホスト側で採番すると
+            // kyou-reload.ts の合流条件に間に合わず、画面の枚数ぶん往復する
+            const requested_at = new_reload_batch()
+            void insert_registered_kyou(kyou, requested_at)
+            emits('registered_kyou', kyou)
+            publish_kyou_change({ kind: 'registered', kyou: kyou }, requested_at)
+        },
         'registered_tag': (tag: Tag) => emits('registered_tag', tag),
         'registered_text': (text: Text) => emits('registered_text', text),
         'registered_notification': (notification: Notification) => emits('registered_notification', notification),
-        'updated_kyou': (kyou: Kyou) => { reload_kyou(kyou); emits('updated_kyou', kyou) },
+        'updated_kyou': (kyou: Kyou) => {
+            const requested_at = new_reload_batch()
+            void reload_kyou(kyou, requested_at)
+            emits('updated_kyou', kyou)
+            publish_kyou_change({ kind: 'reload', kyou: kyou }, requested_at)
+        },
         'updated_tag': (tag: Tag) => emits('updated_tag', tag),
         'updated_text': (text: Text) => emits('updated_text', text),
         'updated_notification': (notification: Notification) => emits('updated_notification', notification),
@@ -1047,8 +1086,17 @@ export function useRykvView(options: {
     }
 
     const allColumnsRequestHandlers = {
-        'requested_reload_kyou': (kyou: Kyou) => reload_kyou(kyou),
-        'requested_reload_list': () => { for (let i = 0; i < querys.value.length; i++) { reload_list(i) } },
+        'requested_reload_kyou': (kyou: Kyou) => {
+            const requested_at = new_reload_batch()
+            void reload_kyou(kyou, requested_at)
+            publish_kyou_change({ kind: 'reload', kyou: kyou }, requested_at)
+        },
+        'requested_reload_list': () => {
+            for (let i = 0; i < querys.value.length; i++) {
+                void reload_list(i)
+            }
+            publish_kyou_change({ kind: 'reload_list' }, new_reload_batch())
+        },
         'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => update_check_kyous(kyous, checked),
     }
 
@@ -1061,8 +1109,35 @@ export function useRykvView(options: {
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload),
     }
 
+
+    // ── 画面間の変更通知 ──
+    // ポート(rudbeckia)で複数の画面を並べているとき、ここで起きた変更を他の画面へ配る。
+    // チャネルが null（単独ページ）なら何も起きない
+    function publish_kyou_change(change: KyouChange, requested_at: number): void {
+        const channel = props.kyou_change_channel
+        if (!channel) {
+            return
+        }
+        channel.bus.publish(channel.origin_id, change, requested_at)
+    }
+    // 他の画面で起きた変更を反映する。**適用関数だけを渡すこと** ――
+    // 中継束を渡すと emit が走ってホストが再 publish し、通知が無限に往復する
+    useKyouChangeSubscriber(() => props.kyou_change_channel, {
+        apply_registered: (kyou, requested_at) => { void insert_registered_kyou(kyou, requested_at) },
+        apply_reload: (kyou, requested_at) => { void reload_kyou(kyou, requested_at) },
+        apply_deleted: (kyou) => apply_deleted_kyou(kyou),
+        apply_reload_list: () => {
+            for (let i = 0; i < querys.value.length; i++) {
+                void reload_list(i)
+            }
+        },
+    })
+
     // ── Keyboard shortcut ──
-    const enable_enter_shortcut = ref(true)
+    // useScopedEnterForKFTL / useScopedCtrlVForClipboard は window にキャプチャで張るので、
+    // ポート(rudbeckia)で4画面ぶん登録すると1回の Enter でメモ帳が4枚開く。
+    // ホストされているときはポート自身のぶんだけ生かす
+    const enable_enter_shortcut = computed(() => !props.is_hosted_in_dialog)
     useScopedEnterForKFTL(rykv_root, show_kftl_dialog, enable_enter_shortcut)
     useScopedCtrlVForClipboard(rykv_root, show_save_clipboard_to_file_dialog, enable_enter_shortcut)
 

@@ -1,5 +1,8 @@
 <template>
-    <div class="plaing_timeis_view_wrap" ref="plaing_timeis_root">
+    <!-- data-gkill-view-ready は E2E の待ち合わせ用。真偽値をそのまま bind すると
+         Vue は false のとき属性ごと消すので、必ず文字列の三項で書く -->
+    <div class="plaing_timeis_view_wrap" ref="plaing_timeis_root"
+        :data-gkill-view-ready="is_view_ready ? 'true' : 'false'">
         <KyouListView :kyou_height="180" :width="timeis_kyou_list_view_width" :list_height="kyou_list_view_height"
             :show_timeis_plaing_end_button="true" :application_config="application_config" :gkill_api="gkill_api"
             :matched_kyous="match_kyous_list" :query="query" :is_focused_list="true" :closable="false"
@@ -48,7 +51,10 @@
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @closed="(id: string) => close_rykv_dialog(id)"
             v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykv_dialog_handler }" />
-        <v-avatar :style="floating_action_button_style()" color="primary" class="position-fixed">
+        <!-- 打刻メモ帳ダイアログやポート(rudbeckia)の中ではFABを出さない。
+             .position-fixed は position: fixed なのでダイアログを抜けて画面右下に居座り、
+             呼び出し元のページのFABと重なる -->
+        <v-avatar v-if="!is_hosted_in_dialog" :style="floating_action_button_style()" color="primary" class="position-fixed">
             <v-menu transition="slide-x-transition">
                 <template v-slot:activator="{ props }">
                     <v-btn color="white" v-long-press="() => show_kftl_dialog()" icon="mdi-plus" variant="text"
@@ -137,6 +143,7 @@ const {
     // Computed
     kyou_list_view_height,
     timeis_kyou_list_view_width,
+    is_view_ready,
 
     // Business logic
     reload_list,

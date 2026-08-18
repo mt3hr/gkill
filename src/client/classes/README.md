@@ -9,7 +9,7 @@ Vue コンポーネント（`pages/`）から使用されるロジック層。
 
 ```
 classes/
-├── (ルートファイル 287個)        # use-*.ts Composable + ユーティリティ
+├── (ルートファイル 296個)        # use-*.ts Composable + ユーティリティ
 ├── api/                        # GkillAPI クライアント → api/README.md
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md

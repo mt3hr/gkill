@@ -238,7 +238,10 @@
                 :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" @closed="(id: string) => close_rykv_dialog(id)"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykv_dialog_handler }" />
-            <v-avatar v-if="!is_shared_rykv_view" :style="floating_action_button_style()" color="primary"
+            <!-- ポート(rudbeckia)の中ではFABを出さない。.position-fixed は position: fixed なので
+                 ダイアログを抜けて画面右下に居座り、ポート自身のFABと重なる。
+                 記録の追加はポートのFABから行う（同じダイアログを開く） -->
+            <v-avatar v-if="!is_shared_rykv_view && !is_hosted_in_dialog" :style="floating_action_button_style()" color="primary"
                 class="position-fixed">
                 <v-menu transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
@@ -419,30 +422,37 @@ const is_ryuu_empty = computed(() => {
         return false
     })
 })
+
+// ── ビューポート単位を使わない寸法 ──
+// このビューはポート(rudbeckia)のフローティングダイアログの中でも描かれる。
+// そこでは基準が画面ではなくダイアログの箱なので、100vh / 100vw と
+// メディアクエリ(ダイアログの幅を見られない)は使えない。すべて props から作る。
+const ryuu_pane_height_px = computed(() => is_ryuu_empty.value ? '0px' : `${props.app_content_height.valueOf() * 0.2}px`)
+const kyou_detail_view_height_px = computed(() => {
+    const ryuu_height = is_ryuu_empty.value ? 0 : props.app_content_height.valueOf() * 0.2
+    return `${props.app_content_height.valueOf() - ryuu_height}px`
+})
+const app_content_width_px = computed(() => `${props.app_content_width.valueOf()}px`)
+// 旧 `@media (max-width: 600px) { width: 100vw }` の置き換え。min-width は旧実装どおり触らない
+const kyou_detail_view_base_width_px = computed(() => props.app_content_width.valueOf() <= 600 ? app_content_width_px.value : '400px')
+const overlay_target_min_width_px = computed(() => is_loading.value ? app_content_width_px.value : '0px')
 </script>
 <style lang="css" scoped>
 .kyou_detail_view.dummy {
     resize: horizontal;
     overflow-x: hidden;
     overflow-y: scroll;
-    height: calc(v-bind('app_content_height.toString().concat("px")') - v-bind('is_ryuu_empty ? "0px" : "100vh * 0.2"'));
-    width: 400px;
+    height: v-bind(kyou_detail_view_height_px);
+    width: v-bind(kyou_detail_view_base_width_px);
     min-width: 400px;
-    max-width: 100vw;
-}
-
-@media (max-width: 600px) {
-    .kyou_detail_view.dummy {
-        width: 100vw;
-    }
+    max-width: v-bind(app_content_width_px);
 }
 
 /* 確定幅を与える。中身のKyouの型によらず、外側のtd列がryuuの中身のmin-contentで広がるのを防ぐ */
 .ryuu_view.dummy {
     overflow-x: hidden;
     overflow-y: auto;
-    height: calc(100vh * 0.2);
-    height: calc(v-bind('is_ryuu_empty ? "0px" : "100vh * 0.2"'));
+    height: v-bind(ryuu_pane_height_px);
     width: v-bind('kyou_detail_view_width.toString().concat("px")');
     max-width: v-bind('kyou_detail_view_width.toString().concat("px")');
 }
@@ -466,7 +476,7 @@ const is_ryuu_empty = computed(() => {
     z-index: -10000;
     position: absolute;
     min-height: calc(v-bind('app_content_height.toString().concat("px")'));
-    min-width: v-bind("is_loading ? 'calc(100vw)' : '0px'");
+    min-width: v-bind(overlay_target_min_width_px);
 }
 .rykv_kyou_detail_view_wrap {
     background-color: rgb(var(--v-theme-background));

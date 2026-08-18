@@ -1,4 +1,4 @@
-import { i18n } from '@/i18n'
+import { gkill_page_list } from '@/classes/gkill-page-list'
 import router from '@/router'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
@@ -39,15 +39,8 @@ export function useMkflPage() {
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
 
     // ── Computed ──
-    const page_list = computed(() => [
-        { app_name: i18n.global.t('RYKV_APP_NAME'), page_name: 'rykv' },
-        { app_name: i18n.global.t('MI_APP_NAME'), page_name: 'mi' },
-        { app_name: i18n.global.t('KFTL_APP_NAME'), page_name: 'kftl' },
-        { app_name: i18n.global.t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
-        { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
-        { app_name: i18n.global.t('DASHBOARD_APP_NAME'), page_name: 'dashboard' },
-        { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
-    ])
+    // 画面切替メニューの一覧は classes/gkill-page-list.ts に1つだけ置いてある
+    const page_list = gkill_page_list
 
     // ── beforeunload guard ──
     function handle_before_unload(e: BeforeUnloadEvent) {
