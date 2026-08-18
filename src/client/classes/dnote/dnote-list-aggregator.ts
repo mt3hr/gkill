@@ -30,21 +30,28 @@ export class DnoteListAggregator {
             }
         }
 
+        // 出力は「キーの初出順に並べたあとソートし直す」ので配列のまま持つが、
+        // 既出キーの引き当ては Map で行う。以前は Kyou × キーごとに
+        // aggregated_result_list.find() を回していて O(件数 × キー数 × 既出キー数) だった
+        // (フォーカス列が数万件になるDnoteでは、ここだけで数十秒になる)。
         const aggregated_result_list = new Array<AggregatedItem>()
+        const aggregated_result_by_title = new Map<string, AggregatedItem>()
         for (let i = 0; i < match_kyous.length; i++) {
             const kyou = match_kyous[i]
             const keys = this.dnote_key_getter.get_keys(kyou)
             for (let j = 0; j < keys.length; j++) {
                 const key = keys[j]
                 // すでに同じキーの集計結果がある場合は、値を追加する
-                const existing_result = aggregated_result_list.find(result => result.title === key)
+                const existing_result = aggregated_result_by_title.get(key)
                 if (existing_result) {
                     existing_result.value = await this.dnote_aggregate_target.append_aggregate_element_value(existing_result.value, kyou, find_kyou_query)
                     existing_result.match_kyous.push(kyou.clone())
                 } else {
                     // 新しいキーの場合は、新しい集計結果を作成する
                     const aggregated_value = await this.dnote_aggregate_target.append_aggregate_element_value(null, kyou, find_kyou_query)
-                    aggregated_result_list.push({ title: key, value: aggregated_value, match_kyous: [kyou.clone()] })
+                    const aggregated_result: AggregatedItem = { title: key, value: aggregated_value, match_kyous: [kyou.clone()] }
+                    aggregated_result_list.push(aggregated_result)
+                    aggregated_result_by_title.set(key, aggregated_result)
                 }
             }
         }

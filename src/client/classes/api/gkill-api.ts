@@ -176,8 +176,7 @@ import type { ReloadRepositoriesResponse } from "./req_res/reload-repositories-r
 import { GetShareKyouListInfosResponse } from "./req_res/get-share-kyou-list-infos-response"
 import { GetUpdatedDatasByTimeRequest } from "./req_res/get-updated-datas-by-time-request"
 import { GetUpdatedDatasByTimeResponse } from "./req_res/get-updated-datas-by-time-response"
-import delete_gkill_kyou_cache, { delete_gkill_all_tag_names_cache, delete_gkill_attached_datas_cache, delete_gkill_config_cache } from "../delete-gkill-cache"
-import { KYOU_CACHE_NAME } from "../service-worker-utils"
+import delete_gkill_kyou_cache, { delete_gkill_all_tag_names_cache, delete_gkill_attached_datas_cache, delete_gkill_config_cache, delete_gkill_kyou_caches } from "../delete-gkill-cache"
 import type { CommitTXRequest } from "./req_res/commit-tx-request"
 import type { CommitTXResponse } from "./req_res/commit-tx-response"
 import type { DiscardTXRequest } from "./req_res/discard-tx-request"
@@ -2324,11 +2323,36 @@ export class GkillAPI {
 
         private gkill_session_id_cookie_key = "gkill_session_id"
 
+        /**
+         * セッションIDをcookieから読む。
+         *
+         * **メモ化してはいけない。** サーバが Set-Cookie で更新する経路があり、
+         * 古い値を掴むと「理由なくログアウトする」という追いづらい症状になる。
+         *
+         * かわりに走査のほうを軽くしてある。以前は `document.cookie.split(';')` で
+         * 全cookieの配列を作り、さらに `.find(closure)` の中で `split('=')` していた。
+         * これは GkillAPIRequest のコンストラクタから呼ばれるので、
+         * 一覧の1行につき3〜5個作られるリクエストオブジェクトのぶんだけ積み上がる。
+         */
         get_session_id(): string {
-                const cookies = document.cookie.split(';')
-                let session_id = cookies.find(
-                        (cookie) => cookie.split('=')[0].trim() === this.gkill_session_id_cookie_key.trim()
-                )?.replace(this.gkill_session_id_cookie_key + "=", "").trim()
+                const key = this.gkill_session_id_cookie_key.trim()
+                const cookie_string = document.cookie
+                let session_id = ""
+                let position = 0
+                while (position < cookie_string.length) {
+                        let separator = cookie_string.indexOf(';', position)
+                        if (separator === -1) {
+                                separator = cookie_string.length
+                        }
+                        const equal = cookie_string.indexOf('=', position)
+                        if (equal !== -1 && equal < separator) {
+                                if (cookie_string.slice(position, equal).trim() === key) {
+                                        session_id = cookie_string.slice(equal + 1, separator).trim()
+                                        break
+                                }
+                        }
+                        position = separator + 1
+                }
 
                 if (!session_id) {
                         this.set_session_id("")
@@ -2734,39 +2758,52 @@ export class GkillAPI {
                 }
         }
 
+        /**
+         * 前回の検索以降に更新されたKyouのキャッシュを捨てる。**検索のたびに呼ばれる。**
+         *
+         * 以前はここで3つの無駄を払っていた:
+         *  1. `(await cache.keys()).length === 0` ―― 空判定のためだけに、Kyouキャッシュの
+         *     全エントリぶんの Request を実体化していた。エントリは「Kyou × データ種別」で増えるので、
+         *     使い込んだ環境ほど高くつく(コード自身が「でかすぎると例外が飛ぶ」と認めていた)。
+         *  2. `get_application_config()` を not_load_all 無しで呼んでいたので内部の load_all() が走り、
+         *     get_all_rep_names / get_all_tag_names / get_mi_board_list まで引いていた。
+         *     cache_clear_count_limit を1つ読むためだけに、検索の前に毎回4往復。
+         *  3. 更新IDごとの削除を逐次 await していた(1IDにつき caches.open + 16 delete)。
+         *
+         * ウォーターマークの約束は変えていない: **更新IDを引けなかったときは進めない**。
+         * 進めてしまうとその時間帯の更新は二度と通知されず、古い応答が焼き付く。
+         */
         async delete_updated_gkill_caches(): Promise<void> {
-                const cache = await caches.open(KYOU_CACHE_NAME)
-                try {
-                        if ((await cache.keys()).length === 0) {
-                                return
-                        }
-                } catch (_e: unknown) {
-                        // でかすぎると例外が飛ぶ。無視する。
-                        // 例外は無視する
+                const last_cache_update_time = this.get_last_cache_update_time()
+                if (!last_cache_update_time) {
+                        // 初回。消すべき「前回以降の更新」がそもそも無いので、往復せずに基準時刻だけ置く
+                        this.set_last_cache_update_time(new Date(Date.now()))
+                        return
                 }
 
-                const application_config_res = await this.get_application_config(new GetApplicationConfigRequest())
+                const req = new GetUpdatedDatasByTimeRequest()
+                req.last_updated_time = last_cache_update_time
+                const res = await this.get_updated_datas_by_time(req)
+                // 更新IDを引けなかったときはウォーターマークを進めない。
+                // 進めてしまうとこの時間帯の更新は二度と通知されず、
+                // 消し損ねた古い応答がキャッシュに焼き付いたまま残る
+                if (res.errors && res.errors.length !== 0) {
+                        return
+                }
+                if (!res.updated_ids) {
+                        return
+                }
 
-                const last_cache_update_time = this.get_last_cache_update_time()
-                if (last_cache_update_time) {
-                        const req = new GetUpdatedDatasByTimeRequest()
-                        req.last_updated_time = last_cache_update_time
-                        const res = await this.get_updated_datas_by_time(req)
-                        // 更新IDを引けなかったときはウォーターマークを進めない。
-                        // 進めてしまうとこの時間帯の更新は二度と通知されず、
-                        // 消し損ねた古い応答がキャッシュに焼き付いたまま残る
-                        if (res.errors && res.errors.length !== 0) {
-                                return
-                        }
-                        if (!res.updated_ids) {
-                                return
-                        }
-                        if (res.updated_ids.length > application_config_res.application_config.cache_clear_count_limit) {
+                if (res.updated_ids.length !== 0) {
+                        // 上限の判定に要るのは cache_clear_count_limit だけ。
+                        // 各ページが読み込み後に set_saved_application_config しているのでそれを使い、
+                        // 無いときだけ取りに行く(not_load_all を渡して付随する3往復を止める)。
+                        const application_config = this.get_saved_application_config()
+                                ?? (await this.get_application_config(new GetApplicationConfigRequest(), true)).application_config
+                        if (res.updated_ids.length > application_config.cache_clear_count_limit) {
                                 await delete_gkill_kyou_cache(null)
                         } else {
-                                for (let i = 0; i < res.updated_ids.length; i++) {
-                                        await delete_gkill_kyou_cache(res.updated_ids[i])
-                                }
+                                await delete_gkill_kyou_caches(res.updated_ids)
                         }
                 }
                 this.set_last_cache_update_time(new Date(Date.now()))
