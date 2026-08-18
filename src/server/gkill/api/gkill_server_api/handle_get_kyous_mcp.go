@@ -170,6 +170,11 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		if err != nil {
 			err = fmt.Errorf("error at find kyous mcp: %w", err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			// 検索が失敗したのにGkillErrorが1つも無いことがある(repのSQLエラーなど)。
+			// そのまま返すと errors:null + 0件 になり、呼び出し側からは
+			// 「成功・該当0件」と区別が付かない。理由はEnsureNotEmptyのコメント。
+			gkillErrors = message.EnsureNotEmpty(gkillErrors, message.FindKyousError,
+				api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}))
 		}
 		response.Errors = append(response.Errors, gkillErrors...)
 		return
