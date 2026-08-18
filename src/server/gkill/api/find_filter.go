@@ -22,6 +22,15 @@ const (
 	NoTags = "no tags"
 )
 
+// containsNoTags はタグ条件に「タグ無し」仮想タグ(NoTags)が含まれるかを返します。
+//
+// 照合は完全一致。NoTags の判定は filterTagsKyous / filterTagsTimeIs でも
+// `tag == NoTags` の完全一致で行っているので、ここだけ大小無視にしてはいけません
+// (片方だけ当たると「タグなし集合を作らないのに NoTags 分岐へ入る」= 常に0件になります)。
+func containsNoTags(tags []string) bool {
+	return slices.Contains(tags, NoTags)
+}
+
 type FindFilter struct {
 }
 
@@ -98,12 +107,18 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return drainFindErrors(wg, errch, gkillErrch)
 	}
 
-	// タグ取得
-	// RelatedTagIDs(タグなし判定)と非表示タグ集合はTimeIsタグ絞り込みでも参照するため、
-	// Kyouタグだけでなく TimeIs タグ使用時にも起動する。
-	// 以前はKyouタグのみが条件で、タグフィルタなし+TimeIsタグ検索のとき
-	// 全TimeIsが「タグなし」扱いになっていた
-	if findQuery.Tags != nil || (findQuery.HasTimeIsFilter() && findQuery.TimeIsTags != nil) {
+	// タグなし判定(RelatedTagIDs)の構築。
+	//
+	// **「タグ無し」仮想タグ(NoTags)を使う検索のときだけ走らせる。**
+	// RelatedTagIDs の読み手は filterTagsKyous / filterTagsTimeIs の NoTags 分岐しか無く
+	// (OR分岐・AND分岐それぞれ2箇所)、NoTags が条件に入っていなければ結果に一切影響しない。
+	// 一方 getAllTags は**全repの全タグ**を集めるので、実データでは1検索あたり数十万行になる。
+	// rykv の既定クエリは tags が非nullなので、以前の条件(Tags != nil)では
+	// タグを明示的に選んだだけの検索でもこの全走査が毎回まるごと無駄に走っていた。
+	//
+	// TimeIsタグ側も見るのは、タグフィルタなし + TimeIsタグ「タグ無し」検索のときに
+	// 全TimeIsが「タグなし」扱いになる不具合があったため(get_kyous_regressions_test.go)。
+	if containsNoTags(findQuery.Tags) || (findQuery.HasTimeIsFilter() && containsNoTags(findQuery.TimeIsTags)) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -116,7 +131,12 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			errch <- e
 			gkillErrch <- ge
 		}()
+	}
 
+	// 非表示タグ(チェックが外れているタグ)の集合。
+	// こちらは NoTags と無関係に、タグ絞り込みの結果から対象を消すために使うので、
+	// 「タグ絞り込みを使っているか」で起動する
+	if findQuery.Tags != nil || (findQuery.HasTimeIsFilter() && findQuery.TimeIsTags != nil) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -498,6 +518,10 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 }
 
 // getAllTags は「タグが1つでも付いているKyouのID」の集合(RelatedTagIDs)を作ります。
+//
+// **呼ぶのは「タグ無し」仮想タグ(NoTags)を使う検索のときだけ**(FindKyous の起動条件を参照)。
+// 全repの全タグを集めるので実データでは数十万行になり、結果に影響しない検索で
+// 走らせると1検索まるごとの無駄になります。
 //
 // 用途はそれだけなので、Tag構造体(240バイト・文字列10本)をIDごとに丸ごと保持しない。
 // 以前は findCtx.AllTags に全タグを溜めていたが、読むのはこの関数の中だけで、
