@@ -74,7 +74,9 @@
         </v-card>
         <v-card v-if="show_footer" :class="footer_class" variant="text" :ripple="false" :link="false">
             <v-row no-gutters>
-                <v-col v-if="!has_loaded && (!matched_kyous || matched_kyous.length === 0)" cols="auto"
+                <!-- 読み込み中は件数を出さない。列を空にしてから引くので普通は空だが、
+                     行が残っている状態で読み込み中になっても途中の件数を見せない -->
+                <v-col v-if="!has_loaded" cols="auto"
                     class="py-3 text-grey">
                     {{ i18n.global.t('LOADING_MESSAGE') }}
                 </v-col>
@@ -82,7 +84,9 @@
                     class="py-3 text-grey">
                     {{ i18n.global.t('NO_RESULTS_MESSAGE') }}
                 </v-col>
-                <v-col v-else-if="matched_kyous && matched_kyous.length" cols="auto" class="py-3">
+                <!-- 全件揃うまで件数を出さない。読み込み中は上の LOADING_MESSAGE のままにする。
+                     途中の件数を「N件」として見せると最終件数と区別が付かない -->
+                <v-col v-else-if="has_loaded && matched_kyous && matched_kyous.length" cols="auto" class="py-3">
                     {{ matched_kyous.length }}{{ i18n.global.t("N_COUNT_ITEMS_TITLE") }}
                 </v-col>
                 <v-spacer />

@@ -3,7 +3,6 @@ import type { KyouChange } from '@/classes/kyou-change-bus'
 import { useKyouChangeSubscriber } from '@/classes/use-kyou-change-subscriber'
 import router from '@/router'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { apply_search_window, build_search_windows } from '@/classes/kyou-search-windows'
 import { computed, nextTick, onBeforeUnmount, type Ref, ref, toRaw, watch } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
 import type { RykvViewEmits } from '@/pages/views/rykv-view-emits'
@@ -621,7 +620,7 @@ export function useRykvView(options: {
                 }
             })
 
-            // SWキャッシュの掃除は検索1回につき1度だけ(窓ごとにやり直さない)
+            // SWキャッシュの掃除は検索1回につき1度だけ
             if (update_cache) {
                 await delete_gkill_kyou_cache(null)
             } else {
@@ -637,82 +636,43 @@ export function useRykvView(options: {
                 base_query.update_cache = true
             }
 
-            // 期間を新しい順の窓へ切って順に引く。
-            //
-            // 全期間を1回で引くと、サーバは条件に合う全件を作ってから返すので、
-            // 30年ぶんを指定した瞬間に数十秒とGB級のメモリを使う。窓に切れば
-            // 最初の窓ぶんはすぐ表示できる(総処理量は減らない。効くのは体感とサーバのピーク)。
-            //
-            // 分割してよい条件は kyou-search-windows.ts の一箇所に閉じている。
-            // mi板・TimeIs絞り込み・地図・実行中・画像のみは**分割すると結果が変わる**ので
-            // そこで null が返り、従来どおり1回で引く。
-            const windows = build_search_windows(query)
-            const window_queries = windows === null
-                ? [base_query]
-                : windows.map(window => apply_search_window(base_query, window))
+            const req = new GetKyousRequest()
+            abort_controllers.set(query_id, req.abort_controller)
+            req.query = base_query
 
-            let is_first_window = true
-            for (let window_index = 0; window_index < window_queries.length; window_index++) {
-                // 窓ごとに世代を照合する。待っている間に同じ列で新しい検索が始まっていたら、
-                // 残りの窓は投げずに降りる(スピナーは新しい検索が所有しているので触らない)
-                if (!is_current()) {
-                    return
-                }
+            const res: GetKyousResponse = await props.gkill_api.get_kyous(req)
 
-                const req = new GetKyousRequest()
-                // 中断は「いま飛んでいる窓」に効けばよい。列ごとに1つだけ持つ約束は変えない
-                abort_controllers.set(query_id, req.abort_controller)
-                req.query = window_queries[window_index]
+            if (!is_current()) {
+                return
+            }
 
-                const res: GetKyousResponse = await props.gkill_api.get_kyous(req)
+            if (res.errors && res.errors.length !== 0) {
+                emits('received_errors', res.errors)
+                // エラー時もスピナーを解除する。解除しないと列が読み込み中のまま残る
+                nextTick(() => get_kyou_list_view(query_id)?.set_loading(false))
+                return
+            }
+            if (res.messages && res.messages.length !== 0) {
+                emits('received_messages', res.messages)
+            }
 
-                if (!is_current()) {
-                    return
-                }
-
-                if (res.errors && res.errors.length !== 0) {
-                    emits('received_errors', res.errors)
-                    // エラー時もスピナーを解除する。解除しないと列が読み込み中のまま残る
-                    nextTick(() => get_kyou_list_view(query_id)?.set_loading(false))
-                    return
-                }
-                if (res.messages && res.messages.length !== 0) {
-                    emits('received_messages', res.messages)
-                }
-
-                // 検索後の列位置を取得する
-                column_index = -1
-                for (let i = 0; i < querys.value.length; i++) {
-                    const current_query = querys.value[i]
-                    if (current_query.query_id === query_id) {
-                        column_index = i
-                        break
-                    }
-                }
-
-                if (column_index === -1) {
-                    return
-                }
-
-                if (is_first_window) {
-                    match_kyous_list.value[column_index] = res.kyous
-                    is_first_window = false
-                    continue
-                }
-                // 2窓目以降は**in-placeで伸ばす**。参照ごと差し替えると
-                // focused_kyous_list(= match_kyous_list[focused_column_index] へのエイリアス)が切れ、
-                // 件数カレンダーとDnoteが追随しなくなる。
-                //
-                // 窓は新しい順で、窓の中はサーバが related_time 降順で返すので、
-                // 連結するだけで全体の並び順が保たれる(窓に切ってよい条件に for_mi を含めていないのはこのため)。
-                const current_list = match_kyous_list.value[column_index]
-                for (let i = 0; i < res.kyous.length; i++) {
-                    current_list.push(res.kyous[i])
+            // 検索後の列位置を取得する
+            column_index = -1
+            for (let i = 0; i < querys.value.length; i++) {
+                const current_query = querys.value[i]
+                if (current_query.query_id === query_id) {
+                    column_index = i
+                    break
                 }
             }
 
+            if (column_index === -1) {
+                return
+            }
+
+            match_kyous_list.value[column_index] = res.kyous
+
             if (!props.is_shared_rykv_view) {
-                // 件数カレンダーとDnoteは窓ごとに作り直さない。全部揃ってから1回だけ繋ぐ。
                 // フォーカス列以外の検索完了でfocused_kyous_listを汚染しない
                 if (column_index !== -1 && column_index === focused_column_index.value
                     && (is_show_kyou_count_calendar.value || is_show_dnote.value)) {
