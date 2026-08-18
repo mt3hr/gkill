@@ -171,6 +171,42 @@ test.describe('KFTL Tabs', () => {
     await expect(textarea).toHaveValue(keep)
   })
 
+  // IMEで打ったときの回帰。実機で「順当にIMEから入力すると保存が走らないのに、
+  // バックスペースを押すと走る」と報告された形。
+  //
+  // IMEでは「変換の確定」と「改行」が別のEnterになる。確定は compositionend 経由で
+  // Vue が合成した input として着地するので、DOMイベントの並びが素の打鍵と変わる。
+  // このとき**同じ input イベントのリスナーとリスナーの間でマイクロタスクが走る**ため、
+  // Vue の post flush（本文の watch）が `@input` ハンドラより先に新しい本文を観測する。
+  // 判定や基準を watch 側に置いていると、ここで黙って落ちる。
+  //
+  // `pressSequentially` では再現しない（打鍵ごとにイベントループが回るので中間の
+  // 本文を必ず観測してしまう）。CDPで実際にIME合成を起こすこと。
+  test('IMEで確定してから改行しても自動で保存される', async ({ page }) => {
+    await openKftl(page)
+
+    const keep = makeUniqueLabel('ime_keep')
+    const textarea = page.locator(TEXT_AREA)
+    await textarea.fill(keep)
+    await expect(textarea).toHaveValue(keep)
+
+    await addTab(page)
+    await textarea.fill('てすと')
+    await textarea.press('End')
+    await textarea.focus()
+
+    const client = await page.context().newCDPSession(page)
+    await page.keyboard.press('Enter')
+    // 「！」をIMEの変換中の文字として置き、確定させる
+    await client.send('Input.imeSetComposition', { text: '！', selectionStart: 1, selectionEnd: 1 })
+    await client.send('Input.insertText', { text: '！' })
+    await page.keyboard.press('Enter')
+
+    // 保存ボタンは押していないが、保存できたタブは閉じる
+    await expect(page.locator(TAB)).toHaveCount(1)
+    await expect(textarea).toHaveValue(keep)
+  })
+
   test('リロードしてもタブが復元される', async ({ page }) => {
     await openKftl(page)
     const first = makeUniqueLabel('reload_first')
