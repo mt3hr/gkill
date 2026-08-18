@@ -270,6 +270,37 @@ test.describe('ポート', () => {
     expect(overflow.x, '行が横スクロールできてしまっている').toBe('hidden')
   })
 
+  /**
+   * 上の一括リセットは集計ビュー(Dnote)のルートも巻き込む（あれも v-card）。
+   * Dnote は fill_height のとき「自分が flex column の器になって残り高さを
+   * 集計リストへ配る」作りなので、display:block へ戻されると
+   * `.dnote-scroll-wrap` までの height:100% の鎖が auto に落ち、
+   * flex-basis:0 の集計リスト区画が高さ0に潰れる。
+   * 集計項目とグラフは自然高さのまま残るので気付きにくい。
+   */
+  test('集計ビューの集計リスト区画が高さ0に潰れない', async ({ page }) => {
+    await openScreenWindow(page, SCREEN_MENU.rykv)
+
+    const dialog = page.locator(PAGE_DIALOG).first()
+    await waitForWindowReady(dialog)
+
+    await dialog.locator('button:has(.mdi-file-chart-outline)').first().click()
+
+    const dnote = dialog.locator('.dnote_view').first()
+    await expect(dnote, '集計ビューが出ない').toBeAttached({ timeout: 60000 })
+    expect(
+      await dnote.evaluate((el) => getComputedStyle(el).display),
+      '集計ビューが display:block に戻されている＝中で高さを配れない',
+    ).toBe('flex')
+
+    // 高さ0の要素は boundingBox() が null になるので矩形を直接測る
+    expect(
+      await dialog.locator('.dnote_list_table_root').first()
+        .evaluate((el) => el.getBoundingClientRect().height),
+      '集計リストの区画が高さ0に潰れている',
+    ).toBeGreaterThan(0)
+  })
+
   test('Escapeで最前面のウィンドウが閉じる', async ({ page }) => {
     await openScreenWindow(page, SCREEN_MENU.rykv)
     await openScreenWindow(page, SCREEN_MENU.mi)
