@@ -194,7 +194,7 @@ describe('useRykvView 初期化', () => {
 
     view.onColumnScrollList(0, 300)
 
-    expect(api.set_saved_rykv_scroll_indexs).toHaveBeenCalledWith([300])
+    expect(api.set_saved_rykv_scroll_indexs).toHaveBeenCalledWith([300], '')
   })
 
   test('is_view_ready は復元中false・完了でtrue・再検索でまたfalse', async () => {
@@ -258,5 +258,61 @@ describe('useRykvView 初期化', () => {
     expect(view.is_loading.value).toBe(false)
     expect(pending_get_kyous.length, 'hot reload OFF なのに検索が飛んだ').toBe(0)
     expect(view.is_view_ready.value, '検索が無いのに準備完了にならない').toBe(true)
+  })
+  /**
+   * ポート(rudbeckia)は同じ画面を複数枚開ける。
+   * 列の検索条件は localStorage の単一キーに入っていたので、2枚目が1枚目を上書きしていた。
+   * 枝番(column_state_instance_key)で分ける約束をここで固定する。
+   */
+  describe('ライフログビューを2枚開く', () => {
+    function createViewWithInstanceKey(instance_key: string, api: ReturnType<typeof createColumnViewMockApi>['api']) {
+      const raw_props = makeColumnViewProps(api, {}, Object.assign({}, { is_shared_rykv_view: false, share_title: '' }, { column_state_instance_key: instance_key }))
+      const props = raw_props as unknown as RykvViewProps
+      const view = useRykvView({ props, emits: noop_emits })
+  view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
+      return { view, start_init: () => finish_application_config_load(raw_props) }
+    }
+
+    test('保存も読み出しも自分の枝番のキーで行う', async () => {
+      const { api } = createColumnViewMockApi()
+
+      const first = createViewWithInstanceKey('', api)
+      const second = createViewWithInstanceKey('2', api)
+      first.start_init()
+      second.start_init()
+      await flushAsync()
+
+      expect(api.get_saved_rykv_find_kyou_querys, '1枚目が自分の枝番で読んでいない').toHaveBeenCalledWith('')
+      expect(api.get_saved_rykv_find_kyou_querys, '2枚目が自分の枝番で読んでいない').toHaveBeenCalledWith('2')
+      for (const call of api.set_saved_rykv_find_kyou_querys.mock.calls) {
+        expect(['', '2'], '知らない枝番へ保存している').toContain(call[1])
+      }
+    })
+
+    // 2枚目は最初まっさら。1枚目の保存内容を種付けすると query_id が重複し、
+    // query_id→列の逆引きが別インスタンスへ誤配送する
+    test('2枚目は1枚目の列を引き継がない', async () => {
+      const { api } = createColumnViewMockApi()
+      api.set_saved_rykv_find_kyou_querys([makeColumnQuery('col-a')], '')
+
+      const second = createViewWithInstanceKey('2', api)
+      second.start_init()
+      await flushAsync()
+
+      const query_ids = second.view.querys.value.map((query) => query.query_id)
+      expect(query_ids, '2枚目が1枚目の列条件を引き継いでいる').not.toContain('col-a')
+    })
+
+    test('2枚目の保存は1枚目を壊さない', async () => {
+      const { api } = createColumnViewMockApi()
+      api.set_saved_rykv_find_kyou_querys([makeColumnQuery('col-a')], '')
+
+      const second = createViewWithInstanceKey('2', api)
+      second.start_init()
+      await flushAsync()
+
+      const first_saved = api.get_saved_rykv_find_kyou_querys('') as Array<{ query_id: string }>
+      expect(first_saved.map((query) => query.query_id), '2枚目の初期化で1枚目の列条件が消えた').toEqual(['col-a'])
+    })
   })
 })

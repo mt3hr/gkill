@@ -16,6 +16,7 @@ stateDiagram-v2
     LoginPage --> PlaingPage: ログイン成功 → /plaing
     LoginPage --> DashboardPage: ログイン成功 → /dashboard
     LoginPage --> SaihatePage: ログイン成功 → /saihate
+    LoginPage --> RudbeckiaPage: ログイン成功 → /rudbeckia
     LoginPage --> SetNewPasswordPage: パスワードリセットリンク → /set_new_password
     LoginPage --> RegisterFirstAccountPage: 初回起動 → /register_first_account
 
@@ -37,19 +38,21 @@ stateDiagram-v2
     PlaingPage --> LoginPage: ログアウト
     DashboardPage --> LoginPage: ログアウト
     SaihatePage --> LoginPage: ログアウト
+    RudbeckiaPage --> RykvPage: ナビゲーション
+    RykvPage --> RudbeckiaPage: ナビゲーション
 
     [*] --> SharedPage: 共有リンクアクセス
     [*] --> OldSharedMiPage: 旧・共有タスクリンクアクセス
     OldSharedMiPage --> SharedPage: router.replace（リダイレクトのみ）
 ```
 
-**メイン画面群（認証必要）:** KFTLPage, RykvPage, MiPage, KyouPage, MkflPage, PlaingPage, DashboardPage, SaihatePage
+**メイン画面群（認証必要）:** KFTLPage, RykvPage, MiPage, KyouPage, MkflPage, PlaingPage, DashboardPage, RudbeckiaPage, SaihatePage
 
 **共有ページ（認証不要）:** SharedPage (`/shared_page`), OldSharedMiPage (`/shared_mi`)
 
 ## 2. 各画面の役割と遷移条件
 
-### ルートページ一覧（13ルート）
+### ルートページ一覧（14ルート）
 
 | パス | ページ | 認証要否 | 役割 |
 |-----|-------|---------|------|
@@ -61,6 +64,7 @@ stateDiagram-v2
 | `/mkfl` | MkflPage | 要 | 打刻メモ帳（KFTL入力+TimeIs表示） |
 | `/plaing` | PlaingPage | 要 | 稼働中 TimeIs 一覧 |
 | `/dashboard` | DashboardPage | 要 | 日次サマリー（Dnote・GPS・MI一覧） |
+| `/rudbeckia` | RudbeckiaPage | 要 | ポート。4画面をウィンドウとして開ける単一画面 |
 | `/saihate` | SaihatePage | 要 | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | SetNewPasswordPage | 不要 | 新パスワード設定 |
 | `/register_first_account` | RegisterFirstAccountPage | 不要 | 初回アカウント登録（旧 `/regist_first_account` はリダイレクト） |
@@ -111,6 +115,10 @@ gkillの中心的な閲覧・操作画面。左サイドバーで検索条件（
 #### DashboardPage（ダッシュボード）`/dashboard`
 
 選択した日付の記録を日次サマリーとして統合表示する画面。Dnote集計ビュー・GPS地図・Miタスク一覧を同一画面で確認できる。日付ナビゲーション（前日・次日ボタン）で1日単位の振り返りに使用する。
+
+#### RudbeckiaPage（ポート）`/rudbeckia`
+
+背景と「+」ボタンだけの1画面。ライフログビュー / タスク / 実行中 / ダッシュボードを**フローティングウィンドウ**として開き、画面を切り替えずに並べて使う。ウィンドウは移動・リサイズでき、位置と大きさは種類ごとに保存される。さいはてと違いタイトルメニューからのページ遷移もできる。アプリバーに置くのは設定とヘルプだけで、再読込とログアウトは持たない（必要なら他画面へ移動して行う）。開発コードは rudbeckia（URL・ファイル名・識別子）で、ユーザ向けの呼び名は「ポート」。
 
 #### SaihatePage（さいはて画面）`/saihate`
 

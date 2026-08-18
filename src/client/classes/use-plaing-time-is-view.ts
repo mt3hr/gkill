@@ -13,6 +13,8 @@ import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/page
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import { useScopedCtrlVForClipboard } from '@/classes/use-scoped-ctrl-v-for-clipboard'
 import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
+import type { KyouChange } from '@/classes/kyou-change-bus'
+import { useKyouChangeSubscriber } from '@/classes/use-kyou-change-subscriber'
 import type { ComponentRef } from '@/classes/component-ref'
 
 export function usePlaingTimeIsView(options: {
@@ -48,11 +50,16 @@ export function usePlaingTimeIsView(options: {
     const focused_time: Ref<Date> = ref(moment().toDate())
     const last_added_request_time: Ref<Date | null> = ref(null)
     const is_loading = ref(false)
+    // 初回の検索が決着したか。E2Eの準備完了信号にだけ使う。
+    // is_loading は検索が始まるまで false なので、これが無いと「まだ何も出ていない」を
+    // 「準備できた」と読み違える
+    const has_searched_once = ref(false)
     const skip_search_this_tick = ref(false)
     const abort_controller: Ref<AbortController> = ref(new AbortController())
 
     // ── Computed ──
     const kyou_list_view_height = computed(() => props.app_content_height)
+    const is_view_ready = computed(() => has_searched_once.value && !is_loading.value)
     const timeis_kyou_list_view_width = computed(() => {
         const app_content_width = props.app_content_width
         if ((typeof app_content_width) !== "number") {
@@ -105,21 +112,34 @@ export function usePlaingTimeIsView(options: {
     }
 
     // ── Business logic ──
-    function onDeletedKyou(deleted_kyou: Kyou): void {
+    /**
+     * 一覧から取り除くだけ。**emit を含めないこと** ―― ポート(rudbeckia)の
+     * 変更通知はこの関数を直接呼ぶので、ここで emit するとホストが再 publish して
+     * 通知が無限に往復する
+     */
+    function apply_deleted_kyou(deleted_kyou: Kyou): void {
         remove_kyou_from_list_by_id(match_kyous_list.value, deleted_kyou.id)
         remove_kyou_from_list_by_id(focused_kyous_list.value, deleted_kyou.id)
         if (focused_kyou.value?.id === deleted_kyou.id) {
             focused_kyou.value = null
         }
+    }
+
+    function onDeletedKyou(deleted_kyou: Kyou): void {
+        apply_deleted_kyou(deleted_kyou)
         emits('deleted_kyou', deleted_kyou)
     }
 
-    async function reload_kyou(kyou: Kyou): Promise<void> {
+    /**
+     * @param requested_at_arg 引き直しの合流キー。ポートの変更通知から呼ぶときは
+     *   **発生元が採番した値**を渡す
+     */
+    async function reload_kyou(kyou: Kyou, requested_at_arg?: number): Promise<void> {
         // 以前は3ブロックとも load_all の force_attached が無く添付タグを引き直せていなかった。
         // focused の分岐だけ reload(false) になっていて「更新後の最新版を取る」意図とも
         // 食い違っていたが、共通関数に寄せて reload(true) に揃う
         // 3ブロックは同じ更新から派生しているので、同じ値を渡して1往復に合流させる
-        const requested_at = new_reload_batch()
+        const requested_at = requested_at_arg ?? new_reload_batch()
         await refresh_kyou_in_list(match_kyous_list.value, kyou, {
             requested_at: requested_at,
             replace: (next_list) => { match_kyous_list.value = next_list },
@@ -213,6 +233,7 @@ export function usePlaingTimeIsView(options: {
             }
         } finally {
             is_loading.value = false
+            has_searched_once.value = true
         }
     }
 
@@ -250,8 +271,28 @@ export function usePlaingTimeIsView(options: {
         }
     }
 
+
+    // ── 画面間の変更通知 ──
+    function publish_kyou_change(change: KyouChange, requested_at: number): void {
+        const channel = props.kyou_change_channel
+        if (!channel) {
+            return
+        }
+        channel.bus.publish(channel.origin_id, change, requested_at)
+    }
+
+    // 実行中は局所挿入を持たないので、追加は素直に取り直す
+    useKyouChangeSubscriber(() => props.kyou_change_channel, {
+        apply_registered: () => { void reload_list(false) },
+        apply_reload: (kyou, requested_at) => { void reload_kyou(kyou, requested_at) },
+        apply_deleted: (kyou) => apply_deleted_kyou(kyou),
+        apply_reload_list: () => { void reload_list(false) },
+    })
+
     // ── Enter key → KFTL dialog ──
-    const enable_enter_shortcut = ref(true)
+    // window にキャプチャで張るので、打刻メモ帳ダイアログやポート(rudbeckia)の中で
+    // 描かれているときは登録しない（ホスト側のぶんと二重になる）
+    const enable_enter_shortcut = computed(() => !props.is_hosted_in_dialog)
     useScopedEnterForKFTL(plaing_timeis_root, show_kftl_dialog, enable_enter_shortcut)
     useScopedCtrlVForClipboard(plaing_timeis_root, show_save_clipboard_to_file_dialog, enable_enter_shortcut)
 
@@ -308,15 +349,15 @@ export function usePlaingTimeIsView(options: {
     // ── Event relay objects ──
     // Note: this view uses reload_list(false) for registered/updated_kyou, NOT reload_kyou
     const crudRelayHandlers = {
-        'deleted_kyou': (kyou: Kyou) => onDeletedKyou(kyou),
+        'deleted_kyou': (kyou: Kyou) => { onDeletedKyou(kyou); publish_kyou_change({ kind: 'deleted', kyou: kyou }, new_reload_batch()) },
         'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
         'deleted_text': (text: Text) => emits('deleted_text', text),
         'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
-        'registered_kyou': (kyou: Kyou) => { reload_list(false); emits('registered_kyou', kyou) },
+        'registered_kyou': (kyou: Kyou) => { reload_list(false); emits('registered_kyou', kyou); publish_kyou_change({ kind: 'registered', kyou: kyou }, new_reload_batch()) },
         'registered_tag': (tag: Tag) => emits('registered_tag', tag),
         'registered_text': (text: Text) => emits('registered_text', text),
         'registered_notification': (notification: Notification) => emits('registered_notification', notification),
-        'updated_kyou': (kyou: Kyou) => { reload_list(false); emits('updated_kyou', kyou) },
+        'updated_kyou': (kyou: Kyou) => { reload_list(false); emits('updated_kyou', kyou); publish_kyou_change({ kind: 'reload', kyou: kyou }, new_reload_batch()) },
         'updated_tag': (tag: Tag) => emits('updated_tag', tag),
         'updated_text': (text: Text) => emits('updated_text', text),
         'updated_notification': (notification: Notification) => emits('updated_notification', notification),
@@ -330,8 +371,15 @@ export function usePlaingTimeIsView(options: {
     }
 
     const dialogReloadRequestHandlers = {
-        'requested_reload_kyou': (kyou: Kyou) => reload_kyou(kyou),
-        'requested_reload_list': () => reload_list(false),
+        'requested_reload_kyou': (kyou: Kyou) => {
+            const requested_at = new_reload_batch()
+            void reload_kyou(kyou, requested_at)
+            publish_kyou_change({ kind: 'reload', kyou: kyou }, requested_at)
+        },
+        'requested_reload_list': () => {
+            void reload_list(false)
+            publish_kyou_change({ kind: 'reload_list' }, new_reload_batch())
+        },
     }
 
     const rykv_dialog_handler = {
@@ -362,6 +410,7 @@ export function usePlaingTimeIsView(options: {
         match_kyous_list,
         focused_kyou,
         is_loading,
+        is_view_ready,
 
         // Computed
         kyou_list_view_height,

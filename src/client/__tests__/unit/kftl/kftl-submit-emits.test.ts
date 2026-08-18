@@ -241,6 +241,58 @@ describe('KFTL送信後のイベント', () => {
     })
 })
 
+/**
+ * 保存マーカー（行に「！」だけ）で保存が走る経路。
+ *
+ * 判定は「打った瞬間に確定した本文」で行う。行ラベルと不正行の再計算は
+ * `get_invalid_line_indexs` が行ごとに await するので行数に比例して伸び、
+ * その待ちのあとに本文を読み直すと、待っている間に打たれた1文字で末尾が
+ * マーカーでなくなり **エラーも出ないまま保存が起きない**。
+ */
+describe('KFTLの保存マーカー', () => {
+    test('マーカー付きで打つと保存が走る', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        view.onTextAreaInput()
+        view.text_area_content.value = 'メモ\n！\n'
+        await nextTick()
+        await flush_microtasks()
+        await flush_microtasks()
+
+        expect(log.calls, 'マーカーで保存が走っていない').toContain('add_kmemo')
+    })
+
+    // 「たまに保存されない」の正体
+    test('解析待ちの間に打ち足しても保存を取りこぼさない', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        view.onTextAreaInput()
+        view.text_area_content.value = 'メモ\n！\n'
+        // watch が解析(await)に入った直後に、続きが1文字打たれた状況
+        await nextTick()
+        view.text_area_content.value = 'メモ\n！\nつ'
+        await flush_microtasks()
+        await flush_microtasks()
+
+        expect(log.calls, '解析待ちの間の1文字で保存が消えている').toContain('add_kmemo')
+    })
+
+    test('利用者が打っていないのに本文が変わっただけでは保存しない', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        // タブ切替・localStorage からの復元はこの形（onTextAreaInput を通らない）
+        view.text_area_content.value = 'メモ\n！\n'
+        await nextTick()
+        await flush_microtasks()
+        await flush_microtasks()
+
+        expect(log.calls, '打っていないのに保存が走っている').not.toContain('add_kmemo')
+    })
+})
+
 describe('KFTLのタブ', () => {
     test('保存したタブは閉じる。最後の1枚なら空のタブが1枚残る', async () => {
         const log: CallLog = { calls: [] }

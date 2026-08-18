@@ -95,7 +95,8 @@ body {
 
 .mi_view_wrap,
 .rykv_view_wrap,
-.saihate_view_wrap {
+.saihate_view_wrap,
+.rudbeckia_view_wrap {
   position: relative;
 }
 
@@ -240,6 +241,30 @@ body::-webkit-scrollbar {
 
 .position-fixed {
   position: fixed;
+}
+
+/* 消えていくオーバーレイでクリックを飲まない。
+
+   Vuetify の `<v-overlay>` は scrim を `fade-transition` で退場させるが、
+   退場アニメーションのあいだ scrim は **pointer-events: auto のまま最前面に残る**。
+   検索中に出す読み込みオーバーレイ（rykv / mi / ダッシュボード等の
+   `<v-overlay ... contained>`）はこれに当たり、**検索が終わった直後の
+   フェードアウト中（0.2〜0.3秒）は一覧のクリックや右クリックが黙って消える**。
+   「検索直後だけ、たまに1回目のクリックが効かない」の正体。
+
+   退場が始まった時点でそのオーバーレイはもう用済みなので、当たり判定を外す。
+   出ている最中（`enter` / 定常状態）の scrim はそのまま操作を遮る */
+.v-overlay__scrim.fade-transition-leave-active {
+  pointer-events: none;
+}
+
+/* ポート(rudbeckia)のFAB。画面ウィンドウ(z-index: 1100 + 並び順)より前に出す。
+   出さないと、ウィンドウを開いた瞬間に唯一の操作導線が覆われて押せなくなる。
+   Vuetify の overlay(2400) より下にしておくこと ―― 追い越すと
+   このFAB自身が開く v-menu が下へ潜る */
+.position-fixed-rudbeckia {
+  position: fixed;
+  z-index: 2000;
 }
 
 .position-fixed-ryuu {
@@ -503,6 +528,21 @@ div.v-sheet.v-picker.v-date-picker > .v-picker__header-wrapper {
   flex: 1 1 auto;
 }
 
+/* 上の規則は「ダイアログの中身はカード1枚」を前提にした子孫セレクタ。
+   Kyou の一覧や1件を載せるダイアログでは、各 Kyou の v-card
+   （kmemo-view.vue などが型ごとに描くカード）まで巻き込んで
+   **行ごとに独立したスクロール箱**にしてしまい、画面で見たときと形が変わる。
+   Kyou まわりだけ Vuetify の既定（display: block / overflow: hidden）へ戻して
+   画面と揃える。一覧のスクロールは .kyou_list_view が持っているので影響しない */
+.gkill-floating-dialog__body .kyou_list_view_card_wrap,
+.gkill-floating-dialog__body .kyou_list_view_card,
+.gkill-floating-dialog__body .kyou_view_root .v-card {
+  display: block;
+  flex-direction: unset;
+  overflow: hidden;
+  flex: 0 1 auto;
+}
+
 .gkill-floating-dialog.is-user-resized .gkill-floating-dialog__body {
   width: 100%;
   max-width: none;
@@ -533,7 +573,13 @@ div.v-sheet.v-picker.v-date-picker > .v-picker__header-wrapper {
   height: 20px;
   cursor: nwse-resize;
   touch-action: none;
-  z-index: 2;
+  /* 中身より必ず上。ポート(rudbeckia)が載せる画面ビューは Vuetify の入れ子レイアウトで、
+     アプリバー / サイドバー / v-main が z-index 900 台を占める
+     (vuetify/lib/composables/layout.js の rootZIndex は入れ子1段で 900)。
+     ここを小さくすると**右下の隅がビューに覆われてつまめなくなる**。
+     `.gkill-floating-dialog` 自身が position: fixed + z-index で重なり文脈を作るので、
+     この値がダイアログの外へ漏れることはない */
+  z-index: 1000;
   background: linear-gradient(135deg,
       transparent 30%,
       rgba(0, 0, 0, 0.15) 30%,
