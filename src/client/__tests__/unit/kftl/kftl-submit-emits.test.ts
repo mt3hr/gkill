@@ -301,6 +301,104 @@ describe('KFTLの保存マーカー', () => {
         expect(log.calls, 'マーカー行が確定したのに保存が走っていない').toContain('add_kmemo')
     })
 
+    // 実機で報告された形。IMEの確定Enterと改行Enterで、マーカー行の後ろに
+    // 空行がもう1本入ることがある。
+    //
+    //     てすと
+    //     ！
+    //     (空行)
+    //
+    // 「マーカー行が本文の末尾か」で見ていると、この本文の末尾は空行なので
+    // **打った時点では発火せず、バックスペースで最後の改行を消した瞬間に発火する**。
+    // 「IMEから順当に入力すると効かないのに、バックスペースを押すと効く」の正体。
+    test('マーカー行の後ろに空行が続いても保存が走る', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        view.onTextAreaInput()
+        view.text_area_content.value = 'てすと\n！\n\n'
+        await nextTick()
+        await flush_microtasks()
+        await flush_microtasks()
+
+        expect(log.calls, 'マーカーの後ろに空行があると保存が走らない').toContain('add_kmemo')
+    })
+
+    // バックスペースはマーカー行を増やさないので、保存の起点にはならない。
+    // (旧実装はここで発火していた。同じ本文が二重に登録される原因でもある)
+    test('マーカーの後ろをバックスペースで消しても再送信しない', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        // 既にマーカー入りの本文がある状態(打っていないので保存は走らない)
+        view.text_area_content.value = 'てすと\n！\n\n'
+        await nextTick()
+        await flush_microtasks()
+        expect(log.calls).not.toContain('add_kmemo')
+
+        // 末尾の改行を1つ消す = マーカー行が本文の末尾になる
+        view.onTextAreaInput()
+        view.text_area_content.value = 'てすと\n！\n'
+        await nextTick()
+        await flush_microtasks()
+        await flush_microtasks()
+
+        expect(log.calls, 'バックスペースで保存が走っている').not.toContain('add_kmemo')
+    })
+
+    // IMEでは「変換の確定」と「改行」が別々の入力として着地する。
+    // 確定した時点(マーカー行がまだ改行で閉じていない)では走らず、
+    // 改行が入って行が確定した時点で走る
+    test('IMEの確定と改行が別々に着地しても保存が走る', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        // 変換確定。マーカーはまだ行として閉じていない
+        view.onTextAreaInput()
+        view.text_area_content.value = 'てすと\n！'
+        await nextTick()
+        await flush_microtasks()
+        expect(log.calls, 'マーカー行が閉じる前に保存が走っている').not.toContain('add_kmemo')
+
+        // 改行でマーカー行が確定する
+        view.onTextAreaInput()
+        view.text_area_content.value = 'てすと\n！\n'
+        await nextTick()
+        await flush_microtasks()
+        await flush_microtasks()
+
+        expect(log.calls, '改行でマーカー行が確定したのに保存が走っていない').toContain('add_kmemo')
+    })
+
+    // IME変換中は v-model がモデルを更新しない(Vueが composing の間 input を捨てる)。
+    // @input だけが何度も飛ぶので、印が立ったまま本文が変わらない状態が続く。
+    // ここで発火してはいけないし、確定したときに取りこぼしてもいけない
+    test('IME変換中(本文が変わらない)は発火せず、確定したら発火する', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        view.text_area_content.value = 'てすと\n'
+        await nextTick()
+        await flush_microtasks()
+
+        // 変換中のキー入力。@input は飛ぶが本文は変わらない
+        view.onTextAreaInput()
+        view.onTextAreaInput()
+        view.onTextAreaInput()
+        await nextTick()
+        await flush_microtasks()
+        expect(log.calls, '本文が変わっていないのに保存が走っている').not.toContain('add_kmemo')
+
+        // 確定と改行がまとめて着地する(1回のフラッシュ窓に収まる場合)
+        view.onTextAreaInput()
+        view.text_area_content.value = 'てすと\n！\n'
+        await nextTick()
+        await flush_microtasks()
+        await flush_microtasks()
+
+        expect(log.calls, 'IME確定で保存が走っていない').toContain('add_kmemo')
+    })
+
     // マーカーが1行目にある場合。前後の改行を要求する endsWith では拾えない
     test('マーカーが1行目でも保存が走る', async () => {
         const log: CallLog = { calls: [] }
