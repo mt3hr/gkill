@@ -6,7 +6,7 @@
       :class="ui.isTransparent.value ? 'is-transparent' : ''">
       <div class="gkill-floating-dialog__header pa-0 ma-0" @mousedown="ui.onHeaderPointerDown"
         @touchstart="ui.onHeaderPointerDown">
-        <div class="gkill-floating-dialog__title">{{ i18n.global.t('EDIT_DNOTE_CORRELATION_GRAPH_TITLE') }}</div>
+        <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
         <v-checkbox v-model="ui.isTransparent.value" color="white" size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />

@@ -1,6 +1,6 @@
 'use strict'
 
-import { ref, type Ref } from 'vue'
+import { onUnmounted, ref, type Ref } from 'vue'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
@@ -21,11 +21,26 @@ export interface OpenedKFTLDialog {
 }
 
 /**
+ * 使用中の slot_index。**ホスト単位ではなくアプリ全体で1つ**。
+ *
+ * slot_index は `kftl-dialog` / `kftl-dialog-2` … という useFloatingDialog の
+ * 保存キーそのものなので、2つのホストがそれぞれ 0 を配ると
+ * 位置とサイズを奪い合う。ポート(rudbeckia)ではポート自身とホストした各画面が
+ * 同時に KFTLDialogHost を持つので、ホスト内だけの採番では必ず衝突する。
+ */
+const used_kftl_slot_indexes = new Set<number>()
+
+/** テスト用。モジュール共有なので、テスト間で持ち越さないよう beforeEach で呼ぶ */
+export function reset_kftl_dialog_host_slots_for_test(): void {
+    used_kftl_slot_indexes.clear()
+}
+
+/**
  * メモ帳ウィンドウの一覧を持つ。
  *
  * `rykv-dialog-host` と同じ形（配列へ push して開き、`closed` で splice）。
  * ホストコンポーネントが `show()` を expose するので、
- * 呼び出し側（5画面）は `kftl_dialog.value?.show()` のままでよい。
+ * 呼び出し側は `kftl_dialog.value?.show()` のままでよい。
  */
 export function useKftlDialogHost(options: {
     emits: KFTLDialogHostEmits,
@@ -40,31 +55,43 @@ export function useKftlDialogHost(options: {
     const dialog_refs: Ref<Array<{ show?: () => unknown } | null>> = ref([])
 
     // ── Business logic ──
+    /** 空いている最小の番号。**全ホストを通して**空いているもの */
     function next_slot_index(): number {
-        const used = new Set(opened_dialogs.value.map(dialog => dialog.slot_index))
         for (let index = 0; index < KFTL_DIALOG_MAX_COUNT; index++) {
-            if (!used.has(index)) {
+            if (!used_kftl_slot_indexes.has(index)) {
                 return index
             }
         }
         return KFTL_DIALOG_MAX_COUNT - 1
     }
 
+    // ホストごと消えるとき（ポートのウィンドウを閉じたときなど）に
+    // 掴んだままの番号を返す。返さないと二度と使えない番号が増えていく
+    onUnmounted(() => {
+        for (const dialog of opened_dialogs.value) {
+            used_kftl_slot_indexes.delete(dialog.slot_index)
+        }
+    })
+
     /** ＋メニューから呼ばれる。呼ぶたびに1枚増える */
     function show(): void {
-        if (opened_dialogs.value.length >= KFTL_DIALOG_MAX_COUNT) {
+        // 上限も全ホスト通し。ホストごとに8枚だと、ポートでは画面の数だけ増えてしまう
+        if (used_kftl_slot_indexes.size >= KFTL_DIALOG_MAX_COUNT) {
             focus_newest_dialog()
             return
         }
+        const slot_index = next_slot_index()
+        used_kftl_slot_indexes.add(slot_index)
         opened_dialogs.value.push({
             id: GkillAPI.get_instance().generate_uuid(),
-            slot_index: next_slot_index(),
+            slot_index: slot_index,
         })
     }
 
     function close(dialog_id: string): void {
         for (let i = 0; i < opened_dialogs.value.length; i++) {
             if (opened_dialogs.value[i].id === dialog_id) {
+                used_kftl_slot_indexes.delete(opened_dialogs.value[i].slot_index)
                 opened_dialogs.value.splice(i, 1)
                 return
             }

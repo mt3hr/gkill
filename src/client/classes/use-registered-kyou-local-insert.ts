@@ -82,7 +82,12 @@ export function useRegisteredKyouLocalInsert(options: RegisteredKyouLocalInsertO
         }
     }
 
-    async function insert_registered_kyou(raw: unknown): Promise<void> {
+    /**
+     * @param requested_at_arg 引き直しの合流キー。ポート(rudbeckia)の変更通知から
+     *   呼ぶときは**発生元が採番した値**を渡す。渡さないとここで採番され、
+     *   `kyou-reload.ts` の合流が成立せず画面の枚数ぶん往復する
+     */
+    async function insert_registered_kyou(raw: unknown, requested_at_arg?: number): Promise<void> {
         // add_* の応答は hydrate を通っていない生JSONで、related_time が文字列のまま
         // clone()/reload() も生えていない。実体化しないと refresh_kyou が落ちる
         const kyou = raw instanceof Kyou ? raw : hydrate(new Kyou(), raw)
@@ -92,7 +97,7 @@ export function useRegisteredKyouLocalInsert(options: RegisteredKyouLocalInsertO
 
         // 列・focused・開いているダイアログが同じ追加を受けて独立に引き直すので、
         // 同じ値を渡して1往復に合流させる
-        const requested_at = new_reload_batch()
+        const requested_at = requested_at_arg ?? new_reload_batch()
 
         // 列の同一性は query_id。ここでスナップショットを取り、以降 index は使わない
         const groups = new Map<string, { query: FindKyouQuery | undefined, query_ids: Array<string> }>()

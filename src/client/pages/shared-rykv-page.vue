@@ -4,6 +4,8 @@
             :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
             :is_shared_rykv_view="true" :share_title="share_title"
             :application_config_load_failed="false /* 共有画面は設定を待たずに初期化する */"
+            :is_hosted_in_dialog="false"
+            :kyou_change_channel="null /* 単独ページ。画面間の伝播はポートの中だけ */" :column_state_instance_key="''"
             @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)" />
         <div class="alert_container" role="status" aria-live="polite">

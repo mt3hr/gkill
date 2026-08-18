@@ -23,4 +23,6 @@ export interface MiViewEmits {
     // KFTL/MKFL はタグを registered_tag で上げてこないので、保存完了のこの合図で
     // ページ側が板ツリー/タグツリーを取り直す（useConfigStructSync の resync_structs）
     (e: 'saved_kyou_by_kftl', last_added_request_time: Date): void
+    // ツールバーの画面切替メニューが選ばれた。意味は rykv-view-emits.ts の同名イベントと同じ
+    (e: 'requested_navigate_page', page_name: string): void
 }

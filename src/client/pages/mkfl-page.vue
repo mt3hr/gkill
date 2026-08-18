@@ -38,6 +38,7 @@
             </div>
             <MkflView :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api"
+                :is_hosted_in_dialog="false /* このページでは内包する実行中ビューのFABが唯一のFAB */"
                 @received_errors="onMkflViewReceivedErrors"
                 @received_messages="onMkflViewReceivedMessages"
                 @deleted_kyou="onMkflViewDeletedKyou"
@@ -79,7 +80,8 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref } from 'vue'
+import { useTutorialOnStartup } from '@/classes/use-tutorial-on-startup'
 import { i18n } from '@/i18n'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import HelpDialog from './dialogs/help-dialog.vue'
@@ -133,11 +135,7 @@ const {
     onAlertClickClose,
 } = useMkflPage()
 
-watch(application_config, (config) => {
-    if (config.is_loaded && config.show_tutorial_on_startup) {
-        nextTick(() => tutorial_dialog.value?.show())
-    }
-})
+useTutorialOnStartup(application_config, tutorial_dialog)
 </script>
 <style lang="css" scoped>
 .overlay_target {

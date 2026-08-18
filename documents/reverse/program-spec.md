@@ -531,7 +531,7 @@ sequenceDiagram
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts`（約3,300行）は、バックエンドAPIとの通信を一元管理するシングルトンクラスです。
+`src/client/classes/api/gkill-api.ts`（約3,400行）は、バックエンドAPIとの通信を一元管理するシングルトンクラスです。
 
 #### 主な責務
 
@@ -564,8 +564,8 @@ Kyou の削除は Kyou 単体の論理削除ではなく、`src/client/classes/c
 | 種別 | 数 | 配置 |
 |---|---|---|
 | ページ | 15 | `pages/*.vue` |
-| ビュー | 203 | `pages/views/*.vue` |
-| ダイアログ | 116 | `pages/dialogs/*.vue` |
+| ビュー | 205 | `pages/views/*.vue` |
+| ダイアログ | 117 | `pages/dialogs/*.vue` |
 
 ### テーマ
 

@@ -38,6 +38,8 @@
             </div>
             <PlaingTimeIsView :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height.valueOf()" :app_content_width="app_content_width"
+                :is_hosted_in_dialog="false"
+                :kyou_change_channel="null /* 単独ページ。画面間の伝播はポートの中だけ */"
                 @received_errors="onPlaingViewReceivedErrors"
                 @received_messages="onPlaingViewReceivedMessages"
                 @deleted_kyou="onPlaingViewDeletedKyou"
@@ -81,7 +83,8 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref } from 'vue'
+import { useTutorialOnStartup } from '@/classes/use-tutorial-on-startup'
 import { i18n } from '@/i18n'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import HelpDialog from './dialogs/help-dialog.vue'
@@ -137,11 +140,7 @@ const {
     onAlertClickClose,
 } = usePlaingTimeIsPage()
 
-watch(application_config, (config) => {
-    if (config.is_loaded && config.show_tutorial_on_startup) {
-        nextTick(() => tutorial_dialog.value?.show())
-    }
-})
+useTutorialOnStartup(application_config, tutorial_dialog)
 </script>
 <style lang="css" scoped>
 .overlay_target {

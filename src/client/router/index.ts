@@ -13,6 +13,7 @@ import plaing_timeis_page from '@/pages/plaing-time-is-page.vue'
 import mkfl_page from '@/pages/mkfl-page.vue'
 import register_first_account_page from '@/pages/register-first-account-page.vue'
 import dashboard_page from '@/pages/dashboard-page.vue'
+import rudbeckia_page from '@/pages/rudbeckia-page.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -61,6 +62,12 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: dashboard_page,
+    },
+    {
+      // 開発コードは rudbeckia。ユーザ向けの呼び名は「ポート」
+      path: '/rudbeckia',
+      name: 'rudbeckia',
+      component: rudbeckia_page,
     },
     {
       path: '/set_new_password',

@@ -163,4 +163,44 @@ test.describe('Dialog History Invariants', () => {
     // 遷移が実行されること (会計バグがあると /rykv のまま止まる)
     await page.waitForURL(/\/mi/, { timeout: 15000 })
   })
+
+  /**
+   * マニュアル（ヘルプ）は本文が丸ごと iframe なので、
+   * 本文で起きた pointerdown / focusin は**親のDOMへ一切伝わらない**。
+   * ヘッダを掴んだときしか前面化しないと、他のウィンドウの下に潜ったまま
+   * マニュアルを読み進められなくなる。
+   */
+  test('マニュアルは本文をクリックしても前面に来る', async ({ page }) => {
+    await navigateToRykv(page)
+
+    // マニュアル → メモ帳 の順に開く。あとから開いたほうが前
+    await page.locator('.v-app-bar button:has(.mdi-help-circle-outline)').first().click()
+    const manual = page.locator('.gkill-floating-dialog.help-dialog')
+    await expect(manual, 'マニュアルが開かない').toBeVisible({ timeout: 15000 })
+
+    const fab = page.locator('.position-fixed button, .position-fixed .v-btn').first()
+    await fab.click({ force: true })
+    const kftl_item = page.locator('.v-list-item').filter({ hasText: /^\s*メモ帳\s*$/ }).first()
+    await expect(kftl_item).toBeVisible({ timeout: 15000 })
+    await kftl_item.click()
+    const kftl = page.locator('.gkill-floating-dialog.kftl_dialog')
+    await expect(kftl, 'メモ帳が開かない').toBeVisible({ timeout: 30000 })
+
+    const z_of = async (locator: typeof manual): Promise<number> =>
+      Number(await locator.evaluate((el) => (el as HTMLElement).style.zIndex))
+
+    expect(await z_of(manual), 'あとから開いたメモ帳が前に来ていない')
+      .toBeLessThan(await z_of(kftl))
+
+    // マニュアル本文（iframe の中）をクリックする
+    const manual_frame = manual.frameLocator('iframe')
+    await manual_frame.locator('body').click({ position: { x: 40, y: 40 } })
+
+    await expect
+      .poll(async () => (await z_of(manual)) > (await z_of(kftl)), {
+        message: 'マニュアルの本文をクリックしても前面に来ない',
+        timeout: 15000,
+      })
+      .toBe(true)
+  })
 })

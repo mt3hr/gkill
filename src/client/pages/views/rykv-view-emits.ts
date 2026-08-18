@@ -25,4 +25,8 @@ export interface RykvViewEmits {
     // KFTL/MKFL はタグを registered_tag で上げてこないので、保存完了のこの合図で
     // ページ側が板ツリー/タグツリーを取り直す（useConfigStructSync の resync_structs）
     (e: 'saved_kyou_by_kftl', last_added_request_time: Date): void
+    // ツールバーの画面切替メニューが選ばれた。is_hosted_in_dialog のときだけ上がる。
+    // 単独ページでは今までどおりビューの中で router.replace する ―― ポート(rudbeckia)では
+    // ページ遷移せずに別のダイアログを開きたいので、行き先の決定を親へ委ねる
+    (e: 'requested_navigate_page', page_name: string): void
 }
