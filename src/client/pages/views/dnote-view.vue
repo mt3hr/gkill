@@ -284,6 +284,17 @@ defineExpose({ reload, abort, set_loading })
     flex-direction: column;
 }
 
+/* 集計リストが1つでもあるときは最低高さを確保する。
+   この区画は flex-basis:0 なので、集計項目やグラフが縦を食い切ると
+   高さ0＝完全に見えない状態になる。溢れたぶんは .dnote-scroll-wrap が
+   縦スクロールで受ける。
+   :has() で「リストが1つ以上あるとき」に限るのが肝 ―― 無条件に床を張ると、
+   既定の定義（lists: []）でも200pxの空白が予約され、ダッシュボードの
+   狭いパネルで余計なスクロールが出る */
+.fill_height_mode :deep(.dnote_list_table_root:has(.dnote_list_view_root)) {
+    min-height: 200px;
+}
+
 .fill_height_mode :deep(.dnote_list_table_row) {
     flex: 1;
     min-height: 0;
