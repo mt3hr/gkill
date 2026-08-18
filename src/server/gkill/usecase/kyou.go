@@ -63,6 +63,11 @@ func (uc *UsecaseContext) GetKyous(ctx context.Context, userID, device, localeNa
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			// 検索が失敗したのにGkillErrorが1つも無いことがある(repのSQLエラーなど)。
+			// そのまま返すと errors:null + 0件 になり、呼び出し側からは
+			// 「成功・該当0件」と区別が付かない。理由はEnsureNotEmptyのコメント。
+			gkillErrors = message.EnsureNotEmpty(gkillErrors, message.FindKyousError,
+				api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}))
 		}
 		return nil, nil, gkillErrors, nil
 	}

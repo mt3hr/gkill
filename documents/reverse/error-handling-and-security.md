@@ -30,7 +30,7 @@ type GkillMessage struct {
 
 ### 1.2 エラーコード体系
 
-エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **408件** のエラーコードが存在する（ERR000001〜ERR000409、ERR000243は欠番）。クライアントだけで発生するエラーには別系統の `ERR9xxxxx` を割り当てている（3.6 参照）。
+エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **409件** のエラーコードが存在する（ERR000001〜ERR000410、ERR000243は欠番）。クライアントだけで発生するエラーには別系統の `ERR9xxxxx` を割り当てている（3.6 参照）。
 
 ```bash
 # 数え直すとき

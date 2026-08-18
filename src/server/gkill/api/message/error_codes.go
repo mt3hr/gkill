@@ -410,4 +410,5 @@ const (
 	GetMiReKyousByTargetIDError                                      = "ERR000407"
 	ExpiredPasswordResetTokenError                                   = "ERR000408"
 	CannotDisableOwnAccountError                                     = "ERR000409"
+	FindKyousError                                                   = "ERR000410"
 )
