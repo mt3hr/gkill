@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL 
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT table statement %s: %w", filename, err)
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT table to %s: %w", filename, err)
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_TEXT ON TEXT(ID, RELATED_TIME, UPDATE_TIME);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT index statement %s: %w", "TEXT", err)
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT index to %s: %w", "TEXT", err)
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}
 
 	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS INDEX_TEXT_TARGET_ID ON TEXT(TARGET_ID, UPDATE_TIME DESC);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexTargetIDSQL))
+	gkill_log.LogSQL(ctx, indexTargetIDSQL)
 	indexTargetIDStmt, err := db.PrepareContext(ctx, indexTargetIDSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT_TARGET_ID index statement %s: %w", "TEXT", err)
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexTargetIDSQL))
+	gkill_log.LogSQL(ctx, indexTargetIDSQL)
 	_, err = indexTargetIDStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT_TARGET_ID index to %s: %w", "TEXT", err)
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}
 
 	indexIDUpdateTimeSQL := `CREATE INDEX IF NOT EXISTS INDEX_TEXT_ID_UPDATE_TIME ON ` + "TEXT" + `(ID, UPDATE_TIME);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexIDUpdateTimeSQL))
+	gkill_log.LogSQL(ctx, indexIDUpdateTimeSQL)
 	indexIDUpdateTimeStmt, err := db.PrepareContext(ctx, indexIDUpdateTimeSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME index statement %s: %w", "TEXT", err)
@@ -139,14 +139,14 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexIDUpdateTimeSQL))
+	gkill_log.LogSQL(ctx, indexIDUpdateTimeSQL)
 	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME index to %s: %w", "TEXT", err)
 		return nil, err
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME table to %s: %w", "TEXT", err)
@@ -281,7 +281,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find texts sql: %w", err)
@@ -294,7 +294,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -451,7 +451,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get text sql: %w", err)
@@ -464,7 +464,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -617,7 +617,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get texts by target id sql: %w", err)
@@ -630,7 +630,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -810,7 +810,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get text histories sql: %w", err)
@@ -823,7 +823,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -948,7 +948,7 @@ INSERT INTO TEXT (
   ?,
   ?
 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add text sql %s: %w", text.ID, err)
@@ -976,7 +976,7 @@ INSERT INTO TEXT (
 		text.UpdateDevice,
 		text.UpdateUser,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -1029,7 +1029,7 @@ SELECT IS_DELETED, ID AS TARGET_ID, TARGET_ID AS TARGET_ID_IN_DATA,
        ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME AS DATA_UPDATE_TIME
 FROM TEXT
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		return nil, err
@@ -1086,7 +1086,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
   VALUE,
   PRIMARY KEY(KEY)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	gkill_log.LogSQL(ctx, createTableSQL)
 	stmt, err := db.PrepareContext(ctx, createTableSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
@@ -1099,7 +1099,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	gkill_log.LogSQL(ctx, createTableSQL)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
@@ -1107,7 +1107,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
@@ -1120,7 +1120,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index: %w", err)
@@ -1134,7 +1134,7 @@ SELECT
 FROM GKILL_META_INFO
 WHERE KEY = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL))
+	gkill_log.LogSQL(ctx, selectSchemaVersionSQL)
 	selectSchemaVersionStmt, err := db.PrepareContext(ctx, selectSchemaVersionSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1148,7 +1148,7 @@ WHERE KEY = ?
 	}()
 	dbSchemaVersion := ""
 	queryArgs := []any{schemaVersionKey}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, selectSchemaVersionSQL, queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
 		// データがなかったら今のバージョンをいれる
@@ -1156,7 +1156,7 @@ WHERE KEY = ?
 			insertCurrentVersionSQL := `
 INSERT INTO GKILL_META_INFO(KEY, VALUE)
 VALUES(?, ?)`
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL))
+			gkill_log.LogSQL(ctx, insertCurrentVersionSQL)
 			insertCurrentVersionStmt, err := db.PrepareContext(ctx, insertCurrentVersionSQL)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1170,7 +1170,7 @@ VALUES(?, ?)`
 				}
 			}()
 			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLQuery(ctx, insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1179,7 +1179,7 @@ VALUES(?, ?)`
 			}
 
 			queryArgs = []any{schemaVersionKey}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLQuery(ctx, selectSchemaVersionSQL, queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)

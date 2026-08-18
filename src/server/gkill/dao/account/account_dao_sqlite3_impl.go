@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
   PASSWORD_RESET_TOKEN,
   PASSWORD_RESET_TOKEN_EXPIRATION
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create ACCOUNT table statement %s: %w", filename, err)
@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create ACCOUNT table to %s: %w", filename, err)
@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_ACCOUNT ON ACCOUNT (USER_ID);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create ACCOUNT index statement %s: %w", filename, err)
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create ACCOUNT index to %s: %w", filename, err)
@@ -144,7 +144,7 @@ SELECT
   PASSWORD_RESET_TOKEN_EXPIRATION
 FROM ACCOUNT
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all accounts sql: %w", err)
@@ -157,7 +157,7 @@ FROM ACCOUNT
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -221,7 +221,7 @@ SELECT
 FROM ACCOUNT
 WHERE USER_ID = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get account sql: %w", err)
@@ -237,7 +237,7 @@ WHERE USER_ID = ?
 	queryArgs := []any{
 		userID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -314,7 +314,7 @@ VALUES (
   ?
 )
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add account sql: %w", err)
@@ -344,7 +344,7 @@ VALUES (
 		"***",
 		formatPasswordResetTokenExpiration(account.PasswordResetTokenExpiration),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
+	gkill_log.LogSQLQuery(ctx, sql, queryArgsForLog)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -366,7 +366,7 @@ UPDATE ACCOUNT SET
   PASSWORD_RESET_TOKEN_EXPIRATION = ?
 WHERE USER_ID = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update account sql: %w", err)
@@ -398,7 +398,7 @@ WHERE USER_ID = ?
 		formatPasswordResetTokenExpiration(account.PasswordResetTokenExpiration),
 		account.UserID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
+	gkill_log.LogSQLQuery(ctx, sql, queryArgsForLog)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -414,7 +414,7 @@ func (a *accountDAOSQLite3Impl) DeleteAccount(ctx context.Context, userID string
 DELETE FROM ACCOUNT
 WHERE USER_ID = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete account sql: %w", err)
@@ -429,7 +429,7 @@ WHERE USER_ID = ?
 	queryArgs := []any{
 		userID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -456,7 +456,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
   VALUE,
   PRIMARY KEY(KEY)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	gkill_log.LogSQL(ctx, createTableSQL)
 	stmt, err := db.PrepareContext(ctx, createTableSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
@@ -469,7 +469,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	gkill_log.LogSQL(ctx, createTableSQL)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
@@ -477,7 +477,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
@@ -490,7 +490,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index: %w", err)
@@ -504,7 +504,7 @@ SELECT
 FROM GKILL_META_INFO
 WHERE KEY = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL))
+	gkill_log.LogSQL(ctx, selectSchemaVersionSQL)
 	selectSchemaVersionStmt, err := db.PrepareContext(ctx, selectSchemaVersionSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -518,7 +518,7 @@ WHERE KEY = ?
 	}()
 	dbSchemaVersion := ""
 	queryArgs := []any{schemaVersionKey}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, selectSchemaVersionSQL, queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
 		// データがなかったら今のバージョンをいれる。
@@ -543,7 +543,7 @@ WHERE KEY = ?
 			insertCurrentVersionSQL := `
 INSERT INTO GKILL_META_INFO(KEY, VALUE)
 VALUES(?, ?)`
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL))
+			gkill_log.LogSQL(ctx, insertCurrentVersionSQL)
 			insertCurrentVersionStmt, err := db.PrepareContext(ctx, insertCurrentVersionSQL)
 			if err != nil {
 				err = fmt.Errorf("error at prepare insert schema version sql: %w", err)
@@ -556,7 +556,7 @@ VALUES(?, ?)`
 				}
 			}()
 			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLQuery(ctx, insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at exec insert schema version sql: %w", err)
@@ -564,7 +564,7 @@ VALUES(?, ?)`
 			}
 
 			queryArgs = []any{schemaVersionKey}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLQuery(ctx, selectSchemaVersionSQL, queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -627,7 +627,7 @@ func migrateAccountSchemaFrom100(ctx context.Context, db *sql.DB, schemaVersionK
 	}
 	if !hasPasswordHash {
 		renameSQL := `ALTER TABLE ACCOUNT RENAME COLUMN PASSWORD_SHA256 TO PASSWORD_HASH`
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", renameSQL))
+		gkill_log.LogSQL(ctx, renameSQL)
 		if _, err := tx.ExecContext(ctx, renameSQL); err != nil {
 			return fmt.Errorf("error at rename PASSWORD_SHA256 to PASSWORD_HASH: %w", err)
 		}
@@ -639,14 +639,14 @@ func migrateAccountSchemaFrom100(ctx context.Context, db *sql.DB, schemaVersionK
 	}
 	if !hasExpiration {
 		addColumnSQL := `ALTER TABLE ACCOUNT ADD COLUMN PASSWORD_RESET_TOKEN_EXPIRATION`
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", addColumnSQL))
+		gkill_log.LogSQL(ctx, addColumnSQL)
 		if _, err := tx.ExecContext(ctx, addColumnSQL); err != nil {
 			return fmt.Errorf("error at add PASSWORD_RESET_TOKEN_EXPIRATION column: %w", err)
 		}
 	}
 
 	selectSQL := `SELECT USER_ID FROM ACCOUNT`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSQL))
+	gkill_log.LogSQL(ctx, selectSQL)
 	rows, err := tx.QueryContext(ctx, selectSQL)
 	if err != nil {
 		return fmt.Errorf("error at get user ids for account schema migration: %w", err)
@@ -677,7 +677,9 @@ WHERE USER_ID = ?
 	resetTokens := map[string]string{}
 	for _, userID := range userIDs {
 		token := sqlite3impl.GenerateNewID()
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", updateSQL), "query", fmt.Sprintf("%q", fmt.Sprint([]any{"***", expiration.Format(sqlite3impl.TimeLayout), userID})))
+		if gkill_log.TraceSQLEnabled(ctx) {
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", updateSQL), "query", fmt.Sprintf("%q", fmt.Sprint([]any{"***", expiration.Format(sqlite3impl.TimeLayout), userID})))
+		}
 		if _, err := tx.ExecContext(ctx, updateSQL, token, expiration.Format(sqlite3impl.TimeLayout), userID); err != nil {
 			return fmt.Errorf("error at reset password for account schema migration user id = %s: %w", userID, err)
 		}
@@ -691,7 +693,9 @@ WHERE USER_ID = ?
 INSERT INTO GKILL_META_INFO(KEY, VALUE)
 VALUES(?, ?)
 ON CONFLICT(KEY) DO UPDATE SET VALUE = excluded.VALUE`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", updateVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint([]any{schemaVersionKey, currentSchemaVersion})))
+	if gkill_log.TraceSQLEnabled(ctx) {
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", updateVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint([]any{schemaVersionKey, currentSchemaVersion})))
+	}
 	if _, err := tx.ExecContext(ctx, updateVersionSQL, schemaVersionKey, currentSchemaVersion); err != nil {
 		return fmt.Errorf("error at update account schema version: %w", err)
 	}

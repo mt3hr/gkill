@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -73,7 +74,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create MI table statement %s: %w", filename, err)
@@ -86,7 +87,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MI table to %s: %w", filename, err)
@@ -94,7 +95,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_MI ON MI (ID, UPDATE_TIME);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create MI index statement %s: %w", filename, err)
@@ -107,7 +108,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MI index to %s: %w", filename, err)
@@ -129,7 +130,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
 	// IS_CHECKED は NOT NULL 列に対する IS NOT NULL としてしか使われず
 	// 常に真＝選択性ゼロなので、単独索引は張らない。
 	boardNameIndexSQL := `CREATE INDEX IF NOT EXISTS INDEX_MI_BOARD_NAME ON MI (BOARD_NAME);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", boardNameIndexSQL))
+	gkill_log.LogIndexSQL(ctx, boardNameIndexSQL)
 	if _, err := db.ExecContext(ctx, boardNameIndexSQL); err != nil {
 		err = fmt.Errorf("error at create MI board name index to %s: %w", filename, err)
 		return nil, err
@@ -404,6 +405,11 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		queryArgsForEnd = append(queryArgsForEnd, *query.MiBoardName)
 	}
 
+	// ここは UNION のままにすること。
+	// 射影ごとに DATA_TYPE のリテラルが違うので「腕をまたぐ重複は無い」のは正しいが、
+	// **腕の中で**同一射影が複数行になることが実際にある。キャッシュ表の最新版判定は
+	// UPDATE_TIME_UNIX(秒)なので、同じ秒に複数版があると全部が最新版として当たるため。
+	// UNION ALL にすると cached だけ行数が増え、mi_find_kyous_parity_test.go が落ちる。
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s",
 		sqlCreateMi, sqlWhereForCreate,
 		sqlCheckMi, sqlWhereForCheck,
@@ -417,7 +423,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	queryArgs = append(queryArgs, queryArgsForStart...)
 	queryArgs = append(queryArgs, queryArgsForEnd...)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get mi sql: %w", err)
@@ -430,7 +436,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -489,9 +495,9 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 				err = fmt.Errorf("error at parse update time %s in MI: %w", updateTimeStr, err)
 				return nil, err
 			}
-			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []Kyou{}
-			}
+			// 空スライスの事前確保はしない。存在しないキーへのappendはnilスライスに対して働くので
+			// 結果は同じで、レコード1件につき1回の無駄な確保(実データで56万回)が消える。
+			// 同じ整理は dao/reps/repositories.go の集約側では既に済んでいる。
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
 	}
@@ -642,7 +648,11 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 		repName,
 	}
 	whereCounter := 0
-	onlyLatestData := false
+	// GenerateFindSQLCommon は query.OnlyLatestData を読まず、この引数しか見ない。
+	// false のままだと updateTime 未指定のときに **そのIDの全バージョンを無順序・無制限に読み**、
+	// 下の kyous[0] が格納順の先頭(多くの場合いちばん古い版)を返してしまう。
+	// 版の数だけ走査するので遅くもある。Tag / Text では既に同じ修正が入っている。
+	onlyLatestData := updateTime == nil
 	relatedTimeColumnName := "CREATE_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -765,7 +775,7 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 	queryArgs = append(queryArgs, queryArgsForStart...)
 	queryArgs = append(queryArgs, queryArgsForEnd...)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou sql: %w", err)
@@ -778,7 +788,7 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -847,7 +857,12 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 	if len(kyous) == 0 {
 		return nil, nil
 	}
-	return &kyous[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestKyou := slices.MaxFunc(kyous, func(a Kyou, b Kyou) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestKyou, nil
 }
 
 func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
@@ -1111,7 +1126,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 	queryArgs = append(queryArgs, queryArgsForStart...)
 	queryArgs = append(queryArgs, queryArgsForEnd...)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -1124,7 +1139,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -1533,9 +1548,14 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 	if len(sqlSegments) == 0 {
 		return []Mi{}, nil
 	}
+	// ここは UNION のままにすること。
+	// 射影ごとに DATA_TYPE のリテラルが違うので「腕をまたぐ重複は無い」のは正しいが、
+	// **腕の中で**同一射影が複数行になることが実際にある。キャッシュ表の最新版判定は
+	// UPDATE_TIME_UNIX(秒)なので、同じ秒に複数版があると全部が最新版として当たるため。
+	// UNION ALL にすると cached だけ行数が増え、mi_find_kyous_parity_test.go が落ちる。
 	sql := strings.Join(sqlSegments, " UNION ")
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find mi sql: %w", err)
@@ -1548,7 +1568,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -1922,7 +1942,7 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 	}
 	sql := strings.Join(sqlSegments, " UNION ")
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get mi sql: %w", err)
@@ -1935,7 +1955,7 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -2312,7 +2332,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 	}
 	sql := strings.Join(sqlSegments, " UNION ")
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get mi histories sql: %w", err)
@@ -2325,7 +2345,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -2468,7 +2488,7 @@ INSERT INTO MI (
   ?,
   ?
 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add mi sql %s: %w", mi.ID, err)
@@ -2518,7 +2538,7 @@ INSERT INTO MI (
 		mi.UpdateDevice,
 		mi.UpdateUser,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to mi %s: %w", mi.ID, err)
@@ -2577,7 +2597,7 @@ WHERE
 	}
 
 	sql = fmt.Sprintf("%s %s", sql, sqlWhereForCreate)
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get board names sql: %w", err)
@@ -2590,7 +2610,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at select board names from MI: %w", err)
@@ -2672,7 +2692,7 @@ SELECT IS_DELETED, ID AS TARGET_ID, NULL AS TARGET_ID_IN_DATA,
        ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME AS DATA_UPDATE_TIME
 FROM MI
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		return nil, err
@@ -2729,7 +2749,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
   VALUE,
   PRIMARY KEY(KEY)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	gkill_log.LogSQL(ctx, createTableSQL)
 	stmt, err := db.PrepareContext(ctx, createTableSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
@@ -2742,7 +2762,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	gkill_log.LogSQL(ctx, createTableSQL)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
@@ -2750,7 +2770,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
@@ -2763,7 +2783,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index: %w", err)
@@ -2777,7 +2797,7 @@ SELECT
 FROM GKILL_META_INFO
 WHERE KEY = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL))
+	gkill_log.LogSQL(ctx, selectSchemaVersionSQL)
 	selectSchemaVersionStmt, err := db.PrepareContext(ctx, selectSchemaVersionSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -2791,7 +2811,7 @@ WHERE KEY = ?
 	}()
 	dbSchemaVersion := ""
 	queryArgs := []any{schemaVersionKey}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, selectSchemaVersionSQL, queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
 		// データがなかったら今のバージョンをいれる
@@ -2799,7 +2819,7 @@ WHERE KEY = ?
 			insertCurrentVersionSQL := `
 INSERT INTO GKILL_META_INFO(KEY, VALUE)
 VALUES(?, ?)`
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL))
+			gkill_log.LogSQL(ctx, insertCurrentVersionSQL)
 			insertCurrentVersionStmt, err := db.PrepareContext(ctx, insertCurrentVersionSQL)
 			if err != nil {
 				err = fmt.Errorf("error at insert schema version sql: %w", err)
@@ -2812,7 +2832,7 @@ VALUES(?, ?)`
 				}
 			}()
 			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLQuery(ctx, insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at insert schema version: %w", err)
@@ -2820,7 +2840,7 @@ VALUES(?, ?)`
 			}
 
 			queryArgs = []any{schemaVersionKey}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLQuery(ctx, selectSchemaVersionSQL, queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)

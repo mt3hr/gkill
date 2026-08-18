@@ -610,31 +610,19 @@ func (t TagRepositories) AddTagInfo(ctx context.Context, tag Tag) error {
 // rep跨ぎにIDごとの最新版を決めてから名前を集める。各repのGetAllTagNamesに
 // 差し替えないこと
 func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
-	tagNames := []string{}
-	tagNamesMap := map[string]struct{}{}
+	// GetAllTags が既に「IDごとに UpdateTime 最大の版」まで畳み、IsDeleted も落としている。
+	// 以前はここでもう一度 map[string]Tag(値240バイト)へ入れ直して同じ解決をやり直していた。
 	tags, err := t.GetAllTags(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags: %w", err)
 		return nil, err
 	}
 
-	latestTags := map[string]Tag{}
+	tagNamesMap := make(map[string]struct{}, len(tags))
 	for _, tag := range tags {
-		if existTag, exist := latestTags[tag.ID]; exist {
-			if tag.UpdateTime.After(existTag.UpdateTime) {
-				latestTags[tag.ID] = tag
-			}
-		} else {
-			latestTags[tag.ID] = tag
-		}
-	}
-
-	for _, tag := range latestTags {
-		if tag.IsDeleted {
-			continue
-		}
 		tagNamesMap[tag.Tag] = struct{}{}
 	}
+	tagNames := make([]string, 0, len(tagNamesMap))
 	for tag := range tagNamesMap {
 		tagNames = append(tagNames, tag)
 	}

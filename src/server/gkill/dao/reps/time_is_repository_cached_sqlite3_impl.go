@@ -5,6 +5,7 @@ import (
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
 	"log/slog"
+	"slices"
 	"sync"
 	"time"
 
@@ -50,7 +51,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   CREATE_TIME_UNIX NOT NULL,
   UPDATE_TIME_UNIX NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TIMEIS table statement %s: %w", dbName, err)
@@ -63,7 +64,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TIMEIS table to %s: %w", dbName, err)
@@ -71,7 +72,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexUnixSQL))
+	gkill_log.LogSQL(ctx, indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create timeis index unix statement %s: %w", dbName, err)
@@ -84,10 +85,28 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexUnixSQL))
+	gkill_log.LogSQL(ctx, indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create timeis index unix to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	// 期間で絞る述語が触るのは START_TIME_UNIX / END_TIME_UNIX。
+	// FindKyous はこの2列に RELATED_TIME_UNIX という**別名**を付けてから
+	// GenerateFindSQLCommon に `RELATED_TIME_UNIX >= ?` を出させるので、
+	// 列名だけ見ていると索引が要ることに気づけない。
+	// この索引は2つの経路に逆向きに効くので、判断の根拠は
+	// dao/sqlite3impl/timeis_range_index_test.go にクエリプランとして固定してある。
+	//   期間絞り込み(検索のたび)       SCAN T -> SEARCH T USING INDEX (START>? AND START<?)  改善
+	//   plaing判定(ダイアログを開く時)  SCAN T -> SEARCH T USING INDEX (START<?)              悪化
+	// plaing判定の `? >= START_TIME_UNIX` は開いた範囲(表の半分に当たる)なので、
+	// 索引を辿ってから表を引く形になり全表走査より不利になる。
+	// それでも索引を採るのは、期間絞り込みが**すべての検索**で走るのに対し、
+	// plaing判定は show_attached_timeis が真の面でしか飛ばないため(一覧の行では飛ばない)。
+	// 覆すときはベンチ(dao/reps/cache_find_bench_test.go)ではなくプランを見ること
+	// ―― 計測環境によってはns/opが同一コードで10〜17msまでぶれて判断にならない。
+	if err := sqlite3impl.EnsureUnixColumnIndex(ctx, cacheDB, dbName, "START_TIME_UNIX", "END_TIME_UNIX"); err != nil {
 		return nil, err
 	}
 
@@ -123,7 +142,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + `(
   ?,
   ?
 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", addTimeIsInfoSQL))
+	gkill_log.LogSQL(ctx, addTimeIsInfoSQL)
 	addTimeIsInfoStmt, err := cacheDB.PrepareContext(ctx, addTimeIsInfoSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add timeis info sql: %w", err)
@@ -256,10 +275,18 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 		whereCounter++
 	}
 
-	orderby := " ORDER BY END_TIME_UNIX DESC "
-	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs, orderby)
+	// 開始射影と終了射影は DATA_TYPE に異なるリテラル(timeis_start / timeis_end)を出すので、
+	// 腕をまたいで同一行になることが原理的に無い。UNIONの重複排除は必ず空振りするのに、
+	// SQLiteは結果全体ぶんの一時Btreeを作る(しかもmodernc.org/sqliteは SQLITE_TEMP_STORE=1 なので
+	// それがディスクの一時ファイルに落ちる)。UNION ALL にして落とす。
+	//
+	// ORDER BY も落とした。両腕とも appendOrderBy=false なのにここで手で足していたが、
+	// 戻り値は map[string][]Kyou なので順序は捨てられる。
+	// インターフェースの契約(time_is_repository.go)も「単一リポジトリはUNIONで組み立てるため
+	// 順序を保証しません」と明記しており、最終的な並びは find_filter が決める。
+	sql := fmt.Sprintf("%s WHERE %s %s UNION ALL %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous sql: %w", err)
@@ -272,7 +299,9 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForStart)), "params_plaing_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlaingStart)), "params_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForEnd)), "params_plaing_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlaingEnd)))
+	if gkill_log.TraceSQLEnabled(ctx) {
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForStart)), "params_plaing_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlaingStart)), "params_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForEnd)), "params_plaing_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlaingEnd)))
+	}
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
@@ -318,9 +347,9 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 
-			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []Kyou{}
-			}
+			// 空スライスの事前確保はしない。存在しないキーへのappendはnilスライスに対して働くので
+			// 結果は同じで、レコード1件につき1回の無駄な確保(実データで56万回)が消える。
+			// 同じ整理は dao/reps/repositories.go の集約側では既に済んでいる。
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
 	}
@@ -371,7 +400,11 @@ WHERE
 	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	queryArgs := []any{}
 	whereCounter := 0
-	onlyLatestData := false
+	// GenerateFindSQLCommon は query.OnlyLatestData を読まず、この引数しか見ない。
+	// false のままだと updateTime 未指定のときに **そのIDの全バージョンを無順序・無制限に読み**、
+	// 下の kyous[0] が格納順の先頭(多くの場合いちばん古い版)を返してしまう。
+	// 版の数だけ走査するので遅くもある。Tag / Text では既に同じ修正が入っている。
+	onlyLatestData := updateTime == nil
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -385,7 +418,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -398,7 +431,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -455,7 +488,12 @@ WHERE
 	if len(kyous) == 0 {
 		return nil, nil
 	}
-	return &kyous[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestKyou := slices.MaxFunc(kyous, func(a Kyou, b Kyou) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestKyou, nil
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
@@ -510,7 +548,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -523,7 +561,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -677,7 +715,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + `(
   ?
 )`
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	insertStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add timeis sql: %w", err)
@@ -721,7 +759,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + `(
 				timeis.CreateTime.Unix(),
 				timeis.UpdateTime.Unix(),
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLParams(ctx, sql, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at insert in to timeis %s: %w", timeis.ID, err)
@@ -899,9 +937,11 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 		whereCounter++
 	}
 
-	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
+	// 開始射影と終了射影は DATA_TYPE のリテラルが異なるので、UNIONの重複排除は必ず空振りする。
+	// 一時Btreeぶんだけ損なので UNION ALL にする。
+	sql := fmt.Sprintf("%s WHERE %s %s UNION ALL %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous sql: %w", err)
@@ -914,7 +954,9 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForStart)), "params_plaing_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlaingStart)), "params_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForEnd)), "params_plaing_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlaingEnd)))
+	if gkill_log.TraceSQLEnabled(ctx) {
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForStart)), "params_plaing_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlaingStart)), "params_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForEnd)), "params_plaing_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlaingEnd)))
+	}
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
@@ -1042,7 +1084,7 @@ WHERE
 	}
 
 	sql += commonWhereSQL + sqlWhereFilterPlaingTimeisStart
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get time is histories sql: %w", err)
@@ -1055,7 +1097,9 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(append(queryArgsForPlaingStart, queryArgs...))))
+	if gkill_log.TraceSQLEnabled(ctx) {
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(append(queryArgsForPlaingStart, queryArgs...))))
+	}
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlaingStart, queryArgs...)...)
 
 	if err != nil {
@@ -1185,7 +1229,7 @@ WHERE
 	}
 
 	sql += commonWhereSQL + sqlWhereFilterPlaingTimeisStart
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get time is histories sql: %w", err)
@@ -1198,7 +1242,9 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(append(queryArgsForPlaingStart, queryArgs...))))
+	if gkill_log.TraceSQLEnabled(ctx) {
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(append(queryArgsForPlaingStart, queryArgs...))))
+	}
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlaingStart, queryArgs...)...)
 
 	if err != nil {
@@ -1289,7 +1335,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) AddTimeIsInfo(ctx context.Context, t
 		timeis.CreateTime.Unix(),
 		timeis.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", t.addTimeIsInfoSQL), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, t.addTimeIsInfoSQL, queryArgs)
 	_, err := t.addTimeIsInfoStmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {

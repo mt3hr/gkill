@@ -27,7 +27,7 @@ func NewMiReKyouTempRepositorySQLite3Impl(ctx context.Context, db *sqllib.DB, m 
   DEVICE NOT NULL,
   TX_ID NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create MIREKYOU table statement %s: %w", filename, err)
@@ -40,7 +40,7 @@ func NewMiReKyouTempRepositorySQLite3Impl(ctx context.Context, db *sqllib.DB, m 
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MIREKYOU table to %s: %w", filename, err)
@@ -48,7 +48,7 @@ func NewMiReKyouTempRepositorySQLite3Impl(ctx context.Context, db *sqllib.DB, m 
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_MIREKYOU ON ` + miReKyouTableName + ` (ID, UPDATE_TIME);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create MIREKYOU index statement %s: %w", filename, err)
@@ -61,7 +61,7 @@ func NewMiReKyouTempRepositorySQLite3Impl(ctx context.Context, db *sqllib.DB, m 
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MIREKYOU index to %s: %w", filename, err)
@@ -163,7 +163,7 @@ func (m *miReKyouTempRepositorySQLite3Impl) AddMiReKyouInfo(ctx context.Context,
   DEVICE,
   TX_ID
 ) VALUES (` + miReKyouInsertPlaceHolders + `, ?, ?, ?)`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add mirekyou sql %s: %w", mirekyou.ID, err)
@@ -177,7 +177,7 @@ func (m *miReKyouTempRepositorySQLite3Impl) AddMiReKyouInfo(ctx context.Context,
 	}()
 
 	queryArgs := append(miReKyouInsertArgs(mirekyou), userID, device, txID)
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to mirekyou %s: %w", mirekyou.ID, err)
@@ -237,7 +237,7 @@ AND DEVICE = ?
 		device,
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := m.db.QueryContext(ctx, sql, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from MIREKYOU: %w", err)
@@ -267,7 +267,7 @@ AND DEVICE = ?
 		userID,
 		device,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	_, err := m.db.ExecContext(ctx, sql, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at delete from MIREKYOU by tx id %s: %w", txID, err)
