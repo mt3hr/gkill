@@ -209,7 +209,7 @@ export function useKftlView(options: {
         // 末尾がマーカーでなくなり、**保存が黙って起きない**。
         // 行数が多いタブほど窓が広がるので「たまに効かない」ように見える
         if (input_tab_id !== null && input_tab_id === active_tab_id.value) {
-            await maybe_submit_by_save_marker(new_value)
+            await maybe_submit_by_save_marker(new_value, old_value)
         }
 
         update_line_labels()
@@ -472,6 +472,27 @@ export function useKftlView(options: {
     }
 
     // ── Business logic ──
+    /**
+     * 確定した保存マーカー行の数。
+     *
+     * 「確定した」= その行の後ろに改行がある、という意味。`！` を打った時点ではまだ数えず、
+     * 改行を打って初めて1になる(そうしないと打った瞬間に保存が走る)。
+     * 行そのものが全角「！」または半角「!」だけであることを要求するので、
+     * 1行目のマーカーも、末尾以外にあるマーカーも同じ規則で数えられる。
+     */
+    function count_save_marker_lines(text: string): number {
+        const ja_marker = i18n.global.t("KFTL_SAVE_CHARACTOR")
+        const lines = text.split("\n")
+        let count = 0
+        // 最後の要素は「最後の改行より後ろ」なので、まだ確定していない行として数えない
+        for (let i = 0; i < lines.length - 1; i++) {
+            if (lines[i] === ja_marker || lines[i] === KFTL_ASCII_SAVE_CHARACTOR) {
+                count++
+            }
+        }
+        return count
+    }
+
     // 全角「！」または半角「!」の保存マーカーを取り除く
     function remove_save_marker(text: string): string {
         const ja_marker = "\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n"
@@ -487,23 +508,36 @@ export function useKftlView(options: {
     }
 
     /**
-     * 保存マーカーで終わっていれば送信する。
+     * 保存マーカーの行が**増えていたら**送信する。
      *
      * 入口は「textarea の `@input` 起点の watch」と「テンプレート貼り付け」の2つだけ。
      * 判定そのものはここ1箇所に閉じている。
      *
-     * `content` は**判定に使う本文**。watch からは「その変更で確定した本文」を渡す
-     * （読み直すと、判定までの await の間に打たれた1文字で末尾が変わって取りこぼす）。
-     * テンプレート貼り付けは貼った直後に同期で呼ぶので、現在の本文でよい
+     * **「末尾がマーカーか」で見てはいけない。** watch は flush:'post' なので、
+     * 1回のフラッシュ窓の中で本文が2回変わると **1回しか呼ばれず、中間の値
+     * (マーカーで終わっている本文)は一度も観測されない**。行数の多いタブでは
+     * 解析(`get_invalid_line_indexs` は行ごとに await)がメインスレッドを掴むので、
+     * その間に打たれたキーがまとめて着地して現実に起きる ―― これが
+     * 「素早く入力すると \n！\n が反応しない」の正体。
+     * 末尾で見ていると、その窓では既に末尾がマーカーではないので黙って落ちる。
+     *
+     * 代わりに「確定したマーカー行の数が前より増えたか」で見る。こうすると
+     *   - 1回のフラッシュ窓でマーカーの後ろまで打たれても拾える
+     *   - マーカーが1行目にあっても拾える(前後の改行を要求しないので)
+     *   - 既にマーカーが残っている本文を編集しただけでは増えないので再送信しない
+     * が同時に成り立つ。
+     *
+     * `previous_content` は比較の基準。watch からは old_value を、
+     * テンプレート貼り付けからは貼る前の本文を渡す。
      */
-    async function maybe_submit_by_save_marker(content: string = text_area_content.value): Promise<void> {
+    async function maybe_submit_by_save_marker(content: string, previous_content: string): Promise<void> {
         if (is_requested_submit.value) {
             return
         }
-        if (content.endsWith("\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n")
-            || content.endsWith("\n" + KFTL_ASCII_SAVE_CHARACTOR + "\n")) {
-            await submit()
+        if (count_save_marker_lines(content) <= count_save_marker_lines(previous_content)) {
+            return
         }
+        await submit()
     }
 
     // 追加されるタグのうち、TagStructに存在しないものを重複なく集める。
@@ -759,6 +793,9 @@ export function useKftlView(options: {
         capture_editor_view_state()
         const template_name = template.title !== "" ? template.title
             : (template.name !== "" ? template.name : null)
+        // 新しいタブなので、比較の基準は「マーカーが1つも無い状態」。
+        // テンプレートがマーカー行を持っていれば増えたことになる
+        const content_before_paste = ""
         active_tab_id.value = tabs_store.add_tab(template.template as string, template_name)
         kftl_template_dialog.value?.hide()
         focus_active_tab_editor()
@@ -770,7 +807,7 @@ export function useKftlView(options: {
         // また watch は flush: 'post' かつ await を挟むので、判定までにタブを切り替えられると
         // 「印のタブ == アクティブタブ」が偽になって、これも黙って発火しない。
         // ここは add_tab / active_tab_id 代入が同期で済んでいるので、直接呼べば窓が開かない
-        return maybe_submit_by_save_marker()
+        return maybe_submit_by_save_marker(text_area_content.value, content_before_paste)
     }
 
     async function focus_kftl_text_area(): Promise<void> {
