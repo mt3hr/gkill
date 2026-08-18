@@ -230,11 +230,35 @@ func TestFindTags_ExcludeRenamedAwayVersion(t *testing.T) {
 			}
 
 			f := &FindFilter{}
-			if _, err := f.findTags(ctx, findCtx); err != nil {
-				t.Fatalf("findTags failed: %v", err)
+			if _, err := f.collectTagsForFilter(ctx, findCtx, true, false); err != nil {
+				t.Fatalf("collectTagsForFilter failed: %v", err)
 			}
 			if len(findCtx.MatchTags) != c.wantCount {
 				t.Errorf("disableCache=%v tag=%q: MatchTags = %d, want %d", disableCache, c.tagName, len(findCtx.MatchTags), c.wantCount)
+			}
+
+			// collectTagsForFilter は「SQLで名前を絞る」と「全部取ってGoで照合する」の
+			// 2経路を名前の個数で切り替える(maxTagNamesForSQLFilter)。
+			// **どちらを通っても結果が同じ**でなければ、タグの個数によって
+			// 検索結果が変わるという静かな壊れ方になる。
+			// needRelatedTagIDs=true はGo側で照合する経路
+			goPathCtx := &FindKyouContext{
+				DisableLatestDataRepositoryCache: disableCache,
+				ParsedFindQuery:                  &find.FindQuery{Tags: []string{c.tagName}},
+				Repositories:                     repositories,
+				MatchTags:                        map[string]reps.Tag{},
+				RelatedTagIDs:                    map[string]struct{}{},
+			}
+			if _, err := f.collectTagsForFilter(ctx, goPathCtx, true, true); err != nil {
+				t.Fatalf("collectTagsForFilter (Go側で照合する経路) failed: %v", err)
+			}
+			if len(goPathCtx.MatchTags) != c.wantCount {
+				t.Errorf("disableCache=%v tag=%q: Go側で照合する経路の MatchTags = %d, want %d", disableCache, c.tagName, len(goPathCtx.MatchTags), c.wantCount)
+			}
+			for id := range findCtx.MatchTags {
+				if _, exist := goPathCtx.MatchTags[id]; !exist {
+					t.Errorf("disableCache=%v tag=%q: SQL経路にしか無いタグ %q", disableCache, c.tagName, id)
+				}
 			}
 		}
 	}
