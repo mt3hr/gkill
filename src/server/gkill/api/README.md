@@ -19,7 +19,7 @@ api/
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── select_match_reps_cache_test.go # 対象リポジトリ選択キャッシュテスト
 ├── version.go                   # バージョン情報
-├── gkill_server_api/            # HTTP ハンドラ（121ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（122ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・全90ルート登録
