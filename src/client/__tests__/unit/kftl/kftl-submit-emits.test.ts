@@ -254,8 +254,9 @@ describe('KFTLの保存マーカー', () => {
         const log: CallLog = { calls: [] }
         const { view } = mount_view(make_api(log))
 
-        view.onTextAreaInput()
+        view.onTextAreaBeforeInput()
         view.text_area_content.value = 'メモ\n！\n'
+        view.onTextAreaInput()
         await nextTick()
         await flush_microtasks()
         await flush_microtasks()
@@ -268,11 +269,14 @@ describe('KFTLの保存マーカー', () => {
         const log: CallLog = { calls: [] }
         const { view } = mount_view(make_api(log))
 
-        view.onTextAreaInput()
+        view.onTextAreaBeforeInput()
         view.text_area_content.value = 'メモ\n！\n'
+        view.onTextAreaInput()
         // watch が解析(await)に入った直後に、続きが1文字打たれた状況
         await nextTick()
+        view.onTextAreaBeforeInput()
         view.text_area_content.value = 'メモ\n！\nつ'
+        view.onTextAreaInput()
         await flush_microtasks()
         await flush_microtasks()
 
@@ -290,10 +294,13 @@ describe('KFTLの保存マーカー', () => {
         const log: CallLog = { calls: [] }
         const { view } = mount_view(make_api(log))
 
-        view.onTextAreaInput()
+        view.onTextAreaBeforeInput()
         view.text_area_content.value = 'メモ\n！\n'
+        view.onTextAreaInput()
         // nextTick を挟まない = watch はまだ動いていない。ここで続きが着地する
+        view.onTextAreaBeforeInput()
         view.text_area_content.value = 'メモ\n！\nつ'
+        view.onTextAreaInput()
         await nextTick()
         await flush_microtasks()
         await flush_microtasks()
@@ -315,8 +322,9 @@ describe('KFTLの保存マーカー', () => {
         const log: CallLog = { calls: [] }
         const { view } = mount_view(make_api(log))
 
-        view.onTextAreaInput()
+        view.onTextAreaBeforeInput()
         view.text_area_content.value = 'てすと\n！\n\n'
+        view.onTextAreaInput()
         await nextTick()
         await flush_microtasks()
         await flush_microtasks()
@@ -337,8 +345,9 @@ describe('KFTLの保存マーカー', () => {
         expect(log.calls).not.toContain('add_kmemo')
 
         // 末尾の改行を1つ消す = マーカー行が本文の末尾になる
-        view.onTextAreaInput()
+        view.onTextAreaBeforeInput()
         view.text_area_content.value = 'てすと\n！\n'
+        view.onTextAreaInput()
         await nextTick()
         await flush_microtasks()
         await flush_microtasks()
@@ -354,15 +363,17 @@ describe('KFTLの保存マーカー', () => {
         const { view } = mount_view(make_api(log))
 
         // 変換確定。マーカーはまだ行として閉じていない
-        view.onTextAreaInput()
+        view.onTextAreaBeforeInput()
         view.text_area_content.value = 'てすと\n！'
+        view.onTextAreaInput()
         await nextTick()
         await flush_microtasks()
         expect(log.calls, 'マーカー行が閉じる前に保存が走っている').not.toContain('add_kmemo')
 
         // 改行でマーカー行が確定する
-        view.onTextAreaInput()
+        view.onTextAreaBeforeInput()
         view.text_area_content.value = 'てすと\n！\n'
+        view.onTextAreaInput()
         await nextTick()
         await flush_microtasks()
         await flush_microtasks()
@@ -382,16 +393,20 @@ describe('KFTLの保存マーカー', () => {
         await flush_microtasks()
 
         // 変換中のキー入力。@input は飛ぶが本文は変わらない
+        view.onTextAreaBeforeInput()
         view.onTextAreaInput()
+        view.onTextAreaBeforeInput()
         view.onTextAreaInput()
+        view.onTextAreaBeforeInput()
         view.onTextAreaInput()
         await nextTick()
         await flush_microtasks()
         expect(log.calls, '本文が変わっていないのに保存が走っている').not.toContain('add_kmemo')
 
         // 確定と改行がまとめて着地する(1回のフラッシュ窓に収まる場合)
-        view.onTextAreaInput()
+        view.onTextAreaBeforeInput()
         view.text_area_content.value = 'てすと\n！\n'
+        view.onTextAreaInput()
         await nextTick()
         await flush_microtasks()
         await flush_microtasks()
@@ -404,8 +419,9 @@ describe('KFTLの保存マーカー', () => {
         const log: CallLog = { calls: [] }
         const { view } = mount_view(make_api(log))
 
-        view.onTextAreaInput()
+        view.onTextAreaBeforeInput()
         view.text_area_content.value = '！\nメモ\n'
+        view.onTextAreaInput()
         await nextTick()
         await flush_microtasks()
         await flush_microtasks()
@@ -426,8 +442,9 @@ describe('KFTLの保存マーカー', () => {
         expect(log.calls).not.toContain('add_kmemo')
 
         // ここから利用者が打つ。マーカーは増えていない
-        view.onTextAreaInput()
+        view.onTextAreaBeforeInput()
         view.text_area_content.value = 'メモ\n！\nつづき2'
+        view.onTextAreaInput()
         await nextTick()
         await flush_microtasks()
         await flush_microtasks()

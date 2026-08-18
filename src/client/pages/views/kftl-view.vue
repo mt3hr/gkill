@@ -55,7 +55,8 @@
                         <div class="kftl_text_area_wrap">
                             <textarea :id="text_area_element_id" class="kftl_text_area" ref="kftl_text_area"
                                 v-model="text_area_content" :readonly="is_requested_submit"
-                                @scroll="update_line_labels" @input="onTextAreaInput"></textarea>
+                                @scroll="update_line_labels" @beforeinput="onTextAreaBeforeInput"
+                                @input="onTextAreaInput"></textarea>
                         </div>
                     </td>
                 </tr>
@@ -146,6 +147,7 @@ const {
     show_kftl_template_dialog,
     paste_template,
     focus_kftl_text_area,
+    onTextAreaBeforeInput,
     onTextAreaInput,
     update_line_labels,
 
