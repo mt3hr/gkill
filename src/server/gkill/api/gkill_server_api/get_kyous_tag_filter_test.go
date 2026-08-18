@@ -2,6 +2,7 @@ package gkill_server_api
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -108,6 +109,70 @@ func TestHandleGetKyous_TagFilterAndNoTags(t *testing.T) {
 		res := getKyousWithQuery(t, tsURL, sessionID, query)
 		if len(res.Kyous) != 0 {
 			t.Errorf("空のタグ条件で%d件返っている", len(res.Kyous))
+		}
+	})
+}
+
+// 強制非表示タグ(hide_tags)の回帰テスト。
+//
+// タグの取得は「SQLで名前を絞る」と「全部取ってGoで照合する」の2経路を
+// 名前の個数(api.maxTagNamesForSQLFilter)で切り替える。
+// **どちらを通っても結果が同じ**でなければ、チェックしているタグの個数によって
+// 非表示が効いたり効かなかったりするという静かな壊れ方になる。
+//
+// 意味論: hide_tags のタグ名が tags に**入っていない**とき、そのタグが付いた記録を消す。
+func TestHandleGetKyous_HideTagsBothPaths(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
+
+	shownID := addTestKmemo(t, tsURL, sessionID, "表示されるメモ")
+	hiddenID := addTestKmemo(t, tsURL, sessionID, "非表示タグの付いたメモ")
+	addTestTagTo(t, tsURL, sessionID, shownID, "表示")
+	addTestTagTo(t, tsURL, sessionID, hiddenID, "表示")
+	addTestTagTo(t, tsURL, sessionID, hiddenID, "非表示")
+
+	// 名前を33個にすると閾値(32)を超えてGo側で照合する経路になる。
+	// 増やしたぶんはどのタグにも一致しないので、結果は1個のときと同じでなければならない
+	manyNames := []string{"表示"}
+	for i := range 32 {
+		manyNames = append(manyNames, fmt.Sprintf("存在しないタグ%02d", i))
+	}
+
+	for _, c := range []struct {
+		name string
+		tags []string
+	}{
+		{"SQLで名前を絞る経路", []string{"表示"}},
+		{"Go側で照合する経路", manyNames},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			query := &find.FindQuery{Tags: c.tags, HideTags: []string{"非表示"}}
+			res := getKyousWithQuery(t, tsURL, sessionID, query)
+			ids := map[string]bool{}
+			for _, kyou := range res.Kyous {
+				ids[kyou.ID] = true
+			}
+			if !ids[shownID] {
+				t.Error("非表示タグの付いていない記録が消えている")
+			}
+			if ids[hiddenID] {
+				t.Error("非表示タグの付いた記録が消えていない")
+			}
+		})
+	}
+
+	// hide_tags のタグ名を tags 側にも入れると、非表示は効かない
+	t.Run("非表示タグを明示的に選んだら消さない", func(t *testing.T) {
+		query := &find.FindQuery{Tags: []string{"表示", "非表示"}, HideTags: []string{"非表示"}}
+		res := getKyousWithQuery(t, tsURL, sessionID, query)
+		ids := map[string]bool{}
+		for _, kyou := range res.Kyous {
+			ids[kyou.ID] = true
+		}
+		if !ids[hiddenID] {
+			t.Error("明示的に選んだ非表示タグの記録まで消えている")
 		}
 	})
 }
