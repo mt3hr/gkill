@@ -24,6 +24,8 @@
             }" ref="kftl_view" />
         <PlaingTimeIsView :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="(app_content_height.valueOf() / 2) + 4" :app_content_width="app_content_width"
+            :is_hosted_in_dialog="is_hosted_in_dialog"
+            :kyou_change_channel="null /* 単独ページ。画面間の伝播はポートの中だけ */"
             @deleted_kyou="(deleted_kyou: Kyou) => { reload_plaing_timeis_view(); emits('deleted_kyou', deleted_kyou) }"
             @deleted_tag="(deleted_tag: Tag) => emits('deleted_tag', deleted_tag)"
             @deleted_text="(deleted_text: any) => emits('deleted_text', deleted_text)"

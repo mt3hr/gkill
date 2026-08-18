@@ -202,12 +202,18 @@ export function useKftlView(options: {
         const input_tab_id = user_input_tab_id
         user_input_tab_id = null
 
+        // **保存マーカーの判定は「この変更で確定した本文」で行い、解析を待たない。**
+        // 行ラベルと不正行の再計算は await を挟む（`get_invalid_line_indexs` は
+        // 行ごとに await するので行数に比例して伸びる）。待ってから
+        // `text_area_content.value` を読み直すと、その間に1文字打たれただけで
+        // 末尾がマーカーでなくなり、**保存が黙って起きない**。
+        // 行数が多いタブほど窓が広がるので「たまに効かない」ように見える
+        if (input_tab_id !== null && input_tab_id === active_tab_id.value) {
+            await maybe_submit_by_save_marker(new_value)
+        }
+
         update_line_labels()
         await refresh_invalid_lines()
-
-        if (input_tab_id !== null && input_tab_id === active_tab_id.value) {
-            await maybe_submit_by_save_marker()
-        }
     }, { flush: 'post' })
 
     /**
@@ -484,13 +490,16 @@ export function useKftlView(options: {
      * 保存マーカーで終わっていれば送信する。
      *
      * 入口は「textarea の `@input` 起点の watch」と「テンプレート貼り付け」の2つだけ。
-     * 判定そのものはここ1箇所に閉じている
+     * 判定そのものはここ1箇所に閉じている。
+     *
+     * `content` は**判定に使う本文**。watch からは「その変更で確定した本文」を渡す
+     * （読み直すと、判定までの await の間に打たれた1文字で末尾が変わって取りこぼす）。
+     * テンプレート貼り付けは貼った直後に同期で呼ぶので、現在の本文でよい
      */
-    async function maybe_submit_by_save_marker(): Promise<void> {
+    async function maybe_submit_by_save_marker(content: string = text_area_content.value): Promise<void> {
         if (is_requested_submit.value) {
             return
         }
-        const content = text_area_content.value
         if (content.endsWith("\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n")
             || content.endsWith("\n" + KFTL_ASCII_SAVE_CHARACTOR + "\n")) {
             await submit()

@@ -4,6 +4,8 @@
             :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
             :is_shared_rykv_view="false" :share_title="''"
             :application_config_load_failed="application_config_load_failed"
+            :is_hosted_in_dialog="false"
+            :kyou_change_channel="null /* 単独ページ。画面間の伝播はポートの中だけ */" :column_state_instance_key="''"
             v-on="rykvViewHandlers" />
         <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height" :app_content_width="app_content_width"
@@ -33,7 +35,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref } from 'vue'
+import { useTutorialOnStartup } from '@/classes/use-tutorial-on-startup'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 import TutorialDialog from './dialogs/tutorial-dialog.vue'
@@ -67,11 +70,7 @@ const {
     rykvViewHandlers,
 } = useRykvPage()
 
-watch(application_config, (config) => {
-    if (config.is_loaded && config.show_tutorial_on_startup) {
-        nextTick(() => tutorial_dialog.value?.show())
-    }
-})
+useTutorialOnStartup(application_config, tutorial_dialog)
 </script>
 <style scoped>
 :root {

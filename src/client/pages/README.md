@@ -9,9 +9,9 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 
 ```
 pages/
-├── (ルートページ 15 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（203 .vue）
-└── dialogs/                        # Dialog コンポーネント（116 .vue）
+├── (ルートページ 16 .vue + 2 .ts)  # Vue Router ルートページ
+├── views/                          # View コンポーネント（205 .vue）
+└── dialogs/                        # Dialog コンポーネント（117 .vue）
 ```
 
 ## 設計パターン
@@ -47,7 +47,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 
 の1行で張る。挙動を変えたいイベントだけ第2引数の `overrides` で差し替える。ビュー層は18件、ダイアログ層はそれにフォーカス系2件（`focused_kyou` / `clicked_kyou`）を足した20件を中継する。
 
-## ルートページ（15 .vue + 2 .ts）
+## ルートページ（16 .vue + 2 .ts）
 
 | ファイル | ルートパス | 説明 |
 |---------|----------|------|
@@ -60,6 +60,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `plaing-time-is-page.vue` | `/plaing` | 稼働中 TimeIs ページ |
 | `saihate-page.vue` | `/saihate` | Saihate（特殊ビュー）ページ |
 | `dashboard-page.vue` | `/dashboard` | ダッシュボード（日次サマリー）ページ |
+| `rudbeckia-page.vue` | `/rudbeckia` | ポート。4画面をウィンドウとして開ける単一画面（開発コード rudbeckia） |
 | `set-new-password-page.vue` | `/set_new_password` | 新パスワード設定ページ |
 | `register-first-account-page.vue` | `/register_first_account` | 初回アカウント登録（旧 `/regist_first_account` からリダイレクト） |
 | `shared-page.vue` | `/shared_page` | 共有ページ |
@@ -69,7 +70,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（203 .vue）
+## views/ — 全 View コンポーネント一覧（205 .vue）
 
 ### データ追加系（23コンポーネント）
 
@@ -252,7 +253,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
 | `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（116 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（117 .vue）
 
 ### データ追加ダイアログ（22コンポーネント）
 

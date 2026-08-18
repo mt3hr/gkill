@@ -79,13 +79,13 @@ src/client/
 │   ├── old-shared-mi-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── views/              # ビューコンポーネント（203ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（116ファイル、browse-zip-contents-dialog.vue 含む）
+│   ├── views/              # ビューコンポーネント（205ファイル）
+│   └── dialogs/            # ダイアログコンポーネント（117ファイル、browse-zip-contents-dialog.vue 含む）
 ├── i18n.ts                 # i18n設定（ja のみ静的、他6言語は動的import）
 ├── assets/                 # 画像等の静的アセット
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,300行、全API呼び出しを集約）
+│   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,400行、全API呼び出しを集約）
 │   │   ├── hydrate.ts      # JSON→クラスインスタンスの詰め替え（any を使わない共通ヘルパー）
 │   │   ├── find_query/     # 検索クエリビルダー
 │   │   └── req_res/        # リクエスト/レスポンス型（172ファイル）
@@ -96,7 +96,7 @@ src/client/
 │   ├── kftl/               # KFTLパーサー（50ステートメント型）
 │   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
-│   └── use-*.ts            # Composition関数群（257ファイル）
+│   └── use-*.ts            # Composition関数群（263ファイル）
 ├── __tests__/              # テスト
 │   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
 │   ├── helpers/            # テストヘルパー
@@ -293,7 +293,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-914キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+918キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 

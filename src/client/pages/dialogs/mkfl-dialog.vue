@@ -22,6 +22,7 @@
       <div class="gkill-floating-dialog__body" :ref="(el: Element | ComponentPublicInstance | null) => { dialog_body_ref = el as HTMLElement | null }">
         <MKFLView :app_content_height="view_height" :app_content_width="view_width"
           :application_config="application_config" :gkill_api="gkill_api"
+          :is_hosted_in_dialog="true /* 呼び出し元のページが自前のFABを持っているので、内包する実行中ビューのFABは出さない */"
           @deleted_kyou="(deleted_kyou: Kyou) => { emits('deleted_kyou', deleted_kyou) }"
           @deleted_tag="(deleted_tag: Tag) => emits('deleted_tag', deleted_tag)"
           @deleted_text="(deleted_text: Text) => emits('deleted_text', deleted_text)"

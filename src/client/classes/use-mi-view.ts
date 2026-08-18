@@ -1,7 +1,7 @@
-import { i18n } from '@/i18n'
+import { gkill_page_list } from '@/classes/gkill-page-list'
 import router from '@/router'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { computed, nextTick, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, type Ref, ref, watch } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
 import type { MiViewEmits } from '@/pages/views/mi-view-emits'
 import type { MiViewProps } from '@/pages/views/mi-view-props'
@@ -21,6 +21,8 @@ import { UpdateMiReKyouRequest } from '@/classes/api/req_res/update-mi-re-kyou-r
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
+import type { KyouChange } from '@/classes/kyou-change-bus'
+import { useKyouChangeSubscriber } from '@/classes/use-kyou-change-subscriber'
 import { useRegisteredKyouLocalInsert } from '@/classes/use-registered-kyou-local-insert'
 import { apply_mi_projection, insert_kyou_sorted } from '@/classes/kyou-local-insert'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
@@ -105,7 +107,10 @@ export function useMiView(options: {
     const is_show_kyou_detail_view: Ref<boolean> = ref(false)
     const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
     const drawer: Ref<boolean | null> = ref(false)
-    const drawer_mode_is_mobile: Ref<boolean | null> = ref(false)
+    // 一時表示(オーバーレイ)モードにするかは「今の内容領域の幅」で決まる。
+    // 初期化時に1回代入するだけにしてはいけない ―― このビューはポート(rudbeckia)の
+    // リサイズできるダイアログの中でも描かれるので、幅はあとから変わる
+    const drawer_mode_is_mobile = computed<boolean>(() => !(props.app_content_width.valueOf() >= 760))
     const is_loading: Ref<boolean> = ref(true)
     const inited = ref(false)
     const is_restoring_columns = ref(false) // 保存済み列の初期検索がまだ走っている。表示制御には使わない
@@ -123,15 +128,8 @@ export function useMiView(options: {
     const is_view_ready = computed(() =>
         inited.value && !is_restoring_columns.value && running_search_count.value === 0)
 
-    const page_list = computed(() => [
-        { app_name: i18n.global.t('RYKV_APP_NAME'), page_name: 'rykv' },
-        { app_name: i18n.global.t('MI_APP_NAME'), page_name: 'mi' },
-        { app_name: i18n.global.t('KFTL_APP_NAME'), page_name: 'kftl' },
-        { app_name: i18n.global.t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
-        { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
-        { app_name: i18n.global.t('DASHBOARD_APP_NAME'), page_name: 'dashboard' },
-        { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
-    ])
+    // 画面切替メニューの一覧は classes/gkill-page-list.ts に1つだけ置いてある
+    const page_list = gkill_page_list
 
     // ── Init trigger ──
     // ApplicationConfig が来たことが初期化の唯一の前提条件なので、それを直接待つ。
@@ -151,6 +149,16 @@ export function useMiView(options: {
         received_init_request.value = true
         init()
     }, { immediate: true })
+
+    // ── Lifecycle ──
+    onBeforeUnmount(() => {
+        // 飛行中の検索を止める。ポート(rudbeckia)ではこのビューごと閉じられるので、
+        // 放っておくと閉じたウィンドウぶんの数十万件の取得が最後まで走る
+        for (const abort_controller of abort_controllers.values()) {
+            abort_controller.abort()
+        }
+        abort_controllers.clear()
+    })
 
     // ── Watchers ──
     watch(() => is_show_kyou_count_calendar.value, () => {
@@ -314,12 +322,21 @@ export function useMiView(options: {
     }
 
     // ── Business logic ──
-    function onDeletedKyou(deleted_kyou: Kyou): void {
+    /**
+     * 一覧から取り除くだけ。**emit を含めないこと** ―― ポート(rudbeckia)の
+     * 変更通知はこの関数を直接呼ぶので、ここで emit するとホストが再 publish して
+     * 通知が無限に往復する
+     */
+    function apply_deleted_kyou(deleted_kyou: Kyou): void {
         remove_kyou_from_multi_column_lists(match_kyous_list.value, deleted_kyou.id)
         remove_kyou_from_list_by_id(focused_kyous_list.value, deleted_kyou.id)
         if (focused_kyou.value?.id === deleted_kyou.id) {
             focused_kyou.value = null
         }
+    }
+
+    function onDeletedKyou(deleted_kyou: Kyou): void {
+        apply_deleted_kyou(deleted_kyou)
         emits('deleted_kyou', deleted_kyou)
     }
 
@@ -334,10 +351,15 @@ export function useMiView(options: {
         return undefined
     }
 
-    async function reload_kyou(kyou: Kyou): Promise<void> {
+    /**
+     * @param requested_at_arg 引き直しの合流キー。ポートの変更通知から呼ぶときは
+     *   **発生元が採番した値**を渡す。渡さないとここで採番され、
+     *   kyou-reload.ts の合流が成立せず画面の枚数ぶん往復する
+     */
+    async function reload_kyou(kyou: Kyou, requested_at_arg?: number): Promise<void> {
         // 列・focused・開いているダイアログは同じ更新を受けて独立に引き直す。
         // 同じ値を渡して1往復に合流させる(渡さないと系統ごとに往復が増える)
-        const requested_at = new_reload_batch();
+        const requested_at = requested_at_arg ?? new_reload_batch();
         (async (): Promise<void> => {
             for (let i = 0; i < match_kyous_list.value.length; i++) {
                 const column_query = querys.value[i]
@@ -420,7 +442,9 @@ export function useMiView(options: {
     // 追加されたKyouは再検索せず、各列の正しい位置へ差し込む。
     // 再検索するとヒット集合もスクロール位置も変わるし、KyouListViewは
     // 配列参照の差し替えでフル再描画する(reload_kyou と同じ理由)
-    const { onRegisteredKyou, insert_registered_kyou } = useRegisteredKyouLocalInsert({
+    // onRegisteredKyou は使わない。中継ハンドラ側で requested_at を採番して
+    // insert_registered_kyou を直接呼び、同じ値を変更通知にも載せる
+    const { insert_registered_kyou } = useRegisteredKyouLocalInsert({
         querys: querys,
         match_kyous_list: match_kyous_list,
         reload_list_by_query_id: reload_list_by_query_id,
@@ -457,10 +481,10 @@ export function useMiView(options: {
             const wait_promises = new Array<Promise<void>>()
             try {
                 // スクロール位置の復元
-                match_kyous_list_top_list.value = props.gkill_api.get_saved_mi_scroll_indexs()
+                match_kyous_list_top_list.value = props.gkill_api.get_saved_mi_scroll_indexs(props.column_state_instance_key)
 
                 // 前回開いていた列があれば復元する
-                const saved_querys = props.gkill_api.get_saved_mi_find_kyou_querys()
+                const saved_querys = props.gkill_api.get_saved_mi_find_kyou_querys(props.column_state_instance_key)
                 if (saved_querys.length.valueOf() === 0) {
                     const default_query = sidebar.get_default_query()!.clone()
                     default_query.query_id = props.gkill_api.generate_uuid()
@@ -488,7 +512,7 @@ export function useMiView(options: {
                 // ここで画面を見せる。初期検索の完了は待たない。
                 // 待つと検索が1本でも解決しないだけで画面全体が固まる。
                 // 進行は列ごとのスピナーとフッタの「取得中」で見せる
-                drawer_mode_is_mobile.value = !(props.app_content_width.valueOf() >= 760)
+                // (drawer_mode_is_mobile は app_content_width の computed。ここでは触らない)
                 drawer.value = props.app_content_width.valueOf() >= 760
                 inited.value = true
                 is_loading.value = false
@@ -551,7 +575,7 @@ export function useMiView(options: {
                 })
             }
 
-            props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
+            props.gkill_api.set_saved_mi_find_kyou_querys(querys.value, props.column_state_instance_key)
 
             // 前の検索処理を中断する
             abort_controllers.get(query_id)?.abort()
@@ -686,8 +710,8 @@ export function useMiView(options: {
             match_kyous_list.value.splice(column_index, 1)
             match_kyous_list_top_list.value.splice(column_index, 1)
 
-            props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
-            props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list.value)
+            props.gkill_api.set_saved_mi_find_kyou_querys(querys.value, props.column_state_instance_key)
+            props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list.value, props.column_state_instance_key)
             nextTick(() => {
                 // 閉じた列の最近傍の列へフォーカスを移す
                 const next_focused_index = Math.max(0, Math.min(
@@ -727,8 +751,8 @@ export function useMiView(options: {
         if (inited.value) {
             focused_column_index.value = querys.value.length - 1
         }
-        props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
-        props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list.value)
+        props.gkill_api.set_saved_mi_find_kyou_querys(querys.value, props.column_state_instance_key)
+        props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list.value, props.column_state_instance_key)
     }
 
     function open_or_focus_board(board_name: string): void {
@@ -939,6 +963,13 @@ export function useMiView(options: {
     }
 
     async function navigate_to_page(page_name: string): Promise<void> {
+        // ポート(rudbeckia)の中では行き先を親が決める。
+        // ここで reset_dialog_history() を呼んではいけない ―― モジュール共有の履歴スタックを
+        // 巻き戻すので、ポートで開いている他のウィンドウまで一斉に閉じる
+        if (props.is_hosted_in_dialog) {
+            emits('requested_navigate_page', page_name)
+            return
+        }
         await reset_dialog_history()
         router.replace('/' + page_name + '?loaded=true')
     }
@@ -984,7 +1015,7 @@ export function useMiView(options: {
             return
         }
         match_kyous_list_top_list.value[index] = scroll_top
-        props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list.value)
+        props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list.value, props.column_state_instance_key)
     }
 
     function onColumnClickedListView(index: number): void {
@@ -1095,15 +1126,27 @@ export function useMiView(options: {
 
     // ── Event relay objects ──
     const crudRelayHandlers = {
-        'deleted_kyou': (kyou: Kyou) => onDeletedKyou(kyou),
+        'deleted_kyou': (kyou: Kyou) => { onDeletedKyou(kyou); publish_kyou_change({ kind: 'deleted', kyou: kyou }, new_reload_batch()) },
         'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
         'deleted_text': (text: Text) => emits('deleted_text', text),
         'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
-        'registered_kyou': (kyou: Kyou) => { onRegisteredKyou(kyou); emits('registered_kyou', kyou) },
+        'registered_kyou': (kyou: Kyou) => {
+            // 引き直しの合流キーはここで採番する。ホスト側で採番すると
+            // kyou-reload.ts の合流条件に間に合わず、画面の枚数ぶん往復する
+            const requested_at = new_reload_batch()
+            void insert_registered_kyou(kyou, requested_at)
+            emits('registered_kyou', kyou)
+            publish_kyou_change({ kind: 'registered', kyou: kyou }, requested_at)
+        },
         'registered_tag': (tag: Tag) => emits('registered_tag', tag),
         'registered_text': (text: Text) => emits('registered_text', text),
         'registered_notification': (notification: Notification) => emits('registered_notification', notification),
-        'updated_kyou': (kyou: Kyou) => { reload_kyou(kyou); emits('updated_kyou', kyou) },
+        'updated_kyou': (kyou: Kyou) => {
+            const requested_at = new_reload_batch()
+            void reload_kyou(kyou, requested_at)
+            emits('updated_kyou', kyou)
+            publish_kyou_change({ kind: 'reload', kyou: kyou }, requested_at)
+        },
         'updated_tag': (tag: Tag) => emits('updated_tag', tag),
         'updated_text': (text: Text) => emits('updated_text', text),
         'updated_notification': (notification: Notification) => emits('updated_notification', notification),
@@ -1112,8 +1155,17 @@ export function useMiView(options: {
     }
 
     const allColumnsRequestHandlers = {
-        'requested_reload_kyou': (kyou: Kyou) => reload_kyou(kyou),
-        'requested_reload_list': () => { for (let i = 0; i < querys.value.length; i++) { reload_list(i) } },
+        'requested_reload_kyou': (kyou: Kyou) => {
+            const requested_at = new_reload_batch()
+            void reload_kyou(kyou, requested_at)
+            publish_kyou_change({ kind: 'reload', kyou: kyou }, requested_at)
+        },
+        'requested_reload_list': () => {
+            for (let i = 0; i < querys.value.length; i++) {
+                void reload_list(i)
+            }
+            publish_kyou_change({ kind: 'reload_list' }, new_reload_batch())
+        },
         'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => update_check_kyous(kyous, checked),
     }
 
@@ -1121,8 +1173,34 @@ export function useMiView(options: {
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload),
     }
 
+
+    // ── 画面間の変更通知 ──
+    // ポート(rudbeckia)で複数の画面を並べているとき、ここで起きた変更を他の画面へ配る。
+    // チャネルが null（単独ページ）なら何も起きない
+    function publish_kyou_change(change: KyouChange, requested_at: number): void {
+        const channel = props.kyou_change_channel
+        if (!channel) {
+            return
+        }
+        channel.bus.publish(channel.origin_id, change, requested_at)
+    }
+    // 他の画面で起きた変更を反映する。**適用関数だけを渡すこと** ――
+    // 中継束を渡すと emit が走ってホストが再 publish し、通知が無限に往復する
+    useKyouChangeSubscriber(() => props.kyou_change_channel, {
+        apply_registered: (kyou, requested_at) => { void insert_registered_kyou(kyou, requested_at) },
+        apply_reload: (kyou, requested_at) => { void reload_kyou(kyou, requested_at) },
+        apply_deleted: (kyou) => apply_deleted_kyou(kyou),
+        apply_reload_list: () => {
+            for (let i = 0; i < querys.value.length; i++) {
+                void reload_list(i)
+            }
+        },
+    })
+
     // ── Keyboard shortcut ──
-    const enable_enter_shortcut = ref(true)
+    // window にキャプチャで張るので、ポート(rudbeckia)で複数枚ホストすると多重登録になる。
+    // 意味は use-rykv-view.ts の同じ箇所と同じ（対称実装）
+    const enable_enter_shortcut = computed(() => !props.is_hosted_in_dialog)
     useScopedEnterForKFTL(mi_root, show_kftl_dialog, enable_enter_shortcut)
     useScopedCtrlVForClipboard(mi_root, show_save_clipboard_to_file_dialog, enable_enter_shortcut)
 

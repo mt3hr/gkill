@@ -23,11 +23,12 @@ export interface PendingGetKyous {
 export function createColumnViewMockApi() {
   let uuid_count = 0
   const pending_get_kyous: PendingGetKyous[] = []
+  // キーは column_state_instance_key（空文字＝従来キー＝単独ページと1枚目）
   const saved = {
-    rykv_querys: [] as unknown[],
-    mi_querys: [] as unknown[],
-    rykv_scrolls: [] as number[],
-    mi_scrolls: [] as number[],
+    rykv_querys: {} as Record<string, unknown[]>,
+    mi_querys: {} as Record<string, unknown[]>,
+    rykv_scrolls: {} as Record<string, number[]>,
+    mi_scrolls: {} as Record<string, number[]>,
   }
   const api = {
     ...createMockGkillAPI(),
@@ -40,21 +41,23 @@ export function createColumnViewMockApi() {
           pending_get_kyous.push({ req, resolve: resolve as PendingGetKyous['resolve'] })
         }),
     ),
-    get_saved_rykv_find_kyou_querys: vi.fn(() => saved.rykv_querys),
-    set_saved_rykv_find_kyou_querys: vi.fn((querys: unknown[]) => {
-      saved.rykv_querys = querys.concat()
+    // 保存領域は本番と同じく**枝番ごと**に分ける。1つの箱にしてしまうと、
+    // 2インスタンスが互いを上書きする不具合をテストが見逃す
+    get_saved_rykv_find_kyou_querys: vi.fn((instance_key: string) => saved.rykv_querys[instance_key ?? ''] ?? []),
+    set_saved_rykv_find_kyou_querys: vi.fn((querys: unknown[], instance_key: string) => {
+      saved.rykv_querys[instance_key ?? ''] = querys.concat()
     }),
-    get_saved_rykv_scroll_indexs: vi.fn(() => saved.rykv_scrolls),
-    set_saved_rykv_scroll_indexs: vi.fn((indexs: number[]) => {
-      saved.rykv_scrolls = indexs.concat()
+    get_saved_rykv_scroll_indexs: vi.fn((instance_key: string) => saved.rykv_scrolls[instance_key ?? ''] ?? []),
+    set_saved_rykv_scroll_indexs: vi.fn((indexs: number[], instance_key: string) => {
+      saved.rykv_scrolls[instance_key ?? ''] = indexs.concat()
     }),
-    get_saved_mi_find_kyou_querys: vi.fn(() => saved.mi_querys),
-    set_saved_mi_find_kyou_querys: vi.fn((querys: unknown[]) => {
-      saved.mi_querys = querys.concat()
+    get_saved_mi_find_kyou_querys: vi.fn((instance_key: string) => saved.mi_querys[instance_key ?? ''] ?? []),
+    set_saved_mi_find_kyou_querys: vi.fn((querys: unknown[], instance_key: string) => {
+      saved.mi_querys[instance_key ?? ''] = querys.concat()
     }),
-    get_saved_mi_scroll_indexs: vi.fn(() => saved.mi_scrolls),
-    set_saved_mi_scroll_indexs: vi.fn((indexs: number[]) => {
-      saved.mi_scrolls = indexs.concat()
+    get_saved_mi_scroll_indexs: vi.fn((instance_key: string) => saved.mi_scrolls[instance_key ?? ''] ?? []),
+    set_saved_mi_scroll_indexs: vi.fn((indexs: number[], instance_key: string) => {
+      saved.mi_scrolls[instance_key ?? ''] = indexs.concat()
     }),
   }
   return { api, pending_get_kyous }
@@ -125,6 +128,10 @@ export function makeColumnViewProps(
     app_title_bar_height: 50,
     app_content_height: 600,
     app_content_width: 800,
+    // 単独ページとしての挙動が既定。ポート(rudbeckia)に載せたケースは extra で上書きする
+    is_hosted_in_dialog: false,
+    // 空文字＝従来キー（単独ページと1枚目）。2枚目以降のケースは extra で '2' などを渡す
+    column_state_instance_key: '',
     ...extra,
   })
 }

@@ -5,7 +5,7 @@
     <div :ref="ui.containerRef" :style="ui.fixedStyle.value" class="gkill-floating-dialog tutorial-dialog">
       <div class="gkill-floating-dialog__header pa-0 ma-0" @mousedown="ui.onHeaderPointerDown"
         @touchstart="ui.onHeaderPointerDown">
-        <div class="gkill-floating-dialog__title">{{ $t('TUTORIAL_TITLE') }}</div>
+        <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
         <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="close_dialog" hide-details :color="'primary'"
           variant="flat">

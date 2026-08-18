@@ -9,15 +9,8 @@
                     </span>
                     <v-menu activator="parent">
                         <v-list>
-                            <v-list-item :key="index" :value="index" v-for="page, index in [
-                                { app_name: i18n.global.t('RYKV_APP_NAME'), page_name: 'rykv' },
-                                { app_name: i18n.global.t('MI_APP_NAME'), page_name: 'mi' },
-                                { app_name: i18n.global.t('KFTL_APP_NAME'), page_name: 'kftl' },
-                                { app_name: i18n.global.t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
-                                { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
-                                { app_name: i18n.global.t('DASHBOARD_APP_NAME'), page_name: 'dashboard' },
-                                { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
-                            ]">
+                            <!-- 画面切替メニューの一覧は classes/gkill-page-list.ts に1つだけ置いてある -->
+                            <v-list-item :key="index" :value="index" v-for="page, index in gkill_page_list">
                                 <v-list-item-title
                                     @click="async () => { await reset_dialog_history(); router.replace('/' + page.page_name + '?loaded=true') }">
                                     {{ page.app_name }}</v-list-item-title>
@@ -81,9 +74,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref } from 'vue'
+import { useTutorialOnStartup } from '@/classes/use-tutorial-on-startup'
 import { i18n } from '@/i18n'
 import router from '@/router'
+import { gkill_page_list } from '@/classes/gkill-page-list'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import HelpDialog from './dialogs/help-dialog.vue'
 import TutorialDialog from './dialogs/tutorial-dialog.vue'
@@ -123,11 +118,7 @@ const {
     onRequestedReloadApplicationConfig,
 } = useKftlPage()
 
-watch(application_config, (config) => {
-    if (config.is_loaded && config.show_tutorial_on_startup) {
-        nextTick(() => tutorial_dialog.value?.show())
-    }
-})
+useTutorialOnStartup(application_config, tutorial_dialog)
 </script>
 <style lang="css" scoped>
 .overlay_target {

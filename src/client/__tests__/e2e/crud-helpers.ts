@@ -198,6 +198,31 @@ export async function navigateToSettings(page: Page): Promise<void> {
 }
 
 /**
+ * Navigate to ポート (dev codename rudbeckia) and wait for it to load.
+ *
+ * ポート自身は一覧を持たないので data-gkill-view-ready は出ない。
+ * 出すのは中に開いた画面ウィンドウのほうなので、ここでは待たない。
+ */
+export async function navigateToRudbeckia(page: Page): Promise<void> {
+  await navigateTo(page, '/rudbeckia')
+}
+
+/**
+ * ポートの FAB(＋) を開く。
+ *
+ * 共通の `clickFabButton` は先に `dismissFloatingDialogs()` を呼ぶので使えない
+ * ―― すでに開いている画面ウィンドウを閉じてしまい、いつまでも増えない。
+ */
+export async function openRudbeckiaFabMenu(page: Page): Promise<void> {
+  // ポートのFABは画面ウィンドウより前に出す専用クラス。
+  // .position-fixed のままだとウィンドウ(z-index 1100+)に覆われて押せない
+  const fab = page.locator('.position-fixed-rudbeckia button, .position-fixed-rudbeckia .v-btn').first()
+  await expect(fab, 'ポートのFAB(＋ボタン)が見つからない').toBeVisible({ timeout: 15000 })
+  await fab.click()
+  await expect(page.locator(CONTEXT_MENU_ITEM).first(), 'FABメニューが開かない').toBeVisible({ timeout: 15000 })
+}
+
+/**
  * Check if the page contains the given text anywhere in #app.
  * 一度読むだけでリトライしない。アサーションには使わず、
  * expectPageToContainText / waitForPageText を使うこと。
