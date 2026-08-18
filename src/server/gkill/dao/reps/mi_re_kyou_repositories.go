@@ -425,6 +425,12 @@ errloop:
 }
 
 func (m *MiReKyouRepositories) FindMiReKyou(ctx context.Context, query *find.FindQuery) ([]MiReKyou, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照。
+	// MiReKyouのSQLもMiと同じく5射影のUNIONでIDリストを5回展開する。
+	return findChunkedByIDs(ctx, query, m.findMiReKyou)
+}
+
+func (m *MiReKyouRepositories) findMiReKyou(ctx context.Context, query *find.FindQuery) ([]MiReKyou, error) {
 	matchMiReKyous := map[string]MiReKyou{}
 	existErr := false
 	var err error

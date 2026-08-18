@@ -40,6 +40,77 @@ func (r Repositories) FindKyous(ctx context.Context, query *find.FindQuery) (map
 	return r.findKyous(ctx, query, true)
 }
 
+// maxIDsPerFindQuery は1回の検索でIDリストに載せる上限です。
+//
+// IDリストは各repのSQLへ ID IN (?, ?, ...) として展開されます。
+// このときMiは5射影のUNIONで、**5本それぞれに同じリストを丸ごと展開する**ので
+// (mi_repository_sqlite3_impl.go)、バインド変数は 5N+5 になり、
+// SQLiteの上限(SQLITE_MAX_VARIABLE_NUMBER=32766)を **N=6553で超えます**。
+// 超えるとPrepareが失敗し、検索が丸ごと落ちます。
+//
+// IDリストはORの羅列なので、分割して和を取れば結果は変わりません。
+// 4000なら5倍展開でも20005で収まり、将来もっと展開する実装が現れても余裕があります。
+//
+// 2026-08-18に実データ(確認待ちの記録7,122件のIDを一度に渡した)で踏みました。
+// そのときは失敗がGkillErrorにならず「成功・0件」に見えていました
+// (message.EnsureNotEmptyのコメントを参照)。
+const maxIDsPerFindQuery = 4000
+
+// findChunkedByIDs はIDリストをmaxIDsPerFindQueryずつに割って検索し、結果を連結します。
+//
+// IDリストはORの羅列なので、分割しても結果は変わりません
+// (同じIDが2つの塊に入ることは無いので、重複も生まれません)。
+// 分割が要らない件数のときはそのまま1回呼ぶだけなので、
+// IDリストを渡しうる検索は常にこれを通して構いません。
+func findChunkedByIDs[T any](ctx context.Context, query *find.FindQuery, findFunc func(context.Context, *find.FindQuery) ([]T, error)) ([]T, error) {
+	if len(query.IDs) <= maxIDsPerFindQuery {
+		return findFunc(ctx, query)
+	}
+
+	collected := []T{}
+	for idsChunk := range slices.Chunk(query.IDs, maxIDsPerFindQuery) {
+		clonedQuery := *query
+		clonedQuery.IDs = idsChunk
+
+		found, err := findFunc(ctx, &clonedQuery)
+		if err != nil {
+			return nil, err
+		}
+		collected = append(collected, found...)
+	}
+	return collected, nil
+}
+
+// findKyousByChunkedIDs はIDリストをmaxIDsPerFindQueryずつに割って検索し、和を返します。
+//
+// IDリストはORの羅列なので、分割しても結果は変わりません
+// (同じIDが2つの塊に入ることは無いので、重複も生まれません)。
+func (r Repositories) findKyousByChunkedIDs(ctx context.Context, query *find.FindQuery, parallel bool) (map[string][]Kyou, error) {
+	// キャッシュ再構築は分割の前に1回だけ行う。
+	// 塊ごとに走らせると同じ再構築を塊の数だけ繰り返すことになる。
+	if query.UpdateCache {
+		if err := r.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
+
+	matchKyous := map[string][]Kyou{}
+	for idsChunk := range slices.Chunk(query.IDs, maxIDsPerFindQuery) {
+		clonedQuery := *query
+		clonedQuery.IDs = idsChunk
+		clonedQuery.UpdateCache = false
+
+		matchKyousInChunk, err := r.findKyous(ctx, &clonedQuery, parallel)
+		if err != nil {
+			return nil, err
+		}
+		for key, kyous := range matchKyousInChunk {
+			matchKyous[key] = append(matchKyous[key], kyous...)
+		}
+	}
+	return matchKyous, nil
+}
+
 // FindKyousSequential は各リポジトリを並列化せずに順に検索します。
 //
 // あるリポジトリのFindKyousの中からさらにRepositories.FindKyousを呼ぶ場面
@@ -51,6 +122,11 @@ func (r Repositories) FindKyousSequential(ctx context.Context, query *find.FindQ
 }
 
 func (r Repositories) findKyous(ctx context.Context, query *find.FindQuery, parallel bool) (map[string][]Kyou, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照。
+	if len(query.IDs) > maxIDsPerFindQuery {
+		return r.findKyousByChunkedIDs(ctx, query, parallel)
+	}
+
 	// update_cache=trueの場合、並列dispatch前に逐次UpdateCacheする。
 	// threads.Goのネスト（FindKyous並列→UpdateCache内の並列）でスレッドプールが枯渇しデッドロックするのを防止する。
 	if query.UpdateCache {

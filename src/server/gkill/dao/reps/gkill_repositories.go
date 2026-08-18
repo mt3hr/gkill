@@ -334,6 +334,35 @@ func (g *GkillRepositories) GetLatestDataRepositoryAddress(id string) (gkill_cac
 	return addr, exist
 }
 
+// LatestDataRepositoryAddressReader は最新版アドレス表をロックを取り直さずに引くための参照器。
+//
+// GetLatestDataRepositoryAddress は1件ごとに syncState()(遅延初期化を守る**プロセス共有の**
+// sync.Mutex)と latestDataAddressesMutex.RLock を取る。結果Kyou 1件ごとに呼ばれる経路
+// (find_filter の replaceLatestKyouInfos、ReKyou/MiReKyou のターゲット解決)では、
+// それが最内ループの頻度で全ユーザ・全リクエストを直列化する。
+// まとめて引くときは必ずこちらを使うこと。
+//
+// 戻り値の release を必ず呼ぶこと(deferでよい)。release するまで読み取りロックを保持するので、
+// その間アドレス表への書き込みは待たされる。
+// **ロックを保持したまま、同じmutexを取る他のメソッドを呼んではいけない**
+// (同一goroutineの再帰RLockは、間に書き込み待ちが挟まると恒久デッドロックになる)。
+type LatestDataRepositoryAddressReader struct {
+	addresses map[string]gkill_cache.LatestDataRepositoryAddress
+}
+
+// Get はIDに対応する最新版アドレスを返す。GetLatestDataRepositoryAddress と同じ意味。
+func (r LatestDataRepositoryAddressReader) Get(id string) (gkill_cache.LatestDataRepositoryAddress, bool) {
+	addr, exist := r.addresses[id]
+	return addr, exist
+}
+
+// BeginLatestDataRepositoryAddressRead は読み取りロックを1回だけ取り、参照器と解放関数を返す。
+func (g *GkillRepositories) BeginLatestDataRepositoryAddressRead() (LatestDataRepositoryAddressReader, func()) {
+	sync := g.syncState()
+	sync.latestDataAddressesMutex.RLock()
+	return LatestDataRepositoryAddressReader{addresses: g.latestDataRepositoryAddresses}, sync.latestDataAddressesMutex.RUnlock
+}
+
 // SetLatestDataRepositoryAddress はIDに対応する最新版アドレスを1件書き込む。
 func (g *GkillRepositories) SetLatestDataRepositoryAddress(id string, addr gkill_cache.LatestDataRepositoryAddress) {
 	sync := g.syncState()
@@ -481,9 +510,13 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 			slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		}
 		CacheMemoryDB.SetMaxOpenConns(runtime.NumCPU()) // 読み取り並列を許可
-		CacheMemoryDB.SetMaxIdleConns(1)                // 0にすると最後が閉じて消える
-		CacheMemoryDB.SetConnMaxLifetime(0)             // 無限
-		CacheMemoryDB.SetConnMaxIdleTime(0)             // 無限
+		// 0にすると最後の接続が閉じてメモリDBごと消える。
+		// 1のままだと同時読み取りの2本目以降が返却のたびに閉じられ、
+		// その接続のプリペアドステートメントが毎回破棄されるので、MaxOpenConnsに揃える
+		// (実データDB側の GetSQLiteDBConnection は既にこの形)。
+		CacheMemoryDB.SetMaxIdleConns(runtime.NumCPU())
+		CacheMemoryDB.SetConnMaxLifetime(0) // 無限
+		CacheMemoryDB.SetConnMaxIdleTime(0) // 無限
 
 		TempMemoryDB, err = sql.Open("sqlite", "file:gkill_temp_db_"+userID+"?mode=memory&cache=shared&_txlock=immediate&_pragma=busy_timeout(6000)&_pragma=journal_mode(MEMORY)&_pragma=synchronous(OFF)")
 		if err != nil {
@@ -491,9 +524,13 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 			slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		}
 		TempMemoryDB.SetMaxOpenConns(runtime.NumCPU()) // 読み取り並列を許可
-		TempMemoryDB.SetMaxIdleConns(1)                // 0にすると最後が閉じて消える
-		TempMemoryDB.SetConnMaxLifetime(0)             // 無限
-		TempMemoryDB.SetConnMaxIdleTime(0)             // 無限
+		// 0にすると最後の接続が閉じてメモリDBごと消える。
+		// 1のままだと同時読み取りの2本目以降が返却のたびに閉じられ、
+		// その接続のプリペアドステートメントが毎回破棄されるので、MaxOpenConnsに揃える
+		// (実データDB側の GetSQLiteDBConnection は既にこの形)。
+		TempMemoryDB.SetMaxIdleConns(runtime.NumCPU())
+		TempMemoryDB.SetConnMaxLifetime(0) // 無限
+		TempMemoryDB.SetConnMaxIdleTime(0) // 無限
 
 		CacheMemoryDBMutex = &sync.RWMutex{}
 		TempMemoryDBMutex = &sync.RWMutex{}
@@ -1107,7 +1144,9 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 				queryLatest.IDs = ids
 			}
 
-			matchTagsInRep, err := rep.FindTags(ctx, queryLatest)
+			// 最新版アドレスから作ったIDリストはrepの件数ぶんになるので、
+			// SQLのバインド変数の上限に当たりうる。理由はmaxIDsPerFindQueryを参照。
+			matchTagsInRep, err := findChunkedByIDs(ctx, queryLatest, rep.FindTags)
 			if err != nil {
 				errch <- err
 				return
@@ -1542,7 +1581,9 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 				queryLatest.IDs = ids
 			}
 
-			matchTextsInRep, err := rep.FindTexts(ctx, queryLatest)
+			// 最新版アドレスから作ったIDリストはrepの件数ぶんになるので、
+			// SQLのバインド変数の上限に当たりうる。理由はmaxIDsPerFindQueryを参照。
+			matchTextsInRep, err := findChunkedByIDs(ctx, queryLatest, rep.FindTexts)
 			if err != nil {
 				errch <- err
 				return

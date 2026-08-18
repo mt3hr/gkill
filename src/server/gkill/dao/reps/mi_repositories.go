@@ -357,6 +357,12 @@ errloop:
 }
 
 func (m MiRepositories) FindMi(ctx context.Context, query *find.FindQuery) ([]Mi, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照。
+	// MiのSQLは5射影のUNIONでIDリストを5回展開するので、ここが最初に上限へ当たる。
+	return findChunkedByIDs(ctx, query, m.findMi)
+}
+
+func (m MiRepositories) findMi(ctx context.Context, query *find.FindQuery) ([]Mi, error) {
 	matchMis := map[string]Mi{}
 	existErr := false
 	var err error
