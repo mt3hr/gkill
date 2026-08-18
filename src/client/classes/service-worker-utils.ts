@@ -29,21 +29,31 @@ export async function is_successful_gkill_response(response: Response): Promise<
   return true
 }
 
-/** Validate whether a Response should be cached. Does not consume the body (reads via clone). */
+/**
+ * Validate whether a Response should be cached. Does not consume the body (reads via clone).
+ *
+ * 本文のパースは1回だけにすること。以前は is_successful_gkill_response を呼んだうえで
+ * もう一度 clone().json() していたため、SWでキャッシュする1行ごとの応答
+ * (get_kyou / get_kmemo / get_tags_by_id ...) が SW内で2回 + ページで1回の計3回パースされていた。
+ * 一覧のスクロールでは行数ぶん飛ぶので、SWスレッドの占有としてそのまま体感に出る。
+ */
 export async function should_cache_response(response: Response, check_histories: boolean): Promise<boolean> {
-  if (!await is_successful_gkill_response(response)) return false
+  if (!response.ok) return false
+  let json: Record<string, unknown>
   try {
-    const json = await response.clone().json()
-    if (check_histories) {
-      for (const key of Object.keys(json)) {
-        if (key.endsWith('_histories')) {
-          if (Array.isArray(json[key]) && json[key].length === 0) return false
-          break
-        }
-      }
-    }
+    json = await response.clone().json()
   } catch {
     return false
+  }
+  const errors = json.errors
+  if (Array.isArray(errors) && errors.length > 0) return false
+  if (check_histories) {
+    for (const key of Object.keys(json)) {
+      if (key.endsWith('_histories')) {
+        if (Array.isArray(json[key]) && json[key].length === 0) return false
+        break
+      }
+    }
   }
   return true
 }

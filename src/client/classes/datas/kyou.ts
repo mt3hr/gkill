@@ -1,6 +1,5 @@
 'use strict'
 
-import { hydrate } from '../api/hydrate'
 import { InfoBase } from './info-base'
 import { GkillError } from '../api/gkill-error'
 import { GitCommitLog } from './git-commit-log'
@@ -33,10 +32,52 @@ import { i18n } from '@/i18n'
 import type { FindKyouQuery } from '../api/find_query/find-kyou-query'
 import { MiSortType } from '../api/find_query/mi-sort-type'
 
+// data_typeのプレフィックスから「どの型別データを読むか」を1回で決めるための表。
+//
+// **長いプレフィックスから順に**照合するので、"mirekyou" は "mi" より必ず先に当たる。
+// CLAUDE.mdの「mirekyou_* は "mi" で始まるためMiより先に判定する」を、
+// ifを並べる順番（書き換えで簡単に壊れる）ではなく構造で保証するための並べ替え。
+// 並びは五十音順ならぬアルファベット順。'mi' が 'mirekyou' より前にあるが、
+// 下の sort が長い順へ並べ替えるので判定は 'mirekyou' が先になる
+const typed_data_prefixes: ReadonlyArray<string> = [
+    'git',
+    'idf',
+    'kc',
+    'kmemo',
+    'lantana',
+    'mi',
+    'mirekyou',
+    'nlog',
+    'rekyou',
+    'timeis',
+    'urlog',
+].sort((a, b) => b.length - a.length)
+
+// resolve_typed_data_prefix は data_type が該当する型別データのプレフィックスを返します。
+// どれにも当たらないときは null（＝プラグインKyou）です。
+function resolve_typed_data_prefix(data_type: string): string | null {
+    for (const prefix of typed_data_prefixes) {
+        if (data_type.startsWith(prefix)) {
+            return prefix
+        }
+    }
+    return null
+}
+
 export class Kyou extends InfoBase {
     is_deleted: boolean
     image_source: string
-    attached_histories: Array<Kyou>
+    // InfoBase の attached_* と同じ理由で遅延確保する(検索応答には含まれない)
+    _attached_histories: Array<Kyou> | null
+    get attached_histories(): Array<Kyou> {
+        if (!this._attached_histories) {
+            this._attached_histories = new Array<Kyou>()
+        }
+        return this._attached_histories
+    }
+    set attached_histories(value: Array<Kyou>) {
+        this._attached_histories = value
+    }
     typed_kmemo: Kmemo | null
     typed_kc: KC | null
     typed_urlog: URLog | null
@@ -116,64 +157,48 @@ export class Kyou extends InfoBase {
         if (this.id === "") {
             return []
         }
+        // 種別の判定は1回だけ。以前は11本のifを並べたうえで、
+        // 末尾のプラグイン判定で同じ11個のstartsWithをもう一度評価していた。
         let errors = new Array<GkillError>()
-        if (this.data_type.startsWith("kmemo")) {
-            const e = await this.load_typed_kmemo(query)
-            errors = errors.concat(e)
-        }
-        if (this.data_type.startsWith("kc")) {
-            const e = await this.load_typed_kc(query)
-            errors = errors.concat(e)
-        }
-        if (this.data_type.startsWith("urlog")) {
-            const e = await this.load_typed_urlog(query)
-            errors = errors.concat(e)
-        }
-        if (this.data_type.startsWith("nlog")) {
-            const e = await this.load_typed_nlog(query)
-            errors = errors.concat(e)
-        }
-        if (this.data_type.startsWith("timeis")) {
-            const e = await this.load_typed_timeis(query)
-            errors = errors.concat(e)
-        }
-        // mirekyou_* は "mi" で始まるためMiより先に判定し、Mi側からは除外する
-        if (this.data_type.startsWith("mirekyou")) {
-            const e = await this.load_typed_mirekyou(query)
-            errors = errors.concat(e)
-        }
-        if (this.data_type.startsWith("mi") && !this.data_type.startsWith("mirekyou")) {
-            const e = await this.load_typed_mi(query)
-            errors = errors.concat(e)
-        }
-        if (this.data_type.startsWith("lantana")) {
-            const e = await this.load_typed_lantana(query)
-            errors = errors.concat(e)
-        }
-        if (this.data_type.startsWith("idf")) {
-            const e = await this.load_typed_idf_kyou(query)
-            errors = errors.concat(e)
-        }
-        if (this.data_type.startsWith("git")) {
-            const e = await this.load_typed_git_commit_log(query)
-            errors = errors.concat(e)
-        }
-        if (this.data_type.startsWith("rekyou")) {
-            const e = await this.load_typed_rekyou(query)
-            errors = errors.concat(e)
-        }
-        // 上記いずれにも該当しない場合はプラグインKyouとして扱う
-        // data_typeが既知のプレフィックスにマッチしなかった場合のみプラグインとして扱う
-        // （APIエラーでload失敗した既知data_typeをプラグインとして誤判定しないようにするため）
-        const is_known_data_type =
-            this.data_type.startsWith("kmemo") || this.data_type.startsWith("kc") ||
-            this.data_type.startsWith("urlog") || this.data_type.startsWith("nlog") ||
-            this.data_type.startsWith("timeis") || this.data_type.startsWith("mi") ||
-            this.data_type.startsWith("mirekyou") ||
-            this.data_type.startsWith("lantana") || this.data_type.startsWith("idf") ||
-            this.data_type.startsWith("git") || this.data_type.startsWith("rekyou")
-        if (!is_known_data_type) {
-            this.typed_plugin = { rep_name: this.rep_name }
+        switch (resolve_typed_data_prefix(this.data_type)) {
+            case 'kmemo':
+                errors = errors.concat(await this.load_typed_kmemo(query))
+                break
+            case 'kc':
+                errors = errors.concat(await this.load_typed_kc(query))
+                break
+            case 'urlog':
+                errors = errors.concat(await this.load_typed_urlog(query))
+                break
+            case 'nlog':
+                errors = errors.concat(await this.load_typed_nlog(query))
+                break
+            case 'timeis':
+                errors = errors.concat(await this.load_typed_timeis(query))
+                break
+            case 'mirekyou':
+                errors = errors.concat(await this.load_typed_mirekyou(query))
+                break
+            case 'mi':
+                errors = errors.concat(await this.load_typed_mi(query))
+                break
+            case 'lantana':
+                errors = errors.concat(await this.load_typed_lantana(query))
+                break
+            case 'idf':
+                errors = errors.concat(await this.load_typed_idf_kyou(query))
+                break
+            case 'git':
+                errors = errors.concat(await this.load_typed_git_commit_log(query))
+                break
+            case 'rekyou':
+                errors = errors.concat(await this.load_typed_rekyou(query))
+                break
+            default:
+                // 既知のプレフィックスに一つも当たらない場合のみプラグインKyouとして扱う
+                // （APIエラーでload失敗した既知data_typeをプラグインとして誤判定しないため）
+                this.typed_plugin = { rep_name: this.rep_name }
+                break
         }
         this.is_typed_data_loaded = true
         return errors
@@ -230,12 +255,8 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
-        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.kmemo_histories.length; i++) {
-            const kmemo = new Kmemo()
-            hydrate(kmemo, res.kmemo_histories[i])
-            res.kmemo_histories[i] = kmemo
-        }
+        // 実体化は API レイヤ(gkill-api.ts の get_* )が済ませている。
+        // ここでもう一度 new + hydrate すると、履歴の件数ぶん二重に作ることになる。
 
         let match_kmemo: Kmemo | null = null
         res.kmemo_histories.forEach(kmemo => {
@@ -265,12 +286,8 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
-        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.kc_histories.length; i++) {
-            const kc = new KC()
-            hydrate(kc, res.kc_histories[i])
-            res.kc_histories[i] = kc
-        }
+        // 実体化は API レイヤ(gkill-api.ts の get_* )が済ませている。
+        // ここでもう一度 new + hydrate すると、履歴の件数ぶん二重に作ることになる。
 
         let match_kc: KC | null = null
         res.kc_histories.forEach(kc => {
@@ -300,12 +317,8 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
-        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.urlog_histories.length; i++) {
-            const urlog = new URLog()
-            hydrate(urlog, res.urlog_histories[i])
-            res.urlog_histories[i] = urlog
-        }
+        // 実体化は API レイヤ(gkill-api.ts の get_* )が済ませている。
+        // ここでもう一度 new + hydrate すると、履歴の件数ぶん二重に作ることになる。
 
         let match_urlog: URLog | null = null
         res.urlog_histories.forEach(urlog => {
@@ -335,12 +348,8 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
-        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.nlog_histories.length; i++) {
-            const nlog = new Nlog()
-            hydrate(nlog, res.nlog_histories[i])
-            res.nlog_histories[i] = nlog
-        }
+        // 実体化は API レイヤ(gkill-api.ts の get_* )が済ませている。
+        // ここでもう一度 new + hydrate すると、履歴の件数ぶん二重に作ることになる。
 
         let match_nlog: Nlog | null = null
         res.nlog_histories.forEach(nlog => {
@@ -370,12 +379,8 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
-        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.timeis_histories.length; i++) {
-            const timeis = new TimeIs()
-            hydrate(timeis, res.timeis_histories[i])
-            res.timeis_histories[i] = timeis
-        }
+        // 実体化は API レイヤ(gkill-api.ts の get_* )が済ませている。
+        // ここでもう一度 new + hydrate すると、履歴の件数ぶん二重に作ることになる。
 
         let match_timeis: TimeIs | null = null
         res.timeis_histories.forEach(timeis => {
@@ -405,12 +410,8 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
-        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.mi_histories.length; i++) {
-            const mi = new Mi()
-            hydrate(mi, res.mi_histories[i])
-            res.mi_histories[i] = mi
-        }
+        // 実体化は API レイヤ(gkill-api.ts の get_* )が済ませている。
+        // ここでもう一度 new + hydrate すると、履歴の件数ぶん二重に作ることになる。
 
         let match_mi: Mi | null = null
         res.mi_histories.forEach(mi => {
@@ -444,12 +445,8 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
-        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.lantana_histories.length; i++) {
-            const lantana = new Lantana()
-            hydrate(lantana, res.lantana_histories[i])
-            res.lantana_histories[i] = lantana
-        }
+        // 実体化は API レイヤ(gkill-api.ts の get_* )が済ませている。
+        // ここでもう一度 new + hydrate すると、履歴の件数ぶん二重に作ることになる。
 
         let match_lantana: Lantana | null = null
         res.lantana_histories.forEach(lantana => {
@@ -479,12 +476,8 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
-        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.idf_kyou_histories.length; i++) {
-            const idf_kyou = new IDFKyou()
-            hydrate(idf_kyou, res.idf_kyou_histories[i])
-            res.idf_kyou_histories[i] = idf_kyou
-        }
+        // 実体化は API レイヤ(gkill-api.ts の get_* )が済ませている。
+        // ここでもう一度 new + hydrate すると、履歴の件数ぶん二重に作ることになる。
 
         let match_idf_kyou: IDFKyou | null = null
         res.idf_kyou_histories.forEach(idf_kyou => {
@@ -514,12 +507,8 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
-        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.git_commit_log_histories.length; i++) {
-            const git_commit_log = new GitCommitLog()
-            hydrate(git_commit_log, res.git_commit_log_histories[i])
-            res.git_commit_log_histories[i] = git_commit_log
-        }
+        // 実体化は API レイヤ(gkill-api.ts の get_* )が済ませている。
+        // ここでもう一度 new + hydrate すると、履歴の件数ぶん二重に作ることになる。
 
         this.typed_git_commit_log = res.git_commit_log_histories[0]
 
@@ -543,12 +532,8 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
-        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.rekyou_histories.length; i++) {
-            const rekyou = new ReKyou()
-            hydrate(rekyou, res.rekyou_histories[i])
-            res.rekyou_histories[i] = rekyou
-        }
+        // 実体化は API レイヤ(gkill-api.ts の get_* )が済ませている。
+        // ここでもう一度 new + hydrate すると、履歴の件数ぶん二重に作ることになる。
 
         let match_rekyou: ReKyou | null = null
         res.rekyou_histories.forEach(rekyou => {
@@ -578,12 +563,8 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
-        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.mirekyou_histories.length; i++) {
-            const mirekyou = new MiReKyou()
-            hydrate(mirekyou, res.mirekyou_histories[i])
-            res.mirekyou_histories[i] = mirekyou
-        }
+        // 実体化は API レイヤ(gkill-api.ts の get_* )が済ませている。
+        // ここでもう一度 new + hydrate すると、履歴の件数ぶん二重に作ることになる。
 
         let match_mirekyou: MiReKyou | null = null
         res.mirekyou_histories.forEach(mirekyou => {
@@ -738,10 +719,10 @@ export class Kyou extends InfoBase {
         cloned_kyou.typed_mirekyou = this.typed_mirekyou
         cloned_kyou.typed_plugin = this.typed_plugin
         cloned_kyou.is_typed_data_loaded = this.is_typed_data_loaded
-        cloned_kyou.attached_tags = this.attached_tags.slice()
-        cloned_kyou.attached_texts = this.attached_texts.slice()
-        cloned_kyou.attached_notifications = this.attached_notifications.slice()
-        cloned_kyou.attached_timeis_kyou = this.attached_timeis_kyou.slice()
+        cloned_kyou._attached_tags = this._attached_tags ? this._attached_tags.slice() : null
+        cloned_kyou._attached_texts = this._attached_texts ? this._attached_texts.slice() : null
+        cloned_kyou._attached_notifications = this._attached_notifications ? this._attached_notifications.slice() : null
+        cloned_kyou._attached_timeis_kyou = this._attached_timeis_kyou ? this._attached_timeis_kyou.slice() : null
         cloned_kyou.is_attached_tags_loaded = this.is_attached_tags_loaded
         cloned_kyou.is_attached_texts_loaded = this.is_attached_texts_loaded
         cloned_kyou.is_attached_notifications_loaded = this.is_attached_notifications_loaded
@@ -761,7 +742,7 @@ export class Kyou extends InfoBase {
         super()
         this.is_deleted = false
         this.image_source = ""
-        this.attached_histories = new Array<Kyou>()
+        this._attached_histories = null
         this.typed_kmemo = null
         this.typed_kc = null
         this.typed_urlog = null

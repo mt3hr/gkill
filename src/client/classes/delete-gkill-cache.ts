@@ -1,5 +1,48 @@
 import { CONFIG_CACHE_NAME, KYOU_CACHE_NAME } from './service-worker-utils'
 
+// Kyouキャッシュのキーになるデータ種別。
+// serviceWorker.ts が同じ形のキーで書いているので、増やしたら向こうにも足すこと。
+const kyou_cache_data_types = [
+    'kyou',
+    'kmemo',
+    'kc',
+    'urlog',
+    'nlog',
+    'timeis',
+    'mi',
+    'lantana',
+    'rekyou',
+    'mirekyou',
+    'git_commit_log',
+    'idf_kyou',
+    'tags_by_id',
+    'texts_by_id',
+    'gkill_notifications_by_id',
+    'plugin_content_html',
+]
+
+/**
+ * 複数のIDのKyouキャッシュをまとめて消す。
+ *
+ * `delete_gkill_kyou_cache` を1件ずつ await すると、IDごとに `caches.open` を開き直したうえで
+ * 16回の delete が直列に並ぶ。更新IDは既定で最大3000件(cache_clear_count_limit)まで来るので、
+ * 検索を始める前に最大48,000回の逐次 await を払うことになる。
+ * キャッシュは1回だけ開き、削除は全部まとめて待つ。
+ */
+export async function delete_gkill_kyou_caches(ids: Array<string>): Promise<void> {
+    if (ids.length === 0) {
+        return
+    }
+    const cache = await caches.open(KYOU_CACHE_NAME)
+    const wait_promises = new Array<Promise<boolean>>()
+    for (let i = 0; i < ids.length; i++) {
+        for (let j = 0; j < kyou_cache_data_types.length; j++) {
+            wait_promises.push(cache.delete(new Request(`/cache/api/${kyou_cache_data_types[j]}/${ids[i]}`)))
+        }
+    }
+    await Promise.all(wait_promises)
+}
+
 export default async function delete_gkill_kyou_cache(id: string | null): Promise<void> {
     if (!id) {
         // 全消しは削除の完了まで待つ。待たずに返すと、呼び出し元が始めた引き直しが
@@ -8,24 +51,7 @@ export default async function delete_gkill_kyou_cache(id: string | null): Promis
         return
     }
 
-    const data_types = [
-        'kyou',
-        'kmemo',
-        'kc',
-        'urlog',
-        'nlog',
-        'timeis',
-        'mi',
-        'lantana',
-        'rekyou',
-        'mirekyou',
-        'git_commit_log',
-        'idf_kyou',
-        'tags_by_id',
-        'texts_by_id',
-        'gkill_notifications_by_id',
-        'plugin_content_html',
-    ]
+    const data_types = kyou_cache_data_types
 
     const cache = await caches.open(KYOU_CACHE_NAME)
     const wait_promises = new Array<Promise<boolean>>()

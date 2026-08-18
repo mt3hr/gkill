@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { computed, onUnmounted, ref, watch, nextTick, type Ref } from 'vue'
+import { computed, nextTick, onUnmounted, ref, type Ref, toRaw, watch } from 'vue'
 import type { KyouCountCalendarProps } from '@/pages/views/kyou-count-calendar-props'
 import type { KyouCountCalendarEmits } from '@/pages/views/kyou-count-calendar-emits'
 import moment from 'moment'
@@ -72,9 +72,13 @@ export function useKyouCountCalendar(options: {
         if (!props.kyous) {
             return
         }
+        // 走査は生の配列に対して行う。deepなref配下のリアクティブProxy越しに読むと
+        // 1要素ごとに track と toReactive が走り、要素ぶんのProxyを確保する(30万件では効く)。
+        // これは watch のコールバック内で、読んだ値に依存を張る必要が無いので意味論も変わらない。
+        const raw_kyous = toRaw(props.kyous)
         const date_event_map: Map<string, number> = new Map<string, number>()
-        for (let i = 0; i < props.kyous.length; i++) {
-            const kyou = props.kyous[i]
+        for (let i = 0; i < raw_kyous.length; i++) {
+            const kyou = raw_kyous[i]
             // momentは1件あたりの生成+formatが重く、数十万件で秒単位になるためネイティブで組む
             const d = kyou.related_time
             const date_str = d.getFullYear().toString() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate())
