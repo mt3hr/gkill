@@ -279,6 +279,64 @@ describe('KFTLの保存マーカー', () => {
         expect(log.calls, '解析待ちの間の1文字で保存が消えている').toContain('add_kmemo')
     })
 
+    // 「素早く入力すると \n！\n が反応しない」の正体。
+    //
+    // watch は flush:'post' なので、1回のフラッシュ窓の中で本文が2回変わると
+    // **1回しか呼ばれず、中間の値(マーカーで終わっている本文)は一度も観測されない**。
+    // 行数の多いタブでは解析(get_invalid_line_indexs は行ごとに await)がメインスレッドを
+    // 掴むので、その間に打たれたキーがまとめて着地して現実に起きる。
+    // endsWith で判定している限り、この窓では末尾が既にマーカーではない。
+    test('1回のフラッシュ窓でマーカーの後ろまで打たれても保存を取りこぼさない', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        view.onTextAreaInput()
+        view.text_area_content.value = 'メモ\n！\n'
+        // nextTick を挟まない = watch はまだ動いていない。ここで続きが着地する
+        view.text_area_content.value = 'メモ\n！\nつ'
+        await nextTick()
+        await flush_microtasks()
+        await flush_microtasks()
+
+        expect(log.calls, 'マーカー行が確定したのに保存が走っていない').toContain('add_kmemo')
+    })
+
+    // マーカーが1行目にある場合。前後の改行を要求する endsWith では拾えない
+    test('マーカーが1行目でも保存が走る', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        view.onTextAreaInput()
+        view.text_area_content.value = '！\nメモ\n'
+        await nextTick()
+        await flush_microtasks()
+        await flush_microtasks()
+
+        expect(log.calls, '1行目のマーカーで保存が走っていない').toContain('add_kmemo')
+    })
+
+    // マーカーが増えていないなら「保存して」という新しい指示ではない。
+    // これが効かないと、マーカーの残った本文を1文字打つたびに保存が走る
+    test('既にあるマーカーの後ろを編集しても再送信しない', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        // 復元などでマーカー入りの本文が入っている状態(打っていないので保存は走らない)
+        view.text_area_content.value = 'メモ\n！\nつづき'
+        await nextTick()
+        await flush_microtasks()
+        expect(log.calls).not.toContain('add_kmemo')
+
+        // ここから利用者が打つ。マーカーは増えていない
+        view.onTextAreaInput()
+        view.text_area_content.value = 'メモ\n！\nつづき2'
+        await nextTick()
+        await flush_microtasks()
+        await flush_microtasks()
+
+        expect(log.calls, 'マーカーが増えていないのに保存が走っている').not.toContain('add_kmemo')
+    })
+
     test('利用者が打っていないのに本文が変わっただけでは保存しない', async () => {
         const log: CallLog = { calls: [] }
         const { view } = mount_view(make_api(log))
