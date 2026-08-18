@@ -183,34 +183,33 @@ export function useKftlView(options: {
     })
 
     /**
-     * 保存マーカーによる自動送信を「利用者が打ったとき」だけに限るための印。
+     * 保存マーカーの増分を測る基準＝**本文が変わる直前**の本文。
      *
-     * この判定を watch の内容変化そのものに戻すと、タブ切替・localStorage からの復元でも
-     * `text_area_content` が変わるので発火してしまい、末尾にマーカーが残ったタブを
-     * クリックしただけで保存が走る（設定の読み込み前はマーカー付きのまま保存されうる）。
+     * `beforeinput` で控えて `input` で比べる。この2つの間には何も割り込めないので、
+     * 「利用者が打ったことで確定したマーカー行が増えたか」を順序に依存せず判定できる。
      *
-     * 立てるのは `onTextAreaInput()` **だけ**。テンプレート貼り付けはこの印に相乗りさせず、
-     * `paste_template` から `maybe_submit_by_save_marker()` を直接呼ぶ（理由はそちらのコメント）
+     * **watch（本文の変化）で判定してはいけない。** 理由が2つある。
+     *   - `flush: 'post'` なので、1回のフラッシュ窓で本文が2回変わると中間の値を観測できない
+     *   - DOMの仕様上、**同じ input イベントのリスナーとリスナーの間でマイクロタスクが走る**ので、
+     *     Vue の post flush（＝この watch）が `@input` ハンドラより**先**に新しい本文を観測しうる。
+     *     IMEで「変換の確定」と「改行」を続けて打つと必ずこの順序になり、
+     *     watch 側に判定や基準の更新を置くと**判定そのものが走らない / 増分0に見える**
+     *
+     * `beforeinput` / `input` はタブ切替・localStorage からの復元では発生しないので、
+     * 「マーカーの残ったタブをクリックしただけで保存が走る」も構造的に起きない。
+     * テンプレート貼り付けはイベントを通らないので `paste_template` から直接判定する。
+     * （2026-08-19 修正）
      */
-    let user_input_tab_id: string | null = null
+    let content_before_input = ""
 
     // flush: 'post' なのは、コールバックの中で textarea の実寸とスクロール位置を読むため
     watch(() => text_area_content.value, async (new_value, old_value) => {
         if (new_value === old_value) {
             return
         }
-        const input_tab_id = user_input_tab_id
-        user_input_tab_id = null
-
-        // **保存マーカーの判定は「この変更で確定した本文」で行い、解析を待たない。**
-        // 行ラベルと不正行の再計算は await を挟む（`get_invalid_line_indexs` は
-        // 行ごとに await するので行数に比例して伸びる）。待ってから
-        // `text_area_content.value` を読み直すと、その間に1文字打たれただけで
-        // 末尾がマーカーでなくなり、**保存が黙って起きない**。
-        // 行数が多いタブほど窓が広がるので「たまに効かない」ように見える
-        if (input_tab_id !== null && input_tab_id === active_tab_id.value) {
-            await maybe_submit_by_save_marker(new_value, old_value)
-        }
+        // 保存マーカーの判定はここではない（理由は content_before_input のコメント）
+        void new_value
+        void old_value
 
         update_line_labels()
         await refresh_invalid_lines()
@@ -502,9 +501,15 @@ export function useKftlView(options: {
         return text.replace("\n" + KFTL_ASCII_SAVE_CHARACTOR + "\n", "\n")
     }
 
-    /** textarea の入力イベント。ここで印をつけ、watch 側で保存マーカーを判定する */
+    /** textarea の `beforeinput`。本文が変わる**前**の値を控える */
+    function onTextAreaBeforeInput(): void {
+        content_before_input = text_area_content.value
+    }
+
     function onTextAreaInput(): void {
-        user_input_tab_id = active_tab_id.value
+        // v-model はこのハンドラより先にモデルを更新する。IME変換中だけは更新を捨てるので
+        // 前回と同じ値が読め、増分0になって発火しない（確定した回に正しく増分が出る）
+        void maybe_submit_by_save_marker(text_area_content.value, content_before_input)
     }
 
     /**
@@ -876,6 +881,7 @@ export function useKftlView(options: {
         show_kftl_template_dialog,
         paste_template,
         focus_kftl_text_area,
+        onTextAreaBeforeInput,
         onTextAreaInput,
         update_line_labels,
 
