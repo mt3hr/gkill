@@ -150,6 +150,18 @@ defineExpose({ show, hide })
     flex: 0 1 auto;
 }
 
+/* 例外。Dnote は fill_height のとき「自分が flex column の器になって
+   残り高さを集計リストへ配る」作り（.dnote_list_view = height:0 + flex-grow:1）。
+   上のリセットで display:block へ戻すと .dnote-scroll-wrap までの height:100% の鎖が
+   auto に落ち、flex-basis:0 の .dnote_list_table_root が高さ0に潰れて
+   **集計リストだけが消える**（集計項目とグラフは残るので気付きにくい）。
+   詳細度を1つ上げて display だけ戻す。overflow / flex は上の規則のままでよい
+   （.dnote_view は App.vue の overflow: unset !important が最終的に効く） */
+.rudbeckia-page-dialog .gkill-floating-dialog__body .v-card.fill_height_mode {
+    display: flex;
+    flex-direction: column;
+}
+
 .rudbeckia-page-dialog .rudbeckia-hosted-layout {
     overflow: hidden;
 }
