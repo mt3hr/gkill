@@ -1,6 +1,6 @@
 'use strict'
 
-import { reactive } from 'vue'
+import { reactive, toRaw } from 'vue'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { Kyou } from '@/classes/datas/kyou'
 import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
@@ -251,32 +251,56 @@ export async function refresh_kyou(kyou: Kyou, query?: FindKyouQuery, requested_
  * id が一致する要素が無ければ何もしない（リクエストも飛ばさない）。
  */
 export async function refresh_kyou_in_list(list: Array<Kyou>, kyou: Kyou, options?: RefreshKyouInListOptions): Promise<void> {
-    const target_indexes = new Array<number>()
-    for (let i = 0; i < list.length; i++) {
-        if (list[i].id === kyou.id) {
-            target_indexes.push(i)
+    // 走査は生の配列に対して行う。listはdeepなref配下のリアクティブProxyなので、
+    // 素で list[i] を読むと1要素ごとに track と toReactive が走り、
+    // 要素ぶんのProxyを確保する(30万件の列では効く)。読み取りだけなので意味論は同じ。
+    // ★書き戻し(splice)は必ずリアクティブな list に対して行うこと。
+    const raw_list = toRaw(list)
+    let first_index = -1
+    for (let i = 0; i < raw_list.length; i++) {
+        if (raw_list[i].id === kyou.id) {
+            first_index = i
+            break
         }
     }
-    if (target_indexes.length === 0) {
+    if (first_index === -1) {
         return
     }
 
-    const query = resolve_query(options?.query, list[target_indexes[0]])
+    const query = resolve_query(options?.query, raw_list[first_index])
     const refreshed = await refresh_kyou(kyou, query, options?.requested_at)
     if (!refreshed) {
         return
     }
 
+    // 書き戻す位置は**awaitのあとに取り直す**。
+    // 待っている間に局所挿入や削除でリストが動きうるので、
+    // 待つ前のインデックスで splice すると別の行を潰す。idで引き直せばずれない。
+    const raw_list_after_await = toRaw(list)
+    // 同一インスタンスを複数行に置くと後段のload_typed_datas等で副作用が出るのでクローンする
+    let used_refreshed = false
+    const next_kyou_for = (): Kyou => {
+        if (used_refreshed) {
+            return refreshed.clone()
+        }
+        used_refreshed = true
+        return refreshed
+    }
+
     if (options?.replace) {
         const next_list = [...list]
-        for (let i = 0; i < target_indexes.length; i++) {
-            next_list[target_indexes[i]] = i === 0 ? refreshed : refreshed.clone()
+        for (let i = 0; i < next_list.length; i++) {
+            if (next_list[i].id === kyou.id) {
+                next_list[i] = next_kyou_for()
+            }
         }
         options.replace(next_list)
         return
     }
 
-    for (let i = 0; i < target_indexes.length; i++) {
-        list.splice(target_indexes[i], 1, i === 0 ? refreshed : refreshed.clone())
+    for (let i = 0; i < raw_list_after_await.length; i++) {
+        if (raw_list_after_await[i].id === kyou.id) {
+            list.splice(i, 1, next_kyou_for())
+        }
     }
 }

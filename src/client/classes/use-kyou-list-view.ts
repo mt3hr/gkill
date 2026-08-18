@@ -1,5 +1,5 @@
 import { Kyou } from '@/classes/datas/kyou'
-import { computed, nextTick, onUnmounted, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, type Ref, ref, toRaw, watch } from 'vue'
 import type { VVirtualScroll } from 'vuetify/components'
 import type { KyouListViewProps } from '@/pages/views/kyou-list-view-props'
 import type { KyouListViewEmits } from '@/pages/views/kyou-list-view-emits'
@@ -39,11 +39,18 @@ export function useKyouListView(options: {
     }
 
     // ── Watchers ──
-    watch(() => props.query, () => reload())
-    watch(() => props.matched_kyous, () => reload())
+    // 3つの監視元は**1つの watch にまとめること**。
+    // 別々に張ると、新しい検索が同じtickで3つとも変える(query差し替え・配列差し替え・長さ変化)ので、
+    // 画像モードのグリッド組み直しが1回の検索で2〜3回走る。
+    // 複数ソースの watch なら Vue が1tickにつき1回へまとめてくれる。
+    //
     // 参照監視だけだと、in-placeのsplice(削除・追加時の局所挿入・mi板のD&D)で
-    // 画像モードのグリッドが作り直されない。deep監視は30万件になるので使えないため長さを見る
-    watch(() => props.matched_kyous?.length ?? 0, () => reload())
+    // 画像モードのグリッドが作り直されない。deep監視は30万件になるので使えないため長さも見る
+    watch([
+        () => props.query,
+        () => props.matched_kyous,
+        () => props.matched_kyous?.length ?? 0,
+    ], () => reload())
     watch(() => props.application_config.rykv_image_list_column_number, () => {
         if (props.query.is_image_only) {
             update_match_kyous_for_image()
@@ -65,13 +72,17 @@ export function useKyouListView(options: {
     }
 
     async function update_match_kyous_for_image(): Promise<void> {
+        // 全件を舐めて行に詰め直すので、生の配列を読む。
+        // deepなref配下のリアクティブProxy越しに読むと1要素ごとにProxyを確保する。
+        // 詰める先(match_kyous_for_image)はリアクティブのままなので描画は追随する。
+        const raw_matched_kyous = props.matched_kyous ? toRaw(props.matched_kyous) : null
+        const column_number = props.application_config.rykv_image_list_column_number.valueOf()
         const match_kyous_for_image_result = new Array<Array<Kyou>>()
-        for (let i = 0; props.matched_kyous && i < props.matched_kyous.length;) {
+        for (let i = 0; raw_matched_kyous && i < raw_matched_kyous.length;) {
             const kyou_row_list = new Array<Kyou>()
-            for (let j = 0; props.matched_kyous && j < props.application_config.rykv_image_list_column_number.valueOf(); j++) {
-                if (i < props.matched_kyous.length) {
-                    const kyou = props.matched_kyous[i]
-                    kyou_row_list.push(kyou)
+            for (let j = 0; j < column_number; j++) {
+                if (i < raw_matched_kyous.length) {
+                    kyou_row_list.push(raw_matched_kyous[i])
                     i++
                 }
             }
@@ -140,9 +151,17 @@ export function useKyouListView(options: {
     }
 
     async function scroll_to_kyou(kyou: Kyou): Promise<boolean> {
+        // 行クリックのたびに全件を舐めるので、生の配列を読む。
+        // deepなref配下のリアクティブProxy越しに読むと1要素ごとに track と toReactive が走り、
+        // 要素ぶんのProxyを確保する(30万件の列では効く)。読み取りだけなので意味論は変わらない。
+        //
+        // 二分探索にはしない: 単調なのはrykv(related_time降順)だけで、mi列は
+        // 射影時刻の昇順＋未設定が末尾(compare_kyou_for_query)なので分岐が要り、
+        // 間違えると黙って違う場所へスクロールする。
+        const raw_matched_kyous = toRaw(props.matched_kyous)
         let index = -1;
-        for (let i = 0; i < props.matched_kyous.length; i++) {
-            const kyou_in_list = props.matched_kyous[i]
+        for (let i = 0; i < raw_matched_kyous.length; i++) {
+            const kyou_in_list = raw_matched_kyous[i]
             if (kyou_in_list.id === kyou.id) {
                 index = i
                 break
@@ -158,9 +177,11 @@ export function useKyouListView(options: {
     }
 
     async function scroll_to_time(time: Date): Promise<boolean> {
+        // scroll_to_kyou と同じ理由で生の配列を読む(こちらはフォーカス時刻が変わるたびに走る)
+        const raw_matched_kyous = toRaw(props.matched_kyous)
         let index = -1;
-        for (let i = 0; i < props.matched_kyous.length; i++) {
-            const kyou = props.matched_kyous[i]
+        for (let i = 0; i < raw_matched_kyous.length; i++) {
+            const kyou = raw_matched_kyous[i]
             if (kyou.related_time.getTime() <= time.getTime()) {
                 index = i
                 break
