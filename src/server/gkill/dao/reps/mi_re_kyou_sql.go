@@ -207,7 +207,12 @@ func buildMiReKyouKyouSQL(query *find.FindQuery, repName string, tableName strin
 	if len(sqlSegments) == 0 {
 		return "", nil, nil
 	}
-	return strings.Join(sqlSegments, " UNION "), queryArgs, nil
+	// 各射影は DATA_TYPE に異なる文字列リテラルを出すので、腕をまたいで同一行になることが原理的に無い。
+	// UNIONの重複排除は必ず空振りするのに、SQLiteは結果全体ぶんの一時Btreeを作る
+	// (modernc.org/sqlite は SQLITE_TEMP_STORE=1 なので、それがディスクの一時ファイルに落ちる)。
+	// 腕の中の完全重複も、消費側が必ずIDキーのマップへ入れる(find_filter の kyouEntryKey / filterMiForMi)ので
+	// 観測可能な差は出ない。
+	return strings.Join(sqlSegments, " UNION ALL "), queryArgs, nil
 }
 
 // buildMiReKyouSQL は5射影のMiReKyou取得SQLを組み立てます。
@@ -230,7 +235,12 @@ func buildMiReKyouSQL(query *find.FindQuery, repName string, tableName string, f
 	if len(sqlSegments) == 0 {
 		return "", nil, nil
 	}
-	return strings.Join(sqlSegments, " UNION "), queryArgs, nil
+	// 各射影は DATA_TYPE に異なる文字列リテラルを出すので、腕をまたいで同一行になることが原理的に無い。
+	// UNIONの重複排除は必ず空振りするのに、SQLiteは結果全体ぶんの一時Btreeを作る
+	// (modernc.org/sqlite は SQLITE_TEMP_STORE=1 なので、それがディスクの一時ファイルに落ちる)。
+	// 腕の中の完全重複も、消費側が必ずIDキーのマップへ入れる(find_filter の kyouEntryKey / filterMiForMi)ので
+	// 観測可能な差は出ない。
+	return strings.Join(sqlSegments, " UNION ALL "), queryArgs, nil
 }
 
 // buildMiReKyouSingleProjectionSQL は作成射影のみでMiReKyouを取得するSQLを組み立てます。
@@ -413,18 +423,50 @@ type miReKyouTargetFilter struct {
 	reps *GkillRepositories
 	// useWordFilter はワード検索を行うかどうかです。
 	useWordFilter bool
+	// addressReader は最新版アドレス表の参照器です。beginTargetAddressRead で入ります。
+	// isMatch は行ごとに呼ばれるので、素で GetLatestDataRepositoryAddress を叩くと
+	// 遅延初期化のプロセス共有mutexと読み取りロックを行数ぶん取り直すことになります。
+	addressReader *LatestDataRepositoryAddressReader
 	// wordMatchTargetIDs はワード検索にヒットしたターゲットIDです。
 	// メモと共有しているので書き換えてはいけません。
 	wordMatchTargetIDs map[string]bool
 }
 
 // isMatch はMiReKyouが検索にヒットするかを返します。
+// beginTargetAddressRead は最新版アドレスの読み取りロックを1回だけ取ります。
+//
+// 戻り値の release を必ず呼ぶこと(deferでよい)。releaseするまで読み取りロックを保持するので、
+// その間にアドレス表を触る他のメソッドを呼んではいけません(同一goroutineの再帰RLockになります)。
+// allowAll のときは何も引かないので、ロックも取りません。
+func (f *miReKyouTargetFilter) beginTargetAddressRead() func() {
+	if f.allowAll || f.reps == nil {
+		return func() {}
+	}
+	reader, release := f.reps.BeginLatestDataRepositoryAddressRead()
+	f.addressReader = &reader
+	return func() {
+		f.addressReader = nil
+		release()
+	}
+}
+
+// lookupTargetIsDeleted はターゲットIDの最新版が削除済みかを返します。
+// 第2戻り値はアドレス表にそのIDがあったかどうかです。
+func (f *miReKyouTargetFilter) lookupTargetIsDeleted(targetID string) (bool, bool) {
+	if f.addressReader != nil {
+		address, exist := f.addressReader.Get(targetID)
+		return address.IsDeleted, exist
+	}
+	address, exist := f.reps.GetLatestDataRepositoryAddress(targetID)
+	return address.IsDeleted, exist
+}
+
 func (f *miReKyouTargetFilter) isMatch(targetID string) bool {
 	if f.allowAll {
 		return true
 	}
-	latestDataRepositoryAddress, exist := f.reps.GetLatestDataRepositoryAddress(targetID)
-	if !exist || latestDataRepositoryAddress.IsDeleted {
+	isDeleted, exist := f.lookupTargetIsDeleted(targetID)
+	if !exist || isDeleted {
 		return false
 	}
 	if f.useWordFilter && !f.wordMatchTargetIDs[targetID] {

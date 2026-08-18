@@ -7,6 +7,7 @@ import (
 	"fmt"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"log/slog"
+	"slices"
 	"sync"
 	"time"
 
@@ -48,7 +49,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   CREATE_TIME_UNIX NOT NULL,
   UPDATE_TIME_UNIX NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create REKYOU table statement %s: %w", dbName, err)
@@ -61,14 +62,14 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create REKYOU table to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create REKYOU table to %s: %w", dbName, err)
@@ -76,7 +77,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexUnixSQL))
+	gkill_log.LogSQL(ctx, indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create rekyou index unix statement %s: %w", dbName, err)
@@ -89,7 +90,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexUnixSQL))
+	gkill_log.LogSQL(ctx, indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create rekyou index unix to %s: %w", dbName, err)
@@ -132,7 +133,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
   ?,
   ?
 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", addReKyouInfoSQL))
+	gkill_log.LogSQL(ctx, addReKyouInfoSQL)
 	addReKyouInfoStmt, err := cacheDB.PrepareContext(ctx, addReKyouInfoSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add rekyou info sql: %w", err)
@@ -194,27 +195,40 @@ func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 		}
 	}
 
+	// 最新版アドレスはループ前に1回だけロックを取ってまとめて引く。
+	// 1件ごとに GetLatestDataRepositoryAddress を呼ぶと、遅延初期化のプロセス共有mutexと
+	// 読み取りロックをReKyouの件数ぶん取り直すことになる。
+	// このループの中からアドレス表を触る他のメソッドを呼んではいけない(再帰RLock)。
+	var latestDataAddressReader LatestDataRepositoryAddressReader
+	if !allowAllTargets {
+		reader, releaseLatestDataAddressRead := repsWithoutRekyou.BeginLatestDataRepositoryAddressRead()
+		defer releaseLatestDataAddressRead()
+		latestDataAddressReader = reader
+	}
+
+	// ID指定はループの外で集合にしておく。1件ごとに query.IDs を線形走査すると、
+	// ワード一致経路(find_filter.findKyous)が数千IDを渡してくるので
+	// 実質 O(ReKyou数 × ID数) になる。
+	// nil=ID指定なし(全通し) / 非nilの空=0件指定、という FindQuery の意味論はそのまま。
+	var queryIDSet map[string]struct{}
+	if query.IDs != nil {
+		queryIDSet = make(map[string]struct{}, len(query.IDs))
+		for _, id := range query.IDs {
+			queryIDSet[id] = struct{}{}
+		}
+	}
+
 	for _, rekyou := range notDeletedAllReKyous {
-		// 最新版アドレスは共有キャッシュから1件ずつ引く。
 		// allowAllTargetsのとき repsWithoutRekyou はnilなので触ってはいけない
 		existInRep := allowAllTargets
 		if !allowAllTargets {
-			latestDataRepositoryAddress, existAddress := repsWithoutRekyou.GetLatestDataRepositoryAddress(rekyou.TargetID)
+			latestDataRepositoryAddress, existAddress := latestDataAddressReader.Get(rekyou.TargetID)
 			existInRep = existAddress && !latestDataRepositoryAddress.IsDeleted
 		}
 
-		matchID := false
-		if query.IDs == nil {
-			matchID = true
-		} else {
-			if len(query.IDs) != 0 {
-				for _, id := range query.IDs {
-					if id == rekyou.ID {
-						matchID = true
-						break
-					}
-				}
-			}
+		matchID := true
+		if queryIDSet != nil {
+			_, matchID = queryIDSet[rekyou.ID]
 		}
 		if !matchID {
 			continue
@@ -243,9 +257,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 			kyou.UpdateUser = rekyou.UpdateUser
 			kyou.UpdateDevice = rekyou.UpdateDevice
 
-			if _, exist := matchKyous[kyou.ID]; !exist {
-				matchKyous[kyou.ID] = []Kyou{}
-			}
+			// 空スライスの事前確保はしない。存在しないキーへのappendはnilスライスに対して働くので
+			// 結果は同じで、レコード1件につき1回の無駄な確保が消える(repositories.goと同じ)。
 			matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
 		}
 	}
@@ -288,7 +301,11 @@ WHERE
 	tableName := r.dbName
 	tableNameAlias := r.dbName
 	whereCounter := 0
-	onlyLatestData := false
+	// GenerateFindSQLCommon は query.OnlyLatestData を読まず、この引数しか見ない。
+	// false のままだと updateTime 未指定のときに **そのIDの全バージョンを無順序・無制限に読み**、
+	// 下の kyous[0] が格納順の先頭(多くの場合いちばん古い版)を返してしまう。
+	// 版の数だけ走査するので遅くもある。Tag / Text では既に同じ修正が入っている。
+	onlyLatestData := updateTime == nil
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
@@ -304,7 +321,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := r.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -317,7 +334,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from REKYOU %s: %w", id, err)
@@ -371,7 +388,12 @@ WHERE
 	if len(kyous) == 0 {
 		return nil, nil
 	}
-	return &kyous[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestKyou := slices.MaxFunc(kyous, func(a Kyou, b Kyou) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestKyou, nil
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
@@ -424,7 +446,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := r.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -437,7 +459,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from REKYOU %s: %w", id, err)
@@ -592,7 +614,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(r.dbName) + ` (
   ?
 )`
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	insertStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add rekyou sql: %w", err)
@@ -628,7 +650,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(r.dbName) + ` (
 				rekyou.CreateTime.Unix(),
 				rekyou.UpdateTime.Unix(),
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLParams(ctx, sql, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at insert in to REKYOU %s: %w", rekyou.ID, err)
@@ -801,7 +823,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := r.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou histories sql: %w", err)
@@ -814,7 +836,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -924,7 +946,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := r.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou histories sql: %w", err)
@@ -937,7 +959,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -1028,7 +1050,7 @@ func (r *reKyouRepositoryCachedSQLite3Impl) AddReKyouInfo(ctx context.Context, r
 		rekyou.CreateTime.Unix(),
 		rekyou.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", r.addReKyouInfoSQL), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, r.addReKyouInfoSQL, queryArgs)
 	_, err := r.addReKyouInfoStmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to REKYOU %s: %w", rekyou.ID, err)
@@ -1085,7 +1107,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := r.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all rekyous sql: %w", err)
@@ -1098,7 +1120,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {

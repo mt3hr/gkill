@@ -55,7 +55,7 @@ func NewMiReKyouRepositorySQLite3Impl(ctx context.Context, filename string, full
 	}
 
 	sql := `CREATE TABLE IF NOT EXISTS "` + miReKyouTableName + `" (` + miReKyouColumns + `);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create MIREKYOU table statement %s: %w", filename, err)
@@ -68,7 +68,7 @@ func NewMiReKyouRepositorySQLite3Impl(ctx context.Context, filename string, full
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MIREKYOU table to %s: %w", filename, err)
@@ -76,7 +76,7 @@ func NewMiReKyouRepositorySQLite3Impl(ctx context.Context, filename string, full
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_MIREKYOU ON ` + miReKyouTableName + ` (ID, UPDATE_TIME);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create MIREKYOU index statement %s: %w", filename, err)
@@ -89,7 +89,7 @@ func NewMiReKyouRepositorySQLite3Impl(ctx context.Context, filename string, full
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MIREKYOU index to %s: %w", filename, err)
@@ -185,10 +185,18 @@ func (m *miReKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *fi
 		return nil, err
 	}
 
-	targetIDMap, err := m.getTargetIDMap(ctx, db)
-	if err != nil {
-		return nil, err
+	// ターゲット解決をしないなら ID→TARGET_ID の対応も要らない(全表スキャンなので丸ごと無駄)
+	targetIDMap := map[string]string{}
+	if !targetFilter.allowAll {
+		targetIDMap, err = m.getTargetIDMap(ctx, db)
+		if err != nil {
+			return nil, err
+		}
 	}
+
+	// アドレス表の読み取りロックは行ごとではなく1回だけ取る
+	releaseTargetAddressRead := targetFilter.beginTargetAddressRead()
+	defer releaseTargetAddressRead()
 
 	kyous := map[string][]Kyou{}
 	for _, kyou := range kyousList {
@@ -196,9 +204,9 @@ func (m *miReKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *fi
 		if !targetFilter.isMatch(targetIDMap[kyou.ID]) {
 			continue
 		}
-		if _, exist := kyous[kyou.ID]; !exist {
-			kyous[kyou.ID] = []Kyou{}
-		}
+		// 空スライスの事前確保はしない。存在しないキーへのappendはnilスライスに対して働くので
+		// 結果は同じで、レコード1件につき1回の無駄な確保(実データで56万回)が消える。
+		// 同じ整理は dao/reps/repositories.go の集約側では既に済んでいる。
 		kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 	}
 	return kyous, nil
@@ -209,7 +217,7 @@ func (m *miReKyouRepositorySQLite3Impl) queryKyous(ctx context.Context, db *sqll
 	if sql == "" {
 		return []Kyou{}, nil
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get mirekyou kyou sql: %w", err)
@@ -222,7 +230,7 @@ func (m *miReKyouRepositorySQLite3Impl) queryKyous(ctx context.Context, db *sqll
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from MIREKYOU: %w", err)
@@ -243,7 +251,7 @@ func (m *miReKyouRepositorySQLite3Impl) queryMiReKyous(ctx context.Context, db *
 	if sql == "" {
 		return []MiReKyou{}, nil
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find mirekyou sql: %w", err)
@@ -256,7 +264,7 @@ func (m *miReKyouRepositorySQLite3Impl) queryMiReKyous(ctx context.Context, db *
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from MIREKYOU: %w", err)
@@ -275,7 +283,7 @@ func (m *miReKyouRepositorySQLite3Impl) queryMiReKyous(ctx context.Context, db *
 // getTargetIDMap はMiReKyouのIDからTARGET_IDを引くマップを作ります。
 func (m *miReKyouRepositorySQLite3Impl) getTargetIDMap(ctx context.Context, db *sqllib.DB) (map[string]string, error) {
 	sql := `SELECT ID, TARGET_ID FROM ` + miReKyouTableName
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get target id map sql: %w", err)
@@ -530,7 +538,7 @@ func (m *miReKyouRepositorySQLite3Impl) AddMiReKyouInfo(ctx context.Context, mir
 	defer m.m.Unlock()
 
 	sql := `INSERT INTO ` + miReKyouTableName + ` (` + miReKyouInsertColumnNames + `) VALUES (` + miReKyouInsertPlaceHolders + `)`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add mirekyou sql %s: %w", mirekyou.ID, err)
@@ -544,7 +552,7 @@ func (m *miReKyouRepositorySQLite3Impl) AddMiReKyouInfo(ctx context.Context, mir
 	}()
 
 	queryArgs := miReKyouInsertArgs(mirekyou)
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to mirekyou %s: %w", mirekyou.ID, err)
@@ -643,7 +651,7 @@ func queryMiReKyouBoardNames(ctx context.Context, db *sqllib.DB, tableName strin
 	sql := `SELECT DISTINCT BOARD_NAME FROM ` + tableName + `
 WHERE IS_DELETED = 0
   AND UPDATE_TIME = ( SELECT UPDATE_TIME FROM ` + tableName + ` AS INNER_TABLE WHERE INNER_TABLE.ID = ` + tableName + `.ID ORDER BY datetime(INNER_TABLE.UPDATE_TIME) DESC LIMIT 1 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get board names sql: %w", err)
@@ -698,7 +706,7 @@ func queryMiReKyouLatestDataRepositoryAddress(ctx context.Context, db *sqllib.DB
 SELECT IS_DELETED, ID AS TARGET_ID, TARGET_ID AS TARGET_ID_IN_DATA,
        ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME AS DATA_UPDATE_TIME
 FROM ` + tableName
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		return nil, err
@@ -769,7 +777,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
   VALUE,
   PRIMARY KEY(KEY)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	gkill_log.LogSQL(ctx, createTableSQL)
 	stmt, err := db.PrepareContext(ctx, createTableSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
@@ -782,7 +790,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	gkill_log.LogSQL(ctx, createTableSQL)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
@@ -790,7 +798,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
@@ -803,7 +811,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index: %w", err)
@@ -817,7 +825,7 @@ SELECT
 FROM GKILL_META_INFO
 WHERE KEY = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL))
+	gkill_log.LogSQL(ctx, selectSchemaVersionSQL)
 	selectSchemaVersionStmt, err := db.PrepareContext(ctx, selectSchemaVersionSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -831,7 +839,7 @@ WHERE KEY = ?
 	}()
 	dbSchemaVersion := ""
 	queryArgs := []any{schemaVersionKey}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, selectSchemaVersionSQL, queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
 		// データがなかったら今のバージョンをいれる
@@ -839,7 +847,7 @@ WHERE KEY = ?
 			insertCurrentVersionSQL := `
 INSERT INTO GKILL_META_INFO(KEY, VALUE)
 VALUES(?, ?)`
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL))
+			gkill_log.LogSQL(ctx, insertCurrentVersionSQL)
 			insertCurrentVersionStmt, err := db.PrepareContext(ctx, insertCurrentVersionSQL)
 			if err != nil {
 				err = fmt.Errorf("error at insert schema version sql: %w", err)
@@ -852,7 +860,7 @@ VALUES(?, ?)`
 				}
 			}()
 			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLQuery(ctx, insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at insert schema version: %w", err)
@@ -860,7 +868,7 @@ VALUES(?, ?)`
 			}
 
 			queryArgs = []any{schemaVersionKey}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLQuery(ctx, selectSchemaVersionSQL, queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)

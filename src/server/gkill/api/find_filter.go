@@ -40,7 +40,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext.GkillDAOManager = gkillDAOManager
 	findKyouContext.ParsedFindQuery = findQuery
 	findKyouContext.MatchReps = map[string]reps.Repository{}
-	findKyouContext.AllTags = map[string]reps.Tag{}
 	findKyouContext.AllHideTagsWhenUnchecked = map[string]reps.Tag{}
 	findKyouContext.MatchHideTagsWhenUncheckedKyou = map[string]reps.Tag{}
 	findKyouContext.MatchHideTagsWhenUncheckedTimeIs = map[string]reps.Tag{}
@@ -297,6 +296,14 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	}
 	slog.Log(ctx, gkill_log.Trace, "finish overrideKyous", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 
+	// 先に総数を数えてから確保する。事前確保しないと56万件で約20回の再確保が起き、
+	// そのたびに確保済みぶん(最終的に130MB級)をコピーし直すことになる。
+	// マップをもう1周するほうが遥かに安い。
+	totalResultKyouCount := 0
+	for _, kyous := range findKyouContext.MatchKyousCurrent {
+		totalResultKyouCount += len(kyous)
+	}
+	findKyouContext.ResultKyous = slices.Grow(findKyouContext.ResultKyous, totalResultKyouCount)
 	for _, kyous := range findKyouContext.MatchKyousCurrent {
 		findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, kyous...)
 	}
@@ -490,6 +497,12 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 	return nil, nil
 }
 
+// getAllTags は「タグが1つでも付いているKyouのID」の集合(RelatedTagIDs)を作ります。
+//
+// 用途はそれだけなので、Tag構造体(240バイト・文字列10本)をIDごとに丸ごと保持しない。
+// 以前は findCtx.AllTags に全タグを溜めていたが、読むのはこの関数の中だけで、
+// タグフィルタはrykvの既定クエリで常に有効なため、検索のたびに全タグ分のマップを作っていた。
+// 版の解決規則(IDごとにUpdateTime最大 → その版のIsDeletedを見る)は従来と同一。
 func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	// 全タグ取得用検索クエリ。IDごとの最新版のみを対象にする
 	findTagsQuery := &find.FindQuery{IsDeleted: false, OnlyLatestData: true}
@@ -501,20 +514,29 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 		return nil, fmt.Errorf("error at get all tags: %w", err)
 	}
 
-	// Tag集約
+	// rep跨ぎでIDごとの最新版を決める。保持するのは判定に要る3つだけ。
+	type latestTagRef struct {
+		updateTime time.Time
+		targetID   string
+		isDeleted  bool
+	}
+	latestTags := make(map[string]latestTagRef, len(allTagsList))
 	for _, tag := range allTagsList {
-		upsertIfNewer(findCtx.AllTags, tag.ID, tag, func(t reps.Tag) time.Time { return t.UpdateTime })
+		if existing, exist := latestTags[tag.ID]; exist && !tag.UpdateTime.After(existing.updateTime) {
+			continue
+		}
+		latestTags[tag.ID] = latestTagRef{updateTime: tag.UpdateTime, targetID: tag.TargetID, isDeleted: tag.IsDeleted}
 	}
 
 	// タグの対象をリスト
-	for _, tag := range findCtx.AllTags {
-		if !findCtx.isLatestData(tag.ID, tag.UpdateTime) {
+	for id, tag := range latestTags {
+		if !findCtx.isLatestData(id, tag.updateTime) {
 			continue
 		}
-		if tag.IsDeleted {
+		if tag.isDeleted {
 			continue
 		}
-		findCtx.RelatedTagIDs[tag.TargetID] = struct{}{}
+		findCtx.RelatedTagIDs[tag.targetID] = struct{}{}
 	}
 
 	return nil, nil
@@ -682,7 +704,8 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 
 func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	query := findCtx.ParsedFindQuery
-	resultKyous := map[string][]reps.Kyou{}
+	// 56万件規模ではマップの伸長ごとの再ハッシュが効くので、入力と同じ容量で確保しておく。
+	resultKyous := make(map[string][]reps.Kyou, len(findCtx.MatchKyousCurrent))
 
 	// 時間帯フィルタが有効かどうかの判定はゲートヘルパに任せる。
 	// ここから下はその内側の高速化で、検索中に変わらない値をKyouごとではなく
@@ -717,8 +740,70 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 		}
 	}
 
+	// Kyou1件ぶんの期間判定。検索中に変わらない値は上で1回だけ計算済みなので、ここは比較だけ。
+	// 単一entryの高速路と従来の重複排除路の両方から同じ判定を使うために切り出してある。
+	passesPeriodFilter := func(kyou reps.Kyou) bool {
+		if (query.CalendarStartDate != nil && kyou.RelatedTime.Before(*query.CalendarStartDate)) ||
+			(query.CalendarEndDate != nil && kyou.RelatedTime.After(*query.CalendarEndDate)) {
+			return false
+		}
+		if !filterPeriodOfTime {
+			return true
+		}
+		localTime := kyou.RelatedTime.In(time.Local)
+
+		// 曜日フィルタ
+		if filterWeekdays && !allowedWeekdays[localTime.Weekday()] {
+			return false
+		}
+
+		// 時間帯フィルタ
+		timeSec := int64(localTime.Hour()*3600 + localTime.Minute()*60 + localTime.Second())
+		if hasPeriodStart && hasPeriodEnd {
+			if periodStartSecond > periodEndSecond {
+				// 夜跨ぎ: timeSec >= start OR timeSec <= end
+				if timeSec < periodStartSecond && timeSec > periodEndSecond {
+					return false
+				}
+			} else {
+				// 通常: timeSec >= start AND timeSec <= end
+				if timeSec < periodStartSecond || timeSec > periodEndSecond {
+					return false
+				}
+			}
+		} else if hasPeriodStart {
+			if timeSec < periodStartSecond {
+				return false
+			}
+		} else if hasPeriodEnd {
+			if timeSec > periodEndSecond {
+				return false
+			}
+		}
+		return true
+	}
+
 	for id, kyous := range findCtx.MatchKyousCurrent {
 		if len(kyous) == 0 {
+			continue
+		}
+
+		// 単一entryの高速路。
+		//
+		// usecase.GetKyous が OnlyLatestData=true を固定し、--cache_in_memory(既定true)では
+		// 型ごとにrepが1つへ畳まれるので、実データではIDの大半がここを通る。
+		// 1件しかないバケツに重複排除も並び替えも要らないのに、従来はIDごとに一時マップを作り、
+		// slices.Collectでスライスへ集め直してからno-opのソートをかけていた。
+		// 集め直したスライスはID 1件につき1確保で、実データ(56万件)では無視できない。
+		//
+		// 入力スライスをそのまま持ち回るが、後段でこれを書き換えるのは overrideKyous だけで、
+		// そこは ForMi のときに他が保持していないスライスに対して行われる
+		// (Repositories.FindKyous も各リポジトリ実装も、呼び出しごとに新しいスライスを作る)。
+		if len(kyous) == 1 {
+			if !passesPeriodFilter(kyous[0]) {
+				continue
+			}
+			resultKyous[id] = kyous
 			continue
 		}
 
@@ -729,41 +814,8 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 		// replaceLatestKyouInfosがレコードごと除外して「出たり消えたり」していた。
 		trimedKyousMap := map[kyouEntryKey]reps.Kyou{}
 		for _, kyou := range kyous {
-			if (query.CalendarStartDate != nil && kyou.RelatedTime.Before(*query.CalendarStartDate)) ||
-				(query.CalendarEndDate != nil && kyou.RelatedTime.After(*query.CalendarEndDate)) {
+			if !passesPeriodFilter(kyou) {
 				continue
-			}
-			if filterPeriodOfTime {
-				localTime := kyou.RelatedTime.In(time.Local)
-
-				// 曜日フィルタ
-				if filterWeekdays && !allowedWeekdays[localTime.Weekday()] {
-					continue
-				}
-
-				// 時間帯フィルタ
-				timeSec := int64(localTime.Hour()*3600 + localTime.Minute()*60 + localTime.Second())
-				if hasPeriodStart && hasPeriodEnd {
-					if periodStartSecond > periodEndSecond {
-						// 夜跨ぎ: timeSec >= start OR timeSec <= end
-						if timeSec < periodStartSecond && timeSec > periodEndSecond {
-							continue
-						}
-					} else {
-						// 通常: timeSec >= start AND timeSec <= end
-						if timeSec < periodStartSecond || timeSec > periodEndSecond {
-							continue
-						}
-					}
-				} else if hasPeriodStart {
-					if timeSec < periodStartSecond {
-						continue
-					}
-				} else if hasPeriodEnd {
-					if timeSec > periodEndSecond {
-						continue
-					}
-				}
 			}
 			trimedKyousMap[kyouEntryKey{
 				updateTimeUnix:  kyou.UpdateTime.Unix(),
@@ -792,10 +844,14 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 	}
 
 	if query.PlaingTime != nil || query.ForMi {
-		for id := range resultKyous {
+		for id, kyousInID := range resultKyous {
 			// 最新版の代表射影1件に決定的に絞る(以前は不安定ソートで
-			// 開始/終了射影のどちらが残るかが実行毎に変わり、plaingの表示時刻が揺れていた)
-			resultKyous[id] = []reps.Kyou{newestKyouEntry(resultKyous[id])}
+			// 開始/終了射影のどちらが残るかが実行毎に変わり、plaingの表示時刻が揺れていた)。
+			// 既に1件なら選び直す余地が無いので、スライスを作り直さない。
+			if len(kyousInID) == 1 {
+				continue
+			}
+			resultKyous[id] = []reps.Kyou{newestKyouEntry(kyousInID)}
 		}
 	}
 
@@ -828,14 +884,20 @@ func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext
 		}
 	}
 
-	withCreatedMis, err := findCtx.Repositories.MiReps.FindMi(ctx, findCtx.ParsedFindQuery)
-	if err != nil {
-		err = fmt.Errorf("error at get all mis: %w", err)
-		return nil, err
-	}
-	for _, mi := range withCreatedMis {
-		if _, exist := allMis[mi.ID]; !exist {
-			allMis[mi.ID] = mi
+	// IncludeCreateMi が既に false なら withoutCreatedMiFindQuery と ParsedFindQuery は
+	// 同じ内容の構造体なので、この2回目は1回目とまったく同じ行を返す。
+	// 受け側のループは `if !exist` しか見ないので何も足さない ―― 丸ごと無駄な集約検索。
+	// mi板の追加検索が4回から2回になる。
+	if findCtx.ParsedFindQuery.IncludeCreateMi {
+		withCreatedMis, err := findCtx.Repositories.MiReps.FindMi(ctx, findCtx.ParsedFindQuery)
+		if err != nil {
+			err = fmt.Errorf("error at get all mis: %w", err)
+			return nil, err
+		}
+		for _, mi := range withCreatedMis {
+			if _, exist := allMis[mi.ID]; !exist {
+				allMis[mi.ID] = mi
+			}
 		}
 	}
 
@@ -858,16 +920,22 @@ func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext
 		}
 	}
 
-	withCreatedMiReKyous, err := findCtx.Repositories.MiReKyouReps.FindMiReKyou(ctx, findCtx.ParsedFindQuery)
-	if err != nil {
-		err = fmt.Errorf("error at get all mirekyous: %w", err)
-		return nil, err
-	}
-	for _, mirekyou := range withCreatedMiReKyous {
-		mi := mirekyou.ToMi()
-		mireKyouIDs[mi.ID] = struct{}{}
-		if _, exist := allMis[mi.ID]; !exist {
-			allMis[mi.ID] = mi
+	// IncludeCreateMi が既に false なら withoutCreatedMiFindQuery と ParsedFindQuery は
+	// 同じ内容の構造体なので、この2回目は1回目とまったく同じ行を返す。
+	// 受け側のループは `if !exist` しか見ないので何も足さない ―― 丸ごと無駄な集約検索。
+	// mi板の追加検索が4回から2回になる。
+	if findCtx.ParsedFindQuery.IncludeCreateMi {
+		withCreatedMiReKyous, err := findCtx.Repositories.MiReKyouReps.FindMiReKyou(ctx, findCtx.ParsedFindQuery)
+		if err != nil {
+			err = fmt.Errorf("error at get all mirekyous: %w", err)
+			return nil, err
+		}
+		for _, mirekyou := range withCreatedMiReKyous {
+			mi := mirekyou.ToMi()
+			mireKyouIDs[mi.ID] = struct{}{}
+			if _, exist := allMis[mi.ID]; !exist {
+				allMis[mi.ID] = mi
+			}
 		}
 	}
 
@@ -930,25 +998,18 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 	}
 
 	if !(findCtx.ParsedFindQuery.TagsAnd) {
-		// ORの場合のフィルタリング処理
+		// ORの場合のフィルタリング処理。
+		//
+		// 以前は「タグ一致」「タグ無し」「合成」の3つのマップを結果件数ぶん作っていた。
+		// 求める集合は同じなので、MatchKyousCurrentを1周して残さないキーをdeleteする形に寄せてある
+		// (Goはrange中の自キーのdeleteを許す)。56万件ではマップ3つぶんの確保がまるごと消える。
+		// MatchKyousCurrentはsortAndTrimKyousMapが作ったばかりで他に持ち主がいないので、
+		// その場で削って問題ない。
 
-		// タグ対象Kyouリスト
-		matchOrTagKyousMap := map[string][]reps.Kyou{}
+		// クエリのタグが付いているKyouのID集合
+		matchOrTagTargetIDs := make(map[string]struct{}, len(findCtx.MatchTags))
 		for _, tag := range findCtx.MatchTags {
-			kyou, exist := findCtx.MatchKyousCurrent[tag.TargetID]
-			if !exist {
-				continue
-			}
-			matchOrTagKyousMap[tag.TargetID] = kyou
-		}
-
-		// タグ無しKyouリスト
-		noTagKyous := map[string][]reps.Kyou{}
-		for id, kyou := range findCtx.MatchKyousCurrent {
-			_, relatedTagKyou := findCtx.RelatedTagIDs[id]
-			if !relatedTagKyou {
-				noTagKyous[id] = kyou
-			}
+			matchOrTagTargetIDs[tag.TargetID] = struct{}{}
 		}
 
 		// タグ無し込であればそれもいれる
@@ -960,23 +1021,22 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			}
 		}
 
-		// タグフィルタしたものを収める
-		filteredByTags := map[string][]reps.Kyou{}
-		for id, kyou := range matchOrTagKyousMap {
-			filteredByTags[id] = kyou
-		}
-		if existNoTags {
-			for id, kyou := range noTagKyous {
-				filteredByTags[id] = kyou
+		for id := range findCtx.MatchKyousCurrent {
+			if _, hasQueryTag := matchOrTagTargetIDs[id]; hasQueryTag {
+				continue
 			}
+			if existNoTags {
+				if _, relatedTagKyou := findCtx.RelatedTagIDs[id]; !relatedTagKyou {
+					continue
+				}
+			}
+			delete(findCtx.MatchKyousCurrent, id)
 		}
 
 		// 非表示タグの対象を消す
 		for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedKyou {
-			delete(filteredByTags, hideTag.TargetID)
+			delete(findCtx.MatchKyousCurrent, hideTag.TargetID)
 		}
-
-		findCtx.MatchKyousCurrent = filteredByTags
 	} else {
 		// ANDの場合のフィルタリング処理
 		// クエリのタグ名を基準に交差する。
@@ -1013,7 +1073,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			if queryTagName != NoTags {
 				continue
 			}
-			noTagKyous := map[string][]reps.Kyou{}
+			noTagKyous := make(map[string][]reps.Kyou, len(findCtx.MatchKyousCurrent))
 			for id, kyous := range findCtx.MatchKyousCurrent {
 				if _, relatedTagKyou := findCtx.RelatedTagIDs[id]; !relatedTagKyou {
 					noTagKyous[id] = kyous
@@ -1416,23 +1476,14 @@ func (f *FindFilter) overrideKyous(_ context.Context, findCtx *FindKyouContext) 
 
 func (f *FindFilter) sortResultKyous(_ context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	if !findCtx.ParsedFindQuery.ForMi {
-		// kyouとしてソート
-		slices.SortFunc(findCtx.ResultKyous, func(a, b reps.Kyou) int {
-			aUnix := a.RelatedTime.Unix()
-			bUnix := b.RelatedTime.Unix()
-			if aUnix != bUnix {
-				if aUnix > bUnix {
-					return -1
-				}
-				return 1
-			}
-			if a.ID < b.ID {
-				return -1
-			} else if a.ID > b.ID {
-				return 1
-			}
-			return 0
-		})
+		// kyouとしてソート。並び順は RelatedTime(秒)降順、同着はID昇順。
+		//
+		// **本体スライスを直接 SortFunc しない。** reps.Kyou は232バイトあり、
+		// pdqsort はその実体を動かすので、56万件では比較のたびの Unix() 計算
+		// (n log n 回で2600万回級)と合わせて memmove がGB級になる。
+		// 32バイトのキーだけ並べ替えてから、本体は巡回置換で1要素あたり1回だけ動かす。
+		// 追加で確保するのはキー配列1本(1件32バイト)だけで、本体のコピーは作らない。
+		sortResultKyousByKey(findCtx.ResultKyous)
 		return nil, nil
 	}
 
@@ -1491,6 +1542,65 @@ func (f *FindFilter) sortResultKyous(_ context.Context, findCtx *FindKyouContext
 	findCtx.ResultKyous = deduped
 
 	return nil, nil
+}
+
+// kyouSortKey は sortResultKyous の並べ替え用キー。
+// index は「並べ替え後のその位置に来るべき、元の位置」を持ちます。
+type kyouSortKey struct {
+	relatedTimeUnix int64
+	id              string
+	index           int32
+}
+
+// sortResultKyousByKey は kyous を RelatedTime(秒)降順・同着ID昇順に並べ替えます。
+// 比較と並べ替えはキー配列で行い、本体は巡回置換でその場で入れ替えます。
+// 結果は本体を直接 slices.SortFunc したときと同一です。
+func sortResultKyousByKey(kyous []reps.Kyou) {
+	if len(kyous) < 2 {
+		return
+	}
+	keys := make([]kyouSortKey, len(kyous))
+	for i := range kyous {
+		keys[i] = kyouSortKey{
+			relatedTimeUnix: kyous[i].RelatedTime.Unix(),
+			id:              kyous[i].ID,
+			index:           int32(i),
+		}
+	}
+	slices.SortFunc(keys, func(a, b kyouSortKey) int {
+		if a.relatedTimeUnix != b.relatedTimeUnix {
+			if a.relatedTimeUnix > b.relatedTimeUnix {
+				return -1
+			}
+			return 1
+		}
+		return strings.Compare(a.id, b.id)
+	})
+
+	// 巡回置換で本体を並べ替える。keys[i].index は「位置 i に来るべき元の位置」。
+	//
+	// **単純な swap ループにしてはいけない** ―― `swap(kyous[i], kyous[keys[i].index])` を
+	// 回す書き方は逆順列を適用してしまい、並びが静かに変わる
+	// (sort_result_kyous_test.go の参照実装との突き合わせで落ちる)。
+	// 巡回をたどって「次に来るべき要素」を引き寄せる形にすると、
+	// 各要素はちょうど1回だけ動き、一時領域も1件ぶんで済む。
+	for i := range keys {
+		if keys[i].index == int32(i) {
+			continue
+		}
+		current := int32(i)
+		carried := kyous[i]
+		for {
+			next := keys[current].index
+			keys[current].index = current
+			if next == int32(i) {
+				kyous[current] = carried
+				break
+			}
+			kyous[current] = kyous[next]
+			current = next
+		}
+	}
 }
 
 func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
@@ -1569,7 +1679,14 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 		findCtx.MatchTimeIsTexts)
 }
 func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	latestKyousMap := map[string][]reps.Kyou{}
+	latestKyousMap := make(map[string][]reps.Kyou, len(findCtx.MatchKyousCurrent))
+
+	// 最新版アドレスは結果1件ごとに引く。GetLatestDataRepositoryAddressを直接呼ぶと
+	// 1件ごとに遅延初期化のプロセス共有mutexと読み取りロックを取り直すので、
+	// 56万件では最内ループの頻度で全リクエストが互いを待つことになる。ロックは1回だけ取る。
+	// このループの中からアドレス表を触る他のメソッドを呼んではいけない(再帰RLock)。
+	latestDataAddressReader, releaseLatestDataAddressRead := findCtx.Repositories.BeginLatestDataRepositoryAddressRead()
+	defer releaseLatestDataAddressRead()
 
 	// キャッシュ設定(DisableLatestDataRepositoryCache)によらず同じ規則で判定する。
 	// 以前は2ブランチに分かれており、Plaing判定の粒度(Equal=ナノ秒 vs Unix=秒)、
@@ -1594,7 +1711,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 		// アドレス表に載らないrep種(plugin/git/gpsなど)は hasLatestData=false のまま素通しする
 		// (以前はキャッシュ無効時に無条件で除外され、プラグイン由来のKyouが全滅していた)。
 		// 判定粒度はアドレス表の格納精度(Unix秒)に合わせる。
-		latestData, hasLatestData := findCtx.Repositories.GetLatestDataRepositoryAddress(id)
+		latestData, hasLatestData := latestDataAddressReader.Get(id)
 		if hasLatestData {
 			if findCtx.ParsedFindQuery.PlaingTime != nil {
 				if newestUpdateTime.Unix() != latestData.DataUpdateTime.Unix() {
@@ -1610,6 +1727,19 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 		isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi") && findCtx.ParsedFindQuery.ForMi
 		isTimeIsData := strings.HasPrefix(currentKyou[0].DataType, "timeis")
 		if isTimeIsData || isMiData {
+			// 全部が最新版(古い版entryが1件も無い)なら、選び直す必要が無いのでそのまま使う。
+			// 実データではこちらが普通で、作り直すとID 1件につき1確保になる。
+			allLatest := true
+			for _, kyou := range currentKyou {
+				if !kyou.UpdateTime.Equal(newestUpdateTime) {
+					allLatest = false
+					break
+				}
+			}
+			if allLatest {
+				latestKyousMap[id] = currentKyou
+				continue
+			}
 			latestVersionKyous := make([]reps.Kyou, 0, len(currentKyou))
 			for _, kyou := range currentKyou {
 				if kyou.UpdateTime.Equal(newestUpdateTime) {
@@ -1617,6 +1747,11 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 				}
 			}
 			latestKyousMap[id] = latestVersionKyous
+		} else if len(currentKyou) == 1 {
+			// 候補が1件なら newestKyouEntry の戻り値はその1件そのものなので、
+			// 1要素スライスを作り直さずに入力をそのまま持ち回る。
+			// 実データではIDの大半がここを通る。
+			latestKyousMap[id] = currentKyou
 		} else {
 			// 射影を持たない型は最新版の代表1件に決定的に絞る
 			latestKyousMap[id] = []reps.Kyou{newestKyouEntry(currentKyou)}
@@ -1626,7 +1761,8 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 	// miの場合は最新以外消す
 	if findCtx.ParsedFindQuery.ForMi {
 		for id, kyous := range latestKyousMap {
-			if len(kyous) == 0 {
+			// 0件は触らない。1件なら選び直す余地が無いのでスライスを作り直さない。
+			if len(kyous) <= 1 {
 				continue
 			}
 			latestKyousMap[id] = []reps.Kyou{newestKyouEntry(kyous)}

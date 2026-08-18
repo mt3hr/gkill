@@ -61,7 +61,7 @@ func NewMiReKyouRepositoryCachedSQLite3Impl(ctx context.Context, mirekyouRep MiR
 	sql := `CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (` + miReKyouColumns + `,
   REP_NAME NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create MIREKYOU cache table statement %s: %w", dbName, err)
@@ -81,7 +81,7 @@ func NewMiReKyouRepositoryCachedSQLite3Impl(ctx context.Context, mirekyouRep MiR
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName) + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, UPDATE_TIME);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create MIREKYOU cache index statement %s: %w", dbName, err)
@@ -97,6 +97,17 @@ func NewMiReKyouRepositoryCachedSQLite3Impl(ctx context.Context, mirekyouRep MiR
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MIREKYOU cache index to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	// このキャッシュ表だけ時刻が RFC3339 の文字列のままで、5つの射影は
+	// `unixepoch(<列>)` で絞り・並べる(mi_re_kyou_sql.go)。式索引が無いと5回とも全表走査になる。
+	// MI では既に同じ手当てが入っている(mi_repository_cached_sqlite3_impl.go)。
+	//
+	// 式は GenerateFindSQLCommon が出すものとバイト単位で一致していないと黙って効かなくなる
+	// (sqlite3impl_util.go の EnsureUnixepochIndex の注記を参照)。
+	if err := sqlite3impl.EnsureUnixepochIndex(ctx, cacheDB, dbName,
+		"CREATE_TIME", "LIMIT_TIME", "ESTIMATE_START_TIME", "ESTIMATE_END_TIME"); err != nil {
 		return nil, err
 	}
 
@@ -153,10 +164,20 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, que
 		return nil, err
 	}
 
-	targetIDMap, err := m.getTargetIDMapWithoutLock(ctx)
-	if err != nil {
-		return nil, err
+	// ターゲット解決をしないなら ID→TARGET_ID の対応も要らない。
+	// getTargetIDMapWithoutLock は WHERE の無い全表スキャンなので、
+	// 使わない場合に引くと丸ごと無駄になる。
+	targetIDMap := map[string]string{}
+	if !targetFilter.allowAll {
+		targetIDMap, err = m.getTargetIDMapWithoutLock(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
+
+	// アドレス表の読み取りロックは行ごとではなく1回だけ取る
+	releaseTargetAddressRead := targetFilter.beginTargetAddressRead()
+	defer releaseTargetAddressRead()
 
 	kyous := map[string][]Kyou{}
 	for _, kyou := range kyousList {
@@ -164,9 +185,9 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, que
 		if !targetFilter.isMatch(targetIDMap[kyou.ID]) {
 			continue
 		}
-		if _, exist := kyous[kyou.ID]; !exist {
-			kyous[kyou.ID] = []Kyou{}
-		}
+		// 空スライスの事前確保はしない。存在しないキーへのappendはnilスライスに対して働くので
+		// 結果は同じで、レコード1件につき1回の無駄な確保(実データで56万回)が消える。
+		// 同じ整理は dao/reps/repositories.go の集約側では既に済んでいる。
 		kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 	}
 	return kyous, nil
@@ -177,7 +198,7 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) queryKyous(ctx context.Context, sq
 	if sql == "" {
 		return []Kyou{}, nil
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := m.cachedDB.QueryContext(ctx, sql, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from mirekyou cache: %w", err)
@@ -197,7 +218,7 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) queryMiReKyous(ctx context.Context
 	if sql == "" {
 		return []MiReKyou{}, nil
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := m.cachedDB.QueryContext(ctx, sql, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from mirekyou cache: %w", err)
@@ -215,7 +236,7 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) queryMiReKyous(ctx context.Context
 // getTargetIDMapWithoutLock はキャッシュからIDとTARGET_IDの対応を取得します。
 func (m *miReKyouRepositoryCachedSQLite3Impl) getTargetIDMapWithoutLock(ctx context.Context) (map[string]string, error) {
 	sql := `SELECT ID, TARGET_ID FROM ` + m.tableName()
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	rows, err := m.cachedDB.QueryContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at select target id from mirekyou cache: %w", err)
@@ -345,7 +366,7 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) e
 	}
 
 	insertSQL := `INSERT INTO ` + m.tableName() + ` (` + miReKyouInsertColumnNames + `, REP_NAME) VALUES (` + miReKyouInsertPlaceHolders + `, ?)`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL))
+	gkill_log.LogSQL(ctx, insertSQL)
 	insertStmt, err := tx.PrepareContext(ctx, insertSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add mirekyou sql: %w", err)
@@ -529,7 +550,7 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) AddMiReKyouInfo(ctx context.Contex
 
 	insertSQL := `INSERT INTO ` + m.tableName() + ` (` + miReKyouInsertColumnNames + `, REP_NAME) VALUES (` + miReKyouInsertPlaceHolders + `, ?)`
 	queryArgs := append(miReKyouInsertArgs(mirekyou), mirekyou.RepName)
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, insertSQL, queryArgs)
 	_, err = tx.ExecContext(ctx, insertSQL, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to mirekyou cache %s: %w", mirekyou.ID, err)

@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS APPLICATION_CONFIG (
   PRIMARY KEY(USER_ID, DEVICE, KEY)
 );
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create APPLICATION_CONFIG table statement %s: %w", filename, err)
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS APPLICATION_CONFIG (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 
 	if err != nil {
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS APPLICATION_CONFIG (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_APPLICATION_CONFIG ON APPLICATION_CONFIG (USER_ID, DEVICE, KEY);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create APPLICATION_CONFIG index statement %s: %w", filename, err)
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS APPLICATION_CONFIG (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create APPLICATION_CONFIG index to %s: %w", filename, err)
@@ -465,7 +465,7 @@ FROM APPLICATION_CONFIG AS GROUPED_APPLICATION_CONFIG
 GROUP BY USER_ID, DEVICE
 `
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all application configs sql: %w", err)
@@ -478,7 +478,7 @@ GROUP BY USER_ID, DEVICE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	rows, err := stmt.QueryContext(ctx,
 		applicationConfigDefaultValue["USE_DARK_THEME"],
 		applicationConfigDefaultValue["GOOGLE_MAP_API_KEY"],
@@ -895,7 +895,7 @@ FROM APPLICATION_CONFIG AS GROUPED_APPLICATION_CONFIG
 GROUP BY USER_ID, DEVICE
 HAVING USER_ID = ? AND DEVICE = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get application config sql: %w", err)
@@ -935,7 +935,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -1152,7 +1152,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"SAVED_FIND_QUERY_JSON_DATA":    applicationConfig.SavedFindQueryJSONData,
 	}
 	for key, value := range insertValuesMap {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+		gkill_log.LogSQL(ctx, sql)
 		device := applicationConfig.Device
 		isIgnoreDeviceNameKey := false
 		for _, ignoreDeviceNameKey := range ignoreDeviceNameConfigKey {
@@ -1176,7 +1176,7 @@ INSERT INTO APPLICATION_CONFIG (
 			key,
 			sqlite3impl.MaskSensitiveValueForLog(key, value),
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
+		gkill_log.LogSQLQuery(ctx, sql, queryArgsForLog)
 		_, err = insertStmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at add application config sql: %w", err)
@@ -1264,7 +1264,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"SAVED_FIND_QUERY_JSON_DATA":    applicationConfigDefaultValue["SAVED_FIND_QUERY_JSON_DATA"],
 	}
 	for key, value := range insertValuesMap {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+		gkill_log.LogSQL(ctx, sql)
 		device := device
 		isIgnoreDeviceNameKey := false
 		for _, ignoreDeviceNameKey := range ignoreDeviceNameConfigKey {
@@ -1282,7 +1282,7 @@ INSERT INTO APPLICATION_CONFIG (
 			key,
 			value,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+		gkill_log.LogSQLQuery(ctx, sql, queryArgs)
 		_, err = insertStmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at add application config sql: %w", err)
@@ -1410,7 +1410,7 @@ INSERT INTO APPLICATION_CONFIG (
 
 	// レコード自体が存在しなかったらいれる
 	for key, value := range updateValuesMap {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+		gkill_log.LogSQL(ctx, sql)
 
 		device := applicationConfig.Device
 		isIgnoreDeviceNameKey := false
@@ -1428,7 +1428,7 @@ INSERT INTO APPLICATION_CONFIG (
 			device,
 			key,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", checkExistSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+		gkill_log.LogSQLQuery(ctx, checkExistSQL, queryArgs)
 		row := checkExistStmt.QueryRowContext(ctx, queryArgs...)
 		err = row.Err()
 		if err != nil {
@@ -1443,7 +1443,7 @@ INSERT INTO APPLICATION_CONFIG (
 			return false, err
 		}
 		if recordCount == 0 {
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL))
+			gkill_log.LogSQL(ctx, insertSQL)
 			device := applicationConfig.Device
 			isIgnoreDeviceNameKey := false
 			for _, ignoreDeviceNameKey := range ignoreDeviceNameConfigKey {
@@ -1467,7 +1467,7 @@ INSERT INTO APPLICATION_CONFIG (
 				key,
 				sqlite3impl.MaskSensitiveValueForLog(key, value),
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
+			gkill_log.LogSQLQuery(ctx, insertSQL, queryArgsForLog)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
@@ -1480,7 +1480,7 @@ INSERT INTO APPLICATION_CONFIG (
 
 	// 更新する
 	for key, value := range updateValuesMap {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+		gkill_log.LogSQL(ctx, sql)
 		device := applicationConfig.Device
 		isIgnoreDeviceNameKey := false
 		for _, ignoreDeviceNameKey := range ignoreDeviceNameConfigKey {
@@ -1504,7 +1504,7 @@ INSERT INTO APPLICATION_CONFIG (
 			device,
 			key,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
+		gkill_log.LogSQLQuery(ctx, sql, queryArgsForLog)
 		_, err = updateStmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
@@ -1528,7 +1528,7 @@ func (a *applicationConfigDAOSQLite3Impl) DeleteApplicationConfig(ctx context.Co
 DELETE FROM APPLICATION_CONFIG 
 WHERE USER_ID = ? AND DEVICE = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete application config sql: %w", err)
@@ -1545,7 +1545,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -1572,7 +1572,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
   VALUE,
   PRIMARY KEY(KEY)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	gkill_log.LogSQL(ctx, createTableSQL)
 	stmt, err := db.PrepareContext(ctx, createTableSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
@@ -1585,7 +1585,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	gkill_log.LogSQL(ctx, createTableSQL)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
@@ -1593,7 +1593,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
@@ -1606,7 +1606,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index: %w", err)
@@ -1620,7 +1620,7 @@ SELECT
 FROM GKILL_META_INFO
 WHERE KEY = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL))
+	gkill_log.LogSQL(ctx, selectSchemaVersionSQL)
 	selectSchemaVersionStmt, err := db.PrepareContext(ctx, selectSchemaVersionSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1634,7 +1634,7 @@ WHERE KEY = ?
 	}()
 	dbSchemaVersion := ""
 	queryArgs := []any{schemaVersionKey}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, selectSchemaVersionSQL, queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
 		// データがなかったら今のバージョンをいれる
@@ -1642,7 +1642,7 @@ WHERE KEY = ?
 			insertCurrentVersionSQL := `
 INSERT INTO GKILL_META_INFO(KEY, VALUE)
 VALUES(?, ?)`
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL))
+			gkill_log.LogSQL(ctx, insertCurrentVersionSQL)
 			insertCurrentVersionStmt, err := db.PrepareContext(ctx, insertCurrentVersionSQL)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1656,7 +1656,7 @@ VALUES(?, ?)`
 				}
 			}()
 			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLQuery(ctx, insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1665,7 +1665,7 @@ VALUES(?, ?)`
 			}
 
 			queryArgs = []any{schemaVersionKey}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLQuery(ctx, selectSchemaVersionSQL, queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)

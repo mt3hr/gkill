@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(latestDataRepositoryAddres
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX NOT NULL,
   PRIMARY KEY(TARGET_ID)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := latestDataRepositoryAddress.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at CREATE TABLE LATEST_DATA_REPOSITORY_ADDRESS statement: %w", err)
@@ -71,14 +71,14 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(latestDataRepositoryAddres
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create LATEST_DATA_REPOSITORY_ADDRESS table: %w", err)
 		return nil, err
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create %s table: %w", latestDataRepositoryAddress.tableName, err)
@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(latestDataRepositoryAddres
 		sqlite3impl.QuoteIdent("INDEX_"+latestDataRepositoryAddress.tableName+"_REP_NAME") +
 		" ON " + sqlite3impl.QuoteIdent(latestDataRepositoryAddress.tableName) +
 		" (LATEST_DATA_REPOSITORY_NAME);"
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", repNameIndexSQL))
+	gkill_log.LogIndexSQL(ctx, repNameIndexSQL)
 	if _, err := latestDataRepositoryAddress.db.ExecContext(ctx, repNameIndexSQL); err != nil {
 		err = fmt.Errorf("error at create %s rep name index: %w", latestDataRepositoryAddress.tableName, err)
 		return nil, err
@@ -124,7 +124,7 @@ SELECT
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX
 FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all latest data repository addresses sql: %w", err)
@@ -137,7 +137,7 @@ FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -199,7 +199,7 @@ SELECT
 FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 WHERE LATEST_DATA_REPOSITORY_NAME = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all data repository by rep name addresses sql: %w", err)
@@ -215,7 +215,7 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 	queryArgs := []any{
 		repName,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -277,7 +277,7 @@ SELECT
 FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 WHERE TARGET_ID = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get latest data repository addresses sql: %w", err)
@@ -293,7 +293,7 @@ WHERE TARGET_ID = ?
 	queryArgs := []any{
 		targetID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -359,7 +359,7 @@ FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 WHERE LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX >= ?
 LIMIT ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all latest data repository addresses sql: %w", err)
@@ -376,7 +376,7 @@ LIMIT ?
 		updateTime.Unix(),
 		limit,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -448,7 +448,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(l.tableName) + ` (
 )
 `
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", deleteSQL))
+	gkill_log.LogSQL(ctx, deleteSQL)
 	deleteStmt, err := l.db.PrepareContext(ctx, deleteSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repoisitory address delete sql: %w", err)
@@ -464,14 +464,14 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(l.tableName) + ` (
 	deleteQueryArgs := []any{
 		latestDataRepositoryAddress.TargetID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", deleteSQL), "query", fmt.Sprintf("%q", fmt.Sprint(deleteQueryArgs)))
+	gkill_log.LogSQLQuery(ctx, deleteSQL, deleteQueryArgs)
 	_, err = deleteStmt.ExecContext(ctx, deleteQueryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL))
+	gkill_log.LogSQL(ctx, insertSQL)
 	insertStmt, err := l.db.PrepareContext(ctx, insertSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repoisitory insert address sql: %w", err)
@@ -492,7 +492,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(l.tableName) + ` (
 		latestDataRepositoryAddress.DataUpdateTime.Unix(),
 		latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL), "query", fmt.Sprintf("%q", fmt.Sprint(insertQueryArgs)))
+	gkill_log.LogSQLQuery(ctx, insertSQL, insertQueryArgs)
 	_, err = insertStmt.ExecContext(ctx, insertQueryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -568,18 +568,18 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(l.tableName) + ` (
 
 	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
 		_, err := func() (bool, error) {
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", deleteSQL))
+			gkill_log.LogSQL(ctx, deleteSQL)
 			deleteQueryArgs := []any{
 				latestDataRepositoryAddress.TargetID,
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", deleteSQL), "query", fmt.Sprintf("%q", fmt.Sprint(deleteQueryArgs)))
+			gkill_log.LogSQLQuery(ctx, deleteSQL, deleteQueryArgs)
 			_, err = deleteStmt.ExecContext(ctx, deleteQueryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)
 				return false, err
 			}
 
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL))
+			gkill_log.LogSQL(ctx, insertSQL)
 			insertQueryArgs := []any{
 				latestDataRepositoryAddress.IsDeleted,
 				latestDataRepositoryAddress.TargetID,
@@ -589,7 +589,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(l.tableName) + ` (
 				latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime.Unix(),
 			}
 
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL), "query", fmt.Sprintf("%q", fmt.Sprint(insertQueryArgs)))
+			gkill_log.LogSQLQuery(ctx, insertSQL, insertQueryArgs)
 			_, err = insertStmt.ExecContext(ctx, insertQueryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)
@@ -618,7 +618,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) DeleteLatestDataRepositoryAddre
 DELETE FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 WHERE TARGET_ID = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete latest data repository address sql: %w", err)
@@ -634,7 +634,7 @@ WHERE TARGET_ID = ?
 	queryArgs := []any{
 		latestDataRepositoryAddress.TargetID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -649,7 +649,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) DeleteAllLatestDataRepositoryAd
 	sql := `
 DELETE FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete all latest data repository address sql: %w", err)
@@ -662,7 +662,7 @@ DELETE FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -678,7 +678,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) DeleteLatestDataRepositoryAddre
 DELETE FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete all latest data repository address sql: %w", err)
@@ -694,7 +694,7 @@ WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 	queryArgs := []any{
 		repName,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -708,7 +708,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) Close(ctx context.Context) erro
 	defer l.m.Unlock()
 	if gkill_options.IsCacheInMemory {
 		sql := `DROP TABLE ` + sqlite3impl.QuoteIdent(l.tableName) + ` `
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+		gkill_log.LogSQL(ctx, sql)
 		stmt, err := l.db.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at DROP TABLE LATEST_DATA_REPOSITORY_ADDRESS statement: %w", err)
@@ -721,7 +721,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) Close(ctx context.Context) erro
 			}
 		}()
 
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+		gkill_log.LogSQL(ctx, sql)
 		_, err = stmt.ExecContext(ctx)
 		if err != nil {
 			err = fmt.Errorf("error at drop table LATEST_DATA_REPOSITORY_ADDRESS table: %w", err)
@@ -744,7 +744,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
   VALUE,
   PRIMARY KEY(KEY)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	gkill_log.LogSQL(ctx, createTableSQL)
 	stmt, err := db.PrepareContext(ctx, createTableSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
@@ -757,7 +757,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	gkill_log.LogSQL(ctx, createTableSQL)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
@@ -765,7 +765,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
@@ -778,7 +778,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index: %w", err)
@@ -792,7 +792,7 @@ SELECT
 FROM GKILL_META_INFO
 WHERE KEY = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL))
+	gkill_log.LogSQL(ctx, selectSchemaVersionSQL)
 	selectSchemaVersionStmt, err := db.PrepareContext(ctx, selectSchemaVersionSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -806,7 +806,7 @@ WHERE KEY = ?
 	}()
 	dbSchemaVersion := ""
 	queryArgs := []any{schemaVersionKey}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLQuery(ctx, selectSchemaVersionSQL, queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
 		// データがなかったら今のバージョンをいれる
@@ -814,7 +814,7 @@ WHERE KEY = ?
 			insertCurrentVersionSQL := `
 INSERT INTO GKILL_META_INFO(KEY, VALUE)
 VALUES(?, ?)`
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL))
+			gkill_log.LogSQL(ctx, insertCurrentVersionSQL)
 			insertCurrentVersionStmt, err := db.PrepareContext(ctx, insertCurrentVersionSQL)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -828,7 +828,7 @@ VALUES(?, ?)`
 				}
 			}()
 			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLQuery(ctx, insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -837,7 +837,7 @@ VALUES(?, ?)`
 			}
 
 			queryArgs = []any{schemaVersionKey}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLQuery(ctx, selectSchemaVersionSQL, queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
