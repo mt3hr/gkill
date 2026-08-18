@@ -568,7 +568,7 @@ func EnsureUnixepochIndex(ctx context.Context, db *sql.DB, tableName string, tim
 			"CREATE INDEX IF NOT EXISTS %s ON %s (unixepoch(%s) DESC);",
 			QuoteIdent(indexName), QuoteIdent(tableName), timeColumnName,
 		)
-		slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+		gkill_log.LogIndexSQL(ctx, indexSQL)
 		if _, err := db.ExecContext(ctx, indexSQL); err != nil {
 			return fmt.Errorf("error at create unixepoch index %s on %s: %w", indexName, tableName, err)
 		}
@@ -590,7 +590,7 @@ func EnsureUnixColumnIndex(ctx context.Context, db *sql.DB, tableName string, co
 			"CREATE INDEX IF NOT EXISTS %s ON %s (%s DESC);",
 			QuoteIdent(indexName), QuoteIdent(tableName), QuoteIdent(columnName),
 		)
-		slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+		gkill_log.LogIndexSQL(ctx, indexSQL)
 		if _, err := db.ExecContext(ctx, indexSQL); err != nil {
 			return fmt.Errorf("error at create unix column index %s on %s: %w", indexName, tableName, err)
 		}
@@ -614,7 +614,7 @@ func EnsureTxIDIndex(ctx context.Context, db *sql.DB, tableName string) error {
 		"CREATE INDEX IF NOT EXISTS %s ON %s (TX_ID, USER_ID, DEVICE);",
 		QuoteIdent(indexName), QuoteIdent(tableName),
 	)
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	gkill_log.LogIndexSQL(ctx, indexSQL)
 	if _, err := db.ExecContext(ctx, indexSQL); err != nil {
 		return fmt.Errorf("error at create tx id index %s on %s: %w", indexName, tableName, err)
 	}

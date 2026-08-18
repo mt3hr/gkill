@@ -356,11 +356,21 @@ func init() {
 	}
 	fixTimezone()
 
-	/*
+	// pprofは環境変数で明示的に有効化したときだけ待ち受ける。
+	//
+	// ハンドラ自体は `_ "net/http/pprof"` の init で http.DefaultServeMux に登録済みだが、
+	// gkill は gorilla/mux を使っており DefaultServeMux を配信しないので、
+	// この待ち受けが無いと外からは届かない。
+	// 未設定なら何も起きないので本番構成への影響は無い。
+	//
+	//	GKILL_PPROF_ADDR=localhost:6060 gkill_server ...
+	if pprofAddr := os.Getenv("GKILL_PPROF_ADDR"); pprofAddr != "" {
 		go func() {
-			http.ListenAndServe("localhost:6060", nil) // pprof用
+			if err := http.ListenAndServe(pprofAddr, nil); err != nil {
+				slog.Log(context.Background(), gkill_log.Error, "error at listen pprof", "address", pprofAddr, "error", err)
+			}
 		}()
-	*/
+	}
 
 	IDFCmd.PersistentFlags().StringArrayVarP(&gkill_options.IDFIgnore, "ignore", "i", gkill_options.IDFIgnore, "ignore files")
 }
