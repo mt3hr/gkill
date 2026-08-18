@@ -100,7 +100,7 @@ handle_*.go は99ファイル（実装91 + テスト8）で、1ハンドラ1フ�
 |---------|------|
 | `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用 |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
-| `error_codes.go` | エラーコード定数（408定数、ERR000001〜ERR000409・ERR000243欠番） |
+| `error_codes.go` | エラーコード定数（409定数、ERR000001〜ERR000410・ERR000243欠番） |
 | `message_codes.go` | メッセージコード定数（88定数） |
 | `message_test.go` | コード形式テスト |
 

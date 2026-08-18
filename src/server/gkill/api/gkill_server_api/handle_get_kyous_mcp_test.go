@@ -46,7 +46,10 @@ func getKyousMCP(t *testing.T, tsURL, sessionID string, query map[string]any, ex
 		t.Fatalf("decode get kyous mcp response: %v", err)
 	}
 	if len(mcpResp.Errors) > 0 {
-		t.Fatalf("get kyous mcp errors: %+v", mcpResp.Errors)
+		for _, gkillError := range mcpResp.Errors {
+			t.Errorf("get kyous mcp error: %s %s", gkillError.ErrorCode, gkillError.ErrorMessage)
+		}
+		t.FailNow()
 	}
 	return mcpResp
 }
@@ -521,4 +524,47 @@ func TestHandleGetKyousMCP_DateOnlyCursorIsAccepted(t *testing.T) {
 	getKyousMCP(t, tsURL, sessionID, map[string]any{}, map[string]any{
 		"cursor": time.Now().Format(time.DateOnly),
 	})
+}
+
+// TestHandleGetKyousMCP_ManyIDs は query.ids を大量に渡しても検索が成立することを固定する。
+//
+// IDリストは各repのSQLへ ID IN (?, ?, ...) として展開され、Miは5射影のUNIONで
+// 5本それぞれに丸ごと展開するので、バインド変数は 5N+5 になる。
+// SQLiteの上限(32766)をN=6553で超えるため、分割しないとPrepareが落ちる。
+//
+// しかも当時は失敗がGkillErrorにならず、HTTP 200 + errors:null + 0件で返っていた。
+// 呼び出し側からは「成功・該当0件」と区別が付かない壊れ方をする。
+// (getKyousMCP はエラーが載っていればテストを落とすので、両方をここで見ている)
+func TestHandleGetKyousMCP_ManyIDs(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	miID := addTestMiForMCP(t, tsURL, sessionID, "IDを大量に渡しても見つかるタスク", "mcp_many_ids_board", nil)
+
+	// SQLiteのバインド変数の上限を確実に超える数を渡す。
+	ids := make([]any, 0, 7001)
+	ids = append(ids, miID)
+	for i := range 7000 {
+		ids = append(ids, fmt.Sprintf("dummy-target-%05d", i))
+	}
+
+	query := miQueryForBoard("mcp_many_ids_board", "create_time")
+	query["ids"] = ids
+
+	mcpResp := getKyousMCP(t, tsURL, sessionID, query, nil)
+	if len(mcpResp.Kyous) == 0 {
+		t.Fatalf("IDを%d件渡すと検索結果が空になる（IDリストが分割されていない）", len(ids))
+	}
+
+	found := false
+	for _, kyou := range mcpResp.Kyous {
+		if kyou.DataType == "mi_create" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("渡したIDのMiが結果に無い")
+	}
 }
