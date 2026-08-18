@@ -123,41 +123,34 @@ describe('useRykvView 列×検索ルーティング', () => {
     expect(fakes.get('col-a')!.get_is_loading()).toBe(false)
   })
 
-  // 期間分割(kyou-search-windows.ts)を通る検索。
-  // 窓ごとに1回ずつ引き、届いた順に列へ**追記**する。
-  // 参照ごと差し替えると focused_kyous_list のエイリアスが切れる
-  test('期間の広い検索は窓に分割して引き、列へ追記していく', async () => {
+  // 検索は期間がどれだけ広くても **1回** で引く。
+  //
+  // 2026-08-18 に期間を窓へ刻んで複数回引く実装を入れたが、08-19 に撤去した。
+  // 1リクエストぶんの固定費(getAllTags は rykv の既定クエリでは毎回走る／
+  // repのファンアウト／最新版アドレスのスナップショット)が窓数ぶん掛かって
+  // 総時間が伸びるうえ、1窓目の結果を表示してからスピナーが回り続けるように見えた。
+  test('検索は期間が広くても1回で引く', async () => {
     const { pending_get_kyous, view } = createView()
     const query_a = makeColumnQuery('col-a')
-    // 分割される期間(数年)を指定する
+    // 以前は分割対象だった期間(数年)
     query_a.calendar_start_date = new Date('2020-01-01T00:00:00+09:00')
     query_a.calendar_end_date = new Date('2026-08-18T00:00:00+09:00')
     setupColumns(view, [query_a], [[]])
-    const list_before = view.match_kyous_list.value[0]
 
     view.reload_list(0)
     await flushAsync()
-    expect(pending_get_kyous.length, '窓に分割されていない').toBe(1)
+    expect(pending_get_kyous.length, '検索が分割されている').toBe(1)
 
-    pending_get_kyous[0].resolve({ kyous: kyous(['new1']), messages: [], errors: [] })
-    await flushAsync()
-    expect(kyouIds(view.match_kyous_list.value[0])).toEqual(['new1'])
-
-    // 2窓目が続けて飛ぶ
-    expect(pending_get_kyous.length).toBe(2)
-    pending_get_kyous[1].resolve({ kyous: kyous(['old1', 'old2']), messages: [], errors: [] })
+    pending_get_kyous[0].resolve({ kyous: kyous(['new1', 'old1', 'old2']), messages: [], errors: [] })
     await flushAsync()
 
-    // 新しい窓の結果の後ろへ追記される(窓は新しい順・窓の中は降順なので連結で並びが保たれる)
-    expect(kyouIds(view.match_kyous_list.value[0]).slice(0, 3)).toEqual(['new1', 'old1', 'old2'])
-    // 1窓目で入れた配列をそのまま伸ばしている(参照ごと差し替えていない)
-    expect(view.match_kyous_list.value[0]).not.toBe(list_before)
-    const list_after_first_window = view.match_kyous_list.value[0]
-    expect(list_after_first_window).toBe(view.match_kyous_list.value[0])
+    expect(kyouIds(view.match_kyous_list.value[0])).toEqual(['new1', 'old1', 'old2'])
+    // 追加の検索は飛ばない
+    expect(pending_get_kyous.length, '2回目の検索が飛んでいる').toBe(1)
   })
 
-  // 分割すると結果が変わる条件では、従来どおり1回で引く
-  test('mi板の列は期間が広くても分割しない', async () => {
+  // mi板も同じ。分割の判定そのものが無いことを対で固定しておく
+  test('mi板の列も期間が広くても1回で引く', async () => {
     const { pending_get_kyous, view } = createView()
     const query_a = makeColumnQuery('col-a')
     query_a.for_mi = true
@@ -172,6 +165,27 @@ describe('useRykvView 列×検索ルーティング', () => {
 
     expect(pending_get_kyous.length, 'mi板を分割してしまっている').toBe(1)
     expect(kyouIds(view.match_kyous_list.value[0])).toEqual(['m1'])
+  })
+
+  // 「全件揃うまで鏡(行と件数)を出さない」の回帰ガード。
+  // 検索中の列は空のままで、応答が届いて初めて行が入る
+  test('検索中の列に部分的な結果を出さない', async () => {
+    const { pending_get_kyous, view } = createView()
+    const query_a = makeColumnQuery('col-a')
+    const fakes = setupColumns(view, [query_a], [kyous(['before1', 'before2'])])
+
+    view.reload_list(0)
+    await flushAsync()
+
+    // 引いている間は列が空。古い行も途中の行も見せない
+    expect(view.match_kyous_list.value[0].length, '検索中に行が残っている').toBe(0)
+    expect(fakes.get('col-a')!.get_is_loading(), '検索中なのにスピナーが出ていない').toBe(true)
+
+    pending_get_kyous[0].resolve({ kyous: kyous(['a', 'b']), messages: [], errors: [] })
+    await flushAsync()
+
+    expect(kyouIds(view.match_kyous_list.value[0])).toEqual(['a', 'b'])
+    expect(fakes.get('col-a')!.get_is_loading()).toBe(false)
   })
 
   test('検索中に列を閉じると、遅れて届いた結果はどこにも書かれない', async () => {
