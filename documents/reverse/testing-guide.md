@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 893 | 119 | Go `testing` |
+| Go バックエンド | 897 | 122 | Go `testing` |
 | フロントエンド ユニット | 1850 | 157 | Vitest |
 | フロントエンド E2E | 248 | 44（+auth.setup.ts） | Playwright |
 | MCP サーバ | 724 | 20 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 123 | 9 | JUnit 4 + MockK |
-| **合計** | **3,850** | **351** | |
+| **合計** | **3,854** | **354** | |
 
 数え直すコマンド:
 
@@ -203,7 +203,7 @@ src/server/gkill/
 │   ├── message/message_test.go        ← メッセージフォーマット
 │   ├── kftl/                          ← KFTL パーサ（3ファイル）
 │   ├── req_res/req_res_test.go        ← JSON 往復テスト
-│   └── gkill_server_api/              ← ハンドラ層（16ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（17ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── handle_get_idf_file_path_test.go      ← IDFファイル絶対パス取得
@@ -226,7 +226,7 @@ src/server/gkill/
 │   ├── gkill_notification/            ← 通知ターゲット
 │   ├── hide_files/                    ← ファイル非表示
 │   ├── sqlite3impl/                   ← SQLite3 ユーティリティ
-│   └── reps/                          ← リポジトリ実装（42ファイル。plugin_repository_impl_test.go, mi_re_kyou_repository_sqlite3_impl_test.go, re_kyou_granular_cache_test.go 等）
+│   └── reps/                          ← リポジトリ実装（43ファイル。plugin_repository_impl_test.go, mi_re_kyou_repository_sqlite3_impl_test.go, re_kyou_granular_cache_test.go 等）
 │       ├── *_repository_sqlite3_impl_test.go  ← 11データ型
 │       ├── cached_and_temp_test.go    ← キャッシュ層・一時層
 │       └── cache/                     ← キャッシュ更新
