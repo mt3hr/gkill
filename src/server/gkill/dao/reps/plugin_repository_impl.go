@@ -455,7 +455,7 @@ func (p *pluginRepositoryImpl) FindKyous(ctx context.Context, query *find.FindQu
 
 	kyous := make([]Kyou, 0, len(pluginKyous))
 	for _, pk := range pluginKyous {
-		k := convertPluginKyouToKyou(pk)
+		k := convertPluginKyouToKyou(pk, p.manifest.RepName)
 		if pluginKyouMatchesQuery(k, query) {
 			kyous = append(kyous, k)
 		}
@@ -478,7 +478,7 @@ func (p *pluginRepositoryImpl) GetKyou(ctx context.Context, id string, updateTim
 	if resp.Kyou == nil {
 		return nil, nil
 	}
-	kyou := convertPluginKyouToKyou(*resp.Kyou)
+	kyou := convertPluginKyouToKyou(*resp.Kyou, p.manifest.RepName)
 	return &kyou, nil
 }
 
@@ -668,6 +668,19 @@ func (p *pluginRepositoryImpl) IsAlive(ctx context.Context) bool {
 
 // --- 変換ヘルパー ---
 
+// warnPluginRepNameMismatchOnce は manifest の rep_name と申告された rep_name が
+// 食い違ったときに、組み合わせごとに1回だけ警告します。
+// 記録1件ごとに出すと実データで数十万行になるので、必ず一度きりにすること。
+var warnedPluginRepNameMismatches sync.Map
+
+func warnPluginRepNameMismatchOnce(manifestRepName string, actualRepName string) {
+	key := manifestRepName + " -> " + actualRepName
+	if _, loaded := warnedPluginRepNameMismatches.LoadOrStore(key, struct{}{}); loaded {
+		return
+	}
+	slog.Warn(fmt.Sprintf("plugin rep_name mismatch: manifest=%q actual=%q", manifestRepName, actualRepName))
+}
+
 // convertPluginKyouToKyou はPluginKyouをgkill本体のKyouに変換する。
 //
 // Kyouはメタ情報しか持たないので、Tags / Texts / Typed / Notifications は
@@ -676,11 +689,28 @@ func (p *pluginRepositoryImpl) IsAlive(ctx context.Context) bool {
 //
 // ImageSource だけは Kyou に置き場所が無いが、画像かどうかは IsImage で表現できる。
 // 空でなければ画像として扱い、一覧の画像表示から漏れないようにする。
-func convertPluginKyouToKyou(pk gkill_plugin.PluginKyou) Kyou {
+//
+// **RepName が空なら manifest の rep_name で埋める。**
+// プロトコルは manifest.json の rep_name と一致させる約束(plugin_protocol.go)だが、
+// 申告をそのまま写しているだけなので空で返ってくることがある。
+// rep名での絞り込みは Kyou.RepName で行う(find_filter.go の findKyous)ので、
+// ここが空だと**そのプラグインの記録がGUIの通常検索から丸ごと消える**
+// (GUIは常に reps を送る)。エラーも警告も出ないので気付けない。
+//
+// 空でない不一致は**上書きしない**。Kyou.rep_name はAPI応答にも出ていて、
+// クライアントのコンテキストメニューや get_kyou_histories_by_rep_name が乗っているため。
+// 代わりに組み合わせごとに1回だけ警告する。
+func convertPluginKyouToKyou(pk gkill_plugin.PluginKyou, manifestRepName string) Kyou {
+	repName := pk.RepName
+	if repName == "" {
+		repName = manifestRepName
+	} else if repName != manifestRepName {
+		warnPluginRepNameMismatchOnce(manifestRepName, repName)
+	}
 	return Kyou{
 		IsDeleted:    pk.IsDeleted,
 		ID:           pk.ID,
-		RepName:      pk.RepName,
+		RepName:      repName,
 		RelatedTime:  pk.RelatedTime,
 		DataType:     pk.DataType,
 		CreateTime:   pk.CreateTime,

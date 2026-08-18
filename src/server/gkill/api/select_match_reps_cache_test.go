@@ -91,9 +91,17 @@ func TestSelectMatchRepsFromQuery_ImageOnlyKeepsCachedRep(t *testing.T) {
 	}
 }
 
-// rep名指定ありのときは、個々のrep名を解決する必要があるので
-// UnWrap() されること（こちらは意図した挙動）。
-func TestSelectMatchRepsFromQuery_RepsSpecifiedStillUnwraps(t *testing.T) {
+// rep名指定ありでも、キャッシュrepを UnWrap() して生repに差し替えてはいけない。
+//
+// UnWrap() は「そのラッパに選ばれた実repが1つでもあるか」を見るためだけに使い、
+// MatchReps に入れるのはキャッシュrepそのもの。
+// 生repに差し替えると、rep名を送ってくる通常のGUI検索（rykv/miは常に送る）が
+// **全てキャッシュをバイパスし**、端末別重複repぶんディスクを舐める。
+// 実データでは11個のキャッシュrepが約940個の生repに化け、gitだけで
+// プロファイル1窓あたり20.7秒を使っていた（2026-08-19 実測）。
+//
+// rep名での絞り込みは findKyous の結果側（Kyou.RepName）で行う。
+func TestSelectMatchRepsFromQuery_RepsSpecifiedKeepsCachedRep(t *testing.T) {
 	ctx := context.Background()
 
 	unwrapCalls := 0
@@ -116,11 +124,55 @@ func TestSelectMatchRepsFromQuery_RepsSpecifiedStillUnwraps(t *testing.T) {
 		t.Fatalf("selectMatchRepsFromQuery failed: %v", err)
 	}
 
+	// 名前解決のためのUnWrap()は要る（選ばれていないrepを検索しないための枝刈り）
 	if unwrapCalls == 0 {
-		t.Error("rep名指定ありのときは名前解決のため UnWrap() が必要")
+		t.Error("選ばれた実repがあるかの判定に UnWrap() が要る")
 	}
-	if _, ok := findCtx.MatchReps["RawIDFRep"]; !ok {
-		t.Errorf("指定したrep名が MatchReps に入っていない: %v", findCtx.MatchReps)
+	if len(findCtx.MatchReps) != 1 {
+		t.Errorf("MatchReps は1件のはず: %v", matchRepNames(findCtx))
+	}
+	// **これが差し替えの再発検知。** 生repの名前で入っていたら、キャッシュを剥がしている
+	if _, ok := findCtx.MatchReps["RawIDFRep"]; ok {
+		t.Error("生repに差し替えている（キャッシュを丸ごとバイパスする）")
+	}
+	got, ok := findCtx.MatchReps["CachedIDFReps"]
+	if !ok {
+		t.Fatalf("キャッシュrepが MatchReps に入っていない: %v", matchRepNames(findCtx))
+	}
+	if got != reps.Repository(cached) {
+		t.Errorf("MatchReps に入っているのがキャッシュrepではない: %#v", got)
+	}
+}
+
+// どのrep名にも一致しないときは、そのrepを検索対象にしないこと。
+//
+// 「結果側で絞るから候補は全部入れておく」にすると、一致0件の検索が
+// いまの0コストから全rep検索（プラグインへのIPCを含む）に化ける。
+func TestSelectMatchRepsFromQuery_RepsMatchingNothingSelectsNoRep(t *testing.T) {
+	ctx := context.Background()
+
+	unwrapCalls := 0
+	raw := &stubRawRep{repName: "RawIDFRep"}
+	cached := &stubIDFRep{repName: "CachedIDFReps", unwrapCalls: &unwrapCalls, unwrapped: raw}
+
+	findCtx := &FindKyouContext{
+		MatchReps: map[string]reps.Repository{},
+		Repositories: &reps.GkillRepositories{
+			IDFKyouReps: reps.IDFKyouRepositories{cached},
+		},
+		ParsedFindQuery: &find.FindQuery{
+			IsImageOnly: true,
+			Reps:        []string{"no_such_rep"},
+		},
+	}
+
+	f := &FindFilter{}
+	if _, err := f.selectMatchRepsFromQuery(ctx, findCtx); err != nil {
+		t.Fatalf("selectMatchRepsFromQuery failed: %v", err)
+	}
+
+	if len(findCtx.MatchReps) != 0 {
+		t.Errorf("一致するrepが無いので検索対象は0件のはず: %v", matchRepNames(findCtx))
 	}
 }
 
@@ -205,7 +257,8 @@ func TestSelectMatchRepsFromQuery_EmptySliceMeansZeroCandidates(t *testing.T) {
 			query: &find.FindQuery{RepTypes: []string{}},
 		},
 		{
-			// Reps: [] → rep名候補0件。タイプフィルタが無いので全repが候補だが、名前で全部落ちる
+			// Reps: [] → rep名候補0件。短絡して候補を1つも入れない
+			// （lenだけで見ると「未指定」に化けて全件になるので、nilとは別に扱うこと）
 			name:  "Repsが非nil空",
 			query: &find.FindQuery{Reps: []string{}},
 		},
