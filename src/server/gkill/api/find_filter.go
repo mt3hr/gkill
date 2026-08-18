@@ -107,26 +107,31 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return drainFindErrors(wg, errch, gkillErrch)
 	}
 
-	// タグなし判定(RelatedTagIDs)の構築。
+	// タグの取得は**1回のスキャンで済ませる**。
 	//
-	// **「タグ無し」仮想タグ(NoTags)を使う検索のときだけ走らせる。**
-	// RelatedTagIDs の読み手は filterTagsKyous / filterTagsTimeIs の NoTags 分岐しか無く
-	// (OR分岐・AND分岐それぞれ2箇所)、NoTags が条件に入っていなければ結果に一切影響しない。
-	// 一方 getAllTags は**全repの全タグ**を集めるので、実データでは1検索あたり数十万行になる。
-	// rykv の既定クエリは tags が非nullなので、以前の条件(Tags != nil)では
-	// タグを明示的に選んだだけの検索でもこの全走査が毎回まるごと無駄に走っていた。
+	// ここで作るのは2つ。
+	//   - MatchTags        … クエリのタグ名に一致するタグ(Kyouタグ絞り込み用)
+	//   - RelatedTagIDs    … タグが1つでも付いているIDの集合(「タグ無し」仮想タグ用)
 	//
-	// TimeIsタグ側も見るのは、タグフィルタなし + TimeIsタグ「タグ無し」検索のときに
-	// 全TimeIsが「タグなし」扱いになる不具合があったため(get_kyous_regressions_test.go)。
-	if containsNoTags(findQuery.Tags) || (findQuery.HasTimeIsFilter() && containsNoTags(findQuery.TimeIsTags)) {
+	// **タグ名の絞り込みをSQLへ降ろしてはいけない。** tag rep のワード検索は
+	// `LOWER(TAG) = LOWER(?)` を出すので、列に関数がかかって索引が効かず、
+	// **全行に LOWER() を適用**したうえでクエリのタグ名の数だけ繰り返す。
+	// 実データのプロファイル(2026-08-19)では、条件なしの全タグ取得が3.3秒だったのに対し
+	// 名前で絞る findTags が40.4秒 ―― **絞り込むほうが12倍高かった**
+	// (うち sqlite の _lowerFunc が17.1秒)。
+	// 全部取ってGo側で `strings.EqualFold` で照合すれば同じ結果がはるかに安く出る。
+	// 照合の意味論は filterTagsKyous のAND分岐と同じ(完全一致・大小無視)。
+	needsMatchTags := findQuery.Tags != nil
+	needsRelatedTagIDs := containsNoTags(findQuery.Tags) || (findQuery.HasTimeIsFilter() && containsNoTags(findQuery.TimeIsTags))
+	if needsMatchTags || needsRelatedTagIDs {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			ge, e := f.getAllTags(ctx, findKyouContext)
+			ge, e := f.collectTagsForFilter(ctx, findKyouContext, needsMatchTags, needsRelatedTagIDs)
 			if e != nil {
-				e = fmt.Errorf("error at get all tags: %w", e)
+				e = fmt.Errorf("error at collect tags for filter: %w", e)
 			} else {
-				slog.Log(ctx, gkill_log.Trace, "finish getAllTags", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
+				slog.Log(ctx, gkill_log.Trace, "finish collectTagsForFilter", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
 			errch <- e
 			gkillErrch <- ge
@@ -145,22 +150,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 				e = fmt.Errorf("error at get hide tags when unchecked tags: %w", e)
 			} else {
 				slog.Log(ctx, gkill_log.Trace, "finish getAllHideTagsWhenUnChecked", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
-			}
-			errch <- e
-			gkillErrch <- ge
-		}()
-	}
-
-	// タグ名での検索はKyouタグ絞り込み専用
-	if findQuery.Tags != nil {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			ge, e := f.findTags(ctx, findKyouContext)
-			if e != nil {
-				e = fmt.Errorf("error at find tags: %w", e)
-			} else {
-				slog.Log(ctx, gkill_log.Trace, "finish findTags", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
 			errch <- e
 			gkillErrch <- ge
@@ -517,17 +506,46 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 	return nil, nil
 }
 
-// getAllTags は「タグが1つでも付いているKyouのID」の集合(RelatedTagIDs)を作ります。
+// maxTagNamesForSQLFilter はタグ名の絞り込みをSQLへ降ろす上限です。
 //
-// **呼ぶのは「タグ無し」仮想タグ(NoTags)を使う検索のときだけ**(FindKyous の起動条件を参照)。
-// 全repの全タグを集めるので実データでは数十万行になり、結果に影響しない検索で
-// 走らせると1検索まるごとの無駄になります。
+// tag rep のワード検索は `LOWER(TAG) = LOWER(?) OR LOWER(ID) = LOWER(?)` を出す。
+// 列に関数がかかるので索引が効かず、**全行に LOWER() を適用**したうえで、
+// それをクエリのタグ名の数だけ繰り返す ―― つまり O(行数 × 名前の数)。
+// 一方「全部取ってGoで照合」は名前の数によらず O(行数) だが、
+// reps.Tag(240バイト + 文字列10本)を行数ぶん実体化する確保を毎回払う。
 //
-// 用途はそれだけなので、Tag構造体(240バイト・文字列10本)をIDごとに丸ごと保持しない。
-// 以前は findCtx.AllTags に全タグを溜めていたが、読むのはこの関数の中だけで、
-// タグフィルタはrykvの既定クエリで常に有効なため、検索のたびに全タグ分のマップを作っていた。
-// 版の解決規則(IDごとにUpdateTime最大 → その版のIsDeletedを見る)は従来と同一。
-func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+// どちらが安いかは名前の個数で逆転する(dao/reps/tag_find_bench_test.go の実測)。
+// 2万タグで交差点はおよそ30。SQL側もGo側も行数に比例するので、
+// 交差する「名前の個数」は行数によらずほぼ一定。
+// 確保の少ないSQL側に寄せたいので、閾値は交差点よりやや上に置く。
+const maxTagNamesForSQLFilter = 32
+
+// collectTagsForFilter はタグ絞り込みに要る2つを作ります。
+//
+//   - MatchTags     … クエリのタグ名に一致するタグ(needMatchTags のとき)
+//   - RelatedTagIDs … タグが1つでも付いているIDの集合(needRelatedTagIDs のとき)
+//
+// **「タグ無し」仮想タグを使う検索では、名前の照合もGo側でやる。**
+// RelatedTagIDs のために結局は全タグを取るので、そこから名前を拾うぶんはタダになる。
+// 以前は「全タグの取得」と「名前で絞る検索」を別々に投げていて、
+// 本番のプロファイル(2026-08-19)ではタグ名の絞り込みだけで実質CPUの44%(40.4秒)を使っていた。
+//
+// 照合は `strings.EqualFold` の完全一致・大小無視。filterTagsKyous のAND分岐と同じ意味論で、
+// SQLが出していた `LOWER(TAG) = LOWER(?)` と等価。SQL は TAG 列だけでなく
+// ID 列とも突き合わせていたので、そこも写してある。
+func (f *FindFilter) collectTagsForFilter(ctx context.Context, findCtx *FindKyouContext, needMatchTags bool, needRelatedTagIDs bool) ([]*message.GkillError, error) {
+	var queryTagNames []string
+	if needMatchTags {
+		// 同じ名前を何度も比べない
+		queryTagNames = uniqueStrings(findCtx.ParsedFindQuery.Tags)
+	}
+
+	// 全タグを取るなら、名前の照合もそこからやったほうが安い。
+	// 全タグを取らないなら、名前が少ないうちはSQLに絞らせたほうが安い
+	if !needRelatedTagIDs && len(queryTagNames) <= maxTagNamesForSQLFilter {
+		return f.findTagsByNameInSQL(ctx, findCtx)
+	}
+
 	// 全タグ取得用検索クエリ。IDごとの最新版のみを対象にする
 	findTagsQuery := &find.FindQuery{IsDeleted: false, OnlyLatestData: true}
 
@@ -538,31 +556,90 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 		return nil, fmt.Errorf("error at get all tags: %w", err)
 	}
 
+	matchesQueryTagName := func(tag reps.Tag) bool {
+		for _, queryTagName := range queryTagNames {
+			if strings.EqualFold(queryTagName, tag.Tag) || strings.EqualFold(queryTagName, tag.ID) {
+				return true
+			}
+		}
+		return false
+	}
+
 	// rep跨ぎでIDごとの最新版を決める。保持するのは判定に要る3つだけ。
+	// ここで reps.Tag(240バイト)をそのまま持つと実データで約180MBになる
 	type latestTagRef struct {
 		updateTime time.Time
 		targetID   string
 		isDeleted  bool
 	}
 	latestTags := make(map[string]latestTagRef, len(allTagsList))
+	// 名前が一致したタグだけは実体で持つ(件数が少ないので安い)
+	matchTagCandidates := map[string]reps.Tag{}
 	for _, tag := range allTagsList {
 		if existing, exist := latestTags[tag.ID]; exist && !tag.UpdateTime.After(existing.updateTime) {
 			continue
 		}
 		latestTags[tag.ID] = latestTagRef{updateTime: tag.UpdateTime, targetID: tag.TargetID, isDeleted: tag.IsDeleted}
-	}
-
-	// タグの対象をリスト
-	for id, tag := range latestTags {
-		if !findCtx.isLatestData(id, tag.updateTime) {
+		if !needMatchTags {
 			continue
 		}
-		if tag.isDeleted {
+		if matchesQueryTagName(tag) {
+			matchTagCandidates[tag.ID] = tag
 			continue
 		}
-		findCtx.RelatedTagIDs[tag.targetID] = struct{}{}
+		// 新しい版で名前が変わって一致しなくなったなら、古い版の分を取り消す
+		delete(matchTagCandidates, tag.ID)
 	}
 
+	if needRelatedTagIDs {
+		// タグの対象をリスト
+		for id, tag := range latestTags {
+			if !findCtx.isLatestData(id, tag.updateTime) {
+				continue
+			}
+			if tag.isDeleted {
+				continue
+			}
+			findCtx.RelatedTagIDs[tag.targetID] = struct{}{}
+		}
+	}
+
+	for id, tag := range matchTagCandidates {
+		if !findCtx.isLatestData(id, tag.UpdateTime) {
+			continue
+		}
+		if tag.IsDeleted {
+			continue
+		}
+		findCtx.MatchTags[id] = tag
+	}
+
+	return nil, nil
+}
+
+// findTagsByNameInSQL はタグ名の絞り込みをSQLへ降ろします。
+// 名前が少ないうちは全タグの実体化を避けられるぶんこちらが安い(上の閾値を参照)。
+func (f *FindFilter) findTagsByNameInSQL(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	query := &find.FindQuery{
+		// IsDeleted: false, // TagReps.FindTags内に考慮があるため削除
+		Words:    findCtx.ParsedFindQuery.Tags,
+		WordsAnd: false,
+		// 編集前のタグ名でヒットしないよう、IDごとの最新版のみを対象にする
+		OnlyLatestData: true,
+	}
+	matchTags, err := findCtx.Repositories.TagReps.FindTags(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("error at get tags by name %#v: %w", findCtx.ParsedFindQuery.Tags, err)
+	}
+	for _, tag := range matchTags {
+		if !findCtx.isLatestData(tag.ID, tag.UpdateTime) {
+			continue
+		}
+		if tag.IsDeleted {
+			continue
+		}
+		findCtx.MatchTags[tag.ID] = tag
+	}
 	return nil, nil
 }
 
@@ -637,32 +714,6 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 			}
 			findCtx.MatchTimeIsTags[tag.ID] = tag
 		}
-	}
-	return nil, nil
-}
-
-func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-
-	query := &find.FindQuery{
-		// IsDeleted: false, // TagReps.FindTags内に考慮があるため削除
-		Words:    findCtx.ParsedFindQuery.Tags,
-		WordsAnd: false,
-		// 編集前のタグ名でヒットしないよう、IDごとの最新版のみを対象にする
-		OnlyLatestData: true,
-	}
-	matchTags, err := findCtx.Repositories.TagReps.FindTags(ctx, query)
-	if err != nil {
-		err = fmt.Errorf("error at get tags by name %#v: %w", findCtx.ParsedFindQuery.Words, err)
-		return nil, err
-	}
-	for _, tag := range matchTags {
-		if !findCtx.isLatestData(tag.ID, tag.UpdateTime) {
-			continue
-		}
-		if tag.IsDeleted {
-			continue
-		}
-		findCtx.MatchTags[tag.ID] = tag
 	}
 	return nil, nil
 }
