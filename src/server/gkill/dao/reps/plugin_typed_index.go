@@ -316,7 +316,7 @@ func (i *PluginTypedIndex) buildSnapshot(pluginKyous []gkill_plugin.PluginKyou) 
 		}
 		record.UpdateTime = pluginKyou.UpdateTime
 		record.IsDeleted = pluginKyou.IsDeleted
-		record.Kyous = append(record.Kyous, convertPluginKyouToKyou(pluginKyou))
+		record.Kyous = append(record.Kyous, convertPluginKyouToKyou(pluginKyou, repName))
 
 		i.applyTypedData(record, pluginKyou, provided)
 		i.applyAttachedData(snapshot, record, pluginKyou, repName, provided)

@@ -428,15 +428,20 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 		typeMatchReps = append(typeMatchReps, repositories.Reps...)
 	}
 
-	// Step3: rep名指定なし → typeMatchReps を全てMatchRepsへ追加して終了
+	// Step3: 候補repを MatchReps へ入れる。
 	//
-	// ここでUnWrap()してはいけない。
-	// typeMatchRepsの要素は repositories.MiReps などから採っており、
+	// **キャッシュrepを UnWrap() で生のディスクrepに差し替えてはいけない。**
+	// typeMatchReps の要素は repositories.Reps などから採っており、
 	// --cache_in_memory（既定true）ではインメモリキャッシュのrepが入っている。
-	// UnWrap()するとその中の生のディスクrepに戻ってしまい、
-	// mi板・画像のみ・Plaing・rep種別指定の検索だけがキャッシュを丸ごとバイパスして
-	// 重複rep（同一ファイルの端末別登録）ぶんディスクを舐めることになる。
-	// rep名での絞り込みが要るのはStep4だけなので、ここは名前解決も不要。
+	// UnWrap() するとその中の生のディスクrepに戻ってしまい、
+	// **キャッシュを丸ごとバイパスして**重複rep（同一ファイルの端末別登録）ぶんディスクを舐める。
+	// --cache_reps_local のローカルコピー層も同時に剥がれ、外付けの元DBへ戻る。
+	// 実データでは11個のキャッシュrepが約940個の生repに化け、
+	// gitだけでプロファイル1窓あたり20.7秒を使っていた（2026-08-19 実測）。
+	//
+	// rep名での絞り込みは**検索対象repではなく検索結果**で行う（findKyous の filterKyousByRepName）。
+	// キャッシュ表は行ごとに実rep名の REP_NAME を持ち、それが Kyou.RepName に入るので絞れる。
+	// ここで UnWrap() を使うのは「そのラッパに選ばれた実repが1つでもあるか」の判定だけ。
 	if findCtx.ParsedFindQuery.Reps == nil {
 		for _, matchRep := range typeMatchReps {
 			repName, err := matchRep.GetRepName(ctx)
@@ -450,33 +455,51 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 		return nil, nil
 	}
 
-	// Step4: rep名指定あり → typeMatchRepsをrep名でさらにフィルタ
+	// Step4: rep名指定あり
+	// 非nil空は「候補0件」。ここで短絡しないと、下の判定で誰も選ばれないだけになり
+	// 結果は同じでも全repを無駄に列挙することになる
 	targetRepNames := findCtx.ParsedFindQuery.Reps
+	if len(targetRepNames) == 0 {
+		return nil, nil
+	}
+	targetRepNameSet := make(map[string]struct{}, len(targetRepNames))
+	for _, targetRepName := range targetRepNames {
+		targetRepNameSet[targetRepName] = struct{}{}
+	}
 
 	for _, matchRep := range typeMatchReps {
+		// UnWrap() は名前解決だけに使う。返ってきた生repを MatchReps に入れてはいけない（上のコメント）
 		repImpls, err := matchRep.UnWrap()
 		if err != nil {
 			return nil, err
 		}
+		selected := false
 		for _, repImpl := range repImpls {
 			repName, err := repImpl.GetRepName(ctx)
 			if err != nil {
 				return nil, err
 			}
-
-			for _, targetRepName := range targetRepNames {
-				if targetRepName == repName {
-					if _, exist := findCtx.MatchReps[repName]; !exist {
-						findCtx.MatchReps[repName] = repImpl
-					}
-					break
-				}
+			if _, exist := targetRepNameSet[repName]; exist {
+				selected = true
+				break
 			}
+		}
+		// 1つも選ばれていないrepは検索しない。
+		// これを省くと「kmemoだけチェック」でもgitキャッシュとプラグイン全部を叩くことになる
+		if !selected {
+			continue
+		}
+
+		repName, err := matchRep.GetRepName(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if _, exist := findCtx.MatchReps[repName]; !exist {
+			findCtx.MatchReps[repName] = matchRep
 		}
 	}
 	return nil, nil
 }
-
 func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	err := findCtx.Repositories.UpdateCache(ctx)
 	if err != nil {
@@ -721,6 +744,40 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 	return nil, nil
 }
 
+// filterKyousByRepName は指定されたrep名のKyouだけを残します。**その場で詰め直します。**
+//
+// 56万件の結果に対して新しいマップを作らないこと(このファイルは確保数を数えて削ってある)。
+// スライスは Repositories.findKyous が呼び出しごとに新しく作るので、他所から参照されていません。
+//
+// **全部落ちたIDはキーごと消すこと。** 空スライスを残すと、後段の
+// filterLocationKyous / filterMiForMi / overrideKyous が kyous[0] を見て panic します。
+//
+// **RepName が空の行は残すこと。** キャッシュrepへの write-through は
+// 呼び出し側が渡した Kmemo などをそのまま INSERT するので、REP_NAME 列が空のまま入る
+// (実rep名が入るのは次の UpdateCache で leaf から取り直したとき)。
+// ここで落とすと、**いま追加したばかりの記録が最大1分間ずっと一覧から消える**。
+// 逆に残しすぎても「チェックを外したrepの、たった今書いた記録が1分だけ残る」で済む。
+// 消えるほうが明らかに重いので、判断できない行は残す。
+func filterKyousByRepName(kyousMap map[string][]reps.Kyou, allowedRepNames map[string]struct{}) {
+	for id, kyous := range kyousMap {
+		kept := kyous[:0]
+		for _, kyou := range kyous {
+			if kyou.RepName == "" {
+				kept = append(kept, kyou)
+				continue
+			}
+			if _, exist := allowedRepNames[kyou.RepName]; exist {
+				kept = append(kept, kyou)
+			}
+		}
+		if len(kept) == 0 {
+			delete(kyousMap, id)
+			continue
+		}
+		kyousMap[id] = kept
+	}
+}
+
 func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	var err error
 
@@ -740,10 +797,26 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 		matchReps = append(matchReps, rep)
 	}
 
+	// rep名の絞り込みは**検索結果**に対して行う。
+	// 検索対象repのほうで絞ろうとするとキャッシュrepを UnWrap() することになり、
+	// 生のディスクrepへ戻ってキャッシュを丸ごとバイパスする
+	// (理由は selectMatchRepsFromQuery のコメント)。
+	// nil は「未使用」。len() で判定すると全件消えるので、必ず nil で見ること
+	allowedRepNames := map[string]struct{}{}
+	if findCtx.ParsedFindQuery.Reps != nil {
+		for _, repName := range findCtx.ParsedFindQuery.Reps {
+			allowedRepNames[repName] = struct{}{}
+		}
+	}
+	filterByRepName := findCtx.ParsedFindQuery.Reps != nil
+
 	// repで検索
 	kyousMap, err := matchReps.FindKyous(ctx, findCtx.ParsedFindQuery)
 	if err != nil {
 		return nil, err
+	}
+	if filterByRepName {
+		filterKyousByRepName(kyousMap, allowedRepNames)
 	}
 	// textでマッチしたものをID検索
 	textMatchKyousMap := map[string][]reps.Kyou{}
@@ -751,6 +824,11 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 		textMatchKyousMap, err = matchReps.FindKyous(ctx, matchTextFindByIDQuery)
 		if err != nil {
 			return nil, err
+		}
+		// **こちらにも同じ絞り込みが要る。** 落とすと、本文がヒットした記録だけ
+		// チェックしていないrepのぶんが混ざる
+		if filterByRepName {
+			filterKyousByRepName(textMatchKyousMap, allowedRepNames)
 		}
 	}
 	for id, textMatchKyous := range textMatchKyousMap {
