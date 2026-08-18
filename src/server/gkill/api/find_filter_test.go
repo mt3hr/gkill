@@ -230,7 +230,7 @@ func TestFindTags_ExcludeRenamedAwayVersion(t *testing.T) {
 			}
 
 			f := &FindFilter{}
-			if _, err := f.collectTagsForFilter(ctx, findCtx, true, false); err != nil {
+			if _, err := f.collectTagsForFilter(ctx, findCtx, true, false, false); err != nil {
 				t.Fatalf("collectTagsForFilter failed: %v", err)
 			}
 			if len(findCtx.MatchTags) != c.wantCount {
@@ -249,7 +249,7 @@ func TestFindTags_ExcludeRenamedAwayVersion(t *testing.T) {
 				MatchTags:                        map[string]reps.Tag{},
 				RelatedTagIDs:                    map[string]struct{}{},
 			}
-			if _, err := f.collectTagsForFilter(ctx, goPathCtx, true, true); err != nil {
+			if _, err := f.collectTagsForFilter(ctx, goPathCtx, true, true, false); err != nil {
 				t.Fatalf("collectTagsForFilter (Go側で照合する経路) failed: %v", err)
 			}
 			if len(goPathCtx.MatchTags) != c.wantCount {
