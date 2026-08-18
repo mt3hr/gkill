@@ -47,10 +47,54 @@ export abstract class InfoBase {
     update_app: string
     update_user: string
     update_device: string
-    attached_tags: Array<Tag>
-    attached_texts: Array<Text>
-    attached_notifications: Array<Notification>
-    attached_timeis_kyou: Array<Kyou>
+    // 検索応答(get_kyous)には attached_* が1つも含まれないので、30万件の実体化では
+    // これらの配列は一度も書かれない。それでもコンストラクタで確保すると1件につき4本、
+    // 30万件で120万個の使い捨てになる。`_abort_controller` と同じく
+    // underscore 公開フィールド + ゲッターで遅延確保する。
+    //
+    // TS private は Vue の UnwrapRef が落として `Ref<Array<Kyou>>` への代入が型エラーになり、
+    // ES private(#) は reactive Proxy 越しの this で壊れるので、どちらも使えない。
+    // 直接 `_` 付きを触らず、必ずゲッター/セッター越しに読み書きすること。
+    _attached_tags: Array<Tag> | null
+    get attached_tags(): Array<Tag> {
+        if (!this._attached_tags) {
+            this._attached_tags = new Array<Tag>()
+        }
+        return this._attached_tags
+    }
+    set attached_tags(value: Array<Tag>) {
+        this._attached_tags = value
+    }
+    _attached_texts: Array<Text> | null
+    get attached_texts(): Array<Text> {
+        if (!this._attached_texts) {
+            this._attached_texts = new Array<Text>()
+        }
+        return this._attached_texts
+    }
+    set attached_texts(value: Array<Text>) {
+        this._attached_texts = value
+    }
+    _attached_notifications: Array<Notification> | null
+    get attached_notifications(): Array<Notification> {
+        if (!this._attached_notifications) {
+            this._attached_notifications = new Array<Notification>()
+        }
+        return this._attached_notifications
+    }
+    set attached_notifications(value: Array<Notification>) {
+        this._attached_notifications = value
+    }
+    _attached_timeis_kyou: Array<Kyou> | null
+    get attached_timeis_kyou(): Array<Kyou> {
+        if (!this._attached_timeis_kyou) {
+            this._attached_timeis_kyou = new Array<Kyou>()
+        }
+        return this._attached_timeis_kyou
+    }
+    set attached_timeis_kyou(value: Array<Kyou>) {
+        this._attached_timeis_kyou = value
+    }
     is_checked_kyou: boolean
     is_attached_tags_loaded: boolean
     is_attached_texts_loaded: boolean
@@ -215,10 +259,10 @@ export abstract class InfoBase {
         this.update_app = ""
         this.update_user = ""
         this.update_device = ""
-        this.attached_tags = new Array<Tag>()
-        this.attached_texts = new Array<Text>()
-        this.attached_notifications = new Array<Notification>()
-        this.attached_timeis_kyou = new Array<Kyou>()
+        this._attached_tags = null
+        this._attached_texts = null
+        this._attached_notifications = null
+        this._attached_timeis_kyou = null
         this.is_checked_kyou = false
         this.is_attached_tags_loaded = false
         this.is_attached_texts_loaded = false

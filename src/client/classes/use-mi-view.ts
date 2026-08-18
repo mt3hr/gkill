@@ -1,7 +1,7 @@
 import { gkill_page_list } from '@/classes/gkill-page-list'
 import router from '@/router'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { computed, nextTick, onBeforeUnmount, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, type Ref, ref, toRaw, watch } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
 import type { MiViewEmits } from '@/pages/views/mi-view-emits'
 import type { MiViewProps } from '@/pages/views/mi-view-props'
@@ -221,8 +221,13 @@ export function useMiView(options: {
     }
 
     function remove_kyou_from_list_by_id(list: Array<Kyou>, deleted_id: string): void {
-        for (let i = list.length - 1; i >= 0; i--) {
-            if (list[i].id === deleted_id) {
+        // 走査は生の配列に対して行う。deepなref配下のリアクティブProxy越しに読むと
+        // 1要素ごとに track と toReactive が走り、要素ぶんのProxyを確保する(30万件の列では効く)。
+        // ★splice は必ずリアクティブな list に対して行うこと(でないと誰にも通知されない)。
+        //   後ろから走るので、splice しても未走査側のインデックスはずれない。
+        const raw_list = toRaw(list)
+        for (let i = raw_list.length - 1; i >= 0; i--) {
+            if (raw_list[i].id === deleted_id) {
                 list.splice(i, 1)
             }
         }
@@ -367,33 +372,24 @@ export function useMiView(options: {
                 if (!column_query || !target_list) {
                     continue
                 }
+                // replace は渡さない = refresh_kyou_in_list の既定の in-place splice に任せる。
+                //
+                // 以前は replace で `current_list.map(...)` の結果を
+                // match_kyous_list.value[index] へ代入していた。これは
+                //  (1) 1行の更新のために30万件の配列を2回作り直し
+                //      (refresh_kyou_in_list 側の `[...list]` と、このmapの分)、
+                //  (2) focused_kyous_list(= match_kyous_list[focused_column_index] への
+                //      エイリアス)を黙って切る。切れると件数カレンダーとDnoteが
+                //      フォーカス列に追随しなくなる。
+                // in-place なら参照が保たれるので、CLAUDE.mdの局所挿入節と同じ約束を守れる。
+                //
+                // 「await中に列が差し替わる」ケースも in-place のほうが素直に正しい。
+                // 列が再検索されていれば match_kyous_list[i] は別の配列になっており、
+                // ここで掴んでいる target_list は誰も見ていないので書いても無害。
+                // 書き戻す位置は refresh_kyou_in_list が await のあとにidで取り直す。
                 await refresh_kyou_in_list(target_list, kyou, {
                     requested_at: requested_at,
                     query: column_query,
-                    replace: (next_list) => {
-                        // await中に列の削除・再検索・別Kyouのreloadでリストが差し替わりうる。
-                        // 列はquery_idで引き直し、リストごと巻き戻さず現在のリストの該当行だけ
-                        // 差し替える(リストごと戻すと新しい検索結果や他のreload結果を潰す)
-                        const current_index = querys.value.findIndex(q => q.query_id === column_query.query_id)
-                        if (current_index === -1) {
-                            return
-                        }
-                        const refreshed = next_list.find(next_kyou => next_kyou.id === kyou.id)
-                        const current_list = match_kyous_list.value[current_index]
-                        if (!refreshed || !current_list || !current_list.some(current_kyou => current_kyou.id === kyou.id)) {
-                            return
-                        }
-                        let used_refreshed = false
-                        match_kyous_list.value[current_index] = current_list.map(current_kyou => {
-                            if (current_kyou.id !== kyou.id) {
-                                return current_kyou
-                            }
-                            // 同一インスタンスを複数行に置くと後段のload_typed_datas等で副作用が出る
-                            const next_kyou = used_refreshed ? refreshed.clone() : refreshed
-                            used_refreshed = true
-                            return next_kyou
-                        })
-                    },
                 })
             }
         })();

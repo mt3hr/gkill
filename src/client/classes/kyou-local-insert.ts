@@ -1,5 +1,6 @@
 'use strict'
 
+import { toRaw } from 'vue'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { Mi } from '@/classes/datas/mi'
@@ -476,12 +477,23 @@ export function find_insert_index(list: Array<Kyou>, kyou: Kyou, query: FindKyou
  * 件数カレンダーやDnoteが追随しなくなる。30万要素の配列コピーも避けられる。
  */
 export function insert_kyou_sorted(list: Array<Kyou>, kyou: Kyou, query: FindKyouQuery): boolean {
-    for (let i = 0; i < list.length; i++) {
-        if (list[i].id === kyou.id) {
+    // 重複チェックは**線形のまま**にすること。
+    // find_insert_index の近傍だけ見る形に狭めると、再射影されたmi行が
+    // リスト内のコピーと違う位置に来るケースを取りこぼし、症状は行の静かな重複になる。
+    //
+    // 走査は生の配列に対して行う。listはdeepなref配下のリアクティブProxyなので、
+    // 素で list[i] を読むと1要素ごとに track と toReactive が走り、
+    // 要素ぶんの Proxy と WeakMap エントリを確保する(30万件の列では効く)。
+    // 読み取りだけならtoRaw越しでも意味論は同じ。
+    const raw_list = toRaw(list)
+    for (let i = 0; i < raw_list.length; i++) {
+        if (raw_list[i].id === kyou.id) {
             return false
         }
     }
-    list.splice(find_insert_index(list, kyou, query), 0, kyou)
+    // ★splice は必ずリアクティブな list に対して行うこと。
+    //   toRaw した配列へ差し込むと変更が誰にも通知されない。
+    list.splice(find_insert_index(raw_list, kyou, query), 0, kyou)
     return true
 }
 

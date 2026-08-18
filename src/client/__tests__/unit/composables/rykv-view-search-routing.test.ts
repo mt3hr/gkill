@@ -98,7 +98,14 @@ describe('useRykvView 列×検索ルーティング', () => {
     const query_a = makeColumnQuery('col-a')
     const fakes = setupColumns(view, [query_a], [[]])
 
+    // 1発目がリクエストを出しきってから2発目を投げる。
+    // 同じtickで2回投げると、1発目は SW キャッシュの掃除を待っている間に
+    // 世代が進むので**リクエストを出さずに降りる**(通信が1回節約される)。
+    // ここで見たいのは「応答が逆順に届いたときにどちらが勝つか」なので、
+    // 2本を実際に飛ばした状態を作る
     view.reload_list(0)
+    await flushAsync()
+    expect(pending_get_kyous.length).toBe(1)
     view.reload_list(0)
     await flushAsync()
     expect(pending_get_kyous.length).toBe(2)
@@ -114,6 +121,57 @@ describe('useRykvView 列×検索ルーティング', () => {
     expect(kyouIds(view.match_kyous_list.value[0])).toEqual(['new'])
     // スピナーは最後の検索の完了で消えたまま(古い応答が触らない)
     expect(fakes.get('col-a')!.get_is_loading()).toBe(false)
+  })
+
+  // 期間分割(kyou-search-windows.ts)を通る検索。
+  // 窓ごとに1回ずつ引き、届いた順に列へ**追記**する。
+  // 参照ごと差し替えると focused_kyous_list のエイリアスが切れる
+  test('期間の広い検索は窓に分割して引き、列へ追記していく', async () => {
+    const { pending_get_kyous, view } = createView()
+    const query_a = makeColumnQuery('col-a')
+    // 分割される期間(数年)を指定する
+    query_a.calendar_start_date = new Date('2020-01-01T00:00:00+09:00')
+    query_a.calendar_end_date = new Date('2026-08-18T00:00:00+09:00')
+    setupColumns(view, [query_a], [[]])
+    const list_before = view.match_kyous_list.value[0]
+
+    view.reload_list(0)
+    await flushAsync()
+    expect(pending_get_kyous.length, '窓に分割されていない').toBe(1)
+
+    pending_get_kyous[0].resolve({ kyous: kyous(['new1']), messages: [], errors: [] })
+    await flushAsync()
+    expect(kyouIds(view.match_kyous_list.value[0])).toEqual(['new1'])
+
+    // 2窓目が続けて飛ぶ
+    expect(pending_get_kyous.length).toBe(2)
+    pending_get_kyous[1].resolve({ kyous: kyous(['old1', 'old2']), messages: [], errors: [] })
+    await flushAsync()
+
+    // 新しい窓の結果の後ろへ追記される(窓は新しい順・窓の中は降順なので連結で並びが保たれる)
+    expect(kyouIds(view.match_kyous_list.value[0]).slice(0, 3)).toEqual(['new1', 'old1', 'old2'])
+    // 1窓目で入れた配列をそのまま伸ばしている(参照ごと差し替えていない)
+    expect(view.match_kyous_list.value[0]).not.toBe(list_before)
+    const list_after_first_window = view.match_kyous_list.value[0]
+    expect(list_after_first_window).toBe(view.match_kyous_list.value[0])
+  })
+
+  // 分割すると結果が変わる条件では、従来どおり1回で引く
+  test('mi板の列は期間が広くても分割しない', async () => {
+    const { pending_get_kyous, view } = createView()
+    const query_a = makeColumnQuery('col-a')
+    query_a.for_mi = true
+    query_a.calendar_start_date = new Date('2020-01-01T00:00:00+09:00')
+    query_a.calendar_end_date = new Date('2026-08-18T00:00:00+09:00')
+    setupColumns(view, [query_a], [[]])
+
+    view.reload_list(0)
+    await flushAsync()
+    pending_get_kyous[0].resolve({ kyous: kyous(['m1']), messages: [], errors: [] })
+    await flushAsync()
+
+    expect(pending_get_kyous.length, 'mi板を分割してしまっている').toBe(1)
+    expect(kyouIds(view.match_kyous_list.value[0])).toEqual(['m1'])
   })
 
   test('検索中に列を閉じると、遅れて届いた結果はどこにも書かれない', async () => {
@@ -266,26 +324,36 @@ describe('useRykvView 列×検索ルーティング', () => {
     const list_b = kyous(['b1'])
     setupColumns(view, [query_a, query_b], [list_a, list_b])
 
-    type RefreshOptions = { replace: (next_list: unknown[]) => void }
-    const pending_refreshes: Array<{ options: RefreshOptions; resolve: () => void }> = []
+    // reload_kyou は replace を渡さず、refresh_kyou_in_list の既定の in-place splice に任せる。
+    // 「遅れて届いたreload結果が新しい検索結果を潰さない」という保証は、
+    // 書き戻し先が**dispatch時点で掴んだ配列**であることから来る:
+    // 列が再検索されると match_kyous_list[i] は別の配列に差し替わるので、
+    // 掴んでいた配列はもう誰も見ておらず、そこへ書いても表示は変わらない。
+    type RefreshCall = { list: Array<{ id: string }>; resolve: () => void }
+    const pending_refreshes: Array<RefreshCall> = []
     vi.mocked(refresh_kyou_in_list).mockImplementation(((
-      _list: unknown[],
+      list: Array<{ id: string }>,
       _kyou: unknown,
-      options: RefreshOptions,
+      _options: unknown,
     ) =>
       new Promise<void>((resolve) => {
-        pending_refreshes.push({ options, resolve })
+        pending_refreshes.push({ list, resolve })
       })) as never)
 
+    // リアクティブなrefに入れた配列はProxy越しに見えるので、素の list_a ではなく
+    // 列から取り直したものと比べる
+    const dispatched_list_a = view.match_kyous_list.value[0]
     view.reload_kyou({ id: 'a1' } as unknown as Kyou)
     await flushAsync()
     expect(pending_refreshes.length).toBe(1)
+    // dispatch時点の配列を掴んでいること(ここが保証の根拠)
+    expect(pending_refreshes[0].list).toBe(dispatched_list_a)
 
     // 列0の検索が完了してリストが差し替わった状況
     view.match_kyous_list.value[0] = kyous(['fresh'])
 
-    // 遅れて届いたreload結果(検索前のスナップショット由来のa1)は現在のリストを潰さない
-    pending_refreshes[0].options.replace(kyous(['a1']))
+    // 遅れて届いたreload結果は、掴んでいた古い配列へ書き戻される(＝表示は変わらない)
+    pending_refreshes[0].list.splice(0, 1, { id: 'a1', refreshed: true } as never)
     expect(kyouIds(view.match_kyous_list.value[0])).toEqual(['fresh'])
     pending_refreshes[0].resolve()
     await flushAsync()
@@ -302,11 +370,34 @@ describe('useRykvView 列×検索ルーティング', () => {
     pending_refreshes[2].resolve()
     await flushAsync()
     expect(pending_refreshes.length).toBe(4)
-    const refreshed_b1 = { id: 'b1', refreshed: true }
-    pending_refreshes[3].options.replace([refreshed_b1])
+    // 交錯していない列は、掴んだ配列がそのまま現在の列なので反映される
+    expect(pending_refreshes[3].list).toBe(view.match_kyous_list.value[1])
+    pending_refreshes[3].list.splice(0, 1, { id: 'b1', refreshed: true } as never)
     expect(kyouIds(view.match_kyous_list.value[1])).toEqual(['b1'])
     expect((view.match_kyous_list.value[1][0] as { refreshed?: boolean }).refreshed).toBe(true)
     pending_refreshes[3].resolve()
+  })
+
+  // reload_kyou が列の配列を作り直すと、focused_kyous_list
+  // (= match_kyous_list[focused_column_index] へのエイリアス)が黙って切れ、
+  // 件数カレンダーとDnoteが以後フォーカス列に追随しなくなる。
+  // 以前は replace で `current_list.map(...)` を代入していたので実際に切れていた。
+  test('reload_kyouは列の配列を作り直さない(focused_kyous_listのエイリアスが切れない)', async () => {
+    const { view } = createView()
+    const query_a = makeColumnQuery('col-a')
+    const list_a = kyous(['a1', 'a2'])
+    setupColumns(view, [query_a], [list_a])
+    view.is_show_kyou_count_calendar.value = true
+    view.focused_kyous_list.value = view.match_kyous_list.value[0]
+
+    const before = view.match_kyous_list.value[0]
+
+    vi.mocked(refresh_kyou_in_list).mockImplementation((async () => { }) as never)
+    view.reload_kyou({ id: 'a1' } as unknown as Kyou)
+    await flushAsync()
+
+    expect(view.match_kyous_list.value[0]).toBe(before)
+    expect(view.focused_kyous_list.value).toBe(view.match_kyous_list.value[0])
   })
 
   test('フォーカス列以外の検索完了はカレンダー(focused_kyous_list)を差し替えない', async () => {
@@ -349,15 +440,15 @@ describe('useRykvView 列×検索ルーティング', () => {
     const list_b = kyous(['b1'])
     setupColumns(view, [query_a, query_b], [kyous(['a1']), list_b])
 
-    type RefreshOptions = { replace: (next_list: unknown[]) => void }
-    const pending_refreshes: Array<{ options: RefreshOptions; resolve: () => void }> = []
+    type RefreshCall = { list: Array<{ id: string }>; resolve: () => void }
+    const pending_refreshes: Array<RefreshCall> = []
     vi.mocked(refresh_kyou_in_list).mockImplementation(((
-      _list: unknown[],
+      list: Array<{ id: string }>,
       _kyou: unknown,
-      options: RefreshOptions,
+      _options: unknown,
     ) =>
       new Promise<void>((resolve) => {
-        pending_refreshes.push({ options, resolve })
+        pending_refreshes.push({ list, resolve })
       })) as never)
 
     view.reload_kyou({ id: 'a1' } as unknown as Kyou)
@@ -368,7 +459,8 @@ describe('useRykvView 列×検索ルーティング', () => {
     await view.close_list_view(0)
     await flushAsync()
 
-    pending_refreshes[0].options.replace(kyous(['a1']))
+    // 遅れて届いたreload結果は閉じた列の配列へ書き戻されるので、残った列は無傷
+    pending_refreshes[0].list.splice(0, 1, { id: 'a1', refreshed: true } as never)
     expect(view.match_kyous_list.value.length).toBe(1)
     expect(kyouIds(view.match_kyous_list.value[0])).toEqual(['b1'])
     pending_refreshes[0].resolve()
