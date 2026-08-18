@@ -56,6 +56,7 @@ export function useApplicationConfigView(options: {
         { app_name: i18n.global.t('KFTL_APP_NAME'), page_name: 'kftl' },
         { app_name: i18n.global.t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
         { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
+        { app_name: i18n.global.t('RUDBECKIA_APP_NAME'), page_name: 'rudbeckia' },
     ])
 
     const is_loading = ref(false)

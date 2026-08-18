@@ -1,0 +1,416 @@
+<template>
+    <div class="dashboard_view_wrap" ref="dashboard_root" :data-gkill-view-ready="is_view_ready ? 'true' : 'false'">
+        <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
+            <v-btn icon="mdi-menu" :ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }"
+                class="d-none d-md-flex" />
+            <v-toolbar-title>
+                <div>
+                    <span>{{ i18n.global.t("DASHBOARD_PAGE_TITLE") }}</span>
+                    <v-menu activator="parent">
+                        <v-list>
+                            <v-list-item :key="index" :value="index" v-for="page, index in page_list">
+                                <v-list-item-title @click="navigate_to_page(page.page_name)">
+                                    {{ page.app_name }}
+                                </v-list-item-title>
+                            </v-list-item>
+                        </v-list>
+                    </v-menu>
+                </div>
+            </v-toolbar-title>
+            <v-spacer />
+            <v-btn icon @click="go_prev_day()" variant="text">
+                <v-icon>mdi-chevron-left</v-icon>
+            </v-btn>
+            <v-menu v-model="date_picker_menu_open" :close-on-content-click="false" location="bottom end"
+                :z-index="3000">
+                <template v-slot:activator="{ props: dateMenuProps }">
+                    <v-btn variant="text" class="text-none" v-bind="dateMenuProps">
+                        {{ date_label }}
+                    </v-btn>
+                </template>
+                <v-date-picker v-model="date_picker_model"
+                    @update:model-value="date_picker_menu_open = false" />
+            </v-menu>
+            <v-btn icon @click="go_next_day()" variant="text">
+                <v-icon>mdi-chevron-right</v-icon>
+            </v-btn>
+            <v-divider vertical class="mx-1 d-none d-md-flex" />
+            <v-btn icon="mdi-help-circle-outline" @click="help_dialog?.show()" />
+            <v-tooltip :text="i18n.global.t('TOOLTIP_SETTINGS')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon="mdi-cog" :disabled="!application_config.is_loaded"
+                        @click="emits('requested_show_application_config_dialog')" />
+                </template>
+            </v-tooltip>
+        </v-app-bar>
+        <v-main class="main pa-0 ma-0">
+            <div class="overlay_target">
+                <v-overlay v-model="is_loading" class="align-center justify-center" persistent contained>
+                    <!-- 設定が取れないと is_loaded が立たず初期化が一度も走らない。
+                         スピナーのままにすると永久に固まるので、再試行の導線を出す -->
+                    <div v-if="application_config_load_failed" class="text-center">
+                        <div class="mb-2">{{ i18n.global.t('FAILED_GET_APPLICATION_CONFIG_MESSAGE') }}</div>
+                        <v-btn color="primary" @click="emits('requested_reload_application_config')">
+                            {{ i18n.global.t('RELOAD_TITLE') }}
+                        </v-btn>
+                    </div>
+                    <v-progress-circular v-else indeterminate color="primary" />
+                </v-overlay>
+            </div>
+            <div :class="is_loading ? 'hide' : 'show'" class="dashboard-content-scroll">
+                <v-container fluid class="pa-0 ma-0 dashboard-container">
+                    <v-row no-gutters class="pa-0 ma-0">
+                        <v-col cols="12" md="6" class="pa-0 ma-0 dnote_view_wrap">
+                            <DnoteView ref="dnote_view" :query="dnote_query" :checked_kyous="checked_kyous"
+                                :app_content_height="panel_height" :app_content_width="app_content_width"
+                                :fill_height="true"
+                                :application_config="application_config" :gkill_api="gkill_api" :editable="false"
+                                v-on="dashboardKyouHandlers" />
+                        </v-col>
+                        <v-col cols="12" md="6" class="pa-0 ma-0">
+                            <div class="gps-map-container">
+                                <GPSLogMap :start_date="target_date_start" :end_date="target_date_end"
+                                    :marker_time="target_date_start" :application_config="application_config"
+                                    :gkill_api="gkill_api" :app_content_height="panel_height"
+                                    @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
+                                    @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                                    ref="gps_log_map" />
+                            </div>
+                        </v-col>
+                        <v-col cols="12" class="pa-0 ma-0">
+                            <v-card class="mi-list-card pa-0 ma-0">
+                                <v-card-title class="pa-2">{{ i18n.global.t("MI_APP_NAME") }}</v-card-title>
+                                <KyouListView ref="mi_list_view" :query="mi_kyou_query" :matched_kyous="mi_kyous"
+                                    :is_focused_list="true" :list_height="mi_kyous.length * 91 + 48" :kyou_height="91"
+                                    :width="Math.max(0, app_content_width - 8)" :show_footer="true"
+                                    :show_checkbox="false" :closable="false" :is_readonly_mi_check="false"
+                                    :enable_context_menu="true" :enable_dialog="true" :show_content_only="false"
+                                    :show_timeis_plaing_end_button="false" :is_show_doc_image_toggle_button="false"
+                                    :is_show_arrow_button="false" :force_show_latest_kyou_info="true"
+                                    :show_rep_name="false" :application_config="application_config"
+                                    :gkill_api="gkill_api"
+                                    v-on="dashboardKyouHandlers" />
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </div>
+            <!-- ポート(rudbeckia)の中ではFABを出さない。理由は rykv-view.vue の同じ箇所参照 -->
+            <v-avatar v-if="!is_hosted_in_dialog" :style="floating_action_button_style()" color="primary" class="position-fixed">
+                <v-menu transition="slide-x-transition">
+                    <template v-slot:activator="{ props }">
+                        <v-btn color="white" icon="mdi-plus" variant="text" v-long-press="() => show_kftl_dialog()"
+                            v-bind="props" />
+                    </template>
+                    <v-list>
+                        <v-list-item @click="show_kftl_dialog()">
+                            <v-list-item-title>{{ i18n.global.t("KFTL_APP_NAME") }}</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_mkfl_dialog()">
+                            <v-list-item-title>{{ i18n.global.t("MKFL_APP_NAME") }}</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_add_kc_dialog()">
+                            <v-list-item-title>{{ i18n.global.t("KC_APP_NAME") }}</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_urlog_dialog()">
+                            <v-list-item-title>{{ i18n.global.t("URLOG_APP_NAME") }}</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_timeis_dialog()">
+                            <v-list-item-title>{{ i18n.global.t("TIMEIS_APP_NAME") }}</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_mi_dialog()">
+                            <v-list-item-title>{{ i18n.global.t("MI_APP_NAME") }}</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_nlog_dialog()">
+                            <v-list-item-title>{{ i18n.global.t("NLOG_APP_NAME") }}</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_lantana_dialog()">
+                            <v-list-item-title>{{ i18n.global.t("LANTANA_APP_NAME") }}</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_upload_file_dialog()">
+                            <v-list-item-title>{{ i18n.global.t("UPLOAD_APP_NAME") }}</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+            </v-avatar>
+            <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
+                v-on="dashboardKyouHandlers"
+                ref="add_kc_dialog" />
+            <AddTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
+                v-on="dashboardKyouHandlers"
+                ref="add_timeis_dialog" />
+            <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
+                v-on="dashboardKyouHandlers"
+                ref="add_lantana_dialog" />
+            <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
+                v-on="dashboardKyouHandlers"
+                ref="add_urlog_dialog" />
+            <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
+                v-on="dashboardKyouHandlers"
+                ref="add_mi_dialog" />
+            <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
+                v-on="dashboardKyouHandlers"
+                ref="add_nlog_dialog" />
+            <KFTLDialogHost :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :kyou="new Kyou()" :app_content_height="app_content_height" :enable_context_menu="true"
+                :enable_dialog="false" :app_content_width="app_content_width"
+                v-on="dashboardKyouHandlers"
+                @saved_kyou_by_kftl="onSavedKyouByKftl"
+                ref="kftl_dialog" />
+            <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :kyou="new Kyou()" :app_content_height="app_content_height" :enable_context_menu="true"
+                :enable_dialog="false" :app_content_width="app_content_width"
+                v-on="dashboardKyouHandlers"
+                @saved_kyou_by_kftl="onSavedKyouByKftl"
+                ref="mkfl_dialog" />
+            <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+                :application_config="application_config" :gkill_api="gkill_api"
+                v-on="dashboardKyouHandlers"
+                ref="upload_file_dialog" />
+            <SaveClipboardToFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+                :application_config="application_config" :gkill_api="gkill_api"
+                v-on="dashboardKyouHandlers"
+                ref="save_clipboard_to_file_dialog" />
+            <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
+                :enable_context_menu="true" :enable_dialog="true" v-on="dashboardKyouHandlers" />
+            <HelpDialog screen_name="dashboard" ref="help_dialog" />
+        </v-main>
+    </div>
+</template>
+
+<script lang="ts" setup>
+import { ref, computed, watch, nextTick } from 'vue'
+import { i18n } from '@/i18n'
+import DnoteView from './dnote-view.vue'
+import GPSLogMap from './gps-log-map.vue'
+import KyouListView from './kyou-list-view.vue'
+import RykvDialogHost from './rykv-dialog-host.vue'
+import HelpDialog from '../dialogs/help-dialog.vue'
+import AddKCDialog from '../dialogs/add-kc-dialog.vue'
+import AddTimeIsDialog from '../dialogs/add-time-is-dialog.vue'
+import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
+import AddUrlogDialog from '../dialogs/add-ur-log-dialog.vue'
+import AddMiDialog from '../dialogs/add-mi-dialog.vue'
+import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
+import KFTLDialogHost from './kftl-dialog-host.vue'
+import mkflDialog from '../dialogs/mkfl-dialog.vue'
+import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
+import SaveClipboardToFileDialog from '../dialogs/save-clipboard-to-file-dialog.vue'
+import { Kyou } from '@/classes/datas/kyou'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { DashboardViewProps } from './dashboard-view-props'
+import type { DashboardViewEmits } from './dashboard-view-emits'
+import { useDashboardView } from '@/classes/use-dashboard-view'
+
+const props = defineProps<DashboardViewProps>()
+const emits = defineEmits<DashboardViewEmits>()
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
+const dnote_view = ref<InstanceType<typeof DnoteView> | null>(null)
+const gps_log_map = ref<InstanceType<typeof GPSLogMap> | null>(null)
+const mi_list_view = ref<InstanceType<typeof KyouListView> | null>(null)
+const date_picker_menu_open = ref(false)
+
+const {
+    // Template refs
+    dashboard_root,
+    add_mi_dialog,
+    add_nlog_dialog,
+    add_lantana_dialog,
+    add_timeis_dialog,
+    add_urlog_dialog,
+    kftl_dialog,
+    add_kc_dialog,
+    mkfl_dialog,
+    upload_file_dialog,
+    save_clipboard_to_file_dialog,
+
+    // State
+    is_loading,
+    is_fetching,
+    gkill_api,
+    application_config,
+    selected_date,
+    checked_kyous,
+    mi_kyous,
+    opened_dialogs,
+
+    // Computed
+    is_view_ready,
+    panel_height,
+    page_list,
+    target_date_start,
+    target_date_end,
+    date_label,
+    date_picker_model,
+    dnote_query,
+    mi_kyou_query,
+
+    // Methods
+    write_errors,
+    write_messages,
+    navigate_to_page,
+    abort_all_fetches,
+    clear_dashboard_datas,
+    fetch_dnote_kyous,
+    fetch_mi_kyous,
+    go_prev_day,
+    go_next_day,
+    go_today: _go_today,
+    floating_action_button_style,
+    show_kftl_dialog,
+    show_add_kc_dialog,
+    show_mkfl_dialog,
+    show_timeis_dialog,
+    show_mi_dialog,
+    show_nlog_dialog,
+    show_lantana_dialog,
+    show_urlog_dialog,
+    show_upload_file_dialog,
+    show_save_clipboard_to_file_dialog: _show_save_clipboard_to_file_dialog,
+    open_rykv_dialog: _open_rykv_dialog,
+    close_rykv_dialog: _close_rykv_dialog,
+
+    // Event relay objects
+    dashboardKyouHandlers,
+    onSavedKyouByKftl,
+} = useDashboardView({
+    props,
+    emits,
+    // fetch_for_date / fetch_dnote_for_date は関数宣言なので巻き上げられる。呼ばれるのは setup 完了後
+    reload_all: () => fetch_for_date(),
+    reload_dnote: () => fetch_dnote_for_date(),
+})
+
+// Dnoteだけ取り直す。Kyou1件の追加はMiリストへ差し込めるが、Dnoteは集計なので取り直すしかない
+async function fetch_dnote_for_date(): Promise<void> {
+    const kyous = await fetch_dnote_kyous()
+    await dnote_view.value?.reload(kyous, dnote_query.value)
+}
+
+// 日付変更時: DnoteView・KyouListView それぞれのローディングを使う
+let fetch_id = 0
+async function fetch_for_date(): Promise<void> {
+    const my_id = ++fetch_id
+    abort_all_fetches()
+    clear_dashboard_datas()
+    dnote_view.value?.set_loading(true)
+    mi_list_view.value?.set_loading(true)
+    is_fetching.value = true
+    await nextTick()
+    try {
+        await Promise.all([
+            fetch_mi_kyous().then(() => {
+                if (my_id === fetch_id) mi_list_view.value?.set_loading(false)
+            }),
+            fetch_dnote_kyous().then((kyous) => {
+                if (my_id === fetch_id) dnote_view.value?.reload(kyous, dnote_query.value)
+            }),
+        ])
+    } finally {
+        // 追い越された取得は自分では倒さない。最新の取得だけが準備完了を宣言する
+        if (my_id === fetch_id) {
+            is_fetching.value = false
+        }
+    }
+}
+
+// 日付変更時にデータを再取得
+watch(selected_date, () => {
+    fetch_for_date()
+})
+
+watch(() => application_config.value.is_loaded, async (is_loaded) => {
+    if (!is_loaded) {
+        return
+    }
+    await nextTick(() => { })
+    gps_log_map.value?.centering()
+    // ApplicationConfig が来た時点で見せる。取得の完了は待たない。
+    // 待つと fetch が1本でも解決しないだけで画面全体が固まる。
+    // 進行は DnoteView / KyouListView それぞれのローディングで見せる
+    // (日付変更時の fetch_for_date と同じ形)
+    is_loading.value = false
+    await fetch_for_date()
+}, { immediate: true })
+
+// パネル高さは panel_height で決定的に決まる（DnoteView・GPSLogMapとも fill 高さ = panel_height）
+const mi_list_height_px = computed((): string => {
+    return `${Math.max(200, props.app_content_height.valueOf() - panel_height.value - 44 - 48)}px` // 44px is the height of the MI list title
+})
+const app_content_height_px = computed(() => `${props.app_content_height.valueOf()}px`)
+const overlay_target_min_width_px = computed(() => is_loading.value ? `${props.app_content_width.valueOf()}px` : '0px')
+const dashboard_view_max_width_px = computed(() => `${props.app_content_width.valueOf()}px`)
+</script>
+<style lang="css" scoped>
+.overlay_target {
+    z-index: -10000;
+    position: absolute;
+    min-height: calc(v-bind('app_content_height.toString().concat("px")'));
+    min-width: v-bind(overlay_target_min_width_px);
+}
+
+.dashboard_view_wrap {
+    overflow-x: hidden;
+    max-width: v-bind(dashboard_view_max_width_px);
+    width: 100%;
+}
+
+.main {
+    padding-top: 50px !important;
+}
+
+.dashboard-content-scroll {
+    height: v-bind(app_content_height_px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.dashboard-container {
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.gps-map-container {
+    width: 100%;
+    overflow-x: unset;
+}
+
+.gps-map-container :deep(.gps_log_map_wrap) {
+    width: 100% !important;
+}
+
+::v-deep(.kyou_list_view_card) {
+    overflow-y: scroll !important;
+    min-height: v-bind(mi_list_height_px);
+    max-height: v-bind(mi_list_height_px);
+    height: v-bind(mi_list_height_px);
+}
+
+/* DnoteViewのテーブルが横はみ出しを引き起こす場合にクリップ */
+:deep(.dnote_view) {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+:deep(.dnote_view .dnote-scroll-wrap) {
+    overflow-x: auto;
+}
+
+.hide {
+    opacity: 0;
+}
+
+.show {
+    opacity: 1;
+}
+</style>

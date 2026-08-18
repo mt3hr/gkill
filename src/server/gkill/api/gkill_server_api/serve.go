@@ -204,6 +204,17 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
+	// ポート（開発コード rudbeckia）。SPAのパスはここに書かないと直リロードで404になる
+	router.PathPrefix("/rudbeckia").Handler(http.StripPrefix("/rudbeckia",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
+			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+				return
+			}
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
 	router.PathPrefix("/saihate").Handler(http.StripPrefix("/saihate",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if ok := g.filterLocalOnly(w, r); !ok {

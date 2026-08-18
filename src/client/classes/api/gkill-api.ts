@@ -2452,12 +2452,29 @@ export class GkillAPI {
                 return this.saved_application_config
         }
 
-        private rykv_find_kyou_querys_localstorage_key = "rykv_find_kyou_querys"
-        set_saved_rykv_find_kyou_querys(querys: Array<FindKyouQuery>): void {
-                window.localStorage.setItem(this.rykv_find_kyou_querys_localstorage_key, JSON.stringify(querys))
+        /**
+         * 列状態(検索条件・スクロール位置)の保存キーにインスタンスの枝番を足す。
+         *
+         * ポート(rudbeckia)では同じ画面を複数枚開けるので、単一キーのままだと
+         * 2枚目が1枚目の列条件を上書きする。空文字は従来キーそのまま
+         * （＝単独ページと1枚目が今までの保存内容をそのまま引き継ぐ）。
+         *
+         * **枝番に uuid を使ってはいけない** ―― 復元時に同じキーを引けなくなり、
+         * 列が毎回まっさらに戻ったうえで localStorage のキーが増え続ける。
+         */
+        private with_instance_key(base_key: string, instance_key: string): string {
+                if (!instance_key || instance_key === "") {
+                        return base_key
+                }
+                return `${base_key}_${instance_key}`
         }
-        get_saved_rykv_find_kyou_querys(): Array<FindKyouQuery> {
-                const query_json_string = window.localStorage.getItem(this.rykv_find_kyou_querys_localstorage_key)
+
+        private rykv_find_kyou_querys_localstorage_key = "rykv_find_kyou_querys"
+        set_saved_rykv_find_kyou_querys(querys: Array<FindKyouQuery>, instance_key: string): void {
+                window.localStorage.setItem(this.with_instance_key(this.rykv_find_kyou_querys_localstorage_key, instance_key), JSON.stringify(querys))
+        }
+        get_saved_rykv_find_kyou_querys(instance_key: string): Array<FindKyouQuery> {
+                const query_json_string = window.localStorage.getItem(this.with_instance_key(this.rykv_find_kyou_querys_localstorage_key, instance_key))
                 if (!query_json_string) {
                         return new Array<FindKyouQuery>()
                 }
@@ -2474,7 +2491,7 @@ export class GkillAPI {
                         querys.push(FindKyouQuery.parse_find_kyou_query(querys_json[i]))
                 }
                 if (this.repair_saved_query_ids(querys) || migrated_from_legacy) {
-                        this.set_saved_rykv_find_kyou_querys(querys)
+                        this.set_saved_rykv_find_kyou_querys(querys, instance_key)
                 }
                 return querys
         }
@@ -2496,11 +2513,11 @@ export class GkillAPI {
         }
 
         private mi_find_kyou_querys_localstorage_key = "mi_find_kyou_querys"
-        set_saved_mi_find_kyou_querys(querys: Array<FindKyouQuery>): void {
-                window.localStorage.setItem(this.mi_find_kyou_querys_localstorage_key, JSON.stringify(querys))
+        set_saved_mi_find_kyou_querys(querys: Array<FindKyouQuery>, instance_key: string): void {
+                window.localStorage.setItem(this.with_instance_key(this.mi_find_kyou_querys_localstorage_key, instance_key), JSON.stringify(querys))
         }
-        get_saved_mi_find_kyou_querys(): Array<FindKyouQuery> {
-                const query_json_string = window.localStorage.getItem(this.mi_find_kyou_querys_localstorage_key)
+        get_saved_mi_find_kyou_querys(instance_key: string): Array<FindKyouQuery> {
+                const query_json_string = window.localStorage.getItem(this.with_instance_key(this.mi_find_kyou_querys_localstorage_key, instance_key))
                 if (!query_json_string) {
                         return new Array<FindKyouQuery>()
                 }
@@ -2517,17 +2534,17 @@ export class GkillAPI {
                         querys.push(FindKyouQuery.parse_find_kyou_query(querys_json[i]))
                 }
                 if (this.repair_saved_query_ids(querys) || migrated_from_legacy) {
-                        this.set_saved_mi_find_kyou_querys(querys)
+                        this.set_saved_mi_find_kyou_querys(querys, instance_key)
                 }
                 return querys
         }
 
         private rykv_scroll_indexs_localstorage_key = "rykv_scroll_indexs"
-        set_saved_rykv_scroll_indexs(indexs: Array<number>): void {
-                window.localStorage.setItem(this.rykv_scroll_indexs_localstorage_key, JSON.stringify(indexs))
+        set_saved_rykv_scroll_indexs(indexs: Array<number>, instance_key: string): void {
+                window.localStorage.setItem(this.with_instance_key(this.rykv_scroll_indexs_localstorage_key, instance_key), JSON.stringify(indexs))
         }
-        get_saved_rykv_scroll_indexs(): Array<number> {
-                const indexs_json_string = window.localStorage.getItem(this.rykv_scroll_indexs_localstorage_key)
+        get_saved_rykv_scroll_indexs(instance_key: string): Array<number> {
+                const indexs_json_string = window.localStorage.getItem(this.with_instance_key(this.rykv_scroll_indexs_localstorage_key, instance_key))
                 if (!indexs_json_string) {
                         return new Array<number>()
                 }
@@ -2540,11 +2557,11 @@ export class GkillAPI {
         }
 
         private mi_scroll_indexs_localstorage_key = "mi_scroll_indexs"
-        set_saved_mi_scroll_indexs(indexs: Array<number>): void {
-                window.localStorage.setItem(this.mi_scroll_indexs_localstorage_key, JSON.stringify(indexs))
+        set_saved_mi_scroll_indexs(indexs: Array<number>, instance_key: string): void {
+                window.localStorage.setItem(this.with_instance_key(this.mi_scroll_indexs_localstorage_key, instance_key), JSON.stringify(indexs))
         }
-        get_saved_mi_scroll_indexs(): Array<number> {
-                const indexs_json_string = window.localStorage.getItem(this.mi_scroll_indexs_localstorage_key)
+        get_saved_mi_scroll_indexs(instance_key: string): Array<number> {
+                const indexs_json_string = window.localStorage.getItem(this.with_instance_key(this.mi_scroll_indexs_localstorage_key, instance_key))
                 if (!indexs_json_string) {
                         return new Array<number>()
                 }

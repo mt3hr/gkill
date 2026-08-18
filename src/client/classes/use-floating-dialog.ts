@@ -648,17 +648,39 @@ export function useFloatingDialog(
     raise_dialog_history_entries(owners)
   }
 
+  // iframe の中で起きた pointerdown / focusin は**親のDOMへ一切伝わらない**ので、
+  // 本文が iframe のダイアログ（マニュアル・チュートリアル・プラグイン本文）は
+  // 上の2つだけだと「本文をクリックしても前面に来ない」。ヘッダを掴んだときしか上がらない。
+  //
+  // iframe をクリックするとフォーカスが入れ子の閲覧文脈へ移り、
+  // 親では window の blur が起きて `document.activeElement` がその iframe になる。
+  // 親から観測できる合図はこれだけなので、これを前面化の入口にする。
+  //
+  // 別アプリへ切り替えたときも window の blur は起きるが、そのとき
+  // activeElement が自分の中の iframe だということは直前に本文を触っていたということで、
+  // つまりすでに最前面。`raise_z_order` は最前面なら何もしないので実害は無い。
+  function onWindowBlurForBringToFront(): void {
+    const el = bring_to_front_target
+    if (!el) return
+    const active = document.activeElement
+    if (!(active instanceof HTMLIFrameElement)) return
+    if (!el.contains(active)) return
+    onBringToFront()
+  }
+
   function attach_bring_to_front(el: HTMLElement): void {
     detach_bring_to_front()
     bring_to_front_target = el
     el.addEventListener("pointerdown", onBringToFront, true)
     el.addEventListener("focusin", onBringToFront, true)
+    window.addEventListener("blur", onWindowBlurForBringToFront)
   }
 
   function detach_bring_to_front(): void {
     if (!bring_to_front_target) return
     bring_to_front_target.removeEventListener("pointerdown", onBringToFront, true)
     bring_to_front_target.removeEventListener("focusin", onBringToFront, true)
+    window.removeEventListener("blur", onWindowBlurForBringToFront)
     bring_to_front_target = null
   }
 

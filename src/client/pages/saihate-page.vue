@@ -133,7 +133,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref } from 'vue'
+import { useTutorialOnStartup } from '@/classes/use-tutorial-on-startup'
 import { i18n } from '@/i18n'
 import { Kyou } from '@/classes/datas/kyou'
 import AddKCDialog from './dialogs/add-kc-dialog.vue'
@@ -215,11 +216,7 @@ const {
     logout,
 } = useSaihatePage()
 
-watch(application_config, (config) => {
-    if (config.is_loaded && config.show_tutorial_on_startup) {
-        nextTick(() => tutorial_dialog.value?.show())
-    }
-})
+useTutorialOnStartup(application_config, tutorial_dialog)
 </script>
 <style lang="css" scoped>
 .overlay_target {

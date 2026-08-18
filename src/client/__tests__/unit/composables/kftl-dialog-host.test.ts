@@ -4,15 +4,24 @@
  * ＋メニューを押すたびに1枚増える（従来は「開いていれば再フォーカスするだけ」だった）。
  * 位置とサイズの保存キーはスロット番号で分けるので、番号の払い出しをここで固定する。
  */
-import { describe, test, expect, vi } from 'vitest'
+import { describe, test, expect, vi, beforeEach } from 'vitest'
 
-import { KFTL_DIALOG_MAX_COUNT, useKftlDialogHost } from '@/classes/use-kftl-dialog-host'
+import {
+    KFTL_DIALOG_MAX_COUNT,
+    reset_kftl_dialog_host_slots_for_test,
+    useKftlDialogHost,
+} from '@/classes/use-kftl-dialog-host'
 
 function make_host() {
     const emits = vi.fn()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return useKftlDialogHost({ emits: emits as any })
 }
+
+// スロット番号はモジュール共有（ホスト単位ではない）。テスト間で持ち越さないよう毎回戻す
+beforeEach(() => {
+    reset_kftl_dialog_host_slots_for_test()
+})
 
 describe('useKftlDialogHost', () => {
     test('最初は1枚も開いていない', () => {
@@ -98,6 +107,55 @@ describe('useKftlDialogHost', () => {
 
         expect(focus_newest).toHaveBeenCalledTimes(1)
         expect(host.opened_dialogs.value.length).toBe(KFTL_DIALOG_MAX_COUNT)
+    })
+
+    /**
+     * slot_index は `kftl-dialog` / `kftl-dialog-2` … という useFloatingDialog の
+     * 保存キーそのもの。ホスト単位で採番すると、2つのホストがそれぞれ 0 を配って
+     * 位置とサイズを奪い合う。ポート(rudbeckia)ではポート自身とホストした各画面が
+     * 同時に KFTLDialogHost を持つので、必ず衝突する
+     */
+    test('2つのホストが同じスロット番号を配らない', () => {
+        const host_a = make_host()
+        const host_b = make_host()
+
+        host_a.show()
+        host_b.show()
+        host_a.show()
+
+        const all_slots = [
+            ...host_a.opened_dialogs.value.map(dialog => dialog.slot_index),
+            ...host_b.opened_dialogs.value.map(dialog => dialog.slot_index),
+        ]
+        expect(new Set(all_slots).size, 'ホストをまたいでスロット番号が重複している').toBe(all_slots.length)
+    })
+
+    test('上限はホストをまたいで効く', () => {
+        const host_a = make_host()
+        const host_b = make_host()
+
+        for (let i = 0; i < KFTL_DIALOG_MAX_COUNT; i++) {
+            host_a.show()
+        }
+        host_b.show()
+
+        expect(
+            host_a.opened_dialogs.value.length + host_b.opened_dialogs.value.length,
+            'ホストごとに上限が効いていて合計が上限を超えている',
+        ).toBe(KFTL_DIALOG_MAX_COUNT)
+    })
+
+    test('閉じたスロット番号は別のホストが使える', () => {
+        const host_a = make_host()
+        const host_b = make_host()
+
+        host_a.show()
+        host_a.show()
+        host_a.close(host_a.opened_dialogs.value[0].id)
+
+        host_b.show()
+
+        expect(host_b.opened_dialogs.value[0].slot_index).toBe(0)
     })
 
     // どのウィンドウから来たかに依らないので、同じハンドラ束を全枚数へ配れる

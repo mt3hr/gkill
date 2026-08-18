@@ -34,7 +34,7 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 
 **Prerequisites:** Go 1.26.4+ (`src/server/go.mod` declares `go 1.26.4`), Node.js 20.19+ (24.x recommended — `package.json` has no `engines` field, so this is not enforced), `npm i`
 
-**Dev server backend target:** `npm run dev` runs `src/tools/dev.mjs`, a thin wrapper that strips `--api` / `--api-target` (Vite errors on unknown CLI options) and passes the value to Vite as `GKILL_API_PROXY_TARGET`; all other args pass through untouched. Accepts a full URL, a bare port (`--api=19999` → `http://127.0.0.1:19999`), or `host:port`. Precedence: `--api` > `GKILL_API_PROXY_TARGET` > `http://localhost:9999`. `vite.config.ts` proxies `/api`, `/files`, `/zip_cache` and `/resources/manual` to that target — SPA routes (`/rykv`, `/kftl`, `/mi`, …) are deliberately not proxied since vue-router owns them in dev.
+**Dev server backend target:** `npm run dev` runs `src/tools/dev.mjs`, a thin wrapper that strips `--api` / `--api-target` (Vite errors on unknown CLI options) and passes the value to Vite as `GKILL_API_PROXY_TARGET`; all other args pass through untouched. Accepts a full URL, a bare port (`--api=19999` → `http://127.0.0.1:19999`), or `host:port`. Precedence: `--api` > `GKILL_API_PROXY_TARGET` > `http://localhost:9999`. `vite.config.ts` proxies `/api`, `/files`, `/zip_cache` and `/resources/manual` to that target — SPA routes (`/rykv`, `/kftl`, `/mi`, `/rudbeckia`, …) are deliberately not proxied since vue-router owns them in dev.
 
 **E2E test environment:** `$HOME/gkill_test` as dedicated gkill home. `npm run test_client_e2e` automatically cleans, starts gkill_server (fresh admin, no password) and a Vite dev server, runs Playwright, and stops both. See `src/client/__tests__/e2e/run-e2e.mjs`.
 
@@ -182,9 +182,9 @@ Key packages:
 
 Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + PWA (vite-plugin-pwa + Workbox)
 
-- `router/index.ts` — 13 page routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, dashboard, set_new_password, register_first_account, shared_page, shared_mi) + 1 redirect-only route (`/regist_first_account` → `/register_first_account`, query preserved)
-- `pages/views/` — 203 view components, `pages/dialogs/` — 116 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend/correlation graph components (client-side aggregation, no server API)
-- `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,300 lines), client-side API wrapper
+- `router/index.ts` — 14 page routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, dashboard, rudbeckia, set_new_password, register_first_account, shared_page, shared_mi) + 1 redirect-only route (`/regist_first_account` → `/register_first_account`, query preserved)
+- `pages/views/` — 203 view components, `pages/dialogs/` — 117 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend/correlation graph components (client-side aggregation, no server API)
+- `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,400 lines), client-side API wrapper
 - `classes/kftl/` — KFTL parser (50 statement types; the Go side has 47). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
 - `classes/cascade-delete-kyou.ts` — cascade delete for Kyou. The attached Tag / Text / Notification and the ReKyou / MiReKyou that reference the Kyou are looked up in reverse via `GetReKyousByTargetID` / `GetMiReKyousByTargetID` and logically deleted together with it. Depth cap 32 (`max_cascade_depth`), 16 lookups in flight per level (`request_chunk_size`). **The Kyou itself is deleted last** (deleting it first makes the server's `FindKyous` drop the referencing records from its results, so the reverse lookup can no longer find them). No TXID / `commit_tx` is used, so a partial commit is possible. On failure: ERR900093 `cascade_delete_depth_exceeded` / ERR900094 `cascade_delete_failed`, i18n key `FAILED_CASCADE_DELETE_KYOU_MESSAGE`
 - `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target; `/zip_cache/.*` on NavigationRoute denylist)
@@ -285,6 +285,39 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 - E2E で `clickFabButton()` を使ってはいけない ―― 先に `dismissFloatingDialogs()` を呼ぶので、開いているメモ帳ウィンドウを閉じてしまい枚数が増えない
 - 守るテスト: `floating-dialog-z-order.test.ts` / `kftl-dialog-host.test.ts` / `e2e/kftl-multi-dialog.spec.ts`
 
+**ポート（開発コード rudbeckia）に画面をウィンドウとして載せる**（2026-08-17）。`/rudbeckia` は背景と FAB だけの1画面で、ライフログビュー / タスク / 実行中 / ダッシュボードをフローティングウィンドウとして開く。**開発コード `rudbeckia` は URL・ファイル名・識別子・保存キー・マニュアルのファイル名に使い、「ポート」は i18n の値とマニュアル本文にだけ出す。** 守るべき約束:
+- **ホストするのはページではなくビュー**（`rykv-view` / `mi-view` / `plaing-time-is-view` / `dashboard-view`）。ページは ApplicationConfig の取得・テーマ・`useConfigStructSync`・メッセージ表示・`resize_content`・`reset_dialog_history` を持つので、ダイアログの中に N 個置くわけにいかない。ポートがその1つぶんを担う
+- **`v-app-bar` / `v-navigation-drawer` / `v-main` を持つビューは `<v-layout :height :width>` で包む。** Vuetify は親レイアウトがあると `rootZIndex` を 100 下げ、レイアウト項目を `fixed` から `absolute` へ切り替える（`vuetify/lib/composables/layout.js:94,211,262`）。包まないと**画面最上部へ飛んでポート自身の上に重なる**。レイアウト部品を持たない実行中(plaing)は包まない
+- **包んだらビューのルートを箱いっぱいに重ねる。** `absolute` になったバー類の基準は `<v-layout>` ではなく最も近い位置指定済み祖先＝`.rykv_view_wrap` 等。`.dashboard_view_wrap` / `.plaing_timeis_view_wrap` は `position: relative` を持たないので埋め込み用の非スコープ CSS で付ける
+- **ビューの scoped CSS に `100vh` / `100vw` とメディアクエリを書かない。** ダイアログの中では基準が画面ではなく箱。`props.app_content_*` から `v-bind` する
+- **`drawer_mode_is_mobile` は `props.app_content_width` の computed。** 初期化時の1回代入だとダイアログをリサイズしてもドロワーの一時表示モードが切り替わらない。rykv と mi は対称なので必ず両方へ
+- **ホストしたビューは自前の FAB を出さない**（`is_hosted_in_dialog`）。`.position-fixed` は `position: fixed` なのでダイアログを抜けて画面右下へ居座り、ポートの FAB と重なる。ついでに打刻メモ帳ダイアログの二重 FAB もこれで消えた
+- **ポートの FAB は `.position-fixed-rudbeckia`（`z-index: 2000`）。** 素の `.position-fixed` だとウィンドウ（`z-index: 1100 + 並び順`）に覆われ、**唯一の操作導線が押せなくなる**。Vuetify の overlay(2400) は追い越さないこと（追い越すと FAB 自身のメニューが下へ潜る）
+- **ホストしたビューで Enter / Ctrl+V を登録しない。** `useScopedEnterForKFTL` / `useScopedCtrlVForClipboard` は `window` にキャプチャで張るので、4画面ぶん登録すると1回の Enter でメモ帳が4枚開く
+- **ホストしたビューの画面切替メニューは `router.replace` しない。** `navigate_to_page` は `reset_dialog_history()`（モジュール共有）を呼ぶので、ポートで開いている他のウィンドウまで一斉に閉じる。`requested_navigate_page` を上げてホストに決めさせる
+- **位置とサイズの保存キー（`slot_index`）と、中央からずらす段数（`cascade_index`）は別物。** 前者は種類ごと、後者は種類をまたいだ採番。ずらす量を `slot_index` で決めると4種類とも 0 になり、**4枚が完全に重なって1枚にしか見えない**
+- **ウィンドウの未リサイズ時サイズは非スコープ CSS で確定させる**（Teleport 先には `data-v-` が付かない）。確定させたぶん ResizeObserver の実測をそのまま子へ渡す。`kftl-dialog.vue:72-82` の「`userSize` が無いときは既定値」ガードと**併用しない**（併用すると固定した高さが無視される）
+
+**複数枚（列状態の分離）**
+- **列の検索条件とスクロール位置の保存キーはインスタンスごとに分ける。** `gkill-api.ts` の `set/get_saved_{rykv,mi}_{find_kyou_querys,scroll_indexs}` は `instance_key` を**必須引数**で取る（省略可能にすると渡し忘れが黙って通り、2枚目が1枚目を上書きする）。空文字＝従来キーで、単独ページと1枚目が今までの保存内容を引き継ぐ
+- **枝番に uuid を使わない。** `${base}_${N+1}` にすること。uuid だと復元時に同じキーを引けず、列が毎回まっさらに戻ったうえで localStorage のキーが増え続ける
+- **slot N を slot 0 の保存値から種付けしない。** `query_id` が重複し、`query_id → 列` の逆引きが別インスタンスへ誤配送する。2枚目は既定クエリ1本で開くのが正しい
+- **メモ帳ウィンドウの slot 採番はホスト単位ではなくアプリ全体で1つ**（`use-kftl-dialog-host.ts` のモジュール共有 Set）。ポートではポート自身とホストした各画面が同時に `KFTLDialogHost` を持つので、ホスト内だけの採番では必ず `kftl-dialog` の保存キーが衝突する。ホストの unmount で掴んだ番号を返すこと
+
+**画面間の変更伝播（`classes/kyou-change-bus.ts`）**
+- **購読側へ渡してよいのは emit を含まない適用関数だけ。** 中継束（`crudRelayHandlers`）を渡すと適用のたびに `emits(...)` が走ってホストが再 publish し、通知が無限に往復する。そのために `onDeletedKyou` は `apply_deleted_kyou`（適用のみ）と `onDeletedKyou`（適用＋emit）に割ってある
+- **通知は seq 付きの追記ログ。** スカラー（最新の1件）だと同じ tick に複数件起きたとき最後の1件しか見えず、残りが黙って落ちる（KFTLの複数行保存が典型）
+- **`KyouChangeBus.last_seq` は Ref ではなくメソッド。** Ref をそのまま公開すると、チャネルのオブジェクトが `reactive()` に包まれたとき Vue が自動アンラップして `.value` が `undefined` になり、**伝播が黙って効かなくなる**（テストのハーネスが実際に踏んだ）
+- **バスは props で配る。`provide`/`inject` にしない。** 既存のテストは `useRykvView({props, emits})` をコンポーネントインスタンスの外から素で呼ぶので、`inject()` は警告を出して既定値へ落ちる ＝ テストでは伝播が効かないのに緑になる
+- **`new_reload_batch()` は発生元のビューが採番**し、自分のローカル適用と通知の両方に同じ値を使う。ホスト側で採番すると `kyou-reload.ts:226` の合流条件（`started_at >= requested_at`）に間に合わず、同じ Kyou を画面の枚数ぶん取りに行く
+- **自分が出した通知は受けない**（`origin_id`）。受けると発生元が二重適用する。追加は `insert_kyou_sorted` の id 重複判定で救われるが、削除と引き直しは救われない
+- **`reload_list` は1ドレイン1回に畳む。** 畳まないと1回の KFTL 保存で開いている画面ぶんの全件検索が走る
+- **後から開いたウィンドウは購読開始時点の最大 seq から始める。** 0 から始めると過去の変更を全部再生する
+- **`requested_reload_kyou` を握り潰さない。** タグ・テキスト・通知の変更はこれしか出さないので、配らないと付随データの変更が他の画面に一切届かない
+- **`requested_update_check_kyous` は配らない。** 列ごとの選択状態であり、rykv/mi では未実装（throw する）
+- ポートのFABから追加した記録も配る（発生元 `rudbeckia-page`）。配らないと「＋から足したのに並べている一覧に出ない」になる
+- 守るテスト: `e2e/rudbeckia.spec.ts` / `kyou-change-bus.test.ts` / `kyou-change-propagation.test.ts` / `dashboard-view-reload.test.ts` / `dashboard-page-reload.test.ts` / `column-view-init-source-scan.test.ts` / `kftl-dialog-host.test.ts` / `rykv・mi-view-initial-load.test.ts`（対）
+
 **Mi の板名の並び順と板ツリーのクリック**（2026-08-16）。純関数は `classes/mi-board-names.ts`、守るテストは `mi-board-names.test.ts` / `mi-board-query.test.ts`。
 - **板名プルダウンの並び順は ApplicationConfig の板ツリーが正。** `get_mi_board_list` は Go の map を回して集めているので**順序を保証しない**（`dao/reps/mi_repositories.go` / `mi_re_kyou_repositories.go`。interface の doc コメントにも明記）。素で `:items` に渡すと読み込むたびに並びが入れ替わるので、5箇所の `v-select`（add/edit Mi・add/edit MiReKyou・設定の既定の板）はどれも `sort_mi_board_names_by_config_order()` を通す
 - 並べ替えは **`computed`** で表現する。`use-edit-mi-view.ts` / `use-mi-re-kyou-schedule-fields.ts` には `application_config` の watch が無く、ある側の watch も**参照同一性**しか見ないので（設定ダイアログでの並べ替えのような deep な変更では発火しない）、代入時に1回ソートすると板を並べ替えても追随しない。API の生の一覧は `mi_board_names_source` に持ち、`update_board_name()` の push 先もそちら
@@ -318,7 +351,7 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 
 **Naming convention (identifiers):** データクラスのプロパティ/メソッド・ローカル変数・通常関数は snake_case（Go 側 JSON タグとの写像）。コンポーザブルは `useXxx`、イベントコールバックは `onXxx`、CRUD リレーハンドラ束は `xxxHandlers`（束の生成は `kyou-view-relay.ts` に一元化。いずれも camelCase）。型は PascalCase、enum メンバーは snake_case。`@typescript-eslint/naming-convention` で機械検査される（`eslint.config.js` の `app/naming-convention` ブロック。対象は `src/client` 本体のみで、`__tests__`・`src/mcp`・`src/tools`・`*.d.ts` は別流儀として対象外）。
 
-**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 914 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
+**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 918 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
 
 ### MCP Server — `src/mcp/`
 
