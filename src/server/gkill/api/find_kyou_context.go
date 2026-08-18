@@ -16,7 +16,6 @@ type FindKyouContext struct {
 	ParsedFindQuery                  *find.FindQuery            `json:"parsed_find_query"`
 	Repositories                     *reps.GkillRepositories    `json:"repositories"`
 	MatchReps                        map[string]reps.Repository `json:"match_reps"`
-	AllTags                          map[string]reps.Tag        `json:"all_tags"`
 	AllHideTagsWhenUnchecked         map[string]reps.Tag        `json:"all_hide_tags_when_unchecked"`
 	MatchHideTagsWhenUncheckedKyou   map[string]reps.Tag
 	MatchHideTagsWhenUncheckedTimeIs map[string]reps.Tag

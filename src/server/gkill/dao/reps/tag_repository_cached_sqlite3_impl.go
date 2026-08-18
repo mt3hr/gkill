@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   CREATE_TIME_UNIX NOT NULL,
   UPDATE_TIME_UNIX NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG table statement %s: %w", dbName, err)
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG table to %s: %w", dbName, err)
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 	}
 
 	indexTargetIDUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_TARGET_ID_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(TARGET_ID, UPDATE_TIME_UNIX DESC);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexTargetIDUnixSQL))
+	gkill_log.LogSQL(ctx, indexTargetIDUnixSQL)
 	indexTargetIDUnixStmt, err := cacheDB.PrepareContext(ctx, indexTargetIDUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_TARGET_ID_UNIX index statement %s: %w", dbName, err)
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexTargetIDUnixSQL))
+	gkill_log.LogSQL(ctx, indexTargetIDUnixSQL)
 	_, err = indexTargetIDUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_TARGET_ID_UNIX index to %s: %w", dbName, err)
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 	}
 
 	indexIDUpdateTimeUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_ID_UPDATE_TIME_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexIDUpdateTimeUnixSQL))
+	gkill_log.LogSQL(ctx, indexIDUpdateTimeUnixSQL)
 	indexIDUpdateTimeUnixStmt, err := cacheDB.PrepareContext(ctx, indexIDUpdateTimeUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME_UNIX index statement %s: %w", dbName, err)
@@ -107,10 +107,16 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexIDUpdateTimeUnixSQL))
+	gkill_log.LogSQL(ctx, indexIDUpdateTimeUnixSQL)
 	_, err = indexIDUpdateTimeUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME_UNIX index to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	// FindTags は appendOrderBy=true 固定で `ORDER BY RELATED_TIME_UNIX DESC` を出す。
+	// 索引が無いと、タグフィルタが有効な検索(rykvの既定)のたびに全最新タグ行の一時Btreeソートになる。
+	if err := sqlite3impl.EnsureUnixColumnIndex(ctx, cacheDB, dbName, "RELATED_TIME_UNIX"); err != nil {
 		return nil, err
 	}
 
@@ -141,7 +147,7 @@ WHERE TAG1.TARGET_ID = ?
   )
 ORDER BY TAG1.UPDATE_TIME_UNIX DESC
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", getTagsByTargetIDSQL))
+	gkill_log.LogSQL(ctx, getTagsByTargetIDSQL)
 	getTagsByTargetIDStmt, err := cacheDB.PrepareContext(ctx, getTagsByTargetIDSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get target id sql: %w", err)
@@ -180,7 +186,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
   ?,
   ?
 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", addTagInfoSQL))
+	gkill_log.LogSQL(ctx, addTagInfoSQL)
 	addTagInfoStmt, err := cacheDB.PrepareContext(ctx, addTagInfoSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add tag info sql: %w", err)
@@ -202,7 +208,7 @@ WHERE TAG1.IS_DELETED = 0
       AND TAG2.UPDATE_TIME_UNIX > TAG1.UPDATE_TIME_UNIX
   )
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", getAllTagNamesSQL))
+	gkill_log.LogSQL(ctx, getAllTagNamesSQL)
 	getAllTagNamesStmt, err := cacheDB.PrepareContext(ctx, getAllTagNamesSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get all tag names sql: %w", err)
@@ -281,7 +287,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find tags sql: %w", err)
@@ -294,7 +300,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -439,7 +445,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get tag histories sql: %w", err)
@@ -452,7 +458,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG: %w", err)
@@ -571,7 +577,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get tag by name sql %s: %w", tagname, err)
@@ -584,7 +590,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG: %w", err)
@@ -652,7 +658,7 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 		target_id,
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", t.getTagsByTargetIDSQL), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, t.getTagsByTargetIDSQL, queryArgs)
 	rows, err := t.getTagsByTargetIDStmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG: %w", err)
@@ -802,7 +808,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + ` (
   ?,
   ?
 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	insertStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add tag sql %s: %w", sql, err)
@@ -839,7 +845,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + ` (
 				tag.CreateTime.Unix(),
 				tag.UpdateTime.Unix(),
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			gkill_log.LogSQLParams(ctx, sql, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at insert in to TAG %s: %w", tag.ID, err)
@@ -929,7 +935,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get tag histories sql: %w", err)
@@ -942,7 +948,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG: %w", err)
@@ -1018,7 +1024,7 @@ func (t *tagRepositoryCachedSQLite3Impl) AddTagInfo(ctx context.Context, tag Tag
 		tag.CreateTime.Unix(),
 		tag.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", t.addTagInfoSQL), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, t.addTagInfoSQL, queryArgs)
 	_, err := t.addTagInfoStmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to TAG %s: %w", tag.ID, err)
@@ -1032,7 +1038,7 @@ func (t *tagRepositoryCachedSQLite3Impl) GetAllTagNames(ctx context.Context) ([]
 	defer t.m.RUnlock()
 	var err error
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", t.getAllTagNamesSQL))
+	gkill_log.LogSQL(ctx, t.getAllTagNamesSQL)
 	rows, err := t.getAllTagNamesStmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at select all tag names from TAG: %w", err)
@@ -1126,7 +1132,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	gkill_log.LogSQL(ctx, sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags sql: %w", err)
@@ -1139,7 +1145,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	gkill_log.LogSQLParams(ctx, sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG: %w", err)
