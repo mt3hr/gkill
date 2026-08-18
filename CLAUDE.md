@@ -239,22 +239,24 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 - dashboard は列を持たないが同じ方針。初回ロードは日付変更時と同じ `fetch_for_date()` に寄せ、パネル単位のローディングで進行を見せる
 - 守るテスト: `rykv-view-initial-load.test.ts` / `mi-view-initial-load.test.ts`（対）/ `column-view-init-source-scan.test.ts`（ソース走査）/ `dashboard-page-reload.test.ts` の「ApplicationConfig 取得の失敗」節 / `e2e/column-view-initial-load.spec.ts`
 
-**期間の広い検索は窓に分割して引く**（2026-08-18）。`classes/kyou-search-windows.ts` の
-`build_search_windows()` が「新しい順の窓」を返し、`use-rykv-view.ts` の `search()` が窓ごとに
-`get_kyous` を投げて列へ**追記**する。狙いは総処理量の削減ではなく、
-**最初の行が出るまでの時間とサーバのピークメモリ**（全期間を1回で引くとサーバは全件を作ってから返す）。守るべき約束:
-- **分割してよい条件の判定は `can_split_search_into_windows()` の1箇所だけ。** レコード単体で合否が決まる検索しか分割できない。
-  `for_mi`（並び替えキーが related_time でない）・TimeIs絞り込み（サーバは同じ期間でTimeIsも引くので、
-  窓をまたぐTimeIsに覆われた Kyou が落ちる）・地図（GPSログも同じ期間で引かれる）・`plaing_time`・`is_image_only`・
-  上限（`calendar_end_date`）が無いもの、は**分割してはいけない**。緩めると**エラーも出ないまま結果が欠ける**
-- **窓の境界は1秒ずらす。** サーバは `time.Unix()`（秒へ切り捨て）で比べるので、ミリ秒だけずらすと
-  隣り合う窓が同じ秒を指し、その秒のレコードが両方の窓に出る
-- **2窓目以降は in-place で伸ばす。** 参照ごと差し替えると `focused_kyous_list` のエイリアスが切れる
-- **世代照合（`search_seqs`）は窓ごとに行う。** 新しい検索が始まったら残りの窓は投げない。
-  `abort_controllers` は列ごとに1つのまま、値を「いま飛んでいる窓」へ差し替える
-- **件数カレンダーと Dnote は窓ごとに繋ぎ直さない**（`update_focused_kyous_list` は全窓のあと1回）
-- SWキャッシュの掃除も検索1回につき1度だけ
-- 守るテスト: `kyou-search-windows.test.ts` / `rykv-view-search-routing.test.ts` の「期間の広い検索は窓に分割して引き」「mi板の列は期間が広くても分割しない」
+**検索を期間の窓へ刻んで複数回 `get_kyous` を投げてはいけない**（2026-08-18 に入れて 08-19 に撤去）。
+狙いは「最初の行が出るまでの時間」とサーバのピークメモリだったが、3つとも外した。
+- **総時間が伸びる。** 1リクエストぶんの固定費が窓の数だけ掛かる ―― `getAllTags`（全repの全タグ走査）は
+  rykv の既定クエリでは `tags` が非nullなので `find_filter.go:106` の条件が必ず真になり**毎回**走る。
+  repのファンアウトと最新版アドレスのスナップショットも同じ。窓数は既定31日で3、1年で6、下限なしで10
+- **「検索が終わってもスピナーが回り続ける」ように見える。** 1窓目の結果を列へ入れて表示するのに、
+  スピナーを消すのは全窓が終わったあとだから
+- **静かに取りこぼす。** サーバの期間判定は2段階で精度が違う ―― SQL は `.Unix()`（秒切り捨て）、
+  `find_filter.go` の `passesPeriodFilter` は `time.Before`/`After`（ナノ秒）。境界を**秒**でずらすと、
+  境界 `S` に対する `S-0.5秒` のレコードが新しい側では `Before(S)` に弾かれ、古い側では
+  `After(S-1秒)` に弾かれて**どちらの窓にも入らない**（秒未満を保持できるプラグイン・gitの記録が対象）
+
+ピークメモリのために分割するなら、固定費を1回で済ませられる**サーバの中**でやること。
+**列に部分的な結果を出さないこと** ―― 件数カレンダー・Dnote・Ryuu・フッタの件数はどれも
+「列が全件を持っている」前提で書かれていて、部分状態ではエラーも出さずに間違える
+（Ryuu は列の配列をサーバ検索の代わりに使うので、間違った「近くの記録」を返す）。
+フッタの件数は `has_loaded` が立つまで出さない。守るテストは
+`rykv-view-search-routing.test.ts` の「検索は期間が広くても1回で引く」「検索中の列に部分的な結果を出さない」。
 
 **記録の追加は再検索せず、その1件を列へ差し込む**（2026-08-15）。追加系ビューは `registered_kyou` だけを出し、`requested_reload_list` は「サーバが Kyou を返さなかった」ときのフォールバックに退いた。受け口は `use-registered-kyou-local-insert.ts` 1つで、rykv / mi / dashboard がこれを使う。判定と整列は純関数 `classes/kyou-local-insert.ts` にあり、意味論は `server/gkill/api/find_filter.go` の写し。守るべき約束:
 - **`/api/get_kyou` は FindQuery を受けない**ので、「その列の条件に一致するか」はクライアントで判定する。判定できるのは rep / タグ（完全一致・大小無視、`"no tags"` 番兵つき）/ カレンダー（両端含む）/ 時間帯 / mi の板名（大小**区別**）・完了状態・`include_*_mi`。判定できないのは本文検索・TimeIs・地図・plaing・画像のみ・`rep_types`（rep_name→rep_type の写像がクライアントに無い）で、**これらを使う列だけ従来どおり再検索する**。判定を足すときは「判定できないものを判定できると誤って宣言しない」ことがすべて —— 誤ると例外もエラーも出ずに黙って一致しない行が出る
