@@ -68,10 +68,11 @@ func (r *kftlMiRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.WriteMiRep.AddMiInfo(ctx, mi); err != nil {
 		return fmt.Errorf("error at add mi info id=%s: %w", r.RequestID, err)
 	}
-	repName, _ := r.Ctx.Repositories.WriteMiRep.GetRepName(ctx)
+	repName, repNameErr := r.Ctx.Repositories.WriteMiRep.GetRepName(ctx)
+	logGetRepNameFailure(ctx, "mi", mi.ID, repNameErr)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	_ = r.Ctx.Repositories.WriteThroughMiCache(ctx, mi)
+	logWriteThroughCacheFailure(ctx, "mi", mi.ID, r.Ctx.Repositories.WriteThroughMiCache(ctx, mi))
 	return nil
 }
 
@@ -106,9 +107,9 @@ func newKFTLStartMiStatementLine(lineText string, ctx *KFTLStatementLineContext)
 func (l *kftlStartMiStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
-func (l *kftlStartMiStatementLine) GetLabelName() string                 { return "mi" }
+func (l *kftlStartMiStatementLine) GetLabelName() string                  { return "mi" }
 func (l *kftlStartMiStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlStartMiStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlStartMiStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlMiTitleStatementLine reads the Mi title.
 // Mirrors: kftl-mi-title-statement-line.ts
@@ -131,9 +132,9 @@ func (l *kftlMiTitleStatementLine) ApplyThisLineToRequestMap(_ context.Context, 
 	l.req.title = l.lineText
 	return nil
 }
-func (l *kftlMiTitleStatementLine) GetLabelName() string                 { return "miTitle" }
+func (l *kftlMiTitleStatementLine) GetLabelName() string                  { return "miTitle" }
 func (l *kftlMiTitleStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlMiTitleStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlMiTitleStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlMiBoardNameStatementLine reads the Mi board name.
 // Mirrors: kftl-mi-board-name-statement-line.ts
@@ -156,9 +157,9 @@ func (l *kftlMiBoardNameStatementLine) ApplyThisLineToRequestMap(_ context.Conte
 	l.req.boardName = l.lineText
 	return nil
 }
-func (l *kftlMiBoardNameStatementLine) GetLabelName() string                 { return "miBoardName" }
+func (l *kftlMiBoardNameStatementLine) GetLabelName() string                  { return "miBoardName" }
 func (l *kftlMiBoardNameStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlMiBoardNameStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlMiBoardNameStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlMiLimitTimeStatementLine reads the Mi limit time (optional, may be empty).
 // After this, next constructor reverts to None.
@@ -189,9 +190,9 @@ func (l *kftlMiLimitTimeStatementLine) ApplyThisLineToRequestMap(_ context.Conte
 	l.req.limitTime = &t
 	return nil
 }
-func (l *kftlMiLimitTimeStatementLine) GetLabelName() string                 { return "miLimitTime" }
+func (l *kftlMiLimitTimeStatementLine) GetLabelName() string                  { return "miLimitTime" }
 func (l *kftlMiLimitTimeStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlMiLimitTimeStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlMiLimitTimeStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlMiEstimateStartTimeStatementLine reads the Mi estimate start time (optional).
 // Mirrors: kftl-mi-estimate-start-time-statement-line.ts

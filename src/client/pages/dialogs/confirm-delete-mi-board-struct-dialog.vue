@@ -30,36 +30,16 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
 import ConfirmDeleteMiBoardStructView from '../views/confirm-delete-mi-board-struct-view.vue';
 import type { ConfirmDeleteMiBoardStructDialogEmits } from './confirm-delete-mi-board-struct-dialog-emits';
 import type { ConfirmDeleteMiBoardStructDialogProps } from './confirm-delete-mi-board-struct-dialog-props';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { MiBoardStructElementData } from '@/classes/datas/config/mi-board-struct-element-data';
 import { i18n } from '@/i18n'
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
+import { useConfirmDeleteMiBoardStructDialog } from '@/classes/use-confirm-delete-mi-board-struct-dialog'
 
-defineProps<ConfirmDeleteMiBoardStructDialogProps>()
+const props = defineProps<ConfirmDeleteMiBoardStructDialogProps>()
 const emits = defineEmits<ConfirmDeleteMiBoardStructDialogEmits>()
+const { mi_board_struct, is_show_dialog, ui, show, hide } = useConfirmDeleteMiBoardStructDialog({ props, emits })
 defineExpose({ show, hide })
-
-const mi_board_struct: Ref<MiBoardStructElementData> = ref(new MiBoardStructElementData())
-
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-const ui = useFloatingDialog("confirm-delete-mi-board-struct-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
-
-async function show(mi_board_struct_obj: MiBoardStructElementData): Promise<void> {
-  mi_board_struct.value = mi_board_struct_obj
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  mi_board_struct.value = new MiBoardStructElementData()
-}
 </script>

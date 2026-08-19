@@ -2,9 +2,7 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -71,19 +69,9 @@ var (
 			ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
 			defer stop()
 
-			go func() {
-				for _, preLoadUserNames := range gkill_options.PreLoadUserNames {
-					userID := preLoadUserNames
-					device, err := common.GetGkillServerAPI().GetDevice()
-					if err != nil {
-						err = fmt.Errorf("error at get device name: %w", err)
-						slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-						continue
-					}
-					common.GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
-				}
-			}()
-
+			// --pre_load_users のプリロードは common.PreLoadRepositories が
+			// LaunchGkillServerAPI の中で1回だけ走らせる。
+			// ここでも同じことをすると起動のたびに2重に走る
 			err = common.LaunchGkillServerAPI(ctx)
 			if err != nil {
 				log.Fatal(err)

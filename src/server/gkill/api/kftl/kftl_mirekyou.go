@@ -92,13 +92,14 @@ func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.WriteMiReKyouRep.AddMiReKyouInfo(ctx, mirekyou); err != nil {
 		return fmt.Errorf("error at add mirekyou info id=%s: %w", r.RequestID, err)
 	}
-	repName, _ := r.Ctx.Repositories.WriteMiReKyouRep.GetRepName(ctx)
+	repName, repNameErr := r.Ctx.Repositories.WriteMiReKyouRep.GetRepName(ctx)
+	logGetRepNameFailure(ctx, "mirekyou", mirekyou.ID, repNameErr)
 	// ReKyouと同じくTargetIDInDataにリポスト対象のIDを入れる
 	// (usecase.updateMiReKyouLatestDataRepositoryAddress と揃える)
 	targetIDInData := r.targetID
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, &targetIDInData, false, now, repName)
 	// キャッシュに書き込み
-	_ = r.Ctx.Repositories.WriteThroughMiReKyouCache(ctx, mirekyou)
+	logWriteThroughCacheFailure(ctx, "mirekyou", mirekyou.ID, r.Ctx.Repositories.WriteThroughMiReKyouCache(ctx, mirekyou))
 	return nil
 }
 

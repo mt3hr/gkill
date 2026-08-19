@@ -50,7 +50,6 @@ func (m *MiReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQu
 
 	// 並列処理
 	for _, rep := range m.MiReKyouRepositories {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -132,7 +131,6 @@ func (m *MiReKyouRepositories) getKyou(ctx context.Context, id string, updateTim
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range m.MiReKyouRepositories {
-		rep := rep
 		getInRep := func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -212,7 +210,6 @@ func (m *MiReKyouRepositories) getKyouHistories(ctx context.Context, id string, 
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range m.MiReKyouRepositories {
-		rep := rep
 		getInRep := func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -338,7 +335,6 @@ func (m *MiReKyouRepositories) updateCache(ctx context.Context, parallel bool) e
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range m.MiReKyouRepositories {
-		rep := rep
 		updateInRep := func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -379,6 +375,10 @@ func (m *MiReKyouRepositories) LastUpdateCacheChanged() bool {
 	return false
 }
 
+// GetRepName は集約の**表示名**を返します。実在するリポジトリの名前ではありません。
+// **Kyou.RepName / REP_NAME 列に入れてはいけません。** 入れると find_filter.go の
+// filterKyousByRepName が「非空で、指定repに無い名前」として結果から落とします。
+// 書き込むrepの名前が要るときは GkillRepositories.WriteMiReKyouRep.GetRepName を使ってください。
 func (m *MiReKyouRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "MiReKyou", nil
 }
@@ -392,7 +392,6 @@ func (m *MiReKyouRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range m.MiReKyouRepositories {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			err := rep.Close(ctx)
 			if err != nil {
@@ -442,7 +441,6 @@ func (m *MiReKyouRepositories) findMiReKyou(ctx context.Context, query *find.Fin
 
 	// 並列処理
 	for _, rep := range m.MiReKyouRepositories {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchMiReKyousInRep, err := rep.FindMiReKyou(ctx, query)
 			if err != nil {
@@ -527,7 +525,6 @@ func (m *MiReKyouRepositories) getMiReKyou(ctx context.Context, id string, updat
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range m.MiReKyouRepositories {
-		rep := rep
 		getInRep := func() {
 			matchMiReKyouInRep, err := rep.GetMiReKyou(ctx, id, updateTime)
 			if err != nil {
@@ -617,7 +614,6 @@ func (m *MiReKyouRepositories) getMiReKyouHistoriesByRepName(ctx context.Context
 	// repNameの絞り込みはdispatchの前に済ませる。goroutineの中でやると
 	// 一致しないrepのぶんまでスレッドプールのスロットを取ってしまう。
 	for _, rep := range repImpls {
-		rep := rep
 		if repName != nil {
 			repNameInRep, err := rep.GetRepName(ctx)
 			if err != nil {
@@ -724,7 +720,6 @@ func (m *MiReKyouRepositories) getMiReKyousAllLatest(ctx context.Context, parall
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range m.MiReKyouRepositories {
-		rep := rep
 		getInRep := func() {
 			matchMiReKyousInRep, err := rep.GetMiReKyousAllLatest(ctx)
 			if err != nil {
@@ -906,7 +901,6 @@ func (m *MiReKyouRepositories) GetLatestDataRepositoryAddress(ctx context.Contex
 
 	// 並列処理
 	for _, rep := range m.MiReKyouRepositories {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {

@@ -2,19 +2,19 @@ package reps
 
 import (
 	"context"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	sqllib "database/sql"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"log/slog"
 	"slices"
 	"sync"
 	"time"
 
-	_ "modernc.org/sqlite"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
+	_ "modernc.org/sqlite"
 )
 
 type tagRepositoryCachedSQLite3Impl struct {
@@ -553,7 +553,7 @@ WHERE
 	words := []string{tagname}
 
 	query := &find.FindQuery{
-		Words:    words,
+		Words: words,
 	}
 	queryArgs := []any{
 		dataType,
@@ -912,7 +912,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		IDs:    ids,
+		IDs: ids,
 	}
 	queryArgs := []any{
 		dataType,

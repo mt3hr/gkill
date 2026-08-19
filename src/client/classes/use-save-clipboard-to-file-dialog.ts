@@ -1,5 +1,6 @@
 'use strict'
 
+import { useFloatingDialog } from '@/classes/use-floating-dialog'
 import { nextTick, onBeforeUnmount, onMounted, type Ref, ref } from 'vue'
 import type { SaveClipboardToFileDialogProps } from '@/pages/dialogs/save-clipboard-to-file-dialog-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
@@ -8,7 +9,9 @@ import { UploadFilesRequest } from '@/classes/api/req_res/upload-files-request'
 import { FileUploadConflictBehavior } from '@/classes/api/req_res/file-upload-conflict-behavior'
 import { GetRepositoriesRequest } from '@/classes/api/req_res/get-repositories-request'
 import type { Repository } from '@/classes/datas/config/repository'
-import { close_dialog_via_history } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import type { ComponentRef } from '@/classes/component-ref'
+import { new_reload_batch, refresh_kyou } from '@/classes/kyou-reload'
 
 const MIME_TO_EXT: Record<string, string> = {
     'image/png': 'png',
@@ -77,7 +80,8 @@ export function useSaveClipboardToFileDialog(options: {
     const show_already_saved_confirm = ref(false)
     const show_saved_snackbar = ref(false)
     const last_saved_hash = ref('')
-    const save_btn = ref<HTMLElement | null>(null)
+    // v-btn はコンポーネントなので $el 経由で実DOMを取る（素の HTMLElement ではない）
+    const save_btn = ref<ComponentRef | null>(null)
     const dialog_el = ref<HTMLElement | null>(null)
     const is_last_clicked_dialog = ref(false)
 
@@ -319,9 +323,12 @@ export function useSaveClipboardToFileDialog(options: {
         show_saved_snackbar.value = true
 
         const uploaded_kyous = res.uploaded_kyous ?? []
+        // add_* の応答は hydrate を通っていない生JSON寄りなので、必ず引き直してから流す。
+        // 手順（SWキャッシュ削除→reload→typed再取得→load_all(force)）は refresh_kyou に閉じている
+        const reload_batch = new_reload_batch()
         for (const kyou of uploaded_kyous) {
-            await kyou.reload(true)
-            emits('registered_kyou', kyou)
+            const refreshed = await refresh_kyou(kyou, undefined, reload_batch)
+            emits('registered_kyou', refreshed ?? kyou)
         }
         // Kyouが1件も返らないと、保存したのに一覧へ何も伝わらない
         if (uploaded_kyous.length === 0) {
@@ -329,8 +336,7 @@ export function useSaveClipboardToFileDialog(options: {
         }
         // Keep dialog open for continuous saving; restore focus to save button
         await nextTick()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;((save_btn.value as any)?.$el as HTMLElement | undefined)?.focus()
+        ;(save_btn.value?.$el as HTMLElement | undefined)?.focus()
     }
 
     async function save_or_confirm(): Promise<void> {
@@ -362,8 +368,7 @@ export function useSaveClipboardToFileDialog(options: {
         await load_clipboard()
 
         await nextTick()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;((save_btn.value as any)?.$el as HTMLElement | undefined)?.focus()
+        ;(save_btn.value?.$el as HTMLElement | undefined)?.focus()
     }
 
     function hide(): void {
@@ -408,7 +413,17 @@ export function useSaveClipboardToFileDialog(options: {
         if (preview_url.value) URL.revokeObjectURL(preview_url.value)
     })
 
+    const ui = useFloatingDialog('save-clipboard-to-file-dialog', {
+            // ファイル名の入力欄は折りたたみの中にあり、既定のフォーカス先は保存ボタン
+            // （use-save-clipboard-to-file-dialog.ts の show / do_save）。共通の自動フォーカスは切る
+            autofocus: false,
+            centerMode: 'always',
+            onEscape: () => hide(),
+    })
+    useDialogHistoryStack(is_show_dialog)
+
     return {
+        ui,
         is_show_dialog,
         is_loading,
         clipboard_blob,

@@ -67,6 +67,11 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 	miBoardNames, gkillErrors, err := g.UsecaseCtx.GetMiBoardList(r.Context(), repositories, userID, device, request.LocaleName)
 	if err != nil {
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		// 失敗したのにGkillErrorが1つも無いことがある(repのSQLエラーなど)。
+		// そのまま返すと errors:null + 0件 になり、呼び出し側からは
+		// 「成功・該当0件」と区別が付かない。理由は message.EnsureNotEmpty のコメント
+		gkillErrors = message.EnsureNotEmpty(gkillErrors, message.GetMiBoardNamesError,
+			api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MIBOARD_NAMES_MESSAGE"}))
 		response.Errors = append(response.Errors, gkillErrors...)
 		return
 	}

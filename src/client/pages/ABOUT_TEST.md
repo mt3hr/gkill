@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、44 specファイル249テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、44 specファイル250テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## E2E の書き方の規約
 
@@ -66,6 +66,8 @@ const record = await waitForKyouByText(page, label)
 | E2E は **PATH 上の `gkill_server`** を起動する。サーバ側（Go）を直しても、ビルドし直さないと古いバイナリで走る | ビルド先を PATH の先頭に置いて実行する。`npm run install_server` は本番サービスの実体（`go/bin/gkill_server.exe`）を上書きするので、検証だけなら別ディレクトリへ `go build -o` する |
 | リポストは元の記録を**入れ子で**描画する（`re-kyou-view.vue` が `<KyouView :show_rep_name="true">` で元Kyouを中に出す）。`.kyou_rep_name` の総数は 元1 + リポスト1 + リポスト内の元1 = 3 になる | 総数で数えずリポジトリ名で絞って数える |
 | タグ名を変更すると、rykv のタグ絞り込みに**未チェック**で入り、その記録が一覧から消える（チェック状態は `application_config.tag_struct` に保存される。新規追加したタグは自動でチェックされるので非対称） | 絞り込みの影響を受けない Kyou詳細ペインで確認する |
+| **ログインは IP ごと15分に10回まで**（`gkill_server_api_rate_limit.go`。判定は資格情報を見る**前**なので失敗も成功も1回と数える）。スイート全体のログインは現在5回で、増やすと上限に当たって「ログインしても画面が変わらない」が**別のテストで**出る | 実際にフォームからログインするテストを増やさない。共有 storageState（`auth.setup.ts`）を使う。`--repeat-each` でログイン系 spec を回すのも同じ理由で不可 |
+| ログイン失敗も `check_auth` のセッション無効判定と**同じエラーコード**（存在しないユーザIDは ERR000002）を通る。素直に飛ばすと `location.replace("/")` でページごと作り直され、出したばかりのエラー表示が消える | 製品側でログイン画面（`pathname === '/'`）のときは飛ばさないようにしてある（`is_on_login_page`）。`check-auth-login-page.test.ts` が配線を固定する |
 
 ## テストフレームワーク
 
@@ -74,7 +76,7 @@ const record = await waitForKyouByText(page, label)
 
 ## テストファイル一覧
 
-### E2E テスト（44 specファイル, 249テスト宣言）
+### E2E テスト（44 specファイル, 250テスト宣言）
 
 #### ページ表示・ナビゲーション系（12ファイル）
 
@@ -117,7 +119,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/settings-crud.spec.ts` | 設定ページ各セクション表示確認 |
 | `src/client/__tests__/e2e/server-config-crud.spec.ts` | サーバ設定機能テスト（プロファイル/TLS/アカウント/Rep管理） |
 | `src/client/__tests__/e2e/user-config-crud.spec.ts` | ユーザ設定機能テスト（API/画像/板名/構造CRUD） |
-| `src/client/__tests__/e2e/regression-fixes.spec.ts` | 修正済みバグ回帰テスト（7件） |
+| `src/client/__tests__/e2e/regression-fixes.spec.ts` | 修正済みバグ回帰テスト（8件）。新規タグを付けて追加した記録が**画面遷移せずに**一覧へ残ること（遷移すると既定クエリを作り直すので不具合をすり抜ける）を含む |
 | `src/client/__tests__/e2e/misc-operations.spec.ts` | ブックマークレット、GPS、共有リンク、再起動 |
 | `src/client/__tests__/e2e/clipboard-save.spec.ts` | Ctrl+V でクリップボード保存ダイアログ表示（RYKV/Mi）、テキスト入力中は抑制、ダイアログ閉じ、クリップボードテキストのプレビュー |
 | `src/client/__tests__/e2e/dashboard.spec.ts` | ダッシュボード画面（ナビゲーション、描画、JSエラーなし確認） |
@@ -129,7 +131,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/mi-board-columns.spec.ts` | mi の板列×検索: 各板の列に自板のタスクだけが出る、板クリック後に別列で検索しても板名表示と検索条件が汚染されない |
 | `src/client/__tests__/e2e/saved-find-query.spec.ts` | 保存済み検索条件: 設定画面で登録→設定適用→ライフログビューのサイドバーFABから呼び出してサイドバーへ反映、タスク側は未登録なのでFAB非表示 |
 
-### Composable ユニットテスト（55ファイル）
+### Composable ユニットテスト（57ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -155,6 +157,8 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/unit/composables/kyou-list-view-loading.test.ts` | KyouListView のローディング表示（set_loading(true) が has_loaded を倒し、再検索中に「該当なし」と誤表示しない） |
 | `src/client/__tests__/unit/composables/plugin-html-view.test.ts` | プラグイン本文の iframe 受け渡し（ローダーが `gkill_plugin_loader_ready` を名乗ってから注入すること・ready のたびに送り直すこと・`@load` では送り直さない＝注入ループにしないこと・`gkill_iframe_dblclick` を本物の bubbling する dblclick として撃ち直すこと・一覧は srcdoc 直書きのまま） |
 | `src/client/__tests__/unit/composables/ryuu-relay-chain.test.ts` | Ryuu の中継チェーン（`kyou_view_relay_event_names` の18件が RyuuItemView から親まで届くこと・`requested_open_rykv_dialog` は kind と payload ごと通ること・フォーカス2件は通さないこと・二重発火しないこと） |
+| `src/client/__tests__/unit/composables/registered-tag-column-filter.test.ts` | 利用者がその場で作ったタグを列の検索条件へ足す判定（`tags_and` の列は積が必ず空になるので触らないこと・既知タグでは列も引き直しも動かないこと・既知判定は emit 前のその場で行うこと） |
+| `src/client/__tests__/unit/composables/new-tag-column-search.test.ts` | 同じ表を useRykvView / useMiView の**両方**へ流す配線テスト（引き直しは列あたり1本・`query_id` 不変・条件が `set_saved_*` に落ちること・親への `registered_tag` 中継を止めないこと） |
 
 ### ルーターテスト
 

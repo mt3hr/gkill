@@ -70,7 +70,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, type ComponentPublicInstance } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { i18n } from '@/i18n'
 import RykvView from '../views/rykv-view.vue'
 import MiView from '../views/mi-view.vue'
@@ -80,31 +80,10 @@ import HelpDialog from './help-dialog.vue'
 import type { RudbeckiaPageDialogProps } from './rudbeckia-page-dialog-props'
 import type { RudbeckiaPageDialogEmits } from './rudbeckia-page-dialog-emits'
 import { useRudbeckiaPageDialog, HOSTED_APP_BAR_HEIGHT } from '@/classes/use-rudbeckia-page-dialog'
-import { build_rudbeckia_hosted_view_relay } from '@/classes/rudbeckia-hosted-view-relay'
 
 const props = defineProps<RudbeckiaPageDialogProps>()
 const emits = defineEmits<RudbeckiaPageDialogEmits>()
-
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-
-const {
-    is_show_dialog,
-    ui,
-    dialog_body_ref,
-    column_state_instance_key,
-    kyou_change_channel,
-    layout_width,
-    layout_height,
-    view_width,
-    view_height,
-    help_screen_name,
-    show,
-    hide,
-} = useRudbeckiaPageDialog({ props, emits })
-
-// 中のビューが出す17件をそのまま上げ、画面切替だけポート向けに読み替える
-const hostedViewHandlers = build_rudbeckia_hosted_view_relay(emits)
-
+const { is_show_dialog, ui, dialog_body_ref, column_state_instance_key, kyou_change_channel, layout_width, layout_height, view_width, view_height, help_screen_name, show, hide, help_dialog, hostedViewHandlers } = useRudbeckiaPageDialog({ props, emits })
 defineExpose({ show, hide })
 </script>
 

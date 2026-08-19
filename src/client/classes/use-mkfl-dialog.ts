@@ -5,12 +5,13 @@ import type { MKFLDialogProps } from '@/pages/dialogs/mkfl-dialog-props'
 import type { MKFLDialogEmits } from '@/pages/dialogs/mkfl-dialog-emits'
 import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export function useMKFLDialog(options: {
     props: MKFLDialogProps
     emits: MKFLDialogEmits
 }) {
-    const { props } = options
+    const { props, emits } = options
 
     const is_show_dialog: Ref<boolean> = ref(false)
     useDialogHistoryStack(is_show_dialog)
@@ -72,6 +73,10 @@ export function useMKFLDialog(options: {
         close_dialog_via_history(is_show_dialog)
     }
 
+    // ── Event relay objects ──
+    // 中身は MKFLView そのものなので、CRUD系はまとめて素通しする
+    const crudRelayHandlers = build_kyou_view_relay(emits)
+
     return {
         is_show_dialog,
         ui,
@@ -80,5 +85,8 @@ export function useMKFLDialog(options: {
         view_height,
         show,
         hide,
+
+        // Event relay objects
+        crudRelayHandlers,
     }
 }

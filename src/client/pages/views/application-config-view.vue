@@ -201,26 +201,29 @@
                 </v-col>
             </v-row>
         </v-card-action>
+        <!-- 子の requested_reload_application_config は意図的に握り潰す。
+             設定画面は cloned_application_config を編集していて、途中で props から
+             読み直すと未適用の編集が消えるため。送信は「適用」1箇所に閉じている -->
         <EditDeviceStructDialog :application_config="cloned_application_config" :folder_name="''" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             @requested_apply_device_struct="(data: DeviceStructElementData) => onRequestedApplyDeviceStruct(data)"
-            ref="edit_device_struct_dialog" />
+            @requested_reload_application_config="() => { }" ref="edit_device_struct_dialog" />
         <EditKFTLTemplateDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             @requested_apply_kftl_template_struct="(data: KFTLTemplateElementData) => onRequestedApplyKftlTemplateStruct(data)"
-            @requested_reload_application_config="() => () => { }" ref="edit_kftl_template_dialog" />
+            @requested_reload_application_config="() => { }" ref="edit_kftl_template_dialog" />
         <EditRepStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             @requested_apply_rep_struct="(data: RepStructElementData) => onRequestedApplyRepStruct(data)"
-            @requested_reload_application_config="() => () => { }"
+            @requested_reload_application_config="() => { }"
             ref="edit_rep_struct_dialog" />
         <EditRepTypeStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             @requested_apply_rep_type_struct="(data: RepTypeStructElementData) => onRequestedApplyRepTypeStruct(data)"
-            @requested_reload_application_config="() => () => { }"
+            @requested_reload_application_config="() => { }"
             ref="edit_rep_type_struct_dialog" />
         <EditTagStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
@@ -293,8 +296,8 @@ import type { RepStructElementData } from "@/classes/datas/config/rep-struct-ele
 import type { RepTypeStructElementData } from "@/classes/datas/config/rep-type-struct-element-data"
 import type { TagStructElementData } from "@/classes/datas/config/tag-struct-element-data"
 import type { MiBoardStructElementData } from "@/classes/datas/config/mi-board-struct-element-data"
-type DnoteData = Record<string, unknown>
-type RyuuData = Record<string, unknown>
+type DnoteData = Array<Record<string, unknown>>
+type RyuuData = Array<Record<string, unknown>>
 type DashboardData = Record<string, unknown>
 type PlaingTimeIsData = Record<string, unknown>
 type SavedFindQueryData = Record<string, unknown>

@@ -3,8 +3,8 @@ package reps
 import (
 	"context"
 	"errors"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"slices"
 	"sync"
 	"time"
@@ -28,7 +28,6 @@ func (k KmemoRepositories) FindKyous(ctx context.Context, query *find.FindQuery)
 
 	// 並列処理
 	for _, rep := range k {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -98,7 +97,6 @@ func (k KmemoRepositories) GetKyou(ctx context.Context, id string, updateTime *t
 
 	// 並列処理
 	for _, rep := range k {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -163,7 +161,6 @@ func (k KmemoRepositories) GetKyouHistories(ctx context.Context, id string) ([]K
 
 	// 並列処理
 	for _, rep := range k {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -235,7 +232,7 @@ func (k KmemoRepositories) GetPath(ctx context.Context, id string) (string, erro
 	ids := []string{id}
 	for _, rep := range k {
 		query := &find.FindQuery{
-			IDs:    ids,
+			IDs: ids,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -261,7 +258,6 @@ func (k KmemoRepositories) UpdateCache(ctx context.Context) error {
 	defer close(errch)
 
 	for _, rep := range k {
-		rep := rep
 		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -322,7 +318,6 @@ func (k KmemoRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
@@ -356,6 +351,11 @@ errloop:
 }
 
 func (k KmemoRepositories) FindKmemo(ctx context.Context, query *find.FindQuery) ([]Kmemo, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照
+	return findChunkedByIDs(ctx, query, k.findKmemo)
+}
+
+func (k KmemoRepositories) findKmemo(ctx context.Context, query *find.FindQuery) ([]Kmemo, error) {
 	matchKmemos := map[string]Kmemo{}
 	existErr := false
 	var err error
@@ -367,7 +367,6 @@ func (k KmemoRepositories) FindKmemo(ctx context.Context, query *find.FindQuery)
 
 	// 並列処理
 	for _, rep := range k {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKmemosInRep, err := rep.FindKmemo(ctx, query)
 			if err != nil {
@@ -445,7 +444,6 @@ func (k KmemoRepositories) GetKmemo(ctx context.Context, id string, updateTime *
 
 	// 並列処理
 	for _, rep := range k {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKmemoInRep, err := rep.GetKmemo(ctx, id, updateTime)
 			if err != nil {
@@ -510,7 +508,6 @@ func (k KmemoRepositories) GetKmemoHistories(ctx context.Context, id string) ([]
 
 	// 並列処理
 	for _, rep := range k {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKmemosInRep, err := rep.GetKmemoHistories(ctx, id)
 			if err != nil {
@@ -587,7 +584,6 @@ func (k KmemoRepositories) GetKmemoHistoriesByRepName(ctx context.Context, id st
 
 	// 並列処理
 	for _, rep := range k {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
 				// repNameが一致しない場合はスキップ
@@ -705,7 +701,6 @@ func (k KmemoRepositories) GetLatestDataRepositoryAddress(ctx context.Context, u
 
 	// 並列処理
 	for _, rep := range k {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {

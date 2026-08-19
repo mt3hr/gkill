@@ -13,7 +13,7 @@ import type { ComponentRef } from '@/classes/component-ref'
 import { useConfirmUnknownTag } from '@/classes/use-confirm-unknown-tag'
 import { apply_kyou_tag_changes } from '@/classes/kyou-tags'
 
-export function useEditUrLogView(options: {
+export function useEditURLogView(options: {
     props: EditURLogViewProps,
     emits: KyouViewEmits,
 }) {

@@ -30,38 +30,17 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
-import RelatedKyouQuery from '@/classes/dnote/related-kyou-query';
 import ConfirmDeleteRelatedKyouQueryView from '../views/confirm-delete-related-kyou-query-view.vue';
 import type { ConfirmDeleteRyuuItemDialogProps } from './confirm-delete-ryuu-item-dialog-props';
 import type { ConfirmDeleteRyuuItemDialogEmits } from './confirm-delete-ryuu-item-dialog-emits';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
-
-defineProps<ConfirmDeleteRyuuItemDialogProps>()
-const emits = defineEmits<ConfirmDeleteRyuuItemDialogEmits>()
-defineExpose({ show, hide })
-
-const related_kyou_query: Ref<RelatedKyouQuery> = ref(new RelatedKyouQuery())
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("confirm-delete-ryuu-item-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useConfirmDeleteRyuuItemDialog } from '@/classes/use-confirm-delete-ryuu-item-dialog'
 
-
-async function show(related_kyou_query_: RelatedKyouQuery): Promise<void> {
-  related_kyou_query.value = related_kyou_query_
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  related_kyou_query.value = new RelatedKyouQuery()
-}
+const props = defineProps<ConfirmDeleteRyuuItemDialogProps>()
+const emits = defineEmits<ConfirmDeleteRyuuItemDialogEmits>()
+const { related_kyou_query, is_show_dialog, ui, show, hide } = useConfirmDeleteRyuuItemDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

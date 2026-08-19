@@ -3,10 +3,9 @@ import type { EditRepStructViewEmits } from '@/pages/views/edit-rep-struct-view-
 import type { EditRepStructViewProps } from '@/pages/views/edit-rep-struct-view-props'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
-import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 import { move_struct_up, move_struct_down, move_struct_to_folder } from '@/classes/foldable-struct-move'
+import { build_error_message_relay } from '@/classes/kyou-view-relay'
 
 export function useEditRepStructView(options: {
     props: EditRepStructViewProps,
@@ -169,23 +168,20 @@ export function useEditRepStructView(options: {
     }
 
     // ── Event relay objects ──
-    const errorMessageHandlers = {
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-    }
+    const errorMessageRelayHandlers = build_error_message_relay(emits)
 
     const addNewRepHandlers = {
-        ...errorMessageHandlers,
+        ...errorMessageRelayHandlers,
         'requested_add_rep_struct_element': (element: RepStructElementData) => add_rep_struct_element(element),
     }
 
     const editRepHandlers = {
-        ...errorMessageHandlers,
+        ...errorMessageRelayHandlers,
         'requested_update_rep_struct': (element: RepStructElementData) => update_rep_struct(element),
     }
 
     const repContextMenuHandlers = {
-        ...errorMessageHandlers,
+        ...errorMessageRelayHandlers,
         'requested_edit_rep': (value: string) => show_edit_rep_struct_dialog(value),
         'requested_move_up_rep': (value: string) => move_rep_struct_up(value),
         'requested_move_down_rep': (value: string) => move_rep_struct_down(value),
@@ -194,12 +190,12 @@ export function useEditRepStructView(options: {
     }
 
     const selectMoveTargetFolderHandlers = {
-        ...errorMessageHandlers,
+        ...errorMessageRelayHandlers,
         'requested_move_struct_obj_to_folder': (struct_id: string, target_folder_id: string | null) => move_rep_struct_to_folder(struct_id, target_folder_id),
     }
 
     const confirmDeleteHandlers = {
-        ...errorMessageHandlers,
+        ...errorMessageRelayHandlers,
         'requested_delete_rep': (value: string) => delete_rep_struct(value),
     }
 
@@ -235,7 +231,7 @@ export function useEditRepStructView(options: {
         onRequestedCloseDialog,
 
         // Event relay objects
-        errorMessageHandlers,
+        errorMessageRelayHandlers,
         addNewRepHandlers,
         editRepHandlers,
         repContextMenuHandlers,

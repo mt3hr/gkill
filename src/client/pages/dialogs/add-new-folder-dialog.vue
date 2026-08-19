@@ -30,39 +30,18 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { AddNewFolderDialogEmits } from './add-new-folder-dialog-emits'
 import type { AddNewFolderDialogProps } from './add-new-folder-dialog-props'
 import AddNewFolderView from '../views/add-new-folder-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data'
-
-const add_new_folder_view = ref<InstanceType<typeof AddNewFolderView> | null>(null);
-
-defineProps<AddNewFolderDialogProps>()
-const emits = defineEmits<AddNewFolderDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-// キーは旧ファイル名綴りのまま(localStorageのダイアログ位置・透過設定の互換維持)
-const ui = useFloatingDialog("add-new-foloder-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useAddNewFolderDialog } from '@/classes/use-add-new-folder-dialog'
 
-
-async function show(): Promise<void> {
-  add_new_folder_view.value?.reset_folder_name()
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  add_new_folder_view.value?.reset_folder_name()
-}
+const props = defineProps<AddNewFolderDialogProps>()
+const emits = defineEmits<AddNewFolderDialogEmits>()
+const { add_new_folder_view, is_show_dialog, ui, show, hide } = useAddNewFolderDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

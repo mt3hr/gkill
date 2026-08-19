@@ -38,33 +38,16 @@
 <script setup lang="ts">
 import EditDnoteCorrelationGraphView from '@/pages/views/edit-dnote-correlation-graph-view.vue';
 import HelpDialog from './help-dialog.vue'
-import { ref, type Ref } from 'vue'
 import type { GkillError } from '../../classes/api/gkill-error';
 import type { GkillMessage } from '../../classes/api/gkill-message';
 import type { DnoteCorrelationGraphQuery } from '../../classes/dnote/dnote-correlation';
 import type EditDnoteCorrelationGraphDialogEmits from './edit-dnote-correlation-graph-dialog-emits';
 import type EditDnoteCorrelationGraphDialogProps from './edit-dnote-correlation-graph-dialog-props';
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
+import { useEditDnoteCorrelationGraphDialog } from '@/classes/use-edit-dnote-correlation-graph-dialog'
 
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("edit-dnote-correlation-graph-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
-
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-
-defineExpose({ show, hide })
-defineProps<EditDnoteCorrelationGraphDialogProps>()
+const props = defineProps<EditDnoteCorrelationGraphDialogProps>()
 const emits = defineEmits<EditDnoteCorrelationGraphDialogEmits>()
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const { is_show_dialog, ui, help_dialog, show, hide } = useEditDnoteCorrelationGraphDialog({ props, emits })
+defineExpose({ show, hide })
 </script>

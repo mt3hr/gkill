@@ -85,9 +85,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 	}
 	defer func() { logs.Close() }()
 
-	useCalendar := query.HasCalendarFilter()
-	calendarStartDate := query.CalendarStartDate
-	calendarEndDate := query.CalendarEndDate
+	timeFilter := buildCommitTimeFilter(query)
 
 loop:
 	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
@@ -130,42 +128,9 @@ loop:
 				continue
 			}
 
-			// 日付範囲指定ありの場合
-			// SQL側(unixepoch >= / <=)と同じく両端を含む(以前は排他で境界ちょうどのコミットが落ちていた)
-			if useCalendar {
-				if calendarStartDate != nil {
-					if commit.Committer.When.Before(*calendarStartDate) {
-						continue
-					}
-				}
-				if calendarEndDate != nil {
-					if commit.Committer.When.After(*calendarEndDate) {
-						continue
-					}
-				}
-			}
-
-			// 時間範囲指定ありの場合
-			useP, stOK, stSec, etOK, etSec := buildPeriodOfTimeSeconds(query)
-			if useP {
-				if !matchPeriodOfTime(commit.Committer.When, stOK, stSec, etOK, etSec) {
-					continue
-				}
-				// 曜日判定
-				matchWeekOfDays := len(query.PeriodOfTimeWeekOfDays) == 7
-				localTimeWeekDay := commit.Committer.When.Local().Weekday()
-				if !matchWeekOfDays {
-				weekloop:
-					for _, weekOfDay := range query.PeriodOfTimeWeekOfDays {
-						if localTimeWeekDay == time.Weekday(weekOfDay) {
-							matchWeekOfDays = true
-							break weekloop
-						}
-					}
-				}
-				if !matchWeekOfDays {
-					continue
-				}
+			// 日付範囲・時間帯・曜日の判定
+			if !timeFilter.match(commit.Committer.When) {
+				continue
 			}
 
 			kyou := Kyou{}
@@ -337,6 +302,8 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 			return nil, err
 		}
 	}
+	timeFilter := buildCommitTimeFilter(query)
+
 	g.m.RLock()
 	defer g.m.RUnlock()
 
@@ -396,6 +363,11 @@ loop:
 			}
 
 			if !match {
+				continue
+			}
+
+			// 日付範囲・時間帯・曜日の判定。FindKyous と同じ判定を通す
+			if !timeFilter.match(commit.Committer.When) {
 				continue
 			}
 
@@ -675,6 +647,90 @@ func buildPeriodOfTimeSeconds(query *find.FindQuery) (use bool, stOK bool, stSec
 		etOK = true
 	}
 	return
+}
+
+// commitTimeFilter は「日付範囲 + 時間帯 + 曜日」の判定に必要な値を1回だけ計算して持つ。
+//
+// FindKyous と FindGitCommitLog が同じ意味論で判定するために共有する。
+// 以前は FindGitCommitLog がこの3つを一切適用しておらず、
+// 同じインタフェースのキャッシュrep実装(GenerateFindSQLCommon を通す)と結果が食い違っていた。
+type commitTimeFilter struct {
+	useCalendar       bool
+	calendarStartDate *time.Time
+	calendarEndDate   *time.Time
+	usePeriodOfTime   bool
+	startOK           bool
+	startSecond       int
+	endOK             bool
+	endSecond         int
+	filterWeekdays    bool
+	allowedWeekdays   [7]bool
+}
+
+// buildCommitTimeFilter はクエリから判定用の値を1回だけ組み立てる。
+// コミット1件ごとに組み立て直すと全走査のたびに同じ計算を繰り返すことになる。
+func buildCommitTimeFilter(query *find.FindQuery) commitTimeFilter {
+	filter := commitTimeFilter{
+		useCalendar:       query.HasCalendarFilter(),
+		calendarStartDate: query.CalendarStartDate,
+		calendarEndDate:   query.CalendarEndDate,
+	}
+	filter.usePeriodOfTime, filter.startOK, filter.startSecond, filter.endOK, filter.endSecond = buildPeriodOfTimeSeconds(query)
+	filter.filterWeekdays, filter.allowedWeekdays = buildAllowedWeekdays(query)
+	return filter
+}
+
+// match はコミット1件ぶんの判定。
+func (f commitTimeFilter) match(commitTime time.Time) bool {
+	// SQL側(unixepoch >= / <=)と同じく両端を含む(以前は排他で境界ちょうどのコミットが落ちていた)
+	if f.useCalendar {
+		if f.calendarStartDate != nil && commitTime.Before(*f.calendarStartDate) {
+			return false
+		}
+		if f.calendarEndDate != nil && commitTime.After(*f.calendarEndDate) {
+			return false
+		}
+	}
+	if f.usePeriodOfTime {
+		if !matchPeriodOfTime(commitTime, f.startOK, f.startSecond, f.endOK, f.endSecond) {
+			return false
+		}
+		if !matchWeekOfDays(commitTime, f.filterWeekdays, f.allowedWeekdays) {
+			return false
+		}
+	}
+	return true
+}
+
+// buildAllowedWeekdays は曜日フィルタの状態を作る。
+//
+// nil=曜日制限なし / 非nilの空=0件 / 全7曜日=制限なし。
+// nil を len==0 や len!=7 の分岐へ落とすと全件が消えるので、必ず nil を先に外すこと。
+// 同じ約束を api/find_filter.go の sortAndTrimKyousMap と
+// dao/sqlite3impl/sqlite3impl_util.go の generateFindSQLCommon も守っている。
+func buildAllowedWeekdays(query *find.FindQuery) (filter bool, allowed [7]bool) {
+	if query.PeriodOfTimeWeekOfDays == nil || len(query.PeriodOfTimeWeekOfDays) == 7 {
+		return false, allowed
+	}
+	for _, weekday := range query.PeriodOfTimeWeekOfDays {
+		if weekday >= find.SunDay && weekday <= find.SaturDay {
+			allowed[weekday] = true
+		}
+	}
+	return true, allowed
+}
+
+// matchWeekOfDays は t のローカル曜日が allowed に含まれるかを返す。
+// filter が偽なら曜日制限なしなので常に真。
+func matchWeekOfDays(t time.Time, filter bool, allowed [7]bool) bool {
+	if !filter {
+		return true
+	}
+	weekday := int(t.In(time.Local).Weekday())
+	if weekday < 0 || weekday >= len(allowed) {
+		return false
+	}
+	return allowed[weekday]
 }
 
 func matchPeriodOfTime(t time.Time, stOK bool, stSec int, etOK bool, etSec int) bool {

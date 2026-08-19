@@ -27,14 +27,14 @@ func newTempServerConfigDAO(t *testing.T) ServerConfigDAO {
 
 func makeTestServerConfig(device string) *ServerConfig {
 	return &ServerConfig{
-		EnableThisDevice:    true,
-		Device:              device,
-		IsLocalOnlyAccess:   false,
-		Address:             ":9999",
-		EnableTLS:           false,
-		URLogTimeout:        10 * time.Second,
+		EnableThisDevice:     true,
+		Device:               device,
+		IsLocalOnlyAccess:    false,
+		Address:              ":9999",
+		EnableTLS:            false,
+		URLogTimeout:         10 * time.Second,
 		UploadSizeLimitMonth: -1,
-		UserDataDirectory:   "",
+		UserDataDirectory:    "",
 	}
 }
 

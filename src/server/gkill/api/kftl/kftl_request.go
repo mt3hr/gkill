@@ -3,11 +3,13 @@ package kftl
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
 // KFTLRequest is the interface implemented by all KFTL request types.
@@ -75,6 +77,34 @@ func (b *KFTLRequestBase) AddTextLine(textID, line string) {
 	}
 }
 
+// logWriteThroughCacheFailure logs a failed write-through to the cached rep.
+//
+// A missed write-through is repaired by the next UpdateCache (1m by default),
+// so the save itself is not failed here. Discarding it with `_ =` however leaves
+// no trace at all, which makes "the tag I just added is invisible for a minute"
+// impossible to diagnose afterwards.
+// The 25 write-through calls in usecase/*.go wrap + slog the same way.
+func logWriteThroughCacheFailure(ctx context.Context, dataType string, id string, err error) {
+	if err == nil {
+		return
+	}
+	err = fmt.Errorf("error at write through %s cache id = %s: %w", dataType, id, err)
+	slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+}
+
+// logGetRepNameFailure logs a failed rep name lookup.
+//
+// Bailing out here would stop the KFTL submission midway even though the record
+// itself is already saved (commit_tx is not a DB transaction, so nothing rolls back).
+// Keep going and just leave a trace.
+func logGetRepNameFailure(ctx context.Context, dataType string, id string, err error) {
+	if err == nil {
+		return
+	}
+	err = fmt.Errorf("error at get rep name for %s id = %s: %w", dataType, id, err)
+	slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+}
+
 // updateLatestDataRepositoryAddress updates the in-memory cache and DAO for one entity.
 // Mirrors the pattern used in gkill_server_api.go L2070-2082.
 func updateLatestDataRepositoryAddress(ctx context.Context, repos *reps.GkillRepositories,
@@ -88,8 +118,11 @@ func updateLatestDataRepositoryAddress(ctx context.Context, repos *reps.GkillRep
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
 	repos.SetLatestDataRepositoryAddress(id, latestDataRepositoryAddress)
-	_, _ = repos.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(
-		ctx, latestDataRepositoryAddress)
+	if _, err := repos.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(
+		ctx, latestDataRepositoryAddress); err != nil {
+		err = fmt.Errorf("error at add or update latest data repository address id = %s: %w", id, err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+	}
 }
 
 // doBaseRequest adds tags and texts for the given targetID.
@@ -118,10 +151,11 @@ func (b *KFTLRequestBase) doBaseRequest(ctx context.Context, targetID string) er
 		if err != nil {
 			return fmt.Errorf("error at add tag info target_id=%s tag=%s: %w", targetID, tag, err)
 		}
-		repName, _ := b.Ctx.Repositories.WriteTagRep.GetRepName(ctx)
+		repName, repNameErr := b.Ctx.Repositories.WriteTagRep.GetRepName(ctx)
+		logGetRepNameFailure(ctx, "tag", tagObj.ID, repNameErr)
 		updateLatestDataRepositoryAddress(ctx, b.Ctx.Repositories, tagObj.ID, &targetID, false, now, repName)
 		// キャッシュに書き込み
-		_ = b.Ctx.Repositories.WriteThroughTagCache(ctx, tagObj)
+		logWriteThroughCacheFailure(ctx, "tag", tagObj.ID, b.Ctx.Repositories.WriteThroughTagCache(ctx, tagObj))
 	}
 
 	// Add texts
@@ -147,10 +181,11 @@ func (b *KFTLRequestBase) doBaseRequest(ctx context.Context, targetID string) er
 		if err != nil {
 			return fmt.Errorf("error at add text info target_id=%s text_id=%s: %w", targetID, textID, err)
 		}
-		repName, _ := b.Ctx.Repositories.WriteTextRep.GetRepName(ctx)
+		repName, repNameErr := b.Ctx.Repositories.WriteTextRep.GetRepName(ctx)
+		logGetRepNameFailure(ctx, "text", textObj.ID, repNameErr)
 		updateLatestDataRepositoryAddress(ctx, b.Ctx.Repositories, textObj.ID, &targetID, false, now, repName)
 		// キャッシュに書き込み
-		_ = b.Ctx.Repositories.WriteThroughTextCache(ctx, textObj)
+		logWriteThroughCacheFailure(ctx, "text", textObj.ID, b.Ctx.Repositories.WriteThroughTextCache(ctx, textObj))
 	}
 
 	return nil

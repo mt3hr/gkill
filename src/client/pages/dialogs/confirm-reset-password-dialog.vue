@@ -30,37 +30,18 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { ConfirmResetPasswordDialogEmits } from './confirm-reset-password-dialog-emits'
 import type { ConfirmResetPasswordDialogProps } from './confirm-reset-password-dialog-props'
 import ConfirmResetPasswordView from '../views/confirm-reset-password-view.vue'
 import { Account } from '@/classes/datas/config/account';
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-
-defineProps<ConfirmResetPasswordDialogProps>()
-const emits = defineEmits<ConfirmResetPasswordDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("confirm-reset-password-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useConfirmResetPasswordDialog } from '@/classes/use-confirm-reset-password-dialog'
 
-const cloned_account: Ref<Account> = ref(new Account())
-
-async function show(account: Account): Promise<void> {
-  cloned_account.value = account
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  cloned_account.value = new Account()
-}
+const props = defineProps<ConfirmResetPasswordDialogProps>()
+const emits = defineEmits<ConfirmResetPasswordDialogEmits>()
+const { is_show_dialog, ui, cloned_account, show, hide } = useConfirmResetPasswordDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

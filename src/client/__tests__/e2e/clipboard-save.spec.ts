@@ -33,11 +33,9 @@ test.describe('Clipboard Save to File', () => {
 
     // Click on a non-interactive area of the page to ensure focus is on body (not a text input)
     await page.click('body', { position: { x: 10, y: 10 }, force: true })
-    await page.waitForTimeout(500)
 
     // Dispatch Ctrl+V keyboard event
     await page.keyboard.press('Control+V')
-    await page.waitForTimeout(2000)
 
     // The clipboard save dialog should appear with the expected title
     const dialogTitle = page.locator('.gkill-floating-dialog').filter({ hasText: /Save Clipboard to File|クリップボードをファイルに保存/i })
@@ -48,24 +46,16 @@ test.describe('Clipboard Save to File', () => {
     await navigateToRykv(page)
 
     await page.click('body', { position: { x: 10, y: 10 }, force: true })
-    await page.waitForTimeout(500)
     await page.keyboard.press('Control+V')
-    await page.waitForTimeout(2000)
 
     // Confirm dialog is open
     const dialog = page.locator('.gkill-floating-dialog').filter({ hasText: /Save Clipboard to File|クリップボードをファイルに保存/i })
     await expect(dialog).toBeVisible({ timeout: 10000 })
 
-    // Click the close button (mdi-close icon button in the dialog header)
-    const closeButton = dialog.locator('button').filter({ has: page.locator('.mdi-close, [class*="close"]') }).first()
-    if (await closeButton.count() > 0) {
-      await closeButton.click()
-    } else {
-      // Fallback: find the first button in the dialog header
-      const headerButton = dialog.locator('.gkill-floating-dialog__header button').first()
-      await headerButton.click()
-    }
-    await page.waitForTimeout(1000)
+    // ヘッダの×で閉じる（gkill-floating-dialog__header に必ずある）
+    const closeButton = dialog.locator('.gkill-floating-dialog__header button:has(.mdi-close)').first()
+    await expect(closeButton, 'ダイアログの×が見つからない').toBeVisible({ timeout: 15000 })
+    await closeButton.click()
 
     // Dialog should be gone
     await expect(dialog).not.toBeVisible({ timeout: 5000 })
@@ -87,11 +77,12 @@ test.describe('Clipboard Save to File', () => {
       document.body.appendChild(ta)
       ta.focus()
     })
-    await page.waitForTimeout(300)
+    // フォーカスが本当にテキストエリアへ乗ったことを確かめてから押す
+    await expect(page.locator('#_test_textarea'), 'テスト用テキストエリアが作られない')
+      .toBeFocused({ timeout: 15000 })
 
     // Press Ctrl+V inside the focused textarea — should NOT open clipboard dialog
     await page.keyboard.press('Control+V')
-    await page.waitForTimeout(1500)
 
     // The clipboard save dialog should NOT appear
     const dialog = page.locator('.gkill-floating-dialog').filter({ hasText: /Save Clipboard to File|クリップボードをファイルに保存/i })
@@ -112,14 +103,11 @@ test.describe('Clipboard Save to File', () => {
     await page.evaluate(async (text) => {
       await navigator.clipboard.writeText(text)
     }, testText)
-    await page.waitForTimeout(300)
 
     await page.click('body', { position: { x: 10, y: 10 }, force: true })
-    await page.waitForTimeout(300)
 
     // Open dialog with Ctrl+V
     await page.keyboard.press('Control+V')
-    await page.waitForTimeout(2000)
 
     // Dialog should appear
     const dialog = page.locator('.gkill-floating-dialog').filter({ hasText: /Save Clipboard to File|クリップボードをファイルに保存/i })
@@ -132,9 +120,9 @@ test.describe('Clipboard Save to File', () => {
 
     // Close the dialog
     const headerButton = dialog.locator('.gkill-floating-dialog__header button').first()
-    if (await headerButton.count() > 0) {
-      await headerButton.click()
-    }
+    await expect(headerButton, 'ダイアログのヘッダにボタンが無い').toBeVisible({ timeout: 15000 })
+    await headerButton.click()
+    await expect(dialog, 'ダイアログが閉じない').not.toBeVisible({ timeout: 15000 })
   })
 
   test('Ctrl+V on Mi page also opens clipboard save dialog', async ({ page }) => {
@@ -142,10 +130,7 @@ test.describe('Clipboard Save to File', () => {
 
     // Click body (not a text input)
     await page.click('body', { position: { x: 10, y: 10 }, force: true })
-    await page.waitForTimeout(500)
-
     await page.keyboard.press('Control+V')
-    await page.waitForTimeout(2000)
 
     // The clipboard save dialog should appear on Mi page as well
     const dialog = page.locator('.gkill-floating-dialog').filter({ hasText: /Save Clipboard to File|クリップボードをファイルに保存/i })

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 	"html"
 	"sort"
 	"strconv"
@@ -99,7 +100,7 @@ func renderConfigHTML(pluginDir string, config pluginConfig, stats cacheStats) s
 		writeConfigRow(&sb, "期間", formatMilli(stats.OldestUnixMilli)+" 〜 "+formatMilli(stats.NewestUnixMilli))
 	}
 	writeConfigRow(&sb, "最終スキャン", formatUnix(stats.LastScanUnix))
-	writeConfigRow(&sb, "キャッシュDB", cacheDBPath(pluginDir))
+	writeConfigRow(&sb, "キャッシュDB", sdk.CacheDBPath(pluginDir))
 	sb.WriteString(`</table>`)
 
 	if len(stats.FileCountByFormat) != 0 {

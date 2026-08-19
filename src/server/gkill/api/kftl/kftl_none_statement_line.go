@@ -30,6 +30,6 @@ func (l *kftlNoneStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *
 	return nil
 }
 
-func (l *kftlNoneStatementLine) GetLabelName() string                 { return "none" }
+func (l *kftlNoneStatementLine) GetLabelName() string                  { return "none" }
 func (l *kftlNoneStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlNoneStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlNoneStatementLine) GetStatementLineText() string          { return l.lineText }

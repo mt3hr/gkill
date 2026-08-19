@@ -30,10 +30,10 @@ import { createMockGkillAPI } from '../../helpers/mock-api'
 import { useAddMiView } from '@/classes/use-add-mi-view'
 import { useAddTagView } from '@/classes/use-add-tag-view'
 import { useAddNlogView } from '@/classes/use-add-nlog-view'
-import { useAddUrlogView } from '@/classes/use-add-ur-log-view'
+import { useAddURLogView } from '@/classes/use-add-ur-log-view'
 import { useAddLantanaView } from '@/classes/use-add-lantana-view'
 import { useAddTimeIsView } from '@/classes/use-add-time-is-view'
-import { useAddKcView } from '@/classes/use-add-kc-view'
+import { useAddKCView } from '@/classes/use-add-kc-view'
 
 function createBaseProps() {
   return {
@@ -262,7 +262,7 @@ describe('useAddNlogView', () => {
 
 // ========== useAddURLogView ==========
 
-describe('useAddUrlogView', () => {
+describe('useAddURLogView', () => {
   let props: Record<string, unknown>
   let emits: ReturnType<typeof vi.fn>
 
@@ -273,12 +273,12 @@ describe('useAddUrlogView', () => {
   })
 
   test('initializes with empty URL', () => {
-    const view = useAddUrlogView({ props, emits })
+    const view = useAddURLogView({ props, emits })
     expect(view.url.value).toBe('')
   })
 
   test('save() emits received_errors when URL is blank', async () => {
-    const view = useAddUrlogView({ props, emits })
+    const view = useAddURLogView({ props, emits })
     view.url.value = ''
     await view.save()
     const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
@@ -286,7 +286,7 @@ describe('useAddUrlogView', () => {
   })
 
   test('returns expected interface', () => {
-    const view = useAddUrlogView({ props, emits })
+    const view = useAddURLogView({ props, emits })
     expect(typeof view.save).toBe('function')
     expect(typeof view.reset).toBe('function')
   })
@@ -316,7 +316,7 @@ describe('useAddUrlogView', () => {
         call_order.push('registered_kyou')
       }
     })
-    const view = useAddUrlogView({ props, emits: ordered_emits })
+    const view = useAddURLogView({ props, emits: ordered_emits })
     view.url.value = 'https://example.com/'
     // タグ欄の子ビューは親から見ると template ref。値を返すだけのスタブで十分
     view.kyou_tags_view.value = { get_tag_names: () => ['既知タグ'], reset: () => { } }
@@ -329,7 +329,7 @@ describe('useAddUrlogView', () => {
   })
 
   test('タグ名が新しいときは保存せず確認ダイアログを開く', async () => {
-    const view = useAddUrlogView({ props, emits })
+    const view = useAddURLogView({ props, emits })
     view.url.value = 'https://example.com/'
     view.kyou_tags_view.value = { get_tag_names: () => ['新しいタグ'], reset: () => { } }
 
@@ -342,7 +342,7 @@ describe('useAddUrlogView', () => {
 
   test('タグを書かなければ add_tag は呼ばれない', async () => {
     props.gkill_api.add_urlog.mockResolvedValue({ added_kyou: { id: 'new-urlog-id' }, messages: [], errors: [] })
-    const view = useAddUrlogView({ props, emits })
+    const view = useAddURLogView({ props, emits })
     view.url.value = 'https://example.com/'
     view.kyou_tags_view.value = { get_tag_names: () => [], reset: () => { } }
 
@@ -409,9 +409,9 @@ describe('useAddTimeIsView', () => {
   })
 })
 
-// ========== useAddKcView ==========
+// ========== useAddKCView ==========
 
-describe('useAddKcView', () => {
+describe('useAddKCView', () => {
   let props: Record<string, unknown>
   let emits: ReturnType<typeof vi.fn>
 
@@ -422,12 +422,12 @@ describe('useAddKcView', () => {
   })
 
   test('initializes with empty title', () => {
-    const view = useAddKcView({ props, emits })
+    const view = useAddKCView({ props, emits })
     expect(view.title.value).toBe('')
   })
 
   test('save() emits received_errors when title is blank', async () => {
-    const view = useAddKcView({ props, emits })
+    const view = useAddKCView({ props, emits })
     view.title.value = ''
     await view.save()
     const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
@@ -435,7 +435,7 @@ describe('useAddKcView', () => {
   })
 
   test('returns expected interface', () => {
-    const view = useAddKcView({ props, emits })
+    const view = useAddKCView({ props, emits })
     expect(typeof view.save).toBe('function')
     expect(typeof view.reset).toBe('function')
   })

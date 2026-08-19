@@ -31,35 +31,18 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { EditDeviceStructDialogEmits } from './edit-device-struct-dialog-emits.ts'
 import type { EditDeviceStructDialogProps } from './edit-device-struct-dialog-props.ts'
 import EditDeviceStructView from '../views/edit-device-struct-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error.js'
 import type { GkillMessage } from '@/classes/api/gkill-message.js'
-
-defineProps<EditDeviceStructDialogProps>()
-const emits = defineEmits<EditDeviceStructDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import type { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data.js'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("edit-device-struct-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useEditDeviceStructDialog } from '@/classes/use-edit-device-struct-dialog'
 
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
-
+const props = defineProps<EditDeviceStructDialogProps>()
+const emits = defineEmits<EditDeviceStructDialogEmits>()
+const { is_show_dialog, ui, show, hide } = useEditDeviceStructDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

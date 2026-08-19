@@ -411,7 +411,6 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 	// （Reps は nil=未指定 / 非nil空=rep名候補0件=0件）
 	if !hasTypeFilter && findCtx.ParsedFindQuery.Reps == nil {
 		for _, rep := range repositories.Reps {
-			rep := rep
 			repName, err := rep.GetRepName(ctx)
 			if err != nil {
 				return nil, err
@@ -758,6 +757,16 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 // ここで落とすと、**いま追加したばかりの記録が最大1分間ずっと一覧から消える**。
 // 逆に残しすぎても「チェックを外したrepの、たった今書いた記録が1分だけ残る」で済む。
 // 消えるほうが明らかに重いので、判断できない行は残す。
+//
+// **書き込み側に「実在しないrep名」を入れさせないこと。** この関数は非空のrep名を
+// 「実在するが選ばれていないrep」とみなして落とすので、合成した名前を渡されると
+// 記録が黙って消える。実例: commit_tx(KFTLの送信経路)は一時リポジトリから読み直した記録を
+// write-through していたが、GetXxxByTXID は `? AS REP_NAME` に temp rep の名前
+// ("KmemoTemp" / "KC_TEMP" / "lantana_temp" …)を差し込んで返すため、
+// **KFTLで書いた記録だけが一覧から丸ごと消えていた**(2026-08-19 修正)。
+// ここに `*Temp` を通す例外を足してはいけない ―― temp rep の名前は流儀がばらばらで、
+// 名前の一覧を2箇所で維持することになる。直すのは常に書き込み側。
+// 回帰は get_kyous_tx_rep_filter_test.go が**キャッシュON/OFFの両方**で守る。
 func filterKyousByRepName(kyousMap map[string][]reps.Kyou, allowedRepNames map[string]struct{}) {
 	for id, kyous := range kyousMap {
 		kept := kyous[:0]

@@ -21,50 +21,22 @@
         <DecideRelatedTimeUploadedFileView :application_config="application_config" :gkill_api="gkill_api"
           :app_content_height="app_content_height" :app_content_width="app_content_width"
           :uploaded_kyous="uploaded_kyous"
-          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
-          @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-          @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
-          @requested_reload_list="emits('requested_reload_list')"
-          @registered_kyou="(kyou: Kyou) => emits('registered_kyou', kyou)"
-          @updated_kyou="(kyou: Kyou) => emits('updated_kyou', kyou)"
-          @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyous, is_checked)"
-          @deleted_kyou="(deleted_kyou: Kyou) => emits('deleted_kyou', deleted_kyou)"
-          @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload)" />
+          v-on="crudRelayHandlers" />
         </v-card>
 </div>
     </div>
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { DecideRelatedTimeUploadedFileDialogEmits } from './decide-related-time-uploaded-file-dialog-emits'
 import type { DecideRelatedTimeUploadedFileDialogProps } from './decide-related-time-uploaded-file-dialog-props'
 import DecideRelatedTimeUploadedFileView from '../views/decide-related-time-uploaded-file-view.vue'
-import type { Kyou } from '@/classes/datas/kyou'
-import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { RykvDialogKind, RykvDialogPayload } from '../views/rykv-dialog-kind'
-
-defineProps<DecideRelatedTimeUploadedFileDialogProps>()
-const emits = defineEmits<DecideRelatedTimeUploadedFileDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("decide-related-time-uploaded-file-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useDecideRelatedTimeUploadedFileDialog } from '@/classes/use-decide-related-time-uploaded-file-dialog'
 
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const props = defineProps<DecideRelatedTimeUploadedFileDialogProps>()
+const emits = defineEmits<DecideRelatedTimeUploadedFileDialogEmits>()
+const { is_show_dialog, crudRelayHandlers, ui, show, hide } = useDecideRelatedTimeUploadedFileDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

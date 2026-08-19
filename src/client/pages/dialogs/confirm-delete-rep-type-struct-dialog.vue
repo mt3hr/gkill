@@ -30,38 +30,17 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
 import ConfirmDeleteRepTypeStructView from '../views/confirm-delete-rep-type-struct-view.vue';
 import type { ConfirmDeleteRepTypeStructDialogEmits } from './confirm-delete-rep-type-struct-dialog-emits';
 import type { ConfirmDeleteRepTypeStructDialogProps } from './confirm-delete-rep-type-struct-dialog-props';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct-element-data';
 import { i18n } from '@/i18n'
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
+import { useConfirmDeleteRepTypeStructDialog } from '@/classes/use-confirm-delete-rep-type-struct-dialog'
 
-defineProps<ConfirmDeleteRepTypeStructDialogProps>()
+const props = defineProps<ConfirmDeleteRepTypeStructDialogProps>()
 const emits = defineEmits<ConfirmDeleteRepTypeStructDialogEmits>()
+const { rep_type_struct, is_show_dialog, ui, show, hide } = useConfirmDeleteRepTypeStructDialog({ props, emits })
 defineExpose({ show, hide })
-
-const rep_type_struct: Ref<RepTypeStructElementData> = ref(new RepTypeStructElementData())
-
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-const ui = useFloatingDialog("confirm-delete-rep-type-struct-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
-
-
-async function show(rep_type_struct_obj: RepTypeStructElementData): Promise<void> {
-  rep_type_struct.value = rep_type_struct_obj
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  rep_type_struct.value = new RepTypeStructElementData()
-}
 </script>
 

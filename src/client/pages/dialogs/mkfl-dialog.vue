@@ -23,21 +23,7 @@
         <MKFLView :app_content_height="view_height" :app_content_width="view_width"
           :application_config="application_config" :gkill_api="gkill_api"
           :is_hosted_in_dialog="true /* 呼び出し元のページが自前のFABを持っているので、内包する実行中ビューのFABは出さない */"
-          @deleted_kyou="(deleted_kyou: Kyou) => { emits('deleted_kyou', deleted_kyou) }"
-          @deleted_tag="(deleted_tag: Tag) => emits('deleted_tag', deleted_tag)"
-          @deleted_text="(deleted_text: Text) => emits('deleted_text', deleted_text)"
-          @deleted_notification="(deleted_notification: Notification) => emits('deleted_notification', deleted_notification)"
-          @registered_kyou="(registered_kyou: Kyou) => { emits('registered_kyou', registered_kyou) }"
-          @registered_tag="(registered_tag: Tag) => emits('registered_tag', registered_tag)"
-          @registered_text="(registered_text: Text) => emits('registered_text', registered_text)"
-          @registered_notification="(registered_notification: Notification) => emits('registered_notification', registered_notification)"
-          @updated_kyou="(updated_kyou: Kyou) => { emits('updated_kyou', updated_kyou) }"
-          @updated_tag="(updated_tag: Tag) => emits('updated_tag', updated_tag)"
-          @updated_text="(updated_text: Text) => emits('updated_text', updated_text)"
-          @updated_notification="(updated_notification: Notification) => emits('updated_notification', updated_notification)"
-          @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
-          @requested_reload_list="() => emits('requested_reload_list')"
+          v-on="crudRelayHandlers"
           @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)" />
         <HelpDialog screen_name="mkfl" ref="help_dialog" />
       </div>
@@ -46,16 +32,10 @@
 </template>
 <script lang="ts" setup>
 import { ref, type ComponentPublicInstance } from 'vue'
-import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { MKFLDialogEmits } from './mkfl-dialog-emits'
 import type { MKFLDialogProps } from './mkfl-dialog-props'
 import MKFLView from '../views/mkfl-view.vue'
 import HelpDialog from './help-dialog.vue'
-import type { Kyou } from "@/classes/datas/kyou"
-import type { Tag } from "@/classes/datas/tag"
-import type { Text } from "@/classes/datas/text"
-import type { Notification } from "@/classes/datas/notification"
 import { useMKFLDialog } from '@/classes/use-mkfl-dialog'
 import { i18n } from '@/i18n'
 
@@ -64,7 +44,7 @@ const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 const props = defineProps<MKFLDialogProps>()
 const emits = defineEmits<MKFLDialogEmits>()
 
-const { is_show_dialog, ui, dialog_body_ref, view_width, view_height, show, hide } = useMKFLDialog({ props, emits })
+const { is_show_dialog, ui, dialog_body_ref, view_width, view_height, show, hide, crudRelayHandlers } = useMKFLDialog({ props, emits })
 
 defineExpose({ show, hide })
 </script>

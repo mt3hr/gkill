@@ -84,6 +84,9 @@ export default function register_dictionary(): void {
     PredicateDictionary.set("GitCommitLogCodeLessThanPredicate", GitCommitLogCodeLessThanPredicate)
     PredicateDictionary.set("KmemoContentContainsPredicate", KmemoContentContainsPredicate)
     PredicateDictionary.set("KmemoContentEqualPredicate", KmemoContentEqualPredicate)
+    // "TextContent..." は保存済みJSONに残っている旧名で、実体は Kmemo 版と同じ。
+    // 対応する text-content-*-predicate.ts は誰からも使われていなかったので消したが、
+    // **この2行は消してはいけない** ―― 旧名で保存された Dnote が読めなくなる
     PredicateDictionary.set("TextContentContainsPredicate", KmemoContentContainsPredicate)
     PredicateDictionary.set("TextContentEqualPredicate", KmemoContentEqualPredicate)
     PredicateDictionary.set("LantanaMoodEqualPredicate", LantanaMoodEqualPredicate)
@@ -144,42 +147,38 @@ export default function register_dictionary(): void {
     DnoteKyouFilterDictionary.set("FilterBottomKyous", FilterBottomKyous)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function build_dnote_aggregate_target_from_json(json: any): DnoteAggregateTarget {
+export function build_dnote_aggregate_target_from_json(json: Record<string, unknown>): DnoteAggregateTarget {
     register_dictionary()
-    const ctor = AggregateTargetDictionary.get(json.type)
+    const ctor = AggregateTargetDictionary.get(String(json.type))
     if (!ctor) throw new Error(`Unknown aggregate type: ${json.type}`)
     return ctor.from_json(json) as DnoteAggregateTarget
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function build_dnote_key_getter_from_json(json: any): DnoteKeyGetter {
+export function build_dnote_key_getter_from_json(json: Record<string, unknown>): DnoteKeyGetter {
     register_dictionary()
-    const ctor = DnoteKeyGetterDictionary.get(json.type)
+    const ctor = DnoteKeyGetterDictionary.get(String(json.type))
     if (!ctor) throw new Error(`Unknown getter type: ${json.type}`)
     return ctor.from_json(json) as DnoteKeyGetter
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function build_dnote_predicate_from_json(json: any): DnotePredicate {
+export function build_dnote_predicate_from_json(json: Record<string, unknown>): DnotePredicate {
     register_dictionary()
     if ('logic' in json && Array.isArray(json.predicates)) {
-        const children = json.predicates.map(build_dnote_predicate_from_json)
+        const children = (json.predicates as Array<Record<string, unknown>>).map(build_dnote_predicate_from_json)
         if (json.logic === 'AND') return new AndPredicate(children)
         if (json.logic === 'OR') return new OrPredicate(children)
         if (json.logic === 'NOT') return new NotPredicate(children)
         throw new Error(`Unknown logic type: ${json.logic}`)
     }
 
-    const ctor = PredicateDictionary.get(json.type)
+    const ctor = PredicateDictionary.get(String(json.type))
     if (!ctor) throw new Error(`Unknown predicate type: ${json.type}`)
     return ctor.from_json(json) as DnotePredicate
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function build_dnote_kyou_filter_from_json(json: any): DnoteKyouFilter {
+export function build_dnote_kyou_filter_from_json(json: Record<string, unknown>): DnoteKyouFilter {
     register_dictionary()
-    const ctor = DnoteKyouFilterDictionary.get(json.type)
+    const ctor = DnoteKyouFilterDictionary.get(String(json.type))
     if (!ctor) throw new Error(`Unknown getter type: ${json.type}`)
     return ctor.from_json(json) as DnoteKyouFilter
 }

@@ -9,14 +9,11 @@ import (
 	"time"
 
 	"github.com/SherClockHolmes/webpush-go"
-	"github.com/mt3hr/gkill/src/server/gkill/api"
-	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 // HandleURLogBookmarkletAddress は、ブックマークレットから送られたページ情報を
@@ -55,11 +52,15 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		return
 	}
 
-	// アカウントを取得
+	// アカウントを取得。
+	// このハンドラはブックマークレットからの遷移でHTTPステータスだけを返すので、
+	// GkillErrorを載せる先が無い。エラーコードはログに残す
 	account, gkillError, err := g.getAccountFromSessionIDWithApplicationName(r.Context(), request.SessionID, "urlog_bookmarklet", request.LocaleName)
 	if err != nil {
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		_ = gkillError
+		if gkillError != nil {
+			slog.Log(r.Context(), gkill_log.Debug, "error at urlog bookmarklet auth", "error_code", gkillError.ErrorCode)
+		}
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -167,17 +168,13 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 
+	// rep名の取得に失敗しても、URLog自体はもう保存されている。
+	// ここで return すると最新版アドレスの更新を丸ごと飛ばすことになり、
+	// 追加したURLogが「最新版の所在」に載らないまま残る。ログだけ残して先へ進む
 	repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetURLogError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
-		}
-		_ = gkillError
-		// response.Errors = append(response.Errors, gkillError)
-		return
 	}
 	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              urlog.IsDeleted,

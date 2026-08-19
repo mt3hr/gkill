@@ -42,10 +42,8 @@
     <table v-show="use_timeis && use_timeis_tags" class="taglist">
         <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
             :is_open="true" :struct_obj="cloned_application_config.tag_struct" :is_editable="false"
-            :is_root="true" :is_show_checkbox="true" @clicked_items="clicked_items"
-            @requested_update_check_state="update_check_state"
-            @received_errors="foldableStructHandlers['received_errors']"
-            @received_messages="foldableStructHandlers['received_messages']"
+            :is_root="true" :is_show_checkbox="true" v-on="foldableStructHandlers"
+            @clicked_items="clicked_items" @requested_update_check_state="update_check_state"
             ref="foldable_struct" />
     </table>
 </template>

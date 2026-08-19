@@ -30,21 +30,12 @@
 import type { ConfirmReKyouDialogProps } from './confirm-re-kyou-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import ConfirmReKyouView from '../views/confirm-re-kyou-view.vue'
-import type { Kyou } from '@/classes/datas/kyou'
 import { i18n } from '@/i18n'
 import { useConfirmReKyouDialog } from '@/classes/use-confirm-re-kyou-dialog'
-import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 
 defineProps<ConfirmReKyouDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
-
-// クリックはフォーカス移動も伴う
-const crudRelayHandlers = build_kyou_dialog_relay(emits, {
-  'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
-})
-
-const { is_show_dialog, ui, show, hide } = useConfirmReKyouDialog({ emits })
-
+const { is_show_dialog, ui, show, hide, crudRelayHandlers } = useConfirmReKyouDialog({ emits })
 defineExpose({ show, hide })
 </script>
 

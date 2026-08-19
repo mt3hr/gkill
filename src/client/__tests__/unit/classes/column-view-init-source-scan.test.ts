@@ -169,4 +169,36 @@ describe('ApplicationConfig 取得の失敗経路', () => {
             ).toBe(true)
         })
     }
+    for (const path of COLUMN_VIEW_COMPOSABLES) {
+        it(`${path} は新規タグを列の条件へ足す（rykv と mi で対称）`, () => {
+            const source = read(path)
+            // rykv と mi はコピー由来の対称実装。片方だけ直すと
+            // 「rykvでは出るが miでは消えたまま」というズレが残る
+            expect(
+                source.includes('useRegisteredTagColumnFilter('),
+                '新規タグを列の条件へ足す配線が無い(タグを付けた記録が追加直後に消える)',
+            ).toBe(true)
+        })
+    }
+
+    for (const path of COLUMN_VIEW_COMPOSABLES) {
+        it(`${path} は registered_tag の既知判定を emit より前に済ませる`, () => {
+            const source = read(path)
+            const start = source.indexOf("'registered_tag':")
+            expect(start, 'registered_tag の中継が見つからない').toBeGreaterThan(-1)
+            const end = source.indexOf("'registered_text':", start)
+            expect(end, 'registered_tag の中継の終わりが見つからない').toBeGreaterThan(start)
+            const body = source.slice(start, end)
+            const note_at = body.indexOf('note_registered_tag(')
+            const emit_at = body.indexOf("emits('registered_tag'")
+            expect(note_at, '既知判定(note_registered_tag)を呼んでいない').toBeGreaterThan(-1)
+            expect(emit_at, '親への emit が無い').toBeGreaterThan(-1)
+            // emit 先(use-*-page.ts)の check_tag_update がタグツリーへ足したあとでは、
+            // 「利用者がついさっき作った」ことを二度と知れない
+            expect(
+                note_at < emit_at,
+                '既知判定が emit より後にある(判定が常に「既知」になり修正が効かなくなる)',
+            ).toBe(true)
+        })
+    }
 })

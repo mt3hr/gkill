@@ -35,31 +35,15 @@
 import type { ShareKyousListDialogEmits } from './share-kyou-list-dialog-emits'
 import type { ShareKyousListDialogProps } from './share-kyou-list-dialog-props'
 import ShareKyousListView from '../views/share-kyou-view.vue'
-import { ref, type Ref } from 'vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ShareKyousInfo } from '@/classes/datas/share-kyous-info'
-
-defineProps<ShareKyousListDialogProps>()
-const emits = defineEmits<ShareKyousListDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("share-kyou-list-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useShareKyouListDialog } from '@/classes/use-share-kyou-list-dialog'
 
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const props = defineProps<ShareKyousListDialogProps>()
+const emits = defineEmits<ShareKyousListDialogEmits>()
+const { is_show_dialog, ui, show, hide } = useShareKyouListDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

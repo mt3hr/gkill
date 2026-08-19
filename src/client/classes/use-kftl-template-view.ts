@@ -2,6 +2,7 @@ import { ref, type Ref } from 'vue'
 import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { KFTLTemplateViewProps } from '@/pages/views/kftl-template-view-props'
 import type { KFTLTemplateViewEmits } from '@/pages/views/kftl-template-view-emits'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useKFTLTemplateView(options: {
     props: KFTLTemplateViewProps,
@@ -9,8 +10,7 @@ export function useKFTLTemplateView(options: {
 }) {
     const { props: _props, emits } = options
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const child_template_dialogs: Ref<Array<any>> = ref(new Array<any>())
+    const child_template_dialogs: Ref<Array<ComponentRef>> = ref(new Array<ComponentRef>())
 
     function clicked_template_button(template: KFTLTemplateElementData, index: number): void {
         if (!template.children) {

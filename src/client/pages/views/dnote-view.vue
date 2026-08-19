@@ -81,12 +81,12 @@
                         :ref="(el) => set_item_table_ref(i, el)" />
                     <DnoteTrendGraphTableView :application_config="application_config" :gkill_api="gkill_api"
                         :editable="editable" v-if="dnote_definitions[i].trends" v-model="dnote_definitions[i].trends"
-                        v-on="errorsMessagesRelayHandlers" @finish_a_aggregate_task="increment_finished_aggregate_task"
+                        v-on="errorMessageRelayHandlers" @finish_a_aggregate_task="increment_finished_aggregate_task"
                         :ref="(el) => set_trend_table_ref(i, el)" />
                     <DnoteCorrelationGraphTableView :application_config="application_config" :gkill_api="gkill_api"
                         :editable="editable" v-if="dnote_definitions[i].correlations"
                         v-model="dnote_definitions[i].correlations"
-                        v-on="errorsMessagesRelayHandlers"
+                        v-on="errorMessageRelayHandlers"
                         @finish_a_aggregate_task="increment_finished_aggregate_task"
                         :ref="(el) => set_correlation_table_ref(i, el)" />
                     <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api"
@@ -132,19 +132,19 @@
             </v-row>
         </v-card-action>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
-            v-on="errorsMessagesRelayHandlers"
+            v-on="errorMessageRelayHandlers"
             @requested_add_dnote_list_query="(query: DnoteListQuery) => onRequestedAddDnoteListQuery(query)"
             ref="add_dnote_list_dialog" />
         <AddDnoteItemDialog :application_config="application_config" :gkill_api="gkill_api"
-            v-on="errorsMessagesRelayHandlers"
+            v-on="errorMessageRelayHandlers"
             @requested_add_dnote_item="(item: DnoteItemData) => onRequestedAddDnoteItem(item)"
             ref="add_dnote_item_dialog" />
         <AddDnoteTrendGraphDialog :application_config="application_config" :gkill_api="gkill_api"
-            v-on="errorsMessagesRelayHandlers"
+            v-on="errorMessageRelayHandlers"
             @requested_add_dnote_trend_graph="(query: DnoteTrendGraphQuery) => onRequestedAddDnoteTrendGraph(query)"
             ref="add_dnote_trend_graph_dialog" />
         <AddDnoteCorrelationGraphDialog :application_config="application_config" :gkill_api="gkill_api"
-            v-on="errorsMessagesRelayHandlers"
+            v-on="errorMessageRelayHandlers"
             @requested_add_dnote_correlation_graph="(query: DnoteCorrelationGraphQuery) => onRequestedAddDnoteCorrelationGraph(query)"
             ref="add_dnote_correlation_graph_dialog" />
     </v-card>
@@ -218,7 +218,7 @@ const {
 
     // Event relay objects
     crudRelayHandlers,
-    errorsMessagesRelayHandlers,
+    errorMessageRelayHandlers,
 } = useDnoteView({ props, emits })
 
 defineExpose({ reload, abort, set_loading })

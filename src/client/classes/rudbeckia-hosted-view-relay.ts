@@ -68,10 +68,11 @@ export type RudbeckiaHostedViewRelay =
     { [K in keyof RudbeckiaHostedViewRelayArgs]: (...args: RudbeckiaHostedViewRelayArgs[K]) => void }
     & { requested_navigate_page: (page_name: string) => void }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type LooseEmits = (event: string, ...args: Array<any>) => void
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type LooseRelay = Record<string, (...args: Array<any>) => void>
+// emits を可変長で呼ぶための形。kyou-view-relay.ts の同名の型と同じ意味
+type LooseEmits = (event: string, ...args: Array<unknown>) => void
+// 値の型は never[]。パラメータは反変なので、具体的な型を取るハンドラも代入できる。
+// 最後に as unknown as で本来の型へ戻すのは kyou-view-relay.ts と同じ
+type LooseRelay = Record<string, (...args: never[]) => void>
 
 /**
  * ポートの画面ウィンドウが、中のビューのイベントを親へ中継する束。
@@ -85,8 +86,7 @@ export function build_rudbeckia_hosted_view_relay(emits: RudbeckiaPageDialogEmit
     const emit = emits as unknown as LooseEmits
     const relay: LooseRelay = {}
     for (const event_name of hosted_view_relay_event_names) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        relay[event_name] = (...args: Array<any>) => emit(event_name, ...args)
+        relay[event_name] = ((...args: Array<unknown>) => emit(event_name, ...args)) as (...args: never[]) => void
     }
     relay['requested_navigate_page'] = (page_name: string) => {
         if (is_rudbeckia_page_kind(page_name)) {
@@ -109,8 +109,7 @@ export function build_rudbeckia_page_dialog_host_relay(
     const emit = emits as unknown as LooseEmits
     const relay: LooseRelay = {}
     for (const event_name of hosted_view_relay_event_names) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        relay[event_name] = (...args: Array<any>) => emit(event_name, ...args)
+        relay[event_name] = ((...args: Array<unknown>) => emit(event_name, ...args)) as (...args: never[]) => void
     }
     // ホストは読み替えない。ダイアログが振り分けたものをそのまま上げる
     relay['requested_open_page'] = (kind: RudbeckiaPageKind) => emit('requested_open_page', kind)

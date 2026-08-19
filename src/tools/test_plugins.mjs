@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-// src/plugins/ 配下の各プラグインのGoテストを走らせる。
+// src/plugins/ 配下の各プラグインに対して go のサブコマンドを回す。
 //
 // 各プラグインは独立した go.mod を持つ別モジュールなので、
 // `cd src/server && go test ./...`（npm run test_server）では実行されない。
 // モジュールを1つずつ回すためだけのスクリプト。
 //
-// 使い方: npm run test_plugins
+// 使い方:
+//   npm run test_plugins   … go test ./...
+//   npm run vet_plugins    … go vet ./...
 //
 // 依存なし（Node 標準のみ）。
 
@@ -40,14 +42,21 @@ if (modules.length === 0) {
   process.exit(1)
 }
 
+// 既定は test。CI は vet も別ステップで回す
+const SUBCOMMAND = process.argv[2] || 'test'
+if (!['test', 'vet', 'build'].includes(SUBCOMMAND)) {
+  console.error(`未対応のサブコマンド: ${SUBCOMMAND}（test / vet / build のみ）`)
+  process.exit(1)
+}
+
 const failed = []
 for (const mod of modules) {
   const rel = path.relative(ROOT, mod).split(path.sep).join('/')
-  console.log(`\n=== go test ./...  (${rel})`)
+  console.log(`\n=== go ${SUBCOMMAND} ./...  (${rel})`)
   // shell は使わない（args がエスケープされない旨の DeprecationWarning を避ける）。
   // Windows では拡張子まで指定しないと spawnSync が実行ファイルを解決できない。
   const goBin = process.platform === 'win32' ? 'go.exe' : 'go'
-  const res = spawnSync(goBin, ['test', './...'], { cwd: mod, stdio: 'inherit' })
+  const res = spawnSync(goBin, [SUBCOMMAND, './...'], { cwd: mod, stdio: 'inherit' })
   if (res.error) {
     console.error(`  ${goBin} を実行できない: ${res.error.message}`)
     failed.push(rel)
@@ -61,4 +70,4 @@ if (failed.length > 0) {
   for (const f of failed) console.error('  - ' + f)
   process.exit(1)
 }
-console.log(`\n✅ プラグイン ${modules.length}モジュール すべて成功`)
+console.log(`\n✅ プラグイン ${modules.length}モジュール すべて成功 (go ${SUBCOMMAND})`)

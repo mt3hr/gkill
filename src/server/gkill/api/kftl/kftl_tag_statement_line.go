@@ -49,6 +49,6 @@ func (l *kftlTagStatementLine) ApplyThisLineToRequestMap(_ context.Context, requ
 	return nil
 }
 
-func (l *kftlTagStatementLine) GetLabelName() string                 { return "tag" }
+func (l *kftlTagStatementLine) GetLabelName() string                  { return "tag" }
 func (l *kftlTagStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlTagStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlTagStatementLine) GetStatementLineText() string          { return l.lineText }

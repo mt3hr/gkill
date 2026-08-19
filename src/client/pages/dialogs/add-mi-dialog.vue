@@ -26,38 +26,15 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
 import AddMiView from '../views/add-mi-view.vue'
 import type { AddMiDialogProps } from './add-mi-dialog-props'
 import type { KyouViewEmits } from '../views/kyou-view-emits'
-import type { Kyou } from '@/classes/datas/kyou'
-import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
-
-defineProps<AddMiDialogProps>()
-const emits = defineEmits<KyouViewEmits>()
-
-// クリックはフォーカス移動も伴う
-const crudRelayHandlers = build_kyou_dialog_relay(emits, {
-  'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
-})
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("add-mi-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useAddMiDialog } from '@/classes/use-add-mi-dialog'
 
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const props = defineProps<AddMiDialogProps>()
+const emits = defineEmits<KyouViewEmits>()
+const { crudRelayHandlers, is_show_dialog, ui, show, hide } = useAddMiDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

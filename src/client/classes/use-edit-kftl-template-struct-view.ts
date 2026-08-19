@@ -4,10 +4,9 @@ import type { EditKFTLTemplateStructViewProps } from '@/pages/views/edit-kftl-te
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data'
-import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 import { move_struct_up, move_struct_down, move_struct_to_folder } from '@/classes/foldable-struct-move'
+import { build_error_message_relay } from '@/classes/kyou-view-relay'
 
 export function useEditKftlTemplateStructView(options: {
     props: EditKFTLTemplateStructViewProps,
@@ -185,10 +184,7 @@ export function useEditKftlTemplateStructView(options: {
     }
 
     // ── Event relay objects ──
-    const errorMessageRelayHandlers = {
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-    }
+    const errorMessageRelayHandlers = build_error_message_relay(emits)
 
     // ── Return ──
     return {

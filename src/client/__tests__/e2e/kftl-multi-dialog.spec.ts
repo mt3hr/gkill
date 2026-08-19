@@ -32,7 +32,22 @@ async function openKftlWindow(page: Page): Promise<void> {
 
   const fab = page.locator('.position-fixed button, .position-fixed .v-btn').first()
   await expect(fab, 'FAB(＋ボタン)が見つからない').toBeVisible({ timeout: 15000 })
-  await fab.click({ force: true })
+
+  // **押して、開くまで押し直す。**
+  // Vuetify の useActivator は「閉じた直後 50ms のあいだアクティベータのクリックを
+  // 黙って捨てる」(reopenLock)。2枚目を開くクリックがその窓に入ると
+  // メニューは開かず、以降なにも起きないまま待ち続けることになる。
+  //
+  // 「前のメニューが閉じきるのを待ってから押す」では塞げない ――
+  // reopenLock を立てるのは isActive が false になった瞬間の watch なので、
+  // **aria-expanded が "false" になる時刻はその 50ms の始まりそのもの**。
+  // 閉じたことを確かめてから押すほど、むしろ確実に窓の中へ入る。
+  // 開いたか(aria-expanded="true")だけを見て、開くまで押し直すのが唯一の塞ぎ方。
+  // aria-expanded は VMenu が必ずアクティベータへ出しているので、製品側に印は要らない
+  await expect(async () => {
+    await fab.click({ force: true })
+    await expect(fab, 'FABメニューが開かない').toHaveAttribute('aria-expanded', 'true', { timeout: 2000 })
+  }).toPass({ timeout: 30000 })
 
   await clickContextMenuItem(page, MENU.kftl)
   await expect(page.locator(KFTL_DIALOG)).toHaveCount(before + 1)
@@ -105,7 +120,10 @@ test.describe('KFTL Multi Dialog', () => {
     await openKftlWindow(page)
     await openKftlWindow(page)
 
-    expect(await zIndexOf(page, 1)).toBeGreaterThan(await zIndexOf(page, 0))
+    // 一発読みにしないこと。z-index は enter_z_order が
+    // watch(container_ref, …, { flush: "post" }) の中で走るので、
+    // **最初の描画では indexOf が -1 で 1100**（＝2枚とも同じ値）に見える窓がある
+    await expect.poll(async () => await zIndexOf(page, 1) > await zIndexOf(page, 0)).toBe(true)
 
     await bringToFront(page, 0)
 

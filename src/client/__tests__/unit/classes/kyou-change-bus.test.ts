@@ -30,16 +30,24 @@ function make_sink(): KyouChangeSink & {
     reloaded: Array<string>
     deleted: Array<string>
     reload_list_count: number
+    applied_order: Array<string>
+    new_tag_names: Array<string>
 } {
     const sink = {
         registered: new Array<string>(),
         reloaded: new Array<string>(),
         deleted: new Array<string>(),
         reload_list_count: 0,
+        applied_order: new Array<string>(),
+        new_tag_names: new Array<string>(),
         apply_registered: (kyou: Kyou) => { sink.registered.push(kyou.id) },
         apply_reload: (kyou: Kyou) => { sink.reloaded.push(kyou.id) },
         apply_deleted: (kyou: Kyou) => { sink.deleted.push(kyou.id) },
-        apply_reload_list: () => { sink.reload_list_count++ },
+        apply_reload_list: () => { sink.reload_list_count++; sink.applied_order.push('reload_list') },
+        apply_registered_tag: (tag_names: Array<string>) => {
+            sink.new_tag_names.push(...tag_names)
+            sink.applied_order.push('registered_tag')
+        },
     }
     return sink
 }
@@ -175,5 +183,45 @@ describe('apply_notices', () => {
         apply_notices('me', sink, [notice(7, 'other', { kind: 'reload', kyou: make_kyou('k1') })])
 
         expect(apply_reload).toHaveBeenCalledWith(expect.objectContaining({ id: 'k1' }), 7)
+    })
+})
+
+describe('registered_tag の配布', () => {
+    function notice(seq: number, origin_id: string, change: KyouChangeNotice['change']): KyouChangeNotice {
+        return { seq: seq, origin_id: origin_id, requested_at: seq, change: change }
+    }
+
+    test('他の画面で作られた新規タグが受け手へ届く', () => {
+        const sink = make_sink()
+        apply_notices('me', sink, [notice(1, 'other', { kind: 'registered_tag', tag_name: '新タグ' })])
+        expect(sink.new_tag_names).toEqual(['新タグ'])
+    })
+
+    test('自分が出したものは受けない', () => {
+        const sink = make_sink()
+        apply_notices('me', sink, [notice(1, 'me', { kind: 'registered_tag', tag_name: '新タグ' })])
+        expect(sink.new_tag_names).toEqual([])
+    })
+
+    test('reload_list より先に適用する（条件を直してから引き直す）', () => {
+        // 順序が逆だと、旧条件のまま全件取り直してしまい記録が出ない
+        const sink = make_sink()
+        apply_notices('me', sink, [
+            notice(1, 'other', { kind: 'reload_list' }),
+            notice(2, 'other', { kind: 'registered_tag', tag_name: '新タグ' }),
+        ])
+        expect(sink.applied_order).toEqual(['registered_tag', 'reload_list'])
+    })
+
+    test('apply_registered_tag を持たないシンクでも落ちない（dashboard / plaing は列のタグ絞り込みが無い）', () => {
+        const sink: KyouChangeSink = {
+            apply_registered: vi.fn(),
+            apply_reload: vi.fn(),
+            apply_deleted: vi.fn(),
+            apply_reload_list: vi.fn(),
+        }
+        expect(() => apply_notices('me', sink, [
+            notice(1, 'other', { kind: 'registered_tag', tag_name: '新タグ' }),
+        ])).not.toThrow()
     })
 })

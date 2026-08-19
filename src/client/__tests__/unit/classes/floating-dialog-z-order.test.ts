@@ -15,8 +15,8 @@ const BASE_Z_INDEX = 1100
 
 beforeEach(() => {
     // jsdom に ResizeObserver は無い。useFloatingDialog は onMounted で必ず作る
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (globalThis as any).ResizeObserver = class {
+    // jsdom には ResizeObserver が無いので最小の実装を差し込む
+    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = class {
         observe(): void { }
         unobserve(): void { }
         disconnect(): void { }

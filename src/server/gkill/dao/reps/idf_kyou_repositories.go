@@ -31,7 +31,6 @@ func (i IDFKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 
 	// 並列処理
 	for _, rep := range i {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -100,7 +99,6 @@ func (i IDFKyouRepositories) GetKyou(ctx context.Context, id string, updateTime 
 
 	// 並列処理
 	for _, rep := range i {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -165,7 +163,6 @@ func (i IDFKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([
 
 	// 並列処理
 	for _, rep := range i {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -258,7 +255,6 @@ func (i IDFKyouRepositories) UpdateCache(ctx context.Context) error {
 	defer close(errch)
 
 	for _, rep := range i {
-		rep := rep
 		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -319,7 +315,6 @@ func (i IDFKyouRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
@@ -353,6 +348,11 @@ errloop:
 }
 
 func (i IDFKyouRepositories) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]IDFKyou, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照
+	return findChunkedByIDs(ctx, query, i.findIDFKyou)
+}
+
+func (i IDFKyouRepositories) findIDFKyou(ctx context.Context, query *find.FindQuery) ([]IDFKyou, error) {
 	matchIDFKyous := map[string]IDFKyou{}
 	existErr := false
 	var err error
@@ -364,7 +364,6 @@ func (i IDFKyouRepositories) FindIDFKyou(ctx context.Context, query *find.FindQu
 
 	// 並列処理
 	for _, rep := range i {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchIDFKyousInRep, err := rep.FindIDFKyou(ctx, query)
 			if err != nil {
@@ -440,7 +439,6 @@ func (i IDFKyouRepositories) GetIDFKyou(ctx context.Context, id string, updateTi
 
 	// 並列処理
 	for _, rep := range i {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchIDFKyouInRep, err := rep.GetIDFKyou(ctx, id, updateTime)
 			if err != nil {
@@ -505,7 +503,6 @@ func (i IDFKyouRepositories) GetIDFKyouByTargetFile(ctx context.Context, targetF
 
 	// 並列処理
 	for _, rep := range i {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchIDFKyouInRep, err := rep.GetIDFKyouByTargetFile(ctx, targetFile)
 			if err != nil {
@@ -570,7 +567,6 @@ func (i IDFKyouRepositories) GetIDFKyouHistories(ctx context.Context, id string)
 
 	// 並列処理
 	for _, rep := range i {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchIDFKyousInRep, err := rep.GetIDFKyouHistories(ctx, id)
 			if err != nil {
@@ -647,7 +643,6 @@ func (i IDFKyouRepositories) GetIDFKyouHistoriesByRepName(ctx context.Context, i
 
 	// 並列処理
 	for _, rep := range i {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
 				// repNameが一致しない場合はスキップ
@@ -747,7 +742,6 @@ func (i IDFKyouRepositories) GenerateThumbCache(ctx context.Context) error {
 
 	wg := &sync.WaitGroup{}
 	for _, unwrapedRep := range unwrapedReps {
-		unwrapedRep := unwrapedRep
 		err := threads.Go(ctx, wg, func() {
 			err := unwrapedRep.GenerateThumbCache(ctx)
 			if err != nil {
@@ -788,7 +782,6 @@ func (i IDFKyouRepositories) GenerateVideoCache(ctx context.Context) error {
 
 	wg := &sync.WaitGroup{}
 	for _, unwrapedRep := range unwrapedReps {
-		unwrapedRep := unwrapedRep
 		err := threads.Go(ctx, wg, func() {
 			err := unwrapedRep.GenerateVideoCache(ctx)
 			if err != nil {
@@ -872,7 +865,6 @@ func (i IDFKyouRepositories) GetLatestDataRepositoryAddress(ctx context.Context,
 
 	// 並列処理
 	for _, rep := range i {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {
