@@ -2,8 +2,11 @@ package find
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log/slog"
+
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
 // legacyUseFlagKeys は旧形式の FindQuery JSON が持っていた use_* フラグキー。
@@ -170,7 +173,7 @@ func migrateLegacyFindQueryObject(obj map[string]any) {
 	if usePlaing, has := legacyFlagValue(obj, "use_plaing"); has {
 		if usePlaing {
 			if value, exist := obj["plaing_time"]; !exist || value == nil {
-				slog.Warn("旧形式FindQueryのuse_plaing=trueかつplaing_time未指定を検出しました。「現在時刻」の意味は新形式で保存できないため、フィルタ未使用(null)として移行します")
+				slog.Log(context.Background(), gkill_log.Warn, "旧形式FindQueryのuse_plaing=trueかつplaing_time未指定を検出しました。「現在時刻」の意味は新形式で保存できないため、フィルタ未使用(null)として移行します")
 				obj["plaing_time"] = nil
 			}
 		} else {

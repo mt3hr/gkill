@@ -9,6 +9,7 @@ import (
 
 	"github.com/SherClockHolmes/webpush-go"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
@@ -59,6 +60,48 @@ func (n *notificator) waitAndNotify() {
 	if err != nil {
 		slog.Log(n.ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		return
+	}
+
+	// キャッシュへ入れる RepName は**書き込み先rep**に合わせる。
+	// updatedNotification は GetNotificationsBetweenNotificationTime で読んだ
+	// 取得元repの名前を持ったままなので、そのまま入れるとキャッシュ表の REP_NAME が
+	// 実体（WriteNotificationRep）と食い違う。取れなければ空にする（空は安全側）
+	if writeRepName, repNameErr := n.gkillReps.WriteNotificationRep.GetRepName(notificationCtx); repNameErr == nil {
+		updatedNotification.RepName = writeRepName
+	} else {
+		updatedNotification.RepName = ""
+	}
+
+	// 読み取りはキャッシュrepしか見ないので、ここを飛ばすと次のUpdateCache(最大1分)まで
+	// IsNotificated=false のまま読まれる。その間にPWAが古い応答をキャッシュし直すと、
+	// 更新IDの再通知が来ないぶん「未通知」が恒久的に焼き付く。
+	// 書き込み経路の作法は usecase/notification.go の AddNotification と同じ
+	err = n.gkillReps.WriteThroughNotificationCache(notificationCtx, updatedNotification)
+	if err != nil {
+		err = fmt.Errorf("error at write through notification cache id = %s: %w", updatedNotification.ID, err)
+		slog.Log(n.ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+	}
+
+	repName, err := n.gkillReps.WriteNotificationRep.GetRepName(notificationCtx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name id = %s: %w", updatedNotification.ID, err)
+		slog.Log(n.ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+	} else {
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
+			IsDeleted:                              updatedNotification.IsDeleted,
+			TargetID:                               updatedNotification.ID,
+			TargetIDInData:                         &updatedNotification.TargetID,
+			DataUpdateTime:                         updatedNotification.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		}
+		n.gkillReps.SetLatestDataRepositoryAddress(updatedNotification.ID, latestDataRepositoryAddress)
+
+		_, err = n.gkillReps.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(notificationCtx, latestDataRepositoryAddress)
+		if err != nil {
+			err = fmt.Errorf("error at add or update latest data repository address for notification id = %s: %w", updatedNotification.ID, err)
+			slog.Log(n.ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		}
 	}
 
 	// 通知対象を取得して送信する

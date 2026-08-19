@@ -24,14 +24,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/twpayne/go-gpx"
 )
 
@@ -424,16 +422,12 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 		return false
 	}
 
+	// この関数は bool を返すだけでレスポンスを組み立てないので、
+	// GkillError を作っても載せる先が無い。エラーコードはログに残す
 	accounts, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(r.Context())
 	if err != nil {
-		err = fmt.Errorf("error at get all account config")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetAllAccountConfigError,
-			ErrorMessage: api.GetLocalizer("").MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ACCOUNT_CONFIG_MESSAGE"}),
-		}
-		_ = gkillError
-		// response.Errors = append(response.Errors, gkillError)
+		err = fmt.Errorf("error at get all account config: %w", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err), "error_code", message.GetAllAccountConfigError)
 		return false
 	}
 

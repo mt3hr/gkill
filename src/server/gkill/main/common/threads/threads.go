@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
@@ -163,7 +164,7 @@ func logInlineFallback() {
 	if !lastInlineFallbackLogUnixNano.CompareAndSwap(last, now) {
 		return
 	}
-	slog.Warn("goroutine pool exhausted, running inline",
+	slog.Log(context.Background(), gkill_log.Warn, "goroutine pool exhausted, running inline",
 		"pool_size", cap(sem),
 		"inline_fallback_count", inlineFallbackCount.Load())
 }

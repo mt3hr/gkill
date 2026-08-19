@@ -16,7 +16,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="kmemo_value" label="Kmemo" autofocus auto-grow :readonly="is_busy" />
+        <v-textarea v-model="kmemo_value" label="Kmemo" auto-grow :readonly="is_busy" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <table>

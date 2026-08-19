@@ -14,6 +14,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
@@ -61,7 +62,7 @@ func newPluginManager(userID string) *PluginManager {
 	if isSingleSafePathElement(userID) {
 		pluginsDir = filepath.Join(pluginsBaseDir, "plugins", userID)
 	} else {
-		slog.Warn(fmt.Sprintf("invalid user id for plugin dir, plugins disabled for user %q", userID))
+		slog.Log(context.Background(), gkill_log.Warn, "invalid user id for plugin dir, plugins disabled", "user_id", fmt.Sprintf("%q", userID))
 	}
 	return &PluginManager{
 		userID:     userID,
@@ -114,13 +115,13 @@ func (pm *PluginManager) discoverPluginsLocked(ctx context.Context) error {
 	}
 	if err := os.MkdirAll(pm.pluginsDir, os.ModePerm); err != nil {
 		// ディレクトリ作成失敗はプラグイン無しとして扱う（警告のみ）
-		slog.Warn(fmt.Sprintf("plugin dir create failed for user %q: %q", pm.userID, err))
+		slog.Log(ctx, gkill_log.Warn, "plugin dir create failed", "user_id", fmt.Sprintf("%q", pm.userID), "error", fmt.Sprintf("%q", err))
 		return nil
 	}
 
 	entries, err := os.ReadDir(pm.pluginsDir)
 	if err != nil {
-		slog.Warn(fmt.Sprintf("plugin dir read failed for user %q: %q", pm.userID, err))
+		slog.Log(ctx, gkill_log.Warn, "plugin dir read failed", "user_id", fmt.Sprintf("%q", pm.userID), "error", fmt.Sprintf("%q", err))
 		return nil
 	}
 
@@ -148,19 +149,19 @@ func (pm *PluginManager) discoverPluginsLocked(ctx context.Context) error {
 		if alreadyLoaded {
 			// 再走査のたびに出るので Debug にしている。
 			// Info にすると再走査1回につきプラグイン数ぶんの行が積み上がる。
-			slog.Debug(fmt.Sprintf("plugin already loaded, skipping: %q", manifest.Name))
+			slog.Log(ctx, gkill_log.Debug, "plugin already loaded, skipping", "plugin_name", fmt.Sprintf("%q", manifest.Name))
 			continue
 		}
 
 		// プロトコルバージョン確認
 		if manifest.ProtocolVersion != "1" {
-			slog.Warn(fmt.Sprintf("plugin %q uses unsupported protocol version %q, skipping", manifest.Name, manifest.ProtocolVersion))
+			slog.Log(ctx, gkill_log.Warn, "plugin uses unsupported protocol version, skipping", "plugin_name", fmt.Sprintf("%q", manifest.Name), "protocol_version", fmt.Sprintf("%q", manifest.ProtocolVersion))
 			continue
 		}
 
 		repo := reps.NewPluginRepository(pm.userID, pluginDir, *manifest)
 		pm.plugins = append(pm.plugins, repo)
-		slog.Info(fmt.Sprintf("plugin discovered: %q (user=%q, repName=%q)", manifest.Name, pm.userID, manifest.RepName))
+		slog.Log(ctx, gkill_log.Info, "plugin discovered", "plugin_name", fmt.Sprintf("%q", manifest.Name), "user_id", fmt.Sprintf("%q", pm.userID), "rep_name", fmt.Sprintf("%q", manifest.RepName))
 	}
 
 	return nil
@@ -200,7 +201,7 @@ func (pm *PluginManager) loadManifest(pluginDir string) (*gkill_plugin.PluginMan
 	seenKinds := map[gkill_plugin.PluginProvidedKind]struct{}{}
 	for _, kind := range manifest.Provides {
 		if !slices.Contains(gkill_plugin.AllPluginProvidedKinds, kind) {
-			slog.Warn(fmt.Sprintf("manifest.json in %q: unknown provides %q, ignored", pluginDir, kind))
+			slog.Log(context.Background(), gkill_log.Warn, "manifest.json has unknown provides, ignored", "plugin_dir", fmt.Sprintf("%q", pluginDir), "provides", fmt.Sprintf("%q", kind))
 			continue
 		}
 		if _, duplicated := seenKinds[kind]; duplicated {
@@ -220,7 +221,7 @@ func (pm *PluginManager) loadManifest(pluginDir string) (*gkill_plugin.PluginMan
 			continue
 		}
 		if !strings.HasPrefix(manifest.DataType, string(kind)) {
-			slog.Warn(fmt.Sprintf("manifest.json in %q: provides %q but data_type is %q; the client will never request the typed view", pluginDir, kind, manifest.DataType))
+			slog.Log(context.Background(), gkill_log.Warn, "manifest.json declares provides but data_type does not match; the client will never request the typed view", "plugin_dir", fmt.Sprintf("%q", pluginDir), "provides", fmt.Sprintf("%q", kind), "data_type", fmt.Sprintf("%q", manifest.DataType))
 		}
 	}
 

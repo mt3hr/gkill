@@ -3,8 +3,10 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToSettings,
-  makeUniqueLabel, findKyouByText,
-  clickDialogButton, clickFabButton,
+  makeUniqueLabel, findKyouByText, waitForKyouByText,
+  clickFabButton, clickContextMenuItem, clickDialogButton,
+  openApplicationConfigDialog,
+  MENU, SAVE_BUTTON,
 } from './crud-helpers'
 
 let apiReachable = false
@@ -27,30 +29,29 @@ test.describe('Regression Tests for Previously Fixed Bugs', () => {
     await submitKftlText(page, label)
     await navigateToRykv(page)
 
-    const record = findKyouByText(page, label)
-    if (await record.count() > 0) {
-      await record.click({ button: 'right', force: true })
-      await page.waitForTimeout(1000)
+    // 見つからなければ落とす。条件で包んでいたころは何も検証せずに緑になっていた
+    const record = findKyouByText(page, label).first()
+    await expect(record, '作った記録の行が一覧に出ない').toBeVisible({ timeout: 30000 })
+    await record.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, /編集|edit/i)
 
-      const editMenuItem = page.locator('.v-list-item, [role="menuitem"]').filter({ hasText: /編集|edit/i }).first()
-      if (await editMenuItem.count() > 0) {
-        await editMenuItem.click()
-        await page.waitForTimeout(2000)
+    const dialog = page.locator('.gkill-floating-dialog').last()
+    await expect(dialog, '編集ダイアログが開かない').toBeVisible({ timeout: 30000 })
 
-        // Clear content and try to save
-        const contentInput = page.locator('.v-dialog textarea, .v-dialog input[type="text"], .v-dialog .v-text-field input').first()
-        if (await contentInput.count() > 0) {
-          await contentInput.clear()
-          await page.waitForTimeout(500)
-          await clickDialogButton(page, /保存|save/i)
-          await page.waitForTimeout(2000)
+    // 本文を空にして保存すると、kmemo_content_is_blank で弾かれる
+    // （use-edit-kmemo-view.ts のタイトル入力チェック）
+    const contentInput = dialog.locator('textarea').first()
+    await expect(contentInput, '本文欄が無い').toBeVisible({ timeout: 15000 })
+    await contentInput.fill('')
+    await expect(contentInput).toHaveValue('')
 
-          // Verify: should show error message or prevent save
-          const app = page.locator('#app')
-          await expect(app).toBeVisible()
-        }
-      }
-    }
+    await dialog.getByRole('button', { name: '保存', exact: true }).click()
+
+    // `[role="alert"]` だけだと Vuetify が入力欄ごとに置く `v-input__details`
+    // （常に存在して不可視）を掴む。実際のエラー表示は `.v-alert` なのでそこまで絞る
+    await expect(page.locator('.v-alert[role="alert"]').first(), '本文が空でも保存できてしまっている')
+      .toBeVisible({ timeout: 30000 })
+    await expect(dialog, '弾かれたのに編集ダイアログが閉じている').toBeVisible()
   })
 
   // 項番80: ローカルアクセスのみ許可 (元NG→修正済み)
@@ -111,49 +112,70 @@ test.describe('Regression Tests for Previously Fixed Bugs', () => {
 
   // 項番139: ApplicationConfig適用ボタン (元NG→修正済み)
   test('application config apply button works', async ({ page }) => {
-    await navigateToSettings(page)
+    // 設定ダイアログは歯車から開く。**最果て(/saihate)に歯車は無い**
+    const dialog = await openApplicationConfigDialog(page)
 
-    // Look for apply/save button in settings
-    const applyButton = page.locator('button').filter({ hasText: /適用|apply|保存|save/i }).first()
-    if (await applyButton.count() > 0) {
-      await applyButton.click()
-      await page.waitForTimeout(2000)
+    const applyButton = dialog.getByRole('button', { name: '適用', exact: true })
+    await expect(applyButton, '設定に「適用」ボタンが無い').toBeVisible({ timeout: 15000 })
+    await applyButton.click()
 
-      // Should not crash — verify page still works
-      const app = page.locator('#app')
-      await expect(app).toBeVisible()
-    } else {
-      // At minimum, verify the page renders
-      const app = page.locator('#app')
-      await expect(app).toBeVisible()
-    }
+    // 適用しても画面が壊れないこと
+    await expect(page.locator('.v-application'), '適用で画面が壊れた')
+      .toBeVisible({ timeout: 30000 })
   })
 
   // 項番142: ファイルアップロード (元NG→修正済み)
   test('file upload via add dialog', async ({ page }) => {
     await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
 
     await clickFabButton(page)
 
-    // Look for upload menu item
+    // Look for upload menu item（FABメニューの「アップロード」）
     const uploadItem = page.locator('.v-list-item, [role="menuitem"], .v-btn')
-      .filter({ hasText: /アップロード|upload|ファイル/i }).first()
-    if (await uploadItem.count() > 0) {
-      await uploadItem.click()
-      await page.waitForTimeout(2000)
+      .filter({ hasText: /アップロード|upload/i }).first()
+    await expect(uploadItem, 'FABメニューにアップロードが無い').toBeVisible({ timeout: 30000 })
+    await uploadItem.click()
 
-      // Verify upload dialog opens
-      const dialog = page.locator('.v-dialog').first()
-      if (await dialog.isVisible()) {
-        // Look for file input
-        const fileInput = page.locator('input[type="file"]').first()
-        expect(await fileInput.count()).toBeGreaterThanOrEqual(0)
-      }
-    }
+    // Verify upload dialog opens
+    const upload_dialog = page.locator('.gkill-floating-dialog').last()
+    await expect(upload_dialog, 'アップロードのダイアログが開かない').toBeVisible({ timeout: 30000 })
+    await expect(upload_dialog.locator('input[type="file"]').first(), 'ファイル入力が無い')
+      .toBeAttached({ timeout: 15000 })
+  })
 
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+  // 「タグを付けて追加した記録が、追加した直後に一覧から消える」の回帰。
+  //
+  // 既定クエリは「絞らない」を tags = null ではなく、そのときの
+  // check_when_inited タグ名の**列挙**として物質化する(find-kyou-query.ts)。
+  // それが localStorage の列状態へ凍る一方でタグ宇宙は育つので、
+  // 保存後に作られたタグが付いた記録は、サーバ検索でも局所挿入でも1件も通らなくなる。
+  //
+  // **画面遷移しないことがこのテストの本質。** 遷移すると localStorage を読み直して
+  // 既定クエリを作り直すので、この不具合をすり抜ける
+  // （add-dialog-crud.spec.ts の同種のテストが遷移するのはそのため）。
+  test('新規タグを付けて追加した記録が、画面遷移せずに一覧へ残る', async ({ page }) => {
+    const label = makeUniqueLabel('new_tag_stays')
+    const tagLabel = makeUniqueLabel('e2eNewTag')
+
+    await navigateToRykv(page)
+
+    await clickFabButton(page)
+    await clickContextMenuItem(page, MENU.addURLog)
+    const dialog = page.locator('.gkill-floating-dialog, .v-dialog').first()
+    await expect(dialog, 'ブックマークの追加ダイアログが開かない').toBeVisible({ timeout: 15000 })
+
+    const field = (index: number) => dialog
+      .locator('input[type="text"], input[type="url"], input[type="number"], .v-text-field input').nth(index)
+    await field(0).fill(`https://example.com/${label}`)
+    await field(1).fill(label)
+    await field(4).fill(tagLabel)
+
+    // 未知タグの確認ダイアログは clickDialogButton の中で確定される
+    await clickDialogButton(page, SAVE_BUTTON)
+    await expect(dialog, '保存してもダイアログが閉じない').toBeHidden({ timeout: 30000 })
+
+    // 遷移しない。列の条件へ新タグが足され、その列が引き直されるまで待つ
+    await waitForKyouByText(page, label, 60000)
   })
 })

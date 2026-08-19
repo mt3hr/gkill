@@ -3,8 +3,8 @@
         <sharedMiTaskView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :app_title_bar_height="app_title_bar_height" :share_id="share_kyou_id" :share_title="share_title"
             :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)" />
+            @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: unknown[]) => write_messages(messages[0] as Array<GkillMessage>)" />
         <div class="alert_container" role="status" aria-live="polite">
             <v-slide-y-transition group>
                 <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"

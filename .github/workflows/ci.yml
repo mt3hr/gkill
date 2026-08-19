@@ -56,6 +56,12 @@ jobs:
         working-directory: src/server
         run: go vet ./...
 
+      # gofmt はこれまでCIに無く、実質60ファイルぶんの崩れが溜まっていた。
+      # 1行足すだけで二度と溜まらない
+      - name: gofmt
+        working-directory: src/server
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && echo '::error::gofmt が必要なファイルがあります' && exit 1)
+
       - name: go test
         working-directory: src/server
         run: go test ./...
@@ -88,8 +94,10 @@ jobs:
         run: npm run type-check
 
       # npm run lint は --fix なのでCIでは使わない。差分を書き換えずに検査する。
+      # --max-warnings 0: E2Eの固定sleep / 条件分岐（＝静かに成功するテスト）や
+      # 未使用インポートを警告のまま溜めないための歯止め
       - name: Lint
-        run: npx eslint
+        run: npx eslint --max-warnings 0
 
       - name: Unit test
         run: npm run test_client_unit
@@ -157,6 +165,9 @@ jobs:
         run: |
           npm run copy_i18n_to_app_embed
           npm run put_version_info_embed
+
+      - name: Plugin vet
+        run: npm run vet_plugins
 
       - name: Plugin tests
         run: npm run test_plugins

@@ -14,8 +14,7 @@ import {
 
 function make_host() {
     const emits = vi.fn()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return useKftlDialogHost({ emits: emits as any })
+    return useKftlDialogHost({ emits: emits as unknown as Parameters<typeof useKftlDialogHost>[0]['emits'] })
 }
 
 // スロット番号はモジュール共有（ホスト単位ではない）。テスト間で持ち越さないよう毎回戻す
@@ -161,8 +160,7 @@ describe('useKftlDialogHost', () => {
     // どのウィンドウから来たかに依らないので、同じハンドラ束を全枚数へ配れる
     test('ウィンドウのイベントはそのまま上へ流す', () => {
         const emits = vi.fn()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const host = useKftlDialogHost({ emits: emits as any })
+        const host = useKftlDialogHost({ emits: emits as unknown as Parameters<typeof useKftlDialogHost>[0]['emits'] })
 
         host.dialogRelayHandlers.requested_reload_list()
         const saved_at = new Date(0)

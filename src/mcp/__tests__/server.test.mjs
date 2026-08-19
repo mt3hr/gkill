@@ -14,7 +14,7 @@ import { MAX_IDF_FILE_BYTES } from "../lib/constants.mjs";
 
 function createMockClient(overrides = {}) {
   return {
-    callRead: vi.fn().mockResolvedValue({ errors: [], messages: [] }),
+    callApi: vi.fn().mockResolvedValue({ errors: [], messages: [] }),
     fetchFile: vi.fn().mockResolvedValue({ buffer: Buffer.from("test"), contentType: "application/octet-stream" }),
     login: vi.fn().mockResolvedValue("mock-session-id"),
     defaultLocale: "ja",
@@ -60,7 +60,7 @@ describe("handleToolCall", () => {
   });
 
   test("dispatches gkill_get_kyous to /api/get_kyous_mcp", async () => {
-    mockClient.callRead.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       kyous: [{ id: "1" }],
       total_count: 1,
       returned_count: 1,
@@ -70,54 +70,54 @@ describe("handleToolCall", () => {
 
     const result = await server.handleToolCall("gkill_get_kyous", { query: {} });
 
-    expect(mockClient.callRead).toHaveBeenCalledTimes(1);
-    const [pathname] = mockClient.callRead.mock.calls[0];
+    expect(mockClient.callApi).toHaveBeenCalledTimes(1);
+    const [pathname] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/get_kyous_mcp");
     expect(result.kyous).toHaveLength(1);
     expect(result.returned_count).toBe(1);
   });
 
   test("dispatches gkill_get_mi_board_list to /api/get_mi_board_list", async () => {
-    mockClient.callRead.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       boards: ["board1", "board2"],
       errors: [],
     });
 
     const result = await server.handleToolCall("gkill_get_mi_board_list", {});
 
-    const [pathname] = mockClient.callRead.mock.calls[0];
+    const [pathname] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/get_mi_board_list");
     expect(result.boards).toEqual(["board1", "board2"]);
   });
 
   test("dispatches gkill_get_all_tag_names to /api/get_all_tag_names", async () => {
-    mockClient.callRead.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       tag_names: ["tag1", "tag2"],
       errors: [],
     });
 
     const result = await server.handleToolCall("gkill_get_all_tag_names", {});
 
-    const [pathname] = mockClient.callRead.mock.calls[0];
+    const [pathname] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/get_all_tag_names");
     expect(result.tag_names).toEqual(["tag1", "tag2"]);
   });
 
   test("dispatches gkill_get_all_rep_names to /api/get_all_rep_names", async () => {
-    mockClient.callRead.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       rep_names: ["repo1"],
       errors: [],
     });
 
     const result = await server.handleToolCall("gkill_get_all_rep_names", {});
 
-    const [pathname] = mockClient.callRead.mock.calls[0];
+    const [pathname] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/get_all_rep_names");
     expect(result.rep_names).toEqual(["repo1"]);
   });
 
   test("dispatches gkill_get_gps_log to /api/get_gps_log", async () => {
-    mockClient.callRead.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       gps_logs: [{ lat: 35.0, lng: 139.0 }],
       errors: [],
     });
@@ -127,13 +127,13 @@ describe("handleToolCall", () => {
       end_date: "2026-01-31",
     });
 
-    const [pathname] = mockClient.callRead.mock.calls[0];
+    const [pathname] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/get_gps_log");
     expect(result.gps_logs).toHaveLength(1);
   });
 
   test("dispatches gkill_get_application_config to /api/get_application_config", async () => {
-    mockClient.callRead.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       application_config: {
         tag_struct: { tags: [] },
         mi_board_struct: {},
@@ -149,31 +149,31 @@ describe("handleToolCall", () => {
 
     const result = await server.handleToolCall("gkill_get_application_config", {});
 
-    const [pathname] = mockClient.callRead.mock.calls[0];
+    const [pathname] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/get_application_config");
     expect(result.tag_struct).toBeDefined();
     expect(result.mi_default_board).toBe("default");
   });
 
   test("dispatches gkill_get_plugin_list to /api/get_plugin_list", async () => {
-    mockClient.callRead.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       plugins: [{ name: "gkill_plugin_claudecode", rep_name: "Claude Code", is_alive: true }],
       errors: [],
     });
 
     const result = await server.handleToolCall("gkill_get_plugin_list", {});
 
-    expect(mockClient.callRead).toHaveBeenCalledWith("/api/get_plugin_list", {}, true, null);
+    expect(mockClient.callApi).toHaveBeenCalledWith("/api/get_plugin_list", {}, true, null);
     expect(result.plugins).toHaveLength(1);
   });
 
   test("passes currentSessionId to plugin tools too", async () => {
-    mockClient.callRead.mockResolvedValue({ plugins: [], errors: [] });
+    mockClient.callApi.mockResolvedValue({ plugins: [], errors: [] });
     server.currentSessionId = "oauth-session-xyz";
 
     await server.handleToolCall("gkill_get_plugin_list", {});
 
-    expect(mockClient.callRead).toHaveBeenCalledWith(
+    expect(mockClient.callApi).toHaveBeenCalledWith(
       "/api/get_plugin_list",
       expect.any(Object),
       true,
@@ -182,7 +182,7 @@ describe("handleToolCall", () => {
   });
 
   test("gkill_get_kyous leaves plugin bodies alone by default", async () => {
-    mockClient.callRead.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       kyous: [pluginKyouResult()],
       total_count: 1,
       returned_count: 1,
@@ -191,13 +191,13 @@ describe("handleToolCall", () => {
 
     const result = await server.handleToolCall("gkill_get_kyous", {});
 
-    expect(mockClient.callRead).toHaveBeenCalledTimes(1);
+    expect(mockClient.callApi).toHaveBeenCalledTimes(1);
     expect(result.plugin_content).toBeUndefined();
     expect(result.kyous[0].payload.content_status).toBeUndefined();
   });
 
   test("gkill_get_kyous inlines plugin bodies when include_plugin_content is true", async () => {
-    mockClient.callRead.mockImplementation((pathname) =>
+    mockClient.callApi.mockImplementation((pathname) =>
       pathname === "/api/get_kyous_mcp"
         ? Promise.resolve({ kyous: [pluginKyouResult()], total_count: 1, returned_count: 1, errors: [] })
         : Promise.resolve({ html: "<html><head><style>p{color:red}</style></head><body><p>会話の本文</p></body></html>", errors: [] }),
@@ -205,7 +205,7 @@ describe("handleToolCall", () => {
 
     const result = await server.handleToolCall("gkill_get_kyous", { include_plugin_content: true });
 
-    expect(mockClient.callRead).toHaveBeenCalledWith(
+    expect(mockClient.callApi).toHaveBeenCalledWith(
       "/api/get_plugin_content_html",
       { rep_name: "Claude Code", kyou_id: "kyou-1" },
       true,
@@ -217,7 +217,7 @@ describe("handleToolCall", () => {
   });
 
   test("gkill_get_kyous does not forward the inline args to the gkill endpoint", async () => {
-    mockClient.callRead.mockImplementation((pathname) =>
+    mockClient.callApi.mockImplementation((pathname) =>
       pathname === "/api/get_kyous_mcp"
         ? Promise.resolve({ kyous: [pluginKyouResult()], total_count: 1, returned_count: 1, errors: [] })
         : Promise.resolve({ html: "<p>x</p>", errors: [] }),
@@ -229,14 +229,14 @@ describe("handleToolCall", () => {
       plugin_content_format: "text",
     });
 
-    const body = mockClient.callRead.mock.calls[0][1];
+    const body = mockClient.callApi.mock.calls[0][1];
     expect(body).not.toHaveProperty("include_plugin_content");
     expect(body).not.toHaveProperty("plugin_content_max_text_length");
     expect(body).not.toHaveProperty("plugin_content_format");
   });
 
   test("gkill_get_kyous still returns results when a plugin body fetch fails", async () => {
-    mockClient.callRead.mockImplementation((pathname) =>
+    mockClient.callApi.mockImplementation((pathname) =>
       pathname === "/api/get_kyous_mcp"
         ? Promise.resolve({ kyous: [pluginKyouResult()], total_count: 1, returned_count: 1, errors: [] })
         : Promise.reject(new Error("plugin is down")),
@@ -255,8 +255,8 @@ describe("handleToolCall", () => {
     );
   });
 
-  test("passes currentSessionId as sessionIdOverride to callRead", async () => {
-    mockClient.callRead.mockResolvedValue({
+  test("passes currentSessionId as sessionIdOverride to callApi", async () => {
+    mockClient.callApi.mockResolvedValue({
       tag_names: ["t1"],
       errors: [],
     });
@@ -265,7 +265,7 @@ describe("handleToolCall", () => {
     await server.handleToolCall("gkill_get_all_tag_names", {});
 
     // 4th argument should be the session override
-    expect(mockClient.callRead).toHaveBeenCalledWith(
+    expect(mockClient.callApi).toHaveBeenCalledWith(
       "/api/get_all_tag_names",
       expect.any(Object),
       true,
@@ -274,14 +274,14 @@ describe("handleToolCall", () => {
   });
 
   test("passes null sessionIdOverride when currentSessionId is not set", async () => {
-    mockClient.callRead.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       tag_names: ["t1"],
       errors: [],
     });
 
     await server.handleToolCall("gkill_get_all_tag_names", {});
 
-    expect(mockClient.callRead).toHaveBeenCalledWith(
+    expect(mockClient.callApi).toHaveBeenCalledWith(
       "/api/get_all_tag_names",
       expect.any(Object),
       true,
@@ -346,7 +346,7 @@ describe("handleMessage", () => {
   });
 
   test("responds to tools/call with tool result", async () => {
-    mockClient.callRead.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       tag_names: ["alpha", "beta"],
       errors: [],
     });
@@ -590,7 +590,7 @@ describe("file_path exposure", () => {
   test("gkill_get_idf_file_path resolves the path for local clients", async () => {
     server.isLocalTransport = true;
     server.currentSessionId = "sess";
-    mockClient.callRead.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       file_path: "C:\\Users\\me\\gkill\\files\\photo.png",
       exists: true,
       errors: [],
@@ -601,7 +601,7 @@ describe("file_path exposure", () => {
       file_name: "photo.png",
     });
 
-    expect(mockClient.callRead).toHaveBeenCalledWith(
+    expect(mockClient.callApi).toHaveBeenCalledWith(
       "/api/get_idf_file_path",
       expect.objectContaining({ rep_name: "repo", file_name: "photo.png" }),
       true,
@@ -620,7 +620,7 @@ describe("file_path exposure", () => {
     await expect(
       server.handleToolCall("gkill_get_idf_file_path", { rep_name: "repo", file_name: "photo.png" }),
     ).rejects.toThrow(/same machine/);
-    expect(mockClient.callRead).not.toHaveBeenCalled();
+    expect(mockClient.callApi).not.toHaveBeenCalled();
   });
 
   test("buildToolResult keeps file_path in kyou payloads for local clients", () => {

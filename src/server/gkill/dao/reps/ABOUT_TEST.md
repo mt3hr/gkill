@@ -61,8 +61,7 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `mi_find_kyous_parity_test.go` | Mi のキャッシュ実装と非キャッシュ実装で、大小無視と「最新版のみ」の扱いが一致すること |
 | `testhelper_test.go` | テストヘルパーユーティリティ |
 | `cache/latest_data_repository_address_dao_sqlite3_impl_test.go` | キャッシュアドレス DAO |
-| `cache/rep_cache_updater/rep_cache_updater_test.go` | キャッシュ更新処理 |
-| `rep_cache_updater/rep_cache_updater_test.go` | キャッシュ更新処理（代替パス） |
+| `rep_cache_updater/rep_cache_updater_test.go` | キャッシュ更新処理 |
 
 ## テスト内容
 

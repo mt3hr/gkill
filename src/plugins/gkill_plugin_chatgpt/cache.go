@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 )
 
 // pluginCache はconversations.jsonをSQLite3にキャッシュする。
-// gkillのキャッシュディレクトリ配下(cacheDBPath参照)に保存する。
+// gkillのキャッシュディレクトリ配下(sdk.CacheDBPath 参照)に保存する。
 type pluginCache struct {
 	mu sync.RWMutex
 	db *sql.DB
@@ -34,7 +35,7 @@ func (c *pluginCache) openDB(pluginDir string) error {
 	if c.db != nil {
 		return nil
 	}
-	dbPath := cacheDBPath(pluginDir)
+	dbPath := sdk.CacheDBPath(pluginDir)
 	db, err := sqlite3impl.GetSQLiteDBConnection(context.Background(), dbPath)
 	if err != nil {
 		return fmt.Errorf("error at open cache db %s: %w", dbPath, err)

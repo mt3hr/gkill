@@ -35,9 +35,8 @@ OAuth 2.1認証付きのHTTPサーバとして起動します。Claude.ai、Chat
 $env:GKILL_BASE_URL="http://127.0.0.1:9999"
 $env:GKILL_USER="admin"
 $env:GKILL_PASSWORD_SHA256="<sha256 hex>"
-$env:MCP_TRANSPORT="http"
 $env:MCP_OAUTH_ISSUER="https://<your-host>"  # リモート接続時は必須（クライアントがアクセス可能な公開URL）
-$env:MCP_PORT="8808"  # 省略可（デフォルト: 8808）
+# MCP_TRANSPORT=http と MCP_PORT は -http スクリプトが自分で設定する
 npm run mcp:gkill-read-http
 ```
 

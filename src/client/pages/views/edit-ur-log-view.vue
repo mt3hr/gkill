@@ -16,7 +16,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field class="input text" type="text" v-model="url" :label="i18n.global.t('URL_TITLE')" autofocus :readonly="is_busy" />
+        <v-text-field class="input text" type="text" v-model="url" :label="i18n.global.t('URL_TITLE')" :readonly="is_busy" />
         <v-text-field class="input text" type="text" v-model="title" :label="i18n.global.t('URLOG_TITLE_TITLE')" :readonly="is_busy" />
         <v-checkbox v-model="re_get_urlog_content" :readonly="is_busy" :label="i18n.global.t('URLOG_REGET_TITLE')" hide-details color="primary" />
         <v-row class="pa-0 ma-0">
@@ -112,7 +112,7 @@ import EditKyouTagsView from './edit-kyou-tags-view.vue'
 import ConfirmUnknownTagDialog from '../dialogs/confirm-unknown-tag-dialog.vue'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/components'
-import { useEditUrLogView } from '@/classes/use-edit-ur-log-view'
+import { useEditURLogView } from '@/classes/use-edit-ur-log-view'
 
 const props = defineProps<EditURLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -140,7 +140,7 @@ const {
     now_to_related_date_time,
     reset_related_date_time,
     crudRelayHandlers,
-} = useEditUrLogView({ props, emits })
+} = useEditURLogView({ props, emits })
 
 defineExpose({
     save,

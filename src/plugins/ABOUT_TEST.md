@@ -12,7 +12,7 @@
 | `src/server/gkill/dao/reps/` | `plugin_repository_impl.go` のリポジトリ層テスト |
 | `src/plugins/gkill_plugin_claudecode/loader_test.go` | ターン分割・ファイル種別判定・サブエージェント紐付け・ツール要約・HTML生成のユニットテスト（`testdata/` の合成トランスクリプトを使用） |
 | `src/plugins/gkill_plugin_codex/{reader,loader,fold,cache,render,config}_test.go` | 巨大行リーダ・`session_meta` の identity/environment 分離・IDE前置きの剥がし・Kyou ID の安定性・差分再構築・構築中の並行読み取りのユニットテスト（`testdata/` の合成ロールアウトを使用） |
-| `src/plugins/gkill_plugin_{claudecode,chatgpt,claudeai,codex}/cache_path_test.go` | キャッシュDBの置き場所の解決。`GKILL_HOME` あり／なし（pluginDirから推定）／想定外の構成（プラグインフォルダにフォールバック）／pluginDirが空、の4パターン |
+| `src/server/gkill/plugin/sdk/cache_path_test.go` | キャッシュDBの置き場所の解決（`sdk.CacheDBPath`）。`GKILL_HOME` あり／なし（pluginDirから推定）／想定外の構成（プラグインフォルダにフォールバック）／pluginDirが空、の4パターンとパス要素の検証。6プラグインが1文字違わず同じものを持っていたのでSDKへ移した |
 
 `clear_cache plugin` でキャッシュを消せることは
 `src/server/gkill/main/common/common_test.go` でテストしている。

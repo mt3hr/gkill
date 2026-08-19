@@ -5,12 +5,13 @@ import { i18n } from '@/i18n'
 import type { AttachedNotificationProps } from '@/pages/views/attached-notification-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import AttachedNotificationContextMenu from '@/pages/views/attached-notification-context-menu.vue'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export function useAttachedNotification(options: {
     props: AttachedNotificationProps
     emits: KyouViewEmits
 }) {
-    const { props, emits: _emits } = options
+    const { props, emits } = options
 
     const context_menu = ref<InstanceType<typeof AttachedNotificationContextMenu> | null>(null)
 
@@ -52,7 +53,12 @@ export function useAttachedNotification(options: {
         return year + '/' + month + '/' + date + '(' + day_of_week + ')' + ' ' + hour + ':' + minute + ':' + second
     }
 
+    // ── Event relay objects ──
+    const crudRelayHandlers = build_kyou_view_relay(emits)
+
     return {
+        // Event relay objects
+        crudRelayHandlers,
         context_menu,
         notification_class,
         show_context_menu,

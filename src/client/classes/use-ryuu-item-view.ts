@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 import { refresh_kyou } from '@/classes/kyou-reload'
@@ -23,6 +23,7 @@ import type DnotePredicate from '@/classes/dnote/dnote-predicate'
 import type RyuuItemViewEmits from '@/pages/views/ryuu-item-view-emits'
 import type RyuuItemViewProps from '@/pages/views/ryuu-item-view-props'
 import type { ComponentRef } from '@/classes/component-ref'
+import { useDeviceKind } from '@/classes/use-device-kind'
 
 export function useRyuuItemView(options: {
     props: RyuuItemViewProps,
@@ -48,8 +49,16 @@ export function useRyuuItemView(options: {
      */
     type DropTypeRyuu = 'up' | 'down'
 
+    // ドラッグ&ドロップでの並べ替えはPCでのみ有効にする。
+    // タッチ端末では draggable を立てても掴めないうえ、
+    // 立てたままだとスクロールやロングプレスと競合する。
+    // 判定は useDeviceKind の is_pc（"タッチできるか"ではない）。
+    // 同じ形が use-foldable-struct.ts / use-mi-kyou-view.ts / use-mi-re-kyou-view.ts にある
+    const { is_pc } = useDeviceKind()
+    const effective_draggable = computed(() => is_pc.value && props.editable)
+
     function drag_start(e: DragEvent): void {
-        if (!props.editable) return
+        if (!effective_draggable.value) return
         const id = model_value.value?.id ?? ''
         if (!id) return
 
@@ -60,14 +69,14 @@ export function useRyuuItemView(options: {
     }
 
     function dragover(e: DragEvent): void {
-        if (!props.editable) return
+        if (!effective_draggable.value) return
         if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
         e.preventDefault()      // dropを許可する
         e.stopPropagation()
     }
 
     function drop(e: DragEvent): void {
-        if (!props.editable) return
+        if (!effective_draggable.value) return
 
         const src_id = e.dataTransfer?.getData('gkill_ryuu_query_id')
         const target_id = model_value.value?.id ?? ''
@@ -131,8 +140,7 @@ export function useRyuuItemView(options: {
 
         // Titleが同じ であれば検索条件に入れる
         if (ryuu_predicate && ryuu_predicate instanceof AndPredicate) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (ryuu_predicate as any).predicates.forEach((predicate: DnotePredicate) => {
+            ryuu_predicate.get_predicates().forEach((predicate: DnotePredicate) => {
                 if (predicate && predicate instanceof EqualTitleTargetKyouPredicate) {
                     const get_title_func = (kyou: Kyou | null): string | null => {
                         if (kyou === null) return null
@@ -160,8 +168,7 @@ export function useRyuuItemView(options: {
                 }
             })
             if (ryuu_predicate && ryuu_predicate instanceof AndPredicate) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (ryuu_predicate as any).predicates.forEach((predicate: DnotePredicate) => {
+                ryuu_predicate.get_predicates().forEach((predicate: DnotePredicate) => {
                     if (predicate && (predicate instanceof EqualTagsAndTargetKyouPredicate || predicate instanceof EqualTagsOrTargetKyouPredicate)) {
                         find_kyou_query.tags_and = predicate instanceof EqualTagsAndTargetKyouPredicate
                         // 非nullのtags代入がタグフィルタ有効を表す
@@ -340,6 +347,8 @@ export function useRyuuItemView(options: {
 
     // ── Return ──
     return {
+        // DnD
+        effective_draggable,
         // Template refs
         contextmenu,
         edit_related_kyou_query_dialog,

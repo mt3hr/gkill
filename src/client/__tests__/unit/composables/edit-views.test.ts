@@ -30,7 +30,7 @@ import { createMockGkillAPI } from '../../helpers/mock-api'
 import { useEditKmemoView } from '@/classes/use-edit-kmemo-view'
 import { useEditMiView } from '@/classes/use-edit-mi-view'
 import { useEditNlogView } from '@/classes/use-edit-nlog-view'
-import { useEditUrLogView } from '@/classes/use-edit-ur-log-view'
+import { useEditURLogView } from '@/classes/use-edit-ur-log-view'
 import { useEditTimeIsView } from '@/classes/use-edit-time-is-view'
 import { useEditLantanaView } from '@/classes/use-edit-lantana-view'
 import { useEditKCView } from '@/classes/use-edit-kc-view'
@@ -385,9 +385,9 @@ describe('useEditNlogView', () => {
   })
 })
 
-// ========== useEditUrLogView ==========
+// ========== useEditURLogView ==========
 
-describe('useEditUrLogView', () => {
+describe('useEditURLogView', () => {
   test('initializes from urlog data', () => {
     const props = createTypedKyouProps('urlog', 'typed_urlog', {
       id: 'urlog-1', url: 'https://example.com', title: 'Example',
@@ -397,7 +397,7 @@ describe('useEditUrLogView', () => {
       update_app: 'gkill', update_device: 'test', update_user: 'admin',
     })
     const emits = vi.fn()
-    const view = useEditUrLogView({ props, emits })
+    const view = useEditURLogView({ props, emits })
     expect(view.url.value).toBe('https://example.com')
   })
 
@@ -409,7 +409,7 @@ describe('useEditUrLogView', () => {
       update_app: 'gkill', update_device: 'test', update_user: 'admin',
     })
     const emits = vi.fn()
-    const view = useEditUrLogView({ props, emits })
+    const view = useEditURLogView({ props, emits })
     expect(typeof view.save).toBe('function')
   })
 })

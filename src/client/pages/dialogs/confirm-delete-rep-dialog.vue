@@ -30,37 +30,18 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { ConfirmDeleteRepDialogEmits } from './confirm-delete-rep-dialog-emits'
 import type { ConfirmDeleteRepDialogProps } from './confirm-delete-rep-dialog-props'
 import ConfirmDeleteRepView from '../views/confirm-delete-rep-view.vue'
 import { Repository } from '@/classes/datas/config/repository';
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-
-defineProps<ConfirmDeleteRepDialogProps>()
-const emits = defineEmits<ConfirmDeleteRepDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("confirm-delete-rep-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useConfirmDeleteRepDialog } from '@/classes/use-confirm-delete-rep-dialog'
 
-const cloned_repository: Ref<Repository> = ref(new Repository())
-
-async function show(repository: Repository): Promise<void> {
-  cloned_repository.value = repository
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  cloned_repository.value = new Repository()
-}
+const props = defineProps<ConfirmDeleteRepDialogProps>()
+const emits = defineEmits<ConfirmDeleteRepDialogEmits>()
+const { is_show_dialog, ui, cloned_repository, show, hide } = useConfirmDeleteRepDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

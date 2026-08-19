@@ -68,8 +68,14 @@ export function useFoldableStruct(options: {
     // ── Internal helpers ──
 
     // this.structがアイテムであればtrueを、そうではなくグループである場合はfalseを返します。
+    //
+    // 入れ物かどうかの判定は is_struct_container_node に一本化する。
+    // is_dir だけで見ると、保存済みJSONのルート（is_dir を持たない実例がある。
+    // gkill-api.ts は children が falsy のときしか立てない）が葉として描かれ、
+    // __root__ がそのまま検索条件へ流れる。
+    // 読み取り側の get_selected_items() は既にこの判定を使っている
     function is_item() {
-        return !props.struct_obj.is_dir
+        return !is_struct_container_node(props.struct_obj)
     }
 
     // アイテムではなくの場合に使われます。

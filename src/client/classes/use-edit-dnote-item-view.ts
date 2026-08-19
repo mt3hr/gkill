@@ -69,17 +69,18 @@ export function useEditDnoteItemView(options: {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function predicate_struct_from_json(json: any): PredicateGroupType | Predicate {
-        if (json.logic && Array.isArray(json.predicates)) {
+    // 保存済みJSONは外部由来なので unknown で受け、読むところで形を確かめる
+    function predicate_struct_from_json(json: unknown): PredicateGroupType | Predicate {
+        const node = (json ?? {}) as Record<string, unknown>
+        if (node.logic && Array.isArray(node.predicates)) {
             return {
-                logic: json.logic,
-                predicates: json.predicates.map(predicate_struct_from_json)
+                logic: node.logic as PredicateGroupType['logic'],
+                predicates: node.predicates.map(predicate_struct_from_json)
             }
         } else {
             return {
-                type: json.type,
-                value: json.value
+                type: String(node.type ?? ''),
+                value: node.value
             }
         }
     }

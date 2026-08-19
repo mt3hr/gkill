@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 	_ "modernc.org/sqlite"
 )
 
@@ -44,7 +45,7 @@ func (c *cache) openDB(pluginDir string) error {
 		return nil
 	}
 
-	dbPath := cacheDBPath(pluginDir)
+	dbPath := sdk.CacheDBPath(pluginDir)
 
 	// sqlite3impl.GetSQLiteDBConnection は使わない。
 	// あれは journal_mode を DELETE に固定するので、バックグラウンドで書いている間

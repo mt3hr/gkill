@@ -15,6 +15,7 @@ package sdk
 
 import (
 	"archive/zip"
+	"cmp"
 	"errors"
 	"fmt"
 	"io"
@@ -23,7 +24,6 @@ import (
 	"path"
 	"path/filepath"
 	"slices"
-	"sort"
 	"strings"
 	"unicode/utf8"
 
@@ -346,7 +346,7 @@ func (s *SourceSet) findArchives(dirs []string, files []string) ([]string, error
 		})
 	}
 
-	sort.Strings(archives)
+	slices.Sort(archives)
 	return archives, errors.Join(walkErrors...)
 }
 
@@ -497,15 +497,15 @@ func (s *SourceSet) buildExports() {
 		}
 	}
 	for _, export := range byID {
-		sort.Strings(export.ArchivePaths)
+		slices.Sort(export.ArchivePaths)
 		s.exports = append(s.exports, *export)
 	}
 	// 新しい書き出しが先。同着はIDの降順（日付入りのフォルダ名で新しい方が勝つ）。
-	sort.Slice(s.exports, func(i, j int) bool {
-		if s.exports[i].NewestMtimeUnix != s.exports[j].NewestMtimeUnix {
-			return s.exports[i].NewestMtimeUnix > s.exports[j].NewestMtimeUnix
+	slices.SortFunc(s.exports, func(a, b ExportInfo) int {
+		if a.NewestMtimeUnix != b.NewestMtimeUnix {
+			return cmp.Compare(b.NewestMtimeUnix, a.NewestMtimeUnix)
 		}
-		return s.exports[i].ExportID > s.exports[j].ExportID
+		return cmp.Compare(b.ExportID, a.ExportID)
 	})
 
 	// 1つのフォルダに時期の違う書き出しが混ざっていたら知らせる。

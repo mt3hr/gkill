@@ -1,5 +1,6 @@
 'use strict'
 
+import { log_unless_aborted } from '@/classes/abort-error'
 import { GkillAPI } from '../api/gkill-api'
 import type { GkillError } from '../api/gkill-error'
 import { GetURLogRequest } from '../api/req_res/get-ur-log-request'
@@ -37,11 +38,8 @@ export class URLog extends InfoBase {
         try {
             return await this.load_attached_histories()
         } catch (err: unknown) {
-            // abortは握りつぶす
-            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
-                // abort以外はエラー出力する
-                console.error(err)
-            }
+            // 中断（画面を離れた・後発の検索に差し替わった）は正常なので出さない
+            log_unless_aborted(err)
             return []
         }
     }

@@ -33,7 +33,6 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { KFTLTemplateDialogEmits } from './kftl-template-dialog-emits'
 import type { KFTLTemplateDialogProps } from './kftl-template-dialog-props'
@@ -41,30 +40,12 @@ import KFTLTemplateView from '../views/kftl-template-view.vue'
 import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-
-defineProps<KFTLTemplateDialogProps>()
-const emits = defineEmits<KFTLTemplateDialogEmits>()
-defineExpose({ show, hide })
-
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("kftl-template-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useKFTLTemplateDialog } from '@/classes/use-kftl-template-dialog'
 
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  emits('closed_dialog')
-}
+const props = defineProps<KFTLTemplateDialogProps>()
+const emits = defineEmits<KFTLTemplateDialogEmits>()
+const { help_dialog, is_show_dialog, ui, show, hide } = useKFTLTemplateDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

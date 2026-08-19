@@ -73,54 +73,16 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue'
 import { i18n } from '@/i18n'
 import HelpDialog from './help-dialog.vue'
 import EditSavedFindQueryListDialog from './edit-saved-find-query-list-dialog.vue'
-import type { SavedFindQueryItem } from '@/classes/datas/config/saved-find-query-config'
 import type { EditSavedFindQueryDialogProps } from './edit-saved-find-query-dialog-props'
 import type { EditSavedFindQueryDialogEmits } from './edit-saved-find-query-dialog-emits'
 import { useEditSavedFindQueryDialog } from '@/classes/use-edit-saved-find-query-dialog'
 
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-const rykv_list_dialog = ref<InstanceType<typeof EditSavedFindQueryListDialog> | null>(null)
-const mi_list_dialog = ref<InstanceType<typeof EditSavedFindQueryListDialog> | null>(null)
 const props = defineProps<EditSavedFindQueryDialogProps>()
 const emits = defineEmits<EditSavedFindQueryDialogEmits>()
-
-const { is_show_dialog, ui, current_config, show, hide } = useEditSavedFindQueryDialog({ props, emits })
-
-function open_rykv_list_dialog(): void {
-    rykv_list_dialog.value?.show(current_config.value.saved_rykv_find_kyou_querys)
-}
-
-function open_mi_list_dialog(): void {
-    mi_list_dialog.value?.show(current_config.value.saved_mi_find_kyou_querys)
-}
-
-// 一覧ダイアログの適用はローカル反映のみ。永続化はこのダイアログの保存で親の clone へ渡し、
-// 設定画面全体の「適用」で確定する
-// (一覧側で適用した時点で親に伝えてしまうと、ここでキャンセルしても戻らなくなる)
-function onAppliedRykvItems(items: Array<SavedFindQueryItem>): void {
-    current_config.value.saved_rykv_find_kyou_querys = items
-}
-
-function onAppliedMiItems(items: Array<SavedFindQueryItem>): void {
-    current_config.value.saved_mi_find_kyou_querys = items
-}
-
-function emit_current_config(): void {
-    emits('requested_apply_saved_find_query_struct', current_config.value.to_json())
-}
-
-function onSave(): void {
-    emit_current_config()
-    hide()
-}
-
-function onCancel(): void {
-    hide()
-}
+const { is_show_dialog, ui, show, hide, help_dialog, rykv_list_dialog, mi_list_dialog, open_rykv_list_dialog, open_mi_list_dialog, onAppliedRykvItems, onAppliedMiItems, onSave, onCancel } = useEditSavedFindQueryDialog({ props, emits })
 
 defineExpose({ show, hide })
 </script>

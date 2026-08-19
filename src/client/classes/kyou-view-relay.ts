@@ -189,3 +189,37 @@ export function build_kyou_dialog_host_handlers(
     }
     return Object.assign(handlers, overrides, required) as unknown as KyouDialogHostHandlers
 }
+
+/**
+ * `received_errors` / `received_messages` だけを上げてくる子のための最小の emits。
+ *
+ * 設定の struct 編集ビューや Add*Dialog のように、CRUD を一切上げない子は多い。
+ * そこへ18件/20件の束を渡しても意味が無いので、この2件だけの束を使う。
+ */
+export interface ErrorMessageEmits {
+    (e: 'received_errors', errors: Array<GkillError>): void
+    (e: 'received_messages', messages: Array<GkillMessage>): void
+}
+
+export interface ErrorMessageRelay {
+    received_errors: (errors: Array<GkillError>) => void
+    received_messages: (messages: Array<GkillMessage>) => void
+}
+
+/**
+ * エラー/メッセージだけを素通しする束を作る。
+ *
+ * ```ts
+ * const errorMessageRelayHandlers = build_error_message_relay(emits)
+ * ```
+ *
+ * 同じ中身を9箇所が手書きしていて、しかも名前が
+ * `errorMessageRelayHandlers` / `errorsMessagesRelayHandlers` / `errorMessageHandlers` の
+ * 3種類に割れていた。名前は `errorMessageRelayHandlers` に揃える。
+ */
+export function build_error_message_relay(emits: ErrorMessageEmits): ErrorMessageRelay {
+    return {
+        received_errors: (errors: Array<GkillError>) => emits('received_errors', errors),
+        received_messages: (messages: Array<GkillMessage>) => emits('received_messages', messages),
+    }
+}

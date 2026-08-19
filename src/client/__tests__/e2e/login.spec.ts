@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { checkGkillServer } from './check-server'
+import { E2E_USER, E2E_PASSWORD } from './e2e-credentials'
+import { openLoginPage, submitLogin } from './helpers'
 
 // This spec tests unauthenticated flows — clear storageState from setup project
 test.use({ storageState: { cookies: [], origins: [] } })
@@ -19,73 +21,40 @@ test.describe('Login page', () => {
   })
 
   test('login page has input fields', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-    const inputs = page.locator('input')
-    await expect(inputs.first()).toBeVisible({ timeout: 15000 })
+    const inputs = await openLoginPage(page)
+    await expect(inputs.first()).toBeVisible()
   })
 
   test('login with invalid credentials shows error', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    await submitLogin(page, 'nonexistent_user', 'wrong_password')
 
-    const inputs = page.locator('input')
-    expect(await inputs.count()).toBeGreaterThanOrEqual(2)
-    await inputs.nth(0).fill('nonexistent_user')
-    await inputs.nth(1).fill('wrong_password')
-
-    const loginButton = page.locator('button').filter({ hasText: /ログイン|login/i })
-    expect(await loginButton.count()).toBeGreaterThan(0)
-    await loginButton.click()
-    await page.waitForTimeout(2000)
-    // After invalid login, should still be on login page or show error
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    // login-page.vue はエラーを role="alert" の v-alert で出す。
+    // 「#app が見えている」だけの確認だと、何が起きても緑になってしまう
+    await expect(page.locator('.v-alert[role="alert"]').first(), 'ログイン失敗のエラーが出ない')
+      .toBeVisible({ timeout: 30000 })
+    // 失敗したのだからログイン画面から動いていないこと
+    await expect(page).toHaveURL(/\/(\?.*)?$/)
   })
 
   test('successful login redirects away from login', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    await submitLogin(page, E2E_USER, E2E_PASSWORD)
 
-    const inputs = page.locator('input')
-    expect(await inputs.count()).toBeGreaterThanOrEqual(2)
-    // Use default admin credentials (admin with empty password)
-    await inputs.nth(0).fill('admin')
-    await inputs.nth(1).fill('')
-
-    const loginButton = page.locator('button').filter({ hasText: /ログイン|login/i })
-    expect(await loginButton.count()).toBeGreaterThan(0)
-    await loginButton.click()
-    await page.waitForTimeout(2000)
-    // After successful login, the page should not crash
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    // 成功すると既定ページ（/kftl など）へ置き換わる
+    await expect(page, 'ログインしても画面が変わらない')
+      .not.toHaveURL(/\/(\?.*)?$/, { timeout: 30000 })
   })
 
   test('session persists across page reload after login', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    await submitLogin(page, E2E_USER, E2E_PASSWORD)
+    await expect(page).not.toHaveURL(/\/(\?.*)?$/, { timeout: 30000 })
 
-    const inputs = page.locator('input')
-    expect(await inputs.count()).toBeGreaterThanOrEqual(2)
-
-    await inputs.nth(0).fill('admin')
-    await inputs.nth(1).fill('')
-    const loginButton = page.locator('button').filter({ hasText: /ログイン|login/i })
-    expect(await loginButton.count()).toBeGreaterThan(0)
-    await loginButton.click()
-    await page.waitForTimeout(2000)
-
-    // Reload the page and verify we're still authenticated (not sent back to login)
+    const after_login_url = new URL(page.url()).pathname
     await page.reload({ waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+
+    // 再読込でログイン画面へ戻されないこと（= セッションが残っている）
+    await expect(page, '再読込でログイン画面へ戻された')
+      .toHaveURL(new RegExp(`${after_login_url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), { timeout: 30000 })
   })
 
   test('navigating to authenticated route without session redirects to login', async ({ page }) => {
@@ -93,33 +62,20 @@ test.describe('Login page', () => {
     await page.context().clearCookies()
     await page.goto('/kftl', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-    // Should either redirect to login or show login-related content
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+
+    // セッションが無ければログイン画面へ送られる
+    await expect(page, 'セッション無しでも認証必要ページに留まっている')
+      .toHaveURL(/\/(\?.*)?$/, { timeout: 30000 })
   })
 
   test('login page user input field accepts Japanese characters', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-
-    const inputs = page.locator('input')
-    expect(await inputs.count()).toBeGreaterThanOrEqual(1)
+    const inputs = await openLoginPage(page)
     await inputs.nth(0).fill('テストユーザー')
-    const value = await inputs.nth(0).inputValue()
-    expect(value).toBe('テストユーザー')
+    await expect(inputs.nth(0)).toHaveValue('テストユーザー')
   })
 
   test('password field masks input', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-
-    const inputs = page.locator('input')
-    expect(await inputs.count()).toBeGreaterThanOrEqual(2)
-    const passwordInput = inputs.nth(1)
-    const type = await passwordInput.getAttribute('type')
-    expect(type).toBe('password')
+    const inputs = await openLoginPage(page)
+    await expect(inputs.nth(1)).toHaveAttribute('type', 'password')
   })
 })

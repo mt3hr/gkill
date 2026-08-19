@@ -16,10 +16,8 @@
 
 <script setup lang="ts">
 import DnoteCorrelationGraphView from "./dnote-correlation-graph-view.vue"
-import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query"
 import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"
-import type { Kyou } from "@/classes/datas/kyou"
 import type { DnoteCorrelationGraphQuery } from "@/classes/dnote/dnote-correlation"
 import type DnoteCorrelationGraphTableViewEmits from "./dnote-correlation-graph-table-view-emits"
 import type DnoteCorrelationGraphTableViewProps from "./dnote-correlation-graph-table-view-props"

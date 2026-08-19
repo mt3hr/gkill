@@ -16,7 +16,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-model="tag_name" :label="i18n.global.t('TAG_TITLE')" autofocus
+        <v-text-field v-model="tag_name" :label="i18n.global.t('TAG_TITLE')"
             :readonly="is_busy" />
         <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />

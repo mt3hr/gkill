@@ -2,12 +2,13 @@ import { ref } from 'vue'
 import type KCContextMenu from '@/pages/views/kc-context-menu.vue'
 import type { KCViewProps } from '@/pages/views/kc-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export function useKCView(options: {
     props: KCViewProps,
     emits: KyouViewEmits,
 }) {
-    const { props, emits: _emits } = options
+    const { props, emits } = options
 
     const context_menu = ref<InstanceType<typeof KCContextMenu> | null>(null)
 
@@ -17,7 +18,12 @@ export function useKCView(options: {
         }
     }
 
+    // ── Event relay objects ──
+    const crudRelayHandlers = build_kyou_view_relay(emits)
+
     return {
+        // Event relay objects
+        crudRelayHandlers,
         context_menu,
         show_context_menu,
     }

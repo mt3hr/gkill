@@ -38,33 +38,16 @@
 <script setup lang="ts">
 import AddDnoteTrendGraphView from '@/pages/views/add-dnote-trend-graph-view.vue';
 import HelpDialog from './help-dialog.vue'
-import { ref, type Ref } from 'vue'
 import type { GkillError } from '../../classes/api/gkill-error';
 import type { GkillMessage } from '../../classes/api/gkill-message';
 import type AddDnoteTrendGraphDialogEmits from './add-dnote-trend-graph-dialog-emits';
 import type AddDnoteTrendGraphDialogProps from './add-dnote-trend-graph-dialog-props';
 import type DnoteTrendGraphQuery from '../views/dnote-trend-graph-query';
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("add-dnote-trend-graph-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useAddDnoteTrendGraphDialog } from '@/classes/use-add-dnote-trend-graph-dialog'
 
-
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-
-defineExpose({ show, hide })
-defineProps<AddDnoteTrendGraphDialogProps>()
+const props = defineProps<AddDnoteTrendGraphDialogProps>()
 const emits = defineEmits<AddDnoteTrendGraphDialogEmits>()
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const { is_show_dialog, ui, help_dialog, show, hide } = useAddDnoteTrendGraphDialog({ props, emits })
+defineExpose({ show, hide })
 </script>

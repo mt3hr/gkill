@@ -79,8 +79,8 @@ src/client/
 │   ├── old-shared-mi-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── views/              # ビューコンポーネント（205ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（117ファイル、browse-zip-contents-dialog.vue 含む）
+│   ├── views/              # ビューコンポーネント（202ファイル）
+│   └── dialogs/            # ダイアログコンポーネント（116ファイル、browse-zip-contents-dialog.vue 含む）
 ├── i18n.ts                 # i18n設定（ja のみ静的、他6言語は動的import）
 ├── assets/                 # 画像等の静的アセット
 ├── classes/
@@ -88,7 +88,7 @@ src/client/
 │   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,400行、全API呼び出しを集約）
 │   │   ├── hydrate.ts      # JSON→クラスインスタンスの詰め替え（any を使わない共通ヘルパー）
 │   │   ├── find_query/     # 検索クエリビルダー
-│   │   └── req_res/        # リクエスト/レスポンス型（172ファイル）
+│   │   └── req_res/        # リクエスト/レスポンス型（169ファイル）
 │   ├── datas/              # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dnote/              # Dnote集計ユーティリティ（dnote-trend-aggregator.ts, dnote-predicate/ 等）
 │   ├── dto/                # データ転送オブジェクト
@@ -96,7 +96,7 @@ src/client/
 │   ├── kftl/               # KFTLパーサー（50ステートメント型）
 │   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
-│   └── use-*.ts            # Composition関数群（263ファイル）
+│   └── use-*.ts            # Composition関数群（329ファイル）
 ├── __tests__/              # テスト
 │   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
 │   ├── helpers/            # テストヘルパー
@@ -134,7 +134,7 @@ src/server/
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（123ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（124ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
     │       ├── gkill_server_api_address.go  # ルーティング定義（92エンドポイント定義・90登録：89 POST + 1 GET）

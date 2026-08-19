@@ -13,7 +13,6 @@ import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { ApplicationConfigViewProps } from '@/pages/views/application-config-view-props'
 import type { ApplicationConfigViewEmits } from '@/pages/views/application-config-view-emits'
-import type { GkillError } from '@/classes/api/gkill-error'
 import type { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data'
 import type { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
 import type { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct-element-data'
@@ -25,6 +24,7 @@ import { DashboardConfig } from '@/classes/datas/config/dashboard-config'
 import { PlaingTimeIsConfig } from '@/classes/datas/config/plaing-time-is-config'
 import { SavedFindQueryConfig } from '@/classes/datas/config/saved-find-query-config'
 import { sort_mi_board_names_by_config_order } from '@/classes/mi-board-names'
+import { build_error_message_relay } from '@/classes/kyou-view-relay'
 
 export function useApplicationConfigView(options: {
     props: ApplicationConfigViewProps,
@@ -472,12 +472,14 @@ javascript: (function () {
     // 子ダイアログでの編集が残ってしまう（保存はされないが表示は変わったまま）。
     // props が差し替わっても編集が消えないようにするのは has_pending_child_edits の役目で、
     // props への書き戻しでやってはいけない
-    function onRequestedApplyDnote(dnote_data: Record<string, unknown>): void {
+    // Dnote の定義は「定義の配列」
+    function onRequestedApplyDnote(dnote_data: Array<Record<string, unknown>>): void {
         has_pending_child_edits = true
         cloned_application_config.value.dnote_json_data = dnote_data
     }
 
-    function onRequestedApplyRyuuStruct(ryuu_data: Record<string, unknown>): void {
+    // Ryuu の定義も「定義の配列」
+    function onRequestedApplyRyuuStruct(ryuu_data: Array<Record<string, unknown>>): void {
         has_pending_child_edits = true
         cloned_application_config.value.ryuu_json_data = ryuu_data
     }
@@ -498,10 +500,7 @@ javascript: (function () {
     }
 
     // ── Event relay objects ──
-    const errorMessageRelayHandlers = {
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-    }
+    const errorMessageRelayHandlers = build_error_message_relay(emits)
 
     // ── Init ──
     load_mi_board_names()

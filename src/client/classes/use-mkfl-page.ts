@@ -15,6 +15,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import { useConfigStructSync } from '@/classes/use-config-struct-sync'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { ComponentRef } from '@/classes/component-ref'
+import { url_base64_to_uint8_array } from '@/classes/web-push-key'
 
 export function useMkflPage() {
     const theme = useTheme()
@@ -294,13 +295,6 @@ export function useMkflPage() {
     }
 
     // プッシュ通知登録用
-    function url_base64_to_uint8_array(base64_string: string) {
-        const padding = '='.repeat((4 - (base64_string.length % 4)) % 4);
-        /* eslint no-useless-escape: 0 */
-        const base64 = (base64_string + padding).replace(/\-/g, '+').replace(/_/g, '/');
-        const raw_data = window.atob(base64);
-        return Uint8Array.from([...raw_data].map(char => char.charCodeAt(0)));
-    }
 
     // プッシュ通知登録用
     async function register_gkill_task_notification(): Promise<void> {

@@ -35,38 +35,19 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { EditKFTLTemplateStructDialogEmits } from './edit-kftl-template-struct-dialog-emits.ts'
 import type { EditKFTLTemplateStructDialogProps } from './edit-kftl-template-struct-dialog-props.ts'
 import EditKFTLTemplateStructView from '../views/edit-kftl-template-struct-view.vue'
 import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error.js'
 import type { GkillMessage } from '@/classes/api/gkill-message.js'
-
-defineProps<EditKFTLTemplateStructDialogProps>()
-const emits = defineEmits<EditKFTLTemplateStructDialogEmits>()
-defineExpose({ show, hide })
-
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("edit-kftl-template-struct-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useEditKFTLTemplateStructDialog } from '@/classes/use-edit-kftl-template-struct-dialog'
 
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
-
+const props = defineProps<EditKFTLTemplateStructDialogProps>()
+const emits = defineEmits<EditKFTLTemplateStructDialogEmits>()
+const { help_dialog, is_show_dialog, ui, show, hide } = useEditKFTLTemplateStructDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

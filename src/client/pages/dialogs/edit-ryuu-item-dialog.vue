@@ -33,7 +33,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, type Ref } from 'vue'
 import EditRyuuItemView from '../views/edit-ryuu-item-view.vue';
 import HelpDialog from './help-dialog.vue'
 import type EditRyuuItemDialogEmits from './edit-ryuu-item-dialog-emits';
@@ -41,28 +40,13 @@ import type EditRyuuItemDialogProps from './edit-ryuu-item-dialog-props';
 import RelatedKyouQuery from '@/classes/dnote/related-kyou-query';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("edit-ryuu-item-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useEditRyuuItemDialog } from '@/classes/use-edit-ryuu-item-dialog'
 
-
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 const model_value = defineModel<RelatedKyouQuery>()
-defineExpose({ show, hide })
-defineProps<EditRyuuItemDialogProps>()
+const props = defineProps<EditRyuuItemDialogProps>()
 const emits = defineEmits<EditRyuuItemDialogEmits>()
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const { is_show_dialog, ui, help_dialog, show, hide } = useEditRyuuItemDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

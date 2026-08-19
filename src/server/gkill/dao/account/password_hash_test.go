@@ -143,9 +143,9 @@ func TestIsValidCredentialFormat(t *testing.T) {
 	invalid := []string{
 		"",
 		"abc",
-		strings.ToUpper(testCredential),                                     // 大文字は受け付けない
-		testCredential + "0",                                                // 長すぎる
-		testCredential[:63],                                                 // 短すぎる
+		strings.ToUpper(testCredential), // 大文字は受け付けない
+		testCredential + "0",            // 長すぎる
+		testCredential[:63],             // 短すぎる
 		"g3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  // hexでない
 		" e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", // 前後の空白
 	}

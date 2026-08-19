@@ -202,6 +202,18 @@ import { RepTypeStructElementData } from "../datas/config/rep-type-struct-elemen
 import { KFTLTemplateElementData } from "../datas/kftl-template-element-data"
 import { MiBoardStructElementData } from "../datas/config/mi-board-struct-element-data"
 
+/**
+ * いまログイン画面（ルート `/`）にいるか。
+ *
+ * `check_auth` の「セッションが無効ならログイン画面へ飛ばす」判定に使う。
+ * ログイン画面で飛ばすと、行き先が同じなのにページを作り直すことになり、
+ * 出したばかりのログイン失敗の表示を消してしまう。
+ * router の login ルートは path: '/' なので、pathname だけで判定できる。
+ */
+export function is_on_login_page(pathname: string): boolean {
+    return pathname === '/' || pathname === ''
+}
+
 export class GkillAPI {
         // 画面以外から参照されるやつ
         private static use_gkill_api: GkillAPI | null
@@ -2448,6 +2460,18 @@ export class GkillAPI {
                                 case "ERR000002": // AccountNotFoundError
                                 case "ERR000238": // AccountDisabledError
                                 case "ERR000373": // AccountSessionExpiredError
+                                        // **ログイン画面にいるときは飛ばさない。**
+                                        // ログイン失敗（存在しないユーザIDは ERR000002）もここを通るので、
+                                        // 素直に飛ばすと location.replace("/") でページごと作り直され、
+                                        // login-page.vue がいま出したばかりのエラー表示が消える。
+                                        // 利用者から見ると「画面が一瞬光って、理由も出ないまま元のまま」になる。
+                                        // 行き先は同じ "/" なので、飛ばさないことで失うものは無い。
+                                        if (has_window && is_on_login_page(window.location.pathname)) {
+                                                if (has_document) {
+                                                        this.set_session_id("")
+                                                }
+                                                return
+                                        }
                                         if (has_document && has_window) {
                                                 // リダイレクト前にブラウザ側の状態(①②・localStorage・全cookie)を掃除する。
                                                 // check_authは同期だが、window.location.replaceで即離脱するため

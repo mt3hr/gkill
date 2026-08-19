@@ -12,7 +12,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="text_value" :label="i18n.global.t('TEXT_TITLE')" autofocus
+        <v-textarea v-model="text_value" :label="i18n.global.t('TEXT_TITLE')"
             :rules="[(v: string) => !!v || i18n.global.t('REQUIRED_FIELD_MESSAGE')]"
             :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0 gkill-dialog-actions">

@@ -150,7 +150,6 @@ func (r *ReKyouRepositories) GetKyou(ctx context.Context, id string, updateTime 
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -215,7 +214,6 @@ func (r *ReKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -313,7 +311,6 @@ func (r *ReKyouRepositories) UpdateCache(ctx context.Context) error {
 	defer close(errch)
 
 	for _, rep := range r.ReKyouRepositories {
-		rep := rep
 		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -349,6 +346,10 @@ func (r *ReKyouRepositories) LastUpdateCacheChanged() bool {
 	return false
 }
 
+// GetRepName は集約の**表示名**を返します。実在するリポジトリの名前ではありません。
+// **Kyou.RepName / REP_NAME 列に入れてはいけません。** 入れると find_filter.go の
+// filterKyousByRepName が「非空で、指定repに無い名前」として結果から落とします。
+// 書き込むrepの名前が要るときは GkillRepositories.WriteReKyouRep.GetRepName を使ってください。
 func (r *ReKyouRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "ReKyou", nil
 }
@@ -362,7 +363,6 @@ func (r *ReKyouRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			err := rep.Close(ctx)
 			if err != nil {
@@ -395,6 +395,11 @@ errloop:
 }
 
 func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQuery) ([]ReKyou, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照
+	return findChunkedByIDs(ctx, query, r.findReKyou)
+}
+
+func (r *ReKyouRepositories) findReKyou(ctx context.Context, query *find.FindQuery) ([]ReKyou, error) {
 	matchReKyous := []ReKyou{}
 
 	// 未削除ReKyouを抽出
@@ -452,7 +457,6 @@ func (r *ReKyouRepositories) GetReKyou(ctx context.Context, id string, updateTim
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchReKyouInRep, err := rep.GetReKyou(ctx, id, updateTime)
 			if err != nil {
@@ -517,7 +521,6 @@ func (r *ReKyouRepositories) GetReKyouHistories(ctx context.Context, id string) 
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchReKyousInRep, err := rep.GetReKyouHistories(ctx, id)
 			if err != nil {
@@ -598,7 +601,6 @@ func (r *ReKyouRepositories) GetReKyouHistoriesByRepName(ctx context.Context, id
 
 	// 並列処理
 	for _, rep := range repImpls {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
 				// repNameが一致しない場合はスキップ
@@ -692,7 +694,6 @@ func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]ReKyou,
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchReKyousInRep, err := rep.GetReKyousAllLatest(ctx)
 			if err != nil {
@@ -833,7 +834,6 @@ func (r *ReKyouRepositories) GetLatestDataRepositoryAddress(ctx context.Context,
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {

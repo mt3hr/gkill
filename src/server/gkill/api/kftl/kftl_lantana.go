@@ -50,10 +50,11 @@ func (r *kftlLantanaRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.WriteLantanaRep.AddLantanaInfo(ctx, lantana); err != nil {
 		return err
 	}
-	repName, _ := r.Ctx.Repositories.WriteLantanaRep.GetRepName(ctx)
+	repName, repNameErr := r.Ctx.Repositories.WriteLantanaRep.GetRepName(ctx)
+	logGetRepNameFailure(ctx, "lantana", lantana.ID, repNameErr)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	_ = r.Ctx.Repositories.WriteThroughLantanaCache(ctx, lantana)
+	logWriteThroughCacheFailure(ctx, "lantana", lantana.ID, r.Ctx.Repositories.WriteThroughLantanaCache(ctx, lantana))
 	return nil
 }
 
@@ -88,9 +89,9 @@ func newKFTLStartLantanaStatementLine(lineText string, ctx *KFTLStatementLineCon
 func (l *kftlStartLantanaStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
-func (l *kftlStartLantanaStatementLine) GetLabelName() string                 { return "lantana" }
+func (l *kftlStartLantanaStatementLine) GetLabelName() string                  { return "lantana" }
 func (l *kftlStartLantanaStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlStartLantanaStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlStartLantanaStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlLantanaMoodStatementLine reads the mood integer (0–10).
 // Mirrors: kftl-lantana-mood-statement-line.ts
@@ -118,6 +119,6 @@ func (l *kftlLantanaMoodStatementLine) ApplyThisLineToRequestMap(_ context.Conte
 	l.req.mood = n
 	return nil
 }
-func (l *kftlLantanaMoodStatementLine) GetLabelName() string                 { return "lantanaMood" }
+func (l *kftlLantanaMoodStatementLine) GetLabelName() string                  { return "lantanaMood" }
 func (l *kftlLantanaMoodStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlLantanaMoodStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlLantanaMoodStatementLine) GetStatementLineText() string          { return l.lineText }

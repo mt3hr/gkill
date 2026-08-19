@@ -22,7 +22,7 @@
         <v-card variant="flat" class="edit_ryuu_dialog_view">
           <RyuuView :application_config="application_config" :gkill_api="gkill_api"
             :editable="true" :find_kyou_query_default="new FindKyouQuery()" :target_kyou="new Kyou()"
-            @requested_apply_ryuu_struct="(ryuu_data: Record<string, unknown>) => { emits('requested_apply_ryuu_struct', ryuu_data) }"
+            @requested_apply_ryuu_struct="(ryuu_data: Array<Record<string, unknown>>) => { emits('requested_apply_ryuu_struct', ryuu_data) }"
             @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
             @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
             @requested_close_dialog="hide()" />
