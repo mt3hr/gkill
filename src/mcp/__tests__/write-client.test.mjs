@@ -198,9 +198,9 @@ describe("login", () => {
 });
 
 // ---------------------------------------------------------------------------
-// callWrite
+// callApi
 // ---------------------------------------------------------------------------
-describe("callWrite", () => {
+describe("callApi", () => {
   test("posts to the correct endpoint with auth", async () => {
     process.env.GKILL_USER = "admin";
     process.env.GKILL_PASSWORD_SHA256 = "hash";
@@ -222,7 +222,7 @@ describe("callWrite", () => {
     });
 
     const client = new GkillWriteClient();
-    const result = await client.callWrite("/api/add_kmemo", { kmemo: {} }, true);
+    const result = await client.callApi("/api/add_kmemo", { kmemo: {} }, true);
     expect(result.added_kmemo.id).toBe("123");
   });
 
@@ -262,7 +262,7 @@ describe("callWrite", () => {
     });
 
     const client = new GkillWriteClient();
-    const result = await client.callWrite("/api/add_kmemo", { kmemo: {} }, true);
+    const result = await client.callApi("/api/add_kmemo", { kmemo: {} }, true);
     expect(result.added_kmemo.id).toBe("456");
     expect(callCount).toBe(4);
   });
@@ -272,7 +272,7 @@ describe("callWrite", () => {
 
     const client = new GkillWriteClient();
     client.sessionId = "default-sess";
-    const _result = await client.callWrite("/api/add_kmemo", { kmemo: {} }, true, "override-sess");
+    const _result = await client.callApi("/api/add_kmemo", { kmemo: {} }, true, "override-sess");
 
     const callBody = JSON.parse(undiciFetch.mock.calls[0][1].body);
     expect(callBody.session_id).toBe("override-sess");

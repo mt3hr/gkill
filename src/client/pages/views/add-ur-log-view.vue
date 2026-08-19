@@ -7,7 +7,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field class="input text" type="text" v-model="url" :label="i18n.global.t('URL_TITLE')" autofocus :readonly="is_requested_submit" :rules="[(v: string) => !!v || i18n.global.t('REQUIRED_FIELD_MESSAGE')]" />
+        <v-text-field class="input text" type="text" v-model="url" :label="i18n.global.t('URL_TITLE')" :readonly="is_requested_submit" :rules="[(v: string) => !!v || i18n.global.t('REQUIRED_FIELD_MESSAGE')]" />
         <v-text-field class="input text" type="text" v-model="title" :label="i18n.global.t('URLOG_TITLE_TITLE')" :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
@@ -89,7 +89,7 @@ import EditKyouTagsView from './edit-kyou-tags-view.vue'
 import ConfirmUnknownTagDialog from '../dialogs/confirm-unknown-tag-dialog.vue'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/components'
-import { useAddUrlogView } from '@/classes/use-add-ur-log-view'
+import { useAddURLogView } from '@/classes/use-add-ur-log-view'
 
 const props = defineProps<EditURLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -124,5 +124,5 @@ const {
 
     // Event relay objects
     crudRelayHandlers,
-} = useAddUrlogView({ props, emits })
+} = useAddURLogView({ props, emits })
 </script>

@@ -116,48 +116,11 @@ import type { SaveClipboardToFileDialogProps } from './save-clipboard-to-file-di
 import type { KyouViewEmits } from '../views/kyou-view-emits'
 import { FileUploadConflictBehavior } from '@/classes/api/req_res/file-upload-conflict-behavior'
 import { i18n } from '@/i18n'
-import { useFloatingDialog } from '@/classes/use-floating-dialog'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useSaveClipboardToFileDialog } from '@/classes/use-save-clipboard-to-file-dialog'
 
 const props = defineProps<SaveClipboardToFileDialogProps>()
 const emits = defineEmits<KyouViewEmits>()
-
-const ui = useFloatingDialog('save-clipboard-to-file-dialog', {
-    // ファイル名の入力欄は折りたたみの中にあり、既定のフォーカス先は保存ボタン
-    // （use-save-clipboard-to-file-dialog.ts の show / do_save）。共通の自動フォーカスは切る
-    autofocus: false,
-    centerMode: 'always',
-    onEscape: () => hide(),
-})
-
-const {
-    is_show_dialog,
-    is_loading,
-    clipboard_blob,
-    filename,
-    preview_url,
-    text_preview,
-    error_message_key,
-    target_rep_names,
-    target_rep_name,
-    conflict_behavior,
-    show_filename_editor,
-    show_already_saved_confirm,
-    show_saved_snackbar,
-    save_btn,
-    set_dialog_el,
-    is_image_type,
-    is_text_type,
-    type_display_name,
-    file_size_display,
-    save_or_confirm,
-    force_save,
-    show,
-    hide,
-} = useSaveClipboardToFileDialog({ props, emits })
-
-useDialogHistoryStack(is_show_dialog)
+const { is_show_dialog, is_loading, clipboard_blob, filename, preview_url, text_preview, error_message_key, target_rep_names, target_rep_name, conflict_behavior, show_filename_editor, show_already_saved_confirm, show_saved_snackbar, save_btn, set_dialog_el, is_image_type, is_text_type, type_display_name, file_size_display, save_or_confirm, force_save, show, hide, ui } = useSaveClipboardToFileDialog({ props, emits })
 defineExpose({ show, hide })
 </script>
 

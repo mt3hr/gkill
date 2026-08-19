@@ -37,7 +37,7 @@ src/client/
 │   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,400行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
-│   │   └── req_res/                # リクエスト/レスポンス型 (172ファイル、サーバー側は186ファイル)
+│   │   └── req_res/                # リクエスト/レスポンス型 (169ファイル、サーバー側は186ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
 │   ├── kftl/                        # KFTLパーサー (48 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)
@@ -52,7 +52,7 @@ src/client/
 │   ├── tag-struct.ts                # タグ階層構造ユーティリティ
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
-│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、263ファイル）
+│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、329ファイル）
 ├── assets/                          # 画像等の静的アセット
 ├── __tests__/                       # Vitest ユニットテスト + Playwright E2E
 │   ├── e2e/                        # E2E spec（run-e2e.mjs / free-port.mjs / auth.setup.ts 等を含む）
@@ -154,7 +154,7 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 
 ### ダイアログ アクセシビリティ
 
-117ダイアログ中90件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
+116ダイアログ中90件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
 
 | 機能 | 説明 |
 |------|------|
@@ -226,7 +226,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 | `GkillAPI` シングルトン | バックエンド通信（`GkillAPI.get_instance()`） |
 | Vuetify `useTheme()` | テーマ状態（ライト/ダーク切替） |
 | vue-i18n | ロケール状態 |
-| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（263ファイル） |
+| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（329ファイル） |
 
 ### ComponentRef 型
 

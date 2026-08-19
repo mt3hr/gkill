@@ -31,32 +31,17 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { EditMiBoardStructDialogEmits } from './edit-mi-board-struct-dialog-emits'
 import type { EditMiBoardStructDialogProps } from './edit-mi-board-struct-dialog-props'
 import EditMiBoardStructView from '../views/edit-mi-board-struct-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import type { MiBoardStructElementData } from '@/classes/datas/config/mi-board-struct-element-data'
 import { i18n } from '@/i18n'
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
+import { useEditMiBoardStructDialog } from '@/classes/use-edit-mi-board-struct-dialog'
 
-defineProps<EditMiBoardStructDialogProps>()
+const props = defineProps<EditMiBoardStructDialogProps>()
 const emits = defineEmits<EditMiBoardStructDialogEmits>()
+const { is_show_dialog, ui, show, hide } = useEditMiBoardStructDialog({ props, emits })
 defineExpose({ show, hide })
-
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-const ui = useFloatingDialog("edit-mi-board-struct-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
 </script>

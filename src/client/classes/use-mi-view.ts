@@ -1,3 +1,4 @@
+import { log_unless_aborted } from '@/classes/abort-error'
 import { gkill_page_list } from '@/classes/gkill-page-list'
 import router from '@/router'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
@@ -24,7 +25,9 @@ import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/
 import type { KyouChange } from '@/classes/kyou-change-bus'
 import { useKyouChangeSubscriber } from '@/classes/use-kyou-change-subscriber'
 import { useRegisteredKyouLocalInsert } from '@/classes/use-registered-kyou-local-insert'
-import { apply_mi_projection, insert_kyou_sorted } from '@/classes/kyou-local-insert'
+import { useRegisteredTagColumnFilter } from '@/classes/use-registered-tag-column-filter'
+import { tag_exists_in_tag_struct } from '@/classes/tag-struct'
+import { remove_kyou_from_list_by_id, apply_mi_projection, insert_kyou_sorted } from '@/classes/kyou-local-insert'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ComponentRef } from '@/classes/component-ref'
 import { MI_ALL_BOARD_KEY } from '@/classes/mi-board-names'
@@ -50,18 +53,23 @@ const MI_REKYOU_DROP_ALLOWED_KEYS = new Set([
 
 // DataTransferのJSONは外部由来なので、許可したフィールド以外は捨てる
 function parse_dropped_task<T extends object>(json: unknown, instance: T, allowed_keys: Set<string>): T {
-    for (const key in json as object) {
+    if (json === null || typeof json !== 'object') {
+        return instance
+    }
+    // 許可キーだけを写す。値の型までは分からないので、
+    // 書き込み口だけを Record<string, unknown> として扱う（any は使わない）
+    const source = json as Record<string, unknown>
+    const target = instance as unknown as Record<string, unknown>
+    for (const key of Object.keys(source)) {
         if (!allowed_keys.has(key)) {
             continue
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (instance as any)[key] = (json as any)[key]
+        target[key] = source[key]
 
         // 時刻はDate型に変換
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (key.endsWith("time") && (instance as any)[key]) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (instance as any)[key] = new Date((instance as any)[key])
+        const value = target[key]
+        if (key.endsWith("time") && value) {
+            target[key] = new Date(value as string | number | Date)
         }
     }
     return instance
@@ -86,7 +94,8 @@ export function useMiView(options: {
     const mkfl_dialog = ref<ComponentRef | null>(null)
     const upload_file_dialog = ref<ComponentRef | null>(null)
     const save_clipboard_to_file_dialog = ref<ComponentRef | null>(null)
-    const kyou_list_views = ref()
+    // 列ごとに1つ。v-for の ref なので配列で来る
+    const kyou_list_views = ref<Array<ComponentRef> | null>(null)
 
     // ── State refs ──
     const enable_context_menu = ref(true)
@@ -201,10 +210,8 @@ export function useMiView(options: {
 
     // 列コンポーネントをquery_idで引く。v-forのテンプレートref配列はマウント順で
     // 並び順が保証されないため、indexではなくquery_idで解決する
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function get_kyou_list_view(query_id: string): any {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return kyou_list_views.value?.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query_id)[0]
+    function get_kyou_list_view(query_id: string): ComponentRef | undefined {
+        return kyou_list_views.value?.filter((kyou_list_view) => kyou_list_view.get_query_id() === query_id)[0]
     }
 
     // フォーカス切り替え等でfocused_queryを差し替えると、サイドバーが機械的に
@@ -218,19 +225,6 @@ export function useMiView(options: {
         skip_search_this_tick.value = true
         fn()
         nextTick(() => skip_search_this_tick.value = false)
-    }
-
-    function remove_kyou_from_list_by_id(list: Array<Kyou>, deleted_id: string): void {
-        // 走査は生の配列に対して行う。deepなref配下のリアクティブProxy越しに読むと
-        // 1要素ごとに track と toReactive が走り、要素ぶんのProxyを確保する(30万件の列では効く)。
-        // ★splice は必ずリアクティブな list に対して行うこと(でないと誰にも通知されない)。
-        //   後ろから走るので、splice しても未走査側のインデックスはずれない。
-        const raw_list = toRaw(list)
-        for (let i = raw_list.length - 1; i >= 0; i--) {
-            if (raw_list[i].id === deleted_id) {
-                list.splice(i, 1)
-            }
-        }
     }
 
     function remove_kyou_from_multi_column_lists(lists: Array<Array<Kyou>>, deleted_id: string): void {
@@ -347,10 +341,23 @@ export function useMiView(options: {
 
     // 対象のKyouが載っている列のクエリを探す。focused_kyou と opened_dialogs は
     // 自分がどの列由来か知らないので、列を総当たりして最初に見つかったものを使う
+    // その Kyou が乗っている列の検索条件を返す。
+    //
+    // rykv の対になる関数は `find_reload_query_for(kyou_id, data_type)` で、
+    // あちらは列のクエリが Mi 用ではない（for_mi=false）ため
+    // `build_mi_reload_query` で for_mi / mi_sort_type を足してから返す。
+    // mi の列のクエリは最初から Mi 用なので、ここは列のクエリをそのまま返す。
+    //
+    // 走査は生の配列に対して行う。match_kyous_list は deep なリアクティブ ref なので、
+    // 素で `.some()` すると1要素ごとに track と Proxy 生成が走る
+    // （ダイアログを開くたび・引き直すたびに列を総当たりするので効く）。
     function find_column_query_for(kyou_id: string): FindKyouQuery | undefined {
         for (let i = 0; i < match_kyous_list.value.length; i++) {
-            if (match_kyous_list.value[i].some(k => k.id === kyou_id)) {
-                return querys.value[i]
+            const raw_list = toRaw(match_kyous_list.value[i])
+            for (let j = 0; j < raw_list.length; j++) {
+                if (raw_list[j].id === kyou_id) {
+                    return querys.value[i]
+                }
             }
         }
         return undefined
@@ -453,6 +460,18 @@ export function useMiView(options: {
                 update_focused_kyous_list(column_index)
             }
         },
+    })
+
+    // 利用者がその場で作った新しいタグを、開いている列の検索条件へ足す。
+    // 既定クエリは「絞らない」を tags の列挙として物質化するので、
+    // タグが1つも無い時期に作られた列は tags = ["no tags"] で凍り、
+    // **タグを付けて追加した記録が追加直後に一覧から消える**（エラーも警告も出ない）
+    const { onRegisteredTag: note_registered_tag, apply_new_tag_names } = useRegisteredTagColumnFilter({
+        querys: querys,
+        querys_backup: querys_backup,
+        is_known_tag_name: (tag_name: string) => tag_exists_in_tag_struct(tag_name, props.application_config.tag_struct),
+        reload_list_by_query_id: reload_list_by_query_id,
+        run_with_sidebar_search_suppressed: run_with_sidebar_search_suppressed,
     })
 
     async function init(): Promise<void> {
@@ -667,11 +686,8 @@ export function useMiView(options: {
                 skip_search_this_tick.value = false
             })
         } catch (err: unknown) {
-            // abortは握りつぶす
-            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
-                // abort以外はエラー出力する
-                console.error(err)
-            }
+            // 中断（画面を離れた・後発の検索に差し替わった）は正常なので出さない
+            log_unless_aborted(err)
             // abort含め例外時はloading状態を解除する（ただし新しいsearchが開始されていない場合のみ）
             if (is_current()) {
                 nextTick(() => get_kyou_list_view(query_id)?.set_loading(false))
@@ -794,6 +810,36 @@ export function useMiView(options: {
         if (props.application_config.rykv_hot_reload) {
             search(querys.value.length - 1, query, true)
         }
+    }
+
+    // ダイアログの中でフォーカスが動いたときに列を追随させる。
+    // rykv の同名の束（use-rykv-view.ts の subViewFocusHandlers）と対。
+    // 列のクリック（clicked_kyou_in_list_view）と違って列番号が無いので、
+    // フォーカス列の付け替えはしない
+    function onFocusedKyouFromSubView(kyou: Kyou): void {
+        focused_kyou.value = kyou
+        if (!inited.value || !kyou_list_views.value) {
+            return
+        }
+        for (let i = 0; i < querys.value.length; i++) {
+            if (querys.value[i].is_focus_kyou_in_list_view) {
+                get_kyou_list_view(querys.value[i].query_id)?.scroll_to_time(kyou.related_time)
+            }
+        }
+    }
+
+    const subViewFocusHandlers = {
+        'focused_kyou': (kyou: Kyou) => onFocusedKyouFromSubView(kyou),
+        'clicked_kyou': (kyou: Kyou) => onFocusedKyouFromSubView(kyou),
+    }
+
+    // 列からの「一覧を引き直して」。クエリを clone してから引き直すのは、
+    // 検索の同値ガード（deep_equals）に「変わった」と認識させるため。
+    // rykv の同名の関数と対
+    function onColumnRequestedReloadList(index: number): void {
+        const query = querys.value[index].clone()
+        querys.value[index] = query
+        reload_list(index)
     }
 
     async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Promise<void> {
@@ -1134,7 +1180,16 @@ export function useMiView(options: {
             emits('registered_kyou', kyou)
             publish_kyou_change({ kind: 'registered', kyou: kyou }, requested_at)
         },
-        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
+        'registered_tag': (tag: Tag) => {
+            // **「未知だったか」は emit より前に、同期で決めること。**
+            // emit 先(use-mi-page.ts)の check_tag_update がタグツリーへ足したあとでは、
+            // 「利用者がついさっき作った」ことを二度と知れない
+            if (note_registered_tag(tag)) {
+                // 未知と判定した発生元だけが配る。受け手は判定をやり直さない
+                publish_kyou_change({ kind: 'registered_tag', tag_name: tag.tag }, new_reload_batch())
+            }
+            emits('registered_tag', tag)
+        },
         'registered_text': (text: Text) => emits('registered_text', text),
         'registered_notification': (notification: Notification) => emits('registered_notification', notification),
         'updated_kyou': (kyou: Kyou) => {
@@ -1165,7 +1220,7 @@ export function useMiView(options: {
         'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => update_check_kyous(kyous, checked),
     }
 
-    const rykv_dialog_handler = {
+    const rykvDialogRelayHandlers = {
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload),
     }
 
@@ -1191,6 +1246,9 @@ export function useMiView(options: {
                 void reload_list(i)
             }
         },
+        // 他の画面で新しく作られたタグ。**既知判定はやり直さない**
+        // （届く頃には発生元の check_tag_update がツリーへ足し終えている）
+        apply_registered_tag: (tag_names) => apply_new_tag_names(tag_names),
     })
 
     // ── Keyboard shortcut ──
@@ -1279,6 +1337,8 @@ export function useMiView(options: {
         // Event relay objects
         crudRelayHandlers,
         allColumnsRequestHandlers,
-        rykv_dialog_handler,
+        subViewFocusHandlers,
+        onColumnRequestedReloadList,
+        rykvDialogRelayHandlers,
     }
 }

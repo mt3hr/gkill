@@ -41,9 +41,9 @@ func (l *kftlStartTextStatementLine) ApplyThisLineToRequestMap(_ context.Context
 	return nil
 }
 
-func (l *kftlStartTextStatementLine) GetLabelName() string                 { return "startText" }
+func (l *kftlStartTextStatementLine) GetLabelName() string                  { return "startText" }
 func (l *kftlStartTextStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlStartTextStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlStartTextStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlTextStatementLine accumulates lines into a text block on the request.
 // Mirrors: src/classes/kftl/kftl_text/kftl-text-statement-line.ts
@@ -87,9 +87,9 @@ func (l *kftlTextStatementLine) ApplyThisLineToRequestMap(_ context.Context, req
 	return nil
 }
 
-func (l *kftlTextStatementLine) GetLabelName() string                 { return "text" }
+func (l *kftlTextStatementLine) GetLabelName() string                  { return "text" }
 func (l *kftlTextStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlTextStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlTextStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlEndTextStatementLine closes a text block (line == "ーー").
 // Mirrors: src/classes/kftl/kftl_text/kftl-end-text-statement-line.ts
@@ -117,6 +117,6 @@ func (l *kftlEndTextStatementLine) ApplyThisLineToRequestMap(_ context.Context, 
 	return nil
 }
 
-func (l *kftlEndTextStatementLine) GetLabelName() string                 { return "endText" }
+func (l *kftlEndTextStatementLine) GetLabelName() string                  { return "endText" }
 func (l *kftlEndTextStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlEndTextStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlEndTextStatementLine) GetStatementLineText() string          { return l.lineText }

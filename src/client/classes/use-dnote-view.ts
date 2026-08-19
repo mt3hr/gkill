@@ -16,12 +16,12 @@ import moment from 'moment'
 import { save_as } from '@/classes/save-as'
 import type { Kyou } from '@/classes/datas/kyou'
 import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
-import type { GkillError } from '@/classes/api/gkill-error'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { to_export_kyou_dto } from '@/classes/dto/export_dto'
 import { prune_empty } from '@/classes/dto/export_prune'
 import type { ComponentRef } from '@/classes/component-ref'
+import { build_error_message_relay } from '@/classes/kyou-view-relay'
 
 export interface DnoteDefinition {
     name: string
@@ -203,39 +203,35 @@ export function useDnoteView(options: {
     function parse_single_definition_json(def_json: Record<string, unknown>): DnoteDefinition {
         register_dictionary()
         const name = (def_json.name as string) || i18n.global.t('DNOTE_DEFINITION_DEFAULT_NAME')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const items: Array<Array<DnoteItem>> = ((def_json && def_json.dnote_item_table_view_data ? def_json.dnote_item_table_view_data : []) as Array<Array<any>> || []).map((col: Array<any>) =>
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            col.map((item_json: any) => {
+        const items: Array<Array<DnoteItem>> = ((def_json && def_json.dnote_item_table_view_data ? def_json.dnote_item_table_view_data : []) as Array<Array<Record<string, unknown>>> || []).map((col) =>
+            col.map((item_json) => {
                 const item = new DnoteItem()
-                item.id = item_json.id
-                item.prefix = item_json.prefix
-                item.suffix = item_json.suffix
-                item.title = item_json.title
-                item.aggregate_target = build_dnote_aggregate_target_from_json(item_json.aggregate_target)
-                item.predicate = build_dnote_predicate_from_json(item_json.predicate)
+                item.id = String(item_json.id ?? '')
+                item.prefix = String(item_json.prefix ?? '')
+                item.suffix = String(item_json.suffix ?? '')
+                item.title = String(item_json.title ?? '')
+                item.aggregate_target = build_dnote_aggregate_target_from_json(item_json.aggregate_target as Record<string, unknown>)
+                item.predicate = build_dnote_predicate_from_json(item_json.predicate as Record<string, unknown>)
                 return item
             })
         )
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const lists: Array<DnoteListQuery> = ((def_json && def_json.dnote_list_item_table_view_data ? def_json.dnote_list_item_table_view_data : []) as Array<any> || []).map((query_json: any) => {
+        const lists: Array<DnoteListQuery> = ((def_json && def_json.dnote_list_item_table_view_data ? def_json.dnote_list_item_table_view_data : []) as Array<Record<string, unknown>> || []).map((query_json) => {
             const query = new DnoteListQuery()
-            query.id = query_json.id
-            query.prefix = query_json.prefix
-            query.suffix = query_json.suffix
-            query.title = query_json.title
-            query.aggregate_target = build_dnote_aggregate_target_from_json(query_json.aggregate_target)
-            query.predicate = build_dnote_predicate_from_json(query_json.predicate)
-            query.key_getter = build_dnote_key_getter_from_json(query_json.key_getter)
+            query.id = String(query_json.id ?? '')
+            query.prefix = String(query_json.prefix ?? '')
+            query.suffix = String(query_json.suffix ?? '')
+            query.title = String(query_json.title ?? '')
+            query.aggregate_target = build_dnote_aggregate_target_from_json(query_json.aggregate_target as Record<string, unknown>)
+            query.predicate = build_dnote_predicate_from_json(query_json.predicate as Record<string, unknown>)
+            query.key_getter = build_dnote_key_getter_from_json(query_json.key_getter as Record<string, unknown>)
             return query
         })
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const trends: Array<DnoteTrendGraphQuery> = ((def_json && def_json.dnote_trend_graph_view_data ? def_json.dnote_trend_graph_view_data : []) as Array<any> || []).map((query_json: any) => {
+        const trends: Array<DnoteTrendGraphQuery> = ((def_json && def_json.dnote_trend_graph_view_data ? def_json.dnote_trend_graph_view_data : []) as Array<Record<string, unknown>> || []).map((query_json) => {
             const query = new DnoteTrendGraphQuery()
-            query.id = query_json.id
-            query.title = query_json.title
-            query.aggregate_target = build_dnote_aggregate_target_from_json(query_json.aggregate_target)
-            query.predicate = build_dnote_predicate_from_json(query_json.predicate)
+            query.id = String(query_json.id ?? '')
+            query.title = String(query_json.title ?? '')
+            query.aggregate_target = build_dnote_aggregate_target_from_json(query_json.aggregate_target as Record<string, unknown>)
+            query.predicate = build_dnote_predicate_from_json(query_json.predicate as Record<string, unknown>)
             query.granularity = (query_json.granularity === 'week' || query_json.granularity === 'month') ? query_json.granularity : 'day'
             query.chart_type = query_json.chart_type === 'bar' ? 'bar' : 'line'
             return query
@@ -459,8 +455,7 @@ export function useDnoteView(options: {
 
     async function apply(): Promise<void> {
         const dnote_json_data = to_json()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        emits('requested_apply_dnote', dnote_json_data as any)
+        emits('requested_apply_dnote', dnote_json_data)
         nextTick(() => emits('requested_close_dialog'))
     }
 
@@ -515,8 +510,8 @@ export function useDnoteView(options: {
     }
 
     async function stream_save_json_array(items: Kyou[], filename: string): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const handle = await (window as any).showSaveFilePicker({
+        // 呼び出し前に "showSaveFilePicker" in window で存在を確かめている
+        const handle = await window.showSaveFilePicker!({
             suggestedName: filename,
             types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
         })
@@ -600,10 +595,7 @@ export function useDnoteView(options: {
     })
 
     // errors/messagesしかemitしない子（AddDnote*Dialog等）には20件束を渡す意味がない
-    const errorsMessagesRelayHandlers = {
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-    }
+    const errorMessageRelayHandlers = build_error_message_relay(emits)
 
     // ── Return ──
     return {
@@ -662,6 +654,6 @@ export function useDnoteView(options: {
 
         // Event relay objects
         crudRelayHandlers,
-        errorsMessagesRelayHandlers,
+        errorMessageRelayHandlers,
     }
 }

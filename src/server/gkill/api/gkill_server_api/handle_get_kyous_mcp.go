@@ -254,65 +254,102 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		OnlyLatestData: true,
 	}
 
-	// 各型の詳細データを一括取得してマップを構築
-	kmemoMap := map[string]reps.Kmemo{}
-	if kmemos, kmemoErr := repositories.KmemoReps.FindKmemo(r.Context(), findQueryForBatch); kmemoErr == nil {
-		for _, k := range kmemos {
-			kmemoMap[k.ID] = k
-		}
+	// 各型の詳細データを一括取得してマップを構築する。
+	//
+	// 失敗を握りつぶしてはいけない。握りつぶすと、その型のペイロードだけが欠けたまま
+	// HTTP 200 + errors:null で返り、呼び出し側からは「その型の記録が無かった」と区別が付かない。
+	// 同じ11型のファンアウトを handle_get_shared_kyous.go も1件ずつエラーにして返している
+	reportFindDetailError := func(dataType string, err error) {
+		err = fmt.Errorf("error at find %s for get kyous mcp user id = %s device = %s: %w", dataType, userID, device, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.FindKyousError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
+		})
 	}
 
-	kcMap := map[string]reps.KC{}
-	if kcs, kcErr := repositories.KCReps.FindKC(r.Context(), findQueryForBatch); kcErr == nil {
-		for _, k := range kcs {
-			kcMap[k.ID] = k
-		}
+	kmemos, err := repositories.KmemoReps.FindKmemo(r.Context(), findQueryForBatch)
+	if err != nil {
+		reportFindDetailError("kmemo", err)
+		return
+	}
+	kmemoMap := make(map[string]reps.Kmemo, len(kmemos))
+	for _, k := range kmemos {
+		kmemoMap[k.ID] = k
 	}
 
-	timeIsMap := map[string]reps.TimeIs{}
-	if timeiss, timeIsErr := repositories.TimeIsReps.FindTimeIs(r.Context(), findQueryForBatch); timeIsErr == nil {
-		for _, t := range timeiss {
-			timeIsMap[t.ID] = t
-		}
+	kcs, err := repositories.KCReps.FindKC(r.Context(), findQueryForBatch)
+	if err != nil {
+		reportFindDetailError("kc", err)
+		return
+	}
+	kcMap := make(map[string]reps.KC, len(kcs))
+	for _, k := range kcs {
+		kcMap[k.ID] = k
 	}
 
-	nlogMap := map[string]reps.Nlog{}
-	if nlogs, nlogErr := repositories.NlogReps.FindNlog(r.Context(), findQueryForBatch); nlogErr == nil {
-		for _, n := range nlogs {
-			nlogMap[n.ID] = n
-		}
+	timeiss, err := repositories.TimeIsReps.FindTimeIs(r.Context(), findQueryForBatch)
+	if err != nil {
+		reportFindDetailError("timeis", err)
+		return
+	}
+	timeIsMap := make(map[string]reps.TimeIs, len(timeiss))
+	for _, t := range timeiss {
+		timeIsMap[t.ID] = t
 	}
 
-	lantanaMap := map[string]reps.Lantana{}
-	if lantanas, lantanaErr := repositories.LantanaReps.FindLantana(r.Context(), findQueryForBatch); lantanaErr == nil {
-		for _, l := range lantanas {
-			lantanaMap[l.ID] = l
-		}
+	nlogs, err := repositories.NlogReps.FindNlog(r.Context(), findQueryForBatch)
+	if err != nil {
+		reportFindDetailError("nlog", err)
+		return
+	}
+	nlogMap := make(map[string]reps.Nlog, len(nlogs))
+	for _, n := range nlogs {
+		nlogMap[n.ID] = n
 	}
 
-	urlogMap := map[string]reps.URLog{}
+	lantanas, err := repositories.LantanaReps.FindLantana(r.Context(), findQueryForBatch)
+	if err != nil {
+		reportFindDetailError("lantana", err)
+		return
+	}
+	lantanaMap := make(map[string]reps.Lantana, len(lantanas))
+	for _, l := range lantanas {
+		lantanaMap[l.ID] = l
+	}
+
 	// URLogのサムネイルはbase64画像で、実データでは227行で90MBある(1行最大10MB)。
 	// MCPの利用者はAIクライアントで画像本体を使えないため、DBから読む段階で外す。
 	findQueryForURLog := *findQueryForBatch
 	findQueryForURLog.ExcludeURLogThumbnailImage = true
-	if urlogs, urlogErr := repositories.URLogReps.FindURLog(r.Context(), &findQueryForURLog); urlogErr == nil {
-		for _, u := range urlogs {
-			urlogMap[u.ID] = u
-		}
+	urlogs, err := repositories.URLogReps.FindURLog(r.Context(), &findQueryForURLog)
+	if err != nil {
+		reportFindDetailError("urlog", err)
+		return
+	}
+	urlogMap := make(map[string]reps.URLog, len(urlogs))
+	for _, u := range urlogs {
+		urlogMap[u.ID] = u
 	}
 
-	idfKyouMap := map[string]reps.IDFKyou{}
-	if idfKyous, idfErr := repositories.IDFKyouReps.FindIDFKyou(r.Context(), findQueryForBatch); idfErr == nil {
-		for _, idfk := range idfKyous {
-			idfKyouMap[idfk.ID] = idfk
-		}
+	idfKyous, err := repositories.IDFKyouReps.FindIDFKyou(r.Context(), findQueryForBatch)
+	if err != nil {
+		reportFindDetailError("idf_kyou", err)
+		return
+	}
+	idfKyouMap := make(map[string]reps.IDFKyou, len(idfKyous))
+	for _, idfk := range idfKyous {
+		idfKyouMap[idfk.ID] = idfk
 	}
 
-	gitCommitLogMap := map[string]reps.GitCommitLog{}
-	if gitCommitLogs, gitErr := repositories.GitCommitLogReps.FindGitCommitLog(r.Context(), findQueryForBatch); gitErr == nil {
-		for _, gcl := range gitCommitLogs {
-			gitCommitLogMap[gcl.ID] = gcl
-		}
+	gitCommitLogs, err := repositories.GitCommitLogReps.FindGitCommitLog(r.Context(), findQueryForBatch)
+	if err != nil {
+		reportFindDetailError("git_commit_log", err)
+		return
+	}
+	gitCommitLogMap := make(map[string]reps.GitCommitLog, len(gitCommitLogs))
+	for _, gcl := range gitCommitLogs {
+		gitCommitLogMap[gcl.ID] = gcl
 	}
 
 	// Mi / MiReKyou のFindは、5つのIncludeXxxMiがどのSQL射影を流すかのスイッチになっており、
@@ -323,25 +360,34 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	findQueryForMi := *findQueryForBatch
 	findQueryForMi.IncludeCreateMi = true
 
-	miMap := map[string]reps.Mi{}
-	if mis, miErr := repositories.MiReps.FindMi(r.Context(), &findQueryForMi); miErr == nil {
-		for _, m := range mis {
-			miMap[m.ID] = m
-		}
+	mis, err := repositories.MiReps.FindMi(r.Context(), &findQueryForMi)
+	if err != nil {
+		reportFindDetailError("mi", err)
+		return
+	}
+	miMap := make(map[string]reps.Mi, len(mis))
+	for _, m := range mis {
+		miMap[m.ID] = m
 	}
 
-	miReKyouMap := map[string]reps.MiReKyou{}
-	if miReKyous, miReKyouErr := repositories.MiReKyouReps.FindMiReKyou(r.Context(), &findQueryForMi); miReKyouErr == nil {
-		for _, m := range miReKyous {
-			miReKyouMap[m.ID] = m
-		}
+	miReKyous, err := repositories.MiReKyouReps.FindMiReKyou(r.Context(), &findQueryForMi)
+	if err != nil {
+		reportFindDetailError("mirekyou", err)
+		return
+	}
+	miReKyouMap := make(map[string]reps.MiReKyou, len(miReKyous))
+	for _, m := range miReKyous {
+		miReKyouMap[m.ID] = m
 	}
 
-	reKyouMap := map[string]reps.ReKyou{}
-	if reKyous, reKyouErr := repositories.ReKyouReps.FindReKyou(r.Context(), findQueryForBatch); reKyouErr == nil {
-		for _, rk := range reKyous {
-			reKyouMap[rk.ID] = rk
-		}
+	reKyous, err := repositories.ReKyouReps.FindReKyou(r.Context(), findQueryForBatch)
+	if err != nil {
+		reportFindDetailError("rekyou", err)
+		return
+	}
+	reKyouMap := make(map[string]reps.ReKyou, len(reKyous))
+	for _, rk := range reKyous {
+		reKyouMap[rk.ID] = rk
 	}
 
 	// プラグインをrep_name別に引けるようにする。

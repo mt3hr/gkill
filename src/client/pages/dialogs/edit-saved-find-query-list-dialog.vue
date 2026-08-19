@@ -87,55 +87,17 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue'
 import { i18n } from '@/i18n'
 import HelpDialog from './help-dialog.vue'
 import FindQueryEditorDialog from './find-query-editor-dialog.vue'
 import MiFindQueryEditorDialog from './mi-find-query-editor-dialog.vue'
-import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { EditSavedFindQueryListDialogProps } from './edit-saved-find-query-list-dialog-props'
 import type { EditSavedFindQueryListDialogEmits } from './edit-saved-find-query-list-dialog-emits'
 import { useEditSavedFindQueryListDialog } from '@/classes/use-edit-saved-find-query-list-dialog'
 
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-const find_query_editor_dialog = ref<InstanceType<typeof FindQueryEditorDialog> | null>(null)
-const mi_find_query_editor_dialog = ref<InstanceType<typeof MiFindQueryEditorDialog> | null>(null)
 const props = defineProps<EditSavedFindQueryListDialogProps>()
 const emits = defineEmits<EditSavedFindQueryListDialogEmits>()
-
-const {
-    is_show_dialog,
-    ui,
-    editing_items,
-    current_editing_index,
-    current_editing_query,
-    title,
-    show,
-    hide,
-    add_item,
-    delete_item,
-    move_item,
-    apply_edited_query,
-    floating_action_button_style,
-    onSave,
-    onCancel,
-} = useEditSavedFindQueryListDialog({ props, emits })
-
-// クエリ編集は種別に応じたエディタダイアログを開き、適用は編集中の行にだけ反映する
-// (ここで親へ流すとこのダイアログのキャンセルが効かなくなる)
-function open_query_editor(index: number): void {
-    current_editing_index.value = index
-    current_editing_query.value = editing_items.value[index].find_kyou_query
-    if (props.query_type === 'rykv') {
-        find_query_editor_dialog.value?.show(editing_items.value[index].find_kyou_query)
-    } else {
-        mi_find_query_editor_dialog.value?.show(editing_items.value[index].find_kyou_query)
-    }
-}
-
-function onAppliedQuery(query: FindKyouQuery): void {
-    apply_edited_query(query)
-}
+const { is_show_dialog, ui, editing_items, current_editing_query, title, show, hide, add_item, delete_item, move_item, floating_action_button_style, onSave, onCancel, help_dialog, find_query_editor_dialog, mi_find_query_editor_dialog, open_query_editor, onAppliedQuery } = useEditSavedFindQueryListDialog({ props, emits })
 
 defineExpose({ show, hide })
 </script>

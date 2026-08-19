@@ -72,7 +72,7 @@ func TestFilterLocationKyous_LastPointInRadiusAndBoundary(t *testing.T) {
 
 	gpsRep := &stubGPSLogRepository{
 		gpsLogs: []reps.GPSLog{
-			{RelatedTime: farTime, Latitude: 36.0, Longitude: 136.0},          // 圏外
+			{RelatedTime: farTime, Latitude: 36.0, Longitude: 136.0},             // 圏外
 			{RelatedTime: arriveTime, Latitude: centerLat, Longitude: centerLng}, // 圏内(最後の点)
 		},
 	}

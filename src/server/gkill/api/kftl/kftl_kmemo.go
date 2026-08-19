@@ -70,9 +70,9 @@ func (l *kftlKmemoStatementLine) ApplyThisLineToRequestMap(_ context.Context, re
 	return nil
 }
 
-func (l *kftlKmemoStatementLine) GetLabelName() string                 { return "kmemo" }
+func (l *kftlKmemoStatementLine) GetLabelName() string                  { return "kmemo" }
 func (l *kftlKmemoStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlKmemoStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlKmemoStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // ─── KFTLKmemoRequest ────────────────────────────────────────────────────────
 
@@ -126,10 +126,11 @@ func (r *kftlKmemoRequest) DoRequest(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("error at add kmemo info id=%s: %w", r.RequestID, err)
 	}
-	repName, _ := r.Ctx.Repositories.WriteKmemoRep.GetRepName(ctx)
+	repName, repNameErr := r.Ctx.Repositories.WriteKmemoRep.GetRepName(ctx)
+	logGetRepNameFailure(ctx, "kmemo", kmemo.ID, repNameErr)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	_ = r.Ctx.Repositories.WriteThroughKmemoCache(ctx, kmemo)
+	logWriteThroughCacheFailure(ctx, "kmemo", kmemo.ID, r.Ctx.Repositories.WriteThroughKmemoCache(ctx, kmemo))
 	return nil
 }
 

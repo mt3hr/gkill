@@ -269,7 +269,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
 | ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
 | GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約3,400行） |
-| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（172ファイル） |
+| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（169ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
 | DashboardConfig | `src/client/classes/datas/config/dashboard-config.ts` | ダッシュボード設定クラス（MI検索条件・Dnote検索条件） |
 | PlaingTimeIsConfig | `src/client/classes/datas/config/plaing-time-is-config.ts` | 実行中検索条件クラス（plaing検索のカスタム条件） |

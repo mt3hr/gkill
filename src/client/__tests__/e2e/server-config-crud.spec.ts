@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
-import { navigateToSettings } from './crud-helpers'
+import { navigateToSettings, openApplicationConfigDialog } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
@@ -117,15 +117,10 @@ test.describe('Server Config CRUD', () => {
 
   // 項番92: 適用ボタンで設定適用
   test('apply button saves server config', async ({ page }) => {
-    await navigateToSettings(page)
-
-    const applyButton = page.locator('button').filter({ hasText: /適用|apply/i }).first()
-    if (await applyButton.count() > 0) {
-      // Verify button is visible and clickable
-      await expect(applyButton).toBeVisible()
-    }
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    // 設定ダイアログは歯車から開く。**最果て(/saihate)に歯車は無い**
+    const dialog = await openApplicationConfigDialog(page)
+    await expect(dialog.getByRole('button', { name: '適用', exact: true }), '設定に「適用」ボタンが無い')
+      .toBeVisible({ timeout: 15000 })
   })
 
   // 項番93: アカウント追加(Rep作成有)
@@ -249,13 +244,9 @@ test.describe('Server Config CRUD', () => {
 
   // 項番111: 適用ボタンでRep反映
   test('apply button reflects rep changes', async ({ page }) => {
-    await navigateToSettings(page)
-
-    const applyButton = page.locator('button').filter({ hasText: /適用|apply/i }).first()
-    if (await applyButton.count() > 0) {
-      await expect(applyButton).toBeVisible()
-    }
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    // 設定ダイアログは歯車から開く。**最果て(/saihate)に歯車は無い**
+    const dialog = await openApplicationConfigDialog(page)
+    await expect(dialog.getByRole('button', { name: '適用', exact: true }), '設定に「適用」ボタンが無い')
+      .toBeVisible({ timeout: 15000 })
   })
 })

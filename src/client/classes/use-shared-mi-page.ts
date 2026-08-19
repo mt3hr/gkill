@@ -18,7 +18,10 @@ export function useSharedMiPage(options: {
     const app_title_bar_height: Ref<number> = ref(50)
     const app_content_height: Ref<number> = ref(0)
     const app_content_width: Ref<number> = ref(0)
-    const share_kyou_id = computed(() => useRoute().query.share_id!.toString())
+    // share_id が無くても throw しないこと（`!` を付けると undefined.toString() で
+    // setup ごと失敗し、エラーも出ない真っ白な画面になる）。
+    // use-shared-page.ts と同じ受け方に揃えてある
+    const share_kyou_id = computed(() => useRoute().query.share_id?.toString() ?? '')
 
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
 

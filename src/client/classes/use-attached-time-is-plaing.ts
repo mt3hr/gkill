@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import type { AttachedTimeIsPlaingProps } from '@/pages/views/attached-time-is-plaing-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export function useAttachedTimeIsPlaing(options: {
     props: AttachedTimeIsPlaingProps,
@@ -45,7 +46,12 @@ export function useAttachedTimeIsPlaing(options: {
     }
 
     // ── Return ──
+    // ── Event relay objects ──
+    const crudRelayHandlers = build_kyou_view_relay(emits)
+
     return {
+        // Event relay objects
+        crudRelayHandlers,
         // Template refs
         context_menu,
 

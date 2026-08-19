@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -78,6 +79,9 @@ func (g *gpsLogRepositoryPluginImpl) GetGPSLogs(ctx context.Context, startTime *
 	}
 
 	// 昇順に並べてあるので二分探索で切り出す。期間は他の時刻フィルタと同じく両端を含む。
+	// ここは述語による境界探索なので sort.Search のままにする。
+	// slices.BinarySearchFunc は探索対象の値を要求するので、
+	// 「end より後の最初の要素」を表すのに比較関数を歪める必要があり読みにくくなる
 	low := 0
 	if start != nil {
 		low = sort.Search(len(snapshot), func(i int) bool { return !snapshot[i].RelatedTime.Before(*start) })
@@ -151,7 +155,7 @@ func (g *gpsLogRepositoryPluginImpl) snapshotOf(ctx context.Context) []GPSLog {
 	})
 	if err != nil {
 		name := g.plugin.GetManifest().Name
-		slog.Warn(fmt.Sprintf("plugin gps log fetch error %q: %q", name, err))
+		slog.Log(ctx, gkill_log.Warn, "plugin gps log fetch error", "plugin_name", fmt.Sprintf("%q", name), "error", fmt.Sprintf("%q", err))
 		AppendPluginFindWarning(ctx, name)
 		return []GPSLog{}
 	}

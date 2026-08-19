@@ -1,7 +1,7 @@
 <template>
   <section class="dnote_correlation_graph" @dragover="dragover" @drop="drop" @contextmenu.prevent.stop="onContextmenu">
     <!-- ドラッグはタイトルをハンドルにする（スクロール操作と干渉しにくい） -->
-    <h2 :draggable="editable" :class="{ draggable: editable }" @dragstart="drag_start"
+    <h2 :draggable="effective_draggable" :class="{ draggable: effective_draggable }" @dragstart="drag_start"
       @dblclick="onRequestedEditDnoteCorrelationGraph">{{ model_value?.title }}</h2>
     <v-progress-linear v-if="is_loading" indeterminate color="primary" />
     <template v-else-if="result">
@@ -133,6 +133,8 @@ const {
   contextMenuHandlers,
   confirmDeleteHandlers,
   editDnoteCorrelationGraphHandlers,
+    // DnD
+    effective_draggable,
 } = useDnoteCorrelationGraphView({ props, emits, model_value })
 
 // p値は0付近で有効数字が飛ぶので、極小のときだけ指数表記に切り替える

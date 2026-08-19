@@ -30,21 +30,12 @@
 import type { AddTextDialogProps } from './add-text-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import AddTextView from '../views/add-text-view.vue'
-import type { Kyou } from '@/classes/datas/kyou'
 import { i18n } from '@/i18n'
 import { useAddTextDialog } from '@/classes/use-add-text-dialog'
-import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 
 defineProps<AddTextDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
-
-// クリックはフォーカス移動も伴う
-const crudRelayHandlers = build_kyou_dialog_relay(emits, {
-  'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
-})
-
-const { is_show_dialog, ui, show, hide } = useAddTextDialog({ emits })
-
+const { is_show_dialog, ui, show, hide, crudRelayHandlers } = useAddTextDialog({ emits })
 defineExpose({ show, hide })
 </script>
 

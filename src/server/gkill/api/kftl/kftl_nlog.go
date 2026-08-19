@@ -141,10 +141,11 @@ func (r *kftlNlogRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.WriteNlogRep.AddNlogInfo(ctx, nlog); err != nil {
 		return fmt.Errorf("error at add nlog info id=%s: %w", r.RequestID, err)
 	}
-	repName, _ := r.Ctx.Repositories.WriteNlogRep.GetRepName(ctx)
+	repName, repNameErr := r.Ctx.Repositories.WriteNlogRep.GetRepName(ctx)
+	logGetRepNameFailure(ctx, "nlog", nlog.ID, repNameErr)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	_ = r.Ctx.Repositories.WriteThroughNlogCache(ctx, nlog)
+	logWriteThroughCacheFailure(ctx, "nlog", nlog.ID, r.Ctx.Repositories.WriteThroughNlogCache(ctx, nlog))
 	return nil
 }
 

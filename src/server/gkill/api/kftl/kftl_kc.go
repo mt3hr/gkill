@@ -52,10 +52,11 @@ func (r *kftlKCRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.WriteKCRep.AddKCInfo(ctx, kc); err != nil {
 		return err
 	}
-	repName, _ := r.Ctx.Repositories.WriteKCRep.GetRepName(ctx)
+	repName, repNameErr := r.Ctx.Repositories.WriteKCRep.GetRepName(ctx)
+	logGetRepNameFailure(ctx, "kc", kc.ID, repNameErr)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	_ = r.Ctx.Repositories.WriteThroughKCCache(ctx, kc)
+	logWriteThroughCacheFailure(ctx, "kc", kc.ID, r.Ctx.Repositories.WriteThroughKCCache(ctx, kc))
 	return nil
 }
 
@@ -90,9 +91,9 @@ func newKFTLStartKCStatementLine(lineText string, ctx *KFTLStatementLineContext)
 func (l *kftlStartKCStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
-func (l *kftlStartKCStatementLine) GetLabelName() string                 { return "kc" }
+func (l *kftlStartKCStatementLine) GetLabelName() string                  { return "kc" }
 func (l *kftlStartKCStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlStartKCStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlStartKCStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlKCTitleStatementLine reads the KC title.
 // Mirrors: kftl-kc-title-statement-line.ts
@@ -115,9 +116,9 @@ func (l *kftlKCTitleStatementLine) ApplyThisLineToRequestMap(_ context.Context, 
 	l.req.title = l.lineText
 	return nil
 }
-func (l *kftlKCTitleStatementLine) GetLabelName() string                 { return "kcTitle" }
+func (l *kftlKCTitleStatementLine) GetLabelName() string                  { return "kcTitle" }
 func (l *kftlKCTitleStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlKCTitleStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlKCTitleStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlKCNumValueStatementLine reads the KC numeric value.
 // Mirrors: kftl-kc-num-value-statement-line.ts
@@ -145,6 +146,6 @@ func (l *kftlKCNumValueStatementLine) ApplyThisLineToRequestMap(_ context.Contex
 	}
 	return nil
 }
-func (l *kftlKCNumValueStatementLine) GetLabelName() string                 { return "kcNumValue" }
+func (l *kftlKCNumValueStatementLine) GetLabelName() string                  { return "kcNumValue" }
 func (l *kftlKCNumValueStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlKCNumValueStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlKCNumValueStatementLine) GetStatementLineText() string          { return l.lineText }

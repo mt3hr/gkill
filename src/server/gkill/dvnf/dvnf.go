@@ -33,9 +33,9 @@ func GetOrCreateLatestDVNFDir(opt *Option) (string, error) {
 			err = fmt.Errorf("error at get %s stat: %w", dvnf, err)
 			return "", err
 		}
+		// ディレクトリならそれをそのまま使う。
+		// ディレクトリでなければ下へ抜けて新しく作り直す
 		if file.IsDir() {
-			err = fmt.Errorf("%s is not directory", dvnf)
-			_ = err
 			return dvnf, nil
 		}
 	}

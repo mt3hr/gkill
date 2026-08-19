@@ -1,6 +1,7 @@
 'use strict'
 
-import { ref, type Ref } from 'vue'
+import { useFloatingDialog } from "@/classes/use-floating-dialog"
+import { ref, type Ref, type ComponentPublicInstance, computed, onBeforeUnmount, watch } from 'vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { KyouListViewDialogProps } from '@/pages/dialogs/kyou-list-view-dialog-props'
 import type { KyouListViewEmits } from '@/pages/views/kyou-list-view-emits'
@@ -150,7 +151,49 @@ export function useKyouListViewDialog(options: {
     }
 
     // ── Return ──
+    const ui = useFloatingDialog("kyou-list-view-dialog", {
+        centerMode: "always",
+        onEscape: () => hide(),
+    })
+    // ダイアログはユーザ操作でリサイズされる。useFloatingDialog は外側コンテナに
+    // inline width/height を書くだけで子には通知しないので、リストを載せている
+    // v-card の実寸を ResizeObserver で測って KyouListView に px で渡す。
+    // (KyouListView は v-virtual-scroll(renderless) の表示行数計算に数値の高さが要るため、
+    //  CSS の flex 追従だけでは埋まらない)
+    const list_card_ref = ref<ComponentPublicInstance | HTMLElement | null>(null)
+    const observed_width = ref(0)
+    const observed_height = ref(0)
+    // kyou-list-view.vue はスクロールコンテナを width + 8 で描くので、その分を差し引く
+    const view_width = computed(() => observed_width.value > 0 ? Math.max(200, observed_width.value - 8) : 400)
+    const view_height = computed(() => observed_height.value > 0 ? observed_height.value : props.list_height.valueOf())
+    function resolve_element(target: ComponentPublicInstance | HTMLElement | null): HTMLElement | null {
+            if (!target) return null
+            return target instanceof HTMLElement ? target : (target.$el as HTMLElement | null)
+    }
+    let card_ro: ResizeObserver | null = null
+    watch(list_card_ref, (el, old_el) => {
+            const old_element = resolve_element(old_el ?? null)
+            if (card_ro && old_element) { try { card_ro.unobserve(old_element) } catch { /* noop */ } }
+            const element = resolve_element(el)
+            if (element) {
+                    if (!card_ro) {
+                            card_ro = new ResizeObserver((entries) => {
+                                    for (const entry of entries) {
+                                            observed_width.value = entry.contentRect.width
+                                            observed_height.value = entry.contentRect.height
+                                    }
+                            })
+                    }
+                    card_ro.observe(element)
+            }
+    }, { flush: 'post' })
+    onBeforeUnmount(() => { card_ro?.disconnect(); card_ro = null })
+
     return {
+        ui,
+        list_card_ref,
+        view_width,
+        view_height,
         // State
         is_show_dialog,
         opened_dialogs,

@@ -30,21 +30,12 @@
 import type { EditTagDialogProps } from './edit-tag-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import EditTagView from '../views/edit-tag-view.vue'
-import type { Kyou } from '@/classes/datas/kyou'
 import { i18n } from '@/i18n'
 import { useEditTagDialog } from '@/classes/use-edit-tag-dialog'
-import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 
 const props = defineProps<EditTagDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
-
-// クリックはフォーカス移動も伴う
-const crudRelayHandlers = build_kyou_dialog_relay(emits, {
-  'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
-})
-
-const { is_show_dialog, ui, tag_highlight_targets, show, hide } = useEditTagDialog({ props, emits })
-
+const { is_show_dialog, ui, tag_highlight_targets, show, hide, crudRelayHandlers } = useEditTagDialog({ props, emits })
 defineExpose({ show, hide })
 </script>
 

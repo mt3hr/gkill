@@ -1265,7 +1265,6 @@ INSERT INTO APPLICATION_CONFIG (
 	}
 	for key, value := range insertValuesMap {
 		gkill_log.LogSQL(ctx, sql)
-		device := device
 		isIgnoreDeviceNameKey := false
 		for _, ignoreDeviceNameKey := range ignoreDeviceNameConfigKey {
 			if key == ignoreDeviceNameKey {

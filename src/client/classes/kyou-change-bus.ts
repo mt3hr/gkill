@@ -6,10 +6,17 @@ import type { Kyou } from '@/classes/datas/kyou'
 /**
  * 画面をまたいで配る変更の種類。
  *
- * 4つだけ。`updated_kyou` と `requested_reload_kyou` は受け手の処理が同じなので
- * `reload` に統合してある。タグ / テキスト / 通知の追加・更新・削除は
- * 表示の更新としては `reload` に集約され、板ツリー / タグツリーの追随は
+ * `updated_kyou` と `requested_reload_kyou` は受け手の処理が同じなので
+ * `reload` に統合してある。テキスト / 通知の追加・更新・削除は
+ * 表示の更新としては `reload` に集約され、板ツリーの追随は
  * ページ側の `useConfigStructSync` が受け持つので、画面へ配る必要が無い。
+ *
+ * **タグだけは配る。** タグはツリーの追随だけでなく**列の検索条件にも効く**ので、
+ * 配らないと「窓Aで新しいタグを付けて追加した記録が、窓Bでは条件に入らないまま
+ * 一覧に出ず、しかも窓Bの列条件（枝番付きの localStorage）に焼き付く」が起きる。
+ * 配るのは**発生元が「未知のタグだった」と判定したものだけ**で、
+ * 受け手は判定をやり直さない（受け取る頃にはツリーへ足し終えている可能性が高く、
+ * やり直すと必ず取りこぼす）。
  *
  * `requested_update_check_kyous` は**配らない** ―― 列ごとの選択状態であり、
  * rykv / mi では未実装（throw する）。
@@ -19,6 +26,7 @@ export type KyouChange =
     | { kind: 'reload', kyou: Kyou }
     | { kind: 'deleted', kyou: Kyou }
     | { kind: 'reload_list' }
+    | { kind: 'registered_tag', tag_name: string }
 
 export interface KyouChangeNotice {
     /** 単調増加。受け手は自分のカーソルより大きいものだけ消化する */

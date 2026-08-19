@@ -4,11 +4,13 @@ import "time"
 
 // claudeConversation は conversations.json の1会話に対応する。
 type claudeConversation struct {
-	UUID         string         `json:"uuid"`
-	Name         string         `json:"name"`
-	Summary      string         `json:"summary"`
-	CreatedAt    time.Time      `json:"created_at"`
-	UpdatedAt    time.Time      `json:"updated_at"`
+	UUID      string    `json:"uuid"`
+	Name      string    `json:"name"`
+	Summary   string    `json:"summary"`
+	CreatedAt time.Time `json:"created_at"`
+	// 会話単位の更新時刻。Kyou は1メッセージ = 1件なので、Kyou には
+	// メッセージ単位の claudeMessage.UpdatedAt のほうを入れる
+	UpdatedAt    time.Time       `json:"updated_at"`
 	ChatMessages []claudeMessage `json:"chat_messages"`
 }
 

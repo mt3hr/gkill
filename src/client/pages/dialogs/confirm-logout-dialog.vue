@@ -26,33 +26,14 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { ConfirmLogoutDialogEmits } from './confirm-logout-dialog-emits'
 import type { ConfirmLogoutDialogProps } from './confirm-logout-dialog-props'
 import ConfirmLogoutView from '../views/confirm-logout-view.vue'
-
-defineProps<ConfirmLogoutDialogProps>()
-const emits = defineEmits<ConfirmLogoutDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("confirm-logout-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useConfirmLogoutDialog } from '@/classes/use-confirm-logout-dialog'
 
-const close_database_value: Ref<boolean> = ref(false)
-
-async function show(close_database: boolean): Promise<void> {
-  close_database_value.value = close_database
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  close_database_value.value = false
-}
+const props = defineProps<ConfirmLogoutDialogProps>()
+const emits = defineEmits<ConfirmLogoutDialogEmits>()
+const { is_show_dialog, ui, close_database_value, show, hide } = useConfirmLogoutDialog({ props, emits })
+defineExpose({ show, hide })
 </script>

@@ -15,8 +15,15 @@ const DIALOG_BUTTON = '.gkill-floating-dialog button, .v-dialog button, .v-overl
  * 同じ文字列が並んでいるため、`.first()` が常にサイドバー側を掴んでいた。
  * v-menu は `.v-menu > .v-overlay__content` へ teleport されるので、
  * その配下に限定することでメニューだけを対象にする。
+ *
+ * **`.v-overlay--active` まで絞ること。** VOverlay は閉じるときコンテンツを
+ * v-show + transition で持つので、**leave アニメーション中のメニューが DOM に残る**。
+ * 絞らないと `.first()` がその「閉じかけの前のメニュー」を掴み、
+ * `element is not stable` で待たされたあと detach され、
+ * 新しいメニューを二度と見に行かない（実際にこれで多重ダイアログのテストが
+ * リトライ頼みになっていた）。`.v-overlay--active` は isActive===true の間だけ付く。
  */
-const CONTEXT_MENU_ITEM = '.v-menu .v-list-item, .v-menu .v-btn, [role="menuitem"]'
+const CONTEXT_MENU_ITEM = '.v-menu.v-overlay--active .v-list-item, .v-menu.v-overlay--active .v-btn, [role="menuitem"]'
 
 /**
  * 書き込み系APIのURL判定。
@@ -191,10 +198,33 @@ export async function navigateToPlaing(page: Page): Promise<void> {
 }
 
 /**
- * Navigate to Settings page and wait for it to load.
+ * 最果て(saihate)へ移動する。
+ *
+ * **ここに ApplicationConfig の設定ダイアログは無い。** 最果てのアプリバーにあるのは
+ * 再読込・ヘルプ・ログアウトだけで、設定の歯車(mdi-cog)は kftl / kyou / mkfl / plaing /
+ * rudbeckia / dashboard / mi / rykv にある。設定を開きたいときは
+ * openApplicationConfigDialog() を使うこと（名前が Settings なので取り違えやすい）。
  */
 export async function navigateToSettings(page: Page): Promise<void> {
   await navigateTo(page, '/saihate')
+}
+
+/**
+ * ApplicationConfig の設定ダイアログを開いて、開いたダイアログを返す。
+ *
+ * 歯車は `:disabled="!application_config.is_loaded"` なので、設定が届くまで押せない。
+ * 一覧を持たない /kftl から開く（rykv/mi は列の初期化を待つぶん遅い）。
+ */
+export async function openApplicationConfigDialog(page: Page) {
+  await navigateTo(page, '/kftl')
+  const settingsButton = page.locator('button:has(.mdi-cog)').first()
+  await expect(settingsButton, '設定の歯車が無い').toBeVisible({ timeout: 30000 })
+  await expect(settingsButton, '設定の歯車が押せるようにならない（ApplicationConfig が届いていない）')
+    .toBeEnabled({ timeout: 30000 })
+  await settingsButton.click()
+  const dialog = page.locator('.gkill-floating-dialog').last()
+  await expect(dialog, '設定ダイアログが開かない').toBeVisible({ timeout: 30000 })
+  return dialog
 }
 
 /**
@@ -321,6 +351,8 @@ export async function openContextMenu(page: Page, selector: string): Promise<voi
 export async function clickContextMenuItem(page: Page, label: RegExp | string): Promise<void> {
   const menuItem = page.locator(CONTEXT_MENU_ITEM).filter({ hasText: label }).first()
   await expect(menuItem).toBeVisible({ timeout: 15000 })
+  // 待ち時間は既定のまま。CONTEXT_MENU_ITEM が `.v-overlay--active` まで絞っているので、
+  // 閉じかけのメニューを掴んで「動いているから押せない」状態にはならない
   await menuItem.click()
 }
 

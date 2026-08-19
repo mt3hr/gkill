@@ -13,7 +13,7 @@ import { McpWriteServer } from "../gkill-write-server.mjs";
 
 function createMockClient(overrides = {}) {
   return {
-    callWrite: vi.fn().mockResolvedValue({ errors: [], messages: [] }),
+    callApi: vi.fn().mockResolvedValue({ errors: [], messages: [] }),
     login: vi.fn().mockResolvedValue("mock-session-id"),
     defaultLocale: "ja",
     userId: "testuser",
@@ -45,7 +45,7 @@ describe("handleToolCall — write tools", () => {
   });
 
   test("dispatches gkill_add_kmemo to /api/add_kmemo", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       added_kmemo: { id: "k1", content: "hello" },
       added_kyou: { id: "k1", data_type: "kmemo" },
       errors: [],
@@ -53,8 +53,8 @@ describe("handleToolCall — write tools", () => {
 
     const result = await server.handleToolCall("gkill_add_kmemo", { content: "hello" });
 
-    expect(mockClient.callWrite).toHaveBeenCalledTimes(1);
-    const [pathname, body] = mockClient.callWrite.mock.calls[0];
+    expect(mockClient.callApi).toHaveBeenCalledTimes(1);
+    const [pathname, body] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/add_kmemo");
     expect(body.kmemo.content).toBe("hello");
     expect(body.want_response_kyou).toBe(true);
@@ -63,7 +63,7 @@ describe("handleToolCall — write tools", () => {
   });
 
   test("dispatches gkill_add_urlog to /api/add_urlog", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       added_urlog: { id: "u1", url: "https://example.com" },
       added_kyou: { id: "u1" },
       errors: [],
@@ -71,14 +71,14 @@ describe("handleToolCall — write tools", () => {
 
     const result = await server.handleToolCall("gkill_add_urlog", { url: "https://example.com" });
 
-    const [pathname, body] = mockClient.callWrite.mock.calls[0];
+    const [pathname, body] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/add_urlog");
     expect(body.urlog.url).toBe("https://example.com");
     expect(result.added_urlog.id).toBe("u1");
   });
 
   test("dispatches gkill_add_nlog to /api/add_nlog", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       added_nlog: { id: "n1", amount: 1500 },
       added_kyou: { id: "n1" },
       errors: [],
@@ -86,7 +86,7 @@ describe("handleToolCall — write tools", () => {
 
     const result = await server.handleToolCall("gkill_add_nlog", { title: "lunch", amount: 1500 });
 
-    const [pathname, body] = mockClient.callWrite.mock.calls[0];
+    const [pathname, body] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/add_nlog");
     expect(body.nlog.amount).toBe(1500);
     expect(body.nlog.title).toBe("lunch");
@@ -94,7 +94,7 @@ describe("handleToolCall — write tools", () => {
   });
 
   test("dispatches gkill_add_lantana to /api/add_lantana", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       added_lantana: { id: "l1", mood: 7 },
       added_kyou: { id: "l1" },
       errors: [],
@@ -102,14 +102,14 @@ describe("handleToolCall — write tools", () => {
 
     const result = await server.handleToolCall("gkill_add_lantana", { mood: 7 });
 
-    const [pathname, body] = mockClient.callWrite.mock.calls[0];
+    const [pathname, body] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/add_lantana");
     expect(body.lantana.mood).toBe(7);
     expect(result.added_lantana.mood).toBe(7);
   });
 
   test("dispatches gkill_add_timeis to /api/add_timeis", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       added_timeis: { id: "t1", title: "coding" },
       added_kyou: { id: "t1" },
       errors: [],
@@ -117,14 +117,14 @@ describe("handleToolCall — write tools", () => {
 
     const result = await server.handleToolCall("gkill_add_timeis", { title: "coding" });
 
-    const [pathname, body] = mockClient.callWrite.mock.calls[0];
+    const [pathname, body] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/add_timeis");
     expect(body.timeis.title).toBe("coding");
     expect(result.added_timeis.title).toBe("coding");
   });
 
   test("dispatches gkill_add_mi to /api/add_mi", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       added_mi: { id: "m1", title: "fix bug", board_name: "dev" },
       added_kyou: { id: "m1" },
       errors: [],
@@ -132,7 +132,7 @@ describe("handleToolCall — write tools", () => {
 
     const result = await server.handleToolCall("gkill_add_mi", { title: "fix bug", board_name: "dev" });
 
-    const [pathname, body] = mockClient.callWrite.mock.calls[0];
+    const [pathname, body] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/add_mi");
     expect(body.mi.title).toBe("fix bug");
     expect(body.mi.board_name).toBe("dev");
@@ -141,7 +141,7 @@ describe("handleToolCall — write tools", () => {
   });
 
   test("dispatches gkill_add_kc to /api/add_kc", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       added_kc: { id: "c1", num_value: 42 },
       added_kyou: { id: "c1" },
       errors: [],
@@ -149,14 +149,14 @@ describe("handleToolCall — write tools", () => {
 
     const result = await server.handleToolCall("gkill_add_kc", { title: "steps", num_value: 42 });
 
-    const [pathname, body] = mockClient.callWrite.mock.calls[0];
+    const [pathname, body] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/add_kc");
     expect(body.kc.num_value).toBe(42);
     expect(result.added_kc.num_value).toBe(42);
   });
 
   test("dispatches gkill_add_tag to /api/add_tag", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       added_tag: { id: "tg1", tag: "important", target_id: "k1" },
       added_kyou: { id: "tg1" },
       errors: [],
@@ -164,7 +164,7 @@ describe("handleToolCall — write tools", () => {
 
     const result = await server.handleToolCall("gkill_add_tag", { tag: "important", target_id: "k1" });
 
-    const [pathname, body] = mockClient.callWrite.mock.calls[0];
+    const [pathname, body] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/add_tag");
     expect(body.tag.tag).toBe("important");
     expect(body.tag.target_id).toBe("k1");
@@ -172,7 +172,7 @@ describe("handleToolCall — write tools", () => {
   });
 
   test("dispatches gkill_add_text to /api/add_text", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       added_text: { id: "tx1", text: "note", target_id: "k1" },
       added_kyou: { id: "tx1" },
       errors: [],
@@ -180,7 +180,7 @@ describe("handleToolCall — write tools", () => {
 
     const result = await server.handleToolCall("gkill_add_text", { text: "note", target_id: "k1" });
 
-    const [pathname, body] = mockClient.callWrite.mock.calls[0];
+    const [pathname, body] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/add_text");
     expect(body.text.text).toBe("note");
     expect(body.text.target_id).toBe("k1");
@@ -188,14 +188,14 @@ describe("handleToolCall — write tools", () => {
   });
 
   test("dispatches gkill_submit_kftl to /api/submit_kftl_text", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       messages: [{ message: "created 2 records" }],
       errors: [],
     });
 
     const result = await server.handleToolCall("gkill_submit_kftl", { kftl_text: "/mi Buy milk" });
 
-    const [pathname, body] = mockClient.callWrite.mock.calls[0];
+    const [pathname, body] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/submit_kftl_text");
     expect(body.kftl_text).toBe("/mi Buy milk");
     expect(result.messages).toHaveLength(1);
@@ -203,12 +203,12 @@ describe("handleToolCall — write tools", () => {
 
   test("dispatches gkill_delete_kyou to correct update endpoint", async () => {
     // First call: GET to fetch current entity
-    mockClient.callWrite.mockResolvedValueOnce({
+    mockClient.callApi.mockResolvedValueOnce({
       kmemo_histories: [{ id: "k1", content: "hello", is_deleted: false, rep_name: "rep1" }],
       errors: [],
     });
     // Second call: UPDATE with is_deleted=true
-    mockClient.callWrite.mockResolvedValueOnce({
+    mockClient.callApi.mockResolvedValueOnce({
       updated_kmemo: { id: "k1", is_deleted: true },
       updated_kyou: { id: "k1" },
       errors: [],
@@ -216,9 +216,9 @@ describe("handleToolCall — write tools", () => {
 
     const result = await server.handleToolCall("gkill_delete_kyou", { id: "k1", data_type: "kmemo" });
 
-    const [getPathname] = mockClient.callWrite.mock.calls[0];
+    const [getPathname] = mockClient.callApi.mock.calls[0];
     expect(getPathname).toBe("/api/get_kmemo");
-    const [updatePathname, body] = mockClient.callWrite.mock.calls[1];
+    const [updatePathname, body] = mockClient.callApi.mock.calls[1];
     expect(updatePathname).toBe("/api/update_kmemo");
     expect(body.kmemo.id).toBe("k1");
     expect(body.kmemo.is_deleted).toBe(true);
@@ -228,12 +228,12 @@ describe("handleToolCall — write tools", () => {
 
   test("gkill_delete_kyou works for mi data_type", async () => {
     // First call: GET to fetch current entity
-    mockClient.callWrite.mockResolvedValueOnce({
+    mockClient.callApi.mockResolvedValueOnce({
       mi_histories: [{ id: "m1", title: "task1", is_deleted: false, rep_name: "rep1" }],
       errors: [],
     });
     // Second call: UPDATE with is_deleted=true
-    mockClient.callWrite.mockResolvedValueOnce({
+    mockClient.callApi.mockResolvedValueOnce({
       updated_mi: { id: "m1", is_deleted: true },
       updated_kyou: { id: "m1" },
       errors: [],
@@ -241,9 +241,9 @@ describe("handleToolCall — write tools", () => {
 
     const result = await server.handleToolCall("gkill_delete_kyou", { id: "m1", data_type: "mi" });
 
-    const [getPathname] = mockClient.callWrite.mock.calls[0];
+    const [getPathname] = mockClient.callApi.mock.calls[0];
     expect(getPathname).toBe("/api/get_mi");
-    const [updatePathname] = mockClient.callWrite.mock.calls[1];
+    const [updatePathname] = mockClient.callApi.mock.calls[1];
     expect(updatePathname).toBe("/api/update_mi");
     expect(result.updated_mi.is_deleted).toBe(true);
   });
@@ -262,40 +262,40 @@ describe("handleToolCall — read convenience tools", () => {
   });
 
   test("dispatches gkill_get_all_rep_names to /api/get_all_rep_names", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       rep_names: ["rep1", "rep2"],
       errors: [],
     });
 
     const result = await server.handleToolCall("gkill_get_all_rep_names", {});
 
-    const [pathname] = mockClient.callWrite.mock.calls[0];
+    const [pathname] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/get_all_rep_names");
     expect(result.rep_names).toEqual(["rep1", "rep2"]);
   });
 
   test("dispatches gkill_get_mi_board_list to /api/get_mi_board_list", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       boards: ["board1", "board2"],
       errors: [],
     });
 
     const result = await server.handleToolCall("gkill_get_mi_board_list", {});
 
-    const [pathname] = mockClient.callWrite.mock.calls[0];
+    const [pathname] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/get_mi_board_list");
     expect(result.boards).toEqual(["board1", "board2"]);
   });
 
   test("dispatches gkill_get_all_tag_names to /api/get_all_tag_names", async () => {
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       tag_names: ["tag1", "tag2"],
       errors: [],
     });
 
     const result = await server.handleToolCall("gkill_get_all_tag_names", {});
 
-    const [pathname] = mockClient.callWrite.mock.calls[0];
+    const [pathname] = mockClient.callApi.mock.calls[0];
     expect(pathname).toBe("/api/get_all_tag_names");
     expect(result.tag_names).toEqual(["tag1", "tag2"]);
   });
@@ -307,7 +307,7 @@ describe("handleToolCall — read convenience tools", () => {
 describe("handleToolCall — plugin tools", () => {
   test("dispatches gkill_get_plugin_list to /api/get_plugin_list", async () => {
     const mockClient = createMockClient({
-      callWrite: vi.fn().mockResolvedValue({
+      callApi: vi.fn().mockResolvedValue({
         plugins: [{ name: "gkill_plugin_claudecode", rep_name: "Claude Code", is_alive: true }],
         errors: [],
       }),
@@ -316,7 +316,7 @@ describe("handleToolCall — plugin tools", () => {
 
     const result = await server.handleToolCall("gkill_get_plugin_list", {});
 
-    expect(mockClient.callWrite).toHaveBeenCalledWith("/api/get_plugin_list", {}, true, null);
+    expect(mockClient.callApi).toHaveBeenCalledWith("/api/get_plugin_list", {}, true, null);
     expect(result.plugins).toHaveLength(1);
   });
 
@@ -329,7 +329,7 @@ describe("handleToolCall — plugin tools", () => {
     await expect(
       server.handleToolCall("gkill_get_plugin_content", { rep_name: "r", kyou_id: "k" }),
     ).rejects.toThrow(/Unknown tool/);
-    expect(mockClient.callWrite).not.toHaveBeenCalled();
+    expect(mockClient.callApi).not.toHaveBeenCalled();
   });
 });
 
@@ -349,7 +349,7 @@ describe("handleToolCall — error cases", () => {
 describe("handleToolCall — entity defaults", () => {
   test("sets common fields on kmemo entity", async () => {
     const mockClient = createMockClient();
-    mockClient.callWrite.mockResolvedValue({
+    mockClient.callApi.mockResolvedValue({
       added_kmemo: { id: "k1" },
       added_kyou: { id: "k1" },
       errors: [],
@@ -358,7 +358,7 @@ describe("handleToolCall — entity defaults", () => {
 
     await server.handleToolCall("gkill_add_kmemo", { content: "test" });
 
-    const [, body] = mockClient.callWrite.mock.calls[0];
+    const [, body] = mockClient.callApi.mock.calls[0];
     const kmemo = body.kmemo;
     expect(kmemo.id).toBeTruthy();
     expect(kmemo.rep_name).toBe("");

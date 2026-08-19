@@ -86,8 +86,10 @@ export function useMapQuery(options: {
     })
 
     // ── Map click handler ──
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function handle_map_click(event: any): void {
+    function handle_map_click(event: google.maps.MapMouseEvent): void {
+        if (!event.latLng) {
+            return
+        }
         is_enable_circle.value = true
         latitude.value = event.latLng.lat()
         longitude.value = event.latLng.lng()

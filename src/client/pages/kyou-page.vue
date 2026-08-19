@@ -47,8 +47,8 @@
                 :show_related_time="true" :width="'fit-content'" :is_readonly_mi_check="false"
                 :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="true"
-                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: unknown[]) => write_messages(messages[0] as Array<GkillMessage>)"
                 @registered_kyou="onRegisteredKyou"
                 @updated_kyou="onUpdatedKyou"
                 @registered_tag="onRegisteredTag"
@@ -56,8 +56,8 @@
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :is_show="is_show_application_config_dialog"
-                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: unknown[]) => write_messages(messages[0] as Array<GkillMessage>)"
                 @requested_reload_application_config="load_application_config" ref="application_config_dialog" />
             <HelpDialog screen_name="kyou" ref="help_dialog" />
         </v-main>

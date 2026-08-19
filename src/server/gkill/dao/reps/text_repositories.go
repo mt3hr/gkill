@@ -3,8 +3,8 @@ package reps
 import (
 	"context"
 	"errors"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"slices"
 	"sync"
 	"time"
@@ -17,6 +17,11 @@ import (
 type TextRepositories []TextRepository
 
 func (t TextRepositories) FindTexts(ctx context.Context, query *find.FindQuery) ([]Text, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照
+	return findChunkedByIDs(ctx, query, t.findTexts)
+}
+
+func (t TextRepositories) findTexts(ctx context.Context, query *find.FindQuery) ([]Text, error) {
 	matchTexts := map[string]Text{}
 	existErr := false
 	var err error
@@ -28,7 +33,6 @@ func (t TextRepositories) FindTexts(ctx context.Context, query *find.FindQuery) 
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTextsInRep, err := rep.FindTexts(ctx, query)
 			if err != nil {
@@ -108,7 +112,6 @@ func (t TextRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
@@ -153,7 +156,6 @@ func (t TextRepositories) GetText(ctx context.Context, id string, updateTime *ti
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTextInRep, err := rep.GetText(ctx, id, updateTime)
 			if err != nil {
@@ -218,7 +220,6 @@ func (t TextRepositories) GetTextsByTargetID(ctx context.Context, target_id stri
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTextsInRep, err := rep.GetTextsByTargetID(ctx, target_id)
 			if err != nil {
@@ -290,7 +291,6 @@ func (t TextRepositories) UpdateCache(ctx context.Context) error {
 	defer close(errch)
 
 	for _, rep := range t {
-		rep := rep
 		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -342,7 +342,7 @@ func (t TextRepositories) GetPath(ctx context.Context, id string) (string, error
 	ids := []string{id}
 	for _, rep := range t {
 		query := &find.FindQuery{
-			IDs:    ids,
+			IDs: ids,
 		}
 		texts, err := rep.FindTexts(ctx, query)
 		if len(texts) == 0 || err != nil {
@@ -376,7 +376,6 @@ func (t TextRepositories) GetTextHistories(ctx context.Context, id string) ([]Te
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTextsInRep, err := rep.GetTextHistories(ctx, id)
 			if err != nil {
@@ -452,7 +451,6 @@ func (t TextRepositories) GetTextHistoriesByRepName(ctx context.Context, id stri
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
 				// repNameが一致しない場合はスキップ
@@ -557,7 +555,6 @@ func (t TextRepositories) GetLatestDataRepositoryAddress(ctx context.Context, up
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {

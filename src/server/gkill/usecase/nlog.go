@@ -130,6 +130,17 @@ func (uc *UsecaseContext) UpdateNlog(ctx context.Context, repositories *reps.Gki
 			})
 			return gkillErrors, nil
 		}
+		// **クライアントがエコーした rep_name をそのままキャッシュへ入れない。**
+		// 実体は WriteNlogRep（書き込み先rep）へ足したので、キャッシュ表の REP_NAME もそこに合わせる。
+		// 取得元repの名前のまま入れると、端末別にrepを分けている環境で他端末由来の記録を編集したとき、
+		// find_filter.go の filterKyousByRepName が「非空で、指定repに無い名前」として落とし、
+		// **更新直後だけ一覧から消えて次の UpdateCache（最大1分）で戻る**。
+		// 取れなければ空にする ―― 空は filterKyousByRepName が残すので安全側。
+		if writeRepName, repNameErr := repositories.WriteNlogRep.GetRepName(ctx); repNameErr == nil {
+			nlog.RepName = writeRepName
+		} else {
+			nlog.RepName = ""
+		}
 		err = repositories.WriteThroughNlogCache(ctx, nlog)
 		if err != nil {
 			err = fmt.Errorf("error at update nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)

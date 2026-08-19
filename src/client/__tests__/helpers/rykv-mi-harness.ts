@@ -109,6 +109,9 @@ export function makeViewApplicationConfig(overrides: Record<string, unknown> = {
     device: 'test-device',
     user_id: 'testuser',
     is_show_share_footer: false,
+    // 本物の ApplicationConfig は tag_struct を必ず持つ（コンストラクタで作る）。
+    // 落とすと、これを読む配線（新規タグの既知判定など）がテストでだけ例外になる
+    tag_struct: { key: '__root__', name: '', tag_name: '', is_dir: true, children: [] },
     ...overrides,
   }
 }

@@ -229,6 +229,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 	}
 
 	for _, idfKyou := range idfKyous {
+		// **IDF は「レコードの置き場」と「ファイルの置き場」が別。**
+		// leaf の AddIDFKyouInfo は idfKyou.RepName を TARGET_REP_NAME（＝ファイルの置き場）として
+		// **実DBへ永続化する**ので、temp rep の合成名 "IDF_TEMP" を入れたまま渡すと
+		// ファイルの所在が実データごと壊れる（キャッシュではないので UpdateCache でも直らない）。
+		// 一時リポジトリが元の TARGET_REP_NAME を持っているので、それを戻してから書く。
+		// この行より後ろの `idfKyou.RepName = repName` は**キャッシュ用**で、意味が違う
+		idfKyou.RepName = idfKyou.TargetRepName
 		err = repositories.WriteIDFKyouRep.AddIDFKyouInfo(r.Context(), idfKyou)
 		if err != nil {
 			err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, idfKyou, err)
@@ -253,6 +260,8 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**（他の12種と同じ理由）
+		idfKyou.RepName = repName
 		err = repositories.WriteThroughIDFKyouCache(r.Context(), idfKyou)
 		if err != nil {
 			err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, idfKyou, err)
@@ -286,12 +295,6 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = repositories.WriteThroughKCCache(r.Context(), kc)
-		if err != nil {
-			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-
 		repName, err := repositories.WriteKCRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
@@ -302,6 +305,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
+		}
+
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**
+		// GetXxxByTXID は `? AS REP_NAME` に temp rep の名前("KCTemp"等)を差し込んで返すので、
+		// そのまま write-through するとキャッシュ表に実在しないrep名が入る。
+		// find_filter.go の filterKyousByRepName は非空で指定repに無い名前を落とすため、
+		// **tx で追加した記録が一覧から消える**(GUIは常に reps を送るので必ずこの経路)。
+		kc.RepName = repName
+		err = repositories.WriteThroughKCCache(r.Context(), kc)
+		if err != nil {
+			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              kc.IsDeleted,
@@ -332,12 +347,6 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = repositories.WriteThroughKmemoCache(r.Context(), kmemo)
-		if err != nil {
-			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-
 		repName, err := repositories.WriteKmemoRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
@@ -348,6 +357,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
+		}
+
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**
+		// GetXxxByTXID は `? AS REP_NAME` に temp rep の名前("KmemoTemp"等)を差し込んで返すので、
+		// そのまま write-through するとキャッシュ表に実在しないrep名が入る。
+		// find_filter.go の filterKyousByRepName は非空で指定repに無い名前を落とすため、
+		// **tx で追加した記録が一覧から消える**(GUIは常に reps を送るので必ずこの経路)。
+		kmemo.RepName = repName
+		err = repositories.WriteThroughKmemoCache(r.Context(), kmemo)
+		if err != nil {
+			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              kmemo.IsDeleted,
@@ -378,12 +399,6 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = repositories.WriteThroughLantanaCache(r.Context(), lantana)
-		if err != nil {
-			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, lantana, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-
 		repName, err := repositories.WriteLantanaRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
@@ -394,6 +409,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
+		}
+
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**
+		// GetXxxByTXID は `? AS REP_NAME` に temp rep の名前("LantanaTemp"等)を差し込んで返すので、
+		// そのまま write-through するとキャッシュ表に実在しないrep名が入る。
+		// find_filter.go の filterKyousByRepName は非空で指定repに無い名前を落とすため、
+		// **tx で追加した記録が一覧から消える**(GUIは常に reps を送るので必ずこの経路)。
+		lantana.RepName = repName
+		err = repositories.WriteThroughLantanaCache(r.Context(), lantana)
+		if err != nil {
+			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, lantana, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              lantana.IsDeleted,
@@ -424,12 +451,6 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = repositories.WriteThroughMiCache(r.Context(), mi)
-		if err != nil {
-			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-
 		repName, err := repositories.WriteMiRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
@@ -440,6 +461,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
+		}
+
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**
+		// GetXxxByTXID は `? AS REP_NAME` に temp rep の名前("MiTemp"等)を差し込んで返すので、
+		// そのまま write-through するとキャッシュ表に実在しないrep名が入る。
+		// find_filter.go の filterKyousByRepName は非空で指定repに無い名前を落とすため、
+		// **tx で追加した記録が一覧から消える**(GUIは常に reps を送るので必ずこの経路)。
+		mi.RepName = repName
+		err = repositories.WriteThroughMiCache(r.Context(), mi)
+		if err != nil {
+			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              mi.IsDeleted,
@@ -470,12 +503,6 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = repositories.WriteThroughNlogCache(r.Context(), nlog)
-		if err != nil {
-			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-
 		repName, err := repositories.WriteNlogRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
@@ -486,6 +513,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
+		}
+
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**
+		// GetXxxByTXID は `? AS REP_NAME` に temp rep の名前("NlogTemp"等)を差し込んで返すので、
+		// そのまま write-through するとキャッシュ表に実在しないrep名が入る。
+		// find_filter.go の filterKyousByRepName は非空で指定repに無い名前を落とすため、
+		// **tx で追加した記録が一覧から消える**(GUIは常に reps を送るので必ずこの経路)。
+		nlog.RepName = repName
+		err = repositories.WriteThroughNlogCache(r.Context(), nlog)
+		if err != nil {
+			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              nlog.IsDeleted,
@@ -516,12 +555,6 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = repositories.WriteThroughNotificationCache(r.Context(), notification)
-		if err != nil {
-			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-
 		repName, err := repositories.WriteNotificationRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
@@ -532,6 +565,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
+		}
+
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**
+		// GetXxxByTXID は `? AS REP_NAME` に temp rep の名前("NotificationTemp"等)を差し込んで返すので、
+		// そのまま write-through するとキャッシュ表に実在しないrep名が入る。
+		// find_filter.go の filterKyousByRepName は非空で指定repに無い名前を落とすため、
+		// **tx で追加した記録が一覧から消える**(GUIは常に reps を送るので必ずこの経路)。
+		notification.RepName = repName
+		err = repositories.WriteThroughNotificationCache(r.Context(), notification)
+		if err != nil {
+			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              notification.IsDeleted,
@@ -563,12 +608,6 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = repositories.WriteThroughReKyouCache(r.Context(), rekyou)
-		if err != nil {
-			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-
 		repName, err := repositories.WriteReKyouRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
@@ -579,6 +618,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
+		}
+
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**
+		// GetXxxByTXID は `? AS REP_NAME` に temp rep の名前("ReKyouTemp"等)を差し込んで返すので、
+		// そのまま write-through するとキャッシュ表に実在しないrep名が入る。
+		// find_filter.go の filterKyousByRepName は非空で指定repに無い名前を落とすため、
+		// **tx で追加した記録が一覧から消える**(GUIは常に reps を送るので必ずこの経路)。
+		rekyou.RepName = repName
+		err = repositories.WriteThroughReKyouCache(r.Context(), rekyou)
+		if err != nil {
+			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              rekyou.IsDeleted,
@@ -620,12 +671,6 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = repositories.WriteThroughMiReKyouCache(r.Context(), mirekyou)
-		if err != nil {
-			err = fmt.Errorf("error at add mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-
 		repName, err := repositories.WriteMiReKyouRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, mirekyou.ID, err)
@@ -636,6 +681,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
+		}
+
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**
+		// GetXxxByTXID は `? AS REP_NAME` に temp rep の名前("MiReKyouTemp"等)を差し込んで返すので、
+		// そのまま write-through するとキャッシュ表に実在しないrep名が入る。
+		// find_filter.go の filterKyousByRepName は非空で指定repに無い名前を落とすため、
+		// **tx で追加した記録が一覧から消える**(GUIは常に reps を送るので必ずこの経路)。
+		mirekyou.RepName = repName
+		err = repositories.WriteThroughMiReKyouCache(r.Context(), mirekyou)
+		if err != nil {
+			err = fmt.Errorf("error at add mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              mirekyou.IsDeleted,
@@ -668,12 +725,6 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		// キャッシュに書き込み
-		err = repositories.WriteThroughTagCache(r.Context(), tag)
-		if err != nil {
-			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-
 		repName, err := repositories.WriteTagRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
@@ -684,6 +735,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
+		}
+
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**
+		// GetXxxByTXID は `? AS REP_NAME` に temp rep の名前("TagTemp"等)を差し込んで返すので、
+		// そのまま write-through するとキャッシュ表に実在しないrep名が入る。
+		// find_filter.go の filterKyousByRepName は非空で指定repに無い名前を落とすため、
+		// **tx で追加した記録が一覧から消える**(GUIは常に reps を送るので必ずこの経路)。
+		tag.RepName = repName
+		err = repositories.WriteThroughTagCache(r.Context(), tag)
+		if err != nil {
+			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              tag.IsDeleted,
@@ -714,12 +777,6 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		err = repositories.WriteThroughTextCache(r.Context(), text)
-		if err != nil {
-			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-
 		repName, err := repositories.WriteTextRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
@@ -730,6 +787,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
+		}
+
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**
+		// GetXxxByTXID は `? AS REP_NAME` に temp rep の名前("TextTemp"等)を差し込んで返すので、
+		// そのまま write-through するとキャッシュ表に実在しないrep名が入る。
+		// find_filter.go の filterKyousByRepName は非空で指定repに無い名前を落とすため、
+		// **tx で追加した記録が一覧から消える**(GUIは常に reps を送るので必ずこの経路)。
+		text.RepName = repName
+		err = repositories.WriteThroughTextCache(r.Context(), text)
+		if err != nil {
+			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              text.IsDeleted,
@@ -761,12 +830,6 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = repositories.WriteThroughTimeIsCache(r.Context(), timeis)
-		if err != nil {
-			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-
 		repName, err := repositories.WriteTimeIsRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
@@ -777,6 +840,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
+		}
+
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**
+		// GetXxxByTXID は `? AS REP_NAME` に temp rep の名前("TimeIsTemp"等)を差し込んで返すので、
+		// そのまま write-through するとキャッシュ表に実在しないrep名が入る。
+		// find_filter.go の filterKyousByRepName は非空で指定repに無い名前を落とすため、
+		// **tx で追加した記録が一覧から消える**(GUIは常に reps を送るので必ずこの経路)。
+		timeis.RepName = repName
+		err = repositories.WriteThroughTimeIsCache(r.Context(), timeis)
+		if err != nil {
+			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              timeis.IsDeleted,
@@ -807,12 +882,6 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = repositories.WriteThroughURLogCache(r.Context(), urlog)
-		if err != nil {
-			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-
 		repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
@@ -823,6 +892,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
+		}
+
+		// **temp rep の合成rep名をキャッシュへ持ち込まない。**
+		// GetXxxByTXID は `? AS REP_NAME` に temp rep の名前("URLogTemp"等)を差し込んで返すので、
+		// そのまま write-through するとキャッシュ表に実在しないrep名が入る。
+		// find_filter.go の filterKyousByRepName は非空で指定repに無い名前を落とすため、
+		// **tx で追加した記録が一覧から消える**(GUIは常に reps を送るので必ずこの経路)。
+		urlog.RepName = repName
+		err = repositories.WriteThroughURLogCache(r.Context(), urlog)
+		if err != nil {
+			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              urlog.IsDeleted,

@@ -37,36 +37,16 @@
 <script setup lang="ts">
 import AddDnoteCorrelationGraphView from '@/pages/views/add-dnote-correlation-graph-view.vue';
 import HelpDialog from './help-dialog.vue'
-import { ref, type Ref } from 'vue'
 import type { GkillError } from '../../classes/api/gkill-error';
 import type { GkillMessage } from '../../classes/api/gkill-message';
 import type { DnoteCorrelationGraphQuery } from '../../classes/dnote/dnote-correlation';
 import type AddDnoteCorrelationGraphDialogEmits from './add-dnote-correlation-graph-dialog-emits';
 import type AddDnoteCorrelationGraphDialogProps from './add-dnote-correlation-graph-dialog-props';
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
+import { useAddDnoteCorrelationGraphDialog } from '@/classes/use-add-dnote-correlation-graph-dialog'
 
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("add-dnote-correlation-graph-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
-
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-
-defineExpose({ show, hide })
-defineProps<AddDnoteCorrelationGraphDialogProps>()
+const props = defineProps<AddDnoteCorrelationGraphDialogProps>()
 const emits = defineEmits<AddDnoteCorrelationGraphDialogEmits>()
-
-// 本文は Teleport の v-if 配下なので、開くたびに作り直される。
-// 追加フォームの初期化は AddDnoteCorrelationGraphView 側のマウント時に行われ、
-// 前回入力した指標が残ることはない
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const { is_show_dialog, ui, help_dialog, show, hide } = useAddDnoteCorrelationGraphDialog({ props, emits })
+defineExpose({ show, hide })
 </script>

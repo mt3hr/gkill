@@ -61,10 +61,11 @@ func (r *kftlTimeIsRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.WriteTimeIsRep.AddTimeIsInfo(ctx, timeis); err != nil {
 		return err
 	}
-	repName, _ := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
+	repName, repNameErr := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
+	logGetRepNameFailure(ctx, "timeis", timeis.ID, repNameErr)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	_ = r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, timeis)
+	logWriteThroughCacheFailure(ctx, "timeis", timeis.ID, r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, timeis))
 	return nil
 }
 
@@ -230,10 +231,11 @@ func (r *kftlTimeIsStartRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.WriteTimeIsRep.AddTimeIsInfo(ctx, timeis); err != nil {
 		return err
 	}
-	repName, _ := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
+	repName, repNameErr := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
+	logGetRepNameFailure(ctx, "timeis", timeis.ID, repNameErr)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	_ = r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, timeis)
+	logWriteThroughCacheFailure(ctx, "timeis", timeis.ID, r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, timeis))
 	return nil
 }
 
@@ -358,10 +360,17 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.WriteTimeIsRep.AddTimeIsInfo(ctx, updated); err != nil {
 		return err
 	}
-	repName, _ := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
+	repName, repNameErr := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
+	logGetRepNameFailure(ctx, "timeis", target.ID, repNameErr)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, target.ID, nil, false, now, repName)
 	// キャッシュに書き込み
-	_ = r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, updated)
+	// The RepName carried here is the rep the running TimeIs was *found* in,
+	// which is not necessarily the rep we just wrote to (ending a TimeIs started on
+	// another device is the normal case for the Wear OS path). Writing the source
+	// rep name into the cache makes find_filter.go's filterKyousByRepName drop the
+	// record from rep-filtered columns until the next UpdateCache. Use the write rep.
+	updated.RepName = repName
+	logWriteThroughCacheFailure(ctx, "timeis", updated.ID, r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, updated))
 	return nil
 }
 
@@ -525,10 +534,17 @@ outer:
 	if err := r.Ctx.Repositories.WriteTimeIsRep.AddTimeIsInfo(ctx, updated); err != nil {
 		return err
 	}
-	repName, _ := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
+	repName, repNameErr := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
+	logGetRepNameFailure(ctx, "timeis", target.ID, repNameErr)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, target.ID, nil, false, now, repName)
 	// キャッシュに書き込み
-	_ = r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, updated)
+	// The RepName carried here is the rep the running TimeIs was *found* in,
+	// which is not necessarily the rep we just wrote to (ending a TimeIs started on
+	// another device is the normal case for the Wear OS path). Writing the source
+	// rep name into the cache makes find_filter.go's filterKyousByRepName drop the
+	// record from rep-filtered columns until the next UpdateCache. Use the write rep.
+	updated.RepName = repName
+	logWriteThroughCacheFailure(ctx, "timeis", updated.ID, r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, updated))
 	return nil
 }
 

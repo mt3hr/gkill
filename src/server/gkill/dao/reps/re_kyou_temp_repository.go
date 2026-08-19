@@ -30,19 +30,20 @@ type ReKyouTempRepository interface {
 	// GetKyouHistories の契約は Repository.GetKyouHistories を参照。
 	GetKyouHistories(ctx context.Context, id string) ([]Kyou, error)
 
-	// GetPath は一時リポジトリでは常にエラーを返します。
-	// DBハンドルを外から渡される作りで、自分のファイルを持たないためです。
+	// GetPath の契約は Repository.GetPath を参照。
+	// DBハンドルを外から渡される作りで自分のファイルを持たないため、sqlite3実装は常にエラーを返します。
 	GetPath(ctx context.Context, id string) (string, error)
 
 	// UpdateCache は一時リポジトリでは何もしません。
 	// 契約は Repository.UpdateCache を参照。
 	UpdateCache(ctx context.Context) error
 
-	// GetLatestDataRepositoryAddress は一時リポジトリでは常にエラーを返します。
-	// 未確定データは「最新版の所在」の対象外だからです。
+	// GetLatestDataRepositoryAddress の契約は Repository.GetLatestDataRepositoryAddress を参照。
+	// 未確定データは最新版の所在に含めないため、sqlite3実装は常にエラーを返します。
 	GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error)
 
-	// GetRepName は固定名 "rekyou_temp" を返します。
+	// GetRepName の契約は Repository.GetRepName を参照。
+	// sqlite3実装は固定値 "rekyou_temp" を返します。
 	GetRepName(ctx context.Context) (string, error)
 
 	// Close の契約は Repository.Close を参照。

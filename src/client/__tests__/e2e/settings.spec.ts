@@ -21,7 +21,11 @@ test.describe('Settings', () => {
   test('settings page renders content', async ({ page }) => {
     await page.goto('/saihate', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    // **`.v-application` の可視で待たないこと。** 最果ては v-main の中身が空なので
+    // ルート要素の高さが 0 になり、Playwright は hidden と判定する（/kyou や /rykv では通る）。
+    // 画面ごとに「本当に出るもの」を待つ
+    await expect(page.locator('.v-toolbar-title'), 'アプリバーのタイトルが出ない')
+      .toBeVisible({ timeout: 30000 })
     const appContent = await page.locator('#app').innerHTML()
     expect(appContent.length).toBeGreaterThan(100)
   })
@@ -31,7 +35,9 @@ test.describe('Settings', () => {
     page.on('pageerror', (err) => errors.push(err.message))
     await page.goto('/saihate', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    // 画面が立ち上がりきってから拾う（固定sleepだと遅い環境で取りこぼす）
+    await expect(page.locator('.v-toolbar-title'), 'アプリバーのタイトルが出ない')
+      .toBeVisible({ timeout: 30000 })
     // Filter out known benign errors
     const criticalErrors = errors.filter(e =>
       !e.includes('ResizeObserver') &&
@@ -46,13 +52,9 @@ test.describe('Settings', () => {
   test('settings page has buttons or interactive controls', async ({ page }) => {
     await page.goto('/saihate', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-    const buttons = page.locator('button')
-    const inputs = page.locator('input')
-    const switches = page.locator('.v-switch, [role="switch"]')
-    const totalInteractive = (await buttons.count()) + (await inputs.count()) + (await switches.count())
-    // Settings page should have some controls
-    expect(totalInteractive).toBeGreaterThan(0)
+    // 固定sleepではなく、操作できる要素が1つでも描かれるのを待つ
+    await expect(page.locator('button, input, .v-switch, [role="switch"]').first(),
+      '設定画面に操作できる要素が1つも無い').toBeVisible({ timeout: 30000 })
     const app = page.locator('#app')
     await expect(app).toBeVisible()
   })

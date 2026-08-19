@@ -1,5 +1,5 @@
 <template>
-  <div class="dnote_item_root" :draggable="editable" :class="{ draggable: editable }" @dragstart="drag_start"
+  <div class="dnote_item_root" :draggable="effective_draggable" :class="{ draggable: effective_draggable }" @dragstart="drag_start"
     @dragover="dragover" @drop="drop"
     @contextmenu.prevent.stop="onContextmenu"
     @dblclick="onDblclick">
@@ -97,6 +97,8 @@ const {
   contextMenuHandlers,
   confirmDeleteHandlers,
   editDnoteItemHandlers,
+    // DnD
+    effective_draggable,
 } = useDnoteItemView({ props, emits, model_value })
 
 defineExpose({ load_aggregated_value, reset })

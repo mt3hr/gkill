@@ -120,9 +120,10 @@ export class FindKyouQuery {
     // 全フィールドを「値がセットされていればそれを優先、無ければコンストラクタ既定を維持」で読む。
     // 旧キーがインスタンスへ混入すると deep_equals のキー数比較が崩れ、
     // サイドバーの機械的emitガードが永久に効かなくなるため、正規化は省略できない
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static parse_find_kyou_query(json: any): FindKyouQuery {
-        const { json: n } = normalize_legacy_find_kyou_query_json(json)
+    // 保存済みJSONの断片。呼び出し側は「あるかどうか」しか確かめていないので unknown で受ける
+    static parse_find_kyou_query(json: unknown): FindKyouQuery {
+        const { json: n } = normalize_legacy_find_kyou_query_json(
+            (json ?? {}) as Record<string, unknown>)
         const cloned = new FindKyouQuery()
         cloned.query_id = n.query_id as string ?? cloned.query_id
         cloned.update_cache = n.update_cache as boolean ?? cloned.update_cache

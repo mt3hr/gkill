@@ -16,8 +16,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field readonly type="text" v-model="timeis_title" :label="i18n.global.t('END_TIMEIS_TITLE_TITLE')"
-            autofocus />
+        <v-text-field readonly type="text" v-model="timeis_title" :label="i18n.global.t('END_TIMEIS_TITLE_TITLE')" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <table>

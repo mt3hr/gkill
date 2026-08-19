@@ -3,8 +3,8 @@ package reps
 import (
 	"context"
 	"errors"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"slices"
 	"sync"
 	"time"
@@ -17,6 +17,11 @@ import (
 type NotificationRepositories []NotificationRepository
 
 func (t NotificationRepositories) FindNotifications(ctx context.Context, query *find.FindQuery) ([]Notification, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照
+	return findChunkedByIDs(ctx, query, t.findNotifications)
+}
+
+func (t NotificationRepositories) findNotifications(ctx context.Context, query *find.FindQuery) ([]Notification, error) {
 	matchNotifications := map[string]Notification{}
 	existErr := false
 	var err error
@@ -28,7 +33,6 @@ func (t NotificationRepositories) FindNotifications(ctx context.Context, query *
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchNotificationsInRep, err := rep.FindNotifications(ctx, query)
 			if err != nil {
@@ -109,7 +113,6 @@ func (t NotificationRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
@@ -154,7 +157,6 @@ func (t NotificationRepositories) GetNotification(ctx context.Context, id string
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchNotificationInRep, err := rep.GetNotification(ctx, id, updateTime)
 			if err != nil {
@@ -219,7 +221,6 @@ func (t NotificationRepositories) GetNotificationsByTargetID(ctx context.Context
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchNotificationsInRep, err := rep.GetNotificationsByTargetID(ctx, target_id)
 			if err != nil {
@@ -295,7 +296,6 @@ func (t NotificationRepositories) GetNotificationsBetweenNotificationTime(ctx co
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchNotificationsInRep, err := rep.GetNotificationsBetweenNotificationTime(ctx, startTime, endTime)
 			if err != nil {
@@ -367,7 +367,6 @@ func (t NotificationRepositories) UpdateCache(ctx context.Context) error {
 	defer close(errch)
 
 	for _, rep := range t {
-		rep := rep
 		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -419,7 +418,7 @@ func (t NotificationRepositories) GetPath(ctx context.Context, id string) (strin
 	ids := []string{id}
 	for _, rep := range t {
 		query := &find.FindQuery{
-			IDs:    ids,
+			IDs: ids,
 		}
 		notifications, err := rep.FindNotifications(ctx, query)
 		if len(notifications) == 0 || err != nil {
@@ -453,7 +452,6 @@ func (t NotificationRepositories) GetNotificationHistories(ctx context.Context, 
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchNotificationsInRep, err := rep.GetNotificationHistories(ctx, id)
 			if err != nil {
@@ -529,7 +527,6 @@ func (t NotificationRepositories) GetNotificationHistoriesByRepName(ctx context.
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
 				// repNameが一致しない場合はスキップ
@@ -634,7 +631,6 @@ func (t NotificationRepositories) GetLatestDataRepositoryAddress(ctx context.Con
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {

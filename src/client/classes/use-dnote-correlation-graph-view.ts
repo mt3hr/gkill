@@ -9,6 +9,7 @@ import { DnoteCorrelationAggregator } from "@/classes/dnote/dnote-correlation-ag
 import { build_correlation_matrix_columns } from "@/classes/dnote-correlation-matrix-layout"
 import type DnoteCorrelationGraphViewEmits from "@/pages/views/dnote-correlation-graph-view-emits"
 import type DnoteCorrelationGraphViewProps from "@/pages/views/dnote-correlation-graph-view-props"
+import { useDeviceKind } from '@/classes/use-device-kind'
 
 export function useDnoteCorrelationGraphView(options: {
     props: DnoteCorrelationGraphViewProps,
@@ -113,21 +114,29 @@ export function useDnoteCorrelationGraphView(options: {
     }
 
     // ── DnD ──
+    // ドラッグ&ドロップでの並べ替えはPCでのみ有効にする。
+    // タッチ端末では draggable を立てても掴めないうえ、
+    // 立てたままだとスクロールやロングプレスと競合する。
+    // 判定は useDeviceKind の is_pc（"タッチできるか"ではない）。
+    // 同じ形が use-foldable-struct.ts / use-mi-kyou-view.ts / use-mi-re-kyou-view.ts にある
+    const { is_pc } = useDeviceKind()
+    const effective_draggable = computed(() => is_pc.value && props.editable)
+
     function drag_start(event: DragEvent): void {
-        if (!props.editable || !model_value.value?.id) return
+        if (!effective_draggable.value || !model_value.value?.id) return
         event.dataTransfer?.setData("gkill_dnote_correlation_graph_id", model_value.value.id)
         if (event.dataTransfer) event.dataTransfer.effectAllowed = "move"
         event.stopPropagation()
     }
 
     function dragover(event: DragEvent): void {
-        if (!props.editable) return
+        if (!effective_draggable.value) return
         event.preventDefault()
         if (event.dataTransfer) event.dataTransfer.dropEffect = "move"
     }
 
     function drop(event: DragEvent): void {
-        if (!props.editable || !model_value.value) return
+        if (!effective_draggable.value || !model_value.value) return
         const source_id = event.dataTransfer?.getData("gkill_dnote_correlation_graph_id")
         if (!source_id || source_id === model_value.value.id) return
         const element = event.currentTarget as HTMLElement | null
@@ -178,6 +187,8 @@ export function useDnoteCorrelationGraphView(options: {
 
     // ── Return ──
     return {
+        // DnD
+        effective_draggable,
         // Template refs
         contextmenu,
         confirm_delete_dnote_correlation_graph_dialog,
