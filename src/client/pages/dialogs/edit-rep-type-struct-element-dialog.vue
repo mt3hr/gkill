@@ -30,36 +30,18 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { EditRepTypeStructElementDialogEmits } from './edit-rep-type-struct-element-dialog-emits'
 import type { EditRepTypeStructElementDialogProps } from './edit-rep-type-struct-element-dialog-props'
 import EditRepTypeStructElementView from '../views/edit-rep-type-struct-element-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct-element-data'
 import { i18n } from '@/i18n'
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
+import { useEditRepTypeStructElementDialog } from '@/classes/use-edit-rep-type-struct-element-dialog'
 
-defineProps<EditRepTypeStructElementDialogProps>()
+const props = defineProps<EditRepTypeStructElementDialogProps>()
 const emits = defineEmits<EditRepTypeStructElementDialogEmits>()
+const { rep_type_struct, is_show_dialog, ui, show, hide } = useEditRepTypeStructElementDialog({ props, emits })
 defineExpose({ show, hide })
-
-const rep_type_struct: Ref<RepTypeStructElementData> = ref(new RepTypeStructElementData())
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-const ui = useFloatingDialog("edit-rep-type-struct-element-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
-
-
-async function show(rep_type_struct_obj: RepTypeStructElementData): Promise<void> {
-  rep_type_struct.value = rep_type_struct_obj
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
 </script>
 

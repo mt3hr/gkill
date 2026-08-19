@@ -25,7 +25,6 @@ func (g GPSLogRepositories) GetAllGPSLogs(ctx context.Context) ([]GPSLog, error)
 
 	// 並列処理
 	for _, rep := range g {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchGPSLogsInRep, err := rep.GetAllGPSLogs(ctx)
 			if err != nil {
@@ -87,7 +86,6 @@ func (g GPSLogRepositories) GetGPSLogs(ctx context.Context, startTime *time.Time
 
 	// 並列処理
 	for _, rep := range g {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchGPSLogsInRep, err := rep.GetGPSLogs(ctx, startTime, endTime)
 			if err != nil {

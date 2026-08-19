@@ -110,7 +110,7 @@
                                     @requested_change_is_image_only_view="(is_image_only: boolean) => onColumnRequestedChangeImageOnlyView(index, is_image_only)"
                                     @requested_close_column="close_list_view(index)"
                                     @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
-                                    @requested_reload_list="() => reload_list(index)"
+                                    @requested_reload_list="() => onColumnRequestedReloadList(index)"
                                     @requested_update_check_kyous="(kyous: Kyou[], checked: boolean) => update_check_kyous(kyous, checked)"
                                     @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
                                     ref="kyou_list_views" />
@@ -132,7 +132,7 @@
                                     :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
                                     :show_attached_tags="true" :show_attached_texts="true"
                                     :show_attached_notifications="true"
-                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykv_dialog_handler }" />
+                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogRelayHandlers }" />
                             </div>
                         </td>
                         <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
@@ -152,9 +152,7 @@
             <AddTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
-                @focused_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
-                @clicked_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
+                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers }"
                 ref="add_timeis_dialog" />
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
@@ -201,7 +199,7 @@
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @closed="(id: string) => close_rykv_dialog(id)"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykv_dialog_handler }" />
+                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogRelayHandlers }" />
             <!-- ポート(rudbeckia)の中ではFABを出さない。理由は rykv-view.vue の同じ箇所参照 -->
             <v-avatar v-if="!is_hosted_in_dialog" :style="floating_action_button_style()" color="primary" class="position-fixed">
                 <v-menu transition="slide-x-transition">
@@ -337,7 +335,6 @@ const {
     open_rykv_dialog,
     close_rykv_dialog,
     reload_kyou,
-    reload_list,
     update_check_kyous,
 
     // Dialog show methods
@@ -356,7 +353,9 @@ const {
     // Event relay objects
     crudRelayHandlers,
     allColumnsRequestHandlers,
-    rykv_dialog_handler,
+    rykvDialogRelayHandlers,
+    subViewFocusHandlers,
+    onColumnRequestedReloadList,
 } = useMiView({ props, emits })
 
 // ── ビューポート単位を使わない寸法 ──

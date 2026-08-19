@@ -15,7 +15,8 @@ gkill プロジェクト用のユーティリティスクリプト。
 | `manual_ascii_fix.mjs` | マニュアル内の文字化け・ASCII 修正ユーティリティ |
 | `extract_manual_src.mjs` | 既存 `resources/manual/` から `manual_src/` を抽出する移行ツール |
 | `verify_release_artifacts.mjs` | `npm run release` 成果物の検証 |
-| `test_plugins.mjs` | `npm run test_plugins` の実体。`src/plugins/` 配下の各 Go モジュールのテストを実行 |
+| `test_plugins.mjs` | `npm run test_plugins` / `npm run vet_plugins` の実体。`src/plugins/` 配下の各 Go モジュールに `go test` / `go vet` を回す |
+| `gradle_test.mjs` | `npm run test_android` / `npm run test_wear_os` の実体。Windows では `gradlew.bat`、それ以外は `./gradlew` を使う |
 
 ## dev.mjs
 
@@ -36,7 +37,7 @@ npm run dev -- --api=19999 --port 5180
 
 | セクション | ソース | 内容 |
 |---|---|---|
-| Go Modules | `src/server` + `src/plugins` 配下の全 go.mod（5モジュール自動発見） | 推移依存含む本文全文。`path@version` でモジュール横断の重複排除。リポジトリ内 replace（自プロジェクト）は除外 |
+| Go Modules | `src/server` + `src/plugins` 配下の全 go.mod（8モジュール自動発見） | 推移依存含む本文全文。`path@version` でモジュール横断の重複排除。リポジトリ内 replace（自プロジェクト）は除外 |
 | Node.js Modules | ルート `package-lock.json` (v3) | ルート package.json の dependencies から到達可能な本番依存のみ（devDependencies はビルドツールチェーンであり配布物に含まれないため対象外）。本文全文 |
 | Android (Gradle) | `src/android` の `releaseRuntimeClasspath` | 推移依存のライセンス名+URL（POM から抽出、無ければ親 POM を追跡）。テスト専用依存は配布物に入らないため対象外 |
 | Wear OS (Gradle) | `src/wear_os` の phone_companion + watch_app（同上） | 同上（2プロジェクトを GAV で重複排除して統合） |

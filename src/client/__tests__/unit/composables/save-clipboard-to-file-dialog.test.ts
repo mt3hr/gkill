@@ -30,6 +30,14 @@ import { createMockGkillAPI } from '../../helpers/mock-api'
 import { useSaveClipboardToFileDialog, sanitize_filename } from '@/classes/use-save-clipboard-to-file-dialog'
 import { useScopedCtrlVForClipboard } from '@/classes/use-scoped-ctrl-v-for-clipboard'
 
+// ダイアログの UI（useFloatingDialog）はコンポーザブル側に入っている。
+// jsdom には ResizeObserver が無いので最小の実装を差し込む
+(globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = class {
+  observe(): void { }
+  unobserve(): void { }
+  disconnect(): void { }
+}
+
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function createBaseProps() {
@@ -182,8 +190,7 @@ describe('useSaveClipboardToFileDialog', () => {
     if (originalClipboard) {
       Object.defineProperty(navigator, 'clipboard', originalClipboard)
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (navigator as any).clipboard
+      delete (navigator as unknown as { clipboard?: unknown }).clipboard
     }
   })
 
@@ -201,8 +208,7 @@ describe('useSaveClipboardToFileDialog', () => {
     expect(result.error_message_key.value).toBe('CLIPBOARD_EMPTY_MESSAGE')
     unmount()
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (navigator as any).clipboard
+    delete (navigator as unknown as { clipboard?: unknown }).clipboard
   })
 
   test('hide() sets is_show_dialog to false', () => {
@@ -310,8 +316,7 @@ describe('useSaveClipboardToFileDialog', () => {
     expect(result.target_rep_names.value).toEqual(['writable'])
     result.hide()
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (navigator as any).clipboard
+    delete (navigator as unknown as { clipboard?: unknown }).clipboard
     unmount()
   })
 })

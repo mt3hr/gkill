@@ -101,6 +101,13 @@ test.describe('Mi (Task) Operations', () => {
     await submitKftlText(page, `ーみ\n${label}`)
     await navigateToMi(page)
 
+    // 一覧は仮想スクロールで8行ぶんしか描画せず（1280x720 で
+    // floor((578 + BUFFER_PX 100) / 91) + 1 = 8）、新規タスクは
+    // estimate_start_time 未設定＝時刻なしグループの末尾（作成日時 昇順）に入る。
+    // 未チェックのタスクはカレンダー絞りが無いので1ランのあいだ積み上がり続けるため、
+    // フルランでは総数が8を超えて押し出される。キーワードで絞ってから存在を確認する
+    // （pages/ABOUT_TEST.md に明文化されている規約。同ファイル4本目と同じ形）
+    await searchByKeyword(page, label)
     await waitForKyouByText(page, label)
 
     // 対象タスクのカードを掴む。mi-kyou-view.vue のルートが v-card で、
@@ -139,6 +146,13 @@ test.describe('Mi (Task) Operations', () => {
     await submitKftlText(page, `ーみ\n${label}`)
     await navigateToMi(page)
 
+    // 一覧は仮想スクロールで8行ぶんしか描画せず（1280x720 で
+    // floor((578 + BUFFER_PX 100) / 91) + 1 = 8）、新規タスクは
+    // estimate_start_time 未設定＝時刻なしグループの末尾（作成日時 昇順）に入る。
+    // 未チェックのタスクはカレンダー絞りが無いので1ランのあいだ積み上がり続けるため、
+    // フルランでは総数が8を超えて押し出される。キーワードで絞ってから存在を確認する
+    // （pages/ABOUT_TEST.md に明文化されている規約。同ファイル4本目と同じ形）
+    await searchByKeyword(page, label)
     await waitForKyouByText(page, label)
     const card = page.locator('.v-card').filter({ hasText: label }).last()
     await expect(card, 'タスクのカードが見つからない').toBeVisible({ timeout: 30000 })

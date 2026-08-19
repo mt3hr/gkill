@@ -31,34 +31,18 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { CreateAccountDialogEmits } from './create-account-dialog-emits'
 import type { CreateAccountDialogProps } from './create-account-dialog-props'
 import CreateAccountView from '../views/create-account-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { Account } from '@/classes/datas/config/account'
-
-defineProps<CreateAccountDialogProps>()
-const emits = defineEmits<CreateAccountDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("create-account-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useCreateAccountDialog } from '@/classes/use-create-account-dialog'
 
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const props = defineProps<CreateAccountDialogProps>()
+const emits = defineEmits<CreateAccountDialogEmits>()
+const { is_show_dialog, ui, show, hide } = useCreateAccountDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

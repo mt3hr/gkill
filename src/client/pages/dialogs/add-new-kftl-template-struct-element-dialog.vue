@@ -33,7 +33,6 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { AddNewKFTLTemplateStructElementDialogEmits } from './add-new-kftl-template-struct-element-dialog-emits'
 import type { AddNewKFTLTemplateStructElementDialogProps } from './add-new-kftl-template-struct-element-dialog-props'
 import AddNewKFTLTemplateStructElementView from '../views/add-new-kftl-template-struct-element-view.vue'
@@ -41,32 +40,12 @@ import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
-
-const add_new_kftl_template_struct_element_view = ref<InstanceType<typeof AddNewKFTLTemplateStructElementView> | null>(null);
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-
-defineProps<AddNewKFTLTemplateStructElementDialogProps>()
-const emits = defineEmits<AddNewKFTLTemplateStructElementDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("add-new-kftl-template-struct-element-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useAddNewKFTLTemplateStructElementDialog } from '@/classes/use-add-new-kftl-template-struct-element-dialog'
 
-
-async function show(): Promise<void> {
-  add_new_kftl_template_struct_element_view.value?.reset_kftl_template_name()
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  add_new_kftl_template_struct_element_view.value?.reset_kftl_template_name()
-}
+const props = defineProps<AddNewKFTLTemplateStructElementDialogProps>()
+const emits = defineEmits<AddNewKFTLTemplateStructElementDialogEmits>()
+const { help_dialog, is_show_dialog, ui, show, hide } = useAddNewKFTLTemplateStructElementDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

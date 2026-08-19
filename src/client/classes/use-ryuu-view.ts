@@ -9,6 +9,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
+import type { RelatedTimeMatchType } from '@/classes/dnote/related-time-match-type'
 
 export interface RyuuDefinition {
     name: string
@@ -95,20 +96,22 @@ export function useRyuuView(options: {
         })
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function parse_single_definition_queries(json: any): Array<RelatedKyouQuery> {
+    // 保存済みJSONは外部由来なので unknown で受ける
+    function parse_single_definition_queries(json: unknown): Array<RelatedKyouQuery> {
         const queries = new Array<RelatedKyouQuery>()
-        if (!json) return queries
-        for (let i = 0; i < json.length; i++) {
+        if (!Array.isArray(json)) return queries
+        for (const raw of json as Array<Record<string, unknown>>) {
             const related_kyou_query = new RelatedKyouQuery()
-            related_kyou_query.id = json[i].id
-            related_kyou_query.title = json[i].title
-            related_kyou_query.prefix = json[i].prefix
-            related_kyou_query.suffix = json[i].suffix
-            related_kyou_query.predicate = build_dnote_predicate_from_json(json[i].predicate)
-            related_kyou_query.related_time_match_type = json[i].related_time_match_type
-            related_kyou_query.find_kyou_query = json[i].find_kyou_query ? FindKyouQuery.parse_find_kyou_query(json[i].find_kyou_query) : null
-            related_kyou_query.find_duration_hour = json[i].find_duration_hour
+            related_kyou_query.id = String(raw.id ?? '')
+            related_kyou_query.title = String(raw.title ?? '')
+            related_kyou_query.prefix = String(raw.prefix ?? '')
+            related_kyou_query.suffix = String(raw.suffix ?? '')
+            related_kyou_query.predicate = build_dnote_predicate_from_json(raw.predicate as Record<string, unknown>)
+            related_kyou_query.related_time_match_type = raw.related_time_match_type as RelatedTimeMatchType
+            related_kyou_query.find_kyou_query = raw.find_kyou_query
+                ? FindKyouQuery.parse_find_kyou_query(raw.find_kyou_query as Record<string, unknown>)
+                : null
+            related_kyou_query.find_duration_hour = Number(raw.find_duration_hour ?? 1)
             queries.push(related_kyou_query)
         }
         return queries
@@ -123,9 +126,8 @@ export function useRyuuView(options: {
         } else {
             definitions_json = [{ name: i18n.global.t('RYUU_DEFINITION_DEFAULT_NAME'), queries: [] }]
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ryuu_definitions.value = definitions_json.map((def_json: any) => ({
-            name: def_json.name || i18n.global.t('RYUU_DEFINITION_DEFAULT_NAME'),
+        ryuu_definitions.value = definitions_json.map((def_json) => ({
+            name: String(def_json.name || i18n.global.t('RYUU_DEFINITION_DEFAULT_NAME')),
             queries: parse_single_definition_queries(def_json.queries),
         }))
         if (current_definition_index.value >= ryuu_definitions.value.length) {
@@ -190,8 +192,7 @@ export function useRyuuView(options: {
      */
     async function apply(): Promise<void> {
         const ryuu_json_data = to_json()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        emits('requested_apply_ryuu_struct', ryuu_json_data as any)
+        emits('requested_apply_ryuu_struct', ryuu_json_data)
         nextTick(() => emits('requested_close_dialog'))
     }
 

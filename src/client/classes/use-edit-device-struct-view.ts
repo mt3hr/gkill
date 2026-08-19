@@ -4,10 +4,9 @@ import type { EditDeviceStructViewProps } from '@/pages/views/edit-device-struct
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data'
 import type { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data'
-import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 import { move_struct_up, move_struct_down, move_struct_to_folder } from '@/classes/foldable-struct-move'
+import { build_error_message_relay } from '@/classes/kyou-view-relay'
 
 export function useEditDeviceStructView(options: {
     props: EditDeviceStructViewProps,
@@ -33,6 +32,9 @@ export function useEditDeviceStructView(options: {
     // ── Business logic ──
     async function reload_cloned_application_config(): Promise<void> {
         cloned_application_config.value = props.application_config.clone()
+        // 対になる rep / rep_type / tag / mi_board の編集ビューは全部これを呼んでいる。
+        // ここだけ呼び忘れていて、新しく現れた端末が端末ツリーの編集画面に出てこなかった
+        await cloned_application_config.value.append_not_found_devices()
     }
 
     function show_device_contextmenu(e: MouseEvent, id: string | null): void {
@@ -186,10 +188,7 @@ export function useEditDeviceStructView(options: {
     }
 
     // ── Event relay objects ──
-    const errorMessageRelayHandlers = {
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-    }
+    const errorMessageRelayHandlers = build_error_message_relay(emits)
 
     // ── Return ──
     return {

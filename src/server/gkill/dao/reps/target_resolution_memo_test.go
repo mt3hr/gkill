@@ -57,8 +57,8 @@ func (c *countingRepository) UpdateCache(_ context.Context) error               
 func (c *countingRepository) GetLatestDataRepositoryAddress(_ context.Context, _ bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
 	return nil, nil
 }
-func (c *countingRepository) Close(_ context.Context) error      { return nil }
-func (c *countingRepository) UnWrap() ([]Repository, error)      { return []Repository{c}, nil }
+func (c *countingRepository) Close(_ context.Context) error { return nil }
+func (c *countingRepository) UnWrap() ([]Repository, error) { return []Repository{c}, nil }
 func newCountingRep(name string, ids ...string) *countingRepository {
 	return &countingRepository{repName: name, kyouIDs: ids}
 }

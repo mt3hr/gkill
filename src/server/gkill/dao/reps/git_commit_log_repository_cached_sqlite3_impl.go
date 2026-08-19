@@ -19,13 +19,13 @@ import (
 )
 
 type gitCommitLogRepositoryCachedSQLite3Impl struct {
-	dbName          string
-	gitRep          GitCommitLogRepository
-	cachedDB        *sqllib.DB
-	m               *sync.RWMutex
-	ownDB           bool // trueの場合、永続ファイルDBを自前で管理する
-	backgroundUpdate bool // trueの場合、初回フルリビルドをバックグラウンドで実行する
-	isCacheBuilding  atomic.Bool // trueの場合、バックグラウンドキャッシュビルド中（検索goroutineと並行に読み書きされる）
+	dbName                 string
+	gitRep                 GitCommitLogRepository
+	cachedDB               *sqllib.DB
+	m                      *sync.RWMutex
+	ownDB                  bool        // trueの場合、永続ファイルDBを自前で管理する
+	backgroundUpdate       bool        // trueの場合、初回フルリビルドをバックグラウンドで実行する
+	isCacheBuilding        atomic.Bool // trueの場合、バックグラウンドキャッシュビルド中（検索goroutineと並行に読み書きされる）
 	lastUpdateCacheChanged bool
 }
 

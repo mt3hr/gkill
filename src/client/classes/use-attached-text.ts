@@ -4,9 +4,10 @@ import { computed, ref } from 'vue'
 import type { AttachedTextProps } from '@/pages/views/attached-text-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import AttachedTextContextMenu from '@/pages/views/attached-text-context-menu.vue'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export function useAttachedText(options: { props: AttachedTextProps, emits: KyouViewEmits }) {
-    const { props, emits: _emits } = options
+    const { props, emits } = options
 
     const context_menu = ref<InstanceType<typeof AttachedTextContextMenu> | null>(null)
 
@@ -32,7 +33,12 @@ export function useAttachedText(options: { props: AttachedTextProps, emits: Kyou
         }
     }
 
+    // ── Event relay objects ──
+    const crudRelayHandlers = build_kyou_view_relay(emits)
+
     return {
+        // Event relay objects
+        crudRelayHandlers,
         context_menu,
         text_class,
         show_context_menu,

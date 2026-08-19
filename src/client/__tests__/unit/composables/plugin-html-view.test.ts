@@ -103,8 +103,8 @@ function spy_post_message(iframe: HTMLIFrameElement): ReturnType<typeof vi.fn> {
     const content_window = iframe.contentWindow
     expect(content_window, 'iframe に browsing context が無い').toBeTruthy()
     const post_message = vi.fn()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ; (content_window as any).postMessage = post_message
+        // 実DOMのiframeではないので、必要なメソッドだけ差し替える
+        ; (content_window as unknown as { postMessage: unknown }).postMessage = post_message
     return post_message
 }
 

@@ -300,7 +300,7 @@ SQLite3 をバックエンドとし、4層のアーキテクチャで構成さ�
 | `latest_data_repository_address_dao.go` | DAO インタフェース |
 | `latest_data_repository_address_dao_sqlite3_impl.go` | SQLite3 実装 |
 
-### `cache/rep_cache_updater/` および `rep_cache_updater/`（5ファイル）
+### `rep_cache_updater/`（5ファイル）
 
 キャッシュの自動更新ロジック。
 

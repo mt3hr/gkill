@@ -9,6 +9,8 @@ import type { Tag } from '@/classes/datas/tag'
 import type { Text } from '@/classes/datas/text'
 import type { Notification } from '@/classes/datas/notification'
 import type { ComponentRef } from '@/classes/component-ref'
+import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
+import { remove_kyou_from_list_by_id } from '@/classes/kyou-local-insert'
 
 export function useDecideRelatedTimeUploadedFileView(options: {
     props: DecideRelatedTimeUploadedFileViewProps,
@@ -28,22 +30,28 @@ export function useDecideRelatedTimeUploadedFileView(options: {
     const kyou_height_px = computed(() => kyou_height.value ? kyou_height.value.toString().concat("px") : "0px")
 
     // ── Business logic ──
-    async function reload_focused_kyou(): Promise<void> {
-        if (!focused_kyou.value) {
-            return
-        }
-        const updated_kyou = focused_kyou.value.clone()
-        await updated_kyou.reload(true)
-        await updated_kyou.load_all()
-        focused_kyou.value = updated_kyou
-    }
-
-    function remove_kyou_from_list_by_id(list: Array<Kyou>, deleted_id: string): void {
-        for (let i = list.length - 1; i >= 0; i--) {
-            if (list[i].id === deleted_id) {
-                list.splice(i, 1)
+    // 引き直しは classes/kyou-reload.ts の手順を必ず通す。
+    // 「SWキャッシュ削除 → reload(true) → is_typed_data_loaded=false → load_all(query, true)」の
+    // 4手順のうち1つでも欠けると引き直しに失敗する。とくに load_all の force_attached を落とすと、
+    // clone() が is_attached_tags_loaded を引き継ぐせいで load_attached_tags(false) が早期returnし、
+    // 添付タグを一度も引き直さない（「タグを足しても表示が変わらない」の正体）。
+    // requested_reload_kyou はタグ/テキスト/通知の変更の唯一の信号なので、ここが効かないと何も反映されない
+    async function reload_kyou(kyou: Kyou): Promise<void> {
+        // 1回の更新から派生する引き直しに同じ値を渡して1往復に畳む
+        const requested_at = new_reload_batch()
+        const refresh_focused = async (): Promise<void> => {
+            if (!focused_kyou.value || focused_kyou.value.id !== kyou.id) {
+                return
+            }
+            const refreshed = await refresh_kyou(focused_kyou.value, undefined, requested_at)
+            if (refreshed) {
+                focused_kyou.value = refreshed
             }
         }
+        await Promise.all([
+            refresh_kyou_in_list(props.uploaded_kyous, kyou, { requested_at: requested_at }),
+            refresh_focused(),
+        ])
     }
 
     function onDeletedKyou(deleted_kyou: Kyou): void {
@@ -91,7 +99,7 @@ export function useDecideRelatedTimeUploadedFileView(options: {
         'updated_notification': (notification: Notification) => emits('updated_notification', notification),
         'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
         'requested_reload_kyou': (kyou: Kyou) => {
-            reload_focused_kyou()
+            reload_kyou(kyou)
             emits('requested_reload_kyou', kyou)
         },
     }
@@ -110,7 +118,6 @@ export function useDecideRelatedTimeUploadedFileView(options: {
         kyou_height_px,
 
         // Business logic
-        reload_focused_kyou,
         onDeletedKyou,
 
         // Event relay objects

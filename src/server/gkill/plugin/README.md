@@ -6,7 +6,7 @@ gkill プラグインシステムのサーバー側実装。プラグインプ�
 
 ```
 plugin/
-└── sdk/                # プラグイン作者向け Go SDK（8ファイル。うちテスト3）
+└── sdk/                # プラグイン作者向け Go SDK（10ファイル。うちテスト4）
     ├── types.go        # 公開型定義（Query, Kyou, Config）
     ├── handler.go      # Handler struct（プラグイン作者が実装するインターフェース）
     ├── sdk.go          # Run() — メインループ（stdin/stdout 改行区切りJSONループ）

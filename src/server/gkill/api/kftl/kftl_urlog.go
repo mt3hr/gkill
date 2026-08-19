@@ -56,10 +56,11 @@ func (r *kftlURLogRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.WriteURLogRep.AddURLogInfo(ctx, urlog); err != nil {
 		return fmt.Errorf("error at add urlog info id=%s: %w", r.RequestID, err)
 	}
-	repName, _ := r.Ctx.Repositories.WriteURLogRep.GetRepName(ctx)
+	repName, repNameErr := r.Ctx.Repositories.WriteURLogRep.GetRepName(ctx)
+	logGetRepNameFailure(ctx, "urlog", urlog.ID, repNameErr)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	_ = r.Ctx.Repositories.WriteThroughURLogCache(ctx, urlog)
+	logWriteThroughCacheFailure(ctx, "urlog", urlog.ID, r.Ctx.Repositories.WriteThroughURLogCache(ctx, urlog))
 	return nil
 }
 
@@ -94,9 +95,9 @@ func newKFTLStartURLogStatementLine(lineText string, ctx *KFTLStatementLineConte
 func (l *kftlStartURLogStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
-func (l *kftlStartURLogStatementLine) GetLabelName() string                 { return "urlog" }
+func (l *kftlStartURLogStatementLine) GetLabelName() string                  { return "urlog" }
 func (l *kftlStartURLogStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlStartURLogStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlStartURLogStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlURLogURLStatementLine reads the URL.
 // Mirrors: kftlur-log-url-statement-line.ts
@@ -121,9 +122,9 @@ func (l *kftlURLogURLStatementLine) ApplyThisLineToRequestMap(_ context.Context,
 	l.req.url = l.lineText
 	return nil
 }
-func (l *kftlURLogURLStatementLine) GetLabelName() string                 { return "urlogURL" }
+func (l *kftlURLogURLStatementLine) GetLabelName() string                  { return "urlogURL" }
 func (l *kftlURLogURLStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlURLogURLStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlURLogURLStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlURLogTitleStatementLine reads the URL title.
 // After this, next constructor reverts to None.
@@ -145,6 +146,6 @@ func (l *kftlURLogTitleStatementLine) ApplyThisLineToRequestMap(_ context.Contex
 	l.req.title = l.lineText
 	return nil
 }
-func (l *kftlURLogTitleStatementLine) GetLabelName() string                 { return "urlogTitle" }
+func (l *kftlURLogTitleStatementLine) GetLabelName() string                  { return "urlogTitle" }
 func (l *kftlURLogTitleStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlURLogTitleStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlURLogTitleStatementLine) GetStatementLineText() string          { return l.lineText }

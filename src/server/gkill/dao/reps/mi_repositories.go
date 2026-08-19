@@ -3,8 +3,8 @@ package reps
 import (
 	"context"
 	"errors"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"slices"
 	"sync"
 	"time"
@@ -28,7 +28,6 @@ func (m MiRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (m
 
 	// 並列処理
 	for _, rep := range m {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -99,7 +98,6 @@ func (m MiRepositories) GetKyou(ctx context.Context, id string, updateTime *time
 
 	// 並列処理
 	for _, rep := range m {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -164,7 +162,6 @@ func (m MiRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou
 
 	// 並列処理
 	for _, rep := range m {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -236,7 +233,7 @@ func (m MiRepositories) GetPath(ctx context.Context, id string) (string, error) 
 	ids := []string{id}
 	for _, rep := range m {
 		query := &find.FindQuery{
-			IDs:    ids,
+			IDs: ids,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -262,7 +259,6 @@ func (m MiRepositories) UpdateCache(ctx context.Context) error {
 	defer close(errch)
 
 	for _, rep := range m {
-		rep := rep
 		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -323,7 +319,6 @@ func (m MiRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
@@ -374,7 +369,6 @@ func (m MiRepositories) findMi(ctx context.Context, query *find.FindQuery) ([]Mi
 
 	// 並列処理
 	for _, rep := range m {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchMisInRep, err := rep.FindMi(ctx, query)
 			if err != nil {
@@ -450,7 +444,6 @@ func (m MiRepositories) GetMi(ctx context.Context, id string, updateTime *time.T
 
 	// 並列処理
 	for _, rep := range m {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchMiInRep, err := rep.GetMi(ctx, id, updateTime)
 			if err != nil {
@@ -515,7 +508,6 @@ func (m MiRepositories) GetMiHistories(ctx context.Context, id string) ([]Mi, er
 
 	// 並列処理
 	for _, rep := range m {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchMisInRep, err := rep.GetMiHistories(ctx, id)
 			if err != nil {
@@ -592,7 +584,6 @@ func (m MiRepositories) GetMiHistoriesByRepName(ctx context.Context, id string, 
 
 	// 並列処理
 	for _, rep := range m {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
 				// repNameが一致しない場合はスキップ
@@ -739,7 +730,6 @@ func (m MiRepositories) GetLatestDataRepositoryAddress(ctx context.Context, upda
 
 	// 並列処理
 	for _, rep := range m {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {

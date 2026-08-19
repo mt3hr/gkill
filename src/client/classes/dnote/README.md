@@ -151,7 +151,7 @@ dnote/
 | `lantana-mood-getter.ts` | Lantana 気分値 |
 | `nlog-shop-name-getter.ts` | Nlog 店名 |
 
-## `dnote-predicate/`（33ファイル）— 検索条件述語
+## `dnote-predicate/`（31ファイル）— 検索条件述語
 
 AND / OR / NOT の論理演算で組み合わせ可能な述語群（33 .ts ファイル + 1 サブディレクトリ）。
 

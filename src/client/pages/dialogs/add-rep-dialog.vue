@@ -30,38 +30,18 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { AddRepDialogEmits } from './add-rep-dialog-emits'
 import type { AddRepDialogProps } from './add-rep-dialog-props'
 import AddRepView from '../views/add-rep-view.vue'
-import { Account } from '@/classes/datas/config/account';
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { Repository } from '@/classes/datas/config/repository'
-
-defineProps<AddRepDialogProps>()
-const emits = defineEmits<AddRepDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("add-rep-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useAddRepDialog } from '@/classes/use-add-rep-dialog'
 
-const cloned_account: Ref<Account> = ref(new Account())
-
-async function show(account: Account): Promise<void> {
-  cloned_account.value = account
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  cloned_account.value = new Account()
-}
+const props = defineProps<AddRepDialogProps>()
+const emits = defineEmits<AddRepDialogEmits>()
+const { is_show_dialog, ui, cloned_account, show, hide } = useAddRepDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

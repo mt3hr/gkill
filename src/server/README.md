@@ -133,7 +133,7 @@ go build ./...
 ## 関連ドキュメント
 
 - [api/README.md](gkill/api/README.md) — HTTP API 共通基盤・ハンドラ層（全90エンドポイント一覧）
-- [api/gkill_server_api/README.md](gkill/api/gkill_server_api/README.md) — HTTP ハンドラ（123ファイル）
+- [api/gkill_server_api/README.md](gkill/api/gkill_server_api/README.md) — HTTP ハンドラ（124ファイル）
 - [api/kftl/README.md](gkill/api/kftl/README.md) — KFTL パーサ
 - [api/req_res/README.md](gkill/api/req_res/README.md) — Request/Response 構造体
 - [api/message/README.md](gkill/api/message/README.md) — エラーコード・メッセージコード

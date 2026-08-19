@@ -168,6 +168,78 @@ func TestGitCommitLogLocalDirFindKyousCalendarRangeIncludesBothEnds(t *testing.T
 	}
 }
 
+// 時間帯を指定した検索で曜日フィルタが正しく効くことを確認する。
+//
+// PeriodOfTimeWeekOfDays の意味論:
+//
+//	nil     = 曜日で絞らない（全件残る）
+//	非nil空 = 0件指定（全部消える）
+//	全7曜日 = 曜日で絞らない（全件残る）
+//	部分指定 = 該当曜日のコミットだけ残る
+//
+// HasPeriodOfTimeFilter() は start/end のどちらかが非nilなら真になるので、
+// 時間帯だけ指定しても曜日の分岐へ入る。そこで nil を len==0 の分岐へ落とすと
+// 候補0個のループになって全コミットが捨てられ、「時間帯を指定しただけで
+// gitのコミットが1件も返らない」という形で表に出る。必ず nil を先に外すこと。
+// 同じ約束を api/find_filter.go と dao/sqlite3impl/sqlite3impl_util.go も守っている。
+func TestGitCommitLogLocalDirFindKyousPeriodOfTimeWeekOfDays(t *testing.T) {
+	rep, _, _ := newTempGitCommitLogRepo(t)
+	ctx := context.Background()
+
+	// 時間帯は2コミットの当日1日ぶんを丸ごと覆う。こうすると曜日フィルタだけが効く。
+	// 2コミットは2時間差なのでローカルタイムゾーンが何であれ同じ日に載る
+	commitDay := gitCommitLogFirstTime().In(time.Local)
+	dayStart := time.Date(commitDay.Year(), commitDay.Month(), commitDay.Day(), 0, 0, 0, 0, time.Local).Unix()
+	dayEnd := time.Date(commitDay.Year(), commitDay.Month(), commitDay.Day(), 23, 59, 59, 0, time.Local).Unix()
+	commitWeekOfDay := find.WeekOfDays(int(commitDay.Weekday()))
+
+	allWeekOfDays := []find.WeekOfDays{find.SunDay, find.MonDay, find.TuesDay, find.WednesDay, find.ThursDay, find.FriDay, find.SaturDay}
+	otherWeekOfDays := []find.WeekOfDays{}
+	for _, weekOfDay := range allWeekOfDays {
+		if weekOfDay != commitWeekOfDay {
+			otherWeekOfDays = append(otherWeekOfDays, weekOfDay)
+		}
+	}
+
+	for _, c := range []struct {
+		name       string
+		weekOfDays []find.WeekOfDays
+		wantCount  int
+	}{
+		{name: "nilは曜日で絞らない", weekOfDays: nil, wantCount: 2},
+		{name: "非nil空は0件指定", weekOfDays: []find.WeekOfDays{}, wantCount: 0},
+		{name: "全7曜日は曜日で絞らない", weekOfDays: allWeekOfDays, wantCount: 2},
+		{name: "コミット曜日を含む部分指定は残る", weekOfDays: []find.WeekOfDays{commitWeekOfDay}, wantCount: 2},
+		{name: "コミット曜日を含まない部分指定は消える", weekOfDays: otherWeekOfDays, wantCount: 0},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			query := &find.FindQuery{
+				PeriodOfTimeStartTimeSecond: &dayStart,
+				PeriodOfTimeEndTimeSecond:   &dayEnd,
+				PeriodOfTimeWeekOfDays:      c.weekOfDays,
+			}
+
+			kyous, err := rep.FindKyous(ctx, query)
+			if err != nil {
+				t.Fatalf("FindKyous failed: %v", err)
+			}
+			if got := countGitCommitLogKyous(kyous); got != c.wantCount {
+				t.Errorf("FindKyous: got %d件, want %d件", got, c.wantCount)
+			}
+
+			// FindGitCommitLog は FindKyous と同じ判定を通すこと。
+			// 揃っていないと、キャッシュrepを挟むかどうかで検索結果が変わる
+			gitCommitLogs, err := rep.FindGitCommitLog(ctx, query)
+			if err != nil {
+				t.Fatalf("FindGitCommitLog failed: %v", err)
+			}
+			if got := len(gitCommitLogs); got != c.wantCount {
+				t.Errorf("FindGitCommitLog: got %d件, want %d件", got, c.wantCount)
+			}
+		})
+	}
+}
+
 // git_commit_logのrep設定は `$HOME/Git/*` のようなglobで書かれ、
 // zglobはディレクトリだけでなくファイルも返すため、
 // 展開先にgitリポジトリでないエントリが混ざるのは異常ではない。

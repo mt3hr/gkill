@@ -4,6 +4,7 @@ import { loginAsAdmin } from './helpers'
 import {
   navigateToSettings,
   clickFabButton,
+  openApplicationConfigDialog,
 } from './crud-helpers'
 
 let apiReachable = false
@@ -42,70 +43,58 @@ test.describe('Misc Operations', () => {
   test('gps log upload via add dialog', async ({ page }) => {
     await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
 
     await clickFabButton(page)
 
-    // Look for upload menu item
+    // Look for upload menu item（FABメニューの「アップロード」）
     const uploadItem = page.locator('.v-list-item, [role="menuitem"], .v-btn')
-      .filter({ hasText: /アップロード|upload|ファイル/i }).first()
-    if (await uploadItem.count() > 0) {
-      await uploadItem.click()
-      await page.waitForTimeout(2000)
+      .filter({ hasText: /アップロード|upload/i }).first()
+    await expect(uploadItem, 'FABメニューにアップロードが無い').toBeVisible({ timeout: 30000 })
+    await uploadItem.click()
 
-      // Verify upload dialog opens with file input
-      const dialog = page.locator('.v-dialog').first()
-      if (await dialog.isVisible()) {
-        const fileInput = page.locator('input[type="file"]').first()
-        // File input should exist (accept GPX files among others)
-        expect(await fileInput.count()).toBeGreaterThanOrEqual(0)
-      }
-    }
-
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    // Verify upload dialog opens with file input
+    const dialog = page.locator('.gkill-floating-dialog').last()
+    await expect(dialog, 'アップロードのダイアログが開かない').toBeVisible({ timeout: 30000 })
+    // GPXを受ける入力欄があること（upload-file-view.vue の accept=".gpx"）
+    await expect(dialog.locator('input[type="file"][accept=".gpx"]'), 'GPX用のファイル入力が無い')
+      .toBeAttached({ timeout: 15000 })
   })
 
   // 項番153: 無効Mi共有リンクでエラーメッセージ表示
   test('invalid shared mi link shows error message', async ({ page }) => {
-    // Navigate to a shared mi page with invalid ID (no login needed for shared pages)
-    await page.goto('/shared_mi?id=invalid_nonexistent_id', { waitUntil: 'domcontentloaded' })
+    // クエリの名前は **share_id**。`id` だと /shared_mi のリダイレクト元
+    // (old-shared-mi-page.vue) が share_id を読めず、以前は setup ごと落ちて真っ白になっていた
+    await page.goto('/shared_mi?share_id=invalid_nonexistent_id', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
 
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    // /shared_mi は /shared_page へ差し替わる
+    await expect(page, '共有ページへ移動しない').toHaveURL(/shared_page/, { timeout: 30000 })
 
-    // The page should render without crashing — check innerHTML since textContent may be empty
-    const html = await app.innerHTML()
-    expect(html.length).toBeGreaterThan(10)
+    // 存在しない共有IDなので handle_get_shared_kyous がエラーを返し、
+    // shared-page.vue が role="alert" の v-alert で見せる。
+    // 「画面が描けた」だけの確認だと、黙って空のページが出ていても緑になる
+    // `[role="alert"]` だけだと Vuetify が入力欄ごとに置く `v-input__details`
+    // （常に存在して不可視）を掴んでしまう。`.v-alert` まで絞る
+    await expect(page.locator('.v-alert[role="alert"]').first(), '無効な共有リンクでエラーが出ない')
+      .toBeVisible({ timeout: 30000 })
   })
 
   // 項番155: サーバコンフィグ適用でサービス再起動
   test('server config apply triggers service restart', async ({ page }) => {
-    await navigateToSettings(page)
+    // 設定ダイアログは歯車から開く。**最果て(/saihate)に歯車は無い**
+    const dialog = await openApplicationConfigDialog(page)
 
-    // Find apply/save button in server config section
-    const applyButton = page.locator('button').filter({ hasText: /適用|apply/i }).first()
-    if (await applyButton.count() > 0) {
-      // Click apply
-      await applyButton.click()
-      await page.waitForTimeout(2000)
+    const applyButton = dialog.getByRole('button', { name: '適用', exact: true })
+    await expect(applyButton, '設定に「適用」ボタンが無い').toBeVisible({ timeout: 15000 })
+    await applyButton.click()
 
-      // After restart, page should still be accessible
-      // Wait for the server to come back
-      await page.waitForTimeout(2000)
-
-      // Try to reload the page
-      await page.goto('/saihate', { waitUntil: 'domcontentloaded' })
-      await page.waitForSelector('#app', { timeout: 30000 })
-
-      const app = page.locator('#app')
-      await expect(app).toBeVisible()
-    } else {
-      // At minimum verify settings page renders
-      const app = page.locator('#app')
-      await expect(app).toBeVisible()
-    }
+    // 適用でサーバが再起動しても、画面が開き直せること
+    await page.goto('/saihate', { waitUntil: 'domcontentloaded' })
+    await page.waitForSelector('#app', { timeout: 30000 })
+    // **`.v-application` の可視で待たないこと。** 最果ては v-main の中身が空なので
+    // ルート要素の高さが 0 になり、Playwright は hidden と判定する（/kyou や /rykv では通る）。
+    // 画面ごとに「本当に出るもの」を待つ
+    await expect(page.locator('.v-toolbar-title'), '適用後に画面が開かない')
+      .toBeVisible({ timeout: 60000 })
   })
 })

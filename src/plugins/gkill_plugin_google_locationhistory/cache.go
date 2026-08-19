@@ -54,7 +54,7 @@ func (c *cache) openDB(pluginDir string) error {
 	if c.db != nil {
 		return nil
 	}
-	dbPath := cacheDBPath(pluginDir)
+	dbPath := sdk.CacheDBPath(pluginDir)
 	db, err := sql.Open("sqlite", "file:"+dbPath+
 		"?_txlock=immediate"+
 		"&_pragma=busy_timeout(6000)"+

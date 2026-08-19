@@ -30,21 +30,12 @@
 import AddNotificationView from '../views/add-notification-view.vue'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import type { AddNotificationDialogProps } from './add-notification-dialog-props'
-import type { Kyou } from '@/classes/datas/kyou'
 import { i18n } from '@/i18n'
 import { useAddNotificationDialog } from '@/classes/use-add-notification-dialog'
-import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 
 defineProps<AddNotificationDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
-
-// クリックはフォーカス移動も伴う
-const crudRelayHandlers = build_kyou_dialog_relay(emits, {
-  'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
-})
-
-const { is_show_dialog, ui, show, hide } = useAddNotificationDialog({ emits })
-
+const { is_show_dialog, ui, show, hide, crudRelayHandlers } = useAddNotificationDialog({ emits })
 defineExpose({ show, hide })
 </script>
 

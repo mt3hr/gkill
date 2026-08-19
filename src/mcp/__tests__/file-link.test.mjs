@@ -169,7 +169,10 @@ describe("HttpTransport.handleFileServe", () => {
       client: { fetchFile },
       accessLog: { info() {}, warn() {}, error() {} },
     };
-    transport = new HttpTransport(fakeServer, 0, { issuer: "https://mcp.example.test" });
+    // HttpTransport は3サーバ共通になり、スコープとファイル配信ルートの有無を options で受ける。
+    // ここはファイル配信そのものの検査なので enableFileLinks を立てる
+    transport = new HttpTransport(fakeServer, 0, { issuer: "https://mcp.example.test" },
+      { scope: "gkill:read", enableFileLinks: true });
   });
 
   afterEach(() => {

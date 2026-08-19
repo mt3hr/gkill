@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"sort"
 	"sync"
 
 	"github.com/gorilla/mux"
@@ -112,18 +111,18 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 	// plugins/ ベースディレクトリを作成する
 	pluginsBaseDir := filepath.Join(os.ExpandEnv(gkill_options.GkillHomeDir), "plugins")
 	if err := os.MkdirAll(pluginsBaseDir, fs.ModePerm); err != nil {
-		slog.Warn(fmt.Sprintf("plugins base dir create failed: %q", err))
+		slog.Log(context.Background(), gkill_log.Warn, "plugins base dir create failed", "error", fmt.Sprintf("%q", err))
 	}
 
 	// 全ユーザの plugins/{userID}/ ディレクトリを作成する
 	accounts, err := gkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(ctx)
 	if err != nil {
-		slog.Warn(fmt.Sprintf("get all accounts failed (plugin dir creation skipped): %q", err))
+		slog.Log(context.Background(), gkill_log.Warn, "get all accounts failed (plugin dir creation skipped)", "error", fmt.Sprintf("%q", err))
 	} else {
 		for _, acc := range accounts {
 			userPluginsDir := filepath.Join(pluginsBaseDir, acc.UserID)
 			if err := os.MkdirAll(userPluginsDir, fs.ModePerm); err != nil {
-				slog.Warn(fmt.Sprintf("plugin user dir create failed for %q: %q", acc.UserID, err))
+				slog.Log(context.Background(), gkill_log.Warn, "plugin user dir create failed", "user_id", fmt.Sprintf("%q", acc.UserID), "error", fmt.Sprintf("%q", err))
 				continue
 			}
 		}
@@ -248,7 +247,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			rep.File = os.ExpandEnv(rep.File)
 
 			matchFiles, _ := zglob.Glob(rep.File)
-			sort.Strings(matchFiles)
+			slices.Sort(matchFiles)
 			for _, filename := range matchFiles {
 				filename = filepath.Clean(filename)
 				isSkipLoop := false
@@ -1112,7 +1111,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		// プラグインリポジトリを追加（デバイス非依存、ユーザ別）
 		pm := g.getOrCreatePluginManager(userID)
 		if discoverErr := pm.DiscoverPlugins(ctx); discoverErr != nil {
-			slog.Warn(fmt.Sprintf("plugin discovery error for user %q: %q", userID, discoverErr))
+			slog.Log(context.Background(), gkill_log.Warn, "plugin discovery error", "user_id", fmt.Sprintf("%q", userID), "error", fmt.Sprintf("%q", discoverErr))
 		}
 		for _, pluginRepo := range pm.GetRepositories() {
 			pluginRep := pluginRepo.(reps.PluginRepository)
@@ -1220,7 +1219,7 @@ func (g *GkillDAOManager) getOrCreatePluginManager(userID string) *PluginManager
 func (g *GkillDAOManager) GetPluginManager(userID string) *PluginManager {
 	pm := g.getOrCreatePluginManager(userID)
 	if discoverErr := pm.EnsureDiscovered(context.Background()); discoverErr != nil {
-		slog.Warn(fmt.Sprintf("plugin discovery error for user %q: %q", userID, discoverErr))
+		slog.Log(context.Background(), gkill_log.Warn, "plugin discovery error", "user_id", fmt.Sprintf("%q", userID), "error", fmt.Sprintf("%q", discoverErr))
 	}
 	return pm
 }

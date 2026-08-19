@@ -7,7 +7,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-if="nlog" v-model="nlog_title_value" :label="i18n.global.t('NLOG_TITLE_TITLE')" autofocus
+        <v-text-field v-if="nlog" v-model="nlog_title_value" :label="i18n.global.t('NLOG_TITLE_TITLE')"
             :readonly="is_requested_submit" :rules="[(v: string) => !!v || i18n.global.t('REQUIRED_FIELD_MESSAGE')]" />
         <v-text-field v-if="nlog" v-model="nlog_shop_value" :label="i18n.global.t('NLOG_SHOP_NAME_TITLE')"
             :readonly="is_requested_submit" />

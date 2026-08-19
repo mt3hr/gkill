@@ -83,8 +83,8 @@ export function useCalendarQuery(options: {
         }
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function clicked_date(recved_dates: any[]): void {
+    // VDatePicker は選択された日付の配列を返す。中身の型までは保証されないので unknown で受ける
+    function clicked_date(recved_dates: Array<unknown>): void {
         if (!recved_dates || recved_dates.length === 0) {
             if (dates.value.length === 0) {
                 // props同期の書き戻し(空のまま)はユーザー操作ではないのでemitしない
@@ -96,8 +96,10 @@ export function useCalendarQuery(options: {
         }
         // Vuetify4のrange modeは[start, end]の2要素のみを受け付ける。
         // 中間日付を全て含む配列が来ても先頭と末尾のみ残す。
-        const first = recved_dates[0]
-        const last = recved_dates[recved_dates.length - 1]
+        // VDatePicker は Date を返すが、型としては保証されないのでここで揃える
+        const to_date = (value: unknown): Date => value instanceof Date ? value : moment(value as string).toDate()
+        const first = to_date(recved_dates[0])
+        const last = to_date(recved_dates[recved_dates.length - 1])
         const new_dates = recved_dates.length === 1 ? [first] : [first, last]
         // VDatePickerはprops同期で受け取ったmodel値を正規化して書き戻すことがある。
         // 日付が変わらない書き戻しはユーザー操作ではないのでemitしない

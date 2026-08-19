@@ -1,5 +1,7 @@
 'use strict'
 
+import type { Kyou } from '@/classes/datas/kyou'
+import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 import { computed, ref, type Ref } from 'vue'
 import type { ConfirmDeleteTagDialogProps } from '@/pages/dialogs/confirm-delete-tag-dialog-props'
 import type { KyouDialogEmits } from '@/pages/views/kyou-dialog-emits'
@@ -31,7 +33,13 @@ export function useConfirmDeleteTagDialog(options: {
         close_dialog_via_history(is_show_dialog)
     }
 
+    // クリックはフォーカス移動も伴う
+    const crudRelayHandlers = build_kyou_dialog_relay(emits, {
+        'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
+    })
+
     return {
+        crudRelayHandlers,
         is_show_dialog,
         ui,
         tag_highlight_targets,

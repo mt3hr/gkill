@@ -1036,7 +1036,6 @@ func (g *GkillRepositories) GetKyouHistories(ctx context.Context, id string) ([]
 
 	// 並列処理
 	for _, rep := range g.Reps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -1113,7 +1112,6 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 
 	// 並列処理
 	for _, rep := range g.TagReps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// 各repのgoroutineが同じ*FindQueryを書き換えると競合するので、構造体を値コピーする
 			clonedQuery := *query
@@ -1226,7 +1224,6 @@ func (g *GkillRepositories) GetTag(ctx context.Context, id string, updateTime *t
 
 	// 並列処理
 	for _, rep := range g.TagReps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTagInRep, err := rep.GetTag(ctx, id, updateTime)
 			if err != nil {
@@ -1291,7 +1288,6 @@ func (g *GkillRepositories) GetTagsByTagName(ctx context.Context, tagname string
 
 	// 並列処理
 	for _, rep := range g.TagReps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTagsInRep, err := rep.GetTagsByTagName(ctx, tagname)
 			if err != nil {
@@ -1393,7 +1389,6 @@ func (g *GkillRepositories) GetTagHistories(ctx context.Context, id string) ([]T
 
 	// 並列処理
 	for _, rep := range g.TagReps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTagsInRep, err := rep.GetTagHistories(ctx, id)
 			if err != nil {
@@ -1482,7 +1477,6 @@ func (g *GkillRepositories) GetAllRepNames(ctx context.Context) ([]string, error
 
 	// 並列処理
 	for _, rep := range repImpls {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			repName, err := rep.GetRepName(ctx)
 			if err != nil {
@@ -1547,7 +1541,6 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 
 	// 並列処理
 	for _, rep := range g.TextReps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// jsonからパースする
 			// 各repのgoroutineが同じ*FindQueryを書き換えると競合するので、構造体を値コピーする
@@ -1663,7 +1656,6 @@ func (g *GkillRepositories) GetText(ctx context.Context, id string, updateTime *
 
 	// 並列処理
 	for _, rep := range g.TextReps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTextInRep, err := rep.GetText(ctx, id, updateTime)
 			if err != nil {
@@ -1728,7 +1720,6 @@ func (g *GkillRepositories) GetNotification(ctx context.Context, id string, upda
 
 	// 並列処理
 	for _, rep := range g.NotificationReps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchNotificationInRep, err := rep.GetNotification(ctx, id, updateTime)
 			if err != nil {
@@ -1793,7 +1784,6 @@ func (g *GkillRepositories) GetTextsByTargetID(ctx context.Context, target_id st
 
 	// 並列処理
 	for _, rep := range g.TextReps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTextsInRep, err := rep.GetTextsByTargetID(ctx, target_id)
 			if err != nil {
@@ -1875,7 +1865,6 @@ func (g *GkillRepositories) GetNotificationsByTargetID(ctx context.Context, targ
 
 	// 並列処理
 	for _, rep := range g.NotificationReps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchNotificationsInRep, err := rep.GetNotificationsByTargetID(ctx, target_id)
 			if err != nil {
@@ -1967,7 +1956,6 @@ func (g *GkillRepositories) GetTextHistories(ctx context.Context, id string) ([]
 
 	// 並列処理
 	for _, rep := range g.TextReps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTextsInRep, err := rep.GetTextHistories(ctx, id)
 			if err != nil {
@@ -2046,7 +2034,6 @@ func (g *GkillRepositories) GetNotificationHistories(ctx context.Context, id str
 
 	// 並列処理
 	for _, rep := range g.NotificationReps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchNotificationsInRep, err := rep.GetNotificationHistories(ctx, id)
 			if err != nil {

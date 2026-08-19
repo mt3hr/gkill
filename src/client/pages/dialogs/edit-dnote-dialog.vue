@@ -24,7 +24,7 @@
             :application_config="application_config" :gkill_api="gkill_api" :query="new FindKyouQuery()"
             :checked_kyous="[]" :editable="true"
             @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-            @requested_apply_dnote="(dnote_data: Record<string, unknown>) => { emits('requested_apply_dnote', dnote_data) }"
+            @requested_apply_dnote="(dnote_data: Array<Record<string, unknown>>) => { emits('requested_apply_dnote', dnote_data) }"
             @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
             @requested_close_dialog="hide()"
             @requested_reload_application_config="(application_config: ApplicationConfig) => emits('requested_reload_application_config', application_config)"

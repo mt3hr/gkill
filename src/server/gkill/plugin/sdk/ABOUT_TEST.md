@@ -2,10 +2,10 @@
 
 ## 概要
 
-プラグイン作者向け Go SDK のテスト。**40テスト（3ファイル）**。
+プラグイン作者向け Go SDK のテスト。**45テスト（4ファイル）**。
 
 `sdk.Run()` の stdin/stdout ループ、`sdk.EnsureConfig()` の `config.json` 自動生成、
-`sdk.OpenSources()` の ZIP 走査を検証する。
+`sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置を検証する。
 SDK は gkill 本体と別プロセスで動くプラグイン側のライブラリなので、ここでの回帰は
 全プラグイン（chatgpt / claudeai / claudecode / fitbit / locationhistory / example）に同時に波及する。
 
@@ -16,6 +16,7 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 | `sdk_test.go` | 14 | `Run()` のメッセージループ（`TestRunLoop_*`） |
 | `config_test.go` | 4 | `EnsureConfig()`（`TestEnsureConfig_*`） |
 | `source_test.go` | 18 | `OpenSources()` の ZIP 走査（`TestOpenSources_*` ほか） |
+| `cache_path_test.go` | 5 | `CacheDBPath()` / `IsSafePathElement()`（`TestCacheDBPath_*`） |
 
 ## sdk_test.go — stdio ループ
 

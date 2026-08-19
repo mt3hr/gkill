@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-0 ma-0 related_kyou_list_item" :draggable="editable" :class="{ draggable: editable }"
+    <v-card class="pa-0 ma-0 related_kyou_list_item" :draggable="effective_draggable" :class="{ draggable: effective_draggable }"
         @dragstart="drag_start" @dragover="dragover" @drop="drop"
         @contextmenu.prevent.stop="(e: PointerEvent) => { if (editable) { show_context_menu(e) } }"
         @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } else { show_kyou_dialog() } }">
@@ -115,6 +115,8 @@ const {
     // Event relay objects
     kyouViewRelayHandlers,
     contextMenuRelayHandlers,
+    // DnD
+    effective_draggable,
 } = useRyuuItemView({ props, emits, model_value })
 
 defineExpose({ load_related_kyou })

@@ -146,14 +146,14 @@
                                     class="kyou_detail_view" :show_update_time="false" :show_related_time="true"
                                     :show_attached_tags="true" :show_attached_texts="true"
                                     :show_attached_notifications="true"
-                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykv_dialog_handler }" />
+                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogRelayHandlers }" />
                             </div>
                             <div class="ryuu_view dummy">
                                 <RyuuView v-if="focused_kyou && default_query" :application_config="application_config"
                                     :gkill_api="gkill_api" :target_kyou="focused_kyou" :editable="false"
                                     :find_kyou_query_default="default_query"
                                     :matched_kyous="match_kyous_list[focused_column_index] ?? null"
-                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykv_dialog_handler }" />
+                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogRelayHandlers }" />
                             </div>
                         </td>
                         <td valign="top" v-if="is_show_dnote && !is_shared_rykv_view"
@@ -162,7 +162,7 @@
                                 :app_content_width="app_content_width" :application_config="application_config"
                                 :gkill_api="gkill_api" :query="focused_query" :checked_kyous="focused_column_checked_kyous"
                                 :editable="false" :fill_height="true"
-                                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykv_dialog_handler }"
+                                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogRelayHandlers }"
                                 ref="dnote_view" />
                         </td>
                         <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
@@ -228,7 +228,7 @@
                 ref="mkfl_dialog" />
             <UploadFileDialog v-if="!is_shared_rykv_view" :app_content_height="app_content_height"
                 :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykv_dialog_handler }"
+                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogRelayHandlers }"
                 ref="upload_file_dialog" />
             <SaveClipboardToFileDialog v-if="!is_shared_rykv_view" :app_content_height="app_content_height"
                 :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
@@ -237,7 +237,7 @@
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" @closed="(id: string) => close_rykv_dialog(id)"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykv_dialog_handler }" />
+                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogRelayHandlers }" />
             <!-- ポート(rudbeckia)の中ではFABを出さない。.position-fixed は position: fixed なので
                  ダイアログを抜けて画面右下に居座り、ポート自身のFABと重なる。
                  記録の追加はポートのFABから行う（同じダイアログを開く） -->
@@ -407,7 +407,7 @@ const {
     crudRelayHandlers,
     allColumnsRequestHandlers,
     subViewFocusHandlers,
-    rykv_dialog_handler,
+    rykvDialogRelayHandlers,
 } = useRykvView({ props, emits })
 
 import { computed } from 'vue'

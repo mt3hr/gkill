@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
-import { navigateToSettings } from './crud-helpers'
+import { navigateToSettings, openApplicationConfigDialog } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
@@ -91,13 +91,10 @@ test.describe('User Config CRUD', () => {
 
   // 項番123: タグ構造適用ボタン
   test('apply tag structure changes', async ({ page }) => {
-    await navigateToSettings(page)
-    const applyButton = page.locator('button').filter({ hasText: /適用|apply/i }).first()
-    if (await applyButton.count() > 0) {
-      await expect(applyButton).toBeVisible()
-    }
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    // 設定ダイアログは歯車から開く。**最果て(/saihate)に歯車は無い**
+    const dialog = await openApplicationConfigDialog(page)
+    await expect(dialog.getByRole('button', { name: '適用', exact: true }), '設定に「適用」ボタンが無い')
+      .toBeVisible({ timeout: 15000 })
   })
 
   // 項番124: Rep構造追加
@@ -189,12 +186,9 @@ test.describe('User Config CRUD', () => {
 
   // 項番138: KFTLテンプレート構造適用ボタン
   test('apply kftl template structure changes', async ({ page }) => {
-    await navigateToSettings(page)
-    const applyButton = page.locator('button').filter({ hasText: /適用|apply/i }).first()
-    if (await applyButton.count() > 0) {
-      await expect(applyButton).toBeVisible()
-    }
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    // 設定ダイアログは歯車から開く。**最果て(/saihate)に歯車は無い**
+    const dialog = await openApplicationConfigDialog(page)
+    await expect(dialog.getByRole('button', { name: '適用', exact: true }), '設定に「適用」ボタンが無い')
+      .toBeVisible({ timeout: 15000 })
   })
 })

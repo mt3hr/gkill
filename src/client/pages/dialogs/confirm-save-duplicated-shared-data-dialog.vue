@@ -50,51 +50,16 @@
     </Teleport>
 </template>
 <script setup lang="ts">
-import { computed, type Ref, ref } from 'vue'
 import { i18n } from '@/i18n'
 import type { ConfirmSaveDuplicatedSharedDataDialogEmits } from './confirm-save-duplicated-shared-data-dialog-emits'
 import type { ConfirmSaveDuplicatedSharedDataDialogProps } from './confirm-save-duplicated-shared-data-dialog-props'
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { useFloatingDialog } from '@/classes/use-floating-dialog'
 import { format_time } from '@/classes/format-date-time'
+import { useConfirmSaveDuplicatedSharedDataDialog } from '@/classes/use-confirm-save-duplicated-shared-data-dialog'
 
 const props = defineProps<ConfirmSaveDuplicatedSharedDataDialogProps>()
 const emits = defineEmits<ConfirmSaveDuplicatedSharedDataDialogEmits>()
+const { is_show_dialog, ui, shared_summary, show, hide, confirm, cancel } = useConfirmSaveDuplicatedSharedDataDialog({ props, emits })
 defineExpose({ show, hide })
-
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-const ui = useFloatingDialog("confirm-save-duplicated-shared-data-dialog", {
-    centerMode: "always",
-    onEscape: () => cancel(),
-})
-
-// 何が重複したのかを出す。URL 共有が大半なので URL を優先する
-const shared_summary = computed(() => {
-    const payload = props.entry?.payload
-    if (!payload) {
-        return ""
-    }
-    return payload.url || payload.text || payload.title
-})
-
-async function show(): Promise<void> {
-    is_show_dialog.value = true
-}
-
-async function hide(): Promise<void> {
-    close_dialog_via_history(is_show_dialog)
-}
-
-function confirm(): void {
-    hide()
-    emits('requested_save')
-}
-
-function cancel(): void {
-    hide()
-    emits('requested_cancel')
-}
 </script>
 <style lang="css" scoped>
 .shared_data_summary {

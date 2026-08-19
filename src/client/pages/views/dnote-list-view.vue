@@ -1,7 +1,7 @@
 <template>
   <div class="dnote_list_view_root" @dragover="dragover" @drop="drop">
     <!-- ドラッグはタイトルをハンドルにする（スクロール操作と干渉しにくい） -->
-    <h2 class="dnote_list_title" :draggable="editable" :class="{ draggable: editable }" @dragstart="drag_start">
+    <h2 class="dnote_list_title" :draggable="effective_draggable" :class="{ draggable: effective_draggable }" @dragstart="drag_start">
       {{ model_value?.title ? model_value.title : "" }}
     </h2>
 
@@ -79,6 +79,8 @@ const {
   contextMenuHandlers,
   confirmDeleteHandlers,
   editDnoteListHandlers,
+    // DnD
+    effective_draggable,
 } = useDnoteListView({ props, emits, model_value })
 
 defineExpose({ load_aggregate_grouping_list, reset })

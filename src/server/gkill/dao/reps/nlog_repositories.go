@@ -28,7 +28,6 @@ func (n NlogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) 
 
 	// 並列処理
 	for _, rep := range n {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -98,7 +97,6 @@ func (n NlogRepositories) GetKyou(ctx context.Context, id string, updateTime *ti
 
 	// 並列処理
 	for _, rep := range n {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -163,7 +161,6 @@ func (n NlogRepositories) GetKyouHistories(ctx context.Context, id string) ([]Ky
 
 	// 並列処理
 	for _, rep := range n {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -261,7 +258,6 @@ func (n NlogRepositories) UpdateCache(ctx context.Context) error {
 	defer close(errch)
 
 	for _, rep := range n {
-		rep := rep
 		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -322,7 +318,6 @@ func (n NlogRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
@@ -356,6 +351,11 @@ errloop:
 }
 
 func (n NlogRepositories) FindNlog(ctx context.Context, query *find.FindQuery) ([]Nlog, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照
+	return findChunkedByIDs(ctx, query, n.findNlog)
+}
+
+func (n NlogRepositories) findNlog(ctx context.Context, query *find.FindQuery) ([]Nlog, error) {
 	matchNlogs := map[string]Nlog{}
 	existErr := false
 	var err error
@@ -367,7 +367,6 @@ func (n NlogRepositories) FindNlog(ctx context.Context, query *find.FindQuery) (
 
 	// 並列処理
 	for _, rep := range n {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchNlogsInRep, err := rep.FindNlog(ctx, query)
 			if err != nil {
@@ -443,7 +442,6 @@ func (n NlogRepositories) GetNlog(ctx context.Context, id string, updateTime *ti
 
 	// 並列処理
 	for _, rep := range n {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchNlogInRep, err := rep.GetNlog(ctx, id, updateTime)
 			if err != nil {
@@ -508,7 +506,6 @@ func (n NlogRepositories) GetNlogHistories(ctx context.Context, id string) ([]Nl
 
 	// 並列処理
 	for _, rep := range n {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchNlogsInRep, err := rep.GetNlogHistories(ctx, id)
 			if err != nil {
@@ -585,7 +582,6 @@ func (n NlogRepositories) GetNlogHistoriesByRepName(ctx context.Context, id stri
 
 	// 並列処理
 	for _, rep := range n {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
 				// repNameが一致しない場合はスキップ
@@ -703,7 +699,6 @@ func (n NlogRepositories) GetLatestDataRepositoryAddress(ctx context.Context, up
 
 	// 並列処理
 	for _, rep := range n {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {

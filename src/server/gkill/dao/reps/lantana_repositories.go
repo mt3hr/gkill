@@ -3,8 +3,8 @@ package reps
 import (
 	"context"
 	"errors"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"slices"
 	"sync"
 	"time"
@@ -28,7 +28,6 @@ func (l LantanaRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 
 	// 並列処理
 	for _, rep := range l {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -98,7 +97,6 @@ func (l LantanaRepositories) GetKyou(ctx context.Context, id string, updateTime 
 
 	// 並列処理
 	for _, rep := range l {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -163,7 +161,6 @@ func (l LantanaRepositories) GetKyouHistories(ctx context.Context, id string) ([
 
 	// 並列処理
 	for _, rep := range l {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -235,7 +232,7 @@ func (l LantanaRepositories) GetPath(ctx context.Context, id string) (string, er
 	ids := []string{id}
 	for _, rep := range l {
 		query := &find.FindQuery{
-			IDs:    ids,
+			IDs: ids,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -261,7 +258,6 @@ func (l LantanaRepositories) UpdateCache(ctx context.Context) error {
 	defer close(errch)
 
 	for _, rep := range l {
-		rep := rep
 		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -322,7 +318,6 @@ func (l LantanaRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
@@ -356,6 +351,11 @@ errloop:
 }
 
 func (l LantanaRepositories) FindLantana(ctx context.Context, query *find.FindQuery) ([]Lantana, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照
+	return findChunkedByIDs(ctx, query, l.findLantana)
+}
+
+func (l LantanaRepositories) findLantana(ctx context.Context, query *find.FindQuery) ([]Lantana, error) {
 	matchLantanas := map[string]Lantana{}
 	existErr := false
 	var err error
@@ -367,7 +367,6 @@ func (l LantanaRepositories) FindLantana(ctx context.Context, query *find.FindQu
 
 	// 並列処理
 	for _, rep := range l {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchLantanasInRep, err := rep.FindLantana(ctx, query)
 			if err != nil {
@@ -443,7 +442,6 @@ func (l LantanaRepositories) GetLantana(ctx context.Context, id string, updateTi
 
 	// 並列処理
 	for _, rep := range l {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchLantanaInRep, err := rep.GetLantana(ctx, id, updateTime)
 			if err != nil {
@@ -508,7 +506,6 @@ func (l LantanaRepositories) GetLantanaHistories(ctx context.Context, id string)
 
 	// 並列処理
 	for _, rep := range l {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchLantanasInRep, err := rep.GetLantanaHistories(ctx, id)
 			if err != nil {
@@ -585,7 +582,6 @@ func (l LantanaRepositories) GetLantanaHistoriesByRepName(ctx context.Context, i
 
 	// 並列処理
 	for _, rep := range l {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
 				// repNameが一致しない場合はスキップ
@@ -703,7 +699,6 @@ func (l LantanaRepositories) GetLatestDataRepositoryAddress(ctx context.Context,
 
 	// 並列処理
 	for _, rep := range l {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {
