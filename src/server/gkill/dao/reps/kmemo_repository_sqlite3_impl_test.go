@@ -193,7 +193,9 @@ func TestKmemoGetPath(t *testing.T) {
 // そのワードを含むレコードが確かに落ちることを確認する。
 //
 // 否定条件の生成が
-//   ( COL NOT LIKE ? OR ID NOT LIKE ? )
+//
+//	( COL NOT LIKE ? OR ID NOT LIKE ? )
+//
 // になっていたころは、IDがUUIDで検索語を含むことは実質ないため右辺が常に真になり、
 // 除外がまったく効いていなかった。ド・モルガンによりANDでなければならない。
 func TestKmemoFindKyous_NotWordFilter(t *testing.T) {
@@ -232,7 +234,9 @@ func TestKmemoFindKyous_NotWordFilter(t *testing.T) {
 // リポジトリに存在するとき、UpdateTime が最新のものが返ることを確認する。
 //
 // 集約ループのコメントは「UpdateTimeが最新のものを収める」なのに、比較が
-//   if 候補.UpdateTime.Before(現在の勝者.UpdateTime) { 現在の勝者 = 候補 }
+//
+//	if 候補.UpdateTime.Before(現在の勝者.UpdateTime) { 現在の勝者 = 候補 }
+//
 // となっており、実際には最古のものが残っていた。
 // 同種のループは全体で101箇所あり、うち24箇所がこの向き違いだった。
 func TestKmemoRepositories_GetKmemoReturnsNewestAcrossReps(t *testing.T) {

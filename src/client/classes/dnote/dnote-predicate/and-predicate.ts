@@ -4,6 +4,11 @@ import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class AndPredicate implements DnotePredicate {
     private predicates: Array<DnotePredicate> = []
+
+    /** 子の述語。外から中身を見て分岐したい呼び出し側のために公開する */
+    get_predicates(): Array<DnotePredicate> {
+        return this.predicates
+    }
     constructor(predicates: Array<DnotePredicate>) {
         this.predicates = predicates
     }

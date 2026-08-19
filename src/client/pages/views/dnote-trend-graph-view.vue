@@ -2,7 +2,7 @@
   <div class="dnote_trend_graph_view_root" @dragover="dragover" @drop="drop" @click="onGraphClick"
     @touchstart="onGraphTouchstart" @touchend="onGraphTouchend" @contextmenu.prevent.stop="onContextmenu">
     <!-- ドラッグはタイトルをハンドルにする（スクロール操作と干渉しにくい） -->
-    <h2 class="dnote_trend_graph_title" :draggable="editable" :class="{ draggable: editable }"
+    <h2 class="dnote_trend_graph_title" :draggable="effective_draggable" :class="{ draggable: effective_draggable }"
       @dragstart="drag_start">
       {{ model_value?.title ? model_value.title : "" }}
     </h2>
@@ -81,6 +81,8 @@ const {
   contextMenuHandlers,
   confirmDeleteHandlers,
   editDnoteTrendGraphHandlers,
+    // DnD
+    effective_draggable,
 } = useDnoteTrendGraphView({ props, emits, model_value })
 
 defineExpose({ load_trend_graph, reset })

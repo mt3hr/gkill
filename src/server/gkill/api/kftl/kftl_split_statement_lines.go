@@ -28,9 +28,9 @@ func (l *kftlSplitStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ 
 	return nil
 }
 
-func (l *kftlSplitStatementLine) GetLabelName() string                 { return "split" }
+func (l *kftlSplitStatementLine) GetLabelName() string                  { return "split" }
 func (l *kftlSplitStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlSplitStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlSplitStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlSplitAndNextSecondStatementLine is like Split but also increments the
 // add_second counter so subsequent entities are timestamped one second later.
@@ -53,6 +53,6 @@ func (l *kftlSplitAndNextSecondStatementLine) ApplyThisLineToRequestMap(_ contex
 	return nil
 }
 
-func (l *kftlSplitAndNextSecondStatementLine) GetLabelName() string                 { return "split+1s" }
+func (l *kftlSplitAndNextSecondStatementLine) GetLabelName() string                  { return "split+1s" }
 func (l *kftlSplitAndNextSecondStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlSplitAndNextSecondStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlSplitAndNextSecondStatementLine) GetStatementLineText() string          { return l.lineText }

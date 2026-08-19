@@ -155,9 +155,9 @@ test.describe('Dialog History Invariants', () => {
 
     // APP_BAR タイトルのプルダウンから タスク(mi) を選ぶ
     await page.locator('.v-toolbar-title').first().click()
-    await page.waitForTimeout(800)
+    // 固定sleepではなくメニューの項目が出るのを待つ（下の toBeVisible が自動でリトライする）
     const item = page.locator('.v-overlay .v-list-item-title').filter({ hasText: /タスク|task/i }).first()
-    await expect(item).toBeVisible()
+    await expect(item, '画面切替のメニューが出ない').toBeVisible({ timeout: 15000 })
     await item.click()
 
     // 遷移が実行されること (会計バグがあると /rykv のまま止まる)

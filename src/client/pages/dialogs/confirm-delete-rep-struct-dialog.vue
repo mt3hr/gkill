@@ -30,38 +30,17 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
 import ConfirmDeleteRepStructView from '../views/confirm-delete-rep-struct-view.vue';
 import type { ConfirmDeleteRepStructDialogEmits } from './confirm-delete-rep-struct-dialog-emits.ts';
 import type { ConfirmDeleteRepStructDialogProps } from './confirm-delete-rep-struct-dialog-props.ts';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data';
 import { i18n } from '@/i18n'
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
+import { useConfirmDeleteRepStructDialog } from '@/classes/use-confirm-delete-rep-struct-dialog'
 
-defineProps<ConfirmDeleteRepStructDialogProps>()
+const props = defineProps<ConfirmDeleteRepStructDialogProps>()
 const emits = defineEmits<ConfirmDeleteRepStructDialogEmits>()
+const { rep_struct, is_show_dialog, ui, show, hide } = useConfirmDeleteRepStructDialog({ props, emits })
 defineExpose({ show, hide })
-
-const rep_struct: Ref<RepStructElementData> = ref(new RepStructElementData())
-
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-const ui = useFloatingDialog("confirm-delete-rep-struct-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
-
-
-async function show(rep_struct_obj: RepStructElementData): Promise<void> {
-  rep_struct.value = rep_struct_obj
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  rep_struct.value = new RepStructElementData()
-}
 </script>
 

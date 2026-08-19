@@ -13,7 +13,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/mattn/go-zglob v0.0.6
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d

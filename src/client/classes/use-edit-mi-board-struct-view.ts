@@ -3,10 +3,9 @@ import type { EditMiBoardStructViewEmits } from '@/pages/views/edit-mi-board-str
 import type { EditMiBoardStructViewProps } from '@/pages/views/edit-mi-board-struct-view-props'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { MiBoardStructElementData } from '@/classes/datas/config/mi-board-struct-element-data'
-import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 import { move_struct_up, move_struct_down } from '@/classes/foldable-struct-move'
+import { build_error_message_relay } from '@/classes/kyou-view-relay'
 
 /**
  * Mi の板構造の編集。
@@ -110,10 +109,7 @@ export function useEditMiBoardStructView(options: {
     }
 
     // ── Event relay objects ──
-    const errorMessageRelayHandlers = {
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-    }
+    const errorMessageRelayHandlers = build_error_message_relay(emits)
 
     // ── Return ──
     return {

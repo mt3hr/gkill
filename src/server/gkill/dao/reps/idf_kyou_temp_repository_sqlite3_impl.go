@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	_ "modernc.org/sqlite"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	_ "modernc.org/sqlite"
 )
 
 type idfKyouRepositoryTempSQLite3Impl idfKyouRepositorySQLite3Impl
@@ -361,9 +361,15 @@ AND DEVICE = ?
 				return nil, err
 			}
 
-			// targetRepNameが空または現在のRepNameと異なる場合はrepNameにフォールバック
-			if targetRepName == "" || targetRepName == "." {
-				targetRepName = repName
+			// **ファイルの置き場（TARGET_REP_NAME）を捨てないこと。**
+			// ここで読んだ値は commit_tx が実リポジトリへ書き戻すときに使う。
+			// 以前は局所変数に入れたまま何にも使わず、commit_tx が
+			// idfKyou.RepName（= "IDF_TEMP"）を TARGET_REP_NAME として
+			// **実DBへ永続化**していた（キャッシュではないので UpdateCache でも直らない）。
+			// 空は「レコードと同じrepにファイルがある」の意味なので、空のまま渡す
+			idf.TargetRepName = targetRepName
+			if idf.TargetRepName == "." {
+				idf.TargetRepName = ""
 			}
 
 			// 画像であるか判定

@@ -8,7 +8,6 @@ import kyou_page from '../pages/kyou-page.vue'
 import saihate_page from '../pages/saihate-page.vue'
 import set_new_password_page from '../pages/set-new-password-page.vue'
 import shared_page from '../pages/shared-page.vue'
-import old_shared_mi_page from '../pages/old-shared-mi-page.vue'
 import plaing_timeis_page from '@/pages/plaing-time-is-page.vue'
 import mkfl_page from '@/pages/mkfl-page.vue'
 import register_first_account_page from '@/pages/register-first-account-page.vue'
@@ -91,9 +90,17 @@ const router = createRouter({
       component: shared_page,
     },
     {
+      // 旧パス。共有URLは配布済みで再発行できないので受け続ける。
+      // **コンポーネントの setup から router.replace してはいけない。**
+      // ここは `<script setup>` に top-level await のある非同期コンポーネントで、
+      // 初回ナビゲーションの解決中にその中から新しいナビゲーションを始めると
+      // 遷移が完了しなくなる（page.goto が60秒待っても返らない）。
+      // これまでは share_id が無いと `query.share_id!.toString()` が throw して
+      // setup ごと落ちていたため、**redirect 自体が一度も走っておらず**露見しなかった。
+      // /regist_first_account と同じく、ルータの redirect で置き換える。
+      // query をそのまま引き継ぐので share_id も残る
       path: '/shared_mi',
-      name: 'shared_mi',
-      component: old_shared_mi_page,
+      redirect: (to) => ({ path: '/shared_page', query: to.query }),
     },
   ]
 })

@@ -13,7 +13,7 @@ import { useConfirmUnknownTag } from '@/classes/use-confirm-unknown-tag'
 import { add_tags_to_target } from '@/classes/kyou-tags'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
-export function useAddUrlogView(options: {
+export function useAddURLogView(options: {
     props: EditURLogViewProps,
     emits: KyouViewEmits,
 }) {

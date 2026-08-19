@@ -3,7 +3,8 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToMi,
-  makeUniqueLabel, expectPageToContainText,
+  makeUniqueLabel, searchByKeyword, clickSidebarSearchButton,
+  findKyouByText,
 } from './crud-helpers'
 
 let apiReachable = false
@@ -22,123 +23,54 @@ test.describe('Search and Summary Flows', () => {
 
   // 項番66: 記録された情報を検索する
   test('search records by keyword on rykv page', async ({ page }) => {
-    // Create a record with a unique label
     const label = makeUniqueLabel('search_test')
     await submitKftlText(page, label)
 
-    // Navigate to rykv
     await navigateToRykv(page)
 
-    // Open sidebar (navigation drawer) if not already open
-    // The sidebar contains the search/query editor
-    const sidebar = page.locator('.v-navigation-drawer')
-    if (await sidebar.count() > 0 && !(await sidebar.isVisible())) {
-      // Try to find and click the hamburger/menu button to open sidebar
-      const menuBtn = page.locator('.v-app-bar button, .v-toolbar button').first()
-      if (await menuBtn.count() > 0) {
-        await menuBtn.click()
-        await page.waitForTimeout(1000)
-      }
-    }
+    // サイドバーを開く・キーワードを有効にする・入力するまでを searchByKeyword が引き受ける。
+    // 見つからなければそこで落ちるので、条件で包まない
+    await searchByKeyword(page, label)
+    // rykv_hot_reload の設定に依らず、検索ボタンで確実に走らせる
+    await clickSidebarSearchButton(page)
 
-    // Look for keyword/search input in sidebar
-    const keywordInput = page.locator('.v-navigation-drawer input[type="text"], .v-navigation-drawer .v-text-field input, .v-navigation-drawer textarea').first()
-    if (await keywordInput.count() > 0 && await keywordInput.isVisible()) {
-      await keywordInput.fill(label)
-      await page.waitForTimeout(500)
-
-      // Click search button
-      const searchBtn = page.locator('button').filter({ hasText: /検索|search/i }).first()
-      if (await searchBtn.count() > 0) {
-        await searchBtn.click()
-        await page.waitForTimeout(2000)
-
-        // Verify the record appears in results
-        await expectPageToContainText(page, label)
-      }
-    } else {
-      // If sidebar search not directly accessible, verify the page loads with content
-      const app = page.locator('#app')
-      await expect(app).toBeVisible()
-    }
+    await expect(findKyouByText(page, label).first(), '検索した記録が一覧に出ない')
+      .toBeVisible({ timeout: 30000 })
   })
 
-  // 項番69: 一日の記録サマリを閲覧する (D-note toggle on rykv)
+  // 項番69: 一日の記録サマリを閲覧する (rykv の集計ビュー)
   test('toggle dnote summary panel on rykv page', async ({ page }) => {
-    // Create some data first
     const label = makeUniqueLabel('dnote_test')
     await submitKftlText(page, label)
 
     await navigateToRykv(page)
 
-    // Look for the D-note toggle button (mdi-file-chart-outline icon)
-    const dnoteToggle = page.locator('[class*="mdi-file-chart-outline"], button[aria-label*="dnote"], button[aria-label*="D-note"]').first()
-    if (await dnoteToggle.count() > 0) {
-      await dnoteToggle.click()
-      await page.waitForTimeout(2000)
+    // 集計ビューの開閉ボタン。rykv-view.vue の mdi-file-chart-outline を持つボタン
+    const dnoteToggle = page.locator('.v-app-bar button').filter({ has: page.locator('.mdi-file-chart-outline') }).first()
+    await expect(dnoteToggle, '集計ビューの開閉ボタンが見つからない').toBeVisible({ timeout: 30000 })
 
-      // Verify D-note panel appeared
-      const app = page.locator('#app')
-      const content = await app.innerHTML()
-      expect(content.length).toBeGreaterThan(100)
-    } else {
-      // Try to find the toggle via tooltip text or button with chart icon
-      const buttons = page.locator('.v-app-bar button, .v-toolbar button')
-      const count = await buttons.count()
-      for (let i = 0; i < count; i++) {
-        const btn = buttons.nth(i)
-        const html = await btn.innerHTML()
-        if (html.includes('chart') || html.includes('file-chart')) {
-          await btn.click()
-          await page.waitForTimeout(2000)
-          break
-        }
-      }
-    }
+    const dnote = page.locator('.rykv_dnote_wrap')
+    await expect(dnote, '押す前から集計ビューが出ている').toHaveCount(0)
 
-    // Verify page is functional after toggle
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
-    const content = await app.textContent()
-    expect(content!.length).toBeGreaterThan(0)
+    await dnoteToggle.click()
+    await expect(dnote, '集計ビューが開かない').toBeVisible({ timeout: 30000 })
+
+    // もう一度押すと閉じる（開きっぱなしだと後続のテストの列幅が変わる）
+    await dnoteToggle.click()
+    await expect(dnote, '集計ビューが閉じない').toHaveCount(0, { timeout: 30000 })
   })
 
   // 項番70: タスク情報を検索する (Mi board search)
   test('search tasks by keyword on mi board page', async ({ page }) => {
-    // Create a task with unique label
     const label = makeUniqueLabel('mi_search_test')
     await submitKftlText(page, `ーみ\n${label}`)
 
-    // Navigate to Mi board
     await navigateToMi(page)
 
-    // Open sidebar for Mi query editor
-    const sidebar = page.locator('.v-navigation-drawer')
-    if (await sidebar.count() > 0 && !(await sidebar.isVisible())) {
-      const menuBtn = page.locator('.v-app-bar button, .v-toolbar button').first()
-      if (await menuBtn.count() > 0) {
-        await menuBtn.click()
-        await page.waitForTimeout(1000)
-      }
-    }
+    await searchByKeyword(page, label)
+    await clickSidebarSearchButton(page)
 
-    // Look for keyword input in Mi sidebar
-    const keywordInput = page.locator('.v-navigation-drawer input[type="text"], .v-navigation-drawer .v-text-field input, .v-navigation-drawer textarea').first()
-    if (await keywordInput.count() > 0 && await keywordInput.isVisible()) {
-      await keywordInput.fill(label)
-      await page.waitForTimeout(500)
-
-      const searchBtn = page.locator('button').filter({ hasText: /検索|search/i }).first()
-      if (await searchBtn.count() > 0) {
-        await searchBtn.click()
-        await page.waitForTimeout(2000)
-
-        await expectPageToContainText(page, label)
-      }
-    } else {
-      // If sidebar search not directly accessible, verify the page loads with content
-      const app = page.locator('#app')
-      await expect(app).toBeVisible()
-    }
+    await expect(findKyouByText(page, label).first(), '検索したタスクが板に出ない')
+      .toBeVisible({ timeout: 30000 })
   })
 })

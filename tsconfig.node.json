@@ -1,10 +1,11 @@
 {
+  // Node で動く設定ファイル（Vite / Vitest / Playwright）だけを見る。
+  // @tsconfig/node20 は「対応する最低バージョン」に合わせたもの（README の要件が Node 20.19+）。
+  // CI が Node 24 で動くことと矛盾はしない（下位互換の型定義で検査する）。
   "extends": "@tsconfig/node20/tsconfig.json",
   "include": [
     "vite.config.*",
     "vitest.config.*",
-    "cypress.config.*",
-    "nightwatch.conf.*",
     "playwright.config.*"
   ],
   "compilerOptions": {

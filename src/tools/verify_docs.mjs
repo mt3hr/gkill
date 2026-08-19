@@ -250,9 +250,37 @@ function computeTestMetrics() {
 // 1-d. その他（MCPツール数 / KFTLステートメント型数 / 用語集件数）
 // ─────────────────────────────────────────────────────────────
 function computeMiscMetrics() {
+  // MCPサーバの TOOLS は lib/*-tools.mjs のスプレッドで組み立てるので、
+  // サーバ本体のファイルだけを見ても数えられない。スプレッドを辿って数える。
+  // 書き込みサーバは読み取りツールの一部だけを載せるので、絞り込みの名前集合も見る。
+  const TOOL_MODULES = {
+    READ_TOOLS: 'src/mcp/lib/read-tools.mjs',
+    WRITE_TOOLS: 'src/mcp/lib/write-tools.mjs',
+    PLUGIN_TOOLS: 'src/mcp/lib/plugin-tools.mjs',
+  }
+  const namesIn = (rel) => (exists(rel)
+    ? [...readText(rel).matchAll(/name: *"(gkill_[a-z_0-9]+)"/g)].map((m) => m[1])
+    : [])
   const toolNames = (rel) => {
     if (!exists(rel)) return 0
-    return new Set([...readText(rel).matchAll(/name: *"(gkill_[a-z_0-9]+)"/g)].map((m) => m[1])).size
+    const src = readText(rel)
+    const names = new Set(namesIn(rel))
+    const toolsBlock = src.match(/const TOOLS = \[[\s\S]*?\n\];/)
+    if (!toolsBlock) return names.size
+    for (const spread of toolsBlock[0].matchAll(/\.\.\.(\w+)(?:\.filter\([^\n]*?(\w+)\.has)?/g)) {
+      const mod = TOOL_MODULES[spread[1]]
+      if (!mod) continue
+      let modNames = namesIn(mod)
+      if (spread[2]) {
+        const setBlock = src.match(new RegExp(`const ${spread[2]} = new Set\\(\\[([\\s\\S]*?)\\]\\)`))
+        if (setBlock) {
+          const allow = new Set([...setBlock[1].matchAll(/"(gkill_[a-z_0-9]+)"/g)].map((x) => x[1]))
+          modNames = modNames.filter((n) => allow.has(n))
+        }
+      }
+      for (const n of modNames) names.add(n)
+    }
+    return names.size
   }
   // ステートメント型 = 名前が StatementLine で終わる型のうち、基底の KFTLStatementLine を除いたもの。
   const BASE = 'KFTLStatementLine'
@@ -338,6 +366,18 @@ function computeMiscMetrics() {
     .map((f) => path.join('src/server/gkill/api/gkill_server_api', f))
   const handlerDocs = docCoverage(handlerFiles, /^func \(g \*GkillServerAPI\) Handle/)
 
+  // 書き込み後のキャッシュ反映（WriteThroughXxxCache）の呼び出し件数。
+  //   CLAUDE.md が「N箇所」と書いているのはこの数。定義側（GkillRepositories のメソッド）と
+  //   テストは除く。反映を飛ばすと最大1分だけ古い応答が見え、PWA が焼き付ける事故につながるので、
+  //   件数が動いたら CLAUDE.md も見直す、を機械で促す。
+  const writeThroughCalls = listFilesRec('src/server/gkill', (f) => f.endsWith('.go') && !f.endsWith('_test.go'))
+    .reduce((sum, f) => {
+      // 定義側（`func (r *GkillRepositories) WriteThroughXxxCache(`）とインターフェース宣言には
+      // 先行する `.` が無いので、この正規表現には最初から掛からない。
+      const src = fs.readFileSync(f, 'utf8')
+      return sum + (src.match(/\.WriteThrough\w*Cache\(/g) || []).length
+    }, 0)
+
   // dao/reps 直下のテストファイル数 / クライアント datas テストファイル数 / Wear OS Kotlin ファイル数
   const repsTestFiles = listFiles('src/server/gkill/dao/reps', (f) => f.endsWith('_test.go')).length
   const datasTestFiles = listFiles('src/client/__tests__/unit/datas', (f) => f.endsWith('.test.ts')).length
@@ -345,6 +385,7 @@ function computeMiscMetrics() {
   const wearWatchKt = listFilesRec('src/wear_os/watch_app/src/main', (f) => f.endsWith('.kt')).length
 
   return {
+    writeThroughCalls,
     mcpReadTools: toolNames('src/mcp/gkill-read-server.mjs'),
     mcpWriteTools: toolNames('src/mcp/gkill-write-server.mjs'),
     mcpReadWriteTools: toolNames('src/mcp/gkill-readwrite-server.mjs'),
@@ -467,10 +508,11 @@ function buildCountAssertions(m) {
   add('src/mcp/ABOUT_TEST.md', `${m.mcpTests}テスト（${m.mcpTestFiles}ファイル）`)
   add('src/wear_os/ABOUT_TEST.md', `合計${m.wearCompanionTests + m.wearWatchTests}テスト`)
 
-  // ── MCP ツール数（プラグイン2ツールは3サーバ共通）
-  const mcpRead = m.mcpReadTools + m.mcpPluginTools
-  const mcpWrite = m.mcpWriteTools + m.mcpPluginTools
-  const mcpRW = m.mcpReadWriteTools + m.mcpPluginTools
+  // ── MCP ツール数。toolNames がスプレッド (lib/*-tools.mjs) を辿るので、
+  //    プラグインツールもそこに含まれる（別途足さない）
+  const mcpRead = m.mcpReadTools
+  const mcpWrite = m.mcpWriteTools
+  const mcpRW = m.mcpReadWriteTools
   add('CLAUDE.md', `| Read | ${mcpRead} (`)
   add('CLAUDE.md', `| Write | ${mcpWrite} (`)
   add('CLAUDE.md', `| ReadWrite | ${mcpRW} (`)
@@ -505,6 +547,7 @@ function buildCountAssertions(m) {
   // ── handle_*.go ファイル数（CLAUDE.md / サーバ系README）
   const handlerTests = m.handlers - m.handlersImpl
   add('CLAUDE.md', `HTTP API handlers (${m.handlers} files incl. tests, 1 handler per file)`)
+  add('CLAUDE.md', `repositories.WriteThroughXxxCache(ctx, ...)\` を使うこと（${m.writeThroughCalls}箇所）`)
   add('src/server/README.md', `（${m.handlers} handle_*.go`)
   add('src/server/gkill/api/README.md', `handle_*.go は${m.handlers}ファイル（実装${m.handlersImpl} + テスト${handlerTests}）`)
   add('src/server/gkill/api/gkill_server_api/README.md', `実装${m.handlersImpl}ファイル + テスト${handlerTests}ファイル`)

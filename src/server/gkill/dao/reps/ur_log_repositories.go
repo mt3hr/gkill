@@ -28,7 +28,6 @@ func (u URLogRepositories) FindKyous(ctx context.Context, query *find.FindQuery)
 
 	// 並列処理
 	for _, rep := range u {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -98,7 +97,6 @@ func (u URLogRepositories) GetKyou(ctx context.Context, id string, updateTime *t
 
 	// 並列処理
 	for _, rep := range u {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -163,7 +161,6 @@ func (u URLogRepositories) GetKyouHistories(ctx context.Context, id string) ([]K
 
 	// 並列処理
 	for _, rep := range u {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -261,7 +258,6 @@ func (u URLogRepositories) UpdateCache(ctx context.Context) error {
 	defer close(errch)
 
 	for _, rep := range u {
-		rep := rep
 		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -322,7 +318,6 @@ func (u URLogRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
@@ -356,6 +351,11 @@ errloop:
 }
 
 func (u URLogRepositories) FindURLog(ctx context.Context, query *find.FindQuery) ([]URLog, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照
+	return findChunkedByIDs(ctx, query, u.findURLog)
+}
+
+func (u URLogRepositories) findURLog(ctx context.Context, query *find.FindQuery) ([]URLog, error) {
 	matchURLogs := map[string]URLog{}
 	existErr := false
 	var err error
@@ -367,7 +367,6 @@ func (u URLogRepositories) FindURLog(ctx context.Context, query *find.FindQuery)
 
 	// 並列処理
 	for _, rep := range u {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchURLogsInRep, err := rep.FindURLog(ctx, query)
 			if err != nil {
@@ -443,7 +442,6 @@ func (u URLogRepositories) GetURLog(ctx context.Context, id string, updateTime *
 
 	// 並列処理
 	for _, rep := range u {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchURLogInRep, err := rep.GetURLog(ctx, id, updateTime)
 			if err != nil {
@@ -508,7 +506,6 @@ func (u URLogRepositories) GetURLogHistories(ctx context.Context, id string) ([]
 
 	// 並列処理
 	for _, rep := range u {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchURLogsInRep, err := rep.GetURLogHistories(ctx, id)
 			if err != nil {
@@ -585,7 +582,6 @@ func (u URLogRepositories) GetURLogHistoriesByRepName(ctx context.Context, id st
 
 	// 並列処理
 	for _, rep := range u {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
 				// repNameが一致しない場合はスキップ
@@ -703,7 +699,6 @@ func (u URLogRepositories) GetLatestDataRepositoryAddress(ctx context.Context, u
 
 	// 並列処理
 	for _, rep := range u {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {

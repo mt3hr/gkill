@@ -131,6 +131,17 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 			})
 			return gkillErrors, nil
 		}
+		// **クライアントがエコーした rep_name をそのままキャッシュへ入れない。**
+		// 実体は WriteReKyouRep（書き込み先rep）へ足したので、キャッシュ表の REP_NAME もそこに合わせる。
+		// 取得元repの名前のまま入れると、端末別にrepを分けている環境で他端末由来の記録を編集したとき、
+		// find_filter.go の filterKyousByRepName が「非空で、指定repに無い名前」として落とし、
+		// **更新直後だけ一覧から消えて次の UpdateCache（最大1分）で戻る**。
+		// 取れなければ空にする ―― 空は filterKyousByRepName が残すので安全側。
+		if writeRepName, repNameErr := repositories.WriteReKyouRep.GetRepName(ctx); repNameErr == nil {
+			rekyou.RepName = writeRepName
+		} else {
+			rekyou.RepName = ""
+		}
 		err = repositories.WriteThroughReKyouCache(ctx, rekyou)
 		if err != nil {
 			err = fmt.Errorf("error at update rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)

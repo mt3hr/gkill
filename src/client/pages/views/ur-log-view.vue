@@ -38,24 +38,8 @@
         <URLogContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" ref="context_menu"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-            @deleted_kyou="crudRelayHandlers['deleted_kyou']"
-            @deleted_tag="crudRelayHandlers['deleted_tag']"
-            @deleted_text="crudRelayHandlers['deleted_text']"
-            @deleted_notification="crudRelayHandlers['deleted_notification']"
-            @registered_kyou="crudRelayHandlers['registered_kyou']"
-            @registered_tag="crudRelayHandlers['registered_tag']"
-            @registered_text="crudRelayHandlers['registered_text']"
-            @registered_notification="crudRelayHandlers['registered_notification']"
-            @updated_kyou="crudRelayHandlers['updated_kyou']"
-            @updated_tag="crudRelayHandlers['updated_tag']"
-            @updated_text="crudRelayHandlers['updated_text']"
-            @updated_notification="crudRelayHandlers['updated_notification']"
-            @received_errors="crudRelayHandlers['received_errors']"
-            @received_messages="crudRelayHandlers['received_messages']"
-            @requested_reload_kyou="crudRelayHandlers['requested_reload_kyou']"
-            @requested_reload_list="crudRelayHandlers['requested_reload_list']"
-            @requested_update_check_kyous="crudRelayHandlers['requested_update_check_kyous']"
-            @requested_open_rykv_dialog="crudRelayHandlers['requested_open_rykv_dialog']" />
+            v-on="crudRelayHandlers"
+            />
     </v-card>
 </template>
 <script setup lang="ts">

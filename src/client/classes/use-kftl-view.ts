@@ -21,6 +21,7 @@ import type { ComponentRef } from '@/classes/component-ref'
 import { useConfirmUnknownMiBoard } from '@/classes/use-confirm-unknown-mi-board'
 import { useKftlTabs } from '@/classes/use-kftl-tabs'
 import { derive_kftl_tab_label, type KFTLEditorViewState, type KFTLTabState } from '@/classes/kftl-tabs'
+import { build_error_message_relay } from '@/classes/kyou-view-relay'
 
 /**
  * textarea の id の接頭辞。
@@ -820,10 +821,7 @@ export function useKftlView(options: {
     }
 
     // ── Event relay objects ──
-    const errorMessageRelayHandlers = {
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-    }
+    const errorMessageRelayHandlers = build_error_message_relay(emits)
 
     // ── Return ──
     return {

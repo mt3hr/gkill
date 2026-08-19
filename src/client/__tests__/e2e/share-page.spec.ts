@@ -28,6 +28,6 @@ test.describe('Share Page', () => {
     await expect(spinner, '読み込み中のまま止まっている').toBeHidden({ timeout: 30000 })
 
     // エラーが利用者に伝わること（shared-page.vue の v-alert は role="alert"）
-    await expect(page.locator('[role="alert"]').first(), 'エラーが表示されない').toBeVisible({ timeout: 30000 })
+    await expect(page.locator('.v-alert[role="alert"]').first(), 'エラーが表示されない').toBeVisible({ timeout: 30000 })
   })
 })

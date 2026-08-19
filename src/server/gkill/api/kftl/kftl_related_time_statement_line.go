@@ -85,6 +85,6 @@ func (l *kftlRelatedTimeStatementLine) ApplyThisLineToRequestMap(_ context.Conte
 	return nil
 }
 
-func (l *kftlRelatedTimeStatementLine) GetLabelName() string                 { return "relatedTime" }
+func (l *kftlRelatedTimeStatementLine) GetLabelName() string                  { return "relatedTime" }
 func (l *kftlRelatedTimeStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlRelatedTimeStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlRelatedTimeStatementLine) GetStatementLineText() string          { return l.lineText }

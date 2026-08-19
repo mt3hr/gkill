@@ -53,39 +53,15 @@
 <script setup lang="ts">
 import type { KyouHistoriesDialogProps } from './kyou-histories-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
-import { type Ref, ref } from 'vue'
 import KyouView from '../views/kyou-view.vue'
 import KyouHistoriesView from '../views/kyou-histories-view.vue'
-import type { Kyou } from '@/classes/datas/kyou'
-import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
-
-defineProps<KyouHistoriesDialogProps>()
-const emits = defineEmits<KyouDialogEmits>()
-
-// クリックはフォーカス移動も伴う
-const crudRelayHandlers = build_kyou_dialog_relay(emits, {
-  'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
-})
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog, { onClosed: () => emits('closed') })
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("kyou-histories-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useKyouHistoriesDialog } from '@/classes/use-kyou-histories-dialog'
 
-const show_kyou: Ref<boolean> = ref(false)
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const props = defineProps<KyouHistoriesDialogProps>()
+const emits = defineEmits<KyouDialogEmits>()
+const { crudRelayHandlers, is_show_dialog, ui, show_kyou, show, hide } = useKyouHistoriesDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 
 

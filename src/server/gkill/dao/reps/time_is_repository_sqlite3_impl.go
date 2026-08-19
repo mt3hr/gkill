@@ -5,20 +5,20 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"slices"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
 
 	sqllib "database/sql"
 
-	_ "modernc.org/sqlite"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
+	_ "modernc.org/sqlite"
 )
 
 const CURRENT_SCHEMA_VERSION_TIMEIS_REPOSITORY_SQLITE3IMPL_DAO = "1.0.0"

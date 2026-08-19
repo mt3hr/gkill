@@ -24,12 +24,9 @@
                                     :enable_dialog="false" :show_content_only="false"
                                     :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
                                     :show_rep_name="false" :force_show_latest_kyou_info="true"
-                                    @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
                                     @focused_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
                                     @clicked_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
                                     v-on="crudRelayHandlers"
-                                    @deleted_kyou="(deleted_kyou: Kyou) => onDeletedKyou(deleted_kyou)"
-                                    @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
                                     ref="kyou_list_view" />
                             </v-card>
                         </td>
@@ -61,7 +58,7 @@
                                                     :enable_dialog="false" :show_update_time="false" :show_related_time="true"
                                                     class="kyou_detail_view" :show_attached_tags="true"
                                                     :show_attached_texts="true" :show_attached_notifications="true"
-                                                    v-on="{ ...crudRelayHandlers, ...rykv_dialog_handler }" />
+                                                    v-on="crudRelayHandlers" />
                                             </div>
                                         </td>
                                     </tr>
@@ -73,19 +70,12 @@
             </table>
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="false" :enable_dialog="false"
-                @closed="(id: string) => close_rykv_dialog(id)"
-                @focused_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
-                @clicked_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
-                @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
-                @requested_reload_list="() => { }"
-                v-on="{ ...crudRelayHandlers, ...rykv_dialog_handler }"
-                @deleted_kyou="(deleted_kyou: Kyou) => onDeletedKyou(deleted_kyou)" />
+                v-on="rykvDialogHandlers" />
         </v-main>
     </div>
 </template>
 <script setup lang="ts">
 import type { SharedMiViewProps } from './shared-mi-view-props'
-import type { RykvDialogKind, RykvDialogPayload } from "./rykv-dialog-kind"
 
 import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'
@@ -117,15 +107,9 @@ const {
     // Computed
     kyou_list_view_height,
 
-    // Business logic
-    reload_kyou,
-    onDeletedKyou,
-    open_rykv_dialog,
-    close_rykv_dialog,
-
     // Event relay objects
     crudRelayHandlers,
-    rykv_dialog_handler,
+    rykvDialogHandlers,
 } = useSharedMiView({ props, emits })
 </script>
 <style lang="css" scoped>

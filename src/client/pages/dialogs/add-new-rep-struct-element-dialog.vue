@@ -29,38 +29,18 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { AddNewRepStructElementDialogEmits } from './add-new-rep-struct-element-dialog-emits'
 import type { AddNewRepStructElementDialogProps } from './add-new-rep-struct-element-dialog-props'
 import AddNewRepStructElementView from '../views/add-new-rep-struct-element-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
-
-const add_new_rep_struct_element_view = ref<InstanceType<typeof AddNewRepStructElementView> | null>(null);
-
-defineProps<AddNewRepStructElementDialogProps>()
-const emits = defineEmits<AddNewRepStructElementDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("add-new-rep-struct-element-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useAddNewRepStructElementDialog } from '@/classes/use-add-new-rep-struct-element-dialog'
 
-
-async function show(): Promise<void> {
-  add_new_rep_struct_element_view.value?.reset_rep_name()
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  add_new_rep_struct_element_view.value?.reset_rep_name()
-}
+const props = defineProps<AddNewRepStructElementDialogProps>()
+const emits = defineEmits<AddNewRepStructElementDialogEmits>()
+const { is_show_dialog, ui, show, hide } = useAddNewRepStructElementDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

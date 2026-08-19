@@ -485,7 +485,7 @@ WHERE
 
 	targetIDs := []string{target_id}
 	query := &find.FindQuery{
-		Words:    targetIDs,
+		Words: targetIDs,
 	}
 	queryArgs := []any{
 		dataType,
@@ -913,7 +913,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		IDs:    ids,
+		IDs: ids,
 	}
 	queryArgs := []any{
 		dataType,

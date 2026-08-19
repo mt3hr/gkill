@@ -91,13 +91,25 @@ function kyouIds(list: unknown): string[] {
   return (list as Array<{ id: string }>).map((kyou) => kyou.id)
 }
 
+/**
+ * このテストが rykv / mi の両方に対して触る部分だけを書いた形。
+ * コンポーザブルの返り値はもっと大きいが、ここでは必要な口だけを見る。
+ */
+interface ColumnViewUnderTest {
+  querys: { value: Array<unknown> }
+  match_kyous_list: { value: Array<Array<unknown>> }
+  insert_registered_kyou: (kyou: unknown) => void
+  crudRelayHandlers: { registered_kyou: (kyou: unknown) => void }
+  allColumnsRequestHandlers: { requested_reload_list: () => void }
+}
+
 interface ViewCase {
   name: string
   create: () => {
     api: ReturnType<typeof createColumnViewMockApi>['api']
     pending_get_kyous: ReturnType<typeof createColumnViewMockApi>['pending_get_kyous']
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    view: any
+    // rykv / mi のコンポーザブルは返す形が違うので、共通の呼び口だけを書く
+    view: ColumnViewUnderTest
   }
 }
 
@@ -114,10 +126,9 @@ const view_cases: ViewCase[] = [
         app_content_width: 800,
         is_shared_rykv_view: false,
         share_title: '',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return { api, pending_get_kyous, view: useRykvView({ props, emits: (() => { }) as any }) }
+      } as unknown as Parameters<typeof useRykvView>[0]['props']
+      const emits = (() => { }) as unknown as Parameters<typeof useRykvView>[0]['emits']
+      return { api, pending_get_kyous, view: useRykvView({ props, emits }) as unknown as ColumnViewUnderTest }
     },
   },
   {
@@ -130,10 +141,9 @@ const view_cases: ViewCase[] = [
         app_title_bar_height: 50,
         app_content_height: 600,
         app_content_width: 800,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return { api, pending_get_kyous, view: useMiView({ props, emits: (() => { }) as any }) }
+      } as unknown as Parameters<typeof useMiView>[0]['props']
+      const emits = (() => { }) as unknown as Parameters<typeof useMiView>[0]['emits']
+      return { api, pending_get_kyous, view: useMiView({ props, emits }) as unknown as ColumnViewUnderTest }
     },
   },
 ]

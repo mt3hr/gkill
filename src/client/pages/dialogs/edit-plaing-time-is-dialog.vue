@@ -55,50 +55,16 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue'
 import { i18n } from '@/i18n'
 import HelpDialog from './help-dialog.vue'
 import FindTimeIsQueryEditorDialog from './find-time-is-query-editor-dialog.vue'
-import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { PlaingTimeIsConfig } from '@/classes/datas/config/plaing-time-is-config'
 import type { EditPlaingTimeIsDialogProps } from './edit-plaing-time-is-dialog-props'
 import type { EditPlaingTimeIsDialogEmits } from './edit-plaing-time-is-dialog-emits'
 import { useEditPlaingTimeIsDialog } from '@/classes/use-edit-plaing-time-is-dialog'
 
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-const find_time_is_query_editor_dialog = ref<InstanceType<typeof FindTimeIsQueryEditorDialog> | null>(null)
 const props = defineProps<EditPlaingTimeIsDialogProps>()
 const emits = defineEmits<EditPlaingTimeIsDialogEmits>()
-
-const { is_show_dialog, ui, current_query, editor_model, is_use_custom_find_kyou_query, show, hide } = useEditPlaingTimeIsDialog({ props, emits })
-
-function open_query_editor(): void {
-    // このボタンはチェックONのときだけ出るので current_query は必ず非null
-    const initial = current_query.value ?? FindKyouQuery.generate_default_query_for_plaing_timeis(props.application_config)
-    editor_model.value = initial
-    find_time_is_query_editor_dialog.value?.show(initial)
-}
-
-// エディタのSaveはローカル反映のみ。永続化はこのダイアログのSaveで確定する
-// （dashboard版と違い、キャンセルすれば破棄される）
-function onAppliedQuery(query: FindKyouQuery): void {
-    current_query.value = query
-}
-
-function emit_current_config(): void {
-    const config = new PlaingTimeIsConfig()
-    config.plaing_timeis_find_kyou_query = current_query.value
-    emits('requested_apply_plaing_timeis', config.to_json())
-}
-
-function onSave(): void {
-    emit_current_config()
-    hide()
-}
-
-function onCancel(): void {
-    hide()
-}
+const { is_show_dialog, ui, editor_model, is_use_custom_find_kyou_query, show, hide, help_dialog, find_time_is_query_editor_dialog, open_query_editor, onAppliedQuery, onSave, onCancel } = useEditPlaingTimeIsDialog({ props, emits })
 
 defineExpose({ show, hide })
 </script>

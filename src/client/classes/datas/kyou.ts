@@ -1,5 +1,7 @@
 'use strict'
 
+import { log_unless_aborted } from '@/classes/abort-error'
+import delete_gkill_kyou_cache from '../delete-gkill-cache'
 import { InfoBase } from './info-base'
 import { GkillError } from '../api/gkill-error'
 import { GitCommitLog } from './git-commit-log'
@@ -126,11 +128,8 @@ export class Kyou extends InfoBase {
                 return errors
             })
         } catch (err: unknown) {
-            // abortは握りつぶす
-            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
-                // abort以外はエラー出力する
-                console.error(err)
-            }
+            // 中断（画面を離れた・後発の検索に差し替わった）は正常なので出さない
+            log_unless_aborted(err)
         }
         return []
     }
@@ -220,11 +219,8 @@ export class Kyou extends InfoBase {
                 return errors
             })
         } catch (err: unknown) {
-            // abortは握りつぶす
-            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
-                // abort以外はエラー出力する
-                console.error(err)
-            }
+            // 中断（画面を離れた・後発の検索に差し替わった）は正常なので出さない
+            log_unless_aborted(err)
         }
         return []
     }
@@ -602,7 +598,22 @@ export class Kyou extends InfoBase {
 
     // 最新のメタ情報を取得したうえで、typedデータ（typed_timeis等）も強制的に再取得する。
     // 表示時点でKyouを最新化しておき、終了操作などでの読み込み待ちをなくすために使う。
+    //
+    // **これは「この場で自分自身を書き換える」引き直しで、通常の引き直しとは別物。**
+    // 表示の更新に使う引き直しは `classes/kyou-reload.ts` の `refresh_kyou` を使うこと
+    // （新しいインスタンスを返し、飛行中の引き直しへ合流し、スピナーも出る）。
+    // ここが in-place なのは、唯一の呼び出し元である TimeIsView が
+    // 「親から渡された Kyou そのもの」を温めておく必要があるため。
+    // その副作用として親の `is_typed_data_loaded` が途中で倒れるので、
+    // KyouView は自分が始めた読み込みだけを追う（`use-kyou-view.ts` の `is_typed_datas_loading`）。
     async reload_with_typed_datas(query?: FindKyouQuery): Promise<Array<GkillError>> {
+        // ServiceWorker が get_kyou をキャッシュ優先で返すので、消してから引き直す。
+        // これが無いと「最新化した」つもりで古い応答をそのまま読むことがある
+        try {
+            await delete_gkill_kyou_cache(this.id)
+        } catch (_e) {
+            // Cache API が使えない環境ではスキップ
+        }
         const errors = await this.reload(true, query)
         this.is_typed_data_loaded = false
         return errors.concat(await this.load_typed_datas(query))

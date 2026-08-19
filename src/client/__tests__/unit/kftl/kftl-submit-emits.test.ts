@@ -67,17 +67,17 @@ beforeEach(() => {
     // 落とさないとテスト間でタブと本文が漏れる
     localStorage.clear()
     reset_kftl_tabs_for_test();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (globalThis as any).ResizeObserver = class {
+    // jsdom には ResizeObserver が無いので最小の実装を差し込む
+    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = class {
         observe(): void { }
         unobserve(): void { }
         disconnect(): void { }
     }
+    // 行ラベルの幅計算に使う分だけの2Dコンテキスト。jsdom は canvas を持たない
     HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
         font: '',
         measureText: (text: string) => ({ width: text.length * 8 }),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    })) as any
+    })) as unknown as typeof HTMLCanvasElement.prototype.getContext
     text_area_element = document.createElement('textarea')
     text_area_element.id = 'kftl_text_area'
     Object.defineProperty(text_area_element, 'clientWidth', { value: 600, configurable: true })
@@ -105,10 +105,11 @@ function mount_view(api: unknown) {
                 application_config: application_config,
                 app_content_height: 600,
                 app_content_width: 800,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } as any
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            view = useKftlView({ props, emits: emits as any })
+            } as unknown as Parameters<typeof useKftlView>[0]['props']
+            view = useKftlView({
+                props,
+                emits: emits as unknown as Parameters<typeof useKftlView>[0]['emits'],
+            })
             return () => h('div')
         },
     })

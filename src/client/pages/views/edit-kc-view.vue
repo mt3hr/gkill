@@ -16,7 +16,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-model="title" :label="i18n.global.t('KC_TITLE_TITLE')" autofocus
+        <v-text-field v-model="title" :label="i18n.global.t('KC_TITLE_TITLE')"
             :readonly="is_busy" />
         <v-text-field type="number" v-model="num_value" :label="i18n.global.t('KC_NUM_VALUE_TITLE')"
             :readonly="is_busy" />

@@ -53,8 +53,7 @@ const dialogs = [
 
 describe.each(dialogs)('$name の show()', ({ use }) => {
     test('query_idが空(値が未セット)ならそのまま渡し、エディタの既定適用判定を潰さない', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const view = use(make_options() as any)
+        const view = use(make_options() as unknown as Parameters<typeof use>[0])
         await view.show(new FindKyouQuery())
         await flush()
 
@@ -62,8 +61,7 @@ describe.each(dialogs)('$name の show()', ({ use }) => {
     })
 
     test('セット済みのクエリは呼び出し元とID衝突しないよう新IDへ振り直す(既存値優先)', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const view = use(make_options() as any)
+        const view = use(make_options() as unknown as Parameters<typeof use>[0])
         const stored = new FindKyouQuery()
         stored.query_id = 'stored-id'
         stored.keywords = '保存済みの条件'

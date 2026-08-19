@@ -18,7 +18,7 @@ type KyouMCPDTO struct {
 	Texts         []string             `json:"texts,omitempty"`
 	Notifications []NotificationMCPDTO `json:"notifications,omitempty"`
 	TimeIs        []TimeIsMCPDTO       `json:"timeis,omitempty"`
-	Payload       any          `json:"payload,omitempty"`
+	Payload       any                  `json:"payload,omitempty"`
 }
 
 // TimeIsMCPDTO は attached TimeIs（Plaing TimeIs）用DTO

@@ -3,8 +3,8 @@ package reps
 import (
 	"context"
 	"errors"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"slices"
 	"sync"
 	"time"
@@ -28,7 +28,6 @@ func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -134,7 +133,6 @@ func (t TimeIsRepositories) GetKyou(ctx context.Context, id string, updateTime *
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -199,7 +197,6 @@ func (t TimeIsRepositories) GetKyouHistories(ctx context.Context, id string) ([]
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -297,7 +294,6 @@ func (t TimeIsRepositories) UpdateCache(ctx context.Context) error {
 	defer close(errch)
 
 	for _, rep := range t {
-		rep := rep
 		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -358,7 +354,6 @@ func (t TimeIsRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
@@ -392,6 +387,11 @@ errloop:
 }
 
 func (t TimeIsRepositories) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]TimeIs, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照
+	return findChunkedByIDs(ctx, query, t.findTimeIs)
+}
+
+func (t TimeIsRepositories) findTimeIs(ctx context.Context, query *find.FindQuery) ([]TimeIs, error) {
 	matchTimeIss := map[string]TimeIs{}
 	existErr := false
 	var err error
@@ -403,7 +403,6 @@ func (t TimeIsRepositories) FindTimeIs(ctx context.Context, query *find.FindQuer
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTimeIssInRep, err := rep.FindTimeIs(ctx, query)
 			if err != nil {
@@ -488,7 +487,6 @@ func (t TimeIsRepositories) GetTimeIs(ctx context.Context, id string, updateTime
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTimeIsInRep, err := rep.GetTimeIs(ctx, id, updateTime)
 			if err != nil {
@@ -553,7 +551,6 @@ func (t TimeIsRepositories) GetTimeIsHistories(ctx context.Context, id string) (
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTimeIssInRep, err := rep.GetTimeIsHistories(ctx, id)
 			if err != nil {
@@ -630,7 +627,6 @@ func (t TimeIsRepositories) GetTimeIsHistoriesByRepName(ctx context.Context, id 
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
 				// repNameが一致しない場合はスキップ
@@ -748,7 +744,6 @@ func (t TimeIsRepositories) GetLatestDataRepositoryAddress(ctx context.Context, 
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {

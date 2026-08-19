@@ -30,20 +30,27 @@ let viteApiReachable = false
 
 function probeGkillApiViaVite(timeoutMs: number): Promise<boolean> {
   return new Promise((resolve) => {
+    // **/api/login を叩いてはいけない。** handle_login.go は資格情報の検証より前に
+    // ログインのレート制限（IP毎 15分に10回）を1回消費する。
+    // このプローブのキャッシュはワーカープロセス単位で、Playwright はテスト失敗のたびに
+    // ワーカーを作り直すので、失敗が続くとプローブが繰り返されて枠を食い潰し、
+    // 本物のログイン（setup / login.spec.ts / ログアウトのテスト）まで巻き添えで落ちる。
+    // get_application_config は wrapAuth なので未認証でも
+    // Content-Type: application/json のエラー応答が返る（レート制限は無い）。
     const req = http.request(
-      { hostname: viteUrl.hostname, port: vitePort, path: '/api/login', method: 'POST', timeout: timeoutMs,
+      { hostname: viteUrl.hostname, port: vitePort, path: '/api/get_application_config', method: 'POST', timeout: timeoutMs,
         headers: { 'Content-Type': 'application/json' } },
       (res) => {
-        // If Vite proxies to gkill, we get a JSON response (200 or error with JSON body).
-        // If Vite doesn't proxy, we get 404 or HTML.
+        // Vite が gkill へプロキシしていれば JSON が返る。
+        // プロキシしていなければ 404 か HTML が返る
         const ct = res.headers['content-type'] || ''
         res.resume()
-        resolve(ct.includes('application/json') || res.statusCode === 200)
+        resolve(ct.includes('application/json'))
       },
     )
     req.on('error', () => resolve(false))
     req.on('timeout', () => { req.destroy(); resolve(false) })
-    req.write(JSON.stringify({ user_id: '', password_sha256: '' }))
+    req.write(JSON.stringify({ session_id: '', locale_name: 'ja' }))
     req.end()
   })
 }

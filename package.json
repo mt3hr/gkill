@@ -6,11 +6,11 @@
   "scripts": {
     "dev": "node src/tools/dev.mjs",
     "mcp:gkill-read": "node src/mcp/gkill-read-server.mjs",
-    "mcp:gkill-read-http": "node src/mcp/gkill-read-server.mjs",
+    "mcp:gkill-read-http": "cross-env MCP_TRANSPORT=http MCP_PORT=8808 node src/mcp/gkill-read-server.mjs",
     "mcp:gkill-write": "node src/mcp/gkill-write-server.mjs",
-    "mcp:gkill-write-http": "node src/mcp/gkill-write-server.mjs",
+    "mcp:gkill-write-http": "cross-env MCP_TRANSPORT=http MCP_PORT=8809 node src/mcp/gkill-write-server.mjs",
     "mcp:gkill-readwrite": "node src/mcp/gkill-readwrite-server.mjs",
-    "mcp:gkill-readwrite-http": "node src/mcp/gkill-readwrite-server.mjs",
+    "mcp:gkill-readwrite-http": "cross-env MCP_TRANSPORT=http MCP_PORT=8810 node src/mcp/gkill-readwrite-server.mjs",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
@@ -60,8 +60,9 @@
     "test_e2e_server": "gkill_server --gkill_home_dir \"$HOME/gkill_test\" --address :19999 --disable_tls --log none",
     "test_mcp": "vitest run --config vitest.config.mcp.ts",
     "test_plugins": "node src/tools/test_plugins.mjs",
-    "test_android": "cd src/android && bash gradlew test",
-    "test_wear_os": "cd src/wear_os && bash gradlew test"
+    "vet_plugins": "node src/tools/test_plugins.mjs vet",
+    "test_android": "node src/tools/gradle_test.mjs src/android",
+    "test_wear_os": "node src/tools/gradle_test.mjs src/wear_os"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.0.2",

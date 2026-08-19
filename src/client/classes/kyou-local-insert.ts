@@ -526,3 +526,24 @@ export function decide_local_insert(kyou: Kyou, query: FindKyouQuery): LocalInse
     }
     return { kind: 'insert', rows: [kyou] }
 }
+
+/**
+ * リストから id の一致する Kyou を全部取り除く。
+ *
+ * 走査は生の配列に対して行う。deepなref配下のリアクティブProxy越しに読むと
+ * 1要素ごとに track と toReactive が走り、要素ぶんのProxyを確保する(30万件の列では効く)。
+ * **splice は必ずリアクティブな `list` に対して行うこと**(でないと誰にも通知されない)。
+ * 後ろから走るので、splice しても未走査側のインデックスはずれない。
+ *
+ * 同じ関数が5つのコンポーザブルに複製されていて、この toRaw の最適化は
+ * rykv / mi の2本にしか入っていなかった。追加(insert_kyou_sorted)と対になるので
+ * ここに置いて全員が同じものを使う。
+ */
+export function remove_kyou_from_list_by_id(list: Array<Kyou>, deleted_id: string): void {
+    const raw_list = toRaw(list)
+    for (let i = raw_list.length - 1; i >= 0; i--) {
+        if (raw_list[i].id === deleted_id) {
+            list.splice(i, 1)
+        }
+    }
+}

@@ -49,39 +49,13 @@
     </Teleport>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
 import { i18n } from '@/i18n'
 import type { ConfirmUnknownMiBoardDialogEmits } from './confirm-unknown-mi-board-dialog-emits'
 import type { ConfirmUnknownMiBoardDialogProps } from './confirm-unknown-mi-board-dialog-props'
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { useFloatingDialog } from '@/classes/use-floating-dialog'
+import { useConfirmUnknownMiBoardDialog } from '@/classes/use-confirm-unknown-mi-board-dialog'
 
-defineProps<ConfirmUnknownMiBoardDialogProps>()
+const props = defineProps<ConfirmUnknownMiBoardDialogProps>()
 const emits = defineEmits<ConfirmUnknownMiBoardDialogEmits>()
+const { is_show_dialog, ui, show, hide, confirm, cancel } = useConfirmUnknownMiBoardDialog({ props, emits })
 defineExpose({ show, hide })
-
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-const ui = useFloatingDialog("confirm-unknown-mi-board-dialog", {
-    centerMode: "always",
-    onEscape: () => cancel(),
-})
-
-async function show(): Promise<void> {
-    is_show_dialog.value = true
-}
-
-async function hide(): Promise<void> {
-    close_dialog_via_history(is_show_dialog)
-}
-
-function confirm(): void {
-    hide()
-    emits('requested_confirm')
-}
-
-function cancel(): void {
-    hide()
-    emits('requested_cancel')
-}
 </script>

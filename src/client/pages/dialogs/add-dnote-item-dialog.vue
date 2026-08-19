@@ -36,7 +36,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, type Ref } from 'vue'
 import type { GkillError } from '../../classes/api/gkill-error';
 import type { GkillMessage } from '../../classes/api/gkill-message';
 import type AddDnoteItemDialogEmits from './add-dnote-item-dialog-emits';
@@ -44,28 +43,12 @@ import type AddDnoteItemDialogProps from './add-dnote-item-dialog-props';
 import AddDnoteItemView from '@/pages/views/add-dnote-item-view.vue';
 import HelpDialog from './help-dialog.vue'
 import type DnoteItem from '@/classes/dnote/dnote-item';
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("add-dnote-item-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useAddDnoteItemDialog } from '@/classes/use-add-dnote-item-dialog'
 
-
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-
-defineExpose({ show, hide })
-defineProps<AddDnoteItemDialogProps>()
+const props = defineProps<AddDnoteItemDialogProps>()
 const emits = defineEmits<AddDnoteItemDialogEmits>()
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const { is_show_dialog, ui, help_dialog, show, hide } = useAddDnoteItemDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

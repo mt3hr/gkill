@@ -2,19 +2,19 @@ package reps
 
 import (
 	"context"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"log/slog"
 	"strconv"
 	"sync"
 	"time"
 
-	_ "modernc.org/sqlite"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	_ "modernc.org/sqlite"
 )
 
 type nlogTempRepositorySQLite3Impl nlogRepositorySQLite3Impl

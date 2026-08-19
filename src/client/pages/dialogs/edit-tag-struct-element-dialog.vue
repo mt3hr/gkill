@@ -30,36 +30,18 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { EditTagStructElementDialogEmits } from './edit-tag-struct-element-dialog-emits'
 import type { EditTagStructElementDialogProps } from './edit-tag-struct-element-dialog-props'
 import EditTagStructElementView from '../views/edit-tag-struct-element-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import { i18n } from '@/i18n'
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
+import { useEditTagStructElementDialog } from '@/classes/use-edit-tag-struct-element-dialog'
 
-defineProps<EditTagStructElementDialogProps>()
+const props = defineProps<EditTagStructElementDialogProps>()
 const emits = defineEmits<EditTagStructElementDialogEmits>()
+const { tag_struct, is_show_dialog, ui, show, hide } = useEditTagStructElementDialog({ props, emits })
 defineExpose({ show, hide })
-
-const tag_struct: Ref<TagStructElementData> = ref(new TagStructElementData())
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-const ui = useFloatingDialog("edit-tag-struct-element-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
-
-
-async function show(tag_struct_obj: TagStructElementData): Promise<void> {
-  tag_struct.value = tag_struct_obj
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
 </script>
 

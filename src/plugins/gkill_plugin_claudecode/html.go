@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 	"html"
 	"path/filepath"
 	"strings"
@@ -67,8 +68,10 @@ td.k { color: var(--muted); }
 //
 // 設定の保存は gkill 本体の設定ダイアログが postMessage で肩代わりする。
 // iframe は allow-same-origin なしで動くため自力では API を叩けない。
-//   iframe → 親 : { gkill_plugin_config: { source_dirs: "..." } }
-//   親 → iframe : { gkill_plugin_config_result: { ok, error } }
+//
+//	iframe → 親 : { gkill_plugin_config: { source_dirs: "..." } }
+//	親 → iframe : { gkill_plugin_config_result: { ok, error } }
+//
 // config.json を直接編集する経路も従来どおり残している。
 func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src expandedSource) string {
 	var sb strings.Builder
@@ -92,7 +95,7 @@ func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src
 	fmt.Fprintf(&sb, `<tr><td class="k">最終スキャン</td><td>%s</td></tr>`,
 		html.EscapeString(formatUnix(stats.LastScanUnix)))
 	fmt.Fprintf(&sb, `<tr><td class="k">キャッシュDB</td><td><code>%s</code></td></tr>`,
-		html.EscapeString(cacheDBPath(pluginDir)))
+		html.EscapeString(sdk.CacheDBPath(pluginDir)))
 	sb.WriteString(`</table>`)
 
 	if len(src.Missing) > 0 {

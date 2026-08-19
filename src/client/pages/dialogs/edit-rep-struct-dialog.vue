@@ -30,35 +30,19 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { EditRepStructDialogEmits } from './edit-rep-struct-dialog-emits'
 import type { EditRepStructDialogProps } from './edit-rep-struct-dialog-props'
 import EditRepStructView from '../views/edit-rep-struct-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-
-defineProps<EditRepStructDialogProps>()
-const emits = defineEmits<EditRepStructDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import type { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("edit-rep-struct-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useEditRepStructDialog } from '@/classes/use-edit-rep-struct-dialog'
 
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const props = defineProps<EditRepStructDialogProps>()
+const emits = defineEmits<EditRepStructDialogEmits>()
+const { is_show_dialog, ui, show, hide } = useEditRepStructDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

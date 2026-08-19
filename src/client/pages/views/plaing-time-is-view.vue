@@ -9,7 +9,7 @@
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="false"
             :show_checkbox="true" :show_footer="true" :show_content_only="true" :show_rep_name="true"
             :force_show_latest_kyou_info="true" :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
-            v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykv_dialog_handler }"
+            v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykvDialogRelayHandlers }"
             @requested_search="search(false)" ref="kyou_list_views" />
         <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -50,7 +50,7 @@
         <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @closed="(id: string) => close_rykv_dialog(id)"
-            v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykv_dialog_handler }" />
+            v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykvDialogRelayHandlers }" />
         <!-- 打刻メモ帳ダイアログやポート(rudbeckia)の中ではFABを出さない。
              .position-fixed は position: fixed なのでダイアログを抜けて画面右下に居座り、
              呼び出し元のページのFABと重なる -->
@@ -168,7 +168,7 @@ const {
     crudRelayHandlers,
     reloadListRequestHandlers,
     dialogReloadRequestHandlers,
-    rykv_dialog_handler,
+    rykvDialogRelayHandlers,
 } = usePlaingTimeIsView({ props, emits })
 
 defineExpose({ reload_list, set_last_added_request_time })

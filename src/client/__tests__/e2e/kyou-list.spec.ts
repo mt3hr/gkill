@@ -24,6 +24,10 @@ test.describe('Kyou List', () => {
   test('Kyou list displays records', async ({ page }) => {
     await page.goto('/kyou', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    // 以前は固定sleepだけで何も検証していなかった（必ず緑になるテスト）。
+    // 一覧の枠が描けることまでを見る
+    await expect(page.locator('#app'), '画面が描かれない').toBeVisible({ timeout: 30000 })
+    await expect(page.locator('.v-application'), 'Vuetifyのレイアウトが立ち上がらない')
+      .toBeVisible({ timeout: 30000 })
   })
 })

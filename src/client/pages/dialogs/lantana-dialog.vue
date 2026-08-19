@@ -28,33 +28,17 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { LantanaDialogEmits } from './lantana-dialog-emits'
 import type { LantanaDialogProps } from './lantana-dialog-props'
 import AddLantanaView from '../views/add-lantana-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-
-defineProps<LantanaDialogProps>()
-const emits = defineEmits<LantanaDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("lantana-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useLantanaDialog } from '@/classes/use-lantana-dialog'
 
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const props = defineProps<LantanaDialogProps>()
+const emits = defineEmits<LantanaDialogEmits>()
+const { is_show_dialog, ui, show, hide } = useLantanaDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

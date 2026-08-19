@@ -1,5 +1,7 @@
 'use strict'
 
+import HelpDialog from '@/pages/dialogs/help-dialog.vue'
+import { build_rudbeckia_hosted_view_relay } from '@/classes/rudbeckia-hosted-view-relay'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'
 import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
@@ -132,7 +134,13 @@ export function useRudbeckiaPageDialog(options: {
     // ホストは配列へ積むだけ。開くのはダイアログ自身（メモ帳ウィンドウと同じ）
     onMounted(() => { show() })
 
+    const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
+    // 中のビューが出す17件をそのまま上げ、画面切替だけポート向けに読み替える
+    const hostedViewHandlers = build_rudbeckia_hosted_view_relay(emits)
+
     return {
+        help_dialog,
+        hostedViewHandlers,
         // State
         is_show_dialog,
         ui,

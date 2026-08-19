@@ -3,7 +3,7 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToMi, navigateToPlaing,
-  makeUniqueLabel, expectPageToContainText, findKyouByText,
+  makeUniqueLabel, expectPageToContainText, findKyouByText, clickContextMenuItem,
 } from './crud-helpers'
 
 let apiReachable = false
@@ -26,25 +26,16 @@ test.describe('View/Browse Flows', () => {
     await submitKftlText(page, label)
     await navigateToRykv(page)
 
-    const record = findKyouByText(page, label)
-    if (await record.count() > 0) {
-      await record.click({ button: 'right', force: true })
-      await page.waitForTimeout(1000)
+    // 行やメニューが見つからなければ落とす。
+    // 条件で包んでいたころは、見つからないと何も検証せずに緑になっていた
+    const record = findKyouByText(page, label).first()
+    await expect(record, '作った記録の行が一覧に出ない').toBeVisible({ timeout: 30000 })
+    await record.click({ button: 'right', force: true })
 
-      // Look for history menu item
-      const historyMenuItem = page.locator('.v-list-item, [role="menuitem"]').filter({ hasText: /履歴|histor/i }).first()
-      if (await historyMenuItem.count() > 0) {
-        await historyMenuItem.click()
-        await page.waitForTimeout(2000)
-
-        // Verify something opened (dialog or expanded section)
-        const app = page.locator('#app')
-        const content = await app.textContent()
-        expect(content!.length).toBeGreaterThan(0)
-      }
-    }
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    // Look for history menu item
+    await clickContextMenuItem(page, /履歴|histor/i)
+    await expect(page.locator('.gkill-floating-dialog').last(), '履歴ダイアログが開かない')
+      .toBeVisible({ timeout: 30000 })
   })
 
   test('rykv page shows mixed data types after creation', async ({ page }) => {
@@ -74,8 +65,7 @@ test.describe('View/Browse Flows', () => {
   test('plaing page shows timeis records', async ({ page }) => {
     const label = makeUniqueLabel('plaing_view')
     await submitKftlText(page, `ーた\n${label}`)
-    // Extra wait for backend to index the new TimeIs record
-    await page.waitForTimeout(2000)
+    // expectPageToContainText がリトライしながら待つので、固定sleepは要らない
 
     await navigateToPlaing(page)
     await expectPageToContainText(page, label)

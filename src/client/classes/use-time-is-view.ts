@@ -1,3 +1,4 @@
+import { log_unless_aborted } from '@/classes/abort-error'
 import { computed, onMounted, ref } from 'vue'
 import moment from 'moment'
 import { format_duration } from '@/classes/format-date-time'
@@ -25,10 +26,8 @@ export function useTimeIsView(options: {
         try {
             await props.kyou.reload_with_typed_datas()
         } catch (err: unknown) {
-            // abortは握りつぶす
-            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
-                console.error(err)
-            }
+            // 中断（画面を離れた・後発の検索に差し替わった）は正常なので出さない
+            log_unless_aborted(err)
         }
     })
 

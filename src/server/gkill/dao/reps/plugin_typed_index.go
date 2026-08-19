@@ -32,6 +32,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
 const (
@@ -249,7 +250,7 @@ func (i *PluginTypedIndex) kickRebuild(_ context.Context) {
 		buildCtx, cancel := context.WithTimeout(context.Background(), pluginIndexBuildTimeout)
 		defer cancel()
 		if err := i.build(buildCtx); err != nil {
-			slog.Warn(fmt.Sprintf("plugin typed index rebuild error %q: %q", i.source.indexPluginName(), err))
+			slog.Log(context.Background(), gkill_log.Warn, "plugin typed index rebuild error", "plugin_name", fmt.Sprintf("%q", i.source.indexPluginName()), "error", fmt.Sprintf("%q", err))
 		}
 	}()
 }
@@ -326,7 +327,7 @@ func (i *PluginTypedIndex) buildSnapshot(pluginKyous []gkill_plugin.PluginKyou) 
 		}
 	}
 	if truncated {
-		slog.Warn(fmt.Sprintf("plugin %q returned more than %d records, truncated", i.source.indexPluginName(), pluginIndexMaxRecords))
+		slog.Log(context.Background(), gkill_log.Warn, "plugin returned too many records, truncated", "plugin_name", fmt.Sprintf("%q", i.source.indexPluginName()), "limit", pluginIndexMaxRecords)
 	}
 
 	for boardName := range boardNameSet {
@@ -479,8 +480,9 @@ func (i *PluginTypedIndex) applyTypedData(record *pluginTypedRecord, pluginKyou 
 
 // warnMultipleTyped は型別データが2つ以上入っていたことを警告します。
 func (i *PluginTypedIndex) warnMultipleTyped(kyouID string, applied string, ignored string) {
-	slog.Warn(fmt.Sprintf("plugin %q kyou %q has multiple typed data; %q was used and %q was ignored",
-		i.source.indexPluginName(), kyouID, applied, ignored))
+	slog.Log(context.Background(), gkill_log.Warn, "plugin kyou has multiple typed data",
+		"plugin_name", fmt.Sprintf("%q", i.source.indexPluginName()), "kyou_id", fmt.Sprintf("%q", kyouID),
+		"applied", fmt.Sprintf("%q", applied), "ignored", fmt.Sprintf("%q", ignored))
 }
 
 // applyAttachedData はタグ・テキスト・通知をレコードとスナップショットに載せます。

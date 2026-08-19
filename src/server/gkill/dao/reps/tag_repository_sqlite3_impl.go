@@ -12,12 +12,12 @@ import (
 	"sync"
 	"time"
 
-	_ "modernc.org/sqlite"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
+	_ "modernc.org/sqlite"
 )
 
 const CURRENT_SCHEMA_VERSION_TAG_REPOSITORY_SQLITE3IMPL_DAO = "1.0.0"
@@ -587,7 +587,7 @@ WHERE
 	words := []string{tagname}
 
 	query := &find.FindQuery{
-		Words:    words,
+		Words: words,
 	}
 	queryArgs := []any{
 		repName,
@@ -745,7 +745,7 @@ WHERE
 
 	targetIDs := []string{target_id}
 	query := &find.FindQuery{
-		Words:    targetIDs,
+		Words: targetIDs,
 	}
 	queryArgs := []any{
 		repName,
@@ -938,7 +938,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		IDs:    ids,
+		IDs: ids,
 	}
 	queryArgs := []any{
 		repName,

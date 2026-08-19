@@ -787,8 +787,9 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(i.dbName) + ` (
 					idfKyou.RepName,
 					idfKyou.TargetFile,
 					idfKyou.CreateApp,
-					idfKyou.CreateDevice,
+					// 列は CREATE_APP, CREATE_USER, CREATE_DEVICE の順（AddIDFKyouInfo と同じ）
 					idfKyou.CreateUser,
+					idfKyou.CreateDevice,
 					idfKyou.UpdateApp,
 					idfKyou.UpdateDevice,
 					idfKyou.UpdateUser,
@@ -1447,8 +1448,12 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) AddIDFKyouInfo(ctx context.Context,
 		idfKyou.RepName,
 		idfKyou.TargetFile,
 		idfKyou.CreateApp,
-		idfKyou.CreateDevice,
+		// 列は CREATE_APP, CREATE_USER, CREATE_DEVICE の順。**引数もこの順に揃えること。**
+		// 以前は CreateDevice, CreateUser の順に渡していて、作成ユーザと作成端末が
+		// 入れ替わったままキャッシュへ入り、読み出しでも入れ替わって返っていた
+		// （--cache_in_memory の既定は true なので通常の経路。実DBは無傷）
 		idfKyou.CreateUser,
+		idfKyou.CreateDevice,
 		idfKyou.UpdateApp,
 		idfKyou.UpdateDevice,
 		idfKyou.UpdateUser,

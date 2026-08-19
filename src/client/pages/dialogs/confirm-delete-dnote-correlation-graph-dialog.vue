@@ -30,35 +30,16 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
-import { DnoteCorrelationGraphQuery } from '../../classes/dnote/dnote-correlation';
 import ConfirmDeleteDnoteCorrelationGraphView from '../views/confirm-delete-dnote-correlation-graph-view.vue';
 import type { ConfirmDeleteDnoteCorrelationGraphDialogEmits } from './confirm-delete-dnote-correlation-graph-dialog-emits';
 import type { ConfirmDeleteDnoteCorrelationGraphDialogProps } from './confirm-delete-dnote-correlation-graph-dialog-props';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
-
-defineProps<ConfirmDeleteDnoteCorrelationGraphDialogProps>()
-const emits = defineEmits<ConfirmDeleteDnoteCorrelationGraphDialogEmits>()
-defineExpose({ show, hide })
-
-const dnote_correlation_graph_query: Ref<DnoteCorrelationGraphQuery> = ref(new DnoteCorrelationGraphQuery())
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("confirm-delete-dnote-correlation-graph-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useConfirmDeleteDnoteCorrelationGraphDialog } from '@/classes/use-confirm-delete-dnote-correlation-graph-dialog'
 
-async function show(target: DnoteCorrelationGraphQuery): Promise<void> {
-  dnote_correlation_graph_query.value = target
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const props = defineProps<ConfirmDeleteDnoteCorrelationGraphDialogProps>()
+const emits = defineEmits<ConfirmDeleteDnoteCorrelationGraphDialogEmits>()
+const { dnote_correlation_graph_query, is_show_dialog, ui, show, hide } = useConfirmDeleteDnoteCorrelationGraphDialog({ props, emits })
+defineExpose({ show, hide })
 </script>

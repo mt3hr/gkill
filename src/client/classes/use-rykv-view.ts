@@ -1,3 +1,4 @@
+import { log_unless_aborted } from '@/classes/abort-error'
 import { gkill_page_list } from '@/classes/gkill-page-list'
 import type { KyouChange } from '@/classes/kyou-change-bus'
 import { useKyouChangeSubscriber } from '@/classes/use-kyou-change-subscriber'
@@ -20,8 +21,11 @@ import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import { build_mi_reload_query, new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
 import { useRegisteredKyouLocalInsert } from '@/classes/use-registered-kyou-local-insert'
+import { useRegisteredTagColumnFilter } from '@/classes/use-registered-tag-column-filter'
+import { tag_exists_in_tag_struct } from '@/classes/tag-struct'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ComponentRef } from '@/classes/component-ref'
+import { remove_kyou_from_list_by_id } from '@/classes/kyou-local-insert'
 
 export function useRykvView(options: {
     props: RykvViewProps,
@@ -43,7 +47,8 @@ export function useRykvView(options: {
     const upload_file_dialog = ref<ComponentRef | null>(null)
     const save_clipboard_to_file_dialog = ref<ComponentRef | null>(null)
     const dnote_view = ref<ComponentRef | null>(null)
-    const kyou_list_views = ref()
+    // 列ごとに1つ。v-for の ref なので配列で来る
+    const kyou_list_views = ref<Array<ComponentRef> | null>(null)
     const kyou_detail_view_element = ref<HTMLElement | null>(null)
 
     // ── State refs ──
@@ -210,10 +215,8 @@ export function useRykvView(options: {
 
     // 列コンポーネントをquery_idで引く。v-forのテンプレートref配列はマウント順で
     // 並び順が保証されないため、indexではなくquery_idで解決する
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function get_kyou_list_view(query_id: string): any {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return kyou_list_views.value?.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query_id)[0]
+    function get_kyou_list_view(query_id: string): ComponentRef | undefined {
+        return kyou_list_views.value?.filter((kyou_list_view) => kyou_list_view.get_query_id() === query_id)[0]
     }
 
     // フォーカス切り替え等でfocused_queryを差し替えると、サイドバーが機械的に
@@ -287,10 +290,8 @@ export function useRykvView(options: {
         try {
             await dnote_view.value?.reload(focused_kyous_list.value, target_query)
         } catch (err: unknown) {
-            // abortは握りつぶす
-            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
-                console.error(err)
-            }
+            // 中断（画面を離れた・後発の検索に差し替わった）は正常なので出さない
+            log_unless_aborted(err)
         }
     }
 
@@ -305,19 +306,6 @@ export function useRykvView(options: {
         if (is_column_changed) {
             // 同じ列内の連続クリックでは重い再集計を走らせない
             reload_dnote_for_column(index)
-        }
-    }
-
-    function remove_kyou_from_list_by_id(list: Array<Kyou>, deleted_id: string): void {
-        // 走査は生の配列に対して行う。deepなref配下のリアクティブProxy越しに読むと
-        // 1要素ごとに track と toReactive が走り、要素ぶんのProxyを確保する(30万件の列では効く)。
-        // ★splice は必ずリアクティブな list に対して行うこと(でないと誰にも通知されない)。
-        //   後ろから走るので、splice しても未走査側のインデックスはずれない。
-        const raw_list = toRaw(list)
-        for (let i = raw_list.length - 1; i >= 0; i--) {
-            if (raw_list[i].id === deleted_id) {
-                list.splice(i, 1)
-            }
         }
     }
 
@@ -348,6 +336,11 @@ export function useRykvView(options: {
 
     // 対象のKyouが載っている列のクエリを探す。focused_kyou と opened_dialogs は
     // 自分がどの列由来か知らないので、列を総当たりして最初に見つかったものを使う
+    // その Kyou が乗っている列の検索条件を、Mi の引き直し用に整えて返す。
+    //
+    // mi の対になる関数は `find_column_query_for(kyou_id)`（use-mi-view.ts）。
+    // あちらは列のクエリが最初から Mi 用なので、そのまま返して data_type も取らない。
+    // rykv の列のクエリは for_mi=false なので、ここで build_mi_reload_query を通す。
     function find_reload_query_for(kyou_id: string, data_type: string): FindKyouQuery | undefined {
         // ダイアログを開くたび・フォーカスKyouを引き直すたびに列を総当たりするので、
         // 生の配列を読む(リアクティブProxy越しだと1要素ごとにProxyを作ることになる)。
@@ -459,6 +452,18 @@ export function useRykvView(options: {
             // Dnoteは命令的にreloadするので、配列を触っただけでは追随しない
             reload_dnote_for_column(column_index)
         },
+    })
+
+    // 利用者がその場で作った新しいタグを、開いている列の検索条件へ足す。
+    // 既定クエリは「絞らない」を tags の列挙として物質化するので、
+    // タグが1つも無い時期に作られた列は tags = ["no tags"] で凍り、
+    // **タグを付けて追加した記録が追加直後に一覧から消える**（エラーも警告も出ない）
+    const { onRegisteredTag: note_registered_tag, apply_new_tag_names } = useRegisteredTagColumnFilter({
+        querys: querys,
+        querys_backup: querys_backup,
+        is_known_tag_name: (tag_name: string) => tag_exists_in_tag_struct(tag_name, props.application_config.tag_struct),
+        reload_list_by_query_id: reload_list_by_query_id,
+        run_with_sidebar_search_suppressed: run_with_sidebar_search_suppressed,
     })
 
     async function init(): Promise<void> {
@@ -702,11 +707,8 @@ export function useRykvView(options: {
                 }
             })
         } catch (err: unknown) {
-            // abortは握りつぶす
-            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
-                // abort以外はエラー出力する
-                console.error(err)
-            }
+            // 中断（画面を離れた・後発の検索に差し替わった）は正常なので出さない
+            log_unless_aborted(err)
             // abort含め例外時はloading状態を解除する（ただし新しいsearchが開始されていない場合のみ）
             if (is_current()) {
                 nextTick(() => get_kyou_list_view(query_id)?.set_loading(false))
@@ -1074,7 +1076,16 @@ export function useRykvView(options: {
             emits('registered_kyou', kyou)
             publish_kyou_change({ kind: 'registered', kyou: kyou }, requested_at)
         },
-        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
+        'registered_tag': (tag: Tag) => {
+            // **「未知だったか」は emit より前に、同期で決めること。**
+            // emit 先(use-rykv-page.ts)の check_tag_update がタグツリーへ足したあとでは、
+            // 「利用者がついさっき作った」ことを二度と知れない
+            if (note_registered_tag(tag)) {
+                // 未知と判定した発生元だけが配る。受け手は判定をやり直さない
+                publish_kyou_change({ kind: 'registered_tag', tag_name: tag.tag }, new_reload_batch())
+            }
+            emits('registered_tag', tag)
+        },
         'registered_text': (text: Text) => emits('registered_text', text),
         'registered_notification': (notification: Notification) => emits('registered_notification', notification),
         'updated_kyou': (kyou: Kyou) => {
@@ -1110,7 +1121,7 @@ export function useRykvView(options: {
         'clicked_kyou': (kyou: Kyou) => onFocusedKyouFromSubView(kyou),
     }
 
-    const rykv_dialog_handler = {
+    const rykvDialogRelayHandlers = {
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload),
     }
 
@@ -1136,6 +1147,9 @@ export function useRykvView(options: {
                 void reload_list(i)
             }
         },
+        // 他の画面で新しく作られたタグ。**既知判定はやり直さない**
+        // （届く頃には発生元の check_tag_update がツリーへ足し終えている）
+        apply_registered_tag: (tag_names) => apply_new_tag_names(tag_names),
     })
 
     // ── Keyboard shortcut ──
@@ -1238,6 +1252,6 @@ export function useRykvView(options: {
         crudRelayHandlers,
         allColumnsRequestHandlers,
         subViewFocusHandlers,
-        rykv_dialog_handler,
+        rykvDialogRelayHandlers,
     }
 }

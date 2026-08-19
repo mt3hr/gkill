@@ -17,7 +17,7 @@
             </v-row>
         </v-card-title>
         <v-text-field class="input text" type="text" v-model="mi_title" :label="i18n.global.t('MI_TITLE_TITLE')"
-            autofocus :readonly="is_busy" />
+            :readonly="is_busy" />
         <table>
             <tbody>
                 <tr>

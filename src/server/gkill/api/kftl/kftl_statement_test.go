@@ -25,7 +25,7 @@ func helperGenerateLines(t *testing.T, text string) []KFTLStatementLine {
 		txID,
 		baseTime,
 		&reps.GkillRepositories{},        // not used during line generation
-		&user_config.ApplicationConfig{},  // not used during line generation
+		&user_config.ApplicationConfig{}, // not used during line generation
 		"test-user", "test-device", "test-app", "ja",
 	)
 	if err != nil {

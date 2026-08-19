@@ -149,7 +149,6 @@ func (r Repositories) findKyous(ctx context.Context, query *find.FindQuery, para
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range r {
-		rep := rep
 		findInRep := func() {
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -228,7 +227,6 @@ func (r Repositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		rep := rep
 		err := goForRep(ctx, wg, rep, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
@@ -273,7 +271,6 @@ func (r Repositories) GetKyou(ctx context.Context, id string, updateTime *time.T
 
 	// 並列処理
 	for _, rep := range r {
-		rep := rep
 		err := goForRep(ctx, wg, rep, func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -340,7 +337,6 @@ func (r Repositories) UpdateCache(ctx context.Context) error {
 
 	// UpdateCache並列処理（threads.Goは内部でネストするためセマフォデッドロック回避のため素のgoroutineを使用）
 	for _, rep := range r {
-		rep := rep
 		wg.Go(func() {
 			start := time.Now()
 			if e := rep.UpdateCache(ctx); e != nil {
@@ -422,7 +418,6 @@ func (r Repositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, 
 
 	// 並列処理
 	for _, rep := range r {
-		rep := rep
 		err := goForRep(ctx, wg, rep, func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -503,7 +498,6 @@ func (r Repositories) GetKyouHistoriesByRepName(ctx context.Context, id string, 
 	// 一致しないrepのぶんまでスレッドプールのスロットを取ってしまい、
 	// rep数が多い利用者では1リクエストでrep数ぶんのセマフォ往復が発生する。
 	for _, rep := range repImpls {
-		rep := rep
 		if repName != nil {
 			repNameInRep, err := rep.GetRepName(ctx)
 			if err != nil {
@@ -600,7 +594,6 @@ func (r Repositories) GetLatestDataRepositoryAddress(ctx context.Context, update
 
 	// 並列処理
 	for _, rep := range r {
-		rep := rep
 		err := goForRep(ctx, wg, rep, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {

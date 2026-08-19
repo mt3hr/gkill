@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 	"strconv"
 	"strings"
 	"time"
@@ -148,7 +149,7 @@ type cacheStats struct {
 // GetConfigHTML から呼ぶので、ここで走査してはいけない。
 // 5秒の IsAlive を超えるとプロセスが殺される。
 func (c *cache) Stats(pluginDir string) cacheStats {
-	stats := cacheStats{CacheDBPath: cacheDBPath(pluginDir)}
+	stats := cacheStats{CacheDBPath: sdk.CacheDBPath(pluginDir)}
 	if err := c.openDB(pluginDir); err != nil {
 		stats.Err = err
 		return stats

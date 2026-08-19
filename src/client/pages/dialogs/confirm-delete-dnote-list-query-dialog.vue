@@ -30,38 +30,17 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
-import DnoteListQuery from '../views/dnote-list-query';
 import ConfirmDeleteDnoteListQueryView from '../views/confirm-delete-dnote-list-query-view.vue';
 import type { ConfirmDeleteDnoteListQueryDialogEmits } from './confirm-delete-dnote-list-query-dialog-emits';
 import type { ConfirmDeleteDnoteListQueryDialogProps } from './confirm-delete-dnote-list-query-dialog-props';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
-
-defineProps<ConfirmDeleteDnoteListQueryDialogProps>()
-const emits = defineEmits<ConfirmDeleteDnoteListQueryDialogEmits>()
-defineExpose({ show, hide })
-
-const dnote_list_query: Ref<DnoteListQuery> = ref(new DnoteListQuery())
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("confirm-delete-dnote-list-query-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useConfirmDeleteDnoteListQueryDialog } from '@/classes/use-confirm-delete-dnote-list-query-dialog'
 
-
-async function show(_dnote_item: DnoteListQuery): Promise<void> {
-  dnote_list_query.value = _dnote_item
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  dnote_list_query.value = new DnoteListQuery()
-}
+const props = defineProps<ConfirmDeleteDnoteListQueryDialogProps>()
+const emits = defineEmits<ConfirmDeleteDnoteListQueryDialogEmits>()
+const { dnote_list_query, is_show_dialog, ui, show, hide } = useConfirmDeleteDnoteListQueryDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

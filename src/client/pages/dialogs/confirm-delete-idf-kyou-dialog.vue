@@ -29,21 +29,12 @@
 import ConfirmDeleteKyouView from '../views/confirm-delete-kyou-view.vue';
 import type { ConfirmDeleteIDFKyouDialogEmits } from './confirm-delete-idf-kyou-dialog-emits';
 import type { ConfirmDeleteIDFKyouDialogProps } from './confirm-delete-idf-kyou-dialog-props';
-import type { Kyou } from '@/classes/datas/kyou';
 import { useConfirmDeleteIDFKyouDialog } from '@/classes/use-confirm-delete-idf-kyou-dialog';
 import { i18n } from '@/i18n'
-import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 
 const props = defineProps<ConfirmDeleteIDFKyouDialogProps>()
 const emits = defineEmits<ConfirmDeleteIDFKyouDialogEmits>()
-
-// クリックはフォーカス移動も伴う
-const crudRelayHandlers = build_kyou_dialog_relay(emits, {
-  'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
-})
-
-const { is_show_dialog, ui, show, hide } = useConfirmDeleteIDFKyouDialog({ props, emits })
-
+const { is_show_dialog, ui, show, hide, crudRelayHandlers } = useConfirmDeleteIDFKyouDialog({ props, emits })
 defineExpose({ show, hide })
 </script>
 

@@ -69,6 +69,11 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 	rekyouHistories, gkillErrors, err := g.UsecaseCtx.GetReKyouHistories(r.Context(), repositories, userID, device, request.LocaleName, request.ID, request.RepName)
 	if err != nil {
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		// 失敗したのにGkillErrorが1つも無いことがある(repのSQLエラーなど)。
+		// そのまま返すと errors:null + 0件 になり、呼び出し側からは
+		// 「成功・該当0件」と区別が付かない。理由は message.EnsureNotEmpty のコメント
+		gkillErrors = message.EnsureNotEmpty(gkillErrors, message.GetReKyouError,
+			api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REKYOU_MESSAGE"}))
 		response.Errors = append(response.Errors, gkillErrors...)
 		return
 	}

@@ -3,8 +3,8 @@ package reps
 import (
 	"context"
 	"errors"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"slices"
 	"sync"
 	"time"
@@ -42,7 +42,6 @@ func (g GitCommitLogRepositories) findKyous(ctx context.Context, query *find.Fin
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
-		rep := rep
 		findInRep := func() {
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -123,7 +122,6 @@ func (g GitCommitLogRepositories) getKyou(ctx context.Context, id string, update
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
-		rep := rep
 		getInRep := func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -203,7 +201,6 @@ func (g GitCommitLogRepositories) getKyouHistories(ctx context.Context, id strin
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
-		rep := rep
 		getInRep := func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -301,7 +298,6 @@ func (g GitCommitLogRepositories) UpdateCache(ctx context.Context) error {
 	defer close(errch)
 
 	for _, rep := range g {
-		rep := rep
 		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -354,7 +350,6 @@ func (g GitCommitLogRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
@@ -388,13 +383,19 @@ errloop:
 }
 
 func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]GitCommitLog, error) {
-	return g.findGitCommitLog(ctx, query, true)
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照
+	return findChunkedByIDs(ctx, query, func(ctx context.Context, chunked *find.FindQuery) ([]GitCommitLog, error) {
+		return g.findGitCommitLog(ctx, chunked, true)
+	})
 }
 
 // FindGitCommitLogSequential は各リポジトリを並列化せずに順に検索します。
 // threads.Goのスロットを保持したまま呼ぶ場面（キャッシュ実装のビルド中フォールバック）で使ってください。
 func (g GitCommitLogRepositories) FindGitCommitLogSequential(ctx context.Context, query *find.FindQuery) ([]GitCommitLog, error) {
-	return g.findGitCommitLog(ctx, query, false)
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照
+	return findChunkedByIDs(ctx, query, func(ctx context.Context, chunked *find.FindQuery) ([]GitCommitLog, error) {
+		return g.findGitCommitLog(ctx, chunked, false)
+	})
 }
 
 func (g GitCommitLogRepositories) findGitCommitLog(ctx context.Context, query *find.FindQuery, parallel bool) ([]GitCommitLog, error) {
@@ -409,7 +410,6 @@ func (g GitCommitLogRepositories) findGitCommitLog(ctx context.Context, query *f
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
-		rep := rep
 		findInRep := func() {
 			matchGitCommitLogsInRep, err := rep.FindGitCommitLog(ctx, query)
 			if err != nil {
@@ -501,7 +501,6 @@ func (g GitCommitLogRepositories) findGitCommitLogByIDs(ctx context.Context, ids
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
-		rep := rep
 		findInRep := func() {
 			logs, err := rep.FindGitCommitLogByIDs(ctx, ids)
 			if err != nil {
@@ -587,7 +586,6 @@ func (g GitCommitLogRepositories) getGitCommitLog(ctx context.Context, id string
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
-		rep := rep
 		getInRep := func() {
 			matchGitCommitLogInRep, err := rep.GetGitCommitLog(ctx, id, updateTime)
 			if err != nil {
@@ -691,7 +689,6 @@ func (g GitCommitLogRepositories) getLatestDataRepositoryAddress(ctx context.Con
 
 	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
-		rep := rep
 		getInRep := func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {

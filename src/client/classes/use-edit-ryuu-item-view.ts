@@ -49,8 +49,8 @@ export function useEditRyuuItemView(options: {
         title.value = model_value.value!.title
         prefix.value = model_value.value!.prefix
         suffix.value = model_value.value!.suffix
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        root_predicate.value = model_value.value!.predicate.predicate_struct_to_json() as any
+        // predicate_struct_to_json は素のJSON(Record)を返すので、木の型へ読み替える
+        root_predicate.value = model_value.value!.predicate.predicate_struct_to_json() as unknown as PredicateGroupType
         related_time_match_type.value = model_value.value!.related_time_match_type
         is_use_custom_find_kyou_query.value = model_value.value!.find_kyou_query !== null
         find_kyou_query.value = model_value.value!.find_kyou_query

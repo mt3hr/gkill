@@ -24,7 +24,6 @@ test.describe('Plaing TimeIs Page', () => {
   test('Plaing page renders app container', async ({ page }) => {
     await page.goto('/plaing', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
     const app = page.locator('#app')
     await expect(app).toBeVisible()
   })
@@ -32,9 +31,8 @@ test.describe('Plaing TimeIs Page', () => {
   test('Plaing page has interactive elements', async ({ page }) => {
     await page.goto('/plaing', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-    const buttons = page.locator('button')
-    const buttonsCount = await buttons.count()
-    expect(buttonsCount).toBeGreaterThan(0)
+    // 固定sleepではなく、ボタンが1つでも描かれるのを待つ
+    await expect(page.locator('button').first(), '操作できるボタンが1つも無い')
+      .toBeVisible({ timeout: 30000 })
   })
 })

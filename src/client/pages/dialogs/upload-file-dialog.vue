@@ -20,11 +20,7 @@
 
         <UploadFileView :app_content_height="app_content_height" :app_content_width="app_content_width"
           :application_config="application_config" :gkill_api="gkill_api"
-          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
-          @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-          @focused_kyou="(kyou: Kyou) => emits('focused_kyou', kyou)"
-          @clicked_kyou="(kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) }"
-          @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload)" />
+          v-on="crudRelayHandlers" />
         </v-card>
 </div>
     </div>
@@ -33,35 +29,14 @@
 
 <script lang="ts" setup>
 import type { UploadFileDialogProps } from './upload-file-dialog-props'
-
 import UploadFileView from '../views/upload-file-view.vue'
-import { type Ref, ref } from 'vue'
 import type { KyouViewEmits } from '../views/kyou-view-emits';
-import type { GkillError } from '@/classes/api/gkill-error';
-import type { GkillMessage } from '@/classes/api/gkill-message';
-import type { Kyou } from '@/classes/datas/kyou';
-import type { RykvDialogKind, RykvDialogPayload } from '../views/rykv-dialog-kind';
-
-defineProps<UploadFileDialogProps>()
-const emits = defineEmits<KyouViewEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("upload-file-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useUploadFileDialog } from '@/classes/use-upload-file-dialog'
 
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
+const props = defineProps<UploadFileDialogProps>()
+const emits = defineEmits<KyouViewEmits>()
+const { is_show_dialog, ui, crudRelayHandlers, show, hide } = useUploadFileDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

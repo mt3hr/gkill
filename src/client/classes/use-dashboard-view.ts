@@ -287,6 +287,10 @@ export function useDashboardView(options: {
             query: mi_kyou_query.value,
             replace: (next_list) => { mi_kyous.value = next_list },
         })
+        // こちらは replace を渡さない（既定の in-place splice）。
+        // mi_kyous は KyouListView へ渡していて配列参照の差し替えで再描画を仕掛けるが、
+        // checked_kyous はこのビューの中だけで読む素の Ref なので、
+        // 全長ぶんコピーする意味が無い
         await refresh_kyou_in_list(checked_kyous.value, kyou, { requested_at: requested_at })
         for (let i = 0; i < opened_dialogs.value.length; i++) {
             if (opened_dialogs.value[i].kyou.id === kyou.id) {
@@ -381,6 +385,13 @@ export function useDashboardView(options: {
      * 追加されたKyouを、再検索せずにMiリストへ差し込む。
      * Dnoteは集計なので差し込めず、まとめて取り直す。
      * Miリストの条件をクライアントで判定しきれないときだけ、従来どおり全体を取り直す。
+     *
+     * rykv / mi が使う `useRegisteredKyouLocalInsert` は「列の配列」を前提にしていて
+     * （query_id で列を引き直す・列ごとに in-place で差し込む）、
+     * 列を持たないダッシュボードには噛み合わない。
+     * **判定と整列の意味論は共有していて**（`can_decide_query_locally` /
+     * `decide_local_insert` / `insert_kyou_sorted` の3つを同じように呼ぶ）、
+     * 違うのは差し込み先の器と、Dnote の取り直しを債務として持っている点だけ。
      */
     async function insert_registered_kyou(raw: unknown, requested_at_arg?: number): Promise<void> {
         reload_dnote_debounce.schedule()

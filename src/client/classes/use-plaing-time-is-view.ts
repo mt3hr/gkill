@@ -1,3 +1,4 @@
+import { log_unless_aborted } from '@/classes/abort-error'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { Kyou } from '@/classes/datas/kyou'
@@ -16,6 +17,7 @@ import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/
 import type { KyouChange } from '@/classes/kyou-change-bus'
 import { useKyouChangeSubscriber } from '@/classes/use-kyou-change-subscriber'
 import type { ComponentRef } from '@/classes/component-ref'
+import { remove_kyou_from_list_by_id } from '@/classes/kyou-local-insert'
 
 export function usePlaingTimeIsView(options: {
     props: PlaingTimeIsViewProps,
@@ -35,7 +37,8 @@ export function usePlaingTimeIsView(options: {
     const mkfl_dialog = ref<ComponentRef | null>(null)
     const upload_file_dialog = ref<ComponentRef | null>(null)
     const save_clipboard_to_file_dialog = ref<ComponentRef | null>(null)
-    const kyou_list_views = ref()
+    // 実行中(plaing)の一覧は1つだけ。rykv / mi と違って列を持たない
+    const kyou_list_views = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const enable_context_menu = ref(true)
@@ -44,7 +47,6 @@ export function usePlaingTimeIsView(options: {
 
     const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
     const match_kyous_list: Ref<Array<Kyou>> = ref(new Array<Kyou>())
-    const focused_column_index: Ref<number> = ref(0)
     const focused_kyous_list: Ref<Array<Kyou>> = ref(new Array<Kyou>())
     const focused_kyou: Ref<Kyou | null> = ref(null)
     const focused_time: Ref<Date> = ref(moment().toDate())
@@ -78,8 +80,7 @@ export function usePlaingTimeIsView(options: {
     watch(() => props.application_config.is_loaded, () => {
         nextTick(async () => {
             await nextTick(async () => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const kyou_list_view = kyou_list_views.value as any
+                const kyou_list_view = kyou_list_views.value
                 if (!kyou_list_view) {
                     return
                 }
@@ -94,22 +95,8 @@ export function usePlaingTimeIsView(options: {
         if (!kyou_list_views.value) {
             return
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const kyou_list_view = kyou_list_views.value[focused_column_index.value] as any
-        if (!kyou_list_view) {
-            return
-        }
-        kyou_list_view.scroll_to_time(focused_time.value)
+        kyou_list_views.value.scroll_to_time(focused_time.value)
     })
-
-    // ── Internal helpers ──
-    function remove_kyou_from_list_by_id(list: Array<Kyou>, deleted_id: string): void {
-        for (let i = list.length - 1; i >= 0; i--) {
-            if (list[i].id === deleted_id) {
-                list.splice(i, 1)
-            }
-        }
-    }
 
     // ── Business logic ──
     /**
@@ -181,8 +168,7 @@ export function usePlaingTimeIsView(options: {
             focused_kyous_list.value.splice(0)
 
             await nextTick(async () => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const kyou_list_view = kyou_list_views.value as any
+                const kyou_list_view = kyou_list_views.value
                 if (!kyou_list_view) {
                     return
                 }
@@ -210,14 +196,12 @@ export function usePlaingTimeIsView(options: {
             match_kyous_list.value.push(...res.kyous)
             focused_kyous_list.value.push(...res.kyous)
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const kyou_list_view = kyou_list_views.value as any
+            const kyou_list_view = kyou_list_views.value
             if (kyou_list_view) {
                 kyou_list_view.scroll_to(1)
             }
             await nextTick(() => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const kyou_list_view = kyou_list_views.value as any
+                const kyou_list_view = kyou_list_views.value
                 if (!kyou_list_view) {
                     return
                 }
@@ -226,11 +210,8 @@ export function usePlaingTimeIsView(options: {
                 skip_search_this_tick.value = false
             })
         } catch (err: unknown) {
-            // abortは握りつぶす
-            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
-                // abort以外はエラー出力する
-                console.error(err)
-            }
+            // 中断（画面を離れた・後発の検索に差し替わった）は正常なので出さない
+            log_unless_aborted(err)
         } finally {
             is_loading.value = false
             has_searched_once.value = true
@@ -382,7 +363,7 @@ export function usePlaingTimeIsView(options: {
         },
     }
 
-    const rykv_dialog_handler = {
+    const rykvDialogRelayHandlers = {
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload),
     }
 
@@ -440,6 +421,6 @@ export function usePlaingTimeIsView(options: {
         crudRelayHandlers,
         reloadListRequestHandlers,
         dialogReloadRequestHandlers,
-        rykv_dialog_handler,
+        rykvDialogRelayHandlers,
     }
 }

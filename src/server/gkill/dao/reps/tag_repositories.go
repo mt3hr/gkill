@@ -3,8 +3,8 @@ package reps
 import (
 	"context"
 	"errors"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"slices"
 	"sync"
 	"time"
@@ -17,6 +17,11 @@ import (
 type TagRepositories []TagRepository
 
 func (t TagRepositories) FindTags(ctx context.Context, query *find.FindQuery) ([]Tag, error) {
+	// IDを渡されすぎているときは分割して検索する。理由はmaxIDsPerFindQueryを参照
+	return findChunkedByIDs(ctx, query, t.findTags)
+}
+
+func (t TagRepositories) findTags(ctx context.Context, query *find.FindQuery) ([]Tag, error) {
 	matchTags := map[string]Tag{}
 	existErr := false
 	var err error
@@ -28,7 +33,6 @@ func (t TagRepositories) FindTags(ctx context.Context, query *find.FindQuery) ([
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTagsInRep, err := rep.FindTags(ctx, query)
 			if err != nil {
@@ -108,7 +112,6 @@ func (t TagRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
@@ -153,7 +156,6 @@ func (t TagRepositories) GetTag(ctx context.Context, id string, updateTime *time
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTagInRep, err := rep.GetTag(ctx, id, updateTime)
 			if err != nil {
@@ -218,7 +220,6 @@ func (t TagRepositories) GetTagsByTagName(ctx context.Context, tagname string) (
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTagsInRep, err := rep.GetTagsByTagName(ctx, tagname)
 			if err != nil {
@@ -292,7 +293,6 @@ func (t TagRepositories) GetTagsByTargetID(ctx context.Context, target_id string
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTagsInRep, err := rep.GetTagsByTargetID(ctx, target_id)
 			if err != nil {
@@ -362,7 +362,6 @@ func (t TagRepositories) UpdateCache(ctx context.Context) error {
 	defer close(errch)
 
 	for _, rep := range t {
-		rep := rep
 		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
@@ -414,7 +413,7 @@ func (t TagRepositories) GetPath(ctx context.Context, id string) (string, error)
 	ids := []string{id}
 	for _, rep := range t {
 		query := &find.FindQuery{
-			IDs:    ids,
+			IDs: ids,
 		}
 		tags, err := rep.FindTags(ctx, query)
 		if len(tags) == 0 || err != nil {
@@ -448,7 +447,6 @@ func (t TagRepositories) GetTagHistories(ctx context.Context, id string) ([]Tag,
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTagsInRep, err := rep.GetTagHistories(ctx, id)
 			if err != nil {
@@ -523,7 +521,6 @@ func (t TagRepositories) GetTagHistoriesByRepName(ctx context.Context, id string
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
 				// repNameが一致しない場合はスキップ
@@ -641,7 +638,6 @@ func (t TagRepositories) GetAllTags(ctx context.Context) ([]Tag, error) {
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			matchTagsInRep, err := rep.GetAllTags(ctx)
 			if err != nil {
@@ -728,7 +724,6 @@ func (t TagRepositories) GetLatestDataRepositoryAddress(ctx context.Context, upd
 
 	// 並列処理
 	for _, rep := range t {
-		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {

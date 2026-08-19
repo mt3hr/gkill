@@ -514,12 +514,29 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) GetMiReKyouHistories(ctx context.C
 }
 
 func (m *miReKyouRepositoryCachedSQLite3Impl) AddMiReKyouInfo(ctx context.Context, mirekyou MiReKyou) error {
-	repName, err := m.GetRepName(ctx)
-	if err != nil {
-		return err
-	}
+	// **m.GetRepName() で埋めてはいけない。** これは MiReKyouRepositories へ委譲され、
+	// そこは実repの名前ではなく**ハードコードの "MiReKyou"（集約の表示名）**を返す。
+	// REP_NAME 列に実在しない名前が入ると、find_filter.go の filterKyousByRepName が
+	// 「非空で、指定repに無い名前」として落とすので、mirekyou repのファイル名が既定でない環境では
+	// **追加した直後のタスクが最大1分間どの列にも出ない**（エラーも警告も出ない）。
+	// 取れないときは空のままにする ―― 空は filterKyousByRepName が残すので安全側。
+	// ReKyou 側（re_kyou_repository_cached_sqlite3_impl.go の AddReKyouInfo）と同じ形。
 	if mirekyou.RepName == "" {
-		mirekyou.RepName = repName
+		if m.gkillRepositories != nil && m.gkillRepositories.WriteMiReKyouRep != nil {
+			repName, err := m.gkillRepositories.WriteMiReKyouRep.GetRepName(ctx)
+			if err == nil && repName != "" {
+				mirekyou.RepName = repName
+			}
+		}
+		if mirekyou.RepName == "" && m.mirekyouRep != nil {
+			repImpls, err := m.mirekyouRep.UnWrapTyped()
+			if err == nil && len(repImpls) == 1 {
+				repName, err := repImpls[0].GetRepName(ctx)
+				if err == nil && repName != "" {
+					mirekyou.RepName = repName
+				}
+			}
+		}
 	}
 
 	m.m.Lock()

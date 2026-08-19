@@ -6,7 +6,8 @@ import type { KyouViewEmits } from "./kyou-view-emits";
 export default interface RyuuViewEmits extends KyouViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
-    (e: 'requested_apply_ryuu_struct', ryuu_data: Record<string, unknown>): void
+    // Ryuu の定義も「定義の配列」
+    (e: 'requested_apply_ryuu_struct', ryuu_data: Array<Record<string, unknown>>): void
     (e: 'requested_close_dialog'): void
     (e: 'requested_reload_application_config', application_config: ApplicationConfig): void
 }

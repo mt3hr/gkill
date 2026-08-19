@@ -34,42 +34,18 @@
 </template>
 
 <script lang="ts" setup>
-import { type Ref, ref, nextTick } from 'vue'
 import type { ApplicationConfigDialogProps } from './application-config-dialog-props'
 import type { ApplicationConfigDialogEmits } from './application-config-dialog-emits'
 import ApplicationConfigView from '../views/application-config-view.vue'
 import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import { GkillMessage } from '@/classes/api/gkill-message'
-
-const application_config_view = ref<InstanceType<typeof ApplicationConfigView> | null>(null);
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-
-const _props = defineProps<ApplicationConfigDialogProps>()
-const emits = defineEmits<ApplicationConfigDialogEmits>()
-defineExpose({ show, hide })
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("application-config-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useApplicationConfigDialog } from '@/classes/use-application-config-dialog'
 
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-  await nextTick()
-  application_config_view.value?.reload_cloned_application_config()
-}
-async function hide(): Promise<void> {
-  // ×・Escape・キャンセルのどれで閉じても、「適用」していない変更は破棄する。
-  // ロケールとダークテーマは選ばせるために即時プレビューしているので、明示的に戻す必要がある
-  application_config_view.value?.cancel_pending_changes()
-  close_dialog_via_history(is_show_dialog)
-}
+const props = defineProps<ApplicationConfigDialogProps>()
+const emits = defineEmits<ApplicationConfigDialogEmits>()
+const { application_config_view, help_dialog, is_show_dialog, ui, show, hide } = useApplicationConfigDialog({ props, emits })
+defineExpose({ show, hide })
 </script>
 

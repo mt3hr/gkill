@@ -34,39 +34,19 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { EditKFTLTemplateStructElementDialogEmits } from './edit-kftl-template-struct-element-dialog-emits'
 import type { EditKFTLTemplateStructElementDialogProps } from './edit-kftl-template-struct-element-dialog-props'
 import EditKFTLTemplateStructElementView from '../views/edit-kftl-template-struct-element-view.vue'
 import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import { i18n } from '@/i18n'
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
+import { useEditKFTLTemplateStructElementDialog } from '@/classes/use-edit-kftl-template-struct-element-dialog'
 
-defineProps<EditKFTLTemplateStructElementDialogProps>()
+const props = defineProps<EditKFTLTemplateStructElementDialogProps>()
 const emits = defineEmits<EditKFTLTemplateStructElementDialogEmits>()
+const { help_dialog, kftl_template_struct, is_show_dialog, ui, show, hide } = useEditKFTLTemplateStructElementDialog({ props, emits })
 defineExpose({ show, hide })
-
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-
-const kftl_template_struct: Ref<KFTLTemplateElementData> = ref(new KFTLTemplateElementData())
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-const ui = useFloatingDialog("edit-kftl-template-struct-element-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
-
-
-async function show(kftl_template_struct_obj: KFTLTemplateElementData): Promise<void> {
-  kftl_template_struct.value = kftl_template_struct_obj
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-}
 </script>
 

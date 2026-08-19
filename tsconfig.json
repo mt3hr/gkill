@@ -1,4 +1,11 @@
 {
+  // ソリューション構成。実際の型検査は参照先の2プロジェクトが行う。
+  // ここに compilerOptions を書いても "files": [] なので何にも適用されない
+  // （かつて lib / types をここに書いていたが、まったく効いていなかった）。
+  // 設定は tsconfig.app.json / tsconfig.node.json 側へ置くこと。
+  //
+  // 注意: `vue-tsc --noEmit` はこのファイルを見るため、1ファイルも検査せずに成功する。
+  //       型検査は必ず `npm run type-check`（= `vue-tsc --build`）で行うこと。
   "files": [],
   "references": [
     {
@@ -7,19 +14,5 @@
     {
       "path": "./tsconfig.app.json"
     }
-  ],
-  "compilerOptions": {
-    "lib": [
-      "WebWorker"
-    ],
-    "types": [
-      "google.maps",
-      "vite-pluginb-pwa/client",
-    ],
-  },
-  "exclude": [
-    "src/server/**/*",
-    "dist",
-    "node_modules",
   ]
 }

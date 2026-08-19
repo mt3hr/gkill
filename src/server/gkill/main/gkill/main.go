@@ -75,23 +75,14 @@ var (
 			serverCtx, serverCancel := context.WithCancel(cmd.Context())
 			defer serverCancel()
 
+			// --pre_load_users のプリロードは common.PreLoadRepositories が
+			// LaunchGkillServerAPI の中で1回だけ走らせる。
+			// ここでも同じことをすると起動のたびに2重に走る
 			go func() {
-				for _, preLoadUserNames := range gkill_options.PreLoadUserNames {
-					userID := preLoadUserNames
-					device, err := common.GetGkillServerAPI().GetDevice()
-					if err != nil {
-						log.Fatal(err)
-					}
-
-					if err != nil {
-						err = fmt.Errorf("error at get device name: %w", err)
-						slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-					}
-					common.GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
+				if err := common.LaunchGkillServerAPI(serverCtx); err != nil {
+					slog.Log(serverCtx, gkill_log.Error, "error at launch gkill server api", "error", fmt.Sprintf("%q", err))
 				}
 			}()
-
-			go common.LaunchGkillServerAPI(serverCtx)
 
 			for ; ; time.Sleep(time.Microsecond * 500) {
 				api := common.GetGkillServerAPI()

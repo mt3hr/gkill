@@ -2,12 +2,13 @@ import { ref } from 'vue'
 import type LantanaContextMenu from '@/pages/views/lantana-context-menu.vue'
 import type { LantanaViewProps } from '@/pages/views/lantana-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export function useLantanaView(options: {
     props: LantanaViewProps,
     emits: KyouViewEmits,
 }) {
-    const { props, emits: _emits } = options
+    const { props, emits } = options
 
     const context_menu = ref<InstanceType<typeof LantanaContextMenu> | null>(null)
 
@@ -17,7 +18,12 @@ export function useLantanaView(options: {
         }
     }
 
+    // ── Event relay objects ──
+    const crudRelayHandlers = build_kyou_view_relay(emits)
+
     return {
+        // Event relay objects
+        crudRelayHandlers,
         context_menu,
         show_context_menu,
     }

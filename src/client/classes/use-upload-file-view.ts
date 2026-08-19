@@ -10,7 +10,7 @@ import { FileData } from '@/classes/api/file-data'
 import { GetRepositoriesRequest } from '@/classes/api/req_res/get-repositories-request'
 import type DecideRelatedTimeUploadedFileDialog from '@/pages/dialogs/decide-related-time-uploaded-file-dialog.vue'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
-import { refresh_kyou_in_list } from '@/classes/kyou-reload'
+import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
 
 export function useUploadFileView(options: {
     props: UploadFileViewProps,
@@ -115,10 +115,13 @@ export function useUploadFileView(options: {
         }
 
         uploaded_kyous.value.splice(0)
+        // 引き直しの手順は refresh_kyou に閉じている（手書きすると
+        // load_all(force_attached) を落として添付タグを一度も引き直さない形になりやすい）
+        const reload_batch = new_reload_batch()
         for (let i = 0; i < res.uploaded_kyous.length; i++) {
             const uploaded_kyou = res.uploaded_kyous[i]
-            await uploaded_kyou.reload(true)
-            uploaded_kyous.value.push(uploaded_kyou)
+            const refreshed = await refresh_kyou(uploaded_kyou, undefined, reload_batch)
+            uploaded_kyous.value.push(refreshed ?? uploaded_kyou)
         }
         files.value = null
         decide_related_time_uploaded_file_dialog.value?.show()

@@ -30,37 +30,16 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
-import DnoteTrendGraphQuery from '../views/dnote-trend-graph-query';
 import ConfirmDeleteDnoteTrendGraphView from '../views/confirm-delete-dnote-trend-graph-view.vue';
 import type { ConfirmDeleteDnoteTrendGraphDialogEmits } from './confirm-delete-dnote-trend-graph-dialog-emits';
 import type { ConfirmDeleteDnoteTrendGraphDialogProps } from './confirm-delete-dnote-trend-graph-dialog-props';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
-
-defineProps<ConfirmDeleteDnoteTrendGraphDialogProps>()
-const emits = defineEmits<ConfirmDeleteDnoteTrendGraphDialogEmits>()
-defineExpose({ show, hide })
-
-const dnote_trend_graph_query: Ref<DnoteTrendGraphQuery> = ref(new DnoteTrendGraphQuery())
-
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("confirm-delete-dnote-trend-graph-dialog", {
-  centerMode: "always",
-  onEscape: () => hide(),
-})
+import { useConfirmDeleteDnoteTrendGraphDialog } from '@/classes/use-confirm-delete-dnote-trend-graph-dialog'
 
-
-async function show(_dnote_trend_graph_query: DnoteTrendGraphQuery): Promise<void> {
-  dnote_trend_graph_query.value = _dnote_trend_graph_query
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  close_dialog_via_history(is_show_dialog)
-  dnote_trend_graph_query.value = new DnoteTrendGraphQuery()
-}
+const props = defineProps<ConfirmDeleteDnoteTrendGraphDialogProps>()
+const emits = defineEmits<ConfirmDeleteDnoteTrendGraphDialogEmits>()
+const { dnote_trend_graph_query, is_show_dialog, ui, show, hide } = useConfirmDeleteDnoteTrendGraphDialog({ props, emits })
+defineExpose({ show, hide })
 </script>

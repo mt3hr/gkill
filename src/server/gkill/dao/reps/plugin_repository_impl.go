@@ -19,6 +19,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
 // pluginProcess はプラグインプロセスとのstdio通信状態を管理する。
@@ -238,7 +239,7 @@ func (p *pluginRepositoryImpl) ensureStarted() error {
 	p.proc = proc
 	go p.readLoop(proc)
 
-	slog.Info(fmt.Sprintf("plugin started: %q (user=%q)", p.manifest.Name, p.userID))
+	slog.Log(context.Background(), gkill_log.Info, "plugin started", "plugin_name", fmt.Sprintf("%q", p.manifest.Name), "user_id", fmt.Sprintf("%q", p.userID))
 	return nil
 }
 
@@ -352,7 +353,7 @@ func (p *pluginRepositoryImpl) sendRequest(callerCtx context.Context, timeoutCtx
 			// IDが空のものはSDKのパースエラー応答（writeError(encoder, "", ...)）なので
 			// 自分宛てとして扱う。捨ててしまうと不正入力のたびに期限まで待つことになる。
 			if resp.ID != "" && resp.ID != req.ID {
-				slog.Debug(fmt.Sprintf("plugin %q discarded stale response %q", p.manifest.Name, resp.ID))
+				slog.Log(callerCtx, gkill_log.Debug, "plugin discarded stale response", "plugin_name", fmt.Sprintf("%q", p.manifest.Name), "response_id", fmt.Sprintf("%q", resp.ID))
 				continue
 			}
 			if len(resp.Errors) > 0 {
@@ -413,7 +414,7 @@ func (p *pluginRepositoryImpl) callCommand(ctx context.Context, req gkill_plugin
 			return nil, err
 		}
 		// プロセスクラッシュ時のみ1回リトライ（自動再起動）
-		slog.Warn(fmt.Sprintf("plugin %q error, retrying: %q", p.manifest.Name, err))
+		slog.Log(ctx, gkill_log.Warn, "plugin error, retrying", "plugin_name", fmt.Sprintf("%q", p.manifest.Name), "error", fmt.Sprintf("%q", err))
 		p.retire(p.proc)
 		if startErr := p.ensureStarted(); startErr != nil {
 			return nil, fmt.Errorf("plugin restart failed %s: %w (original: %v)", p.manifest.Name, startErr, err)
@@ -446,7 +447,7 @@ func (p *pluginRepositoryImpl) findPluginKyous(ctx context.Context, pq *gkill_pl
 func (p *pluginRepositoryImpl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	pluginKyous, err := p.findPluginKyous(ctx, findQueryToPluginQuery(query))
 	if err != nil {
-		slog.Error(fmt.Sprintf("plugin find_kyous error %q: %q", p.manifest.Name, err))
+		slog.Log(ctx, gkill_log.Error, "plugin find_kyous error", "plugin_name", fmt.Sprintf("%q", p.manifest.Name), "error", fmt.Sprintf("%q", err))
 		// プラグイン障害で検索全体を落とさない方針は維持しつつ、
 		// 「静かな欠落」にならないよう警告として記録する(呼び出し元がメッセージ表示に使う)
 		AppendPluginFindWarning(ctx, p.manifest.Name)
@@ -546,7 +547,7 @@ func (p *pluginRepositoryImpl) GetPluginGPSLogs(ctx context.Context, startTime *
 		}
 		offset += len(resp.GPSLogs)
 		if len(gpsLogs) >= maxPluginGPSLogPoints {
-			slog.Warn(fmt.Sprintf("plugin %q returned more than %d gps logs, truncated", p.manifest.Name, maxPluginGPSLogPoints))
+			slog.Log(ctx, gkill_log.Warn, "plugin returned too many gps logs, truncated", "plugin_name", fmt.Sprintf("%q", p.manifest.Name), "limit", maxPluginGPSLogPoints)
 			break
 		}
 	}
@@ -594,19 +595,19 @@ func (p *pluginRepositoryImpl) Close(ctx context.Context) error {
 		case <-proc.respCh:
 			// closeの応答やEOF通知。もう誰も使わないので捨てる。
 		case <-timeout:
-			slog.Warn(fmt.Sprintf("plugin %q did not exit in time, killing", p.manifest.Name))
+			slog.Log(ctx, gkill_log.Warn, "plugin did not exit in time, killing", "plugin_name", fmt.Sprintf("%q", p.manifest.Name))
 			p.retire(proc)
 			<-proc.readerDone
 			waiting = false
 		}
 	}
 	if err := proc.cmd.Wait(); err != nil {
-		slog.Debug(fmt.Sprintf("plugin %q exited with error: %q", p.manifest.Name, err))
+		slog.Log(ctx, gkill_log.Debug, "plugin exited with error", "plugin_name", fmt.Sprintf("%q", p.manifest.Name), "error", fmt.Sprintf("%q", err))
 	}
 
 	// 以後このプロセスは使わない。リーダーが残らないよう必ず解放する。
 	p.retire(proc)
-	slog.Info(fmt.Sprintf("plugin closed: %q", p.manifest.Name))
+	slog.Log(ctx, gkill_log.Info, "plugin closed", "plugin_name", fmt.Sprintf("%q", p.manifest.Name))
 	return nil
 }
 
@@ -678,7 +679,7 @@ func warnPluginRepNameMismatchOnce(manifestRepName string, actualRepName string)
 	if _, loaded := warnedPluginRepNameMismatches.LoadOrStore(key, struct{}{}); loaded {
 		return
 	}
-	slog.Warn(fmt.Sprintf("plugin rep_name mismatch: manifest=%q actual=%q", manifestRepName, actualRepName))
+	slog.Log(context.Background(), gkill_log.Warn, "plugin rep_name mismatch", "manifest_rep_name", fmt.Sprintf("%q", manifestRepName), "actual_rep_name", fmt.Sprintf("%q", actualRepName))
 }
 
 // convertPluginKyouToKyou はPluginKyouをgkill本体のKyouに変換する。

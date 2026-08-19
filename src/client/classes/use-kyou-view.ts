@@ -1,3 +1,4 @@
+import { log_unless_aborted } from '@/classes/abort-error'
 import { computed, watch, type Ref, ref, nextTick, onUnmounted } from 'vue'
 import { format_time } from '@/classes/format-date-time'
 import { useDelayedLoading } from '@/classes/use-delayed-loading'
@@ -145,18 +146,12 @@ export function useKyouView(options: {
                 }
                 await Promise.all(await_promises)
             } catch (err: unknown) {
-                // abortは握りつぶす
-                if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
-                    // abort以外はエラー出力する
-                    console.error(err)
-                }
+                // 中断（画面を離れた・後発の検索に差し替わった）は正常なので出さない
+                log_unless_aborted(err)
             }
         } catch (err: unknown) {
-            // abortは握りつぶす
-            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
-                // abort以外はエラー出力する
-                console.error(err)
-            }
+            // 中断（画面を離れた・後発の検索に差し替わった）は正常なので出さない
+            log_unless_aborted(err)
         }
     }
 
