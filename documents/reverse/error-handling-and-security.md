@@ -429,7 +429,12 @@ Wear OS companion アプリの gkill サーバー接続は、デフォルトで�
 
 ### 3.5 セッション有効期限・レート制限
 
-- **セッション有効期限**: API呼び出し時にセッションの `ExpirationTime` を検証。期限切れの場合は `ERR000373`（`AccountSessionExpiredError`）を返し、クライアント側でログイン画面にリダイレクト
+- **セッション有効期限**: API呼び出し時にセッションの `ExpirationTime` を検証。期限切れの場合は `ERR000373`（`AccountSessionExpiredError`）を返し、クライアント側でログイン画面にリダイレクトする（`gkill-api.ts` の `check_auth`）。
+  **ただしログイン画面にいるときは飛ばさない**（`is_on_login_page(window.location.pathname)`）。
+  ログイン失敗は `check_auth` が見るのと**同じコード帯**を通る（存在しないユーザIDは `ERR000002` `AccountNotFoundError`、
+  無効化されたアカウントは `ERR000238`）。素直に飛ばすと `location.replace("/")` でページごと作り直され、
+  ログイン画面がいま出したばかりのエラー表示が消えてしまう。利用者からは「画面が一瞬光って、理由も出ないまま元のまま」に見える。
+  行き先は同じ `/` なので、飛ばさないことで失うものは無い（セッションIDのクリアだけは行う）
 - **ログインレート制限**: IP単位で15分間に10回までのログイン試行を許可。超過時は `ERR000374`（`LoginRateLimitError`）を返却。`loginRateLimiter` 構造体でスライディングウィンドウ方式を実装。インメモリのみで永続化されないため、サーバー再起動でリセットされる
 
 ### 3.6 クライアント側エラーコード（ERR9xxxxx）

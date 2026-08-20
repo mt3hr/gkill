@@ -131,7 +131,6 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_google_locationhistory/
 | `parsers.go` | 各フォーマットの読み取り |
 | `source.go` | 取り込み元のZIPを開く |
 | `cache.go` | SQLite3 キャッシュ（差分更新・フィルタ・重複除去・ページング） |
-| `cache_path.go` | キャッシュDBの置き場所の解決 |
 | `html.go` | 設定画面の HTML |
 | `types.go` | 型定義と定数 |
 

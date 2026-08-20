@@ -22,7 +22,10 @@ Go `testing` パッケージ
 | `find_filter_tags_test.go` | タグ絞り込みの意味論（AND/OR、存在しないタグ名、大小無視、「タグなし」の扱い、空指定） |
 | `find_filter_timeis_test.go` | 打刻タグでの絞り込みと、打刻検索が最新版だけを見ること |
 | `filter_tags_kyous_test.go` | タグ AND 検索を map 参照へ置き換えた性能改修の結果不変（`find_filter_tags_test.go` と同じ関数を別観点で検査） |
-| `select_match_reps_cache_test.go` | 検索対象リポジトリの選定。種別フィルタとの和集合、非nil空指定（＝候補0件）の扱い、キャッシュ済みリポジトリの素通し |
+| `select_match_reps_cache_test.go` | 検索対象リポジトリの選定。種別フィルタとの和集合、非nil空指定（＝候補0件）の扱い、そして**rep名を指定してもキャッシュrepを剥がさない**こと（`UnWrap()` は枝刈り判定にだけ使う。剥がすとGUIの検索が毎回キャッシュをバイパスする）。配下の一部だけが指定された部分一致も見る |
+| `find_kyou_rep_name_filter_test.go` | rep名での**結果側**の絞り込み（`filterKyousByRepName`）。指定repだけ残る／全部落ちたIDはキーごと消える（空スライスを残すと後段が `kyous[0]` で panic）／`Reps == nil` は未指定／`RepName` が空の行は残す（追加直後の行がこれ）／本文ヒット由来の2本目の検索にも効く |
+| `sort_result_kyous_test.go` | 検索結果の並べ替え |
+| `find_filter_pipeline_bench_test.go` | 検索パイプラインのベンチマーク（`go test` の既定では走らない） |
 
 #### `find_filter_test.go` の内容
 

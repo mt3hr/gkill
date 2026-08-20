@@ -281,7 +281,9 @@ gkill 本体は起動時に環境変数 `GKILL_HOME` を設定し（`common.Init
 サブプロセスはその環境を引き継ぐため、プラグインは環境変数からキャッシュルートを解決できる。
 環境変数が無い場合は `--gkill-plugin-dir`（`$GKILL_HOME/plugins/{userID}/{pluginName}`）から遡って
 推定し、それも解けなければプラグインフォルダ直下にフォールバックする
-（実装: `src/plugins/*/cache_path.go` の `cacheDBPath`）。
+（実装: `src/server/gkill/plugin/sdk/cache_path.go` の `sdk.CacheDBPath`。
+6プラグインが1文字違わず同じものを持っていたので SDK へ集約した。
+パス要素として使える値かの検証は `sdk.IsSafePathElement`）。
 
 キャッシュは `clear_cache plugin <all|user_id...>` で削除できる（`clear_cache all` にも含まれる）。
 
@@ -846,6 +848,16 @@ Kmemo→KC→URLog→Nlog→Lantana→TimeIs→Mi の順で最初の1つだけ�
 `FindKyous` も索引から答える。`KCRepositories.FindKyous` は `threads.Go` でファンアウトするので
 （`goForRep` の迂回は `Repositories` にしかない）、ここで委譲すると rep 種別指定の検索が
 プールのスロットを握ったままプラグインのロックを待つことになる。
+
+**プラグインが `rep_name` を返さないときは manifest の `rep_name` で埋める**
+（`convertPluginKyouToKyou`）。プロトコル上は `manifest.json` の `rep_name` と一致させる約束だが、
+申告をそのまま写しているだけなので空で返ってくることがある。rep 名での絞り込みは
+検索結果の `Kyou.RepName` で行う（GUI は常に `reps` を送る）ので、
+ここが空だと**そのプラグインの記録が通常検索から丸ごと消える**。エラーも警告も出ない。
+空でない不一致は上書きしない（`Kyou.rep_name` は API 応答にも出ていて、
+クライアントのコンテキストメニューや `get_kyou_histories_by_rep_name` が乗っているため）。
+代わりに「manifest名 → 申告名」の組み合わせごとに1回だけ警告する
+（記録1件ごとに出すと実データで数十万行になる）。
 
 また `findCtx.MatchReps` は rep 名がキーなので、1つのプラグインが2種類以上を提供すると
 アダプタが片方しか入らない。そのため rep 種別が指定されているときは

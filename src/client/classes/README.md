@@ -14,8 +14,8 @@ classes/
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md
 ├── kftl/                       # KFTL パーサ → kftl/README.md
-├── dto/                        # DTO（3ファイル）
-└── lantana/                    # Lantana ユーティリティ（3ファイル）
+├── dto/                        # DTO（2ファイル）
+└── lantana/                    # Lantana ユーティリティ（1ファイル）
 ```
 
 ## ルートファイル: Composable 関数群
@@ -68,7 +68,6 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-confirm-delete-tag-view.ts` / `use-confirm-delete-tag-dialog.ts` | Tag 削除確認 |
 | `use-confirm-delete-text-view.ts` / `use-confirm-delete-text-dialog.ts` | Text 削除確認 |
 | `use-confirm-delete-notification-view.ts` / `use-confirm-delete-notification-dialog.ts` | Notification 削除確認 |
-| `use-confirm-delete-share-task-list-view.ts` | 共有タスクリスト削除確認 |
 | `use-confirm-re-kyou-view.ts` / `use-confirm-re-kyou-dialog.ts` | ReKyou 確認 |
 
 ### 表示系 Composable
@@ -206,25 +205,22 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 
 連鎖削除は Kyou 自身を最後に消す。先に消すとサーバの `FindKyous` が参照元を結果から外してしまい、ReKyou / MiReKyou を辿れなくなるため。TXID / commit_tx は使っていないので途中で失敗すると部分的に確定した状態が残る。その場合は `ERR900094 cascade_delete_failed`（i18n: `FAILED_CASCADE_DELETE_KYOU_MESSAGE`）を返す。参照の連鎖を辿る深さは32段で打ち切り（`ERR900093 cascade_delete_depth_exceeded`）。
 
-## `dto/` サブディレクトリ（3ファイル）
+## `dto/` サブディレクトリ（2ファイル）
 
 データエクスポート機能の DTO 定義。
 
 | ファイル | 説明 |
 |---------|------|
 | `export_dto.ts` | エクスポート DTO 型 |
-| `export_dto_types.ts` | エクスポート DTO 型の列挙 |
 | `export_prune.ts` | エクスポートデータの剪定 |
 
-## `lantana/` サブディレクトリ（3ファイル）
+## `lantana/` サブディレクトリ（1ファイル）
 
 Lantana（気分値）表示用のユーティリティ。
 
 | ファイル | 説明 |
 |---------|------|
 | `lantana-flower-state.ts` | 花の状態定義（気分値に応じた表示） |
-| `lantana-text-data.ts` | テキストデータ（気分値テキスト） |
-| `lantana-text-type.ts` | テキスト型 enum |
 
 ## 開発ガイドライン
 

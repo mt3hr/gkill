@@ -19,7 +19,6 @@ api/
 ├── drop-type-foldable-struct.ts          # ドロップ型折り畳み構造体
 ├── file-data.ts                          # ファイルデータ型
 ├── generate-get-plaing-timeis-kyous-query.ts  # Plaing TimeIs クエリ生成
-├── upload-file-conflict-behavior-type.ts # アップロード競合動作型
 ├── find_query/                           # 検索クエリ型
 ├── message/                              # エラー/メッセージ型
 └── req_res/                              # 全 Request/Response 型
@@ -38,7 +37,6 @@ api/
 | `drop-type-foldable-struct.ts` | ドラッグ&ドロップ時のデータ型折り畳み構造体 |
 | `file-data.ts` | `FileData` 型（アップロードファイル情報） |
 | `generate-get-plaing-timeis-kyous-query.ts` | 稼働中 TimeIs の Kyou 取得クエリ生成ユーティリティ（実体は `find_query/generate-plaing-timeis-query.ts` へ委譲） |
-| `upload-file-conflict-behavior-type.ts` | ファイルアップロード競合時の動作 enum |
 
 ## サブディレクトリ
 
@@ -52,7 +50,6 @@ api/
 | `generate-plaing-timeis-query.ts` | `generate_plaing_timeis_query()` — plaing検索クエリの共通生成（カスタム検索条件の適用と未設定時の既定動作。GkillAPI 非依存の純関数） |
 | `mi-check-state.ts` | Mi チェック状態 enum |
 | `mi-sort-type.ts` | Mi ソート順 enum |
-| `mood-operator.ts` | 気分値比較演算子 enum |
 | `week-of-days.ts` | 曜日フィルタ enum |
 
 ### `message/`（2ファイル）— エラー/メッセージ型
@@ -79,7 +76,6 @@ api/
 
 - `add-kc-request.ts` / `add-kc-response.ts`
 - `add-kmemo-request.ts` / `add-kmemo-response.ts`
-- `add-kyou-info-request.ts` / `add-kyou-info-response.ts`
 - `add-lantana-request.ts` / `add-lantana-response.ts`
 - `add-mi-request.ts` / `add-mi-response.ts`
 - `add-nlog-request.ts` / `add-nlog-response.ts`

@@ -21,6 +21,7 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 | `npm run go_mod` | Regenerate `go.mod` and `go.sum` from scratch |
 | `npm test` | Run all tests (build + docs verification + server + client + MCP + plugins + Android + Wear OS) |
 | `npm run test_plugins` | Go tests for each standalone plugin module under `src/plugins/` |
+| `npm run vet_plugins` | `go vet` for the same plugin modules (CI runs it before `test_plugins`; `npm test` does not) |
 | `npm run verify_docs` | Docs CI: checks doc counts against code, cross-links, referenced paths, Mermaid blocks, manual freshness. `--list` prints the measured metrics |
 | `npm run test_server` | Go tests (`cd src/server && go test ./...`) |
 | `npm run test_client_unit` | Vitest unit tests |
@@ -102,8 +103,9 @@ src/
               # embedded manifest.json / default config.json via --gkill-print-manifest /
               # --gkill-print-config. Their SQLite caches live under gkill's own cache dir
               # ($GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db — resolved in
-              # each plugin's cache_path.go from the inherited GKILL_HOME env var, falling back
-              # to the plugin folder), so `clear_cache plugin` can wipe them
+              # plugin/sdk/cache_path.go (sdk.CacheDBPath) from the inherited GKILL_HOME env
+              # var, falling back to the plugin folder), so `clear_cache plugin` can wipe them.
+              # The 6 plugins had a byte-identical cache_path.go each; it now lives in the SDK
 ```
 
 ### Two Deployment Modes
@@ -189,7 +191,7 @@ Key packages:
 Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + PWA (vite-plugin-pwa + Workbox)
 
 - `router/index.ts` — 13 page routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, dashboard, rudbeckia, set_new_password, register_first_account, shared_page) + 2 redirect-only routes（`/regist_first_account` → `/register_first_account`、`/shared_mi` → `/shared_page`。どちらも query を引き継ぐ）。**旧パスの吸収は redirect でやること** ―― コンポーネントの setup から `router.replace` すると、`<script setup>` に top-level await があるページでは初回ナビゲーションが完了しなくなる（`/shared_mi` が実際にそうなっていた。share_id 無しで throw して setup ごと落ちていたため、redirect が一度も走らず露見していなかった）
-- `pages/views/` — 203 view components, `pages/dialogs/` — 116 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend/correlation graph components (client-side aggregation, no server API)
+- `pages/views/` — 202 view components, `pages/dialogs/` — 116 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend/correlation graph components (client-side aggregation, no server API)
 - `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,400 lines), client-side API wrapper
 - `classes/kftl/` — KFTL parser (50 statement types; the Go side has 47). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
 - `classes/cascade-delete-kyou.ts` — cascade delete for Kyou. The attached Tag / Text / Notification and the ReKyou / MiReKyou that reference the Kyou are looked up in reverse via `GetReKyousByTargetID` / `GetMiReKyousByTargetID` and logically deleted together with it. Depth cap 32 (`max_cascade_depth`), 16 lookups in flight per level (`request_chunk_size`). **The Kyou itself is deleted last** (deleting it first makes the server's `FindKyous` drop the referencing records from its results, so the reverse lookup can no longer find them). No TXID / `commit_tx` is used, so a partial commit is possible. On failure: ERR900093 `cascade_delete_depth_exceeded` / ERR900094 `cascade_delete_failed`, i18n key `FAILED_CASCADE_DELETE_KYOU_MESSAGE`
@@ -324,6 +326,20 @@ rykv / mi が同じものを使う。守るべき約束:
   `e2e/regression-fixes.spec.ts` の「新規タグを付けて追加した記録が、画面遷移せずに一覧へ残る」
   （**画面遷移しないことが本質** ―― 遷移すると既定クエリを作り直すのでこの不具合をすり抜ける）
 
+**ログイン画面ではセッション無効の飛ばしを止める**（`is_on_login_page`、`gkill-api.ts` の `check_auth`）。
+`check_auth` はセッション無効系のエラーコード（`ERR000013` / `ERR000002` / `ERR000238` / `ERR000373`）を見つけると
+`clear_browser_datas()` してから `location.replace("/")` する。ところが**ログイン失敗も同じコード帯を通る**
+（存在しないユーザIDは `ERR000002` `AccountNotFoundError`、無効化されたアカウントは `ERR000238`）。
+素直に飛ばすとページごと作り直され、`login-page.vue` がいま出したばかりのエラー表示が消える。
+利用者からは「画面が一瞬光って、理由も出ないまま元のまま」に見える。
+- **行き先は同じ `/` なので、飛ばさないことで失うものは無い。** セッションIDのクリアだけは行う
+- 判定は `pathname === '/'`（と空文字）だけ。**共有ページを足してはいけない** ―― 共有ページは
+  セッションではなく `share_id` で認証するので、そもそもこのコード帯を通らない
+- ガードは `location.replace` の**手前**に置く。順序は `check-auth-login-page.test.ts` がソース走査で固定する
+  （`check_auth` の本体を切り出し、ガードの位置が replace より前であることを添字で比べる）
+- 守るテスト: `check-auth-login-page.test.ts` / `e2e/login.spec.ts` の
+  「login with invalid credentials shows error」
+
 
 **KFTL（メモ帳）のタブ**（2026-08-16）。`kftl-view.vue` がタブのホストで、`/kftl` ページ・各画面のメモ帳ダイアログ（`kftl-dialog.vue`）・打刻メモ帳（`mkfl-view.vue`）の**3系統すべて**に効く。純関数は `classes/kftl-tabs.ts`、状態は `classes/use-kftl-tabs.ts`。守るべき約束:
 - **`v-window` を使わず、アクティブなタブ1枚だけを描画する。** 非表示の textarea は `clientWidth` が0になり、`kftl-statement-line.ts` の `1 + parseInt(text_width / 0)` が **`NaN`**（`Infinity` ではない）を返して行ラベルが丸ごと消える
@@ -455,7 +471,7 @@ ESLint 10 flat config (`eslint.config.js`). Zero violations policy (levels per r
 | `@typescript-eslint/no-empty-object-type` | error | 空の `{}` 型禁止。`type X = ParentType` を使うこと |
 | `@typescript-eslint/no-unused-vars` | warn | `_` プレフィックスで無視 (`argsIgnorePattern: '^_'`) |
 | `@typescript-eslint/naming-convention` | error | 識別子の命名規約（上記 Naming convention 節）。対象は `src/client` 本体のみ |
-| `playwright/no-conditional-in-test` / `no-wait-for-timeout` | error（未移行E2Eのみ warn） | 「静かに成功するテスト」の防止。未移行ファイルは `e2e/playwright-not-migrated` に列挙 |
+| `playwright/no-conditional-in-test` / `no-wait-for-timeout` | error（全 spec） | 「静かに成功するテスト」の防止。免除リストは撤去済み。CI は `npx eslint --max-warnings 0` |
 
 Go: `slices.SortFunc` (not `sort.Slice`), `for range n` (not `for i := 0; i < n; i++`), `any` (not `interface{}`), `errors.Join` for multi-error collection.
 
@@ -467,7 +483,7 @@ The codebase (variable names, comments, commit messages) is primarily in Japanes
 
 ## Documentation
 
-- `resources/manual/` — HTML manuals (7 languages, 21 pages per language), embedded via `//go:embed` and served at `/resources/manual/`
+- `resources/manual/` — HTML manuals (7 languages, 22 pages per language), embedded via `//go:embed` and served at `/resources/manual/`
 - `documents/reverse/` — Reverse-engineered design documents (24 files). See `documents/reverse/README.md` for index. Key files: glossary.md (96 terms), api-endpoints.md (92 endpoints, 90 registered), usecase.md (87 use cases), sequence-diagrams.md (29 diagrams), scenario.md (cross-channel end-to-end usage scenarios with UML), testing-guide.md. `npm run verify_docs` (`src/tools/verify_docs.mjs`) machine-checks the counts, cross-links, referenced paths, Mermaid blocks, and manual freshness — it runs as part of `npm test`, so update the docs when a count changes.
 - `src/ABOUT_TEST.md` — Test specification index, links to 23 subdirectory `ABOUT_TEST.md` files
-- **What `verify_docs` covers** (extend it rather than hand-maintaining new numbers): file/test counts computed from the tree (`--list` prints them all), count assertions across `documents/reverse/*.md` + `CLAUDE.md` + `src/**/README.md` + `ABOUT_TEST.md`, markdown link resolution for that same set, `src/...` path references (warning), Mermaid block types, manual generation freshness / language page-set parity / a11y invariants / intra-manual links, a **terminology lint** that rejects internal code names (`IDF`, `WAN`, `Kyou`, `MiReKyou`, `Dnote`, …) in `resources/manual_src/` outside `<code>` spans, and a check that every `screen_name` the app passes to `HelpDialog` has a matching manual page. `--parity` (opt-in) reports per-page h2/h3/table drift against the Japanese original.
+- **What `verify_docs` covers** (extend it rather than hand-maintaining new numbers): file/test counts computed from the tree (`--list` prints them all), count assertions across `documents/reverse/*.md` + `CLAUDE.md` + `src/**/README.md` + `ABOUT_TEST.md`, markdown link resolution for that same set, `src/...` path references (warning; the backtick scan strips fenced blocks first — pairing across a ``` fence used to hide 65% of them), **a check that every filename mentioned in a doc actually exists** (this one alone caught 17 ghost entries left behind by deletions; `_`-prefixed suffix patterns and `xxx` placeholders are exempt), Mermaid block types, manual generation freshness / language page-set parity / a11y invariants / intra-manual links, a **terminology lint** that rejects internal code names (`IDF`, `WAN`, `Kyou`, `MiReKyou`, `Dnote`, `rudbeckia`, …) in `resources/manual_src/` outside `<code>` spans and `href`/`src` values, and a check that every `screen_name` the app passes to `HelpDialog` has a matching manual page. `--parity` (opt-in) reports per-page h2/h3/table drift against the Japanese original.

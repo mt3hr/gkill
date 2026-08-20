@@ -91,7 +91,6 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_chatgpt/cache.db
 | `main.go` | エントリポイント、SDK ハンドラ登録 |
 | `loader.go` | `conversations.json` の読み込み・パース |
 | `cache.go` | SQLite3 キャッシュ（テーブル定義・差分判定） |
-| `cache_path.go` | キャッシュDBの置き場所の解決 |
 | `html.go` | 会話詳細の HTML 生成 |
 | `types.go` | ChatGPT エクスポート形式の型定義 |
 | `manifest.json` | プラグインメタ情報 |

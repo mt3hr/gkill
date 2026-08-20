@@ -154,7 +154,6 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_fitbit/cache.db
 | `timeparse.go` | 高速なタイムスタンプ解析と現地日付のバケット |
 | `builder.go` | バックグラウンドの取り込み |
 | `cache.go` | SQLite3 キャッシュ（部分集計と差分更新） |
-| `cache_path.go` | キャッシュDBの置き場所の解決 |
 | `query.go` | キャッシュからの読み出し |
 | `render.go` | 詳細 HTML（1日1指標のカードと時刻別グラフ） |
 | `html.go` | 設定画面の HTML |
