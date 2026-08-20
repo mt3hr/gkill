@@ -16,7 +16,18 @@ gkill プロジェクト用のユーティリティスクリプト。
 | `extract_manual_src.mjs` | 既存 `resources/manual/` から `manual_src/` を抽出する移行ツール |
 | `verify_release_artifacts.mjs` | `npm run release` 成果物の検証 |
 | `test_plugins.mjs` | `npm run test_plugins` / `npm run vet_plugins` の実体。`src/plugins/` 配下の各 Go モジュールに `go test` / `go vet` を回す |
-| `gradle_test.mjs` | `npm run test_android` / `npm run test_wear_os` の実体。Windows では `gradlew.bat`、それ以外は `./gradlew` を使う |
+| `gradle_test.mjs` | `npm run test_android` / `npm run test_wear_os` の実体。Windows では `cmd /c <絶対パス>gradlew.bat`、それ以外は `./gradlew`（絶対パス）を使う |
+
+### gradle_test.mjs — ラッパーは絶対パスで呼ぶ
+
+Windows で `gradlew.bat` と**裸の名前**を cmd へ渡してはいけない。
+`NoDefaultCurrentDirectoryInExePath=1` が設定された環境ではカレントディレクトリを探索しないので、
+`cwd` を渡していても「gradlew.bat は、内部コマンドまたは外部コマンド… として認識されていません」で落ちる。
+探索順の問題であって作業ディレクトリの問題ではないため、`cwd` を直しても解決しない。
+
+`shell: true` も使わない。引数がエスケープされずに連結されるだけで（Node が DEP0190 で警告する）、
+`.\gradlew.bat` のようなパスはバックスラッシュが落ちて `.gradlew.bat` に化ける。
+`cmd.exe /d /s /c <絶対パス> <タスク>` を `shell: false` で起動するのが一番素直で、エスケープの余地も無い。
 
 ## dev.mjs
 
