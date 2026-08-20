@@ -236,9 +236,13 @@ sequenceDiagram
     API->>API: wrapAuthRepos ミドルウェアで認証済み（AuthFromContext）
     API->>API: usecase 層で query.OnlyLatestData = true (強制)
     API->>Filter: FindKyous(query, repos)
-    Filter->>Repos: 全リポジトリからデータ取得
+    Filter->>Filter: selectMatchRepsFromQuery<br>(検索対象リポジトリの選定)
+    Note right of Filter: RepType / mi板 / 画像のみ で候補を絞る。<br>rep名(FindQuery.Reps)は「1つでも選ばれたラッパを<br>残す」枝刈りにだけ使い、**キャッシュrepのまま**登録する
+    Filter->>Repos: 選ばれたリポジトリから取得
     Note right of Repos: KmemoReps, KCReps,<br>LantanaReps, MiReps,<br>NlogReps, URLogReps,<br>TimeIsReps, IDFKyouReps,<br>ReKyouReps, MiReKyouReps,<br>GitCommitLogReps, GPSLogReps,<br>PluginReps
-    Repos-->>Filter: 全Kyou候補
+    Repos-->>Filter: Kyou候補
+    Filter->>Filter: filterKyousByRepName<br>(Kyou.RepName で結果を絞る)
+    Note right of Filter: 本文ヒット由来の2本目の検索にも同じ絞り込みをかける
     Filter->>Cache: GetLatestDataRepositoryAddresses
     Cache-->>Filter: リポジトリ位置情報
     Filter->>Filter: フィルタ適用<br>(キーワード, 日時範囲,<br>タグ, データ型, デバイス)
@@ -247,6 +251,40 @@ sequenceDiagram
     API-->>UI: {kyous: [...]}
     UI-->>User: 検索結果一覧表示
 ```
+
+> **rep名での絞り込みは「どのリポジトリを検索するか」ではなく「どの結果を残すか」で行う。**
+>
+> インメモリキャッシュ（既定 `--cache_in_memory=true`）では、型ごとに1個のキャッシュrepへ畳まれ、
+> その配下に端末別の重複登録を含む数百個の生repがぶら下がる。かつては rep名が指定されると
+> `UnWrap()` でラッパを剥がして**生のディスクrepを検索対象に登録**していたため、
+> **rep名を必ず送るGUIの検索が毎回キャッシュを丸ごとバイパス**していた
+> （実データで11個のキャッシュrepが約940個の生repに展開され、git だけで1窓あたり20.7秒）。
+> `--cache_reps_local` のローカルコピー層も同時に剥がれ、クエリが外付けドライブ上の元DBへ戻っていた。
+>
+> いまは `UnWrap()` を「そのラッパに選ばれた実repが1つでもあるか」の**枝刈り判定にだけ**使い、
+> `MatchReps` にはキャッシュrepをそのまま入れる。実際にどの行を残すかは
+> `filterKyousByRepName` が `Kyou.RepName` で決める（キャッシュ表は行ごとに実rep名を持つ）。
+>
+> 枝刈りは省けない。省くと「キャッシュOFF」「1種別だけチェック」「一致0件」が
+> いまの0コストから全rep検索（プラグインへのプロセス間通信を含む）に化ける。
+>
+> **落とし穴**（コメントとテストで固定してある）:
+>
+> | # | 決まりごと | 破ったときの症状 |
+> |---|---|---|
+> | 1 | 本文ヒット由来の2本目の検索にも絞り込みをかける | 語句がテキストに当たった記録だけ絞り込みをすり抜ける |
+> | 2 | 全部落ちたIDはキーごと消す（空スライスを残さない） | 後段が `kyous[0]` を見て panic |
+> | 3 | `Reps == nil` は「未指定」。`len()` で判定しない | 非nil空との区別が消え、全件が落ちる |
+> | 4 | `RepName` が空の行は残す | キャッシュへの write-through は呼び出し側の値をそのまま INSERT するので追加直後の行は空。落とすと**いま追加した記録が最大1分間一覧から消える** |
+> | 5 | `dao/reps` 側には置かない | ReKyou / MiReKyou のワード委譲が利用者のクエリをそのまま `FindKyousSequential` へ渡すため、チェックしていないrepに参照先を持つリポストが黙って語句検索に当たらなくなる |
+>
+> 4 の裏返しとして、**書き込み側が実在しないrep名を入れてはいけない**。
+> この関数は非空のrep名を「実在するが選ばれていないrep」とみなして落とすので、
+> 合成した名前を渡されると記録が黙って消える。実例: `commit_tx` は一時リポジトリから
+> 読み直した記録を write-through していたが、`GetXxxByTXID` は `? AS REP_NAME` に
+> 一時repの名前（`"KmemoTemp"` / `"KC_TEMP"` …）を差し込んで返すため、
+> **メモ帳構文で書いた記録だけが一覧から丸ごと消えていた**。
+> 直すのは常に書き込み側で、ここに `*Temp` の例外を足さない。
 
 ## 8. KFTL テキスト送信・パース・保存
 

@@ -58,6 +58,13 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `find_warnings_test.go` | 検索中の警告コレクタ（収集、コレクタ未設定時の無害さ、並行追加） |
 | `find_word_match_test.go` | キーワード一致判定の共通化。除外語のみの検索、AND/OR、ファイル本文の走査、絶対パスを検索対象に含めないこと |
 | `cached_find_only_latest_test.go` | 「最新版のみ」指定がキャッシュ実装でも非キャッシュ実装と同じに効くこと（Nlog / KC / TimeIs） |
+| `get_kyou_latest_version_test.go` | 単体取得が最新版を返すこと |
+| `repositories_id_chunk_test.go` | IDリストの分割（`findChunkedByIDs`）。SQLite のバインド変数上限を超えると**エラーが立たないまま0件**になるので、上限またぎを実データ寸法で固定する |
+| `local_rep_cache_granular_test.go` | ローカルキャッシュのコピー省略判定。**「コピーが要るか」の判定を `os.Remove` より後に置くと常に「要コピー」になり**、毎回1.3GBコピーし直したうえで変更検知が丸ごと無効化される |
+| `plugin_typed_adapters_test.go` | プラグインの型別/付随データのアダプタ。読み取りが索引から即答し、**プラグインへ往復しない**こと（1件ずつ聞きに行くと一覧の行数ぶんの直列 stdio 呼び出しになる） |
+| `plugin_kyou_rep_name_test.go` | プラグイン Kyou の `RepName`。空なら manifest の `rep_name` で埋め、空でない不一致は上書きせず**組み合わせごとに1回だけ**警告すること |
+| `gps_log_repository_plugin_impl_test.go` | GPSLog 専用プラグイン（`emits_kyou: false`）のリポジトリ実装 |
+| `cache_find_bench_test.go` / `tag_find_bench_test.go` / `kyou_json_bench_test.go` | ベンチマーク（`go test` の既定では走らない）。タグ絞り込みの2経路の交差点や、応答JSONの組み立てを実測するためのもの |
 | `mi_find_kyous_parity_test.go` | Mi のキャッシュ実装と非キャッシュ実装で、大小無視と「最新版のみ」の扱いが一致すること |
 | `testhelper_test.go` | テストヘルパーユーティリティ |
 | `cache/latest_data_repository_address_dao_sqlite3_impl_test.go` | キャッシュアドレス DAO |

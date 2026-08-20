@@ -194,7 +194,12 @@ graph LR
 
 `PluginReps` だけは他と性質が異なります。`RepType` の switch 文では生成されず、
 `PluginManager.DiscoverPlugins()` が `$GKILL_HOME/plugins/{userID}/` を走査して登録し、
-`PluginReps` と `Reps` の両方に追加されます（`gkill_dao_manager.go:1081-1087`）。書き込み先はありません。
+`PluginReps` に追加されます（`gkill_dao_manager.go` の `DiscoverPlugins` 後の登録ループ）。書き込み先はありません。
+
+**`Reps`（Kyou 検索の対象）へ入るかは `manifest.json` の `emits_kyou` 次第です。**
+`emits_kyou: false`（位置情報履歴プラグインのような GPSLog 専用のもの）は `PluginReps`（設定・死活確認）と
+`GPSLogReps` にだけ入り、`Reps` には入りません。Kyou を1件も返さないプラグインを
+記録保管場所の一覧に出さないためです。
 
 ## 4. APIハンドラ構造
 
@@ -454,6 +459,19 @@ graph LR
 ```
 
 複数のリポジトリファイルのデータを1つのインメモリSQLite3データベースに集約し、検索パフォーマンスを向上させます。
+集約後のテーブルは行ごとに実リポジトリ名（`REP_NAME`）を持つので、「どのリポジトリの記録か」は
+キャッシュを剥がさなくても判別できます。
+
+> **`UnWrap()` するとキャッシュ層を丸ごと飛び越える。**
+> キャッシュrepの `UnWrap()` は配下の生ディスクrepを返します。返ってきたrepをそのまま検索に使うと、
+> インメモリキャッシュも `--cache_reps_local` のローカルコピー層も外れ、元のDBファイルを直接舐めることになります。
+> 実データの一例では11個のキャッシュrepが約940個の生rep（312rep中263個が端末別の重複登録）に展開され、
+> git リポジトリだけで1窓あたり20.7秒（実質CPUの60%）を使っていました。
+>
+> `UnWrap()` を使ってよいのは「そのラッパに該当する実repが1つでもあるか」を判定する**枝刈り**と、
+> rep名の一覧（`GetAllRepNames`）だけです。検索対象には**ラッパのまま**入れ、
+> 絞り込みは結果側（`Kyou.RepName`）で行います。詳細は
+> [sequence-diagrams.md](sequence-diagrams.md) の「7. Kyou 検索」を参照。
 
 ### キャッシュ制御パラメータ
 
@@ -523,11 +541,21 @@ sequenceDiagram
 
 全13ルートの定義一覧は [screen-transition.md](screen-transition.md) を、各画面の項目定義は [screen-specs.md](screen-specs.md) を参照。
 
-主要ルート: `/`（ログイン）, `/kftl`（KFTL入力）, `/mi`（タスクボード）, `/rykv`（履歴閲覧）, `/kyou`（記録詳細）, `/mkfl`（打刻メモ帳）, `/plaing`（打刻一覧）, `/dashboard`（日次サマリー）, `/saihate`（記録特化）, `/set_new_password`（パスワード変更）, `/register_first_account`（初回登録）, `/shared_page`（共有）, `/shared_mi`（共有タスク）
+主要ルート: `/`（ログイン）, `/kftl`（KFTL入力）, `/mi`（タスクボード）, `/rykv`（履歴閲覧）, `/kyou`（記録詳細）, `/mkfl`（打刻メモ帳）, `/plaing`（打刻一覧）, `/dashboard`（日次サマリー）, `/rudbeckia`（ポート）, `/saihate`（記録特化）, `/set_new_password`（パスワード変更）, `/register_first_account`（初回登録）, `/shared_page`（共有）
 
-この13ルートに加えて、コンポーネントを持たないリダイレクト専用ルートが1つある:
-`/regist_first_account` → `/register_first_account`（旧パス。`reset_token` クエリを引き継ぐ）。
+この13ルートに加えて、コンポーネントを持たないリダイレクト専用ルートが2つある:
+
+| 旧パス | 行き先 | 備考 |
+|---|---|---|
+| `/regist_first_account` | `/register_first_account` | `reset_token` クエリを引き継ぐ |
+| `/shared_mi` | `/shared_page` | `share_id` クエリを引き継ぐ |
+
 サーバ側（`serve.go`）も旧パスの PathPrefix を残しており、SPA を配信して vue-router に寄せる。
+
+> **旧パスの吸収はルータの `redirect` で行うこと。** 空のページを置いて setup から
+> `router.replace` してはいけない。共有ページは `<script setup>` に top-level await のある
+> 非同期コンポーネントで、初回ナビゲーションの解決中にその中から新しいナビゲーションを始めると
+> **遷移が完了しなくなる**（`page.goto` が60秒待っても返らない）。
 
 ### GkillAPI シングルトン
 

@@ -8,6 +8,31 @@
 
 Vitest
 
+## `use-*.ts` にテストを書く／書かない基準
+
+`classes/` には `use-*.ts` が300本以上あるが、**全部にテストは書かない**。
+基準は「壊れたときに、コンパイラでも型でも他のテストでも気付けないか」の1点。
+
+**書く**:
+
+- 純関数と、それに近い導出（`kftl-tabs.ts` / `mi-board-names.ts` / `kyou-local-insert.ts`）
+- **集約先**。同じ処理が何箇所にも手書きされていたのを1つへ寄せたもの（`abort-error.ts` は20箇所、
+  `web-push-key.ts` は6箇所）。壊れると全箇所へ同時に波及するのに、
+  規約のソース走査は「手書きが残っていないこと」しか見ていない
+- 順序・タイミングが本質のもの（`use-registered-tag-column-filter.ts`、
+  `use-rykv-view.ts` / `use-mi-view.ts` の列×検索）
+- 相手が居るやりとり（`use-plugin-config-dialog.ts` の iframe との postMessage、
+  `use-browse-zip-contents-dialog.ts` の階層導出）
+
+**書かない**:
+
+- `useFloatingDialog` を包んで `show()` / `hide()` / `defineExpose` するだけの薄いラッパ。
+  ダイアログ本体のロジックを `.vue` から `.ts` へ移した棚卸しで69本増えたが、
+  そのうち49本は40行未満のこれで、確認できるのは「型が通ること」だけになる
+  （`src/ABOUT_TEST.md` の「型やコンパイラが保証済みのものは書かない」）
+- 抽出そのものが維持されていることは `convention-source-scan.test.ts` が
+  「ダイアログの `<script setup>` にロジックを残していない」で見張る
+
 ## テストファイル一覧（ユーティリティクラス）
 
 | ファイル | テスト内容 |
@@ -49,6 +74,20 @@ Vitest
 | `src/client/__tests__/unit/classes/relay-bundle-source-scan.test.ts` | イベント中継束を `v-on` で渡した要素に同じイベントの `@` を併記していないこと（両方登録されて二重に発火する） |
 | `src/client/__tests__/unit/classes/kyou-view-height-source-scan.test.ts` | 記録ビューの高さにパーセント指定を渡していないこと |
 | `src/client/__tests__/unit/classes/application-config-update-fields-scan.test.ts` | 設定保存の詰め替え漏れ（書き忘れたフィールドが保存のたびに初期値へ巻き戻る）。永続化フィールド一覧がサーバ実装のキーと一致することも検査する |
+| `src/client/__tests__/unit/classes/convention-source-scan.test.ts` | **保守棚卸し全体の安全網。** `autofocus` を view に撒いていない／`:draggable` が `is_pc` 由来である／`.reload(true)` を手書きしていない／中継束を `@` で展開していない／ダイアログの `<script setup>` にロジックを残していない／中断判定を手書きしていない、をソース走査で検出する。検出用の正規表現自体をインラインの見本で突いてあるので、走査が空振りしたまま緑になることがない |
+| `src/client/__tests__/unit/classes/column-view-init-source-scan.test.ts` | 列ビュー（rykv / mi）の初期化順序と、新しいタグの既知判定を `emit` より前に行っていることをソース走査で固定する |
+| `src/client/__tests__/unit/classes/check-auth-login-page.test.ts` | ログイン画面ではセッション無効の飛ばしを止めること。ログイン失敗も `check_auth` と同じエラーコード帯を通るので、飛ばすと出したばかりのエラー表示がページごと作り直されて消える。ガードが `location.replace` より手前にあることもソース走査で見る |
+| `src/client/__tests__/unit/classes/abort-error.test.ts` | 中断（`AbortController.abort()`）の判定。20箇所の手書きを集約した先なので、壊れると全箇所へ同時に波及する。Chrome / Firefox で文言が違うため**メッセージで見るしかない** |
+| `src/client/__tests__/unit/classes/web-push-key.test.ts` | VAPID公開鍵（URL-safe base64）→ バイト列。6ページ分の重複を集約した先。パディング補完と `-_`→`+/` 置換 |
+| `src/client/__tests__/unit/classes/kyou-change-bus.test.ts` | 画面間の変更伝播バス。自分が出した通知は受けないこと、seq 付きの追記ログで同一 tick の複数件を落とさないこと |
+| `src/client/__tests__/unit/classes/kyou-tags.test.ts` | Kyou へのタグ付け（重複の落とし方、削除マークの扱い） |
+| `src/client/__tests__/unit/classes/kftl-tabs.test.ts` | メモ帳のタブの純関数（追加・削除・並び・保存マーカーの行数え） |
+| `src/client/__tests__/unit/classes/mi-board-names.test.ts` | 板名の並び順を設定の板ツリー順に揃えること・ツリーのルート行のクリックで板を開かないこと |
+| `src/client/__tests__/unit/classes/share-target-dedup.test.ts` | Android共有の重複台帳。再配送と意図的な再共有は内容から区別できないので、内容の完全一致と24時間で照会する |
+| `src/client/__tests__/unit/classes/floating-dialog-z-order.test.ts` | フローティングダイアログの前面化。z-index は開いている枚数から出す（単調増加にすると Vuetify の overlay を追い越してダイアログ内のメニューが下へ潜る） |
+| `src/client/__tests__/unit/classes/dnote-correlation-matrix-layout.test.ts` | 相関マトリクスのレイアウト計算 |
+| `src/client/__tests__/unit/classes/kyou-attached-tags-nowrap-source-scan.test.ts` | 付随タグの折り返し指定をソース走査で固定 |
+| `src/client/__tests__/unit/classes/kyou-detail-pane-attached-source-scan.test.ts` | 詳細ペインが付随データを出す配線をソース走査で固定 |
 
 ## テスト内容
 

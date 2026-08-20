@@ -35,11 +35,9 @@ const record = await waitForKyouByText(page, label)
 
 ### 移行状況
 
-中核のCRUDフロー（`add-dialog-crud` / `edit-dialog-crud` / `delete-crud` /
-`notification-crud` / `mi-operations`）と共通ヘルパ（`crud-helpers.ts`）は移行済みで、
-新規ファイルには最初から `error` が効く。未移行のファイルは
-`eslint.config.js` の `e2e/playwright-not-migrated` ブロックに列挙してあり、
-そこだけ `warn` に落としてある。直したらリストから消すこと。
+**移行は完了している。** 免除リスト（かつての `eslint.config.js` の
+`e2e/playwright-not-migrated` ブロック）は削除済みで、いまは全 spec に `error` が効く。
+CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜めることもできない。
 
 ### 硬くしたときに引っかかった落とし穴
 
@@ -78,7 +76,7 @@ const record = await waitForKyouByText(page, label)
 
 ### E2E テスト（44 specファイル, 250テスト宣言）
 
-#### ページ表示・ナビゲーション系（12ファイル）
+#### ページ表示・ナビゲーション系（14ファイル）
 
 | ファイル | テスト対象ルート |
 |---------|----------------|
@@ -91,9 +89,11 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/settings.spec.ts` | `/saihate` — 設定画面コンテンツ、JS エラーチェック、インタラクティブ操作 |
 | `src/client/__tests__/e2e/kyou-list.spec.ts` | `/kyou` — レコード一覧 |
 | `src/client/__tests__/e2e/share-page.spec.ts` | `/shared_page` — 不正な共有IDでエラーが表示され、読み込み中のまま止まらないこと（返る内容の網羅はGo側 handle_get_shared_kyous_test.go） |
-| `src/client/__tests__/e2e/shared-mi.spec.ts` | `/shared_mi` — 共有タスク |
+| `src/client/__tests__/e2e/shared-mi.spec.ts` | `/shared_mi` — 旧URL。ルータの redirect で `/shared_page` へ引き継がれること（コンポーネントは無い。setup から `router.replace` すると初回ナビゲーションが完了しなくなる） |
 | `src/client/__tests__/e2e/register-first-account.spec.ts` | `/register_first_account` — 初回アカウント登録 |
 | `src/client/__tests__/e2e/set-new-password.spec.ts` | `/set_new_password` — パスワード再設定 |
+| `src/client/__tests__/e2e/rudbeckia.spec.ts` | `/rudbeckia` — ポート。4画面をウィンドウとして開き、ホストしたビューのアプリバーとサイドバーがウィンドウの中に収まること、集計ビューの一覧が高さ0に潰れないこと、画面をまたぐ変更の伝播 |
+| `src/client/__tests__/e2e/dashboard.spec.ts` | `/dashboard` — ダッシュボード（ナビゲーション、描画、JSエラーなし） |
 
 #### CRUD 操作フロー系（9ファイル）
 
@@ -109,7 +109,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴 |
 | `src/client/__tests__/e2e/mi-re-kyou.spec.ts` | MiReKyou（既存Kyouのタスク化）: rykvのコンテキストメニュー「タスクにする」→Mi画面に出る。API面はGo側の TestHandleAddMiReKyou_* 系へ移管 |
 
-#### 認証・ユースケース・設定系（16ファイル）
+#### 認証・ユースケース・設定系（21ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -122,7 +122,6 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/regression-fixes.spec.ts` | 修正済みバグ回帰テスト（8件）。新規タグを付けて追加した記録が**画面遷移せずに**一覧へ残ること（遷移すると既定クエリを作り直すので不具合をすり抜ける）を含む |
 | `src/client/__tests__/e2e/misc-operations.spec.ts` | ブックマークレット、GPS、共有リンク、再起動 |
 | `src/client/__tests__/e2e/clipboard-save.spec.ts` | Ctrl+V でクリップボード保存ダイアログ表示（RYKV/Mi）、テキスト入力中は抑制、ダイアログ閉じ、クリップボードテキストのプレビュー |
-| `src/client/__tests__/e2e/dashboard.spec.ts` | ダッシュボード画面（ナビゲーション、描画、JSエラーなし確認） |
 | `src/client/__tests__/e2e/dialog-history.spec.ts` | ダイアログ履歴不変条件（×/Escape/ブラウザバックで閉じてもバックスタックに使用済みエントリが残らない、複数ダイアログを開いたまま画面遷移可能） |
 | `src/client/__tests__/e2e/edit-readonly-loading.spec.ts` | Edit系ダイアログの Loading 中 readonly 化とロード完了後の編集可能復帰（API 遅延注入で検証） |
 | `src/client/__tests__/e2e/re-kyou.spec.ts` | ReKyou（リポスト）の行を右クリックしたとき、入れ子の参照先ではなくリポスト自身のコンテキストメニューが出ること |
@@ -130,8 +129,13 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/rykv-columns.spec.ts` | rykv の複数列×検索: 別列で検索した結果が検索した列だけに反映される、列リロード・列削除で他列の絞り込みが壊れない |
 | `src/client/__tests__/e2e/mi-board-columns.spec.ts` | mi の板列×検索: 各板の列に自板のタスクだけが出る、板クリック後に別列で検索しても板名表示と検索条件が汚染されない |
 | `src/client/__tests__/e2e/saved-find-query.spec.ts` | 保存済み検索条件: 設定画面で登録→設定適用→ライフログビューのサイドバーFABから呼び出してサイドバーへ反映、タスク側は未登録なのでFAB非表示 |
+| `src/client/__tests__/e2e/rykv-sidebar-defaults.spec.ts` | rykv の既定検索条件と「プロファイル×記録分類→記録先詳細」の算出。列を足すと設定由来の既定条件で検索が飛ぶこと、記録分類のチェック変更が記録先詳細と検索条件へ反映されること |
+| `src/client/__tests__/e2e/column-view-initial-load.spec.ts` | 初期検索の完了を待たずに画面を見せること。準備完了の合図はルート要素の `data-gkill-view-ready`（全画面オーバーレイを待つセレクタでは、出る前に `toBeHidden` が通る窓ができる） |
+| `src/client/__tests__/e2e/kftl-tabs.spec.ts` | メモ帳のタブ（追加・切替・閉じる・localStorage への永続化）と、IMEで確定してから改行したときの保存マーカー。**IME は CDP の `Input.imeSetComposition` でしか再現できない**（`pressSequentially` は中間の本文を必ず観測してしまい常に緑になる） |
+| `src/client/__tests__/e2e/kftl-multi-dialog.spec.ts` | メモ帳ウィンドウを複数枚開く。タブの一覧と中身は共有シングルトン、「いま映しているタブ」だけがウィンドウごと |
+| `src/client/__tests__/e2e/dialog-autofocus.spec.ts` | ダイアログを開いたら最初のテキスト入力欄にカーソルが載ること（選び方の判定そのものは `unit/classes/dialog-autofocus.test.ts`） |
 
-### Composable ユニットテスト（57ファイル）
+### Composable ユニットテスト（59ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -159,12 +163,47 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/unit/composables/ryuu-relay-chain.test.ts` | Ryuu の中継チェーン（`kyou_view_relay_event_names` の18件が RyuuItemView から親まで届くこと・`requested_open_rykv_dialog` は kind と payload ごと通ること・フォーカス2件は通さないこと・二重発火しないこと） |
 | `src/client/__tests__/unit/composables/registered-tag-column-filter.test.ts` | 利用者がその場で作ったタグを列の検索条件へ足す判定（`tags_and` の列は積が必ず空になるので触らないこと・既知タグでは列も引き直しも動かないこと・既知判定は emit 前のその場で行うこと） |
 | `src/client/__tests__/unit/composables/new-tag-column-search.test.ts` | 同じ表を useRykvView / useMiView の**両方**へ流す配線テスト（引き直しは列あたり1本・`query_id` 不変・条件が `set_saved_*` に落ちること・親への `registered_tag` 中継を止めないこと） |
+| `src/client/__tests__/unit/composables/browse-zip-contents-dialog.test.ts` | ZIPの中を辿るダイアログの純ロジック（フォルダのエントリを持たないZIPでも階層を導出する・画像/テキスト/メディアの巡回が両端で止まる・サイズ表示）。**E2Eには zip の spec が無いのでここが唯一のカバレッジ** |
+| `src/client/__tests__/unit/composables/plugin-config-dialog.test.ts` | プラグイン設定ダイアログ。iframe は `allow-same-origin` を持たないので保存を親が肩代わりする経路（`e.source` を緩めると無関係なウィンドウから設定を書き換えられる・保存成功後は設定HTMLを取り直す） |
+| `src/client/__tests__/unit/composables/config-struct-sync.test.ts` | 板ツリー・タグツリーのセッション中追随。どちらもサーバに実体が無く、一覧APIから起動時に組み立てられる |
+| `src/client/__tests__/unit/composables/confirm-unknown-mi-board.test.ts` | 「新しい板です」確認ゲート。板はサーバ側に実体が無いので、打ち間違いが無言で新しい板を生やす |
+| `src/client/__tests__/unit/composables/dashboard-page-reload.test.ts` | useDashboardPage（設定の取得・テーマ・メッセージ・ツリー追随・ログアウトだけの薄いページ）。設定取得の失敗が永久スピナーにならないこと |
+| `src/client/__tests__/unit/composables/dashboard-view-reload.test.ts` | useDashboardView の再読込（`registered_kyou` のデバウンス、日付変更と初回ロードの共通化） |
+| `src/client/__tests__/unit/composables/dnote-correlation-graph-crud.test.ts` | 相関グラフの CRUD 導線がトレンドグラフと同じ形で端まで繋がっていること |
+| `src/client/__tests__/unit/composables/dnote-relay-chain.test.ts` | Dnote の中継チェーンが `requested_reload_kyou` を親まで通すこと（タグ/テキスト/通知の変更はこれしか信号を出さない） |
+| `src/client/__tests__/unit/composables/edit-kyou-tags-view.test.ts` | 追加/編集画面に埋め込むタグ欄。値を集めるだけで登録は親の `save()` が行う |
+| `src/client/__tests__/unit/composables/edit-mi-board-struct-view.test.ts` | Mi の板構造の編集（削除の walk が「子で true が返ったら親が splice」の形になっていること） |
+| `src/client/__tests__/unit/composables/edit-plaing-time-is-dialog.test.ts` | 実行中検索のカスタム条件ダイアログ（「カスタマイズする」チェックの3状態の意味論） |
+| `src/client/__tests__/unit/composables/edit-saved-find-query-list-dialog.test.ts` | 保存済み検索条件の一覧編集。受け取ったリストのクローンを編集し、適用まで元を書き換えないこと |
+| `src/client/__tests__/unit/composables/find-query-editor-view.test.ts` | 検索条件エディタ（Dnote/Ryuu が使う）。TimeIsのタグツリーへ流すのは `timeis_tags` であって `tags` ではないこと |
+| `src/client/__tests__/unit/composables/find-query-editor-dialog-default-signal.test.ts` | 検索条件エディタダイアログの初期値規則（`query_id` が空＝未セットの印を潰さないこと） |
+| `src/client/__tests__/unit/composables/find-time-is-query-editor.test.ts` | 実行中検索のカスタム条件エディタが書き込むフィールドの対応 |
+| `src/client/__tests__/unit/composables/foldable-struct-device-gates.test.ts` | ツリーの端末種別ゲート（D&Dの可否は `is_pc`、ロングプレス補完は `has_touch`。兼用するとタッチ対応PCでD&Dが死ぬ） |
+| `src/client/__tests__/unit/composables/foldable-struct-selected-items.test.ts` | `get_selected_items()` が「入れ物」（フォルダ・ルート）を返さないこと。返すとAND検索が必ず0件になる |
+| `src/client/__tests__/unit/composables/kftl-dialog-host.test.ts` | メモ帳ウィンドウの一覧を持つホスト（＋メニューのたびに1枚増える・slot 番号の採番と返却） |
+| `src/client/__tests__/unit/composables/kftl-tab-store.test.ts` | メモ帳のタブを持つ共有ストア（モジュールシングルトン。独立した `effectScope` の中で作らないと最初のコンポーネントの unmount で永続化ごと止まる） |
+| `src/client/__tests__/unit/composables/kyou-change-propagation.test.ts` | ポートで並べた画面のあいだの変更伝播（自分が出した通知は受けない・`reload_list` は1ドレイン1回に畳む） |
+| `src/client/__tests__/unit/composables/kyou-histories-view.test.ts` | 履歴一覧（`related_time` の付け替えが読み直した値を見ること） |
+| `src/client/__tests__/unit/composables/kyou-list-view-scroll-to.test.ts` | `scroll_to` の永久リトライ打ち切り（世代カウンタと2秒上限。0件の列で50ms周期の強制レイアウトが増殖していた） |
+| `src/client/__tests__/unit/composables/mi-kyou-count-calendar.test.ts` | mi版の件数カレンダー（`is_active` ゲートと日付キー。rykv版と対称） |
+| `src/client/__tests__/unit/composables/mi-sidebar-inited.test.ts` | mi サイドバーの節ごとの `inited` フラグ（子が「初回同期か再同期か」を判定する。消すと props 同期のたびにチェックが列をまたいで累積する） |
+| `src/client/__tests__/unit/composables/mi-view-initial-load.test.ts` | useMiView の初期化（画面を見せるまで）。`rykv-view-initial-load` と対で、修正が片側にしか入っていないと落ちる |
+| `src/client/__tests__/unit/composables/rykv-view-initial-load.test.ts` | useRykvView の初期化（列の骨組みを確定 → 可視化 → 検索の順。`inited` は初期検索の完了に依存しない） |
+| `src/client/__tests__/unit/composables/password-reset-link-view.test.ts` | パスワードリセットリンク表示（72時間の期限表示と期限切れ判定・リンク再発行） |
+| `src/client/__tests__/unit/composables/registered-kyou-local-insert.test.ts` | 追加された記録を再検索せず列へ差し込む経路（rykv / mi の両方へ同じ表を流す） |
+| `src/client/__tests__/unit/composables/rep-query-summary-detail.test.ts` | 「プロファイル×記録分類→記録先詳細」の算出（例外のあとも loading が復帰して算出が生き残ること） |
+| `src/client/__tests__/unit/composables/rykv-sidebar-mechanical-emission.test.ts` | サイドバーの機械的な `updated_query` の遮断（値比較ガード。破れると検索中の列をクリックしただけで飛行中の検索が abort される） |
+| `src/client/__tests__/unit/composables/ryuu-item-view.test.ts` | 流の1項目（中継束の override。手書きで3件だけ並べていた頃は残り15件を落としていた） |
+| `src/client/__tests__/unit/composables/ryuu-view-apply.test.ts` | 流の定義編集（`apply()` は編集結果を親へ渡すだけにする） |
+| `src/client/__tests__/unit/composables/server-config-view.test.ts` | サーバ設定画面（props の ServerConfig を複製してから編集する） |
+| `src/client/__tests__/unit/composables/sidebar-child-query-sync-emission.test.ts` | サイドバー子クエリビューの「props同期では emit しない」原則（TimeIs / Map / Calendar） |
+| `src/client/__tests__/unit/composables/tutorial-on-startup.test.ts` | 起動時チュートリアルは起動時に1回だけ（`application_config` の ref 差し替えで再発火しないこと） |
 
 ### ルーターテスト
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `src/client/__tests__/unit/router.test.ts` | 全13ルートの定義と遷移 |
+| `src/client/__tests__/unit/router.test.ts` | コンポーネントを持つ13ルートの定義と遷移、および旧パスを吸収する redirect 専用2ルート（`/regist_first_account` → `/register_first_account`、`/shared_mi` → `/shared_page`。どちらもクエリを引き継ぐ） |
 
 ## E2E テストヘルパー
 
@@ -174,6 +213,7 @@ const record = await waitForKyouByText(page, label)
 - `src/client/__tests__/e2e/run-e2e.mjs` — テストランナー（gkill_server自動起動・停止）
 - `src/client/__tests__/e2e/free-port.mjs` — OS から空きポートを採番（本番 gkill_server の :9999 と衝突させないため）
 - `src/client/__tests__/e2e/auth.setup.ts` — Playwright の setup プロジェクト。ログイン状態を作って保存する
+- `src/client/__tests__/e2e/e2e-credentials.ts` — テストユーザのIDとパスワードハッシュ（各 spec へ手書きで散らさない）
 - `src/client/__tests__/e2e/global-setup.ts` / `global-teardown.ts` — テスト全体の前後処理
 
 ## 実行方法

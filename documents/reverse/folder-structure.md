@@ -14,7 +14,7 @@ gkill/
 ├── public/                 # 静的アセット（favicon.ico等）
 ├── release/                # リリースビルド成果物（クロスコンパイル時に生成）
 ├── resources/              # リソースファイル
-│   ├── manual/             # 生成済みHTMLマニュアル（7言語×21ページ、go:embed対象）
+│   ├── manual/             # 生成済みHTMLマニュアル（7言語×22ページ、go:embed対象。gitignore済みで build_manuals が生成する）
 │   ├── manual_src/         # マニュアルの原本（7言語 + _layout.html）。build_manuals.mjs の入力
 │   └── gkill_sample_data/  # サンプルデータ
 ├── .github/                # GitHub Actions ワークフロー
@@ -76,7 +76,6 @@ src/client/
 │   ├── set-new-password-page.vue
 │   ├── register-first-account-page.vue
 │   ├── shared-page.vue
-│   ├── old-shared-mi-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
 │   ├── views/              # ビューコンポーネント（202ファイル）
@@ -233,6 +232,14 @@ src/mcp/
 ├── gkill-write-server.mjs     # Write専用MCPサーバー（24ツール = 固有23 + プラグイン1、port 8809）
 ├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（29ツール = 固有28 + プラグイン1、port 8810）
 └── lib/
+    ├── mcp-server-base.mjs    # 3サーバ共通の JSON-RPC 受け口
+    ├── stdio-transport.mjs    # stdio トランスポート
+    ├── http-transport.mjs     # Streamable HTTP トランスポート
+    ├── gkill-client.mjs       # gkill 本体を叩く HTTP クライアント（ログイン・認証リトライ・ファイル取得）
+    ├── payload.mjs            # レスポンスのペイロード加工
+    ├── read-tools.mjs         # 読み取りツール定義（read / readwrite が共有。write も3つだけ取る）
+    ├── write-tools.mjs        # 書き込みツール定義（write / readwrite が共有）
+    ├── find-query-schema.mjs  # gkill_get_kyous の検索条件スキーマ
     ├── access-log.mjs         # MCPアクセスログモジュール（MCP_LOG環境変数で制御）
     ├── plugin-tools.mjs       # 3サーバ共通のプラグインツール（gkill_get_plugin_list）とプラグイン本文のインライン埋め込み
     ├── html-text.mjs          # プラグインコンテンツHTML→プレーンテキスト変換
@@ -247,6 +254,9 @@ src/mcp/
     ├── oauth-html.mjs         # OAuth ログインページテンプレート
     └── pkce.mjs               # PKCE検証
 ```
+
+3つのサーバファイルは**ツールの取捨選択とディスパッチだけ**を持ち、実装は `lib/` にあります。
+以前は3ファイルが同じ処理を丸ごと持っていて（合計4,000行超）、片方だけ直す事故が起きやすい形でした。
 
 トランスポート: stdio（デフォルト）またはHTTP（OAuth 2.1認証付き）。
 
@@ -274,7 +284,7 @@ claudecode / codex / fitbit / google_locationhistory）は
 内容を標準出力に書き出せる（`gkill_example` は埋め込みもフラグも `DefaultConfig` も持たない）。
 この6本は `config.json` の `source_dirs` で取り込み元フォルダを指定し、
 SQLite3 キャッシュを `$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db` に置く
-（各プラグインの `cache_path.go`）。
+（解決は SDK の `sdk.CacheDBPath`。6本が同じ実装を持っていたので集約した）。
 
 > `src/plugins/*` の Go テストは別モジュールのため、`npm run test_server`（`cd src/server && go test ./...`）
 > では実行されない。`npm run test_plugins` が各モジュールを回し、`npm test` からも呼ばれる。

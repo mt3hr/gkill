@@ -106,15 +106,16 @@ gkill_server version
 
 | コマンド / スクリプト | 説明 |
 |---|---|
+| `npm run vet_plugins` | `src/plugins/` の各 Go モジュールへ `go vet`（CI の `plugins` ジョブが `test_plugins` の前に回す。`npm test` には入っていない） |
 | `npm run verify_docs` | ドキュメント検証（`src/tools/verify_docs.mjs`）。件数（handler/req_res/view/dialog/endpoint/i18nキー）をコードから突合、reverse資料の相互リンク・参照パス・Mermaid、マニュアルの生成鮮度・アクセシビリティ（`<main>`/`<caption>`/`th scope`）・言語構成一致・リンクを検査。**`npm test` に組み込まれている**（`install_server` の直後） |
 | `node src/tools/verify_docs.mjs --list` | 実測メトリクスを表示して終了（件数を更新するときの参照元） |
 | `node src/tools/verify_docs.mjs --parity` | 構造パリティ・レポート（日本語=正本に対する各言語マニュアルの見出し/表構造のズレを表示） |
-| `npm run build_manuals` | `resources/manual_src/{lang}/{page}.html`（原稿フラグメント）＋ `_layout.html`（共有レイアウト）から 147 マニュアルを生成。`<main>`/表 `<caption>`/`th scope` を自動付与 |
+| `npm run build_manuals` | `resources/manual_src/{lang}/{page}.html`（原稿フラグメント）＋ `_layout.html`（共有レイアウト）から 154 マニュアル（7言語 × 22ページ）を生成。`<main>`/表 `<caption>`/`th scope` を自動付与 |
 | `src/tools/manual_build.mjs` | マニュアル生成の実体。`build_manuals.mjs` と `verify_docs.mjs` の両方から import される |
 | `node src/tools/manual_a11y.mjs` | マニュアルのアクセシビリティ検査 |
 | `node src/tools/manual_ascii_fix.mjs` | fr/es マニュアルの ASCII 代替表記（アクセント欠落）を辞書ベースで是正（コード/pre/href は保護。要ネイティブレビューの初回パス） |
 | `npm run verify_release_artifacts` | リリース成果物（zip/apk）の検証。`npm run release` の最後に実行される |
-| `src/tools/license_getter.mjs` | 依存パッケージのライセンス情報収集（`npm run license_getter` で `LICENSES_DEPENDENCE` を生成。Go 5モジュール + npm 本番依存 + Android / Wear OS の Gradle 依存。Gradle 環境が無ければ `--skip-gradle`） |
+| `src/tools/license_getter.mjs` | 依存パッケージのライセンス情報収集（`npm run license_getter` で `LICENSES_DEPENDENCE` を生成。Go 8モジュール（`src/server` + `src/plugins` の各プラグイン。自動発見）+ npm 本番依存 + Android / Wear OS の Gradle 依存。Gradle 環境が無ければ `--skip-gradle`） |
 
 **マニュアル編集の流儀:** マニュアルは手書きHTMLではなく `resources/manual_src/` の原稿（HTMLフラグメント）を編集し、`npm run build_manuals` で `resources/manual/` を再生成する。`resources/manual/` を直接編集しても `verify_docs` の生成鮮度チェックで検出される。共通の head/style/テーマスクリプトは `_layout.html` に集約されている。
 
@@ -139,7 +140,7 @@ gkill_server version
 
 | コマンド | 説明 |
 |---|---|
-| `npm run setup_wear_os_gradle` | android/からgradlewをwear_os/にコピー |
+| `npm run setup_wear_os_gradle` | android/からgradlewをwear_os/にコピー（通常は不要。ラッパーはコミット済み） |
 | `npm run build_wear_os_companion` | コンパニオンアプリAPKビルド |
 | `npm run build_wear_os_watch` | ウォッチアプリAPKビルド |
 | `npm run install_wear_os_companion` | adb経由でコンパニオンアプリをインストール |
@@ -151,15 +152,15 @@ gkill_server version
 |---|---|
 | `npm run setup_gkill_develop_env` | Ubuntu/WSL用の開発環境一括セットアップ |
 | `npm run mcp:gkill-read` | Read MCPサーバー起動 |
-| `npm run mcp:gkill-read-http` | 同上（HTTPモード想定のエイリアス） |
+| `npm run mcp:gkill-read-http` | 同上（HTTPモード。`MCP_TRANSPORT=http MCP_PORT=8808`） |
 | `npm run mcp:gkill-write` | Write MCPサーバー起動 |
-| `npm run mcp:gkill-write-http` | 同上（HTTPモード想定のエイリアス） |
+| `npm run mcp:gkill-write-http` | 同上（HTTPモード。`MCP_TRANSPORT=http MCP_PORT=8809`） |
 | `npm run mcp:gkill-readwrite` | Read/Write統合MCPサーバー起動 |
-| `npm run mcp:gkill-readwrite-http` | 同上（HTTPモード想定のエイリアス） |
+| `npm run mcp:gkill-readwrite-http` | 同上（HTTPモード。`MCP_TRANSPORT=http MCP_PORT=8810`） |
 
-> **`-http` 付きスクリプトは非 `-http` 版とコマンド内容が同一**で、`MCP_TRANSPORT=http` を
-> 設定しているわけではない。HTTPモードで動かすには、下記のように環境変数
-> `MCP_TRANSPORT=http` を自分で設定してから起動する必要がある。
+> `-http` 付きスクリプトは `cross-env` で `MCP_TRANSPORT=http` と `MCP_PORT`
+> （Read 8808 / Write 8809 / ReadWrite 8810）を設定してから起動する。
+> 接続先や OAuth 発行者は下記の環境変数で指定する。
 
 ### MCP HTTPモード開発用環境変数
 

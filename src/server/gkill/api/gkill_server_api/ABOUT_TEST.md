@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装91ファイル（+ テスト5ファイル））に対する統合テストを含む。
+`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装91ファイル（+ テスト8ファイル））に対する統合テストを含む。
 
 ## テストフレームワーク
 
@@ -26,6 +26,10 @@ Go `testing` パッケージ
 | `get_device_cache_test.go` | デバイス名キャッシュ（`sync.Once` による `GetAllServerConfigs` 呼び出し削減）の検証 |
 | `plugin_content_html_cache_test.go` | プラグイン本文HTMLキャッシュ（TTL・件数上限・singleflight による同時要求の集約）の検証 |
 | `utils_ssrf_test.go` | `httpGetBase64Data` の SSRF 対策（スキーム制限、内部アドレス拒否、サイズ上限、タイムアウト） |
+| `get_kyous_tag_filter_test.go` | タグ絞り込み（AND / 「タグ無し」仮想タグ、強制非表示タグを2経路のどちらで取っても同じ結果になること） |
+| `get_kyous_rep_filter_test.go` | rep名での絞り込みを**キャッシュ有無の両方**で。`UpdateCache` の**前後で2回**見るのが要点で、追加直後はキャッシュ表の `REP_NAME` が空のため「空の行は残す」分岐で全部素通りし、そこだけでは許可リスト側の分岐を一度も検証できない |
+| `get_kyous_tx_rep_filter_test.go` | `commit_tx` で確定した記録が rep絞り込みを通ること（キャッシュON/OFF）。一時リポジトリの合成rep名がキャッシュへ入ると、メモ帳構文で書いた記録だけが一覧から丸ごと消える |
+| `handle_get_kyous_mcp_test.go` | MCP用の記録取得（大量IDでの分割、応答形状） |
 
 ## テスト内容
 

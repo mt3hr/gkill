@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 905 | 125 | Go `testing` |
-| フロントエンド ユニット | 1893 | 161 | Vitest |
+| Go バックエンド | 910 | 125 | Go `testing` |
+| フロントエンド ユニット | 1934 | 165 | Vitest |
 | フロントエンド E2E | 250 | 44（+auth.setup.ts） | Playwright |
 | MCP サーバ | 724 | 20 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 123 | 9 | JUnit 4 + MockK |
-| **合計** | **3,907** | **361** | |
+| **合計** | **3,953** | **365** | |
 
 数え直すコマンド:
 
@@ -29,7 +29,7 @@ grep -rhE "^\s*(it|test)\(" src/client/__tests__/unit | wc -l      # クライ�
 grep -rhE "^\s*test\(" src/client/__tests__/e2e --include=*.spec.ts | wc -l  # E2E
 ```
 
-> `src/plugins/*` の Go テスト（`cache_path_test.go`、`loader_test.go` 等）は
+> `src/plugins/*` の Go テスト（`loader_test.go`、`reader_test.go` 等）は
 > 各プラグインが**独立した Go モジュール**のため、上記の集計（`src/server` 基準）には含まれない
 > （`test_server` は `cd src/server && go test ./...`）。実行は `npm run test_plugins`
 > （`src/tools/test_plugins.mjs` が go.mod を持つディレクトリを探して1つずつ回す）が担当し、
@@ -65,7 +65,8 @@ npm test
 | `npm run test_client_e2e` | フロントエンド E2E のみ（gkill_server 自動起動・停止） | 20分前後 |
 | `npm run test_e2e_server` | E2E 用 gkill_server 単体起動 (`$HOME/gkill_test`) | — |
 | `npm run test_mcp` | MCP サーバ | 数秒 |
-| `npm run test_plugins` | 同梱プラグイン（独立 Go モジュール4つ） | 数秒 |
+| `npm run test_plugins` | 同梱プラグイン（独立 Go モジュール7つ） | 数秒 |
+| `npm run vet_plugins` | 同梱プラグインへ `go vet`（CI の `plugins` ジョブが `test_plugins` の前に回す。`npm test` には入っていない） | 数秒 |
 | `npm run test_android` | Android | Gradle 依存 |
 | `npm run test_wear_os` | Wear OS | Gradle 依存 |
 
@@ -154,7 +155,7 @@ npx playwright test --debug
 
 | ワークフロー | 内容 |
 |---|---|
-| `ci.yml` | ビルドとテスト。`go`（build / vet / test / dao配下の `-race`）、`frontend`（type-check / eslint / Vitest / MCP）、`docs`（`build_manuals` → `verify_docs`）、`plugins`（各プラグインモジュールの `go test`）の4ジョブを並列に回す |
+| `ci.yml` | ビルドとテスト。次の4ジョブを並列に回す。<br>・`go` … build / vet / **gofmt**（`test -z "$(gofmt -l .)"`。無かったころ60ファイル分の崩れが溜まっていた）/ test / dao配下の `-race`<br>・`frontend` … type-check / **`npx eslint --max-warnings 0`**（`npm run lint` は `--fix` なのでCIでは使わない。固定sleepや条件分岐の警告を溜めないための歯止め）/ Vitest / MCP<br>・`docs` … `build_manuals` → `verify_docs`<br>・`plugins` … 各プラグインモジュールの **`go vet`** → `go test` |
 | `codeql.yml` | CodeQL 解析（go / java-kotlin / javascript-typescript） |
 
 `ci.yml` は E2E・Android・Wear OS を含まない。ローカルの `npm test` は
@@ -201,8 +202,10 @@ src/server/gkill/
 │   ├── find/find_query_test.go        ← クエリビルダー
 │   ├── gpslogs/gpslogs_test.go        ← GPS ログ解析
 │   ├── message/message_test.go        ← メッセージフォーマット
-│   ├── kftl/                          ← KFTL パーサ（3ファイル）
+│   ├── kftl/                          ← KFTL パーサ（5ファイル）
 │   ├── req_res/req_res_test.go        ← JSON 往復テスト
+│   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
+│   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
 │   └── gkill_server_api/              ← ハンドラ層（18ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
@@ -213,9 +216,11 @@ src/server/gkill/
 │       ├── utils_ssrf_test.go                    ← SSRF対策
 │       ├── get_device_cache_test.go              ← デバイス一覧キャッシュ
 │       ├── handle_reset_password_test.go         ← パスワードリセット
-│       └── plugin_content_html_cache_test.go     ← プラグイン本文HTMLのキャッシュ
+│       ├── plugin_content_html_cache_test.go     ← プラグイン本文HTMLのキャッシュ
+│       ├── get_kyous_rep_filter_test.go          ← rep名絞り込み（キャッシュON/OFF × UpdateCache前後）
+│       └── get_kyous_tx_rep_filter_test.go       ← tx確定した記録がrep絞り込みを通ること
 ├── plugin/
-│   └── sdk/                           ← プラグインSDK（sdk_test.go, config_test.go）
+│   └── sdk/                           ← プラグインSDK（4ファイル: sdk / config / source / cache_path）
 ├── dao/
 │   ├── gkill_dao_manager_test.go      ← DAO マネージャ
 │   ├── account/                       ← アカウント CRUD、Argon2id、スキーマ移行（3ファイル）
@@ -230,6 +235,10 @@ src/server/gkill/
 │       ├── *_repository_sqlite3_impl_test.go  ← 11データ型
 │       ├── cached_and_temp_test.go    ← キャッシュ層・一時層
 │       └── cache/                     ← キャッシュ更新
+├── usecase/                           ← 規約のソース走査 + キャッシュ反映（3ファイル）
+│   ├── write_through_cache_test.go    ← 書き込み後のキャッシュ反映
+│   ├── cached_rep_insert_alignment_test.go ← INSERT の列並びと引数の並びの一致
+│   └── source_conventions_scan_test.go ← 規約7件のソース走査（下記）
 ├── dvnf/                              ← DVNF ファイル管理（2ファイル）
 └── main/                              ← CLI・エントリポイント（8ファイル）
 ```
@@ -239,7 +248,12 @@ src/server/gkill/
 - **インメモリ SQLite3**: 全 DAO テストはインメモリデータベースを使用し、テスト間の隔離を保証
 - **4層リポジトリパターン**: interface → SQLite3 実装 → キャッシュ実装 → 一時実装の各層をそれぞれテスト
 - **統合テスト**: `gkill_server_api/gkill_server_api_test.go` が全11データ型の CRUD を HTTP ハンドラレベルで検証（ZIP内容閲覧含む）
-- **`usecase/` にテストは無い**: 意図的にテストを置いていない。理由は [`src/server/gkill/usecase/ABOUT_TEST.md`](../../src/server/gkill/usecase/ABOUT_TEST.md) を参照
+- **`usecase/` には関数ごとの専用テストを置かない**: ビジネスロジックはハンドラ統合テストが
+  HTTPレイヤ込みで通す。このパッケージに置いてあるのは、そのやり方では捕まえられない3本だけ。
+  理由は [`src/server/gkill/usecase/ABOUT_TEST.md`](../../src/server/gkill/usecase/ABOUT_TEST.md) を参照
+- **規約のソース走査**: 13型・457メソッドのようにコピペで増える形は、**1つだけ抜けても他が緑のまま通る**。
+  `usecase/source_conventions_scan_test.go` が製品コードを実行せずソースの書き方だけを見張る（7件）。
+  どれも「`go build` も `go vet` も通り、実行時にエラーも出ずに静かに間違った結果を返す」種類のズレ
 - **テストヘルパー**: `reps/testhelper_test.go` が共通のテストデータ生成・DB セットアップを提供
 
 ### 3.2 フロントエンド ユニット（`src/client/__tests__/unit/`）
@@ -247,11 +261,11 @@ src/server/gkill/
 ```
 src/client/__tests__/
 ├── unit/
-│   ├── api/                           ← API クライアント（3ファイル）
+│   ├── api/                           ← API クライアント（8ファイル）
 │   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
 │   │   ├── find-kyou-query.test.ts   ← 検索クエリビルダー
 │   │   └── hydrate.test.ts           ← hydrate() / hydrate_all()（JSON→クラス詰め替え）
-│   ├── classes/                       ← ユーティリティ（44ファイル）
+│   ├── classes/                       ← ユーティリティ（46ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
@@ -268,11 +282,15 @@ src/client/__tests__/
 │   │   ├── use-confirm-delete-kyou-view.test.ts ← 削除確認ビュー（二重送信ガード・finallyでのクローズ）
 │   │   ├── kyou-view-relay.test.ts        ← 中継束の網羅性（ビュー18件 / ダイアログ20件、overrides の差し替え）
 │   │   ├── confirm-dialog-close.test.ts   ← 確認ダイアログが例外時も finally で閉じること
-│   │   └── edit-view-no-update-check.test.ts ← 「更新がありません」判定に related_time を含めること
-│   ├── datas/                         ← データモデル（31ファイル）
-│   ├── dnote/                         ← D-note モジュール（7ファイル、trend-aggregator.test.ts 含む）
+│   │   ├── edit-view-no-update-check.test.ts ← 「更新がありません」判定に related_time を含めること
+│   │   ├── convention-source-scan.test.ts ← 棚卸し全体の安全網（規約9件のソース走査）
+│   │   ├── check-auth-login-page.test.ts  ← ログイン画面ではセッション無効の飛ばしを止めること
+│   │   ├── abort-error.test.ts            ← 中断判定（20箇所の手書きを集約した先）
+│   │   └── web-push-key.test.ts           ← VAPID公開鍵のバイト列化（6ページ分を集約した先）
+│   ├── datas/                         ← データモデル（35ファイル）
+│   ├── dnote/                         ← D-note モジュール（8ファイル、trend-aggregator.test.ts 含む）
 │   ├── kftl/                          ← KFTL パーサ（5ファイル）
-│   ├── composables/                   ← Vue Composable（57ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（59ファイル。add-views / edit-views /
 │   │                                     confirm-delete / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /
@@ -282,8 +300,10 @@ src/client/__tests__/
 │   │                                     rykv-sidebar-saved-query-apply / mi-sidebar-saved-query-apply /
 │   │                                     mi-board-query / kyou-list-view-loading /
 │   │                                     sidebar-child-query-sync-emission / kyou-list-view-scroll-to /
-│   │                                     rep-query-summary-detail / find-query-editor-dialog-default-signal）
-│   ├── router.test.ts                 ← ルーター（13ルート）
+│   │                                     rep-query-summary-detail / find-query-editor-dialog-default-signal /
+│   │                                     registered-tag-column-filter / new-tag-column-search /
+│   │                                     browse-zip-contents-dialog / plugin-config-dialog）
+│   ├── router.test.ts                 ← ルーター（コンポーネント13 + リダイレクト専用2）
 │   ├── i18n-completeness.test.ts      ← i18n 完全性（7ロケール）
 │   └── service-worker.test.ts         ← Service Worker
 ├── e2e/                               ← E2E テスト（後述）
@@ -302,102 +322,21 @@ src/client/__tests__/
 
 ### 3.3 フロントエンド E2E（`src/client/__tests__/e2e/`）
 
-全13ルートを Playwright で検証し、CRUD 操作フローもカバー（40 specファイル + auth.setup.ts、215テスト宣言）。各テストでは以下を共通チェック：
+コンポーネントを持つ13ルートすべてを Playwright で検証し、CRUD 操作フローもカバーします
+（44 specファイル + auth.setup.ts、250テスト宣言）。各テストでは以下を共通チェックします：
 
 - **JS エラー検出**: ページ遷移時にコンソールエラーがないことを検証
 - **インタラクティブ操作**: ボタンクリック、フォーム入力、ダイアログ開閉
-- **CRUD フロー**: KFTL 記録 → 画面追加 → 編集 → 削除 → 閲覧の一連操作
-- **レスポンシブ対応**: 一部テスト（rykv.spec.ts, mi-board.spec.ts）でモバイルビューポートの表示確認
+- **CRUD フロー**: メモ帳構文で記録 → 画面追加 → 編集 → 削除 → 閲覧の一連操作
+- **レスポンシブ対応**: 一部テスト（`rykv.spec.ts` / `mi-board.spec.ts`）でモバイルビューポートの表示確認
 
-#### ページ表示・ナビゲーション系（13 spec files）
-
-| テストファイル | 対象ルート | 主なテスト内容 |
-|-------------|-----------|--------------|
-| `login.spec.ts` | `/` | セッション永続化、認証リダイレクト、パスワードマスキング |
-| `kftl-dialog.spec.ts` | `/kftl` | KFTL テキスト入力、マルチライン、テンプレート |
-| `mi-board.spec.ts` | `/mi` | タスクボード表示、FAB 検出、レスポンシブ |
-| `rykv.spec.ts` | `/rykv` | モバイルビューポート、URL 永続化 |
-| `mkfl.spec.ts` | `/mkfl` | ファイル管理 |
-| `plaing.spec.ts` | `/plaing` | 計画ビュー |
-| `settings.spec.ts` | `/saihate` | 設定コンテンツ、インタラクティブ操作 |
-| `kyou-list.spec.ts` | `/kyou` | レコード一覧 |
-| `dashboard.spec.ts` | `/dashboard` | ダッシュボード表示（ナビゲーション、描画、JSエラーなし確認） |
-| `share-page.spec.ts` | `/shared_page` | 共有ページ |
-| `shared-mi.spec.ts` | `/shared_mi` | 共有タスク |
-| `register-first-account.spec.ts` | `/register_first_account` | 初回アカウント登録 |
-| `set-new-password.spec.ts` | `/set_new_password` | パスワード再設定 |
-
-#### CRUD 操作フロー系（8 spec files）
-
-| テストファイル | テスト内容 |
-|-------------|-----------|
-| `kftl-crud.spec.ts` | KFTL テキスト経由で各データ型（Kmemo/Lantana/Mi/TimeIs/Nlog/URLog）を記録 → 画面表示確認 |
-| `add-dialog-crud.spec.ts` | FAB(+)→追加ダイアログ→フォーム入力→保存 (Mi/Lantana/Nlog/TimeIs/URLog/KC/Tag/Text) + Mi最小入力、TimeIs/URLog全項目入力 |
-| `edit-dialog-crud.spec.ts` | 右クリック→編集→変更→保存 (Kmemo/Mi/Lantana/Nlog/URLog/TimeIs/Tag + 空内容バリデーション) + 実行中TimeIs終了ボタン、ReKyou編集、Text編集 |
-| `delete-crud.spec.ts` | 右クリック→削除→確認→表示消失確認 (Kmemo/Mi/Lantana/Nlog/URLog/TimeIs/Tag/Text/ReKyou) |
-| `view-browse.spec.ts` | 履歴ダイアログ表示、混合データ型表示、Mi ボード/Plaing ページの表示確認 |
-| `notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴ダイアログ |
-| `search-and-summary.spec.ts` | RYKV キーワード検索、Mi キーワード検索、D-note サマリパネルトグル |
-| `clipboard-save.spec.ts` | RYKV ページでの Ctrl+V によるクリップボード保存ダイアログの表示・閉じる操作 |
-
-#### KFTL TimeIs終了系（1 spec file）
-
-| テストファイル | テスト内容 |
-|-------------|-----------|
-| `kftl-timeis-end.spec.ts` | TimeIs終了の全4バリエーション: タイトル指定(ーえ)、タイトル存在すれば(ーいえ)、タグ指定(ーたえ)、タグ存在すれば(ーいたえ) |
-
-#### 閲覧・履歴系（3 spec files）
-
-| テストファイル | テスト内容 |
-|-------------|-----------|
-| `view-history.spec.ts` | Lantana/Mi/Nlog/URLog/ReKyou/Tag/Text の閲覧+履歴ダイアログ+リポスト+NoImage確認 |
-| `dialog-history.spec.ts` | ダイアログ履歴不変条件: ×/Escape/ブラウザバックのどれで閉じてもバックスタックに使用済みエントリが残らないこと（閉じた後、戻る1回でページを離れる）、複数ダイアログを開いたまま APP_BAR プルダウンで画面遷移できること |
-| `edit-readonly-loading.spec.ts` | Edit系ダイアログ: 保存中は入力フォームが readonly になること（`/api/update_kmemo` の遅延注入で検証）。readonly は `is_busy = is_loading \|\| is_requested_submit` にバインドされているが、リストから開いた Kyou は `clone()` が `is_typed_data_loaded` を引き継ぐため `load_typed_datas()` が早期 return し load 側は観測可能なウィンドウにならない。そのため確実に到達する保存中（`is_requested_submit`）側を検証する |
-
-#### 認証フロー系（1 spec file）
-
-| テストファイル | テスト内容 |
-|-------------|-----------|
-| `auth-flow.spec.ts` | ログアウト→ログイン画面遷移、パスワード未設定ログイン不可、ログイン後Rep全チェック確認 |
-
-#### Mi（タスク）操作系（1 spec file）
-
-| テストファイル | テスト内容 |
-|-------------|-----------|
-| `mi-operations.spec.ts` | タスク板間移動、完了状態トグル、共有状況閲覧+スクロール確認、共有停止 |
-
-#### 設定機能テスト系（4 spec files）
-
-| テストファイル | テスト内容 |
-|-------------|-----------|
-| `settings-crud.spec.ts` | サーバ設定/ユーザ設定/タグ構造/Rep 構造/Device 構造/KFTL テンプレート構造の表示確認 |
-| `server-config-crud.spec.ts` | プロファイル追加・変更、TLS有効化・無効化・生成、アドレス変更、アカウント管理(追加/有効化/無効化/パスワードリセット)、Rep管理(追加/設定変更/有効化/無効化/削除/書き込み制御/ID自動割当/デバイス割当/RepType編集) |
-| `user-config-crud.spec.ts` | GoogleMapAPIキー、画像ビューア列数、miデフォルト板名、ホットリロード、タグ/Rep/Device/RepType/KFTLテンプレート構造(フォルダ追加/並替/適用) |
-| `saved-find-query.spec.ts` | 保存済み検索条件（設定画面で登録→設定適用→ライフログビューのサイドバーFABから呼び出してサイドバーへ反映、タスク側は未登録なのでFAB非表示） |
-
-#### 回帰テスト・その他（4 spec files）
-
-| テストファイル | テスト内容 |
-|-------------|-----------|
-| `regression-fixes.spec.ts` | 修正済みバグの回帰テスト: Kmemo必須チェック、ローカルアクセス設定、タグ/Device/RepType構造追加、ApplicationConfig適用、ファイルアップロード |
-| `misc-operations.spec.ts` | ブックマークレット確認、GPSログアップロード、無効共有リンクエラー表示、サーバコンフィグ適用で再起動 |
-| `mi-re-kyou.spec.ts` | MiReKyou（既存記録のタスク化）の追加・編集・表示 |
-| `re-kyou.spec.ts` | リポストの行を右クリックしたとき、元の記録ではなくリポスト自身のコンテキストメニューが出ること |
-
-#### 列×検索・サイドバー系（3 spec files）
-
-| テストファイル | テスト内容 |
-|-------------|-----------|
-| `rykv-columns.spec.ts` | 別列で検索した結果が検索した列だけに反映され列リロードでも混ざらないこと、列を閉じても残った列の結果が保たれること、検索中に別列をクリックしても飛行中の検索が中断されず追加検索も発生しないこと |
-| `mi-board-columns.spec.ts` | 板の列に自分の板のタスクだけが表示され、検索しても板名が汚染されないこと |
-| `rykv-sidebar-defaults.spec.ts` | 列追加時に ApplicationConfig 由来の既定検索条件が適用されること、記録分類のチェック変更で記録先詳細が再計算されること |
-
-#### UI 挙動系（2 spec files）
-
-| テストファイル | テスト内容 |
-|-------------|-----------|
-| `context-menu-viewport.spec.ts` | 縦に狭い画面でコンテキストメニューを開いても下にはみ出さないこと（配置は Vuetify の実測に任せている） |
-| `dialog-autofocus.spec.ts` | autofocus を書いていないダイアログでも入力欄にカーソルが載ること、明示指定した欄が優先されること、入力欄が無いダイアログではフォーカスを動かさないこと |
+> **spec ファイルごとの内容は [`src/client/pages/ABOUT_TEST.md`](../../src/client/pages/ABOUT_TEST.md) が持ちます。**
+> 以前はここにも同じ一覧を置いていましたが、spec が増えるたびに二重管理になり、
+> 実際に「40ファイル/215宣言」で取り残されていました。件数（44 / 250）は `verify_docs` が
+> 実測と突き合わせますが、ファイル名の一覧までは検査できないため、置き場所を1つに寄せています。
+>
+> 同じ資料には **E2E の書き方の規約**（条件で本体を包まない / 固定 sleep を使わない）と、
+> 硬いアサーションへ移行したときに引っかかった落とし穴の一覧もあります。
 
 #### ヘルパーファイル
 
@@ -408,7 +347,8 @@ src/client/__tests__/
 | `auth.setup.ts` | Playwright の `setup` プロジェクト。ログイン済み `storageState` を作って以降のテストで再利用する |
 | `helpers.ts` | `loginAsAdmin()` — 初回起動時の自動登録（reset_token取得→register_first_account）+ テストユーザでのログイン |
 | `check-server.ts` | `checkGkillServer()`, `checkGkillApiViaVite()` — サーバヘルスチェック |
-| `crud-helpers.ts` | KFTL 送信（`#kftl_text_area` + 保存ボタン有効化待機）、ページナビゲーション（フローティングダイアログ自動閉じ）、コンテキストメニュー操作（`force: true`）、FAB クリック（`.position-fixed button`） |
+| `crud-helpers.ts` | メモ帳の送信（`.kftl_text_area` + 保存ボタン有効化待機。**id はメモ帳を複数枚開けるよう `useId()` で採番されるのでクラスで掴む**）、ページナビゲーション（フローティングダイアログ自動閉じ）、列ビューの準備完了待ち（`data-gkill-view-ready`）、コンテキストメニュー操作、FAB クリック |
+| `e2e-credentials.ts` | テストユーザのIDとパスワードハッシュ。各 spec へ手書きで散らさないための1箇所 |
 | `global-setup.ts` | Playwright グローバルセットアップ（no-op — サーバ管理は `run-e2e.mjs` が担当） |
 | `global-teardown.ts` | Playwright グローバルティアダウン（no-op — Playwright が自動停止） |
 
@@ -609,7 +549,7 @@ E2E テストは `$HOME/gkill_test` をテスト専用のホームディレク�
 
 ```bash
 # Android SDK と Java JDK が必要
-cd src/android && ./gradlew test
+cd src/android && ./gradlew test   # Windows は gradlew.bat（npm run test_android が自動で振り分ける）
 ```
 
 ### Wear OS テスト
@@ -711,8 +651,9 @@ npx playwright test --debug --trace on
 cd src/android && ./gradlew clean
 cd src/wear_os && ./gradlew clean
 
-# gradlew が存在しない場合（Wear OS）
-# src/android/ から gradlew, gradlew.bat, gradle/ をコピー
+# Gradle ラッパーは src/wear_os/ にコミット済みなのでコピーは不要。
+# 壊れたときだけ src/android/ から入れ直す:
+#   npm run setup_wear_os_gradle
 ```
 
 ## 10. 関連資料
