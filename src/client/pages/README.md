@@ -64,8 +64,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `set-new-password-page.vue` | `/set_new_password` | 新パスワード設定ページ |
 | `register-first-account-page.vue` | `/register_first_account` | 初回アカウント登録（旧 `/regist_first_account` からリダイレクト） |
 | `shared-page.vue` | `/shared_page` | 共有ページ |
-| `old-shared-mi-page.vue` | `/shared_mi` | 旧共有 Mi ページ |
-| `shared-mi-page.vue` | — | 共有 Mi ページ（新） |
+| `shared-mi-page.vue` | — | 共有 Mi ページ（`shared-page.vue` が `view_type` で内部振り分けする。旧URL `/shared_mi` はルータの redirect で `/shared_page` へ吸収する） |
 | `shared-rykv-page.vue` | — | 共有 Rykv ページ |
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
@@ -117,13 +116,11 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `edit-text-view.vue` | Text 編集 |
 | `edit-notification-view.vue` | Notification 編集 |
 | `edit-ryuu-item-view.vue` | Ryuu アイテム編集 |
-| `edit-folder-view.vue` | フォルダ編集 |
 | `edit-dnote-card.vue` / `edit-dnote-item-view.vue` / `edit-dnote-list-view.vue` | DNote 編集 |
 | `edit-dnote-trend-graph-view.vue` | DNote トレンドグラフ編集 |
 | `edit-dnote-predicate-group.vue` | DNote 述語グループ編集 |
 | `edit-device-struct-view.vue` / `edit-device-struct-element-view.vue` | デバイス構造編集 |
 | `edit-kftl-template-struct-view.vue` / `edit-kftl-template-struct-element-view.vue` | KFTL テンプレート編集 |
-| `edit-kftl-template-view.vue` | KFTL テンプレートビュー |
 | `edit-rep-struct-view.vue` / `edit-rep-struct-element-view.vue` | リポジトリ構造編集 |
 | `edit-rep-type-struct-view.vue` / `edit-rep-type-struct-element-view.vue` | リポジトリ型構造編集 |
 | `edit-tag-struct-view.vue` / `edit-tag-struct-element-view.vue` | タグ構造編集 |
@@ -248,7 +245,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `rykv-view.vue` / `rykv-dialog-host.vue` / `rykv-dialog-host-item.vue` | Rykv |
 | `ryuu-view.vue` / `ryuu-item-view.vue` | Ryuu |
 | `sidebar-header.vue` | サイドバーヘッダー |
-| `foldable-struct.vue` / `rep-struct-element.vue` / `rep-type-element.vue` / `tag-struct-element.vue` | 構造要素 |
+| `foldable-struct.vue` / `rep-struct-element.vue` / `tag-struct-element.vue` | 構造要素 |
 | `saihate-stars-overlay.vue` / `snow-fall-overlay.vue` | オーバーレイ効果 |
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
 | `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
@@ -261,7 +258,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 
 ### データ編集ダイアログ（35コンポーネント）
 
-`edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-mi-re-kyou-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-folder-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`, `edit-mi-board-struct-dialog.vue`
+`edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-mi-re-kyou-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`, `edit-mi-board-struct-dialog.vue`
 
 ### 削除確認ダイアログ（25コンポーネント）
 
@@ -276,7 +273,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `confirm-re-kyou-dialog.vue` | ReKyou 確認 |
 | `confirm-reset-password-dialog.vue` | パスワードリセット確認 |
 | `edit-dashboard-dialog.vue` | ダッシュボード設定（MI検索条件・Dnote検索条件の編集） |
-| `dnote-correlation-graph-dialog.vue` | DNote 相関グラフの追加・編集・削除を共通処理 |
+| `add-dnote-correlation-graph-dialog.vue` / `edit-dnote-correlation-graph-dialog.vue` / `confirm-delete-dnote-correlation-graph-dialog.vue` | DNote 相関グラフの追加・編集・削除（トレンドグラフと同じ3点セットに揃えてある） |
 | `edit-plaing-time-is-dialog.vue` | 実行中検索条件設定（「検索条件をカスタマイズする」チェックボックス＋条件編集ボタン） |
 | `edit-saved-find-query-dialog.vue` | 保存済み検索条件のハブ（ライフログ検索条件・タスク検索条件の2ボタン） |
 | `edit-saved-find-query-list-dialog.vue` | 保存済み検索条件の一覧管理（名前・条件編集・並べ替え・削除。追加は右下FAB。`query_type` prop で rykv/mi の2インスタンス） |

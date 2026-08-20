@@ -47,6 +47,11 @@ Vitest
 | `src/client/__tests__/unit/datas/attached-histories.test.ts` | 11エンティティの `load_attached_histories` / `load_attached_datas` |
 | `src/client/__tests__/unit/datas/append-not-found-tags.test.ts` | ApplicationConfig のタグ構造に未登録タグを自動追加する処理 |
 | `src/client/__tests__/unit/datas/kyou-load-all-request-count.test.ts` | `Kyou.load_all()` が1件あたりに飛ばすリクエスト本数の回帰テスト（`load_attached_histories` の二重呼び出し、`load_attached_timeis` からの `get_application_config` 呼び出しを検出する） |
+| `src/client/__tests__/unit/datas/append-not-found-reps.test.ts` | ApplicationConfig の記録保管場所ツリーに未登録の rep を自動追加する処理（タグ版と対） |
+| `src/client/__tests__/unit/datas/application-config-clone.test.ts` | ApplicationConfig の複製。設定ダイアログは複製を編集して「適用」で初めて送るので、複製が浅いと**キャンセルが効かなくなる** |
+| `src/client/__tests__/unit/datas/kyou-typed-data-dispatch.test.ts` | `data_type` の接頭辞から型別データを振り分ける表。`mirekyou` を `mi` より**先**に見る必要があるので、分岐の書き順ではなく**接頭辞表を長い順に並べる**ことで構造的に保証する |
+| `src/client/__tests__/unit/datas/info-base-lazy-abort-controller.test.ts` | `InfoBase` の `AbortController` を遅延生成すること（30万件ぶん先に作ると生成だけでメインスレッドが固まる） |
+| `src/client/__tests__/unit/datas/info-base-lazy-attached-arrays.test.ts` | `InfoBase` の付随データ配列を遅延生成すること（同上） |
 
 ## テスト内容
 

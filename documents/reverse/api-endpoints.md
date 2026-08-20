@@ -77,7 +77,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 | `not_words` | []string \| null | 除外キーワード |
 | `tags` | []string \| null | タグ名一覧（非nullでタグフィルタ有効） |
 | `tags_and` | bool | `tags` をAND条件にするか |
-| `reps` | []string \| null | リポジトリ名一覧（非nullでリポジトリフィルタ有効） |
+| `reps` | []string \| null | リポジトリ名一覧（非nullでリポジトリフィルタ有効。下記の注を参照） |
 | `timeis_words` | []string \| null | TimeIs検索キーワード（`timeis_words`/`timeis_not_words` のどちらかが非nullでTimeIsフィルタ有効） |
 | `include_end_timeis` | bool | 終了済みTimeIsを含めるか |
 | `calendar_start_date` | string \| null | 検索開始日時（RFC3339。開始/終了のどちらかが非nullで日付範囲フィルタ有効） |
@@ -89,6 +89,23 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 > ページング用の `page` / `page_size` フィールドは存在しない。`FindQuery` にページング機構はない。
 > かつての `use_*` 有効化フラグ群は全廃された（値のnull判定に一本化）。
+
+**`reps` の意味論**（ここを取り違えると、エラーも警告も出ないまま結果だけが変わる）:
+
+| 送った値 | 意味 |
+|---|---|
+| キー欠落 / `null` | 未指定。リポジトリでは絞らない |
+| `[]`（非nullの空配列） | 候補0件。**必ず0件が返る** |
+| `["rep-a", "rep-b"]` | その名前のリポジトリの記録だけ |
+
+絞り込みは「どのリポジトリを検索するか」ではなく「どの結果を残すか」で行う
+（サーバ内部で `Kyou.rep_name` を見る）。**`rep_name` が空の記録は残る** —— 追加直後の記録は
+キャッシュ表の `REP_NAME` がまだ空で、落とすと最大1分間その記録が一覧から消えるため。
+仕組みの詳細は [sequence-diagrams.md](sequence-diagrams.md) の「7. Kyou 検索」を参照。
+
+なお **GUI（ライフログビュー / タスク）は常に非nullの `reps` を送る**（既定クエリが
+記録保管場所のチェック状態を配列として物質化するため）。「絞っていないつもり」でも
+この経路を通っている。
 
 ```json
 // リクエスト例

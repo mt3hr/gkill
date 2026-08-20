@@ -220,8 +220,6 @@ AND / OR / NOT の論理演算で組み合わせ可能な述語群（33 .ts フ�
 
 | ファイル | 条件 |
 |---------|------|
-| `text-content-contains-predicate.ts` | 内容に文字列を含む |
-| `text-content-equal-predicate.ts` | 内容が一致 |
 
 ### Git Commit Log 述語
 
