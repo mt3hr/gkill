@@ -20,10 +20,8 @@ plugins/
 │   ├── loader.go
 │   ├── source.go
 │   ├── cache.go
-│   ├── cache_path.go
 │   ├── types.go
 │   ├── html.go
-│   ├── cache_path_test.go
 │   ├── go.mod / go.sum
 │   ├── manifest.json
 │   └── README.md
@@ -32,10 +30,8 @@ plugins/
 │   ├── loader.go
 │   ├── source.go
 │   ├── cache.go
-│   ├── cache_path.go
 │   ├── types.go
 │   ├── html.go
-│   ├── cache_path_test.go
 │   ├── go.mod / go.sum
 │   ├── manifest.json
 │   └── README.md
@@ -47,13 +43,11 @@ plugins/
 │   ├── timeparse.go
 │   ├── builder.go
 │   ├── cache.go
-│   ├── cache_path.go
 │   ├── query.go
 │   ├── render.go
 │   ├── html.go
 │   ├── uuid.go
 │   ├── types.go
-│   ├── metrics_test.go / timeparse_test.go / loader_test.go / cache_test.go / cache_path_test.go
 │   ├── testdata/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
@@ -64,10 +58,8 @@ plugins/
 │   ├── parsers.go
 │   ├── source.go
 │   ├── cache.go
-│   ├── cache_path.go
 │   ├── html.go
 │   ├── types.go
-│   ├── parsers_test.go / cache_test.go / cache_path_test.go
 │   ├── testdata/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
@@ -76,12 +68,10 @@ plugins/
 │   ├── main.go
 │   ├── loader.go
 │   ├── cache.go
-│   ├── cache_path.go
 │   ├── types.go
 │   ├── render.go
 │   ├── html.go
 │   ├── loader_test.go
-│   ├── cache_path_test.go
 │   ├── testdata/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
@@ -97,7 +87,6 @@ plugins/
     ├── query.go                # 読み取り(ロックを取らない)
     ├── builder.go              # 常駐バックグラウンドビルダ
     ├── config.go
-    ├── cache_path.go
     ├── render.go
     ├── html.go
     ├── uuid.go

@@ -87,7 +87,6 @@ datas/
 | `account.ts` | アカウント情報 |
 | `device-struct-element-data.ts` | デバイス構造要素 |
 | `folder-struct-element-data.ts` | フォルダ構造要素 |
-| `kftl-template-struct-element-data.ts` | KFTL テンプレート構造要素 |
 | `mi-board-struct-element-data.ts` | Mi ボード構造要素 |
 | `rep-struct-element-data.ts` | リポジトリ構造要素 |
 | `rep-type-struct-element-data.ts` | リポジトリ型構造要素 |

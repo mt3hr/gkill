@@ -71,7 +71,6 @@ src/client/
 │   ├── set-new-password-page.vue
 │   ├── register-first-account-page.vue
 │   ├── shared-page.vue
-│   ├── old-shared-mi-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
 │   ├── views/                       # Viewコンポーネント (197)
@@ -211,7 +210,7 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 | `/set_new_password` | `set_new_password` | set-new-password-page.vue | パスワード設定 |
 | `/register_first_account` | `register_first_account` | register-first-account-page.vue | 初回アカウント登録（旧 `/regist_first_account` からリダイレクト） |
 | `/shared_page` | `shared_page` | shared-page.vue | 共有ページ |
-| `/shared_mi` | `shared_mi` | old-shared-mi-page.vue | 共有タスク |
+| `/shared_mi` | （名前なし） | （コンポーネント無し。`redirect` で `/shared_page` へ） | 旧URL |
 
 ## 5. 状態管理
 
@@ -416,9 +415,13 @@ multipart POST がもう一度届く。届く内容が同一なので、再配�
 
 ### TypeScript設定
 
-- `tsconfig.app.json`: フロントエンド用（`src/client/**/*` + `public/sw.js`）
-- `tsconfig.node.json`: ビルドツール用（`@tsconfig/node20` 継承）
-- lib: `WebWorker`（Service Worker用）
+- `tsconfig.json`: ソリューション構成。**`"files": []` なので `compilerOptions` を書いても何にも適用されない**。
+  設定は下の2つへ置くこと。`vue-tsc --noEmit` はこのファイルを見るため1ファイルも検査せずに成功するので、
+  型検査は必ず `npm run type-check`（= `vue-tsc --build`）で行う
+- `tsconfig.app.json`: フロントエンド用（`env.d.ts` + `src/client/**/*`。`__tests__` は除外）
+- `tsconfig.node.json`: ビルドツール用（`@tsconfig/node20` 継承。`vite.config.*` / `vitest.config.*` / `playwright.config.*`）
+- lib: `ESNext`, `DOM`, `DOM.Iterable`, `WebWorker`（Service Worker 用。実体は `src/client/serviceWorker.ts` で、
+  vite-plugin-pwa が injectManifest 戦略でこれを SW としてビルドする）
 - types: `google.maps`, `vite-plugin-pwa/client`
 
 ### ESLint設定 (`eslint.config.js`)
@@ -593,7 +596,7 @@ plaing検索（Kyou付随の実行中表示 `info-base.ts` の `load_attached_ti
 | `useDialogHistoryStack(show)` | ダイアログの `show` ref を履歴スタックに登録する |
 | `close_dialog_via_history()` | **プログラムからダイアログを閉じるときの唯一の正しい手段**。約44のコンポーザブルが使う。`show.value = false` を直接書くと履歴とずれる |
 | `close_top_dialog()` | 最上位のダイアログだけを閉じる |
-| `reset_dialog_history()` | 履歴スタックを初期化する。ページリダイレクト時に使う（例: `old-shared-mi-page.vue`） |
+| `reset_dialog_history()` | 履歴スタックを初期化する。ページ遷移時に使う（`navigate_to_page`）。**ポートでホストしたビューからは呼ばない** —— モジュール共有なので、並べて開いている他のウィンドウまで一斉に閉じてしまう |
 
 ### 日付・数値のロケール対応
 
@@ -660,6 +663,31 @@ KFTL テキストエリアに内容がある状態でページ離脱しようと
 以前は各 composable が `left: min(innerWidth - 130, x)` / `top: min(max(50, innerHeight - (8 + 48 * 項目数)), y)` を25箇所にコピペしていた。幅130px は実際のリスト幅（実測79px）と無関係で、高さの項目数はテンプレートと手で同期する不文律だったため、構成ツリー系（`*-struct-context-menu`）は実項目5個に対して `48 * 2` のまま下端ではみ出していた。またこのスタイル文字列は `{ }` で囲まれていたため Vue の `parseStringStyle` が `position: absolute` を捨てており、`.v-overlay`（`position: fixed`）の `left` / `top` だけが効いている状態だった。
 
 `.gkill_context_menu_list { max-height: 70vh; overflow-y: scroll }`（`App.vue`）は残す。極端に項目が多いメニューの高さ上限として機能し、Vuetify はその上限込みの実高さに対して配置する。
+
+### 列の検索条件と新しいタグ（`use-registered-tag-column-filter.ts`）
+
+利用者がその場で作ったタグを、開いているすべての列の検索条件へ足す。rykv とタスクの共通処理。
+
+なぜ要るか。ライフログビューとタスクの列は「絞らない」という状態を持たない。既定クエリは
+`tags = null`（=未指定）ではなく、そのときの `check_when_inited` なタグ名の列挙として
+**物質化**され、列ごと localStorage に保存される。したがって**タグが1つも無い時期に作られた列は
+`tags = ["no tags"]` の1件で凍り、以後どれだけタグを作ってもその列だけがタグ宇宙の成長から
+取り残される**。その列で新しいタグを付けた記録を追加すると、サーバ検索でも局所挿入でも
+1件も通らず、記録が保存されているのに一覧から消える（エラーも警告も出ない）。
+
+判断に使ってよいのは「そのタグがタグツリーに無かった」という決定可能な事実だけ。
+既知のタグは利用者が意図的に外したのかもしれないので触らない。
+
+| 決まりごと | 理由 |
+|---|---|
+| `tags === null` の列は触らない | もともと絞っていない |
+| `tags_and === true` の列は触らない | 積が必ず空になる（`["no tags", "新タグ"]` を両方満たす記録は無い） |
+| 既知判定は `emit` より**前に、同期で**行う | emit 先がタグツリーを更新してしまうと、届く頃には必ず「既知」になっていて取りこぼす |
+| 1tick に複数のタグが来ても引き直しは列あたり1回 | メモ帳構文で複数行を一度に保存すると `registered_tag` が連続で飛ぶ |
+| 書き込みは `run_with_sidebar_search_suppressed` の中で行う | サイドバーの機械的な `updated_query` を検索にしないため |
+| 親への `registered_tag` 中継は止めない | タグツリーの同期がこの emit に乗っている |
+
+ポート画面で並べた他のウィンドウへは、変更バス（`classes/kyou-change-bus.ts`）で配る。
 
 ### 読み込み中表示の遅延（`use-delayed-loading.ts`）
 

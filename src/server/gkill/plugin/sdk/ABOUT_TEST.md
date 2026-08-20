@@ -13,7 +13,7 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 
 | ファイル | テスト数 | 対象 |
 |---------|---------|------|
-| `sdk_test.go` | 14 | `Run()` のメッセージループ（`TestRunLoop_*`） |
+| `sdk_test.go` | 18 | `Run()` のメッセージループ（`TestRunLoop_*`）と型別データの往復 |
 | `config_test.go` | 4 | `EnsureConfig()`（`TestEnsureConfig_*`） |
 | `source_test.go` | 18 | `OpenSources()` の ZIP 走査（`TestOpenSources_*` ほか） |
 | `cache_path_test.go` | 5 | `CacheDBPath()` / `IsSafePathElement()`（`TestCacheDBPath_*`） |
@@ -39,6 +39,10 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 | `TestRunLoop_StdinCloseReturnsFalse` | stdin が閉じたらループを抜ける |
 | `TestRunLoop_PassesUserIDToHandler` | `user_id` が Handler へ渡る |
 | `TestRunLoop_PassesConfigToHandler` | `config.json` の内容が Handler へ渡る |
+| `TestRunLoop_GetGPSLogs` | `get_gps_logs` が Handler の結果を返す |
+| `TestRunLoop_GetGPSLogsNotImplemented` | `GetGPSLogs` 未設定時にエラー応答になる |
+| `TestRunLoop_GetGPSLogsNilQuery` | クエリが nil でも落ちない |
+| `TestKyouTypedDataRoundTrip` | 型別データ（`PluginTypedData`）が JSON を往復しても壊れないこと |
 
 ## config_test.go — EnsureConfig
 

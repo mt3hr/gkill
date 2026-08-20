@@ -29,8 +29,8 @@ client/
 │   ├── datas/               # データモデル → classes/datas/README.md
 │   ├── dnote/               # Dynamic Note → classes/dnote/README.md
 │   ├── kftl/                # KFTL パーサ → classes/kftl/README.md
-│   ├── dto/                 # DTO（3ファイル）
-│   └── lantana/             # Lantana ユーティリティ（3ファイル）
+│   ├── dto/                 # DTO（2ファイル）
+│   └── lantana/             # Lantana ユーティリティ（1ファイル）
 ├── pages/                   # Vue ページ → pages/README.md
 │   ├── views/               # View コンポーネント（202 .vue）
 │   └── dialogs/             # Dialog コンポーネント（116 .vue）
@@ -77,11 +77,16 @@ Service Worker の登録。PWA オフライン対応。
 | `/mkfl` | mkfl | `mkfl-page.vue` | Mkfl（ファイル管理） |
 | `/plaing` | plaing | `plaing-time-is-page.vue` | 稼働中 TimeIs 一覧 |
 | `/dashboard` | dashboard | `dashboard-page.vue` | ダッシュボード（日次サマリー・集計・GPS・タスク） |
+| `/rudbeckia` | rudbeckia | `rudbeckia-page.vue` | ポート。4画面をウィンドウとして並べる単一画面（開発コード rudbeckia） |
 | `/saihate` | saihate | `saihate-page.vue` | Saihate（特殊ビュー） |
 | `/set_new_password` | set_new_password | `set-new-password-page.vue` | 新パスワード設定 |
 | `/register_first_account` | register_first_account | `register-first-account-page.vue` | 初回アカウント登録（旧 `/regist_first_account` からリダイレクト） |
 | `/shared_page` | shared_page | `shared-page.vue` | Kyou 共有ページ |
-| `/shared_mi` | shared_mi | `old-shared-mi-page.vue` | 共有 Mi ページ |
+
+これに加えて、コンポーネントを持たない **リダイレクト専用ルートが2つ** ある:
+`/regist_first_account` → `/register_first_account`、`/shared_mi` → `/shared_page`（どちらもクエリを引き継ぐ）。
+**旧パスの吸収はルータの `redirect` で行うこと** ―― `<script setup>` に top-level await のあるページの
+setup から `router.replace` すると、初回ナビゲーションが完了しなくなる。
 
 ## 設計パターン
 

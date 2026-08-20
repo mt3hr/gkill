@@ -48,11 +48,14 @@ stateDiagram-v2
 
 **メイン画面群（認証必要）:** KFTLPage, RykvPage, MiPage, KyouPage, MkflPage, PlaingPage, DashboardPage, RudbeckiaPage, SaihatePage
 
-**共有ページ（認証不要）:** SharedPage (`/shared_page`), OldSharedMiPage (`/shared_mi`)
+**共有ページ（認証不要）:** SharedPage (`/shared_page`)。旧URL `/shared_mi` はルータの redirect で `/shared_page` へ吸収する
 
 ## 2. 各画面の役割と遷移条件
 
-### ルートページ一覧（14ルート）
+### ルートページ一覧（13ルート）
+
+コンポーネントを持つルートは13。これとは別に、旧パスを吸収する **リダイレクト専用ルートが2つ**ある
+（`/regist_first_account` → `/register_first_account`、`/shared_mi` → `/shared_page`。どちらもクエリを引き継ぐ）。
 
 | パス | ページ | 認証要否 | 役割 |
 |-----|-------|---------|------|
@@ -69,7 +72,6 @@ stateDiagram-v2
 | `/set_new_password` | SetNewPasswordPage | 不要 | 新パスワード設定 |
 | `/register_first_account` | RegisterFirstAccountPage | 不要 | 初回アカウント登録（旧 `/regist_first_account` はリダイレクト） |
 | `/shared_page` | SharedPage | 不要 | 共有 Kyou / タスク閲覧（`view_type` で内部振り分け） |
-| `/shared_mi` | OldSharedMiPage | 不要 | 旧URL。`/shared_page?share_id=…` へリダイレクトするだけ |
 
 ### 2.2 画面グループ分類
 
@@ -135,11 +137,20 @@ gkillの中心的な閲覧・操作画面。左サイドバーで検索条件（
 | `mi` | `shared-mi-page.vue` | Miタスクリストの読み取り専用表示 |
 | `rykv` | `shared-rykv-page.vue` | Kyouリストの読み取り専用表示 |
 
-#### OldSharedMiPage（旧・共有タスクURL）`/shared_mi`
+#### 旧URL `/shared_mi` の吸収
 
-`old-shared-mi-page.vue` は**中身を描画しない**（テンプレートは空の `<div>`）。
-マウント時に `reset_dialog_history()` を呼んでから `/shared_page?share_id=…` へ
-`router.replace` するだけのリダイレクタ。過去に配布した共有リンクを生かすために残っている。
+過去に配布した共有リンクを生かすため、`/shared_mi` は `/shared_page` へクエリごと
+引き継がれる。**実体はルータの `redirect` で、コンポーネントは無い。**
+
+かつては空の `<div>` を描くだけのページを置き、そのマウント時に `router.replace` していたが、
+これは動かない書き方だった。共有ページは `<script setup>` に top-level await のある
+非同期コンポーネントで、**初回ナビゲーションの解決中にその中から新しいナビゲーションを始めると
+遷移が完了しない**（`page.goto` が60秒待っても返らない）。
+当時は `share_id` が無いと `query.share_id!.toString()` が throw して setup ごと落ちていたため、
+**リダイレクト自体が一度も走っておらず**この問題が露見していなかった。
+
+> **旧パスの吸収はルータの `redirect` でやること。** コンポーネントの setup から
+> `router.replace` してはいけない（同じ理由で `/regist_first_account` も redirect にしてある）。
 
 > サーバ側（`serve.go`）は `/shared_rykv` にも SPA を配信するが、
 > `src/client/router/index.ts` に対応するルートが無いため、直接アクセスしても表示されない。
@@ -249,7 +260,7 @@ stateDiagram-v2
     DnoteView --> CorrelationGraphDialog: 相関グラフ右クリックから削除確認
 ```
 
-**追加ダイアログ:** AddDnoteItem（`add-dnote-item-dialog.vue`）, AddDnoteList（`add-dnote-list-dialog.vue`）, AddDnoteTrendGraph（`add-dnote-trend-graph-dialog.vue`）, CorrelationGraphDialog（`dnote-correlation-graph-dialog.vue`）
+**追加ダイアログ:** AddDnoteItem（`add-dnote-item-dialog.vue`）, AddDnoteList（`add-dnote-list-dialog.vue`）, AddDnoteTrendGraph（`add-dnote-trend-graph-dialog.vue`）, AddDnoteCorrelationGraph（`add-dnote-correlation-graph-dialog.vue`）
 
 **編集ダイアログ:** EditDnoteItem, EditDnoteList, EditDnoteTrendGraph（`edit-dnote-trend-graph-dialog.vue`）
 

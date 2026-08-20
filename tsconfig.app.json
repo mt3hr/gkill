@@ -1,12 +1,14 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "src/client/**/*", "src/client/**/*.vue", "public/sw.js"],
+  "include": ["env.d.ts", "src/client/**/*", "src/client/**/*.vue"],
   "exclude": ["src/**/__tests__/**"],
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
-    // ServiceWorker (public/sw.js / src/client/serviceWorker.ts) が使う API
+    // ServiceWorker (src/client/serviceWorker.ts) が使う API。
+    // vite-plugin-pwa は injectManifest 戦略でこの .ts を SW としてビルドする
+    // (vite.config.ts の srcDir / filename)。public/sw.js は存在しない
     "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
     // 地図ビューが使う Google Maps と、PWA プラグインが注入する仮想モジュールの型。
     // 以前はルートの tsconfig.json に書いてあったが "files": [] のせいで効いておらず、

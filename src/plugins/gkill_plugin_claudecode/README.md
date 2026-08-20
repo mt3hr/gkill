@@ -156,7 +156,6 @@ Kyou になるのは次の2種類。
 | `main.go` | エントリポイント、SDK ハンドラ登録、検索フィルタ |
 | `loader.go` | 指定のパターン展開・フォルダ走査・JSONL パース・Kyou の切り出し・サブエージェント紐付け |
 | `cache.go` | SQLite3 キャッシュ（ファイル単位の差分更新） |
-| `cache_path.go` | キャッシュDBの置き場所の解決 |
 | `render.go` | 詳細 HTML 生成 |
 | `html.go` | 設定画面の HTML 生成 |
 | `types.go` | JSONL レコードと Kyou の型定義 |

@@ -12,6 +12,32 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 
 プラグインツール `gkill_get_plugin_list` は3サーバ共通で提供します（読み取り専用）。プラグインKyouの本文は `gkill_get_kyous` の `include_plugin_content` でレスポンスに埋め込みます。
 
+### ファイル構成
+
+3つのサーバファイルは**ツールの取捨選択とディスパッチだけ**を持ち、実装は `lib/` に置いてあります。
+以前は3ファイルが同じ処理を丸ごと持っていて（合計4,000行超）、片方だけ直す事故が起きやすい形でした。
+
+| ファイル | 共有範囲 | 内容 |
+|---|---|---|
+| `lib/mcp-server-base.mjs` | 3サーバ | JSON-RPC の受け口（`initialize` / `tools/list` / `tools/call` の骨組み） |
+| `lib/stdio-transport.mjs` | 3サーバ | stdio の JSON-RPC トランスポート |
+| `lib/http-transport.mjs` | 3サーバ | Streamable HTTP トランスポート（OAuth 2.1 の配線を含む） |
+| `lib/gkill-client.mjs` | 3サーバ | gkill 本体を叩く HTTP クライアント（ログイン・認証リトライ・ファイル取得） |
+| `lib/payload.mjs` | 3サーバ | レスポンスのペイロード加工 |
+| `lib/read-tools.mjs` | read / readwrite | 読み取りツールの定義。**書き込み専用サーバも rep名 / 板名 / タグ名の3つだけをここから取る** |
+| `lib/write-tools.mjs` | write / readwrite | 書き込みツールの定義 |
+| `lib/plugin-tools.mjs` | 3サーバ | プラグインツールと、本文のインライン埋め込み |
+| `lib/find-query-schema.mjs` | read / readwrite | `gkill_get_kyous` の検索条件スキーマ |
+| `lib/normalization.mjs` / `write-normalization.mjs` / `validation.mjs` | — | 入力の正規化と検証 |
+| `lib/oauth-server.mjs` / `oauth-store.mjs` / `oauth-html.mjs` / `pkce.mjs` | HTTPモード | OAuth 2.1 |
+| `lib/file-link-store.mjs` | HTTPモード | 期限付きファイルリンク（`GET /files/{token}`） |
+| `lib/html-text.mjs` | 3サーバ | プラグインのコンテンツHTML → プレーンテキスト |
+| `lib/access-log.mjs` / `errors.mjs` / `constants.mjs` | 3サーバ | アクセスログ・エラー型・定数 |
+
+> ツール数（上の表の 9 / 24 / 29）は `verify_docs` が `lib/*-tools.mjs` のスプレッドを辿って
+> 実測と突き合わせます。サーバ本体だけを見ても数えられないので、ツールを増やすときは
+> 必ず `lib/` 側の配列へ足してください。
+
 2つのトランスポートモードに対応：
 - **stdio** (デフォルト): Claude Desktop等のローカルMCPクライアント向け
 - **HTTP** (Streamable HTTP): Claude.ai、ChatGPT等のリモートMCPクライアント向け

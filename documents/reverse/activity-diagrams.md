@@ -116,7 +116,8 @@ flowchart TD
 ```
 
 > **タグ・テキストも「ID ごとの最新版のみ」が検索対象。** 付随データの取得クエリは
-> ID ごとに `UpdateTime` 最新の1件へ絞り込む（`find_filter.go:513,624,656`）。
+> ID ごとに `UpdateTime` 最新の1件へ絞り込む（`find_filter.go` の `findCtx.isLatestData` 呼び出し。
+> 行番号は改修のたびに動くので書かない）。
 > このため**タグ名を編集したあと、編集前の古いタグ名で検索してもヒットしない**。
 > `FindKyouContext.isLatestData`（`find_kyou_context.go:39`）が同じ判定を共有する。
 

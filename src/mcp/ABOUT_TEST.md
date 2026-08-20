@@ -17,7 +17,7 @@ Vitest（Node.js 環境）
 | `__tests__/validation.test.mjs` | MCP ツール入力のバリデーション |
 | `__tests__/normalization.test.mjs` | クエリデータの正規化処理 |
 | `__tests__/constants.test.mjs` | 定数定義の検証 |
-| `__tests__/tool-handlers.test.mjs` | Read 7ツール分のハンドラ実行ロジック（ハンドコピーのツール名一覧・エンドポイント対応表・summarize） |
+| `__tests__/tool-handlers.test.mjs` | Read 8ツール分のハンドラ実行ロジック（`lib/read-tools.mjs` のツール名一覧・エンドポイント対応表・summarize） |
 | `__tests__/client.test.mjs` | GkillReadClient（fetch モック使用、ログイン・認証リトライ等） |
 | `__tests__/server.test.mjs` | McpServer のセットアップとトランスポート管理、セッションオーバーライド、プラグインツール振り分け |
 | `__tests__/access-log.test.mjs` | McpAccessLog（レベルフィルタリング・JSON形式・lazy open・close・sourceパラメータ） |
@@ -64,6 +64,19 @@ Vitest（Node.js 環境）
 - **PKCE**: S256/plain のコード検証、verifier フォーマット検証、チャレンジメソッド検証
 - **OAuth Store**: 認可コード/アクセストークン/リフレッシュトークン/クライアント登録の CRUD、TTL 期限切れ、定期クリーンアップ、JSONファイル永続化
 - **OAuth Server**: メタデータ、認可フロー、トークン交換、PKCE検証、リフレッシュトークンローテーション、動的クライアント登録、RFC 8707 resource パラメータ、完全 E2E フロー
+
+## 実装の置き場所
+
+3つのサーバファイル（`gkill-*-server.mjs`）は**ツールの取捨選択とディスパッチだけ**を持ち、
+実装は `lib/` に置いてある。テストの多くは `lib/` のモジュールを直接 import する。
+
+- トランスポート: `lib/stdio-transport.mjs` / `lib/http-transport.mjs`
+- JSON-RPC の受け口: `lib/mcp-server-base.mjs`
+- ツール定義: `lib/read-tools.mjs` / `lib/write-tools.mjs` / `lib/plugin-tools.mjs`
+- gkill 本体との通信: `lib/gkill-client.mjs`
+
+ツール数（Read 9 / Write 24 / ReadWrite 29）は `verify_docs` が `lib/*-tools.mjs` の
+スプレッドを辿って実測と突き合わせる。**サーバ本体だけを見ても数えられない。**
 
 ## 設定ファイル
 

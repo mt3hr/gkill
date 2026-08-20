@@ -12,11 +12,13 @@
 | ページコンポーネント | 15 |
 | ビューコンポーネント | 202 |
 | ダイアログコンポーネント | 116 |
-| **コンポーネント合計** | **333**（ルートを除く。ビュー203 + ダイアログ116 + ページ15） |
+| **コンポーネント合計** | **333**（ルートを除く。ビュー202 + ダイアログ116 + ページ15） |
 
 ## 1. ルート定義
 
-`src/client/router/index.ts` で定義される14ルートです。
+`src/client/router/index.ts` で定義される15ルート（コンポーネント13 + リダイレクト専用2）です。
+旧パスの吸収はコンポーネントではなく**ルータの `redirect`** で行います（`<script setup>` に
+top-level await のあるページの setup から `router.replace` すると、初回ナビゲーションが完了しなくなるため）。
 
 | パス | コンポーネント | 画面名 | 説明 |
 |---|---|---|---|
@@ -33,7 +35,7 @@
 | `/set_new_password` | set-new-password-page | パスワード変更 | パスワードリセット |
 | `/register_first_account` | register-first-account-page | 初回登録 | 初回アカウント作成（旧 `/regist_first_account` はリダイレクト） |
 | `/shared_page` | shared-page | 共有ページ | 共有コンテンツの表示 |
-| `/shared_mi` | old-shared-mi-page | 共有タスク | 旧形式の共有タスク（shared_pageへリダイレクト） |
+| `/shared_mi` | （リダイレクト専用。コンポーネント無し） | — | 旧URL。`/shared_page?share_id=…` へクエリごと引き継ぐ |
 
 ## 2. 各ページの詳細仕様
 
@@ -329,7 +331,19 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
 
 **ウィンドウの仕組み:** ホストするのはページではなく**ビュー**（`rykv-view` / `mi-view` / `plaing-time-is-view` / `dashboard-view`）です。ビューは自前の `v-app-bar` と `v-navigation-drawer` を持っているので、Vuetify の**入れ子レイアウト**（`<v-layout>` で包む）でウィンドウの中へ収めます。包まないとレイアウト部品が `position: fixed` のまま画面最上部へ飛びます。
 
-**ホスト時のビューの差分:** 自前のFABを出さない（ポートのFABが唯一）、Enter/Ctrl+V のショートカットを登録しない（`window` レベルなので枚数ぶん多重登録される）、画面切替メニューはページ遷移せず `requested_navigate_page` を上げる。
+**ホスト時のビューの差分:** 自前のFABを出さない（ポートのFABが唯一）、Enter/Ctrl+V のショートカットを登録しない（`window` レベルなので枚数ぶん多重登録される）、画面切替メニューはページ遷移せず `requested_navigate_page` を上げる（`reset_dialog_history()` はモジュール共有なので、呼ぶと並べている他のウィンドウまで一斉に閉じる）。
+
+**ウィンドウの中身が縦に潰れないようにする:** ウィンドウの `v-card` は「中身の高さに合わせる」既定のままだと、
+中の `display: flex` なビュー（集計ビュー等）が高さ0に潰れます。ホスト側で
+`.v-card.fill_height_mode` の例外を置き、ホストされる側は
+`.fill_height_mode :deep(...)` で最低高さを持たせます。
+
+- **セレクタの詳細度を落とさないこと。** ホストの `v-card` に効いている既定が詳細度3なので、
+  例外側も同じ詳細度で書かないと勝てない
+- **一覧の区画には `:has()` を付けて、中身があるときだけ最低高さを与える。**
+  無条件に与えると、一覧を出していないときに空白の帯が残る
+- この壊れ方は CSS のカスケードなのでユニットテストでは捕まらない。
+  回帰は E2E（`rudbeckia.spec.ts`）が `getComputedStyle` と `getBoundingClientRect` で見る
 ## 3. データ型別CRUD画面仕様
 
 ### CRUD対応マトリクス
@@ -695,7 +709,6 @@ gkillの検索機能は複数のクエリコンポーネントを組み合わせ
 | コンポーネント | 説明 |
 |---|---|
 | `kftl-template-view.vue` | テンプレート表示 |
-| `edit-kftl-template-view.vue` | テンプレート編集 |
 | `edit-kftl-template-struct-view.vue` | テンプレート構造編集 |
 | `edit-kftl-template-struct-element-view.vue` | テンプレート要素編集 |
 
@@ -787,7 +800,6 @@ Teleport to body
 | `server-config-dialog.vue` | サーバー設定 |
 | `manage-account-dialog.vue` | アカウント管理 |
 | `create-account-dialog.vue` | アカウント作成 |
-| `edit-folder-dialog.vue` | フォルダ編集 |
 | `edit-dashboard-dialog.vue` | ダッシュボード設定（MI検索条件・Dnote検索条件の編集） |
 | `edit-plaing-time-is-dialog.vue` | 実行中検索条件設定（「検索条件をカスタマイズする」チェックボックス＋条件編集ボタン。チェックOFFで未設定＝デフォルト動作に戻る） |
 | `edit-saved-find-query-dialog.vue` | 保存済み検索条件のハブ（ライフログ検索条件・タスク検索条件の2ボタン） |
