@@ -3,6 +3,7 @@ package reps
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
@@ -34,6 +35,25 @@ type gitCommitLogRepositoryLocalImpl struct {
 //
 // reppathがgitリポジトリでない場合はErrNotGitRepositoryを含むエラーを返します。
 func NewGitRep(reppath string) (GitCommitLogRepository, error) {
+	// **gitリポジトリは必ずディレクトリ。ファイルはここで弾く。**
+	//
+	// ファイルを渡すと go-git は `lstat <reppath>/.git` を試みるが、
+	// その失敗の型が **OSで違う**:
+	//   Windows … ErrRepositoryNotExists になる（判別できる）
+	//   Linux   … ENOTDIR の *fs.PathError（"not a directory"）になり、
+	//             ErrRepositoryNotExists を包まない
+	// つまり Linux では下の %w で包んでも errors.Is(err, ErrNotGitRepository) が偽になる。
+	//
+	// git_commit_log のrep設定は `$HOME/Git/*` のようなglobで、zglobは**ファイルも返す**。
+	// 呼び出し側（gkill_dao_manager.go）は ErrNotGitRepository のときだけそのrepを
+	// スキップし、それ以外は GetRepositories を丸ごと失敗させる。
+	// したがってこの判定が漏れると、Gitフォルダに紛れたファイル1つ
+	// （Git Bash の bash.exe.stackdump 等）で**そのユーザの全APIがERR000018になる**。
+	// Windows では再現せず、Linux / Android のサーバ配布物でだけ起きる。
+	if info, statErr := os.Stat(reppath); statErr == nil && !info.IsDir() {
+		return nil, fmt.Errorf("error at open git repository %s: not a directory: %w", reppath, ErrNotGitRepository)
+	}
+
 	gitrep, err := git.PlainOpen(reppath)
 	if err != nil {
 		// ErrNotGitRepositoryを判別できるよう%wで包む
