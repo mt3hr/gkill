@@ -242,7 +242,7 @@ sequenceDiagram
     FindFilter->>DAOManager: GetRepositories(userID, device)
     DAOManager-->>FindFilter: GkillRepositories
     FindFilter->>FindFilter: selectMatchRepsFromQuery()
-    Note over FindFilter: RepTypeフィルタにより<br/>対象リポジトリを絞り込み
+    Note over FindFilter: RepType / mi板 / 画像のみ で<br/>対象リポジトリを絞り込み<br/>（rep名は結果側で絞る）
     FindFilter->>Repositories: 各リポジトリから検索
     Repositories-->>FindFilter: []Kyou
     FindFilter-->>Client: 結果（全件。ページングは無い）
@@ -250,7 +250,13 @@ sequenceDiagram
 
 ### フィルタリングの仕組み
 
-`FindFilter.selectMatchRepsFromQuery()`で、FindQueryに指定されたRepType条件に一致するリポジトリのみが検索対象となります。
+`FindFilter.selectMatchRepsFromQuery()`で、FindQuery に指定された **RepType 条件**に一致するリポジトリのみが検索対象となります。
+
+**rep 名（`FindQuery.Reps`）はここでは絞り込みません。** rep 名は「1つでも選ばれた実rep を含むラッパを
+残す」枝刈りにだけ使い、実際にどの記録を残すかは検索**結果**の `Kyou.RepName` で決めます
+（`find_filter.go` の `filterKyousByRepName`）。インメモリキャッシュでは型ごとに1個のキャッシュrepへ
+畳まれているので、rep 名でラッパを剥がすとキャッシュを丸ごとバイパスしてしまうためです。
+詳細は [sequence-diagrams.md](sequence-diagrams.md) の「7. Kyou 検索」を参照。
 
 ```go
 // FindKyouContext 内で管理

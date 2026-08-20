@@ -152,7 +152,7 @@ npm run go_install
 | `extract_manual_src.mjs` | 生成済みマニュアルから `manual_src` フラグメントを抽出（移行用） |
 | `verify_docs.mjs` | docs CI。件数・リンク・参照パス・Mermaid・マニュアルを検証 |
 | `verify_release_artifacts.mjs` | リリース成果物の存在確認 |
-| `test_plugins.mjs` | `npm run test_plugins` の実体。`src/plugins/` 配下の各 Go モジュール（独立プラグイン）のテストを実行 |
+| `test_plugins.mjs` | `npm run test_plugins` / `npm run vet_plugins` の実体。`src/plugins/` 配下の各 Go モジュール（独立プラグイン）へ `go test` / `go vet` を回す |
 | `license_getter.mjs` | 依存ライブラリのライセンス一覧を生成する（`npm run license_getter`） |
 
 ## 開発ガイドライン
@@ -175,6 +175,7 @@ npm run go_install
 | `npm run test_client_e2e` | フロントエンド E2E（Playwright。gkill_server と Vite を自動起動・停止） |
 | `npm run test_mcp` | MCP サーバ |
 | `npm run test_plugins` | 同梱プラグイン（`src/plugins/` の独立 Go モジュール） |
+| `npm run vet_plugins` | 同梱プラグインへ `go vet`（CI の `plugins` ジョブが `test_plugins` の前に回す。`npm test` には入っていない） |
 | `npm run test_android` | Android |
 | `npm run test_wear_os` | Wear OS |
 

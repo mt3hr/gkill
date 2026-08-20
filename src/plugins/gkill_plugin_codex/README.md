@@ -242,7 +242,6 @@ kyou_cache   : Kyou 1件。body_json に詳細ビュー用の本体が入る
 | `config.go` | 設定の解釈と既定値 |
 | `render.go` | 詳細ビューのHTML |
 | `html.go` | 設定画面のHTML |
-| `cache_path.go` | キャッシュDBの置き場所の解決 |
 | `uuid.go` | UUIDv5 |
 
 ## テスト

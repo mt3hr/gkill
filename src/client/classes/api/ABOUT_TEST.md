@@ -17,6 +17,9 @@ Vitest
 | `src/client/__tests__/unit/api/generate-plaing-timeis-query.test.ts` | `generate_plaing_timeis_query()`（plaing検索クエリの共通生成。カスタム条件の6フィールドコピー・未設定時の既定動作・共有ページでの不適用・rep名絞り込みを常に切ること・記録タイプのTimeIs固定） |
 | `src/client/__tests__/unit/api/hydrate.test.ts` | `hydrate()` / `hydrate_all()` — 生JSONからクラスインスタンスへの詰め替え（`gkill-api.ts` / `datas/kyou.ts` のファイル全体 eslint-disable を解消したヘルパー） |
 | `src/client/__tests__/unit/api/delete-updated-gkill-caches.test.ts` | `delete_updated_gkill_caches()` — 検索直前の差分キャッシュ削除。ウォーターマーク（`last_cache_update_time`）を進めてよい条件 |
+| `src/client/__tests__/unit/api/normalize-legacy-find-kyou-query-json.test.ts` | 旧形式の検索条件JSON（`use_*` 有効化フラグ）の移行。Go / クライアント / MCP の3実装が**同じ16キー**を扱う必要がある |
+| `src/client/__tests__/unit/api/collect-inited-tag-names.test.ts` | 既定でチェックされるタグ名の収集。ツリーの「入れ物」（フォルダ・ルート）を混ぜないこと（混ぜるとAND検索が必ず0件になる） |
+| `src/client/__tests__/unit/api/yield-to-main.test.ts` | 大量応答の処理をメインスレッドへ譲る分割（30万件でUIが固まらないようにするための偽チャンク） |
 
 ## テスト内容
 
