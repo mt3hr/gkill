@@ -225,3 +225,162 @@ func TestAggregateFindChunksIDs(t *testing.T) {
 			strings.Join(violations, "\n"))
 	}
 }
+
+// dao/reps 側で FindQuery.Reps による絞り込みをしている箇所。
+//
+// rep名の絞り込みは **api/find_filter.go の findKyous（filterKyousByRepName）にだけ**置く。
+// dao/reps へ降ろしてはいけない理由は、そこを通るのが利用者のクエリだけではないから:
+// ReKyou / MiReKyou は参照先を解決するために target_resolution_memo.go:120 で
+// **利用者のクエリをそのまま** FindKyousSequential へ渡す。ここで rep名で絞ると、
+// チェックしていないrepに参照先を持つリポストが「参照先が見つからない」扱いになり、
+// **語句検索に黙って当たらなくなる**（エラーも0件表示も出ず、ヒット数が減るだけ）。
+//
+// GkillRepositories.Reps（リポジトリの一覧そのもの）とは別物なので、
+// クエリ側の受け手名でだけ引っかける。
+var queryRepsFilterPattern = regexp.MustCompile(`\b(query|findQuery|parsedFindQuery|q)\.Reps\b`)
+
+func TestNoRepNameFilterInDaoReps(t *testing.T) {
+	repsDir := filepath.Join(sourceScanGkillRoot, "dao", "reps")
+	violations := []string{}
+	scanned := 0
+	err := filepath.WalkDir(repsDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || !strings.HasSuffix(d.Name(), ".go") || strings.HasSuffix(d.Name(), "_test.go") {
+			return nil
+		}
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		scanned++
+		for i, line := range strings.Split(string(content), "\n") {
+			trimmed := strings.TrimSpace(line)
+			if strings.HasPrefix(trimmed, "//") {
+				continue // 説明コメントは対象外（この規約自体を説明した行が引っかかるため）
+			}
+			if queryRepsFilterPattern.MatchString(line) {
+				violations = append(violations,
+					fmt.Sprintf("%s:%d: %s", filepath.ToSlash(path), i+1, trimmed))
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("%s の走査に失敗した: %v", repsDir, err)
+	}
+	if scanned < 100 {
+		t.Fatalf("dao/reps のGoファイルが %d 件しか見つからない。rootの指定(%s)が間違っている可能性がある", scanned, repsDir)
+	}
+	if len(violations) != 0 {
+		t.Fatalf("dao/reps で FindQuery.Reps による絞り込みをしている。"+
+			"rep名の絞り込みは api/find_filter.go の filterKyousByRepName にだけ置くこと"+
+			"（ReKyou/MiReKyou のワード委譲が利用者のクエリをそのまま渡すため、"+
+			"ここで絞るとチェックしていないrepに参照先を持つリポストが語句検索に当たらなくなる）:\n%s",
+			strings.Join(violations, "\n"))
+	}
+}
+
+// commit_tx でキャッシュへ書き戻す直前に実rep名を入れ忘れている型。
+//
+// 一時リポジトリの Get*ByTXID は `? AS REP_NAME` に **temp rep の合成名**（"KMEMO_TEMP" 等）を
+// バインドして返す。それをそのままキャッシュへ write-through すると、キャッシュ表の REP_NAME が
+// 合成名になり、rep名での絞り込み（filterKyousByRepName）から漏れて
+// **確定したばかりの記録が一覧から消える**。
+//
+// 13型すべてが同じ2行の組（`x.RepName = repName` → `WriteThroughXxxCache`）で書かれている
+// コピペ形なので、1型だけ抜けても他の12型のテストは緑のまま通る。順序ごと機械で固定する。
+var (
+	commitTxWriteThroughPattern = regexp.MustCompile(`WriteThrough\w+Cache\(r\.Context\(\), (\w+)\)`)
+	// 期待される直前の行。IDF だけは「実DBへ永続化する TargetRepName の復元」が別にあるが、
+	// キャッシュ用の代入はこの形で他の12型と揃っている
+	commitTxRepNameAssign = "%s.RepName = repName"
+	// この数を下回ったら正規表現がずれている
+	commitTxExpectedTypes = 13
+)
+
+func TestCommitTxSetsRealRepNameBeforeWriteThrough(t *testing.T) {
+	path := filepath.Join(sourceScanGkillRoot, "api", "gkill_server_api", "handle_commit_tx.go")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("%s を読めない: %v", path, err)
+	}
+	lines := strings.Split(string(content), "\n")
+
+	found := 0
+	violations := []string{}
+	for i, line := range lines {
+		m := commitTxWriteThroughPattern.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		found++
+		want := fmt.Sprintf(commitTxRepNameAssign, m[1])
+		// 直前の実コード行（空行とコメントは飛ばす）
+		prev := ""
+		prevLine := 0
+		for j := i - 1; j >= 0; j-- {
+			candidate := strings.TrimSpace(lines[j])
+			if candidate == "" || strings.HasPrefix(candidate, "//") {
+				continue
+			}
+			prev = candidate
+			prevLine = j + 1
+			break
+		}
+		if prev != want {
+			violations = append(violations, fmt.Sprintf(
+				"handle_commit_tx.go:%d: %q の直前(%d行目)が %q ではなく %q",
+				i+1, strings.TrimSpace(line), prevLine, want, prev))
+		}
+	}
+	if found < commitTxExpectedTypes {
+		t.Fatalf("write-through が %d 件しか見つからない（%d 件のはず）。正規表現がずれている可能性がある",
+			found, commitTxExpectedTypes)
+	}
+	if len(violations) != 0 {
+		t.Fatalf("commit_tx でキャッシュへ書き戻す前に実rep名を入れていない型がある。"+
+			"一時リポジトリの合成rep名がキャッシュへ入ると、確定した記録が rep絞り込みから漏れる:\n%s",
+			strings.Join(violations, "\n"))
+	}
+}
+
+// IDF だけは「キャッシュ用の rep名」とは別に、**実DBへ永続化される** TARGET_REP_NAME の
+// 復元が要る。leaf の AddIDFKyouInfo が idfKyou.RepName を TARGET_REP_NAME 列として書くので、
+// temp rep の合成名 "IDF_TEMP" のまま渡すと **ファイルの所在が実データごと壊れ、
+// UpdateCache でも直らない**（キャッシュではないため）。この範囲で唯一の不可逆な失敗モード。
+func TestCommitTxRestoresIDFTargetRepNameBeforeRealWrite(t *testing.T) {
+	path := filepath.Join(sourceScanGkillRoot, "api", "gkill_server_api", "handle_commit_tx.go")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("%s を読めない: %v", path, err)
+	}
+	lines := strings.Split(string(content), "\n")
+
+	addIndex := -1
+	for i, line := range lines {
+		if strings.Contains(line, "WriteIDFKyouRep.AddIDFKyouInfo(r.Context(), idfKyou)") {
+			addIndex = i
+			break
+		}
+	}
+	if addIndex < 0 {
+		t.Fatal("handle_commit_tx.go に WriteIDFKyouRep.AddIDFKyouInfo の呼び出しが無い。実装が変わった可能性がある")
+	}
+
+	// 直前の実コード行が TargetRepName の復元であること
+	for j := addIndex - 1; j >= 0; j-- {
+		trimmed := strings.TrimSpace(lines[j])
+		if trimmed == "" || strings.HasPrefix(trimmed, "//") {
+			continue
+		}
+		if trimmed != "idfKyou.RepName = idfKyou.TargetRepName" {
+			t.Fatalf("handle_commit_tx.go:%d: AddIDFKyouInfo の直前が "+
+				"%q ではなく %q。temp rep の合成名のまま書くと TARGET_REP_NAME が実DBへ入り、"+
+				"ファイルの所在が壊れる（UpdateCache でも直らない）",
+				j+1, "idfKyou.RepName = idfKyou.TargetRepName", trimmed)
+		}
+		break
+	}
+}
