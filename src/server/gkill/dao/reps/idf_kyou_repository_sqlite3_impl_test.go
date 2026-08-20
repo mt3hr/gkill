@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"database/sql"
 	"os"
 	"path/filepath"
 	"slices"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
+	_ "modernc.org/sqlite"
 )
 
 func makeIDFKyou(id, targetFile string) IDFKyou {
@@ -484,5 +486,62 @@ func TestIDFKyouFindIDFKyou_DoesNotSearchAbsolutePath(t *testing.T) {
 	want := []string{"a.png"}
 	if !slices.Equal(got, want) {
 		t.Errorf("repのフォルダ名を除外語にしてもrepは消えないべき: got %v, want %v", got, want)
+	}
+}
+
+// IDFKyou.RepName は **実DBの TARGET_REP_NAME 列へ永続化される**。
+//
+// 他の12型の RepName が「キャッシュ表に入るだけ」なのに対し、IDF だけはファイルの
+// 置き場所を指す実データなので、commit_tx が一時リポジトリの合成名（"IDF_TEMP"）を
+// そのまま渡すと**ファイルの所在が壊れ、UpdateCache でも直らない**。
+// handle_commit_tx.go が AddIDFKyouInfo の直前で TargetRepName を戻しているのは
+// この永続化があるからで、その前提をここで固定する
+// （順序そのものは usecase/source_conventions_scan_test.go が見張る）。
+func TestIDFKyouAddPersistsRepNameAsTargetRepName(t *testing.T) {
+	repo, dir := newTempIDFKyouRepoWithDir(t)
+	ctx := context.Background()
+
+	ownRepName, err := repo.GetRepName(ctx)
+	if err != nil {
+		t.Fatalf("GetRepName failed: %v", err)
+	}
+
+	// 別のIDFrepにあるファイルを指す記録
+	other := makeIDFKyou("idf-other-rep", "photo.jpg")
+	other.RepName = "OTHER_IDF_REP"
+	if err := repo.AddIDFKyouInfo(ctx, other); err != nil {
+		t.Fatalf("AddIDFKyouInfo failed: %v", err)
+	}
+	// 自分のrepにあるファイルを指す記録（DVNFでフォルダ名が変わっても解決できるよう空にされる）
+	own := makeIDFKyou("idf-own-rep", "memo.txt")
+	own.RepName = ownRepName
+	if err := repo.AddIDFKyouInfo(ctx, own); err != nil {
+		t.Fatalf("AddIDFKyouInfo failed: %v", err)
+	}
+
+	db, err := sql.Open("sqlite", filepath.Join(dir, "idf.db"))
+	if err != nil {
+		t.Fatalf("open idf.db failed: %v", err)
+	}
+	defer db.Close()
+
+	read := func(id string) string {
+		t.Helper()
+		var targetRepName string
+		if err := db.QueryRowContext(ctx,
+			`SELECT TARGET_REP_NAME FROM IDF WHERE ID = ?`, id).Scan(&targetRepName); err != nil {
+			t.Fatalf("select TARGET_REP_NAME for %s failed: %v", id, err)
+		}
+		return targetRepName
+	}
+
+	if got := read("idf-other-rep"); got != "OTHER_IDF_REP" {
+		t.Errorf("TARGET_REP_NAME = %q, want %q。"+
+			"IDFKyou.RepName は実DBへ書かれる。commit_tx が一時repの合成名を渡すと"+
+			"ファイルの所在が実データごと壊れる", got, "OTHER_IDF_REP")
+	}
+	if got := read("idf-own-rep"); got != "" {
+		t.Errorf("自repを指すときの TARGET_REP_NAME = %q, want 空文字"+
+			"（DVNFのフォルダリネーム後も解決できるよう空にする）", got)
 	}
 }

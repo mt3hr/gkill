@@ -26,8 +26,8 @@ type stubIDFRep struct {
 	reps.IDFKyouRepository
 	repName     string
 	unwrapCalls *int
-	// UnWrap()の戻り。実際のcached repは配下の生repを返すので、それを模す。
-	unwrapped reps.Repository
+	// UnWrap()の戻り。実際のcached repは配下の生repを**複数**返すので、それを模す。
+	unwrapped []reps.Repository
 }
 
 func (s *stubIDFRep) GetRepName(_ context.Context) (string, error) {
@@ -36,7 +36,7 @@ func (s *stubIDFRep) GetRepName(_ context.Context) (string, error) {
 
 func (s *stubIDFRep) UnWrap() ([]reps.Repository, error) {
 	*s.unwrapCalls++
-	return []reps.Repository{s.unwrapped}, nil
+	return s.unwrapped, nil
 }
 
 type stubRawRep struct {
@@ -59,7 +59,7 @@ func TestSelectMatchRepsFromQuery_ImageOnlyKeepsCachedRep(t *testing.T) {
 
 	unwrapCalls := 0
 	raw := &stubRawRep{repName: "RawIDFRep"}
-	cached := &stubIDFRep{repName: "CachedIDFReps", unwrapCalls: &unwrapCalls, unwrapped: raw}
+	cached := &stubIDFRep{repName: "CachedIDFReps", unwrapCalls: &unwrapCalls, unwrapped: []reps.Repository{raw}}
 
 	findCtx := &FindKyouContext{
 		MatchReps: map[string]reps.Repository{},
@@ -106,7 +106,7 @@ func TestSelectMatchRepsFromQuery_RepsSpecifiedKeepsCachedRep(t *testing.T) {
 
 	unwrapCalls := 0
 	raw := &stubRawRep{repName: "RawIDFRep"}
-	cached := &stubIDFRep{repName: "CachedIDFReps", unwrapCalls: &unwrapCalls, unwrapped: raw}
+	cached := &stubIDFRep{repName: "CachedIDFReps", unwrapCalls: &unwrapCalls, unwrapped: []reps.Repository{raw}}
 
 	findCtx := &FindKyouContext{
 		MatchReps: map[string]reps.Repository{},
@@ -153,7 +153,7 @@ func TestSelectMatchRepsFromQuery_RepsMatchingNothingSelectsNoRep(t *testing.T) 
 
 	unwrapCalls := 0
 	raw := &stubRawRep{repName: "RawIDFRep"}
-	cached := &stubIDFRep{repName: "CachedIDFReps", unwrapCalls: &unwrapCalls, unwrapped: raw}
+	cached := &stubIDFRep{repName: "CachedIDFReps", unwrapCalls: &unwrapCalls, unwrapped: []reps.Repository{raw}}
 
 	findCtx := &FindKyouContext{
 		MatchReps: map[string]reps.Repository{},
@@ -321,5 +321,69 @@ func TestSelectMatchRepsFromQuery_TypeFiltersAreUnioned(t *testing.T) {
 				t.Errorf("MatchReps = %v, want %v", got, c.wantReps)
 			}
 		})
+	}
+}
+
+// キャッシュrepが配下に複数の生repを持ち、そのうち**一部だけ**が指定されたとき。
+//
+// これが本番の形。--cache_in_memory=true では型ごとに1個のキャッシュrepへ畳まれ、
+// その配下に端末別の重複登録を含む数百個の生repがぶら下がる
+// （実データの一例では 312rep 中 263個が重複）。rykv/mi はそのうちの一部だけを
+// チェックした状態で `reps` を送ってくる。
+//
+// 期待する挙動は「1つでも選ばれていればラッパごと検索対象にし、
+// 実際にどの行を残すかは結果側（filterKyousByRepName）で決める」。
+//   - 1つも選ばれていないラッパは検索対象にしない（枝刈り）
+//   - 選ばれたラッパは**キャッシュrepのまま**入れる（生repに差し替えない）
+//
+// 旧実装は「選ばれた生repだけを MatchReps に入れる」だったので、
+// このケースで raw-b だけがディスク直読みで検索されていた。
+func TestSelectMatchRepsFromQuery_PartiallyMatchedWrapperKeepsCachedRep(t *testing.T) {
+	ctx := context.Background()
+
+	unwrapCallsA := 0
+	unwrapCallsB := 0
+	rawA1 := &stubRawRep{repName: "raw-a1"}
+	rawA2 := &stubRawRep{repName: "raw-a2"}
+	rawB1 := &stubRawRep{repName: "raw-b1"}
+	cachedA := &stubIDFRep{
+		repName:     "CachedA",
+		unwrapCalls: &unwrapCallsA,
+		unwrapped:   []reps.Repository{rawA1, rawA2},
+	}
+	cachedB := &stubIDFRep{
+		repName:     "CachedB",
+		unwrapCalls: &unwrapCallsB,
+		unwrapped:   []reps.Repository{rawB1},
+	}
+
+	findCtx := &FindKyouContext{
+		MatchReps: map[string]reps.Repository{},
+		Repositories: &reps.GkillRepositories{
+			IDFKyouReps: reps.IDFKyouRepositories{cachedA, cachedB},
+		},
+		ParsedFindQuery: &find.FindQuery{
+			IsImageOnly: true,
+			// CachedA の配下2個のうち1個だけを指定する
+			Reps: []string{"raw-a2"},
+		},
+	}
+
+	f := &FindFilter{}
+	if _, err := f.selectMatchRepsFromQuery(ctx, findCtx); err != nil {
+		t.Fatalf("selectMatchRepsFromQuery failed: %v", err)
+	}
+
+	if got := matchRepNames(findCtx); !slices.Equal(got, []string{"CachedA"}) {
+		t.Fatalf("MatchReps = %v, want [CachedA]。"+
+			"1つでも選ばれていればラッパごと対象に、1つも選ばれていなければ対象外にすること", got)
+	}
+	if got := findCtx.MatchReps["CachedA"]; got != reps.Repository(cachedA) {
+		t.Errorf("MatchReps に入っているのがキャッシュrepではない: %#v。"+
+			"生repに差し替えるとキャッシュを丸ごとバイパスする", got)
+	}
+	// 枝刈りの判定に UnWrap() は要る。両方のラッパについて呼ばれる
+	if unwrapCallsA == 0 || unwrapCallsB == 0 {
+		t.Errorf("枝刈り判定の UnWrap() が呼ばれていない (A=%d B=%d)", unwrapCallsA, unwrapCallsB)
 	}
 }
