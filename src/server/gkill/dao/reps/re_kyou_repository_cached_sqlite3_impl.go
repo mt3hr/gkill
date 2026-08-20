@@ -305,7 +305,13 @@ WHERE
 	// false のままだと updateTime 未指定のときに **そのIDの全バージョンを無順序・無制限に読み**、
 	// 下の kyous[0] が格納順の先頭(多くの場合いちばん古い版)を返してしまう。
 	// 版の数だけ走査するので遅くもある。Tag / Text では既に同じ修正が入っている。
-	onlyLatestData := updateTime == nil
+	//
+	// 値は上の query リテラルで `OnlyLatestData: updateTime == nil` として組み立てた
+	// ものをそのまま使う。かつては同じ式をここでもう一度書いたうえで
+	// `onlyLatestData = query.OnlyLatestData` で上書きしていた（値は同じなので
+	// 挙動は変わらないが、最初の代入が死んでいて、この説明が捨てられる行に
+	// 付いている状態だった）。
+	onlyLatestData := query.OnlyLatestData
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
@@ -313,7 +319,6 @@ WHERE
 	findWordUseLike := true
 	ignoreCase := false
 
-	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
