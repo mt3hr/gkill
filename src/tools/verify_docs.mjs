@@ -232,6 +232,10 @@ function computeTestMetrics() {
     wearTestFiles: ktFiles('src/wear_os/phone_companion') + ktFiles('src/wear_os/watch_app'),
     unitClassesFiles: unitDirFiles('classes'),
     unitComposablesFiles: unitDirFiles('composables'),
+    unitApiFiles: unitDirFiles('api'),
+    unitDatasFiles: unitDirFiles('datas'),
+    unitDnoteFiles: unitDirFiles('dnote'),
+    unitKftlFiles: unitDirFiles('kftl'),
     serverApiTestFiles: listFiles('src/server/gkill/api/gkill_server_api',
       (f) => f.endsWith('_test.go')).length,
     serverMainTestFiles: listFilesRec('src/server/gkill/main', (f) => f.endsWith('_test.go')).length,
@@ -380,12 +384,39 @@ function computeMiscMetrics() {
 
   // dao/reps 直下のテストファイル数 / クライアント datas テストファイル数 / Wear OS Kotlin ファイル数
   const repsTestFiles = listFiles('src/server/gkill/dao/reps', (f) => f.endsWith('_test.go')).length
+  // サブパッケージ（reps/cache, reps/rep_cache_updater）を含めた本数。
+  // ABOUT_TEST.md の「リポジトリ」行はこちらの数を書いている
+  const repsAllTestFiles = listFilesRec('src/server/gkill/dao/reps', (f) => f.endsWith('_test.go')).length
   const datasTestFiles = listFiles('src/client/__tests__/unit/datas', (f) => f.endsWith('.test.ts')).length
   const wearCompanionKt = listFilesRec('src/wear_os/phone_companion/src/main', (f) => f.endsWith('.kt')).length
   const wearWatchKt = listFilesRec('src/wear_os/watch_app/src/main', (f) => f.endsWith('.kt')).length
 
+  // マニュアルのページ数（1言語あたり）。ja を代表値にする。
+  // 言語間の集合一致は checkManuals() が別に見ているので、ここは枚数だけ。
+  const manualPages = exists('resources/manual_src/ja')
+    ? listFiles('resources/manual_src/ja', (f) => f.endsWith('.html')).length
+    : 0
+
+  // ルータのルート数。
+  //   コンポーネントを持つルートと、旧パス吸収の redirect 専用ルートは別物。
+  //   `/shared_mi` がコンポーネントから redirect に変わったとき、
+  //   「13ルート」「14ルート」「表14行」が資料の中で三重に食い違った。
+  const routerSource = exists('src/client/router/index.ts') ? readText('src/client/router/index.ts') : ''
+  const routeEntries = routerSource.split(/\n\s*\{\s*\n/).slice(1)
+  const routeComponents = routeEntries.filter((e) => /^\s*component:/m.test(e)).length
+  const routeRedirects = routeEntries.filter((e) =>
+    /^\s*redirect:/m.test(e) && !/^\s*component:/m.test(e)).length
+
+  // go.mod を持つモジュール数（src/server + src/plugins の各プラグイン）。
+  // 依存を上げるときは全モジュールで tidy が要るので、資料の数が古いと取りこぼす。
+  const goModModules = listFilesRec('src', (f) => f === 'go.mod').length
+
   return {
     writeThroughCalls,
+    manualPages,
+    routeComponents,
+    routeRedirects,
+    goModModules,
     mcpReadTools: toolNames('src/mcp/gkill-read-server.mjs'),
     mcpWriteTools: toolNames('src/mcp/gkill-write-server.mjs'),
     mcpReadWriteTools: toolNames('src/mcp/gkill-readwrite-server.mjs'),
@@ -408,6 +439,7 @@ function computeMiscMetrics() {
     handlerMethods: handlerDocs.total,
     handlerDocumented: handlerDocs.documented,
     repsTestFiles,
+    repsAllTestFiles,
     datasTestFiles,
     wearCompanionKt,
     wearWatchKt,
@@ -599,6 +631,71 @@ function buildCountAssertions(m) {
   // e2eTestFiles は *.spec.ts の数（auth.setup.ts は含まない）
   add('documents/reverse/testing-guide.md', `| フロントエンド E2E | ${m.e2eTests} | ${m.e2eTestFiles}（+auth.setup.ts） |`)
 
+  // ── 2026-08-20 追加分。
+  //   ここから下も「同じ数字が複数の資料に散っているのに、検査は1〜2ファイルしか
+  //   見ていなかった」ぶん。今回の点検で実際にずれていたものだけを登録してある。
+  //     - CLAUDE.md のビュー数だけ 203 のまま（ダイアログ数は検査済みで正しかった）
+  //     - screen-specs.md の合計行の**括弧の中**だけ 203 で、203+116+15=334≠333
+  //     - documents/reverse/README.md の画面仕様だけ 307 のまま（実測 333）
+  //     - testing-guide.md の本文だけ「40 specファイル・215テスト宣言」のまま
+  //     - src/ABOUT_TEST.md の索引表だけ 894 / 719 / 18 / 1342 のまま
+  //     - マニュアルのページ数が 21 のまま（ポート画面の追加で 22）
+  //     - ルート数が「13」「14」「表14行」で三重に食い違い
+
+  // ビュー数（ダイアログ数は上で検査済み。CLAUDE.md はビューだけ漏れていた）
+  add('CLAUDE.md', `${m.views} view components`)
+  // 合計行の内訳。合計だけ検査していると括弧の中が置き去りになる
+  add('documents/reverse/screen-specs.md',
+    `ビュー${m.views} + ダイアログ${m.dialogs} + ページ${m.pages}`)
+  add('documents/reverse/README.md', `画面仕様・項目定義（${m.componentTotal}コンポーネント）`)
+
+  // ルート数（コンポーネントを持つルート / redirect 専用ルート）
+  const routeTotal = m.routeComponents + m.routeRedirects
+  add('CLAUDE.md',
+    `${m.routeComponents} page routes`)
+  add('CLAUDE.md', `${m.routeRedirects} redirect-only routes`)
+  add('documents/reverse/screen-specs.md', `| ルート | ${m.routeComponents} |`)
+  add('documents/reverse/screen-specs.md',
+    `で定義される${routeTotal}ルート（コンポーネント${m.routeComponents} + リダイレクト専用${m.routeRedirects}）`)
+  add('documents/reverse/screen-transition.md',
+    `### ルートページ一覧（${m.routeComponents}ルート）`)
+  add('documents/reverse/program-spec.md', `### ルート構成（${m.routeComponents}ルート）`)
+  add('documents/reverse/glossary.md', `${m.routeComponents}ルートの定義`)
+  add('documents/reverse/folder-structure.md', `ルーター定義（${m.routeComponents}ルート）`)
+  add('src/client/README.md', `## ルーティング（${m.routeComponents}ルート）`)
+  add('src/client/ABOUT_TEST.md', `ルーター (${m.routeComponents}ルート`)
+
+  // マニュアルのページ数（言語あたり）
+  add('CLAUDE.md', `${m.manualPages} pages per language`)
+  add('documents/reverse/folder-structure.md', `7言語×${m.manualPages}ページ`)
+
+  // src/ABOUT_TEST.md の索引表（上の統計表とは別に、各行が件数を書いている）
+  add('src/ABOUT_TEST.md', `フロントエンド全体（unit ${m.unitTests} + E2E ${m.e2eTests}）`)
+  add('src/ABOUT_TEST.md', `Go バックエンド全体（${m.goTests}テスト / ${m.goTestPkgs}パッケージ）`)
+  add('src/ABOUT_TEST.md', `MCP サーバ（${m.mcpTests}テスト）`)
+  add('src/ABOUT_TEST.md', `${m.sdkTests}テスト）`)
+
+  // src/client/ABOUT_TEST.md のツリー内の件数（冒頭の要約とは別の箇所）
+  add('src/client/ABOUT_TEST.md', `# ユニットテスト (${m.unitTests}テスト宣言, ${m.unitTestFiles}ファイル)`)
+  add('src/client/ABOUT_TEST.md', `# E2E テスト (${m.e2eTests}テスト宣言, ${m.e2eTestFiles} specファイル`)
+  add('src/client/ABOUT_TEST.md', `### E2E テスト (${m.e2eTests}テスト宣言, ${m.e2eTestFiles} specファイル)`)
+  add('src/client/ABOUT_TEST.md', `D-note モジュール (${m.unitDnoteFiles}ファイル`)
+  add('src/client/ABOUT_TEST.md', `| D-note | ${m.unitDnoteFiles}ファイル |`)
+
+  // testing-guide.md の本文（先頭の表とは別の箇所）
+  add('documents/reverse/testing-guide.md',
+    `${m.e2eTestFiles} specファイル + auth.setup.ts、${m.e2eTests}テスト宣言`)
+
+  // src/server/ABOUT_TEST.md のカテゴリ表。合計行が「verify_docs と一致する」と
+  // 自称していたのに検査されておらず、実測125に対して78のまま放置されていた
+  add('src/server/ABOUT_TEST.md', `**合計 ${m.goTestFiles} ファイル**`)
+  add('src/server/ABOUT_TEST.md', `| API 統合 | ${m.serverApiTestFiles} |`)
+  add('src/server/ABOUT_TEST.md', `| リポジトリ | ${m.repsAllTestFiles} |`)
+  add('src/server/ABOUT_TEST.md', `| プラグイン SDK | ${m.sdkTestFiles} |`)
+
+  // go.mod のモジュール数（依存を上げるとき全モジュールで tidy が要る）
+  add('src/tools/README.md', `全 go.mod（${m.goModModules}モジュール自動発見）`)
+
   // gkill-api.ts の行数（100の位で丸め。「3,400」表記）
   const apiLines = m.gkillApiLinesApprox.toLocaleString('en-US')
   add('documents/reverse/frontend-architecture.md', `(~${apiLines}行)`)
@@ -692,6 +789,18 @@ function checkCounts(m) {
 // ─────────────────────────────────────────────────────────────
 // 3. 相互リンク（reverse docs の .md リンクが実在するか）
 // ─────────────────────────────────────────────────────────────
+// コードフェンスの中を落とす。
+//
+// **バッククォート対の走査は必ずこれを通すこと。** フェンスは3連バッククォートなので、
+// 生のテキストへ「` ... `」の正規表現を当てると
+// 「開きフェンスの3本目」と「閉じフェンスの1本目」が対になり、以降の対応が全部ずれる。
+// 実測では223個のパス記述のうち78個しか見えていなかった
+// （frontend-architecture.md は528スパン中0個）。
+function stripFencedBlocks(text) {
+  return text.replace(/^\s*```[\s\S]*?^\s*```/gm, '\n')
+}
+
+// ─────────────────────────────────────────────────────────────
 // 検査対象の Markdown（リポジトリルートからの相対パス）。
 //   documents/reverse/*.md に加え、README.md 群と ABOUT_TEST.md 群も対象にする。
 //   src/README.md の「各サブディレクトリの README / ABOUT_TEST」表がリンク切れのまま
@@ -734,16 +843,15 @@ function checkLinks() {
 //    glob（*）や説明用の一般パスは除外し、具体ファイル/ディレクトリのみ検査。
 // ─────────────────────────────────────────────────────────────
 function checkPaths() {
-  const mdFiles = []
-  for (const f of listFiles('documents/reverse', (f) => f.endsWith('.md'))) {
-    mdFiles.push(path.join('documents/reverse', f))
-  }
-  if (exists('CLAUDE.md')) mdFiles.push('CLAUDE.md')
+  // 対象は docMarkdownFiles() と同じ（README / ABOUT_TEST 群も含む）。
+  // 以前は documents/reverse + CLAUDE.md だけだったので、
+  // src/**/README.md のパス記述はまったく検査されていなかった。
+  const mdFiles = docMarkdownFiles()
 
-  const codeRe = /`([^`]+)`/g
+  const codeRe = /`([^`\n]+)`/g
   const seen = new Set()
   for (const rel of mdFiles) {
-    const text = readText(rel)
+    const text = stripFencedBlocks(readText(rel))
     let mt
     while ((mt = codeRe.exec(text)) !== null) {
       const tok = mt[1].trim()
@@ -758,6 +866,69 @@ function checkPaths() {
         warn(`参照パス未検出（要確認）: ${rel} → ${tok}`)
       }
     }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 4-b. 資料に載っているファイル名が実在するか
+//
+//   件数だけを検査していると「数は合っているのに一覧は古い」が通り抜ける。
+//   実例: classes/dnote/README.md は `dnote-predicate/（31ファイル）` の
+//   件数検査を通ったまま、削除済みの述語2件を表に載せ続けていた。
+//   ASCII ツリーや表セルに書かれた**素のファイル名**（バッククォートの有無を問わない）を
+//   拾い、同名のファイルがリポジトリのどこにも無ければ落とす。
+//
+//   パスではなくファイル名で照合するのは、資料の多くがツリー図で
+//   「置き場所は図の形で示し、行にはファイル名だけ書く」形式だから。
+//   同名別ディレクトリを見逃す代わりに、削除・改名の取り残しを確実に捕まえる。
+// ─────────────────────────────────────────────────────────────
+const DOC_FILENAME_EXTENSIONS = ['go', 'ts', 'vue', 'mjs', 'kt']
+// 走査から外すディレクトリ（生成物・依存・IDE）
+const DOC_FILENAME_SKIP_DIRS = new Set([
+  'node_modules', '.git', 'dist', 'release', 'build', '.gradle', '.idea',
+  'test-results', 'playwright-report',
+])
+// 実在を求めない書き方。
+//   - `_repository.go` のような**接尾辞パターン**（先頭が `_`）
+//   - `xxx_dao.go` / `use-xxx-view.ts` のような**プレースホルダ**
+// どちらも資料が意図して使っている記法なので、実ファイルを探しに行かない。
+const DOC_FILENAME_PLACEHOLDER = /^_|xxx|yyy|zzz/
+
+function collectRepositoryBasenames() {
+  const names = new Set()
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        if (DOC_FILENAME_SKIP_DIRS.has(entry.name)) continue
+        walk(path.join(dir, entry.name))
+        continue
+      }
+      names.add(entry.name)
+    }
+  }
+  walk(ROOT)
+  return names
+}
+
+function checkDocFilenames() {
+  const basenames = collectRepositoryBasenames()
+  const fileRe = new RegExp(
+    `(?<![\\w./-])([A-Za-z0-9_][\\w.-]*\\.(?:${DOC_FILENAME_EXTENSIONS.join('|')}))(?![\\w-])`, 'g')
+
+  // 同じ名前を何度も報告しない（ツリーと表で二重に出るため）
+  const missing = new Map()
+  for (const rel of docMarkdownFiles()) {
+    for (const mt of readText(rel).matchAll(fileRe)) {
+      const name = mt[1]
+      if (DOC_FILENAME_PLACEHOLDER.test(name)) continue
+      if (basenames.has(name)) continue
+      if (!missing.has(name)) missing.set(name, new Set())
+      missing.get(name).add(rel)
+    }
+  }
+  for (const name of [...missing.keys()].sort()) {
+    err(`資料に載っているファイルが実在しない: ${name}`
+      + `（${[...missing.get(name)].sort().join(', ')}）`)
   }
 }
 
@@ -868,6 +1039,10 @@ const MANUAL_FORBIDDEN_TERMS = [
   'IDFKyou', 'IDF', 'WAN', 'MiReKyou', 'ReKyou', 'Kyou', 'KFTL',
   'Rykv', 'Mkfl', 'Dnote', 'Ryuu', 'Plaing', 'Lantana', 'Nlog',
   'URLog', 'TimeIs', 'Kmemo', 'DVNF', 'RepType',
+  // ポート画面の開発コード名。URL（/rudbeckia）・ファイル名・保存キーには出るが、
+  // 利用者に見せる呼び名は「ポート」だけ。現状マニュアル本文に漏れは無く、
+  // 止め金がこれしか無いので入れておく
+  'Rudbeckia', 'rudbeckia',
 ]
 // 例外: Saihate は ja 以外の SAIHATE_APP_NAME がそのまま "Saihate" なので UI ラベル。
 // `<code>` の中（server-config.html の rep type 一覧など、UI が生値を表示する箇所）は対象外。
@@ -879,9 +1054,17 @@ function checkManualTerminology() {
   for (const lang of langs) {
     const langDir = path.join(SRC_DIR, lang)
     for (const page of fs.readdirSync(langDir).filter((f) => f.endsWith('.html'))) {
+      // 属性付き（`<code class="...">`）も剥がす。`<code>` 完全一致で書いていると、
+      // 属性を1つ足しただけで**遮蔽が外れて用語が露出する**のに検査は素通りする。
+      //
+      // `href` / `src` の値も落とす。ページのファイル名は開発コード名のままでよく
+      // （`rudbeckia.html`）、利用者の目に入るのはリンクの**文字**のほうだから。
+      // `alt` / `title` は読み上げやツールチップとして見えるので残す。
       const body = fs.readFileSync(path.join(langDir, page), 'utf8')
-        .replace(/<code>[\s\S]*?<\/code>/g, '')
+        .replace(/<code(?:\s[^>]*)?>[\s\S]*?<\/code>/g, '')
         .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/\s(?:href|src)\s*=\s*"[^"]*"/g, '')
+        .replace(/\s(?:href|src)\s*=\s*'[^']*'/g, '')
       for (const term of MANUAL_FORBIDDEN_TERMS) {
         if (new RegExp(`(^|[^A-Za-z])${term}([^A-Za-z]|$)`).test(body)) {
           err(`マニュアル用語NG: resources/manual_src/${lang}/${page} に開発コード名「${term}」`
@@ -988,6 +1171,7 @@ function main() {
   checkCounts(m)
   checkLinks()
   checkPaths()
+  checkDocFilenames()
   checkMermaid()
   checkManuals()
   checkManualTerminology()
