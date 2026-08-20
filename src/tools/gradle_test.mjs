@@ -43,12 +43,41 @@ if (fs.existsSync(wrapper)) {
   }
 }
 
-const command = process.platform === 'win32' ? 'gradlew.bat' : './gradlew'
 const args = process.argv.slice(3)
-const res = spawnSync(command, args.length > 0 ? args : ['test'], {
+const taskArgs = args.length > 0 ? args : ['test']
+
+// **ラッパーは必ず絶対パスで呼ぶこと。**
+// `gradlew.bat` と裸の名前で cmd へ渡すと、`NoDefaultCurrentDirectoryInExePath=1` が
+// 設定された環境（この開発機がそう）ではカレントディレクトリを探さないため
+// 「'gradlew.bat' は、内部コマンドまたは外部コマンド… として認識されていません」で落ちる。
+// `cwd` を渡していても関係ない（探索順の問題であって、作業ディレクトリの問題ではない）。
+//
+// また `shell: true` は使わない。引数がエスケープされずに連結されるだけで
+// （Node が DEP0190 で警告する）、`.\\gradlew.bat` のようなパスは
+// バックスラッシュが落ちて `.gradlew.bat` に化ける。
+// cmd を明示的に起動して絶対パスを渡すのが一番素直で、エスケープの余地も無い。
+let command
+let commandArgs
+if (process.platform === 'win32') {
+  const bat = path.join(projectDir, 'gradlew.bat')
+  if (!fs.existsSync(bat)) {
+    console.error(`gradlew.bat が見つからない: ${bat}`)
+    process.exit(1)
+  }
+  command = process.env.ComSpec || process.env.comspec || 'cmd.exe'
+  commandArgs = ['/d', '/s', '/c', bat, ...taskArgs]
+} else {
+  if (!fs.existsSync(wrapper)) {
+    console.error(`gradlew が見つからない: ${wrapper}`)
+    process.exit(1)
+  }
+  command = wrapper
+  commandArgs = taskArgs
+}
+
+const res = spawnSync(command, commandArgs, {
   cwd: projectDir,
   stdio: 'inherit',
-  shell: process.platform === 'win32',
 })
 if (res.error) {
   console.error(`${command} を実行できない: ${res.error.message}`)
