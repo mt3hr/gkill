@@ -6,7 +6,7 @@ import { i18n } from '../../helpers/setup-i18n'
 // Mock the @/i18n module to use our test i18n instance
 vi.mock('@/i18n', () => ({ i18n }))
 
-import { format_time, format_duration, format_time_of_day } from '@/classes/format-date-time'
+import { format_time, format_duration, format_time_of_day, to_single_line, DURATION_LINE_SEPARATOR } from '@/classes/format-date-time'
 
 const HOUR = 60 * 60 * 1000
 const MINUTE = 60 * 1000
@@ -120,5 +120,41 @@ describe('format_duration', () => {
     const result = format_duration(60000)
     expect(result).toContain('1分')
     expect(result).not.toContain('秒')
+  })
+
+  // 表示文字列に HTML タグを埋めてはいけない。
+  // 表示側は {{ }} 補間なので Vue がエスケープし、剥がし忘れた画面では
+  // <br> がそのまま文字として見える（Dnoteの集計リストと相関グラフで実際に出ていた）。
+  // 区切りは本物の改行にしてあるので、剥がし忘れても white-space 既定なら空白1個へ畳まれる。
+  test('does not embed an HTML tag', () => {
+    const result = format_duration(83160000)
+    expect(result).not.toContain('<')
+    expect(result).not.toContain('>')
+  })
+
+  test('separates the trimmed hours with a real newline', () => {
+    // 23時間6分 = 83160000ms
+    const result = format_duration(83160000)
+    expect(result).toContain(DURATION_LINE_SEPARATOR)
+    expect(result.split(DURATION_LINE_SEPARATOR)).toEqual(['23時間 6分', '（23.1時間）'])
+  })
+
+  test('has no separator when there is nothing to separate', () => {
+    expect(format_duration(0)).not.toContain(DURATION_LINE_SEPARATOR)
+  })
+})
+
+describe('to_single_line', () => {
+  test('folds the duration separator into a single space', () => {
+    expect(to_single_line(format_duration(83160000))).toBe('23時間 6分 （23.1時間）')
+  })
+
+  test('leaves a string without a separator untouched', () => {
+    expect(to_single_line('1000')).toBe('1000')
+  })
+
+  // .replace(文字列, …) は最初の1個しか置換しないので、区切りが増えたときに黙って壊れる
+  test('folds every separator, not just the first', () => {
+    expect(to_single_line(`a${DURATION_LINE_SEPARATOR}b${DURATION_LINE_SEPARATOR}c`)).toBe('a b c')
   })
 })
