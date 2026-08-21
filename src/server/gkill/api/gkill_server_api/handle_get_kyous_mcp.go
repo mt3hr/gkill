@@ -399,11 +399,25 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		pluginManifestByRepName[manifest.RepName] = manifest
 	}
 
+	// 付随データの取得失敗を種別ごとに数える。1件でも失敗したら response.Partial を立て、
+	// AIクライアントに「返した Kyou の付随データが不完全」と伝える(以前は _ で握り潰し、
+	// 欠落を完全な結果に見せていた＝監査 M-05)。エラー内容は Debug ログにだけ残す(本文・IDは載せない)。
+	detailFailures := map[string]int{}
+	noteDetailFailure := func(kind string, err error) {
+		if err == nil {
+			return
+		}
+		detailFailures[kind]++
+		slog.Log(r.Context(), gkill_log.Debug, "error at fetch attached data for mcp", "kind", kind, "error", fmt.Sprintf("%q", err))
+	}
+
 	// attached TimeIs を一括取得
 	var allTimeIs []reps.TimeIs
 	if request.ShouldIncludeTimeIs() {
 		findAllTimeIsQuery := &find.FindQuery{OnlyLatestData: true, IncludeEndTimeIs: true}
-		allTimeIs, _ = repositories.TimeIsReps.FindTimeIs(r.Context(), findAllTimeIsQuery)
+		var timeisErr error
+		allTimeIs, timeisErr = repositories.TimeIsReps.FindTimeIs(r.Context(), findAllTimeIsQuery)
+		noteDetailFailure("timeis", timeisErr)
 	}
 
 	// DTO構築ループ（サイズ監視）
@@ -424,21 +438,24 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		kyou := batch[i]
 
 		// タグ取得
-		tags, _ := repositories.TagReps.GetTagsByTargetID(r.Context(), kyou.ID)
+		tags, tagsErr := repositories.TagReps.GetTagsByTargetID(r.Context(), kyou.ID)
+		noteDetailFailure("tags", tagsErr)
 		tagStrings := make([]string, 0, len(tags))
 		for _, tag := range tags {
 			tagStrings = append(tagStrings, tag.Tag)
 		}
 
 		// テキスト取得
-		texts, _ := repositories.TextReps.GetTextsByTargetID(r.Context(), kyou.ID)
+		texts, textsErr := repositories.TextReps.GetTextsByTargetID(r.Context(), kyou.ID)
+		noteDetailFailure("texts", textsErr)
 		textStrings := make([]string, 0, len(texts))
 		for _, text := range texts {
 			textStrings = append(textStrings, text.Text)
 		}
 
 		// 通知取得
-		notifications, _ := repositories.NotificationReps.GetNotificationsByTargetID(r.Context(), kyou.ID)
+		notifications, notificationsErr := repositories.NotificationReps.GetNotificationsByTargetID(r.Context(), kyou.ID)
+		noteDetailFailure("notifications", notificationsErr)
 		notificationDTOs := make([]req_res.NotificationMCPDTO, 0, len(notifications))
 		for _, n := range notifications {
 			notificationDTOs = append(notificationDTOs, req_res.NotificationMCPDTO{
@@ -457,7 +474,8 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 					inRange = inRange && kyou.RelatedTime.Before(*ti.EndTime)
 				}
 				if inRange {
-					tiTags, _ := repositories.TagReps.GetTagsByTargetID(r.Context(), ti.ID)
+					tiTags, tiTagsErr := repositories.TagReps.GetTagsByTargetID(r.Context(), ti.ID)
+					noteDetailFailure("timeis_tags", tiTagsErr)
 					tiTagStrings := make([]string, 0, len(tiTags))
 					for _, tag := range tiTags {
 						tiTagStrings = append(tiTagStrings, tag.Tag)
@@ -652,6 +670,18 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	response.ReturnedCount = returnedCount
 	response.HasMore = hasMore
 	response.NextCursor = nextCursor
+	// 付随データの取得に1件でも失敗していたら、返した結果が不完全であることを明示する。
+	if len(detailFailures) > 0 {
+		response.Partial = true
+		kinds := make([]string, 0, len(detailFailures))
+		for kind := range detailFailures {
+			kinds = append(kinds, kind)
+		}
+		slices.Sort(kinds)
+		for _, kind := range kinds {
+			response.Warnings = append(response.Warnings, fmt.Sprintf("failed to fetch %s for %d record(s); attached data is incomplete", kind, detailFailures[kind]))
+		}
+	}
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetKyousMCPSuccessMessage,
 		Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KYOUS_MESSAGE"}),

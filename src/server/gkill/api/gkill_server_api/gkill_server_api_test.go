@@ -545,14 +545,21 @@ func TestHandleLogin_NonexistentUser(t *testing.T) {
 		t.Fatal("expected error for nonexistent user, got none")
 	}
 
-	foundNotFoundError := false
+	// S3-login: ユーザ列挙対策で、存在しないユーザは「パスワード誤り」と同じ error_code を返す
+	// （AccountNotFoundError を出すと存在の有無が漏れる）。
 	for _, e := range loginResp.Errors {
 		if e.ErrorCode == message.AccountNotFoundError {
-			foundNotFoundError = true
+			t.Errorf("nonexistent user must not reveal AccountNotFoundError (user enumeration), got errors: %+v", loginResp.Errors)
 		}
 	}
-	if !foundNotFoundError {
-		t.Errorf("expected error code %s, got errors: %+v", message.AccountNotFoundError, loginResp.Errors)
+	foundGenericError := false
+	for _, e := range loginResp.Errors {
+		if e.ErrorCode == message.AccountInvalidPasswordError {
+			foundGenericError = true
+		}
+	}
+	if !foundGenericError {
+		t.Errorf("expected generic error code %s, got errors: %+v", message.AccountInvalidPasswordError, loginResp.Errors)
 	}
 }
 

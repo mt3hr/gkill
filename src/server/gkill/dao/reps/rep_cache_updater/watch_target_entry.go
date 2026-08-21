@@ -4,11 +4,15 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync/atomic"
 )
 
 type ownerInfo struct {
-	rep  CacheUpdatable
-	skip *bool
+	rep CacheUpdatable
+	// skip は「いまキャッシュ更新を止めているか」を表す参照カウンタ。
+	// 単一の *bool だと重なる Pause/Resume の先に終わった方が false に戻してしまうため、
+	// カウンタ>0 のあいだ skip とみなす(0 で再開)。GkillDAOManager.skipUpdateCache と共有する。
+	skip *atomic.Int64
 }
 
 type watchTargetEntry struct {
@@ -35,7 +39,7 @@ func newWatchTargetEntry(filename string, ignoreFilePrefixes []string) *watchTar
 	}
 }
 
-func (w *watchTargetEntry) addOwner(ownerKey string, rep CacheUpdatable, skip *bool, ignoreFilePrefixes []string) {
+func (w *watchTargetEntry) addOwner(ownerKey string, rep CacheUpdatable, skip *atomic.Int64, ignoreFilePrefixes []string) {
 	w.owners[ownerKey] = ownerInfo{rep: rep, skip: skip}
 	for _, p := range ignoreFilePrefixes {
 		w.ignorePrefixes[p] = struct{}{}
@@ -65,7 +69,7 @@ func (w *watchTargetEntry) shouldSkipAll() bool {
 		if info.skip == nil {
 			return false
 		}
-		if !*info.skip {
+		if info.skip.Load() <= 0 {
 			return false
 		}
 	}
@@ -81,7 +85,7 @@ func (w *watchTargetEntry) repsToUpdate() []CacheUpdatable {
 		if info.rep == nil {
 			continue
 		}
-		if info.skip != nil && *info.skip {
+		if info.skip != nil && info.skip.Load() > 0 {
 			continue
 		}
 		// dedupe

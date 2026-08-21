@@ -396,8 +396,12 @@ function compare_id(a: Kyou, b: Kyou): number {
  * data_type の接尾辞だけで「時刻あり/なし」を復元できる。
  * typed_mi を見てはいけない ―― get_kyous が返した既存行は typed_mi が未ロードで、
  * 比較子が既存行に対して動かなくなる。
+ *
+ * 並び替え(compare_kyou_for_query)と、mi列の時刻スクロール
+ * (use-kyou-list-view.ts の scroll_to_time)の両方が「未設定(末尾)セグメントか」の
+ * 判定にこれを使う。判定を書き写して二重管理にしないこと。
  */
-function has_mi_sort_key(kyou: Kyou, mi_sort_type: MiSortType): boolean {
+export function has_mi_sort_key(kyou: Kyou, mi_sort_type: MiSortType): boolean {
     switch (mi_sort_type) {
         case MiSortType.estimate_start_time:
             return kyou.data_type.endsWith('_start')

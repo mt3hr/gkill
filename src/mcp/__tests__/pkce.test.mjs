@@ -51,20 +51,13 @@ describe("verifyCodeChallenge (S256)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// verifyCodeChallenge — plain
+// verifyCodeChallenge — plain は廃止 (S256 必須)。plain は verifier==challenge のため
+// 中間者が challenge を書き換えるだけで無効化でき、OAuth 2.1 / MCP でも禁止されている。
 // ---------------------------------------------------------------------------
-describe("verifyCodeChallenge (plain)", () => {
-  test("accepts matching verifier and challenge", () => {
+describe("verifyCodeChallenge (plain rejected)", () => {
+  test("rejects plain even when verifier equals challenge", () => {
     const v = "my-plain-code-verifier-that-is-long-enough-here";
-    expect(verifyCodeChallenge(v, v, "plain")).toBe(true);
-  });
-
-  test("rejects mismatched verifier", () => {
-    expect(verifyCodeChallenge("aaa", "bbb", "plain")).toBe(false);
-  });
-
-  test("rejects empty strings", () => {
-    expect(verifyCodeChallenge("", "", "plain")).toBe(false);
+    expect(verifyCodeChallenge(v, v, "plain")).toBe(false);
   });
 });
 
@@ -131,8 +124,8 @@ describe("isSupportedChallengeMethod", () => {
     expect(isSupportedChallengeMethod("S256")).toBe(true);
   });
 
-  test("accepts plain", () => {
-    expect(isSupportedChallengeMethod("plain")).toBe(true);
+  test("rejects plain (S256 only)", () => {
+    expect(isSupportedChallengeMethod("plain")).toBe(false);
   });
 
   test("rejects S512", () => {

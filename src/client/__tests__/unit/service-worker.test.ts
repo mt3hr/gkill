@@ -2,7 +2,7 @@
  * Service Worker utility function tests.
  * Tests should_cache_response and parse_bool_loose extracted to service-worker-utils.ts.
  */
-import { should_cache_response, parse_bool_loose } from '@/classes/service-worker-utils'
+import { should_cache_response, should_cache_for_session, parse_bool_loose } from '@/classes/service-worker-utils'
 
 // Helper to create a mock Response
 function mockResponse(body: object | string, ok = true): Response {
@@ -100,5 +100,25 @@ describe('parseBoolLoose', () => {
     expect(() => parse_bool_loose('maybe')).toThrow(SyntaxError)
     expect(() => parse_bool_loose(null)).toThrow(SyntaxError)
     expect(() => parse_bool_loose(undefined)).toThrow(SyntaxError)
+  })
+})
+
+// ========== should_cache_for_session (M-9) ==========
+
+describe('should_cache_for_session', () => {
+  test('matching session caches', () => {
+    expect(should_cache_for_session('sess-a', 'sess-a')).toBe(true)
+  })
+  test('mismatched session does not cache (account switch)', () => {
+    expect(should_cache_for_session('sess-a', 'sess-b')).toBe(false)
+  })
+  test('unknown current session falls back to caching (e.g. Firefox no cookieStore)', () => {
+    expect(should_cache_for_session('sess-a', undefined)).toBe(true)
+    expect(should_cache_for_session('sess-a', null)).toBe(true)
+    expect(should_cache_for_session('sess-a', '')).toBe(true)
+  })
+  test('missing body session falls back to caching', () => {
+    expect(should_cache_for_session(undefined, 'sess-a')).toBe(true)
+    expect(should_cache_for_session('', 'sess-a')).toBe(true)
   })
 })

@@ -221,6 +221,13 @@ func extractZipOnce(zipFilePath string, cacheDir string) error {
 	return extractZip(zipFilePath, cacheDir)
 }
 
+// ZIP展開の上限（zip bomb / ディスク枯渇対策）。正当な大きい .cbz 漫画等を弾かない値にする。
+const (
+	maxZipEntries       = 65536                  // エントリ数
+	maxZipTotalBytes    = 2 * 1024 * 1024 * 1024 // 展開後の総バイト数（2GB）
+	maxZipCompressRatio = 200                    // 1エントリの (展開/圧縮) 比
+)
+
 func extractZip(zipFilePath string, cacheDir string) error {
 	reader, err := zip.OpenReader(zipFilePath)
 	if err != nil {
@@ -228,13 +235,21 @@ func extractZip(zipFilePath string, cacheDir string) error {
 	}
 	defer reader.Close()
 
+	// エントリ数の上限
+	if len(reader.File) > maxZipEntries {
+		return fmt.Errorf("zip has too many entries: %d (limit %d)", len(reader.File), maxZipEntries)
+	}
+
 	// 一時ディレクトリに展開してからリネーム（原子的展開）
 	tmpDir := cacheDir + ".tmp"
 	os.RemoveAll(tmpDir)
 	if err := os.MkdirAll(tmpDir, os.ModePerm); err != nil {
 		return fmt.Errorf("error at create tmp dir %s: %w", tmpDir, err)
 	}
+	// 途中で上限に引っかかったら中途半端な展開物を残さない
+	cleanupTmp := func() { os.RemoveAll(tmpDir) }
 
+	var totalUncompressed uint64
 	for _, f := range reader.File {
 		// シンボリックリンクはスキップ
 		if f.Mode()&os.ModeSymlink != 0 {
@@ -253,17 +268,32 @@ func extractZip(zipFilePath string, cacheDir string) error {
 
 		if f.FileInfo().IsDir() {
 			if err := os.MkdirAll(destPath, os.ModePerm); err != nil {
+				cleanupTmp()
 				return fmt.Errorf("error at create dir %s: %w", destPath, err)
 			}
 			continue
 		}
 
+		// 宣言サイズによる zip bomb 判定（圧縮比・総展開量）。宣言値は詐称されうるので、
+		// 実際の書き込みは extractZipFile 側で宣言サイズにクランプして二重に守る。
+		if f.CompressedSize64 > 0 && f.UncompressedSize64/f.CompressedSize64 > maxZipCompressRatio {
+			cleanupTmp()
+			return fmt.Errorf("zip entry %s compression ratio too high (possible zip bomb)", f.Name)
+		}
+		totalUncompressed += f.UncompressedSize64
+		if totalUncompressed > maxZipTotalBytes {
+			cleanupTmp()
+			return fmt.Errorf("zip total uncompressed size exceeds limit %d", uint64(maxZipTotalBytes))
+		}
+
 		// 親ディレクトリを作成
 		if err := os.MkdirAll(filepath.Dir(destPath), os.ModePerm); err != nil {
+			cleanupTmp()
 			return fmt.Errorf("error at create parent dir for %s: %w", destPath, err)
 		}
 
 		if err := extractZipFile(f, destPath); err != nil {
+			cleanupTmp()
 			return err
 		}
 	}
@@ -316,9 +346,15 @@ func extractZipFile(f *zip.File, destPath string) error {
 	}
 	defer outFile.Close()
 
-	_, err = io.Copy(outFile, rc)
+	// 宣言サイズ+1 でクランプして実書き込みを制限する。宣言サイズを超えたら
+	// ヘッダのサイズ詐称（zip bomb）なので中断する。
+	limit := int64(f.UncompressedSize64) + 1
+	written, err := io.Copy(outFile, io.LimitReader(rc, limit))
 	if err != nil {
 		return fmt.Errorf("error at write file %s: %w", destPath, err)
+	}
+	if written >= limit {
+		return fmt.Errorf("zip entry %s is larger than its declared size (possible zip bomb)", f.Name)
 	}
 
 	return nil

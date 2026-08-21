@@ -403,12 +403,15 @@ Milch
   <p>Administratoren k&ouml;nnen auf dem Bildschirm &bdquo;Kontoverwaltung&ldquo; Benutzerkonten hinzuf&uuml;gen, aktivieren und deaktivieren.</p>
 
   <h3>Datensicherung</h3>
-  <p>Alle Daten von gkill werden im Home-Verzeichnis gespeichert (Standard: <code>~/gkill</code>; in der Android-App <code>/sdcard/gkill</code>). Durch Sichern dieses Verzeichnisses k&ouml;nnen alle Daten bewahrt werden.</p>
+  <p>Alle Daten von gkill werden im Home-Verzeichnis gespeichert (Standard: <code>~/gkill</code>; in der Android-App <code>/sdcard/gkill</code>). Beenden Sie f&uuml;r die Sicherung <strong>zuerst gkill und kopieren Sie dann dieses Verzeichnis</strong>. Ein Kopieren bei laufendem gkill kann einen halb geschriebenen Zustand erfassen; da die Daten auf mehrere Datenbanken verteilt sind, k&ouml;nnen deren Speicherzeitpunkte auseinanderfallen, sodass eine besch&auml;digte Sicherung erst beim Wiederherstellen auff&auml;llt. Wenn Sie gkill nicht stoppen k&ouml;nnen, verwenden Sie die Snapshot-Funktion Ihres Dateisystems, die den gesamten Zustand zu einem einzigen Zeitpunkt erfasst.</p>
   <div class="tip">
-    <strong>Tipp:</strong> Es wird empfohlen, das Home-Verzeichnis regelm&auml;&szlig;ig zu sichern. Besonders wichtig sind die Verzeichnisse <code>datas/</code> und <code>configs/</code>.
+    <strong>Tipp:</strong> Es wird empfohlen, regelm&auml;&szlig;ig zu sichern. Besonders wichtig sind die Verzeichnisse <code>datas/</code> und <code>configs/</code>. Die Verzeichnisse <code>caches/</code> und <code>logs/</code> werden beim Start neu erstellt und m&uuml;ssen nicht einbezogen werden.
   </div>
   <div class="tip">
-    <strong>Hinweis:</strong> Der Speicherort von Repositorys kann auch au&szlig;erhalb des Home-Verzeichnisses festgelegt werden. Wenn Sie Dateien in externen Ordnern verwenden (Dateien in externen Ordnern, Git-Commit-Verl&auml;ufe, extern abgelegte Datenbanken usw.), werden diese beim alleinigen Kopieren des Home-Verzeichnisses &uuml;bersehen. Nehmen Sie auch den Speicherort aller konfigurierten Repositorys in Ihre Sicherung auf.
+    <strong>Hinweis:</strong> Der Speicherort von Repositorys kann auch au&szlig;erhalb des Home-Verzeichnisses festgelegt werden. Wenn Sie Dateien in externen Ordnern verwenden (Dateien in externen Ordnern, Git-Commit-Verl&auml;ufe, extern abgelegte Datenbanken usw.), werden diese beim alleinigen Kopieren des Home-Verzeichnisses &uuml;bersehen. Nehmen Sie auch den Speicherort aller konfigurierten Repositorys in Ihre Sicherung auf &ndash; erfasst zum selben Zeitpunkt wie der Rest.
+  </div>
+  <div class="tip">
+    <strong>Wiederherstellung pr&uuml;fen:</strong> Eine Sicherung z&auml;hlt erst, wenn sie sich wiederherstellen l&auml;sst. Stellen Sie sie von Zeit zu Zeit tats&auml;chlich an einem vom Produktivsystem getrennten Ort wieder her, starten Sie gkill und pr&uuml;fen Sie, dass es startet und Ihre Aufzeichnungen durchsuchbar sind. So erkennen Sie fehlende Dateien oder Inkonsistenzen, bevor Sie die Sicherung ben&ouml;tigen.
   </div>
 
   <h2>Verwandte Dokumente</h2>

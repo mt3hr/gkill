@@ -921,7 +921,8 @@ WHERE
 		dataType,
 	}
 	whereCounter := 0
-	onlyLatestData := false
+	// GenerateFindSQLCommon は query.OnlyLatestData を読まず、この引数しか見ない（既定 false のままだと最古版を返す）。
+	onlyLatestData := query.OnlyLatestData
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
 	ignoreFindWord := false
@@ -1023,7 +1024,12 @@ WHERE
 	if len(urlogs) == 0 {
 		return nil, nil
 	}
-	return &urlogs[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestURLog := slices.MaxFunc(urlogs, func(a URLog, b URLog) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestURLog, nil
 }
 
 func (u *urlogRepositorySQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]URLog, error) {
@@ -1377,6 +1383,10 @@ FROM URLOG
 				latestDataRepositoryAddressMap[addr.TargetID] = addr
 			}
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	latestDataRepositoryAddresses := make([]gkill_cache.LatestDataRepositoryAddress, 0, len(latestDataRepositoryAddressMap))
 	for _, addr := range latestDataRepositoryAddressMap {

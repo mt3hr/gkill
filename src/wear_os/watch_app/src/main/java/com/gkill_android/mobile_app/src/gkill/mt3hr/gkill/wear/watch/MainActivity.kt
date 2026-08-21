@@ -64,7 +64,13 @@ private sealed class Screen {
         val breadcrumb: List<Pair<String, List<TemplateNode>>>
     ) : Screen()
     data class Confirm(val node: TemplateNode, val parentList: TemplateList) : Screen()
-    data class Submitting(val node: TemplateNode) : Screen()
+    data class Submitting(val node: TemplateNode, val force: Boolean = false) : Screen()
+
+    /**
+     * スマホから DUPLICATE が返ったとき（直前に同じ内容を保存済み）の確認。
+     * 「それでも送信」で force 付きの再送を行う。
+     */
+    data class SubmitDuplicateConfirm(val node: TemplateNode) : Screen()
     data class Result(val success: Boolean, val error: String) : Screen()
     // Plaing screens
     object PlaingLoading : Screen()
@@ -89,6 +95,10 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         wearClient = GkillWearClient(this)
+
+        // リスナーは onResume/onPause ではなく onCreate/onDestroy に張る。
+        // ambient への遷移などで onPause が起きても、スマホからの応答を取りこぼさないため。
+        Wearable.getMessageClient(this).addListener(this)
 
         // Check intent extra for direct mode navigation (tile sets EXTRA_MODE)
         val mode = intent?.getStringExtra(EXTRA_MODE)
@@ -168,9 +178,23 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 
                     is Screen.Submitting -> {
                         LoadingScreen("送信中...")
-                        LaunchedEffect(s.node) {
-                            submitTemplate(s.node)
+                        LaunchedEffect(s.node, s.force) {
+                            submitTemplate(s.node, s.force)
                         }
+                    }
+
+                    is Screen.SubmitDuplicateConfirm -> {
+                        BackHandler {
+                            navigateBackToTopOrFinish()
+                        }
+                        DuplicateConfirmScreen(
+                            onConfirm = {
+                                screenState = Screen.Submitting(s.node, force = true)
+                            },
+                            onCancel = {
+                                navigateBackToTopOrFinish()
+                            }
+                        )
                     }
 
                     is Screen.Result -> {
@@ -241,13 +265,8 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        Wearable.getMessageClient(this).addListener(this)
-    }
-
-    override fun onPause() {
-        super.onPause()
+    override fun onDestroy() {
+        super.onDestroy()
         Wearable.getMessageClient(this).removeListener(this)
     }
 
@@ -346,9 +365,9 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         }
     }
 
-    private suspend fun submitTemplate(node: TemplateNode) {
-        Log.i(TAG, "submitTemplate: ${node.name}")
-        val sent = wearClient.sendSubmitRequest(node.template)
+    private suspend fun submitTemplate(node: TemplateNode, force: Boolean = false) {
+        Log.i(TAG, "submitTemplate: ${node.name} (force=$force)")
+        val sent = wearClient.sendSubmitRequest(node.template, force)
         if (sent == null) {
             Log.e(TAG, "submitTemplate: no phone node found")
             screenState = Screen.Result(success = false, error = "スマホに接続できません。")
@@ -370,10 +389,17 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
             return
         }
 
-        if (result == "OK") {
-            screenState = Screen.Result(success = true, error = "")
-        } else {
-            screenState = Screen.Result(success = false, error = result.removePrefix("ERROR:"))
+        when {
+            result == "OK" -> {
+                screenState = Screen.Result(success = true, error = "")
+            }
+            // 直前に同じ内容を保存済み。黙って捨てず「それでも送信」の確認を出す
+            result == "DUPLICATE" -> {
+                screenState = Screen.SubmitDuplicateConfirm(node)
+            }
+            else -> {
+                screenState = Screen.Result(success = false, error = result.removePrefix("ERROR:"))
+            }
         }
     }
 
@@ -489,6 +515,47 @@ private fun HomeMenuScreen(
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             label = { Text("▶ 実行中") },
             onClick = onPlaing,
+            colors = ChipDefaults.secondaryChipColors()
+        )
+    }
+}
+
+/**
+ * 直前に同じ内容を保存済みのときの確認画面。「それでも送信」でforce再送する。
+ */
+@Composable
+private fun DuplicateConfirmScreen(
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "同じ内容が直前に\n保存されています。\nそれでも送信しますか？",
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+        )
+        Chip(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            label = { Text("それでも送信") },
+            onClick = onConfirm,
+            colors = ChipDefaults.primaryChipColors()
+        )
+        Chip(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            label = { Text("キャンセル") },
+            onClick = onCancel,
             colors = ChipDefaults.secondaryChipColors()
         )
     }

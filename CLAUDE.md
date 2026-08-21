@@ -33,7 +33,7 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 
 **Bare `go build` caveat:** any gkill binary panics at startup if `embed/i18n/locales` is empty (`gkill/api`'s `init()` reads it), so a `go build` without a preceding `npm run copy_i18n_to_app_embed` produces a binary that compiles but dies immediately.
 
-**Prerequisites:** Go 1.26.4+ (`src/server/go.mod` declares `go 1.26.4`), Node.js 20.19+ (24.x recommended — `package.json` has no `engines` field, so this is not enforced), `npm i`
+**Prerequisites:** Go 1.26.6+ (`src/server/go.mod` declares `go 1.26.6`), Node.js 20.19+ (24.x recommended — `package.json` has no `engines` field, so this is not enforced), `npm i`
 
 **Dev server backend target:** `npm run dev` runs `src/tools/dev.mjs`, a thin wrapper that strips `--api` / `--api-target` (Vite errors on unknown CLI options) and passes the value to Vite as `GKILL_API_PROXY_TARGET`; all other args pass through untouched. Accepts a full URL, a bare port (`--api=19999` → `http://127.0.0.1:19999`), or `host:port`. Precedence: `--api` > `GKILL_API_PROXY_TARGET` > `http://localhost:9999`. `vite.config.ts` proxies `/api`, `/files`, `/zip_cache` and `/resources/manual` to that target — SPA routes (`/rykv`, `/kftl`, `/mi`, `/rudbeckia`, …) are deliberately not proxied since vue-router owns them in dev.
 
@@ -138,11 +138,11 @@ Both use cobra for CLI with shared subcommands: `version`, `dvnf`, `generate_thu
 
 ### Backend (Go) — `src/server/`
 
-Module: `github.com/mt3hr/gkill/src/server` (Go 1.26.4)
+Module: `github.com/mt3hr/gkill/src/server` (Go 1.26.6)
 
 Key packages:
 - `gkill/api/` — Shared infrastructure: `embed.go` (`//go:embed` serves Vue SPA at `/`), `version.go`, `gkill_version_data.go`, `find_filter.go`, `find_filter_helpers.go`, `find_kyou_context.go`
-- `gkill/api/gkill_server_api/` — HTTP API handlers (99 files incl. tests, 1 handler per file). `GkillServerAPI` struct with `serve.go`, `close.go`, route definitions in `gkill_server_api_address.go`. Auth middleware (`auth.go`, `auth_context.go`, `auth_middleware.go`) extracts session→account→device→repositories via `AuthContext`, `authMiddleware`, `authWithReposMiddleware`. Handler registration uses wrapper functions: `wrapNoAuth` (no session), `wrapAuth` (session + account), `wrapAuthRepos` (session + account + device + repositories). Utility files: `filter_local_only.go`, `utils.go`, `web_push.go`. ZIP browsing: `handle_browse_zip_contents.go` (path traversal prevention, Shift_JIS→UTF-8, singleflight dedup).
+- `gkill/api/gkill_server_api/` — HTTP API handlers (101 files incl. tests, 1 handler per file). `GkillServerAPI` struct with `serve.go`, `close.go`, route definitions in `gkill_server_api_address.go`. Auth middleware (`auth.go`, `auth_context.go`, `auth_middleware.go`) extracts session→account→device→repositories via `AuthContext`, `authMiddleware`, `authWithReposMiddleware`. Handler registration uses wrapper functions: `wrapNoAuth` (no session), `wrapAuth` (session + account), `wrapAuthRepos` (session + account + device + repositories). Utility files: `filter_local_only.go`, `utils.go`, `web_push.go`. ZIP browsing: `handle_browse_zip_contents.go` (path traversal prevention, Shift_JIS→UTF-8, singleflight dedup).
 - `gkill/api/req_res/` — Request/response structs for every endpoint (186 files)
 - `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- ~~ /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes
 - `gkill/api/gkill_plugin/` — Plugin protocol types: `PluginManifest`, `PluginRequest`, `PluginResponse`, `PluginKyou`, `PluginTypedData`, `PluginGPSLog` (stdio newline-delimited JSON)
@@ -435,7 +435,7 @@ rykv / mi が同じものを使う。守るべき約束:
 
 **Naming convention (identifiers):** データクラスのプロパティ/メソッド・ローカル変数・通常関数は snake_case（Go 側 JSON タグとの写像）。コンポーザブルは `useXxx`、イベントコールバックは `onXxx`、CRUD リレーハンドラ束は `xxxHandlers`（束の生成は `kyou-view-relay.ts` に一元化。いずれも camelCase）。型は PascalCase、enum メンバーは snake_case。`@typescript-eslint/naming-convention` で機械検査される（`eslint.config.js` の `app/naming-convention` ブロック。対象は `src/client` 本体のみで、`__tests__`・`src/mcp`・`src/tools`・`*.d.ts` は別流儀として対象外）。
 
-**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 918 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
+**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 919 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
 
 ### MCP Server — `src/mcp/`
 
@@ -457,7 +457,25 @@ rykv / mi が同じものを使う。守るべき約束:
 
 **IDF file access for AI clients** (3 paths, preferred order): (1) `file_path` — `get_kyous` includes the absolute local path in IDF payloads for **stdio** clients (same machine); read it directly. (2) `file_url` / `file_url_full` — for **HTTP** clients, `get_kyous` includes a per-file, expiring, unguessable public URL served by the MCP server's own `GET /files/{token}` route (`FileLinkStore`, `lib/file-link-store.mjs`); fetch with no auth, any size (images: `file_url` is a thumbnail, `file_url_full` the original). (3) `gkill_get_idf_file` — base64 fallback, size-capped. Local paths never go to remote clients; the transport type (stdio vs HTTP) is the gate. gkill itself stays private — only the MCP server's public surface is used.
 
+**HTTPモードの1リクエスト文脈は `server.current*` 共有フィールドに書かず、不変の `requestContext={sessionId,userId,remoteAddr}` を `handlePayload→handleMessage→handleToolCall/buildToolResult` へ引数で流す**（2026-08-21、監査 C-02）。以前は `_lastTokenUserId` と `server.currentSessionId/currentUserId/currentRemoteAddr` に書いて await をまたいで読んでいたため、並行リクエストで別要求の user/session が混線し、他人のセッションに紐づく file-link URL 発行や書き込みレコードの作成者誤記が起きた。`mcp-server-base.mjs` の入口で `requestContext ?? Object.freeze({...this.current*})` にフォールバックするので stdio と既存の直接呼び出しテストは無改修。**http-transport 側から `server.current*` への書き込みを復活させないこと**（渡し忘れは sessionId=null→gkill側401で顕在化し、静かな混線には戻らない）。OAuth は S256 必須・未登録 client_id は認可拒否（`oauth-server.mjs` の `_validateAuthorizeParams`）、公開ファイル配信は nosniff + CSP sandbox（Go 側 `withUserContentSecurityHeaders` のミラー）、`oauth-store.mjs` の保存は temp+rename の 0600。守るテストは `src/mcp/__tests__/http-transport.test.mjs`（Bearer 401 = C-01 回帰・並行分離 = C-02 回帰・M-06）。
+
+**共有ページのファイル配信は共有クエリの結果に含まれるファイルだけ**（2026-08-21、監査 C-03）。`handle_file_serve.go` の `sharedID != ""` 経路は、rep名一致だけで IDF rep へ委譲せず、`shared_file_authz.go` の `collectSharedIDFFilePaths` で共有 `FindQuery` を再評価して許可パス集合を作り、要求パスが集合に無ければ403にする（`handle_get_shared_kyous.go` と同一手順を共有＝一覧を2箇所で維持しない）。パス正規化は `idf_file_url.go` の `cleanRelativeURLPath` と同一。セッション経路はフルアクセスのまま（`sharedKyouInfo != nil` のときだけゲート）。守るテストは `shared_file_authz_test.go`。
+
+**利用者入力URL・そのページが指す og:image / #landingImage の取得は必ず `api/safefetch` を通す**（2026-08-21、監査 H-04）。`safefetch.GetCapped`（scheme検査・`Dialer.Control` での接続先IP検証・サイズ上限）と `safefetch.CheckImageDimensions`（`image.DecodeConfig` で復号前に総ピクセル検査）で SSRF・無制限read・画像爆弾を防ぐ。`dao/reps/ur_log.go` の getBody/getFavicon/getImageOG/getAmazonImage と `gkill_server_api` の `httpGetBase64Data`（ブックマークレット）が利用。既定は private 拒否（loopback/RFC1918/link-local(メタデータ)/multicast/unspecified）。`http.Get` を新しく直に書かないこと。守るテストは `api/safefetch/safefetch_test.go`。
+
+**型別 `GetXxx(id, nil)` は最新版を返す**（2026-08-21、監査 H-07）。`dao/reps` の各 `*_repository_sqlite3_impl.go` / `*_repository_cached_sqlite3_impl.go` の単体取得は `onlyLatestData := query.OnlyLatestData`（`false` 固定にしない。`GenerateFindSQLCommon` はこの引数しか見ない）と `slices.MaxFunc(UpdateTime)`（`&xxx[0]` を返さない）で最新版を選ぶ。`GkillRepositories.GetKyou` はアドレス表 nil でも panic しない（プラグインKyou・追加直後の記録）。守るテストは `get_typed_latest_version_test.go` / `gkill_repositories_get_kyou_test.go` / `rows_err_check_test.go`。
+
+**外部URLを取る新規コードや子goroutine内の index 参照に注意**: `strings.SplitN(x, ",", 2)` は末尾要素 `parts[len(parts)-1]` を取る（`[1]` を長さ未確認で参照しない。子goroutine内 panic は `recoverMiddleware` で回収できずプロセスが落ちる＝監査 H-01）。ファイル書き込みは tmp+rename で原子的に（Override で原本を壊さない＝M-03）。ZIP展開は件数・総展開量・圧縮比の上限つき（`handle_browse_zip_contents.go` の `maxZip*`＝M-04）。`http.Server` は `ReadHeaderTimeout`/`IdleTimeout`/`MaxHeaderBytes` を張り、認証前ボディは `maxAuthBodyBytes` でキャップ（H-03）。全レスポンスに `securityHeadersMiddleware`（nosniff / X-Frame-Options / Referrer-Policy）。CLIサブコマンドは `InitGkillServerAPI` 失敗で `return`（nil panic 回避＝M-8）、CLIの自己発行セッションは `IsLocalAppUser=false`（最小権限）。ログインは非存在ユーザとパスワード誤りを同じ error_code + 文言に統一し、非存在時もダミー Argon2id を実行（ユーザ列挙対策＝S3-login）。
+
+**IDF走査の一時停止は参照カウント**（2026-08-21、監査 M-02）。`SetSkipIDF(true/false)` は共有 `*bool` ではなく `*atomic.Int64` を増減し「カウント>0 で skip」。重なるアップロード（と UpdateCache）が互いのフラグを倒し合って watcher が走る/変更を取りこぼすのを防ぐ。カウントが0へ戻ったときだけ catch-up 走査を1回キックする（`UpdateCache` の Add(-1) では catch-up しない＝1分周期のリビルド無限ループになるため。`SetSkipIDF` はアップロードハンドラからしか呼ばれず watcher から再入しない）。
+
+**CLIサブコマンドは `RunE` + `SilenceUsage/SilenceErrors`**（2026-08-21、監査 M-8）。失敗で exit 1（main の `log.Fatal` が唯一のエラー出力）。ユーザごとのループは `errors.Join` で集約し、途中失敗でも成功分の結果（reset_password の URL 等）はその場で即出力してから続行する（`os.Exit` を足すと defer のセッション後始末が飛ぶので RunE 経由で返す）。**互換注意**: `SyncDatas` 等が update_cache の失敗を初めて exit code で観測する。`auto_tag` は長時間実行向けに `issueLocalSession` の `refresh` でセッション期限を延長する。
+
+**プラグインの重い構築は常駐ビルダ + WAL + バッチcommit**（2026-08-21、監査 M-6）。claudecode も codex/fitbit と同じく `builder.go`（`EnsureStarted`/`Kick`/`loop`、mu(DB初期化)/buildMu(構築)分離で読み取り無待機、WAL 自前DSN、`cache_meta` に進捗）へ移行済み。`GetMessages`/`GetMessage`/`GetStats` は refresh を呼ばず現キャッシュ即答+Kick。同期・単一tx構築（デッドラインkill→進捗ゼロループ）を新規に書かないこと。
+
 ### Mobile — `src/android/`, `src/wear_os/`
+
+**Android同梱サーバはループバック限定**（2026-08-21、監査 S3-android-main）。`MainActivity` の ProcessBuilder は `--address 127.0.0.1:9999` を渡す（無指定だと全インターフェース待受＝LANの第三者が無認証で全記録を読み書きできる）。activity に `configChanges`（回転で Activity を再生成させず、SQLite書き込み中の `kill -9` を防ぐ。起動はポート先行プローブで既存サーバを再利用）と `onBackPressedDispatcher`（WebView goBack）。cleartext は `network_security_config.xml` で localhost 限定、外部ストレージ権限は `maxSdkVersion` 付き・起動ゲートは非ブロッキング（M-15）。**Wear companion の TLS は TOFU/ピン留め**（H-05）: `GkillServerTrust.kt` がプラットフォーム既定で検証し、失敗時のみ保存済み SHA-256 フィンガープリント一致で許可（trust-all は全廃）。ピン学習は companion の「保存&接続テスト」で利用者承認時のみ。ウォッチ→電話の送信は `WearRequestWorker`（WorkManager）で Service 破棄を跨ぎ、`WearSubmitLedger` で重複再配送を確認へ回す（S3-wear）。KFTL送信にはサーバ側冪等キーも付く: `GkillWearableListenerService` がメッセージ1件ごとに UUID を採番して WorkRequest の不変入力に載せるので、同じ要求のワーカー再送では同じキーになり `handle_submit_kftl_text.go` の `kftlIdempotencyStore`（TTL 10分・成功時のみ記録）が二重登録を畳む。意図的な再送は別メッセージ＝別キーなので畳まれない。**冪等キーを内容ハッシュにしないこと**（意図的な同一内容の再送が畳まれて記録できなくなる）。**ハンドラでの `markDone` 配線を落とさないこと** ―― ストア単体テストは `markDone` を直接呼ぶので配線漏れを見逃す（ビルドも vet も素通しする＝`idempotencyKey` は `alreadyDone` 分岐で使われ未使用にならない）。守るテストは `kftl_idempotency_test.go`（ストア単体）/ `handle_submit_kftl_text_test.go`（2回叩いて2回目が畳まれる end-to-end。同一キー=1件・別キー=2件・キー無し=2件）/ `WearRequestHandlerTest.kt`。
 
 **Android**: APK wrapper (WebView) bundling the gkill_server binary as `jniLibs/arm64-v8a/libgkill_server.so` and exec'ing it from `nativeLibraryDir` — required because targetSdk 29+ forbids executing files under the app's data dir (W^X). Needs `packaging { jniLibs { useLegacyPackaging = true } }` so the `.so` is extracted as a real file. compileSdk 37 (androidx 1.19.x requires it), targetSdk 36, minSdk 26. **Wear OS**: Gradle multi-module project (phone_companion + watch_app), communicates via Wearable Data Layer. The Gradle wrapper is committed under `src/wear_os/`, so no copying is needed; `npm run setup_wear_os_gradle` re-syncs it from `src/android/` if it ever breaks.
 

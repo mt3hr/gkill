@@ -8,6 +8,9 @@ import (
 const repName = "ClaudeCode"
 const dataType = "claude_code_turn"
 
+// appName はstderrログとKyouのCreateApp/UpdateAppに使うプラグイン名。
+const appName = "gkill_plugin_claudecode"
+
 // probeRecord はファイル種別判定に使う最小限のフィールド。
 // history.jsonl のようにtimestampが数値のファイルも混ざりうるので、
 // 判定時は時刻フィールドを持たない構造体でパースする。

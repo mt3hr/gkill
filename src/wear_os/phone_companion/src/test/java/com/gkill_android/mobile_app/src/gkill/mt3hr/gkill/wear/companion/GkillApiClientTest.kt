@@ -3,6 +3,8 @@ package com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.companion
 import kotlinx.serialization.json.jsonObject
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.tls.HandshakeCertificates
+import okhttp3.tls.HeldCertificate
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -259,5 +261,112 @@ class GkillApiClientTest {
         val result = client.getPlaingTimeis("expired-session")
 
         assertNull(result)
+    }
+
+    // ─── TLS pinning (H-05) ──────────────────────────────────────────────────
+    // A throwaway self-signed HeldCertificate stands in for a localhost gkill
+    // server. No real server certificate, SAN, or hostname is used.
+
+    /** Starts a fresh HTTPS MockWebServer that serves [held]. */
+    private fun startHttpsServer(held: HeldCertificate): MockWebServer {
+        val server = MockWebServer()
+        val serverCerts = HandshakeCertificates.Builder().heldCertificate(held).build()
+        server.useHttps(serverCerts.sslSocketFactory(), false)
+        server.start()
+        return server
+    }
+
+    private val loginOk = """{"session_id":"pinned-session","errors":null}"""
+
+    // (a) pinned fingerprint matches the leaf → handshake succeeds → login works.
+    @Test
+    fun tls_pinMatch_loginSucceeds() {
+        val held = HeldCertificate.Builder().addSubjectAlternativeName("localhost").build()
+        val server = startHttpsServer(held)
+        try {
+            server.enqueue(MockResponse().setBody(loginOk).setResponseCode(200))
+            val fingerprint = GkillServerTrust.certSha256Hex(held.certificate)
+            val baseUrl = server.url("/").toString().trimEnd('/')
+            val c = GkillApiClient(baseUrl, allowSelfSignedCert = true, pinnedCertSha256 = fingerprint)
+
+            assertEquals("pinned-session", c.login("admin", "hash"))
+        } finally {
+            server.shutdown()
+        }
+    }
+
+    // (b) pinned fingerprint does not match → handshake fails, but the presented
+    // fingerprint is captured and marked rejected (for the learning UI).
+    @Test
+    fun tls_pinMismatch_loginFailsAndCapturesFingerprint() {
+        val held = HeldCertificate.Builder().addSubjectAlternativeName("localhost").build()
+        val server = startHttpsServer(held)
+        try {
+            server.enqueue(MockResponse().setBody(loginOk).setResponseCode(200))
+            val baseUrl = server.url("/").toString().trimEnd('/')
+            val c = GkillApiClient(baseUrl, allowSelfSignedCert = true, pinnedCertSha256 = "00".repeat(32))
+
+            assertNull(c.login("admin", "hash"))
+            assertEquals(GkillServerTrust.certSha256Hex(held.certificate), c.lastServerCertSha256)
+            assertTrue(c.lastServerCertRejected)
+        } finally {
+            server.shutdown()
+        }
+    }
+
+    // (c) background-equivalent: pinned self-signed mode but no pin stored yet →
+    // the self-signed cert is rejected (the service/worker never learns pins).
+    @Test
+    fun tls_noPin_loginFailsAndCapturesFingerprint() {
+        val held = HeldCertificate.Builder().addSubjectAlternativeName("localhost").build()
+        val server = startHttpsServer(held)
+        try {
+            server.enqueue(MockResponse().setBody(loginOk).setResponseCode(200))
+            val baseUrl = server.url("/").toString().trimEnd('/')
+            val c = GkillApiClient(baseUrl, allowSelfSignedCert = true, pinnedCertSha256 = null)
+
+            assertNull(c.login("admin", "hash"))
+            assertTrue(c.lastServerCertRejected)
+            assertEquals(GkillServerTrust.certSha256Hex(held.certificate), c.lastServerCertSha256)
+        } finally {
+            server.shutdown()
+        }
+    }
+
+    // (d) default mode (allowSelfSignedCert=false) trusts the platform store only.
+    // A self-signed server is rejected and nothing is captured/offered for pinning.
+    @Test
+    fun tls_defaultMode_selfSignedRejectedNoCapture() {
+        val held = HeldCertificate.Builder().addSubjectAlternativeName("localhost").build()
+        val server = startHttpsServer(held)
+        try {
+            server.enqueue(MockResponse().setBody(loginOk).setResponseCode(200))
+            val baseUrl = server.url("/").toString().trimEnd('/')
+            val c = GkillApiClient(baseUrl, allowSelfSignedCert = false)
+
+            assertNull(c.login("admin", "hash"))
+            assertNull(c.lastServerCertSha256)
+            assertFalse(c.lastServerCertRejected)
+        } finally {
+            server.shutdown()
+        }
+    }
+
+    // (e) SAN-less self-signed cert: the default hostname verifier fails, but the
+    // pin byte-match fallback in the verifier allows it.
+    @Test
+    fun tls_sanlessCert_pinFallbackAllowsHostname() {
+        val held = HeldCertificate.Builder().commonName("gkill-no-san").build()
+        val server = startHttpsServer(held)
+        try {
+            server.enqueue(MockResponse().setBody(loginOk).setResponseCode(200))
+            val fingerprint = GkillServerTrust.certSha256Hex(held.certificate)
+            val baseUrl = server.url("/").toString().trimEnd('/')
+            val c = GkillApiClient(baseUrl, allowSelfSignedCert = true, pinnedCertSha256 = fingerprint)
+
+            assertEquals("pinned-session", c.login("admin", "hash"))
+        } finally {
+            server.shutdown()
+        }
     }
 }

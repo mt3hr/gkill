@@ -1,6 +1,6 @@
 'use strict'
 
-import moment from 'moment'
+import { parse_kftl_date_time } from '../kftl-date-time'
 import { i18n } from '@/i18n'
 import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
@@ -45,8 +45,8 @@ export class KFTLNlogRelatedTimeStatementLine extends KFTLStatementLine {
     }
 
     private parse_related_time(): Date {
-        const time = moment(strip_prefix(this.get_context().get_this_statement_line_text(), "KFTL_RELATED_TIME_PREFIX", KFTL_ASCII_RELATED_TIME_PREFIX)).toDate()
-        if (Number.isNaN(time.getTime())) {
+        const time = parse_kftl_date_time(strip_prefix(this.get_context().get_this_statement_line_text(), "KFTL_RELATED_TIME_PREFIX", KFTL_ASCII_RELATED_TIME_PREFIX))
+        if (time === null) {
             throw new Error(i18n.global.t("KFTL_INVALID_PARSE_RELATED_TIME_ERROR_MESSAGE_TITLE"))
         }
         return time

@@ -11,10 +11,28 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	accountdao "github.com/mt3hr/gkill/src/server/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
+
+// dummyPasswordHash は、存在しないユーザでも Argon2id 検証を1回実行して、
+// 応答時間を存在するユーザと近づけるための固定ハッシュ（ユーザ列挙のタイミング差を消す）。
+// 固定入力なので実運用で生成は失敗しない。失敗しても空文字なら検証が即 false で返るだけ。
+var dummyPasswordHash = func() string {
+	h, err := accountdao.HashPassword("gkill-dummy-password-for-login-timing-equalization")
+	if err != nil {
+		return ""
+	}
+	return h
+}()
+
+// performDummyPasswordVerification は存在しないユーザのときに呼ぶ。
+// account パッケージ名がハンドラ内のローカル変数 account と衝突するのでここに分ける。
+func performDummyPasswordVerification(credential string) {
+	_, _ = accountdao.VerifyPassword(dummyPasswordHash, credential)
+}
 
 // HandleLogin は、user_idとパスワードのSHA-256を検証してログインセッションを発行します。
 //
@@ -81,9 +99,12 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		err = fmt.Errorf("error at get account user id = %s: %w", request.UserID, err)
 		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+		// ユーザ列挙対策: 存在しない/引けないユーザと「パスワード誤り」を
+		// 同じ error_code + 文言に統一し、Argon2id もダミーで1回実行して応答時間を近づける。
+		performDummyPasswordVerification(request.PasswordSha256)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
+			ErrorCode:    message.AccountInvalidPasswordError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INVALID_USER_ID_OR_PASSWORD"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -92,8 +113,9 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if account == nil {
 		err = fmt.Errorf("error at get account user id = %s: account not found", request.UserID)
 		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+		performDummyPasswordVerification(request.PasswordSha256)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AccountNotFoundError,
+			ErrorCode:    message.AccountInvalidPasswordError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INVALID_USER_ID_OR_PASSWORD"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -132,7 +154,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidPasswordError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INVALID_USER_ID_OR_PASSWORD"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -142,7 +164,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidPasswordError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INVALID_USER_ID_OR_PASSWORD"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

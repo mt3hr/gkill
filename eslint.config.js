@@ -26,6 +26,10 @@ export default [
       ],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-empty-object-type': 'error',
+      // v-html は利用者由来テキストのstored XSS経路になりうる。正当な使用は
+      // DOMPurify でサニタイズ済みの idf-kyou-view.vue の1箇所だけで、そこには
+      // 個別の disable コメントが付いている。新たな v-html はビルドで止める。
+      'vue/no-v-html': 'error',
     },
   },
   {

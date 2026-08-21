@@ -39,6 +39,11 @@ type targetState struct {
 	timer    *time.Timer
 	updating bool
 	dirty    bool
+
+	// skippedWhilePaused は、skip(一時停止)中にファイル変更イベントを握りつぶしたことを覚えておくフラグ。
+	// 再開時(SetSkipIDFのカウント0復帰)のcatch-upでこのターゲットだけ更新走査をキックするために使う。
+	// 停止中でない全ターゲットを毎回作り直す不要なフルリビルドを避けるための印。
+	skippedWhilePaused bool
 }
 
 func getHub() (*watcherHub, error) {
@@ -71,7 +76,7 @@ func normalizeOSPath(p string) string {
 
 // --- public ctor ---
 
-func NewFileRepCacheUpdater(skip *bool) (FileRepCacheUpdater, error) {
+func NewFileRepCacheUpdater(skip *atomic.Int64) (FileRepCacheUpdater, error) {
 	h, err := getHub()
 	if err != nil {
 		return nil, err
@@ -92,7 +97,7 @@ type fileRepCacheUpdaterImpl struct {
 	m sync.RWMutex
 
 	hub    *watcherHub
-	skip   *bool
+	skip   *atomic.Int64
 	instID uint64
 
 	// local bookkeeping (so Register double-call in same instance doesn't multiply owners)
@@ -138,6 +143,12 @@ func (f *fileRepCacheUpdaterImpl) RemoveWatchFileRep(filename string, userID str
 	return f.hub.unregister(f.ownerKey(userID), filename)
 }
 
+// KickAllPendingUpdates は、skip中に握りつぶした変更を持つターゲットだけ更新走査を1回キックする。
+// SetSkipIDFがカウント0へ戻ったときの取りこぼし防止catch-upから呼ばれる。
+func (f *fileRepCacheUpdaterImpl) KickAllPendingUpdates() {
+	f.hub.kickAllPendingUpdates()
+}
+
 // Close は「このインスタンスが登録した分を解除する」だけ。
 // グローバル watcher は Close しない（＝ private で運用）。
 func (f *fileRepCacheUpdaterImpl) Close() error {
@@ -174,7 +185,7 @@ func (f *fileRepCacheUpdaterImpl) Close() error {
 
 // --- hub operations ---
 
-func (h *watcherHub) register(ownerKey string, rep CacheUpdatable, filename string, ignoreFilePrefixes []string, skip *bool) error {
+func (h *watcherHub) register(ownerKey string, rep CacheUpdatable, filename string, ignoreFilePrefixes []string, skip *atomic.Int64) error {
 	key := normalizeKey(filename)
 	osPath := normalizeOSPath(filename)
 
@@ -258,7 +269,9 @@ func (h *watcherHub) runEventLoop() {
 			}
 
 			// if all active owners are skipping, do nothing
+			// ただし「握りつぶした」ことは覚えておき、再開時のcatch-upで拾えるようにする
 			if target.shouldSkipAll() {
+				h.markSkippedWhilePaused(evKey)
 				continue
 			}
 
@@ -270,6 +283,41 @@ func (h *watcherHub) runEventLoop() {
 			}
 			slog.Log(context.Background(), gkill_log.Warn, "fsnotify error", "error", fmt.Sprintf("%q", err))
 		}
+	}
+}
+
+// markSkippedWhilePaused は、skip中に握りつぶしたイベントのターゲットへ印を付ける。
+func (h *watcherHub) markSkippedWhilePaused(key string) {
+	h.m.Lock()
+	defer h.m.Unlock()
+
+	// 監視対象でなくなっていたら何もしない
+	if _, ok := h.targets[key]; !ok {
+		return
+	}
+	st, ok := h.states[key]
+	if !ok {
+		st = &targetState{}
+		h.states[key] = st
+	}
+	st.skippedWhilePaused = true
+}
+
+// kickAllPendingUpdates は、skip中に握りつぶした変更を持つターゲットだけ更新走査をキックする。
+// 印の付いていないターゲットは触らないので、変わっていないrepまでフルリビルドすることはない。
+func (h *watcherHub) kickAllPendingUpdates() {
+	h.m.Lock()
+	keys := []string{}
+	for key, st := range h.states {
+		if st != nil && st.skippedWhilePaused {
+			st.skippedWhilePaused = false
+			keys = append(keys, key)
+		}
+	}
+	h.m.Unlock()
+
+	for _, key := range keys {
+		h.scheduleUpdate(key)
 	}
 }
 

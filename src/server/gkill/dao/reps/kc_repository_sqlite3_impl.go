@@ -907,7 +907,8 @@ WHERE
 	tableName := "KC"
 	tableNameAlias := "KC"
 	whereCounter := 0
-	onlyLatestData := false
+	// GenerateFindSQLCommon は query.OnlyLatestData を読まず、この引数しか見ない（既定 false のままだと最古版を返す）。
+	onlyLatestData := query.OnlyLatestData
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -1006,7 +1007,12 @@ WHERE
 	if len(kcs) == 0 {
 		return nil, nil
 	}
-	return &kcs[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestKC := slices.MaxFunc(kcs, func(a KC, b KC) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestKC, nil
 }
 
 func (k *kcRepositorySQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]KC, error) {
@@ -1349,6 +1355,10 @@ FROM KC
 				latestDataRepositoryAddressMap[addr.TargetID] = addr
 			}
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	latestDataRepositoryAddresses := make([]gkill_cache.LatestDataRepositoryAddress, 0, len(latestDataRepositoryAddressMap))
 	for _, addr := range latestDataRepositoryAddressMap {

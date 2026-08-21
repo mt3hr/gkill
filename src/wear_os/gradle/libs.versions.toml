@@ -14,6 +14,7 @@ androidxLifecycleViewmodelCompose = "2.11.0"
 wearTiles = "1.6.1"
 protolayout = "1.4.1"
 concurrentFutures = "1.3.0"
+workRuntime = "2.10.0"
 junit = "4.13.2"
 mockk = "1.14.11"
 
@@ -35,10 +36,12 @@ wear-tiles = { group = "androidx.wear.tiles", name = "tiles", version.ref = "wea
 protolayout = { group = "androidx.wear.protolayout", name = "protolayout", version.ref = "protolayout" }
 protolayout-material = { group = "androidx.wear.protolayout", name = "protolayout-material", version.ref = "protolayout" }
 concurrent-futures = { group = "androidx.concurrent", name = "concurrent-futures", version.ref = "concurrentFutures" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntime" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
+okhttp-tls = { group = "com.squareup.okhttp3", name = "okhttp-tls", version.ref = "okhttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

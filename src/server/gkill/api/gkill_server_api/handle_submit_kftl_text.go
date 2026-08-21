@@ -68,6 +68,20 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 	device := auth.Device
 	repositories := auth.Repositories
 
+	// 冪等キー付きの再送で、既に成功済みなら再実行せず成功で返す（二重登録防止）。
+	// キーは利用者ごとに名前空間を切る。
+	idempotencyKey := ""
+	if request.IdempotencyKey != "" {
+		idempotencyKey = userID + ":" + request.IdempotencyKey
+		if kftlIdempotencyStore.alreadyDone(idempotencyKey) {
+			response.Messages = append(response.Messages, &message.GkillMessage{
+				MessageCode: message.SubmitKFTLTextSuccessMessage,
+				Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_SUBMIT_KFTL_TEXT_MESSAGE"}),
+			})
+			return
+		}
+	}
+
 	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
 	if err != nil || applicationConfig == nil {
 		defaultApplicationConfig := user_config.GetDefaultApplicationConfig(userID, device)
@@ -111,6 +125,12 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
+	}
+
+	// 成功したときだけ記録する。以降この利用者の同じキーの再送は再実行されずに畳まれる。
+	// 意図的な再送は別メッセージ＝別キーなので畳まれない（監査 S3-wear）。
+	if idempotencyKey != "" {
+		kftlIdempotencyStore.markDone(idempotencyKey)
 	}
 
 	response.Messages = append(response.Messages, &message.GkillMessage{

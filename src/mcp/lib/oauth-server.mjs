@@ -53,7 +53,7 @@ export class OAuthServer {
       response_types_supported: ["code"],
       grant_types_supported: ["authorization_code", "refresh_token"],
       token_endpoint_auth_methods_supported: ["none"],
-      code_challenge_methods_supported: ["S256", "plain"],
+      code_challenge_methods_supported: ["S256"],
       scopes_supported: ["gkill:read"],
     };
   }
@@ -345,14 +345,20 @@ export class OAuthServer {
       return "code_challenge is required (PKCE)";
     }
     if (params.code_challenge_method && !isSupportedChallengeMethod(params.code_challenge_method)) {
-      return `Unsupported code_challenge_method: ${params.code_challenge_method}. Use S256 or plain.`;
+      return `Unsupported code_challenge_method: ${params.code_challenge_method}. Use S256.`;
     }
-    // Validate redirect_uri against DCR-registered client
+    // DCR で登録済みのクライアントのみ認可する。未登録 client_id を許すと、
+    // 攻撃者が任意の client_id + 自分の redirect_uri + 自分の PKCE challenge で認可URLを
+    // 組み立て、被害者にログインさせて code を自分の redirect_uri に受け取り、
+    // 自分の verifier で交換してフルトークンを得られる（PKCE は攻撃者が challenge を
+    // 選ぶので無力）。gkill には事前登録の仕組みが無く、メタデータで registration_endpoint を
+    // 広告済みで正規クライアント（Claude.ai / ChatGPT コネクタ）は DCR を行うので壊れない。
     const client = this.store.getClient(params.client_id);
-    if (client && client.redirect_uris) {
-      if (!client.redirect_uris.includes(params.redirect_uri)) {
-        return "redirect_uri does not match registered client";
-      }
+    if (!client) {
+      return "unknown client_id — register via the registration endpoint first";
+    }
+    if (client.redirect_uris && !client.redirect_uris.includes(params.redirect_uri)) {
+      return "redirect_uri does not match registered client";
     }
     return null;
   }

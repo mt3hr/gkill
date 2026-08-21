@@ -58,6 +58,23 @@ export async function should_cache_response(response: Response, check_histories:
   return true
 }
 
+/**
+ * M-9: リクエストのセッションと現在のセッションが一致するときだけキャッシュしてよいか。
+ * アカウント切替後に、旧セッションで発行された飛行中の応答が put で入り直して
+ * 新しい利用者へ配られるのを防ぐ。
+ * 現在のセッションが判定できない環境（cookieStore 非対応 = Firefox 等）や、
+ * ボディにセッションが無いときは判定できないので従来どおりキャッシュする（フォールバック）。
+ */
+export function should_cache_for_session(body_session_id: unknown, current_session_id: string | undefined | null): boolean {
+  if (current_session_id === undefined || current_session_id === null || current_session_id === '') {
+    return true
+  }
+  if (typeof body_session_id !== 'string' || body_session_id === '') {
+    return true
+  }
+  return body_session_id === current_session_id
+}
+
 /** Parse a loose boolean value: true/1/yes/y, false/0/no/n (case-insensitive, trimmed). */
 export function parse_bool_loose(value: unknown): boolean {
   if (typeof value === "boolean") return value

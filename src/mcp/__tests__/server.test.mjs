@@ -75,6 +75,27 @@ describe("handleToolCall", () => {
     expect(pathname).toBe("/api/get_kyous_mcp");
     expect(result.kyous).toHaveLength(1);
     expect(result.returned_count).toBe(1);
+    // M-05: 付随データの取得が全て成功なら partial は付かない
+    expect(result.partial).toBeUndefined();
+  });
+
+  test("gkill_get_kyous surfaces partial/warnings when attached data fetch failed (M-05)", async () => {
+    mockClient.callApi.mockResolvedValue({
+      kyous: [{ id: "1" }],
+      total_count: 1,
+      returned_count: 1,
+      has_more: false,
+      partial: true,
+      warnings: ["failed to fetch tags for 2 record(s); attached data is incomplete"],
+      errors: [],
+    });
+
+    const result = await server.handleToolCall("gkill_get_kyous", { query: {} });
+
+    expect(result.partial).toBe(true);
+    expect(result.warnings).toEqual([
+      "failed to fetch tags for 2 record(s); attached data is incomplete",
+    ]);
   });
 
   test("dispatches gkill_get_mi_board_list to /api/get_mi_board_list", async () => {

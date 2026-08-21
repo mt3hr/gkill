@@ -42,11 +42,12 @@ var (
 	gkillServerAPI *gkill_server_api.GkillServerAPI
 
 	IDFCmd = &cobra.Command{
-		Use: "idf",
-		Run: func(cmd *cobra.Command, args []string) {
+		Use:           "idf",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
-				cmd.Usage()
-				return
+				return cmd.Usage()
 			}
 
 			targetDirs := args
@@ -55,9 +56,19 @@ var (
 			router := mux.NewRouter()
 			idfIgnore := gkill_options.IDFIgnore
 
+			// 存在しない/gkillリポジトリでないディレクトリの skip は失敗ではないが、
+			// IDF 処理そのものの失敗（idfKyouRep.IDF / glob の失敗）は握り潰さず、
+			// stderr へ出したうえで exit code に反映する（監査 M-16）。
+			var errs []error
 			for _, filenamePattern := range targetDirs {
 				filenamePattern = os.ExpandEnv(filenamePattern)
-				matchFiles, _ := zglob.Glob(filenamePattern)
+				matchFiles, err := zglob.Glob(filenamePattern)
+				if err != nil {
+					err = fmt.Errorf("error at glob %s: %w", filenamePattern, err)
+					fmt.Printf("%s\n", err)
+					errs = append(errs, err)
+					continue
+				}
 				for _, filename := range matchFiles {
 					if _, err := os.Stat(filename); os.IsNotExist(err) {
 						fmt.Printf("Directory not found. skip idf: %s\n", filename)
@@ -80,92 +91,109 @@ var (
 						fmt.Printf("skip idf: %s\n", filename)
 						continue
 					}
-					defer idfKyouRep.Close(context.TODO())
-					idfKyouRep.IDF(context.TODO())
+					defer func(rep reps.IDFKyouRepository, name string) {
+						if err := rep.Close(context.TODO()); err != nil {
+							slog.Log(cmd.Context(), gkill_log.Debug, "error at close idf rep", "file", fmt.Sprintf("%q", name), "error", fmt.Sprintf("%q", err))
+						}
+					}(idfKyouRep, filename)
+					if err := idfKyouRep.IDF(context.TODO()); err != nil {
+						err = fmt.Errorf("error at idf %s: %w", filename, err)
+						slog.Log(cmd.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+						fmt.Printf("%s\n", err)
+						errs = append(errs, err)
+					}
 				}
 			}
+			// skip（存在しない/gkillリポジトリでないディレクトリ）は失敗ではないが、
+			// glob や IDF 処理そのものの失敗があれば非0で返す（黙って成功にしない）。
+			return errors.Join(errs...)
 		},
 		Short: `idf 'target_dir'`,
 	}
 	DVNFCmd = dvnf_cmd.DVNFCmd
 
 	VersionCommand = &cobra.Command{
-		Use: "version",
-		Run: func(cmd *cobra.Command, args []string) {
+		Use:           "version",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
 			version, err := api.GetVersion()
 			if err != nil {
-				println(err.Error())
-				return
+				return fmt.Errorf("error at get version: %w", err)
 			}
 			fmt.Printf("%s:\t%s\n", AppName, version.Version)
 			fmt.Printf("%s:\t%s\n", "build_time", version.BuildTime)
 			fmt.Printf("%s:\t\t%s\n", "hash", version.CommitHash)
+			return nil
 		},
 	}
 
 	GenerateThumbCacheCmd = &cobra.Command{
-		Use: "generate_thumb_cache",
-		Run: func(cmd *cobra.Command, args []string) {
+		Use:           "generate_thumb_cache",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
 			gkill_options.LoadIDFRepOnly = true
 			if len(args) == 0 {
-				cmd.Usage()
-				return
+				return cmd.Usage()
 			}
 
 			targetUserIDs := args
 
-			err := InitGkillServerAPI()
-			if err != nil {
-				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+			if err := InitGkillServerAPI(); err != nil {
+				return fmt.Errorf("error at init gkill server api: %w", err)
 			}
 
+			// 1ユーザが失敗しても残りは続け、最後にまとめて返す(1件でも失敗すれば exit 1)。
+			var errs []error
 			for _, targetUserID := range targetUserIDs {
-				err := GenerateThumbCache(cmd.Context(), targetUserID)
-				if err != nil {
-					err = fmt.Errorf("error at generate thumb cache user id = %s: %w", targetUserID, err)
-					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+				if err := GenerateThumbCache(cmd.Context(), targetUserID); err != nil {
+					errs = append(errs, fmt.Errorf("error at generate thumb cache user id = %s: %w", targetUserID, err))
 				}
 			}
+			return errors.Join(errs...)
 		},
 		Short: `generate_thumb_cache 'user_id'`,
 	}
 
 	GenerateVideoCacheCmd = &cobra.Command{
-		Use: "generate_video_cache",
-		Run: func(cmd *cobra.Command, args []string) {
+		Use:           "generate_video_cache",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
 			gkill_options.LoadIDFRepOnly = true
 			if len(args) == 0 {
-				cmd.Usage()
-				return
+				return cmd.Usage()
 			}
 
 			targetUserIDs := args
 
-			err := InitGkillServerAPI()
-			if err != nil {
-				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+			if err := InitGkillServerAPI(); err != nil {
+				return fmt.Errorf("error at init gkill server api: %w", err)
 			}
 
+			// 1ユーザが失敗しても残りは続け、最後にまとめて返す(1件でも失敗すれば exit 1)。
+			var errs []error
 			for _, targetUserID := range targetUserIDs {
-				err := GenerateVideoCache(cmd.Context(), targetUserID)
-				if err != nil {
-					err = fmt.Errorf("error at generate video cache user id = %s: %w", targetUserID, err)
-					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+				if err := GenerateVideoCache(cmd.Context(), targetUserID); err != nil {
+					errs = append(errs, fmt.Errorf("error at generate video cache user id = %s: %w", targetUserID, err))
 				}
 			}
+			return errors.Join(errs...)
 		},
 		Short: `generate_video_cache 'user_id'`,
 	}
 
 	ClearCacheCmd = &cobra.Command{
-		Use:   "clear_cache",
-		Short: `clear_cache <thumb|video|zip|plugin|all> <all|user_id...>`,
-		Run: func(cmd *cobra.Command, args []string) {
+		Use:           "clear_cache",
+		Short:         `clear_cache <thumb|video|zip|plugin|all> <all|user_id...>`,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
 			// 第1引数: 対象キャッシュ種別, 第2引数以降: 対象ユーザー(または all)。
 			// 他のサブコマンド(generate_thumb_cache 等)と同様、対象は必須指定とする。
 			if len(args) < 2 {
-				cmd.Usage()
-				return
+				return cmd.Usage()
 			}
 
 			mode := args[0]
@@ -173,8 +201,7 @@ var (
 			case "thumb", "video", "zip", "plugin", "all":
 				// ok
 			default:
-				cmd.Usage()
-				return
+				return cmd.Usage()
 			}
 
 			targets := args[1:]
@@ -182,12 +209,11 @@ var (
 			// all を明示指定した場合: ディスク上の派生キャッシュを全ユーザー分まとめて削除する
 			if slices.Contains(targets, "all") {
 				cacheRootDir := os.ExpandEnv(gkill_options.CacheDir)
+				var errs []error
 				clearCacheDir := func(name string) {
 					target := filepath.Join(cacheRootDir, name)
 					if err := os.RemoveAll(target); err != nil {
-						err = fmt.Errorf("error at clear cache %s: %w", target, err)
-						slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-						fmt.Fprintf(os.Stderr, "%s\n", err)
+						errs = append(errs, fmt.Errorf("error at clear cache %s: %w", target, err))
 						return
 					}
 					fmt.Printf("cleared cache: %s\n", target)
@@ -207,79 +233,81 @@ var (
 					clearCacheDir("zip_cache")
 					clearCacheDir(pluginCacheDirName)
 				}
-				return
+				return errors.Join(errs...)
 			}
 
 			// プラグインのキャッシュはディスク上のディレクトリを消すだけでよく、
 			// リポジトリを読み込む必要がない。重い初期化の前に済ませる
 			if mode == "plugin" {
+				var errs []error
 				for _, targetUserID := range targets {
 					if err := ClearPluginCache(targetUserID); err != nil {
-						slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-						fmt.Fprintf(os.Stderr, "%s\n", err)
+						errs = append(errs, fmt.Errorf("error at clear plugin cache user id = %s: %w", targetUserID, err))
 						continue
 					}
 					fmt.Printf("cleared cache: user id = %s mode = %s\n", targetUserID, mode)
 				}
-				return
+				return errors.Join(errs...)
 			}
 
 			// ユーザー指定: 指定ユーザーのリポジトリ分のキャッシュのみ削除する
 			gkill_options.LoadIDFRepOnly = true
-			err := InitGkillServerAPI()
-			if err != nil {
-				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+			if err := InitGkillServerAPI(); err != nil {
+				return fmt.Errorf("error at init gkill server api: %w", err)
 			}
 
+			var errs []error
 			for _, targetUserID := range targets {
-				err := ClearCache(cmd.Context(), targetUserID, mode)
-				if err != nil {
-					err = fmt.Errorf("error at clear cache user id = %s: %w", targetUserID, err)
-					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				} else {
-					fmt.Printf("cleared cache: user id = %s mode = %s\n", targetUserID, mode)
+				if err := ClearCache(cmd.Context(), targetUserID, mode); err != nil {
+					errs = append(errs, fmt.Errorf("error at clear cache user id = %s: %w", targetUserID, err))
+					continue
 				}
+				fmt.Printf("cleared cache: user id = %s mode = %s\n", targetUserID, mode)
 			}
+			return errors.Join(errs...)
 		},
 	}
 
 	OptimizeCmd = &cobra.Command{
-		Use: "optimize",
-		Run: func(cmd *cobra.Command, args []string) {
+		Use:           "optimize",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
 			gkill_options.Optimize = true
 			if len(args) == 0 {
-				cmd.Usage()
-				return
+				return cmd.Usage()
 			}
 
 			targetUserIDs := args
 
-			err := InitGkillServerAPI()
-			if err != nil {
-				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+			if err := InitGkillServerAPI(); err != nil {
+				return fmt.Errorf("error at init gkill server api: %w", err)
 			}
 			gkillServerAPI := GetGkillServerAPI()
 			device, err := gkillServerAPI.GetDevice()
 			if err != nil {
-				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+				return fmt.Errorf("error at get device: %w", err)
 			}
 
+			// 1ユーザが失敗しても残りは続け、最後にまとめて返す(1件でも失敗すれば exit 1)。
+			var errs []error
 			for _, targetUserID := range targetUserIDs {
-				_, err = gkillServerAPI.GkillDAOManager.GetRepositories(targetUserID, device)
-				if err != nil {
-					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+				if _, err := gkillServerAPI.GkillDAOManager.GetRepositories(targetUserID, device); err != nil {
+					errs = append(errs, fmt.Errorf("error at optimize (get repositories) user id = %s: %w", targetUserID, err))
 				}
 			}
+			return errors.Join(errs...)
 		},
 		Short: `optimize 'user_id'`,
 	}
 
 	UpdateCacheCmd = &cobra.Command{
-		Use: "update_cache",
-		Run: func(cmd *cobra.Command, args []string) {
+		Use:           "update_cache",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
-				cmd.Usage()
-				return
+				return cmd.Usage()
 			}
 
 			targetUserIDs := args
@@ -288,9 +316,7 @@ var (
 			configDBRootDir := os.ExpandEnv(gkill_options.ConfigDir)
 			endpoint, err := ResolveLocalServerEndpoint(ctx)
 			if err != nil {
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
+				return fmt.Errorf("error at resolve local server endpoint: %w", err)
 			}
 			httpClient := endpoint.Client
 
@@ -303,9 +329,7 @@ var (
 			//  そもそもそこに依存しないほうがよい)
 			sessionID, cleanupSession, err := issueLocalAdminSession(ctx, configDBRootDir, endpoint.Device)
 			if err != nil {
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
+				return fmt.Errorf("error at issue local admin session: %w", err)
 			}
 			defer cleanupSession()
 
@@ -316,35 +340,37 @@ var (
 			}
 			jsonBody, err := json.Marshal(requestBody)
 			if err != nil {
-				err = fmt.Errorf("error at marshal update cache request: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
+				return fmt.Errorf("error at marshal update cache request: %w", err)
 			}
 			resp, err := httpClient.Post(address, "application/json", bytes.NewReader(jsonBody))
 			if err != nil {
-				err = fmt.Errorf("error at post update cache request to %s: %w", address, err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
+				return fmt.Errorf("error at post update cache request to %s: %w", address, err)
 			}
 			defer resp.Body.Close()
 
 			response := &req_res.UpdateCacheResponse{}
 			err = json.NewDecoder(resp.Body).Decode(response)
 			if err != nil {
-				err = fmt.Errorf("error at decode update cache response: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
+				return fmt.Errorf("error at decode update cache response: %w", err)
 			}
 
 			for _, msg := range response.Messages {
 				fmt.Printf("%s\n", msg.Message)
 			}
-			for _, errMsg := range response.Errors {
-				fmt.Fprintf(os.Stderr, "%s: %s\n", errMsg.ErrorCode, errMsg.ErrorMessage)
+
+			// HTTPステータス異常、または応答のerrorsに中身があれば失敗として返す(exit 1)。
+			// gkillはHTTP 200でもerrorsに中身を入れることがあるので両方を見る。
+			var errs []error
+			if resp.StatusCode != http.StatusOK {
+				errs = append(errs, fmt.Errorf("error at update cache: status = %d", resp.StatusCode))
 			}
+			for _, errMsg := range response.Errors {
+				if errMsg == nil {
+					continue
+				}
+				errs = append(errs, fmt.Errorf("%s: %s", errMsg.ErrorCode, errMsg.ErrorMessage))
+			}
+			return errors.Join(errs...)
 		},
 		Short: `update_cache 'user_id...'`,
 	}

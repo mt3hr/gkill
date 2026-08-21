@@ -724,21 +724,70 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 		return nil, nil
 	}
 
-	for _, tagName := range findCtx.ParsedFindQuery.TimeIsTags {
-		matchTags, err := findCtx.Repositories.TagReps.GetTagsByTagName(ctx, tagName)
-		if err != nil {
-			err = fmt.Errorf("error at get tags by name %s: %w", tagName, err)
-			return nil, err
-		}
-		for _, tag := range matchTags {
-			if !findCtx.isLatestData(tag.ID, tag.UpdateTime) {
-				continue
+	names := uniqueStrings(findCtx.ParsedFindQuery.TimeIsTags)
+
+	// 名前が少ないうちは SQL に絞らせる。名前1つにつき全行へ LOWER() を適用する
+	// (GetTagsByTagName の LOWER(TAG)=LOWER(?) OR LOWER(ID)=LOWER(?)) ので、
+	// 名前が多いと O(行数 × 名前数) になる。多いときは全タグを1回取って Go で照合する
+	// (O(行数))。閾値と意味論は collectTagsForFilter と同じ(maxTagNamesForSQLFilter)。
+	if len(names) <= maxTagNamesForSQLFilter {
+		for _, tagName := range names {
+			matchTags, err := findCtx.Repositories.TagReps.GetTagsByTagName(ctx, tagName)
+			if err != nil {
+				err = fmt.Errorf("error at get tags by name %s: %w", tagName, err)
+				return nil, err
 			}
-			if tag.IsDeleted {
-				continue
+			for _, tag := range matchTags {
+				if !findCtx.isLatestData(tag.ID, tag.UpdateTime) {
+					continue
+				}
+				if tag.IsDeleted {
+					continue
+				}
+				findCtx.MatchTimeIsTags[tag.ID] = tag
 			}
-			findCtx.MatchTimeIsTags[tag.ID] = tag
 		}
+		return nil, nil
+	}
+
+	// 全タグ取得 → Go 照合。collectTagsForFilter の Go 経路と同じ意味論
+	// (rep跨ぎで UpdateTime 最大の版を選び、strings.EqualFold で Tag/ID を完全一致・大小無視)。
+	findTagsQuery := &find.FindQuery{IsDeleted: false, OnlyLatestData: true}
+	allTagsList, err := collectFromRepos([]reps.TagRepository(findCtx.Repositories.TagReps), func(tagRep reps.TagRepository) ([]reps.Tag, error) {
+		return tagRep.FindTags(ctx, findTagsQuery)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error at get all tags for timeis tags: %w", err)
+	}
+	candidates := map[string]reps.Tag{}
+	latest := map[string]time.Time{}
+	for _, tag := range allTagsList {
+		if ut, exist := latest[tag.ID]; exist && !tag.UpdateTime.After(ut) {
+			continue
+		}
+		latest[tag.ID] = tag.UpdateTime
+		matched := false
+		for _, name := range names {
+			if strings.EqualFold(name, tag.Tag) || strings.EqualFold(name, tag.ID) {
+				matched = true
+				break
+			}
+		}
+		// 新しい版で名前が変わって一致しなくなったら古い版の分を取り消す
+		if matched {
+			candidates[tag.ID] = tag
+		} else {
+			delete(candidates, tag.ID)
+		}
+	}
+	for id, tag := range candidates {
+		if !findCtx.isLatestData(id, tag.UpdateTime) {
+			continue
+		}
+		if tag.IsDeleted {
+			continue
+		}
+		findCtx.MatchTimeIsTags[id] = tag
 	}
 	return nil, nil
 }
@@ -1278,21 +1327,22 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 }
 
 func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// TimeIsタグ絞り込みを使わない場合(またはタグ列が未指定=nil)は、
-	// 削除済みを除いた全TimeIsを通し、非表示タグだけを適用する。
+	// TimeIsタグ絞り込みを使わない場合(タグ列が未指定=nil)は、削除済みを除いた全TimeIsを通す。
 	// 以前はTimeIsTags==nilだとOR/ANDどちらの分岐にも入らず、
-	// MatchTimeIssAtFilterTagsが空のまま=検索全体が0件になっていた
+	// MatchTimeIssAtFilterTagsが空のまま=検索全体が0件になっていた。
+	//
+	// 強制非表示タグ(MatchHideTagsWhenUncheckedTimeIs)はここでは適用しない。
+	// これは Kyou 側 getMatchHideTagsWhenUnckedKyou が Tags==nil で早期returnして
+	// 非表示タグを適用しないのと対称。TimeIsTags!=nil のときだけ line 205 のゲートで
+	// 集合が埋まり、下の OR/AND 分岐で適用される。
+	// (以前ここに delete があったが、この分岐では集合が常に空で発火せず、
+	//  「タグ絞りなしでも適用される」かのような誤解を招くだけの死にコードだった)
 	if findCtx.ParsedFindQuery.TimeIsTags == nil {
 		for _, timeis := range findCtx.MatchTimeIssAtFindTimeIs {
 			if timeis.IsDeleted {
 				continue
 			}
 			findCtx.MatchTimeIssAtFilterTags[timeis.ID] = timeis
-		}
-		// 非表示タグの対象を消す(以前はこの分岐にdeleteが無く、
-		// 計算済みの非表示タグ集合が適用されなかった)
-		for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedTimeIs {
-			delete(findCtx.MatchTimeIssAtFilterTags, hideTag.TargetID)
 		}
 		return nil, nil
 	}
@@ -1473,21 +1523,23 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 	}
 
 	allTimeIss, err := collectFromRepos([]reps.TimeIsRepository(findCtx.Repositories.TimeIsReps), func(rep reps.TimeIsRepository) ([]reps.TimeIs, error) {
-		timeiss, err := rep.FindTimeIs(ctx, timeisFindKyouQuery)
-		if err != nil {
-			return nil, err
-		}
-		if len(targetIDs) != 0 {
-			textMatchTimeiss, err := rep.FindTimeIs(ctx, matchTextFindByIDQuery)
-			if err != nil {
-				return nil, err
-			}
-			timeiss = append(timeiss, textMatchTimeiss...)
-		}
-		return timeiss, nil
+		return rep.FindTimeIs(ctx, timeisFindKyouQuery)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error at find timeiss: %w", err)
+	}
+
+	// 本文ヒット由来のID検索は、leaf rep を直叩きせず集約入口を通す。
+	// IDリストはヒット数ぶん膨らみ、leaf の FindTimeIs はIDを分割しないので、
+	// TimeIs の2射影ぶんバインド変数が上限(SQLITE_MAX_VARIABLE_NUMBER)を超えると
+	// 検索が丸ごとエラーになる。集約の TimeIsReps.FindTimeIs は findChunkedByIDs で分割する。
+	// findTimeIs はリクエスト本流(find_filter.go:195)から呼ばれ threads.Go の入れ子にならない。
+	if len(targetIDs) != 0 {
+		textMatchTimeiss, err := findCtx.Repositories.TimeIsReps.FindTimeIs(ctx, matchTextFindByIDQuery)
+		if err != nil {
+			return nil, fmt.Errorf("error at find timeiss by text-matched ids: %w", err)
+		}
+		allTimeIss = append(allTimeIss, textMatchTimeiss...)
 	}
 
 	// TimeIs集約
