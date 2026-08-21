@@ -326,7 +326,7 @@ func newKFTLNlogRelatedTimeStatementLine(lineText string, ctx *KFTLStatementLine
 func (l *kftlNlogRelatedTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
 	timeStr := strings.TrimPrefix(l.lineText, splitterRelatedTime)
 	timeStr = strings.TrimPrefix(timeStr, splitterRelatedTimeAscii)
-	parsed, err := parseDateTime(timeStr)
+	parsed, err := parseDateTime(timeStr, l.ctx.BaseTime)
 	if err != nil {
 		return fmt.Errorf("invalid nlog related time %q: %w", l.lineText, err)
 	}

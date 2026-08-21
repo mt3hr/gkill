@@ -20,6 +20,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/axgle/mahonia"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	"github.com/mt3hr/gkill/src/server/gkill/api/safefetch"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
@@ -181,60 +182,54 @@ func (u *URLog) fillDescription(body []byte) error {
 	return nil
 }
 
-// ページURLからページのfaviconを取得する
+// ページURLからページのfaviconを取得する。
+// 取得先は固定ホスト google.com なのでSSRFではないが、無制限readを防ぐため上限付きで取る。
 func getFavicon(urlstr string) (image io.ReadCloser, err error) {
 	u, err := url.Parse(urlstr)
 	if err != nil {
 		err = fmt.Errorf("failed parse url %s: %w", urlstr, err)
 		return nil, err
 	}
-	res, err := http.Get(`https://www.google.com/s2/favicons?domain=` + u.Hostname())
+	b, err := safefetch.GetCapped(`https://www.google.com/s2/favicons?domain=`+u.Hostname(), 30*time.Second, "", false, safefetch.DefaultMaxImageBytes)
 	if err != nil {
 		err = fmt.Errorf("failed to get favicon by google api. hostname = %s: %w", u.Hostname(), err)
 		return nil, err
 	}
-	image = res.Body
-	return image, nil
+	return io.NopCloser(bytes.NewReader(b)), nil
 }
 
-// urlに対してhttpリクエストを飛ばし、bodyを取得する
+// urlに対してhttpリクエストを飛ばし、bodyを取得する。
+// 取得先は利用者が入力したURLなので SSRF 対策・サイズ上限つきの safefetch を通す。
+// enableProxy=true のプロキシ経路は現状どこからも渡らない（互換のため残す）。
 func getBody(targeturl string, timeout time.Duration, useragent string, enableProxy bool, proxyURL string) (body []byte, err error) {
-	var client *http.Client
 	if enableProxy {
 		proxy, err := url.Parse(proxyURL)
 		if err != nil {
 			return nil, err
 		}
-
-		client = &http.Client{
+		client := &http.Client{
 			Timeout: timeout,
 			Transport: &http.Transport{
 				Proxy: http.ProxyURL(proxy),
 			},
 		}
-	} else {
-		client = &http.Client{Timeout: timeout}
-	}
-	req, err := http.NewRequest("GET", targeturl, nil)
-	if err != nil {
-		err = fmt.Errorf("failed to create http request.: %w", err)
-
-		return nil, err
-	}
-	req.Header.Set("User-Agent", useragent)
-
-	res, err := client.Do(req)
-	if err != nil {
-		err = fmt.Errorf("failed to http get request: %w", err)
-		return nil, err
-	}
-	defer func() {
-		err := res.Body.Close()
+		req, err := http.NewRequest("GET", targeturl, nil)
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			return nil, fmt.Errorf("failed to create http request.: %w", err)
 		}
-	}()
-	return io.ReadAll(res.Body)
+		req.Header.Set("User-Agent", useragent)
+		res, err := client.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("failed to http get request: %w", err)
+		}
+		defer func() {
+			if cerr := res.Body.Close(); cerr != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", cerr)
+			}
+		}()
+		return io.ReadAll(io.LimitReader(res.Body, safefetch.DefaultMaxBodyBytes+1))
+	}
+	return safefetch.GetCapped(targeturl, timeout, useragent, false, safefetch.DefaultMaxBodyBytes)
 }
 
 // imageを取得してurlogに書き込む
@@ -265,7 +260,17 @@ func (u *URLog) fillImage(body []byte) error {
 			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
 	}()
-	img, imgType, err := image.Decode(imgSrc)
+	// imgSrc は safefetch で上限バイトまでに絞った画像なので全読みしても安全。
+	// 復号前に DecodeConfig で寸法を検査し、画像爆弾（巨大寸法）を弾く。
+	imgBytes, err := io.ReadAll(imgSrc)
+	if err != nil {
+		err = fmt.Errorf("failed to read image bytes: %w", err)
+		return err
+	}
+	if err := safefetch.CheckImageDimensions(imgBytes, safefetch.DefaultMaxImagePixels); err != nil {
+		return fmt.Errorf("failed to check image dimensions: %w", err)
+	}
+	img, imgType, err := image.Decode(bytes.NewReader(imgBytes))
 	if err != nil {
 		err = fmt.Errorf("failed to decodeImage: %w", err)
 		return err
@@ -314,13 +319,15 @@ func getAmazonImage(body []byte) (io.ReadCloser, error) {
 		err = fmt.Errorf("error at get amazon image: %w", err)
 		return nil, err
 	}
+	// src はフェッチしたHTMLの #landingImage 属性由来＝ブックマーク先ページが制御できるので
+	// SSRF 対策つきの safefetch を通す。
 	src := doc.Find("#landingImage").AttrOr("src", "")
-	res, err := http.Get(src)
+	b, err := safefetch.GetCapped(src, 30*time.Second, "", false, safefetch.DefaultMaxImageBytes)
 	if err != nil {
 		err = fmt.Errorf("error at http get %s: %w", src, err)
 		return nil, err
 	}
-	return res.Body, nil
+	return io.NopCloser(bytes.NewReader(b)), nil
 }
 
 // 幅と高さで大きい方をmaxまで下げて、小さい方をその比率に合わせる
@@ -428,13 +435,13 @@ func getImageOG(body []byte) (image io.ReadCloser, err error) {
 	if imageURL == "" {
 		return nil, fmt.Errorf("imageOG not found from html body")
 	}
-	res, err := http.Get(imageURL)
+	// imageURL は og:image 由来＝ブックマーク先ページが制御できるので SSRF 対策つきで取る。
+	b, err := safefetch.GetCapped(imageURL, 30*time.Second, "", false, safefetch.DefaultMaxImageBytes)
 	if err != nil {
 		err = fmt.Errorf("failed to get image %s: %w", imageURL, err)
 		return nil, err
 	}
-	image = res.Body
-	return image, nil
+	return io.NopCloser(bytes.NewReader(b)), nil
 }
 
 var detector = chardet.NewHtmlDetector()

@@ -72,6 +72,10 @@ const (
 // プラグインが壊れているわけではないので、プロセスは回収しない。
 var ErrPluginBusy = errors.New("plugin is busy")
 
+// ErrPluginReturnedErrors は、プラグインが応答の Errors 欄（アプリケーションエラー）を
+// 返したことを表す番兵。プロセス自体は健全なので、この場合はプロセスを殺さず・再送しない。
+var ErrPluginReturnedErrors = errors.New("plugin returned application errors")
+
 // pluginRepositoryImpl は PluginRepository インターフェースの実装。
 // プラグインバイナリをサブプロセスとして起動し、stdio 改行区切りJSONで通信する。
 type pluginRepositoryImpl struct {
@@ -357,7 +361,7 @@ func (p *pluginRepositoryImpl) sendRequest(callerCtx context.Context, timeoutCtx
 				continue
 			}
 			if len(resp.Errors) > 0 {
-				return &resp, fmt.Errorf("plugin %s returned errors: %v", p.manifest.Name, resp.Errors)
+				return &resp, fmt.Errorf("plugin %s returned errors: %v: %w", p.manifest.Name, resp.Errors, ErrPluginReturnedErrors)
 			}
 			return &resp, nil
 		}
@@ -409,6 +413,11 @@ func (p *pluginRepositoryImpl) callCommand(ctx context.Context, req gkill_plugin
 
 	resp, err := p.sendRequest(ctx, timeoutCtx, req)
 	if err != nil {
+		// アプリケーションエラー（プラグインが Errors 欄を返した）はプロセスが健全なので、
+		// 殺さず・再送せずにそのまま返す。殺すと本文取得のたびに再起動が延々続く。
+		if errors.Is(err, ErrPluginReturnedErrors) {
+			return resp, err
+		}
 		// 打ち切り（呼び出し元のキャンセル・期限切れ）はリトライしない
 		if ctx.Err() != nil || timeoutCtx.Err() != nil {
 			return nil, err

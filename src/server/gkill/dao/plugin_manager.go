@@ -186,6 +186,11 @@ func (pm *PluginManager) loadManifest(pluginDir string) (*gkill_plugin.PluginMan
 	if manifest.Executable == "" {
 		return nil, fmt.Errorf("manifest.json in %s: executable is required", pluginDir)
 	}
+	// executable は起動時に filepath.Join(pluginDir, ...) されるので、区切り文字や親参照を
+	// 含むとプラグインフォルダ外のバイナリを起動できてしまう（サードパーティ配布への備え）。
+	if !isSingleSafePathElement(manifest.Executable) {
+		return nil, fmt.Errorf("manifest.json in %s: executable must be a single path element", pluginDir)
+	}
 	if manifest.RepName == "" {
 		return nil, fmt.Errorf("manifest.json in %s: rep_name is required", pluginDir)
 	}

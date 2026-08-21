@@ -740,7 +740,8 @@ WHERE
 	tableName := "KMEMO"
 	tableNameAlias := "KMEMO"
 	whereCounter := 0
-	onlyLatestData := false
+	// FindKmemo はクエリの OnlyLatestData を反映する（他の型の FindXxx と同様。以前だけ false 固定だった）。
+	onlyLatestData := query.OnlyLatestData
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
@@ -897,7 +898,8 @@ WHERE
 	tableName := "KMEMO"
 	tableNameAlias := "KMEMO"
 	whereCounter := 0
-	onlyLatestData := false
+	// GenerateFindSQLCommon は query.OnlyLatestData を読まず、この引数しか見ない（既定 false のままだと最古版を返す）。
+	onlyLatestData := query.OnlyLatestData
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
@@ -992,7 +994,12 @@ WHERE
 	if len(kmemos) == 0 {
 		return nil, nil
 	}
-	return &kmemos[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestKmemo := slices.MaxFunc(kmemos, func(a Kmemo, b Kmemo) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestKmemo, nil
 }
 
 func (k *kmemoRepositorySQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]Kmemo, error) {
@@ -1453,6 +1460,10 @@ FROM KMEMO
 				latestDataRepositoryAddressMap[addr.TargetID] = addr
 			}
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	latestDataRepositoryAddresses := make([]gkill_cache.LatestDataRepositoryAddress, 0, len(latestDataRepositoryAddressMap))
 	for _, addr := range latestDataRepositoryAddressMap {

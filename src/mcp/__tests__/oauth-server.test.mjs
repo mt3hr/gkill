@@ -17,6 +17,9 @@ function createServer(overrides = {}) {
     issuer: overrides.issuer || "http://localhost:8808",
     authenticateUser,
   });
+  // 未登録 client_id は認可を拒否するようになったので、テスト既定の "test-client" を
+  // DCR 相当で登録しておく（authorizeParams / fullAuthCodeFlow が使う既定クライアント）。
+  server.store.putClient("test-client", { redirect_uris: ["http://localhost/callback"] });
   return server;
 }
 
@@ -808,11 +811,12 @@ describe("OAuthServer — redirect_uri validation against DCR", () => {
     expect(result.status).toBe(200);
   });
 
-  test("allows any redirect_uri for non-DCR clients", () => {
+  test("rejects unregistered client_id (auth-code interception hardening)", () => {
     const result = server.handleAuthorizeGet(authorizeParams({
-      client_id: "pre-registered-client",
+      client_id: "never-registered-client",
       redirect_uri: "http://any-url.com/callback",
     }));
-    expect(result.status).toBe(200);
+    expect(result.status).toBe(400);
+    expect(result.body).toContain("unknown client_id");
   });
 });

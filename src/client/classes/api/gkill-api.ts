@@ -2384,10 +2384,19 @@ export class GkillAPI {
         }
 
         set_session_id(session_id: string): void {
-                if (session_id === "") {
-                        document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + "; max-age=0"
+                this.write_persistent_cookie(this.gkill_session_id_cookie_key, session_id)
+        }
+
+        // 永続クッキーを path=/ + SameSite=Lax で書く。https のときだけ Secure を付ける。
+        // （--disable_tls の LAN 平文HTTP で無条件 Secure を付けるとクッキーが黙って落ち、
+        //  ログインループになる。localhost http も secure context ではないので条件分岐で両立する）
+        // HttpOnly 化はセッションをボディで送る現アーキテクチャの作り替えを伴うため中期の別件。
+        private write_persistent_cookie(name: string, value: string): void {
+                const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+                if (value === "") {
+                        document.cookie = name + "=; max-age=0; path=/; SameSite=Lax" + secure
                 } else {
-                        document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + "; max-age=" + 86400 * 400
+                        document.cookie = name + "=" + value + "; max-age=" + (86400 * 400) + "; path=/; SameSite=Lax" + secure
                 }
         }
 
@@ -2630,11 +2639,7 @@ export class GkillAPI {
                 if (!last_added_tag_string) {
                         return ""
                 }
-                const last_added_tag: string = last_added_tag_string
-                if (!last_added_tag) {
-                        return ""
-                }
-                return last_added_tag
+                return last_added_tag_string
         }
         private tag_history_localstorage_key = "tag_history"
         private tag_history_max = 10
@@ -2798,10 +2803,16 @@ export class GkillAPI {
          * 進めてしまうとその時間帯の更新は二度と通知されず、古い応答が焼き付く。
          */
         async delete_updated_gkill_caches(): Promise<void> {
+                // ウォーターマークは「応答受信時刻」ではなく「リクエスト発行時刻」で進める。
+                // 受信時刻にすると、サーバがクエリを実行した後～応答受信までの飛行中に
+                // 他デバイスで確定した更新が今回の updated_ids に入らず、次回は受信時刻より
+                // 古くなって二度と通知されない（古い応答がSWキャッシュに恒久的に焼き付く）。
+                // 窓が重なるぶんは「消したIDをもう一度消す」だけで冪等なので副作用は無い。
+                const watermark_candidate = new Date(Date.now())
                 const last_cache_update_time = this.get_last_cache_update_time()
                 if (!last_cache_update_time) {
                         // 初回。消すべき「前回以降の更新」がそもそも無いので、往復せずに基準時刻だけ置く
-                        this.set_last_cache_update_time(new Date(Date.now()))
+                        this.set_last_cache_update_time(watermark_candidate)
                         return
                 }
 
@@ -2830,7 +2841,7 @@ export class GkillAPI {
                                 await delete_gkill_kyou_caches(res.updated_ids)
                         }
                 }
-                this.set_last_cache_update_time(new Date(Date.now()))
+                this.set_last_cache_update_time(watermark_candidate)
         }
 
         async clear_browser_datas(): Promise<void> {

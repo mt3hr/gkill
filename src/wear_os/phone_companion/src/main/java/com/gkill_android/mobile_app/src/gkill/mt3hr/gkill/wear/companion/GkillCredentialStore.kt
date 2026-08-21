@@ -39,6 +39,28 @@ class GkillCredentialStore(
         prefs.edit().putBoolean("allow_self_signed_cert", allow).apply()
     }
 
+    // ─── ピン留め証明書のフィンガープリント ──────────────────────────────────
+    // 自己署名サーバー向けの TOFU（Trust On First Use）で承認したリーフ証明書の
+    // SHA-256（16進）をホストごとに保存する。証明書のハッシュは秘密情報ではないので
+    // [cipher] を通さず平文で保存する。[hostKey] は [GkillServerTrust.hostKeyOf] で作る。
+
+    fun getPinnedCertSha256(hostKey: String): String =
+        prefs.getString(pinnedCertKey(hostKey), "") ?: ""
+
+    fun setPinnedCertSha256(hostKey: String, sha256: String) {
+        if (sha256.isEmpty()) {
+            prefs.edit().remove(pinnedCertKey(hostKey)).apply()
+            return
+        }
+        prefs.edit().putString(pinnedCertKey(hostKey), sha256).apply()
+    }
+
+    fun clearPinnedCertSha256(hostKey: String) {
+        prefs.edit().remove(pinnedCertKey(hostKey)).apply()
+    }
+
+    private fun pinnedCertKey(hostKey: String): String = "pinned_cert_sha256:$hostKey"
+
     fun getSessionId(): String = getSecret("session_id")
 
     fun setSessionId(id: String) {

@@ -133,7 +133,7 @@ src/server/
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（124ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（131ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
     │       ├── gkill_server_api_address.go  # ルーティング定義（92エンドポイント定義・90登録：89 POST + 1 GET）
@@ -144,7 +144,7 @@ src/server/
     │       ├── utils.go            # ユーティリティ関数
     │       ├── web_push.go         # WebPush通知
     │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
-    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、99ファイル）
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、101ファイル）
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     ├── dao/                        # データアクセス層
@@ -303,7 +303,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-918キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+919キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 

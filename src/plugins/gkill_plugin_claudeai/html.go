@@ -7,6 +7,7 @@ import (
 	"html"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // configHTMLHead は設定画面の共通ヘッダ。
@@ -94,35 +95,40 @@ const maxShownExpanded = 20
 // gkillの設定ダイアログは設定HTMLを表示するだけで、保存(post_plugin_config)を呼ぶ導線が
 // まだ無い。プラグイン側から本体を変更するわけにもいかないので、ここでは編集フォームを出さず、
 // 現状の表示とconfig.jsonの編集手順の案内にとどめる。
-func renderConfigHTML(pluginDir string, patterns []string, src expandedSource) string {
+func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src expandedSource) string {
 	var sb strings.Builder
 	sb.WriteString(configHTMLHead)
 	sb.WriteString(`<h2>Claude.ai チャット履歴プラグイン</h2>`)
 
-	found := findConversationFiles(src)
-	convs, err := loadConversations(src)
-
-	if err != nil {
+	// 走査・読み込みはバックグラウンドのビルダが行う。ここでは絶対にファイルを読まない
+	// (GetConfigHTML は IsAlive 5秒のスロットに並ぶため)。統計はキャッシュから即答する。
+	if stats.MessageCount > 0 {
+		sb.WriteString(`<div class="ok">`)
+		fmt.Fprintf(&sb, `<p>✓ <strong>%d 件</strong>のメッセージ(会話 %d 件)を読み込んでいます</p>`,
+			stats.MessageCount, stats.ConvCount)
+		sb.WriteString(`<p>データを更新するには、Claude.ai から再エクスポートして ` +
+			`<code>conversations.json</code> を置き換えてください。</p>`)
+		sb.WriteString(`</div>`)
+	} else {
 		sb.WriteString(`<div class="warn">`)
-		sb.WriteString(`<p><strong>データが読み込めていません</strong></p>`)
-		sb.WriteString(`<p><code>` + html.EscapeString(err.Error()) + `</code></p>`)
+		sb.WriteString(`<p><strong>まだ読み込まれていません。</strong></p>`)
+		sb.WriteString(`<p>取り込みはバックグラウンドで進むので、指定した直後は0件のことがあります。</p>`)
 		sb.WriteString(`<p>エクスポート手順:</p><ol>`)
 		sb.WriteString(`<li>Claude.ai にログイン → 左下のアカウントアイコン → <strong>Settings</strong></li>`)
 		sb.WriteString(`<li>「Privacy」→「<strong>Export data</strong>」をクリック</li>`)
 		sb.WriteString(`<li>ZIPが届いたら解凍し、<code>conversations.json</code> を取り出す</li>`)
 		sb.WriteString(`<li>下の「データソース」で指定したフォルダに置く</li>`)
 		sb.WriteString(`</ol></div>`)
-	} else {
-		sb.WriteString(`<div class="ok">`)
-		fmt.Fprintf(&sb, `<p>✓ <strong>%d 件</strong>の会話を読み込んでいます</p>`, len(convs))
-		sb.WriteString(`<p>データを更新するには、Claude.ai から再エクスポートして ` +
-			`<code>conversations.json</code> を置き換えてください。</p>`)
-		sb.WriteString(`</div>`)
 	}
 
+	renderBuildProgress(&sb, stats)
+
 	sb.WriteString(`<table>`)
-	fmt.Fprintf(&sb, `<tr><td class="k">読み込んだファイル数</td><td>%d</td></tr>`, len(found))
-	fmt.Fprintf(&sb, `<tr><td class="k">会話数</td><td>%d</td></tr>`, len(convs))
+	fmt.Fprintf(&sb, `<tr><td class="k">読み込んだファイル数</td><td>%d</td></tr>`, stats.FileCount)
+	fmt.Fprintf(&sb, `<tr><td class="k">会話数</td><td>%d</td></tr>`, stats.ConvCount)
+	fmt.Fprintf(&sb, `<tr><td class="k">メッセージ数</td><td>%d</td></tr>`, stats.MessageCount)
+	fmt.Fprintf(&sb, `<tr><td class="k">最終スキャン</td><td>%s</td></tr>`,
+		html.EscapeString(formatUnix(stats.LastScanUnix)))
 	fmt.Fprintf(&sb, `<tr><td class="k">キャッシュDB</td><td><code>%s</code></td></tr>`,
 		html.EscapeString(sdk.CacheDBPath(pluginDir)))
 	sb.WriteString(`</table>`)
@@ -133,6 +139,10 @@ func renderConfigHTML(pluginDir string, patterns []string, src expandedSource) s
 			sb.WriteString(`<li><code>` + html.EscapeString(d) + `</code></li>`)
 		}
 		sb.WriteString(`</ul></div>`)
+	}
+	if stats.LastScanError != "" {
+		sb.WriteString(`<div class="warn"><p>スキャン時のエラー:</p><p><code>` +
+			html.EscapeString(stats.LastScanError) + `</code></p></div>`)
 	}
 
 	sb.WriteString(`<h3>設定されている指定</h3><ul>`)
@@ -145,13 +155,21 @@ func renderConfigHTML(pluginDir string, patterns []string, src expandedSource) s
 	}
 	sb.WriteString(`</ul>`)
 
-	fmt.Fprintf(&sb, `<h3>見つかったファイル (%d)</h3><ul>`, len(found))
-	for i, f := range found {
-		if i >= maxShownExpanded {
-			fmt.Fprintf(&sb, `<li>ほか %d 件</li>`, len(found)-i)
+	fmt.Fprintf(&sb, `<h3>展開結果 (フォルダ %d / ファイル %d)</h3><ul>`, len(src.Dirs), len(src.Files))
+	shown := 0
+	for _, d := range src.Dirs {
+		sb.WriteString(`<li><code>` + html.EscapeString(d) + `</code> (再帰的に走査)</li>`)
+		shown++
+	}
+	for _, f := range src.Files {
+		if shown >= maxShownExpanded {
 			break
 		}
 		sb.WriteString(`<li><code>` + html.EscapeString(f) + `</code></li>`)
+		shown++
+	}
+	if len(src.Dirs)+len(src.Files) > shown {
+		fmt.Fprintf(&sb, `<li>ほか %d 件</li>`, len(src.Dirs)+len(src.Files)-shown)
 	}
 	sb.WriteString(`</ul>`)
 
@@ -191,4 +209,33 @@ func sampleConfigJSON() string {
 		return "{}"
 	}
 	return string(data)
+}
+
+// renderBuildProgress は取り込みの進捗を出す。
+// 「初回は空が返る」のが仕様なので、進んでいることが見えないと壊れて見える。
+func renderBuildProgress(sb *strings.Builder, stats cacheStats) {
+	switch stats.BuildState {
+	case "", "idle":
+		return
+	case "error":
+		return // エラーは下の「スキャン時のエラー」欄で出す
+	}
+	sb.WriteString(`<div class="ok">`)
+	switch stats.BuildState {
+	case "scanning":
+		sb.WriteString(`<p>データソースを走査しています…</p>`)
+	case "ingesting":
+		fmt.Fprintf(sb, `<p>取り込み中 %d / %d 会話</p>`, stats.BuildDone, stats.BuildTotal)
+	default:
+		sb.WriteString(`<p>処理中…</p>`)
+	}
+	sb.WriteString(`</div>`)
+}
+
+// formatUnix はUnix時刻を表示用文字列にする。0は「-」。
+func formatUnix(unix int64) string {
+	if unix <= 0 {
+		return "-"
+	}
+	return time.Unix(unix, 0).Format("2006-01-02 15:04")
 }

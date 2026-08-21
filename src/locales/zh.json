@@ -194,6 +194,7 @@
     "NLOG_DATE_TITLE": "日期",
     "NLOG_TIME_TITLE": "时间",
     "CLIENT_NLOG_IS_NULL_MESSAGE": "客户端数据异常",
+    "KC_RELATED_TIME_IS_BLANK_MESSAGE": "日期或时间未输入",
     "NLOG_DATE_TIME_IS_BLANK_MESSAGE": "日期或时间未输入",
     "NLOG_SHOP_NAME_IS_BLANK_MESSAGE": "店铺名称未输入",
     "NLOG_AMOUNT_IS_BLANK_MESSAGE": "金额未输入",

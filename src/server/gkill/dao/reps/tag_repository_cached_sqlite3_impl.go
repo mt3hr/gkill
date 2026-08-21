@@ -1245,5 +1245,9 @@ WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.Qu
 		addr.TargetIDInData = targetIDInData
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return latestDataRepositoryAddresses, nil
 }

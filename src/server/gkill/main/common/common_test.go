@@ -6,7 +6,44 @@ import (
 	"testing"
 
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
+	"github.com/spf13/cobra"
 )
+
+// TestSubcommandsUseRunE は、このパッケージが提供する全サブコマンドが Run ではなく RunE を持つことを固定する。
+// Run(戻り値なし)だと内部で失敗しても exit code に出ず、SyncDatas 等の呼び出し側が失敗を観測できない。
+// RunE で error を返し、cobra の Execute() 経由で log.Fatal(exit 1)へ伝わるようにする。
+// あわせて、usageの二重印字(SilenceUsage)とエラーの二重印字(SilenceErrors)を止めていることも確認する。
+func TestSubcommandsUseRunE(t *testing.T) {
+	cmds := map[string]*cobra.Command{
+		"idf":                  IDFCmd,
+		"version":              VersionCommand,
+		"generate_thumb_cache": GenerateThumbCacheCmd,
+		"generate_video_cache": GenerateVideoCacheCmd,
+		"clear_cache":          ClearCacheCmd,
+		"optimize":             OptimizeCmd,
+		"update_cache":         UpdateCacheCmd,
+		"reset_password":       ResetPasswordCmd,
+		"auto_tag":             AutoTagCmd,
+	}
+	for name, cmd := range cmds {
+		if cmd == nil {
+			t.Errorf("%s: command is nil", name)
+			continue
+		}
+		if cmd.RunE == nil {
+			t.Errorf("%s: RunE is nil (must return an error so exit code propagates)", name)
+		}
+		if cmd.Run != nil {
+			t.Errorf("%s: Run is set (must use RunE, not Run)", name)
+		}
+		if !cmd.SilenceUsage {
+			t.Errorf("%s: SilenceUsage must be true (avoid reprinting usage on error)", name)
+		}
+		if !cmd.SilenceErrors {
+			t.Errorf("%s: SilenceErrors must be true (main's log.Fatal is the single error printer)", name)
+		}
+	}
+}
 
 func TestAppNameDefault(t *testing.T) {
 	if AppName == "" {
@@ -90,7 +127,9 @@ func TestClearCacheCmd_All_RemovesAllDirs(t *testing.T) {
 		}
 	}
 
-	ClearCacheCmd.Run(ClearCacheCmd, []string{"all", "all"})
+	if err := ClearCacheCmd.RunE(ClearCacheCmd, []string{"all", "all"}); err != nil {
+		t.Fatalf("clear_cache all all: %v", err)
+	}
 
 	for _, name := range cacheNames {
 		dir := filepath.Join(tmpDir, name)
@@ -115,7 +154,9 @@ func TestClearCacheCmd_SingleMode_LeavesOthers(t *testing.T) {
 		}
 	}
 
-	ClearCacheCmd.Run(ClearCacheCmd, []string{"thumb", "all"})
+	if err := ClearCacheCmd.RunE(ClearCacheCmd, []string{"thumb", "all"}); err != nil {
+		t.Fatalf("clear_cache thumb all: %v", err)
+	}
 
 	if _, err := os.Stat(filepath.Join(tmpDir, "thumb_cache")); !os.IsNotExist(err) {
 		t.Errorf("expected thumb_cache removed, stat err = %v", err)
@@ -142,7 +183,9 @@ func TestClearCacheCmd_Plugin_RemovesOnlyPluginCache(t *testing.T) {
 		}
 	}
 
-	ClearCacheCmd.Run(ClearCacheCmd, []string{"plugin", "all"})
+	if err := ClearCacheCmd.RunE(ClearCacheCmd, []string{"plugin", "all"}); err != nil {
+		t.Fatalf("clear_cache plugin all: %v", err)
+	}
 
 	if _, err := os.Stat(filepath.Join(tmpDir, "plugin_cache")); !os.IsNotExist(err) {
 		t.Errorf("expected plugin_cache removed, stat err = %v", err)

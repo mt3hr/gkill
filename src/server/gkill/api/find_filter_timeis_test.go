@@ -3,11 +3,13 @@ package api
 // TimeIs系フィルタ（filterTagsTimeIs / findTimeIs）の回帰テスト。
 //
 // 修正対象のバグ:
-//   - TimeIsの非表示タグがどの組み合わせでも一度も適用されていなかった
-//     (計算条件が適用側と逆 + タグ絞りなし分岐にdelete処理が無かった)
+//   - TimeIsの非表示タグが TimeIsTags!=nil のとき適用されていなかった(計算条件が適用側と逆)。
+//     タグ絞りなし(TimeIsTags==nil)では Kyou 側と対称に適用しない(旧コードの nil 分岐 delete は
+//     集合が常に空で発火しない死にコードだった＝監査 M-5(d))
 //   - use_timeis_tags=true + timeis_tags=nil でどの分岐にも入らず検索全体が0件になっていた
 //   - AND分岐で存在しないタグ名が黙って無視され、タグ名照合が大小を区別していた
 //   - findTimeIs のクエリに OnlyLatestData が無く、編集前タイトルの旧版がヒットしていた
+//   - findTimeIs の本文ヒットID検索が leaf rep 直叩きで findChunkedByIDs を回避していた(M-5(a))
 
 import (
 	"context"
@@ -28,16 +30,21 @@ func timeIsMapOf(ids ...string) map[string]reps.TimeIs {
 	return m
 }
 
-// タグ絞りなし(TimeIsTags=nil)でも非表示タグが適用されること
-func TestFilterTagsTimeIs_NoTagFilter_AppliesHideTags(t *testing.T) {
+// タグ絞りなし(TimeIsTags=nil)では強制非表示タグを適用しないこと（Kyou 側と対称）。
+// getMatchHideTagsWhenUnckedTimeIs は TimeIsTags!=nil のゲートでしか集合を埋めないので、
+// nil のときは集合が常に空＝適用しないのが本番の実挙動。Kyou 側 getMatchHideTagsWhenUnckedKyou も
+// Tags==nil で早期returnして適用しない。ここでは集合を仮に埋めても nil 分岐が触れないことを固定する。
+func TestFilterTagsTimeIs_NoTagFilter_DoesNotApplyHideTags(t *testing.T) {
 	ctx := context.Background()
 
 	findCtx := &FindKyouContext{
 		ParsedFindQuery: &find.FindQuery{
 			TimeIsWords: []string{},
+			TimeIsTags:  nil,
 		},
 		MatchTimeIssAtFindTimeIs: timeIsMapOf("timeis-visible", "timeis-hidden"),
 		MatchTimeIssAtFilterTags: map[string]reps.TimeIs{},
+		// 本番では nil 分岐でこの集合は空だが、仮に埋まっていても適用されないことを示す
 		MatchHideTagsWhenUncheckedTimeIs: tagMapOf(
 			tagFor("timeis-hidden", "非表示タグ"),
 		),
@@ -48,11 +55,76 @@ func TestFilterTagsTimeIs_NoTagFilter_AppliesHideTags(t *testing.T) {
 		t.Fatalf("filterTagsTimeIs failed: %v", err)
 	}
 
-	if _, exist := findCtx.MatchTimeIssAtFilterTags["timeis-hidden"]; exist {
-		t.Errorf("非表示タグの対象 timeis-hidden は消えるはず")
+	// タグ絞りなしなので、削除済みでない TimeIs は非表示タグに関係なく全て通る
+	if _, exist := findCtx.MatchTimeIssAtFilterTags["timeis-hidden"]; !exist {
+		t.Errorf("タグ絞りなしでは強制非表示タグを適用しない: timeis-hidden も残るはず")
 	}
 	if _, exist := findCtx.MatchTimeIssAtFilterTags["timeis-visible"]; !exist {
 		t.Errorf("timeis-visible は残るはず")
+	}
+}
+
+// M-5(b): findTimeIsTags は名前の個数で SQL経路(≤32)と Go照合経路(>32)を切り替える。
+// **どちらを通っても MatchTimeIsTags が同じ**でなければ、タグの個数で検索結果が変わる
+// 静かな壊れ方になる。以前は名前ごとに GetTagsByTagName を投げて O(行数×名前数) だった。
+func TestFindTimeIsTags_BothPathsAgree(t *testing.T) {
+	ctx := context.Background()
+
+	tagRep, err := reps.NewTagRepositorySQLite3Impl(ctx, filepath.Join(t.TempDir(), "tag.db"), true)
+	if err != nil {
+		t.Fatalf("failed to create tag repository: %v", err)
+	}
+	t.Cleanup(func() { tagRep.Close(ctx) })
+
+	baseTime := time.Date(2026, 6, 27, 19, 2, 0, 0, time.Local)
+	targetTag := reps.Tag{
+		ID: "tag-hit", TargetID: "timeis-1", Tag: "会議",
+		RelatedTime: baseTime, CreateTime: baseTime, UpdateTime: baseTime,
+		CreateApp: "test", CreateDevice: "test", CreateUser: "test",
+		UpdateApp: "test", UpdateDevice: "test", UpdateUser: "test",
+	}
+	if err := tagRep.AddTagInfo(ctx, targetTag); err != nil {
+		t.Fatalf("AddTagInfo failed: %v", err)
+	}
+
+	latestDataAddresses := map[string]gkill_cache.LatestDataRepositoryAddress{
+		"tag-hit": {TargetID: "timeis-1", DataUpdateTime: baseTime},
+	}
+
+	// 33名前(>32) は Go照合経路、["会議"] 単独は SQL経路。ダミー名はどのタグにも一致しない。
+	manyNames := []string{"会議"}
+	for i := 0; i < 33; i++ {
+		manyNames = append(manyNames, "dummy-"+string(rune('a'+i%26))+string(rune('0'+i/26)))
+	}
+
+	for _, disableCache := range []bool{true, false} {
+		run := func(names []string) map[string]reps.Tag {
+			repositories := &reps.GkillRepositories{TagReps: reps.TagRepositories{tagRep}}
+			repositories.SetLatestDataRepositoryAddresses(latestDataAddresses)
+			findCtx := &FindKyouContext{
+				DisableLatestDataRepositoryCache: disableCache,
+				ParsedFindQuery:                  &find.FindQuery{TimeIsTags: names},
+				Repositories:                     repositories,
+				MatchTimeIsTags:                  map[string]reps.Tag{},
+			}
+			f := &FindFilter{}
+			if _, err := f.findTimeIsTags(ctx, findCtx); err != nil {
+				t.Fatalf("findTimeIsTags failed: %v", err)
+			}
+			return findCtx.MatchTimeIsTags
+		}
+
+		sqlPath := run([]string{"会議"})    // 1名前 → SQL経路
+		goPath := run(manyNames)          // 33名前 → Go照合経路
+
+		if len(sqlPath) != 1 || len(goPath) != 1 {
+			t.Fatalf("disableCache=%v: SQL経路=%d件 Go経路=%d件, どちらも1件のはず", disableCache, len(sqlPath), len(goPath))
+		}
+		for id := range sqlPath {
+			if _, exist := goPath[id]; !exist {
+				t.Errorf("disableCache=%v: SQL経路にしか無いタグ %q(2経路がずれている)", disableCache, id)
+			}
+		}
 	}
 }
 

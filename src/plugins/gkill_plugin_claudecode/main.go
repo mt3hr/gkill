@@ -7,6 +7,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"sync/atomic"
 
 	sdk "github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 )
@@ -67,6 +68,28 @@ func extractPluginDir(args []string) string {
 	return ""
 }
 
+// latestConfig はハンドラが受け取った最新の設定。ビルダから読む。
+var latestConfig atomic.Pointer[sdk.Config]
+
+func rememberConfig(cfg sdk.Config) {
+	if cfg == nil {
+		return
+	}
+	latestConfig.Store(&cfg)
+}
+
+// sourceProviderOf はビルダに渡す「今のデータソースを返す関数」を作る。
+// 設定画面や config.json の編集を反映できるよう、呼ばれるたびに読み直す。
+func sourceProviderOf(pluginDir string) func() expandedSource {
+	return func() expandedSource {
+		var base sdk.Config
+		if stored := latestConfig.Load(); stored != nil {
+			base = *stored
+		}
+		return sourceOf(pluginDir, base)
+	}
+}
+
 // sourcePatternsOf はデータソースのパターン一覧を取り出す。
 //
 // SDKはconfig.jsonをプロセス起動時に一度だけ読むが、この設定はプラグインフォルダの
@@ -108,13 +131,19 @@ func main() {
 	}
 
 	pluginDir := extractPluginDir(os.Args)
+	provider := sourceProviderOf(pluginDir)
 
 	sdk.Run(sdk.Handler{
 		RepName:       repName,
 		DefaultConfig: defaultConfig(),
 
+		// ハンドラは全部「ビルダを起こして、今キャッシュにあるぶんを即返す」。
+		// 初回が空なのは仕様。取り込みはバックグラウンドで進む。
 		FindKyous: func(_ context.Context, q sdk.Query, cfg sdk.Config) ([]sdk.Kyou, error) {
-			messages, err := globalCache.GetMessages(pluginDir, sourceOf(pluginDir, cfg))
+			rememberConfig(cfg)
+			startBuilder(pluginDir, provider)
+
+			messages, err := globalCache.GetMessages(pluginDir)
 			if err != nil {
 				return []sdk.Kyou{}, nil
 			}
@@ -148,8 +177,8 @@ func main() {
 					RelatedTime: relatedTime,
 					CreateTime:  relatedTime,
 					UpdateTime:  updateTime,
-					CreateApp:   "gkill_plugin_claudecode",
-					UpdateApp:   "gkill_plugin_claudecode",
+					CreateApp:   appName,
+					UpdateApp:   appName,
 				})
 			}
 
@@ -160,17 +189,24 @@ func main() {
 		},
 
 		GetContentHTML: func(_ context.Context, kyouID string, cfg sdk.Config) (string, error) {
-			t, err := globalCache.GetMessage(pluginDir, sourceOf(pluginDir, cfg), kyouID)
+			rememberConfig(cfg)
+			startBuilder(pluginDir, provider)
+
+			t, err := globalCache.GetMessage(pluginDir, kyouID)
 			if err != nil {
 				return renderNotFoundHTML(), nil
 			}
 			return renderMessageHTML(t), nil
 		},
 
+		// ここでファイルを走査してはいけない。IsAlive(5秒)と同じスロットに並ぶ。
 		GetConfigHTML: func(_ context.Context, cfg sdk.Config) (string, error) {
+			rememberConfig(cfg)
+			startBuilder(pluginDir, provider)
+
 			patterns := sourcePatternsOf(pluginDir, cfg)
 			src := expandSourcePatterns(patterns)
-			stats := globalCache.GetStats(pluginDir, src)
+			stats := globalCache.GetStats(pluginDir)
 			return renderConfigHTML(pluginDir, stats, patterns, src), nil
 		},
 
@@ -183,8 +219,10 @@ func main() {
 				// (1行の文字列でも parseSourcePatterns は読めるが、配列のほうが手で編集しやすい)。
 				cfg[configKeySourceDirs] = splitSourceDirsForm(v)
 			}
+			rememberConfig(cfg)
 			// 対象から外れたフォルダのターンは、次回のスキャンで
 			// 「消えたファイル」として自動的にキャッシュから削除される。
+			globalBuilder.Kick()
 			return cfg, nil
 		},
 	})

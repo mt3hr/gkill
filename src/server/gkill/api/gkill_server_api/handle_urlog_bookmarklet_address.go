@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/SherClockHolmes/webpush-go"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
@@ -237,29 +236,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	}
 
 	for _, notificationTarget := range notificationTargets {
-		subscription := string(notificationTarget.Subscription)
-		s := &webpush.Subscription{}
-		json.Unmarshal([]byte(subscription), s)
-		resp, err := webpush.SendNotification(contentJSONb, s, &webpush.Options{
-			Subscriber:      "example@example.com",
-			VAPIDPublicKey:  currentServerConfig.GkillNotificationPublicKey,
-			VAPIDPrivateKey: currentServerConfig.GkillNotificationPrivateKey,
-			TTL:             0,
-		})
-		if err != nil {
-			err = fmt.Errorf("error at send gkill notification: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
-		if resp.Body != nil {
-			defer func() {
-				err := resp.Body.Close()
-				if err != nil {
-					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-				}
-			}()
-		}
-		// 登録解除されていたらDBから消す
-		if resp.Status == "410 Gone" {
+		if g.sendWebPushToTarget(r.Context(), string(notificationTarget.Subscription), contentJSONb, currentServerConfig) {
 			_, err := g.GkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.DeleteGkillNotificationTarget(r.Context(), notificationTarget.ID)
 			if err != nil {
 				err = fmt.Errorf("error at delete gkill notification target after got 410 Gone: %w", err)

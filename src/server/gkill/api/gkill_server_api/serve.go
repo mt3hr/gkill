@@ -16,11 +16,33 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
+// securityHeadersMiddleware は全レスポンスに最小限の防御的セキュリティヘッダを付ける。
+// clickjacking・MIMEスニッフィング・リファラ漏れへの defense-in-depth。
+// CSP はSPA・Google Maps・プラグインiframe・PWA の許可設計が要るので、ここでは付けず
+// 別途 report-only から段階導入する（利用者ファイル配信の CSP sandbox は
+// withUserContentSecurityHeaders が個別に付けているので二重にはしない）。
+func securityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		if h.Get("X-Content-Type-Options") == "" {
+			h.Set("X-Content-Type-Options", "nosniff")
+		}
+		if h.Get("X-Frame-Options") == "" {
+			h.Set("X-Frame-Options", "SAMEORIGIN")
+		}
+		if h.Get("Referrer-Policy") == "" {
+			h.Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	var err error
 	router := g.GkillDAOManager.GetRouter()
 	router.Use(g.recoverMiddleware)
 	router.Use(g.accessLogMiddleware)
+	router.Use(securityHeadersMiddleware)
 	router.Use(gzipMiddleware())
 	// --- PathPrefix routes (wrapNoAuth) ---
 	// 利用者のファイルをそのまま返す2経路には、下流(サムネイル・動画・ZIP展開物)まで
@@ -343,6 +365,12 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 		BaseContext: func(_ net.Listener) context.Context {
 			return serveCtx
 		},
+		// slowloris・巨大ヘッダ対策。ReadTimeout/WriteTimeout は大容量アップロードや
+		// 30万件応答・大ファイル配信を途中で切らないよう敢えて 0（無制限）のままにし、
+		// ヘッダ読み込みとアイドル接続にだけ上限を設ける。
+		ReadHeaderTimeout: 20 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		MaxHeaderBytes:    1 << 20, // 1MB
 	}
 
 	go func() {

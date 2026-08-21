@@ -133,7 +133,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | **Repository 4層パターン** | 各データ型のデータアクセスを4層で実装するパターン: (1) `*_repository.go`（インタフェース定義） → (2) `*_repository_sqlite3_impl.go`（SQLite3 直接アクセス） → (3) `*_repository_cached_sqlite3_impl.go`（キャッシュ付きラッパー） → (4) `*_repository_temp_sqlite3_impl.go`（トランザクション用一時リポジトリ） |
 | **GkillRepositories** | ユーザ別の全リポジトリ集約構造体。読み取り用（`XxxReps` = 複数リポジトリの集約）と書き込み用（`WriteXxxRep` = 単一リポジトリ）を保持する |
 | **GkillDAOManager** | 全 DAO の中央管理。`GetRepositories()` でユーザ別リポジトリを取得し、`GetTempReps()` でトランザクション用一時リポジトリを管理する |
-| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（92定義・90登録）を提供する。`gkill_server_api/` パッケージ（handle_*.go 99ファイル）に分割実装 |
+| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（92定義・90登録）を提供する。`gkill_server_api/` パッケージ（handle_*.go 101ファイル）に分割実装 |
 | **TempReps** | KFTL パース時のトランザクション用一時リポジトリ。`CommitTX` で本リポジトリに反映、`DiscardTX` で破棄する |
 | **Rep / 記録保管場所** | データ保存先の SQLite3 ファイル。ユーザ・デバイス・データ型ごとに割り当てられる |
 | **RepType / 記録タイプ** | リポジトリの分類。メモ帳、打刻帳、支出、数値記録、タスク、気分、ブックマーク、リポスト等 |
@@ -241,7 +241,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
 | APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全92エンドポイントのパス・メソッド定義（91 POST + 1 GET。うち90登録） |
-| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 99ファイル、1ハンドラ1ファイル） |
+| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 101ファイル、1ハンドラ1ファイル） |
 | アクセスログミドルウェア | `src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go` | gorilla/mux ミドルウェア。全HTTPリクエストのアクセスログを `ACCESS` レベルで記録 |
 | リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（186ファイル） |
 | エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000410 の定数定義（計409件。ERR000243は欠番） |
@@ -259,7 +259,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | CLIフラグ定義 | `src/server/gkill/main/common/gkill_options/option.go` | --gkill_home_dir 等のフラグとディレクトリ構成 |
 | gkill_server エントリ | `src/server/gkill/main/gkill_server/main.go` | サーバーモード main() |
 | gkill デスクトップ エントリ | `src/server/gkill/main/gkill/main.go` | デスクトップアプリ main() |
-| Go モジュール定義 | `src/server/go.mod` | Go 1.26.4、モジュールパス |
+| Go モジュール定義 | `src/server/go.mod` | Go 1.26.6、モジュールパス |
 
 ### フロントエンド（TypeScript / Vue 3）
 
@@ -286,7 +286,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（918キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（919キー/言語） |
 
 ### その他
 

@@ -194,6 +194,7 @@
     "NLOG_DATE_TITLE": "Datum",
     "NLOG_TIME_TITLE": "Uhrzeit",
     "CLIENT_NLOG_IS_NULL_MESSAGE": "Clientdaten sind ungültig",
+    "KC_RELATED_TIME_IS_BLANK_MESSAGE": "Datum oder Uhrzeit ist nicht eingegeben",
     "NLOG_DATE_TIME_IS_BLANK_MESSAGE": "Datum oder Uhrzeit ist nicht eingegeben",
     "NLOG_SHOP_NAME_IS_BLANK_MESSAGE": "Geschäftsname ist nicht eingegeben",
     "NLOG_AMOUNT_IS_BLANK_MESSAGE": "Betrag ist nicht eingegeben",

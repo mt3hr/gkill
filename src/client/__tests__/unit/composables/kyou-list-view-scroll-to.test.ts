@@ -25,6 +25,8 @@ vi.mock('@/classes/delete-gkill-cache', () => ({
 import '@/classes/api/gkill-api'
 import { useKyouListView } from '@/classes/use-kyou-list-view'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
+import type { Kyou } from '@/classes/datas/kyou'
 import type { KyouListViewProps } from '@/pages/views/kyou-list-view-props'
 import type { KyouListViewEmits } from '@/pages/views/kyou-list-view-emits'
 
@@ -120,5 +122,120 @@ describe('useKyouListView scroll_to', () => {
     await vi.advanceTimersByTimeAsync(50 * 60)
     expect(element.scrollTop, '破棄されたチェーンがスクロール位置を上書きしてはいけない').toBe(100)
     expect(vi.getTimerCount()).toBe(0)
+  })
+})
+
+/**
+ * scroll_to_time は for_mi で分岐する。
+ * 非mi(rykv)は related_time 降順で「time 以降で最も近い行」、
+ * mi列はソート基準時刻の昇順＋未設定(末尾)なので「ソート基準時刻を持つ行のうち
+ * 最初に related_time >= time を満たす行」へ寄せる。
+ * ソート基準時刻の有無判定は kyou-local-insert.ts の has_mi_sort_key を共有する。
+ */
+describe('useKyouListView scroll_to_time', () => {
+  function makeKyou(id: string, data_type: string, related_time: string): Kyou {
+    return { id, data_type, related_time: new Date(related_time) } as unknown as Kyou
+  }
+
+  function buildProps(matched_kyous: Array<Kyou>, for_mi: boolean, mi_sort_type = MiSortType.estimate_start_time): KyouListViewProps {
+    const query = new FindKyouQuery()
+    query.query_id = 'mi-col'
+    query.for_mi = for_mi
+    query.mi_sort_type = mi_sort_type
+    return {
+      query,
+      matched_kyous,
+      application_config: { rykv_image_list_column_number: 3 },
+      kyou_height: 180,
+      width: 400,
+      show_footer: true,
+      is_focused_list: false,
+      closable: true,
+      is_readonly_mi_check: false,
+      enable_context_menu: true,
+      enable_dialog: true,
+    } as unknown as KyouListViewProps
+  }
+
+  /** scroll_to_time が呼ぶ scrollToIndex を差し替えて、寄せた index を観測する */
+  function mountViewWith(props: KyouListViewProps): { view: ReturnType<typeof useKyouListView>, scrollToIndex: ReturnType<typeof vi.fn> } {
+    const view = useKyouListView({ props, emits: noop_emits })
+    const scrollToIndex = vi.fn()
+    view.kyou_list_view.value = { scrollToIndex } as unknown as typeof view.kyou_list_view.value
+    return { view, scrollToIndex }
+  }
+
+  test('(1) for_mi=false の降順では time 以降で最も近い行へ寄せる(現行不変)', async () => {
+    const list = [
+      makeKyou('a', 'kmemo', '2026-08-03T00:00:00.000Z'),
+      makeKyou('b', 'kmemo', '2026-08-02T00:00:00.000Z'),
+      makeKyou('c', 'kmemo', '2026-08-01T00:00:00.000Z'),
+    ]
+    const { view, scrollToIndex } = mountViewWith(buildProps(list, false))
+
+    const result = await view.scroll_to_time(new Date('2026-08-02T12:00:00.000Z'))
+
+    expect(result).toBe(true)
+    // 08-03 は time より新しいので飛ばし、最初に time 以下になる 08-02(index 1)へ
+    expect(scrollToIndex).toHaveBeenCalledWith(1)
+  })
+
+  test('(2) for_mi=true の昇順では対象時刻の直後の行へ寄せる', async () => {
+    const list = [
+      makeKyou('a', 'mi_start', '2026-08-01T00:00:00.000Z'),
+      makeKyou('b', 'mi_start', '2026-08-03T00:00:00.000Z'),
+      makeKyou('c', 'mi_start', '2026-08-05T00:00:00.000Z'),
+    ]
+    const { view, scrollToIndex } = mountViewWith(buildProps(list, true))
+
+    const result = await view.scroll_to_time(new Date('2026-08-02T00:00:00.000Z'))
+
+    expect(result).toBe(true)
+    // 昇順なので最初に time 以上になる 08-03(index 1)へ
+    expect(scrollToIndex).toHaveBeenCalledWith(1)
+  })
+
+  test('(3) for_mi=true では未設定(末尾)セグメントの行はスキップする', async () => {
+    // 末尾の未設定行 c は related_time(作成日時フォールバック)が time 以上でも、
+    // ソート基準時刻を持たないので寄せ先にしない
+    const list = [
+      makeKyou('a', 'mi_start', '2026-08-01T00:00:00.000Z'),
+      makeKyou('b', 'mi_start', '2026-08-03T00:00:00.000Z'),
+      makeKyou('c', 'mi_create', '2026-08-10T00:00:00.000Z'),
+    ]
+    const { view, scrollToIndex } = mountViewWith(buildProps(list, true))
+
+    const result = await view.scroll_to_time(new Date('2026-08-05T00:00:00.000Z'))
+
+    // キー付き行はどれも time 未満、唯一 time 以上の c はキー無しでスキップ → false
+    expect(result).toBe(false)
+    expect(scrollToIndex).not.toHaveBeenCalled()
+  })
+
+  test('(4) for_mi=true で全行が対象より新しいときは先頭のキー付き行へ寄せる', async () => {
+    const list = [
+      makeKyou('a', 'mi_start', '2026-08-05T00:00:00.000Z'),
+      makeKyou('b', 'mi_start', '2026-08-07T00:00:00.000Z'),
+    ]
+    const { view, scrollToIndex } = mountViewWith(buildProps(list, true))
+
+    const result = await view.scroll_to_time(new Date('2026-08-01T00:00:00.000Z'))
+
+    // 全行が time 以上なので最初のキー付き行(index 0)が最も近い
+    expect(result).toBe(true)
+    expect(scrollToIndex).toHaveBeenCalledWith(0)
+  })
+
+  test('(5) for_mi=true でキー付き行がどれも time 未満なら false', async () => {
+    const list = [
+      makeKyou('a', 'mi_start', '2026-08-01T00:00:00.000Z'),
+      makeKyou('b', 'mi_start', '2026-08-03T00:00:00.000Z'),
+    ]
+    const { view, scrollToIndex } = mountViewWith(buildProps(list, true))
+
+    const result = await view.scroll_to_time(new Date('2026-08-10T00:00:00.000Z'))
+
+    expect(result).toBe(false)
+    expect(scrollToIndex).not.toHaveBeenCalled()
   })
 })
