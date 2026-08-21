@@ -3,7 +3,7 @@
 // Optionally persists refresh tokens and client registrations to a JSON file.
 
 import crypto from "node:crypto";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, renameSync } from "node:fs";
 import { dirname } from "node:path";
 
 /** Default TTLs in milliseconds. */
@@ -233,7 +233,13 @@ export class OAuthStore {
     };
     try {
       mkdirSync(dirname(this._persistPath), { recursive: true });
-      writeFileSync(this._persistPath, JSON.stringify(data, null, 2), "utf8");
+      // 一時ファイルへ 0600 で書いてから rename で本体を差し替える（同一ディレクトリなので原子的）。
+      // 素朴な writeFileSync は (1) 既定 0644 で30日有効の refresh token が他ローカルユーザから読める
+      // (2) 書き込み途中でクラッシュすると JSON が壊れ、次回 load が全 refresh token / DCR クライアントを
+      // 捨てて再認可になる、の2点があった。mode 0600 は Windows では実質 no-op（ACL は親から継承）。
+      const tmpPath = `${this._persistPath}.tmp`;
+      writeFileSync(tmpPath, JSON.stringify(data, null, 2), { encoding: "utf8", mode: 0o600 });
+      renameSync(tmpPath, this._persistPath);
     } catch (err) {
       process.stderr.write(`OAuth state save error: ${err.message}\n`);
     }

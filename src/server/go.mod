@@ -1,6 +1,6 @@
 module github.com/mt3hr/gkill/src/server
 
-go 1.26.4
+go 1.26.6
 
 require (
 	github.com/PuerkitoBio/goquery v1.12.0
@@ -20,9 +20,9 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/twpayne/go-gpx v1.5.0
 	golang.org/x/crypto v0.54.0
-	golang.org/x/image v0.44.0
+	golang.org/x/image v0.45.0
 	golang.org/x/sync v0.22.0
-	golang.org/x/text v0.40.0
+	golang.org/x/text v0.41.0
 	modernc.org/sqlite v1.55.0
 )
 

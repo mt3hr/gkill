@@ -134,7 +134,7 @@ type GkillRepositories struct {
 	TempMemoryDBMutex  *sync.RWMutex
 	TempMemoryDB       *sql.DB
 
-	SkipUpdateCache *bool // fsnotifyによるUpdateCacheの再帰トリガーを防止するためのフラグ。GkillDAOManagerのskipUpdateCacheと同じポインタを共有する。
+	SkipUpdateCache *atomic.Int64 // fsnotifyによるUpdateCacheの再帰トリガーを防止するための参照カウンタ。GkillDAOManagerのskipUpdateCacheと同じポインタを共有する。カウント>0のあいだ監視側はキャッシュ更新を止める。
 }
 
 // CachedRepsはキャッシュrepが有効なときの、その実体を型別に控えたもの。
@@ -639,73 +639,45 @@ func (g *GkillRepositories) Close(ctx context.Context) error {
 	if g.updateCacheTicker != nil {
 		g.updateCacheTicker.Stop()
 	}
-	if err := g.TagReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-		return err
-	}
-	if err := g.TextReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-		return err
-	}
-	if err := g.KmemoReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-		return err
-	}
-	if err := g.KCReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-		return err
-	}
-	if err := g.NlogReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-		return err
-	}
-	if err := g.TimeIsReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-		return err
-	}
 
-	if err := g.MiReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-		return err
+	// 全rep種別を漏れなくCloseし、errors.Joinで集約する。1つ失敗しても残りを閉じる。
+	// 以前は最初のエラーで早期returnして残りのハンドルをリークし、
+	// URLogReps / NotificationReps はそもそもCloseされていなかった。
+	// GPSLogRepository は Close を持たない（interfaceに無い）ので対象外。
+	var errs []error
+	closers := []struct {
+		name  string
+		close func(context.Context) error
+	}{
+		{"TagReps", g.TagReps.Close},
+		{"TextReps", g.TextReps.Close},
+		{"KmemoReps", g.KmemoReps.Close},
+		{"KCReps", g.KCReps.Close},
+		{"NlogReps", g.NlogReps.Close},
+		{"TimeIsReps", g.TimeIsReps.Close},
+		{"URLogReps", g.URLogReps.Close},
+		{"MiReps", g.MiReps.Close},
+		{"IDFKyouReps", g.IDFKyouReps.Close},
+		{"ReKyouReps", g.ReKyouReps.Close},
+		{"MiReKyouReps", g.MiReKyouReps.Close},
+		{"GitCommitLogReps", g.GitCommitLogReps.Close},
+		{"LantanaReps", g.LantanaReps.Close},
+		{"NotificationReps", g.NotificationReps.Close},
+		{"LatestDataRepositoryAddressDAO", g.LatestDataRepositoryAddressDAO.Close},
 	}
-	if err := g.IDFKyouReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-		return err
-	}
-	if err := g.ReKyouReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-		return err
-	}
-	if err := g.MiReKyouReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-		return err
-	}
-	if err := g.GitCommitLogReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-		return err
-	}
-	if err := g.LantanaReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-		return err
-	}
-	err := g.LatestDataRepositoryAddressDAO.Close(ctx)
-	if err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+	for _, c := range closers {
+		if err := c.close(ctx); err != nil {
+			err = fmt.Errorf("error at close %s: %w", c.name, err)
+			slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+			errs = append(errs, err)
+		}
 	}
 
 	g.CacheMemoryDB.Close()
 	g.TempMemoryDB.Close()
-	/*
-		for _, rep := range g.GPSLogReps {
-			err := rep.Close(ctx)
-			if err != nil {
-			slog.Log(ctx, gkill_log.Error, "error",  err)
-			}
-		}
-	*/
 	g.userID = ""
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
@@ -730,12 +702,20 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 			return nil, err
 		}
 
-		if repName != latestDataRepositoryAddress.LatestDataRepositoryName {
+		// アドレス表にこのIDの行が無いと GetLatestDataRepositoryAddress は (nil, nil) を返す。
+		// プラグインKyouのIDは表に載らないし、追加直後～次回UpdateCacheまでのネイティブ記録も載らない。
+		// そのときは絞り込まず全repに問い合わせる（アドレス表を使わない GetKyouHistories と同じ意味論）。
+		// nil を素で参照すると panic して update_time 付き取得が 500 になっていた。
+		if latestDataRepositoryAddress != nil && repName != latestDataRepositoryAddress.LatestDataRepositoryName {
 			continue
 		}
 
 		matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 		if err != nil {
+			continue
+		}
+		// repository.go:44-45 の契約どおり、rep.GetKyou は見つからないとき (nil, nil) を返す。
+		if matchKyouInRep == nil {
 			continue
 		}
 		matchKyousInRep = append(matchKyousInRep, *matchKyouInRep)
@@ -765,10 +745,11 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	updateCacheMutex.Lock()
 	defer updateCacheMutex.Unlock()
 
-	// UpdateCache実行中にfsnotifyがファイル変更を検出してUpdateCacheを再帰的にトリガーするのを防ぐ
+	// UpdateCache実行中にfsnotifyがファイル変更を検出してUpdateCacheを再帰的にトリガーするのを防ぐ。
+	// アップロード等のSetSkipIDFと同じ参照カウンタを共有するので、単純なbool代入ではなく増減で入れ子に耐える。
 	if g.SkipUpdateCache != nil {
-		*g.SkipUpdateCache = true
-		defer func() { *g.SkipUpdateCache = false }()
+		g.SkipUpdateCache.Add(1)
+		defer g.SkipUpdateCache.Add(-1)
 	}
 
 	var cancelFunc context.CancelFunc

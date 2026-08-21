@@ -1063,7 +1063,8 @@ WHERE
 	tableName := i.dbName
 	tableNameAlias := i.dbName
 	whereCounter := 0
-	onlyLatestData := false
+	// GenerateFindSQLCommon は query.OnlyLatestData を読まず、この引数しか見ない（既定 false のままだと最古版を返す）。
+	onlyLatestData := query.OnlyLatestData
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"ID"}
 	ignoreFindWord := false
@@ -1163,7 +1164,12 @@ WHERE
 	if len(idfKyous) == 0 {
 		return nil, nil
 	}
-	return &idfKyous[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestIDFKyou := slices.MaxFunc(idfKyous, func(a IDFKyou, b IDFKyou) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestIDFKyou, nil
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyouByTargetFile(ctx context.Context, targetFile string) (*IDFKyou, error) {
@@ -1544,6 +1550,10 @@ WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.Qu
 			addr.TargetID = *targetIDInData
 		}
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return latestDataRepositoryAddresses, nil
 }

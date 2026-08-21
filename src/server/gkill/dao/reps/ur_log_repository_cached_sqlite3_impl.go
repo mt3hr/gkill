@@ -995,7 +995,8 @@ WHERE
 		dataType,
 	}
 	whereCounter := 0
-	onlyLatestData := false
+	// GenerateFindSQLCommon は query.OnlyLatestData を読まず、この引数しか見ない（既定 false のままだと最古版を返す）。
+	onlyLatestData := query.OnlyLatestData
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
 	ignoreFindWord := false
@@ -1086,7 +1087,12 @@ WHERE
 	}
 	// サムネイルはキャッシュに持っていないので、その版を持つrepから読み直す
 	u.fillThumbnailImages(ctx, urlogs)
-	return &urlogs[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestURLog := slices.MaxFunc(urlogs, func(a URLog, b URLog) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestURLog, nil
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]URLog, error) {
@@ -1306,6 +1312,10 @@ WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.Qu
 			addr.TargetID = *targetIDInData
 		}
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return latestDataRepositoryAddresses, nil
 }

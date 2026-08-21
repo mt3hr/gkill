@@ -1184,6 +1184,10 @@ FROM NOTIFICATION
 			}
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	latestDataRepositoryAddresses := make([]gkill_cache.LatestDataRepositoryAddress, 0, len(latestDataRepositoryAddressMap))
 	for _, addr := range latestDataRepositoryAddressMap {
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)

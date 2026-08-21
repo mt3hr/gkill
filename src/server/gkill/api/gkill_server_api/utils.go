@@ -7,7 +7,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"io/fs"
@@ -20,12 +19,12 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/api/safefetch"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
@@ -306,87 +305,11 @@ func publicKey(priv any) any {
 	}
 }
 
-// maxHTTPGetBodyBytes は httpGetBase64Data が取得するレスポンスボディの上限サイズです。
-const maxHTTPGetBodyBytes = 10 * 1024 * 1024
-
-// isDisallowedFetchIP はSSRF対策として、ユーザ指定URLの取得先にできないIPか判定します。
-// loopback・プライベート・リンクローカル・マルチキャスト・未指定アドレスを拒否します。
-func isDisallowedFetchIP(ip net.IP) bool {
-	if ip == nil {
-		return true
-	}
-	return ip.IsLoopback() ||
-		ip.IsPrivate() ||
-		ip.IsUnspecified() ||
-		ip.IsLinkLocalUnicast() ||
-		ip.IsLinkLocalMulticast() ||
-		ip.IsMulticast()
-}
-
-// ssrfSafeHTTPClient はユーザ指定URLの取得に使うHTTPクライアントです。
-// Dialer.Controlで実際の接続先IPを検証するため、DNSリバインディングやリダイレクトで
-// 内部アドレスへ誘導されても接続段階で拒否されます。
-var ssrfSafeHTTPClient = &http.Client{
-	Timeout: 30 * time.Second,
-	Transport: &http.Transport{
-		DialContext: (&net.Dialer{
-			Timeout: 10 * time.Second,
-			Control: func(network, address string, c syscall.RawConn) error {
-				host, _, err := net.SplitHostPort(address)
-				if err != nil {
-					return err
-				}
-				if isDisallowedFetchIP(net.ParseIP(host)) {
-					return fmt.Errorf("blocked request to disallowed address: %s", address)
-				}
-				return nil
-			},
-		}).DialContext,
-	},
-}
-
+// httpGetBase64Data はブックマークレットの画像/favicon 取得用の薄いラッパです。
+// SSRF・スキーム検査・サイズ上限は safefetch パッケージに集約してあり、
+// URLog のタイトル/画像取得（dao/reps/ur_log.go）と同じ防御を共有します。
 func httpGetBase64Data(urlString string) (string, error) {
-	parsedURL, err := url.Parse(urlString)
-	if err != nil {
-		err = fmt.Errorf("error at parse url %s: %w", urlString, err)
-		return "", err
-	}
-	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
-		err = fmt.Errorf("unsupported url scheme %q at http get %s", parsedURL.Scheme, urlString)
-		return "", err
-	}
-
-	req, err := http.NewRequest("GET", urlString, nil)
-	if err != nil {
-		err = fmt.Errorf("error at new http get request: %w", err)
-		return "", err
-	}
-	req.Header.Set("Referer", urlString)
-
-	res, err := ssrfSafeHTTPClient.Do(req)
-	if err != nil {
-		err = fmt.Errorf("error at http get %s: %w", urlString, err)
-		return "", err
-	}
-	defer func() {
-		err := res.Body.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
-
-	b, err := io.ReadAll(io.LimitReader(res.Body, maxHTTPGetBodyBytes+1))
-	if err != nil {
-		err = fmt.Errorf("error at read all body %s: %w", urlString, err)
-		return "", err
-	}
-	if len(b) > maxHTTPGetBodyBytes {
-		err = fmt.Errorf("response body too large at http get %s", urlString)
-		return "", err
-	}
-
-	base64Data := base64.StdEncoding.EncodeToString(b)
-	return base64Data, nil
+	return safefetch.GetBase64Data(urlString)
 }
 
 func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWriter, r *http.Request) bool {

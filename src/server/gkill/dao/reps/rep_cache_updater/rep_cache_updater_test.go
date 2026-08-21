@@ -1,12 +1,13 @@
 package rep_cache_updater
 
 import (
+	"sync/atomic"
 	"testing"
 )
 
 func TestNewFileRepCacheUpdater(t *testing.T) {
-	skip := false
-	updater, err := NewFileRepCacheUpdater(&skip)
+	skip := &atomic.Int64{}
+	updater, err := NewFileRepCacheUpdater(skip)
 	if err != nil {
 		t.Fatalf("NewFileRepCacheUpdater: %v", err)
 	}
@@ -16,8 +17,8 @@ func TestNewFileRepCacheUpdater(t *testing.T) {
 }
 
 func TestFileRepCacheUpdater_Close(t *testing.T) {
-	skip := false
-	updater, err := NewFileRepCacheUpdater(&skip)
+	skip := &atomic.Int64{}
+	updater, err := NewFileRepCacheUpdater(skip)
 	if err != nil {
 		t.Fatalf("NewFileRepCacheUpdater: %v", err)
 	}
@@ -47,17 +48,18 @@ func TestWatchTargetEntry_ShouldSkipAll(t *testing.T) {
 		t.Error("expected shouldSkipAll=true with no owners")
 	}
 
-	// Add owner with skip=false
-	skipFalse := false
-	entry.addOwner("owner1", nil, &skipFalse, nil)
+	// Add owner with skip count 0 (=not skipping)
+	skipZero := &atomic.Int64{}
+	entry.addOwner("owner1", nil, skipZero, nil)
 	if entry.shouldSkipAll() {
-		t.Error("expected shouldSkipAll=false with skip=false owner")
+		t.Error("expected shouldSkipAll=false with skip count 0 owner")
 	}
 
-	// Add owner with skip=true, remove first
+	// Add owner with skip count >0, remove first
 	entry.removeOwner("owner1")
-	skipTrue := true
-	entry.addOwner("owner2", nil, &skipTrue, nil)
+	skipPositive := &atomic.Int64{}
+	skipPositive.Store(1)
+	entry.addOwner("owner2", nil, skipPositive, nil)
 	if !entry.shouldSkipAll() {
 		t.Error("expected shouldSkipAll=true when all owners skip")
 	}
@@ -65,9 +67,9 @@ func TestWatchTargetEntry_ShouldSkipAll(t *testing.T) {
 
 func TestWatchTargetEntry_RemoveOwner(t *testing.T) {
 	entry := newWatchTargetEntry("/test", nil)
-	skipFalse := false
-	entry.addOwner("owner1", nil, &skipFalse, nil)
-	entry.addOwner("owner2", nil, &skipFalse, nil)
+	skipZero := &atomic.Int64{}
+	entry.addOwner("owner1", nil, skipZero, nil)
+	entry.addOwner("owner2", nil, skipZero, nil)
 
 	empty := entry.removeOwner("owner1")
 	if empty {
@@ -77,6 +79,40 @@ func TestWatchTargetEntry_RemoveOwner(t *testing.T) {
 	empty = entry.removeOwner("owner2")
 	if !empty {
 		t.Error("expected empty after removing last owner")
+	}
+}
+
+// TestWatchTargetEntry_SharedSkipCounterOverlap は、共有の参照カウンタで
+// 重なる Pause/Resume を表したとき、外側が生きている間は skip 継続、
+// 全 Resume でのみ再開されることを entry レベルで確認する。
+func TestWatchTargetEntry_SharedSkipCounterOverlap(t *testing.T) {
+	entry := newWatchTargetEntry("/test", nil)
+	skip := &atomic.Int64{}
+	entry.addOwner("owner1", nil, skip, nil)
+
+	// カウント0: 再開中
+	if entry.shouldSkipAll() {
+		t.Error("expected shouldSkipAll=false at count 0")
+	}
+
+	// 外側 Pause
+	skip.Add(1)
+	if !entry.shouldSkipAll() {
+		t.Error("expected shouldSkipAll=true after first pause")
+	}
+
+	// 内側 Pause (重なる)
+	skip.Add(1)
+	// 内側 Resume: まだ外側が生きている
+	skip.Add(-1)
+	if !entry.shouldSkipAll() {
+		t.Error("expected shouldSkipAll=true while outer pause still alive")
+	}
+
+	// 外側 Resume: 全 Resume で再開
+	skip.Add(-1)
+	if entry.shouldSkipAll() {
+		t.Error("expected shouldSkipAll=false after all resume")
 	}
 }
 

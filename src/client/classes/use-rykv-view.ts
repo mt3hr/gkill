@@ -586,6 +586,14 @@ export function useRykvView(options: {
             if (column_index === focused_column_index.value) {
                 dnote_reload_seq.value++
                 await dnote_view.value?.abort()
+                // await(Dnote abort)の間に close_list_view の splice が走ると位置インデックスが
+                // 古くなるので query_id から取り直す。放置すると下の 591/593/604/612 の書き戻しが
+                // 別の列を潰し、query_id 重複による誤配送になる（finally が running_search_count を戻す）。
+                // use-mi-view.ts は Dnote が無く await しないので非該当＝rykv 固有の対処。
+                column_index = querys.value.findIndex(q => q.query_id === query_id)
+                if (column_index === -1) {
+                    return
+                }
             }
 
             querys.value[column_index] = query

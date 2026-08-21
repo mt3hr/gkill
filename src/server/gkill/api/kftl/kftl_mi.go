@@ -183,7 +183,7 @@ func (l *kftlMiLimitTimeStatementLine) ApplyThisLineToRequestMap(_ context.Conte
 	if s == "" {
 		return nil // optional
 	}
-	t, err := parseDateTime(s)
+	t, err := parseDateTime(s, l.ctx.BaseTime)
 	if err != nil {
 		return nil // invalid → skip silently (mirrors TS: isNaN check)
 	}
@@ -217,7 +217,7 @@ func (l *kftlMiEstimateStartTimeStatementLine) ApplyThisLineToRequestMap(_ conte
 	if s == "" {
 		return nil
 	}
-	t, err := parseDateTime(s)
+	t, err := parseDateTime(s, l.ctx.BaseTime)
 	if err != nil {
 		return nil
 	}
@@ -253,7 +253,7 @@ func (l *kftlMiEstimateEndTimeStatementLine) ApplyThisLineToRequestMap(_ context
 	if s == "" {
 		return nil
 	}
-	t, err := parseDateTime(s)
+	t, err := parseDateTime(s, l.ctx.BaseTime)
 	if err != nil {
 		return nil
 	}

@@ -216,6 +216,53 @@ class GkillCredentialStoreTest {
     }
 
     // -----------------------------------------------------------------------
+    // Pinned certificate fingerprint (per host)
+    // -----------------------------------------------------------------------
+    @Test
+    fun getPinnedCertSha256_returnsEmpty_whenNotSet() {
+        assertEquals("", store.getPinnedCertSha256("example.com:9999"))
+    }
+
+    @Test
+    fun setPinnedCertSha256_storesUnderHostScopedKey() {
+        store.setPinnedCertSha256("example.com:9999", "abcd1234")
+        verify { editor.putString("pinned_cert_sha256:example.com:9999", "abcd1234") }
+        verify { editor.apply() }
+        assertEquals("abcd1234", store.getPinnedCertSha256("example.com:9999"))
+    }
+
+    @Test
+    fun pinnedCertSha256_isStoredInPlainText() {
+        // The fingerprint of a public certificate is not a secret, so it is not encrypted.
+        store.setPinnedCertSha256("example.com:9999", "abcd1234")
+        assertEquals("abcd1234", storage["pinned_cert_sha256:example.com:9999"])
+    }
+
+    @Test
+    fun pinnedCertSha256_isScopedPerHost() {
+        store.setPinnedCertSha256("host-a:9999", "aaaa")
+        store.setPinnedCertSha256("host-b:9999", "bbbb")
+        assertEquals("aaaa", store.getPinnedCertSha256("host-a:9999"))
+        assertEquals("bbbb", store.getPinnedCertSha256("host-b:9999"))
+    }
+
+    @Test
+    fun setPinnedCertSha256_removesKey_whenEmpty() {
+        store.setPinnedCertSha256("example.com:9999", "abcd1234")
+        store.setPinnedCertSha256("example.com:9999", "")
+        verify { editor.remove("pinned_cert_sha256:example.com:9999") }
+        assertEquals("", store.getPinnedCertSha256("example.com:9999"))
+    }
+
+    @Test
+    fun clearPinnedCertSha256_removesKey() {
+        store.setPinnedCertSha256("example.com:9999", "abcd1234")
+        store.clearPinnedCertSha256("example.com:9999")
+        verify { editor.remove("pinned_cert_sha256:example.com:9999") }
+        assertEquals("", store.getPinnedCertSha256("example.com:9999"))
+    }
+
+    // -----------------------------------------------------------------------
     // SharedPreferences name
     // -----------------------------------------------------------------------
     @Test

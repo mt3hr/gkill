@@ -101,10 +101,12 @@ export async function cascade_delete_kyou(options: CascadeDeleteKyouOptions): Pr
     await kyou.load_typed_datas()
 
     const targets = await discover_cascade_delete_targets(kyou, gkill_api)
-    const mutate_errors = await mutate_cascade_delete_targets(targets, gkill_api, application_config)
+    const { errors: mutate_errors, succeeded_ids } = await mutate_cascade_delete_targets(targets, gkill_api, application_config)
 
     return {
-        deleted_ids: targets.visited_ids,
+        // 削除に成功した行だけを visited_ids の順序を保って返す。失敗した行は画面に残し、
+        // エラーは errors で表示する（消えると再実行のためのダイアログを開けなくなる）。
+        deleted_ids: targets.visited_ids.filter(id => succeeded_ids.has(id)),
         errors: targets.errors.concat(mutate_errors),
     }
 }
@@ -238,8 +240,11 @@ async function fetch_cascade_delete_node(id: string, gkill_api: GkillAPI): Promi
  * nil sliceがそのまま "errors": null になる）。素のspreadはnullで例外を投げ、
  * 呼び出し元のダイアログクローズまで巻き添えにするので、必ず ?? [] を通す。
  */
-async function mutate_cascade_delete_targets(targets: CascadeDeleteTargets, gkill_api: GkillAPI, application_config: ApplicationConfig): Promise<Array<GkillError>> {
+async function mutate_cascade_delete_targets(targets: CascadeDeleteTargets, gkill_api: GkillAPI, application_config: ApplicationConfig): Promise<{ errors: Array<GkillError>, succeeded_ids: Set<string> }> {
     const errors = new Array<GkillError>()
+    // 実際に削除できた Kyou 行（root / ReKyou / MiReKyou）の id だけを集める。
+    // 付随データ（Tag/Text/Notification）は行ではないので deleted_ids には影響しない。
+    const succeeded_ids = new Set<string>()
     // 履歴のタイムスタンプがばらけないように、update_timeは全件で同じ値にする
     const stamp: UpdateStamp = {
         is_deleted: true,
@@ -277,23 +282,36 @@ async function mutate_cascade_delete_targets(targets: CascadeDeleteTargets, gkil
         const req = new UpdateReKyouRequest()
         req.rekyou = Object.assign(targets.rekyous[i].clone(), stamp)
         const res = await gkill_api.update_rekyou(req)
-        errors.push(...(res.errors ?? []))
+        const res_errors = res.errors ?? []
+        errors.push(...res_errors)
+        if (res_errors.length === 0) {
+            succeeded_ids.add(targets.rekyous[i].id)
+        }
     }
     for (let i = targets.mirekyous.length - 1; i >= 0; i--) {
         const req = new UpdateMiReKyouRequest()
         req.mirekyou = Object.assign(targets.mirekyous[i].clone(), stamp)
         const res = await gkill_api.update_mirekyou(req)
-        errors.push(...(res.errors ?? []))
+        const res_errors = res.errors ?? []
+        errors.push(...res_errors)
+        if (res_errors.length === 0) {
+            succeeded_ids.add(targets.mirekyous[i].id)
+        }
     }
 
     // Kyou自身は最後。先に消すとサーバのFindKyousが参照元を結果から外してしまい、
     // 途中で失敗したときに残骸を再発見できなくなる
-    errors.push(...await delete_kyou_body(targets.root_kyou, gkill_api, stamp))
+    const body_errors = await delete_kyou_body(targets.root_kyou, gkill_api, stamp)
+    errors.push(...body_errors)
+    if (body_errors.length === 0) {
+        succeeded_ids.add(targets.root_kyou.id)
+    }
 
-    // 消した全idのService Workerキャッシュを落とす
+    // 消した全idのService Workerキャッシュを落とす（未削除の行のキャッシュを消しても
+    // 引き直しになるだけで安全。むしろ最新状態を引き直せる）
     await Promise.all(targets.visited_ids.map(id => delete_gkill_kyou_cache(id)))
 
-    return errors
+    return { errors, succeeded_ids }
 }
 
 /**

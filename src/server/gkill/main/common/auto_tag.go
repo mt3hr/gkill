@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"slices"
@@ -17,6 +19,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/spf13/cobra"
 )
@@ -65,45 +68,43 @@ type autoTagTarget struct {
 //
 // すでに同じタグが付いているKyouには何もしないので、何度実行してもよい。
 var AutoTagCmd = &cobra.Command{
-	Use:   "auto_tag",
-	Short: `auto_tag 'user_id'`,
-	Args:  cobra.ArbitraryArgs,
-	Run: func(cmd *cobra.Command, args []string) {
+	Use:           "auto_tag",
+	Short:         `auto_tag 'user_id'`,
+	Args:          cobra.ArbitraryArgs,
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			cmd.Usage()
-			return
+			return cmd.Usage()
 		}
 		ctx := cmd.Context()
 
 		prefixRules, repTypeRules, err := parseAutoTagRules(autoTagByRepPrefixArgs, autoTagByRepNameArgs)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
+			// 指定の書式が誤り。usageを見せてからエラーで返す(exit 1)。
 			cmd.Usage()
-			return
+			return err
 		}
 		if len(prefixRules) == 0 && len(repTypeRules) == 0 {
-			fmt.Fprintf(os.Stderr, "--tag_by_rep_prefix か --tag_by_rep_name を1つ以上指定してください\n")
 			cmd.Usage()
-			return
+			return errors.New("--tag_by_rep_prefix か --tag_by_rep_name を1つ以上指定してください")
 		}
 
 		endpoint, err := ResolveLocalServerEndpoint(ctx)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			return
+			return fmt.Errorf("error at resolve local server endpoint: %w", err)
 		}
 		configDBRootDir := os.ExpandEnv(gkill_options.ConfigDir)
 
-		failed := false
+		// 1ユーザが失敗しても残りは続け、最後にまとめて返す。
+		// os.Exit(1)で抜けると defer(cleanupSession) を飛ばして短命セッションを消し損ねるので使わない。
+		var errs []error
 		for _, userID := range args {
 			if err := autoTagForUser(ctx, endpoint, configDBRootDir, userID, prefixRules, repTypeRules); err != nil {
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				failed = true
+				errs = append(errs, err)
 			}
 		}
-		if failed {
-			os.Exit(1)
-		}
+		return errors.Join(errs...)
 	},
 }
 
@@ -136,7 +137,7 @@ func parseAutoTagRules(prefixArgs []string, repTypeArgs []string) ([]autoTagPref
 
 // autoTagForUser は1ユーザぶんのタグ付与を行う。
 func autoTagForUser(ctx context.Context, endpoint *LocalServerEndpoint, configDBRootDir string, userID string, prefixRules []autoTagPrefixRule, repTypeRules []string) error {
-	sessionID, cleanupSession, err := issueLocalSession(ctx, configDBRootDir, endpoint.Device, userID)
+	sessionID, refreshSession, cleanupSession, err := issueLocalSession(ctx, configDBRootDir, endpoint.Device, userID)
 	if err != nil {
 		return fmt.Errorf("error at issue local session user id = %s: %w", userID, err)
 	}
@@ -160,7 +161,17 @@ func autoTagForUser(ctx context.Context, endpoint *LocalServerEndpoint, configDB
 		fmt.Printf("%s: no target\n", userID)
 		return nil
 	}
-	return addAutoTags(ctx, client, userID, targets)
+	return addAutoTags(ctx, client, userID, targets, refreshSession)
+}
+
+// autoTagRefreshInterval は、この件数タグを付けるごとにセッションのTTLを延長する間隔。
+// 進捗印字と同じ区切り。大量付与でセッションが期限切れになるのを防ぐ。
+const autoTagRefreshInterval = 500
+
+// shouldRefreshAutoTagSession は、これまでに付けた件数addedがrefresh間隔の区切りかを返す。
+// added==0(まだ1件も付けていない)では延長しない。
+func shouldRefreshAutoTagSession(added int) bool {
+	return added > 0 && added%autoTagRefreshInterval == 0
 }
 
 // collectByRepPrefix は接頭辞ルールの対象を集める。
@@ -277,7 +288,8 @@ func autoTagID(targetID string, tagName string) string {
 }
 
 // addAutoTags は集めた対象へタグを付ける。
-func addAutoTags(ctx context.Context, client *autoTagAPIClient, userID string, targets map[string]*autoTagTarget) error {
+// refresh は500件ごとの進捗印字に相乗りしてセッションのTTLを延ばす(長時間実行での期限切れ防止)。
+func addAutoTags(ctx context.Context, client *autoTagAPIClient, userID string, targets map[string]*autoTagTarget, refresh func() error) error {
 	runAt := time.Now()
 
 	targetIDs := make([]string, 0, len(targets))
@@ -324,8 +336,14 @@ func addAutoTags(ctx context.Context, client *autoTagAPIClient, userID string, t
 				continue
 			}
 			added++
-			if added%500 == 0 {
+			if shouldRefreshAutoTagSession(added) {
 				fmt.Printf("%s: added %d tags\n", userID, added)
+				// セッションのTTLを延長する。失敗しても付与は続ける(次の区切りで挽回できる)。
+				if refresh != nil {
+					if err := refresh(); err != nil {
+						slog.Log(ctx, gkill_log.Warn, "error at refresh auto_tag session ttl", "user_id", fmt.Sprintf("%q", userID), "error", fmt.Sprintf("%q", err))
+					}
+				}
 			}
 		}
 	}

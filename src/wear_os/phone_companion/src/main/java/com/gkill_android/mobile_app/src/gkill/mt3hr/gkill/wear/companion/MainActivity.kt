@@ -5,6 +5,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +62,8 @@ class MainActivity : AppCompatActivity() {
             layoutParams = lp
         }
         val cbAllowSelfSigned = android.widget.CheckBox(this).apply {
-            text = "自己署名証明書を許可 (localhost等の自己署名HTTPSサーバー向け。証明書検証が無効になります)"
+            text = "自己署名証明書を許可 (localhost等の自己署名HTTPSサーバー向け。" +
+                    "接続テストで証明書のフィンガープリントを確認してピン留めします)"
             isChecked = store.getAllowSelfSignedCert()
             layoutParams = lp
         }
@@ -108,19 +110,81 @@ class MainActivity : AppCompatActivity() {
             tvStatus.text = "接続テスト中..."
 
             CoroutineScope(Dispatchers.IO).launch {
-                val client = GkillApiClient(serverUrl, allowSelfSigned)
-                val (sessionId, errorMsg) = client.loginWithError(userId, passwordSha256)
-                withContext(Dispatchers.Main) {
-                    if (sessionId != null) {
-                        store.setSessionId(sessionId)
-                        tvStatus.text = "接続成功！ セッションID: ${sessionId.take(8)}..."
-                    } else {
-                        tvStatus.text = "接続失敗: $errorMsg"
-                    }
-                }
+                attemptConnect(serverUrl, userId, passwordSha256, allowSelfSigned, tvStatus, allowPinPrompt = true)
             }
         }
 
+    }
+
+    /**
+     * ログインを試み、結果を [tvStatus] に反映する。
+     *
+     * ピン留めモード（[allowSelfSigned]）で自己署名証明書が拒否されたときは、
+     * 提示されたフィンガープリントを確認ダイアログで表示し、利用者が明示承認した場合だけ
+     * ピンを保存して1回だけ再接続する（[allowPinPrompt]=false で再入し、確認ループを防ぐ）。
+     */
+    private suspend fun attemptConnect(
+        serverUrl: String,
+        userId: String,
+        passwordSha256: String,
+        allowSelfSigned: Boolean,
+        tvStatus: TextView,
+        allowPinPrompt: Boolean
+    ) {
+        val hostKey = GkillServerTrust.hostKeyOf(serverUrl)
+        val pin = store.getPinnedCertSha256(hostKey).ifEmpty { null }
+        val client = GkillApiClient(serverUrl, allowSelfSigned, pin)
+        val (sessionId, errorMsg) = client.loginWithError(userId, passwordSha256)
+
+        if (sessionId != null) {
+            store.setSessionId(sessionId)
+            withContext(Dispatchers.Main) {
+                tvStatus.text = "接続成功！ セッションID: ${sessionId.take(8)}..."
+            }
+            return
+        }
+
+        val capturedFingerprint = client.lastServerCertSha256
+        if (allowPinPrompt && allowSelfSigned && client.lastServerCertRejected && capturedFingerprint != null) {
+            withContext(Dispatchers.Main) {
+                showPinConfirmDialog(capturedFingerprint) { approved ->
+                    if (approved) {
+                        store.setPinnedCertSha256(hostKey, capturedFingerprint)
+                        tvStatus.text = "証明書を保存しました。再接続中..."
+                        CoroutineScope(Dispatchers.IO).launch {
+                            // ピン保存後の再接続。確認ループを避けるため再プロンプトは無効
+                            attemptConnect(serverUrl, userId, passwordSha256, allowSelfSigned, tvStatus, allowPinPrompt = false)
+                        }
+                    } else {
+                        tvStatus.text = "接続失敗: 証明書が未承認です"
+                    }
+                }
+            }
+            return
+        }
+
+        withContext(Dispatchers.Main) {
+            tvStatus.text = "接続失敗: $errorMsg"
+        }
+    }
+
+    /**
+     * 未知の自己署名証明書のフィンガープリントを表示し、ピン留めの可否を利用者に尋ねる。
+     * [onResult] は承認/拒否を渡してメインスレッドで呼ばれる。
+     */
+    private fun showPinConfirmDialog(fingerprintHex: String, onResult: (Boolean) -> Unit) {
+        AlertDialog.Builder(this)
+            .setTitle("証明書を確認してください")
+            .setMessage(
+                "サーバーの証明書は既知のCAで検証できませんでした。\n" +
+                        "この自己署名証明書を信頼して保存しますか？\n\n" +
+                        "SHA-256:\n${GkillServerTrust.formatFingerprint(fingerprintHex)}\n\n" +
+                        "心当たりが無い場合は「拒否」してください（中間者攻撃の可能性があります）。"
+            )
+            .setCancelable(false)
+            .setPositiveButton("信頼して保存") { _, _ -> onResult(true) }
+            .setNegativeButton("拒否") { _, _ -> onResult(false) }
+            .show()
     }
 
     private fun sha256(input: String): String {

@@ -20,7 +20,7 @@ wear_os/
 │   ├── build.gradle.kts
 │   └── src/main/
 │       ├── AndroidManifest.xml
-│       ├── java/.../wear/companion/    # Kotlin ソース（5ファイル）
+│       ├── java/.../wear/companion/    # Kotlin ソース（9ファイル）
 │       └── res/
 │           └── values/strings.xml
 └── watch_app/                 # ウォッチ側アプリモジュール
@@ -34,17 +34,21 @@ wear_os/
 
 ## モジュール構成
 
-### `phone_companion/` — スマホ側コンパニオンサービス（5ファイル）
+### `phone_companion/` — スマホ側コンパニオンサービス（9ファイル）
 
 ウォッチからのリクエストを受け取り、gkill_server API を呼び出すサービス。
 
 | ファイル | 役割 |
 |---------|------|
-| `GkillWearableListenerService.kt` | Wearable Data Layer のメッセージリスナー。ウォッチからのテンプレート要求・KFTL 送信を処理 |
+| `GkillWearableListenerService.kt` | Wearable Data Layer のメッセージリスナー。受け取ったリクエストは WorkManager へ委譲して Service 破棄を跨いで処理する |
+| `WearRequestWorker.kt` | ウォッチからのリクエストを実際に処理する CoroutineWorker（資格情報ロード→API 呼び出し→結果送信。Service 破棄・プロセス死を跨ぐ） |
+| `WearRequestHandler.kt` | テンプレート取得・KFTL 送信・実行中取得・終了の4処理の本体（Service から抽出し MockWebServer で単体テスト可能に） |
+| `WearSubmitLedger.kt` | 直近成功した KFTL 送信の台帳。同一内容の再配送を重複登録せず確認へ回す（share-target-dedup 契約） |
 | `GkillApiClient.kt` | gkill_server の HTTP API を呼び出すクライアント（login, get_application_config, submit_kftl_text） |
-| `GkillCredentialStore.kt` | ユーザ認証情報（user_id, password）の安全な保存・読み取り |
+| `GkillServerTrust.kt` | TLS 検証。プラットフォーム既定で検証し、失敗時のみ保存済み SHA-256 フィンガープリント一致（TOFU/ピン留め）で許可 |
+| `GkillCredentialStore.kt` | ユーザ認証情報（user_id, password）と証明書ピンの安全な保存・読み取り |
 | `GkillSecretCipher.kt` | 認証情報の暗号化・復号ユーティリティ |
-| `MainActivity.kt` | コンパニオンアプリのメインアクティビティ（認証情報設定画面） |
+| `MainActivity.kt` | コンパニオンアプリのメインアクティビティ（認証情報設定画面・証明書ピンの承認） |
 
 ### `watch_app/` — ウォッチ側アプリ（13ファイル）
 
