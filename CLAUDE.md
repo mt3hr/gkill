@@ -427,6 +427,12 @@ rykv / mi が同じものを使う。守るべき約束:
 
 **行判定の高さにパーセントを渡さない:** `classes/kyou-row-height.ts` の `is_row_height()` は高さを `Number.parseFloat` して 120 未満なら一覧の行とみなす。`parseFloat('80%')` は **80** なので、詳細ペインやダイアログでパーセントを渡すと行扱いになり、`mi-re-kyou-view.vue` の参照先ブロック（`v-if="!is_compact"`）が丸ごと消える。行ではない場所は `'unset'` か `'auto'` を渡すこと。例外は画像一覧（`kyou-list-view.vue` の `is_image_only`）だけで、200pxのセルに詰めるため意図的に `'100%'` を渡している。`__tests__/unit/classes/kyou-view-height-source-scan.test.ts` がソース走査で守る。
 
+**表示用の文字列に HTML タグのリテラルを埋めない**（2026-08-21）。表示側は `{{ }}` 補間で Vue がエスケープするので、剥がし忘れた画面では**タグが文字としてそのまま見える**。実例: `classes/format-date-time.ts` の `format_duration()` が `"23時間 6分 <br>（23.1時間）"` を返し、3つの描画点が銘々 `.replace("<br>", …)` で剥がす一方、**Dnote の集計リスト（`aggregated-list-item.vue`）と相関グラフ（`dnote-correlation-graph-view.vue` の `point_description`）は剥がしておらず `<br>` が見えていた**。
+- 区切りが要るなら**本物の改行**（`format-date-time.ts` の `DURATION_LINE_SEPARATOR`）を使う。`white-space` が既定のままの場所では空白1個へ畳まれるので、**剥がし忘れの壊れ方が「今までどおり1行で出る」に変わる**のが要点
+- 改行として見せたい場所**だけ**が `white-space: pre-line` で opt-in する（今は `aggregated-list-item.vue` の値 span1つだけ）。値が2行になると `<td>` 既定の `vertical-align: middle` で前後の prefix/suffix が中間へ浮くので、同じ scoped style で `top` に揃えてある
+- 1行で見せる場所は `to_single_line()` に通す。**`.replace(文字列, …)` を手書きしない**（最初の1個しか置換しないので区切りが増えると黙って壊れる）。相関グラフの SVG `<title>` は**ネイティブのツールチップとして改行を実際に描画する**ので、ここだけは CSS 任せにできず畳む処理が必須
+- 守るテスト: `format-date-time.test.ts` / `aggregate-targets.test.ts`（TimeIs の合計・平均）/ `convention-source-scan.test.ts` の「表示文字列に HTML タグのリテラルを埋めていない」「集計リストの値が pre-line で改行を見せている」。走査の対象は `classes/**/*.ts` だけ（`.vue` のテンプレートには `time-is-view.vue` の `<br />` のような正当な用例がある）
+
 **設定は「適用」を押すまでサーバへ送らない:** ApplicationConfig の子ダイアログ（tag/rep/rep_type/device/kftl_template/mi_board の struct 系6つ + Dnote / Ryuu / Dashboard / PlaingTimeIs）の「適用」は**組み立てだけ**で、API を1つも呼ばない。送信は `use-application-config-view.ts` の `update_application_config()` の1箇所に閉じている。子の適用先は `cloned_application_config` **だけ**で、`props.application_config` を直接書いてはいけない（書くと設定画面のキャンセルが効かなくなる）。props の差し替え（板ツリー/タグツリーの追随）で未適用の編集が消えないようにするのは `has_pending_child_edits` の役目。ロケールとダークテーマは選ばせるために即時プレビューするので、`cancel_pending_changes()` で開いた時点の値へ戻す（×・Escape・キャンセルのどれでも通るよう `application-config-dialog.vue` の `hide()` から呼ぶ）。**例外は ServerConfigDialog** ―― 別エンティティ（`update_server_config`）なので自分の「適用」で送る。
 
 **Naming convention (files):** `{action}-{feature}-{entity}-{component}` (e.g., `add-dnote-item-view.vue`, `confirm-delete-ryuu-item-dialog.vue`), kebab-case. Dnote and Ryuu follow the same pattern.

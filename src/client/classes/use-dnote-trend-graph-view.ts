@@ -9,7 +9,7 @@ import type DnoteTrendGraphViewEmits from '@/pages/views/dnote-trend-graph-view-
 import type { ComponentRef } from '@/classes/component-ref'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import { format_day_of_week } from '@/classes/format-date-time'
+import { format_day_of_week, to_single_line } from '@/classes/format-date-time'
 import { useDeviceKind } from '@/classes/use-device-kind'
 
 export function useDnoteTrendGraphView(options: {
@@ -77,7 +77,7 @@ export function useDnoteTrendGraphView(options: {
             // VSparklineは1点のとき点を複製するため、indexが範囲外になり得る。クランプして必ず表示する
             const point = trend_points.value[Math.min(item.index, trend_points.value.length - 1)]
             if (!point) return ""
-            const value_string = (point.value_string !== "" ? point.value_string : point.value.toString()).replace("<br>", "")
+            const value_string = to_single_line(point.value_string !== "" ? point.value_string : point.value.toString())
             let label = point.label
             // 日単位のときは曜日も表示する
             if (model_value.value?.granularity === 'day') {
