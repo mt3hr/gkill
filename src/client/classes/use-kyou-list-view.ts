@@ -4,6 +4,7 @@ import type { VVirtualScroll } from 'vuetify/components'
 import type { KyouListViewProps } from '@/pages/views/kyou-list-view-props'
 import type { KyouListViewEmits } from '@/pages/views/kyou-list-view-emits'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
+import { has_mi_sort_key } from '@/classes/kyou-local-insert'
 
 export function useKyouListView(options: {
     props: KyouListViewProps,
@@ -177,14 +178,36 @@ export function useKyouListView(options: {
     }
 
     async function scroll_to_time(time: Date): Promise<boolean> {
-        // scroll_to_kyou と同じ理由で生の配列を読む(こちらはフォーカス時刻が変わるたびに走る)
+        // scroll_to_kyou と同じ理由で生の配列を読む(こちらはフォーカス時刻が変わるたびに走る)。
+        // 二分探索にしないのも scroll_to_kyou と同じ ―― mi列は単調でないので
+        // 分岐を間違えると黙って違う場所へ飛ぶ。
         const raw_matched_kyous = toRaw(props.matched_kyous)
         let index = -1;
-        for (let i = 0; i < raw_matched_kyous.length; i++) {
-            const kyou = raw_matched_kyous[i]
-            if (kyou.related_time.getTime() <= time.getTime()) {
-                index = i
-                break
+        if (props.query.for_mi) {
+            // mi列はソート基準時刻の昇順＋未設定(末尾)。
+            // 「ソート基準時刻を持つ行のうち最初に related_time >= time を満たす行」へ寄せる。
+            // 未設定セグメントの行は related_time が作成日時なので飛ばす。
+            // 「ソート基準時刻を持つか」の判定は kyou-local-insert.ts の
+            // has_mi_sort_key を共有する(判定を書き写して二重管理にしない)。
+            for (let i = 0; i < raw_matched_kyous.length; i++) {
+                const kyou = raw_matched_kyous[i]
+                if (!has_mi_sort_key(kyou, props.query.mi_sort_type)) {
+                    continue
+                }
+                if (kyou.related_time.getTime() >= time.getTime()) {
+                    index = i
+                    break
+                }
+            }
+        } else {
+            // rykvは related_time 降順。上から見て最初に time 以下になった行が
+            // 「time 以降で最も近い行」
+            for (let i = 0; i < raw_matched_kyous.length; i++) {
+                const kyou = raw_matched_kyous[i]
+                if (kyou.related_time.getTime() <= time.getTime()) {
+                    index = i
+                    break
+                }
             }
         }
 

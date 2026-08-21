@@ -201,9 +201,19 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 			base64Reader := bufio.NewReader(strings.NewReader(encoded))
 			decoder := base64.NewDecoder(base64.StdEncoding, base64Reader)
 
-			file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+			// 同一ディレクトリの一時ファイルへ書いてから rename で確定する。
+			// 直接 O_TRUNC で開くと Override 時に io.Copy が途中失敗すると原本が壊れる。
+			// rename 成功まで原本は無傷（ZIP展開の tmp+rename と同じ流儀）。
+			uploadFailed := func() {
+				slog.Log(r.Context(), gkill_log.Debug, "error", "error", "upload failed")
+				gkillErrorCh <- &message.GkillError{
+					ErrorCode:    message.GetRepPathError,
+					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
+				}
+			}
+			tmpFile, err := os.CreateTemp(filepath.Dir(filename), ".upload-*")
 			if err != nil {
-				err := fmt.Errorf("error at open file filename= %s: %w", filename, err)
+				err := fmt.Errorf("error at create temp file for %s: %w", filename, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 				gkillError = &message.GkillError{
 					ErrorCode:    message.GetRepPathError,
@@ -212,20 +222,28 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 				gkillErrorCh <- gkillError
 				return
 			}
-			defer func() {
-				err := file.Close()
-				if err != nil {
-					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-				}
-			}()
-			_, err = io.Copy(file, decoder)
-			if err != nil {
-				err = fmt.Errorf("error at copy file content filename= %s: %w", filename, err)
+			tmpName := tmpFile.Name()
+			_, copyErr := io.Copy(tmpFile, decoder)
+			closeErr := tmpFile.Close()
+			if copyErr != nil {
+				os.Remove(tmpName)
+				err = fmt.Errorf("error at copy file content filename= %s: %w", filename, copyErr)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-				gkillErrorCh <- &message.GkillError{
-					ErrorCode:    message.GetRepPathError,
-					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
-				}
+				uploadFailed()
+				return
+			}
+			if closeErr != nil {
+				os.Remove(tmpName)
+				err = fmt.Errorf("error at close temp file for %s: %w", filename, closeErr)
+				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+				uploadFailed()
+				return
+			}
+			if err := os.Rename(tmpName, filename); err != nil {
+				os.Remove(tmpName)
+				err = fmt.Errorf("error at rename temp file to %s: %w", filename, err)
+				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+				uploadFailed()
 				return
 			}
 			os.Chtimes(filename, time.Now(), fileInfo.LastModified)

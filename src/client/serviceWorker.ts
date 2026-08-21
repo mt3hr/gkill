@@ -4,7 +4,7 @@ import { clientsClaim } from 'workbox-core'
 import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL, } from 'workbox-precaching'
 import { registerRoute, NavigationRoute } from 'workbox-routing'
 import { CacheFirst } from 'workbox-strategies'
-import { should_cache_response, is_successful_gkill_response, parse_bool_loose, KYOU_CACHE_NAME, CONFIG_CACHE_NAME } from './classes/service-worker-utils';
+import { should_cache_response, should_cache_for_session, is_successful_gkill_response, parse_bool_loose, KYOU_CACHE_NAME, CONFIG_CACHE_NAME } from './classes/service-worker-utils';
 import {
   SHARE_FORCE_SAVE_FORM_KEY,
   SHARE_TARGET_PATH,
@@ -21,6 +21,18 @@ declare let clients: Clients;
 declare let self: ServiceWorkerGlobalScope
 
 export default null
+
+// M-9: 現在のセッションIDを cookieStore から取る（無い環境では undefined）。
+// アカウント切替後に旧セッションの飛行中応答が別利用者へキャッシュされるのを防ぐ判定に使う。
+async function get_current_session_id_for_cache(): Promise<string | undefined> {
+  try {
+    if (typeof cookieStore !== 'undefined') {
+      const cookie = await cookieStore.get('gkill_session_id')
+      return cookie?.value ?? undefined
+    }
+  } catch { /* cookieStore 非対応。フォールバックする */ }
+  return undefined
+}
 
 self.skipWaiting()
 clientsClaim()
@@ -132,7 +144,9 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
           const response = await fetch(req_clone2)
           if (await should_cache_response(response, true)) {
-            kyou_cache.put(cache_key, response.clone())
+            if (should_cache_for_session(body.session_id, await get_current_session_id_for_cache())) {
+              kyou_cache.put(cache_key, response.clone())
+            }
           }
           return response
 
@@ -169,7 +183,9 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
           const response = await fetch(req_clone2)
           if (await should_cache_response(response, true)) {
-            kyou_cache.put(cache_key, response.clone())
+            if (should_cache_for_session(body.session_id, await get_current_session_id_for_cache())) {
+              kyou_cache.put(cache_key, response.clone())
+            }
           }
           return response
 
@@ -210,7 +226,9 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
           const response = await fetch(req_clone1)
           if (await should_cache_response(response, false)) {
-            config_cache.put(cache_key, response.clone())
+            if (should_cache_for_session(body.session_id, await get_current_session_id_for_cache())) {
+              config_cache.put(cache_key, response.clone())
+            }
           }
           return response
         } catch (err: unknown) {

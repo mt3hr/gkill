@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -164,7 +165,8 @@ func collectSourceFiles(src expandedSource, matches func(name string) bool) []st
 	for _, dir := range src.Dirs {
 		_ = filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 			if err != nil {
-				// 読めないディレクトリはスキップして続行する
+				// 読めないエントリはスキップして続行するが、可観測性のため stderr に残す（stdout はプロトコルチャネル）。
+				fmt.Fprintf(os.Stderr, "source scan: skipped unreadable path %q: %v\n", path, err)
 				return nil //nolint:nilerr
 			}
 			if d.IsDir() {

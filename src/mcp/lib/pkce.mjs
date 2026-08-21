@@ -1,5 +1,6 @@
 // PKCE (Proof Key for Code Exchange) utilities for OAuth 2.1.
-// Supports S256 (SHA-256) and plain challenge methods per RFC 7636.
+// S256 (SHA-256) のみをサポートする。OAuth 2.1 / MCP は S256 を必須とし、
+// plain は verifier==challenge のため中間者が challenge を書き換えるだけで無効化できる。
 
 import crypto from "node:crypto";
 
@@ -7,7 +8,7 @@ import crypto from "node:crypto";
  * Verify a PKCE code_verifier against a stored code_challenge.
  * @param {string} codeVerifier - The verifier sent by the client in the token request.
  * @param {string} codeChallenge - The challenge stored during the authorization request.
- * @param {string} method - "S256" or "plain".
+ * @param {string} method - "S256" のみ許可（plain は不可）。
  * @returns {boolean} True if the verifier matches the challenge.
  */
 export function verifyCodeChallenge(codeVerifier, codeChallenge, method) {
@@ -17,10 +18,6 @@ export function verifyCodeChallenge(codeVerifier, codeChallenge, method) {
     const hash = crypto.createHash("sha256").update(codeVerifier, "ascii").digest();
     const computed = hash.toString("base64url");
     return computed === codeChallenge;
-  }
-
-  if (method === "plain") {
-    return codeVerifier === codeChallenge;
   }
 
   return false;
@@ -40,9 +37,10 @@ export function isValidCodeVerifier(value) {
 
 /**
  * Validate that a code_challenge_method is supported.
+ * S256 のみ許可（plain は受理しない）。
  * @param {string} method
  * @returns {boolean}
  */
 export function isSupportedChallengeMethod(method) {
-  return method === "S256" || method === "plain";
+  return method === "S256";
 }

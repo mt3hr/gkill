@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"slices"
 	"sync"
+	"sync/atomic"
 
 	"github.com/gorilla/mux"
 	"github.com/mattn/go-zglob"
@@ -47,13 +48,18 @@ type GkillDAOManager struct {
 	router    *mux.Router
 	IDFIgnore []string
 
-	skipUpdateCache *bool
+	// skipUpdateCache は「いまキャッシュ更新を止めているか」を表す参照カウンタ。
+	// アップロード処理(SetSkipIDF)とGkillRepositories.UpdateCacheが同じカウンタを共有し、
+	// カウント>0のあいだ監視側(fsnotify)はキャッシュ更新を止める。
+	// 単一の*boolだと重なるPause/Resumeの先に終わった方がフラグを倒し、
+	// 別のPauseが生きているのに監視が走って変更を取りこぼすため、参照カウントにしてある。
+	skipUpdateCache *atomic.Int64
 }
 
 func NewGkillDAOManager() (*GkillDAOManager, error) {
-	skipUpdateCache := false
+	skipUpdateCache := &atomic.Int64{}
 
-	fileRepWatchCacheUpdater, err := rep_cache_updater.NewFileRepCacheUpdater(&skipUpdateCache)
+	fileRepWatchCacheUpdater, err := rep_cache_updater.NewFileRepCacheUpdater(skipUpdateCache)
 	if err != nil {
 		err = fmt.Errorf("error at new file rep cache updater: %w", err)
 		return nil, err
@@ -64,7 +70,7 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		router:                   &mux.Router{},
 		IDFIgnore:                gkill_options.IDFIgnore,
 		fileRepWatchCacheUpdater: fileRepWatchCacheUpdater,
-		skipUpdateCache:          &skipUpdateCache,
+		skipUpdateCache:          skipUpdateCache,
 	}
 
 	configDBRootDir := os.ExpandEnv(gkill_options.ConfigDir)
@@ -1280,11 +1286,12 @@ func (g *GkillDAOManager) lookupNotificator(userID string, device string) (*Gkil
 
 func (g *GkillDAOManager) Close() error {
 	ctx := context.Background()
-	var allErrors error
-	var err error
+	// 全Closeのエラーを漏れなく集約する。以前は集約条件が逆で、既存エラーがあるときに
+	// 新しいエラーで上書きして古い方を捨て、最終 return も末尾の err しか返していなかった。
+	var errs []error
 
 	if e := g.fileRepWatchCacheUpdater.Close(); e != nil {
-		err = fmt.Errorf("error at close file rep watch cache updater. : %w : %w", e, err)
+		errs = append(errs, fmt.Errorf("error at close file rep watch cache updater: %w", e))
 	}
 
 	// マップをいったん切り離してからクローズする。
@@ -1301,69 +1308,44 @@ func (g *GkillDAOManager) Close() error {
 
 	for userID, repInDevices := range gkillRepositories {
 		for repName, repInDevice := range repInDevices {
-			err = repInDevice.Close(ctx)
-			if err != nil {
-				if allErrors != nil {
-					allErrors = fmt.Errorf("error at close repository user id = %s rep name %s: %w", userID, repName, err)
-				} else {
-					allErrors = fmt.Errorf("error at close repository user id = %s rep name %s", userID, repName)
-				}
+			if err := repInDevice.Close(ctx); err != nil {
+				errs = append(errs, fmt.Errorf("error at close repository user id = %s rep name %s: %w", userID, repName, err))
 			}
-
 		}
 	}
 
 	for userID, notificatorInDevices := range gkillNotificators {
 		for _, notificator := range notificatorInDevices {
-			err = notificator.Close(ctx)
-			if err != nil {
-				if allErrors != nil {
-					allErrors = fmt.Errorf("error at close gkill notificator user id = %s: %w", userID, err)
-				} else {
-					allErrors = fmt.Errorf("error at close gkill notificator user id = %s", userID)
-				}
+			if err := notificator.Close(ctx); err != nil {
+				errs = append(errs, fmt.Errorf("error at close gkill notificator user id = %s: %w", userID, err))
 			}
 		}
 	}
 
 	for userID, pm := range pluginManagers {
 		if e := pm.CloseAll(ctx); e != nil {
-			if allErrors != nil {
-				allErrors = fmt.Errorf("error at close plugins user id = %s: %w: %w", userID, e, allErrors)
-			} else {
-				allErrors = fmt.Errorf("error at close plugins user id = %s: %w", userID, e)
-			}
+			errs = append(errs, fmt.Errorf("error at close plugins user id = %s: %w", userID, e))
 		}
 	}
 
 	if g.ConfigDAOs != nil {
-		err = g.ConfigDAOs.AccountDAO.Close(ctx)
-		if err != nil {
-			return err
+		// 途中で失敗しても残りの Config DAO を閉じ切る（早期returnでハンドルをリークしない）。
+		configClosers := []struct {
+			name  string
+			close func(context.Context) error
+		}{
+			{"AccountDAO", g.ConfigDAOs.AccountDAO.Close},
+			{"LoginSessionDAO", g.ConfigDAOs.LoginSessionDAO.Close},
+			{"FileUploadHistoryDAO", g.ConfigDAOs.FileUploadHistoryDAO.Close},
+			{"ShareKyouInfoDAO", g.ConfigDAOs.ShareKyouInfoDAO.Close},
+			{"ServerConfigDAO", g.ConfigDAOs.ServerConfigDAO.Close},
+			{"ApplicationConfigDAO", g.ConfigDAOs.ApplicationConfigDAO.Close},
+			{"RepositoryDAO", g.ConfigDAOs.RepositoryDAO.Close},
 		}
-		err = g.ConfigDAOs.LoginSessionDAO.Close(ctx)
-		if err != nil {
-			return err
-		}
-		err = g.ConfigDAOs.FileUploadHistoryDAO.Close(ctx)
-		if err != nil {
-			return err
-		}
-		err = g.ConfigDAOs.ShareKyouInfoDAO.Close(ctx)
-		if err != nil {
-			return err
-		}
-		err = g.ConfigDAOs.ServerConfigDAO.Close(ctx)
-		if err != nil {
-			return err
-		}
-		err = g.ConfigDAOs.ApplicationConfigDAO.Close(ctx)
-		if err != nil {
-			return err
-		}
-		err = g.ConfigDAOs.RepositoryDAO.Close(ctx)
-		if err != nil {
-			return err
+		for _, c := range configClosers {
+			if err := c.close(ctx); err != nil {
+				errs = append(errs, fmt.Errorf("error at close %s: %w", c.name, err))
+			}
 		}
 		g.ConfigDAOs.AccountDAO = nil
 		g.ConfigDAOs.LoginSessionDAO = nil
@@ -1378,11 +1360,35 @@ func (g *GkillDAOManager) Close() error {
 	g.router = nil
 	g.IDFIgnore = []string{}
 
-	return err
+	return errors.Join(errs...)
 }
 
+// SetSkipIDF はキャッシュ更新の一時停止/再開を切り替える。
+// APIは従来のboolのままだが、内部は参照カウンタなので重なる呼び出しに耐える。
+//   - true  : カウントをインクリメント(Pause)
+//   - false : カウントをデクリメント(Resume)。既に0以下なら二重Resumeとみなし何もしない(負数にしない)
+//
+// カウントが0へ戻ったResume時には、一時停止中に握りつぶしたファイル変更を取りこぼさないよう
+// 更新走査を1回だけキックする(catch-up)。
 func (g *GkillDAOManager) SetSkipIDF(skip bool) {
-	*g.skipUpdateCache = skip
+	if skip {
+		g.skipUpdateCache.Add(1)
+		return
+	}
+
+	for {
+		cur := g.skipUpdateCache.Load()
+		if cur <= 0 {
+			// 対応するPauseが無いResume。負数にせず黙って無視する。
+			return
+		}
+		if g.skipUpdateCache.CompareAndSwap(cur, cur-1) {
+			if cur-1 == 0 && g.fileRepWatchCacheUpdater != nil {
+				g.fileRepWatchCacheUpdater.KickAllPendingUpdates()
+			}
+			return
+		}
+	}
 }
 
 func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (bool, error) {

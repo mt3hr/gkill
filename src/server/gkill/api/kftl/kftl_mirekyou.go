@@ -228,7 +228,7 @@ func newKFTLMiReKyouEstimateStartTimeStatementLine(lineText string, ctx *KFTLSta
 }
 
 func (l *kftlMiReKyouEstimateStartTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	t, ok := parseMiReKyouTime(l.lineText)
+	t, ok := parseMiReKyouTime(l.lineText, l.ctx.BaseTime)
 	if ok {
 		l.req.estimateStartTime = &t
 	}
@@ -265,7 +265,7 @@ func newKFTLMiReKyouEstimateEndTimeStatementLine(lineText string, ctx *KFTLState
 }
 
 func (l *kftlMiReKyouEstimateEndTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	t, ok := parseMiReKyouTime(l.lineText)
+	t, ok := parseMiReKyouTime(l.lineText, l.ctx.BaseTime)
 	if ok {
 		l.req.estimateEndTime = &t
 	}
@@ -298,7 +298,7 @@ func newKFTLMiReKyouLimitTimeStatementLine(lineText string, ctx *KFTLStatementLi
 }
 
 func (l *kftlMiReKyouLimitTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	t, ok := parseMiReKyouTime(l.lineText)
+	t, ok := parseMiReKyouTime(l.lineText, l.ctx.BaseTime)
 	if ok {
 		l.req.limitTime = &t
 	}
@@ -390,13 +390,13 @@ func (l *kftlEndMiReKyouStatementLine) GetStatementLineText() string          { 
 
 // parseMiReKyouTime parses an optional datetime line.
 // 「？」/「?」は付いていてもいなくてもよい。空行やパースできない行は未設定として扱う。
-func parseMiReKyouTime(lineText string) (time.Time, bool) {
+func parseMiReKyouTime(lineText string, base time.Time) (time.Time, bool) {
 	s := strings.TrimPrefix(lineText, splitterRelatedTime)
 	s = strings.TrimPrefix(s, splitterRelatedTimeAscii)
 	if strings.TrimSpace(s) == "" {
 		return time.Time{}, false
 	}
-	t, err := parseDateTime(s)
+	t, err := parseDateTime(s, base)
 	if err != nil {
 		return time.Time{}, false
 	}

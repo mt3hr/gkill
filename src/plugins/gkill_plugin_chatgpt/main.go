@@ -7,6 +7,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"sync/atomic"
 
 	sdk "github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 )
@@ -89,6 +90,28 @@ func sourceOf(pluginDir string, cfg sdk.Config) expandedSource {
 	return expandSourcePatterns(sourcePatternsOf(pluginDir, cfg))
 }
 
+// latestConfig はハンドラが受け取った最新の設定。ビルダから読む。
+var latestConfig atomic.Pointer[sdk.Config]
+
+func rememberConfig(cfg sdk.Config) {
+	if cfg == nil {
+		return
+	}
+	latestConfig.Store(&cfg)
+}
+
+// sourceProviderOf はビルダに渡す「今のデータソースを返す関数」を作る。
+// 設定画面や config.json の編集を反映できるよう、呼ばれるたびに読み直す。
+func sourceProviderOf(pluginDir string) func() expandedSource {
+	return func() expandedSource {
+		var base sdk.Config
+		if stored := latestConfig.Load(); stored != nil {
+			base = *stored
+		}
+		return sourceOf(pluginDir, base)
+	}
+}
+
 func main() {
 	// manifest.json の出力だけして終わる。sdk.Run より前に処理する
 	// (sdk.Run の flag.Parse は知らないフラグを受け取るとエラー終了するため)
@@ -109,13 +132,19 @@ func main() {
 	}
 
 	pluginDir := extractpluginDir(os.Args)
+	provider := sourceProviderOf(pluginDir)
 
 	sdk.Run(sdk.Handler{
 		RepName:       repName,
 		DefaultConfig: defaultConfig(),
 
+		// ハンドラは全部「ビルダを起こして、今キャッシュにあるぶんを即返す」。
+		// 初回が空なのは仕様。取り込みはバックグラウンドで進む。
 		FindKyous: func(ctx context.Context, q sdk.Query, cfg sdk.Config) ([]sdk.Kyou, error) {
-			msgs, err := globalCache.GetMessages(pluginDir, sourceOf(pluginDir, cfg))
+			rememberConfig(cfg)
+			startBuilder(pluginDir, provider)
+
+			msgs, err := globalCache.GetMessages(pluginDir)
 			if err != nil {
 				return []sdk.Kyou{}, nil
 			}
@@ -160,17 +189,25 @@ func main() {
 		},
 
 		GetContentHTML: func(ctx context.Context, kyouID string, cfg sdk.Config) (string, error) {
-			convTitle, msg, err := globalCache.GetMsgByID(pluginDir, sourceOf(pluginDir, cfg), kyouID)
+			rememberConfig(cfg)
+			startBuilder(pluginDir, provider)
+
+			convTitle, msg, err := globalCache.GetMsgByID(pluginDir, kyouID)
 			if err != nil {
 				return "<html><body><p>メッセージが見つかりません</p></body></html>", nil
 			}
 			return renderSingleMsgHTML(convTitle, msg), nil
 		},
 
+		// ここでファイルを走査してはいけない。IsAlive(5秒)と同じスロットに並ぶ。
 		GetConfigHTML: func(ctx context.Context, cfg sdk.Config) (string, error) {
+			rememberConfig(cfg)
+			startBuilder(pluginDir, provider)
+
 			patterns := sourcePatternsOf(pluginDir, cfg)
 			src := expandSourcePatterns(patterns)
-			return renderConfigHTML(pluginDir, patterns, src), nil
+			stats := globalCache.GetStats(pluginDir)
+			return renderConfigHTML(pluginDir, stats, patterns, src), nil
 		},
 
 		PostConfig: func(_ context.Context, form map[string]string, cfg sdk.Config) (sdk.Config, error) {
@@ -182,6 +219,8 @@ func main() {
 				// (1行の文字列でも parseSourcePatterns は読めるが、配列のほうが手で編集しやすい)。
 				cfg[configKeySourceDirs] = splitSourceDirsForm(v)
 			}
+			rememberConfig(cfg)
+			globalBuilder.Kick()
 			return cfg, nil
 		},
 	})

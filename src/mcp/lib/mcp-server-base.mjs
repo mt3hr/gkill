@@ -36,16 +36,20 @@ export class McpServerBase {
     this.fileLinkContext = null;
   }
 
-  async handlePayload(payload) {
+  // requestContext は HttpTransport が組む1リクエスト分の不変値
+  // {sessionId,userId,remoteAddr}。以前は server.current* 共有フィールドに
+  // 書いて await をまたいで読んでいたため、並行リクエストで別要求の
+  // user/session が混線した。引数で末端まで流すことで混線を構造的に断つ。
+  async handlePayload(payload, requestContext = null) {
     if (!Array.isArray(payload)) {
-      return this.handleMessage(payload);
+      return this.handleMessage(payload, requestContext);
     }
     if (payload.length === 0) {
       return { jsonrpc: "2.0", id: null, error: { code: -32600, message: "Invalid Request" } };
     }
     const responses = [];
     for (const message of payload) {
-      const response = await this.handleMessage(message);
+      const response = await this.handleMessage(message, requestContext);
       if (response !== null) {
         responses.push(response);
       }
@@ -53,7 +57,15 @@ export class McpServerBase {
     return responses.length === 0 ? null : responses;
   }
 
-  async handleMessage(message) {
+  async handleMessage(message, requestContext = null) {
+    // requestContext 未指定 (stdio / 単体テストの直接呼び出し) のときだけ
+    // 起動時に一度設定される this.current* のスナップショットへフォールバックする。
+    // HTTP 経路は必ず requestContext を渡すので、この分岐には入らない。
+    const ctx = requestContext ?? Object.freeze({
+      sessionId: this.currentSessionId,
+      userId: this.currentUserId,
+      remoteAddr: this.currentRemoteAddr,
+    });
     if (!message || message.jsonrpc !== "2.0" || !message.method) {
       return {
         jsonrpc: "2.0",
@@ -103,28 +115,28 @@ export class McpServerBase {
         }
         const toolName = assertTrimmedString(params.name, "name");
         const toolArgs = Object.prototype.hasOwnProperty.call(params, "arguments") ? params.arguments : {};
-        const response = await this.handleToolCall(toolName, toolArgs);
+        const response = await this.handleToolCall(toolName, toolArgs, ctx);
         this.accessLog.info("tool_call", {
           tool: toolName,
-          user_id: this.currentUserId || null,
-          remote_addr: this.currentRemoteAddr || null,
+          user_id: ctx.userId || null,
+          remote_addr: ctx.remoteAddr || null,
           duration: `${Date.now() - toolStart}ms`,
         });
-        return { jsonrpc: "2.0", id, result: this.buildToolResult(toolName, response, false) };
+        return { jsonrpc: "2.0", id, result: this.buildToolResult(toolName, response, false, ctx) };
       } catch (error) {
         const detail = error instanceof GkillApiError ? error.detail : null;
         const messageText = error instanceof Error ? error.message : "Unknown tool error";
         this.accessLog.error("tool_call_error", {
           tool: params.name,
-          user_id: this.currentUserId || null,
-          remote_addr: this.currentRemoteAddr || null,
+          user_id: ctx.userId || null,
+          remote_addr: ctx.remoteAddr || null,
           duration: `${Date.now() - toolStart}ms`,
           error: messageText,
         });
         return {
           jsonrpc: "2.0",
           id,
-          result: this.buildToolResult(params.name, { error: messageText, detail }, true),
+          result: this.buildToolResult(params.name, { error: messageText, detail }, true, ctx),
         };
       }
     }

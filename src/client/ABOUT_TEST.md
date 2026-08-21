@@ -2,7 +2,7 @@
 
 ## 概要
 
-Vue 3 フロントエンドのテスト。ユニットテスト（1934テスト宣言、165ファイル）と E2E テスト（250テスト宣言、44ファイル）の合計2184テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計 + 相関グラフの統計計算をカバーする。
+Vue 3 フロントエンドのテスト。ユニットテスト（1952テスト宣言、166ファイル）と E2E テスト（250テスト宣言、44ファイル）の合計2202テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計 + 相関グラフの統計計算をカバーする。
 
 ## テストフレームワーク
 
@@ -15,7 +15,7 @@ Vue 3 フロントエンドのテスト。ユニットテスト（1934テスト�
 
 ```
 src/client/__tests__/
-├── unit/                    # ユニットテスト (1934テスト宣言, 165ファイル)
+├── unit/                    # ユニットテスト (1952テスト宣言, 166ファイル)
 │   ├── api/                 #   GkillAPI クライアント
 │   ├── classes/             #   ユーティリティクラス (46ファイル, kyou-view-relay / cascade-delete-kyou / confirm-dialog-close / edit-view-no-update-check / markdown-to-html / mermaid-render / use-dialog-history-stack / delayed-loading / foldable-struct-move / foldable-struct-check / kyou-content-text / use-context-menu-position / use-device-kind / linkify-text / application-config-update-fields-scan / dialog-autofocus / kyou-view-height-source-scan / mi-board-column-layout / mi-board-names / use-application-config-view / share-target-dedup 含む)
 │   ├── datas/               #   データモデル (35ファイル, dashboard-config / saved-find-query-config / plaing-time-is-config / mi-re-kyou / append-not-found-tags 含む)
@@ -38,7 +38,7 @@ src/client/__tests__/
 
 ## テスト内容
 
-### ユニットテスト（1934テスト宣言、165ファイル）
+### ユニットテスト（1952テスト宣言、166ファイル）
 
 | カテゴリ | テスト数（概算） | 内容 |
 |---------|----------------|------|

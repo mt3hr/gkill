@@ -117,17 +117,19 @@ class MainActivityTest {
     @Test
     fun `screen states are documented for coverage`() {
         // The Screen sealed class is file-private in MainActivity.kt.
-        // It defines 10 states:
-        //   HomeMenu, Loading, TemplateList, Confirm, Submitting, Result,
+        // It defines 11 states:
+        //   HomeMenu, Loading, TemplateList, Confirm, Submitting,
+        //   SubmitDuplicateConfirm, Result,
         //   PlaingLoading, PlaingList, PlaingEndConfirm, PlaingEnding
         //
         // These cannot be tested directly since they are private to the file.
         // This test documents the expected states for reference.
         val expectedStates = listOf(
-            "HomeMenu", "Loading", "TemplateList", "Confirm", "Submitting", "Result",
+            "HomeMenu", "Loading", "TemplateList", "Confirm", "Submitting",
+            "SubmitDuplicateConfirm", "Result",
             "PlaingLoading", "PlaingList", "PlaingEndConfirm", "PlaingEnding"
         )
-        assertEquals(10, expectedStates.size)
+        assertEquals(11, expectedStates.size)
     }
 
     // ─── Mode-to-screen mapping logic ────────────────────────────────────────────

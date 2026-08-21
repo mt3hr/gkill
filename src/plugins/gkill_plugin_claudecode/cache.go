@@ -1,25 +1,37 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
+	_ "modernc.org/sqlite"
 )
 
 // pluginCache はトランスクリプトから組み立てた発言をSQLite3にキャッシュする。
 // gkillのキャッシュディレクトリ配下(sdk.CacheDBPath 参照)に保存し、
 // ファイル単位のmtime/サイズで差分更新する。
 // ソースは146MB規模になるため、毎回全部を読み直さないことが重要。
+//
+// ロックを2つに分けているのが要点。
+//   - mu は db の遅延初期化だけを守る
+//   - buildMu は構築どうしだけを直列化する
+//   - 読み取り(GetMessages/GetMessage/GetStats)はどちらも取らない
+//
+// 兼用すると初回構築のあいだ find_kyous が全部詰まり、
+// gkill のデッドライン(IsAlive 5秒 / 呼び出し30秒)でプロセスが殺され続ける。
+// SQLite は WAL で開いてあり *sql.DB 自体も並行安全なので、
+// 構築中の読み取りは「そこまで取り込めたぶん」を返せばよい。
 type pluginCache struct {
-	mu sync.Mutex
-	db *sql.DB
+	mu      sync.Mutex
+	buildMu sync.Mutex
+	db      *sql.DB
 }
 
 var globalCache = &pluginCache{}
@@ -37,21 +49,38 @@ type messageSummary struct {
 	UpdateTimeUnix  int64
 }
 
-// cacheStats は設定画面に出す統計。
+// cacheStats は設定画面に出す統計。ファイルは1バイトも開かずに作る。
 type cacheStats struct {
 	FileCount     int
 	MessageCount  int
 	LastScanUnix  int64
 	LastScanError string
+	BuildState    string
+	BuildError    string
+	BuildTotal    int
+	BuildDone     int
 }
 
-// openDB はキャッシュDBを開く(初回は初期化する)。
+// openDB はキャッシュDBを開く。何度呼んでも1回しか開かない。
 func (c *pluginCache) openDB(pluginDir string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if c.db != nil {
 		return nil
 	}
+
 	dbPath := sdk.CacheDBPath(pluginDir)
-	db, err := sqlite3impl.GetSQLiteDBConnection(context.Background(), dbPath)
+
+	// sqlite3impl.GetSQLiteDBConnection は使わない。
+	// あれは journal_mode を DELETE に固定するので、バックグラウンドで書いている間
+	// 読み手が busy_timeout まで待たされる。派生キャッシュは自前でWALを開く。
+	db, err := sql.Open("sqlite", "file:"+dbPath+
+		"?_txlock=immediate"+
+		"&_pragma=busy_timeout(6000)"+
+		"&_pragma=journal_mode(WAL)"+
+		"&_pragma=synchronous(NORMAL)"+
+		"&_pragma=cache_size(-16000)"+
+		"&_pragma=temp_store(MEMORY)")
 	if err != nil {
 		return fmt.Errorf("error at open cache db %s: %w", dbPath, err)
 	}
@@ -63,9 +92,16 @@ func (c *pluginCache) openDB(pluginDir string) error {
 	return nil
 }
 
+// conn は開いてあるDBを返す。openDB を通っていれば非nil。
+func (c *pluginCache) conn() *sql.DB {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.db
+}
+
 // cacheSchemaVersion はキャッシュのスキーマ版。
-// 構造を変えたら上げること。古いDBは作り直される(キャッシュなので捨ててよい)。
-const cacheSchemaVersion = "2"
+// 構造やジャーナルモードを変えたら上げること。古いDBは作り直される(キャッシュなので捨ててよい)。
+const cacheSchemaVersion = "3"
 
 // initSchema はテーブルを作成する。
 // 記録している版が違えば、作り直しのため既存のテーブルを落とす。
@@ -73,36 +109,34 @@ func initSchema(db *sql.DB) error {
 	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS cache_meta (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
-);`); err != nil {
+)`); err != nil {
 		return fmt.Errorf("error at init cache_meta: %w", err)
 	}
 
-	var version string
+	version := ""
 	_ = db.QueryRow(`SELECT value FROM cache_meta WHERE key = 'schema_version'`).Scan(&version)
 	if version != cacheSchemaVersion {
-		if _, err := db.Exec(`
-DROP TABLE IF EXISTS message_cache;
-DROP TABLE IF EXISTS turn_cache;
-DROP TABLE IF EXISTS file_cache;
-DELETE FROM cache_meta;
-`); err != nil {
-			return fmt.Errorf("error at drop old schema: %w", err)
-		}
-		if _, err := db.Exec(`INSERT OR REPLACE INTO cache_meta(key,value) VALUES('schema_version', ?)`,
-			cacheSchemaVersion); err != nil {
-			return fmt.Errorf("error at record schema version: %w", err)
+		for _, statement := range []string{
+			`DROP TABLE IF EXISTS message_cache`,
+			`DROP TABLE IF EXISTS turn_cache`,
+			`DROP TABLE IF EXISTS file_cache`,
+			`DELETE FROM cache_meta`,
+		} {
+			if _, err := db.Exec(statement); err != nil {
+				return fmt.Errorf("error at drop old schema: %w", err)
+			}
 		}
 	}
 
-	_, err := db.Exec(`
-CREATE TABLE IF NOT EXISTS file_cache (
+	for _, statement := range []string{
+		`CREATE TABLE IF NOT EXISTS file_cache (
   path       TEXT PRIMARY KEY,
   mtime_unix INTEGER NOT NULL,
   size       INTEGER NOT NULL,
   kind       TEXT NOT NULL,
   session_id TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS message_cache (
+)`,
+		`CREATE TABLE IF NOT EXISTS message_cache (
   message_id        TEXT PRIMARY KEY,
   role              TEXT NOT NULL,
   source_path       TEXT NOT NULL,
@@ -115,30 +149,57 @@ CREATE TABLE IF NOT EXISTS message_cache (
   body_json         TEXT NOT NULL,
   related_time_unix INTEGER NOT NULL,
   update_time_unix  INTEGER NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_msg_time    ON message_cache(related_time_unix);
-CREATE INDEX IF NOT EXISTS idx_msg_session ON message_cache(session_id);
-CREATE INDEX IF NOT EXISTS idx_msg_src     ON message_cache(source_path);
-`)
-	if err != nil {
-		return fmt.Errorf("error at init schema: %w", err)
+)`,
+		`CREATE INDEX IF NOT EXISTS idx_msg_time    ON message_cache(related_time_unix)`,
+		`CREATE INDEX IF NOT EXISTS idx_msg_session ON message_cache(session_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_msg_src     ON message_cache(source_path)`,
+	} {
+		if _, err := db.Exec(statement); err != nil {
+			return fmt.Errorf("error at init schema: %w", err)
+		}
+	}
+
+	if _, err := db.Exec(
+		`INSERT OR REPLACE INTO cache_meta(key, value) VALUES('schema_version', ?)`,
+		cacheSchemaVersion,
+	); err != nil {
+		return fmt.Errorf("error at record schema version: %w", err)
 	}
 	return nil
 }
 
-// GetMessages はFindKyous用に全発言の要約を返す。呼び出し前に差分更新する。
-func (c *pluginCache) GetMessages(pluginDir string, src expandedSource) ([]messageSummary, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+func (c *pluginCache) setMeta(key, value string) {
+	db := c.conn()
+	if db == nil {
+		return
+	}
+	_, _ = db.Exec(`INSERT OR REPLACE INTO cache_meta(key, value) VALUES(?, ?)`, key, value)
+}
 
+func (c *pluginCache) getMeta(key string) string {
+	db := c.conn()
+	if db == nil {
+		return ""
+	}
+	value := ""
+	_ = db.QueryRow(`SELECT value FROM cache_meta WHERE key = ?`, key).Scan(&value)
+	return value
+}
+
+// GetMessages はFindKyous用に全発言の要約を返す。
+//
+// 読み取りは buildMu を取らない。構築中でも「そこまで取り込めたぶん」を返す。
+// これが仕様どおりの挙動で、初回呼び出しが空になるのもそのため。
+func (c *pluginCache) GetMessages(pluginDir string) ([]messageSummary, error) {
 	if err := c.openDB(pluginDir); err != nil {
 		return nil, err
 	}
-	if err := c.refresh(src); err != nil {
-		return nil, err
+	db := c.conn()
+	if db == nil {
+		return nil, fmt.Errorf("cache db is not opened")
 	}
 
-	rows, err := c.db.Query(`
+	rows, err := db.Query(`
 		SELECT message_id, role, session_id, session_title, project, branch, search_text,
 		       related_time_unix, update_time_unix
 		FROM message_cache ORDER BY related_time_unix DESC`)
@@ -156,24 +217,22 @@ func (c *pluginCache) GetMessages(pluginDir string, src expandedSource) ([]messa
 		}
 		messages = append(messages, t)
 	}
-	return messages, nil
+	return messages, rows.Err()
 }
 
 // GetMessage はGetContentHTML用に、発言1件を本文込みで返す。
-func (c *pluginCache) GetMessage(pluginDir string, src expandedSource, messageID string) (message, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
+func (c *pluginCache) GetMessage(pluginDir string, messageID string) (message, error) {
 	var t message
 	if err := c.openDB(pluginDir); err != nil {
 		return t, err
 	}
-	if err := c.refresh(src); err != nil {
-		return t, err
+	db := c.conn()
+	if db == nil {
+		return t, fmt.Errorf("cache db is not opened")
 	}
 
 	var bodyJSON string
-	row := c.db.QueryRow(`SELECT body_json FROM message_cache WHERE message_id = ?`, messageID)
+	row := db.QueryRow(`SELECT body_json FROM message_cache WHERE message_id = ?`, messageID)
 	if err := row.Scan(&bodyJSON); err != nil {
 		return t, fmt.Errorf("message not found: %s", messageID)
 	}
@@ -184,30 +243,60 @@ func (c *pluginCache) GetMessage(pluginDir string, src expandedSource, messageID
 }
 
 // GetStats は設定画面用の統計を返す。
-func (c *pluginCache) GetStats(pluginDir string, src expandedSource) cacheStats {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
+//
+// GetConfigHTML から呼ぶので、ここで走査してはいけない。
+// 5秒の IsAlive を超えるとプロセスが殺される。
+func (c *pluginCache) GetStats(pluginDir string) cacheStats {
 	stats := cacheStats{}
 	if err := c.openDB(pluginDir); err != nil {
 		stats.LastScanError = err.Error()
 		return stats
 	}
-	if err := c.refresh(src); err != nil {
-		stats.LastScanError = err.Error()
+	db := c.conn()
+	if db == nil {
+		stats.LastScanError = "cache db is not opened"
+		return stats
 	}
 
-	_ = c.db.QueryRow(`SELECT COUNT(*) FROM file_cache WHERE kind != ?`, kindOther).Scan(&stats.FileCount)
-	_ = c.db.QueryRow(`SELECT COUNT(*) FROM message_cache`).Scan(&stats.MessageCount)
-	var lastScan string
-	if err := c.db.QueryRow(`SELECT value FROM cache_meta WHERE key = 'last_scan_unix'`).Scan(&lastScan); err == nil {
-		stats.LastScanUnix, _ = strconv.ParseInt(lastScan, 10, 64)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM file_cache WHERE kind != ?`, kindOther).Scan(&stats.FileCount)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM message_cache`).Scan(&stats.MessageCount)
+
+	stats.BuildState = c.getMeta("build_state")
+	stats.BuildError = c.getMeta("build_error")
+	stats.BuildTotal = atoiOrZero(c.getMeta("build_total_sessions"))
+	stats.BuildDone = atoiOrZero(c.getMeta("build_done_sessions"))
+	if unix := atoiOrZero(c.getMeta("last_scan_unix")); unix > 0 {
+		stats.LastScanUnix = int64(unix)
+	}
+	// 構築時のエラーは従来の「スキャン時のエラー」欄にも出す(既存UIの互換)。
+	if stats.BuildError != "" {
+		stats.LastScanError = stats.BuildError
 	}
 	return stats
 }
 
-// refresh はソースを走査し、変化のあったセッションだけキャッシュを作り直す。
-func (c *pluginCache) refresh(src expandedSource) error {
+// buildBatchSessions は1トランザクションで取り込むセッション数。
+// 途中で殺されても、このぶんだけやり直せばよい。テストが小さくできるよう var。
+var buildBatchSessions = 16
+
+// ingestSessionHook はテストが取り込みに割り込むためのフック。本番では nil。
+// エラーを返すとそのバッチが失敗し、先行してコミット済みのバッチはそのまま残る。
+var ingestSessionHook func(sessionID string) error
+
+// build はソースを走査し、変化のあったセッションだけキャッシュを作り直す。
+// ビルダ以外から呼ばないこと。
+func (c *pluginCache) build(pluginDir string, src expandedSource) error {
+	// 構築どうしだけを直列化する。読み取りは待たせない
+	c.buildMu.Lock()
+	defer c.buildMu.Unlock()
+
+	if err := c.openDB(pluginDir); err != nil {
+		return err
+	}
+
+	c.setMeta("build_state", "scanning")
+	c.setMeta("build_error", "")
+
 	known, err := c.loadFileCache()
 	if err != nil {
 		return err
@@ -232,12 +321,14 @@ func (c *pluginCache) refresh(src expandedSource) error {
 	// 変化のあったファイルからセッションを洗い出す
 	dirtySessions := map[string]bool{}
 	current := map[string]scannedFile{}
+	var changedFiles []scannedFile
 	for _, f := range files {
 		current[f.Path] = f
 		prev, ok := known[f.Path]
 		if ok && prev.MtimeUnix == f.MtimeUnix && prev.Size == f.Size {
 			continue
 		}
+		changedFiles = append(changedFiles, f)
 		if sid := sessionIDOfFile(f); sid != "" {
 			dirtySessions[sid] = true
 		}
@@ -253,11 +344,14 @@ func (c *pluginCache) refresh(src expandedSource) error {
 		}
 	}
 
-	if len(dirtySessions) == 0 && len(removedPaths) == 0 {
+	if len(dirtySessions) == 0 && len(removedPaths) == 0 && len(changedFiles) == 0 {
+		c.setMeta("build_state", "idle")
+		c.setMeta("last_scan_unix", strconv.FormatInt(time.Now().Unix(), 10))
 		return scanErr
 	}
 
-	// セッションごとに、メイン/サブエージェント/metaのファイルをまとめる
+	// セッションごとに、メイン/サブエージェント/metaのファイルをまとめる。
+	// dirty セッションの作り直しには、変わっていないファイルも含めた全体が要る。
 	mainsOf := map[string][]scannedFile{}
 	subsOf := map[string][]scannedFile{}
 	metasOf := map[string][]scannedFile{}
@@ -276,9 +370,57 @@ func (c *pluginCache) refresh(src expandedSource) error {
 		}
 	}
 
-	tx, err := c.db.Begin()
+	// 消えたファイルを先に落とす
+	if len(removedPaths) != 0 {
+		if err := c.removeFiles(removedPaths); err != nil {
+			return err
+		}
+	}
+
+	// dirty セッションをバッチで作り直す。1バッチ=1トランザクションなので、
+	// 途中で失敗しても先行してコミット済みのバッチの行は残る。
+	sessionList := make([]string, 0, len(dirtySessions))
+	for sid := range dirtySessions {
+		sessionList = append(sessionList, sid)
+	}
+	slices.Sort(sessionList) // 進捗表示とバッチ境界を安定させる
+	c.setMeta("build_total_sessions", strconv.Itoa(len(sessionList)))
+	c.setMeta("build_done_sessions", "0")
+	if len(sessionList) != 0 {
+		c.setMeta("build_state", "ingesting")
+	}
+
+	batchSize := buildBatchSessions
+	if batchSize <= 0 {
+		batchSize = 1
+	}
+	done := 0
+	for start := 0; start < len(sessionList); start += batchSize {
+		end := min(start+batchSize, len(sessionList))
+		if err := c.ingestSessions(sessionList[start:end], mainsOf, subsOf, metasOf); err != nil {
+			return err
+		}
+		done += end - start
+		c.setMeta("build_done_sessions", strconv.Itoa(done))
+	}
+
+	// どのセッションにも属さない変化ファイル(kind=other など)の file_cache を進める。
+	// 次の走査で「変わっていない」と判定させ、中身を読み直さないようにするため。
+	if err := c.trackOrphanFiles(changedFiles, sessionIDOfFile); err != nil {
+		return err
+	}
+
+	c.setMeta("build_state", "idle")
+	c.setMeta("last_scan_unix", strconv.FormatInt(time.Now().Unix(), 10))
+	return scanErr
+}
+
+// ingestSessions は指定セッションのメッセージを1トランザクションで作り直す。
+func (c *pluginCache) ingestSessions(sids []string, mainsOf, subsOf, metasOf map[string][]scannedFile) error {
+	db := c.conn()
+	tx, err := db.Begin()
 	if err != nil {
-		return fmt.Errorf("error at begin tx: %w", err)
+		return fmt.Errorf("error at begin ingest tx: %w", err)
 	}
 	committed := false
 	defer func() {
@@ -287,16 +429,12 @@ func (c *pluginCache) refresh(src expandedSource) error {
 		}
 	}()
 
-	for _, path := range removedPaths {
-		if _, err := tx.Exec(`DELETE FROM message_cache WHERE source_path = ?`, path); err != nil {
-			return fmt.Errorf("error at delete messages of %s: %w", path, err)
+	for _, sid := range sids {
+		if ingestSessionHook != nil {
+			if err := ingestSessionHook(sid); err != nil {
+				return err
+			}
 		}
-		if _, err := tx.Exec(`DELETE FROM file_cache WHERE path = ?`, path); err != nil {
-			return fmt.Errorf("error at delete file cache %s: %w", path, err)
-		}
-	}
-
-	for sid := range dirtySessions {
 		if _, err := tx.Exec(`DELETE FROM message_cache WHERE session_id = ?`, sid); err != nil {
 			return fmt.Errorf("error at delete messages of session %s: %w", sid, err)
 		}
@@ -312,25 +450,94 @@ func (c *pluginCache) refresh(src expandedSource) error {
 				}
 			}
 		}
-	}
-
-	for _, f := range files {
-		if _, err := tx.Exec(
-			`INSERT OR REPLACE INTO file_cache(path, mtime_unix, size, kind, session_id) VALUES(?,?,?,?,?)`,
-			f.Path, f.MtimeUnix, f.Size, f.Kind, sessionIDOfFile(f)); err != nil {
-			return fmt.Errorf("error at upsert file cache %s: %w", f.Path, err)
+		// このセッションのファイルの file_cache を進める(セッションIDは sid で確定)
+		for _, f := range sessionFiles(sid, mainsOf, subsOf, metasOf) {
+			if err := upsertFileCache(tx, f, sid); err != nil {
+				return err
+			}
 		}
-	}
-	if _, err := tx.Exec(`INSERT OR REPLACE INTO cache_meta(key,value) VALUES('last_scan_unix', ?)`,
-		strconv.FormatInt(time.Now().Unix(), 10)); err != nil {
-		return fmt.Errorf("error at update last scan: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("error at commit: %w", err)
+		return fmt.Errorf("error at commit ingest tx: %w", err)
 	}
 	committed = true
-	return scanErr
+	return nil
+}
+
+// sessionFiles はセッションに属する全ファイル(メイン/サブ/meta)を集める。
+func sessionFiles(sid string, mainsOf, subsOf, metasOf map[string][]scannedFile) []scannedFile {
+	files := make([]scannedFile, 0, len(mainsOf[sid])+len(subsOf[sid])+len(metasOf[sid]))
+	files = append(files, mainsOf[sid]...)
+	files = append(files, subsOf[sid]...)
+	files = append(files, metasOf[sid]...)
+	return files
+}
+
+// trackOrphanFiles はどのセッションにも属さない変化ファイルの file_cache を進める。
+func (c *pluginCache) trackOrphanFiles(changedFiles []scannedFile, sessionIDOfFile func(scannedFile) string) error {
+	var orphans []scannedFile
+	for _, f := range changedFiles {
+		if sessionIDOfFile(f) == "" {
+			orphans = append(orphans, f)
+		}
+	}
+	if len(orphans) == 0 {
+		return nil
+	}
+
+	db := c.conn()
+	batchSize := buildBatchSessions
+	if batchSize <= 0 {
+		batchSize = 1
+	}
+	for start := 0; start < len(orphans); start += batchSize {
+		end := min(start+batchSize, len(orphans))
+		tx, err := db.Begin()
+		if err != nil {
+			return fmt.Errorf("error at begin orphan tx: %w", err)
+		}
+		for _, f := range orphans[start:end] {
+			if err := upsertFileCache(tx, f, ""); err != nil {
+				_ = tx.Rollback()
+				return err
+			}
+		}
+		if err := tx.Commit(); err != nil {
+			return fmt.Errorf("error at commit orphan tx: %w", err)
+		}
+	}
+	return nil
+}
+
+// removeFiles は消えたファイルの発言と file_cache を落とす。
+func (c *pluginCache) removeFiles(paths []string) error {
+	db := c.conn()
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("error at begin remove tx: %w", err)
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+
+	for _, path := range paths {
+		if _, err := tx.Exec(`DELETE FROM message_cache WHERE source_path = ?`, path); err != nil {
+			return fmt.Errorf("error at delete messages of %s: %w", path, err)
+		}
+		if _, err := tx.Exec(`DELETE FROM file_cache WHERE path = ?`, path); err != nil {
+			return fmt.Errorf("error at delete file cache %s: %w", path, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("error at commit remove tx: %w", err)
+	}
+	committed = true
+	return nil
 }
 
 // loadSubAgents はセッションのサブエージェントを読み込み、
@@ -383,9 +590,23 @@ func insertMessage(tx *sql.Tx, sourcePath string, t message) error {
 	return nil
 }
 
+// upsertFileCache は走査結果の1ファイルを file_cache に書き込む。
+func upsertFileCache(tx *sql.Tx, f scannedFile, sessionID string) error {
+	if _, err := tx.Exec(
+		`INSERT OR REPLACE INTO file_cache(path, mtime_unix, size, kind, session_id) VALUES(?,?,?,?,?)`,
+		f.Path, f.MtimeUnix, f.Size, f.Kind, sessionID); err != nil {
+		return fmt.Errorf("error at upsert file cache %s: %w", f.Path, err)
+	}
+	return nil
+}
+
 // loadFileCache は前回のスキャン結果を読み込む。
 func (c *pluginCache) loadFileCache() (map[string]scannedFile, error) {
-	rows, err := c.db.Query(`SELECT path, mtime_unix, size, kind, session_id FROM file_cache`)
+	db := c.conn()
+	if db == nil {
+		return nil, fmt.Errorf("cache db is not opened")
+	}
+	rows, err := db.Query(`SELECT path, mtime_unix, size, kind, session_id FROM file_cache`)
 	if err != nil {
 		return nil, fmt.Errorf("error at query file cache: %w", err)
 	}
@@ -399,5 +620,14 @@ func (c *pluginCache) loadFileCache() (map[string]scannedFile, error) {
 		}
 		known[f.Path] = f
 	}
-	return known, nil
+	return known, rows.Err()
+}
+
+// atoiOrZero は数値でない/空の meta 値を0にする。
+func atoiOrZero(s string) int {
+	value, err := strconv.Atoi(strings.TrimSpace(s))
+	if err != nil {
+		return 0
+	}
+	return value
 }

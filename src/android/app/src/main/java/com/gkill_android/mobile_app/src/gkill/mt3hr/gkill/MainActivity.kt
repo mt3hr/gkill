@@ -7,13 +7,13 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
 
     private var gkillServerProcess: Process? = null
     private var serverUrlLatch = CountDownLatch(1)
-    private var detectedServerUrl = "http://localhost:9999"
+    private var detectedServerUrl = DEFAULT_SERVER_URL
 
     companion object {
         private const val STORAGE_PERMISSION_REQUEST = 1001
@@ -43,6 +43,45 @@ class MainActivity : AppCompatActivity() {
          * USB/MTP接続、ファイラーアプリのいずれからも中身が読めてしまっていた。
          */
         private const val LEGACY_GKILL_HOME = "/sdcard/gkill"
+
+        /** 既定のサーバ待受ポート。 */
+        const val DEFAULT_SERVER_PORT = 9999
+
+        /** WebView が最初に読み込む既定URL。stdout からURLを検出するまでのフォールバックでもある。 */
+        const val DEFAULT_SERVER_URL = "http://localhost:9999"
+
+        /**
+         * gkill_server をループバックに限定して待ち受けさせるアドレス。
+         *
+         * これは実行時オーバーライド（--address）であって設定DBは書き換えない。
+         * 全インターフェース待受をやめ、同一LANの別端末から :9999 へ到達できないようにする。
+         * stdout からのURL検出（http://localhost:9999）はポートが同じなので無傷。
+         */
+        const val SERVER_LISTEN_ADDRESS = "127.0.0.1:9999"
+
+        /** 既存サーバの応答を確かめる先行プローブの接続タイムアウト(ms)。 */
+        const val PROBE_TIMEOUT_MS = 300
+
+        /** 起動待ちループでの1回ぶんのソケット接続タイムアウト(ms)。 */
+        const val SERVER_CONNECT_TIMEOUT_MS = 500
+
+        /** 起動待ちループのリトライ間隔(ms)。 */
+        const val RETRY_INTERVAL_MS = 500L
+
+        /**
+         * gkill_server の起動引数を組み立てる。
+         *
+         * companion に切り出しているのはユニットテストから引数（--address 127.0.0.1:9999 を
+         * 含むこと）を検証できるようにするため。
+         */
+        fun buildGkillServerArgs(binaryPath: String, gkillHomePath: String): List<String> =
+            listOf(
+                binaryPath,
+                "--gkill_home_dir", gkillHomePath,
+                "--address", SERVER_LISTEN_ADDRESS,
+                "--disable_tls",
+                "--log", "debug"
+            )
     }
 
     /**
@@ -115,11 +154,11 @@ class MainActivity : AppCompatActivity() {
                 migrateLegacyHomeIfNeeded(gkillHomeDir)
                 gkillHomeDir.mkdirs()
 
+                // 起動引数は companion の buildGkillServerArgs に切り出してある（テストから検証するため）。
+                // --address 127.0.0.1:9999 はループバック限定の実行時オーバーライドで、
+                // 設定DBは書き換えず、stdout からのURL検出(http://localhost:9999)も無傷。
                 val pb = ProcessBuilder(
-                    gkillBinary.absolutePath,
-                    "--gkill_home_dir", gkillHomeDir.absolutePath,
-                    "--disable_tls",
-                    "--log", "debug"
+                    buildGkillServerArgs(gkillBinary.absolutePath, gkillHomeDir.absolutePath)
                 )
                 pb.environment()["HOME"] = homeDir
                 pb.redirectErrorStream(true)
@@ -197,47 +236,62 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // 戻るボタン: WebView に履歴があれば1つ戻り、無ければ既定動作（アプリ終了）へ委譲する。
+        // configChanges で回転を自前処理するようにしたので、Activity が作り直されず
+        // WebView の履歴が保持され、ここでの canGoBack が意味を持つ。
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (webView.canGoBack()) {
+                    webView.goBack()
+                } else {
+                    // 自分を無効化してから既定のバック処理を呼び直す（そのまま終了へ流す）
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
+
         checkPermissionAndStart()
     }
 
+    /**
+     * サーバを起動する。権限の有無で起動をブロックしない。
+     *
+     * filesDir 配下のデータだけで全機能が動くので、共有ストレージ上のファイルリポジトリを
+     * 開くための全ファイルアクセス権限が無くても起動する。権限の案内は非ブロッキングに出す。
+     */
     private fun checkPermissionAndStart() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+ は MANAGE_EXTERNAL_STORAGE が必要
-            if (Environment.isExternalStorageManager()) {
-                startServerAndOpen()
-            } else {
-                @Suppress("DEPRECATION")
-                startActivityForResult(
-                    Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                        data = Uri.parse("package:$packageName")
-                    },
-                    STORAGE_PERMISSION_REQUEST
-                )
-            }
-        } else {
-            // Android 10 以下は WRITE_EXTERNAL_STORAGE で足りる
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                startServerAndOpen()
-            } else {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                    STORAGE_PERMISSION_REQUEST
-                )
-            }
-        }
+        startServerAndOpen()
+        guideAllFilesAccessIfNeeded()
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        @Suppress("DEPRECATION")
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == STORAGE_PERMISSION_REQUEST) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
-                startServerAndOpen()
-            } else {
-                Toast.makeText(this, "ストレージアクセス権限が必要です", Toast.LENGTH_LONG).show()
+    /**
+     * 全ファイルアクセス権限が無ければ非ブロッキングに案内する。
+     *
+     * Android 11+ は MANAGE_EXTERNAL_STORAGE（設定画面での付与）を Toast で案内するだけで、
+     * 設定画面を自動で開いて起動を妨げることはしない。
+     * Android 10 以下は従来どおり WRITE_EXTERNAL_STORAGE のランタイム権限を要求するが、
+     * サーバは既に起動しているので拒否されても filesDir 配下の全機能は動く。
+     */
+    private fun guideAllFilesAccessIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                Toast.makeText(
+                    this,
+                    "共有ストレージ上のファイルを扱うには、設定から全ファイルアクセスを許可してください",
+                    Toast.LENGTH_LONG
+                ).show()
             }
+        } else if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                STORAGE_PERMISSION_REQUEST
+            )
         }
     }
 
@@ -247,20 +301,35 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == STORAGE_PERMISSION_REQUEST) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startServerAndOpen()
-            } else {
-                Toast.makeText(this, "ストレージアクセス権限が必要です", Toast.LENGTH_LONG).show()
-            }
+        // サーバは権限に関わらず起動済み。ここでは案内だけ行い、再起動はしない。
+        if (requestCode == STORAGE_PERMISSION_REQUEST &&
+            (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED)
+        ) {
+            Toast.makeText(
+                this,
+                "共有ストレージ上のファイルを扱うにはストレージアクセスの許可が必要です",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
     private fun startServerAndOpen() {
         serverUrlLatch = CountDownLatch(1)
-        detectedServerUrl = "http://localhost:9999"
-        killExistingGkillServer()
-        startGkillServer()
+        detectedServerUrl = DEFAULT_SERVER_URL
+        // ポート先行プローブ: 既に応答する gkill_server があれば kill/start を丸ごと飛ばす。
+        // 画面回転などで Activity が作り直されても、生きているサーバを殺して立て直さないため。
+        // ソケット接続はメインスレッドで行えないので別スレッドに逃がす。
+        Thread {
+            if (isPortOpen(DEFAULT_SERVER_PORT, PROBE_TIMEOUT_MS)) {
+                Log.i("gkill", "既存の gkill_server が応答したので起動処理を省略する")
+                // waitUntilServerStarts が 10 秒待たずに進めるよう、URL検出ラッチを即座に開ける
+                serverUrlLatch.countDown()
+            } else {
+                // 応答が無いときだけ従来経路。死にかけプロセスの回収も兼ねる。
+                killExistingGkillServer()
+                startGkillServer()
+            }
+        }.start()
         waitUntilServerStarts { url ->
             findViewById<View>(R.id.loading_layout).visibility = View.GONE
             // onCreateで設定済みだが、読み込み直前にも明示しておく。
@@ -320,6 +389,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * ループバックの指定ポートに接続できるか（＝サーバが応答するか）を1回だけ確かめる。
+     */
+    private fun isPortOpen(port: Int, timeoutMs: Int): Boolean {
+        return try {
+            Socket().use { socket ->
+                socket.connect(InetSocketAddress("localhost", port), timeoutMs)
+            }
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     private fun waitUntilServerStarts(onReady: (String) -> Unit) {
         Thread {
             // stdoutからURLを受け取るまで最大10秒待つ
@@ -327,22 +410,18 @@ class MainActivity : AppCompatActivity() {
 
             // URLからポートを取得 (例: "http://localhost:9999" → 9999)
             val port = try {
-                URI(detectedServerUrl).port.let { if (it == -1) 9999 else it }
+                URI(detectedServerUrl).port.let { if (it == -1) DEFAULT_SERVER_PORT else it }
             } catch (_: Exception) {
-                9999
+                DEFAULT_SERVER_PORT
             }
 
             var connected = false
             for (i in 1..60) { // 最大30秒待つ（500ms × 60）
-                try {
-                    val socket = Socket()
-                    socket.connect(InetSocketAddress("localhost", port), 500)
-                    socket.close()
+                if (isPortOpen(port, SERVER_CONNECT_TIMEOUT_MS)) {
                     connected = true
                     break
-                } catch (_: Exception) {
-                    Thread.sleep(500)
                 }
+                Thread.sleep(RETRY_INTERVAL_MS)
             }
 
             if (connected) {

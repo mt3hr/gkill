@@ -1260,7 +1260,8 @@ WHERE
 	tableName := g.dbName
 	tableNameAlias := g.dbName
 	whereCounter := 0
-	onlyLatestData := false
+	// GenerateFindSQLCommon は query.OnlyLatestData を読まず、この引数しか見ない（既定 false のままだと最古版を返す）。
+	onlyLatestData := query.OnlyLatestData
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"COMMIT_MESSAGE"}
 	ignoreFindWord := false
@@ -1348,7 +1349,12 @@ WHERE
 		}
 		return g.gitRep.GetGitCommitLog(ctx, id, updateTime)
 	}
-	return &gitCommitLog[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestGitCommitLog := slices.MaxFunc(gitCommitLog, func(a GitCommitLog, b GitCommitLog) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestGitCommitLog, nil
 }
 
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) UnWrapTyped() ([]GitCommitLogRepository, error) {

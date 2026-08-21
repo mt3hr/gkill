@@ -146,7 +146,7 @@ func newKFTLTimeIsStartTimeStatementLine(lineText string, ctx *KFTLStatementLine
 func (l *kftlTimeIsStartTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
 	timeStr := strings.TrimPrefix(l.lineText, splitterRelatedTime)
 	timeStr = strings.TrimPrefix(timeStr, splitterRelatedTimeAscii)
-	t, err := parseDateTime(timeStr)
+	t, err := parseDateTime(timeStr, l.ctx.BaseTime)
 	if err != nil {
 		return fmt.Errorf("invalid timeis start_time %q: %w", l.lineText, err)
 	}
@@ -175,7 +175,7 @@ func newKFTLTimeIsEndTimeStatementLine(lineText string, ctx *KFTLStatementLineCo
 func (l *kftlTimeIsEndTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
 	timeStr := strings.TrimPrefix(l.lineText, splitterRelatedTime)
 	timeStr = strings.TrimPrefix(timeStr, splitterRelatedTimeAscii)
-	t, err := parseDateTime(timeStr)
+	t, err := parseDateTime(timeStr, l.ctx.BaseTime)
 	if err != nil {
 		return fmt.Errorf("invalid timeis end_time %q: %w", l.lineText, err)
 	}

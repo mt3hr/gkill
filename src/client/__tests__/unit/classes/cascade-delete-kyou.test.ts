@@ -205,6 +205,39 @@ describe('cascade_delete_kyou', () => {
     expect(api.update_rekyou).toHaveBeenCalledTimes(3)
   })
 
+  it('S3-cascade: 削除に失敗したReKyouの id は deleted_ids に入らない（失敗行は画面に残す）', async () => {
+    const { api } = create_cascade_api({
+      rekyous: {
+        'kmemo-1': [make_ref_stub('rekyou-ok', 'kmemo-1'), make_ref_stub('rekyou-ng', 'kmemo-1')],
+      },
+    })
+    const failure = { error_code: 'ERR_TEST', error_message: 'failed', show_keep: true }
+    api.update_rekyou.mockImplementation(async (req: { rekyou: { id: string } }) => {
+      if (req.rekyou.id === 'rekyou-ng') {
+        return { messages: [], errors: [failure] }
+      }
+      return { messages: [], errors: [] }
+    })
+
+    const result = await run(make_kmemo_kyou('kmemo-1'), api)
+
+    expect(result.deleted_ids).toContain('kmemo-1')
+    expect(result.deleted_ids).toContain('rekyou-ok')
+    expect(result.deleted_ids).not.toContain('rekyou-ng')
+    expect(result.errors.length).toBeGreaterThan(0)
+  })
+
+  it('S3-cascade: Kyou本体の削除が失敗したら root の id は deleted_ids に入らない', async () => {
+    const { api } = create_cascade_api({})
+    const failure = { error_code: 'ERR_TEST', error_message: 'failed', show_keep: true }
+    api.update_kmemo.mockImplementation(async () => ({ messages: [], errors: [failure] }))
+
+    const result = await run(make_kmemo_kyou('kmemo-1'), api)
+
+    expect(result.deleted_ids).not.toContain('kmemo-1')
+    expect(result.errors.length).toBeGreaterThan(0)
+  })
+
   it('循環参照でも止まる', async () => {
     // A(kmemo-1) ← B、B ← A相当のReKyou。visited集合が無いと無限に回る
     const { api } = create_cascade_api({

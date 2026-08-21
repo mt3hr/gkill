@@ -2,7 +2,9 @@ package gkill_server_api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -14,10 +16,35 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// maxAuthBodyBytes は認証系ミドルウェアが認証前に読むボディの上限。
+// 未認証の攻撃者に無制限のメモリを確保させないための上限。大容量が正規に必要な
+// アップロード系（/api/upload_files 等）は wrapNoAuth 登録でこの経路を通らないので影響しない。
+const maxAuthBodyBytes = 32 * 1024 * 1024 // 32MB
+
 // sessionPeek はリクエストボディからSessionIDとLocaleNameだけを読み取るための構造体
 type sessionPeek struct {
 	SessionID  string `json:"session_id"`
 	LocaleName string `json:"locale_name"`
+}
+
+// readAuthBody は認証前のボディ読み取りを上限付きで行う。
+// 上限超過なら 413、その他の読み取り失敗なら 500 を返し、読めたかどうかを ok で返す。
+func readAuthBody(w http.ResponseWriter, r *http.Request, ctx context.Context) ([]byte, bool) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxAuthBodyBytes)
+	rawBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			slog.Log(ctx, gkill_log.Debug, "request body too large in auth middleware", "error", fmt.Sprintf("%q", err))
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
+			return nil, false
+		}
+		slog.Log(ctx, gkill_log.Debug, "error at read request body in auth middleware", "error", fmt.Sprintf("%q", err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return nil, false
+	}
+	_ = r.Body.Close()
+	return rawBody, true
 }
 
 // wrapNoAuth wraps handler with filterLocalOnly only
@@ -57,14 +84,11 @@ func (g *GkillServerAPI) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		// ボディを読み取り
-		rawBody, err := io.ReadAll(r.Body)
-		if err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at read request body in auth middleware", "error", fmt.Sprintf("%q", err))
-			w.WriteHeader(http.StatusInternalServerError)
+		// ボディを読み取り（認証前なので上限つき）
+		rawBody, ok := readAuthBody(w, r, ctx)
+		if !ok {
 			return
 		}
-		r.Body.Close()
 
 		// ボディを復元（ハンドラが再度読めるように）
 		r.Body = io.NopCloser(bytes.NewReader(rawBody))
@@ -137,14 +161,11 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		// ボディを読み取り
-		rawBody, err := io.ReadAll(r.Body)
-		if err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at read request body in auth middleware", "error", fmt.Sprintf("%q", err))
-			w.WriteHeader(http.StatusInternalServerError)
+		// ボディを読み取り（認証前なので上限つき）
+		rawBody, ok := readAuthBody(w, r, ctx)
+		if !ok {
 			return
 		}
-		r.Body.Close()
 
 		// ボディを復元
 		r.Body = io.NopCloser(bytes.NewReader(rawBody))

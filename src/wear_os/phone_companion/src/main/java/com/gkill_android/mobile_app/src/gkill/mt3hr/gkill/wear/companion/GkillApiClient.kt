@@ -17,42 +17,57 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.security.SecureRandom
-import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
-import javax.net.ssl.X509TrustManager
 
 /**
  * Minimal gkill API client using OkHttp (blocking, call from coroutine/thread).
  *
- * @param allowSelfSignedCert When true, certificate and hostname verification are
- * disabled so that a gkill server running on localhost with a self-signed
- * certificate can be reached. Defaults to false (standard platform validation);
- * enable only via the explicit user setting.
+ * @param allowSelfSignedCert When true, the client runs in "pinned self-signed"
+ * mode: the platform default TrustManager is still tried first, and a self-signed
+ * certificate is only accepted when its SHA-256 fingerprint matches [pinnedCertSha256].
+ * Certificate/hostname verification is never disabled outright (no trust-all).
+ * Defaults to false (standard platform validation only).
+ * @param pinnedCertSha256 Saved leaf-certificate SHA-256 fingerprint (hex, no
+ * separators) for this server's host. null means no pin is stored yet, so a
+ * self-signed certificate will be rejected until the user pins it via the settings
+ * screen. Ignored when [allowSelfSignedCert] is false.
  */
 class GkillApiClient(
     private val serverUrl: String,
-    private val allowSelfSignedCert: Boolean = false
+    private val allowSelfSignedCert: Boolean = false,
+    private val pinnedCertSha256: String? = null
 ) {
 
+    private val serverTrust: GkillServerTrust? =
+        if (allowSelfSignedCert) GkillServerTrust(pinnedCertSha256) else null
+
     private val client = buildOkHttpClient()
+
+    /** 直近のハンドシェイクで提示されたリーフ証明書の SHA-256。学習UIでの表示に使う。 */
+    val lastServerCertSha256: String?
+        get() = serverTrust?.lastLeafSha256
+
+    /**
+     * 直近のハンドシェイクでリーフ証明書が拒否されたか（証明書を提示されたが信頼できなかった）。
+     * true のときだけピン留めの確認を利用者に出す。
+     */
+    val lastServerCertRejected: Boolean
+        get() = serverTrust?.let { it.lastLeafSha256 != null && !it.lastServerTrusted } ?: false
 
     private fun buildOkHttpClient(): OkHttpClient {
         val builder = OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
-        if (allowSelfSignedCert) {
-            val trustAll = object : X509TrustManager {
-                override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
-                override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
-                override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-            }
+        val trust = serverTrust
+        if (trust != null) {
+            val tm = trust.trustManager()
             val sslContext = SSLContext.getInstance("TLS").apply {
-                init(null, arrayOf<TrustManager>(trustAll), SecureRandom())
+                init(null, arrayOf<TrustManager>(tm), SecureRandom())
             }
-            builder.sslSocketFactory(sslContext.socketFactory, trustAll)
-                .hostnameVerifier { _, _ -> true }
+            builder.sslSocketFactory(sslContext.socketFactory, tm)
+                .hostnameVerifier(trust.hostnameVerifier())
         }
         return builder.build()
     }
@@ -90,7 +105,10 @@ class GkillApiClient(
     data class SubmitKFTLTextRequest(
         val session_id: String,
         val kftl_text: String,
-        val locale_name: String = "ja"
+        val locale_name: String = "ja",
+        // 空文字はサーバーの omitempty と Json の encodeDefaults=false で送信時に落ちる。
+        // ワーカー再送で同じキーを送ると二重登録にならない（監査 S3-wear）。
+        val idempotency_key: String = ""
     )
 
     @Serializable
@@ -351,11 +369,14 @@ class GkillApiClient(
 
     /**
      * Submits KFTL text and returns null on success, or an error message on failure.
+     *
+     * [idempotencyKey] を渡すと、同じキーの再送はサーバー側で1回の登録に畳まれる
+     * （ワーカー再送で結果だけ届かなかった場合の二重登録を防ぐ）。null/空なら従来どおり毎回登録。
      */
-    fun submitKFTLText(sessionId: String, kftlText: String): String? {
+    fun submitKFTLText(sessionId: String, kftlText: String, idempotencyKey: String? = null): String? {
         val reqJson = json.encodeToString(
             SubmitKFTLTextRequest.serializer(),
-            SubmitKFTLTextRequest(sessionId, kftlText)
+            SubmitKFTLTextRequest(sessionId, kftlText, idempotency_key = idempotencyKey ?: "")
         )
         val body = reqJson.toRequestBody(jsonMediaType)
         val req = Request.Builder()

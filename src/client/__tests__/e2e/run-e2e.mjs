@@ -61,6 +61,40 @@ const server = spawn('gkill_server', [
 server.stdout.on('data', (d) => process.stdout.write(`[gkill_server] ${d}`))
 server.stderr.on('data', (d) => process.stderr.write(`[gkill_server] ${d}`))
 
+// gkill_server の起動失敗を即座に捕まえる監視。
+// waitForServer は接続できないあいだ待ち続けるだけなので、次の2つを別に見張る:
+//   - spawn 自体の失敗 ('error'。典型は gkill_server が PATH に無い ENOENT)
+//   - waitForServer 成功前のプロセス終了 ('exit'。起動直後のクラッシュ)
+// どちらも「30秒待って失敗」より早く、原因の分かるメッセージで落とせる。
+// waitForServer が成功したらこの監視は外す (テスト後の stopServers の kill を
+// 起動失敗と誤検知しないため)。
+let onServerError = null
+let onServerEarlyExit = null
+const serverStartupFailed = new Promise((_resolve, reject) => {
+  onServerError = (err) => {
+    reject(new Error(
+      `gkill_server を起動できませんでした: ${err.message}\n` +
+      'gkill_server が PATH に無い可能性があります (npm run install_server が必要)',
+    ))
+  }
+  onServerEarlyExit = (code, signal) => {
+    reject(new Error(
+      `gkill_server が起動途中で終了しました (code=${code}, signal=${signal})\n` +
+      'gkill_server が PATH に無い可能性があります (npm run install_server が必要)',
+    ))
+  }
+  server.on('error', onServerError)
+  server.on('exit', onServerEarlyExit)
+})
+// race で拾うが、リスナー登録から race までのわずかな間に reject しても
+// unhandledRejection にならないよう、ここでも握っておく (実処理は race 側)。
+serverStartupFailed.catch(() => { /* handled by Promise.race below */ })
+
+function detachServerStartupWatchers() {
+  if (onServerError) { server.off('error', onServerError); onServerError = null }
+  if (onServerEarlyExit) { server.off('exit', onServerEarlyExit); onServerEarlyExit = null }
+}
+
 let vite = null
 
 function stopServers() {
@@ -96,9 +130,17 @@ async function waitForServer(url, timeoutMs = 30000) {
 
 let exitCode = 0
 try {
-  if (!await waitForServer(`${gkillBaseUrl}/`)) {
+  // 起動確認とプロセスの起動失敗を競わせる。失敗すれば serverStartupFailed が
+  // 原因つきで reject し、この try の catch へ落ちる。
+  const started = await Promise.race([
+    waitForServer(`${gkillBaseUrl}/`),
+    serverStartupFailed,
+  ])
+  if (!started) {
     throw new Error('gkill_server failed to start within 30 seconds')
   }
+  // 起動確認できたので監視を外す (以降の server.kill() を誤検知しないため)
+  detachServerStartupWatchers()
   console.log('[E2E] gkill_server is ready')
 
   // 4. Start Vite dev server proxying /api to the test gkill_server.

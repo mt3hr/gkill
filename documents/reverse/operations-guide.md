@@ -230,34 +230,43 @@ Windows サービスなどで標準出力が見えない場合は、
 
 ### 5.1 バックアップ対象
 
-gkill のデータは全て **ファイルベース**（SQLite3 + 通常ファイル）のため、ファイルコピーでバックアップ可能。
+gkill のデータは全て **ファイルベース**（SQLite3 + 通常ファイル）である。ただし SQLite3 は `journal_mode=DELETE`（ロールバックジャーナル方式）で動作するため、**サーバー稼働中に単純ファイルコピーすると書き込み途中の不整合な状態が写る**。しかも設定・データが複数の DB ファイルと外部リポジトリに分かれているため、稼働中コピーでは各ファイルの「時点」が揃わず、**復元して起動するまで不整合に気づけない**。整合したバックアップを取るには「サーバー停止」か「スナップショット」のどちらかで時点を揃える必要がある（→ 5.2）。
 
 | 対象 | パス | 優先度 |
 |---|---|---|
 | 設定データベース群 | `$HOME/gkill/configs/*.db` | 必須 |
 | ユーザーデータ | `$HOME/gkill/datas/` | 必須 |
-| ユーザー登録リポジトリ | ユーザー設定で指定したディレクトリ群 | 必須 |
+| ユーザー登録リポジトリ | ユーザー設定で指定したディレクトリ群（`$HOME/gkill/` の外に置ける） | 必須 |
 | TLS証明書 | `$HOME/gkill/tls/` | TLS使用時のみ |
 | キャッシュ | `$HOME/gkill/caches/`（`zip_cache/` 含む） | 任意（再生成可能） |
 | ログ | `$HOME/gkill/logs/` | 任意 |
 
-### 5.2 バックアップ手順
+### 5.2 バックアップ手順（時点整合の取り方）
+
+**時点整合は必ず次のどちらかの方法で確保すること。** 稼働中の単純コピーは公式手順としない。
+
+#### 方法A（推奨）: サーバーを停止してからコピー
+
+最も確実。全 DB と外部リポジトリを同一時点でコピーできる。
 
 ```bash
-# サーバーを停止してからバックアップ（SQLite3ロック回避）
-# Ctrl+C でサーバー停止後:
+# 1. gkill_server を停止（Ctrl+C など）してから実行
 
-# 設定のバックアップ
+# 2. 設定・データ・TLS をコピー
 cp -r $HOME/gkill/configs/ /backup/gkill_configs_$(date +%Y%m%d)/
-
-# データのバックアップ
-cp -r $HOME/gkill/datas/ /backup/gkill_datas_$(date +%Y%m%d)/
-
-# TLS証明書（使用時のみ）
-cp -r $HOME/gkill/tls/ /backup/gkill_tls_$(date +%Y%m%d)/
+cp -r $HOME/gkill/datas/   /backup/gkill_datas_$(date +%Y%m%d)/
+cp -r $HOME/gkill/tls/     /backup/gkill_tls_$(date +%Y%m%d)/   # TLS使用時のみ
 ```
 
-**重要 — 外部ディレクトリのリポジトリを取りこぼさないこと:** 上記の `configs/` `datas/` `tls/` コピーだけでは**完全バックアップにならない**。ユーザーがリポジトリ設定で `$HOME/gkill/` の外（任意の外部ディレクトリ）を指定している場合、そのデータは含まれない。完全バックアップには、まず登録済みリポジトリのパス一覧を確認し、外部ディレクトリも個別にコピーする必要がある。
+#### 方法B: ファイルシステムのスナップショット（無停止）
+
+サーバーを止められない場合は、全ファイルを一瞬で写すファイルシステムスナップショット（LVM / ZFS / btrfs / Windows VSS 等）を使う。スナップショットは複数 DB と外部リポジトリを**同一時点**で捉えるため、稼働中でも整合したバックアップになる。スナップショットを取ってから、そのスナップショットに対して 5.1 の対象をコピーする。
+
+> **SQLite online backup（`.backup` / バックアップAPI）について:** `sqlite3 src.db ".backup dst.db"` は稼働中の**単一 DB** を安全に写せるが、gkill は複数 DB と外部リポジトリにまたがるため、**各ファイルを個別に online backup しても相互の時点は揃わない**。全体整合が要るバックアップでは方法A（停止）か方法B（スナップショット）を用いること。online backup は「特定の1 DB だけを稼働中に取り出したい」用途に限る。
+
+#### 外部リポジトリを取りこぼさないこと
+
+上記の `configs/` `datas/` `tls/` コピーだけでは**完全バックアップにならない**。ユーザーがリポジトリ設定で `$HOME/gkill/` の外（任意の外部ディレクトリ）を指定している場合、そのデータは含まれない。まず登録済みリポジトリのパス一覧を確認し、外部ディレクトリも**本体と同じ時点で**コピーする（停止中、または同一スナップショット内で）。
 
 ```bash
 # 1. 登録済みリポジトリのパス一覧を設定DBから確認
@@ -270,17 +279,46 @@ sqlite3 $HOME/gkill/configs/*.db "SELECT file FROM REP;" 2>/dev/null | sort -u
 cp -r /path/to/external/repo/ /backup/gkill_external_repo_$(date +%Y%m%d)/
 ```
 
-**バックアップ後の検証:**
-- コピー先の SQLite3 ファイルが破損していないか確認する（`sqlite3 <file> "PRAGMA integrity_check;"` が `ok` を返すこと）。
-- 外部リポジトリを含む全リポジトリパスがバックアップに含まれているか、手順1の一覧と突き合わせる。
+#### バックアップ後の検証（integrity_check + ハッシュマニフェスト）
 
-**注意:** サーバー稼働中のSQLite3ファイルコピーはデータ破損のリスクがある。必ずサーバーを停止してからコピーすること。
+バックアップは**取っただけでは検証にならない**。次の2つを毎回実施する。
 
-### 5.3 リストア手順
+```bash
+# (1) SQLite3 ファイルの内部整合性を確認（各 DB が ok を返すこと）
+find /backup/gkill_configs_$(date +%Y%m%d) /backup/gkill_datas_$(date +%Y%m%d) \
+  -name '*.db' -print0 \
+| while IFS= read -r -d '' db; do
+    echo "$db: $(sqlite3 "$db" 'PRAGMA integrity_check;')"
+  done
+
+# (2) ハッシュマニフェストを作成（後日の破損検知・復元前照合に使う）
+( cd /backup && find gkill_configs_$(date +%Y%m%d) gkill_datas_$(date +%Y%m%d) \
+    -type f -exec sha256sum {} + ) > /backup/manifest_$(date +%Y%m%d).sha256
+```
+
+- `PRAGMA integrity_check` が全 DB で `ok` を返すこと（`ok` 以外は破損。稼働中コピーで時点がずれると出やすい）。
+- 外部リポジトリを含む全リポジトリパスがバックアップに含まれているか、上のパス一覧と突き合わせる。
+- ハッシュマニフェストは復元前の照合（`sha256sum -c manifest_YYYYMMDD.sha256`）に使う。
+
+### 5.3 リストア手順と復元訓練
+
+**リストア:**
 
 1. gkill_server を停止
-2. バックアップファイルを元のパスに上書きコピー
-3. gkill_server を再起動
+2. 復元前にハッシュマニフェストで破損がないか照合（`( cd /backup && sha256sum -c manifest_YYYYMMDD.sha256 )`）
+3. バックアップファイルを元のパスに上書きコピー（**外部リポジトリのパスも忘れずに**）
+4. gkill_server を再起動し、ログにエラーが無いこと・記録が検索できることを確認
+
+**復元訓練（restore drill）を定期的に行うこと:** バックアップは「復元できて初めて成功」である。本番とは別のホームへ実際に復元して gkill_server を起動し、記録が読めるかを定期的に確認する。これにより、外部リポジトリの取りこぼしや時点不整合を**復元が必要になる前に**発見できる。
+
+```bash
+# 別ホームへ復元して起動確認（本番に影響しない）
+mkdir -p /tmp/gkill_restore_test/gkill
+cp -r /backup/gkill_configs_YYYYMMDD/ /tmp/gkill_restore_test/gkill/configs/
+cp -r /backup/gkill_datas_YYYYMMDD/   /tmp/gkill_restore_test/gkill/datas/
+gkill_server --gkill_home_dir /tmp/gkill_restore_test/gkill --address 127.0.0.1:19999
+# 起動後、ログイン・検索が正常なら訓練成功。確認後は破棄してよい。
+```
 
 ---
 

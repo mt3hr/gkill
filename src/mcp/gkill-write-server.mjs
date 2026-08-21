@@ -187,7 +187,7 @@ class McpWriteServer extends McpServerBase {
   }
 
 
-  buildToolResult(name, payload, isError = false) {
+  buildToolResult(name, payload, isError = false, _ctx = null) {
     const summary = isError
       ? summarizeToolError(name, payload?.error || "Unknown tool error", payload?.detail || null)
       : summarizeWritePayload(name, payload);
@@ -207,9 +207,9 @@ class McpWriteServer extends McpServerBase {
     return result;
   }
 
-  async handleToolCall(name, args) {
-    const sid = this.currentSessionId;
-    const userId = this.currentUserId || this.client.userId;
+  async handleToolCall(name, args, ctx = null) {
+    const sid = ctx ? ctx.sessionId : this.currentSessionId;
+    const userId = (ctx ? ctx.userId : this.currentUserId) || this.client.userId;
 
     if (isPluginToolName(name)) {
       return handlePluginToolCall(

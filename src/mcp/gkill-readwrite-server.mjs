@@ -203,12 +203,13 @@ class McpServer extends McpServerBase {
   }
 
 
-  buildToolResult(name, payload, isError = false) {
+  buildToolResult(name, payload, isError = false, ctx = null) {
     // ローカルクライアントには実パスを渡す。リモートには実パスを渡さず、
     // 代わりに期限付きの公開ファイルURLを注入する (発行できないときは実パスを消すだけ)。
+    // file-link トークンは ctx.sessionId で鋳造する。ctx 未指定 (単体テスト) のみ this.currentSessionId。
     if (!this.isLocalTransport) {
       if (this.fileLinkContext && !isError) {
-        applyFileLinks(payload, this.fileLinkContext, this.currentSessionId);
+        applyFileLinks(payload, this.fileLinkContext, ctx ? ctx.sessionId : this.currentSessionId);
       } else {
         stripFilePaths(payload);
       }
@@ -252,9 +253,9 @@ class McpServer extends McpServerBase {
     return result;
   }
 
-  async handleToolCall(name, args) {
-    const sid = this.currentSessionId;
-    const userId = this.currentUserId || this.client.userId;
+  async handleToolCall(name, args, ctx = null) {
+    const sid = ctx ? ctx.sessionId : this.currentSessionId;
+    const userId = (ctx ? ctx.userId : this.currentUserId) || this.client.userId;
 
     if (isPluginToolName(name)) {
       return handlePluginToolCall(
@@ -289,6 +290,8 @@ class McpServer extends McpServerBase {
           returned_count: response.returned_count ?? 0,
           has_more: Boolean(response.has_more),
           ...(response.next_cursor ? { next_cursor: response.next_cursor } : {}),
+          // M-05: 付随データの取得が一部失敗したら、結果が不完全なことを明示する。
+          ...(response.partial ? { partial: true, warnings: Array.isArray(response.warnings) ? response.warnings : [] } : {}),
         };
         if (normalized.include_plugin_content) {
           payload.plugin_content = await inlinePluginContents(
@@ -370,7 +373,7 @@ class McpServer extends McpServerBase {
             .split("/")
             .map((s) => encodeURIComponent(s))
             .join("/");
-        const fileSid = this.currentSessionId || (await this.client.login());
+        const fileSid = sid || (await this.client.login());
         const { buffer, contentType } = await this.client.fetchFile(filePath, fileSid);
         // base64はJSON-RPCレスポンスに素で載るので、青天井にすると数百MBの動画で応答が破裂する
         if (buffer.length > MAX_IDF_FILE_BYTES) {

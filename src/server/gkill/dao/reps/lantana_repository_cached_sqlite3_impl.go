@@ -873,7 +873,8 @@ WHERE
 	tableName := l.dbName
 	tableNameAlias := l.dbName
 	whereCounter := 0
-	onlyLatestData := false
+	// GenerateFindSQLCommon は query.OnlyLatestData を読まず、この引数しか見ない（既定 false のままだと最古版を返す）。
+	onlyLatestData := query.OnlyLatestData
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
@@ -956,7 +957,12 @@ WHERE
 	if len(lantanas) == 0 {
 		return nil, nil
 	}
-	return &lantanas[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestLantana := slices.MaxFunc(lantanas, func(a Lantana, b Lantana) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestLantana, nil
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]Lantana, error) {
@@ -1155,6 +1161,10 @@ WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.Qu
 			addr.TargetID = *targetIDInData
 		}
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return latestDataRepositoryAddresses, nil
 }

@@ -8,6 +8,7 @@
 // その2つだけをコンストラクタの options で受ける。
 
 import http from "node:http";
+import { OAuthServer } from "./oauth-server.mjs";
 import { FileLinkStore } from "./file-link-store.mjs";
 import { THUMB_QUERY_REGEX, normalizeMimeType } from "./payload.mjs";
 
@@ -46,9 +47,25 @@ export class HttpTransport {
   }
 
   start() {
-    const httpServer = http.createServer((req, res) => this.handleRequest(req, res));
-    httpServer.listen(this.port, "0.0.0.0", () => {
-      process.stderr.write(`MCP HTTP server listening on http://0.0.0.0:${this.port}/mcp [OAuth issuer: ${this.oauthServer.issuer}]\n`);
+    // httpServer はテストから stop() で確実に閉じられるようフィールドに保持する。
+    // listen のポートに 0 を渡すと OS が空きポートを採番する (テスト用。本番は this.port)。
+    this.httpServer = http.createServer((req, res) => this.handleRequest(req, res));
+    this.httpServer.listen(this.port, "0.0.0.0", () => {
+      const boundPort = this.httpServer.address()?.port ?? this.port;
+      process.stderr.write(`MCP HTTP server listening on http://0.0.0.0:${boundPort}/mcp [OAuth issuer: ${this.oauthServer.issuer}]\n`);
+    });
+    return this.httpServer;
+  }
+
+  // テスト用。listen 中の httpServer を閉じ、file-link の掃除タイマーも止める。
+  stop() {
+    return new Promise((resolve) => {
+      this.fileLinkStore?.stopCleanup();
+      if (this.httpServer) {
+        this.httpServer.close(() => resolve());
+      } else {
+        resolve();
+      }
     });
   }
 
@@ -165,12 +182,24 @@ export class HttpTransport {
     try {
       const { buffer, contentType } = await this.server.client.fetchFile(gkillPath, link.gkillSessionId);
       this.logRequest(req, { statusCode: 200, responseBytes: buffer.length });
-      res.writeHead(200, {
+      // Mirrors: gkill_server_api/utils.go withUserContentSecurityHeaders。
+      // 拡張子許可リストの無い利用者ファイルを、OAuth ログインフォームと同一オリジンで
+      // 無認証配信するので、.html/.svg がスクリプト実行経路になりうる。nosniff は常時、
+      // CSP sandbox は .pdf 以外に付ける (.pdf は sandbox の opaque origin で
+      // Chrome 内蔵PDFビューワが動かなくなるため除外)。sandbox は文書読み込み時のみ効き
+      // <img>/<video> のサブリソース表示には影響しないので、画像取得の本来用途は壊れない。
+      const isPdf = link.fileName.toLowerCase().endsWith(".pdf");
+      const responseHeaders = {
         "Content-Type": normalizeMimeType(contentType) || "application/octet-stream",
         "Content-Length": buffer.length,
         "Cache-Control": "private, max-age=300",
         "Access-Control-Allow-Origin": "*",
-      });
+        "X-Content-Type-Options": "nosniff",
+      };
+      if (!isPdf) {
+        responseHeaders["Content-Security-Policy"] = "sandbox";
+      }
+      res.writeHead(200, responseHeaders);
       res.end(buffer);
     } catch (error) {
       this.logRequest(req, { statusCode: 502, reason: "file_fetch_failed" });
@@ -246,12 +275,17 @@ export class HttpTransport {
       return;
     }
 
-    // NOTE: _lastTokenUserId は handlePost 内で server.currentUserId に転記される。
-    // HTTP/1.1 直列処理を前提としており、HTTP/2 並行リクエスト時はリクエスト間でリークする可能性がある。
-    this._lastTokenUserId = tokenData.userId || null;
+    // 1リクエスト分の認証文脈は不変オブジェクトに固めて handlePost へ渡す。
+    // 以前は server.currentUserId 等の共有フィールドに書いて await をまたいで
+    // 読んでいたため、並行リクエストで別要求の user/session が混線していた。
+    const requestContext = Object.freeze({
+      sessionId: tokenData.gkillSessionId || null,
+      userId: tokenData.userId || null,
+      remoteAddr: req.socket?.remoteAddress || null,
+    });
     switch (req.method) {
       case "POST":
-        return this.handlePost(req, res, tokenData.gkillSessionId);
+        return this.handlePost(req, res, requestContext);
       case "GET":
         return this.handleGet(req, res);
       case "DELETE":
@@ -262,7 +296,7 @@ export class HttpTransport {
     }
   }
 
-  handlePost(req, res, oauthSessionId = null) {
+  handlePost(req, res, requestContext = null) {
     const chunks = [];
     req.on("data", (chunk) => chunks.push(chunk));
     req.on("end", async () => {
@@ -276,14 +310,8 @@ export class HttpTransport {
       }
 
       try {
-        // Set session override for OAuth-authenticated requests
-        this.server.currentSessionId = oauthSessionId;
-        this.server.currentUserId = this._lastTokenUserId || null;
-        this.server.currentRemoteAddr = req.socket?.remoteAddress || null;
-        const response = await this.server.handlePayload(payload);
-        this.server.currentSessionId = null;
-        this.server.currentUserId = null;
-        this.server.currentRemoteAddr = null;
+        // 認証文脈は不変引数で末端まで流す (共有フィールドに書かないので並行しても混線しない)。
+        const response = await this.server.handlePayload(payload, requestContext);
         const methods = this.summarizeJsonRpcMethods(payload);
 
         if (response === null) {
@@ -295,9 +323,6 @@ export class HttpTransport {
         const responseBytes = this.sendJson(res, 200, response);
         this.logRequest(req, { methods, statusCode: 200, responseBytes });
       } catch (error) {
-        this.server.currentSessionId = null;
-        this.server.currentUserId = null;
-        this.server.currentRemoteAddr = null;
         process.stderr.write(`HTTP handler error: ${String(error)}\n`);
         const id =
           payload && !Array.isArray(payload) && Object.prototype.hasOwnProperty.call(payload, "id") ? payload.id : null;

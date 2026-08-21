@@ -7,10 +7,9 @@
             </a>
             <v-progress-linear v-if="text_loading" indeterminate color="primary" height="2" />
             <!-- eslint-disable-next-line vue/no-v-html markdown_to_safe_html でDOMPurifyサニタイズ済み -->
-            <div v-if="markdown_html" ref="markdown_content"
+            <div v-if="markdown_html" v-html="markdown_html" ref="markdown_content"
                 :class="['idf_markdown_content', is_image_request_to_thumb_size ? 'idf_markdown_content--list' : '']"
-                @click="onMarkdownContentClick" @dblclick="onMarkdownContentDblclick"
-                v-html="markdown_html"></div>
+                @click="onMarkdownContentClick" @dblclick="onMarkdownContentDblclick"></div>
         </div>
         <!-- テキストファイル: 内容をインライン表示 -->
         <div v-else-if="kyou.typed_idf_kyou && is_text" class="idf_text_wrap">

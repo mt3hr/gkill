@@ -14,10 +14,8 @@ class MainActivityUnitTest {
      */
     @Test
     fun serverUrl_isLocalhostPort9999() {
-        val expectedUrl = "http://localhost:9999"
-        // The URL is hardcoded in onCreate; verify the expected value here
-        // to catch accidental changes.
-        assertEquals("http://localhost:9999", expectedUrl)
+        // Reference the real companion constant so an accidental change is caught.
+        assertEquals("http://localhost:9999", MainActivity.DEFAULT_SERVER_URL)
     }
 
     /**
@@ -25,8 +23,45 @@ class MainActivityUnitTest {
      */
     @Test
     fun serverPort_is9999() {
-        val port = 9999
-        assertEquals(9999, port)
+        assertEquals(9999, MainActivity.DEFAULT_SERVER_PORT)
+    }
+
+    /**
+     * The server must listen on the loopback interface only (127.0.0.1:9999),
+     * so a different device on the same LAN cannot reach it.
+     */
+    @Test
+    fun serverListenAddress_isLoopbackOnly() {
+        assertEquals("127.0.0.1:9999", MainActivity.SERVER_LISTEN_ADDRESS)
+    }
+
+    /**
+     * The launch arguments must pin the listen address to the loopback interface.
+     * The arg list is factored into the companion so it can be verified here.
+     */
+    @Test
+    fun serverArgs_containLoopbackAddress() {
+        val args = MainActivity.buildGkillServerArgs(
+            "/data/app/lib/arm64/libgkill_server.so",
+            "/data/user/0/pkg/files/gkill"
+        )
+        val addressIndex = args.indexOf("--address")
+        assertTrue("--address フラグが起動引数に含まれること", addressIndex >= 0)
+        assertTrue("--address の値が続くこと", addressIndex + 1 < args.size)
+        assertEquals("127.0.0.1:9999", args[addressIndex + 1])
+    }
+
+    /**
+     * The launch arguments must keep the existing flags (home dir / disable TLS / log).
+     */
+    @Test
+    fun serverArgs_keepExistingFlags() {
+        val args = MainActivity.buildGkillServerArgs(
+            "/lib/libgkill_server.so",
+            "/home/gkill"
+        )
+        assertEquals("/lib/libgkill_server.so", args[0])
+        assertTrue(args.containsAll(listOf("--gkill_home_dir", "/home/gkill", "--disable_tls", "--log", "debug")))
     }
 
     /**
@@ -46,8 +81,7 @@ class MainActivityUnitTest {
      */
     @Test
     fun socketConnectTimeout_is500ms() {
-        val timeout = 500
-        assertEquals(500, timeout)
+        assertEquals(500, MainActivity.SERVER_CONNECT_TIMEOUT_MS)
     }
 
     /**
@@ -55,8 +89,7 @@ class MainActivityUnitTest {
      */
     @Test
     fun retryInterval_is500ms() {
-        val interval = 500L
-        assertEquals(500L, interval)
+        assertEquals(500L, MainActivity.RETRY_INTERVAL_MS)
     }
 
     /**
