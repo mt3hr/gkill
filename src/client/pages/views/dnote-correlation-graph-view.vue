@@ -86,6 +86,7 @@ import DnoteCorrelationGraphContextMenu from "./dnote-correlation-graph-context-
 import EditDnoteCorrelationGraphDialog from "../dialogs/edit-dnote-correlation-graph-dialog.vue"
 import ConfirmDeleteDnoteCorrelationGraphDialog from "../dialogs/confirm-delete-dnote-correlation-graph-dialog.vue"
 import { i18n } from "@/i18n"
+import { to_single_line } from "@/classes/format-date-time"
 import { useDnoteCorrelationGraphView } from "@/classes/use-dnote-correlation-graph-view"
 
 const props = defineProps<DnoteCorrelationGraphViewProps>()
@@ -148,9 +149,11 @@ function format_interval(low: number | null, high: number | null): string {
   return low === null || high === null ? "—" : `[${low.toFixed(4)}, ${high.toFixed(4)}]`
 }
 
+// 時間の集計は format_duration が改行入りの文字列を返す。
+// ここは SVG の <title>（ネイティブのツールチップ）と1行の <p> なので畳んでから並べる
 function point_description(point: DnoteCorrelationPairPoint): string {
-  const x = point.x_value_string || point.x.toString()
-  const y = point.y_value_string || point.y.toString()
+  const x = to_single_line(point.x_value_string || point.x.toString())
+  const y = to_single_line(point.y_value_string || point.y.toString())
   return `${point.row_label}: ${x} / ${point.column_label}: ${y}`
 }
 

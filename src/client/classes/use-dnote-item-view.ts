@@ -9,6 +9,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
+import { to_single_line } from '@/classes/format-date-time'
 import { useDeviceKind } from '@/classes/use-device-kind'
 
 export function useDnoteItemView(options: {
@@ -58,7 +59,7 @@ export function useDnoteItemView(options: {
         related_kyous.value.splice(0)
         const dnote_aggregator = new DnoteAgregator(model_value.value!.predicate, model_value.value!.aggregate_target)
         const aggregate_result = await dnote_aggregator.aggregate(abort_controller, kyous, query, kyou_is_loaded)
-        value.value = aggregate_result.result_string.replace("<br>", "")
+        value.value = to_single_line(aggregate_result.result_string)
         related_kyous.value.splice(0, Infinity, ...aggregate_result.match_kyous)
         emits("finish_a_aggregate_task")
     }
