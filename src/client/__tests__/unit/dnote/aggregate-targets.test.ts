@@ -21,7 +21,10 @@ import AggregateAverageTimeIsStartTime from '@/classes/dnote/dnote-aggregate-tar
 import AggregateAverageTimeIsEndTime from '@/classes/dnote/dnote-aggregate-target/aggregate-average-timeis-end-time'
 import AggregateAverageKCNumValue from '@/classes/dnote/dnote-aggregate-target/aggregate-average-kc-num-value'
 import AggregateMaxKCNumValue from '@/classes/dnote/dnote-aggregate-target/aggregate-max-kc-num-value'
+import AggregateSumTimeIsTime from '@/classes/dnote/dnote-aggregate-target/aggregate-sum-timeis-time'
+import AggregateAverageTimeIsTime from '@/classes/dnote/dnote-aggregate-target/aggregate-average-timeis-time'
 import format_aggregated_number from '@/classes/dnote/dnote-aggregate-target/format-aggregated-number'
+import { DURATION_LINE_SEPARATOR } from '@/classes/format-date-time'
 
 const asKyou = (obj: unknown) => obj
 const emptyQuery = {} as never
@@ -249,6 +252,53 @@ describe('AggregateAverageTimeIsEndTime', () => {
     expect(await target.result_to_string(val)).toBe('')
     val = await target.append_aggregate_element_value(val, kyouEndingAt(18), emptyQuery)
     expect(await target.result_to_string(val)).toBe('18:00')
+  })
+})
+
+// ========== TimeIs の経過時間 ==========
+//
+// この2つの result_to_string は format_duration をそのまま返す。
+// 以前は format_duration が文字列に HTML の <br> を埋めていて、
+// 剥がしていない画面（Dnoteの集計リスト・相関グラフ）でタグが文字として見えていた。
+// 区切りは本物の改行でなければならない ―― タグに戻すとここが落ちる。
+
+/** 2025-03-15 00:00 から 23時間6分。format_duration の出力は "23時間 6分\n（23.1時間）" */
+const timeisOf23h6m = () =>
+  asKyou(makeKyouWithTimeis('テスト', {
+    typed_timeis: {
+      start_time: new Date(2025, 2, 15, 0, 0, 0),
+      end_time: new Date(2025, 2, 15, 23, 6, 0),
+    },
+  }))
+
+describe('AggregateSumTimeIsTime', () => {
+  const target = new AggregateSumTimeIsTime()
+
+  test('sums elapsed time and formats it with a real newline', async () => {
+    const val = await target.append_aggregate_element_value(null, timeisOf23h6m(), emptyQuery)
+    const result = await target.result_to_string(val)
+    expect(result).toBe(`23時間 6分${DURATION_LINE_SEPARATOR}（23.1時間）`)
+    expect(result).not.toContain('<')
+  })
+
+  test('returns an empty string for zero', async () => {
+    expect(await target.result_to_string(0)).toBe('')
+  })
+})
+
+describe('AggregateAverageTimeIsTime', () => {
+  const target = new AggregateAverageTimeIsTime()
+
+  test('averages elapsed time and formats it with a real newline', async () => {
+    let val = await target.append_aggregate_element_value(null, timeisOf23h6m(), emptyQuery)
+    val = await target.append_aggregate_element_value(val, timeisOf23h6m(), emptyQuery)
+    const result = await target.result_to_string(val)
+    expect(result).toBe(`23時間 6分${DURATION_LINE_SEPARATOR}（23.1時間）`)
+    expect(result).not.toContain('<')
+  })
+
+  test('returns an empty string when nothing was aggregated', async () => {
+    expect(await target.result_to_string(null)).toBe('')
   })
 })
 

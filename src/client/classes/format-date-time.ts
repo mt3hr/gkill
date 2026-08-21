@@ -41,6 +41,20 @@ export function format_time_of_day(milli_second_of_day: number | null): string {
     return ('0' + hours).slice(-2) + ':' + ('0' + minutes).slice(-2)
 }
 
+/**
+ * format_duration が「N日 N時間 N分」と「（N.NN時間）」の間に入れる区切り。
+ * 以前はここに HTML の <br> をそのまま埋めていたが、表示側は {{ }} 補間なので
+ * 剥がし忘れた画面ではタグが文字として見えていた（Dnoteの集計リスト・相関グラフ）。
+ * 本物の改行にしてあるので、剥がし忘れても white-space が既定のままなら空白1個へ畳まれる。
+ * 改行として見せたい場所だけが white-space: pre-line で opt-in する。
+ */
+export const DURATION_LINE_SEPARATOR = "\n"
+
+/** 集計値の文字列を1行に畳む。グラフのツールチップなど、改行が意味を持たない場所で使う */
+export function to_single_line(text: string): string {
+    return text.replaceAll(DURATION_LINE_SEPARATOR, " ")
+}
+
 export function format_duration(duration_milli_second: number | null): string {
     if (!duration_milli_second || duration_milli_second === 0) {
         return ""
@@ -75,10 +89,7 @@ export function format_duration(duration_milli_second: number | null): string {
         diff_str += seconds + i18n.global.t("SECOND_SUFFIX")
     }
     if (diff_str !== "") {
-        if (diff_str !== "") {
-            diff_str += " "
-        }
-        diff_str += "<br>（" + trimed_hours + i18n.global.t("HOUR_SUFFIX") + "）"
+        diff_str += DURATION_LINE_SEPARATOR + "（" + trimed_hours + i18n.global.t("HOUR_SUFFIX") + "）"
     }
     return diff_str
 }

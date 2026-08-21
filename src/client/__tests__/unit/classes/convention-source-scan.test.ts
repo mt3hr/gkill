@@ -7,6 +7,8 @@
  *   - `:draggable` を `is_pc` でゲートし忘れる（タッチパネル付きPCで D&D が死ぬ / 逆も）
  *   - Kyou の引き直しを手書きする（`load_all(force_attached)` を落として添付タグを引き直さない）
  *   - 中継束を `@evt="xxxHandlers['evt']"` と展開して並べる（畳み忘れが増殖する）
+ *   - 表示文字列に HTML タグのリテラルを埋める（`format_duration` の `<br>` が
+ *     剥がしていない画面でタグのまま見えていた）
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
@@ -248,8 +250,40 @@ describe('クライアントの規約のソース走査', () => {
         expect(violations).toEqual([])
     })
 
+    // 表示用の文字列に HTML タグのリテラルを埋めない。
+    // 表示側は {{ }} 補間なので Vue がエスケープし、剥がし忘れた画面では
+    // タグが文字として見える（format_duration の "<br>" が Dnote の集計リストと
+    // 相関グラフで実際に出ていた）。区切りが要るなら本物の改行を使い、
+    // 改行として見せたい場所だけが white-space: pre-line で opt-in する。
+    const html_tag_literal = /(["'`])<\s*\/?\s*(br|p|div|span|b|i|hr)\b[^>]*>/i
+    it('表示文字列に HTML タグのリテラルを埋めていない', () => {
+        const violations = new Array<string>()
+        for (const path of ts_files) {
+            const source = strip_comments(readFileSync(path, 'utf8'))
+            const match = html_tag_literal.exec(source)
+            if (match) {
+                violations.push(`${to_repo_path(path)}: ${match[0]}（改行が要るなら "\\n" を使い、見せる側が white-space: pre-line で opt-in すること）`)
+            }
+        }
+        expect(violations).toEqual([])
+    })
+
+    // 上の規約の受け皿。ここを外すと Dnote の集計リストが
+    // "23時間 6分\n（23.1時間）" を1行に畳んで表示してしまう
+    it('集計リストの値が pre-line で改行を見せている', () => {
+        const source = readFileSync(join(client_root, 'pages', 'views', 'aggregated-list-item.vue'), 'utf8')
+        expect(source).toContain('aggregated_list_item_value')
+        expect(source).toContain('white-space: pre-line')
+    })
+
     // 走査が「何も見つけられないだけ」で緑になっていないことを確かめる
     it('検出ロジックが違反を見つけられる（自己検査）', () => {
+        expect(html_tag_literal.test('diff_str += "<br>（"')).toBe(true)
+        expect(html_tag_literal.test('const s = "改行なし"')).toBe(false)
+        // 比較演算子や型引数を誤検出しない
+        expect(html_tag_literal.test('if (a < b) { return "x" }')).toBe(false)
+        expect(html_tag_literal.test('const x = ref<Array<Kyou>>([])')).toBe(false)
+
         expect(/\bautofocus\b/.test(strip_comments('<v-text-field autofocus />'))).toBe(true)
         expect(/\bautofocus\b/.test(strip_comments('// autofocus は書かない\n<v-text-field />'))).toBe(false)
 

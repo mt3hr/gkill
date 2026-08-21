@@ -1,7 +1,7 @@
 import { log_unless_aborted } from '@/classes/abort-error'
 import { computed, onMounted, ref } from 'vue'
 import moment from 'moment'
-import { format_duration } from '@/classes/format-date-time'
+import { format_duration, to_single_line } from '@/classes/format-date-time'
 import type { TimeIsViewProps } from '@/pages/views/time-is-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import type TimeIsContextMenu from '@/pages/views/time-is-context-menu.vue'
@@ -38,7 +38,7 @@ export function useTimeIsView(options: {
 
         time2 = time2 ? time2 : moment().toDate()
         const diff = Math.abs(time2.getTime() - time1.getTime())
-        return format_duration(diff).replace("<br>", " ")
+        return to_single_line(format_duration(diff))
     })
 
     // ── CRUD relay handlers ──
