@@ -12,7 +12,8 @@
                                 <span>{{ dnote_list_query.prefix }}</span>
                             </td>
                             <td>
-                                <span v-if="!is_lantana_type" :class="value_class">{{ aggregated_item.value }}</span>
+                                <span v-if="!is_lantana_type" class="aggregated_list_item_value"
+                                    :class="value_class">{{ aggregated_item.value }}</span>
                                 <span v-if="is_lantana_type">
                                     <LantanaFlowersView :gkill_api="gkill_api" :application_config="application_config"
                                         :mood="mood_value" :editable="false" />
@@ -60,5 +61,19 @@ const {
 <style lang="css" scoped>
 .aggregated_list_item {
     border-top: 1px solid silver;
+}
+
+/* format_duration が入れる DURATION_LINE_SEPARATOR をここでは本物の改行として見せる。
+   「23時間 6分」と「（23.1時間）」を2行に割るのが目的で、
+   1行で見せる他の画面（TimeIsカード・集計項目・グラフのツールチップ）は
+   to_single_line() で畳んでいる */
+.aggregated_list_item_value {
+    white-space: pre-line;
+}
+
+/* 値が2行になると、既定の vertical-align: middle では
+   前後に置く prefix / suffix が2行の中間へ浮く。1行目に揃える */
+.aggregated_list_item td {
+    vertical-align: top;
 }
 </style>
