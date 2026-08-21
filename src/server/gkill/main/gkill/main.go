@@ -84,21 +84,25 @@ var (
 				}
 			}()
 
-			for ; ; time.Sleep(time.Microsecond * 500) {
+			// DAO と server_config の準備を待つ。待っているのは DAO と設定の初期化だけで
+			// (リポジトリ構築ではない)、上の goroutine の LaunchGkillServerAPI が失敗すると
+			// 永遠に準備できない。以前は上限なしの 500µs busy-wait で、その場合フリーズしていた。
+			// 上限を設けて超えたら fatal にする（60秒は初期化には十分。sleep も現実的な間隔に）。
+			readyDeadline := time.Now().Add(60 * time.Second)
+			for {
 				api := common.GetGkillServerAPI()
-				if api.GkillDAOManager == nil {
-					continue
+				ready := api.GkillDAOManager != nil &&
+					api.GkillDAOManager.ConfigDAOs != nil &&
+					api.GkillDAOManager.ConfigDAOs.ServerConfigDAO != nil
+				if ready {
+					if serverConfigs, err := api.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.TODO()); len(serverConfigs) != 0 && err == nil {
+						break
+					}
 				}
-				if api.GkillDAOManager.ConfigDAOs == nil {
-					continue
+				if time.Now().After(readyDeadline) {
+					log.Fatal("gkill server did not become ready within 60s (LaunchGkillServerAPI may have failed)")
 				}
-				if api.GkillDAOManager.ConfigDAOs.ServerConfigDAO == nil {
-					continue
-				}
-				if serverConfigs, err := api.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.TODO()); len(serverConfigs) == 0 || err != nil {
-					continue
-				}
-				break
+				time.Sleep(100 * time.Millisecond)
 			}
 
 			device, err := common.GetGkillServerAPI().GetDevice()

@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 910 | 125 | Go `testing` |
-| フロントエンド ユニット | 1934 | 165 | Vitest |
+| Go バックエンド | 939 | 136 | Go `testing` |
+| フロントエンド ユニット | 1952 | 166 | Vitest |
 | フロントエンド E2E | 250 | 44（+auth.setup.ts） | Playwright |
-| MCP サーバ | 724 | 20 | Vitest |
+| MCP サーバ | 732 | 21 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
-| Wear OS | 123 | 9 | JUnit 4 + MockK |
-| **合計** | **3,953** | **365** | |
+| Wear OS | 171 | 9 | JUnit 4 + MockK |
+| **合計** | **4,059** | **381** | |
 
 数え直すコマンド:
 
@@ -206,7 +206,7 @@ src/server/gkill/
 │   ├── req_res/req_res_test.go        ← JSON 往復テスト
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（18ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（23ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── handle_get_idf_file_path_test.go      ← IDFファイル絶対パス取得
@@ -231,7 +231,7 @@ src/server/gkill/
 │   ├── gkill_notification/            ← 通知ターゲット
 │   ├── hide_files/                    ← ファイル非表示
 │   ├── sqlite3impl/                   ← SQLite3 ユーティリティ
-│   └── reps/                          ← リポジトリ実装（43ファイル。plugin_repository_impl_test.go, mi_re_kyou_repository_sqlite3_impl_test.go, re_kyou_granular_cache_test.go 等）
+│   └── reps/                          ← リポジトリ実装（46ファイル。plugin_repository_impl_test.go, mi_re_kyou_repository_sqlite3_impl_test.go, re_kyou_granular_cache_test.go 等）
 │       ├── *_repository_sqlite3_impl_test.go  ← 11データ型
 │       ├── cached_and_temp_test.go    ← キャッシュ層・一時層
 │       └── cache/                     ← キャッシュ更新
@@ -240,7 +240,7 @@ src/server/gkill/
 │   ├── cached_rep_insert_alignment_test.go ← INSERT の列並びと引数の並びの一致
 │   └── source_conventions_scan_test.go ← 規約7件のソース走査（下記）
 ├── dvnf/                              ← DVNF ファイル管理（2ファイル）
-└── main/                              ← CLI・エントリポイント（8ファイル）
+└── main/                              ← CLI・エントリポイント（9ファイル）
 ```
 
 **テスト戦略:**
@@ -517,7 +517,7 @@ npm install
 
 ### Go テスト
 
-- Go 1.26.4 以上（`src/server/go.mod` の `go` ディレクティブ）
+- Go 1.26.6 以上（`src/server/go.mod` の `go` ディレクティブ）
 - 追加のセットアップ不要（インメモリ DB 使用のため）
 
 ### フロントエンド ユニットテスト

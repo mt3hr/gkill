@@ -327,7 +327,7 @@ describe("OAuthStore — cleanup interval", () => {
 // ---------------------------------------------------------------------------
 // Persistence (JSON file)
 // ---------------------------------------------------------------------------
-import { existsSync, unlinkSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, unlinkSync, mkdirSync, readFileSync, writeFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -355,6 +355,27 @@ describe("OAuthStore — persistence", () => {
     const data = JSON.parse(readFileSync(persistPath, "utf8"));
     expect(data.refreshTokens.rt1.value.userId).toBe("admin");
     expect(data.clients.c1.client_name).toBe("Test");
+  });
+
+  // M-08: temp+rename の原子的書き込み。中間の .tmp を残さない。
+  test("save() leaves no .tmp file behind (atomic temp+rename)", () => {
+    const store = new OAuthStore(persistPath);
+    store.putRefreshToken("rt1", { userId: "admin" }, 60000);
+    expect(existsSync(`${persistPath}.tmp`)).toBe(false);
+    // 完全な JSON として再 load できる。
+    const store2 = new OAuthStore(persistPath);
+    store2.load();
+    expect(store2.getRefreshToken("rt1")).toEqual({ userId: "admin" });
+  });
+
+  // M-08: POSIX では 0600 で書く（他ローカルユーザから refresh token を読めなくする）。
+  // Windows では mode は実質 no-op なので検査しない。
+  test("save() writes the state file with 0600 permissions on POSIX", () => {
+    if (process.platform === "win32") return;
+    const store = new OAuthStore(persistPath);
+    store.putRefreshToken("rt1", { userId: "admin" }, 60000);
+    const mode = statSync(persistPath).mode & 0o777;
+    expect(mode).toBe(0o600);
   });
 
   test("load() restores refresh tokens and clients from file", () => {

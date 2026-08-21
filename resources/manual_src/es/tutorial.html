@@ -403,12 +403,15 @@ leche
   <p>Los administradores pueden agregar, habilitar y deshabilitar cuentas de usuario en la pantalla de "Gestión de cuentas".</p>
 
   <h3>Copia de seguridad de datos</h3>
-  <p>Todos los datos de gkill se almacenan en el directorio de inicio (predeterminado: <code>~/gkill</code>; en la aplicación Android, <code>/sdcard/gkill</code>). Si hace una copia de seguridad de este directorio, puede preservar todos los datos.</p>
+  <p>Todos los datos de gkill se almacenan en el directorio de inicio (predeterminado: <code>~/gkill</code>; en la aplicación Android, <code>/sdcard/gkill</code>). Al hacer la copia de seguridad, <strong>cierre primero gkill y luego copie este directorio</strong>. Copiarlo mientras gkill está en ejecución puede capturar un estado escrito a medias y, como los datos se reparten entre varias bases de datos, sus momentos de guardado pueden no coincidir, de modo que una copia dañada pasará inadvertida hasta que intente restaurarla. Si no puede detener gkill, utilice la función de instantáneas (snapshot) de su sistema de archivos, que captura todo el estado en un único instante.</p>
   <div class="tip">
-    <strong>Consejo:</strong> Se recomienda hacer copias de seguridad del directorio de inicio periódicamente. Los directorios <code>datas/</code> y <code>configs/</code> son especialmente importantes.
+    <strong>Consejo:</strong> Se recomienda hacer copias de seguridad periódicamente. Los directorios <code>datas/</code> y <code>configs/</code> son especialmente importantes. Los directorios <code>caches/</code> y <code>logs/</code> se regeneran al iniciar, por lo que no es necesario incluirlos.
   </div>
   <div class="tip">
-    <strong>Nota:</strong> La ubicación de los repositorios también puede configurarse fuera del directorio de inicio. Si utiliza archivos ubicados en carpetas externas (archivos colocados en carpetas externas, historiales de commits de Git, bases de datos ubicadas fuera, etc.), copiar solo el directorio de inicio los omitirá. Asegúrese de incluir también en la copia de seguridad la ubicación de todos los repositorios configurados.
+    <strong>Nota:</strong> La ubicación de los repositorios también puede configurarse fuera del directorio de inicio. Si utiliza archivos ubicados en carpetas externas (archivos colocados en carpetas externas, historiales de commits de Git, bases de datos ubicadas fuera, etc.), copiar solo el directorio de inicio los omitirá. Asegúrese de incluir también en la copia de seguridad la ubicación de todos los repositorios configurados, capturada en el mismo momento que el resto.
+  </div>
+  <div class="tip">
+    <strong>Verifique la restauración:</strong> Una copia de seguridad solo cuenta cuando se puede restaurar. De vez en cuando, restáurela realmente en una ubicación distinta de su entorno de producción, inicie gkill y confirme que arranca y que sus registros se pueden buscar. Así detectará archivos omitidos o inconsistencias antes de necesitar la copia.
   </div>
 
   <h2>Documentos relacionados</h2>

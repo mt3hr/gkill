@@ -1,46 +1,15 @@
 package gkill_server_api
 
 import (
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
 
-func TestIsDisallowedFetchIP(t *testing.T) {
-	disallowed := []string{
-		"127.0.0.1",
-		"10.0.0.1",
-		"172.16.0.1",
-		"192.168.1.1",
-		"169.254.169.254",
-		"0.0.0.0",
-		"::1",
-		"fe80::1",
-		"fc00::1",
-	}
-	for _, s := range disallowed {
-		if !isDisallowedFetchIP(net.ParseIP(s)) {
-			t.Errorf("isDisallowedFetchIP(%s) = false, want true", s)
-		}
-	}
-
-	allowed := []string{
-		"93.184.216.34",
-		"8.8.8.8",
-		"2001:4860:4860::8888",
-	}
-	for _, s := range allowed {
-		if isDisallowedFetchIP(net.ParseIP(s)) {
-			t.Errorf("isDisallowedFetchIP(%s) = true, want false", s)
-		}
-	}
-
-	if !isDisallowedFetchIP(nil) {
-		t.Error("isDisallowedFetchIP(nil) = false, want true")
-	}
-}
+// SSRF ロジック本体（IsDisallowedFetchIP / スキーム検査 / サイズ上限）は
+// api/safefetch/safefetch_test.go へ移設した。ここは httpGetBase64Data が
+// そのラッパとして従来どおり loopback とスキームを弾くことだけを確認する。
 
 func TestHttpGetBase64Data_BlocksLoopback(t *testing.T) {
 	// loopbackで実際にサーバを立てても、接続段階で拒否されることを確認する

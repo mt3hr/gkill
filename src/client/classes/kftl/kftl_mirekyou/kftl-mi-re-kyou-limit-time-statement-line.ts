@@ -1,6 +1,6 @@
 'use strict'
 
-import moment from 'moment'
+import { parse_kftl_date_time } from '../kftl-date-time'
 import { i18n } from '@/i18n'
 import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
@@ -26,8 +26,8 @@ export class KFTLMiReKyouLimitTimeStatementLine extends KFTLStatementLine {
     }
 
     async apply_this_line_to_request_map(_request_map: KFTLRequestMap): Promise<void> {
-        const time = moment(strip_prefix(this.get_context().get_this_statement_line_text(), "KFTL_TIMEIS_TIME_PREFIX", KFTL_ASCII_TIMEIS_TIME_PREFIX)).toDate()
-        if (!Number.isNaN(time.getTime())) {
+        const time = parse_kftl_date_time(strip_prefix(this.get_context().get_this_statement_line_text(), "KFTL_TIMEIS_TIME_PREFIX", KFTL_ASCII_TIMEIS_TIME_PREFIX))
+        if (time !== null) {
             this.request.set_limit_time(time)
         }
         return new Promise<void>((resolve) => resolve())
@@ -38,8 +38,8 @@ export class KFTLMiReKyouLimitTimeStatementLine extends KFTLStatementLine {
         if (line_text == "" || line_text == "\n") {
             return i18n.global.t("KFTL_MI_NO_LIMIT_TIME_TITLE")
         }
-        const time = moment(strip_prefix(line_text, "KFTL_TIMEIS_TIME_PREFIX", KFTL_ASCII_TIMEIS_TIME_PREFIX)).toDate()
-        if (Number.isNaN(time.getTime())) {
+        const time = parse_kftl_date_time(strip_prefix(line_text, "KFTL_TIMEIS_TIME_PREFIX", KFTL_ASCII_TIMEIS_TIME_PREFIX))
+        if (time === null) {
             return i18n.global.t("KFTL_MI_INVALID_LIMIT_TIME_TITLE")
         }
         return i18n.global.t("KFTL_MI_LIMIT_TIME_TITLE")

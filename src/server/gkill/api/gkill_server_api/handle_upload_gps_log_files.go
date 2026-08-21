@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -169,7 +170,13 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 		go func(filename string, base64Data string) {
 			// テンポラリファイル書き込み
 			defer wg.Done()
-			base64Reader := bufio.NewReader(strings.NewReader(strings.SplitN(base64Data, ",", 2)[1]))
+			// data URI プレフィックスの有無どちらでも末尾要素を本文として扱う。
+			// 以前は SplitN(...)[1] を長さ未確認で参照しており、カンマ無し入力の
+			// index out of range panic が子goroutine内で起きて recoverMiddleware で
+			// 回収できずプロセス全体が落ちていた（handle_upload_files.go と同じ形に揃える）。
+			parts := strings.SplitN(base64Data, ",", 2)
+			encoded := parts[len(parts)-1]
+			base64Reader := bufio.NewReader(strings.NewReader(encoded))
 			decoder := base64.NewDecoder(base64.RawStdEncoding, base64Reader)
 			base64DataBytes, err := io.ReadAll(decoder)
 			if err != nil {
@@ -302,9 +309,10 @@ loop:
 				}
 				return
 			}
-			file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+			// 一時ファイルへ書いてから rename で確定する（Override 時に原本を壊さない）。
+			tmpFile, err := os.CreateTemp(filepath.Dir(filename), ".gpslog-*")
 			if err != nil {
-				err := fmt.Errorf("error at open file filename= %s: %w", filename, err)
+				err := fmt.Errorf("error at create temp file for %s: %w", filename, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 				gkillErrorCh2 <- &message.GkillError{
 					ErrorCode:    message.GetRepPathError,
@@ -312,15 +320,22 @@ loop:
 				}
 				return
 			}
-			defer func() {
-				err := file.Close()
-				if err != nil {
-					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			tmpName := tmpFile.Name()
+			_, writeErr := tmpFile.WriteString(gpxFileContent)
+			closeErr := tmpFile.Close()
+			if writeErr != nil || closeErr != nil {
+				os.Remove(tmpName)
+				err := fmt.Errorf("error at write gpx content to file filename= %s: write=%v close=%v", filename, writeErr, closeErr)
+				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+				gkillErrorCh2 <- &message.GkillError{
+					ErrorCode:    message.WriteGPXFileError,
+					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 				}
-			}()
-			_, err = file.WriteString(gpxFileContent)
-			if err != nil {
-				err := fmt.Errorf("error at write gpx content to file filename= %s: %w", filename, err)
+				return
+			}
+			if err := os.Rename(tmpName, filename); err != nil {
+				os.Remove(tmpName)
+				err = fmt.Errorf("error at rename temp file to %s: %w", filename, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 				gkillErrorCh2 <- &message.GkillError{
 					ErrorCode:    message.WriteGPXFileError,

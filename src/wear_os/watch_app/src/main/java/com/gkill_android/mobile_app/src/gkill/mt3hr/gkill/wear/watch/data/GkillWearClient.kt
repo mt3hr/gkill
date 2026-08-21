@@ -15,6 +15,7 @@ private const val TAG = "GkillWearClient"
 private const val PATH_GET_TEMPLATES = "/gkill/get_templates"
 private const val PATH_TEMPLATES     = "/gkill/templates"
 private const val PATH_SUBMIT              = "/gkill/submit"
+private const val PATH_SUBMIT_FORCE        = "/gkill/submit_force"
 private const val PATH_SUBMIT_RESULT       = "/gkill/submit_result"
 private const val PATH_GET_PLAING_TIMEIS   = "/gkill/get_plaing_timeis"
 private const val PATH_PLAING_TIMEIS       = "/gkill/plaing_timeis"
@@ -107,12 +108,15 @@ class GkillWearClient(private val context: Context) {
 
     /**
      * Sends a KFTL text submission request to the phone.
+     * When [force] is true, uses the force path so the phone skips the duplicate
+     * check (the user explicitly confirmed "それでも送信" after a DUPLICATE result).
      * Returns the nodeId if sent successfully, null otherwise.
      */
-    suspend fun sendSubmitRequest(kftlText: String): String? {
+    suspend fun sendSubmitRequest(kftlText: String, force: Boolean = false): String? {
         val nodeId = getPhoneNodeId() ?: return null
+        val path = if (force) PATH_SUBMIT_FORCE else PATH_SUBMIT
         return try {
-            messageClient.sendMessage(nodeId, PATH_SUBMIT, kftlText.toByteArray(Charsets.UTF_8)).await()
+            messageClient.sendMessage(nodeId, path, kftlText.toByteArray(Charsets.UTF_8)).await()
             nodeId
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send submit request", e)

@@ -403,12 +403,15 @@ Milk
   <p>Administrators can add, enable, and disable user accounts on the "Account Management" screen.</p>
 
   <h3>Data Backup</h3>
-  <p>All gkill data is stored in the home directory (default: <code>~/gkill</code>; <code>/sdcard/gkill</code> in the Android app). Backing up this directory will preserve all your data.</p>
+  <p>All gkill data is stored in the home directory (default: <code>~/gkill</code>; <code>/sdcard/gkill</code> in the Android app). When you back it up, <strong>quit gkill first and then copy this directory</strong>. Copying while gkill is running can capture a half-written state, and because the data is split across several databases their saved points may not line up, so a broken backup may go unnoticed until you try to restore it. If you cannot stop gkill, use your file system's snapshot feature (which captures the whole state at a single instant).</p>
   <div class="tip">
-    <strong>Tip:</strong> It is recommended to back up the home directory regularly. The <code>datas/</code> and <code>configs/</code> directories are particularly important.
+    <strong>Tip:</strong> It is recommended to back up regularly. The <code>datas/</code> and <code>configs/</code> directories are particularly important. The <code>caches/</code> and <code>logs/</code> directories are rebuilt on startup, so you do not need to include them.
   </div>
   <div class="tip">
-    <strong>Note:</strong> Repository locations can also be set outside the home directory. If you use files placed in external folders (files placed in external folders, Git commit histories, databases located outside, etc.), copying only the home directory will miss them. Be sure to include the location of every configured repository in your backup as well.
+    <strong>Note:</strong> Repository locations can also be set outside the home directory. If you use files placed in external folders (files placed in external folders, Git commit histories, databases located outside, etc.), copying only the home directory will miss them. Be sure to include the location of every configured repository in your backup as well, captured at the same point in time as the rest.
+  </div>
+  <div class="tip">
+    <strong>Verify restoration:</strong> A backup only counts once it can be restored. From time to time, actually restore it to a location separate from your live setup, start gkill, and confirm that it launches and your records are searchable. This lets you catch missing files or inconsistencies before you ever need the backup.
   </div>
 
   <h2>Related Documents</h2>

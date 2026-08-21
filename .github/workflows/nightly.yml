@@ -1,0 +1,177 @@
+name: Nightly
+
+# 夜間に回す重いチェック。
+# CI (ci.yml) は push / PR 用の「速い層」で、E2E / Android / Wear OS / 脆弱性検査を
+# 外している (ローカルの `npm test` は install_server から始まり30分近くかかるため)。
+# それらをまとめてここで毎日回す。
+#
+# 各ジョブは独立で、初期はすべて continue-on-error にしてある。
+# 既知フレーク (mi-operations 2本 / add-dialog-crud / delete-crud) や、
+# 外部 advisory の増減で赤くなりやすいジョブが1つ落ちても、
+# 他のジョブの結果が読めるようにするため。安定したら順に外していく。
+#
+# すべて ubuntu-latest で回す。Windows は並列プロセス過多で 0xC0000142 の
+# 偽失敗が出るため、夜間の自動実行には向かない。
+on:
+  schedule:
+    # 毎日 15:17 UTC。分をずらして GitHub 側のスケジュール混雑ピークを避ける
+    - cron: "17 15 * * *"
+
+  # GitHub Actions画面から手動実行できるようにする
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    # 既知フレークがあるので、E2Eの flake で夜間全体を赤にしない
+    continue-on-error: true
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: src/server/go.mod
+          cache-dependency-path: src/server/go.sum
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # E2E は Vite dev server でフロントを配信するが、gkill_server は
+      # embed/i18n/locales が無いと起動時に panic する。prepare_install で
+      # 埋め込み資産一式 (locales / version.json / フロントビルド) を用意してから
+      # サーバをビルドする。
+      - name: Prepare install (frontend build + embed assets)
+        run: npm run prepare_install
+
+      # run-e2e.mjs は PATH から gkill_server を探して起動する。
+      # RUNNER_TEMP にビルドして次のステップで PATH へ通す。
+      - name: Build gkill_server
+        working-directory: src/server
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          go build -o "$RUNNER_TEMP/bin/gkill_server" ./gkill/main/gkill_server
+
+      - name: Add gkill_server to PATH
+        run: echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      # E2E は Chromium だけ使う。--with-deps でランナーに不足しているライブラリも入れる
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      # run-e2e.mjs が gkill_server と Vite を空きポートで自動起動・停止し、
+      # Playwright を回す。
+      - name: Run E2E tests
+        run: node src/client/__tests__/e2e/run-e2e.mjs
+
+  android_wear:
+    name: Android / Wear OS (gradle test)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # AGP を動かすため JDK 17 を使う。Gradleキャッシュもここで有効化する
+      # (codeql.yml の Android / Kotlin 環境と同じ構成)。
+      - name: Set up JDK 17
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: |
+            src/android/**/*.gradle*
+            src/android/gradle/libs.versions.toml
+            src/android/gradle/wrapper/gradle-wrapper.properties
+            src/wear_os/**/*.gradle*
+            src/wear_os/gradle/libs.versions.toml
+            src/wear_os/gradle/wrapper/gradle-wrapper.properties
+
+      # test_android / test_wear_os は node 製ラッパー (gradle_test.mjs) 経由で走る
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Android tests
+        run: npm run test_android
+
+      - name: Wear OS tests
+        run: npm run test_wear_os
+
+  govulncheck:
+    name: govulncheck (Go)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: src/server/go.mod
+          cache-dependency-path: src/server/go.sum
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # api パッケージの init() は embed/i18n/locales を読み、無いと panic する。
+      # govulncheck は解析のためにビルドを通すので、埋め込み資産が要る。
+      # Vite のビルドは不要なので locales と version.json だけ用意する。
+      - name: Prepare embedded assets
+        run: |
+          npm run copy_i18n_to_app_embed
+          npm run put_version_info_embed
+
+      - name: govulncheck
+        working-directory: src/server
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+  npm_audit:
+    name: npm audit
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # high 以上の脆弱性がある依存を検出する。閾値未満は落とさない
+      - name: npm audit
+        run: npm audit --audit-level=high

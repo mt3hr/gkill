@@ -226,16 +226,19 @@ func scanSources(src expandedSource, known map[string]scannedFile) ([]scannedFil
 	}
 
 	for _, dir := range src.Dirs {
-		err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				// 読めないディレクトリはスキップして続行する
-				return nil //nolint:nilerr
+		err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, walkErr error) error {
+			if walkErr != nil {
+				// 読めないディレクトリ/ファイルはスキップして続行するが、
+				// 取りこぼしに気づけるよう errs に載せる(scanErr→LastScanError へ流れる)。
+				errs = append(errs, fmt.Errorf("error at walk %s: %w", path, walkErr))
+				return nil
 			}
 			if d.IsDir() {
 				return nil
 			}
 			info, ierr := d.Info()
 			if ierr != nil {
+				errs = append(errs, fmt.Errorf("error at stat %s: %w", path, ierr))
 				return nil
 			}
 			appendFile(path, info)

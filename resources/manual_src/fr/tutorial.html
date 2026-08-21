@@ -403,12 +403,15 @@ Lait
   <p>L'administrateur peut ajouter, activer et désactiver des comptes utilisateurs depuis l'écran "Gestion des comptes".</p>
 
   <h3>Sauvegarde des données</h3>
-  <p>Toutes les données de gkill sont stockees dans le répertoire personnel (par defaut : <code>~/gkill</code> ; <code>/sdcard/gkill</code> dans l'application Android). Il suffit de sauvegarder ce répertoire pour preserver l'ensemble de vos données.</p>
+  <p>Toutes les données de gkill sont stockées dans le répertoire personnel (par défaut : <code>~/gkill</code> ; <code>/sdcard/gkill</code> dans l'application Android). Pour la sauvegarde, <strong>quittez d'abord gkill, puis copiez ce répertoire</strong>. Copier pendant que gkill fonctionne peut capturer un état écrit à moitié ; comme les données sont réparties entre plusieurs bases de données, leurs instants d'enregistrement peuvent ne pas coïncider, si bien qu'une sauvegarde corrompue passera inaperçue jusqu'à la restauration. Si vous ne pouvez pas arrêter gkill, utilisez la fonction d'instantané (snapshot) de votre système de fichiers, qui capture l'ensemble de l'état à un instant unique.</p>
   <div class="tip">
-    <strong>Astuce :</strong> Il est recommandé de sauvegarder régulièrement le répertoire personnel. Les répertoires <code>datas/</code> et <code>configs/</code> sont particulièrement importants.
+    <strong>Astuce :</strong> Il est recommandé de sauvegarder régulièrement. Les répertoires <code>datas/</code> et <code>configs/</code> sont particulièrement importants. Les répertoires <code>caches/</code> et <code>logs/</code> sont reconstruits au démarrage : il n'est pas nécessaire de les inclure.
   </div>
   <div class="tip">
-    <strong>Remarque :</strong> L'emplacement des dépôts peut aussi être défini en dehors du répertoire personnel. Si vous utilisez des fichiers placés dans des dossiers externes (fichiers placés dans des dossiers externes, historiques de commits Git, bases de données situées à l’extérieur, etc.), copier uniquement le répertoire personnel les omettra. Veillez à inclure également dans votre sauvegarde l'emplacement de tous les dépôts configurés.
+    <strong>Remarque :</strong> L'emplacement des dépôts peut aussi être défini en dehors du répertoire personnel. Si vous utilisez des fichiers placés dans des dossiers externes (fichiers placés dans des dossiers externes, historiques de commits Git, bases de données situées à l’extérieur, etc.), copier uniquement le répertoire personnel les omettra. Veillez à inclure également dans votre sauvegarde l'emplacement de tous les dépôts configurés, capturé au même instant que le reste.
+  </div>
+  <div class="tip">
+    <strong>Vérifiez la restauration :</strong> Une sauvegarde n'est réussie que lorsqu'elle peut être restaurée. De temps en temps, restaurez-la réellement à un emplacement distinct de votre environnement de production, démarrez gkill et vérifiez qu'il se lance et que vos enregistrements sont consultables. Vous repérerez ainsi les fichiers manquants ou les incohérences avant d'en avoir besoin.
   </div>
 
   <h2>Documents associés</h2>

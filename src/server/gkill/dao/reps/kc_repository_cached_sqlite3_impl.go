@@ -968,7 +968,12 @@ WHERE
 	if len(kcs) == 0 {
 		return nil, nil
 	}
-	return &kcs[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestKC := slices.MaxFunc(kcs, func(a KC, b KC) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestKC, nil
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]KC, error) {
@@ -1173,6 +1178,10 @@ WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.Qu
 			addr.TargetID = *targetIDInData
 		}
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return latestDataRepositoryAddresses, nil
 }

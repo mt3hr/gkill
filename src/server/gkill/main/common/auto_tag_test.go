@@ -102,6 +102,28 @@ func TestAutoTagIDMatchesPreviouslyIssuedID(t *testing.T) {
 	}
 }
 
+func TestShouldRefreshAutoTagSession(t *testing.T) {
+	// 500件ごと(進捗印字と同じ区切り)でだけ true。0件では延長しない。
+	cases := []struct {
+		added int
+		want  bool
+	}{
+		{0, false},
+		{1, false},
+		{499, false},
+		{500, true},
+		{501, false},
+		{999, false},
+		{1000, true},
+		{1500, true},
+	}
+	for _, c := range cases {
+		if got := shouldRefreshAutoTagSession(c.added); got != c.want {
+			t.Errorf("shouldRefreshAutoTagSession(%d) = %v, want %v", c.added, got, c.want)
+		}
+	}
+}
+
 func TestFindTaggedKyouIDsQueryUsesTagsAnd(t *testing.T) {
 	// 単一タグの「付いているものだけ」をANDで表現していることを固定する
 	// (現在のfind_filterはOR/ANDとも完全一致照合なので結果は同じだが、意図の直接表現)

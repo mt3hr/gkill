@@ -86,8 +86,11 @@ func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src
 		sb.WriteString(`<div class="warn">`)
 		sb.WriteString(`<p>まだ読み込まれていません。</p>`)
 		sb.WriteString(`<p>Claude Code のセッションログが入ったフォルダを、下の手順で指定してください。</p>`)
+		sb.WriteString(`<p>取り込みはバックグラウンドで進むので、指定した直後は0件のことがあります。</p>`)
 		sb.WriteString(`</div>`)
 	}
+
+	renderBuildProgress(&sb, stats)
 
 	sb.WriteString(`<table>`)
 	fmt.Fprintf(&sb, `<tr><td class="k">対象ファイル数</td><td>%d</td></tr>`, stats.FileCount)
@@ -163,6 +166,27 @@ func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src
 
 	sb.WriteString(`</body></html>`)
 	return sb.String()
+}
+
+// renderBuildProgress は取り込みの進捗を出す。
+// 「初回は空が返る」のが仕様なので、進んでいることが見えないと壊れて見える。
+func renderBuildProgress(sb *strings.Builder, stats cacheStats) {
+	switch stats.BuildState {
+	case "", "idle":
+		return
+	case "error":
+		return // エラーは下の「スキャン時のエラー」欄で出す
+	}
+	sb.WriteString(`<div class="ok">`)
+	switch stats.BuildState {
+	case "scanning":
+		sb.WriteString(`<p>データソースを走査しています…</p>`)
+	case "ingesting":
+		fmt.Fprintf(sb, `<p>取り込み中 %d / %d セッション</p>`, stats.BuildDone, stats.BuildTotal)
+	default:
+		sb.WriteString(`<p>処理中…</p>`)
+	}
+	sb.WriteString(`</div>`)
 }
 
 // configSaveScript は設定ダイアログ(親)へ保存を依頼するスクリプト。

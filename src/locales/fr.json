@@ -194,6 +194,7 @@
     "NLOG_DATE_TITLE": "Date",
     "NLOG_TIME_TITLE": "Heure",
     "CLIENT_NLOG_IS_NULL_MESSAGE": "Les données du client sont invalides",
+    "KC_RELATED_TIME_IS_BLANK_MESSAGE": "La date ou l'heure n'est pas saisie",
     "NLOG_DATE_TIME_IS_BLANK_MESSAGE": "La date ou l'heure n'est pas saisie",
     "NLOG_SHOP_NAME_IS_BLANK_MESSAGE": "Le nom du magasin n'est pas saisi",
     "NLOG_AMOUNT_IS_BLANK_MESSAGE": "Le montant n'est pas saisi",
