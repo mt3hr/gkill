@@ -1,3 +1,4 @@
+// Read before editing: .claude/skills/gkill-mcp/SKILL.md (invariants for this area)
 // 3つのMCPサーバに共通する JSON-RPC の受け口。
 //
 // handleMessage / handlePayload / constructor は3本とも1文字違わず同じだった。

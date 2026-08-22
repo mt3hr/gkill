@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
  * 単一ディスパッチへ寄せたので、次の2つを固定しておく。
  *   - data_type ごとに **1つだけ** 型別データを読むこと
  *   - `mirekyou_*` は `mi` で始まるので、**Mi ではなく MiReKyou** を読むこと
- *     (CLAUDE.md の「mirekyou を mi より先に判定する」)。
+ *     (AGENTS.md の「mirekyou を mi より先に判定する」)。
  *     いまは判定表を長いプレフィックス順に並べ替えることで構造的に保証している
  */
 

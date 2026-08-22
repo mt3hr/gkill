@@ -1,3 +1,4 @@
+// 編集前に読む: .claude/skills/gkill-client-columns/SKILL.md（この領域の不変条件の正本）
 'use strict'
 
 import { ref, shallowReactive } from 'vue'

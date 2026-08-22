@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-19 |
-| Sources | `b45e6236` / `src/server/gkill/api/find_filter.go` / `CLAUDE.md`「タグ絞り込みの取得は2経路」節 |
+| Sources | `b45e6236` / `src/server/gkill/api/find_filter.go` / `.claude/skills/gkill-go-backend/SKILL.md`「タグ絞り込みの取得は2経路」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/find_filter.go` |

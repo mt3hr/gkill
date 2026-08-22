@@ -1,5 +1,7 @@
 package api
 
+// 編集前に読む: .claude/skills/gkill-go-backend/SKILL.md（この領域の不変条件の正本）
+
 import (
 	"context"
 	"fmt"

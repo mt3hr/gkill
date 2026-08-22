@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-17 |
-| Sources | `a07f4a5a` / `f4c2b7c3` / `CLAUDE.md`「init() の起動条件は props.application_config.is_loaded の watch」 |
+| Sources | `a07f4a5a` / `f4c2b7c3` / `.claude/skills/gkill-client-columns/SKILL.md`「init() の起動条件は props.application_config.is_loaded の watch」 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/client/classes/use-rykv-view.ts` |

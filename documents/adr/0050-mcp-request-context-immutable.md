@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-21 |
-| Sources | `bb364253`（監査 C-02） / `CLAUDE.md`「HTTPモードの1リクエスト文脈は server.current* 共有フィールドに書かず」節 |
+| Sources | `bb364253`（監査 C-02） / `.claude/skills/gkill-mcp/SKILL.md`「HTTPモードの1リクエスト文脈は server.current* 共有フィールドに書かず」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/mcp/lib/mcp-server-base.mjs` |

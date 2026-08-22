@@ -1,3 +1,4 @@
+// 編集前に読む: .claude/skills/gkill-client-foundation/SKILL.md（この領域の不変条件の正本）
 'use strict'
 
 // Pinia/Vuex を入れない理由（中継の網羅性を型で保証している）:

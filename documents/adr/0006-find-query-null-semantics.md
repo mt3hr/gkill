@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-11 |
-| Sources | `de0f330c` / `397d5100` / `CLAUDE.md`「検索条件（FindQuery）の null 判定セマンティクス」節 |
+| Sources | `de0f330c` / `397d5100` / `.claude/skills/gkill-find-query/SKILL.md`「検索条件（FindQuery）の null 判定セマンティクス」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/find/find_query.go` |
