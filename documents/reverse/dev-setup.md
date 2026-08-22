@@ -121,6 +121,30 @@ gkill_server version
 
 > **注意:** `src/tools/extract_manual_src.mjs` は「元の手書きマニュアル」から原稿を切り出す**一度きりの移行専用**ツール。生成済み（`<main>` を含む）マニュアルに対しては安全ガードで実行を拒否する。
 
+### 静的解析（CodeQL）
+
+GitHub の Code scanning アラートをローカルで再現するためのコマンド（`src/tools/codeql.mjs`）。
+
+| コマンド | 説明 |
+|---|---|
+| `npm run codeql` | `go` + `javascript-typescript` を解析し、ベースラインに無い指摘が出たら失敗する |
+| `npm run codeql -- go` | 言語を指定（`go` / `javascript-typescript` / `java-kotlin`） |
+| `npm run codeql -- --all` | `java-kotlin` も含める（Gradle ビルドを伴うため既定の対象外） |
+| `npm run codeql -- --update-baseline` | 既知の指摘一覧（`.github/codeql/local-baseline.json`）を今回の結果で作り直す |
+| `npm run codeql -- --reuse-db` | データベースを作り直さず、クエリだけ回し直す |
+| `npm run codeql -- --required` | CodeQL CLI が無いときスキップではなく失敗にする |
+
+**CodeQL CLI が無い環境ではスキップして正常終了する**ので、`npm test` に混ぜても壊れない
+（現状 `npm test` には入れていない。CodeQL の解析は言語ごとに10〜30分かかるため）。
+
+| 環境変数 | 説明 |
+|---|---|
+| `GKILL_CODEQL` | CodeQL CLI の実行ファイル、またはバンドルを展開したディレクトリ。未設定なら PATH と既定の展開先を探す |
+| `GKILL_CODEQL_WORK` | データベース・SARIF の置き場所。既定は OS のテンポラリ配下。言語ごとに数GBになる |
+
+解析設定は CI（`.github/workflows/codeql.yml`）と同じ `.github/codeql/codeql-config.yml` を共用する。
+ローカル専用の設定を別に置くと CI とドリフトするため。詳細な設計判断は `src/tools/README.md` を参照。
+
 ### クロスコンパイル
 
 | コマンド | ターゲット |

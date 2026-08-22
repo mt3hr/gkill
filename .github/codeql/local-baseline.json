@@ -1,0 +1,649 @@
+{
+  "note": "npm run codeql が「既知」として扱う指摘の一覧。ここに無い指摘が出たら失敗する。 GitHub 側で棄却した指摘や、修正しないと決めた指摘を入れておく。 更新するときは npm run codeql -- --update-baseline。 lang は記録した言語。指定した言語ぶんだけが差し替わる。",
+  "findings": [
+    {
+      "fingerprint": "go/disabled-certificate-check|src/server/gkill/main/common/common.go|26a8d23b4fc877c4:1",
+      "lang": "go",
+      "rule": "go/disabled-certificate-check",
+      "file": "src/server/gkill/main/common/common.go",
+      "message": "InsecureSkipVerify should not be used in production code."
+    },
+    {
+      "fingerprint": "go/path-injection|src/server/gkill/api/gkill_server_api/handle_update_server_configs.go|d15c00a8f4fa2dd8:1",
+      "lang": "go",
+      "rule": "go/path-injection",
+      "file": "src/server/gkill/api/gkill_server_api/handle_update_server_configs.go",
+      "message": "This path depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/path-injection|src/server/gkill/api/gkill_server_api/handle_update_server_configs.go|d2f57d703240cfe6:1",
+      "lang": "go",
+      "rule": "go/path-injection",
+      "file": "src/server/gkill/api/gkill_server_api/handle_update_server_configs.go",
+      "message": "This path depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/path-injection|src/server/gkill/dao/plugin_manager.go|5ac2060ff08e526f:1",
+      "lang": "go",
+      "rule": "go/path-injection",
+      "file": "src/server/gkill/dao/plugin_manager.go",
+      "message": "This path depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/path-injection|src/server/gkill/dao/plugin_manager.go|ad5a0c7526c5f22e:1",
+      "lang": "go",
+      "rule": "go/path-injection",
+      "file": "src/server/gkill/dao/plugin_manager.go",
+      "message": "This path depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/path-injection|src/server/gkill/dao/plugin_manager.go|f3b11d4a44786ebc:1",
+      "lang": "go",
+      "rule": "go/path-injection",
+      "file": "src/server/gkill/dao/plugin_manager.go",
+      "message": "This path depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/request-forgery|src/server/gkill/api/safefetch/safefetch.go|30b724f1cf0039e2:1",
+      "lang": "go",
+      "rule": "go/request-forgery",
+      "file": "src/server/gkill/api/safefetch/safefetch.go",
+      "message": "The [URL](1) of this request depends on a [user-provided value](2)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/cache/latest_data_repository_address_dao_sqlite3_impl.go|44fb594b933564cb:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/cache/latest_data_repository_address_dao_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/cache/latest_data_repository_address_dao_sqlite3_impl.go|6922ad60c479bc9b:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/cache/latest_data_repository_address_dao_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go|23225c03817a010c:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go|2852978e85eb34f7:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go|8cc75df9ae43c90d:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go|a6bf28308e8badc1:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/idf_kyou_repository_cached_sqlite3_impl.go|7e23ba83b878eef8:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/idf_kyou_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/idf_kyou_repository_cached_sqlite3_impl.go|8a8d2c16059abe9c:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/idf_kyou_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/idf_kyou_repository_cached_sqlite3_impl.go|8ce191d96afcb433:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/idf_kyou_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/idf_kyou_repository_cached_sqlite3_impl.go|94feaa0cc68b77e:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/idf_kyou_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/idf_kyou_repository_sqlite3_impl.go|d49fc0ab1ca9f6f:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/idf_kyou_repository_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/kc_repository_cached_sqlite3_impl.go|2cba809f7ed14409:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/kc_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/kc_repository_cached_sqlite3_impl.go|426ce13290800221:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/kc_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/kc_repository_cached_sqlite3_impl.go|512ee20da2d3e8d0:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/kc_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/kc_repository_cached_sqlite3_impl.go|8ce191d96afcb433:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/kc_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/kc_repository_sqlite3_impl.go|bc4171b7fbcfed18:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/kc_repository_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/kmemo_repository_cached_sqlite3_impl.go|426ce13290800221:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/kmemo_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/kmemo_repository_cached_sqlite3_impl.go|8ce191d96afcb433:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/kmemo_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/kmemo_repository_cached_sqlite3_impl.go|8fcca1d1c5379a14:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/kmemo_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/kmemo_repository_cached_sqlite3_impl.go|e3e1259ac7044474:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/kmemo_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/kmemo_repository_sqlite3_impl.go|86ecd175403212ac:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/kmemo_repository_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/lantana_repository_cached_sqlite3_impl.go|4df9cbf92b6d766c:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/lantana_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/lantana_repository_cached_sqlite3_impl.go|8ce191d96afcb433:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/lantana_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/lantana_repository_cached_sqlite3_impl.go|cf6fcd9300e13700:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/lantana_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/lantana_repository_cached_sqlite3_impl.go|efd64200c90f1066:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/lantana_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/lantana_repository_sqlite3_impl.go|86ecd175403212ac:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/lantana_repository_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/mi_re_kyou_repository_cached_sqlite3_impl.go|5e14867b2a62950:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/mi_re_kyou_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/mi_re_kyou_repository_cached_sqlite3_impl.go|bcbf8a1bb44da7e0:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/mi_re_kyou_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/mi_re_kyou_repository_cached_sqlite3_impl.go|cc239d3aefd1424d:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/mi_re_kyou_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/mi_re_kyou_repository_sqlite3_impl.go|6e13a03fd4c65ef9:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/mi_re_kyou_repository_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/mi_repository_cached_sqlite3_impl.go|5e2d0be5276e2520:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/mi_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/mi_repository_cached_sqlite3_impl.go|64b094ef7f6b69d1:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/mi_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/mi_repository_cached_sqlite3_impl.go|8ce191d96afcb433:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/mi_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/mi_repository_cached_sqlite3_impl.go|b3c8dd93248aa439:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/mi_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/mi_repository_cached_sqlite3_impl.go|ba773361f3fee05c:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/mi_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/mi_repository_cached_sqlite3_impl.go|fcb5ed20b65a0dcf:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/mi_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/mi_repository_sqlite3_impl.go|2b50297df47d5995:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/mi_repository_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/nlog_repository_cached_sqlite3_impl.go|4aa9039d3a2d2cf0:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/nlog_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/nlog_repository_cached_sqlite3_impl.go|8ce191d96afcb433:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/nlog_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/nlog_repository_cached_sqlite3_impl.go|8f7f97b900a1d5e1:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/nlog_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/nlog_repository_cached_sqlite3_impl.go|9627f4c0dbde5f2b:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/nlog_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/nlog_repository_sqlite3_impl.go|86ecd175403212ac:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/nlog_repository_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/notification_repository_cached_sqlite3_impl.go|831c787356b1d81f:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/notification_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/notification_repository_cached_sqlite3_impl.go|8ce191d96afcb433:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/notification_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/notification_repository_cached_sqlite3_impl.go|bd094344fed8c049:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/notification_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/notification_repository_cached_sqlite3_impl.go|d6af7130710e1dff:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/notification_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/re_kyou_repository_cached_sqlite3_impl.go|1269362319218069:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/re_kyou_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/re_kyou_repository_cached_sqlite3_impl.go|303274a3bf3d2df9:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/re_kyou_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/re_kyou_repository_cached_sqlite3_impl.go|8ce191d96afcb433:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/re_kyou_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/tag_repository_cached_sqlite3_impl.go|3d6019597c967e88:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/tag_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/tag_repository_cached_sqlite3_impl.go|442f487813ddb4ab:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/tag_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/tag_repository_cached_sqlite3_impl.go|75cc38903257a002:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/tag_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/tag_repository_cached_sqlite3_impl.go|8471dc9923018c2f:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/tag_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/tag_repository_cached_sqlite3_impl.go|89950ad1984b5a5:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/tag_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/tag_repository_cached_sqlite3_impl.go|f5d48fa19c3930eb:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/tag_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/text_repository_cached_sqlite3_impl.go|1a0914d96dc4bcc5:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/text_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/text_repository_cached_sqlite3_impl.go|2c0fc9329e761d0e:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/text_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/text_repository_cached_sqlite3_impl.go|36659008c04ccb00:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/text_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/text_repository_cached_sqlite3_impl.go|3d6019597c967e88:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/text_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/text_repository_cached_sqlite3_impl.go|442f487813ddb4ab:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/text_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/text_repository_cached_sqlite3_impl.go|8ce191d96afcb433:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/text_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/time_is_repository_cached_sqlite3_impl.go|474ac114f11ebd6d:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/time_is_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/time_is_repository_cached_sqlite3_impl.go|7cfc2e9b625a70ff:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/time_is_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/time_is_repository_cached_sqlite3_impl.go|8ce191d96afcb433:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/time_is_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/time_is_repository_cached_sqlite3_impl.go|d77328b5f756aa1:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/time_is_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/time_is_repository_sqlite3_impl.go|bc4171b7fbcfed18:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/time_is_repository_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/ur_log_repository_cached_sqlite3_impl.go|4cdc34b818b7a07c:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/ur_log_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/ur_log_repository_cached_sqlite3_impl.go|88aa940c61690d3:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/ur_log_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/ur_log_repository_cached_sqlite3_impl.go|8ce191d96afcb433:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/ur_log_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/ur_log_repository_cached_sqlite3_impl.go|a8ba6e9a6aae94a0:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/ur_log_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/ur_log_repository_sqlite3_impl.go|86ecd175403212ac:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/ur_log_repository_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/sqlite3impl/sqlite3impl_util.go|1004f39141ca443f:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/sqlite3impl/sqlite3impl_util.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/sqlite3impl/sqlite3impl_util.go|13635ce25fb867b2:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/sqlite3impl/sqlite3impl_util.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "java/android/missing-certificate-pinning|src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt|31a6956c7e3ed32b:1",
+      "lang": "java-kotlin",
+      "rule": "java/android/missing-certificate-pinning",
+      "file": "src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt",
+      "message": "This network call does not implement certificate pinning. (no explicitly trusted domains)"
+    },
+    {
+      "fingerprint": "java/android/missing-certificate-pinning|src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt|376e02e8165f93f1:1",
+      "lang": "java-kotlin",
+      "rule": "java/android/missing-certificate-pinning",
+      "file": "src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt",
+      "message": "This network call does not implement certificate pinning. (no explicitly trusted domains)"
+    },
+    {
+      "fingerprint": "java/android/missing-certificate-pinning|src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt|528a06b46657fe6c:1",
+      "lang": "java-kotlin",
+      "rule": "java/android/missing-certificate-pinning",
+      "file": "src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt",
+      "message": "This network call does not implement certificate pinning. (no explicitly trusted domains)"
+    },
+    {
+      "fingerprint": "java/android/missing-certificate-pinning|src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt|53f5f0df4695d1e7:1",
+      "lang": "java-kotlin",
+      "rule": "java/android/missing-certificate-pinning",
+      "file": "src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt",
+      "message": "This network call does not implement certificate pinning. (no explicitly trusted domains)"
+    },
+    {
+      "fingerprint": "java/android/missing-certificate-pinning|src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt|7ecee88b7f60280:1",
+      "lang": "java-kotlin",
+      "rule": "java/android/missing-certificate-pinning",
+      "file": "src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt",
+      "message": "This network call does not implement certificate pinning. (no explicitly trusted domains)"
+    },
+    {
+      "fingerprint": "java/android/missing-certificate-pinning|src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt|7ecee88b7f60280:2",
+      "lang": "java-kotlin",
+      "rule": "java/android/missing-certificate-pinning",
+      "file": "src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt",
+      "message": "This network call does not implement certificate pinning. (no explicitly trusted domains)"
+    },
+    {
+      "fingerprint": "java/android/missing-certificate-pinning|src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt|aac56fcde3017ee0:1",
+      "lang": "java-kotlin",
+      "rule": "java/android/missing-certificate-pinning",
+      "file": "src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt",
+      "message": "This network call does not implement certificate pinning. (no explicitly trusted domains)"
+    },
+    {
+      "fingerprint": "java/android/websettings-javascript-enabled|src/android/app/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/MainActivity.kt|dd08c410ec3caaa5:1",
+      "lang": "java-kotlin",
+      "rule": "java/android/websettings-javascript-enabled",
+      "file": "src/android/app/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/MainActivity.kt",
+      "message": "JavaScript execution enabled in WebView."
+    },
+    {
+      "fingerprint": "js/clear-text-storage-of-sensitive-data|src/client/classes/api/gkill-api.ts|3b69bff77e043f47:1",
+      "lang": "javascript-typescript",
+      "rule": "js/clear-text-storage-of-sensitive-data",
+      "file": "src/client/classes/api/gkill-api.ts",
+      "message": "This stores sensitive data returned by [an access to map_latitude](1) as clear text."
+    },
+    {
+      "fingerprint": "js/clear-text-storage-of-sensitive-data|src/client/classes/api/gkill-api.ts|5a6e0c6c90dc7cd4:1",
+      "lang": "javascript-typescript",
+      "rule": "js/clear-text-storage-of-sensitive-data",
+      "file": "src/client/classes/api/gkill-api.ts",
+      "message": "This stores sensitive data returned by [an access to map_latitude](1) as clear text."
+    },
+    {
+      "fingerprint": "js/insufficient-password-hash|src/mcp/lib/gkill-client.mjs|7b229080e6bf1af4:1",
+      "lang": "javascript-typescript",
+      "rule": "js/insufficient-password-hash",
+      "file": "src/mcp/lib/gkill-client.mjs",
+      "message": "Password from [an access to password](1) is hashed insecurely."
+    },
+    {
+      "fingerprint": "js/user-controlled-bypass|src/mcp/lib/oauth-server.mjs|50f081722d28ec30:1",
+      "lang": "javascript-typescript",
+      "rule": "js/user-controlled-bypass",
+      "file": "src/mcp/lib/oauth-server.mjs",
+      "message": "This condition guards a sensitive [action](1), but a [user-provided value](2) controls it."
+    }
+  ]
+}

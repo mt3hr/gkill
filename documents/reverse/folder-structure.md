@@ -318,12 +318,14 @@ src/tools/
 ├── extract_manual_src.mjs       # 既存マニュアルから manual_src を抽出
 ├── verify_release_artifacts.mjs # リリース成果物の検証（npm run verify_release_artifacts）
 ├── test_plugins.mjs             # src/plugins/ 配下の各 Go モジュールを個別に go test（npm run test_plugins）
+├── gradle_test.mjs              # Android / Wear OS の Gradle テスト（npm run test_android / test_wear_os）
+├── codeql.mjs                   # CodeQL のローカル実行。CLI が無ければスキップ（npm run codeql）
 ├── license_getter.mjs           # 依存ライセンス一覧の生成（npm run license_getter）
 └── README.md
 ```
 
 このうち `dev.mjs` / `verify_docs.mjs` / `build_manuals.mjs` / `verify_release_artifacts.mjs` / `test_plugins.mjs` /
-`license_getter.mjs` は `package.json` の npm スクリプトから直接呼ばれる。
+`gradle_test.mjs` / `codeql.mjs` / `license_getter.mjs` は `package.json` の npm スクリプトから直接呼ばれる。
 
 ## documents/ — ドキュメント
 
