@@ -1,5 +1,8 @@
 package main
 
+// スレッド識別子にファイル名を使う理由と、実データで外れた読み方の一覧:
+// documents/adr/0025-codex-thread-id-from-filename.md
+
 import (
 	"bufio"
 	"bytes"

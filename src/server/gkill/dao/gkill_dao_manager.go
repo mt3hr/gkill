@@ -928,6 +928,8 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 		// キャッシュしたRep。
 		// XxxRepsをキャッシュrep1個で差し替えると同時に、その実体をCachedRepsへ控える。
+		// 個数判定(len(XxxReps)==1)が破れた経緯と却下案:
+		// documents/adr/0012-write-through-cache-not-reps-count.md
 		// このあと(プラグイン読み込み時)に型別アダプタがXxxRepsへappendされるので、
 		// 「XxxRepsの長さが1ならキャッシュrep」という個数判定は成立しない。
 		// 書き込み後の反映はrepositories.WriteThroughXxxCacheを使うこと

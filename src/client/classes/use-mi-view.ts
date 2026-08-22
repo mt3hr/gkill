@@ -1,3 +1,6 @@
+
+// 列の同一性を query_id に固定する理由と、再採番が誤配送を招く経緯:
+// documents/adr/0034-column-identity-query-id.md
 import { log_unless_aborted } from '@/classes/abort-error'
 import { gkill_page_list } from '@/classes/gkill-page-list'
 import router from '@/router'

@@ -1,4 +1,7 @@
 // Package find は検索条件(FindQuery)と関連列挙型の型定義。
+//
+// use_* フラグを廃して null 判定へ一本化した理由と却下案:
+// documents/adr/0006-find-query-null-semantics.md
 package find
 
 import (

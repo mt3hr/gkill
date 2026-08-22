@@ -1,5 +1,8 @@
 package reps
 
+// 委譲クエリの正規化を却下した理由（絞り込みが効かなくなり結果が変わる）:
+// documents/adr/0007-memoize-rekyou-target-resolution.md
+
 // ReKyou/MiReKyou のターゲット解決をリクエスト単位でメモする。
 //
 // ReKyou も MiReKyou もタイトルを持たないので、ワード検索を

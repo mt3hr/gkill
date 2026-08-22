@@ -23,6 +23,9 @@ import (
 // 上位のキャッシュrepが毎回フルリビルドします。
 // 実データ（数百 rep・数十万行・外付けストレージ上の DB 数百本で GB 級）では
 // これで update_cache 1回が分単位になっていました。
+//
+// 却下案（毎回リビルド／試行時点で基準を進める／ReKyou も変更検知に載せる）:
+// documents/adr/0011-rebuild-cache-only-on-db-change.md
 func localRepCacheNeedsCopy(originalDBFileName string, localCacheDBFileName string) bool {
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(originalDBFileName)
