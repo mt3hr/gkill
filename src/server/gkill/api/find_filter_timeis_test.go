@@ -114,8 +114,8 @@ func TestFindTimeIsTags_BothPathsAgree(t *testing.T) {
 			return findCtx.MatchTimeIsTags
 		}
 
-		sqlPath := run([]string{"会議"})    // 1名前 → SQL経路
-		goPath := run(manyNames)          // 33名前 → Go照合経路
+		sqlPath := run([]string{"会議"}) // 1名前 → SQL経路
+		goPath := run(manyNames)       // 33名前 → Go照合経路
 
 		if len(sqlPath) != 1 || len(goPath) != 1 {
 			t.Fatalf("disableCache=%v: SQL経路=%d件 Go経路=%d件, どちらも1件のはず", disableCache, len(sqlPath), len(goPath))
