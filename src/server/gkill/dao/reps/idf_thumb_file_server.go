@@ -305,16 +305,25 @@ func cleanRelURLPath(p string) (string, bool) {
 }
 
 // SecureJoin は rootDir から外へ出ないように join する。
-// 結果が rootDir 配下でなければ ok=false を返す。
+// 結果が rootDir の**真下**でなければ ok=false を返す。
+//
+// rootDir 自身（rel が "." や "" や "foo/.." のとき）も ok=false にする。
+// 呼び出し元は6箇所ともファイル1件のパスを求めており、ディレクトリ自身を指すパスを
+// 受け取っても書き込みにも配信にも使えない（アップロードなら os.Rename が
+// ディレクトリを潰そうとして失敗し、配信なら中身の無いパスを返す）。
+// ZIP展開のディレクトリエントリだけは以前 ok=true で MkdirAll に渡っていたが、
+// 対象は展開先そのもので既に存在するため、弾いても実質no-opになる。
+//
+// この「rootDir 自身は許可しない」は CodeQL 対策も兼ねる。
+// go/path-injection は strings.HasPrefix によるガードはバリアとして認識するが、
+// full == root の分岐は認識せず、実際には安全なアップロード経路が
+// 3件のアラートになっていた（2026-08-22）。
 func SecureJoin(rootDir, rel string) (string, bool) {
 	root := filepath.Clean(rootDir)
 	full := filepath.Join(root, filepath.FromSlash(rel))
 	full = filepath.Clean(full)
 
-	// root配下のみ許可
-	if full == root {
-		return full, true
-	}
+	// root の真下のみ許可する
 	prefix := root + string(os.PathSeparator)
 	if strings.HasPrefix(full, prefix) {
 		return full, true
