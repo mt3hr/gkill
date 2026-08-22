@@ -19,3 +19,18 @@ paths-ignore:
   # なお paths-ignore が効くのは js-ts のようにビルドせず解析する言語だけで、
   # autobuild の go / manual build の java-kotlin では無視される。
   - "**/__tests__/**"
+
+  # ビルド生成物。いずれも .gitignore 済みで、CI はクリーンチェックアウトなので
+  # そもそも存在しない。ローカル実行（npm run codeql）では作業ツリーに残っており、
+  # 外さないと生成物由来の指摘が本物を埋めてしまう。
+  # 実測: 除外前 2919件 → 除外後 5件（2919件のうち 2812件が Gradle の
+  # configuration-cache レポート、81件が Playwright レポート、22件が Vite の
+  # minified バンドル。いずれも手で書いたコードではない）。
+  - dist/**
+  - "**/build/**"
+  - playwright-report/**
+  - test-results/**
+
+  # embed 配下は dist/ と resources/manual/ のコピー（//go:embed 用）。
+  # 追跡しているのは PLACEHOLDER.md だけ。
+  - "**/embed/**"
