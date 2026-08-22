@@ -62,7 +62,8 @@
     "test_plugins": "node src/tools/test_plugins.mjs",
     "vet_plugins": "node src/tools/test_plugins.mjs vet",
     "test_android": "node src/tools/gradle_test.mjs src/android",
-    "test_wear_os": "node src/tools/gradle_test.mjs src/wear_os"
+    "test_wear_os": "node src/tools/gradle_test.mjs src/wear_os",
+    "codeql": "node src/tools/codeql.mjs"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.0.2",
