@@ -80,6 +80,8 @@ var ErrPluginReturnedErrors = errors.New("plugin returned application errors")
 // プラグインバイナリをサブプロセスとして起動し、stdio 改行区切りJSONで通信する。
 type pluginRepositoryImpl struct {
 	// callSlot は容量1のチャネルで、プラグインへの操作を1件ずつに直列化する。
+	// 「待つのをやめる」と「プロセスを殺す」を分けた理由と却下案:
+	// documents/adr/0020-plugin-cancel-vs-kill.md
 	// ミューテックスではなくチャネルなのは「待つのをやめられる」ようにするため。
 	// 待ちを打ち切れないと、行列に並んでいる間に期限を食い潰し、
 	// 応答しているだけのプラグインを期限切れとして殺してしまう。

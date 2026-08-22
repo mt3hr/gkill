@@ -1,5 +1,8 @@
 'use strict'
 
+// 判定できない条件を判定できると宣言しないこと。却下案と経緯:
+// documents/adr/0031-insert-registered-kyou-locally.md
+
 import { toRaw } from 'vue'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { Kyou } from '@/classes/datas/kyou'

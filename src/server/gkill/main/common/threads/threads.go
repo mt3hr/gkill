@@ -1,4 +1,7 @@
 // Package threads はNumCPU有界セマフォによるゴルーチン数制限。
+//
+// 入れ子が恒久デッドロックになる理由と却下案（上限を増やす／スロットを手放す／
+// タイムアウトで抜ける）: documents/adr/0015-no-nested-threads-go.md
 package threads
 
 import (

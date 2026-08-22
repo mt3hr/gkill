@@ -1,5 +1,8 @@
 package api
 
+// 性能の判断基準（ns/op を使わない）と、実測で否決した最適化の一覧:
+// documents/adr/0008-perf-judge-by-allocs-not-ns-op.md
+
 // FindKyous の後段パイプライン（SQLの外側）の割り当てを固定するベンチマーク。
 //
 // 実測(2026-08-16, pprof)では検索CPUの約40%がGCで、Goヒープ増分よりも
