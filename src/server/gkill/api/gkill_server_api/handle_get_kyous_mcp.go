@@ -1,5 +1,8 @@
 package gkill_server_api
 
+// 厳密に Limit を守らない理由（同時刻の記録が永久に取れなくなる）:
+// documents/adr/0052-mcp-cursor-pushes-period-end.md
+
 import (
 	"context"
 	"encoding/json"

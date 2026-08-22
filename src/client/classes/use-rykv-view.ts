@@ -561,6 +561,10 @@ export function useRykvView(options: {
         })
     }
 
+    // 期間を窓へ刻んで複数回 get_kyous を投げない（2026-08-18 に入れて翌日撤去した）。
+    // 経緯と実測: documents/adr/0030-do-not-split-search-window-in-client.md
+    // 初期化トリガが @inited ではなく ApplicationConfig.is_loaded である理由:
+    // documents/adr/0036-init-on-application-config-loaded.md
     async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean, preserve_scroll?: boolean): Promise<void> {
         const query_id = query.query_id
         // この列の最新の検索だけが結果を書き戻せるようにする世代番号。

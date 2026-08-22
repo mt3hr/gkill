@@ -1,5 +1,8 @@
 package sqlite3impl
 
+// journal_mode を DELETE のまま変えない理由（WAL のサイドカーが持ち回りを壊す）:
+// documents/adr/0013-keep-journal-mode-delete.md
+
 // 実データDBの接続設定の回帰テスト。
 //
 // とくに journal_mode は DELETE から変えてはいけない。

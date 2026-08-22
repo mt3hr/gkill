@@ -1,5 +1,8 @@
 'use strict'
 
+// 既知タグと tags_and の列を触らない理由、および直らない範囲:
+// documents/adr/0033-add-unknown-tag-to-column-filter.md
+
 import { nextTick, type Ref } from 'vue'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { Tag } from '@/classes/datas/tag'
