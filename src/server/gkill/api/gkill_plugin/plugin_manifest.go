@@ -1,4 +1,7 @@
 // Package gkill_plugin はプラグインプロトコルの型定義(stdio改行区切りJSON)。
+//
+// emits_kyou を provides から推測しない理由:
+// documents/adr/0023-plugin-emits-kyou-false.md
 package gkill_plugin
 
 import "slices"

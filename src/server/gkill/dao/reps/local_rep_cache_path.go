@@ -1,5 +1,8 @@
 package reps
 
+// rep名の照合では守れない理由（rep名は利用者間で一意でない）:
+// documents/adr/0044-per-user-derived-cache-dir.md
+
 import (
 	"fmt"
 	"os"

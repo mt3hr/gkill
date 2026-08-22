@@ -1,3 +1,6 @@
+
+// 初期取得の完了を待たずに可視化する理由と却下案:
+// documents/adr/0035-visualize-before-initial-search.md
 import router from '@/router'
 import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
