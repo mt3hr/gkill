@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | YYYY-MM-DD |
-| Sources | `<commit sha>` / `CLAUDE.md`（節名） |
+| Sources | `<commit sha>` / `.claude/skills/xxx/SKILL.md`「節名」 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/...`（アンカーを置いた場所。無ければ「なし — 理由」） |
@@ -13,7 +13,7 @@
 
 何が問題だったか。どういう制約があったか。この決定が無いとどうなるか。
 
-**規則そのものは書かない。** 規則の正本は `CLAUDE.md` とコードコメント。
+**規則そのものは書かない。** 規則の正本は `.claude/skills/*/SKILL.md`（横断規約は `AGENTS.md`）とコードコメント。
 ここに書くのは「なぜその規則が要るのか」の側だけ。
 
 ## Decision

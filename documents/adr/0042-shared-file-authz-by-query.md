@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-21 |
-| Sources | `bb364253`（監査 C-03） / `CLAUDE.md`「共有ページのファイル配信は共有クエリの結果に含まれるファイルだけ」節 |
+| Sources | `bb364253`（監査 C-03） / `.claude/skills/gkill-go-backend/SKILL.md`「共有ページのファイル配信は共有クエリの結果に含まれるファイルだけ」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/gkill_server_api/shared_file_authz.go` |

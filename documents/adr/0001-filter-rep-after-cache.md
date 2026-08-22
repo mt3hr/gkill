@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-19 |
-| Sources | `06fcdec4` / `44b2be68` / `df9ceeb8` / `CLAUDE.md`「rep名の絞り込みは『検索するrep』ではなく『検索結果』でやる」節 |
+| Sources | `06fcdec4` / `44b2be68` / `df9ceeb8` / `.claude/skills/gkill-go-backend/SKILL.md`「rep名の絞り込みは『検索するrep』ではなく『検索結果』でやる」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/find_filter.go` |
@@ -39,7 +39,7 @@ rep名の絞り込みを「**どのrepを検索するか**」から「**どの�
 
 意味論は変わらない。`OnlyLatestData` は本番の全経路で true 固定で、ID X について M＝全rep横断の最大 `UpdateTime`、I＝指定rep とすると、旧は「各leafの自表内MAXの行」、新は「横断MAX(=M)の行のうち `RepName`∈I」。`replaceLatestKyouInfos` が全rep由来のアドレス表と突き合わせて「最大がMに届かなければレコードごと落とし、届けば `UpdateTime`==M の行だけ残す」ので、どちらも同じ集合に収束する。キャッシュOFFでは `UnWrap()` が自分自身を返すので完全一致。
 
-結果側で絞ることの代償として、**5つの落とし穴が生まれた**。どれも例外もエラーも出さずに壊れる。規則そのものは `CLAUDE.md` にあるが、なぜ必要かはここに残す。
+結果側で絞ることの代償として、**5つの落とし穴が生まれた**。どれも例外もエラーも出さずに壊れる。規則そのものは `.claude/skills/gkill-go-backend/SKILL.md` にあるが、なぜ必要かはここに残す。
 
 1. 本文ヒット由来の2本目の検索（`matchTextFindByIDQuery`）にも同じ絞り込みが要る。片方だけだと本文で当たった記録が rep 絞り込みをすり抜ける
 2. 全部落ちたIDは**キーごと消す**。空スライスを残すと `kyous[0]` を見る `filterLocationKyous` / `filterMiForMi` / `overrideKyous` が **panic** する

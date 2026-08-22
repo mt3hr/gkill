@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-09 |
-| Sources | `CLAUDE.md`「rykv/mi の『列×検索』不変条件」節 / `src/client/classes/use-rykv-view.ts` / `src/client/classes/use-mi-view.ts` |
+| Sources | `.claude/skills/gkill-client-columns/SKILL.md`「rykv/mi の『列×検索』不変条件」節 / `src/client/classes/use-rykv-view.ts` / `src/client/classes/use-mi-view.ts` |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/client/classes/use-mi-view.ts` |

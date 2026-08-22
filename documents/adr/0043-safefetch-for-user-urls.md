@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-21 |
-| Sources | `bb364253`（監査 H-04） / `CLAUDE.md`「利用者入力URL・そのページが指す og:image / #landingImage の取得は必ず api/safefetch を通す」節 |
+| Sources | `bb364253`（監査 H-04） / `.claude/skills/gkill-go-backend/SKILL.md`「利用者入力URL・そのページが指す og:image / #landingImage の取得は必ず api/safefetch を通す」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/safefetch/safefetch.go` |
