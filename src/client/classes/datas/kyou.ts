@@ -37,7 +37,7 @@ import { MiSortType } from '../api/find_query/mi-sort-type'
 // data_typeのプレフィックスから「どの型別データを読むか」を1回で決めるための表。
 //
 // **長いプレフィックスから順に**照合するので、"mirekyou" は "mi" より必ず先に当たる。
-// CLAUDE.mdの「mirekyou_* は "mi" で始まるためMiより先に判定する」を、
+// AGENTS.mdの「mirekyou_* は "mi" で始まるためMiより先に判定する」を、
 // ifを並べる順番（書き換えで簡単に壊れる）ではなく構造で保証するための並べ替え。
 // 並びは五十音順ならぬアルファベット順。'mi' が 'mirekyou' より前にあるが、
 // 下の sort が長い順へ並べ替えるので判定は 'mirekyou' が先になる

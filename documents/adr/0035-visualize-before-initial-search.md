@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-17 |
-| Sources | `5ab34d74` / `13818a0d` / `a5c913bf` / `CLAUDE.md`「rykv/mi/dashboard の初期化順序」節 |
+| Sources | `5ab34d74` / `13818a0d` / `a5c913bf` / `.claude/skills/gkill-client-columns/SKILL.md`「rykv/mi/dashboard の初期化順序」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/client/classes/use-dashboard-page.ts` |

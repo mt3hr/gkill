@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-12 |
-| Sources | `44b2be68` / `69e14f48` / `94bdb13b` / `CLAUDE.md`「キャッシュのフルリビルドは『実DBが変わったときだけ』」節 |
+| Sources | `44b2be68` / `69e14f48` / `94bdb13b` / `.claude/skills/gkill-go-backend/SKILL.md`「キャッシュのフルリビルドは『実DBが変わったときだけ』」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/dao/reps/local_rep_cache_copy.go` |

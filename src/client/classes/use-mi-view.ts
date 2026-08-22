@@ -391,7 +391,8 @@ export function useMiView(options: {
                 //  (2) focused_kyous_list(= match_kyous_list[focused_column_index] への
                 //      エイリアス)を黙って切る。切れると件数カレンダーとDnoteが
                 //      フォーカス列に追随しなくなる。
-                // in-place なら参照が保たれるので、CLAUDE.mdの局所挿入節と同じ約束を守れる。
+                // in-place なら参照が保たれるので、規約スキル（.claude/skills/gkill-client-columns/SKILL.md）の
+                // 局所挿入節と同じ約束を守れる。
                 //
                 // 「await中に列が差し替わる」ケースも in-place のほうが素直に正しい。
                 // 列が再検索されていれば match_kyous_list[i] は別の配列になっており、

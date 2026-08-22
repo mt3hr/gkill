@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-05 |
-| Sources | `2d10492c` / `d577bba7` / `CLAUDE.md`「Plugin tools」節 / `documents/reverse/plugin-system.md`「13. MCP からのプラグイン内容取得」 |
+| Sources | `2d10492c` / `d577bba7` / `.claude/skills/gkill-mcp/SKILL.md`「Plugin tools」節 / `documents/reverse/plugin-system.md`「13. MCP からのプラグイン内容取得」 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/mcp/lib/plugin-tools.mjs` |

@@ -1,3 +1,4 @@
+// 編集前に読む: .claude/skills/gkill-client-tags/SKILL.md（この領域の不変条件の正本）
 'use strict'
 
 // add_tag の完了前に registered_kyou を emit してはいけない理由:

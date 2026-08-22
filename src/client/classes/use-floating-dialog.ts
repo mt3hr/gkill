@@ -1,3 +1,4 @@
+// 編集前に読む: .claude/skills/gkill-client-rudbeckia/SKILL.md（この領域の不変条件の正本）
 // src/classes/use-floating-dialog.ts
 // Teleport 前提の「壊れにくい」フローティングダイアログ
 // - v-overlay 配下の transform の影響を避けるため、Teleport to="body" を想定

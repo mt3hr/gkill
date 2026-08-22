@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-19 |
-| Sources | `1acc9481`（1回目の修正） / `a3f349ca`（本修正） / `4cceccd0`（回帰テスト） / `CLAUDE.md`「保存マーカーの判定は beforeinput で控えた本文と input 時点の本文を比べ」節 |
+| Sources | `1acc9481`（1回目の修正） / `a3f349ca`（本修正） / `4cceccd0`（回帰テスト） / `.claude/skills/gkill-client-kftl/SKILL.md`「保存マーカーの判定は beforeinput で控えた本文と input 時点の本文を比べ」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/client/classes/use-kftl-view.ts` |

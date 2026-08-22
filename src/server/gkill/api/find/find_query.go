@@ -4,6 +4,8 @@
 // documents/adr/0006-find-query-null-semantics.md
 package find
 
+// 編集前に読む: .claude/skills/gkill-find-query/SKILL.md（この領域の不変条件の正本）
+
 import (
 	"time"
 )

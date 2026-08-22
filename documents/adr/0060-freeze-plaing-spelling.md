@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-05 |
-| Sources | `f093b748` / `41d63887` / `75235cab` / `documents/reverse/glossary.md`「凍結された綴り」節 / `CLAUDE.md`「Frozen spellings」節 |
+| Sources | `f093b748` / `41d63887` / `75235cab` / `documents/reverse/glossary.md`「凍結された綴り」節 / `AGENTS.md`「Frozen spellings」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | なし — 983箇所・182ファイルに分散しており、指す先が1つに決まらない |
@@ -54,7 +54,7 @@
 
 **`plaing` の綴り修正は提案しない。** ルート `/plaing`、`FindQuery` の `plaing_time`、MCP ツールスキーマ、Wear OS のデータレイヤーパス、マニュアルのページ名、`default_page` の保存値は、すべてこの綴りのまま。
 
-**この決定はテストで守られていない。** リネームを防ぐソース走査テストが存在せず、現状は `CLAUDE.md` / `glossary.md` / この ADR という**文書だけが防御線**。一括置換で壊せる状態にある。
+**この決定はテストで守られていない。** リネームを防ぐソース走査テストが存在せず、現状は `AGENTS.md` / `glossary.md` / この ADR という**文書だけが防御線**。一括置換で壊せる状態にある。
 
 新しい綴り誤りを見つけたときは、上の基準（永続データ／外部契約に乗っているか）で判定してから直すこと。
 

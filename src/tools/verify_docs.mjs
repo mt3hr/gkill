@@ -448,6 +448,10 @@ function computeMiscMetrics() {
     wearWatchKt,
     adrCount: listFiles('documents/adr',
       (f) => /^\d{4}-.+\.md$/.test(f) && f !== '0000-template.md').length,
+    skillCount: listFiles('.claude/skills',
+      (d) => exists('.claude/skills/' + d + '/SKILL.md')).length,
+    agentsMdBytes: exists('AGENTS.md')
+      ? Buffer.byteLength(readText('AGENTS.md').replace(/\r\n/g, '\n'), 'utf8') : 0,
   }
 }
 
@@ -479,11 +483,11 @@ function buildCountAssertions(m) {
   add('documents/reverse/screen-specs.md', `| ダイアログコンポーネント | ${m.dialogs} |`)
   add('documents/reverse/program-spec.md', `| ダイアログ | ${m.dialogs} |`)
   add('documents/reverse/frontend-architecture.md', `${m.dialogs}ダイアログ中`)
-  add('CLAUDE.md', `${m.dialogs} dialog components`)
+  add('.claude/skills/gkill-client-foundation/SKILL.md', `${m.dialogs} dialog components`)
 
   // i18n keys
   add('documents/reverse/folder-structure.md', `${m.i18nKeys}キー/言語`)
-  add('CLAUDE.md', `${m.i18nKeys} keys per locale`)
+  add('AGENTS.md', `${m.i18nKeys} keys per locale`)
 
   // endpoints（登録数）
   add('documents/reverse/glossary.md', `${m.endpoints}登録`)
@@ -550,41 +554,41 @@ function buildCountAssertions(m) {
   const mcpRead = m.mcpReadTools
   const mcpWrite = m.mcpWriteTools
   const mcpRW = m.mcpReadWriteTools
-  add('CLAUDE.md', `| Read | ${mcpRead} (`)
-  add('CLAUDE.md', `| Write | ${mcpWrite} (`)
-  add('CLAUDE.md', `| ReadWrite | ${mcpRW} (`)
+  add('.claude/skills/gkill-mcp/SKILL.md', `| Read | ${mcpRead} (`)
+  add('.claude/skills/gkill-mcp/SKILL.md', `| Write | ${mcpWrite} (`)
+  add('.claude/skills/gkill-mcp/SKILL.md', `| ReadWrite | ${mcpRW} (`)
   add('resources/manual_src/ja/mcp.html', `<td>gkill-read-server.mjs</td><td>${mcpRead}</td>`)
   add('resources/manual_src/ja/mcp.html', `<td>gkill-write-server.mjs</td><td>${mcpWrite}</td>`)
   add('resources/manual_src/ja/mcp.html', `<td>gkill-readwrite-server.mjs</td><td>${mcpRW}</td>`)
 
   // ── KFTL ステートメント型数 / glossary 用語数
-  add('CLAUDE.md', `KFTL parser (${m.kftlStatementTs} statement types; the Go side has ${m.kftlStatementGo})`)
+  add('.claude/skills/gkill-client-kftl/SKILL.md', `KFTL parser (${m.kftlStatementTs} statement types; the Go side has ${m.kftlStatementGo})`)
   add('documents/reverse/folder-structure.md', `KFTLパーサー（${m.kftlStatementTs}ステートメント型）`)
   add('documents/reverse/folder-structure.md', `バックエンド側、${m.kftlStatementGo}ステートメント型`)
-  add('CLAUDE.md', `glossary.md (${m.glossaryTerms} terms)`)
+  add('.claude/skills/gkill-docs/SKILL.md', `glossary.md (${m.glossaryTerms} terms)`)
   add('documents/reverse/README.md', `ドメイン用語の定義（${m.glossaryTerms}項目）`)
   add('documents/reverse/folder-structure.md', `用語集（${m.glossaryTerms}項目）`)
 
   // ── docコメント網羅率。
   //    reps のインターフェース契約と HandleXxx は 100% 維持する方針なので、
   //    ここが落ちたら「docを書かずにメソッド/ハンドラを足した」ことを意味する。
-  add('CLAUDE.md', `${m.repsIfaceDocumented}/${m.repsIfaceMethods} documented`)
-  add('CLAUDE.md', `${m.handlerDocumented}/${m.handlerMethods} handlers documented`)
+  add('.claude/skills/gkill-go-backend/SKILL.md', `${m.repsIfaceDocumented}/${m.repsIfaceMethods} documented`)
+  add('.claude/skills/gkill-go-backend/SKILL.md', `${m.handlerDocumented}/${m.handlerMethods} handlers documented`)
 
   // ── ユースケース数（ユニークUC-ID） / シーケンス図数（mermaidブロック）
   add('documents/reverse/usecase.md', `**${m.ucIds}件（ユニークな UC-ID 数）**`)
   add('documents/reverse/README.md', `ユースケース一覧（${m.ucIds}件）`)
   add('documents/reverse/scenario.md', `（${m.ucIds}件、1操作ずつ静的に列挙）`)
   add('documents/reverse/folder-structure.md', `ユースケース一覧（${m.ucIds}件）`)
-  add('CLAUDE.md', `usecase.md (${m.ucIds} use cases)`)
+  add('.claude/skills/gkill-docs/SKILL.md', `usecase.md (${m.ucIds} use cases)`)
   add('documents/reverse/README.md', `シーケンス図（${m.seqDiagrams}本:`)
   add('documents/reverse/folder-structure.md', `シーケンス図（${m.seqDiagrams}本:`)
-  add('CLAUDE.md', `sequence-diagrams.md (${m.seqDiagrams} diagrams)`)
+  add('.claude/skills/gkill-docs/SKILL.md', `sequence-diagrams.md (${m.seqDiagrams} diagrams)`)
 
   // ── handle_*.go ファイル数（CLAUDE.md / サーバ系README）
   const handlerTests = m.handlers - m.handlersImpl
-  add('CLAUDE.md', `HTTP API handlers (${m.handlers} files incl. tests, 1 handler per file)`)
-  add('CLAUDE.md', `repositories.WriteThroughXxxCache(ctx, ...)\` を使うこと（${m.writeThroughCalls}箇所）`)
+  add('.claude/skills/gkill-go-backend/SKILL.md', `HTTP API handlers (${m.handlers} files incl. tests, 1 handler per file)`)
+  add('.claude/skills/gkill-go-backend/SKILL.md', `repositories.WriteThroughXxxCache(ctx, ...)\` を使うこと（${m.writeThroughCalls}箇所）`)
   add('src/server/README.md', `（${m.handlers} handle_*.go`)
   add('src/server/gkill/api/README.md', `handle_*.go は${m.handlers}ファイル（実装${m.handlersImpl} + テスト${handlerTests}）`)
   add('src/server/gkill/api/gkill_server_api/README.md', `実装${m.handlersImpl}ファイル + テスト${handlerTests}ファイル`)
@@ -598,11 +602,11 @@ function buildCountAssertions(m) {
   add('src/server/gkill/api/find/README.md', `${m.findQueryFields} フィールドの検索条件`)
   add('src/server/gkill/api/README.md', `（${m.findQueryFields}フィールド:`)
   add('src/server/README.md', `**Go バージョン**: ${m.goVersion}`)
-  add('CLAUDE.md', `declares \`go ${m.goVersion}\``)
+  add('AGENTS.md', `declares \`go ${m.goVersion}\``)
 
   // ── ADR 件数。documents/adr/ 配下の NNNN-*.md（0000-template.md を除く）。
   //   ADR は増える一方なので、CLAUDE.md の件数だけが古びるのを防ぐ。
-  add('CLAUDE.md', `Architecture Decision Record（現在 ${m.adrCount} 件）`)
+  add('.claude/skills/gkill-docs/SKILL.md', `Architecture Decision Record（現在 ${m.adrCount} 件）`)
 
   // ── テストファイル数（ディレクトリ単位） / Wear OS Kotlinファイル数
   add('src/server/ABOUT_TEST.md', `リポジトリ実装 (${m.repsTestFiles}ファイル)`)
@@ -652,7 +656,7 @@ function buildCountAssertions(m) {
   //     - ルート数が「13」「14」「表14行」で三重に食い違い
 
   // ビュー数（ダイアログ数は上で検査済み。CLAUDE.md はビューだけ漏れていた）
-  add('CLAUDE.md', `${m.views} view components`)
+  add('.claude/skills/gkill-client-foundation/SKILL.md', `${m.views} view components`)
   // 合計行の内訳。合計だけ検査していると括弧の中が置き去りになる
   add('documents/reverse/screen-specs.md',
     `ビュー${m.views} + ダイアログ${m.dialogs} + ページ${m.pages}`)
@@ -660,9 +664,9 @@ function buildCountAssertions(m) {
 
   // ルート数（コンポーネントを持つルート / redirect 専用ルート）
   const routeTotal = m.routeComponents + m.routeRedirects
-  add('CLAUDE.md',
+  add('.claude/skills/gkill-client-foundation/SKILL.md',
     `${m.routeComponents} page routes`)
-  add('CLAUDE.md', `${m.routeRedirects} redirect-only routes`)
+  add('.claude/skills/gkill-client-foundation/SKILL.md', `${m.routeRedirects} redirect-only routes`)
   add('documents/reverse/screen-specs.md', `| ルート | ${m.routeComponents} |`)
   add('documents/reverse/screen-specs.md',
     `で定義される${routeTotal}ルート（コンポーネント${m.routeComponents} + リダイレクト専用${m.routeRedirects}）`)
@@ -675,7 +679,7 @@ function buildCountAssertions(m) {
   add('src/client/ABOUT_TEST.md', `ルーター (${m.routeComponents}ルート`)
 
   // マニュアルのページ数（言語あたり）
-  add('CLAUDE.md', `${m.manualPages} pages per language`)
+  add('.claude/skills/gkill-docs/SKILL.md', `${m.manualPages} pages per language`)
   add('documents/reverse/folder-structure.md', `7言語×${m.manualPages}ページ`)
 
   // src/ABOUT_TEST.md の索引表（上の統計表とは別に、各行が件数を書いている）
@@ -713,12 +717,12 @@ function buildCountAssertions(m) {
   add('documents/reverse/glossary.md', `約${apiLines}行`)
   add('documents/reverse/program-spec.md', `約${apiLines}行`)
   add('documents/reverse/class-diagrams.md', `約${apiLines}行`)
-  add('CLAUDE.md', `(~${apiLines} lines)`)
+  add('.claude/skills/gkill-client-foundation/SKILL.md', `(~${apiLines} lines)`)
 
   // req_res（Go / TypeScript）
   add('documents/reverse/api-endpoints.md', `req_res/\`（${m.reqRes}ファイル）`)
   add('documents/reverse/api-endpoints.md', `構造体（${m.reqRes}ファイル）`)
-  add('CLAUDE.md', `Request/response structs for every endpoint (${m.reqRes} files)`)
+  add('.claude/skills/gkill-go-backend/SKILL.md', `Request/response structs for every endpoint (${m.reqRes} files)`)
   add('documents/reverse/folder-structure.md', `リクエスト/レスポンス型（${m.classesApiReqRes}ファイル）`)
   add('documents/reverse/frontend-architecture.md',
     `(${m.classesApiReqRes}ファイル、サーバー側は${m.reqRes}ファイル)`)
@@ -818,6 +822,7 @@ function stripFencedBlocks(text) {
 //   **検査対象の資料ジャンルを増やすときは、必ずこの関数へ足すこと。**
 //   ここが唯一の入口なので、足し忘れるとリンク切れもゴーストファイル名も素通りする
 //   （実例: documents/releasenote/ の27ファイルは今も対象外）。
+//   AGENTS.md と .claude/skills/**/SKILL.md も対象（AI 資料再編。ADR-0062）。
 function docMarkdownFiles() {
   const out = []
   for (const f of listFiles('documents/reverse', (f) => f.endsWith('.md'))) {
@@ -829,6 +834,12 @@ function docMarkdownFiles() {
   }
   if (exists('README.md')) out.push('README.md')
   if (exists('CLAUDE.md')) out.push('CLAUDE.md')
+  if (exists('AGENTS.md')) out.push('AGENTS.md')
+  // 規約スキル（領域別の不変条件の正本）。SKILL.md すべてを検査対象にする。
+  // .gitignore が /.claude/* + !/.claude/skills/ である前提（checkSkills が0件を error にする）。
+  for (const p of listFilesRec('.claude/skills', (f) => f.endsWith('.md'))) {
+    out.push(path.relative(ROOT, p).split(path.sep).join('/'))
+  }
   for (const p of listFilesRec('src', (f) => f === 'README.md' || f === 'ABOUT_TEST.md')) {
     out.push(path.relative(ROOT, p).split(path.sep).join('/'))
   }
@@ -1292,6 +1303,187 @@ function checkADR() {
   reciprocal(supersedes, supersededBy, 'Supersedes')
 }
 
+
+// ─────────────────────────────────────────────────────────────
+// 8. AI エージェント向け資料（AGENTS.md / CLAUDE.md / .claude/skills）
+//    分割の設計と却下案: documents/adr/0062-split-claude-md-into-skills.md
+//
+//    AGENTS.md と CLAUDE.md は毎セッション全文が読み込まれる入口なので、
+//    太るとすべてのタスクの常時コンテキストを食う。上限を機械で固定する。
+//    **上限に当たったら上限を上げず、中身を .claude/skills/ へ落とすこと。**
+// ─────────────────────────────────────────────────────────────
+const SKILLS_DIR = '.claude/skills'
+const AGENTS_MD_MAX_BYTES = 24000   // LF 正規化後の実測 約17.5KB + 余裕。上げる前に分割を検討する
+const CLAUDE_MD_MAX_LINES = 40
+
+// 作業ツリーは CRLF なので、バイト計測・正規表現の前に必ず LF へ正規化する
+const normalizeLF = (s) => s.replace(/\r\n/g, '\n')
+
+function skillNames() {
+  return listFiles(SKILLS_DIR, (d) => exists(`${SKILLS_DIR}/${d}/SKILL.md`)).sort()
+}
+
+function checkAgentEntrypoints() {
+  if (!exists('AGENTS.md')) { err('AGENTS.md が無い（AI エージェント共通の入口）'); return }
+  const agents = normalizeLF(readText('AGENTS.md'))
+  const bytes = Buffer.byteLength(agents, 'utf8')
+  if (bytes > AGENTS_MD_MAX_BYTES) {
+    err(`AGENTS.md が ${bytes} バイト（上限 ${AGENTS_MD_MAX_BYTES}）。` +
+      '上限を上げるのではなく、領域別の内容を .claude/skills/ へ移してルーティング表に載せること')
+  }
+  if (!agents.includes('<!-- ROUTING-TABLE:BEGIN')) err('AGENTS.md にルーティング表のマーカーが無い')
+
+  if (!exists('CLAUDE.md')) { err('CLAUDE.md が無い（Claude Code の入口）'); return }
+  const claude = normalizeLF(readText('CLAUDE.md'))
+  if (!/^@AGENTS\.md\s*$/m.test(claude)) {
+    err('CLAUDE.md に `@AGENTS.md` の行が無い（Claude Code に AGENTS.md が読み込まれない）')
+  }
+  const claudeLines = claude.split('\n').length
+  if (claudeLines > CLAUDE_MD_MAX_LINES) {
+    err(`CLAUDE.md が ${claudeLines} 行（上限 ${CLAUDE_MD_MAX_LINES}）。` +
+      '規約の正本は AGENTS.md と .claude/skills/。CLAUDE.md は入口だけを持つこと')
+  }
+
+  // 他AIツールの入口は導線だけを持つ。規約本文の複製は必ずドリフトする
+  for (const rel of ['.github/copilot-instructions.md', '.cursor/rules/gkill.mdc']) {
+    if (!exists(rel)) { err(`AI 入口ファイルが無い: ${rel}`); continue }
+    const pointer = normalizeLF(readText(rel))
+    if (!pointer.includes('AGENTS.md')) err(`AI 入口が AGENTS.md を指していない: ${rel}`)
+    if (Buffer.byteLength(pointer, 'utf8') > 4096) err(`AI 入口が大きすぎる: ${rel}（導線だけにする）`)
+    if (/してはいけない|してはならない/.test(pointer)) {
+      err(`AI 入口に規約本文が書かれている: ${rel}（正本は AGENTS.md と .claude/skills/）`)
+    }
+  }
+  if (!exists('.gemini/settings.json')) err('AI 入口ファイルが無い: .gemini/settings.json')
+}
+
+function checkSkills() {
+  const names = skillNames()
+  if (!names.length) {
+    err(`規約スキルが1つも見つからない: ${SKILLS_DIR}/*/SKILL.md` +
+      '（.gitignore が /.claude/* + !/.claude/skills/ になっているか確認。' +
+      'ディレクトリごと無視すると CI の checkout に存在せず、検査が静かにゼロ件になる）')
+    return
+  }
+  const agents = exists('AGENTS.md') ? normalizeLF(readText('AGENTS.md')) : ''
+  const tableMatch = agents.match(/<!-- ROUTING-TABLE:BEGIN[\s\S]*?<!-- ROUTING-TABLE:END -->/)
+  const table = tableMatch ? tableMatch[0] : ''
+  const linked = new Set()
+  for (const mt of table.matchAll(/\]\((\.claude\/skills\/[\w-]+\/SKILL\.md)\)/g)) linked.add(mt[1])
+
+  for (const name of names) {
+    const rel = `${SKILLS_DIR}/${name}/SKILL.md`
+    const text = normalizeLF(readText(rel))
+    const fm = text.match(/^---\n([\s\S]*?)\n---\n/)
+    if (!fm) { err(`SKILL.md に frontmatter が無い: ${rel}`); continue }
+    const nameLine = fm[1].match(/^name:\s*(.+?)\s*$/m)
+    if (!nameLine || nameLine[1] !== name) {
+      err(`SKILL.md の name がディレクトリ名と違う: ${rel} → 「${nameLine ? nameLine[1] : '(無し)'}」`)
+    }
+    // description は二重引用符でくくった1物理行（オンデマンド発動の唯一の手がかり）
+    const descLine = fm[1].match(/^description:\s*"(.+)"\s*$/m)
+    if (!descLine) {
+      err(`SKILL.md の description が無いか、二重引用符1行の形式でない: ${rel}`)
+    } else {
+      const d = descLine[1]
+      if (d.length < 80) err(`description が短すぎて発動精度が出ない: ${rel}（${d.length}字）`)
+      if (d.length > 1024) err(`description が長すぎる（常時コンテキストを食う）: ${rel}（${d.length}字）`)
+      if (!/(src\/|\.claude\/|documents\/|resources\/|package\.json|AGENTS\.md|CLAUDE\.md|\.(ts|go|vue|mjs)\b)/.test(d)) {
+        err(`description に発動の手がかり（パスやファイル名）が無い: ${rel}`)
+      }
+    }
+    if (!linked.has(rel)) {
+      err(`スキルが AGENTS.md のルーティング表に無い: ${rel}` +
+        '（表に行が無いスキルは、パス連動のスキル機構を持たないエージェントから永遠に読まれない）')
+    }
+    // 1スキル = SKILL.md 1ファイル。補助 .md の散在は「索引に載らず読まれない資料」になる
+    for (const f of listFiles(`${SKILLS_DIR}/${name}`, (f2) => f2.endsWith('.md') && f2 !== 'SKILL.md')) {
+      err(`スキルに SKILL.md 以外の .md がある: ${SKILLS_DIR}/${name}/${f}（1スキル=1ファイル。内容は SKILL.md へ）`)
+    }
+  }
+  for (const p of linked) {
+    const dirName = p.split('/')[2]
+    if (!names.includes(dirName)) err(`ルーティング表にあるスキルが実在しない: ${p}`)
+  }
+}
+
+// ADR の | Sources | が指す資料ファイルと節名の実在。
+// 節が別ファイルへ移った・改名されたのに出典が旧位置を指し続ける事故は、
+// これまでどの検査にも掛かっていなかった（今回の分割で 20 ADR の出典が動いた）。
+// 節名の照合はバッククォートと『』/「」の揺れを吸収した部分文字列一致。
+function checkADRSources() {
+  const norm = (s) => s.replace(/`/g, '').replace(/『/g, '「').replace(/』/g, '」')
+  for (const f of adrFiles()) {
+    const rel = 'documents/adr/' + f
+    const sources = adrMeta(readText(rel), 'Sources')
+    if (!sources) continue
+    for (const mt of sources.matchAll(/`([\w./-]+\.md)`\s*(?:の)?「([^」]+)」/g)) {
+      const [, file, section] = mt
+      if (!exists(file)) { err(`ADR の Sources が実在しないファイルを指している: ${rel} → ${file}`); continue }
+      if (!norm(normalizeLF(readText(file))).includes(norm(section))) {
+        err(`ADR の Sources の節が見つからない: ${rel} → ${file}「${section}」` +
+          '（節の移動・改名。出典のファイルパスを追随させること）')
+      }
+    }
+  }
+}
+
+// 個人情報・実環境情報の混入検査（AGENTS.md「AI エージェントへの約束」の機械化）。
+// 公開リポジトリなので、実在の利用者ID・端末のローカル絶対パス・メールアドレスを資料に書かない。
+// パターンで表せない固有の NG 語（実在の名前など）は、それ自体をコミットすると本末転倒なので、
+// gitignore 済みの verify_docs_personal_ngwords.local.txt（1行1語）に置くとその環境でだけ検査に加わる。
+function checkPersonalInfo() {
+  const patterns = [
+    [/[A-Za-z]:\\+Users\\+(?![〈<]|user(?:name)?\b)[A-Za-z0-9]/, 'Windows のユーザープロファイル実パス'],
+    [/\/(?:home|Users)\/(?!user\/|〈|<)[a-z0-9_-]{3,}\//, 'ホームディレクトリの実パス'],
+    [/[A-Za-z0-9._%+-]+@(?!example\.)[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/, 'メールアドレス'],
+  ]
+  const ngWords = exists('verify_docs_personal_ngwords.local.txt')
+    ? normalizeLF(readText('verify_docs_personal_ngwords.local.txt')).split('\n').map((w) => w.trim()).filter(Boolean)
+    : []
+  for (const rel of docMarkdownFiles()) {
+    const text = normalizeLF(readText(rel))
+    for (const [re, label] of patterns) {
+      const mt = text.match(re)
+      if (mt) {
+        err(`個人情報の疑い（${label}）: ${rel} → 「${mt[0].slice(0, 40)}」` +
+          '（$HOME や 〈ユーザー名〉 のプレースホルダに置き換えること）')
+      }
+    }
+    for (const w of ngWords) {
+      if (text.includes(w)) err(`個人情報の疑い（ローカル NG 語）: ${rel} に「${w}」`)
+    }
+  }
+}
+
+
+// ソース内アンカーコメント（規約スキルへの参照）の実在検査。
+// コメント内の参照は checkLinks に載らないので、スキルの改名・削除で静かに古びる。
+// 高リスクファイルの先頭に「編集前に読む: .claude/skills/<name>/SKILL.md」を置く運用（ADR-0062）。
+function checkSkillAnchors() {
+  const re = /\.claude\/skills\/[\w-]+\/SKILL\.md/g
+  const exts = /\.(go|ts|vue|mjs|kt)$/
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name)
+      if (e.isDirectory()) {
+        if (DOC_FILENAME_SKIP_DIRS.has(e.name)) continue
+        walk(p)
+        continue
+      }
+      if (!exts.test(e.name)) continue
+      const text = fs.readFileSync(p, 'utf8')
+      for (const mt of text.matchAll(re)) {
+        if (!exists(mt[0])) {
+          err('ソースのアンカーコメントが指すスキルが実在しない: ' +
+            `${path.relative(ROOT, p).split(path.sep).join('/')} → ${mt[0]}`)
+        }
+      }
+    }
+  }
+  walk(abs('src'))
+}
+
 // ─────────────────────────────────────────────────────────────
 // メイン
 // ─────────────────────────────────────────────────────────────
@@ -1315,6 +1507,11 @@ function main() {
   checkPaths()
   checkDocFilenames()
   checkADR()
+  checkSkills()
+  checkAgentEntrypoints()
+  checkADRSources()
+  checkPersonalInfo()
+  checkSkillAnchors()
   checkMermaid()
   checkManuals()
   checkManualTerminology()

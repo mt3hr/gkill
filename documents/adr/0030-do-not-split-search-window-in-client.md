@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-19 |
-| Sources | `5edfa431`（導入） / `fc8f26a7`（撤去） / `CLAUDE.md`「検索を期間の窓へ刻んで複数回 get_kyous を投げてはいけない」節 |
+| Sources | `5edfa431`（導入） / `fc8f26a7`（撤去） / `.claude/skills/gkill-client-columns/SKILL.md`「検索を期間の窓へ刻んで複数回 get_kyous を投げてはいけない」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/client/classes/use-rykv-view.ts` |

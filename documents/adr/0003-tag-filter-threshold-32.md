@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-19 |
-| Sources | `f2c4f280` / `a6e4967c` / `bb364253` / `CLAUDE.md`「タグ絞り込みの取得は2経路。切り替えは『タグ名の個数』で決める」節 |
+| Sources | `f2c4f280` / `a6e4967c` / `bb364253` / `.claude/skills/gkill-go-backend/SKILL.md`「タグ絞り込みの取得は2経路。切り替えは『タグ名の個数』で決める」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/find_filter.go` |
