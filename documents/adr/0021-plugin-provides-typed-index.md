@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-11 |
-| Sources | `3c3bfade` / `5afbd408` / `documents/reverse/plugin-system.md` 14章 / `CLAUDE.md`「プラグインの型別/付随データ」節 |
+| Sources | `3c3bfade` / `5afbd408` / `documents/reverse/plugin-system.md` 14章 / `.claude/skills/gkill-plugin/SKILL.md`「プラグインの型別/付随データ」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/dao/reps/plugin_typed_index.go` |

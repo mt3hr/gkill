@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-12 |
-| Sources | `5afbd408` / `CLAUDE.md`「`len(XxxReps) == 1` でキャッシュrepを判定してはいけない」節 |
+| Sources | `5afbd408` / `.claude/skills/gkill-go-backend/SKILL.md`「`len(XxxReps) == 1` でキャッシュrepを判定してはいけない」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/dao/gkill_dao_manager.go` |

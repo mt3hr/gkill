@@ -33,7 +33,7 @@ export default [
     },
   },
   {
-    // CLAUDE.md「Naming convention (identifiers)」の機械化。
+    // AGENTS.md「Naming convention (identifiers)」の機械化。
     // 対象は src/client 本体のみ:
     //  - .js/.mjs に当てるとルールがパーササービス要求でクラッシュするため files 必須
     //  - __tests__ は camelCase 流儀なので対象外

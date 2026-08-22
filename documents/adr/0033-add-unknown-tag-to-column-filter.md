@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-19 |
-| Sources | `a510fbc2` / `CLAUDE.md`「利用者がその場で作ったタグは、開いている列の検索条件へ足す」節 |
+| Sources | `a510fbc2` / `.claude/skills/gkill-client-columns/SKILL.md`「利用者がその場で作ったタグは、開いている列の検索条件へ足す」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/client/classes/use-registered-tag-column-filter.ts` |

@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-18 |
-| Sources | `7c5f07f2` / `CLAUDE.md`「FindQuery.IDs は分割して渡す」節 |
+| Sources | `7c5f07f2` / `.claude/skills/gkill-go-backend/SKILL.md`「FindQuery.IDs は分割して渡す」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/dao/reps/repositories.go` |

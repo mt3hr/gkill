@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-13 |
-| Sources | `0caffd06` / `80383e38` / `7b9f0127` / `CLAUDE.md` の `gkill_plugin_codex` コメント |
+| Sources | `0caffd06` / `80383e38` / `7b9f0127` / `.claude/skills/gkill-plugin/SKILL.md` の `gkill_plugin_codex` コメント |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/plugins/gkill_plugin_codex/reader.go` |

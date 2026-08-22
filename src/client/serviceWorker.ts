@@ -1,3 +1,4 @@
+// 編集前に読む: .claude/skills/gkill-client-foundation/SKILL.md（この領域の不変条件の正本）
 /// <reference lib="webworker" />
 import delete_gkill_kyou_cache from './classes/delete-gkill-cache';
 import { clientsClaim } from 'workbox-core'

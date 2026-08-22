@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-16 |
-| Sources | `c1fbc9de` / `6c4bdfd9` / `6ee545b3` / `CLAUDE.md`「記録の追加は再検索せず、その1件を列へ差し込む」節 |
+| Sources | `c1fbc9de` / `6c4bdfd9` / `6ee545b3` / `.claude/skills/gkill-client-columns/SKILL.md`「記録の追加は再検索せず、その1件を列へ差し込む」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/client/classes/kyou-local-insert.ts` |
