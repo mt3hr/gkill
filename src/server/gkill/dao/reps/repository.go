@@ -10,6 +10,9 @@ import (
 
 // Repository は全データ型のリポジトリが満たす共通契約です。
 //
+// 「更新も削除も INSERT」を選んだ理由と却下案:
+// documents/adr/0010-append-only-dao.md
+//
 // 実装は4層あります（SQLiteを持つデータ型の場合）:
 //
 //	*_repository.go              interface定義（この契約の型別拡張）

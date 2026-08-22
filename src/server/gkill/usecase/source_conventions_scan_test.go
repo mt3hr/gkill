@@ -240,41 +240,50 @@ func TestAggregateFindChunksIDs(t *testing.T) {
 var queryRepsFilterPattern = regexp.MustCompile(`\b(query|findQuery|parsedFindQuery|q)\.Reps\b`)
 
 func TestNoRepNameFilterInDaoReps(t *testing.T) {
-	repsDir := filepath.Join(sourceScanGkillRoot, "dao", "reps")
+	// SQL を組み立てる層（dao/sqlite3impl）も走査する。
+	// rep名の絞り込みを「速そうだから」と降ろすとしたら行き先はここで、
+	// いま dao/sqlite3impl には query.Reps が1件も無い ＝ 規約が守られている状態。
+	// 走査対象から外れていると、降ろされた瞬間を誰も見張っていないことになる。
+	scanDirs := []string{
+		filepath.Join(sourceScanGkillRoot, "dao", "reps"),
+		filepath.Join(sourceScanGkillRoot, "dao", "sqlite3impl"),
+	}
 	violations := []string{}
 	scanned := 0
-	err := filepath.WalkDir(repsDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() || !strings.HasSuffix(d.Name(), ".go") || strings.HasSuffix(d.Name(), "_test.go") {
+	for _, scanDir := range scanDirs {
+		err := filepath.WalkDir(scanDir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if d.IsDir() || !strings.HasSuffix(d.Name(), ".go") || strings.HasSuffix(d.Name(), "_test.go") {
+				return nil
+			}
+			content, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			scanned++
+			for i, line := range strings.Split(string(content), "\n") {
+				trimmed := strings.TrimSpace(line)
+				if strings.HasPrefix(trimmed, "//") {
+					continue // 説明コメントは対象外（この規約自体を説明した行が引っかかるため）
+				}
+				if queryRepsFilterPattern.MatchString(line) {
+					violations = append(violations,
+						fmt.Sprintf("%s:%d: %s", filepath.ToSlash(path), i+1, trimmed))
+				}
+			}
 			return nil
-		}
-		content, err := os.ReadFile(path)
+		})
 		if err != nil {
-			return err
+			t.Fatalf("%s の走査に失敗した: %v", scanDir, err)
 		}
-		scanned++
-		for i, line := range strings.Split(string(content), "\n") {
-			trimmed := strings.TrimSpace(line)
-			if strings.HasPrefix(trimmed, "//") {
-				continue // 説明コメントは対象外（この規約自体を説明した行が引っかかるため）
-			}
-			if queryRepsFilterPattern.MatchString(line) {
-				violations = append(violations,
-					fmt.Sprintf("%s:%d: %s", filepath.ToSlash(path), i+1, trimmed))
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("%s の走査に失敗した: %v", repsDir, err)
 	}
-	if scanned < 100 {
-		t.Fatalf("dao/reps のGoファイルが %d 件しか見つからない。rootの指定(%s)が間違っている可能性がある", scanned, repsDir)
+	if scanned < 140 {
+		t.Fatalf("dao/reps と dao/sqlite3impl のGoファイルが %d 件しか見つからない。rootの指定(%s)が間違っている可能性がある", scanned, sourceScanGkillRoot)
 	}
 	if len(violations) != 0 {
-		t.Fatalf("dao/reps で FindQuery.Reps による絞り込みをしている。"+
+		t.Fatalf("dao 層で FindQuery.Reps による絞り込みをしている。"+
 			"rep名の絞り込みは api/find_filter.go の filterKyousByRepName にだけ置くこと"+
 			"（ReKyou/MiReKyou のワード委譲が利用者のクエリをそのまま渡すため、"+
 			"ここで絞るとチェックしていないrepに参照先を持つリポストが語句検索に当たらなくなる）:\n%s",

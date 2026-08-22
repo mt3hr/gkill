@@ -4,6 +4,9 @@
 // read / write / readwrite の3サーバから共有する。サーバごとにAPI呼び出しの
 // メソッド名が違う (callRead / callWrite / callApi) ため、呼び出し口は
 // call(pathname, body) 形式のコールバックで受け取る。
+//
+// 同一プラグインへ並列に投げない理由（stdio が1本しかない）:
+// documents/adr/0051-mcp-inline-plugin-content.md
 
 import { GkillApiError } from "./errors.mjs";
 import { normalizeLocaleOnlyArgs } from "./normalization.mjs";

@@ -5,6 +5,9 @@
 // そこだけを継承側の buildToolResult / handleToolCall に残す。
 //
 // サーバ名・版・ツール一覧はコンストラクタの options で受ける。
+//
+// server.current* へ書き戻してはいけない理由（並行要求の混線）:
+// documents/adr/0050-mcp-request-context-immutable.md
 
 import { GkillApiError, isPlainObject, invalidArgument } from "./errors.mjs";
 import { assertTrimmedString } from "./validation.mjs";

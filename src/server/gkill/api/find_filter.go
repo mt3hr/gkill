@@ -441,6 +441,9 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 	// rep名での絞り込みは**検索対象repではなく検索結果**で行う（findKyous の filterKyousByRepName）。
 	// キャッシュ表は行ごとに実rep名の REP_NAME を持ち、それが Kyou.RepName に入るので絞れる。
 	// ここで UnWrap() を使うのは「そのラッパに選ばれた実repが1つでもあるか」の判定だけ。
+	//
+	// 却下案（SQLへ押し込む／dao/reps へ降ろす／枝刈りも省く）と実測:
+	// documents/adr/0001-filter-rep-after-cache.md
 	if findCtx.ParsedFindQuery.Reps == nil {
 		for _, matchRep := range typeMatchReps {
 			repName, err := matchRep.GetRepName(ctx)
@@ -511,6 +514,9 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 
 // maxTagNamesForSQLFilter はタグ名の絞り込みをSQLへ降ろす上限です。
 //
+// 実測表と却下案（SQL一本化／Go一本化／行数で閾値を動かす）:
+// documents/adr/0003-tag-filter-threshold-32.md
+//
 // tag rep のワード検索は `LOWER(TAG) = LOWER(?) OR LOWER(ID) = LOWER(?)` を出す。
 // 列に関数がかかるので索引が効かず、**全行に LOWER() を適用**したうえで、
 // それをクエリのタグ名の数だけ繰り返す ―― つまり O(行数 × 名前の数)。
@@ -521,6 +527,8 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 // 2万タグで交差点はおよそ30。SQL側もGo側も行数に比例するので、
 // 交差する「名前の個数」は行数によらずほぼ一定。
 // 確保の少ないSQL側に寄せたいので、閾値は交差点よりやや上に置く。
+// 全タグ走査を「タグ無し」検索のときだけ走らせる理由:
+// documents/adr/0004-related-tag-ids-only-for-no-tags.md
 const maxTagNamesForSQLFilter = 32
 
 // collectTagsForFilter はタグ絞り込みに要る3つを作ります。
@@ -816,6 +824,8 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 // ここに `*Temp` を通す例外を足してはいけない ―― temp rep の名前は流儀がばらばらで、
 // 名前の一覧を2箇所で維持することになる。直すのは常に書き込み側。
 // 回帰は get_kyous_tx_rep_filter_test.go が**キャッシュON/OFFの両方**で守る。
+// 落とし穴5件がなぜ生まれたか（結果側で絞ることの代償）:
+// documents/adr/0001-filter-rep-after-cache.md
 func filterKyousByRepName(kyousMap map[string][]reps.Kyou, allowedRepNames map[string]struct{}) {
 	for id, kyous := range kyousMap {
 		kept := kyous[:0]

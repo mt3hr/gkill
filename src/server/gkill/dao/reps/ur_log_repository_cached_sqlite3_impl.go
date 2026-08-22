@@ -1,5 +1,8 @@
 package reps
 
+// サムネイルをキャッシュに載せない理由と、集約への丸投げを却下した理由:
+// documents/adr/0016-exclude-urlog-thumbnail-from-cache.md
+
 import (
 	"context"
 	sqllib "database/sql"

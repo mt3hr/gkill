@@ -54,6 +54,9 @@ func (r Repositories) FindKyous(ctx context.Context, query *find.FindQuery) (map
 // 2026-08-18に実データ(確認待ちの記録7,122件のIDを一度に渡した)で踏みました。
 // そのときは失敗がGkillErrorにならず「成功・0件」に見えていました
 // (message.EnsureNotEmptyのコメントを参照)。
+//
+// 却下案（分割せずエラーにする／UNIONを畳む／呼び出し側で分割する）と経緯:
+// documents/adr/0005-chunk-find-query-ids.md
 const maxIDsPerFindQuery = 4000
 
 // findChunkedByIDs はIDリストをmaxIDsPerFindQueryずつに割って検索し、結果を連結します。

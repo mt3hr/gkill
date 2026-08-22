@@ -5,6 +5,9 @@
 // 以前は gkill_server_api/utils.go の中にブックマークレット画像取得専用として
 // 閉じていました。URLog のタイトル/画像取得（dao/reps/ur_log.go）にも同じ防御が
 // 要るので、共有パッケージへ切り出しています。
+//
+// 文字列検査ではなく接続直前に実IPを見る理由（DNSリバインディング）:
+// documents/adr/0043-safefetch-for-user-urls.md
 package safefetch
 
 import (

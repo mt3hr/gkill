@@ -9,6 +9,9 @@
 //   node src/tools/verify_docs.mjs --list  実測メトリクスを表示して終了
 //
 // 依存なし（Node 標準のみ）。リポジトリルートからでも任意の CWD からでも動作する。
+//
+// ファイル名の実在まで検査する理由と、除外を2種類に絞った理由:
+// documents/adr/0061-verify-docs-checks-filenames.md
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -443,6 +446,8 @@ function computeMiscMetrics() {
     datasTestFiles,
     wearCompanionKt,
     wearWatchKt,
+    adrCount: listFiles('documents/adr',
+      (f) => /^\d{4}-.+\.md$/.test(f) && f !== '0000-template.md').length,
   }
 }
 
@@ -594,6 +599,10 @@ function buildCountAssertions(m) {
   add('src/server/gkill/api/README.md', `（${m.findQueryFields}フィールド:`)
   add('src/server/README.md', `**Go バージョン**: ${m.goVersion}`)
   add('CLAUDE.md', `declares \`go ${m.goVersion}\``)
+
+  // ── ADR 件数。documents/adr/ 配下の NNNN-*.md（0000-template.md を除く）。
+  //   ADR は増える一方なので、CLAUDE.md の件数だけが古びるのを防ぐ。
+  add('CLAUDE.md', `Architecture Decision Record（現在 ${m.adrCount} 件）`)
 
   // ── テストファイル数（ディレクトリ単位） / Wear OS Kotlinファイル数
   add('src/server/ABOUT_TEST.md', `リポジトリ実装 (${m.repsTestFiles}ファイル)`)
@@ -805,10 +814,18 @@ function stripFencedBlocks(text) {
 //   documents/reverse/*.md に加え、README.md 群と ABOUT_TEST.md 群も対象にする。
 //   src/README.md の「各サブディレクトリの README / ABOUT_TEST」表がリンク切れのまま
 //   放置される事故を防ぐのが主目的。
+//
+//   **検査対象の資料ジャンルを増やすときは、必ずこの関数へ足すこと。**
+//   ここが唯一の入口なので、足し忘れるとリンク切れもゴーストファイル名も素通りする
+//   （実例: documents/releasenote/ の27ファイルは今も対象外）。
 function docMarkdownFiles() {
   const out = []
   for (const f of listFiles('documents/reverse', (f) => f.endsWith('.md'))) {
     out.push('documents/reverse/' + f)
+  }
+  // ADR。0000-template.md はプレースホルダを含むので対象外。
+  for (const f of listFiles('documents/adr', (f) => f.endsWith('.md') && f !== '0000-template.md')) {
+    out.push('documents/adr/' + f)
   }
   if (exists('README.md')) out.push('README.md')
   if (exists('CLAUDE.md')) out.push('CLAUDE.md')
@@ -918,7 +935,12 @@ function checkDocFilenames() {
   // 同じ名前を何度も報告しない（ツリーと表で二重に出るため）
   const missing = new Map()
   for (const rel of docMarkdownFiles()) {
-    for (const mt of readText(rel).matchAll(fileRe)) {
+    // ADR は本質的に歴史を語るので、削除済みファイルの名前が本文に出てくる。
+    // 「かつて存在した名前はコードフェンスで囲む」を規約にして、フェンス内だけ免除する
+    // （documents/adr/README.md「削除済みファイルの名前を書くとき」）。
+    // フェンスの外は従来どおり実在を要求するので、現役ファイルの改名取り残しは捕まる。
+    const text = rel.startsWith('documents/adr/') ? stripFencedBlocks(readText(rel)) : readText(rel)
+    for (const mt of text.matchAll(fileRe)) {
       const name = mt[1]
       if (DOC_FILENAME_PLACEHOLDER.test(name)) continue
       if (basenames.has(name)) continue
@@ -1151,6 +1173,126 @@ function checkManualParity(detailed) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// 4-d. ADR（documents/adr/）の構造検査
+//
+//   ADR が持つのは「却下案・実測値・事件譚」で、禁止文の正本ではない
+//   （層ごとの持ち分は documents/adr/README.md の「正本の分割規約」）。
+//   ここで検査するのは、その役割を果たせる形になっているかどうか。
+//
+//   Related tests の実在検査に Status: Superseded の免除があるのは、
+//   **決定を覆す実体が「ガードテストを消すこと」**だから。免除が無いと
+//   Superseded にした瞬間に CI が赤くなり、逃げ道が「歴史であるはずの
+//   ADR を書き換える」ことしか無くなる。
+// ─────────────────────────────────────────────────────────────
+const ADR_REQUIRED_HEADINGS = [
+  'Context', 'Decision', 'Rejected alternatives',
+  'Consequences', 'Evidence', 'Related tests',
+]
+const ADR_STATUSES = ['Accepted', 'Superseded', 'Deprecated']
+
+function adrFiles() {
+  return listFiles('documents/adr',
+    (f) => /^\d{4}-.+\.md$/.test(f) && f !== '0000-template.md')
+}
+
+// メタ表（本文冒頭の2列テーブル）から1項目を取る。
+function adrMeta(text, key) {
+  const mt = text.match(new RegExp('^\\|\\s*' + key + '\\s*\\|(.*)\\|\\s*$', 'm'))
+  return mt ? mt[1].trim() : null
+}
+
+// 「## 見出し」の直後から次の「## 」までを返す。見出しが無ければ null。
+function adrSection(text, heading) {
+  const mt = text.match(new RegExp('^## ' + heading + '\\s*$', 'm'))
+  if (!mt) return null
+  const rest = text.slice(mt.index + mt[0].length)
+  const next = rest.search(/^## /m)
+  return next < 0 ? rest : rest.slice(0, next)
+}
+
+function checkADR() {
+  const files = adrFiles()
+  if (!files.length) return
+  const indexText = exists('documents/adr/README.md') ? readText('documents/adr/README.md') : ''
+  const seen = new Map()
+  const supersedes = new Map()
+  const supersededBy = new Map()
+  const numsIn = (v) => (v && v !== 'なし') ? [...v.matchAll(/(\d{4})/g)].map((mt) => mt[1]) : []
+
+  for (const f of files) {
+    const rel = 'documents/adr/' + f
+    const text = readText(rel)
+    const num = f.slice(0, 4)
+
+    for (const h of ADR_REQUIRED_HEADINGS) {
+      if (adrSection(text, h) === null) err(`ADR に必須見出しが無い: ${rel} → ## ${h}`)
+    }
+
+    if (!new RegExp('^# ADR-' + num + ':', 'm').test(text)) {
+      err(`ADR の番号がファイル名と本文で食い違う: ${rel} → 本文の見出しが「# ADR-${num}: 」で始まっていない`)
+    }
+    if (seen.has(num)) err(`ADR 番号の重複: ${num}（${seen.get(num)} と ${rel}）`)
+    seen.set(num, rel)
+
+    const status = adrMeta(text, 'Status')
+    if (!status) err(`ADR のメタ表に Status が無い: ${rel}`)
+    else if (!ADR_STATUSES.includes(status)) {
+      err(`ADR の Status が不正: ${rel} → 「${status}」（${ADR_STATUSES.join(' / ')} のいずれか）`)
+    }
+
+    const date = adrMeta(text, 'Date')
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) {
+      err(`ADR のメタ表の Date が YYYY-MM-DD でない: ${rel} → 「${date}」`)
+    }
+    const sources = adrMeta(text, 'Sources')
+    if (!sources || sources === 'なし') err(`ADR のメタ表に Sources が無い: ${rel}`)
+
+    // 却下案が1つも無いなら、それは決定ではなく仕様。documents/reverse/ の担当。
+    const rejected = adrSection(text, 'Rejected alternatives') || ''
+    const rejectedItems = rejected.split(/\r?\n/).filter((l) => /^\s*[-*] \S/.test(l))
+    if (!rejectedItems.length) {
+      err(`ADR の Rejected alternatives が実質空: ${rel}（却下案が無いなら決定ではなく仕様。documents/reverse/ の担当）`)
+    }
+
+    // 実測が無い決定でも空欄にはしない（「実測なし — 理由」を書く）。
+    if (!(adrSection(text, 'Evidence') || '').trim()) {
+      err(`ADR の Evidence が空: ${rel}（実測が無いなら「実測なし — 理由」と書く）`)
+    }
+
+    if (status !== 'Superseded') {
+      const related = adrSection(text, 'Related tests') || ''
+      for (const mt of related.matchAll(/`(src\/[\w./-]+)`/g)) {
+        if (!exists(mt[1])) err(`ADR の Related tests が実在しない: ${rel} → ${mt[1]}`)
+      }
+    }
+
+    supersededBy.set(num, numsIn(adrMeta(text, 'Superseded-by')))
+    supersedes.set(num, numsIn(adrMeta(text, 'Supersedes')))
+    if (supersededBy.get(num).length && status !== 'Superseded') {
+      err(`ADR に Superseded-by があるのに Status が Superseded でない: ${rel}`)
+    }
+
+    if (!indexText.includes(f)) {
+      err(`ADR が索引に無い: ${rel}（documents/adr/README.md の索引表に1行足すこと）`)
+    }
+  }
+
+  // Supersede は相互リンクでなければならない（片方向だと歴史がたどれない）。
+  const reciprocal = (from, to, label) => {
+    for (const [num, targets] of from) {
+      for (const t of targets) {
+        if (!seen.has(t)) { err(`ADR-${num} の ${label} が実在しない ADR-${t} を指している`); continue }
+        if (!(to.get(t) || []).includes(num)) {
+          err(`ADR の Supersede が片方向: ADR-${num} の ${label} は ADR-${t} を指しているが、逆向きが書かれていない`)
+        }
+      }
+    }
+  }
+  reciprocal(supersededBy, supersedes, 'Superseded-by')
+  reciprocal(supersedes, supersededBy, 'Supersedes')
+}
+
+// ─────────────────────────────────────────────────────────────
 // メイン
 // ─────────────────────────────────────────────────────────────
 function main() {
@@ -1172,6 +1314,7 @@ function main() {
   checkLinks()
   checkPaths()
   checkDocFilenames()
+  checkADR()
   checkMermaid()
   checkManuals()
   checkManualTerminology()

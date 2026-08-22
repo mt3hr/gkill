@@ -1,5 +1,8 @@
 package reps
 
+// PlainOpen のエラー型で分岐しない理由（型が OS で違い Linux だけ壊れた）:
+// documents/adr/0017-git-repo-detect-by-os-stat.md
+
 import (
 	"context"
 	"fmt"

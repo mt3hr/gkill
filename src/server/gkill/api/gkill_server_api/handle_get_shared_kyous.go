@@ -1,5 +1,8 @@
 package gkill_server_api
 
+// 所有者を本文の user_id から取らない理由:
+// documents/adr/0041-share-owner-from-session.md
+
 import (
 	"context"
 	"encoding/json"
