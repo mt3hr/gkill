@@ -32,7 +32,9 @@ gkill/
 ├── env.d.ts                # 環境変数型定義
 ├── LICENSE                 # MIT ライセンス
 ├── LICENSES_DEPENDENCE     # 依存パッケージのライセンス一覧
-├── CLAUDE.md               # Claude Code向けプロジェクトガイド
+├── AGENTS.md               # AIエージェント共通の規約の核（触る場所→必読スキルのルーティング表つき）
+├── CLAUDE.md               # Claude Code の入口（@AGENTS.md を展開するだけの薄いラッパ）
+├── .claude/skills/         # 領域別の不変条件の正本（規約スキル13本。git追跡対象）
 └── README.md               # プロジェクト説明（日本語）
 ```
 

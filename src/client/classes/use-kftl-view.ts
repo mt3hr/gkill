@@ -1,3 +1,4 @@
+// 編集前に読む: .claude/skills/gkill-client-kftl/SKILL.md（この領域の不変条件の正本）
 import { computed, nextTick, onMounted, onUnmounted, ref, useId, watch, type Ref } from 'vue'
 import { i18n } from '@/i18n'
 import { GkillError } from '@/classes/api/gkill-error'

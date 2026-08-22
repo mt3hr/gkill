@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-08 |
-| Sources | `9beff2ff` / `CLAUDE.md`「Context menus」節 |
+| Sources | `9beff2ff` / `.claude/skills/gkill-client-foundation/SKILL.md`「Context menus」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/client/classes/use-context-menu-position.ts` |

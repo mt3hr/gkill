@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-17 |
-| Sources | `CLAUDE.md`「Kyou の追加/編集画面のタグ欄」節 / `src/client/pages/views/edit-kyou-tags-view.vue` |
+| Sources | `.claude/skills/gkill-client-tags/SKILL.md`「Kyou の追加/編集画面のタグ欄」節 / `src/client/pages/views/edit-kyou-tags-view.vue` |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/client/classes/kyou-tags.ts` |

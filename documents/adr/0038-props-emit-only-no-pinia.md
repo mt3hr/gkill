@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-21 |
-| Sources | `documents/reverse/frontend-architecture.md`「5. 状態管理」 / `CLAUDE.md`「State management」「Composable pattern」節 |
+| Sources | `documents/reverse/frontend-architecture.md`「5. 状態管理」 / `.claude/skills/gkill-client-foundation/SKILL.md`「State management」「Composable pattern」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/client/classes/kyou-view-relay.ts` |

@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-21 |
-| Sources | `documents/reverse/design-philosophy.md`「3. Append-Only DAO」 / `bb364253`（監査 H-07） / `CLAUDE.md`「型別 GetXxx(id, nil) は最新版を返す」節 |
+| Sources | `documents/reverse/design-philosophy.md`「3. Append-Only DAO」 / `bb364253`（監査 H-07） / `.claude/skills/gkill-go-backend/SKILL.md`「型別 GetXxx(id, nil) は最新版を返す」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/dao/reps/repository.go` |

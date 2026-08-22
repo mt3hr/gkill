@@ -1,5 +1,7 @@
 package reps
 
+// 編集前に読む: .claude/skills/gkill-plugin/SKILL.md（この領域の不変条件の正本）
+
 import (
 	"bufio"
 	"context"
