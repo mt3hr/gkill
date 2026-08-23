@@ -198,7 +198,7 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 - `file_url` — 画像は既定でサムネ（長辺〜1024のJPEG）、それ以外は原寸。
 - `file_url_full` — 画像の原寸URL（画像のときだけ）。
 
-AIはこのURLを **Bearer無しでGET** すればバイトを取得できる（base64を経由せず、サイズ上限なし）。配信は各MCPサーバの `GET /files/{token}` ルートが担い、`MCP_OAUTH_ISSUER`（公開URL）を基点にURLを組み立てる。
+このURLは **Bearer無しでGET** できる（base64を経由せず、サイズ上限なし）。配信は各MCPサーバの `GET /files/{token}` ルートが担い、`MCP_OAUTH_ISSUER`（公開URL）を基点にURLを組み立てる。**ただしこのURLを取りに行くのはAI自身ではない**（後述の「AIが画像を見る経路」）。
 
 セキュリティは**トークン自体**が担保する:
 
@@ -206,7 +206,20 @@ AIはこのURLを **Bearer無しでGET** すればバイトを取得できる（
 - gkillからのバイト取得は発行時のOAuthセッションで行い、**URLにセッションは載らない**。URLを知る者は「期限内・そのファイルだけ」取得できる。
 - トークン発行はOAuth認証済みのツールコール内でのみ。gkill本体を公開する必要はない（gkillは非公開のまま、MCPサーバの公開面だけで完結）。
 
-リモートで大きすぎて `gkill_get_idf_file`（base64、`GKILL_MCP_MAX_FILE_BYTES` 上限）に収まらないファイルも、この `file_url` なら取得できる。
+大きすぎて `gkill_get_idf_file`（base64、`GKILL_MCP_MAX_FILE_BYTES` 上限）に収まらないファイルも、この `file_url` なら渡せる。ただし次節のとおり**AIはその中身を見られない**（人間が開くリンクとして渡すことになる）。
+
+##### AIが画像を「見る」経路
+
+上の2つの導線は**優先順位ではなく用途の違い**。MCPはツール出力のURLを代わりに取りに行く仕組みを持たないし、クライアントが自前の機能でURLを取れたとしても、得られるのは会話の外側のバイトであって**見られる画像にはならない**。`file_url` は**人間へ渡すリンク**（返答に貼る・ブラウザで開く・HTMLへ埋める）と考える。
+
+| クライアント | 画像を**見る** | ファイルを人間へ渡す |
+|---|---|---|
+| stdio（Claude Code等） | `file_path` を直接読む | `file_path` |
+| HTTP（ChatGPT / Claude.ai Connectors） | **`gkill_get_idf_file` だけ** | `file_url` / `file_url_full` |
+
+`type: "image"` のMCP contentブロックを組み立てるのは `mcp-server-base.mjs` の `buildToolResult` 1箇所だけで、その入力は `gkill_get_idf_file` が返す `file_content_base64` に限られる。したがって**HTTP接続のAIが画像を見る手段は `gkill_get_idf_file` が唯一**で、画像生成ツールへ参照画像として渡す場合もこれを使う。
+
+実測（2026-08-24）: ChatGPTで「キーワード検索 → ヒットしたイラスト3枚を参照して新規イラストを生成」を1回実行したところ、`gkill_get_kyous` 1回に続いて `gkill_get_idf_file` が3回呼ばれ、`/files/` へのアクセスは0件だった。経緯と却下案は [ADR-0055](../../documents/adr/0055-idf-file-reaches-ai-through-payload.md)。
 
 #### Writeツール（21 — Write専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
