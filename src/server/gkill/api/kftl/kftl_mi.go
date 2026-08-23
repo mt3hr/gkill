@@ -70,6 +70,7 @@ func (r *kftlMiRequest) DoRequest(ctx context.Context) error {
 	}
 	repName, repNameErr := r.Ctx.Repositories.WriteMiRep.GetRepName(ctx)
 	logGetRepNameFailure(ctx, "mi", mi.ID, repNameErr)
+	r.recordCreated("mi", mi.ID)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
 	logWriteThroughCacheFailure(ctx, "mi", mi.ID, r.Ctx.Repositories.WriteThroughMiCache(ctx, mi))

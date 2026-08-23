@@ -54,6 +54,7 @@ func (r *kftlKCRequest) DoRequest(ctx context.Context) error {
 	}
 	repName, repNameErr := r.Ctx.Repositories.WriteKCRep.GetRepName(ctx)
 	logGetRepNameFailure(ctx, "kc", kc.ID, repNameErr)
+	r.recordCreated("kc", kc.ID)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
 	logWriteThroughCacheFailure(ctx, "kc", kc.ID, r.Ctx.Repositories.WriteThroughKCCache(ctx, kc))

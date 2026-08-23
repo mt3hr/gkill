@@ -98,6 +98,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | 0050-0059 | MCP |
 | 0060-0069 | 開発規約と資料 |
 | 0070-0079 | 検索とフィルタの意味論（続。0001-0009 が満杯になったため） |
+| 0080-0089 | メモ帳（KFTL） |
 
 **番号は採番後不変。** 撤回した決定も番号を空けず `Superseded` で残す
 （「入れて翌日撤去した」という記録そのものが最良の ADR になる）。
@@ -178,3 +179,5 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0070](0070-hide-tags-standalone.md) | hide_tags はタグ絞り込み(tags)の有無と独立に適用する | Accepted |
 | [0071](0071-deleted-data-opens-only-with-include-deleted-data.md) | 削除済みの Kyou は include_deleted_data だけが開ける（is_deleted は使わない） | Accepted |
 | [0072](0072-drop-never-implemented-query-fields.md) | 実装されなかった検索条件は消す — 受理して無視するより未知キーとして弾く | Accepted |
+| [0073](0073-tag-vocabulary-drops-dead-targets.md) | タグ語彙は「生存する対象を持つタグ」だけを返す — カスケード削除はしない | Accepted |
+| [0080](0080-kftl-errors-are-per-line.md) | メモ帳（KFTL）の失敗は行ごとに返し、入力ミスとサーバ障害を分ける | Accepted |

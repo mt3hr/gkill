@@ -63,6 +63,7 @@ func (r *kftlTimeIsRequest) DoRequest(ctx context.Context) error {
 	}
 	repName, repNameErr := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
 	logGetRepNameFailure(ctx, "timeis", timeis.ID, repNameErr)
+	r.recordCreated("timeis", timeis.ID)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
 	logWriteThroughCacheFailure(ctx, "timeis", timeis.ID, r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, timeis))
@@ -233,6 +234,7 @@ func (r *kftlTimeIsStartRequest) DoRequest(ctx context.Context) error {
 	}
 	repName, repNameErr := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
 	logGetRepNameFailure(ctx, "timeis", timeis.ID, repNameErr)
+	r.recordCreated("timeis", timeis.ID)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
 	logWriteThroughCacheFailure(ctx, "timeis", timeis.ID, r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, timeis))
@@ -317,10 +319,8 @@ func newKFTLTimeIsEndByTitleRequest(requestID string, ctx *KFTLStatementLineCont
 
 func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 	if r.title == "" {
-		return fmt.Errorf("timeis end: title is empty")
-	}
-	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
-		return err
+		return newKFTLInputError("KFTL_TIMEIS_END_REQUIRE_END_TITLE_MESSAGE_TITLE",
+			fmt.Errorf("timeis end: title is empty"))
 	}
 	endTime := r.GetRelatedTime()
 
@@ -345,9 +345,16 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 
 	if target == nil {
 		if r.errorWhenTargetNotExist {
-			return fmt.Errorf("no playing timeis with title=%q", r.title)
+			return newKFTLInputError("KFTL_TIMEIS_END_TARGET_NOT_FOUND_MESSAGE_TITLE",
+				fmt.Errorf("no playing timeis with title=%q", r.title))
 		}
 		return nil
+	}
+
+	// タグ・テキストの書き込みは「終了対象が見つかってから」。以前はこの判定より前にあり、
+	// 終了できなかったときでもタグだけが実在しないIDを指したまま残っていた。
+	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
+		return err
 	}
 
 	now := r.CreateTime
@@ -362,6 +369,7 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 	}
 	repName, repNameErr := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
 	logGetRepNameFailure(ctx, "timeis", target.ID, repNameErr)
+	r.recordUpdated("timeis", target.ID)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, target.ID, nil, false, now, repName)
 	// キャッシュに書き込み
 	// The RepName carried here is the rep the running TimeIs was *found* in,
@@ -484,9 +492,6 @@ func (r *kftlTimeIsEndByTagRequest) AddTag(tag string) {
 }
 
 func (r *kftlTimeIsEndByTagRequest) DoRequest(ctx context.Context) error {
-	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
-		return err
-	}
 	endTime := r.GetRelatedTime()
 
 	plaingNow := time.Now()
@@ -519,9 +524,15 @@ outer:
 
 	if target == nil {
 		if r.errorWhenTargetNotExist {
-			return fmt.Errorf("no playing timeis with tags=%v", r.searchTags)
+			return newKFTLInputError("KFTL_TIMEIS_END_TARGET_NOT_FOUND_MESSAGE_TITLE",
+				fmt.Errorf("no playing timeis with tags=%v", r.searchTags))
 		}
 		return nil
+	}
+
+	// タイトル指定版と同じ理由で、終了対象が見つかってから書く
+	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
+		return err
 	}
 
 	now := r.CreateTime
@@ -536,6 +547,7 @@ outer:
 	}
 	repName, repNameErr := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
 	logGetRepNameFailure(ctx, "timeis", target.ID, repNameErr)
+	r.recordUpdated("timeis", target.ID)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, target.ID, nil, false, now, repName)
 	// キャッシュに書き込み
 	// The RepName carried here is the rep the running TimeIs was *found* in,

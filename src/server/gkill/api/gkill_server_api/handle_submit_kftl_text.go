@@ -108,7 +108,7 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 	}
 
 	statement := &kftl.KFTLStatement{StatementText: request.KFTLText}
-	err = statement.GenerateAndExecuteRequests(
+	createdRecords, err := statement.GenerateAndExecuteRequests(
 		r.Context(),
 		repositories,
 		applicationConfig,
@@ -117,9 +117,29 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 		"gkill_kftl",
 		request.LocaleName,
 	)
+	// 成功・失敗どちらでも、実際に書けたものは載せる。KFTLはDBトランザクションを使わないので
+	// 途中で失敗しても前のリクエストぶんは残る。何が残ったか分からないと後始末ができない。
+	response.Created = toSubmitKFTLTextCreated(createdRecords)
+
 	if err != nil {
 		err = fmt.Errorf("error at submit kftl text user id = %s device = %s: %w", userID, device, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+
+		// 利用者の書き間違いはサーバ障害と分けて 400 で返し、行番号と原因を載せる。
+		// 2026-08-24 まではどちらも ERR000351(500) + 定型文1本に畳まれていて、
+		// 何行目の何が悪いのか応答からは一切分からなかった（Wear もこの1文しか読めない）。
+		inputErrors := kftl.CollectKFTLInputErrors(err)
+		if len(inputErrors) != 0 {
+			localizer := api.GetLocalizer(request.LocaleName)
+			for _, inputError := range inputErrors {
+				response.Errors = append(response.Errors, &message.GkillError{
+					ErrorCode:    message.SubmitKFTLTextInvalidInputError,
+					ErrorMessage: formatKFTLInputErrorMessage(localizer, inputError),
+				})
+			}
+			return
+		}
+
 		gkillError := &message.GkillError{
 			ErrorCode:    message.SubmitKFTLTextError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"}),
@@ -138,4 +158,39 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 		MessageCode: message.SubmitKFTLTextSuccessMessage,
 		Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_SUBMIT_KFTL_TEXT_MESSAGE"}),
 	})
+}
+
+// formatKFTLInputErrorMessage は入力エラー1件を利用者向けの1文にする。
+//
+// 多言語メッセージIDがあればそれを引き、無ければ原因の文面をそのまま添える
+// (原因は英語だが、何も出さないよりは追える)。行番号と行テキストは言語に依らない
+// 形で挟む —— 利用者が直すのに要るのは「何行目か」で、そこは翻訳しても価値が無い。
+func formatKFTLInputErrorMessage(localizer *i18n.Localizer, inputError *kftl.KFTLInputError) string {
+	detail := ""
+	if inputError.MessageID != "" {
+		detail = localizer.MustLocalizeMessage(&i18n.Message{ID: inputError.MessageID})
+	} else if inputError.Cause != nil {
+		detail = inputError.Cause.Error()
+	}
+	header := localizer.MustLocalizeMessage(&i18n.Message{ID: "KFTL_FOUND_INVALID_LINE_MESSAGE"})
+	if inputError.LineNumber > 0 {
+		return fmt.Sprintf("%s (line %d: %q): %s", header, inputError.LineNumber, inputError.LineText, detail)
+	}
+	return fmt.Sprintf("%s: %s", header, detail)
+}
+
+// toSubmitKFTLTextCreated は kftl パッケージの記録を応答DTOへ写す。
+func toSubmitKFTLTextCreated(records []kftl.KFTLCreatedRecord) []*req_res.SubmitKFTLTextCreated {
+	if len(records) == 0 {
+		return nil
+	}
+	created := make([]*req_res.SubmitKFTLTextCreated, 0, len(records))
+	for _, record := range records {
+		created = append(created, &req_res.SubmitKFTLTextCreated{
+			ID:       record.ID,
+			DataType: record.DataType,
+			Updated:  record.Updated,
+		})
+	}
+	return created
 }

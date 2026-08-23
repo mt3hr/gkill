@@ -417,7 +417,10 @@ func collectMCPUnknownValueWarnings(ctx context.Context, repositories *reps.Gkil
 	tagNamesToCheck := 0
 	tagNamesToCheck += len(query.Tags) + len(query.HideTags) + len(query.TimeIsTags)
 	if tagNamesToCheck > 0 {
-		allTagNames, err := repositories.GetAllTagNames(ctx)
+		// 検証には対象の生死を問わない一覧を使う。GetAllTagNames は対象が削除済みの
+		// タグを落とすので、include_deleted_data で削除済みを開いた検索に
+		// 「未知のタグ」という誤った警告が出てしまう。
+		allTagNames, err := repositories.GetAllTagNamesIncludingDeletedTargets(ctx)
 		if err != nil {
 			warnings = append(warnings, fmt.Sprintf("could not validate tag names against the tag list: %v", err))
 		} else {
