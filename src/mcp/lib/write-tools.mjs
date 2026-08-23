@@ -3,7 +3,7 @@
 // 以前はサーバごとに逐語コピーされていて、gkill_submit_kftl / gkill_delete_kyou の
 // description が接続先サーバによって違っていた。
 
-import { ISO_DATETIME_DESC, DATE_ONLY_DESC } from "./constants.mjs";
+import { ISO_DATETIME_DESC, DATE_ONLY_DESC, DELETE_DATA_TYPE_VALUES } from "./constants.mjs";
 
 export const WRITE_TOOLS = [
   {
@@ -262,7 +262,7 @@ export const WRITE_TOOLS = [
         data_type: {
           type: "string",
           description: "Data type of the entry to delete. Must match the actual type of the entry.",
-          enum: ["kmemo", "urlog", "nlog", "lantana", "timeis", "mi", "kc", "tag", "text"],
+          enum: DELETE_DATA_TYPE_VALUES,
         },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },

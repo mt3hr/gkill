@@ -15,6 +15,7 @@ import crypto from "node:crypto";
 
 import { GkillApiError } from "./errors.mjs";
 import { WRITE_TOOLS } from "./write-tools.mjs";
+import { DELETE_TARGETS } from "./constants.mjs";
 import {
   normalizeKmemoArgs,
   normalizeUrlogArgs,
@@ -41,38 +42,6 @@ import {
 // 書き込み時に記録する端末名。サーバ種別によらず共通。
 // アプリ名 (create_app / update_app) はサーバごとに違うので ctx.appName で受け取る。
 const WRITE_DEVICE = "mcp";
-
-// ---------------------------------------------------------------------------
-// Delete endpoint mapping
-// ---------------------------------------------------------------------------
-
-export const DELETE_ENDPOINT_MAP = {
-  kmemo:   { endpoint: "/api/update_kmemo",   key: "kmemo",   responseKey: "updated_kmemo" },
-  urlog:   { endpoint: "/api/update_urlog",   key: "urlog",   responseKey: "updated_urlog" },
-  nlog:    { endpoint: "/api/update_nlog",    key: "nlog",    responseKey: "updated_nlog" },
-  lantana: { endpoint: "/api/update_lantana", key: "lantana", responseKey: "updated_lantana" },
-  timeis:  { endpoint: "/api/update_timeis",  key: "timeis",  responseKey: "updated_timeis" },
-  mi:      { endpoint: "/api/update_mi",      key: "mi",      responseKey: "updated_mi" },
-  kc:      { endpoint: "/api/update_kc",      key: "kc",      responseKey: "updated_kc" },
-  tag:     { endpoint: "/api/update_tag",     key: "tag",     responseKey: "updated_tag" },
-  text:    { endpoint: "/api/update_text",    key: "text",    responseKey: "updated_text" },
-};
-
-// ---------------------------------------------------------------------------
-// Get endpoint mapping (for patch-style delete)
-// ---------------------------------------------------------------------------
-
-export const GET_ENDPOINT_MAP = {
-  kmemo: { endpoint: "/api/get_kmemo", historiesKey: "kmemo_histories" },
-  urlog: { endpoint: "/api/get_urlog", historiesKey: "urlog_histories" },
-  nlog: { endpoint: "/api/get_nlog", historiesKey: "nlog_histories" },
-  lantana: { endpoint: "/api/get_lantana", historiesKey: "lantana_histories" },
-  timeis: { endpoint: "/api/get_timeis", historiesKey: "timeis_histories" },
-  mi: { endpoint: "/api/get_mi", historiesKey: "mi_histories" },
-  kc: { endpoint: "/api/get_kc", historiesKey: "kc_histories" },
-  tag: { endpoint: "/api/get_tag_histories_by_tag_id", historiesKey: "tag_histories" },
-  text: { endpoint: "/api/get_text_histories_by_text_id", historiesKey: "text_histories" },
-};
 
 const WRITE_TOOL_NAMES = new Set(WRITE_TOOLS.map((tool) => tool.name));
 
@@ -317,16 +286,15 @@ export async function handleWriteToolCall(ctx, name, args) {
 
       case "gkill_delete_kyou": {
         const normalized = normalizeDeleteArgs(args);
-        const deleteMapping = DELETE_ENDPOINT_MAP[normalized.data_type];
-        const getMapping = GET_ENDPOINT_MAP[normalized.data_type];
-        if (!deleteMapping || !getMapping) {
+        const target = DELETE_TARGETS[normalized.data_type];
+        if (!target) {
           throw new GkillApiError(`Unsupported data_type for delete: ${normalized.data_type}`);
         }
         // 1. Fetch current entity to preserve all data fields
         const getResponse = await ctx.client.callApi(
-          getMapping.endpoint, { id: normalized.id }, true, ctx.sid,
+          target.getEndpoint, { id: normalized.id }, true, ctx.sid,
         );
-        const histories = getResponse[getMapping.historiesKey];
+        const histories = getResponse[target.historiesKey];
         if (!Array.isArray(histories) || histories.length === 0) {
           throw new GkillApiError(`Entity not found: ${normalized.id}`);
         }
@@ -340,13 +308,13 @@ export async function handleWriteToolCall(ctx, name, args) {
         current.update_user = ctx.userId;
         // 3. Send update
         const response = await ctx.client.callApi(
-          deleteMapping.endpoint,
-          { [deleteMapping.key]: current, want_response_kyou: true, locale_name: normalized.locale_name },
+          target.updateEndpoint,
+          { [target.requestKey]: current, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
         // 4. Return current with is_deleted=true and all data preserved
         const result = {};
-        result[deleteMapping.responseKey] = current;
+        result[target.responseKey] = current;
         if (response.updated_kyou) result.updated_kyou = response.updated_kyou;
         return result;
       }

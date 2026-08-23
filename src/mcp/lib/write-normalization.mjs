@@ -15,15 +15,15 @@ import {
   assertBoolean,
   assertKnownKeys,
 } from "./validation.mjs";
+import { DELETE_DATA_TYPE_VALUES } from "./constants.mjs";
 import { normalizeDateTimeString } from "./normalization.mjs";
 
 // ---------------------------------------------------------------------------
 // Allowed data_type values for gkill_delete_kyou
 // ---------------------------------------------------------------------------
 
-export const DELETE_DATA_TYPES = new Set([
-  "kmemo", "urlog", "nlog", "lantana", "timeis", "mi", "kc", "tag", "text",
-]);
+// 語彙の正本は constants.mjs の DELETE_TARGETS。ここは互換のための派生。
+export const DELETE_DATA_TYPES = new Set(DELETE_DATA_TYPE_VALUES);
 
 // ---------------------------------------------------------------------------
 // Helpers
