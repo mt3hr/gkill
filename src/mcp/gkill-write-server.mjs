@@ -42,6 +42,7 @@ import { StdioTransport } from "./lib/stdio-transport.mjs";
 import { McpServerBase } from "./lib/mcp-server-base.mjs";
 import { GkillClient as GkillWriteClient } from "./lib/gkill-client.mjs";
 import { READ_TOOLS } from "./lib/read-tools.mjs";
+import { handleReadToolCall, summarizeReadToolPayload } from "./lib/read-handlers.mjs";
 import { WRITE_TOOLS } from "./lib/write-tools.mjs";
 
 // 書き込みサーバにも載せる読み取りツール。書き込みの前に名前を引くためだけのもの
@@ -148,15 +149,14 @@ function summarizeWritePayload(name, payload) {
       return `Updated tag: ${payload.updated_tag?.id || "unknown"}`;
     case "gkill_update_text":
       return `Updated text: ${payload.updated_text?.id || "unknown"}`;
-    // Read convenience tools
-    case "gkill_get_mi_board_list":
-      return `Fetched ${Array.isArray(payload.boards) ? payload.boards.length : 0} Mi boards.`;
-    case "gkill_get_all_tag_names":
-      return `Fetched ${Array.isArray(payload.tag_names) ? payload.tag_names.length : 0} tag names.`;
-    case "gkill_get_all_rep_names":
-      return `Fetched ${Array.isArray(payload.rep_names) ? payload.rep_names.length : 0} repository names.`;
-    default:
+    // Read convenience tools は共有の summarizeReadToolPayload が担う
+    default: {
+      const readSummary = summarizeReadToolPayload(name, payload);
+      if (readSummary !== null) {
+        return readSummary;
+      }
       return "Tool call completed.";
+    }
   }
 }
 
@@ -717,26 +717,15 @@ class McpWriteServer extends McpServerBase {
         return { updated_text: current, updated_kyou: response.updated_kyou || null };
       }
 
-      // ----- Read convenience tools -----
-      case "gkill_get_all_rep_names": {
-        const normalized = normalizeLocaleOnlyArgs(args);
-        const response = await this.client.callApi("/api/get_all_rep_names", normalized, true, sid);
-        return { rep_names: Array.isArray(response.rep_names) ? response.rep_names : [] };
-      }
-
-      case "gkill_get_mi_board_list": {
-        const normalized = normalizeLocaleOnlyArgs(args);
-        const response = await this.client.callApi("/api/get_mi_board_list", normalized, true, sid);
-        return { boards: Array.isArray(response.boards) ? response.boards : [] };
-      }
-
-      case "gkill_get_all_tag_names": {
-        const normalized = normalizeLocaleOnlyArgs(args);
-        const response = await this.client.callApi("/api/get_all_tag_names", normalized, true, sid);
-        return { tag_names: Array.isArray(response.tag_names) ? response.tag_names : [] };
-      }
-
       default:
+        // ----- Read convenience tools（WRITE_SERVER_READ_TOOL_NAMES）は共有ディスパッチへ -----
+        if (WRITE_SERVER_READ_TOOL_NAMES.has(name)) {
+          return handleReadToolCall(
+            { client: this.client, sid, isLocalTransport: this.isLocalTransport },
+            name,
+            args,
+          );
+        }
         throw new GkillApiError(`Unknown tool: ${name}`);
     }
   }
