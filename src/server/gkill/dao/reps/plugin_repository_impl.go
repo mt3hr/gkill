@@ -770,7 +770,10 @@ func findQueryToPluginQuery(q *find.FindQuery) *gkill_plugin.PluginQuery {
 		return &gkill_plugin.PluginQuery{}
 	}
 	pq := &gkill_plugin.PluginQuery{
-		IsDeleted:      q.IsDeleted,
+		// FindQuery から IsDeleted は削除済み (Kyou 検索で一度も実装されなかった)。
+		// プロトコルのフィールドはサードパーティ製プラグインが見る公開 API なので残し、
+		// gkill 本体からは常に false を渡す。
+		IsDeleted:      false,
 		OnlyLatestData: q.OnlyLatestData,
 	}
 	if q.HasWordFilter() {

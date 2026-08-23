@@ -162,14 +162,29 @@ describe("normalizeKyouQuery", () => {
   });
 
   test("validates boolean fields", () => {
-    const result = normalizeKyouQuery({ tags_and: true, is_deleted: false });
+    const result = normalizeKyouQuery({ tags_and: true, include_deleted_data: false });
     expect(result.tags_and).toBe(true);
-    expect(result.is_deleted).toBe(false);
+    expect(result.include_deleted_data).toBe(false);
     expect(result.only_latest_data).toBe(true);
   });
 
   test("throws for non-boolean in boolean field", () => {
     expect(() => normalizeKyouQuery({ words_and: "yes" })).toThrow(GkillApiError);
+  });
+
+  // is_deleted / hide_timeis_tags は Kyou 検索で一度も実装されたことがなく、
+  // 送っているクライアントも実在しなかったので語彙ごと落とした。
+  // 受理して黙って無視すると「フィルタを指定したつもりで何も起きない」になるため、
+  // 未知キーとして弾き、allowed に正しい候補を添えて返すのが正しい。
+  test("rejects the never-implemented is_deleted / hide_timeis_tags", () => {
+    expect(() => normalizeKyouQuery({ is_deleted: true })).toThrow(GkillApiError);
+    expect(() => normalizeKyouQuery({ hide_timeis_tags: ["x"] })).toThrow(GkillApiError);
+    try {
+      normalizeKyouQuery({ is_deleted: true });
+    } catch (error) {
+      expect(error.detail.allowed).toContain("include_deleted_data");
+      expect(error.detail.allowed).not.toContain("is_deleted");
+    }
   });
 
   test("validates string array fields", () => {

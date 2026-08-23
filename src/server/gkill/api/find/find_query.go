@@ -20,7 +20,6 @@ import (
 // 複数フィールドで構成されるグループの有効判定は HasXxxFilter ヘルパーを使うこと。
 type FindQuery struct {
 	UpdateCache                 bool         `json:"update_cache"`
-	IsDeleted                   bool         `json:"is_deleted"`
 	RepTypes                    []string     `json:"rep_types"`
 	IDs                         []string     `json:"ids"`
 	Words                       []string     `json:"words"`
@@ -34,7 +33,6 @@ type FindQuery struct {
 	TimeIsNotWords              []string     `json:"timeis_not_words"`
 	TimeIsWordsAnd              bool         `json:"timeis_words_and"`
 	TimeIsTags                  []string     `json:"timeis_tags"`
-	HideTimeIsTags              []string     `json:"hide_timeis_tags"`
 	TimeIsTagsAnd               bool         `json:"timeis_tags_and"`
 	CalendarStartDate           *time.Time   `json:"calendar_start_date"`
 	CalendarEndDate             *time.Time   `json:"calendar_end_date"`

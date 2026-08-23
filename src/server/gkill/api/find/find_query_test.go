@@ -19,7 +19,6 @@ func TestFindQueryJSONRoundTrip(t *testing.T) {
 		Tags:              tags,
 		Reps:              reps,
 		CalendarStartDate: &now,
-		IsDeleted:         false,
 		UpdateCache:       true,
 		ForMi:             true,
 		MiCheckState:      All,
@@ -70,9 +69,6 @@ func TestFindQueryJSONRoundTrip(t *testing.T) {
 func TestFindQueryDefaultValues(t *testing.T) {
 	var q FindQuery
 
-	if q.IsDeleted {
-		t.Error("IsDeleted should be false by default")
-	}
 	if q.ForMi {
 		t.Error("ForMi should be false by default")
 	}
@@ -483,7 +479,6 @@ func TestFindQuery_AllFiltersEnabled(t *testing.T) {
 
 	original := FindQuery{
 		UpdateCache:                 true,
-		IsDeleted:                   true,
 		Tags:                        []string{"t1", "t2"},
 		HideTags:                    []string{"ht1"},
 		TagsAnd:                     true,
@@ -497,7 +492,6 @@ func TestFindQuery_AllFiltersEnabled(t *testing.T) {
 		TimeIsNotWords:              []string{"tinw1"},
 		TimeIsWordsAnd:              true,
 		TimeIsTags:                  []string{"tit1"},
-		HideTimeIsTags:              []string{"htit1"},
 		TimeIsTagsAnd:               true,
 		CalendarStartDate:           &now,
 		CalendarEndDate:             &now,
@@ -537,9 +531,6 @@ func TestFindQuery_AllFiltersEnabled(t *testing.T) {
 	// Verify bool flags
 	if !restored.UpdateCache {
 		t.Error("UpdateCache should be true")
-	}
-	if !restored.IsDeleted {
-		t.Error("IsDeleted should be true")
 	}
 	if !restored.WordsAnd {
 		t.Error("WordsAnd should be true")

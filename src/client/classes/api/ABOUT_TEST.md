@@ -46,9 +46,9 @@ Vitest
 - **クライアントにしか無い5件** (`/api/update_tag_struct` など) — `gkill-api.ts`
   の中でしか名前が出てこない未使用の定義。呼び出しコードは無いが、
   呼ぶと404になる。定義を消すのはクライアント本体の変更なので既知として通している
-- **サーバにしか無い6件** — MCPサーバ / Wear OS から使うもの
-  (`/api/submit_kftl_text`, `/api/get_kyous_mcp`, `/api/get_rep_infos_mcp`,
-  `/api/get_idf_file_path`)、保守用 (`/api/update_cache`)、
+- **サーバにしか無い5件** — MCPサーバ / Wear OS から使うもの
+  (`/api/submit_kftl_text`, `/api/get_kyous_mcp`, `/api/get_rep_infos_mcp`)、
+  保守用 (`/api/update_cache`)、
   Service Worker 配信 (`/serviceWorker.js`)
 
 > 以前は「`login_address` は `/api/login` である」といった個別テストが3本あったが、

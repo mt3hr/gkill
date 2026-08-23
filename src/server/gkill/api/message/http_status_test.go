@@ -64,13 +64,13 @@ func TestHTTPStatusOf_CoversEveryErrorCode(t *testing.T) {
 // **コードを足して落ちたら、期待値と資料の両方を更新すること。**
 func TestErrorCodeHTTPStatus_Distribution(t *testing.T) {
 	want := map[int]int{
-		http.StatusBadRequest:          103,
+		http.StatusBadRequest:          102,
 		http.StatusUnauthorized:        4,
-		http.StatusForbidden:           12,
+		http.StatusForbidden:           11,
 		http.StatusNotFound:            18,
 		http.StatusConflict:            16,
 		http.StatusTooManyRequests:     1,
-		http.StatusInternalServerError: 260,
+		http.StatusInternalServerError: 259,
 	}
 
 	got := map[int]int{}
@@ -107,7 +107,6 @@ func TestHTTPStatusOf_KnownAssignments(t *testing.T) {
 		{AccountNotHasAdminError, "AccountNotHasAdminError", http.StatusForbidden, "権限不足"},
 		{AccountDisabledError, "AccountDisabledError", http.StatusForbidden, "無効化済み"},
 		{LocalOnlyAccessDeniedError, "LocalOnlyAccessDeniedError", http.StatusForbidden, "ローカル限定アクセス違反"},
-		{GetIDFFilePathNotLocalRequestError, "GetIDFFilePathNotLocalRequestError", http.StatusForbidden, "同上（別経路）"},
 		{LoginRateLimitError, "LoginRateLimitError", http.StatusTooManyRequests, "レート制限"},
 		{AlreadyExistKmemoError, "AlreadyExistKmemoError", http.StatusConflict, "同じIDが既にある"},
 		{NotFoundTLSCertFileError, "NotFoundTLSCertFileError", http.StatusInternalServerError, "名前は NotFound だがサーバの設定不備"},
