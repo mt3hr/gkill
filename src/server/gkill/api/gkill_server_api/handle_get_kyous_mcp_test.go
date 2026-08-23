@@ -591,3 +591,116 @@ func TestHandleGetKyousMCP_ManyIDs(t *testing.T) {
 		t.Error("渡したIDのMiが結果に無い")
 	}
 }
+
+// TestHandleGetKyousMCP_IncludeDeletedData は削除済みの列挙を固定する。
+//
+// gkill は追記型で、削除は is_deleted=true の版を積むだけ。
+// FindFilter は最新版が削除済みのIDを無条件に落としており、
+// 「消したものを検索で数える」手段がまったく無かった（監査2026-08-23のS判定）。
+// IncludeDeletedData を立てたときだけ残すようにしたので、
+//   - 既定では従来どおり出ないこと
+//   - 旗を立てると出て、is_deleted で見分けられること
+//
+// の両方を固定する。既定が漏れると全画面（rykv / mi / dashboard / Web UI）に波及する。
+//
+// キャッシュON/OFFの両方で走らせる。削除の判定はキャッシュrepとleaf repの
+// どちらの経路でも同じでなければならない。
+func TestHandleGetKyousMCP_IncludeDeletedData(t *testing.T) {
+	for _, cacheInMemory := range []bool{false, true} {
+		t.Run(fmt.Sprintf("cacheInMemory=%v", cacheInMemory), func(t *testing.T) {
+			if cacheInMemory {
+				useCacheInMemory(t)
+			}
+			tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+			defer cleanup()
+
+			sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+			keptID := addTestKmemo(t, tsURL, sessionID, "生きているメモ")
+			deletedID := addTestKmemo(t, tsURL, sessionID, "消したメモ")
+			softDeleteTestKmemo(t, tsURL, sessionID, deletedID)
+
+			// 既定: 削除済みは出ない
+			def := getKyousMCP(t, tsURL, sessionID, map[string]any{}, nil)
+			for _, kyou := range def.Kyous {
+				if kyou.ID == deletedID {
+					t.Fatal("既定の検索に削除済みのKyouが出ている")
+				}
+			}
+			if !containsKyouID(def.Kyous, keptID) {
+				t.Fatal("生きているKyouが既定の検索に出ていない")
+			}
+
+			// include_deleted_data: 削除済みも出て、is_deleted で見分けられる
+			withDeleted := getKyousMCP(t, tsURL, sessionID, map[string]any{"include_deleted_data": true}, nil)
+			var found *req_res.KyouMCPDTO
+			for i := range withDeleted.Kyous {
+				if withDeleted.Kyous[i].ID == deletedID {
+					found = &withDeleted.Kyous[i]
+					break
+				}
+			}
+			if found == nil {
+				t.Fatal("include_deleted_data を立てても削除済みのKyouが出ない")
+			}
+			if !found.IsDeleted {
+				t.Error("削除済みのKyouの is_deleted が false。生きているものと区別が付かない")
+			}
+			if found.UpdateTime.IsZero() {
+				t.Error("update_time が空。どちらの版が新しいか判別できない")
+			}
+			if !containsKyouID(withDeleted.Kyous, keptID) {
+				t.Error("include_deleted_data を立てると生きているKyouが消えてしまう")
+			}
+		})
+	}
+}
+
+func containsKyouID(kyous []req_res.KyouMCPDTO, id string) bool {
+	for _, kyou := range kyous {
+		if kyou.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+// softDeleteTestKmemo は MCP の gkill_delete_kyou と同じ patch 方式で論理削除する。
+// 現在値を取り、is_deleted を立てて update へ送り直す（専用の削除APIは無い）。
+func softDeleteTestKmemo(t *testing.T, tsURL, sessionID, id string) {
+	t.Helper()
+
+	getResp := postJSON(t, tsURL+"/api/get_kmemo", &req_res.GetKmemoRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+		ID:         id,
+	})
+	defer getResp.Body.Close()
+
+	var got req_res.GetKmemoResponse
+	if err := json.NewDecoder(getResp.Body).Decode(&got); err != nil {
+		t.Fatalf("decode get kmemo response: %v", err)
+	}
+	if len(got.KmemoHistories) == 0 {
+		t.Fatalf("kmemo %s の履歴が空", id)
+	}
+
+	current := got.KmemoHistories[0]
+	current.IsDeleted = true
+	current.UpdateTime = current.UpdateTime.Add(time.Second)
+
+	updateResp := postJSON(t, tsURL+"/api/update_kmemo", &req_res.UpdateKmemoRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+		Kmemo:      current,
+	})
+	defer updateResp.Body.Close()
+
+	var updated req_res.UpdateKmemoResponse
+	if err := json.NewDecoder(updateResp.Body).Decode(&updated); err != nil {
+		t.Fatalf("decode update kmemo response: %v", err)
+	}
+	if len(updated.Errors) > 0 {
+		t.Fatalf("update kmemo errors: %+v", updated.Errors)
+	}
+}

@@ -49,7 +49,7 @@ Kyou 検索に使用するクエリ構造体と列挙型を定義する。
 | フィールド | 型 | 説明 |
 |-----------|-----|------|
 | `OnlyLatestData` | `bool` | 最新データのみ取得（履歴を含めない） |
-| `IncludeDeletedData` | `bool` | 論理削除済みデータを含める（TagReps/TextRepsの集約でのみ参照） |
+| `IncludeDeletedData` | `bool` | 論理削除済みデータを含める。Kyou検索（`FindFilter`）とTag/Text/Notificationの集約が参照する。既定 false で従来どおり除外 |
 | `IsImageOnly` | `bool` | 画像ファイルのみ取得 |
 | `UpdateCache` | `bool` | キャッシュを更新してから検索 |
 
@@ -62,6 +62,11 @@ Kyou 検索に使用するクエリ構造体と列挙型を定義する。
 |-----------|---------|
 | `HideTimeIsTags` | `hide_timeis_tags` |
 | `IsDeleted` | `is_deleted` |
+
+`IsDeleted` は「無視される」だけではない。唯一の読み手である
+`git_commit_log_repository_local_dir_impl.go` が `IsDeleted=true` を
+**「削除済みのみを探す」という逆の意味**で読み、0件を返す。
+削除済みを含めたいときは `IncludeDeletedData` を使うこと。
 
 ### 旧形式からの移行
 
