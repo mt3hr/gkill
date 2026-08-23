@@ -118,6 +118,24 @@ export const READ_TOOLS = [
             "how you filter plugin records (rep_types cannot). Unknown values produce warnings, not errors. " +
             "null/omitted = no filter, [] = match nothing.",
         },
+        create_apps: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Allowlist of the app that WROTE each entry, matched against the create_app now returned on every " +
+            "result. Known values: \"gkill\" (web UI and uploads), \"gkill_kftl\" (the KFTL notepad), " +
+            "\"gkill_mcp_readwrite\" / \"gkill_mcp_write\" (these MCP servers), \"urlog_bookmarklet\", " +
+            "\"git\", and whatever a plugin sets. This is how you find \"the records I created through MCP\". " +
+            "null/omitted = no filter, [] = match nothing.",
+        },
+        update_apps: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Same as create_apps but for the app that last UPDATED the entry (matched against update_app). " +
+            "Use this to find entries edited through a particular client rather than created by it. " +
+            "null/omitted = no filter, [] = match nothing.",
+        },
         num_min: {
           type: "number",
           description:
@@ -262,7 +280,7 @@ export const READ_TOOLS = [
     description:
       "Get application configuration including tag hierarchy, task board structure, repository structure, and KFTL templates. " +
       "Recommended first call: use this before gkill_get_kyous to understand the data organization, visible tags, and board names. " +
-      "Response fields: tag_struct (tag parent-child hierarchy with check_when_inited, is_force_hide, children), mi_board_struct (task board hierarchy), rep_struct (repository hierarchy), rep_type_struct (repository type hierarchy), device_struct (device hierarchy), kftl_template_struct (KFTL templates), mi_default_board (default board name, e.g. \"Inbox\"), show_tags_in_list (boolean). " +
+      "Response fields: tag_struct (tag parent-child hierarchy with check_when_inited, is_force_hide, children), mi_board_struct (task board hierarchy), rep_struct (repository hierarchy — this is the tree the web settings screen saves, so it is null until someone has pressed Apply there at least once; an account used only through MCP or the CLI will always see null, and that is not an error. For the actual list of repositories, call gkill_get_rep_infos instead), rep_type_struct (repository type hierarchy), device_struct (device hierarchy), kftl_template_struct (KFTL templates), mi_default_board (default board name, e.g. \"Inbox\"), show_tags_in_list (boolean). " +
       "Note that display labels in this config may not map 1:1 to accepted rep_types query values — canonical query values come from gkill_get_rep_infos. " +
       "The full config is large (~90k chars even after UI-state stripping); prefer narrowing with fields, e.g. fields:[\"tag_struct\"].",
     inputSchema: {
@@ -297,7 +315,12 @@ export const READ_TOOLS = [
       "List repositories with structured metadata: rep_infos[] ({rep_name, rep_type}), canonical_rep_types[] (the exact " +
       "strings query.rep_types accepts — e.g. files/images live under \"directory\", not \"idf\"), and plugins[] " +
       "({rep_name, data_type, plugin_name} — plugins are matched via query.reps or data_types, never rep_types). " +
-      "Call this instead of guessing rep_types casing; ApplicationConfig display labels do not map 1:1 to query values.",
+      "Call this instead of guessing rep_types casing; ApplicationConfig display labels do not map 1:1 to query values. " +
+      "Also returns attached_data_reps[] ({rep_name, data_kind}) — where tags, texts, notifications and GPS logs are " +
+      "stored. That answers \"where does gkill_add_tag write?\" before you write, which nothing else could. " +
+      "IMPORTANT: these are NOT query.reps values. They hold attached data, not kyou entries, so passing one to " +
+      "query.reps matches no kyou and silently returns zero results. Use rep_infos[] for filtering and " +
+      "attached_data_reps[] only to know where attached data lives.",
     inputSchema: {
       type: "object",
       properties: {

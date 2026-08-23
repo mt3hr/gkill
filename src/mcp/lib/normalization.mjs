@@ -285,6 +285,8 @@ export function reviveStaleSchemaArgs(source, kindsByKey) {
 const KYOUS_STALE_SCHEMA_ARG_KINDS = new Map([
   ["count_only", "boolean"],
   ["data_types", "string_array"],
+  ["create_apps", "string_array"],
+  ["update_apps", "string_array"],
   ["num_min", "number"],
   ["num_max", "number"],
   ["idf_kinds", "string_array"],
@@ -378,6 +380,12 @@ export function normalizeKyouArgs(args) {
       );
     }
     normalized.group_by = groupBy;
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "create_apps") && source.create_apps !== undefined) {
+    normalized.create_apps = assertStringArray(source.create_apps, "create_apps");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "update_apps") && source.update_apps !== undefined) {
+    normalized.update_apps = assertStringArray(source.update_apps, "update_apps");
   }
   if (Object.prototype.hasOwnProperty.call(source, "data_types") && source.data_types !== undefined) {
     normalized.data_types = assertStringArray(source.data_types, "data_types");
