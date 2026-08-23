@@ -687,6 +687,8 @@
     "FAILED_FIND_PLUGIN_MESSAGE": "Impossible d'obtenir les résultats de recherche du plugin",
     "FAILED_GET_KYOUS_MESSAGE": "Échec de la récupération des enregistrements",
     "SUCCESS_GET_KYOUS_MESSAGE": "Recherche terminée",
+    "FAILED_GET_REP_INFOS_MESSAGE": "Échec de la récupération de la liste des dépôts",
+    "SUCCESS_GET_REP_INFOS_MESSAGE": "Liste des dépôts récupérée",
     "FAILED_GET_KYOU_MESSAGE": "Échec de la récupération de l'enregistrement",
     "SUCCESS_GET_KYOU_MESSAGE": "Récupéré",
     "FAILED_GET_KMEMO_MESSAGE": "Échec de la récupération du mémo",

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
@@ -62,6 +63,27 @@ func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Requ
 			DataType:    manifest.DataType,
 			RepName:     manifest.RepName,
 			IsAlive:     pluginRepo.IsAlive(r.Context()),
+			// 受動情報。IsAlive(ping)と違い副作用なし
+			ProcessRunning: pluginRepo.ProcessRunning(),
+			// stderr末尾。「is_alive=trueなのに0件」の診断用（外部監査 D2）
+			LastError: pluginRepo.LastStderr(),
+		}
+		// provides宣言のあるプラグインは索引統計（鮮度・件数・時刻範囲）も返す（外部監査 D1）
+		if typedIndex := pluginRepo.TypedIndex(); typedIndex != nil {
+			stats := typedIndex.Stats()
+			statsDTO := &req_res.PluginTypedIndexStatsMCPDTO{
+				OK:          stats.OK,
+				RecordCount: stats.RecordCount,
+				Truncated:   stats.Truncated,
+				BuiltAt:     stats.BuiltAt.Format(time.RFC3339),
+			}
+			if !stats.Oldest.IsZero() {
+				statsDTO.Oldest = stats.Oldest.Format(time.RFC3339)
+			}
+			if !stats.Newest.IsZero() {
+				statsDTO.Newest = stats.Newest.Format(time.RFC3339)
+			}
+			info.TypedIndex = statsDTO
 		}
 		response.Plugins = append(response.Plugins, info)
 	}

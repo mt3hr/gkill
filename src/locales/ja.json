@@ -687,6 +687,8 @@
     "FAILED_FIND_PLUGIN_MESSAGE": "プラグインの検索結果を取得できませんでした",
     "FAILED_GET_KYOUS_MESSAGE": "記録の取得に失敗しました",
     "SUCCESS_GET_KYOUS_MESSAGE": "検索完了",
+    "FAILED_GET_REP_INFOS_MESSAGE": "リポジトリ一覧の取得に失敗しました",
+    "SUCCESS_GET_REP_INFOS_MESSAGE": "リポジトリ一覧の取得完了",
     "FAILED_GET_KYOU_MESSAGE": "記録の取得に失敗しました",
     "SUCCESS_GET_KYOU_MESSAGE": "取得完了",
     "FAILED_GET_KMEMO_MESSAGE": "メモの取得に失敗しました",

@@ -687,6 +687,8 @@
     "FAILED_FIND_PLUGIN_MESSAGE": "Die Suchergebnisse des Plugins konnten nicht abgerufen werden",
     "FAILED_GET_KYOUS_MESSAGE": "Datensätze konnten nicht abgerufen werden",
     "SUCCESS_GET_KYOUS_MESSAGE": "Suche abgeschlossen",
+    "FAILED_GET_REP_INFOS_MESSAGE": "Repository-Liste konnte nicht abgerufen werden",
+    "SUCCESS_GET_REP_INFOS_MESSAGE": "Repository-Liste abgerufen",
     "FAILED_GET_KYOU_MESSAGE": "Datensatz konnte nicht abgerufen werden",
     "SUCCESS_GET_KYOU_MESSAGE": "Abgerufen",
     "FAILED_GET_KMEMO_MESSAGE": "Notiz konnte nicht abgerufen werden",

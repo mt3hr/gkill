@@ -687,6 +687,8 @@
     "FAILED_FIND_PLUGIN_MESSAGE": "플러그인의 검색 결과를 가져오지 못했습니다",
     "FAILED_GET_KYOUS_MESSAGE": "기록 조회에 실패했습니다",
     "SUCCESS_GET_KYOUS_MESSAGE": "검색 완료",
+    "FAILED_GET_REP_INFOS_MESSAGE": "저장소 목록을 가져오지 못했습니다",
+    "SUCCESS_GET_REP_INFOS_MESSAGE": "저장소 목록 가져오기 완료",
     "FAILED_GET_KYOU_MESSAGE": "기록 조회에 실패했습니다",
     "SUCCESS_GET_KYOU_MESSAGE": "조회 완료",
     "FAILED_GET_KMEMO_MESSAGE": "메모 조회에 실패했습니다",
