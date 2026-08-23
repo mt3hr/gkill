@@ -26,6 +26,7 @@ Go `testing` パッケージ
 | `find_kyou_rep_name_filter_test.go` | rep名での**結果側**の絞り込み（`filterKyousByRepName`）。指定repだけ残る／全部落ちたIDはキーごと消える（空スライスを残すと後段が `kyous[0]` で panic）／`Reps == nil` は未指定／`RepName` が空の行は残す（追加直後の行がこれ）／本文ヒット由来の2本目の検索にも効く |
 | `sort_result_kyous_test.go` | 検索結果の並べ替え |
 | `find_filter_pipeline_bench_test.go` | 検索パイプラインのベンチマーク（`go test` の既定では走らない） |
+| `gkill_sample_data_test.go` | 配布サンプル `resources/gkill_sample_data` が現行コードで動くこと（account.db のスキーマと Argon2id 認証、REPOSITORY 14件の `$GKILL_HOME` 展開後パス実在と種別が既知集合に含まれること、`FindKyous` で主要repから記録が返ること、Web Push 鍵が空で配布されていること）。**コミット済みDBを直接開かず、必ずテンポラリへコピーしてから検証する**（DAOは開くだけでスキーマ移行・IDF走査によりDBを変異させる） |
 
 #### `find_filter_test.go` の内容
 
@@ -49,6 +50,7 @@ Go `testing` パッケージ
 |---------|-----------|
 | `find/find_query_test.go` | FindQuery ビルダー（ゲートヘルパ、`null` とキー欠落と `[]` の復元差、MiCheckState/MiSortType enum の JSON 往復、nil日付、データ型フィルタ） |
 | `find/find_query_legacy_json_test.go` | 旧形式（`use_*` フラグ入り）JSON の新形式への移行。無効化・有効化・打刻グループの従属、ネスト構造、冪等性、数値精度、壊れたJSON |
+| `find/period_of_time_test.go` | 時間帯フィルタの秒の二重解釈の境界（0..86399 は秒オブデイ、86400以上は絶対epoch秒としてローカル時分秒へ変換） |
 | `gpslogs/gpslogs_test.go` | GPS ログファイル解析 |
 | `message/message_test.go` | GkillMessage / GkillError フォーマット |
 | `kftl/*_test.go` | メモ帳構文のパーサ。詳細は [kftl/ABOUT_TEST.md](kftl/ABOUT_TEST.md) |
