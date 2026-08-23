@@ -181,8 +181,10 @@ export async function handleReadToolCall(ctx, name, args) {
         if (buffer.length > MAX_IDF_FILE_BYTES) {
           throw new GkillApiError(
             `File is too large to return through MCP: ${buffer.length} bytes (limit ${MAX_IDF_FILE_BYTES}). ` +
-              `Use the IDF payload's file_url_full instead — it is served from /files/ with no size limit ` +
-              `(HTTP clients), or read its file_path directly (stdio clients).`,
+              `On stdio clients read the IDF payload's file_path directly instead — no size limit. ` +
+              `On HTTP clients this file cannot be shown to you at all (nothing else produces an ` +
+              `image block); hand the user the payload's file_url_full instead, which is served ` +
+              `from /files/ with no size limit.`,
             {
               file_name: normalized.file_name,
               file_size_bytes: buffer.length,

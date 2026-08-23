@@ -312,11 +312,15 @@ export const READ_TOOLS = [
       "Retrieve actual file content for an IDF (file/image/video/audio) kyou entry. " +
       "First use gkill_get_kyous to find IDF entries (data_type 'idf'), then call this tool " +
       "with the rep_name and file_name from the IDF payload to get the file content as base64. " +
-      "For images, the content is returned as an MCP image content block that AI can view directly. " +
-      "PREFER PATH OR URL INSTEAD WHEN AVAILABLE: if the IDF payload carries a 'file_path' (local clients) " +
-      "read it directly from the filesystem; if it carries a 'file_url' (remote clients) fetch that URL to " +
-      "get the bytes with no auth. Both avoid base64 transfer and work at any size. Use this tool only as a " +
-      "fallback when neither is available; it is capped by GKILL_MCP_MAX_FILE_BYTES.",
+      "For images the content also comes back as an MCP image content block. That block is what puts the " +
+      "picture in front of the model and lets it be used as a reference image for image generation, and " +
+      "this tool is its only producer. " +
+      "The payload's 'file_url' is a link to hand a human (paste it in a reply, open it in a browser, " +
+      "embed it in HTML): MCP never fetches it for you, and a client that can fetch URLs on its own still " +
+      "ends up with bytes outside the conversation rather than a picture it can look at. " +
+      "On stdio clients the payload carries 'file_path' instead; reading that from the filesystem avoids " +
+      "base64 and has no size cap, so prefer it whenever it is present. " +
+      "This tool is capped by GKILL_MCP_MAX_FILE_BYTES (default 8MB).",
     inputSchema: {
       type: "object",
       properties: {
