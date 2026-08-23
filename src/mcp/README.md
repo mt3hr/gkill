@@ -168,7 +168,7 @@ curl -v -X POST http://localhost:8808/mcp \
 
 ### 提供ツール
 
-#### Readツール（9つ — Read専用/ReadWrite統合サーバで使用可能）
+#### Readツール（10 — Read専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却） |
@@ -179,6 +179,7 @@ curl -v -X POST http://localhost:8808/mcp \
 | `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等） |
 | `gkill_get_idf_file` | IDFファイルの実データを取得（画像はMCP image blockで返却）。上限は `GKILL_MCP_MAX_FILE_BYTES`（既定8MB） |
 | `gkill_get_idf_file_path` | IDFファイルの絶対パスを取得。stdio接続時のみ利用可 |
+| `gkill_get_kyou_history` | 1件の全版を取得（削除済みの版も含む）。`gkill_get_kyous` から見えなくなった記録を読み返す唯一の経路 |
 
 ##### ファイル実パス導線
 
@@ -208,7 +209,7 @@ AIはこのURLを **Bearer無しでGET** すればバイトを取得できる（
 
 リモートで大きすぎて `gkill_get_idf_file`（base64、`GKILL_MCP_MAX_FILE_BYTES` 上限）に収まらないファイルも、この `file_url` なら取得できる。
 
-#### Writeツール（20 — Write専用/ReadWrite統合サーバで使用可能）
+#### Writeツール（21 — Write専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_add_kmemo` | テキストメモ作成 |
@@ -231,8 +232,22 @@ AIはこのURLを **Bearer無しでGET** すればバイトを取得できる（
 | `gkill_update_text` | テキスト注釈更新 |
 | `gkill_submit_kftl` | KFTLテキスト一括処理 |
 | `gkill_delete_kyou` | エントリのソフト削除 |
+| `gkill_restore_kyou` | ソフト削除の取り消し（`is_deleted` を戻す） |
 
-Write専用サーバにはRead便利ツール3つ（`gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`）も含まれます。
+Write専用サーバにはRead便利ツール4つ（`gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_kyou_history`）も含まれます。`gkill_get_kyou_history` を載せているのは、`gkill_delete_kyou` / `gkill_restore_kyou` と同じサーバから「いま何を消したのか」を確かめられないと、取り消しが当てずっぽうになるためです。
+
+##### 更新系の引数
+
+`gkill_update_*` は **patch セマンティクス**で、`id` 以外はすべて省略可能です。送らなかった項目は現在値のまま残ります。スキーマの `required` も `["id"]` だけです（以前は `title` などを要求しており、スキーマに従って推測値を送ると既存の値を静かに上書きしていました）。
+
+##### 削除と復活
+
+削除は論理削除（`is_deleted=true` の版を追加）です。消したものは通常の検索から外れますが、
+`gkill_get_kyou_history` で全版を読み返せ、`gkill_restore_kyou` で戻せます。
+一覧したいときは `gkill_get_kyous` の `query.include_deleted_data: true` を使ってください
+（既定は false で従来どおり除外。返る行は `is_deleted` で見分けられます）。
+`query.only_latest_data: false` は受理されますが**無視されます** — 詳しくは
+[ADR-0054](../../documents/adr/0054-mcp-version-history-is-a-dedicated-tool.md)。
 
 #### プラグインツール（1つ — Read/Write/ReadWrite すべてのサーバで使用可能）
 | ツール名 | 説明 |

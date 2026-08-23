@@ -230,17 +230,19 @@ AI連携用のMCP（Model Context Protocol）サーバーです。
 
 ```
 src/mcp/
-├── gkill-read-server.mjs      # Read専用MCPサーバー（10ツール = 固有9 + プラグイン1、port 8808）
-├── gkill-write-server.mjs     # Write専用MCPサーバー（24ツール = 固有23 + プラグイン1、port 8809）
-├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（30ツール = 固有29 + プラグイン1、port 8810）
+├── gkill-read-server.mjs      # Read専用MCPサーバー（11ツール = 固有10 + プラグイン1、port 8808）
+├── gkill-write-server.mjs     # Write専用MCPサーバー（26ツール = 固有25 + プラグイン1、port 8809）
+├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（32ツール = 固有31 + プラグイン1、port 8810）
 └── lib/
     ├── mcp-server-base.mjs    # 3サーバ共通の JSON-RPC 受け口
     ├── stdio-transport.mjs    # stdio トランスポート
     ├── http-transport.mjs     # Streamable HTTP トランスポート
     ├── gkill-client.mjs       # gkill 本体を叩く HTTP クライアント（ログイン・認証リトライ・ファイル取得）
     ├── payload.mjs            # レスポンスのペイロード加工
-    ├── read-tools.mjs         # 読み取りツール定義（read / readwrite が共有。write も3つだけ取る）
+    ├── read-tools.mjs         # 読み取りツール定義（read / readwrite が共有。write も4つだけ取る）
+    ├── read-handlers.mjs      # 読み取りツールのディスパッチと要約（3サーバ共有の正本）
     ├── write-tools.mjs        # 書き込みツール定義（write / readwrite が共有）
+    ├── write-handlers.mjs     # 書き込みツールのディスパッチと要約（write / readwrite 共有の正本）
     ├── find-query-schema.mjs  # gkill_get_kyous の検索条件スキーマ
     ├── access-log.mjs         # MCPアクセスログモジュール（MCP_LOG環境変数で制御）
     ├── plugin-tools.mjs       # 3サーバ共通のプラグインツール（gkill_get_plugin_list）とプラグイン本文のインライン埋め込み
