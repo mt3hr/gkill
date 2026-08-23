@@ -108,8 +108,8 @@ backup_server_2026
 | コマンド | フラグ |
 |---|---|
 | `get` | `--all`/`-a`（最新だけでなくマッチする全 dvnf を取得）、`--create_sub_directory`/`-s`、`--ext`/`-e`（既定 `true`） |
-| `copy` | `--ignore`/`-i`、`--override`/`-w`（既定 `true`）、`--fast`（既定 `true`）、`--file`/`-f`、`--ext`/`-e`、`--copy_lastmod`（既定 `true`）、`--robo` |
-| `move` | `--ignore`/`-i`、`--delete_directory`/`-d`、`--override`/`-w`、`--file`/`-f`、`--ext`/`-e`、`--robo` |
+| `copy` | `--ignore`/`-i`、`--ignore_pattern`（ファイル名パターンでの除外。`--ignore` とは別枠で、既定の除外リストを消さない）、`--override`/`-w`（既定 `true`）、`--fast`（既定 `true`）、`--file`/`-f`、`--ext`/`-e`、`--copy_lastmod`（既定 `true`）、`--robo` |
+| `move` | `--ignore`/`-i`、`--ignore_pattern`（同上）、`--delete_directory`/`-d`、`--override`/`-w`、`--file`/`-f`、`--ext`/`-e`、`--robo` |
 
 ## 4. RepType（リポジトリ種別）
 
