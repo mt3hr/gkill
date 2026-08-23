@@ -1,6 +1,9 @@
 package gkill_server_api
 
-import "testing"
+import (
+	"runtime"
+	"testing"
+)
 
 // C-03 の核心: 共有経路のファイル配信は「共有クエリの結果に含まれるファイル」だけを
 // 許可し、同一rep内の兄弟ファイルは 403 にする。許可集合の突き合わせと、URLパスの
@@ -56,8 +59,18 @@ func TestCleanSharedRelPath(t *testing.T) {
 		"sub/../b.png":     "b.png",
 		"":                 "",
 		".":                "",
-		"a\\b.png":         "a/b.png", // Windows のバックスラッシュも ToSlash で揃える
 		"../../etc/passwd": "etc/passwd",
+	}
+	// バックスラッシュの畳み方は filepath.ToSlash 経由で OS のパス意味論に従う。
+	// Windows: `\` は区切り文字。畳まないと同一ファイルの認可キーが分かれるので畳む。
+	// Unix:    `\` はファイル名の正当な1文字。畳むと `a\b.png`（1ファイル）と
+	//          `a/b.png`（dir a 内の b.png）という別ファイルが同じ認可キーへ衝突し、
+	//          片方の共有でもう片方が配信されうるため、畳まないのが安全側。
+	// 期待値を無条件に "a/b.png" にすると Linux の CI でだけ落ちる（ToSlash は no-op）。
+	if runtime.GOOS == "windows" {
+		cases["a\\b.png"] = "a/b.png"
+	} else {
+		cases["a\\b.png"] = "a\\b.png"
 	}
 	for in, want := range cases {
 		if got := cleanSharedRelPath(in); got != want {
