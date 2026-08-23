@@ -208,8 +208,16 @@ describe("normalizeMiArgs", () => {
     expectThrowsField(() => normalizeMiArgs({ board_name: "dev" }), "title");
   });
 
-  test("rejects missing board_name", () => {
-    expectThrowsField(() => normalizeMiArgs({ title: "task" }), "board_name");
+  test("allows omitting board_name (the handler fills in the default board)", () => {
+    // スキーマは optional と宣言しているので省略できなければならない。
+    // 以前はここで型エラーになり、既定板へ入れる意図の呼び出しが必ず失敗していた
+    const result = normalizeMiArgs({ title: "task" });
+    expect(result.board_name).toBeUndefined();
+    expect(result.title).toBe("task");
+  });
+
+  test("still rejects a non-string board_name", () => {
+    expectThrowsField(() => normalizeMiArgs({ title: "task", board_name: 1 }), "board_name");
   });
 
   test("rejects non-boolean is_checked", () => {
