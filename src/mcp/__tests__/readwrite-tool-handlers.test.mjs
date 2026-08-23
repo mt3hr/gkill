@@ -97,6 +97,7 @@ const EXPECTED_READ_TOOLS = [
   "gkill_get_all_rep_names",
   "gkill_get_gps_log",
   "gkill_get_application_config",
+  "gkill_get_rep_infos",
   "gkill_get_idf_file",
   "gkill_get_idf_file_path",
 ];
@@ -130,12 +131,12 @@ const ALL_TOOLS = [...EXPECTED_READ_TOOLS, ...EXPECTED_WRITE_TOOLS];
 // Tool definitions
 // ---------------------------------------------------------------------------
 describe("Tool definitions", () => {
-  test("combined server has 28 tools (8 read + 20 write)", () => {
-    expect(ALL_TOOLS).toHaveLength(28);
+  test("combined server has 29 tools (9 read + 20 write)", () => {
+    expect(ALL_TOOLS).toHaveLength(29);
   });
 
   test("read tools have 8 entries", () => {
-    expect(EXPECTED_READ_TOOLS).toHaveLength(8);
+    expect(EXPECTED_READ_TOOLS).toHaveLength(9);
   });
 
   test("write tools have 20 entries", () => {

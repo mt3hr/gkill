@@ -39,8 +39,14 @@ export const READ_TOOLS = [
       "Practical recommendation: start with a minimal query, keep limit small, and add filters gradually. Hidden tags can be searched intentionally by passing them directly in query.tags or query.timeis_tags. rep_types are backend-specific and may be case-sensitive, so do not assume ApplicationConfig display labels map 1:1 to accepted query values. " +
       "If a query fails, first retry with fewer query fields, a smaller limit, and is_include_timeis=false; then add rep_types or TimeIs expansion back step by step. " +
       "The server always applies only_latest_data=true. " +
-      "Results are returned in reverse chronological order (newest first, by related_time). " +
-      "Response fields: kyous[], total_count, returned_count, has_more, next_cursor, plugin_content (inline-content counts; present only when include_plugin_content is true).",
+      "Results are returned in reverse chronological order (newest first, by related_time; ties break by id ascending). " +
+      "For counts and histograms use count_only / group_by instead of fetching records — they skip all payload construction. " +
+      "calendar_start_date/calendar_end_date are both INCLUSIVE, so adjacent hand-made windows double-count the boundary day; prefer group_by. " +
+      "Unknown filter values (rep_types / tags / reps / data_types typos) are reported in warnings[] instead of silently matching nothing; " +
+      "canonical rep_types values come from gkill_get_rep_infos. " +
+      "Every entry always carries id and rep_name (v2). limit and max_size_mb are strict caps. " +
+      "Response fields: kyous[], total_count (only on cursor-less responses), returned_count, remaining_count, has_more, next_cursor, " +
+      "buckets (group_by only), warnings, plugin_content (inline-content counts; present only when include_plugin_content is true).",
     inputSchema: {
       type: "object",
       properties: {
@@ -57,7 +63,9 @@ export const READ_TOOLS = [
         cursor: {
           type: "string",
           description:
-            `Pagination cursor. Pass the next_cursor value from the previous response to fetch the next page. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
+            "Opaque pagination cursor. Pass next_cursor from the previous response verbatim — do not construct or edit it " +
+            "(v2 cursors are composite time+ID tokens; plain ISO-8601 datetimes from older clients are still accepted). " +
+            "Responses with a cursor omit total_count (use remaining_count); the first page carries total_count.",
         },
         max_size_mb: {
           type: "number",
@@ -72,22 +80,67 @@ export const READ_TOOLS = [
         include_id: {
           type: "boolean",
           description:
-            "Include entity ID (UUID) in each result object. Default: false (IDs omitted to reduce response size). " +
-            "Set to true when you need IDs for subsequent operations such as gkill_update_* (patch update), gkill_delete_kyou (soft-delete), " +
-            "gkill_add_tag (tagging by target_id), or gkill_add_text (annotating by target_id). " +
-            "When true, each result includes an 'id' field at the top level of the kyou object.",
-          default: false,
+            "Deprecated (v2): entity IDs are always included now. Accepted for backward compatibility and ignored.",
+          default: true,
         },
         include_rep_name: {
           type: "boolean",
           description:
-            "Include the source repository name in each result object. Default: false (omitted to reduce response size). " +
-            "When true, each result includes a 'rep_name' field at the top level of the kyou object — the repository the entry came from, " +
-            "which is the value you pass to query.reps to narrow later searches. " +
-            "Note idf and plugin payloads already carry their own rep_name inside payload regardless of this flag.",
-          default: false,
+            "Deprecated (v2): rep_name is always included now. Accepted for backward compatibility and ignored.",
+          default: true,
         },
-        include_plugin_content: {
+        count_only: {
+          type: "boolean",
+          default: false,
+          description:
+            "Return only total_count (no kyous[], no attached data, no payloads). The cheapest way to size a query " +
+            "before fetching, and the right tool for building histograms with repeated narrow queries is group_by instead. " +
+            "Cannot be combined with cursor.",
+        },
+        group_by: {
+          type: "string",
+          enum: ["month", "day", "week_of_day", "hour", "data_type", "rep_name", "url_domain", "file_extension"],
+          description:
+            "Aggregate matching entries server-side and return buckets:[{key,count}] plus total_count instead of kyous[]. " +
+            "Time keys use the server's local timezone. url_domain covers only urlog entries and file_extension only idf " +
+            "entries (others are excluded with a warning). At most 1000 buckets; overflow folds into \"(other)\". " +
+            "This replaces manual window-splitting (which double-counts boundary days because calendar bounds are inclusive). " +
+            "Cannot be combined with cursor.",
+        },
+        data_types: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Allowlist of data_type strings exactly as they appear in results (e.g. [\"nlog\"], [\"mi_create\"], " +
+            "plugin types like [\"claude_conversation\"]). This is how you separate Mi from MiReKyou projections and " +
+            "how you filter plugin records (rep_types cannot). Unknown values produce warnings, not errors. " +
+            "null/omitted = no filter, [] = match nothing.",
+        },
+        num_min: {
+          type: "number",
+          description:
+            "Lower bound (inclusive) on the numeric payload value: nlog amount, kc num_value, lantana mood. " +
+            "When num_min/num_max is set, entries of other kinds are excluded from results.",
+        },
+        num_max: {
+          type: "number",
+          description: "Upper bound (inclusive). See num_min.",
+        },
+        idf_kinds: {
+          type: "array",
+          items: { type: "string", enum: ["image", "video", "audio", "zip", "other"] },
+          description:
+            "Filter idf (file) entries by kind. When set, non-idf entries are excluded from results. " +
+            "null/omitted = no filter, [] = match nothing.",
+        },
+        include_file_size: {
+          type: "boolean",
+          default: false,
+          description:
+            "Add file_size (bytes, from the filesystem) to idf payloads on the returned page. " +
+            "Missing when the file cannot be stat-ed.",
+        },
+                include_plugin_content: {
           type: "boolean",
           description:
             "Inline the body of plugin kyous (payload.kind='plugin') into this response, so you do not need a " +
@@ -162,7 +215,10 @@ export const READ_TOOLS = [
   },
   {
     name: "gkill_get_gps_log",
-    description: "Get GPS log entries in a date range. Returns array of GPS log objects with latitude, longitude, timestamp, and related metadata. Read-only.",
+    description:
+      "Get GPS log points in a date range (deduplicated, newest first). Supports cursor pagination and aggregation: " +
+      "use count_only to size a range, group_by:\"day\" for daily coverage buckets, and limit/cursor to page through points. " +
+      "Response fields: gps_logs[], total_count (cursor-less responses), returned_count, remaining_count, has_more, next_cursor, buckets (group_by only). Read-only.",
     inputSchema: {
       type: "object",
       properties: {
@@ -173,6 +229,25 @@ export const READ_TOOLS = [
         end_date: {
           type: "string",
           description: `Required ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
+        },
+        limit: {
+          type: "integer",
+          default: 500,
+          description: "Max GPS points per page (1-5000).",
+        },
+        cursor: {
+          type: "string",
+          description: "Opaque cursor. Pass next_cursor from the previous response verbatim.",
+        },
+        count_only: {
+          type: "boolean",
+          default: false,
+          description: "Return only total_count. Cannot be combined with cursor.",
+        },
+        group_by: {
+          type: "string",
+          enum: ["day"],
+          description: "Return buckets:[{key:\"YYYY-MM-DD\",count}] — daily coverage instead of points. Cannot be combined with cursor.",
         },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
@@ -186,7 +261,8 @@ export const READ_TOOLS = [
       "Get application configuration including tag hierarchy, task board structure, repository structure, and KFTL templates. " +
       "Recommended first call: use this before gkill_get_kyous to understand the data organization, visible tags, and board names. " +
       "Response fields: tag_struct (tag parent-child hierarchy with check_when_inited, is_force_hide, children), mi_board_struct (task board hierarchy), rep_struct (repository hierarchy), rep_type_struct (repository type hierarchy), device_struct (device hierarchy), kftl_template_struct (KFTL templates), mi_default_board (default board name, e.g. \"Inbox\"), show_tags_in_list (boolean). " +
-      "Note that display labels in this config may not map 1:1 to accepted rep_types query values.",
+      "Note that display labels in this config may not map 1:1 to accepted rep_types query values — canonical query values come from gkill_get_rep_infos. " +
+      "The full config is large (~90k chars even after UI-state stripping); prefer narrowing with fields, e.g. fields:[\"tag_struct\"].",
     inputSchema: {
       type: "object",
       properties: {
@@ -194,6 +270,36 @@ export const READ_TOOLS = [
           type: "string",
           description: "Locale, e.g. ja/en.",
         },
+        fields: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: ["tag_struct", "mi_board_struct", "rep_struct", "rep_type_struct", "device_struct", "kftl_template_struct", "mi_default_board", "show_tags_in_list"],
+          },
+          description: "Return only these fields. Default: all.",
+        },
+        include_ui_state: {
+          type: "boolean",
+          default: false,
+          description:
+            "When false (default), transient tree-editor keys (is_checked, indeterminate, key, seq, seq_in_parent, " +
+            "is_open_default, parent_folder_id, id) are stripped from struct nodes. check_when_inited and is_force_hide are always kept.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "gkill_get_rep_infos",
+    description:
+      "List repositories with structured metadata: rep_infos[] ({rep_name, rep_type}), canonical_rep_types[] (the exact " +
+      "strings query.rep_types accepts — e.g. files/images live under \"directory\", not \"idf\"), and plugins[] " +
+      "({rep_name, data_type, plugin_name} — plugins are matched via query.reps or data_types, never rep_types). " +
+      "Call this instead of guessing rep_types casing; ApplicationConfig display labels do not map 1:1 to query values.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        locale_name: { type: "string", description: "Locale, e.g. ja/en." },
       },
       additionalProperties: false,
     },
