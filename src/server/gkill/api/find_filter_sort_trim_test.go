@@ -162,3 +162,70 @@ func BenchmarkSortAndTrimKyousMap_PeriodOfTime(b *testing.B) {
 		}
 	}
 }
+
+// 最終段の重複排除は (ID, DataType, RelatedTimeナノ秒) の複合キーで行う。
+//
+// **素のID重複排除にしてはいけない** ―― TimeIs は同じIDから timeis_start /
+// timeis_end の2行が正当に出る（DataTypeが違う）。複合キーならこの2行は残り、
+// 完全重複（同一コミットが2経路から合流した等）だけが畳まれる。
+// 経路の合流で残る完全重複の最終防衛線（外部監査 C2 の一部）。
+func TestSortResultKyous_DedupKeepsTimeIsProjections(t *testing.T) {
+	ctx := context.Background()
+	commitTime := time.Date(2026, 8, 1, 12, 0, 0, 0, time.Local)
+	startTime := time.Date(2026, 8, 1, 10, 0, 0, 0, time.Local)
+	endTime := time.Date(2026, 8, 1, 11, 0, 0, 0, time.Local)
+
+	findCtx := &FindKyouContext{
+		ParsedFindQuery: &find.FindQuery{},
+		ResultKyous: []reps.Kyou{
+			// 完全重複（同一git commitが2つのrep経由で合流したケース）→ 1本になる
+			{ID: "commit-1", DataType: "git_commit_log", RelatedTime: commitTime, UpdateTime: commitTime},
+			{ID: "commit-1", DataType: "git_commit_log", RelatedTime: commitTime, UpdateTime: commitTime},
+			// TimeIs の start/end 2射影（同一ID・別DataType）→ 両方残る
+			{ID: "timeis-1", DataType: "timeis_start", RelatedTime: startTime, UpdateTime: startTime},
+			{ID: "timeis-1", DataType: "timeis_end", RelatedTime: endTime, UpdateTime: startTime},
+		},
+	}
+
+	f := &FindFilter{}
+	if _, err := f.sortResultKyous(ctx, findCtx); err != nil {
+		t.Fatalf("sortResultKyous failed: %v", err)
+	}
+
+	counts := map[string]int{}
+	for _, kyou := range findCtx.ResultKyous {
+		counts[kyou.ID+"/"+kyou.DataType]++
+	}
+	if counts["commit-1/git_commit_log"] != 1 {
+		t.Errorf("完全重複のcommit-1は1本に畳まれるはず: got %d", counts["commit-1/git_commit_log"])
+	}
+	if counts["timeis-1/timeis_start"] != 1 || counts["timeis-1/timeis_end"] != 1 {
+		t.Errorf("TimeIsのstart/end 2射影は両方残るはず: got %v", counts)
+	}
+	if len(findCtx.ResultKyous) != 3 {
+		t.Errorf("結果は3本のはず: got %d", len(findCtx.ResultKyous))
+	}
+}
+
+// 同一秒・同一ID・同一DataTypeでもナノ秒が違えば別entryとして残る
+// (dedupの同一性はナノ秒精度。秒に丸めると別時刻の行を巻き込む)。
+func TestSortResultKyous_DedupKeepsSubsecondDistinct(t *testing.T) {
+	ctx := context.Background()
+	base := time.Date(2026, 8, 1, 12, 0, 0, 0, time.Local)
+
+	findCtx := &FindKyouContext{
+		ParsedFindQuery: &find.FindQuery{},
+		ResultKyous: []reps.Kyou{
+			{ID: "kyou-1", DataType: "kmemo", RelatedTime: base, UpdateTime: base},
+			{ID: "kyou-1", DataType: "kmemo", RelatedTime: base.Add(500 * time.Millisecond), UpdateTime: base},
+		},
+	}
+
+	f := &FindFilter{}
+	if _, err := f.sortResultKyous(ctx, findCtx); err != nil {
+		t.Fatalf("sortResultKyous failed: %v", err)
+	}
+	if len(findCtx.ResultKyous) != 2 {
+		t.Errorf("ナノ秒違いの2本は両方残るはず: got %d", len(findCtx.ResultKyous))
+	}
+}

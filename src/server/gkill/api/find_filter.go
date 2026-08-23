@@ -120,10 +120,13 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	// tag rep のワード検索は `LOWER(TAG) = LOWER(?)` を出すので列に関数がかかって索引が効かず、
 	// **全行に LOWER() を適用**したうえで名前の数だけ繰り返す。
 	// 詳細と実測は collectTagsForFilter と maxTagNamesForSQLFilter のコメントを参照。
-	usesTagFilter := findQuery.Tags != nil || (findQuery.HasTimeIsFilter() && findQuery.TimeIsTags != nil)
 	needMatchTags := findQuery.Tags != nil
 	needRelatedTagIDs := containsNoTags(findQuery.Tags) || (findQuery.HasTimeIsFilter() && containsNoTags(findQuery.TimeIsTags))
-	needHideTags := usesTagFilter && len(findQuery.HideTags) != 0
+	// hide_tags はタグ絞り込み(tags/timeis_tags)の有無と独立に効く。
+	// 以前は「タグ絞り込みを使うときだけ」収集しており、hide_tags 単独指定が
+	// エラーも警告も出さずに無視されていた（外部監査 S4）。
+	// 経緯と却下案: documents/adr/0070-hide-tags-standalone.md
+	needHideTags := len(findQuery.HideTags) != 0
 	if needMatchTags || needRelatedTagIDs || needHideTags {
 		wg.Add(1)
 		go func() {
@@ -203,8 +206,10 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 		// 非表示タグ集合はfilterTagsTimeIsが適用する。
 		// 以前は条件が「TimeIsタグを使わないとき」と逆になっており、
-		// 適用側と噛み合わずTimeIsの非表示タグが一度も機能していなかった
-		if findQuery.TimeIsTags != nil {
+		// 適用側と噛み合わずTimeIsの非表示タグが一度も機能していなかった。
+		// hide_tags はタグ絞り込みの有無と独立に効く（単独有効化。ADR-0070）ので、
+		// TimeIsTags が未指定でも HideTags があれば集合を作る
+		if findQuery.TimeIsTags != nil || len(findQuery.HideTags) != 0 {
 			gkillErr, err = f.getMatchHideTagsWhenUnckedTimeIs(ctx, findKyouContext)
 			if err != nil {
 				err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
@@ -239,7 +244,8 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	slog.Log(ctx, gkill_log.Trace, "finish filterMiForMi", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
-	if findQuery.Tags != nil {
+	// hide_tags はタグ絞り込みの有無と独立に効く（単独有効化。ADR-0070）
+	if findQuery.Tags != nil || len(findQuery.HideTags) != 0 {
 		gkillErr, err = f.getMatchHideTagsWhenUnckedKyou(ctx, findKyouContext)
 		if err != nil {
 			err = fmt.Errorf("error at get match hide tags when unchecked kyou: %w", err)
@@ -255,6 +261,12 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		}
 		slog.Log(ctx, gkill_log.Trace, "finish filterTagsKyous", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 	}
+	gkillErr, err = f.filterHideTagsKyous(ctx, findKyouContext)
+	if err != nil {
+		err = fmt.Errorf("error at filter hide tags kyous: %w", err)
+		return nil, gkillErr, err
+	}
+	slog.Log(ctx, gkill_log.Trace, "finish filterHideTagsKyous", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 	gkillErr, err = f.filterPlaingTimeIsKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter plaing time is kyous: %w", err)
@@ -287,6 +299,13 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	slog.Log(ctx, gkill_log.Trace, "finish overrideKyous", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
+
+	gkillErr, err = f.refilterOverriddenKyousForMi(ctx, findKyouContext)
+	if err != nil {
+		err = fmt.Errorf("error at refilter overridden kyous for mi: %w", err)
+		return nil, gkillErr, err
+	}
+	slog.Log(ctx, gkill_log.Trace, "finish refilterOverriddenKyousForMi", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 
 	// 先に総数を数えてから確保する。事前確保しないと56万件で約20回の再確保が起き、
 	// そのたびに確保済みぶん(最終的に130MB級)をコピーし直すことになる。
@@ -716,9 +735,8 @@ func (f *FindFilter) getMatchHideTagsWhenUnchecked(
 }
 
 func (f *FindFilter) getMatchHideTagsWhenUnckedKyou(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.Tags == nil {
-		return nil, nil
-	}
+	// Tags==nil でも走る（hide_tags 単独有効化。ADR-0070）。
+	// checkedTagNames が nil なら「チェック済みのタグは無い」= 全 hide_tags が有効。
 	f.getMatchHideTagsWhenUnchecked(findCtx, findCtx.ParsedFindQuery.Tags, findCtx.MatchHideTagsWhenUncheckedKyou)
 	return nil, nil
 }
@@ -928,15 +946,15 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 	return nil, nil
 }
 
-func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	query := findCtx.ParsedFindQuery
-	// 56万件規模ではマップの伸長ごとの再ハッシュが効くので、入力と同じ容量で確保しておく。
-	resultKyous := make(map[string][]reps.Kyou, len(findCtx.MatchKyousCurrent))
-
-	// 時間帯フィルタが有効かどうかの判定はゲートヘルパに任せる。
-	// ここから下はその内側の高速化で、検索中に変わらない値をKyouごとではなく
-	// 最初に一度だけ計算しておく。時刻への変換と曜日スライスの走査は、
-	// 検索結果が多いほど無視できない負荷になる。
+// newKyouTimeFilter は「カレンダー期間 + 時間帯 + 曜日」の判定関数を作る。
+//
+// 検索中に変わらない値（窓の秒・許可曜日）を最初に一度だけ計算しておき、返す関数は
+// 比較だけを行う。時刻への変換と曜日スライスの走査は、検索結果が多いほど
+// 無視できない負荷になるため。
+//
+// sortAndTrimKyousMap の本判定と、ForMi で RelatedTime を射影時刻へ上書きした後の
+// 再判定（refilterOverriddenKyousForMi）が同じ意味論を共有するために切り出してある。
+func newKyouTimeFilter(query *find.FindQuery) func(kyou reps.Kyou) bool {
 	filterPeriodOfTime := query.HasPeriodOfTimeFilter()
 	var filterWeekdays bool
 	var allowedWeekdays [7]bool
@@ -966,9 +984,7 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 		}
 	}
 
-	// Kyou1件ぶんの期間判定。検索中に変わらない値は上で1回だけ計算済みなので、ここは比較だけ。
-	// 単一entryの高速路と従来の重複排除路の両方から同じ判定を使うために切り出してある。
-	passesPeriodFilter := func(kyou reps.Kyou) bool {
+	return func(kyou reps.Kyou) bool {
 		if (query.CalendarStartDate != nil && kyou.RelatedTime.Before(*query.CalendarStartDate)) ||
 			(query.CalendarEndDate != nil && kyou.RelatedTime.After(*query.CalendarEndDate)) {
 			return false
@@ -1008,6 +1024,16 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 		}
 		return true
 	}
+}
+
+func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	query := findCtx.ParsedFindQuery
+	// 56万件規模ではマップの伸長ごとの再ハッシュが効くので、入力と同じ容量で確保しておく。
+	resultKyous := make(map[string][]reps.Kyou, len(findCtx.MatchKyousCurrent))
+
+	// Kyou1件ぶんの期間判定。検索中に変わらない値は newKyouTimeFilter が1回だけ計算済みで、
+	// ここは比較だけ。単一entryの高速路と従来の重複排除路の両方から同じ判定を使う。
+	passesPeriodFilter := newKyouTimeFilter(query)
 
 	for id, kyous := range findCtx.MatchKyousCurrent {
 		if len(kyous) == 0 {
@@ -1258,11 +1284,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			}
 			delete(findCtx.MatchKyousCurrent, id)
 		}
-
-		// 非表示タグの対象を消す
-		for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedKyou {
-			delete(findCtx.MatchKyousCurrent, hideTag.TargetID)
-		}
+		// 非表示タグ(hide_tags)の適用は独立ステップ filterHideTagsKyous が行う(ADR-0070)
 	} else {
 		// ANDの場合のフィルタリング処理
 		// クエリのタグ名を基準に交差する。
@@ -1327,14 +1349,24 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			filteredByTags = matchThisLoopKyousMap
 		}
 
-		// 非表示タグの対象を消す
-		for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedKyou {
-			delete(filteredByTags, hideTag.TargetID)
-		}
-
+		// 非表示タグ(hide_tags)の適用は独立ステップ filterHideTagsKyous が行う(ADR-0070)
 		findCtx.MatchKyousCurrent = filteredByTags
 	}
 
+	return nil, nil
+}
+
+// filterHideTagsKyous は非表示タグ(hide_tags)の対象を結果から消す。
+//
+// filterTagsKyous から独立したステップなのは、Tags==nil(タグ絞り込みなし)でも
+// hide_tags を単独で効かせるため。「同じ名前が tags にも入っていれば消さない」
+// 意味論は集合を作る getMatchHideTagsWhenUnchecked 側が担っており、ここは
+// 出来上がった集合の対象を消すだけ。集合が空なら実質no-op。
+// 経緯と却下案: documents/adr/0070-hide-tags-standalone.md
+func (f *FindFilter) filterHideTagsKyous(_ context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedKyou {
+		delete(findCtx.MatchKyousCurrent, hideTag.TargetID)
+	}
 	return nil, nil
 }
 
@@ -1343,18 +1375,18 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 	// 以前はTimeIsTags==nilだとOR/ANDどちらの分岐にも入らず、
 	// MatchTimeIssAtFilterTagsが空のまま=検索全体が0件になっていた。
 	//
-	// 強制非表示タグ(MatchHideTagsWhenUncheckedTimeIs)はここでは適用しない。
-	// これは Kyou 側 getMatchHideTagsWhenUnckedKyou が Tags==nil で早期returnして
-	// 非表示タグを適用しないのと対称。TimeIsTags!=nil のときだけ line 205 のゲートで
-	// 集合が埋まり、下の OR/AND 分岐で適用される。
-	// (以前ここに delete があったが、この分岐では集合が常に空で発火せず、
-	//  「タグ絞りなしでも適用される」かのような誤解を招くだけの死にコードだった)
+	// 非表示タグ(hide_tags)はタグ絞り込みの有無と独立に適用する（単独有効化。
+	// Kyou 側の filterHideTagsKyous と対称。ADR-0070）。TimeIsTags==nil でも
+	// HideTags があれば集合が埋まっているので、この分岐でも消してから返す。
 	if findCtx.ParsedFindQuery.TimeIsTags == nil {
 		for _, timeis := range findCtx.MatchTimeIssAtFindTimeIs {
 			if timeis.IsDeleted {
 				continue
 			}
 			findCtx.MatchTimeIssAtFilterTags[timeis.ID] = timeis
+		}
+		for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedTimeIs {
+			delete(findCtx.MatchTimeIssAtFilterTags, hideTag.TargetID)
 		}
 		return nil, nil
 	}
@@ -1703,6 +1735,33 @@ func (f *FindFilter) overrideKyous(_ context.Context, findCtx *FindKyouContext) 
 	return nil, nil
 }
 
+// refilterOverriddenKyousForMi は、overrideKyous が RelatedTime を mi_sort_type の
+// 射影時刻（期限・見積開始など）へ上書きした後に、カレンダー期間・時間帯・曜日の
+// フィルタを上書き後の時刻でもう一度適用する。
+//
+// sortAndTrimKyousMap の判定は上書き前の時刻に対して行われるため、ここで再判定
+// しないと「判定した時刻」と「表示される時刻」が別物になり、for_mi + 期間/時間帯
+// 指定の検索で窓の外の時刻を持つ行が返る（外部監査 S1'）。
+// 「for_mi の期間・時間帯・曜日フィルタは mi_sort_type の射影時刻に対して掛かる」が仕様。
+//
+// 落ちた ID はキーごと削除する（空スライスを残すと後段の kyous[0] 参照が panic する）。
+func (f *FindFilter) refilterOverriddenKyousForMi(_ context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	query := findCtx.ParsedFindQuery
+	if !query.ForMi {
+		return nil, nil
+	}
+	if !query.HasCalendarFilter() && !query.HasPeriodOfTimeFilter() {
+		return nil, nil
+	}
+	passes := newKyouTimeFilter(query)
+	for id, kyous := range findCtx.MatchKyousCurrent {
+		if len(kyous) == 0 || !passes(kyous[0]) {
+			delete(findCtx.MatchKyousCurrent, id)
+		}
+	}
+	return nil, nil
+}
+
 func (f *FindFilter) sortResultKyous(_ context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	if !findCtx.ParsedFindQuery.ForMi {
 		// kyouとしてソート。並び順は RelatedTime(秒)降順、同着はID昇順。
@@ -1713,6 +1772,7 @@ func (f *FindFilter) sortResultKyous(_ context.Context, findCtx *FindKyouContext
 		// 32バイトのキーだけ並べ替えてから、本体は巡回置換で1要素あたり1回だけ動かす。
 		// 追加で確保するのはキー配列1本(1件32バイト)だけで、本体のコピーは作らない。
 		sortResultKyousByKey(findCtx.ResultKyous)
+		findCtx.ResultKyous = dedupAdjacentResultKyous(findCtx.ResultKyous)
 		return nil, nil
 	}
 
@@ -1830,6 +1890,43 @@ func sortResultKyousByKey(kyous []reps.Kyou) {
 			current = next
 		}
 	}
+}
+
+// dedupAdjacentResultKyous は並べ替え済み(RelatedTime秒降順・同着ID昇順)の結果から、
+// (ID, DataType, RelatedTimeナノ秒) が完全一致する重複行を畳む。
+//
+// 同一IDから複数entryが正当に出るケースがあるため、**素のID重複排除は不可**:
+// TimeIs は同じIDから timeis_start / timeis_end の2行が出る(DataTypeが違う)。
+// そのため複合キーで、かつソート順により同一(秒,ID)のランは連続することを利用して
+// ラン内だけを線形に見る(ラン長は実データで高々数件)。in-placeで詰めるので追加確保ゼロ。
+//
+// 上流の kyouEntryKey(sortAndTrimKyousMap) は (UpdateTime, DataType, RelatedTime) で
+// IDバケツ内の重複を畳むが、経路の合流(本文ヒットの2本目検索など)でIDバケツを
+// またいだ完全重複が残ることがあり、ここが最終防衛線になる（外部監査 C2 の一部）。
+func dedupAdjacentResultKyous(kyous []reps.Kyou) []reps.Kyou {
+	if len(kyous) < 2 {
+		return kyous
+	}
+	out := kyous[:1]
+	for i := 1; i < len(kyous); i++ {
+		kyou := kyous[i]
+		isDup := false
+		// 同一(秒,ID)のランの中だけ遡って比べる
+		for j := len(out) - 1; j >= 0; j-- {
+			prev := out[j]
+			if prev.RelatedTime.Unix() != kyou.RelatedTime.Unix() || prev.ID != kyou.ID {
+				break
+			}
+			if prev.DataType == kyou.DataType && prev.RelatedTime.Equal(kyou.RelatedTime) {
+				isDup = true
+				break
+			}
+		}
+		if !isDup {
+			out = append(out, kyou)
+		}
+	}
+	return out
 }
 
 func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {

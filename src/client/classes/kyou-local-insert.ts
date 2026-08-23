@@ -189,16 +189,18 @@ function has_tag_name(kyou: Kyou, tag_name: string): boolean {
 }
 
 /**
- * 非表示タグ。`tags` が未使用(null)のときは適用しない。
+ * 非表示タグ。`tags` の指定有無と独立に適用される（単独有効化。ADR-0070。
+ * 以前は tags が null のとき適用しない仕様で、サーバ側 find_filter.go と対で変更した）。
  * 「hide_tags に載っている(大小無視)が query.tags には無い(大小区別)」タグを持つと除外される。
  * この大小の非対称は find_filter.go の実装そのままで、
  * hide_tags 側は GetTagsByTagName の照合、query.tags 側は containsString の == による。
+ * tags が null のときは「チェック済みのタグは無い」= 全 hide_tags が有効。
  */
 function is_hidden_by_hide_tags(kyou: Kyou, query: FindKyouQuery): boolean {
-    if (query.tags === null || query.hide_tags.length === 0) {
+    if (query.hide_tags.length === 0) {
         return false
     }
-    const checked_tag_names = query.tags
+    const checked_tag_names = query.tags ?? []
     return kyou.attached_tags.some(attached_tag => {
         const is_hide_tag = query.hide_tags.some(hide_tag_name => equals_ignore_case(hide_tag_name, attached_tag.tag))
         if (!is_hide_tag) {
@@ -210,7 +212,9 @@ function is_hidden_by_hide_tags(kyou: Kyou, query: FindKyouQuery): boolean {
 
 function matches_tags(kyou: Kyou, query: FindKyouQuery): boolean {
     if (query.tags === null) {
-        return true
+        // タグ絞り込みなし。hide_tags はタグ絞り込みと独立に適用される
+        // （単独有効化。ADR-0070。サーバ側は filterHideTagsKyous が独立ステップ）
+        return !is_hidden_by_hide_tags(kyou, query)
     }
     // タグで絞る指定なのに1つもチェックされていない場合は0件
     if (query.tags.length === 0) {
