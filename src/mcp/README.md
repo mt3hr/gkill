@@ -6,9 +6,9 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| **Read専用** | `gkill-read-server.mjs` | 10 (9 read + 1 plugin) | 8808 | 読み取りのみ |
-| **Write専用** | `gkill-write-server.mjs` | 24 (20 write + 3 read convenience + 1 plugin) | 8809 | 書き込み中心 |
-| **Read/Write統合** | `gkill-readwrite-server.mjs` | 30 (9 read + 20 write + 1 plugin) | 8810 | 全機能 |
+| **Read専用** | `gkill-read-server.mjs` | 11 (10 read + 1 plugin) | 8808 | 読み取りのみ |
+| **Write専用** | `gkill-write-server.mjs` | 26 (21 write + 4 read convenience + 1 plugin) | 8809 | 書き込み中心 |
+| **Read/Write統合** | `gkill-readwrite-server.mjs` | 32 (10 read + 21 write + 1 plugin) | 8810 | 全機能 |
 
 プラグインツール `gkill_get_plugin_list` は3サーバ共通で提供します（読み取り専用）。プラグインKyouの本文は `gkill_get_kyous` の `include_plugin_content` でレスポンスに埋め込みます。
 

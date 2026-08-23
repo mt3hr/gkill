@@ -203,7 +203,7 @@ export const MI_CHECK_STATES = new Set(["all", "checked", "uncheck"]);
 export const MI_SORT_TYPES = new Set(["create_time", "estimate_start_time", "estimate_end_time", "limit_time"]);
 
 // ---------------------------------------------------------------------------
-// gkill_delete_kyou が扱える種別と、その取得/更新エンドポイント
+// 型別エンティティの取得/更新エンドポイント
 // ---------------------------------------------------------------------------
 //
 // **削除の語彙はここだけに置くこと。**
@@ -215,7 +215,13 @@ export const MI_SORT_TYPES = new Set(["create_time", "estimate_start_time", "est
 //
 // gkill に専用の削除APIは無い。現在値を取って is_deleted を立て、
 // 同じ型の更新APIへ送り直す patch 方式なので、種別ごとに取得と更新の対が要る。
-export const DELETE_TARGETS = {
+// 削除・復活・版履歴の3ツールが同じ対応表を使う。
+//
+// **型非依存の /api/get_kyou を使ってはいけない。**
+// Repositories.GetKyouHistoriesByRepName は冒頭で UnWrap() を呼び、
+// キャッシュrepを丸ごとバイパスして 11rep→約940rep に膨れる（実測20.7秒）。
+// 型別の XxxRepositories.GetXxxHistoriesByRepName はキャッシュrepを直接回るので安全。
+export const ENTITY_TARGETS = {
   kmemo:   { getEndpoint: "/api/get_kmemo",   historiesKey: "kmemo_histories",   updateEndpoint: "/api/update_kmemo",   requestKey: "kmemo",   responseKey: "updated_kmemo" },
   urlog:   { getEndpoint: "/api/get_urlog",   historiesKey: "urlog_histories",   updateEndpoint: "/api/update_urlog",   requestKey: "urlog",   responseKey: "updated_urlog" },
   nlog:    { getEndpoint: "/api/get_nlog",    historiesKey: "nlog_histories",    updateEndpoint: "/api/update_nlog",    requestKey: "nlog",    responseKey: "updated_nlog" },
@@ -227,5 +233,10 @@ export const DELETE_TARGETS = {
   text:    { getEndpoint: "/api/get_text_histories_by_text_id", historiesKey: "text_histories", updateEndpoint: "/api/update_text", requestKey: "text", responseKey: "updated_text" },
 };
 
-// gkill_delete_kyou の data_type として受理する値。スキーマの enum と正規化の両方がこれを見る。
-export const DELETE_DATA_TYPE_VALUES = Object.keys(DELETE_TARGETS);
+// gkill_get_kyou_history が1回に返す版の既定件数。
+// 履歴は編集のたびに1件伸びるので必ず上限を掛ける。
+export const DEFAULT_KYOU_HISTORY_LIMIT = 20;
+export const MAX_KYOU_HISTORY_LIMIT = 200;
+
+// data_type として受理する値。削除・復活・版履歴のスキーマ enum と正規化がこれを見る。
+export const ENTITY_DATA_TYPE_VALUES = Object.keys(ENTITY_TARGETS);

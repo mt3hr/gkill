@@ -41,6 +41,9 @@ import {
   DEFAULT_GPS_LIMIT,
   MAX_GPS_LIMIT,
   GPS_GROUP_BY_VALUES,
+  ENTITY_DATA_TYPE_VALUES,
+  DEFAULT_KYOU_HISTORY_LIMIT,
+  MAX_KYOU_HISTORY_LIMIT,
 } from "./constants.mjs";
 
 export function pad2(value) {
@@ -508,4 +511,23 @@ export function normalizeIdfFileArgs(args) {
     normalized.locale_name = assertTrimmedString(source.locale_name, "locale_name");
   }
   return normalized;
+}
+
+// normalizeKyouHistoryArgs は gkill_get_kyou_history の引数を検証する。
+//
+// data_type は必須。型非依存の /api/get_kyou へ落とすフォールバックは置かない
+// （constants.mjs の ENTITY_TARGETS のコメント参照: UnWrap() でキャッシュを全バイパスする）。
+export function normalizeKyouHistoryArgs(args) {
+  const source = assertObject(args, "arguments", { allowUndefined: true }) ?? {};
+  assertKnownKeys(source, new Set(["id", "data_type", "limit", "locale_name"]), "arguments");
+  const id = assertTrimmedString(source.id, "id");
+  const data_type = assertTrimmedString(source.data_type, "data_type");
+  if (!ENTITY_DATA_TYPE_VALUES.includes(data_type)) {
+    throw invalidArgument("data_type", `must be one of: ${ENTITY_DATA_TYPE_VALUES.join(", ")}`, data_type);
+  }
+  const limit = source.limit !== undefined
+    ? assertInteger(source.limit, "limit", { min: 1, max: MAX_KYOU_HISTORY_LIMIT })
+    : DEFAULT_KYOU_HISTORY_LIMIT;
+  const locale_name = source.locale_name !== undefined ? assertTrimmedString(source.locale_name, "locale_name") : undefined;
+  return { id, data_type, limit, locale_name };
 }
