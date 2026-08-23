@@ -8,6 +8,7 @@ import {
   normalizeKyouArgs,
   normalizeLocaleOnlyArgs,
   normalizeGpsArgs,
+  normalizeAppConfigArgs,
   normalizeIdfFileArgs,
 } from "../lib/normalization.mjs";
 import {
@@ -809,5 +810,83 @@ describe("normalizeIdfFileArgs", () => {
 
   test("accepts null args as empty object and throws for missing required", () => {
     expect(() => normalizeIdfFileArgs(null)).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// stale-schema revival (clients holding a pre-upgrade cached tool schema send
+// post-upgrade top-level params as canonical-JSON strings; observed live on
+// 2026-08-23 via the claude.ai connector)
+// ---------------------------------------------------------------------------
+
+describe("stale-schema argument revival", () => {
+  test("revives canonical JSON strings for v2 get_kyous params", () => {
+    const result = normalizeKyouArgs({
+      count_only: "true",
+      data_types: '["nlog","kc"]',
+      num_min: "3.5",
+      num_max: "10",
+      idf_kinds: '["image"]',
+      include_file_size: "false",
+    });
+    expect(result.count_only).toBe(true);
+    expect(result.data_types).toEqual(["nlog", "kc"]);
+    expect(result.num_min).toBe(3.5);
+    expect(result.num_max).toBe(10);
+    expect(result.idf_kinds).toEqual(["image"]);
+    expect(result.include_file_size).toBe(false);
+  });
+
+  test("properly typed values still pass unchanged", () => {
+    const result = normalizeKyouArgs({ count_only: true, num_min: 2 });
+    expect(result.count_only).toBe(true);
+    expect(result.num_min).toBe(2);
+  });
+
+  test("non-canonical strings still fail type validation", () => {
+    expect(() => normalizeKyouArgs({ count_only: "TRUE" })).toThrow(GkillApiError);
+    expect(() => normalizeKyouArgs({ count_only: "yes" })).toThrow(GkillApiError);
+    expect(() => normalizeKyouArgs({ num_min: "abc" })).toThrow(GkillApiError);
+    expect(() => normalizeKyouArgs({ data_types: "nlog" })).toThrow(GkillApiError);
+    expect(() => normalizeKyouArgs({ data_types: '["nlog",1]' })).toThrow(GkillApiError);
+    expect(() => normalizeKyouArgs({ data_types: "[broken" })).toThrow(GkillApiError);
+  });
+
+  test("revived idf_kinds still go through the allowed-value check", () => {
+    expect(() => normalizeKyouArgs({ idf_kinds: '["bogus"]' })).toThrow(GkillApiError);
+  });
+
+  test("pre-v2 params are NOT revived (limit stays strict on get_kyous)", () => {
+    expect(() => normalizeKyouArgs({ limit: "50" })).toThrow(GkillApiError);
+  });
+
+  test("revives gps paging params (limit is v2-added on the gps tool)", () => {
+    const result = normalizeGpsArgs({
+      start_date: "2026-07-01",
+      end_date: "2026-07-02",
+      limit: "250",
+      count_only: "true",
+    });
+    expect(result.limit).toBe(250);
+    expect(result.count_only).toBe(true);
+  });
+
+  test("revived gps limit still rejects non-integers and out-of-range values", () => {
+    expect(() =>
+      normalizeGpsArgs({ start_date: "2026-07-01", end_date: "2026-07-02", limit: "2.5" }),
+    ).toThrow(GkillApiError);
+    expect(() =>
+      normalizeGpsArgs({ start_date: "2026-07-01", end_date: "2026-07-02", limit: "999999" }),
+    ).toThrow(GkillApiError);
+  });
+
+  test("revives app config projection params", () => {
+    const result = normalizeAppConfigArgs({ fields: '["tag_struct"]', include_ui_state: "true" });
+    expect(result.fields).toEqual(["tag_struct"]);
+    expect(result.include_ui_state).toBe(true);
+  });
+
+  test("revived app config fields still go through the allowed-value check", () => {
+    expect(() => normalizeAppConfigArgs({ fields: '["bogus_field"]' })).toThrow(GkillApiError);
   });
 });
