@@ -67,9 +67,10 @@ func Init() {
 }
 
 func Acquire(ctx context.Context) (release func(), err error) {
-	if sem == nil {
-		Init()
-	}
+	// 裸の `sem == nil` 読みは Init() 内の書き込みと同期しないデータ競合になる
+	// （本番は main が Init() を先に呼ぶので実害はないが、テストの並行 fan-out で
+	// -race が検出する）。once.Do の fast path は atomic load 1回なので常に呼ぶ。
+	Init()
 	select {
 	case sem <- struct{}{}:
 		return func() { <-sem }, nil
@@ -95,9 +96,8 @@ func Acquire(ctx context.Context) (release func(), err error) {
 // 集約リポジトリのfan-outは全てこの形です。新しい呼び出し箇所を足すときも
 // この前提を守ってください。
 func Go(ctx context.Context, wg *sync.WaitGroup, fn func()) error {
-	if sem == nil {
-		Init()
-	}
+	// 裸の nil チェックはデータ競合（Acquire の同型コメントを参照）
+	Init()
 	if err := ctx.Err(); err != nil {
 		return err
 	}
