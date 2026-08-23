@@ -79,8 +79,6 @@ function stripUrlogImages(urlog) {
   return rest;
 }
 
-// nextUpdateTime は「現在値より必ず後」になる更新時刻を返す。
-//
 // 型を取り違えたときも同じ「見つからない」になるので、id が悪いのだと誤診しやすい。
 // 実際に data_type:"urlog" で kmemo の id を消そうとすると Entity not found になる。
 function entityNotFoundMessage(id, dataType) {
@@ -91,6 +89,18 @@ function entityNotFoundMessage(id, dataType) {
   );
 }
 
+// mergeStored は「サーバが保存した版」を手元の値に重ねる。
+//
+// 以前は書き込み応答が、ローカルで組んだ current をそのまま返していた。すると
+// update_time が JS の UTC・ミリ秒つき (…T18:47:31.035Z) のままになり、同じ応答の
+// updated_kyou (…T03:47:31+09:00) と**日付表記まで食い違う**。保存は1秒解像度なので、
+// そのミリ秒はそもそも存在しない精度でもあった。
+// 置き換えではなく重ねるのは、応答が部分的でも手元のフィールドを落とさないため。
+function mergeStored(current, stored) {
+  return stored ? { ...current, ...stored } : current;
+}
+
+// nextUpdateTime は「現在値より必ず後」になる更新時刻を返す。
 //
 // **UPDATE_TIME は1秒解像度で保存される** (sqlite3impl.TimeLayout)。
 // 履歴の取得は ID + UpdateTime で dedup し、検索の最新版判定は
@@ -404,7 +414,7 @@ export async function handleWriteToolCall(ctx, name, args) {
         );
         // 4. Return current with is_deleted=true and all data preserved
         const result = {};
-        result[target.responseKey] = current;
+        result[target.responseKey] = mergeStored(current, response[target.responseKey]);
         if (response.updated_kyou) result.updated_kyou = response.updated_kyou;
         return result;
       }
@@ -438,7 +448,8 @@ export async function handleWriteToolCall(ctx, name, args) {
           true, ctx.sid,
         );
         const result = {};
-        result[`restored_${normalized.data_type}`] = current;
+        // キー名だけ restored_ に付け替える (サーバ側の応答キーは updated_ のまま)
+        result[`restored_${normalized.data_type}`] = mergeStored(current, response[target.responseKey]);
         if (response.updated_kyou) result.updated_kyou = response.updated_kyou;
         return result;
       }
@@ -466,7 +477,7 @@ export async function handleWriteToolCall(ctx, name, args) {
           { kmemo: current, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { updated_kmemo: current, updated_kyou: response.updated_kyou || null };
+        return { updated_kmemo: mergeStored(current, response.updated_kmemo), updated_kyou: response.updated_kyou || null };
       }
 
       case "gkill_update_urlog": {
@@ -492,7 +503,7 @@ export async function handleWriteToolCall(ctx, name, args) {
           { urlog: current, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { updated_urlog: current, updated_kyou: response.updated_kyou || null };
+        return { updated_urlog: mergeStored(current, response.updated_urlog), updated_kyou: response.updated_kyou || null };
       }
 
       case "gkill_update_nlog": {
@@ -519,7 +530,7 @@ export async function handleWriteToolCall(ctx, name, args) {
           { nlog: current, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { updated_nlog: current, updated_kyou: response.updated_kyou || null };
+        return { updated_nlog: mergeStored(current, response.updated_nlog), updated_kyou: response.updated_kyou || null };
       }
 
       case "gkill_update_lantana": {
@@ -544,7 +555,7 @@ export async function handleWriteToolCall(ctx, name, args) {
           { lantana: current, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { updated_lantana: current, updated_kyou: response.updated_kyou || null };
+        return { updated_lantana: mergeStored(current, response.updated_lantana), updated_kyou: response.updated_kyou || null };
       }
 
       case "gkill_update_timeis": {
@@ -570,7 +581,7 @@ export async function handleWriteToolCall(ctx, name, args) {
           { timeis: current, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { updated_timeis: current, updated_kyou: response.updated_kyou || null };
+        return { updated_timeis: mergeStored(current, response.updated_timeis), updated_kyou: response.updated_kyou || null };
       }
 
       case "gkill_update_mi": {
@@ -599,7 +610,7 @@ export async function handleWriteToolCall(ctx, name, args) {
           { mi: current, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { updated_mi: current, updated_kyou: response.updated_kyou || null };
+        return { updated_mi: mergeStored(current, response.updated_mi), updated_kyou: response.updated_kyou || null };
       }
 
       case "gkill_update_kc": {
@@ -625,7 +636,7 @@ export async function handleWriteToolCall(ctx, name, args) {
           { kc: current, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { updated_kc: current, updated_kyou: response.updated_kyou || null };
+        return { updated_kc: mergeStored(current, response.updated_kc), updated_kyou: response.updated_kyou || null };
       }
 
       case "gkill_update_tag": {
@@ -649,7 +660,7 @@ export async function handleWriteToolCall(ctx, name, args) {
           { tag: current, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { updated_tag: current, updated_kyou: response.updated_kyou || null };
+        return { updated_tag: mergeStored(current, response.updated_tag), updated_kyou: response.updated_kyou || null };
       }
 
       case "gkill_update_text": {
@@ -673,7 +684,7 @@ export async function handleWriteToolCall(ctx, name, args) {
           { text: current, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { updated_text: current, updated_kyou: response.updated_kyou || null };
+        return { updated_text: mergeStored(current, response.updated_text), updated_kyou: response.updated_kyou || null };
       }
       default:
         throw new GkillApiError(unknownToolMessage(name));

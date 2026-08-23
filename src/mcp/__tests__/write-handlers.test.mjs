@@ -340,3 +340,56 @@ describe("削除の冪等性とエラー品質 (2026-08-24 再監査 P-30 / P-34
     );
   });
 });
+
+describe("応答はサーバが保存した版を返す (2026-08-24 再監査 P-09)", () => {
+  // 以前はローカルで組んだ current をそのまま返していたので、update_time が
+  // JS の UTC・ミリ秒つきのままになり、同じ応答の updated_kyou (JST・秒) と
+  // 日付表記まで食い違っていた。保存は1秒解像度なのでミリ秒は存在しない精度でもある。
+  test("update takes update_time from the server, not from the locally built object", async () => {
+    const ctx = makeCtx(async (pathname) =>
+      pathname === "/api/get_kmemo"
+        ? { kmemo_histories: [{ id: "k1", content: "before", update_time: "2026-08-24T03:00:00+09:00" }] }
+        : {
+            updated_kmemo: { id: "k1", content: "after", update_time: "2026-08-24T03:47:31+09:00" },
+            updated_kyou: { id: "k1", update_time: "2026-08-24T03:47:31+09:00" },
+          },
+    );
+    const result = await handleWriteToolCall(ctx, "gkill_update_kmemo", { id: "k1", content: "after" });
+
+    expect(result.updated_kmemo.update_time).toBe("2026-08-24T03:47:31+09:00");
+    // 同じ応答の中で2つの時刻表現が割れない
+    expect(result.updated_kmemo.update_time).toBe(result.updated_kyou.update_time);
+    // 送った側は依然として「必ず後」になる時刻を送っている
+    expect(ctx.client.callApi.mock.calls[1][1].kmemo.update_time).not.toBe("2026-08-24T03:00:00+09:00");
+  });
+
+  test("delete and restore follow the same rule", async () => {
+    const deleteCtx = makeCtx(async (pathname) =>
+      pathname === "/api/get_kmemo"
+        ? { kmemo_histories: [{ id: "k1", content: "x", is_deleted: false, update_time: "2026-08-24T03:00:00+09:00" }] }
+        : { updated_kmemo: { id: "k1", is_deleted: true, update_time: "2026-08-24T03:48:35+09:00" } },
+    );
+    const deleted = await handleWriteToolCall(deleteCtx, "gkill_delete_kyou", { id: "k1", data_type: "kmemo" });
+    expect(deleted.updated_kmemo.update_time).toBe("2026-08-24T03:48:35+09:00");
+
+    const restoreCtx = makeCtx(async (pathname) =>
+      pathname === "/api/get_kmemo"
+        ? { kmemo_histories: [{ id: "k1", content: "x", is_deleted: true, update_time: "2026-08-24T03:48:35+09:00" }] }
+        : { updated_kmemo: { id: "k1", is_deleted: false, update_time: "2026-08-24T03:49:47+09:00" } },
+    );
+    const restored = await handleWriteToolCall(restoreCtx, "gkill_restore_kyou", { id: "k1", data_type: "kmemo" });
+    expect(restored.restored_kmemo.update_time).toBe("2026-08-24T03:49:47+09:00");
+  });
+
+  test("a partial server response does not drop fields we already had", async () => {
+    // 実サーバは完全なエンティティを返すが、部分応答でも手元の値を落とさない
+    const ctx = makeCtx(async (pathname) =>
+      pathname === "/api/get_kmemo"
+        ? { kmemo_histories: [{ id: "k1", content: "keepme", is_deleted: false }] }
+        : { updated_kmemo: { id: "k1", is_deleted: true } },
+    );
+    const result = await handleWriteToolCall(ctx, "gkill_delete_kyou", { id: "k1", data_type: "kmemo" });
+    expect(result.updated_kmemo.content).toBe("keepme");
+    expect(result.updated_kmemo.is_deleted).toBe(true);
+  });
+});
