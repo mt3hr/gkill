@@ -30,11 +30,12 @@ func timeIsMapOf(ids ...string) map[string]reps.TimeIs {
 	return m
 }
 
-// タグ絞りなし(TimeIsTags=nil)では強制非表示タグを適用しないこと（Kyou 側と対称）。
-// getMatchHideTagsWhenUnckedTimeIs は TimeIsTags!=nil のゲートでしか集合を埋めないので、
-// nil のときは集合が常に空＝適用しないのが本番の実挙動。Kyou 側 getMatchHideTagsWhenUnckedKyou も
-// Tags==nil で早期returnして適用しない。ここでは集合を仮に埋めても nil 分岐が触れないことを固定する。
-func TestFilterTagsTimeIs_NoTagFilter_DoesNotApplyHideTags(t *testing.T) {
+// タグ絞りなし(TimeIsTags=nil)でも非表示タグ(hide_tags)は適用されること（Kyou 側と対称）。
+//
+// 以前は「タグ絞り込みを使うときだけ」集合が埋まり、hide_tags 単独指定が黙って
+// 無視されていた（このテストもその挙動を固定していた）。単独有効化に伴い期待を反転。
+// 経緯と却下案: documents/adr/0070-hide-tags-standalone.md
+func TestFilterTagsTimeIs_NoTagFilter_AppliesHideTags(t *testing.T) {
 	ctx := context.Background()
 
 	findCtx := &FindKyouContext{
@@ -44,7 +45,7 @@ func TestFilterTagsTimeIs_NoTagFilter_DoesNotApplyHideTags(t *testing.T) {
 		},
 		MatchTimeIssAtFindTimeIs: timeIsMapOf("timeis-visible", "timeis-hidden"),
 		MatchTimeIssAtFilterTags: map[string]reps.TimeIs{},
-		// 本番では nil 分岐でこの集合は空だが、仮に埋まっていても適用されないことを示す
+		// hide_tags 単独指定で埋まる集合（本番では getMatchHideTagsWhenUnckedTimeIs が埋める）
 		MatchHideTagsWhenUncheckedTimeIs: tagMapOf(
 			tagFor("timeis-hidden", "非表示タグ"),
 		),
@@ -55,9 +56,9 @@ func TestFilterTagsTimeIs_NoTagFilter_DoesNotApplyHideTags(t *testing.T) {
 		t.Fatalf("filterTagsTimeIs failed: %v", err)
 	}
 
-	// タグ絞りなしなので、削除済みでない TimeIs は非表示タグに関係なく全て通る
-	if _, exist := findCtx.MatchTimeIssAtFilterTags["timeis-hidden"]; !exist {
-		t.Errorf("タグ絞りなしでは強制非表示タグを適用しない: timeis-hidden も残るはず")
+	// タグ絞りなしでも、非表示タグの対象は消える
+	if _, exist := findCtx.MatchTimeIssAtFilterTags["timeis-hidden"]; exist {
+		t.Errorf("タグ絞りなしでも非表示タグは適用される: timeis-hidden は消えるはず")
 	}
 	if _, exist := findCtx.MatchTimeIssAtFilterTags["timeis-visible"]; !exist {
 		t.Errorf("timeis-visible は残るはず")
