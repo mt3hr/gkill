@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 940 | 137 | Go `testing` |
+| Go バックエンド | 956 | 140 | Go `testing` |
 | フロントエンド ユニット | 1964 | 166 | Vitest |
-| フロントエンド E2E | 250 | 44（+auth.setup.ts） | Playwright |
+| フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
 | MCP サーバ | 732 | 21 | Vitest |
-| Android | 12 | 2 | JUnit 4 |
-| Wear OS | 171 | 9 | JUnit 4 + MockK |
-| **合計** | **4,072** | **382** | |
+| Android | 15 | 2 | JUnit 4 |
+| Wear OS | 171 | 12 | JUnit 4 + MockK |
+| **合計** | **4,089** | **386** | |
 
 数え直すコマンド:
 
@@ -206,7 +206,7 @@ src/server/gkill/
 │   ├── req_res/req_res_test.go        ← JSON 往復テスト
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（23ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（24ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── handle_get_idf_file_path_test.go      ← IDFファイル絶対パス取得
@@ -323,7 +323,7 @@ src/client/__tests__/
 ### 3.3 フロントエンド E2E（`src/client/__tests__/e2e/`）
 
 コンポーネントを持つ13ルートすべてを Playwright で検証し、CRUD 操作フローもカバーします
-（44 specファイル + auth.setup.ts、250テスト宣言）。各テストでは以下を共通チェックします：
+（45 specファイル + auth.setup.ts、251テスト宣言）。各テストでは以下を共通チェックします：
 
 - **JS エラー検出**: ページ遷移時にコンソールエラーがないことを検証
 - **インタラクティブ操作**: ボタンクリック、フォーム入力、ダイアログ開閉

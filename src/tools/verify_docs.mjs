@@ -535,7 +535,8 @@ function buildCountAssertions(m) {
     `| フロントエンド ユニット (\`client/\`) | ${m.unitTests} | ${m.unitTestFiles} |`,
     `| フロントエンド E2E (\`client/\`) | ${m.e2eTests} | ${m.e2eTestFiles} |`,
     `| MCP サーバ (\`mcp/\`) | ${m.mcpTests} | ${m.mcpTestFiles} |`,
-    `| Wear OS (\`wear_os/\`) | ${m.wearCompanionTests + m.wearWatchTests} | 9 |`,
+    `| Android (\`android/\`) | ${m.androidTests} | ${m.androidTestFiles} |`,
+    `| Wear OS (\`wear_os/\`) | ${m.wearCompanionTests + m.wearWatchTests} | ${m.wearTestFiles} |`,
   ]
   for (const row of testRows) add('src/ABOUT_TEST.md', row)
   add('src/ABOUT_TEST.md', `Go テスト ${m.pluginGoTests}件`)
@@ -543,7 +544,8 @@ function buildCountAssertions(m) {
   add('documents/reverse/testing-guide.md', `| フロントエンド ユニット | ${m.unitTests} | ${m.unitTestFiles} |`)
   add('documents/reverse/testing-guide.md', `| フロントエンド E2E | ${m.e2eTests} |`)
   add('documents/reverse/testing-guide.md', `| MCP サーバ | ${m.mcpTests} | ${m.mcpTestFiles} |`)
-  add('documents/reverse/testing-guide.md', `| Wear OS | ${m.wearCompanionTests + m.wearWatchTests} |`)
+  add('documents/reverse/testing-guide.md', `| Android | ${m.androidTests} | ${m.androidTestFiles} |`)
+  add('documents/reverse/testing-guide.md', `| Wear OS | ${m.wearCompanionTests + m.wearWatchTests} | ${m.wearTestFiles} |`)
   add('src/server/ABOUT_TEST.md', `${m.goTests}テスト関数、${m.goTestFiles}テストファイル、${m.goTestPkgs}パッケージ`)
   add('src/server/gkill/plugin/sdk/ABOUT_TEST.md', `**${m.sdkTests}テスト（${m.sdkTestFiles}ファイル）**`)
   add('src/mcp/ABOUT_TEST.md', `${m.mcpTests}テスト（${m.mcpTestFiles}ファイル）`)
