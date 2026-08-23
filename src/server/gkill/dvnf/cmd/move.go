@@ -16,6 +16,9 @@ import (
 func init() {
 	moveFs := moveCommand.Flags()
 	moveFs.StringArrayVarP(&moveOpt.ignore, "ignore", "i", gkill_options.IDFIgnore, "移動処理から除外するファイル名")
+	// --ignoreとは別の入れ物にする。pflagのStringArrayは最初の指定で既定値を
+	// 置き換えるので、--ignoreに足す形にすると.gkillやThumbs.dbの除外が消える。
+	moveFs.StringArrayVar(&moveOpt.ignorePattern, "ignore_pattern", nil, "移動処理から除外するファイル名のパターン(例: *.tmp)")
 	moveFs.BoolVarP(&moveOpt.deleteDirectory, "delete_directory", "d", false, "移動後、中身のない移動元ディレクトリを削除する")
 	moveFs.BoolVarP(&moveOpt.override, "override", "w", false, "移動先ファイルに上書きする")
 	moveFs.BoolVarP(&moveOpt.file, "file", "f", false, "移動先をファイルとする")
@@ -30,6 +33,7 @@ var moveOpt = struct {
 	src             string
 	target          string
 	ignore          []string
+	ignorePattern   []string
 	deleteDirectory bool
 	override        bool
 	file            bool
@@ -39,6 +43,13 @@ var moveOpt = struct {
 
 func runMove(_ *cobra.Command, _ []string) {
 	var err error
+
+	// 何かを動かす前に見る。壊れたパターンは黙って何にも当たらないので、
+	// 除外し損ねたまま運んでしまう。
+	if err := validateIgnorePatterns(moveOpt.ignorePattern); err != nil {
+		log.Fatal(err)
+	}
+
 	dvnfdir, childdir := splitDVNFPathnium(moveOpt.target)
 
 	// createNewならcreateする
@@ -88,20 +99,12 @@ func runMove(_ *cobra.Command, _ []string) {
 	// 移動する。親ディレクトリを作成しつつ
 	for _, path := range matches {
 		// 無視だったら無視
-		ignore := false
-		srcFileNameBase := filepath.Base(path)
-		for _, i := range moveOpt.ignore {
-			if i == srcFileNameBase {
-				ignore = true
-				break
-			}
-		}
-		if ignore {
+		if isIgnored(filepath.Base(path), moveOpt.ignore, moveOpt.ignorePattern) {
 			continue
 		}
 
 		fmt.Printf("move %s -> %s\n", path, target)
-		err := move(path, target, moveOpt.ignore)
+		err := move(path, target, moveOpt.ignore, moveOpt.ignorePattern)
 		if err != nil {
 			err = fmt.Errorf("error at move from %s to %s: %w", path, target, err)
 			log.Fatal(err)
@@ -109,7 +112,7 @@ func runMove(_ *cobra.Command, _ []string) {
 	}
 }
 
-func move(src, target string, ignores []string) error {
+func move(src, target string, ignores []string, ignorePatterns []string) error {
 	srcFile, err := os.Stat(src)
 	if err != nil {
 		err = fmt.Errorf("error at get stat %s: %w", src, err)
@@ -117,15 +120,7 @@ func move(src, target string, ignores []string) error {
 	}
 
 	// 無視だったら無視
-	ignore := false
-	srcFileNameBase := filepath.Base(srcFile.Name())
-	for _, i := range ignores {
-		if i == srcFileNameBase {
-			ignore = true
-			break
-		}
-	}
-	if ignore {
+	if isIgnored(filepath.Base(srcFile.Name()), ignores, ignorePatterns) {
 		return nil
 	}
 
@@ -139,7 +134,7 @@ func move(src, target string, ignores []string) error {
 		for _, childFile := range childFiles {
 			childFilename := filepath.Join(src, filepath.Base(childFile.Name()))
 			targetFilename := filepath.Join(target, srcFile.Name())
-			err = move(childFilename, targetFilename, ignores)
+			err = move(childFilename, targetFilename, ignores, ignorePatterns)
 			if err != nil {
 				return err
 			}
