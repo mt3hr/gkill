@@ -201,3 +201,31 @@ export const MAX_INLINE_PLUGIN_CONTENT_HTML_LENGTH = 400000;
 
 export const MI_CHECK_STATES = new Set(["all", "checked", "uncheck"]);
 export const MI_SORT_TYPES = new Set(["create_time", "estimate_start_time", "estimate_end_time", "limit_time"]);
+
+// ---------------------------------------------------------------------------
+// gkill_delete_kyou が扱える種別と、その取得/更新エンドポイント
+// ---------------------------------------------------------------------------
+//
+// **削除の語彙はここだけに置くこと。**
+// 以前は gkill_delete_kyou の enum (write-tools.mjs)、DELETE_DATA_TYPES
+// (write-normalization.mjs)、DELETE_ENDPOINT_MAP、GET_ENDPOINT_MAP の4箇所に
+// 同じ9値が別々に書かれており、しかもサーバ2本ぶんに複製されていた。
+// 1つ足し忘れると「スキーマは受理するのにディスパッチで落ちる」
+// (あるいはその逆で、正規化を素通りしてエンドポイント未定義で落ちる) になる。
+//
+// gkill に専用の削除APIは無い。現在値を取って is_deleted を立て、
+// 同じ型の更新APIへ送り直す patch 方式なので、種別ごとに取得と更新の対が要る。
+export const DELETE_TARGETS = {
+  kmemo:   { getEndpoint: "/api/get_kmemo",   historiesKey: "kmemo_histories",   updateEndpoint: "/api/update_kmemo",   requestKey: "kmemo",   responseKey: "updated_kmemo" },
+  urlog:   { getEndpoint: "/api/get_urlog",   historiesKey: "urlog_histories",   updateEndpoint: "/api/update_urlog",   requestKey: "urlog",   responseKey: "updated_urlog" },
+  nlog:    { getEndpoint: "/api/get_nlog",    historiesKey: "nlog_histories",    updateEndpoint: "/api/update_nlog",    requestKey: "nlog",    responseKey: "updated_nlog" },
+  lantana: { getEndpoint: "/api/get_lantana", historiesKey: "lantana_histories", updateEndpoint: "/api/update_lantana", requestKey: "lantana", responseKey: "updated_lantana" },
+  timeis:  { getEndpoint: "/api/get_timeis",  historiesKey: "timeis_histories",  updateEndpoint: "/api/update_timeis",  requestKey: "timeis",  responseKey: "updated_timeis" },
+  mi:      { getEndpoint: "/api/get_mi",      historiesKey: "mi_histories",      updateEndpoint: "/api/update_mi",      requestKey: "mi",      responseKey: "updated_mi" },
+  kc:      { getEndpoint: "/api/get_kc",      historiesKey: "kc_histories",      updateEndpoint: "/api/update_kc",      requestKey: "kc",      responseKey: "updated_kc" },
+  tag:     { getEndpoint: "/api/get_tag_histories_by_tag_id",   historiesKey: "tag_histories",  updateEndpoint: "/api/update_tag",  requestKey: "tag",  responseKey: "updated_tag" },
+  text:    { getEndpoint: "/api/get_text_histories_by_text_id", historiesKey: "text_histories", updateEndpoint: "/api/update_text", requestKey: "text", responseKey: "updated_text" },
+};
+
+// gkill_delete_kyou の data_type として受理する値。スキーマの enum と正規化の両方がこれを見る。
+export const DELETE_DATA_TYPE_VALUES = Object.keys(DELETE_TARGETS);
