@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。755テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 23（書き込み20 + Read便利3）+ プラグイン1 = 24ツール、統合サーバ 29 + プラグイン1 = 30ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
+MCP (Model Context Protocol) サーバのテスト。744テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 23（書き込み20 + Read便利3）+ プラグイン1 = 24ツール、統合サーバ 29 + プラグイン1 = 30ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
 
 ## テストフレームワーク
 
@@ -40,7 +40,7 @@ Vitest（Node.js 環境）
 | `__tests__/write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲検証、data_type検証等） |
 | `__tests__/write-client.test.mjs` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
 | `__tests__/write-server.test.mjs` | McpWriteServer（JSON-RPC、24ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
-| `__tests__/write-tool-handlers.test.mjs` | Write 23ツール定義（add系9 + update系9 + submit_kftl + delete_kyou + Read便利3）・summarize関数 |
+| `__tests__/write-tool-handlers.test.mjs` | Write 20ツール定義（実物 import）・削除の語彙が enum / DELETE_DATA_TYPES / 対応表2つで一致すること・summarizeWriteToolPayload |
 
 ### Read/Write統合サーバ
 
@@ -48,7 +48,7 @@ Vitest（Node.js 環境）
 |---------|-----------|
 | `__tests__/readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
 | `__tests__/readwrite-server.test.mjs` | McpServer 統合（30ツール全ディスパッチ、プラグインツール振り分け、IDF画像ブロック、エンティティデフォルト値） |
-| `__tests__/readwrite-tool-handlers.test.mjs` | 統合28ツール定義・summarize関数（Read+Write統合版） |
+| `__tests__/write-handlers.test.mjs` | 書き込みディスパッチの正本（add/update/delete のエンドポイント、update の patch セマンティクス、create_app がサーバ種別で埋まること） |
 
 ## テスト内容
 

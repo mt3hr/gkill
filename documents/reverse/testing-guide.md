@@ -15,10 +15,10 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | Go バックエンド | 980 | 146 | Go `testing` |
 | フロントエンド ユニット | 1964 | 166 | Vitest |
 | フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
-| MCP サーバ | 755 | 22 | Vitest |
+| MCP サーバ | 744 | 22 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 171 | 12 | JUnit 4 + MockK |
-| **合計** | **4,136** | **393** | |
+| **合計** | **4,125** | **393** | |
 
 数え直すコマンド:
 
@@ -386,7 +386,8 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | `write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲、data_type列挙値） |
 | `write-client.test.mjs` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
 | `write-server.test.mjs` | McpWriteServer（24ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
-| `write-tool-handlers.test.mjs` | Write 固有23ツール定義（update系9ツール含む。プラグイン1ツールを足して公開は24）・summarize関数 |
+| `write-tool-handlers.test.mjs` | Write 20ツール定義（実物 import）・削除の語彙が3箇所で一致すること・summarizeWriteToolPayload |
+| `write-handlers.test.mjs` | 書き込みディスパッチ（add/update/delete のエンドポイント、patch セマンティクス、create_app のサーバ種別） |
 
 **Read/Write統合サーバ:**
 
@@ -394,7 +395,6 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 |-------------|-----------|
 | `readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
 | `readwrite-server.test.mjs` | McpServer統合（全30ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
-| `readwrite-tool-handlers.test.mjs` | 統合の固有29ツール定義（プラグイン1ツールを足して公開は30）・summarize関数 |
 
 ### 3.5 Android / Wear OS
 
