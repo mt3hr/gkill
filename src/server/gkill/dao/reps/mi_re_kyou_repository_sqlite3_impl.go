@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -340,7 +341,12 @@ func (m *miReKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, 
 	if len(kyous) == 0 {
 		return nil, nil
 	}
-	return &kyous[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestKyou := slices.MaxFunc(kyous, func(a Kyou, b Kyou) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestKyou, nil
 }
 
 func (m *miReKyouRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {

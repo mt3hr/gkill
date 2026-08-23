@@ -807,7 +807,16 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 	if len(kyous) == 0 {
 		return nil, nil
 	}
-	return &kyous[0], nil
+	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
+	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
+	latestKyou := slices.MaxFunc(kyous, func(a Kyou, b Kyou) int {
+		if c := a.UpdateTime.Compare(b.UpdateTime); c != 0 {
+			return c
+		}
+		// 5射影は同着なので、どれを名乗るかを UNION の出力順に決めさせない
+		return compareMiProjectionPreference(a.DataType, b.DataType)
+	})
+	return &latestKyou, nil
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
@@ -2063,7 +2072,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
 	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
 	latestMi := slices.MaxFunc(mis, func(a Mi, b Mi) int {
-		return a.UpdateTime.Compare(b.UpdateTime)
+		if c := a.UpdateTime.Compare(b.UpdateTime); c != 0 {
+			return c
+		}
+		// 5射影は同着なので、どれを名乗るかを UNION の出力順に決めさせない
+		return compareMiProjectionPreference(a.DataType, b.DataType)
 	})
 	return &latestMi, nil
 

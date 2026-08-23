@@ -8,6 +8,13 @@ import "github.com/mt3hr/gkill/src/server/gkill/api/message"
 type RepInfoMCPDTO struct {
 	RepName string `json:"rep_name"`
 	RepType string `json:"rep_type"`
+	// IndexedAt はその rep の索引が最後に更新された時刻（RFC3339）。
+	// 索引を持たない rep では省略。
+	//
+	// rep ディレクトリへ置いただけのファイルは UpdateCache を通すまで検索に出ず、
+	// しかも警告が出ないので「0件」の意味が分からなかった。
+	// 定期実行も監視も無いので、ここが何日も前で止まっていることは普通に起きる。
+	IndexedAt string `json:"indexed_at,omitempty"`
 }
 
 // AttachedDataRepInfoMCPDTO はタグ・テキスト・通知・GPSログの格納先rep。

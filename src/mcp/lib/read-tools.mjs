@@ -312,7 +312,11 @@ export const READ_TOOLS = [
   {
     name: "gkill_get_rep_infos",
     description:
-      "List repositories with structured metadata: rep_infos[] ({rep_name, rep_type}), canonical_rep_types[] (the exact " +
+      "List repositories with structured metadata: rep_infos[] ({rep_name, rep_type, and indexed_at for repositories " +
+      "that keep an index — when that index was last refreshed. Files dropped into a repository directory do not " +
+      "appear in searches until the cache is updated, and nothing warns you, so a stale indexed_at is the reason " +
+      "a file you know you added comes back as zero hits: pass query.update_cache=true or run the update_cache CLI), " +
+      "canonical_rep_types[] (the exact " +
       "strings query.rep_types accepts — e.g. files/images live under \"directory\", not \"idf\"), and plugins[] " +
       "({rep_name, data_type, plugin_name} — plugins are matched via query.reps or data_types, never rep_types). " +
       "Call this instead of guessing rep_types casing; ApplicationConfig display labels do not map 1:1 to query values. " +
