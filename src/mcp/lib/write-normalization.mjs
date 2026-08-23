@@ -68,7 +68,8 @@ function assertUrlWithScheme(value, field) {
 // 終わりが始まりより前の TimeIs は作れてしまい、長さが負になる。
 /** @param {string|undefined} startTime @param {string|undefined} endTime */
 function assertTimeIsOrder(startTime, endTime) {
-  if (startTime === undefined || endTime === undefined) return;
+  // null は「終了を消す」の意思表示なので比較しない
+  if (startTime === undefined || endTime === undefined || endTime === null) return;
   // normalizeDateTimeString は妥当な RFC3339 をそのまま返すので "…Z" と "…+09:00" が
   // 混ざりうる。文字列比較だと offset の違いで前後を取り違える。
   if (Date.parse(startTime) > Date.parse(endTime)) {
@@ -247,7 +248,11 @@ export function normalizeUpdateTimeIsArgs(args) {
   const id = assertTrimmedString(args.id, "id");
   const title = args.title !== undefined ? assertTrimmedString(args.title, "title") : undefined;
   const start_time = optionalDatetime(args, "start_time");
-  const end_time = optionalDatetime(args, "end_time");
+  // end_time だけは null に意味がある。「終了を取り消して進行中へ戻す」の唯一の手段で、
+  // これが無いと一度終わらせた TimeIs を MCP から二度と進行中にできない
+  // (Go 側 reps.TimeIs.EndTime は *time.Time なので nil を保存できる)。
+  // 未指定 = 触らない、null = 消す、値 = その時刻にする、の3値。
+  const end_time = args.end_time === null ? null : optionalDatetime(args, "end_time");
   // patch なので両方揃ったときだけ比べる（片側だけの更新は既存値と突き合わせられない）
   assertTimeIsOrder(start_time, end_time);
   const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
