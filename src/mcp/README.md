@@ -168,7 +168,7 @@ curl -v -X POST http://localhost:8808/mcp \
 
 ### 提供ツール
 
-#### Readツール（10 — Read専用/ReadWrite統合サーバで使用可能）
+#### Readツール（9 — Read専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却） |
@@ -178,7 +178,6 @@ curl -v -X POST http://localhost:8808/mcp \
 | `gkill_get_gps_log` | 期間指定でGPSログを取得 |
 | `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等） |
 | `gkill_get_idf_file` | IDFファイルの実データを取得（画像はMCP image blockで返却）。上限は `GKILL_MCP_MAX_FILE_BYTES`（既定8MB） |
-| `gkill_get_idf_file_path` | IDFファイルの絶対パスを取得。stdio接続時のみ利用可 |
 | `gkill_get_kyou_history` | 1件の全版を取得（削除済みの版も含む）。`gkill_get_kyous` から見えなくなった記録を読み返す唯一の経路 |
 
 ##### ファイル実パス導線
@@ -188,7 +187,7 @@ curl -v -X POST http://localhost:8808/mcp \
 絶対パスは**同一マシンのクライアントにしか渡さない**。二重にゲートしている:
 
 - **gkillサーバ側**: リクエスト元がlocalhostのときだけ `file_path` を返す。
-- **MCPサーバ側**: stdioトランスポート（＝クライアントが同一マシン）のときだけAIに見せる。HTTP/OAuth接続では `file_path` を削ぎ落とし、`gkill_get_idf_file_path` も拒否する。
+- **MCPサーバ側**: stdioトランスポート（＝クライアントが同一マシン）のときだけAIに見せる。HTTP/OAuth接続では `file_path` を削ぎ落とす（代わりに後述の `file_url` を注入する）。
 
 MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のlocalhost判定だけではリモートのAIにパスが渡ってしまう。MCPサーバ側のゲートが実質的な防御線になる。
 

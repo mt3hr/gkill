@@ -338,36 +338,6 @@ export const READ_TOOLS = [
     },
   },
   {
-    name: "gkill_get_idf_file_path",
-    description:
-      "Resolve the absolute local filesystem path of an IDF file from its rep_name and file_name. " +
-      "Available only when gkill runs on the same machine as this MCP server and you are connected " +
-      "over stdio; otherwise it returns an error. Once you have the path, read the file directly from " +
-      "the filesystem — for images this lets you view them without any base64 transfer, at any file size. " +
-      "gkill_get_kyous already includes 'file_path' in IDF payloads when available, so call this tool " +
-      "only when you have a rep_name/file_name but not the path. Returns exists=false if the file is " +
-      "not registered in the repository.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        rep_name: {
-          type: "string",
-          description: "Repository name from the IDF payload's rep_name field.",
-        },
-        file_name: {
-          type: "string",
-          description: "File name from the IDF payload's file_name field.",
-        },
-        locale_name: {
-          type: "string",
-          description: "Locale, e.g. ja/en.",
-        },
-      },
-      required: ["rep_name", "file_name"],
-      additionalProperties: false,
-    },
-  },
-  {
     name: "gkill_get_kyou_history",
     description:
       "Read every stored version of ONE entry, including versions that are soft-deleted. " +

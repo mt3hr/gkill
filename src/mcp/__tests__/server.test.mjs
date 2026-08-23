@@ -356,7 +356,7 @@ describe("handleMessage", () => {
     expect(response.jsonrpc).toBe("2.0");
     expect(response.id).toBe(2);
     expect(Array.isArray(response.result.tools)).toBe(true);
-    expect(response.result.tools.length).toBe(11);
+    expect(response.result.tools.length).toBe(10);
 
     const toolNames = response.result.tools.map((t) => t.name);
     expect(toolNames).toContain("gkill_get_kyous");
@@ -606,42 +606,6 @@ describe("file_path exposure", () => {
 
   test("defaults to non-local so a transport that forgets to opt in never leaks paths", () => {
     expect(server.isLocalTransport).toBe(false);
-  });
-
-  test("gkill_get_idf_file_path resolves the path for local clients", async () => {
-    server.isLocalTransport = true;
-    server.currentSessionId = "sess";
-    mockClient.callApi.mockResolvedValue({
-      file_path: "C:\\Users\\me\\gkill\\files\\photo.png",
-      exists: true,
-      errors: [],
-    });
-
-    const result = await server.handleToolCall("gkill_get_idf_file_path", {
-      rep_name: "repo",
-      file_name: "photo.png",
-    });
-
-    expect(mockClient.callApi).toHaveBeenCalledWith(
-      "/api/get_idf_file_path",
-      expect.objectContaining({ rep_name: "repo", file_name: "photo.png" }),
-      true,
-      "sess",
-    );
-    expect(result.file_path).toBe("C:\\Users\\me\\gkill\\files\\photo.png");
-    expect(result.exists).toBe(true);
-  });
-
-  // リモートクライアント (HTTP/OAuth 越しのクラウドAI) に絶対パスを渡すと
-  // ユーザのディレクトリ構造の漏洩になる。gkillへの問い合わせ自体を行わない。
-  test("gkill_get_idf_file_path refuses remote clients without calling gkill", async () => {
-    server.isLocalTransport = false;
-    server.currentSessionId = "sess";
-
-    await expect(
-      server.handleToolCall("gkill_get_idf_file_path", { rep_name: "repo", file_name: "photo.png" }),
-    ).rejects.toThrow(/same machine/);
-    expect(mockClient.callApi).not.toHaveBeenCalled();
   });
 
   test("buildToolResult keeps file_path in kyou payloads for local clients", () => {
