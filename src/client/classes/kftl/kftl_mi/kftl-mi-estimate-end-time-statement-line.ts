@@ -5,6 +5,7 @@ import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import type { KFTLMiRequest } from './kftl-mi-request'
+import { generate_mi_block_next_constructor } from './kftl-mi-block'
 import { KFTLMiLimitTimeStatementLine } from './kftl-mi-limit-time-statement-line'
 import { i18n } from '@/i18n'
 import { KFTL_ASCII_TIMEIS_TIME_PREFIX, strip_prefix } from '../kftl-prefixes'
@@ -13,7 +14,7 @@ export class KFTLMiEstimateEndTimeStatementLine extends KFTLStatementLine {
 
     constructor(line_text: string, context: KFTLStatementLineContext) {
         super(line_text, context)
-        context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLMiLimitTimeStatementLine(line_text, context))
+        context.set_next_statement_line_constructor(generate_mi_block_next_constructor(context.get_next_statement_line_text(), (line_text: string, context: KFTLStatementLineContext) => new KFTLMiLimitTimeStatementLine(line_text, context)))
         context.set_next_statement_line_target_id(context.get_this_statement_line_target_id())
     }
 

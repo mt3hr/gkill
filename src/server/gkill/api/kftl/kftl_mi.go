@@ -78,6 +78,42 @@ func (r *kftlMiRequest) DoRequest(ctx context.Context) error {
 
 // ─── Statement lines ──────────────────────────────────────────────────────────
 
+// generateMiBlockNextConstructor は `ーみ` ブロックの中の「次の行」を決める先読み。
+//
+// タグ行・テキスト開始行は**項目の位置を消費しない**。汎用の行をそのまま使い、
+// 「ブロックへ復帰する次行の決め方」だけを渡す(支出ブロックと同じやり方)。
+// 渡さないと、ブロックの途中に `。タグ` と書いた時点でその行が板名や見積開始として
+// 読まれてしまい、タグは付かないまま板名が "。タグ" になる。
+//
+// Mi のリクエストは ThisStatementLineTargetID をキーに request_map へ入っている
+// (kftlStartMiStatementLine.ApplyThisLineToRequestMap)ので、
+// MiReKyou と違って専用のタグ行は要らない。汎用のタグ行がそのまま Mi へタグを付ける。
+//
+// **`？` はここで拾ってはいけない。** 見積開始・見積終了・期限の3行は
+// `？`/`?` を任意の接頭辞として自分で剥がす。generateDefaultConstructor へ委譲すると
+// `？` が関連時刻行に化けて、空行で位置を送る既存の書き方が壊れる
+// (reps.Mi に RelatedTime 列は無い)。
+//
+// 空行も拾わない。空行は今までどおり項目の位置を消費する。
+// Mirrors: generate_mi_block_next_constructor (kftl-mi-block.ts)
+func generateMiBlockNextConstructor(nextLineText string, nextField StatementLineConstructorFunc) StatementLineConstructorFunc {
+	resume := func(lineText string) StatementLineConstructorFunc {
+		return generateMiBlockNextConstructor(lineText, nextField)
+	}
+
+	switch {
+	case strings.HasPrefix(nextLineText, splitterTag) || strings.HasPrefix(nextLineText, splitterTagAscii):
+		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
+			return newKFTLTagStatementLine(lineText, ctx, false, resume)
+		}
+	case nextLineText == splitterStartText || nextLineText == splitterStartTextAscii:
+		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
+			return newKFTLStartTextStatementLine(lineText, ctx, false, resume)
+		}
+	}
+	return nextField
+}
+
 // kftlStartMiStatementLine handles "ーみ".
 // Mirrors: kftl-start-mi-statement-line.ts
 type kftlStartMiStatementLine struct {
@@ -98,9 +134,9 @@ func newKFTLStartMiStatementLine(lineText string, ctx *KFTLStatementLineContext)
 	ctx.NextStatementLineTargetID = &targetID
 
 	req := newKFTLMiRequest(targetID, ctx)
-	ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
+	ctx.NextStatementLineConstructor = generateMiBlockNextConstructor(ctx.NextStatementLineText, func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
 		return newKFTLMiTitleStatementLine(lt, c, req)
-	}
+	})
 	return &kftlStartMiStatementLine{lineText: lineText, ctx: ctx, req: req}
 }
 
@@ -122,9 +158,9 @@ type kftlMiTitleStatementLine struct {
 func newKFTLMiTitleStatementLine(lineText string, ctx *KFTLStatementLineContext, req *kftlMiRequest) *kftlMiTitleStatementLine {
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
-	ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
+	ctx.NextStatementLineConstructor = generateMiBlockNextConstructor(ctx.NextStatementLineText, func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
 		return newKFTLMiBoardNameStatementLine(lt, c, req)
-	}
+	})
 	return &kftlMiTitleStatementLine{lineText: lineText, ctx: ctx, req: req}
 }
 
@@ -147,9 +183,9 @@ type kftlMiBoardNameStatementLine struct {
 func newKFTLMiBoardNameStatementLine(lineText string, ctx *KFTLStatementLineContext, req *kftlMiRequest) *kftlMiBoardNameStatementLine {
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
-	ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
+	ctx.NextStatementLineConstructor = generateMiBlockNextConstructor(ctx.NextStatementLineText, func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
 		return newKFTLMiEstimateStartTimeStatementLine(lt, c, req)
-	}
+	})
 	return &kftlMiBoardNameStatementLine{lineText: lineText, ctx: ctx, req: req}
 }
 
@@ -205,9 +241,9 @@ type kftlMiEstimateStartTimeStatementLine struct {
 func newKFTLMiEstimateStartTimeStatementLine(lineText string, ctx *KFTLStatementLineContext, req *kftlMiRequest) *kftlMiEstimateStartTimeStatementLine {
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
-	ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
+	ctx.NextStatementLineConstructor = generateMiBlockNextConstructor(ctx.NextStatementLineText, func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
 		return newKFTLMiEstimateEndTimeStatementLine(lt, c, req)
-	}
+	})
 	return &kftlMiEstimateStartTimeStatementLine{lineText: lineText, ctx: ctx, req: req}
 }
 
@@ -241,9 +277,9 @@ type kftlMiEstimateEndTimeStatementLine struct {
 func newKFTLMiEstimateEndTimeStatementLine(lineText string, ctx *KFTLStatementLineContext, req *kftlMiRequest) *kftlMiEstimateEndTimeStatementLine {
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
-	ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
+	ctx.NextStatementLineConstructor = generateMiBlockNextConstructor(ctx.NextStatementLineText, func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
 		return newKFTLMiLimitTimeStatementLine(lt, c, req)
-	}
+	})
 	return &kftlMiEstimateEndTimeStatementLine{lineText: lineText, ctx: ctx, req: req}
 }
 
