@@ -687,6 +687,8 @@
     "FAILED_FIND_PLUGIN_MESSAGE": "Failed to get search results from a plugin",
     "FAILED_GET_KYOUS_MESSAGE": "Failed to retrieve records",
     "SUCCESS_GET_KYOUS_MESSAGE": "Search complete",
+    "FAILED_GET_REP_INFOS_MESSAGE": "Failed to retrieve repository list",
+    "SUCCESS_GET_REP_INFOS_MESSAGE": "Repository list retrieved",
     "FAILED_GET_KYOU_MESSAGE": "Failed to retrieve record",
     "SUCCESS_GET_KYOU_MESSAGE": "Retrieved",
     "FAILED_GET_KMEMO_MESSAGE": "Failed to retrieve memo",

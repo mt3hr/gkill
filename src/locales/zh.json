@@ -687,6 +687,8 @@
     "FAILED_FIND_PLUGIN_MESSAGE": "未能获取插件的搜索结果",
     "FAILED_GET_KYOUS_MESSAGE": "获取记录失败",
     "SUCCESS_GET_KYOUS_MESSAGE": "搜索完成",
+    "FAILED_GET_REP_INFOS_MESSAGE": "获取仓库列表失败",
+    "SUCCESS_GET_REP_INFOS_MESSAGE": "仓库列表获取完成",
     "FAILED_GET_KYOU_MESSAGE": "获取记录失败",
     "SUCCESS_GET_KYOU_MESSAGE": "获取完成",
     "FAILED_GET_KMEMO_MESSAGE": "获取备忘录失败",

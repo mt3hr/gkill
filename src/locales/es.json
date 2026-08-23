@@ -687,6 +687,8 @@
     "FAILED_FIND_PLUGIN_MESSAGE": "No se pudieron obtener los resultados de búsqueda del plugin",
     "FAILED_GET_KYOUS_MESSAGE": "Error al obtener los registros",
     "SUCCESS_GET_KYOUS_MESSAGE": "Búsqueda completada",
+    "FAILED_GET_REP_INFOS_MESSAGE": "No se pudo obtener la lista de repositorios",
+    "SUCCESS_GET_REP_INFOS_MESSAGE": "Lista de repositorios obtenida",
     "FAILED_GET_KYOU_MESSAGE": "Error al obtener el registro",
     "SUCCESS_GET_KYOU_MESSAGE": "Obtenido",
     "FAILED_GET_KMEMO_MESSAGE": "Error al obtener la nota",

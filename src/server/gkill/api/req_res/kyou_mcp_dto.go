@@ -5,14 +5,17 @@ import (
 	"time"
 )
 
-// KyouMCPDTO は MCP レスポンス用の軽量 Kyou DTO
+// KyouMCPDTO は MCP レスポンス用の軽量 Kyou DTO。
+//
+// ID / RepName は v2 から常時付与する。AIクライアントの追撃クエリ
+// (query.ids / query.reps / プラグイン本文取得 / 更新系ツール) は両方を前提とし、
+// 旧 v1 の「要求フラグを立てないと載らない」既定が往復を1回増やしていた（外部監査 C1 ほか）。
+// サイズ増(1件あたり数十バイト)は v2 で max_size_mb が厳密上限になったので上限自体が吸収する。
 type KyouMCPDTO struct {
-	ID       string `json:"id,omitempty"`
+	ID       string `json:"id"`
 	DataType string `json:"data_type"`
-	// RepName はKyouの取得元リポジトリ名。include_rep_nameのときだけ入る。
-	// 全件に載せると1件あたり数十バイト増えてmax_size_mbの打ち切りが早まるため、
-	// idsやreps絞り込みの起点として必要なときだけ要求させる。
-	RepName       string               `json:"rep_name,omitempty"`
+	// RepName はKyouの取得元リポジトリ名。query.reps 絞り込みの起点になる。
+	RepName       string               `json:"rep_name"`
 	RelatedTime   time.Time            `json:"related_time"`
 	Tags          []string             `json:"tags,omitempty"`
 	Texts         []string             `json:"texts,omitempty"`
@@ -116,9 +119,15 @@ type IDFPayloadMCPDTO struct {
 	IsVideo  bool   `json:"is_video"`
 	IsAudio  bool   `json:"is_audio"`
 	// IsZip は .zip / .cbz のように中身を一覧できるアーカイブかどうか。
-	IsZip    bool   `json:"is_zip,omitempty"`
+	// omitempty を付けてはいけない: false で消えると、スキーマに載っているのに
+	// 実レスポンスに一度も現れないフィールドになり、呼び出し側は
+	// 「false なのか未実装なのか」を判別できない（外部監査 C4）。
+	IsZip    bool   `json:"is_zip"`
 	RepName  string `json:"rep_name"`
 	MimeType string `json:"mime_type,omitempty"`
+	// FileSize はファイルサイズ(バイト)。include_file_size:true のリクエストで、
+	// ページ内の行に対する os.Stat が成功したときだけ入る(失敗はフィールド欠落)。
+	FileSize *int64 `json:"file_size,omitempty"`
 	// FilePath はファイルの絶対パス。同一マシンからのリクエストのときだけ埋める。
 	FilePath string `json:"file_path,omitempty"`
 }
@@ -137,8 +146,14 @@ type PluginPayloadMCPDTO struct {
 }
 
 type GitPayloadMCPDTO struct {
-	Kind          string `json:"kind"` // "git_commit_log"
+	Kind string `json:"kind"` // "git_commit_log"
+	// CommitHash はコミットハッシュ。Kyou の id と同値だが、ペイロード単体でも
+	// 自明になるよう明示する(重複排除・突合の鍵。外部監査 C2)。
+	CommitHash    string `json:"commit_hash"`
 	CommitMessage string `json:"commit_message"`
-	Addition      int    `json:"addition,omitempty"`
-	Deletion      int    `json:"deletion,omitempty"`
+	// Addition / Deletion に omitempty を付けてはいけない:
+	// int の 0 はキーごと消え、「差分0行のコミット」と「値が取れなかった」を
+	// 呼び出し側が区別できなくなる（外部監査 C5）。
+	Addition int `json:"addition"`
+	Deletion int `json:"deletion"`
 }
