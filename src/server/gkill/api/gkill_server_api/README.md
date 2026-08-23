@@ -26,7 +26,7 @@ gkill_server_api/
 ├── plugin_content_html_cache.go     # プラグイン本文HTMLのキャッシュ（TTL・件数上限・singleflight）
 ├── gkill_server_api_test.go         # 統合テスト
 ├── gkill_server_api_rate_limit_test.go # レートリミットテスト
-├── handle_get_idf_file_path_test.go # IDFファイルパス解決ハンドラテスト
+├── filter_local_only_test.go        # localhost判定 (isLocalRequest) テスト
 ├── handle_get_idf_kyou_by_relative_path_test.go # 相対パス解決ハンドラテスト
 ├── handle_get_shared_kyous_test.go  # 共有Kyou取得ハンドラテスト
 ├── handle_reset_password_test.go    # パスワードリセットハンドラテスト
@@ -34,10 +34,10 @@ gkill_server_api/
 ├── get_device_cache_test.go         # デバイスキャッシュ取得テスト
 ├── plugin_content_html_cache_test.go # プラグイン本文HTMLキャッシュのテスト
 ├── utils_ssrf_test.go               # httpGetBase64Data の SSRF 対策テスト
-└── handle_*.go                      # 各エンドポイントのハンドラ（実装92ファイル + テスト12ファイル）
+└── handle_*.go                      # 各エンドポイントのハンドラ（実装91ファイル + テスト11ファイル）
 ```
 
-**合計: 117ファイル**（基盤14 + ハンドラ実装92 + テスト10 + README.md 1 + ABOUT_TEST.md 1）
+**合計: 117ファイル**（基盤14 + ハンドラ実装91 + テスト10 + README.md 1 + ABOUT_TEST.md 1）
 `.go` だけなら115ファイル。`handle_*.go` という名前のファイルは96あるが、うち5つはテスト。
 
 ## GkillServerAPI 構造体

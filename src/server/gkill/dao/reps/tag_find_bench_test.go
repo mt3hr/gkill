@@ -114,7 +114,7 @@ func BenchmarkTagFindByNameInGo(b *testing.B) {
 	repo := getBenchCachedTagRepo(b)
 	for _, nameCount := range []int{1, 3, 10, 30, 100} {
 		b.Run(fmt.Sprintf("names=%d", nameCount), func(b *testing.B) {
-			query := &find.FindQuery{IsDeleted: false, OnlyLatestData: true}
+			query := &find.FindQuery{OnlyLatestData: true}
 			names := benchTagNames(nameCount)
 			b.ReportAllocs()
 			for b.Loop() {

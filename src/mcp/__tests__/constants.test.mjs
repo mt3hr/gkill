@@ -188,9 +188,15 @@ describe("KYOUS_QUERY_BOOLEAN_FIELDS", () => {
 
   test("contains expected boolean fields", () => {
     expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("update_cache")).toBe(true);
-    expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("is_deleted")).toBe(true);
+    expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("include_deleted_data")).toBe(true);
     expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("is_image_only")).toBe(true);
     expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("only_latest_data")).toBe(true);
+  });
+
+  // 実装されたことが一度も無く、送っているクライアントも実在しなかった検索条件。
+  // 受理して黙って無視するより、未知キーとして弾いて「そのフィルタは無い」と伝えるほうがよい。
+  test("no longer contains the never-implemented is_deleted", () => {
+    expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("is_deleted")).toBe(false);
   });
 
   test("no longer contains the removed use_X flags", () => {

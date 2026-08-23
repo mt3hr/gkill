@@ -170,8 +170,10 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0052](0052-mcp-cursor-pushes-period-end.md) | MCP のページングはカーソルを期間上限へ押し下げ、同一時刻のかたまりを割らない | Superseded |
 | [0053](0053-mcp-composite-cursor-strict-limits.md) | MCPのページングは複合カーソル（時刻+ID）にし、Limit/MaxSizeMBを厳密な上限へ戻す | Accepted |
 | [0054](0054-mcp-version-history-is-a-dedicated-tool.md) | 1件の版履歴と削除の取り消しは専用ツールで返す（only_latest_data は開けない） | Accepted |
+| [0055](0055-idf-file-reaches-ai-through-payload.md) | IDF ファイルはペイロードの file_url / file_path で渡し、到達できないツールは一覧に載せない | Accepted |
 | [0060](0060-freeze-plaing-spelling.md) | 綴りは「永続に乗るか」で決める — plaing は凍結、agregate は改名して読み込み互換を残す | Accepted |
 | [0061](0061-verify-docs-checks-filenames.md) | 資料は件数だけでなく「資料に載っているファイル名の実在」も機械検査する | Accepted |
 | [0062](0062-split-claude-md-into-skills.md) | AI向け規約は AGENTS.md（核）と規約スキルへ分割し、入口の肥大化を機械検査で防ぐ | Accepted |
 | [0070](0070-hide-tags-standalone.md) | hide_tags はタグ絞り込み(tags)の有無と独立に適用する | Accepted |
 | [0071](0071-deleted-data-opens-only-with-include-deleted-data.md) | 削除済みの Kyou は include_deleted_data だけが開ける（is_deleted は使わない） | Accepted |
+| [0072](0072-drop-never-implemented-query-fields.md) | 実装されなかった検索条件は消す — 受理して無視するより未知キーとして弾く | Accepted |

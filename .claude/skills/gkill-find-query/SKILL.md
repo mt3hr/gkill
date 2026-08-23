@@ -10,14 +10,14 @@ description: "検索条件 FindQuery の null 判定セマンティクス。null
 **このファイルは全文が、実際に起きた事故の再発防止である。該当作業では飛ばさずに読むこと。**
 多くは「例外もエラーも出さずに静かに壊れる」種類で、破っても目の前ではエラーにならない。
 
-**検索条件（FindQuery）の null 判定セマンティクス:** かつて存在した `use_*` 有効化フラグ（14個）は**全廃**され、いまは **値フィールドが非null（Go では非nil）ならそのフィルタが有効**。`FindQuery` は 55→41 フィールド。間違えると例外もエラーも出ずに静かに 0 件になるので、以下は規約として守ること。
+**検索条件（FindQuery）の null 判定セマンティクス:** かつて存在した `use_*` 有効化フラグ（14個）は**全廃**され、いまは **値フィールドが非null（Go では非nil）ならそのフィルタが有効**。`FindQuery` は 55→39 フィールド。間違えると例外もエラーも出ずに静かに 0 件になるので、以下は規約として守ること。
 - `null` / `nil` = フィルタ未使用、**非nullの空配列 `[]` = フィルタ有効かつ0件指定**。唯一の例外は `timeis_words: []` で「任意の TimeIs に覆われた Kyou」を意味する
 - 3値そろって初めて有効になるグループがある（地図の `map_latitude` / `map_longitude` / `map_radius`）。Go 側は `HasWordFilter()` / `HasTimeIsFilter()` / `HasCalendarFilter()` / `HasMapFilter()` / `HasPeriodOfTimeFilter()` の**ゲートヘルパ経由で判定する**（生の nil 比較を書き散らさない）
 - `PeriodOfTimeWeekOfDays` は **nil を先行ガードで弾く**こと。`len==0` / `len!=7` の分岐へ落とすと全件が消える（`find_filter.go` の `sortAndTrimKyousMap` と `sqlite3impl_util.go` の両方に同じ罠がある）
 - TypeScript 側で `undefined` は禁止。`JSON.stringify` でキーが落ち、localStorage 往復でコンストラクタ既定値が復活し、`deep_equals` のキー数比較が壊れてサイドバーの機械的 re-emit ガードが死ぬ。未使用は必ず `null` で表現する。**禁止の対象は「永続化・比較される値」**（`FindQuery` のフィールド、localStorage へ入るオブジェクト、`deep_equals` に掛ける値）。関数の省略可能引数（`show(query?: FindKyouQuery)`）や Vuetify の `:color="… ? 'error' : undefined"`（prop 既定値を効かせる用法）は対象外
 - ただし `FindKyouQuery` のコンストラクタ既定は `tags` / `reps` だけ **`null` ではなく `[]`**（旧 `use_tags=true` + 空配列と厳密等価にするため）
 - Mi の板名は `mi_board_name: null` が「すべて」。番兵は `classes/mi-board-names.ts` の **`MI_ALL_BOARD_KEY`（= ハードコードの `"すべて"`。ロケール非依存）** でサイドバー専用、null への変換は `use-mi-query-editor-sidebar.ts` の1点に集約されている。**i18n の訳語（`MI_ALL_BOARD_NAME_TITLE`）と比較してはいけない** ―― ツリーが emit するのはノードの `key` で、それは `append_all_mi_board()` が入れた `"すべて"` 固定なので、訳語と比べると日本語以外のロケールで「すべて」が全件に戻らず 0 件になる（表示名だけが `ALL_MI_BOARD_NAME` / `MI_ALL_TITLE`）
-- **削除済みを含めたいときは `IncludeDeletedData`（JSON `include_deleted_data`）を使う。`IsDeleted` ではない。** Kyou 検索の削除除外は `find_filter.go` の1箇所で、既定（false）は従来どおり最新版が削除済みのIDを丸ごと落とす。`IsDeleted` は Kyou 検索では読まれず、唯一の読み手 `git_commit_log_repository_local_dir_impl.go` は `IsDeleted=true` を**「削除済みのみを探す」という逆の意味**で読んで0件を返すので、「含める」つもりで立てると静かに結果が変わる。なお rekyou / mirekyou は rep の内部で削除済みを弾いており、この旗の対象外
+- **削除済みを含めたいときは `IncludeDeletedData`（JSON `include_deleted_data`）を使う。** Kyou 検索の削除除外は `find_filter.go` の1箇所で、既定（false）は従来どおり最新版が削除済みのIDを丸ごと落とす。かつて紛らわしい `IsDeleted` と `HideTimeIsTags` が定義だけ存在し（前者は git の実装が「削除済みのみ」という逆の意味で読んでいた）、どちらも Kyou 検索では一度も参照されなかったが、送っているクライアントが実在しなかったので 2026-08-24 に削除した。MCP の語彙からも外してあるので、送ると未知キーとしてエラーになる。なお rekyou / mirekyou は rep の内部で削除済みを弾いており、この旗の対象外。**プラグインプロトコルの `sdk.Query.IsDeleted` だけは公開 API として残っており、gkill 本体からは常に false が渡る**
 - 旧形式JSONの移行は3実装が**同じ16キー**を扱う: Go `api/find/find_query_legacy_json.go`、client `classes/api/find_query/normalize-legacy-find-kyou-query-json.ts`、MCP `mcp/lib/constants.mjs` の `LEGACY_USE_FLAG_KEYS`。どれかが欠けると、そのフラグを送る古いクライアントの保存クエリが移行されない（MCP では未知キー扱いで throw する）。共有URL用の `share_kyou_info.db` は起動時にスキーマ 1.0.0→1.1.0 で**保存済みJSONそのものを書き換える**（共有URLは配布済みで再発行できないため） 却下案（フラグを残す／値が空ならフラグを無視する）は [ADR-0006](../../../documents/adr/0006-find-query-null-semantics.md)。
 
 ## 関連スキル

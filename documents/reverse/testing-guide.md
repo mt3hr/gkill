@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1007 | 149 | Go `testing` |
+| Go バックエンド | 1006 | 149 | Go `testing` |
 | フロントエンド ユニット | 1967 | 166 | Vitest |
 | フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
-| MCP サーバ | 763 | 22 | Vitest |
+| MCP サーバ | 765 | 22 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 171 | 12 | JUnit 4 + MockK |
-| **合計** | **4,174** | **396** | |
+| **合計** | **4,175** | **396** | |
 
 数え直すコマンド:
 
@@ -209,7 +209,7 @@ src/server/gkill/
 │   └── gkill_server_api/              ← ハンドラ層（28ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
-│       ├── handle_get_idf_file_path_test.go      ← IDFファイル絶対パス取得
+│       ├── filter_local_only_test.go             ← localhost 判定 (isLocalRequest)
 │       ├── handle_get_idf_kyou_by_relative_path_test.go ← 相対パス解決
 │       ├── handle_get_shared_kyous_test.go       ← 共有Kyou取得
 │       ├── handle_zip_cache_file_serve_test.go   ← ZIPキャッシュの利用者分離

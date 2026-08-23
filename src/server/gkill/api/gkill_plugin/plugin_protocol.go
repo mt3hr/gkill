@@ -75,6 +75,7 @@ type PluginQuery struct {
 	CalendarEndDate *time.Time `json:"calendar_end_date,omitempty"`
 
 	// IsDeleted は true のとき削除済みデータを対象にする。
+	// gkill 本体からは常に false が渡る (FindQuery に対応するフィールドが無いため)。
 	IsDeleted bool `json:"is_deleted"`
 
 	// OnlyLatestData は true のとき各IDの最新バージョンのみ返す。

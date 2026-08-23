@@ -128,17 +128,17 @@ src/server/
     │   ├── find_kyou_context.go    # 検索コンテキスト
     │   ├── find/                   # 検索クエリ構造体
     │   ├── message/                # メッセージ/エラー構造体
-    │   ├── req_res/                # リクエスト/レスポンス構造体（188ファイル）
+    │   ├── req_res/                # リクエスト/レスポンス構造体（186ファイル）
     │   ├── kftl/                   # KFTLパーサー（バックエンド側、47ステートメント型）
     │   │   ├── kftl_factory.go     # ファクトリ（ステートメント生成、日本語/ASCII両プレフィックス）
     │   │   └── *.go                # 各ステートメント型実装
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（139ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（138ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
-    │       ├── gkill_server_api_address.go  # ルーティング定義（93エンドポイント定義・91登録：89 POST + 1 GET）
+    │       ├── gkill_server_api_address.go  # ルーティング定義（92エンドポイント定義・90登録：89 POST + 1 GET）
     │       ├── auth.go             # セッション認証ヘルパー
     │       ├── auth_context.go     # AuthContext構造体（認証済みコンテキスト）
     │       ├── auth_middleware.go  # authMiddleware / authWithReposMiddleware
@@ -146,7 +146,7 @@ src/server/
     │       ├── utils.go            # ユーティリティ関数
     │       ├── web_push.go         # WebPush通知
     │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
-    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、104ファイル）
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、102ファイル）
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     ├── dao/                        # データアクセス層
@@ -348,7 +348,7 @@ documents/
 │   ├── screen-transition.md          # 画面遷移図
 │   ├── screen-specs.md               # 画面仕様（項目定義）
 │   ├── frontend-architecture.md      # フロントエンド設計ガイド
-│   ├── api-endpoints.md              # APIエンドポイント一覧（93件定義・91件登録）
+│   ├── api-endpoints.md              # APIエンドポイント一覧（92件定義・90件登録）
 │   ├── error-handling-and-security.md # エラー処理・セキュリティ
 │   ├── operations-guide.md           # 運用ガイド
 │   ├── dvnf-rep-type-spec.md         # DVNF/RepType仕様

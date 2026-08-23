@@ -122,11 +122,6 @@ loop:
 			// 判定
 			match := true
 
-			// gitコミットに削除の概念はないため、削除済み検索(IsDeleted=true)には該当しない
-			if query.IsDeleted {
-				continue
-			}
-
 			// ID検索
 			if query.IDs != nil {
 				// SQL側(GenerateFindSQLCommon)の「IDs非nil かつ IDs空 → 0件」と意味論を揃える。
