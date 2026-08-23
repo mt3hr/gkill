@@ -39,6 +39,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get applicationConfig response to json: %w", err)

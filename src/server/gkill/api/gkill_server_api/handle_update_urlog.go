@@ -41,6 +41,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse update urlog response to json: %w", err)

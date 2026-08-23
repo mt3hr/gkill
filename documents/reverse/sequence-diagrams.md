@@ -1006,7 +1006,7 @@ sequenceDiagram
     API->>API: filterLocalOnly()<br>r.RemoteAddr = "192.168.1.100:xxxxx"
     API->>API: ホスト判定:<br>localhost / 127.0.0.1 / [::1] に不一致
 
-    API-->>Client: HTTP 403 Forbidden
+    API-->>Client: HTTP 403 Forbidden<br>errors: [ERR000414 LocalOnlyAccessDeniedError]
 ```
 
 ### E5. KFTL テキスト送信エラー

@@ -40,10 +40,15 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
 func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	var err error
 	router := g.GkillDAOManager.GetRouter()
+	// 登録順の先頭が最外層になる(gorilla/mux)。
+	// recoverMiddleware を最外層と最内層の両方に置いてあるのは、gzipMiddleware の
+	// defer gzipWriter.Close() が panic の巻き戻しで先に走って暗黙200を確定させ、
+	// 外側 recover の 500 が捨てられるのを防ぐため(理由の全文は recover_middleware.go)。
 	router.Use(g.recoverMiddleware)
 	router.Use(g.accessLogMiddleware)
 	router.Use(securityHeadersMiddleware)
 	router.Use(gzipMiddleware())
+	router.Use(g.recoverMiddleware)
 	// --- PathPrefix routes (wrapNoAuth) ---
 	// 利用者のファイルをそのまま返す2経路には、下流(サムネイル・動画・ZIP展開物)まで
 	// まとめて効くようルート側でセキュリティヘッダを付ける。

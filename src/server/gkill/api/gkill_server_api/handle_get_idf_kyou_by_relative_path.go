@@ -39,6 +39,7 @@ func (g *GkillServerAPI) HandleGetIDFKyouByRelativePath(w http.ResponseWriter, r
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get idf kyou by relative path response to json: %w", err)

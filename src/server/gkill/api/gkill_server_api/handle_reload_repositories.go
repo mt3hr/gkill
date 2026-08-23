@@ -35,6 +35,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse reload repositories response to json: %w", err)

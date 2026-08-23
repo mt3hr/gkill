@@ -222,11 +222,21 @@ describe("post", () => {
     expect(JSON.parse(opts.body)).toEqual({ key: "value" });
   });
 
-  test("throws GkillApiError on non-ok response", async () => {
-    mockFetchError(500, { errors: [{ error_code: "ERR500" }] });
+  // gkill は 2026-08 から異常時に 4xx/5xx を返す。ステータスだけで throw すると
+  // 本文の errors が呼び出し側へ届かず、callApi の再ログインが不通になる。
+  test("returns the body on non-ok response when it is a gkill envelope", async () => {
+    mockFetchError(500, { errors: [{ error_code: "ERR000410" }], messages: null });
 
     const client = new GkillReadClient();
-    await expect(client.post("/api/fail", {})).rejects.toThrow("HTTP 500");
+    const result = await client.post("/api/fail", {});
+    expect(result.errors[0].error_code).toBe("ERR000410");
+  });
+
+  test("throws GkillApiError on non-ok response that is not a gkill envelope", async () => {
+    mockFetchError(502, { message: "Bad Gateway" });
+
+    const client = new GkillReadClient();
+    await expect(client.post("/api/fail", {})).rejects.toThrow("HTTP 502");
   });
 
   test("throws GkillApiError on network failure", async () => {

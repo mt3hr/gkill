@@ -919,5 +919,6 @@
     "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_TITLE": "Le contenu partagé est en double",
     "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_MESSAGE": "Le même contenu a déjà été enregistré. L’enregistrer à nouveau ?",
     "SAVE_ANYWAY_TITLE": "Enregistrer quand même",
-    "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "Non enregistré car en double"
+    "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "Non enregistré car en double",
+    "LOCAL_ONLY_ACCESS_DENIED_MESSAGE": "Seul l'accès local est autorisé"
 }

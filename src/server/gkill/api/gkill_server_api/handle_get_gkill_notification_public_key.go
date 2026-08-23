@@ -35,6 +35,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get mi task notification public key response to json: %w", err)

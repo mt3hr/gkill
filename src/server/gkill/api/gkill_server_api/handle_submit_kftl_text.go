@@ -38,6 +38,7 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse submit kftl text response to json: %w", err)

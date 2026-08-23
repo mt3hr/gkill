@@ -41,6 +41,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse open directory response to json: %w", err)

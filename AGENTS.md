@@ -98,7 +98,7 @@ src/
 
 **Core entity — "Kyou"** (record). Data types: kmemo (text), timeis (timestamps), lantana (mood 0-10), kc (numeric), nlog (expense), urlog (bookmark), mi (task), idf_kyou (file, with `is_zip` flag for .zip/.cbz), re_kyou (repost), mi_re_kyou (an existing Kyou turned into a task: `target_id` + Mi scheduling fields, no title; `data_type` is `mirekyou_create` / `_check` / `_limit` / `_start` / `_end`, so prefix checks must test `mirekyou` **before** `mi`; the client's `load_typed_datas` guarantees this structurally by sorting its prefix table longest-first rather than relying on the order the branches are written in — `kyou-typed-data-dispatch.test.ts`), tag, text, notification, git_commit_log, gps_log (GPS tracks), plugin_kyou (external plugin data — `typed_plugin` field non-null in TypeScript `Kyou` class; `data_type` is plugin-defined e.g. `claude_conversation`).
 
-**Response structure:** All API responses include `messages []GkillMessage` and `errors []GkillError` (with `error_code` + `error_message`). HTTP 200 for normal responses (check `errors` array), 403 for access denied, 500 for unexpected errors. The Go struct tags carry no `omitempty`, so **on success `messages` / `errors` come back as `null`, not as an empty array**. On the client always go through `res.errors ?? []` **before spreading or `concat`** (a bare `[...res.errors]` throws `TypeError`; `[].concat(null)` silently pushes `null` as an element). `if (res.errors && res.errors.length !== 0) { ... }` のガードで囲うのも同じく正しく、そちらが約180箇所と多数派。**ガード方式をわざわざ `?? []` へ書き換える必要はない** —— 守るべきなのは「null のまま展開しない」の1点だけ。
+**Response structure:** All API responses include `messages []GkillMessage` and `errors []GkillError` (with `error_code` + `error_message`). **ステータスはエラーコードから決まる**（400/401/403/404/409/429/500）。正本は `src/server/gkill/api/message/http_status.go` の表で、新しいコード・新しいハンドラには1行ずつ足す必要がある（機械検査あり。詳細は [gkill-go-backend](.claude/skills/gkill-go-backend/SKILL.md)）。**ステータスが変わっても本文は変わらない** ので、判定は今までどおり `errors` 配列で行ってよい。 The Go struct tags carry no `omitempty`, so **on success `messages` / `errors` come back as `null`, not as an empty array**. On the client always go through `res.errors ?? []` **before spreading or `concat`** (a bare `[...res.errors]` throws `TypeError`; `[].concat(null)` silently pushes `null` as an element). `if (res.errors && res.errors.length !== 0) { ... }` のガードで囲うのも同じく正しく、そちらが約180箇所と多数派。**ガード方式をわざわざ `?? []` へ書き換える必要はない** —— 守るべきなのは「null のまま展開しない」の1点だけ。
 
 ## Cross-cutting conventions
 
@@ -108,7 +108,7 @@ src/
 
 **Naming convention (identifiers):** データクラスのプロパティ/メソッド・ローカル変数・通常関数は snake_case（Go 側 JSON タグとの写像）。コンポーザブルは `useXxx`、イベントコールバックは `onXxx`、CRUD リレーハンドラ束は `xxxHandlers`（束の生成は `kyou-view-relay.ts` に一元化。いずれも camelCase）。型は PascalCase、enum メンバーは snake_case。`@typescript-eslint/naming-convention` で機械検査される（`eslint.config.js` の `app/naming-convention` ブロック。対象は `src/client` 本体のみで、`__tests__`・`src/mcp`・`src/tools`・`*.d.ts` は別流儀として対象外）。
 
-**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 921 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
+**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 922 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
 
 ## Lint & Code Quality
 

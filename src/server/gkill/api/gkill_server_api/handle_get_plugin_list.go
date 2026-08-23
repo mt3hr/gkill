@@ -32,6 +32,7 @@ func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Requ
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at encode get plugin list response: %w", err)

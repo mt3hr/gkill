@@ -413,4 +413,19 @@ const (
 	FindKyousError                                                   = "ERR000410"
 	InvalidGetRepInfosMCPRequestDataError                            = "ERR000411"
 	InvalidGetRepInfosMCPResponseDataError                           = "ERR000412"
+
+	// TargetAccountNotFoundError は「操作対象のアカウントが存在しない」です。
+	// AccountNotFoundError(ERR000002) と分けてあります。あちらは「自分のセッションに
+	// 紐づくアカウントが消えている」で、クライアントの check_auth はそれを見て
+	// ログイン画面へ飛ばします。管理者操作の対象が居ないだけで同じコードを返すと、
+	// 存在しないユーザIDへパスワードリセットを実行した管理者が締め出されます。
+	TargetAccountNotFoundError = "ERR000413"
+
+	// LocalOnlyAccessDeniedError は IsLocalOnlyAccess が有効なサーバへ
+	// ローカル以外から来たリクエストの拒否です(filterLocalOnly)。
+	LocalOnlyAccessDeniedError = "ERR000414"
+
+	// InternalServerPanicError は recoverMiddleware が panic を回収したときのものです。
+	// panic 時はリクエストを読み直せないので、これだけは i18n を通さず固定文言で返します。
+	InternalServerPanicError = "ERR000415"
 )
