@@ -14,6 +14,10 @@ import { getFreePorts } from './free-port.mjs'
 
 const home = process.env.HOME || process.env.USERPROFILE || ''
 const testHome = path.join(home, 'gkill_test')
+// サンプルデータ検証用の別home。名前に gkill_test を含めることで、
+// 下の leftover kill の対象 (`*gkill_test*`) に自動で入る
+const sampleTestHome = path.join(home, 'gkill_test_sample')
+const sampleDataDir = path.join(process.cwd(), 'resources', 'gkill_sample_data')
 
 // 0. Kill leftover gkill_server from previous E2E runs.
 //    テストhome配下を指しているプロセスだけを対象にする (常駐している本番サーバは落とさない)
@@ -42,10 +46,24 @@ try {
 }
 fs.mkdirSync(testHome, { recursive: true })
 
+// 1.5. Prepare sample-data home (サンプルデータ起動スモーク用)。
+//      コミット済みの resources/ を gkill_server に直接触らせてはいけない
+//      (DAOは開くだけでスキーマ移行やIDF走査でDBを書き換え、リポジトリが汚れる)
+//      ので、必ずコピーへ差し替える。
+try {
+  if (fs.existsSync(sampleTestHome)) {
+    fs.rmSync(sampleTestHome, { recursive: true, force: true })
+  }
+} catch {
+  // ignore — may have locked files from previous run
+}
+fs.cpSync(sampleDataDir, sampleTestHome, { recursive: true })
+
 // 2. Allocate free ports and start gkill_server with test home
-const [gkillPort, vitePort] = await getFreePorts(2)
+const [gkillPort, vitePort, samplePort] = await getFreePorts(3)
 const gkillBaseUrl = `http://127.0.0.1:${gkillPort}`
 const viteBaseUrl = `http://127.0.0.1:${vitePort}`
+const sampleBaseUrl = `http://127.0.0.1:${samplePort}`
 
 console.log(`[E2E] Starting gkill_server on ${gkillBaseUrl} with --gkill_home_dir ${testHome}`)
 const server = spawn('gkill_server', [
@@ -95,6 +113,21 @@ function detachServerStartupWatchers() {
   if (onServerEarlyExit) { server.off('exit', onServerEarlyExit); onServerEarlyExit = null }
 }
 
+// サンプルデータ入りの2台目。--address がDB内の ADDRESS(:8888) より優先されるので
+// ポート衝突しない (gkill_options.ResolveServerAddress)
+console.log(`[E2E] Starting sample-data gkill_server on ${sampleBaseUrl} with --gkill_home_dir ${sampleTestHome}`)
+const sampleServer = spawn('gkill_server', [
+  '--gkill_home_dir', sampleTestHome,
+  '--address', `127.0.0.1:${samplePort}`,
+  '--disable_tls',
+  '--log', 'none',
+], {
+  stdio: ['ignore', 'pipe', 'pipe'],
+  detached: false,
+})
+sampleServer.stdout.on('data', (d) => process.stdout.write(`[gkill_server sample] ${d}`))
+sampleServer.stderr.on('data', (d) => process.stderr.write(`[gkill_server sample] ${d}`))
+
 let vite = null
 
 function stopServers() {
@@ -106,6 +139,10 @@ function stopServers() {
   if (server.exitCode === null) {
     console.log('[E2E] Stopping gkill_server')
     server.kill()
+  }
+  if (sampleServer.exitCode === null) {
+    console.log('[E2E] Stopping sample-data gkill_server')
+    sampleServer.kill()
   }
 }
 
@@ -143,6 +180,11 @@ try {
   detachServerStartupWatchers()
   console.log('[E2E] gkill_server is ready')
 
+  if (!await waitForServer(`${sampleBaseUrl}/`)) {
+    throw new Error('sample-data gkill_server failed to start within 30 seconds')
+  }
+  console.log('[E2E] sample-data gkill_server is ready')
+
   // 4. Start Vite dev server proxying /api to the test gkill_server.
   //    これを立てないとCRUD系のspecがskipされる。proxy先を明示することで
   //    本番の:9999に書き込んでしまう事故も防ぐ。
@@ -175,6 +217,7 @@ try {
         ...process.env,
         GKILL_E2E_BASE_URL: gkillBaseUrl,
         GKILL_E2E_VITE_URL: viteBaseUrl,
+        GKILL_E2E_SAMPLE_URL: sampleBaseUrl,
       },
     })
   } catch (e) {

@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、44 specファイル250テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、45 specファイル251テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## E2E の書き方の規約
 
@@ -74,7 +74,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 
 ## テストファイル一覧
 
-### E2E テスト（44 specファイル, 250テスト宣言）
+### E2E テスト（45 specファイル, 251テスト宣言）
 
 #### ページ表示・ナビゲーション系（14ファイル）
 
@@ -109,7 +109,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴 |
 | `src/client/__tests__/e2e/mi-re-kyou.spec.ts` | MiReKyou（既存Kyouのタスク化）: rykvのコンテキストメニュー「タスクにする」→Mi画面に出る。API面はGo側の TestHandleAddMiReKyou_* 系へ移管 |
 
-#### 認証・ユースケース・設定系（21ファイル）
+#### 認証・ユースケース・設定系（22ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -134,6 +134,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/kftl-tabs.spec.ts` | メモ帳のタブ（追加・切替・閉じる・localStorage への永続化）と、IMEで確定してから改行したときの保存マーカー。**IME は CDP の `Input.imeSetComposition` でしか再現できない**（`pressSequentially` は中間の本文を必ず観測してしまい常に緑になる） |
 | `src/client/__tests__/e2e/kftl-multi-dialog.spec.ts` | メモ帳ウィンドウを複数枚開く。タブの一覧と中身は共有シングルトン、「いま映しているタブ」だけがウィンドウごと |
 | `src/client/__tests__/e2e/dialog-autofocus.spec.ts` | ダイアログを開いたら最初のテキスト入力欄にカーソルが載ること（選び方の判定そのものは `unit/classes/dialog-autofocus.test.ts`） |
+| `src/client/__tests__/e2e/sample-data-smoke.spec.ts` | 配布サンプルデータの起動スモーク。run-e2e.mjs がサンプルデータのコピーを home にした gkill_server を別ポートで起動し（URL は `GKILL_E2E_SAMPLE_URL`）、embed 配信のフロントエンドへ README 記載の資格情報でログインして rykv に記録が出ること。ログインはレート制限を消費するので1回だけ |
 
 ### Composable ユニットテスト（59ファイル）
 
