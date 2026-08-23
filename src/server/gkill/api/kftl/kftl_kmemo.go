@@ -128,6 +128,7 @@ func (r *kftlKmemoRequest) DoRequest(ctx context.Context) error {
 	}
 	repName, repNameErr := r.Ctx.Repositories.WriteKmemoRep.GetRepName(ctx)
 	logGetRepNameFailure(ctx, "kmemo", kmemo.ID, repNameErr)
+	r.recordCreated("kmemo", kmemo.ID)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
 	logWriteThroughCacheFailure(ctx, "kmemo", kmemo.ID, r.Ctx.Repositories.WriteThroughKmemoCache(ctx, kmemo))

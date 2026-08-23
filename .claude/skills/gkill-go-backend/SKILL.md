@@ -41,6 +41,8 @@ Key packages:
 
 **`len(XxxReps) == 1` でキャッシュrepを判定してはいけない。** アダプタの append は「キャッシュrepで `XxxReps` を1個に差し替える」処理より後なので、`provides` を持つプラグインが1つ入るだけで長さが2になる。書き込み後のキャッシュ反映は構築時に控えた `GkillRepositories.CachedReps` を見る `repositories.WriteThroughXxxCache(ctx, ...)` を使うこと（54箇所）。読み取りはキャッシュrepしか見ず下層repへフォールバックしないので、反映を飛ばすと追加したタグが最大1分見えず、その間にPWAが古い応答をキャッシュし直すと**恒久的に古いまま焼き付く**。再発は `usecase/write_through_cache_test.go` の `TestNoRepsCountCacheGuard` がソース走査で落とす。経緯と却下案は [ADR-0012](../../../documents/adr/0012-write-through-cache-not-reps-count.md)。
 
+**タグ語彙の列挙は2つある。検証には「対象の生死を問わない」ほうを使う。** `GkillRepositories.GetAllTagNames` は**対象が削除済みのタグを落とす** —— 記録を消してもタグは消えない（消すと `gkill_restore_kyou` で復活したときにタグが失われる）ので、落とさないと「選んでも0件」の候補が溜まり続ける。生存判定は最新版アドレス表を引くだけで**追加のI/Oは無い**（`GetAllTags` が既に `TargetID` を持って返る）。**アドレス表に載っていない対象は落とさないこと** —— プラグインや git の記録は表に載らないので、落とすと語彙が黙って痩せる。一方「そのタグ名は実在するか」の検証（`collectMCPUnknownValueWarnings`）は `GetAllTagNamesIncludingDeletedTargets` を使う。フィルタ済みの一覧で検証すると、`include_deleted_data:true` で削除済みを開いたタグ検索に**未知のタグという誤警告**が出る。却下案（カスケード削除・SQLへの降ろし）は [ADR-0073](../../../documents/adr/0073-tag-vocabulary-drops-dead-targets.md)。
+
 ### HTTP ステータス（2026-08 導入）
 
 **エラーコード → HTTP ステータスの表が正本。** `api/message/http_status.go` の

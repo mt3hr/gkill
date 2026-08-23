@@ -94,6 +94,7 @@ func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
 	}
 	repName, repNameErr := r.Ctx.Repositories.WriteMiReKyouRep.GetRepName(ctx)
 	logGetRepNameFailure(ctx, "mirekyou", mirekyou.ID, repNameErr)
+	r.recordCreated("mirekyou", mirekyou.ID)
 	// ReKyouと同じくTargetIDInDataにリポスト対象のIDを入れる
 	// (usecase.updateMiReKyouLatestDataRepositoryAddress と揃える)
 	targetIDInData := r.targetID

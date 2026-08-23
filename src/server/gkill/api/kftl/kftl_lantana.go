@@ -52,6 +52,7 @@ func (r *kftlLantanaRequest) DoRequest(ctx context.Context) error {
 	}
 	repName, repNameErr := r.Ctx.Repositories.WriteLantanaRep.GetRepName(ctx)
 	logGetRepNameFailure(ctx, "lantana", lantana.ID, repNameErr)
+	r.recordCreated("lantana", lantana.ID)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
 	logWriteThroughCacheFailure(ctx, "lantana", lantana.ID, r.Ctx.Repositories.WriteThroughLantanaCache(ctx, lantana))
@@ -111,10 +112,12 @@ func newKFTLLantanaMoodStatementLine(lineText string, ctx *KFTLStatementLineCont
 func (l *kftlLantanaMoodStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
 	n, err := strconv.Atoi(l.lineText)
 	if err != nil {
-		return fmt.Errorf("invalid lantana mood %q: %w", l.lineText, err)
+		return newKFTLInputError("KFTL_LANTANA_INVALID_MOOD_VALUE_MESSAGE_TITLE",
+			fmt.Errorf("invalid lantana mood %q: %w", l.lineText, err))
 	}
 	if n < 0 || n > 10 {
-		return fmt.Errorf("lantana mood must be 0-10, got %d", n)
+		return newKFTLInputError("KFTL_LANTANA_OUT_OF_RANGE_MOOD_VALUE_MESSAGE_TITLE",
+			fmt.Errorf("lantana mood must be 0-10, got %d", n))
 	}
 	l.req.mood = n
 	return nil

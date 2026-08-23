@@ -235,8 +235,8 @@ export const WRITE_TOOLS = [
       "Separator lines: 、 or , → separate into a new entity; 、、 or ,, → separate + increment time by 1 second. " +
       "Example (creates 3 records: kmemo + mood + expense): " +
       "\"今日はいい天気だった\\n、\\n/mood\\n8\\n、\\n/expense\\nカフェ\\nアイスコーヒー\\n-500\\n!\" " +
-      "Important: unlike individual gkill_add_* tools, KFTL does not return created entity IDs. If you need IDs for tagging/updating, use individual gkill_add_* tools instead. " +
-      "Response fields: messages[] (server processing messages).",
+      "Response fields: messages[] (server processing messages) and created[] ({id, data_type, updated}) — one entry per record actually written, in the order they were written. Lines that write nothing (a blank kmemo, a blank task, a blank expense) produce no entry, and ending a timeis reports the existing record with updated:true rather than a new id. Use created[].id as target_id for gkill_add_tag / gkill_add_text. " +
+      "On failure the errors are reported one per bad line, and created[] still lists what was already written before the failure — KFTL is not a database transaction, so those records stay.",
     inputSchema: {
       type: "object",
       properties: {

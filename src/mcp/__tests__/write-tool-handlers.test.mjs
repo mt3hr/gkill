@@ -147,11 +147,36 @@ describe("summarizeWriteToolPayload", () => {
       .toBe("Updated mi: m1");
   });
 
-  test("gkill_submit_kftl counts messages", () => {
-    expect(summarizeWriteToolPayload("gkill_submit_kftl", { messages: [{}, {}] }))
-      .toBe("KFTL submitted: 2 messages.");
-    expect(summarizeWriteToolPayload("gkill_submit_kftl", {}))
-      .toBe("KFTL submitted: 0 messages.");
+  test("gkill_submit_kftl reports what was written, not how many messages came back", () => {
+    // 「N messages」はサーバの定型文の本数でしかなく、何が作られたかを伝えていなかった
+    expect(
+      summarizeWriteToolPayload("gkill_submit_kftl", {
+        messages: [{}],
+        created: [
+          { id: "a", data_type: "kmemo" },
+          { id: "b", data_type: "lantana" },
+        ],
+      }),
+    ).toBe("KFTL submitted: wrote 2 record(s) — kmemo, lantana.");
+  });
+
+  test("gkill_submit_kftl groups repeats and marks updates", () => {
+    // 打刻の終了は新規作成ではなく既存レコードの更新
+    expect(
+      summarizeWriteToolPayload("gkill_submit_kftl", {
+        created: [
+          { id: "a", data_type: "kmemo" },
+          { id: "b", data_type: "kmemo" },
+          { id: "c", data_type: "timeis", updated: true },
+        ],
+      }),
+    ).toBe("KFTL submitted: wrote 3 record(s) — kmemo x2, timeis (updated).");
+  });
+
+  test("gkill_submit_kftl says so when nothing was written", () => {
+    // 空行だけのテキストと、冪等キーで畳まれた再送はどちらも何も書かない
+    expect(summarizeWriteToolPayload("gkill_submit_kftl", { messages: [{}] }))
+      .toBe("KFTL submitted: nothing was written (blank lines and idempotent replays write nothing).");
   });
 
   test("gkill_delete_kyou lists the updated_* keys", () => {
