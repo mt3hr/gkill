@@ -15,7 +15,7 @@ import crypto from "node:crypto";
 
 import { GkillApiError } from "./errors.mjs";
 import { WRITE_TOOLS } from "./write-tools.mjs";
-import { ENTITY_TARGETS } from "./constants.mjs";
+import { ENTITY_TARGETS, unknownToolMessage } from "./constants.mjs";
 import {
   normalizeKmemoArgs,
   normalizeUrlogArgs,
@@ -80,6 +80,17 @@ function stripUrlogImages(urlog) {
 }
 
 // nextUpdateTime は「現在値より必ず後」になる更新時刻を返す。
+//
+// 型を取り違えたときも同じ「見つからない」になるので、id が悪いのだと誤診しやすい。
+// 実際に data_type:"urlog" で kmemo の id を消そうとすると Entity not found になる。
+function entityNotFoundMessage(id, dataType) {
+  return (
+    `Entity not found: ${id} (looked it up as data_type ${JSON.stringify(dataType)}; ` +
+    `the lookup is per-type, so a wrong data_type looks exactly like a wrong id. ` +
+    `Confirm the type with gkill_get_kyous, then retry.)`
+  );
+}
+
 //
 // **UPDATE_TIME は1秒解像度で保存される** (sqlite3impl.TimeLayout)。
 // 履歴の取得は ID + UpdateTime で dedup し、検索の最新版判定は
@@ -369,9 +380,16 @@ export async function handleWriteToolCall(ctx, name, args) {
         );
         const histories = getResponse[target.historiesKey];
         if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(`Entity not found: ${normalized.id}`);
+          throw new GkillApiError(entityNotFoundMessage(normalized.id, normalized.data_type));
         }
         const current = histories[0];
+        if (current.is_deleted) {
+          // 無意味な版を積まない。restore 側の "already active" と対称に、
+          // 「消えたのか、元から無かったのか、既に消えていたのか」を呼び出し側が区別できるようにする
+          throw new GkillApiError(
+            `Entity is already deleted: ${normalized.id} (nothing changed; read it with gkill_get_kyou_history or undo with gkill_restore_kyou)`,
+          );
+        }
         // 2. Set is_deleted + update metadata
         current.is_deleted = true;
         current.update_time = nextUpdateTime(current);
@@ -402,7 +420,7 @@ export async function handleWriteToolCall(ctx, name, args) {
         );
         const histories = getResponse[target.historiesKey];
         if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(`Entity not found: ${normalized.id}`);
+          throw new GkillApiError(entityNotFoundMessage(normalized.id, normalized.data_type));
         }
         const current = histories[0];
         if (!current.is_deleted) {
@@ -658,7 +676,7 @@ export async function handleWriteToolCall(ctx, name, args) {
         return { updated_text: current, updated_kyou: response.updated_kyou || null };
       }
       default:
-        throw new GkillApiError(`Unknown tool: ${name}`);
+        throw new GkillApiError(unknownToolMessage(name));
   }
 }
 
