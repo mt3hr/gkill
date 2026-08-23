@@ -275,18 +275,18 @@ export const WRITE_TOOLS = [
     description:
       "Update an existing text memo (kmemo) in gkill using patch semantics — only specify the fields you want to change; unspecified fields are preserved as-is. " +
       "The MCP server internally fetches the current entity by ID, merges your changes, updates metadata (update_time, update_app, update_device, update_user), and sends the update to the backend. " +
-      "To obtain the entity ID: use the id from a previous gkill_add_kmemo response (added_kmemo.id), or search with gkill_get_kyous (include_id:true) to find existing entries and their IDs. " +
+      "To obtain the entity ID: use the id from a previous gkill_add_kmemo response (added_kmemo.id), or search with gkill_get_kyous to find existing entries and their IDs. " +
       "Response fields: updated_kmemo (full Kmemo entity after update, with id, rep_name, content, related_time, create_time, update_time, etc.), updated_kyou (parent Kyou wrapper). " +
-      "Typical workflow: gkill_get_kyous({include_id:true, query:{words:[\"keyword\"]}}) → find the entry → gkill_update_kmemo({id: found_id, content: \"updated text\"}).",
+      "Typical workflow: gkill_get_kyous({query:{words:[\"keyword\"]}}) → find the entry → gkill_update_kmemo({id: found_id, content: \"updated text\"}).",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "ID of the kmemo to update. Obtain from gkill_add_kmemo response (added_kmemo.id) or gkill_get_kyous with include_id:true." },
+        id: { type: "string", description: "ID of the kmemo to update. Obtain from gkill_add_kmemo response (added_kmemo.id) or gkill_get_kyous." },
         content: { type: "string", description: "New memo text content." },
         related_time: { type: "string", description: `New related time (when the memo relates to). ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
-      required: ["id", "content"],
+      required: ["id"],
       additionalProperties: false,
     },
   },
@@ -295,19 +295,19 @@ export const WRITE_TOOLS = [
     description:
       "Update an existing bookmark/URL record (urlog) in gkill using patch semantics — only specify the fields you want to change; unspecified fields are preserved as-is. " +
       "The MCP server internally fetches the current entity, merges changes, and sends the update. " +
-      "To obtain the entity ID: use the id from a previous gkill_add_urlog response, or search with gkill_get_kyous (include_id:true). " +
+      "To obtain the entity ID: use the id from a previous gkill_add_urlog response, or search with gkill_get_kyous. " +
       "Response fields: updated_urlog (full URLog entity after update, with id, url, title, rep_name, related_time, etc.), updated_kyou (parent Kyou wrapper). " +
       "Use cases: correct a URL typo, add/change a title for a previously untitled bookmark, change related_time.",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "ID of the urlog to update. Obtain from gkill_add_urlog response or gkill_get_kyous with include_id:true." },
+        id: { type: "string", description: "ID of the urlog to update. Obtain from gkill_add_urlog response or gkill_get_kyous." },
         url: { type: "string", description: "New URL." },
         title: { type: "string", description: "New human-readable title. Omit to keep unchanged." },
         related_time: { type: "string", description: `New related time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
-      required: ["id", "url"],
+      required: ["id"],
       additionalProperties: false,
     },
   },
@@ -316,20 +316,20 @@ export const WRITE_TOOLS = [
     description:
       "Update an existing expense/income record (nlog) in gkill using patch semantics — only specify the fields you want to change; unspecified fields are preserved as-is. " +
       "The MCP server internally fetches the current entity, merges changes, and sends the update. " +
-      "To obtain the entity ID: use the id from a previous gkill_add_nlog response, or search with gkill_get_kyous (include_id:true). " +
+      "To obtain the entity ID: use the id from a previous gkill_add_nlog response, or search with gkill_get_kyous. " +
       "Response fields: updated_nlog (full Nlog entity after update, with id, title, shop, amount, rep_name, related_time, etc.), updated_kyou (parent Kyou wrapper). " +
       "Use cases: correct an expense amount, change the shop name, update the description.",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "ID of the nlog to update. Obtain from gkill_add_nlog response or gkill_get_kyous with include_id:true." },
+        id: { type: "string", description: "ID of the nlog to update. Obtain from gkill_add_nlog response or gkill_get_kyous." },
         title: { type: "string", description: "New expense/income description." },
         amount: { type: "integer", description: "New monetary amount (integer only, e.g. -1500 for expense, 200 for income). Must be a valid integer." },
         shop: { type: "string", description: "New shop/store name. Omit to keep unchanged." },
         related_time: { type: "string", description: `New related time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
-      required: ["id", "title", "amount"],
+      required: ["id"],
       additionalProperties: false,
     },
   },
@@ -338,18 +338,18 @@ export const WRITE_TOOLS = [
     description:
       "Update an existing mood record (lantana) in gkill using patch semantics — only specify the fields you want to change; unspecified fields are preserved as-is. " +
       "The MCP server internally fetches the current entity, merges changes, and sends the update. " +
-      "To obtain the entity ID: use the id from a previous gkill_add_lantana response, or search with gkill_get_kyous (include_id:true). " +
+      "To obtain the entity ID: use the id from a previous gkill_add_lantana response, or search with gkill_get_kyous. " +
       "Response fields: updated_lantana (full Lantana entity after update, with id, mood, rep_name, related_time, etc.), updated_kyou (parent Kyou wrapper). " +
       "Use cases: correct a mood value that was recorded incorrectly, adjust the related_time.",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "ID of the lantana to update. Obtain from gkill_add_lantana response or gkill_get_kyous with include_id:true." },
+        id: { type: "string", description: "ID of the lantana to update. Obtain from gkill_add_lantana response or gkill_get_kyous." },
         mood: { type: "integer", description: "New mood level: 0 (lowest) to 10 (highest). Must be an integer.", minimum: 0, maximum: 10 },
         related_time: { type: "string", description: `New related time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
-      required: ["id", "mood"],
+      required: ["id"],
       additionalProperties: false,
     },
   },
@@ -358,20 +358,20 @@ export const WRITE_TOOLS = [
     description:
       "Update an existing time interval record (timeis) in gkill using patch semantics — only specify the fields you want to change; unspecified fields are preserved as-is. " +
       "The MCP server internally fetches the current entity, merges changes, and sends the update. " +
-      "To obtain the entity ID: use the id from a previous gkill_add_timeis response, or search with gkill_get_kyous (include_id:true). " +
+      "To obtain the entity ID: use the id from a previous gkill_add_timeis response, or search with gkill_get_kyous. " +
       "Response fields: updated_timeis (full TimeIs entity after update, with id, title, start_time, end_time, rep_name, etc.), updated_kyou (parent Kyou wrapper). " +
       "Common use case: close an open-ended timeis by setting end_time (e.g., gkill_update_timeis({id, end_time: \"2026-03-31T18:00:00+09:00\"})). " +
       "Also useful for: correcting start/end times, renaming an activity.",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "ID of the timeis to update. Obtain from gkill_add_timeis response or gkill_get_kyous with include_id:true." },
+        id: { type: "string", description: "ID of the timeis to update. Obtain from gkill_add_timeis response or gkill_get_kyous." },
         title: { type: "string", description: "New activity title/label." },
         start_time: { type: "string", description: `New start time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
         end_time: { type: "string", description: `New end time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Set this to close an open-ended (ongoing) timeis. Omit to keep unchanged.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
-      required: ["id", "title"],
+      required: ["id"],
       additionalProperties: false,
     },
   },
@@ -380,14 +380,14 @@ export const WRITE_TOOLS = [
     description:
       "Update an existing task (mi) in gkill using patch semantics — only specify the fields you want to change; unspecified fields are preserved as-is. " +
       "The MCP server internally fetches the current entity, merges changes, and sends the update. " +
-      "To obtain the entity ID: use the id from a previous gkill_add_mi response, or search with gkill_get_kyous (include_id:true, query:{for_mi:true, include_create_mi:true}). " +
+      "To obtain the entity ID: use the id from a previous gkill_add_mi response, or search with gkill_get_kyous (query:{for_mi:true, include_create_mi:true}). " +
       "Response fields: updated_mi (full Mi entity after update, with id, title, is_checked, board_name, limit_time, estimate_start_time, estimate_end_time, rep_name, etc.), updated_kyou (parent Kyou wrapper). " +
       "Common use cases: mark a task as completed (is_checked:true), move to a different board (board_name), update deadline (limit_time), rename a task. " +
-      "Typical workflow: gkill_get_kyous({include_id:true, query:{for_mi:true, mi_check_state:\"uncheck\", include_create_mi:true}}) → find the task → gkill_update_mi({id, is_checked:true}).",
+      "Typical workflow: gkill_get_kyous({query:{for_mi:true, mi_check_state:\"uncheck\", include_create_mi:true}}) → find the task → gkill_update_mi({id, is_checked:true}).",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "ID of the mi to update. Obtain from gkill_add_mi response or gkill_get_kyous with include_id:true." },
+        id: { type: "string", description: "ID of the mi to update. Obtain from gkill_add_mi response or gkill_get_kyous." },
         title: { type: "string", description: "New task title." },
         board_name: { type: "string", description: "New board name to move the task to. Any string accepted — non-existent names create new boards. Omit to keep the current board unchanged." },
         is_checked: { type: "boolean", description: "Set to true to mark as completed, false to reopen. Omit to keep unchanged." },
@@ -396,7 +396,7 @@ export const WRITE_TOOLS = [
         estimate_end_time: { type: "string", description: `New estimated end time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
-      required: ["id", "title"],
+      required: ["id"],
       additionalProperties: false,
     },
   },
@@ -405,19 +405,19 @@ export const WRITE_TOOLS = [
     description:
       "Update an existing numeric record (kc) in gkill using patch semantics — only specify the fields you want to change; unspecified fields are preserved as-is. " +
       "The MCP server internally fetches the current entity, merges changes, and sends the update. " +
-      "To obtain the entity ID: use the id from a previous gkill_add_kc response, or search with gkill_get_kyous (include_id:true). " +
+      "To obtain the entity ID: use the id from a previous gkill_add_kc response, or search with gkill_get_kyous. " +
       "Response fields: updated_kc (full KC entity after update, with id, title, num_value, rep_name, related_time, etc.), updated_kyou (parent Kyou wrapper). " +
       "Use cases: correct a measurement value, rename the metric title, adjust related_time.",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "ID of the kc to update. Obtain from gkill_add_kc response or gkill_get_kyous with include_id:true." },
+        id: { type: "string", description: "ID of the kc to update. Obtain from gkill_add_kc response or gkill_get_kyous." },
         title: { type: "string", description: "New measurement title (e.g., \"steps\", \"weight\")." },
         num_value: { type: "number", description: "New numeric value. Integer or decimal (e.g., 10000, 72.5)." },
         related_time: { type: "string", description: `New related time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
-      required: ["id", "title", "num_value"],
+      required: ["id"],
       additionalProperties: false,
     },
   },
@@ -436,7 +436,7 @@ export const WRITE_TOOLS = [
         tag: { type: "string", description: "New tag name string." },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
-      required: ["id", "tag"],
+      required: ["id"],
       additionalProperties: false,
     },
   },
@@ -455,7 +455,7 @@ export const WRITE_TOOLS = [
         text: { type: "string", description: "New text annotation content. Supports multi-line." },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
-      required: ["id", "text"],
+      required: ["id"],
       additionalProperties: false,
     },
   },

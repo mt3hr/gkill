@@ -304,3 +304,17 @@ describe("assertKnownKeys", () => {
     }
   });
 });
+
+describe("assertKnownKeys — default field name", () => {
+  test("unknown keys are reported under arguments when no field is given", () => {
+    // 第3引数を渡さない呼び出しが write 側に20箇所あり、
+    // エラーが `Invalid argument 'undefined.contnet'` になっていた
+    try {
+      assertKnownKeys({ content: "x", contnet: "y" }, new Set(["content"]));
+      throw new Error("should have thrown");
+    } catch (e) {
+      expect(e.detail?.field).toBe("arguments.contnet");
+      expect(e.message).not.toContain("undefined");
+    }
+  });
+});
