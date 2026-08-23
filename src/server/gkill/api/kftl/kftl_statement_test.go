@@ -1458,3 +1458,50 @@ func TestCollectKFTLInputErrors_ReturnsNilForServerFailure(t *testing.T) {
 		t.Errorf("サーバ障害なのに入力エラーとして拾った: %v", collected)
 	}
 }
+
+func TestCollectKFTLInputErrors_SeesThroughASingleWrap(t *testing.T) {
+	// **本番で実際に取りこぼした形。** ハンドラは文脈を足すために
+	// fmt.Errorf("...: %w", err) で束ねたエラーをもう一度包む。
+	// 単段の Unwrap を辿らないと errors.As が最初の1件しか拾わず、
+	// 「全行ぶん集める」が黙って1件に戻る（単体テストは包む前の値を渡していたので通っていた）。
+	joined := errors.Join(
+		&KFTLInputError{LineNumber: 2, Cause: errors.New("out of range")},
+		&KFTLInputError{LineNumber: 5, Cause: errors.New("not a number")},
+	)
+	wrapped := fmt.Errorf("error at submit kftl text user id = %s device = %s: %w", "u", "d", joined)
+
+	collected := CollectKFTLInputErrors(wrapped)
+	if len(collected) != 2 {
+		t.Fatalf("包んだあとの件数 = %d, want 2", len(collected))
+	}
+	if collected[0].LineNumber != 2 || collected[1].LineNumber != 5 {
+		t.Errorf("行番号 = %d, %d, want 2, 5", collected[0].LineNumber, collected[1].LineNumber)
+	}
+}
+
+func TestCollectKFTLInputErrors_DoesNotDoubleCountNestedInputErrors(t *testing.T) {
+	// 入力エラーが入力エラーを包んでいるとき、二重に数えない
+	inner := &KFTLInputError{LineNumber: 3, Cause: errors.New("inner")}
+	outer := &KFTLInputError{LineNumber: 3, Cause: inner}
+	if collected := CollectKFTLInputErrors(outer); len(collected) != 1 {
+		t.Errorf("件数 = %d, want 1", len(collected))
+	}
+}
+
+func TestGenerateAndExecuteRequests_ReportsEveryBadLineThroughTheHandlerPath(t *testing.T) {
+	// 実行 → 包む → 集める、という本番と同じ順で辿れること
+	stmt := &KFTLStatement{StatementText: "/mood\n99\n、\n/mood\nabc"}
+	_, err := stmt.GenerateAndExecuteRequests(
+		context.Background(),
+		&reps.GkillRepositories{},
+		&user_config.ApplicationConfig{},
+		"test-user", "test-device", "test-app", "ja",
+	)
+	if err == nil {
+		t.Fatal("2行とも不正なのにエラーにならなかった")
+	}
+	wrapped := fmt.Errorf("error at submit kftl text user id = %s device = %s: %w", "u", "d", err)
+	if collected := CollectKFTLInputErrors(wrapped); len(collected) != 2 {
+		t.Fatalf("ハンドラと同じ包み方で件数 = %d, want 2", len(collected))
+	}
+}
