@@ -954,15 +954,15 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 			}
 		}
 
-		hasPeriodStart = query.PeriodOfTimeStartTimeSecond != nil
-		if hasPeriodStart {
-			start := time.Unix(*query.PeriodOfTimeStartTimeSecond, 0).In(time.Local)
-			periodStartSecond = int64(start.Hour()*3600 + start.Minute()*60 + start.Second())
+		// 秒の解釈（epoch / 秒オブデイの二重解釈）は find パッケージのアクセサが正本:
+		// documents/adr/0009-period-of-time-second-of-day.md
+		if sec, ok := query.PeriodStartSecondOfDay(); ok {
+			hasPeriodStart = true
+			periodStartSecond = int64(sec)
 		}
-		hasPeriodEnd = query.PeriodOfTimeEndTimeSecond != nil
-		if hasPeriodEnd {
-			end := time.Unix(*query.PeriodOfTimeEndTimeSecond, 0).In(time.Local)
-			periodEndSecond = int64(end.Hour()*3600 + end.Minute()*60 + end.Second())
+		if sec, ok := query.PeriodEndSecondOfDay(); ok {
+			hasPeriodEnd = true
+			periodEndSecond = int64(sec)
 		}
 	}
 
