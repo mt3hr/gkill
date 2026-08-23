@@ -160,6 +160,7 @@ var errorCodeHTTPStatus = map[string]int{
 	AccountInvalidCommitTxRequestDataError:                          http.StatusBadRequest, // ERR000319
 	AccountInvalidDiscardTxRequestDataError:                         http.StatusBadRequest, // ERR000333
 	InvalidSubmitKFTLTextRequestDataError:                           http.StatusBadRequest, // ERR000350
+	SubmitKFTLTextInvalidInputError:                                 http.StatusBadRequest, // ERR000416
 	InvalidGetKyousMCPRequestDataError:                              http.StatusBadRequest, // ERR000352
 	InvalidUpdateCacheRequestDataError:                              http.StatusBadRequest, // ERR000355
 	InvalidURLogBookmarkletRequestDataError:                         http.StatusBadRequest, // ERR000372

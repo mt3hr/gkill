@@ -425,4 +425,11 @@ const (
 	// InternalServerPanicError は recoverMiddleware が panic を回収したときのものです。
 	// panic 時はリクエストを読み直せないので、これだけは i18n を通さず固定文言で返します。
 	InternalServerPanicError = "ERR000415"
+
+	// SubmitKFTLTextInvalidInputError はメモ帳のテキスト自体が正しくないときのものです。
+	// SubmitKFTLTextError(ERR000351) がサーバ側の失敗で 500 なのに対し、これは
+	// 利用者の書き間違い（気分値が範囲外、終了する打刻が無い等）なので 400 です。
+	// 2026-08-24 まで両者が同じ 500 に畳まれており、ステータスを見る層からは
+	// 打ち間違いとサーバ障害が区別できませんでした。行ごとに1件ずつ立てます。
+	SubmitKFTLTextInvalidInputError = "ERR000416"
 )

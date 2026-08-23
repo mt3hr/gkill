@@ -226,3 +226,99 @@ func TestGkillRepositoriesFindTexts_EmptyIDsIsExplicitZeroHit(t *testing.T) {
 		t.Errorf("IDs=[] は明示的な0件指定なので補完してはいけない: got %d件", len(emptyIDsResults))
 	}
 }
+
+// ---------------------------------------------------------------------------
+// 2026-08-24 の再監査: 記録を削除してもタグは語彙に残り続け、
+// 検索候補に0件しか返さない項目が溜まっていた。
+//
+// フィルタは GkillRepositories（rep の集約）の層にあるので、
+// キャッシュrepか素のrepかでは挙動が変わらない。判定に使う最新版アドレス表は
+// UpdateCache の Phase2 が IS_DELETED を行から読み直して埋めるので、
+// キャッシュONでも同じ値になる。
+// ---------------------------------------------------------------------------
+
+// registerLatestAddressWithDeleted は削除フラグつきで最新版アドレスを1件登録する。
+func registerLatestAddressWithDeleted(t *testing.T, repositories *GkillRepositories, targetID string, isDeleted bool) {
+	t.Helper()
+	_, err := repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(context.Background(), gkill_cache.LatestDataRepositoryAddress{
+		IsDeleted:                              isDeleted,
+		TargetID:                               targetID,
+		LatestDataRepositoryName:               "tag",
+		DataUpdateTime:                         testTime(),
+		LatestDataRepositoryAddressUpdatedTime: testTime(),
+	})
+	if err != nil {
+		t.Fatalf("AddOrUpdateLatestDataRepositoryAddress failed: %v", err)
+	}
+}
+
+func TestGkillRepositoriesGetAllTagNames_DropsTagsWhoseTargetIsDeleted(t *testing.T) {
+	ctx := context.Background()
+	repositories := newIDsSemanticsRepositories(t)
+
+	liveTag := makeTag("tag-live-001", "target-live-001", "生きているタグ")
+	deadTag := makeTag("tag-dead-001", "target-dead-001", "消した記録のタグ")
+	for _, tag := range []Tag{liveTag, deadTag} {
+		if err := repositories.TagReps[0].AddTagInfo(ctx, tag); err != nil {
+			t.Fatalf("AddTagInfo failed: %v", err)
+		}
+	}
+	registerLatestAddressWithDeleted(t, repositories, liveTag.TargetID, false)
+	registerLatestAddressWithDeleted(t, repositories, deadTag.TargetID, true)
+
+	names, err := repositories.GetAllTagNames(ctx)
+	if err != nil {
+		t.Fatalf("GetAllTagNames failed: %v", err)
+	}
+	if len(names) != 1 || names[0] != "生きているタグ" {
+		t.Errorf("対象が削除済みのタグは語彙から落ちるはず: got %v", names)
+	}
+}
+
+func TestGkillRepositoriesGetAllTagNames_KeepsTagsWhoseTargetIsNotInTheAddressTable(t *testing.T) {
+	ctx := context.Background()
+	repositories := newIDsSemanticsRepositories(t)
+
+	// プラグインや git の記録は最新版アドレス表に載らない。
+	// 載っていないことを「削除済み」と読むと語彙が黙って痩せる
+	orphanTag := makeTag("tag-orphan-001", "target-not-in-address-table", "表に載らない対象のタグ")
+	if err := repositories.TagReps[0].AddTagInfo(ctx, orphanTag); err != nil {
+		t.Fatalf("AddTagInfo failed: %v", err)
+	}
+	// 表を空にしないため、無関係の生存レコードを1件だけ入れておく
+	registerLatestAddressWithDeleted(t, repositories, "target-unrelated-001", false)
+
+	names, err := repositories.GetAllTagNames(ctx)
+	if err != nil {
+		t.Fatalf("GetAllTagNames failed: %v", err)
+	}
+	if len(names) != 1 || names[0] != "表に載らない対象のタグ" {
+		t.Errorf("アドレス表に載っていない対象のタグは残すはず: got %v", names)
+	}
+}
+
+func TestGkillRepositoriesGetAllTagNamesIncludingDeletedTargets_KeepsEverything(t *testing.T) {
+	ctx := context.Background()
+	repositories := newIDsSemanticsRepositories(t)
+
+	// 「そのタグ名は実在するか」の検証はこちらを使う。
+	// GetAllTagNames で検証すると、include_deleted_data で削除済みを開いた
+	// タグ検索に「未知のタグ」という誤った警告が出る
+	liveTag := makeTag("tag-live-002", "target-live-002", "生きているタグ")
+	deadTag := makeTag("tag-dead-002", "target-dead-002", "消した記録のタグ")
+	for _, tag := range []Tag{liveTag, deadTag} {
+		if err := repositories.TagReps[0].AddTagInfo(ctx, tag); err != nil {
+			t.Fatalf("AddTagInfo failed: %v", err)
+		}
+	}
+	registerLatestAddressWithDeleted(t, repositories, liveTag.TargetID, false)
+	registerLatestAddressWithDeleted(t, repositories, deadTag.TargetID, true)
+
+	names, err := repositories.GetAllTagNamesIncludingDeletedTargets(ctx)
+	if err != nil {
+		t.Fatalf("GetAllTagNamesIncludingDeletedTargets failed: %v", err)
+	}
+	if len(names) != 2 {
+		t.Errorf("検証用の一覧は対象の生死を問わず全部返すはず: got %v", names)
+	}
+}

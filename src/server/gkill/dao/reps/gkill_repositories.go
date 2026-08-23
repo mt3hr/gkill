@@ -1515,7 +1515,55 @@ loop:
 	return tagHistoriesList, nil
 }
 
+// GetAllTagNames は「生存している対象に付いているタグ」の名前一覧を返します。
+//
+// 記録を削除してもタグ自体は削除されません（追記型で、復活したときにタグが
+// 失われないようにするため）。そのため素直に列挙すると、対象がもう見えない
+// タグが語彙に残り続け、検索候補に0件しか返さない項目が溜まっていきます
+// （2026-08-24 の再監査で実測。削除は日常操作なので、使うほど汚れる）。
+// カスケード削除は復活を壊すので、**列挙する側で落とします**。
+//
+// 生存判定には最新版アドレス表を使います。タグ行は対象KyouのIDを TargetID に持ち、
+// Kyou 行はそのIDをキーに IsDeleted を持っているので、**追加の問い合わせは要りません**
+// （GetAllTags は今も内部で呼んでおり TargetID は取得済み）。
+// アドレス表に載っていない対象（プラグイン・git など）は落としません
+// ―― 落とすと語彙が黙って痩せます。
+//
+// 「そのタグ名が存在するか」の検証には対象の生死を問わない一覧が要るので、
+// そちらは GetAllTagNamesIncludingDeletedTargets を使ってください。
 func (g *GkillRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
+	tags, err := g.TagReps.GetAllTags(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error at get all tags: %w", err)
+	}
+	if err := g.EnsureLatestDataRepositoryAddresses(ctx); err != nil {
+		return nil, fmt.Errorf("error at ensure latest data repository addresses: %w", err)
+	}
+	reader, release := g.BeginLatestDataRepositoryAddressRead()
+	defer release()
+
+	tagNamesMap := make(map[string]struct{}, len(tags))
+	for _, tag := range tags {
+		if addr, exist := reader.Get(tag.TargetID); exist && addr.IsDeleted {
+			continue
+		}
+		tagNamesMap[tag.Tag] = struct{}{}
+	}
+	tagNames := make([]string, 0, len(tagNamesMap))
+	for tagName := range tagNamesMap {
+		tagNames = append(tagNames, tagName)
+	}
+	// map の反復順は不定なので並べる（呼び出し側が候補一覧として出す）
+	slices.Sort(tagNames)
+	return tagNames, nil
+}
+
+// GetAllTagNamesIncludingDeletedTargets は対象が削除済みのタグも含めた名前一覧を返します。
+//
+// 「そのタグ名は実在するか」の検証専用です。GetAllTagNames を検証に使うと、
+// query.include_deleted_data で削除済みを開いてタグ検索したときに
+// 「未知のタグ」という誤った警告が出ます。
+func (g *GkillRepositories) GetAllTagNamesIncludingDeletedTargets(ctx context.Context) ([]string, error) {
 	return g.TagReps.GetAllTagNames(ctx)
 }
 

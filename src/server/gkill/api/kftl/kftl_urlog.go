@@ -58,6 +58,7 @@ func (r *kftlURLogRequest) DoRequest(ctx context.Context) error {
 	}
 	repName, repNameErr := r.Ctx.Repositories.WriteURLogRep.GetRepName(ctx)
 	logGetRepNameFailure(ctx, "urlog", urlog.ID, repNameErr)
+	r.recordCreated("urlog", urlog.ID)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
 	logWriteThroughCacheFailure(ctx, "urlog", urlog.ID, r.Ctx.Repositories.WriteThroughURLogCache(ctx, urlog))

@@ -27,9 +27,26 @@ type KFTLRequest interface {
 	GetCurrentTextID() *string
 	SetCurrentTextID(textID *string)
 	GetContext() *KFTLStatementLineContext
+	// GetCreatedRecords は DoRequest が実際に書いたものを返す。
+	// 実装は KFTLRequestBase に1本だけあり、全具象がそれを埋め込んでいる。
+	GetCreatedRecords() []KFTLCreatedRecord
 }
 
 // KFTLRequestBase is the base struct embedded by all concrete request types.
+// KFTLCreatedRecord は KFTL が実際に書いた1件。
+//
+// KFTL は1つのテキストから複数のKyouを作るのに、応答は「記録しました」の1文だけで、
+// 件数も種別もIDも返していなかった（2026-08-24 の再監査）。IDそのものは
+// リクエストIDと同じ値で最初から手元にあったが、**本文が空の kmemo / Mi / Nlog は
+// 何も書かずに成功し、打刻の終了は既存レコードの更新**なので、リクエストを
+// 事前に並べるだけでは「作られたもの」にならない。書いた側が控える。
+type KFTLCreatedRecord struct {
+	ID       string
+	DataType string
+	// Updated は新規作成ではなく既存レコードの更新であることを表す（打刻の終了）。
+	Updated bool
+}
+
 // Mirrors: src/classes/kftl/kftl-request.ts
 type KFTLRequestBase struct {
 	RequestID     string
@@ -39,7 +56,23 @@ type KFTLRequestBase struct {
 	relatedTime   *time.Time // nil means use addSecond offset
 	Ctx           *KFTLStatementLineContext
 	CreateTime    time.Time
+
+	// created は DoRequest が実際に書いたもの。recordCreated / recordUpdated だけが積む。
+	created []KFTLCreatedRecord
 }
+
+// recordCreated は新規作成した1件を控える。**書き込みが成功した直後にだけ呼ぶこと。**
+func (b *KFTLRequestBase) recordCreated(dataType, id string) {
+	b.created = append(b.created, KFTLCreatedRecord{ID: id, DataType: dataType})
+}
+
+// recordUpdated は既存レコードを更新した1件を控える（打刻の終了）。
+func (b *KFTLRequestBase) recordUpdated(dataType, id string) {
+	b.created = append(b.created, KFTLCreatedRecord{ID: id, DataType: dataType, Updated: true})
+}
+
+// GetCreatedRecords は DoRequest が実際に書いたものを返す。
+func (b *KFTLRequestBase) GetCreatedRecords() []KFTLCreatedRecord { return b.created }
 
 func (b *KFTLRequestBase) GetRequestID() string                  { return b.RequestID }
 func (b *KFTLRequestBase) GetTags() []string                     { return b.Tags }

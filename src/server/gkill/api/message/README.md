@@ -11,7 +11,7 @@ gkill API のエラーコードとメッセージコードの定数定義、お�
 |---------|------|
 | `gkill_error.go` | `GkillError` 構造体 — `ErrorCode` + `ErrorMessage` |
 | `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` |
-| `error_codes.go` | エラーコード定数（411 定数: `ERR000001` 〜 `ERR000415`、`ERR000243` は欠番） |
+| `error_codes.go` | エラーコード定数（412 定数: `ERR000001` 〜 `ERR000416`、`ERR000243` は欠番） |
 | `message_codes.go` | メッセージコード定数（89 定数: `MSG000001` 〜 `MSG000089`） |
 | `message_test.go` | コード形式・空文字チェックのテスト |
 
@@ -29,7 +29,7 @@ type GkillMessage struct {
 }
 ```
 
-## エラーコード体系（411 コード）
+## エラーコード体系（412 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|
@@ -42,6 +42,7 @@ type GkillMessage struct {
 | `ERR000410` | 検索そのものの失敗（repのSQLエラーなど、個別のGkillErrorが立たない失敗の受け皿） |
 | `ERR000411`, `ERR000412` | MCP向けrep一覧（get_rep_infos_mcp）のリクエスト/レスポンス不正 |
 | `ERR000413` 〜 `ERR000415` | 操作対象アカウント不在（404）、ローカル限定アクセス拒否（403）、panic回収（500） |
+| `ERR000416` | メモ帳（KFTL）のテキスト自体が正しくない（400）。行ごとに1件ずつ立てる。サーバ側の失敗は `ERR000351`（500）のまま |
 
 `ERR9000xx` 帯はフロントエンドだけで採番するコードで、Go 側の `error_codes.go` には存在しない（定義元は `src/client/classes/api/message/gkill_error.ts`、現在98定数）。番号が衝突しないよう帯を分けてあるので、Go 側でこの帯を使ってはならない。
 
