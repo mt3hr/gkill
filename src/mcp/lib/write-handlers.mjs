@@ -63,6 +63,21 @@ async function resolveDefaultBoardName(ctx, localeName) {
   return "Inbox";
 }
 
+// stripUrlogImages は URLog の応答から画像の base64 を落とす。
+//
+// サーバは登録時に対象URLを取得して favicon とサムネイルを埋める。
+// 保存されること自体は正しいが、応答に載せると1件あたり 1.5〜2.7KB の base64 が
+// MCP クライアントのコンテキストを食う（3件登録しただけで約6KB）。
+// 読み返し側 (gkill_get_kyous の urlog payload) には元から載っていないので、
+// ここで落としても情報は失われない。
+function stripUrlogImages(urlog) {
+  if (!urlog) {
+    return null;
+  }
+  const { favicon_image: _favicon, thumbnail_image: _thumbnail, ...rest } = urlog;
+  return rest;
+}
+
 const WRITE_TOOL_NAMES = new Set(WRITE_TOOLS.map((tool) => tool.name));
 
 // isWriteToolName は name が書き込みツールかを返す。
@@ -122,7 +137,10 @@ export async function handleWriteToolCall(ctx, name, args) {
           { urlog, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { added_urlog: response.added_urlog || null, added_kyou: response.added_kyou || null };
+        return {
+          added_urlog: stripUrlogImages(response.added_urlog),
+          added_kyou: response.added_kyou || null,
+        };
       }
 
       case "gkill_add_nlog": {
@@ -264,6 +282,9 @@ export async function handleWriteToolCall(ctx, name, args) {
           rep_name: "",
           target_id: normalized.target_id,
           tag: normalized.tag,
+          // 送らないと Go のゼロ値 (0001-01-01) がそのまま保存され、
+          // 応答からも「いつの注記か」が読めなくなる
+          related_time: now,
           data_type: "tag",
           create_time: now, create_app: ctx.appName,
           create_device: WRITE_DEVICE, create_user: ctx.userId,
@@ -276,7 +297,8 @@ export async function handleWriteToolCall(ctx, name, args) {
           { tag, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { added_tag: response.added_tag || null, added_kyou: response.added_kyou || null };
+        // AddTagResponse に added_kyou は無い（常に null が返るだけだった）
+        return { added_tag: response.added_tag || null };
       }
 
       case "gkill_add_text": {
@@ -287,6 +309,8 @@ export async function handleWriteToolCall(ctx, name, args) {
           rep_name: "",
           target_id: normalized.target_id,
           text: normalized.text,
+          // 送らないと Go のゼロ値 (0001-01-01) がそのまま保存される
+          related_time: now,
           data_type: "text",
           create_time: now, create_app: ctx.appName,
           create_device: WRITE_DEVICE, create_user: ctx.userId,
@@ -299,7 +323,8 @@ export async function handleWriteToolCall(ctx, name, args) {
           { text, want_response_kyou: true, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { added_text: response.added_text || null, added_kyou: response.added_kyou || null };
+        // AddTextResponse に added_kyou は無い（常に null が返るだけだった）
+        return { added_text: response.added_text || null };
       }
 
       case "gkill_submit_kftl": {
