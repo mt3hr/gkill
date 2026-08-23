@@ -146,15 +146,22 @@ func TestHandleGetRepInfosMCPListsAttachedDataReps(t *testing.T) {
 		t.Errorf("タグの格納先が出ていない: %+v", infoResp.AttachedDataReps)
 	}
 
-	// **rep_infos と混ざっていないこと。** 混ぜると呼び出し側が query.reps へ渡し、
-	// Kyou の rep_name と一致しないので静かに0件になる
-	kyouRepNames := map[string]bool{}
-	for _, info := range infoResp.RepInfos {
-		kyouRepNames[info.RepName] = true
-	}
+	// **別々のフィールドで返すこと。** 同じ配列へ混ぜると、呼び出し側が
+	// 付随データのrep名を query.reps へ渡し、Kyou の rep_name と一致せず静かに0件になる。
+	//
+	// 名前が両方に出ること自体は正当なので禁止しない —— provides を持つプラグインは
+	// Kyou（kc など）と付随データ（tag など）の両方を供給するので、同じ rep 名が
+	// どちらの一覧にも載る（2026-08-24 のデプロイ後に本番で実測）。その rep は
+	// 本当に Kyou rep でもあるので query.reps へ渡しても正しく効く。
+	// 守るべきなのは「配列が別で、それぞれの区別が付くこと」だけ。
 	for _, attached := range infoResp.AttachedDataReps {
-		if kyouRepNames[attached.RepName] {
-			t.Errorf("付随データのrep %q が rep_infos にも出ている（query.reps へ渡されて0件になる）", attached.RepName)
+		if attached.DataKind == "" {
+			t.Errorf("付随データのrep %q に data_kind が無い（rep_infos と同じ形になっている）", attached.RepName)
+		}
+	}
+	for _, info := range infoResp.RepInfos {
+		if info.RepType == "" {
+			t.Errorf("Kyou rep %q に rep_type が無い", info.RepName)
 		}
 	}
 }
