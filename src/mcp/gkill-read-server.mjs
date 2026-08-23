@@ -10,7 +10,6 @@ import {
   PLUGIN_TOOLS,
   handlePluginToolCall,
   isPluginToolName,
-  summarizePluginToolPayload,
 } from "./lib/plugin-tools.mjs";
 import { OAuthServer } from "./lib/oauth-server.mjs";
 import { McpAccessLog, parseMcpLogLevel } from "./lib/access-log.mjs";
@@ -18,9 +17,8 @@ import { StdioTransport } from "./lib/stdio-transport.mjs";
 import { McpServerBase } from "./lib/mcp-server-base.mjs";
 import { GkillClient as GkillReadClient } from "./lib/gkill-client.mjs";
 import { READ_TOOLS } from "./lib/read-tools.mjs";
-import { isReadToolName, handleReadToolCall, summarizeReadToolPayload } from "./lib/read-handlers.mjs";
+import { isReadToolName, handleReadToolCall } from "./lib/read-handlers.mjs";
 import { HttpTransport } from "./lib/http-transport.mjs";
-import { applyFileLinks, normalizeMimeType, stripFilePaths, summarizeToolError } from "./lib/payload.mjs";
 
 const _thisFile = _fileURLToPath(import.meta.url);
 const _thisDir = _dirname(_thisFile);
@@ -28,18 +26,6 @@ const _pkg = JSON.parse(readFileSync(_resolvePath(_thisDir, "../../package.json"
 
 const SERVER_NAME = "gkill-read-mcp";
 const SERVER_VERSION = _pkg.version;
-
-function summarizeToolPayload(name, payload) {
-  const pluginSummary = summarizePluginToolPayload(name, payload);
-  if (pluginSummary !== null) {
-    return pluginSummary;
-  }
-  const readSummary = summarizeReadToolPayload(name, payload);
-  if (readSummary !== null) {
-    return readSummary;
-  }
-  return "Tool call completed.";
-}
 
 const TOOLS = [
   ...READ_TOOLS,
@@ -51,57 +37,6 @@ const TOOLS = [
 class McpServer extends McpServerBase {
   constructor(client, accessLog = null) {
     super(client, accessLog, { serverName: SERVER_NAME, serverVersion: SERVER_VERSION, tools: TOOLS });
-  }
-
-
-  buildToolResult(name, payload, isError = false, ctx = null) {
-    // ローカルクライアントには実パスを渡す。リモートには実パスを渡さず、
-    // 代わりに期限付きの公開ファイルURLを注入する (発行できないときは実パスを消すだけ)。
-    // file-link トークンは ctx.sessionId で鋳造する。ctx 未指定 (単体テスト) のみ this.currentSessionId。
-    if (!this.isLocalTransport) {
-      if (this.fileLinkContext && !isError) {
-        applyFileLinks(payload, this.fileLinkContext, ctx ? ctx.sessionId : this.currentSessionId);
-      } else {
-        stripFilePaths(payload);
-      }
-    }
-
-    const summary = isError
-      ? summarizeToolError(name, payload?.error || "Unknown tool error", payload?.detail || null)
-      : summarizeToolPayload(name, payload);
-
-    const hasBase64 = name === "gkill_get_idf_file" && !isError && Boolean(payload?.file_content_base64);
-    // 画像はimageブロックでバイト列を届ける
-    const hasImageBlock = hasBase64 && Boolean(payload.is_image);
-
-    // テキスト表現にbase64は載せない（読めないうえに肥大化するだけ）
-    let textPayload = payload;
-    if (hasBase64) {
-      const { file_content_base64: _file_content_base64, ...rest } = payload;
-      textPayload = rest;
-    }
-    // structuredContentからbase64を落とすのは、imageブロックで既にバイト列を届けている画像のときだけ。
-    // 同じデータが1レスポンスに2回入ると、クライアント側のツール結果上限を超えて切り捨てられ、
-    // 画像そのものが届かなくなる。非画像 (PDF等) はここが唯一のバイト列の渡し口なので残す。
-    const structuredPayload = hasImageBlock ? textPayload : payload;
-
-    const jsonText = textPayload !== undefined ? JSON.stringify(textPayload, null, 2) : undefined;
-
-    const result = {
-      content: [{ type: "text", text: jsonText ? `${summary}\n\n${jsonText}` : summary }],
-      isError,
-    };
-    if (hasImageBlock) {
-      result.content.push({
-        type: "image",
-        data: payload.file_content_base64,
-        mimeType: normalizeMimeType(payload.mime_type),
-      });
-    }
-    if (structuredPayload !== undefined) {
-      result.structuredContent = structuredPayload;
-    }
-    return result;
   }
 
   async handleToolCall(name, args, ctx = null) {

@@ -2,8 +2,10 @@
 // 3つのMCPサーバに共通する JSON-RPC の受け口。
 //
 // handleMessage / handlePayload / constructor は3本とも1文字違わず同じだった。
-// 違うのは「どのツールを持つか」と「結果をどう組み立てるか」だけなので、
-// そこだけを継承側の buildToolResult / handleToolCall に残す。
+// buildToolResult も read と readwrite は完全に同一で、write サーバだけが
+// file-link 注入と IDF 画像ブロックを欠いた劣化コピーを持っていたので、
+// 正しいほう (read / readwrite 版) をここへ引き上げて1本にする。
+// 継承側に残すのは「どのツールを持つか」と handleToolCall のディスパッチだけ。
 //
 // サーバ名・版・ツール一覧はコンストラクタの options で受ける。
 //
@@ -12,6 +14,29 @@
 
 import { GkillApiError, isPlainObject, invalidArgument } from "./errors.mjs";
 import { assertTrimmedString } from "./validation.mjs";
+import { applyFileLinks, normalizeMimeType, stripFilePaths, summarizeToolError } from "./payload.mjs";
+import { summarizePluginToolPayload } from "./plugin-tools.mjs";
+import { summarizeReadToolPayload } from "./read-handlers.mjs";
+import { summarizeWriteToolPayload } from "./write-handlers.mjs";
+
+// summarizeToolPayload は結果の1行要約を返す。plugin → read → write の順に委ねる。
+// 各要約器は対象外のツールに null を返すので、持っていないツールの分は素通りする
+// (読み取り専用サーバは write の case に一致しない)。
+function summarizeToolPayload(name, payload) {
+  const pluginSummary = summarizePluginToolPayload(name, payload);
+  if (pluginSummary !== null) {
+    return pluginSummary;
+  }
+  const readSummary = summarizeReadToolPayload(name, payload);
+  if (readSummary !== null) {
+    return readSummary;
+  }
+  const writeSummary = summarizeWriteToolPayload(name, payload);
+  if (writeSummary !== null) {
+    return writeSummary;
+  }
+  return "Tool call completed.";
+}
 
 export class McpServerBase {
   constructor(client, accessLog, options) {
@@ -38,6 +63,56 @@ export class McpServerBase {
      * Null on stdio (local clients read the path directly).
      */
     this.fileLinkContext = null;
+  }
+
+  buildToolResult(name, payload, isError = false, ctx = null) {
+    // ローカルクライアントには実パスを渡す。リモートには実パスを渡さず、
+    // 代わりに期限付きの公開ファイルURLを注入する (発行できないときは実パスを消すだけ)。
+    // file-link トークンは ctx.sessionId で鋳造する。ctx 未指定 (単体テスト) のみ this.currentSessionId。
+    if (!this.isLocalTransport) {
+      if (this.fileLinkContext && !isError) {
+        applyFileLinks(payload, this.fileLinkContext, ctx ? ctx.sessionId : this.currentSessionId);
+      } else {
+        stripFilePaths(payload);
+      }
+    }
+
+    const summary = isError
+      ? summarizeToolError(name, payload?.error || "Unknown tool error", payload?.detail || null)
+      : summarizeToolPayload(name, payload);
+
+    const hasBase64 = name === "gkill_get_idf_file" && !isError && Boolean(payload?.file_content_base64);
+    // 画像はimageブロックでバイト列を届ける
+    const hasImageBlock = hasBase64 && Boolean(payload.is_image);
+
+    // テキスト表現にbase64は載せない（読めないうえに肥大化するだけ）
+    let textPayload = payload;
+    if (hasBase64) {
+      const { file_content_base64: _file_content_base64, ...rest } = payload;
+      textPayload = rest;
+    }
+    // structuredContentからbase64を落とすのは、imageブロックで既にバイト列を届けている画像のときだけ。
+    // 同じデータが1レスポンスに2回入ると、クライアント側のツール結果上限を超えて切り捨てられ、
+    // 画像そのものが届かなくなる。非画像 (PDF等) はここが唯一のバイト列の渡し口なので残す。
+    const structuredPayload = hasImageBlock ? textPayload : payload;
+
+    const jsonText = textPayload !== undefined ? JSON.stringify(textPayload, null, 2) : undefined;
+
+    const result = {
+      content: [{ type: "text", text: jsonText ? `${summary}\n\n${jsonText}` : summary }],
+      isError,
+    };
+    if (hasImageBlock) {
+      result.content.push({
+        type: "image",
+        data: payload.file_content_base64,
+        mimeType: normalizeMimeType(payload.mime_type),
+      });
+    }
+    if (structuredPayload !== undefined) {
+      result.structuredContent = structuredPayload;
+    }
+    return result;
   }
 
   // requestContext は HttpTransport が組む1リクエスト分の不変値
