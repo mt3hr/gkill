@@ -15,6 +15,8 @@ IDリストは各repのSQLへ `ID IN (?, ?, ...)` として展開される。と
 
 **この壊れ方は静かで気付けなかった。** 失敗が `GkillError` にならず、`/api/get_kyous` も `/api/get_kyous_mcp` も **HTTP 200 ＋ `errors: null` ＋ 0件**で返っていた（内部の `err` は Debug ログにしか出ない）。呼び出し側からは「成功・該当0件」と区別が付かない。
 
+（2026-08 追記: [ADR-0045](0045-http-status-from-error-code.md) でステータスをエラーコードから決めるようにしたので、`ERR000410` が立つ今の実装では **HTTP 500** で返る。ただしそれは `message.EnsureNotEmpty` で `GkillError` を必ず立てているからで、**「失敗したのに `GkillError` が空」で return する分岐を作れば、やはり 200 ＋ 0件に戻る。** 防御線は今も EnsureNotEmpty 側にある。）
+
 実データでは確認待ちの記録7,122件のIDを一度に渡して踏んだ。
 
 ## Decision

@@ -493,8 +493,10 @@ func TestHandleLogin_WrongPassword(t *testing.T) {
 	resp := postJSON(t, ts.URL+"/api/login", req)
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("status = %d, want 200 (errors in body)", resp.StatusCode)
+	// ログイン失敗は 401。存在しないユーザとパスワード誤りは
+	// 利用者列挙を防ぐため同じコード・同じ文言・同じステータスに揃えてある。
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want 401 (errors in body)", resp.StatusCode)
 	}
 
 	var loginResp req_res.LoginResponse
@@ -533,8 +535,10 @@ func TestHandleLogin_NonexistentUser(t *testing.T) {
 	resp := postJSON(t, ts.URL+"/api/login", req)
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("status = %d, want 200 (errors in body)", resp.StatusCode)
+	// ログイン失敗は 401。存在しないユーザとパスワード誤りは
+	// 利用者列挙を防ぐため同じコード・同じ文言・同じステータスに揃えてある。
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want 401 (errors in body)", resp.StatusCode)
 	}
 
 	var loginResp req_res.LoginResponse
@@ -866,9 +870,11 @@ func TestAuthMiddleware_RejectsInvalidSession(t *testing.T) {
 					resp := postJSON(t, tsURL+ep.path, body)
 					defer resp.Body.Close()
 
-					// gkillは認証エラーもHTTP 200 + errors配列で返す
-					if resp.StatusCode != http.StatusOK {
-						t.Fatalf("status = %d, want 200", resp.StatusCode)
+					// 認証エラーは 401 + errors配列。
+					// 2026-08まではここも200で、期限切れセッションが
+					// ステータスからは成功と区別が付かなかった。
+					if resp.StatusCode != http.StatusUnauthorized {
+						t.Fatalf("status = %d, want 401", resp.StatusCode)
 					}
 
 					var result struct {

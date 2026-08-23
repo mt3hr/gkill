@@ -74,6 +74,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get kyous mcp response to json: %w", err)

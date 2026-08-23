@@ -97,31 +97,17 @@ func (g *GkillServerAPI) authMiddleware(next http.Handler) http.Handler {
 		var peek sessionPeek
 		if err := json.Unmarshal(rawBody, &peek); err != nil || peek.SessionID == "" {
 			// SessionIDが取得できない場合はエラーレスポンス
-			w.Header().Set("Content-Type", "application/json")
-			errResp := struct {
-				Errors []*message.GkillError `json:"errors"`
-			}{
-				Errors: []*message.GkillError{
-					{
-						ErrorCode:    message.AccountSessionNotFoundError,
-						ErrorMessage: "session_id is required",
-					},
-				},
-			}
-			json.NewEncoder(w).Encode(errResp)
+			writeGkillErrorResponse(w, &message.GkillError{
+				ErrorCode:    message.AccountSessionNotFoundError,
+				ErrorMessage: "session_id is required",
+			})
 			return
 		}
 
 		// アカウント認証
 		account, gkillError, err := g.getAccountFromSessionID(ctx, peek.SessionID, peek.LocaleName)
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			errResp := struct {
-				Errors []*message.GkillError `json:"errors"`
-			}{
-				Errors: []*message.GkillError{gkillError},
-			}
-			json.NewEncoder(w).Encode(errResp)
+			writeGkillErrorResponse(w, gkillError)
 			return
 		}
 
@@ -130,18 +116,10 @@ func (g *GkillServerAPI) authMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			err = fmt.Errorf("error at get device name in auth middleware: %w", err)
 			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			w.Header().Set("Content-Type", "application/json")
-			errResp := struct {
-				Errors []*message.GkillError `json:"errors"`
-			}{
-				Errors: []*message.GkillError{
-					{
-						ErrorCode:    message.GetDeviceError,
-						ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-					},
-				},
-			}
-			json.NewEncoder(w).Encode(errResp)
+			writeGkillErrorResponse(w, &message.GkillError{
+				ErrorCode:    message.GetDeviceError,
+				ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			})
 			return
 		}
 
@@ -173,31 +151,17 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 		// SessionIDとLocaleNameを抽出
 		var peek sessionPeek
 		if err := json.Unmarshal(rawBody, &peek); err != nil || peek.SessionID == "" {
-			w.Header().Set("Content-Type", "application/json")
-			errResp := struct {
-				Errors []*message.GkillError `json:"errors"`
-			}{
-				Errors: []*message.GkillError{
-					{
-						ErrorCode:    message.AccountSessionNotFoundError,
-						ErrorMessage: "session_id is required",
-					},
-				},
-			}
-			json.NewEncoder(w).Encode(errResp)
+			writeGkillErrorResponse(w, &message.GkillError{
+				ErrorCode:    message.AccountSessionNotFoundError,
+				ErrorMessage: "session_id is required",
+			})
 			return
 		}
 
 		// アカウント認証
 		account, gkillError, err := g.getAccountFromSessionID(ctx, peek.SessionID, peek.LocaleName)
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			errResp := struct {
-				Errors []*message.GkillError `json:"errors"`
-			}{
-				Errors: []*message.GkillError{gkillError},
-			}
-			json.NewEncoder(w).Encode(errResp)
+			writeGkillErrorResponse(w, gkillError)
 			return
 		}
 
@@ -206,18 +170,10 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 		if err != nil {
 			err = fmt.Errorf("error at get device name in auth middleware: %w", err)
 			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			w.Header().Set("Content-Type", "application/json")
-			errResp := struct {
-				Errors []*message.GkillError `json:"errors"`
-			}{
-				Errors: []*message.GkillError{
-					{
-						ErrorCode:    message.GetDeviceError,
-						ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-					},
-				},
-			}
-			json.NewEncoder(w).Encode(errResp)
+			writeGkillErrorResponse(w, &message.GkillError{
+				ErrorCode:    message.GetDeviceError,
+				ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			})
 			return
 		}
 
@@ -226,18 +182,10 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 		if err != nil {
 			err = fmt.Errorf("error at get repositories user id = %s device = %s in auth middleware: %w", account.UserID, device, err)
 			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			w.Header().Set("Content-Type", "application/json")
-			errResp := struct {
-				Errors []*message.GkillError `json:"errors"`
-			}{
-				Errors: []*message.GkillError{
-					{
-						ErrorCode:    message.RepositoriesGetError,
-						ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-					},
-				},
-			}
-			json.NewEncoder(w).Encode(errResp)
+			writeGkillErrorResponse(w, &message.GkillError{
+				ErrorCode:    message.RepositoriesGetError,
+				ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			})
 			return
 		}
 

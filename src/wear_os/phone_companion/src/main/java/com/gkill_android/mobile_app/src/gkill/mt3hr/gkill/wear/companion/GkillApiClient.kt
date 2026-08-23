@@ -148,8 +148,11 @@ class GkillApiClient(
             .build()
         return try {
             client.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return Pair(null, "HTTP ${resp.code}")
-                val respJson = resp.body.string().ifEmpty { return Pair(null, "レスポンスが空です") }
+                // gkillは異常時に4xx/5xxを返すが、理由(error_message)は本文にしか入っていない。
+                // ステータスで打ち切ると時計に「HTTP 401」としか出せないので、先に本文を読む。
+                val respJson = resp.body.string().ifEmpty {
+                    return Pair(null, if (resp.isSuccessful) "レスポンスが空です" else "HTTP ${resp.code}")
+                }
                 val loginResp = json.decodeFromString(LoginResponse.serializer(), respJson)
                 if (!loginResp.errors.isNullOrEmpty()) {
                     Pair(null, loginResp.errors.first().error_message)
@@ -179,7 +182,7 @@ class GkillApiClient(
             .build()
         return try {
             client.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return null
+                // ステータスで打ち切らず本文を読む(gkillのerrorsは本文にしかない)。
                 val respJson = resp.body.string().ifEmpty { return null }
                 val configResp = json.decodeFromString(GetApplicationConfigResponse.serializer(), respJson)
                 if (!configResp.errors.isNullOrEmpty()) return null
@@ -218,8 +221,9 @@ class GkillApiClient(
                 .build()
             val kyousRespBody = client.newCall(kyousReq).execute().use { resp ->
                 if (!resp.isSuccessful) {
+                    // 打ち切らずに本文まで読む。gkillは4xx/5xxでもerrors配列を返すので、
+                    // ステータスだけをログに残すと原因が追えない。
                     Log.e(tag, "get_kyous failed: HTTP ${resp.code}")
-                    return null
                 }
                 resp.body.string().ifEmpty { return null }
             }
@@ -251,7 +255,7 @@ class GkillApiClient(
                     .build()
                 val timeisRespBody = try {
                     client.newCall(timeisReq).execute().use { resp ->
-                        if (!resp.isSuccessful) return@use null
+                        // ステータスで打ち切らない(本文のerrorsが唯一の手がかり)。
                         resp.body.string().ifEmpty { null }
                     }
                 } catch (e: Exception) {
@@ -311,8 +315,10 @@ class GkillApiClient(
                 .post(getTimeisBody.toString().toRequestBody(jsonMediaType))
                 .build()
             val timeisRespBody = client.newCall(timeisReq).execute().use { resp ->
-                if (!resp.isSuccessful) return "HTTP ${resp.code}"
-                resp.body.string().ifEmpty { return "empty response" }
+                // 本文のerrorsを優先して読む。空のときだけステータスを出す。
+                resp.body.string().ifEmpty {
+                    return if (resp.isSuccessful) "empty response" else "HTTP ${resp.code}"
+                }
             }
             val timeisJson = json.parseToJsonElement(timeisRespBody).jsonObject
             val timeisErrors = timeisJson["errors"]?.let { if (it is JsonNull) null else it.jsonArray }
@@ -341,8 +347,10 @@ class GkillApiClient(
                 .post(updateBody.toString().toRequestBody(jsonMediaType))
                 .build()
             return client.newCall(updateReq).execute().use { resp ->
-                if (!resp.isSuccessful) return "HTTP ${resp.code}"
-                val respBody = resp.body.string().ifEmpty { return "empty response" }
+                // 本文のerrorsを優先して読む。空のときだけステータスを出す。
+                val respBody = resp.body.string().ifEmpty {
+                    return if (resp.isSuccessful) "empty response" else "HTTP ${resp.code}"
+                }
                 val updateJson = json.parseToJsonElement(respBody).jsonObject
                 val updateErrors = updateJson["errors"]?.let { if (it is JsonNull) null else it.jsonArray }
                 if (updateErrors != null && updateErrors.isNotEmpty()) {
@@ -385,8 +393,10 @@ class GkillApiClient(
             .build()
         return try {
             client.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return "HTTP ${resp.code}"
-                val respJson = resp.body.string().ifEmpty { return "empty response" }
+                // 本文のerrorsを優先して読む。空のときだけステータスを出す。
+                val respJson = resp.body.string().ifEmpty {
+                    return if (resp.isSuccessful) "empty response" else "HTTP ${resp.code}"
+                }
                 val submitResp = json.decodeFromString(SubmitKFTLTextResponse.serializer(), respJson)
                 if (!submitResp.errors.isNullOrEmpty()) submitResp.errors.first().error_message else null
             }

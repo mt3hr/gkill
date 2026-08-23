@@ -39,6 +39,58 @@ Key packages:
 
 **`len(XxxReps) == 1` でキャッシュrepを判定してはいけない。** アダプタの append は「キャッシュrepで `XxxReps` を1個に差し替える」処理より後なので、`provides` を持つプラグインが1つ入るだけで長さが2になる。書き込み後のキャッシュ反映は構築時に控えた `GkillRepositories.CachedReps` を見る `repositories.WriteThroughXxxCache(ctx, ...)` を使うこと（54箇所）。読み取りはキャッシュrepしか見ず下層repへフォールバックしないので、反映を飛ばすと追加したタグが最大1分見えず、その間にPWAが古い応答をキャッシュし直すと**恒久的に古いまま焼き付く**。再発は `usecase/write_through_cache_test.go` の `TestNoRepsCountCacheGuard` がソース走査で落とす。経緯と却下案は [ADR-0012](../../../documents/adr/0012-write-through-cache-not-reps-count.md)。
 
+### HTTP ステータス（2026-08 導入）
+
+**エラーコード → HTTP ステータスの表が正本。** `api/message/http_status.go` の
+`errorCodeHTTPStatus`（414件、400/401/403/404/409/429/500）と `HTTPStatusForErrors`。
+2026-08 まで `/api/*` の JSON ハンドラは**全部が暗黙の200**で、セッション切れも権限不足も
+内部エラーも「成功」に見えていた。ステータスを見る層（監視・プロキシ・アクセスログ・
+素朴なHTTPクライアント）から障害が完全に隠れていた。
+
+守ること3つ。どれも破っても目の前ではエラーにならない。
+
+1. **エラーコードを足したら `http_status.go` の表にも1行足す。** 迷ったら 500。
+   落とすのは `message/http_status_test.go`（`error_codes.go` をソース走査して未分類を検出。
+   ステータスごとの件数も固定してあるので「全部500にしておく」も落ちる）。
+2. **ハンドラを足したら `writeErrorStatus(w, response.Errors)` を
+   `json.NewEncoder(w).Encode(response)` の直前に置く。** 順序が命で、
+   本文を1バイト書くと net/http が 200 を確定させ、あとから `WriteHeader` を呼んでも
+   `superfluous response.WriteHeader` がログに出るだけで**ステータスは200のまま返る**。
+   errors 配列は正しいので画面は普段どおり動き、気付けない。
+   落とすのは `gkill_server_api/response_status_guard_test.go`（全 `handle_*.go` を走査。
+   免除は `handle_file_serve.go` / `handle_urlog_bookmarklet_*.go` の3本だけ）。
+3. **ハンドラより手前で打ち切る経路（`auth_middleware.go` / `filter_local_only.go`）は
+   `writeGkillErrorResponse` を通す。** 直に `json.NewEncoder(w).Encode(...)` を書くと
+   ステータスを書き忘れる。**本文を必ず JSON で返すのも要件** ——
+   クライアント（`gkill-api.ts`）はステータスを見ずに `res.json()` するので、
+   本文が空だとそこで例外になり、ログイン画面に「証明書が必要です」という
+   無関係な文言が出る。
+
+**名前から機械的に導けないので推論に置き換えないこと。** `error_codes.go` の語彙には
+`Forbidden` / `Unauthorized` / `Denied` / `Permission` が1件も無く、`Invalid*` が 400 と 500 に、
+`NotFound*` が 401 と 404 に跨る。取り違えると実害が出る割り当ては
+`http_status_test.go` の `TestHTTPStatusOf_KnownAssignments` が名指しで固定してある
+（`AccountSessionNotFoundError` は404ではなく**401**、`NotFoundTLSCertFileError` は
+サーバの設定不備なので404ではなく**500**、など）。
+
+**`AccountNotFoundError`(ERR000002) は認証経路（`auth.go`）専用。** 操作対象のアカウントが
+無いときは `TargetAccountNotFoundError`(ERR000413)。混ぜると、クライアントの `check_auth` が
+ERR000002 でログアウトさせるので、**存在しないユーザIDにパスワードリセットを実行した
+管理者がその場で締め出される**（2026-08 まで実際にそうなっていた）。
+
+**`recoverMiddleware` は `serve.go` で最外層と最内層の両方に登録してある。** 内側が要るのは、
+`gzipMiddleware` の `defer gzipWriter.Close()` が panic の巻き戻しで先に走り、
+空の gzip ストリームを書いて暗黙200を確定させるため。外側の recover が書く500は捨てられ、
+**200 ＋ 復号すると空の本文**が返っていた（再現テストで確認）。順序を戻さないこと。
+守るのは `response_status_test.go` の `TestResponseStatus_PanicReturns500WithGzip`。
+
+**外向き（gkill がHTTPクライアントのとき）も 2xx を見る。** `api/safefetch` の `GetCapped` は
+2xx 以外をエラーにする。見ていなかったので404ページのHTMLが favicon として base64 で
+保存されていた。favicon は加えて `LooksLikeSupportedImage`（gif/jpeg/png/webp。判定形式は
+`use-ur-log-view.ts` の `base64_to_data_uri` と揃える）と `CheckImageDimensions` を通す。
+スキーム無しURLは `u.Hostname()` が空になり Google が汎用アイコンを**200**で返すので、
+リクエスト前に弾く（`dao/reps/ur_log.go` の `getFavicon`）。
+
 ### HTTP セキュリティ（2026-08 外部監査由来）
 
 **共有ページのファイル配信は共有クエリの結果に含まれるファイルだけ**（2026-08-21、監査 C-03）。`handle_file_serve.go` の `sharedID != ""` 経路は、rep名一致だけで IDF rep へ委譲せず、`shared_file_authz.go` の `collectSharedIDFFilePaths` で共有 `FindQuery` を再評価して許可パス集合を作り、要求パスが集合に無ければ403にする（`handle_get_shared_kyous.go` と同一手順を共有＝一覧を2箇所で維持しない）。パス正規化は `idf_file_url.go` の `cleanRelativeURLPath` と同一。セッション経路はフルアクセスのまま（`sharedKyouInfo != nil` のときだけゲート）。守るテストは `shared_file_authz_test.go`。 却下案（許可パスを共有作成時に固定する等）は [ADR-0042](../../../documents/adr/0042-shared-file-authz-by-query.md)。

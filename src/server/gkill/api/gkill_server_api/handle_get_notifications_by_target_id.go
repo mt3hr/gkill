@@ -34,6 +34,7 @@ func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter,
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get notifications by target id response to json: %w", err)

@@ -37,6 +37,7 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse add ShareKyouListInfo response to json: %w", err)

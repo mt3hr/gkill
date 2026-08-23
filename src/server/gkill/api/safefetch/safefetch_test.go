@@ -118,3 +118,99 @@ func TestCheckImageDimensions(t *testing.T) {
 		t.Error("non-image data should fail CheckImageDimensions")
 	}
 }
+
+// GetCapped は2xx以外の本文を返してはいけない。
+//
+// ここを見ていなかったせいで、404ページのHTMLがそのまま favicon として
+// base64 で保存されていた(監査でGoogleの "Error 404 (Not Found)!!1" を実測)。
+// 404ページの <title> がブックマークのタイトルとして保存される経路も同じ原因。
+func TestGetCapped_RejectsNon2xx(t *testing.T) {
+	for _, status := range []int{http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound, http.StatusInternalServerError} {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(status)
+			_, _ = w.Write([]byte("<html><title>Error 404 (Not Found)!!1</title></html>"))
+		}))
+
+		b, err := GetCapped(server.URL, 0, "", true, DefaultMaxBodyBytes)
+		server.Close()
+
+		if err == nil {
+			t.Errorf("GetCapped should reject status %d, got body %q", status, string(b))
+			continue
+		}
+		if !strings.Contains(err.Error(), "status =") {
+			t.Errorf("status %d のエラー文にステータスが入っていない: %v", status, err)
+		}
+		if b != nil {
+			t.Errorf("status %d で本文を返している: %q", status, string(b))
+		}
+	}
+}
+
+// 2xx なら今までどおり本文を返す(退行していないこと)。
+func TestGetCapped_Accepts2xx(t *testing.T) {
+	for _, status := range []int{http.StatusOK, http.StatusCreated, http.StatusAccepted, 299} {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(status)
+			_, _ = w.Write([]byte("ok body"))
+		}))
+
+		b, err := GetCapped(server.URL, 0, "", true, DefaultMaxBodyBytes)
+		server.Close()
+
+		if err != nil {
+			t.Errorf("status %d は通るべき: %v", status, err)
+			continue
+		}
+		if string(b) != "ok body" {
+			t.Errorf("status %d: got %q, want %q", status, string(b), "ok body")
+		}
+	}
+}
+
+// LooksLikeSupportedImage はクライアントが表示できる4形式だけを通す。
+//
+// 判定形式は src/client/classes/use-ur-log-view.ts の base64_to_data_uri と揃えてある。
+// あちらが増えたらこちらも足すこと(逆も同じ)。
+func TestLooksLikeSupportedImage(t *testing.T) {
+	png2x2 := makeTestPNG(t)
+
+	supported := map[string][]byte{
+		"png":    png2x2,
+		"gif87a": []byte("GIF87a....."),
+		"gif89a": []byte("GIF89a....."),
+		"jpeg":   {0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10},
+		"webp":   append([]byte("RIFF\x00\x00\x00\x00WEBP"), 0x00),
+	}
+	for name, data := range supported {
+		if !LooksLikeSupportedImage(data) {
+			t.Errorf("%s が画像として認識されない", name)
+		}
+	}
+
+	rejected := map[string][]byte{
+		"404のHTML":   []byte("<html><title>Error 404 (Not Found)!!1</title></html>"),
+		"空":          {},
+		"短すぎるRIFF":   []byte("RIFF"),
+		"RIFFだがwave": []byte("RIFF\x00\x00\x00\x00WAVE"),
+		"svg":        []byte(`<svg xmlns="http://www.w3.org/2000/svg"></svg>`),
+		"ico":        {0x00, 0x00, 0x01, 0x00},
+	}
+	for name, data := range rejected {
+		if LooksLikeSupportedImage(data) {
+			t.Errorf("%s が画像として通ってしまう", name)
+		}
+	}
+}
+
+// makeTestPNG は2x2の実PNGを作る。
+func makeTestPNG(t *testing.T) []byte {
+	t.Helper()
+	img := image.NewRGBA(image.Rect(0, 0, 2, 2))
+	img.Set(0, 0, color.RGBA{R: 255, A: 255})
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		t.Fatalf("png.Encode: %v", err)
+	}
+	return buf.Bytes()
+}

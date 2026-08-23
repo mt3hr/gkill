@@ -919,5 +919,6 @@
     "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_TITLE": "Shared content is duplicated",
     "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_MESSAGE": "The same content has already been saved. Save it again?",
     "SAVE_ANYWAY_TITLE": "Save anyway",
-    "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "Not saved because it is a duplicate"
+    "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "Not saved because it is a duplicate",
+    "LOCAL_ONLY_ACCESS_DENIED_MESSAGE": "Only local access is allowed"
 }

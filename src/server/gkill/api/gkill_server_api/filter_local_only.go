@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api"
+	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request) bool {
@@ -14,14 +17,10 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		/*
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetDeviceError,
-			    ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-		*/
-		w.WriteHeader(http.StatusInternalServerError)
+		writeGkillErrorResponse(w, &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+		})
 		return false
 	}
 
@@ -30,20 +29,19 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		err = fmt.Errorf("error at get serverConfig device = %s: %w", device, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		/*
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetServerConfigError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-		*/
-		w.WriteHeader(http.StatusInternalServerError)
+		writeGkillErrorResponse(w, &message.GkillError{
+			ErrorCode:    message.GetServerConfigError,
+			ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
+		})
 		return false
 	}
 	if serverConfig == nil {
 		err = fmt.Errorf("error at server config is nil device = %s: %w", device, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		w.WriteHeader(http.StatusInternalServerError)
+		writeGkillErrorResponse(w, &message.GkillError{
+			ErrorCode:    message.GetServerConfigError,
+			ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
+		})
 		return false
 	}
 	if !serverConfig.IsLocalOnlyAccess {
@@ -53,8 +51,20 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 	if isLocalRequest(r) {
 		return true
 	}
-	w.WriteHeader(http.StatusForbidden)
+	writeGkillErrorResponse(w, &message.GkillError{
+		ErrorCode:    message.LocalOnlyAccessDeniedError,
+		ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "LOCAL_ONLY_ACCESS_DENIED_MESSAGE"}),
+	})
 	return false
+}
+
+// localeUnawareLocalizer は locale_name を読む前に打ち切る経路のための localizer。
+//
+// filterLocalOnly はリクエストボディを読むより手前で走るので、利用者が選んだ言語が分からない。
+// api.GetLocalizer("") は既定の言語にフォールバックするので、それを使う。
+// (認証ミドルウェアはボディから locale_name だけ先読みできるので、あちらは利用者の言語で返せる)
+func localeUnawareLocalizer() *i18n.Localizer {
+	return api.GetLocalizer("")
 }
 
 // isLocalRequest はリクエスト元が同一マシンかどうかを返す。
