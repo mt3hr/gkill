@@ -97,6 +97,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | 0040-0049 | セキュリティ |
 | 0050-0059 | MCP |
 | 0060-0069 | 開発規約と資料 |
+| 0070-0079 | 検索とフィルタの意味論（続。0001-0009 が満杯になったため） |
 
 **番号は採番後不変。** 撤回した決定も番号を空けず `Superseded` で残す
 （「入れて翌日撤去した」という記録そのものが最良の ADR になる）。
@@ -132,6 +133,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0006](0006-find-query-null-semantics.md) | FindQuery の use_* 有効化フラグを全廃し「値が非nullならフィルタ有効」に一本化する | Accepted |
 | [0007](0007-memoize-rekyou-target-resolution.md) | ReKyou / MiReKyou のターゲット解決はリクエスト単位でメモ化する | Accepted |
 | [0008](0008-perf-judge-by-allocs-not-ns-op.md) | 性能判断は ns/op ではなく allocs/op・B/op・EXPLAIN QUERY PLAN で行う | Accepted |
+| [0009](0009-period-of-time-second-of-day.md) | 時間帯フィルタの秒値は「86400未満は秒オブデイ、以上はepoch」の二重解釈にする | Accepted |
 | [0010](0010-append-only-dao.md) | Append-Only DAO — ID 列に主キー制約を置かず、更新も削除も INSERT で表現する | Accepted |
 | [0011](0011-rebuild-cache-only-on-db-change.md) | キャッシュのフルリビルドは実DBが変わったときだけ | Accepted |
 | [0012](0012-write-through-cache-not-reps-count.md) | 書き込み後のキャッシュ反映は要素数ではなく構築時に控えた CachedReps で判定する | Accepted |
@@ -163,7 +165,9 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0044](0044-per-user-derived-cache-dir.md) | 派生キャッシュは利用者IDでディレクトリを分ける | Accepted |
 | [0050](0050-mcp-request-context-immutable.md) | MCP HTTPモードの1リクエスト文脈は不変オブジェクトを引数で流す | Accepted |
 | [0051](0051-mcp-inline-plugin-content.md) | MCP のプラグイン本文は get_kyous へインライン埋め込みし、同一プラグインへ並列に投げない | Accepted |
-| [0052](0052-mcp-cursor-pushes-period-end.md) | MCP のページングはカーソルを期間上限へ押し下げ、同一時刻のかたまりを割らない | Accepted |
+| [0052](0052-mcp-cursor-pushes-period-end.md) | MCP のページングはカーソルを期間上限へ押し下げ、同一時刻のかたまりを割らない | Superseded |
+| [0053](0053-mcp-composite-cursor-strict-limits.md) | MCPのページングは複合カーソル（時刻+ID）にし、Limit/MaxSizeMBを厳密な上限へ戻す | Accepted |
 | [0060](0060-freeze-plaing-spelling.md) | 綴りは「永続に乗るか」で決める — plaing は凍結、agregate は改名して読み込み互換を残す | Accepted |
 | [0061](0061-verify-docs-checks-filenames.md) | 資料は件数だけでなく「資料に載っているファイル名の実在」も機械検査する | Accepted |
 | [0062](0062-split-claude-md-into-skills.md) | AI向け規約は AGENTS.md（核）と規約スキルへ分割し、入口の肥大化を機械検査で防ぐ | Accepted |
+| [0070](0070-hide-tags-standalone.md) | hide_tags はタグ絞り込み(tags)の有無と独立に適用する | Accepted |

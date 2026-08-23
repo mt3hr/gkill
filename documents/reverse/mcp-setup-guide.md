@@ -589,7 +589,7 @@ gkillは3種類のMCPサーバーを提供しています。用途に応じて�
 
 | サーバー | ファイル | ツール数 | npm スクリプト | 用途 |
 |---|---|---|---|---|
-| **Read専用** | `gkill-read-server.mjs` | 9 | `mcp:gkill-read` / `mcp:gkill-read-http` | 閲覧のみ。データを変更したくない場合 |
+| **Read専用** | `gkill-read-server.mjs` | 10 | `mcp:gkill-read` / `mcp:gkill-read-http` | 閲覧のみ。データを変更したくない場合 |
 | **Write専用** | `gkill-write-server.mjs` | 24 | `mcp:gkill-write` / `mcp:gkill-write-http` | 書き込み中心。Read便利ツール3つ付属 |
 | **Read/Write統合** | `gkill-readwrite-server.mjs` | 29 | `mcp:gkill-readwrite` / `mcp:gkill-readwrite-http` | 全機能。迷ったらこれ |
 

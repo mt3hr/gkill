@@ -34,10 +34,10 @@ gkill_server_api/
 ├── get_device_cache_test.go         # デバイスキャッシュ取得テスト
 ├── plugin_content_html_cache_test.go # プラグイン本文HTMLキャッシュのテスト
 ├── utils_ssrf_test.go               # httpGetBase64Data の SSRF 対策テスト
-└── handle_*.go                      # 各エンドポイントのハンドラ（実装91ファイル + テスト10ファイル）
+└── handle_*.go                      # 各エンドポイントのハンドラ（実装92ファイル + テスト12ファイル）
 ```
 
-**合計: 117ファイル**（基盤14 + ハンドラ実装91 + テスト10 + README.md 1 + ABOUT_TEST.md 1）
+**合計: 117ファイル**（基盤14 + ハンドラ実装92 + テスト10 + README.md 1 + ABOUT_TEST.md 1）
 `.go` だけなら115ファイル。`handle_*.go` という名前のファイルは96あるが、うち5つはテスト。
 
 ## GkillServerAPI 構造体

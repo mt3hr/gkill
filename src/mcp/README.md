@@ -6,9 +6,9 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| **Read専用** | `gkill-read-server.mjs` | 9 (8 read + 1 plugin) | 8808 | 読み取りのみ |
+| **Read専用** | `gkill-read-server.mjs` | 10 (9 read + 1 plugin) | 8808 | 読み取りのみ |
 | **Write専用** | `gkill-write-server.mjs` | 24 (20 write + 3 read convenience + 1 plugin) | 8809 | 書き込み中心 |
-| **Read/Write統合** | `gkill-readwrite-server.mjs` | 29 (8 read + 20 write + 1 plugin) | 8810 | 全機能 |
+| **Read/Write統合** | `gkill-readwrite-server.mjs` | 30 (9 read + 20 write + 1 plugin) | 8810 | 全機能 |
 
 プラグインツール `gkill_get_plugin_list` は3サーバ共通で提供します（読み取り専用）。プラグインKyouの本文は `gkill_get_kyous` の `include_plugin_content` でレスポンスに埋め込みます。
 
@@ -34,7 +34,7 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 | `lib/html-text.mjs` | 3サーバ | プラグインのコンテンツHTML → プレーンテキスト |
 | `lib/access-log.mjs` / `errors.mjs` / `constants.mjs` | 3サーバ | アクセスログ・エラー型・定数 |
 
-> ツール数（上の表の 9 / 24 / 29）は `verify_docs` が `lib/*-tools.mjs` のスプレッドを辿って
+> ツール数（上の表の 10 / 24 / 30）は `verify_docs` が `lib/*-tools.mjs` のスプレッドを辿って
 > 実測と突き合わせます。サーバ本体だけを見ても数えられないので、ツールを増やすときは
 > 必ず `lib/` 側の配列へ足してください。
 
@@ -168,7 +168,7 @@ curl -v -X POST http://localhost:8808/mcp \
 
 ### 提供ツール
 
-#### Readツール（8つ — Read専用/ReadWrite統合サーバで使用可能）
+#### Readツール（9つ — Read専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却） |
@@ -305,20 +305,24 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 | `query` | object | FindQuery（後述） |
 | `locale_name` | string | ロケール（例: ja, en） |
 | `limit` | integer | 最大取得件数（default: 20） |
-| `cursor` | string | 前回レスポンスの `next_cursor` を指定してページング。ISO-8601推奨 |
+| `cursor` | string | 前回レスポンスの `next_cursor` をそのまま指定してページング（不透明文字列。v2は複合形式 `{RFC3339Nano}::{ID}`。組み立て・編集しない） |
 | `max_size_mb` | number | レスポンスの最大サイズMB（default: 0.25） |
 | `is_include_timeis` | boolean | 各Kyouに付随する TimeIs を含めるか（default: false） |
-| `include_id` | boolean | 各Kyouに `id`（UUID）を含めるか（default: false） |
+| `count_only` / `group_by` | boolean / string | 件数だけ・バケット集計（month/day/week_of_day/hour/data_type/rep_name/url_domain/file_extension）。cursor とは併用不可 |
+| `data_types` / `num_min` / `num_max` / `idf_kinds` / `include_file_size` | - | リクエストレベルの絞り込み（v2。ADR-0053） |
 | `include_plugin_content` | boolean | プラグインKyouの本文をレスポンスに埋め込むか（default: false） |
 | `plugin_content_max_text_length` | integer | 埋め込む本文の1件あたり上限文字数（default: 4000, max: 200000） |
 | `plugin_content_format` | string | 埋め込む形式。`text`（既定）/ `html` / `both` |
 
 レスポンスフィールド:
 - `kyous[]`: Kyou DTOの配列（各要素に `data_type`, `related_time`, `tags[]`, `texts[]`, `notifications[]`, `payload` を含む）
-- `total_count`: クエリ全体の件数
+- `total_count`: クエリ全体の件数（**cursor 無し応答のみ**。count_only/group_by を含む）
 - `returned_count`: 今回返却した件数
+- `remaining_count`: この続きに残っている件数（全応答）
 - `has_more`: 続きがある場合 true
-- `next_cursor`: 次ページ取得用カーソル（ISO-8601）
+- `next_cursor`: 次ページ取得用カーソル（不透明文字列。そのまま返送する）
+- `buckets[]`: group_by 指定時の集計（{key, count}）
+- `warnings[]`: 未知のフィルタ値の指摘・付随データ欠落など
 - `plugin_content`: 本文埋め込みの集計（`include_plugin_content: true` のときのみ）
 
 #### 4) ペイロード（payload）フィールド
