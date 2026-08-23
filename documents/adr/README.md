@@ -143,6 +143,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0016](0016-exclude-urlog-thumbnail-from-cache.md) | URLog のサムネイルはインメモリキャッシュに載せない | Accepted |
 | [0017](0017-git-repo-detect-by-os-stat.md) | gitリポジトリ判定は PlainOpen のエラー型ではなく os.Stat で行う | Accepted |
 | [0018](0018-write-through-normalizes-rep-name.md) | キャッシュへ書き戻す rep 名はクライアントの値を信用せず書き込み側で正規化する | Accepted |
+| [0019](0019-latest-data-address-uses-row-rep-name.md) | 最新版アドレス表の rep 名は行ごとの実 rep 名にする（集約名を焼かない） | Accepted |
 | [0020](0020-plugin-cancel-vs-kill.md) | プラグインの打ち切りは「待つのをやめる」と「プロセスを殺す」を分け、期限はスロットを取ってから張る | Accepted |
 | [0021](0021-plugin-provides-typed-index.md) | プラグインは provides で型別/付随データを提供でき、アダプタの読み取りは索引から即答する | Accepted |
 | [0022](0022-plugin-cache-use-crc32-and-size.md) | Google Takeout は ZIP のまま読み、差分判定は (CRC32, Size)、世代は「フォルダ + 書き出し時刻」 | Accepted |

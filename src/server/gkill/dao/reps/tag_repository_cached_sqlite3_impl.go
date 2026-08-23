@@ -1207,14 +1207,11 @@ func (t *tagRepositoryCachedSQLite3Impl) UnWrapTyped() ([]TagRepository, error) 
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+	// rep名は行の REP_NAME 列から読む。GetRepName() を焼いてはいけない
+	// （包んでいるのは集約なので "TagReps" という実在しない名前が返る）。ADR-0019。
 	sql := `
 SELECT IS_DELETED, ID AS TARGET_ID, TARGET_ID AS TARGET_ID_IN_DATA,
-       ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME_UNIX AS DATA_UPDATE_TIME_UNIX
+       REP_NAME AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME_UNIX AS DATA_UPDATE_TIME_UNIX
 FROM ` + sqlite3impl.QuoteIdent(t.dbName) + ` AS T
 WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.QuoteIdent(t.dbName) + ` AS INNER_TABLE WHERE INNER_TABLE.ID = T.ID)
 `
@@ -1224,7 +1221,7 @@ WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.Qu
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.QueryContext(ctx, repName)
+	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		return nil, err
 	}

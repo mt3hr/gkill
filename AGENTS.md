@@ -39,6 +39,7 @@ gkill の不変条件の多くは「例外もエラーも出さずに静かに�
 |---|---|
 | 検索が黙って0件になる／HTTP 200 で `errors` が null なのに結果が空 | gkill-go-backend, gkill-find-query |
 | タグの個数で検索結果が変わる | gkill-go-backend |
+| 実在する記録にタグ/テキストを付けると ERR000092（対象が見つからない） | gkill-go-backend |
 | 追加したタグ・記録が最大1分見えない／PWA が古いまま焼き付く | gkill-go-backend |
 | 全種類の検索が数分止まる | gkill-go-backend |
 | 検索結果が別の列に出る／列クリックで検索がやり直しになる | gkill-client-columns |
