@@ -41,7 +41,14 @@ export const PLUGIN_TOOLS = [
       "Use this to discover which data_type / rep_name values belong to plugins, then filter gkill_get_kyous " +
       "with query.reps or query.rep_types to fetch only that plugin's records, passing " +
       "include_plugin_content:true to get their bodies in the same call. " +
-      "Response fields: plugins[].",
+      "Response fields: plugins[] with name, version, description, data_type, rep_name, is_alive (responds to a ping), " +
+      "process_running (started; read without side effects), last_error (tail of the plugin process stderr — this is " +
+      "what to read when is_alive is true but no records come back), and typed_index for plugins that declare provides. " +
+      "typed_index carries state (\"ok\" / \"failed\" / \"never_built\"), record_count, oldest / newest (how far the " +
+      "plugin has actually ingested), truncated, built_at, and — when a build failed — last_build_error and " +
+      "last_attempt_at. Index build failures never reach last_error: they happen inside gkill (timeouts, a busy " +
+      "plugin, malformed JSON), so read typed_index.last_build_error for those. last_attempt_at matters because " +
+      "rebuilds back off after a failure and then produce no error at all.",
     inputSchema: {
       type: "object",
       properties: {
