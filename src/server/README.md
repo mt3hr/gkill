@@ -19,7 +19,7 @@ server/
 ├── go.sum                     # 依存関係チェックサム
 └── gkill/
     ├── api/                   # HTTP API 共通基盤 → api/README.md
-    │   ├── gkill_server_api/  # HTTP ハンドラ（101 handle_*.go + 認証・ルーティング）
+    │   ├── gkill_server_api/  # HTTP ハンドラ（104 handle_*.go + 認証・ルーティング）
     │   ├── embed/             # ビルド生成物（Vue SPA 埋め込み）
     │   ├── find/              # 検索クエリ型
     │   ├── gkill_plugin/      # プラグイン通信プロトコル型（PluginManifest / PluginRequest / PluginResponse / PluginKyou）
@@ -132,8 +132,8 @@ go build ./...
 
 ## 関連ドキュメント
 
-- [api/README.md](gkill/api/README.md) — HTTP API 共通基盤・ハンドラ層（全90エンドポイント一覧）
-- [api/gkill_server_api/README.md](gkill/api/gkill_server_api/README.md) — HTTP ハンドラ（132ファイル）
+- [api/README.md](gkill/api/README.md) — HTTP API 共通基盤・ハンドラ層（全91エンドポイント一覧）
+- [api/gkill_server_api/README.md](gkill/api/gkill_server_api/README.md) — HTTP ハンドラ（136ファイル）
 - [api/kftl/README.md](gkill/api/kftl/README.md) — KFTL パーサ
 - [api/req_res/README.md](gkill/api/req_res/README.md) — Request/Response 構造体
 - [api/message/README.md](gkill/api/message/README.md) — エラーコード・メッセージコード
