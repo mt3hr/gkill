@@ -14,6 +14,10 @@ type GPSLogRepository interface {
 	// GetAllGPSLogs はリポジトリ内の全GPXファイルを読み、全トラックポイントを返します。
 	// 集約（GPSLogRepositories）は全リポジトリぶんを連結し RelatedTime の降順で返します。
 	// 1点も無ければ空スライスで、エラーではありません。
+	//
+	// 読むのは拡張子が .gpx のファイルだけです。書きかけの yyyyMMdd.gpx.tmp のように
+	// 隣へ置かれただけのものは読みません。壊れたGPXファイルは警告ログを出して読み飛ばします
+	// ―― 1件の破損でリポジトリぶん全体が返らなくなるのを避けるためです。
 	GetAllGPSLogs(ctx context.Context) ([]GPSLog, error)
 
 	// GetGPSLogs は指定期間のトラックポイントを返します。

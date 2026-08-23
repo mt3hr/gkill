@@ -37,15 +37,20 @@ func (g *gpsLogRepositoryDirectoryImpl) GetAllGPSLogs(ctx context.Context) ([]GP
 			err = fmt.Errorf("error at get file info: %w", err)
 			return nil, err
 		}
-		if strings.Contains(fileInfo.Name(), ".gpx") {
-			gpxFileName := filepath.Join(g.dirname, fileInfo.Name())
-			gpsLogsFromFile, err := g.gpxFileToGPSLogs(gpxFileName)
-			if err != nil {
-				err = fmt.Errorf("error at gpx file to gpsLogs %s: %w", gpxFileName, err)
-				return nil, err
-			}
-			gpsLogs = append(gpsLogs, gpsLogsFromFile...)
+		// 読むのは拡張子が.gpxのものだけ。部分一致にすると、書きかけの
+		// yyyyMMdd.gpx.tmp のように隣へ置かれただけのファイルまで拾ってしまう。
+		if !strings.EqualFold(filepath.Ext(fileInfo.Name()), ".gpx") {
+			continue
 		}
+		gpxFileName := filepath.Join(g.dirname, fileInfo.Name())
+		gpsLogsFromFile, err := g.gpxFileToGPSLogs(gpxFileName)
+		if err != nil {
+			// 1ファイルの失敗でこのrepぶんを丸ごと落とさない。壊れた1件のために
+			// 隣に並ぶ数百日ぶんが返らなくなるほうが実害が大きい。
+			slog.Log(ctx, gkill_log.Warn, "skip broken gpx file at get all gps logs", "file", gpxFileName, "error", err)
+			continue
+		}
+		gpsLogs = append(gpsLogs, gpsLogsFromFile...)
 	}
 	return gpsLogs, nil
 }
