@@ -335,12 +335,15 @@ describe("normalizeDeleteArgs", () => {
 // DELETE_DATA_TYPES constant
 // ---------------------------------------------------------------------------
 describe("DELETE_DATA_TYPES", () => {
-  test("contains 9 data types", () => {
-    expect(DELETE_DATA_TYPES.size).toBe(9);
+  test("contains 12 data types", () => {
+    expect(DELETE_DATA_TYPES.size).toBe(12);
   });
 
   test("contains expected types", () => {
-    const expected = ["kmemo", "urlog", "nlog", "lantana", "timeis", "mi", "kc", "tag", "text"];
+    // rekyou / mirekyou / notification は rep が実在するのに削除も履歴取得もできなかった。
+    // 作成(add)は今も無いが、他の経路が作ったものを消す・戻すことはできる
+    const expected = ["kmemo", "urlog", "nlog", "lantana", "timeis", "mi", "kc", "tag", "text",
+      "rekyou", "mirekyou", "notification"];
     for (const dt of expected) {
       expect(DELETE_DATA_TYPES.has(dt)).toBe(true);
     }

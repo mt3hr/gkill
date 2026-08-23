@@ -232,6 +232,12 @@ export const ENTITY_TARGETS = {
   kc:      { getEndpoint: "/api/get_kc",      historiesKey: "kc_histories",      updateEndpoint: "/api/update_kc",      requestKey: "kc",      responseKey: "updated_kc" },
   tag:     { getEndpoint: "/api/get_tag_histories_by_tag_id",   historiesKey: "tag_histories",  updateEndpoint: "/api/update_tag",  requestKey: "tag",  responseKey: "updated_tag" },
   text:    { getEndpoint: "/api/get_text_histories_by_text_id", historiesKey: "text_histories", updateEndpoint: "/api/update_text", requestKey: "text", responseKey: "updated_text" },
+  // rekyou / mirekyou / notification は rep が実在するのに MCP から作成も削除もできなかった。
+  // 作成(add)は依然として無いが、Web クライアントや他端末が作ったものを
+  // 消す・履歴を見る・戻すことはできるべきなので対応表へ入れる。
+  rekyou:       { getEndpoint: "/api/get_rekyou",   historiesKey: "rekyou_histories",   updateEndpoint: "/api/update_rekyou",   requestKey: "rekyou",   responseKey: "updated_rekyou" },
+  mirekyou:     { getEndpoint: "/api/get_mirekyou", historiesKey: "mirekyou_histories", updateEndpoint: "/api/update_mirekyou", requestKey: "mirekyou", responseKey: "updated_mirekyou" },
+  notification: { getEndpoint: "/api/get_gkill_notification_histories_by_notification_id", historiesKey: "notification_histories", updateEndpoint: "/api/update_gkill_notification", requestKey: "notification", responseKey: "updated_notification" },
 };
 
 // gkill_get_kyou_history が1回に返す版の既定件数。
