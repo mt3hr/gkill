@@ -393,3 +393,83 @@ func TestCommitTxRestoresIDFTargetRepNameBeforeRealWrite(t *testing.T) {
 		break
 	}
 }
+
+// WriteThroughXxxCache は、キャッシュへ渡す前に必ず書き込み先repの実名を入れること。
+//
+// 呼び出し側が渡す RepName はクライアントがエコーした値で、
+// MCP の追加経路は空文字を、更新経路は取得元repの名前をそのまま送ってくる。
+// leaf rep は REP_NAME 列を持たず読むときにGo側が自分の名前を入れるので実害が出ないが、
+// **キャッシュrepは REP_NAME 列を持ち、ここで渡した値をそのまま INSERT する**。
+// --cache_in_memory(既定true) では検索がキャッシュrepしか見ないため、
+// 1型でも抜けると「追加直後だけ rep絞り込みから漏れ、次のUpdateCache(既定1分)で戻る」
+// という時限付きの壊れ方になる。しかも他の型のテストは緑のまま通る。
+//
+// IDFKyou だけは例外。handle_upload_files.go が request.TargetRepName で
+// リクエストごとに書き込み先repを選ぶので、g.WriteIDFKyouRep とは別のrepになりうる。
+var (
+	writeThroughMethodPattern = regexp.MustCompile(`^func \(g \*GkillRepositories\) WriteThrough(\w+)Cache\(ctx context\.Context, (\w+) \w+\) error \{$`)
+	writeThroughRepNameAssign = "%s.RepName = writeRepNameOrEmpty(ctx, g.Write%sRep)"
+	// 意図して上書きしない型と、その理由
+	writeThroughSkipTypes = map[string]string{
+		"IDFKyou": "handle_upload_files.go が request.TargetRepName でrepを選ぶため",
+	}
+	// この数を下回ったら正規表現がずれている
+	writeThroughExpectedTypes = 13
+)
+
+func TestWriteThroughSetsWriteRepName(t *testing.T) {
+	path := filepath.Join(sourceScanGkillRoot, "dao", "reps", "gkill_repositories.go")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("%s を読めない: %v", path, err)
+	}
+	lines := strings.Split(string(content), "\n")
+
+	found := 0
+	violations := []string{}
+	for i, line := range lines {
+		m := writeThroughMethodPattern.FindStringSubmatch(strings.TrimRight(line, "\r"))
+		if m == nil {
+			continue
+		}
+		found++
+		cachedType, varName := m[1], m[2]
+		if reason, skip := writeThroughSkipTypes[cachedType]; skip {
+			// 例外は「理由がdocコメントに書かれていること」まで見る
+			start := i - 8
+			if start < 0 {
+				start = 0
+			}
+			if !strings.Contains(strings.Join(lines[start:i], "\n"), "TargetRepName") {
+				violations = append(violations, fmt.Sprintf(
+					"gkill_repositories.go:%d: %s は上書きしない例外(%s)だが、docコメントに理由が無い",
+					i+1, cachedType, reason))
+			}
+			continue
+		}
+		want := fmt.Sprintf(writeThroughRepNameAssign, varName, cachedType)
+		// メソッドの終端は字下げの無い "}" だけ。
+		// TrimSpace で見ると nil ガードの閉じ括弧で止まり、本体を素通りしてしまう
+		bodyEnd := len(lines)
+		for j := i + 1; j < len(lines); j++ {
+			if strings.TrimRight(lines[j], "") == "}" {
+				bodyEnd = j
+				break
+			}
+		}
+		if !strings.Contains(strings.Join(lines[i:bodyEnd], "\n"), want) {
+			violations = append(violations, fmt.Sprintf(
+				"gkill_repositories.go:%d: WriteThrough%sCache に %q が無い",
+				i+1, cachedType, want))
+		}
+	}
+	if found < writeThroughExpectedTypes {
+		t.Fatalf("WriteThroughXxxCache が %d 件しか見つからない（%d 件のはず）。正規表現がずれている可能性がある",
+			found, writeThroughExpectedTypes)
+	}
+	if len(violations) != 0 {
+		t.Fatalf("キャッシュへ書き戻す前に書き込み先repの実名を入れていない型がある。"+
+			"追加した記録が rep絞り込みから最大1分消える:\n%s",
+			strings.Join(violations, "\n"))
+	}
+}
