@@ -741,19 +741,30 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 		return nil, err
 	}
 
+	// アドレス表にこのIDの行が無いと GetLatestDataRepositoryAddress は (nil, nil) を返す。
+	// プラグインKyouのIDは表に載らないし、追加直後～次回UpdateCacheまでのネイティブ記録も載らない。
+	// そのときは絞り込まず全repに問い合わせる（アドレス表を使わない GetKyouHistories と同じ意味論）。
+	// nil を素で参照すると panic して update_time 付き取得が 500 になっていた。
+	//
+	// 空のrep名でも絞り込まない。ライトスルーは GetRepName に失敗した行を空名で書くので、
+	// 空を「一致しない名前」として扱うとその記録が丸ごと引けなくなる
+	// （find_filter.go の filterKyousByRepName が「RepName が空の行は残す」のと同じ向き）。
+	addressRepName := ""
+	if latestDataRepositoryAddress != nil {
+		addressRepName = latestDataRepositoryAddress.LatestDataRepositoryName
+	}
+
+	matchedAddressRepName := false
 	for _, rep := range repImpls {
 		repName, err := rep.GetRepName(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		// アドレス表にこのIDの行が無いと GetLatestDataRepositoryAddress は (nil, nil) を返す。
-		// プラグインKyouのIDは表に載らないし、追加直後～次回UpdateCacheまでのネイティブ記録も載らない。
-		// そのときは絞り込まず全repに問い合わせる（アドレス表を使わない GetKyouHistories と同じ意味論）。
-		// nil を素で参照すると panic して update_time 付き取得が 500 になっていた。
-		if latestDataRepositoryAddress != nil && repName != latestDataRepositoryAddress.LatestDataRepositoryName {
+		if addressRepName != "" && repName != addressRepName {
 			continue
 		}
+		matchedAddressRepName = true
 
 		matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 		if err != nil {
@@ -764,6 +775,29 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 			continue
 		}
 		matchKyousInRep = append(matchKyousInRep, *matchKyouInRep)
+	}
+
+	// 絞り込みが1repも選ばなかったときは、絞り込みを捨てて全repへ問い合わせ直す。
+	//
+	// アドレス表のrep名と実repの名前が食い違うと、絞り込みは全repを continue して
+	// 「エラーも立たず nil」で返る。この nil を呼び出し元（usecase/tag.go・usecase/text.go の
+	// 実在検査）は「対象が存在しない」と読むので、実在する記録へのタグ/テキスト追加が
+	// ERR000092 で全滅する。2026-08-24 に実際にそうなった（ADR-0019）。
+	//
+	// 名前が揃っていればここは発火しないので、全rep走査が常態になることはない。
+	// 発火したら名前の食い違いが戻ってきた印なので warn を1行残す。
+	if addressRepName != "" && !matchedAddressRepName {
+		slog.Log(ctx, gkill_log.Warn, "latest data repository address points at a rep name that does not exist",
+			"id", fmt.Sprintf("%q", id),
+			"address_rep_name", fmt.Sprintf("%q", addressRepName),
+			"rep_count", len(repImpls))
+		for _, rep := range repImpls {
+			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
+			if err != nil || matchKyouInRep == nil {
+				continue
+			}
+			matchKyousInRep = append(matchKyousInRep, *matchKyouInRep)
+		}
 	}
 
 	// Kyou集約。UpdateTimeが最新のものを収める
