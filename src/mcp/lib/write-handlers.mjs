@@ -15,7 +15,7 @@ import crypto from "node:crypto";
 
 import { GkillApiError } from "./errors.mjs";
 import { WRITE_TOOLS } from "./write-tools.mjs";
-import { DELETE_TARGETS } from "./constants.mjs";
+import { ENTITY_TARGETS } from "./constants.mjs";
 import {
   normalizeKmemoArgs,
   normalizeUrlogArgs,
@@ -28,6 +28,7 @@ import {
   normalizeTextArgs,
   normalizeKftlArgs,
   normalizeDeleteArgs,
+  normalizeRestoreArgs,
   normalizeUpdateKmemoArgs,
   normalizeUpdateUrlogArgs,
   normalizeUpdateNlogArgs,
@@ -76,6 +77,25 @@ function stripUrlogImages(urlog) {
   }
   const { favicon_image: _favicon, thumbnail_image: _thumbnail, ...rest } = urlog;
   return rest;
+}
+
+// nextUpdateTime は「現在値より必ず後」になる更新時刻を返す。
+//
+// **UPDATE_TIME は1秒解像度で保存される** (sqlite3impl.TimeLayout)。
+// 履歴の取得は ID + UpdateTime で dedup し、検索の最新版判定は
+// 厳密な UpdateTime.After で行うので、同じ秒の中で delete → restore すると
+// 新しい版が最新と見なされず、黙って何も起きない（あるいは版が入れ替わる）。
+// 実時刻が現在値と同じ秒に落ちるときだけ1秒進める。
+function nextUpdateTime(current) {
+  const now = Date.now();
+  const previous = Date.parse(current?.update_time ?? "");
+  if (!Number.isFinite(previous)) {
+    return new Date(now).toISOString();
+  }
+  // 保存されるのは秒までなので、秒に丸めてから比較する
+  const previousSecond = Math.floor(previous / 1000) * 1000;
+  const nowSecond = Math.floor(now / 1000) * 1000;
+  return new Date(nowSecond > previousSecond ? now : previousSecond + 1000).toISOString();
 }
 
 const WRITE_TOOL_NAMES = new Set(WRITE_TOOLS.map((tool) => tool.name));
@@ -339,7 +359,7 @@ export async function handleWriteToolCall(ctx, name, args) {
 
       case "gkill_delete_kyou": {
         const normalized = normalizeDeleteArgs(args);
-        const target = DELETE_TARGETS[normalized.data_type];
+        const target = ENTITY_TARGETS[normalized.data_type];
         if (!target) {
           throw new GkillApiError(`Unsupported data_type for delete: ${normalized.data_type}`);
         }
@@ -353,9 +373,8 @@ export async function handleWriteToolCall(ctx, name, args) {
         }
         const current = histories[0];
         // 2. Set is_deleted + update metadata
-        const now = new Date().toISOString();
         current.is_deleted = true;
-        current.update_time = now;
+        current.update_time = nextUpdateTime(current);
         current.update_app = ctx.appName;
         current.update_device = WRITE_DEVICE;
         current.update_user = ctx.userId;
@@ -368,6 +387,40 @@ export async function handleWriteToolCall(ctx, name, args) {
         // 4. Return current with is_deleted=true and all data preserved
         const result = {};
         result[target.responseKey] = current;
+        if (response.updated_kyou) result.updated_kyou = response.updated_kyou;
+        return result;
+      }
+
+      case "gkill_restore_kyou": {
+        const normalized = normalizeRestoreArgs(args);
+        const target = ENTITY_TARGETS[normalized.data_type];
+        if (!target) {
+          throw new GkillApiError(`Unsupported data_type for restore: ${normalized.data_type}`);
+        }
+        const getResponse = await ctx.client.callApi(
+          target.getEndpoint, { id: normalized.id }, true, ctx.sid,
+        );
+        const histories = getResponse[target.historiesKey];
+        if (!Array.isArray(histories) || histories.length === 0) {
+          throw new GkillApiError(`Entity not found: ${normalized.id}`);
+        }
+        const current = histories[0];
+        if (!current.is_deleted) {
+          // 無意味な版を積まない。投機的に呼んでも安全にするための分岐
+          throw new GkillApiError(`Entity is already active (not deleted): ${normalized.id}`);
+        }
+        current.is_deleted = false;
+        current.update_time = nextUpdateTime(current);
+        current.update_app = ctx.appName;
+        current.update_device = WRITE_DEVICE;
+        current.update_user = ctx.userId;
+        const response = await ctx.client.callApi(
+          target.updateEndpoint,
+          { [target.requestKey]: current, want_response_kyou: true, locale_name: normalized.locale_name },
+          true, ctx.sid,
+        );
+        const result = {};
+        result[`restored_${normalized.data_type}`] = current;
         if (response.updated_kyou) result.updated_kyou = response.updated_kyou;
         return result;
       }
@@ -633,6 +686,10 @@ export function summarizeWriteToolPayload(name, payload) {
       return `Added text: ${payload.added_text?.id || "unknown"}`;
     case "gkill_submit_kftl":
       return `KFTL submitted: ${Array.isArray(payload.messages) ? payload.messages.length : 0} messages.`;
+    case "gkill_restore_kyou": {
+      const keys = Object.keys(payload).filter((k) => k.startsWith("restored_"));
+      return `Restored: ${keys.length > 0 ? keys.join(", ") : "completed"}`;
+    }
     case "gkill_delete_kyou": {
       const keys = Object.keys(payload).filter((k) => k.startsWith("updated_"));
       return `Deleted (soft): ${keys.length > 0 ? keys.join(", ") : "completed"}`;

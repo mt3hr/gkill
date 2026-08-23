@@ -222,3 +222,69 @@ describe("handleWriteToolCall — unknown tools", () => {
     expect(isWriteToolName("unknown_tool")).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// gkill_restore_kyou — 削除の取り消し
+// ---------------------------------------------------------------------------
+describe("handleWriteToolCall — restore", () => {
+  test("clears is_deleted on the current version and sends it to update", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ kmemo_histories: [{ id: "k1", content: "back", is_deleted: true, update_time: "2026-01-01T00:00:00+09:00" }] })
+      .mockResolvedValueOnce({ updated_kyou: { id: "k1" } });
+
+    const result = await handleWriteToolCall(ctx, "gkill_restore_kyou", { id: "k1", data_type: "kmemo" });
+
+    expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/get_kmemo");
+    expect(ctx.client.callApi.mock.calls[1][0]).toBe("/api/update_kmemo");
+    expect(ctx.client.callApi.mock.calls[1][1].kmemo.is_deleted).toBe(false);
+    expect(result.restored_kmemo.is_deleted).toBe(false);
+  });
+
+  test("refuses to append a pointless version when the entry is already active", async () => {
+    const ctx = makeCtx(async () => ({ kmemo_histories: [{ id: "k1", is_deleted: false, update_time: "2026-01-01T00:00:00+09:00" }] }));
+    await expect(handleWriteToolCall(ctx, "gkill_restore_kyou", { id: "k1", data_type: "kmemo" }))
+      .rejects.toThrow(/already active/);
+    // 現在値を取っただけで更新は送っていない
+    expect(ctx.client.callApi).toHaveBeenCalledTimes(1);
+  });
+
+  test("throws Entity not found when the id has no history", async () => {
+    const ctx = makeCtx(async () => ({ kmemo_histories: [] }));
+    await expect(handleWriteToolCall(ctx, "gkill_restore_kyou", { id: "nope", data_type: "kmemo" }))
+      .rejects.toThrow(/Entity not found/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// update_time は必ず前進する（1秒解像度の罠）
+// ---------------------------------------------------------------------------
+describe("update_time always moves forward", () => {
+  test("restore in the same second as the delete still gets a later update_time", async () => {
+    // UPDATE_TIME は秒までしか保存されず、最新版の判定は厳密な After なので、
+    // 同じ秒のまま送ると復活が黙って無視される
+    const sameSecond = new Date().toISOString();
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ kmemo_histories: [{ id: "k1", is_deleted: true, update_time: sameSecond }] })
+      .mockResolvedValueOnce({ updated_kyou: { id: "k1" } });
+
+    await handleWriteToolCall(ctx, "gkill_restore_kyou", { id: "k1", data_type: "kmemo" });
+
+    const sent = ctx.client.callApi.mock.calls[1][1].kmemo.update_time;
+    expect(Math.floor(Date.parse(sent) / 1000)).toBeGreaterThan(Math.floor(Date.parse(sameSecond) / 1000));
+  });
+
+  test("delete has the same guarantee", async () => {
+    const sameSecond = new Date().toISOString();
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ kmemo_histories: [{ id: "k1", is_deleted: false, update_time: sameSecond }] })
+      .mockResolvedValueOnce({ updated_kyou: { id: "k1" } });
+
+    await handleWriteToolCall(ctx, "gkill_delete_kyou", { id: "k1", data_type: "kmemo" });
+
+    const sent = ctx.client.callApi.mock.calls[1][1].kmemo.update_time;
+    expect(Math.floor(Date.parse(sent) / 1000)).toBeGreaterThan(Math.floor(Date.parse(sameSecond) / 1000));
+  });
+});

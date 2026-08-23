@@ -15,7 +15,7 @@ import { describe, test, expect } from "vitest";
 
 import { WRITE_TOOLS } from "../lib/write-tools.mjs";
 import { isWriteToolName, summarizeWriteToolPayload } from "../lib/write-handlers.mjs";
-import { DELETE_TARGETS } from "../lib/constants.mjs";
+import { ENTITY_TARGETS } from "../lib/constants.mjs";
 import { DELETE_DATA_TYPES } from "../lib/write-normalization.mjs";
 import { summarizeToolError } from "../lib/payload.mjs";
 
@@ -23,8 +23,8 @@ import { summarizeToolError } from "../lib/payload.mjs";
 // Tool definitions
 // ---------------------------------------------------------------------------
 describe("Tool definitions", () => {
-  test("write server exposes 20 write tools", () => {
-    expect(WRITE_TOOLS).toHaveLength(20);
+  test("write server exposes 21 write tools", () => {
+    expect(WRITE_TOOLS).toHaveLength(21);
   });
 
   test("write tool names are the current set", () => {
@@ -49,6 +49,7 @@ describe("Tool definitions", () => {
       "gkill_update_kc",
       "gkill_update_tag",
       "gkill_update_text",
+      "gkill_restore_kyou",
     ]);
   });
 
@@ -99,18 +100,18 @@ describe("Tool definitions", () => {
 // Delete data_type: 語彙が constants.mjs の1箇所から派生していること
 // ---------------------------------------------------------------------------
 describe("delete_kyou data_type vocabulary", () => {
-  test("schema enum and DELETE_DATA_TYPES are derived from DELETE_TARGETS", () => {
+  test("schema enum and DELETE_DATA_TYPES are derived from ENTITY_TARGETS", () => {
     // 語彙が食い違うと「スキーマは受理するのにディスパッチで落ちる」
-    // （あるいはその逆）になる。正本は constants.mjs の DELETE_TARGETS
+    // （あるいはその逆）になる。正本は constants.mjs の ENTITY_TARGETS
     const deleteTool = WRITE_TOOLS.find((tool) => tool.name === "gkill_delete_kyou");
-    const canonical = Object.keys(DELETE_TARGETS).sort();
+    const canonical = Object.keys(ENTITY_TARGETS).sort();
 
     expect([...deleteTool.inputSchema.properties.data_type.enum].sort()).toEqual(canonical);
     expect([...DELETE_DATA_TYPES].sort()).toEqual(canonical);
   });
 
   test("every delete target has both a get and an update endpoint", () => {
-    for (const target of Object.values(DELETE_TARGETS)) {
+    for (const target of Object.values(ENTITY_TARGETS)) {
       expect(target.getEndpoint).toMatch(/^\/api\//);
       expect(target.historiesKey).toMatch(/_histories$/);
       expect(target.updateEndpoint).toMatch(/^\/api\/update_/);

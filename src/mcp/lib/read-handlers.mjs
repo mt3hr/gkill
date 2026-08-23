@@ -10,8 +10,9 @@ import { GkillApiError } from "./errors.mjs";
 import {
   MAX_IDF_FILE_BYTES,
   APP_CONFIG_UI_STATE_KEYS,
+  ENTITY_TARGETS,
 } from "./constants.mjs";
-import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs, normalizeAppConfigArgs } from "./normalization.mjs";
+import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs, normalizeAppConfigArgs, normalizeKyouHistoryArgs } from "./normalization.mjs";
 import { inlinePluginContents, summarizeInlinePluginContent } from "./plugin-tools.mjs";
 import { normalizeMimeType } from "./payload.mjs";
 import { READ_TOOLS } from "./read-tools.mjs";
@@ -224,6 +225,34 @@ export async function handleReadToolCall(ctx, name, args) {
           exists: Boolean(response.exists),
         };
       }
+      case "gkill_get_kyou_history": {
+        const normalized = normalizeKyouHistoryArgs(args);
+        const target = ENTITY_TARGETS[normalized.data_type];
+        // 型別エンドポイントの histories は IS_DELETED で絞らないので、
+        // 削除済みの版もそのまま返る。これが「消したものを読み返す」唯一の経路
+        const response = await ctx.client.callApi(
+          target.getEndpoint,
+          normalized.locale_name !== undefined
+            ? { id: normalized.id, locale_name: normalized.locale_name }
+            : { id: normalized.id },
+          true, ctx.sid,
+        );
+        const histories = response[target.historiesKey];
+        if (!Array.isArray(histories) || histories.length === 0) {
+          throw new GkillApiError(`Entity not found: ${normalized.id}`);
+        }
+        const versions = histories.slice(0, normalized.limit);
+        return {
+          id: normalized.id,
+          data_type: normalized.data_type,
+          latest_is_deleted: Boolean(histories[0].is_deleted),
+          version_count: histories.length,
+          returned_count: versions.length,
+          has_more: histories.length > versions.length,
+          versions,
+        };
+      }
+
     default:
       throw new GkillApiError(`Unknown read tool: ${name}`);
   }
@@ -272,6 +301,12 @@ export function summarizeReadToolPayload(name, payload) {
     }
     case "gkill_get_application_config":
       return `Fetched application configuration (${Object.keys(payload ?? {}).length} fields).`;
+    case "gkill_get_kyou_history": {
+      const total = payload.version_count ?? 0;
+      const shown = payload.returned_count ?? 0;
+      const deleted = payload.latest_is_deleted ? " — latest version is DELETED" : "";
+      return `Returned ${shown} of ${total} versions${payload.has_more ? " (more available)" : ""}${deleted}.`;
+    }
     case "gkill_get_rep_infos": {
       const repCount = Array.isArray(payload.rep_infos) ? payload.rep_infos.length : 0;
       const typeCount = Array.isArray(payload.canonical_rep_types) ? payload.canonical_rep_types.length : 0;

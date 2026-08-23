@@ -7,6 +7,8 @@
 
 import { FIND_QUERY_SCHEMA } from "./find-query-schema.mjs";
 import {
+  ENTITY_DATA_TYPE_VALUES,
+  DEFAULT_KYOU_HISTORY_LIMIT,
   ISO_DATETIME_DESC,
   DATE_ONLY_DESC,
   DEFAULT_KYOUS_LIMIT,
@@ -362,6 +364,44 @@ export const READ_TOOLS = [
         },
       },
       required: ["rep_name", "file_name"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "gkill_get_kyou_history",
+    description:
+      "Read every stored version of ONE entry, including versions that are soft-deleted. " +
+      "gkill is append-only: an update adds a new version and a delete adds a version with is_deleted=true. " +
+      "Ordinary searches (gkill_get_kyous) only ever return the latest version of entries that are not deleted, " +
+      "and there is no query flag that changes that — this tool is the only way to see what an entry used to say, " +
+      "or to read back something you deleted by mistake. " +
+      "Requires both the id and its data_type: the lookup is per-type, and there is no safe type-agnostic fallback. " +
+      "Response fields: id, data_type, latest_is_deleted (whether the newest version is deleted — check this first " +
+      "when an entry has vanished from search results), version_count, returned_count, has_more, and versions[] " +
+      "newest first, each with update_time, is_deleted, update_app, update_device, update_user, rep_name and the " +
+      "type-specific fields. Use gkill_restore_kyou to bring back a deleted entry. " +
+      "Caveat: update_time is stored at one-second resolution, so two versions written within the same second " +
+      "collapse into one and a history may be missing a version.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "ID of the entry. Obtain from gkill_add_* responses or from gkill_get_kyous results.",
+        },
+        data_type: {
+          type: "string",
+          description: "Data type of the entry. Must match the actual type — a mismatch reports the entry as not found.",
+          enum: ENTITY_DATA_TYPE_VALUES,
+        },
+        limit: {
+          type: "integer",
+          description: `Max versions to return, newest first. Default: ${DEFAULT_KYOU_HISTORY_LIMIT}. Histories are unbounded — every edit appends one.`,
+          default: DEFAULT_KYOU_HISTORY_LIMIT,
+        },
+        locale_name: { type: "string", description: "Locale, e.g. ja/en." },
+      },
+      required: ["id", "data_type"],
       additionalProperties: false,
     },
   },
