@@ -350,9 +350,12 @@ func TestHandleGetKyousMCP_ReKyouPayload(t *testing.T) {
 	}
 }
 
-// TestHandleGetKyousMCP_IncludeRepName は rep_name が任意フラグであることを確認する。
-// 全件に常時載せるとMaxSizeMBの打ち切りが早まるので、既定では出さない。
-func TestHandleGetKyousMCP_IncludeRepName(t *testing.T) {
+// TestHandleGetKyousMCP_IDAndRepNameAlwaysPresent は id / rep_name が常時入ることを固定する。
+// 旧v1は include_id / include_rep_name の要求フラグ制だったが、AIクライアントの
+// 追撃クエリ(query.ids / query.reps / プラグイン本文取得 / 更新系)は両方を前提とし、
+// フラグの立て忘れが往復を1回増やしていたため v2 で常時付与へ変えた（ADR-0053）。
+// 旧フラグを送っても無害に無視されることも固定する。
+func TestHandleGetKyousMCP_IDAndRepNameAlwaysPresent(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -362,24 +365,23 @@ func TestHandleGetKyousMCP_IncludeRepName(t *testing.T) {
 
 	query := map[string]any{"only_latest_data": true}
 
-	withoutFlag := getKyousMCP(t, tsURL, sessionID, query, nil)
-	if len(withoutFlag.Kyous) == 0 {
+	res := getKyousMCP(t, tsURL, sessionID, query, nil)
+	if len(res.Kyous) == 0 {
 		t.Fatal("Kyouが1件も返っていない")
 	}
-	for _, kyou := range withoutFlag.Kyous {
-		if kyou.RepName != "" {
-			t.Errorf("include_rep_name未指定なのにrep_nameが入っている: %q", kyou.RepName)
+	for _, kyou := range res.Kyous {
+		if kyou.ID == "" {
+			t.Errorf("data_type %q のidが空(常時付与のはず)", kyou.DataType)
+		}
+		if kyou.RepName == "" {
+			t.Errorf("data_type %q のrep_nameが空(常時付与のはず)", kyou.DataType)
 		}
 	}
 
-	withFlag := getKyousMCP(t, tsURL, sessionID, query, map[string]any{"include_rep_name": true})
-	if len(withFlag.Kyous) == 0 {
-		t.Fatal("include_rep_name:trueでKyouが1件も返っていない")
-	}
-	for _, kyou := range withFlag.Kyous {
-		if kyou.RepName == "" {
-			t.Errorf("include_rep_name:trueなのにdata_type %q のrep_nameが空", kyou.DataType)
-		}
+	// 旧フラグは未知フィールドとして無害に無視される
+	legacy := getKyousMCP(t, tsURL, sessionID, query, map[string]any{"include_rep_name": false, "include_id": false})
+	if len(legacy.Kyous) == 0 || legacy.Kyous[0].ID == "" || legacy.Kyous[0].RepName == "" {
+		t.Error("旧フラグ(include_id/include_rep_name)を送ると挙動が変わってしまう")
 	}
 }
 
@@ -426,12 +428,12 @@ func TestPayloadKindOfDataType(t *testing.T) {
 }
 
 // TestHandleGetKyousMCP_PagingDoesNotDropSameRelatedTime は、同一RelatedTimeのかたまりが
-// ページ境界で切り捨てられないことを固定する。
+// ページ境界で取りこぼされないことを固定する。
 //
-// NextCursorは「その時刻より厳密に前」から次ページを始めるので、同時刻のかたまりの
-// 途中でページを切ると、返しそこねた残りが次ページからも漏れて永久に取れない。
-// 一括取り込みのIDFやFitbitの日次指標のように同時刻が並ぶデータで現実に起きる。
-// Limitを少し超えてでも、かたまりの終わりまで返しきること。
+// v2の複合カーソル({RFC3339Nano}::{ID})は同一時刻のかたまりの途中からでも正確に
+// 再開できるため、Limitは厳密な上限（旧v1はかたまりの終わりまで伸ばしていた。ADR-0053）。
+// limit=1で全ページを回し、「全件がちょうど1回ずつ」「毎ページreturned<=limit」を見る。
+// 一括取り込みのIDFやFitbitの日次指標のように同時刻が並ぶデータで現実に起きる形。
 func TestHandleGetKyousMCP_PagingDoesNotDropSameRelatedTime(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -450,7 +452,7 @@ func TestHandleGetKyousMCP_PagingDoesNotDropSameRelatedTime(t *testing.T) {
 	addTestKmemoWithRelatedTime(t, tsURL, sessionID, olderContent, sameTime.Add(-1*time.Minute))
 	wantContents = append(wantContents, olderContent)
 
-	// limit=1 で回す。かたまりを割る実装だと同時刻3件のうち1件しか取れず、残り2件が消える。
+	// limit=1 で回す。複合カーソルが無い実装だと同時刻3件の2件目以降へ戻れず取りこぼす。
 	seen := map[string]int{}
 	cursor := ""
 	for range 10 {
@@ -459,6 +461,9 @@ func TestHandleGetKyousMCP_PagingDoesNotDropSameRelatedTime(t *testing.T) {
 			extra["cursor"] = cursor
 		}
 		mcpResp := getKyousMCP(t, tsURL, sessionID, map[string]any{}, extra)
+		if len(mcpResp.Kyous) > 1 {
+			t.Errorf("limit=1なのに%d件返った(v2ではLimitは厳密な上限)", len(mcpResp.Kyous))
+		}
 		for _, kyou := range mcpResp.Kyous {
 			payload, ok := kyou.Payload.(map[string]any)
 			if !ok {
@@ -477,6 +482,9 @@ func TestHandleGetKyousMCP_PagingDoesNotDropSameRelatedTime(t *testing.T) {
 	for _, content := range wantContents {
 		if seen[content] == 0 {
 			t.Errorf("%q がページングで取りこぼされた (取得できたもの: %v)", content, seen)
+		}
+		if seen[content] > 1 {
+			t.Errorf("%q が%d回返った(複合カーソルの再開位置がずれている)", content, seen[content])
 		}
 	}
 }

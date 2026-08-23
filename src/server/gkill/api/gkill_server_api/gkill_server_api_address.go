@@ -171,6 +171,8 @@ type GkillServerAPIAddress struct {
 
 	GetKyousMCPAddress string
 
+	GetRepInfosMCPAddress string
+
 	UpdateCacheAddress string
 
 	BrowseZipContentsAddress string
@@ -352,6 +354,8 @@ type GkillServerAPIAddress struct {
 
 	GetKyousMCPMethod string
 
+	GetRepInfosMCPMethod string
+
 	UpdateCacheMethod string
 
 	BrowseZipContentsMethod string
@@ -454,6 +458,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.DiscardTXAddress = "/api/discard_tx"
 	gkillAPIAddress.SubmitKFTLTextAddress = "/api/submit_kftl_text"
 	gkillAPIAddress.GetKyousMCPAddress = "/api/get_kyous_mcp"
+	gkillAPIAddress.GetRepInfosMCPAddress = "/api/get_rep_infos_mcp"
 	gkillAPIAddress.LoginMethod = "POST"
 	gkillAPIAddress.LogoutMethod = "POST"
 	gkillAPIAddress.ResetPasswordMethod = "POST"
@@ -538,6 +543,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.DiscardTXMethod = "POST"
 	gkillAPIAddress.SubmitKFTLTextMethod = "POST"
 	gkillAPIAddress.GetKyousMCPMethod = "POST"
+	gkillAPIAddress.GetRepInfosMCPMethod = "POST"
 	gkillAPIAddress.UpdateCacheAddress = "/api/update_cache"
 	gkillAPIAddress.UpdateCacheMethod = "POST"
 	gkillAPIAddress.BrowseZipContentsAddress = "/api/browse_zip_contents"

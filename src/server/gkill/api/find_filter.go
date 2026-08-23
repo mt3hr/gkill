@@ -341,6 +341,66 @@ func (f *FindFilter) getRepositories(ctx context.Context, userID string, device 
 	return nil, nil
 }
 
+// RepsOfKyouRepType は rep_types の正準値1つに対応するrep群を返す。
+//
+// 受理する値の一覧は find.KyouRepTypes が正本で、この関数との集合一致を
+// TestKyouRepTypesCoversRepsOfKyouRepType が固定する（switchに値を足したら
+// find/rep_types.go にも足すこと。逆も同じ）。
+// 未知の値には空を返す（エラーにしない。「綴り違いが黙って0件」への防御は
+// get_kyous_mcp の未知値警告が担う）。
+// 表示ラベル（ApplicationConfig の rep_type_struct）とは別語彙で、
+// とくにファイル系repは "directory"（REPOSITORY.TYPE 列の値）が正準。
+func RepsOfKyouRepType(repositories *reps.GkillRepositories, repType string) []reps.Repository {
+	matchReps := []reps.Repository{}
+	switch repType {
+	case "kmemo":
+		for _, rep := range repositories.KmemoReps {
+			matchReps = append(matchReps, rep)
+		}
+	case "kc":
+		for _, rep := range repositories.KCReps {
+			matchReps = append(matchReps, rep)
+		}
+	case "urlog":
+		for _, rep := range repositories.URLogReps {
+			matchReps = append(matchReps, rep)
+		}
+	case "timeis":
+		for _, rep := range repositories.TimeIsReps {
+			matchReps = append(matchReps, rep)
+		}
+	case "mi":
+		for _, rep := range repositories.MiReps {
+			matchReps = append(matchReps, rep)
+		}
+	case "nlog":
+		for _, rep := range repositories.NlogReps {
+			matchReps = append(matchReps, rep)
+		}
+	case "lantana":
+		for _, rep := range repositories.LantanaReps {
+			matchReps = append(matchReps, rep)
+		}
+	case "rekyou":
+		for _, rep := range repositories.ReKyouReps.ReKyouRepositories {
+			matchReps = append(matchReps, rep)
+		}
+	case "mirekyou":
+		for _, rep := range repositories.MiReKyouReps.MiReKyouRepositories {
+			matchReps = append(matchReps, rep)
+		}
+	case "directory":
+		for _, rep := range repositories.IDFKyouReps {
+			matchReps = append(matchReps, rep)
+		}
+	case "git_commit_log":
+		for _, rep := range repositories.GitCommitLogReps {
+			matchReps = append(matchReps, rep)
+		}
+	}
+	return matchReps
+}
+
 func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	repositories := findCtx.Repositories
 
@@ -379,52 +439,7 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 	if findCtx.ParsedFindQuery.RepTypes != nil {
 		// RepType指定の場合、指定以外は除外する
 		for _, repType := range findCtx.ParsedFindQuery.RepTypes {
-			switch repType {
-			case "kmemo":
-				for _, rep := range repositories.KmemoReps {
-					typeMatchReps = append(typeMatchReps, rep)
-				}
-			case "kc":
-				for _, rep := range repositories.KCReps {
-					typeMatchReps = append(typeMatchReps, rep)
-				}
-			case "urlog":
-				for _, rep := range repositories.URLogReps {
-					typeMatchReps = append(typeMatchReps, rep)
-				}
-			case "timeis":
-				for _, rep := range repositories.TimeIsReps {
-					typeMatchReps = append(typeMatchReps, rep)
-				}
-			case "mi":
-				for _, rep := range repositories.MiReps {
-					typeMatchReps = append(typeMatchReps, rep)
-				}
-			case "nlog":
-				for _, rep := range repositories.NlogReps {
-					typeMatchReps = append(typeMatchReps, rep)
-				}
-			case "lantana":
-				for _, rep := range repositories.LantanaReps {
-					typeMatchReps = append(typeMatchReps, rep)
-				}
-			case "rekyou":
-				for _, rep := range repositories.ReKyouReps.ReKyouRepositories {
-					typeMatchReps = append(typeMatchReps, rep)
-				}
-			case "mirekyou":
-				for _, rep := range repositories.MiReKyouReps.MiReKyouRepositories {
-					typeMatchReps = append(typeMatchReps, rep)
-				}
-			case "directory":
-				for _, rep := range repositories.IDFKyouReps {
-					typeMatchReps = append(typeMatchReps, rep)
-				}
-			case "git_commit_log":
-				for _, rep := range repositories.GitCommitLogReps {
-					typeMatchReps = append(typeMatchReps, rep)
-				}
-			}
+			typeMatchReps = append(typeMatchReps, RepsOfKyouRepType(repositories, repType)...)
 		}
 	}
 

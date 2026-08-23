@@ -115,6 +115,10 @@ type pluginIndexSnapshot struct {
 	byID    map[string]*pluginTypedRecord
 	records []*pluginTypedRecord
 
+	// truncated は構築時に pluginIndexMaxRecords を超えて切り捨てが起きたか。
+	// 立っているとき record 数・時刻範囲は実データより少なく見える（Stats が返す）。
+	truncated bool
+
 	tagsByTarget          map[string][]Tag
 	textsByTarget         map[string][]Text
 	notificationsByTarget map[string][]Notification
@@ -188,6 +192,50 @@ func (i *PluginTypedIndex) Snapshot() *pluginIndexSnapshot {
 		return snapshot
 	}
 	return newEmptyPluginIndexSnapshot(false)
+}
+
+// PluginTypedIndexStats は索引スナップショットの統計。get_plugin_list の応答用。
+type PluginTypedIndexStats struct {
+	// OK は索引が構築済みか。false のとき他のフィールドは全てゼロ値
+	// （未構築＝件数0と、実データ0件を呼び出し側が区別できるように）。
+	OK bool
+	// RecordCount は索引に載っているレコード数。Truncated のときは実数より小さい。
+	RecordCount int
+	// Oldest / Newest はレコードの RelatedTime の最小・最大。件数0ならゼロ値。
+	Oldest time.Time
+	Newest time.Time
+	// Truncated は構築時に上限（pluginIndexMaxRecords）で切り捨てが起きたか。
+	Truncated bool
+	// BuiltAt はスナップショットの構築時刻（＝データの鮮度）。
+	BuiltAt time.Time
+}
+
+// Stats は現在のスナップショットの統計を返します。決してブロックしません
+// （Snapshot と同じ非ブロッキング契約。未構築なら OK=false）。
+// レコード走査は O(件数) ですが上限 pluginIndexMaxRecords で有界です。
+// 「プラグインがどの期間まで取り込み済みか」をAPIから読めるようにする（外部監査 D1）。
+func (i *PluginTypedIndex) Stats() PluginTypedIndexStats {
+	snapshot := i.Snapshot()
+	stats := PluginTypedIndexStats{
+		OK:        snapshot.ok,
+		Truncated: snapshot.truncated,
+		BuiltAt:   snapshot.builtAt,
+	}
+	if !snapshot.ok {
+		return stats
+	}
+	stats.RecordCount = len(snapshot.records)
+	for _, record := range snapshot.records {
+		for _, kyou := range record.Kyous {
+			if stats.Oldest.IsZero() || kyou.RelatedTime.Before(stats.Oldest) {
+				stats.Oldest = kyou.RelatedTime
+			}
+			if kyou.RelatedTime.After(stats.Newest) {
+				stats.Newest = kyou.RelatedTime
+			}
+		}
+	}
+	return stats
 }
 
 // Ensure は索引が無ければ非同期に構築を開始し、待たずに現在のスナップショットを返します。
@@ -329,6 +377,7 @@ func (i *PluginTypedIndex) buildSnapshot(pluginKyous []gkill_plugin.PluginKyou) 
 			boardNameSet[record.Mi.BoardName] = struct{}{}
 		}
 	}
+	snapshot.truncated = truncated
 	if truncated {
 		slog.Log(context.Background(), gkill_log.Warn, "plugin returned too many records, truncated", "plugin_name", fmt.Sprintf("%q", i.source.indexPluginName()), "limit", pluginIndexMaxRecords)
 	}

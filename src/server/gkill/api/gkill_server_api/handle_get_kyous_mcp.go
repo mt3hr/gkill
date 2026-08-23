@@ -1,7 +1,8 @@
 package gkill_server_api
 
-// 厳密に Limit を守らない理由（同時刻の記録が永久に取れなくなる）:
-// documents/adr/0052-mcp-cursor-pushes-period-end.md
+// 複合カーソル(時刻+ID)・厳密なLimit/MaxSizeMB・count_only/group_by の契約:
+// documents/adr/0053-mcp-composite-cursor-strict-limits.md
+// (旧: 時刻のみカーソルのため Limit を厳密に守れなかった — ADR-0052、Superseded)
 
 import (
 	"context"
@@ -10,6 +11,7 @@ import (
 	"log/slog"
 	"mime"
 	"net/http"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -26,7 +28,7 @@ import (
 )
 
 // HandleGetKyousMCP は、MCPサーバ向けにKyouを検索し、型ごとのペイロードと
-// 付随データ (タグ・テキスト・通知) を1件にまとめたDTOをページングして返します。
+// 付随データ (タグ・テキスト・通知) を1件にまとめたDTOをページング・集計して返します。
 //
 // POST /api/get_kyous_mcp（wrapNoAuth）
 // req_res.GetKyousMCPRequest / req_res.GetKyousMCPResponse
@@ -34,20 +36,26 @@ import (
 // wrapNoAuth登録ですが、ハンドラ内でSessionIDからアカウントを解決するので未認証では使えません。
 // Limitは1〜1000にクランプ (未指定は50)、MaxSizeMBの未指定は1.0、
 // Queryはnilなら空のクエリに差し替え、いずれの場合も OnlyLatestData = true に上書きします。
-// 並び順はRelatedTimeの降順で、Cursor (RFC3339) を渡すとその時刻より前の最初の件から再開します。
-// Cursorはクエリの期間上限(CalendarEndDate)へ押し下げるため、2ページ目以降は
-// 検索対象そのものが「カーソル以降」に縮みます。これに伴い TotalCount は
-// 「条件に合う全件」ではなく「カーソル以降の残り件数」を指します（HasMoreの判定は変わりません）。
-// DTOを1件ずつJSONにした累積サイズがMaxSizeMBを超えた時点で打ち切るため、
-// ReturnedCountがLimitに満たないことがあります。
-// Cursorは RFC3339 と日付のみ(YYYY-MM-DD)を受け、どちらでもないときはエラーを返します
-// （黙って1ページ目に戻すとページングが終わらないため）。
-// LimitとMaxSizeMBによる打ち切りは同一RelatedTimeのかたまりを割らないので、
-// ReturnedCountがLimitを少し超えることがあります（割ると次ページが取りこぼすため）。
-// NextCursorは RFC3339Nano で返します（秒へ切り捨てると同じ秒の内側が漏れるため）。
+//
+// v2 の契約（詳細と却下案: documents/adr/0053-mcp-composite-cursor-strict-limits.md）:
+//   - 並び順は (RelatedTime降順, ID昇順) の全順序。カーソルは複合形式 "{RFC3339Nano}::{ID}" で、
+//     同一時刻のかたまりの途中からでも再開できるため **Limit と MaxSizeMB は厳密な上限**です
+//     （唯一の例外はページ先頭の1件が単独で MaxSizeMB を超えるときで、そのまま返して警告します。
+//     返さないと0件+has_more=trueの永久ループになるため）。
+//   - 旧形式カーソル（RFC3339単独・日付のみ）も受理します。解釈できないカーソルはエラーです
+//     （黙って1ページ目に戻すとページングが終わらないため）。
+//   - カーソルはクエリの期間上限(CalendarEndDate)へ押し下げるため、2ページ目以降のハンドラは
+//     全件数を知りません。TotalCount は cursor 無しの応答にのみ入り、全応答に RemainingCount が入ります。
+//   - CountOnly はDTO構築・付随データ取得を全て飛ばして件数だけを返します。
+//     GroupBy は buckets へのバケット集計を返します。どちらも cursor とは併用できません（エラー）。
+//   - DataTypes / NumMin / NumMax / IDFKinds はリクエストレベルの絞り込みで、
+//     FindQuery の検索結果に対して件数・ページングより前に適用されます。
+//   - 未知のフィルタ値（rep_types / tags / reps / data_types の綴り違い等）は Warnings で指摘します。
+//     エラーにはしません（「実在するが該当0件」の正当な経路を壊さないため）。
+//
 // URLogのサムネイル画像はAIクライアントで扱えないうえ巨大なので、DBから読む段階で外します。
-// IDFペイロードのFilePathはローカルリクエストのときだけ入ります。
-// Kyouのrep_nameはIncludeRepNameのときだけ載せます（全件に載せるとMaxSizeMBの打ち切りが早まるため）。
+// IDFペイロードのFilePathはローカルリクエストのときだけ、FileSizeはIncludeFileSizeのときだけ入ります。
+// Kyouのid/rep_nameは常時入ります（旧v1の要求フラグは廃止。追撃クエリの前提のため）。
 // ペイロードの分岐はDataTypeそのものではなく payloadKindOfDataType で寄せた種別で行います。
 // Mi/MiReKyou/TimeIsのDataTypeは射影ごとに枝分かれする(mi_create、mirekyou_limit、
 // timeis_start ...)ので、素の型名との完全一致では拾えません。
@@ -117,21 +125,15 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	//   境界ちょうど(同一時刻)の件はこのあとのカーソル走査が従来どおり読み飛ばすため、
 	//   返る中身は押し下げの前後で変わらない。
 	//   呼び出し元が期間を指定している場合は狭いほうを採る。
-	cursorTime := time.Time{}
+	cursor := mcpCursor{}
 	hasCursor := false
 	if request.Cursor != "" {
-		parsedCursorTime, parseErr := time.Parse(time.RFC3339, request.Cursor)
-		if parseErr != nil {
-			// 日付のみ(YYYY-MM-DD)も受ける。MCPサーバは日付のみを日時へ正規化してから
-			// 送るが(normalization.mjsのnormalizeDateTimeString)、APIを直接叩く
-			// クライアントはそのまま送ってくる。
-			parsedCursorTime, parseErr = time.ParseInLocation(time.DateOnly, request.Cursor, time.Local)
-		}
+		parsedCursor, parseErr := parseMCPCursor(request.Cursor)
 		if parseErr != nil {
 			// ★解釈できないカーソルを黙って無視してはいけない。
 			//   以前は無視して1ページ目を返していたため、呼び出し側は同じページを
 			//   受け取り続け、ページングが永久に終わらなかった。
-			err = fmt.Errorf("error at parse cursor %q: %w", request.Cursor, parseErr)
+			err = fmt.Errorf("error at parse cursor: %w", parseErr)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetKyousMCPRequestDataError,
@@ -140,11 +142,32 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		cursorTime = parsedCursorTime
+		cursor = parsedCursor
 		hasCursor = true
-		if request.Query.CalendarEndDate == nil || request.Query.CalendarEndDate.After(cursorTime) {
-			request.Query.CalendarEndDate = &cursorTime
+		if request.Query.CalendarEndDate == nil || request.Query.CalendarEndDate.After(cursor.time) {
+			request.Query.CalendarEndDate = &cursor.time
 		}
+	}
+
+	// count_only / group_by は「条件に合う全件」を数える口なので cursor と併用できない。
+	// 黙って片方を無視すると呼び出し側が気付けない（不正カーソル黙殺と同じ罠）ためエラーにする。
+	if hasCursor && (request.CountOnly || request.GroupBy != "") {
+		err = fmt.Errorf("error at get kyous mcp: count_only/group_by cannot be combined with cursor")
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.InvalidGetKyousMCPRequestDataError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
+		})
+		return
+	}
+	if request.GroupBy != "" && !isValidMCPGroupBy(request.GroupBy) {
+		err = fmt.Errorf("error at get kyous mcp: unknown group_by %q", request.GroupBy)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.InvalidGetKyousMCPRequestDataError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
+		})
+		return
 	}
 
 	// アカウントを取得
@@ -183,33 +206,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// related_time 降順ソート
-	slices.SortFunc(allKyous, func(a, b reps.Kyou) int {
-		return b.RelatedTime.Compare(a.RelatedTime)
-	})
-
-	totalCount := len(allKyous)
-
-	// カーソル適用。
-	// 期間上限へ押し下げ済みなので、ここで読み飛ばすのは境界(カーソルと同一時刻)ぶんだけ。
-	startIdx := 0
-	if hasCursor {
-		found := false
-		for i, kyou := range allKyous {
-			if kyou.RelatedTime.Before(cursorTime) {
-				startIdx = i
-				found = true
-				break
-			}
-		}
-		if !found {
-			startIdx = len(allKyous)
-		}
-	}
-
-	batch := allKyous[startIdx:]
-
-	// リポジトリを取得
+	// リポジトリを取得（リクエストレベルフィルタ・未知値警告・バケット集計が使う）
 	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
@@ -222,7 +219,105 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// 候補IDを収集
+	// リクエストレベルの絞り込み（FindQueryではなく検索結果に対して掛かる）。
+	// 件数(total_count/count_only/group_by)・ページングより前に適用する。
+	reportRequestFilterError := func(what string, err error) {
+		err = fmt.Errorf("error at apply %s for get kyous mcp: %w", what, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.FindKyousError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
+		})
+	}
+	allKyous = applyMCPDataTypesFilter(allKyous, request.DataTypes)
+	if request.NumMin != nil || request.NumMax != nil {
+		filtered, filterWarnings, filterErr := applyMCPNumFilter(r.Context(), repositories, allKyous, request.NumMin, request.NumMax)
+		response.Warnings = append(response.Warnings, filterWarnings...)
+		if filterErr != nil {
+			reportRequestFilterError("num filter", filterErr)
+			return
+		}
+		allKyous = filtered
+	}
+	if request.IDFKinds != nil {
+		filtered, filterWarnings, filterErr := applyMCPIDFKindsFilter(r.Context(), repositories, allKyous, request.IDFKinds)
+		response.Warnings = append(response.Warnings, filterWarnings...)
+		if filterErr != nil {
+			reportRequestFilterError("idf_kinds filter", filterErr)
+			return
+		}
+		allKyous = filtered
+	}
+
+	// 未知のフィルタ値の警告（綴り違いが黙って0件になるのを防ぐ。外部監査 S7）。
+	// count_only でも実施する — 件数確認こそタイポ検索の入口のため。
+	response.Warnings = append(response.Warnings, collectMCPUnknownValueWarnings(r.Context(), repositories, request.Query, request.DataTypes)...)
+
+	// (RelatedTime降順, ID昇順) の全順序ソート。
+	// IDのタイブレークは複合カーソルの前提（同一時刻のかたまりの中で位置を特定できる）。
+	slices.SortFunc(allKyous, func(a, b reps.Kyou) int {
+		if c := b.RelatedTime.Compare(a.RelatedTime); c != 0 {
+			return c
+		}
+		return strings.Compare(a.ID, b.ID)
+	})
+
+	totalCount := len(allKyous)
+
+	// count_only: DTO構築・typed取得・付随データ3N・TimeIs全ロードを全て飛ばして件数だけ返す。
+	// 旧v1は「limit:1で総数だけ読む」が最安の裏技だったが、それでも1件ぶんのフルDTOと
+	// 使われないファイルURLトークンが毎回付いてきた（外部監査 B1）。
+	if request.CountOnly {
+		response.TotalCount = &totalCount
+		appendGetKyousMCPSuccess(response, request.LocaleName)
+		return
+	}
+
+	// group_by: バケット集計を返す。limit / max_size_mb は適用されない
+	// （バケット数はmcpBucketLimitで有界）。
+	if request.GroupBy != "" {
+		buckets, bucketWarnings, bucketErr := bucketizeMCPKyous(r.Context(), repositories, allKyous, request.GroupBy)
+		response.Warnings = append(response.Warnings, bucketWarnings...)
+		if bucketErr != nil {
+			reportRequestFilterError("group_by", bucketErr)
+			return
+		}
+		response.Buckets = buckets
+		response.TotalCount = &totalCount
+		appendGetKyousMCPSuccess(response, request.LocaleName)
+		return
+	}
+
+	// カーソル適用。
+	// 期間上限へ押し下げ済みなので、ここで読み飛ばすのは境界(カーソルと同一時刻)ぶんだけ。
+	// 複合カーソル（時刻+ID）なら同一時刻のかたまりの内側でも「IDがカーソルより後」から
+	// 正確に再開できる。旧形式（時刻のみ）は従来どおり「厳密に前」から。
+	startIdx := 0
+	if hasCursor {
+		found := false
+		for i, kyou := range allKyous {
+			if kyou.RelatedTime.Before(cursor.time) {
+				startIdx = i
+				found = true
+				break
+			}
+			if cursor.hasID && kyou.RelatedTime.Equal(cursor.time) && kyou.ID > cursor.id {
+				startIdx = i
+				found = true
+				break
+			}
+		}
+		if !found {
+			startIdx = len(allKyous)
+		}
+	}
+
+	batch := allKyous[startIdx:]
+
+	// 候補IDを収集。
+	// ★v2ではLimitは厳密な上限。複合カーソルが同一時刻のかたまりの途中からでも
+	//   再開できるため、旧v1の「かたまりの終わりまで伸ばす」延長は不要になった
+	//   （ADR-0053。旧v1の事情はADR-0052を参照）。
 	// request.Limitは冒頭で[1,maxLimit]にクランプ済み。ここでは batch のインデックス範囲
 	// (batch[i])を安全にするため candidateCount <= len(batch) にクランプする。
 	candidateCount := request.Limit
@@ -234,17 +329,6 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	}
 	if candidateCount > maxLimit {
 		candidateCount = maxLimit
-	}
-	// ★同一RelatedTimeのかたまりの途中でページを切らない。
-	//
-	//   次ページは「カーソルより厳密に前」から始まるので、境界が同一時刻の連続の
-	//   途中に落ちると、返しそこねた同時刻の残りが次ページからも漏れて永久に取れない。
-	//   実データでは一括取り込みのIDFやFitbitの日次指標のように同時刻が並ぶため現実に起きる。
-	//   ここでかたまりの終わりまで伸ばしておけば、Limitを少し超える代わりに取りこぼしが無くなる
-	//   (伸びる量はそのかたまりの残り件数ぶんだけ)。
-	for candidateCount > 0 && candidateCount < len(batch) &&
-		batch[candidateCount].RelatedTime.Equal(batch[candidateCount-1].RelatedTime) {
-		candidateCount++
 	}
 	candidateIDs := make([]string, 0)
 	for i := range candidateCount {
@@ -433,10 +517,6 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	if candidateCount <= len(batch) {
 		resultDTOs = make([]req_res.KyouMCPDTO, 0, candidateCount)
 	}
-	// 直前に採用したKyouのRelatedTime。MaxSizeMBでの打ち切りが
-	// 同一時刻のかたまりを割らないようにするために持つ（割ると次ページが取りこぼす）。
-	lastAppendedRelatedTime := time.Time{}
-
 	for i := range candidateCount {
 		kyou := batch[i]
 
@@ -554,6 +634,15 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 				if isLocalRequest(r) {
 					filePath = idfk.ContentPath
 				}
+				// ファイルサイズは要求されたページ内の行だけ os.Stat で引く
+				// (IDFのDBにサイズ列は無い。stat失敗はフィールド欠落のまま)
+				var fileSize *int64
+				if request.IncludeFileSize && idfk.ContentPath != "" {
+					if stat, statErr := os.Stat(idfk.ContentPath); statErr == nil {
+						size := stat.Size()
+						fileSize = &size
+					}
+				}
 				payload = req_res.IDFPayloadMCPDTO{
 					Kind:     "idf",
 					FileName: idfk.TargetFile,
@@ -564,12 +653,16 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 					RepName:  repName,
 					MimeType: mimeType,
 					FilePath: filePath,
+					FileSize: fileSize,
 				}
 			}
 		case "git_commit_log":
 			if gcl, ok := gitCommitLogMap[kyou.ID]; ok {
 				payload = req_res.GitPayloadMCPDTO{
-					Kind:          "git_commit_log",
+					Kind: "git_commit_log",
+					// git_commit_log の Kyou ID はフル40文字のコミットハッシュそのもの
+					// (git_commit_log_repository_local_dir_impl.go の kyou.ID = commit.Hash.String())
+					CommitHash:    gcl.ID,
 					CommitMessage: gcl.CommitMessage,
 					Addition:      gcl.Addition,
 					Deletion:      gcl.Deletion,
@@ -624,7 +717,9 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		}
 
 		dto := req_res.KyouMCPDTO{
+			ID:            kyou.ID,
 			DataType:      kyou.DataType,
+			RepName:       kyou.RepName,
 			RelatedTime:   kyou.RelatedTime.In(time.Local),
 			Tags:          tagStrings,
 			Texts:         textStrings,
@@ -632,45 +727,48 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			TimeIs:        timeisDTOs,
 			Payload:       payload,
 		}
-		if request.IncludeID {
-			dto.ID = kyou.ID
-		}
-		if request.IncludeRepName {
-			dto.RepName = kyou.RepName
-		}
 
 		dtoJSON, marshalErr := json.Marshal(dto)
 		if marshalErr != nil {
 			continue
 		}
 
-		// サイズ上限での打ち切りも、同一時刻のかたまりの途中では行わない。
-		// ここで割ると、返しそこねた同時刻の記録が次ページ(カーソルより厳密に前)から
-		// 漏れて永久に取れなくなる。かたまりを跨ぐまでは上限を超えても入れ続ける。
-		inSameRelatedTimeGroup := len(resultDTOs) > 0 && kyou.RelatedTime.Equal(lastAppendedRelatedTime)
-		if runningSize+int64(len(dtoJSON)) > maxBytes && !inSameRelatedTimeGroup {
+		// ★v2ではMaxSizeMBは厳密な上限（複合カーソルが同一時刻のかたまりの途中からでも
+		//   再開できるため、旧v1の「かたまりを跨ぐまで入れ続ける」例外は不要になった）。
+		//   唯一の例外はページ先頭の1件が単独で上限を超えるとき: 返さないと
+		//   0件+has_more=true の永久ループになるため、その1件だけ返して警告する。
+		if len(resultDTOs) > 0 && runningSize+int64(len(dtoJSON)) > maxBytes {
 			break
+		}
+		if len(resultDTOs) == 0 && int64(len(dtoJSON)) > maxBytes {
+			response.Warnings = append(response.Warnings, fmt.Sprintf(
+				"single record (%d bytes) exceeds max_size_mb (%d bytes); returned anyway to keep pagination progressing", len(dtoJSON), maxBytes))
 		}
 		runningSize += int64(len(dtoJSON))
 		resultDTOs = append(resultDTOs, dto)
-		lastAppendedRelatedTime = kyou.RelatedTime
 	}
 
 	returnedCount := len(resultDTOs)
-	hasMore := (startIdx + returnedCount) < totalCount
+	remainingCount := len(batch) - returnedCount
+	hasMore := remainingCount > 0
 	nextCursor := ""
 	if hasMore && returnedCount > 0 {
-		// ★秒精度(time.RFC3339)で出してはいけない。
-		//   RelatedTimeが小数秒を持つとき、秒へ切り捨てたカーソルは実際の時刻より前を指す。
-		//   次ページは「カーソルより厳密に前」を取るので、切り捨てた秒の内側にある
-		//   未返却の記録が丸ごと漏れる。RFC3339Nanoなら切り捨てが起きない
-		//   (ISO 8601のままなので、受け取る側の time.RFC3339 パースでもそのまま読める)。
-		nextCursor = resultDTOs[returnedCount-1].RelatedTime.Format(time.RFC3339Nano)
+		// 複合カーソル {RFC3339Nano}::{ID}。
+		// 時刻がRFC3339Nanoなのは、秒へ切り捨てると同じ秒の内側が漏れるため。
+		// IDを併記することで、同一時刻のかたまりの途中でページを割っても
+		// 次ページが正確な位置から再開できる（これがLimit厳密化の前提。ADR-0053）。
+		last := batch[returnedCount-1]
+		nextCursor = encodeMCPCursor(last.RelatedTime, last.ID)
 	}
 
 	response.Kyous = resultDTOs
-	response.TotalCount = totalCount
+	// TotalCount は cursor 無しの応答のみ（カーソル押し下げ後のハンドラは全件数を知らない）。
+	// 全応答に RemainingCount。旧v1のTotalCountはカーソルの有無で意味が変わっていた（外部監査 S3）。
+	if !hasCursor {
+		response.TotalCount = &totalCount
+	}
 	response.ReturnedCount = returnedCount
+	response.RemainingCount = remainingCount
 	response.HasMore = hasMore
 	response.NextCursor = nextCursor
 	// 付随データの取得に1件でも失敗していたら、返した結果が不完全であることを明示する。
@@ -685,9 +783,14 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			response.Warnings = append(response.Warnings, fmt.Sprintf("failed to fetch %s for %d record(s); attached data is incomplete", kind, detailFailures[kind]))
 		}
 	}
+	appendGetKyousMCPSuccess(response, request.LocaleName)
+}
+
+// appendGetKyousMCPSuccess は成功メッセージを積む（count_only / group_by の早期returnと共有）。
+func appendGetKyousMCPSuccess(response *req_res.GetKyousMCPResponse, localeName string) {
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetKyousMCPSuccessMessage,
-		Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KYOUS_MESSAGE"}),
+		Message:     api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KYOUS_MESSAGE"}),
 	})
 }
 
