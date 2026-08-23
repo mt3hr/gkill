@@ -355,33 +355,48 @@ func TestHandleGetKyousMCP_ReKyouPayload(t *testing.T) {
 // 追撃クエリ(query.ids / query.reps / プラグイン本文取得 / 更新系)は両方を前提とし、
 // フラグの立て忘れが往復を1回増やしていたため v2 で常時付与へ変えた（ADR-0053）。
 // 旧フラグを送っても無害に無視されることも固定する。
+//
+// **キャッシュONでも必ず走らせること。**
+// leaf repはREP_NAME列を持たず読むときにGo側が自分の名前を入れるので、
+// キャッシュOFFではRepNameが空になりようがない。
+// 一方キャッシュrepはREP_NAME列を持ち、書き込み時に渡された値をそのままINSERTするので、
+// 「追加直後だけrep_nameが空」という壊れ方はキャッシュONでしか再現しない。
+// 既定(--cache_in_memory=true)は本番と同じキャッシュONの側なので、
+// OFFだけで走らせているとこの回帰を丸ごと見逃す（実際に見逃していた）。
 func TestHandleGetKyousMCP_IDAndRepNameAlwaysPresent(t *testing.T) {
-	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
+	for _, cacheInMemory := range []bool{false, true} {
+		t.Run(fmt.Sprintf("cacheInMemory=%v", cacheInMemory), func(t *testing.T) {
+			if cacheInMemory {
+				useCacheInMemory(t)
+			}
+			tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+			defer cleanup()
 
-	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+			sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
 
-	addTestKmemo(t, tsURL, sessionID, "rep_nameの確認用メモ")
+			addTestKmemo(t, tsURL, sessionID, "rep_nameの確認用メモ")
 
-	query := map[string]any{"only_latest_data": true}
+			query := map[string]any{"only_latest_data": true}
 
-	res := getKyousMCP(t, tsURL, sessionID, query, nil)
-	if len(res.Kyous) == 0 {
-		t.Fatal("Kyouが1件も返っていない")
-	}
-	for _, kyou := range res.Kyous {
-		if kyou.ID == "" {
-			t.Errorf("data_type %q のidが空(常時付与のはず)", kyou.DataType)
-		}
-		if kyou.RepName == "" {
-			t.Errorf("data_type %q のrep_nameが空(常時付与のはず)", kyou.DataType)
-		}
-	}
+			res := getKyousMCP(t, tsURL, sessionID, query, nil)
+			if len(res.Kyous) == 0 {
+				t.Fatal("Kyouが1件も返っていない")
+			}
+			for _, kyou := range res.Kyous {
+				if kyou.ID == "" {
+					t.Errorf("data_type %q のidが空(常時付与のはず)", kyou.DataType)
+				}
+				if kyou.RepName == "" {
+					t.Errorf("data_type %q のrep_nameが空(常時付与のはず)", kyou.DataType)
+				}
+			}
 
-	// 旧フラグは未知フィールドとして無害に無視される
-	legacy := getKyousMCP(t, tsURL, sessionID, query, map[string]any{"include_rep_name": false, "include_id": false})
-	if len(legacy.Kyous) == 0 || legacy.Kyous[0].ID == "" || legacy.Kyous[0].RepName == "" {
-		t.Error("旧フラグ(include_id/include_rep_name)を送ると挙動が変わってしまう")
+			// 旧フラグは未知フィールドとして無害に無視される
+			legacy := getKyousMCP(t, tsURL, sessionID, query, map[string]any{"include_rep_name": false, "include_id": false})
+			if len(legacy.Kyous) == 0 || legacy.Kyous[0].ID == "" || legacy.Kyous[0].RepName == "" {
+				t.Error("旧フラグ(include_id/include_rep_name)を送ると挙動が変わってしまう")
+			}
+		})
 	}
 }
 

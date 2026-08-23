@@ -163,12 +163,42 @@ type CachedReps struct {
 	URLog        URLogRepository
 }
 
+// writeRepNameOrEmptyは書き込み先repの実名を返します。取れなければ空を返します。
+//
+// **キャッシュrepのREP_NAME列は「実体を書いたrep」に合わせること。**
+// 呼び出し側が渡すRepNameはクライアントがエコーしたもので、
+// MCPの更新経路は取得元repの名前をそのまま返してくるし、追加経路は空文字を送ってくる。
+// leaf repはREP_NAME列を持たず読むときにGo側が自分の名前を入れるので実害が出ないが、
+// キャッシュrepはREP_NAME列を持ちここで渡した値をそのままINSERTする。
+// --cache_in_memory(既定true)では検索がキャッシュrepしか見ないため、
+// 空文字や取得元repの名前がそのまま検索結果に出て、
+// **次のUpdateCache(既定1分)まで rep絞り込みが効かない**。
+//
+// 取れなければ空にする ―― 空はfilterKyousByRepNameが残すので安全側。
+// 実在しないrep名を入れるほうが重い壊れ方(記録が黙って消える)になる。
+//
+// Write*Repは必ずleaf rep(gkill_dao_managerのUseToWrite分岐がSQLite3Implを代入する)なので、
+// 返る名前は必ずGetAllRepNamesに載る。集約repの合成名は返らない。
+func writeRepNameOrEmpty(ctx context.Context, rep interface {
+	GetRepName(ctx context.Context) (string, error)
+}) string {
+	if rep == nil {
+		return ""
+	}
+	name, err := rep.GetRepName(ctx)
+	if err != nil {
+		return ""
+	}
+	return name
+}
+
 // WriteThroughReKyouCacheは書き込み済みのReKyouをキャッシュrepにも反映します。
 // キャッシュrepが無いときは何もせずnilを返します。
 func (g *GkillRepositories) WriteThroughReKyouCache(ctx context.Context, rekyou ReKyou) error {
 	if g.CachedReps.ReKyou == nil {
 		return nil
 	}
+	rekyou.RepName = writeRepNameOrEmpty(ctx, g.WriteReKyouRep)
 	return g.CachedReps.ReKyou.AddReKyouInfo(ctx, rekyou)
 }
 
@@ -178,11 +208,16 @@ func (g *GkillRepositories) WriteThroughMiReKyouCache(ctx context.Context, mirek
 	if g.CachedReps.MiReKyou == nil {
 		return nil
 	}
+	mirekyou.RepName = writeRepNameOrEmpty(ctx, g.WriteMiReKyouRep)
 	return g.CachedReps.MiReKyou.AddMiReKyouInfo(ctx, mirekyou)
 }
 
 // WriteThroughIDFKyouCacheは書き込み済みのIDFKyouをキャッシュrepにも反映します。
 // キャッシュrepが無いときは何もせずnilを返します。
+//
+// **他の12メソッドと違い、ここではRepNameを書き込み先repで上書きしない。**
+// handle_upload_files.goがrequest.TargetRepNameでリクエストごとに書き込み先repを選ぶので、
+// g.WriteIDFKyouRepとは別のrepになりうる。呼び出し側が既に正しい値を入れている。
 func (g *GkillRepositories) WriteThroughIDFKyouCache(ctx context.Context, idfKyou IDFKyou) error {
 	if g.CachedReps.IDFKyou == nil {
 		return nil
@@ -196,6 +231,7 @@ func (g *GkillRepositories) WriteThroughKCCache(ctx context.Context, kc KC) erro
 	if g.CachedReps.KC == nil {
 		return nil
 	}
+	kc.RepName = writeRepNameOrEmpty(ctx, g.WriteKCRep)
 	return g.CachedReps.KC.AddKCInfo(ctx, kc)
 }
 
@@ -205,6 +241,7 @@ func (g *GkillRepositories) WriteThroughKmemoCache(ctx context.Context, kmemo Km
 	if g.CachedReps.Kmemo == nil {
 		return nil
 	}
+	kmemo.RepName = writeRepNameOrEmpty(ctx, g.WriteKmemoRep)
 	return g.CachedReps.Kmemo.AddKmemoInfo(ctx, kmemo)
 }
 
@@ -214,6 +251,7 @@ func (g *GkillRepositories) WriteThroughLantanaCache(ctx context.Context, lantan
 	if g.CachedReps.Lantana == nil {
 		return nil
 	}
+	lantana.RepName = writeRepNameOrEmpty(ctx, g.WriteLantanaRep)
 	return g.CachedReps.Lantana.AddLantanaInfo(ctx, lantana)
 }
 
@@ -223,6 +261,7 @@ func (g *GkillRepositories) WriteThroughMiCache(ctx context.Context, mi Mi) erro
 	if g.CachedReps.Mi == nil {
 		return nil
 	}
+	mi.RepName = writeRepNameOrEmpty(ctx, g.WriteMiRep)
 	return g.CachedReps.Mi.AddMiInfo(ctx, mi)
 }
 
@@ -232,6 +271,7 @@ func (g *GkillRepositories) WriteThroughNlogCache(ctx context.Context, nlog Nlog
 	if g.CachedReps.Nlog == nil {
 		return nil
 	}
+	nlog.RepName = writeRepNameOrEmpty(ctx, g.WriteNlogRep)
 	return g.CachedReps.Nlog.AddNlogInfo(ctx, nlog)
 }
 
@@ -241,6 +281,7 @@ func (g *GkillRepositories) WriteThroughNotificationCache(ctx context.Context, n
 	if g.CachedReps.Notification == nil {
 		return nil
 	}
+	notification.RepName = writeRepNameOrEmpty(ctx, g.WriteNotificationRep)
 	return g.CachedReps.Notification.AddNotificationInfo(ctx, notification)
 }
 
@@ -250,6 +291,7 @@ func (g *GkillRepositories) WriteThroughTagCache(ctx context.Context, tag Tag) e
 	if g.CachedReps.Tag == nil {
 		return nil
 	}
+	tag.RepName = writeRepNameOrEmpty(ctx, g.WriteTagRep)
 	return g.CachedReps.Tag.AddTagInfo(ctx, tag)
 }
 
@@ -259,6 +301,7 @@ func (g *GkillRepositories) WriteThroughTextCache(ctx context.Context, text Text
 	if g.CachedReps.Text == nil {
 		return nil
 	}
+	text.RepName = writeRepNameOrEmpty(ctx, g.WriteTextRep)
 	return g.CachedReps.Text.AddTextInfo(ctx, text)
 }
 
@@ -268,6 +311,7 @@ func (g *GkillRepositories) WriteThroughTimeIsCache(ctx context.Context, timeis 
 	if g.CachedReps.TimeIs == nil {
 		return nil
 	}
+	timeis.RepName = writeRepNameOrEmpty(ctx, g.WriteTimeIsRep)
 	return g.CachedReps.TimeIs.AddTimeIsInfo(ctx, timeis)
 }
 
@@ -277,6 +321,7 @@ func (g *GkillRepositories) WriteThroughURLogCache(ctx context.Context, urlog UR
 	if g.CachedReps.URLog == nil {
 		return nil
 	}
+	urlog.RepName = writeRepNameOrEmpty(ctx, g.WriteURLogRep)
 	return g.CachedReps.URLog.AddURLogInfo(ctx, urlog)
 }
 
