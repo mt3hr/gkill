@@ -29,6 +29,8 @@ export const KYOUS_TOP_LEVEL_FIELDS = new Set([
   "count_only",
   "group_by",
   "data_types",
+  "create_apps",
+  "update_apps",
   "num_min",
   "num_max",
   "idf_kinds",

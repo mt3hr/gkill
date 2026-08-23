@@ -15,7 +15,13 @@ type KyouMCPDTO struct {
 	ID       string `json:"id"`
 	DataType string `json:"data_type"`
 	// RepName はKyouの取得元リポジトリ名。query.reps 絞り込みの起点になる。
-	RepName     string    `json:"rep_name"`
+	RepName string `json:"rep_name"`
+	// CreateApp / UpdateApp は書いたアプリ・最後に更新したアプリ。
+	// create_apps / update_apps で絞れるようにした以上、結果からも読めないと
+	// 呼び出し側が絞り込みの結果を検証できない（omitempty は付けない。
+	// 空と「フィールドが無い」が区別できなくなるため）。
+	CreateApp   string    `json:"create_app"`
+	UpdateApp   string    `json:"update_app"`
 	RelatedTime time.Time `json:"related_time"`
 	// IsDeleted / UpdateTime は query.include_deleted_data で削除済みを混ぜたときに
 	// 「どれが削除済みか」「どちらが新しいか」を判別するために要る。

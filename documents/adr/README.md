@@ -180,4 +180,6 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0071](0071-deleted-data-opens-only-with-include-deleted-data.md) | 削除済みの Kyou は include_deleted_data だけが開ける（is_deleted は使わない） | Accepted |
 | [0072](0072-drop-never-implemented-query-fields.md) | 実装されなかった検索条件は消す — 受理して無視するより未知キーとして弾く | Accepted |
 | [0073](0073-tag-vocabulary-drops-dead-targets.md) | タグ語彙は「生存する対象を持つタグ」だけを返す — カスケード削除はしない | Accepted |
+| [0056](0056-attached-data-reps-are-a-separate-list.md) | タグ・テキスト・通知・GPSログの格納先は別枠で返す — Reps へ混ぜない | Accepted |
+| [0074](0074-filter-by-create-app-at-request-level.md) | 「どのアプリが書いたか」の絞り込みは FindQuery ではなく MCP リクエストに置く | Accepted |
 | [0080](0080-kftl-errors-are-per-line.md) | メモ帳（KFTL）の失敗は行ごとに返し、入力ミスとサーバ障害を分ける | Accepted |

@@ -139,6 +139,65 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 		return strings.Compare(a.RepName, b.RepName)
 	})
 
+	// 付随データ（タグ・テキスト・通知・GPSログ）の格納先。
+	// これらは Kyou を1件も生まないので Reps には入っておらず、
+	// RepInfos にも GetAllRepNames にも出てこない。だが add_tag / add_text の
+	// 書き込み先はここなので、書く前に知れないと「どこへ書かれるのか」が分からない。
+	// **RepInfos へ混ぜないこと** ―― 混ぜると query.reps へ渡されて静かに0件になる。
+	appendAttachedDataRep := func(dataKind string, repNames []string) {
+		for _, repName := range repNames {
+			if repName == "" {
+				continue
+			}
+			response.AttachedDataReps = append(response.AttachedDataReps, req_res.AttachedDataRepInfoMCPDTO{
+				RepName:  repName,
+				DataKind: dataKind,
+			})
+		}
+	}
+	if tagReps, err := repositories.TagReps.UnWrapTyped(); err == nil {
+		names := make([]string, 0, len(tagReps))
+		for _, rep := range tagReps {
+			if name, err := rep.GetRepName(r.Context()); err == nil {
+				names = append(names, name)
+			}
+		}
+		appendAttachedDataRep("tag", names)
+	}
+	if textReps, err := repositories.TextReps.UnWrapTyped(); err == nil {
+		names := make([]string, 0, len(textReps))
+		for _, rep := range textReps {
+			if name, err := rep.GetRepName(r.Context()); err == nil {
+				names = append(names, name)
+			}
+		}
+		appendAttachedDataRep("text", names)
+	}
+	if notificationReps, err := repositories.NotificationReps.UnWrapTyped(); err == nil {
+		names := make([]string, 0, len(notificationReps))
+		for _, rep := range notificationReps {
+			if name, err := rep.GetRepName(r.Context()); err == nil {
+				names = append(names, name)
+			}
+		}
+		appendAttachedDataRep("notification", names)
+	}
+	{
+		names := make([]string, 0, len(repositories.GPSLogReps))
+		for _, rep := range repositories.GPSLogReps {
+			if name, err := rep.GetRepName(r.Context()); err == nil {
+				names = append(names, name)
+			}
+		}
+		appendAttachedDataRep("gpslog", names)
+	}
+	slices.SortFunc(response.AttachedDataReps, func(a, b req_res.AttachedDataRepInfoMCPDTO) int {
+		if c := strings.Compare(a.DataKind, b.DataKind); c != 0 {
+			return c
+		}
+		return strings.Compare(a.RepName, b.RepName)
+	})
+
 	response.CanonicalRepTypes = append(response.CanonicalRepTypes, find.KyouRepTypes...)
 
 	for _, pluginRep := range repositories.PluginReps {

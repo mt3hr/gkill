@@ -25,6 +25,16 @@ type GetKyousMCPRequest struct {
 	// DataTypes は DTO の data_type 文字列(mi_create / claude_conversation 等)の許可リスト。
 	// nil=未使用、非nil空=0件（FindQuery の null 意味論に揃える）。
 	DataTypes []string `json:"data_types"`
+
+	// CreateApps / UpdateApps は「どのアプリが書いたか / 最後に更新したか」の許可リスト。
+	// gkill_kftl / gkill_mcp_readwrite / gkill_mcp_write / urlog_bookmarklet / gkill / git など。
+	// nil=未使用、非nil空=0件（FindQuery の null 意味論に揃える）。
+	//
+	// FindQuery に足していないのは意図的。ReKyou / MiReKyou のワード委譲が
+	// 利用者のクエリをそのまま下位検索へ流すので、SQL まで降ろすと
+	// 「MCPで作ったリポストだが参照先はブラウザ作成」が黙って消える。
+	CreateApps []string `json:"create_apps"`
+	UpdateApps []string `json:"update_apps"`
 	// NumMin / NumMax は数値ペイロード(kc.num_value / nlog.amount / lantana.mood)の範囲絞り込み。
 	// どちらか非nilで有効になり、有効時は数値を持たない種別の行は結果から外れる。
 	NumMin *float64 `json:"num_min"`

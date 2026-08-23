@@ -73,10 +73,15 @@ func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Requ
 		if typedIndex := pluginRepo.TypedIndex(); typedIndex != nil {
 			stats := typedIndex.Stats()
 			statsDTO := &req_res.PluginTypedIndexStatsMCPDTO{
-				OK:          stats.OK,
-				RecordCount: stats.RecordCount,
-				Truncated:   stats.Truncated,
-				BuiltAt:     stats.BuiltAt.Format(time.RFC3339),
+				OK:             stats.OK,
+				State:          stats.State,
+				LastBuildError: stats.LastBuildError,
+				RecordCount:    stats.RecordCount,
+				Truncated:      stats.Truncated,
+				BuiltAt:        stats.BuiltAt.Format(time.RFC3339),
+			}
+			if !stats.LastAttemptAt.IsZero() {
+				statsDTO.LastAttemptAt = stats.LastAttemptAt.Format(time.RFC3339)
 			}
 			if !stats.Oldest.IsZero() {
 				statsDTO.Oldest = stats.Oldest.Format(time.RFC3339)
