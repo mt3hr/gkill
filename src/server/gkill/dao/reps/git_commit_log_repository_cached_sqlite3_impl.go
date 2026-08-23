@@ -19,14 +19,42 @@ import (
 )
 
 type gitCommitLogRepositoryCachedSQLite3Impl struct {
-	dbName                 string
-	gitRep                 GitCommitLogRepository
-	cachedDB               *sqllib.DB
-	m                      *sync.RWMutex
-	ownDB                  bool        // trueの場合、永続ファイルDBを自前で管理する
-	backgroundUpdate       bool        // trueの場合、初回フルリビルドをバックグラウンドで実行する
-	isCacheBuilding        atomic.Bool // trueの場合、バックグラウンドキャッシュビルド中（検索goroutineと並行に読み書きされる）
-	lastUpdateCacheChanged bool
+	dbName           string
+	gitRep           GitCommitLogRepository
+	cachedDB         *sqllib.DB
+	m                *sync.RWMutex
+	ownDB            bool        // trueの場合、永続ファイルDBを自前で管理する
+	backgroundUpdate bool        // trueの場合、初回フルリビルドをバックグラウンドで実行する
+	isCacheBuilding  atomic.Bool // trueの場合、バックグラウンドキャッシュビルド中（検索goroutineと並行に読み書きされる）
+	// 並行UpdateCache（1分周期の更新とCLIのupdate_cacheの重なり等）で無ロックに
+	// 書かれるためatomic。素のboolはraceになる
+	lastUpdateCacheChanged atomic.Bool
+}
+
+// ensureGitCommitLogCacheUnique は既存キャッシュの重複行を掃除してから ID の UNIQUE 索引を張る。
+//
+// **順序が重要**: 索引を先に作ろうとすると、重複入りの既存DB(legacy)で
+// CREATE UNIQUE INDEX が失敗し、この rep どころか GetRepositories 全体が
+// 失敗してログイン不能になる。掃除→索引の順を守ること。
+//
+// 重複の混入経路は「並行 UpdateCache の diff(無ロック)→INSERT の TOCTOU」と
+// 「同一コミット(同一ハッシュ=同一ID)を持つ複数 git rep からの合流」。
+// INSERT OR IGNORE + UNIQUE(ID) が再発を防ぎ、この掃除が既存DBを自己修復する
+// (derived cache なので DELETE は安全。最悪 UpdateCache が拾い直す)。
+// 同一コミットが複数 rep にある場合は先に入った行の REP_NAME が残る。
+// 経緯: 1年分の外部監査 C2「git 同一コミットが2レコード返る」。
+func ensureGitCommitLogCacheUnique(ctx context.Context, db *sqllib.DB, dbName string) error {
+	cleanupSQL := `DELETE FROM ` + sqlite3impl.QuoteIdent(dbName) + ` WHERE rowid NOT IN (SELECT MIN(rowid) FROM ` + sqlite3impl.QuoteIdent(dbName) + ` GROUP BY ID)`
+	gkill_log.LogSQL(ctx, cleanupSQL)
+	if _, err := db.ExecContext(ctx, cleanupSQL); err != nil {
+		return fmt.Errorf("error at cleanup duplicated git commit log cache rows %s: %w", dbName, err)
+	}
+	uniqueSQL := `CREATE UNIQUE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("UNIQ_"+dbName+"_ID") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID)`
+	gkill_log.LogSQL(ctx, uniqueSQL)
+	if _, err := db.ExecContext(ctx, uniqueSQL); err != nil {
+		return fmt.Errorf("error at create unique git commit log cache index %s: %w", dbName, err)
+	}
+	return nil
 }
 
 func NewGitRepCachedSQLite3Impl(ctx context.Context, gitRep GitCommitLogRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (GitCommitLogRepository, error) {
@@ -99,6 +127,10 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	if err := ensureGitCommitLogCacheUnique(ctx, cacheDB, dbName); err != nil {
+		return nil, err
+	}
+
 	return &gitCommitLogRepositoryCachedSQLite3Impl{
 		dbName:   dbName,
 		gitRep:   gitRep,
@@ -149,6 +181,11 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 	if err != nil {
 		db.Close()
 		return nil, fmt.Errorf("error at create git commit log cache index: %w", err)
+	}
+
+	if err := ensureGitCommitLogCacheUnique(ctx, db, dbName); err != nil {
+		db.Close()
+		return nil, err
 	}
 
 	// REF_HASHESテーブル作成（ref hashの永続化用）
@@ -596,7 +633,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 
 	// Step 2: 下層リポジトリに変更がなければスキップ
 	if !g.gitRep.LastUpdateCacheChanged() {
-		g.lastUpdateCacheChanged = false
+		g.lastUpdateCacheChanged.Store(false)
 		return nil
 	}
 
@@ -607,7 +644,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 		currentRefHashes := g.getCurrentRefHashes(ctx)
 		persistedRefHashes, err := g.loadPersistedRefHashes(ctx)
 		if err == nil && refHashesEqual(currentRefHashes, persistedRefHashes) {
-			g.lastUpdateCacheChanged = false
+			g.lastUpdateCacheChanged.Store(false)
 			return nil
 		}
 	}
@@ -644,7 +681,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 
 	// データ変更がなければref hashesだけ更新
 	if len(newIDs) == 0 && len(deletedIDs) == 0 {
-		g.lastUpdateCacheChanged = false
+		g.lastUpdateCacheChanged.Store(false)
 		if g.ownDB {
 			g.saveRefHashes(ctx, g.getCurrentRefHashes(ctx))
 		}
@@ -666,7 +703,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 			}
 			g.isCacheBuilding.Store(false)
 		}()
-		g.lastUpdateCacheChanged = true
+		g.lastUpdateCacheChanged.Store(true)
 		return nil
 	}
 
@@ -676,7 +713,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 	if err != nil {
 		return err
 	}
-	g.lastUpdateCacheChanged = true
+	g.lastUpdateCacheChanged.Store(true)
 	return nil
 }
 
@@ -726,10 +763,13 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) doIncrementalUpdate(ctx contex
 		}
 	}
 
-	// 新規コミットをINSERT
+	// 新規コミットをINSERT。
+	// OR IGNORE なのは、並行 UpdateCache の diff(無ロック)→INSERT の TOCTOU と、
+	// 同一コミットを持つ複数 git rep からの合流で同じ ID が二度届きうるため。
+	// UNIQUE(ID) 索引(ensureGitCommitLogCacheUnique)と対で同一コミットの重複行を根絶する。
 	if len(newLogs) > 0 {
 		insertSQL := `
-INSERT INTO ` + sqlite3impl.QuoteIdent(g.dbName) + ` (
+INSERT OR IGNORE INTO ` + sqlite3impl.QuoteIdent(g.dbName) + ` (
   IS_DELETED,
   ID,
   COMMIT_MESSAGE,
@@ -948,7 +988,7 @@ func refHashesEqual(a, b map[string]map[string]string) bool {
 }
 
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
-	return g.lastUpdateCacheChanged
+	return g.lastUpdateCacheChanged.Load()
 }
 
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {
