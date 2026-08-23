@@ -250,6 +250,7 @@ func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 	router.HandleFunc(gkillAPI.APIAddress.CommitTXAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleCommitTx)).Methods(gkillAPI.APIAddress.CommitTXMethod)
 	router.HandleFunc(gkillAPI.APIAddress.DiscardTXAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleDiscardTX)).Methods(gkillAPI.APIAddress.DiscardTXMethod)
 	router.HandleFunc(gkillAPI.APIAddress.GetKyousMCPAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetKyousMCP)).Methods(gkillAPI.APIAddress.GetKyousMCPMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetRepInfosMCPAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetRepInfosMCP)).Methods(gkillAPI.APIAddress.GetRepInfosMCPMethod)
 	router.HandleFunc(gkillAPI.APIAddress.GetGitCommitLogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetGitCommitLog)).Methods(gkillAPI.APIAddress.GetGitCommitLogMethod)
 	router.HandleFunc(gkillAPI.APIAddress.GetGPSLogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetGPSLog)).Methods(gkillAPI.APIAddress.GetGPSLogMethod)
 
@@ -830,6 +831,7 @@ func TestAuthMiddleware_RejectsInvalidSession(t *testing.T) {
 		{"DiscardTx", addr.DiscardTXAddress},
 		{"SubmitKFTLText", addr.SubmitKFTLTextAddress},
 		{"GetKyousMCP", addr.GetKyousMCPAddress},
+		{"GetRepInfosMCP", addr.GetRepInfosMCPAddress},
 		{"GetGitCommitLog", addr.GetGitCommitLogAddress},
 		{"GetGPSLog", addr.GetGPSLogAddress},
 	}
@@ -7384,8 +7386,11 @@ func TestHandleGetKyousMCP_BasicQuery(t *testing.T) {
 	if getResp.ReturnedCount == 0 {
 		t.Fatal("expected at least 1 returned kyou in MCP response, got 0")
 	}
-	if getResp.TotalCount < getResp.ReturnedCount {
-		t.Errorf("TotalCount (%d) < ReturnedCount (%d)", getResp.TotalCount, getResp.ReturnedCount)
+	// cursor無しの応答なのでTotalCountが入る(v2: *int。cursorページには入らない)
+	if getResp.TotalCount == nil {
+		t.Error("cursor無しの応答なのにTotalCountが無い")
+	} else if *getResp.TotalCount < getResp.ReturnedCount {
+		t.Errorf("TotalCount (%d) < ReturnedCount (%d)", *getResp.TotalCount, getResp.ReturnedCount)
 	}
 
 	// Verify the added kmemo is in the results

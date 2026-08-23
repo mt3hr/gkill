@@ -25,7 +25,18 @@ type PluginRepository interface {
 	PostConfig(ctx context.Context, formData map[string]string) error
 
 	// IsAlive はプラグインプロセスが起動・応答中かを返す。
+	// 判定はping（必要ならプロセスを起動する）なので副作用がある。
+	// 起動を伴わない読み取りには ProcessRunning を使うこと。
 	IsAlive(ctx context.Context) bool
+
+	// LastStderr はプラグインプロセスの stderr 末尾（直近約4KB）を返す。
+	// ビルドエラー等の診断用で、何も出ていなければ空文字。
+	// 「is_alive=true なのに0件」の理由をAPIから読めるようにする（外部監査 D2）。
+	LastStderr() string
+
+	// ProcessRunning はプロセスが起動済みかを副作用なしで返す。
+	// IsAlive と違い、呼んでもプロセスは起動しない。
+	ProcessRunning() bool
 
 	// TypedIndex はプラグインが返した型別データ・付随データのインメモリ索引を返す。
 	// manifest.jsonのprovidesが空のプラグインではnilを返す。

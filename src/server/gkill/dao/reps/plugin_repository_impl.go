@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
@@ -100,6 +101,13 @@ type pluginRepositoryImpl struct {
 	// providesを宣言していないプラグイン（chatgpt/claudeai/claudecode/example）ではnilのままで、
 	// UpdateCacheも従来どおり何もしない。
 	typedIndex *PluginTypedIndex
+
+	// stderrRing はプラグインstderrの末尾を保持する（診断用。PluginInfo.last_error の源）。
+	stderrRing *pluginStderrRing
+	// running はプロセスが起動済みかの受動フラグ。
+	// IsAlive は「呼ぶとプロセスを起動する」副作用を持つため、
+	// 起動を伴わない読み取り（ProcessRunning）の対として持つ。
+	running atomic.Bool
 }
 
 // インターフェース適合確認（コンパイル時チェック）
@@ -110,10 +118,11 @@ var _ pluginIndexSource = (*pluginRepositoryImpl)(nil)
 // プロセスは初回クエリ時に遅延起動する。
 func NewPluginRepository(userID string, pluginDir string, manifest gkill_plugin.PluginManifest) PluginRepository {
 	rep := &pluginRepositoryImpl{
-		callSlot:  make(chan struct{}, 1),
-		userID:    userID,
-		pluginDir: pluginDir,
-		manifest:  manifest,
+		callSlot:   make(chan struct{}, 1),
+		userID:     userID,
+		pluginDir:  pluginDir,
+		manifest:   manifest,
+		stderrRing: newPluginStderrRing(),
 	}
 	if len(manifest.Provides) != 0 {
 		rep.typedIndex = newPluginTypedIndex(rep)
@@ -217,9 +226,13 @@ func (p *pluginRepositoryImpl) ensureStarted() error {
 	if err != nil {
 		return fmt.Errorf("error at get stdout pipe for plugin %s: %w", p.manifest.Name, err)
 	}
-	cmd.Stderr = os.Stderr
+	// stderr は本体のstderrへ流しつつ、末尾をリングにも写す。
+	// 以前は直結で、プラグインのビルドエラーがAPIから一切診断できなかった（外部監査 D2）
+	cmd.Stderr = io.MultiWriter(os.Stderr, p.stderrRing)
 
 	if err := cmd.Start(); err != nil {
+		// 起動失敗もリングに残す（プロセスが1行も吐けない失敗はここでしか捕まらない）
+		fmt.Fprintf(p.stderrRing, "gkill: failed to start plugin: %v\n", err)
 		return fmt.Errorf("error at start plugin %s (%s): %w", p.manifest.Name, execPath, err)
 	}
 
@@ -245,6 +258,7 @@ func (p *pluginRepositoryImpl) ensureStarted() error {
 		readerDone: make(chan struct{}),
 	}
 	p.proc = proc
+	p.running.Store(true)
 	go p.readLoop(proc)
 
 	slog.Log(context.Background(), gkill_log.Info, "plugin started", "plugin_name", fmt.Sprintf("%q", p.manifest.Name), "user_id", fmt.Sprintf("%q", p.userID))
@@ -289,6 +303,7 @@ func (p *pluginRepositoryImpl) deliver(proc *pluginProcess, result scanResult) b
 // retire はプロセスを使用終了にする。リーダーを解放し、プロセスを強制終了する。
 // 複数回呼んでも安全。呼び出し側で実行スロットを取得済みであること。
 func (p *pluginRepositoryImpl) retire(proc *pluginProcess) {
+	p.running.Store(false)
 	proc.retireOnce.Do(func() { close(proc.retired) })
 	proc.started = false
 	if proc.cmd.Process != nil {
@@ -678,6 +693,16 @@ func (p *pluginRepositoryImpl) IsAlive(ctx context.Context) bool {
 	}
 	resp, err := p.callCommand(pingCtx, req)
 	return err == nil && resp.Pong
+}
+
+// LastStderr の契約は PluginRepository.LastStderr を参照。
+func (p *pluginRepositoryImpl) LastStderr() string {
+	return p.stderrRing.Tail()
+}
+
+// ProcessRunning の契約は PluginRepository.ProcessRunning を参照。
+func (p *pluginRepositoryImpl) ProcessRunning() bool {
+	return p.running.Load()
 }
 
 // --- 変換ヘルパー ---

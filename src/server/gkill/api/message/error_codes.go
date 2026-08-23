@@ -411,4 +411,6 @@ const (
 	ExpiredPasswordResetTokenError                                   = "ERR000408"
 	CannotDisableOwnAccountError                                     = "ERR000409"
 	FindKyousError                                                   = "ERR000410"
+	InvalidGetRepInfosMCPRequestDataError                            = "ERR000411"
+	InvalidGetRepInfosMCPResponseDataError                           = "ERR000412"
 )

@@ -89,4 +89,5 @@ const (
 	GetReKyousByTargetIDSuccessMessage      = "MSG000086"
 	GetMiReKyousByTargetIDSuccessMessage    = "MSG000087"
 	FindKyousPluginWarningMessage           = "MSG000088"
+	GetRepInfosMCPSuccessMessage            = "MSG000089"
 )
