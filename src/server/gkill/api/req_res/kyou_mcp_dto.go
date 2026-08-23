@@ -15,8 +15,15 @@ type KyouMCPDTO struct {
 	ID       string `json:"id"`
 	DataType string `json:"data_type"`
 	// RepName はKyouの取得元リポジトリ名。query.reps 絞り込みの起点になる。
-	RepName       string               `json:"rep_name"`
-	RelatedTime   time.Time            `json:"related_time"`
+	RepName     string    `json:"rep_name"`
+	RelatedTime time.Time `json:"related_time"`
+	// IsDeleted / UpdateTime は query.include_deleted_data で削除済みを混ぜたときに
+	// 「どれが削除済みか」「どちらが新しいか」を判別するために要る。
+	// omitempty は付けない。false / ゼロ値のときに黙って消えると、
+	// 「生きている」と「フィールドが無い」の区別が付かなくなる
+	// （IsZip / Addition / Deletion と同じ理由。外部監査 C4 / C5）。
+	IsDeleted     bool                 `json:"is_deleted"`
+	UpdateTime    time.Time            `json:"update_time"`
 	Tags          []string             `json:"tags,omitempty"`
 	Texts         []string             `json:"texts,omitempty"`
 	Notifications []NotificationMCPDTO `json:"notifications,omitempty"`

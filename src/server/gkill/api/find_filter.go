@@ -941,21 +941,37 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 		kyousMap[id] = append(kyousMap[id], textMatchKyous...)
 	}
 
-	// 削除隅のものは消す
-	deleteTargetIDs := []string{}
-	for id, kyous := range kyousMap {
-		var latestKyou reps.Kyou
-		for _, kyou := range kyous {
-			if kyou.UpdateTime.After(latestKyou.UpdateTime) {
-				latestKyou = kyou
+	// 削除済みのものは消す。
+	//
+	// IncludeDeletedData が立っているときだけ残す。既定(false)は従来どおり除外。
+	// **IsDeleted は使わないこと。** 唯一の読み手である
+	// git_commit_log_repository_local_dir_impl.go は IsDeleted=true を
+	// 「削除済みのみを探す」という逆の意味で読んでおり、意味論が衝突する。
+	// IncludeDeletedData は tag / text / notification の集約で既に
+	// 「削除済みも含める」の意味を持っているので、1つの旗が全層で1つの意味を保てる。
+	//
+	// 利用者のクエリが TagReps.FindTags / TextReps.FindTexts へ渡ることは無い
+	// （それらは呼び出しごとに新しい FindQuery を組む）ので、
+	// ここで旗を立てても隠しタグや削除済みタグが漏れることはない。
+	//
+	// なお rekyou / mirekyou は rep の内部で削除済みを弾いており、
+	// git_commit_log には削除の概念そのものが無いので、この旗の対象外。
+	if !findCtx.ParsedFindQuery.IncludeDeletedData {
+		deleteTargetIDs := []string{}
+		for id, kyous := range kyousMap {
+			var latestKyou reps.Kyou
+			for _, kyou := range kyous {
+				if kyou.UpdateTime.After(latestKyou.UpdateTime) {
+					latestKyou = kyou
+				}
+			}
+			if latestKyou.IsDeleted {
+				deleteTargetIDs = append(deleteTargetIDs, id)
 			}
 		}
-		if latestKyou.IsDeleted {
-			deleteTargetIDs = append(deleteTargetIDs, id)
+		for _, deleteTargetID := range deleteTargetIDs {
+			delete(kyousMap, deleteTargetID)
 		}
-	}
-	for _, deleteTargetID := range deleteTargetIDs {
-		delete(kyousMap, deleteTargetID)
 	}
 	findCtx.MatchKyousCurrent = kyousMap
 	return nil, nil
