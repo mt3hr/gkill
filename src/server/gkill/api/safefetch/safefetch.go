@@ -109,6 +109,19 @@ func GetCapped(urlString string, timeout time.Duration, userAgent string, allowP
 	}
 	defer func() { _ = res.Body.Close() }()
 
+	// **2xx 以外の本文は「そのURLの中身」ではない。**
+	// ここを見ていなかったので、404ページのHTMLがそのまま favicon として
+	// base64 で保存されていた(監査でGoogleの "Error 404 (Not Found)!!1" を実測)。
+	// 同じ理由で、404ページの <title> がブックマークのタイトルとして
+	// 保存される経路も開いていた。
+	//
+	// ログイン必須のSaaSやCloudflareのチャレンジページのように、401/403でも
+	// 有用な <title> を返すサイトではタイトルが空になるが、
+	// 「取れなかったものを取れたことにしない」ほうを選んでいる。
+	if res.StatusCode < 200 || res.StatusCode > 299 {
+		return nil, fmt.Errorf("error at http get %s: status = %d", urlString, res.StatusCode)
+	}
+
 	// gzip はトランスポートが透過展開するので、これは展開後バイトへの上限になる。
 	b, err := io.ReadAll(io.LimitReader(res.Body, maxBytes+1))
 	if err != nil {
@@ -128,6 +141,39 @@ func GetBase64Data(urlString string) (string, error) {
 		return "", err
 	}
 	return base64.StdEncoding.EncodeToString(b), nil
+}
+
+// imageMagics は「クライアントが表示できる画像形式」のマジックバイト。
+//
+// 判定する形式を絞っているのは退行ではない。クライアント側の
+// src/client/classes/use-ur-log-view.ts の base64_to_data_uri は
+// gif/jpeg/png/webp の4つしかマジックを見ておらず、それ以外は data:image/png へ
+// フォールバックするので、**SVG や ICO の favicon は今日すでに壊れた画像として
+// 表示されている**。ここで弾いても表示できるものは減らない。
+var imageMagics = [][]byte{
+	[]byte("GIF87a"),
+	[]byte("GIF89a"),
+	{0xFF, 0xD8, 0xFF}, // jpeg
+	{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A}, // png
+	[]byte("RIFF"), // webp(先頭4バイト。8バイト目以降の "WEBP" も見る)
+}
+
+// LooksLikeSupportedImage はデータがクライアントで表示できる画像形式かを返します。
+//
+// HTTPステータスが2xxでも画像とは限らない(エラーページを200で返すサイト、
+// Content-Type が正しくないサイト)ので、中身のマジックバイトで確かめます。
+func LooksLikeSupportedImage(data []byte) bool {
+	for _, magic := range imageMagics {
+		if !bytes.HasPrefix(data, magic) {
+			continue
+		}
+		if string(magic) == "RIFF" {
+			// RIFF は webp 以外(wav など)にも使われるので、"WEBP" まで見る。
+			return len(data) >= 12 && string(data[8:12]) == "WEBP"
+		}
+		return true
+	}
+	return false
 }
 
 // CheckImageDimensions は image.DecodeConfig で復号前に寸法を検査し、

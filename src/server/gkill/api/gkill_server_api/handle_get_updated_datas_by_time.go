@@ -43,6 +43,7 @@ func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *h
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get updated data by time response to json: %w", err)

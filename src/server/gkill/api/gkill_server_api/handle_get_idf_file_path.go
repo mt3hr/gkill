@@ -36,6 +36,7 @@ func (g *GkillServerAPI) HandleGetIDFFilePath(w http.ResponseWriter, r *http.Req
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get idf file path response to json: %w", err)

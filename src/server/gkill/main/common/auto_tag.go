@@ -358,6 +358,11 @@ type autoTagAPIClient struct {
 	SessionID string
 }
 
+// maxResponseBodyBytes は応答本文を読む上限。
+// 検索系は返さない(auto_tagが叩くのはタグ操作とrep名一覧だけ)ので、
+// 上限を張っておいても実用上は当たらない。
+const maxResponseBodyBytes = 8 * 1024 * 1024
+
 // post はJSONをPOSTして、レスポンスをresponseへ書き込む。
 func (c *autoTagAPIClient) post(ctx context.Context, path string, requestBody any, response any) error {
 	jsonBody, err := json.Marshal(requestBody)
@@ -378,12 +383,27 @@ func (c *autoTagAPIClient) post(ctx context.Context, path string, requestBody an
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
-		return fmt.Errorf("error at post %s: status = %d body = %q", address, resp.StatusCode, string(body))
+	// **先にデコードしてから、ステータスと応答の両方を見る。**
+	// gkillは2026-08から異常時に4xx/5xxを返すが、エラーの中身(error_code)は
+	// 今までどおり本文のerrors配列にしか入っていない。ステータスで打ち切ると
+	// 「HTTP 401」しか分からず、セッション切れなのか権限不足なのか判別できなくなる。
+	// 逆にHTTP 200でもerrorsに中身が入ることがあるので、両方を見る必要がある
+	// (update_cache側のcommon.goと同じ形)。
+	body, readErr := io.ReadAll(io.LimitReader(resp.Body, maxResponseBodyBytes))
+	if readErr != nil {
+		return fmt.Errorf("error at read response of %s: status = %d: %w", address, resp.StatusCode, readErr)
 	}
-	if err := json.NewDecoder(resp.Body).Decode(response); err != nil {
-		return fmt.Errorf("error at decode response of %s: %w", address, err)
+	if decodeErr := json.Unmarshal(body, response); decodeErr != nil {
+		// 本文がJSONですらない場合(TLSのサーバへ平文で繋いだ等)は、
+		// ステータスと本文の断片を添えて返す。
+		snippet := body
+		if len(snippet) > 1024 {
+			snippet = snippet[:1024]
+		}
+		return fmt.Errorf("error at decode response of %s: status = %d body = %q: %w", address, resp.StatusCode, string(snippet), decodeErr)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error at post %s: status = %d", address, resp.StatusCode)
 	}
 	return nil
 }

@@ -14,12 +14,22 @@ import { Agent, fetch } from "undici";
 
 import { GkillApiError } from "./errors.mjs";
 
+// gkill の応答は成功でも失敗でも errors / messages を持つ(成功時は null)。
+// ステータスが 2xx でなくても、この形なら業務エラーとして呼び出し側へ渡す。
+function isGkillEnvelope(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return false;
+  }
+  return "errors" in body || "messages" in body;
+}
+
 // gkill 側が「セッションが無効」を表すときに返すエラーコード。
 // これを見たら1回だけログインし直して再試行する。
 export const AUTH_ERROR_CODES = new Set([
   "ERR000002", // AccountNotFoundError
   "ERR000013", // AccountSessionNotFoundError
   "ERR000238", // AccountDisabledError
+  "ERR000373", // AccountSessionExpiredError
 ]);
 
 export class GkillClient {
@@ -105,7 +115,14 @@ export class GkillClient {
       });
     }
 
-    if (!response.ok) {
+    // gkill は 2026-08 から、異常時に 400/401/403/404/409/429/500 を返す。
+    // ここでステータスだけを見て throw すると、本文の errors 配列が呼び出し側へ届かない。
+    // 特に callApi の「セッション切れを見つけたら1回だけログインし直す」経路
+    // (hasAuthErrors) に到達しなくなり、MCP は長寿命プロセスなので
+    // **セッション期限が来た時点で全ツールが復旧不能になる**。
+    // なので gkill 形式の本文(errors 配列を持つ)なら、ステータスに関わらずそのまま返す。
+    // 呼び出し側は今までどおり errors を見て判断する。
+    if (!response.ok && !isGkillEnvelope(jsonBody)) {
       throw new GkillApiError(`HTTP ${response.status} from ${pathname}.`, {
         status: response.status,
         body: jsonBody,

@@ -312,9 +312,10 @@ type GkillError struct {
 }
 ```
 
-- HTTP 200: 正常応答（`errors`配列で業務エラーを返す）
-- HTTP 403: アクセス拒否
-- HTTP 500: 予期しないサーバーエラー
+- HTTP 200: 正常応答（`errors` は `null`）
+- HTTP 400/401/403/404/409/429/500: 失敗。`error_code` から決まる
+  （正本は `src/server/gkill/api/message/http_status.go`、経緯は ADR-0045）
+- ボディの形はステータスによらず同じで、`error_code` は本文にしか入っていない
 
 ## 5. リポジトリパターン（4層実装）
 

@@ -11,7 +11,7 @@ gkill API のエラーコードとメッセージコードの定数定義、お�
 |---------|------|
 | `gkill_error.go` | `GkillError` 構造体 — `ErrorCode` + `ErrorMessage` |
 | `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` |
-| `error_codes.go` | エラーコード定数（411 定数: `ERR000001` 〜 `ERR000412`、`ERR000243` は欠番） |
+| `error_codes.go` | エラーコード定数（414 定数: `ERR000001` 〜 `ERR000415`、`ERR000243` は欠番） |
 | `message_codes.go` | メッセージコード定数（89 定数: `MSG000001` 〜 `MSG000089`） |
 | `message_test.go` | コード形式・空文字チェックのテスト |
 
@@ -29,7 +29,7 @@ type GkillMessage struct {
 }
 ```
 
-## エラーコード体系（411 コード）
+## エラーコード体系（414 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|
@@ -41,6 +41,7 @@ type GkillMessage struct {
 | `ERR000408` 〜 `ERR000409` | アカウント運用の防護（リセットトークンの期限切れ、自分自身の無効化の拒否） |
 | `ERR000410` | 検索そのものの失敗（repのSQLエラーなど、個別のGkillErrorが立たない失敗の受け皿） |
 | `ERR000411`, `ERR000412` | MCP向けrep一覧（get_rep_infos_mcp）のリクエスト/レスポンス不正 |
+| `ERR000413` 〜 `ERR000415` | 操作対象アカウント不在（404）、ローカル限定アクセス拒否（403）、panic回収（500） |
 
 `ERR9000xx` 帯はフロントエンドだけで採番するコードで、Go 側の `error_codes.go` には存在しない（定義元は `src/client/classes/api/message/gkill_error.ts`、現在98定数）。番号が衝突しないよう帯を分けてあるので、Go 側でこの帯を使ってはならない。
 
@@ -56,11 +57,25 @@ type GkillMessage struct {
 
 ## HTTP ステータスコードとの関係
 
-| HTTP ステータス | 意味 |
-|----------------|------|
-| 200 | 正常レスポンス（`errors` 配列にエラーが含まれる場合もある — 要チェック） |
-| 403 | アクセス拒否 |
-| 500 | 予期しないエラー |
+**エラーコードごとの対応表が `http_status.go` にある**（`errorCodeHTTPStatus`）。
+`HTTPStatusOf(errorCode)` で引ける。`errors` が空なら 200。
+
+| HTTP ステータス | 割り当てているエラーコード | 件数 |
+|----------------|--------------------------|------|
+| 200 | （`errors` が空のとき） | — |
+| 400 | `Invalid*RequestDataError` ほか入力値のバリデーション失敗 | 103 |
+| 401 | `AccountSessionNotFoundError` / `AccountSessionExpiredError` / `AccountInvalidPasswordError` / `AccountNotFoundError` | 4 |
+| 403 | `AccountNotHasAdminError` / `AccountDisabledError` / `LocalOnlyAccessDeniedError` ほか | 12 |
+| 404 | `NotFound*` / `TargetAccountNotFoundError` | 18 |
+| 409 | `AlreadyExist*` / `AccountPasswordResetTokenIsNotNilError` | 16 |
+| 429 | `LoginRateLimitError` | 1 |
+| 500 | `Get*` / `Add*` / `Update*` / `Delete*` / `CommitTx*` / `Invalid*ResponseDataError` ほか | 260 |
+
+**エラーコードを足したら表にも1行足すこと。** `http_status_test.go` が
+`error_codes.go` をソース走査して未分類のコードを落とす。
+名前の規則からは導けない（`Invalid*` が 400 と 500 に、`NotFound*` が 401 と 404 に跨る）ので、
+推論に置き換えないこと。経緯と却下案は
+[ADR-0045](../../../../../documents/adr/0045-http-status-from-error-code.md)。
 
 ## 関連ドキュメント
 

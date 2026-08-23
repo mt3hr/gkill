@@ -164,6 +164,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0042](0042-shared-file-authz-by-query.md) | 共有ページのファイル配信は共有クエリを再評価した許可パス集合にだけ許す | Accepted |
 | [0043](0043-safefetch-for-user-urls.md) | 利用者入力URLと og:image の取得は必ず api/safefetch を通す | Accepted |
 | [0044](0044-per-user-derived-cache-dir.md) | 派生キャッシュは利用者IDでディレクトリを分ける | Accepted |
+| [0045](0045-http-status-from-error-code.md) | HTTP ステータスはエラーコードから一元表で決める | Accepted |
 | [0050](0050-mcp-request-context-immutable.md) | MCP HTTPモードの1リクエスト文脈は不変オブジェクトを引数で流す | Accepted |
 | [0051](0051-mcp-inline-plugin-content.md) | MCP のプラグイン本文は get_kyous へインライン埋め込みし、同一プラグインへ並列に投げない | Accepted |
 | [0052](0052-mcp-cursor-pushes-period-end.md) | MCP のページングはカーソルを期間上限へ押し下げ、同一時刻のかたまりを割らない | Superseded |

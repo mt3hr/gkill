@@ -37,6 +37,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse update userReps response to json: %w", err)
@@ -83,7 +84,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 		err = fmt.Errorf("error at get account user id = %s: %w", request.TargetUserID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AccountNotFoundError,
+			ErrorCode:    message.GetAccountError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -92,7 +93,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 
 	if targetAccount == nil {
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AccountNotFoundError,
+			ErrorCode:    message.TargetAccountNotFoundError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
