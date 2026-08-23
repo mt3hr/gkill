@@ -143,6 +143,7 @@ func (r *kftlNlogRequest) DoRequest(ctx context.Context) error {
 	}
 	repName, repNameErr := r.Ctx.Repositories.WriteNlogRep.GetRepName(ctx)
 	logGetRepNameFailure(ctx, "nlog", nlog.ID, repNameErr)
+	r.recordCreated("nlog", nlog.ID)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
 	logWriteThroughCacheFailure(ctx, "nlog", nlog.ID, r.Ctx.Repositories.WriteThroughNlogCache(ctx, nlog))

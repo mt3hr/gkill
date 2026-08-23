@@ -2,6 +2,8 @@ package kftl
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -1359,5 +1361,100 @@ func TestApply_MiRelatedTimePrefixStillPositional(t *testing.T) {
 	}
 	if miReq.boardName != "?2025-01-01" {
 		t.Errorf("? は板名の位置を消費するはず: got %q", miReq.boardName)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// 2026-08-24 の再監査: メモ帳の失敗がどれも ERR000351 の1文に畳まれ、
+// 何行目の何が悪いのか応答から一切分からなかった。
+// ---------------------------------------------------------------------------
+
+func TestGenerateAndExecuteRequests_InputErrorCarriesLineNumber(t *testing.T) {
+	stmt := &KFTLStatement{StatementText: "/mood\n99"}
+	created, err := stmt.GenerateAndExecuteRequests(
+		context.Background(),
+		&reps.GkillRepositories{},
+		&user_config.ApplicationConfig{},
+		"test-user", "test-device", "test-app", "ja",
+	)
+	if err == nil {
+		t.Fatal("範囲外の気分値がエラーにならなかった")
+	}
+	// 行をリクエストへ適用するフェーズはまだ1バイトも書いていない
+	if len(created) != 0 {
+		t.Errorf("書き込み前に失敗したのに created = %v", created)
+	}
+
+	inputErrors := CollectKFTLInputErrors(err)
+	if len(inputErrors) != 1 {
+		t.Fatalf("入力エラーの件数 = %d, want 1 (err = %v)", len(inputErrors), err)
+	}
+	if inputErrors[0].LineNumber != 2 {
+		t.Errorf("行番号 = %d, want 2", inputErrors[0].LineNumber)
+	}
+	if inputErrors[0].LineText != "99" {
+		t.Errorf("行テキスト = %q, want %q", inputErrors[0].LineText, "99")
+	}
+	if inputErrors[0].MessageID != "KFTL_LANTANA_OUT_OF_RANGE_MOOD_VALUE_MESSAGE_TITLE" {
+		t.Errorf("メッセージID = %q, want KFTL_LANTANA_OUT_OF_RANGE_MOOD_VALUE_MESSAGE_TITLE", inputErrors[0].MessageID)
+	}
+}
+
+func TestGenerateAndExecuteRequests_CollectsEveryBadLine(t *testing.T) {
+	// 書き込み前のフェーズなので全行を評価してよい。利用者は1往復で全部直せる
+	// （TS 側は元から複数集める設計で、Go だけが最初の1件で止まっていた）
+	stmt := &KFTLStatement{StatementText: "/mood\n99\n、\n/mood\nabc"}
+	_, err := stmt.GenerateAndExecuteRequests(
+		context.Background(),
+		&reps.GkillRepositories{},
+		&user_config.ApplicationConfig{},
+		"test-user", "test-device", "test-app", "ja",
+	)
+	if err == nil {
+		t.Fatal("2行とも不正なのにエラーにならなかった")
+	}
+
+	inputErrors := CollectKFTLInputErrors(err)
+	if len(inputErrors) != 2 {
+		t.Fatalf("入力エラーの件数 = %d, want 2 (err = %v)", len(inputErrors), err)
+	}
+	if inputErrors[0].LineNumber != 2 || inputErrors[1].LineNumber != 5 {
+		t.Errorf("行番号 = %d, %d, want 2, 5", inputErrors[0].LineNumber, inputErrors[1].LineNumber)
+	}
+}
+
+func TestGenerateAndExecuteRequests_LineIndexMatchesSourceLine(t *testing.T) {
+	// エラーへ行番号を添えられるのは、行の文脈が元テキストでの位置を持っているから
+	lines := helperGenerateLines(t, "1行目\n、\n3行目")
+	for i, line := range lines {
+		lineCtx := line.GetContext()
+		if lineCtx == nil {
+			t.Fatalf("lines[%d] に文脈が無い", i)
+		}
+		if lineCtx.LineIndex != i {
+			t.Errorf("lines[%d].LineIndex = %d, want %d", i, lineCtx.LineIndex, i)
+		}
+	}
+}
+
+func TestCollectKFTLInputErrors_FlattensJoinedErrors(t *testing.T) {
+	// errors.Join で束ねたものへ errors.As を直に当てると最初の1件しか拾えない
+	joined := errors.Join(
+		&KFTLInputError{LineNumber: 1, Cause: errors.New("first")},
+		fmt.Errorf("wrapped: %w", &KFTLInputError{LineNumber: 3, Cause: errors.New("third")}),
+	)
+	collected := CollectKFTLInputErrors(joined)
+	if len(collected) != 2 {
+		t.Fatalf("件数 = %d, want 2", len(collected))
+	}
+	if collected[0].LineNumber != 1 || collected[1].LineNumber != 3 {
+		t.Errorf("行番号 = %d, %d, want 1, 3", collected[0].LineNumber, collected[1].LineNumber)
+	}
+}
+
+func TestCollectKFTLInputErrors_ReturnsNilForServerFailure(t *testing.T) {
+	// 入力エラーが1件も無ければサーバ障害として 500 で返してよい、の判定に使う
+	if collected := CollectKFTLInputErrors(errors.New("db is down")); collected != nil {
+		t.Errorf("サーバ障害なのに入力エラーとして拾った: %v", collected)
 	}
 }

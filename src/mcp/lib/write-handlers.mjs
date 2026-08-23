@@ -375,7 +375,10 @@ export async function handleWriteToolCall(ctx, name, args) {
           { kftl_text: normalized.kftl_text, locale_name: normalized.locale_name },
           true, ctx.sid,
         );
-        return { messages: response.messages || [] };
+        // created は「実際に書かれたもの」。KFTL は1つのテキストから複数の Kyou を作るので、
+        // これが無いと呼び出し側は何が作られたか分からない。
+        // 失敗時も途中まで書けたぶんが入る（KFTL は DB トランザクションを使わない）。
+        return { messages: response.messages || [], created: response.created || [] };
       }
 
       case "gkill_delete_kyou": {
@@ -713,8 +716,21 @@ export function summarizeWriteToolPayload(name, payload) {
       return `Added tag: ${payload.added_tag?.id || "unknown"}`;
     case "gkill_add_text":
       return `Added text: ${payload.added_text?.id || "unknown"}`;
-    case "gkill_submit_kftl":
-      return `KFTL submitted: ${Array.isArray(payload.messages) ? payload.messages.length : 0} messages.`;
+    case "gkill_submit_kftl": {
+      const created = Array.isArray(payload.created) ? payload.created : [];
+      if (created.length === 0) {
+        return "KFTL submitted: nothing was written (blank lines and idempotent replays write nothing).";
+      }
+      const kinds = {};
+      for (const record of created) {
+        const kind = record.updated ? `${record.data_type} (updated)` : record.data_type;
+        kinds[kind] = (kinds[kind] || 0) + 1;
+      }
+      const breakdown = Object.entries(kinds)
+        .map(([kind, count]) => (count === 1 ? kind : `${kind} x${count}`))
+        .join(", ");
+      return `KFTL submitted: wrote ${created.length} record(s) — ${breakdown}.`;
+    }
     case "gkill_restore_kyou": {
       const keys = Object.keys(payload).filter((k) => k.startsWith("restored_"));
       return `Restored: ${keys.length > 0 ? keys.join(", ") : "completed"}`;
