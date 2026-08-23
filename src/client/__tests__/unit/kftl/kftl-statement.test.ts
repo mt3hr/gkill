@@ -9,6 +9,7 @@ import { KFTLMiBoardNameStatementLine } from '@/classes/kftl/kftl_mi/kftl-mi-boa
 import { KFTLMiEstimateStartTimeStatementLine } from '@/classes/kftl/kftl_mi/kftl-mi-estimate-start-time-statement-line'
 import { KFTLMiEstimateEndTimeStatementLine } from '@/classes/kftl/kftl_mi/kftl-mi-estimate-end-time-statement-line'
 import { KFTLMiLimitTimeStatementLine } from '@/classes/kftl/kftl_mi/kftl-mi-limit-time-statement-line'
+import { KFTLTagStatementLine } from '@/classes/kftl/kftl_tag/kftl-tag-statement-line'
 import { KFTLStartMiReKyouStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-start-mi-re-kyou-statement-line'
 import { KFTLMiReKyouBoardNameStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-board-name-statement-line'
 import { KFTLMiReKyouEstimateStartTimeStatementLine } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-estimate-start-time-statement-line'
@@ -74,6 +75,32 @@ describe('KFTLStatement', () => {
     expect(lines[2]).toBeInstanceOf(KFTLMiBoardNameStatementLine)
     expect(lines[3]).toBeInstanceOf(KFTLMiEstimateStartTimeStatementLine)
     expect(lines[4]).toBeInstanceOf(KFTLMiEstimateEndTimeStatementLine)
+    expect(lines[5]).toBeInstanceOf(KFTLMiLimitTimeStatementLine)
+  })
+
+  // ブロックの途中に書いたタグ行・テキスト開始行は**項目の位置を消費しない**。
+  // 以前は5行が無条件に位置で消費されており、`#tag` と書くと丸ごと板名になっていた
+  // （タグは付かない。エラーも警告も出ないので読み返して初めて気付く）。
+  // Go 側(kftl_mi.go の generateMiBlockNextConstructor)と同じ入力で固定すること
+  test('Mi ブロックの中のタグ行は項目の位置を消費しない', () => {
+    const lines = build_statement_lines(['ーみ', '。仕事', 'レポートを書く', '。急ぎ', '開発板'])
+    expect(lines[0]).toBeInstanceOf(KFTLStartMiStatementLine)
+    expect(lines[1]).toBeInstanceOf(KFTLTagStatementLine)
+    expect(lines[2]).toBeInstanceOf(KFTLMiTitleStatementLine)
+    expect(lines[3]).toBeInstanceOf(KFTLTagStatementLine)
+    expect(lines[4]).toBeInstanceOf(KFTLMiBoardNameStatementLine)
+  })
+
+  test('Mi ブロックの中のテキストブロックも項目の位置を消費しない', () => {
+    const lines = build_statement_lines(['ーみ', 'タスク', 'ーー', '詳細のメモ', 'ーー', '開発板'])
+    expect(lines[1]).toBeInstanceOf(KFTLMiTitleStatementLine)
+    expect(lines[5]).toBeInstanceOf(KFTLMiBoardNameStatementLine)
+  })
+
+  // 空行で項目を送る書き方は既存の仕様。ブロックの先読みが空行を拾うと壊れる
+  test('Mi の空行は今までどおり項目の位置を消費する', () => {
+    const lines = build_statement_lines(['ーみ', 'タスク', '', '', '', '2025-03-22'])
+    expect(lines[2]).toBeInstanceOf(KFTLMiBoardNameStatementLine)
     expect(lines[5]).toBeInstanceOf(KFTLMiLimitTimeStatementLine)
   })
 
