@@ -2,7 +2,7 @@
 //
 // 以前は write と readwrite に逐語コピーされており、add/update/delete の20ケース
 // 約500行がバイト単位で同一だった。読み取り側は同じ形で
-// gkill_get_idf_file_path だけが片側だけ古いまま静かに壊れた前例があるので
+// IDFファイルパス取得の1ツールだけが片側だけ古いまま静かに壊れた前例があるので
 // (lib/read-handlers.mjs の冒頭を参照)、書き込み側も同じ形で1箇所へ寄せる。
 // 実装はこの1箇所が正本で、サーバ側は isWriteToolName / handleWriteToolCall /
 // summarizeWriteToolPayload へ委譲するだけにする。

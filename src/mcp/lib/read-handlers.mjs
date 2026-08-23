@@ -1,7 +1,7 @@
 // 読み取りツールのディスパッチと要約。read / readwrite / write の3サーバが共有する。
 //
 // 以前は read と readwrite に逐語コピーされており、readwrite 側の
-// gkill_get_idf_file_path だけが廃止済み client.callRead を呼び続けて
+// IDFファイルパス取得の1ツールだけが廃止済み client.callRead を呼び続けて
 // 常に TypeError で静かに失敗していた（片側だけの直し漏れの温床）。
 // 実装はこの1箇所が正本で、サーバ側は isReadToolName / handleReadToolCall /
 // summarizeReadToolPayload へ委譲するだけにする。
@@ -181,7 +181,8 @@ export async function handleReadToolCall(ctx, name, args) {
         if (buffer.length > MAX_IDF_FILE_BYTES) {
           throw new GkillApiError(
             `File is too large to return through MCP: ${buffer.length} bytes (limit ${MAX_IDF_FILE_BYTES}). ` +
-              `Use gkill_get_idf_file_path to get the local path and read the file from the filesystem instead.`,
+              `Use the IDF payload's file_url_full instead — it is served from /files/ with no size limit ` +
+              `(HTTP clients), or read its file_path directly (stdio clients).`,
             {
               file_name: normalized.file_name,
               file_size_bytes: buffer.length,
@@ -196,33 +197,6 @@ export async function handleReadToolCall(ctx, name, args) {
           file_size_bytes: buffer.length,
           is_image: mimeType.startsWith("image/"),
           file_content_base64: buffer.toString("base64"),
-        };
-      }
-      case "gkill_get_idf_file_path": {
-        const normalized = normalizeIdfFileArgs(args);
-        // 絶対パスは同一マシンのクライアントにしか意味がない。
-        // リモートクライアントに渡すとユーザのディレクトリ構造の漏洩になるので、gkillに問い合わせもしない。
-        if (!ctx.isLocalTransport) {
-          throw new GkillApiError(
-            "Local file paths are available only to MCP clients running on the same machine (stdio transport). " +
-              "Use gkill_get_idf_file to fetch the file content instead.",
-          );
-        }
-        const response = await ctx.client.callApi(
-          "/api/get_idf_file_path",
-          {
-            rep_name: normalized.rep_name,
-            file_name: normalized.file_name,
-            locale_name: normalized.locale_name,
-          },
-          true,
-          ctx.sid,
-        );
-        return {
-          rep_name: normalized.rep_name,
-          file_name: normalized.file_name,
-          file_path: response.file_path || "",
-          exists: Boolean(response.exists),
         };
       }
       case "gkill_get_kyou_history": {
@@ -314,10 +288,6 @@ export function summarizeReadToolPayload(name, payload) {
     }
     case "gkill_get_idf_file":
       return `Retrieved file: ${payload.file_name} (${payload.file_size_bytes} bytes, ${payload.mime_type})`;
-    case "gkill_get_idf_file_path":
-      return payload.exists
-        ? `Resolved local file path: ${payload.file_path}`
-        : `File not found in repository (no local path available).`;
     default:
       return null;
   }
