@@ -177,7 +177,7 @@ curl -v -X POST http://localhost:8808/mcp \
 | `gkill_get_all_rep_names` | 全リポジトリ名を取得 |
 | `gkill_get_gps_log` | 期間指定でGPSログを取得 |
 | `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等） |
-| `gkill_get_idf_file` | IDFファイルの実データを取得（画像はMCP image blockで返却）。上限は `GKILL_MCP_MAX_FILE_BYTES`（既定8MB） |
+| `gkill_get_idf_file` | IDFファイルの実データを取得（画像はMCP image blockで返却）。`thumb=WxH`（一辺最大1024、動画は `is_video: true` 併用）で縮小取得できる。上限は `GKILL_MCP_MAX_FILE_BYTES`（既定8MB） |
 | `gkill_get_kyou_history` | 1件の全版を取得（削除済みの版も含む）。`gkill_get_kyous` から見えなくなった記録を読み返す唯一の経路 |
 
 ##### ファイル実パス導線
@@ -218,6 +218,8 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 | HTTP（ChatGPT / Claude.ai Connectors） | **`gkill_get_idf_file` だけ** | `file_url` / `file_url_full` |
 
 `type: "image"` のMCP contentブロックを組み立てるのは `mcp-server-base.mjs` の `buildToolResult` 1箇所だけで、その入力は `gkill_get_idf_file` が返す `file_content_base64` に限られる。したがって**HTTP接続のAIが画像を見る手段は `gkill_get_idf_file` が唯一**で、画像生成ツールへ参照画像として渡す場合もこれを使う。
+
+大きすぎて上限に当たる画像・動画は、`thumb`（`"1024x1024"` 等、一辺最大1024。動画は `is_video: true` を併用してフレームを抜く）を渡せば縮小JPEGで収まる。クエリの形は `file_url` の `?thumb=` と同一で、非対象のファイルは原本がそのまま返る。
 
 実測（2026-08-24）: ChatGPTで「キーワード検索 → ヒットしたイラスト3枚を参照して新規イラストを生成」を1回実行したところ、`gkill_get_kyous` 1回に続いて `gkill_get_idf_file` が3回呼ばれ、`/files/` へのアクセスは0件だった。経緯と却下案は [ADR-0055](../../documents/adr/0055-idf-file-reaches-ai-through-payload.md)。
 

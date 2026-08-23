@@ -167,6 +167,16 @@ export async function handleReadToolCall(ctx, name, args) {
       }
       case "gkill_get_idf_file": {
         const normalized = normalizeIdfFileArgs(args);
+        // クエリの形は他の実装と揃える: ?is_video=true&thumb=WxH
+        // (payload.mjs の file_url 注入 / http-transport.mjs の /files/ 配信 /
+        //  クライアントの use-idf-kyou-view.ts build_media_url と同じ)。
+        const fileQuery = [];
+        if (normalized.is_video) {
+          fileQuery.push("is_video=true");
+        }
+        if (normalized.thumb !== undefined) {
+          fileQuery.push(`thumb=${normalized.thumb}`);
+        }
         const filePath =
           "/files/" +
           encodeURIComponent(normalized.rep_name) +
@@ -174,17 +184,19 @@ export async function handleReadToolCall(ctx, name, args) {
           normalized.file_name
             .split("/")
             .map((s) => encodeURIComponent(s))
-            .join("/");
+            .join("/") +
+          (fileQuery.length === 0 ? "" : `?${fileQuery.join("&")}`);
         const fileSid = ctx.sid || (await ctx.client.login());
         const { buffer, contentType } = await ctx.client.fetchFile(filePath, fileSid);
         // base64はJSON-RPCレスポンスに素で載るので、青天井にすると数百MBの動画で応答が破裂する
         if (buffer.length > MAX_IDF_FILE_BYTES) {
           throw new GkillApiError(
             `File is too large to return through MCP: ${buffer.length} bytes (limit ${MAX_IDF_FILE_BYTES}). ` +
-              `On stdio clients read the IDF payload's file_path directly instead — no size limit. ` +
-              `On HTTP clients this file cannot be shown to you at all (nothing else produces an ` +
-              `image block); hand the user the payload's file_url_full instead, which is served ` +
-              `from /files/ with no size limit.`,
+              `If this is an image or a video, retry with thumb (e.g. thumb:"1024x1024", plus ` +
+              `is_video:true for a video) to get a downscaled JPEG that fits. ` +
+              `On stdio clients you can instead read the IDF payload's file_path directly — no size limit. ` +
+              `Otherwise hand the user the payload's file_url_full, which is served from /files/ ` +
+              `with no size limit.`,
             {
               file_name: normalized.file_name,
               file_size_bytes: buffer.length,
@@ -198,6 +210,8 @@ export async function handleReadToolCall(ctx, name, args) {
           mime_type: mimeType,
           file_size_bytes: buffer.length,
           is_image: mimeType.startsWith("image/"),
+          // 縮小して取ったときだけ載せる。原寸と取り違えないための印。
+          ...(normalized.thumb === undefined ? {} : { thumb: normalized.thumb }),
           file_content_base64: buffer.toString("base64"),
         };
       }

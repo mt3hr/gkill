@@ -1,6 +1,7 @@
 // Normalization functions extracted from gkill-read-server.mjs.
 
 import { invalidArgument, GkillApiError } from "./errors.mjs";
+import { THUMB_QUERY_REGEX, MAX_THUMB_SIZE } from "./payload.mjs";
 import {
   assertObject,
   assertBoolean,
@@ -502,11 +503,44 @@ export function normalizeAppConfigArgs(args) {
 
 export function normalizeIdfFileArgs(args) {
   const source = args == null ? {} : assertObject(args, "arguments");
-  assertKnownKeys(source, new Set(["rep_name", "file_name", "locale_name"]), "arguments");
+  assertKnownKeys(
+    source,
+    new Set(["rep_name", "file_name", "thumb", "is_video", "locale_name"]),
+    "arguments",
+  );
   const normalized = {
     rep_name: assertTrimmedString(source.rep_name, "rep_name"),
     file_name: assertTrimmedString(source.file_name, "file_name"),
   };
+  if (Object.prototype.hasOwnProperty.call(source, "thumb") && source.thumb !== undefined) {
+    const thumb = assertTrimmedString(source.thumb, "thumb");
+    if (!THUMB_QUERY_REGEX.test(thumb)) {
+      throw invalidArgument("thumb", 'must be "<width>x<height>", e.g. "1024x1024"', source.thumb);
+    }
+    // Go 側は上限超えだとサムネを作らず原本をそのまま返す。ここで弾かないと
+    // 「縮小したつもりで原寸が返る」という静かな取り違えになる。
+    const [width, height] = thumb.split("x").map((size) => parseInt(size, 10));
+    if (width > MAX_THUMB_SIZE || height > MAX_THUMB_SIZE) {
+      throw invalidArgument(
+        "thumb",
+        `must not exceed ${MAX_THUMB_SIZE} per side (larger values make the server return the original instead)`,
+        source.thumb,
+      );
+    }
+    normalized.thumb = thumb;
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "is_video") && source.is_video !== undefined) {
+    normalized.is_video = assertBoolean(source.is_video, "is_video");
+  }
+  // is_video は thumb と組でしか意味を持たない (Go 側は thumb 未指定なら即座に原本を返す)。
+  // 単独で受け付けると、数百MB の動画が丸ごと返ってサイズ上限に当たるだけになる。
+  if (normalized.is_video && normalized.thumb === undefined) {
+    throw invalidArgument(
+      "is_video",
+      "requires thumb (a video frame is only extracted when a thumbnail size is given)",
+      source.is_video,
+    );
+  }
   if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
     normalized.locale_name = assertTrimmedString(source.locale_name, "locale_name");
   }

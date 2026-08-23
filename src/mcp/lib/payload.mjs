@@ -8,6 +8,10 @@
 export const DEFAULT_FILE_LINK_THUMB = "1024x1024";
 // 配信ルートが受け付けるサムネ指定の検証用。
 export const THUMB_QUERY_REGEX = /^\d{1,4}x\d{1,4}$/;
+// 一辺の上限。Go 側 thumbFileServer.maxSize の写し
+// (dao/reps/idf_thumb_file_server.go)。これを超えると Go はサムネを作らず
+// **黙って原本を返す**ので、送る前に弾く必要がある。
+export const MAX_THUMB_SIZE = 1024;
 
 // Content-Type ヘッダから "; charset=..." などのパラメータを落とし、MIME型だけにする。
 export function normalizeMimeType(contentType) {
