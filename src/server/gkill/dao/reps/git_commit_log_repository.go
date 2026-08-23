@@ -20,7 +20,8 @@ import (
 type GitCommitLogRepository interface {
 	// FindKyous の契約は Repository.FindKyous を参照。
 	// git logを走査してKyouを組み立てます。
-	// 削除済みコミットは存在しないため、query.IsDeleted が true なら必ず0件になります。
+	// gitコミットに削除の概念が無いため、削除に関する検索条件は一切効きません
+	// (IncludeDeletedData を立てても結果は変わりません)。
 	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	// GetKyou の契約は Repository.GetKyou を参照。id はコミットハッシュです。

@@ -52,7 +52,6 @@ describe('GkillAPI', () => {
       '/api/submit_kftl_text', // MCPサーバ / Wear OS から使う
       '/api/get_kyous_mcp', // MCPサーバ専用
       '/api/get_rep_infos_mcp', // MCPサーバ専用
-      '/api/get_idf_file_path', // MCPサーバ（stdio・同一マシン）専用
       '/api/update_cache', // 保守用。現状どのクライアントからも呼んでいない
       '/serviceWorker.js', // Web Push用のService Worker配信。APIではない
     ]

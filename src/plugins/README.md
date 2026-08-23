@@ -390,7 +390,7 @@ func main() {
 | `TagsAnd` | `bool` | `true` = AND 検索 |
 | `CalendarStartDate` | `*time.Time` | 期間開始（nil = 無制限） |
 | `CalendarEndDate` | `*time.Time` | 期間終了（nil = 無制限） |
-| `IsDeleted` | `bool` | 削除済みのみ取得 |
+| `IsDeleted` | `bool` | 削除済みのみ取得。**gkill 本体からは常に `false` が渡る**（`FindQuery` 側に対応するフィールドが無いため） |
 | `OnlyLatestData` | `bool` | 最新データのみ |
 | `Limit` | `int` | 最大件数（0 = 無制限） |
 

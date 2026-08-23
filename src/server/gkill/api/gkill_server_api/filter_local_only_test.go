@@ -5,9 +5,10 @@ import (
 	"testing"
 )
 
-// ファイルの絶対パスは同一マシンのクライアントにしか意味がなく、
-// 外部に渡すとユーザのディレクトリ構造の漏洩になる。
-// その可否を決めるのがisLocalRequestなので、判定を固定する。
+// isLocalRequest は2箇所の可否を決める。filterLocalOnly (IsLocalOnlyAccess 設定) と、
+// handle_get_kyous_mcp.go が IDF ペイロードへ file_path を載せるかどうか。
+// 絶対パスを外部に渡すとユーザのディレクトリ構造の漏洩になるので、判定を固定する。
+// とくにループバックに見せかけたホスト名 (127.0.0.1.example.com) を通さないこと。
 func TestIsLocalRequest(t *testing.T) {
 	tests := []struct {
 		name       string

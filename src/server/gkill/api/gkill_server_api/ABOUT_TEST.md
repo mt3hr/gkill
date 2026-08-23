@@ -17,7 +17,7 @@ Go `testing` パッケージ
 | `get_kyous_regressions_test.go` | 記録取得の回帰。プラグイン検索失敗が警告として返ること（エラーにしない）、実行中の指定が無いときは実行中で絞らないこと、打刻タグでの絞り込みが記録側のタグ指定なしでも効くこと |
 | `gzip_middleware_test.go` | API応答のgzip圧縮。`Accept-Encoding` を見て圧縮すること、対象外パスや非対応クライアントには圧縮をかけないこと、ストリーミング応答を壊さないこと |
 | `gkill_server_api_rate_limit_test.go` | ログインレート制限テスト（IP別カウント、ウィンドウ期限、IP抽出） |
-| `handle_get_idf_file_path_test.go` | IDF ファイル絶対パス解決ハンドラ（localhost 限定応答、ERR000389、存在確認） |
+| `filter_local_only_test.go` | `isLocalRequest` の localhost 判定（ループバック/LAN/外部/詐称ホスト名/空 RemoteAddr の8ケース）。`filterLocalOnly` と `handle_get_kyous_mcp.go` の `file_path` 可否がこれで決まる |
 | `handle_get_idf_kyou_by_relative_path_test.go` | Markdown 相対リンクの IDFKyou 解決ハンドラ（同一 Rep 内解決、パストラバーサル防止） |
 | `handle_zip_cache_file_serve_test.go` | `/zip_cache/` の利用者分離（他人のキャッシュを読めないこと、ユーザーごとに分かれていない旧レイアウトを配信しないこと、`../` / `..%2F` で抜けられないこと、セッション無し・不正セッションの拒否）と、利用者ファイル配信のセキュリティヘッダ（後述）、ZIP展開物一覧の種別フラグ（`TestBuildZipEntriesMediaFlags`、後述） |
 | `handle_reset_password_test.go` | パスワードリセットのセッション検証（後述） |

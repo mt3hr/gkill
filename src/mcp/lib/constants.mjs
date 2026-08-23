@@ -86,7 +86,6 @@ export const GPS_GROUP_BY_VALUES = new Set(["day"]);
 
 export const KYOUS_QUERY_BOOLEAN_FIELDS = new Set([
   "update_cache",
-  "is_deleted",
   "include_deleted_data",
   "words_and",
   "tags_and",
@@ -138,7 +137,6 @@ export const KYOUS_QUERY_STRING_ARRAY_FIELDS = new Set([
   "timeis_words",
   "timeis_not_words",
   "timeis_tags",
-  "hide_timeis_tags",
 ]);
 
 export const KYOUS_QUERY_NUMBER_FIELDS = new Set(["map_radius", "map_latitude", "map_longitude"]);

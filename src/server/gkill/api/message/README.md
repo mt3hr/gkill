@@ -11,7 +11,7 @@ gkill API のエラーコードとメッセージコードの定数定義、お�
 |---------|------|
 | `gkill_error.go` | `GkillError` 構造体 — `ErrorCode` + `ErrorMessage` |
 | `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` |
-| `error_codes.go` | エラーコード定数（414 定数: `ERR000001` 〜 `ERR000415`、`ERR000243` は欠番） |
+| `error_codes.go` | エラーコード定数（411 定数: `ERR000001` 〜 `ERR000415`、`ERR000243` は欠番） |
 | `message_codes.go` | メッセージコード定数（89 定数: `MSG000001` 〜 `MSG000089`） |
 | `message_test.go` | コード形式・空文字チェックのテスト |
 
@@ -29,7 +29,7 @@ type GkillMessage struct {
 }
 ```
 
-## エラーコード体系（414 コード）
+## エラーコード体系（411 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|

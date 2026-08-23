@@ -19,7 +19,7 @@ api/
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── select_match_reps_cache_test.go # 対象リポジトリ選択キャッシュテスト
 ├── version.go                   # バージョン情報
-├── gkill_server_api/            # HTTP ハンドラ（139ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（138ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・全90ルート登録
@@ -62,8 +62,8 @@ api/
 
 詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
 
-`GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全91エンドポイントを登録する。
-handle_*.go は104ファイル（実装92 + テスト12）で、1ハンドラ1ファイルとして分割されている。
+`GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全90エンドポイントを登録する。
+handle_*.go は102ファイル（実装91 + テスト11）で、1ハンドラ1ファイルとして分割されている。
 ビジネスロジックは `usecase/` 層に委譲し、ハンドラは HTTP リクエスト/レスポンスの変換に専念する。
 
 ### `find/`（5ファイル）— 検索クエリ型定義
@@ -72,7 +72,7 @@ handle_*.go は104ファイル（実装92 + テスト12）で、1ハンドラ1�
 
 | ファイル | 説明 |
 |---------|------|
-| `find_query.go` | `FindQuery` 構造体 — 検索条件（41フィールド: キーワード、日付範囲、タグ、データ型等。値がnullなら未使用） |
+| `find_query.go` | `FindQuery` 構造体 — 検索条件（39フィールド: キーワード、日付範囲、タグ、データ型等。値がnullなら未使用） |
 | `mi_check_state.go` | Mi（タスク）のチェック状態 enum |
 | `mi_sort_type.go` | Mi のソート順 enum |
 | `week_of_days.go` | 曜日フィルタ enum |
@@ -100,7 +100,7 @@ handle_*.go は104ファイル（実装92 + テスト12）で、1ハンドラ1�
 |---------|------|
 | `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用 |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
-| `error_codes.go` | エラーコード定数（414定数、ERR000001〜ERR000415・ERR000243欠番） |
+| `error_codes.go` | エラーコード定数（411定数、ERR000001〜ERR000415・ERR000243欠番） |
 | `message_codes.go` | メッセージコード定数（89定数） |
 | `message_test.go` | コード形式テスト |
 
@@ -108,11 +108,11 @@ handle_*.go は104ファイル（実装92 + テスト12）で、1ハンドラ1�
 
 詳細は [kftl/README.md](kftl/README.md) を参照。
 
-### `req_res/`（188ファイル）— Request/Response 構造体
+### `req_res/`（186ファイル）— Request/Response 構造体
 
 詳細は [req_res/README.md](req_res/README.md) を参照。
 
-## 全エンドポイント一覧（93エンドポイント定義・91登録）
+## 全エンドポイント一覧（92エンドポイント定義・90登録）
 
 全エンドポイントは `/api/` 配下に配置（POST 中心、一部 GET）。`gkill_server_api/serve.go` 内で gorilla/mux に登録。`GetKFTLTemplate` と `GetGkillInfo` の2件はアドレス定義のみで未登録。`GkillWebpushServiceWorkerJs`（`/serviceWorker.js`、GET）だけは `/api/` 配下ではなく、`router.PathPrefix` で別途登録している。
 

@@ -26,7 +26,6 @@ export const FIND_QUERY_SCHEMA = {
   properties: {
     update_cache: { type: "boolean", description: "Force cache refresh before query." },
     include_deleted_data: { type: "boolean", description: "Also return soft-deleted entries. Default false. Deleted entries carry is_deleted:true in the result, so you can tell them apart. Use this to find what was deleted; use gkill_get_kyou_history to read one deleted entry in full, and gkill_restore_kyou to bring it back. Note rekyou / mirekyou entries stay hidden even with this flag (their repositories filter deleted rows internally), and git_commit_log has no concept of deletion." },
-    is_deleted: { type: "boolean", description: "Deprecated and ignored for Kyou searches — it never did anything here. Use include_deleted_data instead." },
     rep_types: {
       type: "array",
       description:
@@ -77,12 +76,6 @@ export const FIND_QUERY_SCHEMA = {
       type: "array",
       description:
         "Allowed TimeIs tag names; omit or pass null for no TimeIs tag filter, [] matches nothing. When set without timeis_words/timeis_not_words, timeis_words: [] is auto-added so the TimeIs filter activates. For ordinary browsing, you may use the same visible-tag allowlist strategy as tags. If you intentionally need a hidden tag, you can pass it here directly.",
-      items: { type: "string" },
-    },
-    hide_timeis_tags: {
-      type: "array",
-      description:
-        "Explicit TimeIs tag exclusion list. Prefer a visible-tag allowlist in timeis_tags when you need to exclude hidden tags reliably.",
       items: { type: "string" },
     },
     timeis_tags_and: { type: "boolean", description: "AND logic for timeis_tags." },
