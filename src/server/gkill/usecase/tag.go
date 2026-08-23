@@ -39,6 +39,39 @@ func (uc *UsecaseContext) AddTag(ctx context.Context, repositories *reps.GkillRe
 		return nil, gkillErrors, nil
 	}
 
+	// 対象のKyouが無い場合はエラー
+	//
+	// **txIDがあるときは検査しない。** KFTL は1つのトランザクションで
+	// 「対象のKyouを作る」→「それにタグを付ける」を挿入順に流すので、
+	// この時点で対象はまだ一時リポジトリの中にいて確定していない。
+	// 無条件に検査すると、メモ帳からのタグ付き投入が全滅する。
+	//
+	// 検査しないと、存在しないIDへタグを付けても成功が返り、
+	// どこにも付いていない宙吊りのタグができる。しかもその名前は
+	// get_all_tag_names の語彙に載るので、0件しかヒットしない候補が検索に混ざる。
+	// IDの取り違えはAIが最も起こしやすい事故で、そのとき静かに失敗していた。
+	if txID == nil {
+		targetKyou, err := repositories.GetKyou(ctx, tag.TargetID, nil)
+		if err != nil {
+			err = fmt.Errorf("error at get kyou user id = %s device = %s target id = %s: %w", userID, device, tag.TargetID, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			gkillErrors = append(gkillErrors, &message.GkillError{
+				ErrorCode:    message.GetTagError,
+				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
+			})
+			return nil, gkillErrors, nil
+		}
+		if targetKyou == nil {
+			err = fmt.Errorf("not found target kyou id = %s", tag.TargetID)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			gkillErrors = append(gkillErrors, &message.GkillError{
+				ErrorCode:    message.NotFoundKyouInfoError,
+				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
+			})
+			return nil, gkillErrors, nil
+		}
+	}
+
 	if txID == nil {
 		err = repositories.WriteTagRep.AddTagInfo(ctx, tag)
 		if err != nil {
