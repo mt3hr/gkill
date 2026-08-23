@@ -423,3 +423,26 @@ describe("TimeIs の前後関係 (2026-08-24 再監査 P-33)", () => {
     ).not.toThrow();
   });
 });
+
+describe("終了済み TimeIs を進行中へ戻す (2026-08-24 再監査 P-41)", () => {
+  // 以前は end_time:"" が「空文字は不可」で弾かれ、null は未指定と同じ扱いだったので、
+  // 一度終わらせた TimeIs を MCP から二度と進行中に戻せなかった。
+  test("null means clear, and is distinct from omitting the field", () => {
+    expect(normalizeUpdateTimeIsArgs({ id: "t1", end_time: null }).end_time).toBeNull();
+    expect(normalizeUpdateTimeIsArgs({ id: "t1" }).end_time).toBeUndefined();
+  });
+
+  test("a null end_time skips the ordering check", () => {
+    expect(() =>
+      normalizeUpdateTimeIsArgs({ id: "t1", start_time: "2026-08-24T12:00:00+09:00", end_time: null }),
+    ).not.toThrow();
+  });
+
+  test("an empty string is still rejected — it is not a way to clear", () => {
+    expect(() => normalizeUpdateTimeIsArgs({ id: "t1", end_time: "" })).toThrow(/must not be empty/);
+  });
+
+  test("add_timeis is unaffected: omitting end_time already means ongoing", () => {
+    expect(normalizeTimeIsArgs({ title: "x", start_time: "2026-08-24T12:00:00+09:00" }).end_time).toBeUndefined();
+  });
+});
