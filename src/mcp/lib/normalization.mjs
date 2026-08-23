@@ -224,8 +224,84 @@ export function normalizeKyouQuery(query) {
   return normalized;
 }
 
+// 旧スキーマキャッシュ救済（2026-08-23 本番実測）: ツール一覧のスキーマを
+// 更新前に取得したままのクライアント（claude.ai コネクタ等はセッション中
+// スキーマを再取得しない）は、後から追加されたトップレベル引数の型を知らず、
+// 値を正規のJSON符号化の文字列のまま送ってくる（"true"・'["nlog"]' など）。
+// その符号化に限り本来の型へ復元する。曖昧な文字列は復元せずそのまま残し、
+// 後段の型検証で従来どおりエラーにする。対象はスキーマ追加後の引数のみ
+// （昔からある引数は常に型付きで届くため、緩めない）。
+function parseCanonicalJSONValue(value, kind) {
+  const trimmed = value.trim();
+  if (trimmed === "") {
+    return undefined;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch {
+    return undefined;
+  }
+  if (kind === "boolean" && typeof parsed === "boolean") {
+    return parsed;
+  }
+  if (kind === "number" && typeof parsed === "number" && Number.isFinite(parsed)) {
+    return parsed;
+  }
+  if (kind === "string_array" && Array.isArray(parsed) && parsed.every((item) => typeof item === "string")) {
+    return parsed;
+  }
+  return undefined;
+}
+
+export function reviveStaleSchemaArgs(source, kindsByKey) {
+  let revived = null;
+  for (const [key, kind] of kindsByKey) {
+    if (!Object.prototype.hasOwnProperty.call(source, key)) {
+      continue;
+    }
+    const value = source[key];
+    if (typeof value !== "string") {
+      continue;
+    }
+    const parsed = parseCanonicalJSONValue(value, kind);
+    if (parsed === undefined) {
+      continue;
+    }
+    if (revived === null) {
+      revived = { ...source };
+    }
+    revived[key] = parsed;
+  }
+  return revived ?? source;
+}
+
+// v2 (ADR-0053) で追加したトップレベル引数。string 型の group_by / cursor は
+// 旧スキーマ経由でも壊れないので対象外。
+const KYOUS_STALE_SCHEMA_ARG_KINDS = new Map([
+  ["count_only", "boolean"],
+  ["data_types", "string_array"],
+  ["num_min", "number"],
+  ["num_max", "number"],
+  ["idf_kinds", "string_array"],
+  ["include_file_size", "boolean"],
+]);
+
+const GPS_STALE_SCHEMA_ARG_KINDS = new Map([
+  ["limit", "number"],
+  ["count_only", "boolean"],
+]);
+
+const APP_CONFIG_STALE_SCHEMA_ARG_KINDS = new Map([
+  ["fields", "string_array"],
+  ["include_ui_state", "boolean"],
+]);
+
 export function normalizeKyouArgs(args) {
-  const source = args == null ? {} : assertObject(args, "arguments");
+  const source = reviveStaleSchemaArgs(
+    args == null ? {} : assertObject(args, "arguments"),
+    KYOUS_STALE_SCHEMA_ARG_KINDS,
+  );
   assertKnownKeys(source, KYOUS_TOP_LEVEL_FIELDS, "arguments");
 
   const normalized = {
@@ -348,7 +424,10 @@ export function normalizeLocaleOnlyArgs(args) {
 }
 
 export function normalizeGpsArgs(args) {
-  const source = args == null ? {} : assertObject(args, "arguments");
+  const source = reviveStaleSchemaArgs(
+    args == null ? {} : assertObject(args, "arguments"),
+    GPS_STALE_SCHEMA_ARG_KINDS,
+  );
   assertKnownKeys(
     source,
     new Set(["start_date", "end_date", "locale_name", "limit", "cursor", "count_only", "group_by"]),
@@ -391,7 +470,10 @@ export function normalizeGpsArgs(args) {
 // normalizeAppConfigArgs は gkill_get_application_config の引数を検証する。
 // fields は射影（許可値のみ）、include_ui_state は struct ツリーの UI 状態キーを残すか。
 export function normalizeAppConfigArgs(args) {
-  const source = args == null ? {} : assertObject(args, "arguments");
+  const source = reviveStaleSchemaArgs(
+    args == null ? {} : assertObject(args, "arguments"),
+    APP_CONFIG_STALE_SCHEMA_ARG_KINDS,
+  );
   assertKnownKeys(source, new Set(["locale_name", "fields", "include_ui_state"]), "arguments");
   const normalized = {};
   if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
