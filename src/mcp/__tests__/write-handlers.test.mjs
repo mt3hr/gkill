@@ -106,6 +106,41 @@ describe("handleWriteToolCall — add tools", () => {
     expect(ctx.client.callApi.mock.calls[1][1].mi.board_name).toBe("Inbox");
   });
 
+  test("gkill_add_urlog drops the image base64 from the response", async () => {
+    // 1件2KB前後の浪費。検索結果の urlog payload には元から載っていない
+    const ctx = makeCtx(async () => ({
+      added_urlog: { id: "u1", url: "https://example.com", title: "T", favicon_image: "AAAA", thumbnail_image: "BBBB" },
+      added_kyou: { id: "u1" },
+    }));
+    const result = await handleWriteToolCall(ctx, "gkill_add_urlog", { url: "https://example.com" });
+
+    expect(result.added_urlog.id).toBe("u1");
+    expect(result.added_urlog.title).toBe("T");
+    expect(result.added_urlog).not.toHaveProperty("favicon_image");
+    expect(result.added_urlog).not.toHaveProperty("thumbnail_image");
+  });
+
+  test("gkill_add_tag sends related_time and does not claim a parent kyou", async () => {
+    // related_time を送らないと Go のゼロ値 0001-01-01 が保存される。
+    // AddTagResponse に added_kyou は無いので、返しても常に null だった
+    const ctx = makeCtx(async () => ({ added_tag: { id: "t1" } }));
+    const result = await handleWriteToolCall(ctx, "gkill_add_tag", { tag: "x", target_id: "id1" });
+
+    const [, body] = ctx.client.callApi.mock.calls[0];
+    expect(body.tag.related_time).toEqual(expect.any(String));
+    expect(body.tag.related_time.startsWith("0001-")).toBe(false);
+    expect(result).not.toHaveProperty("added_kyou");
+  });
+
+  test("gkill_add_text sends related_time and does not claim a parent kyou", async () => {
+    const ctx = makeCtx(async () => ({ added_text: { id: "x1" } }));
+    const result = await handleWriteToolCall(ctx, "gkill_add_text", { text: "note", target_id: "id1" });
+
+    const [, body] = ctx.client.callApi.mock.calls[0];
+    expect(body.text.related_time.startsWith("0001-")).toBe(false);
+    expect(result).not.toHaveProperty("added_kyou");
+  });
+
   test("gkill_submit_kftl posts the raw text", async () => {
     const ctx = makeCtx(async () => ({ messages: [{ message: "ok" }] }));
     await handleWriteToolCall(ctx, "gkill_submit_kftl", { kftl_text: "memo" });

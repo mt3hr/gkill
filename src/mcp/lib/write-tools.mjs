@@ -35,7 +35,9 @@ export const WRITE_TOOLS = [
       "The repository is determined automatically by the server. " +
       "Response fields: added_urlog (full URLog entity with id, url, title, rep_name, related_time, etc.), added_kyou (parent Kyou wrapper). " +
       "Use the returned id as target_id for gkill_add_tag or gkill_add_text to annotate the bookmark. " +
-      "If title is omitted, only the URL is stored. The server does not automatically fetch page titles.",
+      "NOTE: saving a bookmark makes the server fetch the URL. When title is omitted the server fills it in from the page's <title>, and it also fetches a favicon and a thumbnail. " +
+      "That means adding a bookmark causes outbound traffic to the target site (and to a third-party favicon service). " +
+      "The stored favicon and thumbnail are not echoed back in this response — they would cost kilobytes of base64 per call and are not part of search results either.",
     inputSchema: {
       type: "object",
       properties: {
@@ -166,7 +168,7 @@ export const WRITE_TOOLS = [
       "Tags are free-form strings. Use gkill_get_all_tag_names to discover existing tags and maintain consistency. " +
       "You can add multiple tags to the same entry by calling this tool multiple times with the same target_id but different tag values. " +
       "The repository for the tag is determined automatically by the server. " +
-      "Response fields: added_tag (full Tag entity with id, tag, target_id, rep_name, etc.), added_kyou (parent Kyou wrapper). " +
+      "Response fields: added_tag (full Tag entity with id, tag, target_id, rep_name, related_time, etc.). Tags have no parent Kyou wrapper of their own. " +
       "Typical workflow: create an entry (e.g., gkill_add_kmemo) → use the returned id → gkill_add_tag to categorize it.",
     inputSchema: {
       type: "object",
@@ -187,7 +189,7 @@ export const WRITE_TOOLS = [
       "The target_id must be the ID of an existing kyou entry — obtain this from the response of any gkill_add_* tool. " +
       "You can add multiple text annotations to the same entry by calling this tool multiple times. " +
       "The repository is determined automatically by the server. " +
-      "Response fields: added_text (full Text entity with id, text, target_id, rep_name, etc.), added_kyou (parent Kyou wrapper). " +
+      "Response fields: added_text (full Text entity with id, text, target_id, rep_name, related_time, etc.). Text annotations have no parent Kyou wrapper of their own. " +
       "Typical workflow: create an entry → gkill_add_text to attach detailed notes.",
     inputSchema: {
       type: "object",
