@@ -1238,3 +1238,126 @@ func TestApply_JapaneseTimeIsTimes(t *testing.T) {
 		t.Errorf("expected end time hour 11, got %v", timeIsReq.endTime)
 	}
 }
+
+// ─── /mi ブロックの中のタグ・テキスト ─────────────────────────────────────────
+
+// TestStatement_MiTagDoesNotConsumeFieldPosition は
+// `ーみ` ブロックの中のタグ行が項目の位置を消費しないことを固定する。
+//
+// 以前は `/mi` の後の5行が無条件に位置で消費されており、
+// `#tag` と書くと丸ごと板名になってタグは付かなかった（監査2026-08-23で実測）。
+// エラーも警告も出ないので、読み返して初めて気付く。
+func TestStatement_MiTagDoesNotConsumeFieldPosition(t *testing.T) {
+	lines := helperGenerateLines(t, "ーみ\n。仕事\nレポートを書く\n。急ぎ\n開発板")
+	want := []string{"mi", "tag", "miTitle", "tag", "miBoardName"}
+	if len(lines) != len(want) {
+		t.Fatalf("expected %d lines, got %d", len(want), len(lines))
+	}
+	for i, label := range want {
+		if lines[i].GetLabelName() != label {
+			t.Errorf("line %d: expected %s, got %s", i, label, lines[i].GetLabelName())
+		}
+	}
+}
+
+// TestApply_MiTagsGoToMi はブロックの中のタグが Mi 自身に付くことを固定する。
+//
+// Mi のリクエストは ThisStatementLineTargetID をキーに request_map へ入っているので、
+// MiReKyou と違って専用のタグ行は要らず、汎用のタグ行がそのまま Mi へ付く。
+func TestApply_MiTagsGoToMi(t *testing.T) {
+	requestMap := helperApplyToRequestMap(t, "ーみ\n。仕事\nレポートを書く\n。急ぎ\n開発板")
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	miReq, ok := all[0].(*kftlMiRequest)
+	if !ok {
+		t.Fatalf("expected *kftlMiRequest, got %T", all[0])
+	}
+	if miReq.title != "レポートを書く" {
+		t.Errorf("title: expected レポートを書く, got %q", miReq.title)
+	}
+	if miReq.boardName != "開発板" {
+		t.Errorf("boardName: expected 開発板, got %q", miReq.boardName)
+	}
+	tags := miReq.GetTags()
+	if len(tags) != 2 || tags[0] != "仕事" || tags[1] != "急ぎ" {
+		t.Errorf("tags: expected [仕事 急ぎ], got %v", tags)
+	}
+}
+
+// TestApply_AsciiMiTagsGoToMi は ASCII 記法(`/mi` と `#`)でも同じことを固定する。
+func TestApply_AsciiMiTagsGoToMi(t *testing.T) {
+	requestMap := helperApplyToRequestMap(t, "/mi\n#work\nWrite report\n#urgent\ndev board")
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	miReq, ok := all[0].(*kftlMiRequest)
+	if !ok {
+		t.Fatalf("expected *kftlMiRequest, got %T", all[0])
+	}
+	if miReq.title != "Write report" {
+		t.Errorf("title: expected Write report, got %q", miReq.title)
+	}
+	if miReq.boardName != "dev board" {
+		t.Errorf("boardName: expected dev board, got %q", miReq.boardName)
+	}
+	if tags := miReq.GetTags(); len(tags) != 2 {
+		t.Errorf("tags: expected 2, got %v", tags)
+	}
+}
+
+// TestStatement_MiTextBlockDoesNotConsumeFieldPosition はテキストブロックも同様に
+// 項目の位置を消費しないことを固定する。
+func TestStatement_MiTextBlockDoesNotConsumeFieldPosition(t *testing.T) {
+	requestMap := helperApplyToRequestMap(t, "ーみ\nタスク\nーー\n詳細のメモ\nーー\n開発板")
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	miReq, ok := all[0].(*kftlMiRequest)
+	if !ok {
+		t.Fatalf("expected *kftlMiRequest, got %T", all[0])
+	}
+	if miReq.title != "タスク" {
+		t.Errorf("title: expected タスク, got %q", miReq.title)
+	}
+	if miReq.boardName != "開発板" {
+		t.Errorf("boardName: expected 開発板, got %q", miReq.boardName)
+	}
+}
+
+// TestApply_MiEmptyLineStillConsumesPosition は空行の扱いが変わっていないことを固定する。
+// 空行で項目を送る書き方は既存のテスト(TestApply_AsciiMiLimitTime ほか)が前提にしている。
+func TestApply_MiEmptyLineStillConsumesPosition(t *testing.T) {
+	requestMap := helperApplyToRequestMap(t, "/mi\nTest Task\n\n\n\n?2025-01-01")
+	all := requestMap.All()
+	miReq, ok := all[0].(*kftlMiRequest)
+	if !ok {
+		t.Fatalf("expected *kftlMiRequest, got %T", all[0])
+	}
+	if miReq.boardName != "" {
+		t.Errorf("空行は板名の位置を消費して空のままのはず: got %q", miReq.boardName)
+	}
+	if miReq.limitTime == nil {
+		t.Error("空行3つの後の ?2025-01-01 が期限として読まれていない")
+	}
+}
+
+// TestApply_MiRelatedTimePrefixStillPositional は `？` を拾わない決定を固定する。
+//
+// 見積開始・見積終了・期限の3行は `？`/`?` を任意の接頭辞として自分で剥がす。
+// ブロックの先読みで `？` を関連時刻行へ回すと、この3行が受け取れなくなる
+// （reps.Mi に RelatedTime 列は無いので、そもそも付け先が無い）。
+func TestApply_MiRelatedTimePrefixStillPositional(t *testing.T) {
+	requestMap := helperApplyToRequestMap(t, "/mi\nTest\n?2025-01-01")
+	all := requestMap.All()
+	miReq, ok := all[0].(*kftlMiRequest)
+	if !ok {
+		t.Fatalf("expected *kftlMiRequest, got %T", all[0])
+	}
+	if miReq.boardName != "?2025-01-01" {
+		t.Errorf("? は板名の位置を消費するはず: got %q", miReq.boardName)
+	}
+}
