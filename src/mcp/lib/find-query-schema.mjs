@@ -87,11 +87,11 @@ export const FIND_QUERY_SCHEMA = {
     timeis_tags_and: { type: "boolean", description: "AND logic for timeis_tags." },
     calendar_start_date: {
       type: "string",
-      description: `Start of the date-range filter; set to activate. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
+      description: `Start of the date-range filter (INCLUSIVE); set to activate. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
     },
     calendar_end_date: {
       type: "string",
-      description: `End of the date-range filter; set to activate. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
+      description: `End of the date-range filter (INCLUSIVE - adjacent hand-made windows double-count the boundary day; prefer top-level group_by for histograms). Date-only values expand to 23:59:59 local. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
     },
     map_radius: {
       type: "number",
