@@ -721,6 +721,8 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			DataType:      kyou.DataType,
 			RepName:       kyou.RepName,
 			RelatedTime:   kyou.RelatedTime.In(time.Local),
+			IsDeleted:     kyou.IsDeleted,
+			UpdateTime:    kyou.UpdateTime.In(time.Local),
 			Tags:          tagStrings,
 			Texts:         textStrings,
 			Notifications: notificationDTOs,

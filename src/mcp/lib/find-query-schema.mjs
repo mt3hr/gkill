@@ -25,7 +25,8 @@ export const FIND_QUERY_SCHEMA = {
     "Plugin-provided entries (any data_type that is not one of the built-ins above) have payload.kind='plugin' carrying data_type/rep_name/kyou_id/plugin_name; their body is not stored in gkill, so set include_plugin_content:true on this same call to get it inline as payload.content_text.",
   properties: {
     update_cache: { type: "boolean", description: "Force cache refresh before query." },
-    is_deleted: { type: "boolean", description: "Include soft-deleted entries." },
+    include_deleted_data: { type: "boolean", description: "Also return soft-deleted entries. Default false. Deleted entries carry is_deleted:true in the result, so you can tell them apart. Use this to find what was deleted; use gkill_get_kyou_history to read one deleted entry in full, and gkill_restore_kyou to bring it back. Note rekyou / mirekyou entries stay hidden even with this flag (their repositories filter deleted rows internally), and git_commit_log has no concept of deletion." },
+    is_deleted: { type: "boolean", description: "Deprecated and ignored for Kyou searches — it never did anything here. Use include_deleted_data instead." },
     rep_types: {
       type: "array",
       description:
