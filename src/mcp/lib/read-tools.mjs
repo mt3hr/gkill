@@ -320,7 +320,8 @@ export const READ_TOOLS = [
       "ends up with bytes outside the conversation rather than a picture it can look at. " +
       "On stdio clients the payload carries 'file_path' instead; reading that from the filesystem avoids " +
       "base64 and has no size cap, so prefer it whenever it is present. " +
-      "This tool is capped by GKILL_MCP_MAX_FILE_BYTES (default 8MB).",
+      "This tool is capped by GKILL_MCP_MAX_FILE_BYTES (default 8MB); pass thumb to stay under it " +
+      "(and is_video:true alongside thumb to grab a frame out of a video).",
     inputSchema: {
       type: "object",
       properties: {
@@ -331,6 +332,20 @@ export const READ_TOOLS = [
         file_name: {
           type: "string",
           description: "File name from the IDF payload's file_name field.",
+        },
+        thumb: {
+          type: "string",
+          description:
+            'Return a downscaled JPEG instead of the original, sized "<width>x<height>" (e.g. "1024x1024"). ' +
+            "At most 1024 per side. Reach for this when you only need to look at the picture, or when the " +
+            "original exceeds the size cap. Files that are neither images nor (with is_video) videos come " +
+            "back unchanged.",
+        },
+        is_video: {
+          type: "boolean",
+          description:
+            "Extract a frame from a video and return that as the thumbnail. Requires thumb. Without it a " +
+            "video is fetched whole, which normally blows the size cap.",
         },
         locale_name: {
           type: "string",

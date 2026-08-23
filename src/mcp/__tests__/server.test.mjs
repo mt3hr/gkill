@@ -590,6 +590,62 @@ describe("gkill_get_idf_file", () => {
       server.handleToolCall("gkill_get_idf_file", { rep_name: "repo", file_name: "big.mp4" }),
     ).rejects.toThrow(/too large/);
   });
+
+  test("points at thumb as the way out when the file is too large", async () => {
+    const huge = Buffer.alloc(MAX_IDF_FILE_BYTES + 1);
+    mockClient.fetchFile.mockResolvedValue({ buffer: huge, contentType: "image/png" });
+    server.currentSessionId = "sess";
+
+    await expect(
+      server.handleToolCall("gkill_get_idf_file", { rep_name: "repo", file_name: "huge.png" }),
+    ).rejects.toThrow(/retry with thumb/);
+  });
+
+  test("appends thumb to the file path in the same form as file_url", async () => {
+    mockClient.fetchFile.mockResolvedValue({ buffer: Buffer.from("j"), contentType: "image/jpeg" });
+    server.currentSessionId = "sess";
+
+    const result = await server.handleToolCall("gkill_get_idf_file", {
+      rep_name: "repo",
+      file_name: "photo.png",
+      thumb: "1024x1024",
+    });
+
+    expect(mockClient.fetchFile).toHaveBeenCalledWith("/files/repo/photo.png?thumb=1024x1024", "sess");
+    // 縮小して取ったことが応答から分かる (原寸と取り違えない)
+    expect(result.thumb).toBe("1024x1024");
+    expect(result.is_image).toBe(true);
+  });
+
+  test("puts is_video before thumb, matching the client's build_media_url", async () => {
+    mockClient.fetchFile.mockResolvedValue({ buffer: Buffer.from("j"), contentType: "image/jpeg" });
+    server.currentSessionId = "sess";
+
+    await server.handleToolCall("gkill_get_idf_file", {
+      rep_name: "repo",
+      file_name: "clip.mp4",
+      thumb: "400x400",
+      is_video: true,
+    });
+
+    expect(mockClient.fetchFile).toHaveBeenCalledWith(
+      "/files/repo/clip.mp4?is_video=true&thumb=400x400",
+      "sess",
+    );
+  });
+
+  test("omits the query entirely when no thumb is asked for", async () => {
+    mockClient.fetchFile.mockResolvedValue({ buffer: Buffer.from("x"), contentType: "image/png" });
+    server.currentSessionId = "sess";
+
+    const result = await server.handleToolCall("gkill_get_idf_file", {
+      rep_name: "repo",
+      file_name: "photo.png",
+    });
+
+    expect(mockClient.fetchFile).toHaveBeenCalledWith("/files/repo/photo.png", "sess");
+    expect(result.thumb).toBeUndefined();
+  });
 });
 
 // ---------------------------------------------------------------------------
