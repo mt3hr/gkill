@@ -5,9 +5,9 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、101ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、104ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（186ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（188ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、17ファイル）
 
 ## 共通仕様
@@ -18,7 +18,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 | ラッパー | 件数 | ミドルウェアが行うこと | 対象 |
 |---|---|---|---|
-| `wrapNoAuth` | 13 | `filterLocalOnly` のみ | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet`, `urlog_bookmarklet_page`, `get_kyous_mcp`, `upload_files`, `upload_gpslog_files`, `browse_zip_contents`, `get_idf_kyou_by_relative_path`, `get_idf_file_path` |
+| `wrapNoAuth` | 14 | `filterLocalOnly` のみ | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet`, `urlog_bookmarklet_page`, `get_kyous_mcp`, `get_rep_infos_mcp`, `upload_files`, `upload_gpslog_files`, `browse_zip_contents`, `get_idf_kyou_by_relative_path`, `get_idf_file_path` |
 | `wrapAuth` | 19 | セッション検証 → Account / UserID / Device を `AuthContext` に設定 | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, プラグイン4本 等 |
 | `wrapAuthRepos` | 58 | 上記に加えて `GkillRepositories` を解決 | データCRUD系（追加12 + 更新13 + 取得25 + 共有4 + リポジトリ/TX 4） |
 
@@ -398,13 +398,13 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 |---|---|
 | `/api/get_gps_log` | GPSログ取得（日付範囲指定） |
 
-## MCP連携（1件 + MCPツール9個）
+## MCP連携（2件 + MCPツール10個）
 
 | パス | 説明 |
 |---|---|
 | `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得（IDFペイロードに`rep_name`/`is_image`等含む） |
 
-MCPサーバは9個のReadツールを提供する。内訳は固有の8つ（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_idf_file`, `gkill_get_idf_file_path`）と、3サーバ共通のプラグインツール1つ（`gkill_get_plugin_list`。`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_idf_file_path` は `/api/get_idf_file_path` を経由してファイルの絶対パスを返す（stdio接続のローカルクライアント用）。
+MCPサーバは10個のReadツールを提供する。内訳は固有の9つ（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_rep_infos`, `gkill_get_idf_file`, `gkill_get_idf_file_path`）と、3サーバ共通のプラグインツール1つ（`gkill_get_plugin_list`。`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_idf_file_path` は `/api/get_idf_file_path` を経由してファイルの絶対パスを返す（stdio接続のローカルクライアント用）。
 
 ## TLS・セキュリティ（1件）
 
@@ -486,9 +486,9 @@ MCPサーバは9個のReadツールを提供する。内訳は固有の8つ（`g
 
 ## 補足
 
-- **合計:** `/api/` エンドポイント 92件定義（91 POST + 1 GET。うち90件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 19件（PathPrefix 18 + Path 1）
+- **合計:** `/api/` エンドポイント 93件定義（92 POST + 1 GET。うち91件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 19件（PathPrefix 18 + Path 1）
 - **全エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（186ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（188ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（17ファイル）
 - `get_kftl_template` と `get_gkill_info` はアドレス定義（`gkill_server_api_address.go`）が存在するが、`HandleFunc` 登録もハンドラ関数実装も存在しない。コードベース全体を調査した結果、これらは**未実装のエンドポイント**であることが確認された。リクエストは404となる

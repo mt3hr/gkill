@@ -205,12 +205,12 @@ graph LR
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api/`パッケージ（handle_*.go 101ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
+`gkill/api/gkill_server_api/`パッケージ（handle_*.go 104ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
 
 #### 主な責務
 
 - HTTPサーバーの起動・停止（`serve.go`, `close.go`）
-- 全90エンドポイント（89 POST + 1 GET）のハンドリング（`handle_*.go`）。GETは `urlog_bookmarklet_page` のみ。アドレス定義は92件で、`get_kftl_template` と `get_gkill_info` の2件は未登録
+- 全91エンドポイント（89 POST + 1 GET）のハンドリング（`handle_*.go`）。GETは `urlog_bookmarklet_page` のみ。アドレス定義は93件で、`get_kftl_template` と `get_gkill_info` の2件は未登録
 - GkillDAOManagerの保持・提供
 - 認証ミドルウェアによるセッション検証（`auth_middleware.go`）
 - レスポンス構築
@@ -267,7 +267,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 - HTTPリクエスト/レスポンスに依存しない
 - ハンドラとMCPサーバーの両方から再利用可能
 
-### エンドポイント分類（アドレス定義92件 = 91 POST + 1 GET。うち `get_kftl_template` / `get_gkill_info` の2件は未登録で、登録済みは90件。カテゴリは排他で、合計が定義数と一致する）
+### エンドポイント分類（アドレス定義93件 = 92 POST + 1 GET。うち `get_kftl_template` / `get_gkill_info` の2件は未登録で、登録済みは90件。カテゴリは排他で、合計が定義数と一致する）
 
 | カテゴリ | エンドポイント数 | 内訳 |
 |---|---|---|
@@ -290,7 +290,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 
 ### ルーティング定義
 
-`gkill/api/gkill_server_api/gkill_server_api_address.go`で全エンドポイントのルートが定義されます（92件、うち90件が登録済み）。大半は`POST /api/{endpoint}`形式ですが、`urlog_bookmarklet_page` のみ `GET` です。各ルートは`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でラップされたハンドラに紐づけられます。
+`gkill/api/gkill_server_api/gkill_server_api_address.go`で全エンドポイントのルートが定義されます（93件、うち91件が登録済み）。大半は`POST /api/{endpoint}`形式ですが、`urlog_bookmarklet_page` のみ `GET` です。各ルートは`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でラップされたハンドラに紐づけられます。
 
 API 以外のルートは19件（`PathPrefix` 18 + `Path` 1）で、SPA 配信・`/files/`・`/zip_cache/`・
 `/resources/manual/` 等がここに含まれます。

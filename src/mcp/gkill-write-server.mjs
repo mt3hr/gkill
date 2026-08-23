@@ -7,7 +7,6 @@ import process from "node:process";
 import { fileURLToPath as _fileURLToPath } from "node:url";
 
 import { GkillApiError } from "./lib/errors.mjs";
-import { normalizeLocaleOnlyArgs } from "./lib/normalization.mjs";
 import {
   normalizeKmemoArgs,
   normalizeUrlogArgs,

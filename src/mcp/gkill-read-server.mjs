@@ -7,16 +7,10 @@ import { fileURLToPath as _fileURLToPath } from "node:url";
 
 import { GkillApiError } from "./lib/errors.mjs";
 import {
-  MAX_IDF_FILE_BYTES,
-} from "./lib/constants.mjs";
-import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs } from "./lib/normalization.mjs";
-import {
   PLUGIN_TOOLS,
   handlePluginToolCall,
   isPluginToolName,
   summarizePluginToolPayload,
-  inlinePluginContents,
-  summarizeInlinePluginContent,
 } from "./lib/plugin-tools.mjs";
 import { OAuthServer } from "./lib/oauth-server.mjs";
 import { McpAccessLog, parseMcpLogLevel } from "./lib/access-log.mjs";
