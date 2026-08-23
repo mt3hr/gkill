@@ -148,3 +148,39 @@ var (
 func glob(pattern string) ([]string, error) {
 	return zglob.Glob(pattern)
 }
+
+// 除外するかどうかを判定します。
+//
+// ignoresはファイル名の完全一致、ignorePatternsはfilepath.Matchのパターンです。
+// 完全一致を残してあるのは、既定の除外リスト(gkill_options.IDFIgnore)が
+// そのまま渡ってくるためです。すべてパターン扱いにすると、名前に [ や *
+// を含むファイルの扱いが変わってしまいます。
+//
+// パターンの妥当性はvalidateIgnorePatternsが先に見ているので、
+// ここではMatchのエラーを無視して構いません。
+func isIgnored(name string, ignores []string, ignorePatterns []string) bool {
+	for _, ignore := range ignores {
+		if ignore == name {
+			return true
+		}
+	}
+	for _, pattern := range ignorePatterns {
+		if matched, err := filepath.Match(pattern, name); err == nil && matched {
+			return true
+		}
+	}
+	return false
+}
+
+// 除外パターンが壊れていないかを確認します。
+//
+// 壊れたパターンは黙って「何にも当たらない」になります。除外し損ねると
+// 書きかけのファイルを運んでしまうので、動き出す前に気づけるようにします。
+func validateIgnorePatterns(ignorePatterns []string) error {
+	for _, pattern := range ignorePatterns {
+		if _, err := filepath.Match(pattern, ""); err != nil {
+			return fmt.Errorf("不正な除外パターンです %s: %w", pattern, err)
+		}
+	}
+	return nil
+}
