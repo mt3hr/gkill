@@ -39,6 +39,15 @@ export function assertInteger(value, field, { min = null, max = null } = {}) {
   if (typeof value !== "number" || !Number.isInteger(value)) {
     throw invalidArgument(field, "must be an integer", value);
   }
+  // 2^53 を超える整数は JSON を往復するだけで別の値に化ける。受理すると
+  // 「保存した金額と読み戻した金額が違う」が例外もエラーも無しに起きる。
+  if (!Number.isSafeInteger(value)) {
+    throw invalidArgument(
+      field,
+      `must be within the safe integer range (at most ${Number.MAX_SAFE_INTEGER})`,
+      value,
+    );
+  }
   if (min !== null && value < min) {
     throw invalidArgument(field, `must be greater than or equal to ${min}`, value);
   }
