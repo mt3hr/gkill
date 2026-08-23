@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	_ "modernc.org/sqlite"
@@ -69,6 +70,40 @@ func newWriteThroughTagRepositories(t *testing.T, withCache bool) (*reps.GkillRe
 	return repositories, writeRep
 }
 
+// newWriteThroughTargetKyou は「タグ/テキストを付ける対象のKyou」を1件だけ持つrepを作る。
+//
+// AddTag / AddText は txID が nil のとき対象の実在を検査する
+// （存在しないIDへ付けると、どこにも付いていない宙吊りの記録ができるため）。
+// このファイルのテストは write-through の検査が目的で対象の実在は関心事ではないが、
+// 検査を通すために実体を1件用意する。
+func newWriteThroughTargetKyou(t *testing.T, repositories *reps.GkillRepositories, targetID string) {
+	t.Helper()
+	kmemoRep, err := reps.NewKmemoRepositorySQLite3Impl(context.Background(), filepath.Join(t.TempDir(), "target_kmemo.db"), false)
+	if err != nil {
+		t.Fatalf("failed to create kmemo repo: %v", err)
+	}
+	t.Cleanup(func() { _ = kmemoRep.Close(context.Background()) })
+
+	now := time.Date(2026, 8, 12, 9, 0, 0, 0, time.UTC)
+	if err := kmemoRep.AddKmemoInfo(context.Background(), reps.Kmemo{
+		ID:           targetID,
+		Content:      "タグを付ける対象",
+		RelatedTime:  now,
+		CreateTime:   now,
+		CreateApp:    "test_app",
+		CreateDevice: "test_device",
+		CreateUser:   "testuser",
+		UpdateTime:   now,
+		UpdateApp:    "test_app",
+		UpdateDevice: "test_device",
+		UpdateUser:   "testuser",
+	}); err != nil {
+		t.Fatalf("failed to add target kmemo: %v", err)
+	}
+	repositories.KmemoReps = reps.KmemoRepositories{kmemoRep}
+	repositories.Reps = reps.Repositories{kmemoRep}
+}
+
 func newWriteThroughTag(id, targetID, tag string) reps.Tag {
 	now := time.Date(2026, 8, 12, 10, 0, 0, 0, time.UTC)
 	return reps.Tag{
@@ -95,6 +130,7 @@ func TestAddTagWritesThroughToCacheWithPluginTypedAdapter(t *testing.T) {
 	ctx := context.Background()
 	uc := &UsecaseContext{}
 	repositories, cacheRep := newWriteThroughTagRepositories(t, true)
+	newWriteThroughTargetKyou(t, repositories, "target-001")
 
 	if len(repositories.TagReps) == 1 {
 		t.Fatal("前提が崩れている: TagRepsはアダプタ込みで2個であること")
@@ -138,6 +174,7 @@ func TestUpdateTagWritesThroughToCacheWithPluginTypedAdapter(t *testing.T) {
 	ctx := context.Background()
 	uc := &UsecaseContext{}
 	repositories, _ := newWriteThroughTagRepositories(t, true)
+	newWriteThroughTargetKyou(t, repositories, "target-002")
 
 	tag := newWriteThroughTag("tag-002", "target-002", "日記")
 	if _, gkillErrors, err := uc.AddTag(ctx, repositories, "testuser", "test_device", "ja", tag, nil); err != nil || len(gkillErrors) != 0 {
@@ -168,6 +205,7 @@ func TestAddTagWithoutCachedRep(t *testing.T) {
 	ctx := context.Background()
 	uc := &UsecaseContext{}
 	repositories, writeRep := newWriteThroughTagRepositories(t, false)
+	newWriteThroughTargetKyou(t, repositories, "target-003")
 
 	if repositories.CachedReps.Tag != nil {
 		t.Fatal("前提が崩れている: キャッシュ無効時はCachedReps.Tagがnilであること")
@@ -232,5 +270,75 @@ func TestNoRepsCountCacheGuard(t *testing.T) {
 	}
 	if len(violations) != 0 {
 		t.Fatalf("個数によるキャッシュrep判定が復活している。repositories.WriteThroughXxxCacheを使うこと:\n%s", strings.Join(violations, "\n"))
+	}
+}
+
+// ─── タグの対象IDの実在検査 ───────────────────────────────────────────────────
+
+// newWriteThroughTagTempRep は確定前のタグを置く一時リポジトリを作る。
+func newWriteThroughTagTempRep(t *testing.T) reps.TagTempRepository {
+	t.Helper()
+	db, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatalf("failed to open in-memory sqlite: %v", err)
+	}
+	t.Cleanup(func() { _ = db.Close() })
+	rep, err := reps.NewTagTempRepositorySQLite3Impl(context.Background(), db, &sync.RWMutex{})
+	if err != nil {
+		t.Fatalf("NewTagTempRepositorySQLite3Impl: %v", err)
+	}
+	return rep
+}
+
+// TestAddTagRejectsMissingTarget は存在しない対象IDへのタグ追加が弾かれることを固定する。
+//
+// 以前は成功が返り、どこにも付いていない宙吊りのタグができていた。
+// そのタグ名は get_all_tag_names の語彙に載るので、
+// 0件しかヒットしない候補が検索の選択肢に混ざり続ける（監査2026-08-23で実測）。
+// IDの取り違えはAIが最も起こしやすい事故で、そのとき静かに失敗していた。
+func TestAddTagRejectsMissingTarget(t *testing.T) {
+	ctx := context.Background()
+	uc := &UsecaseContext{}
+	repositories, _ := newWriteThroughTagRepositories(t, true)
+	newWriteThroughTargetKyou(t, repositories, "target-001")
+
+	tag := newWriteThroughTag("tag-missing", "target-does-not-exist", "日記")
+	addedTag, gkillErrors, err := uc.AddTag(ctx, repositories, "testuser", "test_device", "ja", tag, nil)
+	if err != nil {
+		t.Fatalf("AddTag returned a hard error instead of a gkill error: %v", err)
+	}
+	if len(gkillErrors) == 0 {
+		t.Fatal("存在しない対象IDへのタグ追加が成功している。宙吊りのタグができる")
+	}
+	if gkillErrors[0].ErrorCode != message.NotFoundKyouInfoError {
+		t.Errorf("ErrorCode = %s, want %s（「サーバ障害」ではなく「指定ミス」として返すこと）",
+			gkillErrors[0].ErrorCode, message.NotFoundKyouInfoError)
+	}
+	if addedTag != nil {
+		t.Error("弾いたのにタグを返している")
+	}
+}
+
+// TestAddTagSkipsTargetCheckInTransaction は
+// トランザクション中は対象の実在を検査しないことを固定する。
+//
+// **これを検査してしまうとメモ帳(KFTL)からのタグ付き投入が全滅する。**
+// KFTL は1つのトランザクションで「対象のKyouを作る」→「それにタグを付ける」を
+// 挿入順に流すので、タグを付ける時点で対象はまだ一時リポジトリの中にいて確定していない。
+func TestAddTagSkipsTargetCheckInTransaction(t *testing.T) {
+	ctx := context.Background()
+	uc := &UsecaseContext{}
+	repositories, _ := newWriteThroughTagRepositories(t, true)
+	newWriteThroughTargetKyou(t, repositories, "target-001")
+	repositories.TempReps = &reps.TempReps{TagTempRep: newWriteThroughTagTempRep(t)}
+
+	txID := "tx-001"
+	tag := newWriteThroughTag("tag-in-tx", "target-not-committed-yet", "日記")
+	_, gkillErrors, err := uc.AddTag(ctx, repositories, "testuser", "test_device", "ja", tag, &txID)
+	if err != nil {
+		t.Fatalf("AddTag failed: %v", err)
+	}
+	if len(gkillErrors) != 0 {
+		t.Fatalf("トランザクション中は対象の実在を検査しないこと。検査するとKFTLのタグ付き投入が全滅する: %v", gkillErrors)
 	}
 }

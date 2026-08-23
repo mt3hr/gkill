@@ -39,6 +39,38 @@ func (uc *UsecaseContext) AddText(ctx context.Context, repositories *reps.GkillR
 		return nil, gkillErrors, nil
 	}
 
+	// 対象のKyouが無い場合はエラー
+	//
+	// **txIDがあるときは検査しない。** KFTL は1つのトランザクションで
+	// 「対象のKyouを作る」→「それに注記を付ける」を挿入順に流すので、
+	// この時点で対象はまだ一時リポジトリの中にいて確定していない。
+	// 無条件に検査すると、メモ帳からのテキスト付き投入が全滅する。
+	//
+	// 検査しないと、存在しないIDへ注記を付けても成功が返り、
+	// どこにも付いていない宙吊りのテキストができる。
+	// IDの取り違えはAIが最も起こしやすい事故で、そのとき静かに失敗していた。
+	if txID == nil {
+		targetKyou, err := repositories.GetKyou(ctx, text.TargetID, nil)
+		if err != nil {
+			err = fmt.Errorf("error at get kyou user id = %s device = %s target id = %s: %w", userID, device, text.TargetID, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			gkillErrors = append(gkillErrors, &message.GkillError{
+				ErrorCode:    message.GetTextError,
+				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
+			})
+			return nil, gkillErrors, nil
+		}
+		if targetKyou == nil {
+			err = fmt.Errorf("not found target kyou id = %s", text.TargetID)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			gkillErrors = append(gkillErrors, &message.GkillError{
+				ErrorCode:    message.NotFoundKyouInfoError,
+				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
+			})
+			return nil, gkillErrors, nil
+		}
+	}
+
 	if txID == nil {
 		err = repositories.WriteTextRep.AddTextInfo(ctx, text)
 		if err != nil {
