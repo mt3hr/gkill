@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Status | Accepted |
+| Status | Superseded |
 | Date | 2026-08-16 |
 | Sources | `623e3777` / `bb364253` |
 | Supersedes | なし |
-| Superseded-by | なし |
+| Superseded-by | [0053](0053-mcp-composite-cursor-strict-limits.md) |
 | Anchors | `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp.go` |
 
 ## Context

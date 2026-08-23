@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 959 | 142 | Go `testing` |
+| Go バックエンド | 975 | 146 | Go `testing` |
 | フロントエンド ユニット | 1964 | 166 | Vitest |
 | フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
-| MCP サーバ | 732 | 21 | Vitest |
+| MCP サーバ | 746 | 22 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 171 | 12 | JUnit 4 + MockK |
-| **合計** | **4,092** | **388** | |
+| **合計** | **4,122** | **393** | |
 
 数え直すコマンド:
 
@@ -206,7 +206,7 @@ src/server/gkill/
 │   ├── req_res/req_res_test.go        ← JSON 往復テスト
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（24ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（26ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── handle_get_idf_file_path_test.go      ← IDFファイル絶対パス取得
@@ -231,7 +231,7 @@ src/server/gkill/
 │   ├── gkill_notification/            ← 通知ターゲット
 │   ├── hide_files/                    ← ファイル非表示
 │   ├── sqlite3impl/                   ← SQLite3 ユーティリティ
-│   └── reps/                          ← リポジトリ実装（49ファイル。plugin_repository_impl_test.go, git_commit_log_cached_unique_test.go, gps_log_repositories_test.go 等）
+│   └── reps/                          ← リポジトリ実装（50ファイル。plugin_repository_impl_test.go, git_commit_log_cached_unique_test.go, gps_log_repositories_test.go 等）
 │       ├── *_repository_sqlite3_impl_test.go  ← 11データ型
 │       ├── cached_and_temp_test.go    ← キャッシュ層・一時層
 │       └── cache/                     ← キャッシュ更新

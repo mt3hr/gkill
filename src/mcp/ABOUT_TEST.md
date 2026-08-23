@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。732テスト（21ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 8 + プラグイン1 = 9ツール、Write サーバ 23（書き込み20 + Read便利3）+ プラグイン1 = 24ツール、統合サーバ 28 + プラグイン1 = 29ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
+MCP (Model Context Protocol) サーバのテスト。746テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 23（書き込み20 + Read便利3）+ プラグイン1 = 24ツール、統合サーバ 29 + プラグイン1 = 30ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
 
 ## テストフレームワーク
 
@@ -47,7 +47,7 @@ Vitest（Node.js 環境）
 | ファイル | テスト内容 |
 |---------|-----------|
 | `__tests__/readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
-| `__tests__/readwrite-server.test.mjs` | McpServer 統合（29ツール全ディスパッチ、プラグインツール振り分け、IDF画像ブロック、エンティティデフォルト値） |
+| `__tests__/readwrite-server.test.mjs` | McpServer 統合（30ツール全ディスパッチ、プラグインツール振り分け、IDF画像ブロック、エンティティデフォルト値） |
 | `__tests__/readwrite-tool-handlers.test.mjs` | 統合28ツール定義・summarize関数（Read+Write統合版） |
 
 ## テスト内容
