@@ -133,3 +133,71 @@ func TestGPSLogGPXDirGetGPSLogsSkipsMissingDateFile(t *testing.T) {
 		t.Errorf("該当日のファイルが無いので0件のはず: got %d件", len(logs))
 	}
 }
+
+// 拡張子が.gpxでないファイルは読まないこと。
+//
+// dvnfが書きかけの yyyyMMdd.gpx.tmp を運んでしまい、部分一致(Contains)が
+// それを拾って0バイトのxml.Decodeで落ち、repのGPSログが丸ごと返らなくなった。
+func TestGPSLogGPXDirGetAllGPSLogsIgnoresNonGPXExtension(t *testing.T) {
+	dir := t.TempDir()
+	baseTime := gpsLogTestBaseTime()
+	writeTestGPXFile(t, dir, baseTime, baseTime.Add(30*time.Minute), baseTime.Add(1*time.Hour))
+
+	// 0バイトの書きかけファイル。読みに行けば必ず失敗する
+	tmpName := baseTime.Format("20060102") + ".gpx.tmp"
+	if err := os.WriteFile(filepath.Join(dir, tmpName), nil, 0o600); err != nil {
+		t.Fatalf("WriteFile failed: %v", err)
+	}
+
+	logs, err := NewGPXDirRep(dir).GetAllGPSLogs(context.Background())
+	if err != nil {
+		t.Fatalf(".gpx.tmp は読まないはず: %v", err)
+	}
+	if len(logs) != 3 {
+		t.Errorf("本体の.gpxぶんだけ返るはず: got %d件, want 3件", len(logs))
+	}
+}
+
+// 壊れたGPXファイルが1件あっても、他のファイルは返すこと。
+//
+// 1件の破損でrep全体を落とすと、隣に並ぶ数百日ぶんが道連れになる。
+func TestGPSLogGPXDirGetAllGPSLogsSkipsBrokenFile(t *testing.T) {
+	dir := t.TempDir()
+	baseTime := gpsLogTestBaseTime()
+	writeTestGPXFile(t, dir, baseTime, baseTime.Add(30*time.Minute), baseTime.Add(1*time.Hour))
+
+	brokenName := baseTime.AddDate(0, 0, 1).Format("20060102") + ".gpx"
+	if err := os.WriteFile(filepath.Join(dir, brokenName), []byte("<gpx>壊れている"), 0o600); err != nil {
+		t.Fatalf("WriteFile failed: %v", err)
+	}
+
+	logs, err := NewGPXDirRep(dir).GetAllGPSLogs(context.Background())
+	if err != nil {
+		t.Fatalf("壊れた1件は読み飛ばすはず: %v", err)
+	}
+	if len(logs) != 3 {
+		t.Errorf("健全なファイルぶんは返るはず: got %d件, want 3件", len(logs))
+	}
+}
+
+// 拡張子の大小は問わないこと。
+func TestGPSLogGPXDirGetAllGPSLogsAcceptsUpperCaseExtension(t *testing.T) {
+	dir := t.TempDir()
+	baseTime := gpsLogTestBaseTime()
+	writeTestGPXFile(t, dir, baseTime)
+
+	// 書き出した .gpx を .GPX へ改名する
+	oldName := filepath.Join(dir, baseTime.Format("20060102")+".gpx")
+	newName := filepath.Join(dir, baseTime.Format("20060102")+".GPX")
+	if err := os.Rename(oldName, newName); err != nil {
+		t.Fatalf("Rename failed: %v", err)
+	}
+
+	logs, err := NewGPXDirRep(dir).GetAllGPSLogs(context.Background())
+	if err != nil {
+		t.Fatalf("GetAllGPSLogs failed: %v", err)
+	}
+	if len(logs) != 1 {
+		t.Errorf(".GPX も読むはず: got %d件, want 1件", len(logs))
+	}
+}
