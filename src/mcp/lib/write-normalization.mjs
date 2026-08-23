@@ -15,15 +15,15 @@ import {
   assertBoolean,
   assertKnownKeys,
 } from "./validation.mjs";
-import { DELETE_DATA_TYPE_VALUES } from "./constants.mjs";
+import { ENTITY_DATA_TYPE_VALUES } from "./constants.mjs";
 import { normalizeDateTimeString } from "./normalization.mjs";
 
 // ---------------------------------------------------------------------------
 // Allowed data_type values for gkill_delete_kyou
 // ---------------------------------------------------------------------------
 
-// 語彙の正本は constants.mjs の DELETE_TARGETS。ここは互換のための派生。
-export const DELETE_DATA_TYPES = new Set(DELETE_DATA_TYPE_VALUES);
+// 語彙の正本は constants.mjs の ENTITY_TARGETS。ここは互換のための派生。
+export const DELETE_DATA_TYPES = new Set(ENTITY_DATA_TYPE_VALUES);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -280,6 +280,19 @@ export function normalizeKftlArgs(args) {
   const kftl_text = assertTrimmedString(args.kftl_text, "kftl_text");
   const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
   return { kftl_text, locale_name };
+}
+
+/** @param {unknown} args */
+export function normalizeRestoreArgs(args) {
+  assertArgs(args);
+  assertKnownKeys(args, new Set(["id", "data_type", "locale_name"]));
+  const id = assertTrimmedString(args.id, "id");
+  const data_type = assertTrimmedString(args.data_type, "data_type");
+  if (!DELETE_DATA_TYPES.has(data_type)) {
+    throw invalidArgument("data_type", `must be one of: ${[...DELETE_DATA_TYPES].join(", ")}`, data_type);
+  }
+  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
+  return { id, data_type, locale_name };
 }
 
 /** @param {unknown} args */

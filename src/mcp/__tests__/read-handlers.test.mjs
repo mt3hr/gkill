@@ -15,6 +15,7 @@ import {
   paginateGpsLogs,
   encodeGpsCursor,
   decodeGpsCursor,
+  summarizeReadToolPayload,
 } from "../lib/read-handlers.mjs";
 import { applyFileLinks } from "../lib/payload.mjs";
 import { FileLinkStore } from "../lib/file-link-store.mjs";
@@ -281,5 +282,64 @@ describe("handleReadToolCall — gkill_get_rep_infos", () => {
     const store = new FileLinkStore();
     applyFileLinks(payload, { publicBaseUrl: "https://example.com", store }, "sid");
     expect(JSON.stringify(payload)).toBe(before);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// gkill_get_kyou_history — 削除済みと過去版を読む唯一の経路
+// ---------------------------------------------------------------------------
+describe("handleReadToolCall — gkill_get_kyou_history", () => {
+  test("uses the per-type endpoint, never the type-agnostic /api/get_kyou", () => {
+    // 型非依存の Repositories.GetKyouHistoriesByRepName は UnWrap() で
+    // キャッシュrepを丸ごとバイパスする（11rep→約940rep・実測20.7秒）
+    const ctx = makeCtx(async () => ({ kmemo_histories: [{ id: "k1", is_deleted: false, update_time: "2026-01-02T00:00:00+09:00" }] }));
+    return handleReadToolCall(ctx, "gkill_get_kyou_history", { id: "k1", data_type: "kmemo" }).then(() => {
+      expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/get_kmemo");
+      expect(ctx.client.callApi.mock.calls[0][0]).not.toBe("/api/get_kyou");
+    });
+  });
+
+  test("returns every version newest first and flags a deleted latest version", async () => {
+    const ctx = makeCtx(async () => ({
+      kmemo_histories: [
+        { id: "k1", content: "gone", is_deleted: true, update_time: "2026-01-03T00:00:00+09:00" },
+        { id: "k1", content: "second", is_deleted: false, update_time: "2026-01-02T00:00:00+09:00" },
+        { id: "k1", content: "first", is_deleted: false, update_time: "2026-01-01T00:00:00+09:00" },
+      ],
+    }));
+    const result = await handleReadToolCall(ctx, "gkill_get_kyou_history", { id: "k1", data_type: "kmemo" });
+
+    expect(result.latest_is_deleted).toBe(true);
+    expect(result.version_count).toBe(3);
+    expect(result.returned_count).toBe(3);
+    expect(result.has_more).toBe(false);
+    expect(result.versions[0].content).toBe("gone");
+    expect(result.versions[2].content).toBe("first");
+  });
+
+  test("caps the versions by limit and reports has_more", async () => {
+    // 履歴は編集のたびに1件伸びるので無制限には返さない
+    const ctx = makeCtx(async () => ({
+      kmemo_histories: Array.from({ length: 5 }, (_unused, i) => ({ id: "k1", is_deleted: false, update_time: `2026-01-0${i + 1}T00:00:00+09:00` })),
+    }));
+    const result = await handleReadToolCall(ctx, "gkill_get_kyou_history", { id: "k1", data_type: "kmemo", limit: 2 });
+
+    expect(result.returned_count).toBe(2);
+    expect(result.version_count).toBe(5);
+    expect(result.has_more).toBe(true);
+  });
+
+  test("throws when the id has no history at all", async () => {
+    const ctx = makeCtx(async () => ({ kmemo_histories: [] }));
+    await expect(handleReadToolCall(ctx, "gkill_get_kyou_history", { id: "nope", data_type: "kmemo" }))
+      .rejects.toThrow(/Entity not found/);
+  });
+
+  test("summary names the deleted state so it is visible before reading the JSON", () => {
+    const summary = summarizeReadToolPayload("gkill_get_kyou_history", {
+      version_count: 3, returned_count: 3, has_more: false, latest_is_deleted: true,
+    });
+    expect(summary).toContain("3 of 3");
+    expect(summary).toContain("DELETED");
   });
 });
