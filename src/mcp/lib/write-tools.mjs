@@ -363,14 +363,14 @@ export const WRITE_TOOLS = [
       "To obtain the entity ID: use the id from a previous gkill_add_timeis response, or search with gkill_get_kyous. " +
       "Response fields: updated_timeis (full TimeIs entity after update, with id, title, start_time, end_time, rep_name, etc.), updated_kyou (parent Kyou wrapper). " +
       "Common use case: close an open-ended timeis by setting end_time (e.g., gkill_update_timeis({id, end_time: \"2026-03-31T18:00:00+09:00\"})). " +
-      "Also useful for: correcting start/end times, renaming an activity.",
+      "Also useful for: correcting start/end times, renaming an activity, and reopening a finished one (end_time: null).",
     inputSchema: {
       type: "object",
       properties: {
         id: { type: "string", description: "ID of the timeis to update. Obtain from gkill_add_timeis response or gkill_get_kyous." },
         title: { type: "string", description: "New activity title/label." },
         start_time: { type: "string", description: `New start time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
-        end_time: { type: "string", description: `New end time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Set this to close an open-ended (ongoing) timeis. Omit to keep unchanged.` },
+        end_time: { type: ["string", "null"], description: `New end time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Set this to close an open-ended (ongoing) timeis. Omit to keep unchanged. Pass null to CLEAR it and put the interval back to in-progress — omitting the field leaves the existing end time alone, so null is the only way to reopen a timeis that was already ended.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
       required: ["id"],
