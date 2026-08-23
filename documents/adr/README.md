@@ -142,6 +142,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0015](0015-no-nested-threads-go.md) | threads.Go の入れ子は禁止。集約リポジトリには逐次版を用意する | Accepted |
 | [0016](0016-exclude-urlog-thumbnail-from-cache.md) | URLog のサムネイルはインメモリキャッシュに載せない | Accepted |
 | [0017](0017-git-repo-detect-by-os-stat.md) | gitリポジトリ判定は PlainOpen のエラー型ではなく os.Stat で行う | Accepted |
+| [0018](0018-write-through-normalizes-rep-name.md) | キャッシュへ書き戻す rep 名はクライアントの値を信用せず書き込み側で正規化する | Accepted |
 | [0020](0020-plugin-cancel-vs-kill.md) | プラグインの打ち切りは「待つのをやめる」と「プロセスを殺す」を分け、期限はスロットを取ってから張る | Accepted |
 | [0021](0021-plugin-provides-typed-index.md) | プラグインは provides で型別/付随データを提供でき、アダプタの読み取りは索引から即答する | Accepted |
 | [0022](0022-plugin-cache-use-crc32-and-size.md) | Google Takeout は ZIP のまま読み、差分判定は (CRC32, Size)、世代は「フォルダ + 書き出し時刻」 | Accepted |
@@ -167,7 +168,9 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0051](0051-mcp-inline-plugin-content.md) | MCP のプラグイン本文は get_kyous へインライン埋め込みし、同一プラグインへ並列に投げない | Accepted |
 | [0052](0052-mcp-cursor-pushes-period-end.md) | MCP のページングはカーソルを期間上限へ押し下げ、同一時刻のかたまりを割らない | Superseded |
 | [0053](0053-mcp-composite-cursor-strict-limits.md) | MCPのページングは複合カーソル（時刻+ID）にし、Limit/MaxSizeMBを厳密な上限へ戻す | Accepted |
+| [0054](0054-mcp-version-history-is-a-dedicated-tool.md) | 1件の版履歴と削除の取り消しは専用ツールで返す（only_latest_data は開けない） | Accepted |
 | [0060](0060-freeze-plaing-spelling.md) | 綴りは「永続に乗るか」で決める — plaing は凍結、agregate は改名して読み込み互換を残す | Accepted |
 | [0061](0061-verify-docs-checks-filenames.md) | 資料は件数だけでなく「資料に載っているファイル名の実在」も機械検査する | Accepted |
 | [0062](0062-split-claude-md-into-skills.md) | AI向け規約は AGENTS.md（核）と規約スキルへ分割し、入口の肥大化を機械検査で防ぐ | Accepted |
 | [0070](0070-hide-tags-standalone.md) | hide_tags はタグ絞り込み(tags)の有無と独立に適用する | Accepted |
+| [0071](0071-deleted-data-opens-only-with-include-deleted-data.md) | 削除済みの Kyou は include_deleted_data だけが開ける（is_deleted は使わない） | Accepted |
