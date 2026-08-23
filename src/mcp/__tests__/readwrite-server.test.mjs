@@ -420,9 +420,9 @@ describe("JSON-RPC protocol", () => {
     expect(response.result).toEqual({});
   });
 
-  test("tools/list returns 30 tools", async () => {
+  test("tools/list returns 32 tools", async () => {
     const response = await server.handleMessage({ jsonrpc: "2.0", id: 3, method: "tools/list" });
-    expect(response.result.tools).toHaveLength(30);
+    expect(response.result.tools).toHaveLength(32);
   });
 
   test("tools/list includes all expected tool names", async () => {

@@ -3,7 +3,7 @@
 // 以前はサーバごとに逐語コピーされていて、gkill_submit_kftl / gkill_delete_kyou の
 // description が接続先サーバによって違っていた。
 
-import { ISO_DATETIME_DESC, DATE_ONLY_DESC, DELETE_DATA_TYPE_VALUES } from "./constants.mjs";
+import { ISO_DATETIME_DESC, DATE_ONLY_DESC, ENTITY_DATA_TYPE_VALUES } from "./constants.mjs";
 
 export const WRITE_TOOLS = [
   {
@@ -264,7 +264,7 @@ export const WRITE_TOOLS = [
         data_type: {
           type: "string",
           description: "Data type of the entry to delete. Must match the actual type of the entry.",
-          enum: DELETE_DATA_TYPE_VALUES,
+          enum: ENTITY_DATA_TYPE_VALUES,
         },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
@@ -458,6 +458,33 @@ export const WRITE_TOOLS = [
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
       required: ["id"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "gkill_restore_kyou",
+    description:
+      "Undo a soft-delete: clear is_deleted on an entry so it shows up in searches again. " +
+      "This is the counterpart of gkill_delete_kyou. Use gkill_get_kyou_history first to confirm what you are " +
+      "about to bring back — a deleted entry is invisible to every ordinary search, so restoring blind is a guess. " +
+      "gkill is append-only, so a restore adds a new version rather than removing the deleting one; " +
+      "delete/restore cycles keep growing the history. " +
+      "Note the restored entry lands in the account's current write repository, which is not necessarily the " +
+      "repository it came from. " +
+      "Fails with 'already active' when the entry is not deleted, so it is safe to call speculatively. " +
+      "Response fields: restored_{data_type} (the entity with is_deleted=false), updated_kyou (parent Kyou wrapper, when the server returns one).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "ID of the soft-deleted entry to restore." },
+        data_type: {
+          type: "string",
+          description: "Data type of the entry. Must match the actual type of the entry.",
+          enum: ENTITY_DATA_TYPE_VALUES,
+        },
+        locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
+      },
+      required: ["id", "data_type"],
       additionalProperties: false,
     },
   },

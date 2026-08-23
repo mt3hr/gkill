@@ -21,11 +21,16 @@ import { WRITE_TOOLS } from "./lib/write-tools.mjs";
 import { handleWriteToolCall } from "./lib/write-handlers.mjs";
 import { HttpTransport } from "./lib/http-transport.mjs";
 
-// 書き込みサーバにも載せる読み取りツール。書き込みの前に名前を引くためだけのもの
+// 書き込みサーバにも載せる読み取りツール。
+// 前3つは書き込みの前に rep名 / 板名 / タグ名を引くためのもの。
+// gkill_get_kyou_history は gkill_delete_kyou / gkill_restore_kyou の相棒で、
+// 「今なにを消したのか」「なにを戻そうとしているのか」を同じサーバから確かめられないと
+// 削除の取り消しが当てずっぽうになるので、ここに載せる。
 const WRITE_SERVER_READ_TOOL_NAMES = new Set([
   "gkill_get_all_rep_names",
   "gkill_get_mi_board_list",
   "gkill_get_all_tag_names",
+  "gkill_get_kyou_history",
 ]);
 
 const _thisFile = _fileURLToPath(import.meta.url);
