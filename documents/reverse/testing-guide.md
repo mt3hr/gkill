@@ -393,8 +393,8 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | テストファイル | テスト内容 |
 |-------------|-----------|
 | `readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
-| `readwrite-server.test.mjs` | McpServer統合（全29ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
-| `readwrite-tool-handlers.test.mjs` | 統合の固有28ツール定義（プラグイン1ツールを足して公開は29）・summarize関数 |
+| `readwrite-server.test.mjs` | McpServer統合（全30ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
+| `readwrite-tool-handlers.test.mjs` | 統合の固有29ツール定義（プラグイン1ツールを足して公開は30）・summarize関数 |
 
 ### 3.5 Android / Wear OS
 
