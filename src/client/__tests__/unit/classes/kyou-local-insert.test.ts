@@ -184,9 +184,13 @@ describe('does_kyou_match_query - タグ', () => {
         expect(does_kyou_match_query(kyou, make_query({ tags: ['x', 'Secret'], hide_tags: ['Secret'] }))).toBe(false)
     })
 
-    it('tags が null なら hide_tags は適用しない', () => {
+    it('tags が null でも hide_tags は適用される（単独有効化。ADR-0070）', () => {
+        // 以前は tags が null のとき適用しない仕様で、サーバ find_filter.go と対で変更した
         const kyou = make_kyou({ tags: ['secret'] })
-        expect(does_kyou_match_query(kyou, make_query({ tags: null, hide_tags: ['secret'] }))).toBe(true)
+        expect(does_kyou_match_query(kyou, make_query({ tags: null, hide_tags: ['secret'] }))).toBe(false)
+        // hide_tags の対象でないタグしか持たない記録は残る
+        const plain_kyou = make_kyou({ tags: ['x'] })
+        expect(does_kyou_match_query(plain_kyou, make_query({ tags: null, hide_tags: ['secret'] }))).toBe(true)
     })
 })
 
