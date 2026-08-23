@@ -169,7 +169,6 @@ var errorCodeHTTPStatus = map[string]int{
 	InvalidGetPluginConfigHTMLRequestDataError:                      http.StatusBadRequest, // ERR000381
 	InvalidPostPluginConfigRequestDataError:                         http.StatusBadRequest, // ERR000383
 	InvalidGetIDFKyouByRelativePathRequestDataError:                 http.StatusBadRequest, // ERR000385
-	InvalidGetIDFFilePathRequestDataError:                           http.StatusBadRequest, // ERR000387
 	InvalidAddMiReKyouRequestDataError:                              http.StatusBadRequest, // ERR000390
 	InvalidUpdateMiReKyouRequestDataError:                           http.StatusBadRequest, // ERR000394
 	InvalidGetMiReKyouRequestDataError:                              http.StatusBadRequest, // ERR000398
@@ -187,18 +186,17 @@ var errorCodeHTTPStatus = map[string]int{
 
 	// ---- 403 Forbidden — 誰かは分かるが、やらせない ----
 	// 権限不足・無効化済みアカウント・ローカル限定アクセス違反。
-	AccountIsNotEnableError:            http.StatusForbidden, // ERR000003
-	AccountNotHasAdminError:            http.StatusForbidden, // ERR000014
-	TagStructInvalidUserID:             http.StatusForbidden, // ERR000159
-	RepStructInvalidUserID:             http.StatusForbidden, // ERR000164
-	DeviceStructInvalidUserID:          http.StatusForbidden, // ERR000169
-	RepTypeStructInvalidUserID:         http.StatusForbidden, // ERR000174
-	KFTLTemplateStructInvalidUserID:    http.StatusForbidden, // ERR000229
-	AccountDisabledError:               http.StatusForbidden, // ERR000238
-	OpenFolderNotLocalAccountError:     http.StatusForbidden, // ERR000296
-	GetIDFFilePathNotLocalRequestError: http.StatusForbidden, // ERR000389
-	CannotDisableOwnAccountError:       http.StatusForbidden, // ERR000409
-	LocalOnlyAccessDeniedError:         http.StatusForbidden, // ERR000414
+	AccountIsNotEnableError:         http.StatusForbidden, // ERR000003
+	AccountNotHasAdminError:         http.StatusForbidden, // ERR000014
+	TagStructInvalidUserID:          http.StatusForbidden, // ERR000159
+	RepStructInvalidUserID:          http.StatusForbidden, // ERR000164
+	DeviceStructInvalidUserID:       http.StatusForbidden, // ERR000169
+	RepTypeStructInvalidUserID:      http.StatusForbidden, // ERR000174
+	KFTLTemplateStructInvalidUserID: http.StatusForbidden, // ERR000229
+	AccountDisabledError:            http.StatusForbidden, // ERR000238
+	OpenFolderNotLocalAccountError:  http.StatusForbidden, // ERR000296
+	CannotDisableOwnAccountError:    http.StatusForbidden, // ERR000409
+	LocalOnlyAccessDeniedError:      http.StatusForbidden, // ERR000414
 
 	// ---- 404 Not Found — 指定されたものが無い ----
 	// 「サーバの設定ファイルが無い」は利用者の指定ミスではないので 500 に置いてある。
@@ -491,7 +489,6 @@ var errorCodeHTTPStatus = map[string]int{
 	GetPluginConfigHTMLError:                                         http.StatusInternalServerError, // ERR000382
 	PostPluginConfigError:                                            http.StatusInternalServerError, // ERR000384
 	GetIDFKyouByRelativePathError:                                    http.StatusInternalServerError, // ERR000386
-	GetIDFFilePathError:                                              http.StatusInternalServerError, // ERR000388
 	InvalidAddMiReKyouResponseDataError:                              http.StatusInternalServerError, // ERR000391
 	AddMiReKyouError:                                                 http.StatusInternalServerError, // ERR000392
 	InvalidUpdateMiReKyouResponseDataError:                           http.StatusInternalServerError, // ERR000395

@@ -610,7 +610,7 @@ func (f *FindFilter) collectTagsForFilter(ctx context.Context, findCtx *FindKyou
 	}
 
 	// 全タグ取得用検索クエリ。IDごとの最新版のみを対象にする
-	findTagsQuery := &find.FindQuery{IsDeleted: false, OnlyLatestData: true}
+	findTagsQuery := &find.FindQuery{OnlyLatestData: true}
 
 	allTagsList, err := collectFromRepos([]reps.TagRepository(findCtx.Repositories.TagReps), func(tagRep reps.TagRepository) ([]reps.Tag, error) {
 		return tagRep.FindTags(ctx, findTagsQuery)
@@ -694,7 +694,6 @@ func (f *FindFilter) collectTagsForFilter(ctx context.Context, findCtx *FindKyou
 // 名前が少ないうちは全タグの実体化を避けられるぶんこちらが安い(上の閾値を参照)。
 func (f *FindFilter) findTagsByNameInSQL(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	query := &find.FindQuery{
-		// IsDeleted: false, // TagReps.FindTags内に考慮があるため削除
 		Words:    findCtx.ParsedFindQuery.Tags,
 		WordsAnd: false,
 		// 編集前のタグ名でヒットしないよう、IDごとの最新版のみを対象にする
@@ -795,7 +794,7 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 
 	// 全タグ取得 → Go 照合。collectTagsForFilter の Go 経路と同じ意味論
 	// (rep跨ぎで UpdateTime 最大の版を選び、strings.EqualFold で Tag/ID を完全一致・大小無視)。
-	findTagsQuery := &find.FindQuery{IsDeleted: false, OnlyLatestData: true}
+	findTagsQuery := &find.FindQuery{OnlyLatestData: true}
 	allTagsList, err := collectFromRepos([]reps.TagRepository(findCtx.Repositories.TagReps), func(tagRep reps.TagRepository) ([]reps.Tag, error) {
 		return tagRep.FindTags(ctx, findTagsQuery)
 	})

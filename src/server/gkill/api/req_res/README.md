@@ -28,7 +28,7 @@
 
 > どちらも `omitempty` を付けていないので、**成功時は nil スライスがそのまま `"errors": null` / `"messages": null` として出る**。TypeScript 側で受けるときは `res.errors ?? []` を通してからスプレッドすること（素の `[...res.errors]` は例外になる）。
 
-## 全ファイル一覧（188ファイル: 型定義187 + テスト `req_res_test.go` 1）
+## 全ファイル一覧（186ファイル: 型定義185 + テスト `req_res_test.go` 1）
 
 ### 認証系（10ファイル）
 
@@ -153,7 +153,6 @@
 | `open_file_request.go` / `open_file_response.go` | ファイルを開く |
 | `browse_zip_contents_request.go` / `browse_zip_contents_response.go` | ZIP ファイル内容閲覧 |
 | `get_idf_kyou_by_relative_path_request.go` / `get_idf_kyou_by_relative_path_response.go` | 相対パスによる IDFKyou 解決（Markdown 内相対リンク用） |
-| `get_idf_file_path_request.go` / `get_idf_file_path_response.go` | IDF ファイル絶対パス解決（MCP stdio クライアント用） |
 
 ### プラグイン系（8ファイル）
 

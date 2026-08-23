@@ -82,20 +82,6 @@ func countGitCommitLogKyous(kyous map[string][]Kyou) int {
 	return count
 }
 
-// gitのコミットに削除の概念は無いので、削除済み検索には1件も該当しない。
-func TestGitCommitLogLocalDirFindKyousIsDeletedMatchesNothing(t *testing.T) {
-	rep, _, _ := newTempGitCommitLogRepo(t)
-	ctx := context.Background()
-
-	kyous, err := rep.FindKyous(ctx, &find.FindQuery{IsDeleted: true})
-	if err != nil {
-		t.Fatalf("FindKyous failed: %v", err)
-	}
-	if got := countGitCommitLogKyous(kyous); got != 0 {
-		t.Errorf("削除済み検索にgitコミットが該当してはいけない: got %d件", got)
-	}
-}
-
 // IDsの意味論をSQL側(GenerateFindSQLCommon)と揃える。
 // nil=未使用(全件) / 非nil空=明示的な0件指定 / 指定あり=そのIDだけ。
 // 以前は非nil空でループが回らず match=true のまま全コミットが返っていた。
