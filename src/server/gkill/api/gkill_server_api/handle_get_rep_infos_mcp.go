@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
@@ -125,10 +126,20 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 					continue
 				}
 				seen[key] = struct{}{}
-				response.RepInfos = append(response.RepInfos, req_res.RepInfoMCPDTO{
+				repInfo := req_res.RepInfoMCPDTO{
 					RepName: repName,
 					RepType: repType,
-				})
+				}
+				// 索引を持つ rep だけ鮮度を出す。「置いたのに0件」が
+				// 取り込み待ちなのか本当に無いのかを、呼び出し側が判断できるようにする。
+				if reporter, ok := leafRep.(interface {
+					IndexUpdatedAt(ctx context.Context) (time.Time, error)
+				}); ok {
+					if indexedAt, err := reporter.IndexUpdatedAt(r.Context()); err == nil && !indexedAt.IsZero() {
+						repInfo.IndexedAt = indexedAt.In(time.Local).Format(time.RFC3339)
+					}
+				}
+				response.RepInfos = append(response.RepInfos, repInfo)
 			}
 		}
 	}

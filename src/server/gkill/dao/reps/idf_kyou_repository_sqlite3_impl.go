@@ -1013,6 +1013,21 @@ func (i *idfKyouRepositorySQLite3Impl) CommitCacheRebuild() {
 	i.cacheChange.commit()
 }
 
+// IndexUpdatedAt は採番索引（gkill_id.db）が最後に更新された時刻を返します。
+//
+// rep ディレクトリへ置いただけのファイルは、UpdateCache が IDF() を走らせるまで
+// 検索に出てきません。それは仕様ですが、**警告も出ないので「0件」が
+// 「まだ取り込んでいない」なのか「本当に無い」なのか区別できませんでした**
+// （2026-08-24 の再監査）。検索のたびにディレクトリを全走査して未採番を数えるのは
+// 実データの規模（56万行）では論外なので、鮮度だけを出して呼び出し側に判断させます。
+func (i *idfKyouRepositorySQLite3Impl) IndexUpdatedAt(ctx context.Context) (time.Time, error) {
+	info, err := os.Stat(i.idDBFile)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("error at stat idf index file %s: %w", i.idDBFile, err)
+	}
+	return info.ModTime(), nil
+}
+
 func (i *idfKyouRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return filepath.Base(i.contentDir), nil
 }
