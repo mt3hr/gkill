@@ -26,7 +26,63 @@ export const KYOUS_TOP_LEVEL_FIELDS = new Set([
   "include_plugin_content",
   "plugin_content_max_text_length",
   "plugin_content_format",
+  "count_only",
+  "group_by",
+  "data_types",
+  "num_min",
+  "num_max",
+  "idf_kinds",
+  "include_file_size",
 ]);
+
+// v2 (ADR-0053) の集計・絞り込みの列挙値。サーバ側(get_kyous_mcp_helpers.go)と揃えること。
+export const KYOUS_GROUP_BY_VALUES = new Set([
+  "month",
+  "day",
+  "week_of_day",
+  "hour",
+  "data_type",
+  "rep_name",
+  "url_domain",
+  "file_extension",
+]);
+
+export const KYOUS_IDF_KIND_VALUES = new Set(["image", "video", "audio", "zip", "other"]);
+
+// カーソルは v2 から不透明文字列（複合形式 {RFC3339Nano}::{ID}）。
+// Node側は解釈せず素通しする。長さだけ制限して事故を防ぐ。
+export const MAX_CURSOR_LENGTH = 512;
+
+// gkill_get_application_config の fields 射影の許可値。
+export const APP_CONFIG_FIELDS = new Set([
+  "tag_struct",
+  "mi_board_struct",
+  "rep_struct",
+  "rep_type_struct",
+  "device_struct",
+  "kftl_template_struct",
+  "mi_default_board",
+  "show_tags_in_list",
+]);
+
+// struct ツリーから既定で剥がす UI 状態キー（ツリーエディタの一時状態。
+// 実測で応答が 193.6k→93.0k 字に減る）。check_when_inited / is_force_hide は
+// 可視タグ判定に必要なので**絶対に剥がさない**。
+export const APP_CONFIG_UI_STATE_KEYS = new Set([
+  "is_checked",
+  "indeterminate",
+  "key",
+  "seq",
+  "seq_in_parent",
+  "is_open_default",
+  "parent_folder_id",
+  "id",
+]);
+
+// gkill_get_gps_log のページング（Node側実装。gkillは全件を返す）。
+export const DEFAULT_GPS_LIMIT = 500;
+export const MAX_GPS_LIMIT = 5000;
+export const GPS_GROUP_BY_VALUES = new Set(["day"]);
 
 export const KYOUS_QUERY_BOOLEAN_FIELDS = new Set([
   "update_cache",
