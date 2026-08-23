@@ -76,15 +76,25 @@ func CollectKFTLInputErrors(err error) []*KFTLInputError {
 		if e == nil {
 			return
 		}
+		// 自分自身が入力エラーならそこで確定。errors.As を使うと連鎖の先まで
+		// 潜ってしまい、包んだ側と包まれた側を二重に拾う。
+		if inputErr, ok := e.(*KFTLInputError); ok {
+			collected = append(collected, inputErr)
+			return
+		}
+		// errors.Join で束ねたもの。
 		if joined, ok := e.(interface{ Unwrap() []error }); ok {
 			for _, child := range joined.Unwrap() {
 				walk(child)
 			}
 			return
 		}
-		var inputErr *KFTLInputError
-		if errors.As(e, &inputErr) {
-			collected = append(collected, inputErr)
+		// fmt.Errorf("%w") で1段包んだもの。**ここを辿らないと束が見えない。**
+		// 呼び出し側（ハンドラ）は文脈を足すために束ねたエラーをもう一度包むので、
+		// 単段の Unwrap を辿らないと errors.As が最初の1件しか拾わず、
+		// 「全行ぶん集める」が黙って1件に戻る（2026-08-24 のデプロイ後の実測で発覚）。
+		if wrapped, ok := e.(interface{ Unwrap() error }); ok {
+			walk(wrapped.Unwrap())
 		}
 	}
 	walk(err)
