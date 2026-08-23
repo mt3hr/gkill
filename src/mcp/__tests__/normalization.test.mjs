@@ -826,6 +826,50 @@ describe("normalizeIdfFileArgs", () => {
   test("accepts null args as empty object and throws for missing required", () => {
     expect(() => normalizeIdfFileArgs(null)).toThrow();
   });
+
+  test("accepts thumb in the WxH form the file route expects", () => {
+    const result = normalizeIdfFileArgs({ rep_name: "repo", file_name: "photo.png", thumb: "1024x1024" });
+    expect(result.thumb).toBe("1024x1024");
+  });
+
+  test("rejects thumb that is not WxH", () => {
+    for (const thumb of ["1024", "1024*1024", "axb", "1024x", "12345x100"]) {
+      expect(() => normalizeIdfFileArgs({ rep_name: "r", file_name: "f", thumb })).toThrow(GkillApiError);
+    }
+  });
+
+  test("rejects thumb over the server cap instead of silently getting the original", () => {
+    // Go 側は 1024 超えを受け取るとサムネを作らず原本を返す。
+    expect(() => normalizeIdfFileArgs({ rep_name: "r", file_name: "f", thumb: "2048x2048" })).toThrow(
+      /1024 per side/,
+    );
+    expect(() => normalizeIdfFileArgs({ rep_name: "r", file_name: "f", thumb: "100x2048" })).toThrow(
+      /1024 per side/,
+    );
+  });
+
+  test("accepts is_video together with thumb", () => {
+    const result = normalizeIdfFileArgs({
+      rep_name: "repo",
+      file_name: "clip.mp4",
+      thumb: "400x400",
+      is_video: true,
+    });
+    expect(result.is_video).toBe(true);
+    expect(result.thumb).toBe("400x400");
+  });
+
+  test("rejects is_video without thumb", () => {
+    expect(() =>
+      normalizeIdfFileArgs({ rep_name: "repo", file_name: "clip.mp4", is_video: true }),
+    ).toThrow(/requires thumb/);
+  });
+
+  test("allows is_video:false on its own (it is a no-op, not a request for a frame)", () => {
+    const result = normalizeIdfFileArgs({ rep_name: "repo", file_name: "f.txt", is_video: false });
+    expect(result.is_video).toBe(false);
+    expect(result.thumb).toBeUndefined();
+  });
 });
 
 // ---------------------------------------------------------------------------
