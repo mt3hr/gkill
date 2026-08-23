@@ -121,34 +121,6 @@ describe("handleToolCall — read tools", () => {
   });
 });
 
-// gkill_get_idf_file_path が /api/get_idf_file_path を callApi で叩くこと。
-// 以前は廃止済みの client.callRead を呼んでおり、readwriteサーバのstdioでは
-// このツールが常に TypeError で静かに失敗していた（read/readwriteのディスパッチが
-// 逐語コピーだったことによる片側だけの直し漏れ）。
-test("dispatches gkill_get_idf_file_path via callApi (callRead regression)", async () => {
-  const mockClient = createMockClient({
-    callApi: vi.fn().mockResolvedValue({ errors: [], messages: [], file_path: "C:/data/a.png", exists: true }),
-  });
-  const server = new McpServer(mockClient);
-  server.isLocalTransport = true; // stdio相当。リモートではツール自体が拒否される
-  const payload = await server.handleToolCall("gkill_get_idf_file_path", {
-    rep_name: "TestRep",
-    file_name: "a.png",
-  });
-  expect(mockClient.callApi).toHaveBeenCalledWith(
-    "/api/get_idf_file_path",
-    expect.objectContaining({ rep_name: "TestRep", file_name: "a.png" }),
-    true,
-    null,
-  );
-  expect(payload).toEqual({
-    rep_name: "TestRep",
-    file_name: "a.png",
-    file_path: "C:/data/a.png",
-    exists: true,
-  });
-});
-
 // ---------------------------------------------------------------------------
 // handleToolCall dispatch — Write tools
 // ---------------------------------------------------------------------------
@@ -420,9 +392,9 @@ describe("JSON-RPC protocol", () => {
     expect(response.result).toEqual({});
   });
 
-  test("tools/list returns 32 tools", async () => {
+  test("tools/list returns 31 tools", async () => {
     const response = await server.handleMessage({ jsonrpc: "2.0", id: 3, method: "tools/list" });
-    expect(response.result.tools).toHaveLength(32);
+    expect(response.result.tools).toHaveLength(31);
   });
 
   test("tools/list includes all expected tool names", async () => {
