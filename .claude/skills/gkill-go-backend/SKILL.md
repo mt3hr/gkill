@@ -37,6 +37,8 @@ Key packages:
 
 **キャッシュのフルリビルドは「実DBが変わったときだけ」:** cached rep の `UpdateCache` は `DELETE FROM` + 全行再INSERT なので、変わっていない rep まで作り直すと共有の書き込みロックを握ったまま全種類の検索が止まる。抑止は `dbFileChangeDetector`（mtime + サイズ）で、基準を進めるのは**再構築成功後の `CommitCacheRebuild` だけ**（失敗した回を取りこぼさないため）。`--cache_reps_local=true` のときに挟まる `*_local_cached.go` も同じ約束を守ること ―― **「コピーが要るか」の判定は必ず `os.Remove` より前に置く**。消してから `os.Stat` すると常に「要コピー」になり、`LastUpdateCacheChanged()` が常に true を返して抑止が丸ごと無効化される。共通ヘルパは `local_rep_cache_copy.go`、回帰検出は `local_rep_cache_granular_test.go`。**ReKyou / MiReKyou は変更検知に載せてはいけない**（コピー省略のみ可）: この2つはターゲット解決のためアドレス確定後にもう一度更新される仕様で、mtime判定を入れると2回目が飛んでターゲット未解決の中身が残る。実測（phase1 が 0.2秒→1〜2分）と却下案は [ADR-0011](../../../documents/adr/0011-rebuild-cache-only-on-db-change.md)。
 
+**最新版アドレス表へ焼く rep 名は「行ごとの実rep名」。集約名を焼いてはいけない:** キャッシュrepの `GetLatestDataRepositoryAddress` は `LATEST_DATA_REPOSITORY_NAME` に **`REP_NAME` 列を射影する**（`? AS ...` に `GetRepName()` をバインドしない）。キャッシュrepが包んでいるのは集約なので `GetRepName()` は `"KmemoReps"` / `"IDFKyouReps"` のような**どのrepにも一致しない固定文字列**を返す。`GkillRepositories.GetKyou` はこの名前を `Reps.UnWrap()` が返す leaf rep の実名と突き合わせて問い合わせ先を1repへ絞るので、集約名を入れると比較が永遠に外れ、**エラーも立たず `(nil, nil)`** が返る。2026-08-24 に `usecase/tag.go` / `usecase/text.go` の実在検査がこれを踏み、**実在する記録へのタグ/テキスト追加が軒並み `ERR000092` で失敗**した。**`?` を1つ減らしたら `QueryContext` の引数も対で落とす**（残すとバインドがずれて静かに0件。2026-08-02 の `notification_repository_cached_sqlite3_impl.go` と同型）。**MiReKyou だけは例外** —— `UnWrap()` が自分自身を返すので両辺が同じ `GetRepName()` で自己一貫しており、`REP_NAME` へ変えるとむしろ壊れる。壊れ方は条件つきで、APIの書き込み経路はアドレス表へ leaf 名を直接書くため**同じプロセスで追加した直後の記録には付けられる** —— 失敗するのは UpdateCache が索引した後（スキャン由来の全記録と再起動後の全記録）。キャッシュOFFでは再現しない。守るテストは `dao/reps/gkill_repositories_get_kyou_test.go` と `dao/reps/latest_data_address_rep_name_scan_test.go`（ソース走査）。経緯と実測は [ADR-0019](../../../documents/adr/0019-latest-data-address-uses-row-rep-name.md)。
+
 **`len(XxxReps) == 1` でキャッシュrepを判定してはいけない。** アダプタの append は「キャッシュrepで `XxxReps` を1個に差し替える」処理より後なので、`provides` を持つプラグインが1つ入るだけで長さが2になる。書き込み後のキャッシュ反映は構築時に控えた `GkillRepositories.CachedReps` を見る `repositories.WriteThroughXxxCache(ctx, ...)` を使うこと（54箇所）。読み取りはキャッシュrepしか見ず下層repへフォールバックしないので、反映を飛ばすと追加したタグが最大1分見えず、その間にPWAが古い応答をキャッシュし直すと**恒久的に古いまま焼き付く**。再発は `usecase/write_through_cache_test.go` の `TestNoRepsCountCacheGuard` がソース走査で落とす。経緯と却下案は [ADR-0012](../../../documents/adr/0012-write-through-cache-not-reps-count.md)。
 
 ### HTTP ステータス（2026-08 導入）
@@ -127,6 +129,7 @@ ERR000002 でログアウトさせるので、**存在しないユーザIDにパ
 - [ADR-0015 threads.Go を入れ子にしない](../../../documents/adr/0015-no-nested-threads-go.md)
 - [ADR-0016 URLog サムネイルをキャッシュから除外](../../../documents/adr/0016-exclude-urlog-thumbnail-from-cache.md)
 - [ADR-0017 Git リポジトリ判定は os.Stat で](../../../documents/adr/0017-git-repo-detect-by-os-stat.md)
+- [ADR-0019 最新版アドレス表の rep 名は行ごとの実rep名](../../../documents/adr/0019-latest-data-address-uses-row-rep-name.md)
 - [ADR-0040 パスワードは Argon2id](../../../documents/adr/0040-argon2id-password-storage.md)
 - [ADR-0041 共有の所有者はセッションから](../../../documents/adr/0041-share-owner-from-session.md)
 - [ADR-0042 共有ファイル認可はクエリ再評価で](../../../documents/adr/0042-shared-file-authz-by-query.md)

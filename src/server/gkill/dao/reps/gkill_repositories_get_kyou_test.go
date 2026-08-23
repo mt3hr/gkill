@@ -2,8 +2,11 @@ package reps
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 // M-01: GkillRepositories.GetKyou は、最新版アドレス表に載っていないID
@@ -59,4 +62,83 @@ func TestGkillRepositoriesGetKyou_NilAddressDoesNotPanic(t *testing.T) {
 			t.Errorf("GetKyou should return nil for an absent version, got %#v", got)
 		}
 	})
+}
+
+// GkillRepositories.GetKyou は、キャッシュrepを挟んだ構成でも実在のKyouを見つけられる。
+//
+// GetKyou は最新版アドレス表の rep 名で問い合わせ先を1repに絞るが、比較の相手は
+// Reps.UnWrap() が返す leaf rep の実名である。アドレス表側に "KmemoReps" のような
+// 集約名を焼くと比較が永遠に外れ、全repが continue されて (nil, nil) が返る。
+// 呼び出し元の usecase/tag.go・usecase/text.go は nil を「対象が存在しない」と読むので、
+// 実在する記録へのタグ/テキスト追加が ERR000092 で全滅する。
+//
+// 上の TestGkillRepositoriesGetKyou_NilAddressDoesNotPanic は Reps に leaf rep を
+// 直接入れていてアドレス表に1行も載らないため、この穴を踏まない。
+func TestGkillRepositoriesGetKyou_FindsKyouThroughCachedRep(t *testing.T) {
+	ctx := context.Background()
+	enable := true
+	old := gkill_options.CacheKmemoReps
+	gkill_options.CacheKmemoReps = &enable
+	t.Cleanup(func() { gkill_options.CacheKmemoReps = old })
+
+	// t.Cleanup は LIFO なので、TempDir を先に確保してから Close を登録する。
+	// 逆にすると TempDir の削除が Close より先に走り、DBを掴んだままの削除で Windows が転ける。
+	dir := t.TempDir()
+
+	repositories, err := NewGkillRepositories(sanitizeTestUserID(t.Name()))
+	if err != nil {
+		t.Fatalf("failed to create repositories: %v", err)
+	}
+	t.Cleanup(func() { _ = repositories.Close(context.Background()) })
+
+	kmemoRep, err := NewKmemoRepositorySQLite3Impl(ctx, filepath.Join(dir, "Kmemo_TestDevice_20260824.db"), true)
+	if err != nil {
+		t.Fatalf("failed to create kmemo repo: %v", err)
+	}
+	leafRepName, err := kmemoRep.GetRepName(ctx)
+	if err != nil {
+		t.Fatalf("failed to get leaf rep name: %v", err)
+	}
+
+	const targetID = "cached-rep-target"
+	if err := kmemoRep.AddKmemoInfo(ctx, makeKmemo(targetID, "タグを付ける対象")); err != nil {
+		t.Fatalf("failed to add kmemo: %v", err)
+	}
+
+	cachedKmemoRep, err := NewKmemoRepositoryCachedSQLite3Impl(ctx, KmemoRepositories{kmemoRep}, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, sanitizeTestUserID(t.Name())+"_KMEMO_CACHE")
+	if err != nil {
+		t.Fatalf("failed to create cached kmemo repo: %v", err)
+	}
+	repositories.KmemoReps = KmemoRepositories{cachedKmemoRep}
+	repositories.WriteKmemoRep = kmemoRep
+	repositories.Reps = Repositories{cachedKmemoRep}
+
+	if err := repositories.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache() error: %v", err)
+	}
+
+	addr, err := repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddress(ctx, targetID)
+	if err != nil {
+		t.Fatalf("GetLatestDataRepositoryAddress() error: %v", err)
+	}
+	if addr == nil {
+		t.Fatal("最新版アドレス表に行が無い。この検査は「表に載っている状態でGetKyouを引く」ためのもので、載っていないと絞り込み自体が働かず素通りする")
+	}
+	if addr.LatestDataRepositoryName != leafRepName {
+		t.Errorf("LatestDataRepositoryName = %q, want %q（集約名を焼くと GetKyou の絞り込みが leaf 名と永遠に一致しない）", addr.LatestDataRepositoryName, leafRepName)
+	}
+
+	got, err := repositories.GetKyou(ctx, targetID, nil)
+	if err != nil {
+		t.Fatalf("GetKyou() error: %v", err)
+	}
+	if got == nil {
+		t.Fatal("GetKyou() がキャッシュrep構成で nil を返した。usecase/tag.go・usecase/text.go の実在検査がこれを「対象なし」と読み、実在する記録へのタグ/テキスト追加が ERR000092 になる")
+	}
+	if got.ID != targetID {
+		t.Errorf("GetKyou().ID = %q, want %q", got.ID, targetID)
+	}
+	if got.RepName != leafRepName {
+		t.Errorf("GetKyou().RepName = %q, want %q", got.RepName, leafRepName)
+	}
 }
