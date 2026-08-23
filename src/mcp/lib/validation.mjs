@@ -73,7 +73,12 @@ export function assertIntegerArray(value, field, { min = null, max = null } = {}
   return value.map((item, index) => assertInteger(item, `${field}[${index}]`, { min, max }));
 }
 
-export function assertKnownKeys(value, allowedKeys, field) {
+// assertKnownKeys は未知のキーを弾く。
+// field は「どのオブジェクトの中か」を示す接頭辞で、既定は "arguments"（ツール引数の直下）。
+// 既定を置く前は write 側20箇所が第3引数を渡しておらず、
+// エラーが `Invalid argument 'undefined.contnet'` と出て、
+// 呼び出し側からは自分の書き間違いなのか実装の不具合なのか判別できなかった。
+export function assertKnownKeys(value, allowedKeys, field = "arguments") {
   for (const key of Object.keys(value)) {
     if (!allowedKeys.has(key)) {
       throw invalidArgument(`${field}.${key}`, "is not supported", value[key], {
