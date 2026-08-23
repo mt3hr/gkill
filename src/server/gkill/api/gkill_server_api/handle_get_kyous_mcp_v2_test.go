@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 )
 
 // parseMCPCursor / encodeMCPCursor のラウンドトリップと形式の受理・拒否を固定する。
@@ -373,5 +374,42 @@ func TestHandleGetKyousMCP_RemainingCountSemantics(t *testing.T) {
 	}
 	if first.ReturnedCount+second.ReturnedCount != *first.TotalCount {
 		t.Errorf("2ページの合計(%d)が総数(%d)と一致しない", first.ReturnedCount+second.ReturnedCount, *first.TotalCount)
+	}
+}
+
+// 2026-08-24 の再監査 事象7: 「MCP で書いた記録」だけを絞る手段が無かった。
+// create_app は全レコードに入っているのに、引く口だけが無かった。
+func TestApplyMCPCreateAppsFilter(t *testing.T) {
+	kyous := []reps.Kyou{
+		{ID: "a", CreateApp: "gkill_mcp_readwrite", UpdateApp: "gkill_mcp_readwrite"},
+		{ID: "b", CreateApp: "gkill", UpdateApp: "gkill_kftl"},
+		{ID: "c", CreateApp: "gkill_kftl", UpdateApp: "gkill_kftl"},
+	}
+
+	// nil は未使用（絞らない）
+	if got := applyMCPCreateAppsFilter(append([]reps.Kyou(nil), kyous...), nil); len(got) != 3 {
+		t.Errorf("nil は絞らないはず: got %d件", len(got))
+	}
+
+	// 非nil空は「明示的な0件」
+	if got := applyMCPCreateAppsFilter(append([]reps.Kyou(nil), kyous...), []string{}); len(got) != 0 {
+		t.Errorf("[] は0件のはず: got %d件", len(got))
+	}
+
+	got := applyMCPCreateAppsFilter(append([]reps.Kyou(nil), kyous...), []string{"gkill_mcp_readwrite", "gkill_kftl"})
+	if len(got) != 2 || got[0].ID != "a" || got[1].ID != "c" {
+		t.Errorf("許可リストで絞れていない: %+v", got)
+	}
+}
+
+func TestApplyMCPUpdateAppsFilter(t *testing.T) {
+	// create ではなく「最後に更新したアプリ」で絞る
+	kyous := []reps.Kyou{
+		{ID: "a", CreateApp: "gkill", UpdateApp: "gkill_mcp_readwrite"},
+		{ID: "b", CreateApp: "gkill_mcp_readwrite", UpdateApp: "gkill"},
+	}
+	got := applyMCPUpdateAppsFilter(append([]reps.Kyou(nil), kyous...), []string{"gkill_mcp_readwrite"})
+	if len(got) != 1 || got[0].ID != "a" {
+		t.Errorf("update_app で絞れていない: %+v", got)
 	}
 }

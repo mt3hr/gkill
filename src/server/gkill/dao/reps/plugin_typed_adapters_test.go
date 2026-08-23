@@ -379,3 +379,97 @@ func TestPluginKCAdapter_FindKCFiltersByWord(t *testing.T) {
 		t.Errorf("FindKC(歩数1) = %+v, want 1件（歩数1）", filtered)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// 2026-08-24 の再監査: 索引が ok:false を返すだけで、
+// 「一度も構築していない」のか「構築に失敗した」のかが区別できず、
+// 失敗の理由もどこにも出てこなかった。
+// ---------------------------------------------------------------------------
+
+// stubIndexSource は索引の単体テスト用。fetchErr が非nilなら構築が失敗する。
+type stubIndexSource struct {
+	fetchErr error
+	kyous    []gkill_plugin.PluginKyou
+}
+
+func (s *stubIndexSource) indexRepName() string    { return "StubRep" }
+func (s *stubIndexSource) indexPluginName() string { return "stub_plugin" }
+func (s *stubIndexSource) indexProvidedKinds() map[gkill_plugin.PluginProvidedKind]struct{} {
+	return map[gkill_plugin.PluginProvidedKind]struct{}{}
+}
+func (s *stubIndexSource) indexFetchAll(_ context.Context) ([]gkill_plugin.PluginKyou, error) {
+	if s.fetchErr != nil {
+		return nil, s.fetchErr
+	}
+	return s.kyous, nil
+}
+
+func TestPluginTypedIndexStats_NeverBuiltIsDistinctFromFailed(t *testing.T) {
+	index := newPluginTypedIndex(&stubIndexSource{})
+
+	stats := index.Stats()
+	if stats.OK {
+		t.Errorf("一度も構築していないのに OK=true")
+	}
+	if stats.State != PluginTypedIndexStateNeverBuilt {
+		t.Errorf("State = %q, want %q", stats.State, PluginTypedIndexStateNeverBuilt)
+	}
+	if stats.LastBuildError != "" {
+		t.Errorf("まだ試していないのに失敗理由がある: %q", stats.LastBuildError)
+	}
+	if !stats.LastAttemptAt.IsZero() {
+		t.Errorf("まだ試していないのに試行時刻がある: %v", stats.LastAttemptAt)
+	}
+}
+
+func TestPluginTypedIndexStats_FailedCarriesTheReason(t *testing.T) {
+	// 以前は kickRebuild が slog へ出して捨てるだけで、APIからは
+	// 「ok=false・件数0」しか見えなかった
+	source := &stubIndexSource{fetchErr: fmt.Errorf("plugin is busy")}
+	index := newPluginTypedIndex(source)
+
+	if err := index.build(context.Background()); err == nil {
+		t.Fatal("構築が失敗するはずなのにエラーにならなかった")
+	}
+
+	stats := index.Stats()
+	if stats.OK {
+		t.Errorf("構築に失敗したのに OK=true")
+	}
+	if stats.State != PluginTypedIndexStateFailed {
+		t.Errorf("State = %q, want %q", stats.State, PluginTypedIndexStateFailed)
+	}
+	if !strings.Contains(stats.LastBuildError, "plugin is busy") {
+		t.Errorf("失敗理由が伝わっていない: %q", stats.LastBuildError)
+	}
+	// バックオフ中は再試行でエラーすら出ないので、試行時刻が無いと
+	// 「なぜ何も起きていないのか」が分からない
+	if stats.LastAttemptAt.IsZero() {
+		t.Errorf("試行時刻が記録されていない")
+	}
+}
+
+func TestPluginTypedIndexStats_SuccessClearsTheReason(t *testing.T) {
+	source := &stubIndexSource{fetchErr: fmt.Errorf("transient failure")}
+	index := newPluginTypedIndex(source)
+	if err := index.build(context.Background()); err == nil {
+		t.Fatal("1回目は失敗するはず")
+	}
+
+	// 一時的に混んでいただけなら、次の構築で理由は消える
+	source.fetchErr = nil
+	if err := index.build(context.Background()); err != nil {
+		t.Fatalf("2回目は成功するはず: %v", err)
+	}
+
+	stats := index.Stats()
+	if !stats.OK {
+		t.Errorf("構築に成功したのに OK=false")
+	}
+	if stats.State != PluginTypedIndexStateOK {
+		t.Errorf("State = %q, want %q", stats.State, PluginTypedIndexStateOK)
+	}
+	if stats.LastBuildError != "" {
+		t.Errorf("成功したのに古い失敗理由が残っている: %q", stats.LastBuildError)
+	}
+}

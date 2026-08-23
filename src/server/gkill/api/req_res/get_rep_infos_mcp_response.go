@@ -10,6 +10,22 @@ type RepInfoMCPDTO struct {
 	RepType string `json:"rep_type"`
 }
 
+// AttachedDataRepInfoMCPDTO はタグ・テキスト・通知・GPSログの格納先rep。
+//
+// **これは query.reps へ渡す値ではない。** RepInfos と混ぜてはいけない ――
+// 混ぜると呼び出し側が query.reps へ渡し、Kyou の RepName と一致しないので
+// 静かに0件になる。「add_tag / add_text がどこへ書かれるのか」を
+// **書く前に**知るための一覧で、絞り込みには使えない。
+//
+// これらの rep は Kyou を1件も生まないので Reps（＝利用者が選べる記録保管場所）
+// には入っておらず、GetAllRepNames にも RepInfos にも出てこなかった。
+// 書き込み応答の rep_name で事後に分かるだけだった（2026-08-24 の再監査）。
+type AttachedDataRepInfoMCPDTO struct {
+	RepName string `json:"rep_name"`
+	// DataKind は tag / text / notification / gpslog のいずれか。
+	DataKind string `json:"data_kind"`
+}
+
 // PluginRepInfoMCPDTO はプラグインrepの対応表。
 // プラグインは rep_types では絞れない（正準値の集合に居ない）ため、
 // RepName を query.reps へ、DataType を data_types へ渡して絞る。
@@ -35,4 +51,7 @@ type GetRepInfosMCPResponse struct {
 	CanonicalRepTypes []string `json:"canonical_rep_types"`
 	// Plugins はプラグインrepの対応表。
 	Plugins []PluginRepInfoMCPDTO `json:"plugins"`
+	// AttachedDataReps はタグ・テキスト・通知・GPSログの格納先rep。
+	// RepInfos とは用途が違う（query.reps へ渡してはいけない）。
+	AttachedDataReps []AttachedDataRepInfoMCPDTO `json:"attached_data_reps"`
 }

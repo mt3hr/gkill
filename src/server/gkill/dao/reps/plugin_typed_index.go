@@ -178,6 +178,13 @@ type PluginTypedIndex struct {
 	// lastAttemptUnixNano は直近の再構築「試行」時刻。
 	// 成功・失敗にかかわらず更新し、最短間隔と失敗時のバックオフの両方に使います。
 	lastAttemptUnixNano atomic.Int64
+	// lastBuildErr は直近の構築失敗の理由。成功したら消します。
+	//
+	// 以前は kickRebuild が slog へ出して捨てるだけで、APIからは
+	// 「ok=false・件数0」しか見えませんでした。プラグインのstderr（LastError）は
+	// 別物で、索引構築の失敗要因（20秒タイムアウト・ErrPluginBusy・JSON不正・
+	// プロセスkill）はそこには出ません。
+	lastBuildErr atomic.Pointer[string]
 }
 
 // newPluginTypedIndex は索引を作ります。
@@ -194,11 +201,31 @@ func (i *PluginTypedIndex) Snapshot() *pluginIndexSnapshot {
 	return newEmptyPluginIndexSnapshot(false)
 }
 
+// PluginTypedIndexState は索引が今どの状態にあるか。
+//
+// OK=false だけでは「一度も構築していない」と「構築に失敗した」が潰れており、
+// 呼び出し側は直しようが無かった（2026-08-24 の再監査）。
+const (
+	PluginTypedIndexStateNeverBuilt = "never_built"
+	PluginTypedIndexStateFailed     = "failed"
+	PluginTypedIndexStateOK         = "ok"
+)
+
 // PluginTypedIndexStats は索引スナップショットの統計。get_plugin_list の応答用。
 type PluginTypedIndexStats struct {
 	// OK は索引が構築済みか。false のとき他のフィールドは全てゼロ値
 	// （未構築＝件数0と、実データ0件を呼び出し側が区別できるように）。
 	OK bool
+	// State は never_built / failed / ok。OK=false の内訳。
+	State string
+	// LastBuildError は直近の構築失敗の理由。成功したら消える。
+	// LastError（プラグインプロセスのstderr）とは別物で、
+	// 索引構築の失敗要因（タイムアウト・ErrPluginBusy・JSON不正）はstderrには出ない。
+	LastBuildError string
+	// LastAttemptAt は直近に構築を試みた時刻。
+	// 再構築はバックオフ中だとエラーすら発生しないので、これが無いと
+	// 「なぜ何も起きていないのか」が分からない。
+	LastAttemptAt time.Time
 	// RecordCount は索引に載っているレコード数。Truncated のときは実数より小さい。
 	RecordCount int
 	// Oldest / Newest はレコードの RelatedTime の最小・最大。件数0ならゼロ値。
@@ -220,6 +247,22 @@ func (i *PluginTypedIndex) Stats() PluginTypedIndexStats {
 		OK:        snapshot.ok,
 		Truncated: snapshot.truncated,
 		BuiltAt:   snapshot.builtAt,
+	}
+	if lastAttempt := i.lastAttemptUnixNano.Load(); lastAttempt != 0 {
+		stats.LastAttemptAt = time.Unix(0, lastAttempt)
+	}
+	if buildErr := i.lastBuildErr.Load(); buildErr != nil {
+		stats.LastBuildError = *buildErr
+	}
+	// 未構築と構築失敗を分ける。Snapshot() は未構築のとき空を合成して返すので、
+	// ここは生のポインタを見る。
+	switch {
+	case snapshot.ok:
+		stats.State = PluginTypedIndexStateOK
+	case i.snapshot.Load() == nil:
+		stats.State = PluginTypedIndexStateNeverBuilt
+	default:
+		stats.State = PluginTypedIndexStateFailed
 	}
 	if !snapshot.ok {
 		return stats
@@ -321,9 +364,15 @@ func (i *PluginTypedIndex) build(ctx context.Context) error {
 			i.snapshot.Store(newEmptyPluginIndexSnapshot(false))
 		}
 		AppendPluginFindWarning(ctx, i.source.indexPluginName())
-		return fmt.Errorf("error at fetch all plugin kyous for index: %w", err)
+		buildErr := fmt.Errorf("error at fetch all plugin kyous for index: %w", err)
+		// 理由をAPIから読めるように控える。ここで捨てると
+		// 「ok=false・件数0」だけが残り、直しようが無くなる。
+		message := buildErr.Error()
+		i.lastBuildErr.Store(&message)
+		return buildErr
 	}
 
+	i.lastBuildErr.Store(nil)
 	i.snapshot.Store(i.buildSnapshot(pluginKyous))
 	return nil
 }

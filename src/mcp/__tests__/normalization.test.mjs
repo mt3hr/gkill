@@ -1029,3 +1029,33 @@ describe("cursor の形 (2026-08-24 再監査 P-36)", () => {
     );
   });
 });
+
+describe("create_apps / update_apps (2026-08-24 再監査 事象7)", () => {
+  // 「MCP で書いた記録」だけを絞る手段が無く、create_app は全レコードに入っているのに
+  // 引く口だけが無かった。FindQuery には足していない（リポストのワード委譲が
+  // 利用者クエリをそのまま下位検索へ流すので、SQL へ降ろすと黙って消える）
+  test("accepts create_apps and update_apps as string arrays", () => {
+    const result = normalizeKyouArgs({
+      create_apps: ["gkill_mcp_readwrite"],
+      update_apps: ["gkill_kftl"],
+    });
+    expect(result.create_apps).toEqual(["gkill_mcp_readwrite"]);
+    expect(result.update_apps).toEqual(["gkill_kftl"]);
+  });
+
+  test("keeps the null semantics: omitted is no filter, [] matches nothing", () => {
+    expect(normalizeKyouArgs({}).create_apps).toBeUndefined();
+    expect(normalizeKyouArgs({ create_apps: [] }).create_apps).toEqual([]);
+  });
+
+  test("revives them when a stale-schema client sends them as a JSON string", () => {
+    // 配列の新引数は revival の表に載せないと、旧スキーマのクライアントから
+    // 文字列で届いて必ず型エラーになる
+    const result = normalizeKyouArgs({ create_apps: '["gkill_mcp_write"]' });
+    expect(result.create_apps).toEqual(["gkill_mcp_write"]);
+  });
+
+  test("rejects a non-array", () => {
+    expect(() => normalizeKyouArgs({ create_apps: "gkill" })).toThrow(GkillApiError);
+  });
+});

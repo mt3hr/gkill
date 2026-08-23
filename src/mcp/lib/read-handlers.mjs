@@ -43,6 +43,8 @@ export async function handleReadToolCall(ctx, name, args) {
             count_only: normalized.count_only || false,
             group_by: normalized.group_by,
             data_types: normalized.data_types,
+            create_apps: normalized.create_apps,
+            update_apps: normalized.update_apps,
             num_min: normalized.num_min,
             num_max: normalized.num_max,
             idf_kinds: normalized.idf_kinds,
@@ -129,6 +131,9 @@ export async function handleReadToolCall(ctx, name, args) {
           rep_infos: Array.isArray(response.rep_infos) ? response.rep_infos : [],
           canonical_rep_types: Array.isArray(response.canonical_rep_types) ? response.canonical_rep_types : [],
           plugins: Array.isArray(response.plugins) ? response.plugins : [],
+          // タグ・テキスト・通知・GPSログの格納先。rep_infos とは用途が違い、
+          // query.reps へ渡すと Kyou の rep_name と一致せず静かに0件になる。
+          attached_data_reps: Array.isArray(response.attached_data_reps) ? response.attached_data_reps : [],
         };
       }
       case "gkill_get_application_config": {

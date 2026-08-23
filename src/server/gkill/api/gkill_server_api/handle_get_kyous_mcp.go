@@ -231,6 +231,8 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		})
 	}
 	allKyous = applyMCPDataTypesFilter(allKyous, request.DataTypes)
+	allKyous = applyMCPCreateAppsFilter(allKyous, request.CreateApps)
+	allKyous = applyMCPUpdateAppsFilter(allKyous, request.UpdateApps)
 	if request.NumMin != nil || request.NumMax != nil {
 		filtered, filterWarnings, filterErr := applyMCPNumFilter(r.Context(), repositories, allKyous, request.NumMin, request.NumMax)
 		response.Warnings = append(response.Warnings, filterWarnings...)
@@ -721,6 +723,8 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			ID:            kyou.ID,
 			DataType:      kyou.DataType,
 			RepName:       kyou.RepName,
+			CreateApp:     kyou.CreateApp,
+			UpdateApp:     kyou.UpdateApp,
 			RelatedTime:   kyou.RelatedTime.In(time.Local),
 			IsDeleted:     kyou.IsDeleted,
 			UpdateTime:    kyou.UpdateTime.In(time.Local),

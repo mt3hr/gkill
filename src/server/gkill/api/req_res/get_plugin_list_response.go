@@ -17,6 +17,8 @@ type PluginInfo struct {
 	// ProcessRunning はプロセスが現に起動済みか（副作用なしの受動読み）。
 	ProcessRunning bool `json:"process_running"`
 	// LastError はプラグインstderrの末尾（直近約4KB）。何も出ていなければ省略。
+	// **索引構築の失敗はここには出ない**（タイムアウトやJSON不正はgkill側で起きるため）。
+	// そちらは typed_index.last_build_error を見ること。
 	// 「is_alive=true なのに0件」の理由（ビルドエラー等）をAPIから診断できるようにする
 	// （外部監査 D2。以前はサーバのコンソールにしか出なかった）。
 	LastError string `json:"last_error,omitempty"`
@@ -28,8 +30,19 @@ type PluginInfo struct {
 // PluginTypedIndexStatsMCPDTO はプラグイン型別索引の統計DTO。
 type PluginTypedIndexStatsMCPDTO struct {
 	// OK は索引が構築済みか。falseなら他フィールドは未確定（未構築と0件を区別するため）。
-	OK          bool `json:"ok"`
-	RecordCount int  `json:"record_count"`
+	OK bool `json:"ok"`
+	// State は never_built / failed / ok。ok=false の内訳を分ける
+	// （以前は「一度も構築していない」と「構築に失敗した」が潰れていた）。
+	State string `json:"state"`
+	// LastBuildError は直近の索引構築の失敗理由。成功していれば省略。
+	// last_error（プラグインプロセスのstderr）とは別物で、
+	// 索引構築の失敗要因はstderrには出ない。
+	LastBuildError string `json:"last_build_error,omitempty"`
+	// LastAttemptAt は直近に構築を試みた時刻（RFC3339）。一度も試していなければ省略。
+	// 再構築はバックオフ中だとエラーすら発生しないので、これが無いと
+	// 「なぜ何も起きていないのか」が分からない。
+	LastAttemptAt string `json:"last_attempt_at,omitempty"`
+	RecordCount   int    `json:"record_count"`
 	// Oldest / Newest はレコードの related_time の範囲（RFC3339）。件数0なら省略。
 	Oldest string `json:"oldest,omitempty"`
 	Newest string `json:"newest,omitempty"`

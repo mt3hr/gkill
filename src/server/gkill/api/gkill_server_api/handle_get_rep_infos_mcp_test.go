@@ -98,3 +98,63 @@ func TestHandleGetRepInfosMCPRequiresSession(t *testing.T) {
 		t.Errorf("不正セッションなのにrep_infosが返っている: %d件", len(infoResp.RepInfos))
 	}
 }
+
+// 2026-08-24 の再監査: タグ・テキストの書き込み先が
+// get_all_rep_names にも rep_infos にも出ず、書く前には分からなかった。
+// これらは Kyou を1件も生まないので Reps に居らず、原理的に rep_infos へは出てこない。
+func TestHandleGetRepInfosMCPListsAttachedDataReps(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	resp := postJSON(t, tsURL+"/api/get_rep_infos_mcp", map[string]any{
+		"session_id":  sessionID,
+		"locale_name": "en",
+	})
+	defer resp.Body.Close()
+
+	var infoResp req_res.GetRepInfosMCPResponse
+	if err := json.NewDecoder(resp.Body).Decode(&infoResp); err != nil {
+		t.Fatalf("decode get rep infos mcp response: %v", err)
+	}
+	if len(infoResp.Errors) > 0 {
+		t.Fatalf("get rep infos mcp errors: %+v", infoResp.Errors)
+	}
+
+	if len(infoResp.AttachedDataReps) == 0 {
+		t.Fatal("attached_data_reps が空（タグ・テキストの書き込み先が分からないまま）")
+	}
+
+	validKinds := map[string]bool{"tag": true, "text": true, "notification": true, "gpslog": true}
+	foundTag := false
+	for _, attached := range infoResp.AttachedDataReps {
+		if attached.RepName == "" {
+			t.Error("rep_name が空の行がある")
+		}
+		if !validKinds[attached.DataKind] {
+			t.Errorf("data_kind %q が想定外", attached.DataKind)
+		}
+		if strings.ContainsAny(attached.RepName, `/\`) {
+			t.Errorf("rep_name %q がパスに見える", attached.RepName)
+		}
+		if attached.DataKind == "tag" {
+			foundTag = true
+		}
+	}
+	if !foundTag {
+		t.Errorf("タグの格納先が出ていない: %+v", infoResp.AttachedDataReps)
+	}
+
+	// **rep_infos と混ざっていないこと。** 混ぜると呼び出し側が query.reps へ渡し、
+	// Kyou の rep_name と一致しないので静かに0件になる
+	kyouRepNames := map[string]bool{}
+	for _, info := range infoResp.RepInfos {
+		kyouRepNames[info.RepName] = true
+	}
+	for _, attached := range infoResp.AttachedDataReps {
+		if kyouRepNames[attached.RepName] {
+			t.Errorf("付随データのrep %q が rep_infos にも出ている（query.reps へ渡されて0件になる）", attached.RepName)
+		}
+	}
+}
