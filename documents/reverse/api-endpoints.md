@@ -406,7 +406,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得（IDFペイロードに`rep_name`/`is_image`等含む） |
 | `/api/get_rep_infos_mcp` | rep名・rep種別・canonical_rep_types・プラグイン一覧の取得 |
 
-MCPサーバは11個のReadツールを提供する。内訳は固有の10（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_rep_infos`, `gkill_get_idf_file`, `gkill_get_idf_file_path`, `gkill_get_kyou_history`）と、3サーバ共通のプラグインツール1つ（`gkill_get_plugin_list`。`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_idf_file_path` は `/api/get_idf_file_path` を経由してファイルの絶対パスを返す（stdio接続のローカルクライアント用）。`gkill_get_kyou_history` は型別の `/api/get_*`（`/api/get_kmemo` 等）が返す histories をそのまま返す ―― 削除済みの版も含むので、`gkill_get_kyous` からは見えなくなった記録を読み返す唯一の経路になる。
+MCPサーバは10個のReadツールを提供する。内訳は固有の9（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_rep_infos`, `gkill_get_idf_file`, `gkill_get_kyou_history`）と、3サーバ共通のプラグインツール1つ（`gkill_get_plugin_list`。`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_kyou_history` は型別の `/api/get_*`（`/api/get_kmemo` 等）が返す histories をそのまま返す ―― 削除済みの版も含むので、`gkill_get_kyous` からは見えなくなった記録を読み返す唯一の経路になる。
 
 ## TLS・セキュリティ（1件）
 

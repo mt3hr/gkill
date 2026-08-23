@@ -17,8 +17,8 @@ import { summarizeToolError } from "../lib/payload.mjs";
 // Tool definition presence
 // ---------------------------------------------------------------------------
 describe("Tool definitions", () => {
-  test("read server exposes 11 tools (10 read + 1 plugin)", () => {
-    expect(READ_TOOLS).toHaveLength(10);
+  test("read server exposes 10 tools (9 read + 1 plugin)", () => {
+    expect(READ_TOOLS).toHaveLength(9);
     expect(PLUGIN_TOOLS).toHaveLength(1);
   });
 
@@ -32,7 +32,6 @@ describe("Tool definitions", () => {
       "gkill_get_application_config",
       "gkill_get_rep_infos",
       "gkill_get_idf_file",
-      "gkill_get_idf_file_path",
       "gkill_get_kyou_history",
     ]);
   });
