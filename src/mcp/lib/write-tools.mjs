@@ -252,10 +252,10 @@ export const WRITE_TOOLS = [
     description:
       "Soft-delete an existing entry by setting is_deleted=true. The entry is not physically removed — it is marked as deleted and hidden from normal queries. " +
       "Requires the entry's ID (from a previous gkill_add_* response, or from gkill_get_kyous on the read / readwrite servers) and its data_type. " +
-      "Valid data_type values: kmemo (text memo), urlog (bookmark), nlog (expense), lantana (mood), timeis (time interval), mi (task), kc (numeric), tag, text. " +
+      "Valid data_type values: kmemo (text memo), urlog (bookmark), nlog (expense), lantana (mood), timeis (time interval), mi (task), kc (numeric), tag, text, rekyou (repost), mirekyou (an entry turned into a task), notification. " +
       "The appropriate update endpoint is selected automatically based on data_type. " +
       "Response fields: updated_{data_type} (the entity with is_deleted=true), updated_kyou (parent Kyou wrapper). " +
-      "Note: this is a soft-delete. The data remains in the database and can potentially be recovered by clearing the is_deleted flag. " +
+      "Note: this is a soft-delete. The entry stays in the database — read it back with gkill_get_kyou_history, list deleted entries with query.include_deleted_data on gkill_get_kyous, and undo with gkill_restore_kyou. " +
       "Note: idf (file) and git_commit_log entries cannot be deleted via this tool — they are managed by the file system and git repositories respectively.",
     inputSchema: {
       type: "object",
