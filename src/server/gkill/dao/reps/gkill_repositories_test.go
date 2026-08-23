@@ -322,3 +322,25 @@ func TestGkillRepositoriesGetAllTagNamesIncludingDeletedTargets_KeepsEverything(
 		t.Errorf("検証用の一覧は対象の生死を問わず全部返すはず: got %v", names)
 	}
 }
+
+// 2026-08-24 の再監査 事象10: 1つの応答の中で種別名が食い違っていた
+// （updated_mi は mi_check、updated_kyou は mi_create）。
+// Mi の5射影は同じ1行から SQL が合成するラベルで、MI テーブルに DATA_TYPE 列は無い。
+// 5つとも UPDATE_TIME が同着なので、素の MaxFunc は SQLite の UNION 出力順に従っていた。
+func TestCompareMiProjectionPreference(t *testing.T) {
+	// 正準（作成時刻の射影）が勝つ。検索の既定 mi_sort_type=create_time と揃える
+	if compareMiProjectionPreference("mi_create", "mi_check") <= 0 {
+		t.Error("mi_create が mi_check に勝たない")
+	}
+	if compareMiProjectionPreference("mi_check", "mi_create") >= 0 {
+		t.Error("mi_check が mi_create に勝ってしまう")
+	}
+	// 同じなら差は無い
+	if compareMiProjectionPreference("mi_check", "mi_check") != 0 {
+		t.Error("同じ射影に差が出ている")
+	}
+	// どちらも正準でないなら順序を作らない（UpdateTime 側の判断に委ねる）
+	if compareMiProjectionPreference("mi_check", "mi_limit") != 0 {
+		t.Error("正準でない射影同士に順序を作っている")
+	}
+}

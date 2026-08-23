@@ -8,6 +8,31 @@ import (
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 )
 
+// miCanonicalProjectionDataType は1件取得が名乗る射影。
+// 検索の既定（mi_sort_type=create_time）と同じものを正準とする。
+const miCanonicalProjectionDataType = "mi_create"
+
+// compareMiProjectionPreference は UpdateTime 同着のときに正準の射影を優先する比較。
+//
+// Mi の5射影（mi_create / mi_check / mi_limit / mi_start / mi_end）は
+// **同じ1行から SQL が合成するラベル**で、MI テーブルに DATA_TYPE 列は無い。
+// 5つとも UPDATE_TIME が同着なので、素の MaxFunc は「SQLite の UNION が返した先頭」を返す。
+// SELECT の列の並びが違うだけで勝つ射影が変わり、実際 GetMi は mi_check・
+// GetKyou は mi_create を返して、1つの応答の中で種別名が食い違っていた
+// （2026-08-24 の再監査）。**どれを名乗るかを実装の都合に決めさせない。**
+func compareMiProjectionPreference(a, b string) int {
+	switch {
+	case a == b:
+		return 0
+	case a == miCanonicalProjectionDataType:
+		return 1
+	case b == miCanonicalProjectionDataType:
+		return -1
+	default:
+		return 0
+	}
+}
+
 // MiRepository はタスク（mi）のリポジトリが満たす契約です。
 // Repository の共通契約に、タイトル・チェック状態・ボード名・期限・予定開始終了を持つ Mi 実体を
 // 直接扱うメソッドを足したものです。

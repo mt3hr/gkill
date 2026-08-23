@@ -41,6 +41,10 @@ Key packages:
 
 **`len(XxxReps) == 1` でキャッシュrepを判定してはいけない。** アダプタの append は「キャッシュrepで `XxxReps` を1個に差し替える」処理より後なので、`provides` を持つプラグインが1つ入るだけで長さが2になる。書き込み後のキャッシュ反映は構築時に控えた `GkillRepositories.CachedReps` を見る `repositories.WriteThroughXxxCache(ctx, ...)` を使うこと（54箇所）。読み取りはキャッシュrepしか見ず下層repへフォールバックしないので、反映を飛ばすと追加したタグが最大1分見えず、その間にPWAが古い応答をキャッシュし直すと**恒久的に古いまま焼き付く**。再発は `usecase/write_through_cache_test.go` の `TestNoRepsCountCacheGuard` がソース走査で落とす。経緯と却下案は [ADR-0012](../../../documents/adr/0012-write-through-cache-not-reps-count.md)。
 
+**Mi の1件取得は、どの射影を名乗るかを SQLite の UNION 出力順に決めさせない。** `MI` テーブルに `DATA_TYPE` 列は無く、5射影（`mi_create` / `mi_check` / `mi_limit` / `mi_start` / `mi_end`）は**同じ1行から SQL が合成するラベル**。5つとも `UPDATE_TIME` が同着なので、素の `slices.MaxFunc` は「UNION が返した先頭」を返す。SELECT の列の並びが違うだけで勝つ射影が変わり、実際 `GetMi` は `mi_check`・`GetKyou` は `mi_create` を返して**1つの応答の中で種別名が食い違っていた**（2026-08-24 の再監査）。同着は `compareMiProjectionPreference` で正準（`mi_create`＝検索の既定 `mi_sort_type=create_time` と同じ）に割る。**単体取得は `&kyous[0]` を返さない**という既存の規則（外部監査 H-07）から外れていた2箇所（`mi_repository_cached_sqlite3_impl.go` / `mi_re_kyou_repository_sqlite3_impl.go`）も揃えてある。
+
+**索引を持つ rep は鮮度を出す。** rep ディレクトリへ置いただけのファイルは `UpdateCache` が `IDF()` を走らせるまで検索に出ないが、**定期実行も監視も無く、警告も出ない**ので「0件」が「まだ取り込んでいない」なのか「本当に無い」なのか区別できなかった。`get_rep_infos` の `indexed_at`（任意インタフェース `IndexUpdatedAt` を実装した rep だけ）で判断させる。**検索のたびにディレクトリを全走査して未採番を数えてはいけない**（実データは56万行規模）。
+
 **タグ語彙の列挙は2つある。検証には「対象の生死を問わない」ほうを使う。** `GkillRepositories.GetAllTagNames` は**対象が削除済みのタグを落とす** —— 記録を消してもタグは消えない（消すと `gkill_restore_kyou` で復活したときにタグが失われる）ので、落とさないと「選んでも0件」の候補が溜まり続ける。生存判定は最新版アドレス表を引くだけで**追加のI/Oは無い**（`GetAllTags` が既に `TargetID` を持って返る）。**アドレス表に載っていない対象は落とさないこと** —— プラグインや git の記録は表に載らないので、落とすと語彙が黙って痩せる。一方「そのタグ名は実在するか」の検証（`collectMCPUnknownValueWarnings`）は `GetAllTagNamesIncludingDeletedTargets` を使う。フィルタ済みの一覧で検証すると、`include_deleted_data:true` で削除済みを開いたタグ検索に**未知のタグという誤警告**が出る。却下案（カスケード削除・SQLへの降ろし）は [ADR-0073](../../../documents/adr/0073-tag-vocabulary-drops-dead-targets.md)。
 
 ### HTTP ステータス（2026-08 導入）
