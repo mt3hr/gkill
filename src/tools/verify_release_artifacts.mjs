@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
+import { execFileSync } from 'node:child_process'
 
 const require = createRequire(import.meta.url)
 const version = require('../../package.json').version
@@ -52,6 +53,44 @@ if (missing.length !== 0) {
     console.error(`\nリリース成果物が ${missing.length} 件欠けています: ${missing.join(', ')}`)
     process.exit(1)
 }
+
+// サンプルデータ zip は「存在してサイズがある」だけでは足りない。
+// prepare_gkill_sample_data のコピー・同梱手順が崩れると、bat や exe や DB を
+// 欠いたまま正常サイズの zip ができてしまう（利用者が起動して初めて気付く）。
+// パックと同じ 7za で一覧を取り、必須エントリの実在を検査する。
+const sampleZip = path.join(releaseDir, `gkill_sample_data_${version}.zip`)
+const requiredSampleEntries = [
+    'gkill_sample_data/LAUNCH_GKILL_SAMPLE_DATA.bat',
+    'gkill_sample_data/README.txt',
+    'gkill_sample_data/gkill_server.exe',
+    'gkill_sample_data/configs/account.db',
+    'gkill_sample_data/configs/user_config.db',
+    'gkill_sample_data/configs/server_config.db',
+    'gkill_sample_data/datas/gkill_sample_data/Kmemo.db',
+    'gkill_sample_data/datas/gkill_sample_data/Files',
+    'gkill_sample_data/datas/gkill_sample_data/GPSLog',
+]
+let sampleZipListing = ''
+try {
+    // -slt: 1エントリ = 「Path = <パス>」行になる機械可読形式
+    sampleZipListing = execFileSync('7za', ['l', '-slt', sampleZip], { encoding: 'utf8' })
+} catch (e) {
+    console.error(`\ngkill_sample_data zip の一覧取得に失敗しました (7za l): ${e.message}`)
+    process.exit(1)
+}
+const sampleZipPaths = new Set(
+    sampleZipListing
+        .split('\n')
+        .filter((line) => line.startsWith('Path = '))
+        // 7za の Path 区切りは環境で \ になりうるので / へ揃える
+        .map((line) => line.slice('Path = '.length).trim().replaceAll('\\', '/')),
+)
+const missingSampleEntries = requiredSampleEntries.filter((entry) => !sampleZipPaths.has(entry))
+if (missingSampleEntries.length !== 0) {
+    console.error(`\ngkill_sample_data zip に必須エントリが ${missingSampleEntries.length} 件ありません: ${missingSampleEntries.join(', ')}`)
+    process.exit(1)
+}
+console.log(`  OK   gkill_sample_data zip の必須エントリ ${requiredSampleEntries.length} 件を確認`)
 
 // 全件そろったときだけ SHA256SUMS を書き出す。
 // `sha256sum -c release/SHA256SUMS_<version>.txt` で検証できる。

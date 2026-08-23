@@ -2,7 +2,7 @@
 
 ## 概要
 
-Go バックエンドのテスト。940テスト関数、137テストファイル、31パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
+Go バックエンドのテスト。956テスト関数、140テストファイル、31パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
 
 ## テストフレームワーク
 
@@ -15,6 +15,7 @@ src/server/gkill/
 ├── api/                     # API ハンドラ層
 │   ├── gkill_server_api_test.go  # 統合テスト（全エンドポイント）
 │   ├── find_filter_test.go       # 検索フィルタ
+│   ├── gkill_sample_data_test.go # 配布サンプルデータの現行コード互換性
 │   ├── find/                     # クエリビルダー
 │   ├── gpslogs/                  # GPS ログ解析
 │   ├── message/                  # メッセージフォーマット
@@ -45,8 +46,9 @@ src/server/gkill/
 
 | カテゴリ | テストファイル数 | 内容 |
 |---------|----------------|------|
-| API 統合 | 23 | 全データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント、SSRF・レート制限、デバイス名キャッシュ、プラグイン本文HTMLキャッシュ、rep名絞り込み（キャッシュON/OFF・tx確定後）、タグ絞り込み、MCP用取得 |
-| 検索フィルタ・クエリ | 14 | `api/` 直下の検索フィルタ・タグ絞り込み・対象リポジトリ選択キャッシュ・rep名での結果絞り込み・並び替え + `api/find/` のクエリビルダー |
+| API 統合 | 24 | 全データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント、SSRF・レート制限、デバイス名キャッシュ、プラグイン本文HTMLキャッシュ、rep名絞り込み（キャッシュON/OFF・tx確定後）、タグ絞り込み、時間帯フィルタ、MCP用取得 |
+| 検索フィルタ・クエリ | 15 | `api/` 直下の検索フィルタ・タグ絞り込み・対象リポジトリ選択キャッシュ・rep名での結果絞り込み・並び替え + `api/find/` のクエリビルダー・時間帯の秒解釈 |
+| サンプルデータ | 1 | 配布サンプル `resources/gkill_sample_data` の現行コード互換性（アカウント認証・rep定義14件のパス実在と種別・全件検索で主要repから記録が返る・秘密鍵が空で配布されている） |
 | KFTL パーサ | 5 | Factory、Statement、Request Map、MiReKyou、時刻 |
 | req_res | 1 | ワイヤ契約の検証5本（JSONタグ名・MCP DTO の omitempty・プラグインpayload）。旧「JSON往復テスト」は削除済み |
 | メッセージ・GPS | 3 | メッセージコード体系、`EnsureNotEmpty`、GPS ログ解析 |
@@ -62,7 +64,7 @@ src/server/gkill/
 | CLI/Main | 8 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ、スレッド、エントリポイント、バッチ |
 | プラグイン SDK | 4 | `Run()` の stdio ループ（18本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本） |
 
-**合計 137 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
+**合計 140 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
 ずれたら `checkCounts` が落とす）。
 
 ## 規約のソース走査（`usecase/source_conventions_scan_test.go`）
