@@ -47,10 +47,14 @@ func TestSortResultKyousMatchesReferenceOrder(t *testing.T) {
 	random := rand.New(rand.NewSource(20260818))
 	base := time.Date(2026, 8, 18, 0, 0, 0, 0, time.Local)
 	source := make([]reps.Kyou, 0, kyouCount)
-	for range kyouCount {
+	for i := range kyouCount {
 		relatedTime := base.Add(time.Duration(random.Intn(distinctSeconds)) * time.Second)
 		source = append(source, reps.Kyou{
-			ID:          fmt.Sprintf("kyou-%08d", random.Intn(kyouCount)),
+			// IDは添字で一意にする。ランダムにすると (ID, DataType, RelatedTime) の
+			// 完全重複が偶然できて dedupAdjacentResultKyous に畳まれ、
+			// このテストの狙い（並び順の一致）と無関係な件数差で落ちる。
+			// dedup 自体は TestSortResultKyous_Dedup* が固定している。
+			ID:          fmt.Sprintf("kyou-%08d", i),
 			DataType:    "kmemo",
 			RelatedTime: relatedTime,
 			UpdateTime:  relatedTime,

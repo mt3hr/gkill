@@ -175,4 +175,34 @@ func TestHandleGetKyous_HideTagsBothPaths(t *testing.T) {
 			t.Error("明示的に選んだ非表示タグの記録まで消えている")
 		}
 	})
+
+	// hide_tags の単独有効化(ADR-0070): tags を指定しなくても非表示は効く。
+	// 以前は「タグ絞り込みを使うときだけ」で、単独指定が黙って無視されていた（外部監査 S4）。
+	// SQL経路(名前1個)とGo照合経路(33個で閾値超え)の両方で固定する。
+	manyHideNames := []string{"非表示"}
+	for i := range 32 {
+		manyHideNames = append(manyHideNames, fmt.Sprintf("存在しない非表示タグ%02d", i))
+	}
+	for _, c := range []struct {
+		name     string
+		hideTags []string
+	}{
+		{"タグ絞りなし×SQL経路", []string{"非表示"}},
+		{"タグ絞りなし×Go照合経路", manyHideNames},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			query := &find.FindQuery{Tags: nil, HideTags: c.hideTags}
+			res := getKyousWithQuery(t, tsURL, sessionID, query)
+			ids := map[string]bool{}
+			for _, kyou := range res.Kyous {
+				ids[kyou.ID] = true
+			}
+			if !ids[shownID] {
+				t.Error("非表示タグの付いていない記録が消えている")
+			}
+			if ids[hiddenID] {
+				t.Error("tags未指定でも非表示タグの付いた記録は消えるはず")
+			}
+		})
+	}
 }

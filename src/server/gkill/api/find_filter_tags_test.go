@@ -218,7 +218,10 @@ func TestFilterTagsKyous_Or_TagOrNoTagsUnion(t *testing.T) {
 	}
 }
 
-// OR分岐の非表示タグ: 非表示タグの対象Kyouが結果から消えること
+// 非表示タグ: 非表示タグの対象Kyouが結果から消えること。
+// 適用は filterTagsKyous 本体ではなく独立ステップ filterHideTagsKyous が行う
+// （Tags==nil でも hide_tags 単独で効かせるため。ADR-0070）。
+// 本番の FindKyous と同じく filterTagsKyous → filterHideTagsKyous の順で呼ぶ。
 func TestFilterTagsKyous_Or_HideTagRemoves(t *testing.T) {
 	ctx := context.Background()
 
@@ -248,11 +251,85 @@ func TestFilterTagsKyous_Or_HideTagRemoves(t *testing.T) {
 	if _, err := f.filterTagsKyous(ctx, findCtx); err != nil {
 		t.Fatalf("filterTagsKyous failed: %v", err)
 	}
+	if _, err := f.filterHideTagsKyous(ctx, findCtx); err != nil {
+		t.Fatalf("filterHideTagsKyous failed: %v", err)
+	}
 
 	if _, exist := findCtx.MatchKyousCurrent["kyou-b"]; exist {
 		t.Errorf("非表示タグの対象 kyou-b は消えるはず: got %v", keysOfKyouMap(findCtx.MatchKyousCurrent))
 	}
 	if _, exist := findCtx.MatchKyousCurrent["kyou-a"]; !exist {
 		t.Errorf("kyou-a は残るはず")
+	}
+}
+
+// hide_tags の単独有効化: タグ絞り込み(Tags)が nil でも、hide_tags の対象は消える。
+// 「同じ名前が tags にも入っていれば消さない」意味論は集合を作る側
+// (getMatchHideTagsWhenUnchecked)が担うので、ここでは集合の適用だけを固定する。
+// 経緯: documents/adr/0070-hide-tags-standalone.md
+func TestFilterHideTagsKyous_WorksWithoutTagsFilter(t *testing.T) {
+	ctx := context.Background()
+
+	findCtx := &FindKyouContext{
+		ParsedFindQuery: &find.FindQuery{
+			Tags:     nil,
+			HideTags: []string{"非表示タグ"},
+		},
+		MatchKyousCurrent: map[string][]reps.Kyou{
+			"kyou-a": kyouForTagFilter("kyou-a"),
+			"kyou-b": kyouForTagFilter("kyou-b"),
+		},
+		AllHideTagsWhenUnchecked: tagMapOf(
+			tagFor("kyou-b", "非表示タグ"),
+		),
+		MatchHideTagsWhenUncheckedKyou: map[string]reps.Tag{},
+	}
+
+	f := &FindFilter{}
+	// 本番の FindKyous と同じ順: 集合を作ってから適用する
+	if _, err := f.getMatchHideTagsWhenUnckedKyou(ctx, findCtx); err != nil {
+		t.Fatalf("getMatchHideTagsWhenUnckedKyou failed: %v", err)
+	}
+	if _, err := f.filterHideTagsKyous(ctx, findCtx); err != nil {
+		t.Fatalf("filterHideTagsKyous failed: %v", err)
+	}
+
+	if _, exist := findCtx.MatchKyousCurrent["kyou-b"]; exist {
+		t.Errorf("Tags=nil でも hide_tags の対象 kyou-b は消えるはず: got %v", keysOfKyouMap(findCtx.MatchKyousCurrent))
+	}
+	if _, exist := findCtx.MatchKyousCurrent["kyou-a"]; !exist {
+		t.Errorf("kyou-a は残るはず")
+	}
+}
+
+// hide_tags と同じ名前が tags にも入っていれば消さない（既存意味論の再固定）。
+// 「非表示タグを意図的に選んで検索する」経路で、集合を作る側がその名前を除外する。
+func TestFilterHideTagsKyous_CheckedNameSuppressesHide(t *testing.T) {
+	ctx := context.Background()
+
+	findCtx := &FindKyouContext{
+		ParsedFindQuery: &find.FindQuery{
+			Tags:     []string{"非表示タグ"},
+			HideTags: []string{"非表示タグ"},
+		},
+		MatchKyousCurrent: map[string][]reps.Kyou{
+			"kyou-b": kyouForTagFilter("kyou-b"),
+		},
+		AllHideTagsWhenUnchecked: tagMapOf(
+			tagFor("kyou-b", "非表示タグ"),
+		),
+		MatchHideTagsWhenUncheckedKyou: map[string]reps.Tag{},
+	}
+
+	f := &FindFilter{}
+	if _, err := f.getMatchHideTagsWhenUnckedKyou(ctx, findCtx); err != nil {
+		t.Fatalf("getMatchHideTagsWhenUnckedKyou failed: %v", err)
+	}
+	if _, err := f.filterHideTagsKyous(ctx, findCtx); err != nil {
+		t.Fatalf("filterHideTagsKyous failed: %v", err)
+	}
+
+	if _, exist := findCtx.MatchKyousCurrent["kyou-b"]; !exist {
+		t.Errorf("tags で明示的に選ばれた非表示タグは消さないはず: got %v", keysOfKyouMap(findCtx.MatchKyousCurrent))
 	}
 }
