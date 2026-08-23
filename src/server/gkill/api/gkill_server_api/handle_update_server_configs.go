@@ -42,6 +42,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 			}
 		}()
 		defer func() {
+			writeErrorStatus(w, response.Errors)
 			err := json.NewEncoder(w).Encode(response)
 			if err != nil {
 				err = fmt.Errorf("error at parse update server config response to json: %w", err)

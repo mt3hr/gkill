@@ -377,8 +377,13 @@ export async function clickDialogButton(page: Page, label: RegExp | string): Pro
   await confirmUnknownMiBoardIfShown(page)
   const response = await responsePromise
 
-  // gkillは失敗も HTTP 200 + errors配列 で返すので、中身まで見る。
+  // gkillは失敗を HTTP 4xx/5xx + errors配列 で返す。ステータスと中身の両方を見る。
   // ここを見ないと「保存できていないのに次のアサーションまで進む」ことになる。
+  //
+  // **本文だけを見るのでは足りない。** json() が失敗すると errors が [] になり、
+  // 「エラー0件＝成功」と読めてしまう。ステータスを先に確かめておけば、
+  // 本文が読めない失敗が静かに通り抜けることはない。
+  expect(response.ok(), `${response.url()} が HTTP ${response.status()} を返した`).toBe(true)
   const body = await response.json().catch(() => null)
   const errors = (body as { errors?: unknown[] } | null)?.errors ?? []
   expect(errors, `${response.url()} がエラーを返した`).toHaveLength(0)

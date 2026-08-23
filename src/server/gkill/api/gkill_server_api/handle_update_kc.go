@@ -36,6 +36,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse update kc response to json: %w", err)

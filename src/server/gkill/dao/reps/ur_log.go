@@ -151,6 +151,16 @@ func (u *URLog) fillFavicon() error {
 		err = fmt.Errorf("failed to readFavicon: %w", err)
 		return err
 	}
+	// **中身が画像であることを確かめてから保存する。**
+	// ここだけ fillImage の CheckImageDimensions を通らないので、
+	// 以前は404ページのHTMLがそのままbase64でFaviconImageに入っていた。
+	// 2xx判定を入れた今でも、エラーページを200で返すサイトは残るので中身で見る。
+	if !safefetch.LooksLikeSupportedImage(b) {
+		return fmt.Errorf("failed to get favicon: response is not a supported image")
+	}
+	if err := safefetch.CheckImageDimensions(b, safefetch.DefaultMaxImagePixels); err != nil {
+		return fmt.Errorf("failed to get favicon: %w", err)
+	}
 	faviconBase64 = base64.StdEncoding.EncodeToString(b)
 	u.FaviconImage = faviconBase64
 	return nil
@@ -189,6 +199,13 @@ func getFavicon(urlstr string) (image io.ReadCloser, err error) {
 	if err != nil {
 		err = fmt.Errorf("failed parse url %s: %w", urlstr, err)
 		return nil, err
+	}
+	// **ホスト名が取れないURLでリクエストを出さない。**
+	// スキーム無しのURL("example.com/foo")は url.Parse を通るが Hostname() が空になり、
+	// "?domain=" だけのURLになる。Googleはそれに対して汎用アイコンを **200** で返すので、
+	// ステータス検査だけでは弾けない。無関係のアイコンがfaviconとして保存される。
+	if u.Hostname() == "" {
+		return nil, fmt.Errorf("failed to get favicon: url has no hostname: %s", urlstr)
 	}
 	b, err := safefetch.GetCapped(`https://www.google.com/s2/favicons?domain=`+u.Hostname(), 30*time.Second, "", false, safefetch.DefaultMaxImageBytes)
 	if err != nil {

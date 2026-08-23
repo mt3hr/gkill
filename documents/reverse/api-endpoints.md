@@ -56,9 +56,10 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 ```
 
 - **正常:** HTTP 200 + `errors` が `null`（要素なし）
-- **業務エラー:** HTTP 200 + `errors` に詳細あり（エラーコードで判別）
-- **アクセス拒否:** HTTP 403（ローカルアクセス制限時）
-- **サーバーエラー:** HTTP 500
+- **失敗:** `error_code` に応じた 400/401/403/404/409/429/500 + `errors` に詳細あり
+- 対応表の正本は `src/server/gkill/api/message/http_status.go`
+- **ボディの形はステータスによらず同じ。** `error_code` は本文にしか入っていないので、
+  ステータスで打ち切らずに本文を読むこと
 
 > **`errors` は成功時 `null` で返る。** Go 側のレスポンス構造体は `json:"errors"`（`omitempty` 無し）で、ハンドラはエラーが起きたときだけ `append` するため、nil slice がそのまま `null` になり空配列 `[]` にはならない。クライアントは `res.errors ?? []` のように必ず null を吸収してから扱うこと。なお `messages` は成功時に成功メッセージが1件入るので `null` ではない。
 

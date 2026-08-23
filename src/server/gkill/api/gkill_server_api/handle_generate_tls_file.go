@@ -51,6 +51,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse generate tls to json: %w", err)

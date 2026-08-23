@@ -35,6 +35,7 @@ func (g *GkillServerAPI) HandleGetMiReKyousByTargetID(w http.ResponseWriter, r *
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get mirekyous by target id response to json: %w", err)

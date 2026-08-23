@@ -35,6 +35,7 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get notification histories by notification id response to json: %w", err)

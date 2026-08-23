@@ -82,7 +82,10 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 
 	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
 	if err != nil {
-		w.WriteHeader(http.StatusForbidden)
+		// リポジトリの取得失敗は認可の失敗ではなくサーバ障害。
+		// ここだけ403を返していたので、同じ失敗を返す他の2経路
+		// (auth_middleware / handle_urlog_bookmarklet_address)と揃えて500にする。
+		w.WriteHeader(http.StatusInternalServerError)
 		err = fmt.Errorf("error at handle file serve: %w", err)
 		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
 		return

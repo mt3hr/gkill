@@ -244,7 +244,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 104ファイル、1ハンドラ1ファイル） |
 | アクセスログミドルウェア | `src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go` | gorilla/mux ミドルウェア。全HTTPリクエストのアクセスログを `ACCESS` レベルで記録 |
 | リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（188ファイル） |
-| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000412 の定数定義（計411件。ERR000243は欠番） |
+| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000415 の定数定義（計414件。ERR000243は欠番） |
 | GkillError / GkillMessage | `src/server/gkill/api/message/` | エラー・メッセージ構造体 |
 | KFTLパーサー | `src/server/gkill/api/kftl/` | KFTL テキストパース・リクエスト生成 |
 | Embed（SPA埋め込み） | `src/server/gkill/api/embed.go` | `//go:embed embed` ディレクティブ |
@@ -286,7 +286,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（921キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（922キー/言語） |
 
 ### その他
 

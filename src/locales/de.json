@@ -919,5 +919,6 @@
     "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_TITLE": "Geteilter Inhalt ist doppelt",
     "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_MESSAGE": "Derselbe Inhalt wurde bereits gespeichert. Erneut speichern?",
     "SAVE_ANYWAY_TITLE": "Trotzdem speichern",
-    "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "Wegen Duplikat nicht gespeichert"
+    "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "Wegen Duplikat nicht gespeichert",
+    "LOCAL_ONLY_ACCESS_DENIED_MESSAGE": "Nur lokaler Zugriff ist erlaubt"
 }

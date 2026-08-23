@@ -32,6 +32,7 @@ func (g *GkillServerAPI) HandleGetPluginContentHTML(w http.ResponseWriter, r *ht
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at encode get plugin content html response: %w", err)

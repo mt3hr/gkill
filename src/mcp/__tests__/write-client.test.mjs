@@ -267,6 +267,51 @@ describe("callApi", () => {
     expect(callCount).toBe(4);
   });
 
+  // gkill がセッション切れに 401 を返すようになっても、再ログインが走ること。
+  // ステータスで打ち切ると hasAuthErrors に到達せず、MCP は長寿命プロセスなので
+  // 期限切れ以降ずっと復旧できなくなる。
+  test("re-logins once when the session expires with HTTP 401", async () => {
+    process.env.GKILL_USER = "admin";
+    process.env.GKILL_PASSWORD_SHA256 = "hash";
+
+    let callCount = 0;
+    undiciFetch.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ session_id: "old-sess", errors: null }),
+        });
+      }
+      if (callCount === 2) {
+        return Promise.resolve({
+          ok: false,
+          status: 401,
+          json: () =>
+            Promise.resolve({ errors: [{ error_code: "ERR000373", error_message: "session expired" }], messages: null }),
+        });
+      }
+      if (callCount === 3) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ session_id: "new-sess", errors: null }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ added_kmemo: { id: "456" }, errors: null }),
+      });
+    });
+
+    const client = new GkillWriteClient();
+    const result = await client.callApi("/api/add_kmemo", { kmemo: {} }, true);
+    expect(result.added_kmemo.id).toBe("456");
+    expect(callCount).toBe(4);
+  });
+
   test("uses session override when provided", async () => {
     mockFetchOk({ added_kmemo: { id: "789" }, errors: [] });
 

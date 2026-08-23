@@ -35,6 +35,7 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 		}
 	}()
 	defer func() {
+		writeErrorStatus(w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get gpsLog response to json: %w", err)
