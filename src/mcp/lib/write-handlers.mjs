@@ -43,6 +43,26 @@ import {
 // アプリ名 (create_app / update_app) はサーバごとに違うので ctx.appName で受け取る。
 const WRITE_DEVICE = "mcp";
 
+// resolveDefaultBoardName は gkill_add_mi の board_name 未指定時に使う既定板名を返す。
+// ApplicationConfig の mi_default_board が取れなければ "Inbox" へ落とす
+// （gkill の初期値と同じ。空文字で送るよりは名前のある板に入るほうが回復しやすい）。
+async function resolveDefaultBoardName(ctx, localeName) {
+  try {
+    const response = await ctx.client.callApi(
+      "/api/get_application_config",
+      localeName !== undefined ? { locale_name: localeName } : {},
+      true, ctx.sid,
+    );
+    const configured = response?.application_config?.mi_default_board;
+    if (typeof configured === "string" && configured.trim() !== "") {
+      return configured;
+    }
+  } catch {
+    // 既定板が引けないことを理由にタスク作成そのものを失敗させない
+  }
+  return "Inbox";
+}
+
 const WRITE_TOOL_NAMES = new Set(WRITE_TOOLS.map((tool) => tool.name));
 
 // isWriteToolName は name が書き込みツールかを返す。
@@ -179,13 +199,21 @@ export async function handleWriteToolCall(ctx, name, args) {
 
       case "gkill_add_mi": {
         const normalized = normalizeMiArgs(args);
+        // board_name 未指定ならアカウントの既定板へ入れる。
+        // Go 側の AddMi に既定補完は無く (MiDefaultBoard を見るのは KFTL 経路だけ)、
+        // 空文字のまま送ると名前の無い板にタスクが積まれてどの画面にも出てこない。
+        // 新規アカウントでは gkill_get_mi_board_list が [] を返すので、
+        // 板一覧ではなく ApplicationConfig から引く。
+        const board_name = normalized.board_name !== undefined
+          ? normalized.board_name
+          : await resolveDefaultBoardName(ctx, normalized.locale_name);
         const now = new Date().toISOString();
         const mi = {
           id: crypto.randomUUID(),
           rep_name: "",
           title: normalized.title,
           is_checked: normalized.is_checked,
-          board_name: normalized.board_name,
+          board_name,
           limit_time: normalized.limit_time || null,
           estimate_start_time: normalized.estimate_start_time || null,
           estimate_end_time: normalized.estimate_end_time || null,

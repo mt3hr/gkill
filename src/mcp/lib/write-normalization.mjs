@@ -114,7 +114,12 @@ export function normalizeMiArgs(args) {
     "locale_name",
   ]));
   const title = assertTrimmedString(args.title, "title");
-  const board_name = assertTrimmedString(args.board_name, "board_name");
+  // 省略可。未指定のときは呼び出し側 (write-handlers) が
+  // ApplicationConfig の mi_default_board を引いて埋める。
+  // ここで assertTrimmedString を素で呼ぶと、スキーマが optional と宣言している
+  // フィールドを省略しただけで「must be a string」の型エラーになり、
+  // 呼び出し側は自分の入力ミスだと誤診する (update 側は元からガード付き)。
+  const board_name = args.board_name !== undefined ? assertTrimmedString(args.board_name, "board_name") : undefined;
   const is_checked = args.is_checked !== undefined ? assertBoolean(args.is_checked, "is_checked") : false;
   const limit_time = optionalDatetime(args, "limit_time");
   const estimate_start_time = optionalDatetime(args, "estimate_start_time");
