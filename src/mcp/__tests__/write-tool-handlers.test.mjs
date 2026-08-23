@@ -14,12 +14,8 @@
 import { describe, test, expect } from "vitest";
 
 import { WRITE_TOOLS } from "../lib/write-tools.mjs";
-import {
-  isWriteToolName,
-  summarizeWriteToolPayload,
-  DELETE_ENDPOINT_MAP,
-  GET_ENDPOINT_MAP,
-} from "../lib/write-handlers.mjs";
+import { isWriteToolName, summarizeWriteToolPayload } from "../lib/write-handlers.mjs";
+import { DELETE_TARGETS } from "../lib/constants.mjs";
 import { DELETE_DATA_TYPES } from "../lib/write-normalization.mjs";
 import { summarizeToolError } from "../lib/payload.mjs";
 
@@ -81,26 +77,26 @@ describe("Tool definitions", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Delete data_type: 語彙が3箇所で一致していること
+// Delete data_type: 語彙が constants.mjs の1箇所から派生していること
 // ---------------------------------------------------------------------------
 describe("delete_kyou data_type vocabulary", () => {
-  test("schema enum, DELETE_DATA_TYPES, and both endpoint maps agree", () => {
-    // 対応表が食い違うと「スキーマは受理するのにディスパッチで落ちる」
-    // （あるいはその逆）になる。3箇所を1つの集合として固定する
+  test("schema enum and DELETE_DATA_TYPES are derived from DELETE_TARGETS", () => {
+    // 語彙が食い違うと「スキーマは受理するのにディスパッチで落ちる」
+    // （あるいはその逆）になる。正本は constants.mjs の DELETE_TARGETS
     const deleteTool = WRITE_TOOLS.find((tool) => tool.name === "gkill_delete_kyou");
-    const schemaEnum = [...deleteTool.inputSchema.properties.data_type.enum].sort();
+    const canonical = Object.keys(DELETE_TARGETS).sort();
 
-    expect([...DELETE_DATA_TYPES].sort()).toEqual(schemaEnum);
-    expect(Object.keys(DELETE_ENDPOINT_MAP).sort()).toEqual(schemaEnum);
-    expect(Object.keys(GET_ENDPOINT_MAP).sort()).toEqual(schemaEnum);
+    expect([...deleteTool.inputSchema.properties.data_type.enum].sort()).toEqual(canonical);
+    expect([...DELETE_DATA_TYPES].sort()).toEqual(canonical);
   });
 
   test("every delete target has both a get and an update endpoint", () => {
-    for (const dataType of Object.keys(DELETE_ENDPOINT_MAP)) {
-      expect(GET_ENDPOINT_MAP[dataType].endpoint).toMatch(/^\/api\//);
-      expect(GET_ENDPOINT_MAP[dataType].historiesKey).toMatch(/_histories$/);
-      expect(DELETE_ENDPOINT_MAP[dataType].endpoint).toMatch(/^\/api\/update_/);
-      expect(DELETE_ENDPOINT_MAP[dataType].responseKey).toMatch(/^updated_/);
+    for (const target of Object.values(DELETE_TARGETS)) {
+      expect(target.getEndpoint).toMatch(/^\/api\//);
+      expect(target.historiesKey).toMatch(/_histories$/);
+      expect(target.updateEndpoint).toMatch(/^\/api\/update_/);
+      expect(target.responseKey).toMatch(/^updated_/);
+      expect(typeof target.requestKey).toBe("string");
     }
   });
 });
