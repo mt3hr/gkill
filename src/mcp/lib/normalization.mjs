@@ -1,6 +1,6 @@
 // Normalization functions extracted from gkill-read-server.mjs.
 
-import { invalidArgument } from "./errors.mjs";
+import { invalidArgument, GkillApiError } from "./errors.mjs";
 import {
   assertObject,
   assertBoolean,
@@ -34,6 +34,13 @@ import {
   MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
   DEFAULT_INCLUDE_PLUGIN_CONTENT,
   DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+  KYOUS_GROUP_BY_VALUES,
+  KYOUS_IDF_KIND_VALUES,
+  MAX_CURSOR_LENGTH,
+  APP_CONFIG_FIELDS,
+  DEFAULT_GPS_LIMIT,
+  MAX_GPS_LIMIT,
+  GPS_GROUP_BY_VALUES,
 } from "./constants.mjs";
 
 export function pad2(value) {
@@ -238,7 +245,14 @@ export function normalizeKyouArgs(args) {
     normalized.limit = assertInteger(source.limit, "limit", { min: 1, max: 1000 });
   }
   if (Object.prototype.hasOwnProperty.call(source, "cursor") && source.cursor !== undefined) {
-    normalized.cursor = normalizeDateTimeString(source.cursor, "cursor", { allowDateOnly: true, endOfDay: false });
+    // v2: カーソルは不透明文字列（複合形式 {RFC3339Nano}::{ID}）。
+    // 旧実装はここで日時として正規化しており、複合形式を渡すと壊していた。
+    // 解釈と旧形式の受理はサーバ(parseMCPCursor)の責務。Node は素通しする。
+    const cursor = assertTrimmedString(source.cursor, "cursor");
+    if (cursor.length > MAX_CURSOR_LENGTH) {
+      throw new GkillApiError(`cursor is too long (${cursor.length} > ${MAX_CURSOR_LENGTH})`);
+    }
+    normalized.cursor = cursor;
   }
   if (Object.prototype.hasOwnProperty.call(source, "max_size_mb") && source.max_size_mb !== undefined) {
     normalized.max_size_mb = assertNumber(source.max_size_mb, "max_size_mb", { minExclusive: 0 });
@@ -246,11 +260,49 @@ export function normalizeKyouArgs(args) {
   if (Object.prototype.hasOwnProperty.call(source, "is_include_timeis") && source.is_include_timeis !== undefined) {
     normalized.is_include_timeis = assertBoolean(source.is_include_timeis, "is_include_timeis");
   }
+  // include_id / include_rep_name は v2 で廃止（id/rep_name は常時付与）。
+  // 旧クライアント救済のため受理はするが、値は使わない（型検証だけ行う）。
   if (Object.prototype.hasOwnProperty.call(source, "include_id") && source.include_id !== undefined) {
-    normalized.include_id = assertBoolean(source.include_id, "include_id");
+    assertBoolean(source.include_id, "include_id");
   }
   if (Object.prototype.hasOwnProperty.call(source, "include_rep_name") && source.include_rep_name !== undefined) {
-    normalized.include_rep_name = assertBoolean(source.include_rep_name, "include_rep_name");
+    assertBoolean(source.include_rep_name, "include_rep_name");
+  }
+  // ---- v2 (ADR-0053) ----
+  if (Object.prototype.hasOwnProperty.call(source, "count_only") && source.count_only !== undefined) {
+    normalized.count_only = assertBoolean(source.count_only, "count_only");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "group_by") && source.group_by !== undefined) {
+    const groupBy = assertTrimmedString(source.group_by, "group_by");
+    if (!KYOUS_GROUP_BY_VALUES.has(groupBy)) {
+      throw new GkillApiError(
+        `Invalid group_by: ${JSON.stringify(groupBy)} (valid: ${[...KYOUS_GROUP_BY_VALUES].join(", ")})`,
+      );
+    }
+    normalized.group_by = groupBy;
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "data_types") && source.data_types !== undefined) {
+    normalized.data_types = assertStringArray(source.data_types, "data_types");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "num_min") && source.num_min !== undefined) {
+    normalized.num_min = assertNumber(source.num_min, "num_min", {});
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "num_max") && source.num_max !== undefined) {
+    normalized.num_max = assertNumber(source.num_max, "num_max", {});
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "idf_kinds") && source.idf_kinds !== undefined) {
+    const idfKinds = assertStringArray(source.idf_kinds, "idf_kinds");
+    for (const kind of idfKinds) {
+      if (!KYOUS_IDF_KIND_VALUES.has(kind)) {
+        throw new GkillApiError(
+          `Invalid idf_kind: ${JSON.stringify(kind)} (valid: ${[...KYOUS_IDF_KIND_VALUES].join(", ")})`,
+        );
+      }
+    }
+    normalized.idf_kinds = idfKinds;
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "include_file_size") && source.include_file_size !== undefined) {
+    normalized.include_file_size = assertBoolean(source.include_file_size, "include_file_size");
   }
   if (
     Object.prototype.hasOwnProperty.call(source, "include_plugin_content") &&
@@ -297,14 +349,70 @@ export function normalizeLocaleOnlyArgs(args) {
 
 export function normalizeGpsArgs(args) {
   const source = args == null ? {} : assertObject(args, "arguments");
-  assertKnownKeys(source, new Set(["start_date", "end_date", "locale_name"]), "arguments");
-  return {
+  assertKnownKeys(
+    source,
+    new Set(["start_date", "end_date", "locale_name", "limit", "cursor", "count_only", "group_by"]),
+    "arguments",
+  );
+  const normalized = {
     start_date: normalizeDateTimeString(source.start_date, "start_date", { allowDateOnly: true, endOfDay: false }),
     end_date: normalizeDateTimeString(source.end_date, "end_date", { allowDateOnly: true, endOfDay: true }),
     ...(Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined
       ? { locale_name: assertTrimmedString(source.locale_name, "locale_name") }
       : {}),
   };
+  // ページングは Node 側実装（gkill は全件を返す。将来 Go 側へ移す余地あり）
+  normalized.limit = DEFAULT_GPS_LIMIT;
+  if (Object.prototype.hasOwnProperty.call(source, "limit") && source.limit !== undefined) {
+    normalized.limit = assertInteger(source.limit, "limit", { min: 1, max: MAX_GPS_LIMIT });
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "cursor") && source.cursor !== undefined) {
+    const cursor = assertTrimmedString(source.cursor, "cursor");
+    if (cursor.length > MAX_CURSOR_LENGTH) {
+      throw new GkillApiError(`cursor is too long (${cursor.length} > ${MAX_CURSOR_LENGTH})`);
+    }
+    normalized.cursor = cursor;
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "count_only") && source.count_only !== undefined) {
+    normalized.count_only = assertBoolean(source.count_only, "count_only");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "group_by") && source.group_by !== undefined) {
+    const groupBy = assertTrimmedString(source.group_by, "group_by");
+    if (!GPS_GROUP_BY_VALUES.has(groupBy)) {
+      throw new GkillApiError(
+        `Invalid group_by: ${JSON.stringify(groupBy)} (valid: ${[...GPS_GROUP_BY_VALUES].join(", ")})`,
+      );
+    }
+    normalized.group_by = groupBy;
+  }
+  return normalized;
+}
+
+// normalizeAppConfigArgs は gkill_get_application_config の引数を検証する。
+// fields は射影（許可値のみ）、include_ui_state は struct ツリーの UI 状態キーを残すか。
+export function normalizeAppConfigArgs(args) {
+  const source = args == null ? {} : assertObject(args, "arguments");
+  assertKnownKeys(source, new Set(["locale_name", "fields", "include_ui_state"]), "arguments");
+  const normalized = {};
+  if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
+    normalized.locale_name = assertTrimmedString(source.locale_name, "locale_name");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "fields") && source.fields !== undefined) {
+    const fields = assertStringArray(source.fields, "fields");
+    for (const field of fields) {
+      if (!APP_CONFIG_FIELDS.has(field)) {
+        throw new GkillApiError(
+          `Invalid field: ${JSON.stringify(field)} (valid: ${[...APP_CONFIG_FIELDS].join(", ")})`,
+        );
+      }
+    }
+    normalized.fields = fields;
+  }
+  normalized.include_ui_state = false;
+  if (Object.prototype.hasOwnProperty.call(source, "include_ui_state") && source.include_ui_state !== undefined) {
+    normalized.include_ui_state = assertBoolean(source.include_ui_state, "include_ui_state");
+  }
+  return normalized;
 }
 
 export function normalizeIdfFileArgs(args) {

@@ -566,14 +566,12 @@ describe("normalizeKyouArgs", () => {
     expect(result.is_include_timeis).toBe(true);
   });
 
-  test("accepts include_rep_name", () => {
-    expect(normalizeKyouArgs({ include_rep_name: true }).include_rep_name).toBe(true);
-    expect(normalizeKyouArgs({ include_rep_name: false }).include_rep_name).toBe(false);
-  });
-
-  // 未指定なら送らず、サーバ側の既定(false)に任せる。include_id と同じ扱い。
-  test("omits include_rep_name when not given", () => {
-    expect(normalizeKyouArgs({}).include_rep_name).toBeUndefined();
+  // v2: include_id / include_rep_name は廃止（id/rep_name は常時付与）。
+  // 旧クライアント救済のため受理はするが、正規化結果には載せない（型検証のみ）。
+  test("accepts but ignores deprecated include_rep_name", () => {
+    expect(normalizeKyouArgs({ include_rep_name: true }).include_rep_name).toBeUndefined();
+    expect(normalizeKyouArgs({ include_rep_name: false }).include_rep_name).toBeUndefined();
+    expect(normalizeKyouArgs({ include_id: true }).include_id).toBeUndefined();
   });
 
   test("throws for non-boolean include_rep_name", () => {
@@ -590,9 +588,14 @@ describe("normalizeKyouArgs", () => {
     expect(result.cursor).toBe("2026-01-01T00:00:00+09:00");
   });
 
-  test("accepts cursor as date-only", () => {
-    const result = normalizeKyouArgs({ cursor: "2026-01-01" });
-    expect(result.cursor).toMatch(/^2026-01-01T00:00:00[+-]\d{2}:\d{2}$/);
+  // v2: カーソルは不透明文字列。Node は日時として解釈せず素通しする
+  // （複合形式 {RFC3339Nano}::{ID} を日時正規化に掛けると壊れるため）。
+  // 旧形式（日付のみ等）の受理はサーバ(parseMCPCursor)の責務。
+  test("passes cursor through verbatim (opaque, v2)", () => {
+    expect(normalizeKyouArgs({ cursor: "2026-01-01" }).cursor).toBe("2026-01-01");
+    const composite = "2026-08-01T20:00:00.123456789+09:00::3f9e40c1";
+    expect(normalizeKyouArgs({ cursor: composite }).cursor).toBe(composite);
+    expect(() => normalizeKyouArgs({ cursor: "x".repeat(600) })).toThrow(GkillApiError);
   });
 
   test("passes query through normalizeKyouQuery", () => {
