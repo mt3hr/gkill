@@ -72,6 +72,40 @@ describe("handleWriteToolCall — add tools", () => {
     }
   });
 
+  test("gkill_add_mi falls back to the account default board when board_name is omitted", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ application_config: { mi_default_board: "Inbox" } })
+      .mockResolvedValueOnce({ added_mi: { id: "m1" } });
+
+    await handleWriteToolCall(ctx, "gkill_add_mi", { title: "buy milk" });
+
+    expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/get_application_config");
+    expect(ctx.client.callApi.mock.calls[1][0]).toBe("/api/add_mi");
+    expect(ctx.client.callApi.mock.calls[1][1].mi.board_name).toBe("Inbox");
+  });
+
+  test("gkill_add_mi does not look up the config when board_name is given", async () => {
+    const ctx = makeCtx(async () => ({ added_mi: { id: "m1" } }));
+    await handleWriteToolCall(ctx, "gkill_add_mi", { title: "buy milk", board_name: "errands" });
+
+    expect(ctx.client.callApi).toHaveBeenCalledTimes(1);
+    expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/add_mi");
+    expect(ctx.client.callApi.mock.calls[0][1].mi.board_name).toBe("errands");
+  });
+
+  test("gkill_add_mi still creates the task when the config lookup fails", async () => {
+    // 既定板が引けないことを理由にタスク作成そのものを失敗させない
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockRejectedValueOnce(new Error("config unavailable"))
+      .mockResolvedValueOnce({ added_mi: { id: "m1" } });
+
+    await handleWriteToolCall(ctx, "gkill_add_mi", { title: "buy milk" });
+
+    expect(ctx.client.callApi.mock.calls[1][1].mi.board_name).toBe("Inbox");
+  });
+
   test("gkill_submit_kftl posts the raw text", async () => {
     const ctx = makeCtx(async () => ({ messages: [{ message: "ok" }] }));
     await handleWriteToolCall(ctx, "gkill_submit_kftl", { kftl_text: "memo" });
