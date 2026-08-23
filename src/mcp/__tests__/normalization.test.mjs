@@ -949,3 +949,83 @@ describe("stale-schema argument revival", () => {
     expect(() => normalizeAppConfigArgs({ fields: '["bogus_field"]' })).toThrow(GkillApiError);
   });
 });
+
+describe("normalizeIdfFileArgs — 旧スキーマ救済 (2026-08-24 再監査 Q-01)", () => {
+  // MCP のツール一覧はクライアントのセッション寿命で固定される。b303de73 で足した
+  // is_video は boolean なので、旧スキーマのクライアントからは正規JSON文字列で届く。
+  // reviveStaleSchemaArgs を通さないと、既存セッションからは動画サムネへ到達できない。
+  test('revives is_video sent as the string "true" by a stale-schema client', () => {
+    const result = normalizeIdfFileArgs({
+      rep_name: "repo",
+      file_name: "clip.mp4",
+      thumb: "400x400",
+      is_video: "true",
+    });
+    expect(result.is_video).toBe(true);
+  });
+
+  test('revives is_video sent as the string "false"', () => {
+    const result = normalizeIdfFileArgs({
+      rep_name: "repo",
+      file_name: "photo.png",
+      thumb: "400x400",
+      is_video: "false",
+    });
+    expect(result.is_video).toBe(false);
+  });
+
+  test("still rejects values that are not a canonical JSON boolean", () => {
+    for (const value of ["TRUE", "yes", "1", ""]) {
+      expect(() =>
+        normalizeIdfFileArgs({ rep_name: "r", file_name: "f", thumb: "10x10", is_video: value }),
+      ).toThrow(GkillApiError);
+    }
+  });
+
+  test("a revived is_video still requires thumb", () => {
+    expect(() =>
+      normalizeIdfFileArgs({ rep_name: "r", file_name: "f", is_video: "true" }),
+    ).toThrow(/requires thumb/);
+  });
+});
+
+describe("normalizeGpsArgs — 逆さまの期間 (2026-08-24 再監査 P-12)", () => {
+  test("rejects start_date after end_date instead of silently matching nothing", () => {
+    expect(() => normalizeGpsArgs({ start_date: "2026-08-24", end_date: "2026-08-01" })).toThrow(
+      /must not be after end_date/,
+    );
+  });
+
+  test("compares instants, not strings, so mixed offsets are judged correctly", () => {
+    // 文字列比較だと "2026-08-24T00:00:00Z" > "2026-08-24T08:00:00+09:00" に見えるが、
+    // 実際には後者(= 2026-08-23T23:00:00Z)のほうが前。
+    expect(() =>
+      normalizeGpsArgs({ start_date: "2026-08-24T00:00:00Z", end_date: "2026-08-24T08:00:00+09:00" }),
+    ).toThrow(/must not be after end_date/);
+  });
+
+  test("accepts an ordinary range and a single day", () => {
+    expect(normalizeGpsArgs({ start_date: "2026-08-01", end_date: "2026-08-24" }).start_date).toContain("2026-08-01");
+    expect(() => normalizeGpsArgs({ start_date: "2026-08-24", end_date: "2026-08-24" })).not.toThrow();
+  });
+});
+
+describe("cursor の形 (2026-08-24 再監査 P-36)", () => {
+  // 壊れたカーソルは gkill 側で ERR000352「記録の取得に失敗しました」に畳まれ、
+  // カーソルが原因だと分からなくなっていた。
+  test("rejects a cursor that is neither an RFC3339 time nor time::id", () => {
+    expect(() => normalizeKyouArgs({ cursor: "garbage-not-a-cursor" })).toThrow(/next_cursor/);
+    expect(() =>
+      normalizeGpsArgs({ start_date: "2026-08-01", end_date: "2026-08-24", cursor: "nonsense" }),
+    ).toThrow(/next_cursor/);
+  });
+
+  test("accepts the v2 composite cursor and the legacy plain datetime", () => {
+    expect(normalizeKyouArgs({ cursor: "2026-08-24T03:00:00+09:00::abc-123" }).cursor).toBe(
+      "2026-08-24T03:00:00+09:00::abc-123",
+    );
+    expect(normalizeKyouArgs({ cursor: "2026-08-24T03:00:00+09:00" }).cursor).toBe(
+      "2026-08-24T03:00:00+09:00",
+    );
+  });
+});

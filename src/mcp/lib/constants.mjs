@@ -245,3 +245,28 @@ export const MAX_KYOU_HISTORY_LIMIT = 200;
 
 // data_type として受理する値。削除・復活・版履歴のスキーマ enum と正規化がこれを見る。
 export const ENTITY_DATA_TYPE_VALUES = Object.keys(ENTITY_TARGETS);
+
+// 消したツールの案内。MCP のツール一覧は**クライアントのセッション寿命で固定**されるので、
+// サーバから消しても既存セッションは呼び続ける (2026-08-24 の再監査で live コネクタから再現)。
+// しかもそのクライアントが握っている古い説明文は「パスを優先しろ」と、
+// まさにこの消えたツールへ誘導している。名前だけ返すと行き止まりになる。
+const REMOVED_TOOL_HINTS = new Map([
+  [
+    "gkill_get_idf_file_path",
+    "removed on 2026-08-24: it could never be reached from an HTTP client, and on stdio it was a strict " +
+      "subset of the file_path that gkill_get_kyous already puts into IDF payloads. On stdio read " +
+      "payload.file_path directly; otherwise call gkill_get_idf_file, which is the only way to get an " +
+      'image in front of the model (add thumb:"1024x1024" to stay under the size cap).',
+  ],
+  [
+    "gkill_get_plugin_content",
+    "removed: pass include_plugin_content:true to gkill_get_kyous instead. It inlines plugin bodies into " +
+      "the same response rather than costing one round trip per entry.",
+  ],
+]);
+
+// 未知ツールのエラー文。消したツールなら代替まで案内する。
+export function unknownToolMessage(name) {
+  const hint = REMOVED_TOOL_HINTS.get(name);
+  return hint ? `Unknown tool: ${name} — ${hint}` : `Unknown tool: ${name}`;
+}

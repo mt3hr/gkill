@@ -15,6 +15,7 @@ import {
   normalizeTextArgs,
   normalizeKftlArgs,
   normalizeDeleteArgs,
+  normalizeUpdateTimeIsArgs,
   DELETE_DATA_TYPES,
 } from "../lib/write-normalization.mjs";
 
@@ -347,5 +348,78 @@ describe("DELETE_DATA_TYPES", () => {
     for (const dt of expected) {
       expect(DELETE_DATA_TYPES.has(dt)).toBe(true);
     }
+  });
+});
+
+describe("normalizeUrlogArgs — URL のスキーム (2026-08-24 再監査 P-19)", () => {
+  // スキームが無いと gkill はページ取得すら試みず、title が空のまま保存される。
+  // エラーは出ないので「タイトルの自動補完が効かなかった」としか見えない。
+  test("rejects a URL without a scheme", () => {
+    expect(() => normalizeUrlogArgs({ url: "example.com/foo" })).toThrow(/must include a scheme/);
+    expect(() => normalizeUrlogArgs({ url: "//example.com/foo" })).toThrow(/must include a scheme/);
+  });
+
+  test("accepts http/https and other schemes", () => {
+    expect(normalizeUrlogArgs({ url: "https://example.com/foo" }).url).toBe("https://example.com/foo");
+    expect(normalizeUrlogArgs({ url: "http://example.com/" }).url).toBe("http://example.com/");
+    expect(normalizeUrlogArgs({ url: "file://host/path" }).url).toBe("file://host/path");
+  });
+});
+
+describe("TimeIs の前後関係 (2026-08-24 再監査 P-33)", () => {
+  test("rejects end_time before start_time instead of creating a negative interval", () => {
+    expect(() =>
+      normalizeTimeIsArgs({
+        title: "x",
+        start_time: "2026-08-24T12:00:00+09:00",
+        end_time: "2026-08-24T11:00:00+09:00",
+      }),
+    ).toThrow(/negative length/);
+  });
+
+  test("applies to update as well, but only when both ends are supplied", () => {
+    expect(() =>
+      normalizeUpdateTimeIsArgs({
+        id: "t1",
+        start_time: "2026-08-24T12:00:00+09:00",
+        end_time: "2026-08-24T11:00:00+09:00",
+      }),
+    ).toThrow(/negative length/);
+    // 片側だけの patch は既存値と突き合わせられないので通す
+    expect(() =>
+      normalizeUpdateTimeIsArgs({ id: "t1", end_time: "2026-08-24T11:00:00+09:00" }),
+    ).not.toThrow();
+  });
+
+  test("compares instants, not strings", () => {
+    // normalizeDateTimeString は妥当な RFC3339 をそのまま返すので、offset が混ざりうる。
+    // 文字列順と実際の前後が食い違う組み合わせでだけ、この違いが表に出る。
+
+    // 文字列順では start < end に見えるが、実際は start(18:00Z) が end(16:00Z) より後
+    expect(() =>
+      normalizeTimeIsArgs({
+        title: "x",
+        start_time: "2026-08-23T18:00:00Z",
+        end_time: "2026-08-24T01:00:00+09:00",
+      }),
+    ).toThrow(/negative length/);
+
+    // 逆に文字列順では start > end に見えるが、実際は正しい順序なので通す
+    expect(() =>
+      normalizeTimeIsArgs({
+        title: "x",
+        start_time: "2026-08-24T02:00:00+09:00",
+        end_time: "2026-08-23T18:00:00Z",
+      }),
+    ).not.toThrow();
+
+    // 同じ瞬間は長さ0であって負ではない
+    expect(() =>
+      normalizeTimeIsArgs({
+        title: "x",
+        start_time: "2026-08-24T02:00:00+09:00",
+        end_time: "2026-08-23T17:00:00Z",
+      }),
+    ).not.toThrow();
   });
 });

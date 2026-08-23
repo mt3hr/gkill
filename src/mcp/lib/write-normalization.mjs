@@ -51,6 +51,35 @@ function assertArgs(args) {
 // Normalizers
 // ---------------------------------------------------------------------------
 
+// URL からスキームが抜けていると gkill はページ取得すら試みず、
+// title が空のまま保存される（エラーは出ない）。呼び出し側からは
+// 「タイトルの自動補完が効かなかった」としか見えないので入口で弾く。
+const URL_SCHEME_REGEX = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//;
+
+/** @param {unknown} value @param {string} field */
+function assertUrlWithScheme(value, field) {
+  const url = assertTrimmedString(value, field);
+  if (!URL_SCHEME_REGEX.test(url)) {
+    throw invalidArgument(field, 'must include a scheme, e.g. "https://example.com/page"', value);
+  }
+  return url;
+}
+
+// 終わりが始まりより前の TimeIs は作れてしまい、長さが負になる。
+/** @param {string|undefined} startTime @param {string|undefined} endTime */
+function assertTimeIsOrder(startTime, endTime) {
+  if (startTime === undefined || endTime === undefined) return;
+  // normalizeDateTimeString は妥当な RFC3339 をそのまま返すので "…Z" と "…+09:00" が
+  // 混ざりうる。文字列比較だと offset の違いで前後を取り違える。
+  if (Date.parse(startTime) > Date.parse(endTime)) {
+    throw invalidArgument(
+      "end_time",
+      `must not be before start_time (${startTime}); the interval would have a negative length`,
+      endTime,
+    );
+  }
+}
+
 /** @param {unknown} args */
 export function normalizeKmemoArgs(args) {
   assertArgs(args);
@@ -65,7 +94,7 @@ export function normalizeKmemoArgs(args) {
 export function normalizeUrlogArgs(args) {
   assertArgs(args);
   assertKnownKeys(args, new Set(["url", "title", "related_time", "locale_name"]));
-  const url = assertTrimmedString(args.url, "url");
+  const url = assertUrlWithScheme(args.url, "url");
   const title = args.title !== undefined ? assertTrimmedString(args.title, "title") : undefined;
   const related_time = optionalDatetime(args, "related_time");
   const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
@@ -101,6 +130,7 @@ export function normalizeTimeIsArgs(args) {
   const title = assertTrimmedString(args.title, "title");
   const start_time = optionalDatetime(args, "start_time");
   const end_time = optionalDatetime(args, "end_time");
+  assertTimeIsOrder(start_time, end_time);
   const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
   return { title, start_time, end_time, locale_name };
 }
@@ -218,6 +248,8 @@ export function normalizeUpdateTimeIsArgs(args) {
   const title = args.title !== undefined ? assertTrimmedString(args.title, "title") : undefined;
   const start_time = optionalDatetime(args, "start_time");
   const end_time = optionalDatetime(args, "end_time");
+  // patch なので両方揃ったときだけ比べる（片側だけの更新は既存値と突き合わせられない）
+  assertTimeIsOrder(start_time, end_time);
   const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
   return { id, title, start_time, end_time, locale_name };
 }

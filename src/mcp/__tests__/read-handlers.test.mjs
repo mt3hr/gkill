@@ -84,7 +84,10 @@ describe("handleReadToolCall — gkill_get_kyous v2", () => {
       has_more: true,
       next_cursor: "t::a",
     }));
-    const payload = await handleReadToolCall(ctx, "gkill_get_kyous", { cursor: "t::z" });
+    // カーソルは形を検証するようになったので、実物と同じ `{RFC3339}::{id}` を使う
+    const payload = await handleReadToolCall(ctx, "gkill_get_kyous", {
+      cursor: "2026-08-24T03:00:00+09:00::z",
+    });
     expect(payload).not.toHaveProperty("total_count");
     expect(payload.remaining_count).toBe(3);
     expect(payload.next_cursor).toBe("t::a");
@@ -341,5 +344,75 @@ describe("handleReadToolCall — gkill_get_kyou_history", () => {
     });
     expect(summary).toContain("3 of 3");
     expect(summary).toContain("DELETED");
+  });
+});
+
+describe("gkill_get_idf_file の 404 (2026-08-24 再監査 P-13)", () => {
+  test("turns the raw HTTP 404 into something that names the likely cause", async () => {
+    // 「HTTP 404 fetching file /files/NoSuchRep/x.png」だけだと、rep 名が悪いのか
+    // ファイル名が悪いのか、そもそも消えたのかが読めない
+    const ctx = {
+      client: {
+        fetchFile: vi.fn(async () => {
+          throw new GkillApiError("HTTP 404 fetching file /files/NoSuchRep/x.png.", { status: 404 });
+        }),
+      },
+      sid: "sid-1",
+    };
+    await expect(
+      handleReadToolCall(ctx, "gkill_get_idf_file", { rep_name: "NoSuchRep", file_name: "x.png" }),
+    ).rejects.toThrow(/gkill_get_rep_infos/);
+  });
+
+  test("passes other failures through untouched", async () => {
+    const ctx = {
+      client: {
+        fetchFile: vi.fn(async () => {
+          throw new GkillApiError("HTTP 500 fetching file /files/r/x.png.", { status: 500 });
+        }),
+      },
+      sid: "sid-1",
+    };
+    await expect(
+      handleReadToolCall(ctx, "gkill_get_idf_file", { rep_name: "r", file_name: "x.png" }),
+    ).rejects.toThrow(/HTTP 500/);
+  });
+});
+
+describe("0件の要約 (2026-08-24 再監査 Q-05)", () => {
+  // count_only の応答も通常検索の0件も kyous:[] なので payload からは区別できない。
+  // 「Counted 0 entries.」だと、count_only を指定していない呼び出し側に
+  // 「集計モードで返ってきた」と読めてしまう。
+  test("an empty ordinary result does not claim to have counted", () => {
+    expect(
+      summarizeReadToolPayload("gkill_get_kyous", {
+        kyous: [],
+        total_count: 0,
+        returned_count: 0,
+        remaining_count: 0,
+        has_more: false,
+      }),
+    ).toBe("No entries matched.");
+  });
+
+  test("count_only with matches still reports the count", () => {
+    expect(
+      summarizeReadToolPayload("gkill_get_kyous", {
+        kyous: [],
+        total_count: 12,
+        returned_count: 0,
+        remaining_count: 0,
+        has_more: false,
+      }),
+    ).toBe("Counted 12 entries.");
+  });
+
+  test("gps logs follow the same rule", () => {
+    expect(
+      summarizeReadToolPayload("gkill_get_gps_log", { gps_logs: [], total_count: 0, has_more: false }),
+    ).toBe("No GPS points matched.");
+    expect(
+      summarizeReadToolPayload("gkill_get_gps_log", { gps_logs: [], total_count: 5, has_more: false }),
+    ).toBe("Counted 5 GPS points.");
   });
 });

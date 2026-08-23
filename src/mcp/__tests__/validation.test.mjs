@@ -318,3 +318,20 @@ describe("assertKnownKeys — default field name", () => {
     }
   });
 });
+
+describe("assertInteger — 安全整数の範囲 (2026-08-24 再監査 P-37)", () => {
+  test("rejects integers beyond the safe range instead of storing a value that cannot round-trip", () => {
+    // 2^53。JSON を往復するだけで別の値になるので、保存できたように見えて読み戻すと違う
+    expect(() => assertInteger(9007199254740992, "amount")).toThrow(/safe integer range/);
+    expect(() => assertInteger(-9007199254740992, "amount")).toThrow(/safe integer range/);
+  });
+
+  test("still accepts the largest value that does round-trip", () => {
+    expect(assertInteger(Number.MAX_SAFE_INTEGER, "amount")).toBe(Number.MAX_SAFE_INTEGER);
+    expect(assertInteger(-Number.MAX_SAFE_INTEGER, "amount")).toBe(-Number.MAX_SAFE_INTEGER);
+  });
+
+  test("the safe-range error is a GkillApiError like every other validation error", () => {
+    expect(() => assertInteger(2 ** 53, "amount")).toThrow(GkillApiError);
+  });
+});
