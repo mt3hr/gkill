@@ -815,3 +815,189 @@ func TestEscapeLikePattern(t *testing.T) {
 		}
 	}
 }
+
+// 時間帯フィルタの狭い窓（09:00〜10:00）を、秒オブデイ表現とepoch表現の両方 ×
+// 文字列列(RELATED_TIME)と数値列(RELATED_TIME_UNIX)の両方で、実SQLiteに投げて固定する。
+//
+// バインド値は find.SecondOfDayToHHMMSS の "HH:MM:SS" 文字列で、列側の
+// strftime('%H:%M:%S', ...) と文字列比較される。以前はバインド側が
+// 「epoch秒をそのままdatetime()に食わせる」形で、秒オブデイを渡すと
+// 1970-01-01の時刻として+9時間ずれていた（外部監査で発覚）。
+// 解釈の正本: find.NormalizeSecondOfDay / documents/adr/0009-period-of-time-second-of-day.md
+func TestGenerateFindSQLCommon_PeriodOfTimeNarrowWindow(t *testing.T) {
+	day := time.Date(2026, 8, 19, 0, 0, 0, 0, time.Local)
+	rows := map[string]time.Time{
+		"before":    day.Add(8*time.Hour + 59*time.Minute + 59*time.Second),
+		"at-start":  day.Add(9 * time.Hour),
+		"inside":    day.Add(9*time.Hour + 30*time.Minute),
+		"at-end":    day.Add(10 * time.Hour),
+		"after-end": day.Add(10*time.Hour + 1*time.Second),
+	}
+	want := map[string]bool{"at-start": true, "inside": true, "at-end": true}
+
+	secOfDayStart := int64(9 * 3600)
+	secOfDayEnd := int64(10 * 3600)
+	epochStart := time.Date(2026, 1, 1, 9, 0, 0, 0, time.Local).Unix()
+	epochEnd := time.Date(2026, 1, 1, 10, 0, 0, 0, time.Local).Unix()
+
+	matchedIDs := func(t *testing.T, columnName string, whereSQL string, args []any) map[string]bool {
+		t.Helper()
+		db, err := sql.Open("sqlite", ":memory:")
+		if err != nil {
+			t.Fatalf("error at open memory db: %v", err)
+		}
+		defer func() { _ = db.Close() }()
+		if _, err := db.Exec(`CREATE TABLE MY_TABLE (ID, TITLE, RELATED_TIME, RELATED_TIME_UNIX, UPDATE_TIME)`); err != nil {
+			t.Fatalf("error at create table: %v", err)
+		}
+		for id, rowTime := range rows {
+			if _, err := db.Exec(`INSERT INTO MY_TABLE (ID, TITLE, RELATED_TIME, RELATED_TIME_UNIX) VALUES (?, ?, ?, ?)`,
+				id, "title", rowTime.Format(TimeLayout), rowTime.Unix()); err != nil {
+				t.Fatalf("error at insert row %s: %v", id, err)
+			}
+		}
+		selected, err := db.Query(`SELECT ID FROM MY_TABLE AS T WHERE `+whereSQL, args...)
+		if err != nil {
+			t.Fatalf("error at select with generated where clause %q: %v", whereSQL, err)
+		}
+		defer func() { _ = selected.Close() }()
+		got := map[string]bool{}
+		for selected.Next() {
+			id := ""
+			if err := selected.Scan(&id); err != nil {
+				t.Fatalf("error at scan: %v", err)
+			}
+			got[id] = true
+		}
+		if err := selected.Err(); err != nil {
+			t.Fatalf("error at iterate rows: %v", err)
+		}
+		return got
+	}
+
+	for _, expr := range []struct {
+		name       string
+		columnName string
+	}{
+		{name: "文字列列", columnName: "RELATED_TIME"},
+		{name: "数値列(_UNIX)", columnName: "RELATED_TIME_UNIX"},
+	} {
+		for _, c := range []struct {
+			name       string
+			start, end int64
+		}{
+			{name: "秒オブデイ表現(MCP契約)", start: secOfDayStart, end: secOfDayEnd},
+			{name: "epoch表現(Web契約)", start: epochStart, end: epochEnd},
+		} {
+			t.Run(expr.name+"/"+c.name, func(t *testing.T) {
+				query := &find.FindQuery{
+					PeriodOfTimeStartTimeSecond: &c.start,
+					PeriodOfTimeEndTimeSecond:   &c.end,
+				}
+				whereCounter := 0
+				queryArgs := []any{}
+				whereSQL, err := GenerateFindSQLCommon(
+					query, "MY_TABLE", "T", &whereCounter,
+					false, expr.columnName,
+					[]string{"TITLE"}, true, false,
+					false, false, &queryArgs,
+				)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				got := matchedIDs(t, expr.columnName, whereSQL, queryArgs)
+				if len(got) != len(want) {
+					t.Fatalf("一致した行 = %v, want %v (sql=%q args=%v)", got, want, whereSQL, queryArgs)
+				}
+				for id := range want {
+					if !got[id] {
+						t.Errorf("%s が一致していない: matched=%v (sql=%q)", id, got, whereSQL)
+					}
+				}
+			})
+		}
+	}
+}
+
+// 夜跨ぎ窓（23:00〜01:00）のSQL経路。start > end で OR 判定に切り替わる分岐を両表現で固定する。
+func TestGenerateFindSQLCommon_PeriodOfTimeOvernightWindow(t *testing.T) {
+	day := time.Date(2026, 8, 19, 0, 0, 0, 0, time.Local)
+	rows := map[string]time.Time{
+		"evening-out": day.Add(22*time.Hour + 59*time.Minute + 59*time.Second),
+		"at-start":    day.Add(23 * time.Hour),
+		"early":       day.Add(24*time.Hour + 30*time.Minute),
+		"at-end":      day.Add(25 * time.Hour),
+		"after-end":   day.Add(25*time.Hour + 1*time.Second),
+		"midday-out":  day.Add(12 * time.Hour),
+	}
+	want := map[string]bool{"at-start": true, "early": true, "at-end": true}
+
+	secOfDayStart := int64(23 * 3600)
+	secOfDayEnd := int64(1 * 3600)
+	epochStart := time.Date(2026, 1, 1, 23, 0, 0, 0, time.Local).Unix()
+	epochEnd := time.Date(2026, 1, 1, 1, 0, 0, 0, time.Local).Unix()
+
+	for _, c := range []struct {
+		name       string
+		start, end int64
+	}{
+		{name: "秒オブデイ表現(MCP契約)", start: secOfDayStart, end: secOfDayEnd},
+		{name: "epoch表現(Web契約)", start: epochStart, end: epochEnd},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			query := &find.FindQuery{
+				PeriodOfTimeStartTimeSecond: &c.start,
+				PeriodOfTimeEndTimeSecond:   &c.end,
+			}
+			whereCounter := 0
+			queryArgs := []any{}
+			whereSQL, err := GenerateFindSQLCommon(
+				query, "MY_TABLE", "T", &whereCounter,
+				false, "RELATED_TIME",
+				[]string{"TITLE"}, true, false,
+				false, false, &queryArgs,
+			)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			db, err := sql.Open("sqlite", ":memory:")
+			if err != nil {
+				t.Fatalf("error at open memory db: %v", err)
+			}
+			defer func() { _ = db.Close() }()
+			if _, err := db.Exec(`CREATE TABLE MY_TABLE (ID, TITLE, RELATED_TIME, UPDATE_TIME)`); err != nil {
+				t.Fatalf("error at create table: %v", err)
+			}
+			for id, rowTime := range rows {
+				if _, err := db.Exec(`INSERT INTO MY_TABLE (ID, TITLE, RELATED_TIME) VALUES (?, ?, ?)`, id, "title", rowTime.Format(TimeLayout)); err != nil {
+					t.Fatalf("error at insert row %s: %v", id, err)
+				}
+			}
+			selected, err := db.Query(`SELECT ID FROM MY_TABLE AS T WHERE `+whereSQL, queryArgs...)
+			if err != nil {
+				t.Fatalf("error at select with generated where clause %q: %v", whereSQL, err)
+			}
+			defer func() { _ = selected.Close() }()
+			got := map[string]bool{}
+			for selected.Next() {
+				id := ""
+				if err := selected.Scan(&id); err != nil {
+					t.Fatalf("error at scan: %v", err)
+				}
+				got[id] = true
+			}
+			if err := selected.Err(); err != nil {
+				t.Fatalf("error at iterate rows: %v", err)
+			}
+			if len(got) != len(want) {
+				t.Fatalf("一致した行 = %v, want %v (sql=%q args=%v)", got, want, whereSQL, queryArgs)
+			}
+			for id := range want {
+				if !got[id] {
+					t.Errorf("%s が一致していない: matched=%v (sql=%q)", id, got, whereSQL)
+				}
+			}
+		})
+	}
+}

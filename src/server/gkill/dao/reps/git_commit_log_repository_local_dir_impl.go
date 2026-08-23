@@ -659,16 +659,10 @@ func buildPeriodOfTimeSeconds(query *find.FindQuery) (use bool, stOK bool, stSec
 	}
 	use = true
 
-	if query.PeriodOfTimeStartTimeSecond != nil {
-		st := time.Unix(*query.PeriodOfTimeStartTimeSecond, 0).In(time.Local)
-		stSec = st.Hour()*3600 + st.Minute()*60 + st.Second()
-		stOK = true
-	}
-	if query.PeriodOfTimeEndTimeSecond != nil {
-		et := time.Unix(*query.PeriodOfTimeEndTimeSecond, 0).In(time.Local)
-		etSec = et.Hour()*3600 + et.Minute()*60 + et.Second()
-		etOK = true
-	}
+	// 秒の解釈（epoch / 秒オブデイの二重解釈）は find パッケージのアクセサが正本:
+	// documents/adr/0009-period-of-time-second-of-day.md
+	stSec, stOK = query.PeriodStartSecondOfDay()
+	etSec, etOK = query.PeriodEndSecondOfDay()
 	return
 }
 

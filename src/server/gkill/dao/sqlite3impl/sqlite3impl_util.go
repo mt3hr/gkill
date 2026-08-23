@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
@@ -419,33 +418,31 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 
 	// 時間範囲指定ありの場合
 	usePeriodOfTime := query.HasPeriodOfTimeFilter()
-	periodOfStartTimeSecond := query.PeriodOfTimeStartTimeSecond
-	periodOfEndTimeSecond := query.PeriodOfTimeEndTimeSecond
 
-	// 時間帯比較用
+	// 時間帯比較用。列側はローカル時刻の "HH:MM:SS" 文字列にし、バインド値は
+	// 正規化済みの秒オブデイを同じ書式にした文字列（find.SecondOfDayToHHMMSS）と
+	// 文字列比較する。秒の解釈（epoch / 秒オブデイの二重解釈）は find パッケージの
+	// アクセサが正本: documents/adr/0009-period-of-time-second-of-day.md
 	timeExpr := ""
 	if strings.HasSuffix(relatedTimeColumnName, "_UNIX") {
 		timeExpr = "strftime('%H:%M:%S', datetime(" + relatedTimeColumnName + ", 'unixepoch', 'localtime'))"
 	} else {
 		timeExpr = "strftime('%H:%M:%S', datetime(" + relatedTimeColumnName + ", 'localtime'))"
 	}
-	argExpr := "strftime('%H:%M:%S', datetime(?, 'localtime'))"
 
 	if usePeriodOfTime {
+		stSec, stOK := query.PeriodStartSecondOfDay()
+		etSec, etOK := query.PeriodEndSecondOfDay()
+
 		// start/end を両方指定している場合は「ひとかたまり」で付ける
-		if periodOfStartTimeSecond != nil && periodOfEndTimeSecond != nil {
+		if stOK && etOK {
 			if *whereCounter != 0 {
 				sqlBuilder.WriteString(" AND ")
 			}
 
-			st := time.Unix(*periodOfStartTimeSecond, 0).In(time.Local)
-			et := time.Unix(*periodOfEndTimeSecond, 0).In(time.Local)
-			stSec := st.Hour()*3600 + st.Minute()*60 + st.Second()
-			etSec := et.Hour()*3600 + et.Minute()*60 + et.Second()
-
 			sqlBuilder.WriteString(" ( ")
-			sqlBuilder.WriteString(timeExpr + " >= " + argExpr)
-			*queryArgs = append(*queryArgs, st.Format(TimeLayout))
+			sqlBuilder.WriteString(timeExpr + " >= ?")
+			*queryArgs = append(*queryArgs, find.SecondOfDayToHHMMSS(stSec))
 
 			if stSec > etSec {
 				// 夜跨ぎ
@@ -455,24 +452,24 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 				sqlBuilder.WriteString(" AND ")
 			}
 
-			sqlBuilder.WriteString(timeExpr + " <= " + argExpr)
-			*queryArgs = append(*queryArgs, et.Format(TimeLayout))
+			sqlBuilder.WriteString(timeExpr + " <= ?")
+			*queryArgs = append(*queryArgs, find.SecondOfDayToHHMMSS(etSec))
 			sqlBuilder.WriteString(" ) ")
 
 			*whereCounter++
-		} else if periodOfStartTimeSecond != nil {
+		} else if stOK {
 			if *whereCounter != 0 {
 				sqlBuilder.WriteString(" AND ")
 			}
-			sqlBuilder.WriteString(timeExpr + " >= " + argExpr)
-			*queryArgs = append(*queryArgs, time.Unix(*periodOfStartTimeSecond, 0).In(time.Local).Format(TimeLayout))
+			sqlBuilder.WriteString(timeExpr + " >= ?")
+			*queryArgs = append(*queryArgs, find.SecondOfDayToHHMMSS(stSec))
 			*whereCounter++
-		} else if periodOfEndTimeSecond != nil {
+		} else if etOK {
 			if *whereCounter != 0 {
 				sqlBuilder.WriteString(" AND ")
 			}
-			sqlBuilder.WriteString(timeExpr + " <= " + argExpr)
-			*queryArgs = append(*queryArgs, time.Unix(*periodOfEndTimeSecond, 0).In(time.Local).Format(TimeLayout))
+			sqlBuilder.WriteString(timeExpr + " <= ?")
+			*queryArgs = append(*queryArgs, find.SecondOfDayToHHMMSS(etSec))
 			*whereCounter++
 		}
 

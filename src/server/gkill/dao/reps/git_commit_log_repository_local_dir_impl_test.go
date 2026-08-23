@@ -288,3 +288,51 @@ func TestNewGitRepSuccessForGitRepository(t *testing.T) {
 		t.Fatal("gitリポジトリなのにrepが生成されなかった")
 	}
 }
+
+// 時間帯フィルタの秒値が「秒オブデイ(0..86399)」でも「絶対epoch秒」でも同じ窓に
+// 正規化されることを、gitのSQLを通らない経路(buildPeriodOfTimeSeconds)で固定する。
+// 解釈の正本: find.NormalizeSecondOfDay / documents/adr/0009-period-of-time-second-of-day.md
+func TestBuildPeriodOfTimeSecondsSecondOfDayInput(t *testing.T) {
+	secOfDayStart := int64(9 * 3600)
+	epochStart := time.Date(2026, 1, 1, 9, 0, 0, 0, time.Local).Unix()
+	secOfDayEnd := int64(10 * 3600)
+	epochEnd := time.Date(2026, 1, 1, 10, 0, 0, 0, time.Local).Unix()
+
+	for _, c := range []struct {
+		name       string
+		start, end int64
+	}{
+		{name: "秒オブデイ表現(MCP契約)", start: secOfDayStart, end: secOfDayEnd},
+		{name: "epoch表現(Web契約)", start: epochStart, end: epochEnd},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			query := &find.FindQuery{
+				PeriodOfTimeStartTimeSecond: &c.start,
+				PeriodOfTimeEndTimeSecond:   &c.end,
+			}
+			use, stOK, stSec, etOK, etSec := buildPeriodOfTimeSeconds(query)
+			if !use || !stOK || !etOK {
+				t.Fatalf("use=%v stOK=%v etOK=%v, want all true", use, stOK, etOK)
+			}
+			if stSec != 9*3600 || etSec != 10*3600 {
+				t.Errorf("正規化後の窓 = %d..%d, want %d..%d", stSec, etSec, 9*3600, 10*3600)
+			}
+
+			// 実際の判定でも境界（両端含む）が同じであること
+			day := time.Date(2026, 8, 19, 0, 0, 0, 0, time.Local)
+			for _, p := range []struct {
+				at   time.Time
+				want bool
+			}{
+				{at: day.Add(8*time.Hour + 59*time.Minute + 59*time.Second), want: false},
+				{at: day.Add(9 * time.Hour), want: true},
+				{at: day.Add(10 * time.Hour), want: true},
+				{at: day.Add(10*time.Hour + 1*time.Second), want: false},
+			} {
+				if got := matchPeriodOfTime(p.at, stOK, stSec, etOK, etSec); got != p.want {
+					t.Errorf("matchPeriodOfTime(%v) = %v, want %v", p.at.Format("15:04:05"), got, p.want)
+				}
+			}
+		})
+	}
+}

@@ -342,3 +342,125 @@ func TestSortAndTrimKyousMap_PeriodOfTimeWeekOfDays(t *testing.T) {
 		})
 	}
 }
+
+// 時間帯フィルタの狭い窓（09:00〜10:00）の境界を、秒オブデイ表現とepoch表現の両方で固定する。
+//
+// 既存の時間帯テストは「1日全体を覆う窓」しか使っておらず、秒の解釈（epoch/秒オブデイ）が
+// 変わっても赤くならなかった。この検査が無かったせいで、MCP経路の時間帯検索は
+// 1年間ずっと+9時間ずれた窓で動いていた（外部監査で発覚）。
+// 解釈の正本は find.NormalizeSecondOfDay: documents/adr/0009-period-of-time-second-of-day.md
+func TestSortAndTrimKyousMap_PeriodOfTimeNarrowWindow(t *testing.T) {
+	ctx := context.Background()
+
+	// 境界の内外を1秒差で並べる（両端含む）
+	day := time.Date(2026, 8, 19, 0, 0, 0, 0, time.Local)
+	rows := map[string]time.Time{
+		"before":    day.Add(8*time.Hour + 59*time.Minute + 59*time.Second), // 08:59:59 → 落ちる
+		"at-start":  day.Add(9 * time.Hour),                                 // 09:00:00 → 残る
+		"inside":    day.Add(9*time.Hour + 30*time.Minute),                  // 09:30:00 → 残る
+		"at-end":    day.Add(10 * time.Hour),                                // 10:00:00 → 残る
+		"after-end": day.Add(10*time.Hour + 1*time.Second),                  // 10:00:01 → 落ちる
+	}
+	newMatchKyous := func() map[string][]reps.Kyou {
+		matchKyous := map[string][]reps.Kyou{}
+		for id, relatedTime := range rows {
+			matchKyous[id] = []reps.Kyou{{ID: id, DataType: "kmemo", RelatedTime: relatedTime, UpdateTime: relatedTime}}
+		}
+		return matchKyous
+	}
+	wantIDs := map[string]bool{"at-start": true, "inside": true, "at-end": true}
+
+	secOfDayStart := int64(9 * 3600)
+	secOfDayEnd := int64(10 * 3600)
+	epochStart := time.Date(2026, 1, 1, 9, 0, 0, 0, time.Local).Unix()
+	epochEnd := time.Date(2026, 1, 1, 10, 0, 0, 0, time.Local).Unix()
+
+	for _, c := range []struct {
+		name       string
+		start, end int64
+	}{
+		{name: "秒オブデイ表現(MCP契約)", start: secOfDayStart, end: secOfDayEnd},
+		{name: "epoch表現(Web契約)", start: epochStart, end: epochEnd},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			findCtx := &FindKyouContext{
+				ParsedFindQuery: &find.FindQuery{
+					PeriodOfTimeStartTimeSecond: &c.start,
+					PeriodOfTimeEndTimeSecond:   &c.end,
+				},
+				MatchKyousCurrent: newMatchKyous(),
+			}
+			f := &FindFilter{}
+			if _, err := f.sortAndTrimKyousMap(ctx, findCtx); err != nil {
+				t.Fatalf("sortAndTrimKyousMap failed: %v", err)
+			}
+			if len(findCtx.MatchKyousCurrent) != len(wantIDs) {
+				t.Fatalf("残った件数 = %d, want %d (%v)", len(findCtx.MatchKyousCurrent), len(wantIDs), keysOfKyouMap(findCtx.MatchKyousCurrent))
+			}
+			for id := range wantIDs {
+				if _, exist := findCtx.MatchKyousCurrent[id]; !exist {
+					t.Errorf("%q が窓の内側なのに消えている", id)
+				}
+			}
+		})
+	}
+}
+
+// 夜跨ぎの窓（23:00〜01:00）も両表現で固定する。start > end のとき OR 判定に切り替わる分岐。
+func TestSortAndTrimKyousMap_PeriodOfTimeOvernightWindow(t *testing.T) {
+	ctx := context.Background()
+
+	day := time.Date(2026, 8, 19, 0, 0, 0, 0, time.Local)
+	rows := map[string]time.Time{
+		"evening-out": day.Add(22*time.Hour + 59*time.Minute + 59*time.Second), // 22:59:59 → 落ちる
+		"at-start":    day.Add(23 * time.Hour),                                 // 23:00:00 → 残る
+		"midnight":    day.Add(24 * time.Hour),                                 // 翌00:00:00 → 残る
+		"early":       day.Add(24*time.Hour + 30*time.Minute),                  // 翌00:30:00 → 残る
+		"at-end":      day.Add(25 * time.Hour),                                 // 翌01:00:00 → 残る
+		"after-end":   day.Add(25*time.Hour + 1*time.Second),                   // 翌01:00:01 → 落ちる
+		"midday-out":  day.Add(12 * time.Hour),                                 // 12:00:00 → 落ちる
+	}
+	newMatchKyous := func() map[string][]reps.Kyou {
+		matchKyous := map[string][]reps.Kyou{}
+		for id, relatedTime := range rows {
+			matchKyous[id] = []reps.Kyou{{ID: id, DataType: "kmemo", RelatedTime: relatedTime, UpdateTime: relatedTime}}
+		}
+		return matchKyous
+	}
+	wantIDs := map[string]bool{"at-start": true, "midnight": true, "early": true, "at-end": true}
+
+	secOfDayStart := int64(23 * 3600)
+	secOfDayEnd := int64(1 * 3600)
+	epochStart := time.Date(2026, 1, 1, 23, 0, 0, 0, time.Local).Unix()
+	epochEnd := time.Date(2026, 1, 1, 1, 0, 0, 0, time.Local).Unix()
+
+	for _, c := range []struct {
+		name       string
+		start, end int64
+	}{
+		{name: "秒オブデイ表現(MCP契約)", start: secOfDayStart, end: secOfDayEnd},
+		{name: "epoch表現(Web契約)", start: epochStart, end: epochEnd},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			findCtx := &FindKyouContext{
+				ParsedFindQuery: &find.FindQuery{
+					PeriodOfTimeStartTimeSecond: &c.start,
+					PeriodOfTimeEndTimeSecond:   &c.end,
+				},
+				MatchKyousCurrent: newMatchKyous(),
+			}
+			f := &FindFilter{}
+			if _, err := f.sortAndTrimKyousMap(ctx, findCtx); err != nil {
+				t.Fatalf("sortAndTrimKyousMap failed: %v", err)
+			}
+			if len(findCtx.MatchKyousCurrent) != len(wantIDs) {
+				t.Fatalf("残った件数 = %d, want %d (%v)", len(findCtx.MatchKyousCurrent), len(wantIDs), keysOfKyouMap(findCtx.MatchKyousCurrent))
+			}
+			for id := range wantIDs {
+				if _, exist := findCtx.MatchKyousCurrent[id]; !exist {
+					t.Errorf("%q が夜跨ぎ窓の内側なのに消えている", id)
+				}
+			}
+		})
+	}
+}
