@@ -35,6 +35,21 @@ gkill dvnf get <path>         # ファイルのバージョン情報取得
 gkill dvnf move <src> <dst>   # バージョン付きファイル移動
 ```
 
+### 除外フラグ
+
+`copy` / `move` は2種類の除外を持つ。**別々の入れ物**であり、`--ignore` に
+パターンを足す形にはしないこと（pflag の `StringArray` は最初の指定で既定値を
+置き換えるので、`.gkill` や `Thumbs.db` の除外が消える）。
+
+| フラグ | 照合 | 用途 |
+|---|---|---|
+| `--ignore` / `-i` | ファイル名の完全一致 | 既定は `gkill_options.IDFIgnore`（`.gkill` など） |
+| `--ignore_pattern` | `filepath.Match` のパターン | 拡張子で弾く（`*.tmp` / `*.crdownload` / `*.part` など） |
+
+壊れたパターンは黙って「何にも当たらない」になり、除外し損ねたまま運んでしまう。
+`validateIgnorePatterns` が動き出す前に弾く。フラグの全一覧は
+[dvnf-rep-type-spec.md](../../../../documents/reverse/dvnf-rep-type-spec.md)。
+
 ## 設計思想
 
 - cobra のサブコマンドパターンに従い、`cmd/` 配下にコマンド定義を配置
