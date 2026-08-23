@@ -20,6 +20,9 @@ import (
 func init() {
 	copyFs := copyCommand.Flags()
 	copyFs.StringArrayVarP(&copyOpt.ignore, "ignore", "i", gkill_options.IDFIgnore, "コピー処理から除外するファイル名")
+	// --ignoreとは別の入れ物にする。pflagのStringArrayは最初の指定で既定値を
+	// 置き換えるので、--ignoreに足す形にすると.gkillやThumbs.dbの除外が消える。
+	copyFs.StringArrayVar(&copyOpt.ignorePattern, "ignore_pattern", nil, "コピー処理から除外するファイル名のパターン(例: *.tmp)")
 	copyFs.BoolVarP(&copyOpt.override, "override", "w", true, "コピー先ファイルに上書きする")
 	copyFs.BoolVar(&copyOpt.fast, "fast", true, "最終更新時刻が更新された場合にのみコピーする")
 	copyFs.BoolVarP(&copyOpt.file, "file", "f", false, "コピー先をファイルとする")
@@ -32,18 +35,25 @@ func init() {
 }
 
 var copyOpt = &struct {
-	src         string
-	target      string
-	ignore      []string
-	override    bool
-	fast        bool
-	file        bool
-	ext         bool
-	copyLastMod bool
-	robo        bool // 有効な場合、srcでマッチするものがなかったらパニクる
+	src           string
+	target        string
+	ignore        []string
+	ignorePattern []string
+	override      bool
+	fast          bool
+	file          bool
+	ext           bool
+	copyLastMod   bool
+	robo          bool // 有効な場合、srcでマッチするものがなかったらパニクる
 }{}
 
 func runCopy(_ *cobra.Command, _ []string) {
+	// 何かを動かす前に見る。壊れたパターンは黙って何にも当たらないので、
+	// 除外し損ねたまま運んでしまう。
+	if err := validateIgnorePatterns(copyOpt.ignorePattern); err != nil {
+		log.Fatal(err)
+	}
+
 	var err error
 	dvnfdir, childdir := splitDVNFPathnium(copyOpt.target)
 
@@ -95,15 +105,8 @@ func runCopy(_ *cobra.Command, _ []string) {
 	// コピーする。親ディレクトリを作成しつつ
 	for _, path := range matches {
 		// 無視だったら無視
-		ignore := false
 		srcFileNameBase := filepath.Base(path)
-		for _, i := range copyOpt.ignore {
-			if i == srcFileNameBase {
-				ignore = true
-				break
-			}
-		}
-		if ignore {
+		if isIgnored(srcFileNameBase, copyOpt.ignore, copyOpt.ignorePattern) {
 			continue
 		}
 
@@ -130,7 +133,7 @@ func runCopy(_ *cobra.Command, _ []string) {
 		}
 
 		fmt.Printf("copy %s -> %s\n", path, target)
-		err := copy(path, target, copyOpt.ignore)
+		err := copy(path, target, copyOpt.ignore, copyOpt.ignorePattern)
 		if err != nil {
 			err = fmt.Errorf("error at copy from %s to %s: %w", path, target, err)
 			log.Fatal(err)
@@ -138,7 +141,7 @@ func runCopy(_ *cobra.Command, _ []string) {
 	}
 }
 
-func copy(src, target string, ignores []string) error {
+func copy(src, target string, ignores []string, ignorePatterns []string) error {
 	srcFile, err := os.Stat(src)
 	if err != nil {
 		err = fmt.Errorf("error at get stat %s: %w", src, err)
@@ -146,15 +149,7 @@ func copy(src, target string, ignores []string) error {
 	}
 
 	// 無視だったら無視
-	ignore := false
-	srcFileNameBase := filepath.Base(srcFile.Name())
-	for _, i := range ignores {
-		if i == srcFileNameBase {
-			ignore = true
-			break
-		}
-	}
-	if ignore {
+	if isIgnored(filepath.Base(srcFile.Name()), ignores, ignorePatterns) {
 		return nil
 	}
 
@@ -168,7 +163,7 @@ func copy(src, target string, ignores []string) error {
 		for _, childFile := range childFiles {
 			childFilename := filepath.Join(src, filepath.Base(childFile.Name()))
 			targetFilename := filepath.Join(target, srcFile.Name())
-			err = copy(childFilename, targetFilename, ignores)
+			err = copy(childFilename, targetFilename, ignores, ignorePatterns)
 			if err != nil {
 				return err
 			}

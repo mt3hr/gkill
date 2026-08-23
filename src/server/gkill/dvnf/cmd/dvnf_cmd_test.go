@@ -68,6 +68,58 @@ func TestPlaneFileName(t *testing.T) {
 	}
 }
 
+func TestIsIgnored(t *testing.T) {
+	// 既定の除外リストを模したもの。完全一致で当たる。
+	ignores := []string{".gkill", "Thumbs.db"}
+	// 書きかけのファイルを落とすためのパターン。
+	patterns := []string{"*.tmp", "*.crdownload", "*.part"}
+
+	tests := []struct {
+		name string
+		want bool
+		why  string
+	}{
+		{".gkill", true, "完全一致"},
+		{"Thumbs.db", true, "完全一致"},
+		{"20260806.gpx.tmp", true, "書きかけのGPX"},
+		{"Phone_2026-08-23_12-00-00.webp.tmp", true, "書きかけのスクリーンショット"},
+		{"setup.exe.crdownload", true, "ダウンロード中"},
+		{"movie.mp4.part", true, "ダウンロード中"},
+		{"20260806.gpx", false, "出来上がったGPXは運ぶ"},
+		{"Phone_2026-08-23_12-00-00.webp", false, "出来上がった画像は運ぶ"},
+		{"tmp", false, "拡張子が.tmpでないものまで落とさない"},
+		{"notes.tmpx", false, "前方一致で巻き込まない"},
+		{"gkill_id.db", false, "渡していない名前は落とさない"},
+	}
+
+	for _, tt := range tests {
+		got := isIgnored(tt.name, ignores, patterns)
+		if got != tt.want {
+			t.Errorf("isIgnored(%q) = %v, want %v (%s)", tt.name, got, tt.want, tt.why)
+		}
+	}
+
+	// パターンを渡さなければ、これまでどおり完全一致だけで判定する。
+	if isIgnored("20260806.gpx.tmp", ignores, nil) {
+		t.Error("パターンを渡していないのに除外された。既存の呼び出しの意味が変わっている")
+	}
+}
+
+func TestValidateIgnorePatterns(t *testing.T) {
+	if err := validateIgnorePatterns([]string{"*.tmp", "*.part", "name"}); err != nil {
+		t.Errorf("正しいパターンで失敗した: %v", err)
+	}
+	if err := validateIgnorePatterns(nil); err != nil {
+		t.Errorf("パターン無しで失敗した: %v", err)
+	}
+
+	// 壊れたパターンは黙って「何にも当たらない」になる。
+	// 除外し損ねたまま運んでしまうので、動き出す前に気づけないといけない。
+	if err := validateIgnorePatterns([]string{"*.tmp", "[", "*.part"}); err == nil {
+		t.Error("壊れたパターンを通してしまった")
+	}
+}
+
 func TestSubcommands(t *testing.T) {
 	// Verify subcommands are registered
 	cmds := DVNFCmd.Commands()
