@@ -68,6 +68,25 @@ describe("Tool definitions", () => {
     }
   });
 
+  test("update tools require only id (patch semantics)", () => {
+    // 正規化層は id 以外すべて optional の patch なのに、スキーマの required だけが
+    // title などを強制していた。スキーマに忠実な AI は
+    // (a) title を取りに1往復増やすか (b) 推測して送って既存値を静かに上書きする。
+    // update_mi の説明文の例 {id, is_checked:true} も自分の required に違反していた
+    for (const tool of WRITE_TOOLS) {
+      if (!tool.name.startsWith("gkill_update_")) continue;
+      expect(tool.inputSchema.required).toEqual(["id"]);
+    }
+  });
+
+  test("no description advertises the deprecated include_id argument", () => {
+    // ADR-0053 で ID は常時付与になった。案内が残っていると AI が必須引数だと学習する
+    for (const tool of WRITE_TOOLS) {
+      expect(tool.description).not.toContain("include_id");
+      expect(JSON.stringify(tool.inputSchema)).not.toContain("include_id");
+    }
+  });
+
   test("every tool has a non-empty description", () => {
     for (const tool of WRITE_TOOLS) {
       expect(typeof tool.description).toBe("string");
