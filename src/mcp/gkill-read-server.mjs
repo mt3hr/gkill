@@ -18,6 +18,7 @@ import { McpServerBase } from "./lib/mcp-server-base.mjs";
 import { GkillClient as GkillReadClient } from "./lib/gkill-client.mjs";
 import { READ_TOOLS } from "./lib/read-tools.mjs";
 import { isReadToolName, handleReadToolCall } from "./lib/read-handlers.mjs";
+import { unknownToolMessage } from "./lib/constants.mjs";
 import { HttpTransport } from "./lib/http-transport.mjs";
 
 const _thisFile = _fileURLToPath(import.meta.url);
@@ -55,7 +56,7 @@ class McpServer extends McpServerBase {
         args,
       );
     }
-    throw new GkillApiError(`Unknown tool: ${name}`);
+    throw new GkillApiError(unknownToolMessage(name));
   }
 
 }

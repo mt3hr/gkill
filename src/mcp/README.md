@@ -6,9 +6,9 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| **Read専用** | `gkill-read-server.mjs` | 11 (10 read + 1 plugin) | 8808 | 読み取りのみ |
+| **Read専用** | `gkill-read-server.mjs` | 10 (9 read + 1 plugin) | 8808 | 読み取りのみ |
 | **Write専用** | `gkill-write-server.mjs` | 26 (21 write + 4 read convenience + 1 plugin) | 8809 | 書き込み中心 |
-| **Read/Write統合** | `gkill-readwrite-server.mjs` | 32 (10 read + 21 write + 1 plugin) | 8810 | 全機能 |
+| **Read/Write統合** | `gkill-readwrite-server.mjs` | 31 (9 read + 21 write + 1 plugin) | 8810 | 全機能 |
 
 プラグインツール `gkill_get_plugin_list` は3サーバ共通で提供します（読み取り専用）。プラグインKyouの本文は `gkill_get_kyous` の `include_plugin_content` でレスポンスに埋め込みます。
 
@@ -34,7 +34,7 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 | `lib/html-text.mjs` | 3サーバ | プラグインのコンテンツHTML → プレーンテキスト |
 | `lib/access-log.mjs` / `errors.mjs` / `constants.mjs` | 3サーバ | アクセスログ・エラー型・定数 |
 
-> ツール数（上の表の 10 / 24 / 30）は `verify_docs` が `lib/*-tools.mjs` のスプレッドを辿って
+> ツール数（上の表の 10 / 26 / 31）は `verify_docs` が `lib/*-tools.mjs` のスプレッドを辿って
 > 実測と突き合わせます。サーバ本体だけを見ても数えられないので、ツールを増やすときは
 > 必ず `lib/` 側の配列へ足してください。
 

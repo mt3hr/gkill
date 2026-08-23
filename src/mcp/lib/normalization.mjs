@@ -301,6 +301,12 @@ const APP_CONFIG_STALE_SCHEMA_ARG_KINDS = new Map([
   ["include_ui_state", "boolean"],
 ]);
 
+// gkill_get_idf_file に 2026-08-24 (b303de73) で足したサムネ引数。
+// thumb は string 型なので旧スキーマでも素通しするが、is_video は boolean なので
+// 正規JSON文字列 "true" として届き、救済しないと必ず型エラーになる
+// (2026-08-24 の再監査で ChatGPT / claude.ai 相当の実クライアントから再現した)。
+const IDF_STALE_SCHEMA_ARG_KINDS = new Map([["is_video", "boolean"]]);
+
 export function normalizeKyouArgs(args) {
   const source = reviveStaleSchemaArgs(
     args == null ? {} : assertObject(args, "arguments"),
@@ -331,6 +337,18 @@ export function normalizeKyouArgs(args) {
     const cursor = assertTrimmedString(source.cursor, "cursor");
     if (cursor.length > MAX_CURSOR_LENGTH) {
       throw new GkillApiError(`cursor is too long (${cursor.length} > ${MAX_CURSOR_LENGTH})`);
+    }
+    // v2 の複合カーソルは `{RFC3339Nano}::{ID}`、旧クライアントは素の ISO 日時。
+    // どちらでもない文字列は gkill 側で ERR000352「記録の取得に失敗しました」に畳まれ、
+    // カーソルが原因だと分からなくなる。
+    const cursorTime = cursor.includes("::") ? cursor.slice(0, cursor.indexOf("::")) : cursor;
+    if (!Number.isFinite(Date.parse(cursorTime))) {
+      throw invalidArgument(
+        "cursor",
+        "must be the next_cursor value from a previous response, passed back verbatim " +
+          '(an RFC3339 time, optionally followed by "::" and the entry id)',
+        source.cursor,
+      );
     }
     normalized.cursor = cursor;
   }
@@ -444,6 +462,15 @@ export function normalizeGpsArgs(args) {
       ? { locale_name: assertTrimmedString(source.locale_name, "locale_name") }
       : {}),
   };
+  // 逆さまの期間は gkill 側で0件になるだけで、警告も出ない。
+  // 「その期間にGPSが無い」と読めてしまうので入口で弾く。
+  if (Date.parse(normalized.start_date) > Date.parse(normalized.end_date)) {
+    throw invalidArgument(
+      "start_date",
+      `must not be after end_date (${normalized.end_date}); an inverted range silently matches nothing`,
+      normalized.start_date,
+    );
+  }
   // ページングは Node 側実装（gkill は全件を返す。将来 Go 側へ移す余地あり）
   normalized.limit = DEFAULT_GPS_LIMIT;
   if (Object.prototype.hasOwnProperty.call(source, "limit") && source.limit !== undefined) {
@@ -453,6 +480,18 @@ export function normalizeGpsArgs(args) {
     const cursor = assertTrimmedString(source.cursor, "cursor");
     if (cursor.length > MAX_CURSOR_LENGTH) {
       throw new GkillApiError(`cursor is too long (${cursor.length} > ${MAX_CURSOR_LENGTH})`);
+    }
+    // v2 の複合カーソルは `{RFC3339Nano}::{ID}`、旧クライアントは素の ISO 日時。
+    // どちらでもない文字列は gkill 側で ERR000352「記録の取得に失敗しました」に畳まれ、
+    // カーソルが原因だと分からなくなる。
+    const cursorTime = cursor.includes("::") ? cursor.slice(0, cursor.indexOf("::")) : cursor;
+    if (!Number.isFinite(Date.parse(cursorTime))) {
+      throw invalidArgument(
+        "cursor",
+        "must be the next_cursor value from a previous response, passed back verbatim " +
+          '(an RFC3339 time, optionally followed by "::" and the entry id)',
+        source.cursor,
+      );
     }
     normalized.cursor = cursor;
   }
@@ -502,7 +541,10 @@ export function normalizeAppConfigArgs(args) {
 }
 
 export function normalizeIdfFileArgs(args) {
-  const source = args == null ? {} : assertObject(args, "arguments");
+  const source = reviveStaleSchemaArgs(
+    args == null ? {} : assertObject(args, "arguments"),
+    IDF_STALE_SCHEMA_ARG_KINDS,
+  );
   assertKnownKeys(
     source,
     new Set(["rep_name", "file_name", "thumb", "is_video", "locale_name"]),

@@ -187,7 +187,24 @@ export async function handleReadToolCall(ctx, name, args) {
             .join("/") +
           (fileQuery.length === 0 ? "" : `?${fileQuery.join("&")}`);
         const fileSid = ctx.sid || (await ctx.client.login());
-        const { buffer, contentType } = await ctx.client.fetchFile(filePath, fileSid);
+        let buffer, contentType;
+        try {
+          ({ buffer, contentType } = await ctx.client.fetchFile(filePath, fileSid));
+        } catch (error) {
+          // 404 の大半は rep 名か file 名の取り違えだが、HTTP の生の文言からはそれが読めない。
+          // どちらも IDF ペイロードが正本で、rep_name は data_type とは別物。
+          if (error instanceof GkillApiError && error.detail && error.detail.status === 404) {
+            throw new GkillApiError(
+              `File not found: rep_name=${JSON.stringify(normalized.rep_name)} ` +
+                `file_name=${JSON.stringify(normalized.file_name)}. Both come from the IDF payload of ` +
+                `gkill_get_kyous (payload.rep_name and payload.file_name) — rep_name is the repository, ` +
+                `not the entry's data_type. List valid repository names with gkill_get_rep_infos. ` +
+                `The file may also have been removed from the repository.`,
+              error.detail,
+            );
+          }
+          throw error;
+        }
         // base64はJSON-RPCレスポンスに素で載るので、青天井にすると数百MBの動画で応答が破裂する
         if (buffer.length > MAX_IDF_FILE_BYTES) {
           throw new GkillApiError(
@@ -261,7 +278,11 @@ export function summarizeReadToolPayload(name, payload) {
       const returnedCount = payload.returned_count ?? 0;
       const remaining = payload.remaining_count ?? 0;
       if ((payload.kyous?.length ?? 0) === 0 && payload.total_count !== undefined && returnedCount === 0 && !payload.has_more) {
-        return `Counted ${payload.total_count} entries.`;
+        // 0件のときは count_only の有無で文言が割れないようにする。
+        // どちらの経路も kyous:[] なので payload からはモードを判別できない。
+        return payload.total_count === 0
+          ? "No entries matched."
+          : `Counted ${payload.total_count} entries.`;
       }
       const pluginSuffix = summarizeInlinePluginContent(payload.plugin_content);
       const totalPart = payload.total_count !== undefined ? ` of ${payload.total_count}` : "";
@@ -282,7 +303,9 @@ export function summarizeReadToolPayload(name, payload) {
       }
       const returned = Array.isArray(payload.gps_logs) ? payload.gps_logs.length : 0;
       if (returned === 0 && payload.total_count !== undefined && !payload.has_more) {
-        return `Counted ${payload.total_count} GPS points.`;
+        return payload.total_count === 0
+          ? "No GPS points matched."
+          : `Counted ${payload.total_count} GPS points.`;
       }
       if (payload.has_more && payload.next_cursor) {
         return `Returned ${returned} GPS points (${payload.remaining_count ?? 0} remaining). Next page: cursor="${payload.next_cursor}".`;

@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。775テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 25（書き込み21 + Read便利4）+ プラグイン1 = 26ツール、統合サーバ 30 + プラグイン1 = 31ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
+MCP (Model Context Protocol) サーバのテスト。803テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 25（書き込み21 + Read便利4）+ プラグイン1 = 26ツール、統合サーバ 30 + プラグイン1 = 31ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
 
 ## テストフレームワーク
 
@@ -17,7 +17,7 @@ Vitest（Node.js 環境）
 | `__tests__/validation.test.mjs` | MCP ツール入力のバリデーション |
 | `__tests__/normalization.test.mjs` | クエリデータの正規化処理 |
 | `__tests__/constants.test.mjs` | 定数定義の検証 |
-| `__tests__/tool-handlers.test.mjs` | Read 8ツール分のハンドラ実行ロジック（`lib/read-tools.mjs` のツール名一覧・エンドポイント対応表・summarize） |
+| `__tests__/tool-handlers.test.mjs` | Read 9ツール分のハンドラ実行ロジック（`lib/read-tools.mjs` のツール名一覧・エンドポイント対応表・summarize） |
 | `__tests__/client.test.mjs` | GkillReadClient（fetch モック使用、ログイン・認証リトライ等） |
 | `__tests__/server.test.mjs` | McpServer のセットアップとトランスポート管理、セッションオーバーライド、プラグインツール振り分け |
 | `__tests__/access-log.test.mjs` | McpAccessLog（レベルフィルタリング・JSON形式・lazy open・close・sourceパラメータ） |
@@ -39,15 +39,15 @@ Vitest（Node.js 環境）
 |---------|-----------|
 | `__tests__/write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲検証、data_type検証等） |
 | `__tests__/write-client.test.mjs` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
-| `__tests__/write-server.test.mjs` | McpWriteServer（JSON-RPC、24ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
-| `__tests__/write-tool-handlers.test.mjs` | Write 20ツール定義（実物 import）・削除の語彙が enum / DELETE_DATA_TYPES / 対応表2つで一致すること・summarizeWriteToolPayload |
+| `__tests__/write-server.test.mjs` | McpWriteServer（JSON-RPC、26ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
+| `__tests__/write-tool-handlers.test.mjs` | Write 21ツール定義（実物 import）・削除の語彙が enum / DELETE_DATA_TYPES / 対応表2つで一致すること・summarizeWriteToolPayload |
 
 ### Read/Write統合サーバ
 
 | ファイル | テスト内容 |
 |---------|-----------|
 | `__tests__/readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
-| `__tests__/readwrite-server.test.mjs` | McpServer 統合（30ツール全ディスパッチ、プラグインツール振り分け、IDF画像ブロック、エンティティデフォルト値） |
+| `__tests__/readwrite-server.test.mjs` | McpServer 統合（31ツール全ディスパッチ、プラグインツール振り分け、IDF画像ブロック、エンティティデフォルト値） |
 | `__tests__/write-handlers.test.mjs` | 書き込みディスパッチの正本（add/update/delete のエンドポイント、update の patch セマンティクス、create_app がサーバ種別で埋まること） |
 
 ## テスト内容
@@ -56,7 +56,7 @@ Vitest（Node.js 環境）
 - **Normalization**: 日付フォーマット、文字列トリム、デフォルト値補完
 - **Write Normalization**: Write専用入力検証（mood 0-10範囲、amount数値型、data_type列挙値、unknown keys拒否等）
 - **Constants**: ツール名、エラーコード、デフォルト設定値
-- **Tool Handlers**: Read 8ツール + Write 20ツール（add系9 + update系9 + submit_kftl + delete_kyou）+ Read便利3ツール + プラグイン1ツール（3サーバ共通）
+- **Tool Handlers**: Read 9ツール + Write 21ツール（add系9 + update系9 + submit_kftl + delete_kyou + restore_kyou）+ Read便利4ツール + プラグイン1ツール（3サーバ共通）
 - **Plugin Tools**: `gkill_get_plugin_list` の定義・引数検証・エンドポイント振り分けと、`gkill_get_kyous` の `include_plugin_content` によるプラグイン本文のインライン埋め込み（並列度・予算・デッドライン・失敗隔離）、コンテンツHTMLのテキスト変換
 - **Client**: GkillReadClient / GkillWriteClient / GkillClient（統合）のAPIラッパー（認証、エラーハンドリング、レスポンスパース）
 - **Server**: Read / Write / ReadWrite各サーバのツールディスパッチ、JSON-RPCプロトコル、IDF画像ブロック、Writeエンティティデフォルト値
@@ -75,7 +75,7 @@ Vitest（Node.js 環境）
 - ツール定義: `lib/read-tools.mjs` / `lib/write-tools.mjs` / `lib/plugin-tools.mjs`
 - gkill 本体との通信: `lib/gkill-client.mjs`
 
-ツール数（Read 9 / Write 24 / ReadWrite 29）は `verify_docs` が `lib/*-tools.mjs` の
+ツール数（Read 10 / Write 26 / ReadWrite 31）は `verify_docs` が `lib/*-tools.mjs` の
 スプレッドを辿って実測と突き合わせる。**サーバ本体だけを見ても数えられない。**
 
 ## 設定ファイル

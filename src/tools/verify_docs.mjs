@@ -563,6 +563,26 @@ function buildCountAssertions(m) {
   add('resources/manual_src/ja/mcp.html', `<td>gkill-write-server.mjs</td><td>${mcpWrite}</td>`)
   add('resources/manual_src/ja/mcp.html', `<td>gkill-readwrite-server.mjs</td><td>${mcpRW}</td>`)
 
+  // README / ABOUT_TEST は本数を「プラグイン1本を除いた内訳」でも書いている。
+  // そこが検査から漏れていたため 11/26/32・10/24/30・Read 9/Write 24/ReadWrite 29 と
+  // 3世代ぶんのドリフトが同時に残っていた（2026-08-24 の再監査で発見）。内訳まで検査する。
+  const mcpReadOnly = mcpRead - 1
+  const mcpWriteOnly = mcpRW - mcpRead
+  const mcpWriteConvenience = mcpWrite - mcpWriteOnly - 1
+  add('src/mcp/README.md', `\`gkill-read-server.mjs\` | ${mcpRead} (${mcpReadOnly} read + 1 plugin)`)
+  add('src/mcp/README.md', `\`gkill-write-server.mjs\` | ${mcpWrite} (${mcpWriteOnly} write + ${mcpWriteConvenience} read convenience + 1 plugin)`)
+  add('src/mcp/README.md', `\`gkill-readwrite-server.mjs\` | ${mcpRW} (${mcpReadOnly} read + ${mcpWriteOnly} write + 1 plugin)`)
+  add('src/mcp/README.md', `ツール数（上の表の ${mcpRead} / ${mcpWrite} / ${mcpRW}）`)
+  add('src/mcp/ABOUT_TEST.md', `ツール数（Read ${mcpRead} / Write ${mcpWrite} / ReadWrite ${mcpRW}）`)
+  add('src/mcp/ABOUT_TEST.md', `Read サーバ ${mcpReadOnly} + プラグイン1 = ${mcpRead}ツール`)
+  add('src/mcp/ABOUT_TEST.md', `Write サーバ ${mcpWrite - 1}（書き込み${mcpWriteOnly} + Read便利${mcpWriteConvenience}）+ プラグイン1 = ${mcpWrite}ツール`)
+  add('src/mcp/ABOUT_TEST.md', `統合サーバ ${mcpRW - 1} + プラグイン1 = ${mcpRW}ツール`)
+  add('src/mcp/ABOUT_TEST.md', `Read ${mcpReadOnly}ツール分のハンドラ実行ロジック`)
+  add('src/mcp/ABOUT_TEST.md', `${mcpWrite}ツールディスパッチ`)
+  add('src/mcp/ABOUT_TEST.md', `Write ${mcpWriteOnly}ツール定義（実物 import）`)
+  add('src/mcp/ABOUT_TEST.md', `${mcpRW}ツール全ディスパッチ`)
+  add('src/mcp/ABOUT_TEST.md', `Read ${mcpReadOnly}ツール + Write ${mcpWriteOnly}ツール`)
+
   // ── KFTL ステートメント型数 / glossary 用語数
   add('.claude/skills/gkill-client-kftl/SKILL.md', `KFTL parser (${m.kftlStatementTs} statement types; the Go side has ${m.kftlStatementGo})`)
   add('documents/reverse/folder-structure.md', `KFTLパーサー（${m.kftlStatementTs}ステートメント型）`)

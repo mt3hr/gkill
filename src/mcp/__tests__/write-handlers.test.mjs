@@ -288,3 +288,55 @@ describe("update_time always moves forward", () => {
     expect(Math.floor(Date.parse(sent) / 1000)).toBeGreaterThan(Math.floor(Date.parse(sameSecond) / 1000));
   });
 });
+
+describe("削除の冪等性とエラー品質 (2026-08-24 再監査 P-30 / P-34 / Q-03)", () => {
+  test("refuses to delete an already-deleted entity instead of stacking another version", async () => {
+    // 2回目も成功を返していたので「消えたのか、元から無かったのか、既に消えていたのか」が
+    // 区別できず、しかも履歴に無意味な版が積まれていた
+    const ctx = makeCtx(async () => ({ kmemo_histories: [{ id: "k1", is_deleted: true }] }));
+    await expect(
+      handleWriteToolCall(ctx, "gkill_delete_kyou", { id: "k1", data_type: "kmemo" }),
+    ).rejects.toThrow(/already deleted/);
+    // 更新は投げていない (GET だけで止まる)
+    expect(ctx.client.callApi.mock.calls).toHaveLength(1);
+  });
+
+  test("still deletes an entity that is not deleted yet", async () => {
+    const ctx = makeCtx(async (pathname) =>
+      pathname === "/api/get_kmemo"
+        ? { kmemo_histories: [{ id: "k1", is_deleted: false, update_time: "2026-08-24T03:00:00+09:00" }] }
+        : { updated_kyou: { id: "k1" } },
+    );
+    const result = await handleWriteToolCall(ctx, "gkill_delete_kyou", { id: "k1", data_type: "kmemo" });
+    expect(result.updated_kmemo.is_deleted).toBe(true);
+  });
+
+  test("entity-not-found names the data_type it looked under, because a wrong type looks identical", async () => {
+    const ctx = makeCtx(async () => ({ urlog_histories: [] }));
+    await expect(
+      handleWriteToolCall(ctx, "gkill_delete_kyou", { id: "k1", data_type: "urlog" }),
+    ).rejects.toThrow(/data_type "urlog"/);
+  });
+
+  test("restore reports not-found the same way", async () => {
+    const ctx = makeCtx(async () => ({ kmemo_histories: [] }));
+    await expect(
+      handleWriteToolCall(ctx, "gkill_restore_kyou", { id: "k1", data_type: "kmemo" }),
+    ).rejects.toThrow(/data_type "kmemo"/);
+  });
+
+  test("a removed tool name comes back with what to use instead", async () => {
+    // ツール一覧はクライアントのセッション寿命で固定されるので、消しても呼ばれ続ける
+    const ctx = makeCtx();
+    await expect(handleWriteToolCall(ctx, "gkill_get_idf_file_path", {})).rejects.toThrow(
+      /gkill_get_idf_file/,
+    );
+  });
+
+  test("an ordinary unknown tool keeps the plain message", async () => {
+    const ctx = makeCtx();
+    await expect(handleWriteToolCall(ctx, "nonexistent_tool", {})).rejects.toThrow(
+      /^Unknown tool: nonexistent_tool$/,
+    );
+  });
+});
