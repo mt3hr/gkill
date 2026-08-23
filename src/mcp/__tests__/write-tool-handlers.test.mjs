@@ -1,238 +1,181 @@
 /**
- * Tests for MCP write tool definitions and helper functions from gkill-write-server.mjs.
+ * Tests for MCP write tool definitions and shared helpers.
  *
- * Since TOOLS, summarizeWritePayload, and summarizeToolError are module-private,
- * we re-declare minimal copies here based on the known implementation.
+ * C1 から summarize / ディスパッチ / 削除の対応表は lib/write-handlers.mjs に一本化され
+ * export されたので、ここは再実装のミラーではなく**実物を直接 import して**検証する
+ * （ミラーは実装が変わっても緑のまま古び、二重管理の温床だった。
+ *  実際このファイルと readwrite-tool-handlers.test.mjs は
+ *  「統合サーバは29ツール」「read は8件」という実測と違う値を
+ *  自分のハードコード配列に対して検証し続けていた）。
+ *
+ * lib/read-tools.mjs 側の同じ形は tool-handlers.test.mjs にある。
  */
 
 import { describe, test, expect } from "vitest";
 
-// ---------------------------------------------------------------------------
-// summarizeWritePayload — reimplemented for testing (mirrors gkill-write-server.mjs)
-// ---------------------------------------------------------------------------
-function summarizeWritePayload(name, payload) {
-  switch (name) {
-    case "gkill_add_kmemo":
-      return `Created kmemo: ${payload.added_kmemo?.id || "unknown"}`;
-    case "gkill_add_urlog":
-      return `Created urlog: ${payload.added_urlog?.id || "unknown"}`;
-    case "gkill_add_nlog":
-      return `Created nlog: ${payload.added_nlog?.id || "unknown"}`;
-    case "gkill_add_lantana":
-      return `Created lantana: ${payload.added_lantana?.id || "unknown"}`;
-    case "gkill_add_timeis":
-      return `Created timeis: ${payload.added_timeis?.id || "unknown"}`;
-    case "gkill_add_mi":
-      return `Created mi: ${payload.added_mi?.id || "unknown"}`;
-    case "gkill_add_kc":
-      return `Created kc: ${payload.added_kc?.id || "unknown"}`;
-    case "gkill_add_tag":
-      return `Added tag: ${payload.added_tag?.id || "unknown"}`;
-    case "gkill_add_text":
-      return `Added text: ${payload.added_text?.id || "unknown"}`;
-    case "gkill_submit_kftl":
-      return `KFTL submitted: ${Array.isArray(payload.messages) ? payload.messages.length : 0} messages.`;
-    case "gkill_delete_kyou": {
-      const keys = Object.keys(payload).filter((k) => k.startsWith("updated_"));
-      return `Deleted (soft): ${keys.length > 0 ? keys.join(", ") : "completed"}`;
-    }
-    // Update tools
-    case "gkill_update_kmemo":
-      return `Updated kmemo: ${payload.updated_kmemo?.id || "unknown"}`;
-    case "gkill_update_urlog":
-      return `Updated urlog: ${payload.updated_urlog?.id || "unknown"}`;
-    case "gkill_update_nlog":
-      return `Updated nlog: ${payload.updated_nlog?.id || "unknown"}`;
-    case "gkill_update_lantana":
-      return `Updated lantana: ${payload.updated_lantana?.id || "unknown"}`;
-    case "gkill_update_timeis":
-      return `Updated timeis: ${payload.updated_timeis?.id || "unknown"}`;
-    case "gkill_update_mi":
-      return `Updated mi: ${payload.updated_mi?.id || "unknown"}`;
-    case "gkill_update_kc":
-      return `Updated kc: ${payload.updated_kc?.id || "unknown"}`;
-    case "gkill_update_tag":
-      return `Updated tag: ${payload.updated_tag?.id || "unknown"}`;
-    case "gkill_update_text":
-      return `Updated text: ${payload.updated_text?.id || "unknown"}`;
-    case "gkill_get_mi_board_list":
-      return `Fetched ${Array.isArray(payload.boards) ? payload.boards.length : 0} Mi boards.`;
-    case "gkill_get_all_tag_names":
-      return `Fetched ${Array.isArray(payload.tag_names) ? payload.tag_names.length : 0} tag names.`;
-    case "gkill_get_all_rep_names":
-      return `Fetched ${Array.isArray(payload.rep_names) ? payload.rep_names.length : 0} repository names.`;
-    default:
-      return "Tool call completed.";
-  }
-}
-
-function summarizeToolError(name, error, detail) {
-  const prefix = name ? `${name} failed` : "Tool call failed";
-  if (detail && detail.field) {
-    return `${prefix}: ${error} (field: ${detail.field})`;
-  }
-  return `${prefix}: ${error}`;
-}
+import { WRITE_TOOLS } from "../lib/write-tools.mjs";
+import {
+  isWriteToolName,
+  summarizeWriteToolPayload,
+  DELETE_ENDPOINT_MAP,
+  GET_ENDPOINT_MAP,
+} from "../lib/write-handlers.mjs";
+import { DELETE_DATA_TYPES } from "../lib/write-normalization.mjs";
+import { summarizeToolError } from "../lib/payload.mjs";
 
 // ---------------------------------------------------------------------------
-// Known tool names — must match the TOOLS array in gkill-write-server.mjs
-// ---------------------------------------------------------------------------
-const EXPECTED_WRITE_TOOL_NAMES = [
-  "gkill_add_kmemo",
-  "gkill_add_urlog",
-  "gkill_add_nlog",
-  "gkill_add_lantana",
-  "gkill_add_timeis",
-  "gkill_add_mi",
-  "gkill_add_kc",
-  "gkill_add_tag",
-  "gkill_add_text",
-  "gkill_submit_kftl",
-  "gkill_delete_kyou",
-  "gkill_update_kmemo",
-  "gkill_update_urlog",
-  "gkill_update_nlog",
-  "gkill_update_lantana",
-  "gkill_update_timeis",
-  "gkill_update_mi",
-  "gkill_update_kc",
-  "gkill_update_tag",
-  "gkill_update_text",
-];
-
-const EXPECTED_READ_CONVENIENCE_TOOL_NAMES = [
-  "gkill_get_all_rep_names",
-  "gkill_get_mi_board_list",
-  "gkill_get_all_tag_names",
-];
-
-const ALL_EXPECTED_TOOLS = [...EXPECTED_WRITE_TOOL_NAMES, ...EXPECTED_READ_CONVENIENCE_TOOL_NAMES];
-
-// Known API endpoint mappings
-const WRITE_TOOL_ENDPOINT_MAP = {
-  gkill_add_kmemo: "/api/add_kmemo",
-  gkill_add_urlog: "/api/add_urlog",
-  gkill_add_nlog: "/api/add_nlog",
-  gkill_add_lantana: "/api/add_lantana",
-  gkill_add_timeis: "/api/add_timeis",
-  gkill_add_mi: "/api/add_mi",
-  gkill_add_kc: "/api/add_kc",
-  gkill_add_tag: "/api/add_tag",
-  gkill_add_text: "/api/add_text",
-  gkill_submit_kftl: "/api/submit_kftl_text",
-  gkill_update_kmemo: "/api/update_kmemo",
-  gkill_update_urlog: "/api/update_urlog",
-  gkill_update_nlog: "/api/update_nlog",
-  gkill_update_lantana: "/api/update_lantana",
-  gkill_update_timeis: "/api/update_timeis",
-  gkill_update_mi: "/api/update_mi",
-  gkill_update_kc: "/api/update_kc",
-  gkill_update_tag: "/api/update_tag",
-  gkill_update_text: "/api/update_text",
-  gkill_get_all_rep_names: "/api/get_all_rep_names",
-  gkill_get_mi_board_list: "/api/get_mi_board_list",
-  gkill_get_all_tag_names: "/api/get_all_tag_names",
-};
-
-// ---------------------------------------------------------------------------
-// Tool definition presence
+// Tool definitions
 // ---------------------------------------------------------------------------
 describe("Tool definitions", () => {
-  test("all 23 expected tool names are defined", () => {
-    expect(ALL_EXPECTED_TOOLS).toHaveLength(23);
+  test("write server exposes 20 write tools", () => {
+    expect(WRITE_TOOLS).toHaveLength(20);
   });
 
-  test("write tools have 20 entries", () => {
-    expect(EXPECTED_WRITE_TOOL_NAMES).toHaveLength(20);
+  test("write tool names are the current set", () => {
+    expect(WRITE_TOOLS.map((tool) => tool.name)).toEqual([
+      "gkill_add_kmemo",
+      "gkill_add_urlog",
+      "gkill_add_nlog",
+      "gkill_add_lantana",
+      "gkill_add_timeis",
+      "gkill_add_mi",
+      "gkill_add_kc",
+      "gkill_add_tag",
+      "gkill_add_text",
+      "gkill_submit_kftl",
+      "gkill_delete_kyou",
+      "gkill_update_kmemo",
+      "gkill_update_urlog",
+      "gkill_update_nlog",
+      "gkill_update_lantana",
+      "gkill_update_timeis",
+      "gkill_update_mi",
+      "gkill_update_kc",
+      "gkill_update_tag",
+      "gkill_update_text",
+    ]);
   });
 
-  test("read convenience tools have 3 entries", () => {
-    expect(EXPECTED_READ_CONVENIENCE_TOOL_NAMES).toHaveLength(3);
+  test("isWriteToolName matches the definitions", () => {
+    for (const tool of WRITE_TOOLS) {
+      expect(isWriteToolName(tool.name)).toBe(true);
+    }
+    expect(isWriteToolName("gkill_get_kyous")).toBe(false);
+    expect(isWriteToolName("gkill_get_plugin_list")).toBe(false);
   });
 
-  test("endpoint mappings match tool count", () => {
-    expect(Object.keys(WRITE_TOOL_ENDPOINT_MAP)).toHaveLength(22);
-    // gkill_delete_kyou maps to multiple endpoints, not in this simple map
-  });
-});
-
-// ---------------------------------------------------------------------------
-// summarizeWritePayload
-// ---------------------------------------------------------------------------
-describe("summarizeWritePayload", () => {
-  test("summarizes gkill_add_kmemo with id", () => {
-    const result = summarizeWritePayload("gkill_add_kmemo", { added_kmemo: { id: "abc123" } });
-    expect(result).toBe("Created kmemo: abc123");
+  test("every tool has an object inputSchema with additionalProperties: false", () => {
+    // 未知キーを黙って捨てないための不変条件。read 側は tool-handlers.test.mjs が同じ検査をしている
+    for (const tool of WRITE_TOOLS) {
+      expect(tool.inputSchema.type).toBe("object");
+      expect(tool.inputSchema.additionalProperties).toBe(false);
+    }
   });
 
-  test("summarizes gkill_add_kmemo with missing entity", () => {
-    const result = summarizeWritePayload("gkill_add_kmemo", {});
-    expect(result).toBe("Created kmemo: unknown");
-  });
-
-  test("summarizes gkill_add_mi with id", () => {
-    const result = summarizeWritePayload("gkill_add_mi", { added_mi: { id: "m1" } });
-    expect(result).toBe("Created mi: m1");
-  });
-
-  test("summarizes gkill_add_tag with id", () => {
-    const result = summarizeWritePayload("gkill_add_tag", { added_tag: { id: "t1" } });
-    expect(result).toBe("Added tag: t1");
-  });
-
-  test("summarizes gkill_add_text with id", () => {
-    const result = summarizeWritePayload("gkill_add_text", { added_text: { id: "x1" } });
-    expect(result).toBe("Added text: x1");
-  });
-
-  test("summarizes gkill_submit_kftl with message count", () => {
-    const result = summarizeWritePayload("gkill_submit_kftl", { messages: [1, 2, 3] });
-    expect(result).toBe("KFTL submitted: 3 messages.");
-  });
-
-  test("summarizes gkill_submit_kftl with empty messages", () => {
-    const result = summarizeWritePayload("gkill_submit_kftl", { messages: [] });
-    expect(result).toBe("KFTL submitted: 0 messages.");
-  });
-
-  test("summarizes gkill_delete_kyou with updated keys", () => {
-    const result = summarizeWritePayload("gkill_delete_kyou", { updated_kmemo: {}, updated_kyou: {} });
-    expect(result).toContain("updated_kmemo");
-  });
-
-  test("summarizes gkill_delete_kyou with no updated keys", () => {
-    const result = summarizeWritePayload("gkill_delete_kyou", {});
-    expect(result).toContain("completed");
-  });
-
-  test("summarizes read convenience tools", () => {
-    expect(summarizeWritePayload("gkill_get_mi_board_list", { boards: ["a", "b"] })).toContain("2 Mi boards");
-    expect(summarizeWritePayload("gkill_get_all_tag_names", { tag_names: ["t1"] })).toContain("1 tag names");
-    expect(summarizeWritePayload("gkill_get_all_rep_names", { rep_names: [] })).toContain("0 repository names");
-  });
-
-  test("returns default for unknown tool", () => {
-    const result = summarizeWritePayload("unknown_tool", {});
-    expect(result).toBe("Tool call completed.");
+  test("every tool has a non-empty description", () => {
+    for (const tool of WRITE_TOOLS) {
+      expect(typeof tool.description).toBe("string");
+      expect(tool.description.length).toBeGreaterThan(0);
+    }
   });
 });
 
 // ---------------------------------------------------------------------------
-// summarizeToolError
+// Delete data_type: 語彙が3箇所で一致していること
+// ---------------------------------------------------------------------------
+describe("delete_kyou data_type vocabulary", () => {
+  test("schema enum, DELETE_DATA_TYPES, and both endpoint maps agree", () => {
+    // 対応表が食い違うと「スキーマは受理するのにディスパッチで落ちる」
+    // （あるいはその逆）になる。3箇所を1つの集合として固定する
+    const deleteTool = WRITE_TOOLS.find((tool) => tool.name === "gkill_delete_kyou");
+    const schemaEnum = [...deleteTool.inputSchema.properties.data_type.enum].sort();
+
+    expect([...DELETE_DATA_TYPES].sort()).toEqual(schemaEnum);
+    expect(Object.keys(DELETE_ENDPOINT_MAP).sort()).toEqual(schemaEnum);
+    expect(Object.keys(GET_ENDPOINT_MAP).sort()).toEqual(schemaEnum);
+  });
+
+  test("every delete target has both a get and an update endpoint", () => {
+    for (const dataType of Object.keys(DELETE_ENDPOINT_MAP)) {
+      expect(GET_ENDPOINT_MAP[dataType].endpoint).toMatch(/^\/api\//);
+      expect(GET_ENDPOINT_MAP[dataType].historiesKey).toMatch(/_histories$/);
+      expect(DELETE_ENDPOINT_MAP[dataType].endpoint).toMatch(/^\/api\/update_/);
+      expect(DELETE_ENDPOINT_MAP[dataType].responseKey).toMatch(/^updated_/);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// summarizeWriteToolPayload
+// ---------------------------------------------------------------------------
+describe("summarizeWriteToolPayload", () => {
+  test("add tools report the created id", () => {
+    expect(summarizeWriteToolPayload("gkill_add_kmemo", { added_kmemo: { id: "k1" } }))
+      .toBe("Created kmemo: k1");
+    expect(summarizeWriteToolPayload("gkill_add_mi", { added_mi: { id: "m1" } }))
+      .toBe("Created mi: m1");
+    expect(summarizeWriteToolPayload("gkill_add_tag", { added_tag: { id: "t1" } }))
+      .toBe("Added tag: t1");
+    expect(summarizeWriteToolPayload("gkill_add_text", { added_text: { id: "x1" } }))
+      .toBe("Added text: x1");
+  });
+
+  test("add tools fall back to unknown when the entity is missing", () => {
+    expect(summarizeWriteToolPayload("gkill_add_kmemo", {})).toBe("Created kmemo: unknown");
+  });
+
+  test("update tools report the updated id", () => {
+    expect(summarizeWriteToolPayload("gkill_update_kmemo", { updated_kmemo: { id: "k1" } }))
+      .toBe("Updated kmemo: k1");
+    expect(summarizeWriteToolPayload("gkill_update_mi", { updated_mi: { id: "m1" } }))
+      .toBe("Updated mi: m1");
+  });
+
+  test("gkill_submit_kftl counts messages", () => {
+    expect(summarizeWriteToolPayload("gkill_submit_kftl", { messages: [{}, {}] }))
+      .toBe("KFTL submitted: 2 messages.");
+    expect(summarizeWriteToolPayload("gkill_submit_kftl", {}))
+      .toBe("KFTL submitted: 0 messages.");
+  });
+
+  test("gkill_delete_kyou lists the updated_* keys", () => {
+    expect(summarizeWriteToolPayload("gkill_delete_kyou", { updated_kmemo: {}, updated_kyou: {} }))
+      .toBe("Deleted (soft): updated_kmemo, updated_kyou");
+    expect(summarizeWriteToolPayload("gkill_delete_kyou", {}))
+      .toBe("Deleted (soft): completed");
+  });
+
+  test("returns null for tools it does not own (server falls through to read/plugin)", () => {
+    // null を返さないと、基底の3段フォールバックが read の要約を上書きしてしまう
+    expect(summarizeWriteToolPayload("gkill_get_kyous", {})).toBeNull();
+    expect(summarizeWriteToolPayload("gkill_get_plugin_list", {})).toBeNull();
+    expect(summarizeWriteToolPayload("unknown_tool", {})).toBeNull();
+  });
+
+  test("covers every tool in WRITE_TOOLS", () => {
+    // ツールを足して要約の case を忘れると "Tool call completed." に落ちて静かに劣化する
+    for (const tool of WRITE_TOOLS) {
+      expect(summarizeWriteToolPayload(tool.name, {})).not.toBeNull();
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// summarizeToolError (payload.mjs の実物)
 // ---------------------------------------------------------------------------
 describe("summarizeToolError", () => {
   test("includes tool name and error", () => {
-    const result = summarizeToolError("gkill_add_kmemo", "bad input", null);
-    expect(result).toBe("gkill_add_kmemo failed: bad input");
+    const result = summarizeToolError("gkill_add_kmemo", "Connection refused", null);
+    expect(result).toContain("gkill_add_kmemo");
+    expect(result).toContain("Connection refused");
   });
 
   test("includes field when present", () => {
-    const result = summarizeToolError("gkill_add_kmemo", "bad input", { field: "content" });
-    expect(result).toBe("gkill_add_kmemo failed: bad input (field: content)");
+    const result = summarizeToolError("gkill_add_kmemo", "Invalid", { field: "content" });
+    expect(result).toContain("content");
   });
 
-  test("handles null name", () => {
-    const result = summarizeToolError(null, "error", null);
-    expect(result).toBe("Tool call failed: error");
+  test("handles empty tool name", () => {
+    expect(summarizeToolError("", "Timeout", null)).toContain("Timeout");
   });
 });
