@@ -239,10 +239,119 @@ describe("post", () => {
     await expect(client.post("/api/fail", {})).rejects.toThrow("HTTP 502");
   });
 
+  // 本文がJSONでない非2xx (リバースプロキシのHTML 502/504、本文なしの413/500等) を
+  // 「Failed to parse JSON response」にすると、HTTPステータスが呼び出し側へ一切届かない。
+  test("includes the HTTP status when a non-2xx response body is not JSON", async () => {
+    undiciFetch.mockResolvedValue({
+      ok: false,
+      status: 502,
+      json: () => Promise.reject(new SyntaxError("Unexpected token '<'")),
+    });
+
+    const client = new GkillReadClient();
+    await expect(client.post("/api/fail", {})).rejects.toThrow("HTTP 502");
+  });
+
+  test("keeps the parse error when a 2xx response body is not JSON", async () => {
+    undiciFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.reject(new SyntaxError("Unexpected end of JSON input")),
+    });
+
+    const client = new GkillReadClient();
+    await expect(client.post("/api/broken", {})).rejects.toThrow("Failed to parse JSON response");
+  });
+
   test("throws GkillApiError on network failure", async () => {
     undiciFetch.mockRejectedValue(new Error("ECONNREFUSED"));
 
     const client = new GkillReadClient();
     await expect(client.post("/api/down", {})).rejects.toThrow("Network error");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fetchFile
+// ---------------------------------------------------------------------------
+describe("fetchFile", () => {
+  // /files/ はエンベロープ(errors配列)を返さないので、セッション切れは HTTP 401 でしか
+  // 分からない。callApi と同じく、401 なら1回だけログインし直して再試行する。
+  // MCP は長寿命プロセスなので、これが無いと期限切れ以降ファイル取得が復旧不能になる。
+  test("re-logins once and retries when the file request returns HTTP 401", async () => {
+    process.env.GKILL_USER = "admin";
+    process.env.GKILL_PASSWORD_SHA256 = "hash";
+
+    let callCount = 0;
+    undiciFetch.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        // First file request with the expired session
+        return Promise.resolve({ ok: false, status: 401 });
+      }
+      if (callCount === 2) {
+        // Re-login
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ session_id: "new-sess", errors: null }),
+        });
+      }
+      // Retry succeeds
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        headers: { get: () => "image/png" },
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(4)),
+      });
+    });
+
+    const client = new GkillReadClient();
+    const result = await client.fetchFile("/files/rep/photo.png", "expired-sess");
+    expect(result.contentType).toBe("image/png");
+    expect(result.buffer).toBeInstanceOf(Buffer);
+    expect(callCount).toBe(3);
+
+    // 再試行はログインし直したセッションのCookieで行われること
+    const retryHeaders = undiciFetch.mock.calls[2][1].headers;
+    expect(retryHeaders.Cookie).toContain("new-sess");
+  });
+
+  test("throws when the retry after re-login still returns HTTP 401", async () => {
+    process.env.GKILL_USER = "admin";
+    process.env.GKILL_PASSWORD_SHA256 = "hash";
+
+    let callCount = 0;
+    undiciFetch.mockImplementation(() => {
+      callCount++;
+      if (callCount === 2) {
+        // Re-login
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ session_id: "new-sess", errors: null }),
+        });
+      }
+      // First attempt and the retry both get 401
+      return Promise.resolve({ ok: false, status: 401 });
+    });
+
+    const client = new GkillReadClient();
+    await expect(client.fetchFile("/files/rep/photo.png", "expired-sess")).rejects.toThrow(
+      "HTTP 401 fetching file",
+    );
+    expect(callCount).toBe(3);
+  });
+
+  // 401 以外は再ログインしない。read-handlers の 404→原因名指しの変換は
+  // 生の「HTTP 404 fetching file」がそのまま1回で返ることに依存している。
+  test("throws immediately without re-login on non-401 errors", async () => {
+    undiciFetch.mockResolvedValue({ ok: false, status: 404 });
+
+    const client = new GkillReadClient();
+    await expect(client.fetchFile("/files/rep/missing.png", "sess")).rejects.toThrow(
+      "HTTP 404 fetching file",
+    );
+    expect(undiciFetch).toHaveBeenCalledTimes(1);
   });
 });

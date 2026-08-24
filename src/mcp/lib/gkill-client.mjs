@@ -110,6 +110,15 @@ export class GkillClient {
     try {
       jsonBody = await response.json();
     } catch (error) {
+      // 本文がJSONでない非2xx (本文なしの413/500、リバースプロキシのHTML 502/504等) を
+      // 「Failed to parse JSON response」で握り潰すと、HTTPステータスが呼び出し側へ
+      // 一切届かない。非2xxならステータスを含むエラーとして投げる。
+      if (!response.ok) {
+        throw new GkillApiError(`HTTP ${response.status} from ${pathname}.`, {
+          status: response.status,
+          cause: String(error),
+        });
+      }
       throw new GkillApiError(`Failed to parse JSON response from ${pathname}.`, {
         cause: String(error),
       });
@@ -186,6 +195,27 @@ export class GkillClient {
   }
 
   async fetchFile(filePath, sessionId) {
+    let response = await this.fetchFileOnce(filePath, sessionId);
+    // /files/ はエンベロープ(errors配列)を返さないので、セッション切れは HTTP 401 でしか
+    // 分からない。callApi の再ログイン (hasAuthErrors→login→再試行) をミラーし、
+    // 401 なら1回だけログインし直して再試行する。2回目も失敗なら従来どおり throw。
+    if (response.status === 401) {
+      this.sessionId = "";
+      const refreshedSessionId = await this.login();
+      response = await this.fetchFileOnce(filePath, refreshedSessionId);
+    }
+    if (!response.ok) {
+      throw new GkillApiError(`HTTP ${response.status} fetching file ${filePath}.`, {
+        status: response.status,
+      });
+    }
+    const contentType = response.headers.get("content-type") || "application/octet-stream";
+    const buffer = Buffer.from(await response.arrayBuffer());
+    return { buffer, contentType };
+  }
+
+  // fetchFile の1回分のGETリクエスト。再ログイン後の再試行のために分離してある。
+  async fetchFileOnce(filePath, sessionId) {
     const url = this.buildApiUrl(filePath);
     const timeoutMs = parseInt(process.env.GKILL_FETCH_TIMEOUT_MS || "120000", 10);
     const fetchOptions = {
@@ -198,22 +228,13 @@ export class GkillClient {
     if (this.dispatcher) {
       fetchOptions.dispatcher = this.dispatcher;
     }
-    let response;
     try {
-      response = await fetch(url, fetchOptions);
+      return await fetch(url, fetchOptions);
     } catch (error) {
       throw new GkillApiError(`Network error fetching file ${filePath}.`, {
         url,
         message: error instanceof Error ? error.message : String(error),
       });
     }
-    if (!response.ok) {
-      throw new GkillApiError(`HTTP ${response.status} fetching file ${filePath}.`, {
-        status: response.status,
-      });
-    }
-    const contentType = response.headers.get("content-type") || "application/octet-stream";
-    const buffer = Buffer.from(await response.arrayBuffer());
-    return { buffer, contentType };
   }
 }
