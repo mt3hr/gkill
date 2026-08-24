@@ -113,6 +113,10 @@ func TestMiddlewaresWriteStatusWithJSONBody(t *testing.T) {
 	// 直に json.NewEncoder(w).Encode(...) を書くとステータスを書き忘れられるので、
 	// 必ず writeGkillErrorResponse を通す。
 	rawEncode := regexp.MustCompile(`json\.NewEncoder\(w\)\.Encode\(`)
+	// 逆に、素の w.WriteHeader(...) は本文なしでステータスだけを返す書き方。
+	// readAuthBody の 413/500 が実際にこの形で書かれていて（2026-08-24 に修正）、
+	// 上の2検査では検出できなかった。ステータスも本文も writeGkillErrorResponse に任せること。
+	rawWriteHeader := regexp.MustCompile(`w\.WriteHeader\(`)
 
 	for _, file := range []string{"auth_middleware.go", "filter_local_only.go"} {
 		body, err := os.ReadFile(file)
@@ -128,6 +132,11 @@ func TestMiddlewaresWriteStatusWithJSONBody(t *testing.T) {
 		if rawEncode.MatchString(text) {
 			t.Errorf("%s が json.NewEncoder(w).Encode( を直に書いている。"+
 				"writeGkillErrorResponse を使うこと（ステータスの書き忘れを防ぐため）", file)
+		}
+		if rawWriteHeader.MatchString(text) {
+			t.Errorf("%s が w.WriteHeader( を直に呼んでいる。"+
+				"本文なしのステータスだけが返り、クライアントの res.json() が例外になる。"+
+				"writeGkillErrorResponse を使うこと", file)
 		}
 	}
 }

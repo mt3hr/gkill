@@ -432,4 +432,14 @@ const (
 	// 2026-08-24 まで両者が同じ 500 に畳まれており、ステータスを見る層からは
 	// 打ち間違いとサーバ障害が区別できませんでした。行ごとに1件ずつ立てます。
 	SubmitKFTLTextInvalidInputError = "ERR000416"
+
+	// RequestBodyTooLargeError は認証系ミドルウェアの先読み(readAuthBody)で
+	// リクエストボディが上限(maxAuthBodyBytes)を超えたときのものです。413 です。
+	// 2026-08-24 まで本文なしの素の WriteHeader(413) を返しており、ステータスを見ずに
+	// res.json() するクライアント(gkill-api.ts)側では本文が空のまま例外になっていました。
+	RequestBodyTooLargeError = "ERR000417"
+
+	// ReadRequestBodyError は認証系ミドルウェアの先読み(readAuthBody)での
+	// リクエストボディ読み取り失敗(上限超過以外)です。サーバ側の失敗として 500 です。
+	ReadRequestBodyError = "ERR000418"
 )

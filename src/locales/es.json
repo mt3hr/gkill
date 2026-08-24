@@ -736,7 +736,6 @@
     "FAILED_GET_ACCOUNT_CONFIG_MESSAGE": "Error al obtener la configuración de la cuenta",
     "FAILED_GET_ALL_REPOSITORIES_MESSAGE": "Error al obtener todos los repositorios",
     "FAILED_GET_GPS_LOG_MESSAGE": "Error al obtener la información de ubicación",
-    "FAILED_GET_IDF_FILE_PATH_NO_AUTH_MESSAGE": "Error al obtener la ruta del archivo. No tiene permisos.",
     "FAILED_GET_LATEST_INFO_MESSAGE": "Error al obtener la información más reciente",
     "FAILED_GET_NOTIFICATION_MESSAGE": "Error al obtener la notificación",
     "FAILED_GET_REPOSITORIES_MESSAGE": "Error al obtener la lista de almacenamiento",
@@ -920,5 +919,6 @@
     "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_MESSAGE": "El mismo contenido ya se ha guardado. ¿Guardarlo de nuevo?",
     "SAVE_ANYWAY_TITLE": "Guardar de todos modos",
     "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "No se guardó por estar duplicado",
-    "LOCAL_ONLY_ACCESS_DENIED_MESSAGE": "Solo se permite el acceso local"
+    "LOCAL_ONLY_ACCESS_DENIED_MESSAGE": "Solo se permite el acceso local",
+    "REQUEST_BODY_TOO_LARGE_MESSAGE": "El cuerpo de la solicitud es demasiado grande"
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -301,5 +302,96 @@ func TestResponseStatus_PanicReturns500WithGzip(t *testing.T) {
 	}
 	if len(parsed.Errors) == 0 || parsed.Errors[0].ErrorCode != message.InternalServerPanicError {
 		t.Errorf("errors = %v, want %s", formatErrorCodes(parsed.Errors), message.InternalServerPanicError)
+	}
+}
+
+// decodeRecordedErrors は httptest.NewRecorder の本文から errors 配列を取り出す。
+// 本文がJSONとして読めること自体も検査対象(素の WriteHeader だと本文が空になる)。
+func decodeRecordedErrors(t *testing.T, rec *httptest.ResponseRecorder) []*message.GkillError {
+	t.Helper()
+	var parsed struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &parsed); err != nil {
+		t.Fatalf("本文がJSONとして読めない %q: %v (素の WriteHeader に戻っていないか確認)", rec.Body.String(), err)
+	}
+	return parsed.Errors
+}
+
+// TestResponseStatus_AuthBodyTooLargeReturns413WithJSONBody は、認証系ミドルウェアの
+// ボディ先読みが上限(maxAuthBodyBytes)を超えたとき、413 と JSON の errors 本文の
+// **両方**が返ることを確認する。
+//
+// **以前は w.WriteHeader(413) だけで本文が空だった。** クライアント(gkill-api.ts)は
+// ステータスを見ずに res.json() するので、本文が空だとそこで例外になる
+// (writeGkillErrorResponse の doc コメント)。auth_middleware.go は handle_*.go では
+// ないので response_status_guard_test.go のエンコード行走査には掛からず、
+// ここで実物のミドルウェアを叩いて固定する。
+func TestResponseStatus_AuthBodyTooLargeReturns413WithJSONBody(t *testing.T) {
+	g := &GkillServerAPI{}
+
+	middlewares := []struct {
+		name string
+		wrap func(http.Handler) http.Handler
+	}{
+		{"authMiddleware", g.authMiddleware},
+		{"authWithReposMiddleware", g.authWithReposMiddleware},
+	}
+
+	for _, m := range middlewares {
+		t.Run(m.name, func(t *testing.T) {
+			handlerCalled := false
+			handler := m.wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				handlerCalled = true
+			}))
+
+			body := bytes.NewReader(make([]byte, maxAuthBodyBytes+1))
+			req := httptest.NewRequest(http.MethodPost, "/api/get_kyous", body)
+			rec := httptest.NewRecorder()
+			handler.ServeHTTP(rec, req)
+
+			if handlerCalled {
+				t.Error("上限超過なのにハンドラ本体が呼ばれた")
+			}
+			if rec.Code != http.StatusRequestEntityTooLarge {
+				t.Errorf("status = %d, want %d", rec.Code, http.StatusRequestEntityTooLarge)
+			}
+			errs := decodeRecordedErrors(t, rec)
+			if len(errs) == 0 || errs[0].ErrorCode != message.RequestBodyTooLargeError {
+				t.Errorf("errors = %v, want %s", formatErrorCodes(errs), message.RequestBodyTooLargeError)
+			}
+			if len(errs) > 0 && errs[0].ErrorMessage == "" {
+				t.Error("ErrorMessage が空。利用者向けの文言(REQUEST_BODY_TOO_LARGE_MESSAGE)を載せること")
+			}
+		})
+	}
+}
+
+// errorReadCloser は Read が常に失敗するボディ。認証系ミドルウェアの
+// 「上限超過以外の読み取り失敗」経路を再現するために使う。
+type errorReadCloser struct{}
+
+func (errorReadCloser) Read([]byte) (int, error) { return 0, errors.New("read error for test") }
+func (errorReadCloser) Close() error             { return nil }
+
+// TestResponseStatus_AuthBodyReadFailureReturns500WithJSONBody は、認証系ミドルウェアの
+// ボディ読み取りが上限超過以外の理由で失敗したとき、500 と JSON の errors 本文が
+// 返ることを確認する。こちらも以前は w.WriteHeader(500) だけで本文が空だった。
+func TestResponseStatus_AuthBodyReadFailureReturns500WithJSONBody(t *testing.T) {
+	g := &GkillServerAPI{}
+	handler := g.authMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("読み取り失敗なのにハンドラ本体が呼ばれた")
+	}))
+
+	req := httptest.NewRequest(http.MethodPost, "/api/get_kyous", errorReadCloser{})
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("status = %d, want 500", rec.Code)
+	}
+	errs := decodeRecordedErrors(t, rec)
+	if len(errs) == 0 || errs[0].ErrorCode != message.ReadRequestBodyError {
+		t.Errorf("errors = %v, want %s", formatErrorCodes(errs), message.ReadRequestBodyError)
 	}
 }
