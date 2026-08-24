@@ -99,7 +99,7 @@ src/
 
 **Core entity — "Kyou"** (record). Data types: kmemo (text), timeis (timestamps), lantana (mood 0-10), kc (numeric), nlog (expense), urlog (bookmark), mi (task), idf_kyou (file, with `is_zip` flag for .zip/.cbz), re_kyou (repost), mi_re_kyou (an existing Kyou turned into a task: `target_id` + Mi scheduling fields, no title; `data_type` is `mirekyou_create` / `_check` / `_limit` / `_start` / `_end`, so prefix checks must test `mirekyou` **before** `mi`; the client's `load_typed_datas` guarantees this structurally by sorting its prefix table longest-first rather than relying on the order the branches are written in — `kyou-typed-data-dispatch.test.ts`), tag, text, notification, git_commit_log, gps_log (GPS tracks), plugin_kyou (external plugin data — `typed_plugin` field non-null in TypeScript `Kyou` class; `data_type` is plugin-defined e.g. `claude_conversation`).
 
-**Response structure:** All API responses include `messages []GkillMessage` and `errors []GkillError` (with `error_code` + `error_message`). **ステータスはエラーコードから決まる**（400/401/403/404/409/429/500）。正本は `src/server/gkill/api/message/http_status.go` の表で、新しいコード・新しいハンドラには1行ずつ足す必要がある（機械検査あり。詳細は [gkill-go-backend](.claude/skills/gkill-go-backend/SKILL.md)）。**ステータスが変わっても本文は変わらない** ので、判定は今までどおり `errors` 配列で行ってよい。 The Go struct tags carry no `omitempty`, so **on success `messages` / `errors` come back as `null`, not as an empty array**. On the client always go through `res.errors ?? []` **before spreading or `concat`** (a bare `[...res.errors]` throws `TypeError`; `[].concat(null)` silently pushes `null` as an element). `if (res.errors && res.errors.length !== 0) { ... }` のガードで囲うのも同じく正しく、そちらが約180箇所と多数派。**ガード方式をわざわざ `?? []` へ書き換える必要はない** —— 守るべきなのは「null のまま展開しない」の1点だけ。
+**Response structure:** All API responses include `messages []GkillMessage` and `errors []GkillError` (with `error_code` + `error_message`). **ステータスはエラーコードから決まる**（400/401/403/404/409/413/429/500）。正本は `src/server/gkill/api/message/http_status.go` の表で、新しいコード・新しいハンドラには1行ずつ足す必要がある（機械検査あり。詳細は [gkill-go-backend](.claude/skills/gkill-go-backend/SKILL.md)）。**ステータスが変わっても本文は変わらない** ので、判定は今までどおり `errors` 配列で行ってよい。 The Go struct tags carry no `omitempty`, so **on success `messages` / `errors` come back as `null`, not as an empty array**. On the client always go through `res.errors ?? []` **before spreading or `concat`** (a bare `[...res.errors]` throws `TypeError`; `[].concat(null)` silently pushes `null` as an element). `if (res.errors && res.errors.length !== 0) { ... }` のガードで囲うのも同じく正しく、そちらが約180箇所と多数派。**ガード方式をわざわざ `?? []` へ書き換える必要はない** —— 守るべきなのは「null のまま展開しない」の1点だけ。
 
 ## Cross-cutting conventions
 
@@ -145,8 +145,12 @@ The codebase (variable names, comments, commit messages) is primarily in Japanes
 - **個人情報・実環境の情報をリポジトリへ入れない（最重要）。** 実在の利用者ID・人名・メールアドレス・
   端末のローカル絶対パス（`C:\Users\〈名前〉` など）・実データの中身を、コード・資料・テストデータ・
   コミットメッセージのどこにも書かない。テストの利用者IDは `testuser` 系、例示パスは `$HOME` や
-  `〈ユーザー名〉` のプレースホルダで書く。`npm run verify_docs` が資料への混入をパターン検査するが、
-  検査は網でしかない — 書く前に止めることがすべて。
+  `〈ユーザー名〉` のプレースホルダで書く。`npm run verify_docs` が混入をパターン検査し、
+  リポジトリ直下の `verify_docs_personal_ngwords.local.txt`（gitignore 済み・1行1語・大小無視の部分一致）が
+  あればその環境固有の NG 語検査も加わるが、検査は網でしかない — 書く前に止めることがすべて。
+- **コミット前に必ず `npm run verify_docs` を通す（例外なし）。** pre-commit フック
+  （`.githooks/pre-commit`。`npm i` の postinstall が `core.hooksPath` を設定する）が機械強制する。
+  `--no-verify` でフックを飛ばすことは何があっても禁止。
 - **このファイルと `CLAUDE.md` に領域別の規約本文を書き足さない。** 正本は `.claude/skills/*/SKILL.md`。
   ここが太ると全タスクの常時コンテキストを食う。サイズ上限（verify_docs が検査）に当たったら、
   上限を上げるのではなく中身をスキルへ落とすこと。
