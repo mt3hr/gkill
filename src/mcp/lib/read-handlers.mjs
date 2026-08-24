@@ -9,6 +9,7 @@
 import { GkillApiError } from "./errors.mjs";
 import {
   MAX_IDF_FILE_BYTES,
+  APP_CONFIG_FIELDS,
   APP_CONFIG_UI_STATE_KEYS,
   ENTITY_TARGETS,
 } from "./constants.mjs";
@@ -156,10 +157,18 @@ export async function handleReadToolCall(ctx, name, args) {
           show_tags_in_list: config.show_tags_in_list,
         };
         // fields 射影（実測で全量193.6k字＝応答上限超過。tag_struct 単体なら44.6k字）
+        // 許可リストの照合は normalizeAppConfigArgs も行う（外れた値はそこで例外になる）が、
+        // 動的なプロパティ書き込みの直前でも弾く。CodeQL の js/remote-property-injection は
+        // バリアガードが関数境界を越えず、Object.prototype.hasOwnProperty.call も認識しない。
+        // 認識される唯一の形が「書き込みと同じ関数内の Set.has ガード」なので、この行を消すと
+        // アラートが再発する（#932）。
         let projected = full;
         if (normalized.fields) {
           projected = {};
           for (const field of normalized.fields) {
+            if (!APP_CONFIG_FIELDS.has(field)) {
+              continue;
+            }
             projected[field] = full[field];
           }
         }
