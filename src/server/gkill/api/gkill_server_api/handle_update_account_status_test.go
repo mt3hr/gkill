@@ -3,6 +3,7 @@ package gkill_server_api
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"testing"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
@@ -102,5 +103,53 @@ func TestHandleUpdateAccountStatus_NotFoundAccountDoesNotPanic(t *testing.T) {
 	updateResp := updateAccountStatus(t, ts.URL, adminSession, "no_such_user", false)
 	if len(updateResp.Errors) == 0 {
 		t.Fatal("存在しないユーザの更新が成功扱いになっている")
+	}
+}
+
+// TestHandleUpdateAccountStatus_TargetAccountNotFoundReturns404 は、存在しないユーザIDへの
+// 状態変更が TargetAccountNotFoundError(ERR000413) + HTTP 404 になることを確認する。
+//
+// 上の NotFoundAccountDoesNotPanic は「errorsが空でない」までしか見ていない。
+// AccountNotFoundError(ERR000002) は認証経路専用で、クライアントの check_auth が
+// これを見るとログアウトさせるため、ここで ERR000413 であることまで固定する
+// （2026-08 に分離。混ぜると操作した管理者が締め出される）。
+func TestHandleUpdateAccountStatus_TargetAccountNotFoundReturns404(t *testing.T) {
+	ts, gkillAPI, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	adminSession := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
+
+	req := &req_res.UpdateAccountStatusRequest{
+		SessionID:    adminSession,
+		TargetUserID: "no_such_target_user",
+		Enable:       false,
+		LocaleName:   "en",
+	}
+	resp := postJSON(t, ts.URL+"/api/update_account_status", req)
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("status = %d, want 404", resp.StatusCode)
+	}
+
+	var updateResp req_res.UpdateAccountStatusResponse
+	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
+		t.Fatalf("decode update account status response: %v", err)
+	}
+	if len(updateResp.Errors) == 0 {
+		t.Fatal("存在しないユーザの更新が成功扱いになっている")
+	}
+	foundTargetNotFound := false
+	for _, e := range updateResp.Errors {
+		if e.ErrorCode == message.TargetAccountNotFoundError {
+			foundTargetNotFound = true
+		}
+		if e.ErrorCode == message.AccountNotFoundError {
+			t.Errorf("認証経路専用の %s が返っている（check_auth が実行者をログアウトさせる）", message.AccountNotFoundError)
+		}
+	}
+	if !foundTargetNotFound {
+		t.Errorf("errors に %s が積まれていない: %+v", message.TargetAccountNotFoundError, updateResp.Errors)
 	}
 }
