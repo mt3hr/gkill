@@ -68,9 +68,20 @@ func TestRequestResponse_JSONFieldNames(t *testing.T) {
 		// v2(ADR-0053): include_id/include_rep_name は廃止（id/rep_name 常時付与）。
 		// count_only/group_by/data_types/num_min/num_max/idf_kinds/include_file_size を追加
 		{"GetKyousMCPRequest", GetKyousMCPRequest{}, []string{"session_id", "query", "locale_name", "limit", "cursor", "max_size_mb", "is_include_timeis", "count_only", "group_by", "data_types", "num_min", "num_max", "idf_kinds", "include_file_size"}},
+		// KyouMCPDTO の id / rep_name / create_app / update_app / is_deleted / update_time は
+		// omitempty を付けない契約（空と「フィールドが無い」を区別するため。kyou_mcp_dto.go）。
+		// ゼロ値のまま marshal してキーが出ることを見るので、タグ名の固定と同時に
+		// omitempty（time.Time は omitzero）の紛れ込みも検出する。
+		{"KyouMCPDTO", KyouMCPDTO{}, []string{"id", "data_type", "rep_name", "create_app", "update_app", "related_time", "is_deleted", "update_time"}},
 
 		// --- その他 ---
 		{"SubmitKFTLTextRequest", SubmitKFTLTextRequest{}, []string{"session_id", "kftl_text", "locale_name"}},
+		// created は実際に書いた記録の一覧（MCP の submit_kftl が response.created を参照）。
+		// 冪等キーで再送を畳んだとき「実行していない」を空で表すので、omitempty で消さない。
+		{"SubmitKFTLTextResponse", SubmitKFTLTextResponse{}, []string{"messages", "errors", "created"}},
+		// updated=false は「新規作成」を意味する値なので、omitempty が付くとキーごと消えて
+		// 更新（打刻の終了）と区別できなくなる。ゼロ値で3キーとも出ることを固定する。
+		{"SubmitKFTLTextCreated", SubmitKFTLTextCreated{}, []string{"id", "data_type", "updated"}},
 		{"AddShareKyouListInfoRequest", AddShareKyouListInfoRequest{}, []string{"session_id", "share_kyou_list_info", "locale_name"}},
 		{"CommitTxRequest", CommitTxRequest{}, []string{"session_id", "tx_id", "locale_name"}},
 	}

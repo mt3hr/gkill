@@ -3,6 +3,7 @@ package gkill_server_api
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"testing"
 	"time"
 
@@ -158,6 +159,56 @@ func TestHandleResetPassword_RejectsDisabledAdmin(t *testing.T) {
 		if e.ErrorCode == message.PasswordResetSuccessMessage {
 			t.Error("成功扱いになっている")
 		}
+	}
+	if resetResp.PasswordResetPathWithoutHost != "" {
+		t.Error("リセットトークンが返ってしまっている")
+	}
+}
+
+// TestHandleResetPassword_TargetAccountNotFoundReturns404 は、存在しないユーザIDへの
+// リセットが TargetAccountNotFoundError(ERR000413) + HTTP 404 になることを確認する。
+//
+// AccountNotFoundError(ERR000002) は認証経路（auth.go）専用で、クライアントの
+// check_auth はこれを見るとログアウトさせる。かつてこの経路が ERR000002 を
+// 返していたため、存在しないユーザIDにパスワードリセットを実行した管理者が
+// その場で締め出されていた（2026-08 に ERR000413 へ分離）。
+func TestHandleResetPassword_TargetAccountNotFoundReturns404(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	adminSession := loginAndGetSession(t, tsURL.URL, gkillAPI, "admin", passwordHash)
+
+	req := &req_res.ResetPasswordRequest{
+		SessionID:    adminSession,
+		TargetUserID: "no_such_target_user",
+		LocaleName:   "en",
+	}
+	resp := postJSON(t, tsURL.URL+"/api/reset_password", req)
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("status = %d, want 404", resp.StatusCode)
+	}
+
+	var resetResp req_res.ResetPasswordResponse
+	if err := json.NewDecoder(resp.Body).Decode(&resetResp); err != nil {
+		t.Fatalf("decode reset password response: %v", err)
+	}
+	if len(resetResp.Errors) == 0 {
+		t.Fatal("存在しないユーザへのリセットが成功扱いになっている")
+	}
+	foundTargetNotFound := false
+	for _, e := range resetResp.Errors {
+		if e.ErrorCode == message.TargetAccountNotFoundError {
+			foundTargetNotFound = true
+		}
+		if e.ErrorCode == message.AccountNotFoundError {
+			t.Errorf("認証経路専用の %s が返っている（check_auth が実行者をログアウトさせる）", message.AccountNotFoundError)
+		}
+	}
+	if !foundTargetNotFound {
+		t.Errorf("errors に %s が積まれていない: %+v", message.TargetAccountNotFoundError, resetResp.Errors)
 	}
 	if resetResp.PasswordResetPathWithoutHost != "" {
 		t.Error("リセットトークンが返ってしまっている")
