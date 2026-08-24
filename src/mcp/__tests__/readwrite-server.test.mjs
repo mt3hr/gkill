@@ -367,6 +367,24 @@ describe("handleToolCall — error cases", () => {
     const server = new McpServer(createMockClient());
     await expect(server.handleToolCall("unknown_tool", {})).rejects.toThrow("Unknown tool");
   });
+
+  test("the removed plugin content tool falls through to the replacement hint", async () => {
+    // gkill_get_plugin_content は削除済みで isPluginToolName がもう受け付けない。
+    // 旧セッションのクライアントが呼ぶと plugin → read → write と流れ、
+    // write-handlers の default で REMOVED_TOOL_HINTS (lib/constants.mjs) の案内文になる。
+    // handlePluginToolCall 直叩き (plugin-tools.test.mjs) とは別の、実ディスパッチ経路。
+    const mockClient = createMockClient();
+    const server = new McpServer(mockClient);
+
+    await expect(server.handleToolCall("gkill_get_plugin_content", {})).rejects.toThrow(
+      /include_plugin_content:true/,
+    );
+    await expect(server.handleToolCall("gkill_get_plugin_content", {})).rejects.toThrow(
+      /gkill_get_kyous/,
+    );
+    // 案内で完結し、gkill への API 呼び出しは発生しない
+    expect(mockClient.callApi).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------

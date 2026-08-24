@@ -393,3 +393,58 @@ describe("応答はサーバが保存した版を返す (2026-08-24 再監査 P-
     expect(result.updated_kmemo.is_deleted).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// gkill_update_timeis — end_time の3値 (2026-08-24 再監査 P-41)
+// ---------------------------------------------------------------------------
+describe("gkill_update_timeis end_time three-state patch", () => {
+  // 「未指定=据え置き / null=進行中へ戻す / 値=その時刻」の3値は、正規化層
+  // (write-normalization.test.mjs) だけでなくハンドラの `!== undefined` ガードが
+  // 支えている。ガードが `!= null` 等に変わっても正規化層のテストは緑のままなので、
+  // リクエスト本文まで届く/届かないことはここで固定する。
+  test("end_time:null reaches the request body as null (finished back to ongoing)", async () => {
+    // null を保存する以外に、一度終わらせた TimeIs を進行中へ戻す手段は無い
+    // (Go 側 reps.TimeIs.EndTime は *time.Time で nil を保存できる)
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({
+        timeis_histories: [{
+          id: "t1",
+          title: "work",
+          start_time: "2026-08-24T09:00:00+09:00",
+          end_time: "2026-08-24T13:00:00+09:00",
+        }],
+      })
+      .mockResolvedValueOnce({ updated_kyou: { id: "t1" } });
+
+    const result = await handleWriteToolCall(ctx, "gkill_update_timeis", { id: "t1", end_time: null });
+
+    expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/get_timeis");
+    expect(ctx.client.callApi.mock.calls[1][0]).toBe("/api/update_timeis");
+    expect(ctx.client.callApi.mock.calls[1][1].timeis.end_time).toBeNull();
+    expect(result.updated_timeis.end_time).toBeNull();
+  });
+
+  test("omitting end_time keeps the stored value untouched", async () => {
+    // 未指定は「触らない」。ここが崩れると、タイトルを直しただけの update が
+    // 終了時刻を消して記録を進行中へ戻してしまう
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({
+        timeis_histories: [{
+          id: "t1",
+          title: "work",
+          start_time: "2026-08-24T09:00:00+09:00",
+          end_time: "2026-08-24T13:00:00+09:00",
+        }],
+      })
+      .mockResolvedValueOnce({ updated_kyou: { id: "t1" } });
+
+    const result = await handleWriteToolCall(ctx, "gkill_update_timeis", { id: "t1", title: "renamed" });
+
+    const sent = ctx.client.callApi.mock.calls[1][1].timeis;
+    expect(sent.title).toBe("renamed");
+    expect(sent.end_time).toBe("2026-08-24T13:00:00+09:00");
+    expect(result.updated_timeis.end_time).toBe("2026-08-24T13:00:00+09:00");
+  });
+});
