@@ -219,14 +219,19 @@ export async function handleReadToolCall(ctx, name, args) {
           }
           throw error;
         }
+        const mimeType = normalizeMimeType(contentType);
         // base64はJSON-RPCレスポンスに素で載るので、青天井にすると数百MBの動画で応答が破裂する
         if (buffer.length > MAX_IDF_FILE_BYTES) {
+          // file_url_full が載るのは画像の payload だけ（payload.mjs の applyFileLinks は
+          // is_image のときだけサムネ file_url と原寸 file_url_full を分けて注入する）。
+          // 非画像へ file_url_full を案内すると、存在しないフィールドを探させてしまう。
+          const originalUrlField = mimeType.startsWith("image/") ? "file_url_full" : "file_url";
           throw new GkillApiError(
             `File is too large to return through MCP: ${buffer.length} bytes (limit ${MAX_IDF_FILE_BYTES}). ` +
               `If this is an image or a video, retry with thumb (e.g. thumb:"1024x1024", plus ` +
               `is_video:true for a video) to get a downscaled JPEG that fits. ` +
               `On stdio clients you can instead read the IDF payload's file_path directly — no size limit. ` +
-              `Otherwise hand the user the payload's file_url_full, which is served from /files/ ` +
+              `Otherwise hand the user the payload's ${originalUrlField}, which is served from /files/ ` +
               `with no size limit.`,
             {
               file_name: normalized.file_name,
@@ -235,7 +240,6 @@ export async function handleReadToolCall(ctx, name, args) {
             },
           );
         }
-        const mimeType = normalizeMimeType(contentType);
         return {
           file_name: normalized.file_name,
           mime_type: mimeType,
