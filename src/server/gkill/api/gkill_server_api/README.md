@@ -18,27 +18,23 @@ gkill_server_api/
 ├── auth_context.go                  # AuthContext 構造体・コンテキストキー
 ├── auth_middleware.go               # 認証ミドルウェアラッパー
 ├── recover_middleware.go            # リカバリミドルウェア
+├── gzip_middleware.go               # /api/ 配下の応答を gzip 圧縮するミドルウェア
 ├── filter_local_only.go             # ローカルアクセス制限
-├── utils.go                         # ユーティリティ関数（490+行）
+├── write_response_status.go         # errors 配列から HTTP ステータスを決めて書く（エンコードより前に呼ぶ）
+├── shared_file_authz.go             # 共有経路のファイル配信の認可（共有クエリ結果の許可集合と突き合わせ）
+├── kftl_idempotency.go              # KFTL 送信の冪等キー台帳（TTL 付きインメモリ）
+├── get_kyous_mcp_helpers.go         # get_kyous_mcp v2 の補助（複合カーソル・フィルタ・group_by）
+├── utils.go                         # ユーティリティ関数（540+行）
 ├── web_push.go                      # Web Push 通知送信
 ├── gkill_server_api_access_log.go   # アクセスログ
 ├── gkill_server_api_rate_limit.go   # ログインレートリミット
 ├── plugin_content_html_cache.go     # プラグイン本文HTMLのキャッシュ（TTL・件数上限・singleflight）
-├── gkill_server_api_test.go         # 統合テスト
-├── gkill_server_api_rate_limit_test.go # レートリミットテスト
-├── filter_local_only_test.go        # localhost判定 (isLocalRequest) テスト
-├── handle_get_idf_kyou_by_relative_path_test.go # 相対パス解決ハンドラテスト
-├── handle_get_shared_kyous_test.go  # 共有Kyou取得ハンドラテスト
-├── handle_reset_password_test.go    # パスワードリセットハンドラテスト
-├── handle_zip_cache_file_serve_test.go # ZIPキャッシュ配信ハンドラテスト
-├── get_device_cache_test.go         # デバイスキャッシュ取得テスト
-├── plugin_content_html_cache_test.go # プラグイン本文HTMLキャッシュのテスト
-├── utils_ssrf_test.go               # httpGetBase64Data の SSRF 対策テスト
-└── handle_*.go                      # 各エンドポイントのハンドラ（実装91ファイル + テスト11ファイル）
+├── handle_*.go                      # 各エンドポイントのハンドラ（実装91ファイル + テスト14ファイル）
+└── *_test.go                        # テスト全31ファイル（handle_*_test.go 14本を含む。一覧は ABOUT_TEST.md）
 ```
 
-**合計: 117ファイル**（基盤14 + ハンドラ実装91 + テスト10 + README.md 1 + ABOUT_TEST.md 1）
-`.go` だけなら115ファイル。`handle_*.go` という名前のファイルは96あるが、うち5つはテスト。
+**合計: 143ファイル**（基盤19 + ハンドラ実装91 + テスト31 + README.md 1 + ABOUT_TEST.md 1）
+`.go` だけなら141ファイル。`handle_*.go` という名前のファイルは105あるが、うち14はテスト。
 
 ## GkillServerAPI 構造体
 
@@ -144,7 +140,7 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 
 ## ユーティリティ（`utils.go`）
 
-490+ 行の汎用ユーティリティ関数群:
+540+ 行の汎用ユーティリティ関数群:
 - ファイル操作（サムネイル・動画キャッシュ、GPS ログインポート）
 - ID 生成
 - GPX エクスポート

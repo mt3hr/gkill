@@ -173,6 +173,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0053](0053-mcp-composite-cursor-strict-limits.md) | MCPのページングは複合カーソル（時刻+ID）にし、Limit/MaxSizeMBを厳密な上限へ戻す | Accepted |
 | [0054](0054-mcp-version-history-is-a-dedicated-tool.md) | 1件の版履歴と削除の取り消しは専用ツールで返す（only_latest_data は開けない） | Accepted |
 | [0055](0055-idf-file-reaches-ai-through-payload.md) | IDF ファイルの経路は優劣ではなく用途で分かれる — 到達できないツールは消し、画像を見せる base64 は残す | Accepted |
+| [0056](0056-attached-data-reps-are-a-separate-list.md) | タグ・テキスト・通知・GPSログの格納先は別枠で返す — Reps へ混ぜない | Accepted |
 | [0060](0060-freeze-plaing-spelling.md) | 綴りは「永続に乗るか」で決める — plaing は凍結、agregate は改名して読み込み互換を残す | Accepted |
 | [0061](0061-verify-docs-checks-filenames.md) | 資料は件数だけでなく「資料に載っているファイル名の実在」も機械検査する | Accepted |
 | [0062](0062-split-claude-md-into-skills.md) | AI向け規約は AGENTS.md（核）と規約スキルへ分割し、入口の肥大化を機械検査で防ぐ | Accepted |
@@ -180,6 +181,5 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0071](0071-deleted-data-opens-only-with-include-deleted-data.md) | 削除済みの Kyou は include_deleted_data だけが開ける（is_deleted は使わない） | Accepted |
 | [0072](0072-drop-never-implemented-query-fields.md) | 実装されなかった検索条件は消す — 受理して無視するより未知キーとして弾く | Accepted |
 | [0073](0073-tag-vocabulary-drops-dead-targets.md) | タグ語彙は「生存する対象を持つタグ」だけを返す — カスケード削除はしない | Accepted |
-| [0056](0056-attached-data-reps-are-a-separate-list.md) | タグ・テキスト・通知・GPSログの格納先は別枠で返す — Reps へ混ぜない | Accepted |
 | [0074](0074-filter-by-create-app-at-request-level.md) | 「どのアプリが書いたか」の絞り込みは FindQuery ではなく MCP リクエストに置く | Accepted |
 | [0080](0080-kftl-errors-are-per-line.md) | メモ帳（KFTL）の失敗は行ごとに返し、入力ミスとサーバ障害を分ける | Accepted |

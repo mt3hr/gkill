@@ -5,14 +5,17 @@
 gkill API のエラーコードとメッセージコードの定数定義、およびレスポンス用構造体を提供する。
 全 API レスポンスは `[]GkillMessage` と `[]GkillError` を含み、クライアント側でエラー判定・表示に使用される。
 
-## ファイル一覧（5ファイル）
+## ファイル一覧（8ファイル）
 
 | ファイル | 説明 |
 |---------|------|
-| `gkill_error.go` | `GkillError` 構造体 — `ErrorCode` + `ErrorMessage` |
+| `gkill_error.go` | `GkillError` 構造体 — `ErrorCode` + `ErrorMessage`。`EnsureNotEmpty`（エラー無し失敗の受け皿）もここ |
+| `gkill_error_test.go` | `EnsureNotEmpty` が「失敗したのに GkillError が1つも無い」状態を潰すことのテスト |
 | `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` |
-| `error_codes.go` | エラーコード定数（412 定数: `ERR000001` 〜 `ERR000416`、`ERR000243` は欠番） |
+| `error_codes.go` | エラーコード定数（414 定数: `ERR000001` 〜 `ERR000418`、`ERR000243`・`ERR000387`・`ERR000388`・`ERR000389` は欠番） |
 | `message_codes.go` | メッセージコード定数（89 定数: `MSG000001` 〜 `MSG000089`） |
+| `http_status.go` | エラーコード → HTTP ステータス対応表（`errorCodeHTTPStatus`、`HTTPStatusOf` / `HTTPStatusForErrors`） |
+| `http_status_test.go` | 全エラーコードが対応表に載っていることを `error_codes.go` のソース走査で固定するテスト |
 | `message_test.go` | コード形式・空文字チェックのテスト |
 
 ## レスポンス構造体
@@ -29,7 +32,7 @@ type GkillMessage struct {
 }
 ```
 
-## エラーコード体系（412 コード）
+## エラーコード体系（414 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|
@@ -37,16 +40,17 @@ type GkillMessage struct {
 | `ERR000023` 〜 `ERR000095` | CRUD 操作（Add, Update, Get, NotFound — 全データ型） |
 | `ERR000098` 〜 `ERR000199` | 複合操作（共有リスト、MiSharedTasks、GPSLog 等） |
 | `ERR000203` 〜 `ERR000280` | 拡張機能（KFTL、通知、構造体、Danote） |
-| `ERR000300` 〜 `ERR000407` | 新機能（KC 数値記録、トランザクション、ZIP ブラウズ、レートリミット、プラグイン、IDF パス解決、ReKyou/MiReKyou の対象ID逆引き） |
+| `ERR000300` 〜 `ERR000407` | 新機能（KC 数値記録、トランザクション、ZIP ブラウズ、レートリミット、プラグイン、ReKyou/MiReKyou の対象ID逆引き） |
 | `ERR000408` 〜 `ERR000409` | アカウント運用の防護（リセットトークンの期限切れ、自分自身の無効化の拒否） |
 | `ERR000410` | 検索そのものの失敗（repのSQLエラーなど、個別のGkillErrorが立たない失敗の受け皿） |
 | `ERR000411`, `ERR000412` | MCP向けrep一覧（get_rep_infos_mcp）のリクエスト/レスポンス不正 |
 | `ERR000413` 〜 `ERR000415` | 操作対象アカウント不在（404）、ローカル限定アクセス拒否（403）、panic回収（500） |
 | `ERR000416` | メモ帳（KFTL）のテキスト自体が正しくない（400）。行ごとに1件ずつ立てる。サーバ側の失敗は `ERR000351`（500）のまま |
+| `ERR000417` 〜 `ERR000418` | 認証系ミドルウェアの先読み `readAuthBody` の失敗（ボディ上限超過は 413、読み取り失敗は 500） |
 
-`ERR9000xx` 帯はフロントエンドだけで採番するコードで、Go 側の `error_codes.go` には存在しない（定義元は `src/client/classes/api/message/gkill_error.ts`、現在98定数）。番号が衝突しないよう帯を分けてあるので、Go 側でこの帯を使ってはならない。
+`ERR9000xx` 帯はフロントエンドだけで採番するコードで、Go 側の `error_codes.go` には存在しない（定義元は `src/client/classes/api/message/gkill_error.ts`、現在99定数）。番号が衝突しないよう帯を分けてあるので、Go 側でこの帯を使ってはならない。
 
-## メッセージコード体系（87 コード）
+## メッセージコード体系（89 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|
@@ -66,9 +70,10 @@ type GkillMessage struct {
 | 200 | （`errors` が空のとき） | — |
 | 400 | `Invalid*RequestDataError` ほか入力値のバリデーション失敗 | 103 |
 | 401 | `AccountSessionNotFoundError` / `AccountSessionExpiredError` / `AccountInvalidPasswordError` / `AccountNotFoundError` | 4 |
-| 403 | `AccountNotHasAdminError` / `AccountDisabledError` / `LocalOnlyAccessDeniedError` ほか | 12 |
+| 403 | `AccountNotHasAdminError` / `AccountDisabledError` / `LocalOnlyAccessDeniedError` ほか | 11 |
 | 404 | `NotFound*` / `TargetAccountNotFoundError` | 18 |
 | 409 | `AlreadyExist*` / `AccountPasswordResetTokenIsNotNilError` | 16 |
+| 413 | `RequestBodyTooLargeError`（認証前ボディの上限超過。`writeGkillErrorResponse` 経由で JSON 本文つきで返る） | 1 |
 | 429 | `LoginRateLimitError` | 1 |
 | 500 | `Get*` / `Add*` / `Update*` / `Delete*` / `CommitTx*` / `Invalid*ResponseDataError` ほか | 260 |
 

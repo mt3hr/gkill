@@ -140,7 +140,7 @@ export const FIND_QUERY_SCHEMA = {
       description: "Sort order for Mi tasks.",
       enum: ["create_time", "estimate_start_time", "estimate_end_time", "limit_time"],
     },
-    only_latest_data: { type: "boolean", description: "Return only the latest version of each entry (server default: true)." },
+    only_latest_data: { type: "boolean", description: "Deprecated: accepted for backward compatibility and ignored — the MCP layer always forces this to true, whatever you pass. Past versions of an entry are only visible through gkill_get_kyou_history." },
   },
   additionalProperties: true,
 };

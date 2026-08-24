@@ -11,15 +11,13 @@ HTTP API の共通基盤とハンドラ層。全エンドポイントは POST �
 ```
 api/
 ├── embed.go                     # //go:embed ディレクティブ（Vue SPA 配信）
-├── filter_tags_kyous_test.go    # タグ絞り込みテスト
 ├── find_filter.go               # 検索フィルタロジック
 ├── find_filter_helpers.go       # 検索フィルタヘルパー
-├── find_filter_test.go          # 検索フィルタテスト
 ├── find_kyou_context.go         # Kyou 検索コンテキスト
 ├── gkill_version_data.go        # バージョンデータ構造体
-├── select_match_reps_cache_test.go # 対象リポジトリ選択キャッシュテスト
 ├── version.go                   # バージョン情報
-├── gkill_server_api/            # HTTP ハンドラ（138ファイル）
+├── *_test.go                    # 検索フィルタ・rep名絞り込みなどのテスト（14ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（141ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・全90ルート登録
@@ -32,57 +30,62 @@ api/
 │   ├── web_push.go              # Web Push 通知
 │   ├── gkill_server_api_access_log.go # アクセスログ
 │   ├── gkill_server_api_rate_limit.go # レートリミット
-│   └── handle_*.go              # 各エンドポイントのハンドラ（96ファイル。うちテスト5）
+│   └── handle_*.go              # 各エンドポイントのハンドラ（105ファイル。うちテスト14）
 ├── find/                        # 検索クエリ型定義
 ├── gkill_plugin/                # プラグイン通信プロトコル型
 ├── gpslogs/                     # GPS ログパーサ
 ├── kftl/                        # KFTL パーサ → kftl/README.md 参照
 ├── message/                     # エラー/メッセージコード
 ├── req_res/                     # Request/Response 構造体 → req_res/README.md 参照
+├── safefetch/                   # SSRF 対策付き HTTP 取得ヘルパ
 └── embed/                       # ビルド生成物（.gitignore 対象）
 ```
 
-## api/ ルートレベルファイル（9ファイル）
+## api/ ルートレベルファイル（20ファイル）
 
 | ファイル | 役割 |
 |---------|------|
 | `embed.go` | `//go:embed embed` ディレクティブ。ビルド時にフロントエンドの dist/ をバイナリに埋め込む |
-| `filter_tags_kyous_test.go` | タグ絞り込みのテスト |
 | `find_filter.go` | Kyou の検索フィルタロジック。FindQuery に基づいたデータ絞り込み |
 | `find_filter_helpers.go` | 検索フィルタのヘルパー関数群 |
-| `find_filter_test.go` | 検索フィルタのテスト |
 | `find_kyou_context.go` | Kyou 検索時のコンテキスト構造体 |
 | `gkill_version_data.go` | バージョンデータ構造体定義 |
-| `select_match_reps_cache_test.go` | 対象リポジトリ選択キャッシュのテスト |
 | `version.go` | ビルド時に埋め込まれるバージョン情報 |
+| `*_test.go`（14ファイル） | 検索フィルタ（タグ・位置・Mi・TimeIs・ソート等）・rep名絞り込み・rep選択キャッシュ・rep種別網羅・サンプルデータのテスト |
 
 ## サブディレクトリ
 
-### `gkill_server_api/`（115ファイル）— HTTP ハンドラ
+### `gkill_server_api/`（141ファイル）— HTTP ハンドラ
 
 詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
 
 `GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全90エンドポイントを登録する。
-handle_*.go は102ファイル（実装91 + テスト11）で、1ハンドラ1ファイルとして分割されている。
+handle_*.go は105ファイル（実装91 + テスト14）で、1ハンドラ1ファイルとして分割されている。
 ビジネスロジックは `usecase/` 層に委譲し、ハンドラは HTTP リクエスト/レスポンスの変換に専念する。
 
-### `find/`（5ファイル）— 検索クエリ型定義
+### `find/`（10ファイル）— 検索クエリ型定義
 
 詳細は [find/README.md](find/README.md) を参照。
 
 | ファイル | 説明 |
 |---------|------|
 | `find_query.go` | `FindQuery` 構造体 — 検索条件（39フィールド: キーワード、日付範囲、タグ、データ型等。値がnullなら未使用） |
+| `find_query_legacy_json.go` | 旧形式（`use_*` フラグ入り）JSON を新形式へ書き換える移行ウォーカー |
+| `period_of_time.go` | 時間帯フィルタの秒値正規化ヘルパー |
+| `rep_types.go` | `KyouRepTypes` — `RepTypes` が受理する正準値の一覧 |
 | `mi_check_state.go` | Mi（タスク）のチェック状態 enum |
 | `mi_sort_type.go` | Mi のソート順 enum |
 | `week_of_days.go` | 曜日フィルタ enum |
 | `find_query_test.go` | JSON シリアライズ・デシリアライズテスト |
+| `find_query_legacy_json_test.go` | 旧形式 JSON 移行のテスト |
+| `period_of_time_test.go` | 時間帯フィルタの秒値正規化のテスト |
 
-### `gkill_plugin/`（2ファイル）— プラグイン通信プロトコル型
+### `gkill_plugin/`（3ファイル）— プラグイン通信プロトコル型
 
 | ファイル | 説明 |
 |---------|------|
 | `plugin_manifest.go` | `PluginManifest` 構造体 — manifest.json の型 |
+| `plugin_manifest_test.go` | manifest 解釈のテスト（`emits_kyou` 未指定時の既定値など） |
 | `plugin_protocol.go` | `PluginRequest` / `PluginResponse` / `PluginKyou` — stdio 改行区切り JSON のメッセージ型 |
 
 ### `gpslogs/`（2ファイル）— GPS ログパーサ
@@ -92,16 +95,19 @@ handle_*.go は102ファイル（実装91 + テスト11）で、1ハンドラ1�
 | `google_location_history_data.go` | Google Location History の JSON/GPX データ構造体 |
 | `gpslogs_test.go` | GPS データパーステスト |
 
-### `message/`（5ファイル）— エラー/メッセージコード
+### `message/`（8ファイル）— エラー/メッセージコード
 
 詳細は [message/README.md](message/README.md) を参照。
 
 | ファイル | 説明 |
 |---------|------|
-| `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用 |
+| `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用。`EnsureNotEmpty`（エラー無し失敗の受け皿）もここ |
+| `gkill_error_test.go` | `EnsureNotEmpty` のテスト |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
-| `error_codes.go` | エラーコード定数（412定数、ERR000001〜ERR000416・ERR000243欠番） |
+| `error_codes.go` | エラーコード定数（414定数、ERR000001〜ERR000418・欠番4つ: ERR000243 / ERR000387 / ERR000388 / ERR000389） |
 | `message_codes.go` | メッセージコード定数（89定数） |
+| `http_status.go` | エラーコード → HTTP ステータス対応表（`HTTPStatusOf` / `HTTPStatusForErrors`） |
+| `http_status_test.go` | 全エラーコードが対応表に載っていることのソース走査テスト |
 | `message_test.go` | コード形式テスト |
 
 ### `kftl/`（26ファイル）— KFTL パーサ
@@ -111,6 +117,13 @@ handle_*.go は102ファイル（実装91 + テスト11）で、1ハンドラ1�
 ### `req_res/`（186ファイル）— Request/Response 構造体
 
 詳細は [req_res/README.md](req_res/README.md) を参照。
+
+### `safefetch/`（2ファイル）— SSRF 対策付き HTTP 取得
+
+| ファイル | 説明 |
+|---------|------|
+| `safefetch.go` | `GetCapped`（scheme 検査・接続先 IP 検証・サイズ上限）、`LooksLikeSupportedImage` / `CheckImageDimensions`。利用者入力由来の URL 取得はここを通す |
+| `safefetch_test.go` | SSRF 防御・サイズ上限・画像判定のテスト |
 
 ## 全エンドポイント一覧（92エンドポイント定義・90登録）
 
@@ -211,7 +224,7 @@ handle_*.go は102ファイル（実装91 + テスト11）で、1ハンドラ1�
 | `ReloadRepositories` | リポジトリ再読み込み |
 | `UpdateCache` | キャッシュ更新 |
 
-### ファイル操作系（7エンドポイント）
+### ファイル操作系（6エンドポイント）
 
 | エンドポイント | 説明 |
 |---------------|------|
@@ -221,7 +234,6 @@ handle_*.go は102ファイル（実装91 + テスト11）で、1ハンドラ1�
 | `OpenFile` | ファイルを OS で開く |
 | `BrowseZipContents` | IDFKyou の ZIP ファイル内容閲覧（展開・キャッシュ・パストラバーサル防止） |
 | `GetIDFKyouByRelativePath` | 基準 IDFKyou からの相対パスで同一 Rep 内のファイル記録を解決（Markdown 内相対リンク用） |
-| `GetIDFFilePath` | IDF ファイルの絶対パス解決（localhost からのリクエストのみ応答。MCP stdio クライアント用） |
 
 ### 共有系（5エンドポイント）
 
@@ -242,7 +254,7 @@ handle_*.go は102ファイル（実装91 + テスト11）で、1ハンドラ1�
 | `GetPluginConfigHTML` | プラグイン設定画面 HTML 取得 |
 | `PostPluginConfig` | プラグイン設定フォームのデータ保存 |
 
-### 通知・TLS・トランザクション・その他（11エンドポイント）
+### 通知・TLS・トランザクション・その他（12エンドポイント）
 
 | エンドポイント | 説明 |
 |---------------|------|
@@ -255,6 +267,7 @@ handle_*.go は102ファイル（実装91 + テスト11）で、1ハンドラ1�
 | `URLogBookmarkletPage` | URLog ブックマークレット導入ページ配信（GET） |
 | `SubmitKFTLText` | KFTL テキスト送信・実行 |
 | `GetKyousMCP` | MCP 用 Kyou 取得 |
+| `GetRepInfosMCP` | MCP 用 rep 一覧取得（Kyou を供給する rep の rep_name と rep_type、rep_types の正準値一覧。ファイルパスは返さない） |
 | `GetKFTLTemplate` | KFTL テンプレート取得（※アドレス定義のみ、未登録） |
 | `GetGkillInfo` | アプリケーション情報取得（※アドレス定義のみ、未登録） |
 

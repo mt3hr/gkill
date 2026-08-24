@@ -30,7 +30,7 @@ type GkillMessage struct {
 
 ### 1.2 エラーコード体系
 
-エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **412件** のエラーコードが存在する（ERR000001〜ERR000416、ERR000243は欠番）。クライアントだけで発生するエラーには別系統の `ERR9xxxxx` を割り当てている（3.6 参照）。
+エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **414件** のエラーコードが存在する（ERR000001〜ERR000418、欠番は ERR000243 / ERR000387 / ERR000388 / ERR000389 の4つ）。クライアントだけで発生するエラーには別系統の `ERR9xxxxx` を割り当てている（3.6 参照）。
 
 ```bash
 # 数え直すとき
@@ -68,12 +68,18 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 | `ERR000376` | BrowseZipContentsError | ZIP内容閲覧処理エラー（展開失敗、パストラバーサル検出等） |
 | `ERR000377`〜`ERR000384` | Invalid〜/GetPluginListError, GetPluginContentHTMLError, GetPluginConfigHTMLError, PostPluginConfigError | プラグイン系エンドポイント（一覧取得・コンテンツHTML・設定HTML・設定保存）のパース/処理エラー |
 | `ERR000385`〜`ERR000386` | InvalidGetIDFKyouByRelativePathRequestDataError / GetIDFKyouByRelativePathError | Markdown相対リンク解決（IDFKyou相対パス解決）のパース/処理エラー |
-| `ERR000387`〜`ERR000388` | InvalidGetIDFFilePathRequestDataError / GetIDFFilePathError | IDFファイル絶対パス解決のパース/処理エラー |
-| `ERR000389` | GetIDFFilePathNotLocalRequestError | IDFファイル絶対パス解決を localhost 以外からリクエストした場合の拒否エラー |
 | `ERR000390`〜`ERR000401` | InvalidAddMiReKyouRequestDataError 〜 CommitTxGetMiReKyouError | MiReKyou（既存記録のタスク化）系の追加・取得・更新・トランザクションのパース/処理エラー（12件） |
 | `ERR000402`〜`ERR000407` | InvalidGetReKyousByTargetIDRequestDataError 〜 GetMiReKyousByTargetIDError | 逆引き取得（`get_rekyous_by_target_id` / `get_mirekyous_by_target_id`）のパース/処理エラー（6件）。クライアントの連鎖削除が参照元を辿るのに使う |
 | `ERR000408` | ExpiredPasswordResetTokenError | パスワードリセットトークンが一致したが期限切れ（72時間）。汎用の失敗と区別して「再発行してもらえばよい」と伝えるためのコード |
 | `ERR000409` | CannotDisableOwnAccountError | ログイン中のアカウント自身を無効化しようとした。管理者が自分を締め出す事故を防ぐ |
+| `ERR000410` | FindKyousError | Kyou検索が失敗したのに GkillError が1つも積まれていないとき（repのSQLエラー等）に `message.EnsureNotEmpty` で詰める汎用コード。そのまま返すと `errors: null` + 0件で「成功・該当0件」と区別が付かなくなる |
+| `ERR000411`〜`ERR000412` | InvalidGetRepInfosMCPRequestDataError / InvalidGetRepInfosMCPResponseDataError | MCP向けrep構造化一覧（`get_rep_infos_mcp`）のパース/エンコードエラー |
+| `ERR000413` | TargetAccountNotFoundError | 操作対象のアカウントが存在しない（404）。「自分のセッションに紐づくアカウントが消えている」を表す ERR000002 と分けてあり、管理者操作の対象不在でログイン画面へ飛ばされないようにする |
+| `ERR000414` | LocalOnlyAccessDeniedError | ローカル限定サーバ（`IsLocalOnlyAccess`）へローカル以外から来たリクエストの拒否（`filterLocalOnly`、403） |
+| `ERR000415` | InternalServerPanicError | `recoverMiddleware` が panic を回収したときの内部エラー（500）。リクエストを読み直せないため、これだけは i18n を通さず固定文言で返す |
+| `ERR000416` | SubmitKFTLTextInvalidInputError | KFTLテキスト自体の書き間違い（気分値が範囲外、終了する打刻が無い等。行ごとに1件）。サーバ側失敗の ERR000351 が 500 なのに対し、こちらは利用者の誤りなので 400 |
+| `ERR000417` | RequestBodyTooLargeError | 認証系ミドルウェアの先読み（`readAuthBody`）でリクエストボディが上限 32MB を超過（413） |
+| `ERR000418` | ReadRequestBodyError | 認証系ミドルウェアの先読みでのリクエストボディ読み取り失敗（上限超過以外、500） |
 
 ### 1.3 HTTPステータスコードの使い分け
 
@@ -85,7 +91,7 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 | 403 | 管理者権限が無い・アカウントが無効・ローカル限定アクセス違反 |
 | 404 | 指定されたIDやrep名が存在しない |
 | 409 | 同じIDが既にある（重複追加） |
-| 413 | 認証前のリクエストボディが 32MB を超えた |
+| 413 | 認証前のリクエストボディが 32MB を超えた（`ERR000417`。他と同じく JSON の `errors` 本文つきで返る） |
 | 429 | ログインのレート制限（IP毎15分10回） |
 | 500 | サーバ内部の失敗（取得・追加・更新・削除の失敗、panic） |
 

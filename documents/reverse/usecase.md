@@ -9,7 +9,7 @@ astah モデル（`gkill_model.asta`）のユースケース記述 + コード�
 | **ユーザ** | gkill にログインしてライフログの記録・閲覧・管理を行う利用者。全認証済みユースケースの主アクター |
 | **管理者 (admin)** | アカウント作成・サーバー設定変更の権限を持つユーザ。初回起動時に自動作成される `admin` アカウント |
 | **共有閲覧者** | 認証不要で共有リンク経由でKyouやタスクを閲覧する外部利用者 |
-| **MCP クライアント** | MCP サーバー経由で gkill のデータを読み書きするAIアシスタント等の外部システム。Read サーバー（9ツール）は読み取りのみ、Write（24ツール）/ ReadWrite（29ツール）は追加・更新・削除も行える |
+| **MCP クライアント** | MCP サーバー経由で gkill のデータを読み書きするAIアシスタント等の外部システム。Read サーバー（10ツール）は読み取りのみ、Write（26ツール）/ ReadWrite（31ツール）は追加・更新・削除も行える |
 | **Wear OS ウォッチ** | Wearable Data Layer 経由でテンプレート取得・KFTL テキスト送信を行うウォッチアプリ |
 | **ブックマークレット** | ブラウザ上で動作し、URLog（ブックマーク）を直接追加するJavaScript |
 
@@ -117,7 +117,7 @@ graph LR
 
 ## 2. 機能カテゴリ別ユースケース一覧
 
-> **件数について:** ユースケースは **87件（ユニークな UC-ID 数）**。以下のカテゴリ別表の行数は 91 行で、一部のユースケースは複数カテゴリに再掲されているため行数のほうが多くなる。件数を引用する際はユニーク ID 数（87）を使うこと。
+> **件数について:** ユースケースは **86件（ユニークな UC-ID 数）**。以下のカテゴリ別表の行数は 91 行で、ダッシュボードの UC-09xxd 系がユニーク数では設定管理の UC-09xx と同一視されるため行数のほうが多くなる。件数を引用する際はユニーク ID 数（86）を使うこと。
 >
 > 数え直すときは **4桁に限定**すること。`UC-[0-9]+` だと本文中の「UC-04xx」「UC-05xx」という
 > 記述（後述の欠番の説明）まで拾ってしまい、2件多く数えられる。
@@ -209,7 +209,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-0705 | テキスト履歴を取得する | `GetTextsByTargetID`, `GetTextHistoriesByTextID` |
 | UC-0706 | 通知履歴を取得する | `GetNotificationsByTargetID`, `GetNotificationHistoriesByNotificationID` |
 | UC-0707 | Mi ボード一覧を取得する | `GetMiBoardList` |
-| UC-0708 | 全タグ名を取得する | `GetAllTagNames` |
+| UC-0708 | 全タグ名を取得する | `GetAllTagNames`（対象の記録が削除済みのタグは語彙に出ない） |
 | UC-0709 | GPS ログを取得する | `GetGPSLog` |
 | UC-0710 | 更新データを時刻指定取得する | `GetUpdatedDatasByTime` |
 | UC-0711 | 集計ビューで記録を集計・分析する（集計項目・集計リスト） | `GetKyous`（集計はクライアント側）+ `UpdateApplicationConfig`（定義を `dnote_json_data` に保存） |
@@ -277,7 +277,6 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-1109 | ディレクトリを開く | `OpenDirectory` |
 | UC-1110 | ファイルを開く | `OpenFile` |
 | UC-1111 | MCP 経由で IDF ファイルの実データを取得する | `GetIDFFile` |
-| UC-1112 | MCP 経由で IDF ファイルの絶対パスを取得する | `GetIDFFilePath`（localhost からのリクエストのみ応答） |
 | UC-1113 | プラグイン一覧を取得する | `GetPluginList`（呼び出し元は MCP の `gkill_get_plugin_list` のみ） |
 | UC-1114 | プラグイン Kyou のコンテンツ HTML を取得する（画面表示と、MCP の `include_plugin_content` によるインライン埋め込みの両方から使う） | `GetPluginContentHTML` |
 | UC-1115 | プラグイン設定画面の HTML を取得する | `GetPluginConfigHTML`（プラグイン Kyou のコンテキストメニュー「プラグイン設定」から開く） |

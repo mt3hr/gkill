@@ -5,16 +5,20 @@
 Kyou 検索に使用するクエリ構造体と列挙型を定義する。
 `FindQuery` は API のデータ取得系エンドポイントで検索条件を指定するために使用される。
 
-## ファイル一覧（6ファイル）
+## ファイル一覧（10ファイル）
 
 | ファイル | 説明 |
 |---------|------|
 | `find_query.go` | `FindQuery` 構造体 — 39 フィールドの検索条件とゲート判定ヘルパー |
 | `find_query_legacy_json.go` | 旧形式（`use_*` フラグ入り）JSON を新形式へ書き換える移行ウォーカー |
+| `period_of_time.go` | 時間帯フィルタの秒値正規化（`NormalizeSecondOfDay` で 0..86399 の秒オブデイへ、`SecondOfDayToHHMMSS` 等） |
+| `rep_types.go` | `KyouRepTypes` — `RepTypes` が受理する正準値の一覧（`selectMatchRepsFromQuery` との集合一致をテストで固定） |
 | `mi_check_state.go` | `MiCheckState` 列挙型 — Mi タスクのチェック状態フィルタ |
 | `mi_sort_type.go` | `MiSortType` 列挙型 — Mi タスクのソート順 |
 | `week_of_days.go` | `WeekOfDays` 列挙型 — 曜日フィルタ |
 | `find_query_test.go` | JSON シリアライズ・デシリアライズテスト |
+| `find_query_legacy_json_test.go` | 旧形式 JSON 移行（`MigrateLegacyFindQueryJSON`）のテスト |
+| `period_of_time_test.go` | 時間帯フィルタの秒値正規化のテスト |
 
 ## FindQuery 構造体
 

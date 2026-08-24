@@ -2,7 +2,7 @@
 
 ## 概要
 
-Wear OS (Pixel Watch) KFTL 入力アプリのテスト。スマホ側コンパニオンアプリ（7ファイル、110テスト）とウォッチ側アプリ（5ファイル、61テスト）の合計171テスト（12ファイル）で構成される。
+Wear OS (Pixel Watch) KFTL 入力アプリのテスト。スマホ側コンパニオンアプリ（7ファイル、116テスト）とウォッチ側アプリ（5ファイル、61テスト）の合計177テスト（12ファイル）で構成される。
 
 ## テストフレームワーク
 
@@ -16,7 +16,7 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 |---------|---------|-----------|
 | `phone_companion/src/test/java/.../GkillCredentialStoreTest.kt` | 24 | 認証情報ストアの保存・取得・削除。`GkillSecretCipher`（Android Keystore による暗号化）経由の保存と、ホスト別のピン留め証明書フィンガープリント保存も含む（MockK使用） |
 | `phone_companion/src/test/java/.../MainActivityTest.kt` | 8 | コンパニオンアプリの Activity ライフサイクル |
-| `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 22 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得・plaing検索クエリの形状検証。okhttp-tls の自己署名証明書での TLS ピン留め一致/不一致/未保存/既定モード/SAN欠落フォールバック検証を含む） |
+| `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 28 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得・plaing検索クエリの形状検証。okhttp-tls の自己署名証明書での TLS ピン留め一致/不一致/未保存/既定モード/SAN欠落フォールバック検証を含む） |
 | `phone_companion/src/test/java/.../GkillServerTrustTest.kt` | 13 | TOFU+ピン留めの TrustManager。フィンガープリント計算・整形・照合、ピン一致/不一致/未保存の可否、ホストキー導出（okhttp-tls の HeldCertificate 使用） |
 | `phone_companion/src/test/java/.../GkillWearableListenerServiceTest.kt` | 19 | ウォッチ→スマホ間メッセージパスのハンドリング |
 | `phone_companion/src/test/java/.../WearRequestHandlerTest.kt` | 15 | 時計要求ハンドラ（MockWebServer 使用、4ハンドラの成功/失敗/`ERROR:`プレフィックス契約と重複送信の `DUPLICATE`/force 上書き） |

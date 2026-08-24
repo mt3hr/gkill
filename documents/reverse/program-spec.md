@@ -205,7 +205,7 @@ graph LR
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api/`パッケージ（handle_*.go 102ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
+`gkill/api/gkill_server_api/`パッケージ（handle_*.go 105ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
 
 #### 主な責務
 
@@ -232,7 +232,7 @@ graph LR
 >
 > また `wrapNoAuth` は「認証を一切しない」という意味ではありません。ルータ上は未認証ですが、
 > `upload_files` / `upload_gpslog_files` / `browse_zip_contents` /
-> `get_idf_kyou_by_relative_path` / `get_idf_file_path` / `get_kyous_mcp` の6本は
+> `get_idf_kyou_by_relative_path` / `get_kyous_mcp` / `get_rep_infos_mcp` の6本は
 > **ハンドラ内部の `getAccountFromSessionID` でセッションを検証**します。
 > `/files/` と `/zip_cache/` はボディではなく **cookie**（`gkill_session_id`）で認証します。
 
@@ -272,7 +272,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 | カテゴリ | エンドポイント数 | 内訳 |
 |---|---|---|
 | 認証 | 6 | login, logout, reset_password, set_new_password, add_user, update_account_status |
-| データ取得 | 26 | get_kyous, get_kyou, get_kmemo, get_kc, get_urlog, get_nlog, get_timeis, get_mi, get_lantana, get_rekyou, get_mirekyou, get_rekyous_by_target_id, get_mirekyous_by_target_id, get_git_commit_log, get_idf_kyou, get_mi_board_list, get_all_tag_names, get_all_rep_names, get_tags_by_id, get_tag_histories_by_tag_id, get_texts_by_id, get_text_histories_by_text_id, get_gkill_notifications_by_id, get_gkill_notification_histories_by_notification_id, get_idf_kyou_by_relative_path, get_idf_file_path |
+| データ取得 | 25 | get_kyous, get_kyou, get_kmemo, get_kc, get_urlog, get_nlog, get_timeis, get_mi, get_lantana, get_rekyou, get_mirekyou, get_rekyous_by_target_id, get_mirekyous_by_target_id, get_git_commit_log, get_idf_kyou, get_mi_board_list, get_all_tag_names, get_all_rep_names, get_tags_by_id, get_tag_histories_by_tag_id, get_texts_by_id, get_text_histories_by_text_id, get_gkill_notifications_by_id, get_gkill_notification_histories_by_notification_id, get_idf_kyou_by_relative_path |
 | データ追加 | 12 | add_kmemo, add_kc, add_urlog, add_nlog, add_timeis, add_mi, add_lantana, add_tag, add_text, add_gkill_notification, add_rekyou, add_mirekyou |
 | データ更新 | 13 | update_kmemo, update_kc, update_urlog, update_nlog, update_timeis, update_mi, update_lantana, update_tag, update_text, update_gkill_notification, update_rekyou, update_mirekyou, update_idf_kyou |
 | 共有 | 5 | get_share_kyou_list_infos, add_share_kyou_list_info, update_share_kyou_list_info, delete_share_kyou_list_infos, get_shared_kyous |
@@ -283,7 +283,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 | キャッシュ | 1 | update_cache |
 | ファイル | 4 | upload_files, upload_gpslog_files, get_gps_log, browse_zip_contents |
 | プラグイン | 4 | get_plugin_list, get_plugin_content_html, get_plugin_config_html, post_plugin_config |
-| その他 | 8 | generate_tls_file, get_gkill_info（**未登録**）, open_directory, open_file, urlog_bookmarklet, urlog_bookmarklet_page（唯一の GET）, get_updated_datas_by_time, get_kyous_mcp |
+| その他 | 9 | generate_tls_file, get_gkill_info（**未登録**）, open_directory, open_file, urlog_bookmarklet, urlog_bookmarklet_page（唯一の GET）, get_updated_datas_by_time, get_kyous_mcp, get_rep_infos_mcp |
 
 > `get_kftl_template` と `get_gkill_info` はアドレス定義だけがあり、`HandleFunc` 登録も
 > ハンドラ実装も存在しません（実行時404）。`gkill-api.ts` には呼び出しメソッドが残っています。
