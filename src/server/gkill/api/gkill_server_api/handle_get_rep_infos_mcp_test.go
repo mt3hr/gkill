@@ -5,9 +5,11 @@ package gkill_server_api
 
 import (
 	"encoding/json"
+	"fmt"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
@@ -163,5 +165,70 @@ func TestHandleGetRepInfosMCPListsAttachedDataReps(t *testing.T) {
 		if info.RepType == "" {
 			t.Errorf("Kyou rep %q に rep_type が無い", info.RepName)
 		}
+	}
+}
+
+// 2026-08-24 の再監査: rep ディレクトリへ置いただけのファイルは UpdateCache が
+// IDF() を走らせるまで検索に出ないのに、定期実行も監視も警告も無く、
+// 「0件」が取り込み待ちなのか本当に無いのか区別できなかった。
+// その判断材料が rep_infos[].indexed_at で、実装は「任意インタフェース
+// IndexUpdatedAt を実装した leaf rep だけ」を型アサーションで拾う。
+// アサーションはシグネチャがずれても**コンパイルエラーにならず**、
+// indexed_at が黙って全行から消えるだけなので、ここで固定して回帰を検知する。
+//
+// キャッシュONでは IDFKyouReps がキャッシュrep1つに畳まれ、UnWrap で leaf に
+// 降りてからアサーションする経路になる。OFFとは通り道が違うので両方で回す。
+func TestHandleGetRepInfosMCPIncludesIndexedAt(t *testing.T) {
+	for _, cacheInMemory := range []bool{false, true} {
+		t.Run(fmt.Sprintf("cacheInMemory=%v", cacheInMemory), func(t *testing.T) {
+			if cacheInMemory {
+				useCacheInMemory(t)
+			}
+			tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+			defer cleanup()
+
+			sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+			resp := postJSON(t, tsURL+"/api/get_rep_infos_mcp", map[string]any{
+				"session_id":  sessionID,
+				"locale_name": "en",
+			})
+			defer resp.Body.Close()
+
+			var infoResp req_res.GetRepInfosMCPResponse
+			if err := json.NewDecoder(resp.Body).Decode(&infoResp); err != nil {
+				t.Fatalf("decode get rep infos mcp response: %v", err)
+			}
+			if len(infoResp.Errors) > 0 {
+				t.Fatalf("get rep infos mcp errors: %+v", infoResp.Errors)
+			}
+
+			// directory (= IDF) rep は setupTestRouterWithRepos が必ず1つ作る。
+			// IDF rep の構築時に索引DB（gkill_id.db）が作られるので、
+			// indexed_at はこの時点で必ず入る。
+			foundDirectory := false
+			for _, info := range infoResp.RepInfos {
+				switch info.RepType {
+				case "directory":
+					foundDirectory = true
+					if info.IndexedAt == "" {
+						t.Errorf("directory rep %q の indexed_at が空（IndexUpdatedAt の型アサーションが外れている）", info.RepName)
+						continue
+					}
+					if _, err := time.Parse(time.RFC3339, info.IndexedAt); err != nil {
+						t.Errorf("indexed_at %q が RFC3339 として読めない: %v", info.IndexedAt, err)
+					}
+				case "kmemo":
+					// 索引を持たない rep では省略が契約（DTOの omitempty に依存する
+					// クライアントが「索引あり」と誤読しないように）
+					if info.IndexedAt != "" {
+						t.Errorf("索引を持たない kmemo rep %q に indexed_at が出ている: %q", info.RepName, info.IndexedAt)
+					}
+				}
+			}
+			if !foundDirectory {
+				t.Fatalf("directory rep が列挙されていない: %+v", infoResp.RepInfos)
+			}
+		})
 	}
 }

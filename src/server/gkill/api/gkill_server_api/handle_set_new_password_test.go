@@ -3,6 +3,7 @@ package gkill_server_api
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"testing"
 	"time"
 
@@ -152,5 +153,49 @@ func TestHandleSetNewPassword_ValidTokenSucceeds(t *testing.T) {
 	}
 	if updatedAccount.PasswordResetToken != nil {
 		t.Error("使い終わったリセットトークンが残っている")
+	}
+}
+
+// TestHandleSetNewPassword_TargetAccountNotFoundReturns404 は、存在しないユーザIDへの
+// パスワード設定が TargetAccountNotFoundError(ERR000413) + HTTP 404 になることを確認する。
+//
+// AccountNotFoundError(ERR000002) は認証経路専用で、クライアントの check_auth が
+// これを見るとログアウトさせるため、操作対象不在の経路で混ぜてはいけない
+// （2026-08 に ERR000413 へ分離）。
+func TestHandleSetNewPassword_TargetAccountNotFoundReturns404(t *testing.T) {
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	req := &req_res.SetNewPasswordRequest{
+		UserID:            "no_such_target_user",
+		ResetToken:        GenerateNewID(),
+		NewPasswordSha256: setNewPasswordTestCredential,
+		LocaleName:        "en",
+	}
+	resp := postJSON(t, ts.URL+"/api/set_new_password", req)
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("status = %d, want 404", resp.StatusCode)
+	}
+
+	var setResp req_res.SetNewPasswordResponse
+	if err := json.NewDecoder(resp.Body).Decode(&setResp); err != nil {
+		t.Fatalf("decode set new password response: %v", err)
+	}
+	if len(setResp.Errors) == 0 {
+		t.Fatal("存在しないユーザへのパスワード設定が成功扱いになっている")
+	}
+	foundTargetNotFound := false
+	for _, e := range setResp.Errors {
+		if e.ErrorCode == message.TargetAccountNotFoundError {
+			foundTargetNotFound = true
+		}
+		if e.ErrorCode == message.AccountNotFoundError {
+			t.Errorf("認証経路専用の %s が返っている", message.AccountNotFoundError)
+		}
+	}
+	if !foundTargetNotFound {
+		t.Errorf("errors に %s が積まれていない: %+v", message.TargetAccountNotFoundError, setResp.Errors)
 	}
 }
