@@ -64,13 +64,14 @@ func TestHTTPStatusOf_CoversEveryErrorCode(t *testing.T) {
 // **コードを足して落ちたら、期待値と資料の両方を更新すること。**
 func TestErrorCodeHTTPStatus_Distribution(t *testing.T) {
 	want := map[int]int{
-		http.StatusBadRequest:          103,
-		http.StatusUnauthorized:        4,
-		http.StatusForbidden:           11,
-		http.StatusNotFound:            18,
-		http.StatusConflict:            16,
-		http.StatusTooManyRequests:     1,
-		http.StatusInternalServerError: 259,
+		http.StatusBadRequest:            103,
+		http.StatusUnauthorized:          4,
+		http.StatusForbidden:             11,
+		http.StatusNotFound:              18,
+		http.StatusConflict:              16,
+		http.StatusRequestEntityTooLarge: 1,
+		http.StatusTooManyRequests:       1,
+		http.StatusInternalServerError:   260,
 	}
 
 	got := map[int]int{}
@@ -116,6 +117,8 @@ func TestHTTPStatusOf_KnownAssignments(t *testing.T) {
 		{AccountInvalidAddKmemoRequestDataError, "AccountInvalidAddKmemoRequestDataError", http.StatusBadRequest, "リクエストJSONのパース失敗"},
 		{FindKyousError, "FindKyousError", http.StatusInternalServerError, "検索の失敗"},
 		{InternalServerPanicError, "InternalServerPanicError", http.StatusInternalServerError, "panic 回収"},
+		{RequestBodyTooLargeError, "RequestBodyTooLargeError", http.StatusRequestEntityTooLarge, "認証前の先読み上限超過。400へ均すと縮小という対処が伝わらない"},
+		{ReadRequestBodyError, "ReadRequestBodyError", http.StatusInternalServerError, "名前だけでは400にも見えるが、読み取り失敗はサーバ側の失敗"},
 	}
 
 	for _, c := range cases {
@@ -145,6 +148,7 @@ func TestHTTPStatusForErrors(t *testing.T) {
 		{"順序を入れ替えても同じ", []*GkillError{e(AlreadyExistKmemoError), e(AccountInvalidAddKmemoRequestDataError)}, http.StatusConflict},
 		{"未知のコードは 500 扱い", []*GkillError{e("ERR999999")}, http.StatusInternalServerError},
 		{"nil要素は飛ばす", []*GkillError{nil, e(NotFoundKmemoError)}, http.StatusNotFound},
+		{"413 は最後尾(400にも劣後)", []*GkillError{e(RequestBodyTooLargeError), e(AccountInvalidAddKmemoRequestDataError)}, http.StatusBadRequest},
 	}
 
 	for _, c := range cases {

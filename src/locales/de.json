@@ -736,7 +736,6 @@
     "FAILED_GET_ACCOUNT_CONFIG_MESSAGE": "Kontoeinstellungen konnten nicht abgerufen werden",
     "FAILED_GET_ALL_REPOSITORIES_MESSAGE": "Alle Ablagen konnten nicht abgerufen werden",
     "FAILED_GET_GPS_LOG_MESSAGE": "Standortinformationen konnten nicht abgerufen werden",
-    "FAILED_GET_IDF_FILE_PATH_NO_AUTH_MESSAGE": "Der Dateipfad konnte nicht abgerufen werden. Keine Berechtigung.",
     "FAILED_GET_LATEST_INFO_MESSAGE": "Neueste Informationen konnten nicht abgerufen werden",
     "FAILED_GET_NOTIFICATION_MESSAGE": "Benachrichtigung konnte nicht abgerufen werden",
     "FAILED_GET_REPOSITORIES_MESSAGE": "Speicherortliste konnte nicht abgerufen werden",
@@ -920,5 +919,6 @@
     "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_MESSAGE": "Derselbe Inhalt wurde bereits gespeichert. Erneut speichern?",
     "SAVE_ANYWAY_TITLE": "Trotzdem speichern",
     "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "Wegen Duplikat nicht gespeichert",
-    "LOCAL_ONLY_ACCESS_DENIED_MESSAGE": "Nur lokaler Zugriff ist erlaubt"
+    "LOCAL_ONLY_ACCESS_DENIED_MESSAGE": "Nur lokaler Zugriff ist erlaubt",
+    "REQUEST_BODY_TOO_LARGE_MESSAGE": "Anfragetext ist zu groß"
 }
