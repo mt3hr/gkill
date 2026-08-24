@@ -1,0 +1,14 @@
+#!/bin/sh
+# コミット前の必須検査。何があっても飛ばさないこと（--no-verify の使用は禁止）。
+#
+# verify_docs は資料の件数・リンク検査に加えて、個人情報・実環境情報の混入検査
+# （checkPersonalInfo）を全ソース・資料・マニュアル原稿に対して行う。
+# リポジトリ直下に verify_docs_personal_ngwords.local.txt（gitignore 済み・1行1語・
+# 大小無視の部分一致）があれば、その環境固有の NG 語も検査に加わる。
+# 検査の実体は src/tools/verify_docs.mjs。
+npm run verify_docs || {
+  echo ""
+  echo "verify_docs が失敗したためコミットを中止しました。"
+  echo "個人情報の疑いが出た場合は、該当箇所をプレースホルダへ置換してから再コミットすること。"
+  exit 1
+}

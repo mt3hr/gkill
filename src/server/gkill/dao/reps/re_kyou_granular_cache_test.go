@@ -75,7 +75,7 @@ func newGranularReKyouFixture(t *testing.T) (*GkillRepositories, string, string,
 	}
 	phoneRepName, err := phoneRep.GetRepName(ctx)
 	if err != nil {
-		t.Fatalf("failed to get phone rep name: %v", err)
+		t.Fatalf("failed to get second rep name: %v", err)
 	}
 
 	sharedID := "rekyou-shared"
@@ -91,7 +91,7 @@ func newGranularReKyouFixture(t *testing.T) (*GkillRepositories, string, string,
 	rekyouLatest.CreateTime = rekyouLatest.CreateTime.Add(time.Hour)
 	rekyouLatest.UpdateTime = rekyouLatest.UpdateTime.Add(time.Hour)
 	if err := phoneRep.AddReKyouInfo(ctx, rekyouLatest); err != nil {
-		t.Fatalf("failed to add phone rekyou: %v", err)
+		t.Fatalf("failed to add second rekyou: %v", err)
 	}
 
 	originalReKyouReps := ReKyouRepositories{
