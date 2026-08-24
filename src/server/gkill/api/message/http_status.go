@@ -55,6 +55,10 @@ var statusPriority = []int{
 	http.StatusConflict,
 	http.StatusNotFound,
 	http.StatusBadRequest,
+	// 413 は 400 の特化形で、「本文を小さくする」という次の行動が最も明確なので最後尾。
+	// (実際には認証系ミドルウェアがハンドラより手前で単独エラーとして返すので、
+	// 他のエラーと同居することは今のところ無い)
+	http.StatusRequestEntityTooLarge,
 }
 
 // statusRank は statusPriority の中での重さを返します。大きいほど重い。
@@ -238,6 +242,10 @@ var errorCodeHTTPStatus = map[string]int{
 	AlreadyExistNotificationError:          http.StatusConflict, // ERR000276
 	AlreadyExistKCError:                    http.StatusConflict, // ERR000307
 	AlreadyExistMiReKyouError:              http.StatusConflict, // ERR000393
+
+	// ---- 413 Request Entity Too Large — リクエスト本文が大きすぎる ----
+	// 認証系ミドルウェアの先読み上限（maxAuthBodyBytes）超過。
+	RequestBodyTooLargeError: http.StatusRequestEntityTooLarge, // ERR000417
 
 	// ---- 429 Too Many Requests ----
 	// ログインのレート制限（IP毎15分10回）。
@@ -504,4 +512,5 @@ var errorCodeHTTPStatus = map[string]int{
 	FindKyousError:                                                   http.StatusInternalServerError, // ERR000410
 	InvalidGetRepInfosMCPResponseDataError:                           http.StatusInternalServerError, // ERR000412
 	InternalServerPanicError:                                         http.StatusInternalServerError, // ERR000415
+	ReadRequestBodyError:                                             http.StatusInternalServerError, // ERR000418
 }
