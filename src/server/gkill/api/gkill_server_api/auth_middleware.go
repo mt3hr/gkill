@@ -29,6 +29,11 @@ type sessionPeek struct {
 
 // readAuthBody は認証前のボディ読み取りを上限付きで行う。
 // 上限超過なら 413、その他の読み取り失敗なら 500 を返し、読めたかどうかを ok で返す。
+//
+// どちらの失敗も writeGkillErrorResponse で JSON の errors 本文ごと返す。素の
+// WriteHeader だけだと本文が空になり、ステータスを見ずに res.json() する
+// クライアント(gkill-api.ts)側で例外になる(writeGkillErrorResponse の doc コメント)。
+// ボディが読めていないので locale_name も分からず、文言は既定言語で返す。
 func readAuthBody(w http.ResponseWriter, r *http.Request, ctx context.Context) ([]byte, bool) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxAuthBodyBytes)
 	rawBody, err := io.ReadAll(r.Body)
@@ -36,11 +41,17 @@ func readAuthBody(w http.ResponseWriter, r *http.Request, ctx context.Context) (
 		var maxErr *http.MaxBytesError
 		if errors.As(err, &maxErr) {
 			slog.Log(ctx, gkill_log.Debug, "request body too large in auth middleware", "error", fmt.Sprintf("%q", err))
-			w.WriteHeader(http.StatusRequestEntityTooLarge)
+			writeGkillErrorResponse(w, &message.GkillError{
+				ErrorCode:    message.RequestBodyTooLargeError,
+				ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "REQUEST_BODY_TOO_LARGE_MESSAGE"}),
+			})
 			return nil, false
 		}
 		slog.Log(ctx, gkill_log.Debug, "error at read request body in auth middleware", "error", fmt.Sprintf("%q", err))
-		w.WriteHeader(http.StatusInternalServerError)
+		writeGkillErrorResponse(w, &message.GkillError{
+			ErrorCode:    message.ReadRequestBodyError,
+			ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+		})
 		return nil, false
 	}
 	_ = r.Body.Close()

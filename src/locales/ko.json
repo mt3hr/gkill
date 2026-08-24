@@ -736,7 +736,6 @@
     "FAILED_GET_ACCOUNT_CONFIG_MESSAGE": "계정 설정 정보 조회에 실패했습니다",
     "FAILED_GET_ALL_REPOSITORIES_MESSAGE": "저장소 전체 조회에 실패했습니다",
     "FAILED_GET_GPS_LOG_MESSAGE": "위치 정보 조회에 실패했습니다",
-    "FAILED_GET_IDF_FILE_PATH_NO_AUTH_MESSAGE": "파일 경로 조회에 실패했습니다. 권한이 없습니다.",
     "FAILED_GET_LATEST_INFO_MESSAGE": "최신 정보 조회에 실패했습니다",
     "FAILED_GET_NOTIFICATION_MESSAGE": "알림 조회에 실패했습니다",
     "FAILED_GET_REPOSITORIES_MESSAGE": "저장 위치 목록 조회에 실패했습니다",
@@ -920,5 +919,6 @@
     "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_MESSAGE": "같은 내용이 이미 저장되어 있습니다. 다시 저장할까요?",
     "SAVE_ANYWAY_TITLE": "그래도 저장",
     "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "중복이므로 저장하지 않았습니다",
-    "LOCAL_ONLY_ACCESS_DENIED_MESSAGE": "로컬 접근만 허용됩니다"
+    "LOCAL_ONLY_ACCESS_DENIED_MESSAGE": "로컬 접근만 허용됩니다",
+    "REQUEST_BODY_TOO_LARGE_MESSAGE": "요청 본문이 너무 큽니다"
 }
