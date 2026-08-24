@@ -308,6 +308,49 @@ func TestMiReKyouGetHistories(t *testing.T) {
 	}
 }
 
+// GetKyou(id, nil) が「最新版」を返すことを固定する（外部監査 H-07 の水平展開）。
+// ここは「単体取得は &kyous[0] を返さず slices.MaxFunc(UpdateTime) で選ぶ」規則から
+// 外れた最後の2箇所のうちの1つだった（もう1箇所は mi の cached。そちらは
+// get_typed_latest_version_test.go / mi_projection_preference_test.go が守る）。
+func TestMiReKyouGetKyouReturnsLatestVersion(t *testing.T) {
+	repo := newTempMiReKyouRepo(t)
+	ctx := context.Background()
+
+	oldVersion := makeMiReKyou("mirekyou-getkyou-latest", "target-getkyou-latest")
+	if err := repo.AddMiReKyouInfo(ctx, oldVersion); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+	newVersion := makeMiReKyou("mirekyou-getkyou-latest", "target-getkyou-latest")
+	newVersion.BoardName = "updated"
+	newVersion.UpdateTime = oldVersion.UpdateTime.Add(time.Hour)
+	if err := repo.AddMiReKyouInfo(ctx, newVersion); err != nil {
+		t.Fatalf("AddMiReKyouInfo (v2) failed: %v", err)
+	}
+
+	kyou, err := repo.GetKyou(ctx, "mirekyou-getkyou-latest", nil)
+	if err != nil {
+		t.Fatalf("GetKyou failed: %v", err)
+	}
+	if kyou == nil {
+		t.Fatal("GetKyou returned nil")
+	}
+	if !kyou.UpdateTime.Equal(newVersion.UpdateTime) {
+		t.Errorf("最新版が返っていない: got UpdateTime=%v, want %v", kyou.UpdateTime, newVersion.UpdateTime)
+	}
+
+	// updateTime を指定したときは、その版が返る
+	specified, err := repo.GetKyou(ctx, "mirekyou-getkyou-latest", &oldVersion.UpdateTime)
+	if err != nil {
+		t.Fatalf("GetKyou (updateTime指定) failed: %v", err)
+	}
+	if specified == nil {
+		t.Fatal("版を指定したのに見つからない")
+	}
+	if !specified.UpdateTime.Equal(oldVersion.UpdateTime) {
+		t.Errorf("指定した版が返っていない: got UpdateTime=%v, want %v", specified.UpdateTime, oldVersion.UpdateTime)
+	}
+}
+
 // TestMiReKyouGetLatestDataRepositoryAddress はTargetIDInDataにリポスト対象が入ることを確認する。
 func TestMiReKyouGetLatestDataRepositoryAddress(t *testing.T) {
 	repo := newTempMiReKyouRepo(t)

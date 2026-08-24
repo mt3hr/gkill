@@ -489,6 +489,74 @@ func TestIDFKyouFindIDFKyou_DoesNotSearchAbsolutePath(t *testing.T) {
 	}
 }
 
+// IndexUpdatedAt は採番索引（gkill_id.db）の鮮度を返す。
+//
+// rep ディレクトリへ置いただけのファイルは IDF() が走るまで検索に出ず、
+// 定期実行も監視も警告も無いので、「0件」が取り込み待ちなのか本当に無いのかを
+// get_rep_infos の indexed_at で呼び出し側に判断させる（2026-08-24 の再監査）。
+// 検索のたびにディレクトリを全走査して未採番を数える実装にしないこと（実データは数十万行規模）。
+func TestIDFKyouIndexUpdatedAt(t *testing.T) {
+	repo, contentDir := newIDFRepForBatchTest(t)
+	ctx := context.Background()
+
+	// handle_get_rep_infos_mcp.go はこの任意インタフェースへの型アサーションで
+	// indexed_at を出すか決める。シグネチャが変わっても どこもコンパイルエラーにならず、
+	// indexed_at がエラーも出さず黙って消えるので、公開されていることを固定する。
+	reporter, ok := any(repo).(interface {
+		IndexUpdatedAt(ctx context.Context) (time.Time, error)
+	})
+	if !ok {
+		t.Fatal("IDFKyou rep が IndexUpdatedAt を公開していない（get_rep_infos の indexed_at が黙って消える）")
+	}
+
+	// 索引を構築する（ファイルを置いて IDF() で採番する）
+	if err := os.WriteFile(filepath.Join(contentDir, "photo.jpg"), []byte("x"), os.ModePerm); err != nil {
+		t.Fatalf("write photo.jpg: %v", err)
+	}
+	before := time.Now().Add(-time.Minute)
+	if err := repo.IDF(ctx); err != nil {
+		t.Fatalf("IDF failed: %v", err)
+	}
+	after := time.Now().Add(time.Minute)
+
+	indexedAt, err := reporter.IndexUpdatedAt(ctx)
+	if err != nil {
+		t.Fatalf("IndexUpdatedAt failed: %v", err)
+	}
+	if indexedAt.IsZero() {
+		t.Error("索引構築後の IndexUpdatedAt がゼロ値（get_rep_infos は !IsZero のときだけ indexed_at を出す）")
+	}
+	if indexedAt.Before(before) || indexedAt.After(after) {
+		t.Errorf("IndexUpdatedAt = %v, want %v 〜 %v の範囲（索引を構築した時刻）", indexedAt, before, after)
+	}
+
+	// 返る時刻の実体は索引DBファイルの更新時刻。「3日前で止まっている」を検出するための値なので、
+	// 呼び出しの時刻や起動時刻に化けていないことを確かめる。
+	info, err := os.Stat(repo.idDBFile)
+	if err != nil {
+		t.Fatalf("stat index db: %v", err)
+	}
+	if !indexedAt.Equal(info.ModTime()) {
+		t.Errorf("IndexUpdatedAt = %v, want 索引DBの更新時刻 %v", indexedAt, info.ModTime())
+	}
+}
+
+// 索引DBがまだ無い（未構築）ならゼロ値とエラーを返す。
+// get_rep_infos は err == nil && !IsZero() のときだけ indexed_at を出すので、
+// この組でなければ「索引が無い」ことが黙って有効な時刻に化ける。
+func TestIDFKyouIndexUpdatedAt_MissingIndexDB(t *testing.T) {
+	ctx := context.Background()
+	repo := &idfKyouRepositorySQLite3Impl{idDBFile: filepath.Join(t.TempDir(), "not_built", "gkill_id.db")}
+
+	indexedAt, err := repo.IndexUpdatedAt(ctx)
+	if err == nil {
+		t.Error("存在しない索引DBでエラーが返らない")
+	}
+	if !indexedAt.IsZero() {
+		t.Errorf("エラー時の時刻 = %v, want ゼロ値", indexedAt)
+	}
+}
+
 // IDFKyou.RepName は **実DBの TARGET_REP_NAME 列へ永続化される**。
 //
 // 他の12型の RepName が「キャッシュ表に入るだけ」なのに対し、IDF だけはファイルの

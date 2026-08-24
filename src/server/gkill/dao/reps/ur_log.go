@@ -192,8 +192,16 @@ func (u *URLog) fillDescription(body []byte) error {
 	return nil
 }
 
-// ページURLからページのfaviconを取得する。
+// fetchFaviconBytes はホスト名に対応するfaviconをfavicon APIから取得する。
 // 取得先は固定ホスト google.com なのでSSRFではないが、無制限readを防ぐため上限付きで取る。
+// パッケージ変数なのはテストのため。本番の取得先は外部ホスト固定でテストから到達できないので、
+// ur_log_favicon_test.go が httptest.Server を指すクロージャへ差し替える。
+// 本体コードから書き換える経路は無い。
+var fetchFaviconBytes = func(hostname string) ([]byte, error) {
+	return safefetch.GetCapped(`https://www.google.com/s2/favicons?domain=`+hostname, 30*time.Second, "", false, safefetch.DefaultMaxImageBytes)
+}
+
+// ページURLからページのfaviconを取得する。
 func getFavicon(urlstr string) (image io.ReadCloser, err error) {
 	u, err := url.Parse(urlstr)
 	if err != nil {
@@ -207,7 +215,7 @@ func getFavicon(urlstr string) (image io.ReadCloser, err error) {
 	if u.Hostname() == "" {
 		return nil, fmt.Errorf("failed to get favicon: url has no hostname: %s", urlstr)
 	}
-	b, err := safefetch.GetCapped(`https://www.google.com/s2/favicons?domain=`+u.Hostname(), 30*time.Second, "", false, safefetch.DefaultMaxImageBytes)
+	b, err := fetchFaviconBytes(u.Hostname())
 	if err != nil {
 		err = fmt.Errorf("failed to get favicon by google api. hostname = %s: %w", u.Hostname(), err)
 		return nil, err
