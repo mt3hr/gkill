@@ -12,7 +12,8 @@ import org.junit.Test
 
 /**
  * Unit tests for GkillApiClient using MockWebServer.
- * Tests login, submitKFTLText, and getKftlTemplateStructJson methods.
+ * Tests login, submitKFTLText, getKftlTemplateStructJson, getPlaingTimeis,
+ * and endTimeis methods.
  */
 class GkillApiClientTest {
 
@@ -123,6 +124,21 @@ class GkillApiClientTest {
         assertEquals("HTTP 500", errorMsg)
     }
 
+    // gkill returns 4xx/5xx on failure, but the reason (error_message) lives only
+    // in the response body. The client must read the body first and surface that
+    // message; "HTTP 401" is only the fallback for an empty body (a bare status
+    // is useless on a watch screen).
+    @Test
+    fun loginWithError_non2xxWithErrorsBody_returnsBodyErrorMessage() {
+        val responseJson = """{"session_id":"","errors":[{"error_code":"AUTH_FAILED","error_message":"Invalid credentials"}]}"""
+        mockServer.enqueue(MockResponse().setBody(responseJson).setResponseCode(401))
+
+        val (sessionId, errorMsg) = client.loginWithError("admin", "wronghash")
+
+        assertNull(sessionId)
+        assertEquals("Invalid credentials", errorMsg)
+    }
+
     // ─── submitKFTLText ────────────────────────────────────────────────────
 
     @Test
@@ -160,6 +176,18 @@ class GkillApiClientTest {
         val error = client.submitKFTLText("session-123", "/m memo")
 
         assertEquals("HTTP 403", error)
+    }
+
+    // Non-2xx with an errors body: the body's error_message wins over "HTTP 400"
+    // (the status-only fallback applies only when the body is empty).
+    @Test
+    fun submitKFTLText_non2xxWithErrorsBody_returnsBodyErrorMessage() {
+        val responseJson = """{"errors":[{"error_code":"PARSE_ERROR","error_message":"Invalid KFTL syntax"}]}"""
+        mockServer.enqueue(MockResponse().setBody(responseJson).setResponseCode(400))
+
+        val error = client.submitKFTLText("session-123", "invalid text")
+
+        assertEquals("Invalid KFTL syntax", error)
     }
 
     @Test
@@ -207,6 +235,19 @@ class GkillApiClientTest {
         mockServer.enqueue(MockResponse().setResponseCode(500))
 
         val result = client.getKftlTemplateStructJson("session-123")
+
+        assertNull(result)
+    }
+
+    // Non-2xx with an errors body: the body is still read, and its errors mean
+    // failure (null). Pins that the errors decision comes from the body, not from
+    // a status cut before reading it.
+    @Test
+    fun getKftlTemplateStructJson_non2xxWithErrorsBody_returnsNull() {
+        val responseJson = """{"application_config":null,"errors":[{"error_code":"NO_SESSION","error_message":"session expired"}]}"""
+        mockServer.enqueue(MockResponse().setBody(responseJson).setResponseCode(401))
+
+        val result = client.getKftlTemplateStructJson("expired-session")
 
         assertNull(result)
     }
@@ -261,6 +302,60 @@ class GkillApiClientTest {
         val result = client.getPlaingTimeis("expired-session")
 
         assertNull(result)
+    }
+
+    // Non-2xx get_kyous with an errors body: the failure decision comes from the
+    // body's errors array (read after the status), and the call returns null.
+    @Test
+    fun getPlaingTimeis_non2xxWithErrorsBody_returnsNull() {
+        val responseJson = """{"kyous":null,"errors":[{"error_code":"NO_SESSION","error_message":"session expired"}]}"""
+        mockServer.enqueue(MockResponse().setBody(responseJson).setResponseCode(401))
+
+        val result = client.getPlaingTimeis("expired-session")
+
+        assertNull(result)
+    }
+
+    // Non-2xx get_kyous must not cut processing on status alone: when the body is
+    // valid JSON without errors, the kyous are processed and get_timeis is still
+    // called. Pins the no-status-cut semantics (the client previously returned
+    // null on non-2xx before reading the body).
+    @Test
+    fun getPlaingTimeis_non2xxGetKyousWithValidBody_continuesProcessing() {
+        val kyousJson = """{"kyous":[{"id":"timeis-1","rep_name":"TimeIs"}],"errors":null}"""
+        mockServer.enqueue(MockResponse().setBody(kyousJson).setResponseCode(500))
+        val timeisJson = """{"timeis_histories":[{"title":"work","start_time":"2026-01-01T10:00:00+09:00","data_type":"timeis_start","is_deleted":false}],"errors":null}"""
+        mockServer.enqueue(MockResponse().setBody(timeisJson).setResponseCode(200))
+
+        val result = client.getPlaingTimeis("session-123")
+
+        assertNotNull(result)
+        assertTrue(result!!.contains("timeis-1"))
+        assertTrue(result.contains("work"))
+
+        // Both requests were actually made: processing continued past the 500.
+        assertEquals("/api/get_kyous", mockServer.takeRequest().path)
+        assertEquals("/api/get_timeis", mockServer.takeRequest().path)
+    }
+
+    // ─── endTimeis ─────────────────────────────────────────────────────────
+
+    // Non-2xx update_timeis with an errors body: the body's error_message is
+    // returned instead of "HTTP 409" (the status-only fallback applies only when
+    // the body is empty).
+    @Test
+    fun endTimeis_non2xxUpdateWithErrorsBody_returnsBodyErrorMessage() {
+        val getTimeisJson = """{"timeis_histories":[{"id":"timeis-1","title":"work","start_time":"2026-01-01T10:00:00+09:00","data_type":"timeis_start","is_deleted":false}],"errors":null}"""
+        mockServer.enqueue(MockResponse().setBody(getTimeisJson).setResponseCode(200))
+        val updateJson = """{"errors":[{"error_code":"CONFLICT","error_message":"update conflict"}]}"""
+        mockServer.enqueue(MockResponse().setBody(updateJson).setResponseCode(409))
+
+        val error = client.endTimeis("session-123", "timeis-1", "TimeIs")
+
+        assertEquals("update conflict", error)
+
+        assertEquals("/api/get_timeis", mockServer.takeRequest().path)
+        assertEquals("/api/update_timeis", mockServer.takeRequest().path)
     }
 
     // ─── TLS pinning (H-05) ──────────────────────────────────────────────────
