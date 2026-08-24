@@ -5,7 +5,7 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、102ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、105ファイル。テスト14ファイルを含み、実装は91ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（186ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、17ファイル）
@@ -18,13 +18,13 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 | ラッパー | 件数 | ミドルウェアが行うこと | 対象 |
 |---|---|---|---|
-| `wrapNoAuth` | 14 | `filterLocalOnly` のみ | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet`, `urlog_bookmarklet_page`, `get_kyous_mcp`, `get_rep_infos_mcp`, `upload_files`, `upload_gpslog_files`, `browse_zip_contents`, `get_idf_kyou_by_relative_path`, `get_idf_file_path` |
+| `wrapNoAuth` | 13 | `filterLocalOnly` のみ | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet`, `urlog_bookmarklet_page`, `get_kyous_mcp`, `get_rep_infos_mcp`, `upload_files`, `upload_gpslog_files`, `browse_zip_contents`, `get_idf_kyou_by_relative_path` |
 | `wrapAuth` | 19 | セッション検証 → Account / UserID / Device を `AuthContext` に設定 | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, プラグイン4本 等 |
 | `wrapAuthRepos` | 58 | 上記に加えて `GkillRepositories` を解決 | データCRUD系（追加12 + 更新13 + 取得25 + 共有4 + リポジトリ/TX 4） |
 
 > **`wrapNoAuth` = 認証なし、ではない。** 上表の `wrapNoAuth` のうち
 > `upload_files` / `upload_gpslog_files` / `browse_zip_contents` /
-> `get_idf_kyou_by_relative_path` / `get_idf_file_path` / `get_kyous_mcp` の6本は、
+> `get_idf_kyou_by_relative_path` / `get_kyous_mcp` / `get_rep_infos_mcp` の6本は、
 > **ハンドラ内部で `getAccountFromSessionID` を呼んでセッションを検証**する。
 > ミドルウェアを通さないのは、これらがマルチパート相当の大きなボディや
 > 独自のリクエスト形式を扱うため。
@@ -56,7 +56,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 ```
 
 - **正常:** HTTP 200 + `errors` が `null`（要素なし）
-- **失敗:** `error_code` に応じた 400/401/403/404/409/429/500 + `errors` に詳細あり
+- **失敗:** `error_code` に応じた 400/401/403/404/409/413/429/500 + `errors` に詳細あり
 - 対応表の正本は `src/server/gkill/api/message/http_status.go`
 - **ボディの形はステータスによらず同じ。** `error_code` は本文にしか入っていないので、
   ステータスで打ち切らずに本文を読むこと
@@ -180,14 +180,28 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
   "locale_name": "ja"
 }
 
-// レスポンス例（成功時）
+// レスポンス例（成功時。created は実際に書けた記録の一覧）
 {
   "messages": [
     { "message_code": "MSG000076", "message": "メモ帳のテキストを記録しました" }
   ],
-  "errors": null
+  "errors": null,
+  "created": [
+    { "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "data_type": "kmemo", "updated": false },
+    { "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "data_type": "lantana", "updated": false },
+    { "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "data_type": "kc", "updated": false }
+  ]
 }
 ```
+
+`created[]` の要素は `{id, data_type, updated}`。記録本体（kmemo / mi / timeis 等）だけが載り、行から作られたタグ・テキストは載らない。`updated: true` は新規作成ではなく既存レコードの更新（`/end` 系の打刻終了）を表す。KFTLはDBトランザクションを使わないため、**途中で失敗してもそこまでに書けたぶんが `created[]` に載る**（部分保存の後始末用）。冪等キーで畳まれた再送は実行されないので `created` は空になる。
+
+失敗の返し方は2系統に分かれる（経緯は `documents/adr/0080-kftl-errors-are-per-line.md`）:
+
+| 失敗 | 応答 |
+|---|---|
+| 入力ミス（気分値が0-10の範囲外、終了対象の打刻が無い等） | **行ごとに** `ERR000416` を1件ずつ立て、行番号・行テキスト付きで HTTP 400。書き込み前の検査は全行を評価してから返すので、不正行が複数あっても1往復で全部分かる |
+| サーバ側の失敗 | 従来どおり `ERR000351` 1件で HTTP 500 |
 
 #### `/api/upload_files` — ファイルアップロード
 
@@ -323,7 +337,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 
 | パス | 説明 |
 |---|---|
-| `/api/get_all_tag_names` | 全タグ名一覧取得 |
+| `/api/get_all_tag_names` | 全タグ名一覧取得。**対象の記録が削除済みのタグは語彙から落とす**（記録を削除してもタグ自体は追記型のため残る。素直に列挙すると0件しか返さない候補が溜まるので、カスケード削除ではなく列挙側で落とす。判定は最新版アドレス表で行い、表に載らない対象＝プラグイン・git などのタグは落とさない。「タグ名が実在するか」の検証には対象の生死を問わない `GetAllTagNamesIncludingDeletedTargets` が別にある。実装は `gkill_repositories.go`、経緯は `documents/adr/0073-tag-vocabulary-drops-dead-targets.md`） |
 | `/api/get_all_rep_names` | 全リポジトリ名一覧取得 |
 | `/api/get_tags_by_id` | 対象KyouのIDに紐づくタグ一覧取得 |
 | `/api/get_tag_histories_by_tag_id` | タグIDの履歴取得（Append-Only全バージョン） |
@@ -350,7 +364,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/update_user_reps` | リポジトリパス更新 |
 | `/api/reload_repositories` | リポジトリ再読み込み |
 
-## ファイル操作（7件）
+## ファイル操作（6件）
 
 | パス | 説明 |
 |---|---|
@@ -360,14 +374,13 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/open_file` | ファイルを開く（OS コマンド実行） |
 | `/api/browse_zip_contents` | ZIPファイル内容閲覧。IDFKyouのZIPファイルを `$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/` に展開し、ZipEntry リスト（パス・サイズ・種別フラグ `is_image`/`is_text`/`is_video`/`is_audio`/`is_pdf`・配信URL）を返却する。種別フラグはクライアントの開き方（プレビュー・再生・新タブ・ダウンロード）の分岐に使う。セッション認証必須。パストラバーサル防止、Shift_JISファイル名デコード、アトミック展開に対応 |
 | `/api/get_idf_kyou_by_relative_path` | IDFKyou相対パス解決。基準IDFKyou（`target_id`）のファイルからの相対パス（`relative_path`）を同一Rep内で解決し、対象ファイルのIDFKyou IDを返却する（Markdown内相対リンクのKyouDialog表示用）。見つからない場合は `kyou_id` 空文字。セッション認証必須。パストラバーサル防止対応 |
-| `/api/get_idf_file_path` | IDFファイル絶対パス解決。`rep_name` + `file_name` から実ファイルの絶対パス（`file_path`）を返却する。MCPクライアントがbase64転送を経ずにファイルを直接読むための導線。**リクエスト元がlocalhostのときのみ応答**し、それ以外は `file_path` 空 + `ERR000389`。DB登録済みファイルしか引けないためパストラバーサル不可。リポジトリに無い場合は `exists` false。セッション認証必須 |
 
 ## KFTL（2件）
 
 | パス | 説明 |
 |---|---|
 | `/api/get_kftl_template` | KFTLテンプレート構造取得（※アドレス定義のみ、ハンドラ未実装。リクエストは404となる。テンプレートは `get_application_config` 経由で取得する） |
-| `/api/submit_kftl_text` | KFTLテキスト送信・パース・保存 |
+| `/api/submit_kftl_text` | KFTLテキスト送信・パース・保存。応答の `created[]` に実際に書けた記録が載る（部分保存時もそこまで載る）。入力ミスは行ごとの `ERR000416`（HTTP 400）、サーバ障害は `ERR000351`（500）で返る。詳細は上の代表例と `documents/adr/0080-kftl-errors-are-per-line.md` |
 
 ## トランザクション（2件）
 
@@ -399,12 +412,12 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 |---|---|
 | `/api/get_gps_log` | GPSログ取得（日付範囲指定） |
 
-## MCP連携（2件 + MCPツール11個）
+## MCP連携（2件 + MCPツール10個）
 
 | パス | 説明 |
 |---|---|
-| `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得（IDFペイロードに`rep_name`/`is_image`等含む） |
-| `/api/get_rep_infos_mcp` | rep名・rep種別・canonical_rep_types・プラグイン一覧の取得 |
+| `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得（IDFペイロードに`rep_name`/`is_image`等含む）。リクエストの `create_apps` / `update_apps` は「どのアプリが書いたか / 最後に更新したか」の許可リスト（`gkill_kftl` / `gkill_mcp_readwrite` / `urlog_bookmarklet` など。null=フィルタ未使用、非nullの空配列=0件）。応答の各 `kyous[]` には `create_app` / `update_app` が常時載り、絞り込みの結果を応答から検証できる |
+| `/api/get_rep_infos_mcp` | rep名・rep種別・canonical_rep_types・プラグイン一覧の取得。`rep_infos[].indexed_at` はその rep の索引の最終更新時刻（RFC3339。索引を持つ rep のみ＝現状は IDF）で、**索引が止まっていることを検知できる**（rep に置いただけのファイルは update_cache を通すまで検索に出ず、警告も出ないため）。`attached_data_reps[]`（`{rep_name, data_kind}`。data_kind は tag / text / notification / gpslog）はタグ・テキスト・通知・GPSログの書き込み先 rep の一覧で、「add_tag / add_text がどこへ書かれるか」を書く前に知るためのもの。**`rep_infos` と混ぜてはいけない別リスト** —— `query.reps` へ渡すと Kyou の `rep_name` と一致せず静かに0件になる |
 
 MCPサーバは10個のReadツールを提供する。内訳は固有の9（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_rep_infos`, `gkill_get_idf_file`, `gkill_get_kyou_history`）と、3サーバ共通のプラグインツール1つ（`gkill_get_plugin_list`。`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_kyou_history` は型別の `/api/get_*`（`/api/get_kmemo` 等）が返す histories をそのまま返す ―― 削除済みの版も含むので、`gkill_get_kyous` からは見えなくなった記録を読み返す唯一の経路になる。
 
@@ -427,7 +440,7 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の9（`gki
 
 | パス | 説明 |
 |---|---|
-| `/api/get_plugin_list` | インストール済みプラグイン一覧取得（名前・バージョン・説明・rep_name・is_alive） |
+| `/api/get_plugin_list` | インストール済みプラグイン一覧取得（manifest 情報に加え、稼働状態 `is_alive` / `process_running`、直近エラー `last_error`、型別索引の統計 `typed_index`） |
 | `/api/get_plugin_content_html` | プラグイン Kyou のコンテンツ HTML 取得 |
 | `/api/get_plugin_config_html` | プラグイン設定画面 HTML 取得 |
 | `/api/post_plugin_config` | プラグイン設定フォームのデータ保存 |
@@ -439,9 +452,11 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の9（`gki
 | リクエスト型 | `GetPluginListRequest` |
 | 主要フィールド | `session_id`, `locale_name` |
 | レスポンス型 | `GetPluginListResponse` |
-| レスポンスフィールド | `plugins: Array<PluginInfo>`（`name`, `version`, `description`, `data_type`, `rep_name`, `is_alive`） |
+| レスポンスフィールド | `plugins: Array<PluginInfo>`（`name`, `version`, `description`, `data_type`, `rep_name`, `is_alive`, `process_running`, `last_error`, `typed_index`） |
 | 備考 | MCPの `gkill_get_plugin_list` もこのエンドポイントをそのまま使う |
-| 備考 | `is_alive` はプラグインプロセスの生存状態を示す。プロセスが起動済みの場合 `true`、停止中は `false` |
+| 備考 | `is_alive` は「プロセスが起動できて ping に応答したか」。**判定は必要ならプロセスを起動する**。データが取り込めているかは表さない。現に起動済みかを副作用なしで見るのは `process_running` |
+| 備考 | `last_error` はプラグイン stderr の末尾（直近約4KB。何も出ていなければ省略）。**索引構築の失敗はここには出ない**（タイムアウトやJSON不正は gkill 側で起きるため）—— そちらは `typed_index.last_build_error` を見る |
+| 備考 | `typed_index` は provides を宣言したプラグインの索引統計（宣言が無ければ省略）。`ok` / `state`（`never_built` / `failed` / `ok`。未構築と構築失敗を区別する）/ `last_build_error` / `last_attempt_at`（直近に構築を試みた時刻。バックオフ中はエラーすら出ないため要る）/ `record_count` / `oldest` / `newest`（related_time の範囲。0件なら省略）/ `truncated`（true なら `record_count` は実数より小さい）/ `built_at`（この統計の鮮度） |
 
 ### get_plugin_content_html 詳細
 
@@ -467,7 +482,7 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の9（`gki
 
 ## 非APIルート
 
-`serve.go` に登録される API 以外のルートは19件（`PathPrefix` 18 + `Path` 1）。
+`serve.go` に登録される API 以外のルートは21件（`PathPrefix` 20 + `Path` 1）。
 
 | パス | メソッド | 説明 |
 |---|---|---|
@@ -476,7 +491,7 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の9（`gki
 | `/serviceWorker.js` | GET | PWA Service Worker 配信 |
 | `/resources/manual/*` | GET | HTMLマニュアル配信（7言語）。`filterLocalOnly` によるアクセス制御付き |
 | `/` | GET | Vue SPA（embed された index.html）。`router.Path("/")` として個別登録 |
-| `/rykv` `/kftl` `/mi` `/mkfl` `/kyou` `/dashboard` `/saihate` `/plaing` | GET | 同一SPAを配信（各パスが `PathPrefix` として個別登録される） |
+| `/rykv` `/kftl` `/mi` `/mkfl` `/kyou` `/dashboard` `/rudbeckia` `/saihate` `/plaing` | GET | 同一SPAを配信（各パスが `PathPrefix` として個別登録される） |
 | `/shared_page` `/shared_mi` `/shared_rykv` | GET | 共有ページ用SPA。認証不要 |
 | `/set_new_password` `/register_first_account`（+旧 `/regist_first_account`） | GET | SPA。**この2つだけ `ifRedirectResetAdminAccountIsNotFound` を通らない**（`serve.go:262-276`）。管理者アカウント未設定時のリダイレクト先そのものなので、リダイレクト判定を通すとループするため |
 | （上記以外） | GET | catch-all の `PathPrefix("/")` が同一SPAを配信 |

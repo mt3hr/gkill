@@ -9,6 +9,7 @@ import { FIND_QUERY_SCHEMA } from "./find-query-schema.mjs";
 import {
   ENTITY_DATA_TYPE_VALUES,
   DEFAULT_KYOU_HISTORY_LIMIT,
+  MAX_KYOU_HISTORY_LIMIT,
   ISO_DATETIME_DESC,
   DATE_ONLY_DESC,
   DEFAULT_KYOUS_LIMIT,
@@ -26,7 +27,7 @@ export const READ_TOOLS = [
     name: "gkill_get_kyous",
     description:
       "Search life-log entries (kyou) with optional filters and return enriched results including tags, texts, notifications, and typed payload inline. " +
-      "Each result contains data_type, related_time, tags[], texts[], notifications[], timeis[] (attached TimeIs), and payload (type-specific fields). " +
+      "Each result contains data_type, related_time, create_app / update_app (the app that wrote / last updated it — filter on these with the create_apps / update_apps parameters), tags[], texts[], notifications[], timeis[] (attached TimeIs), and payload (type-specific fields). " +
       "Supports cursor-based pagination via next_cursor / cursor parameters. " +
       "Use limit and max_size_mb to control response size. " +
       "Available data_type values: kmemo (text memo), kc (numeric record), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image — use gkill_get_idf_file to fetch file content), git_commit_log (git commit), rekyou (repost of another entry), " +
@@ -48,7 +49,8 @@ export const READ_TOOLS = [
       "canonical rep_types values come from gkill_get_rep_infos. " +
       "Every entry always carries id and rep_name (v2). limit and max_size_mb are strict caps. " +
       "Response fields: kyous[], total_count (only on cursor-less responses), returned_count, remaining_count, has_more, next_cursor, " +
-      "buckets (group_by only), warnings, plugin_content (inline-content counts; present only when include_plugin_content is true).",
+      "buckets (group_by only), partial (true when some attached data — tags/texts/notifications/TimeIs — could not be fetched and the " +
+      "returned entries are incomplete; details land in warnings), warnings, plugin_content (inline-content counts; present only when include_plugin_content is true).",
     inputSchema: {
       type: "object",
       properties: {
@@ -59,8 +61,10 @@ export const READ_TOOLS = [
         },
         limit: {
           type: "integer",
-          description: `Max number of entries to return. Default: ${DEFAULT_KYOUS_LIMIT}.`,
+          description: `Max number of entries to return (1-1000). Default: ${DEFAULT_KYOUS_LIMIT}.`,
           default: DEFAULT_KYOUS_LIMIT,
+          minimum: 1,
+          maximum: 1000,
         },
         cursor: {
           type: "string",
@@ -321,7 +325,8 @@ export const READ_TOOLS = [
       "({rep_name, data_type, plugin_name} — plugins are matched via query.reps or data_types, never rep_types). " +
       "Call this instead of guessing rep_types casing; ApplicationConfig display labels do not map 1:1 to query values. " +
       "Also returns attached_data_reps[] ({rep_name, data_kind}) — where tags, texts, notifications and GPS logs are " +
-      "stored. That answers \"where does gkill_add_tag write?\" before you write, which nothing else could. " +
+      "stored. On the ReadWrite server that answers \"where does gkill_add_tag write?\" before you write, which " +
+      "nothing else could (the Write-only server does not carry this tool). " +
       "IMPORTANT: these are NOT query.reps values. They hold attached data, not kyou entries, so passing one to " +
       "query.reps matches no kyou and silently returns zero results. Use rep_infos[] for filtering and " +
       "attached_data_reps[] only to know where attached data lives.",
@@ -348,7 +353,10 @@ export const READ_TOOLS = [
       "On stdio clients the payload carries 'file_path' instead; reading that from the filesystem avoids " +
       "base64 and has no size cap, so prefer it whenever it is present. " +
       "This tool is capped by GKILL_MCP_MAX_FILE_BYTES (default 8MB); pass thumb to stay under it " +
-      "(and is_video:true alongside thumb to grab a frame out of a video).",
+      "(and is_video:true alongside thumb to grab a frame out of a video). " +
+      "Response fields: file_name, mime_type, file_size_bytes, is_image, thumb (echoed back only when a downscaled " +
+      "version was returned — its absence means you got the original), and file_content_base64 (the file body; " +
+      "for images it is also delivered as the MCP image content block).",
     inputSchema: {
       type: "object",
       properties: {
@@ -412,8 +420,10 @@ export const READ_TOOLS = [
         },
         limit: {
           type: "integer",
-          description: `Max versions to return, newest first. Default: ${DEFAULT_KYOU_HISTORY_LIMIT}. Histories are unbounded — every edit appends one.`,
+          description: `Max versions to return, newest first (1-${MAX_KYOU_HISTORY_LIMIT}). Default: ${DEFAULT_KYOU_HISTORY_LIMIT}. Histories are unbounded — every edit appends one.`,
           default: DEFAULT_KYOU_HISTORY_LIMIT,
+          minimum: 1,
+          maximum: MAX_KYOU_HISTORY_LIMIT,
         },
         locale_name: { type: "string", description: "Locale, e.g. ja/en." },
       },

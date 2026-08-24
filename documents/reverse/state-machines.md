@@ -14,6 +14,8 @@ stateDiagram-v2
 
     実行中 --> 終了済み: UpdateTimeis<br>(END_TIME設定)
 
+    終了済み --> 実行中: UpdateTimeis<br>(END_TIME=null で差し戻し)
+
     実行中 --> 論理削除: UpdateTimeis<br>(IS_DELETED=true)
 
     終了済み --> 終了済み: UpdateTimeis<br>(タイトル等の編集)<br>Append-Onlyで新レコードINSERT
@@ -38,6 +40,11 @@ stateDiagram-v2
         履歴からは参照可能
     end note
 ```
+
+**「終了済み → 実行中」の差し戻しは正規の遷移。** 編集ダイアログで終了日時を空欄にして
+保存するか、MCP の `gkill_update_timeis` に `end_time: null` を渡すと、END_TIME=null の版が
+最新になり進行中へ戻る（`src/mcp/lib/write-normalization.mjs` — `end_time` だけは
+「未指定=触らない / null=消す / 値=その時刻」の3値。Go 側 `TimeIs.EndTime` は `*time.Time`）。
 
 ### KFTL での TimeIs 状態遷移
 

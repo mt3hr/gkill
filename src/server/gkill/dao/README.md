@@ -54,13 +54,14 @@ dao/
 全リポジトリの初期化・接続管理・ライフサイクルを統括する中心的な構造体。
 ユースケース層（`usecase/`）および API ハンドラ層は `GkillDAOManager` 経由でリポジトリにアクセスする。
 
-## ルートファイル（5ファイル）
+## ルートファイル（6ファイル）
 
 | ファイル | 役割 |
 |---------|------|
 | `config_da_os.go` | OS 別の設定ファイルパス定義。Windows / macOS / Linux で異なるパスを返す |
 | `gkill_dao_manager.go` | `GkillDAOManager` 本体。全リポジトリの初期化・接続管理・ライフサイクル統括 |
 | `gkill_dao_manager_test.go` | `GkillDAOManager` のテスト |
+| `gkill_dao_manager_git_rep_test.go` | git_commit_log の rep 定義（glob）に git リポジトリでないエントリが混ざっても `GetRepositories` 全体が落ちないことのテスト |
 | `gkill_notificater.go` | Web Push 通知の送信ロジック。VAPID 鍵を使用したブラウザ通知 |
 | `plugin_manager.go` | プラグインバイナリの検出・起動管理。userID をパス要素として使用する前に検証する |
 
@@ -135,7 +136,7 @@ dao/
 | `repository_dao.go` | `RepositoryDAO` インタフェース |
 | `repository_dao_sqlite3_impl.go` | SQLite3 実装 |
 
-### `reps/`（137ファイル。テストを含めると188）— メインリポジトリ
+### `reps/`（137ファイル。テストを含めると190）— メインリポジトリ
 
 全 Kyou データ型のリポジトリ。詳細は [reps/README.md](reps/README.md) を参照。
 

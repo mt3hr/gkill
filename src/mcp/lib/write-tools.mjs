@@ -255,6 +255,7 @@ export const WRITE_TOOLS = [
       "Valid data_type values: kmemo (text memo), urlog (bookmark), nlog (expense), lantana (mood), timeis (time interval), mi (task), kc (numeric), tag, text, rekyou (repost), mirekyou (an entry turned into a task), notification. " +
       "The appropriate update endpoint is selected automatically based on data_type. " +
       "Response fields: updated_{data_type} (the entity with is_deleted=true), and updated_kyou (parent Kyou wrapper) only for types that have one — tag and text are attached data with no Kyou of their own, so their responses carry updated_tag / updated_text alone. " +
+      "Fails with 'Entity is already deleted' when the entry is already deleted, instead of stacking another pointless version — the counterpart of gkill_restore_kyou's 'already active' guard — so it is safe to call speculatively. " +
       "Note: this is a soft-delete. The entry stays in the database — read it back with gkill_get_kyou_history, list deleted entries with query.include_deleted_data on gkill_get_kyous, and undo with gkill_restore_kyou. " +
       "Note: idf (file) and git_commit_log entries cannot be deleted via this tool — they are managed by the file system and git repositories respectively.",
     inputSchema: {
@@ -429,7 +430,7 @@ export const WRITE_TOOLS = [
       "Update an existing tag in gkill using patch semantics. Changes the tag name while keeping the tag attached to the same target entry. " +
       "The MCP server internally fetches the current tag entity via the tag history API (get_tag_histories_by_tag_id), merges the change, and sends the update. " +
       "To obtain the tag ID: use the id from a previous gkill_add_tag response (added_tag.id). Note: tags are separate entities from the entries they're attached to — each tag has its own ID distinct from the parent entry's ID. " +
-      "Response fields: updated_tag (full Tag entity after update, with id, tag, target_id, rep_name, etc.), updated_kyou (parent Kyou wrapper). " +
+      "Response fields: updated_tag (full Tag entity after update, with id, tag, target_id, rep_name, etc.). Tags are attached data with no parent Kyou wrapper of their own, so updated_kyou is always null here. " +
       "Use case: rename a tag (e.g., fix a typo in a tag name, change \"wrk\" to \"work\"). To remove a tag entirely, use gkill_delete_kyou with data_type=\"tag\".",
     inputSchema: {
       type: "object",
@@ -448,7 +449,7 @@ export const WRITE_TOOLS = [
       "Update an existing text annotation in gkill using patch semantics. Changes the text content while keeping the annotation attached to the same target entry. " +
       "The MCP server internally fetches the current text entity via the text history API (get_text_histories_by_text_id), merges the change, and sends the update. " +
       "To obtain the text ID: use the id from a previous gkill_add_text response (added_text.id). Note: text annotations are separate entities from the entries they're attached to — each has its own ID distinct from the parent entry's ID. " +
-      "Response fields: updated_text (full Text entity after update, with id, text, target_id, rep_name, etc.), updated_kyou (parent Kyou wrapper). " +
+      "Response fields: updated_text (full Text entity after update, with id, text, target_id, rep_name, etc.). Text annotations are attached data with no parent Kyou wrapper of their own, so updated_kyou is always null here. " +
       "Use case: edit a note or comment attached to an existing entry. To remove a text annotation entirely, use gkill_delete_kyou with data_type=\"text\".",
     inputSchema: {
       type: "object",

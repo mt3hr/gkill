@@ -177,6 +177,7 @@ curl -v -X POST http://localhost:8808/mcp \
 | `gkill_get_all_rep_names` | 全リポジトリ名を取得 |
 | `gkill_get_gps_log` | 期間指定でGPSログを取得 |
 | `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等） |
+| `gkill_get_rep_infos` | リポジトリ一覧を構造化メタデータ付きで取得。`query.rep_types` が受理する正準値 `canonical_rep_types[]`（表示ラベルと1:1でない）、索引付きrepの最終更新 `indexed_at`（古いと「追加したはずのファイルが検索に出ない」の原因）、タグ・テキスト・通知・GPSログの格納先 `attached_data_reps[]`（`query.reps` には渡せない）を返す |
 | `gkill_get_idf_file` | IDFファイルの実データを取得（画像はMCP image blockで返却）。`thumb=WxH`（一辺最大1024、動画は `is_video: true` 併用）で縮小取得できる。上限は `GKILL_MCP_MAX_FILE_BYTES`（既定8MB） |
 | `gkill_get_kyou_history` | 1件の全版を取得（削除済みの版も含む）。`gkill_get_kyous` から見えなくなった記録を読み返す唯一の経路 |
 
@@ -244,7 +245,7 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 | `gkill_update_kc` | 数値記録更新 |
 | `gkill_update_tag` | タグ更新 |
 | `gkill_update_text` | テキスト注釈更新 |
-| `gkill_submit_kftl` | KFTLテキスト一括処理 |
+| `gkill_submit_kftl` | KFTLテキスト一括処理。応答の `created[]`（`{id, data_type, updated}`）に実際に書かれた記録が書かれた順で並ぶ。`created[].id` を `gkill_add_tag` / `gkill_add_text` の `target_id` に使えば、KFTLで作った記録へ後からタグ・注釈を付けられる |
 | `gkill_delete_kyou` | エントリのソフト削除 |
 | `gkill_restore_kyou` | ソフト削除の取り消し（`is_deleted` を戻す） |
 
@@ -253,6 +254,8 @@ Write専用サーバにはRead便利ツール4つ（`gkill_get_all_rep_names`, `
 ##### 更新系の引数
 
 `gkill_update_*` は **patch セマンティクス**で、`id` 以外はすべて省略可能です。送らなかった項目は現在値のまま残ります。スキーマの `required` も `["id"]` だけです（以前は `title` などを要求しており、スキーマに従って推測値を送ると既存の値を静かに上書きしていました）。
+
+`gkill_update_timeis` の `end_time` だけは3値です — 省略で現状維持、日時指定で終了、**`null` で終了時刻を消して進行中へ差し戻す**。省略が現状維持である以上、終了済み TimeIs を再開する手段は `end_time: null` だけです。
 
 ##### 削除と復活
 
@@ -323,10 +326,12 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 #### 2) ツール選択フロー（推奨）
 1. まず `gkill_get_application_config` でタグ階層・ボード構造・リポジトリ構造を把握する
 2. 必要に応じて `gkill_get_all_tag_names` / `gkill_get_all_rep_names` / `gkill_get_mi_board_list` でメタ情報を補完
-3. `gkill_get_kyous` でKyou一覧を取得（タグ・テキスト・型データはレスポンスにインライン）
-4. 件数が多い場合は `cursor` / `next_cursor` でページングして追加取得
-5. 地図系は `gkill_get_gps_log` を使う
-6. プラグイン由来のKyou（`payload.kind === "plugin"`）の本文が要るときは `gkill_get_kyous` に `include_plugin_content: true` を付ける。どのプラグインが入っているかは `gkill_get_plugin_list` で分かる
+3. `query.rep_types` で絞るときは `gkill_get_rep_infos` で正準値（`canonical_rep_types`）を引く（ApplicationConfig の表示ラベルと受理値は1:1でない）。「追加したはずのファイルが検索に出ない」ときも `indexed_at` で索引の鮮度を確かめる
+4. `gkill_get_kyous` でKyou一覧を取得（タグ・テキスト・型データはレスポンスにインライン）
+5. 件数が多い場合は `cursor` / `next_cursor` でページングして追加取得
+6. 地図系は `gkill_get_gps_log` を使う
+7. プラグイン由来のKyou（`payload.kind === "plugin"`）の本文が要るときは `gkill_get_kyous` に `include_plugin_content: true` を付ける。どのプラグインが入っているかは `gkill_get_plugin_list` で分かる
+8. 検索から消えた記録・過去版・削除済みの中身を読み返すときは `gkill_get_kyou_history`（`id` と `data_type` の両方が必須）。削除の取り消しは Write系サーバの `gkill_restore_kyou`
 
 #### 3) `gkill_get_kyous` のパラメータ
 | パラメータ | 型 | 説明 |
@@ -339,18 +344,20 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 | `is_include_timeis` | boolean | 各Kyouに付随する TimeIs を含めるか（default: false） |
 | `count_only` / `group_by` | boolean / string | 件数だけ・バケット集計（month/day/week_of_day/hour/data_type/rep_name/url_domain/file_extension）。cursor とは併用不可 |
 | `data_types` / `num_min` / `num_max` / `idf_kinds` / `include_file_size` | - | リクエストレベルの絞り込み（v2。ADR-0053） |
+| `create_apps` / `update_apps` | array | 作成アプリ / 最終更新アプリの許可リスト（各記録の `create_app` / `update_app` と照合）。「MCP経由で作った記録」（`"gkill_mcp_readwrite"` / `"gkill_mcp_write"`）の絞り込みに使う |
 | `include_plugin_content` | boolean | プラグインKyouの本文をレスポンスに埋め込むか（default: false） |
 | `plugin_content_max_text_length` | integer | 埋め込む本文の1件あたり上限文字数（default: 4000, max: 200000） |
 | `plugin_content_format` | string | 埋め込む形式。`text`（既定）/ `html` / `both` |
 
 レスポンスフィールド:
-- `kyous[]`: Kyou DTOの配列（各要素に `data_type`, `related_time`, `tags[]`, `texts[]`, `notifications[]`, `payload` を含む）
+- `kyous[]`: Kyou DTOの配列（各要素に `id`, `rep_name`, `data_type`, `related_time`, `create_app` / `update_app`（作成/最終更新アプリ名）, `tags[]`, `texts[]`, `notifications[]`, `timeis[]`（`is_include_timeis: true` のときの付随TimeIs）, `payload` を含む）
 - `total_count`: クエリ全体の件数（**cursor 無し応答のみ**。count_only/group_by を含む）
 - `returned_count`: 今回返却した件数
 - `remaining_count`: この続きに残っている件数（全応答）
 - `has_more`: 続きがある場合 true
 - `next_cursor`: 次ページ取得用カーソル（不透明文字列。そのまま返送する）
 - `buckets[]`: group_by 指定時の集計（{key, count}）
+- `partial`: 付随データ（タグ・テキスト・通知・TimeIs）の一部取得に失敗し、返した Kyou の付随データが不完全なとき true（内訳は `warnings[]` に入る）
 - `warnings[]`: 未知のフィルタ値の指摘・付随データ欠落など
 - `plugin_content`: 本文埋め込みの集計（`include_plugin_content: true` のときのみ）
 

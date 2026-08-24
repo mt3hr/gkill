@@ -705,7 +705,7 @@ AIクライアント（MCP）からもプラグインの記録を読める。プ
 
 | ツール名 | gkill API | 説明 |
 |---|---|---|
-| `gkill_get_plugin_list` | `/api/get_plugin_list` | プラグイン一覧（name / version / description / data_type / rep_name / is_alive） |
+| `gkill_get_plugin_list` | `/api/get_plugin_list` | プラグイン一覧（name / version / description / data_type / rep_name / is_alive / process_running / last_error / typed_index。後3つは診断用 — 実装は `req_res/get_plugin_list_response.go`） |
 
 読み取り専用。設定書き換え（`/api/post_plugin_config`）はMCPに公開していない。
 
@@ -822,6 +822,16 @@ Kmemo→KC→URLog→Nlog→Lantana→TimeIs→Mi の順で最初の1つだけ�
 | 読み取りは | 不変スナップショット（`atomic.Pointer`）から即答。冷たければ空を返し、バックグラウンドで温め直しを予約する |
 | 再構築の最短間隔 | 30秒。`UpdateCache` は `Reps` / `TagReps` / `TextReps` / `NotificationReps` から立て続けに呼ばれるため |
 | 失敗時 | 既存のスナップショットを**空で潰さない**。`AppendPluginFindWarning` に記録してメッセージに出す |
+
+**索引の状態は `get_plugin_list` の `typed_index` から観測できる。** `state` は
+`never_built`（一度も構築していない）/ `failed`（直近の構築が失敗）/ `ok` の3値 ——
+`ok` フラグの false だけでは「未構築」と「構築失敗」が潰れており、呼び出し側は
+直しようが無かった（2026-08-24 の再監査で分離）。`last_build_error` は直近の構築失敗の
+理由（タイムアウト・`ErrPluginBusy`・JSON不正など gkill 側で起きるもの）で、
+**プラグインプロセスの stderr 末尾である `last_error` とは別物** —— 索引構築の失敗要因は
+stderr には出ない。`last_attempt_at` は直近に構築を試みた時刻で、再構築はバックオフ中だと
+エラーすら発生しないため、これが無いと「なぜ何も起きていないのか」が分からない
+（`PluginTypedIndex.Stats()`）。
 
 `FindKyous` で索引を埋めるのは、`Reps` 経由の検索が `goForRep`（`dao/reps/repositories.go`）で
 スレッドプールを迂回するので、そこでブロックしても安全なため。
