@@ -135,7 +135,7 @@ src/server/
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（138ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（141ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
     │       ├── gkill_server_api_address.go  # ルーティング定義（92エンドポイント定義・90登録：89 POST + 1 GET）
@@ -146,7 +146,7 @@ src/server/
     │       ├── utils.go            # ユーティリティ関数
     │       ├── web_push.go         # WebPush通知
     │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
-    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、102ファイル）
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、105ファイル）
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     ├── dao/                        # データアクセス層
@@ -230,9 +230,9 @@ AI連携用のMCP（Model Context Protocol）サーバーです。
 
 ```
 src/mcp/
-├── gkill-read-server.mjs      # Read専用MCPサーバー（11ツール = 固有10 + プラグイン1、port 8808）
+├── gkill-read-server.mjs      # Read専用MCPサーバー（10ツール = 固有9 + プラグイン1、port 8808）
 ├── gkill-write-server.mjs     # Write専用MCPサーバー（26ツール = 固有25 + プラグイン1、port 8809）
-├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（32ツール = 固有31 + プラグイン1、port 8810）
+├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（31ツール = 固有30 + プラグイン1、port 8810）
 └── lib/
     ├── mcp-server-base.mjs    # 3サーバ共通の JSON-RPC 受け口
     ├── stdio-transport.mjs    # stdio トランスポート
@@ -339,7 +339,7 @@ documents/
 │   ├── README.md                     # 資料集の目次・推奨読み順
 │   ├── glossary.md                   # 用語集（96項目）
 │   ├── design-philosophy.md          # 設計思想
-│   ├── usecase.md                    # ユースケース一覧（87件）
+│   ├── usecase.md                    # ユースケース一覧（86件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
 │   ├── sequence-diagrams.md          # シーケンス図（29本: 正常系24 + 異常系5）

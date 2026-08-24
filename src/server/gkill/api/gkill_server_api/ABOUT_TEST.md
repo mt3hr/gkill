@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装91ファイル（+ テスト8ファイル））に対する統合テストを含む。
+`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装91ファイル）に対する統合テストを含む。テストファイルは全31本（うち handle_*_test.go は14本）。
 
 ## テストフレームワーク
 
@@ -30,6 +30,19 @@ Go `testing` パッケージ
 | `get_kyous_rep_filter_test.go` | rep名での絞り込みを**キャッシュ有無の両方**で。`UpdateCache` の**前後で2回**見るのが要点で、追加直後はキャッシュ表の `REP_NAME` が空のため「空の行は残す」分岐で全部素通りし、そこだけでは許可リスト側の分岐を一度も検証できない |
 | `get_kyous_tx_rep_filter_test.go` | `commit_tx` で確定した記録が rep絞り込みを通ること（キャッシュON/OFF）。一時リポジトリの合成rep名がキャッシュへ入ると、メモ帳構文で書いた記録だけが一覧から丸ごと消える |
 | `handle_get_kyous_mcp_test.go` | MCP用の記録取得（大量IDでの分割、応答形状） |
+| `handle_get_kyous_mcp_v2_test.go` | get_kyous_mcp v2 の回帰（複合カーソルのラウンドトリップと受理・拒否、count_only / group_by、データ型・数値・作成/更新アプリのリクエストレベルフィルタ、未知値の警告、残件数の意味論）。プラグインIDは任意文字列なので「ID側に `::` が含まれる」ケースを必ず含める |
+| `handle_get_rep_infos_mcp_test.go` | `/api/get_rep_infos_mcp` の回帰。rep_types の正準語彙が API から取れること、付随データ rep の列挙、索引の鮮度 `indexed_at` が載ること、セッション必須であること |
+| `get_kyous_period_of_time_test.go` | 時間帯フィルタの狭い窓（09:00〜10:00）。秒オブデイ表現（MCP契約）と epoch 表現（Web契約）が同じ結果になること、SQL 経路と Go 経路（`--cache_in_memory` の ON/OFF）で結果が一致すること |
+| `response_status_test.go` | エラーコード別 HTTP ステータス（`message.HTTPStatusOf`）が実応答に出ることの end-to-end 確認。401/403/400/409、成功時は 200 のまま、panic は 500+gzip、認証本文の過大は 413・読み取り失敗は 500 で、いずれも JSON 本文が返ること |
+| `response_status_guard_test.go` | ソース走査ガード。JSON ハンドラのエンコード行の直前に `writeErrorStatus` があること（既存ハンドラのコピペでこの1行が抜けると、そのエンドポイントだけ異常時も 200 へ戻る）、免除リストのファイルが実在すること、ミドルウェアがステータスと JSON 本文を書くこと |
+| `handle_browse_zip_contents_test.go` | ZIP 展開（`extractZip`）の正常系と、圧縮爆弾の拒否 |
+| `handle_submit_kftl_text_test.go` | KFTL 送信の冪等キー、作成された記録の `created[]` 返却、利用者の書き間違い（ERR000416）が不正行ごとに行番号・行テキスト付きで積まれ HTTP 400 になること（解釈フェーズの失敗では正しい行も保存されない） |
+| `kftl_idempotency_test.go` | 冪等キー台帳（`markDone` 後の達成済み判定、TTL 失効で再実行対象へ戻ること、`markDone` 時の GC） |
+| `shared_file_authz_test.go` | 共有経路のファイル配信の認可。共有クエリの結果に含まれるファイルだけを許可し、同一 rep 内の兄弟ファイルは 403 にすること（許可集合の突き合わせと URL パスの正規化） |
+| `web_push_test.go` | WebPush 送信失敗（`webpush.SendNotification` が nil resp を返す）で panic しないこと |
+| `handle_file_serve_test.go` | `/files/` 配信で `GetRepositories` 失敗が 500 になること。req_res を使わずファイル本体を返す経路で `response_status_guard_test.go` の免除対象のため、ここで直に固定する（かつては 403 で、認可の失敗とサーバ障害がステータスから区別できなかった） |
+| `handle_get_plugin_list_test.go` | `/api/get_plugin_list` が provides 宣言のあるプラグインに型別索引の統計（typed_index）と State / LastBuildError / LastAttemptAt を返すこと（「is_alive=true なのに0件」の理由を API から診断できるようにするため） |
+| `handle_update_user_reps_test.go` | 存在しないユーザIDへのリポジトリ一覧更新が `TargetAccountNotFoundError`（ERR000413）+ HTTP 404 になること。認証経路の `AccountNotFoundError`（ERR000002）を混ぜるとクライアントの check_auth が操作した管理者をログアウトさせるため、コードを分けている |
 
 ## テスト内容
 
@@ -156,6 +169,7 @@ MPEG-TS（is_video）の両方に該当する既知の重複もここで文書�
 - **無効化済み管理者**: セッションは生きたままアカウントだけ `IsEnable = false` に
   したとき、リセットできないこと
 - **通常のセッションは成功する**: 上記3件が「そもそも常に失敗する」だけでないことを担保する
+- **存在しない対象ユーザ**: 存在しないユーザIDへのリセットが `TargetAccountNotFoundError`（ERR000413）+ HTTP 404 になること
 
 ### `handle_set_new_password_test.go`（リセットトークンの期限切れ）
 
@@ -168,6 +182,7 @@ MPEG-TS（is_video）の両方に該当する既知の重複もここで文書�
 - **不一致**: トークンが一致しないときは期限切れを名乗らないこと（従来どおり `ERR000247`）
 - **期限内**: 期限内のトークンならパスワードが設定され、使い終わったトークンが消えること
   （上の2件が「そもそも常に失敗する」だけでないことの担保）
+- **存在しない対象ユーザ**: 存在しないユーザIDへのパスワード設定が `TargetAccountNotFoundError`（ERR000413）+ HTTP 404 になること
 
 ### `handle_update_account_status_test.go`（自分自身の無効化）
 
@@ -178,7 +193,8 @@ MPEG-TS（is_video）の両方に該当する既知の重複もここで文書�
 - **自分の無効化**: `ERR000409` で弾き、アカウントが有効なままであること
 - **自分の有効化**: 禁止しているのが無効化だけで、有効化まで巻き込んでいないこと
 - **存在しないユーザ**: `GetAccount` が「見つからない」をnilで返すため、
-  nilチェックを落とすとnilポインタ参照になる経路がエラーとして返ること
+  nilチェックを落とすとnilポインタ参照になる経路がエラーとして返ること。
+  あわせて `TargetAccountNotFoundError`（ERR000413）+ HTTP 404 で返ること
 
 ### `gkill_server_api_rate_limit_test.go`（レート制限テスト）
 

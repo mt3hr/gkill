@@ -422,6 +422,14 @@ sequenceDiagram
     TimeIsRep-->>API: OK
     API-->>UI: {updated_timeis}
     UI-->>User: 終了完了
+
+    Note over User,TimeIsRep: TimeIs 差し戻し（終了の取り消し）
+    User->>UI: 編集ダイアログで終了日時を空欄にして保存
+    UI->>API: POST /api/update_timeis<br>{timeis: {ID, END_TIME=null}}
+    API->>TimeIsRep: AddTimeIsInfo(timeis)
+    Note right of TimeIsRep: END_TIME=null の版が最新になり<br>稼働中状態へ戻る<br>(MCP の gkill_update_timeis<br>end_time:null も同じ経路)
+    TimeIsRep-->>API: OK
+    API-->>UI: {updated_timeis}
 ```
 
 ## 12. アプリケーション設定取得・更新
@@ -722,12 +730,18 @@ sequenceDiagram
     API->>PluginMgr: GetPluginManager(userID).GetPluginRepositories()
     loop 各プラグイン
         PluginMgr->>PluginMgr: manifest情報取得（name, version, description, data_type, rep_name）
-        PluginMgr->>PluginMgr: is_alive 確認（プロセス生存判定）
+        PluginMgr->>PluginMgr: is_alive 確認（ping。必要ならプロセス起動）
+        PluginMgr->>PluginMgr: process_running / last_error（stderr末尾）/<br>typed_index（索引統計）を受動読み
     end
     PluginMgr-->>API: []PluginRepository
-    API-->>MCP: {plugins: [{name, version, description, data_type, rep_name, is_alive}, ...]}
+    API-->>MCP: {plugins: [{name, version, description, data_type, rep_name,<br>is_alive, process_running, last_error,<br>typed_index: {ok, state, last_build_error, last_attempt_at,<br>record_count, oldest, newest, truncated, built_at}}, ...]}
     MCP-->>Client: プラグイン一覧
 ```
+
+`typed_index` は `provides` を宣言したプラグインだけに載る（`req_res/get_plugin_list_response.go`）。
+`last_error` はプラグインプロセスの stderr 末尾で、索引構築の失敗理由はそこには出ない
+（そちらは `typed_index.last_build_error`。詳細は [plugin-system.md](plugin-system.md) の
+「インメモリ索引」節）。
 
 ---
 
@@ -1025,9 +1039,20 @@ sequenceDiagram
         API-->>UI: {errors: [{error_code: "ERR000013"}]}
     else デバイス取得失敗
         API-->>UI: {errors: [{error_code: "ERR000220"}]}
-    else パース/保存エラー
+    else 入力ミス（利用者が直せる）
+        API->>KFTL: GenerateAndExecuteRequests(kftl_text)
+        KFTL-->>API: KFTLInputError（行番号・行テキスト付き）
+        API-->>UI: HTTP 400<br>{errors: [ERR000416 を不正行ごとに1件],<br>created: [書けたぶん]}
+    else サーバ障害
         API->>KFTL: GenerateAndExecuteRequests(kftl_text)
         KFTL-->>API: error
-        API-->>UI: {errors: [{error_code: "ERR000351",<br>error_message: "KFTLテキスト処理エラー"}]}
+        API-->>UI: HTTP 500<br>{errors: [{error_code: "ERR000351",<br>error_message: "KFTLテキスト処理エラー"}],<br>created: [書けたぶん]}
     end
 ```
+
+入力ミス（気分値の範囲外・`/end` の終了対象なし等）は `ERR000416`（HTTP 400）で
+**不正行ごとに1件ずつ**積まれ、メッセージに行番号と行テキストが載る。サーバ障害は
+従来どおり `ERR000351`（HTTP 500）1件。どちらの失敗でも応答の `created[]` には
+**そこまでに書けた記録**（`{id, data_type, updated}`）が載る — KFTL は DB トランザクションを
+使わないため部分保存が残り、これが無いと後始末ができない
+（[ADR-0080](../adr/0080-kftl-errors-are-per-line.md)）。
