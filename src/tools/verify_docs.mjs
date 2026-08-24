@@ -13,6 +13,7 @@
 // ファイル名の実在まで検査する理由と、除外を2種類に絞った理由:
 // documents/adr/0061-verify-docs-checks-filenames.md
 
+import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -583,9 +584,34 @@ function buildCountAssertions(m) {
   add('src/mcp/ABOUT_TEST.md', `${mcpRW}ツール全ディスパッチ`)
   add('src/mcp/ABOUT_TEST.md', `Read ${mcpReadOnly}ツール + Write ${mcpWriteOnly}ツール`)
 
+  // documents/reverse 側の MCP ツール数。2026-08-24 の監査で、検査対象が src/mcp と
+  // スキル・マニュアルの4ファイルに限られていたため reverse 資料に3〜4世代前の数が
+  // 14箇所残っていた（同一ファイル内で新旧が同居する自己矛盾も2件）。言及箇所を全て検査に載せる。
+  add('documents/reverse/folder-structure.md', `${mcpRead}ツール = 固有${mcpReadOnly} + プラグイン1、port 8808`)
+  add('documents/reverse/folder-structure.md', `${mcpWrite}ツール = 固有${mcpWrite - 1} + プラグイン1、port 8809`)
+  add('documents/reverse/folder-structure.md', `${mcpRW}ツール = 固有${mcpRW - 1} + プラグイン1、port 8810`)
+  add('documents/reverse/glossary.md', `${mcpRead}ツール = 固有${mcpReadOnly} + プラグイン1、stdio/HTTP`)
+  add('documents/reverse/glossary.md', `${mcpWrite}ツール = 書き込み${mcpWriteOnly} + Read便利${mcpWriteConvenience} + プラグイン1、stdio/HTTP`)
+  add('documents/reverse/glossary.md', `${mcpRW}ツール = 固有${mcpRW - 1} + プラグイン1、stdio/HTTP`)
+  add('documents/reverse/mcp-setup-guide.md', `\`gkill-read-server.mjs\` | ${mcpRead} |`)
+  add('documents/reverse/mcp-setup-guide.md', `\`gkill-write-server.mjs\` | ${mcpWrite} |`)
+  add('documents/reverse/mcp-setup-guide.md', `\`gkill-readwrite-server.mjs\` | ${mcpRW} |`)
+  add('documents/reverse/design-philosophy.md', `Read（${mcpRead}ツール、読み取りのみ）`)
+  add('documents/reverse/design-philosophy.md', `Write（${mcpWrite}ツール）と ReadWrite（${mcpRW}ツール）`)
+  add('documents/reverse/usecase.md', `Read サーバー（${mcpRead}ツール）は読み取りのみ、Write（${mcpWrite}ツール）/ ReadWrite（${mcpRW}ツール）`)
+  add('documents/reverse/testing-guide.md', `Read ${mcpReadOnly}ツール分のハンドラ実行ロジック`)
+  add('documents/reverse/testing-guide.md', `${mcpWrite}ツールディスパッチ`)
+  add('documents/reverse/testing-guide.md', `Write ${mcpWriteOnly}ツール定義（実物 import）`)
+  add('documents/reverse/testing-guide.md', `全${mcpRW}ツールディスパッチ`)
+  add('documents/reverse/api-endpoints.md', `MCPツール${mcpRead}個`)
+
   // ── KFTL ステートメント型数 / glossary 用語数
   add('.claude/skills/gkill-client-kftl/SKILL.md', `KFTL parser (${m.kftlStatementTs} statement types; the Go side has ${m.kftlStatementGo})`)
   add('documents/reverse/folder-structure.md', `KFTLパーサー（${m.kftlStatementTs}ステートメント型）`)
+  // frontend-architecture / glossary にも同じ数がある。folder-structure だけ検査していたため
+  // 48/50 の割れが残っていた（2026-08-24 監査）。
+  add('documents/reverse/frontend-architecture.md', `KFTLパーサー (${m.kftlStatementTs} ステートメント型`)
+  add('documents/reverse/glossary.md', `（${m.kftlStatementTs}ステートメント型。\`kftl_*/\` 配下の具象クラス数）`)
   add('documents/reverse/folder-structure.md', `バックエンド側、${m.kftlStatementGo}ステートメント型`)
   add('.claude/skills/gkill-docs/SKILL.md', `glossary.md (${m.glossaryTerms} terms)`)
   add('documents/reverse/README.md', `ドメイン用語の定義（${m.glossaryTerms}項目）`)
@@ -1454,16 +1480,40 @@ function checkADRSources() {
 // 公開リポジトリなので、実在の利用者ID・端末のローカル絶対パス・メールアドレスを資料に書かない。
 // パターンで表せない固有の NG 語（実在の名前など）は、それ自体をコミットすると本末転倒なので、
 // gitignore 済みの verify_docs_personal_ngwords.local.txt（1行1語）に置くとその環境でだけ検査に加わる。
+// 個人情報検査の対象ファイル列挙（資料 Markdown に加えて src/ のコード・テストと
+// resources/manual_src/ の原稿）。2026-08-24 の監査で、資料層だけの検査では
+// ソースコメントへの混入（実ハンドルを使った例示など）を原理的に検出できないと分かったため広げた。
+// gitignore 済みのビルド生成物（.gradle / build 等）は DOC_FILENAME_SKIP_DIRS で外れる。
+// 依存 OSS のライセンス原文（ルート直下の LICENSES_DEPENDENCE）は原著者のメールを含むが、
+// 対象パスに入っていないので誤検出しない。
+function personalInfoScanFiles() {
+  const exts = /\.(go|ts|vue|mjs|js|kt|java|json|html|md|css|ps1|sh|kts|gradle|ya?ml|xml|properties|txt|csv|svg|db)$/
+  // 「追跡済み + 未追跡だが ignore されていない」= リポジトリに入り得るファイルだけを見る。
+  // ファイルシステム走査だと gitignore 済みのローカル設定（Android の local.properties や
+  // ビルド生成物）まで拾って偽陽性になるし、逆に ignore されていない置き忘れは拾いたい。
+  const out = execSync('git ls-files -z --cached --others --exclude-standard', { cwd: ROOT })
+  return out.toString('utf8').split('\0').filter(Boolean)
+    .filter((rel) => exts.test(rel) && /^(src|resources|documents|\.github)\//.test(rel))
+    // サンプルデータは実データ由来を許容する運用（2026-08-24 の判断）。検査対象外。
+    // 3文字級の短い NG 語は DB 内の base64 や複合語の一部に偶発一致するため、
+    // ここを対象に戻すなら語側を前後にアンダースコア等の区切りを付けた形へ寄せること。
+    .filter((rel) => !rel.startsWith('resources/gkill_sample_data/'))
+}
+
 function checkPersonalInfo() {
   const patterns = [
     [/[A-Za-z]:\\+Users\\+(?![〈<]|user(?:name)?\b)[A-Za-z0-9]/, 'Windows のユーザープロファイル実パス'],
     [/\/(?:home|Users)\/(?!user\/|〈|<)[a-z0-9_-]{3,}\//, 'ホームディレクトリの実パス'],
     [/[A-Za-z0-9._%+-]+@(?!example\.)[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/, 'メールアドレス'],
   ]
+  // NG 語の照合は大文字小文字を無視する（小文字で書いた1行が大文字混じりの出現も拾う）。
+  // 1行1語・部分一致。語そのものをコミットしないための gitignore 済みローカルファイル。
   const ngWords = exists('verify_docs_personal_ngwords.local.txt')
-    ? normalizeLF(readText('verify_docs_personal_ngwords.local.txt')).split('\n').map((w) => w.trim()).filter(Boolean)
+    ? normalizeLF(readText('verify_docs_personal_ngwords.local.txt')).split('\n')
+      .map((w) => w.trim().toLowerCase()).filter(Boolean)
     : []
-  for (const rel of docMarkdownFiles()) {
+  const targets = [...new Set([...docMarkdownFiles(), ...personalInfoScanFiles()])]
+  for (const rel of targets) {
     const text = normalizeLF(readText(rel))
     for (const [re, label] of patterns) {
       const mt = text.match(re)
@@ -1472,8 +1522,11 @@ function checkPersonalInfo() {
           '（$HOME や 〈ユーザー名〉 のプレースホルダに置き換えること）')
       }
     }
-    for (const w of ngWords) {
-      if (text.includes(w)) err(`個人情報の疑い（ローカル NG 語）: ${rel} に「${w}」`)
+    if (ngWords.length !== 0) {
+      const lowered = text.toLowerCase()
+      for (const w of ngWords) {
+        if (lowered.includes(w)) err(`個人情報の疑い（ローカル NG 語）: ${rel} に「${w}」`)
+      }
     }
   }
 }

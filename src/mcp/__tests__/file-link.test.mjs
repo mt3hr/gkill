@@ -81,7 +81,7 @@ describe("buildToolResult file_url injection", () => {
             rep_name: "Files",
             file_name: "photo.png",
             is_image: true,
-            file_path: "C:\\Users\\me\\gkill\\photo.png",
+            file_path: "C:\\Users\\user\\gkill\\photo.png",
             ...extra,
           },
         },
@@ -125,7 +125,7 @@ describe("buildToolResult file_url injection", () => {
     const result = server.buildToolResult("gkill_get_kyous", idfResult(), false);
     const p = result.structuredContent.kyous[0].payload;
 
-    expect(p.file_path).toBe("C:\\Users\\me\\gkill\\photo.png");
+    expect(p.file_path).toBe("C:\\Users\\user\\gkill\\photo.png");
     expect(p.file_url).toBeUndefined();
   });
 

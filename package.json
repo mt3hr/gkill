@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "postinstall": "git config core.hooksPath .githooks || exit 0",
     "dev": "node src/tools/dev.mjs",
     "mcp:gkill-read": "node src/mcp/gkill-read-server.mjs",
     "mcp:gkill-read-http": "cross-env MCP_TRANSPORT=http MCP_PORT=8808 node src/mcp/gkill-read-server.mjs",

@@ -26,7 +26,7 @@ func TestRepositoriesFindKyousSplitsHugeIDList(t *testing.T) {
 	}
 	t.Cleanup(func() { repository.Close(ctx) })
 
-	mi := makeMi("mi-huge-id-list-001", "たくさんのIDに紛れて探されるタスク")
+	mi := makeMi("mi-huge-id-list-001", "大量のIDに紛れて探されるタスク")
 	if err := repository.AddMiInfo(ctx, mi); err != nil {
 		t.Fatalf("AddMiInfo failed: %v", err)
 	}
