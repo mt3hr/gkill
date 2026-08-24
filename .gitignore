@@ -53,7 +53,7 @@ coverage
 /.claude/*
 !/.claude/skills/
 # 個人情報検査のローカル NG 語リスト（コミットしない。checkPersonalInfo が読む）
-/verify_docs_personal_ngwords.local.txt
+verify_docs_personal_ngwords.local.txt
 
 # Wear OS (Gradle project)
 src/wear_os/.gradle/
