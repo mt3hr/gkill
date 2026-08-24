@@ -276,6 +276,23 @@ describe("handleToolCall", () => {
     );
   });
 
+  test("a removed tool name is dispatched to the replacement hint, not a dead end", async () => {
+    // ツール一覧はクライアントのセッション寿命で固定されるので、削除済みの
+    // gkill_get_idf_file_path は旧セッションから呼ばれ続ける。plugin でも read でも
+    // ない名前がサーバディスパッチの行き止まりへ落ちたとき、REMOVED_TOOL_HINTS
+    // (lib/constants.mjs) の案内文まで届くことを実経路で確かめる。
+    // ツール名の echo 自体が gkill_get_idf_file を含むので、案内文にしか無い文言で見る
+    await expect(server.handleToolCall("gkill_get_idf_file_path", {})).rejects.toThrow(
+      /removed on 2026-08-24/,
+    );
+    await expect(server.handleToolCall("gkill_get_idf_file_path", {})).rejects.toThrow(
+      /otherwise call gkill_get_idf_file/,
+    );
+    // 案内で完結し、gkill への API 呼び出しは発生しない
+    expect(mockClient.callApi).not.toHaveBeenCalled();
+    expect(mockClient.fetchFile).not.toHaveBeenCalled();
+  });
+
   test("passes currentSessionId as sessionIdOverride to callApi", async () => {
     mockClient.callApi.mockResolvedValue({
       tag_names: ["t1"],

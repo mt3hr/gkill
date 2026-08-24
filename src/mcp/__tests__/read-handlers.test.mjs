@@ -4,6 +4,7 @@
  * - application_config: fields 射影 + UI状態キーの strip
  * - GPS: Node側ページング（複合カーソル・同一時刻ラン跨ぎ・count_only・日別バケット）
  * - rep_infos: ディスパッチと applyFileLinks 不変（file-link トークンの誤発行防止）
+ * - idf_file: /files/ クエリ組み立て（?is_video=true&thumb=WxH）・thumb エコー・サイズ上限超過の案内
  */
 
 import { describe, test, expect, vi } from "vitest";
@@ -20,6 +21,7 @@ import {
 import { applyFileLinks } from "../lib/payload.mjs";
 import { FileLinkStore } from "../lib/file-link-store.mjs";
 import { GkillApiError } from "../lib/errors.mjs";
+import { MAX_IDF_FILE_BYTES } from "../lib/constants.mjs";
 
 function makeCtx(callApiImpl) {
   return {
@@ -49,6 +51,8 @@ describe("handleReadToolCall — gkill_get_kyous v2", () => {
       count_only: true,
       group_by: "month",
       data_types: ["nlog"],
+      create_apps: ["appA"],
+      update_apps: ["appB"],
       num_min: 100,
       num_max: 500,
       idf_kinds: ["image"],
@@ -60,6 +64,8 @@ describe("handleReadToolCall — gkill_get_kyous v2", () => {
     expect(body.count_only).toBe(true);
     expect(body.group_by).toBe("month");
     expect(body.data_types).toEqual(["nlog"]);
+    expect(body.create_apps).toEqual(["appA"]);
+    expect(body.update_apps).toEqual(["appB"]);
     expect(body.num_min).toBe(100);
     expect(body.num_max).toBe(500);
     expect(body.idf_kinds).toEqual(["image"]);
@@ -260,12 +266,21 @@ describe("handleReadToolCall — gkill_get_rep_infos", () => {
       rep_infos: [{ rep_name: "Kmemo", rep_type: "kmemo" }],
       canonical_rep_types: ["kmemo", "directory"],
       plugins: [{ rep_name: "ClaudeCode", data_type: "claude_code_turn", plugin_name: "gkill_plugin_claudecode" }],
+      attached_data_reps: [
+        { rep_name: "Tag", data_kind: "tag" },
+        { rep_name: "GPSLog", data_kind: "gpslog" },
+      ],
     }));
     const payload = await handleReadToolCall(ctx, "gkill_get_rep_infos", {});
     expect(ctx.client.callApi).toHaveBeenCalledWith("/api/get_rep_infos_mcp", {}, true, "sid-1");
     expect(payload.rep_infos).toHaveLength(1);
     expect(payload.canonical_rep_types).toContain("directory");
     expect(payload.plugins[0].data_type).toBe("claude_code_turn");
+    // タグ等の書き込み先（query.reps へは渡せない）も素通しで返ること
+    expect(payload.attached_data_reps).toEqual([
+      { rep_name: "Tag", data_kind: "tag" },
+      { rep_name: "GPSLog", data_kind: "gpslog" },
+    ]);
   });
 
   test("isReadToolName covers the new tool", () => {
@@ -274,12 +289,13 @@ describe("handleReadToolCall — gkill_get_rep_infos", () => {
 
   test("applyFileLinks leaves rep_infos payload unchanged (no file-link mint)", () => {
     // applyFileLinks は rep_name+file_name の同居で idf とみなしてトークンを鋳造する。
-    // rep_infos の応答は rep_name を持つが file_name を持たないので、不変であること
-    // （サーバ側が file_name 系キーを同居させない契約の防御線）。
+    // rep_infos / attached_data_reps の行は rep_name を持つが file_name を持たないので、
+    // 不変であること（サーバ側が file_name 系キーを同居させない契約の防御線）。
     const payload = {
       rep_infos: [{ rep_name: "Kmemo", rep_type: "kmemo" }],
       canonical_rep_types: ["kmemo"],
       plugins: [{ rep_name: "ClaudeCode", data_type: "claude_code_turn", plugin_name: "p" }],
+      attached_data_reps: [{ rep_name: "Tag", data_kind: "tag" }],
     };
     const before = JSON.stringify(payload);
     const store = new FileLinkStore();
@@ -344,6 +360,112 @@ describe("handleReadToolCall — gkill_get_kyou_history", () => {
     });
     expect(summary).toContain("3 of 3");
     expect(summary).toContain("DELETED");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// gkill_get_idf_file — /files/ クエリ組み立てと thumb エコー
+// ---------------------------------------------------------------------------
+describe("handleReadToolCall — gkill_get_idf_file のクエリ組み立て", () => {
+  // ?is_video=true&thumb=WxH の順序とエンコードを決める唯一の箇所
+  // (payload.mjs の file_url 注入 / http-transport.mjs の /files/ 配信 /
+  //  クライアントの build_media_url と同じ形であること)。
+  function makeFileCtx(file) {
+    const ctx = makeCtx();
+    ctx.client.fetchFile.mockResolvedValue(file);
+    return ctx;
+  }
+
+  test("builds ?is_video=true&thumb=WxH in that order", async () => {
+    const ctx = makeFileCtx({ buffer: Buffer.from("frame"), contentType: "image/jpeg" });
+    await handleReadToolCall(ctx, "gkill_get_idf_file", {
+      rep_name: "Video",
+      file_name: "clip.mp4",
+      is_video: true,
+      thumb: "640x480",
+    });
+    expect(ctx.client.fetchFile).toHaveBeenCalledWith(
+      "/files/Video/clip.mp4?is_video=true&thumb=640x480",
+      "sid-1",
+    );
+  });
+
+  test("thumb alone appends only ?thumb=WxH", async () => {
+    const ctx = makeFileCtx({ buffer: Buffer.from("img"), contentType: "image/png" });
+    await handleReadToolCall(ctx, "gkill_get_idf_file", {
+      rep_name: "Photo",
+      file_name: "p.png",
+      thumb: "320x240",
+    });
+    expect(ctx.client.fetchFile).toHaveBeenCalledWith("/files/Photo/p.png?thumb=320x240", "sid-1");
+  });
+
+  test("no thumb and no is_video appends no query string", async () => {
+    const ctx = makeFileCtx({ buffer: Buffer.from("img"), contentType: "image/png" });
+    await handleReadToolCall(ctx, "gkill_get_idf_file", { rep_name: "Photo", file_name: "p.png" });
+    expect(ctx.client.fetchFile).toHaveBeenCalledWith("/files/Photo/p.png", "sid-1");
+  });
+
+  test("encodes rep_name and each file_name segment, keeping / separators", async () => {
+    const ctx = makeFileCtx({ buffer: Buffer.from("img"), contentType: "image/png" });
+    await handleReadToolCall(ctx, "gkill_get_idf_file", {
+      rep_name: "My Photos",
+      file_name: "2026 08/pic 1.png",
+    });
+    expect(ctx.client.fetchFile).toHaveBeenCalledWith(
+      "/files/My%20Photos/2026%2008/pic%201.png",
+      "sid-1",
+    );
+  });
+
+  test("echoes thumb in the payload only when the fetch was downscaled", async () => {
+    // thumb エコーは「縮小して取った」ことの唯一の印。原寸と取り違えないための防御線
+    const downscaled = makeFileCtx({ buffer: Buffer.from("small"), contentType: "image/jpeg" });
+    const withThumb = await handleReadToolCall(downscaled, "gkill_get_idf_file", {
+      rep_name: "Photo",
+      file_name: "p.png",
+      thumb: "640x480",
+    });
+    expect(withThumb.thumb).toBe("640x480");
+
+    const original = makeFileCtx({ buffer: Buffer.from("orig"), contentType: "image/jpeg" });
+    const withoutThumb = await handleReadToolCall(original, "gkill_get_idf_file", {
+      rep_name: "Photo",
+      file_name: "p.png",
+    });
+    expect(withoutThumb).not.toHaveProperty("thumb");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// gkill_get_idf_file — サイズ上限超過の案内
+// ---------------------------------------------------------------------------
+describe("gkill_get_idf_file のサイズ上限超過メッセージ", () => {
+  // payload.mjs の applyFileLinks は is_image のときだけ file_url_full を注入する。
+  // 非画像へ file_url_full を案内すると、存在しないフィールドを探させてしまう
+  const hugeBuffer = Buffer.alloc(MAX_IDF_FILE_BYTES + 1);
+
+  test("advises file_url_full for an oversized image", async () => {
+    const ctx = makeCtx();
+    ctx.client.fetchFile.mockResolvedValue({ buffer: hugeBuffer, contentType: "image/png" });
+    const error = await handleReadToolCall(ctx, "gkill_get_idf_file", {
+      rep_name: "Photo",
+      file_name: "big.png",
+    }).catch((e) => e);
+    expect(error).toBeInstanceOf(GkillApiError);
+    expect(error.message).toContain("file_url_full");
+  });
+
+  test("advises file_url (not file_url_full) for an oversized non-image", async () => {
+    const ctx = makeCtx();
+    ctx.client.fetchFile.mockResolvedValue({ buffer: hugeBuffer, contentType: "video/mp4" });
+    const error = await handleReadToolCall(ctx, "gkill_get_idf_file", {
+      rep_name: "Video",
+      file_name: "big.mp4",
+    }).catch((e) => e);
+    expect(error).toBeInstanceOf(GkillApiError);
+    expect(error.message).toContain("file_url");
+    expect(error.message).not.toContain("file_url_full");
   });
 });
 
