@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。816テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 25（書き込み21 + Read便利4）+ プラグイン1 = 26ツール、統合サーバ 30 + プラグイン1 = 31ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
+MCP (Model Context Protocol) サーバのテスト。832テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 25（書き込み21 + Read便利4）+ プラグイン1 = 26ツール、統合サーバ 30 + プラグイン1 = 31ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
 
 ## テストフレームワーク
 
@@ -18,6 +18,7 @@ Vitest（Node.js 環境）
 | `__tests__/normalization.test.mjs` | クエリデータの正規化処理 |
 | `__tests__/constants.test.mjs` | 定数定義の検証 |
 | `__tests__/tool-handlers.test.mjs` | Read 9ツール分のハンドラ実行ロジック（`lib/read-tools.mjs` のツール名一覧・エンドポイント対応表・summarize） |
+| `__tests__/read-handlers.test.mjs` | 読み取りディスパッチの正本 `lib/read-handlers.mjs`（get_kyous v2 パラメータの転送と応答の素通し、application_config の fields 射影 + UI状態キー strip、GPS の Node側ページング（複合カーソル・count_only・日別バケット）、rep_infos、idf_file の `/files/` クエリ組み立て・thumb エコー・サイズ上限超過の案内） |
 | `__tests__/client.test.mjs` | GkillReadClient（fetch モック使用、ログイン・認証リトライ等） |
 | `__tests__/server.test.mjs` | McpServer のセットアップとトランスポート管理、セッションオーバーライド、プラグインツール振り分け |
 | `__tests__/access-log.test.mjs` | McpAccessLog（レベルフィルタリング・JSON形式・lazy open・close・sourceパラメータ） |
@@ -25,6 +26,7 @@ Vitest（Node.js 環境）
 | `__tests__/oauth-store.test.mjs` | OAuthストア（認可コード、アクセストークン、リフレッシュトークン、クライアント登録、TTL期限切れ、定期クリーンアップ、JSONファイル永続化） |
 | `__tests__/oauth-server.test.mjs` | OAuth 2.1サーバ（メタデータ、認可フロー、トークン交換、PKCE検証、リフレッシュトークンローテーション、動的クライアント登録、E2Eフロー） |
 | `__tests__/file-link.test.mjs` | FileLinkStore（HTTPモード用の期限付きファイルリンクトークンの発行・解決・失効、`GET /files/{token}` 配信） |
+| `__tests__/http-transport.test.mjs` | HttpTransport の `/mcp` 経路の統合・回帰（実ポートで OAuth→Bearer→tools を通す。Bearer 401 検出 = C-01、並行リクエストの user/session 分離 = C-02、公開ファイル配信の nosniff / CSP sandbox = M-06。3サーバ共通） |
 
 ### プラグインツール（3サーバ共通）
 
@@ -38,7 +40,7 @@ Vitest（Node.js 環境）
 | ファイル | テスト内容 |
 |---------|-----------|
 | `__tests__/write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲検証、data_type検証等） |
-| `__tests__/write-client.test.mjs` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
+| `__tests__/write-client.test.mjs` | GkillWriteClient（環境変数、login、callApi、認証リトライ） |
 | `__tests__/write-server.test.mjs` | McpWriteServer（JSON-RPC、26ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
 | `__tests__/write-tool-handlers.test.mjs` | Write 21ツール定義（実物 import）・削除の語彙が enum / DELETE_DATA_TYPES / 対応表2つで一致すること・summarizeWriteToolPayload |
 
@@ -48,7 +50,7 @@ Vitest（Node.js 環境）
 |---------|-----------|
 | `__tests__/readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
 | `__tests__/readwrite-server.test.mjs` | McpServer 統合（31ツール全ディスパッチ、プラグインツール振り分け、IDF画像ブロック、エンティティデフォルト値） |
-| `__tests__/write-handlers.test.mjs` | 書き込みディスパッチの正本（add/update/delete のエンドポイント、update の patch セマンティクス、create_app がサーバ種別で埋まること） |
+| `__tests__/write-handlers.test.mjs` | 書き込みディスパッチの正本（add/update/delete/restore のエンドポイント、update の patch セマンティクス、create_app がサーバ種別で埋まること、既削除の delete / 未削除の restore を拒む冪等ガード、update_time が同一秒でも必ず進むこと、応答がサーバ保存版を返すこと（mergeStored）、`end_time: null` の3値パッチ） |
 
 ## テスト内容
 

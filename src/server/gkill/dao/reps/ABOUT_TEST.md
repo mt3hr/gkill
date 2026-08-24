@@ -66,6 +66,16 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `gps_log_repository_plugin_impl_test.go` | GPSLog 専用プラグイン（`emits_kyou: false`）のリポジトリ実装 |
 | `cache_find_bench_test.go` / `tag_find_bench_test.go` / `kyou_json_bench_test.go` | ベンチマーク（`go test` の既定では走らない）。タグ絞り込みの2経路の交差点や、応答JSONの組み立てを実測するためのもの |
 | `mi_find_kyous_parity_test.go` | Mi のキャッシュ実装と非キャッシュ実装で、大小無視と「最新版のみ」の扱いが一致すること |
+| `mi_projection_preference_test.go` | Mi の5射影（mi_create 等）の正準化。5射影は同じ1行から SQL が合成するラベルで UPDATE_TIME が同着のため、素の `slices.MaxFunc` では SELECT の列並びで勝つ射影が変わっていた（SQL 込みの `GetKyou` / `GetMi` 経由の回帰。比較関数単体は `gkill_repositories_test.go` 側） |
+| `latest_data_address_rep_name_scan_test.go` | キャッシュrepの `GetLatestDataRepositoryAddress` が行ごとの `REP_NAME` 列を最新版アドレスへ射影すること。集約の `GetRepName()` をバインドすると実在しない名前（`KmemoReps` 等）が焼かれ、`GetKyou` の突き合わせが永遠に外れて「エラーも立たず nil」になる |
+| `get_typed_latest_version_test.go` | 型別の単体取得 `GetXxx(id, nil)` が最新版を返すこと（`get_kyou_latest_version_test.go` の型別 GetXxx への水平展開。kmemo/kc/lantana/nlog/urlog/timeis/mi の raw・cached と idf の raw をカバー） |
+| `git_commit_log_cached_unique_test.go` | git キャッシュの重複行。開き直しでの自己修復と、並行 `UpdateCache`（TOCTOU）で重複が入らないこと |
+| `gkill_repositories_get_kyou_test.go` | `GkillRepositories.GetKyou` が最新版アドレス表に載っていないID（プラグインKyou・追加直後〜次回UpdateCacheまでのネイティブ記録）を updateTime 付きで取得しても panic せず解決すること |
+| `gps_log_repositories_test.go` | GPSLog 集約の rep 横断の重複排除 |
+| `plugin_diagnostics_test.go` | プラグイン診断情報。stderr リングバッファ（末尾保持・一周時の行境界・過大書き込み）と型別索引の統計。「is_alive=true なのに0件」の理由が診断できなかった件の回帰 |
+| `ur_log_favicon_test.go` | favicon 取得の ur_log 側の配線。取れたバイト列が画像であることを確かめてから保存すること（エラーページを200で返すサイトのHTMLが混入した件の回帰）、復号前の寸法検査、空ホスト名では取得に行かないこと |
+| `rows_err_check_test.go` | ソース走査ガード。`rows.Next()` ループの後に `rows.Err()` を確認しない関数が復活したら落とす（見ないと反復途中のエラーで「部分的な結果」を成功として返す） |
+| `secure_join_test.go` | `SecureJoin` が rootDir の真下だけを許可すること。rootDir 自身を返すと、呼び出し元（アップロード保存先・サムネ/動画配信元・ZIP展開先）がディレクトリをファイルとして扱うことになる |
 | `testhelper_test.go` | テストヘルパーユーティリティ |
 | `cache/latest_data_repository_address_dao_sqlite3_impl_test.go` | キャッシュアドレス DAO |
 | `rep_cache_updater/rep_cache_updater_test.go` | キャッシュ更新処理 |

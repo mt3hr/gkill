@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1026 | 150 | Go `testing` |
+| Go バックエンド | 1053 | 155 | Go `testing` |
 | フロントエンド ユニット | 1967 | 166 | Vitest |
 | フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
-| MCP サーバ | 816 | 22 | Vitest |
+| MCP サーバ | 832 | 22 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
-| Wear OS | 171 | 12 | JUnit 4 + MockK |
-| **合計** | **4,246** | **397** | |
+| Wear OS | 177 | 12 | JUnit 4 + MockK |
+| **合計** | **4,295** | **402** | |
 
 数え直すコマンド:
 
@@ -201,14 +201,19 @@ src/server/gkill/
 │   ├── find_filter_test.go            ← 検索フィルタ
 │   ├── find/find_query_test.go        ← クエリビルダー
 │   ├── gpslogs/gpslogs_test.go        ← GPS ログ解析
-│   ├── message/message_test.go        ← メッセージフォーマット
-│   ├── kftl/                          ← KFTL パーサ（5ファイル）
+│   ├── message/                       ← メッセージフォーマット + エラーコード→HTTPステータス表
+│   │   ├── message_test.go
+│   │   ├── gkill_error_test.go
+│   │   └── http_status_test.go        ← ステータス表の網羅・分布・名指し固定（下記）
+│   ├── kftl/                          ← KFTL パーサ（6ファイル）
 │   ├── req_res/req_res_test.go        ← JSON 往復テスト
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（28ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（31ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
+│       ├── response_status_guard_test.go         ← 全ハンドラが writeErrorStatus を呼ぶこと（ソース走査）
+│       ├── response_status_test.go               ← エラー時のHTTPステータス実挙動（下記）
 │       ├── filter_local_only_test.go             ← localhost 判定 (isLocalRequest)
 │       ├── handle_get_idf_kyou_by_relative_path_test.go ← 相対パス解決
 │       ├── handle_get_shared_kyous_test.go       ← 共有Kyou取得
@@ -231,7 +236,7 @@ src/server/gkill/
 │   ├── gkill_notification/            ← 通知ターゲット
 │   ├── hide_files/                    ← ファイル非表示
 │   ├── sqlite3impl/                   ← SQLite3 ユーティリティ
-│   └── reps/                          ← リポジトリ実装（51ファイル。plugin_repository_impl_test.go, git_commit_log_cached_unique_test.go, gps_log_repositories_test.go 等）
+│   └── reps/                          ← リポジトリ実装（53ファイル。plugin_repository_impl_test.go, git_commit_log_cached_unique_test.go, gps_log_repositories_test.go 等）
 │       ├── *_repository_sqlite3_impl_test.go  ← 11データ型
 │       ├── cached_and_temp_test.go    ← キャッシュ層・一時層
 │       └── cache/                     ← キャッシュ更新
@@ -254,6 +259,18 @@ src/server/gkill/
 - **規約のソース走査**: 13型・457メソッドのようにコピペで増える形は、**1つだけ抜けても他が緑のまま通る**。
   `usecase/source_conventions_scan_test.go` が製品コードを実行せずソースの書き方だけを見張る（7件）。
   どれも「`go build` も `go vet` も通り、実行時にエラーも出ずに静かに間違った結果を返す」種類のズレ
+- **HTTPステータス化のガード3本**: エラーコード→ステータスの表（`api/message/http_status.go`）は
+  「コードを足したのに分類し忘れる」「ハンドラのコピペで `writeErrorStatus` の1行が抜ける」で静かに壊れる
+  （どちらもエラーにならず、そのエンドポイントだけ異常時も200へ戻る）。役割分担で3本が見張る
+  - `message/http_status_test.go` — 表の**網羅**（`error_codes.go` の全定数が表に載る・表に余剰が無い）、
+    ステータス別**分布**の固定（「とりあえず500」で全部通るのを防ぐ）、実害の出る割り当ての**名指し固定**
+  - `gkill_server_api/response_status_guard_test.go` — **ソース走査**。全 `handle_*.go` のエンコード行の
+    直前に `writeErrorStatus` があること、認証ミドルウェアとローカル限定フィルタが
+    `writeGkillErrorResponse` を通すこと（素の `json.NewEncoder(w).Encode(` に加え
+    **素の `w.WriteHeader(` の直書きも禁止** — 本文なしでステータスだけが返り、
+    クライアントの `res.json()` が例外になる）
+  - `gkill_server_api/response_status_test.go` — **実挙動**。表が正しくてもハンドラが呼んでいなければ
+    意味がないので、実際にHTTPを叩いて 401/400/403/409/413 と「成功は今も200」を確認する
 - **テストヘルパー**: `reps/testhelper_test.go` が共通のテストデータ生成・DB セットアップを提供
 
 ### 3.2 フロントエンド ユニット（`src/client/__tests__/unit/`）
@@ -289,7 +306,7 @@ src/client/__tests__/
 │   │   └── web-push-key.test.ts           ← VAPID公開鍵のバイト列化（6ページ分を集約した先）
 │   ├── datas/                         ← データモデル（35ファイル）
 │   ├── dnote/                         ← D-note モジュール（8ファイル、trend-aggregator.test.ts 含む）
-│   ├── kftl/                          ← KFTL パーサ（5ファイル）
+│   ├── kftl/                          ← KFTL パーサ（7ファイル）
 │   ├── composables/                   ← Vue Composable（59ファイル。add-views / edit-views /
 │   │                                     confirm-delete / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
@@ -363,7 +380,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | `validation.test.mjs` | Read入力パラメータ検証（必須/型/範囲） |
 | `normalization.test.mjs` | 日付・文字列・デフォルト値の正規化 |
 | `constants.test.mjs` | ツール名、エラーコード、デフォルト設定値 |
-| `tool-handlers.test.mjs` | Read 7ツール分のハンドラ実行ロジック（ハンドコピーのツール名一覧・エンドポイント対応表・summarize） |
+| `tool-handlers.test.mjs` | Read 9ツール分のハンドラ実行ロジック（ハンドコピーのツール名一覧・エンドポイント対応表・summarize） |
 | `file-link.test.mjs` | FileLinkStore（HTTPモード用の期限付きファイルリンクトークンの発行・解決・失効、`GET /files/{token}` 配信） |
 | `client.test.mjs` | GkillReadClient（fetch モック、認証、レスポンスパース） |
 | `server.test.mjs` | McpServer ライフサイクル、トランスポート管理、gkill_get_idf_file ツール |
@@ -385,8 +402,8 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 |-------------|-----------|
 | `write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲、data_type列挙値） |
 | `write-client.test.mjs` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
-| `write-server.test.mjs` | McpWriteServer（24ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
-| `write-tool-handlers.test.mjs` | Write 20ツール定義（実物 import）・削除の語彙が3箇所で一致すること・summarizeWriteToolPayload |
+| `write-server.test.mjs` | McpWriteServer（26ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
+| `write-tool-handlers.test.mjs` | Write 21ツール定義（実物 import）・削除の語彙が3箇所で一致すること・summarizeWriteToolPayload |
 | `write-handlers.test.mjs` | 書き込みディスパッチ（add/update/delete のエンドポイント、patch セマンティクス、create_app のサーバ種別） |
 
 **Read/Write統合サーバ:**
@@ -394,7 +411,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | テストファイル | テスト内容 |
 |-------------|-----------|
 | `readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
-| `readwrite-server.test.mjs` | McpServer統合（全30ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
+| `readwrite-server.test.mjs` | McpServer統合（全31ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
 
 ### 3.5 Android / Wear OS
 
@@ -403,7 +420,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 - インストルメンテーションテスト: Android フレームワーク統合
 
 **Wear OS** (`src/wear_os/`): JUnit 4 + MockK
-- phone_companion（4ファイル / 62テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer、plaing検索クエリの形状検証含む）、メッセージハンドリング
+- phone_companion（7ファイル / 116テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer、plaing検索クエリの形状検証含む）、メッセージハンドリング、サーバ証明書の信頼（フィンガープリント計算とピン照合）、二重送信防止台帳
 - watch_app（5ファイル / 61テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル
 
 ## 4. テスト設定ファイル
