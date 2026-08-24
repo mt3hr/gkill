@@ -403,6 +403,20 @@ func (c *autoTagAPIClient) post(ctx context.Context, path string, requestBody an
 		return fmt.Errorf("error at decode response of %s: status = %d body = %q: %w", address, resp.StatusCode, string(snippet), decodeErr)
 	}
 	if resp.StatusCode != http.StatusOK {
+		// 非2xxでも、本文のerrorsに中身があるならここでは打ち切らない。
+		// エラーの意味はerror_codeにしか入っておらず、その判定は呼び出し側にしかできない。
+		// 特にAddTagはERR000056(既存ID)を「既に付いている」として飲む必要があり、
+		// 2026-08からERR000056はHTTP 409で届くため、ここで打ち切ると
+		// 冪等なはずの再実行が最初の既存タグで失敗するようになってしまう。
+		// それ以外の呼び出し側もautoTagResponseErrorでerror_message込みのエラーにする
+		// (本文のerrorsを優先する判断はMCPのgkill-client.mjsと同じ)。
+		// 本文にエラーの中身が無いときだけ、ステータスを唯一の手掛かりとして返す。
+		probe := struct {
+			Errors []*message.GkillError `json:"errors"`
+		}{}
+		if json.Unmarshal(body, &probe) == nil && autoTagResponseError(path, probe.Errors) != nil {
+			return nil
+		}
 		return fmt.Errorf("error at post %s: status = %d", address, resp.StatusCode)
 	}
 	return nil

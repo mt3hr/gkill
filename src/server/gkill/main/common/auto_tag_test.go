@@ -1,10 +1,19 @@
 package common
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	"github.com/mt3hr/gkill/src/server/gkill/api/message"
+	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 )
 
@@ -146,5 +155,242 @@ func TestFindTaggedKyouIDsQueryUsesTagsAnd(t *testing.T) {
 	// 呼び出し元のクエリを書き換えてはいけない（rep名ごとに使い回すため）
 	if base.Tags != nil {
 		t.Error("base query should not be modified")
+	}
+}
+
+// newAutoTagTestClient は httptest.Server を宛先にした autoTagAPIClient を作る。
+// ResolveLocalServerEndpoint は設定DB(server_config.db)が要るので、テストでは宛先を直接組み立てる。
+func newAutoTagTestClient(server *httptest.Server) *autoTagAPIClient {
+	return &autoTagAPIClient{
+		Endpoint: &LocalServerEndpoint{
+			BaseURL: server.URL,
+			Device:  "test_device",
+			Client:  server.Client(),
+		},
+		SessionID: "test_session",
+	}
+}
+
+// post は応答本文の読み取りに失敗したら、ステータス付きの「読み取り失敗」エラーを返す。
+//
+// サーバがContent-Lengthぶんの本文を送りきらずに接続を切ると、
+// クライアント側の io.ReadAll が途中で unexpected EOF になる(実装が実際に踏む形)。
+// デコード失敗とは別のエラー文で、どの段階で壊れたかが分かることを固定する。
+func TestAutoTagPost_ReadBodyFailureReturnsReadError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 宣言した長さより短い本文を書いてハンドラを終える。
+		// net/httpサーバは書き足りないまま接続を閉じるので、クライアントは読み取り途中で失敗する
+		w.Header().Set("Content-Length", "4096")
+		_, _ = w.Write([]byte(`{"messages":null,"errors":null`))
+	}))
+	defer server.Close()
+
+	client := newAutoTagTestClient(server)
+	response := &req_res.GetAllRepNamesResponse{}
+	err := client.post(context.Background(), "/api/get_all_rep_names", &req_res.GetAllRepNamesRequest{SessionID: client.SessionID, LocaleName: autoTagLocaleName}, response)
+	if err == nil {
+		t.Fatal("本文の読み取り失敗はエラーになるべき")
+	}
+	if !strings.Contains(err.Error(), "error at read response of") {
+		t.Errorf("読み取り失敗のエラー文ではない: %v", err)
+	}
+	if !strings.Contains(err.Error(), "status = 200") {
+		t.Errorf("エラー文にステータスが入っていない: %v", err)
+	}
+}
+
+// 8MB(maxResponseBodyBytes)を超える本文は上限で切り詰められ、デコード失敗として現れる。
+//
+// io.LimitReader は上限超過をエラーにせず黙って打ち切るので、
+// 「本文が大きすぎる」はこの実装では読み取り失敗ではなく、
+// 途中で切れたJSONのデコード失敗になる。巨大応答でも読むのは上限まで、
+// エラー文へ入る断片は1024バイトまでで、どちらも際限なく膨らまないことを固定する。
+func TestAutoTagPost_HugeBodyIsCappedAndFailsDecode(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"messages":null,"errors":null,"rep_names":["`))
+		_, _ = w.Write(bytes.Repeat([]byte("a"), maxResponseBodyBytes))
+		_, _ = w.Write([]byte(`"]}`))
+	}))
+	defer server.Close()
+
+	client := newAutoTagTestClient(server)
+	response := &req_res.GetAllRepNamesResponse{}
+	err := client.post(context.Background(), "/api/get_all_rep_names", &req_res.GetAllRepNamesRequest{SessionID: client.SessionID, LocaleName: autoTagLocaleName}, response)
+	if err == nil {
+		t.Fatal("上限を超えて切り詰められた本文はエラーになるべき")
+	}
+	if !strings.Contains(err.Error(), "error at decode response of") {
+		t.Errorf("デコード失敗のエラー文ではない: %v", err)
+	}
+	if len(err.Error()) > 4096 {
+		t.Errorf("エラー文が長すぎる(断片が1024バイトで切られていない): %d bytes", len(err.Error()))
+	}
+}
+
+// 本文がJSONですらないとき(プロキシのHTMLエラーページ、TLSサーバへ平文で繋いだ等)は、
+// ステータスと本文の断片を添えたエラーになる。断片は1024バイトで打ち切る。
+func TestAutoTagPost_NonJSONBodyReturnsSnippetError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusBadGateway)
+		// 1024バイト目より後ろにマーカーを置き、断片へ入らないことを確かめる
+		_, _ = w.Write([]byte("<html><body>Bad Gateway " + strings.Repeat("x", 1024) + "TAIL_MARKER_BEYOND_CAP</body></html>"))
+	}))
+	defer server.Close()
+
+	client := newAutoTagTestClient(server)
+	response := &req_res.GetAllRepNamesResponse{}
+	err := client.post(context.Background(), "/api/get_all_rep_names", &req_res.GetAllRepNamesRequest{SessionID: client.SessionID, LocaleName: autoTagLocaleName}, response)
+	if err == nil {
+		t.Fatal("非JSON本文はエラーになるべき")
+	}
+	if !strings.Contains(err.Error(), "error at decode response of") {
+		t.Errorf("デコード失敗のエラー文ではない: %v", err)
+	}
+	if !strings.Contains(err.Error(), "status = 502") {
+		t.Errorf("エラー文にステータスが入っていない: %v", err)
+	}
+	if !strings.Contains(err.Error(), "Bad Gateway") {
+		t.Errorf("エラー文に本文の断片が入っていない: %v", err)
+	}
+	if strings.Contains(err.Error(), "TAIL_MARKER_BEYOND_CAP") {
+		t.Errorf("断片が1024バイトで切られていない: %v", err)
+	}
+}
+
+// HTTP 200でも本文のerrorsに中身があれば失敗として扱う。
+//
+// gkillは2026-08より前は異常時も常に200を返していたし、今もエラーの中身は
+// 本文のerrors配列が正なので、ステータスだけを見て成功と判定してはいけない。
+func TestAutoTagGetAllRepNames_ErrorsWithHTTP200IsFailure(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"messages":null,"errors":[{"error_code":%q,"error_message":"管理者権限がありません"}],"rep_names":null}`, message.AccountNotHasAdminError)
+	}))
+	defer server.Close()
+
+	client := newAutoTagTestClient(server)
+	repNames, err := client.GetAllRepNames(context.Background())
+	if err == nil {
+		t.Fatalf("200 + errorsあり は失敗になるべき: rep names = %#v", repNames)
+	}
+	if !strings.Contains(err.Error(), message.AccountNotHasAdminError) {
+		t.Errorf("エラー文にerror_codeが入っていない: %v", err)
+	}
+	if !strings.Contains(err.Error(), "管理者権限がありません") {
+		t.Errorf("エラー文にerror_messageが入っていない: %v", err)
+	}
+}
+
+// 非2xxでも本文のerrorsがデコードできるなら、error_code/error_messageを伝える。
+//
+// gkillは2026-08から異常時に4xx/5xxを返すが、エラーの中身は今までどおり
+// 本文のerrors配列にしか入っていない。ステータスで打ち切ると「HTTP 401」しか
+// 分からず、セッション切れなのか権限不足なのか判別できなくなる
+// (本文のerrorsを優先する判断はMCPのgkill-client.mjsと同じ)。
+func TestAutoTagGetAllRepNames_Non2xxCarriesErrorMessage(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, `{"messages":null,"errors":[{"error_code":%q,"error_message":"セッションが見つかりませんでした"}],"rep_names":null}`, message.AccountSessionNotFoundError)
+	}))
+	defer server.Close()
+
+	client := newAutoTagTestClient(server)
+	_, err := client.GetAllRepNames(context.Background())
+	if err == nil {
+		t.Fatal("401 + errorsあり は失敗になるべき")
+	}
+	if !strings.Contains(err.Error(), message.AccountSessionNotFoundError) {
+		t.Errorf("エラー文にerror_codeが入っていない: %v", err)
+	}
+	if !strings.Contains(err.Error(), "セッションが見つかりませんでした") {
+		t.Errorf("エラー文にerror_messageが伝わっていない: %v", err)
+	}
+}
+
+// 既存IDのタグはHTTP 409 + ERR000056で届き、AddTagは「既に付いている」(スキップ)として飲む。
+//
+// auto_tagの冪等性はこの経路が要で、「付いているか」の判定を取りこぼしても
+// サーバが同じIDを弾いて二重登録にならず、手で消したタグも同じIDで弾かれて復活しない。
+// 2026-08からERR000056はHTTP 409で届くようになったため、ステータスで
+// 打ち切るとこのスキップに到達できず、冪等なはずの再実行が失敗になってしまう。
+func TestAutoTagAddTag_AlreadyExistOver409IsSkip(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		fmt.Fprintf(w, `{"messages":null,"errors":[{"error_code":%q,"error_message":"すでに存在するタグです"}],"added_tag":null}`, message.AlreadyExistTagError)
+	}))
+	defer server.Close()
+
+	client := newAutoTagTestClient(server)
+	alreadyExist, err := client.AddTag(context.Background(), reps.Tag{
+		ID:       autoTagID("kyou1", "gkill"),
+		TargetID: "kyou1",
+		Tag:      "gkill",
+	})
+	if err != nil {
+		t.Fatalf("409 + ERR000056 はスキップ扱いのはず: %v", err)
+	}
+	if !alreadyExist {
+		t.Error("alreadyExist = false, want true")
+	}
+}
+
+// 非2xxで本文にエラーの中身が無いなら、ステータスを唯一の手掛かりとしてエラーにする。
+//
+// ここでnilを返すと「4xxなのに成功・0件」になり、静かに壊れる。
+// errors:[null](中身なしの要素だけ)も同じ扱い。
+func TestAutoTagPost_Non2xxWithoutErrorContentFailsWithStatus(t *testing.T) {
+	for _, body := range []string{
+		`{"messages":null,"errors":null,"rep_names":null}`,
+		`{"messages":null,"errors":[null],"rep_names":null}`,
+	} {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte(body))
+		}))
+
+		client := newAutoTagTestClient(server)
+		response := &req_res.GetAllRepNamesResponse{}
+		err := client.post(context.Background(), "/api/get_all_rep_names", &req_res.GetAllRepNamesRequest{SessionID: client.SessionID, LocaleName: autoTagLocaleName}, response)
+		server.Close()
+
+		if err == nil {
+			t.Errorf("body %q: 500でerrorsに中身が無くてもエラーになるべき", body)
+			continue
+		}
+		if !strings.Contains(err.Error(), "error at post") || !strings.Contains(err.Error(), "status = 500") {
+			t.Errorf("body %q: ステータスを手掛かりにしたエラー文ではない: %v", body, err)
+		}
+	}
+}
+
+// 200 + errors:null が今までどおり成功として通ること(退行防止)。
+// あわせて、リクエストが指定パスへJSONで届いていることも確かめる。
+func TestAutoTagGetAllRepNames_Success(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/get_all_rep_names" {
+			t.Errorf("path = %q, want /api/get_all_rep_names", r.URL.Path)
+		}
+		request := &req_res.GetAllRepNamesRequest{}
+		if err := json.NewDecoder(r.Body).Decode(request); err != nil {
+			t.Errorf("リクエスト本文がJSONとして読めない: %v", err)
+		} else if request.SessionID != "test_session" {
+			t.Errorf("session id = %q, want test_session", request.SessionID)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"messages":null,"errors":null,"rep_names":["gkill","gkill_autolog"]}`))
+	}))
+	defer server.Close()
+
+	client := newAutoTagTestClient(server)
+	repNames, err := client.GetAllRepNames(context.Background())
+	if err != nil {
+		t.Fatalf("GetAllRepNames: %v", err)
+	}
+	if len(repNames) != 2 || repNames[0] != "gkill" || repNames[1] != "gkill_autolog" {
+		t.Errorf("rep names: got %#v, want [gkill gkill_autolog]", repNames)
 	}
 }
