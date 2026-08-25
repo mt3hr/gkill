@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1084 | 157 | Go `testing` |
+| Go バックエンド | 1085 | 157 | Go `testing` |
 | フロントエンド ユニット | 1967 | 166 | Vitest |
 | フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
-| MCP サーバ | 927 | 22 | Vitest |
+| MCP サーバ | 933 | 22 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 177 | 12 | JUnit 4 + MockK |
-| **合計** | **4,421** | **404** | |
+| **合計** | **4,428** | **404** | |
 
 数え直すコマンド:
 
@@ -402,7 +402,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 |-------------|-----------|
 | `write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲、data_type列挙値） |
 | `write-client.test.mjs` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
-| `write-server.test.mjs` | McpWriteServer（26ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
+| `write-server.test.mjs` | McpWriteServer（27ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
 | `write-tool-handlers.test.mjs` | Write 21ツール定義（実物 import）・削除の語彙が3箇所で一致すること・summarizeWriteToolPayload |
 | `write-handlers.test.mjs` | 書き込みディスパッチ（add/update/delete のエンドポイント、patch セマンティクス、create_app のサーバ種別） |
 

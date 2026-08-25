@@ -62,8 +62,11 @@ export const PLUGIN_TOOLS = [
       "has_last_build_error is the one to read for those. last_attempt_at matters because " +
       "rebuilds back off after a failure and then produce no error at all. " +
       "gps_index is separate (GPS points are not kyou) and appears for gpslog plugins once their points have been " +
-      "loaded: point_count, oldest / newest, fetched_at. Its absence means nothing has requested GPS logs yet, not " +
-      "that the plugin is broken — call gkill_get_gps_log with count_only:true to size it.",
+      "loaded: point_count, oldest / newest, fetched_at. It covers ONLY the points this plugin supplied, counted " +
+      "before deduplication — gkill_get_gps_log spans every GPS repository (including native ones) and dedupes, " +
+      "so the two numbers are expected to differ, sometimes by an order of magnitude. Do not read a stale newest " +
+      "here as proof that GPS recording stopped. Its absence means nothing has requested GPS logs yet, not " +
+      "that the plugin is broken — call gkill_get_gps_log with count_only:true to size the real total.",
     inputSchema: {
       type: "object",
       properties: {
@@ -86,7 +89,9 @@ export const PLUGIN_DIAGNOSTICS_WITHHELD_WARNING =
   "plugin diagnostics are withheld from this response: last_error (raw plugin stderr) and " +
   "typed_index.last_build_error describe the directory layout of the user's own machine, so only " +
   "has_last_error / has_last_build_error are returned. When one is true and the text is needed, ask the " +
-  "person running gkill to read it from the server console — do not copy it into documents or commit messages.";
+  "person running gkill to read it from the server console — do not copy it into documents or commit messages. " +
+  "The most common cause of has_last_error with is_alive:true is that the plugin's configured import path " +
+  "matches nothing — a real account ran for 20 months at zero records that way — so ask for that path first.";
 
 // withoutPluginDiagnostics はプラグイン1件から診断文を落とし、
 // 非空だったときだけ has_last_error / has_last_build_error を立てる。

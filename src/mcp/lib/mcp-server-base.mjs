@@ -104,7 +104,23 @@ export class McpServerBase {
       throw new GkillApiError(unknownToolMessage(name));
     }
 
-    const userId = (ctx ? ctx.userId : this.currentUserId) || this.client.userId;
+    // 書き込みに刻む user は、その要求を認証したアカウントでなければならない。
+    // sid（どのアカウントのDBへ書くか）と userId（レコードに刻む名前）は
+    // 出どころが別なので、放っておくと静かにずれる。
+    // sid がトークン由来（HTTP/OAuth）なのに userId だけ取れないと、環境変数
+    // GKILL_USER へ落ちて「別アカウントのセッションへ書いたのに create_user は
+    // 手元の名前」という記録ができあがり、あとから誰が書いたのか追えなくなる。
+    // stdio は sid を持たず環境変数で接続するので、そちらは従来どおり。
+    const authenticatedUserId = ctx ? ctx.userId : this.currentUserId;
+    if (sid && !authenticatedUserId) {
+      throw new GkillApiError(
+        "Cannot determine which user to record as the writer of this entry: " +
+          "the session is authenticated but carries no user id, so create_user / update_user " +
+          "would be taken from this server's environment instead of the account being written to. " +
+          "Reconnect (re-authorize) this MCP server and retry.",
+      );
+    }
+    const userId = authenticatedUserId || this.client.userId;
     return handleWriteToolCall(
       { client: this.client, sid, userId, appName: this.writeAppName },
       name,

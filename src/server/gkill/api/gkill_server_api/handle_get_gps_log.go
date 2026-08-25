@@ -79,6 +79,12 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// 時刻はローカルへ寄せる。get_kyous 側は .In(time.Local) で返しているのに
+	// GPS だけ GPX 由来の UTC(Z)のままで、同じサーバの2つの口で表記が割れていた。
+	// 日付でまとめる側(MCP の group_by は現地日付で切る)が境界を取り違える。
+	for i := range gpsLogHistories {
+		gpsLogHistories[i].RelatedTime = gpsLogHistories[i].RelatedTime.In(time.Local)
+	}
 	response.GPSLogs = gpsLogHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetGPSLogSuccessMessage,

@@ -23,6 +23,11 @@ import { isDirectRun, readPackageVersion, startMcpServer } from "./lib/mcp-serve
 // これは「載せる分の選抜集合」であって、「read ツールかどうか」の判定ではない
 // （判定は read-handlers.mjs の isReadToolName が正本。McpServerBase が両方を見る）。
 const WRITE_SERVER_READ_TOOL_NAMES = new Set([
+  // 「どのアカウントへ書くのか」を書く前に確かめる唯一の手段。
+  // 3サーバが別アカウントを向いていることがあり、これが無いと
+  // 書き込み専用サーバだけが自分の接続先を答えられなかった
+  // （しかも entityNotFoundMessage はこのツールを名指しで案内していた）。
+  "gkill_get_application_config",
   "gkill_get_all_rep_names",
   "gkill_get_mi_board_list",
   "gkill_get_all_tag_names",

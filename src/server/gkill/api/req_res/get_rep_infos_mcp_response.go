@@ -15,6 +15,14 @@ type RepInfoMCPDTO struct {
 	// しかも警告が出ないので「0件」の意味が分からなかった。
 	// 定期実行も監視も無いので、ここが何日も前で止まっていることは普通に起きる。
 	IndexedAt string `json:"indexed_at,omitempty"`
+	// UseToWrite は、この rep が書き込み先として設定されているか。
+	//
+	// 一覧に出ることと書けることは別で、use_to_write が立っていない rep へは
+	// 追加も更新もできない。この欄が無かったころ、メモ帳の ~~ が毎回失敗するのに
+	// 「mirekyou の rep はあるのに、なぜ書けないのか」を書く前に確かめる手段が
+	// 無かった。omitempty は付けない —— false を返せないと「書けない」と
+	// 「古いサーバで分からない」の区別が付かなくなる。
+	UseToWrite bool `json:"use_to_write"`
 }
 
 // AttachedDataRepInfoMCPDTO はタグ・テキスト・通知・GPSログの格納先rep。
