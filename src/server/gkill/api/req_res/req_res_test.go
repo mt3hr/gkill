@@ -174,8 +174,23 @@ func TestMCPPayloadDTO_JSONFieldNames(t *testing.T) {
 		},
 		{
 			"PluginPayloadMCPDTO",
-			PluginPayloadMCPDTO{Kind: "plugin", PluginName: "p", Description: "d"},
-			[]string{"kind", "data_type", "rep_name", "kyou_id", "plugin_name", "description"},
+			// description はここに無い。プラグインの説明文は130〜150字あり、
+			// Kyou 1件ごとに焼き込むと20件取るだけで同じ文が20回並ぶ。
+			// 応答トップレベルの PluginDescriptionMCPDTO へ rep_name ごと1回だけ出す。
+			PluginPayloadMCPDTO{Kind: "plugin", PluginName: "p"},
+			[]string{"kind", "data_type", "rep_name", "kyou_id", "plugin_name"},
+		},
+		{
+			"PluginDescriptionMCPDTO",
+			PluginDescriptionMCPDTO{RepName: "ClaudeCode", PluginName: "p", Description: "d"},
+			[]string{"rep_name", "plugin_name", "description"},
+		},
+		{
+			// tag / text の実体IDを運ぶ枠。plain な tags[] / texts[] は文字列なので
+			// update_text / delete_kyou が要求する「注釈自身のID」を運べない。
+			"AttachedEntityMCPDTO",
+			AttachedEntityMCPDTO{ID: "tag-1", Value: "仕事"},
+			[]string{"id", "value"},
 		},
 	}
 

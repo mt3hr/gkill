@@ -15,7 +15,14 @@ import {
   normalizeTextArgs,
   normalizeKftlArgs,
   normalizeDeleteArgs,
+  normalizeRestoreArgs,
   normalizeUpdateTimeIsArgs,
+  normalizeUpdateMiArgs,
+  normalizeUpdateKmemoArgs,
+  normalizeUpdateUrlogArgs,
+  normalizeUpdateLantanaArgs,
+  normalizeUpdateTagArgs,
+  normalizeUpdateTextArgs,
   DELETE_DATA_TYPES,
 } from "../lib/write-normalization.mjs";
 
@@ -308,14 +315,14 @@ describe("normalizeKftlArgs", () => {
 describe("normalizeDeleteArgs", () => {
   test("accepts valid id and data_type", () => {
     const result = normalizeDeleteArgs({ id: "uuid-789", data_type: "kmemo" });
-    expect(result.id).toBe("uuid-789");
-    expect(result.data_type).toBe("kmemo");
+    expect(result.batch).toBe(false);
+    expect(result.targets).toEqual([{ id: "uuid-789", data_type: "kmemo" }]);
   });
 
   test("accepts all valid data_types", () => {
     for (const dt of DELETE_DATA_TYPES) {
       const result = normalizeDeleteArgs({ id: "id", data_type: dt });
-      expect(result.data_type).toBe(dt);
+      expect(result.targets[0].data_type).toBe(dt);
     }
   });
 
@@ -444,5 +451,193 @@ describe("終了済み TimeIs を進行中へ戻す (2026-08-24 再監査 P-41)"
 
   test("add_timeis is unaffected: omitting end_time already means ongoing", () => {
     expect(normalizeTimeIsArgs({ title: "x", start_time: "2026-08-24T12:00:00+09:00" }).end_time).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 日付だけを渡したときの展開先
+//
+// 締切と見積終了は「その日じゅう」の意味なので、その日の終わりへ展開する。
+// 00:00:00 に丸めると「8/25締切」が25日の開始時点で期限切れになる。
+// 読み取り側は calendar_end_date を 23:59:59 へ展開すると明記しており、
+// 書き込み側だけが一律 00:00:00 のままだった（2026-08-24 の実利用レビュー）。
+// ---------------------------------------------------------------------------
+
+describe("date-only expansion on write", () => {
+  test("limit_time expands to the end of the day", () => {
+    const result = normalizeMiArgs({ title: "t", board_name: "b", limit_time: "2026-08-25" });
+    expect(result.limit_time).toMatch(/^2026-08-25T23:59:59/);
+  });
+
+  test("estimate_end_time expands to the end of the day", () => {
+    const result = normalizeMiArgs({ title: "t", board_name: "b", estimate_end_time: "2026-08-25" });
+    expect(result.estimate_end_time).toMatch(/^2026-08-25T23:59:59/);
+  });
+
+  // 開始側は「その日の始まり」のままでなければならない。
+  // 両端を終わりへ寄せると、開始 > 終了 の順序検査に引っかかる形が生まれる。
+  test("estimate_start_time still expands to the start of the day", () => {
+    const result = normalizeMiArgs({ title: "t", board_name: "b", estimate_start_time: "2026-08-25" });
+    expect(result.estimate_start_time).toMatch(/^2026-08-25T00:00:00/);
+  });
+
+  test("a full datetime is untouched", () => {
+    const result = normalizeMiArgs({ title: "t", board_name: "b", limit_time: "2026-08-25T09:00:00+09:00" });
+    expect(result.limit_time).toBe("2026-08-25T09:00:00+09:00");
+  });
+
+  test("update_mi follows the same rule", () => {
+    const result = normalizeUpdateMiArgs({ id: "abc", limit_time: "2026-08-25" });
+    expect(result.limit_time).toMatch(/^2026-08-25T23:59:59/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 射影名とエンティティ種別の2語彙
+//
+// gkill_get_kyous や gkill_add_mi の応答が返す data_type は「射影名」（mi_create /
+// timeis_start）で、delete / restore / history が受理するのは「エンティティ種別」
+// （mi / timeis）。この違いはどこにも書かれておらず、ツール説明は「結果から取れ」と
+// 案内していたので、**案内どおりにすると落ちる**状態だった。
+// KFTL の created[] だけはエンティティ語彙なので通る、という三者三様
+// （2026-08-24 の実利用レビュー）。
+// ---------------------------------------------------------------------------
+
+describe("projection data_type is accepted by delete / restore", () => {
+  test("mi_create folds to mi", () => {
+    expect(normalizeDeleteArgs({ id: "abc", data_type: "mi_create" }).targets[0].data_type).toBe("mi");
+    expect(normalizeRestoreArgs({ id: "abc", data_type: "mi_create" }).targets[0].data_type).toBe("mi");
+  });
+
+  test("timeis_start / timeis_end fold to timeis", () => {
+    expect(normalizeDeleteArgs({ id: "abc", data_type: "timeis_start" }).targets[0].data_type).toBe("timeis");
+    expect(normalizeDeleteArgs({ id: "abc", data_type: "timeis_end" }).targets[0].data_type).toBe("timeis");
+  });
+
+  test("mirekyou projections fold to mirekyou, not mi", () => {
+    // 接頭辞で判定すると mirekyou_* が mi になる（prefix 判定は mirekyou を先に見る必要がある）
+    expect(normalizeDeleteArgs({ id: "abc", data_type: "mirekyou_check" }).targets[0].data_type).toBe("mirekyou");
+  });
+
+  test("entity types still pass through unchanged", () => {
+    expect(normalizeDeleteArgs({ id: "abc", data_type: "mi" }).targets[0].data_type).toBe("mi");
+    expect(normalizeDeleteArgs({ id: "abc", data_type: "kmemo" }).targets[0].data_type).toBe("kmemo");
+  });
+
+  test("unknown values are still rejected", () => {
+    expectThrowsField(() => normalizeDeleteArgs({ id: "abc", data_type: "bogus" }), "data_type");
+    // idf は Kyou 側の data_type だが、エンティティとしての削除は未対応なので通さない
+    expectThrowsField(() => normalizeDeleteArgs({ id: "abc", data_type: "idf" }), "data_type");
+  });
+});
+
+describe("delete / restore batch form", () => {
+  test("accepts targets and marks the call as batch", () => {
+    const result = normalizeDeleteArgs({
+      targets: [{ id: "a", data_type: "kmemo" }, { id: "b", data_type: "mi_create" }],
+    });
+    expect(result.batch).toBe(true);
+    // 射影名は一括側でもエンティティ種別へ寄せる
+    expect(result.targets).toEqual([
+      { id: "a", data_type: "kmemo" },
+      { id: "b", data_type: "mi" },
+    ]);
+  });
+
+  test("rejects mixing the two forms", () => {
+    expectThrowsField(
+      () => normalizeDeleteArgs({ id: "a", data_type: "kmemo", targets: [{ id: "b", data_type: "kmemo" }] }),
+      "targets",
+    );
+  });
+
+  test("rejects an empty targets list", () => {
+    expectThrowsField(() => normalizeDeleteArgs({ targets: [] }), "targets");
+  });
+
+  test("reports which entry is malformed", () => {
+    expectThrowsField(
+      () => normalizeDeleteArgs({ targets: [{ id: "a", data_type: "kmemo" }, { id: "b", data_type: "bogus" }]}),
+      "targets[1].data_type",
+    );
+  });
+
+  // 古いスキーマを掴んだクライアントは未知の引数を正規JSON文字列で送ってくる。
+  // 表に載せ忘れると boolean/number/配列の新引数は既存の全クライアントから型エラーになる。
+  test("revives targets sent as a canonical JSON string", () => {
+    const result = normalizeDeleteArgs({ targets: '[{"id":"a","data_type":"kmemo"}]' });
+    expect(result.targets).toEqual([{ id: "a", data_type: "kmemo" }]);
+  });
+});
+
+describe("追加と更新は同じフィールド表から作る", () => {
+  // 手書き18本だった頃、assertUrlWithScheme は**追加側の1箇所でしか呼ばれていなかった**。
+  // スキームの無いURLで更新すると gkill はページ取得を試みず、title が空のまま
+  // エラーも出さずに保存される。表にして種別の定義を1箇所にした（ADR-0063）。
+  test("update_urlog もスキームの無いURLを弾く", () => {
+    expect(() => normalizeUpdateUrlogArgs({ id: "u1", url: "example.com/page" })).toThrow(
+      /must include a scheme/,
+    );
+  });
+
+  test("add_urlog も同じ文言で弾く", () => {
+    expect(() => normalizeUrlogArgs({ url: "example.com/page" })).toThrow(/must include a scheme/);
+  });
+
+  test("add と update でURLの検証が一致する", () => {
+    const addError = (() => {
+      try {
+        normalizeUrlogArgs({ url: "example.com" });
+      } catch (error) {
+        return error.message;
+      }
+      return null;
+    })();
+    const updateError = (() => {
+      try {
+        normalizeUpdateUrlogArgs({ id: "u1", url: "example.com" });
+      } catch (error) {
+        return error.message;
+      }
+      return null;
+    })();
+    expect(addError).toBe(updateError);
+  });
+
+  test("スキーム付きは add / update とも通る", () => {
+    expect(normalizeUrlogArgs({ url: "https://example.com/p" }).url).toBe("https://example.com/p");
+    expect(normalizeUpdateUrlogArgs({ id: "u1", url: "https://example.com/p" }).url).toBe(
+      "https://example.com/p",
+    );
+  });
+
+  // 表にしても patch セマンティクスは変わらない（update は id 以外すべて任意）。
+  test("update は id 以外を省略できる", () => {
+    expect(normalizeUpdateKmemoArgs({ id: "k1" })).toEqual({
+      id: "k1",
+      content: undefined,
+      related_time: undefined,
+      locale_name: undefined,
+    });
+  });
+
+  // target_id は add でしか受け付けない（付け替えはできない）。
+  test("update_tag / update_text は target_id を受け付けない", () => {
+    expect(() => normalizeUpdateTagArgs({ id: "t1", target_id: "k1" })).toThrow(/is not supported/);
+    expect(() => normalizeUpdateTextArgs({ id: "t1", target_id: "k1" })).toThrow(/is not supported/);
+  });
+
+  // add の必須欄は未指定でもその欄の名前で落ちる（従来の文言のまま）。
+  test("add の必須欄は欄名つきで落ちる", () => {
+    expect(() => normalizeKmemoArgs({})).toThrow(/'content'/);
+    expect(() => normalizeNlogArgs({ title: "t" })).toThrow(/'amount'/);
+    expect(() => normalizeKcArgs({ title: "t" })).toThrow(/'num_value'/);
+    expect(() => normalizeTagArgs({ tag: "a" })).toThrow(/'target_id'/);
+  });
+
+  // 範囲つきの欄は add / update の両方で同じ範囲。
+  test("mood の範囲は add / update で同じ", () => {
+    expect(() => normalizeLantanaArgs({ mood: 11 })).toThrow(/less than or equal to 10/);
+    expect(() => normalizeUpdateLantanaArgs({ id: "l1", mood: 11 })).toThrow(/less than or equal to 10/);
   });
 });

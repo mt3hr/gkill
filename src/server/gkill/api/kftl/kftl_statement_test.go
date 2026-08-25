@@ -1505,3 +1505,123 @@ func TestGenerateAndExecuteRequests_ReportsEveryBadLineThroughTheHandlerPath(t *
 		t.Fatalf("ハンドラと同じ包み方で件数 = %d, want 2", len(collected))
 	}
 }
+
+// ─── 引数の書き方の間違いを、書き込む前に行別エラーにする ─────────────────────
+//
+// 2026-08-24 の実利用レビューで、書式を間違えても何も言われないまま
+// 「壊れたデータが書かれる」「無言で0件になる」の2通りに分かれることが分かった。
+// どちらも利用者からは原因が見えない。ADR-0080 の行別エラーへ倒す。
+
+// helperSubmitExpectingInputErrors は入力エラーを期待して1回実行する。
+// 行をリクエストへ適用するフェーズで落ちるので、リポジトリは空で足りる。
+func helperSubmitExpectingInputErrors(t *testing.T, text string) []*KFTLInputError {
+	t.Helper()
+	stmt := &KFTLStatement{StatementText: text}
+	created, err := stmt.GenerateAndExecuteRequests(
+		context.Background(),
+		&reps.GkillRepositories{},
+		&user_config.ApplicationConfig{},
+		"test-user", "test-device", "test-app", "ja",
+	)
+	if err == nil {
+		t.Fatalf("エラーにならなかった: %q", text)
+	}
+	// 適用フェーズで落ちる＝まだ1バイトも書いていない
+	if len(created) != 0 {
+		t.Errorf("書き込み前に失敗したのに created = %v", created)
+	}
+	inputErrors := CollectKFTLInputErrors(err)
+	if len(inputErrors) == 0 {
+		t.Fatalf("入力エラーとして返らなかった（サーバ障害扱いになる）: %v", err)
+	}
+	return inputErrors
+}
+
+// 値の行が無いまま終わったら、ゼロ値を書かずにエラーにする。
+//
+// **これを外すと `/mood` 単独で気分値0(最低)の記録が黙って1件書かれる。**
+// `/num` 単独はタイトルも数値も空の数値記録を書く。他は無言で0件だった。
+func TestStatement_PrefixWithoutValueLineIsInputError(t *testing.T) {
+	for _, text := range []string{"/mood", "/num", "/expense", "/url", "/mi", "/start", "/timeis"} {
+		t.Run(text, func(t *testing.T) {
+			inputErrors := helperSubmitExpectingInputErrors(t, text)
+			if inputErrors[0].MessageID != "KFTL_REQUIRE_VALUE_LINE_MESSAGE_TITLE" {
+				t.Errorf("メッセージID = %q, want KFTL_REQUIRE_VALUE_LINE_MESSAGE_TITLE", inputErrors[0].MessageID)
+			}
+			if inputErrors[0].LineNumber != 1 {
+				t.Errorf("行番号 = %d, want 1", inputErrors[0].LineNumber)
+			}
+		})
+	}
+}
+
+// 日本語プレフィックスも同じ扱いにする（ASCIIだけ直すと打った言語で挙動が割れる）。
+func TestStatement_JapanesePrefixWithoutValueLineIsInputError(t *testing.T) {
+	inputErrors := helperSubmitExpectingInputErrors(t, "ーら")
+	if inputErrors[0].MessageID != "KFTL_REQUIRE_VALUE_LINE_MESSAGE_TITLE" {
+		t.Errorf("メッセージID = %q, want KFTL_REQUIRE_VALUE_LINE_MESSAGE_TITLE", inputErrors[0].MessageID)
+	}
+}
+
+// プレフィックスと値を同じ行に書いたらエラーにする。
+//
+// プレフィックスの判定は完全一致なので `/mood 8` は「/mood ではない行」として
+// 本文へ落ち、**気分記録のつもりが本文「/mood 8」のメモ1件**になっていた。
+func TestStatement_PrefixWithArgumentOnSameLineIsInputError(t *testing.T) {
+	for _, text := range []string{"/mood 8", "/num 42", "/mi 買い物", "ーら 8"} {
+		t.Run(text, func(t *testing.T) {
+			inputErrors := helperSubmitExpectingInputErrors(t, text)
+			if inputErrors[0].MessageID != "KFTL_PREFIX_MUST_BE_ALONE_ON_LINE_MESSAGE_TITLE" {
+				t.Errorf("メッセージID = %q, want KFTL_PREFIX_MUST_BE_ALONE_ON_LINE_MESSAGE_TITLE", inputErrors[0].MessageID)
+			}
+		})
+	}
+}
+
+// 正しい2行の書き方は今までどおり通る（過検出していないことの確認）。
+func TestStatement_PrefixOnOwnLineStillWorks(t *testing.T) {
+	requestMap := helperApplyToRequestMap(t, "/mood\n8")
+	found := false
+	for _, req := range requestMap.All() {
+		if lantana, ok := req.(*kftlLantanaRequest); ok {
+			found = true
+			if lantana.mood != 8 {
+				t.Errorf("mood = %d, want 8", lantana.mood)
+			}
+		}
+	}
+	if !found {
+		t.Error("正しい書き方の気分記録が作られていない")
+	}
+}
+
+// 本文として正当な行を巻き込まないこと。
+//
+// タグ(#)と関連時刻(?)は**前方一致**で受理する設計なので、
+// 「# 見出し」や「? を含む英文」をここで弾くと既存の書き方が壊れる。
+// 空白を挟まない別の語（/mine）も本文のまま通す。
+func TestStatement_PrefixDetectionDoesNotCatchOrdinaryText(t *testing.T) {
+	for _, lineText := range []string{
+		"/mine is better",  // プレフィックスではない語
+		"/moodiness",       // 空白が無い
+		"# 見出し",            // タグは前方一致で受理する
+		"? what happened",  // 関連時刻も前方一致
+		"see /mood for it", // 行頭ではない
+		"/mood",            // 単独は別の検査の担当（ここでは咎めない）
+	} {
+		if prefix, ok := prefixWrittenWithArgument(lineText); ok {
+			t.Errorf("%q を %q として誤検出した", lineText, prefix)
+		}
+	}
+}
+
+// 長いプレフィックスを先に見ること。短い側から見ると `/end?` が
+// 「/end に引数 ? を付けた行」に化ける。
+func TestStatement_PrefixDetectionPrefersLongestPrefix(t *testing.T) {
+	if _, ok := prefixWrittenWithArgument("/end?"); ok {
+		t.Error("/end? を「/end + 引数」と誤検出した")
+	}
+	if prefix, ok := prefixWrittenWithArgument("/endt タグ名"); !ok || prefix != "/endt" {
+		t.Errorf("prefixWrittenWithArgument(\"/endt タグ名\") = %q, %v; want \"/endt\", true", prefix, ok)
+	}
+}

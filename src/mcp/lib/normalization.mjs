@@ -2,6 +2,7 @@
 
 import { invalidArgument, GkillApiError } from "./errors.mjs";
 import { THUMB_QUERY_REGEX, MAX_THUMB_SIZE } from "./payload.mjs";
+import { isValidGpsCursor } from "./gps-cursor.mjs";
 import {
   assertObject,
   assertBoolean,
@@ -39,10 +40,15 @@ import {
   KYOUS_IDF_KIND_VALUES,
   MAX_CURSOR_LENGTH,
   APP_CONFIG_FIELDS,
+  REP_INFOS_FIELDS,
+  ATTACHED_DATA_KINDS,
   DEFAULT_GPS_LIMIT,
   MAX_GPS_LIMIT,
+  DEFAULT_REP_NAMES_LIMIT,
+  MAX_REP_NAMES_LIMIT,
   GPS_GROUP_BY_VALUES,
   ENTITY_DATA_TYPE_VALUES,
+  toEntityDataType,
   DEFAULT_KYOU_HISTORY_LIMIT,
   MAX_KYOU_HISTORY_LIMIT,
 } from "./constants.mjs";
@@ -224,6 +230,21 @@ export function normalizeKyouQuery(query) {
     normalized.timeis_words = [];
   }
 
+  // 逆さまの期間は gkill 側で0件になるだけで、警告も出ない。
+  // 「その期間に記録が無い」と読めてしまうので入口で弾く。
+  // GPS 側 (normalizeGpsArgs) は元から弾いており、そちらと揃える。
+  if (
+    normalized.calendar_start_date !== undefined &&
+    normalized.calendar_end_date !== undefined &&
+    Date.parse(normalized.calendar_start_date) > Date.parse(normalized.calendar_end_date)
+  ) {
+    throw invalidArgument(
+      "query.calendar_start_date",
+      `must not be after query.calendar_end_date (${normalized.calendar_end_date}); an inverted range silently matches nothing`,
+      normalized.calendar_start_date,
+    );
+  }
+
   normalized.only_latest_data = true;
   return normalized;
 }
@@ -253,6 +274,13 @@ function parseCanonicalJSONValue(value, kind) {
     return parsed;
   }
   if (kind === "string_array" && Array.isArray(parsed) && parsed.every((item) => typeof item === "string")) {
+    return parsed;
+  }
+  if (
+    kind === "object_array" &&
+    Array.isArray(parsed) &&
+    parsed.every((item) => item !== null && typeof item === "object" && !Array.isArray(item))
+  ) {
     return parsed;
   }
   return undefined;
@@ -308,6 +336,145 @@ const APP_CONFIG_STALE_SCHEMA_ARG_KINDS = new Map([
 // 正規JSON文字列 "true" として届き、救済しないと必ず型エラーになる
 // (2026-08-24 の再監査で ChatGPT / claude.ai 相当の実クライアントから再現した)。
 const IDF_STALE_SCHEMA_ARG_KINDS = new Map([["is_video", "boolean"]]);
+
+// gkill_get_all_rep_names の絞り込み引数。contains は string 型なので対象外。
+const REP_NAMES_STALE_SCHEMA_ARG_KINDS = new Map([["limit", "number"]]);
+
+// gkill_get_rep_infos の射影引数。
+const REP_INFOS_STALE_SCHEMA_ARG_KINDS = new Map([["fields", "string_array"]]);
+
+// gkill_delete_kyou / gkill_restore_kyou の targets（オブジェクトの配列）。
+// 実体は write-normalization.mjs 側にも同じ表があるが、あちらは「復元する」ため、
+// こちらは「古さを検出する」ため（detectStaleSchemaSignals が引く）。
+const DELETE_TARGETS_STALE_SCHEMA_ARG_KINDS = new Map([["targets", "object_array"]]);
+
+// gkill_get_kyou_history の limit。data_type / id は string 型なので対象外。
+const KYOU_HISTORY_STALE_SCHEMA_ARG_KINDS = new Map([["limit", "number"]]);
+
+// ツール名から救済表を引く表。detectStaleSchemaSignals が使う。
+// **スキーマへ非string型の引数を足したら、対応する表とここの両方へ載せること。**
+const STALE_SCHEMA_ARG_KINDS_BY_TOOL = new Map([
+  ["gkill_get_kyous", KYOUS_STALE_SCHEMA_ARG_KINDS],
+  ["gkill_get_gps_log", GPS_STALE_SCHEMA_ARG_KINDS],
+  ["gkill_get_application_config", APP_CONFIG_STALE_SCHEMA_ARG_KINDS],
+  ["gkill_get_idf_file", IDF_STALE_SCHEMA_ARG_KINDS],
+  ["gkill_get_all_rep_names", REP_NAMES_STALE_SCHEMA_ARG_KINDS],
+  ["gkill_get_rep_infos", REP_INFOS_STALE_SCHEMA_ARG_KINDS],
+  ["gkill_get_kyou_history", KYOU_HISTORY_STALE_SCHEMA_ARG_KINDS],
+  // 書き込み側。delete / restore の targets はオブジェクトの配列なので、
+  // 古いスキーマのクライアントからは正規JSON文字列で届く。
+  ["gkill_delete_kyou", DELETE_TARGETS_STALE_SCHEMA_ARG_KINDS],
+  ["gkill_restore_kyou", DELETE_TARGETS_STALE_SCHEMA_ARG_KINDS],
+]);
+
+// 受理はするが既に意味を持たない引数。送られてきたこと自体が
+// 「クライアントの掴んでいるスキーマが v2 より前」の証拠になる。
+const DEPRECATED_TOP_LEVEL_ARGS = new Set(["include_id", "include_rep_name"]);
+const DEPRECATED_QUERY_FIELDS = new Set(["only_latest_data"]);
+
+/**
+ * detectStaleSchemaSignals はクライアントのツールスキーマが古いことの「証拠」を集める。
+ *
+ * ツール一覧はクライアントのセッション寿命で固定されるので、サーバを直しても
+ * 生きているセッションには新しいスキーマが届かない。その結果
+ * 「もう直っている機能が、そのクライアントからは永久に見えない」が起きる。
+ * ここで拾えるのは推測ではなく証拠だけ:
+ *
+ * - 非string型の引数が正規JSON文字列で届いた（＝その引数がスキーマに無い時代のクライアント）
+ * - 廃止済みだが後方互換で受理している引数が届いた
+ *
+ * @param {string} name ツール名。
+ * @param {unknown} args 正規化前の生の引数。
+ * @returns {{revived: string[], deprecated: string[]}|null} 証拠。無ければ null。
+ */
+export function detectStaleSchemaSignals(name, args) {
+  if (args === null || typeof args !== "object" || Array.isArray(args)) {
+    return null;
+  }
+  const revived = [];
+  const kindsByKey = STALE_SCHEMA_ARG_KINDS_BY_TOOL.get(name);
+  if (kindsByKey) {
+    for (const [key, kind] of kindsByKey) {
+      if (!Object.prototype.hasOwnProperty.call(args, key)) {
+        continue;
+      }
+      const value = args[key];
+      if (typeof value !== "string") {
+        continue;
+      }
+      if (parseCanonicalJSONValue(value, kind) !== undefined) {
+        revived.push(key);
+      }
+    }
+  }
+
+  const deprecated = [];
+  for (const key of DEPRECATED_TOP_LEVEL_ARGS) {
+    if (Object.prototype.hasOwnProperty.call(args, key)) {
+      deprecated.push(key);
+    }
+  }
+  const query = args.query;
+  if (query !== null && typeof query === "object" && !Array.isArray(query)) {
+    for (const key of Object.keys(query)) {
+      if (DEPRECATED_QUERY_FIELDS.has(key) || LEGACY_USE_FLAG_KEYS.has(key)) {
+        deprecated.push(`query.${key}`);
+      }
+    }
+  }
+
+  if (revived.length === 0 && deprecated.length === 0) {
+    return null;
+  }
+  return { revived, deprecated };
+}
+
+/**
+ * staleSchemaWarning は detectStaleSchemaSignals の結果を1行の警告文にする。
+ *
+ * @param {{revived: string[], deprecated: string[]}} signals 証拠。
+ * @returns {string} warnings[] へ入れる文。
+ */
+export function staleSchemaWarning(signals) {
+  const evidence = [];
+  if (signals.revived.length !== 0) {
+    evidence.push(`arguments arrived as JSON strings: ${signals.revived.join(", ")}`);
+  }
+  if (signals.deprecated.length !== 0) {
+    evidence.push(`deprecated arguments were sent: ${signals.deprecated.join(", ")}`);
+  }
+  return (
+    `this MCP client's tool schema snapshot looks stale (${evidence.join("; ")}). ` +
+    "Tool schemas are fetched once per client session, so a server-side fix stays invisible until the " +
+    "client reconnects. Reconnect the MCP client to pick up the current schema — features you may not be " +
+    "seeing include gkill_get_gps_log cursor/limit/count_only/group_by, the top-level data_types filter " +
+    "on gkill_get_kyous, and the fields projection on gkill_get_application_config."
+  );
+}
+
+/**
+ * appendStaleSchemaWarning は古いスキーマの証拠があるときだけ payload.warnings へ1行足す。
+ *
+ * 証拠が無ければ payload をそのまま返す（誤警告を出さない）。
+ * Go 由来の warnings は成功時 null で返りうるので、必ず ?? [] を通してから足すこと。
+ *
+ * @param {unknown} payload ツールのペイロード。
+ * @param {string} name ツール名。
+ * @param {unknown} args 正規化前の生の引数。
+ * @returns {unknown} 警告を足した（あるいはそのままの）ペイロード。
+ */
+export function appendStaleSchemaWarning(payload, name, args) {
+  if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
+    return payload;
+  }
+  const signals = detectStaleSchemaSignals(name, args);
+  if (signals === null) {
+    return payload;
+  }
+  const warnings = Array.isArray(payload.warnings) ? [...payload.warnings] : [];
+  warnings.push(staleSchemaWarning(signals));
+  return { ...payload, warnings };
+}
 
 export function normalizeKyouArgs(args) {
   const source = reviveStaleSchemaArgs(
@@ -441,6 +608,94 @@ export function normalizeKyouArgs(args) {
     normalized.plugin_content_format = format;
   }
 
+  assertAggregationNotCombinedWithCursor(normalized);
+
+  return normalized;
+}
+
+// assertAggregationNotCombinedWithCursor は count_only / group_by と cursor の併用を弾く。
+//
+// count_only / group_by は「条件に合う全件」を数える口なので、途中から再開する cursor と
+// 意味が両立しない。gkill 側にも同じ検査があるが、返るのは ERR000352「記録の取得に失敗しました」
+// という汎用文で、**理由が本文に一切乗らない**（実測 2026-08-25: 検索失敗と区別が付かなかった）。
+// GPS 側（paginateGpsLogs）は前から MCP 層で理由つきに弾いており、get_kyous だけが
+// 素通しだった。同じ規則の2形態を1つにするためここへ寄せてある（ADR-0063）。
+export function assertAggregationNotCombinedWithCursor(args) {
+  if (!args || !args.cursor) {
+    return;
+  }
+  for (const field of ["count_only", "group_by"]) {
+    if (args[field]) {
+      throw invalidArgument(
+        field,
+        "cannot be combined with cursor: it counts everything the query matches, " +
+          "while a cursor resumes partway through. Drop the cursor to aggregate, " +
+          "or drop count_only/group_by to page",
+        args[field],
+      );
+    }
+  }
+}
+
+// normalizeRepInfosArgs は gkill_get_rep_infos の引数を検証する。
+// 射影は Node 側で行う（gkill は4配列を丸ごと返す）。
+export function normalizeRepInfosArgs(args) {
+  const source = reviveStaleSchemaArgs(
+    args == null ? {} : assertObject(args, "arguments"),
+    REP_INFOS_STALE_SCHEMA_ARG_KINDS,
+  );
+  assertKnownKeys(source, new Set(["locale_name", "fields", "data_kinds"]), "arguments");
+  const normalized = {};
+  if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
+    normalized.locale_name = assertTrimmedString(source.locale_name, "locale_name");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "fields") && source.fields !== undefined) {
+    const fields = assertStringArray(source.fields, "fields");
+    for (const field of fields) {
+      if (!REP_INFOS_FIELDS.has(field)) {
+        throw invalidArgument("fields", `must be one of: ${[...REP_INFOS_FIELDS].join(", ")}`, field);
+      }
+    }
+    normalized.fields = fields;
+  }
+  // attached_data_reps は本番で約120件。fields は「その配列を返すか返さないか」しか
+  // 選べず、中身は絞れなかった。綴り違いは0件ではなくエラーにする
+  // （語彙が4つしかないので、黙って0件になると「その種別が無い」と読めてしまう）。
+  if (Object.prototype.hasOwnProperty.call(source, "data_kinds") && source.data_kinds !== undefined) {
+    const dataKinds = assertStringArray(source.data_kinds, "data_kinds");
+    for (const dataKind of dataKinds) {
+      if (!ATTACHED_DATA_KINDS.has(dataKind)) {
+        throw invalidArgument(
+          "data_kinds",
+          `must be one of: ${[...ATTACHED_DATA_KINDS].join(", ")}`,
+          dataKind,
+        );
+      }
+    }
+    normalized.data_kinds = dataKinds;
+  }
+  return normalized;
+}
+
+// normalizeRepNamesArgs は gkill_get_all_rep_names の引数を検証する。
+// 絞り込みは Node 側実装（gkill は全件を返す）なので、contains / limit は
+// gkill へは送らず paginateRepNames が使う。
+export function normalizeRepNamesArgs(args) {
+  const source = reviveStaleSchemaArgs(
+    args == null ? {} : assertObject(args, "arguments"),
+    REP_NAMES_STALE_SCHEMA_ARG_KINDS,
+  );
+  assertKnownKeys(source, new Set(["locale_name", "contains", "limit"]), "arguments");
+  const normalized = { limit: DEFAULT_REP_NAMES_LIMIT };
+  if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
+    normalized.locale_name = assertTrimmedString(source.locale_name, "locale_name");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "contains") && source.contains !== undefined) {
+    normalized.contains = assertTrimmedString(source.contains, "contains");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "limit") && source.limit !== undefined) {
+    normalized.limit = assertInteger(source.limit, "limit", { min: 1, max: MAX_REP_NAMES_LIMIT });
+  }
   return normalized;
 }
 
@@ -489,15 +744,15 @@ export function normalizeGpsArgs(args) {
     if (cursor.length > MAX_CURSOR_LENGTH) {
       throw new GkillApiError(`cursor is too long (${cursor.length} > ${MAX_CURSOR_LENGTH})`);
     }
-    // v2 の複合カーソルは `{RFC3339Nano}::{ID}`、旧クライアントは素の ISO 日時。
-    // どちらでもない文字列は gkill 側で ERR000352「記録の取得に失敗しました」に畳まれ、
-    // カーソルが原因だと分からなくなる。
-    const cursorTime = cursor.includes("::") ? cursor.slice(0, cursor.indexOf("::")) : cursor;
-    if (!Number.isFinite(Date.parse(cursorTime))) {
+    // **GPSカーソルは get_kyous のものとは別方式。** get_kyous は Go 製の複合カーソル
+    // `{RFC3339Nano}::{ID}` だが、GPSのページングは Node 側実装で base64url(JSON {t,n})。
+    // ここに get_kyous 用の RFC3339 検証をコピペしていたため、説明文どおり next_cursor を
+    // verbatim で渡すと必ず弾かれていた。判定は発行側と同じ gps-cursor.mjs へ寄せる。
+    if (!isValidGpsCursor(cursor)) {
       throw invalidArgument(
         "cursor",
-        "must be the next_cursor value from a previous response, passed back verbatim " +
-          '(an RFC3339 time, optionally followed by "::" and the entry id)',
+        "must be the next_cursor value from a previous gkill_get_gps_log response, passed back verbatim " +
+          "(an opaque token — do not construct or edit it)",
         source.cursor,
       );
     }
@@ -602,10 +857,16 @@ export function normalizeIdfFileArgs(args) {
 // data_type は必須。型非依存の /api/get_kyou へ落とすフォールバックは置かない
 // （constants.mjs の ENTITY_TARGETS のコメント参照: UnWrap() でキャッシュを全バイパスする）。
 export function normalizeKyouHistoryArgs(args) {
-  const source = assertObject(args, "arguments", { allowUndefined: true }) ?? {};
+  const source = reviveStaleSchemaArgs(
+    assertObject(args, "arguments", { allowUndefined: true }) ?? {},
+    KYOU_HISTORY_STALE_SCHEMA_ARG_KINDS,
+  );
   assertKnownKeys(source, new Set(["id", "data_type", "limit", "locale_name"]), "arguments");
   const id = assertTrimmedString(source.id, "id");
-  const data_type = assertTrimmedString(source.data_type, "data_type");
+  // 検索結果が返すのは射影名（mi_create / timeis_start）で、ここが受理するのは
+  // エンティティ種別（mi / timeis）。説明どおり「結果から取った data_type」を
+  // そのまま渡せるように寄せる。
+  const data_type = toEntityDataType(assertTrimmedString(source.data_type, "data_type"));
   if (!ENTITY_DATA_TYPE_VALUES.includes(data_type)) {
     throw invalidArgument("data_type", `must be one of: ${ENTITY_DATA_TYPE_VALUES.join(", ")}`, data_type);
   }

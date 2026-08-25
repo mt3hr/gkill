@@ -35,20 +35,35 @@ export const PLUGIN_TOOLS = [
     name: "gkill_get_plugin_list",
     description:
       "List the gkill plugins installed for the current user. Plugins are external programs that feed their own " +
-      "records (kyou) into gkill — for example Claude Code / Claude.ai / ChatGPT conversation logs. " +
-      "Each entry has name, version, description, data_type (the data_type its kyous carry), rep_name " +
-      "(the repository name its kyous carry) and is_alive (whether the plugin process currently responds). " +
-      "Use this to discover which data_type / rep_name values belong to plugins, then filter gkill_get_kyous " +
-      "with query.reps or query.rep_types to fetch only that plugin's records, passing " +
-      "include_plugin_content:true to get their bodies in the same call. " +
-      "Response fields: plugins[] with name, version, description, data_type, rep_name, is_alive (responds to a ping), " +
-      "process_running (started; read without side effects), last_error (tail of the plugin process stderr — this is " +
-      "what to read when is_alive is true but no records come back), and typed_index for plugins that declare provides. " +
-      "typed_index carries state (\"ok\" / \"failed\" / \"never_built\"), record_count, oldest / newest (how far the " +
-      "plugin has actually ingested), truncated, built_at, and — when a build failed — last_build_error and " +
-      "last_attempt_at. Index build failures never reach last_error: they happen inside gkill (timeouts, a busy " +
-      "plugin, malformed JSON), so read typed_index.last_build_error for those. last_attempt_at matters because " +
-      "rebuilds back off after a failure and then produce no error at all.",
+      "data into gkill — for example Claude Code / Claude.ai / ChatGPT conversation logs, Fitbit daily metrics, " +
+      "Google location history. " +
+      "IMPORTANT — plugins do not all play the same role, and emits_kyou tells you which one you are looking at. " +
+      "When emits_kyou is true the plugin supplies kyou: filter gkill_get_kyous with query.reps (its rep_name) or " +
+      "the top-level data_types (its data_type), and pass include_plugin_content:true to get their bodies in the " +
+      "same call. query.rep_types does NOT work for plugins — they are not in the canonical rep-type vocabulary. " +
+      "When emits_kyou is false the plugin supplies no kyou at all, and its data_type / rep_name are NOT query " +
+      "values: passing them matches nothing. Read that plugin's data through the route matching provides — today " +
+      "provides:[\"gpslog\"] means gkill_get_gps_log. " +
+      "provides lists what the plugin supplies beyond kyou metadata (kmemo, kc, urlog, nlog, lantana, timeis, mi, " +
+      "tag, text, notification, gpslog); an absent provides means it supplies plain kyou only. " +
+      "Response fields: plugins[] with name, version, description, data_type, rep_name, emits_kyou, provides, " +
+      "is_alive (responds to a ping), " +
+      "process_running (started; read without side effects), has_last_error, typed_index, and gps_index. " +
+      "has_last_error is true when the plugin process wrote something to stderr — that is the signal to look at " +
+      "when is_alive is true but no records come back. The text itself is deliberately NOT returned: it is the " +
+      "plugin's raw stderr and carries the directory layout of the user's own machine. When it is true and the " +
+      "text is needed, ask the person running gkill to read it from the server console, and never copy it into " +
+      "documents or commit messages. " +
+      "typed_index is the KYOU index and is present only for plugins that declare a non-gpslog provides; it carries " +
+      "state (\"ok\" / \"failed\" / \"never_built\"), record_count (unique kyou ids), oldest / newest (how far the " +
+      "plugin has actually ingested), truncated, built_at, and — when a build failed — has_last_build_error and " +
+      "last_attempt_at (the failure text is withheld for the same reason as last_error). Index build failures " +
+      "never reach has_last_error: they happen inside gkill (timeouts, a busy plugin, malformed JSON), so " +
+      "has_last_build_error is the one to read for those. last_attempt_at matters because " +
+      "rebuilds back off after a failure and then produce no error at all. " +
+      "gps_index is separate (GPS points are not kyou) and appears for gpslog plugins once their points have been " +
+      "loaded: point_count, oldest / newest, fetched_at. Its absence means nothing has requested GPS logs yet, not " +
+      "that the plugin is broken — call gkill_get_gps_log with count_only:true to size it.",
     inputSchema: {
       type: "object",
       properties: {
@@ -59,12 +74,98 @@ export const PLUGIN_TOOLS = [
   },
 ];
 
+// プラグインの診断文をAIへ返さないときに足す1行。
+//
+// last_error はプラグインプロセスの生stderr、typed_index.last_build_error は起動失敗の
+// エラー文で、どちらも「利用者の端末のどこに何が置いてあるか」を含む。gkill 側で
+// ユーザー名は伏せているが、AIの文脈へ入れば資料やコミットメッセージへ引き写される経路が
+// できてしまう。「何か書かれている」ことだけ has_* で伝えれば、
+// 「is_alive=true なのに0件」の診断（外部監査 D2）は成立する。
+// 経緯: documents/adr/0046-redact-environment-specific-strings.md
+export const PLUGIN_DIAGNOSTICS_WITHHELD_WARNING =
+  "plugin diagnostics are withheld from this response: last_error (raw plugin stderr) and " +
+  "typed_index.last_build_error describe the directory layout of the user's own machine, so only " +
+  "has_last_error / has_last_build_error are returned. When one is true and the text is needed, ask the " +
+  "person running gkill to read it from the server console — do not copy it into documents or commit messages.";
+
+// withoutPluginDiagnostics はプラグイン1件から診断文を落とし、
+// 非空だったときだけ has_last_error / has_last_build_error を立てる。
+function withoutPluginDiagnostics(plugin) {
+  if (plugin === null || typeof plugin !== "object" || Array.isArray(plugin)) {
+    return plugin;
+  }
+  const { last_error: lastError, typed_index: typedIndex, ...rest } = plugin;
+  const stripped = { ...rest };
+  if (typeof lastError === "string" && lastError !== "") {
+    stripped.has_last_error = true;
+  }
+  if (typedIndex !== undefined) {
+    if (typedIndex !== null && typeof typedIndex === "object" && !Array.isArray(typedIndex)) {
+      const { last_build_error: lastBuildError, ...typedRest } = typedIndex;
+      stripped.typed_index = { ...typedRest };
+      if (typeof lastBuildError === "string" && lastBuildError !== "") {
+        stripped.typed_index.has_last_build_error = true;
+      }
+    } else {
+      stripped.typed_index = typedIndex;
+    }
+  }
+  return stripped;
+}
+
+// hasWithheldDiagnostics は診断文を実際に落としたかどうかを返す。
+// 落としていないのに警告を出すと常時ノイズになる（ADR-0058 と同じ理由）。
+function hasWithheldDiagnostics(plugin) {
+  if (plugin === null || typeof plugin !== "object") {
+    return false;
+  }
+  if (plugin.has_last_error === true) {
+    return true;
+  }
+  return (
+    plugin.typed_index !== null &&
+    typeof plugin.typed_index === "object" &&
+    plugin.typed_index.has_last_build_error === true
+  );
+}
+
+// pluginsWithoutIngestCount は「記録を出すのに取り込み件数を名乗れない」プラグインの名前を返す。
+//
+// provides を宣言していないプラグインには typed_index が付かない。すると
+// gkill_get_plugin_list からは「取り込み0件」と「正常」の区別が付かない ——
+// is_alive:true / process_running:true のまま1件も取り込めていない状態が、
+// 一覧の上では完全に正常に見える（実測 2026-08-25: 会話ログ系4本のうち1本が
+// has_last_error:true で全期間0件だったのに、別途カウントを打つまで分からなかった）。
+//
+// 件数そのものはここでは出さない。数えるにはプラグイン本体へ問い合わせることになり、
+// gkill_get_plugin_list が全プラグインへ直列に往復する形になる（プラグインのハンドラは
+// 数十msで返す前提。ADR-0020）。代わりに「数えられない」ことと数え方を名指しする。
+function pluginsWithoutIngestCount(plugins) {
+  return plugins
+    .filter(
+      (plugin) =>
+        plugin !== null &&
+        typeof plugin === "object" &&
+        plugin.emits_kyou === true &&
+        plugin.typed_index === undefined &&
+        typeof plugin.data_type === "string" &&
+        plugin.data_type !== "",
+    )
+    .map((plugin) => plugin.data_type);
+}
+
 // summarizePluginToolPayload はプラグインツールの結果の1行サマリを返す。
 // 対象外のツール名には null を返すので、呼び出し側は既存のsummarizeにフォールバックできる。
 export function summarizePluginToolPayload(name, payload) {
   switch (name) {
-    case "gkill_get_plugin_list":
-      return `Fetched ${Array.isArray(payload.plugins) ? payload.plugins.length : 0} plugins.`;
+    case "gkill_get_plugin_list": {
+      const summary = `Fetched ${Array.isArray(payload.plugins) ? payload.plugins.length : 0} plugins.`;
+      // 本文の warnings を読まない経路でも気づけるようにする。
+      if (Array.isArray(payload.warnings) && payload.warnings.length !== 0) {
+        return `${summary} (some plugins reported diagnostics; the text is withheld — see warnings)`;
+      }
+      return summary;
+    }
     default:
       return null;
   }
@@ -87,9 +188,25 @@ export async function handlePluginToolCall(call, name, args) {
     case "gkill_get_plugin_list": {
       const normalized = normalizeLocaleOnlyArgs(args);
       const response = await call(GET_PLUGIN_LIST_ENDPOINT, normalized);
-      return {
-        plugins: Array.isArray(response.plugins) ? response.plugins : [],
-      };
+      const plugins = (Array.isArray(response.plugins) ? response.plugins : []).map(withoutPluginDiagnostics);
+      const warnings = [];
+      // 実際に落としたときだけ警告を足す。落としていないのに出すと常時ノイズになる。
+      if (plugins.some(hasWithheldDiagnostics)) {
+        warnings.push(PLUGIN_DIAGNOSTICS_WITHHELD_WARNING);
+      }
+      const uncounted = pluginsWithoutIngestCount(plugins);
+      if (uncounted.length !== 0) {
+        warnings.push(
+          `these plugins feed records but report no ingest count (they declare no provides, so they have no typed_index): ` +
+            `${uncounted.join(", ")}. is_alive:true does not mean anything was ingested — a plugin can answer pings ` +
+            `while holding zero records. To check one, call gkill_get_kyous with count_only:true and ` +
+            `data_types:["<the data_type>"] over the period you expect.`,
+        );
+      }
+      if (warnings.length !== 0) {
+        return { plugins, warnings };
+      }
+      return { plugins };
     }
     default:
       throw new GkillApiError(`Unknown tool: ${name}`);

@@ -14,7 +14,7 @@
 
 import { describe, test, expect, vi } from "vitest";
 
-import { handleWriteToolCall, isWriteToolName } from "../lib/write-handlers.mjs";
+import { handleWriteToolCall, isWriteToolName, summarizeWriteToolPayload } from "../lib/write-handlers.mjs";
 
 function makeCtx(callApiImpl) {
   return {
@@ -446,5 +446,258 @@ describe("gkill_update_timeis end_time three-state patch", () => {
     expect(sent.title).toBe("renamed");
     expect(sent.end_time).toBe("2026-08-24T13:00:00+09:00");
     expect(result.updated_timeis.end_time).toBe("2026-08-24T13:00:00+09:00");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 一括削除／一括復活
+//
+// KFTL は1回で5件作れるのに、消すのは1件ずつ2往復だった（検証の後片付けに11往復）。
+// gkill_submit_kftl の created[] が {id, data_type} の配列なので、
+// **応答をそのまま入力へ渡せる**形にしてある（2026-08-24 の実利用レビュー）。
+// ---------------------------------------------------------------------------
+
+describe("handleWriteToolCall — batch delete / restore", () => {
+  test("processes every target and reports per-entry results", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ kmemo_histories: [{ id: "k1", is_deleted: false }] })
+      .mockResolvedValueOnce({ updated_kmemo: { id: "k1" } })
+      .mockResolvedValueOnce({ lantana_histories: [{ id: "l1", is_deleted: false }] })
+      .mockResolvedValueOnce({ updated_lantana: { id: "l1" } });
+
+    const result = await handleWriteToolCall(ctx, "gkill_delete_kyou", {
+      targets: [
+        { id: "k1", data_type: "kmemo" },
+        { id: "l1", data_type: "lantana" },
+      ],
+    });
+
+    expect(result.succeeded_count).toBe(2);
+    expect(result.failed_count).toBe(0);
+    expect(result.results).toEqual([
+      { id: "k1", data_type: "kmemo", ok: true },
+      { id: "l1", data_type: "lantana", ok: true },
+    ]);
+  });
+
+  // DBトランザクションではないので、途中で失敗しても止めない。
+  // 「どこまで消したか」を返さないと利用者は後始末ができない。
+  test("keeps going after a failure and says how far it got", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ kmemo_histories: [] }) // 1件目: 見つからない
+      .mockResolvedValueOnce({ lantana_histories: [{ id: "l1", is_deleted: false }] })
+      .mockResolvedValueOnce({ updated_lantana: { id: "l1" } });
+
+    const result = await handleWriteToolCall(ctx, "gkill_delete_kyou", {
+      targets: [
+        { id: "missing", data_type: "kmemo" },
+        { id: "l1", data_type: "lantana" },
+      ],
+    });
+
+    expect(result.succeeded_count).toBe(1);
+    expect(result.failed_count).toBe(1);
+    expect(result.results[0].ok).toBe(false);
+    expect(result.results[0].error).toMatch(/not found/i);
+    expect(result.results[1].ok).toBe(true);
+  });
+
+  // 単件の応答の形は変えない（既存の呼び出し側を壊さない）。
+  test("the single-entry form still returns the entity, not a results list", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ kmemo_histories: [{ id: "k1", is_deleted: false }] })
+      .mockResolvedValueOnce({ updated_kmemo: { id: "k1" } });
+
+    const result = await handleWriteToolCall(ctx, "gkill_delete_kyou", { id: "k1", data_type: "kmemo" });
+    expect(result.updated_kmemo.is_deleted).toBe(true);
+    expect(result).not.toHaveProperty("results");
+  });
+
+  test("restore accepts the batch form too", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ kmemo_histories: [{ id: "k1", is_deleted: true }] })
+      .mockResolvedValueOnce({ updated_kmemo: { id: "k1" } });
+
+    const result = await handleWriteToolCall(ctx, "gkill_restore_kyou", {
+      targets: [{ id: "k1", data_type: "kmemo" }],
+    });
+    expect(result.succeeded_count).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 一括削除のサマリ
+//
+// failed_count:1 でも「Deleted (soft): completed」と出ていた。JSON を読めば分かるが、
+// サマリ行だけを読むと全成功に見える。一括は DB トランザクションではないので、
+// **どこまで済んだか**こそがサマリの本題（2026-08-25 の実利用レビュー）。
+// ---------------------------------------------------------------------------
+
+describe("summarizeWriteToolPayload — batch soft delete", () => {
+  test("says how many failed instead of reporting completion", () => {
+    const summary = summarizeWriteToolPayload("gkill_delete_kyou", {
+      results: [{ ok: true }, { ok: false }],
+      succeeded_count: 1,
+      failed_count: 1,
+    });
+    expect(summary).toContain("1/2");
+    expect(summary).toContain("FAILED");
+    expect(summary).not.toContain("completed");
+  });
+
+  test("reports a clean batch without crying failure", () => {
+    const summary = summarizeWriteToolPayload("gkill_delete_kyou", {
+      results: [{ ok: true }, { ok: true }],
+      succeeded_count: 2,
+      failed_count: 0,
+    });
+    expect(summary).toBe("Deleted (soft): 2/2 entries.");
+  });
+
+  test("restore uses the same shape", () => {
+    const summary = summarizeWriteToolPayload("gkill_restore_kyou", {
+      results: [{ ok: false }],
+      succeeded_count: 0,
+      failed_count: 1,
+    });
+    expect(summary).toContain("Restored");
+    expect(summary).toContain("FAILED");
+  });
+
+  // 単件の応答は従来の文言のまま（既存の読み手を壊さない）
+  test("the single-entry form keeps the old wording", () => {
+    const summary = summarizeWriteToolPayload("gkill_delete_kyou", { updated_kmemo: { id: "k1" } });
+    expect(summary).toBe("Deleted (soft): updated_kmemo");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 一本化した update と「見つからない」の文言
+//
+// update 9本は取得→patch→更新の手順が同じで、24行のブロックが9本並んでいた。
+// 取得先・更新先・応答キーの対応は ENTITY_TARGETS に既にあり、softDeleteOne と
+// gkill_get_kyou_history はそちらを使っていた。表と直書きの2形態が併存していた状態を
+// 表側へ寄せた（2026-08-25）。直書きだったころは「見つからない」も3種類に割れていた。
+// ---------------------------------------------------------------------------
+
+describe("update tools are table-driven", () => {
+  test.each([
+    ["gkill_update_kmemo", "kmemo", "/api/get_kmemo", "/api/update_kmemo", "kmemo_histories", "updated_kmemo"],
+    ["gkill_update_urlog", "urlog", "/api/get_urlog", "/api/update_urlog", "urlog_histories", "updated_urlog"],
+    ["gkill_update_nlog", "nlog", "/api/get_nlog", "/api/update_nlog", "nlog_histories", "updated_nlog"],
+    ["gkill_update_lantana", "lantana", "/api/get_lantana", "/api/update_lantana", "lantana_histories", "updated_lantana"],
+    ["gkill_update_timeis", "timeis", "/api/get_timeis", "/api/update_timeis", "timeis_histories", "updated_timeis"],
+    ["gkill_update_mi", "mi", "/api/get_mi", "/api/update_mi", "mi_histories", "updated_mi"],
+    ["gkill_update_kc", "kc", "/api/get_kc", "/api/update_kc", "kc_histories", "updated_kc"],
+    ["gkill_update_tag", "tag", "/api/get_tag_histories_by_tag_id", "/api/update_tag", "tag_histories", "updated_tag"],
+    ["gkill_update_text", "text", "/api/get_text_histories_by_text_id", "/api/update_text", "text_histories", "updated_text"],
+  ])("%s uses the ENTITY_TARGETS endpoints", async (tool, _type, getEndpoint, updateEndpoint, historiesKey, responseKey) => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ [historiesKey]: [{ id: "x1", is_deleted: false }] })
+      .mockResolvedValueOnce({ [responseKey]: { id: "x1" }, updated_kyou: { id: "x1" } });
+
+    // 各型の必須引数は id だけ（他は patch なので省略できる）
+    const result = await handleWriteToolCall(ctx, tool, { id: "x1" });
+
+    expect(ctx.client.callApi.mock.calls[0][0]).toBe(getEndpoint);
+    expect(ctx.client.callApi.mock.calls[1][0]).toBe(updateEndpoint);
+    expect(result[responseKey]).toBeDefined();
+  });
+
+  // 「見つからない」は read / write / update で同じ1文になる。
+  // 型を取り違えたのか ID が無いのかはサーバの応答から区別できないので、
+  // **区別できないことを言う**のが唯一正しい案内。
+  test("not-found says the lookup is per-type instead of blaming the id", async () => {
+    const ctx = makeCtx(async () => ({ kmemo_histories: [] }));
+    await expect(handleWriteToolCall(ctx, "gkill_update_kmemo", { id: "missing" }))
+      .rejects.toThrow(/looked it up as data_type/);
+  });
+
+  test("not-found no longer uses a per-type wording", async () => {
+    const ctx = makeCtx(async () => ({ urlog_histories: [] }));
+    await expect(handleWriteToolCall(ctx, "gkill_update_urlog", { id: "missing" }))
+      .rejects.not.toThrow(/^Urlog not found/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 古いツールスキーマの警告は書き込み側にも掛かる
+//
+// 読み取り側だけが appendStaleSchemaWarning で包まれており、書き込み側は素通しだった。
+// delete / restore の targets は後から足した非string型の引数なので、
+// 古いクライアントからは正規JSON文字列で届く。片側だけに掛けると
+// 「同じ古さなのに読み取りでしか知らされない」ことになる。
+// ---------------------------------------------------------------------------
+
+describe("handleWriteToolCall — stale tool schema warning", () => {
+  test("warns when targets arrived as a JSON string", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ kmemo_histories: [{ id: "k1", is_deleted: false }] })
+      .mockResolvedValueOnce({ updated_kmemo: { id: "k1" } });
+
+    const payload = await handleWriteToolCall(ctx, "gkill_delete_kyou", {
+      targets: '[{"id":"k1","data_type":"kmemo"}]',
+    });
+
+    expect(payload.warnings).toHaveLength(1);
+    expect(payload.warnings[0]).toContain("tool schema snapshot looks stale");
+  });
+
+  // 誤警告を出さないことが本体と同じくらい重要。
+  test("does not warn for a current-schema call", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ kmemo_histories: [{ id: "k1", is_deleted: false }] })
+      .mockResolvedValueOnce({ updated_kmemo: { id: "k1" } });
+
+    const payload = await handleWriteToolCall(ctx, "gkill_delete_kyou", {
+      targets: [{ id: "k1", data_type: "kmemo" }],
+    });
+    expect(payload.warnings).toBeUndefined();
+  });
+});
+
+describe("summarizeWriteToolPayload — 表から作る", () => {
+  // 18本の case を並べると、欄を1つ足すとき18箇所を触ることになり、
+  // 1つ落としてもテストは緑のまま（各ツールのテストは自分の case しか見ない）。
+  test("9型すべての add / update が要約を返す", () => {
+    for (const dataType of ["kmemo", "urlog", "nlog", "lantana", "timeis", "mi", "kc", "tag", "text"]) {
+      const added = summarizeWriteToolPayload(`gkill_add_${dataType}`, { [`added_${dataType}`]: { id: "x1" } });
+      expect(added).toContain(dataType);
+      expect(added).toContain("x1");
+
+      const updated = summarizeWriteToolPayload(`gkill_update_${dataType}`, { [`updated_${dataType}`]: { id: "x2" } });
+      expect(updated).toBe(`Updated ${dataType}: x2`);
+    }
+  });
+
+  // tag / text は「作る」のではなく既存の記録へ「付ける」。
+  test("動詞は tag / text だけ Added", () => {
+    expect(summarizeWriteToolPayload("gkill_add_tag", { added_tag: { id: "t1" } })).toBe("Added tag: t1");
+    expect(summarizeWriteToolPayload("gkill_add_kmemo", { added_kmemo: { id: "k1" } })).toBe("Created kmemo: k1");
+  });
+
+  test("対象外のツールは null", () => {
+    expect(summarizeWriteToolPayload("gkill_get_kyous", {})).toBeNull();
+  });
+
+  // 古スキーマの印は読み取りの要約にしか無かった。delete/restore の targets が
+  // まさに古スキーマで壊れる側なので、片側だけだと読み取りでしか知らされない。
+  test("古スキーマの印が書き込みの要約にも付く", () => {
+    const summary = summarizeWriteToolPayload("gkill_add_kmemo", {
+      added_kmemo: { id: "k1" },
+      warnings: ["this client's tool schema snapshot looks stale"],
+    });
+    expect(summary).toContain("reconnect the MCP client");
+  });
+
+  test("警告が無ければ印は付かない", () => {
+    expect(summarizeWriteToolPayload("gkill_add_kmemo", { added_kmemo: { id: "k1" } })).toBe("Created kmemo: k1");
   });
 });

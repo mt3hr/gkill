@@ -49,6 +49,21 @@ func newKFTLInputError(messageID string, cause error) *KFTLInputError {
 	return &KFTLInputError{MessageID: messageID, Cause: cause}
 }
 
+// requireNextLineText は「プレフィックス行の次に値の行が要る」文の共通検査。
+//
+// 値の行が無いまま終わったときの結末が型ごとにばらばらだった。
+// `/mood` は**気分値0(最低)のLantanaを黙って書き**、`/num` は空のKCを黙って書き、
+// `/expense` `/url` `/mi` `/start` `/timeis` は無言で0件だった。
+// どちらも利用者からは「なぜそうなったか」が分からない（2026-08-24 の実利用報告）。
+// 書き込みが起きる前のこのフェーズで行別エラーへ倒す（ADR-0080）。
+func requireNextLineText(ctx *KFTLStatementLineContext) error {
+	if strings.TrimSpace(ctx.NextStatementLineText) != "" {
+		return nil
+	}
+	return newKFTLInputError("KFTL_REQUIRE_VALUE_LINE_MESSAGE_TITLE",
+		fmt.Errorf("prefix %q needs its value on the next line", ctx.ThisStatementLineText))
+}
+
 // withLine は行番号と行テキストを添えた入力エラーにする。
 // 既に入力エラーなら行の情報だけを埋め、そうでなければ包む。
 func withLine(err error, lineNumber int, lineText string) *KFTLInputError {

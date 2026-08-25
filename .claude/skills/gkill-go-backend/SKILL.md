@@ -109,6 +109,8 @@ ERR000002 でログアウトさせるので、**存在しないユーザIDにパ
 
 **外部URLを取る新規コードや子goroutine内の index 参照に注意**: `strings.SplitN(x, ",", 2)` は末尾要素 `parts[len(parts)-1]` を取る（`[1]` を長さ未確認で参照しない。子goroutine内 panic は `recoverMiddleware` で回収できずプロセスが落ちる＝監査 H-01）。ファイル書き込みは tmp+rename で原子的に（Override で原本を壊さない＝M-03）。ZIP展開は件数・総展開量・圧縮比の上限つき（`handle_browse_zip_contents.go` の `maxZip*`＝M-04）。`http.Server` は `ReadHeaderTimeout`/`IdleTimeout`/`MaxHeaderBytes` を張り、認証前ボディは `maxAuthBodyBytes` でキャップ（H-03）。全レスポンスに `securityHeadersMiddleware`（nosniff / X-Frame-Options / Referrer-Policy）。CLIサブコマンドは `InitGkillServerAPI` 失敗で `return`（nil panic 回避＝M-8）、CLIの自己発行セッションは `IsLocalAppUser=false`（最小権限）。ログインは非存在ユーザとパスワード誤りを同じ error_code + 文言に統一し、非存在時もダミー Argon2id を実行（ユーザ列挙対策＝S3-login）。
 
+**レスポンスへ載る自由文は端末固有の情報を伏せてから出す**（2026-08-24）。`GkillError.MarshalJSON` が `ErrorMessage` を `message.RedactEnvironmentSpecific` へ通し、ホームディレクトリのユーザー名（`C:\Users\〈ユーザー名〉` / `/home/〈ユーザー名〉/`）とメールアドレスをプレースホルダにする。**伏せるのは生成側ではなく marshal 側**（`ErrorMessage:` の代入は684箇所あり、そのうち `err.Error()` を埋めているのは4箇所。生成側で1つずつ包む方式は必ず足し忘れるし、新しいハンドラが同じ書き方をしても自動で載るのはこちらだけ）。`GkillError` でない自由文——プラグイン診断の `last_error` と `typed_index.last_build_error`——は `handle_get_plugin_list.go` で明示的に通す。パスの**形は残す**ので `C:\Windows\System32\config\systemprofile` は素通しになり、LocalSystem 起動でホームが化ける事故の診断は従来どおり成立する。**サーバのコンソールログには適用しない**（端末に閉じた人間の診断チャネルで、リポジトリへ入る経路が無い）。守るテストは `api/message/redact_test.go` / `handle_get_plugin_list_test.go`。 なぜ書き手側の約束ではなく出口で伏せるのかは [ADR-0046](../../../documents/adr/0046-redact-environment-specific-strings.md)。
+
 **IDF走査の一時停止は参照カウント**（2026-08-21、監査 M-02）。`SetSkipIDF(true/false)` は共有 `*bool` ではなく `*atomic.Int64` を増減し「カウント>0 で skip」。重なるアップロード（と UpdateCache）が互いのフラグを倒し合って watcher が走る/変更を取りこぼすのを防ぐ。カウントが0へ戻ったときだけ catch-up 走査を1回キックする（`UpdateCache` の Add(-1) では catch-up しない＝1分周期のリビルド無限ループになるため。`SetSkipIDF` はアップロードハンドラからしか呼ばれず watcher から再入しない）。
 
 ## 関連スキル
@@ -141,3 +143,4 @@ ERR000002 でログアウトさせるので、**存在しないユーザIDにパ
 - [ADR-0042 共有ファイル認可はクエリ再評価で](../../../documents/adr/0042-shared-file-authz-by-query.md)
 - [ADR-0043 利用者URLは safefetch 経由](../../../documents/adr/0043-safefetch-for-user-urls.md)
 - [ADR-0044 派生キャッシュはユーザー別ディレクトリ](../../../documents/adr/0044-per-user-derived-cache-dir.md)
+- [ADR-0046 端末固有の文字列は出口で伏せる](../../../documents/adr/0046-redact-environment-specific-strings.md)

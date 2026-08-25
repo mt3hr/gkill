@@ -112,6 +112,22 @@ func (m PluginManifest) EmitsKyouOrDefault() bool {
 	return m.EmitsKyou == nil || *m.EmitsKyou
 }
 
+// NeedsTypedIndex は型別データ索引(PluginTypedIndex)を持つべきプラグインかを返す。
+//
+// 索引が扱えるのは型別データ(IsTyped)と付随データ(tag/text/notification)だけで、
+// GPSLogはKyouではないため索引の対象外(専用コマンドget_gps_logsで受け渡す)。
+// providesがgpslogだけのプラグインに索引を作ると、材料が1件も無いので
+// **state="never_built"・record_count=0のまま永久に固定**され、
+// APIから見ると「索引が壊れている」ようにしか見えなくなる。
+func (m PluginManifest) NeedsTypedIndex() bool {
+	for _, kind := range m.Provides {
+		if kind != PluginProvidesGPSLog {
+			return true
+		}
+	}
+	return false
+}
+
 // ProvidedKinds はProvidesを集合にして返す。未指定なら空の集合。
 // 呼び出し側でスライスの線形探索を書かないためのもの。
 func (m PluginManifest) ProvidedKinds() map[PluginProvidedKind]struct{} {

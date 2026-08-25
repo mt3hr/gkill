@@ -45,6 +45,8 @@ export const KYOUS_GROUP_BY_VALUES = new Set([
   "hour",
   "data_type",
   "rep_name",
+  "create_app",
+  "update_app",
   "url_domain",
   "file_extension",
 ]);
@@ -57,6 +59,13 @@ export const MAX_CURSOR_LENGTH = 512;
 
 // gkill_get_application_config の fields 射影の許可値。
 export const APP_CONFIG_FIELDS = new Set([
+  // 接続先の識別。gkill が返す user_id / device をそのまま通す。
+  // read サーバと readwrite サーバが別アカウントを向いていても、AI からは
+  // 区別する手段が無く「同じAPIなのに件数が違う」と誤診されていた
+  // （2026-08-24 の実利用レビュー）。環境変数の値（GKILL_BASE_URL 等）は
+  // 端末の情報なので出さない（ADR-0046）。出すのは gkill 由来のこの2つだけ。
+  "user_id",
+  "device",
   "tag_struct",
   "mi_board_struct",
   "rep_struct",
@@ -66,6 +75,27 @@ export const APP_CONFIG_FIELDS = new Set([
   "mi_default_board",
   "show_tags_in_list",
 ]);
+
+// gkill_delete_kyou / gkill_restore_kyou の一括指定の上限。
+// 1件につき取得+更新の2往復なので、上限が無いと1リクエストで数百往復になりうる。
+export const MAX_DELETE_TARGETS = 100;
+
+// gkill_get_rep_infos の fields 射影の許可値。
+// 本番では rep_infos[] だけで数百件になる（rep は rep_type ごとに重複して載るので
+// rep 数より膨らむ）。一方「正準値と対応表だけ欲しい」呼び出しが多く、
+// 一番よく使う形が一番大きい応答になっていた（2026-08-24 の実利用レビュー）。
+export const REP_INFOS_FIELDS = new Set([
+  "rep_infos",
+  "canonical_rep_types",
+  "plugins",
+  "attached_data_reps",
+]);
+
+// attached_data_reps の data_kind。歴代端末ぶんの Tag_ / Text_ / Notification_ / GPSLogs_ が
+// 並ぶので本番では約120件になり、fields で丸ごと落とすか丸ごと取るかの2択だった
+// （2026-08-25 の実利用レビュー）。生成側は handle_get_rep_infos_mcp.go の
+// appendAttachedDataRep が渡す4値。
+export const ATTACHED_DATA_KINDS = new Set(["tag", "text", "notification", "gpslog"]);
 
 // struct ツリーから既定で剥がす UI 状態キー（ツリーエディタの一時状態。
 // 実測で応答が 193.6k→93.0k 字に減る）。check_when_inited / is_force_hide は
@@ -85,6 +115,12 @@ export const APP_CONFIG_UI_STATE_KEYS = new Set([
 export const DEFAULT_GPS_LIMIT = 500;
 export const MAX_GPS_LIMIT = 5000;
 export const GPS_GROUP_BY_VALUES = new Set(["day"]);
+
+// gkill_get_all_rep_names の絞り込み（Node側実装。gkillは全件を返す）。
+// rep が数百ある環境では「その名前の rep があるか」を確かめるだけで
+// 全件を読むことになっていた。
+export const DEFAULT_REP_NAMES_LIMIT = 200;
+export const MAX_REP_NAMES_LIMIT = 2000;
 
 export const KYOUS_QUERY_BOOLEAN_FIELDS = new Set([
   "update_cache",
@@ -247,6 +283,42 @@ export const MAX_KYOU_HISTORY_LIMIT = 200;
 
 // data_type として受理する値。削除・復活・版履歴のスキーマ enum と正規化がこれを見る。
 export const ENTITY_DATA_TYPE_VALUES = Object.keys(ENTITY_TARGETS);
+
+// 射影名 → エンティティ種別の対応。**語彙が2つある**ことへの唯一の橋。
+//
+// gkill_get_kyous の DTO が返す data_type は「射影名」（mi_create / timeis_start …）で、
+// delete / restore / history が受理するのは ENTITY_TARGETS のキー＝「エンティティ種別」
+// （mi / timeis …）。この違いはどこにも書かれておらず、
+// **gkill_add_mi の応答 data_type:"mi_create" をそのまま gkill_delete_kyou へ渡すと落ちる**
+// （KFTL の created[] だけはエンティティ語彙なので通る、という三者三様だった。
+// 2026-08-24 の実利用レビュー）。
+// 応答をそのまま次のツールへ渡せるよう、射影名も受理して正規化する。
+export const PROJECTION_TO_ENTITY_DATA_TYPE = new Map([
+  ["mi_create", "mi"],
+  ["mi_check", "mi"],
+  ["mi_limit", "mi"],
+  ["mi_start", "mi"],
+  ["mi_end", "mi"],
+  ["mirekyou_create", "mirekyou"],
+  ["mirekyou_check", "mirekyou"],
+  ["mirekyou_limit", "mirekyou"],
+  ["mirekyou_start", "mirekyou"],
+  ["mirekyou_end", "mirekyou"],
+  ["timeis_start", "timeis"],
+  ["timeis_end", "timeis"],
+  // idf は Kyou 側の data_type。エンティティとしての削除/履歴は未対応なので写さない。
+]);
+
+/**
+ * toEntityDataType は射影名を受け取ったらエンティティ種別へ寄せる。
+ * エンティティ種別・未知の値はそのまま返す（判定は呼び出し側の許可リストに任せる）。
+ *
+ * @param {string} dataType 射影名またはエンティティ種別。
+ * @returns {string} エンティティ種別。
+ */
+export function toEntityDataType(dataType) {
+  return PROJECTION_TO_ENTITY_DATA_TYPE.get(dataType) ?? dataType;
+}
 
 // 消したツールの案内。MCP のツール一覧は**クライアントのセッション寿命で固定**されるので、
 // サーバから消しても既存セッションは呼び続ける (2026-08-24 の再監査で live コネクタから再現)。

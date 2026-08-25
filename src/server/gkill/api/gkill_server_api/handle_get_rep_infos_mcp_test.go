@@ -13,6 +13,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 func TestHandleGetRepInfosMCP(t *testing.T) {
@@ -230,5 +231,132 @@ func TestHandleGetRepInfosMCPIncludesIndexedAt(t *testing.T) {
 				t.Fatalf("directory rep が列挙されていない: %+v", infoResp.RepInfos)
 			}
 		})
+	}
+}
+
+// TestHandleGetRepInfosMCPExcludesNonKyouPluginsFromPlugins は、Kyouを1件も出さない
+// プラグインが plugins[] に載らないことを固定する。
+//
+// plugins[] は「query.reps / data_types へ渡せる値」の対応表として説明されている。
+// ところが以前は PluginReps を無条件に列挙していたため、GPSログ専用プラグインが
+// **同じ応答の中で** plugins[]（渡せる）と attached_data_reps[]（渡してはいけない）の
+// 両方に出ており、応答が自己矛盾していた。実利用のAIはこれを読んで
+// query.reps へ rep_name を渡し、警告だけが返る結果になった（2026-08-24 の報告）。
+//
+// 役割ごとに1箇所へ決めるのが ADR-0056 の方針。GPS の供給元としては
+// attached_data_reps[] の data_kind="gpslog" に残る。
+func TestHandleGetRepInfosMCPExcludesNonKyouPluginsFromPlugins(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	t.Setenv("GKILL_HOME", gkill_options.GkillHomeDir)
+
+	// GPSログ専用プラグイン（emits_kyou=false）。実行ファイルは置かない。
+	writePluginManifestForTest(t, "admin", "repinfo_gpslog_plugin", map[string]any{
+		"protocol_version": "1",
+		"name":             "repinfo_gpslog_plugin",
+		"version":          "1.0.0",
+		"description":      "gps only",
+		"data_type":        "repinfo_gpslog_visit",
+		"rep_name":         "RepInfoGPSLogRep",
+		"executable":       "no_such_plugin_binary",
+		"provides":         []string{"gpslog"},
+		"emits_kyou":       false,
+	})
+	// Kyouを出すプラグイン（対照）。こちらは plugins[] に出る。
+	writePluginManifestForTest(t, "admin", "repinfo_kyou_plugin", map[string]any{
+		"protocol_version": "1",
+		"name":             "repinfo_kyou_plugin",
+		"version":          "1.0.0",
+		"description":      "emits kyou",
+		"data_type":        "repinfo_kyou_test",
+		"rep_name":         "RepInfoKyouRep",
+		"executable":       "no_such_plugin_binary",
+	})
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	resp := postJSON(t, tsURL+"/api/get_rep_infos_mcp", map[string]any{
+		"session_id":  sessionID,
+		"locale_name": "en",
+	})
+	defer resp.Body.Close()
+
+	var infoResp req_res.GetRepInfosMCPResponse
+	if err := json.NewDecoder(resp.Body).Decode(&infoResp); err != nil {
+		t.Fatalf("decode get rep infos mcp response: %v", err)
+	}
+	if len(infoResp.Errors) > 0 {
+		t.Fatalf("get rep infos mcp errors: %+v", infoResp.Errors)
+	}
+
+	for _, plugin := range infoResp.Plugins {
+		if plugin.PluginName == "repinfo_gpslog_plugin" {
+			t.Errorf("Kyouを出さないプラグインが plugins[] に居る（query.reps へ渡され静かに0件になる）: %+v", plugin)
+		}
+	}
+
+	foundKyouPlugin := false
+	for _, plugin := range infoResp.Plugins {
+		if plugin.PluginName == "repinfo_kyou_plugin" {
+			foundKyouPlugin = true
+		}
+	}
+	if !foundKyouPlugin {
+		t.Errorf("Kyouを出すプラグインまで plugins[] から消えている: %+v", infoResp.Plugins)
+	}
+
+	// GPS の供給元としては別枠に残っていること。両方から消すと
+	// 「そのプラグインのデータをどこから読むのか」が分からなくなる。
+	foundGPSSource := false
+	for _, attached := range infoResp.AttachedDataReps {
+		if attached.RepName == "RepInfoGPSLogRep" && attached.DataKind == "gpslog" {
+			foundGPSSource = true
+		}
+	}
+	if !foundGPSSource {
+		t.Errorf("GPS専用プラグインが attached_data_reps[] にも居ない: %+v", infoResp.AttachedDataReps)
+	}
+}
+
+// TestHandleGetRepInfosMCPAttachedDataRepNamesAreReal は attached_data_reps の
+// rep 名が**実在する rep の名前**であることを固定する。
+//
+// キャッシュ有効時（既定）、tag / text の cached 実装の UnWrapTyped が1段しか剥がさず、
+// 集約自身が leaf として返っていた。その GetRepName() は "TagReps" / "TextReps" という
+// リテラルなので、**実在しない名前が「タグはどこへ書かれるか」の答えとして返っていた**
+// （2026-08-24 の実利用レビュー。実際の書き込み先は "Tag" / "Text"）。
+//
+// 同じ注意は GetLatestDataRepositoryAddress のコメント（ADR-0019）に書かれていたのに、
+// UnWrapTyped 側では守られていなかった。notification は元から再帰していて正しい。
+func TestHandleGetRepInfosMCPAttachedDataRepNamesAreReal(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	resp := postJSON(t, tsURL+"/api/get_rep_infos_mcp", map[string]any{
+		"session_id":  sessionID,
+		"locale_name": "en",
+	})
+	defer resp.Body.Close()
+
+	var infoResp req_res.GetRepInfosMCPResponse
+	if err := json.NewDecoder(resp.Body).Decode(&infoResp); err != nil {
+		t.Fatalf("decode get rep infos mcp response: %v", err)
+	}
+	if len(infoResp.Errors) > 0 {
+		t.Fatalf("get rep infos mcp errors: %+v", infoResp.Errors)
+	}
+	if len(infoResp.AttachedDataReps) == 0 {
+		t.Fatal("attached_data_reps が空（検査になっていない）")
+	}
+
+	// 集約の偽名がそのまま漏れていないこと。実在しないので呼び出し側は何もできない。
+	for _, attached := range infoResp.AttachedDataReps {
+		switch attached.RepName {
+		case "TagReps", "TextReps", "NotificationReps", "GPSLogReps":
+			t.Errorf("集約の名前がそのまま返っている（実在しない rep 名）: %+v", attached)
+		}
 	}
 }

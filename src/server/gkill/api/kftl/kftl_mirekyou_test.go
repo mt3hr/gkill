@@ -1,6 +1,7 @@
 package kftl
 
 import (
+	"errors"
 	"strings"
 	"testing"
 )
@@ -256,11 +257,20 @@ func TestDoRequest_MiReKyouWithPrototypeOnlyTargetIsError(t *testing.T) {
 	// タグだけのレコードはプロトタイプが残るので、存在確認だけでは弾けない
 	requestMap := helperApplyToRequestMap(t, "。買い物\n～～\n仕事\n～～")
 	mireq := helperMiReKyouRequest(t, requestMap)
-	if err := mireq.DoRequest(t.Context()); err == nil {
-		t.Errorf("expected an error when the target is a prototype only, got nil")
+	err := mireq.DoRequest(t.Context())
+	if err == nil {
+		t.Fatalf("expected an error when the target is a prototype only, got nil")
 	}
+	assertKFTLInputError(t, err, "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE")
 }
 
+// 書き込み先が無いのは「サーバ障害」ではなく、利用者が設定で直せる状態。
+//
+// fmt.Errorf のままだと errors.As に引っかからず ERR000351 (HTTP 500) の
+// 「メモ帳のテキストの記録に失敗しました」だけが返り、行番号も理由も出ない。
+// 実利用レビュー(2026-08-25)では ~~ の最小形が3回とも同じ文言で落ち、
+// 切り分けに5回の試行を要した。原因は MCP 経路ではなく、繋いだアカウントに
+// mirekyou 型の rep が1件も無かったこと(Web UI からでも同じく失敗する)。
 func TestDoRequest_MiReKyouWithoutWriteRepIsError(t *testing.T) {
 	// MiReKyouは後から追加されたrep種別なので、既存の設定DBには書き込み用repが無いことがある
 	requestMap := helperApplyToRequestMap(t, "牛乳を買う\n～～\n仕事\n～～")
@@ -271,5 +281,23 @@ func TestDoRequest_MiReKyouWithoutWriteRepIsError(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "not exist write mirekyou rep") {
 		t.Errorf("expected the write rep error, got %v", err)
+	}
+	assertKFTLInputError(t, err, "KFTL_MI_REKYOU_NO_WRITE_REP_MESSAGE_TITLE")
+}
+
+// assertKFTLInputError は「利用者が直せる入力エラーとして返っているか」を見る。
+// MessageID が空だと handle_submit_kftl_text.go が Cause の英文をそのまま応答へ載せ、
+// 利用者IDと端末名が漏れる(ADR-0046)。空でないことまで含めて固定する。
+func assertKFTLInputError(t *testing.T, err error, wantMessageID string) {
+	t.Helper()
+	var inputErr *KFTLInputError
+	if !errors.As(err, &inputErr) {
+		t.Fatalf("入力エラーとして返っていない(ERR000351/HTTP500に化ける): %v", err)
+	}
+	if inputErr.MessageID != wantMessageID {
+		t.Errorf("MessageID = %q, want %q", inputErr.MessageID, wantMessageID)
+	}
+	if len(CollectKFTLInputErrors(err)) == 0 {
+		t.Error("CollectKFTLInputErrors が拾えていない(行別400にならない)")
 	}
 }

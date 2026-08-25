@@ -22,6 +22,9 @@ type GetKyousMCPResponse struct {
 	NextCursor     string `json:"next_cursor,omitempty"`
 	// Buckets は group_by 指定時のバケット集計結果。
 	Buckets []KyouCountBucketMCPDTO `json:"buckets,omitempty"`
+	// Plugins はこの応答に出てきたプラグインの説明。rep_name ごとに1回だけ。
+	// payload 側へ焼き込むと同じ130〜150字が Kyou の件数ぶん並ぶ。
+	Plugins []PluginDescriptionMCPDTO `json:"plugins,omitempty"`
 	// Partial は付随データ(タグ/テキスト/通知/TimeIs)の一部取得に失敗し、
 	// 返した Kyou の付随データが不完全なことを表す。AIクライアントが「欠落のない完全な結果」と
 	// 誤解しないための印。true のとき Warnings に失敗の内訳が入る。

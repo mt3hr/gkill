@@ -167,6 +167,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0043](0043-safefetch-for-user-urls.md) | 利用者入力URLと og:image の取得は必ず api/safefetch を通す | Accepted |
 | [0044](0044-per-user-derived-cache-dir.md) | 派生キャッシュは利用者IDでディレクトリを分ける | Accepted |
 | [0045](0045-http-status-from-error-code.md) | HTTP ステータスはエラーコードから一元表で決める | Accepted |
+| [0046](0046-redact-environment-specific-strings.md) | 端末固有の文字列は出口で伏せ、プラグインの診断文はAIへ返さない | Accepted |
 | [0050](0050-mcp-request-context-immutable.md) | MCP HTTPモードの1リクエスト文脈は不変オブジェクトを引数で流す | Accepted |
 | [0051](0051-mcp-inline-plugin-content.md) | MCP のプラグイン本文は get_kyous へインライン埋め込みし、同一プラグインへ並列に投げない | Accepted |
 | [0052](0052-mcp-cursor-pushes-period-end.md) | MCP のページングはカーソルを期間上限へ押し下げ、同一時刻のかたまりを割らない | Superseded |
@@ -174,12 +175,20 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0054](0054-mcp-version-history-is-a-dedicated-tool.md) | 1件の版履歴と削除の取り消しは専用ツールで返す（only_latest_data は開けない） | Accepted |
 | [0055](0055-idf-file-reaches-ai-through-payload.md) | IDF ファイルの経路は優劣ではなく用途で分かれる — 到達できないツールは消し、画像を見せる base64 は残す | Accepted |
 | [0056](0056-attached-data-reps-are-a-separate-list.md) | タグ・テキスト・通知・GPSログの格納先は別枠で返す — Reps へ混ぜない | Accepted |
+| [0057](0057-plugin-role-is-emits-kyou-and-provides.md) | プラグインの役割は emits_kyou / provides をそのまま出して表す — capabilities 語彙を新設しない | Accepted |
+| [0058](0058-stale-tool-schema-is-warned-only-when-proven.md) | 古いツールスキーマは「証明できるときだけ」警告する | Accepted |
+| [0059](0059-mi-projection-depends-on-for-mi.md) | Mi の射影が for_mi に依存することは、潰し込みを外さずに警告と説明で見せる | Accepted |
 | [0060](0060-freeze-plaing-spelling.md) | 綴りは「永続に乗るか」で決める — plaing は凍結、agregate は改名して読み込み互換を残す | Accepted |
 | [0061](0061-verify-docs-checks-filenames.md) | 資料は件数だけでなく「資料に載っているファイル名の実在」も機械検査する | Accepted |
 | [0062](0062-split-claude-md-into-skills.md) | AI向け規約は AGENTS.md（核）と規約スキルへ分割し、入口の肥大化を機械検査で防ぐ | Accepted |
+| [0063](0063-one-table-not-two-forms.md) | 同じ対応表を「表」と「直書き」の2形態で持たない | Accepted |
+| [0064](0064-attached-data-follows-kyou-search-rules.md) | 付随データの「その瞬間に走っていたか」は Kyou 検索と同じ規則で判定する | Accepted |
+| [0065](0065-add-and-update-share-one-field-table.md) | 追加と更新は1つのフィールド表から作る | Accepted |
 | [0070](0070-hide-tags-standalone.md) | hide_tags はタグ絞り込み(tags)の有無と独立に適用する | Accepted |
 | [0071](0071-deleted-data-opens-only-with-include-deleted-data.md) | 削除済みの Kyou は include_deleted_data だけが開ける（is_deleted は使わない） | Accepted |
 | [0072](0072-drop-never-implemented-query-fields.md) | 実装されなかった検索条件は消す — 受理して無視するより未知キーとして弾く | Accepted |
 | [0073](0073-tag-vocabulary-drops-dead-targets.md) | タグ語彙は「生存する対象を持つタグ」だけを返す — カスケード削除はしない | Accepted |
 | [0074](0074-filter-by-create-app-at-request-level.md) | 「どのアプリが書いたか」の絞り込みは FindQuery ではなく MCP リクエストに置く | Accepted |
 | [0080](0080-kftl-errors-are-per-line.md) | メモ帳（KFTL）の失敗は行ごとに返し、入力ミスとサーバ障害を分ける | Accepted |
+| [0081](0081-kftl-prefix-misuse-is-an-input-error.md) | 引数の無い／引数を同じ行に書いたメモ帳のプレフィックスは、ゼロ値を書かずに行別エラーにする | Accepted |
+| [0082](0082-kftl-missing-configuration-is-an-input-error.md) | KFTL の実行フェーズの失敗も、設定不足なら行別の入力エラーにする | Accepted |

@@ -97,10 +97,14 @@ type pluginRepositoryImpl struct {
 
 	proc *pluginProcess // nil = 未起動
 
-	// typedIndex は manifest.provides が空でないときだけ作られる型別/付随データの索引。
-	// providesを宣言していないプラグイン（chatgpt/claudeai/claudecode/example）ではnilのままで、
-	// UpdateCacheも従来どおり何もしない。
+	// typedIndex は型別/付随データを提供するプラグインだけが持つ索引。
+	// providesを宣言していないプラグイン（chatgpt/claudeai/claudecode/example）と、
+	// providesがgpslogだけのプラグインではnilのままで、UpdateCacheも何もしない。
 	typedIndex *PluginTypedIndex
+
+	// gpsStats はGPSログのスナップショット統計。GPSLogRepositoryアダプタが取得のたびに預ける。
+	// 一度も取得していなければnil。読み取りは非ブロッキング（プラグインへは行かない）。
+	gpsStats atomic.Pointer[GPSIndexStats]
 
 	// stderrRing はプラグインstderrの末尾を保持する（診断用。PluginInfo.last_error の源）。
 	stderrRing *pluginStderrRing
@@ -124,13 +128,51 @@ func NewPluginRepository(userID string, pluginDir string, manifest gkill_plugin.
 		manifest:   manifest,
 		stderrRing: newPluginStderrRing(),
 	}
-	if len(manifest.Provides) != 0 {
+	// providesがgpslogだけのプラグインには索引を作らない。
+	// 索引の材料は型別データと付随データで、GPSログはどちらでもないため
+	// 作っても中身が入らず never_built のまま固定される（NeedsTypedIndexのコメント参照）。
+	if manifest.NeedsTypedIndex() {
 		rep.typedIndex = newPluginTypedIndex(rep)
 	}
 	return rep
 }
 
-// TypedIndex は型別データ・付随データの索引を返す。providesが空ならnil。
+// GPSIndexStats はGPSログのスナップショット統計。プラグイン一覧APIが返す。
+//
+// 型別索引(PluginTypedIndex)とは別物。GPSログはKyouではないので型別索引には載らず、
+// providesがgpslogだけのプラグインは型別索引そのものを持たない。
+type GPSIndexStats struct {
+	// PointCount は重複排除前のスナップショットの点数。
+	PointCount int
+	// Oldest / Newest は点のRelatedTimeの範囲。点が0件ならゼロ値。
+	Oldest time.Time
+	Newest time.Time
+	// FetchedAt はスナップショットを取得した時刻（＝この統計の鮮度）。
+	FetchedAt time.Time
+}
+
+// gpsIndexStatsSink はGPSスナップショットの統計を預かれるプラグインリポジトリ。
+// アダプタ(gpsLogRepositoryPluginImpl)がインタフェース越しに預けるための口。
+type gpsIndexStatsSink interface {
+	SetGPSIndexStats(stats GPSIndexStats)
+}
+
+// SetGPSIndexStats はGPSスナップショットの統計を預かる。
+//
+// 呼ぶのは GPSLogRepository アダプタ(gpsLogRepositoryPluginImpl.publishStats)だけ。
+// プラグイン一覧APIは wrapAuth でリポジトリ解決を通らずGPSLogRepsへ到達できないので、
+// 統計を持っているアダプタ側から、両経路で同一インスタンスであるここへ預ける。
+func (p *pluginRepositoryImpl) SetGPSIndexStats(stats GPSIndexStats) {
+	p.gpsStats.Store(&stats)
+}
+
+// GPSIndexStats は直近に取得したGPSスナップショットの統計を返す。
+// 一度も取得していなければnil。決してブロックしない（プラグインへは行かない）。
+func (p *pluginRepositoryImpl) GPSIndexStats() *GPSIndexStats {
+	return p.gpsStats.Load()
+}
+
+// TypedIndex は型別データ・付随データの索引を返す。持たないプラグインではnil。
 func (p *pluginRepositoryImpl) TypedIndex() *PluginTypedIndex {
 	return p.typedIndex
 }

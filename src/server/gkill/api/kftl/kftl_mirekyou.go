@@ -43,22 +43,37 @@ func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
 	// タスク化する対象は「同じレコードで書いたKyou」。レコードにKyou本体が無い
 	// (タグだけ書いてプロトタイプのまま終わった場合を含む)と、対象が存在しないMiReKyouになる。
 	// そういうMiReKyouは検索でターゲット解決に失敗して結果から落ちるので、
-	// 画面に出ないのに消せない行がリポジトリに残ってしまう。書く前に弾く
+	// 画面に出ないのに消せない行がリポジトリに残ってしまう。書く前に弾く。
+	//
+	// **入力エラーとして返す。** ここは実行フェーズだが、原因はどれも
+	// 「送ったテキストの書き方」か「アカウントの設定」で、利用者が直せる。
+	// fmt.Errorf のままだと errors.As に引っかからず ERR000351 (HTTP 500) の
+	// 「メモ帳のテキストの記録に失敗しました」だけが返り、**行番号も理由も出ない**
+	// (2026-08-25 の実利用レビュー: ~~ の最小形が3回とも同じ文言で落ち、
+	//  切り分けに5回の試行を要した)。ADR-0080 / ADR-0081 の続き。
+	// TS 側 (kftl-mi-re-kyou-request.ts) は同じ検査で
+	// NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE を返しており、Go だけが遅れていた。
 	if r.requestMap == nil {
-		return fmt.Errorf("mirekyou request map is not set: id=%s", r.RequestID)
+		return newKFTLInputError("NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE",
+			fmt.Errorf("mirekyou request map is not set: id=%s", r.RequestID))
 	}
 	target, ok := r.requestMap.Get(r.targetID)
 	if !ok {
-		return fmt.Errorf("not found mirekyou target in this record: target_id=%s", r.targetID)
+		return newKFTLInputError("NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE",
+			fmt.Errorf("not found mirekyou target in this record: target_id=%s", r.targetID))
 	}
 	if _, isPrototype := target.(*KFTLPrototypeRequest); isPrototype {
-		return fmt.Errorf("not found mirekyou target in this record (prototype only): target_id=%s", r.targetID)
+		return newKFTLInputError("NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE",
+			fmt.Errorf("not found mirekyou target in this record (prototype only): target_id=%s", r.targetID))
 	}
 
 	// MiReKyouは後から追加されたrep種別なので、既存の設定DBには書き込み用repが無いことがある。
-	// doBaseRequestより前に判定して、このリクエストは何も書かずに終わらせる
+	// doBaseRequestより前に判定して、このリクエストは何も書かずに終わらせる。
+	// **原因の文面を利用者へ返さない。** 利用者IDと端末名が入っており、
+	// MessageID が空だと handle_submit_kftl_text.go がそれをそのまま応答へ載せる (ADR-0046)。
 	if r.Ctx.Repositories == nil || r.Ctx.Repositories.WriteMiReKyouRep == nil {
-		return fmt.Errorf("not exist write mirekyou rep user id = %s device = %s", r.Ctx.UserID, r.Ctx.Device)
+		return newKFTLInputError("KFTL_MI_REKYOU_NO_WRITE_REP_MESSAGE_TITLE",
+			fmt.Errorf("not exist write mirekyou rep user id = %s device = %s", r.Ctx.UserID, r.Ctx.Device))
 	}
 
 	boardName := r.boardName

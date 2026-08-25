@@ -114,7 +114,7 @@ export const FIND_QUERY_SCHEMA = {
       description: `Filter by last update time (records updated after this time); set to activate. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
     },
     is_image_only: { type: "boolean", description: "Return only entries that have images attached." },
-    for_mi: { type: "boolean", description: "Query Mi (task) entries specifically. Requires at least one of include_create_mi / include_check_mi / include_limit_mi / include_start_mi / include_end_mi to be true, otherwise the search returns zero entries." },
+    for_mi: { type: "boolean", description: "Restrict the search to task entries — BOTH Mi and MiReKyou (an existing record turned into a task); results carry mi_* and mirekyou_* data_types. Requires at least one of include_create_mi / include_check_mi / include_limit_mi / include_start_mi / include_end_mi to be true, otherwise the search returns zero entries. This flag also decides which projection you see: with for_mi the data_type follows mi_sort_type (mi_create when unset), and WITHOUT it the five projections collapse to one representative per record (mi_start wins, then mi_check), so mi_create appears in a plain date search only for tasks updated outside the window — rare, but not never." },
     period_of_time_start_time_second: {
       type: "integer",
       description: "Start of time-of-day window, seconds from 00:00:00 (0-86399); set to activate time-of-day filtering.",

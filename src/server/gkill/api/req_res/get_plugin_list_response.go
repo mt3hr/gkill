@@ -11,6 +11,16 @@ type PluginInfo struct {
 	Description string `json:"description"`
 	DataType    string `json:"data_type"`
 	RepName     string `json:"rep_name"`
+	// EmitsKyou はこのプラグインがKyouを返すか（manifestのemits_kyou。未指定はtrue）。
+	//
+	// **falseのときDataTypeとRepNameは検索に使える値ではない。** そのプラグインは
+	// Kyouを1件も出さないのでRepsに載らず、query.repsにもdata_typesにも一致しない。
+	// manifestの必須項目なので値は入っているが、参照先のKyouが存在しない。
+	// データはProvidesに対応する経路（gpslogならGPSログAPI）から読む。
+	EmitsKyou bool `json:"emits_kyou"`
+	// Provides はKyouのメタ情報以外に提供するデータ種別（manifestのprovides）。
+	// 宣言していなければ省略。値の全集合は gkill_plugin.AllPluginProvidedKinds。
+	Provides []string `json:"provides,omitempty"`
 	// IsAlive は「プロセスが起動できてpingに応答したか」。判定は必要ならプロセスを起動する。
 	// データが取り込めているかは表さない（それは TypedIndex / LastError を見る）。
 	IsAlive bool `json:"is_alive"`
@@ -22,9 +32,30 @@ type PluginInfo struct {
 	// 「is_alive=true なのに0件」の理由（ビルドエラー等）をAPIから診断できるようにする
 	// （外部監査 D2。以前はサーバのコンソールにしか出なかった）。
 	LastError string `json:"last_error,omitempty"`
-	// TypedIndex は provides を宣言したプラグインの索引統計（鮮度・件数・時刻範囲）。
-	// provides の無いプラグインでは省略（外部監査 D1）。
+	// TypedIndex は型別/付随データを提供するプラグインの索引統計（鮮度・件数・時刻範囲）。
+	// **これはKyouの索引**で、record_countはプラグインが返したKyouのユニーク数。
+	// provides の無いプラグインと、provides が gpslog だけのプラグインでは省略
+	// （後者は索引の材料が1件も無く、出すと never_built / 0 に固定されて
+	// 「索引が壊れている」と誤読される。外部監査 D1 と 2026-08-24 の実利用報告）。
 	TypedIndex *PluginTypedIndexStatsMCPDTO `json:"typed_index,omitempty"`
+	// GPSIndex は provides に gpslog を含むプラグインのGPSスナップショット統計。
+	// TypedIndex とは別物（GPSログはKyouではない）。一度も取得していなければ省略。
+	GPSIndex *PluginGPSIndexStatsMCPDTO `json:"gps_index,omitempty"`
+}
+
+// PluginGPSIndexStatsMCPDTO はプラグインのGPSログスナップショットの統計DTO。
+//
+// GPSログはKyouではないので型別索引には載らない。ここが無いと
+// 「ロケーション履歴がどこまで取り込まれたか」を知る手段が
+// GPSログAPIを実際に引く以外に無かった。
+type PluginGPSIndexStatsMCPDTO struct {
+	// PointCount はスナップショットの点数。
+	PointCount int `json:"point_count"`
+	// Oldest / Newest は点の時刻範囲（RFC3339）。0件なら省略。
+	Oldest string `json:"oldest,omitempty"`
+	Newest string `json:"newest,omitempty"`
+	// FetchedAt はスナップショットの取得時刻（＝この統計の鮮度）。
+	FetchedAt string `json:"fetched_at"`
 }
 
 // PluginTypedIndexStatsMCPDTO はプラグイン型別索引の統計DTO。

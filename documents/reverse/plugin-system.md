@@ -705,7 +705,9 @@ AIクライアント（MCP）からもプラグインの記録を読める。プ
 
 | ツール名 | gkill API | 説明 |
 |---|---|---|
-| `gkill_get_plugin_list` | `/api/get_plugin_list` | プラグイン一覧（name / version / description / data_type / rep_name / is_alive / process_running / last_error / typed_index。後3つは診断用 — 実装は `req_res/get_plugin_list_response.go`） |
+| `gkill_get_plugin_list` | `/api/get_plugin_list` | プラグイン一覧（name / version / description / data_type / rep_name / emits_kyou / provides / is_alive / process_running / has_last_error / typed_index / gps_index。診断用は has_last_error 以降 — 実装は `req_res/get_plugin_list_response.go`） |
+
+APIの `last_error` と `typed_index.last_build_error` は、**MCP では中身を返さない**。どちらもプラグインが動いている端末のディレクトリ構成を含み、AIの文脈へ入れば資料やコミットメッセージへ引き写される経路ができるため、`plugin-tools.mjs` の `handlePluginToolCall` が落として `has_last_error` / `has_last_build_error` だけを立てる（落としたときだけ `warnings` に1行）。Go 側も出口で端末固有の情報を伏せる（[ADR-0046](../adr/0046-redact-environment-specific-strings.md)）。
 
 読み取り専用。設定書き換え（`/api/post_plugin_config`）はMCPに公開していない。
 
@@ -714,7 +716,11 @@ AIクライアント（MCP）からもプラグインの記録を読める。プ
 ### 取得導線
 
 ```
-gkill_get_plugin_list        … どのプラグインが入っているか（data_type / rep_name）を知る
+gkill_get_plugin_list        … どのプラグインが入っているか（data_type / rep_name）と、
+                               その役割（emits_kyou / provides）を知る
+  ↓  emits_kyou=false ならここで分岐する。そのプラグインはKyouを1件も出さないので
+     data_type / rep_name は検索値ではなく、provides に対応する経路
+     （gpslog なら gkill_get_gps_log）から読む
   ↓
 gkill_get_kyous              … include_plugin_content:true を付けて検索する。
    (include_plugin_content)     payload.kind = "plugin" のKyouに本文が入って返る
@@ -832,6 +838,16 @@ Kmemo→KC→URLog→Nlog→Lantana→TimeIs→Mi の順で最初の1つだけ�
 stderr には出ない。`last_attempt_at` は直近に構築を試みた時刻で、再構築はバックオフ中だと
 エラーすら発生しないため、これが無いと「なぜ何も起きていないのか」が分からない
 （`PluginTypedIndex.Stats()`）。
+
+**`typed_index` は Kyou の索引**であり、`record_count` はプラグインが返した Kyou の
+ユニークID数。`provides` が `gpslog` だけのプラグインには**そもそも作らない**
+（`PluginManifest.NeedsTypedIndex()`）—— GPSログはKyouではないので索引の材料が1件も無く、
+作ると `never_built` / `0` のまま永久に固定されて「索引が壊れている＝位置情報が使えない」と
+誤読される（2026-08-24 の実利用報告。→ [ADR-0057](../adr/0057-plugin-role-is-emits-kyou-and-provides.md)）。
+GPSの取り込み状況は別枠の `gps_index`（`point_count` / `oldest` / `newest` / `fetched_at`）で、
+統計は `gpsLogRepositoryPluginImpl` が取得のたびにプラグインリポジトリへ預ける
+（一覧APIは `wrapAuth` でリポジトリ解決を通らないため、アダプタ側から預ける形にしてある）。
+GPSが一度も要求されていなければキーごと省略される —— 「壊れている」ではなく「まだ読んでいない」。
 
 `FindKyous` で索引を埋めるのは、`Reps` 経由の検索が `goForRep`（`dao/reps/repositories.go`）で
 スレッドプールを迂回するので、そこでブロックしても安全なため。

@@ -48,6 +48,60 @@ const (
 	splitterSaveCharacterAscii         = "!"
 )
 
+// argTakingPrefixes は「行に単独で書き、値は次の行に書く」プレフィックスの一覧。
+//
+// タグ(。/#)と関連時刻(？/?)は**前方一致**で受理する設計なので、ここには入れない
+// （入れると「# 見出し」や「? を含む英文」が行エラーになり、既存の書き方が壊れる）。
+// 区切り(、/,)と打ち切り(！/!)も引数を取らないので対象外。
+var argTakingPrefixes = []string{
+	splitterKC, splitterMi, splitterLantana, splitterNlog,
+	splitterTimeIsStart, splitterTimeIsEnd, splitterTimeIs,
+	splitterTimeIsEndIfExist, splitterTimeIsEndByTag, splitterTimeIsEndByTagIfExist,
+	splitterURLog, splitterStartText, splitterMiReKyou,
+	splitterKCAscii, splitterMiAscii, splitterLantanaAscii, splitterNlogAscii,
+	splitterTimeIsStartAscii, splitterTimeIsEndAscii, splitterTimeIsAscii,
+	splitterTimeIsEndIfExistAscii, splitterTimeIsEndByTagAscii, splitterTimeIsEndByTagIfExistAscii,
+	splitterURLogAscii, splitterStartTextAscii, splitterMiReKyouAscii,
+}
+
+// prefixWrittenWithArgument は「既知のプレフィックス＋同じ行に引数」を書いた行かを返す。
+// 該当すればそのプレフィックスを返す。
+//
+// プレフィックスの判定は完全一致（generateDefaultConstructor）なので、
+// `/mood 8` は「/mood ではない行」として本文へ落ち、**気分記録のつもりが
+// 本文「/mood 8」のメモ1件になる**。エラーも警告も出ないので気づけない
+// （2026-08-24 の実利用報告）。書き込みの前にここで捕まえる。
+//
+// 長いプレフィックスから先に見る。`/end?` は `/end` で始まるので、
+// 短い側から見ると `/end?` が「/end に引数 ? を付けた行」に化ける。
+func prefixWrittenWithArgument(lineText string) (string, bool) {
+	trimmed := normalizeWaveDash(strings.TrimRight(lineText, " \t"))
+	longest := ""
+	for _, prefix := range argTakingPrefixes {
+		if trimmed == prefix {
+			// 単独で書かれている＝正しい書き方。ここでは咎めない
+			// （値の行が無いことは requireNextLineText が別に見る）。
+			return "", false
+		}
+		if len(prefix) <= len(longest) {
+			continue
+		}
+		rest, found := strings.CutPrefix(trimmed, prefix)
+		if !found || rest == "" {
+			continue
+		}
+		// 直後が空白のときだけ「引数を同じ行に書いた」とみなす。
+		// 空白が無ければ別の語（例: `/mine`）なので本文のまま通す。
+		if strings.TrimLeft(rest, " \t") != rest {
+			longest = prefix
+		}
+	}
+	if longest == "" {
+		return "", false
+	}
+	return longest, true
+}
+
 // normalizeWaveDash rewrites the wave dash (U+301C) to the fullwidth tilde (U+FF5E).
 //
 // 「～」はWindowsのIMEがU+FF5E、macOS/iOSのIMEがU+301Cを出す。見た目が同じで

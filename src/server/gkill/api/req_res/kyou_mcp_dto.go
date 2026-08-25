@@ -34,16 +34,53 @@ type KyouMCPDTO struct {
 	Texts         []string             `json:"texts,omitempty"`
 	Notifications []NotificationMCPDTO `json:"notifications,omitempty"`
 	TimeIs        []TimeIsMCPDTO       `json:"timeis,omitempty"`
-	Payload       any                  `json:"payload,omitempty"`
+	// TagEntities / TextEntities は Tags / Texts と同じ内容を ID 付きで返す枠。順序も同じ。
+	// 既存の Tags / Texts を置き換えないのは、Web の列と Wear OS が []string を前提に
+	// しているため（ワイヤ互換）。詳細は AttachedEntityMCPDTO のコメント。
+	TagEntities  []AttachedEntityMCPDTO `json:"tag_entities,omitempty"`
+	TextEntities []AttachedEntityMCPDTO `json:"text_entities,omitempty"`
+	Payload      any                    `json:"payload,omitempty"`
 }
 
-// TimeIsMCPDTO は attached TimeIs（Plaing TimeIs）用DTO
+// TimeIsMCPDTO は attached TimeIs（Plaing TimeIs）用DTO。
+//
+// ID と時刻が要る。以前は Title と Tags しか無く、同じ題名の打刻が
+// 1つの応答に何度も並んでも**区別も特定もできなかった**（実測で lantana 3件に対し
+// 付随 TimeIs が90件、うち同題名が4回）。「記録時に何が走っていたか」を知る機能なのに
+// 時刻が無いため、実質「その日に存在した打刻の題名一覧」になっていた
+// （2026-08-25 の実利用レビュー）。
 type TimeIsMCPDTO struct {
+	// ID は打刻の実体を引くための識別子。gkill_get_kyou_history や
+	// query.ids へそのまま渡せる。
+	ID    string   `json:"id"`
 	Title string   `json:"title"`
 	Tags  []string `json:"tags,omitempty"`
+	// StartTime / EndTime は打刻の期間。EndTime が無いものは計測中。
+	// 応答の他の時刻と同じくローカルタイムゾーンへ揃える。
+	StartTime time.Time  `json:"start_time"`
+	EndTime   *time.Time `json:"end_time,omitempty"`
+}
+
+// AttachedEntityMCPDTO は付随データ（タグ・テキスト）の実体1件。
+//
+// tags / texts は表示用の文字列配列で、**注釈を後から直す・消すのに必要な ID を運べない**。
+// gkill_update_text と gkill_delete_kyou(data_type:"text") は text 自身の ID を要求するので、
+// add_text の応答を手元に持っていない限り編集も削除もできなかった
+// （2026-08-25 の実利用レビュー）。同じレビューで TimeIs にだけ ID を足したので、残りも揃える。
+type AttachedEntityMCPDTO struct {
+	// ID は付随データ自身の識別子。**親の Kyou の ID とは別物**で、
+	// gkill_update_text / gkill_delete_kyou / gkill_get_kyou_history へ渡すのはこちら。
+	ID string `json:"id"`
+	// Value はタグ名またはテキスト本文。Tags / Texts に入るのと同じ文字列。
+	Value string `json:"value"`
 }
 
 type NotificationMCPDTO struct {
+	// ID は通知自身の識別子。gkill_delete_kyou(data_type:"notification") と
+	// gkill_get_kyou_history はこれを要求するのに応答へ載っておらず、
+	// **MCP から通知の id を得る経路が1つも無かった**
+	// （notification は data_type フィルタにも group_by のバケットにも出ない）。
+	ID               string    `json:"id"`
 	Content          string    `json:"content"`
 	NotificationTime time.Time `json:"notification_time,omitempty"`
 	IsNotificated    bool      `json:"is_notificated"`
@@ -150,10 +187,21 @@ type IDFPayloadMCPDTO struct {
 // コンテンツHTMLとして取り出すしかないので、その取得に必要な
 // rep_name / kyou_id をペイロードに含める（idfのrep_name/file_nameと同じ考え方）。
 type PluginPayloadMCPDTO struct {
-	Kind        string `json:"kind"` // "plugin"
-	DataType    string `json:"data_type"`
+	Kind       string `json:"kind"` // "plugin"
+	DataType   string `json:"data_type"`
+	RepName    string `json:"rep_name"`
+	KyouID     string `json:"kyou_id"`
+	PluginName string `json:"plugin_name,omitempty"`
+	// Description はここには入れない。プラグインの説明文は130〜150字あり、
+	// Kyou 1件ごとに焼き込むと20件取るだけで同じ文が20回並ぶ
+	// （include_plugin_content とは無関係に常に載っていた。2026-08-25 の実利用レビュー）。
+	// 応答トップレベルの Plugins（PluginDescriptionMCPDTO）に rep_name ごと1回だけ出す。
+}
+
+// PluginDescriptionMCPDTO は応答に出てきたプラグインの説明を1回だけ載せる枠。
+// payload.rep_name から引く。plugin_content ブロックと同じ「まとめて末尾」の形。
+type PluginDescriptionMCPDTO struct {
 	RepName     string `json:"rep_name"`
-	KyouID      string `json:"kyou_id"`
 	PluginName  string `json:"plugin_name,omitempty"`
 	Description string `json:"description,omitempty"`
 }

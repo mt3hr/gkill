@@ -42,6 +42,23 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 - E2E で `clickFabButton()` を使ってはいけない ―― 先に `dismissFloatingDialogs()` を呼ぶので、開いているメモ帳ウィンドウを閉じてしまい枚数が増えない
 - 守るテスト: `floating-dialog-z-order.test.ts` / `kftl-dialog-host.test.ts` / `e2e/kftl-multi-dialog.spec.ts`
 
+## 書式ミスは黙って通さない
+
+プレフィックスの判定は**完全一致**（`kftl_factory.go` の `generateDefaultConstructor`）で、値は次の行に書く。外したときは**書き込みの前に**行別エラーへ倒すこと（[ADR-0081](../../../documents/adr/0081-kftl-prefix-misuse-is-an-input-error.md)）。
+
+- **単独プレフィックス**（次に値の行が無い）は `requireNextLineText` で弾く。放置すると `/mood` 単独が**気分値 0（最低）の記録を黙って1件書き**、`/num` 単独が空の数値記録を書く。他は無言で0件になる
+- **プレフィックス＋同じ行の引数**（`/mood 8`）は `prefixWrittenWithArgument` で弾く。完全一致判定なので本文へ落ち、気分記録のつもりが本文「/mood 8」のメモ1件になっていた
+- 判定は**長いプレフィックスから**見る（短い側からだと `/end?` が「`/end` に引数 `?`」に化ける）。タグ（`。`/`#`）と関連時刻（`？`/`?`）は**前方一致で受理する設計なので対象に入れない** —— 入れると `# 見出し` や `?` 始まりの英文が壊れる
+- 検査は `ApplyThisLineToRequestMap` のフェーズで行う。**まだ1バイトも書いていない**ので全行を評価して束ねられる。`DoRequest` まで持ち越すと前の行は既に書かれている
+- 打ち間違いは `newKFTLInputError` を使う。`fmt.Errorf` のままだと ERR000351（HTTP 500）＋英語の生文言になる。**メッセージIDは既存の i18n キーを探してから足すこと**（キー追加は7言語 + Go の embed コピー + 件数を書いた資料4箇所に波及する）
+- **`api/kftl/` に .go を新規追加しない。** `verify_docs.mjs` がファイル数を数えて `api/README.md` と突き合わせる
+
+**KFTL の実行フェーズの失敗でも、原因が「利用者が直せる状態」なら `newKFTLInputError` に載せる。** `fmt.Errorf` のままだと `kftl_statement.go` の `errors.As` に引っかからず、`ERR000351`（HTTP 500）の「メモ帳のテキストの記録に失敗しました」だけが返って**行番号も理由も出ない**。2026-08-25 の実利用レビューは `~~`（リポストタスク）がこれで3回とも同じ文言で落ち、原因を MCP 経路の不具合と誤診した（実際は繋いだアカウントに `mirekyou` 型の rep が1件も無く、Web UI からでも同じく失敗する状態だった）。**`MessageID` を空にしないこと** —— 空だと `formatKFTLInputErrorMessage` が `Cause` の英文をそのまま応答へ載せ、利用者IDと端末名が漏れる（[ADR-0046](../../../documents/adr/0046-redact-environment-specific-strings.md)）。境界と却下案は [ADR-0082](../../../documents/adr/0082-kftl-missing-configuration-is-an-input-error.md)。
+
+**`~~` は既存レコードをタスク化できない。** 対象IDは `ctx.ThisStatementLineTargetID` ＝**同じ送信テキストの直前の行が採番したUUID**で、gkill に既にある記録を指す構文は無い。ツール説明にそう書き戻さないこと。
+
+**KFTL 経由で書いた記録は `create_app="gkill_kftl"` / `create_device=<サーバのdevice>`。** MCP から書いても同じで、手打ちのメモ帳と**区別する欄が無い**（`gkill_add_*` は `gkill_mcp_readwrite` / `mcp`）。`create_apps:["gkill_mcp_readwrite"]` を「MCP で作った記録の探し方」と案内しないこと。KFTL は DB トランザクションではないので、失敗した送信を再送するときは `idempotency_key` を同じ値で渡す（受け口は `SubmitKFTLTextRequest`。渡さないと孤児レコードが積む）。
+
 ## 関連スキル
 
 - [gkill-client-foundation](../gkill-client-foundation/SKILL.md) — 必ず併読（中継束・ダイアログ規約）
@@ -51,3 +68,6 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 ## 詳しい設計と却下案（ADR）
 
 - [ADR-0037 保存マーカーは beforeinput/input の対で](../../../documents/adr/0037-save-marker-beforeinput-input-pair.md)
+- [ADR-0080 メモ帳の失敗は行ごとに返す](../../../documents/adr/0080-kftl-errors-are-per-line.md)
+- [ADR-0081 引数の書き方を誤ったプレフィックスは行別エラー](../../../documents/adr/0081-kftl-prefix-misuse-is-an-input-error.md)
+- [ADR-0082 実行フェーズでも設定不足は行別の入力エラー](../../../documents/adr/0082-kftl-missing-configuration-is-an-input-error.md)
