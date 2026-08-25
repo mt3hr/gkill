@@ -94,6 +94,10 @@ func newKFTLStartURLogStatementLine(lineText string, ctx *KFTLStatementLineConte
 }
 
 func (l *kftlStartURLogStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
+	// URLの行が無いと無言で0件になり、なぜ作られなかったのか分からない。
+	if err := requireNextLineText(l.ctx); err != nil {
+		return err
+	}
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
 func (l *kftlStartURLogStatementLine) GetLabelName() string                  { return "urlog" }

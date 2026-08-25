@@ -456,6 +456,7 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の9（`gki
 | 備考 | MCPの `gkill_get_plugin_list` もこのエンドポイントをそのまま使う |
 | 備考 | `is_alive` は「プロセスが起動できて ping に応答したか」。**判定は必要ならプロセスを起動する**。データが取り込めているかは表さない。現に起動済みかを副作用なしで見るのは `process_running` |
 | 備考 | `last_error` はプラグイン stderr の末尾（直近約4KB。何も出ていなければ省略）。**索引構築の失敗はここには出ない**（タイムアウトやJSON不正は gkill 側で起きるため）—— そちらは `typed_index.last_build_error` を見る |
+| 備考 | `last_error` と `typed_index.last_build_error` は、返す直前に `message.RedactEnvironmentSpecific` を通してホームのユーザー名・メールアドレスをプレースホルダへ置き換える（プラグインは診断のために実パスを書いてよい前提で、伏せるのは gkill 側の責務。パスの形は残るので LocalSystem 起動でホームが化ける事故は診断できる）。MCP はこの2つを**中身ごと返さず** `has_last_error` / `has_last_build_error` だけを返す（[ADR-0046](../adr/0046-redact-environment-specific-strings.md)） |
 | 備考 | `typed_index` は provides を宣言したプラグインの索引統計（宣言が無ければ省略）。`ok` / `state`（`never_built` / `failed` / `ok`。未構築と構築失敗を区別する）/ `last_build_error` / `last_attempt_at`（直近に構築を試みた時刻。バックオフ中はエラーすら出ないため要る）/ `record_count` / `oldest` / `newest`（related_time の範囲。0件なら省略）/ `truncated`（true なら `record_count` は実数より小さい）/ `built_at`（この統計の鮮度） |
 
 ### get_plugin_content_html 詳細

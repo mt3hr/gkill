@@ -27,7 +27,8 @@ func (m *KFTLRequestMap) Set(requestID string, req KFTLRequest) error {
 	if ok {
 		proto, isProto := existing.(*KFTLPrototypeRequest)
 		if !isProto {
-			return fmt.Errorf("request id=%s is already set and is not a prototype", requestID)
+			return newKFTLInputError("KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE",
+				fmt.Errorf("request id=%s is already set and is not a prototype", requestID))
 		}
 		// Inherit from prototype
 		for _, tag := range proto.GetTags() {

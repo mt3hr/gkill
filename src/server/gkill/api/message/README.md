@@ -5,12 +5,14 @@
 gkill API のエラーコードとメッセージコードの定数定義、およびレスポンス用構造体を提供する。
 全 API レスポンスは `[]GkillMessage` と `[]GkillError` を含み、クライアント側でエラー判定・表示に使用される。
 
-## ファイル一覧（8ファイル）
+## ファイル一覧（10ファイル）
 
 | ファイル | 説明 |
 |---------|------|
-| `gkill_error.go` | `GkillError` 構造体 — `ErrorCode` + `ErrorMessage`。`EnsureNotEmpty`（エラー無し失敗の受け皿）もここ |
-| `gkill_error_test.go` | `EnsureNotEmpty` が「失敗したのに GkillError が1つも無い」状態を潰すことのテスト |
+| `gkill_error.go` | `GkillError` 構造体 — `ErrorCode` + `ErrorMessage`。`EnsureNotEmpty`（エラー無し失敗の受け皿）と、`ErrorMessage` を伏せる `MarshalJSON` もここ |
+| `gkill_error_test.go` | `EnsureNotEmpty` が「失敗したのに GkillError が1つも無い」状態を潰すこと、`MarshalJSON` が端末固有の情報を伏せることのテスト |
+| `redact.go` | `RedactEnvironmentSpecific` — レスポンスへ載る自由文からホームのユーザー名・メールアドレスを伏せる（[ADR-0046](../../../../../documents/adr/0046-redact-environment-specific-strings.md)） |
+| `redact_test.go` | 伏せ方の表駆動テスト（形は残す・二重適用しない・`@example.` は残す） |
 | `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` |
 | `error_codes.go` | エラーコード定数（414 定数: `ERR000001` 〜 `ERR000418`、`ERR000243`・`ERR000387`・`ERR000388`・`ERR000389` は欠番） |
 | `message_codes.go` | メッセージコード定数（89 定数: `MSG000001` 〜 `MSG000089`） |

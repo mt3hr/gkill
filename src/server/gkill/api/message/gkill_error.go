@@ -1,9 +1,29 @@
 package message
 
+import "encoding/json"
+
 type GkillError struct {
 	ErrorCode string `json:"error_code"`
 
 	ErrorMessage string `json:"error_message"`
+}
+
+// MarshalJSON はレスポンスへ出る直前に ErrorMessage から端末固有の情報を伏せます。
+//
+// **伏せるのは生成側ではなくここです。** ErrorMessage の代入は684箇所あり、
+// そのうち err.Error() を埋めているのは4箇所ですが、将来のハンドラが同じ書き方を
+// したときに自動で載ることが唯一の再発防止になります。生成側で1つずつ包む方式は
+// 必ず足し忘れます（詳細は documents/adr/0046-redact-environment-specific-strings.md）。
+//
+// 値レシーバなので、レスポンスが持つ []*GkillError からでも呼ばれます。
+// 受け取る側（CLIのHTTPクライアント）は従来どおりなので UnmarshalJSON は足しません。
+func (e GkillError) MarshalJSON() ([]byte, error) {
+	// メソッドを引き継がない別の型にしてから包む。そうしないと再帰する。
+	type gkillErrorJSON GkillError
+	return json.Marshal(gkillErrorJSON{
+		ErrorCode:    e.ErrorCode,
+		ErrorMessage: RedactEnvironmentSpecific(e.ErrorMessage),
+	})
 }
 
 // EnsureNotEmpty は「失敗したのにGkillErrorが1つも無い」状態を潰します。

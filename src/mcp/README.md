@@ -174,8 +174,8 @@ curl -v -X POST http://localhost:8808/mcp \
 | `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却） |
 | `gkill_get_mi_board_list` | Miボード名一覧を取得 |
 | `gkill_get_all_tag_names` | 全タグ名を取得 |
-| `gkill_get_all_rep_names` | 全リポジトリ名を取得 |
-| `gkill_get_gps_log` | 期間指定でGPSログを取得 |
+| `gkill_get_all_rep_names` | Kyouを供給するリポジトリ名を取得。`contains`（大小無視の部分一致）と `limit`（既定200）で絞れ、`total_count` / `truncated` が付く。rep が数百ある環境で「その名前があるか」を確かめるために全件を読まずに済む |
+| `gkill_get_gps_log` | 期間指定でGPSログを取得。`limit` / `cursor`（不透明トークン。`next_cursor` をそのまま返す）でページングし、`count_only` / `group_by:"day"` で件数・日別カバレッジだけ取れる。**カーソルは `gkill_get_kyous` のものと別方式**（Node製base64url。コーデックの正本は `lib/gps-cursor.mjs` 1本で、発行側と受理側の両方がそこを使う） |
 | `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等） |
 | `gkill_get_rep_infos` | リポジトリ一覧を構造化メタデータ付きで取得。`query.rep_types` が受理する正準値 `canonical_rep_types[]`（表示ラベルと1:1でない）、索引付きrepの最終更新 `indexed_at`（古いと「追加したはずのファイルが検索に出ない」の原因）、タグ・テキスト・通知・GPSログの格納先 `attached_data_reps[]`（`query.reps` には渡せない）を返す |
 | `gkill_get_idf_file` | IDFファイルの実データを取得（画像はMCP image blockで返却）。`thumb=WxH`（一辺最大1024、動画は `is_video: true` 併用）で縮小取得できる。上限は `GKILL_MCP_MAX_FILE_BYTES`（既定8MB） |
@@ -269,7 +269,7 @@ Write専用サーバにはRead便利ツール4つ（`gkill_get_all_rep_names`, `
 #### プラグインツール（1つ — Read/Write/ReadWrite すべてのサーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
-| `gkill_get_plugin_list` | インストール済みプラグイン一覧を取得（name/version/description/data_type/rep_name/is_alive） |
+| `gkill_get_plugin_list` | インストール済みプラグイン一覧を取得（name/version/description/data_type/rep_name/**emits_kyou**/**provides**/is_alive/process_running/**has_last_error**/typed_index/gps_index。診断文の中身（last_error / typed_index.last_build_error）は端末のディレクトリ構成を含むため返さない。[ADR-0046](../../documents/adr/0046-redact-environment-specific-strings.md)）。`emits_kyou:false` のプラグインは Kyou を1件も出さないので、その `data_type` / `rep_name` は**検索値ではない** —— `provides` に対応する経路（`gpslog` なら `gkill_get_gps_log`）から読む |
 
 ##### プラグイン内容取得の導線
 
@@ -279,7 +279,7 @@ Write専用サーバにはRead便利ツール4つ（`gkill_get_all_rep_names`, `
 
 導線は次の2ステップ:
 
-1. `gkill_get_plugin_list` でプラグインの `data_type` / `rep_name` を把握する。
+1. `gkill_get_plugin_list` でプラグインの `data_type` / `rep_name` と役割（`emits_kyou` / `provides`）を把握する。`emits_kyou:false` ならこの導線には乗らない（Kyou が存在しないので `query.reps` に渡しても0件）。
 2. `gkill_get_kyous` に `include_plugin_content: true` を付けて検索する（`query.reps` でそのプラグインに絞れる）。プラグインKyouの `payload` は `kind: "plugin"` で、`data_type` / `rep_name` / `kyou_id` / `plugin_name` に加えて本文フィールドを持つ。
 
 各プラグインペイロードに付くフィールド:

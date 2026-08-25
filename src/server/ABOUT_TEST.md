@@ -2,7 +2,7 @@
 
 ## 概要
 
-Go バックエンドのテスト。1053テスト関数、155テストファイル、31パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
+Go バックエンドのテスト。1084テスト関数、157テストファイル、31パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
 
 ## テストフレームワーク
 
@@ -35,7 +35,7 @@ src/server/gkill/
 │   ├── gkill_notification/       # 通知ターゲット
 │   ├── hide_files/               # ファイル非表示
 │   ├── sqlite3impl/              # SQLite3 ユーティリティ
-│   └── reps/                     # リポジトリ実装 (53ファイル)
+│   └── reps/                     # リポジトリ実装 (54ファイル)
 ├── dvnf/                    # DVNF ファイル管理 (2ファイル)
 └── main/                    # CLI エントリポイント (9ファイル)
     ├── common/                   # 共有ロジック・オプション・ログ・スレッド
@@ -53,7 +53,7 @@ src/server/gkill/
 | KFTL パーサ | 6 | Factory、Statement、Request Map、MiReKyou、NLog、時刻 |
 | req_res | 1 | ワイヤ契約の検証5本（JSONタグ名・MCP DTO の omitempty・プラグインpayload）。旧「JSON往復テスト」は削除済み |
 | safefetch | 1 | SSRF 対策の共有フェッチ9本（接続直前の実IP検査・スキーム/サイズ上限・画像寸法・2xx判定） |
-| メッセージ・GPS | 4 | メッセージコード体系、`EnsureNotEmpty`、エラーコード→HTTPステータス対応表、GPS ログ解析 |
+| メッセージ・GPS | 5 | メッセージコード体系、`EnsureNotEmpty`、エラーコード→HTTPステータス対応表、端末固有情報の伏せ処理、GPS ログ解析 |
 | プラグインプロトコル | 1 | `gkill_plugin` の stdio メッセージ型 |
 | ユースケース | 3 | write-through のキャッシュ反映、キャッシュ実装の INSERT 列と引数の対応、規約のソース走査（下記） |
 | DAO 管理 | 2 | GkillDAOManager ライフサイクル |
@@ -61,12 +61,12 @@ src/server/gkill/
 | 設定 | 3 | サーバ設定、アプリ設定、リポジトリ定義 |
 | 共有・通知 | 3 | 共有情報 CRUD、通知ターゲット |
 | ユーティリティ | 8 | SQLite3 ユーティリティ、ファイル非表示 |
-| リポジトリ | 55 | `reps/` 直下53（13データ型の SQLite3 実装 + キャッシュ + 一時 + プラグイン + プラグイン診断 + デッドロック/ネスト並列回帰 + gitキャッシュUNIQUE + GPS集約dedup + 最新版アドレスのrep名走査）+ `reps/cache/`・`reps/rep_cache_updater/` の2 |
+| リポジトリ | 56 | `reps/` 直下54（13データ型の SQLite3 実装 + キャッシュ + 一時 + プラグイン + プラグイン診断 + デッドロック/ネスト並列回帰 + gitキャッシュUNIQUE + GPS集約dedup + 最新版アドレスのrep名走査）+ `reps/cache/`・`reps/rep_cache_updater/` の2 |
 | DVNF | 2 | ファイル管理、CLI コマンド |
 | CLI/Main | 9 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ、スレッド、エントリポイント、パスワード管理、auto_tag バッチ（HTTP投稿と応答判定を含む） |
 | プラグイン SDK | 4 | `Run()` の stdio ループ（18本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本） |
 
-**合計 155 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
+**合計 157 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
 ずれたら `checkCounts` が落とす）。
 
 ## 規約のソース走査（`usecase/source_conventions_scan_test.go`）

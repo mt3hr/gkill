@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/api/safefetch"
@@ -29,6 +30,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/twpayne/go-gpx"
 )
 
@@ -545,4 +547,46 @@ func withUserContentSecurityHeaders(next http.HandlerFunc) http.HandlerFunc {
 		}
 		next(w, r)
 	}
+}
+
+// resolveSelfAuthContext は wrapNoAuth で登録したハンドラが自前でやっている
+// 「セッションID → アカウント → 端末 → リポジトリ」の3段をまとめる。
+//
+// wrapAuth / wrapAuthRepos のミドルウェアと同じ処理が、認証を自前でやる
+// ハンドラ側へ逐語コピーされていた（3度目の複製）。1つ直すと他が置き去りになる。
+//
+// 失敗したときは呼び出し側が応答へ積むための GkillError を返す。
+// エラーコードは経路ごとに違うので、リポジトリ取得の失敗メッセージIDだけ引数で受ける。
+func (g *GkillServerAPI) resolveSelfAuthContext(
+	ctx context.Context,
+	sessionID string,
+	localeName string,
+	reposFailureMessageID string,
+) (userID string, device string, repositories *reps.GkillRepositories, gkillError *message.GkillError) {
+	account, gkillError, err := g.getAccountFromSessionID(ctx, sessionID, localeName)
+	if err != nil {
+		return "", "", nil, gkillError
+	}
+	userID = account.UserID
+
+	device, err = g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		return "", "", nil, &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+		}
+	}
+
+	repositories, err = g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		return "", "", nil, &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: reposFailureMessageID}),
+		}
+	}
+	return userID, device, repositories, nil
 }

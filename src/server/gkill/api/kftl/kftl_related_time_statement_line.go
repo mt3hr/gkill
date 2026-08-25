@@ -93,7 +93,8 @@ func (l *kftlRelatedTimeStatementLine) ApplyThisLineToRequestMap(_ context.Conte
 	dateStr = strings.TrimPrefix(dateStr, splitterRelatedTimeAscii)
 	t, err := parseDateTime(dateStr, l.ctx.BaseTime)
 	if err != nil {
-		return fmt.Errorf("invalid related time %q: %w", dateStr, err)
+		return newKFTLInputError("KFTL_INVALID_PARSE_RELATED_TIME_ERROR_MESSAGE_TITLE",
+			fmt.Errorf("invalid related time %q: %w", dateStr, err))
 	}
 	req.SetRelatedTime(t)
 	return nil
