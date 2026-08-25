@@ -25,7 +25,7 @@ export const FIND_QUERY_SCHEMA = {
     "Plugin-provided entries (any data_type that is not one of the built-ins above) have payload.kind='plugin' carrying data_type/rep_name/kyou_id/plugin_name; their body is not stored in gkill, so set include_plugin_content:true on this same call to get it inline as payload.content_text.",
   properties: {
     update_cache: { type: "boolean", description: "Force cache refresh before query." },
-    include_deleted_data: { type: "boolean", description: "Also return soft-deleted entries. Default false. Deleted entries carry is_deleted:true in the result, so you can tell them apart. Use this to find what was deleted; use gkill_get_kyou_history to read one deleted entry in full, and gkill_restore_kyou to bring it back. Note rekyou / mirekyou entries stay hidden even with this flag (their repositories filter deleted rows internally), and git_commit_log has no concept of deletion. Note also that a deleted entry is indexed by the time it was DELETED, not by its original related_time: gkill is append-only, so the delete is the newest version. A calendar range with this flag on therefore also surfaces entries created on other days that merely happened to be deleted inside the range." },
+    include_deleted_data: { type: "boolean", description: "Also return soft-deleted entries. Default false. Deleted entries carry is_deleted:true in the result, so you can tell them apart. Use this to find what was deleted; use gkill_get_kyou_history to read one deleted entry in full, and gkill_restore_kyou (on a server that exposes write tools) to bring it back. Note rekyou / mirekyou entries stay hidden even with this flag (their repositories filter deleted rows internally), and git_commit_log has no concept of deletion. Note also that a deleted entry is indexed by the time it was DELETED, not by its original related_time: gkill is append-only, so the delete is the newest version. A calendar range with this flag on therefore also surfaces entries created on other days that merely happened to be deleted inside the range." },
     rep_types: {
       type: "array",
       description:
@@ -137,7 +137,14 @@ export const FIND_QUERY_SCHEMA = {
     },
     mi_sort_type: {
       type: "string",
-      description: "Sort order for Mi tasks.",
+      description:
+        "Which time of a Mi task to use. This is NOT only a sort order: it also decides the timestamp " +
+        "that calendar_start_date / calendar_end_date, the time-of-day window and the weekday filter are " +
+        "matched against, and it sets the data_type of the results (mi_limit for limit_time, and so on). " +
+        "Changing it therefore changes WHICH tasks come back, not just their order. " +
+        "It only takes effect through the matching include_*_mi projection: limit_time needs " +
+        "include_limit_mi, estimate_start_time needs include_start_mi, and so on — otherwise the " +
+        "projection you did enable decides the axis and this value is ignored.",
       enum: ["create_time", "estimate_start_time", "estimate_end_time", "limit_time"],
     },
     only_latest_data: { type: "boolean", description: "Deprecated: accepted for backward compatibility and ignored — the MCP layer always forces this to true, whatever you pass. Past versions of an entry are only visible through gkill_get_kyou_history." },

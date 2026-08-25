@@ -3,7 +3,7 @@
 // 以前はサーバごとに逐語コピーされていて、gkill_submit_kftl / gkill_delete_kyou の
 // description が接続先サーバによって違っていた。
 
-import { ISO_DATETIME_DESC, DATE_ONLY_DESC, ENTITY_DATA_TYPE_VALUES } from "./constants.mjs";
+import { ISO_DATETIME_DESC, DATE_ONLY_DESC, ENTITY_AND_PROJECTION_DATA_TYPE_VALUES } from "./constants.mjs";
 
 export const WRITE_TOOLS = [
   {
@@ -243,7 +243,7 @@ export const WRITE_TOOLS = [
       "Example (creates 3 records: kmemo + mood + expense): " +
       "\"今日はいい天気だった\\n、\\n/mood\\n8\\n、\\n/expense\\nカフェ\\nアイスコーヒー\\n-500\\n!\" " +
       "Response fields: messages[] (server processing messages) and created[] ({id, data_type, updated}) — one entry per record actually written, in the order they were written. Lines that write nothing (a blank kmemo, a blank task, a blank expense) produce no entry, and ending a timeis reports the existing record with updated:true rather than a new id. Use created[].id as target_id for gkill_add_tag / gkill_add_text. " +
-      "On failure the errors are reported one per bad line, and created[] still lists what was already written before the failure — KFTL is not a database transaction, so those records stay. Pass the same idempotency_key when you retry so the replay does not write the earlier records a second time. "
+      "On failure the errors are reported one per bad line. Which failures can leave records behind differs: a bad VALUE (a mood outside 0-10, a prefix with no argument) is caught while parsing, before a single byte is written, so created[] comes back empty and nothing was saved. A failure while actually writing (a missing write repository, a database error) happens after earlier lines are already in, and created[] then lists exactly those — KFTL is not a database transaction, so they stay, and the error names the line it stopped at. Pass the same idempotency_key when you retry so the replay does not write the earlier records a second time. "
       + "Provenance: records written through this tool carry create_app=\"gkill_kftl\" (the same value the web notepad writes) and create_device set to the SERVER's device name, not \"mcp\". There is currently no field that separates MCP-submitted KFTL from hand-typed notepad KFTL, so create_apps:[\"gkill_mcp_readwrite\"] does NOT find them.",
     inputSchema: {
       type: "object",
@@ -284,7 +284,7 @@ export const WRITE_TOOLS = [
             type: "object",
             properties: {
               id: { type: "string" },
-              data_type: { type: "string", enum: ENTITY_DATA_TYPE_VALUES },
+              data_type: { type: "string", enum: ENTITY_AND_PROJECTION_DATA_TYPE_VALUES },
             },
             required: ["id", "data_type"],
             additionalProperties: false,
@@ -303,7 +303,7 @@ export const WRITE_TOOLS = [
           description:
             "Data type of the entry to delete. Must match the actual type of the entry. " +
             "Two vocabularies exist: search results and add_* / update_* responses carry PROJECTION names (mi_create / mi_check / mi_limit / mi_start / mi_end, mirekyou_*, timeis_start / timeis_end), while this parameter is the ENTITY type (mi / mirekyou / timeis). Projection names are accepted here and folded to their entity type, so a data_type copied straight out of a response works.",
-          enum: ENTITY_DATA_TYPE_VALUES,
+          enum: ENTITY_AND_PROJECTION_DATA_TYPE_VALUES,
         },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
@@ -521,7 +521,7 @@ export const WRITE_TOOLS = [
             type: "object",
             properties: {
               id: { type: "string" },
-              data_type: { type: "string", enum: ENTITY_DATA_TYPE_VALUES },
+              data_type: { type: "string", enum: ENTITY_AND_PROJECTION_DATA_TYPE_VALUES },
             },
             required: ["id", "data_type"],
             additionalProperties: false,
@@ -540,7 +540,7 @@ export const WRITE_TOOLS = [
           description:
             "Data type of the entry. Must match the actual type of the entry. " +
             "Two vocabularies exist: search results and add_* / update_* responses carry PROJECTION names (mi_create / mi_check / mi_limit / mi_start / mi_end, mirekyou_*, timeis_start / timeis_end), while this parameter is the ENTITY type (mi / mirekyou / timeis). Projection names are accepted here and folded to their entity type, so a data_type copied straight out of a response works.",
-          enum: ENTITY_DATA_TYPE_VALUES,
+          enum: ENTITY_AND_PROJECTION_DATA_TYPE_VALUES,
         },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },

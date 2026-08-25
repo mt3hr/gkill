@@ -45,6 +45,8 @@ import {
   DEFAULT_GPS_LIMIT,
   MAX_GPS_LIMIT,
   DEFAULT_REP_NAMES_LIMIT,
+  DEFAULT_TAG_NAMES_LIMIT,
+  MAX_TAG_NAMES_LIMIT,
   MAX_REP_NAMES_LIMIT,
   GPS_GROUP_BY_VALUES,
   ENTITY_DATA_TYPE_VALUES,
@@ -340,6 +342,10 @@ const IDF_STALE_SCHEMA_ARG_KINDS = new Map([["is_video", "boolean"]]);
 // gkill_get_all_rep_names の絞り込み引数。contains は string 型なので対象外。
 const REP_NAMES_STALE_SCHEMA_ARG_KINDS = new Map([["limit", "number"]]);
 
+// gkill_get_all_tag_names の絞り込み引数。limit は number なので、
+// この表へ載せないと既存セッションからは文字列で届いて型エラーになる。
+const TAG_NAMES_STALE_SCHEMA_ARG_KINDS = new Map([["limit", "number"]]);
+
 // gkill_get_rep_infos の射影引数。
 const REP_INFOS_STALE_SCHEMA_ARG_KINDS = new Map([["fields", "string_array"]]);
 
@@ -359,6 +365,7 @@ const STALE_SCHEMA_ARG_KINDS_BY_TOOL = new Map([
   ["gkill_get_application_config", APP_CONFIG_STALE_SCHEMA_ARG_KINDS],
   ["gkill_get_idf_file", IDF_STALE_SCHEMA_ARG_KINDS],
   ["gkill_get_all_rep_names", REP_NAMES_STALE_SCHEMA_ARG_KINDS],
+  ["gkill_get_all_tag_names", TAG_NAMES_STALE_SCHEMA_ARG_KINDS],
   ["gkill_get_rep_infos", REP_INFOS_STALE_SCHEMA_ARG_KINDS],
   ["gkill_get_kyou_history", KYOU_HISTORY_STALE_SCHEMA_ARG_KINDS],
   // 書き込み側。delete / restore の targets はオブジェクトの配列なので、
@@ -677,16 +684,17 @@ export function normalizeRepInfosArgs(args) {
   return normalized;
 }
 
-// normalizeRepNamesArgs は gkill_get_all_rep_names の引数を検証する。
+// normalizeNameListArgs は名前一覧ツール（rep 名 / タグ名）の共通の引数検証。
 // 絞り込みは Node 側実装（gkill は全件を返す）なので、contains / limit は
-// gkill へは送らず paginateRepNames が使う。
-export function normalizeRepNamesArgs(args) {
+// gkill へは送らずページャが使う。片方だけ実装すると、もう片方だけが
+// 全件を毎回返し続けることになる。
+function normalizeNameListArgs(args, staleKinds, defaultLimit, maxLimit) {
   const source = reviveStaleSchemaArgs(
     args == null ? {} : assertObject(args, "arguments"),
-    REP_NAMES_STALE_SCHEMA_ARG_KINDS,
+    staleKinds,
   );
   assertKnownKeys(source, new Set(["locale_name", "contains", "limit"]), "arguments");
-  const normalized = { limit: DEFAULT_REP_NAMES_LIMIT };
+  const normalized = { limit: defaultLimit };
   if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
     normalized.locale_name = assertTrimmedString(source.locale_name, "locale_name");
   }
@@ -694,9 +702,19 @@ export function normalizeRepNamesArgs(args) {
     normalized.contains = assertTrimmedString(source.contains, "contains");
   }
   if (Object.prototype.hasOwnProperty.call(source, "limit") && source.limit !== undefined) {
-    normalized.limit = assertInteger(source.limit, "limit", { min: 1, max: MAX_REP_NAMES_LIMIT });
+    normalized.limit = assertInteger(source.limit, "limit", { min: 1, max: maxLimit });
   }
   return normalized;
+}
+
+// normalizeRepNamesArgs は gkill_get_all_rep_names の引数を検証する。
+export function normalizeRepNamesArgs(args) {
+  return normalizeNameListArgs(args, REP_NAMES_STALE_SCHEMA_ARG_KINDS, DEFAULT_REP_NAMES_LIMIT, MAX_REP_NAMES_LIMIT);
+}
+
+// normalizeTagNamesArgs は gkill_get_all_tag_names の引数を検証する。
+export function normalizeTagNamesArgs(args) {
+  return normalizeNameListArgs(args, TAG_NAMES_STALE_SCHEMA_ARG_KINDS, DEFAULT_TAG_NAMES_LIMIT, MAX_TAG_NAMES_LIMIT);
 }
 
 export function normalizeLocaleOnlyArgs(args) {

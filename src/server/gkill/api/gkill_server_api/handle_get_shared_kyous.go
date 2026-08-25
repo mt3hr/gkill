@@ -429,13 +429,15 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 					response.Errors = append(response.Errors, gkillError)
 					return
 				}
-				for _, timeis := range plaingTimeIss {
-					attachedTimeIssMap[timeis.ID] = timeis
-					if existTimeIs, exist := attachedTimeIssMap[timeis.ID]; exist {
-						if timeis.UpdateTime.After(existTimeIs.UpdateTime) {
-							attachedTimeIssMap[timeis.ID] = timeis
-						}
-					} else {
+				// 削除済みは Kyou 検索と同じ規則で落とす(ADR-0064)。ここは FindFilter を
+				// 通らない直叩きなので、落とさないと「終了していない削除済みの打刻」が
+				// 開始以降のすべての記録に *実行中* として永久に付き続ける。
+				for _, timeis := range livePlaingTimeIsCandidates(plaingTimeIss) {
+					// 同じIDの版が複数来たら新しいほうを採る。
+					// 以前は先に無条件で代入していたため、直後の比較が必ず自分自身との
+					// 比較になり(else も到達不能で)、版の選択が働いていなかった。
+					existTimeIs, exist := attachedTimeIssMap[timeis.ID]
+					if !exist || timeis.UpdateTime.After(existTimeIs.UpdateTime) {
 						attachedTimeIssMap[timeis.ID] = timeis
 					}
 				}

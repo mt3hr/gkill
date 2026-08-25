@@ -11,7 +11,10 @@ import { describe, test, expect } from "vitest";
 import { READ_TOOLS } from "../lib/read-tools.mjs";
 import { PLUGIN_TOOLS } from "../lib/plugin-tools.mjs";
 import { isReadToolName, summarizeReadToolPayload } from "../lib/read-handlers.mjs";
-import { summarizeToolError } from "../lib/payload.mjs";
+import { summarizeToolError, entityNotFoundMessage } from "../lib/payload.mjs";
+import { WRITE_TOOLS } from "../lib/write-tools.mjs";
+import { WRITE_SERVER_READ_TOOL_NAMES } from "../gkill-write-server.mjs";
+import { CROSS_SERVER_TOOL_MENTIONS } from "../lib/constants.mjs";
 
 // ---------------------------------------------------------------------------
 // Tool definition presence
@@ -179,5 +182,97 @@ describe("summarizeToolError", () => {
   test("handles empty tool name", () => {
     const result = summarizeToolError("", "Timeout", null);
     expect(result).toContain("Timeout");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 説明文が名指しするツールは、そのサーバに実在すること
+// ---------------------------------------------------------------------------
+//
+// 読み取り専用サーバの説明が gkill_restore_kyou を案内し、書き込み専用サーバの
+// 「見つからない」が gkill_get_application_config / gkill_get_kyous を案内していた。
+// どちらも「案内されたツールがそのサーバに無い」で、AI は存在しないツールを探す。
+// 同じ穴なので、説明文とエラーメッセージをまとめて機械検査する。
+describe("tool names in descriptions exist on the same server", () => {
+  const WRITE_SERVER_READ_TOOLS = READ_TOOLS.filter((tool) => WRITE_SERVER_READ_TOOL_NAMES.has(tool.name));
+  // 書き込み専用サーバは read を数本に絞る設計なので、3サーバで共有している
+  // 説明文が検索の口(gkill_get_kyous)に触れるのは避けられない。ここで検査すると
+  // 説明を全部書き換えることになり、read / readwrite 側の案内が劣化する。
+  // 代わりに、実害の出たランタイム文言（「見つからない」）を下の別テストで固定する。
+  const SERVERS = [
+    ["read", [...READ_TOOLS, ...PLUGIN_TOOLS]],
+    ["readwrite", [...READ_TOOLS, ...WRITE_TOOLS, ...PLUGIN_TOOLS]],
+  ];
+  const ALL_TOOL_NAMES = new Set([...READ_TOOLS, ...WRITE_TOOLS, ...PLUGIN_TOOLS].map((tool) => tool.name));
+
+  // 説明文の中の gkill_* を全部拾う。inputSchema の中の description も見る
+  // （restore の案内は find-query-schema.mjs 側、つまりスキーマの奥にあった）。
+  function collectMentions(node, found = new Set()) {
+    if (typeof node === "string") {
+      for (const match of node.matchAll(/gkill_[a-z_]+/g)) {
+        found.add(match[0]);
+      }
+      return found;
+    }
+    if (Array.isArray(node)) {
+      for (const child of node) collectMentions(child, found);
+      return found;
+    }
+    if (node && typeof node === "object") {
+      for (const child of Object.values(node)) collectMentions(child, found);
+    }
+    return found;
+  }
+
+  test.each(SERVERS)("%s server", (_label, tools) => {
+    const available = new Set(tools.map((tool) => tool.name));
+    const missing = [];
+    for (const tool of tools) {
+      for (const mentioned of collectMentions(tool)) {
+        // gkill_kftl / gkill_mcp_readwrite のような create_app 値は素通しする。
+        // 判定したいのは「どこかのサーバに実在するツール名なのに、ここには無い」だけ。
+        if (!ALL_TOOL_NAMES.has(mentioned)) continue;
+        if (CROSS_SERVER_TOOL_MENTIONS.has(mentioned)) continue;
+        if (!available.has(mentioned)) missing.push(`${tool.name} -> ${mentioned}`);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  // 「見つからない」はランタイムの文言なので、スキーマ検査では拾えない。
+  // 書き込み専用サーバはここで案内されるツールを持っている必要がある。
+  test("entityNotFoundMessage names only tools the write-only server has", () => {
+    const available = new Set([
+      ...WRITE_TOOLS.map((tool) => tool.name),
+      ...WRITE_SERVER_READ_TOOLS.map((tool) => tool.name),
+      ...PLUGIN_TOOLS.map((tool) => tool.name),
+    ]);
+    for (const mentioned of collectMentions(entityNotFoundMessage("x1", "kmemo"))) {
+      if (!ALL_TOOL_NAMES.has(mentioned)) continue;
+      expect(available.has(mentioned)).toBe(true);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// read と readwrite は同じ read ツールを配ること
+// ---------------------------------------------------------------------------
+//
+// 「readwrite にだけ user_id が無い」「group_by が違う」という報告が繰り返し来る。
+// 実体は毎回「古いプロセスが昨日の定義を配っていた」だったが、コード側で
+// 保証しているのは「同じ配列を spread している」という書き方だけで、テストは
+// 本数と名前しか見ていなかった。スキーマそのものの同一性を固定する。
+describe("read and readwrite serve identical read tools", () => {
+  test("same names and same inputSchema", () => {
+    const readTools = [...READ_TOOLS, ...PLUGIN_TOOLS];
+    const readwriteTools = [...READ_TOOLS, ...WRITE_TOOLS, ...PLUGIN_TOOLS];
+    const readwriteByName = new Map(readwriteTools.map((tool) => [tool.name, tool]));
+
+    for (const tool of readTools) {
+      const counterpart = readwriteByName.get(tool.name);
+      expect(counterpart).toBeDefined();
+      expect(counterpart.description).toBe(tool.description);
+      expect(counterpart.inputSchema).toEqual(tool.inputSchema);
+    }
   });
 });

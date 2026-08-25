@@ -99,6 +99,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | 0060-0069 | 開発規約と資料 |
 | 0070-0079 | 検索とフィルタの意味論（続。0001-0009 が満杯になったため） |
 | 0080-0089 | メモ帳（KFTL） |
+| 0090-0099 | MCP（続。0050-0059 が満杯になったため） |
 
 **番号は採番後不変。** 撤回した決定も番号を空けず `Superseded` で残す
 （「入れて翌日撤去した」という記録そのものが最良の ADR になる）。
@@ -192,3 +193,5 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0080](0080-kftl-errors-are-per-line.md) | メモ帳（KFTL）の失敗は行ごとに返し、入力ミスとサーバ障害を分ける | Accepted |
 | [0081](0081-kftl-prefix-misuse-is-an-input-error.md) | 引数の無い／引数を同じ行に書いたメモ帳のプレフィックスは、ゼロ値を書かずに行別エラーにする | Accepted |
 | [0082](0082-kftl-missing-configuration-is-an-input-error.md) | KFTL の実行フェーズの失敗も、設定不足なら行別の入力エラーにする | Accepted |
+| [0090](0090-write-user-comes-from-the-authenticated-session.md) | 書き込みに刻む user は、その要求を認証したセッションから決める | Accepted |
+| [0091](0091-update-rejects-an-empty-patch.md) | 更新は「変わる欄が1つも無い」なら書かずに断る | Accepted |
