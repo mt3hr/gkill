@@ -7,7 +7,7 @@
 
 import { FIND_QUERY_SCHEMA } from "./find-query-schema.mjs";
 import {
-  ENTITY_DATA_TYPE_VALUES,
+  ENTITY_AND_PROJECTION_DATA_TYPE_VALUES,
   DEFAULT_KYOU_HISTORY_LIMIT,
   MAX_KYOU_HISTORY_LIMIT,
   ISO_DATETIME_DESC,
@@ -23,6 +23,8 @@ import {
   DEFAULT_GPS_LIMIT,
   MAX_GPS_LIMIT,
   DEFAULT_REP_NAMES_LIMIT,
+  DEFAULT_TAG_NAMES_LIMIT,
+  MAX_TAG_NAMES_LIMIT,
   MAX_REP_NAMES_LIMIT,
 } from "./constants.mjs";
 
@@ -89,7 +91,7 @@ export const READ_TOOLS = [
         },
         is_include_timeis: {
           type: "boolean",
-          description: `Include attached TimeIs (plaing) data for each kyou — i.e., which TimeIs was running when each record was created. Each entry carries id, title, tags, start_time and end_time (absent while still running), so you can tell same-titled stamps apart and fetch one with query.ids. Default: ${DEFAULT_KYOUS_INCLUDE_TIMEIS}. This is expensive: a day with many stamps can attach dozens per record and dominate the response, so leave it off unless you actually need it. Note: this does NOT filter out TimeIs-type kyous from results; those always appear regardless of this flag. Only controls inline plaing attachment on other data types.`,
+          description: `Include attached TimeIs (plaing) data for each kyou — i.e., which TimeIs was running when each record was created. Each entry carries id, title, tags, start_time and end_time (absent while still running), so you can tell same-titled stamps apart and fetch one with query.ids. Default: ${DEFAULT_KYOUS_INCLUDE_TIMEIS}. Deleted stamps are excluded, by the same rule the search itself uses. A stamp with no end_time is still running by definition, so it covers every record after its start — an old stamp you forgot to close attaches to everything since, and that is data to clean up, not a bug. This is expensive in a way limit does not bound: every call reads the whole TimeIs history (tens of thousands of rows in a real account) and the attachment ignores query.reps / rep_types / the calendar range, so narrowing the search does not narrow what gets attached. Leave it off unless you actually need it. Note: this does NOT filter out TimeIs-type kyous from results; those always appear regardless of this flag. Only controls inline plaing attachment on other data types.`,
           default: DEFAULT_KYOUS_INCLUDE_TIMEIS,
         },
         include_id: {
@@ -133,6 +135,9 @@ export const READ_TOOLS = [
             "include_*_mi flag) is set, so filtering on [\"mi_create\"] without it returns far fewer rows than " +
             "the number of tasks actually created — a low count is NOT proof that no task was created. " +
             "The response says so in warnings. " +
+            "Plugins may reuse a built-in data_type: [\"kc\"] can return step counts, account balances and " +
+            "hand-entered measurements at once, because they are different repositories wearing the same type. " +
+            "Add query.reps to separate them. " +
             "null/omitted = no filter, [] = match nothing.",
         },
         create_apps: {
@@ -157,7 +162,10 @@ export const READ_TOOLS = [
           type: "number",
           description:
             "Lower bound (inclusive) on the numeric payload value: nlog amount, kc num_value, lantana mood. " +
-            "When num_min/num_max is set, entries of other kinds are excluded from results.",
+            "When num_min/num_max is set, entries of other kinds are excluded from results. " +
+            "The comparison ignores units — yen, step counts and a 0-10 mood are all measured on the same " +
+            "axis, so num_min:7 mixes them. Pair it with data_types (and query.reps for plugin-supplied kc) " +
+            "whenever the number means something specific.",
         },
         num_max: {
           type: "number",
@@ -234,11 +242,31 @@ export const READ_TOOLS = [
   },
   {
     name: "gkill_get_all_tag_names",
-    description: "Get all tag names defined in gkill. Use this to discover available tags for filtering in gkill_get_kyous via query.tags or query.timeis_tags.",
+    description:
+      "Get tag names defined in gkill. Use this to discover available tags for filtering in " +
+      "gkill_get_kyous via query.tags or query.timeis_tags. Accounts accumulate hundreds of tags, " +
+      "so narrow with contains when you only need to confirm one exists, or to list one family " +
+      "such as the autolog tags. Response fields: tag_names[], total_count (before limit), " +
+      "returned_count, truncated. Only tags whose target still exists are listed.",
     inputSchema: {
       type: "object",
       properties: {
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
+        contains: {
+          type: "string",
+          description:
+            "Case-insensitive substring filter on the tag name. Omit for no filter. " +
+            "Matching is done on the full list, so total_count reflects the filter.",
+        },
+        limit: {
+          type: "integer",
+          default: DEFAULT_TAG_NAMES_LIMIT,
+          minimum: 1,
+          maximum: MAX_TAG_NAMES_LIMIT,
+          description:
+            `Max names to return after filtering (1-${MAX_TAG_NAMES_LIMIT}). Default: ${DEFAULT_TAG_NAMES_LIMIT}. ` +
+            "When more matched, truncated is true and total_count tells you how many there were.",
+        },
       },
       additionalProperties: false,
     },
@@ -369,8 +397,14 @@ export const READ_TOOLS = [
       "that keep an index — when that index was last refreshed. Files dropped into a repository directory do not " +
       "appear in searches until the cache is updated, and nothing warns you, so a stale indexed_at is the reason " +
       "a file you know you added comes back as zero hits: pass query.update_cache=true or run the update_cache CLI), " +
+      "Each rep_infos[] entry also carries use_to_write: whether that repository is the write target for " +
+      "its type. A repository can be listed and searchable yet not writable, and then every write of that " +
+      "type fails with a message that does not say why (the KFTL ~~ task-from-record line is the usual " +
+      "victim). Check it before writing, not after. " +
       "canonical_rep_types[] (the exact " +
-      "strings query.rep_types accepts — e.g. files/images live under \"directory\", not \"idf\"), and plugins[] " +
+      "strings query.rep_types accepts — e.g. files/images live under \"directory\", not \"idf\". It is the " +
+      "vocabulary, not an inventory: every value is listed whether or not this account has such a repository, " +
+      "so filtering by one of them and getting zero hits is not an anomaly — check rep_infos[] for what exists here), and plugins[] " +
       "({rep_name, data_type, plugin_name} — plugins are matched via query.reps or data_types, never rep_types). " +
       "plugins[] lists only plugins that actually supply kyou: one that emits none (a GPS-only plugin, say) is " +
       "absent here by design, because its manifest rep_name would silently match nothing — look for it in " +
@@ -482,7 +516,8 @@ export const READ_TOOLS = [
       "Response fields: id, data_type, latest_is_deleted (whether the newest version is deleted — check this first " +
       "when an entry has vanished from search results), version_count, returned_count, has_more, and versions[] " +
       "newest first, each with update_time, is_deleted, update_app, update_device, update_user, rep_name and the " +
-      "type-specific fields. Use gkill_restore_kyou to bring back a deleted entry. " +
+      "type-specific fields. On a server that exposes write tools, gkill_restore_kyou brings a deleted entry back " +
+      "(this read-only server does not have it). " +
       "Caveat: update_time is stored at one-second resolution, so two versions written within the same second " +
       "collapse into one and a history may be missing a version.",
     inputSchema: {
@@ -497,7 +532,7 @@ export const READ_TOOLS = [
           description:
             "Data type of the entry. Must match the actual type — a mismatch reports the entry as not found. " +
             "Two vocabularies exist: search results and add_* / update_* responses carry PROJECTION names (mi_create / mi_check / mi_limit / mi_start / mi_end, mirekyou_*, timeis_start / timeis_end), while this parameter is the ENTITY type (mi / mirekyou / timeis). Projection names are accepted here and folded to their entity type, so a data_type copied straight out of a response works.",
-          enum: ENTITY_DATA_TYPE_VALUES,
+          enum: ENTITY_AND_PROJECTION_DATA_TYPE_VALUES,
         },
         limit: {
           type: "integer",

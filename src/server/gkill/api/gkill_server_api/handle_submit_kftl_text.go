@@ -3,6 +3,7 @@ package gkill_server_api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -142,7 +143,7 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 
 		gkillError := &message.GkillError{
 			ErrorCode:    message.SubmitKFTLTextError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"}),
+			ErrorMessage: formatKFTLExecutionErrorMessage(api.GetLocalizer(request.LocaleName), err),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -158,6 +159,20 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 		MessageCode: message.SubmitKFTLTextSuccessMessage,
 		Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_SUBMIT_KFTL_TEXT_MESSAGE"}),
 	})
+}
+
+// formatKFTLExecutionErrorMessage は実行フェーズの失敗に行番号を添える。
+//
+// 原因そのもの(DBのエラー等)は端末固有の情報を含みうるので載せない。載せるのは
+// 「何行目で止まったか」だけ —— 定型文1本では、created[] のどこまでが書けて
+// どこで止まったのかが応答から分からなかった。行テキストは利用者自身が書いたもの。
+func formatKFTLExecutionErrorMessage(localizer *i18n.Localizer, err error) string {
+	base := localizer.MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"})
+	var executionError *kftl.KFTLExecutionError
+	if errors.As(err, &executionError) && executionError.LineNumber > 0 {
+		return fmt.Sprintf("%s (line %d: %q)", base, executionError.LineNumber, executionError.LineText)
+	}
+	return base
 }
 
 // formatKFTLInputErrorMessage は入力エラー1件を利用者向けの1文にする。

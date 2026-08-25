@@ -64,6 +64,26 @@ func requireNextLineText(ctx *KFTLStatementLineContext) error {
 		fmt.Errorf("prefix %q needs its value on the next line", ctx.ThisStatementLineText))
 }
 
+// KFTLExecutionError は実行フェーズ(実際に書きにいく段)で起きた失敗に行番号を添える。
+//
+// 入力ミスではないので KFTLInputError とは別物で、ハンドラは 500 のまま扱う。
+// それでも行番号だけは載せる —— 「メモ帳のテキストの記録に失敗しました」の1文では、
+// 何行目で止まったのか(＝ created[] のどこまでが書けたのか)が応答から分からず、
+// 後始末の手がかりが無かった(2026-08-25 の実利用レビュー)。
+type KFTLExecutionError struct {
+	// LineNumber は1始まりの行番号。0 は「行が分からない」。
+	LineNumber int
+	LineText   string
+	RequestID  string
+	Cause      error
+}
+
+func (e *KFTLExecutionError) Error() string {
+	return fmt.Sprintf("error executing request id=%s (line %d %q): %v", e.RequestID, e.LineNumber, e.LineText, e.Cause)
+}
+
+func (e *KFTLExecutionError) Unwrap() error { return e.Cause }
+
 // withLine は行番号と行テキストを添えた入力エラーにする。
 // 既に入力エラーなら行の情報だけを埋め、そうでなければ包む。
 func withLine(err error, lineNumber int, lineText string) *KFTLInputError {
@@ -165,7 +185,14 @@ func (s *KFTLStatement) GenerateAndExecuteRequests(
 			if errors.As(err, &inputErr) {
 				return created, withLine(err, lineNumber, lineText)
 			}
-			return created, fmt.Errorf("error executing request id=%s (line %d %q): %w", req.GetRequestID(), lineNumber, lineText, err)
+			// 行番号を構造として持たせる。文字列へ畳むと、ハンドラが
+			// 「何行目で止まったか」を利用者へ返せない。
+			return created, &KFTLExecutionError{
+				LineNumber: lineNumber,
+				LineText:   lineText,
+				RequestID:  req.GetRequestID(),
+				Cause:      err,
+			}
 		}
 	}
 	return created, nil

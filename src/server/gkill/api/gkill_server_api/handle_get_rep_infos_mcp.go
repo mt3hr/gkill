@@ -85,6 +85,8 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 		repType string
 	}
 	seen := map[repInfoKey]struct{}{}
+	// 「一覧にはあるが書けない」を呼び出し側が書く前に判別できるようにする。
+	writeTargets := repositories.WriteTargetRepNames(r.Context())
 	for _, repType := range find.KyouRepTypes {
 		for _, rep := range api.RepsOfKyouRepType(repositories, repType) {
 			leafReps, err := rep.UnWrap()
@@ -103,9 +105,11 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 					continue
 				}
 				seen[key] = struct{}{}
+				_, useToWrite := writeTargets[repName]
 				repInfo := req_res.RepInfoMCPDTO{
-					RepName: repName,
-					RepType: repType,
+					RepName:    repName,
+					RepType:    repType,
+					UseToWrite: useToWrite,
 				}
 				// 索引を持つ rep だけ鮮度を出す。「置いたのに0件」が
 				// 取り込み待ちなのか本当に無いのかを、呼び出し側が判断できるようにする。

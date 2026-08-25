@@ -122,6 +122,12 @@ export const GPS_GROUP_BY_VALUES = new Set(["day"]);
 export const DEFAULT_REP_NAMES_LIMIT = 200;
 export const MAX_REP_NAMES_LIMIT = 2000;
 
+// タグ名も rep 名と同じ理由で絞り込める必要がある。タグは数百〜数千に育つので、
+// 「autolog 系のタグはあるか」を確かめるために全件を受け取るのは無駄が大きい。
+// rep 名側にだけ contains / limit があり、タグ名だけ全件返しだった。
+export const DEFAULT_TAG_NAMES_LIMIT = 200;
+export const MAX_TAG_NAMES_LIMIT = 2000;
+
 export const KYOUS_QUERY_BOOLEAN_FIELDS = new Set([
   "update_cache",
   "include_deleted_data",
@@ -308,6 +314,41 @@ export const PROJECTION_TO_ENTITY_DATA_TYPE = new Map([
   ["timeis_end", "timeis"],
   // idf は Kyou 側の data_type。エンティティとしての削除/履歴は未対応なので写さない。
 ]);
+
+/**
+ * ENTITY_AND_PROJECTION_DATA_TYPE_VALUES は data_type を受け取る口の enum。
+ *
+ * 入口は toEntityDataType を通すので射影名(mi_start / timeis_start …)でも動くのに、
+ * enum を畳んだ後の語彙だけにしていると、JSON Schema を送信前に検証する
+ * クライアントが mi_start をサーバへ届く前に弾く。説明文が「応答の data_type を
+ * そのまま渡せる」と約束しているので正面から食い違っていた(2026-08-25 の実利用レビュー)。
+ * 畳んだ後の語彙(ENTITY_DATA_TYPE_VALUES)は検証側で使うので、両方を残す。
+ */
+// CROSS_SERVER_TOOL_MENTIONS は「そのサーバに載っていなくても説明文に出てよい」ツール名。
+//
+// read / write は同じデータを別のサーバで扱うので、読み取り側の説明が
+// 書き込み側のツールに触れること自体は正しい —— 「この id は gkill_update_text へ
+// 渡すためのものだ」は、その場で呼べという案内ではなく、id を捨てるなという話。
+//
+// 禁じたいのはその逆で、**「今これを呼べ」と書いておいて、そのサーバに無い**こと。
+// read の履歴説明が gkill_restore_kyou を「使え」と書いていたのが実例で、
+// AI は載っていないツールを探しにいく。区別は機械では付かないので、
+// 参照情報としての言及だけをここへ明示する。**案内を足すときは表ではなく
+// ツールの搭載側を直すこと。**
+export const CROSS_SERVER_TOOL_MENTIONS = new Set([
+  "gkill_restore_kyou",
+  "gkill_update_text",
+  "gkill_delete_kyou",
+  "gkill_submit_kftl",
+  "gkill_add_mi",
+  "gkill_update_mi",
+  "gkill_add_tag",
+]);
+
+export const ENTITY_AND_PROJECTION_DATA_TYPE_VALUES = [
+  ...ENTITY_DATA_TYPE_VALUES,
+  ...PROJECTION_TO_ENTITY_DATA_TYPE.keys(),
+];
 
 /**
  * toEntityDataType は射影名を受け取ったらエンティティ種別へ寄せる。

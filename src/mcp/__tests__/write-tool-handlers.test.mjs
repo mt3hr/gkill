@@ -15,7 +15,12 @@ import { describe, test, expect } from "vitest";
 
 import { WRITE_TOOLS } from "../lib/write-tools.mjs";
 import { isWriteToolName, summarizeWriteToolPayload } from "../lib/write-handlers.mjs";
-import { ENTITY_TARGETS } from "../lib/constants.mjs";
+import {
+  ENTITY_TARGETS,
+  ENTITY_AND_PROJECTION_DATA_TYPE_VALUES,
+  PROJECTION_TO_ENTITY_DATA_TYPE,
+  toEntityDataType,
+} from "../lib/constants.mjs";
 import { DELETE_DATA_TYPES } from "../lib/write-normalization.mjs";
 import { summarizeToolError } from "../lib/payload.mjs";
 
@@ -100,14 +105,24 @@ describe("Tool definitions", () => {
 // Delete data_type: 語彙が constants.mjs の1箇所から派生していること
 // ---------------------------------------------------------------------------
 describe("delete_kyou data_type vocabulary", () => {
-  test("schema enum and DELETE_DATA_TYPES are derived from ENTITY_TARGETS", () => {
+  test("schema enum accepts projections while DELETE_DATA_TYPES stays the folded vocabulary", () => {
     // 語彙が食い違うと「スキーマは受理するのにディスパッチで落ちる」
-    // （あるいはその逆）になる。正本は constants.mjs の ENTITY_TARGETS
+    // （あるいはその逆）になる。畳んだ後の正本は constants.mjs の ENTITY_TARGETS。
+    // ただし入口は toEntityDataType を通すので、スキーマ側は射影名も許さないと
+    // 「応答の data_type をそのまま次のツールへ渡せる」という説明と食い違う
+    // （enum を畳んだ後の語彙だけにすると、送信前に検証するクライアントが
+    // mi_start をサーバへ届く前に弾く。2026-08-25 の実利用レビュー）。
     const deleteTool = WRITE_TOOLS.find((tool) => tool.name === "gkill_delete_kyou");
     const canonical = Object.keys(ENTITY_TARGETS).sort();
+    const accepted = [...ENTITY_AND_PROJECTION_DATA_TYPE_VALUES].sort();
 
-    expect([...deleteTool.inputSchema.properties.data_type.enum].sort()).toEqual(canonical);
+    expect([...deleteTool.inputSchema.properties.data_type.enum].sort()).toEqual(accepted);
+    // 畳んだ後の語彙は従来どおり ENTITY_TARGETS と一致する
     expect([...DELETE_DATA_TYPES].sort()).toEqual(canonical);
+    // スキーマが受理する射影名は、すべて畳んだ先が語彙にあること
+    for (const projection of PROJECTION_TO_ENTITY_DATA_TYPE.keys()) {
+      expect(DELETE_DATA_TYPES.has(toEntityDataType(projection))).toBe(true);
+    }
   });
 
   test("every delete target has both a get and an update endpoint", () => {

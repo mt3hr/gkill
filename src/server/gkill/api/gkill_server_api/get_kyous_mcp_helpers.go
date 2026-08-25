@@ -586,6 +586,38 @@ func forMiWithoutProjectionWarning(query *find.FindQuery) string {
 		"A zero count from this query means nothing about whether tasks exist"
 }
 
+// miSortTypeIgnoredWarning は「mi_sort_type を指定したのに、それが指す射影を
+// 立てていない」ときの案内を返す。該当しなければ空文字。
+//
+// mi_sort_type は並び順の名前をしているが、実際は **カレンダー範囲・時間帯・曜日を
+// 照合する時刻軸** も決める(find_filter.go の refilterOverriddenKyousForMi)。
+// 対応する include_*_mi が立っていないとその軸には切り替わらず、指定は黙って無視され、
+// **件数だけが変わる**。実測では同じ1週間が limit_time 指定で15件、
+// estimate_start_time 指定で9件になった(2026-08-25 のレビュー)。
+// 週次の集計をこれで作ると、間違いに気づく手がかりが一つも無い。
+func miSortTypeIgnoredWarning(query *find.FindQuery) string {
+	if !query.ForMi || query.MiSortType == "" {
+		return ""
+	}
+	// mi_sort_type が要求する射影と、それを立てるフラグの対応。
+	required := map[string]struct {
+		flag  bool
+		field string
+	}{
+		"create_time":         {query.IncludeCreateMi, "include_create_mi"},
+		"estimate_start_time": {query.IncludeStartMi, "include_start_mi"},
+		"estimate_end_time":   {query.IncludeEndMi, "include_end_mi"},
+		"limit_time":          {query.IncludeLimitMi, "include_limit_mi"},
+	}
+	needed, ok := required[string(query.MiSortType)]
+	if !ok || needed.flag {
+		return ""
+	}
+	return fmt.Sprintf(
+		"query.mi_sort_type is %q but query.%s is not true, so the sort type is ignored. mi_sort_type also decides which timestamp the calendar range, the time-of-day window and the weekday filter are matched against, so ignoring it changes the number of entries returned, not just their order. Set %s:true to use that axis",
+		string(query.MiSortType), needed.field, needed.field)
+}
+
 // miProjectionDataTypes は Mi / MiReKyou の射影名の全集合。
 // knownMCPDataTypes が既知として通す値のうち、for_mi を立てないと出てこないもの。
 var miProjectionDataTypes = []string{
@@ -649,6 +681,9 @@ func collectMCPUnknownValueWarnings(ctx context.Context, repositories *reps.Gkil
 		warnings = append(warnings, warning)
 	}
 
+	if warning := miSortTypeIgnoredWarning(query); warning != "" {
+		warnings = append(warnings, warning)
+	}
 	if warning := forMiWithoutProjectionWarning(query); warning != "" {
 		warnings = append(warnings, warning)
 	}
@@ -769,11 +804,14 @@ func livePlaingTimeIsCandidates(found []reps.TimeIs) []reps.TimeIs {
 // と揃えてある。違うのは削除済みの扱いだけで、それは呼び出し前に
 // livePlaingTimeIsCandidates が落とす。
 func timeIsCoversMoment(timeis reps.TimeIs, moment time.Time) bool {
-	if !moment.After(timeis.StartTime) {
+	// SQL は両端を含む(>= と <=)ので、ここも含める。排他にすると、
+	// 打刻と同じ時刻に書かれた記録(KFTL で打刻と本文を一度に書いたときなど)が
+	// plaing_time では出るのにここでは付かない、という食い違いになる。
+	if moment.Before(timeis.StartTime) {
 		return false
 	}
 	if timeis.EndTime == nil {
 		return true
 	}
-	return moment.Before(*timeis.EndTime)
+	return !moment.After(*timeis.EndTime)
 }

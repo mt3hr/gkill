@@ -590,7 +590,7 @@ gkillは3種類のMCPサーバーを提供しています。用途に応じて�
 | サーバー | ファイル | ツール数 | npm スクリプト | 用途 |
 |---|---|---|---|---|
 | **Read専用** | `gkill-read-server.mjs` | 10 | `mcp:gkill-read` / `mcp:gkill-read-http` | 閲覧のみ。データを変更したくない場合 |
-| **Write専用** | `gkill-write-server.mjs` | 26 | `mcp:gkill-write` / `mcp:gkill-write-http` | 書き込み中心。Read便利ツール4つ付属 |
+| **Write専用** | `gkill-write-server.mjs` | 27 | `mcp:gkill-write` / `mcp:gkill-write-http` | 書き込み中心。Read便利ツール4つ付属 |
 | **Read/Write統合** | `gkill-readwrite-server.mjs` | 31 | `mcp:gkill-readwrite` / `mcp:gkill-readwrite-http` | 全機能。迷ったらこれ |
 
 プラグイン一覧を返す `gkill_get_plugin_list` はどのサーバーにも入っています（読み取り専用）。プラグインが入れてくれた記録（Claude Code / Claude.ai / ChatGPT の会話ログ等）の本文は、`gkill_get_kyous` に `include_plugin_content:true` を渡すと検索結果にそのまま埋め込まれます（Write専用サーバーには `gkill_get_kyous` が無いので本文は読めません）。詳細は [`src/mcp/README.md`](../../src/mcp/README.md) を参照。

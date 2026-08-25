@@ -156,14 +156,25 @@ async function runUpdate(ctx, dataType, args) {
     throw new GkillApiError(entityNotFoundMessage(normalized.id, dataType));
   }
   const current = histories[0];
-  for (const field of spec.patchFields) {
-    // 未指定 = 触らない。null は「消す」の意味を持つ欄があるので !== undefined で見る
-    // （TimeIs の end_time が唯一の例。3値パッチ）。
-    if (normalized[field] !== undefined) {
-      current[field] = normalized[field];
-    }
+  // 未指定 = 触らない。null は「消す」の意味を持つ欄があるので !== undefined で見る
+  // （TimeIs の end_time が唯一の例。3値パッチ）。
+  const patchedFields = spec.patchFields.filter((field) => normalized[field] !== undefined);
+  // 更新する欄が1つも無いなら、内容の同じ版を積むだけになるので弾く。
+  // 追記型なので no-op でも履歴は1つ増え、あとから読む側には
+  // 「何が変わったのか」が区別できない（delete/restore の二重操作ガードと同じ理由）。
+  if (patchedFields.length === 0) {
+    throw new GkillApiError(
+      `No fields to update for ${dataType} ${normalized.id} (nothing changed; ` +
+        `pass at least one of ${spec.patchFields.join(", ")}).`,
+    );
   }
-  current.update_time = new Date().toISOString();
+  for (const field of patchedFields) {
+    current[field] = normalized[field];
+  }
+  // softDeleteOne と同じく nextUpdateTime を通す。UPDATE_TIME は1秒解像度で、
+  // 最新版の判定は厳密な After なので、同じ秒の中で2回更新すると
+  // 2回目が最新と見なされず黙って消える。
+  current.update_time = nextUpdateTime(current);
   current.update_app = ctx.appName;
   current.update_device = WRITE_DEVICE;
   current.update_user = ctx.userId;

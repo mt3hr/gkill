@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
@@ -788,6 +789,11 @@ func TestTimeIsCoversMoment(t *testing.T) {
 		{"終了済み・終了後", closed, end.Add(time.Minute), false},
 		{"計測中・開始後はいつでも", running, start.Add(400 * 24 * time.Hour), true},
 		{"計測中・開始前", running, start.Add(-time.Second), false},
+		// 境界ちょうど。SQL が両端を含む(>= / <=)ので、ここも含める。
+		// 排他へ戻すと、打刻と同じ時刻に書かれた記録に打刻が付かなくなる。
+		{"終了済み・開始ちょうど", closed, start, true},
+		{"終了済み・終了ちょうど", closed, end, true},
+		{"計測中・開始ちょうど", running, start, true},
 	}
 	for _, c := range cases {
 		if got := timeIsCoversMoment(c.timeis, c.moment); got != c.want {
@@ -860,5 +866,50 @@ func TestNotificationMCPDTO_CarriesID(t *testing.T) {
 	}
 	if decoded["id"] != "notification-1" {
 		t.Errorf("通知に id が無い: %v", decoded)
+	}
+}
+
+// mi_sort_type は「並び順」の名前をしているが、カレンダー範囲・時間帯・曜日を
+// 照合する時刻軸も決める。対応する include_*_mi を立てていないと黙って無視され、
+// 並び順ではなく **件数** が変わる（実測で同じ1週間が 15件 と 9件 に割れた）。
+// 警告を消すとこのテストが落ちる。
+func TestMiSortTypeIgnoredWarning(t *testing.T) {
+	cases := []struct {
+		name     string
+		query    find.FindQuery
+		wantWarn bool
+	}{
+		{
+			"for_mi が無ければ Mi の話ではないので黙る",
+			find.FindQuery{MiSortType: "limit_time"},
+			false,
+		},
+		{
+			"mi_sort_type 未指定なら黙る",
+			find.FindQuery{ForMi: true, IncludeCreateMi: true},
+			false,
+		},
+		{
+			"対応する射影が立っていれば効いているので黙る",
+			find.FindQuery{ForMi: true, MiSortType: "limit_time", IncludeLimitMi: true},
+			false,
+		},
+		{
+			"別の射影しか立っていないと無視されるので警告する",
+			find.FindQuery{ForMi: true, MiSortType: "limit_time", IncludeCreateMi: true},
+			true,
+		},
+		{
+			"estimate_start_time も同じ",
+			find.FindQuery{ForMi: true, MiSortType: "estimate_start_time", IncludeCreateMi: true},
+			true,
+		},
+	}
+	for _, c := range cases {
+		query := c.query
+		got := miSortTypeIgnoredWarning(&query)
+		if (got != "") != c.wantWarn {
+			t.Errorf("%s: warning=%q, want warning=%v", c.name, got, c.wantWarn)
+		}
 	}
 }

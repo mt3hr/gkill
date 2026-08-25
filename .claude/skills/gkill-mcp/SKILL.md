@@ -17,7 +17,7 @@ description: "gkill の MCP サーバ（src/mcp/、read/write/readwrite の3種�
 | Server | Tools | stdio | HTTP | Port |
 |---|---|---|---|---|
 | Read | 10 (get_kyous, get_mi_board_list, get_all_tag_names, get_all_rep_names, get_gps_log, get_application_config, get_rep_infos, get_idf_file, get_kyou_history + plugin 1) | `npm run mcp:gkill-read` | `npm run mcp:gkill-read-http` | 8808 |
-| Write | 26 (9 add + 1 submit_kftl + 1 delete + 1 restore + 9 update + 4 read convenience + plugin 1) | `npm run mcp:gkill-write` | `npm run mcp:gkill-write-http` | 8809 |
+| Write | 27 (9 add + 1 submit_kftl + 1 delete + 1 restore + 9 update + 5 read convenience + plugin 1) | `npm run mcp:gkill-write` | `npm run mcp:gkill-write-http` | 8809 |
 | ReadWrite | 31 (read 9 + write 21 + plugin 1) | `npm run mcp:gkill-readwrite` | `npm run mcp:gkill-readwrite-http` | 8810 |
 
 **GPS専用プラグインの `rep_name` / `data_type` は検索値ではない。** manifest の必須項目なので値は入っているが、`emits_kyou:false` のプラグインは Kyou を1件も出さないので `query.reps` にも `data_types` にも一致しない。`get_plugin_list` は `emits_kyou` / `provides` をそのまま返す（`capabilities` のような3つ目の語彙を作らないこと。正本は manifest の語彙）。`get_rep_infos` の `plugins[]` は「渡せる値」の表なので `emits_kyou:false` は載せず、`attached_data_reps[]` の `data_kind:"gpslog"` にだけ残す（ADR-0056 / ADR-0057）。Go 側の未知値警告も、一致したときは汎用文ではなく「そのプラグインは Kyou を出さない。`get_gps_log` で読め」と名指しする。**`typed_index` は Kyou の索引**なので `provides` が `gpslog` だけのプラグインには付けない（付けると材料が無く `never_built`/0 で固定され「索引が壊れている」と誤読される）。GPS の取り込み状況は別枠の `gps_index`。
@@ -30,6 +30,31 @@ description: "gkill の MCP サーバ（src/mcp/、read/write/readwrite の3種�
 
 **同じ処理を2形態で持たない。** 手順が同じで型ごとに違うのは「正規化関数」と「patch する欄」だけ、という所は表で持つ。`gkill_update_*` 9本は24行のブロックが9本並んでおり、取得先・更新先・応答キーの対応表（`ENTITY_TARGETS`）が既にあって `softDeleteOne` と `gkill_get_kyou_history` はそちらを使っている、という「表と直書きの併存」状態だった（2026-08-25 に `UPDATE_TARGETS` + `runUpdate` へ集約）。併存していた間、**「見つからない」の文言が3種類に割れていた** —— `entityNotFoundMessage`（`lib/payload.mjs`）が唯一の正本で、read / write / update の全部がここを通る。型を取り違えたのか ID が無いのかは型別エンドポイントの応答からは区別できないので、**区別できないことを言う**（「ID が存在しない」と断定しない）。
 
+**書き込みに刻む user は、その要求を認証したセッションから決める。** `create_user` / `update_user` は
+MCP が本文へ載せる自己申告値で、gkill 側は上書きしない（Web UI も Wear も同じ）。`sid`（どのアカウントの
+DBへ書くか）と `userId`（レコードに刻む名前）は**出どころが別**なので、`|| this.client.userId`
+（環境変数 `GKILL_USER`）へのフォールバックを無条件に残すと、**別アカウントのセッションへ書いた
+レコードに手元の名前が焼かれる**。エラーは出ず、書き込みは成功する。`mcp-server-base.mjs` は
+sid がある（＝認証済み）ときだけ userId を必須にし、sid を持たない stdio だけ環境変数を使う。
+**特定のクライアント名をコードから探さないこと** —— 「あのクライアント専用の残骸では」という指摘は
+毎回ここへ戻ってくるが、ハードコードは1箇所も無く、実体は接続に使ったアカウント名がそのまま
+出ているだけ（[ADR-0090](../../../documents/adr/0090-write-user-comes-from-the-authenticated-session.md)）。
+
+**更新は「変わる欄が1つも無い」なら書かずに断る。** `runUpdate` は9ツール共通なので、ガード1つで全部に効く。
+追記型なので no-op でも版が1つ増え、あとから読む側には「何が変わったのか」が区別できない
+（delete / restore の `already deleted` / `already active` と同じ理由。判定は `undefined` のみを未指定と
+みなす —— `null` は `timeis.end_time` で「消す」の意思表示になる）。**`update_time` は `nextUpdateTime` を
+通すこと** —— 素の `new Date()` だと1秒解像度の丸めで、同じ秒の中の2回目が最新版と見なされず黙って消える
+（[ADR-0091](../../../documents/adr/0091-update-rejects-an-empty-patch.md)）。
+
+**説明文が「これを呼べ」と名指しするツールは、そのサーバに載っていること。** read の履歴説明が
+`gkill_restore_kyou` を、write の「見つからない」が `gkill_get_kyous` を案内していて、どちらもそのサーバには
+無かった（AI は載っていないツールを探しにいく）。`tool-handlers.test.mjs` が read / readwrite の全 description と
+`entityNotFoundMessage` を走査して検査する。**参照情報としての言及**（「この id は `gkill_update_text` へ
+渡すためのもの」）だけが `CROSS_SERVER_TOOL_MENTIONS` の例外で、**案内を足したくなったら表ではなく
+ツールの搭載側を直すこと**（接続先確認は書き込み前こそ要るので、`gkill_get_application_config` は
+write 専用サーバにも載せた）。write 専用サーバは read を数本に絞る設計なので、共有された説明文が
+検索の口に触れるのは避けられず、そちらは検査対象から外してある。
 **古スキーマ警告は読み書き両方に掛ける。** `handleReadToolCall` / `handleWriteToolCall` のどちらもディスパッチ本体を包んで `appendStaleSchemaWarning` を1箇所で足す。片側だけだと「同じ古さなのに読み取りでしか知らされない」ことになる（`gkill_delete_kyou` / `gkill_restore_kyou` の `targets` が非string型の後付け引数）。
 
 **OAuth の `authenticateUser` は `makeOAuthAuthenticateUser`（`lib/mcp-server-base.mjs`）1本。**3サーバへ逐語コピーされていた18行で、片方だけ直すと静かにずれる。

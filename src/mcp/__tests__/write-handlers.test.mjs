@@ -275,6 +275,21 @@ describe("update_time always moves forward", () => {
     expect(Math.floor(Date.parse(sent) / 1000)).toBeGreaterThan(Math.floor(Date.parse(sameSecond) / 1000));
   });
 
+  // 更新も同じ保証を持つ。runUpdate だけ素の new Date() を使っていたため、
+  // 同じ秒の中で2回更新すると2回目が最新版と見なされずに消えていた。
+  test("update in the same second as the current version still moves update_time forward", async () => {
+    const sameSecond = new Date().toISOString();
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ kmemo_histories: [{ id: "k1", is_deleted: false, update_time: sameSecond }] })
+      .mockResolvedValueOnce({ updated_kmemo: { id: "k1" }, updated_kyou: { id: "k1" } });
+
+    await handleWriteToolCall(ctx, "gkill_update_kmemo", { id: "k1", content: "after" });
+
+    const sent = ctx.client.callApi.mock.calls[1][1].kmemo.update_time;
+    expect(Math.floor(Date.parse(sent) / 1000)).toBeGreaterThan(Math.floor(Date.parse(sameSecond) / 1000));
+  });
+
   test("delete has the same guarantee", async () => {
     const sameSecond = new Date().toISOString();
     const ctx = makeCtx();
@@ -586,23 +601,23 @@ describe("summarizeWriteToolPayload — batch soft delete", () => {
 
 describe("update tools are table-driven", () => {
   test.each([
-    ["gkill_update_kmemo", "kmemo", "/api/get_kmemo", "/api/update_kmemo", "kmemo_histories", "updated_kmemo"],
-    ["gkill_update_urlog", "urlog", "/api/get_urlog", "/api/update_urlog", "urlog_histories", "updated_urlog"],
-    ["gkill_update_nlog", "nlog", "/api/get_nlog", "/api/update_nlog", "nlog_histories", "updated_nlog"],
-    ["gkill_update_lantana", "lantana", "/api/get_lantana", "/api/update_lantana", "lantana_histories", "updated_lantana"],
-    ["gkill_update_timeis", "timeis", "/api/get_timeis", "/api/update_timeis", "timeis_histories", "updated_timeis"],
-    ["gkill_update_mi", "mi", "/api/get_mi", "/api/update_mi", "mi_histories", "updated_mi"],
-    ["gkill_update_kc", "kc", "/api/get_kc", "/api/update_kc", "kc_histories", "updated_kc"],
-    ["gkill_update_tag", "tag", "/api/get_tag_histories_by_tag_id", "/api/update_tag", "tag_histories", "updated_tag"],
-    ["gkill_update_text", "text", "/api/get_text_histories_by_text_id", "/api/update_text", "text_histories", "updated_text"],
-  ])("%s uses the ENTITY_TARGETS endpoints", async (tool, _type, getEndpoint, updateEndpoint, historiesKey, responseKey) => {
+    ["gkill_update_kmemo", "kmemo", "/api/get_kmemo", "/api/update_kmemo", "kmemo_histories", "updated_kmemo", { content: "x" }],
+    ["gkill_update_urlog", "urlog", "/api/get_urlog", "/api/update_urlog", "urlog_histories", "updated_urlog", { title: "x" }],
+    ["gkill_update_nlog", "nlog", "/api/get_nlog", "/api/update_nlog", "nlog_histories", "updated_nlog", { title: "x" }],
+    ["gkill_update_lantana", "lantana", "/api/get_lantana", "/api/update_lantana", "lantana_histories", "updated_lantana", { mood: 5 }],
+    ["gkill_update_timeis", "timeis", "/api/get_timeis", "/api/update_timeis", "timeis_histories", "updated_timeis", { title: "x" }],
+    ["gkill_update_mi", "mi", "/api/get_mi", "/api/update_mi", "mi_histories", "updated_mi", { title: "x" }],
+    ["gkill_update_kc", "kc", "/api/get_kc", "/api/update_kc", "kc_histories", "updated_kc", { title: "x" }],
+    ["gkill_update_tag", "tag", "/api/get_tag_histories_by_tag_id", "/api/update_tag", "tag_histories", "updated_tag", { tag: "x" }],
+    ["gkill_update_text", "text", "/api/get_text_histories_by_text_id", "/api/update_text", "text_histories", "updated_text", { text: "x" }],
+  ])("%s uses the ENTITY_TARGETS endpoints", async (tool, _type, getEndpoint, updateEndpoint, historiesKey, responseKey, patch) => {
     const ctx = makeCtx();
     ctx.client.callApi
       .mockResolvedValueOnce({ [historiesKey]: [{ id: "x1", is_deleted: false }] })
       .mockResolvedValueOnce({ [responseKey]: { id: "x1" }, updated_kyou: { id: "x1" } });
 
-    // 各型の必須引数は id だけ（他は patch なので省略できる）
-    const result = await handleWriteToolCall(ctx, tool, { id: "x1" });
+    // 更新する欄が1つも無いと no-op ガードに弾かれるので、型ごとに1つだけ渡す
+    const result = await handleWriteToolCall(ctx, tool, { id: "x1", ...patch });
 
     expect(ctx.client.callApi.mock.calls[0][0]).toBe(getEndpoint);
     expect(ctx.client.callApi.mock.calls[1][0]).toBe(updateEndpoint);
@@ -622,6 +637,29 @@ describe("update tools are table-driven", () => {
     const ctx = makeCtx(async () => ({ urlog_histories: [] }));
     await expect(handleWriteToolCall(ctx, "gkill_update_urlog", { id: "missing" }))
       .rejects.not.toThrow(/^Urlog not found/);
+  });
+
+  // id だけの更新は「内容の同じ版」を積むだけになる。追記型なので黙って通すと
+  // 履歴が1つ増え、あとから読む側には何が変わったのか区別が付かない。
+  // delete/restore が already deleted / already active を弾くのと同じ理由。
+  test("update with no patchable field is rejected instead of appending a no-op version", async () => {
+    const ctx = makeCtx(async () => ({
+      kmemo_histories: [{ id: "k1", content: "same", is_deleted: false }],
+    }));
+
+    await expect(handleWriteToolCall(ctx, "gkill_update_kmemo", { id: "k1" }))
+      .rejects.toThrow(/No fields to update/);
+
+    // 取得はしても、更新APIは呼ばない
+    const calledUpdate = ctx.client.callApi.mock.calls.some((call) => call[0] === "/api/update_kmemo");
+    expect(calledUpdate).toBe(false);
+  });
+
+  // 「見つからない」のほうが先に出る。欄が無いことより、対象が無いことを先に言う
+  test("not-found wins over the empty-patch guard", async () => {
+    const ctx = makeCtx(async () => ({ kmemo_histories: [] }));
+    await expect(handleWriteToolCall(ctx, "gkill_update_kmemo", { id: "missing" }))
+      .rejects.toThrow(/looked it up as data_type/);
   });
 });
 

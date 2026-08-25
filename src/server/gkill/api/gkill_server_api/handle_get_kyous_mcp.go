@@ -518,6 +518,9 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	// 容量ヒントは candidateCount(len(batch)以下にクランプ済み)を使う。
 	// go/uncontrolled-allocation-size が上限ガードを認識できるよう、割り当てを
 	// candidateCount <= len(batch) が成立するブランチ内に置く(この条件は常に真)。
+	// consumedCount は batch のどこまで見たか。返せた件数とは別で、
+	// 直列化に失敗して落とした1件もここでは進める。カーソルはこちらを使う。
+	consumedCount := 0
 	resultDTOs := make([]req_res.KyouMCPDTO, 0)
 	if candidateCount <= len(batch) {
 		resultDTOs = make([]req_res.KyouMCPDTO, 0, candidateCount)
@@ -752,6 +755,12 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 
 		dtoJSON, marshalErr := json.Marshal(dto)
 		if marshalErr != nil {
+			// この1件は返せないが、消費位置は進める。進めないと次ページの
+			// カーソルが返却済みより手前を指し、返した分をもう一度返す。
+			// 返却数と全件数の差はこの1件ぶんずれるので、黙って落とさず警告する。
+			consumedCount = i + 1
+			response.Warnings = append(response.Warnings, fmt.Sprintf(
+				"record %s could not be serialized and was skipped; total_count and the number of returned records differ by it", kyou.ID))
 			continue
 		}
 
@@ -767,19 +776,22 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 				"single record (%d bytes) exceeds max_size_mb (%d bytes); returned anyway to keep pagination progressing", len(dtoJSON), maxBytes))
 		}
 		runningSize += int64(len(dtoJSON))
+		consumedCount = i + 1
 		resultDTOs = append(resultDTOs, dto)
 	}
 
 	returnedCount := len(resultDTOs)
-	remainingCount := len(batch) - returnedCount
+	// 残件数もカーソルも「どこまで見たか」で決める。返せた件数で決めると、
+	// 直列化に失敗して落とした1件のぶんだけカーソルが後戻りする。
+	remainingCount := len(batch) - consumedCount
 	hasMore := remainingCount > 0
 	nextCursor := ""
-	if hasMore && returnedCount > 0 {
+	if hasMore && consumedCount > 0 {
 		// 複合カーソル {RFC3339Nano}::{ID}。
 		// 時刻がRFC3339Nanoなのは、秒へ切り捨てると同じ秒の内側が漏れるため。
 		// IDを併記することで、同一時刻のかたまりの途中でページを割っても
 		// 次ページが正確な位置から再開できる（これがLimit厳密化の前提。ADR-0053）。
-		last := batch[returnedCount-1]
+		last := batch[consumedCount-1]
 		nextCursor = encodeMCPCursor(last.RelatedTime, last.ID)
 	}
 
