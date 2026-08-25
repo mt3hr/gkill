@@ -10,8 +10,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 // parseMCPCursor / encodeMCPCursor のラウンドトリップと形式の受理・拒否を固定する。
@@ -411,5 +413,452 @@ func TestApplyMCPUpdateAppsFilter(t *testing.T) {
 	got := applyMCPUpdateAppsFilter(append([]reps.Kyou(nil), kyous...), []string{"gkill_mcp_readwrite"})
 	if len(got) != 1 || got[0].ID != "a" {
 		t.Errorf("update_app で絞れていない: %+v", got)
+	}
+}
+
+// Kyouを1件も出さないプラグイン（GPSログ専用など）の rep名 / data_type を渡したときは、
+// 汎用の「綴りを確かめろ」ではなく**読む先を名指しする**ことを固定する。
+//
+// 2026-08-24 の実利用報告の中心がこれ。manifest の rep_name / data_type は
+// プラグイン一覧に出ているので綴りは合っており、汎用文では直しようが無かった。
+// さらに data_type 側は既知集合に無条件で入っていたため、**警告すら出ずに必ず0件**だった。
+func TestHandleGetKyousMCP_NonKyouPluginValuesGetNamedWarning(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	t.Setenv("GKILL_HOME", gkill_options.GkillHomeDir)
+
+	writePluginManifestForTest(t, "admin", "warn_gpslog_plugin", map[string]any{
+		"protocol_version": "1",
+		"name":             "warn_gpslog_plugin",
+		"version":          "1.0.0",
+		"description":      "gps only",
+		"data_type":        "warn_gpslog_visit",
+		"rep_name":         "WarnGPSLogRep",
+		"executable":       "no_such_plugin_binary",
+		"provides":         []string{"gpslog"},
+		"emits_kyou":       false,
+	})
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	res := getKyousMCP(t, tsURL, sessionID, map[string]any{
+		"reps": []string{"WarnGPSLogRep"},
+	}, map[string]any{"data_types": []string{"warn_gpslog_visit"}})
+
+	// rep名・data_type の両方に、そのプラグインがKyouを出さないことと
+	// 読む先（get_gps_log）が出ていること
+	for _, want := range []string{"WarnGPSLogRep", "warn_gpslog_visit"} {
+		found := false
+		for _, warning := range res.Warnings {
+			if strings.Contains(warning, want) && strings.Contains(warning, "emits no kyou") {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("%q に対する名指しの警告が無い: %v", want, res.Warnings)
+		}
+	}
+	foundRoute := false
+	for _, warning := range res.Warnings {
+		if strings.Contains(warning, "get_gps_log") {
+			foundRoute = true
+		}
+	}
+	if !foundRoute {
+		t.Errorf("読む先(get_gps_log)が案内されていない: %v", res.Warnings)
+	}
+}
+
+// data_types に Mi の射影名を渡したのに for_mi を立てていないときは案内する。
+//
+// Mi の5射影は for_mi を立てたときだけ残る。立てないと代表1件へ潰され、
+// _start 優先→DataType辞書昇順なので mi_check が勝つ。MI.IS_CHECKED は NOT NULL で
+// mi_check 行は全 Mi に必ず存在するため、**mi_create は構造的にほぼ絶対に生き残れない**。
+// data_types は検索後の後段フィルタで、値としては既知なので、
+// 「警告ゼロで必ず0件」という一番たちの悪い形になっていた（2026-08-24 の実利用レビュー）。
+func TestHandleGetKyousMCP_MiProjectionWithoutForMiWarns(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	res := getKyousMCP(t, tsURL, sessionID, map[string]any{}, map[string]any{
+		"data_types": []string{"mi_create"},
+		"count_only": true,
+	})
+
+	found := false
+	for _, warning := range res.Warnings {
+		if strings.Contains(warning, "mi_create") && strings.Contains(warning, "for_mi") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("for_mi を促す警告が無い: %v", res.Warnings)
+	}
+}
+
+// for_mi を立てているときは出さない（正しく使っている呼び出しへノイズを出さない）。
+func TestHandleGetKyousMCP_MiProjectionWithForMiDoesNotWarn(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	res := getKyousMCP(t, tsURL, sessionID, map[string]any{
+		"for_mi":            true,
+		"include_create_mi": true,
+	}, map[string]any{
+		"data_types": []string{"mi_create"},
+		"count_only": true,
+	})
+
+	for _, warning := range res.Warnings {
+		if strings.Contains(warning, "for_mi") {
+			t.Errorf("for_mi を立てているのに警告が出ている: %v", res.Warnings)
+		}
+	}
+}
+
+// Mi と無関係な data_types では出さない。
+func TestHandleGetKyousMCP_NonMiDataTypeDoesNotWarnAboutForMi(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	res := getKyousMCP(t, tsURL, sessionID, map[string]any{}, map[string]any{
+		"data_types": []string{"kmemo"},
+		"count_only": true,
+	})
+
+	for _, warning := range res.Warnings {
+		if strings.Contains(warning, "for_mi") {
+			t.Errorf("Mi と無関係なのに for_mi の警告が出ている: %v", res.Warnings)
+		}
+	}
+}
+
+// 登録済みプラグインの data_type だが索引が空、のときは0件の理由を伝える。
+//
+// 既知集合に載っているので警告の対象外になり、「該当なし」と
+// 「プラグインが取り込めていない」が区別できなかった。実際 Claude.ai プラグインが
+// データソース欠如で失敗している最中に、data_types:["claude_conversation"] が
+// 0件・警告なしで返っていた（2026-08-24 の実利用レビュー）。
+//
+// HTTP 経由ではなくヘルパを直接見る。実行ファイルの無いプラグインを登録すると
+// 検索そのものが内部エラーになり、警告の検査まで到達できないため。
+func TestEmptyPluginIndexHint(t *testing.T) {
+	newPlugin := func(name, dataType string, provides []string) reps.PluginRepository {
+		manifest := gkill_plugin.PluginManifest{
+			ProtocolVersion: "1",
+			Name:            name,
+			DataType:        dataType,
+			RepName:         name + "Rep",
+			Executable:      "no_such_plugin_binary",
+		}
+		for _, kind := range provides {
+			manifest.Provides = append(manifest.Provides, gkill_plugin.PluginProvidedKind(kind))
+		}
+		return reps.NewPluginRepository("testuser", t.TempDir(), manifest)
+	}
+
+	t.Run("索引が一度も構築されていなければ0件の理由を返す", func(t *testing.T) {
+		repositories := &reps.GkillRepositories{
+			PluginReps: []reps.PluginRepository{newPlugin("empty_index_plugin", "empty_index_conversation", []string{"tag"})},
+		}
+		hint := emptyPluginIndexHint(repositories, "empty_index_conversation")
+		if !strings.Contains(hint, "matches nothing") {
+			t.Errorf("0件になる理由が案内されていない: %q", hint)
+		}
+		if !strings.Contains(hint, "gkill_get_plugin_list") {
+			t.Errorf("読む先が案内されていない: %q", hint)
+		}
+		// 失敗理由の本文は返さない（利用者の端末の構成を含むため。ADR-0046）
+		if strings.Contains(hint, "no_such_plugin_binary") {
+			t.Errorf("プラグインの診断文がそのまま載っている: %q", hint)
+		}
+	})
+
+	t.Run("provides を宣言していないプラグインには索引が無いので断定しない", func(t *testing.T) {
+		repositories := &reps.GkillRepositories{
+			PluginReps: []reps.PluginRepository{newPlugin("no_provides_plugin", "no_provides_conversation", nil)},
+		}
+		if hint := emptyPluginIndexHint(repositories, "no_provides_conversation"); hint != "" {
+			t.Errorf("取り込み状況を知る手段が無いのに断定している: %q", hint)
+		}
+	})
+
+	t.Run("関係のない data_type には何も返さない", func(t *testing.T) {
+		repositories := &reps.GkillRepositories{
+			PluginReps: []reps.PluginRepository{newPlugin("empty_index_plugin", "empty_index_conversation", []string{"tag"})},
+		}
+		if hint := emptyPluginIndexHint(repositories, "kmemo"); hint != "" {
+			t.Errorf("組み込みの data_type に警告が出ている: %q", hint)
+		}
+	})
+}
+
+// for_mi を立てたのに include_*_mi を1つも立てていないときは、0件の理由を伝える。
+//
+// この形は 0件が返るのに警告が1行も出なかった。実利用の AI は
+// 「先週はタスクが無かった」と読み、include フラグを足して19件出るまで気づけなかった
+// （2026-08-25 のレビュー）。rep_types の綴り違いには有効値つきの警告が出るのに、
+// ここだけ無言なのは非対称でもあった。
+func TestHandleGetKyousMCP_ForMiWithoutProjectionFlagsWarns(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	res := getKyousMCP(t, tsURL, sessionID, map[string]any{
+		"for_mi": true,
+	}, map[string]any{"count_only": true})
+
+	found := false
+	for _, warning := range res.Warnings {
+		if strings.Contains(warning, "include_create_mi") && strings.Contains(warning, "zero entries") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("include_*_mi を促す警告が無い: %v", res.Warnings)
+	}
+}
+
+// include フラグを1つでも立てていれば出さない（正しく使っている呼び出しへノイズを出さない）。
+func TestHandleGetKyousMCP_ForMiWithProjectionFlagDoesNotWarn(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	res := getKyousMCP(t, tsURL, sessionID, map[string]any{
+		"for_mi":            true,
+		"include_create_mi": true,
+	}, map[string]any{"count_only": true})
+
+	for _, warning := range res.Warnings {
+		if strings.Contains(warning, "include_create_mi") && strings.Contains(warning, "zero entries") {
+			t.Errorf("include フラグを立てているのに警告が出ている: %v", res.Warnings)
+		}
+	}
+}
+
+// for_mi を立てていない検索には出さない。
+func TestHandleGetKyousMCP_WithoutForMiDoesNotWarnAboutProjectionFlags(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	res := getKyousMCP(t, tsURL, sessionID, map[string]any{}, map[string]any{"count_only": true})
+
+	for _, warning := range res.Warnings {
+		if strings.Contains(warning, "include_create_mi") {
+			t.Errorf("for_mi 無しなのに警告が出ている: %v", res.Warnings)
+		}
+	}
+}
+
+// 付随 TimeIs は ID と時刻を持つ。
+//
+// 以前は Title と Tags だけで、同じ題名の打刻が1つの応答に何度並んでも
+// 区別も特定もできなかった（実測で lantana 3件に対し付随 TimeIs 90件、
+// うち同題名が4回）。「記録時に何が走っていたか」を知る機能なのに時刻が無く、
+// 実質「その日に存在した打刻の題名一覧」だった（2026-08-25 の実利用レビュー）。
+//
+// 組み立て地点（handle_get_kyous_mcp.go）には ti.ID / ti.StartTime / ti.EndTime が
+// その場にあり、DTO へ載せていないだけだった。落としてもコンパイルは通るので固定する。
+func TestTimeIsMCPDTO_CarriesIDAndTimes(t *testing.T) {
+	start := time.Date(2026, 8, 25, 9, 0, 0, 0, time.Local)
+	end := time.Date(2026, 8, 25, 10, 30, 0, 0, time.Local)
+	dto := req_res.TimeIsMCPDTO{
+		ID:        "timeis-1",
+		Title:     "大船駅",
+		Tags:      []string{"移動"},
+		StartTime: start,
+		EndTime:   &end,
+	}
+
+	encoded, err := json.Marshal(dto)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal(encoded, &decoded); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	for _, key := range []string{"id", "title", "start_time", "end_time"} {
+		if _, ok := decoded[key]; !ok {
+			t.Errorf("付随TimeIsに %q が無い: %v", key, decoded)
+		}
+	}
+	if decoded["id"] != "timeis-1" {
+		t.Errorf("id = %v, want timeis-1", decoded["id"])
+	}
+}
+
+// 計測中（EndTime が nil）は end_time を出さない。
+// ゼロ値の "0001-01-01T00:00:00Z" が出ると「1年に終わった打刻」に見える。
+func TestTimeIsMCPDTO_OmitsEndTimeWhileRunning(t *testing.T) {
+	dto := req_res.TimeIsMCPDTO{
+		ID:        "timeis-2",
+		Title:     "作業中",
+		StartTime: time.Date(2026, 8, 25, 9, 0, 0, 0, time.Local),
+	}
+	encoded, err := json.Marshal(dto)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if strings.Contains(string(encoded), "end_time") {
+		t.Errorf("計測中なのに end_time が出ている: %s", encoded)
+	}
+}
+
+// 削除済みの打刻を付随 TimeIs に混ぜない。
+//
+// FindTimeIs は rep の直叩きで IS_DELETED を見ないため、落とさないと
+// 「終了記録ごと消した未終了の打刻」が開始時刻以降のあらゆる記録へ永久に付く。
+// 本番実測(2026-08-25): ある kmemo に付いた付随 TimeIs 16件のうち14件が削除済みで、
+// 最古は1年前(2025-08-14)の開始。同じ瞬間を plaing_time で引くと2件しか返らなかった。
+//
+// livePlaingTimeIsCandidates の中身を「そのまま返す」に戻すとこのテストが落ちる。
+func TestLivePlaingTimeIsCandidates_DropsDeleted(t *testing.T) {
+	// 1年前に始めて未終了のまま削除した打刻。plaing の意味論では「まだ走っている」に見える。
+	deletedGhost := reps.TimeIs{
+		IsDeleted: true,
+		ID:        "ghost",
+		Title:     "カラオケ",
+		StartTime: time.Date(2025, 8, 14, 11, 55, 23, 0, time.Local),
+	}
+	alive := reps.TimeIs{
+		ID:        "alive",
+		Title:     "覚醒",
+		StartTime: time.Date(2026, 8, 24, 8, 27, 38, 0, time.Local),
+	}
+
+	live := livePlaingTimeIsCandidates([]reps.TimeIs{deletedGhost, alive})
+
+	if len(live) != 1 {
+		t.Fatalf("削除済みが落ちていない: %d件 %+v", len(live), live)
+	}
+	if live[0].ID != "alive" {
+		t.Errorf("残ったのが違う: %q", live[0].ID)
+	}
+
+	// 落とさなかった場合に何が起きるかも固定しておく。
+	// 幽霊は「今日の記録」を覆ってしまうので、除外が唯一の防御線になる。
+	today := time.Date(2026, 8, 24, 17, 30, 0, 0, time.Local)
+	if !timeIsCoversMoment(deletedGhost, today) {
+		t.Fatal("前提が崩れている: 未終了の打刻は開始時刻以降を覆うはず")
+	}
+}
+
+// 空でも nil を返さない（呼び出し側が len() で回すだけなので実害は無いが、
+// make の容量ヒントごと消す変更を検出する）。
+func TestLivePlaingTimeIsCandidates_AllDeleted(t *testing.T) {
+	live := livePlaingTimeIsCandidates([]reps.TimeIs{
+		{IsDeleted: true, ID: "a"},
+		{IsDeleted: true, ID: "b"},
+	})
+	if len(live) != 0 {
+		t.Errorf("全部削除済みなのに残っている: %+v", live)
+	}
+}
+
+// 「その瞬間に走っていたか」の判定。plaing_time の SQL と同じ意味である必要がある
+// （START_TIME <= ? AND (? <= END_TIME OR END_TIME IS NULL)）。
+func TestTimeIsCoversMoment(t *testing.T) {
+	start := time.Date(2026, 8, 25, 9, 0, 0, 0, time.Local)
+	end := time.Date(2026, 8, 25, 10, 0, 0, 0, time.Local)
+	closed := reps.TimeIs{ID: "closed", StartTime: start, EndTime: &end}
+	running := reps.TimeIs{ID: "running", StartTime: start}
+
+	cases := []struct {
+		name   string
+		timeis reps.TimeIs
+		moment time.Time
+		want   bool
+	}{
+		{"終了済み・期間内", closed, start.Add(30 * time.Minute), true},
+		{"終了済み・開始前", closed, start.Add(-time.Minute), false},
+		{"終了済み・終了後", closed, end.Add(time.Minute), false},
+		{"計測中・開始後はいつでも", running, start.Add(400 * 24 * time.Hour), true},
+		{"計測中・開始前", running, start.Add(-time.Second), false},
+	}
+	for _, c := range cases {
+		if got := timeIsCoversMoment(c.timeis, c.moment); got != c.want {
+			t.Errorf("%s: got %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
+// tag / text は ID 付きの別枠でも返す。
+//
+// gkill_update_text と gkill_delete_kyou(data_type:"text") は text 自身の ID を要求するのに、
+// 検索結果は文字列配列しか返しておらず、add_text の応答を持っていない限り
+// 後から直すことも消すこともできなかった（2026-08-25 の実利用レビュー）。
+// 既存の tags / texts は Web の列と Wear OS が []string を前提にしているので残す。
+func TestKyouMCPDTO_CarriesAttachedEntityIDs(t *testing.T) {
+	dto := req_res.KyouMCPDTO{
+		ID:           "kyou-1",
+		Tags:         []string{"仕事"},
+		Texts:        []string{"あとで直す"},
+		TagEntities:  []req_res.AttachedEntityMCPDTO{{ID: "tag-1", Value: "仕事"}},
+		TextEntities: []req_res.AttachedEntityMCPDTO{{ID: "text-1", Value: "あとで直す"}},
+	}
+	encoded, err := json.Marshal(dto)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal(encoded, &decoded); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	// 旧来の文字列配列は残っていること（ワイヤ互換）。
+	for _, key := range []string{"tags", "texts"} {
+		if _, ok := decoded[key]; !ok {
+			t.Errorf("互換フィールド %q が消えている", key)
+		}
+	}
+	for _, key := range []string{"tag_entities", "text_entities"} {
+		entities, ok := decoded[key].([]any)
+		if !ok || len(entities) != 1 {
+			t.Fatalf("%q が無いか件数が違う: %v", key, decoded[key])
+		}
+		entity, ok := entities[0].(map[string]any)
+		if !ok {
+			t.Fatalf("%q の要素がオブジェクトでない: %v", key, entities[0])
+		}
+		if entity["id"] == nil || entity["id"] == "" {
+			t.Errorf("%q に id が無い: %v", key, entity)
+		}
+		if entity["value"] == nil || entity["value"] == "" {
+			t.Errorf("%q に value が無い: %v", key, entity)
+		}
+	}
+}
+
+// 通知は ID を返す。data_type:"notification" は delete_kyou が受理するのに、
+// これが無いと MCP から通知の id を得る経路が1つも無い
+// （notification は data_types フィルタにも group_by のバケットにも出ない）。
+func TestNotificationMCPDTO_CarriesID(t *testing.T) {
+	encoded, err := json.Marshal(req_res.NotificationMCPDTO{
+		ID:      "notification-1",
+		Content: "そろそろ出る",
+	})
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal(encoded, &decoded); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if decoded["id"] != "notification-1" {
+		t.Errorf("通知に id が無い: %v", decoded)
 	}
 }

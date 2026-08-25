@@ -10,13 +10,18 @@ import { GkillApiError } from "./errors.mjs";
 import {
   MAX_IDF_FILE_BYTES,
   APP_CONFIG_FIELDS,
+  REP_INFOS_FIELDS,
   APP_CONFIG_UI_STATE_KEYS,
   ENTITY_TARGETS,
 } from "./constants.mjs";
-import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs, normalizeAppConfigArgs, normalizeKyouHistoryArgs } from "./normalization.mjs";
+import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs, normalizeAppConfigArgs, normalizeKyouHistoryArgs, normalizeRepNamesArgs, normalizeRepInfosArgs, appendStaleSchemaWarning, assertAggregationNotCombinedWithCursor } from "./normalization.mjs";
 import { inlinePluginContents, summarizeInlinePluginContent } from "./plugin-tools.mjs";
-import { normalizeMimeType } from "./payload.mjs";
+import { normalizeMimeType, entityNotFoundMessage, appendStaleSchemaNoteToSummary } from "./payload.mjs";
 import { READ_TOOLS } from "./read-tools.mjs";
+import { encodeGpsCursor, decodeGpsCursor } from "./gps-cursor.mjs";
+
+// コーデックの正本は gps-cursor.mjs。ここからの re-export は既存の import 元を保つため。
+export { encodeGpsCursor, decodeGpsCursor };
 
 const READ_TOOL_NAMES = new Set(READ_TOOLS.map((tool) => tool.name));
 
@@ -27,7 +32,15 @@ export function isReadToolName(name) {
 
 // handleReadToolCall は読み取りツール1件を処理する。
 // ctx = { client, ctx.sid, isLocalTransport }。client は GkillClient（callApi / fetchFile / login）。
+//
+// ディスパッチ本体を包んで、古いツールスキーマを掴んだクライアントへの警告を
+// **1箇所で**足す。ツールごとに書くと必ず足し忘れる。
 export async function handleReadToolCall(ctx, name, args) {
+  const payload = await dispatchReadToolCall(ctx, name, args);
+  return appendStaleSchemaWarning(payload, name, args);
+}
+
+async function dispatchReadToolCall(ctx, name, args) {
   switch (name) {
       case "gkill_get_kyous": {
         const normalized = normalizeKyouArgs(args);
@@ -101,11 +114,17 @@ export async function handleReadToolCall(ctx, name, args) {
         };
       }
       case "gkill_get_all_rep_names": {
-        const normalized = normalizeLocaleOnlyArgs(args);
-        const response = await ctx.client.callApi("/api/get_all_rep_names", normalized, true, ctx.sid);
-        return {
-          rep_names: Array.isArray(response.rep_names) ? response.rep_names : [],
-        };
+        const normalized = normalizeRepNamesArgs(args);
+        const response = await ctx.client.callApi(
+          "/api/get_all_rep_names",
+          normalized.locale_name === undefined ? {} : { locale_name: normalized.locale_name },
+          true,
+          ctx.sid,
+        );
+        // 絞り込みは Node 側実装。gkill は Reps の全名を返す（この規模の環境では数百件あり、
+        // 「その名前の rep があるか」を確かめるだけで全件を読むことになっていた）。
+        const repNames = Array.isArray(response.rep_names) ? response.rep_names : [];
+        return paginateRepNames(repNames, normalized);
       }
       case "gkill_get_gps_log": {
         const normalized = normalizeGpsArgs(args);
@@ -126,9 +145,14 @@ export async function handleReadToolCall(ctx, name, args) {
         return paginateGpsLogs(gpsLogs, normalized);
       }
       case "gkill_get_rep_infos": {
-        const normalized = normalizeLocaleOnlyArgs(args);
-        const response = await ctx.client.callApi("/api/get_rep_infos_mcp", normalized, true, ctx.sid);
-        return {
+        const normalized = normalizeRepInfosArgs(args);
+        const response = await ctx.client.callApi(
+          "/api/get_rep_infos_mcp",
+          normalized.locale_name === undefined ? {} : { locale_name: normalized.locale_name },
+          true,
+          ctx.sid,
+        );
+        const full = {
           rep_infos: Array.isArray(response.rep_infos) ? response.rep_infos : [],
           canonical_rep_types: Array.isArray(response.canonical_rep_types) ? response.canonical_rep_types : [],
           plugins: Array.isArray(response.plugins) ? response.plugins : [],
@@ -136,6 +160,27 @@ export async function handleReadToolCall(ctx, name, args) {
           // query.reps へ渡すと Kyou の rep_name と一致せず静かに0件になる。
           attached_data_reps: Array.isArray(response.attached_data_reps) ? response.attached_data_reps : [],
         };
+        // data_kinds 絞り込み。本番では約120件（歴代端末ぶんの Tag_ / Text_ / Notification_ / GPSLogs_）。
+        if (normalized.data_kinds) {
+          const wanted = new Set(normalized.data_kinds);
+          full.attached_data_reps = full.attached_data_reps.filter((rep) => wanted.has(rep?.data_kind));
+        }
+        // fields 射影。rep_infos[] だけで本番は数百件になるのに、
+        // 「正準値と対応表だけ欲しい」呼び出しが多かった。
+        // 許可リストの照合は normalizeRepInfosArgs も行うが、動的なプロパティ書き込みの
+        // 直前でも弾く（app_config 側と同じ理由。CodeQL js/remote-property-injection #932 は
+        // 書き込みと同じ関数内の Set.has ガードしか認識しない）。
+        if (!normalized.fields) {
+          return full;
+        }
+        const projected = {};
+        for (const field of normalized.fields) {
+          if (!REP_INFOS_FIELDS.has(field)) {
+            continue;
+          }
+          projected[field] = full[field];
+        }
+        return projected;
       }
       case "gkill_get_application_config": {
         const normalized = normalizeAppConfigArgs(args);
@@ -147,6 +192,9 @@ export async function handleReadToolCall(ctx, name, args) {
         );
         const config = response.application_config || {};
         const full = {
+          // 接続先の識別。gkill は元から返しているのに、この射影が捨てていた。
+          user_id: config.user_id,
+          device: config.device,
           tag_struct: config.tag_struct,
           mi_board_struct: config.mi_board_struct,
           rep_struct: config.rep_struct,
@@ -264,7 +312,7 @@ export async function handleReadToolCall(ctx, name, args) {
         );
         const histories = response[target.historiesKey];
         if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(`Entity not found: ${normalized.id}`);
+          throw new GkillApiError(entityNotFoundMessage(normalized.id, normalized.data_type));
         }
         const versions = histories.slice(0, normalized.limit);
         return {
@@ -284,7 +332,13 @@ export async function handleReadToolCall(ctx, name, args) {
 }
 
 // summarizeReadToolPayload は読み取りツールの結果要約を返す。対象外のツールは null。
+// summarizeReadToolPayload は1行サマリを返す。
+// 古スキーマの印の付け方は payload.mjs が正本（書き込み側と同じ文言にするため）。
 export function summarizeReadToolPayload(name, payload) {
+  return appendStaleSchemaNoteToSummary(summarizeReadToolPayloadBody(name, payload), payload);
+}
+
+function summarizeReadToolPayloadBody(name, payload) {
   switch (name) {
     case "gkill_get_kyous": {
       // v2: total_count は cursor 無し応答にのみ入る。残量の真実は remaining_count。
@@ -313,8 +367,13 @@ export function summarizeReadToolPayload(name, payload) {
       return `Fetched ${Array.isArray(payload.boards) ? payload.boards.length : 0} Mi boards.`;
     case "gkill_get_all_tag_names":
       return `Fetched ${Array.isArray(payload.tag_names) ? payload.tag_names.length : 0} tag names.`;
-    case "gkill_get_all_rep_names":
-      return `Fetched ${Array.isArray(payload.rep_names) ? payload.rep_names.length : 0} repository names.`;
+    case "gkill_get_all_rep_names": {
+      const returned = Array.isArray(payload.rep_names) ? payload.rep_names.length : 0;
+      if (payload.truncated) {
+        return `Fetched ${returned} of ${payload.total_count} matching repository names (truncated — narrow with contains or raise limit).`;
+      }
+      return `Fetched ${returned} repository names.`;
+    }
     case "gkill_get_gps_log": {
       if (Array.isArray(payload.buckets)) {
         return `Aggregated ${payload.buckets.length} daily buckets (${payload.total_count ?? 0} GPS points).`;
@@ -339,9 +398,20 @@ export function summarizeReadToolPayload(name, payload) {
       return `Returned ${shown} of ${total} versions${payload.has_more ? " (more available)" : ""}${deleted}.`;
     }
     case "gkill_get_rep_infos": {
-      const repCount = Array.isArray(payload.rep_infos) ? payload.rep_infos.length : 0;
-      const typeCount = Array.isArray(payload.canonical_rep_types) ? payload.canonical_rep_types.length : 0;
-      return `Fetched ${repCount} repositories (${typeCount} canonical rep types).`;
+      // fields で rep_infos を外した呼び出しに「Fetched 0 repositories」と言うと、
+      // 自分で外しただけなのに「リポジトリが0件」と読める（2026-08-25 の実利用レビュー）。
+      const parts = [];
+      parts.push(
+        Array.isArray(payload.rep_infos)
+          ? `${payload.rep_infos.length} repositories`
+          : "repositories omitted by fields",
+      );
+      parts.push(
+        Array.isArray(payload.canonical_rep_types)
+          ? `${payload.canonical_rep_types.length} canonical rep types`
+          : "canonical rep types omitted by fields",
+      );
+      return `Fetched ${parts.join(", ")}.`;
     }
     case "gkill_get_idf_file":
       return `Retrieved file: ${payload.file_name} (${payload.file_size_bytes} bytes, ${payload.mime_type})`;
@@ -369,33 +439,35 @@ export function stripAppConfigUiState(value) {
   return value;
 }
 
-// GPSカーソル: base64url(JSON {t, n})。t=最後に返した点の related_time、
-// n=同一時刻の中で消費済みの点数。サーバの並びは（時刻降順・座標タイブレーク）で
-// 決定的なので、同一時刻ランの途中でも位置を特定できる（get_kyous v2 と同じ考え方）。
-export function encodeGpsCursor(t, n) {
-  return Buffer.from(JSON.stringify({ t, n }), "utf8").toString("base64url");
-}
-
-export function decodeGpsCursor(cursor) {
-  try {
-    const decoded = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
-    if (typeof decoded.t === "string" && Number.isInteger(decoded.n) && decoded.n >= 0) {
-      return decoded;
-    }
-  } catch {
-    // fallthrough
+/**
+ * paginateRepNames は rep名の全一覧に contains / limit を適用する。
+ *
+ * total_count は**絞り込み後・limit適用前**の件数。limit の前の件数を返さないと
+ * 「contains に一致したのが何件か」が読めず、truncated の意味も決まらない。
+ *
+ * @param {string[]} repNames gkill が返した全rep名。
+ * @param {{contains?: string, limit: number}} options 正規化済みの絞り込み条件。
+ * @returns {{rep_names: string[], total_count: number, returned_count: number, truncated: boolean}} 応答。
+ */
+export function paginateRepNames(repNames, options) {
+  let matched = repNames;
+  if (options.contains !== undefined && options.contains !== "") {
+    const needle = options.contains.toLowerCase();
+    matched = repNames.filter((repName) => String(repName).toLowerCase().includes(needle));
   }
-  throw new GkillApiError(`Invalid GPS cursor: ${JSON.stringify(cursor)} (pass next_cursor verbatim)`);
+  const page = matched.slice(0, options.limit);
+  return {
+    rep_names: page,
+    total_count: matched.length,
+    returned_count: page.length,
+    truncated: page.length < matched.length,
+  };
 }
 
 // paginateGpsLogs は取得済みの全点列に limit/cursor/count_only/group_by を適用する。
 export function paginateGpsLogs(gpsLogs, options) {
-  if (options.count_only && options.cursor) {
-    throw new GkillApiError("count_only cannot be combined with cursor");
-  }
-  if (options.group_by && options.cursor) {
-    throw new GkillApiError("group_by cannot be combined with cursor");
-  }
+  // 規則の正本は normalization.mjs。get_kyous と同じ文言で弾く。
+  assertAggregationNotCombinedWithCursor(options);
   if (options.count_only) {
     return { gps_logs: [], total_count: gpsLogs.length, returned_count: 0, remaining_count: 0, has_more: false };
   }

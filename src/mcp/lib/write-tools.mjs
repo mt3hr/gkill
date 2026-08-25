@@ -12,6 +12,7 @@ export const WRITE_TOOLS = [
       "Create a text memo (kmemo) in gkill — the most general-purpose record type for free-form text notes, diary entries, or any textual life-log data. " +
       "The repository where the memo is stored is determined automatically by the server based on user configuration. " +
       "Response fields: added_kmemo (full Kmemo entity with id, rep_name, content, related_time, create_time, etc.), added_kyou (parent Kyou wrapper with id, data_type, related_time). " +
+      "The two overlap on purpose: added_kyou is the row shape a timeline shows (id, data_type, related_time, is_image/is_video), added_* is the entity with the fields you just wrote. Use added_*.id as the id everywhere — they are the same id. " +
       "Use the returned id as target_id for gkill_add_tag to categorize the memo, or gkill_add_text to attach additional annotations. " +
       "Typical workflow: create a memo with gkill_add_kmemo → tag it with gkill_add_tag using the returned id. " +
       "If related_time is omitted, defaults to the current timestamp. " +
@@ -34,6 +35,7 @@ export const WRITE_TOOLS = [
       "Useful for bookmarking articles, documentation, or any web resource as part of the life-log. " +
       "The repository is determined automatically by the server. " +
       "Response fields: added_urlog (full URLog entity with id, url, title, rep_name, related_time, etc.), added_kyou (parent Kyou wrapper). " +
+      "The two overlap on purpose: added_kyou is the row shape a timeline shows (id, data_type, related_time, is_image/is_video), added_* is the entity with the fields you just wrote. Use added_*.id as the id everywhere — they are the same id. " +
       "Use the returned id as target_id for gkill_add_tag or gkill_add_text to annotate the bookmark. " +
       "NOTE: saving a bookmark makes the server fetch the URL. When title is omitted the server fills it in from the page's <title>, and it also fetches a favicon and a thumbnail. " +
       "That means adding a bookmark causes outbound traffic to the target site (and to a third-party favicon service). " +
@@ -57,6 +59,7 @@ export const WRITE_TOOLS = [
       "Each record has a title (what was purchased or received), an amount (negative for expense/spending, positive for income/refund), and an optional shop name. " +
       "The repository is determined automatically by the server. " +
       "Response fields: added_nlog (full Nlog entity with id, title, shop, amount, rep_name, related_time, etc.), added_kyou (parent Kyou wrapper). " +
+      "The two overlap on purpose: added_kyou is the row shape a timeline shows (id, data_type, related_time, is_image/is_video), added_* is the entity with the fields you just wrote. Use added_*.id as the id everywhere — they are the same id. " +
       "Use the returned id as target_id for gkill_add_tag (e.g., tag with category like \"food\", \"transport\") to organize expenses.",
     inputSchema: {
       type: "object",
@@ -78,6 +81,7 @@ export const WRITE_TOOLS = [
       "Mood is an integer from 0 (lowest/worst) to 10 (highest/best), representing a subjective self-assessment of well-being. " +
       "The repository is determined automatically by the server. " +
       "Response fields: added_lantana (full Lantana entity with id, mood, rep_name, related_time, etc.), added_kyou (parent Kyou wrapper). " +
+      "The two overlap on purpose: added_kyou is the row shape a timeline shows (id, data_type, related_time, is_image/is_video), added_* is the entity with the fields you just wrote. Use added_*.id as the id everywhere — they are the same id. " +
       "Use the returned id as target_id for gkill_add_tag or gkill_add_text to add context (e.g., tag with reason like \"exercise\", annotate with notes about why the mood is high/low). " +
       "Typical usage: record mood periodically (e.g., morning, evening) to build a mood timeline.",
     inputSchema: {
@@ -99,6 +103,7 @@ export const WRITE_TOOLS = [
       "Omit end_time to create an ongoing (open-ended) interval — it can be closed later. " +
       "The repository is determined automatically by the server. " +
       "Response fields: added_timeis (full TimeIs entity with id, title, start_time, end_time, rep_name, etc.), added_kyou (parent Kyou wrapper). " +
+      "The two overlap on purpose: added_kyou is the row shape a timeline shows (id, data_type, related_time, is_image/is_video), added_* is the entity with the fields you just wrote. Use added_*.id as the id everywhere — they are the same id. " +
       "TimeIs records are used by gkill's plaing view to show what was happening at any given moment. " +
       "Multiple timeis can overlap (e.g., \"work\" and \"meeting\" can run simultaneously). " +
       "Use the returned id as target_id for gkill_add_tag to categorize the activity.",
@@ -121,6 +126,7 @@ export const WRITE_TOOLS = [
       "Use gkill_get_mi_board_list to discover existing board names. board_name can be any string — a non-existent board name will be created and the task is saved under that name. If board_name is omitted, the account's default board is used automatically. " +
       "The repository is determined automatically by the server. " +
       "Response fields: added_mi (full Mi entity with id, title, is_checked, board_name, limit_time, estimate_start_time, estimate_end_time, rep_name, etc.), added_kyou (parent Kyou wrapper). " +
+      "The two overlap on purpose: added_kyou is the row shape a timeline shows (id, data_type, related_time, is_image/is_video), added_* is the entity with the fields you just wrote. Use added_*.id as the id everywhere — they are the same id. " +
       "Tasks can have optional scheduling fields: limit_time (deadline), estimate_start_time, estimate_end_time. " +
       "Use the returned id as target_id for gkill_add_tag to categorize (e.g., \"urgent\", \"bugfix\") or gkill_add_text to add detailed notes. " +
       "Typical workflow: gkill_get_mi_board_list → pick a board → gkill_add_mi → optionally tag/annotate.",
@@ -130,9 +136,9 @@ export const WRITE_TOOLS = [
         title: { type: "string", description: "Task title/description. Be concise but descriptive." },
         board_name: { type: "string", description: "Board name to place the task on. Use gkill_get_mi_board_list to discover existing names. Any string is accepted — a non-existent name creates a new board. If omitted, the account's default board is used." },
         is_checked: { type: "boolean", description: "Whether the task is already completed. Default: false. Set to true to create a pre-completed task (e.g., logging past work)." },
-        limit_time: { type: "string", description: `Deadline for the task. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Optional.` },
-        estimate_start_time: { type: "string", description: `Estimated start time for scheduling. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Optional.` },
-        estimate_end_time: { type: "string", description: `Estimated end time for scheduling. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Optional.` },
+        limit_time: { type: "string", description: `Deadline for the task. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC} — a date-only value expands to the END of that day (23:59:59 local), so "2026-08-25" means "due by the end of the 25th". Optional.` },
+        estimate_start_time: { type: "string", description: `Estimated start time for scheduling. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC} — a date-only value expands to the START of that day (00:00:00 local). Optional.` },
+        estimate_end_time: { type: "string", description: `Estimated end time for scheduling. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC} — a date-only value expands to the END of that day (23:59:59 local). Optional.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
       required: ["title"],
@@ -147,6 +153,7 @@ export const WRITE_TOOLS = [
       "Each record has a title (what is being measured) and a num_value (the measurement). " +
       "The repository is determined automatically by the server. " +
       "Response fields: added_kc (full KC entity with id, title, num_value, rep_name, related_time, etc.), added_kyou (parent Kyou wrapper). " +
+      "The two overlap on purpose: added_kyou is the row shape a timeline shows (id, data_type, related_time, is_image/is_video), added_* is the entity with the fields you just wrote. Use added_*.id as the id everywhere — they are the same id. " +
       "Use the returned id as target_id for gkill_add_tag to categorize (e.g., tag with \"health\", \"fitness\").",
     inputSchema: {
       type: "object",
@@ -209,39 +216,48 @@ export const WRITE_TOOLS = [
       "CRITICAL parsing rules: " +
       "(1) Text is split by newlines (\\n). Each line is processed independently. " +
       "(2) Prefixes MUST be on their own line with NOTHING else on that line. The prefix line and the data value MUST be on SEPARATE lines. " +
-      "For example, '/mood' must be alone on one line, and '8' on the next line. '/mood 8' on one line does NOT work — it becomes a kmemo. " +
+      "For example, '/mood' must be alone on one line, and '8' on the next line. Writing '/mood 8' on one line is rejected per-line, and so is a prefix with no value line after it. " +
       "(3) Lines without a recognized prefix are treated as kmemo (text memo) content. Adjacent non-prefixed lines are merged into a single kmemo. " +
       "(4) To create SEPARATE records, insert a separator line (、 or ,) between them. Without separators, consecutive lines merge into one kmemo. " +
       "Supported prefix lines (must be the ENTIRE line, not part of a line): " +
-      "/mi or ーみ → next line is task title, " +
-      "~~ or ～～ → turn the record written just ABOVE into a task (repost task). Opens AND closes with the same ~~ marker, and is meaningless on its own — the record it tasks must come first. There is NO title line (the original record is shown as-is). Inside the block: board name, estimated start, estimated end, deadline (all optional, no ? needed before a date). Lines starting with # inside the block become tags on the TASK itself and may appear before or after the board name. Use /mi for a brand new task and ~~ to task an existing record, " +
+      "/mi or ーみ → task in up to five positional lines: title, then board name, estimated start, estimated end, deadline (same order as the ~~ block), " +
+      "~~ or ～～ → turn the record written just ABOVE into a task (repost task). Opens AND closes with the same ~~ marker, and is meaningless on its own — the record it tasks must come first. There is NO title line (the original record is shown as-is). Inside the block: board name, estimated start, estimated end, deadline (all optional, no ? needed before a date). Lines starting with # inside the block become tags on the TASK itself and may appear before or after the board name. Use /mi for a brand new task. ~~ can ONLY task a record created earlier in THIS SAME submission (its target is the id the previous line just minted) — it cannot reference a record that already exists in gkill, and there is no syntax that can. It also needs a mirekyou repository configured for the account; without one the submission fails after the records above it were already written, " +
       "/mood or ーら → next line is mood value (0-10), " +
       "/expense or ーん → next lines: shop name, then (title/description, amount) pairs repeating — one expense record per pair. " +
       "A #tag line or a -- text block written after an amount line attaches to that one payment only; write them after the amount, never before /expense. " +
       "(IMPORTANT: the prefix is /expense, NOT /nlog), " +
-      "/url or ーう → next line is URL, " +
-      "/num or ーか → next line is title then value, " +
+      "/url or ーう → next line is the URL, and the line AFTER that is its title, " +
+      "/num or ーか → next line is title, then the line after that is the numeric value, " +
       "/start or ーた → next line is timeis start label, " +
-      "/end or ーえ → end current timeis, " +
-      "/timeis or ーち → timeis shorthand, " +
-      "/end? or ーいえ → end timeis if exists, " +
-      "/endt or ーたえ → end timeis by tag, " +
-      "/endt? or ーいたえ → end timeis by tag if exists, " +
-      "# or 。 → tag (attach to previous record), " +
-      "? or ？ → related time, " +
+      "/end or ーえ → end a running timeis. The NEXT LINE IS REQUIRED and must be the exact title of the running timeis to close; omitting it fails with \"打刻終了タイトルを指定してください\", " +
+      "/timeis or ーち → timeis in three fixed lines: title, then start datetime, then end datetime, " +
+      "/end? or ーいえ → same as /end but tolerates \"no such running timeis\". The title line is STILL REQUIRED — the if-exists part only forgives a missing target, not a missing title, " +
+      "/endt or ーたえ → end a running timeis by tag. The NEXT LINE IS REQUIRED and holds the tag name(s), separated by 、 or , and written WITHOUT the # / 。 prefix, " +
+      "/endt? or ーいたえ → same as /endt but tolerates \"no such running timeis\"; the tag line is still required, " +
+      "# or 。 → tag (attach to previous record). Matched by PREFIX, so a Markdown heading line like \"# Title\" becomes a tag, " +
+      "? or ？ → related time. Also matched by prefix, so any line starting with ? is parsed as a datetime and fails if it is not one, " +
       "-- or ーー → text block start/end, " +
-      "! or ！ → stop processing, " +
+      "! or ！ → stop processing. On the FIRST line it does nothing (processing continues), " +
       "(no prefix) → kmemo text content. " +
       "Separator lines: 、 or , → separate into a new entity; 、、 or ,, → separate + increment time by 1 second. " +
       "Example (creates 3 records: kmemo + mood + expense): " +
       "\"今日はいい天気だった\\n、\\n/mood\\n8\\n、\\n/expense\\nカフェ\\nアイスコーヒー\\n-500\\n!\" " +
       "Response fields: messages[] (server processing messages) and created[] ({id, data_type, updated}) — one entry per record actually written, in the order they were written. Lines that write nothing (a blank kmemo, a blank task, a blank expense) produce no entry, and ending a timeis reports the existing record with updated:true rather than a new id. Use created[].id as target_id for gkill_add_tag / gkill_add_text. " +
-      "On failure the errors are reported one per bad line, and created[] still lists what was already written before the failure — KFTL is not a database transaction, so those records stay.",
+      "On failure the errors are reported one per bad line, and created[] still lists what was already written before the failure — KFTL is not a database transaction, so those records stay. Pass the same idempotency_key when you retry so the replay does not write the earlier records a second time. "
+      + "Provenance: records written through this tool carry create_app=\"gkill_kftl\" (the same value the web notepad writes) and create_device set to the SERVER's device name, not \"mcp\". There is currently no field that separates MCP-submitted KFTL from hand-typed notepad KFTL, so create_apps:[\"gkill_mcp_readwrite\"] does NOT find them.",
     inputSchema: {
       type: "object",
       properties: {
         kftl_text: { type: "string", description: "KFTL formatted text block. Multi-line (\\n separated). CRITICAL: Each prefix (/mood, /expense, /mi, etc.) MUST be the ENTIRE line by itself — do NOT put data values on the same line as the prefix. The data goes on the NEXT line(s). Use 、 or , on its own line to separate entities." },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
+        idempotency_key: {
+          type: "string",
+          description:
+            "Optional replay guard. KFTL is not a database transaction: when a submission fails partway, the records "
+            + "already written stay. Retrying with the SAME key folds the replay into the original submission instead of "
+            + "writing those records again. Omit it and every retry writes afresh. Use any stable string you can reproduce "
+            + "for the retry (e.g. a uuid you generate once per submission).",
+        },
       },
       required: ["kftl_text"],
       additionalProperties: false,
@@ -262,14 +278,35 @@ export const WRITE_TOOLS = [
       type: "object",
       properties: {
         id: { type: "string", description: "ID of the entry to soft-delete. Obtain from gkill_add_* responses, or from gkill_get_kyous on the read / readwrite servers." },
+        targets: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              data_type: { type: "string", enum: ENTITY_DATA_TYPE_VALUES },
+            },
+            required: ["id", "data_type"],
+            additionalProperties: false,
+          },
+          description:
+            "Batch form: delete several entries in one call, instead of id + data_type. " +
+            "At most 100 entries; they are processed one by one in order. " +
+            "gkill_submit_kftl returns created[] in exactly this shape, so its response can be passed straight back here. " +
+            "This is NOT a transaction: on partial failure the response lists every entry with ok / error, " +
+            "plus succeeded_count and failed_count, so you can see how far it got. " +
+            "Cannot be combined with id / data_type.",
+        },
+
         data_type: {
           type: "string",
-          description: "Data type of the entry to delete. Must match the actual type of the entry.",
+          description:
+            "Data type of the entry to delete. Must match the actual type of the entry. " +
+            "Two vocabularies exist: search results and add_* / update_* responses carry PROJECTION names (mi_create / mi_check / mi_limit / mi_start / mi_end, mirekyou_*, timeis_start / timeis_end), while this parameter is the ENTITY type (mi / mirekyou / timeis). Projection names are accepted here and folded to their entity type, so a data_type copied straight out of a response works.",
           enum: ENTITY_DATA_TYPE_VALUES,
         },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
-      required: ["id", "data_type"],
       additionalProperties: false,
     },
   },
@@ -478,14 +515,35 @@ export const WRITE_TOOLS = [
       type: "object",
       properties: {
         id: { type: "string", description: "ID of the soft-deleted entry to restore." },
+        targets: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              data_type: { type: "string", enum: ENTITY_DATA_TYPE_VALUES },
+            },
+            required: ["id", "data_type"],
+            additionalProperties: false,
+          },
+          description:
+            "Batch form: restore several entries in one call, instead of id + data_type. " +
+            "At most 100 entries; they are processed one by one in order. " +
+            "gkill_submit_kftl returns created[] in exactly this shape, so its response can be passed straight back here. " +
+            "This is NOT a transaction: on partial failure the response lists every entry with ok / error, " +
+            "plus succeeded_count and failed_count, so you can see how far it got. " +
+            "Cannot be combined with id / data_type.",
+        },
+
         data_type: {
           type: "string",
-          description: "Data type of the entry. Must match the actual type of the entry.",
+          description:
+            "Data type of the entry. Must match the actual type of the entry. " +
+            "Two vocabularies exist: search results and add_* / update_* responses carry PROJECTION names (mi_create / mi_check / mi_limit / mi_start / mi_end, mirekyou_*, timeis_start / timeis_end), while this parameter is the ENTITY type (mi / mirekyou / timeis). Projection names are accepted here and folded to their entity type, so a data_type copied straight out of a response works.",
           enum: ENTITY_DATA_TYPE_VALUES,
         },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
-      required: ["id", "data_type"],
       additionalProperties: false,
     },
   },

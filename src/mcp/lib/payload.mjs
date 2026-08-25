@@ -82,3 +82,42 @@ export function summarizeToolError(name, error, detail) {
   }
   return `${prefix}: ${error}`;
 }
+
+// entityNotFoundMessage は「1件を型別に引いたが見つからない」ときの文言。
+//
+// **read / write の両方から使う。** 以前は3種類に割れていて
+// （read の `Entity not found: {id}`、write の親切版、update 9本の `Kmemo not found: {id}`）、
+// 同じ状況で受け取る説明が呼んだツールによって違った（2026-08-25 の実利用レビュー）。
+//
+// 取得は型別エンドポイントなので、ID が無いのか型を取り違えたのかは
+// サーバの応答からは区別できない。**区別できないことを言う**のが唯一正しい案内で、
+// 「ID が存在しない」と断定してはいけない。
+// 実際 data_type:"urlog" で kmemo の id を引くと、この経路へ来る。
+// appendStaleSchemaNoteToSummary は、本文の warnings に古スキーマの指摘があるとき
+// 1行サマリにも印を付ける。本文の warnings を読まない経路でも気づけるようにするため。
+//
+// 以前は読み取りの要約器だけが持っており、書き込みの要約器には無かった。
+// gkill_delete_kyou / gkill_restore_kyou の targets（後から足した非string型の引数）が
+// まさに古スキーマで壊れる側なので、片側だけだと「同じ古さなのに読み取りでしか
+// 知らされない」ことになる（ADR-0058 / ADR-0063）。
+export function appendStaleSchemaNoteToSummary(summary, payload) {
+  if (summary === null || summary === undefined) {
+    return summary;
+  }
+  if (payload === null || typeof payload !== "object" || !Array.isArray(payload.warnings)) {
+    return summary;
+  }
+  if (!payload.warnings.some((warning) => String(warning).includes("tool schema snapshot looks stale"))) {
+    return summary;
+  }
+  return `${summary} (this client's tool schema looks stale — reconnect the MCP client)`;
+}
+
+export function entityNotFoundMessage(id, dataType) {
+  return (
+    `Entity not found: ${id} (looked it up as data_type ${JSON.stringify(dataType)}; ` +
+    `the lookup is per-type, so a wrong data_type looks exactly like a wrong id. ` +
+    `Confirm the type with gkill_get_kyous, and check you are on the account that holds it ` +
+    `(gkill_get_application_config with fields:["user_id"]), then retry.)`
+  );
+}

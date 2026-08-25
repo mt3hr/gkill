@@ -15,6 +15,8 @@ import crypto from "node:crypto";
 
 import { GkillApiError } from "./errors.mjs";
 import { WRITE_TOOLS } from "./write-tools.mjs";
+import { entityNotFoundMessage, appendStaleSchemaNoteToSummary } from "./payload.mjs";
+import { appendStaleSchemaWarning } from "./normalization.mjs";
 import { ENTITY_TARGETS, unknownToolMessage } from "./constants.mjs";
 import {
   normalizeKmemoArgs,
@@ -79,16 +81,6 @@ function stripUrlogImages(urlog) {
   return rest;
 }
 
-// 型を取り違えたときも同じ「見つからない」になるので、id が悪いのだと誤診しやすい。
-// 実際に data_type:"urlog" で kmemo の id を消そうとすると Entity not found になる。
-function entityNotFoundMessage(id, dataType) {
-  return (
-    `Entity not found: ${id} (looked it up as data_type ${JSON.stringify(dataType)}; ` +
-    `the lookup is per-type, so a wrong data_type looks exactly like a wrong id. ` +
-    `Confirm the type with gkill_get_kyous, then retry.)`
-  );
-}
-
 // mergeStored は「サーバが保存した版」を手元の値に重ねる。
 //
 // 以前は書き込み応答が、ローカルで組んだ current をそのまま返していた。すると
@@ -119,6 +111,167 @@ function nextUpdateTime(current) {
   return new Date(nowSecond > previousSecond ? now : previousSecond + 1000).toISOString();
 }
 
+// UPDATE_TARGETS は gkill_update_* 9ツールの「型ごとに違うところ」だけを持つ表。
+//
+// 取得→patch→更新の手順そのものは9本とも同じで、以前は24行のブロックが9本並んでいた。
+// 取得先・更新先・応答キーの対応は constants.mjs の ENTITY_TARGETS に既にあり、
+// softDeleteOne と gkill_get_kyou_history はそちらを使っている。
+// **同じ対応表が「表」と「9箇所の直書き」の2形態で存在していた**ので、表側へ寄せた。
+// 直書きだったころは「見つからない」のメッセージも3種類に割れていた。
+const UPDATE_TARGETS = {
+  kmemo: { normalize: normalizeUpdateKmemoArgs, patchFields: ["content", "related_time"] },
+  urlog: { normalize: normalizeUpdateUrlogArgs, patchFields: ["url", "title", "related_time"] },
+  nlog: { normalize: normalizeUpdateNlogArgs, patchFields: ["title", "amount", "shop", "related_time"] },
+  lantana: { normalize: normalizeUpdateLantanaArgs, patchFields: ["mood", "related_time"] },
+  timeis: { normalize: normalizeUpdateTimeIsArgs, patchFields: ["title", "start_time", "end_time"] },
+  mi: { normalize: normalizeUpdateMiArgs, patchFields: ["title", "board_name", "is_checked", "limit_time", "estimate_start_time", "estimate_end_time"] },
+  kc: { normalize: normalizeUpdateKcArgs, patchFields: ["title", "num_value", "related_time"] },
+  tag: { normalize: normalizeUpdateTagArgs, patchFields: ["tag"] },
+  text: { normalize: normalizeUpdateTextArgs, patchFields: ["text"] },
+};
+
+/**
+ * runUpdate は gkill_update_* 1件を処理する。
+ *
+ * gkill に部分更新のAPIは無いので、現在値を取って渡された欄だけ上書きし、
+ * 同じ型の更新APIへ送り直す（patch semantics）。渡さなかった欄は保持される。
+ *
+ * @param {object} ctx ハンドラ文脈。
+ * @param {string} dataType エンティティ種別（ENTITY_TARGETS のキー）。
+ * @param {unknown} args ツール引数。
+ * @returns {Promise<object>} updated_xxx と updated_kyou。
+ */
+async function runUpdate(ctx, dataType, args) {
+  const spec = UPDATE_TARGETS[dataType];
+  const target = ENTITY_TARGETS[dataType];
+  if (!spec || !target) {
+    throw new GkillApiError(`Unsupported data_type for update: ${dataType}`);
+  }
+  const normalized = spec.normalize(args);
+  const getResponse = await ctx.client.callApi(target.getEndpoint, { id: normalized.id }, true, ctx.sid);
+  const histories = getResponse[target.historiesKey];
+  if (!Array.isArray(histories) || histories.length === 0) {
+    // 文言は削除・復活と同じものを使う。以前は型ごとに "Kmemo not found" のような
+    // 別文言で、型の取り違えとID不在が見分けられなかった。
+    throw new GkillApiError(entityNotFoundMessage(normalized.id, dataType));
+  }
+  const current = histories[0];
+  for (const field of spec.patchFields) {
+    // 未指定 = 触らない。null は「消す」の意味を持つ欄があるので !== undefined で見る
+    // （TimeIs の end_time が唯一の例。3値パッチ）。
+    if (normalized[field] !== undefined) {
+      current[field] = normalized[field];
+    }
+  }
+  current.update_time = new Date().toISOString();
+  current.update_app = ctx.appName;
+  current.update_device = WRITE_DEVICE;
+  current.update_user = ctx.userId;
+  const response = await ctx.client.callApi(
+    target.updateEndpoint,
+    { [target.requestKey]: current, want_response_kyou: true, locale_name: normalized.locale_name },
+    true, ctx.sid,
+  );
+  return {
+    [target.responseKey]: mergeStored(current, response[target.responseKey]),
+    updated_kyou: response.updated_kyou || null,
+  };
+}
+
+/**
+ * softDeleteOne は1件の is_deleted を切り替える。削除と復活で共通。
+ *
+ * gkill に専用の削除APIは無く、現在値を取って is_deleted を立て、同じ型の更新APIへ
+ * 送り直す patch 方式なので、1件につき2往復かかる。
+ *
+ * @param {object} ctx ハンドラ文脈。
+ * @param {{id: string, data_type: string}} entry 対象。
+ * @param {boolean} deleting true=削除、false=復活。
+ * @param {string|undefined} localeName サーバメッセージのロケール。
+ * @returns {Promise<object>} 単件形式の応答。
+ */
+async function softDeleteOne(ctx, entry, deleting, localeName) {
+  const target = ENTITY_TARGETS[entry.data_type];
+  if (!target) {
+    throw new GkillApiError(`Unsupported data_type for ${deleting ? "delete" : "restore"}: ${entry.data_type}`);
+  }
+  // 1. 現在値を取る（データ欄を落とさずに patch するため）
+  const getResponse = await ctx.client.callApi(target.getEndpoint, { id: entry.id }, true, ctx.sid);
+  const histories = getResponse[target.historiesKey];
+  if (!Array.isArray(histories) || histories.length === 0) {
+    throw new GkillApiError(entityNotFoundMessage(entry.id, entry.data_type));
+  }
+  const current = histories[0];
+  // 無意味な版を積まない。「消えたのか、元から無かったのか、既に消えていたのか」を
+  // 呼び出し側が区別できるようにする。
+  if (deleting && current.is_deleted) {
+    throw new GkillApiError(
+      `Entity is already deleted: ${entry.id} (nothing changed; read it with gkill_get_kyou_history or undo with gkill_restore_kyou)`,
+    );
+  }
+  if (!deleting && !current.is_deleted) {
+    throw new GkillApiError(`Entity is already active (not deleted): ${entry.id}`);
+  }
+  // 2. is_deleted と更新メタデータを差し替える
+  current.is_deleted = deleting;
+  current.update_time = nextUpdateTime(current);
+  current.update_app = ctx.appName;
+  current.update_device = WRITE_DEVICE;
+  current.update_user = ctx.userId;
+  // 3. 更新APIへ送る
+  const response = await ctx.client.callApi(
+    target.updateEndpoint,
+    { [target.requestKey]: current, want_response_kyou: true, locale_name: localeName },
+    true, ctx.sid,
+  );
+  const result = {};
+  // 復活はキー名だけ restored_ に付け替える（サーバ側の応答キーは updated_ のまま）
+  const responseKey = deleting ? target.responseKey : `restored_${entry.data_type}`;
+  result[responseKey] = mergeStored(current, response[target.responseKey]);
+  if (response.updated_kyou) result.updated_kyou = response.updated_kyou;
+  return result;
+}
+
+/**
+ * runSoftDeleteTargets は単件と一括の両方を捌く。
+ *
+ * 一括は**直列**に回す。1件が取得+更新の2往復なので、並列にすると
+ * 同じ書き込み口へ一斉に投げることになる。
+ * 途中で失敗しても止めない —— DBトランザクションではないので、
+ * 「どこまで消したか」を返さないと利用者は後始末ができない（KFTL の created[] と同じ考え方）。
+ *
+ * @param {object} ctx ハンドラ文脈。
+ * @param {{targets: Array<{id: string, data_type: string}>, batch: boolean, locale_name?: string}} normalized 正規化済み引数。
+ * @param {boolean} deleting true=削除、false=復活。
+ * @returns {Promise<object>} 単件なら従来どおりの形、一括なら results[] を持つ形。
+ */
+async function runSoftDeleteTargets(ctx, normalized, deleting) {
+  if (!normalized.batch) {
+    return softDeleteOne(ctx, normalized.targets[0], deleting, normalized.locale_name);
+  }
+  const results = [];
+  let succeeded = 0;
+  for (const entry of normalized.targets) {
+    try {
+      await softDeleteOne(ctx, entry, deleting, normalized.locale_name);
+      results.push({ id: entry.id, data_type: entry.data_type, ok: true });
+      succeeded++;
+    } catch (error) {
+      results.push({
+        id: entry.id,
+        data_type: entry.data_type,
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  return {
+    results,
+    succeeded_count: succeeded,
+    failed_count: results.length - succeeded,
+  };
+}
+
 const WRITE_TOOL_NAMES = new Set(WRITE_TOOLS.map((tool) => tool.name));
 
 // isWriteToolName は name が書き込みツールかを返す。
@@ -130,7 +283,16 @@ export function isWriteToolName(name) {
 // ctx = { client, sid, userId, appName }。client は GkillClient（callApi）。
 // appName は create_app / update_app に載るサーバ種別名
 // （write は "gkill_mcp_write"、readwrite は "gkill_mcp_readwrite"）。
+// ディスパッチ本体を包んで、古いツールスキーマを掴んだクライアントへの警告を
+// **1箇所で**足す。読み取り側（handleReadToolCall）と同じ形。
+// 書き込み側にも非string型の後付け引数（delete / restore の targets）があるので、
+// 片側だけに掛けると「同じ古さなのに読み取りでしか知らされない」ことになる。
 export async function handleWriteToolCall(ctx, name, args) {
+  const payload = await dispatchWriteToolCall(ctx, name, args);
+  return appendStaleSchemaWarning(payload, name, args);
+}
+
+async function dispatchWriteToolCall(ctx, name, args) {
   switch (name) {
       // ----- Write tools -----
       case "gkill_add_kmemo": {
@@ -372,7 +534,11 @@ export async function handleWriteToolCall(ctx, name, args) {
         const normalized = normalizeKftlArgs(args);
         const response = await ctx.client.callApi(
           "/api/submit_kftl_text",
-          { kftl_text: normalized.kftl_text, locale_name: normalized.locale_name },
+          {
+            kftl_text: normalized.kftl_text,
+            locale_name: normalized.locale_name,
+            idempotency_key: normalized.idempotency_key,
+          },
           true, ctx.sid,
         );
         // created は「実際に書かれたもの」。KFTL は1つのテキストから複数の Kyou を作るので、
@@ -383,339 +549,78 @@ export async function handleWriteToolCall(ctx, name, args) {
 
       case "gkill_delete_kyou": {
         const normalized = normalizeDeleteArgs(args);
-        const target = ENTITY_TARGETS[normalized.data_type];
-        if (!target) {
-          throw new GkillApiError(`Unsupported data_type for delete: ${normalized.data_type}`);
-        }
-        // 1. Fetch current entity to preserve all data fields
-        const getResponse = await ctx.client.callApi(
-          target.getEndpoint, { id: normalized.id }, true, ctx.sid,
-        );
-        const histories = getResponse[target.historiesKey];
-        if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(entityNotFoundMessage(normalized.id, normalized.data_type));
-        }
-        const current = histories[0];
-        if (current.is_deleted) {
-          // 無意味な版を積まない。restore 側の "already active" と対称に、
-          // 「消えたのか、元から無かったのか、既に消えていたのか」を呼び出し側が区別できるようにする
-          throw new GkillApiError(
-            `Entity is already deleted: ${normalized.id} (nothing changed; read it with gkill_get_kyou_history or undo with gkill_restore_kyou)`,
-          );
-        }
-        // 2. Set is_deleted + update metadata
-        current.is_deleted = true;
-        current.update_time = nextUpdateTime(current);
-        current.update_app = ctx.appName;
-        current.update_device = WRITE_DEVICE;
-        current.update_user = ctx.userId;
-        // 3. Send update
-        const response = await ctx.client.callApi(
-          target.updateEndpoint,
-          { [target.requestKey]: current, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
-        // 4. Return current with is_deleted=true and all data preserved
-        const result = {};
-        result[target.responseKey] = mergeStored(current, response[target.responseKey]);
-        if (response.updated_kyou) result.updated_kyou = response.updated_kyou;
-        return result;
+        return runSoftDeleteTargets(ctx, normalized, true);
       }
 
       case "gkill_restore_kyou": {
         const normalized = normalizeRestoreArgs(args);
-        const target = ENTITY_TARGETS[normalized.data_type];
-        if (!target) {
-          throw new GkillApiError(`Unsupported data_type for restore: ${normalized.data_type}`);
-        }
-        const getResponse = await ctx.client.callApi(
-          target.getEndpoint, { id: normalized.id }, true, ctx.sid,
-        );
-        const histories = getResponse[target.historiesKey];
-        if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(entityNotFoundMessage(normalized.id, normalized.data_type));
-        }
-        const current = histories[0];
-        if (!current.is_deleted) {
-          // 無意味な版を積まない。投機的に呼んでも安全にするための分岐
-          throw new GkillApiError(`Entity is already active (not deleted): ${normalized.id}`);
-        }
-        current.is_deleted = false;
-        current.update_time = nextUpdateTime(current);
-        current.update_app = ctx.appName;
-        current.update_device = WRITE_DEVICE;
-        current.update_user = ctx.userId;
-        const response = await ctx.client.callApi(
-          target.updateEndpoint,
-          { [target.requestKey]: current, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
-        const result = {};
-        // キー名だけ restored_ に付け替える (サーバ側の応答キーは updated_ のまま)
-        result[`restored_${normalized.data_type}`] = mergeStored(current, response[target.responseKey]);
-        if (response.updated_kyou) result.updated_kyou = response.updated_kyou;
-        return result;
+        return runSoftDeleteTargets(ctx, normalized, false);
       }
 
       // ----- Update tools -----
-      case "gkill_update_kmemo": {
-        const normalized = normalizeUpdateKmemoArgs(args);
-        const getResponse = await ctx.client.callApi(
-          "/api/get_kmemo", { id: normalized.id }, true, ctx.sid,
-        );
-        const histories = getResponse.kmemo_histories;
-        if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(`Kmemo not found: ${normalized.id}`);
-        }
-        const current = histories[0];
-        if (normalized.content !== undefined) current.content = normalized.content;
-        if (normalized.related_time !== undefined) current.related_time = normalized.related_time;
-        const now = new Date().toISOString();
-        current.update_time = now;
-        current.update_app = ctx.appName;
-        current.update_device = WRITE_DEVICE;
-        current.update_user = ctx.userId;
-        const response = await ctx.client.callApi(
-          "/api/update_kmemo",
-          { kmemo: current, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
-        return { updated_kmemo: mergeStored(current, response.updated_kmemo), updated_kyou: response.updated_kyou || null };
-      }
-
-      case "gkill_update_urlog": {
-        const normalized = normalizeUpdateUrlogArgs(args);
-        const getResponse = await ctx.client.callApi(
-          "/api/get_urlog", { id: normalized.id }, true, ctx.sid,
-        );
-        const histories = getResponse.urlog_histories;
-        if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(`Urlog not found: ${normalized.id}`);
-        }
-        const current = histories[0];
-        if (normalized.url !== undefined) current.url = normalized.url;
-        if (normalized.title !== undefined) current.title = normalized.title;
-        if (normalized.related_time !== undefined) current.related_time = normalized.related_time;
-        const now = new Date().toISOString();
-        current.update_time = now;
-        current.update_app = ctx.appName;
-        current.update_device = WRITE_DEVICE;
-        current.update_user = ctx.userId;
-        const response = await ctx.client.callApi(
-          "/api/update_urlog",
-          { urlog: current, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
-        return { updated_urlog: mergeStored(current, response.updated_urlog), updated_kyou: response.updated_kyou || null };
-      }
-
-      case "gkill_update_nlog": {
-        const normalized = normalizeUpdateNlogArgs(args);
-        const getResponse = await ctx.client.callApi(
-          "/api/get_nlog", { id: normalized.id }, true, ctx.sid,
-        );
-        const histories = getResponse.nlog_histories;
-        if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(`Nlog not found: ${normalized.id}`);
-        }
-        const current = histories[0];
-        if (normalized.title !== undefined) current.title = normalized.title;
-        if (normalized.amount !== undefined) current.amount = normalized.amount;
-        if (normalized.shop !== undefined) current.shop = normalized.shop;
-        if (normalized.related_time !== undefined) current.related_time = normalized.related_time;
-        const now = new Date().toISOString();
-        current.update_time = now;
-        current.update_app = ctx.appName;
-        current.update_device = WRITE_DEVICE;
-        current.update_user = ctx.userId;
-        const response = await ctx.client.callApi(
-          "/api/update_nlog",
-          { nlog: current, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
-        return { updated_nlog: mergeStored(current, response.updated_nlog), updated_kyou: response.updated_kyou || null };
-      }
-
-      case "gkill_update_lantana": {
-        const normalized = normalizeUpdateLantanaArgs(args);
-        const getResponse = await ctx.client.callApi(
-          "/api/get_lantana", { id: normalized.id }, true, ctx.sid,
-        );
-        const histories = getResponse.lantana_histories;
-        if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(`Lantana not found: ${normalized.id}`);
-        }
-        const current = histories[0];
-        if (normalized.mood !== undefined) current.mood = normalized.mood;
-        if (normalized.related_time !== undefined) current.related_time = normalized.related_time;
-        const now = new Date().toISOString();
-        current.update_time = now;
-        current.update_app = ctx.appName;
-        current.update_device = WRITE_DEVICE;
-        current.update_user = ctx.userId;
-        const response = await ctx.client.callApi(
-          "/api/update_lantana",
-          { lantana: current, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
-        return { updated_lantana: mergeStored(current, response.updated_lantana), updated_kyou: response.updated_kyou || null };
-      }
-
-      case "gkill_update_timeis": {
-        const normalized = normalizeUpdateTimeIsArgs(args);
-        const getResponse = await ctx.client.callApi(
-          "/api/get_timeis", { id: normalized.id }, true, ctx.sid,
-        );
-        const histories = getResponse.timeis_histories;
-        if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(`TimeIs not found: ${normalized.id}`);
-        }
-        const current = histories[0];
-        if (normalized.title !== undefined) current.title = normalized.title;
-        if (normalized.start_time !== undefined) current.start_time = normalized.start_time;
-        if (normalized.end_time !== undefined) current.end_time = normalized.end_time;
-        const now = new Date().toISOString();
-        current.update_time = now;
-        current.update_app = ctx.appName;
-        current.update_device = WRITE_DEVICE;
-        current.update_user = ctx.userId;
-        const response = await ctx.client.callApi(
-          "/api/update_timeis",
-          { timeis: current, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
-        return { updated_timeis: mergeStored(current, response.updated_timeis), updated_kyou: response.updated_kyou || null };
-      }
-
-      case "gkill_update_mi": {
-        const normalized = normalizeUpdateMiArgs(args);
-        const getResponse = await ctx.client.callApi(
-          "/api/get_mi", { id: normalized.id }, true, ctx.sid,
-        );
-        const histories = getResponse.mi_histories;
-        if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(`Mi not found: ${normalized.id}`);
-        }
-        const current = histories[0];
-        if (normalized.title !== undefined) current.title = normalized.title;
-        if (normalized.board_name !== undefined) current.board_name = normalized.board_name;
-        if (normalized.is_checked !== undefined) current.is_checked = normalized.is_checked;
-        if (normalized.limit_time !== undefined) current.limit_time = normalized.limit_time;
-        if (normalized.estimate_start_time !== undefined) current.estimate_start_time = normalized.estimate_start_time;
-        if (normalized.estimate_end_time !== undefined) current.estimate_end_time = normalized.estimate_end_time;
-        const now = new Date().toISOString();
-        current.update_time = now;
-        current.update_app = ctx.appName;
-        current.update_device = WRITE_DEVICE;
-        current.update_user = ctx.userId;
-        const response = await ctx.client.callApi(
-          "/api/update_mi",
-          { mi: current, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
-        return { updated_mi: mergeStored(current, response.updated_mi), updated_kyou: response.updated_kyou || null };
-      }
-
-      case "gkill_update_kc": {
-        const normalized = normalizeUpdateKcArgs(args);
-        const getResponse = await ctx.client.callApi(
-          "/api/get_kc", { id: normalized.id }, true, ctx.sid,
-        );
-        const histories = getResponse.kc_histories;
-        if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(`KC not found: ${normalized.id}`);
-        }
-        const current = histories[0];
-        if (normalized.title !== undefined) current.title = normalized.title;
-        if (normalized.num_value !== undefined) current.num_value = normalized.num_value;
-        if (normalized.related_time !== undefined) current.related_time = normalized.related_time;
-        const now = new Date().toISOString();
-        current.update_time = now;
-        current.update_app = ctx.appName;
-        current.update_device = WRITE_DEVICE;
-        current.update_user = ctx.userId;
-        const response = await ctx.client.callApi(
-          "/api/update_kc",
-          { kc: current, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
-        return { updated_kc: mergeStored(current, response.updated_kc), updated_kyou: response.updated_kyou || null };
-      }
-
-      case "gkill_update_tag": {
-        const normalized = normalizeUpdateTagArgs(args);
-        const getResponse = await ctx.client.callApi(
-          "/api/get_tag_histories_by_tag_id", { id: normalized.id }, true, ctx.sid,
-        );
-        const histories = getResponse.tag_histories;
-        if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(`Tag not found: ${normalized.id}`);
-        }
-        const current = histories[0];
-        if (normalized.tag !== undefined) current.tag = normalized.tag;
-        const now = new Date().toISOString();
-        current.update_time = now;
-        current.update_app = ctx.appName;
-        current.update_device = WRITE_DEVICE;
-        current.update_user = ctx.userId;
-        const response = await ctx.client.callApi(
-          "/api/update_tag",
-          { tag: current, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
-        return { updated_tag: mergeStored(current, response.updated_tag), updated_kyou: response.updated_kyou || null };
-      }
-
+      case "gkill_update_kmemo":
+      case "gkill_update_urlog":
+      case "gkill_update_nlog":
+      case "gkill_update_lantana":
+      case "gkill_update_timeis":
+      case "gkill_update_mi":
+      case "gkill_update_kc":
+      case "gkill_update_tag":
       case "gkill_update_text": {
-        const normalized = normalizeUpdateTextArgs(args);
-        const getResponse = await ctx.client.callApi(
-          "/api/get_text_histories_by_text_id", { id: normalized.id }, true, ctx.sid,
-        );
-        const histories = getResponse.text_histories;
-        if (!Array.isArray(histories) || histories.length === 0) {
-          throw new GkillApiError(`Text not found: ${normalized.id}`);
-        }
-        const current = histories[0];
-        if (normalized.text !== undefined) current.text = normalized.text;
-        const now = new Date().toISOString();
-        current.update_time = now;
-        current.update_app = ctx.appName;
-        current.update_device = WRITE_DEVICE;
-        current.update_user = ctx.userId;
-        const response = await ctx.client.callApi(
-          "/api/update_text",
-          { text: current, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
-        return { updated_text: mergeStored(current, response.updated_text), updated_kyou: response.updated_kyou || null };
+        const dataType = name.slice("gkill_update_".length);
+        return runUpdate(ctx, dataType, args);
       }
       default:
         throw new GkillApiError(unknownToolMessage(name));
   }
 }
 
+// batchSoftDeleteSummary は一括削除・一括復活の1行サマリを作る。
+//
+// 失敗件数を出さないと `failed_count:1` でも「completed」と読めてしまう。
+// 一括は DB トランザクションではないので、**どこまで済んだか**がサマリの本題
+// （2026-08-25 の実利用レビュー）。
+function batchSoftDeleteSummary(verb, payload) {
+  const succeeded = payload.succeeded_count ?? 0;
+  const failed = payload.failed_count ?? 0;
+  const total = succeeded + failed;
+  if (failed === 0) {
+    return `${verb}: ${succeeded}/${total} entries.`;
+  }
+  return `${verb}: ${succeeded}/${total} entries — ${failed} FAILED (see results[] for the reason of each).`;
+}
+
+// gkill_add_* / gkill_update_* の1行要約は、型ごとに違うのが「動詞」と「応答キー」だけ。
+// case を18本並べると、欄を1つ足すとき18箇所を触ることになり、1つ落としても
+// テストは緑のまま（各ツールのテストは自分の case しか見ない）。表から作る（ADR-0063）。
+//
+// 動詞が "Added" なのは tag / text だけ。付随データは「作る」のではなく既存の記録へ「付ける」。
+const ADD_SUMMARY_VERBS = { tag: "Added", text: "Added" };
+
+const ENTITY_SUMMARIZERS = new Map();
+for (const dataType of Object.keys(UPDATE_TARGETS)) {
+  const addVerb = ADD_SUMMARY_VERBS[dataType] || "Created";
+  ENTITY_SUMMARIZERS.set(
+    `gkill_add_${dataType}`,
+    (payload) => `${addVerb} ${dataType}: ${payload[`added_${dataType}`]?.id || "unknown"}`,
+  );
+  ENTITY_SUMMARIZERS.set(
+    `gkill_update_${dataType}`,
+    (payload) => `Updated ${dataType}: ${payload[`updated_${dataType}`]?.id || "unknown"}`,
+  );
+}
+
 // summarizeWriteToolPayload は書き込みツールの結果要約を返す。対象外のツールは null。
 export function summarizeWriteToolPayload(name, payload) {
+  const entitySummarizer = ENTITY_SUMMARIZERS.get(name);
+  if (entitySummarizer) {
+    return appendStaleSchemaNoteToSummary(entitySummarizer(payload), payload);
+  }
+  return appendStaleSchemaNoteToSummary(summarizeWriteToolPayloadBody(name, payload), payload);
+}
+
+function summarizeWriteToolPayloadBody(name, payload) {
   switch (name) {
-    // Write tools
-    case "gkill_add_kmemo":
-      return `Created kmemo: ${payload.added_kmemo?.id || "unknown"}`;
-    case "gkill_add_urlog":
-      return `Created urlog: ${payload.added_urlog?.id || "unknown"}`;
-    case "gkill_add_nlog":
-      return `Created nlog: ${payload.added_nlog?.id || "unknown"}`;
-    case "gkill_add_lantana":
-      return `Created lantana: ${payload.added_lantana?.id || "unknown"}`;
-    case "gkill_add_timeis":
-      return `Created timeis: ${payload.added_timeis?.id || "unknown"}`;
-    case "gkill_add_mi":
-      return `Created mi: ${payload.added_mi?.id || "unknown"}`;
-    case "gkill_add_kc":
-      return `Created kc: ${payload.added_kc?.id || "unknown"}`;
-    case "gkill_add_tag":
-      return `Added tag: ${payload.added_tag?.id || "unknown"}`;
-    case "gkill_add_text":
-      return `Added text: ${payload.added_text?.id || "unknown"}`;
     case "gkill_submit_kftl": {
       const created = Array.isArray(payload.created) ? payload.created : [];
       if (created.length === 0) {
@@ -732,32 +637,19 @@ export function summarizeWriteToolPayload(name, payload) {
       return `KFTL submitted: wrote ${created.length} record(s) — ${breakdown}.`;
     }
     case "gkill_restore_kyou": {
+      if (Array.isArray(payload.results)) {
+        return batchSoftDeleteSummary("Restored", payload);
+      }
       const keys = Object.keys(payload).filter((k) => k.startsWith("restored_"));
       return `Restored: ${keys.length > 0 ? keys.join(", ") : "completed"}`;
     }
     case "gkill_delete_kyou": {
+      if (Array.isArray(payload.results)) {
+        return batchSoftDeleteSummary("Deleted (soft)", payload);
+      }
       const keys = Object.keys(payload).filter((k) => k.startsWith("updated_"));
       return `Deleted (soft): ${keys.length > 0 ? keys.join(", ") : "completed"}`;
     }
-    // Update tools
-    case "gkill_update_kmemo":
-      return `Updated kmemo: ${payload.updated_kmemo?.id || "unknown"}`;
-    case "gkill_update_urlog":
-      return `Updated urlog: ${payload.updated_urlog?.id || "unknown"}`;
-    case "gkill_update_nlog":
-      return `Updated nlog: ${payload.updated_nlog?.id || "unknown"}`;
-    case "gkill_update_lantana":
-      return `Updated lantana: ${payload.updated_lantana?.id || "unknown"}`;
-    case "gkill_update_timeis":
-      return `Updated timeis: ${payload.updated_timeis?.id || "unknown"}`;
-    case "gkill_update_mi":
-      return `Updated mi: ${payload.updated_mi?.id || "unknown"}`;
-    case "gkill_update_kc":
-      return `Updated kc: ${payload.updated_kc?.id || "unknown"}`;
-    case "gkill_update_tag":
-      return `Updated tag: ${payload.updated_tag?.id || "unknown"}`;
-    case "gkill_update_text":
-      return `Updated text: ${payload.updated_text?.id || "unknown"}`;
     default:
       return null;
   }

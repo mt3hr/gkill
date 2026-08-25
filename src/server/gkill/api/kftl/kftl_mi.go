@@ -142,6 +142,10 @@ func newKFTLStartMiStatementLine(lineText string, ctx *KFTLStatementLineContext)
 }
 
 func (l *kftlStartMiStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
+	// タイトルの行が無いと無言で0件になり、なぜ作られなかったのか分からない。
+	if err := requireNextLineText(l.ctx); err != nil {
+		return err
+	}
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
 func (l *kftlStartMiStatementLine) GetLabelName() string                  { return "mi" }

@@ -5,9 +5,14 @@
 // buildToolResult も read と readwrite は完全に同一で、write サーバだけが
 // file-link 注入と IDF 画像ブロックを欠いた劣化コピーを持っていたので、
 // 正しいほう (read / readwrite 版) をここへ引き上げて1本にする。
-// 継承側に残すのは「どのツールを持つか」と handleToolCall のディスパッチだけ。
+// handleToolCall も3本とも「plugin → read → write」の同じ順で、違うのは
+// **write を持つか**と**read の選抜集合を持つか**の2つの値だけだったので、ここへ畳んだ。
+// これで readwrite が read の上位集合であることが構造で担保される
+// （2026-08-25 の実利用レビューが「read と readwrite でスキーマが違う」と報告したが、
+//  実体は古いプロセスが昨日の定義を配っていただけで、コードは既に同一だった）。
+// 継承側に残すのは options の表1行だけ（ADR-0063）。
 //
-// サーバ名・版・ツール一覧はコンストラクタの options で受ける。
+// サーバ名・版・ツール一覧・read の選抜集合・write のアプリ名は options で受ける。
 //
 // server.current* へ書き戻してはいけない理由（並行要求の混線）:
 // documents/adr/0050-mcp-request-context-immutable.md
@@ -16,8 +21,10 @@ import { GkillApiError, isPlainObject, invalidArgument } from "./errors.mjs";
 import { assertTrimmedString } from "./validation.mjs";
 import { applyFileLinks, normalizeMimeType, stripFilePaths, summarizeToolError } from "./payload.mjs";
 import { summarizePluginToolPayload } from "./plugin-tools.mjs";
-import { summarizeReadToolPayload } from "./read-handlers.mjs";
-import { summarizeWriteToolPayload } from "./write-handlers.mjs";
+import { summarizeReadToolPayload, isReadToolName, handleReadToolCall } from "./read-handlers.mjs";
+import { summarizeWriteToolPayload, handleWriteToolCall } from "./write-handlers.mjs";
+import { handlePluginToolCall, isPluginToolName } from "./plugin-tools.mjs";
+import { unknownToolMessage } from "./constants.mjs";
 
 // summarizeToolPayload は結果の1行要約を返す。plugin → read → write の順に委ねる。
 // 各要約器は対象外のツールに null を返すので、持っていないツールの分は素通りする
@@ -43,6 +50,14 @@ export class McpServerBase {
     this.serverName = options.serverName;
     this.serverVersion = options.serverVersion;
     this.tools = options.tools;
+    // readToolNames: null なら READ_TOOLS 全部。Set ならそのうち載せる分だけ
+    // （書き込み専用サーバは4本だけ載せる）。「read ツールか」の判定自体は
+    // isReadToolName が正本で、ここは選抜集合。選抜集合だけで判定すると
+    // READ_TOOLS から消えた名前がここに残っていても気づけない。
+    this.readToolNames = options.readToolNames ?? null;
+    // writeAppName: null なら書き込みツールを持たない（読み取り専用サーバ）。
+    // 文字列なら書いた記録の create_app に載る値。
+    this.writeAppName = options.writeAppName ?? null;
     this.client = client;
     this.accessLog = accessLog || { info() {}, warn() {}, error() {}, debug() {}, trace() {} };
     /** @type {string|null} Per-request session override set by HttpTransport for OAuth. */
@@ -63,6 +78,38 @@ export class McpServerBase {
      * Null on stdio (local clients read the path directly).
      */
     this.fileLinkContext = null;
+  }
+
+  // handleToolCall は plugin → read → write の順で委譲する。3サーバ共通。
+  async handleToolCall(name, args, ctx = null) {
+    const sid = ctx ? ctx.sessionId : this.currentSessionId;
+
+    if (isPluginToolName(name)) {
+      return handlePluginToolCall(
+        (pathname, body) => this.client.callApi(pathname, body, true, sid),
+        name,
+        args,
+      );
+    }
+
+    if (isReadToolName(name) && (this.readToolNames === null || this.readToolNames.has(name))) {
+      return handleReadToolCall(
+        { client: this.client, sid, isLocalTransport: this.isLocalTransport },
+        name,
+        args,
+      );
+    }
+
+    if (this.writeAppName === null) {
+      throw new GkillApiError(unknownToolMessage(name));
+    }
+
+    const userId = (ctx ? ctx.userId : this.currentUserId) || this.client.userId;
+    return handleWriteToolCall(
+      { client: this.client, sid, userId, appName: this.writeAppName },
+      name,
+      args,
+    );
   }
 
   buildToolResult(name, payload, isError = false, ctx = null) {
@@ -223,4 +270,33 @@ export class McpServerBase {
     if (!hasId) return null;
     return { jsonrpc: "2.0", id, error: { code: -32601, message: `Method not found: ${method}` } };
   }
+}
+
+// makeOAuthAuthenticateUser は OAuth の利用者認証コールバックを作る。
+//
+// read / write / readwrite の3サーバへ**逐語コピーされていた18行**（md5 一致）。
+// 片方だけ直すと静かにずれるので1本にする。gkill のログイン応答は
+// エンベロープ（errors / session_id）なので、HTTP ステータスではなく中身で判定する。
+//
+// 認証の失敗理由は**呼び出し側へ返さない**（総当たりの手掛かりになる）。
+// アクセスログにだけ user_id つきで残す。
+export function makeOAuthAuthenticateUser(client, accessLog) {
+  return async (userId, passwordSha256) => {
+    try {
+      const response = await client.post("/api/login", {
+        user_id: userId,
+        password_sha256: passwordSha256,
+        locale_name: client.defaultLocale,
+      });
+      if (client.hasErrors(response) || !response.session_id) {
+        accessLog.warn("auth_failure", { user_id: userId });
+        return null;
+      }
+      accessLog.info("auth_success", { user_id: userId });
+      return { sessionId: response.session_id };
+    } catch {
+      accessLog.warn("auth_failure", { user_id: userId });
+      return null;
+    }
+  };
 }

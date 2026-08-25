@@ -14,10 +14,12 @@ import {
   isReadToolName,
   stripAppConfigUiState,
   paginateGpsLogs,
+  paginateRepNames,
   encodeGpsCursor,
   decodeGpsCursor,
   summarizeReadToolPayload,
 } from "../lib/read-handlers.mjs";
+import { normalizeGpsArgs } from "../lib/normalization.mjs";
 import { applyFileLinks } from "../lib/payload.mjs";
 import { FileLinkStore } from "../lib/file-link-store.mjs";
 import { GkillApiError } from "../lib/errors.mjs";
@@ -163,6 +165,20 @@ describe("handleReadToolCall — gkill_get_application_config", () => {
     expect(payload.tag_struct.children[0].tag_name).toBe("tagA");
   });
 
+  // どのアカウントに繋がっているかを答えられること。
+  // read サーバと readwrite サーバが別アカウントを向いていても AI から区別できず、
+  // 「同じAPIなのに件数が違う」「query.ids が壊れている」と誤診されていた
+  // （2026-08-24 の実利用レビュー）。gkill は元から返しており、射影が捨てていただけ。
+  test("exposes user_id / device so the caller can tell which account it is on", async () => {
+    const ctx = makeCtx(async () => ({
+      application_config: { ...config, user_id: "testuser", device: "testdevice" },
+    }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_application_config", {
+      fields: ["user_id", "device"],
+    });
+    expect(payload).toEqual({ user_id: "testuser", device: "testdevice" });
+  });
+
   test("fields projection returns only the requested fields", async () => {
     const ctx = makeCtx(async () => ({ application_config: config }));
     const payload = await handleReadToolCall(ctx, "gkill_get_application_config", { fields: ["tag_struct", "mi_default_board"] });
@@ -255,12 +271,87 @@ describe("paginateGpsLogs", () => {
     expect(decodeGpsCursor(cursor)).toEqual({ t: "2026-08-02T12:00:00+09:00", n: 2 });
     expect(() => decodeGpsCursor("not-base64-json")).toThrow(GkillApiError);
   });
+
+  // 発行(paginateGpsLogs) と 受理(normalizeGpsArgs) の境界をまたぐ回帰テスト。
+  //
+  // 両者は別々にテストされていたが往復が一度も通されておらず、
+  // normalizeGpsArgs が get_kyous 用の `{RFC3339}::{ID}` 検証をコピペしたまま
+  // 残っていたために「説明文どおり next_cursor を verbatim で渡すと 100% 失敗する」
+  // 状態が出荷されていた（2026-08-24 の実利用報告）。片側だけのテストでは検出できない。
+  test("next_cursor survives normalizeGpsArgs and pages the whole list exactly once", () => {
+    const period = { start_date: "2026-08-01", end_date: "2026-08-03" };
+    const seen = [];
+    let cursor = undefined;
+    for (let i = 0; i < 10; i++) {
+      // 実際の呼び出しと同じ経路: クライアントが渡した引数を normalize してから paginate する
+      const normalized = normalizeGpsArgs(cursor === undefined ? { ...period, limit: 2 } : { ...period, limit: 2, cursor });
+      const page = paginateGpsLogs(logs, normalized);
+      seen.push(...page.gps_logs);
+      if (!page.has_more) {
+        break;
+      }
+      cursor = page.next_cursor;
+    }
+    expect(seen).toHaveLength(5);
+    expect(new Set(seen.map((p) => `${p.related_time}/${p.latitude}`)).size).toBe(5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// rep名の絞り込み（純関数）
+// ---------------------------------------------------------------------------
+describe("paginateRepNames", () => {
+  const names = ["Fitbit", "GoogleLocation", "Kmemo", "kmemo_backup", "Tag"];
+
+  test("returns everything within limit and reports no truncation", () => {
+    expect(paginateRepNames(names, { limit: 200 })).toEqual({
+      rep_names: names,
+      total_count: 5,
+      returned_count: 5,
+      truncated: false,
+    });
+  });
+
+  test("contains matches case-insensitively", () => {
+    const result = paginateRepNames(names, { contains: "KMEMO", limit: 200 });
+    expect(result.rep_names).toEqual(["Kmemo", "kmemo_backup"]);
+    expect(result.total_count).toBe(2);
+  });
+
+  // total_count は「絞り込み後・limit適用前」。limit前の件数を返さないと
+  // 何件一致したのかが読めず、truncated の意味も決まらない
+  test("total_count counts matches before limit", () => {
+    const result = paginateRepNames(names, { contains: "kmemo", limit: 1 });
+    expect(result.rep_names).toEqual(["Kmemo"]);
+    expect(result.returned_count).toBe(1);
+    expect(result.total_count).toBe(2);
+    expect(result.truncated).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
 // rep_infos
 // ---------------------------------------------------------------------------
 describe("handleReadToolCall — gkill_get_rep_infos", () => {
+  // 本番では rep_infos[] だけで数百件になるのに、
+  // 「正準値と対応表だけ欲しい」呼び出しが一番多かった（2026-08-24 の実利用レビュー）。
+  test("fields projection can skip the large rep_infos list", async () => {
+    const ctx = makeCtx(async () => ({
+      rep_infos: [{ rep_name: "Kmemo", rep_type: "kmemo" }],
+      canonical_rep_types: ["kmemo", "kc"],
+      plugins: [{ rep_name: "ChatGPT", data_type: "chatgpt_conversation", plugin_name: "p" }],
+      attached_data_reps: [{ rep_name: "Tag", data_kind: "tag" }],
+    }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_rep_infos", {
+      fields: ["canonical_rep_types", "plugins", "attached_data_reps"],
+    });
+    expect(Object.keys(payload).sort()).toEqual(["attached_data_reps", "canonical_rep_types", "plugins"]);
+    expect(payload).not.toHaveProperty("rep_infos");
+    // 絞り込みは Node 側。gkill には fields の受け口が無いので送らない
+    expect(ctx.client.callApi).toHaveBeenCalledWith("/api/get_rep_infos_mcp", {}, true, "sid-1");
+  });
+
+
   test("dispatches to /api/get_rep_infos_mcp and passes arrays through", async () => {
     const ctx = makeCtx(async () => ({
       rep_infos: [{ rep_name: "Kmemo", rep_type: "kmemo" }],
@@ -536,5 +627,86 @@ describe("0件の要約 (2026-08-24 再監査 Q-05)", () => {
     expect(
       summarizeReadToolPayload("gkill_get_gps_log", { gps_logs: [], total_count: 5, has_more: false }),
     ).toBe("Counted 5 GPS points.");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 古いツールスキーマを掴んだクライアントへの警告
+//
+// MCPのツール一覧はクライアントのセッション寿命で固定されるため、サーバを直しても
+// 生きているセッションには届かない。その結果「もう直っている機能が永久に見えない」
+// が起きる（2026-08-24 の実利用報告では、指摘9件のうち4件がこれだった）。
+// 警告は**古さが証明できるときだけ**出す。推測で出すと常時ノイズになる。
+// ---------------------------------------------------------------------------
+describe("handleReadToolCall — stale tool schema warning", () => {
+  test("warns when a non-string argument arrived as a JSON string", async () => {
+    const ctx = makeCtx(async () => ({ kyous: [], returned_count: 0, remaining_count: 0, has_more: false }));
+    // 旧スキーマのクライアントは data_types を知らないので正規JSON文字列として送ってくる
+    const payload = await handleReadToolCall(ctx, "gkill_get_kyous", { data_types: '["nlog"]' });
+    expect(payload.warnings).toHaveLength(1);
+    expect(payload.warnings[0]).toContain("tool schema snapshot looks stale");
+    expect(payload.warnings[0]).toContain("data_types");
+  });
+
+  test("warns when deprecated arguments are sent", async () => {
+    const ctx = makeCtx(async () => ({ kyous: [], returned_count: 0, remaining_count: 0, has_more: false }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_kyous", {
+      include_id: true,
+      query: { use_tags: true },
+    });
+    expect(payload.warnings[0]).toContain("include_id");
+    expect(payload.warnings[0]).toContain("query.use_tags");
+  });
+
+  // 誤警告を出さないことが本体と同じくらい重要。現行スキーマどおりの呼び出しで
+  // 警告が付くと、警告そのものが読まれなくなる
+  test("does not warn for a current-schema call", async () => {
+    const ctx = makeCtx(async () => ({ kyous: [], returned_count: 0, remaining_count: 0, has_more: false }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_kyous", { data_types: ["nlog"], count_only: false });
+    expect(payload.warnings).toBeUndefined();
+  });
+
+  test("keeps warnings from gkill and appends to them", async () => {
+    const ctx = makeCtx(async () => ({
+      kyous: [],
+      returned_count: 0,
+      remaining_count: 0,
+      has_more: false,
+      warnings: ['unknown rep "GoogleLocation" in query.reps: plugin emits no kyou'],
+    }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_kyous", { count_only: "true" });
+    expect(payload.warnings).toHaveLength(2);
+    expect(payload.warnings[0]).toContain("GoogleLocation");
+    expect(payload.warnings[1]).toContain("tool schema snapshot looks stale");
+  });
+
+  test("the one-line summary carries the stale marker too", () => {
+    const summary = summarizeReadToolPayload("gkill_get_all_rep_names", {
+      rep_names: ["Fitbit"],
+      total_count: 1,
+      returned_count: 1,
+      truncated: false,
+      warnings: ["this MCP client's tool schema snapshot looks stale (…)"],
+    });
+    expect(summary).toContain("reconnect the MCP client");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// rep名一覧（ディスパッチ）
+// ---------------------------------------------------------------------------
+describe("handleReadToolCall — gkill_get_all_rep_names", () => {
+  test("filters node-side and does not forward contains/limit to gkill", async () => {
+    const ctx = makeCtx(async () => ({ rep_names: ["Fitbit", "GoogleLocation", "Kmemo"] }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_all_rep_names", { contains: "o", limit: 1 });
+    expect(payload).toEqual({
+      rep_names: ["GoogleLocation"],
+      total_count: 2,
+      returned_count: 1,
+      truncated: true,
+    });
+    // "o" は GoogleLocation と Kmemo に一致する（Fitbit には無い）
+    // gkill 側には絞り込みの口が無いので送らない（送ると未知キーで弾かれる）
+    expect(ctx.client.callApi).toHaveBeenCalledWith("/api/get_all_rep_names", {}, true, "sid-1");
   });
 });

@@ -63,7 +63,8 @@ func generateNlogBlockNextConstructor(nextLineText string, block *kftlNlogBlock,
 func assertIsNotMetaInfoLine(lineText string) error {
 	if strings.HasPrefix(lineText, splitterTag) || strings.HasPrefix(lineText, splitterTagAscii) ||
 		lineText == splitterStartText || lineText == splitterStartTextAscii {
-		return fmt.Errorf("nlog tags and texts must be written after the amount line: %q", lineText)
+		return newKFTLInputError("KFTL_NLOG_META_INFO_MUST_BE_AFTER_AMOUNT_MESSAGE_TITLE",
+			fmt.Errorf("nlog tags and texts must be written after the amount line: %q", lineText))
 	}
 	return nil
 }
@@ -112,7 +113,8 @@ func (r *kftlNlogRequest) DoRequest(ctx context.Context) error {
 	}
 	// 品名だけ書いて金額行が無い。取りこぼしになるので黙って切り詰めずエラーにする
 	if !r.hasAmount {
-		return fmt.Errorf("nlog title has no amount: %q", r.title)
+		return newKFTLInputError("KFTL_NLOG_INVALID_RECORD_COUNT_MESSAGE_TITLE",
+			fmt.Errorf("nlog title has no amount: %q", r.title))
 	}
 
 	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
@@ -184,6 +186,10 @@ func newKFTLStartNlogStatementLine(lineText string, ctx *KFTLStatementLineContex
 // 直前の支払いに付ける仕様なので、ブロックの前に書かれていたら黙って捨てずにエラーにする。
 // 関連時刻だけはブロック全体に効くので取り込む。
 func (l *kftlStartNlogStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
+	// 店名の行が無いと品名も金額も生成されず、無言で0件になっていた。
+	if err := requireNextLineText(l.ctx); err != nil {
+		return err
+	}
 	prevRequest, ok := requestMap.Get(l.ctx.ThisStatementLineTargetID)
 	if !ok {
 		return nil
@@ -191,10 +197,12 @@ func (l *kftlStartNlogStatementLine) ApplyThisLineToRequestMap(_ context.Context
 	proto, isProto := prevRequest.(*KFTLPrototypeRequest)
 	if !isProto {
 		// 区切らずにメモの直後へ書いた場合。従来 KFTLRequestMap.Set が返していたのと同じエラー
-		return fmt.Errorf("request id=%s is already set and is not a prototype", l.ctx.ThisStatementLineTargetID)
+		return newKFTLInputError("KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE",
+			fmt.Errorf("request id=%s is already set and is not a prototype", l.ctx.ThisStatementLineTargetID))
 	}
 	if 0 < len(proto.GetTags()) || 0 < len(proto.GetTextsMap()) {
-		return fmt.Errorf("nlog tags and texts must be written after the amount line")
+		return newKFTLInputError("KFTL_NLOG_META_INFO_MUST_BE_AFTER_AMOUNT_MESSAGE_TITLE",
+			fmt.Errorf("nlog tags and texts must be written after the amount line"))
 	}
 	l.block.relatedTime = proto.relatedTime
 	return nil
@@ -283,11 +291,13 @@ func newKFTLNlogAmountStatementLine(lineText string, ctx *KFTLStatementLineConte
 
 func (l *kftlNlogAmountStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
 	if l.lineText == "" {
-		return fmt.Errorf("nlog amount is empty")
+		return newKFTLInputError("KFTL_NLOG_INVALID_AMOUNT_MESSAGE_TITLE",
+			fmt.Errorf("nlog amount is empty"))
 	}
 	num := json.Number(l.lineText)
 	if _, err := num.Float64(); err != nil {
-		return fmt.Errorf("invalid nlog amount %q: %w", l.lineText, err)
+		return newKFTLInputError("KFTL_NLOG_INVALID_AMOUNT_MESSAGE_TITLE",
+			fmt.Errorf("invalid nlog amount %q: %w", l.lineText, err))
 	}
 	req, ok := requestMap.Get(l.ctx.ThisStatementLineTargetID)
 	if !ok {

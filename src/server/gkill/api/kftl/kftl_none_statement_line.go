@@ -25,7 +25,8 @@ func newKFTLNoneStatementLine(lineText string, ctx *KFTLStatementLineContext) *k
 
 func (l *kftlNoneStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
 	if l.lineText != "" {
-		return fmt.Errorf("unexpected non-empty line in none-state: %q", l.lineText)
+		return newKFTLInputError("KFTL_NONE_VALUE_IS_NOT_BLANK_MESSAGE_TITLE",
+			fmt.Errorf("unexpected non-empty line in none-state: %q", l.lineText))
 	}
 	return nil
 }

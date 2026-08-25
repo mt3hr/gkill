@@ -68,34 +68,11 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
-	if err != nil {
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	userID := account.UserID
-	device, err := g.GetDevice()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillError = &message.GkillError{
-			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REP_INFOS_MESSAGE"}),
-		}
+	// wrapNoAuth なので認証は自前。3段（アカウント→端末→リポジトリ）は
+	// wrapAuthRepos と同じ処理なので共通ヘルパへ寄せてある。
+	userID, _, repositories, gkillError := g.resolveSelfAuthContext(
+		r.Context(), request.SessionID, request.LocaleName, "FAILED_GET_REP_INFOS_MESSAGE")
+	if gkillError != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
@@ -211,8 +188,17 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 
 	response.CanonicalRepTypes = append(response.CanonicalRepTypes, find.KyouRepTypes...)
 
+	// Plugins は「query.reps / data_types へ渡せる値」の対応表なので、
+	// Kyouを1件も出さないプラグイン（emits_kyou=false。GPSログ専用など）は入れない。
+	// manifestのrep_name/data_typeは必須項目なので値は入っているが、
+	// そのプラグインのKyouは存在しないため、渡してもエラーも警告も無く0件になる。
+	// GPSログの供給元としては AttachedDataReps に data_kind="gpslog" で載っており、
+	// そちらが「query.repsの値ではない」と明示されている枠（ADR-0056）。
 	for _, pluginRep := range repositories.PluginReps {
 		manifest := pluginRep.GetManifest()
+		if !manifest.EmitsKyouOrDefault() {
+			continue
+		}
 		response.Plugins = append(response.Plugins, req_res.PluginRepInfoMCPDTO{
 			RepName:    manifest.RepName,
 			DataType:   manifest.DataType,

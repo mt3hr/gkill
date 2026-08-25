@@ -10,7 +10,13 @@ import {
   normalizeGpsArgs,
   normalizeAppConfigArgs,
   normalizeIdfFileArgs,
+  normalizeRepNamesArgs,
+  normalizeRepInfosArgs,
+  normalizeKyouHistoryArgs,
+  detectStaleSchemaSignals,
 } from "../lib/normalization.mjs";
+import { encodeGpsCursor } from "../lib/gps-cursor.mjs";
+import { paginateGpsLogs } from "../lib/read-handlers.mjs";
 import {
   DEFAULT_INCLUDE_PLUGIN_CONTENT,
   DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
@@ -18,6 +24,7 @@ import {
   LEGACY_USE_FLAG_KEYS,
   MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
 } from "../lib/constants.mjs";
+import { normalizeKftlArgs } from "../lib/write-normalization.mjs";
 
 // ---------------------------------------------------------------------------
 // pad2
@@ -1057,5 +1064,239 @@ describe("create_apps / update_apps (2026-08-24 再監査 事象7)", () => {
 
   test("rejects a non-array", () => {
     expect(() => normalizeKyouArgs({ create_apps: "gkill" })).toThrow(GkillApiError);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GPS cursor validation
+//
+// The GPS cursor is a Node-side base64url token, NOT the Go composite
+// `{RFC3339Nano}::{ID}` token that gkill_get_kyous uses. normalizeGpsArgs used to
+// carry a copy-pasted RFC3339 check, so passing next_cursor back verbatim — exactly
+// what the tool description instructs — failed 100% of the time.
+// 発行側と受理側が別実装だったのが原因なので、実物の encode 出力で検証する。
+// ---------------------------------------------------------------------------
+
+describe("normalizeGpsArgs — cursor", () => {
+  const period = { start_date: "2026-08-23", end_date: "2026-08-24" };
+
+  test("accepts a cursor produced by encodeGpsCursor", () => {
+    const cursor = encodeGpsCursor("2026-08-23T23:51:41.000+00:00", 1);
+    const result = normalizeGpsArgs({ ...period, cursor });
+    expect(result.cursor).toBe(cursor);
+  });
+
+  test("rejects garbage and the get_kyous composite cursor", () => {
+    expect(() => normalizeGpsArgs({ ...period, cursor: "nonsense" })).toThrow(GkillApiError);
+    // Kyou 用の複合カーソルを GPS へ渡すのは呼び出し側の取り違えなので弾く
+    expect(() =>
+      normalizeGpsArgs({ ...period, cursor: "2026-08-24T17:00:00+09:00::cd97a1f1" }),
+    ).toThrow(GkillApiError);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// rep name filtering
+// ---------------------------------------------------------------------------
+
+describe("normalizeRepNamesArgs", () => {
+  test("defaults limit and accepts contains", () => {
+    expect(normalizeRepNamesArgs({ contains: "Fit" })).toEqual({ limit: 200, contains: "Fit" });
+  });
+
+  test("rejects unknown keys and out-of-range limit", () => {
+    expect(() => normalizeRepNamesArgs({ bogus: 1 })).toThrow(GkillApiError);
+    expect(() => normalizeRepNamesArgs({ limit: 0 })).toThrow(GkillApiError);
+    expect(() => normalizeRepNamesArgs({ limit: 2001 })).toThrow(GkillApiError);
+  });
+
+  test("revives a stale-schema limit string", () => {
+    expect(normalizeRepNamesArgs({ limit: "50" }).limit).toBe(50);
+    expect(() => normalizeRepNamesArgs({ limit: "fifty" })).toThrow(GkillApiError);
+  });
+});
+
+// gkill_get_kyou_history の limit も他の後付け引数と同じ穴を持っていた
+// （救済表に載っておらず、旧セッションからは文字列で届いて型エラーになる）
+describe("normalizeKyouHistoryArgs — stale-schema revival", () => {
+  test("revives limit sent as a canonical JSON string", () => {
+    const result = normalizeKyouHistoryArgs({ id: "abc", data_type: "kmemo", limit: "5" });
+    expect(result.limit).toBe(5);
+  });
+
+  test("non-canonical strings still fail", () => {
+    expect(() => normalizeKyouHistoryArgs({ id: "abc", data_type: "kmemo", limit: "five" })).toThrow(GkillApiError);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// stale tool schema detection
+//
+// MCP tool schemas are frozen for the lifetime of a client session, so a
+// server-side fix stays invisible until the client reconnects. Only emit the
+// warning when staleness is PROVEN — a guess would make it constant noise.
+// ---------------------------------------------------------------------------
+
+describe("detectStaleSchemaSignals", () => {
+  test("reports arguments that arrived as JSON strings", () => {
+    const signals = detectStaleSchemaSignals("gkill_get_kyous", { data_types: '["nlog"]', count_only: "true" });
+    expect(signals.revived.sort()).toEqual(["count_only", "data_types"]);
+    expect(signals.deprecated).toEqual([]);
+  });
+
+  test("reports deprecated arguments, including legacy use_X query flags", () => {
+    const signals = detectStaleSchemaSignals("gkill_get_kyous", {
+      include_rep_name: false,
+      query: { use_reps: true, only_latest_data: false, words: ["x"] },
+    });
+    expect(signals.revived).toEqual([]);
+    expect(signals.deprecated.sort()).toEqual(["include_rep_name", "query.only_latest_data", "query.use_reps"]);
+  });
+
+  test("returns null for a current-schema call", () => {
+    expect(detectStaleSchemaSignals("gkill_get_kyous", { data_types: ["nlog"], query: { words: ["x"] } })).toBeNull();
+    expect(detectStaleSchemaSignals("gkill_get_gps_log", { start_date: "2026-08-01", end_date: "2026-08-02" })).toBeNull();
+  });
+
+  // string 型の引数は旧スキーマでも素通しするので、証拠にはならない
+  test("does not treat string-typed arguments as evidence", () => {
+    expect(detectStaleSchemaSignals("gkill_get_kyous", { group_by: "day", cursor: "x" })).toBeNull();
+  });
+
+  test("covers every tool that has a revival table", () => {
+    expect(detectStaleSchemaSignals("gkill_get_gps_log", { limit: "250" }).revived).toEqual(["limit"]);
+    expect(detectStaleSchemaSignals("gkill_get_application_config", { fields: '["tag_struct"]' }).revived).toEqual(["fields"]);
+    expect(detectStaleSchemaSignals("gkill_get_idf_file", { is_video: "true" }).revived).toEqual(["is_video"]);
+    expect(detectStaleSchemaSignals("gkill_get_all_rep_names", { limit: "10" }).revived).toEqual(["limit"]);
+    expect(detectStaleSchemaSignals("gkill_get_kyou_history", { limit: "10" }).revived).toEqual(["limit"]);
+  });
+});
+
+// gkill_get_kyou_history も同じ2語彙の橋を通す。
+// ツール説明が「gkill_get_kyous の結果から data_type を取れ」と案内しているのに、
+// その結果は射影名なので、案内どおりにすると落ちていた。
+describe("normalizeKyouHistoryArgs — projection data_type", () => {
+  test("folds projection names to entity types", () => {
+    expect(normalizeKyouHistoryArgs({ id: "abc", data_type: "mi_create" }).data_type).toBe("mi");
+    expect(normalizeKyouHistoryArgs({ id: "abc", data_type: "timeis_start" }).data_type).toBe("timeis");
+    expect(normalizeKyouHistoryArgs({ id: "abc", data_type: "mirekyou_end" }).data_type).toBe("mirekyou");
+  });
+
+  test("entity types are unchanged and unknown values still throw", () => {
+    expect(normalizeKyouHistoryArgs({ id: "abc", data_type: "kmemo" }).data_type).toBe("kmemo");
+    expect(() => normalizeKyouHistoryArgs({ id: "abc", data_type: "bogus" })).toThrow(GkillApiError);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 逆さまのカレンダー期間
+//
+// gkill 側では0件になるだけで警告も出ず、「その期間に記録が無い」と読めてしまう。
+// GPS 側 (normalizeGpsArgs) は元から入口で弾いていたので、そちらと揃える
+// （2026-08-25 の実利用レビュー）。
+// ---------------------------------------------------------------------------
+
+describe("normalizeKyouQuery — inverted calendar range", () => {
+  test("rejects start after end", () => {
+    expect(() =>
+      normalizeKyouQuery({ calendar_start_date: "2026-08-17", calendar_end_date: "2026-08-11" }),
+    ).toThrow(GkillApiError);
+  });
+
+  test("accepts the same day on both ends", () => {
+    // 日付のみは start=00:00:00 / end=23:59:59 へ展開されるので、同日は逆さまではない
+    const result = normalizeKyouQuery({ calendar_start_date: "2026-08-11", calendar_end_date: "2026-08-11" });
+    expect(result.calendar_start_date).toMatch(/^2026-08-11T00:00:00/);
+    expect(result.calendar_end_date).toMatch(/^2026-08-11T23:59:59/);
+  });
+
+  test("accepts a normal range and one-sided ranges", () => {
+    expect(() =>
+      normalizeKyouQuery({ calendar_start_date: "2026-08-11", calendar_end_date: "2026-08-17" }),
+    ).not.toThrow();
+    expect(() => normalizeKyouQuery({ calendar_start_date: "2026-08-17" })).not.toThrow();
+    expect(() => normalizeKyouQuery({ calendar_end_date: "2026-08-11" })).not.toThrow();
+  });
+});
+
+describe("normalizeKyouArgs — 集計と cursor の併用", () => {
+  // 併用は gkill 側でも弾かれるが、返るのは ERR000352「記録の取得に失敗しました」という
+  // 汎用文で、理由が本文に一切乗らない（実測 2026-08-25: 検索失敗と区別が付かなかった）。
+  // GPS 側は前から MCP 層で理由つきに弾いており、get_kyous だけが素通しだった。
+  test("count_only + cursor を MCP 層で弾く", () => {
+    expect(() => normalizeKyouArgs({ count_only: true, cursor: "2026-08-24T17:25:56+09:00::abc" }))
+      .toThrow(/count_only[\s\S]*cannot be combined with cursor/);
+  });
+
+  test("group_by + cursor を MCP 層で弾く", () => {
+    expect(() => normalizeKyouArgs({ group_by: "day", cursor: "2026-08-24T17:25:56+09:00::abc" }))
+      .toThrow(/group_by[\s\S]*cannot be combined with cursor/);
+  });
+
+  test("cursor 単独・集計単独は通る", () => {
+    expect(normalizeKyouArgs({ cursor: "2026-08-24T17:25:56+09:00::abc" }).cursor).toBe(
+      "2026-08-24T17:25:56+09:00::abc",
+    );
+    expect(normalizeKyouArgs({ count_only: true }).count_only).toBe(true);
+    expect(normalizeKyouArgs({ group_by: "day" }).group_by).toBe("day");
+  });
+
+  test("count_only:false は cursor と併用できる", () => {
+    const result = normalizeKyouArgs({ count_only: false, cursor: "2026-08-24T17:25:56+09:00::abc" });
+    expect(result.count_only).toBe(false);
+    expect(result.cursor).toBe("2026-08-24T17:25:56+09:00::abc");
+  });
+
+  test("GPS と get_kyous が同じ規則・同じ文言で弾く", () => {
+    const gpsError = (() => {
+      try {
+        paginateGpsLogs([], { count_only: true, cursor: encodeGpsCursor("2026-08-24T00:00:00+09:00", 0) });
+      } catch (error) {
+        return error;
+      }
+      return null;
+    })();
+    const kyouError = (() => {
+      try {
+        normalizeKyouArgs({ count_only: true, cursor: "2026-08-24T17:25:56+09:00::abc" });
+      } catch (error) {
+        return error;
+      }
+      return null;
+    })();
+    expect(gpsError).not.toBeNull();
+    expect(kyouError).not.toBeNull();
+    expect(gpsError.message).toBe(kyouError.message);
+  });
+});
+
+describe("normalizeRepInfosArgs — data_kinds", () => {
+  // attached_data_reps は歴代端末ぶんの Tag_ / Text_ / Notification_ / GPSLogs_ が並ぶので
+  // 本番で約120件。fields は「配列を返すか返さないか」しか選べなかった。
+  test("正しい data_kind を受理する", () => {
+    expect(normalizeRepInfosArgs({ data_kinds: ["tag", "gpslog"] }).data_kinds).toEqual(["tag", "gpslog"]);
+  });
+
+  // 語彙が4つしかないので、黙って0件になると「その種別が無い」と読めてしまう。
+  test("綴り違いは0件ではなくエラー", () => {
+    expect(() => normalizeRepInfosArgs({ data_kinds: ["tags"] })).toThrow(/must be one of/);
+    expect(() => normalizeRepInfosArgs({ data_kinds: ["Tag"] })).toThrow(/must be one of/);
+  });
+
+  test("省略時は絞り込まない", () => {
+    expect(normalizeRepInfosArgs({}).data_kinds).toBeUndefined();
+  });
+});
+
+describe("normalizeKftlArgs — idempotency_key", () => {
+  // KFTL は DB トランザクションではないので、失敗して再送するたびに
+  // 手前で書けたぶんが積む（実測で孤児 kmemo 4件）。受け口はサーバに前からあり、
+  // Wear OS は送っていたのに MCP だけ送っていなかった。
+  test("任意で受け取り、そのまま渡す", () => {
+    expect(normalizeKftlArgs({ kftl_text: "メモ", idempotency_key: "k-1" }).idempotency_key).toBe("k-1");
+  });
+
+  test("省略できる", () => {
+    expect(normalizeKftlArgs({ kftl_text: "メモ" }).idempotency_key).toBeUndefined();
   });
 });

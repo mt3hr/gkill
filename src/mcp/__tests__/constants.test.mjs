@@ -1,4 +1,8 @@
+import { readFileSync } from "node:fs";
+
+import { READ_TOOLS } from "../lib/read-tools.mjs";
 import {
+  KYOUS_GROUP_BY_VALUES,
   DEFAULT_KYOUS_LIMIT,
   DEFAULT_KYOUS_MAX_SIZE_MB,
   DEFAULT_KYOUS_INCLUDE_TIMEIS,
@@ -374,5 +378,40 @@ describe("MI_SORT_TYPES", () => {
 
   test("has exactly 4 entries", () => {
     expect(MI_SORT_TYPES.size).toBe(4);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Go 側の列挙値との一致
+//
+// group_by の有効値は Go(get_kyous_mcp_helpers.go の mcpGroupByValues)、
+// MCP の正規化(KYOUS_GROUP_BY_VALUES)、スキーマの enum(read-tools.mjs) の3箇所にある。
+// 「サーバ側と揃えること」とコメントされているだけで機械検査が無く、
+// MCP 側に足し忘れると **Go に届く前に MCP が弾く**、Go 側に足し忘れると
+// 「スキーマは受理するのにサーバがエラーを返す」になる。
+// ここで実ファイルを読んで突き合わせ、ズレたら落とす。
+// ---------------------------------------------------------------------------
+
+describe("group_by vocabulary is identical across Go, normalization and schema", () => {
+  const goSource = readFileSync(
+    new URL("../../server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go", import.meta.url),
+    "utf8",
+  );
+
+  function goGroupByValues() {
+    const match = /var mcpGroupByValues = \[\]string\{([^}]*)\}/.exec(goSource);
+    if (!match) {
+      throw new Error("mcpGroupByValues が Go 側に見つからない（変数名が変わった？）");
+    }
+    return match[1].split(",").map((part) => part.trim().replace(/^"|"$/g, "")).filter(Boolean);
+  }
+
+  test("Go and KYOUS_GROUP_BY_VALUES agree", () => {
+    expect([...KYOUS_GROUP_BY_VALUES].sort()).toEqual(goGroupByValues().sort());
+  });
+
+  test("the tool schema enum agrees too", () => {
+    const tool = READ_TOOLS.find((t) => t.name === "gkill_get_kyous");
+    expect([...tool.inputSchema.properties.group_by.enum].sort()).toEqual(goGroupByValues().sort());
   });
 });

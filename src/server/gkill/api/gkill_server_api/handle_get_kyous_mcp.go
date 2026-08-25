@@ -172,27 +172,26 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
-	if err != nil {
+	// wrapNoAuth なので認証は自前。3段（アカウント→端末→リポジトリ）は
+	// wrapAuthRepos と同じ処理なので共通ヘルパへ寄せてある。
+	userID, device, repositories, gkillError := g.resolveSelfAuthContext(
+		r.Context(), request.SessionID, request.LocaleName, "FAILED_GET_KYOUS_MESSAGE")
+	if gkillError != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
-	userID := account.UserID
-	device, err := g.GetDevice()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	// プラグイン検索の失敗を警告として回収する。
+	//
+	// この仕込みは長らく usecase.GetKyous（/api/get_kyous。Web が使う）にしか無く、
+	// MCP は FindKyous を素で呼んでいたため、**プラグイン検索がコケても MCP には
+	// 何も伝わらなかった**。実利用のレビューで「is_alive:true なのに0件」のプラグインを
+	// 前に足止めされている（2026-08-25）。エラーではなく警告なのは、
+	// errors へ載せると呼び出し側が検索全体を失敗扱いにして結果を捨てるため。
+	findCtx := reps.WithFindWarnings(r.Context())
 
 	// Kyou一覧を取得
-	allKyous, gkillErrors, err := g.FindFilter.FindKyous(r.Context(), userID, device, g.GkillDAOManager, request.Query)
+	allKyous, gkillErrors, err := g.FindFilter.FindKyous(findCtx, userID, device, g.GkillDAOManager, request.Query)
 	if len(gkillErrors) != 0 || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at find kyous mcp: %w", err)
@@ -204,19 +203,6 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 				api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}))
 		}
 		response.Errors = append(response.Errors, gkillErrors...)
-		return
-	}
-
-	// リポジトリを取得（リクエストレベルフィルタ・未知値警告・バケット集計が使う）
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillError = &message.GkillError{
-			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
@@ -254,6 +240,11 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 
 	// 未知のフィルタ値の警告（綴り違いが黙って0件になるのを防ぐ。外部監査 S7）。
 	// count_only でも実施する — 件数確認こそタイポ検索の入口のため。
+	for _, pluginName := range reps.PluginFindWarnings(findCtx) {
+		response.Warnings = append(response.Warnings,
+			fmt.Sprintf("plugin %q failed during this search, so its records are missing from the result. "+
+				"Check gkill_get_plugin_list (is_alive / has_last_error / typed_index)", pluginName))
+	}
 	response.Warnings = append(response.Warnings, collectMCPUnknownValueWarnings(r.Context(), repositories, request.Query, request.DataTypes)...)
 
 	// (RelatedTime降順, ID昇順) の全順序ソート。
@@ -501,14 +492,25 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		slog.Log(r.Context(), gkill_log.Debug, "error at fetch attached data for mcp", "kind", kind, "error", fmt.Sprintf("%q", err))
 	}
 
-	// attached TimeIs を一括取得
+	// attached TimeIs を一括取得。削除済みの除外と「その瞬間に走っていたか」の判定は
+	// どちらも get_kyous_mcp_helpers.go の関数が正本（理由と実測はそちらのコメント）。
+	// 実測(2026-08-25 本番): 落とさないと付随16件のうち14件が削除済みで、最古は1年前の開始。
+	// 同じ瞬間を plaing_time で引くと2件しか返らない。
 	var allTimeIs []reps.TimeIs
 	if request.ShouldIncludeTimeIs() {
 		findAllTimeIsQuery := &find.FindQuery{OnlyLatestData: true, IncludeEndTimeIs: true}
-		var timeisErr error
-		allTimeIs, timeisErr = repositories.TimeIsReps.FindTimeIs(r.Context(), findAllTimeIsQuery)
+		foundTimeIs, timeisErr := repositories.TimeIsReps.FindTimeIs(r.Context(), findAllTimeIsQuery)
 		noteDetailFailure("timeis", timeisErr)
+		allTimeIs = livePlaingTimeIsCandidates(foundTimeIs)
 	}
+
+	// 付随 TimeIs のタグは打刻IDでメモ化する。同じ打刻が N 件の Kyou に付いても引くのは1回。
+	// メモ化しないと GetTagsByTargetID の呼び出しが Σ(Kyouごとの一致件数) になる
+	// (1ページ20件・1件16打刻で320回)。リクエスト単位のメモ化は ADR-0007 と同じ考え方。
+	timeisTagsCache := map[string][]string{}
+
+	// この応答に出たプラグインの rep 名。説明文を末尾に1回だけ載せるために集める。
+	usedPluginRepNames := map[string]struct{}{}
 
 	// DTO構築ループ（サイズ監視）
 	maxBytes := int64(request.MaxSizeMB * 1024 * 1024)
@@ -527,16 +529,20 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		tags, tagsErr := repositories.TagReps.GetTagsByTargetID(r.Context(), kyou.ID)
 		noteDetailFailure("tags", tagsErr)
 		tagStrings := make([]string, 0, len(tags))
+		tagEntities := make([]req_res.AttachedEntityMCPDTO, 0, len(tags))
 		for _, tag := range tags {
 			tagStrings = append(tagStrings, tag.Tag)
+			tagEntities = append(tagEntities, req_res.AttachedEntityMCPDTO{ID: tag.ID, Value: tag.Tag})
 		}
 
 		// テキスト取得
 		texts, textsErr := repositories.TextReps.GetTextsByTargetID(r.Context(), kyou.ID)
 		noteDetailFailure("texts", textsErr)
 		textStrings := make([]string, 0, len(texts))
+		textEntities := make([]req_res.AttachedEntityMCPDTO, 0, len(texts))
 		for _, text := range texts {
 			textStrings = append(textStrings, text.Text)
+			textEntities = append(textEntities, req_res.AttachedEntityMCPDTO{ID: text.ID, Value: text.Text})
 		}
 
 		// 通知取得
@@ -545,8 +551,9 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		notificationDTOs := make([]req_res.NotificationMCPDTO, 0, len(notifications))
 		for _, n := range notifications {
 			notificationDTOs = append(notificationDTOs, req_res.NotificationMCPDTO{
+				ID:               n.ID,
 				Content:          n.Content,
-				NotificationTime: n.NotificationTime,
+				NotificationTime: localTime(n.NotificationTime),
 				IsNotificated:    n.IsNotificated,
 			})
 		}
@@ -555,20 +562,23 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		var timeisDTOs []req_res.TimeIsMCPDTO
 		if request.ShouldIncludeTimeIs() && len(allTimeIs) > 0 {
 			for _, ti := range allTimeIs {
-				inRange := kyou.RelatedTime.After(ti.StartTime)
-				if ti.EndTime != nil {
-					inRange = inRange && kyou.RelatedTime.Before(*ti.EndTime)
-				}
-				if inRange {
-					tiTags, tiTagsErr := repositories.TagReps.GetTagsByTargetID(r.Context(), ti.ID)
-					noteDetailFailure("timeis_tags", tiTagsErr)
-					tiTagStrings := make([]string, 0, len(tiTags))
-					for _, tag := range tiTags {
-						tiTagStrings = append(tiTagStrings, tag.Tag)
+				if timeIsCoversMoment(ti, kyou.RelatedTime) {
+					tiTagStrings, cached := timeisTagsCache[ti.ID]
+					if !cached {
+						tiTags, tiTagsErr := repositories.TagReps.GetTagsByTargetID(r.Context(), ti.ID)
+						noteDetailFailure("timeis_tags", tiTagsErr)
+						tiTagStrings = make([]string, 0, len(tiTags))
+						for _, tag := range tiTags {
+							tiTagStrings = append(tiTagStrings, tag.Tag)
+						}
+						timeisTagsCache[ti.ID] = tiTagStrings
 					}
 					timeisDTOs = append(timeisDTOs, req_res.TimeIsMCPDTO{
-						Title: ti.Title,
-						Tags:  tiTagStrings,
+						ID:        ti.ID,
+						Title:     ti.Title,
+						Tags:      tiTagStrings,
+						StartTime: localTime(ti.StartTime),
+						EndTime:   localTimePtr(ti.EndTime),
 					})
 				}
 			}
@@ -599,8 +609,8 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 				payload = req_res.TimeIsPayloadMCPDTO{
 					Kind:      "timeis",
 					Title:     t.Title,
-					StartTime: t.StartTime,
-					EndTime:   t.EndTime,
+					StartTime: localTime(t.StartTime),
+					EndTime:   localTimePtr(t.EndTime),
 				}
 			}
 		case "nlog":
@@ -678,10 +688,10 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 					Title:             m.Title,
 					IsChecked:         m.IsChecked,
 					BoardName:         m.BoardName,
-					CreateTime:        m.CreateTime,
-					LimitTime:         m.LimitTime,
-					EstimateStartTime: m.EstimateStartTime,
-					EstimateEndTime:   m.EstimateEndTime,
+					CreateTime:        localTime(m.CreateTime),
+					LimitTime:         localTimePtr(m.LimitTime),
+					EstimateStartTime: localTimePtr(m.EstimateStartTime),
+					EstimateEndTime:   localTimePtr(m.EstimateEndTime),
 				}
 			}
 		case "mirekyou":
@@ -691,10 +701,10 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 					TargetID:          m.TargetID,
 					IsChecked:         m.IsChecked,
 					BoardName:         m.BoardName,
-					CreateTime:        m.CreateTime,
-					LimitTime:         m.LimitTime,
-					EstimateStartTime: m.EstimateStartTime,
-					EstimateEndTime:   m.EstimateEndTime,
+					CreateTime:        localTime(m.CreateTime),
+					LimitTime:         localTimePtr(m.LimitTime),
+					EstimateStartTime: localTimePtr(m.EstimateStartTime),
+					EstimateEndTime:   localTimePtr(m.EstimateEndTime),
 				}
 			}
 		case "rekyou":
@@ -709,12 +719,15 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			// data_typeはプラグインが自由に決めるので、rep_nameで引き当てる。
 			if manifest, ok := pluginManifestByRepName[kyou.RepName]; ok {
 				payload = req_res.PluginPayloadMCPDTO{
-					Kind:        "plugin",
-					DataType:    kyou.DataType,
-					RepName:     kyou.RepName,
-					KyouID:      kyou.ID,
-					PluginName:  manifest.Name,
-					Description: manifest.Description,
+					Kind:       "plugin",
+					DataType:   kyou.DataType,
+					RepName:    kyou.RepName,
+					KyouID:     kyou.ID,
+					PluginName: manifest.Name,
+				}
+				// 説明文は応答トップレベルへ rep_name ごと1回だけ（DTOのコメント参照）。
+				if _, seen := usedPluginRepNames[kyou.RepName]; !seen {
+					usedPluginRepNames[kyou.RepName] = struct{}{}
 				}
 			}
 		}
@@ -732,6 +745,8 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			Texts:         textStrings,
 			Notifications: notificationDTOs,
 			TimeIs:        timeisDTOs,
+			TagEntities:   tagEntities,
+			TextEntities:  textEntities,
 			Payload:       payload,
 		}
 
@@ -778,6 +793,22 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	response.RemainingCount = remainingCount
 	response.HasMore = hasMore
 	response.NextCursor = nextCursor
+	// この応答に出たプラグインの説明を rep 名ごとに1回だけ載せる。
+	// payload へ焼き込むと130〜150字が Kyou の件数ぶん並ぶ（req_res 側のコメント参照）。
+	for repName := range usedPluginRepNames {
+		manifest, ok := pluginManifestByRepName[repName]
+		if !ok {
+			continue
+		}
+		response.Plugins = append(response.Plugins, req_res.PluginDescriptionMCPDTO{
+			RepName:     repName,
+			PluginName:  manifest.Name,
+			Description: manifest.Description,
+		})
+	}
+	slices.SortFunc(response.Plugins, func(a, b req_res.PluginDescriptionMCPDTO) int {
+		return strings.Compare(a.RepName, b.RepName)
+	})
 	// 付随データの取得に1件でも失敗していたら、返した結果が不完全であることを明示する。
 	if len(detailFailures) > 0 {
 		response.Partial = true

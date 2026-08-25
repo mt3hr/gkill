@@ -70,6 +70,26 @@ describe("PLUGIN_TOOLS", () => {
     expect(PLUGIN_TOOL_NAMES).toEqual(["gkill_get_plugin_list"]);
     expect(PLUGIN_TOOLS).toHaveLength(1);
   });
+
+  // The description used to say "filter with query.reps or query.rep_types",
+  // which contradicts gkill's own warning ("plugin records are matched via
+  // query.reps or data_types, not rep_types") and sends the caller down a path
+  // that silently returns nothing.
+  test("does not send callers to query.rep_types for plugin records", () => {
+    const tool = PLUGIN_TOOLS.find((t) => t.name === "gkill_get_plugin_list");
+    expect(tool.description).not.toMatch(/query\.reps or query\.rep_types/);
+    expect(tool.description).toContain("query.rep_types does NOT work for plugins");
+  });
+
+  // 役割の区別（Kyouを出すのか、GPSログだけなのか）は emits_kyou / provides で表す。
+  // capabilities のような3つ目の語彙を作らない（manifest 側の語彙が正本）。
+  test("explains emits_kyou / provides and where a non-kyou plugin's data lives", () => {
+    const tool = PLUGIN_TOOLS.find((t) => t.name === "gkill_get_plugin_list");
+    expect(tool.description).toContain("emits_kyou");
+    expect(tool.description).toContain("provides");
+    expect(tool.description).toContain("gkill_get_gps_log");
+    expect(tool.description).not.toContain("capabilities");
+  });
 });
 
 describe("isPluginToolName", () => {
@@ -117,6 +137,110 @@ describe("handlePluginToolCall gkill_get_plugin_list", () => {
     const call = vi.fn().mockResolvedValue({ errors: [] });
     const payload = await handlePluginToolCall(call, "gkill_get_plugin_list", {});
     expect(payload).toEqual({ plugins: [] });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 診断文（last_error / typed_index.last_build_error）をAIへ返さない
+//
+// どちらも利用者の端末のディレクトリ構成を含む。AIの文脈へ入れば、資料やコミット
+// メッセージへ引き写される経路ができてしまう（gkill 側でユーザー名は伏せてあるが、
+// あれは最後の網であって、そもそも渡さないのが本筋）。
+// 「何か書かれている」ことだけ has_* で伝えれば、外部監査 D2 の
+// 「is_alive=true なのに0件」の診断は成立する。
+// 経緯: documents/adr/0046-redact-environment-specific-strings.md
+// ---------------------------------------------------------------------------
+describe("handlePluginToolCall withholds plugin diagnostics", () => {
+  test("drops last_error and reports only that there is one", async () => {
+    const call = vi.fn().mockResolvedValue({
+      plugins: [{ name: "p", is_alive: true, last_error: "gkill: failed to start plugin: ..." }],
+      errors: [],
+    });
+
+    const payload = await handlePluginToolCall(call, "gkill_get_plugin_list", {});
+
+    expect(payload.plugins[0].last_error).toBeUndefined();
+    expect(payload.plugins[0].has_last_error).toBe(true);
+    expect(payload.plugins[0].name).toBe("p");
+    expect(payload.warnings).toHaveLength(1);
+    expect(payload.warnings[0]).toContain("withheld");
+  });
+
+  test("drops typed_index.last_build_error and keeps the rest of typed_index", async () => {
+    const call = vi.fn().mockResolvedValue({
+      plugins: [
+        {
+          name: "p",
+          typed_index: { ok: false, state: "failed", record_count: 0, last_build_error: "index build failed" },
+        },
+      ],
+      errors: [],
+    });
+
+    const payload = await handlePluginToolCall(call, "gkill_get_plugin_list", {});
+
+    expect(payload.plugins[0].typed_index.last_build_error).toBeUndefined();
+    expect(payload.plugins[0].typed_index.has_last_build_error).toBe(true);
+    expect(payload.plugins[0].typed_index.state).toBe("failed");
+    expect(payload.plugins[0].typed_index.record_count).toBe(0);
+    expect(payload.warnings).toHaveLength(1);
+  });
+
+  // 落としていないのに警告を出すと常時ノイズになり、本当に効く警告まで読まれなくなる。
+  test("adds no warning and no has_* flags when nothing was withheld", async () => {
+    const call = vi.fn().mockResolvedValue({
+      plugins: [{ name: "p", is_alive: true, typed_index: { ok: true, state: "ok", record_count: 3 } }],
+      errors: [],
+    });
+
+    const payload = await handlePluginToolCall(call, "gkill_get_plugin_list", {});
+
+    expect(payload.warnings).toBeUndefined();
+    expect(payload.plugins[0].has_last_error).toBeUndefined();
+    expect(payload.plugins[0].typed_index.has_last_build_error).toBeUndefined();
+  });
+
+  // 空文字の last_error は「何も書かれていない」。has_last_error を立てると
+  // 存在しない診断を追いかけさせることになる。
+  test("treats an empty last_error as nothing to report", async () => {
+    const call = vi.fn().mockResolvedValue({
+      plugins: [{ name: "p", last_error: "" }],
+      errors: [],
+    });
+
+    const payload = await handlePluginToolCall(call, "gkill_get_plugin_list", {});
+
+    expect(payload.plugins[0].has_last_error).toBeUndefined();
+    expect(payload.warnings).toBeUndefined();
+  });
+});
+
+describe("summarizePluginToolPayload marks withheld diagnostics", () => {
+  // 本文の warnings を読まない経路でも気づけるようにする。
+  test("notes the warning in the one-line summary", () => {
+    const summary = summarizePluginToolPayload("gkill_get_plugin_list", {
+      plugins: [{ name: "p", has_last_error: true }],
+      warnings: ["plugin diagnostics are withheld from this response"],
+    });
+
+    expect(summary).toContain("Fetched 1 plugins.");
+    expect(summary).toContain("withheld");
+  });
+
+  test("stays plain when there is nothing to warn about", () => {
+    expect(summarizePluginToolPayload("gkill_get_plugin_list", { plugins: [] })).toBe("Fetched 0 plugins.");
+  });
+});
+
+describe("gkill_get_plugin_list description", () => {
+  // 「stderr の末尾を読め」と案内したままだと、AIは返ってこない値を待つ。
+  test("does not send callers to the raw stderr text", () => {
+    const tool = PLUGIN_TOOLS.find((t) => t.name === "gkill_get_plugin_list");
+
+    expect(tool.description).not.toContain("tail of the plugin process stderr");
+    expect(tool.description).toContain("has_last_error");
+    expect(tool.description).toContain("has_last_build_error");
+    expect(tool.description).toContain("never copy it into documents or commit messages");
   });
 });
 
@@ -568,5 +692,41 @@ describe("summarizeInlinePluginContent", () => {
       errors: 1,
     });
     expect(summary).toBe(" Embedded plugin content for 3 of 6 plugin kyous (1 truncated, 2 not fetched, 1 failed).");
+  });
+});
+
+describe("gkill_get_plugin_list — 取り込み件数を名乗れないプラグイン", () => {
+  // provides を宣言していないプラグインには typed_index が付かない。すると
+  // is_alive:true / process_running:true のまま1件も取り込めていない状態が、
+  // 一覧の上では完全に正常に見える（実測 2026-08-25）。
+  test("emits_kyou なのに typed_index が無いものを名指しする", async () => {
+    const call = async () => ({
+      plugins: [
+        { name: "p1", data_type: "claude_conversation", emits_kyou: true },
+        { name: "p2", data_type: "kc", emits_kyou: true, typed_index: { state: "ok", record_count: 22 } },
+      ],
+    });
+    const payload = await handlePluginToolCall(call, "gkill_get_plugin_list", {});
+    const joined = (payload.warnings || []).join("\n");
+    expect(joined).toContain("claude_conversation");
+    expect(joined).not.toContain('"kc"');
+    expect(joined).toContain("count_only");
+  });
+
+  // 記録を出さないプラグイン（GPSログ専用など）は対象外。
+  test("emits_kyou:false は名指ししない", async () => {
+    const call = async () => ({
+      plugins: [{ name: "p3", data_type: "google_location_visit", emits_kyou: false }],
+    });
+    const payload = await handlePluginToolCall(call, "gkill_get_plugin_list", {});
+    expect(payload.warnings).toBeUndefined();
+  });
+
+  test("全部が索引を持つなら警告なし", async () => {
+    const call = async () => ({
+      plugins: [{ name: "p2", data_type: "kc", emits_kyou: true, typed_index: { state: "ok" } }],
+    });
+    const payload = await handlePluginToolCall(call, "gkill_get_plugin_list", {});
+    expect(payload.warnings).toBeUndefined();
   });
 });

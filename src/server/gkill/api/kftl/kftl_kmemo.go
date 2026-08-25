@@ -50,6 +50,15 @@ func prevLineIsKmemo(ctx *KFTLStatementLineContext) bool {
 }
 
 func (l *kftlKmemoStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
+	// 「既知のプレフィックス＋同じ行に引数」はここへ落ちてくる。
+	// プレフィックスの判定は完全一致なので `/mood 8` は本文扱いになり、
+	// 気分記録のつもりが本文「/mood 8」のメモ1件になっていた（エラーも警告も無し）。
+	// 本文として正当な行と区別できるのはこの1点だけなので、ここで捕まえる。
+	if prefix, ok := prefixWrittenWithArgument(l.lineText); ok {
+		return newKFTLInputError("KFTL_PREFIX_MUST_BE_ALONE_ON_LINE_MESSAGE_TITLE",
+			fmt.Errorf("prefix %q must be alone on its line; put the value on the next line", prefix))
+	}
+
 	targetID := l.ctx.ThisStatementLineTargetID
 
 	// Mirrors TS try/catch: if the existing entry is not a KmemoRequest (e.g. PrototypeRequest),

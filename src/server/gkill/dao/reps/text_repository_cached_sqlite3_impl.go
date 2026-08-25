@@ -912,7 +912,17 @@ func (t *textRepositoryCachedSQLite3Impl) AddTextInfo(ctx context.Context, text 
 }
 
 func (m *textRepositoryCachedSQLite3Impl) UnWrapTyped() ([]TextRepository, error) {
-	return []TextRepository{m.textRep}, nil
+	// 包んでいるのは集約なので、1段だけ剥がすと集約自身が leaf として返る。
+	// その GetRepName() は "TagReps" / "TextReps" という**実在しない名前**を返すので、
+	// rep名を列挙する呼び出し側（get_rep_infos_mcp の attached_data_reps）へ
+	// 渡せない値が漏れる。ADR-0019 の注意は GetLatestDataRepositoryAddress 側にだけ
+	// 書かれていて、ここが守れていなかった（2026-08-24 の実利用レビュー）。
+	// notification 側は元から再帰しており、そちらが正しい形。
+	unWraped, err := m.textRep.UnWrapTyped()
+	if err != nil {
+		return nil, err
+	}
+	return unWraped, nil
 }
 
 func (t *textRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {

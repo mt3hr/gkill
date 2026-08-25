@@ -146,7 +146,19 @@ describe("summarizeReadToolPayload", () => {
       canonical_rep_types: ["kmemo", "kc"],
       plugins: [],
     });
-    expect(result).toBe("Fetched 1 repositories (2 canonical rep types).");
+    expect(result).toBe("Fetched 1 repositories, 2 canonical rep types.");
+  });
+
+  // fields で rep_infos を外した呼び出しに「Fetched 0 repositories」と言うと、
+  // 自分で外しただけなのに「リポジトリが0件」と読める（2026-08-25 の実利用レビュー）。
+  test("gkill_get_rep_infos — says a field was omitted rather than reporting zero", () => {
+    const result = summarizeReadToolPayload("gkill_get_rep_infos", {
+      canonical_rep_types: ["kmemo", "kc"],
+      plugins: [],
+      attached_data_reps: [],
+    });
+    expect(result).toContain("omitted by fields");
+    expect(result).not.toContain("0 repositories");
   });
 
   test("unknown tool — returns null (server falls back)", () => {

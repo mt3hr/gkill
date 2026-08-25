@@ -15,8 +15,8 @@ import {
   assertBoolean,
   assertKnownKeys,
 } from "./validation.mjs";
-import { ENTITY_DATA_TYPE_VALUES } from "./constants.mjs";
-import { normalizeDateTimeString } from "./normalization.mjs";
+import { ENTITY_DATA_TYPE_VALUES, toEntityDataType, MAX_DELETE_TARGETS } from "./constants.mjs";
+import { normalizeDateTimeString, reviveStaleSchemaArgs } from "./normalization.mjs";
 
 // ---------------------------------------------------------------------------
 // Allowed data_type values for gkill_delete_kyou
@@ -25,9 +25,23 @@ import { normalizeDateTimeString } from "./normalization.mjs";
 // 語彙の正本は constants.mjs の ENTITY_TARGETS。ここは互換のための派生。
 export const DELETE_DATA_TYPES = new Set(ENTITY_DATA_TYPE_VALUES);
 
+// 後から足した targets（オブジェクトの配列）。古いスキーマを掴んだクライアントは
+// 未知の引数を正規JSON文字列にして送ってくるので、型を復元する
+// （is_video で実際に起きた事故と同じクラス。gkill-mcp スキル参照）。
+const DELETE_STALE_SCHEMA_ARG_KINDS = new Map([["targets", "object_array"]]);
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+// 日付だけを渡されたとき「その日の終わり」へ展開するフィールド。
+//
+// 締切や見積終了は「その日じゅう」の意味なので、00:00:00 に丸めると
+// **8/25締切が25日の開始時点で期限切れ**になる。読み取り側は既に
+// calendar_end_date / GPS の end_date をフィールドごとに endOfDay 指定しており
+// (constants.mjs)、書き込み側だけが一律 false のままだった
+// (2026-08-24 の実利用レビュー)。
+const END_OF_DAY_DATETIME_FIELDS = new Set(["limit_time", "estimate_end_time"]);
 
 /**
  * Validate and normalize an optional datetime argument.
@@ -35,7 +49,10 @@ export const DELETE_DATA_TYPES = new Set(ENTITY_DATA_TYPE_VALUES);
  */
 function optionalDatetime(args, field) {
   if (args[field] === undefined || args[field] === null) return undefined;
-  return normalizeDateTimeString(args[field], field, { allowDateOnly: true, endOfDay: false });
+  return normalizeDateTimeString(args[field], field, {
+    allowDateOnly: true,
+    endOfDay: END_OF_DAY_DATETIME_FIELDS.has(field),
+  });
 }
 
 /**
@@ -81,113 +98,230 @@ function assertTimeIsOrder(startTime, endTime) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// エンティティのフィールド表
+// ---------------------------------------------------------------------------
+
+// 追加(add)と更新(update)は同じ手順で、型ごとに違うのは
+// **フィールド名・種別・追加時に必須か**だけ。かつては型ごとに add / update の
+// 2関数を手書きしており、計18本が並んでいた。
+//
+// その並びは実際にずれた: gkill_add_urlog は assertUrlWithScheme で
+// スキーム付きURLを要求するのに、gkill_update_urlog は assertTrimmedString のままで、
+// assertUrlWithScheme はこのファイル全体で**追加側の1箇所でしか呼ばれていなかった**。
+// スキームの無いURLで更新すると gkill はページ取得を試みず、title が空のまま
+// エラーも出さずに保存される（2026-08-25 の実利用レビューを機に発見）。
+//
+// 表にすれば種別の定義が1箇所になるので、この種のずれは書けなくなる（ADR-0063）。
+//
+// kind:
+//   string   … assertTrimmedString
+//   url      … assertUrlWithScheme（スキーム必須。add / update とも）
+//   integer  … assertInteger（range を渡せる）
+//   number   … assertNumber
+//   boolean  … assertBoolean
+//   datetime … optionalDatetime（未指定なら触らない。END_OF_DAY_DATETIME_FIELDS も見る）
+// requiredOnAdd … add のとき必須。update では常に任意（patch セマンティクス）
+// defaultOnAdd  … add で未指定のときに入れる値
+// addOnly       … add でしか受け付けない（update のスキーマにも無い）
+// nullClears    … update のとき null を「消す」の意思表示として通す
+const ENTITY_FIELD_SPECS = {
+  kmemo: {
+    fields: [
+      { name: "content", kind: "string", requiredOnAdd: true },
+      { name: "related_time", kind: "datetime" },
+    ],
+  },
+  urlog: {
+    fields: [
+      { name: "url", kind: "url", requiredOnAdd: true },
+      { name: "title", kind: "string" },
+      { name: "related_time", kind: "datetime" },
+    ],
+  },
+  nlog: {
+    fields: [
+      { name: "title", kind: "string", requiredOnAdd: true },
+      { name: "amount", kind: "integer", requiredOnAdd: true },
+      { name: "shop", kind: "string" },
+      { name: "related_time", kind: "datetime" },
+    ],
+  },
+  lantana: {
+    fields: [
+      { name: "mood", kind: "integer", requiredOnAdd: true, range: { min: 0, max: 10 } },
+      { name: "related_time", kind: "datetime" },
+    ],
+  },
+  timeis: {
+    fields: [
+      { name: "title", kind: "string", requiredOnAdd: true },
+      { name: "start_time", kind: "datetime" },
+      // end_time だけは null に意味がある。「終了を取り消して進行中へ戻す」の唯一の手段で、
+      // これが無いと一度終わらせた TimeIs を MCP から二度と進行中にできない
+      // (Go 側 reps.TimeIs.EndTime は *time.Time なので nil を保存できる)。
+      // 未指定 = 触らない、null = 消す、値 = その時刻にする、の3値。
+      { name: "end_time", kind: "datetime", nullClears: true },
+    ],
+    // patch なので両方揃ったときだけ比べる（片側だけの更新は既存値と突き合わせられない）
+    after: (normalized) => assertTimeIsOrder(normalized.start_time, normalized.end_time),
+  },
+  mi: {
+    fields: [
+      { name: "title", kind: "string", requiredOnAdd: true },
+      // board_name は add でも省略可。未指定のときは呼び出し側 (write-handlers) が
+      // ApplicationConfig の mi_default_board を引いて埋める。
+      // ここで必須にすると、スキーマが optional と宣言しているフィールドを省略しただけで
+      // 「must be a string」の型エラーになり、呼び出し側は自分の入力ミスだと誤診する。
+      { name: "board_name", kind: "string" },
+      { name: "is_checked", kind: "boolean", defaultOnAdd: false },
+      { name: "limit_time", kind: "datetime" },
+      { name: "estimate_start_time", kind: "datetime" },
+      { name: "estimate_end_time", kind: "datetime" },
+    ],
+  },
+  kc: {
+    fields: [
+      { name: "title", kind: "string", requiredOnAdd: true },
+      { name: "num_value", kind: "number", requiredOnAdd: true },
+      { name: "related_time", kind: "datetime" },
+    ],
+  },
+  tag: {
+    fields: [
+      { name: "tag", kind: "string", requiredOnAdd: true },
+      // 付け替えはできない。update_tag はタグ名だけを変える。
+      { name: "target_id", kind: "string", requiredOnAdd: true, addOnly: true },
+    ],
+  },
+  text: {
+    fields: [
+      { name: "text", kind: "string", requiredOnAdd: true },
+      { name: "target_id", kind: "string", requiredOnAdd: true, addOnly: true },
+    ],
+  },
+};
+
+/** @param {{name: string, kind: string, range?: object}} field @param {unknown} value */
+function assertFieldValue(field, value) {
+  switch (field.kind) {
+    case "string":
+      return assertTrimmedString(value, field.name);
+    case "url":
+      return assertUrlWithScheme(value, field.name);
+    case "integer":
+      return assertInteger(value, field.name, field.range);
+    case "number":
+      return assertNumber(value, field.name, field.range);
+    case "boolean":
+      return assertBoolean(value, field.name);
+    default:
+      throw new Error(`unknown field kind: ${field.kind}`);
+  }
+}
+
+/**
+ * normalizeEntityArgs は add / update の引数を ENTITY_FIELD_SPECS に従って検証する。
+ * mode="add" は requiredOnAdd を必須にし、mode="update" は id だけ必須の patch。
+ *
+ * @param {string} dataType ENTITY_FIELD_SPECS のキー
+ * @param {unknown} args
+ * @param {"add"|"update"} mode
+ */
+function normalizeEntityArgs(dataType, args, mode) {
+  const spec = ENTITY_FIELD_SPECS[dataType];
+  assertArgs(args);
+
+  const fields = spec.fields.filter((field) => mode === "add" || !field.addOnly);
+  const allowedKeys = new Set(["locale_name"]);
+  if (mode === "update") {
+    allowedKeys.add("id");
+  }
+  for (const field of fields) {
+    allowedKeys.add(field.name);
+  }
+  assertKnownKeys(args, allowedKeys);
+
+  const normalized = {};
+  if (mode === "update") {
+    normalized.id = assertTrimmedString(args.id, "id");
+  }
+  for (const field of fields) {
+    if (field.kind === "datetime") {
+      normalized[field.name] =
+        mode === "update" && field.nullClears && args[field.name] === null
+          ? null
+          : optionalDatetime(args, field.name);
+      continue;
+    }
+    // add の必須フィールドは値の有無を見ずに検証へ通す。未指定なら
+    // 「must be a string」等でその欄の名前つきに落ちる（従来と同じ文言）。
+    if (mode === "add" && field.requiredOnAdd) {
+      normalized[field.name] = assertFieldValue(field, args[field.name]);
+      continue;
+    }
+    if (args[field.name] === undefined) {
+      normalized[field.name] = mode === "add" ? field.defaultOnAdd : undefined;
+      continue;
+    }
+    normalized[field.name] = assertFieldValue(field, args[field.name]);
+  }
+  normalized.locale_name =
+    args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
+
+  if (spec.after) {
+    spec.after(normalized);
+  }
+  return normalized;
+}
+
+// ---------------------------------------------------------------------------
+// Normalizers（表から作る。名前つきの口は呼び出し側とテストのために残す）
+// ---------------------------------------------------------------------------
+
 /** @param {unknown} args */
 export function normalizeKmemoArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["content", "related_time", "locale_name"]));
-  const content = assertTrimmedString(args.content, "content");
-  const related_time = optionalDatetime(args, "related_time");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { content, related_time, locale_name };
+  return normalizeEntityArgs("kmemo", args, "add");
 }
 
 /** @param {unknown} args */
 export function normalizeUrlogArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["url", "title", "related_time", "locale_name"]));
-  const url = assertUrlWithScheme(args.url, "url");
-  const title = args.title !== undefined ? assertTrimmedString(args.title, "title") : undefined;
-  const related_time = optionalDatetime(args, "related_time");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { url, title, related_time, locale_name };
+  return normalizeEntityArgs("urlog", args, "add");
 }
 
 /** @param {unknown} args */
 export function normalizeNlogArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["title", "amount", "shop", "related_time", "locale_name"]));
-  const title = assertTrimmedString(args.title, "title");
-  const amount = assertInteger(args.amount, "amount");
-  const shop = args.shop !== undefined ? assertTrimmedString(args.shop, "shop") : undefined;
-  const related_time = optionalDatetime(args, "related_time");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { title, amount, shop, related_time, locale_name };
+  return normalizeEntityArgs("nlog", args, "add");
 }
 
 /** @param {unknown} args */
 export function normalizeLantanaArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["mood", "related_time", "locale_name"]));
-  const mood = assertInteger(args.mood, "mood", { min: 0, max: 10 });
-  const related_time = optionalDatetime(args, "related_time");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { mood, related_time, locale_name };
+  return normalizeEntityArgs("lantana", args, "add");
 }
 
 /** @param {unknown} args */
 export function normalizeTimeIsArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["title", "start_time", "end_time", "locale_name"]));
-  const title = assertTrimmedString(args.title, "title");
-  const start_time = optionalDatetime(args, "start_time");
-  const end_time = optionalDatetime(args, "end_time");
-  assertTimeIsOrder(start_time, end_time);
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { title, start_time, end_time, locale_name };
+  return normalizeEntityArgs("timeis", args, "add");
 }
 
 /** @param {unknown} args */
 export function normalizeMiArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set([
-    "title", "board_name", "is_checked",
-    "limit_time", "estimate_start_time", "estimate_end_time",
-    "locale_name",
-  ]));
-  const title = assertTrimmedString(args.title, "title");
-  // 省略可。未指定のときは呼び出し側 (write-handlers) が
-  // ApplicationConfig の mi_default_board を引いて埋める。
-  // ここで assertTrimmedString を素で呼ぶと、スキーマが optional と宣言している
-  // フィールドを省略しただけで「must be a string」の型エラーになり、
-  // 呼び出し側は自分の入力ミスだと誤診する (update 側は元からガード付き)。
-  const board_name = args.board_name !== undefined ? assertTrimmedString(args.board_name, "board_name") : undefined;
-  const is_checked = args.is_checked !== undefined ? assertBoolean(args.is_checked, "is_checked") : false;
-  const limit_time = optionalDatetime(args, "limit_time");
-  const estimate_start_time = optionalDatetime(args, "estimate_start_time");
-  const estimate_end_time = optionalDatetime(args, "estimate_end_time");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { title, board_name, is_checked, limit_time, estimate_start_time, estimate_end_time, locale_name };
+  return normalizeEntityArgs("mi", args, "add");
 }
 
 /** @param {unknown} args */
 export function normalizeKcArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["title", "num_value", "related_time", "locale_name"]));
-  const title = assertTrimmedString(args.title, "title");
-  const num_value = assertNumber(args.num_value, "num_value");
-  const related_time = optionalDatetime(args, "related_time");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { title, num_value, related_time, locale_name };
+  return normalizeEntityArgs("kc", args, "add");
 }
 
 /** @param {unknown} args */
 export function normalizeTagArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["tag", "target_id", "locale_name"]));
-  const tag = assertTrimmedString(args.tag, "tag");
-  const target_id = assertTrimmedString(args.target_id, "target_id");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { tag, target_id, locale_name };
+  return normalizeEntityArgs("tag", args, "add");
 }
 
 /** @param {unknown} args */
 export function normalizeTextArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["text", "target_id", "locale_name"]));
-  const text = assertTrimmedString(args.text, "text");
-  const target_id = assertTrimmedString(args.target_id, "target_id");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { text, target_id, locale_name };
+  return normalizeEntityArgs("text", args, "add");
 }
 
 // ---------------------------------------------------------------------------
@@ -196,151 +330,133 @@ export function normalizeTextArgs(args) {
 
 /** @param {unknown} args */
 export function normalizeUpdateKmemoArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["id", "content", "related_time", "locale_name"]));
-  const id = assertTrimmedString(args.id, "id");
-  const content = args.content !== undefined ? assertTrimmedString(args.content, "content") : undefined;
-  const related_time = optionalDatetime(args, "related_time");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { id, content, related_time, locale_name };
+  return normalizeEntityArgs("kmemo", args, "update");
 }
 
 /** @param {unknown} args */
 export function normalizeUpdateUrlogArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["id", "url", "title", "related_time", "locale_name"]));
-  const id = assertTrimmedString(args.id, "id");
-  const url = args.url !== undefined ? assertTrimmedString(args.url, "url") : undefined;
-  const title = args.title !== undefined ? assertTrimmedString(args.title, "title") : undefined;
-  const related_time = optionalDatetime(args, "related_time");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { id, url, title, related_time, locale_name };
+  return normalizeEntityArgs("urlog", args, "update");
 }
 
 /** @param {unknown} args */
 export function normalizeUpdateNlogArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["id", "title", "amount", "shop", "related_time", "locale_name"]));
-  const id = assertTrimmedString(args.id, "id");
-  const title = args.title !== undefined ? assertTrimmedString(args.title, "title") : undefined;
-  const amount = args.amount !== undefined ? assertInteger(args.amount, "amount") : undefined;
-  const shop = args.shop !== undefined ? assertTrimmedString(args.shop, "shop") : undefined;
-  const related_time = optionalDatetime(args, "related_time");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { id, title, amount, shop, related_time, locale_name };
+  return normalizeEntityArgs("nlog", args, "update");
 }
 
 /** @param {unknown} args */
 export function normalizeUpdateLantanaArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["id", "mood", "related_time", "locale_name"]));
-  const id = assertTrimmedString(args.id, "id");
-  const mood = args.mood !== undefined ? assertInteger(args.mood, "mood", { min: 0, max: 10 }) : undefined;
-  const related_time = optionalDatetime(args, "related_time");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { id, mood, related_time, locale_name };
+  return normalizeEntityArgs("lantana", args, "update");
 }
 
 /** @param {unknown} args */
 export function normalizeUpdateTimeIsArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["id", "title", "start_time", "end_time", "locale_name"]));
-  const id = assertTrimmedString(args.id, "id");
-  const title = args.title !== undefined ? assertTrimmedString(args.title, "title") : undefined;
-  const start_time = optionalDatetime(args, "start_time");
-  // end_time だけは null に意味がある。「終了を取り消して進行中へ戻す」の唯一の手段で、
-  // これが無いと一度終わらせた TimeIs を MCP から二度と進行中にできない
-  // (Go 側 reps.TimeIs.EndTime は *time.Time なので nil を保存できる)。
-  // 未指定 = 触らない、null = 消す、値 = その時刻にする、の3値。
-  const end_time = args.end_time === null ? null : optionalDatetime(args, "end_time");
-  // patch なので両方揃ったときだけ比べる（片側だけの更新は既存値と突き合わせられない）
-  assertTimeIsOrder(start_time, end_time);
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { id, title, start_time, end_time, locale_name };
+  return normalizeEntityArgs("timeis", args, "update");
 }
 
 /** @param {unknown} args */
 export function normalizeUpdateMiArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set([
-    "id", "title", "board_name", "is_checked",
-    "limit_time", "estimate_start_time", "estimate_end_time",
-    "locale_name",
-  ]));
-  const id = assertTrimmedString(args.id, "id");
-  const title = args.title !== undefined ? assertTrimmedString(args.title, "title") : undefined;
-  const board_name = args.board_name !== undefined ? assertTrimmedString(args.board_name, "board_name") : undefined;
-  const is_checked = args.is_checked !== undefined ? assertBoolean(args.is_checked, "is_checked") : undefined;
-  const limit_time = optionalDatetime(args, "limit_time");
-  const estimate_start_time = optionalDatetime(args, "estimate_start_time");
-  const estimate_end_time = optionalDatetime(args, "estimate_end_time");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { id, title, board_name, is_checked, limit_time, estimate_start_time, estimate_end_time, locale_name };
+  return normalizeEntityArgs("mi", args, "update");
 }
 
 /** @param {unknown} args */
 export function normalizeUpdateKcArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["id", "title", "num_value", "related_time", "locale_name"]));
-  const id = assertTrimmedString(args.id, "id");
-  const title = args.title !== undefined ? assertTrimmedString(args.title, "title") : undefined;
-  const num_value = args.num_value !== undefined ? assertNumber(args.num_value, "num_value") : undefined;
-  const related_time = optionalDatetime(args, "related_time");
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { id, title, num_value, related_time, locale_name };
+  return normalizeEntityArgs("kc", args, "update");
 }
 
 /** @param {unknown} args */
 export function normalizeUpdateTagArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["id", "tag", "locale_name"]));
-  const id = assertTrimmedString(args.id, "id");
-  const tag = args.tag !== undefined ? assertTrimmedString(args.tag, "tag") : undefined;
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { id, tag, locale_name };
+  return normalizeEntityArgs("tag", args, "update");
 }
 
 /** @param {unknown} args */
 export function normalizeUpdateTextArgs(args) {
-  assertArgs(args);
-  assertKnownKeys(args, new Set(["id", "text", "locale_name"]));
-  const id = assertTrimmedString(args.id, "id");
-  const text = args.text !== undefined ? assertTrimmedString(args.text, "text") : undefined;
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { id, text, locale_name };
+  return normalizeEntityArgs("text", args, "update");
 }
 
 /** @param {unknown} args */
 export function normalizeKftlArgs(args) {
   assertArgs(args);
-  assertKnownKeys(args, new Set(["kftl_text", "locale_name"]));
+  assertKnownKeys(args, new Set(["kftl_text", "locale_name", "idempotency_key"]));
   const kftl_text = assertTrimmedString(args.kftl_text, "kftl_text");
   const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { kftl_text, locale_name };
+  // KFTL は DB トランザクションではないので、途中で失敗すると先に書けたぶんが残る。
+  // 同じ鍵で再送すれば二重登録にならない（サーバ側の受け口は前からあり、
+  // Wear OS は送っていたのに MCP だけ送っていなかった。リトライのたびに
+  // 孤児 kmemo が積んでいた実測あり。2026-08-25 の実利用レビュー）。
+  const idempotency_key =
+    args.idempotency_key !== undefined ? assertTrimmedString(args.idempotency_key, "idempotency_key") : undefined;
+  return { kftl_text, locale_name, idempotency_key };
+}
+
+// 削除・復活の「対象」引数を1本にまとめる。
+//
+// 単件は {id, data_type}、一括は {targets:[{id, data_type}, ...]}。
+// 一括を足したのは、KFTL が1回で5件作れるのに後始末が1件ずつ2往復で、
+// 検証の後片付けに11往復かかったという報告があったため（2026-08-24 の実利用レビュー）。
+// gkill_submit_kftl の created[] が既に {id, data_type} の配列なので、
+// **応答をそのまま入力へ渡せる**形にしてある。
+function normalizeDeleteTargets(args, verb) {
+  const hasSingle = args.id !== undefined || args.data_type !== undefined;
+  const hasBatch = args.targets !== undefined;
+  if (hasSingle && hasBatch) {
+    throw invalidArgument("targets", `cannot be combined with id / data_type; pass one form or the other`, args.targets);
+  }
+  if (!hasSingle && !hasBatch) {
+    throw invalidArgument("id", `is required (or pass targets:[{id, data_type}] to ${verb} several entries)`, args.id);
+  }
+  if (hasSingle) {
+    const id = assertTrimmedString(args.id, "id");
+    // 検索結果や add_* の応答が返すのは射影名（mi_create / timeis_start）で、
+    // ここが受理するのはエンティティ種別（mi / timeis）。応答をそのまま渡せるよう寄せる。
+    const data_type = toEntityDataType(assertTrimmedString(args.data_type, "data_type"));
+    if (!DELETE_DATA_TYPES.has(data_type)) {
+      throw invalidArgument("data_type", `must be one of: ${[...DELETE_DATA_TYPES].join(", ")}`, data_type);
+    }
+    return [{ id, data_type }];
+  }
+  if (!Array.isArray(args.targets)) {
+    throw invalidArgument("targets", "must be an array of {id, data_type}", args.targets);
+  }
+  if (args.targets.length === 0) {
+    throw invalidArgument("targets", "must not be empty", args.targets);
+  }
+  if (args.targets.length > MAX_DELETE_TARGETS) {
+    throw invalidArgument("targets", `must have at most ${MAX_DELETE_TARGETS} entries`, args.targets.length);
+  }
+  return args.targets.map((target, index) => {
+    if (!isPlainObject(target)) {
+      throw invalidArgument(`targets[${index}]`, "must be an object with id and data_type", target);
+    }
+    assertKnownKeys(target, new Set(["id", "data_type"]), `targets[${index}]`);
+    const id = assertTrimmedString(target.id, `targets[${index}].id`);
+    const data_type = toEntityDataType(assertTrimmedString(target.data_type, `targets[${index}].data_type`));
+    if (!DELETE_DATA_TYPES.has(data_type)) {
+      throw invalidArgument(
+        `targets[${index}].data_type`,
+        `must be one of: ${[...DELETE_DATA_TYPES].join(", ")}`,
+        data_type,
+      );
+    }
+    return { id, data_type };
+  });
 }
 
 /** @param {unknown} args */
 export function normalizeRestoreArgs(args) {
   assertArgs(args);
-  assertKnownKeys(args, new Set(["id", "data_type", "locale_name"]));
-  const id = assertTrimmedString(args.id, "id");
-  const data_type = assertTrimmedString(args.data_type, "data_type");
-  if (!DELETE_DATA_TYPES.has(data_type)) {
-    throw invalidArgument("data_type", `must be one of: ${[...DELETE_DATA_TYPES].join(", ")}`, data_type);
-  }
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { id, data_type, locale_name };
+  const source = reviveStaleSchemaArgs(args, DELETE_STALE_SCHEMA_ARG_KINDS);
+  assertKnownKeys(source, new Set(["id", "data_type", "targets", "locale_name"]));
+  const targets = normalizeDeleteTargets(source, "restore");
+  const locale_name = source.locale_name !== undefined ? assertTrimmedString(source.locale_name, "locale_name") : undefined;
+  return { targets, batch: source.targets !== undefined, locale_name };
 }
 
 /** @param {unknown} args */
 export function normalizeDeleteArgs(args) {
   assertArgs(args);
-  assertKnownKeys(args, new Set(["id", "data_type", "locale_name"]));
-  const id = assertTrimmedString(args.id, "id");
-  const data_type = assertTrimmedString(args.data_type, "data_type");
-  if (!DELETE_DATA_TYPES.has(data_type)) {
-    throw invalidArgument("data_type", `must be one of: ${[...DELETE_DATA_TYPES].join(", ")}`, data_type);
-  }
-  const locale_name = args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
-  return { id, data_type, locale_name };
+  const source = reviveStaleSchemaArgs(args, DELETE_STALE_SCHEMA_ARG_KINDS);
+  assertKnownKeys(source, new Set(["id", "data_type", "targets", "locale_name"]));
+  const targets = normalizeDeleteTargets(source, "delete");
+  const locale_name = source.locale_name !== undefined ? assertTrimmedString(source.locale_name, "locale_name") : undefined;
+  return { targets, batch: source.targets !== undefined, locale_name };
 }

@@ -30,7 +30,7 @@ Go `testing` パッケージ
 | `get_kyous_rep_filter_test.go` | rep名での絞り込みを**キャッシュ有無の両方**で。`UpdateCache` の**前後で2回**見るのが要点で、追加直後はキャッシュ表の `REP_NAME` が空のため「空の行は残す」分岐で全部素通りし、そこだけでは許可リスト側の分岐を一度も検証できない |
 | `get_kyous_tx_rep_filter_test.go` | `commit_tx` で確定した記録が rep絞り込みを通ること（キャッシュON/OFF）。一時リポジトリの合成rep名がキャッシュへ入ると、メモ帳構文で書いた記録だけが一覧から丸ごと消える |
 | `handle_get_kyous_mcp_test.go` | MCP用の記録取得（大量IDでの分割、応答形状） |
-| `handle_get_kyous_mcp_v2_test.go` | get_kyous_mcp v2 の回帰（複合カーソルのラウンドトリップと受理・拒否、count_only / group_by、データ型・数値・作成/更新アプリのリクエストレベルフィルタ、未知値の警告、残件数の意味論）。プラグインIDは任意文字列なので「ID側に `::` が含まれる」ケースを必ず含める |
+| `handle_get_kyous_mcp_v2_test.go` | get_kyous_mcp v2 の回帰（複合カーソルのラウンドトリップと受理・拒否、count_only / group_by、データ型・数値・作成/更新アプリのリクエストレベルフィルタ、未知値の警告、残件数の意味論）。プラグインIDは任意文字列なので「ID側に `::` が含まれる」ケースを必ず含める。付随 TimeIs から削除済みを落とすこと（`livePlaingTimeIsCandidates`）と、「その瞬間に走っていたか」の判定が `plaing_time` の SQL と同じ意味であること（`timeIsCoversMoment`）、tag / text / notification が実体IDを運ぶこと |
 | `handle_get_rep_infos_mcp_test.go` | `/api/get_rep_infos_mcp` の回帰。rep_types の正準語彙が API から取れること、付随データ rep の列挙、索引の鮮度 `indexed_at` が載ること、セッション必須であること |
 | `get_kyous_period_of_time_test.go` | 時間帯フィルタの狭い窓（09:00〜10:00）。秒オブデイ表現（MCP契約）と epoch 表現（Web契約）が同じ結果になること、SQL 経路と Go 経路（`--cache_in_memory` の ON/OFF）で結果が一致すること |
 | `response_status_test.go` | エラーコード別 HTTP ステータス（`message.HTTPStatusOf`）が実応答に出ることの end-to-end 確認。401/403/400/409、成功時は 200 のまま、panic は 500+gzip、認証本文の過大は 413・読み取り失敗は 500 で、いずれも JSON 本文が返ること |
