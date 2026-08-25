@@ -14,7 +14,7 @@ import {
   APP_CONFIG_UI_STATE_KEYS,
   ENTITY_TARGETS,
 } from "./constants.mjs";
-import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs, normalizeAppConfigArgs, normalizeKyouHistoryArgs, normalizeRepNamesArgs, normalizeRepInfosArgs, appendStaleSchemaWarning, assertAggregationNotCombinedWithCursor } from "./normalization.mjs";
+import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs, normalizeAppConfigArgs, normalizeKyouHistoryArgs, normalizeRepNamesArgs, normalizeTagNamesArgs, normalizeRepInfosArgs, appendStaleSchemaWarning, assertAggregationNotCombinedWithCursor } from "./normalization.mjs";
 import { inlinePluginContents, summarizeInlinePluginContent } from "./plugin-tools.mjs";
 import { normalizeMimeType, entityNotFoundMessage, appendStaleSchemaNoteToSummary } from "./payload.mjs";
 import { READ_TOOLS } from "./read-tools.mjs";
@@ -107,11 +107,18 @@ async function dispatchReadToolCall(ctx, name, args) {
         };
       }
       case "gkill_get_all_tag_names": {
-        const normalized = normalizeLocaleOnlyArgs(args);
-        const response = await ctx.client.callApi("/api/get_all_tag_names", normalized, true, ctx.sid);
-        return {
-          tag_names: Array.isArray(response.tag_names) ? response.tag_names : [],
-        };
+        // 絞り込みは Node 側。gkill は全件を返すので、contains / limit は送らない。
+        const normalized = normalizeTagNamesArgs(args);
+        const response = await ctx.client.callApi(
+          "/api/get_all_tag_names",
+          normalized.locale_name === undefined ? {} : { locale_name: normalized.locale_name },
+          true,
+          ctx.sid,
+        );
+        return paginateTagNames(
+          Array.isArray(response.tag_names) ? response.tag_names : [],
+          normalized,
+        );
       }
       case "gkill_get_all_rep_names": {
         const normalized = normalizeRepNamesArgs(args);
@@ -289,7 +296,10 @@ async function dispatchReadToolCall(ctx, name, args) {
           );
         }
         return {
-          file_name: normalized.file_name,
+          // thumb のときは中身が JPEG なので、名前の拡張子もそれに合わせる。
+          file_name: normalized.thumb === undefined
+            ? normalized.file_name
+            : thumbFileName(normalized.file_name, mimeType),
           mime_type: mimeType,
           file_size_bytes: buffer.length,
           is_image: mimeType.startsWith("image/"),
@@ -449,18 +459,47 @@ export function stripAppConfigUiState(value) {
  * @param {{contains?: string, limit: number}} options 正規化済みの絞り込み条件。
  * @returns {{rep_names: string[], total_count: number, returned_count: number, truncated: boolean}} 応答。
  */
-export function paginateRepNames(repNames, options) {
-  let matched = repNames;
+// thumbFileName は縮小版の名前。thumb を頼むとサーバは JPEG を返すので、
+// 元の名前(.webp や .png)をそのまま返すと「拡張子と中身が食い違うファイル」を
+// 案内することになり、名前で判断して保存する側が壊れる。
+function thumbFileName(fileName, mimeType) {
+  if (mimeType !== "image/jpeg") {
+    return fileName;
+  }
+  return String(fileName).replace(/\.[^./\\]*$/, "") + ".jpg";
+}
+
+// paginateNameList は名前一覧に contains / limit を適用する共通部分。
+// rep 名とタグ名で規則を分けない（片方だけ絞り込めると、もう片方は
+// 「autolog 系のタグはあるか」を確かめるだけで全件を受け取ることになる）。
+function paginateNameList(names, options) {
+  let matched = names;
   if (options.contains !== undefined && options.contains !== "") {
     const needle = options.contains.toLowerCase();
-    matched = repNames.filter((repName) => String(repName).toLowerCase().includes(needle));
+    matched = names.filter((name) => String(name).toLowerCase().includes(needle));
   }
   const page = matched.slice(0, options.limit);
+  return { page, total: matched.length };
+}
+
+export function paginateRepNames(repNames, options) {
+  const { page, total } = paginateNameList(repNames, options);
   return {
     rep_names: page,
-    total_count: matched.length,
+    total_count: total,
     returned_count: page.length,
-    truncated: page.length < matched.length,
+    truncated: page.length < total,
+  };
+}
+
+// paginateTagNames は paginateRepNames と同じ規則をタグ名へ当てる。
+export function paginateTagNames(tagNames, options) {
+  const { page, total } = paginateNameList(tagNames, options);
+  return {
+    tag_names: page,
+    total_count: total,
+    returned_count: page.length,
+    truncated: page.length < total,
   };
 }
 

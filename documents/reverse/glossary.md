@@ -293,7 +293,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
 | MCP サーバー（Read） | `src/mcp/gkill-read-server.mjs` | 読み取り専用MCPサーバー（10ツール = 固有9 + プラグイン1、stdio/HTTP） |
-| MCP サーバー（Write） | `src/mcp/gkill-write-server.mjs` | 書き込み専用MCPサーバー（26ツール = 書き込み21 + Read便利4 + プラグイン1、stdio/HTTP） |
+| MCP サーバー（Write） | `src/mcp/gkill-write-server.mjs` | 書き込み専用MCPサーバー（27ツール = 書き込み21 + Read便利5 + プラグイン1、stdio/HTTP） |
 | MCP サーバー（ReadWrite） | `src/mcp/gkill-readwrite-server.mjs` | 読み書き統合MCPサーバー（31ツール = 固有30 + プラグイン1、stdio/HTTP） |
 | MCP プラグインツール | `src/mcp/lib/plugin-tools.mjs` | 3サーバ共通の `gkill_get_plugin_list` と、`gkill_get_kyous` へプラグイン本文を埋める `inlinePluginContents`（読み取りのみ。`post_plugin_config` は公開しない） |
 | MCP アクセスログ | `src/mcp/lib/access-log.mjs` | MCPサーバのアクセスログモジュール。`MCP_LOG` 環境変数で制御 |

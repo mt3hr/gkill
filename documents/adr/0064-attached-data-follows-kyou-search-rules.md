@@ -28,7 +28,7 @@
 | 経路 | 実装 | 削除済み |
 |---|---|---|
 | Web の列 | クライアントが `plaing_time` 検索を投げる（`generate-plaing-timeis-query.ts`） | 落ちる |
-| 共有ページ | `FindFilter.FindKyous` に `PlaingTime` を渡す | 落ちる |
+| 共有ページ | Kyou 側は `FindFilter.FindKyous`、打刻の実体は `TimeIsReps.FindTimeIs` 直叩き | **Kyou 側だけ落ちる** |
 | **MCP** | `TimeIsReps.FindTimeIs` を直叩きして Go 側で総当たり | **落ちない** |
 
 gkill で削除済みを落としているのは `find_filter.go` の Kyou 集約だけで、SQL にもリポジトリにも無い
@@ -78,6 +78,11 @@ gkill で削除済みを落としているのは `find_filter.go` の Kyou 集�
 - タグ引きの呼び出しが `Σ(Kyouごとの一致件数)` から「一致した打刻の種類数」になる
   （1ページ20件・1件16打刻なら320回 → 数回）
 - `TimeIsMCPDTO` に `is_deleted` は**足さない**。削除済みは返さないので、あれば嘘になる
+- **共有ページの実体側（`handle_get_shared_kyous.go` の `AttachedTimeIss`）は、当初の調査で
+  「落ちる」と書いたが実際には落ちていなかった。** Kyou リストは `FindFilter` 経由なので落ちる一方、
+  打刻の実体は `TimeIsReps.FindTimeIs` を直叩きしており、MCP とまったく同じ欠落を持っていた。
+  同日中に `livePlaingTimeIsCandidates` を通す形へ寄せた（同時に、先に無条件代入してから
+  自分自身と `UpdateTime` を比べていた版選択のデッドコードも除いた）
 - 判定が純関数2つになったので、規則を戻すと必ずテストが落ちる（下記）
 
 ## Evidence

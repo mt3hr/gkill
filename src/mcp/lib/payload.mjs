@@ -117,7 +117,9 @@ export function entityNotFoundMessage(id, dataType) {
   return (
     `Entity not found: ${id} (looked it up as data_type ${JSON.stringify(dataType)}; ` +
     `the lookup is per-type, so a wrong data_type looks exactly like a wrong id. ` +
-    `Confirm the type with gkill_get_kyous, and check you are on the account that holds it ` +
+    // gkill_get_kyous を名指ししない: 書き込み専用サーバには載っていないので、
+    // そこで出すと「案内されたツールが無い」になる（read 側は持っている）。
+    `Confirm the entry's data_type, and check you are on the account that holds it ` +
     `(gkill_get_application_config with fields:["user_id"]), then retry.)`
   );
 }

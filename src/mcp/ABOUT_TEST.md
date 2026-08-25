@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。927テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 25（書き込み21 + Read便利4）+ プラグイン1 = 26ツール、統合サーバ 30 + プラグイン1 = 31ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
+MCP (Model Context Protocol) サーバのテスト。933テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 26（書き込み21 + Read便利5）+ プラグイン1 = 27ツール、統合サーバ 30 + プラグイン1 = 31ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
 
 ## テストフレームワーク
 
@@ -41,7 +41,7 @@ Vitest（Node.js 環境）
 |---------|-----------|
 | `__tests__/write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲検証、data_type検証等）。追加と更新が同じ `ENTITY_FIELD_SPECS` から作られること（URLのスキーム検証が add / update で同一文言、`target_id` は add 専用、patch セマンティクスの維持）、`idempotency_key` の受理 |
 | `__tests__/write-client.test.mjs` | GkillWriteClient（環境変数、login、callApi、認証リトライ） |
-| `__tests__/write-server.test.mjs` | McpWriteServer（JSON-RPC、26ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
+| `__tests__/write-server.test.mjs` | McpWriteServer（JSON-RPC、27ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
 | `__tests__/write-tool-handlers.test.mjs` | Write 21ツール定義（実物 import）・削除の語彙が enum / DELETE_DATA_TYPES / 対応表2つで一致すること・summarizeWriteToolPayload |
 
 ### Read/Write統合サーバ
@@ -77,7 +77,7 @@ Vitest（Node.js 環境）
 - ツール定義: `lib/read-tools.mjs` / `lib/write-tools.mjs` / `lib/plugin-tools.mjs`
 - gkill 本体との通信: `lib/gkill-client.mjs`
 
-ツール数（Read 10 / Write 26 / ReadWrite 31）は `verify_docs` が `lib/*-tools.mjs` の
+ツール数（Read 10 / Write 27 / ReadWrite 31）は `verify_docs` が `lib/*-tools.mjs` の
 スプレッドを辿って実測と突き合わせる。**サーバ本体だけを見ても数えられない。**
 
 ## 設定ファイル

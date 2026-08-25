@@ -179,6 +179,40 @@ type CachedReps struct {
 //
 // Write*Repは必ずleaf rep(gkill_dao_managerのUseToWrite分岐がSQLite3Implを代入する)なので、
 // 返る名前は必ずGetAllRepNamesに載る。集約repの合成名は返らない。
+// WriteTargetRepNames は「書き込み先として設定されている rep」の名前を集める。
+//
+// rep が一覧にあることと、そこへ書けることは別物で、user_config の use_to_write が
+// 立っていない rep は一覧に出るのに書き込み先にならない。この差は
+// 「メモ帳の ~~ が毎回失敗するのに、rep 一覧には mirekyou がある」という形で
+// 表に出た(2026-08-25 の実利用レビュー)。書く前に判別できるようにする。
+func (g *GkillRepositories) WriteTargetRepNames(ctx context.Context) map[string]struct{} {
+	names := map[string]struct{}{}
+	writeReps := []interface {
+		GetRepName(ctx context.Context) (string, error)
+	}{
+		g.WriteTagRep,
+		g.WriteTextRep,
+		g.WriteNotificationRep,
+		g.WriteKmemoRep,
+		g.WriteKCRep,
+		g.WriteURLogRep,
+		g.WriteNlogRep,
+		g.WriteTimeIsRep,
+		g.WriteMiRep,
+		g.WriteLantanaRep,
+		g.WriteIDFKyouRep,
+		g.WriteReKyouRep,
+		g.WriteMiReKyouRep,
+		g.WriteGPSLogRep,
+	}
+	for _, rep := range writeReps {
+		if name := writeRepNameOrEmpty(ctx, rep); name != "" {
+			names[name] = struct{}{}
+		}
+	}
+	return names
+}
+
 func writeRepNameOrEmpty(ctx context.Context, rep interface {
 	GetRepName(ctx context.Context) (string, error)
 }) string {
