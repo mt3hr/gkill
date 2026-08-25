@@ -121,6 +121,28 @@ func (g *gpsLogRepositoryPluginImpl) UnWrapTyped() ([]GPSLogRepository, error) {
 // IsReadOnlyGPSLogRepository はアップロード先に選べないことを表す目印です。
 func (g *gpsLogRepositoryPluginImpl) IsReadOnlyGPSLogRepository() {}
 
+// publishStats は取得したスナップショットの統計をプラグインリポジトリ側へ預けます。
+//
+// 統計を持っているのはこのアダプタですが、プラグイン一覧API(HandleGetPluginList)は
+// wrapAuth で登録されていてリポジトリ解決を通らないため、GPSLogRepsへ到達できません。
+// 一方プラグインリポジトリの実体はPluginManagerが持つ同じインスタンスなので、
+// そこへ預けておけば一覧APIから非ブロッキングで読めます。
+// (リポジトリ解決を通すためにwrapAuthReposへ変えるのは、設定取得のたびに
+// リポジトリ解決が走る経路——「読み込みが一生終わらない」の原因——へ戻ることになる)
+func (g *gpsLogRepositoryPluginImpl) publishStats(gpsLogs []GPSLog, fetchedAt time.Time) {
+	sink, ok := g.plugin.(gpsIndexStatsSink)
+	if !ok {
+		return
+	}
+	stats := GPSIndexStats{PointCount: len(gpsLogs), FetchedAt: fetchedAt}
+	if len(gpsLogs) != 0 {
+		// snapshot は RelatedTime の昇順に並べた直後なので両端でよい。
+		stats.Oldest = gpsLogs[0].RelatedTime
+		stats.Newest = gpsLogs[len(gpsLogs)-1].RelatedTime
+	}
+	sink.SetGPSIndexStats(stats)
+}
+
 // snapshotOf はスナップショットを返します。取得に失敗しても空を返し、エラーにはしません。
 //
 // GPSLogRepositories.GetGPSLogs も find_filter の collectFromRepos も
@@ -148,9 +170,11 @@ func (g *gpsLogRepositoryPluginImpl) snapshotOf(ctx context.Context) []GPSLog {
 		}
 		slices.SortFunc(gpsLogs, func(a, b GPSLog) int { return a.RelatedTime.Compare(b.RelatedTime) })
 
+		fetchedAt := time.Now()
 		g.mu.Lock()
-		g.snapshot, g.fetchedAt = gpsLogs, time.Now()
+		g.snapshot, g.fetchedAt = gpsLogs, fetchedAt
 		g.mu.Unlock()
+		g.publishStats(gpsLogs, fetchedAt)
 		return gpsLogs, nil
 	})
 	if err != nil {

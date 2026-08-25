@@ -90,6 +90,10 @@ func newKFTLStartKCStatementLine(lineText string, ctx *KFTLStatementLineContext)
 }
 
 func (l *kftlStartKCStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
+	// 値の行が無いと、タイトルも数値も空の数値記録が黙って1件書かれていた。
+	if err := requireNextLineText(l.ctx); err != nil {
+		return err
+	}
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
 func (l *kftlStartKCStatementLine) GetLabelName() string                  { return "kc" }
@@ -138,12 +142,14 @@ func newKFTLKCNumValueStatementLine(lineText string, ctx *KFTLStatementLineConte
 
 func (l *kftlKCNumValueStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
 	if l.lineText == "" {
-		return fmt.Errorf("kc num_value is empty")
+		return newKFTLInputError("KFTL_KC_INVALID_NUM_VALUE_MESSAGE_TITLE",
+			fmt.Errorf("kc num_value is empty"))
 	}
 	l.req.numValue = json.Number(l.lineText)
 	// Validate it's actually a number
 	if _, err := l.req.numValue.Float64(); err != nil {
-		return fmt.Errorf("invalid kc num_value %q: %w", l.lineText, err)
+		return newKFTLInputError("KFTL_KC_INVALID_NUM_VALUE_MESSAGE_TITLE",
+			fmt.Errorf("invalid kc num_value %q: %w", l.lineText, err))
 	}
 	return nil
 }

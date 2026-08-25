@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
@@ -63,34 +65,75 @@ func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Requ
 			Description: manifest.Description,
 			DataType:    manifest.DataType,
 			RepName:     manifest.RepName,
-			IsAlive:     pluginRepo.IsAlive(r.Context()),
+			// emits_kyou=false のとき DataType / RepName は検索に使える値ではない。
+			// 役割（Kyouを出すのか、GPSログだけなのか）を呼び出し側が判別できるよう
+			// manifest の宣言をそのまま返す（新しい語彙は作らない）。
+			EmitsKyou: manifest.EmitsKyouOrDefault(),
+			Provides:  providedKindStrings(manifest),
+			IsAlive:   pluginRepo.IsAlive(r.Context()),
 			// 受動情報。IsAlive(ping)と違い副作用なし
 			ProcessRunning: pluginRepo.ProcessRunning(),
-			// stderr末尾。「is_alive=trueなのに0件」の診断用（外部監査 D2）
-			LastError: pluginRepo.LastStderr(),
+			// stderr末尾。「is_alive=trueなのに0件」の診断用（外部監査 D2）。
+			// プラグインは別リポジトリの成果物で、診断のためにホームディレクトリや
+			// 読み取り元の絶対パスを書く（書いてよい）。出口で伏せるのはこちらの責務。
+			LastError: message.RedactEnvironmentSpecific(pluginRepo.LastStderr()),
 		}
 		// provides宣言のあるプラグインは索引統計（鮮度・件数・時刻範囲）も返す（外部監査 D1）
 		if typedIndex := pluginRepo.TypedIndex(); typedIndex != nil {
 			stats := typedIndex.Stats()
 			statsDTO := &req_res.PluginTypedIndexStatsMCPDTO{
-				OK:             stats.OK,
-				State:          stats.State,
-				LastBuildError: stats.LastBuildError,
+				OK:    stats.OK,
+				State: stats.State,
+				// 索引構築の失敗理由にはプラグインディレクトリの絶対パスが乗る
+				// （起動失敗のエラーがそのまま文字列化されるため）。last_error と同じく伏せる。
+				LastBuildError: message.RedactEnvironmentSpecific(stats.LastBuildError),
 				RecordCount:    stats.RecordCount,
 				Truncated:      stats.Truncated,
-				BuiltAt:        stats.BuiltAt.Format(time.RFC3339),
+				BuiltAt:        stats.BuiltAt.In(time.Local).Format(time.RFC3339),
 			}
 			if !stats.LastAttemptAt.IsZero() {
-				statsDTO.LastAttemptAt = stats.LastAttemptAt.Format(time.RFC3339)
+				statsDTO.LastAttemptAt = stats.LastAttemptAt.In(time.Local).Format(time.RFC3339)
 			}
 			if !stats.Oldest.IsZero() {
-				statsDTO.Oldest = stats.Oldest.Format(time.RFC3339)
+				statsDTO.Oldest = stats.Oldest.In(time.Local).Format(time.RFC3339)
 			}
 			if !stats.Newest.IsZero() {
-				statsDTO.Newest = stats.Newest.Format(time.RFC3339)
+				statsDTO.Newest = stats.Newest.In(time.Local).Format(time.RFC3339)
 			}
 			info.TypedIndex = statsDTO
 		}
+		// GPSログを提供するプラグインの取り込み状況。型別索引とは別枠で返す
+		// （GPSログはKyouではないので型別索引には1件も載らない）。
+		if reporter, ok := pluginRepo.(interface {
+			GPSIndexStats() *reps.GPSIndexStats
+		}); ok {
+			if gpsStats := reporter.GPSIndexStats(); gpsStats != nil {
+				gpsDTO := &req_res.PluginGPSIndexStatsMCPDTO{
+					PointCount: gpsStats.PointCount,
+					FetchedAt:  gpsStats.FetchedAt.In(time.Local).Format(time.RFC3339),
+				}
+				if !gpsStats.Oldest.IsZero() {
+					gpsDTO.Oldest = gpsStats.Oldest.In(time.Local).Format(time.RFC3339)
+				}
+				if !gpsStats.Newest.IsZero() {
+					gpsDTO.Newest = gpsStats.Newest.In(time.Local).Format(time.RFC3339)
+				}
+				info.GPSIndex = gpsDTO
+			}
+		}
 		response.Plugins = append(response.Plugins, info)
 	}
+}
+
+// providedKindStrings は manifest の provides を文字列スライスにする。
+// 宣言が無ければ nil を返し、JSON では omitempty でキーごと消える。
+func providedKindStrings(manifest gkill_plugin.PluginManifest) []string {
+	if len(manifest.Provides) == 0 {
+		return nil
+	}
+	kinds := make([]string, 0, len(manifest.Provides))
+	for _, kind := range manifest.Provides {
+		kinds = append(kinds, string(kind))
+	}
+	return kinds
 }

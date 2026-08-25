@@ -155,6 +155,8 @@ function computeDirMetrics() {
     serverApiBase: listFiles(SA, (f) => f.endsWith('.go') && !f.startsWith('handle_') && !f.endsWith('_test.go')).length,
     reqResType: countIn('src/server/gkill/api/req_res', '.go', { excludeTest: true }),
     kftlGo: countIn('src/server/gkill/api/kftl', '.go'),
+    // message/README.md の「ファイル一覧」はテストも含めて数えている。
+    messageGo: countIn('src/server/gkill/api/message', '.go'),
     repsGo: countIn('src/server/gkill/dao/reps', '.go'),
     repsImpl: countIn('src/server/gkill/dao/reps', '.go', { excludeTest: true }),
     // usecase/README.md が数えているのは本番の実装面。
@@ -509,6 +511,7 @@ function buildCountAssertions(m) {
   add('src/server/gkill/api/README.md', `全${m.endpoints}エンドポイントを登録`)
   add('src/server/gkill/api/README.md', `### \`kftl/\`（${m.kftlGo}ファイル）`)
   add('src/server/gkill/api/README.md', `### \`req_res/\`（${m.reqRes}ファイル）`)
+  add('src/server/gkill/api/message/README.md', `## ファイル一覧（${m.messageGo}ファイル）`)
   add('src/server/gkill/api/gkill_server_api/README.md', `ハンドラ実装${m.handlersImpl}`)
   add('src/server/gkill/api/req_res/README.md', `（${m.reqRes}ファイル: 型定義${m.reqResType} +`)
   add('src/server/gkill/dao/README.md', `### \`reps/\`（${m.repsImpl}ファイル。テストを含めると${m.repsGo}）`)

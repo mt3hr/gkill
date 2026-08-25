@@ -98,6 +98,10 @@ func newKFTLStartTimeIsStatementLine(lineText string, ctx *KFTLStatementLineCont
 }
 
 func (l *kftlStartTimeIsStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
+	// タイトル・開始日時・終了日時の3行が要る。1行も無ければ無言で0件だった。
+	if err := requireNextLineText(l.ctx); err != nil {
+		return err
+	}
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
 func (l *kftlStartTimeIsStatementLine) GetLabelName() string                  { return "timeIs" }
@@ -149,7 +153,8 @@ func (l *kftlTimeIsStartTimeStatementLine) ApplyThisLineToRequestMap(_ context.C
 	timeStr = strings.TrimPrefix(timeStr, splitterRelatedTimeAscii)
 	t, err := parseDateTime(timeStr, l.ctx.BaseTime)
 	if err != nil {
-		return fmt.Errorf("invalid timeis start_time %q: %w", l.lineText, err)
+		return newKFTLInputError("KFTL_TIMEIS_INVALID_PARSE_TIME_ERROR_MESSAGE_TITLE",
+			fmt.Errorf("invalid timeis start_time %q: %w", l.lineText, err))
 	}
 	l.req.startTime = t
 	l.req.SetRelatedTime(t)
@@ -178,7 +183,8 @@ func (l *kftlTimeIsEndTimeStatementLine) ApplyThisLineToRequestMap(_ context.Con
 	timeStr = strings.TrimPrefix(timeStr, splitterRelatedTimeAscii)
 	t, err := parseDateTime(timeStr, l.ctx.BaseTime)
 	if err != nil {
-		return fmt.Errorf("invalid timeis end_time %q: %w", l.lineText, err)
+		return newKFTLInputError("KFTL_TIMEIS_INVALID_PARSE_TIME_ERROR_MESSAGE_TITLE",
+			fmt.Errorf("invalid timeis end_time %q: %w", l.lineText, err))
 	}
 	l.req.endTime = &t
 	return nil
@@ -268,6 +274,10 @@ func newKFTLStartTimeIsStartStatementLine(lineText string, ctx *KFTLStatementLin
 }
 
 func (l *kftlStartTimeIsStartStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
+	// 開始ラベルの行が無いと無言で0件になり、なぜ作られなかったのか分からない。
+	if err := requireNextLineText(l.ctx); err != nil {
+		return err
+	}
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
 func (l *kftlStartTimeIsStartStatementLine) GetLabelName() string                  { return "timeIsStart" }
@@ -502,6 +512,14 @@ func (r *kftlTimeIsEndByTagRequest) DoRequest(ctx context.Context) error {
 	playingEntries, err := r.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)
 	if err != nil {
 		return fmt.Errorf("error finding playing timeis for tag-end: %w", err)
+	}
+
+	// タグの行を書かなかった場合。searchTags が空だと下の照合はどの打刻とも一致せず、
+	// 「終了対象の打刻が存在しませんでした」という**原因と違う**エラーになっていた
+	// （if-exist 版では無言で0件）。打ち間違いとして名指しする。
+	if len(r.searchTags) == 0 {
+		return newKFTLInputError("KFTL_TIMEIS_END_REQUIRE_END_TAG_MESSAGE_TITLE",
+			fmt.Errorf("end-by-tag needs at least one tag on the next line"))
 	}
 
 	var target *reps.TimeIs

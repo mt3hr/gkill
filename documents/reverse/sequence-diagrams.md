@@ -734,14 +734,17 @@ sequenceDiagram
         PluginMgr->>PluginMgr: process_running / last_error（stderr末尾）/<br>typed_index（索引統計）を受動読み
     end
     PluginMgr-->>API: []PluginRepository
+    API->>API: last_error / last_build_error を<br>RedactEnvironmentSpecific で伏せる
     API-->>MCP: {plugins: [{name, version, description, data_type, rep_name,<br>is_alive, process_running, last_error,<br>typed_index: {ok, state, last_build_error, last_attempt_at,<br>record_count, oldest, newest, truncated, built_at}}, ...]}
-    MCP-->>Client: プラグイン一覧
+    MCP->>MCP: last_error / last_build_error を落とし<br>has_last_error / has_last_build_error にする
+    MCP-->>Client: プラグイン一覧（診断文の中身は含まない）
 ```
 
 `typed_index` は `provides` を宣言したプラグインだけに載る（`req_res/get_plugin_list_response.go`）。
 `last_error` はプラグインプロセスの stderr 末尾で、索引構築の失敗理由はそこには出ない
 （そちらは `typed_index.last_build_error`。詳細は [plugin-system.md](plugin-system.md) の
-「インメモリ索引」節）。
+「インメモリ索引」節）。どちらも端末のディレクトリ構成を含むため、Go 側は返す直前に伏せ、
+MCP はさらに中身ごと落として有無だけを返す（[ADR-0046](../adr/0046-redact-environment-specific-strings.md)）。
 
 ---
 

@@ -492,7 +492,14 @@ func (m *miReKyouRepositorySQLite3Impl) GetMiReKyou(ctx context.Context, id stri
 	if len(mirekyous) == 0 {
 		return nil, nil
 	}
-	return &mirekyous[0], nil
+	// 最新版は UpdateTime で選ぶ。**[0] を返してはいけない** ——
+	// 行の並びは SQL の都合で決まるので、複数版が返ったときに
+	// どれが最新かは保証されない（外部監査 H-07。他の型別 GetXxx は全て
+	// slices.MaxFunc で揃えてあり、ここだけ取り残されていた）。
+	latest := slices.MaxFunc(mirekyous, func(a, b MiReKyou) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latest, nil
 }
 
 func (m *miReKyouRepositorySQLite3Impl) GetMiReKyouHistories(ctx context.Context, id string) ([]MiReKyou, error) {

@@ -88,6 +88,11 @@ func newKFTLStartLantanaStatementLine(lineText string, ctx *KFTLStatementLineCon
 }
 
 func (l *kftlStartLantanaStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
+	// 値の行が無いと mood はゼロ値のまま DoRequest まで届き、
+	// **気分値0(最低)の記録が黙って1件書かれていた**。
+	if err := requireNextLineText(l.ctx); err != nil {
+		return err
+	}
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
 func (l *kftlStartLantanaStatementLine) GetLabelName() string                  { return "lantana" }
