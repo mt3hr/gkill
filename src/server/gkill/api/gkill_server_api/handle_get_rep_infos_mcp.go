@@ -43,7 +43,7 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 		}
 	}()
 	defer func() {
-		writeErrorStatus(w, response.Errors)
+		writeErrorStatus(r.Context(), w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get rep infos mcp response to json: %w", err)

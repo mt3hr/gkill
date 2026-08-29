@@ -22,7 +22,7 @@ import (
 const canonicalEncode = "err := json.NewEncoder(w).Encode(response)"
 
 // writeErrorStatusCall は直前に来ていなければならない呼び出し。
-const writeErrorStatusCall = "writeErrorStatus(w, response.Errors)"
+const writeErrorStatusCall = "writeErrorStatus(r.Context(), w, response.Errors)"
 
 // statusExemptHandlers はこの検査の対象外にするファイル。
 //
@@ -39,7 +39,7 @@ var statusExemptHandlers = map[string]string{
 //
 // **落ちたら、ハンドラを足したのに writeErrorStatus の1行を入れていない。**
 // defer の中の json.NewEncoder(w).Encode(response) の直前へ
-// writeErrorStatus(w, response.Errors) を足すこと。
+// writeErrorStatus(r.Context(), w, response.Errors) を足すこと。
 func TestAllJSONHandlersWriteErrorStatus(t *testing.T) {
 	files, err := filepath.Glob("handle_*.go")
 	if err != nil {

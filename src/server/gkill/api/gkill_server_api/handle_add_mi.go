@@ -37,7 +37,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 	defer func() {
-		writeErrorStatus(w, response.Errors)
+		writeErrorStatus(r.Context(), w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse add mi response to json: %w", err)
