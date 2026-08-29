@@ -21,12 +21,17 @@ var accessLogContextKey = accessLogContextKeyType{}
 // accessLogInfo is stored as a pointer in the request context.
 // The middleware creates it before calling next.ServeHTTP.
 // Handlers (via getAccountFromSessionIDWithApplicationName) write UserID into it.
+//
+// Method / Path はミドルウェアが立てます。writeErrorStatus が「どのAPIが失敗したか」を
+// 1行に載せるために読みます（あそこには *http.Request が無い）。
 type accessLogInfo struct {
 	UserID string
+	Method string
+	Path   string
 }
 
-func newAccessLogContext(ctx context.Context) (context.Context, *accessLogInfo) {
-	info := &accessLogInfo{}
+func newAccessLogContext(ctx context.Context, method string, path string) (context.Context, *accessLogInfo) {
+	info := &accessLogInfo{Method: method, Path: path}
 	return context.WithValue(ctx, accessLogContextKey, info), info
 }
 
@@ -61,7 +66,7 @@ func (g *GkillServerAPI) accessLogMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
-		ctx, info := newAccessLogContext(r.Context())
+		ctx, info := newAccessLogContext(r.Context(), r.Method, r.URL.Path)
 		rec := newResponseRecorder(w)
 
 		next.ServeHTTP(rec, r.WithContext(ctx))

@@ -35,7 +35,7 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 		}
 	}()
 	defer func() {
-		writeErrorStatus(w, response.Errors)
+		writeErrorStatus(r.Context(), w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get repositories response to json: %w", err)
