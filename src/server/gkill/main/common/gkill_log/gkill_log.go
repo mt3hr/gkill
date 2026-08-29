@@ -47,12 +47,17 @@ func Init() {
 	}
 
 	router = NewRouter(Options{
-		JSON:         true,
-		AddSource:    true,
-		MinLevel:     logLevel,
-		Mode:         SplitOnly, // ログファイルをまとめるやつ
-		StdoutMirror: false,     //stdoutにも出す
-		StaticFields: []any{"app", "gkill"},
+		JSON:      true,
+		AddSource: true,
+		MinLevel:  logLevel,
+		// レベル別ファイルと統合ファイルの両方へ出す。
+		// SplitOnly だと SetMergedFile で開いた gkill.log へ1バイトも書かれず、
+		// 「全レベル統合」と資料に書いてあるファイルが常に空だった。
+		Mode:           MergedAndSplit,
+		StdoutMirror:   false, //stdoutにも出す
+		StaticFields:   []any{"app", "gkill"},
+		RotateMaxBytes: gkill_options.LogRotateMaxBytes,
+		RotateKeep:     gkill_options.LogRotateKeep,
 	})
 
 	err = router.SetSplitFile(TraceSQL, filepath.Join(logRootDir, "gkill_trace_sql.log"))
