@@ -310,7 +310,7 @@ export function reviveStaleSchemaArgs(source, kindsByKey) {
   return revived ?? source;
 }
 
-// v2 (ADR-0053) で追加したトップレベル引数。string 型の group_by / cursor は
+// v2 (ADR-0604) で追加したトップレベル引数。string 型の group_by / cursor は
 // 旧スキーマ経由でも壊れないので対象外。
 const KYOUS_STALE_SCHEMA_ARG_KINDS = new Map([
   ["count_only", "boolean"],
@@ -542,7 +542,7 @@ export function normalizeKyouArgs(args) {
   if (Object.prototype.hasOwnProperty.call(source, "include_rep_name") && source.include_rep_name !== undefined) {
     assertBoolean(source.include_rep_name, "include_rep_name");
   }
-  // ---- v2 (ADR-0053) ----
+  // ---- v2 (ADR-0604) ----
   if (Object.prototype.hasOwnProperty.call(source, "count_only") && source.count_only !== undefined) {
     normalized.count_only = assertBoolean(source.count_only, "count_only");
   }
@@ -626,7 +626,7 @@ export function normalizeKyouArgs(args) {
 // 意味が両立しない。gkill 側にも同じ検査があるが、返るのは ERR000352「記録の取得に失敗しました」
 // という汎用文で、**理由が本文に一切乗らない**（実測 2026-08-25: 検索失敗と区別が付かなかった）。
 // GPS 側（paginateGpsLogs）は前から MCP 層で理由つきに弾いており、get_kyous だけが
-// 素通しだった。同じ規則の2形態を1つにするためここへ寄せてある（ADR-0063）。
+// 素通しだった。同じ規則の2形態を1つにするためここへ寄せてある（ADR-0611）。
 export function assertAggregationNotCombinedWithCursor(args) {
   if (!args || !args.cursor) {
     return;

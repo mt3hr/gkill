@@ -1,8 +1,8 @@
 package gkill_server_api
 
 // 複合カーソル(時刻+ID)・厳密なLimit/MaxSizeMB・count_only/group_by の契約:
-// documents/adr/0053-mcp-composite-cursor-strict-limits.md
-// (旧: 時刻のみカーソルのため Limit を厳密に守れなかった — ADR-0052、Superseded)
+// documents/adr/0604-mcp-composite-cursor-strict-limits.md
+// (旧: 時刻のみカーソルのため Limit を厳密に守れなかった — ADR-0603、Superseded)
 
 import (
 	"context"
@@ -37,7 +37,7 @@ import (
 // Limitは1〜1000にクランプ (未指定は50)、MaxSizeMBの未指定は1.0、
 // Queryはnilなら空のクエリに差し替え、いずれの場合も OnlyLatestData = true に上書きします。
 //
-// v2 の契約（詳細と却下案: documents/adr/0053-mcp-composite-cursor-strict-limits.md）:
+// v2 の契約（詳細と却下案: documents/adr/0604-mcp-composite-cursor-strict-limits.md）:
 //   - 並び順は (RelatedTime降順, ID昇順) の全順序。カーソルは複合形式 "{RFC3339Nano}::{ID}" で、
 //     同一時刻のかたまりの途中からでも再開できるため **Limit と MaxSizeMB は厳密な上限**です
 //     （唯一の例外はページ先頭の1件が単独で MaxSizeMB を超えるときで、そのまま返して警告します。
@@ -311,7 +311,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	// 候補IDを収集。
 	// ★v2ではLimitは厳密な上限。複合カーソルが同一時刻のかたまりの途中からでも
 	//   再開できるため、旧v1の「かたまりの終わりまで伸ばす」延長は不要になった
-	//   （ADR-0053。旧v1の事情はADR-0052を参照）。
+	//   （ADR-0604。旧v1の事情はADR-0603を参照）。
 	// request.Limitは冒頭で[1,maxLimit]にクランプ済み。ここでは batch のインデックス範囲
 	// (batch[i])を安全にするため candidateCount <= len(batch) にクランプする。
 	candidateCount := request.Limit
@@ -506,7 +506,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 
 	// 付随 TimeIs のタグは打刻IDでメモ化する。同じ打刻が N 件の Kyou に付いても引くのは1回。
 	// メモ化しないと GetTagsByTargetID の呼び出しが Σ(Kyouごとの一致件数) になる
-	// (1ページ20件・1件16打刻で320回)。リクエスト単位のメモ化は ADR-0007 と同じ考え方。
+	// (1ページ20件・1件16打刻で320回)。リクエスト単位のメモ化は ADR-0107 と同じ考え方。
 	timeisTagsCache := map[string][]string{}
 
 	// この応答に出たプラグインの rep 名。説明文を末尾に1回だけ載せるために集める。
@@ -790,7 +790,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		// 複合カーソル {RFC3339Nano}::{ID}。
 		// 時刻がRFC3339Nanoなのは、秒へ切り捨てると同じ秒の内側が漏れるため。
 		// IDを併記することで、同一時刻のかたまりの途中でページを割っても
-		// 次ページが正確な位置から再開できる（これがLimit厳密化の前提。ADR-0053）。
+		// 次ページが正確な位置から再開できる（これがLimit厳密化の前提。ADR-0604）。
 		last := batch[consumedCount-1]
 		nextCursor = encodeMCPCursor(last.RelatedTime, last.ID)
 	}

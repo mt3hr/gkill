@@ -10,10 +10,10 @@ description: "rykv / mi / dashboard の列と検索の不変条件。列の同�
 **このファイルは全文が、実際に起きた事故の再発防止である。該当作業では飛ばさずに読むこと。**
 多くは「例外もエラーも出さずに静かに壊れる」種類で、破っても目の前ではエラーにならない。
 
-**rykv/mi の「列×検索」不変条件**（2026-08-09 の誤配送根絶で確立。崩すと「検索結果が別の列に出る」が再発する）: 列の同一性は `query_id`（**列の誕生時のみ採番、以後不変**）。`:key`・DOM id・テンプレート ref 逆引き（`get_kyou_list_view`）・`abort_controllers` / `search_seqs`（Map）のキーは全部これ。列リロード・画像トグル・サイドバー clear 系で**再採番してはいけない**（列が remount され、検索結果の帰属も切れる）。検索は列ごとの世代番号 `search_seqs` で「最後の検索だけが書き戻せる」。`focused_query` を更新してよいのはフォーカス列の検索だけ（無条件更新するとサイドバーが別列条件に乗っ取られ query_id 重複→誤配送になる）。サイドバー編集の宛先は `focused_column_index` ではなく `querys.findIndex(query_id)` で解決する。検索ボタンはサイドバーの `generate_query(列のquery_id)` で「今見えている条件」から検索する（`rykv_hot_reload` OFF 時は編集が列に保存されないため。なお既定は **ON**、サーバ既定値 true）。サイドバーの `emits_current_query` は**再生成結果が同期済みクエリと同値なら emit しない**（フォーカス切替で子ビューのprops同期の残響が機械的に届くのを検索にしないための値比較ガード。これが破れると「検索中の列をクリック→飛行中の検索がabortされ最初からやり直し」が再発する。`generate_query` は同期済みクエリに対して恒等であること —— とくに `include_*_mi` をtrue固定でドリフトさせない。`rykv-sidebar-mechanical-emission.test.ts` が守る）。`use-rykv-view.ts` と `use-mi-view.ts` はコピー由来の対称実装なので**修正は必ず両方へ**（`rykv-view-search-routing.test.ts` / `mi-view-search-routing.test.ts` が対で守る）。フォーカス切替時の検索抑止は**コールバック式 `run_with_sidebar_search_suppressed(fn)` だけ**を使う（`skip=true → fn()でリアクティブ書き込み → nextTick(解除)` の順が本質。書き込みより先に nextTick を登録すると、Vue の nextTick が resolvedPromise へ直結して解除がウォッチャ flush より先に走り、抑止が一度も効かない — 2026-08-10 のタブフリーズ回帰の正体）。サイドバーの子クエリビュー（Rep/Tag/TimeIs/Map/Calendar）は **props 同期では emit しない**：TimeIs は同期経路に `disable_emits=true` + `pre_uncheck_all=true`（累積させない）、Map は同期時 emit なし + radius ウォッチャの値ガード、Calendar は `clicked_date` の同値エコーガード（`sidebar-child-query-sync-emission.test.ts` が守る）。`use-kyou-list-view.ts` の `scroll_to` は世代カウンタ + 上限（2秒）つきで、打ち切り時は scrollTop を直接代入する（無限リトライに戻すと 0 件列への 50ms 周期の強制レイアウトが増殖する）。 誤配送が起きた経緯と却下案は [ADR-0034](../../../documents/adr/0034-column-identity-query-id.md)。
+**rykv/mi の「列×検索」不変条件**（2026-08-09 の誤配送根絶で確立。崩すと「検索結果が別の列に出る」が再発する）: 列の同一性は `query_id`（**列の誕生時のみ採番、以後不変**）。`:key`・DOM id・テンプレート ref 逆引き（`get_kyou_list_view`）・`abort_controllers` / `search_seqs`（Map）のキーは全部これ。列リロード・画像トグル・サイドバー clear 系で**再採番してはいけない**（列が remount され、検索結果の帰属も切れる）。検索は列ごとの世代番号 `search_seqs` で「最後の検索だけが書き戻せる」。`focused_query` を更新してよいのはフォーカス列の検索だけ（無条件更新するとサイドバーが別列条件に乗っ取られ query_id 重複→誤配送になる）。サイドバー編集の宛先は `focused_column_index` ではなく `querys.findIndex(query_id)` で解決する。検索ボタンはサイドバーの `generate_query(列のquery_id)` で「今見えている条件」から検索する（`rykv_hot_reload` OFF 時は編集が列に保存されないため。なお既定は **ON**、サーバ既定値 true）。サイドバーの `emits_current_query` は**再生成結果が同期済みクエリと同値なら emit しない**（フォーカス切替で子ビューのprops同期の残響が機械的に届くのを検索にしないための値比較ガード。これが破れると「検索中の列をクリック→飛行中の検索がabortされ最初からやり直し」が再発する。`generate_query` は同期済みクエリに対して恒等であること —— とくに `include_*_mi` をtrue固定でドリフトさせない。`rykv-sidebar-mechanical-emission.test.ts` が守る）。`use-rykv-view.ts` と `use-mi-view.ts` はコピー由来の対称実装なので**修正は必ず両方へ**（`rykv-view-search-routing.test.ts` / `mi-view-search-routing.test.ts` が対で守る）。フォーカス切替時の検索抑止は**コールバック式 `run_with_sidebar_search_suppressed(fn)` だけ**を使う（`skip=true → fn()でリアクティブ書き込み → nextTick(解除)` の順が本質。書き込みより先に nextTick を登録すると、Vue の nextTick が resolvedPromise へ直結して解除がウォッチャ flush より先に走り、抑止が一度も効かない — 2026-08-10 のタブフリーズ回帰の正体）。サイドバーの子クエリビュー（Rep/Tag/TimeIs/Map/Calendar）は **props 同期では emit しない**：TimeIs は同期経路に `disable_emits=true` + `pre_uncheck_all=true`（累積させない）、Map は同期時 emit なし + radius ウォッチャの値ガード、Calendar は `clicked_date` の同値エコーガード（`sidebar-child-query-sync-emission.test.ts` が守る）。`use-kyou-list-view.ts` の `scroll_to` は世代カウンタ + 上限（2秒）つきで、打ち切り時は scrollTop を直接代入する（無限リトライに戻すと 0 件列への 50ms 周期の強制レイアウトが増殖する）。 誤配送が起きた経緯と却下案は [ADR-0405](../../../documents/adr/0405-column-identity-query-id.md)。
 
 **rykv/mi/dashboard の初期化順序**（2026-08-17 に「初期取得の完了まで全画面を隠す」段階を外して確立）。順序は **列の骨組みを確定 → 可視化 → 検索**で、`inited` / `is_loading` は初期検索の完了に依存しない。守るべき約束:
-- **`init()` の起動条件は `props.application_config.is_loaded` の watch**。サイドバーの `@inited` へ戻してはいけない ―― あれは「その節が描けた」の集約でしかなく、節を1つ画面から外すだけで画面ごとスピナーで固まる（経緯は ADR-0036）
+- **`init()` の起動条件は `props.application_config.is_loaded` の watch**。サイドバーの `@inited` へ戻してはいけない ―― あれは「その節が描けた」の集約でしかなく、節を1つ画面から外すだけで画面ごとスピナーで固まる（経緯は ADR-0407）
 - **サイドバーの `inited` 集約は無い**が、`inited_*_for_query_sidebar` の各フラグは**残す**。子へ `:inited` prop として降り、子が「初回同期か再同期か」を判定している（消すと props 同期のたびにチェックが列をまたいで累積する）
 - **`init()` は hot reload の ON/OFF で分岐せず、列の骨組み（`querys` / `querys_backup` / `match_kyous_list`）を検索より前に確定させる**。1本ずつ足すと「列が確定した瞬間」が定義できず、復元中にユーザが列を足したとき `search(i, ...)` の固定 index と衝突する。`querys_backup` を先に埋めるのは、機械的な残響が `search()` の `deep_equals` 早期returnで確実に落ちるようにするため
 - **`init()` で `skip_search_this_tick` を立てっぱなしにしない。** あれは「1tick分の残響を捨てる」短命フラグで、初期化全体の門番に流用すると機械的な emit が1つ届いただけで `onSidebarUpdatedQuery` が消費し、複数列のとき1列目の完了で抑止が途中で解ける。抑止は `run_with_sidebar_search_suppressed` だけを使う
@@ -24,12 +24,12 @@ description: "rykv / mi / dashboard の列と検索の不変条件。列の同�
 - **①（ApplicationConfig 待ち）は残す。** 未ロードで既定クエリを作ると既定期間と強制非表示タグが黙って落ちる（`generate_default_query_for_rykv` が設定を読むため。初回起動のユーザだけが踏む）
 - **設定取得の失敗は永久スピナーにしない。** `application_config_load_failed` を立ててオーバーレイの中身をエラー＋再試行ボタンへ差し替える（文言は既存の `FAILED_GET_APPLICATION_CONFIG_MESSAGE` / `RELOAD_TITLE`）
 - dashboard は列を持たないが同じ方針。初回ロードは日付変更時と同じ `fetch_for_date()` に寄せ、パネル単位のローディングで進行を見せる
-- 守るテスト: `rykv-view-initial-load.test.ts` / `mi-view-initial-load.test.ts`（対）/ `column-view-init-source-scan.test.ts`（ソース走査）/ `dashboard-page-reload.test.ts` の「ApplicationConfig 取得の失敗」節 / `e2e/column-view-initial-load.spec.ts` 却下案と、@inited が偶然機能していた理由（→ ADR-0036）は [ADR-0035](../../../documents/adr/0035-visualize-before-initial-search.md)。
+- 守るテスト: `rykv-view-initial-load.test.ts` / `mi-view-initial-load.test.ts`（対）/ `column-view-init-source-scan.test.ts`（ソース走査）/ `dashboard-page-reload.test.ts` の「ApplicationConfig 取得の失敗」節 / `e2e/column-view-initial-load.spec.ts` 却下案と、@inited が偶然機能していた理由（→ ADR-0407）は [ADR-0406](../../../documents/adr/0406-visualize-before-initial-search.md)。
 
 **検索を期間の窓へ刻んで複数回 `get_kyous` を投げてはいけない**（2026-08-18 に入れて 08-19 に撤去）。
 総時間が伸び、スピナーが回り続けているように見え、**境界のレコードがどちらの窓にも入らず静かに落ちる**
 （SQL は `.Unix()` の秒切り捨て、`passesPeriodFilter` はナノ秒で、精度が違う）。
-狙いをどう外したかの内訳は [ADR-0030](../../../documents/adr/0030-do-not-split-search-window-in-client.md)。
+狙いをどう外したかの内訳は [ADR-0401](../../../documents/adr/0401-do-not-split-search-window-in-client.md)。
 
 ピークメモリのために分割するなら、固定費を1回で済ませられる**サーバの中**でやること。
 **列に部分的な結果を出さないこと** ―― 件数カレンダー・Dnote・Ryuu・フッタの件数はどれも
@@ -44,11 +44,11 @@ description: "rykv / mi / dashboard の列と検索の不変条件。列の同�
 - 差し込みは **in-place `splice`**。`focused_kyous_list` は `match_kyous_list[focused_column_index]` へのエイリアスなので、参照ごと差し替えると件数カレンダーや Dnote と縁が切れる（30万件のコピーも避けられる）。ただし Dnote は命令的 reload なので配列を触るだけでは追随せず、明示的に呼び直すこと
 - `add_*` の応答は **hydrate を通っていない生 JSON**（`related_time` が文字列、`clone()` も無い）。受け口で必ず実体化する
 - KFTL は送信全体を tx で包むが、**tx 中の `add_*` は `added_kyou` を返せない**。リクエストクラスが id だけ積み（`get_result_kyou_ids()`）、`commit_tx` の**あと**に `get_kyou` で引いてから emit する。「終了」系は既存 TimeIs の更新なので `updated_kyou`
-- 守るテスト: `kyou-local-insert.test.ts` / `kyou-local-insert-mi-parity.test.ts`（Go の `find_filter_mi_test.go` と対）/ `registered-kyou-local-insert.test.ts`（rykv・mi 両方でパラメタライズ）/ `kftl-submit-emits.test.ts` 判定できない条件の一覧と却下案は [ADR-0031](../../../documents/adr/0031-insert-registered-kyou-locally.md)。
+- 守るテスト: `kyou-local-insert.test.ts` / `kyou-local-insert-mi-parity.test.ts`（Go の `find_filter_mi_test.go` と対）/ `registered-kyou-local-insert.test.ts`（rykv・mi 両方でパラメタライズ）/ `kftl-submit-emits.test.ts` 判定できない条件の一覧と却下案は [ADR-0402](../../../documents/adr/0402-insert-registered-kyou-locally.md)。
 
 **利用者がその場で作ったタグは、開いている列の検索条件へ足す**（2026-08-19）。
 直している不具合は **「タグを付けて追加した記録が、追加した直後に一覧から消える」**。
-根本原因は既定クエリがタグ宇宙を列挙で物質化して凍ること（詳細は ADR-0033）。タグが1つも無い時期に作られた列は
+根本原因は既定クエリがタグ宇宙を列挙で物質化して凍ること（詳細は ADR-0404）。タグが1つも無い時期に作られた列は
 `tags = ["no tags"]` だけになり、**タグの付いた記録が1件も通らない**（サーバ検索と局所挿入の両方で落ち、
 **エラーも警告も出ない**）。実装は `classes/use-registered-tag-column-filter.ts` の1つで、
 rykv / mi が同じものを使う。守るべき約束:
@@ -73,11 +73,11 @@ rykv / mi が同じものを使う。守るべき約束:
   optional（dashboard / plaing は列のタグ絞り込みを持たない）。受け手では `reload_list` の畳み込みより**先**に適用する
   （逆だと旧条件のまま全件取り直す）
 - **今回の修正では直らないもの**（区別できる情報が保存データに無い）: 他端末で作られたタグ、過去に作ったタグ、
-  プラグインKyouのタグ。本命の対処（既定クエリの物質化をやめる）が別件である理由は ADR-0033
+  プラグインKyouのタグ。本命の対処（既定クエリの物質化をやめる）が別件である理由は ADR-0404
 - 守るテスト: `registered-tag-column-filter.test.ts` / `new-tag-column-search.test.ts`（rykv・mi 両方）/
   `column-view-init-source-scan.test.ts` / `kyou-change-bus.test.ts` /
   `e2e/regression-fixes.spec.ts` の「新規タグを付けて追加した記録が、画面遷移せずに一覧へ残る」
-  （**画面遷移しないことが本質** ―― 遷移すると既定クエリを作り直すのでこの不具合をすり抜ける） 既定クエリの物質化という根本原因と、この修正で直らない範囲は [ADR-0033](../../../documents/adr/0033-add-unknown-tag-to-column-filter.md)。
+  （**画面遷移しないことが本質** ―― 遷移すると既定クエリを作り直すのでこの不具合をすり抜ける） 既定クエリの物質化という根本原因と、この修正で直らない範囲は [ADR-0404](../../../documents/adr/0404-add-unknown-tag-to-column-filter.md)。
 
 **画面間の変更伝播（`classes/kyou-change-bus.ts`）**
 - **購読側へ渡してよいのは emit を含まない適用関数だけ。** 中継束（`crudRelayHandlers`）を渡すと適用のたびに `emits(...)` が走ってホストが再 publish し、通知が無限に往復する。そのために `onDeletedKyou` は `apply_deleted_kyou`（適用のみ）と `onDeletedKyou`（適用＋emit）に割ってある
@@ -117,9 +117,9 @@ rykv / mi が同じものを使う。守るべき約束:
 
 ## 詳しい設計と却下案（ADR）
 
-- [ADR-0030 検索を期間の窓へ刻まない](../../../documents/adr/0030-do-not-split-search-window-in-client.md)
-- [ADR-0031 追加は局所挿入](../../../documents/adr/0031-insert-registered-kyou-locally.md)
-- [ADR-0033 未知タグを列条件へ足す](../../../documents/adr/0033-add-unknown-tag-to-column-filter.md)
-- [ADR-0034 列の同一性は query_id](../../../documents/adr/0034-column-identity-query-id.md)
-- [ADR-0035 可視化を初期検索より先に](../../../documents/adr/0035-visualize-before-initial-search.md)
-- [ADR-0036 init は ApplicationConfig ロード後](../../../documents/adr/0036-init-on-application-config-loaded.md)
+- [ADR-0401 検索を期間の窓へ刻まない](../../../documents/adr/0401-do-not-split-search-window-in-client.md)
+- [ADR-0402 追加は局所挿入](../../../documents/adr/0402-insert-registered-kyou-locally.md)
+- [ADR-0404 未知タグを列条件へ足す](../../../documents/adr/0404-add-unknown-tag-to-column-filter.md)
+- [ADR-0405 列の同一性は query_id](../../../documents/adr/0405-column-identity-query-id.md)
+- [ADR-0406 可視化を初期検索より先に](../../../documents/adr/0406-visualize-before-initial-search.md)
+- [ADR-0407 init は ApplicationConfig ロード後](../../../documents/adr/0407-init-on-application-config-loaded.md)

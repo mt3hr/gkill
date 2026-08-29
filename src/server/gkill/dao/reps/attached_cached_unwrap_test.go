@@ -10,7 +10,7 @@ package reps
 // これは「gkill_add_tag はどこへ書くのか」を書く前に知るための一覧
 // (get_rep_infos_mcp の attached_data_reps) に漏れており、
 // 実際の書き込み先 "Tag" と食い違う値が案内されていた（2026-08-24 の実利用レビュー）。
-// 同じ注意は GetLatestDataRepositoryAddress のコメント（ADR-0019）にあったが、
+// 同じ注意は GetLatestDataRepositoryAddress のコメント（ADR-0210）にあったが、
 // UnWrapTyped 側では守られていなかった。notification は元から再帰していて正しい。
 
 import (

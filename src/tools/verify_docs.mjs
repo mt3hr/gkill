@@ -11,7 +11,7 @@
 // 依存なし（Node 標準のみ）。リポジトリルートからでも任意の CWD からでも動作する。
 //
 // ファイル名の実在まで検査する理由と、除外を2種類に絞った理由:
-// documents/adr/0061-verify-docs-checks-filenames.md
+// documents/adr/0803-verify-docs-checks-filenames.md
 
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -873,7 +873,7 @@ function stripFencedBlocks(text) {
 //   **検査対象の資料ジャンルを増やすときは、必ずこの関数へ足すこと。**
 //   ここが唯一の入口なので、足し忘れるとリンク切れもゴーストファイル名も素通りする
 //   （実例: documents/releasenote/ の27ファイルは今も対象外）。
-//   AGENTS.md と .claude/skills/**/SKILL.md も対象（AI 資料再編。ADR-0062）。
+//   AGENTS.md と .claude/skills/**/SKILL.md も対象（AI 資料再編。ADR-0804）。
 function docMarkdownFiles() {
   const out = []
   for (const f of listFiles('documents/reverse', (f) => f.endsWith('.md'))) {
@@ -1356,8 +1356,79 @@ function checkADR() {
 
 
 // ─────────────────────────────────────────────────────────────
+// 4-e. ADR の番号帯（documents/adr/README.md「番号の付け方」の表）
+//
+//   帯は「壊れたときに同じ場所を読み直すことになる範囲」で切ってある。
+//   刻みが10番幅だった頃、4つの帯が満杯になり、中身が MCP の ADR 3本が
+//   空いていた「開発規約と資料」帯へ逃げた。番号は採番後不変なので、
+//   逃がした瞬間に気づかなければ恒久的にずれたまま残る（経緯は ADR-0805）。
+//
+//   だから「満杯になってから」ではなく **空きが ADR_BAND_MIN_FREE を切った時点で**
+//   落とす。落ちたときの正しい対応は帯を広げるか新しい帯を切ることで、
+//   別の帯へ逃がすことではない。
+// ─────────────────────────────────────────────────────────────
+const ADR_BAND_MIN_FREE = 10
+
+// README の「## 番号の付け方」節から `| NNNN-NNNN | サブシステム |` を拾う。
+function adrBands() {
+  const rel = 'documents/adr/README.md'
+  const text = readText(rel)
+  const head = text.match(/^## 番号の付け方\s*$/m)
+  if (!head) { err(`${rel} に「## 番号の付け方」節が無い（番号帯の正本）`); return [] }
+  const rest = text.slice(head.index + head[0].length)
+  const next = rest.search(/^## /m)
+  const section = next < 0 ? rest : rest.slice(0, next)
+  const bands = []
+  for (const mt of section.matchAll(/^\|\s*(\d{4})-(\d{4})\s*\|\s*([^|]+?)\s*\|\s*$/gm)) {
+    bands.push({ from: Number(mt[1]), to: Number(mt[2]), name: mt[3] })
+  }
+  return bands
+}
+
+function checkADRBands() {
+  const bands = adrBands()
+  if (!bands.length) {
+    err('documents/adr/README.md の「番号の付け方」に番号帯の表が無い')
+    return
+  }
+
+  for (const b of bands) {
+    if (b.from > b.to) err(`ADR の番号帯の範囲が逆: ${b.from}-${b.to}（${b.name}）`)
+  }
+
+  // 帯の重なり。重なると「どちらの帯に属するか」が読み手ごとに変わる。
+  const sorted = [...bands].sort((a, b) => a.from - b.from)
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i].from <= sorted[i - 1].to) {
+      err('ADR の番号帯が重なっている: ' +
+        `${sorted[i - 1].from}-${sorted[i - 1].to}（${sorted[i - 1].name}）と ` +
+        `${sorted[i].from}-${sorted[i].to}（${sorted[i].name}）`)
+    }
+  }
+
+  const nums = adrFiles().map((f) => Number(f.slice(0, 4)))
+  for (const n of nums) {
+    if (!bands.some((b) => n >= b.from && n <= b.to)) {
+      err(`ADR-${String(n).padStart(4, '0')} がどの番号帯にも入っていない` +
+        '（documents/adr/README.md「番号の付け方」の表に帯を足すこと）')
+    }
+  }
+
+  // 空き枯渇。予約帯（0件）は正常なので、使用数ではなく残り空きだけを見る。
+  for (const b of bands) {
+    const used = nums.filter((n) => n >= b.from && n <= b.to).length
+    const free = (b.to - b.from + 1) - used
+    if (free < ADR_BAND_MIN_FREE) {
+      err(`ADR の番号帯の空きが足りない: ${b.from}-${b.to}（${b.name}）は残り ${free}。` +
+        '帯を広げるか新しい帯を切ること。別の帯へ逃がすと恒久的にずれる（ADR-0805）')
+    }
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────
 // 8. AI エージェント向け資料（AGENTS.md / CLAUDE.md / .claude/skills）
-//    分割の設計と却下案: documents/adr/0062-split-claude-md-into-skills.md
+//    分割の設計と却下案: documents/adr/0804-split-claude-md-into-skills.md
 //
 //    AGENTS.md と CLAUDE.md は毎セッション全文が読み込まれる入口なので、
 //    太るとすべてのタスクの常時コンテキストを食う。上限を機械で固定する。
@@ -1537,7 +1608,7 @@ function checkPersonalInfo() {
 
 // ソース内アンカーコメント（規約スキルへの参照）の実在検査。
 // コメント内の参照は checkLinks に載らないので、スキルの改名・削除で静かに古びる。
-// 高リスクファイルの先頭に「編集前に読む: .claude/skills/<name>/SKILL.md」を置く運用（ADR-0062）。
+// 高リスクファイルの先頭に「編集前に読む: .claude/skills/<name>/SKILL.md」を置く運用（ADR-0804）。
 function checkSkillAnchors() {
   const re = /\.claude\/skills\/[\w-]+\/SKILL\.md/g
   const exts = /\.(go|ts|vue|mjs|kt)$/
@@ -1585,6 +1656,7 @@ function main() {
   checkPaths()
   checkDocFilenames()
   checkADR()
+  checkADRBands()
   checkSkills()
   checkAgentEntrypoints()
   checkADRSources()

@@ -125,7 +125,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	// hide_tags はタグ絞り込み(tags/timeis_tags)の有無と独立に効く。
 	// 以前は「タグ絞り込みを使うときだけ」収集しており、hide_tags 単独指定が
 	// エラーも警告も出さずに無視されていた（外部監査 S4）。
-	// 経緯と却下案: documents/adr/0070-hide-tags-standalone.md
+	// 経緯と却下案: documents/adr/0109-hide-tags-standalone.md
 	needHideTags := len(findQuery.HideTags) != 0
 	if needMatchTags || needRelatedTagIDs || needHideTags {
 		wg.Add(1)
@@ -207,7 +207,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		// 非表示タグ集合はfilterTagsTimeIsが適用する。
 		// 以前は条件が「TimeIsタグを使わないとき」と逆になっており、
 		// 適用側と噛み合わずTimeIsの非表示タグが一度も機能していなかった。
-		// hide_tags はタグ絞り込みの有無と独立に効く（単独有効化。ADR-0070）ので、
+		// hide_tags はタグ絞り込みの有無と独立に効く（単独有効化。ADR-0109）ので、
 		// TimeIsTags が未指定でも HideTags があれば集合を作る
 		if findQuery.TimeIsTags != nil || len(findQuery.HideTags) != 0 {
 			gkillErr, err = f.getMatchHideTagsWhenUnckedTimeIs(ctx, findKyouContext)
@@ -244,7 +244,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	slog.Log(ctx, gkill_log.Trace, "finish filterMiForMi", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
-	// hide_tags はタグ絞り込みの有無と独立に効く（単独有効化。ADR-0070）
+	// hide_tags はタグ絞り込みの有無と独立に効く（単独有効化。ADR-0109）
 	if findQuery.Tags != nil || len(findQuery.HideTags) != 0 {
 		gkillErr, err = f.getMatchHideTagsWhenUnckedKyou(ctx, findKyouContext)
 		if err != nil {
@@ -479,7 +479,7 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 	// ここで UnWrap() を使うのは「そのラッパに選ばれた実repが1つでもあるか」の判定だけ。
 	//
 	// 却下案（SQLへ押し込む／dao/reps へ降ろす／枝刈りも省く）と実測:
-	// documents/adr/0001-filter-rep-after-cache.md
+	// documents/adr/0101-filter-rep-after-cache.md
 	if findCtx.ParsedFindQuery.Reps == nil {
 		for _, matchRep := range typeMatchReps {
 			repName, err := matchRep.GetRepName(ctx)
@@ -551,7 +551,7 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 // maxTagNamesForSQLFilter はタグ名の絞り込みをSQLへ降ろす上限です。
 //
 // 実測表と却下案（SQL一本化／Go一本化／行数で閾値を動かす）:
-// documents/adr/0003-tag-filter-threshold-32.md
+// documents/adr/0103-tag-filter-threshold-32.md
 //
 // tag rep のワード検索は `LOWER(TAG) = LOWER(?) OR LOWER(ID) = LOWER(?)` を出す。
 // 列に関数がかかるので索引が効かず、**全行に LOWER() を適用**したうえで、
@@ -564,7 +564,7 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 // 交差する「名前の個数」は行数によらずほぼ一定。
 // 確保の少ないSQL側に寄せたいので、閾値は交差点よりやや上に置く。
 // 全タグ走査を「タグ無し」検索のときだけ走らせる理由:
-// documents/adr/0004-related-tag-ids-only-for-no-tags.md
+// documents/adr/0104-related-tag-ids-only-for-no-tags.md
 const maxTagNamesForSQLFilter = 32
 
 // collectTagsForFilter はタグ絞り込みに要る3つを作ります。
@@ -749,7 +749,7 @@ func (f *FindFilter) getMatchHideTagsWhenUnchecked(
 }
 
 func (f *FindFilter) getMatchHideTagsWhenUnckedKyou(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// Tags==nil でも走る（hide_tags 単独有効化。ADR-0070）。
+	// Tags==nil でも走る（hide_tags 単独有効化。ADR-0109）。
 	// checkedTagNames が nil なら「チェック済みのタグは無い」= 全 hide_tags が有効。
 	f.getMatchHideTagsWhenUnchecked(findCtx, findCtx.ParsedFindQuery.Tags, findCtx.MatchHideTagsWhenUncheckedKyou)
 	return nil, nil
@@ -859,7 +859,7 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 // 名前の一覧を2箇所で維持することになる。直すのは常に書き込み側。
 // 回帰は get_kyous_tx_rep_filter_test.go が**キャッシュON/OFFの両方**で守る。
 // 落とし穴5件がなぜ生まれたか（結果側で絞ることの代償）:
-// documents/adr/0001-filter-rep-after-cache.md
+// documents/adr/0101-filter-rep-after-cache.md
 func filterKyousByRepName(kyousMap map[string][]reps.Kyou, allowedRepNames map[string]struct{}) {
 	for id, kyous := range kyousMap {
 		kept := kyous[:0]
@@ -1003,7 +1003,7 @@ func newKyouTimeFilter(query *find.FindQuery) func(kyou reps.Kyou) bool {
 		}
 
 		// 秒の解釈（epoch / 秒オブデイの二重解釈）は find パッケージのアクセサが正本:
-		// documents/adr/0009-period-of-time-second-of-day.md
+		// documents/adr/0108-period-of-time-second-of-day.md
 		if sec, ok := query.PeriodStartSecondOfDay(); ok {
 			hasPeriodStart = true
 			periodStartSecond = int64(sec)
@@ -1314,7 +1314,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			}
 			delete(findCtx.MatchKyousCurrent, id)
 		}
-		// 非表示タグ(hide_tags)の適用は独立ステップ filterHideTagsKyous が行う(ADR-0070)
+		// 非表示タグ(hide_tags)の適用は独立ステップ filterHideTagsKyous が行う(ADR-0109)
 	} else {
 		// ANDの場合のフィルタリング処理
 		// クエリのタグ名を基準に交差する。
@@ -1379,7 +1379,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			filteredByTags = matchThisLoopKyousMap
 		}
 
-		// 非表示タグ(hide_tags)の適用は独立ステップ filterHideTagsKyous が行う(ADR-0070)
+		// 非表示タグ(hide_tags)の適用は独立ステップ filterHideTagsKyous が行う(ADR-0109)
 		findCtx.MatchKyousCurrent = filteredByTags
 	}
 
@@ -1392,7 +1392,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 // hide_tags を単独で効かせるため。「同じ名前が tags にも入っていれば消さない」
 // 意味論は集合を作る getMatchHideTagsWhenUnchecked 側が担っており、ここは
 // 出来上がった集合の対象を消すだけ。集合が空なら実質no-op。
-// 経緯と却下案: documents/adr/0070-hide-tags-standalone.md
+// 経緯と却下案: documents/adr/0109-hide-tags-standalone.md
 func (f *FindFilter) filterHideTagsKyous(_ context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedKyou {
 		delete(findCtx.MatchKyousCurrent, hideTag.TargetID)
@@ -1406,7 +1406,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 	// MatchTimeIssAtFilterTagsが空のまま=検索全体が0件になっていた。
 	//
 	// 非表示タグ(hide_tags)はタグ絞り込みの有無と独立に適用する（単独有効化。
-	// Kyou 側の filterHideTagsKyous と対称。ADR-0070）。TimeIsTags==nil でも
+	// Kyou 側の filterHideTagsKyous と対称。ADR-0109）。TimeIsTags==nil でも
 	// HideTags があれば集合が埋まっているので、この分岐でも消してから返す。
 	if findCtx.ParsedFindQuery.TimeIsTags == nil {
 		for _, timeis := range findCtx.MatchTimeIssAtFindTimeIs {

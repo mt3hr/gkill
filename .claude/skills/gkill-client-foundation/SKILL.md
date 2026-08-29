@@ -20,7 +20,7 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + 
 - `classes/cascade-delete-kyou.ts` — cascade delete for Kyou. The attached Tag / Text / Notification and the ReKyou / MiReKyou that reference the Kyou are looked up in reverse via `GetReKyousByTargetID` / `GetMiReKyousByTargetID` and logically deleted together with it. Depth cap 32 (`max_cascade_depth`), 16 lookups in flight per level (`request_chunk_size`). **The Kyou itself is deleted last** (deleting it first makes the server's `FindKyous` drop the referencing records from its results, so the reverse lookup can no longer find them). No TXID / `commit_tx` is used, so a partial commit is possible. On failure: ERR900093 `cascade_delete_depth_exceeded` / ERR900094 `cascade_delete_failed`, i18n key `FAILED_CASCADE_DELETE_KYOU_MESSAGE`
 - `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target; `/zip_cache/.*` on NavigationRoute denylist)
 
-**State management:** Props/Emit only. No Pinia/Vuex. `GkillAPI` singleton for backend communication. Pinia/Vuex を入れない理由と却下案は [ADR-0038](../../../documents/adr/0038-props-emit-only-no-pinia.md)。
+**State management:** Props/Emit only. No Pinia/Vuex. `GkillAPI` singleton for backend communication. Pinia/Vuex を入れない理由と却下案は [ADR-0408](../../../documents/adr/0408-props-emit-only-no-pinia.md)。
 
 **Android共有（Web Share Target）の二重保存対策**（2026-08-16）。`POST /share-target` は `serviceWorker.ts` が
 `respondWith` で丸ごと処理し、その場で `add_urlog` / `add_kmemo` を叩いてから `/saihate` へ 303 で送る。
@@ -66,7 +66,7 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 
 ### UI 実装の共通規約
 
-**Context menus:** never compute the popup position by hand. Call `useContextMenuPosition()` (`classes/use-context-menu-position.ts`) for `is_show` / `menu_target` / `open_at(e)`, and bind the template as `<v-menu v-model="is_show" :target="menu_target" location="bottom start">`. Vuetify's connected location strategy measures the rendered menu and flips/shifts it to stay inside the viewport. The previous approach copy-pasted `left: min(innerWidth - 130, x); top: min(max(50, innerHeight - (8 + 48 * N)), y)` into all 25 context-menu composables — the 130px width was unrelated to the real list width, and `N` had to be hand-synced with the template's item count (the struct-family menus sat at `N=2` while actually having 5 items). `.gkill_context_menu_list { max-height: 70vh; overflow-y: scroll }` in `App.vue` still caps very long menus. 手計算をやめた経緯（実測しない限り正しい定数は書けない）は [ADR-0039](../../../documents/adr/0039-context-menu-position-by-vuetify.md)。
+**Context menus:** never compute the popup position by hand. Call `useContextMenuPosition()` (`classes/use-context-menu-position.ts`) for `is_show` / `menu_target` / `open_at(e)`, and bind the template as `<v-menu v-model="is_show" :target="menu_target" location="bottom start">`. Vuetify's connected location strategy measures the rendered menu and flips/shifts it to stay inside the viewport. The previous approach copy-pasted `left: min(innerWidth - 130, x); top: min(max(50, innerHeight - (8 + 48 * N)), y)` into all 25 context-menu composables — the 130px width was unrelated to the real list width, and `N` had to be hand-synced with the template's item count (the struct-family menus sat at `N=2` while actually having 5 items). `.gkill_context_menu_list { max-height: 70vh; overflow-y: scroll }` in `App.vue` still caps very long menus. 手計算をやめた経緯（実測しない限り正しい定数は書けない）は [ADR-0409](../../../documents/adr/0409-context-menu-position-by-vuetify.md)。
 
 **チェックツリーへの適用は単一パスで:** サイドバーのチェック状態をツリーへ書き戻すときは `classes/foldable-struct-check.ts` の `apply_check_state_to_struct(root, items, state, pre_uncheck_all)` を使い、**「項目1つごとにツリー全体を再帰走査」を書かない**。旧実装は O(項目数×ノード数) で、全ノード訪問が Vue の deep reactive proxy 越しになるため、rep 376個の実環境では列フォーカス切替の click が同期6.5秒（トレース実測）に達していた（2026-08-10 修正。rep/tag/timeis の3コンポーザブルと `apply_rep_summary_to_detaul` が対象。旧実装との等価性は `foldable-struct-check.test.ts` が担保）。なお `InfoBase` 系データクラスに TS `private` フィールドを足してはいけない —— `ref()` の UnwrapRef が private を落とし `Ref<Array<Kyou>>` への代入が全所で型エラーになる（ES `#` も reactive Proxy 越しの `this` で壊れる）。内部フィールドは underscore 公開 + getter/setter にする。
 
@@ -95,5 +95,5 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 
 ## 詳しい設計と却下案（ADR）
 
-- [ADR-0038 Props/Emit のみ（Pinia を入れない）](../../../documents/adr/0038-props-emit-only-no-pinia.md)
-- [ADR-0039 コンテキストメニュー位置は Vuetify に任せる](../../../documents/adr/0039-context-menu-position-by-vuetify.md)
+- [ADR-0408 Props/Emit のみ（Pinia を入れない）](../../../documents/adr/0408-props-emit-only-no-pinia.md)
+- [ADR-0409 コンテキストメニュー位置は Vuetify に任せる](../../../documents/adr/0409-context-menu-position-by-vuetify.md)

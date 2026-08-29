@@ -38,5 +38,5 @@ description: "ポート（開発コード rudbeckia）とフローティング�
 
 ## 詳しい設計と却下案（ADR）
 
-- [ADR-0034 列の同一性は query_id（関連）](../../../documents/adr/0034-column-identity-query-id.md)
-- [ADR-0038 Props/Emit のみ（関連）](../../../documents/adr/0038-props-emit-only-no-pinia.md)
+- [ADR-0405 列の同一性は query_id（関連）](../../../documents/adr/0405-column-identity-query-id.md)
+- [ADR-0408 Props/Emit のみ（関連）](../../../documents/adr/0408-props-emit-only-no-pinia.md)

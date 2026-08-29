@@ -4,7 +4,7 @@ package reps
 //
 // rep単位のファンアウト（IDFKyouRepositories.GenerateThumbCache）が
 // 既に threads.Go のスロットを保持しているので、その内側でファイル単位の並列化に
-// threads.Go を使うと入れ子になり、プールが枯渇して恒久ハングする（ADR-0015）。
+// threads.Go を使うと入れ子になり、プールが枯渇して恒久ハングする（ADR-0206）。
 //
 // threads.Go には枯渇時の inline フォールバックが入っているので、
 // 「返ってくること」だけでは入れ子の復活を検知できない。

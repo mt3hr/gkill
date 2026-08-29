@@ -816,7 +816,7 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 	// アドレス表のrep名と実repの名前が食い違うと、絞り込みは全repを continue して
 	// 「エラーも立たず nil」で返る。この nil を呼び出し元（usecase/tag.go・usecase/text.go の
 	// 実在検査）は「対象が存在しない」と読むので、実在する記録へのタグ/テキスト追加が
-	// ERR000092 で全滅する。2026-08-24 に実際にそうなった（ADR-0019）。
+	// ERR000092 で全滅する。2026-08-24 に実際にそうなった（ADR-0210）。
 	//
 	// 名前が揃っていればここは発火しないので、全rep走査が常態になることはない。
 	// 発火したら名前の食い違いが戻ってきた印なので warn を1行残す。

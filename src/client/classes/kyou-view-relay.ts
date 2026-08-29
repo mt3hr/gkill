@@ -2,7 +2,7 @@
 'use strict'
 
 // Pinia/Vuex を入れない理由（中継の網羅性を型で保証している）:
-// documents/adr/0038-props-emit-only-no-pinia.md
+// documents/adr/0408-props-emit-only-no-pinia.md
 
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'

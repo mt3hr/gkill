@@ -707,7 +707,7 @@ AIクライアント（MCP）からもプラグインの記録を読める。プ
 |---|---|---|
 | `gkill_get_plugin_list` | `/api/get_plugin_list` | プラグイン一覧（name / version / description / data_type / rep_name / emits_kyou / provides / is_alive / process_running / has_last_error / typed_index / gps_index。診断用は has_last_error 以降 — 実装は `req_res/get_plugin_list_response.go`） |
 
-APIの `last_error` と `typed_index.last_build_error` は、**MCP では中身を返さない**。どちらもプラグインが動いている端末のディレクトリ構成を含み、AIの文脈へ入れば資料やコミットメッセージへ引き写される経路ができるため、`plugin-tools.mjs` の `handlePluginToolCall` が落として `has_last_error` / `has_last_build_error` だけを立てる（落としたときだけ `warnings` に1行）。Go 側も出口で端末固有の情報を伏せる（[ADR-0046](../adr/0046-redact-environment-specific-strings.md)）。
+APIの `last_error` と `typed_index.last_build_error` は、**MCP では中身を返さない**。どちらもプラグインが動いている端末のディレクトリ構成を含み、AIの文脈へ入れば資料やコミットメッセージへ引き写される経路ができるため、`plugin-tools.mjs` の `handlePluginToolCall` が落として `has_last_error` / `has_last_build_error` だけを立てる（落としたときだけ `warnings` に1行）。Go 側も出口で端末固有の情報を伏せる（[ADR-0707](../adr/0707-redact-environment-specific-strings.md)）。
 
 読み取り専用。設定書き換え（`/api/post_plugin_config`）はMCPに公開していない。
 
@@ -843,7 +843,7 @@ stderr には出ない。`last_attempt_at` は直近に構築を試みた時刻�
 ユニークID数。`provides` が `gpslog` だけのプラグインには**そもそも作らない**
 （`PluginManifest.NeedsTypedIndex()`）—— GPSログはKyouではないので索引の材料が1件も無く、
 作ると `never_built` / `0` のまま永久に固定されて「索引が壊れている＝位置情報が使えない」と
-誤読される（2026-08-24 の実利用報告。→ [ADR-0057](../adr/0057-plugin-role-is-emits-kyou-and-provides.md)）。
+誤読される（2026-08-24 の実利用報告。→ [ADR-0608](../adr/0608-plugin-role-is-emits-kyou-and-provides.md)）。
 GPSの取り込み状況は別枠の `gps_index`（`point_count` / `oldest` / `newest` / `fetched_at`）で、
 統計は `gpsLogRepositoryPluginImpl` が取得のたびにプラグインリポジトリへ預ける
 （一覧APIは `wrapAuth` でリポジトリ解決を通らないため、アダプタ側から預ける形にしてある）。

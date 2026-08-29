@@ -18,7 +18,7 @@ description: "検索条件 FindQuery の null 判定セマンティクス。null
 - ただし `FindKyouQuery` のコンストラクタ既定は `tags` / `reps` だけ **`null` ではなく `[]`**（旧 `use_tags=true` + 空配列と厳密等価にするため）
 - Mi の板名は `mi_board_name: null` が「すべて」。番兵は `classes/mi-board-names.ts` の **`MI_ALL_BOARD_KEY`（= ハードコードの `"すべて"`。ロケール非依存）** でサイドバー専用、null への変換は `use-mi-query-editor-sidebar.ts` の1点に集約されている。**i18n の訳語（`MI_ALL_BOARD_NAME_TITLE`）と比較してはいけない** ―― ツリーが emit するのはノードの `key` で、それは `append_all_mi_board()` が入れた `"すべて"` 固定なので、訳語と比べると日本語以外のロケールで「すべて」が全件に戻らず 0 件になる（表示名だけが `ALL_MI_BOARD_NAME` / `MI_ALL_TITLE`）
 - **削除済みを含めたいときは `IncludeDeletedData`（JSON `include_deleted_data`）を使う。** Kyou 検索の削除除外は `find_filter.go` の1箇所で、既定（false）は従来どおり最新版が削除済みのIDを丸ごと落とす。かつて紛らわしい `IsDeleted` と `HideTimeIsTags` が定義だけ存在し（前者は git の実装が「削除済みのみ」という逆の意味で読んでいた）、どちらも Kyou 検索では一度も参照されなかったが、送っているクライアントが実在しなかったので 2026-08-24 に削除した。MCP の語彙からも外してあるので、送ると未知キーとしてエラーになる。なお rekyou / mirekyou は rep の内部で削除済みを弾いており、この旗の対象外。**プラグインプロトコルの `sdk.Query.IsDeleted` だけは公開 API として残っており、gkill 本体からは常に false が渡る**
-- 旧形式JSONの移行は3実装が**同じ16キー**を扱う: Go `api/find/find_query_legacy_json.go`、client `classes/api/find_query/normalize-legacy-find-kyou-query-json.ts`、MCP `mcp/lib/constants.mjs` の `LEGACY_USE_FLAG_KEYS`。どれかが欠けると、そのフラグを送る古いクライアントの保存クエリが移行されない（MCP では未知キー扱いで throw する）。共有URL用の `share_kyou_info.db` は起動時にスキーマ 1.0.0→1.1.0 で**保存済みJSONそのものを書き換える**（共有URLは配布済みで再発行できないため） 却下案（フラグを残す／値が空ならフラグを無視する）は [ADR-0006](../../../documents/adr/0006-find-query-null-semantics.md)。
+- 旧形式JSONの移行は3実装が**同じ16キー**を扱う: Go `api/find/find_query_legacy_json.go`、client `classes/api/find_query/normalize-legacy-find-kyou-query-json.ts`、MCP `mcp/lib/constants.mjs` の `LEGACY_USE_FLAG_KEYS`。どれかが欠けると、そのフラグを送る古いクライアントの保存クエリが移行されない（MCP では未知キー扱いで throw する）。共有URL用の `share_kyou_info.db` は起動時にスキーマ 1.0.0→1.1.0 で**保存済みJSONそのものを書き換える**（共有URLは配布済みで再発行できないため） 却下案（フラグを残す／値が空ならフラグを無視する）は [ADR-0106](../../../documents/adr/0106-find-query-null-semantics.md)。
 
 ## 関連スキル
 
@@ -28,4 +28,4 @@ description: "検索条件 FindQuery の null 判定セマンティクス。null
 
 ## 詳しい設計と却下案（ADR）
 
-- [ADR-0006 FindQuery の null 意味論](../../../documents/adr/0006-find-query-null-semantics.md)
+- [ADR-0106 FindQuery の null 意味論](../../../documents/adr/0106-find-query-null-semantics.md)

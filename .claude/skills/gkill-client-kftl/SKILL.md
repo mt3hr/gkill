@@ -13,7 +13,7 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 - `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- ~~ /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes
 - `classes/kftl/` — KFTL parser (50 statement types; the Go side has 47). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
 
-**Go 側のエラーは行ごとに返し、入力ミスとサーバ障害を分ける**（2026-08-24、[ADR-0080](../../../documents/adr/0080-kftl-errors-are-per-line.md)）。`kftl_statement.go` は3フェーズ直列で、**行をリクエストへ適用するフェーズまでは1バイトも書かない**。だからそこは最初の1件で止めず**全行を評価して `errors.Join` で束ねる**（利用者が1往復で全部直せる。TS 側は元からそうなっていて Go だけが遅れていた）。実行フェーズは書き込みが起きるので最初の失敗で止める。振り分けは `KFTLInputError` と `errors.As` で、入力ミスは `ERR000416`(**400**)・サーバ障害は `ERR000351`(500)。**打ち間違いを 500 で返さないこと** —— ステータスを見る層からサーバ障害と区別できなくなる。応答の `created[]` は**書き込みが成功した直後にリクエスト側が控えた**もので、`requestMap` を事前に列挙して作ってはいけない（本文が空の kmemo / Mi / Nlog は何も書かずに成功し、打刻の終了は既存レコードの更新なので嘘になる）。失敗しても**そこまでに書けたぶんを載せる**（KFTL は DB トランザクションを使わないので部分保存が残る）。多言語キーは各失敗に1対1で7言語ぶん既にあるので**新設しない**。`api/kftl/` に **.go を新規追加しない**（`verify_docs` がファイル数を数えている）。
+**Go 側のエラーは行ごとに返し、入力ミスとサーバ障害を分ける**（2026-08-24、[ADR-0502](../../../documents/adr/0502-kftl-errors-are-per-line.md)）。`kftl_statement.go` は3フェーズ直列で、**行をリクエストへ適用するフェーズまでは1バイトも書かない**。だからそこは最初の1件で止めず**全行を評価して `errors.Join` で束ねる**（利用者が1往復で全部直せる。TS 側は元からそうなっていて Go だけが遅れていた）。実行フェーズは書き込みが起きるので最初の失敗で止める。振り分けは `KFTLInputError` と `errors.As` で、入力ミスは `ERR000416`(**400**)・サーバ障害は `ERR000351`(500)。**打ち間違いを 500 で返さないこと** —— ステータスを見る層からサーバ障害と区別できなくなる。応答の `created[]` は**書き込みが成功した直後にリクエスト側が控えた**もので、`requestMap` を事前に列挙して作ってはいけない（本文が空の kmemo / Mi / Nlog は何も書かずに成功し、打刻の終了は既存レコードの更新なので嘘になる）。失敗しても**そこまでに書けたぶんを載せる**（KFTL は DB トランザクションを使わないので部分保存が残る）。多言語キーは各失敗に1対1で7言語ぶん既にあるので**新設しない**。`api/kftl/` に **.go を新規追加しない**（`verify_docs` がファイル数を数えている）。
 
 **KFTL（メモ帳）のタブ**（2026-08-16）。`kftl-view.vue` がタブのホストで、`/kftl` ページ・各画面のメモ帳ダイアログ（`kftl-dialog.vue`）・打刻メモ帳（`mkfl-view.vue`）の**3系統すべて**に効く。純関数は `classes/kftl-tabs.ts`、状態は `classes/use-kftl-tabs.ts`。守るべき約束:
 - **`v-window` を使わず、アクティブなタブ1枚だけを描画する。** 非表示の textarea は `clientWidth` が0になり、`kftl-statement-line.ts` の `1 + parseInt(text_width / 0)` が **`NaN`**（`Infinity` ではない）を返して行ラベルが丸ごと消える
@@ -22,7 +22,7 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 - **送信対象タブは `do_submit(target_tab_id, ...)` の引数で渡す。** `do_submit()` は未知タグ確認・未知板名確認でいったん抜けて応答を待つので、1回の保存で2〜3回呼ばれる。gkill のフローティングダイアログは非モーダル（`App.vue` の `.gkill-float-scrim` が `pointer-events: none`）なので、確認中でも背後のタブバーは押せる。持ち越し用の `submit_target_tab_id` を**引数ではなく直接読ませてはいけない** ―― 確認ダイアログを Escape / ブラウザバックで閉じられると古い値が残り、次の保存が別のタブへ誤配送される。新しい送信（`submit()`）は必ずアクティブなタブを渡す
 - **タブ操作のロックは `is_submitting || show_confirm_unknown_tag_dialog`。** `is_requested_submit` は設定の読み込みが終わるまで `true` なので鍵に使えない（起動直後にタブを追加できなくなる）。板名確認をロック条件に入れてもいけない ―― `unknown_mi_boards` はブラウザバックで閉じても空にならないので**永久ロック**になる（タグ確認は `useDialogHistoryStack` がどの閉じ方でも false にするので安全）
 - **不正行の判定は送信対象タブから引き直す。** 表示用の `invalid_line_numbers` はアクティブタブのもので、しかも await をまたいで遅れて着地する。これを送信の可否に使うと、タブを切り替えた直後の保存が「おかしな行があります」で止まる
-- **保存マーカーの判定は `beforeinput` で控えた本文と `input` 時点の本文を比べ、「確定したマーカー行が増えたか」で行う（`count_save_marker_lines`）。watch（本文の変化）に置いてはいけない。** watch は `flush: 'post'` で中間の値を観測しないうえ、**同じ `input` イベントのリスナー間でマイクロタスクが走る**ので `@input` より先に新しい本文を見てしまう（IMEでは必ず起きる）。「末尾がマーカーか」で見るのも不可。理由の詳細と却下案は [ADR-0037](../../../documents/adr/0037-save-marker-beforeinput-input-pair.md)。「確定した」= その行の後ろに改行がある、なので `！` を打った時点では走らない。守るテストは `kftl-submit-emits.test.ts` の「KFTLの保存マーカー」節と `e2e/kftl-tabs.spec.ts` の「IMEで確定してから改行しても自動で保存される」（**IMEはCDPの `Input.imeSetComposition` でしか再現しない**。`pressSequentially` は打鍵ごとにイベントループが回るので中間の本文を必ず観測してしまい、常に緑になる）
+- **保存マーカーの判定は `beforeinput` で控えた本文と `input` 時点の本文を比べ、「確定したマーカー行が増えたか」で行う（`count_save_marker_lines`）。watch（本文の変化）に置いてはいけない。** watch は `flush: 'post'` で中間の値を観測しないうえ、**同じ `input` イベントのリスナー間でマイクロタスクが走る**ので `@input` より先に新しい本文を見てしまう（IMEでは必ず起きる）。「末尾がマーカーか」で見るのも不可。理由の詳細と却下案は [ADR-0501](../../../documents/adr/0501-save-marker-beforeinput-input-pair.md)。「確定した」= その行の後ろに改行がある、なので `！` を打った時点では走らない。守るテストは `kftl-submit-emits.test.ts` の「KFTLの保存マーカー」節と `e2e/kftl-tabs.spec.ts` の「IMEで確定してから改行しても自動で保存される」（**IMEはCDPの `Input.imeSetComposition` でしか再現しない**。`pressSequentially` は打鍵ごとにイベントループが回るので中間の本文を必ず観測してしまい、常に緑になる）
 - **保存マーカーによる自動送信の入口は「利用者が選んだ操作」の2つだけ ―― textarea の `@input` と、テンプレート貼り付け。** 判定関数（`maybe_submit_by_save_marker`）は1つのまま、入口だけ2つにすること。`text_area_content` はアクティブタブへの computed なので、判定を watch の内容変化そのものに戻すとタブ切替・localStorage からの復元でも発火し、末尾にマーカーが残ったタブを**クリックしただけで保存が走る**。watch は `@input` が立てた印（`user_input_tab_id`。立てるのは `onTextAreaInput()` **だけ**）が付いているときしか判定しない。**テンプレートはこの印に相乗りさせず `paste_template()` から直接呼ぶ** ―― watch は `new_value === old_value` で早期returnするので、貼る前のタブの本文がテンプレートと同一文字列だと黙って発火しない（タブ化する前も同じ理由で取りこぼしていた）。さらに watch は `flush: 'post'` かつ await を挟むので、判定までにタブを切り替えられると「印のタブ == アクティブタブ」が偽になってこれも黙って落ちる
 - **同じタブを2枚のウィンドウが同時に保存しても、登録は1回。** `is_submitting` / `is_requested_submit` は**ビューごと**なので、同じタブを映した別ウィンドウの保存ボタンは止められない（KFTLはtxで束ねて送るので二重送信するとKyouが丸ごと重複する）。送信中のタブidは共有ストアが持ち、`do_submit` の冒頭で `tabs_store.try_begin_submit(target_tab_id)`、`finally` で `end_submit(target_tab_id)`。**claim は `is_requested_submit` ガードの「後」かつ `try` の「外」で取る** ―― 前に置くとガードの return が `finally` を通らず永久ロック、`try` の中で取ると掴めなかった側の `finally` が**勝ったウィンドウの分を解放**する。確認ダイアログで抜けるときは手放し、`confirm_submit` / `confirm_mi_board_submit` からの再入で取り直す（**持ち越すと自己デッドロックする**）。この印はリアクティブにせず localStorage にも出さない（`is_tab_locked` に混ぜると「送信中のタブから切り替えられない」、永続化するとリロードで掴んだままのタブが二度と保存できなくなる）。テンプレート経路は毎回一意な新しいタブを作り、それをアクティブにするのは貼ったウィンドウだけなので、この排他とは無関係に重複しない
 - `update_line_labels()` / `refresh_invalid_lines()` は **await をまたぐので世代トークンで最後の1回だけ書き戻す**（前のタブぶんの結果が後から着地して行ラベルが化けるのを防ぐ）
@@ -44,7 +44,7 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 
 ## 書式ミスは黙って通さない
 
-プレフィックスの判定は**完全一致**（`kftl_factory.go` の `generateDefaultConstructor`）で、値は次の行に書く。外したときは**書き込みの前に**行別エラーへ倒すこと（[ADR-0081](../../../documents/adr/0081-kftl-prefix-misuse-is-an-input-error.md)）。
+プレフィックスの判定は**完全一致**（`kftl_factory.go` の `generateDefaultConstructor`）で、値は次の行に書く。外したときは**書き込みの前に**行別エラーへ倒すこと（[ADR-0503](../../../documents/adr/0503-kftl-prefix-misuse-is-an-input-error.md)）。
 
 - **単独プレフィックス**（次に値の行が無い）は `requireNextLineText` で弾く。放置すると `/mood` 単独が**気分値 0（最低）の記録を黙って1件書き**、`/num` 単独が空の数値記録を書く。他は無言で0件になる
 - **プレフィックス＋同じ行の引数**（`/mood 8`）は `prefixWrittenWithArgument` で弾く。完全一致判定なので本文へ落ち、気分記録のつもりが本文「/mood 8」のメモ1件になっていた
@@ -53,7 +53,7 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 - 打ち間違いは `newKFTLInputError` を使う。`fmt.Errorf` のままだと ERR000351（HTTP 500）＋英語の生文言になる。**メッセージIDは既存の i18n キーを探してから足すこと**（キー追加は7言語 + Go の embed コピー + 件数を書いた資料4箇所に波及する）
 - **`api/kftl/` に .go を新規追加しない。** `verify_docs.mjs` がファイル数を数えて `api/README.md` と突き合わせる
 
-**KFTL の実行フェーズの失敗でも、原因が「利用者が直せる状態」なら `newKFTLInputError` に載せる。** `fmt.Errorf` のままだと `kftl_statement.go` の `errors.As` に引っかからず、`ERR000351`（HTTP 500）の「メモ帳のテキストの記録に失敗しました」だけが返って**行番号も理由も出ない**。2026-08-25 の実利用レビューは `~~`（リポストタスク）がこれで3回とも同じ文言で落ち、原因を MCP 経路の不具合と誤診した（実際は繋いだアカウントに `mirekyou` 型の rep が1件も無く、Web UI からでも同じく失敗する状態だった）。**`MessageID` を空にしないこと** —— 空だと `formatKFTLInputErrorMessage` が `Cause` の英文をそのまま応答へ載せ、利用者IDと端末名が漏れる（[ADR-0046](../../../documents/adr/0046-redact-environment-specific-strings.md)）。境界と却下案は [ADR-0082](../../../documents/adr/0082-kftl-missing-configuration-is-an-input-error.md)。
+**KFTL の実行フェーズの失敗でも、原因が「利用者が直せる状態」なら `newKFTLInputError` に載せる。** `fmt.Errorf` のままだと `kftl_statement.go` の `errors.As` に引っかからず、`ERR000351`（HTTP 500）の「メモ帳のテキストの記録に失敗しました」だけが返って**行番号も理由も出ない**。2026-08-25 の実利用レビューは `~~`（リポストタスク）がこれで3回とも同じ文言で落ち、原因を MCP 経路の不具合と誤診した（実際は繋いだアカウントに `mirekyou` 型の rep が1件も無く、Web UI からでも同じく失敗する状態だった）。**`MessageID` を空にしないこと** —— 空だと `formatKFTLInputErrorMessage` が `Cause` の英文をそのまま応答へ載せ、利用者IDと端末名が漏れる（[ADR-0707](../../../documents/adr/0707-redact-environment-specific-strings.md)）。境界と却下案は [ADR-0504](../../../documents/adr/0504-kftl-missing-configuration-is-an-input-error.md)。
 
 **`~~` は既存レコードをタスク化できない。** 対象IDは `ctx.ThisStatementLineTargetID` ＝**同じ送信テキストの直前の行が採番したUUID**で、gkill に既にある記録を指す構文は無い。ツール説明にそう書き戻さないこと。
 
@@ -67,7 +67,7 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 
 ## 詳しい設計と却下案（ADR）
 
-- [ADR-0037 保存マーカーは beforeinput/input の対で](../../../documents/adr/0037-save-marker-beforeinput-input-pair.md)
-- [ADR-0080 メモ帳の失敗は行ごとに返す](../../../documents/adr/0080-kftl-errors-are-per-line.md)
-- [ADR-0081 引数の書き方を誤ったプレフィックスは行別エラー](../../../documents/adr/0081-kftl-prefix-misuse-is-an-input-error.md)
-- [ADR-0082 実行フェーズでも設定不足は行別の入力エラー](../../../documents/adr/0082-kftl-missing-configuration-is-an-input-error.md)
+- [ADR-0501 保存マーカーは beforeinput/input の対で](../../../documents/adr/0501-save-marker-beforeinput-input-pair.md)
+- [ADR-0502 メモ帳の失敗は行ごとに返す](../../../documents/adr/0502-kftl-errors-are-per-line.md)
+- [ADR-0503 引数の書き方を誤ったプレフィックスは行別エラー](../../../documents/adr/0503-kftl-prefix-misuse-is-an-input-error.md)
+- [ADR-0504 実行フェーズでも設定不足は行別の入力エラー](../../../documents/adr/0504-kftl-missing-configuration-is-an-input-error.md)

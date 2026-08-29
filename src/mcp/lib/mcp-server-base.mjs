@@ -10,12 +10,12 @@
 // これで readwrite が read の上位集合であることが構造で担保される
 // （2026-08-25 の実利用レビューが「read と readwrite でスキーマが違う」と報告したが、
 //  実体は古いプロセスが昨日の定義を配っていただけで、コードは既に同一だった）。
-// 継承側に残すのは options の表1行だけ（ADR-0063）。
+// 継承側に残すのは options の表1行だけ（ADR-0611）。
 //
 // サーバ名・版・ツール一覧・read の選抜集合・write のアプリ名は options で受ける。
 //
 // server.current* へ書き戻してはいけない理由（並行要求の混線）:
-// documents/adr/0050-mcp-request-context-immutable.md
+// documents/adr/0601-mcp-request-context-immutable.md
 
 import { GkillApiError, isPlainObject, invalidArgument } from "./errors.mjs";
 import { assertTrimmedString } from "./validation.mjs";

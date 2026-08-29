@@ -243,7 +243,7 @@ func TestHandleGetRepInfosMCPIncludesIndexedAt(t *testing.T) {
 // 両方に出ており、応答が自己矛盾していた。実利用のAIはこれを読んで
 // query.reps へ rep_name を渡し、警告だけが返る結果になった（2026-08-24 の報告）。
 //
-// 役割ごとに1箇所へ決めるのが ADR-0056 の方針。GPS の供給元としては
+// 役割ごとに1箇所へ決めるのが ADR-0607 の方針。GPS の供給元としては
 // attached_data_reps[] の data_kind="gpslog" に残る。
 func TestHandleGetRepInfosMCPExcludesNonKyouPluginsFromPlugins(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
@@ -327,7 +327,7 @@ func TestHandleGetRepInfosMCPExcludesNonKyouPluginsFromPlugins(t *testing.T) {
 // リテラルなので、**実在しない名前が「タグはどこへ書かれるか」の答えとして返っていた**
 // （2026-08-24 の実利用レビュー。実際の書き込み先は "Tag" / "Text"）。
 //
-// 同じ注意は GetLatestDataRepositoryAddress のコメント（ADR-0019）に書かれていたのに、
+// 同じ注意は GetLatestDataRepositoryAddress のコメント（ADR-0210）に書かれていたのに、
 // UnWrapTyped 側では守られていなかった。notification は元から再帰していて正しい。
 func TestHandleGetRepInfosMCPAttachedDataRepNamesAreReal(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)

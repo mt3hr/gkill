@@ -2,7 +2,7 @@
 'use strict'
 
 // add_tag の完了前に registered_kyou を emit してはいけない理由:
-// documents/adr/0032-add-tag-before-registered-kyou.md
+// documents/adr/0403-add-tag-before-registered-kyou.md
 
 import type { GkillAPI } from '@/classes/api/gkill-api'
 import type { GkillError } from '@/classes/api/gkill-error'
