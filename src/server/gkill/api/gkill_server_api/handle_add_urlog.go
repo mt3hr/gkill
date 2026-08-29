@@ -37,7 +37,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	defer func() {
@@ -101,7 +101,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 
 	err = request.URLog.FillURLogField(serverConfig, applicationConfig)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Warn, "error at fill urlog field", "error", fmt.Sprintf("%q", err))
 	}
 
 	gkillErrors, err := g.UsecaseCtx.AddURLog(r.Context(), repositories, userID, device, request.LocaleName, request.URLog, request.TXID)

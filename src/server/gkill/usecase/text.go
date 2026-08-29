@@ -85,7 +85,7 @@ func (uc *UsecaseContext) AddText(ctx context.Context, repositories *reps.GkillR
 		err = repositories.WriteThroughTextCache(ctx, text)
 		if err != nil {
 			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at add text user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(ctx, text, *txID, userID, device)
@@ -123,7 +123,7 @@ func (uc *UsecaseContext) AddText(ctx context.Context, repositories *reps.GkillR
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	addedText, err := repositories.GetText(ctx, text.ID, nil)
@@ -191,7 +191,7 @@ func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.Gki
 		err = repositories.WriteThroughTextCache(ctx, text)
 		if err != nil {
 			err = fmt.Errorf("error at update text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at update text user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(ctx, text, *txID, userID, device)
@@ -229,7 +229,7 @@ func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.Gki
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	updatedText, err := repositories.GetText(ctx, text.ID, nil)

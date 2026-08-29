@@ -52,7 +52,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	defer func() {
@@ -323,7 +323,7 @@ loop:
 				err = repositories.WriteThroughIDFKyouCache(r.Context(), *idfKyou)
 				if err != nil {
 					err = fmt.Errorf("error at add idf kyou info to cache rep at %s: %w", request.TargetRepName, err)
-					slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+					slog.Log(r.Context(), gkill_log.Error, "error at add idf kyou info to cache rep at", "error", fmt.Sprintf("%q", err))
 				}
 
 				// defer g.WebPushUpdatedData(r.Context(), userID, device, idfKyou.ID)
@@ -339,7 +339,7 @@ loop:
 				_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 				if err != nil {
 					err = fmt.Errorf("error at update or add latest data repository address: %w", err)
-					slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+					slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 				}
 			}
 		default:

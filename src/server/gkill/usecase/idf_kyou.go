@@ -52,7 +52,7 @@ func (uc *UsecaseContext) UpdateIDFKyou(ctx context.Context, repositories *reps.
 		err = repositories.WriteThroughIDFKyouCache(ctx, idfKyou)
 		if err != nil {
 			err = fmt.Errorf("error at update idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, idfKyou, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at update idfKyou user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err := repositories.TempReps.IDFKyouTempRep.AddIDFKyouInfo(ctx, idfKyou, *txID, userID, device)
@@ -89,7 +89,7 @@ func (uc *UsecaseContext) UpdateIDFKyou(ctx context.Context, repositories *reps.
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil

@@ -53,7 +53,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 		err = repositories.WriteThroughNotificationCache(ctx, notification)
 		if err != nil {
 			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at add notification user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(ctx, notification, *txID, userID, device)
@@ -91,7 +91,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	addedNotification, err := repositories.GetNotification(ctx, notification.ID, nil)
@@ -158,7 +158,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 		err = repositories.WriteThroughNotificationCache(ctx, notification)
 		if err != nil {
 			err = fmt.Errorf("error at update notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at update notification user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(ctx, notification, *txID, userID, device)
@@ -196,7 +196,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	updatedNotification, err := repositories.GetNotification(ctx, notification.ID, nil)

@@ -59,7 +59,7 @@ func NewTextRepositorySQLite3ImplLocalCached(ctx context.Context, userID string,
 		defer func() {
 			err := originalDBFile.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close file opened for read", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
@@ -70,7 +70,7 @@ func NewTextRepositorySQLite3ImplLocalCached(ctx context.Context, userID string,
 		defer func() {
 			err := cacheDBFile.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close file opened for write", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)

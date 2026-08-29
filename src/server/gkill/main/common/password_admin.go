@@ -60,7 +60,7 @@ func runResetPassword(ctx context.Context, configDBRootDir string, userIDs []str
 	}
 	defer func() {
 		if err := accountDAO.Close(ctx); err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at close account dao", "error", err)
+			slog.Log(ctx, gkill_log.Warn, "error at close account dao", "error", err)
 		}
 	}()
 
@@ -129,7 +129,7 @@ func findLocalAdminUserID(ctx context.Context, configDBRootDir string) (string, 
 	}
 	defer func() {
 		if err := accountDAO.Close(ctx); err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at close account dao", "error", err)
+			slog.Log(ctx, gkill_log.Warn, "error at close account dao", "error", err)
 		}
 	}()
 
@@ -165,7 +165,7 @@ func issueLocalSession(ctx context.Context, configDBRootDir string, device strin
 	}
 	defer func() {
 		if err := accountDAO.Close(ctx); err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at close account dao", "error", err)
+			slog.Log(ctx, gkill_log.Warn, "error at close account dao", "error", err)
 		}
 	}()
 
@@ -200,7 +200,7 @@ func issueLocalSession(ctx context.Context, configDBRootDir string, device strin
 	}
 	if _, err := loginSessionDAO.AddLoginSession(ctx, loginSession); err != nil {
 		if err := loginSessionDAO.Close(ctx); err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at close login session dao", "error", err)
+			slog.Log(ctx, gkill_log.Warn, "error at close login session dao", "error", err)
 		}
 		return "", nil, nil, fmt.Errorf("error at add login session: %w", err)
 	}
@@ -217,10 +217,10 @@ func issueLocalSession(ctx context.Context, configDBRootDir string, device strin
 
 	cleanup = func() {
 		if _, err := loginSessionDAO.DeleteLoginSession(ctx, loginSession.SessionID); err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at delete local session", "error", err)
+			slog.Log(ctx, gkill_log.Warn, "error at delete local session", "error", err)
 		}
 		if err := loginSessionDAO.Close(ctx); err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at close login session dao", "error", err)
+			slog.Log(ctx, gkill_log.Warn, "error at close login session dao", "error", err)
 		}
 	}
 	return loginSession.SessionID, refresh, cleanup, nil

@@ -27,7 +27,7 @@ func (g *GkillServerAPI) HandleGetPluginConfigHTML(w http.ResponseWriter, r *htt
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	defer func() {
@@ -35,7 +35,7 @@ func (g *GkillServerAPI) HandleGetPluginConfigHTML(w http.ResponseWriter, r *htt
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at encode get plugin config html response: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at encode get plugin config html response", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 

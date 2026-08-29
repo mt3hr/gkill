@@ -52,7 +52,7 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 		err = repositories.WriteThroughMiCache(ctx, mi)
 		if err != nil {
 			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at add mi user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.MiTempRep.AddMiInfo(ctx, mi, *txID, userID, device)
@@ -89,7 +89,7 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil
@@ -145,7 +145,7 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 		err = repositories.WriteThroughMiCache(ctx, mi)
 		if err != nil {
 			err = fmt.Errorf("error at update mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at update mi user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.MiTempRep.AddMiInfo(ctx, mi, *txID, userID, device)
@@ -182,7 +182,7 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil
