@@ -112,6 +112,15 @@ type pluginRepositoryImpl struct {
 	// IsAlive は「呼ぶとプロセスを起動する」副作用を持つため、
 	// 起動を伴わない読み取り（ProcessRunning）の対として持つ。
 	running atomic.Bool
+
+	// lastFindErrLogUnixNano は FindKyous の失敗ログを間引くための直近出力時刻。
+	//
+	// **検索1回につきプラグイン1本あたり1行**出るので、プラグインが恒常的に壊れていると
+	// 全検索ぶん積む。利用者へは AppendPluginFindWarning が毎回伝わるので、
+	// ログ側は時間窓で間引いてよい（threads.logInlineFallback と同じ考え方）。
+	lastFindErrLogUnixNano atomic.Int64
+	// findErrCount は間引いた分も含む FindKyous の失敗の累計。
+	findErrCount atomic.Int64
 }
 
 // インターフェース適合確認（コンパイル時チェック）
@@ -514,10 +523,33 @@ func (p *pluginRepositoryImpl) findPluginKyous(ctx context.Context, pq *gkill_pl
 	return resp.Kyous, nil
 }
 
+// pluginFindErrLogInterval は FindKyous の失敗ログを出す最短間隔。
+const pluginFindErrLogInterval = 1 * time.Minute
+
+// logFindKyousError は FindKyous の失敗を間引いて Warn で出す。
+//
+// レベルが Warn なのは、これがプラグイン側の障害で、gkill 本体は残りの rep で
+// 動き続けるため（結果が痩せる＝Warn）。利用者へは毎回 MSG000088 の警告が届く。
+func (p *pluginRepositoryImpl) logFindKyousError(ctx context.Context, findErr error) {
+	count := p.findErrCount.Add(1)
+	now := time.Now().UnixNano()
+	last := p.lastFindErrLogUnixNano.Load()
+	if now-last < int64(pluginFindErrLogInterval) {
+		return
+	}
+	if !p.lastFindErrLogUnixNano.CompareAndSwap(last, now) {
+		return
+	}
+	slog.Log(ctx, gkill_log.Warn, "plugin find_kyous error",
+		"plugin_name", fmt.Sprintf("%q", p.manifest.Name),
+		"error_count", count,
+		"error", fmt.Sprintf("%q", findErr))
+}
+
 func (p *pluginRepositoryImpl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	pluginKyous, err := p.findPluginKyous(ctx, findQueryToPluginQuery(query))
 	if err != nil {
-		slog.Log(ctx, gkill_log.Error, "plugin find_kyous error", "plugin_name", fmt.Sprintf("%q", p.manifest.Name), "error", fmt.Sprintf("%q", err))
+		p.logFindKyousError(ctx, err)
 		// プラグイン障害で検索全体を落とさない方針は維持しつつ、
 		// 「静かな欠落」にならないよう警告として記録する(呼び出し元がメッセージ表示に使う)
 		AppendPluginFindWarning(ctx, p.manifest.Name)

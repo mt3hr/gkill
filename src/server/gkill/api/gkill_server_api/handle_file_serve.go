@@ -35,7 +35,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			w.WriteHeader(http.StatusForbidden)
 			err = fmt.Errorf("error at handle file serve: %w", err)
-			slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Warn, "file serve denied: no session or shared cookie", "error", fmt.Sprintf("%q", err))
 			return
 		}
 		sharedID = strings.ReplaceAll(sharedIDCookie.Value, "shared_id", "")
@@ -52,7 +52,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if account == nil || gkillError != nil || err != nil {
 			w.WriteHeader(http.StatusForbidden)
 			err = fmt.Errorf("error at handle file serve: %w", err)
-			slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Warn, "file serve denied: invalid session", "error", fmt.Sprintf("%q", err))
 			return
 		}
 		userID = account.UserID
@@ -61,14 +61,14 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if err != nil || sharedKyouInfo == nil {
 			w.WriteHeader(http.StatusForbidden)
 			err = fmt.Errorf("error at handle file serve: %w", err)
-			slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Warn, "file serve denied: invalid shared id", "error", fmt.Sprintf("%q", err))
 			return
 		}
 		userID = sharedKyouInfo.UserID
 	} else {
 		w.WriteHeader(http.StatusForbidden)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Warn, "file serve denied: no session or shared cookie", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -76,7 +76,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at get device name in file serve", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -87,7 +87,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		// (auth_middleware / handle_urlog_bookmarklet_address)と揃えて500にする。
 		w.WriteHeader(http.StatusInternalServerError)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at get repositories in file serve", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -100,7 +100,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at unwrap idf kyou reps in file serve", "error", fmt.Sprintf("%q", err))
 		return
 	}
 	for _, idfRep := range idfRepImpls {
@@ -108,7 +108,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			err = fmt.Errorf("error at handle file serve: %w", err)
-			slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at get rep name in file serve", "error", fmt.Sprintf("%q", err))
 			return
 		}
 		if repName == targetRepName {
@@ -119,8 +119,9 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 
 	if targetIDFRep == nil {
 		w.WriteHeader(http.StatusNotFound)
-		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
+		// ここの err は直前のループの GetRepName のもので、正常時は nil。
+		// %w で包むと %!w(<nil>) になるだけなので、探した rep 名を出す。
+		slog.Log(r.Context(), gkill_log.Warn, "file serve target rep not found", "rep_name", fmt.Sprintf("%q", targetRepName))
 		return
 	}
 
@@ -132,7 +133,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			err = fmt.Errorf("error at collect shared idf file paths: %w", err)
-			slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at collect shared idf file paths", "error", fmt.Sprintf("%q", err))
 			return
 		}
 		requestedRel := ""
@@ -143,7 +144,8 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		}
 		if !isSharedFileAllowed(allowed, targetRepName, requestedRel) {
 			w.WriteHeader(http.StatusForbidden)
-			slog.Log(r.Context(), gkill_log.Error, "finish", "error", "requested file is not in the shared query result")
+			// 要求された相対パスは出さない。共有相手の総当たりの結果がそのままログへ入る。
+			slog.Log(r.Context(), gkill_log.Warn, "file serve denied: requested file is not in the shared query result", "rep_name", fmt.Sprintf("%q", targetRepName))
 			return
 		}
 	}

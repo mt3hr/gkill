@@ -185,6 +185,15 @@ type PluginTypedIndex struct {
 	// 別物で、索引構築の失敗要因（20秒タイムアウト・ErrPluginBusy・JSON不正・
 	// プロセスkill）はそこには出ません。
 	lastBuildErr atomic.Pointer[string]
+
+	// multipleTypedCount / multipleTypedSample は buildSnapshot 1回のあいだに見つかった
+	// 「型別データが2つ以上入っていた」レコードの件数と、最初の1件。
+	//
+	// 以前はレコードごとに Warn を出していたので、索引の再構築1回で最大
+	// pluginIndexMaxRecords 行が積んだ。運用者が知りたいのは件数なので要約1行に畳む。
+	// buildSnapshot は buildMu で1本に絞られているので、素のフィールドでよい。
+	multipleTypedCount  int
+	multipleTypedSample string
 }
 
 // newPluginTypedIndex は索引を作ります。
@@ -385,6 +394,9 @@ func (i *PluginTypedIndex) buildSnapshot(pluginKyous []gkill_plugin.PluginKyou) 
 	snapshot := newEmptyPluginIndexSnapshot(true)
 	boardNameSet := map[string]struct{}{}
 
+	i.multipleTypedCount = 0
+	i.multipleTypedSample = ""
+
 	truncated := false
 	for _, pluginKyou := range pluginKyous {
 		if pluginKyou.ID == "" {
@@ -429,6 +441,12 @@ func (i *PluginTypedIndex) buildSnapshot(pluginKyous []gkill_plugin.PluginKyou) 
 	snapshot.truncated = truncated
 	if truncated {
 		slog.Log(context.Background(), gkill_log.Warn, "plugin returned too many records, truncated", "plugin_name", fmt.Sprintf("%q", i.source.indexPluginName()), "limit", pluginIndexMaxRecords)
+	}
+	if i.multipleTypedCount != 0 {
+		slog.Log(context.Background(), gkill_log.Warn, "plugin kyou has multiple typed data",
+			"plugin_name", fmt.Sprintf("%q", i.source.indexPluginName()),
+			"count", i.multipleTypedCount,
+			"first_kyou_id", fmt.Sprintf("%q", i.multipleTypedSample))
 	}
 
 	for boardName := range boardNameSet {
@@ -579,9 +597,16 @@ func (i *PluginTypedIndex) applyTypedData(record *pluginTypedRecord, pluginKyou 
 	}
 }
 
-// warnMultipleTyped は型別データが2つ以上入っていたことを警告します。
+// warnMultipleTyped は型別データが2つ以上入っていたことを数えます。
+//
+// **ここで1件ずつログを出さないこと。** 索引の再構築1回で最大 pluginIndexMaxRecords 行が積む。
+// 要約は buildSnapshot の末尾で1行だけ出す。
 func (i *PluginTypedIndex) warnMultipleTyped(kyouID string, applied string, ignored string) {
-	slog.Log(context.Background(), gkill_log.Warn, "plugin kyou has multiple typed data",
+	i.multipleTypedCount++
+	if i.multipleTypedSample == "" {
+		i.multipleTypedSample = kyouID
+	}
+	slog.Log(context.Background(), gkill_log.Debug, "plugin kyou has multiple typed data",
 		"plugin_name", fmt.Sprintf("%q", i.source.indexPluginName()), "kyou_id", fmt.Sprintf("%q", kyouID),
 		"applied", fmt.Sprintf("%q", applied), "ignored", fmt.Sprintf("%q", ignored))
 }

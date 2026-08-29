@@ -55,7 +55,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Warn, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
 	}()
 	defer func() {
@@ -63,7 +63,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse login response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at encode login response", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidLoginResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
@@ -76,7 +76,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse login request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Warn, "login request json decode failed", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidLoginRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
@@ -87,6 +87,11 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	ip := extractIP(r.RemoteAddr)
 	if !g.loginRateLimiter.allow(ip) {
+		// 総当たりの検知に要る。ここだけ1行も出ていなかったので、
+		// レート制限が効いた事実がログのどこにも残っていなかった。
+		slog.Log(r.Context(), gkill_log.Warn, "login rate limited",
+			"remote_addr", fmt.Sprintf("%q", ip),
+			"user_id", fmt.Sprintf("%q", request.UserID))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.LoginRateLimitError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "LOGIN_RATE_LIMITED_MESSAGE"}),
@@ -99,7 +104,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	account, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(r.Context(), request.UserID)
 	if err != nil {
 		err = fmt.Errorf("error at get account user id = %s: %w", request.UserID, err)
-		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at get account for login", "error", fmt.Sprintf("%q", err))
 		// ユーザ列挙対策: 存在しない/引けないユーザと「パスワード誤り」を
 		// 同じ error_code + 文言に統一し、Argon2id もダミーで1回実行して応答時間を近づける。
 		performDummyPasswordVerification(request.PasswordSha256)
@@ -113,7 +118,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	if account == nil {
 		err = fmt.Errorf("error at get account user id = %s: account not found", request.UserID)
-		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Warn, "login denied: account not found", "error", fmt.Sprintf("%q", err))
 		performDummyPasswordVerification(request.PasswordSha256)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidPasswordError,
@@ -126,7 +131,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	// アカウント有効確認
 	if !account.IsEnable {
 		err = fmt.Errorf("error at account is not enable = %s", request.UserID)
-		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Warn, "login denied: account is not enabled", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountIsNotEnableError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "ACCOUNT_DISABLED_MESSAGE"}),
@@ -138,7 +143,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	// パスワードリセット処理実施中のアカウントはログインから弾く
 	if account.PasswordResetToken != nil {
 		err = fmt.Errorf("error at password reset token is not nil = %s", request.UserID)
-		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Warn, "login denied: password reset in progress", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountPasswordResetTokenIsNotNilError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "REQUESTED_PASSWORD_RESET_MESSAGE"}),
@@ -152,7 +157,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	passwordMatched, err := account.VerifyPassword(request.PasswordSha256)
 	if err != nil {
 		err = fmt.Errorf("error at verify password user id = %s: %w", request.UserID, err)
-		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at verify password", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidPasswordError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INVALID_USER_ID_OR_PASSWORD"}),
@@ -162,7 +167,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	if !passwordMatched {
 		err = fmt.Errorf("error at account invalid password = %s", request.UserID)
-		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Warn, "login denied: invalid password", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidPasswordError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INVALID_USER_ID_OR_PASSWORD"}),
@@ -178,7 +183,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
-		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at get device name for login", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -202,7 +207,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error add login session user_id = %s: %w", request.UserID, err)
-			slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add login session", "error", fmt.Sprintf("%q", err))
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountLoginInternalServerError,
@@ -217,7 +222,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err != nil {
 			err = fmt.Errorf("error get login sessions = %s: %w", request.UserID, err)
-			slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at get all login sessions", "error", fmt.Sprintf("%q", err))
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAccountSessionsError,
@@ -249,7 +254,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		if !ok || err != nil {
 			if err != nil {
 				err = fmt.Errorf("error add login session = %s: %w", request.UserID, err)
-				slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+				slog.Log(r.Context(), gkill_log.Error, "error at add urlog bookmarklet login session", "error", fmt.Sprintf("%q", err))
 			}
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddURLogLoginSessionError,
@@ -266,7 +271,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		if !ok || err != nil {
 			if err != nil {
 				err = fmt.Errorf("error update urlog bookmarklet session = %s: %w", request.UserID, err)
-				slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+				slog.Log(r.Context(), gkill_log.Error, "error at update urlog bookmarklet login session", "error", fmt.Sprintf("%q", err))
 			}
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddURLogLoginSessionError,
