@@ -93,7 +93,7 @@ var (
 					}
 					defer func(rep reps.IDFKyouRepository, name string) {
 						if err := rep.Close(context.TODO()); err != nil {
-							slog.Log(cmd.Context(), gkill_log.Debug, "error at close idf rep", "file", fmt.Sprintf("%q", name), "error", fmt.Sprintf("%q", err))
+							slog.Log(cmd.Context(), gkill_log.Warn, "error at close idf rep", "file", fmt.Sprintf("%q", name), "error", fmt.Sprintf("%q", err))
 						}
 					}(idfKyouRep, filename)
 					if err := idfKyouRep.IDF(context.TODO()); err != nil {
@@ -425,7 +425,7 @@ func ResolveLocalServerEndpoint(ctx context.Context) (*LocalServerEndpoint, erro
 	}
 	defer func() {
 		if err := serverConfigDAO.Close(ctx); err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at close server config dao", "error", err)
+			slog.Log(ctx, gkill_log.Warn, "error at close server config dao", "error", err)
 		}
 	}()
 
@@ -543,7 +543,7 @@ func LaunchGkillServerAPI(ctx context.Context) error {
 	defer func() {
 		err := gkillServerAPI.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Error, "error at defer close gkill server api", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 

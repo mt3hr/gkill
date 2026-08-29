@@ -185,7 +185,7 @@ func (n *notificator) waitAndNotify() {
 			_, err := n.gkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.DeleteGkillNotificationTarget(notificationCtx, notificationTarget.ID)
 			if err != nil {
 				err = fmt.Errorf("error at delete gkill notification target after got 410 Gone: %w", err)
-				slog.Log(n.ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+				slog.Log(n.ctx, gkill_log.Warn, "error at delete gkill notification target after got 410 Gone", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}

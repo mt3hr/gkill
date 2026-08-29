@@ -28,7 +28,7 @@ func (g *GkillServerAPI) HandlePostPluginConfig(w http.ResponseWriter, r *http.R
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	defer func() {
@@ -36,7 +36,7 @@ func (g *GkillServerAPI) HandlePostPluginConfig(w http.ResponseWriter, r *http.R
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at encode post plugin config response: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at encode post plugin config response", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 

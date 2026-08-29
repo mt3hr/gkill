@@ -500,7 +500,7 @@ func globalIP(ctx context.Context) (net.IP, error) {
 	defer func() {
 		err := res.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 

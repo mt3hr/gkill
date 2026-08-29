@@ -36,7 +36,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	defer func() {
@@ -266,7 +266,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughIDFKyouCache(r.Context(), idfKyou)
 		if err != nil {
 			err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, idfKyou, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add idfKyou user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              idfKyou.IsDeleted,
@@ -280,7 +280,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 	for _, kc := range kcs {
@@ -317,7 +317,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughKCCache(r.Context(), kc)
 		if err != nil {
 			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add kc user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              kc.IsDeleted,
@@ -331,7 +331,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for kc user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -369,7 +369,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughKmemoCache(r.Context(), kmemo)
 		if err != nil {
 			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add kmemo user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              kmemo.IsDeleted,
@@ -383,7 +383,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for kmemo user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -421,7 +421,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughLantanaCache(r.Context(), lantana)
 		if err != nil {
 			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, lantana, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add lantana user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              lantana.IsDeleted,
@@ -435,7 +435,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -473,7 +473,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughMiCache(r.Context(), mi)
 		if err != nil {
 			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add mi user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              mi.IsDeleted,
@@ -487,7 +487,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -525,7 +525,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughNlogCache(r.Context(), nlog)
 		if err != nil {
 			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add nlog user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              nlog.IsDeleted,
@@ -539,7 +539,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -577,7 +577,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughNotificationCache(r.Context(), notification)
 		if err != nil {
 			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add notification user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              notification.IsDeleted,
@@ -592,7 +592,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -630,7 +630,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughReKyouCache(r.Context(), rekyou)
 		if err != nil {
 			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add rekyou user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              rekyou.IsDeleted,
@@ -645,7 +645,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -693,7 +693,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughMiReKyouCache(r.Context(), mirekyou)
 		if err != nil {
 			err = fmt.Errorf("error at add mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add mirekyou user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              mirekyou.IsDeleted,
@@ -708,7 +708,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for mirekyou user id = %s device = %s id = %s: %w", userID, device, mirekyou.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -747,7 +747,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughTagCache(r.Context(), tag)
 		if err != nil {
 			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add tag user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              tag.IsDeleted,
@@ -762,7 +762,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -799,7 +799,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughTextCache(r.Context(), text)
 		if err != nil {
 			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add text user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              text.IsDeleted,
@@ -814,7 +814,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -852,7 +852,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughTimeIsCache(r.Context(), timeis)
 		if err != nil {
 			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add timeis user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              timeis.IsDeleted,
@@ -866,7 +866,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -904,7 +904,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		err = repositories.WriteThroughURLogCache(r.Context(), urlog)
 		if err != nil {
 			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add urlog user id =", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              urlog.IsDeleted,
@@ -918,7 +918,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 		}
 	}
 

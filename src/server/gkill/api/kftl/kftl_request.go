@@ -122,7 +122,9 @@ func logWriteThroughCacheFailure(ctx context.Context, dataType string, id string
 		return
 	}
 	err = fmt.Errorf("error at write through %s cache id = %s: %w", dataType, id, err)
-	slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+	// The record is saved but the cache is not, so it stays invisible for up to a minute.
+	// Error, because nothing else reports it: the response is a success.
+	slog.Log(ctx, gkill_log.Error, "error at write through cache", "data_type", fmt.Sprintf("%q", dataType), "error", fmt.Sprintf("%q", err))
 }
 
 // logGetRepNameFailure logs a failed rep name lookup.
@@ -135,7 +137,7 @@ func logGetRepNameFailure(ctx context.Context, dataType string, id string, err e
 		return
 	}
 	err = fmt.Errorf("error at get rep name for %s id = %s: %w", dataType, id, err)
-	slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+	slog.Log(ctx, gkill_log.Warn, "error at get rep name", "data_type", fmt.Sprintf("%q", dataType), "error", fmt.Sprintf("%q", err))
 }
 
 // updateLatestDataRepositoryAddress updates the in-memory cache and DAO for one entity.
@@ -154,7 +156,7 @@ func updateLatestDataRepositoryAddress(ctx context.Context, repos *reps.GkillRep
 	if _, err := repos.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(
 		ctx, latestDataRepositoryAddress); err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address id = %s: %w", id, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 }
 

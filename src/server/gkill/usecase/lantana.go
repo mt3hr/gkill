@@ -52,7 +52,7 @@ func (uc *UsecaseContext) AddLantana(ctx context.Context, repositories *reps.Gki
 		err = repositories.WriteThroughLantanaCache(ctx, lantana)
 		if err != nil {
 			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, lantana, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at add lantana user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.LantanaTempRep.AddLantanaInfo(ctx, lantana, *txID, userID, device)
@@ -89,7 +89,7 @@ func (uc *UsecaseContext) AddLantana(ctx context.Context, repositories *reps.Gki
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil
@@ -144,7 +144,7 @@ func (uc *UsecaseContext) UpdateLantana(ctx context.Context, repositories *reps.
 		err = repositories.WriteThroughLantanaCache(ctx, lantana)
 		if err != nil {
 			err = fmt.Errorf("error at update lantana user id = %s device = %s lantana = %#v: %w", userID, device, lantana, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at update lantana user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err := repositories.TempReps.LantanaTempRep.AddLantanaInfo(ctx, lantana, *txID, userID, device)
@@ -181,7 +181,7 @@ func (uc *UsecaseContext) UpdateLantana(ctx context.Context, repositories *reps.
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil

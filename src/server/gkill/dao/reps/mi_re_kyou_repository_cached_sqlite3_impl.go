@@ -70,7 +70,7 @@ func NewMiReKyouRepositoryCachedSQLite3Impl(ctx context.Context, mirekyouRep MiR
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -90,7 +90,7 @@ func NewMiReKyouRepositoryCachedSQLite3Impl(ctx context.Context, mirekyouRep MiR
 	defer func() {
 		err := indexStmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -207,7 +207,7 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) queryKyous(ctx context.Context, sq
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	return scanMiReKyouKyous(ctx, rows, repName)
@@ -227,7 +227,7 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) queryMiReKyous(ctx context.Context
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	return scanMiReKyous(ctx, rows, repName)
@@ -245,7 +245,7 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) getTargetIDMapWithoutLock(ctx cont
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -353,7 +353,7 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) e
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
+				slog.Log(context.Background(), gkill_log.Error, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -375,7 +375,7 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) e
 	defer func() {
 		err := insertStmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -552,7 +552,7 @@ func (m *miReKyouRepositoryCachedSQLite3Impl) AddMiReKyouInfo(ctx context.Contex
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at add mirekyou", "error", fmt.Sprintf("%q", err))
+				slog.Log(context.Background(), gkill_log.Error, "error at rollback at add mirekyou", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
