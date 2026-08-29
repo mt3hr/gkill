@@ -50,3 +50,4 @@
 - `src/server/gkill/dao/reps/mi_re_kyou_cached_nested_pool_test.go`
 - `src/server/gkill/dao/reps/git_commit_log_cached_nested_pool_test.go`
 - `src/server/gkill/dao/reps/re_kyou_cached_deadlock_test.go`
+- `src/server/gkill/dao/reps/idf_generate_cache_nested_pool_test.go`

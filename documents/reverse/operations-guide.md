@@ -481,6 +481,10 @@ gkill_server generate_thumb_cache ユーザーID
 gkill_server generate_video_cache ユーザーID
 ```
 
+どちらも生成済みのものは作り直さない。判定は、生成対象の親ディレクトリとキャッシュディレクトリをそれぞれ1回ずつ列挙して行う（1件ずつ `os.Stat` はしない。[ADR-0101](../adr/0101-derived-cache-scan-lists-directories.md)）。
+
+互換動画は全件を変換するわけではない。ffprobe でコンテナ・映像コーデック・画素形式・プロファイル・音声コーデックを見て、**原本のままブラウザで再生できると言い切れるものは変換せずそのまま配信する**（[ADR-0102](../adr/0102-transcode-only-what-the-browser-cannot-play.md)）。変換に失敗した動画には `<キャッシュ名>.failed` という印が残り、次回以降はやり直さずに原本へフォールバックする。印を消すには `gkill_server clear_cache video ユーザーID` でキャッシュごと削除する。
+
 ### 9.4 キャッシュアーキテクチャ詳細
 
 gkillは複数層のキャッシュを組み合わせてパフォーマンスを確保している。

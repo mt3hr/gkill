@@ -8,9 +8,10 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"os"
+	"path"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"sync"
@@ -2328,8 +2329,8 @@ func isVideo(filename string) bool {
 		".avi",
 		".mov",
 		".mpg",
+		".mpeg",
 		".mkv",
-		".mwv",
 		".flv",
 		".asf",
 		".f4v",
@@ -2427,6 +2428,213 @@ func IsAudioPublic(filename string) bool {
 	return isAudio(filename)
 }
 
+// 一括生成でつくるサムネイルの寸法。クライアントが要求する ?thumb=400x400 と揃える。
+const (
+	batchThumbWidth  = 400
+	batchThumbHeight = 400
+)
+
+// derivedCacheTarget は派生キャッシュ（サムネイル・互換動画）の生成対象1件。
+type derivedCacheTarget struct {
+	rel     string
+	isVideo bool
+}
+
+// derivedCacheBatchSem は一括生成のファイル単位の並列度を抑えます。
+//
+// threads.Go は使えません。rep単位のファンアウトが既に threads.Go のスロットを
+// 保持しており、その内側でさらに取ると入れ子になってプールが枯渇します（ADR-0015）。
+// スロットを取らない専用のセマフォなら入れ子にならず、rep数によらず総量も抑えられます。
+//
+// 実際に重い処理（画像デコード・ffmpeg）は thumbSem / videoSem が別に律速するので、
+// ここはその手前まで仕事を並べておくための枠です。逐次にすると、
+// 新しいファイルが1つのrepに偏っているとき thumbSem が1件ぶんしか埋まりません。
+var derivedCacheBatchSem = make(chan struct{}, max(1, runtime.NumCPU()))
+
+// goForDerivedCacheBatch は派生キャッシュの生成1件を、有界の並列度で走らせます。
+func goForDerivedCacheBatch(wg *sync.WaitGroup, fn func()) {
+	derivedCacheBatchSem <- struct{}{}
+	wg.Go(func() {
+		defer func() { <-derivedCacheBatchSem }()
+		fn()
+	})
+}
+
+// derivedCacheIgnoreNameCase はディレクトリ列挙の結果を大文字小文字を無視して引くかどうか。
+//
+// 索引に入っている綴りと実ファイル名の大小が食い違っていても、
+// os.Stat は Windows / macOS では見つけていた。列挙に置き換えたことで
+// 引けなくなると、そのファイルのサムネイルだけがエラーも警告も無く作られなくなる。
+//
+// テストから切り替えられるよう定数ではなく変数にしている。
+var derivedCacheIgnoreNameCase = runtime.GOOS == "windows" || runtime.GOOS == "darwin"
+
+// findTargetFilesForDerivedCache は派生キャッシュの生成対象を集めるためだけの軽い問い合わせです。
+//
+// FindIDFKyou を使わないのは、あちらが1行ごとに時刻3本を time.Parse し、配信URLを組み立て、
+// TARGET_REP_NAME を解決したうえで関連時刻の降順に整列するからです。
+// 一括生成が要るのは対象ファイルの相対パスだけで、それ以外は行数ぶん作って捨てることになります。
+// 並び順も要りません。
+func (i *idfKyouRepositorySQLite3Impl) findTargetFilesForDerivedCache(ctx context.Context) ([]string, error) {
+	var err error
+	var db *sql.DB
+	if i.fullConnect {
+		db = i.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, i.idDBFile)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
+	}
+
+	i.m.RLock()
+	defer i.m.RUnlock()
+
+	// 削除済みの行も対象に含める。派生キャッシュは実ファイルがあるかどうかで決まり、
+	// 索引の論理削除とは関係が無い（FindIDFKyou に空の検索条件を渡していたときと同じ集合）。
+	sql := `SELECT DISTINCT TARGET_FILE FROM IDF`
+	gkill_log.LogSQL(ctx, sql)
+	rows, err := db.QueryContext(ctx, sql)
+	if err != nil {
+		return nil, fmt.Errorf("error at select target file from idf: %w", err)
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	targetFiles := []string{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+		targetFile := ""
+		if err := rows.Scan(&targetFile); err != nil {
+			return nil, fmt.Errorf("error at scan target file from idf: %w", err)
+		}
+		targetFiles = append(targetFiles, targetFile)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error at scan target file from idf: %w", err)
+	}
+	return targetFiles, nil
+}
+
+// collectDerivedCacheTargets は IDF の索引から派生キャッシュの生成対象を集めます。
+// 同じファイルが複数行に出るので、リポジトリ内の相対パスで重複を排除します。
+func (i *idfKyouRepositorySQLite3Impl) collectDerivedCacheTargets(ctx context.Context, want func(rel string) bool) ([]derivedCacheTarget, error) {
+	targetFiles, err := i.findTargetFilesForDerivedCache(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	targets := make([]derivedCacheTarget, 0, len(targetFiles))
+	seen := make(map[string]struct{}, len(targetFiles))
+	for _, targetFile := range targetFiles {
+		rel := strings.TrimPrefix(filepath.ToSlash(targetFile), "/")
+		if rel == "" || !want(rel) {
+			continue
+		}
+		if _, exist := seen[rel]; exist {
+			continue
+		}
+		seen[rel] = struct{}{}
+		targets = append(targets, derivedCacheTarget{rel: rel, isVideo: isVideo(rel)})
+	}
+	return targets, nil
+}
+
+// eachExistingTargetFile は生成対象を親ディレクトリごとにまとめて列挙し、
+// 実体のあるものだけ fn へ渡します。
+//
+// 1件ずつ os.Stat しないのは、派生キャッシュのファイル名にファイルサイズが要るからといって
+// 数十万回の stat を外付けストレージへ投げると、それだけで数十分の待ちになるため。
+// Windows の os.ReadDir は列挙の結果からサイズまで返す（DirEntry.Info() が
+// 追加の syscall を伴わない）ので、親ディレクトリ1回の列挙で同じ情報が揃う。
+// 数万件のリポジトリで数十秒かかっていたものが数十ミリ秒で済む。
+func (i *idfKyouRepositorySQLite3Impl) eachExistingTargetFile(ctx context.Context, targets []derivedCacheTarget, fn func(target derivedCacheTarget, st os.FileInfo)) {
+	byDir := map[string][]derivedCacheTarget{}
+	dirOrder := []string{}
+	for _, target := range targets {
+		dir := path.Dir(target.rel)
+		if _, exist := byDir[dir]; !exist {
+			dirOrder = append(dirOrder, dir)
+		}
+		byDir[dir] = append(byDir[dir], target)
+	}
+
+	for _, dir := range dirOrder {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		// SecureJoin は rootDir 自身を返さないので、直下は自分で組み立てる
+		absDir := i.contentDir
+		if dir != "." && dir != "" {
+			joined, ok := SecureJoin(i.contentDir, dir)
+			if !ok {
+				continue
+			}
+			absDir = joined
+		}
+
+		entries, err := os.ReadDir(absDir)
+		if err != nil {
+			// 索引にあってもディレクトリごと消えていることがある（IDFの索引は追加専用）
+			continue
+		}
+
+		infoByName := make(map[string]os.FileInfo, len(entries))
+		infoByLowerName := map[string]os.FileInfo{}
+		for _, entry := range entries {
+			if entry.IsDir() {
+				continue
+			}
+			info, err := entry.Info()
+			if err != nil {
+				continue
+			}
+			// シンボリックリンクは列挙の情報がリンク自身を指すので、実体を見に行く
+			if entry.Type()&fs.ModeSymlink != 0 {
+				resolved, err := os.Stat(filepath.Join(absDir, entry.Name()))
+				if err != nil || resolved.IsDir() {
+					continue
+				}
+				info = resolved
+			}
+			infoByName[entry.Name()] = info
+			if derivedCacheIgnoreNameCase {
+				infoByLowerName[strings.ToLower(entry.Name())] = info
+			}
+		}
+
+		for _, target := range byDir[dir] {
+			base := path.Base(target.rel)
+			info, exist := infoByName[base]
+			if !exist && derivedCacheIgnoreNameCase {
+				info, exist = infoByLowerName[strings.ToLower(base)]
+			}
+			if !exist {
+				// 索引にあって実体が無い行。IDFの索引は追加専用なので必ず出る
+				continue
+			}
+			fn(target, info)
+		}
+	}
+}
+
 func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) error {
 	repName, err := i.GetRepName(ctx)
 	if err != nil {
@@ -2434,40 +2642,38 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) e
 		return err
 	}
 
-	query := &find.FindQuery{}
-	idfKyous, err := i.FindIDFKyou(ctx, query)
+	targets, err := i.collectDerivedCacheTargets(ctx, func(rel string) bool {
+		return isImage(rel) || isVideo(rel)
+	})
 	if err != nil {
 		err = fmt.Errorf("error at generate thumb cache at %s: %w", repName, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
-
-	for _, idfKyou := range idfKyous {
-		if !idfKyou.IsImage && !idfKyou.IsVideo {
-			continue
-		}
-
-		rel := filepath.ToSlash(idfKyou.TargetFile)
-		rel = strings.TrimPrefix(rel, "/")
-
-		url := &url.URL{
-			Scheme: "http",
-			Host:   "localhost:9999",
-			Path:   "/" + rel,
-		}
-		query := url.Query()
-		query.Set("thumb", "400x400")
-		if idfKyou.IsVideo {
-			query.Set("is_video", "true")
-		}
-		url.RawQuery = query.Encode()
-
-		err = i.thumbGenerator.GenerateThumbCache(ctx, url.String())
-		if err != nil {
-			err = fmt.Errorf("error at generate thumb cache %s: %w", url.String(), err)
-			slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-			continue
-		}
+	if len(targets) == 0 {
+		return nil
 	}
+
+	cachedNames, err := i.thumbGenerator.CachedThumbNames()
+	if err != nil {
+		err = fmt.Errorf("error at list thumb cache at %s: %w", repName, err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		cachedNames = map[string]struct{}{}
+	}
+
+	wg := &sync.WaitGroup{}
+	i.eachExistingTargetFile(ctx, targets, func(target derivedCacheTarget, st os.FileInfo) {
+		name := i.thumbGenerator.ThumbCacheName(target.rel, st.Size(), batchThumbWidth, batchThumbHeight)
+		if _, cached := cachedNames[name]; cached {
+			return
+		}
+		goForDerivedCacheBatch(wg, func() {
+			if err := i.thumbGenerator.GenerateThumbCacheFor(ctx, target.rel, st, target.isVideo, batchThumbWidth, batchThumbHeight); err != nil {
+				err = fmt.Errorf("error at generate thumb cache %s %s: %w", repName, target.rel, err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+			}
+		})
+	})
+	wg.Wait()
 	return nil
 }
 
@@ -2485,34 +2691,36 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateVideoCache(ctx context.Context) e
 		return nil
 	}
 
-	query := &find.FindQuery{}
-	idfKyous, err := i.FindIDFKyou(ctx, query)
+	targets, err := i.collectDerivedCacheTargets(ctx, isVideo)
 	if err != nil {
 		err = fmt.Errorf("error at generate video cache at %s: %w", repName, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
-
-	for _, idfKyou := range idfKyous {
-		if !idfKyou.IsVideo {
-			continue
-		}
-
-		rel := filepath.ToSlash(idfKyou.TargetFile)
-		rel = strings.TrimPrefix(rel, "/")
-
-		u := &url.URL{
-			Scheme: "http",
-			Host:   "localhost:9999",
-			Path:   "/" + rel,
-		}
-
-		err = i.videoGenerator.GenerateVideoCache(ctx, u.String())
-		if err != nil {
-			err = fmt.Errorf("error at generate video cache %s: %w", u.String(), err)
-			slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-			continue
-		}
+	if len(targets) == 0 {
+		return nil
 	}
+
+	cachedNames, err := i.videoGenerator.CachedCompatNames()
+	if err != nil {
+		err = fmt.Errorf("error at list video cache at %s: %w", repName, err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		cachedNames = map[string]struct{}{}
+	}
+
+	wg := &sync.WaitGroup{}
+	i.eachExistingTargetFile(ctx, targets, func(target derivedCacheTarget, st os.FileInfo) {
+		name := i.videoGenerator.CompatCacheName(target.rel, st.Size())
+		if _, cached := cachedNames[name]; cached {
+			return
+		}
+		goForDerivedCacheBatch(wg, func() {
+			if err := i.videoGenerator.GenerateVideoCacheFor(ctx, target.rel, st); err != nil {
+				err = fmt.Errorf("error at generate video cache %s %s: %w", repName, target.rel, err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+			}
+		})
+	})
+	wg.Wait()
 	return nil
 }
 
