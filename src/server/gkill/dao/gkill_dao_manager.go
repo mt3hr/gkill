@@ -280,612 +280,19 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				}
 				loadedRepKeys[loadedRepKey] = struct{}{}
 
-				parentDir := filepath.Dir(filename)
-				err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
-				if err != nil {
-					err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
-					return nil, err
-				}
-
-				switch rep.Type {
-				case "kmemo":
-					var kmemoRep reps.KmemoRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						kmemoRep, err = reps.NewKmemoRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
-					} else {
-						kmemoRep, err = reps.NewKmemoRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+				loadErr := g.loadRepIntoRepositories(ctx, repositories, userID, device, rep, filename)
+				if loadErr != nil {
+					// git_commit_logのrep設定は `$HOME/Git/*` のようなglobで書かれ、
+					// zglobはディレクトリだけでなくファイルも返すため、
+					// 展開先にgitリポジトリでないエントリが混ざるのは異常ではない。
+					// ここで全体を失敗させると GetRepositories が丸ごと失敗し、
+					// そのユーザの全APIがERR000018になって何もできなくなるので、
+					// gitリポジトリでないものはそのrepだけスキップする。
+					if errors.Is(loadErr, reps.ErrNotGitRepository) {
+						slog.Log(ctx, gkill_log.Warn, "skip not a git repository", "userID", fmt.Sprintf("%q", userID), "device", fmt.Sprintf("%q", device), "file", fmt.Sprintf("%q", filename))
+						continue
 					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.KmemoReps = append(repositories.KmemoReps, kmemoRep)
-					if rep.UseToWrite {
-						newPath, _ := kmemoRep.GetPath(ctx, "")
-						if repositories.WriteKmemoRep != nil {
-							existPath, _ := repositories.WriteKmemoRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write kmemo rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteKmemoRep = kmemoRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := kmemoRep
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "kc":
-					var kcRep reps.KCRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						kcRep, err = reps.NewKCRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
-					} else {
-						kcRep, err = reps.NewKCRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
-					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.KCReps = append(repositories.KCReps, kcRep)
-					if rep.UseToWrite {
-						newPath, _ := kcRep.GetPath(ctx, "")
-						if repositories.WriteKCRep != nil {
-							existPath, _ := repositories.WriteKCRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write kc rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteKCRep = kcRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := kcRep
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "urlog":
-					var urlogRep reps.URLogRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						urlogRep, err = reps.NewURLogRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
-					} else {
-						urlogRep, err = reps.NewURLogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
-					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.URLogReps = append(repositories.URLogReps, urlogRep)
-					if rep.UseToWrite {
-						newPath, _ := urlogRep.GetPath(ctx, "")
-						if repositories.WriteURLogRep != nil {
-							existPath, _ := repositories.WriteURLogRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write urlog rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteURLogRep = urlogRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := urlogRep
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "timeis":
-					var timeisRep reps.TimeIsRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						timeisRep, err = reps.NewTimeIsRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
-					} else {
-						timeisRep, err = reps.NewTimeIsRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
-					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.TimeIsReps = append(repositories.TimeIsReps, timeisRep)
-					if rep.UseToWrite {
-						newPath, _ := timeisRep.GetPath(ctx, "")
-						if repositories.WriteTimeIsRep != nil {
-							existPath, _ := repositories.WriteTimeIsRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write timeis rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteTimeIsRep = timeisRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := timeisRep
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "mi":
-					var miRep reps.MiRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						miRep, err = reps.NewMiRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
-					} else {
-						miRep, err = reps.NewMiRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
-					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.MiReps = append(repositories.MiReps, miRep)
-					if rep.UseToWrite {
-						newPath, _ := miRep.GetPath(ctx, "")
-						if repositories.WriteMiRep != nil {
-							existPath, _ := repositories.WriteMiRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write mi rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteMiRep = miRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := miRep
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "nlog":
-					var nlogRep reps.NlogRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						nlogRep, err = reps.NewNlogRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
-					} else {
-						nlogRep, err = reps.NewNlogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
-					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.NlogReps = append(repositories.NlogReps, nlogRep)
-					if rep.UseToWrite {
-						newPath, _ := nlogRep.GetPath(ctx, "")
-						if repositories.WriteNlogRep != nil {
-							existPath, _ := repositories.WriteNlogRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write nlog rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteNlogRep = nlogRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := nlogRep
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "lantana":
-					var lantanaRep reps.LantanaRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						lantanaRep, err = reps.NewLantanaRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
-					} else {
-						lantanaRep, err = reps.NewLantanaRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
-					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.LantanaReps = append(repositories.LantanaReps, lantanaRep)
-					if rep.UseToWrite {
-						newPath, _ := lantanaRep.GetPath(ctx, "")
-						if repositories.WriteLantanaRep != nil {
-							existPath, _ := repositories.WriteLantanaRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write lantana rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteLantanaRep = lantanaRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := lantanaRep
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "tag":
-					var tagRep reps.TagRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						tagRep, err = reps.NewTagRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
-					} else {
-						tagRep, err = reps.NewTagRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
-					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.TagReps = append(repositories.TagReps, tagRep)
-					// 第1引数は TagRepsWatchTarget であること。
-					// TagReps を渡すと、直前の行で足した tagRep が重複するうえ、
-					// TagReps と backing array を共有して互いに干渉する。
-					repositories.TagRepsWatchTarget = append(repositories.TagRepsWatchTarget, tagRep)
-					if rep.UseToWrite {
-						newPath, _ := tagRep.GetPath(ctx, "")
-						if repositories.WriteTagRep != nil {
-							existPath, _ := repositories.WriteTagRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write tag rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteTagRep = tagRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := tagRep
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "text":
-					var textRep reps.TextRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						textRep, err = reps.NewTextRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
-					} else {
-						textRep, err = reps.NewTextRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
-					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.TextReps = append(repositories.TextReps, textRep)
-					// 第1引数は TextRepsWatchTarget であること（TagReps側と同じ理由）
-					repositories.TextRepsWatchTarget = append(repositories.TextRepsWatchTarget, textRep)
-					if rep.UseToWrite {
-						newPath, _ := textRep.GetPath(ctx, "")
-						if repositories.WriteTextRep != nil {
-							existPath, _ := repositories.WriteTextRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write text rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteTextRep = textRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := textRep
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "notification":
-					var notificationRep reps.NotificationRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						notificationRep, err = reps.NewNotificationRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
-					} else {
-						notificationRep, err = reps.NewNotificationRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
-					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.NotificationReps = append(repositories.NotificationReps, notificationRep)
-					if rep.UseToWrite {
-						newPath, _ := notificationRep.GetPath(ctx, "")
-						if repositories.WriteNotificationRep != nil {
-							existPath, _ := repositories.WriteNotificationRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write notification rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteNotificationRep = notificationRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := notificationRep
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "rekyou":
-					var reKyouRep reps.ReKyouRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						reKyouRep, err = reps.NewReKyouRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite, repositories)
-					} else {
-						reKyouRep, err = reps.NewReKyouRepositorySQLite3Impl(ctx, filename, rep.UseToWrite, repositories)
-					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.ReKyouReps.ReKyouRepositories = append(repositories.ReKyouReps.ReKyouRepositories, reKyouRep)
-					if rep.UseToWrite {
-						newPath, _ := reKyouRep.GetPath(ctx, "")
-						if repositories.WriteReKyouRep != nil {
-							existPath, _ := repositories.WriteReKyouRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write reKyou rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteReKyouRep = reKyouRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := reKyouRep
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "mirekyou":
-					var miReKyouRep reps.MiReKyouRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						miReKyouRep, err = reps.NewMiReKyouRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite, repositories)
-					} else {
-						miReKyouRep, err = reps.NewMiReKyouRepositorySQLite3Impl(ctx, filename, rep.UseToWrite, repositories)
-					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.MiReKyouReps.MiReKyouRepositories = append(repositories.MiReKyouReps.MiReKyouRepositories, miReKyouRep)
-					if rep.UseToWrite {
-						newPath, _ := miReKyouRep.GetPath(ctx, "")
-						if repositories.WriteMiReKyouRep != nil {
-							existPath, _ := repositories.WriteMiReKyouRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write miReKyou rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteMiReKyouRep = miReKyouRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := miReKyouRep
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "directory":
-					autoIDF := rep.IsExecuteIDFWhenReload
-					parentDir := filepath.Join(filename, ".gkill")
-					err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
-					if err != nil {
-						err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
-						return nil, err
-					}
-					hide_files.HideFolder(parentDir)
-					idDBFilename := filepath.Join(parentDir, "gkill_id.db")
-
-					var idfKyouRep reps.IDFKyouRepository
-					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						idfKyouRep, err = reps.NewIDFDirRepLocalCached(ctx, userID, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
-					} else {
-						idfKyouRep, err = reps.NewIDFDirRep(ctx, userID, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
-					}
-					if err != nil {
-						return nil, err
-					}
-					repositories.IDFKyouReps = append(repositories.IDFKyouReps, idfKyouRep)
-					if rep.UseToWrite {
-						newPath, _ := idfKyouRep.GetPath(ctx, "")
-						if repositories.WriteIDFKyouRep != nil {
-							existPath, _ := repositories.WriteIDFKyouRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write idf kyou rep %s %s", existPath, newPath)
-							return nil, err
-						}
-						repositories.WriteIDFKyouRep = idfKyouRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					if rep.IsWatchTargetForUpdateRep {
-						rep := idfKyouRep
-						enableUpdateRepsCache := true
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename := idDBFilename
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
-					}
-
-				case "gpslog":
-					err := os.MkdirAll(os.ExpandEnv(filename), os.ModePerm)
-					if err != nil {
-						err = fmt.Errorf("error at make directory %s: %w", filename, err)
-						return nil, err
-					}
-
-					gpslogRep := reps.NewGPXDirRep(filename)
-					repositories.GPSLogReps = append(repositories.GPSLogReps, gpslogRep)
-					if rep.UseToWrite {
-						repositories.WriteGPSLogRep = gpslogRep
-					}
-
-				case "git_commit_log":
-					gitCommitLogRep, err := reps.NewGitRep(filename)
-					if err != nil {
-						// git_commit_logのrep設定は `$HOME/Git/*` のようなglobで書かれ、
-						// zglobはディレクトリだけでなくファイルも返すため、
-						// 展開先にgitリポジトリでないエントリが混ざるのは異常ではない。
-						// ここで全体を失敗させると GetRepositories が丸ごと失敗し、
-						// そのユーザの全APIがERR000018になって何もできなくなるので、
-						// gitリポジトリでないものはそのrepだけスキップする。
-						if errors.Is(err, reps.ErrNotGitRepository) {
-							slog.Log(ctx, gkill_log.Warn, "skip not a git repository", "userID", fmt.Sprintf("%q", userID), "device", fmt.Sprintf("%q", device), "file", fmt.Sprintf("%q", filename))
-							continue
-						}
-						return nil, err
-					}
-					repositories.GitCommitLogReps = append(repositories.GitCommitLogReps, gitCommitLogRep)
+					return nil, loadErr
 				}
 			}
 		}
@@ -1172,6 +579,615 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 	}
 
 	return repositories, nil
+}
+
+// loadRepIntoRepositories はrep定義1つ x 展開後ファイル1つを組み立てて repositories へ足す。
+//
+// **ここで続行/中止を決めないこと。** 「1本落として続けるか、全体を失敗させるか」の判定は
+// 呼び出し元(GetRepositories)の1箇所に集約してある。ここへ足すと種別ごとに方針がばらつき、
+// 次に壊れた種別でまた同じ判断を書くことになる。
+// 経緯と却下案: documents/adr/0216-detach-a-broken-rep-but-never-silently.md
+func (g *GkillDAOManager) loadRepIntoRepositories(ctx context.Context, repositories *reps.GkillRepositories, userID string, device string, rep *user_config.Repository, filename string) error {
+	parentDir := filepath.Dir(filename)
+	err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
+	if err != nil {
+		err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
+		return err
+	}
+
+	switch rep.Type {
+	case "kmemo":
+		var kmemoRep reps.KmemoRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			kmemoRep, err = reps.NewKmemoRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
+		} else {
+			kmemoRep, err = reps.NewKmemoRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.KmemoReps = append(repositories.KmemoReps, kmemoRep)
+		if rep.UseToWrite {
+			newPath, _ := kmemoRep.GetPath(ctx, "")
+			if repositories.WriteKmemoRep != nil {
+				existPath, _ := repositories.WriteKmemoRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write kmemo rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteKmemoRep = kmemoRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := kmemoRep
+			enableUpdateRepsCache := false
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename, err := rep.GetPath(ctx, "")
+			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+				return err
+			}
+			repFilename = filepath.ToSlash(repFilename)
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "kc":
+		var kcRep reps.KCRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			kcRep, err = reps.NewKCRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
+		} else {
+			kcRep, err = reps.NewKCRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.KCReps = append(repositories.KCReps, kcRep)
+		if rep.UseToWrite {
+			newPath, _ := kcRep.GetPath(ctx, "")
+			if repositories.WriteKCRep != nil {
+				existPath, _ := repositories.WriteKCRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write kc rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteKCRep = kcRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := kcRep
+			enableUpdateRepsCache := false
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename, err := rep.GetPath(ctx, "")
+			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+				return err
+			}
+			repFilename = filepath.ToSlash(repFilename)
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "urlog":
+		var urlogRep reps.URLogRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			urlogRep, err = reps.NewURLogRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
+		} else {
+			urlogRep, err = reps.NewURLogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.URLogReps = append(repositories.URLogReps, urlogRep)
+		if rep.UseToWrite {
+			newPath, _ := urlogRep.GetPath(ctx, "")
+			if repositories.WriteURLogRep != nil {
+				existPath, _ := repositories.WriteURLogRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write urlog rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteURLogRep = urlogRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := urlogRep
+			enableUpdateRepsCache := false
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename, err := rep.GetPath(ctx, "")
+			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+				return err
+			}
+			repFilename = filepath.ToSlash(repFilename)
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "timeis":
+		var timeisRep reps.TimeIsRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			timeisRep, err = reps.NewTimeIsRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
+		} else {
+			timeisRep, err = reps.NewTimeIsRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.TimeIsReps = append(repositories.TimeIsReps, timeisRep)
+		if rep.UseToWrite {
+			newPath, _ := timeisRep.GetPath(ctx, "")
+			if repositories.WriteTimeIsRep != nil {
+				existPath, _ := repositories.WriteTimeIsRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write timeis rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteTimeIsRep = timeisRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := timeisRep
+			enableUpdateRepsCache := false
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename, err := rep.GetPath(ctx, "")
+			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+				return err
+			}
+			repFilename = filepath.ToSlash(repFilename)
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "mi":
+		var miRep reps.MiRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			miRep, err = reps.NewMiRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
+		} else {
+			miRep, err = reps.NewMiRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.MiReps = append(repositories.MiReps, miRep)
+		if rep.UseToWrite {
+			newPath, _ := miRep.GetPath(ctx, "")
+			if repositories.WriteMiRep != nil {
+				existPath, _ := repositories.WriteMiRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write mi rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteMiRep = miRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := miRep
+			enableUpdateRepsCache := false
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename, err := rep.GetPath(ctx, "")
+			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+				return err
+			}
+			repFilename = filepath.ToSlash(repFilename)
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "nlog":
+		var nlogRep reps.NlogRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			nlogRep, err = reps.NewNlogRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
+		} else {
+			nlogRep, err = reps.NewNlogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.NlogReps = append(repositories.NlogReps, nlogRep)
+		if rep.UseToWrite {
+			newPath, _ := nlogRep.GetPath(ctx, "")
+			if repositories.WriteNlogRep != nil {
+				existPath, _ := repositories.WriteNlogRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write nlog rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteNlogRep = nlogRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := nlogRep
+			enableUpdateRepsCache := false
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename, err := rep.GetPath(ctx, "")
+			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+				return err
+			}
+			repFilename = filepath.ToSlash(repFilename)
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "lantana":
+		var lantanaRep reps.LantanaRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			lantanaRep, err = reps.NewLantanaRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
+		} else {
+			lantanaRep, err = reps.NewLantanaRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.LantanaReps = append(repositories.LantanaReps, lantanaRep)
+		if rep.UseToWrite {
+			newPath, _ := lantanaRep.GetPath(ctx, "")
+			if repositories.WriteLantanaRep != nil {
+				existPath, _ := repositories.WriteLantanaRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write lantana rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteLantanaRep = lantanaRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := lantanaRep
+			enableUpdateRepsCache := false
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename, err := rep.GetPath(ctx, "")
+			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+				return err
+			}
+			repFilename = filepath.ToSlash(repFilename)
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "tag":
+		var tagRep reps.TagRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			tagRep, err = reps.NewTagRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
+		} else {
+			tagRep, err = reps.NewTagRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.TagReps = append(repositories.TagReps, tagRep)
+		// 第1引数は TagRepsWatchTarget であること。
+		// TagReps を渡すと、直前の行で足した tagRep が重複するうえ、
+		// TagReps と backing array を共有して互いに干渉する。
+		repositories.TagRepsWatchTarget = append(repositories.TagRepsWatchTarget, tagRep)
+		if rep.UseToWrite {
+			newPath, _ := tagRep.GetPath(ctx, "")
+			if repositories.WriteTagRep != nil {
+				existPath, _ := repositories.WriteTagRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write tag rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteTagRep = tagRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := tagRep
+			enableUpdateRepsCache := false
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename, err := rep.GetPath(ctx, "")
+			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+				return err
+			}
+			repFilename = filepath.ToSlash(repFilename)
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "text":
+		var textRep reps.TextRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			textRep, err = reps.NewTextRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
+		} else {
+			textRep, err = reps.NewTextRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.TextReps = append(repositories.TextReps, textRep)
+		// 第1引数は TextRepsWatchTarget であること（TagReps側と同じ理由）
+		repositories.TextRepsWatchTarget = append(repositories.TextRepsWatchTarget, textRep)
+		if rep.UseToWrite {
+			newPath, _ := textRep.GetPath(ctx, "")
+			if repositories.WriteTextRep != nil {
+				existPath, _ := repositories.WriteTextRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write text rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteTextRep = textRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := textRep
+			enableUpdateRepsCache := false
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename, err := rep.GetPath(ctx, "")
+			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+				return err
+			}
+			repFilename = filepath.ToSlash(repFilename)
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "notification":
+		var notificationRep reps.NotificationRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			notificationRep, err = reps.NewNotificationRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
+		} else {
+			notificationRep, err = reps.NewNotificationRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.NotificationReps = append(repositories.NotificationReps, notificationRep)
+		if rep.UseToWrite {
+			newPath, _ := notificationRep.GetPath(ctx, "")
+			if repositories.WriteNotificationRep != nil {
+				existPath, _ := repositories.WriteNotificationRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write notification rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteNotificationRep = notificationRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := notificationRep
+			enableUpdateRepsCache := false
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename, err := rep.GetPath(ctx, "")
+			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+				return err
+			}
+			repFilename = filepath.ToSlash(repFilename)
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "rekyou":
+		var reKyouRep reps.ReKyouRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			reKyouRep, err = reps.NewReKyouRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite, repositories)
+		} else {
+			reKyouRep, err = reps.NewReKyouRepositorySQLite3Impl(ctx, filename, rep.UseToWrite, repositories)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.ReKyouReps.ReKyouRepositories = append(repositories.ReKyouReps.ReKyouRepositories, reKyouRep)
+		if rep.UseToWrite {
+			newPath, _ := reKyouRep.GetPath(ctx, "")
+			if repositories.WriteReKyouRep != nil {
+				existPath, _ := repositories.WriteReKyouRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write reKyou rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteReKyouRep = reKyouRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := reKyouRep
+			enableUpdateRepsCache := false
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename, err := rep.GetPath(ctx, "")
+			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+				return err
+			}
+			repFilename = filepath.ToSlash(repFilename)
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "mirekyou":
+		var miReKyouRep reps.MiReKyouRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			miReKyouRep, err = reps.NewMiReKyouRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite, repositories)
+		} else {
+			miReKyouRep, err = reps.NewMiReKyouRepositorySQLite3Impl(ctx, filename, rep.UseToWrite, repositories)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.MiReKyouReps.MiReKyouRepositories = append(repositories.MiReKyouReps.MiReKyouRepositories, miReKyouRep)
+		if rep.UseToWrite {
+			newPath, _ := miReKyouRep.GetPath(ctx, "")
+			if repositories.WriteMiReKyouRep != nil {
+				existPath, _ := repositories.WriteMiReKyouRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write miReKyou rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteMiReKyouRep = miReKyouRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := miReKyouRep
+			enableUpdateRepsCache := false
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename, err := rep.GetPath(ctx, "")
+			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+				return err
+			}
+			repFilename = filepath.ToSlash(repFilename)
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "directory":
+		autoIDF := rep.IsExecuteIDFWhenReload
+		parentDir := filepath.Join(filename, ".gkill")
+		err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
+		if err != nil {
+			err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
+			return err
+		}
+		hide_files.HideFolder(parentDir)
+		idDBFilename := filepath.Join(parentDir, "gkill_id.db")
+
+		var idfKyouRep reps.IDFKyouRepository
+		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+			idfKyouRep, err = reps.NewIDFDirRepLocalCached(ctx, userID, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
+		} else {
+			idfKyouRep, err = reps.NewIDFDirRep(ctx, userID, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
+		}
+		if err != nil {
+			return err
+		}
+		repositories.IDFKyouReps = append(repositories.IDFKyouReps, idfKyouRep)
+		if rep.UseToWrite {
+			newPath, _ := idfKyouRep.GetPath(ctx, "")
+			if repositories.WriteIDFKyouRep != nil {
+				existPath, _ := repositories.WriteIDFKyouRep.GetPath(ctx, "")
+				err := fmt.Errorf("error conflict write idf kyou rep %s %s", existPath, newPath)
+				return err
+			}
+			repositories.WriteIDFKyouRep = idfKyouRep
+		}
+
+		// ファイル更新があったときにキャッシュを更新する
+		if rep.IsWatchTargetForUpdateRep {
+			rep := idfKyouRep
+			enableUpdateRepsCache := true
+			enableUpdateLatestDataRepositoryCache := true
+			cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+			ignoreFileNamePrefixes := []string{}
+			repFilename := idDBFilename
+
+			err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+			if err != nil {
+				err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+				return err
+			}
+		}
+
+	case "gpslog":
+		err := os.MkdirAll(os.ExpandEnv(filename), os.ModePerm)
+		if err != nil {
+			err = fmt.Errorf("error at make directory %s: %w", filename, err)
+			return err
+		}
+
+		gpslogRep := reps.NewGPXDirRep(filename)
+		repositories.GPSLogReps = append(repositories.GPSLogReps, gpslogRep)
+		if rep.UseToWrite {
+			repositories.WriteGPSLogRep = gpslogRep
+		}
+
+	case "git_commit_log":
+		gitCommitLogRep, err := reps.NewGitRep(filename)
+		if err != nil {
+			// gitリポジトリでないエントリ(ErrNotGitRepository)を読み飛ばす判定は
+			// 呼び出し元(GetRepositories)にある。ここへ書き戻さないこと。
+			return err
+		}
+		repositories.GitCommitLogReps = append(repositories.GitCommitLogReps, gitCommitLogRep)
+	}
+	return nil
 }
 
 // getOrCreatePluginManager はユーザID別のPluginManagerを取得または作成する。
