@@ -37,7 +37,7 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	defer func() {
@@ -117,7 +117,7 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at add ShareKyouListInfo user id = %s device = %s ShareKyouListInfo = %#v: %w", userID, device, request.ShareKyouListInfo, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add ShareKyouListInfo user id =", "error", fmt.Sprintf("%q", err))
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddShareKyouListInfoError,

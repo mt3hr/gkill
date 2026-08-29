@@ -35,7 +35,7 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	defer func() {
@@ -89,7 +89,7 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 		defaultApplicationConfig := user_config.GetDefaultApplicationConfig(userID, device)
 		_, err = g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.AddApplicationConfig(r.Context(), defaultApplicationConfig)
 		if err != nil {
-			slog.Log(r.Context(), gkill_log.Debug, "error at add default application config", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Warn, "error at add default application config", "error", fmt.Sprintf("%q", err))
 		}
 		applicationConfig, err = g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
 		if err != nil || applicationConfig == nil {

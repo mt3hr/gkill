@@ -50,7 +50,7 @@ func expandRepFilePattern(ctx context.Context, pattern string) []string {
 	if repFilePatternNeedsWalk(normalized) {
 		matchFiles, err := zglob.Glob(normalized)
 		if err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at glob repository file pattern", "pattern", fmt.Sprintf("%q", normalized), "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Warn, "error at glob repository file pattern", "pattern", fmt.Sprintf("%q", normalized), "error", fmt.Sprintf("%q", err))
 		}
 		return matchFiles
 	}

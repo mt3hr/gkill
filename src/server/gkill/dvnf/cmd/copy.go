@@ -237,7 +237,7 @@ func copyFile(src, target string) error {
 	defer func() {
 		err := srcFile.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close file opened for read", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	targetFile, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
@@ -248,7 +248,7 @@ func copyFile(src, target string) error {
 	defer func() {
 		err := targetFile.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Warn, "error at defer close file opened for write", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	_, err = io.Copy(targetFile, srcFile)

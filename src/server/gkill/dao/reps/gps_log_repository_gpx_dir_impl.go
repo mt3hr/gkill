@@ -143,7 +143,7 @@ func (g *gpsLogRepositoryDirectoryImpl) gpxFileToGPSLogs(gpxfilename string) (gp
 	defer func() {
 		err := gpxFile.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close file opened for read", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -187,7 +187,7 @@ func (g *gpsLogRepositoryDirectoryImpl) gpxFileToPoints(gpxfilename string) (gps
 	defer func() {
 		err := gpxFile.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close file opened for read", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 

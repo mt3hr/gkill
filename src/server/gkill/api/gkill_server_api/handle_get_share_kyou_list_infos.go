@@ -30,7 +30,7 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	defer func() {

@@ -39,7 +39,7 @@ func (g *GkillServerAPI) sendWebPushToTarget(ctx context.Context, subscriptionJS
 	}
 	defer func() {
 		if cerr := resp.Body.Close(); cerr != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at defer close", "error", cerr)
+			slog.Log(ctx, gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	// 登録解除されていたら呼び出し側で消す
@@ -93,7 +93,7 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 			_, err := g.GkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.DeleteGkillNotificationTarget(ctx, notificationTarget.ID)
 			if err != nil {
 				err = fmt.Errorf("error at delete gkill notification target after got 410 Gone: %w", err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+				slog.Log(ctx, gkill_log.Warn, "error at delete gkill notification target after got 410 Gone", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}

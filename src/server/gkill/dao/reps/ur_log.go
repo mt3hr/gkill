@@ -143,7 +143,7 @@ func (u *URLog) fillFavicon() error {
 	defer func() {
 		err := favicon.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close file opened for read", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	b, err := io.ReadAll(favicon)
@@ -249,7 +249,7 @@ func getBody(targeturl string, timeout time.Duration, useragent string, enablePr
 		}
 		defer func() {
 			if cerr := res.Body.Close(); cerr != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", cerr)
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 		return io.ReadAll(io.LimitReader(res.Body, safefetch.DefaultMaxBodyBytes+1))
@@ -270,7 +270,7 @@ func (u *URLog) fillImage(body []byte) error {
 			defer func() {
 				err := imgSrc.Close()
 				if err != nil {
-					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close file opened for read", "error", fmt.Sprintf("%q", err))
 				}
 			}()
 		}
@@ -282,7 +282,7 @@ func (u *URLog) fillImage(body []byte) error {
 	defer func() {
 		err := imgSrc.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close file opened for read", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	// imgSrc は safefetch で上限バイトまでに絞った画像なので全読みしても安全。
