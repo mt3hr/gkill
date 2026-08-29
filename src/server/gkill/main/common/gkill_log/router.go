@@ -27,6 +27,11 @@ type Options struct {
 	StdoutMirror bool       // ③ 有効なレベルをstdoutにも出す
 	TimeFormat   string     // 出力のtime整形（任意）
 	StaticFields []any
+
+	// RotateMaxBytes は1ファイルの上限。0以下なら回転しない。
+	RotateMaxBytes int64
+	// RotateKeep は残す世代数（path.1 .. path.RotateKeep）。
+	RotateKeep int
 }
 
 // ルータの公開API
@@ -105,6 +110,7 @@ func (r *Router) SetMode(mode SplitMode) {
 
 // ④ 統合ファイルのパス設定
 func (r *Router) SetMergedFile(path string) error {
+	r.merged.SetRotation(r.opts.RotateMaxBytes, r.opts.RotateKeep)
 	return r.merged.SetFile(path)
 }
 
@@ -114,6 +120,7 @@ func (r *Router) SetSplitFile(level slog.Level, path string) error {
 	if !ok {
 		return fmt.Errorf("unknown level for split: %v", level)
 	}
+	s.SetRotation(r.opts.RotateMaxBytes, r.opts.RotateKeep)
 	return s.SetFile(path)
 }
 

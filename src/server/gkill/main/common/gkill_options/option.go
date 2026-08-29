@@ -24,6 +24,13 @@ var (
 
 	IsCacheInMemory = true
 	IsOutputLog     = false
+
+	// LogRotateMaxBytes は1つのログファイルの上限。超えると gkill_xxx.log.1 .. .N へ世代を回す。
+	// 0以下にすると回転しない（上限なく育つ）。
+	LogRotateMaxBytes int64 = 32 * 1024 * 1024
+	// LogRotateKeep は残す世代数。0以下なら退避せずに捨てる。
+	LogRotateKeep = 5
+
 	DisableTLSForce = false
 
 	Optimize = false

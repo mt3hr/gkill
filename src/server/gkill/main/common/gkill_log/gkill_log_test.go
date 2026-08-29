@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -174,5 +175,120 @@ func TestSetMergedFile(t *testing.T) {
 	}
 	if len(data) == 0 {
 		t.Error("expected merged log to have content")
+	}
+}
+
+// TestStaticFieldsAreEmitted は Logger().With(...) で足した静的フィールドが
+// 実際に出力へ載ることを確認する。
+//
+// **落ちたら routingHandler.WithAttrs が属性を捨てている。**
+// 以前は WithAttrs/WithGroup が `return h` の空実装で、資料に「{"app":"gkill"} が付く」と
+// 書いてあるのに1行も出ていなかった。leaf handler は Record ごとに作り直すので、
+// 修飾もそのたびに掛け直す必要がある。
+func TestStaticFieldsAreEmitted(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "static_fields.log")
+
+	r := NewRouter(Options{
+		JSON:         true,
+		MinLevel:     Info,
+		Mode:         MergedOnly,
+		StaticFields: []any{"app", "gkill"},
+	})
+	if err := r.SetMergedFile(logPath); err != nil {
+		t.Fatalf("SetMergedFile failed: %v", err)
+	}
+
+	r.Logger().Info("with static fields")
+	r.merged.Close()
+
+	data, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("failed to read log file: %v", err)
+	}
+	if !strings.Contains(string(data), `"app":"gkill"`) {
+		t.Errorf("静的フィールドが出力に無い。routingHandler.WithAttrs が属性を捨てている: %s", string(data))
+	}
+}
+
+// TestWithGroupIsApplied は WithGroup も leaf handler へ伝わることを確認する。
+func TestWithGroupIsApplied(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "with_group.log")
+
+	r := NewRouter(Options{JSON: true, MinLevel: Info, Mode: MergedOnly})
+	if err := r.SetMergedFile(logPath); err != nil {
+		t.Fatalf("SetMergedFile failed: %v", err)
+	}
+
+	r.Logger().WithGroup("g").Info("grouped", "key", "value")
+	r.merged.Close()
+
+	data, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("failed to read log file: %v", err)
+	}
+	if !strings.Contains(string(data), `"g":{"key":"value"}`) {
+		t.Errorf("WithGroup が leaf handler へ伝わっていない: %s", string(data))
+	}
+}
+
+// TestLogRotationKeepsGenerations はサイズ上限を超えたときに世代が回ることを確認する。
+//
+// **Windowsでは開いたままのファイルをリネームできない。** 回転の実装が Close を先に
+// 行っていないと、ここが Windows でだけ落ちる（ファイルは上限なく育ち続ける）。
+func TestLogRotationKeepsGenerations(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "rotate.log")
+
+	const maxBytes = 512
+	r := NewRouter(Options{
+		JSON:           true,
+		MinLevel:       Info,
+		Mode:           SplitOnly,
+		RotateMaxBytes: maxBytes,
+		RotateKeep:     2,
+	})
+	if err := r.SetSplitFile(Info, logPath); err != nil {
+		t.Fatalf("SetSplitFile failed: %v", err)
+	}
+
+	for i := range 40 {
+		r.Logger().Info("rotate me", "index", i, "padding", strings.Repeat("x", 64))
+	}
+	r.byLevel[Info].Close()
+
+	stat, err := os.Stat(logPath)
+	if err != nil {
+		t.Fatalf("stat %s: %v", logPath, err)
+	}
+	if stat.Size() > maxBytes {
+		t.Errorf("回転していない。%s が %d バイト（上限 %d）", logPath, stat.Size(), maxBytes)
+	}
+	if _, err := os.Stat(logPath + ".1"); err != nil {
+		t.Errorf("退避した世代 %s.1 が無い: %v", logPath, err)
+	}
+	// keep=2 なので .3 は残らない
+	if _, err := os.Stat(logPath + ".3"); err == nil {
+		t.Errorf("keep=2 なのに %s.3 が残っている", logPath)
+	}
+}
+
+// TestNoRotationWhenDisabled は RotateMaxBytes が0のとき回転しないことを確認する。
+func TestNoRotationWhenDisabled(t *testing.T) {
+	tmpDir := t.TempDir()
+	logPath := filepath.Join(tmpDir, "no_rotate.log")
+
+	r := NewRouter(Options{JSON: true, MinLevel: Info, Mode: SplitOnly})
+	if err := r.SetSplitFile(Info, logPath); err != nil {
+		t.Fatalf("SetSplitFile failed: %v", err)
+	}
+	for i := range 40 {
+		r.Logger().Info("no rotate", "index", i, "padding", strings.Repeat("x", 64))
+	}
+	r.byLevel[Info].Close()
+
+	if _, err := os.Stat(logPath + ".1"); err == nil {
+		t.Errorf("回転を無効にしているのに %s.1 ができている", logPath)
 	}
 }
