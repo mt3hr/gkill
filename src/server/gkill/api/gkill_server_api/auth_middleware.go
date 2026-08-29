@@ -41,14 +41,14 @@ func readAuthBody(w http.ResponseWriter, r *http.Request, ctx context.Context) (
 		var maxErr *http.MaxBytesError
 		if errors.As(err, &maxErr) {
 			slog.Log(ctx, gkill_log.Debug, "request body too large in auth middleware", "error", fmt.Sprintf("%q", err))
-			writeGkillErrorResponse(w, &message.GkillError{
+			writeGkillErrorResponse(ctx, w, &message.GkillError{
 				ErrorCode:    message.RequestBodyTooLargeError,
 				ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "REQUEST_BODY_TOO_LARGE_MESSAGE"}),
 			})
 			return nil, false
 		}
 		slog.Log(ctx, gkill_log.Debug, "error at read request body in auth middleware", "error", fmt.Sprintf("%q", err))
-		writeGkillErrorResponse(w, &message.GkillError{
+		writeGkillErrorResponse(ctx, w, &message.GkillError{
 			ErrorCode:    message.ReadRequestBodyError,
 			ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
@@ -108,7 +108,7 @@ func (g *GkillServerAPI) authMiddleware(next http.Handler) http.Handler {
 		var peek sessionPeek
 		if err := json.Unmarshal(rawBody, &peek); err != nil || peek.SessionID == "" {
 			// SessionIDが取得できない場合はエラーレスポンス
-			writeGkillErrorResponse(w, &message.GkillError{
+			writeGkillErrorResponse(ctx, w, &message.GkillError{
 				ErrorCode:    message.AccountSessionNotFoundError,
 				ErrorMessage: "session_id is required",
 			})
@@ -118,7 +118,7 @@ func (g *GkillServerAPI) authMiddleware(next http.Handler) http.Handler {
 		// アカウント認証
 		account, gkillError, err := g.getAccountFromSessionID(ctx, peek.SessionID, peek.LocaleName)
 		if err != nil {
-			writeGkillErrorResponse(w, gkillError)
+			writeGkillErrorResponse(ctx, w, gkillError)
 			return
 		}
 
@@ -127,7 +127,7 @@ func (g *GkillServerAPI) authMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			err = fmt.Errorf("error at get device name in auth middleware: %w", err)
 			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			writeGkillErrorResponse(w, &message.GkillError{
+			writeGkillErrorResponse(ctx, w, &message.GkillError{
 				ErrorCode:    message.GetDeviceError,
 				ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 			})
@@ -162,7 +162,7 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 		// SessionIDとLocaleNameを抽出
 		var peek sessionPeek
 		if err := json.Unmarshal(rawBody, &peek); err != nil || peek.SessionID == "" {
-			writeGkillErrorResponse(w, &message.GkillError{
+			writeGkillErrorResponse(ctx, w, &message.GkillError{
 				ErrorCode:    message.AccountSessionNotFoundError,
 				ErrorMessage: "session_id is required",
 			})
@@ -172,7 +172,7 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 		// アカウント認証
 		account, gkillError, err := g.getAccountFromSessionID(ctx, peek.SessionID, peek.LocaleName)
 		if err != nil {
-			writeGkillErrorResponse(w, gkillError)
+			writeGkillErrorResponse(ctx, w, gkillError)
 			return
 		}
 
@@ -181,7 +181,7 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 		if err != nil {
 			err = fmt.Errorf("error at get device name in auth middleware: %w", err)
 			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			writeGkillErrorResponse(w, &message.GkillError{
+			writeGkillErrorResponse(ctx, w, &message.GkillError{
 				ErrorCode:    message.GetDeviceError,
 				ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 			})
@@ -198,7 +198,7 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 			// 実際 2026-08-30 の障害では、--log debug で動いていた回のログが偶然残っていた
 			// おかげでしか原因に辿り着けなかった。
 			slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-			writeGkillErrorResponse(w, &message.GkillError{
+			writeGkillErrorResponse(ctx, w, &message.GkillError{
 				ErrorCode:    message.RepositoriesGetError,
 				ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 			})

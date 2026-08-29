@@ -39,7 +39,7 @@ func (g *GkillServerAPI) HandleAddMiReKyou(w http.ResponseWriter, r *http.Reques
 		}
 	}()
 	defer func() {
-		writeErrorStatus(w, response.Errors)
+		writeErrorStatus(r.Context(), w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse add mirekyou response to json: %w", err)
