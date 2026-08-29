@@ -222,7 +222,7 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 
 大きすぎて上限に当たる画像・動画は、`thumb`（`"1024x1024"` 等、一辺最大1024。動画は `is_video: true` を併用してフレームを抜く）を渡せば縮小JPEGで収まる。クエリの形は `file_url` の `?thumb=` と同一で、非対象のファイルは原本がそのまま返る。
 
-実測（2026-08-24）: ChatGPTで「キーワード検索 → ヒットしたイラスト3枚を参照して新規イラストを生成」を1回実行したところ、`gkill_get_kyous` 1回に続いて `gkill_get_idf_file` が3回呼ばれ、`/files/` へのアクセスは0件だった。経緯と却下案は [ADR-0055](../../documents/adr/0055-idf-file-reaches-ai-through-payload.md)。
+実測（2026-08-24）: ChatGPTで「キーワード検索 → ヒットしたイラスト3枚を参照して新規イラストを生成」を1回実行したところ、`gkill_get_kyous` 1回に続いて `gkill_get_idf_file` が3回呼ばれ、`/files/` へのアクセスは0件だった。経緯と却下案は [ADR-0606](../../documents/adr/0606-idf-file-reaches-ai-through-payload.md)。
 
 #### Writeツール（21 — Write専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
@@ -264,12 +264,12 @@ Write専用サーバにはRead便利ツール4つ（`gkill_get_all_rep_names`, `
 一覧したいときは `gkill_get_kyous` の `query.include_deleted_data: true` を使ってください
 （既定は false で従来どおり除外。返る行は `is_deleted` で見分けられます）。
 `query.only_latest_data: false` は受理されますが**無視されます** — 詳しくは
-[ADR-0054](../../documents/adr/0054-mcp-version-history-is-a-dedicated-tool.md)。
+[ADR-0605](../../documents/adr/0605-mcp-version-history-is-a-dedicated-tool.md)。
 
 #### プラグインツール（1つ — Read/Write/ReadWrite すべてのサーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
-| `gkill_get_plugin_list` | インストール済みプラグイン一覧を取得（name/version/description/data_type/rep_name/**emits_kyou**/**provides**/is_alive/process_running/**has_last_error**/typed_index/gps_index。診断文の中身（last_error / typed_index.last_build_error）は端末のディレクトリ構成を含むため返さない。[ADR-0046](../../documents/adr/0046-redact-environment-specific-strings.md)）。`emits_kyou:false` のプラグインは Kyou を1件も出さないので、その `data_type` / `rep_name` は**検索値ではない** —— `provides` に対応する経路（`gpslog` なら `gkill_get_gps_log`）から読む |
+| `gkill_get_plugin_list` | インストール済みプラグイン一覧を取得（name/version/description/data_type/rep_name/**emits_kyou**/**provides**/is_alive/process_running/**has_last_error**/typed_index/gps_index。診断文の中身（last_error / typed_index.last_build_error）は端末のディレクトリ構成を含むため返さない。[ADR-0707](../../documents/adr/0707-redact-environment-specific-strings.md)）。`emits_kyou:false` のプラグインは Kyou を1件も出さないので、その `data_type` / `rep_name` は**検索値ではない** —— `provides` に対応する経路（`gpslog` なら `gkill_get_gps_log`）から読む |
 
 ##### プラグイン内容取得の導線
 
@@ -343,7 +343,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 | `max_size_mb` | number | レスポンスの最大サイズMB（default: 0.25） |
 | `is_include_timeis` | boolean | 各Kyouに付随する TimeIs を含めるか（default: false） |
 | `count_only` / `group_by` | boolean / string | 件数だけ・バケット集計（month/day/week_of_day/hour/data_type/rep_name/url_domain/file_extension）。cursor とは併用不可 |
-| `data_types` / `num_min` / `num_max` / `idf_kinds` / `include_file_size` | - | リクエストレベルの絞り込み（v2。ADR-0053） |
+| `data_types` / `num_min` / `num_max` / `idf_kinds` / `include_file_size` | - | リクエストレベルの絞り込み（v2。ADR-0604） |
 | `create_apps` / `update_apps` | array | 作成アプリ / 最終更新アプリの許可リスト（各記録の `create_app` / `update_app` と照合）。「MCP経由で作った記録」（`"gkill_mcp_readwrite"` / `"gkill_mcp_write"`）の絞り込みに使う |
 | `include_plugin_content` | boolean | プラグインKyouの本文をレスポンスに埋め込むか（default: false） |
 | `plugin_content_max_text_length` | integer | 埋め込む本文の1件あたり上限文字数（default: 4000, max: 200000） |

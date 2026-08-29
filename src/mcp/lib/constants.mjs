@@ -37,7 +37,7 @@ export const KYOUS_TOP_LEVEL_FIELDS = new Set([
   "include_file_size",
 ]);
 
-// v2 (ADR-0053) の集計・絞り込みの列挙値。サーバ側(get_kyous_mcp_helpers.go)と揃えること。
+// v2 (ADR-0604) の集計・絞り込みの列挙値。サーバ側(get_kyous_mcp_helpers.go)と揃えること。
 export const KYOUS_GROUP_BY_VALUES = new Set([
   "month",
   "day",
@@ -63,7 +63,7 @@ export const APP_CONFIG_FIELDS = new Set([
   // read サーバと readwrite サーバが別アカウントを向いていても、AI からは
   // 区別する手段が無く「同じAPIなのに件数が違う」と誤診されていた
   // （2026-08-24 の実利用レビュー）。環境変数の値（GKILL_BASE_URL 等）は
-  // 端末の情報なので出さない（ADR-0046）。出すのは gkill 由来のこの2つだけ。
+  // 端末の情報なので出さない（ADR-0707）。出すのは gkill 由来のこの2つだけ。
   "user_id",
   "device",
   "tag_struct",

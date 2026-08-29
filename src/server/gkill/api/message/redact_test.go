@@ -8,7 +8,7 @@ import (
 // RedactEnvironmentSpecific が伏せ損なうと、プラグインの診断文に載った端末のローカル絶対パスが
 // APIレスポンス経由でAIへ届き、そのまま資料やコミットメッセージへ引き写される。
 // それは verify_docs の checkPersonalInfo が防いでいる混入そのもの。
-// 経緯: documents/adr/0046-redact-environment-specific-strings.md
+// 経緯: documents/adr/0707-redact-environment-specific-strings.md
 //
 // テストの入力にユーザー名として `user` / `username` を使っているのは、
 // 実在しそうな名前を書くとこのテストファイル自身が checkPersonalInfo に引っかかるため。

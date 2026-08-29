@@ -65,7 +65,7 @@ func TestRequestResponse_JSONFieldNames(t *testing.T) {
 		{"GetAllTagNamesResponse", GetAllTagNamesResponse{}, []string{"messages", "errors", "tag_names"}},
 
 		// --- MCPサーバが参照する ---
-		// v2(ADR-0053): include_id/include_rep_name は廃止（id/rep_name 常時付与）。
+		// v2(ADR-0604): include_id/include_rep_name は廃止（id/rep_name 常時付与）。
 		// count_only/group_by/data_types/num_min/num_max/idf_kinds/include_file_size を追加
 		{"GetKyousMCPRequest", GetKyousMCPRequest{}, []string{"session_id", "query", "locale_name", "limit", "cursor", "max_size_mb", "is_include_timeis", "count_only", "group_by", "data_types", "num_min", "num_max", "idf_kinds", "include_file_size"}},
 		// KyouMCPDTO の id / rep_name / create_app / update_app / is_deleted / update_time は
@@ -216,7 +216,7 @@ func TestMCPPayloadDTO_OmitsEmptyOptionalFields(t *testing.T) {
 		wantOmitted []string
 	}{
 		{
-			// is_zip は v2 から常時出力（falseで消えると「未実装」と区別できない。ADR-0053/監査C4）
+			// is_zip は v2 から常時出力（falseで消えると「未実装」と区別できない。ADR-0604/監査C4）
 			"IDFPayloadMCPDTO",
 			IDFPayloadMCPDTO{Kind: "idf", FileName: "data.bin", RepName: "files_repo"},
 			[]string{"mime_type", "file_size"},
@@ -247,7 +247,7 @@ func TestMCPPayloadDTO_OmitsEmptyOptionalFields(t *testing.T) {
 			[]string{"end_time"},
 		},
 		{
-			// id / rep_name は v2 から常時出力（追撃クエリの前提。ADR-0053）
+			// id / rep_name は v2 から常時出力（追撃クエリの前提。ADR-0604）
 			"KyouMCPDTO",
 			KyouMCPDTO{DataType: "kmemo", RelatedTime: time.Now()},
 			[]string{"tags", "texts", "notifications", "timeis", "payload"},

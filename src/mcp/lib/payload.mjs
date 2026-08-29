@@ -99,7 +99,7 @@ export function summarizeToolError(name, error, detail) {
 // 以前は読み取りの要約器だけが持っており、書き込みの要約器には無かった。
 // gkill_delete_kyou / gkill_restore_kyou の targets（後から足した非string型の引数）が
 // まさに古スキーマで壊れる側なので、片側だけだと「同じ古さなのに読み取りでしか
-// 知らされない」ことになる（ADR-0058 / ADR-0063）。
+// 知らされない」ことになる（ADR-0609 / ADR-0611）。
 export function appendStaleSchemaNoteToSummary(summary, payload) {
   if (summary === null || summary === undefined) {
     return summary;

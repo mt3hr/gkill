@@ -148,7 +148,7 @@ describe("handlePluginToolCall gkill_get_plugin_list", () => {
 // あれは最後の網であって、そもそも渡さないのが本筋）。
 // 「何か書かれている」ことだけ has_* で伝えれば、外部監査 D2 の
 // 「is_alive=true なのに0件」の診断は成立する。
-// 経緯: documents/adr/0046-redact-environment-specific-strings.md
+// 経緯: documents/adr/0707-redact-environment-specific-strings.md
 // ---------------------------------------------------------------------------
 describe("handlePluginToolCall withholds plugin diagnostics", () => {
   test("drops last_error and reports only that there is one", async () => {

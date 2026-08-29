@@ -100,9 +100,9 @@ func GetSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error
 // 実測で1,122件=6.5ms / 7,047件=102ms / 10万件=27秒かかっていました。
 //
 // rep名の条件をここへ足さない理由（暫定的な否決。相関サブクエリに足すと最新版判定が壊れる）:
-// documents/adr/0002-no-rep-name-in-sql.md
+// documents/adr/0102-no-rep-name-in-sql.md
 // 時刻列を unixepoch の式インデックスで引く理由（生成SQLと索引の式がずれると黙って全走査に戻る）:
-// documents/adr/0014-unixepoch-expression-index.md
+// documents/adr/0205-unixepoch-expression-index.md
 func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAlias string, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, findWordUseLike bool, ignoreFindWord bool, appendOrderBy bool, ignoreCase bool, queryArgs *[]any) (string, error) {
 	sqlBuilder := &strings.Builder{}
 	// ID列挙とワード条件で膨らむぶんを概算で先に確保しておく
@@ -422,7 +422,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	// 時間帯比較用。列側はローカル時刻の "HH:MM:SS" 文字列にし、バインド値は
 	// 正規化済みの秒オブデイを同じ書式にした文字列（find.SecondOfDayToHHMMSS）と
 	// 文字列比較する。秒の解釈（epoch / 秒オブデイの二重解釈）は find パッケージの
-	// アクセサが正本: documents/adr/0009-period-of-time-second-of-day.md
+	// アクセサが正本: documents/adr/0108-period-of-time-second-of-day.md
 	timeExpr := ""
 	if strings.HasSuffix(relatedTimeColumnName, "_UNIX") {
 		timeExpr = "strftime('%H:%M:%S', datetime(" + relatedTimeColumnName + ", 'unixepoch', 'localtime'))"

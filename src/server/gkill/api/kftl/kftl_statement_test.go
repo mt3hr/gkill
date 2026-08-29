@@ -1510,7 +1510,7 @@ func TestGenerateAndExecuteRequests_ReportsEveryBadLineThroughTheHandlerPath(t *
 //
 // 2026-08-24 の実利用レビューで、書式を間違えても何も言われないまま
 // 「壊れたデータが書かれる」「無言で0件になる」の2通りに分かれることが分かった。
-// どちらも利用者からは原因が見えない。ADR-0080 の行別エラーへ倒す。
+// どちらも利用者からは原因が見えない。ADR-0502 の行別エラーへ倒す。
 
 // helperSubmitExpectingInputErrors は入力エラーを期待して1回実行する。
 // 行をリクエストへ適用するフェーズで落ちるので、リポジトリは空で足りる。

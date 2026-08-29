@@ -112,7 +112,7 @@ function assertTimeIsOrder(startTime, endTime) {
 // スキームの無いURLで更新すると gkill はページ取得を試みず、title が空のまま
 // エラーも出さずに保存される（2026-08-25 の実利用レビューを機に発見）。
 //
-// 表にすれば種別の定義が1箇所になるので、この種のずれは書けなくなる（ADR-0063）。
+// 表にすれば種別の定義が1箇所になるので、この種のずれは書けなくなる（ADR-0611）。
 //
 // kind:
 //   string   … assertTrimmedString

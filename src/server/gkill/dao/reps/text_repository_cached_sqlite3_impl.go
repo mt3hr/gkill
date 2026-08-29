@@ -915,7 +915,7 @@ func (m *textRepositoryCachedSQLite3Impl) UnWrapTyped() ([]TextRepository, error
 	// 包んでいるのは集約なので、1段だけ剥がすと集約自身が leaf として返る。
 	// その GetRepName() は "TagReps" / "TextReps" という**実在しない名前**を返すので、
 	// rep名を列挙する呼び出し側（get_rep_infos_mcp の attached_data_reps）へ
-	// 渡せない値が漏れる。ADR-0019 の注意は GetLatestDataRepositoryAddress 側にだけ
+	// 渡せない値が漏れる。ADR-0210 の注意は GetLatestDataRepositoryAddress 側にだけ
 	// 書かれていて、ここが守れていなかった（2026-08-24 の実利用レビュー）。
 	// notification 側は元から再帰しており、そちらが正しい形。
 	unWraped, err := m.textRep.UnWrapTyped()
@@ -927,7 +927,7 @@ func (m *textRepositoryCachedSQLite3Impl) UnWrapTyped() ([]TextRepository, error
 
 func (t *textRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
 	// rep名は行の REP_NAME 列から読む。GetRepName() を焼いてはいけない
-	// （包んでいるのは集約なので "TextReps" という実在しない名前が返る）。ADR-0019。
+	// （包んでいるのは集約なので "TextReps" という実在しない名前が返る）。ADR-0210。
 	sql := `
 SELECT IS_DELETED, ID AS TARGET_ID, TARGET_ID AS TARGET_ID_IN_DATA,
        REP_NAME AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME_UNIX AS DATA_UPDATE_TIME_UNIX

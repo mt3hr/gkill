@@ -184,7 +184,7 @@ describe('does_kyou_match_query - タグ', () => {
         expect(does_kyou_match_query(kyou, make_query({ tags: ['x', 'Secret'], hide_tags: ['Secret'] }))).toBe(false)
     })
 
-    it('tags が null でも hide_tags は適用される（単独有効化。ADR-0070）', () => {
+    it('tags が null でも hide_tags は適用される（単独有効化。ADR-0109）', () => {
         // 以前は tags が null のとき適用しない仕様で、サーバ find_filter.go と対で変更した
         const kyou = make_kyou({ tags: ['secret'] })
         expect(does_kyou_match_query(kyou, make_query({ tags: null, hide_tags: ['secret'] }))).toBe(false)

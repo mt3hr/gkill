@@ -21,7 +21,7 @@ Both use cobra for CLI with shared subcommands: `version`, `dvnf`, `generate_thu
 
 `auto_tag <user_id...>` adds tags by repository rule — `--tag_by_rep_prefix '<rep name prefix>=<tag>'` and `--tag_by_rep_name '<rep type>'` (tag = the rep's own name), both repeatable, plus `--dry_run`. It decides "already tagged?" by diffing two `/api/get_kyous` calls (unfiltered vs. `tags` non-null + **`tags_and: true`**). Both the OR and AND branches of `filterTagsKyous` match tag names exactly (case-insensitive) — `gkill` never matches `gkill_autolog` — so either would work; `tags_and` is kept because a single-tag "has this tag" query is what AND expresses directly. Tag IDs are a UUIDv5 of (target id, tag name), so reruns never duplicate: the server rejects an existing ID with `ERR000056` `AlreadyExistTagError`, which the command counts as a skip. That also means a **manually deleted tag is never resurrected**, since the deleted row keeps the same ID.
 
-`clear_cache <thumb|video|zip|plugin|all> <all|user_id...>` deletes the on-disk derived caches (`thumb_cache` / `video_cache` / `zip_cache` / `plugin_cache`). The target is required (matching `generate_thumb_cache`/`optimize` etc. which require positional user args): pass the literal `all` to remove the whole cache dirs under `$HOME/gkill/caches/` globally (no user context needed), or one or more user_ids to load each user's repositories (`LoadIDFRepOnly`) and clear only that user's IDF-rep caches via `IDFKyouReps.Clear{Thumb,Video,Zip}Cache(userID)`. `plugin` mode is a plain directory removal (`ClearPluginCache`) and skips the repository load entirely. Missing target or unknown mode prints usage. All three derived caches are keyed per user — `caches/zip_cache/{userID}/{repName}/{sha1(zipPath)}/` and `caches/{thumb,video}_cache/{userID}/{repName}/` — built by `derivedCacheDirForUser` in `dao/reps/local_rep_cache_path.go`. Rep names are NOT unique across users (`filepath.Base(contentDir)`, no UNIQUE constraint), so name matching alone cannot isolate them; that's why all three `Clear*Cache(userID)` take the user id. Thumb/video have no dedicated route — they are only reachable via `/files/{repName}/...?thumb=`. rep名の照合では原理的に守れない理由は [ADR-0044](../../../documents/adr/0044-per-user-derived-cache-dir.md)。
+`clear_cache <thumb|video|zip|plugin|all> <all|user_id...>` deletes the on-disk derived caches (`thumb_cache` / `video_cache` / `zip_cache` / `plugin_cache`). The target is required (matching `generate_thumb_cache`/`optimize` etc. which require positional user args): pass the literal `all` to remove the whole cache dirs under `$HOME/gkill/caches/` globally (no user context needed), or one or more user_ids to load each user's repositories (`LoadIDFRepOnly`) and clear only that user's IDF-rep caches via `IDFKyouReps.Clear{Thumb,Video,Zip}Cache(userID)`. `plugin` mode is a plain directory removal (`ClearPluginCache`) and skips the repository load entirely. Missing target or unknown mode prints usage. All three derived caches are keyed per user — `caches/zip_cache/{userID}/{repName}/{sha1(zipPath)}/` and `caches/{thumb,video}_cache/{userID}/{repName}/` — built by `derivedCacheDirForUser` in `dao/reps/local_rep_cache_path.go`. Rep names are NOT unique across users (`filepath.Base(contentDir)`, no UNIQUE constraint), so name matching alone cannot isolate them; that's why all three `Clear*Cache(userID)` take the user id. Thumb/video have no dedicated route — they are only reachable via `/files/{repName}/...?thumb=`. rep名の照合では原理的に守れない理由は [ADR-0705](../../../documents/adr/0705-per-user-derived-cache-dir.md)。
 
 ### CLI Flags
 
@@ -43,13 +43,13 @@ Both use cobra for CLI with shared subcommands: `version`, `dvnf`, `generate_thu
 
 **CLIサブコマンドは `RunE` + `SilenceUsage/SilenceErrors`**（2026-08-21、監査 M-8）。失敗で exit 1（main の `log.Fatal` が唯一のエラー出力）。ユーザごとのループは `errors.Join` で集約し、途中失敗でも成功分の結果（reset_password の URL 等）はその場で即出力してから続行する（`os.Exit` を足すと defer のセッション後始末が飛ぶので RunE 経由で返す）。**互換注意**: `SyncDatas` 等が update_cache の失敗を初めて exit code で観測する。`auto_tag` は長時間実行向けに `issueLocalSession` の `refresh` でセッション期限を延長する。
 
-**`generate_thumb_cache` / `generate_video_cache` は1件ずつ stat しない。** 生成対象を親ディレクトリごとに `os.ReadDir` して、その列挙結果からキャッシュ名に要るファイルサイズを取る。キャッシュ側もrepごとに1回列挙して名前の集合と突き合わせる。**「キャッシュ名の接頭辞（パスのSHA1）だけ見てサイズを無視する」近似を入れてはいけない** —— 差し替わったファイルのサムネイルが古いまま出続け、しかも画面で見ているぶんには正しいので原因に辿り着けない（[ADR-0101](../../../documents/adr/0101-derived-cache-scan-lists-directories.md)）。ファイル単位の並列化に `threads.Go` を使わないこと（rep単位のファンアウトが既にスロットを持っているので入れ子になる。[ADR-0015](../../../documents/adr/0015-no-nested-threads-go.md)）。
+**`generate_thumb_cache` / `generate_video_cache` は1件ずつ stat しない。** 生成対象を親ディレクトリごとに `os.ReadDir` して、その列挙結果からキャッシュ名に要るファイルサイズを取る。キャッシュ側もrepごとに1回列挙して名前の集合と突き合わせる。**「キャッシュ名の接頭辞（パスのSHA1）だけ見てサイズを無視する」近似を入れてはいけない** —— 差し替わったファイルのサムネイルが古いまま出続け、しかも画面で見ているぶんには正しいので原因に辿り着けない（[ADR-0212](../../../documents/adr/0212-derived-cache-scan-lists-directories.md)）。ファイル単位の並列化に `threads.Go` を使わないこと（rep単位のファンアウトが既にスロットを持っているので入れ子になる。[ADR-0206](../../../documents/adr/0206-no-nested-threads-go.md)）。
 
-**互換動画へ変換するのは、原本のまま再生できると言い切れないものだけ。** 判定は `videoNeedsCompat`（コンテナ×映像コーデック×画素形式×プロファイル×音声）で、**分からないもの・probe失敗はすべて変換する側に倒す**。クライアントには再生失敗の受け皿が無く、再生できなければエラーも出ずに無音の黒枠になる。緩める向きの変更をするなら受け皿を先に作ること。変換に失敗したら `<キャッシュ名>.failed` を残して次回以降やり直さない（**ctx が切れているときは印を残さない** —— ブラウザが待ちきれずに切っただけのものを恒久的な失敗として焼くと、変換できる動画が二度と変換されなくなる）。印を消すのは `clear_cache video <利用者ID>`（[ADR-0102](../../../documents/adr/0102-transcode-only-what-the-browser-cannot-play.md)）。
+**互換動画へ変換するのは、原本のまま再生できると言い切れないものだけ。** 判定は `videoNeedsCompat`（コンテナ×映像コーデック×画素形式×プロファイル×音声）で、**分からないもの・probe失敗はすべて変換する側に倒す**。クライアントには再生失敗の受け皿が無く、再生できなければエラーも出ずに無音の黒枠になる。緩める向きの変更をするなら受け皿を先に作ること。変換に失敗したら `<キャッシュ名>.failed` を残して次回以降やり直さない（**ctx が切れているときは印を残さない** —— ブラウザが待ちきれずに切っただけのものを恒久的な失敗として焼くと、変換できる動画が二度と変換されなくなる）。印を消すのは `clear_cache video <利用者ID>`（[ADR-0213](../../../documents/adr/0213-transcode-only-what-the-browser-cannot-play.md)）。
 
-**rep 定義のパターン展開は対象ツリーを歩かない。** `GetRepositories` は `**` を含まないパターンを親ディレクトリ1回の列挙で展開する（[ADR-0100](../../../documents/adr/0100-expand-rep-patterns-without-walking.md)）。
+**rep 定義のパターン展開は対象ツリーを歩かない。** `GetRepositories` は `**` を含まないパターンを親ディレクトリ1回の列挙で展開する（[ADR-0211](../../../documents/adr/0211-expand-rep-patterns-without-walking.md)）。
 
-**`LoadIDFRepOnly` のときはプラグインを探索しない。** 探索は1プラグインにつき1サブプロセスを起動するので、IDF のrepしか使わない CLI では丸ごと無駄になる。**この分岐は「プラグインのアダプタが `IDFKyouReps` へ入らない」ことに依存している** —— アダプタの登録先を増やすときは必ずここも見ること。破ると、そのプラグインぶんのサムネイルと互換動画がエラーも警告も出ないまま作られなくなる（[ADR-0103](../../../documents/adr/0103-skip-plugin-discovery-when-only-idf-is-needed.md)）。
+**`LoadIDFRepOnly` のときはプラグインを探索しない。** 探索は1プラグインにつき1サブプロセスを起動するので、IDF のrepしか使わない CLI では丸ごと無駄になる。**この分岐は「プラグインのアダプタが `IDFKyouReps` へ入らない」ことに依存している** —— アダプタの登録先を増やすときは必ずここも見ること。破ると、そのプラグインぶんのサムネイルと互換動画がエラーも警告も出ないまま作られなくなる（[ADR-0307](../../../documents/adr/0307-skip-plugin-discovery-when-only-idf-is-needed.md)）。
 
 ## 関連スキル
 
@@ -58,8 +58,8 @@ Both use cobra for CLI with shared subcommands: `version`, `dvnf`, `generate_thu
 
 ## 詳しい設計と却下案（ADR）
 
-- [ADR-0044 派生キャッシュはユーザー別ディレクトリ](../../../documents/adr/0044-per-user-derived-cache-dir.md)
-- [ADR-0100 パターン展開は木を歩かない](../../../documents/adr/0100-expand-rep-patterns-without-walking.md)
-- [ADR-0101 派生キャッシュの走査はディレクトリ列挙](../../../documents/adr/0101-derived-cache-scan-lists-directories.md)
-- [ADR-0102 変換するのは再生できないものだけ](../../../documents/adr/0102-transcode-only-what-the-browser-cannot-play.md)
-- [ADR-0103 IDFだけ要る経路ではプラグインを探索しない](../../../documents/adr/0103-skip-plugin-discovery-when-only-idf-is-needed.md)
+- [ADR-0705 派生キャッシュはユーザー別ディレクトリ](../../../documents/adr/0705-per-user-derived-cache-dir.md)
+- [ADR-0211 パターン展開は木を歩かない](../../../documents/adr/0211-expand-rep-patterns-without-walking.md)
+- [ADR-0212 派生キャッシュの走査はディレクトリ列挙](../../../documents/adr/0212-derived-cache-scan-lists-directories.md)
+- [ADR-0213 変換するのは再生できないものだけ](../../../documents/adr/0213-transcode-only-what-the-browser-cannot-play.md)
+- [ADR-0307 IDFだけ要る経路ではプラグインを探索しない](../../../documents/adr/0307-skip-plugin-discovery-when-only-idf-is-needed.md)

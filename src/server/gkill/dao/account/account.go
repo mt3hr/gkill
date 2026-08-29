@@ -1,7 +1,7 @@
 // Package account はユーザアカウント情報のDAO。
 //
 // ワイヤ形式（password_sha256）を変えない理由と、既存ハッシュを包み直さない理由:
-// documents/adr/0040-argon2id-password-storage.md
+// documents/adr/0701-argon2id-password-storage.md
 package account
 
 import "time"

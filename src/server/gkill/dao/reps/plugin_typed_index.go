@@ -3,7 +3,7 @@ package reps
 // プラグインが返した型別データ・付随データのインメモリ索引。
 //
 // provides の設計と却下案（自動推測／素直な委譲／登録順）:
-// documents/adr/0021-plugin-provides-typed-index.md
+// documents/adr/0302-plugin-provides-typed-index.md
 //
 // なぜ索引が要るのか（消さないこと）:
 //

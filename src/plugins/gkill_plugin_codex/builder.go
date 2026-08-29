@@ -1,7 +1,7 @@
 package main
 
 // 同期・単一tx構築を書かない理由（進捗ゼロループ）と却下案:
-// documents/adr/0024-plugin-background-builder-wal.md
+// documents/adr/0305-plugin-background-builder-wal.md
 
 import (
 	"fmt"

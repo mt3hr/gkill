@@ -1,7 +1,7 @@
 package sdk
 
 // 差分判定に mtime を使わない理由と、世代の単位をフォルダだけにしない理由:
-// documents/adr/0022-plugin-cache-use-crc32-and-size.md
+// documents/adr/0303-plugin-cache-use-crc32-and-size.md
 
 // source.go は Google Takeout のようなZIPで届く書き出しを走査する。
 //

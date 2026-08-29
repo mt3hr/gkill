@@ -603,7 +603,7 @@ function batchSoftDeleteSummary(verb, payload) {
 
 // gkill_add_* / gkill_update_* の1行要約は、型ごとに違うのが「動詞」と「応答キー」だけ。
 // case を18本並べると、欄を1つ足すとき18箇所を触ることになり、1つ落としても
-// テストは緑のまま（各ツールのテストは自分の case しか見ない）。表から作る（ADR-0063）。
+// テストは緑のまま（各ツールのテストは自分の case しか見ない）。表から作る（ADR-0611）。
 //
 // 動詞が "Added" なのは tag / text だけ。付随データは「作る」のではなく既存の記録へ「付ける」。
 const ADD_SUMMARY_VERBS = { tag: "Added", text: "Added" };

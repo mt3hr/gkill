@@ -22,7 +22,7 @@ description: "Kyou の追加/編集画面のタグ欄（18本共通の edit-kyou
 - **タグ欄は既存フィールドより後ろ（アクション行の直前）に置く。** E2E ヘルパ `fillDialogField(dialog, N, ...)` は入力欄の位置インデックスで掴むので、前に挿すと既存 spec が総崩れになる
 - 未知タグ確認は共有部品 `pages/dialogs/confirm-unknown-tag-dialog.vue` + `classes/use-confirm-unknown-tag.ts`（板名版と対）。`add-tag-view` / KFTL に手書き複製されていたマークアップと、`add_tag` の手順を12本のコンテキストメニュー・削除確認から寄せた
 - **「確認が開いているか」を呼び出し元が持つときは `closed` イベントで倒す。** `unknown_tags` の空判定で代用すると、ブラウザバックで閉じたときに空にならないので開きっぱなし扱いになる（KFTLのタブ操作が永久ロックされる）。ただし **`closed` は `requested_confirm` より先に来る**（ダイアログが `hide()` してから emit するため）ので、確認の続行で読む値（KFTLの `submit_target_tab_id` 等）を `closed` で消してはいけない
-- 守るテスト: `kyou-tags.test.ts` / `edit-kyou-tags-view.test.ts` / `add-views.test.ts` の「registered_kyou は add_tag が終わってから emit される」/ `edit-views.test.ts` の「タグ欄」節 / `e2e/add-dialog-crud.spec.ts` の「URLogを本文とタグ入りで一度に追加できる」 順序が唯一の防御線である理由と却下案（tx_id で束ねる等）は [ADR-0032](../../../documents/adr/0032-add-tag-before-registered-kyou.md)。
+- 守るテスト: `kyou-tags.test.ts` / `edit-kyou-tags-view.test.ts` / `add-views.test.ts` の「registered_kyou は add_tag が終わってから emit される」/ `edit-views.test.ts` の「タグ欄」節 / `e2e/add-dialog-crud.spec.ts` の「URLogを本文とタグ入りで一度に追加できる」 順序が唯一の防御線である理由と却下案（tx_id で束ねる等）は [ADR-0403](../../../documents/adr/0403-add-tag-before-registered-kyou.md)。
 
 ## 関連スキル
 
@@ -32,4 +32,4 @@ description: "Kyou の追加/編集画面のタグ欄（18本共通の edit-kyou
 
 ## 詳しい設計と却下案（ADR）
 
-- [ADR-0032 add_tag が終わってから registered_kyou](../../../documents/adr/0032-add-tag-before-registered-kyou.md)
+- [ADR-0403 add_tag が終わってから registered_kyou](../../../documents/adr/0403-add-tag-before-registered-kyou.md)

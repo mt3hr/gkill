@@ -18,7 +18,7 @@ const secondsPerDay = 86400
 // その時刻を指定する実クライアントは存在しないため、86400未満は秒オブデイとして
 // そのまま採用し、それ以外は従来どおり「絶対epoch秒 → ローカル時刻の時分秒」で解釈する。
 // この二重解釈により、Webの既存動作を一切変えずにMCP契約のズレ（+9時間）を解消した。
-// 経緯と却下案: documents/adr/0009-period-of-time-second-of-day.md
+// 経緯と却下案: documents/adr/0108-period-of-time-second-of-day.md
 func NormalizeSecondOfDay(v int64) int {
 	if v >= 0 && v < secondsPerDay {
 		return int(v)

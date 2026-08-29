@@ -50,7 +50,7 @@ func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
 	// fmt.Errorf のままだと errors.As に引っかからず ERR000351 (HTTP 500) の
 	// 「メモ帳のテキストの記録に失敗しました」だけが返り、**行番号も理由も出ない**
 	// (2026-08-25 の実利用レビュー: ~~ の最小形が3回とも同じ文言で落ち、
-	//  切り分けに5回の試行を要した)。ADR-0080 / ADR-0081 の続き。
+	//  切り分けに5回の試行を要した)。ADR-0502 / ADR-0503 の続き。
 	// TS 側 (kftl-mi-re-kyou-request.ts) は同じ検査で
 	// NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE を返しており、Go だけが遅れていた。
 	if r.requestMap == nil {
@@ -70,7 +70,7 @@ func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
 	// MiReKyouは後から追加されたrep種別なので、既存の設定DBには書き込み用repが無いことがある。
 	// doBaseRequestより前に判定して、このリクエストは何も書かずに終わらせる。
 	// **原因の文面を利用者へ返さない。** 利用者IDと端末名が入っており、
-	// MessageID が空だと handle_submit_kftl_text.go がそれをそのまま応答へ載せる (ADR-0046)。
+	// MessageID が空だと handle_submit_kftl_text.go がそれをそのまま応答へ載せる (ADR-0707)。
 	if r.Ctx.Repositories == nil || r.Ctx.Repositories.WriteMiReKyouRep == nil {
 		return newKFTLInputError("KFTL_MI_REKYOU_NO_WRITE_REP_MESSAGE_TITLE",
 			fmt.Errorf("not exist write mirekyou rep user id = %s device = %s", r.Ctx.UserID, r.Ctx.Device))

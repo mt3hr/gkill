@@ -538,7 +538,7 @@ export function useKftlView(options: {
      * テンプレート貼り付けからは貼る前の本文を渡す。
      */
     // beforeinput→input の対で判定する理由（watch では判定そのものが走らない）と、
-    // IME の回帰が CDP でしか再現しないこと: documents/adr/0037-save-marker-beforeinput-input-pair.md
+    // IME の回帰が CDP でしか再現しないこと: documents/adr/0501-save-marker-beforeinput-input-pair.md
     async function maybe_submit_by_save_marker(content: string, previous_content: string): Promise<void> {
         if (is_requested_submit.value) {
             return

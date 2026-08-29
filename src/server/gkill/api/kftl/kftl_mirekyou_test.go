@@ -287,7 +287,7 @@ func TestDoRequest_MiReKyouWithoutWriteRepIsError(t *testing.T) {
 
 // assertKFTLInputError は「利用者が直せる入力エラーとして返っているか」を見る。
 // MessageID が空だと handle_submit_kftl_text.go が Cause の英文をそのまま応答へ載せ、
-// 利用者IDと端末名が漏れる(ADR-0046)。空でないことまで含めて固定する。
+// 利用者IDと端末名が漏れる(ADR-0707)。空でないことまで含めて固定する。
 func assertKFTLInputError(t *testing.T, err error, wantMessageID string) {
 	t.Helper()
 	var inputErr *KFTLInputError
