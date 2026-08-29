@@ -27,7 +27,7 @@ import (
 // （get_kyous_mcp と同じ形）。
 // rep_infos はKyouを供給するrepだけを (rep_name, rep_type) で列挙します。rep名の取得は
 // ラッパを UnWrap した leaf の GetRepName が正本で、これは「名前列挙のためだけ」の
-// UnWrap（ADR-0001 の許容用途。MatchReps へ入れる用途とは別物）です。
+// UnWrap（ADR-0101 の許容用途。MatchReps へ入れる用途とは別物）です。
 // ファイルパスは返しません。プラグインは rep_types で絞れないため対応表(plugins)を
 // 別枠で返し、canonical_rep_types には find.KyouRepTypes の11値をそのまま載せます。
 // 経緯: 外部監査 A1/A3「rep_types の語彙がどのAPIからも取得できず総当たりでしか判明しない」。
@@ -197,7 +197,7 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 	// manifestのrep_name/data_typeは必須項目なので値は入っているが、
 	// そのプラグインのKyouは存在しないため、渡してもエラーも警告も無く0件になる。
 	// GPSログの供給元としては AttachedDataReps に data_kind="gpslog" で載っており、
-	// そちらが「query.repsの値ではない」と明示されている枠（ADR-0056）。
+	// そちらが「query.repsの値ではない」と明示されている枠（ADR-0607）。
 	for _, pluginRep := range repositories.PluginReps {
 		manifest := pluginRep.GetManifest()
 		if !manifest.EmitsKyouOrDefault() {

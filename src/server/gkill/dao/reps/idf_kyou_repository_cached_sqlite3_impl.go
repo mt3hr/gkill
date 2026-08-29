@@ -1512,7 +1512,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
 	// rep名は行の REP_NAME 列から読む。GetRepName() を焼いてはいけない
-	// （包んでいるのは集約なので "IDFKyouReps" という実在しない名前が返る）。ADR-0019。
+	// （包んでいるのは集約なので "IDFKyouReps" という実在しない名前が返る）。ADR-0210。
 	// TARGET_REP_NAME ではなく REP_NAME であることに注意。前者は参照先の解決用で旧名が残りうる。
 	sql := `
 SELECT IS_DELETED, ID AS TARGET_ID, NULL AS TARGET_ID_IN_DATA,

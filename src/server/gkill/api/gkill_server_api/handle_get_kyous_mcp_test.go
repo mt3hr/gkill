@@ -353,7 +353,7 @@ func TestHandleGetKyousMCP_ReKyouPayload(t *testing.T) {
 // TestHandleGetKyousMCP_IDAndRepNameAlwaysPresent は id / rep_name が常時入ることを固定する。
 // 旧v1は include_id / include_rep_name の要求フラグ制だったが、AIクライアントの
 // 追撃クエリ(query.ids / query.reps / プラグイン本文取得 / 更新系)は両方を前提とし、
-// フラグの立て忘れが往復を1回増やしていたため v2 で常時付与へ変えた（ADR-0053）。
+// フラグの立て忘れが往復を1回増やしていたため v2 で常時付与へ変えた（ADR-0604）。
 // 旧フラグを送っても無害に無視されることも固定する。
 //
 // **キャッシュONでも必ず走らせること。**
@@ -446,7 +446,7 @@ func TestPayloadKindOfDataType(t *testing.T) {
 // ページ境界で取りこぼされないことを固定する。
 //
 // v2の複合カーソル({RFC3339Nano}::{ID})は同一時刻のかたまりの途中からでも正確に
-// 再開できるため、Limitは厳密な上限（旧v1はかたまりの終わりまで伸ばしていた。ADR-0053）。
+// 再開できるため、Limitは厳密な上限（旧v1はかたまりの終わりまで伸ばしていた。ADR-0604）。
 // limit=1で全ページを回し、「全件がちょうど1回ずつ」「毎ページreturned<=limit」を見る。
 // 一括取り込みのIDFやFitbitの日次指標のように同時刻が並ぶデータで現実に起きる形。
 func TestHandleGetKyousMCP_PagingDoesNotDropSameRelatedTime(t *testing.T) {

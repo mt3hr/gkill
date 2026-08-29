@@ -2,7 +2,7 @@ package gkill_server_api
 
 // HandleGetKyousMCP (v2) のリクエストレベルの補助群。
 // 複合カーソル・data_types/num/idf_kinds フィルタ・group_by バケット化・未知値警告。
-// 契約の全体と却下案: documents/adr/0053-mcp-composite-cursor-strict-limits.md
+// 契約の全体と却下案: documents/adr/0604-mcp-composite-cursor-strict-limits.md
 
 import (
 	"context"
@@ -483,7 +483,7 @@ func knownMCPDataTypes(repositories *reps.GkillRepositories) map[string]struct{}
 //
 // 索引の状態は非ブロッキングで読める（プラグインへは行かない）。
 // **失敗理由の本文は返さない** —— プラグインの生 stderr と索引構築のエラー文は
-// 利用者の端末のディレクトリ構成を含むため（ADR-0046）。
+// 利用者の端末のディレクトリ構成を含むため（ADR-0707）。
 // 「何か書かれている」ことと読む先だけ伝えれば、診断としては足りる。
 func emptyPluginIndexHint(repositories *reps.GkillRepositories, dataType string) string {
 	for _, pluginRep := range repositories.PluginReps {

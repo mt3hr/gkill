@@ -573,7 +573,7 @@ describe("delete / restore batch form", () => {
 describe("追加と更新は同じフィールド表から作る", () => {
   // 手書き18本だった頃、assertUrlWithScheme は**追加側の1箇所でしか呼ばれていなかった**。
   // スキームの無いURLで更新すると gkill はページ取得を試みず、title が空のまま
-  // エラーも出さずに保存される。表にして種別の定義を1箇所にした（ADR-0063）。
+  // エラーも出さずに保存される。表にして種別の定義を1箇所にした（ADR-0611）。
   test("update_urlog もスキームの無いURLを弾く", () => {
     expect(() => normalizeUpdateUrlogArgs({ id: "u1", url: "example.com/page" })).toThrow(
       /must include a scheme/,

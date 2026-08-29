@@ -53,7 +53,7 @@ async function dispatchReadToolCall(ctx, name, args) {
             cursor: normalized.cursor,
             max_size_mb: normalized.max_size_mb,
             is_include_timeis: normalized.is_include_timeis,
-            // ---- v2 (ADR-0053)。include_id / include_rep_name は廃止（常時付与） ----
+            // ---- v2 (ADR-0604)。include_id / include_rep_name は廃止（常時付与） ----
             count_only: normalized.count_only || false,
             group_by: normalized.group_by,
             data_types: normalized.data_types,

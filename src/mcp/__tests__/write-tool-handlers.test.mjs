@@ -86,7 +86,7 @@ describe("Tool definitions", () => {
   });
 
   test("no description advertises the deprecated include_id argument", () => {
-    // ADR-0053 で ID は常時付与になった。案内が残っていると AI が必須引数だと学習する
+    // ADR-0604 で ID は常時付与になった。案内が残っていると AI が必須引数だと学習する
     for (const tool of WRITE_TOOLS) {
       expect(tool.description).not.toContain("include_id");
       expect(JSON.stringify(tool.inputSchema)).not.toContain("include_id");

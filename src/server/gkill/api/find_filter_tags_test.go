@@ -220,7 +220,7 @@ func TestFilterTagsKyous_Or_TagOrNoTagsUnion(t *testing.T) {
 
 // 非表示タグ: 非表示タグの対象Kyouが結果から消えること。
 // 適用は filterTagsKyous 本体ではなく独立ステップ filterHideTagsKyous が行う
-// （Tags==nil でも hide_tags 単独で効かせるため。ADR-0070）。
+// （Tags==nil でも hide_tags 単独で効かせるため。ADR-0109）。
 // 本番の FindKyous と同じく filterTagsKyous → filterHideTagsKyous の順で呼ぶ。
 func TestFilterTagsKyous_Or_HideTagRemoves(t *testing.T) {
 	ctx := context.Background()
@@ -266,7 +266,7 @@ func TestFilterTagsKyous_Or_HideTagRemoves(t *testing.T) {
 // hide_tags の単独有効化: タグ絞り込み(Tags)が nil でも、hide_tags の対象は消える。
 // 「同じ名前が tags にも入っていれば消さない」意味論は集合を作る側
 // (getMatchHideTagsWhenUnchecked)が担うので、ここでは集合の適用だけを固定する。
-// 経緯: documents/adr/0070-hide-tags-standalone.md
+// 経緯: documents/adr/0109-hide-tags-standalone.md
 func TestFilterHideTagsKyous_WorksWithoutTagsFilter(t *testing.T) {
 	ctx := context.Background()
 

@@ -1,7 +1,7 @@
 package gkill_server_api
 
 // 所有者を本文の user_id から取らない理由:
-// documents/adr/0041-share-owner-from-session.md
+// documents/adr/0702-share-owner-from-session.md
 
 import (
 	"context"
@@ -429,7 +429,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 					response.Errors = append(response.Errors, gkillError)
 					return
 				}
-				// 削除済みは Kyou 検索と同じ規則で落とす(ADR-0064)。ここは FindFilter を
+				// 削除済みは Kyou 検索と同じ規則で落とす(ADR-0612)。ここは FindFilter を
 				// 通らない直叩きなので、落とさないと「終了していない削除済みの打刻」が
 				// 開始以降のすべての記録に *実行中* として永久に付き続ける。
 				for _, timeis := range livePlaingTimeIsCandidates(plaingTimeIss) {

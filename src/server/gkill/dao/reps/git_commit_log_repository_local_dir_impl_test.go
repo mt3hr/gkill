@@ -277,7 +277,7 @@ func TestNewGitRepSuccessForGitRepository(t *testing.T) {
 
 // 時間帯フィルタの秒値が「秒オブデイ(0..86399)」でも「絶対epoch秒」でも同じ窓に
 // 正規化されることを、gitのSQLを通らない経路(buildPeriodOfTimeSeconds)で固定する。
-// 解釈の正本: find.NormalizeSecondOfDay / documents/adr/0009-period-of-time-second-of-day.md
+// 解釈の正本: find.NormalizeSecondOfDay / documents/adr/0108-period-of-time-second-of-day.md
 func TestBuildPeriodOfTimeSecondsSecondOfDayInput(t *testing.T) {
 	secOfDayStart := int64(9 * 3600)
 	epochStart := time.Date(2026, 1, 1, 9, 0, 0, 0, time.Local).Unix()

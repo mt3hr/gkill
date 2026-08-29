@@ -12,7 +12,7 @@ import (
 //	負値       = 絶対epoch秒として扱う（1970以前。実クライアントは送らないが未定義にしない）
 //
 // この境界を動かすと、MCPの時間帯検索が9時間ずれるか、Webの時間帯検索が9時間ずれるかの
-// どちらかが静かに起きる。経緯: documents/adr/0009-period-of-time-second-of-day.md
+// どちらかが静かに起きる。経緯: documents/adr/0108-period-of-time-second-of-day.md
 func TestNormalizeSecondOfDay(t *testing.T) {
 	// epoch解釈の期待値はTZ依存なので、テスト自身がローカルTZで計算する
 	epochOf := func(hour, minute, second int) int64 {

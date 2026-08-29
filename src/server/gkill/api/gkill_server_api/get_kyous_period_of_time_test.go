@@ -12,7 +12,7 @@ import (
 // 検査の狙いは2つ:
 //  1. 秒オブデイ表現(MCP契約)とepoch表現(Web契約)が**同じ結果**になること。
 //     解釈の正本は find.NormalizeSecondOfDay
-//     （documents/adr/0009-period-of-time-second-of-day.md）。
+//     （documents/adr/0108-period-of-time-second-of-day.md）。
 //  2. SQL経路（キャッシュrepの GenerateFindSQLCommon）とGo経路（find_filter の
 //     sortAndTrimKyousMap）のどちらを通っても同じ結果になること。
 //     cache_in_memory の ON/OFF で通る経路が変わるので両方で回す。

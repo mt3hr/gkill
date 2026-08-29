@@ -11,7 +11,7 @@ gkill API のエラーコードとメッセージコードの定数定義、お�
 |---------|------|
 | `gkill_error.go` | `GkillError` 構造体 — `ErrorCode` + `ErrorMessage`。`EnsureNotEmpty`（エラー無し失敗の受け皿）と、`ErrorMessage` を伏せる `MarshalJSON` もここ |
 | `gkill_error_test.go` | `EnsureNotEmpty` が「失敗したのに GkillError が1つも無い」状態を潰すこと、`MarshalJSON` が端末固有の情報を伏せることのテスト |
-| `redact.go` | `RedactEnvironmentSpecific` — レスポンスへ載る自由文からホームのユーザー名・メールアドレスを伏せる（[ADR-0046](../../../../../documents/adr/0046-redact-environment-specific-strings.md)） |
+| `redact.go` | `RedactEnvironmentSpecific` — レスポンスへ載る自由文からホームのユーザー名・メールアドレスを伏せる（[ADR-0707](../../../../../documents/adr/0707-redact-environment-specific-strings.md)） |
 | `redact_test.go` | 伏せ方の表駆動テスト（形は残す・二重適用しない・`@example.` は残す） |
 | `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` |
 | `error_codes.go` | エラーコード定数（414 定数: `ERR000001` 〜 `ERR000418`、`ERR000243`・`ERR000387`・`ERR000388`・`ERR000389` は欠番） |
@@ -83,7 +83,7 @@ type GkillMessage struct {
 `error_codes.go` をソース走査して未分類のコードを落とす。
 名前の規則からは導けない（`Invalid*` が 400 と 500 に、`NotFound*` が 401 と 404 に跨る）ので、
 推論に置き換えないこと。経緯と却下案は
-[ADR-0045](../../../../../documents/adr/0045-http-status-from-error-code.md)。
+[ADR-0706](../../../../../documents/adr/0706-http-status-from-error-code.md)。
 
 ## 関連ドキュメント
 

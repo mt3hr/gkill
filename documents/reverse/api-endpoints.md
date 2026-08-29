@@ -196,7 +196,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 `created[]` の要素は `{id, data_type, updated}`。記録本体（kmemo / mi / timeis 等）だけが載り、行から作られたタグ・テキストは載らない。`updated: true` は新規作成ではなく既存レコードの更新（`/end` 系の打刻終了）を表す。KFTLはDBトランザクションを使わないため、**途中で失敗してもそこまでに書けたぶんが `created[]` に載る**（部分保存の後始末用）。冪等キーで畳まれた再送は実行されないので `created` は空になる。
 
-失敗の返し方は2系統に分かれる（経緯は `documents/adr/0080-kftl-errors-are-per-line.md`）:
+失敗の返し方は2系統に分かれる（経緯は `documents/adr/0502-kftl-errors-are-per-line.md`）:
 
 | 失敗 | 応答 |
 |---|---|
@@ -337,7 +337,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 
 | パス | 説明 |
 |---|---|
-| `/api/get_all_tag_names` | 全タグ名一覧取得。**対象の記録が削除済みのタグは語彙から落とす**（記録を削除してもタグ自体は追記型のため残る。素直に列挙すると0件しか返さない候補が溜まるので、カスケード削除ではなく列挙側で落とす。判定は最新版アドレス表で行い、表に載らない対象＝プラグイン・git などのタグは落とさない。「タグ名が実在するか」の検証には対象の生死を問わない `GetAllTagNamesIncludingDeletedTargets` が別にある。実装は `gkill_repositories.go`、経緯は `documents/adr/0073-tag-vocabulary-drops-dead-targets.md`） |
+| `/api/get_all_tag_names` | 全タグ名一覧取得。**対象の記録が削除済みのタグは語彙から落とす**（記録を削除してもタグ自体は追記型のため残る。素直に列挙すると0件しか返さない候補が溜まるので、カスケード削除ではなく列挙側で落とす。判定は最新版アドレス表で行い、表に載らない対象＝プラグイン・git などのタグは落とさない。「タグ名が実在するか」の検証には対象の生死を問わない `GetAllTagNamesIncludingDeletedTargets` が別にある。実装は `gkill_repositories.go`、経緯は `documents/adr/0112-tag-vocabulary-drops-dead-targets.md`） |
 | `/api/get_all_rep_names` | 全リポジトリ名一覧取得 |
 | `/api/get_tags_by_id` | 対象KyouのIDに紐づくタグ一覧取得 |
 | `/api/get_tag_histories_by_tag_id` | タグIDの履歴取得（Append-Only全バージョン） |
@@ -380,7 +380,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | パス | 説明 |
 |---|---|
 | `/api/get_kftl_template` | KFTLテンプレート構造取得（※アドレス定義のみ、ハンドラ未実装。リクエストは404となる。テンプレートは `get_application_config` 経由で取得する） |
-| `/api/submit_kftl_text` | KFTLテキスト送信・パース・保存。応答の `created[]` に実際に書けた記録が載る（部分保存時もそこまで載る）。入力ミスは行ごとの `ERR000416`（HTTP 400）、サーバ障害は `ERR000351`（500）で返る。詳細は上の代表例と `documents/adr/0080-kftl-errors-are-per-line.md` |
+| `/api/submit_kftl_text` | KFTLテキスト送信・パース・保存。応答の `created[]` に実際に書けた記録が載る（部分保存時もそこまで載る）。入力ミスは行ごとの `ERR000416`（HTTP 400）、サーバ障害は `ERR000351`（500）で返る。詳細は上の代表例と `documents/adr/0502-kftl-errors-are-per-line.md` |
 
 ## トランザクション（2件）
 
@@ -456,7 +456,7 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の9（`gki
 | 備考 | MCPの `gkill_get_plugin_list` もこのエンドポイントをそのまま使う |
 | 備考 | `is_alive` は「プロセスが起動できて ping に応答したか」。**判定は必要ならプロセスを起動する**。データが取り込めているかは表さない。現に起動済みかを副作用なしで見るのは `process_running` |
 | 備考 | `last_error` はプラグイン stderr の末尾（直近約4KB。何も出ていなければ省略）。**索引構築の失敗はここには出ない**（タイムアウトやJSON不正は gkill 側で起きるため）—— そちらは `typed_index.last_build_error` を見る |
-| 備考 | `last_error` と `typed_index.last_build_error` は、返す直前に `message.RedactEnvironmentSpecific` を通してホームのユーザー名・メールアドレスをプレースホルダへ置き換える（プラグインは診断のために実パスを書いてよい前提で、伏せるのは gkill 側の責務。パスの形は残るので LocalSystem 起動でホームが化ける事故は診断できる）。MCP はこの2つを**中身ごと返さず** `has_last_error` / `has_last_build_error` だけを返す（[ADR-0046](../adr/0046-redact-environment-specific-strings.md)） |
+| 備考 | `last_error` と `typed_index.last_build_error` は、返す直前に `message.RedactEnvironmentSpecific` を通してホームのユーザー名・メールアドレスをプレースホルダへ置き換える（プラグインは診断のために実パスを書いてよい前提で、伏せるのは gkill 側の責務。パスの形は残るので LocalSystem 起動でホームが化ける事故は診断できる）。MCP はこの2つを**中身ごと返さず** `has_last_error` / `has_last_build_error` だけを返す（[ADR-0707](../adr/0707-redact-environment-specific-strings.md)） |
 | 備考 | `typed_index` は provides を宣言したプラグインの索引統計（宣言が無ければ省略）。`ok` / `state`（`never_built` / `failed` / `ok`。未構築と構築失敗を区別する）/ `last_build_error` / `last_attempt_at`（直近に構築を試みた時刻。バックオフ中はエラーすら出ないため要る）/ `record_count` / `oldest` / `newest`（related_time の範囲。0件なら省略）/ `truncated`（true なら `record_count` は実数より小さい）/ `built_at`（この統計の鮮度） |
 
 ### get_plugin_content_html 詳細

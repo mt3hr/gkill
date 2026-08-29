@@ -1,7 +1,7 @@
 package reps
 
 // サムネイルをキャッシュに載せない理由と、集約への丸投げを却下した理由:
-// documents/adr/0016-exclude-urlog-thumbnail-from-cache.md
+// documents/adr/0207-exclude-urlog-thumbnail-from-cache.md
 
 import (
 	"context"
@@ -1277,7 +1277,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
 	// rep名は行の REP_NAME 列から読む。GetRepName() を焼いてはいけない
-	// （包んでいるのは集約なので "URLogReps" という実在しない名前が返る）。ADR-0019。
+	// （包んでいるのは集約なので "URLogReps" という実在しない名前が返る）。ADR-0210。
 	sql := `
 SELECT IS_DELETED, ID AS TARGET_ID, NULL AS TARGET_ID_IN_DATA,
        REP_NAME AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME_UNIX AS DATA_UPDATE_TIME_UNIX

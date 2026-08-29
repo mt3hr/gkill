@@ -1,7 +1,7 @@
 package api
 
 // 性能の判断基準（ns/op を使わない）と、実測で否決した最適化の一覧:
-// documents/adr/0008-perf-judge-by-allocs-not-ns-op.md
+// documents/adr/0801-perf-judge-by-allocs-not-ns-op.md
 
 // FindKyous の後段パイプライン（SQLの外側）の割り当てを固定するベンチマーク。
 //

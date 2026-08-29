@@ -6,7 +6,7 @@
 // call(pathname, body) 形式のコールバックで受け取る。
 //
 // 同一プラグインへ並列に投げない理由（stdio が1本しかない）:
-// documents/adr/0051-mcp-inline-plugin-content.md
+// documents/adr/0602-mcp-inline-plugin-content.md
 
 import { GkillApiError } from "./errors.mjs";
 import { normalizeLocaleOnlyArgs } from "./normalization.mjs";
@@ -84,7 +84,7 @@ export const PLUGIN_TOOLS = [
 // ユーザー名は伏せているが、AIの文脈へ入れば資料やコミットメッセージへ引き写される経路が
 // できてしまう。「何か書かれている」ことだけ has_* で伝えれば、
 // 「is_alive=true なのに0件」の診断（外部監査 D2）は成立する。
-// 経緯: documents/adr/0046-redact-environment-specific-strings.md
+// 経緯: documents/adr/0707-redact-environment-specific-strings.md
 export const PLUGIN_DIAGNOSTICS_WITHHELD_WARNING =
   "plugin diagnostics are withheld from this response: last_error (raw plugin stderr) and " +
   "typed_index.last_build_error describe the directory layout of the user's own machine, so only " +
@@ -119,7 +119,7 @@ function withoutPluginDiagnostics(plugin) {
 }
 
 // hasWithheldDiagnostics は診断文を実際に落としたかどうかを返す。
-// 落としていないのに警告を出すと常時ノイズになる（ADR-0058 と同じ理由）。
+// 落としていないのに警告を出すと常時ノイズになる（ADR-0609 と同じ理由）。
 function hasWithheldDiagnostics(plugin) {
   if (plugin === null || typeof plugin !== "object") {
     return false;
@@ -144,7 +144,7 @@ function hasWithheldDiagnostics(plugin) {
 //
 // 件数そのものはここでは出さない。数えるにはプラグイン本体へ問い合わせることになり、
 // gkill_get_plugin_list が全プラグインへ直列に往復する形になる（プラグインのハンドラは
-// 数十msで返す前提。ADR-0020）。代わりに「数えられない」ことと数え方を名指しする。
+// 数十msで返す前提。ADR-0301）。代わりに「数えられない」ことと数え方を名指しする。
 function pluginsWithoutIngestCount(plugins) {
   return plugins
     .filter(
