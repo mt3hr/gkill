@@ -687,6 +687,7 @@
     "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE": "記録更新後取得に失敗しました",
     "SUCCESS_UPDATE_IDFKYOU_MESSAGE": "記録更新しました",
     "FAILED_FIND_PLUGIN_MESSAGE": "プラグインの検索結果を取得できませんでした",
+    "FAILED_LOAD_REP_MESSAGE": "記録保管場所を読み込めませんでした",
     "FAILED_GET_KYOUS_MESSAGE": "記録の取得に失敗しました",
     "SUCCESS_GET_KYOUS_MESSAGE": "検索完了",
     "FAILED_GET_REP_INFOS_MESSAGE": "リポジトリ一覧の取得に失敗しました",
