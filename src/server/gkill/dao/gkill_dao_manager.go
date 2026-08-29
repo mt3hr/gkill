@@ -250,9 +250,15 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			if !rep.IsEnable {
 				continue
 			}
+			// IDFのrepしか要らないなら、ここで落とす。
+			// パターンの展開もディレクトリ作成もこの下なので、
+			// 各caseの中で落としていたぶんは、そこへ辿り着くまでの走査が丸ごと無駄になっていた。
+			if gkill_options.LoadIDFRepOnly && rep.Type != "directory" {
+				continue
+			}
 			rep.File = os.ExpandEnv(rep.File)
 
-			matchFiles, _ := zglob.Glob(rep.File)
+			matchFiles := expandRepFilePattern(ctx, rep.File)
 			slices.Sort(matchFiles)
 			for _, filename := range matchFiles {
 				filename = filepath.Clean(filename)
@@ -283,9 +289,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 				switch rep.Type {
 				case "kmemo":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					var kmemoRep reps.KmemoRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						kmemoRep, err = reps.NewKmemoRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
@@ -329,9 +332,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "kc":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					var kcRep reps.KCRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						kcRep, err = reps.NewKCRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
@@ -375,9 +375,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "urlog":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					var urlogRep reps.URLogRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						urlogRep, err = reps.NewURLogRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
@@ -421,9 +418,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "timeis":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					var timeisRep reps.TimeIsRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						timeisRep, err = reps.NewTimeIsRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
@@ -467,9 +461,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "mi":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					var miRep reps.MiRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						miRep, err = reps.NewMiRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
@@ -513,9 +504,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "nlog":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					var nlogRep reps.NlogRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						nlogRep, err = reps.NewNlogRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
@@ -559,9 +547,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "lantana":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					var lantanaRep reps.LantanaRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						lantanaRep, err = reps.NewLantanaRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
@@ -605,9 +590,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "tag":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					var tagRep reps.TagRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						tagRep, err = reps.NewTagRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
@@ -655,9 +637,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "text":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					var textRep reps.TextRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						textRep, err = reps.NewTextRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
@@ -703,9 +682,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "notification":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					var notificationRep reps.NotificationRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						notificationRep, err = reps.NewNotificationRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
@@ -749,9 +725,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "rekyou":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					var reKyouRep reps.ReKyouRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						reKyouRep, err = reps.NewReKyouRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite, repositories)
@@ -795,9 +768,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "mirekyou":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					var miReKyouRep reps.MiReKyouRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						miReKyouRep, err = reps.NewMiReKyouRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite, repositories)
@@ -888,9 +858,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "gpslog":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					err := os.MkdirAll(os.ExpandEnv(filename), os.ModePerm)
 					if err != nil {
 						err = fmt.Errorf("error at make directory %s: %w", filename, err)
@@ -904,9 +871,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "git_commit_log":
-					if gkill_options.LoadIDFRepOnly {
-						continue
-					}
 					gitCommitLogRep, err := reps.NewGitRep(filename)
 					if err != nil {
 						// git_commit_logのrep設定は `$HOME/Git/*` のようなglobで書かれ、
@@ -1117,71 +1081,81 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		}
 
 		// プラグインリポジトリを追加（デバイス非依存、ユーザ別）
-		pm := g.getOrCreatePluginManager(userID)
-		if discoverErr := pm.DiscoverPlugins(ctx); discoverErr != nil {
-			slog.Log(context.Background(), gkill_log.Warn, "plugin discovery error", "user_id", fmt.Sprintf("%q", userID), "error", fmt.Sprintf("%q", discoverErr))
-		}
-		for _, pluginRepo := range pm.GetRepositories() {
-			pluginRep := pluginRepo.(reps.PluginRepository)
-			repositories.PluginReps = append(repositories.PluginReps, pluginRep)
+		//
+		// IDFのrepしか要らないなら、プラグインは1つも要らない。
+		// プラグインのアダプタが入るのは Kmemo / KC / URLog / Nlog / Lantana / TimeIs /
+		// Mi / Tag / Text / Notification / GPSLog の各Repsだけで、IDFKyouRepsには決して入らない。
+		//
+		// DiscoverPlugins は1プラグインにつき1つサブプロセスを起動してマニフェストを問い合わせる。
+		// 実データではここが GetRepositories の大半を占めていて、
+		// 派生キャッシュの一括生成のように IDF しか触らない経路まで毎回払っていた。
+		if !gkill_options.LoadIDFRepOnly {
+			pm := g.getOrCreatePluginManager(userID)
+			if discoverErr := pm.DiscoverPlugins(ctx); discoverErr != nil {
+				slog.Log(context.Background(), gkill_log.Warn, "plugin discovery error", "user_id", fmt.Sprintf("%q", userID), "error", fmt.Sprintf("%q", discoverErr))
+			}
+			for _, pluginRepo := range pm.GetRepositories() {
+				pluginRep := pluginRepo.(reps.PluginRepository)
+				repositories.PluginReps = append(repositories.PluginReps, pluginRep)
 
-			// manifest.jsonのemits_kyouがfalseのプラグインはRepsに入れない。
-			//
-			// GPSログだけを提供するプラグインがこれにあたる。Kyouを1件も返さないのに
-			// Repsに居ると「記録保管場所」の一覧（GetAllRepNames）に並び、
-			// 選んでも0件の項目になる。検索のたびに空振りの往復も1回発生する。
-			//
-			// PluginReps（設定・死活確認）とGPSLogReps（下で登録）には入るので、
-			// GPSログは rep の選択状態と無関係に常に使われる。
-			if pluginRep.GetManifest().EmitsKyouOrDefault() {
-				repositories.Reps = append(repositories.Reps, pluginRepo)
-			}
+				// manifest.jsonのemits_kyouがfalseのプラグインはRepsに入れない。
+				//
+				// GPSログだけを提供するプラグインがこれにあたる。Kyouを1件も返さないのに
+				// Repsに居ると「記録保管場所」の一覧（GetAllRepNames）に並び、
+				// 選んでも0件の項目になる。検索のたびに空振りの往復も1回発生する。
+				//
+				// PluginReps（設定・死活確認）とGPSLogReps（下で登録）には入るので、
+				// GPSログは rep の選択状態と無関係に常に使われる。
+				if pluginRep.GetManifest().EmitsKyouOrDefault() {
+					repositories.Reps = append(repositories.Reps, pluginRepo)
+				}
 
-			// manifest.jsonのprovidesに応じて型別/付随データのアダプタを登録する。
-			//
-			// ここが上のRepsへのコピーループより後にあることが要点。
-			// 先に足すとKCReps→Repsのコピーでアダプタまで Reps に入り、
-			// プラグイン本体と二重に検索されて同じ記録が2回出る。
-			//
-			// WriteXxxRepには絶対に入れない（プラグインは読み取り専用）。
-			// TagRepsWatchTarget / TextRepsWatchTargetにも入れない
-			// （ファイル実体が無くfsnotifyの監視対象にならないため）。
-			adapters := reps.NewPluginTypedRepositories(pluginRep)
-			if adapters.Kmemo != nil {
-				repositories.KmemoReps = append(repositories.KmemoReps, adapters.Kmemo)
-			}
-			if adapters.KC != nil {
-				repositories.KCReps = append(repositories.KCReps, adapters.KC)
-			}
-			if adapters.URLog != nil {
-				repositories.URLogReps = append(repositories.URLogReps, adapters.URLog)
-			}
-			if adapters.Nlog != nil {
-				repositories.NlogReps = append(repositories.NlogReps, adapters.Nlog)
-			}
-			if adapters.Lantana != nil {
-				repositories.LantanaReps = append(repositories.LantanaReps, adapters.Lantana)
-			}
-			if adapters.TimeIs != nil {
-				repositories.TimeIsReps = append(repositories.TimeIsReps, adapters.TimeIs)
-			}
-			if adapters.Mi != nil {
-				repositories.MiReps = append(repositories.MiReps, adapters.Mi)
-			}
-			if adapters.Tag != nil {
-				repositories.TagReps = append(repositories.TagReps, adapters.Tag)
-			}
-			if adapters.Text != nil {
-				repositories.TextReps = append(repositories.TextReps, adapters.Text)
-			}
-			if adapters.Notification != nil {
-				repositories.NotificationReps = append(repositories.NotificationReps, adapters.Notification)
-			}
+				// manifest.jsonのprovidesに応じて型別/付随データのアダプタを登録する。
+				//
+				// ここが上のRepsへのコピーループより後にあることが要点。
+				// 先に足すとKCReps→Repsのコピーでアダプタまで Reps に入り、
+				// プラグイン本体と二重に検索されて同じ記録が2回出る。
+				//
+				// WriteXxxRepには絶対に入れない（プラグインは読み取り専用）。
+				// TagRepsWatchTarget / TextRepsWatchTargetにも入れない
+				// （ファイル実体が無くfsnotifyの監視対象にならないため）。
+				adapters := reps.NewPluginTypedRepositories(pluginRep)
+				if adapters.Kmemo != nil {
+					repositories.KmemoReps = append(repositories.KmemoReps, adapters.Kmemo)
+				}
+				if adapters.KC != nil {
+					repositories.KCReps = append(repositories.KCReps, adapters.KC)
+				}
+				if adapters.URLog != nil {
+					repositories.URLogReps = append(repositories.URLogReps, adapters.URLog)
+				}
+				if adapters.Nlog != nil {
+					repositories.NlogReps = append(repositories.NlogReps, adapters.Nlog)
+				}
+				if adapters.Lantana != nil {
+					repositories.LantanaReps = append(repositories.LantanaReps, adapters.Lantana)
+				}
+				if adapters.TimeIs != nil {
+					repositories.TimeIsReps = append(repositories.TimeIsReps, adapters.TimeIs)
+				}
+				if adapters.Mi != nil {
+					repositories.MiReps = append(repositories.MiReps, adapters.Mi)
+				}
+				if adapters.Tag != nil {
+					repositories.TagReps = append(repositories.TagReps, adapters.Tag)
+				}
+				if adapters.Text != nil {
+					repositories.TextReps = append(repositories.TextReps, adapters.Text)
+				}
+				if adapters.Notification != nil {
+					repositories.NotificationReps = append(repositories.NotificationReps, adapters.Notification)
+				}
 
-			// GPSログを提供するプラグインは GPSLogRepository としても登録する。
-			// 書き込み口を持たないので WriteGPSLogRep には決してしない。
-			if gpsLogRep, ok := reps.NewGPSLogPluginRepIfProvided(pluginRep); ok {
-				repositories.GPSLogReps = append(repositories.GPSLogReps, gpsLogRep)
+				// GPSログを提供するプラグインは GPSLogRepository としても登録する。
+				// 書き込み口を持たないので WriteGPSLogRep には決してしない。
+				if gpsLogRep, ok := reps.NewGPSLogPluginRepIfProvided(pluginRep); ok {
+					repositories.GPSLogReps = append(repositories.GPSLogReps, gpsLogRep)
+				}
 			}
 		}
 

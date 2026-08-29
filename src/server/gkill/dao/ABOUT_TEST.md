@@ -16,6 +16,8 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 |---------|-----------|
 | `gkill_dao_manager_test.go` | GkillDAOManager のライフサイクルと初期化 |
 | `gkill_dao_manager_git_rep_test.go` | git_commit_log の rep 定義（`$HOME/Git/*` のような glob）の展開先に git リポジトリでないディレクトリやファイルが混ざっていても、`GetRepositories` 全体が失敗せず本物の git リポジトリだけを読み込むこと。**ここが崩れると認証ミドルウェアが ERR000018 を返し、対象利用者はログイン直後から全 API が「内部エラー」になる** |
+| `gkill_dao_manager_load_idf_rep_only_test.go` | `LoadIDFRepOnly` が立っているとき IDF の rep だけが読み込まれ、それ以外の rep 定義はパターンの展開もディレクトリ作成もされないこと。**判定が `os.MkdirAll` より後ろへ戻ると、読み込まない rep のパターン展開ぶんの走査を丸ごと払う** |
+| `rep_file_glob_test.go` | REPOSITORY の `FILE` パターンの展開が go-zglob と同じ集合を返すこと（`*` が `/` をまたがない・`?` と `[` はリテラル・`**` は go-zglob へフォールバック・区切りの二連・ファイルシステムのルートを走査しない）。**ずれると rep が黙って増減する**（[ADR-0100](../../../../documents/adr/0100-expand-rep-patterns-without-walking.md)） |
 
 ### アカウント / セッション
 

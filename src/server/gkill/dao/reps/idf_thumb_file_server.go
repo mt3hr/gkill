@@ -21,6 +21,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	_ "image/gif"
@@ -69,8 +70,29 @@ var (
 	thumbSem = make(chan struct{}, runtime.NumCPU())
 )
 
+// ThumbGenerator はサムネイルキャッシュの生成と、生成済みかどうかの判定を提供します。
 type ThumbGenerator interface {
+	// GenerateThumbCache は配信URLと同じ形の文字列からサムネイルキャッシュを生成します。
+	// 対象がサムネイル化できない種別だったり、すでに生成済みだったときは何もせずnilを返します。
 	GenerateThumbCache(ctx context.Context, url string) error
+
+	// GenerateThumbCacheFor はURLを介さずにサムネイルキャッシュを生成します。
+	// rel はリポジトリ内の相対パス、st はその実ファイルの情報です。
+	//
+	// 一括生成はこちらを使ってください。GenerateThumbCache は1件ごとに
+	// URL文字列を組み立てて即座に解析し直すので、数十万件規模では無視できません。
+	GenerateThumbCacheFor(ctx context.Context, rel string, st os.FileInfo, isVideo bool, w int, h int) error
+
+	// ThumbCacheName はリポジトリ内の相対パスとファイルサイズから、キャッシュのファイル名を返します。
+	// CachedThumbNames が返す集合と突き合わせるために使います。
+	ThumbCacheName(rel string, size int64, w int, h int) string
+
+	// CachedThumbNames は生成済みサムネイルのファイル名の集合を、ディレクトリ1回の列挙で返します。
+	// キャッシュディレクトリがまだ無いときは空の集合を返します（エラーにしません）。
+	//
+	// 1件ずつ os.Stat すると数万件のリポジトリで数十秒かかるものが、
+	// 1回の列挙なら数十ミリ秒で済みます。
+	CachedThumbNames() (map[string]struct{}, error)
 }
 
 // NewThumbFileServer は dir 配下をサーブしつつ、?thumb=200x200 のときだけサムネを返す。
@@ -143,18 +165,36 @@ func (t *thumbFileServer) GenerateThumbCache(ctx context.Context, queryURL strin
 		return nil
 	}
 
-	thumbPath, _, err := t.thumbPathFor(rel, st, tw, th)
-	if err != nil {
+	return t.GenerateThumbCacheFor(ctx, rel, st, isVideo, tw, th)
+}
+
+// GenerateThumbCacheFor はURLを介さずにサムネイルキャッシュを生成します。
+// 契約は ThumbGenerator.GenerateThumbCacheFor を参照。
+func (t *thumbFileServer) GenerateThumbCacheFor(ctx context.Context, rel string, st os.FileInfo, isVideo bool, tw int, th int) error {
+	if tw <= 0 || th <= 0 || tw > t.maxSize || th > t.maxSize {
+		return fmt.Errorf("invalid thumb dimensions %dx%d for %s", tw, th, rel)
+	}
+	if st == nil || st.IsDir() {
+		return nil
+	}
+	if !looksLikeThumbTarget(rel, isVideo) {
 		return nil
 	}
 
-	// キャッシュがあれば返す（ETagで304も返す）
+	abs, ok := SecureJoin(t.rootDir, rel)
+	if !ok {
+		return fmt.Errorf("bad path %s", rel)
+	}
+
+	thumbPath := filepath.Join(t.cacheDir, t.ThumbCacheName(rel, st.Size(), tw, th))
 	if fileExists(thumbPath) {
 		return nil
 	}
 
-	// 生成
-	if fileExists(thumbPath) {
+	// 生成に失敗した印があれば、二度と挑まない。
+	// 印が無いと、デコードできないファイルは一括生成のたびに全件やり直しになる。
+	// 消したいときは clear_cache thumb <利用者ID>（キャッシュディレクトリごと消える）。
+	if fileExists(thumbPath + thumbFailedMarkerSuffix) {
 		return nil
 	}
 
@@ -175,13 +215,41 @@ func (t *thumbFileServer) GenerateThumbCache(ctx context.Context, queryURL strin
 			}
 			return nil, generateVideoThumbJpeg(ctx, abs, thumbPath, tw, th)
 		}
-		return nil, generateThumbJpeg(abs, thumbPath, tw, th, t.jpegQ)
+		return nil, generateThumbJpeg(ctx, abs, thumbPath, tw, th, t.jpegQ)
 	})
 
 	if genErr != nil {
+		markThumbFailed(ctx, thumbPath, genErr)
 		return genErr
 	}
 	return nil
+}
+
+// CachedThumbNames は生成済みサムネイルのファイル名の集合を返します。
+// 契約は ThumbGenerator.CachedThumbNames を参照。
+func (t *thumbFileServer) CachedThumbNames() (map[string]struct{}, error) {
+	names := map[string]struct{}{}
+	entries, err := os.ReadDir(t.cacheDir)
+	if err != nil {
+		// まだ1件も生成していないだけ。呼び出し元は「全部未生成」として進めればよい
+		if os.IsNotExist(err) {
+			return names, nil
+		}
+		return nil, err
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		// 失敗の印は「生成済み」ではない。ここへ混ぜると、
+		// 一括生成側が「サムネイルがある」と誤認して数を取り違える。
+		// 印そのものは GenerateThumbCacheFor が入口で見て早く戻る。
+		if strings.HasSuffix(entry.Name(), thumbFailedMarkerSuffix) {
+			continue
+		}
+		names[entry.Name()] = struct{}{}
+	}
+	return names, nil
 }
 
 func (t *thumbFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -239,6 +307,19 @@ func (t *thumbFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 生成に失敗した印があれば、二度と挑まない。
+	// 印が無いと、デコードできないファイルは表示のたびに
+	// EXIFパース + Decode + ffmpeg をやり直すことになる。
+	if fileExists(thumbPath + thumbFailedMarkerSuffix) {
+		if isVideo {
+			// 動画posterは原本へフォールバックすると Content-Type が壊れる（下と同じ理由）。
+			http.Error(w, "thumb generation failed", http.StatusInternalServerError)
+			return
+		}
+		t.base.ServeHTTP(w, r)
+		return
+	}
+
 	// 生成（同時生成まとめ + 同時実行制限）
 	_, genErr, _ := thumbSF.Do(thumbPath, func() (any, error) {
 		thumbSem <- struct{}{}
@@ -256,10 +337,11 @@ func (t *thumbFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			return nil, generateVideoThumbJpeg(r.Context(), abs, thumbPath, tw, th)
 		}
-		return nil, generateThumbJpeg(abs, thumbPath, tw, th, t.jpegQ)
+		return nil, generateThumbJpeg(r.Context(), abs, thumbPath, tw, th, t.jpegQ)
 	})
 
 	if genErr != nil {
+		markThumbFailed(r.Context(), thumbPath, genErr)
 		// thumb要求（特に動画poster）は、動画本体へフォールバックすると Content-Type が壊れる。
 		// 画像は既存挙動維持でフォールバックする。
 		if isVideo {
@@ -283,12 +365,29 @@ func parseThumb(s string) (int, int, bool) {
 	return w, h, true
 }
 
+// browserRenderableWithoutThumbExts は、ブラウザが img でそのまま描けるのに
+// Go の image.Decode でも ffmpeg でもラスタ化できない拡張子。
+//
+// サムネイルを作ろうとすると必ず失敗するので、生成を試みずに原本を配信させる。
+// SVG はベクタで元から小さく、縮小して配る意味も薄い。
+var browserRenderableWithoutThumbExts = map[string]struct{}{
+	".svg": {},
+}
+
+func isBrowserRenderableWithoutThumb(filename string) bool {
+	_, ok := browserRenderableWithoutThumbExts[strings.ToLower(filepath.Ext(filename))]
+	return ok
+}
+
 // looksLikeThumbTarget returns true if the request should be handled as a thumbnail generation.
 // - isVideo=true : allow common video extensions
-// - otherwise    : allow decodable images only
+// - otherwise    : allow images, except the ones the browser draws better than we can
 func looksLikeThumbTarget(rel string, isVideo_ bool) bool {
 	if isVideo_ {
 		return isVideo(rel)
+	}
+	if isBrowserRenderableWithoutThumb(rel) {
+		return false
 	}
 	return isImage(rel)
 }
@@ -331,14 +430,41 @@ func SecureJoin(rootDir, rel string) (string, bool) {
 	return "", false
 }
 
-func (t *thumbFileServer) thumbPathFor(rel string, st os.FileInfo, w, h int) (thumbPath string, etag string, err error) {
+// thumbFailedMarkerSuffix はサムネイル生成に失敗した印のファイル名につく接尾辞。
+const thumbFailedMarkerSuffix = ".failed"
+
+// markThumbFailed はサムネイル生成に失敗した印を残します。
+//
+// ctx が切れているときは印を残しません。HTTP経由ではブラウザが待ちきれずに
+// 接続を切ると ffmpeg も一緒に落ちるので、それを恒久的な失敗として焼いてはいけません。
+// 互換動画側の markCompatFailed と同じ判断です。
+func markThumbFailed(ctx context.Context, thumbPath string, cause error) {
+	if ctx.Err() != nil {
+		return
+	}
+	markerPath := thumbPath + thumbFailedMarkerSuffix
+	if err := os.MkdirAll(filepath.Dir(markerPath), 0o755); err != nil {
+		slog.Log(ctx, gkill_log.Debug, "error at make thumb failed marker directory", "error", fmt.Sprintf("%q", err))
+		return
+	}
+	content := fmt.Sprintf("%s\n%v\n", time.Now().Format(time.RFC3339), cause)
+	if err := os.WriteFile(markerPath, []byte(content), 0o644); err != nil {
+		slog.Log(ctx, gkill_log.Debug, "error at write thumb failed marker", "error", fmt.Sprintf("%q", err))
+	}
+}
+
+// ThumbCacheName はキャッシュのファイル名を返します。
+// 契約は ThumbGenerator.ThumbCacheName を参照。
+func (t *thumbFileServer) ThumbCacheName(rel string, size int64, w int, h int) string {
 	// rel + size + w/h でキー化
 	hh := sha1.Sum([]byte(rel))
 	key := hex.EncodeToString(hh[:])
 
-	ver := fmt.Sprintf("%d", st.Size())
-	name := fmt.Sprintf("%s_%s_%dx%d.jpg", key, ver, w, h)
+	return fmt.Sprintf("%s_%d_%dx%d.jpg", key, size, w, h)
+}
 
+func (t *thumbFileServer) thumbPathFor(rel string, st os.FileInfo, w, h int) (thumbPath string, etag string, err error) {
+	name := t.ThumbCacheName(rel, st.Size(), w, h)
 	etag = fmt.Sprintf(`W/"%s"`, name)
 
 	return filepath.Join(t.cacheDir, name), etag, nil
@@ -363,6 +489,103 @@ func serveThumbFile(w http.ResponseWriter, r *http.Request, thumbPath string, et
 	http.ServeFile(w, r, thumbPath)
 }
 
+// thumbTmpSeq は同一プロセス内の一時ファイル名を分けるための連番。
+var thumbTmpSeq atomic.Uint64
+
+// thumbTmpPath は書きかけのサムネイルを置く一時ファイルのパスを返します。
+//
+// プロセスIDと連番を挟むのは、**同じサムネイルを複数のプロセスが同時に作りうる**ため。
+// サーバ本体・MCPサーバ・generate_thumb_cache は別プロセスで同じキャッシュ置き場を共有していて、
+// singleflight はプロセスの中しかまとめられない。固定名の `.tmp` を共有すると、
+// 片方の os.Rename がもう片方の消した tmp を掴んで失敗し、
+// 実際には作れるサムネイルに失敗の印が焼かれる。
+func thumbTmpPath(dstPath string) string {
+	return fmt.Sprintf("%s.%d.%d.tmp", dstPath, os.Getpid(), thumbTmpSeq.Add(1))
+}
+
+// finalizeFFmpegThumbOutput は ffmpeg が書いたはずの tmp を dstPath へ atomic に移します。
+//
+// ffmpeg は exit 0 でも出力を書かないことがある。-ss が素材の末尾を越えたときがそれで、
+// ffprobe が duration を返すのに、その1割の位置ではフレームが取れない古い .MOV が実在する。
+// 確かめずに os.Rename まで進むと「指定されたファイルが見つかりません」という、
+// ffmpeg が何もしなかったことを隠したエラーになる。
+//
+// 出力が無いときに ffmpeg 自身が非ゼロで終わるかどうかは、ビルドと素材で変わる。
+// 終了コードを当てにせず、出力の有無だけで判定すること。
+func finalizeFFmpegThumbOutput(srcPath, tmp, dstPath, ffmpegOutput string) error {
+	if st, err := os.Stat(tmp); err != nil || st.Size() == 0 {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("ffmpeg thumb wrote no output for %s: %s", filepath.Base(srcPath), ffmpegOutput)
+	}
+
+	_ = os.Remove(dstPath)
+	if err := os.Rename(tmp, dstPath); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
+	return nil
+}
+
+// runFFmpegThumb は ffmpeg で1フレーム抜き出し、dstPath へ atomic に書きます。
+// seekSec が正のときだけ -ss を付けます（静止画には付けない）。
+func runFFmpegThumb(ctx context.Context, srcPath, dstPath string, w, h int, seekSec float64) error {
+	tmp := thumbTmpPath(dstPath)
+	_ = os.Remove(tmp)
+
+	args := []string{"-hide_banner", "-loglevel", "error", "-y"}
+	if seekSec > 0 {
+		args = append(args, "-ss", fmt.Sprintf("%.3f", seekSec))
+	}
+	// scale while preserving aspect ratio, then crop center
+	// force_original_aspect_ratio=increase ensures both dimensions cover the target, then crop.
+	args = append(args,
+		"-i", srcPath,
+		"-frames:v", "1",
+		"-vf", fmt.Sprintf("scale=%d:%d:force_original_aspect_ratio=increase,crop=%d:%d", w, h, w, h),
+		"-q:v", "2",
+		"-f", "image2",
+		tmp,
+	)
+
+	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := cmd.Run(); err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("ffmpeg thumb failed: %w: %s", err, out.String())
+	}
+
+	return finalizeFFmpegThumbOutput(srcPath, tmp, dstPath, out.String())
+}
+
+// runFFmpegDecodeFull は ffmpeg で1フレームを原寸のまま JPEG へ書き出します。
+// 縮小フィルタを付けられない入力（タイル分割された HEIF など）のための逃げ道です。
+func runFFmpegDecodeFull(ctx context.Context, srcPath, dstPath string) error {
+	tmp := thumbTmpPath(dstPath)
+	_ = os.Remove(tmp)
+
+	cmd := exec.CommandContext(ctx, "ffmpeg",
+		"-hide_banner",
+		"-loglevel", "error",
+		"-y",
+		"-i", srcPath,
+		"-frames:v", "1",
+		"-q:v", "2",
+		"-f", "image2",
+		tmp,
+	)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := cmd.Run(); err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("ffmpeg decode failed: %w: %s", err, out.String())
+	}
+
+	return finalizeFFmpegThumbOutput(srcPath, tmp, dstPath, out.String())
+}
+
 // generateVideoThumbJpeg creates a JPEG thumbnail for a video using ffmpeg.
 // Policy: take a frame at ~10% of the duration (fallback: 1s), then scale+center-crop to WxH.
 // It writes atomically to dstPath.
@@ -378,36 +601,15 @@ func generateVideoThumbJpeg(ctx context.Context, srcPath, dstPath string, w, h i
 		}
 	}
 
-	// scale while preserving aspect ratio, then crop center
-	// force_original_aspect_ratio=increase ensures both dimensions cover the target, then crop.
-	vf := fmt.Sprintf("scale=%d:%d:force_original_aspect_ratio=increase,crop=%d:%d", w, h, w, h)
-
-	tmp := dstPath + ".tmp"
-	_ = os.Remove(tmp)
-
-	cmd := exec.CommandContext(ctx, "ffmpeg",
-		"-hide_banner",
-		"-loglevel", "error",
-		"-y",
-		"-ss", fmt.Sprintf("%.3f", sec),
-		"-i", srcPath,
-		"-frames:v", "1",
-		"-vf", vf,
-		"-q:v", "2",
-		"-f", "image2",
-		tmp,
-	)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &out
-	if err := cmd.Run(); err != nil {
-		_ = os.Remove(tmp)
-		return fmt.Errorf("ffmpeg thumb failed: %w: %s", err, out.String())
+	err := runFFmpegThumb(ctx, srcPath, dstPath, w, h, sec)
+	if err == nil || sec <= 0 {
+		return err
 	}
 
-	_ = os.Remove(dstPath)
-	if err := os.Rename(tmp, dstPath); err != nil {
-		_ = os.Remove(tmp)
+	// -ss が素材の末尾を越えていると1フレームも取れない。
+	// duration を返さない古い .MOV と、動画の名前が付いた静止画がここへ来る。
+	// 先頭から取り直せば通るので、1回だけやり直す。
+	if retryErr := runFFmpegThumb(ctx, srcPath, dstPath, w, h, 0); retryErr != nil {
 		return err
 	}
 	return nil
@@ -441,7 +643,12 @@ func ffprobeDurationSeconds(ctx context.Context, srcPath string) (float64, error
 }
 
 // generateThumbJpeg: center-crop → resize → jpeg保存（atomic write）
-func generateThumbJpeg(srcPath, dstPath string, w, h int, quality int) error {
+//
+// image.Decode で読めなかったものは ffmpeg へ落とす。isImage が通す37拡張子のうち
+// Go にデコーダがあるのは jpeg/png/gif/webp の4形式だけで、
+// heic/avif/bmp/ico/tiff は必ずそこで失敗する。ffmpeg は拡張子ではなく中身で
+// 形式を決めるので、拡張子が実体と食い違っているファイルもここで拾える。
+func generateThumbJpeg(ctx context.Context, srcPath, dstPath string, w, h int, quality int) error {
 	f, err := os.Open(srcPath)
 	if err != nil {
 		return err
@@ -472,7 +679,10 @@ func generateThumbJpeg(srcPath, dstPath string, w, h int, quality int) error {
 
 	img, format, err := image.Decode(f)
 	if err != nil {
-		return err
+		if !existFFMPEG {
+			return err
+		}
+		return generateThumbViaFFmpeg(ctx, srcPath, dstPath, w, h, quality, err)
 	}
 
 	// 3) JPEG のときだけ Orientation を適用
@@ -480,13 +690,50 @@ func generateThumbJpeg(srcPath, dstPath string, w, h int, quality int) error {
 		img = applyExifOrientation(img, orient)
 	}
 
-	// 4) いつもの crop → resize
+	return writeThumbFromImage(img, dstPath, w, h, quality)
+}
+
+// generateThumbViaFFmpeg は image.Decode で読めなかった画像を ffmpeg で起こします。
+// decodeErr は Go 側のデコード失敗で、ffmpeg でも作れなかったときに包んで返します。
+func generateThumbViaFFmpeg(ctx context.Context, srcPath, dstPath string, w, h int, quality int, decodeErr error) error {
+	// まずは縮小まで ffmpeg の中で済ませる。プロセス1回で終わるので速い
+	fastErr := runFFmpegThumb(ctx, srcPath, dstPath, w, h, 0)
+	if fastErr == nil {
+		return nil
+	}
+
+	// タイルに分割された HEIF は、ffmpeg が内部で complex filtergraph を組んで
+	// タイルを貼り合わせてから1枚の画像にする。そこへこちらの簡易フィルタ（-vf）を足すと
+	// 「Simple and complex filtering cannot be used together」で拒否され、
+	// **何も書かないまま exit 0** で終わる。
+	// -vf を外せば読めるので、原寸で書き出してから Go 側で縮小する。
+	full := thumbTmpPath(dstPath)
+	defer func() { _ = os.Remove(full) }()
+	if err := runFFmpegDecodeFull(ctx, srcPath, full); err != nil {
+		return fmt.Errorf("%w (ffmpeg fallback: %v)", decodeErr, fastErr)
+	}
+
+	ff, err := os.Open(full)
+	if err != nil {
+		return fmt.Errorf("%w (ffmpeg fallback: %v)", decodeErr, err)
+	}
+	img, _, err := image.Decode(ff)
+	if closeErr := ff.Close(); closeErr != nil {
+		slog.Log(ctx, gkill_log.Debug, "error at close ffmpeg output", "error", fmt.Sprintf("%q", closeErr))
+	}
+	if err != nil {
+		return fmt.Errorf("%w (ffmpeg fallback: %v)", decodeErr, err)
+	}
+	return writeThumbFromImage(img, dstPath, w, h, quality)
+}
+
+// writeThumbFromImage は中央切り抜き → 縮小 → JPEG保存（atomic write）を行います。
+func writeThumbFromImage(img image.Image, dstPath string, w, h int, quality int) error {
 	cropped := cropCenterToAspect(img, float64(w)/float64(h))
 	dst := image.NewRGBA(image.Rect(0, 0, w, h))
 	xdraw.CatmullRom.Scale(dst, dst.Bounds(), cropped, cropped.Bounds(), stdDraw.Over, nil)
 
-	// 5) atomic write
-	tmp := dstPath + ".tmp"
+	tmp := thumbTmpPath(dstPath)
 	tf, err := os.Create(tmp)
 	if err != nil {
 		return err
