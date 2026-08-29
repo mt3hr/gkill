@@ -35,7 +35,7 @@ func (g *GkillServerAPI) HandleGetReKyousByTargetID(w http.ResponseWriter, r *ht
 		}
 	}()
 	defer func() {
-		writeErrorStatus(w, response.Errors)
+		writeErrorStatus(r.Context(), w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get rekyous by target id response to json: %w", err)

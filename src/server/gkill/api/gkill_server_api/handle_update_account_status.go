@@ -37,7 +37,7 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 		}
 	}()
 	defer func() {
-		writeErrorStatus(w, response.Errors)
+		writeErrorStatus(r.Context(), w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse update accountStatus response to json: %w", err)

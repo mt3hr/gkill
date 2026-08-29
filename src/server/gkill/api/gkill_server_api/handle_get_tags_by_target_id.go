@@ -34,7 +34,7 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 		}
 	}()
 	defer func() {
-		writeErrorStatus(w, response.Errors)
+		writeErrorStatus(r.Context(), w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get tags by target id response to json: %w", err)

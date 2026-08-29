@@ -38,7 +38,7 @@ func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r
 		}
 	}()
 	defer func() {
-		writeErrorStatus(w, response.Errors)
+		writeErrorStatus(r.Context(), w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse delete ShareKyouListInfos response to json: %w", err)

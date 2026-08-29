@@ -36,7 +36,7 @@ func (g *GkillServerAPI) HandleRegisterGkillNotification(w http.ResponseWriter, 
 		}
 	}()
 	defer func() {
-		writeErrorStatus(w, response.Errors)
+		writeErrorStatus(r.Context(), w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse register mi task notification response to json: %w", err)

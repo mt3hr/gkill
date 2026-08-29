@@ -34,7 +34,7 @@ func (g *GkillServerAPI) HandleUpdateCache(w http.ResponseWriter, r *http.Reques
 		}
 	}()
 	defer func() {
-		writeErrorStatus(w, response.Errors)
+		writeErrorStatus(r.Context(), w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse update cache response to json: %w", err)
