@@ -192,7 +192,12 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 		repositories, err := g.GkillDAOManager.GetRepositories(account.UserID, device)
 		if err != nil {
 			err = fmt.Errorf("error at get repositories user id = %s device = %s in auth middleware: %w", account.UserID, device, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			// ここは Debug ではなく Warn。
+			// この失敗はそのユーザの**全API**を500にするのに、Debugだと既定のログレベルでは
+			// 1行も残らず、「全部エラーになるが理由がどこにも出ない」状態になる。
+			// 実際 2026-08-30 の障害では、--log debug で動いていた回のログが偶然残っていた
+			// おかげでしか原因に辿り着けなかった。
+			slog.Log(ctx, gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 			writeGkillErrorResponse(w, &message.GkillError{
 				ErrorCode:    message.RepositoriesGetError,
 				ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
