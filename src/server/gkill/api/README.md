@@ -17,7 +17,7 @@ api/
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
 ├── *_test.go                    # 検索フィルタ・rep名絞り込みなどのテスト（14ファイル）
-├── gkill_server_api/            # HTTP ハンドラ（141ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（142ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・全90ルート登録
@@ -105,7 +105,7 @@ handle_*.go は105ファイル（実装91 + テスト14）で、1ハンドラ1�
 | `gkill_error_test.go` | `EnsureNotEmpty` のテスト |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
 | `error_codes.go` | エラーコード定数（414定数、ERR000001〜ERR000418・欠番4つ: ERR000243 / ERR000387 / ERR000388 / ERR000389） |
-| `message_codes.go` | メッセージコード定数（89定数） |
+| `message_codes.go` | メッセージコード定数（90定数） |
 | `http_status.go` | エラーコード → HTTP ステータス対応表（`HTTPStatusOf` / `HTTPStatusForErrors`） |
 | `http_status_test.go` | 全エラーコードが対応表に載っていることのソース走査テスト |
 | `message_test.go` | コード形式テスト |

@@ -109,6 +109,11 @@ type GkillRepositories struct {
 	// (WriteThroughXxxCacheを使う)。
 	CachedReps CachedReps
 
+	// loadFailuresは構築時に読み込めなかったrepの記録。
+	// 直接触らず AppendLoadFailure / LoadFailures 経由で読み書きすること
+	// (rep_load_failures.go)。
+	loadFailures []RepLoadFailure
+
 	LatestDataRepositoryAddressDAO gkill_cache.LatestDataRepositoryAddressDAO
 	TempReps                       *TempReps
 
@@ -368,6 +373,11 @@ type gkillRepositoriesSync struct {
 	// latestDataAddressesMutexはlatestDataRepositoryAddressesと
 	// lastUpdatedLatestDataRepositoryAddressCacheFindTimeを保護する。
 	latestDataAddressesMutex sync.RWMutex
+
+	// loadFailuresMutexはloadFailuresを保護する。
+	// 書くのは構築中(GetRepositories)だけだが、読むのは検索のたびなので、
+	// 素のスライスのまま公開しない。latestDataRepositoryAddressesと同じ理由。
+	loadFailuresMutex sync.RWMutex
 
 	// isClosedとisUpdateCacheNextTickはCloseや各ハンドラと
 	// キャッシュ更新tickerのgoroutineの間で共有されるためatomicで持つ。

@@ -167,6 +167,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0213](0213-transcode-only-what-the-browser-cannot-play.md) | 互換動画へ変換するのは、原本のまま再生できると言い切れないものだけ | Accepted |
 | [0214](0214-thumbnail-decodes-by-content-not-extension.md) | サムネイルは拡張子ではなく中身で作る | Accepted |
 | [0215](0215-data-db-synchronous-full.md) | 実データDB・設定DBの synchronous は FULL にする | Accepted |
+| [0216](0216-detach-a-broken-rep-but-never-silently.md) | 読めない rep は切り離して動き続ける。ただし黙って落とさない | Accepted |
 | [0301](0301-plugin-cancel-vs-kill.md) | プラグインの打ち切りは「待つのをやめる」と「プロセスを殺す」を分け、期限はスロットを取ってから張る | Accepted |
 | [0302](0302-plugin-provides-typed-index.md) | プラグインは provides で型別/付随データを提供でき、アダプタの読み取りは索引から即答する | Accepted |
 | [0303](0303-plugin-cache-use-crc32-and-size.md) | Google Takeout は ZIP のまま読み、差分判定は (CRC32, Size)、世代は「フォルダ + 書き出し時刻」 | Accepted |
