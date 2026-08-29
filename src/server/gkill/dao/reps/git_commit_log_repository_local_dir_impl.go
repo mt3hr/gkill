@@ -1,7 +1,7 @@
 package reps
 
 // PlainOpen のエラー型で分岐しない理由（型が OS で違い Linux だけ壊れた）:
-// documents/adr/0017-git-repo-detect-by-os-stat.md
+// documents/adr/0208-git-repo-detect-by-os-stat.md
 
 import (
 	"context"
@@ -655,7 +655,7 @@ func buildPeriodOfTimeSeconds(query *find.FindQuery) (use bool, stOK bool, stSec
 	use = true
 
 	// 秒の解釈（epoch / 秒オブデイの二重解釈）は find パッケージのアクセサが正本:
-	// documents/adr/0009-period-of-time-second-of-day.md
+	// documents/adr/0108-period-of-time-second-of-day.md
 	stSec, stOK = query.PeriodStartSecondOfDay()
 	etSec, etOK = query.PeriodEndSecondOfDay()
 	return

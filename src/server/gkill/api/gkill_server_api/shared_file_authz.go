@@ -1,7 +1,7 @@
 package gkill_server_api
 
 // rep名一致で許さない理由と、判定手順を共有する理由:
-// documents/adr/0042-shared-file-authz-by-query.md
+// documents/adr/0703-shared-file-authz-by-query.md
 
 import (
 	"context"

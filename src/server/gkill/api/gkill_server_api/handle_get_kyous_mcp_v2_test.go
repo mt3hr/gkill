@@ -1,7 +1,7 @@
 package gkill_server_api
 
 // get_kyous_mcp v2（複合カーソル・厳密上限・count_only/group_by・リクエストレベルフィルタ・
-// 未知値警告）の回帰テスト。契約: documents/adr/0053-mcp-composite-cursor-strict-limits.md
+// 未知値警告）の回帰テスト。契約: documents/adr/0604-mcp-composite-cursor-strict-limits.md
 
 import (
 	"encoding/json"
@@ -576,7 +576,7 @@ func TestEmptyPluginIndexHint(t *testing.T) {
 		if !strings.Contains(hint, "gkill_get_plugin_list") {
 			t.Errorf("読む先が案内されていない: %q", hint)
 		}
-		// 失敗理由の本文は返さない（利用者の端末の構成を含むため。ADR-0046）
+		// 失敗理由の本文は返さない（利用者の端末の構成を含むため。ADR-0707）
 		if strings.Contains(hint, "no_such_plugin_binary") {
 			t.Errorf("プラグインの診断文がそのまま載っている: %q", hint)
 		}

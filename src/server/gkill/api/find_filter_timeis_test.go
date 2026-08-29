@@ -34,7 +34,7 @@ func timeIsMapOf(ids ...string) map[string]reps.TimeIs {
 //
 // 以前は「タグ絞り込みを使うときだけ」集合が埋まり、hide_tags 単独指定が黙って
 // 無視されていた（このテストもその挙動を固定していた）。単独有効化に伴い期待を反転。
-// 経緯と却下案: documents/adr/0070-hide-tags-standalone.md
+// 経緯と却下案: documents/adr/0109-hide-tags-standalone.md
 func TestFilterTagsTimeIs_NoTagFilter_AppliesHideTags(t *testing.T) {
 	ctx := context.Background()
 

@@ -2,7 +2,7 @@
 'use strict'
 
 // 判定できない条件を判定できると宣言しないこと。却下案と経緯:
-// documents/adr/0031-insert-registered-kyou-locally.md
+// documents/adr/0402-insert-registered-kyou-locally.md
 
 import { toRaw } from 'vue'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
@@ -189,7 +189,7 @@ function has_tag_name(kyou: Kyou, tag_name: string): boolean {
 }
 
 /**
- * 非表示タグ。`tags` の指定有無と独立に適用される（単独有効化。ADR-0070。
+ * 非表示タグ。`tags` の指定有無と独立に適用される（単独有効化。ADR-0109。
  * 以前は tags が null のとき適用しない仕様で、サーバ側 find_filter.go と対で変更した）。
  * 「hide_tags に載っている(大小無視)が query.tags には無い(大小区別)」タグを持つと除外される。
  * この大小の非対称は find_filter.go の実装そのままで、
@@ -213,7 +213,7 @@ function is_hidden_by_hide_tags(kyou: Kyou, query: FindKyouQuery): boolean {
 function matches_tags(kyou: Kyou, query: FindKyouQuery): boolean {
     if (query.tags === null) {
         // タグ絞り込みなし。hide_tags はタグ絞り込みと独立に適用される
-        // （単独有効化。ADR-0070。サーバ側は filterHideTagsKyous が独立ステップ）
+        // （単独有効化。ADR-0109。サーバ側は filterHideTagsKyous が独立ステップ）
         return !is_hidden_by_hide_tags(kyou, query)
     }
     // タグで絞る指定なのに1つもチェックされていない場合は0件

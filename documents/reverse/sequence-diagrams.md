@@ -744,7 +744,7 @@ sequenceDiagram
 `last_error` はプラグインプロセスの stderr 末尾で、索引構築の失敗理由はそこには出ない
 （そちらは `typed_index.last_build_error`。詳細は [plugin-system.md](plugin-system.md) の
 「インメモリ索引」節）。どちらも端末のディレクトリ構成を含むため、Go 側は返す直前に伏せ、
-MCP はさらに中身ごと落として有無だけを返す（[ADR-0046](../adr/0046-redact-environment-specific-strings.md)）。
+MCP はさらに中身ごと落として有無だけを返す（[ADR-0707](../adr/0707-redact-environment-specific-strings.md)）。
 
 ---
 
@@ -1058,4 +1058,4 @@ sequenceDiagram
 従来どおり `ERR000351`（HTTP 500）1件。どちらの失敗でも応答の `created[]` には
 **そこまでに書けた記録**（`{id, data_type, updated}`）が載る — KFTL は DB トランザクションを
 使わないため部分保存が残り、これが無いと後始末ができない
-（[ADR-0080](../adr/0080-kftl-errors-are-per-line.md)）。
+（[ADR-0502](../adr/0502-kftl-errors-are-per-line.md)）。

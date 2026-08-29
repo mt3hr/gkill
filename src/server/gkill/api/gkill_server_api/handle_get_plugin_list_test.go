@@ -328,7 +328,7 @@ func TestHandleGetPluginList_EmitsKyouAndProvides(t *testing.T) {
 // 書いたホームディレクトリが乗る。これはMCP経由でAIへ渡り、AIが資料やコミットメッセージへ
 // 引き写すと、verify_docs の checkPersonalInfo が防いでいる混入がそのまま成立する。
 // プラグインは別リポジトリの成果物なので、書き手側の約束では止められない。
-// 経緯: documents/adr/0046-redact-environment-specific-strings.md
+// 経緯: documents/adr/0707-redact-environment-specific-strings.md
 func TestHandleGetPluginList_RedactsEnvironmentSpecificDiagnostics(t *testing.T) {
 	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()

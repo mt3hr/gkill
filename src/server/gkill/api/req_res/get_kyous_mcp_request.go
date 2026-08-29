@@ -5,7 +5,7 @@ import "github.com/mt3hr/gkill/src/server/gkill/api/find"
 // GetKyousMCPRequest は /api/get_kyous_mcp のリクエスト。
 //
 // v2 でトップレベルのフィルタ・集計パラメータを追加した（FindQuery は不変のまま）。
-// 契約の全体は documents/adr/0053-mcp-composite-cursor-strict-limits.md を参照。
+// 契約の全体は documents/adr/0604-mcp-composite-cursor-strict-limits.md を参照。
 // 旧 include_id / include_rep_name は廃止（id / rep_name は常時付与。未知フィールドは
 // encoding/json が無視するので旧クライアントの送信は無害）。
 type GetKyousMCPRequest struct {

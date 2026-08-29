@@ -97,7 +97,7 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 
 **ステータスはエラーコードから決まる。** 対応表の正本は
 `src/server/gkill/api/message/http_status.go` の `errorCodeHTTPStatus`。
-`documents/adr/0045-http-status-from-error-code.md` に経緯と却下案がある。
+`documents/adr/0706-http-status-from-error-code.md` に経緯と却下案がある。
 
 **ステータスが変わってもレスポンスボディは変わらない。** 判定は今までどおり
 `errors` 配列で行ってよく、クライアント（`gkill-api.ts`）は実際にステータスを見ていない。

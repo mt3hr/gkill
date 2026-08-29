@@ -348,7 +348,7 @@ func TestSortAndTrimKyousMap_PeriodOfTimeWeekOfDays(t *testing.T) {
 // 既存の時間帯テストは「1日全体を覆う窓」しか使っておらず、秒の解釈（epoch/秒オブデイ）が
 // 変わっても赤くならなかった。この検査が無かったせいで、MCP経路の時間帯検索は
 // 1年間ずっと+9時間ずれた窓で動いていた（外部監査で発覚）。
-// 解釈の正本は find.NormalizeSecondOfDay: documents/adr/0009-period-of-time-second-of-day.md
+// 解釈の正本は find.NormalizeSecondOfDay: documents/adr/0108-period-of-time-second-of-day.md
 func TestSortAndTrimKyousMap_PeriodOfTimeNarrowWindow(t *testing.T) {
 	ctx := context.Background()
 
