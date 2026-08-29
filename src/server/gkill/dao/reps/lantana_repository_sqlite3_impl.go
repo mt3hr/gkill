@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 	defer func() {
 		err := indexStmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -158,7 +158,7 @@ func (l *lantanaRepositorySQLite3Impl) FindKyous(ctx context.Context, query *fin
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -236,7 +236,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -249,7 +249,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -325,7 +325,7 @@ func (l *lantanaRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, u
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -399,7 +399,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -412,7 +412,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -493,7 +493,7 @@ func (l *lantanaRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id 
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -561,7 +561,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -574,7 +574,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -690,7 +690,7 @@ func (l *lantanaRepositorySQLite3Impl) FindLantana(ctx context.Context, query *f
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -769,7 +769,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -783,7 +783,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -857,7 +857,7 @@ func (l *lantanaRepositorySQLite3Impl) GetLantana(ctx context.Context, id string
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -929,7 +929,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -943,7 +943,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1025,7 +1025,7 @@ func (l *lantanaRepositorySQLite3Impl) GetLantanaHistories(ctx context.Context, 
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -1094,7 +1094,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1108,7 +1108,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1182,7 +1182,7 @@ func (l *lantanaRepositorySQLite3Impl) AddLantanaInfo(ctx context.Context, lanta
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -1224,7 +1224,7 @@ INSERT INTO LANTANA (
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1273,7 +1273,7 @@ func (l *lantanaRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx contex
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -1369,7 +1369,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1390,7 +1390,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	defer func() {
 		err := indexStmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1417,7 +1417,7 @@ WHERE KEY = ?
 	defer func() {
 		err := selectSchemaVersionStmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	dbSchemaVersion := ""
@@ -1440,7 +1440,7 @@ VALUES(?, ?)`
 			defer func() {
 				err := insertCurrentVersionStmt.Close()
 				if err != nil {
-					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 				}
 			}()
 			queryArgs := []any{schemaVersionKey, currentSchemaVersion}

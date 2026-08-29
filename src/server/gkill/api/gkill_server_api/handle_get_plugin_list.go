@@ -30,7 +30,7 @@ func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Requ
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	defer func() {
@@ -38,7 +38,7 @@ func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Requ
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at encode get plugin list response: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at encode get plugin list response", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 

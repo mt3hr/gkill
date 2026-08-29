@@ -52,7 +52,7 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 		err = repositories.WriteThroughURLogCache(ctx, urlog)
 		if err != nil {
 			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at add urlog user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(ctx, urlog, *txID, userID, device)
@@ -89,7 +89,7 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil
@@ -144,7 +144,7 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 		err = repositories.WriteThroughURLogCache(ctx, urlog)
 		if err != nil {
 			err = fmt.Errorf("error at update urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at update urlog user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(ctx, urlog, *txID, userID, device)
@@ -181,7 +181,7 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil

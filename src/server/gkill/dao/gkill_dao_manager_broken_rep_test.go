@@ -9,14 +9,18 @@ package dao
 // 実機へADBで接続して1本ずつ integrity_check を回すまで分からなかった。
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	_ "modernc.org/sqlite"
 )
 
@@ -128,6 +132,37 @@ func setupBrokenRepTest(t *testing.T, brokenRepDirName string, useToWrite bool) 
 	return manager, userID, device, dataDir
 }
 
+// captureBrokenRepLogs は GetRepositories が出す構造化ログを検査するため、
+// テスト中だけ slog の出力先を差し替える。
+func captureBrokenRepLogs(t *testing.T) *bytes.Buffer {
+	t.Helper()
+
+	var buffer bytes.Buffer
+	original := slog.Default()
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&buffer, &slog.HandlerOptions{Level: gkill_log.TraceSQL})))
+	t.Cleanup(func() { slog.SetDefault(original) })
+	return &buffer
+}
+
+func findBrokenRepLogRecords(t *testing.T, buffer *bytes.Buffer, message string) []map[string]any {
+	t.Helper()
+
+	records := []map[string]any{}
+	for _, line := range strings.Split(strings.TrimSpace(buffer.String()), "\n") {
+		if line == "" {
+			continue
+		}
+		record := map[string]any{}
+		if err := json.Unmarshal([]byte(line), &record); err != nil {
+			t.Fatalf("ログJSONを解析できない: %v: %s", err, line)
+		}
+		if record["msg"] == message {
+			records = append(records, record)
+		}
+	}
+	return records
+}
+
 // 読み取り専用のrepが壊れていても、その1本だけ切り離して残りで動くこと。
 //
 // これが崩れると、rep 1本の物理障害でそのユーザの全APIがERR000018になり、
@@ -163,6 +198,76 @@ func TestGetRepositoriesDetachesBrokenReadOnlyRep(t *testing.T) {
 	// 記録が空なら、利用者は一覧から消えたrepに気付けない
 	if repositories.LoadFailureError() == nil {
 		t.Error("LoadFailureErrorがnil。切り離しの原因がログにも診断にも出せない")
+	}
+}
+
+// 切り離したrepの個別行とまとめ行が、どちらも Error で残ること。
+// Warnへ戻ると通常運用の警告に埋もれ、gkill_error.log から障害が消える。
+func TestGetRepositoriesLogsDetachedRepAtError(t *testing.T) {
+	manager, userID, device, _ := setupBrokenRepTest(t, "BrokenNote", false)
+	logBuffer := captureBrokenRepLogs(t)
+
+	if _, err := manager.GetRepositories(userID, device); err != nil {
+		t.Fatalf("GetRepositories failed: %v", err)
+	}
+
+	individual := findBrokenRepLogRecords(t, logBuffer, "detach broken repository")
+	if len(individual) != 1 {
+		t.Fatalf("切り離しの個別ログ = %d件, want 1: %s", len(individual), logBuffer.String())
+	}
+	if individual[0]["level"] != "ERROR" {
+		t.Errorf("個別ログのlevel = %v, want ERROR", individual[0]["level"])
+	}
+	for _, key := range []string{"type", "repName", "error"} {
+		if value := individual[0][key]; value == nil || !strings.Contains(value.(string), map[string]string{
+			"type": "directory", "repName": "BrokenNote", "error": "database",
+		}[key]) {
+			t.Errorf("個別ログの %s = %v", key, value)
+		}
+	}
+
+	summary := findBrokenRepLogRecords(t, logBuffer, "repositories loaded with detached reps")
+	if len(summary) != 1 {
+		t.Fatalf("切り離しのまとめログ = %d件, want 1: %s", len(summary), logBuffer.String())
+	}
+	if summary[0]["level"] != "ERROR" {
+		t.Errorf("まとめログのlevel = %v, want ERROR", summary[0]["level"])
+	}
+	if summary[0]["detachedRepCount"] != float64(1) {
+		t.Errorf("detachedRepCount = %v, want 1", summary[0]["detachedRepCount"])
+	}
+	if value, _ := summary[0]["detachedReps"].(string); !strings.Contains(value, "BrokenNote") {
+		t.Errorf("detachedReps = %v, BrokenNoteを含むはず", summary[0]["detachedReps"])
+	}
+}
+
+// 健全な構築で切り離しのまとめログを出さないこと。
+// 正常時にもErrorが出ると、監視が常時異常扱いになって本物の欠落を見分けられない。
+func TestGetRepositoriesDoesNotLogDetachedSummaryWhenHealthy(t *testing.T) {
+	tmpDir := setupGitRepGlobTestOptions(t)
+	ctx := context.Background()
+	manager, err := NewGkillDAOManager()
+	if err != nil {
+		t.Fatalf("NewGkillDAOManager failed: %v", err)
+	}
+	t.Cleanup(func() { _ = manager.Close() })
+
+	userID := "test_user"
+	device := "test_device"
+	dataDir := filepath.Join(tmpDir, "datas", userID)
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll failed: %v", err)
+	}
+	if _, err := manager.ConfigDAOs.RepositoryDAO.AddRepositories(ctx, writeRepositoriesForTest(t, userID, device, dataDir)); err != nil {
+		t.Fatalf("AddRepositories failed: %v", err)
+	}
+
+	logBuffer := captureBrokenRepLogs(t)
+	if _, err := manager.GetRepositories(userID, device); err != nil {
+		t.Fatalf("GetRepositories failed: %v", err)
+	}
+	if records := findBrokenRepLogRecords(t, logBuffer, "repositories loaded with detached reps"); len(records) != 0 {
+		t.Errorf("健全な構築で切り離しのまとめログが出ている: %s", logBuffer.String())
 	}
 }
 

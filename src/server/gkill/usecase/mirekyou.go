@@ -67,7 +67,7 @@ func (uc *UsecaseContext) AddMiReKyou(ctx context.Context, repositories *reps.Gk
 		err = repositories.WriteThroughMiReKyouCache(ctx, mirekyou)
 		if err != nil {
 			err = fmt.Errorf("error at add mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at add mirekyou user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.MiReKyouTempRep.AddMiReKyouInfo(ctx, mirekyou, *txID, userID, device)
@@ -152,7 +152,7 @@ func (uc *UsecaseContext) UpdateMiReKyou(ctx context.Context, repositories *reps
 		err = repositories.WriteThroughMiReKyouCache(ctx, mirekyou)
 		if err != nil {
 			err = fmt.Errorf("error at update mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at update mirekyou user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.MiReKyouTempRep.AddMiReKyouInfo(ctx, mirekyou, *txID, userID, device)
@@ -204,7 +204,7 @@ func (uc *UsecaseContext) updateMiReKyouLatestDataRepositoryAddress(ctx context.
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for mirekyou user id = %s device = %s id = %s: %w", userID, device, mirekyou.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 	return nil
 }

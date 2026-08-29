@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	defer func() {
 		err := indexStmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	defer func() {
 		err := latestIndexStmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -242,7 +242,7 @@ func (i *idfKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *fin
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -321,7 +321,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -334,7 +334,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -490,7 +490,7 @@ func (i *idfKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, u
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -565,7 +565,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -578,7 +578,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -685,7 +685,7 @@ func (i *idfKyouRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id 
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -754,7 +754,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -767,7 +767,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -867,7 +867,7 @@ func (i *idfKyouRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -925,7 +925,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -938,7 +938,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1075,7 +1075,7 @@ func (i *idfKyouRepositorySQLite3Impl) FindIDFKyou(ctx context.Context, query *f
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -1153,7 +1153,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1166,7 +1166,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1283,7 +1283,7 @@ func (i *idfKyouRepositorySQLite3Impl) GetIDFKyou(ctx context.Context, id string
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -1354,7 +1354,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1367,7 +1367,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1474,7 +1474,7 @@ func (i *idfKyouRepositorySQLite3Impl) GetIDFKyouByTargetFile(ctx context.Contex
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -1528,7 +1528,7 @@ ORDER BY datetime(UPDATE_TIME) DESC
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1541,7 +1541,7 @@ ORDER BY datetime(UPDATE_TIME) DESC
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1640,7 +1640,7 @@ func (i *idfKyouRepositorySQLite3Impl) GetIDFKyouHistories(ctx context.Context, 
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -1708,7 +1708,7 @@ WHERE
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1721,7 +1721,7 @@ WHERE
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -1995,7 +1995,7 @@ func (i *idfKyouRepositorySQLite3Impl) addIDFKyouInfoChunk(ctx context.Context, 
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -2010,7 +2010,7 @@ func (i *idfKyouRepositorySQLite3Impl) addIDFKyouInfoChunk(ctx context.Context, 
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at add idf kyou infos", "error", fmt.Sprintf("%q", err))
+				slog.Log(context.Background(), gkill_log.Error, "error at rollback at add idf kyou infos", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -2054,7 +2054,7 @@ INSERT INTO IDF (
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -2114,7 +2114,7 @@ func (i *idfKyouRepositorySQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKy
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -2157,7 +2157,7 @@ INSERT INTO IDF (
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -2489,7 +2489,7 @@ func (i *idfKyouRepositorySQLite3Impl) findTargetFilesForDerivedCache(ctx contex
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -2508,7 +2508,7 @@ func (i *idfKyouRepositorySQLite3Impl) findTargetFilesForDerivedCache(ctx contex
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -2781,7 +2781,7 @@ func (i *idfKyouRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx contex
 		defer func() {
 			err := db.Close()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at defer close database", "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -2877,7 +2877,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -2898,7 +2898,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	defer func() {
 		err := indexStmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -2925,7 +2925,7 @@ WHERE KEY = ?
 	defer func() {
 		err := selectSchemaVersionStmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	dbSchemaVersion := ""
@@ -2948,7 +2948,7 @@ VALUES(?, ?)`
 			defer func() {
 				err := insertCurrentVersionStmt.Close()
 				if err != nil {
-					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 				}
 			}()
 			queryArgs := []any{schemaVersionKey, currentSchemaVersion}

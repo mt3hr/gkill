@@ -1369,7 +1369,7 @@ func (g *GkillDAOManager) GetNotificator(userID string, device string) (*GkillNo
 	// 並行して先に作られていたらそちらを使い、自分が作ったほうは閉じる
 	if existing, exist := g.gkillNotificators[userID][device]; exist {
 		if closeErr := gkillNotificator.Close(context.Background()); closeErr != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at close duplicated notificator", "error", closeErr)
+			slog.Log(context.Background(), gkill_log.Warn, "error at close duplicated notificator", "error", closeErr)
 		}
 		return existing, nil
 	}
@@ -1583,7 +1583,7 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 		err = g.fileRepWatchCacheUpdater.RemoveWatchFileRep(filename, userID)
 		if err != nil {
 			err = fmt.Errorf("error at remove watch file rep. filename = %s userID = %s: %w", filename, userID, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Warn, "error at remove watch file rep", "user_id", fmt.Sprintf("%q", userID), "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -1591,7 +1591,7 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 	err = reps.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close repositories: %w", err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Warn, "error at close repositories", "error", fmt.Sprintf("%q", err))
 	}
 	return true, nil
 }

@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
 	defer func() {
 		err := indexStmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -153,7 +153,7 @@ FROM ACCOUNT
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -166,7 +166,7 @@ FROM ACCOUNT
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -230,7 +230,7 @@ WHERE USER_ID = ?
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -247,7 +247,7 @@ WHERE USER_ID = ?
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -323,7 +323,7 @@ VALUES (
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -375,7 +375,7 @@ WHERE USER_ID = ?
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -423,7 +423,7 @@ WHERE USER_ID = ?
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	queryArgs := []any{
@@ -465,7 +465,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -486,7 +486,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	defer func() {
 		err := indexStmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -513,7 +513,7 @@ WHERE KEY = ?
 	defer func() {
 		err := selectSchemaVersionStmt.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	dbSchemaVersion := ""
@@ -552,7 +552,7 @@ VALUES(?, ?)`
 			defer func() {
 				err := insertCurrentVersionStmt.Close()
 				if err != nil {
-					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
 				}
 			}()
 			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
@@ -616,7 +616,7 @@ func migrateAccountSchemaFrom100(ctx context.Context, db *sql.DB, schemaVersionK
 	defer func() {
 		if !committed {
 			if err := tx.Rollback(); err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback account schema migration", "error", err)
+				slog.Log(context.Background(), gkill_log.Error, "error at rollback account schema migration", "error", err)
 			}
 		}
 	}()
@@ -738,7 +738,7 @@ func columnExists(ctx context.Context, db *sql.DB, tableName string, columnName 
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	return scanColumnExists(rows, tableName, columnName)
@@ -752,7 +752,7 @@ func columnExistsInTx(ctx context.Context, tx *sql.Tx, tableName string, columnN
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 	return scanColumnExists(rows, tableName, columnName)

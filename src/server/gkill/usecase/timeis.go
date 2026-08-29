@@ -52,7 +52,7 @@ func (uc *UsecaseContext) AddTimeIs(ctx context.Context, repositories *reps.Gkil
 		err = repositories.WriteThroughTimeIsCache(ctx, timeis)
 		if err != nil {
 			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at add timeis user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, timeis, *txID, userID, device)
@@ -89,7 +89,7 @@ func (uc *UsecaseContext) AddTimeIs(ctx context.Context, repositories *reps.Gkil
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil
@@ -144,7 +144,7 @@ func (uc *UsecaseContext) UpdateTimeIs(ctx context.Context, repositories *reps.G
 		err = repositories.WriteThroughTimeIsCache(ctx, timeis)
 		if err != nil {
 			err = fmt.Errorf("error at update timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at update timeis user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, timeis, *txID, userID, device)
@@ -181,7 +181,7 @@ func (uc *UsecaseContext) UpdateTimeIs(ctx context.Context, repositories *reps.G
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil

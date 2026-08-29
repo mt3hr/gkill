@@ -52,7 +52,7 @@ func (uc *UsecaseContext) AddNlog(ctx context.Context, repositories *reps.GkillR
 		err = repositories.WriteThroughNlogCache(ctx, nlog)
 		if err != nil {
 			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at add nlog user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(ctx, nlog, *txID, userID, device)
@@ -89,7 +89,7 @@ func (uc *UsecaseContext) AddNlog(ctx context.Context, repositories *reps.GkillR
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil
@@ -144,7 +144,7 @@ func (uc *UsecaseContext) UpdateNlog(ctx context.Context, repositories *reps.Gki
 		err = repositories.WriteThroughNlogCache(ctx, nlog)
 		if err != nil {
 			err = fmt.Errorf("error at update nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at update nlog user id =", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(ctx, nlog, *txID, userID, device)
@@ -181,7 +181,7 @@ func (uc *UsecaseContext) UpdateNlog(ctx context.Context, repositories *reps.Gki
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil
