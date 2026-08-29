@@ -51,6 +51,10 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `target_resolution_memo_test.go` | ReKyou/MiReKyou ワード委譲検索のターゲット解決メモ |
 | `db_file_change_detector_test.go` | DBファイル変更検出（キャッシュ無効化トリガ） |
 | `derived_cache_path_test.go` | 派生キャッシュ（サムネ/動画/ZIP）のユーザ別パス解決 |
+| `idf_thumb_batch_test.go` | サムネイル一括生成が、生成済みを作り直さず・索引にあって実体の無い行で落ちず・ファイルが差し替わったら別名で作り直すこと（[ADR-0101](../../../../../documents/adr/0101-derived-cache-scan-lists-directories.md)） |
+| `idf_generate_cache_nested_pool_test.go` | 派生キャッシュの一括生成が `threads.Go` を入れ子にしていないことの回帰テスト（`git_commit_log_cached_nested_pool_test.go` と同種） |
+| `idf_video_probe_test.go` | 互換動画へ変換するかどうかの判定表。ffprobe を実行せずテーブル駆動で回す（[ADR-0102](../../../../../documents/adr/0102-transcode-only-what-the-browser-cannot-play.md)） |
+| `idf_thumb_content_decode_test.go` | サムネイルを拡張子ではなく中身で作ること。デコーダの無い形式と拡張子の誤りを ffmpeg で拾い、失敗は印に焼いて再試行しない（[ADR-0104](../../../../../documents/adr/0104-thumbnail-decodes-by-content-not-extension.md)） |
 | `idf_kyou_repository_batch_test.go` | IDFKyou のバッチ処理 |
 | `ur_log_cache_thumbnail_test.go` | URLog サムネイルキャッシュ |
 | `shared_find_query_mutation_test.go` | 共有 FindQuery の変更検証 |

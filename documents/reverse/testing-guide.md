@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1085 | 157 | Go `testing` |
+| Go バックエンド | 1114 | 163 | Go `testing` |
 | フロントエンド ユニット | 1967 | 166 | Vitest |
 | フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
 | MCP サーバ | 933 | 22 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 177 | 12 | JUnit 4 + MockK |
-| **合計** | **4,428** | **404** | |
+| **合計** | **4,457** | **410** | |
 
 数え直すコマンド:
 
@@ -236,7 +236,7 @@ src/server/gkill/
 │   ├── gkill_notification/            ← 通知ターゲット
 │   ├── hide_files/                    ← ファイル非表示
 │   ├── sqlite3impl/                   ← SQLite3 ユーティリティ
-│   └── reps/                          ← リポジトリ実装（54ファイル。plugin_repository_impl_test.go, git_commit_log_cached_unique_test.go, gps_log_repositories_test.go 等）
+│   └── reps/                          ← リポジトリ実装（58ファイル。plugin_repository_impl_test.go, git_commit_log_cached_unique_test.go, gps_log_repositories_test.go 等）
 │       ├── *_repository_sqlite3_impl_test.go  ← 11データ型
 │       ├── cached_and_temp_test.go    ← キャッシュ層・一時層
 │       └── cache/                     ← キャッシュ更新

@@ -100,6 +100,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | 0070-0079 | 検索とフィルタの意味論（続。0001-0009 が満杯になったため） |
 | 0080-0089 | メモ帳（KFTL） |
 | 0090-0099 | MCP（続。0050-0059 が満杯になったため） |
+| 0100-0109 | DAO・キャッシュ・SQLite（続。0010-0019 が満杯になったため） |
 
 **番号は採番後不変。** 撤回した決定も番号を空けず `Superseded` で残す
 （「入れて翌日撤去した」という記録そのものが最良の ADR になる）。
@@ -195,3 +196,8 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0082](0082-kftl-missing-configuration-is-an-input-error.md) | KFTL の実行フェーズの失敗も、設定不足なら行別の入力エラーにする | Accepted |
 | [0090](0090-write-user-comes-from-the-authenticated-session.md) | 書き込みに刻む user は、その要求を認証したセッションから決める | Accepted |
 | [0091](0091-update-rejects-an-empty-patch.md) | 更新は「変わる欄が1つも無い」なら書かずに断る | Accepted |
+| [0100](0100-expand-rep-patterns-without-walking.md) | リポジトリ定義のパターン展開は対象ツリーを歩かない | Accepted |
+| [0101](0101-derived-cache-scan-lists-directories.md) | 派生キャッシュの一括生成は1件ずつ stat せずディレクトリを列挙する | Accepted |
+| [0102](0102-transcode-only-what-the-browser-cannot-play.md) | 互換動画へ変換するのは、原本のまま再生できると言い切れないものだけ | Accepted |
+| [0103](0103-skip-plugin-discovery-when-only-idf-is-needed.md) | IDF のリポジトリしか要らない経路ではプラグインを探索しない | Accepted |
+| [0104](0104-thumbnail-decodes-by-content-not-extension.md) | サムネイルは拡張子ではなく中身で作る | Accepted |

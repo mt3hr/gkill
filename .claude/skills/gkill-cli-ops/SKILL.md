@@ -43,6 +43,14 @@ Both use cobra for CLI with shared subcommands: `version`, `dvnf`, `generate_thu
 
 **CLIサブコマンドは `RunE` + `SilenceUsage/SilenceErrors`**（2026-08-21、監査 M-8）。失敗で exit 1（main の `log.Fatal` が唯一のエラー出力）。ユーザごとのループは `errors.Join` で集約し、途中失敗でも成功分の結果（reset_password の URL 等）はその場で即出力してから続行する（`os.Exit` を足すと defer のセッション後始末が飛ぶので RunE 経由で返す）。**互換注意**: `SyncDatas` 等が update_cache の失敗を初めて exit code で観測する。`auto_tag` は長時間実行向けに `issueLocalSession` の `refresh` でセッション期限を延長する。
 
+**`generate_thumb_cache` / `generate_video_cache` は1件ずつ stat しない。** 生成対象を親ディレクトリごとに `os.ReadDir` して、その列挙結果からキャッシュ名に要るファイルサイズを取る。キャッシュ側もrepごとに1回列挙して名前の集合と突き合わせる。**「キャッシュ名の接頭辞（パスのSHA1）だけ見てサイズを無視する」近似を入れてはいけない** —— 差し替わったファイルのサムネイルが古いまま出続け、しかも画面で見ているぶんには正しいので原因に辿り着けない（[ADR-0101](../../../documents/adr/0101-derived-cache-scan-lists-directories.md)）。ファイル単位の並列化に `threads.Go` を使わないこと（rep単位のファンアウトが既にスロットを持っているので入れ子になる。[ADR-0015](../../../documents/adr/0015-no-nested-threads-go.md)）。
+
+**互換動画へ変換するのは、原本のまま再生できると言い切れないものだけ。** 判定は `videoNeedsCompat`（コンテナ×映像コーデック×画素形式×プロファイル×音声）で、**分からないもの・probe失敗はすべて変換する側に倒す**。クライアントには再生失敗の受け皿が無く、再生できなければエラーも出ずに無音の黒枠になる。緩める向きの変更をするなら受け皿を先に作ること。変換に失敗したら `<キャッシュ名>.failed` を残して次回以降やり直さない（**ctx が切れているときは印を残さない** —— ブラウザが待ちきれずに切っただけのものを恒久的な失敗として焼くと、変換できる動画が二度と変換されなくなる）。印を消すのは `clear_cache video <利用者ID>`（[ADR-0102](../../../documents/adr/0102-transcode-only-what-the-browser-cannot-play.md)）。
+
+**rep 定義のパターン展開は対象ツリーを歩かない。** `GetRepositories` は `**` を含まないパターンを親ディレクトリ1回の列挙で展開する（[ADR-0100](../../../documents/adr/0100-expand-rep-patterns-without-walking.md)）。
+
+**`LoadIDFRepOnly` のときはプラグインを探索しない。** 探索は1プラグインにつき1サブプロセスを起動するので、IDF のrepしか使わない CLI では丸ごと無駄になる。**この分岐は「プラグインのアダプタが `IDFKyouReps` へ入らない」ことに依存している** —— アダプタの登録先を増やすときは必ずここも見ること。破ると、そのプラグインぶんのサムネイルと互換動画がエラーも警告も出ないまま作られなくなる（[ADR-0103](../../../documents/adr/0103-skip-plugin-discovery-when-only-idf-is-needed.md)）。
+
 ## 関連スキル
 
 - [gkill-go-backend](../gkill-go-backend/SKILL.md) — 派生キャッシュの構造・rep名で利用者を分離できない理由
@@ -51,3 +59,7 @@ Both use cobra for CLI with shared subcommands: `version`, `dvnf`, `generate_thu
 ## 詳しい設計と却下案（ADR）
 
 - [ADR-0044 派生キャッシュはユーザー別ディレクトリ](../../../documents/adr/0044-per-user-derived-cache-dir.md)
+- [ADR-0100 パターン展開は木を歩かない](../../../documents/adr/0100-expand-rep-patterns-without-walking.md)
+- [ADR-0101 派生キャッシュの走査はディレクトリ列挙](../../../documents/adr/0101-derived-cache-scan-lists-directories.md)
+- [ADR-0102 変換するのは再生できないものだけ](../../../documents/adr/0102-transcode-only-what-the-browser-cannot-play.md)
+- [ADR-0103 IDFだけ要る経路ではプラグインを探索しない](../../../documents/adr/0103-skip-plugin-discovery-when-only-idf-is-needed.md)
