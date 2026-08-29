@@ -336,7 +336,10 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					// なお rep によっては、生成に成功して repositories へ足したあとの段階
 					// (watch登録など)で失敗しうる。その場合 rep 自体は使えるまま警告だけが出るが、
 					// 「何かおかしい」を伝える方が黙るより良いので、そのまま警告する。
-					slog.Log(ctx, gkill_log.Warn, "detach broken repository",
+					// レベルは Error。gkill_error.log へ振り分けられる。
+					// rep が1本消えるのは検索結果が黙って痩せる異常なので、
+					// warn に混ぜて流さない（--log warn 運用だと他の警告に埋もれる）。
+					slog.Log(ctx, gkill_log.Error, "detach broken repository",
 						"userID", fmt.Sprintf("%q", userID),
 						"device", fmt.Sprintf("%q", device),
 						"type", fmt.Sprintf("%q", rep.Type),
@@ -627,6 +630,23 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			err = fmt.Errorf("error at update cache in get repositories: %w", err)
 			return nil, err
 		}
+		// 切り離したrepがあれば、構築の最後にまとめて1行残す。
+		// 個別の "detach broken repository" は起動直後のログに散るので、
+		// 「いまどのrepが欠けているか」を1行で見られるようにしておく。
+		// レベルは Error（gkill_error.log）。検索結果が黙って痩せている状態なので。
+		if loadFailures := repositories.LoadFailures(); len(loadFailures) != 0 {
+			detachedRepNames := make([]string, 0, len(loadFailures))
+			for _, failure := range loadFailures {
+				detachedRepNames = append(detachedRepNames, failure.RepName)
+			}
+			slog.Log(ctx, gkill_log.Error, "repositories loaded with detached reps",
+				"userID", fmt.Sprintf("%q", userID),
+				"device", fmt.Sprintf("%q", device),
+				"detachedRepCount", len(loadFailures),
+				"detachedReps", fmt.Sprintf("%q", strings.Join(detachedRepNames, ", ")),
+				"error", fmt.Sprintf("%q", repositories.LoadFailureError()))
+		}
+
 		g.storeRepositories(userID, device, repositories)
 		// ここまで来たら構築は成功。上の defer による Close を抑止する
 		buildSucceeded = true
