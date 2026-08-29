@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -214,6 +215,23 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		repositories.ReKyouReps.GkillRepositories = repositories
 		repositories.MiReKyouReps.GkillRepositories = repositories
 
+		// 構築に失敗したら、そこまでに開いたrepを閉じる。
+		//
+		// 失敗した結果はキャッシュしない(storeRepositoriesは成功時にしか呼ばれない)ので、
+		// 閉じないと**リクエストのたびに** rep のぶんだけ *sql.DB が積み上がる。
+		// 1本ごとに接続プール(NumCPU本)と mmap_size 256MB を抱えるうえ、
+		// Windowsでは元の .db を掴んだままになるので、**壊れたDBを差し替えて直すことすらできなくなる**。
+		// Close は空のコレクションでも安全で、二重Closeにも耐える(CASで1回だけ通す)。
+		buildSucceeded := false
+		defer func() {
+			if buildSucceeded {
+				return
+			}
+			if closeErr := repositories.Close(ctx); closeErr != nil {
+				slog.Log(ctx, gkill_log.Warn, "error at close partially built repositories", "userID", fmt.Sprintf("%q", userID), "device", fmt.Sprintf("%q", device), "error", fmt.Sprintf("%q", closeErr))
+			}
+		}()
+
 		repositoriesDefine, err := g.ConfigDAOs.RepositoryDAO.GetRepositories(ctx, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at get repositories user=%s device=%s: %w", userID, device, err)
@@ -292,7 +310,11 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						slog.Log(ctx, gkill_log.Warn, "skip not a git repository", "userID", fmt.Sprintf("%q", userID), "device", fmt.Sprintf("%q", device), "file", fmt.Sprintf("%q", filename))
 						continue
 					}
-					return nil, loadErr
+					// どのrepが読めなかったのかをエラーに載せる。
+					// 載せないと「error at create gkill meta info table: database disk image is
+					// malformed」のようにSQLiteの文言だけが残り、rep名もパスも出ないので、
+					// 実機のログからは壊れたrepを特定できない(2026-08-30に実際にそうなった)。
+					return nil, fmt.Errorf("error at load repository. type = %s rep name = %s file = %s: %w", rep.Type, repNameFromDefine(rep.Type, filename), filename, loadErr)
 				}
 			}
 		}
@@ -572,6 +594,8 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			return nil, err
 		}
 		g.storeRepositories(userID, device, repositories)
+		// ここまで来たら構築は成功。上の defer による Close を抑止する
+		buildSucceeded = true
 
 		if _, err := g.GetNotificator(userID, device); err != nil {
 			slog.Log(context.Background(), gkill_log.Warn, "error at get notificator", "error", fmt.Sprintf("%q", err), "userID", fmt.Sprintf("%q", userID), "device", fmt.Sprintf("%q", device))
@@ -579,6 +603,29 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 	}
 
 	return repositories, nil
+}
+
+// repNameFromDefine は rep を生成せずに rep 名を予測する。
+//
+// 読み込みに失敗した rep は leaf rep にならないので GetRepName を呼べないが、
+// エラーと警告には名前が要る。名前が無いと、利用者は「一覧からどれが消えたのか」も、
+// 保存済みの検索条件(列のReps)に残った名前をどう直せばよいかも分からない。
+//
+// **各 leaf の GetRepName と同じ規則にしてあること。**ずれると、警告に出る名前と
+// query.reps に渡せる実 rep 名が食い違い、利用者が直しようのない案内になる。
+//   - directory / gpslog / git_commit_log … filepath.Base(パス)
+//     (idf_kyou_repository_sqlite3_impl.go / gps_log_repository_gpx_dir_impl.go /
+//     git_commit_log_repository_local_dir_impl.go の GetRepName)
+//   - それ以外(.dbファイル) … 拡張子を除いた filepath.Base
+//     (kmemo_repository_sqlite3_impl.go の GetRepName ほか12型)
+func repNameFromDefine(repType string, filename string) string {
+	base := filepath.Base(filename)
+	switch repType {
+	case "directory", "gpslog", "git_commit_log":
+		return base
+	default:
+		return strings.TrimSuffix(base, filepath.Ext(base))
+	}
 }
 
 // loadRepIntoRepositories はrep定義1つ x 展開後ファイル1つを組み立てて repositories へ足す。
