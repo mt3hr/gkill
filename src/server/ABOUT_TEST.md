@@ -2,7 +2,7 @@
 
 ## 概要
 
-Go バックエンドのテスト。1114テスト関数、164テストファイル、31パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
+Go バックエンドのテスト。1118テスト関数、165テストファイル、31パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
 
 ## テストフレームワーク
 
@@ -56,7 +56,7 @@ src/server/gkill/
 | メッセージ・GPS | 5 | メッセージコード体系、`EnsureNotEmpty`、エラーコード→HTTPステータス対応表、端末固有情報の伏せ処理、GPS ログ解析 |
 | プラグインプロトコル | 1 | `gkill_plugin` の stdio メッセージ型 |
 | ユースケース | 3 | write-through のキャッシュ反映、キャッシュ実装の INSERT 列と引数の対応、規約のソース走査（下記） |
-| DAO 管理 | 2 | GkillDAOManager ライフサイクル |
+| DAO 管理 | 3 | GkillDAOManager ライフサイクル、壊れた索引DBを持つrepの扱い（エラーへのrep名の記載・失敗時のClose・rep名の予測規則） |
 | アカウント | 5 | アカウント CRUD、セッション、アップロード履歴 |
 | 設定 | 3 | サーバ設定、アプリ設定、リポジトリ定義 |
 | 共有・通知 | 3 | 共有情報 CRUD、通知ターゲット |
@@ -66,7 +66,7 @@ src/server/gkill/
 | CLI/Main | 9 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ、スレッド、エントリポイント、パスワード管理、auto_tag バッチ（HTTP投稿と応答判定を含む） |
 | プラグイン SDK | 4 | `Run()` の stdio ループ（18本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本） |
 
-**合計 164 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
+**合計 165 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
 ずれたら `checkCounts` が落とす）。
 
 ## 規約のソース走査（`usecase/source_conventions_scan_test.go`）
