@@ -687,6 +687,7 @@
     "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE": "기록 갱신 후 조회에 실패했습니다",
     "SUCCESS_UPDATE_IDFKYOU_MESSAGE": "기록을 갱신했습니다",
     "FAILED_FIND_PLUGIN_MESSAGE": "플러그인의 검색 결과를 가져오지 못했습니다",
+    "FAILED_LOAD_REP_MESSAGE": "저장소를 불러오지 못했습니다",
     "FAILED_GET_KYOUS_MESSAGE": "기록 조회에 실패했습니다",
     "SUCCESS_GET_KYOUS_MESSAGE": "검색 완료",
     "FAILED_GET_REP_INFOS_MESSAGE": "저장소 목록을 가져오지 못했습니다",

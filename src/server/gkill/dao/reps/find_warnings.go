@@ -17,6 +17,7 @@ var findWarningsCtxKey = findWarningsCtxKeyType{}
 type findWarnings struct {
 	mu          sync.Mutex
 	pluginNames []string
+	repNames    []string
 }
 
 // WithFindWarnings は検索警告コレクタを載せたcontextを返します。
@@ -47,4 +48,35 @@ func PluginFindWarnings(ctx context.Context) []string {
 	warnings.mu.Lock()
 	defer warnings.mu.Unlock()
 	return slices.Clone(warnings.pluginNames)
+}
+
+// AppendRepLoadWarning は読み込めなかったrepを警告として記録します。
+// コレクタが無いcontextでは何もしません。
+//
+// **repNameにパスを渡さないこと。** この値はGkillMessageへ載るが、
+// GkillMessageにはGkillErrorのような伏せ処理が無い。
+func AppendRepLoadWarning(ctx context.Context, repName string) {
+	warnings, ok := ctx.Value(findWarningsCtxKey).(*findWarnings)
+	if !ok {
+		return
+	}
+	warnings.mu.Lock()
+	defer warnings.mu.Unlock()
+	if slices.Contains(warnings.repNames, repName) {
+		// 同じrepが複数の型別コレクションに現れても警告は1本にする
+		return
+	}
+	warnings.repNames = append(warnings.repNames, repName)
+}
+
+// RepLoadWarnings は記録済みの「読み込めなかったrep」の名前を返します。
+// コレクタが無ければnilを返します。
+func RepLoadWarnings(ctx context.Context) []string {
+	warnings, ok := ctx.Value(findWarningsCtxKey).(*findWarnings)
+	if !ok {
+		return nil
+	}
+	warnings.mu.Lock()
+	defer warnings.mu.Unlock()
+	return slices.Clone(warnings.repNames)
 }

@@ -687,6 +687,7 @@
     "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE": "Échec de la récupération de l'enregistrement après mise à jour",
     "SUCCESS_UPDATE_IDFKYOU_MESSAGE": "Enregistrement mis à jour",
     "FAILED_FIND_PLUGIN_MESSAGE": "Impossible d'obtenir les résultats de recherche du plugin",
+    "FAILED_LOAD_REP_MESSAGE": "Impossible de charger le dépôt",
     "FAILED_GET_KYOUS_MESSAGE": "Échec de la récupération des enregistrements",
     "SUCCESS_GET_KYOUS_MESSAGE": "Recherche terminée",
     "FAILED_GET_REP_INFOS_MESSAGE": "Échec de la récupération de la liste des dépôts",

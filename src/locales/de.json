@@ -687,6 +687,7 @@
     "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE": "Datensatz konnte nach der Aktualisierung nicht abgerufen werden",
     "SUCCESS_UPDATE_IDFKYOU_MESSAGE": "Datensatz aktualisiert",
     "FAILED_FIND_PLUGIN_MESSAGE": "Die Suchergebnisse des Plugins konnten nicht abgerufen werden",
+    "FAILED_LOAD_REP_MESSAGE": "Ablage konnte nicht geladen werden",
     "FAILED_GET_KYOUS_MESSAGE": "Datensätze konnten nicht abgerufen werden",
     "SUCCESS_GET_KYOUS_MESSAGE": "Suche abgeschlossen",
     "FAILED_GET_REP_INFOS_MESSAGE": "Repository-Liste konnte nicht abgerufen werden",

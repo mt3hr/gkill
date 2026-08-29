@@ -245,6 +245,14 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			fmt.Sprintf("plugin %q failed during this search, so its records are missing from the result. "+
 				"Check gkill_get_plugin_list (is_alive / has_last_error / typed_index)", pluginName))
 	}
+	// 読み込めなかったrepの警告。
+	// このrepは存在しないので、名前を query.reps へ渡してはいけない
+	// （非空のrep名は「実在するが選ばれていない」と扱われ、エラーも警告も無く0件になる）。
+	for _, repName := range reps.RepLoadWarnings(findCtx) {
+		response.Warnings = append(response.Warnings,
+			fmt.Sprintf("repository %q could not be loaded, so its records are missing from the result. "+
+				"Do not pass this name in query.reps; it would silently match nothing", repName))
+	}
 	response.Warnings = append(response.Warnings, collectMCPUnknownValueWarnings(r.Context(), repositories, request.Query, request.DataTypes)...)
 
 	// (RelatedTime降順, ID昇順) の全順序ソート。

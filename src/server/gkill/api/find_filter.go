@@ -338,6 +338,18 @@ func (f *FindFilter) getRepositories(ctx context.Context, userID string, device 
 	}
 	findCtx.Repositories = repositories
 
+	// 読み込めなかったrepを検索の警告として積む。
+	//
+	// ここは /api/get_kyous と /api/get_kyous_mcp の唯一の合流点なので、
+	// 両方の経路にまとめて載る。回収して GkillMessage にするのは usecase 側。
+	//
+	// 切り離したrepを黙らせないための経路。黙ると、保存済みの検索条件(列のReps)に
+	// 残った名前が filterKyousByRepName に「実在するが選ばれていない」と扱われ、
+	// エラーも警告も無いまま0件になる。GetAllRepNamesからも消えるのでUIの候補にも出ない。
+	for _, failure := range repositories.LoadFailures() {
+		reps.AppendRepLoadWarning(ctx, failure.RepName)
+	}
+
 	return nil, nil
 }
 
