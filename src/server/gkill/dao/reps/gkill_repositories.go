@@ -595,8 +595,12 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 	if gkill_options.IsCacheInMemory {
 		CacheMemoryDB, err = sql.Open("sqlite", "file:gkill_memory_db_"+userID+"?mode=memory&cache=shared&_txlock=immediate&_pragma=busy_timeout(6000)&_pragma=journal_mode(MEMORY)&_pragma=synchronous(OFF)")
 		if err != nil {
-			err = fmt.Errorf("error at open memory database: %w", err)
-			slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+			// **return を落とさないこと。** 失敗時 CacheMemoryDB は nil で、
+			// 直後の SetMaxOpenConns が nil ポインタ参照で落ちる。
+			// ログだけ出して続けていたので、原因の行より後ろの panic として現れていた。
+			err = fmt.Errorf("error at open cache memory database: %w", err)
+			slog.Log(ctx, gkill_log.Error, "error at open cache memory database", "user_id", fmt.Sprintf("%q", userID), "error", fmt.Sprintf("%q", err))
+			return nil, err
 		}
 		CacheMemoryDB.SetMaxOpenConns(runtime.NumCPU()) // 読み取り並列を許可
 		// 0にすると最後の接続が閉じてメモリDBごと消える。
@@ -609,8 +613,10 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 
 		TempMemoryDB, err = sql.Open("sqlite", "file:gkill_temp_db_"+userID+"?mode=memory&cache=shared&_txlock=immediate&_pragma=busy_timeout(6000)&_pragma=journal_mode(MEMORY)&_pragma=synchronous(OFF)")
 		if err != nil {
-			err = fmt.Errorf("error at open memory database: %w", err)
-			slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+			// 上の CacheMemoryDB と同じ。nil のまま SetMaxOpenConns を呼ぶと落ちる。
+			err = fmt.Errorf("error at open temp memory database: %w", err)
+			slog.Log(ctx, gkill_log.Error, "error at open temp memory database", "user_id", fmt.Sprintf("%q", userID), "error", fmt.Sprintf("%q", err))
+			return nil, err
 		}
 		TempMemoryDB.SetMaxOpenConns(runtime.NumCPU()) // 読み取り並列を許可
 		// 0にすると最後の接続が閉じてメモリDBごと消える。
@@ -704,7 +710,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 				err := repositories.UpdateCache(tickCtx)
 				tickCancel()
 				if err != nil {
-					slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+					slog.Log(ctx, gkill_log.Error, "error at update cache in background", "error", fmt.Sprintf("%q", err))
 					continue
 				}
 				syncState.isUpdateCacheNextTick.Store(false)
@@ -757,7 +763,7 @@ func (g *GkillRepositories) Close(ctx context.Context) error {
 	for _, c := range closers {
 		if err := c.close(ctx); err != nil {
 			err = fmt.Errorf("error at close %s: %w", c.name, err)
-			slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at close repositories", "rep_group", fmt.Sprintf("%q", c.name), "error", fmt.Sprintf("%q", err))
 			errs = append(errs, err)
 		}
 	}

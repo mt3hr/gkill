@@ -427,7 +427,7 @@ func (g *GkillServerAPI) HandleZipCacheFileServe(w http.ResponseWriter, r *http.
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		err = fmt.Errorf("error at handle zip cache file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Warn, "zip cache file serve denied: no session cookie", "error", fmt.Sprintf("%q", err))
 		return
 	}
 	sessionID := sessionIDCookie.Value
@@ -437,7 +437,7 @@ func (g *GkillServerAPI) HandleZipCacheFileServe(w http.ResponseWriter, r *http.
 	if account == nil || err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		err = fmt.Errorf("error at handle zip cache file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Warn, "zip cache file serve denied: invalid session", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
