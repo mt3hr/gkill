@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strconv"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
@@ -77,6 +78,31 @@ func (uc *UsecaseContext) GetKyous(ctx context.Context, userID, device, localeNa
 		warningMessages = append(warningMessages, &message.GkillMessage{
 			MessageCode: message.FindKyousPluginWarningMessage,
 			Message:     api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_FIND_PLUGIN_MESSAGE"}) + " (" + pluginName + ")",
+		})
+	}
+
+	// 読み込めなかったrepも同じく警告として返す。
+	// rep名を載せるのは、利用者が「一覧からどれが消えたか」を知り、
+	// 保存済みの検索条件に残った名前を直せるようにするため。
+	// GkillMessageにはGkillErrorのような伏せ処理が無いので、
+	// パスが混ざっても出さないよう RedactEnvironmentSpecific を通す。
+	//
+	// 死んだディスクにrepが何十本も載っていると警告もその数だけ出るので、
+	// 先頭を並べて残りは件数だけにする。
+	repLoadWarnings := reps.RepLoadWarnings(ctx)
+	const maxNamedRepLoadWarnings = 8
+	for i, repName := range repLoadWarnings {
+		if i >= maxNamedRepLoadWarnings {
+			warningMessages = append(warningMessages, &message.GkillMessage{
+				MessageCode: message.FindKyousRepLoadWarningMessage,
+				Message: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOAD_REP_MESSAGE"}) +
+					" (+" + strconv.Itoa(len(repLoadWarnings)-maxNamedRepLoadWarnings) + ")",
+			})
+			break
+		}
+		warningMessages = append(warningMessages, &message.GkillMessage{
+			MessageCode: message.FindKyousRepLoadWarningMessage,
+			Message:     api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOAD_REP_MESSAGE"}) + " (" + message.RedactEnvironmentSpecific(repName) + ")",
 		})
 	}
 

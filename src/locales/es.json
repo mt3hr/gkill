@@ -687,6 +687,7 @@
     "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE": "Error al obtener el registro después de actualizarlo",
     "SUCCESS_UPDATE_IDFKYOU_MESSAGE": "Registro actualizado",
     "FAILED_FIND_PLUGIN_MESSAGE": "No se pudieron obtener los resultados de búsqueda del plugin",
+    "FAILED_LOAD_REP_MESSAGE": "No se pudo cargar el repositorio",
     "FAILED_GET_KYOUS_MESSAGE": "Error al obtener los registros",
     "SUCCESS_GET_KYOUS_MESSAGE": "Búsqueda completada",
     "FAILED_GET_REP_INFOS_MESSAGE": "No se pudo obtener la lista de repositorios",

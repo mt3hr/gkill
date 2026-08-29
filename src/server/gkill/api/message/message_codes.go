@@ -90,4 +90,7 @@ const (
 	GetMiReKyousByTargetIDSuccessMessage    = "MSG000087"
 	FindKyousPluginWarningMessage           = "MSG000088"
 	GetRepInfosMCPSuccessMessage            = "MSG000089"
+	// FindKyousRepLoadWarningMessage は「読み込めなかったrepがある」ことの警告。
+	// errorsではなくmessagesへ載せる。errorsに載せるとクライアントが検索結果ごと捨てる
+	FindKyousRepLoadWarningMessage = "MSG000090"
 )

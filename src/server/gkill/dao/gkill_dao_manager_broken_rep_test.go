@@ -75,9 +75,11 @@ func writeCorruptSQLiteFile(t *testing.T, path string) {
 	}
 }
 
-// setupBrokenRepTest は壊れた索引DBを持つdirectory repを含むrep定義一式を作り、
-// managerとrep定義を返す。
-func setupBrokenRepTest(t *testing.T, brokenRepDirName string) (*GkillDAOManager, string, string, string) {
+// setupBrokenRepTest は壊れた索引DBを持つdirectory repを含むrep定義一式を作る。
+//
+// useToWrite が false なら読み取り専用のrepを1本足してそれを壊す（切り離しの対象）。
+// true なら書き込み先repそのものを壊す（切り離してはいけない対象）。
+func setupBrokenRepTest(t *testing.T, brokenRepDirName string, useToWrite bool) (*GkillDAOManager, string, string, string) {
 	t.Helper()
 
 	tmpDir := setupGitRepGlobTestOptions(t)
@@ -96,23 +98,29 @@ func setupBrokenRepTest(t *testing.T, brokenRepDirName string) (*GkillDAOManager
 		t.Fatalf("MkdirAll failed: %v", err)
 	}
 
-	// 壊れた索引DBを持つ読み取り専用のdirectory rep
-	brokenDir := filepath.Join(dataDir, brokenRepDirName)
-	if err := os.MkdirAll(brokenDir, 0o755); err != nil {
-		t.Fatalf("MkdirAll failed: %v", err)
-	}
-	writeCorruptSQLiteFile(t, filepath.Join(brokenDir, ".gkill", "gkill_id.db"))
-
 	// 「デバイスごとに各種別の書き込み先repがちょうど1つ」の検査があるので
-	// 13種別を1トランザクションでまとめて入れる。壊すrepは UseToWrite:false で足す
-	repositoriesDefine := append(writeRepositoriesForTest(t, userID, device, dataDir), &user_config.Repository{
-		ID:       "test_broken_directory",
-		UserID:   userID,
-		Device:   device,
-		Type:     "directory",
-		File:     filepath.ToSlash(brokenDir),
-		IsEnable: true,
-	})
+	// 13種別を1トランザクションでまとめて入れる
+	repositoriesDefine := writeRepositoriesForTest(t, userID, device, dataDir)
+
+	if useToWrite {
+		// writeRepositoriesForTest が作る書き込み先の directory rep(dataDir/Files)を壊す
+		writeCorruptSQLiteFile(t, filepath.Join(dataDir, "Files", ".gkill", "gkill_id.db"))
+	} else {
+		brokenDir := filepath.Join(dataDir, brokenRepDirName)
+		if err := os.MkdirAll(brokenDir, 0o755); err != nil {
+			t.Fatalf("MkdirAll failed: %v", err)
+		}
+		writeCorruptSQLiteFile(t, filepath.Join(brokenDir, ".gkill", "gkill_id.db"))
+		repositoriesDefine = append(repositoriesDefine, &user_config.Repository{
+			ID:       "test_broken_directory",
+			UserID:   userID,
+			Device:   device,
+			Type:     "directory",
+			File:     filepath.ToSlash(brokenDir),
+			IsEnable: true,
+		})
+	}
+
 	if _, err := manager.ConfigDAOs.RepositoryDAO.AddRepositories(ctx, repositoriesDefine); err != nil {
 		t.Fatalf("AddRepositories failed: %v", err)
 	}
@@ -120,21 +128,62 @@ func setupBrokenRepTest(t *testing.T, brokenRepDirName string) (*GkillDAOManager
 	return manager, userID, device, dataDir
 }
 
-// 壊れたrepがあるとき、エラーにどのrepが壊れたのかが載っていること。
+// 読み取り専用のrepが壊れていても、その1本だけ切り離して残りで動くこと。
 //
-// 載っていないと、実機のログには SQLite の文言しか残らず、
-// rep を1本ずつ当たるしかなくなる（2026-08-30に実際にそうなった）。
-func TestGetRepositoriesErrorNamesTheBrokenRep(t *testing.T) {
-	manager, userID, device, _ := setupBrokenRepTest(t, "BrokenNote")
+// これが崩れると、rep 1本の物理障害でそのユーザの全APIがERR000018になり、
+// 設定画面すら開けず自力復旧の手段が残らない（2026-08-30に実際にそうなった）。
+func TestGetRepositoriesDetachesBrokenReadOnlyRep(t *testing.T) {
+	manager, userID, device, _ := setupBrokenRepTest(t, "BrokenNote", false)
+
+	repositories, err := manager.GetRepositories(userID, device)
+	if err != nil {
+		t.Fatalf("読み取り専用repの破損で全体が失敗している: %v", err)
+	}
+
+	failures := repositories.LoadFailures()
+	if len(failures) != 1 {
+		t.Fatalf("切り離しの記録が1件のはず: got %d件 %+v", len(failures), failures)
+	}
+	if failures[0].RepName != "BrokenNote" {
+		t.Errorf("切り離したrepの名前が違う: got %q", failures[0].RepName)
+	}
+	if failures[0].RepType != "directory" {
+		t.Errorf("切り離したrepの種別が違う: got %q", failures[0].RepType)
+	}
+	if failures[0].Err == nil {
+		t.Error("切り離しの原因が記録されていない")
+	}
+
+	// 健全なrepは残っていること（切り離しで全部落ちていないか）
+	if len(repositories.IDFKyouReps) == 0 {
+		t.Error("健全なdirectory repまで消えている")
+	}
+
+	// **黙って落とさない**ことがこの機能の前提（ADR-0208の却下を満たす条件）。
+	// 記録が空なら、利用者は一覧から消えたrepに気付けない
+	if repositories.LoadFailureError() == nil {
+		t.Error("LoadFailureErrorがnil。切り離しの原因がログにも診断にも出せない")
+	}
+}
+
+// 書き込み先repが壊れているときは、切り離さず全体を失敗させること。
+//
+// 切り離すと WriteXxxRep が nil のまま書き込み経路へ入り、nilポインタ参照でpanicする。
+// commit_txはDBトランザクションではないので、途中で落ちると
+// 「Kyou本体だけ書けてタグと本文が落ちた」状態が残る。500で止まる方がまだまし。
+//
+// あわせて、エラーにどのrepが壊れたのかが載っていることも見る。
+// 載っていないと実機のログにはSQLiteの文言しか残らず、repを1本ずつ当たるしかなくなる。
+func TestGetRepositoriesFailsWhenWriteRepIsBroken(t *testing.T) {
+	manager, userID, device, _ := setupBrokenRepTest(t, "", true)
 
 	_, err := manager.GetRepositories(userID, device)
 	if err == nil {
-		// 前提が崩れたらこのテストは何も検証しない。先に落とす
-		t.Fatal("壊した索引DBでGetRepositoriesが成功している。仕込みが効いていない")
+		t.Fatal("書き込み先repが壊れているのにGetRepositoriesが成功している")
 	}
 
 	got := err.Error()
-	for _, want := range []string{"BrokenNote", "directory"} {
+	for _, want := range []string{"Files", "directory"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("エラーに %q が含まれていない。どのrepが壊れたか特定できない: %s", want, got)
 		}
@@ -150,14 +199,45 @@ func TestGetRepositoriesErrorNamesTheBrokenRep(t *testing.T) {
 // 判定はファイルを消せるかで行う。Windowsでは開いたままのファイルを削除できないので
 // これで検出できる。Linux/macOSでは開いていても消せるため、この検査は素通りする。
 func TestGetRepositoriesClosesPartiallyBuiltRepositoriesOnFailure(t *testing.T) {
-	manager, userID, device, dataDir := setupBrokenRepTest(t, "BrokenNote")
+	manager, userID, device, dataDir := setupBrokenRepTest(t, "", true)
 
 	if _, err := manager.GetRepositories(userID, device); err == nil {
-		t.Fatal("壊した索引DBでGetRepositoriesが成功している。仕込みが効いていない")
+		t.Fatal("書き込み先repが壊れているのにGetRepositoriesが成功している")
 	}
 
 	if err := os.RemoveAll(dataDir); err != nil {
 		t.Errorf("構築失敗後もrepのDBハンドルが残っている(壊れたDBの差し替えができない状態): %v", err)
+	}
+}
+
+// 切り離しても設定(IsEnable)は書き換えないこと。
+//
+// 書き換えると、USBを挿し直せば直る種類の障害が恒久的な設定変更になり、
+// 利用者は「自分が消していないrepが消えたこと」に気付けない（ADR-0208の制約）。
+func TestGetRepositoriesDoesNotDisableBrokenRepInConfig(t *testing.T) {
+	manager, userID, device, _ := setupBrokenRepTest(t, "BrokenNote", false)
+	ctx := context.Background()
+
+	if _, err := manager.GetRepositories(userID, device); err != nil {
+		t.Fatalf("GetRepositories failed: %v", err)
+	}
+
+	defines, err := manager.ConfigDAOs.RepositoryDAO.GetRepositories(ctx, userID, device)
+	if err != nil {
+		t.Fatalf("GetRepositories(config) failed: %v", err)
+	}
+	found := false
+	for _, define := range defines {
+		if define.ID != "test_broken_directory" {
+			continue
+		}
+		found = true
+		if !define.IsEnable {
+			t.Error("切り離したrepの設定がIsEnable=falseへ書き換えられている")
+		}
+	}
+	if !found {
+		t.Error("切り離したrepの設定行そのものが消えている")
 	}
 }
 

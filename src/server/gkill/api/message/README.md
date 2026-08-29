@@ -15,7 +15,7 @@ gkill API のエラーコードとメッセージコードの定数定義、お�
 | `redact_test.go` | 伏せ方の表駆動テスト（形は残す・二重適用しない・`@example.` は残す） |
 | `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` |
 | `error_codes.go` | エラーコード定数（414 定数: `ERR000001` 〜 `ERR000418`、`ERR000243`・`ERR000387`・`ERR000388`・`ERR000389` は欠番） |
-| `message_codes.go` | メッセージコード定数（89 定数: `MSG000001` 〜 `MSG000089`） |
+| `message_codes.go` | メッセージコード定数（90 定数: `MSG000001` 〜 `MSG000090`） |
 | `http_status.go` | エラーコード → HTTP ステータス対応表（`errorCodeHTTPStatus`、`HTTPStatusOf` / `HTTPStatusForErrors`） |
 | `http_status_test.go` | 全エラーコードが対応表に載っていることを `error_codes.go` のソース走査で固定するテスト |
 | `message_test.go` | コード形式・空文字チェックのテスト |
@@ -60,7 +60,7 @@ type GkillMessage struct {
 | `MSG000005` 〜 `MSG000024` | CRUD 成功（Add, Update 系） |
 | `MSG000025` 〜 `MSG000040` | Get 操作成功 |
 | `MSG000041` 〜 `MSG000074` | 設定・アップロード・KC・トランザクション |
-| `MSG000075` 〜 `MSG000089` | KFTL、MCP、キャッシュ、通知、ZIP ブラウズ、ReKyou/MiReKyou の対象ID逆引き、プラグイン検索失敗の警告、MCP向けrep一覧 |
+| `MSG000075` 〜 `MSG000090` | KFTL、MCP、キャッシュ、通知、ZIP ブラウズ、ReKyou/MiReKyou の対象ID逆引き、プラグイン検索失敗の警告、MCP向けrep一覧、rep読み込み失敗の警告 |
 
 ## HTTP ステータスコードとの関係
 

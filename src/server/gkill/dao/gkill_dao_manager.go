@@ -310,11 +310,45 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						slog.Log(ctx, gkill_log.Warn, "skip not a git repository", "userID", fmt.Sprintf("%q", userID), "device", fmt.Sprintf("%q", device), "file", fmt.Sprintf("%q", filename))
 						continue
 					}
-					// どのrepが読めなかったのかをエラーに載せる。
+					// どのrepが読めなかったのかをエラーと警告に載せる。
 					// 載せないと「error at create gkill meta info table: database disk image is
 					// malformed」のようにSQLiteの文言だけが残り、rep名もパスも出ないので、
 					// 実機のログからは壊れたrepを特定できない(2026-08-30に実際にそうなった)。
-					return nil, fmt.Errorf("error at load repository. type = %s rep name = %s file = %s: %w", rep.Type, repNameFromDefine(rep.Type, filename), filename, loadErr)
+					repName := repNameFromDefine(rep.Type, filename)
+
+					if !canDetachRepOnLoadFailure(rep) {
+						return nil, fmt.Errorf("error at load repository. type = %s rep name = %s file = %s: %w", rep.Type, repName, filename, loadErr)
+					}
+
+					// 読み取り専用のrepは、その1本だけ切り離して残りで動かす。
+					// 1本の物理障害でそのユーザの全APIがERR000018になると、
+					// 設定画面すら開けず自力復旧の手段が残らないため。
+					//
+					// **黙って落とさないこと。**切り離しは必ず利用者へ返す
+					// (検索の応答に警告として載る)。黙ってスキップするのは
+					// ADR-0208が却下した形で、「1件も出ないことに気付けなくなる」。
+					// IsEnableも書き換えない。挿し直せば直る障害を恒久的な設定変更にしないため。
+					//
+					// 失敗の理由では分岐しない。SQLiteのエラーコードで「壊れているときだけ」に
+					// 絞ると、ドライバやOSの実装詳細が変わった回にだけ静かに全滅へ戻る。
+					// どんな理由でも切り離し、必ず言う。
+					//
+					// なお rep によっては、生成に成功して repositories へ足したあとの段階
+					// (watch登録など)で失敗しうる。その場合 rep 自体は使えるまま警告だけが出るが、
+					// 「何かおかしい」を伝える方が黙るより良いので、そのまま警告する。
+					slog.Log(ctx, gkill_log.Warn, "detach broken repository",
+						"userID", fmt.Sprintf("%q", userID),
+						"device", fmt.Sprintf("%q", device),
+						"type", fmt.Sprintf("%q", rep.Type),
+						"repName", fmt.Sprintf("%q", repName),
+						"file", fmt.Sprintf("%q", filename),
+						"error", fmt.Sprintf("%q", loadErr))
+					repositories.AppendLoadFailure(reps.RepLoadFailure{
+						RepName: repName,
+						RepType: rep.Type,
+						Err:     loadErr,
+					})
+					continue
 				}
 			}
 		}
@@ -603,6 +637,22 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 	}
 
 	return repositories, nil
+}
+
+// canDetachRepOnLoadFailure は、読み込みに失敗したrepを1本だけ切り離してよいかを返す。
+//
+// **書き込み先repは切り離さない。** WriteXxxRep が nil のまま usecase や
+// handle_commit_tx の書き込み経路へ入ると、nilポインタ参照でpanicする。
+// commit_tx はDBトランザクションではなく決まった順の逐次書き込みなので、
+// 途中で落ちると「Kyou本体だけ書けてタグと本文が落ちた」状態が残る。
+// 500で止まる方がまだましなので、書き込み先が読めないときは従来どおり全体を失敗させる。
+//
+// ここを外して書き込み先も切り離せるようにするには、先に書き込み経路の
+// 取得口（WriteXxxRep の直接参照をやめて nil を弾く形）を通すこと。順序を逆にすると
+// 500がpanicに化けるだけになる。
+// 経緯と却下案: documents/adr/0216-detach-a-broken-rep-but-never-silently.md
+func canDetachRepOnLoadFailure(rep *user_config.Repository) bool {
+	return !rep.UseToWrite
 }
 
 // repNameFromDefine は rep を生成せずに rep 名を予測する。
