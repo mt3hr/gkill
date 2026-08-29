@@ -29,6 +29,9 @@ SQLITE_CORRUPT になり、実際にそうなった。`/api/get_kyous` も `/api
 読み込みに失敗した rep は、**書き込み先でない限り**その1本だけ切り離して残りで動き続ける。
 
 - 切り離しは**必ず利用者へ返す**（検索の応答に `MSG000090` の警告として載る。MCP は `warnings[]`）
+- 運用者向けには `gkill_error.log` へも残す（切り離した1本ごとの行と、構築完了時のまとめ1行）。
+  レベルを Warn ではなく Error にしているのは、rep が1本消えるのは検索結果が黙って痩せる異常で、
+  `--log warn` 運用のときに他の警告へ埋もれさせないため
 - `IsEnable` は書き換えない（設定DBへ書き戻さない）
 - **失敗の理由では分岐しない**。どんな理由でも切り離し、必ず言う
 - **書き込み先 rep が読めないときは従来どおり全体を失敗させる**（下記 Rejected alternatives 参照）
@@ -69,6 +72,15 @@ SQLITE_CORRUPT になり、実際にそうなった。`/api/get_kyous` も `/api
   `MSG000088`（プラグイン検索の失敗）が `messages` 側にいるのと同じ理由。
 
 - **切り離しの有無をフラグで選べるようにする** — 「全滅する側」を選べる意味がない。
+
+- **`get_rep_infos` の `rep_infos[]` に「読み込めなかった rep」を混ぜる** — 壊れた rep は leaf rep に
+  ならないので、あの一覧を作る走査（rep 群を歩いて `UnWrap` → `GetRepName`）に**そもそも現れない**。
+  載せるには架空の行を合成することになり、そうすると `rep_infos[]` の
+  「`query.reps` へそのまま渡せる実 rep 名」という契約が壊れる。渡されたら
+  `filterKyousByRepName` が非空の rep 名を「実在するが選ばれていない」として落とし、
+  **エラーも警告も無く0件**になる。別枠（`unavailable_reps[]`）にする案もあるが、
+  MCP の DTO・JS 側の射影許可リスト・tool description まで触ることになるので、
+  まずは `gkill_error.log` に出す形で足りるかを見る。
 
 ## Consequences
 
