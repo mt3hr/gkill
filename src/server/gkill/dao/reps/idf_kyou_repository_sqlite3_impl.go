@@ -15,6 +15,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
@@ -2646,8 +2647,9 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) e
 		return isImage(rel) || isVideo(rel)
 	})
 	if err != nil {
+		// 握り潰して続けるので Debug では残らない。対象が欠けたまま「完了」に見える。
 		err = fmt.Errorf("error at generate thumb cache at %s: %w", repName, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Warn, "error at collect thumb cache targets", "rep_name", fmt.Sprintf("%q", repName), "error", fmt.Sprintf("%q", err))
 	}
 	if len(targets) == 0 {
 		return nil
@@ -2656,10 +2658,14 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) e
 	cachedNames, err := i.thumbGenerator.CachedThumbNames()
 	if err != nil {
 		err = fmt.Errorf("error at list thumb cache at %s: %w", repName, err)
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at list thumb cache", "rep_name", fmt.Sprintf("%q", repName), "error", fmt.Sprintf("%q", err))
 		cachedNames = map[string]struct{}{}
 	}
 
+	// 1ファイルの失敗は Warn。ffmpeg が壊れていると対象ファイル数ぶん積むので、
+	// Error に置くと gkill_error.log がそれだけで埋まる。
+	// 運用者が見るべきは「何件落ちたか」なので、最後に要約を1行 Error で出す。
+	failed := &atomic.Int64{}
 	wg := &sync.WaitGroup{}
 	i.eachExistingTargetFile(ctx, targets, func(target derivedCacheTarget, st os.FileInfo) {
 		name := i.thumbGenerator.ThumbCacheName(target.rel, st.Size(), batchThumbWidth, batchThumbHeight)
@@ -2668,12 +2674,16 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) e
 		}
 		goForDerivedCacheBatch(wg, func() {
 			if err := i.thumbGenerator.GenerateThumbCacheFor(ctx, target.rel, st, target.isVideo, batchThumbWidth, batchThumbHeight); err != nil {
+				failed.Add(1)
 				err = fmt.Errorf("error at generate thumb cache %s %s: %w", repName, target.rel, err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+				slog.Log(ctx, gkill_log.Warn, "error at generate thumb cache for a file", "rep_name", fmt.Sprintf("%q", repName), "error", fmt.Sprintf("%q", err))
 			}
 		})
 	})
 	wg.Wait()
+	if n := failed.Load(); n != 0 {
+		slog.Log(ctx, gkill_log.Error, "thumb cache generation finished with failures", "rep_name", fmt.Sprintf("%q", repName), "failed", n)
+	}
 	return nil
 }
 
@@ -2693,8 +2703,9 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateVideoCache(ctx context.Context) e
 
 	targets, err := i.collectDerivedCacheTargets(ctx, isVideo)
 	if err != nil {
+		// 握り潰して続けるので Debug では残らない。対象が欠けたまま「完了」に見える。
 		err = fmt.Errorf("error at generate video cache at %s: %w", repName, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Warn, "error at collect video cache targets", "rep_name", fmt.Sprintf("%q", repName), "error", fmt.Sprintf("%q", err))
 	}
 	if len(targets) == 0 {
 		return nil
@@ -2703,10 +2714,12 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateVideoCache(ctx context.Context) e
 	cachedNames, err := i.videoGenerator.CachedCompatNames()
 	if err != nil {
 		err = fmt.Errorf("error at list video cache at %s: %w", repName, err)
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at list video cache", "rep_name", fmt.Sprintf("%q", repName), "error", fmt.Sprintf("%q", err))
 		cachedNames = map[string]struct{}{}
 	}
 
+	// サムネイル側と同じ。1ファイルの失敗は Warn、要約だけ Error。
+	failed := &atomic.Int64{}
 	wg := &sync.WaitGroup{}
 	i.eachExistingTargetFile(ctx, targets, func(target derivedCacheTarget, st os.FileInfo) {
 		name := i.videoGenerator.CompatCacheName(target.rel, st.Size())
@@ -2715,12 +2728,16 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateVideoCache(ctx context.Context) e
 		}
 		goForDerivedCacheBatch(wg, func() {
 			if err := i.videoGenerator.GenerateVideoCacheFor(ctx, target.rel, st); err != nil {
+				failed.Add(1)
 				err = fmt.Errorf("error at generate video cache %s %s: %w", repName, target.rel, err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+				slog.Log(ctx, gkill_log.Warn, "error at generate video cache for a file", "rep_name", fmt.Sprintf("%q", repName), "error", fmt.Sprintf("%q", err))
 			}
 		})
 	})
 	wg.Wait()
+	if n := failed.Load(); n != 0 {
+		slog.Log(ctx, gkill_log.Error, "video cache generation finished with failures", "rep_name", fmt.Sprintf("%q", repName), "failed", n)
+	}
 	return nil
 }
 

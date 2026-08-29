@@ -149,9 +149,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	validFor := &validForDuration
 	isCA := &isCABool
 	if len(*host) == 0 {
-		slog.Log(r.Context(), gkill_log.Error, "finish Missing required --host parameter")
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Warn, "generate tls files: missing required host parameter")
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -177,9 +175,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	case "P521":
 		priv, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	default:
-		slog.Log(r.Context(), gkill_log.Error, "finish Unrecognized elliptic", "curve", *ecdsaCurve)
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Warn, "generate tls files: unrecognized elliptic curve", "curve", fmt.Sprintf("%q", *ecdsaCurve))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -188,9 +184,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		return
 	}
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "finish Failed to generate private key", "error", fmt.Sprintf("%q", err))
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: failed to generate private key", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -215,9 +209,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	} else {
 		notBefore, err = time.Parse("Jan 2 15:04:05 2006", *validFrom)
 		if err != nil {
-			slog.Log(r.Context(), gkill_log.Error, "finish Failed to parse creation date", "error", fmt.Sprintf("%q", err))
-			err = fmt.Errorf("error at generate tls files")
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: failed to parse creation date", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GenerateTLSFilesError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -232,9 +224,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "finish Failed to generate serial number", "error", fmt.Sprintf("%q", err))
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: failed to generate serial number", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -272,9 +262,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, publicKey(priv), priv)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "finish Failed to create certificate", "error", fmt.Sprintf("%q", err))
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: failed to create certificate", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -288,9 +276,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 
 	err = os.MkdirAll(parentDirCert, os.ModePerm)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "finish Failed to open cert.pem for writing", "error", fmt.Sprintf("%q", err))
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: failed to open cert.pem for writing", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -300,9 +286,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	}
 	err = os.MkdirAll(parentDirKey, os.ModePerm)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "finish Failed to open cert.pem for writing", "error", fmt.Sprintf("%q", err))
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: failed to open cert.pem for writing", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -313,9 +297,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 
 	certOut, err := os.Create(certFileName)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "finish Failed to open cert.pem for writing", "error", fmt.Sprintf("%q", err))
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: failed to open cert.pem for writing", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -324,9 +306,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		return
 	}
 	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "finish Failed to write data to cert.pem", "error", fmt.Sprintf("%q", err))
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: failed to write data to cert.pem", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -335,9 +315,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		return
 	}
 	if err := certOut.Close(); err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "finish Error closing cert.pem", "error", fmt.Sprintf("%q", err))
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: error closing cert.pem", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -348,9 +326,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 
 	keyOut, err := os.OpenFile(pemFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "finish Failed to open key.pem for writing", "error", fmt.Sprintf("%q", err))
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: failed to open key.pem for writing", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -360,9 +336,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	}
 	privBytes, err := x509.MarshalPKCS8PrivateKey(priv)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "finish Unable to marshal private key", "error", fmt.Sprintf("%q", err))
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: unable to marshal private key", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -371,9 +345,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		return
 	}
 	if err := pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes}); err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "finish Failed to write data to key.pem", "error", fmt.Sprintf("%q", err))
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: failed to write data to key.pem", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
@@ -382,9 +354,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		return
 	}
 	if err := keyOut.Close(); err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "finish Error closing key.pem", "error", fmt.Sprintf("%q", err))
-		err = fmt.Errorf("error at generate tls files")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at generate tls files: error closing key.pem", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
