@@ -38,6 +38,10 @@ SQLite の性能改善を検討すると **WAL 化がほぼ必ず候補に挙が
 
 キャッシュ側と実データ側で `journal_mode` が違う、という非対称が残る。キャッシュは持ち回らない派生物なので WAL でよい。
 
+**この決定は `journal_mode` だけのもので、`synchronous` は当時扱っていなかった。**
+耐久性は2つの組み合わせで決まり、DELETE を選んだ以上 `synchronous` は FULL でなければ
+電源断・I/O断でDBそのものが壊れうる（実際に壊れた）。その続きは [ADR-0215](0215-data-db-synchronous-full.md)。
+
 ## Evidence
 
 - `mmap_size` 256MB: 90MBの `URLog.db` の全走査が **156ms → 5.6ms**（実行順を入れ替えても同じ）

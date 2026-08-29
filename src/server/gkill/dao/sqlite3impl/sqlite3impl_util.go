@@ -61,7 +61,14 @@ func EscapeLikePattern(word string) string {
 // 持ち回る作りで、バックアップも単純なファイルコピーで済ませたいので、
 // ここは意図的にWALを使わない。（キャッシュ側は別で、そちらはWALを使っている）
 //
-// synchronous も NORMAL のまま変えない。耐久性の意味が変わるため。
+// synchronous は FULL にすること。NORMAL へ戻さない。
+// 耐久性は journal_mode との**組み合わせ**で決まり、DELETE + NORMAL だけが
+// 電源断・I/O断でDBそのものが壊れうる組み合わせになる。
+// WAL + NORMAL なら最悪でも最後のトランザクションを失うだけで済むが、
+// ここは上のとおり DELETE なので、その保証を synchronous 側で買う必要がある。
+// 「WALでもNORMALで平気なのだから」で戻すと、壊れ方が「1トランザクション消える」から
+// 「DBが開けなくなる」へ変わる。速さと引き換えにしてよい性質ではない。
+// documents/adr/0215-data-db-synchronous-full.md
 //
 // cache_size / temp_store / mmap_size は未設定だったので足した。
 //   - cache_size: 既定は -2000 (2MB)。接続ごとの上限で、実体ファイル数ぶん
@@ -71,11 +78,28 @@ func EscapeLikePattern(word string) string {
 //     156ms -> 5.6ms。小さいDBでは差が出ない。
 //     ページをOSキャッシュからSQLiteのバッファへ複写しなくて済むため。
 const sqliteDataDSNParams = "?_pragma=busy_timeout(6000)" +
-	"&_pragma=synchronous(NORMAL)" +
+	"&_pragma=synchronous(FULL)" +
 	"&_pragma=journal_mode(DELETE)" +
 	"&_pragma=cache_size(-8000)" +
 	"&_pragma=temp_store(MEMORY)" +
 	"&_pragma=mmap_size(268435456)"
+
+// ConfigDBDSNParams は設定DB（configs/ 配下の account.db / user_config.db など）を
+// 開くときのPRAGMAです。
+//
+// 実データDBの sqliteDataDSNParams とは別物で、cache_size / temp_store / mmap_size を持たない。
+// 設定DBは小さく全走査も起動時だけなので、あちらの実測（90MBのDBで156ms -> 5.6ms）が効かない。
+//
+// journal_mode と synchronous の組み合わせは実データDB側と同じ理由で DELETE + FULL にすること。
+// **設定DBが壊れると rep 定義そのものが読めなくなり、そのユーザの全APIが失敗する。**
+// 実データDB1本の破損より広く効くので、ここを NORMAL に戻す理由はない。
+// documents/adr/0215-data-db-synchronous-full.md
+//
+// この定数を各DAOへコピーして散らさないこと。以前は8ファイルが同じ文字列を直書きしており、
+// 片方だけ直すと設定DBと実データDBで耐久性が非対称になることに気付けなかった。
+const ConfigDBDSNParams = "?_pragma=busy_timeout(6000)" +
+	"&_pragma=synchronous(FULL)" +
+	"&_pragma=journal_mode(DELETE)"
 
 func GetSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", "file:"+filename+sqliteDataDSNParams)

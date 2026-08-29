@@ -24,7 +24,7 @@ type gkillNotificateTargetDAOSQLite3Impl struct {
 
 func NewGkillNotificateTargetDAOSQLite3Impl(ctx context.Context, filename string) (GkillNotificateTargetDAO, error) {
 	var err error
-	db, err := sql.Open("sqlite", "file:"+filename+"?_pragma=busy_timeout(6000)&_pragma=synchronous(NORMAL)&_pragma=journal_mode(DELETE)")
+	db, err := sql.Open("sqlite", "file:"+filename+sqlite3impl.ConfigDBDSNParams)
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err

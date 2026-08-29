@@ -2,6 +2,8 @@ package sqlite3impl
 
 // journal_mode を DELETE のまま変えない理由（WAL のサイドカーが持ち回りを壊す）:
 // documents/adr/0204-keep-journal-mode-delete.md
+// synchronous を FULL にした理由（DELETE + NORMAL だけがDBを壊しうる）:
+// documents/adr/0215-data-db-synchronous-full.md
 
 // 実データDBの接続設定の回帰テスト。
 //
@@ -9,6 +11,10 @@ package sqlite3impl
 // WALにすると -wal / -shm のサイドカーができ、.db 単体をコピーしても
 // 未チェックポイントの内容が落ちる。gkillはrepを端末ごとの .db ファイルとして
 // 持ち回る作りで、バックアップも単純なファイルコピーで済ませたいため。
+//
+// journal_mode と synchronous は**対で**見ること。
+// 耐久性はどちらか一方ではなく組み合わせで決まり、上の理由で DELETE を選んでいる以上、
+// synchronous は FULL でなければ電源断・I/O断でDBそのものが壊れうる。
 
 import (
 	"context"
@@ -35,7 +41,7 @@ func TestGetSQLiteDBConnection_AppliesExpectedPragmas(t *testing.T) {
 		reason string
 	}{
 		{"journal_mode", "delete", "WALにすると -wal/-shm ができて .db 単体のバックアップが壊れる"},
-		{"synchronous", "1", "NORMAL のまま。変えると耐久性の意味が変わる"},
+		{"synchronous", "2", "FULL(2)。DELETE+NORMAL(1) は電源断・I/O断でDBが壊れうる組み合わせ"},
 		{"cache_size", "-8000", "既定の2MBでは大きいDBに足りない"},
 		{"temp_store", "2", "MEMORY。ORDER BY の一時ソートがディスクに落ちるのを防ぐ"},
 		{"busy_timeout", "6000", ""},
