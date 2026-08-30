@@ -126,6 +126,31 @@ func TestWrapNoAuthCapped_SlowBodyIsCutByReadDeadline(t *testing.T) {
 	}
 }
 
+// 本番の応答経路は accessLog の responseRecorder と gzip の gzipResponseWriter が
+// ResponseWriter を包む。どちらかが Unwrap を欠くと http.ResponseController が
+// SetReadDeadline を底の *http.response まで辿れず、wrapNoAuthCapped の
+// スローボディ打ち切りが本番でだけ静かに無効になる（素の httptest では検出できない）。
+func TestResponseWriterWrappersUnwrapForResponseController(t *testing.T) {
+	deadlineErr := make(chan error, 1)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rec := newResponseRecorder(w)
+		wrapped := &gzipResponseWriter{ResponseWriter: rec}
+		rc := http.NewResponseController(wrapped)
+		deadlineErr <- rc.SetReadDeadline(time.Now().Add(time.Minute))
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	res, err := http.Get(ts.URL)
+	if err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	_ = res.Body.Close()
+	if err := <-deadlineErr; err != nil {
+		t.Errorf("SetReadDeadline がラッパ越しに効かない（Unwrap の欠落）: %v", err)
+	}
+}
+
 // serve.go の登録をソース走査で固定する。素の wrapNoAuth に残ってよいのは
 // ボディを読まない経路だけ。ボディ付きの経路を wrapNoAuth で足すと、
 // 未認証の無制限ボディがそのままヒープへ載る（目の前ではエラーにならない）。
