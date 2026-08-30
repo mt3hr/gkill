@@ -8,7 +8,6 @@ import (
 	"crypto/ed25519"
 	"crypto/rsa"
 	"fmt"
-	"io"
 	"io/fs"
 	"log/slog"
 	"net"
@@ -19,7 +18,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/mt3hr/gkill/src/server/gkill/api"
@@ -484,37 +482,6 @@ func isPrivateIPv4(ip net.IP) bool {
 	default:
 		return false
 	}
-}
-
-func globalIP(ctx context.Context) (net.IP, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.ipify.org", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	client := &http.Client{Timeout: 5 * time.Second}
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		err := res.Body.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close request body", "error", fmt.Sprintf("%q", err))
-		}
-	}()
-
-	b, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	s := strings.TrimSpace(string(b))
-	ip := net.ParseIP(s)
-	if ip == nil {
-		return nil, fmt.Errorf("invalid ip response: %q", s)
-	}
-	return ip, nil
 }
 
 // withUserContentSecurityHeaders は、利用者のファイルをそのまま返す経路
