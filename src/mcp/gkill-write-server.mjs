@@ -54,17 +54,24 @@ class McpWriteServer extends McpServerBase {
   }
 }
 
+// 起動 spec の静的な部分。宣言値の意味と export の理由は gkill-read-server.mjs の同名定数を参照。
+// enableFileLinks:false は「書き込み専用サーバは file-link URL を発行しない」の宣言で、
+// bootstrap がそのまま HttpTransport へ渡す。
+export const START_SPEC = Object.freeze({
+  scriptName: "gkill-write-server.mjs",
+  logFileName: "gkill_mcp_write_access.log",
+  oauthStateFileName: "mcp_oauth_write_state.json",
+  defaultPort: 8809,
+  scope: "gkill:write",
+  enableFileLinks: false,
+});
+
 // Entry point — guarded so importing this module for tests does not start a transport.
 if (isDirectRun(import.meta.url)) {
   startMcpServer({
     ServerClass: McpWriteServer,
     client: new GkillWriteClient(),
-    scriptName: "gkill-write-server.mjs",
-    logFileName: "gkill_mcp_write_access.log",
-    oauthStateFileName: "mcp_oauth_write_state.json",
-    defaultPort: 8809,
-    scope: "gkill:write",
-    enableFileLinks: false,
+    ...START_SPEC,
   });
 }
 
