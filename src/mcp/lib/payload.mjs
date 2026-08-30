@@ -113,6 +113,48 @@ export function appendStaleSchemaNoteToSummary(summary, payload) {
   return `${summary} (this client's tool schema looks stale — reconnect the MCP client)`;
 }
 
+// 1行サマリに載せる warning は最初の1件だけ。長文でも要点が残るよう緩めに切る
+// (全文は本文の warnings[] にある)。
+const SUMMARY_WARNING_MAX_LENGTH = 200;
+
+// appendWarningsToSummary は本文の warnings / partial を1行サマリへ昇格させる。
+// 以前は要約が件数と cursor だけで、未知タグで0件でも `No entries matched.` としか
+// 出なかった。要約だけを見る利用者・モデルが「本当に0件」と誤読する
+// (2026-08-30 レビュー P1)。
+//
+// - partial は付随データ欠落専用の印 (M-05) のままで、意味は変えない。ここは表示だけ。
+// - warning があっても partial:false になりうる (壊れた rep の全期間 count 等) ので、
+//   partial では warnings の代用にならない。両方を独立に見る。
+// - 古スキーマ警告は appendStaleSchemaNoteToSummary が専用文言で扱うのでここでは飛ばす。
+// - 新しい部分成功フラグは足さない (ADR-0216)。
+export function appendWarningsToSummary(summary, payload) {
+  if (summary === null || summary === undefined) {
+    return summary;
+  }
+  if (payload === null || typeof payload !== "object") {
+    return summary;
+  }
+  const parts = [];
+  if (payload.partial) {
+    parts.push("PARTIAL: attached data may be missing for some entries.");
+  }
+  const warnings = Array.isArray(payload.warnings)
+    ? payload.warnings.filter((warning) => !String(warning).includes("tool schema snapshot looks stale"))
+    : [];
+  if (warnings.length > 0) {
+    let first = String(warnings[0]);
+    if (first.length > SUMMARY_WARNING_MAX_LENGTH) {
+      first = `${first.slice(0, SUMMARY_WARNING_MAX_LENGTH)}…`;
+    }
+    const more = warnings.length > 1 ? ` (+${warnings.length - 1} more)` : "";
+    parts.push(`WARNING: ${first}${more}`);
+  }
+  if (parts.length === 0) {
+    return summary;
+  }
+  return `${summary} ${parts.join(" ")}`;
+}
+
 export function entityNotFoundMessage(id, dataType) {
   return (
     `Entity not found: ${id} (looked it up as data_type ${JSON.stringify(dataType)}; ` +

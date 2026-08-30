@@ -19,7 +19,7 @@
 
 import { GkillApiError, isPlainObject, invalidArgument } from "./errors.mjs";
 import { assertTrimmedString } from "./validation.mjs";
-import { applyFileLinks, normalizeMimeType, stripFilePaths, summarizeToolError } from "./payload.mjs";
+import { applyFileLinks, appendWarningsToSummary, normalizeMimeType, stripFilePaths, summarizeToolError } from "./payload.mjs";
 import { summarizePluginToolPayload } from "./plugin-tools.mjs";
 import { summarizeReadToolPayload, isReadToolName, handleReadToolCall } from "./read-handlers.mjs";
 import { summarizeWriteToolPayload, handleWriteToolCall } from "./write-handlers.mjs";
@@ -29,7 +29,13 @@ import { unknownToolMessage } from "./constants.mjs";
 // summarizeToolPayload は結果の1行要約を返す。plugin → read → write の順に委ねる。
 // 各要約器は対象外のツールに null を返すので、持っていないツールの分は素通りする
 // (読み取り専用サーバは write の case に一致しない)。
+// warnings / partial の1行サマリへの昇格はここ1箇所で全ツールに掛ける
+// (要約器ごとに書くと必ず足し忘れる。古スキーマ警告の appendStaleSchemaWarning と同じ判断)。
 function summarizeToolPayload(name, payload) {
+  return appendWarningsToSummary(summarizeToolPayloadBody(name, payload), payload);
+}
+
+function summarizeToolPayloadBody(name, payload) {
   const pluginSummary = summarizePluginToolPayload(name, payload);
   if (pluginSummary !== null) {
     return pluginSummary;
@@ -152,7 +158,10 @@ export class McpServerBase {
     let textPayload = payload;
     if (hasBase64) {
       const { file_content_base64: _file_content_base64, ...rest } = payload;
-      textPayload = rest;
+      // 画像のときは「バイト列は image ブロックへ移してある」の印を残す。
+      // structuredContent だけを見ると file_content_base64 が無く、
+      // 「画像が返っていない」と誤読された (2026-08-30 レビュー 5.5)。
+      textPayload = hasImageBlock ? { ...rest, image_content_attached: true } : rest;
     }
     // structuredContentからbase64を落とすのは、imageブロックで既にバイト列を届けている画像のときだけ。
     // 同じデータが1レスポンスに2回入ると、クライアント側のツール結果上限を超えて切り捨てられ、

@@ -598,6 +598,37 @@ describe("gkill_get_idf_file", () => {
     expect(result.content[1].mimeType).toBe("image/jpeg");
   });
 
+  // structuredContent だけを見ると base64 が無く「画像が返っていない」と誤読された
+  // (2026-08-30 レビュー 5.5)。imageブロックへ移した印を構造化側にも残す。
+  test("buildToolResult marks image payloads with image_content_attached", () => {
+    const payload = {
+      file_name: "img.jpg",
+      mime_type: "image/jpeg",
+      file_size_bytes: 100,
+      is_image: true,
+      file_content_base64: "base64data",
+    };
+
+    const result = server.buildToolResult("gkill_get_idf_file", payload, false);
+
+    expect(result.structuredContent.image_content_attached).toBe(true);
+  });
+
+  // 非画像は structuredContent が唯一のバイト列の渡し口 (base64 が残る) なので印は不要。
+  test("buildToolResult does not mark non-image payloads", () => {
+    const payload = {
+      file_name: "doc.pdf",
+      mime_type: "application/pdf",
+      file_size_bytes: 200,
+      is_image: false,
+      file_content_base64: "pdfdata",
+    };
+
+    const result = server.buildToolResult("gkill_get_idf_file", payload, false);
+
+    expect(result.structuredContent.image_content_attached).toBeUndefined();
+  });
+
   test("rejects files larger than the size limit", async () => {
     const huge = Buffer.alloc(MAX_IDF_FILE_BYTES + 1);
     mockClient.fetchFile.mockResolvedValue({ buffer: huge, contentType: "video/mp4" });
@@ -702,5 +733,133 @@ describe("file_path exposure", () => {
 
     expect(result.structuredContent.kyous[0].payload.file_path).toBeUndefined();
     expect(result.content[0].text).not.toContain("/home/me/gkill/photo.png");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// warnings / partial の1行要約への昇格 (2026-08-30 レビュー P1)
+//
+// 以前の要約は件数と cursor だけで、未知タグで0件でも `No entries matched.` としか
+// 出なかった。warnings は構造化結果に入っていても、要約だけを見る利用者・モデルは
+// 「本当に0件」と誤読する。昇格は mcp-server-base の summarizeToolPayload 1箇所で
+// 全ツールに掛かるので、ここでは buildToolResult 経由 (実配線) で検証する。
+// ---------------------------------------------------------------------------
+describe("warnings / partial elevation into the one-line summary", () => {
+  let server;
+
+  beforeEach(() => {
+    server = new McpServer(createMockClient());
+  });
+
+  // content[0].text は `${summary}\n\n${JSON}` で、JSON 側には warnings が常に入る。
+  // 要約行だけを検査するため1行目を切り出す。
+  function summaryLine(result) {
+    return result.content[0].text.split("\n")[0];
+  }
+
+  test("a zero-hit result with a warning does not read as a clean zero", () => {
+    const payload = {
+      kyous: [],
+      total_count: 0,
+      returned_count: 0,
+      remaining_count: 0,
+      has_more: false,
+      warnings: ['unknown tag "no-such-tag" in query.tags'],
+    };
+    const line = summaryLine(server.buildToolResult("gkill_get_kyous", payload, false));
+    expect(line).toContain("No entries matched.");
+    expect(line).toContain('WARNING: unknown tag "no-such-tag"');
+  });
+
+  test("partial shows up even without warnings", () => {
+    const payload = {
+      kyous: [{ id: "k1" }],
+      total_count: 1,
+      returned_count: 1,
+      remaining_count: 0,
+      has_more: false,
+      partial: true,
+    };
+    const line = summaryLine(server.buildToolResult("gkill_get_kyous", payload, false));
+    expect(line).toContain("PARTIAL:");
+  });
+
+  test("a warning shows up even when partial is false (broken-rep count case)", () => {
+    // 壊れた rep の warning があっても、ページング上の打ち切りが無ければ partial は false の
+    // ままになりうる (ADR-0216)。partial だけを見て warnings の表示を省略してはいけない。
+    const payload = {
+      kyous: [],
+      total_count: 12345,
+      returned_count: 0,
+      remaining_count: 0,
+      has_more: false,
+      warnings: ['repository "BrokenRep" could not be read; results may be incomplete'],
+    };
+    const line = summaryLine(server.buildToolResult("gkill_get_kyous", payload, false));
+    expect(line).toContain("Counted 12345 entries.");
+    expect(line).toContain("WARNING:");
+    expect(line).not.toContain("PARTIAL:");
+  });
+
+  test("multiple warnings show the first plus a count", () => {
+    const payload = {
+      kyous: [],
+      total_count: 0,
+      returned_count: 0,
+      remaining_count: 0,
+      has_more: false,
+      warnings: ["first warning", "second warning", "third warning"],
+    };
+    const line = summaryLine(server.buildToolResult("gkill_get_kyous", payload, false));
+    expect(line).toContain("WARNING: first warning");
+    expect(line).toContain("(+2 more)");
+    expect(line).not.toContain("second warning");
+  });
+
+  test("an over-long warning is truncated in the summary (full text stays in warnings[])", () => {
+    const longWarning = "w".repeat(250);
+    const payload = {
+      kyous: [],
+      total_count: 0,
+      returned_count: 0,
+      remaining_count: 0,
+      has_more: false,
+      warnings: [longWarning],
+    };
+    const result = server.buildToolResult("gkill_get_kyous", payload, false);
+    const line = summaryLine(result);
+    expect(line).toContain("WARNING:");
+    expect(line).toContain("…");
+    expect(line.length).toBeLessThan(300);
+    expect(result.structuredContent.warnings[0]).toBe(longWarning);
+  });
+
+  test("a stale-schema warning keeps its dedicated note and is not double-reported", () => {
+    // 古スキーマ警告は appendStaleSchemaNoteToSummary が専用文言で扱う。
+    // 汎用の WARNING: にも載せると同じ指摘が1行に2回並ぶ。
+    const payload = {
+      kyous: [],
+      total_count: 0,
+      returned_count: 0,
+      remaining_count: 0,
+      has_more: false,
+      warnings: ["this client's tool schema snapshot looks stale: data_types arrived as a JSON string"],
+    };
+    const line = summaryLine(server.buildToolResult("gkill_get_kyous", payload, false));
+    expect(line).toContain("tool schema looks stale");
+    expect(line).not.toContain("WARNING:");
+  });
+
+  test("a clean result gets no WARNING / PARTIAL suffix", () => {
+    const payload = {
+      kyous: [{ id: "k1" }],
+      total_count: 1,
+      returned_count: 1,
+      remaining_count: 0,
+      has_more: false,
+    };
+    const line = summaryLine(server.buildToolResult("gkill_get_kyous", payload, false));
+    expect(line).not.toContain("WARNING:");
+    expect(line).not.toContain("PARTIAL:");
   });
 });

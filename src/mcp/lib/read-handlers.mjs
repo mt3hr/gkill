@@ -79,6 +79,12 @@ async function dispatchReadToolCall(ctx, name, args) {
           has_more: Boolean(response.has_more),
           ...(response.next_cursor ? { next_cursor: response.next_cursor } : {}),
           ...(Array.isArray(response.buckets) ? { buckets: response.buckets } : {}),
+          // プラグインの説明は各 Kyou へ焼き込まず、応答トップレベルへ rep 名ごと1回だけ
+          // 載せる設計 (kyou_mcp_dto.go)。Go は返していたのにここがコピーしておらず、
+          // 「各 Kyou にもトップレベルにも説明が無い」状態だった (2026-08-30 レビュー P1)。
+          ...(Array.isArray(response.plugins) && response.plugins.length > 0
+            ? { plugins: response.plugins }
+            : {}),
           // 警告は partial に限らず常設（未知フィルタ値の指摘等）。
           // partial は付随データ欠落専用の印として従来の意味を保つ (M-05)。
           ...(response.partial ? { partial: true } : {}),
