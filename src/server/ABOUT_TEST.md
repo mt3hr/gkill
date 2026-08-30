@@ -2,7 +2,7 @@
 
 ## 概要
 
-Go バックエンドのテスト。1145テスト関数、170テストファイル、31パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
+Go バックエンドのテスト。1148テスト関数、172テストファイル、31パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
 
 ## テストフレームワーク
 
@@ -13,7 +13,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 ```
 src/server/gkill/
 ├── api/                     # API ハンドラ層
-│   ├── gkill_server_api/         # 統合テスト（全エンドポイント。31ファイル）
+│   ├── gkill_server_api/         # 統合テスト（全エンドポイント。35ファイル）
 │   ├── find_filter_test.go       # 検索フィルタ
 │   ├── gkill_sample_data_test.go # 配布サンプルデータの現行コード互換性
 │   ├── find/                     # クエリビルダー
@@ -36,8 +36,8 @@ src/server/gkill/
 │   ├── hide_files/               # ファイル非表示
 │   ├── sqlite3impl/              # SQLite3 ユーティリティ
 │   └── reps/                     # リポジトリ実装 (59ファイル)
-├── dvnf/                    # DVNF ファイル管理 (2ファイル)
-└── main/                    # CLI エントリポイント (9ファイル)
+├── dvnf/                    # DVNF ファイル管理 (3ファイル)
+└── main/                    # CLI エントリポイント (10ファイル)
     ├── common/                   # 共有ロジック・オプション・ログ・スレッド
     ├── gkill/                    # デスクトップアプリ
     ├── gkill_server/             # HTTP サーバ
@@ -47,7 +47,7 @@ src/server/gkill/
 
 | カテゴリ | テストファイル数 | 内容 |
 |---------|----------------|------|
-| API 統合 | 34 | 全データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント、SSRF・レート制限、デバイス名キャッシュ、プラグイン本文HTMLキャッシュ、rep名絞り込み（キャッシュON/OFF・tx確定後）、タグ絞り込み、時間帯フィルタ、MCP用取得、壊れたrepのWeb/MCP警告、認証時rep取得失敗のHTTP 500とErrorログ、無認証経路のボディ上限・読み取り期限（wrapNoAuthCapped） |
+| API 統合 | 35 | 全データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント、SSRF・レート制限、デバイス名キャッシュ、プラグイン本文HTMLキャッシュ、rep名絞り込み（キャッシュON/OFF・tx確定後）、タグ絞り込み、時間帯フィルタ、MCP用取得、壊れたrepのWeb/MCP警告、認証時rep取得失敗のHTTP 500とErrorログ、無認証経路のボディ上限・読み取り期限（wrapNoAuthCapped）、URLog登録の取得抑止フラグ配線のソース走査 |
 | 検索フィルタ・クエリ | 16 | `api/` 直下の検索フィルタ・タグ絞り込み・対象リポジトリ選択キャッシュ・rep名での結果絞り込み・並び替え・rep種別語彙の網羅 + `api/find/` のクエリビルダー・時間帯の秒解釈 |
 | サンプルデータ | 1 | 配布サンプル `resources/gkill_sample_data` の現行コード互換性（アカウント認証・rep定義14件のパス実在と種別・全件検索で主要repから記録が返る・秘密鍵が空で配布されている） |
 | KFTL パーサ | 6 | Factory、Statement、Request Map、MiReKyou、NLog、時刻 |
@@ -56,17 +56,17 @@ src/server/gkill/
 | メッセージ・GPS | 5 | メッセージコード体系、`EnsureNotEmpty`、エラーコード→HTTPステータス対応表、端末固有情報の伏せ処理、GPS ログ解析 |
 | プラグインプロトコル | 1 | `gkill_plugin` の stdio メッセージ型 |
 | ユースケース | 3 | write-through のキャッシュ反映、キャッシュ実装の INSERT 列と引数の対応、規約のソース走査（下記） |
-| DAO 管理 | 3 | GkillDAOManager ライフサイクル、壊れた索引DBを持つrepの扱い（切り離し、書き込み先のfail-closed、`IsEnable`不変、失敗時のClose、rep名予測、個別/集約Errorログ、正常時の集約ログ抑止） |
+| DAO 管理 | 5 | GkillDAOManager ライフサイクル、壊れた索引DBを持つrepの扱い（切り離し、書き込み先のfail-closed、`IsEnable`不変、失敗時のClose、rep名予測、個別/集約Errorログ、正常時の集約ログ抑止）、Git rep のディレクトリ限定 glob（非リポジトリの混入で全体を殺さない）、IDF rep だけの読み込み経路（ADR-0307）、リポジトリ定義のパターン展開（rep_file_glob） |
 | アカウント | 5 | アカウント CRUD、セッション、アップロード履歴 |
 | 設定 | 3 | サーバ設定、アプリ設定、リポジトリ定義 |
 | 共有・通知 | 3 | 共有情報 CRUD、通知ターゲット |
 | ユーティリティ | 9 | SQLite3 ユーティリティ、ファイル非表示 |
 | リポジトリ | 61 | `reps/` 直下59（13データ型の SQLite3 実装 + キャッシュ + 一時 + プラグイン + プラグイン診断 + デッドロック/ネスト並列回帰 + gitキャッシュUNIQUE + GPS集約dedup + 最新版アドレスのrep名走査 + URLog取得抑止フラグ）+ `reps/cache/`・`reps/rep_cache_updater/` の2 |
-| DVNF | 2 | ファイル管理、CLI コマンド |
-| CLI/Main | 9 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ、スレッド、エントリポイント、パスワード管理、auto_tag バッチ（HTTP投稿と応答判定を含む） |
+| DVNF | 3 | ファイル管理、CLI コマンドの引数解析、copy/move 共用 `copyFile` の実ファイル操作（内容一致・copyLastMod の mtime 保存） |
+| CLI/Main | 10 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ、スレッド、エントリポイント、パスワード管理、auto_tag バッチ（HTTP投稿と応答判定を含む） |
 | プラグイン SDK | 4 | `Run()` の stdio ループ（18本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本） |
 
-**合計 170 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
+**合計 172 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
 ずれたら `checkCounts` が落とす）。
 
 ## 規約のソース走査（`usecase/source_conventions_scan_test.go`）
