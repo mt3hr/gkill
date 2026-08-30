@@ -98,6 +98,11 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "全項目を入力してください", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+            // 平文HTTPはループバック限定。外部ホストへは資格情報が平文で流れるため保存前に拒否する
+            if (!GkillServerUrlPolicy.isAllowed(serverUrl)) {
+                Toast.makeText(this, GkillServerUrlPolicy.REJECTION_MESSAGE, Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
 
             val passwordSha256 = sha256(password)
             val allowSelfSigned = cbAllowSelfSigned.isChecked
