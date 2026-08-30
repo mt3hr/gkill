@@ -15,6 +15,8 @@ import { fileURLToPath } from "node:url";
 import { describe, test, expect } from "vitest";
 
 import { normalizeKyouArgs } from "../lib/normalization.mjs";
+import { READ_TOOLS } from "../lib/read-tools.mjs";
+import { FIND_QUERY_SCHEMA } from "../lib/find-query-schema.mjs";
 
 const README_PATH = resolve(dirname(fileURLToPath(import.meta.url)), "../README.md");
 
@@ -82,6 +84,41 @@ describe("README の gkill_get_kyous 例は現行スキーマで正規化でき�
     expect(cursorExamples.length).toBeGreaterThan(0);
     for (const args of cursorExamples) {
       expect(args.cursor).toContain("::");
+    }
+  });
+
+  // README のパラメータ表に散文で列挙された group_by の語彙は、正規化器では検証されない
+  // (スキーマ enum の検査はクライアント側)。今回の修正前は url_domain だけ抜けた状態で
+  // 放置されていたので、表の列挙をスキーマ enum とまるごと突き合わせる。
+  test("group_by の語彙列挙はスキーマ enum と一致する", () => {
+    const match = readme.match(/バケット集計（([^）]+)）/);
+    expect(match, "README の group_by 行 (バケット集計（…）) が見つからない").toBeTruthy();
+    const documented = match[1].split("/").map((value) => value.trim());
+    const kyousTool = READ_TOOLS.find((tool) => tool.name === "gkill_get_kyous");
+    expect(documented).toEqual(kyousTool.inputSchema.properties.group_by.enum);
+  });
+
+  // mi_sort_type は「対応する include_*_mi 射影があるときだけ効く」(スキーマの説明文)。
+  // include_*_mi 最低1つの検査 (上) はこの対応ズレを検出できないので、例が自分の
+  // 注意書きを守っていることまで見る。
+  test("mi_sort_type の例は対応する include_*_mi 射影を立てている", () => {
+    const SORT_TO_PROJECTION = {
+      create_time: "include_create_mi",
+      estimate_start_time: "include_start_mi",
+      estimate_end_time: "include_end_mi",
+      limit_time: "include_limit_mi",
+    };
+    // 対応表の語彙がスキーマ enum から乖離したら、まずここで気づく。
+    expect(Object.keys(SORT_TO_PROJECTION).sort()).toEqual(
+      [...FIND_QUERY_SCHEMA.properties.mi_sort_type.enum].sort(),
+    );
+    const parsed = blocks.map((block) => JSON.parse(block));
+    const sortExamples = parsed.filter((args) => typeof args.query?.mi_sort_type === "string");
+    expect(sortExamples.length).toBeGreaterThan(0);
+    for (const args of sortExamples) {
+      const projection = SORT_TO_PROJECTION[args.query.mi_sort_type];
+      expect(projection, `unknown mi_sort_type ${args.query.mi_sort_type}`).toBeDefined();
+      expect(args.query[projection], `example with mi_sort_type:${args.query.mi_sort_type} lacks ${projection}:true`).toBe(true);
     }
   });
 });

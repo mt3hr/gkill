@@ -715,24 +715,24 @@ describe("file_path exposure", () => {
   test("buildToolResult keeps file_path in kyou payloads for local clients", () => {
     server.isLocalTransport = true;
     const payload = {
-      kyous: [{ data_type: "idf", payload: { kind: "idf", file_path: "/home/me/gkill/photo.png" } }],
+      kyous: [{ data_type: "idf", payload: { kind: "idf", file_path: "$HOME/gkill/photo.png" } }],
     };
 
     const result = server.buildToolResult("gkill_get_kyous", payload, false);
 
-    expect(result.structuredContent.kyous[0].payload.file_path).toBe("/home/me/gkill/photo.png");
+    expect(result.structuredContent.kyous[0].payload.file_path).toBe("$HOME/gkill/photo.png");
   });
 
   test("buildToolResult strips file_path from kyou payloads for remote clients", () => {
     server.isLocalTransport = false;
     const payload = {
-      kyous: [{ data_type: "idf", payload: { kind: "idf", file_path: "/home/me/gkill/photo.png" } }],
+      kyous: [{ data_type: "idf", payload: { kind: "idf", file_path: "$HOME/gkill/photo.png" } }],
     };
 
     const result = server.buildToolResult("gkill_get_kyous", payload, false);
 
     expect(result.structuredContent.kyous[0].payload.file_path).toBeUndefined();
-    expect(result.content[0].text).not.toContain("/home/me/gkill/photo.png");
+    expect(result.content[0].text).not.toContain("$HOME/gkill/photo.png");
   });
 });
 
@@ -861,5 +861,64 @@ describe("warnings / partial elevation into the one-line summary", () => {
     const line = summaryLine(server.buildToolResult("gkill_get_kyous", payload, false));
     expect(line).not.toContain("WARNING:");
     expect(line).not.toContain("PARTIAL:");
+  });
+
+  test("partial and a warning appear together, PARTIAL first", () => {
+    // 実運用で最も起きやすい複合 (壊れた rep で欠けつつ、別 rep の付随データも落ちた等)。
+    // 並び順まで固定するのは、順序が入れ替わると「PARTIAL の説明が WARNING の続き」に
+    // 読めてしまうため。
+    const payload = {
+      kyous: [{ id: "k1" }],
+      total_count: 1,
+      returned_count: 1,
+      remaining_count: 0,
+      has_more: false,
+      partial: true,
+      warnings: ['repository "BrokenRep" could not be read; results may be incomplete'],
+    };
+    const line = summaryLine(server.buildToolResult("gkill_get_kyous", payload, false));
+    const partialIndex = line.indexOf("PARTIAL:");
+    const warningIndex = line.indexOf("WARNING:");
+    expect(partialIndex).toBeGreaterThan(-1);
+    expect(warningIndex).toBeGreaterThan(partialIndex);
+  });
+
+  test("a stale warning mixed with a real one is not counted into (+N more)", () => {
+    // stale はフィルタ後に数えるので、実 warning 1件 + stale 1件で "(+1 more)" が
+    // 付いてはいけない (残った実 warning は1件だけ)。数え方を取り違えると件数が嘘になる。
+    const payload = {
+      kyous: [],
+      total_count: 0,
+      returned_count: 0,
+      remaining_count: 0,
+      has_more: false,
+      warnings: [
+        "this client's tool schema snapshot looks stale: count_only arrived as a JSON string",
+        'unknown tag "no-such-tag" in query.tags',
+      ],
+    };
+    const line = summaryLine(server.buildToolResult("gkill_get_kyous", payload, false));
+    expect(line).toContain('WARNING: unknown tag "no-such-tag"');
+    expect(line).not.toContain("more)");
+    expect(line).toContain("tool schema looks stale");
+  });
+
+  test("the summary warning is cut at exactly 200 characters, not before", () => {
+    // 境界: 200文字ちょうどは切らない / 201文字で切って "…" を付ける。
+    const exactly200 = "w".repeat(200);
+    const over200 = "w".repeat(201);
+    const base = { kyous: [], total_count: 0, returned_count: 0, remaining_count: 0, has_more: false };
+
+    const lineAtLimit = summaryLine(
+      server.buildToolResult("gkill_get_kyous", { ...base, warnings: [exactly200] }, false),
+    );
+    expect(lineAtLimit).toContain(exactly200);
+    expect(lineAtLimit).not.toContain("…");
+
+    const lineOverLimit = summaryLine(
+      server.buildToolResult("gkill_get_kyous", { ...base, warnings: [over200] }, false),
+    );
+    expect(lineOverLimit).toContain(`${exactly200}…`);
+    expect(lineOverLimit).not.toContain(over200);
   });
 });

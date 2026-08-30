@@ -141,8 +141,9 @@ const ENTITY_FIELD_SPECS = {
       { name: "url", kind: "url", requiredOnAdd: true },
       { name: "title", kind: "string" },
       { name: "related_time", kind: "datetime" },
-      // 外向き取得の抑止 (2026-08-30 MCPレビュー)。add 専用 —— update は patch で
-      // 全欄が埋まった実体を送るため、Go 側の補完 (空欄のみ) はそもそも働かない。
+      // 外向き取得の抑止 (2026-08-30 MCPレビュー)。add 専用 —— update で再取得が走るのは
+      // リクエストに re_get_urlog_content:true を明示したときだけで (handle_update_urlog.go)、
+      // MCP の runUpdate はそのキーを送らない。つまり update 経路には抑止すべき取得が無い。
       // エンティティには載せない (write-handlers がリクエストの skip_fetch_* へ写す)。
       { name: "fetch_metadata", kind: "boolean", defaultOnAdd: true, addOnly: true, revivesStaleBoolean: true },
       { name: "fetch_favicon", kind: "boolean", defaultOnAdd: true, addOnly: true, revivesStaleBoolean: true },
@@ -271,9 +272,14 @@ function normalizeEntityArgs(dataType, args, mode) {
     // 正規JSON文字列 ("true" / "false") で届く。表で宣言したフィールドだけ型を復元する
     // (read側 reviveStaleSchemaArgs の書き込み版。古さの検出と警告は
     // appendStaleSchemaWarning が生の引数から行うので、ここは黙って直してよい)。
+    // trim してから比べるのは検出器 (parseCanonicalJSONValue) と受理範囲を揃えるため ——
+    // ずれると「stale 警告は出るのに型エラーで落ちる」入力が生まれる。
     let value = args[field.name];
-    if (field.revivesStaleBoolean && (value === "true" || value === "false")) {
-      value = value === "true";
+    if (field.revivesStaleBoolean && typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed === "true" || trimmed === "false") {
+        value = trimmed === "true";
+      }
     }
     // add の必須フィールドは値の有無を見ずに検証へ通す。未指定なら
     // 「must be a string」等でその欄の名前つきに落ちる（従来と同じ文言）。

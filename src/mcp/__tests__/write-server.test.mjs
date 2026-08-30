@@ -516,3 +516,46 @@ describe("handlePayload", () => {
     expect(result.result).toEqual({});
   });
 });
+
+// ---------------------------------------------------------------------------
+// warnings の1行要約昇格は書き込み側にも掛かる (mcp-server-base の1箇所配線)
+// ---------------------------------------------------------------------------
+describe("summary elevation applies to write tools too", () => {
+  // 昇格の実装は mcp-server-base の summarizeToolPayload 1箇所だが、
+  // 検証は read サーバ側 (server.test.mjs) にしか無かった。書き込みの要約は
+  // summarizeWriteToolPayload が先に stale 専用文言を付け、その後
+  // appendWarningsToSummary が同じ warning をフィルタする二段構えなので、
+  // 崩れると「同じ指摘が1行に2回」が書き込み側だけで再発する。
+  function summaryLine(result) {
+    return result.content[0].text.split("\n")[0];
+  }
+
+  test("a real warning is elevated into the write summary line", () => {
+    const server = new McpWriteServer(createMockClient());
+    const result = server.buildToolResult(
+      "gkill_add_urlog",
+      { added_urlog: { id: "u1" }, warnings: ["favicon fetch was skipped by request"] },
+      false,
+    );
+    const line = summaryLine(result);
+    expect(line).toContain("urlog: u1");
+    expect(line).toContain("WARNING: favicon fetch was skipped by request");
+  });
+
+  test("a stale-schema warning keeps the dedicated note and never doubles up", () => {
+    const server = new McpWriteServer(createMockClient());
+    const result = server.buildToolResult(
+      "gkill_add_urlog",
+      {
+        added_urlog: { id: "u1" },
+        warnings: ["this client's tool schema snapshot looks stale: fetch_metadata arrived as a JSON string"],
+      },
+      false,
+    );
+    const line = summaryLine(result);
+    // 専用文言は1回だけ。汎用の WARNING: には載らない (フィルタ済み)。
+    expect(line.match(/stale/g)?.length ?? 0).toBe(1);
+    expect(line).toContain("tool schema looks stale");
+    expect(line).not.toContain("WARNING:");
+  });
+});
