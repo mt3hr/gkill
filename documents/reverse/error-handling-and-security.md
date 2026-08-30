@@ -142,6 +142,15 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 
 **ログフォーマット:** JSON形式、ソース位置追跡有効、静的フィールド `{"app": "gkill"}`
 
+統合ログとレベル別ログは同時に書かれる。各ファイルは既定で 32 MiB を超える直前に回転し、
+`.1` から `.5` までを保持する。`--log_rotate_max_bytes` で上限を、`--log_rotate_keep` で世代数を変更できる。
+前者を0以下にすると回転を無効化し、後者を0以下にすると旧ファイルを保持せず破棄する。
+
+**記録保管場所の構築失敗:** 書き込み先でない場所は1本だけ切り離して処理を継続するが、
+検索結果が欠ける重大な状態なので、切り離した場所ごとの行と構築完了時の集約行をどちらも Error レベルで残す。
+正常時には集約行を出さない。書き込み先の失敗など処理を続けられない場合は、認証ミドルウェアから
+`ERR000018` と HTTP 500 を返し、同じ原因を Error レベルで記録する。
+
 **機密値のマスク:** TraceSQL ログ（`gkill_trace_sql.log`）に出力される SQL バインド値のうち、機密値（Google Map 等の APIキー、TLS 秘密鍵、パスワードハッシュ、パスワードリセットトークン、セッションID）はマスクされて記録される（`account_dao_sqlite3_impl.go`・`server_config_dao_sqlite3_impl.go`・`sqlite3impl_util.go`）。
 
 ---

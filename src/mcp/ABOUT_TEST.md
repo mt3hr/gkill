@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。933テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 26（書き込み21 + Read便利5）+ プラグイン1 = 27ツール、統合サーバ 30 + プラグイン1 = 31ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
+MCP (Model Context Protocol) サーバのテスト。934テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 26（書き込み21 + Read便利5）+ プラグイン1 = 27ツール、統合サーバ 30 + プラグイン1 = 31ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
 
 ## テストフレームワーク
 
@@ -17,7 +17,7 @@ Vitest（Node.js 環境）
 | `__tests__/validation.test.mjs` | MCP ツール入力のバリデーション |
 | `__tests__/normalization.test.mjs` | クエリデータの正規化処理。`count_only` / `group_by` と `cursor` の併用をMCP層で弾くこと（GPS と同じ文言であることも含む）、`gkill_get_rep_infos` の `data_kinds` 絞り込み |
 | `__tests__/constants.test.mjs` | 定数定義の検証 |
-| `__tests__/tool-handlers.test.mjs` | Read 9ツール分のハンドラ実行ロジック（`lib/read-tools.mjs` のツール名一覧・エンドポイント対応表・summarize） |
+| `__tests__/tool-handlers.test.mjs` | Read 9ツール分のハンドラ実行ロジック（`lib/read-tools.mjs` のツール名一覧・エンドポイント対応表・summarize）。`gkill_get_kyous` の Description が `partial=false` と独立に `warnings` を確認し、読み込めない保管場所を `query.reps` へ指定し直さないようAIへ伝えることも固定する |
 | `__tests__/read-handlers.test.mjs` | 読み取りディスパッチの正本 `lib/read-handlers.mjs`（get_kyous v2 パラメータの転送と応答の素通し、application_config の fields 射影 + UI状態キー strip、GPS の Node側ページング（複合カーソル・count_only・日別バケット）、rep_infos、idf_file の `/files/` クエリ組み立て・thumb エコー・サイズ上限超過の案内） |
 | `__tests__/client.test.mjs` | GkillReadClient（fetch モック使用、ログイン・認証リトライ等） |
 | `__tests__/server.test.mjs` | McpServer のセットアップとトランスポート管理、セッションオーバーライド、プラグインツール振り分け |
@@ -59,6 +59,7 @@ Vitest（Node.js 環境）
 - **Write Normalization**: Write専用入力検証（mood 0-10範囲、amount数値型、data_type列挙値、unknown keys拒否等）
 - **Constants**: ツール名、エラーコード、デフォルト設定値
 - **Tool Handlers**: Read 9ツール + Write 21ツール（add系9 + update系9 + submit_kftl + delete_kyou + restore_kyou）+ Read便利4ツール + プラグイン1ツール（3サーバ共通）
+- **Warning Contract**: 記録保管場所の読み込み失敗が既存の `warnings` に残り、`partial` と混同されず、再指定による0件化を Description が防ぐこと
 - **Plugin Tools**: `gkill_get_plugin_list` の定義・引数検証・エンドポイント振り分けと、`gkill_get_kyous` の `include_plugin_content` によるプラグイン本文のインライン埋め込み（並列度・予算・デッドライン・失敗隔離）、コンテンツHTMLのテキスト変換
 - **Client**: GkillReadClient / GkillWriteClient / GkillClient（統合）のAPIラッパー（認証、エラーハンドリング、レスポンスパース）
 - **Server**: Read / Write / ReadWrite各サーバのツールディスパッチ、JSON-RPCプロトコル、IDF画像ブロック、Writeエンティティデフォルト値

@@ -34,6 +34,7 @@ Go `testing` パッケージ
 | `handle_get_rep_infos_mcp_test.go` | `/api/get_rep_infos_mcp` の回帰。rep_types の正準語彙が API から取れること、付随データ rep の列挙、索引の鮮度 `indexed_at` が載ること、セッション必須であること |
 | `get_kyous_period_of_time_test.go` | 時間帯フィルタの狭い窓（09:00〜10:00）。秒オブデイ表現（MCP契約）と epoch 表現（Web契約）が同じ結果になること、SQL 経路と Go 経路（`--cache_in_memory` の ON/OFF）で結果が一致すること |
 | `response_status_test.go` | エラーコード別 HTTP ステータス（`message.HTTPStatusOf`）が実応答に出ることの end-to-end 確認。401/403/400/409、成功時は 200 のまま、panic は 500+gzip、認証本文の過大は 413・読み取り失敗は 500 で、いずれも JSON 本文が返ること |
+| `broken_rep_warning_test.go` | 読み込めない書き込み先以外の rep があるとき、Web検索は既存の警告メッセージ、MCP検索は `warnings` を返し、利用可能な rep の結果は維持すること。MCPの通常・`count_only`・`group_by` の全経路で警告が消えず、`partial` は警告と独立して false のままであること |
 | `response_status_guard_test.go` | ソース走査ガード。JSON ハンドラのエンコード行の直前に `writeErrorStatus` があること（既存ハンドラのコピペでこの1行が抜けると、そのエンドポイントだけ異常時も 200 へ戻る）、免除リストのファイルが実在すること、ミドルウェアがステータスと JSON 本文を書くこと |
 | `handle_browse_zip_contents_test.go` | ZIP 展開（`extractZip`）の正常系と、圧縮爆弾の拒否 |
 | `handle_submit_kftl_text_test.go` | KFTL 送信の冪等キー、作成された記録の `created[]` 返却、利用者の書き間違い（ERR000416）が不正行ごとに行番号・行テキスト付きで積まれ HTTP 400 になること（解釈フェーズの失敗では正しい行も保存されない） |
@@ -43,6 +44,9 @@ Go `testing` パッケージ
 | `handle_file_serve_test.go` | `/files/` 配信で `GetRepositories` 失敗が 500 になること。req_res を使わずファイル本体を返す経路で `response_status_guard_test.go` の免除対象のため、ここで直に固定する（かつては 403 で、認可の失敗とサーバ障害がステータスから区別できなかった） |
 | `handle_get_plugin_list_test.go` | `/api/get_plugin_list` が provides 宣言のあるプラグインに型別索引の統計（typed_index）と State / LastBuildError / LastAttemptAt を返すこと（「is_alive=true なのに0件」の理由を API から診断できるようにするため） |
 | `handle_update_user_reps_test.go` | 存在しないユーザIDへのリポジトリ一覧更新が `TargetAccountNotFoundError`（ERR000413）+ HTTP 404 になること。認証経路の `AccountNotFoundError`（ERR000002）を混ぜるとクライアントの check_auth が操作した管理者をログアウトさせるため、コードを分けている |
+
+`response_status_test.go` は認証中の `GetRepositories` 失敗も対象にする。既存の `ERR000018` を本文に残し、
+HTTP 500 と Error ログへ同じ失敗が伝播することを、DAOを意図的に閉じた状態で検証する。
 
 ## テスト内容
 

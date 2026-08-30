@@ -37,11 +37,19 @@ Both use cobra for CLI with shared subcommands: `version`, `dvnf`, `generate_thu
 | `--cache_update_duration` | `1m` | Cache refresh interval |
 | `--pre_load_users` | (none) | Pre-load specified users' repositories on startup |
 | `--log` | (none) | Log level: `none`, `error`, `warn`, `info`, `access`, `debug`, `trace`, `trace_sql` |
+| `--log_rotate_max_bytes` | `33554432` (32 MiB) | 1ログファイルの上限。0以下は回転を無効化する |
+| `--log_rotate_keep` | `5` | 保持する旧世代数。0以下は旧ファイルを退避せず破棄する |
 
 - `gkill/main/common/` — Shared CLI commands, server initialization, logging
 - `gkill/main/common/gkill_options/` — CLI flag definitions and directory structure
 
 **CLIサブコマンドは `RunE` + `SilenceUsage/SilenceErrors`**（2026-08-21、監査 M-8）。失敗で exit 1（main の `log.Fatal` が唯一のエラー出力）。ユーザごとのループは `errors.Join` で集約し、途中失敗でも成功分の結果（reset_password の URL 等）はその場で即出力してから続行する（`os.Exit` を足すと defer のセッション後始末が飛ぶので RunE 経由で返す）。**互換注意**: `SyncDatas` 等が update_cache の失敗を初めて exit code で観測する。`auto_tag` は長時間実行向けに `issueLocalSession` の `refresh` でセッション期限を延長する。
+
+**ログは統合ファイルとレベル別ファイルへ同時に出し、両方へ同じ回転設定を適用する。**
+既定は32 MiB・5世代で、現在のファイルを `.1`、古いものを `.2` 以降へ送る。
+Windows は開いたファイルを rename できないため、回転時の Close → rename → reopen の順序を変えないこと。
+回転失敗は本体を止めず書き込みを続ける。`gkill_log_test.go` が統合・分割の二重出力、静的フィールド、
+Windowsでの世代回転、無効化時の非回転を固定する。
 
 **`generate_thumb_cache` / `generate_video_cache` は1件ずつ stat しない。** 生成対象を親ディレクトリごとに `os.ReadDir` して、その列挙結果からキャッシュ名に要るファイルサイズを取る。キャッシュ側もrepごとに1回列挙して名前の集合と突き合わせる。**「キャッシュ名の接頭辞（パスのSHA1）だけ見てサイズを無視する」近似を入れてはいけない** —— 差し替わったファイルのサムネイルが古いまま出続け、しかも画面で見ているぶんには正しいので原因に辿り着けない（[ADR-0212](../../../documents/adr/0212-derived-cache-scan-lists-directories.md)）。ファイル単位の並列化に `threads.Go` を使わないこと（rep単位のファンアウトが既にスロットを持っているので入れ子になる。[ADR-0206](../../../documents/adr/0206-no-nested-threads-go.md)）。
 
