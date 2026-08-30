@@ -15,10 +15,10 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | Go バックエンド | 1141 | 169 | Go `testing` |
 | フロントエンド ユニット | 1967 | 166 | Vitest |
 | フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
-| MCP サーバ | 934 | 22 | Vitest |
+| MCP サーバ | 939 | 22 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 177 | 12 | JUnit 4 + MockK |
-| **合計** | **4,485** | **416** | |
+| **合計** | **4,490** | **416** | |
 
 数え直すコマンド:
 
