@@ -44,7 +44,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse set new password response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse set new password response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidSetNewPasswordResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
@@ -57,7 +57,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse login response to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse login response to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidSetNewPasswordResponseDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
@@ -81,7 +81,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 	// その形式でないものは受け付けない (空文字や巨大な文字列がそのまま資格情報になるのを防ぐ)
 	if !account.IsValidCredentialFormat(request.NewPasswordSha256) {
 		err = fmt.Errorf("error at invalid new password format user id = %s", request.UserID)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at invalid new password format user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidSetNewPasswordRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
@@ -94,7 +94,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 	targetAccount, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(r.Context(), request.UserID)
 	if err != nil {
 		err = fmt.Errorf("error at get account user id = %s: %w", request.UserID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get account user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAccountError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
@@ -116,7 +116,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 	now := time.Now()
 	if !targetAccount.IsPasswordResetTokenValid(request.ResetToken, now) {
 		err = fmt.Errorf("error at reset token is not match or expired user id = %s", request.UserID)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at reset token is not match or expired user id", "error", fmt.Sprintf("%q", err))
 		// 期限切れは「リンクが壊れている」のではなく「再発行してもらえばよい」状態なので、
 		// 汎用の失敗メッセージと区別して伝える。
 		// トークンが一致している場合しか期限切れとは言わないので、
@@ -136,7 +136,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 	passwordHash, err := account.HashPassword(request.NewPasswordSha256)
 	if err != nil {
 		err = fmt.Errorf("error at hash new password user id = %s: %w", request.UserID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at hash new password user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInfoUpdateError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
@@ -172,7 +172,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 	_, err = g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.DeleteLoginSessionsByUserID(r.Context(), targetAccount.UserID)
 	if err != nil {
 		err = fmt.Errorf("error at delete login sessions user id = %s: %w", targetAccount.UserID, err)
-		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Warn, "error at delete login sessions user id", "error", fmt.Sprintf("%q", err))
 	}
 
 	response.Messages = append(response.Messages, &message.GkillMessage{

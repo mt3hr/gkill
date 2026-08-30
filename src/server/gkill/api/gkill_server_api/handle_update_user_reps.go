@@ -41,7 +41,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse update userReps response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse update userReps response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateUserRepsResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_MESSAGE"}),
@@ -54,7 +54,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse update userReps request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse update userReps request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateUserRepsRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_MESSAGE"}),
@@ -69,7 +69,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 	// 管理者権限がなければ弾く
 	if !auth.Account.IsAdmin {
 		err = fmt.Errorf("account not has admin user id = %s", auth.Account.UserID)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "account not has admin user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotHasAdminError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_NO_AUTH_MESSAGE"}),
@@ -82,7 +82,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 	targetAccount, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(r.Context(), request.TargetUserID)
 	if err != nil {
 		err = fmt.Errorf("error at get account user id = %s: %w", request.TargetUserID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get account user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAccountError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_MESSAGE"}),

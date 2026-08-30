@@ -43,7 +43,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse add timeis response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse add timeis response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidAddTimeIsResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
@@ -56,7 +56,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse add timeis request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse add timeis request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddTimeIsRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
@@ -73,7 +73,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 
 	gkillErrors, err := g.UsecaseCtx.AddTimeIs(r.Context(), repositories, userID, device, request.LocaleName, request.TimeIs, request.TXID)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at add time is", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddTimeIsError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
@@ -90,7 +90,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		timeis, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID, nil)
 		if err != nil {
 			err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at get timeis user id", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetTimeIsError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_ADDED_GET_MESSAGE"}),
@@ -103,7 +103,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		kyou, err := repositories.TimeIsReps.GetKyou(r.Context(), request.TimeIs.ID, nil)
 		if err != nil {
 			err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at get timeis user id", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetTimeIsError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_ADDED_GET_MESSAGE"}),

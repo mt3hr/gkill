@@ -41,7 +41,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse update idfKyou response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse update idfKyou response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateIDFKyouResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
@@ -54,7 +54,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse update idfKyou request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse update idfKyou request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateIDFKyouRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
@@ -71,7 +71,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 
 	gkillErrors, err := g.UsecaseCtx.UpdateIDFKyou(r.Context(), repositories, userID, device, request.LocaleName, request.IDFKyou, request.TXID)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at update idf kyou", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.UpdateIDFKyouError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
@@ -88,7 +88,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		idfKyou, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.IDFKyou.ID, nil)
 		if err != nil {
 			err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at get idfKyou user id", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetIDFKyouError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE"}),
@@ -100,7 +100,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		kyou, err := repositories.IDFKyouReps.GetKyou(r.Context(), request.IDFKyou.ID, nil)
 		if err != nil {
 			err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at get idfKyou user id", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetIDFKyouError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),

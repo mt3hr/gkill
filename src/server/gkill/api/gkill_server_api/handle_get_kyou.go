@@ -40,7 +40,7 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get kyou response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse get kyou response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetKyouResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
@@ -53,7 +53,7 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse get kyou request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse get kyou request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetKyouRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
@@ -69,7 +69,7 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 
 	kyouHistories, gkillErrors, err := g.UsecaseCtx.GetKyouHistories(r.Context(), repositories, userID, device, request.LocaleName, request.ID, request.UpdateTime, request.RepName)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get kyou histories", "error", fmt.Sprintf("%q", err))
 		// 失敗したのにGkillErrorが1つも無いことがある(repのSQLエラーなど)。
 		// そのまま返すと errors:null + 0件 になり、呼び出し側からは
 		// 「成功・該当0件」と区別が付かない。理由は message.EnsureNotEmpty のコメント

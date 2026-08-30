@@ -39,7 +39,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get serverConfig response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse get serverConfig response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetServerConfigResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
@@ -52,7 +52,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse get serverConfig request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse get serverConfig request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetServerConfigRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
@@ -68,7 +68,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 	// 管理者権限がなければ弾く
 	if !auth.Account.IsAdmin {
 		err = fmt.Errorf("account not has admin user id = %s", auth.Account.UserID)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "account not has admin user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotHasAdminError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_NO_AUTH_MESSAGE"}),
@@ -80,7 +80,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(r.Context())
 	if err != nil {
 		err = fmt.Errorf("error at get serverConfig user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get serverConfig user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
@@ -93,7 +93,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 		accounts, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get all account config")
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at get all account config", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetAllAccountConfigError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ACCOUNT_CONFIG_MESSAGE"}),
@@ -106,7 +106,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 		repositories, err := g.GkillDAOManager.ConfigDAOs.RepositoryDAO.GetAllRepositories(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get all repositories")
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at get all repositories", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetAllRepositoriesError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_REPOSITORIES_MESSAGE"}),

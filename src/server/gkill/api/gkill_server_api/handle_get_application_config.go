@@ -43,7 +43,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get applicationConfig response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse get applicationConfig response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetApplicationConfigResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
@@ -56,7 +56,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse get applicationConfig request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse get applicationConfig request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetApplicationConfigRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
@@ -73,7 +73,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	if err != nil || applicationConfig == nil {
 		err = fmt.Errorf("error at get applicationConfig user id = %s device = %s: %w", userID, device, err)
 		err = fmt.Errorf("try create application config user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "try create application config user id", "error", fmt.Sprintf("%q", err))
 
 		defaultApplicationConfig := user_config.GetDefaultApplicationConfig(userID, device)
 		_, err = g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.AddApplicationConfig(r.Context(), defaultApplicationConfig)
@@ -100,7 +100,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	session, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
 	if session == nil || err != nil {
 		err = fmt.Errorf("error at get login session: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get login session", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
@@ -112,7 +112,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	sessions, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSessions(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get login sessions: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get login sessions", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
@@ -129,11 +129,11 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 
 	privateIP, err := privateIPv4s()
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at i pv4s", "error", fmt.Sprintf("%q", err))
 	}
 	globalIP, err := globalIP(context.Background())
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at ip", "error", fmt.Sprintf("%q", err))
 	}
 	privateIPStr := ""
 	if len(privateIP) != 0 {
@@ -143,7 +143,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	version, err := api.GetVersion()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get device name", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),

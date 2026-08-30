@@ -16,7 +16,7 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get device name", "error", fmt.Sprintf("%q", err))
 		writeGkillErrorResponse(r.Context(), w, &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -28,7 +28,7 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(r.Context(), device)
 	if err != nil {
 		err = fmt.Errorf("error at get serverConfig device = %s: %w", device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get serverConfig device", "error", fmt.Sprintf("%q", err))
 		writeGkillErrorResponse(r.Context(), w, &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
 			ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
@@ -37,7 +37,7 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 	}
 	if serverConfig == nil {
 		err = fmt.Errorf("error at server config is nil device = %s: %w", device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at server config is nil device", "error", fmt.Sprintf("%q", err))
 		writeGkillErrorResponse(r.Context(), w, &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
 			ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),

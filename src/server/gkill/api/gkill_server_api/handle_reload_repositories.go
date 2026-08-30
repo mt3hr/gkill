@@ -39,7 +39,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse reload repositories response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse reload repositories response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidReloadRepositoriesResponse,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
@@ -52,7 +52,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse reload repositories request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse reload repositories request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidRegisterOpenFileRequest,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
@@ -68,7 +68,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get repositories user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
@@ -80,7 +80,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 	_, err = repositories.LatestDataRepositoryAddressDAO.DeleteAllLatestDataRepositoryAddress(r.Context())
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get repositories user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
@@ -93,7 +93,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		err = repositories.IDFKyouReps.ClearThumbCache(userID)
 		if err != nil {
 			err = fmt.Errorf("error at clear thumb cache: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at clear thumb cache", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.RepositoriesGetError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
@@ -107,7 +107,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		err = repositories.IDFKyouReps.ClearVideoCache(userID)
 		if err != nil {
 			err = fmt.Errorf("error at clear video cache: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at clear video cache", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.RepositoriesGetError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
@@ -121,7 +121,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		err = repositories.IDFKyouReps.ClearZipCache(userID)
 		if err != nil {
 			err = fmt.Errorf("error at clear zip cache: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at clear zip cache", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.RepositoriesGetError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
@@ -138,7 +138,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 	_, err = g.GkillDAOManager.CloseUserRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get repositories user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
@@ -150,7 +150,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 	_, err = g.GkillDAOManager.GetRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get repositories user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),

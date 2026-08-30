@@ -39,7 +39,7 @@ func (g *GkillServerAPI) HandleGetMiReKyousByTargetID(w http.ResponseWriter, r *
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get mirekyous by target id response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse get mirekyous by target id response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetMiReKyousByTargetIDResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_REKYOU_MESSAGE"}),
@@ -52,7 +52,7 @@ func (g *GkillServerAPI) HandleGetMiReKyousByTargetID(w http.ResponseWriter, r *
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse get mirekyous by target id request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse get mirekyous by target id request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetMiReKyousByTargetIDRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_REKYOU_MESSAGE"}),
@@ -69,7 +69,7 @@ func (g *GkillServerAPI) HandleGetMiReKyousByTargetID(w http.ResponseWriter, r *
 
 	mirekyous, gkillErrors, err := g.UsecaseCtx.GetMiReKyousByTargetID(r.Context(), repositories, userID, device, request.LocaleName, request.TargetID)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get mi re kyous by target id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiReKyousByTargetIDError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_REKYOU_MESSAGE"}),

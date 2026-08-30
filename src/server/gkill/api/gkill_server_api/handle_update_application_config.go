@@ -38,7 +38,7 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse update application config response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse update application config response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateApplicationconfigResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
@@ -51,7 +51,7 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse update application config request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse update application config request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateApplicationConfigRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
@@ -72,7 +72,7 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at update application config user user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at update application config user user id", "error", fmt.Sprintf("%q", err))
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.UpdateApplicationConfigError,

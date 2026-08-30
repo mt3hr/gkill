@@ -39,7 +39,7 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get notification histories by notification id response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse get notification histories by notification id response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetNotificationHistoriesByNotificationIDResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
@@ -52,7 +52,7 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse get notification histories by notification id request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse get notification histories by notification id request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetNotificationHistoriesByNotificationIDRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
@@ -69,7 +69,7 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 
 	notifications, gkillErrors, err := g.UsecaseCtx.GetNotificationHistoriesByNotificationID(r.Context(), repositories, userID, device, request.LocaleName, request.ID, request.UpdateTime)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get notification histories by notification id", "error", fmt.Sprintf("%q", err))
 		// 失敗したのにGkillErrorが1つも無いことがある(repのSQLエラーなど)。
 		// そのまま返すと errors:null + 0件 になり、呼び出し側からは
 		// 「成功・該当0件」と区別が付かない。理由は message.EnsureNotEmpty のコメント

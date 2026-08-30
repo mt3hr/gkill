@@ -42,7 +42,7 @@ func (g *GkillServerAPI) HandleGetPluginConfigHTML(w http.ResponseWriter, r *htt
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at decode get plugin config html request: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at decode get plugin config html request", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.InvalidGetPluginConfigHTMLRequestDataError,
 			ErrorMessage: "プラグイン設定HTML取得リクエストのパースに失敗しました",
@@ -66,7 +66,7 @@ func (g *GkillServerAPI) HandleGetPluginConfigHTML(w http.ResponseWriter, r *htt
 	html, err := pluginRepo.GetConfigHTML(r.Context())
 	if err != nil {
 		err = fmt.Errorf("error at get plugin config html %s: %w", request.RepName, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get plugin config html", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.GetPluginConfigHTMLError,
 			ErrorMessage: fmt.Sprintf("プラグイン設定HTMLの取得に失敗しました: %s", err.Error()),

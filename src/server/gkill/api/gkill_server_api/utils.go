@@ -288,7 +288,7 @@ func (g *GkillServerAPI) getTLSFileNames(device string) (certFileName string, pe
 	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(context.Background(), device)
 	if err != nil {
 		err = fmt.Errorf("error at get server config device = %s: %w", device, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get server config device", "error", fmt.Sprintf("%q", err))
 		return "", "", err
 	}
 	return serverConfig.TLSCertFile, serverConfig.TLSKeyFile, nil
@@ -352,7 +352,7 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 	accounts, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(r.Context())
 	if err != nil {
 		err = fmt.Errorf("error at get all account config: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err), "error_code", message.GetAllAccountConfigError)
+		slog.Log(r.Context(), gkill_log.Debug, "error at get all account config", "error", fmt.Sprintf("%q", err), "error_code", message.GetAllAccountConfigError)
 		return false
 	}
 
@@ -400,7 +400,7 @@ func (g *GkillServerAPI) findEnabledDevice() (string, error) {
 	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all server configs: %w", err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get all server configs", "error", fmt.Sprintf("%q", err))
 		return "", err
 	}
 
@@ -572,7 +572,7 @@ func (g *GkillServerAPI) resolveSelfAuthContext(
 	device, err = g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get device name", "error", fmt.Sprintf("%q", err))
 		return "", "", nil, &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -582,7 +582,7 @@ func (g *GkillServerAPI) resolveSelfAuthContext(
 	repositories, err = g.GkillDAOManager.GetRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get repositories user id", "error", fmt.Sprintf("%q", err))
 		return "", "", nil, &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: reposFailureMessageID}),

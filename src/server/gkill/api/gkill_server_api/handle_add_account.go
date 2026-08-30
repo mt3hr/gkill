@@ -44,7 +44,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse add account response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse add account response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidAddAccountResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
@@ -57,7 +57,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse add account request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse add account request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidAddAccountRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
@@ -73,7 +73,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	// 管理者権限がなければ弾く
 	if !auth.Account.IsAdmin {
 		err = fmt.Errorf("account not has admin user id = %s", userID)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "account not has admin user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotHasAdminError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_NO_AUTH_MESSAGE"}),
@@ -86,7 +86,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	// パスとして解釈されうる文字が混ざらないことを確認する
 	if !account.IsValidUserID(request.AccountInfo.UserID) {
 		err = fmt.Errorf("error at invalid user id = %q", request.AccountInfo.UserID)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at invalid user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidAddAccountRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
@@ -99,7 +99,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	existAccount, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(r.Context(), request.AccountInfo.UserID)
 	if err != nil {
 		err = fmt.Errorf("error at get account user device = %s id = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get account user device", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAccountError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
@@ -109,7 +109,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	}
 	if existAccount != nil {
 		err = fmt.Errorf("exist account id = %s", userID)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "exist account id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AlreadyExistAccountError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
@@ -123,7 +123,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	_, err = g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.AddApplicationConfig(r.Context(), defaultApplicationConfig)
 	if err != nil {
 		err = fmt.Errorf("error at add application config user id = %s id = %s: %w", userID, request.AccountInfo.UserID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at add application config user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddApplicationConfig,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_ADDED_GET_MESSAGE"}),
@@ -144,7 +144,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	_, err = g.GkillDAOManager.ConfigDAOs.AccountDAO.AddAccount(r.Context(), account)
 	if err != nil {
 		err = fmt.Errorf("error at add account user id = %s id = %s: %w", userID, request.AccountInfo.UserID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at add account user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddApplicationConfig,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_ADDED_GET_MESSAGE"}),
@@ -156,7 +156,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	requesterAccount, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(r.Context(), request.AccountInfo.UserID)
 	if err != nil {
 		err = fmt.Errorf("error at get account user id = %s id = %s: %w", userID, request.AccountInfo.UserID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get account user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAccountError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_ADDED_GET_MESSAGE"}),
@@ -178,7 +178,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		err := g.initializeNewUserReps(r.Context(), requesterAccount)
 		if err != nil {
 			err = fmt.Errorf("error at initialize new user reps user id = %s device = %s account = %#v: %w", userID, device, request.AccountInfo, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at initialize new user reps user id", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddAccountError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),

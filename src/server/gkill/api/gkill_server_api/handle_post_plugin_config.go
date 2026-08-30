@@ -43,7 +43,7 @@ func (g *GkillServerAPI) HandlePostPluginConfig(w http.ResponseWriter, r *http.R
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at decode post plugin config request: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at decode post plugin config request", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.InvalidPostPluginConfigRequestDataError,
 			ErrorMessage: "プラグイン設定保存リクエストのパースに失敗しました",
@@ -66,7 +66,7 @@ func (g *GkillServerAPI) HandlePostPluginConfig(w http.ResponseWriter, r *http.R
 
 	if err := pluginRepo.PostConfig(r.Context(), request.FormData); err != nil {
 		err = fmt.Errorf("error at post plugin config %s: %w", request.RepName, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at post plugin config", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.PostPluginConfigError,
 			ErrorMessage: fmt.Sprintf("プラグイン設定の保存に失敗しました: %s", err.Error()),

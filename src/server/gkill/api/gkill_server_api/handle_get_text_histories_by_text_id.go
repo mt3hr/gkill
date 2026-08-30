@@ -39,7 +39,7 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get text histories by text id response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse get text histories by text id response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetTextHistoriesByTextIDResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
@@ -52,7 +52,7 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse get text histories by text id request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse get text histories by text id request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetTextHistoriesByTextIDRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
@@ -69,7 +69,7 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 
 	texts, gkillErrors, err := g.UsecaseCtx.GetTextHistoriesByTextID(r.Context(), repositories, userID, device, request.LocaleName, request.ID, request.UpdateTime, request.RepName)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get text histories by text id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTextHistoriesByTextIDError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),

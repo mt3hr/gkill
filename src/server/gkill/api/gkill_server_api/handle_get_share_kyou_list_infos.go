@@ -38,7 +38,7 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get ShareKyouListInfos response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse get ShareKyouListInfos response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetShareKyouListInfosResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
@@ -51,7 +51,7 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse get ShareKyouListInfos request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse get ShareKyouListInfos request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetShareKyouListInfosRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
@@ -68,7 +68,7 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 	ShareKyouList, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.GetKyouShareInfos(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get ShareKyouListInfos user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get ShareKyouListInfos user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetShareKyouListInfosError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),

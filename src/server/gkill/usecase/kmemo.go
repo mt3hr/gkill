@@ -22,7 +22,7 @@ func (uc *UsecaseContext) AddKmemo(ctx context.Context, repositories *reps.Gkill
 	existKmemo, err := repositories.KmemoReps.GetKmemo(ctx, kmemo.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get kmemo user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
@@ -31,7 +31,7 @@ func (uc *UsecaseContext) AddKmemo(ctx context.Context, repositories *reps.Gkill
 	}
 	if existKmemo != nil {
 		err = fmt.Errorf("exist kmemo id = %s", kmemo.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "exist kmemo id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.AlreadyExistKmemoError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
@@ -43,7 +43,7 @@ func (uc *UsecaseContext) AddKmemo(ctx context.Context, repositories *reps.Gkill
 		err = repositories.WriteKmemoRep.AddKmemoInfo(ctx, kmemo)
 		if err != nil {
 			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Debug, "error at add kmemo user id", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddKmemoError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
@@ -59,7 +59,7 @@ func (uc *UsecaseContext) AddKmemo(ctx context.Context, repositories *reps.Gkill
 		err = repositories.TempReps.KmemoTempRep.AddKmemoInfo(ctx, kmemo, *txID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Debug, "error at add kmemo user id", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddKmemoError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
@@ -71,7 +71,7 @@ func (uc *UsecaseContext) AddKmemo(ctx context.Context, repositories *reps.Gkill
 	repName, err := repositories.WriteKmemoRep.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get rep name user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_ADDED_GET_MESSAGE"}),
@@ -104,7 +104,7 @@ func (uc *UsecaseContext) UpdateKmemo(ctx context.Context, repositories *reps.Gk
 	existKmemo, err := repositories.KmemoReps.GetKmemo(ctx, kmemo.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get kmemo user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
@@ -113,7 +113,7 @@ func (uc *UsecaseContext) UpdateKmemo(ctx context.Context, repositories *reps.Gk
 	}
 	if existKmemo == nil {
 		err = fmt.Errorf("not exist kmemo id = %s", kmemo.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "not exist kmemo id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.NotFoundKmemoError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
@@ -125,7 +125,7 @@ func (uc *UsecaseContext) UpdateKmemo(ctx context.Context, repositories *reps.Gk
 		err = repositories.WriteKmemoRep.AddKmemoInfo(ctx, kmemo)
 		if err != nil {
 			err = fmt.Errorf("error at update kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Debug, "error at update kmemo user id", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateKmemoError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
@@ -152,7 +152,7 @@ func (uc *UsecaseContext) UpdateKmemo(ctx context.Context, repositories *reps.Gk
 		err = repositories.TempReps.KmemoTempRep.AddKmemoInfo(ctx, kmemo, *txID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at update kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Debug, "error at update kmemo user id", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateKmemoError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
@@ -164,7 +164,7 @@ func (uc *UsecaseContext) UpdateKmemo(ctx context.Context, repositories *reps.Gk
 	repName, err := repositories.WriteKmemoRep.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get rep name user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_UPDATED_GET_MESSAGE"}),
@@ -197,7 +197,7 @@ func (uc *UsecaseContext) GetKmemoHistories(ctx context.Context, repositories *r
 	kmemoHistories, err := repositories.KmemoReps.GetKmemoHistoriesByRepName(ctx, id, repName)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, id, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get kmemo user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KMEMO_MESSAGE"}),

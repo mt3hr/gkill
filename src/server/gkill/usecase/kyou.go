@@ -34,7 +34,7 @@ func (uc *UsecaseContext) GetKyouHistories(ctx context.Context, repositories *re
 
 	if err != nil {
 		err = fmt.Errorf("error at get kyou user id = %s device = %s id = %s: %w", userID, device, id, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get kyou user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
@@ -63,7 +63,7 @@ func (uc *UsecaseContext) GetKyous(ctx context.Context, userID, device, localeNa
 	if len(gkillErrors) != 0 || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Debug, "error at find kyous", "error", fmt.Sprintf("%q", err))
 			// 検索が失敗したのにGkillErrorが1つも無いことがある(repのSQLエラーなど)。
 			// そのまま返すと errors:null + 0件 になり、呼び出し側からは
 			// 「成功・該当0件」と区別が付かない。理由はEnsureNotEmptyのコメント。
