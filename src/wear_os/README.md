@@ -20,7 +20,7 @@ wear_os/
 │   ├── build.gradle.kts
 │   └── src/main/
 │       ├── AndroidManifest.xml
-│       ├── java/.../wear/companion/    # Kotlin ソース（9ファイル）
+│       ├── java/.../wear/companion/    # Kotlin ソース（10ファイル）
 │       └── res/
 │           └── values/strings.xml
 └── watch_app/                 # ウォッチ側アプリモジュール
