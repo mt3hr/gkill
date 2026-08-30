@@ -641,3 +641,49 @@ describe("追加と更新は同じフィールド表から作る", () => {
     expect(() => normalizeUpdateLantanaArgs({ id: "l1", mood: 11 })).toThrow(/less than or equal to 10/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// 後付けフラグ (2026-08-30 MCPレビュー): urlog の fetch_metadata / fetch_favicon、
+// mi の allow_create_board。既定値・addOnly・古いスキーマからの文字列復元を固定する。
+// ---------------------------------------------------------------------------
+describe("後付けフラグの正規化", () => {
+  test("urlog: fetch_metadata / fetch_favicon の既定は true (従来どおり取得)", () => {
+    const normalized = normalizeUrlogArgs({ url: "https://example.com" });
+    expect(normalized.fetch_metadata).toBe(true);
+    expect(normalized.fetch_favicon).toBe(true);
+  });
+
+  test("urlog: false 指定は素直に通る", () => {
+    const normalized = normalizeUrlogArgs({ url: "https://example.com", fetch_metadata: false, fetch_favicon: false });
+    expect(normalized.fetch_metadata).toBe(false);
+    expect(normalized.fetch_favicon).toBe(false);
+  });
+
+  test("urlog: fetch_* は add 専用 (update は patch で補完自体が働かないので受けない)", () => {
+    expect(() => normalizeUpdateUrlogArgs({ id: "u1", title: "t", fetch_metadata: false })).toThrow(/fetch_metadata/);
+  });
+
+  test("urlog: 正規JSON文字列 \"false\" は boolean へ復元される (古スキーマ救済)", () => {
+    const normalized = normalizeUrlogArgs({ url: "https://example.com", fetch_metadata: "false", fetch_favicon: "true" });
+    expect(normalized.fetch_metadata).toBe(false);
+    expect(normalized.fetch_favicon).toBe(true);
+  });
+
+  test("urlog: 復元対象外の文字列は従来どおり型エラー", () => {
+    expect(() => normalizeUrlogArgs({ url: "https://example.com", fetch_metadata: "yes" })).toThrow(/boolean/);
+  });
+
+  test("mi: allow_create_board の既定は add=true / update=undefined (未指定=許可)", () => {
+    expect(normalizeMiArgs({ title: "t" }).allow_create_board).toBe(true);
+    expect(normalizeUpdateMiArgs({ id: "m1", title: "t" }).allow_create_board).toBeUndefined();
+  });
+
+  test("mi: allow_create_board は add / update の両方で false を受ける", () => {
+    expect(normalizeMiArgs({ title: "t", allow_create_board: false }).allow_create_board).toBe(false);
+    expect(normalizeUpdateMiArgs({ id: "m1", board_name: "b", allow_create_board: false }).allow_create_board).toBe(false);
+  });
+
+  test("mi: 正規JSON文字列 \"false\" は boolean へ復元される (古スキーマ救済)", () => {
+    expect(normalizeUpdateMiArgs({ id: "m1", board_name: "b", allow_create_board: "false" }).allow_create_board).toBe(false);
+  });
+});

@@ -68,8 +68,22 @@ type URLog struct {
 }
 
 // FillURLogField .
-// 0値なURLogの値を埋めます
+// 0値なURLogの値を埋めます（外向き取得の抑止なし。既存呼び出し元の互換用）
 func (u *URLog) FillURLogField(serverConfig *server_config.ServerConfig, applicationConfig *user_config.ApplicationConfig) error {
+	return u.FillURLogFieldSkipping(serverConfig, applicationConfig, false, false)
+}
+
+// ページ本文の取得口。ur_log_fill_skip_test.go が「呼ばれないこと」を確かめるために
+// 差し替える（fetchFaviconBytes と同じ流儀）。本体コードから書き換える経路は無い。
+var fetchPageBody = getBody
+
+// FillURLogFieldSkipping は FillURLogField の本体。外向き取得を項目別に抑止できる。
+// skipFetchMetadata=true でページ本文の取得（空の Title・Description・ThumbnailImage の補完）を、
+// skipFetchFavicon=true で favicon の取得を行わない。
+// ID・RelatedTime の補完は抑止と無関係に必ず行う（IDが無いと登録できない）。
+// MCP の gkill_add_urlog が fetch_metadata:false / fetch_favicon:false をこの2つへ写す
+// （2026-08-30 MCPレビュー）。既定は両方 false = 従来どおり全部取得。
+func (u *URLog) FillURLogFieldSkipping(serverConfig *server_config.ServerConfig, applicationConfig *user_config.ApplicationConfig, skipFetchMetadata bool, skipFetchFavicon bool) error {
 	ctx := context.Background()
 	if u.URL == "" {
 		err := fmt.Errorf("url value has not been set")
@@ -87,7 +101,7 @@ func (u *URLog) FillURLogField(serverConfig *server_config.ServerConfig, applica
 	}
 
 	// favicon
-	if u.FaviconImage == "" {
+	if !skipFetchFavicon && u.FaviconImage == "" {
 		err := u.fillFavicon()
 		if err != nil {
 			err = fmt.Errorf("failed to fill favicon: %w", err)
@@ -95,9 +109,12 @@ func (u *URLog) FillURLogField(serverConfig *server_config.ServerConfig, applica
 		}
 	}
 
+	if skipFetchMetadata {
+		return nil
+	}
 	enableProxy := false
 	proxyURL := ""
-	body, err := getBody(u.URL, serverConfig.URLogTimeout, serverConfig.URLogUserAgent, enableProxy, proxyURL)
+	body, err := fetchPageBody(u.URL, serverConfig.URLogTimeout, serverConfig.URLogUserAgent, enableProxy, proxyURL)
 	if err != nil {
 		err = fmt.Errorf("failed to get body: %w", err)
 		slog.Log(ctx, gkill_log.Debug, "failed to get body", "error", fmt.Sprintf("%q", err))

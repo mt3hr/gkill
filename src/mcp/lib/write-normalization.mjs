@@ -125,6 +125,10 @@ function assertTimeIsOrder(startTime, endTime) {
 // defaultOnAdd  … add で未指定のときに入れる値
 // addOnly       … add でしか受け付けない（update のスキーマにも無い）
 // nullClears    … update のとき null を「消す」の意思表示として通す
+// revivesStaleBoolean … 後付けの boolean 引数。古いスキーマのクライアントからは
+//                 正規JSON文字列 ("true"/"false") で届くので型を復元する。
+//                 **boolean をスキーマへ後から足すときは必ずこれを立て、
+//                 normalization.mjs の STALE_SCHEMA_ARG_KINDS_BY_TOOL へも載せること**
 const ENTITY_FIELD_SPECS = {
   kmemo: {
     fields: [
@@ -137,6 +141,11 @@ const ENTITY_FIELD_SPECS = {
       { name: "url", kind: "url", requiredOnAdd: true },
       { name: "title", kind: "string" },
       { name: "related_time", kind: "datetime" },
+      // 外向き取得の抑止 (2026-08-30 MCPレビュー)。add 専用 —— update は patch で
+      // 全欄が埋まった実体を送るため、Go 側の補完 (空欄のみ) はそもそも働かない。
+      // エンティティには載せない (write-handlers がリクエストの skip_fetch_* へ写す)。
+      { name: "fetch_metadata", kind: "boolean", defaultOnAdd: true, addOnly: true, revivesStaleBoolean: true },
+      { name: "fetch_favicon", kind: "boolean", defaultOnAdd: true, addOnly: true, revivesStaleBoolean: true },
     ],
   },
   nlog: {
@@ -178,6 +187,10 @@ const ENTITY_FIELD_SPECS = {
       { name: "limit_time", kind: "datetime" },
       { name: "estimate_start_time", kind: "datetime" },
       { name: "estimate_end_time", kind: "datetime" },
+      // false のとき、実在しない board_name を「新しい板の作成」ではなく typo として弾く
+      // (実在確認は write-handlers が板一覧と照合する。エンティティには載せない)。
+      // 既定 true = 従来どおり未知の板名は新しい板を作る (2026-08-30 MCPレビュー、フラグ追加)。
+      { name: "allow_create_board", kind: "boolean", defaultOnAdd: true, revivesStaleBoolean: true },
     ],
   },
   kc: {
@@ -254,17 +267,25 @@ function normalizeEntityArgs(dataType, args, mode) {
           : optionalDatetime(args, field.name);
       continue;
     }
+    // 後から足した boolean 引数は、古いツールスキーマを掴んだクライアントから
+    // 正規JSON文字列 ("true" / "false") で届く。表で宣言したフィールドだけ型を復元する
+    // (read側 reviveStaleSchemaArgs の書き込み版。古さの検出と警告は
+    // appendStaleSchemaWarning が生の引数から行うので、ここは黙って直してよい)。
+    let value = args[field.name];
+    if (field.revivesStaleBoolean && (value === "true" || value === "false")) {
+      value = value === "true";
+    }
     // add の必須フィールドは値の有無を見ずに検証へ通す。未指定なら
     // 「must be a string」等でその欄の名前つきに落ちる（従来と同じ文言）。
     if (mode === "add" && field.requiredOnAdd) {
-      normalized[field.name] = assertFieldValue(field, args[field.name]);
+      normalized[field.name] = assertFieldValue(field, value);
       continue;
     }
-    if (args[field.name] === undefined) {
+    if (value === undefined) {
       normalized[field.name] = mode === "add" ? field.defaultOnAdd : undefined;
       continue;
     }
-    normalized[field.name] = assertFieldValue(field, args[field.name]);
+    normalized[field.name] = assertFieldValue(field, value);
   }
   normalized.locale_name =
     args.locale_name !== undefined ? assertTrimmedString(args.locale_name, "locale_name") : undefined;
