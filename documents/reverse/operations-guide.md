@@ -32,6 +32,7 @@ $HOME/gkill/
 │   ├── gkill_trace.log
 │   ├── gkill_trace_sql.log
 │   ├── gkill.log                   # 全レベル統合
+│   ├── gkill.log.1 ... .5          # サイズ上限で回転した統合ログ（レベル別ログも同様）
 │   ├── gkill_mcp_read_access.log      # Read MCPサーバアクセスログ（MCP_LOG環境変数で制御）
 │   ├── gkill_mcp_write_access.log     # Write MCPサーバアクセスログ
 │   └── gkill_mcp_readwrite_access.log # Read/Write MCPサーバアクセスログ
@@ -336,16 +337,22 @@ gkill_server --log trace_sql # SQL文も含め全出力
 
 | レベル | 内容 | ファイル |
 |---|---|---|
-| `error` | エラーのみ | `gkill_error.log` |
+| `error` | エラーのみ（**既定値**） | `gkill_error.log` |
 | `warn` | 警告以上 | `gkill_warn.log` |
 | `info` | 情報以上 | `gkill_info.log` |
 | `access` | アクセスログ以上（INFO含む） | `gkill_access.log` |
 | `debug` | デバッグ以上 | `gkill_debug.log` |
 | `trace` | トレース以上 | `gkill_trace.log` |
 | `trace_sql` | SQL文含む全て | `gkill_trace_sql.log` |
-| `none` | ログ出力なし（**既定値**） | — |
+| `none` | ログ出力なし | — |
 
 `--log access` を指定すると、全HTTPリクエストのアクセスログ（リモートIP、メソッド、パス、ステータスコード、所要時間、ユーザID）が `gkill_access.log` に記録されます。
+
+**既定が `error` なのは、「`gkill_error.log` に出ていなければ起きていない」と言えるようにするためです。**
+どの事象をどのレベルで出すかの判断基準は [ADR-1001](../adr/1001-log-level-by-severity.md) にあります。
+要点は「呼び出し元へ返らないエラーは Debug に置かない」「利用者の入力・認証・認可の失敗は Warn 以下」の2つです。
+失敗したリクエストは応答を書く1箇所（`writeErrorStatus`）が、ステータスから決まるレベルで1行残します
+（5xx は Error、401・403・429 は Warn、その他の4xx は Debug）。エラーコード・メソッド・パス・ユーザIDが載ります。
 
 ### 6.2 ログフォーマット
 
@@ -359,6 +366,19 @@ JSON形式。各行に以下のフィールド:
 ### 6.3 統合ログ
 
 `gkill.log` には全レベルのログが統合出力される。レベル別ファイルと統合ファイルの両方が同時に書き込まれる。
+
+### 6.4 ログローテーション
+
+統合ログと各レベル別ログは、1ファイルが既定の 32 MiB を超える直前に回転する。
+現在のファイルを `.1`、それ以前を `.2` 以降へ送り、既定では5世代まで保持する。
+
+| フラグ | 既定値 | 意味 |
+|---|---:|---|
+| `--log_rotate_max_bytes` | `33554432` | 1ファイルの上限バイト数。0以下は回転を無効化する |
+| `--log_rotate_keep` | `5` | 保持する旧世代数。0以下は旧ファイルを保持せず破棄する |
+
+回転に失敗しても本体処理は止めず、現在のログへの書き込みを続ける。容量監視では現行ファイルだけでなく
+`.1` 以降も含めること。障害調査中に世代数を減らすと必要な時刻のログが消えるため、先に退避してから変更する。
 
 ---
 
@@ -425,11 +445,15 @@ JSON形式。各行に以下のフィールド:
 **症状:** 起動時やデータアクセス時に `database disk image is malformed`
 
 **対処:**
-1. サーバー停止
-2. 破損DBの特定（ログで確認）
-3. バックアップからリストア
-4. バックアップがない場合: `sqlite3 broken.db ".recover" | sqlite3 repaired.db` で修復を試みる
-5. `gkill_server optimize ユーザーID` でDB最適化
+1. 画面に「記録保管場所を読み込めない」旨が出ても、まず他の場所の記録が表示されているか確認する。書き込み先でない1本だけが読めない場合、利用可能な場所で処理は継続する
+2. 外部ストレージやネットワーク共有の接続、読み取り権限を確認し、再接続後に画面の再読み込みまたは記録保管場所の再読み込みを行う
+3. 継続する場合は `gkill_error.log` を確認する。`detach broken repository` が個別の場所、`repositories loaded with detached reps` が同一構築処理の集約を示す。正常な構築では集約行は出ない
+4. 書き込み先が読めない場合や設定データベース自体が壊れた場合は処理を継続せず HTTP 500 になる。サーバーを停止し、ログから対象DBを特定する
+5. バックアップからリストアする。バックアップがない場合は、原本を退避したうえで `sqlite3 broken.db ".recover" | sqlite3 repaired.db` による救出を別ファイルへ試す
+6. 復旧後に `PRAGMA integrity_check;` が `ok` を返すこと、記録保管場所を再読み込みして警告が消えること、読み書きできることを確認する
+
+`optimize` は健全なDBの最適化であり、破損DBの修復手段ではない。破損した原本へ直接書き込まず、
+バックアップまたはコピーに対して復旧作業を行うこと。
 
 ---
 

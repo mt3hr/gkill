@@ -12,6 +12,11 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 
 プラグインツール `gkill_get_plugin_list` は3サーバ共通で提供します（読み取り専用）。プラグインKyouの本文は `gkill_get_kyous` の `include_plugin_content` でレスポンスに埋め込みます。
 
+`gkill_get_kyous` の利用時は、`partial` だけでなく `warnings` も毎回確認してください。
+`partial=false` でも、一部の記録保管場所を読み込めず、利用可能な場所だけの結果になっている場合があります。
+警告された名前を `query.reps` に指定し直すと、利用可能な場所まで検索対象から外れて0件に見えるため、
+復旧するまではその名前を検索条件に入れません。この警告は通常検索・`count_only`・`group_by` のどれでも同じです。
+
 ### ファイル構成
 
 3つのサーバファイルは**ツールの取捨選択とディスパッチだけ**を持ち、実装は `lib/` に置いてあります。
@@ -357,8 +362,8 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 - `has_more`: 続きがある場合 true
 - `next_cursor`: 次ページ取得用カーソル（不透明文字列。そのまま返送する）
 - `buckets[]`: group_by 指定時の集計（{key, count}）
-- `partial`: 付随データ（タグ・テキスト・通知・TimeIs）の一部取得に失敗し、返した Kyou の付随データが不完全なとき true（内訳は `warnings[]` に入る）
-- `warnings[]`: 未知のフィルタ値の指摘・付随データ欠落など
+- `partial`: 付随データ（タグ・テキスト・通知・TimeIs）の一部取得に失敗し、返した Kyou の付随データが不完全なとき true（内訳は `warnings[]` に入る）。記録保管場所の読み込み失敗とは独立で、そちらの警告があっても false の場合がある
+- `warnings[]`: 未知のフィルタ値、付随データ欠落、読み込めなかった記録保管場所など。通常検索・count_only・group_by のどれでも確認する
 - `plugin_content`: 本文埋め込みの集計（`include_plugin_content: true` のときのみ）
 
 #### 4) ペイロード（payload）フィールド
