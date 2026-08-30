@@ -217,6 +217,12 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0804](0804-split-claude-md-into-skills.md) | AI向け規約は AGENTS.md（核）と規約スキルへ分割し、入口の肥大化を機械検査で防ぐ | Accepted |
 | [0805](0805-adr-numbering-by-subsystem-hundreds.md) | ADR の採番はサブシステム別100番幅にし、帯の空きを機械検査する | Accepted |
 
+### 1000番台 運用CLI・配布
+
+| 番号 | 決定 | Status |
+|---|---|---|
+| [1001](1001-log-level-by-severity.md) | ログレベルは事象の重さで決める。既定でエラーだけは必ず残す | Accepted |
+
 ## 旧→新 対応表
 
 2026-08-30 の全面再採番（[ADR-0805](0805-adr-numbering-by-subsystem-hundreds.md)）の前後の対応。
