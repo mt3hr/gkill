@@ -138,20 +138,17 @@ class MainActivity : AppCompatActivity() {
             try {
                 val gkillBinary = serverBinary()
 
-                // 起動診断は DEBUG。端末の絶対パスを毎起動 logcat へ残す必要は無い
-                // （配布APKは assembleDebug で minify も無いので、INFO は誰の端末でも出る）。
-                Log.d("gkill", "バイナリパス: ${gkillBinary.absolutePath}")
-                Log.d("gkill", "バイナリサイズ: ${gkillBinary.length()} bytes")
-                Log.d("gkill", "実行可能: ${gkillBinary.canExecute()}")
-                Log.d("gkill", "読み取り可能: ${gkillBinary.canRead()}")
+                // 起動診断は値の要らないものだけ残す。絶対パス(バイナリ・HOME・GKILL_HOME・
+                // nativeLibraryDir)は logcat へ出さない — Log.d でも release 実行時に出力され、
+                // 端末ログ・クラッシュ収集・adb 越しに環境情報が漏れる(2026-08-30 監査 F-008)。
+                Log.d(
+                    "gkill",
+                    "バイナリ診断: size=${gkillBinary.length()} bytes, " +
+                        "exec=${gkillBinary.canExecute()}, read=${gkillBinary.canRead()}"
+                )
 
                 val homeDir = filesDir.parentFile?.absolutePath ?: filesDir.absolutePath
                 val gkillHomeDir = gkillHome
-                Log.d("gkill", "HOME: $homeDir")
-                Log.d("gkill", "GKILL_HOME: ${gkillHomeDir.absolutePath}")
-
-                val nativeDir = applicationInfo.nativeLibraryDir
-                Log.d("gkill", "nativeLibraryDir: $nativeDir")
 
                 migrateLegacyHomeIfNeeded(gkillHomeDir)
                 gkillHomeDir.mkdirs()
@@ -168,11 +165,18 @@ class MainActivity : AppCompatActivity() {
                 gkillServerProcess = process
 
                 // stdoutを別スレッドで読み続ける（バッファフルによるハング防止）
-                // サーバーURLを "Access your record space at : " 行から検出する
+                // サーバーURLを "Access your record space at : " 行から検出する。
+                // 全行を logcat へ中継しない — サーバ出力には環境情報が混ざりうるうえ、
+                // Log.d でも release 実行時に出力される(2026-08-30 監査 F-008)。
+                // 異常終了の診断用に直近の行だけメモリに保持し、exitCode != 0 のときに出す。
+                val recentServerLines = ArrayDeque<String>()
                 Thread {
                     try {
                         process.inputStream.bufferedReader().forEachLine { line ->
-                            Log.d("gkill_server_stdout", line)
+                            synchronized(recentServerLines) {
+                                recentServerLines.addLast(line)
+                                if (recentServerLines.size > 20) recentServerLines.removeFirst()
+                            }
                             val prefix = "Access your record space at : "
                             if (line.startsWith(prefix)) {
                                 detectedServerUrl = line.removePrefix(prefix).trim()
@@ -192,6 +196,10 @@ class MainActivity : AppCompatActivity() {
                 // 出し分けているのに、ログだけ揃っていなかった。
                 if (exitCode != 0) {
                     Log.e("gkill", "プロセス終了コード: $exitCode")
+                    val tail = synchronized(recentServerLines) { recentServerLines.joinToString("\n") }
+                    if (tail.isNotEmpty()) {
+                        Log.e("gkill_server_stdout", tail)
+                    }
                 } else {
                     Log.i("gkill", "gkill_server が正常終了した")
                 }
@@ -242,7 +250,9 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(Intent.ACTION_VIEW, url))
                     true
                 } catch (e: Exception) {
-                    Log.w("gkill", "外部URLを開けませんでした: $url", e)
+                    // URL と例外本体は載せない(ActivityNotFoundException の文言に URL が入る。
+                    // 利用者が開いたブックマーク先が端末ログへ残る。2026-08-30 監査 F-008)
+                    Log.w("gkill", "外部URLを開けませんでした (${e.javaClass.simpleName})")
                     true
                 }
             }

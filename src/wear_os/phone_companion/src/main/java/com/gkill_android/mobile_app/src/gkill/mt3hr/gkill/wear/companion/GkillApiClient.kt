@@ -208,7 +208,7 @@ class GkillApiClient(
         try {
             // get_kyous with a non-null plaing_time (all other filters unused = omitted)
             val now = java.time.OffsetDateTime.now().format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-            Log.d(tag, "getPlaingTimeis: querying get_kyous with plaing_time=$now")
+            Log.d(tag, "getPlaingTimeis: querying get_kyous")
             val findQuery = buildPlaingFindQuery(now)
             val getKyousBody = JsonObject(mapOf(
                 "session_id" to JsonPrimitive(sessionId),
@@ -230,7 +230,9 @@ class GkillApiClient(
             val kyousJson = json.parseToJsonElement(kyousRespBody).jsonObject
             val errors = kyousJson["errors"]?.let { if (it is JsonNull) null else it.jsonArray }
             if (errors != null && errors.isNotEmpty()) {
-                Log.e(tag, "get_kyous errors: $errors")
+                // errors の本文には環境依存の文言が入りうるので error_code だけを残す(2026-08-30 監査 F-008)
+                val codes = errors.mapNotNull { it.jsonObject["error_code"]?.jsonPrimitive?.content }
+                Log.e(tag, "get_kyous errors: ${codes.joinToString(",")}")
                 return null
             }
             val kyous = kyousJson["kyous"]?.let { if (it is JsonNull) null else it.jsonArray } ?: JsonArray(emptyList())
@@ -259,7 +261,8 @@ class GkillApiClient(
                         resp.body.string().ifEmpty { null }
                     }
                 } catch (e: Exception) {
-                    Log.e(tag, "get_timeis failed for $kyouId", e)
+                    // Kyou ID は記録と突き合わせられる識別子なので logcat へ出さない(2026-08-30 監査 F-008)
+                    Log.e(tag, "get_timeis failed", e)
                     null
                 }
                 if (timeisRespBody == null) continue
