@@ -55,6 +55,13 @@ func (g *gzipResponseWriter) Write(data []byte) (int, error) {
 	return g.gzipWriter.Write(data)
 }
 
+// Unwrap は http.ResponseController がラッパ越しに SetReadDeadline 等へ届くための口です。
+// これが無いと wrapNoAuthCapped の読み取り期限が gzip 対象の /api/ 経路でだけ
+// 静かに効かなくなります(auth_middleware_capped_test.go が検査)。
+func (g *gzipResponseWriter) Unwrap() http.ResponseWriter {
+	return g.ResponseWriter
+}
+
 // Flush はgzipの内部バッファを掃き出してから下位のFlusherへ委譲します。
 // ストリーミング応答(json.NewEncoderの逐次書き込み)を途中で送出できるようにするためのものです。
 func (g *gzipResponseWriter) Flush() {
