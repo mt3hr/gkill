@@ -15,6 +15,9 @@
 import { describe, test, expect, vi } from "vitest";
 
 import { handleWriteToolCall, isWriteToolName, summarizeWriteToolPayload } from "../lib/write-handlers.mjs";
+import { WRITE_TOOLS } from "../lib/write-tools.mjs";
+import { READ_TOOLS } from "../lib/read-tools.mjs";
+import { WRITE_SERVER_READ_TOOL_NAMES } from "../gkill-write-server.mjs";
 
 function makeCtx(callApiImpl) {
   return {
@@ -753,6 +756,12 @@ describe("handleWriteToolCall — urlog fetch suppression flags", () => {
     const [, body] = ctx.client.callApi.mock.calls[0];
     expect(body.skip_fetch_metadata).toBe(false);
     expect(body.skip_fetch_favicon).toBe(false);
+    // フラグはリクエストの兄弟フィールドであってエンティティの列ではない。
+    // 実体へ混入しても gkill は無視するだけだが、「urlog に fetch_metadata という欄がある」
+    // という誤解が応答経由で広まるのでここで塞ぐ。
+    expect(body.urlog.fetch_metadata).toBeUndefined();
+    expect(body.urlog.fetch_favicon).toBeUndefined();
+    expect(body.urlog.skip_fetch_metadata).toBeUndefined();
   });
 
   test("fetch_metadata:false / fetch_favicon:false は反転して skip_fetch_* へ写る", async () => {
@@ -790,6 +799,25 @@ describe("handleWriteToolCall — urlog fetch suppression flags", () => {
     expect(body.skip_fetch_metadata).toBe(true);
     expect(payload.warnings?.some((w) => String(w).includes("tool schema snapshot looks stale"))).toBe(true);
   });
+
+  test("update_urlog は再取得キーを送らない (抑止フラグが update に無い理由)", async () => {
+    // Go 側が外向き取得をやり直すのは re_get_urlog_content:true を明示されたときだけ
+    // (handle_update_urlog.go)。MCP の runUpdate はこのキーを送らないので、
+    // fetch_metadata:false で登録したブックマークを update しても外向き通信は起きない。
+    // ここが送るようになると、利用者が抑止したはずの取得が update 経路で復活する。
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({
+        urlog_histories: [{ id: "u1", url: "https://example.com/", title: "", update_time: "2026-08-30T10:00:00+09:00" }],
+      })
+      .mockResolvedValueOnce({ updated_urlog: { id: "u1" }, updated_kyou: { id: "u1" } });
+
+    await handleWriteToolCall(ctx, "gkill_update_urlog", { id: "u1", title: "renamed" });
+
+    const [pathname, body] = ctx.client.callApi.mock.calls[1];
+    expect(pathname).toBe("/api/update_urlog");
+    expect(Object.keys(body)).not.toContain("re_get_urlog_content");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -806,6 +834,30 @@ describe("handleWriteToolCall — allow_create_board", () => {
 
     expect(ctx.client.callApi).toHaveBeenCalledTimes(1);
     expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/get_mi_board_list");
+  });
+
+  test("板名エラーの文言が名指しするツールは書き込み専用サーバにも実在する", async () => {
+    // 「説明文が名指しするツールはそのサーバに載っていること」の機械検査は
+    // tool-handlers.test.mjs にあるが、対象はスキーマと entityNotFoundMessage だけで、
+    // assertBoardExists のランタイム文言は誰も見ていなかった。実際に投げさせて検査する。
+    const ctx = makeCtx(async () => ({ boards: ["Inbox"] }));
+    let message = "";
+    try {
+      await handleWriteToolCall(ctx, "gkill_add_mi", { title: "x", board_name: "nope", allow_create_board: false });
+    } catch (error) {
+      message = String(error.message);
+    }
+    expect(message).toContain("unknown board");
+    const availableOnWriteServer = new Set(
+      [...WRITE_TOOLS, ...READ_TOOLS.filter((tool) => WRITE_SERVER_READ_TOOL_NAMES.has(tool.name))].map(
+        (tool) => tool.name,
+      ),
+    );
+    const mentions = [...message.matchAll(/gkill_[a-z_]+/g)].map((match) => match[0]);
+    expect(mentions.length).toBeGreaterThan(0);
+    for (const mentioned of mentions) {
+      expect(availableOnWriteServer.has(mentioned), `${mentioned} is not on the write-only server`).toBe(true);
+    }
   });
 
   test("add: false でも実在の板名なら登録される", async () => {
@@ -827,6 +879,25 @@ describe("handleWriteToolCall — allow_create_board", () => {
 
     expect(ctx.client.callApi).toHaveBeenCalledTimes(1);
     expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/add_mi");
+    // 修飾子フラグは mi 実体へ書かれない (urlog の fetch_* と同じ線引き)。
+    expect(ctx.client.callApi.mock.calls[0][1].mi.allow_create_board).toBeUndefined();
+  });
+
+  test("add: false + board_name 未指定なら、既定板への補完値は照合しない", async () => {
+    // 板が1つも無い新規アカウントでは get_mi_board_list が [] を返すので、
+    // 補完値まで照合すると既定板すら弾いてタスクが1件も作れなくなる。
+    // この設計判断はコメントにしか無かったのでここで固定する。
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ application_config: { mi_default_board: "Inbox" } })
+      .mockResolvedValueOnce({ added_mi: { id: "m1" } });
+
+    await handleWriteToolCall(ctx, "gkill_add_mi", { title: "x", allow_create_board: false });
+
+    const calledPaths = ctx.client.callApi.mock.calls.map((call) => call[0]);
+    expect(calledPaths).toEqual(["/api/get_application_config", "/api/add_mi"]);
+    expect(calledPaths).not.toContain("/api/get_mi_board_list");
+    expect(ctx.client.callApi.mock.calls[1][1].mi.board_name).toBe("Inbox");
   });
 
   test("update: false で未知の板名は現在値の取得より前に弾かれる", async () => {
@@ -866,5 +937,61 @@ describe("handleWriteToolCall — allow_create_board", () => {
     await expect(
       handleWriteToolCall(ctx, "gkill_update_mi", { id: "m1", allow_create_board: false }),
     ).rejects.toThrow(/No fields to update/);
+  });
+
+  test("update: 既定では照合の往復が1つも増えない (1本目は現在値の取得)", async () => {
+    // preUpdate の条件が緩むと、全 gkill_update_mi に /api/get_mi_board_list の往復が
+    // 1つ増える (フラグ導入時に明示的に避けた副作用)。add 側の「既定では照合しない」
+    // テストと対で、update 側の非対称を塞ぐ。
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({
+        mi_histories: [{ id: "m1", title: "x", board_name: "Inbox", update_time: "2026-08-30T10:00:00+09:00" }],
+      })
+      .mockResolvedValueOnce({ updated_mi: { id: "m1" }, updated_kyou: { id: "m1" } });
+
+    await handleWriteToolCall(ctx, "gkill_update_mi", { id: "m1", board_name: "somewhere-new" });
+
+    const calledPaths = ctx.client.callApi.mock.calls.map((call) => call[0]);
+    expect(calledPaths).toEqual(["/api/get_mi", "/api/update_mi"]);
+    // 修飾子フラグは mi 実体へ書かれない (patchFields に無い)。
+    expect(ctx.client.callApi.mock.calls[1][1].mi.allow_create_board).toBeUndefined();
+  });
+
+  test("add: 古いスキーマからの文字列 \"false\" も照合を発火させ、古さの警告が付く", async () => {
+    // urlog 側には同じ end-to-end テストがあるのに mi 側は正規化器単体しか無かった。
+    // 文字列のまま比較 (=== false) されると照合が静かにスキップされる。
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ boards: ["Inbox", "errands"] })
+      .mockResolvedValueOnce({ added_mi: { id: "m1" } });
+
+    const payload = await handleWriteToolCall(ctx, "gkill_add_mi", {
+      title: "x",
+      board_name: "errands",
+      allow_create_board: "false",
+    });
+
+    expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/get_mi_board_list");
+    expect(payload.warnings?.some((w) => String(w).includes("tool schema snapshot looks stale"))).toBe(true);
+  });
+
+  test("update: 古いスキーマからの文字列 \"false\" も照合を発火させ、古さの警告が付く", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ boards: ["Inbox", "errands"] })
+      .mockResolvedValueOnce({
+        mi_histories: [{ id: "m1", title: "x", board_name: "Inbox", update_time: "2026-08-30T10:00:00+09:00" }],
+      })
+      .mockResolvedValueOnce({ updated_mi: { id: "m1" }, updated_kyou: { id: "m1" } });
+
+    const payload = await handleWriteToolCall(ctx, "gkill_update_mi", {
+      id: "m1",
+      board_name: "errands",
+      allow_create_board: "false",
+    });
+
+    expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/get_mi_board_list");
+    expect(payload.warnings?.some((w) => String(w).includes("tool schema snapshot looks stale"))).toBe(true);
   });
 });

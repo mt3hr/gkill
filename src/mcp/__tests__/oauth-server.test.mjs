@@ -858,6 +858,23 @@ describe("OAuthServer — scope enforcement (P0)", () => {
     server.close();
   });
 
+  test("authorize POST with a foreign scope is rejected before authentication and issues no code", async () => {
+    // code を発行するのは POST 経路で、攻撃者はフォーム (hidden の scope は正準値固定)
+    // を介さず POST を直接叩ける。GET 側だけの検証では code の発行そのものを守れない。
+    const authenticateUser = vi.fn(async () => ({ sessionId: "sess-should-never-exist" }));
+    const server = createServer({ scope: "gkill:readwrite", authenticateUser });
+    const result = await server.handleAuthorizePost({
+      ...authorizeParams({ scope: "gkill:read" }),
+      user_id: "admin",
+      password_sha256: "abc123",
+    });
+    expect(result.status).toBe(400);
+    expect(result.body).toContain("unsupported scope");
+    // 検証は認証より前 — 資格情報の処理も code の発行も一切走らない。
+    expect(authenticateUser).not.toHaveBeenCalled();
+    server.close();
+  });
+
   test("omitted scope defaults to the server scope and the token carries it", async () => {
     const server = createServer({ scope: "gkill:readwrite" });
     const pkce = makeS256Pair();
@@ -934,14 +951,40 @@ describe("OAuthServer — consent display on the login page", () => {
     expect(result.body).toContain("gkill:readwrite");
     expect(result.body).toContain("読み書き");
     expect(result.body).toContain("削除");
+    // class 属性そのものを見る (<style> 内の .consent-writable は常に居るため、
+    // 文字列 "consent-writable" の存在検査では強調表示の欠落を検出できない)。
+    expect(result.body).toContain('class="consent-writable"');
     server.close();
   });
 
-  test("read login page says read-only", () => {
+  test("write login page shows the write-only scope as writable", () => {
+    // 3種のうち write だけテストが無く、「書き込み」ラベルと強調表示は誰も見ていなかった。
+    const server = createServer({ scope: "gkill:write" });
+    const result = server.handleAuthorizeGet(authorizeParams({ scope: "gkill:write" }));
+    expect(result.status).toBe(200);
+    expect(result.body).toContain("gkill:write");
+    expect(result.body).toContain("書き込み");
+    expect(result.body).toContain('class="consent-writable"');
+    server.close();
+  });
+
+  test("read login page says read-only and is not marked writable", () => {
     const server = createServer();
     const result = server.handleAuthorizeGet(authorizeParams());
     expect(result.status).toBe(200);
     expect(result.body).toContain("読み取り専用");
+    expect(result.body).not.toContain('class="consent-writable"');
+    server.close();
+  });
+
+  test("a scope without a description falls back to the raw value", () => {
+    // SCOPE_DESCRIPTIONS に無い scope でも空表示にしない (label = 生の scope 値)。
+    // 認可検証はサーバ宣言値との厳密一致なので、ここへ来るのは宣言値自体が未知のとき。
+    const server = createServer({ scope: "custom:x" });
+    const result = server.handleAuthorizeGet(authorizeParams({ scope: "custom:x" }));
+    expect(result.status).toBe(200);
+    expect(result.body).toContain("custom:x (custom:x)");
+    expect(result.body).not.toContain("読み取り専用");
     server.close();
   });
 
@@ -955,6 +998,22 @@ describe("OAuthServer — consent display on the login page", () => {
     expect(result.status).toBe(200);
     expect(result.body).toContain("Example Connector");
     expect(result.body).toContain("http://localhost:8808");
+    server.close();
+  });
+
+  test("escapes a hostile DCR client_name before rendering it into the login page", () => {
+    // client_name は DCR (handleRegister) が無検証で保存する攻撃者制御値で、
+    // 同意ブロックの導入で初めてログイン HTML へ描画されるようになった。
+    // escHtml が外れても他のテストは全部緑のままなので、ここで固定する。
+    const server = createServer();
+    const reg = server.handleRegister({
+      redirect_uris: ["http://localhost/callback"],
+      client_name: '<script>alert(1)</script>"',
+    });
+    const result = server.handleAuthorizeGet(authorizeParams({ client_id: reg.body.client_id }));
+    expect(result.status).toBe(200);
+    expect(result.body).not.toContain("<script>alert(1)</script>");
+    expect(result.body).toContain("&lt;script&gt;alert(1)&lt;/script&gt;&quot;");
     server.close();
   });
 });

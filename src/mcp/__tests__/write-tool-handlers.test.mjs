@@ -21,7 +21,13 @@ import {
   PROJECTION_TO_ENTITY_DATA_TYPE,
   toEntityDataType,
 } from "../lib/constants.mjs";
-import { DELETE_DATA_TYPES } from "../lib/write-normalization.mjs";
+import {
+  DELETE_DATA_TYPES,
+  normalizeUrlogArgs,
+  normalizeMiArgs,
+  normalizeUpdateMiArgs,
+} from "../lib/write-normalization.mjs";
+import { detectStaleSchemaSignals } from "../lib/normalization.mjs";
 import { summarizeToolError } from "../lib/payload.mjs";
 
 // ---------------------------------------------------------------------------
@@ -91,6 +97,19 @@ describe("Tool definitions", () => {
       expect(tool.description).not.toContain("include_id");
       expect(JSON.stringify(tool.inputSchema)).not.toContain("include_id");
     }
+  });
+
+  test("urlog の説明は外向き取得の条件を add / update の両側で言い切っている", () => {
+    // add 側: title の「省略するとサーバが取得して埋める」を無条件形で書くと
+    // fetch_metadata:false と矛盾する (tool 説明と field 説明の矛盾を直した直後に、
+    // フラグ追加で field 側だけが再び無条件形へ取り残された実績がある)。
+    const addTool = WRITE_TOOLS.find((tool) => tool.name === "gkill_add_urlog");
+    expect(addTool.inputSchema.properties.title.description).toContain("fetch_metadata");
+    // update 側: 逆に「外向き通信を起こさない」を明言する (add では選べたフラグが
+    // update に無い理由。実挙動は write-handlers.test.mjs の re_get_urlog_content
+    // 非送信テストが固定している)。
+    const updateTool = WRITE_TOOLS.find((tool) => tool.name === "gkill_update_urlog");
+    expect(updateTool.description).toContain("never causes outbound traffic");
   });
 
   test("every tool has a non-empty description", () => {
@@ -213,6 +232,54 @@ describe("summarizeWriteToolPayload", () => {
     for (const tool of WRITE_TOOLS) {
       expect(summarizeWriteToolPayload(tool.name, {})).not.toBeNull();
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 後付け boolean 引数の2表整合 (メタテスト)
+// ---------------------------------------------------------------------------
+describe("後付け boolean 引数は救済表・型復元の両方に載る", () => {
+  // ツールスキーマはクライアントのセッション寿命で固定されるので、後から足した
+  // boolean 引数は既存セッションから正規JSON文字列 ("false") で届く。
+  // 復元 (write-normalization の revivesStaleBoolean) と検出 (normalization の
+  // STALE_SCHEMA_ARG_KINDS_BY_TOOL) のどちらか片方を忘れると、その引数は
+  // 「新しいセッションでだけ動く」状態で出荷される (read 側の is_video で実際に起きた)。
+  // 両ファイルの注意書きコメントだけが頼りだったので、スキーマの boolean プロパティ
+  // 全件を回して機械強制する。
+
+  // スキーマ導入時から boolean だった引数。最初のセッションから型付きで届くので
+  // 救済表には載せない (ここへ足す行為自体が「後付けではない」という意思表示になる)。
+  const DAY_ONE_BOOLEANS = new Set(["gkill_add_mi.is_checked", "gkill_update_mi.is_checked"]);
+
+  // 後付け boolean を持つツールの実物の正規化器と最小引数。
+  // 新しいツール名でこのテストが落ちたら、ここへ1行足す。
+  const NORMALIZER_BY_TOOL = {
+    gkill_add_urlog: (extra) => normalizeUrlogArgs({ url: "https://example.com/", ...extra }),
+    gkill_add_mi: (extra) => normalizeMiArgs({ title: "t", ...extra }),
+    gkill_update_mi: (extra) => normalizeUpdateMiArgs({ id: "m1", board_name: "b", ...extra }),
+  };
+
+  const booleanProps = [];
+  for (const tool of WRITE_TOOLS) {
+    for (const [prop, schema] of Object.entries(tool.inputSchema.properties ?? {})) {
+      if (schema.type === "boolean" && !DAY_ONE_BOOLEANS.has(`${tool.name}.${prop}`)) {
+        booleanProps.push({ toolName: tool.name, prop });
+      }
+    }
+  }
+
+  test("スキーマに後付け boolean が実在する (この検査自体の空振り防止)", () => {
+    expect(booleanProps.length).toBeGreaterThanOrEqual(4);
+  });
+
+  test.each(booleanProps)("$toolName.$prop は検出表に載り、正規JSON文字列から復元される", ({ toolName, prop }) => {
+    // (a) 検出: 文字列で届いたことが「古いスキーマの証拠」として警告経路に乗る
+    const signals = detectStaleSchemaSignals(toolName, { [prop]: "false" });
+    expect(signals?.revived ?? [], `${toolName}.${prop} が STALE_SCHEMA_ARG_KINDS_BY_TOOL に無い`).toContain(prop);
+    // (b) 復元: 実物の正規化器が boolean へ戻す (revivesStaleBoolean の付け忘れ検出)
+    const normalize = NORMALIZER_BY_TOOL[toolName];
+    expect(normalize, `NORMALIZER_BY_TOOL に ${toolName} の行が無い — 後付け boolean を足したらここへも1行`).toBeDefined();
+    expect(normalize({ [prop]: "false" })[prop]).toBe(false);
   });
 });
 

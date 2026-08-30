@@ -672,17 +672,22 @@ describe("handleReadToolCall — top-level plugins[] passthrough", () => {
     expect(payload.plugins).toBeUndefined();
   });
 
-  test("count_only responses carry no plugins", async () => {
-    // Go は count_only / group_by で plugins を作らない。Node 側も条件付きコピーなので付かない。
+  test("count_only passes plugins through when the response carries them (copy, not a filter)", async () => {
+    // Node 側の plugins は「来たら載せる」条件付きコピーで、count_only かどうかで
+    // 落としたりしない (経路は通常検索と同じ1つの組み立て)。
+    // 「count_only では plugins が来ない」のは Go 側の性質であって、Node で検証できる
+    // 命題ではない — 以前のこのテストはモックに plugins を入れておらず、
+    // 隣の「無ければ載せない」テストと同じ分岐しか通っていなかった。
     const ctx = makeCtx(async () => ({
       kyous: [],
       total_count: 3,
       returned_count: 0,
       remaining_count: 0,
       has_more: false,
+      plugins: PLUGINS,
     }));
     const payload = await handleReadToolCall(ctx, "gkill_get_kyous", { count_only: true });
-    expect(payload.plugins).toBeUndefined();
+    expect(payload.plugins).toEqual(PLUGINS);
   });
 });
 

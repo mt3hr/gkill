@@ -370,7 +370,10 @@ const MI_BOARD_GUARD_STALE_SCHEMA_ARG_KINDS = new Map([["allow_create_board", "b
 
 // ツール名から救済表を引く表。detectStaleSchemaSignals が使う。
 // **スキーマへ非string型の引数を足したら、対応する表とここの両方へ載せること。**
-const STALE_SCHEMA_ARG_KINDS_BY_TOOL = new Map([
+// export するのはテストのため —— normalization.test.mjs がこの表を丸ごと回して
+// 「表に載った全引数が証拠として検出される」ことを固定する (ハードコード列挙だと
+// 表へ足した分だけテストが黙って古びる。実際 13 中 5 まで減っていた)。
+export const STALE_SCHEMA_ARG_KINDS_BY_TOOL = new Map([
   ["gkill_get_kyous", KYOUS_STALE_SCHEMA_ARG_KINDS],
   ["gkill_get_gps_log", GPS_STALE_SCHEMA_ARG_KINDS],
   ["gkill_get_application_config", APP_CONFIG_STALE_SCHEMA_ARG_KINDS],

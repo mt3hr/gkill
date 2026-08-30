@@ -36,17 +36,24 @@ class McpServer extends McpServerBase {
   }
 }
 
+// 起動 spec の静的な部分。宣言値の意味と export の理由は gkill-read-server.mjs の同名定数を参照。
+// scope は必ず gkill:readwrite —— ここを gkill:read にした状態が実際に出荷され、
+// 読み書きサーバが読み取り専用の scope を広告していた（2026-08-30 修正）。
+export const START_SPEC = Object.freeze({
+  scriptName: "gkill-readwrite-server.mjs",
+  logFileName: "gkill_mcp_readwrite_access.log",
+  oauthStateFileName: "mcp_oauth_readwrite_state.json",
+  defaultPort: 8810,
+  scope: "gkill:readwrite",
+  enableFileLinks: true,
+});
+
 // Entry point — guarded so importing this module for tests does not start a transport.
 if (isDirectRun(import.meta.url)) {
   startMcpServer({
     ServerClass: McpServer,
     client: new GkillClient(),
-    scriptName: "gkill-readwrite-server.mjs",
-    logFileName: "gkill_mcp_readwrite_access.log",
-    oauthStateFileName: "mcp_oauth_readwrite_state.json",
-    defaultPort: 8810,
-    scope: "gkill:readwrite",
-    enableFileLinks: true,
+    ...START_SPEC,
   });
 }
 
