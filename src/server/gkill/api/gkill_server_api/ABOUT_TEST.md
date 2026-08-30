@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装91ファイル）に対する統合テストを含む。テストファイルは全31本（うち handle_*_test.go は14本）。
+`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装91ファイル）に対する統合テストを含む。テストファイルは全35本（うち handle_*_test.go は15本）。
 
 ## テストフレームワーク
 
@@ -36,6 +36,9 @@ Go `testing` パッケージ
 | `response_status_test.go` | エラーコード別 HTTP ステータス（`message.HTTPStatusOf`）が実応答に出ることの end-to-end 確認。401/403/400/409、成功時は 200 のまま、panic は 500+gzip、認証本文の過大は 413・読み取り失敗は 500 で、いずれも JSON 本文が返ること |
 | `broken_rep_warning_test.go` | 読み込めない書き込み先以外の rep があるとき、Web検索は既存の警告メッセージ、MCP検索は `warnings` を返し、利用可能な rep の結果は維持すること。MCPの通常・`count_only`・`group_by` の全経路で警告が消えず、`partial` は警告と独立して false のままであること |
 | `response_status_guard_test.go` | ソース走査ガード。JSON ハンドラのエンコード行の直前に `writeErrorStatus` があること（既存ハンドラのコピペでこの1行が抜けると、そのエンドポイントだけ異常時も 200 へ戻る）、免除リストのファイルが実在すること、ミドルウェアがステータスと JSON 本文を書くこと |
+| `response_status_log_test.go` | 失敗した応答の1行ログ（`writeErrorStatus`）。ステータス→ログレベルの機械的対応（5xx=Error / 401・403 を Error にしない）、成功時は1行も出さないこと、エラーコード・メソッド・パス・ユーザIDが載ること。深部のエラーは Debug 側にあり、既定ログレベルではこの1行が障害の唯一の痕跡になる |
+| `auth_middleware_capped_test.go` | 無認証経路のボディ上限（±1バイト境界・413 の JSON 本文）、スローボディの読み取り期限、`serve.go` のボディ付き `wrapNoAuth` 登録が capped 版であることのソース走査（F-002）。加えて accessLog の `responseRecorder` と gzip の `gzipResponseWriter` が `Unwrap` を持つこと —— どちらかが欠けると `http.ResponseController` が底の接続へ届かず、読み取り期限が本番経路でだけ静かに無効になる（コンパイル時アサーションも両ファイルに常設） |
+| `handle_add_urlog_skip_wiring_test.go` | ソース走査ガード。`handle_add_urlog.go` が `FillURLogFieldSkipping` へ `request.SkipFetchMetadata, request.SkipFetchFavicon` をこの順で渡すこと。両方 bool なので入れ替えてもコンパイルも既存テストも通り、MCP の「両方 false なら外向き通信なし」の約束が黙って破れる（reps 層のテストはハンドラを通らない。実HTTP取得のテストは safefetch の SSRF 対策と干渉するため置けない） |
 | `handle_browse_zip_contents_test.go` | ZIP 展開（`extractZip`）の正常系と、圧縮爆弾の拒否 |
 | `handle_submit_kftl_text_test.go` | KFTL 送信の冪等キー、作成された記録の `created[]` 返却、利用者の書き間違い（ERR000416）が不正行ごとに行番号・行テキスト付きで積まれ HTTP 400 になること（解釈フェーズの失敗では正しい行も保存されない） |
 | `kftl_idempotency_test.go` | 冪等キー台帳（`markDone` 後の達成済み判定、TTL 失効で再実行対象へ戻ること、`markDone` 時の GC） |

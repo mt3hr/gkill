@@ -577,7 +577,7 @@ sequenceDiagram
     Client->>MCP: GET /.well-known/oauth-protected-resource
     MCP-->>Client: {resource, authorization_servers, scopes_supported}
     Client->>MCP: GET /.well-known/oauth-authorization-server
-    MCP-->>Client: {issuer, authorization_endpoint,<br>token_endpoint, registration_endpoint,<br>code_challenge_methods_supported: ["S256","plain"]}
+    MCP-->>Client: {issuer, authorization_endpoint,<br>token_endpoint, registration_endpoint,<br>code_challenge_methods_supported: ["S256"]}
 
     Note over Client,MCP: 2. 動的クライアント登録（RFC 7591）
 
@@ -623,8 +623,10 @@ sequenceDiagram
 
 - **トークン永続化:** リフレッシュトークンとDCRクライアント登録は `$GKILL_HOME/configs/` 配下に保存（Read: `mcp_oauth_read_state.json`、Write: `mcp_oauth_write_state.json`、ReadWrite: `mcp_oauth_readwrite_state.json`）。サーバ再起動後も再認証不要
 - **アクセストークン:** インメモリのみ（サーバ再起動で失効、リフレッシュトークンで再発行可能）
-- **PKCE:** S256（SHA-256）と plain の両方をサポート。S256 推奨
+- **PKCE:** S256（SHA-256）のみ。plain は verifier==challenge のため受理しない（メタデータの広告も S256 のみ）
 - **RFC 8707（Resource Indicators）:** 認可〜トークン交換で `resource` パラメータを引き回し、一致を検証
+- **scope はサーバ種別ごとに1値**（read=`gkill:read` / write=`gkill:write` / readwrite=`gkill:readwrite`。正本はエントリスクリプトの `START_SPEC` 1箇所）。metadata・authorize の既定値・トークン発行・Bearer 受理検証がすべて同じ1値から生成され、不一致な scope は認可時 400、コード交換・refresh 時 `invalid_scope`（旧 scope の code / refresh token は失効）、Bearer 受理時 403 `insufficient_scope` で拒否される。**2026-08-30 より前に発行されたトークンや別種サーバのトークンは再認可が必要**
+- **認可ログイン画面の同意表示:** アプリ名（DCR の `client_name`）・許可する操作（scope の意味と書き込み可否の強調）・接続先（issuer）を表示する
 - **既知の制限:** ChatGPT はOAuth認証・初回データ取得は成功するが、cursorベースのページング継続時にプラットフォーム側で問題が発生する（2026-03時点）
 
 ## 18. ZIPファイル内容閲覧

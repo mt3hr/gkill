@@ -400,7 +400,7 @@ JSON API 側がボディで `session_id` を運ぶ設計になっているため
 
 ### 2.10 外部URL取得のSSRF対策
 
-URLog 等で外部URLのコンテンツを取得する `httpGetBase64Data`（`gkill_server_api/utils.go`）には以下のSSRF対策が実装されている（テスト: `utils_ssrf_test.go`）:
+外部URLの取得は `api/safefetch` パッケージ（`GetCapped` / `CheckImageDimensions`）が正本で、URLog の本体取得（`ur_log.go` の getBody / getFavicon / getImageOG / getAmazonImage）はすべてここを通る（ADR-0704。テスト: `safefetch_test.go`）。ブックマークレット専用の `httpGetBase64Data`（`gkill_server_api/utils.go`）はその薄いラッパ（テスト: `utils_ssrf_test.go`）:
 
 | 対策 | 内容 |
 |------|------|
@@ -408,6 +408,8 @@ URLog 等で外部URLのコンテンツを取得する `httpGetBase64Data`（`gk
 | **内部アドレス拒否** | `Dialer.Control` で接続先IPを検査し、ループバック・プライベート・リンクローカル等の内部アドレスへの接続を拒否（DNSリバインディング対策を含む） |
 | **サイズ上限** | レスポンスボディの読み取りサイズに上限を設定 |
 | **タイムアウト** | リクエスト全体にタイムアウトを設定 |
+
+外向き取得そのものの抑止は経路ごとに異なる: `/api/add_urlog` は `skip_fetch_metadata` / `skip_fetch_favicon` で項目別に抑止できる（既定は取得する。MCP の `gkill_add_urlog` の `fetch_metadata:false` / `fetch_favicon:false` がここへ写る）。`/api/update_urlog` はリクエストで `re_get_urlog_content:true` を明示したときだけ再取得し（MCP は送らない）、`/api/urlog_bookmarklet` は常に取得する（URLしか送られてこないため）。KFTL 経由の URL 記録は元から一切取得しない。
 
 ### 2.11 パストラバーサル対策の集約（SecureJoin）
 

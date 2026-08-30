@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。988テスト（23ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 26（書き込み21 + Read便利5）+ プラグイン1 = 27ツール、統合サーバ 30 + プラグイン1 = 31ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
+MCP (Model Context Protocol) サーバのテスト。1015テスト（24ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 26（書き込み21 + Read便利5）+ プラグイン1 = 27ツール、統合サーバ 30 + プラグイン1 = 31ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
 
 ## テストフレームワーク
 
@@ -15,19 +15,20 @@ Vitest（Node.js 環境）
 | ファイル | テスト内容 |
 |---------|-----------|
 | `__tests__/validation.test.mjs` | MCP ツール入力のバリデーション |
-| `__tests__/normalization.test.mjs` | クエリデータの正規化処理。`count_only` / `group_by` と `cursor` の併用をMCP層で弾くこと（GPS と同じ文言であることも含む）、`gkill_get_rep_infos` の `data_kinds` 絞り込み |
+| `__tests__/normalization.test.mjs` | クエリデータの正規化処理。`count_only` / `group_by` と `cursor` の併用をMCP層で弾くこと（GPS と同じ文言であることも含む）、`gkill_get_rep_infos` の `data_kinds` 絞り込み、古スキーマ救済表 `STALE_SCHEMA_ARG_KINDS_BY_TOOL` の全エントリを表駆動で回す検出網羅（ハードコード列挙が表に置き去りにされていた反省） |
 | `__tests__/constants.test.mjs` | 定数定義の検証 |
 | `__tests__/tool-handlers.test.mjs` | Read 9ツール分のハンドラ実行ロジック（`lib/read-tools.mjs` のツール名一覧・エンドポイント対応表・summarize）。`gkill_get_kyous` の Description が `partial=false` と独立に `warnings` を確認し、読み込めない保管場所を `query.reps` へ指定し直さないようAIへ伝えることも固定する |
-| `__tests__/read-handlers.test.mjs` | 読み取りディスパッチの正本 `lib/read-handlers.mjs`（get_kyous v2 パラメータの転送と応答の素通し、application_config の fields 射影 + UI状態キー strip、GPS の Node側ページング（複合カーソル・count_only・日別バケット）、rep_infos、idf_file の `/files/` クエリ組み立て・thumb エコー・サイズ上限超過の案内） |
+| `__tests__/read-handlers.test.mjs` | 読み取りディスパッチの正本 `lib/read-handlers.mjs`（get_kyous v2 パラメータの転送と応答の素通し、トップレベル `plugins[]` の条件付きコピー（count_only でも来たものは素通し）、application_config の fields 射影 + UI状態キー strip、GPS の Node側ページング（複合カーソル・count_only・日別バケット）、rep_infos、idf_file の `/files/` クエリ組み立て・thumb エコー・サイズ上限超過の案内） |
 | `__tests__/client.test.mjs` | GkillReadClient（fetch モック使用、ログイン・認証リトライ等） |
-| `__tests__/server.test.mjs` | McpServer のセットアップとトランスポート管理、セッションオーバーライド、プラグインツール振り分け |
+| `__tests__/server.test.mjs` | McpServer のセットアップとトランスポート管理、セッションオーバーライド、プラグインツール振り分け、IDF base64 の text/structuredContent 分離と `image_content_attached`、`warnings` / `partial` の1行要約への昇格（複合・並び順・stale との混在時の件数・200字境界。2026-08-30 MCPレビュー P1） |
 | `__tests__/access-log.test.mjs` | McpAccessLog（レベルフィルタリング・JSON形式・lazy open・close・sourceパラメータ） |
 | `__tests__/pkce.test.mjs` | PKCE (S256/plain) のコード検証、バリデーション |
 | `__tests__/oauth-store.test.mjs` | OAuthストア（認可コード、アクセストークン、リフレッシュトークン、クライアント登録、TTL期限切れ、定期クリーンアップ、JSONファイル永続化） |
-| `__tests__/oauth-server.test.mjs` | OAuth 2.1サーバ（メタデータ、認可フロー、トークン交換、PKCE検証、リフレッシュトークンローテーション、動的クライアント登録、E2Eフロー） |
+| `__tests__/oauth-server.test.mjs` | OAuth 2.1サーバ（メタデータ、認可フロー、トークン交換、PKCE検証、リフレッシュトークンローテーション、動的クライアント登録、E2Eフロー）。scope の1値強制（authorize GET/POST の不一致 400 と code 非発行、旧 scope の code / refresh token の `invalid_scope` 拒否と失効）、同意画面の3 scope 表示（書き込みの強調 `consent-writable`・未知 scope の生値フォールバック・DCR 由来 `client_name` の HTML エスケープ）（2026-08-30 MCPレビュー P0） |
 | `__tests__/file-link.test.mjs` | FileLinkStore（HTTPモード用の期限付きファイルリンクトークンの発行・解決・失効、`GET /files/{token}` 配信） |
-| `__tests__/http-transport.test.mjs` | HttpTransport の `/mcp` 経路の統合・回帰（実ポートで OAuth→Bearer→tools を通す。Bearer 401 検出 = C-01、並行リクエストの user/session 分離 = C-02、公開ファイル配信の nosniff / CSP sandbox = M-06、ボディ上限 413・明示タイムアウト・アクセスログのクエリ除去 = 2026-08-30 監査 F-003/F-004、scope 境界 = metadata 一致・不一致トークンの 403 = 2026-08-30 MCPレビュー P0。3サーバ共通） |
-| `__tests__/readme-examples.test.mjs` | README の ```json 例を実物の正規化器（normalizeKyouArgs）へ通す同期検査。Mi 例の include_*_mi 必須・cursor 例の v2 複合形式も固定（2026-08-30 MCPレビュー P1） |
+| `__tests__/http-transport.test.mjs` | HttpTransport の `/mcp` 経路の統合・回帰（実ポートで OAuth→Bearer→tools を通す。Bearer 401 検出 = C-01、並行リクエストの user/session 分離 = C-02、公開ファイル配信の nosniff / CSP sandbox = M-06、ボディ上限 413・明示タイムアウト・アクセスログのクエリ除去 = 2026-08-30 監査 F-003/F-004、scope 境界 = metadata 一致・不一致トークンの 403 と `token_scope_rejected` 監査ログ・scope 源が両方欠けた生成の fail-fast = 2026-08-30 MCPレビュー P0。3サーバ共通） |
+| `__tests__/readme-examples.test.mjs` | README の ```json 例を実物の正規化器（normalizeKyouArgs）へ通す同期検査。Mi 例の include_*_mi 必須・`mi_sort_type` と射影の対応・cursor 例の v2 複合形式・group_by の語彙列挙とスキーマ enum の一致も固定（2026-08-30 MCPレビュー P1） |
+| `__tests__/start-spec.test.mjs` | 3エントリスクリプトの起動 spec（`START_SPEC`）の宣言値固定。scope / 既定ポート / file-link 可否・3サーバ間の重複禁止・bootstrap が `spec.scope` を OAuthServer へ渡す配線（ReadWrite が gkill:read を広告していた事故の再発防止。2026-08-30 MCPレビュー P0） |
 
 ### プラグインツール（3サーバ共通）
 
@@ -40,10 +41,10 @@ Vitest（Node.js 環境）
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `__tests__/write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲検証、data_type検証等）。追加と更新が同じ `ENTITY_FIELD_SPECS` から作られること（URLのスキーム検証が add / update で同一文言、`target_id` は add 専用、patch セマンティクスの維持）、`idempotency_key` の受理、後付けフラグ（urlog の `fetch_metadata` / `fetch_favicon`、mi の `allow_create_board`）の既定値・addOnly・古スキーマ文字列の復元 |
+| `__tests__/write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲検証、data_type検証等）。追加と更新が同じ `ENTITY_FIELD_SPECS` から作られること（URLのスキーム検証が add / update で同一文言、`target_id` は add 専用、patch セマンティクスの維持）、`idempotency_key` の受理、後付けフラグ（urlog の `fetch_metadata` / `fetch_favicon`、mi の `allow_create_board`）の既定値・addOnly・古スキーマ文字列の復元（trim 込みで検出器と同じ受理範囲）、delete / restore の対象無指定を verb 入り文言で拒否すること・restore 側の一括形式 |
 | `__tests__/write-client.test.mjs` | GkillWriteClient（環境変数、login、callApi、認証リトライ） |
-| `__tests__/write-server.test.mjs` | McpWriteServer（JSON-RPC、27ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
-| `__tests__/write-tool-handlers.test.mjs` | Write 21ツール定義（実物 import）・削除の語彙が enum / DELETE_DATA_TYPES / 対応表2つで一致すること・summarizeWriteToolPayload |
+| `__tests__/write-server.test.mjs` | McpWriteServer（JSON-RPC、27ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造、warnings の1行要約昇格が書き込み側にも掛かり stale 専用文言と二重にならないこと） |
+| `__tests__/write-tool-handlers.test.mjs` | Write 21ツール定義（実物 import）・削除の語彙が enum / DELETE_DATA_TYPES / 対応表2つで一致すること・summarizeWriteToolPayload・後付け boolean 引数が検出表と型復元の両方に載ることの表駆動メタ検査・urlog の外向き取得説明が add（fetch_metadata 条件）/ update（再取得しない明言）の両側で言い切っていること |
 
 ### Read/Write統合サーバ
 
@@ -51,7 +52,7 @@ Vitest（Node.js 環境）
 |---------|-----------|
 | `__tests__/readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
 | `__tests__/readwrite-server.test.mjs` | McpServer 統合（31ツール全ディスパッチ、プラグインツール振り分け、IDF画像ブロック、エンティティデフォルト値） |
-| `__tests__/write-handlers.test.mjs` | 書き込みディスパッチの正本（add/update/delete/restore のエンドポイント、update の patch セマンティクス、create_app がサーバ種別で埋まること、既削除の delete / 未削除の restore を拒む冪等ガード、update_time が同一秒でも必ず進むこと、応答がサーバ保存版を返すこと（mergeStored）、`end_time: null` の3値パッチ）。1行要約が `ENTITY_TARGETS` 駆動であること（9型×add/update）と、古スキーマの印が書き込みの要約にも付くこと。urlog の外向き取得抑止フラグが `skip_fetch_*` へ反転して写ること、`allow_create_board:false` の板名照合（add / update とも登録前に弾く） |
+| `__tests__/write-handlers.test.mjs` | 書き込みディスパッチの正本（add/update/delete/restore のエンドポイント、update の patch セマンティクス、create_app がサーバ種別で埋まること、既削除の delete / 未削除の restore を拒む冪等ガード、update_time が同一秒でも必ず進むこと、応答がサーバ保存版を返すこと（mergeStored）、`end_time: null` の3値パッチ）。1行要約が `ENTITY_TARGETS` 駆動であること（9型×add/update）と、古スキーマの印が書き込みの要約にも付くこと。urlog の外向き取得抑止フラグが `skip_fetch_*` へ反転して写り実体へ漏れないこと、`gkill_update_urlog` が再取得キー `re_get_urlog_content` を送らないこと、`allow_create_board:false` の板名照合（add / update とも登録前に弾く。既定板への補完値は照合せず・既定では照合の往復ゼロ・古スキーマ文字列でも発火・エラー文言は write サーバ搭載ツールだけを名指し） |
 
 ## テスト内容
 

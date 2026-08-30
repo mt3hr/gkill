@@ -78,6 +78,8 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `gps_log_repositories_test.go` | GPSLog 集約の rep 横断の重複排除 |
 | `plugin_diagnostics_test.go` | プラグイン診断情報。stderr リングバッファ（末尾保持・一周時の行境界・過大書き込み）と型別索引の統計。「is_alive=true なのに0件」の理由が診断できなかった件の回帰 |
 | `ur_log_favicon_test.go` | favicon 取得の ur_log 側の配線。取れたバイト列が画像であることを確かめてから保存すること（エラーページを200で返すサイトのHTMLが混入した件の回帰）、復号前の寸法検査、空ホスト名では取得に行かないこと |
+| `ur_log_fill_skip_test.go` | `FillURLogFieldSkipping` の抑止フラグ。両方 skip なら外向き取得が1回も走らず ID・RelatedTime だけ補完されること、favicon だけ skip してもメタデータ補完は動くこと（引数順の非対称呼び出しで入れ替わりを検出）、互換ラッパ `FillURLogField` は従来どおり両方取得すること |
+| `attached_cached_unwrap_test.go` | 付随データ（タグ・テキスト）のキャッシュrepの `UnWrapTyped` が leaf まで降りること。1段しか剥がさないと集約自身が leaf として返り、`GetRepName()` が実在しない "TagReps" / "TextReps" を返して `get_rep_infos_mcp` の書き込み先案内が実際の書き込み先と食い違う（2026-08-24 実利用レビューの回帰） |
 | `rows_err_check_test.go` | ソース走査ガード。`rows.Next()` ループの後に `rows.Err()` を確認しない関数が復活したら落とす（見ないと反復途中のエラーで「部分的な結果」を成功として返す） |
 | `secure_join_test.go` | `SecureJoin` が rootDir の真下だけを許可すること。rootDir 自身を返すと、呼び出し元（アップロード保存先・サムネ/動画配信元・ZIP展開先）がディレクトリをファイルとして扱うことになる |
 | `testhelper_test.go` | テストヘルパーユーティリティ |
