@@ -35,7 +35,7 @@ export const READ_TOOLS = [
       "Search life-log entries (kyou) with optional filters and return enriched results including tags, texts, notifications, and typed payload inline. " +
       "Each result contains data_type, related_time, create_app / update_app (the app that wrote / last updated it — filter on these with the create_apps / update_apps parameters), tags[], texts[], notifications[], timeis[] (attached TimeIs), and payload (type-specific fields). " +
       "Supports cursor-based pagination via next_cursor / cursor parameters. " +
-      "Use limit and max_size_mb to control response size. " +
+      "Use limit and max_size_mb to control response size. They cap what is RETURNED, not what is SEARCHED: the backend still scans every matching repository, so on a large account a broad query with limit:3 takes about as long as one with limit:100. To make a query faster, narrow calendar_start_date/calendar_end_date, data_types, or reps instead of shrinking limit. " +
       "Available data_type values: kmemo (text memo), kc (numeric record), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image — use gkill_get_idf_file to fetch file content), git_commit_log (git commit), rekyou (repost of another entry), " +
       "timeis_start / timeis_end (time stamp), mi_create / mi_check / mi_limit / mi_start / mi_end (task, one value per projection), mirekyou_create / mirekyou_check / mirekyou_limit / mirekyou_start / mirekyou_end (an existing entry turned into a task). Which Mi projection you see depends on query.for_mi: WITH it the data_type follows query.mi_sort_type (mi_create when unset), WITHOUT it the five collapse to one representative per record (mi_start wins, then mi_check), so a plain date search mostly shows mi_check / mi_start. mi_create still survives for tasks whose create_time falls in the window while their update_time does not, so it is rare but NOT absent — do not read its low count as proof that no task was created. Plugins add their own data_type values (e.g. claude_conversation) — list them with gkill_get_plugin_list, and set include_plugin_content:true to read their bodies in this same response. " +
       "A filter activates simply by being present and non-null in the query; omit (or pass null for) filters you don't use. " +
@@ -470,7 +470,9 @@ export const READ_TOOLS = [
       "(and is_video:true alongside thumb to grab a frame out of a video). " +
       "Response fields: file_name, mime_type, file_size_bytes, is_image, thumb (echoed back only when a downscaled " +
       "version was returned — its absence means you got the original), and file_content_base64 (the file body; " +
-      "for images it is also delivered as the MCP image content block).",
+      "for images the bytes are delivered ONLY as the MCP image content block, and structuredContent carries " +
+      "image_content_attached:true instead of the base64 — its absence from structuredContent does not mean " +
+      "the image was not returned).",
     inputSchema: {
       type: "object",
       properties: {

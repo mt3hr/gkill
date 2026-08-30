@@ -24,7 +24,13 @@ export const FIND_QUERY_SCHEMA = {
     "To read an idf file: if the payload carries file_path (stdio clients) read it from the filesystem — no base64, no size cap. Otherwise call gkill_get_idf_file with rep_name and file_name; for images it is the only producer of the MCP image block, which is what puts the picture in front of you and lets it serve as a reference image for image generation. file_url / file_url_full are links to hand a human (images: file_url is a downscaled thumbnail, file_url_full the original, no size cap) — MCP never fetches them for you, and bytes pulled from a URL are not a picture you can look at. " +
     "Plugin-provided entries (any data_type that is not one of the built-ins above) have payload.kind='plugin' carrying data_type/rep_name/kyou_id/plugin_name; their body is not stored in gkill, so set include_plugin_content:true on this same call to get it inline as payload.content_text.",
   properties: {
-    update_cache: { type: "boolean", description: "Force cache refresh before query." },
+    update_cache: {
+      type: "boolean",
+      description:
+        "Force cache refresh before query. Does NOT change any user data, but it is not free either: " +
+        "it triggers a rebuild of the derived caches (I/O and wait time), so a 'read-only' call with this flag " +
+        "still has an operational side effect. Leave it off unless a record you know exists is missing from results.",
+    },
     include_deleted_data: { type: "boolean", description: "Also return soft-deleted entries. Default false. Deleted entries carry is_deleted:true in the result, so you can tell them apart. Use this to find what was deleted; use gkill_get_kyou_history to read one deleted entry in full, and gkill_restore_kyou (on a server that exposes write tools) to bring it back. Note rekyou / mirekyou entries stay hidden even with this flag (their repositories filter deleted rows internally), and git_commit_log has no concept of deletion. Note also that a deleted entry is indexed by the time it was DELETED, not by its original related_time: gkill is append-only, so the delete is the newest version. A calendar range with this flag on therefore also surfaces entries created on other days that merely happened to be deleted inside the range." },
     rep_types: {
       type: "array",
