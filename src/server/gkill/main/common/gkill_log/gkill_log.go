@@ -13,7 +13,16 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
-var LogLevelFromCmd = "none"
+// LogLevelFromCmd は --log の値。**既定は error。**
+//
+// 以前の既定は none で、--log を付けずに起動すると gkill_error.log を含む全ファイルが
+// 0バイトのままだった。実際 2026-08-30 の障害では、たまたま --log debug で動かしていた回の
+// ログが残っていたおかげでしか原因に辿り着けなかった。「gkill_error.log に出ていなければ
+// 起きていない」と言えることを既定にする。
+//
+// error にしているのは、Warn 以下には常態化しうるもの（rep パターンの0件マッチ、
+// プラグインの再起動、認証の失敗）が入るため。回転はあるが、既定で流れ続けさせない。
+var LogLevelFromCmd = "error"
 
 var router *Router
 
