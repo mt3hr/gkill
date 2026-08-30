@@ -83,7 +83,7 @@ func readBodyCapped(w http.ResponseWriter, r *http.Request, ctx context.Context,
 //
 // ボディを読む経路には使わないこと。認証ミドルウェアを通らないため readAuthBody の
 // 32MB上限が効かず、未認証の無制限ボディがそのままヒープへ載る。ボディ付きの
-// 無認証経路は wrapNoAuthCapped を使う（serve_noauth_body_cap_test.go が機械検査する）。
+// 無認証経路は wrapNoAuthCapped を使う（auth_middleware_capped_test.go が機械検査する）。
 func (g *GkillServerAPI) wrapNoAuth(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !g.filterLocalOnly(w, r) {
