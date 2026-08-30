@@ -271,7 +271,7 @@ export const WRITE_TOOLS = [
       "Valid data_type values: kmemo (text memo), urlog (bookmark), nlog (expense), lantana (mood), timeis (time interval), mi (task), kc (numeric), tag, text, rekyou (repost), mirekyou (an entry turned into a task), notification. " +
       "The appropriate update endpoint is selected automatically based on data_type. " +
       "Response fields: updated_{data_type} (the entity with is_deleted=true), and updated_kyou (parent Kyou wrapper) only for types that have one — tag and text are attached data with no Kyou of their own, so their responses carry updated_tag / updated_text alone. " +
-      "Fails with 'Entity is already deleted' when the entry is already deleted, instead of stacking another pointless version — the counterpart of gkill_restore_kyou's 'already active' guard — so it is safe to call speculatively. " +
+      "Fails with 'Entity is already deleted' when the entry is already deleted, instead of stacking another pointless version — the counterpart of gkill_restore_kyou's 'already active' guard — so it is safe to retry after an uncertain response (a timeout, say). It is NOT safe to call speculatively: an active entry WILL be deleted. " +
       "Note: this is a soft-delete. The entry stays in the database — read it back with gkill_get_kyou_history, list deleted entries with query.include_deleted_data on gkill_get_kyous, and undo with gkill_restore_kyou. " +
       "Note: idf (file) and git_commit_log entries cannot be deleted via this tool — they are managed by the file system and git repositories respectively.",
     inputSchema: {
@@ -509,7 +509,7 @@ export const WRITE_TOOLS = [
       "delete/restore cycles keep growing the history. " +
       "Note the restored entry lands in the account's current write repository, which is not necessarily the " +
       "repository it came from. " +
-      "Fails with 'already active' when the entry is not deleted, so it is safe to call speculatively. " +
+      "Fails with 'already active' when the entry is not deleted, so it is safe to retry after an uncertain response (a timeout, say). It is NOT safe to call speculatively: a deleted entry WILL be restored. " +
       "Response fields: restored_{data_type} (the entity with is_deleted=false), updated_kyou (parent Kyou wrapper, when the server returns one).",
     inputSchema: {
       type: "object",

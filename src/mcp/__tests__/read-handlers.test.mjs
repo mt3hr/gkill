@@ -631,6 +631,62 @@ describe("0件の要約 (2026-08-24 再監査 Q-05)", () => {
 });
 
 // ---------------------------------------------------------------------------
+// トップレベル plugins[] の素通し (2026-08-30 レビュー P1)
+//
+// Go はページに現れたプラグインの説明を rep 名ごと1回だけ応答トップレベルの plugins[]
+// で返し、各 Kyou の payload には rep_name / plugin_name しか載せない設計
+// (説明の焼き込み排除)。ここがコピーを落とすと、ツール説明が約束しているのに
+// 「各 Kyou にもトップレベルにも説明が無い」状態になる。
+// ---------------------------------------------------------------------------
+describe("handleReadToolCall — top-level plugins[] passthrough", () => {
+  const PLUGINS = [
+    { rep_name: "ExamplePluginRep", plugin_name: "example_plugin", description: "プラグインの説明文" },
+  ];
+
+  function pageResponse(extra = {}) {
+    return {
+      kyous: [{ id: "k1", rep_name: "ExamplePluginRep", data_type: "example_type" }],
+      total_count: 1,
+      returned_count: 1,
+      remaining_count: 0,
+      has_more: false,
+      ...extra,
+    };
+  }
+
+  test("copies plugins[] from the gkill response verbatim", async () => {
+    const ctx = makeCtx(async () => pageResponse({ plugins: PLUGINS }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_kyous", {});
+    expect(payload.plugins).toEqual(PLUGINS);
+  });
+
+  test("omits plugins when the page carries none (ordinary kyous only)", async () => {
+    const ctx = makeCtx(async () => pageResponse());
+    const payload = await handleReadToolCall(ctx, "gkill_get_kyous", {});
+    expect(payload.plugins).toBeUndefined();
+  });
+
+  test("omits plugins when gkill returns an empty array", async () => {
+    const ctx = makeCtx(async () => pageResponse({ plugins: [] }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_kyous", {});
+    expect(payload.plugins).toBeUndefined();
+  });
+
+  test("count_only responses carry no plugins", async () => {
+    // Go は count_only / group_by で plugins を作らない。Node 側も条件付きコピーなので付かない。
+    const ctx = makeCtx(async () => ({
+      kyous: [],
+      total_count: 3,
+      returned_count: 0,
+      remaining_count: 0,
+      has_more: false,
+    }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_kyous", { count_only: true });
+    expect(payload.plugins).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 古いツールスキーマを掴んだクライアントへの警告
 //
 // MCPのツール一覧はクライアントのセッション寿命で固定されるため、サーバを直しても
