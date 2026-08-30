@@ -129,11 +129,11 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 
 	privateIP, err := privateIPv4s()
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error at i pv4s", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get private ipv4 addresses", "error", fmt.Sprintf("%q", err))
 	}
 	globalIP, err := globalIP(context.Background())
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error at ip", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get global ip", "error", fmt.Sprintf("%q", err))
 	}
 	privateIPStr := ""
 	if len(privateIP) != 0 {
