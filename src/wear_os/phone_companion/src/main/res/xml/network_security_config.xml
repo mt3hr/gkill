@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  平文(HTTP)通信の許可範囲を絞る設定。src/android の同名設定と同じ判断。
+
+  companion が平文で繋いでよいのは電話機内のループバック(http://localhost:9999 等)だけ。
+  LAN や外部ホストへ平文で繋ぐと password_sha256 とセッションIDがそのまま流れるため、
+  既定では平文を全面禁止し、localhost / 127.0.0.1 のドメインに限って許可する。
+  外部サーバーへは HTTPS を使う(自己署名は GkillServerTrust の TOFU/ピン留めで許可できる)。
+  保存前の入力検証は GkillServerUrlPolicy が同じ境界で行う。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>
