@@ -3,26 +3,51 @@
 // to POST /oauth/authorize. The password is SHA-256 hashed client-side
 // before submission (matching gkill backend convention).
 
+// scope → 同意画面の説明。以前のログイン画面は scope を hidden で送るだけで
+// 「何に書き込み許可を与えるのか」を一切表示していなかった (2026-08-30 レビュー P0)。
+// 未知の scope は認可側の検証で 400 になるのでここへは来ないが、来ても生の値を出す。
+const SCOPE_DESCRIPTIONS = {
+  "gkill:read": {
+    label: "読み取り専用",
+    detail: "記録の閲覧のみできます。追加・変更・削除はできません。",
+    writable: false,
+  },
+  "gkill:write": {
+    label: "書き込み",
+    detail: "記録の追加・更新・削除・復元ができます。",
+    writable: true,
+  },
+  "gkill:readwrite": {
+    label: "読み書き",
+    detail: "記録の閲覧に加えて、追加・更新・削除・復元ができます。",
+    writable: true,
+  },
+};
+
 /**
  * Render the authorization login page.
  * @param {object} params
  * @param {string} params.clientId
+ * @param {string} [params.clientName] - DCR で登録された表示名 (無ければ空)。
  * @param {string} params.redirectUri
  * @param {string} params.state
  * @param {string} params.codeChallenge
  * @param {string} params.codeChallengeMethod
  * @param {string} params.scope
+ * @param {string} [params.issuer] - 許可先のサーバ (公開 issuer URL)。
  * @param {string} [params.resource] - RFC 8707 resource indicator.
  * @param {string} [params.error] - Error message to display (e.g., "Invalid credentials").
  * @returns {string} HTML string.
  */
 export function renderLoginPage({
   clientId,
+  clientName,
   redirectUri,
   state,
   codeChallenge,
   codeChallengeMethod,
   scope,
+  issuer,
   resource,
   error,
 }) {
@@ -35,6 +60,14 @@ export function renderLoginPage({
   const errorBlock = error
     ? `<div class="error">${escHtml(error)}</div>`
     : "";
+
+  const scopeInfo = SCOPE_DESCRIPTIONS[scope] || { label: scope, detail: "", writable: false };
+  const consentBlock = `<div class="consent">
+    <div class="consent-row"><span class="consent-key">アプリ</span><span>${escHtml(clientName || "(名前未登録のクライアント)")}</span></div>
+    <div class="consent-row"><span class="consent-key">許可する操作</span><span class="${scopeInfo.writable ? "consent-writable" : ""}">${escHtml(scopeInfo.label)} (${escHtml(scope)})</span></div>
+    ${scopeInfo.detail ? `<div class="consent-detail">${escHtml(scopeInfo.detail)}</div>` : ""}
+    ${issuer ? `<div class="consent-row"><span class="consent-key">接続先</span><span>${escHtml(issuer)}</span></div>` : ""}
+  </div>`;
 
   return `<!DOCTYPE html>
 <html lang="ja">
@@ -67,6 +100,15 @@ export function renderLoginPage({
     background: #7a0117; color: #ef9a9a; border: 1px solid #a0334d;
     border-radius: 4px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.9rem;
   }
+  .consent {
+    background: #2a2a2a; border: 1px solid #444; border-radius: 4px;
+    padding: 12px 14px; margin-bottom: 20px; font-size: 0.85rem;
+  }
+  .consent-row { display: flex; gap: 12px; margin-bottom: 6px; word-break: break-all; }
+  .consent-row:last-child { margin-bottom: 0; }
+  .consent-key { color: #999999; flex: 0 0 6.5em; }
+  .consent-writable { color: #ffb74d; font-weight: 500; }
+  .consent-detail { color: #bbbbbb; margin: 2px 0 8px; }
   label { display: block; font-size: 0.75rem; color: #999999; margin-bottom: 4px; }
   input[type="text"], input[type="password"] {
     width: 100%; padding: 10px 12px; border: 1px solid #555; border-radius: 4px;
@@ -91,6 +133,7 @@ export function renderLoginPage({
   <h1>gkill</h1>
   <div class="subtitle">MCP OAuth ログイン</div>
   ${errorBlock}
+  ${consentBlock}
   <form id="loginForm" method="POST" action="/oauth/authorize">
     <input type="hidden" name="client_id" value="${escHtml(clientId)}">
     <input type="hidden" name="redirect_uri" value="${escHtml(redirectUri)}">
