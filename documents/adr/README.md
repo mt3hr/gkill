@@ -205,6 +205,8 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0614](0614-filter-by-create-app-at-request-level.md) | 「どのアプリが書いたか」の絞り込みは FindQuery ではなく MCP リクエストに置く | Accepted |
 | [0615](0615-write-user-comes-from-the-authenticated-session.md) | 書き込みに刻む user は、その要求を認証したセッションから決める | Accepted |
 | [0616](0616-update-rejects-an-empty-patch.md) | 更新は「変わる欄が1つも無い」なら書かずに断る | Accepted |
+| [0617](0617-oauth-scope-is-one-value-per-server-kind.md) | OAuth の scope はサーバ種別ごとに1値 | Accepted |
+| [0618](0618-urlog-outbound-fetch-is-default-on-with-opt-out.md) | urlog の外向き取得は既定で行い、引数で項目別に抑止する | Accepted |
 | [0701](0701-argon2id-password-storage.md) | パスワードは Argon2id で保存し、ワイヤ形式（password_sha256）は変えない | Accepted |
 | [0702](0702-share-owner-from-session.md) | 共有情報の所有者はリクエスト本文ではなくセッションから決める | Accepted |
 | [0703](0703-shared-file-authz-by-query.md) | 共有ページのファイル配信は共有クエリを再評価した許可パス集合にだけ許す | Accepted |
