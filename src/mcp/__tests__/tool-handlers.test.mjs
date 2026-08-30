@@ -53,6 +53,13 @@ describe("Tool definitions", () => {
       expect(tool.inputSchema.additionalProperties).toBe(false);
     }
   });
+
+  test("gkill_get_kyous tells AI to inspect repository warnings independently of partial", () => {
+    const description = READ_TOOLS.find((tool) => tool.name === "gkill_get_kyous")?.description || "";
+    expect(description).toContain("even when partial is false");
+    expect(description).toContain("failed to load");
+    expect(description).toContain("do not put a repository named by that warning back into query.reps");
+  });
 });
 
 // ---------------------------------------------------------------------------
