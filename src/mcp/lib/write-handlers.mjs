@@ -13,7 +13,7 @@
 
 import crypto from "node:crypto";
 
-import { GkillApiError } from "./errors.mjs";
+import { GkillApiError, invalidArgument } from "./errors.mjs";
 import { WRITE_TOOLS } from "./write-tools.mjs";
 import { entityNotFoundMessage, appendStaleSchemaNoteToSummary } from "./payload.mjs";
 import { appendStaleSchemaWarning } from "./normalization.mjs";
@@ -64,6 +64,29 @@ async function resolveDefaultBoardName(ctx, localeName) {
     // 既定板が引けないことを理由にタスク作成そのものを失敗させない
   }
   return "Inbox";
+}
+
+// assertBoardExists は board_name が実在の板名か照合し、無ければ呼び出し側エラーで弾く。
+// gkill 側 (AddMi / UpdateMi) は板の実在を確かめず、未知の板名は新しい板の作成になる。
+// それが既定の仕様だが、AI の typo がそのまま新しい板になると気付きにくいので、
+// allow_create_board:false のときだけこの照合を通す (2026-08-30 MCPレビュー、フラグ追加)。
+// 照合は完全一致 —— 板名の大小・空白ゆらぎを吸収すると「似た名前の別の板」へ落ちて
+// しまい、typo 検出という目的と矛盾する。
+async function assertBoardExists(ctx, boardName, localeName) {
+  const response = await ctx.client.callApi(
+    "/api/get_mi_board_list",
+    localeName !== undefined ? { locale_name: localeName } : {},
+    true, ctx.sid,
+  );
+  const boards = Array.isArray(response.boards) ? response.boards : [];
+  if (!boards.includes(boardName)) {
+    throw invalidArgument(
+      "board_name",
+      `unknown board ${JSON.stringify(boardName)} — gkill would create a new board with this name. ` +
+        `Pass allow_create_board:true to allow that, or pick an existing board (gkill_get_mi_board_list)`,
+      boardName,
+    );
+  }
 }
 
 // stripUrlogImages は URLog の応答から画像の base64 を落とす。
@@ -124,7 +147,17 @@ const UPDATE_TARGETS = {
   nlog: { normalize: normalizeUpdateNlogArgs, patchFields: ["title", "amount", "shop", "related_time"] },
   lantana: { normalize: normalizeUpdateLantanaArgs, patchFields: ["mood", "related_time"] },
   timeis: { normalize: normalizeUpdateTimeIsArgs, patchFields: ["title", "start_time", "end_time"] },
-  mi: { normalize: normalizeUpdateMiArgs, patchFields: ["title", "board_name", "is_checked", "limit_time", "estimate_start_time", "estimate_end_time"] },
+  mi: {
+    normalize: normalizeUpdateMiArgs,
+    patchFields: ["title", "board_name", "is_checked", "limit_time", "estimate_start_time", "estimate_end_time"],
+    // allow_create_board:false のときだけ、移動先の板名を実在の板と照合する
+    // (add と同じ typo ガード。patchFields ではないので実体には書かれない)。
+    preUpdate: async (ctx, normalized) => {
+      if (normalized.allow_create_board === false && normalized.board_name !== undefined) {
+        await assertBoardExists(ctx, normalized.board_name, normalized.locale_name);
+      }
+    },
+  },
   kc: { normalize: normalizeUpdateKcArgs, patchFields: ["title", "num_value", "related_time"] },
   tag: { normalize: normalizeUpdateTagArgs, patchFields: ["tag"] },
   text: { normalize: normalizeUpdateTextArgs, patchFields: ["text"] },
@@ -148,6 +181,10 @@ async function runUpdate(ctx, dataType, args) {
     throw new GkillApiError(`Unsupported data_type for update: ${dataType}`);
   }
   const normalized = spec.normalize(args);
+  // 型固有の事前検証 (現状は mi の板名照合だけ)。取得より前に置いて fail-fast にする。
+  if (spec.preUpdate) {
+    await spec.preUpdate(ctx, normalized);
+  }
   const getResponse = await ctx.client.callApi(target.getEndpoint, { id: normalized.id }, true, ctx.sid);
   const histories = getResponse[target.historiesKey];
   if (!Array.isArray(histories) || histories.length === 0) {
@@ -348,7 +385,15 @@ async function dispatchWriteToolCall(ctx, name, args) {
         };
         const response = await ctx.client.callApi(
           "/api/add_urlog",
-          { urlog, want_response_kyou: true, locale_name: normalized.locale_name },
+          {
+            urlog,
+            want_response_kyou: true,
+            locale_name: normalized.locale_name,
+            // fetch_metadata / fetch_favicon (既定 true) を Go 側の抑止フラグへ反転して写す。
+            // 両方 false ならサーバは対象サイトにも favicon サービスにも外向き通信しない。
+            skip_fetch_metadata: normalized.fetch_metadata === false,
+            skip_fetch_favicon: normalized.fetch_favicon === false,
+          },
           true, ctx.sid,
         );
         return {
@@ -431,6 +476,11 @@ async function dispatchWriteToolCall(ctx, name, args) {
 
       case "gkill_add_mi": {
         const normalized = normalizeMiArgs(args);
+        // allow_create_board:false のときだけ、指定された板名を実在の板と照合する。
+        // 既定板への補完値は照合しない (板が1つも無い新規アカウントで既定板すら弾いてしまう)。
+        if (normalized.allow_create_board === false && normalized.board_name !== undefined) {
+          await assertBoardExists(ctx, normalized.board_name, normalized.locale_name);
+        }
         // board_name 未指定ならアカウントの既定板へ入れる。
         // Go 側の AddMi に既定補完は無く (MiDefaultBoard を見るのは KFTL 経路だけ)、
         // 空文字のまま送ると名前の無い板にタスクが積まれてどの画面にも出てこない。

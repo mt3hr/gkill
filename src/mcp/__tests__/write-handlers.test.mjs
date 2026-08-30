@@ -739,3 +739,132 @@ describe("summarizeWriteToolPayload — 表から作る", () => {
     expect(summarizeWriteToolPayload("gkill_add_kmemo", { added_kmemo: { id: "k1" } })).toBe("Created kmemo: k1");
   });
 });
+
+// ---------------------------------------------------------------------------
+// gkill_add_urlog の外向き取得抑止フラグ (2026-08-30 MCPレビュー、フラグ追加)
+// サーバは登録時に対象サイトと favicon サービスへ外向き通信する。
+// fetch_metadata / fetch_favicon (既定 true) を Go 側の skip_fetch_* へ反転して写す。
+// ---------------------------------------------------------------------------
+describe("handleWriteToolCall — urlog fetch suppression flags", () => {
+  test("既定では skip_fetch_* = false (従来どおり取得する)", async () => {
+    const ctx = makeCtx(async () => ({ added_urlog: { id: "u1" } }));
+    await handleWriteToolCall(ctx, "gkill_add_urlog", { url: "https://example.com" });
+
+    const [, body] = ctx.client.callApi.mock.calls[0];
+    expect(body.skip_fetch_metadata).toBe(false);
+    expect(body.skip_fetch_favicon).toBe(false);
+  });
+
+  test("fetch_metadata:false / fetch_favicon:false は反転して skip_fetch_* へ写る", async () => {
+    const ctx = makeCtx(async () => ({ added_urlog: { id: "u1" } }));
+    await handleWriteToolCall(ctx, "gkill_add_urlog", {
+      url: "https://example.com",
+      title: "example title",
+      fetch_metadata: false,
+      fetch_favicon: false,
+    });
+
+    const [, body] = ctx.client.callApi.mock.calls[0];
+    expect(body.skip_fetch_metadata).toBe(true);
+    expect(body.skip_fetch_favicon).toBe(true);
+  });
+
+  test("フラグは独立 (favicon だけ抑止できる)", async () => {
+    const ctx = makeCtx(async () => ({ added_urlog: { id: "u1" } }));
+    await handleWriteToolCall(ctx, "gkill_add_urlog", { url: "https://example.com", fetch_favicon: false });
+
+    const [, body] = ctx.client.callApi.mock.calls[0];
+    expect(body.skip_fetch_metadata).toBe(false);
+    expect(body.skip_fetch_favicon).toBe(true);
+  });
+
+  test("古いスキーマからの文字列 \"false\" も型が復元され、古さの警告が付く", async () => {
+    // 後付け引数は古いツールスキーマを掴んだクライアントから正規JSON文字列で届く
+    const ctx = makeCtx(async () => ({ added_urlog: { id: "u1" } }));
+    const payload = await handleWriteToolCall(ctx, "gkill_add_urlog", {
+      url: "https://example.com",
+      fetch_metadata: "false",
+    });
+
+    const [, body] = ctx.client.callApi.mock.calls[0];
+    expect(body.skip_fetch_metadata).toBe(true);
+    expect(payload.warnings?.some((w) => String(w).includes("tool schema snapshot looks stale"))).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// allow_create_board — 板名の typo ガード (2026-08-30 MCPレビュー、フラグ追加)
+// gkill 側は板の実在を確かめず、未知の板名は新しい板の作成になる (それが既定の仕様)。
+// false のときだけ板一覧と照合して弾く。既定 true では照合の往復すら発生しない。
+// ---------------------------------------------------------------------------
+describe("handleWriteToolCall — allow_create_board", () => {
+  test("add: false で未知の板名は登録前に弾かれる (/api/add_mi へ行かない)", async () => {
+    const ctx = makeCtx(async () => ({ boards: ["Inbox", "errands"] }));
+    await expect(
+      handleWriteToolCall(ctx, "gkill_add_mi", { title: "x", board_name: "erands", allow_create_board: false }),
+    ).rejects.toThrow(/unknown board/);
+
+    expect(ctx.client.callApi).toHaveBeenCalledTimes(1);
+    expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/get_mi_board_list");
+  });
+
+  test("add: false でも実在の板名なら登録される", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ boards: ["Inbox", "errands"] })
+      .mockResolvedValueOnce({ added_mi: { id: "m1" } });
+
+    await handleWriteToolCall(ctx, "gkill_add_mi", { title: "x", board_name: "errands", allow_create_board: false });
+
+    expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/get_mi_board_list");
+    expect(ctx.client.callApi.mock.calls[1][0]).toBe("/api/add_mi");
+    expect(ctx.client.callApi.mock.calls[1][1].mi.board_name).toBe("errands");
+  });
+
+  test("add: 既定(true)では板一覧を照合しない (従来どおり未知の板名は新しい板になる)", async () => {
+    const ctx = makeCtx(async () => ({ added_mi: { id: "m1" } }));
+    await handleWriteToolCall(ctx, "gkill_add_mi", { title: "x", board_name: "brand-new-board" });
+
+    expect(ctx.client.callApi).toHaveBeenCalledTimes(1);
+    expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/add_mi");
+  });
+
+  test("update: false で未知の板名は現在値の取得より前に弾かれる", async () => {
+    const ctx = makeCtx(async () => ({ boards: ["Inbox"] }));
+    await expect(
+      handleWriteToolCall(ctx, "gkill_update_mi", { id: "m1", board_name: "no-such-board", allow_create_board: false }),
+    ).rejects.toThrow(/unknown board/);
+
+    expect(ctx.client.callApi).toHaveBeenCalledTimes(1);
+    expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/get_mi_board_list");
+  });
+
+  test("update: false でも実在の板名なら移動できる", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ boards: ["Inbox", "errands"] })
+      .mockResolvedValueOnce({
+        mi_histories: [{ id: "m1", title: "x", board_name: "Inbox", is_checked: false, update_time: "2026-08-30T10:00:00+09:00" }],
+      })
+      .mockResolvedValueOnce({ updated_mi: { id: "m1", board_name: "errands" }, updated_kyou: { id: "m1" } });
+
+    const result = await handleWriteToolCall(ctx, "gkill_update_mi", {
+      id: "m1",
+      board_name: "errands",
+      allow_create_board: false,
+    });
+
+    expect(ctx.client.callApi.mock.calls[1][0]).toBe("/api/get_mi");
+    expect(ctx.client.callApi.mock.calls[2][0]).toBe("/api/update_mi");
+    expect(result.updated_mi.board_name).toBe("errands");
+  });
+
+  test("update: allow_create_board だけでは「変わる欄なし」として拒否される (修飾子であって変更ではない)", async () => {
+    const ctx = makeCtx(async () => ({
+      mi_histories: [{ id: "m1", title: "x", board_name: "Inbox", update_time: "2026-08-30T10:00:00+09:00" }],
+    }));
+    await expect(
+      handleWriteToolCall(ctx, "gkill_update_mi", { id: "m1", allow_create_board: false }),
+    ).rejects.toThrow(/No fields to update/);
+  });
+});
