@@ -56,20 +56,23 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	router.PathPrefix("/zip_cache/").HandlerFunc(withUserContentSecurityHeaders(g.wrapNoAuth(g.HandleZipCacheFileServe)))
 
 	// --- wrapNoAuth routes (no auth needed) ---
-	router.HandleFunc(g.APIAddress.LoginAddress, g.wrapNoAuth(g.HandleLogin)).Methods(g.APIAddress.LoginMethod)
-	router.HandleFunc(g.APIAddress.LogoutAddress, g.wrapNoAuth(g.HandleLogout)).Methods(g.APIAddress.LogoutMethod)
-	router.HandleFunc(g.APIAddress.ResetPasswordAddress, g.wrapNoAuth(g.HandleResetPassword)).Methods(g.APIAddress.ResetPasswordMethod)
-	router.HandleFunc(g.APIAddress.SetNewPasswordAddress, g.wrapNoAuth(g.HandleSetNewPassword)).Methods(g.APIAddress.SetNewPasswordMethod)
-	router.HandleFunc(g.APIAddress.GetSharedKyousAddress, g.wrapNoAuth(g.HandleGetSharedKyous)).Methods(g.APIAddress.GetSharedKyousMethod)
+	// ボディを読む経路は wrapNoAuthCapped で経路別のボディ上限と読み取り期限を掛ける。
+	// 認証ミドルウェアを通らないため readAuthBody の32MB上限が効かない（2026-08-30 監査 F-002）。
+	// 素の wrapNoAuth に残してよいのはボディを読まない経路だけ（serve_noauth_body_cap_test.go）。
+	router.HandleFunc(g.APIAddress.LoginAddress, g.wrapNoAuthCapped(g.HandleLogin, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.LoginMethod)
+	router.HandleFunc(g.APIAddress.LogoutAddress, g.wrapNoAuthCapped(g.HandleLogout, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.LogoutMethod)
+	router.HandleFunc(g.APIAddress.ResetPasswordAddress, g.wrapNoAuthCapped(g.HandleResetPassword, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.ResetPasswordMethod)
+	router.HandleFunc(g.APIAddress.SetNewPasswordAddress, g.wrapNoAuthCapped(g.HandleSetNewPassword, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.SetNewPasswordMethod)
+	router.HandleFunc(g.APIAddress.GetSharedKyousAddress, g.wrapNoAuthCapped(g.HandleGetSharedKyous, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.GetSharedKyousMethod)
 	router.HandleFunc(g.APIAddress.UpdateCacheAddress, g.wrapAuth(g.HandleUpdateCache)).Methods(g.APIAddress.UpdateCacheMethod)
-	router.HandleFunc(g.APIAddress.URLogBookmarkletAddress, g.wrapNoAuth(g.HandleURLogBookmarkletAddress)).Methods(g.APIAddress.URLogBookmarkletMethod)
+	router.HandleFunc(g.APIAddress.URLogBookmarkletAddress, g.wrapNoAuthCapped(g.HandleURLogBookmarkletAddress, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.URLogBookmarkletMethod)
 	router.HandleFunc(g.APIAddress.URLogBookmarkletPageAddress, g.wrapNoAuth(g.HandleURLogBookmarkletPage)).Methods(g.APIAddress.URLogBookmarkletPageMethod)
-	router.HandleFunc(g.APIAddress.GetKyousMCPAddress, g.wrapNoAuth(g.HandleGetKyousMCP)).Methods(g.APIAddress.GetKyousMCPMethod)
-	router.HandleFunc(g.APIAddress.GetRepInfosMCPAddress, g.wrapNoAuth(g.HandleGetRepInfosMCP)).Methods(g.APIAddress.GetRepInfosMCPMethod)
-	router.HandleFunc(g.APIAddress.UploadFilesAddress, g.wrapNoAuth(g.HandleUploadFiles)).Methods(g.APIAddress.UploadFilesMethod)
-	router.HandleFunc(g.APIAddress.UploadGPSLogFilesAddress, g.wrapNoAuth(g.HandleUploadGPSLogFiles)).Methods(g.APIAddress.UploadGPSLogFilesMethod)
-	router.HandleFunc(g.APIAddress.BrowseZipContentsAddress, g.wrapNoAuth(g.HandleBrowseZipContents)).Methods(g.APIAddress.BrowseZipContentsMethod)
-	router.HandleFunc(g.APIAddress.GetIDFKyouByRelativePathAddress, g.wrapNoAuth(g.HandleGetIDFKyouByRelativePath)).Methods(g.APIAddress.GetIDFKyouByRelativePathMethod)
+	router.HandleFunc(g.APIAddress.GetKyousMCPAddress, g.wrapNoAuthCapped(g.HandleGetKyousMCP, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.GetKyousMCPMethod)
+	router.HandleFunc(g.APIAddress.GetRepInfosMCPAddress, g.wrapNoAuthCapped(g.HandleGetRepInfosMCP, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.GetRepInfosMCPMethod)
+	router.HandleFunc(g.APIAddress.UploadFilesAddress, g.wrapNoAuthCapped(g.HandleUploadFiles, maxUploadBodyBytes, uploadBodyReadTimeout)).Methods(g.APIAddress.UploadFilesMethod)
+	router.HandleFunc(g.APIAddress.UploadGPSLogFilesAddress, g.wrapNoAuthCapped(g.HandleUploadGPSLogFiles, maxUploadBodyBytes, uploadBodyReadTimeout)).Methods(g.APIAddress.UploadGPSLogFilesMethod)
+	router.HandleFunc(g.APIAddress.BrowseZipContentsAddress, g.wrapNoAuthCapped(g.HandleBrowseZipContents, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.BrowseZipContentsMethod)
+	router.HandleFunc(g.APIAddress.GetIDFKyouByRelativePathAddress, g.wrapNoAuthCapped(g.HandleGetIDFKyouByRelativePath, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.GetIDFKyouByRelativePathMethod)
 
 	// --- wrapAuth routes (auth only, no repos) ---
 	router.HandleFunc(g.APIAddress.GetApplicationConfigAddress, g.wrapAuth(g.HandleGetApplicationConfig)).Methods(g.APIAddress.GetApplicationConfigMethod)
