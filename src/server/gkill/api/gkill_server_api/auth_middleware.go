@@ -105,8 +105,10 @@ func (g *GkillServerAPI) wrapNoAuthCapped(h http.HandlerFunc, limitBytes int64, 
 		}
 		rc := http.NewResponseController(w)
 		if err := rc.SetReadDeadline(time.Now().Add(readTimeout)); err != nil {
-			// httptest.ResponseRecorder 等、期限を持てない実装では上限だけで守る
-			slog.Log(r.Context(), gkill_log.Debug, "error at set read deadline for no-auth capped route", "error", fmt.Sprintf("%q", err))
+			// 期限を張れないとスローボディ対策が1段消える(上限だけで守る状態になる)ので Warn。
+			// 本番経路のラッパ(responseRecorder / gzipResponseWriter)は Unwrap を実装しており
+			// ここへは来ない。来るのは httptest.ResponseRecorder 等、期限を持てない実装だけ。
+			slog.Log(r.Context(), gkill_log.Warn, "error at set read deadline for no-auth capped route", "error", fmt.Sprintf("%q", err))
 		}
 		rawBody, ok := readBodyCapped(w, r, r.Context(), limitBytes)
 		if !ok {

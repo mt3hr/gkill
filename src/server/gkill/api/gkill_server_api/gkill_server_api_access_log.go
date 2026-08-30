@@ -58,6 +58,13 @@ func (rr *responseRecorder) WriteHeader(code int) {
 	rr.ResponseWriter.WriteHeader(code)
 }
 
+// Unwrap は http.ResponseController がラッパ越しに SetReadDeadline 等へ届くための口です。
+// これが無いと wrapNoAuthCapped の読み取り期限が本番の全経路で静かに効かなくなります
+// (auth_middleware_capped_test.go が検査)。
+func (rr *responseRecorder) Unwrap() http.ResponseWriter {
+	return rr.ResponseWriter
+}
+
 // ---------------------------------------------------------------------------
 // Middleware
 // ---------------------------------------------------------------------------

@@ -157,7 +157,6 @@ var swallowedDebugAllowlist = map[string]string{
 	"error at close response body":              "HTTPレスポンスボディ",
 	"error at fetch attached data for mcp":      "件数を数えて別途まとめて返している",
 	"error at get private ipv4 addresses":       "画面表示用の best effort。取れなくても動く",
-	"error at get global ip":                    "同上",
 	"error at write thumb failed marker":        "次回の生成で取り直せる",
 	"error at write video compat failed marker": "同上",
 	"failed to fill favicon":                    "外部サイトの取得。落ちるのが常態",
