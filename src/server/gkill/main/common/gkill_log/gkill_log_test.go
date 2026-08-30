@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 func TestLevelNameReturnsCorrectNames(t *testing.T) {
@@ -175,6 +177,49 @@ func TestSetMergedFile(t *testing.T) {
 	}
 	if len(data) == 0 {
 		t.Error("expected merged log to have content")
+	}
+}
+
+// Init の実配線で、統合ログとレベル別ログの両方へ同じ行が出ることを確認する。
+// Router単体が正しくても Init が SplitOnly に戻ると gkill.log は常に空になる。
+func TestInitWritesMergedAndSplitLogs(t *testing.T) {
+	tmpDir := t.TempDir()
+	originalLogDir := gkill_options.LogDir
+	originalLevel := LogLevelFromCmd
+	originalRouter := router
+	originalLogger := slog.Default()
+
+	gkill_options.LogDir = tmpDir
+	LogLevelFromCmd = "info"
+	Init()
+	initializedRouter := router
+	t.Cleanup(func() {
+		slog.SetDefault(originalLogger)
+		for _, sink := range initializedRouter.byLevel {
+			_ = sink.Close()
+		}
+		_ = initializedRouter.merged.Close()
+		gkill_options.LogDir = originalLogDir
+		LogLevelFromCmd = originalLevel
+		router = originalRouter
+	})
+
+	slog.Info("init routing test", "test_key", "test_value")
+	_ = initializedRouter.byLevel[Info].Close()
+	_ = initializedRouter.merged.Close()
+
+	for _, name := range []string{"gkill_info.log", "gkill.log"} {
+		data, err := os.ReadFile(filepath.Join(tmpDir, name))
+		if err != nil {
+			t.Fatalf("ReadFile(%s) failed: %v", name, err)
+		}
+		content := string(data)
+		if !strings.Contains(content, "init routing test") {
+			t.Errorf("%s にログ本文が無い: %s", name, content)
+		}
+		if !strings.Contains(content, `"app":"gkill"`) {
+			t.Errorf("%s に静的フィールドが無い: %s", name, content)
+		}
 	}
 }
 
