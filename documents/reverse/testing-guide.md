@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1145 | 170 | Go `testing` |
+| Go バックエンド | 1148 | 172 | Go `testing` |
 | フロントエンド ユニット | 1967 | 166 | Vitest |
 | フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
-| MCP サーバ | 988 | 23 | Vitest |
+| MCP サーバ | 1015 | 24 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 181 | 13 | JUnit 4 + MockK |
-| **合計** | **4,547** | **419** | |
+| **合計** | **4,577** | **422** | |
 
 数え直すコマンド:
 
@@ -206,14 +206,16 @@ src/server/gkill/
 │   │   ├── gkill_error_test.go
 │   │   └── http_status_test.go        ← ステータス表の網羅・分布・名指し固定（下記）
 │   ├── kftl/                          ← KFTL パーサ（6ファイル）
-│   ├── req_res/req_res_test.go        ← JSON 往復テスト
+│   ├── req_res/req_res_test.go        ← ワイヤ契約（JSONタグ名 / omitempty）
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（34ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（35ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── response_status_guard_test.go         ← 全ハンドラが writeErrorStatus を呼ぶこと（ソース走査）
 │       ├── response_status_test.go               ← エラー時のHTTPステータス実挙動（下記）
+│       ├── auth_middleware_capped_test.go        ← 無認証経路のボディ上限・読み取り期限・応答ラッパの Unwrap
+│       ├── handle_add_urlog_skip_wiring_test.go  ← URLog 取得抑止フラグの引数順（ソース走査）
 │       ├── filter_local_only_test.go             ← localhost 判定 (isLocalRequest)
 │       ├── handle_get_idf_kyou_by_relative_path_test.go ← 相対パス解決
 │       ├── handle_get_shared_kyous_test.go       ← 共有Kyou取得
@@ -243,8 +245,8 @@ src/server/gkill/
 ├── usecase/                           ← 規約のソース走査 + キャッシュ反映（3ファイル）
 │   ├── write_through_cache_test.go    ← 書き込み後のキャッシュ反映
 │   ├── cached_rep_insert_alignment_test.go ← INSERT の列並びと引数の並びの一致
-│   └── source_conventions_scan_test.go ← 規約7件のソース走査（下記）
-├── dvnf/                              ← DVNF ファイル管理（2ファイル）
+│   └── source_conventions_scan_test.go ← 規約8件のソース走査（下記）
+├── dvnf/                              ← DVNF ファイル管理（3ファイル。copyFile の実ファイル操作を含む）
 └── main/                              ← CLI・エントリポイント（10ファイル）
 ```
 
@@ -257,7 +259,7 @@ src/server/gkill/
   HTTPレイヤ込みで通す。このパッケージに置いてあるのは、そのやり方では捕まえられない3本だけ。
   理由は [`src/server/gkill/usecase/ABOUT_TEST.md`](../../src/server/gkill/usecase/ABOUT_TEST.md) を参照
 - **規約のソース走査**: 13型・457メソッドのようにコピペで増える形は、**1つだけ抜けても他が緑のまま通る**。
-  `usecase/source_conventions_scan_test.go` が製品コードを実行せずソースの書き方だけを見張る（7件）。
+  `usecase/source_conventions_scan_test.go` が製品コードを実行せずソースの書き方だけを見張る（8件）。
   どれも「`go build` も `go vet` も通り、実行時にエラーも出ずに静かに間違った結果を返す」種類のズレ
 - **HTTPステータス化のガード3本**: エラーコード→ステータスの表（`api/message/http_status.go`）は
   「コードを足したのに分類し忘れる」「ハンドラのコピペで `writeErrorStatus` の1行が抜ける」で静かに壊れる
@@ -446,7 +448,7 @@ graph LR
         A1[gkill_server_api_test.go<br/>統合テスト]
         A2[find_query_test.go<br/>クエリフィルタ]
         A3[kftl/ テスト<br/>KFTL パーサ]
-        A4[req_res_test.go<br/>JSON 往復]
+        A4[req_res_test.go<br/>ワイヤ契約]
         A5[gpslogs_test.go<br/>GPS 解析]
         A6[message_test.go<br/>メッセージ]
     end

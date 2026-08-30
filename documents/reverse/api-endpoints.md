@@ -5,7 +5,7 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、105ファイル。テスト14ファイルを含み、実装は91ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、106ファイル。テスト15ファイルを含み、実装は91ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（186ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、17ファイル）
@@ -281,7 +281,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 |---|---|---|
 | `/api/add_kmemo` | Kmemo | テキストメモ追加 |
 | `/api/add_kc` | KC | 数値記録追加 |
-| `/api/add_urlog` | URLog | ブックマーク追加 |
+| `/api/add_urlog` | URLog | ブックマーク追加。サーバが対象URLと favicon サービスへ外向き取得して空欄を補完する（`skip_fetch_metadata` / `skip_fetch_favicon`、いずれも既定 false = 取得する、で項目別に抑止可能。ID・関連時刻は抑止と無関係に必ず補完される） |
 | `/api/add_nlog` | Nlog | 支出記録追加 |
 | `/api/add_timeis` | TimeIs | 打刻（タイムスタンプ）追加 |
 | `/api/add_mi` | Mi | タスク追加 |
