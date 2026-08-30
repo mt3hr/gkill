@@ -5,10 +5,12 @@ name: Nightly
 # 外している (ローカルの `npm test` は install_server から始まり30分近くかかるため)。
 # それらをまとめてここで毎日回す。
 #
-# 各ジョブは独立で、初期はすべて continue-on-error にしてある。
-# 既知フレーク (mi-operations 2本 / add-dialog-crud / delete-crud) や、
-# 外部 advisory の増減で赤くなりやすいジョブが1つ落ちても、
-# 他のジョブの結果が読めるようにするため。安定したら順に外していく。
+# 各ジョブは独立。E2E と Android/Wear は既知フレーク (mi-operations 2本 /
+# add-dialog-crud / delete-crud。全体負荷依存で Mi 板変更・MiReKyou ダイアログ系も
+# 揺れることが 2026-08-30 の監査ランで観測された) があるため continue-on-error のままにし、
+# 安定したら外していく。govulncheck / npm_audit にはフレーク要因が無いので
+# fail-closed (2026-08-30 監査 F-009)。外部 advisory の増減で赤くなるのは
+# 「新しい既知脆弱性が届いた」という本物の信号で、握りつぶすと次の配布物へ入る。
 #
 # すべて ubuntu-latest で回す。Windows は並列プロセス過多で 0xC0000142 の
 # 偽失敗が出るため、夜間の自動実行には向かない。
@@ -19,6 +21,10 @@ on:
 
   # GitHub Actions画面から手動実行できるようにする
   workflow_dispatch:
+
+# テスト・検査だけのワークフローに書き込み権限は不要 (2026-08-30 監査 F-012)
+permissions:
+  contents: read
 
 jobs:
   e2e:
@@ -119,7 +125,6 @@ jobs:
   govulncheck:
     name: govulncheck (Go)
     runs-on: ubuntu-latest
-    continue-on-error: true
     timeout-minutes: 20
 
     steps:
@@ -156,7 +161,6 @@ jobs:
   npm_audit:
     name: npm audit
     runs-on: ubuntu-latest
-    continue-on-error: true
     timeout-minutes: 15
 
     steps:
