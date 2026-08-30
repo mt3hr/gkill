@@ -16,6 +16,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 |---------|-----------|
 | `gkill_dao_manager_test.go` | GkillDAOManager のライフサイクルと初期化 |
 | `gkill_dao_manager_git_rep_test.go` | git_commit_log の rep 定義（`$HOME/Git/*` のような glob）の展開先に git リポジトリでないディレクトリやファイルが混ざっていても、`GetRepositories` 全体が失敗せず本物の git リポジトリだけを読み込むこと。**ここが崩れると認証ミドルウェアが ERR000018 を返し、対象利用者はログイン直後から全 API が「内部エラー」になる** |
+| `gkill_dao_manager_broken_rep_test.go` | 読み込めない書き込み先以外の rep を1本だけ切り離し、利用可能な rep で継続すること。書き込み先は切り離さず失敗し、設定の `IsEnable` は書き換えない。切り離しの個別行と集約行が Error レベルで出て、正常時には集約行が出ないことも固定する |
 | `gkill_dao_manager_load_idf_rep_only_test.go` | `LoadIDFRepOnly` が立っているとき IDF の rep だけが読み込まれ、それ以外の rep 定義はパターンの展開もディレクトリ作成もされないこと。**判定が `os.MkdirAll` より後ろへ戻ると、読み込まない rep のパターン展開ぶんの走査を丸ごと払う** |
 | `rep_file_glob_test.go` | REPOSITORY の `FILE` パターンの展開が go-zglob と同じ集合を返すこと（`*` が `/` をまたがない・`?` と `[` はリテラル・`**` は go-zglob へフォールバック・区切りの二連・ファイルシステムのルートを走査しない）。**ずれると rep が黙って増減する**（[ADR-0211](../../../../documents/adr/0211-expand-rep-patterns-without-walking.md)） |
 
@@ -58,6 +59,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 ## テスト内容
 
 - **GkillDAOManager**: 全 DAO の初期化・接続管理・ライフサイクル
+- **部分的な保管場所障害**: 利用可能な rep だけでの継続、書き込み先の fail-closed、個別/集約 Error ログ、正常時の無用な集約ログ抑止
 - **アカウント**: ユーザ作成、パスワードハッシュ検証、アカウント更新・削除
 - **セッション**: セッション発行、有効期限検証、セッション破棄
 - **設定管理**: サーバ設定・ユーザ設定・リポジトリ定義の CRUD

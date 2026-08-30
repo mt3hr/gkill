@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-30 |
-| Sources | `438fc8e3` / `src/server/gkill/dao/sqlite3impl/` |
+| Sources | `9914312a` / `src/server/gkill/dao/sqlite3impl/` |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/dao/sqlite3impl/sqlite_connection_test.go` |
@@ -26,7 +26,7 @@ SQLite の耐久性は `journal_mode` 単独では決まらず、**`synchronous`
 書いてあるだけで、DELETE との相性は検討されていなかった。
 
 本番で実際に壊れた。USB接続のディスク上にある directory rep の索引DB
-（`Notes/Dnote/.gkill/gkill_id.db`）が SQLITE_CORRUPT になり、**rep 1本の破損でそのユーザの全APIが500**になった
+（`〈外部ストレージ〉/〈記録保管場所〉/.gkill/gkill_id.db`）が SQLITE_CORRUPT になり、**rep 1本の破損でそのユーザの全APIが500**になった
 （`GetRepositories` が丸ごと失敗し、auth middleware が全リクエストで落ちるため。こちらは ADR-0216 で扱う）。
 
 破損の形は `invalid page number`（B-tree の子ページ番号がヘッダのページ数を超えている）。

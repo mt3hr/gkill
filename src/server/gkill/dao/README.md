@@ -54,16 +54,24 @@ dao/
 全リポジトリの初期化・接続管理・ライフサイクルを統括する中心的な構造体。
 ユースケース層（`usecase/`）および API ハンドラ層は `GkillDAOManager` 経由でリポジトリにアクセスする。
 
-## ルートファイル（6ファイル）
+書き込み先ではないリポジトリの組み立てに失敗した場合は、その1本だけを切り離し、利用可能なものだけで続行する。
+設定の `IsEnable` は変更しない。切り離した各リポジトリと構築全体の集約を Error レベルで記録し、
+呼び出し側が利用者向け警告へ変換できるよう `BrokenReps` を保持する。書き込み先の失敗は切り離さず全体を失敗させる。
+
+## ルートファイル（10ファイル、資料を除く）
 
 | ファイル | 役割 |
 |---------|------|
 | `config_da_os.go` | OS 別の設定ファイルパス定義。Windows / macOS / Linux で異なるパスを返す |
 | `gkill_dao_manager.go` | `GkillDAOManager` 本体。全リポジトリの初期化・接続管理・ライフサイクル統括 |
+| `gkill_dao_manager_broken_rep_test.go` | 読めないリポジトリの部分的切り離し、書き込み先のfail-closed、設定不変、個別/集約ログのテスト |
 | `gkill_dao_manager_test.go` | `GkillDAOManager` のテスト |
 | `gkill_dao_manager_git_rep_test.go` | git_commit_log の rep 定義（glob）に git リポジトリでないエントリが混ざっても `GetRepositories` 全体が落ちないことのテスト |
+| `gkill_dao_manager_load_idf_rep_only_test.go` | IDFだけを必要とする経路で不要なリポジトリを組み立てないことのテスト |
 | `gkill_notificater.go` | Web Push 通知の送信ロジック。VAPID 鍵を使用したブラウザ通知 |
 | `plugin_manager.go` | プラグインバイナリの検出・起動管理。userID をパス要素として使用する前に検証する |
+| `rep_file_glob.go` | リポジトリ定義のファイルパターンを、不要なツリー走査を避けて展開する |
+| `rep_file_glob_test.go` | パターン展開の互換性とルート走査防止のテスト |
 
 ## サブディレクトリ一覧
 

@@ -76,7 +76,9 @@ go-astilectron を使用して Electron ライクなデスクトップウィン�
 ### `gkill_log/`（7ファイル）— ログシステム
 
 `log/slog` ベースのカスタムマルチレベルログ（TraceSQL, Trace, Debug, Access, Info, Warn, Error, None の8レベル）。
-レベル別ファイル分割、統合ログ、stdout ミラーリング、ホットスワップに対応。
+レベル別ファイル分割、統合ログ、stdout ミラーリング、ホットスワップ、サイズ上限による世代回転に対応。
+統合ログとレベル別ログは同時に書かれ、既定では各32 MiB、旧ログ5世代を保持する。
+`--log_rotate_max_bytes` と `--log_rotate_keep` はデスクトップ版・サーバー版の両方に共通である。
 
 | ファイル | 役割 |
 |---------|------|
