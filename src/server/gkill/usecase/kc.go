@@ -52,7 +52,7 @@ func (uc *UsecaseContext) AddKC(ctx context.Context, repositories *reps.GkillRep
 		err = repositories.WriteThroughKCCache(ctx, kc)
 		if err != nil {
 			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
-			slog.Log(ctx, gkill_log.Error, "error at add kc user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.KCTempRep.AddKCInfo(ctx, kc, *txID, userID, device)
@@ -144,7 +144,7 @@ func (uc *UsecaseContext) UpdateKC(ctx context.Context, repositories *reps.Gkill
 		err = repositories.WriteThroughKCCache(ctx, kc)
 		if err != nil {
 			err = fmt.Errorf("error at update kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
-			slog.Log(ctx, gkill_log.Error, "error at update kc user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.KCTempRep.AddKCInfo(ctx, kc, *txID, userID, device)

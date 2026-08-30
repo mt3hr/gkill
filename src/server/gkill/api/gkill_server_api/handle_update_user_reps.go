@@ -111,7 +111,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 		response.Errors = append(response.Errors, gkillError)
 		if err != nil {
 			err = fmt.Errorf("error at delete add all repositories by users user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Warn, "error at delete add all repositories by users user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Warn, "error at delete add all repositories by users", "error", fmt.Sprintf("%q", err))
 		}
 
 		return

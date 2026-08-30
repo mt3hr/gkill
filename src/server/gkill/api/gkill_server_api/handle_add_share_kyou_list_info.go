@@ -117,7 +117,7 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at add ShareKyouListInfo user id = %s device = %s ShareKyouListInfo = %#v: %w", userID, device, request.ShareKyouListInfo, err)
-			slog.Log(r.Context(), gkill_log.Error, "error at add ShareKyouListInfo user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at add ShareKyouListInfo", "error", fmt.Sprintf("%q", err))
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddShareKyouListInfoError,

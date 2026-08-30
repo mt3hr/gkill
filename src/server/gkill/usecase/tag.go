@@ -87,7 +87,7 @@ func (uc *UsecaseContext) AddTag(ctx context.Context, repositories *reps.GkillRe
 		err = repositories.WriteThroughTagCache(ctx, tag)
 		if err != nil {
 			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
-			slog.Log(ctx, gkill_log.Error, "error at add tag user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TagTempRep.AddTagInfo(ctx, tag, *txID, userID, device)
@@ -194,7 +194,7 @@ func (uc *UsecaseContext) UpdateTag(ctx context.Context, repositories *reps.Gkil
 		err = repositories.WriteThroughTagCache(ctx, tag)
 		if err != nil {
 			err = fmt.Errorf("error at update tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
-			slog.Log(ctx, gkill_log.Error, "error at update tag user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TagTempRep.AddTagInfo(ctx, tag, *txID, userID, device)

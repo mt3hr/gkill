@@ -53,7 +53,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 		err = repositories.WriteThroughNotificationCache(ctx, notification)
 		if err != nil {
 			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-			slog.Log(ctx, gkill_log.Error, "error at add notification user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(ctx, notification, *txID, userID, device)
@@ -158,7 +158,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 		err = repositories.WriteThroughNotificationCache(ctx, notification)
 		if err != nil {
 			err = fmt.Errorf("error at update notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-			slog.Log(ctx, gkill_log.Error, "error at update notification user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(ctx, notification, *txID, userID, device)

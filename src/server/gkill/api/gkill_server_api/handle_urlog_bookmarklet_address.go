@@ -164,7 +164,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	err = repositories.WriteThroughURLogCache(r.Context(), *urlog)
 	if err != nil {
 		err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-		slog.Log(r.Context(), gkill_log.Error, "error at add urlog user id =", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 	}
 
 	// rep名の取得に失敗しても、URLog自体はもう保存されている。

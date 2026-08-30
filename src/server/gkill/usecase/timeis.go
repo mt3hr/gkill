@@ -52,7 +52,7 @@ func (uc *UsecaseContext) AddTimeIs(ctx context.Context, repositories *reps.Gkil
 		err = repositories.WriteThroughTimeIsCache(ctx, timeis)
 		if err != nil {
 			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
-			slog.Log(ctx, gkill_log.Error, "error at add timeis user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, timeis, *txID, userID, device)
@@ -144,7 +144,7 @@ func (uc *UsecaseContext) UpdateTimeIs(ctx context.Context, repositories *reps.G
 		err = repositories.WriteThroughTimeIsCache(ctx, timeis)
 		if err != nil {
 			err = fmt.Errorf("error at update timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
-			slog.Log(ctx, gkill_log.Error, "error at update timeis user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, timeis, *txID, userID, device)

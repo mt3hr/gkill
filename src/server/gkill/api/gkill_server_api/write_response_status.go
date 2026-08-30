@@ -57,6 +57,13 @@ func logResponseFailure(ctx context.Context, status int, errs []*message.GkillEr
 		level = gkill_log.Warn
 	}
 
+	// レベルが無効なら組み立てない。Go は引数を呼び出し前に評価するので、
+	// ここを素に書くと既定レベル(error)でも 4xx のたびに文字列を作って捨てることになる
+	// (gkill_log.TraceSQLEnabled と同じ趣旨)。
+	if !slog.Default().Enabled(ctx, level) {
+		return
+	}
+
 	errorCodes := make([]string, 0, len(errs))
 	for _, gkillError := range errs {
 		if gkillError == nil {
