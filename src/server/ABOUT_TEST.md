@@ -2,7 +2,7 @@
 
 ## 概要
 
-Go バックエンドのテスト。1142テスト関数、169テストファイル、31パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
+Go バックエンドのテスト。1145テスト関数、170テストファイル、31パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
 
 ## テストフレームワーク
 
@@ -35,7 +35,7 @@ src/server/gkill/
 │   ├── gkill_notification/       # 通知ターゲット
 │   ├── hide_files/               # ファイル非表示
 │   ├── sqlite3impl/              # SQLite3 ユーティリティ
-│   └── reps/                     # リポジトリ実装 (58ファイル)
+│   └── reps/                     # リポジトリ実装 (59ファイル)
 ├── dvnf/                    # DVNF ファイル管理 (2ファイル)
 └── main/                    # CLI エントリポイント (9ファイル)
     ├── common/                   # 共有ロジック・オプション・ログ・スレッド
@@ -61,12 +61,12 @@ src/server/gkill/
 | 設定 | 3 | サーバ設定、アプリ設定、リポジトリ定義 |
 | 共有・通知 | 3 | 共有情報 CRUD、通知ターゲット |
 | ユーティリティ | 9 | SQLite3 ユーティリティ、ファイル非表示 |
-| リポジトリ | 60 | `reps/` 直下58（13データ型の SQLite3 実装 + キャッシュ + 一時 + プラグイン + プラグイン診断 + デッドロック/ネスト並列回帰 + gitキャッシュUNIQUE + GPS集約dedup + 最新版アドレスのrep名走査）+ `reps/cache/`・`reps/rep_cache_updater/` の2 |
+| リポジトリ | 61 | `reps/` 直下59（13データ型の SQLite3 実装 + キャッシュ + 一時 + プラグイン + プラグイン診断 + デッドロック/ネスト並列回帰 + gitキャッシュUNIQUE + GPS集約dedup + 最新版アドレスのrep名走査 + URLog取得抑止フラグ）+ `reps/cache/`・`reps/rep_cache_updater/` の2 |
 | DVNF | 2 | ファイル管理、CLI コマンド |
 | CLI/Main | 9 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ、スレッド、エントリポイント、パスワード管理、auto_tag バッチ（HTTP投稿と応答判定を含む） |
 | プラグイン SDK | 4 | `Run()` の stdio ループ（18本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本） |
 
-**合計 169 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
+**合計 170 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
 ずれたら `checkCounts` が落とす）。
 
 ## 規約のソース走査（`usecase/source_conventions_scan_test.go`）

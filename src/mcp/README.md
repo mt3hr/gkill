@@ -233,11 +233,11 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 | ツール名 | 説明 |
 |---|---|
 | `gkill_add_kmemo` | テキストメモ作成 |
-| `gkill_add_urlog` | ブックマーク/URL記録作成 |
+| `gkill_add_urlog` | ブックマーク/URL記録作成。サーバが対象サイトと faviconサービスへ外向き取得して空の title・description・favicon・サムネイルを埋める。`fetch_metadata: false` / `fetch_favicon: false` で項目別に抑止できる（両方 false なら外向き通信なし） |
 | `gkill_add_nlog` | 支出/収入記録作成 |
 | `gkill_add_lantana` | 気分記録作成（0-10） |
 | `gkill_add_timeis` | 時間記録作成（開始/終了） |
-| `gkill_add_mi` | タスク作成 |
+| `gkill_add_mi` | タスク作成。未知の板名は新しい板を作る（既定）。`allow_create_board: false` で実在しない板名を typo として拒否できる（update_mi の板移動も同じ） |
 | `gkill_add_kc` | 数値記録作成 |
 | `gkill_add_tag` | 既存エントリにタグ追加 |
 | `gkill_add_text` | 既存エントリにテキスト注釈追加 |

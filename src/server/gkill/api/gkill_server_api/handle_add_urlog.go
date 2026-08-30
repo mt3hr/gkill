@@ -19,9 +19,11 @@ import (
 // POST /api/add_urlog（wrapAuthRepos）
 // req_res.AddURLogRequest / req_res.AddURLogResponse
 //
-// 登録前にFillURLogFieldを呼び、サーバ側からURL先を実際に取得して空のTitle・
+// 登録前にFillURLogFieldSkippingを呼び、サーバ側からURL先を実際に取得して空のTitle・
 // Description・Favicon・Thumbnailを埋める。ブックマークレットやWeb Share TargetからはURLしか
 // 送られてこないため。取得に失敗してもログに残すだけで、埋まらないまま登録を続ける。
+// SkipFetchMetadata / SkipFetchFavicon で外向き取得を項目別に抑止できる
+// （ID・RelatedTimeの補完は抑止と無関係に必ず行う）。
 //
 // TXIDがnilなら書き込み用リポジトリへ確定登録し、非nilならそのトランザクションの
 // 一時リポジトリへ積む（commit_txするまで検索には出ない）。
@@ -99,7 +101,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = request.URLog.FillURLogField(serverConfig, applicationConfig)
+	err = request.URLog.FillURLogFieldSkipping(serverConfig, applicationConfig, request.SkipFetchMetadata, request.SkipFetchFavicon)
 	if err != nil {
 		slog.Log(r.Context(), gkill_log.Warn, "error at fill urlog field", "error", fmt.Sprintf("%q", err))
 	}

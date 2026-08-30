@@ -39,6 +39,7 @@ export const WRITE_TOOLS = [
       "Use the returned id as target_id for gkill_add_tag or gkill_add_text to annotate the bookmark. " +
       "NOTE: saving a bookmark makes the server fetch the URL. When title is omitted the server fills it in from the page's <title>, and it also fetches a favicon and a thumbnail. " +
       "That means adding a bookmark causes outbound traffic to the target site (and to a third-party favicon service). " +
+      "Pass fetch_metadata:false and/or fetch_favicon:false to suppress those fetches — with both false the server makes no outbound request for this bookmark and stores exactly what you passed. " +
       "The stored favicon and thumbnail are not echoed back in this response — they would cost kilobytes of base64 per call and are not part of search results either.",
     inputSchema: {
       type: "object",
@@ -46,6 +47,21 @@ export const WRITE_TOOLS = [
         url: { type: "string", description: "Full URL to bookmark (e.g., https://example.com/article)." },
         title: { type: "string", description: "Human-readable title for the bookmark. Optional — if omitted, the server fetches the page and fills the title from its <title> tag (see the outbound-fetch NOTE above); when that fetch fails the bookmark is stored with an empty title." },
         related_time: { type: "string", description: `When this bookmark relates to. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Defaults to now.` },
+        fetch_metadata: {
+          type: "boolean",
+          description:
+            "Default: true — the server fetches the page and fills empty title / description / thumbnail from it. " +
+            "Pass false to skip that page fetch entirely (no outbound request to the target site); the bookmark then stores only what you passed. " +
+            "Prefer false when the URL is sensitive, unreachable from the server, or you already supply the title.",
+          default: true,
+        },
+        fetch_favicon: {
+          type: "boolean",
+          description:
+            "Default: true — the server fetches a favicon for the URL's domain from a third-party favicon service. " +
+            "Pass false to skip the favicon fetch. Independent of fetch_metadata.",
+          default: true,
+        },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
       required: ["url"],
@@ -123,7 +139,7 @@ export const WRITE_TOOLS = [
     name: "gkill_add_mi",
     description:
       "Create a task (mi) in gkill's task management system. Tasks are organized into boards (like Kanban columns). " +
-      "Use gkill_get_mi_board_list to discover existing board names. board_name can be any string — a non-existent board name will be created and the task is saved under that name. If board_name is omitted, the account's default board is used automatically. " +
+      "Use gkill_get_mi_board_list to discover existing board names. board_name can be any string — a non-existent board name will be created and the task is saved under that name. Pass allow_create_board:false to reject a board_name that does not exist yet (typo guard). If board_name is omitted, the account's default board is used automatically. " +
       "The repository is determined automatically by the server. " +
       "Response fields: added_mi (full Mi entity with id, title, is_checked, board_name, limit_time, estimate_start_time, estimate_end_time, rep_name, etc.), added_kyou (parent Kyou wrapper). " +
       "The two overlap on purpose: added_kyou is the row shape a timeline shows (id, data_type, related_time, is_image/is_video), added_* is the entity with the fields you just wrote. Use added_*.id as the id everywhere — they are the same id. " +
@@ -134,7 +150,15 @@ export const WRITE_TOOLS = [
       type: "object",
       properties: {
         title: { type: "string", description: "Task title/description. Be concise but descriptive." },
-        board_name: { type: "string", description: "Board name to place the task on. Use gkill_get_mi_board_list to discover existing names. Any string is accepted — a non-existent name creates a new board. If omitted, the account's default board is used." },
+        board_name: { type: "string", description: "Board name to place the task on. Use gkill_get_mi_board_list to discover existing names. Any string is accepted — a non-existent name creates a new board (unless allow_create_board is false). If omitted, the account's default board is used." },
+        allow_create_board: {
+          type: "boolean",
+          description:
+            "Default: true — an unknown board_name silently creates a new board. " +
+            "Pass false to instead reject a board_name that does not match an existing board " +
+            "(checked against gkill_get_mi_board_list; exact match). Use it as a typo guard when you mean to file into an existing board.",
+          default: true,
+        },
         is_checked: { type: "boolean", description: "Whether the task is already completed. Default: false. Set to true to create a pre-completed task (e.g., logging past work)." },
         limit_time: { type: "string", description: `Deadline for the task. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC} — a date-only value expands to the END of that day (23:59:59 local), so "2026-08-25" means "due by the end of the 25th". Optional.` },
         estimate_start_time: { type: "string", description: `Estimated start time for scheduling. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC} — a date-only value expands to the START of that day (00:00:00 local). Optional.` },
@@ -430,7 +454,15 @@ export const WRITE_TOOLS = [
       properties: {
         id: { type: "string", description: "ID of the mi to update. Obtain from gkill_add_mi response or gkill_get_kyous." },
         title: { type: "string", description: "New task title." },
-        board_name: { type: "string", description: "New board name to move the task to. Any string accepted — non-existent names create new boards. Omit to keep the current board unchanged." },
+        board_name: { type: "string", description: "New board name to move the task to. Any string accepted — non-existent names create new boards (unless allow_create_board is false). Omit to keep the current board unchanged." },
+        allow_create_board: {
+          type: "boolean",
+          description:
+            "Default: true — an unknown board_name silently creates a new board. " +
+            "Pass false to instead reject a board_name that does not match an existing board " +
+            "(checked against gkill_get_mi_board_list; exact match). Only meaningful together with board_name.",
+          default: true,
+        },
         is_checked: { type: "boolean", description: "Set to true to mark as completed, false to reopen. Omit to keep unchanged." },
         limit_time: { type: "string", description: `New deadline. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
         estimate_start_time: { type: "string", description: `New estimated start time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },

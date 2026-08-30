@@ -357,6 +357,17 @@ const DELETE_TARGETS_STALE_SCHEMA_ARG_KINDS = new Map([["targets", "object_array
 // gkill_get_kyou_history の limit。data_type / id は string 型なので対象外。
 const KYOU_HISTORY_STALE_SCHEMA_ARG_KINDS = new Map([["limit", "number"]]);
 
+// gkill_add_urlog の外向き取得抑止フラグ（2026-08-30 追加。後付け boolean）。
+// 型の復元そのものは write-normalization.mjs の revivesStaleBoolean が行い、
+// ここは「古いスキーマの証拠」として警告を出すため（delete/restore の targets と同じ分担）。
+const ADD_URLOG_STALE_SCHEMA_ARG_KINDS = new Map([
+  ["fetch_metadata", "boolean"],
+  ["fetch_favicon", "boolean"],
+]);
+
+// gkill_add_mi / gkill_update_mi の allow_create_board（2026-08-30 追加。後付け boolean）。
+const MI_BOARD_GUARD_STALE_SCHEMA_ARG_KINDS = new Map([["allow_create_board", "boolean"]]);
+
 // ツール名から救済表を引く表。detectStaleSchemaSignals が使う。
 // **スキーマへ非string型の引数を足したら、対応する表とここの両方へ載せること。**
 const STALE_SCHEMA_ARG_KINDS_BY_TOOL = new Map([
@@ -372,6 +383,9 @@ const STALE_SCHEMA_ARG_KINDS_BY_TOOL = new Map([
   // 古いスキーマのクライアントからは正規JSON文字列で届く。
   ["gkill_delete_kyou", DELETE_TARGETS_STALE_SCHEMA_ARG_KINDS],
   ["gkill_restore_kyou", DELETE_TARGETS_STALE_SCHEMA_ARG_KINDS],
+  ["gkill_add_urlog", ADD_URLOG_STALE_SCHEMA_ARG_KINDS],
+  ["gkill_add_mi", MI_BOARD_GUARD_STALE_SCHEMA_ARG_KINDS],
+  ["gkill_update_mi", MI_BOARD_GUARD_STALE_SCHEMA_ARG_KINDS],
 ]);
 
 // 受理はするが既に意味を持たない引数。送られてきたこと自体が
