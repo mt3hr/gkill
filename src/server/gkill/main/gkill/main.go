@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -23,7 +22,7 @@ import (
 
 func main() {
 	if err := AppCmd.Execute(); err != nil {
-		log.Fatal(err)
+		gkill_log.Fatal("error at execute gkill command", err)
 	}
 }
 
@@ -62,7 +61,7 @@ var (
 			gkill_log.Init()
 			if gkill_options.IsOutputLog {
 				gkill_log.SetMinLevel(gkill_log.TraceSQL)
-				gkill_log.SetMode(gkill_log.SplitOnly)
+				gkill_log.SetMode(gkill_log.MergedAndSplit)
 				gkill_log.SetStdoutMirror(false)
 			}
 		},
@@ -71,7 +70,7 @@ var (
 
 			err = common.InitGkillServerAPI()
 			if err != nil {
-				log.Fatal(err)
+				gkill_log.Fatal("error at init gkill server api", err)
 			}
 
 			serverCtx, serverCancel := context.WithCancel(cmd.Context())
@@ -102,18 +101,18 @@ var (
 					}
 				}
 				if time.Now().After(readyDeadline) {
-					log.Fatal("gkill server did not become ready within 60s (LaunchGkillServerAPI may have failed)")
+					gkill_log.Fatal("gkill server did not become ready within 60s (LaunchGkillServerAPI may have failed)", nil)
 				}
 				time.Sleep(100 * time.Millisecond)
 			}
 
 			device, err := common.GetGkillServerAPI().GetDevice()
 			if err != nil {
-				log.Fatal(err)
+				gkill_log.Fatal("error at get device name", err)
 			}
 			serverConfig, err := common.GetGkillServerAPI().GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(context.Background(), device)
 			if err != nil {
-				log.Fatal(err)
+				gkill_log.Fatal("error at get server config", err)
 			}
 
 			address := ""
@@ -135,7 +134,7 @@ var (
 				err := os.MkdirAll(dir, fs.ModePerm)
 				if err != nil {
 					err = fmt.Errorf("error at create directory %s: %w", dir, err)
-					log.Fatal(err)
+					gkill_log.Fatal("error at create directory for electron", err)
 				}
 			}
 
@@ -151,7 +150,7 @@ var (
 			})
 			if err != nil {
 				fmt.Printf("Electronが動かない環境であるかもしれません。その場合gkillは動きませんので変わりにgkill_serverを起動し、ブラウザからのアクセスを試みてください。")
-				log.Fatal(err)
+				gkill_log.Fatal("error at new astilectron", err)
 			}
 			defer func() { a.Close() }()
 
@@ -169,7 +168,7 @@ var (
 			})
 			if err != nil {
 				err = fmt.Errorf("error at new window: %w", err)
-				log.Fatal(err)
+				gkill_log.Fatal("error at new window", err)
 			}
 
 			openInDefaultBrowserMessagePrefix := "open_in_default_browser:"

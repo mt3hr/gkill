@@ -35,6 +35,7 @@ func (g *GkillServerAPI) Close() error {
 		g.GkillDAOManager = nil
 		g.FindFilter = nil
 		g.RebootServerCh = nil
+		slog.Log(context.Background(), gkill_log.Info, "gkill server closed")
 	})
 	return g.closeErr
 }
@@ -51,13 +52,13 @@ func (g *GkillServerAPI) PrintStartedMessage() {
 	ctx := context.Background()
 	device, err := g.GetDevice()
 	if err != nil {
-		slog.Log(ctx, gkill_log.Debug, "Error getting device information", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Warn, "error at get device name for started message", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
 	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(context.Background(), device)
 	if err != nil {
-		slog.Log(ctx, gkill_log.Debug, "Error getting server configuration", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Warn, "error at get server config for started message", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -76,6 +77,13 @@ func (g *GkillServerAPI) PrintStartedMessage() {
 	// 実際にbindするアドレスは ResolveServerAddress で解決する
 	g.printInsecureBindWarning(gkill_options.ResolveServerAddress(serverConfig.Address), protocol)
 	g.printInitialSetupURLs(ctx, protocol, port)
+
+	// 起動したことは標準出力にしか出ていなかった。サービスとして動かしていると
+	// 誰も見ないので、ログにも1行だけ残す（1事象1行なので流れない）。
+	slog.Log(ctx, gkill_log.Info, "gkill server started",
+		"protocol", fmt.Sprintf("%q", protocol),
+		"address", fmt.Sprintf("%q", gkill_options.ResolveServerAddress(serverConfig.Address)),
+		"device", fmt.Sprintf("%q", device))
 }
 
 // printInsecureBindWarning はTLS無効のまま外部から届くアドレスで待ち受けているときに警告する。
