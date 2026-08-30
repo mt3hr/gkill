@@ -67,6 +67,7 @@
 
   <h2>Uso remoto (conexión HTTP)</h2>
   <p>Si la IA no está en el mismo PC, puede hacer que el propio servidor MCP escuche por HTTP para que una IA en internet se conecte. Este modo autoriza la conexión mediante OAuth, por lo que no necesita exponer gkill a internet.</p>
+  <p>La autorización se concede por tipo de conexión (solo lectura, escritura o lectura y escritura). Una conexión autorizada como solo lectura no puede usarse para escribir. Si cambia de tipo, o una conexión que funcionaba empieza a fallar por falta de permisos, desconéctela en el lado de la IA y vuelva a autorizarla.</p>
   <pre><code># Ejemplo: servir lectura y escritura por HTTP
 MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
 GKILL_BASE_URL=http://localhost:9999 \

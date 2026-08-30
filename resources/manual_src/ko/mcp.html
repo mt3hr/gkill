@@ -67,6 +67,7 @@
 
   <h2>원격에서 사용하기 (HTTP 연결)</h2>
   <p>AI가 같은 PC에 없는 경우 MCP 서버 자체를 HTTP로 대기시켜 인터넷을 통한 AI에서 접속할 수 있습니다. 이 방식은 접속 시 OAuth 인가가 이루어지므로 gkill 본체를 인터넷에 공개할 필요가 없습니다.</p>
+  <p>인가는 연결 종류(읽기 전용·쓰기용·읽고 쓰기용)별로 이루어집니다. 읽기 전용으로 인가한 연결을 그대로 쓰기에 사용할 수는 없습니다. 종류를 바꾸었거나, 이전까지 잘 되던 연결이 권한 부족으로 실패하기 시작하면 AI 측에서 연결을 해제하고 다시 인가해 주세요.</p>
   <pre><code># 읽기 및 쓰기를 HTTP로 대기시키는 예
 MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
 GKILL_BASE_URL=http://localhost:9999 \
