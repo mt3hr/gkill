@@ -1369,7 +1369,7 @@ func (g *GkillDAOManager) GetNotificator(userID string, device string) (*GkillNo
 	// 並行して先に作られていたらそちらを使い、自分が作ったほうは閉じる
 	if existing, exist := g.gkillNotificators[userID][device]; exist {
 		if closeErr := gkillNotificator.Close(context.Background()); closeErr != nil {
-			slog.Log(context.Background(), gkill_log.Warn, "error at close duplicated notificator", "error", closeErr)
+			slog.Log(context.Background(), gkill_log.Warn, "error at close duplicated notificator", "error", fmt.Sprintf("%q", closeErr))
 		}
 		return existing, nil
 	}

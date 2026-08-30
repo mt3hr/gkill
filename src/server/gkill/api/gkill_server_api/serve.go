@@ -356,7 +356,7 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(context.Background(), device)
 	if err != nil {
 		err = fmt.Errorf("error at get server config device = %s: %w", device, err)
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at get server config device", "error", fmt.Sprintf("%q", err))
 		return err
 	}
 	port := gkill_options.ResolveServerAddress(serverConfig.Address)
@@ -388,7 +388,7 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	if serverConfig.EnableTLS && !gkill_options.DisableTLSForce {
 		certFileName, pemFileName, err := g.getTLSFileNames(device)
 		if err != nil {
-			slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at tls file names", "error", fmt.Sprintf("%q", err))
 			return err
 		}
 		certFileName, pemFileName = os.ExpandEnv(certFileName), os.ExpandEnv(pemFileName)

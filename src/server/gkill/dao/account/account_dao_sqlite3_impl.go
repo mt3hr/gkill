@@ -616,7 +616,7 @@ func migrateAccountSchemaFrom100(ctx context.Context, db *sql.DB, schemaVersionK
 	defer func() {
 		if !committed {
 			if err := tx.Rollback(); err != nil {
-				slog.Log(context.Background(), gkill_log.Error, "error at rollback account schema migration", "error", err)
+				slog.Log(context.Background(), gkill_log.Error, "error at rollback account schema migration", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()

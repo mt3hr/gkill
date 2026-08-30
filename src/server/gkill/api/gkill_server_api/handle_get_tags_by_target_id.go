@@ -38,7 +38,7 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get tags by target id response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse get tags by target id response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetTagsByTargetIDResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAGS_BY_TARGET_ID_MESSAGE"}),
@@ -51,7 +51,7 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse get tags by target id request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse get tags by target id request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetTagsByTargetIDRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAGS_BY_TARGET_ID_MESSAGE"}),
@@ -68,7 +68,7 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 
 	tags, gkillErrors, err := g.UsecaseCtx.GetTagsByTargetID(r.Context(), repositories, userID, device, request.LocaleName, request.TargetID)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get tags by target id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagsByTargetIDError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAGS_BY_TARGET_ID_MESSAGE"}),

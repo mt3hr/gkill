@@ -19,7 +19,7 @@ func GetVersion() (*GkillVersionData, error) {
 		// 生成するもので、それを踏まないビルドでは存在しない。
 		// 実際 CI で /api/get_application_config がこれで panic した。
 		err = fmt.Errorf("error at open %s: %w", assetsFileName, err)
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at open", "error", fmt.Sprintf("%q", err))
 		return nil, err
 	}
 	defer func() {

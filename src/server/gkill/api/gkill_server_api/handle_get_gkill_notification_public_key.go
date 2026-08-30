@@ -39,7 +39,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get mi task notification public key response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse get mi task notification public key response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetMiTaskNotificationPublicKeyResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGISTER_MI_TASK_NOTIFICATION_MESSAGE"}),
@@ -52,7 +52,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse get get mi task notification public key request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse get get mi task notification public key request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetMiTaskNotificationPublicKeyRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGISTER_MI_TASK_NOTIFICATION_MESSAGE"}),
@@ -69,7 +69,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(r.Context())
 	if err != nil {
 		err = fmt.Errorf("error at get serverConfig user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get serverConfig user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGISTER_MI_TASK_NOTIFICATION_MESSAGE"}),
@@ -85,7 +85,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 	}
 	if currentServerConfig == nil {
 		err = fmt.Errorf("error at get serverConfig user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get serverConfig user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),

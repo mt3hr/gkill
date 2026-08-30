@@ -62,7 +62,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse browse zip contents response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse browse zip contents response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidBrowseZipContentsRequestDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
@@ -74,7 +74,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse browse zip contents request from json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse browse zip contents request from json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidBrowseZipContentsRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
@@ -94,7 +94,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get device name", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -106,7 +106,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at get repositories user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
@@ -123,7 +123,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		} else {
 			err = fmt.Errorf("idf kyou not found id = %s", request.TargetID)
 		}
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at errorf", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.BrowseZipContentsError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
@@ -135,7 +135,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 	// ZIPファイルかチェック
 	if !idfKyou.IsZip {
 		err = fmt.Errorf("target idf kyou is not a zip file id = %s", request.TargetID)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "target idf kyou is not a zip file id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.BrowseZipContentsError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
@@ -148,7 +148,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 	zipFilePath := idfKyou.ContentPath
 	if zipFilePath == "" {
 		err = fmt.Errorf("content path is empty for idf kyou id = %s", request.TargetID)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "content path is empty for idf kyou id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.BrowseZipContentsError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
@@ -170,7 +170,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 	extractErr := extractZipOnce(zipFilePath, cacheDir)
 	if extractErr != nil {
 		err = fmt.Errorf("error at extract zip file %s: %w", zipFilePath, extractErr)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at extract zip file", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.BrowseZipContentsError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
@@ -183,7 +183,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 	entries, err := buildZipEntries(cacheDir, repName, hash)
 	if err != nil {
 		err = fmt.Errorf("error at build zip entries from cache dir %s: %w", cacheDir, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at build zip entries from cache dir", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.BrowseZipContentsError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),

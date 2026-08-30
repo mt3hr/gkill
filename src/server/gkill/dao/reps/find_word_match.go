@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -78,13 +79,13 @@ func findWordTextOfIDFKyou(ctx context.Context, targetFile string, absolutePath 
 
 	file, err := os.OpenFile(absolutePath, os.O_RDONLY, os.ModePerm)
 	if err != nil {
-		slog.Log(ctx, gkill_log.Debug, "error at open file for find word", "file", absolutePath, "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error at open file for find word", "file", absolutePath, "error", fmt.Sprintf("%q", err))
 		return text
 	}
 	b, err := io.ReadAll(file)
 	file.Close()
 	if err != nil {
-		slog.Log(ctx, gkill_log.Debug, "error at read all file content for find word", "file", absolutePath, "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error at read all file content for find word", "file", absolutePath, "error", fmt.Sprintf("%q", err))
 		return text
 	}
 	return text + strings.ToLower(string(b))

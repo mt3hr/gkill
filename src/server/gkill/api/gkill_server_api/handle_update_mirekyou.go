@@ -43,7 +43,7 @@ func (g *GkillServerAPI) HandleUpdateMiReKyou(w http.ResponseWriter, r *http.Req
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse update mirekyou response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse update mirekyou response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateMiReKyouResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_REKYOU_MESSAGE"}),
@@ -56,7 +56,7 @@ func (g *GkillServerAPI) HandleUpdateMiReKyou(w http.ResponseWriter, r *http.Req
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse update mirekyou request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse update mirekyou request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateMiReKyouRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_REKYOU_MESSAGE"}),
@@ -73,7 +73,7 @@ func (g *GkillServerAPI) HandleUpdateMiReKyou(w http.ResponseWriter, r *http.Req
 
 	gkillErrors, err := g.UsecaseCtx.UpdateMiReKyou(r.Context(), repositories, userID, device, request.LocaleName, request.MiReKyou, request.TXID)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at update mi re kyou", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.UpdateMiReKyouError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_REKYOU_MESSAGE"}),
@@ -90,7 +90,7 @@ func (g *GkillServerAPI) HandleUpdateMiReKyou(w http.ResponseWriter, r *http.Req
 		mirekyou, err := repositories.MiReKyouReps.GetMiReKyou(r.Context(), request.MiReKyou.ID, nil)
 		if err != nil {
 			err = fmt.Errorf("error at get mirekyou user id = %s device = %s id = %s: %w", userID, device, request.MiReKyou.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at get mirekyou user id", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetMiReKyouError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_REKYOU_UPDATED_GET_MESSAGE"}),
@@ -103,7 +103,7 @@ func (g *GkillServerAPI) HandleUpdateMiReKyou(w http.ResponseWriter, r *http.Req
 		kyou, err := repositories.MiReKyouReps.GetKyou(r.Context(), request.MiReKyou.ID, nil)
 		if err != nil {
 			err = fmt.Errorf("error at get mirekyou user id = %s device = %s id = %s: %w", userID, device, request.MiReKyou.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at get mirekyou user id", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetMiReKyouError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_REKYOU_UPDATED_GET_MESSAGE"}),

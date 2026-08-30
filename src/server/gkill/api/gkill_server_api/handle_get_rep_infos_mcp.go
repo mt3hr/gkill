@@ -47,7 +47,7 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get rep infos mcp response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse get rep infos mcp response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetRepInfosMCPResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REP_INFOS_MESSAGE"}),
@@ -59,7 +59,7 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse get rep infos mcp request from json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse get rep infos mcp request from json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetRepInfosMCPRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REP_INFOS_MESSAGE"}),
@@ -92,7 +92,7 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 			leafReps, err := rep.UnWrap()
 			if err != nil {
 				err = fmt.Errorf("error at unwrap rep for rep infos user id = %s: %w", userID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+				slog.Log(r.Context(), gkill_log.Debug, "error at unwrap rep for rep infos user id", "error", fmt.Sprintf("%q", err))
 				continue
 			}
 			for _, leafRep := range leafReps {

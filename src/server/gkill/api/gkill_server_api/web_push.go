@@ -22,7 +22,7 @@ func (g *GkillServerAPI) sendWebPushToTarget(ctx context.Context, subscriptionJS
 	s := &webpush.Subscription{}
 	if err := json.Unmarshal([]byte(subscriptionJSON), s); err != nil {
 		err = fmt.Errorf("error at unmarshal webpush subscription: %w", err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at unmarshal webpush subscription", "error", fmt.Sprintf("%q", err))
 		return false
 	}
 	resp, err := webpush.SendNotification(contentJSONb, s, &webpush.Options{
@@ -34,7 +34,7 @@ func (g *GkillServerAPI) sendWebPushToTarget(ctx context.Context, subscriptionJS
 	if err != nil {
 		// err 非nil のとき resp は nil。resp を触らずに戻る。
 		err = fmt.Errorf("error at send gkill notification: %w", err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at send gkill notification", "error", fmt.Sprintf("%q", err))
 		return false
 	}
 	defer func() {
@@ -52,7 +52,7 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 	var currentServerConfig *server_config.ServerConfig
 	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(ctx)
 	if err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at get all server configs", "error", fmt.Sprintf("%q", err))
 		return
 	}
 	for _, serverConfig := range serverConfigs {
@@ -62,7 +62,7 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 	}
 	if currentServerConfig == nil {
 		err = fmt.Errorf("current server config is not found. in gkill notificator")
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "current server config is not found. in gkill notificator", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -70,7 +70,7 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 	notificationTargets, err := g.GkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.GetGkillNotificationTargets(ctx, userID, currentServerConfig.GkillNotificationPublicKey)
 	if err != nil {
 		err = fmt.Errorf("get notification target. in gkill notificator.: %w", err)
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "get notification target. in gkill notificator", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -84,7 +84,7 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 	contentJSONb, err := json.Marshal(content)
 	if err != nil {
 		err = fmt.Errorf("error at marshal webpush content: %w", err)
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at marshal webpush content", "error", fmt.Sprintf("%q", err))
 		return
 	}
 

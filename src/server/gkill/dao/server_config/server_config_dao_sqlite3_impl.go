@@ -1057,7 +1057,7 @@ GROUP BY DEVICE
 				&enableCount,
 			)
 			if err != nil {
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+				slog.Log(ctx, gkill_log.Debug, "error at scan", "error", fmt.Sprintf("%q", err))
 				break
 			}
 			enableDeviceCount += enableCount
@@ -1293,7 +1293,7 @@ GROUP BY DEVICE
 				&enableCount,
 			)
 			if err != nil {
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+				slog.Log(ctx, gkill_log.Debug, "error at scan", "error", fmt.Sprintf("%q", err))
 				break
 			}
 			enableDeviceCount += enableCount
