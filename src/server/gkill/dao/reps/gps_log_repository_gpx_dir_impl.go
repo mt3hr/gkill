@@ -47,7 +47,7 @@ func (g *gpsLogRepositoryDirectoryImpl) GetAllGPSLogs(ctx context.Context) ([]GP
 		if err != nil {
 			// 1ファイルの失敗でこのrepぶんを丸ごと落とさない。壊れた1件のために
 			// 隣に並ぶ数百日ぶんが返らなくなるほうが実害が大きい。
-			slog.Log(ctx, gkill_log.Warn, "skip broken gpx file at get all gps logs", "file", gpxFileName, "error", err)
+			slog.Log(ctx, gkill_log.Warn, "skip broken gpx file at get all gps logs", "file", gpxFileName, "error", fmt.Sprintf("%q", err))
 			continue
 		}
 		gpsLogs = append(gpsLogs, gpsLogsFromFile...)

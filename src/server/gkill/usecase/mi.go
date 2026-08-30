@@ -21,7 +21,7 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 	existMi, err := repositories.MiReps.GetMi(ctx, mi.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get mi user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetMiError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
@@ -30,7 +30,7 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 	}
 	if existMi != nil {
 		err = fmt.Errorf("exist mi id = %s", mi.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "exist mi id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.AlreadyExistMiError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
@@ -42,7 +42,7 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 		err = repositories.WriteMiRep.AddMiInfo(ctx, mi)
 		if err != nil {
 			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Debug, "error at add mi user id", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddMiError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
@@ -58,7 +58,7 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 		err = repositories.TempReps.MiTempRep.AddMiInfo(ctx, mi, *txID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Debug, "error at add mi user id", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddMiError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
@@ -70,7 +70,7 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 	repName, err := repositories.WriteMiRep.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get rep name user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetMiError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_ADDED_GET_MESSAGE"}),
@@ -103,7 +103,7 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 	existMi, err := repositories.MiReps.GetMi(ctx, mi.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get mi user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetMiError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
@@ -112,7 +112,7 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 	}
 	if existMi == nil {
 		err = fmt.Errorf("not exist mi id = %s", mi.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "not exist mi id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.NotFoundMiError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
@@ -124,7 +124,7 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 		err = repositories.WriteMiRep.AddMiInfo(ctx, mi)
 		if err != nil {
 			err = fmt.Errorf("error at update mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Debug, "error at update mi user id", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateMiError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
@@ -151,7 +151,7 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 		err = repositories.TempReps.MiTempRep.AddMiInfo(ctx, mi, *txID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at update mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Debug, "error at update mi user id", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateMiError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
@@ -163,7 +163,7 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 	repName, err := repositories.WriteMiRep.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get rep name user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetMiError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_UPDATED_GET_MESSAGE"}),
@@ -195,7 +195,7 @@ func (uc *UsecaseContext) GetMiHistories(ctx context.Context, repositories *reps
 	miHistories, err := repositories.MiReps.GetMiHistoriesByRepName(ctx, id, repName)
 	if err != nil {
 		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, id, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get mi user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetMiError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_MESSAGE"}),
@@ -213,7 +213,7 @@ func (uc *UsecaseContext) GetMiBoardList(ctx context.Context, repositories *reps
 	miBoardNames, err := repositories.MiReps.GetBoardNames(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get mi board names user id = %s device = %s: %w", userID, device, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get mi board names user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetMiBoardNamesError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -225,7 +225,7 @@ func (uc *UsecaseContext) GetMiBoardList(ctx context.Context, repositories *reps
 	miReKyouBoardNames, err := repositories.MiReKyouReps.GetBoardNames(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get mirekyou board names user id = %s device = %s: %w", userID, device, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Debug, "error at get mirekyou board names user id", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetMiBoardNamesError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
