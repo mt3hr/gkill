@@ -58,7 +58,7 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	// --- wrapNoAuth routes (no auth needed) ---
 	// ボディを読む経路は wrapNoAuthCapped で経路別のボディ上限と読み取り期限を掛ける。
 	// 認証ミドルウェアを通らないため readAuthBody の32MB上限が効かない（2026-08-30 監査 F-002）。
-	// 素の wrapNoAuth に残してよいのはボディを読まない経路だけ（serve_noauth_body_cap_test.go）。
+	// 素の wrapNoAuth に残してよいのはボディを読まない経路だけ（auth_middleware_capped_test.go）。
 	router.HandleFunc(g.APIAddress.LoginAddress, g.wrapNoAuthCapped(g.HandleLogin, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.LoginMethod)
 	router.HandleFunc(g.APIAddress.LogoutAddress, g.wrapNoAuthCapped(g.HandleLogout, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.LogoutMethod)
 	router.HandleFunc(g.APIAddress.ResetPasswordAddress, g.wrapNoAuthCapped(g.HandleResetPassword, maxAuthBodyBytes, noAuthBodyReadTimeout)).Methods(g.APIAddress.ResetPasswordMethod)

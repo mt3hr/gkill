@@ -51,6 +51,10 @@ func TestRequestResponse_JSONFieldNames(t *testing.T) {
 		// --- 追加/更新（TSクライアントが組み立てる） ---
 		{"AddKmemoRequest", AddKmemoRequest{}, []string{"session_id", "kmemo", "tx_id", "locale_name", "added_kyou", "want_response_kyou"}},
 		{"UpdateKmemoRequest", UpdateKmemoRequest{}, []string{"session_id", "kmemo", "tx_id", "locale_name", "updated_kyou", "want_response_kyou"}},
+		// skip_fetch_metadata / skip_fetch_favicon は MCP の write-handlers.mjs が送る
+		// 外向き取得の抑止フラグ。JSONデコードは未知キーを無視するので、タグが変わると
+		// MCP の抑止だけがエラーも出さずに無効化される（常時取得へ戻る）。
+		{"AddURLogRequest", AddURLogRequest{}, []string{"session_id", "urlog", "tx_id", "locale_name", "added_kyou", "want_response_kyou", "skip_fetch_metadata", "skip_fetch_favicon"}},
 		// MiReKyouのペイロードキーは "mirekyou"（"mi_re_kyou" ではない）
 		{"AddMiReKyouRequest", AddMiReKyouRequest{}, []string{"session_id", "mirekyou", "tx_id", "locale_name", "added_kyou", "want_response_kyou"}},
 		{"UpdateMiReKyouRequest", UpdateMiReKyouRequest{}, []string{"session_id", "mirekyou", "tx_id", "locale_name", "updated_kyou", "want_response_kyou"}},

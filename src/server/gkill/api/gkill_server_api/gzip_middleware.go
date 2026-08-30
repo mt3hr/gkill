@@ -71,9 +71,12 @@ func (g *gzipResponseWriter) Flush() {
 	}
 }
 
-// 静的検査用: FlusherとWriterを満たしていること
+// 静的検査用: Flusher・Writerと、http.ResponseController がラッパ越しに
+// 底の *http.response へ届くための Unwrap を満たしていること。
+// Unwrap が欠けると読み取り期限が本番経路でだけ静かに無効になる。
 var (
-	_ http.ResponseWriter = (*gzipResponseWriter)(nil)
-	_ http.Flusher        = (*gzipResponseWriter)(nil)
-	_ io.Writer           = (*gzipResponseWriter)(nil)
+	_ http.ResponseWriter                       = (*gzipResponseWriter)(nil)
+	_ http.Flusher                              = (*gzipResponseWriter)(nil)
+	_ io.Writer                                 = (*gzipResponseWriter)(nil)
+	_ interface{ Unwrap() http.ResponseWriter } = (*gzipResponseWriter)(nil)
 )
