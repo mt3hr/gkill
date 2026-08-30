@@ -20,16 +20,22 @@ export class OAuthServer {
   /**
    * @param {object} options
    * @param {string} options.issuer - Issuer URL (e.g., "http://localhost:8808").
+   * @param {string} options.scope - このサーバの唯一の許可スコープ (gkill:read / gkill:write / gkill:readwrite)。
+   *   metadata・authorize 既定値・トークン発行・受理検証の全てをこの1値から生成する。
+   *   以前は metadata だけが "gkill:read" 固定で、ReadWrite サーバの広告と矛盾し、
+   *   scope が権限境界として機能していなかった (2026-08-30 レビュー P0)。
    * @param {function} options.authenticateUser - async (userId, passwordSha256) => { sessionId } | null.
    * @param {string} [options.persistPath] - Path to JSON file for persisting refresh tokens and DCR clients.
    * @param {object} [options.accessLog] - McpAccessLog, so store failures reach gkill_mcp_error.log.
    */
-  constructor({ issuer, authenticateUser, persistPath, accessLog }) {
+  constructor({ issuer, scope, authenticateUser, persistPath, accessLog }) {
     if (!issuer) throw new Error("OAuthServer requires an issuer URL");
+    if (!scope) throw new Error("OAuthServer requires a scope");
     if (typeof authenticateUser !== "function") {
       throw new Error("OAuthServer requires an authenticateUser function");
     }
     this.issuer = issuer.replace(/\/+$/, "");
+    this.scope = scope;
     this.authenticateUser = authenticateUser;
     this.store = new OAuthStore(persistPath, accessLog || null);
     this.store.load();
@@ -55,7 +61,7 @@ export class OAuthServer {
       grant_types_supported: ["authorization_code", "refresh_token"],
       token_endpoint_auth_methods_supported: ["none"],
       code_challenge_methods_supported: ["S256"],
-      scopes_supported: ["gkill:read"],
+      scopes_supported: [this.scope],
     };
   }
 
@@ -64,7 +70,7 @@ export class OAuthServer {
   // ---------------------------------------------------------------------------
 
   handleAuthorizeGet(query) {
-    const { client_id, redirect_uri, state, code_challenge, code_challenge_method, scope, response_type: _response_type, resource } = query;
+    const { client_id, redirect_uri, state, code_challenge, code_challenge_method, response_type: _response_type, resource } = query;
 
     const error = this._validateAuthorizeParams(query);
     if (error) {
@@ -73,11 +79,15 @@ export class OAuthServer {
 
     const html = renderLoginPage({
       clientId: client_id,
+      clientName: this.store.getClient(client_id)?.client_name || "",
       redirectUri: redirect_uri,
       state: state || "",
       codeChallenge: code_challenge,
       codeChallengeMethod: code_challenge_method || "S256",
-      scope: scope || "gkill:read",
+      // 要求 scope は検証済み (このサーバの唯一の許可 scope と一致するものだけ通る) なので、
+      // 表示・再送信とも正準値 this.scope に正規化する。省略時の既定もここ。
+      scope: this.scope,
+      issuer: this.issuer,
       resource: resource || "",
       error: null,
     });
@@ -91,7 +101,7 @@ export class OAuthServer {
   async handleAuthorizePost(formData) {
     const {
       client_id, redirect_uri, state, code_challenge,
-      code_challenge_method, scope, response_type: _response_type,
+      code_challenge_method, response_type: _response_type,
       user_id, password_sha256, resource,
     } = formData;
 
@@ -112,11 +122,13 @@ export class OAuthServer {
       // Re-render login form with error
       const html = renderLoginPage({
         clientId: client_id,
+        clientName: this.store.getClient(client_id)?.client_name || "",
         redirectUri: redirect_uri,
         state: state || "",
         codeChallenge: code_challenge,
         codeChallengeMethod: code_challenge_method || "S256",
-        scope: scope || "gkill:read",
+        scope: this.scope,
+        issuer: this.issuer,
         resource: resource || "",
         error: "ログインに失敗しました。ユーザーIDまたはパスワードを確認してください。",
       });
@@ -130,7 +142,8 @@ export class OAuthServer {
       redirectUri: redirect_uri,
       codeChallenge: code_challenge,
       codeChallengeMethod: code_challenge_method || "S256",
-      scope: scope || "gkill:read",
+      // scope は検証済みなので正準値へ正規化して刻む。トークンにもこの値が乗る。
+      scope: this.scope,
       resource: resource || "",
       gkillSessionId: authResult.sessionId,
       userId: user_id,
@@ -196,6 +209,12 @@ export class OAuthServer {
       return this._tokenError("invalid_grant", "PKCE verification failed");
     }
 
+    // scope 不整合の code はトークンへ昇格させない (認可時に正規化済みなので、
+    // ここに来るのは scope 修正前のプロセスが発行した残骸だけ)。
+    if (codeData.scope !== this.scope) {
+      return this._tokenError("invalid_scope", `This server issues only "${this.scope}". Re-authorize.`);
+    }
+
     // Issue tokens
     const accessToken = generateToken();
     const refreshToken = generateToken();
@@ -234,6 +253,13 @@ export class OAuthServer {
     // Validate client_id if provided
     if (client_id && client_id !== tokenData.clientId) {
       return this._tokenError("invalid_grant", "client_id mismatch");
+    }
+
+    // scope 修正前に永続化された refresh token (例: ReadWrite サーバ上の "gkill:read") は
+    // ここで打ち切って再認可させる。回転して生き延びさせても Bearer 受理で 403 になるだけ。
+    if (tokenData.scope !== this.scope) {
+      this.store.deleteRefreshToken(refresh_token);
+      return this._tokenError("invalid_scope", `This server issues only "${this.scope}". Re-authorize.`);
     }
 
     // Rotate refresh token (delete old, issue new)
@@ -347,6 +373,16 @@ export class OAuthServer {
     }
     if (params.code_challenge_method && !isSupportedChallengeMethod(params.code_challenge_method)) {
       return `Unsupported code_challenge_method: ${params.code_challenge_method}. Use S256.`;
+    }
+    // scope はこのサーバの唯一の許可値と厳密一致のみ (省略は既定 = this.scope として許す)。
+    // 黙って別 scope のトークンを発行すると、利用者は「読み取りを許可した」つもりで
+    // 書き込み可能なトークンを渡しかねない。空白区切りの複数要求も全要素一致のみ通す。
+    if (params.scope) {
+      for (const requested of String(params.scope).trim().split(/\s+/)) {
+        if (requested !== this.scope) {
+          return `unsupported scope "${requested}" — this server issues only "${this.scope}"`;
+        }
+      }
     }
     // DCR で登録済みのクライアントのみ認可する。未登録 client_id を許すと、
     // 攻撃者が任意の client_id + 自分の redirect_uri + 自分の PKCE challenge で認可URLを

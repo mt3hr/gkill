@@ -15,6 +15,7 @@ function createServer(overrides = {}) {
   });
   const server = new OAuthServer({
     issuer: overrides.issuer || "http://localhost:8808",
+    scope: overrides.scope || "gkill:read",
     authenticateUser,
   });
   // 未登録 client_id は認可を拒否するようになったので、テスト既定の "test-client" を
@@ -103,11 +104,17 @@ describe("OAuthServer — constructor", () => {
   });
 
   test("throws without issuer", () => {
-    expect(() => new OAuthServer({ issuer: "", authenticateUser: async () => null })).toThrow("issuer");
+    expect(() => new OAuthServer({ issuer: "", scope: "gkill:read", authenticateUser: async () => null })).toThrow("issuer");
   });
 
   test("throws without authenticateUser", () => {
-    expect(() => new OAuthServer({ issuer: "http://x", authenticateUser: null })).toThrow("authenticateUser");
+    expect(() => new OAuthServer({ issuer: "http://x", scope: "gkill:read", authenticateUser: null })).toThrow("authenticateUser");
+  });
+
+  // scope 無しの生成を許すと、既定 "gkill:read" へ静かに落ちて ReadWrite サーバの
+  // metadata 矛盾 (2026-08-30 レビュー P0) が再発する。生成時点で落とす。
+  test("throws without scope", () => {
+    expect(() => new OAuthServer({ issuer: "http://x", authenticateUser: async () => null })).toThrow("scope");
   });
 });
 
@@ -126,6 +133,15 @@ describe("OAuthServer — getMetadata", () => {
     expect(meta.grant_types_supported).toContain("authorization_code");
     expect(meta.grant_types_supported).toContain("refresh_token");
     expect(meta.code_challenge_methods_supported).toContain("S256");
+    expect(meta.scopes_supported).toEqual(["gkill:read"]);
+    server.close();
+  });
+
+  // 以前は "gkill:read" がハードコードされ、ReadWrite サーバでも authorization-server
+  // metadata だけが gkill:read を広告して protected-resource と矛盾していた。
+  test("scopes_supported follows the injected scope", () => {
+    const server = createServer({ scope: "gkill:readwrite" });
+    expect(server.getMetadata().scopes_supported).toEqual(["gkill:readwrite"]);
     server.close();
   });
 });
@@ -818,5 +834,127 @@ describe("OAuthServer — redirect_uri validation against DCR", () => {
     }));
     expect(result.status).toBe(400);
     expect(result.body).toContain("unknown client_id");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// scope 境界 (2026-08-30 レビュー P0)
+// 以前は metadata が "gkill:read" 固定・受理側は scope 非照合で、ReadWrite サーバ上で
+// scope 省略や "gkill:read" のトークンを発行しても書き込みツールが呼べていた。
+// ---------------------------------------------------------------------------
+describe("OAuthServer — scope enforcement (P0)", () => {
+  test("authorize rejects a scope this server does not issue", () => {
+    const server = createServer({ scope: "gkill:readwrite" });
+    const result = server.handleAuthorizeGet(authorizeParams({ scope: "gkill:read" }));
+    expect(result.status).toBe(400);
+    expect(result.body).toContain("unsupported scope");
+    server.close();
+  });
+
+  test("authorize rejects a multi-scope request containing a foreign scope", () => {
+    const server = createServer();
+    const result = server.handleAuthorizeGet(authorizeParams({ scope: "gkill:read gkill:readwrite" }));
+    expect(result.status).toBe(400);
+    server.close();
+  });
+
+  test("omitted scope defaults to the server scope and the token carries it", async () => {
+    const server = createServer({ scope: "gkill:readwrite" });
+    const pkce = makeS256Pair();
+    const params = authorizeParams({ code_challenge: pkce.challenge });
+    delete params.scope;
+    const postResult = await server.handleAuthorizePost({
+      ...params,
+      user_id: "admin",
+      password_sha256: "abc123",
+    });
+    const code = extractCodeFromResult(postResult);
+    const tokenResult = server.handleTokenRequest({
+      grant_type: "authorization_code",
+      code,
+      code_verifier: pkce.verifier,
+    });
+    expect(tokenResult.status).toBe(200);
+    expect(tokenResult.body.scope).toBe("gkill:readwrite");
+    expect(server.validateAccessToken(tokenResult.body.access_token).scope).toBe("gkill:readwrite");
+    server.close();
+  });
+
+  test("refresh of a legacy wrong-scope token is rejected and the token is revoked", () => {
+    // scope 修正前の ReadWrite サーバが発行・永続化した "gkill:read" の refresh token を再現する。
+    const server = createServer({ scope: "gkill:readwrite" });
+    server.store.putRefreshToken("legacy-refresh", {
+      clientId: "test-client",
+      scope: "gkill:read",
+      gkillSessionId: "sess-legacy",
+      userId: "admin",
+    });
+    const result = server.handleTokenRequest({ grant_type: "refresh_token", refresh_token: "legacy-refresh" });
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe("invalid_scope");
+    // 打ち切った refresh token は残さない (再試行しても同じ失敗を繰り返すだけ)。
+    expect(server.store.getRefreshToken("legacy-refresh")).toBeFalsy();
+    server.close();
+  });
+
+  test("a legacy wrong-scope authorization code is not exchanged for tokens", () => {
+    const server = createServer({ scope: "gkill:readwrite" });
+    const pkce = makeS256Pair();
+    server.store.putCode("legacy-code", {
+      clientId: "test-client",
+      redirectUri: "http://localhost/callback",
+      codeChallenge: pkce.challenge,
+      codeChallengeMethod: "S256",
+      scope: "gkill:read",
+      resource: "",
+      gkillSessionId: "sess-legacy",
+      userId: "admin",
+    });
+    const result = server.handleTokenRequest({
+      grant_type: "authorization_code",
+      code: "legacy-code",
+      code_verifier: pkce.verifier,
+    });
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe("invalid_scope");
+    server.close();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 同意画面の権限表示 (2026-08-30 レビュー P0)
+// 以前は scope を hidden で送るだけで、ReadWrite の認可でも「書き込み可能」が
+// どこにも表示されなかった。
+// ---------------------------------------------------------------------------
+describe("OAuthServer — consent display on the login page", () => {
+  test("readwrite login page shows the writable scope and its meaning", () => {
+    const server = createServer({ scope: "gkill:readwrite" });
+    const result = server.handleAuthorizeGet(authorizeParams({ scope: "gkill:readwrite" }));
+    expect(result.status).toBe(200);
+    expect(result.body).toContain("gkill:readwrite");
+    expect(result.body).toContain("読み書き");
+    expect(result.body).toContain("削除");
+    server.close();
+  });
+
+  test("read login page says read-only", () => {
+    const server = createServer();
+    const result = server.handleAuthorizeGet(authorizeParams());
+    expect(result.status).toBe(200);
+    expect(result.body).toContain("読み取り専用");
+    server.close();
+  });
+
+  test("login page shows the DCR client_name and the issuer", () => {
+    const server = createServer();
+    const reg = server.handleRegister({
+      redirect_uris: ["http://localhost/callback"],
+      client_name: "Example Connector",
+    });
+    const result = server.handleAuthorizeGet(authorizeParams({ client_id: reg.body.client_id }));
+    expect(result.status).toBe(200);
+    expect(result.body).toContain("Example Connector");
+    expect(result.body).toContain("http://localhost:8808");
+    server.close();
   });
 });

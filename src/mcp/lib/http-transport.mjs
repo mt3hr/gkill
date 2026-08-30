@@ -33,8 +33,9 @@ export class HttpTransport {
    * @param {object} server MCPサーバ本体
    * @param {number} port
    * @param {OAuthServer} oauthServer
-   * @param {{scope: string, enableFileLinks?: boolean}} options
-   *   scope           … OAuth のスコープ名 (gkill:read / gkill:write / gkill:readwrite)
+   * @param {{scope?: string, enableFileLinks?: boolean}} options
+   *   scope           … OAuth のスコープ名。正本は OAuthServer.scope で、通常ここでは渡さない。
+   *                     oauthServer が scope を持たないフェイク (テスト) のときだけ使われる
    *   enableFileLinks … /files/{token} の配信ルートを載せるか。
    *                     ファイル系ツールを持たない書き込み専用サーバでは false
    */
@@ -42,7 +43,14 @@ export class HttpTransport {
     this.server = server;
     this.port = port;
     this.oauthServer = oauthServer;
-    this.scope = options.scope;
+    // scope は OAuthServer と共有の1値。以前は transport と OAuthServer が別々の値を
+    // 持てたため、protected-resource と authorization-server の広告が矛盾していた
+    // (2026-08-30 レビュー P0)。二重指定の不一致は静かに広告し続けず起動時に落とす。
+    if (options.scope !== undefined && oauthServer.scope !== undefined && options.scope !== oauthServer.scope) {
+      throw new Error(`OAuth scope mismatch: transport=${options.scope} oauthServer=${oauthServer.scope}`);
+    }
+    this.scope = oauthServer.scope ?? options.scope;
+    if (!this.scope) throw new Error("HttpTransport requires a scope (via OAuthServer or options)");
     this.enableFileLinks = Boolean(options.enableFileLinks);
     // HTTP越しのクライアントは別マシン (例: クラウド上のAI) でありうる。
     // このMCPサーバ自身がgkillと同居していても、絶対パスを渡してよい相手ではない。
@@ -312,6 +320,7 @@ export class HttpTransport {
     // MCP endpoint — require OAuth Bearer token
     const bearerToken = OAuthServer.extractBearerToken(req.headers["authorization"] || "");
     const tokenData = bearerToken ? this.oauthServer.validateAccessToken(bearerToken) : null;
+    const resourceMetadataUrl = `${this.oauthServer.issuer}/.well-known/oauth-protected-resource`;
 
     if (!tokenData) {
       this.logRequest(req, { statusCode: 401, reason: "unauthorized" });
@@ -319,12 +328,32 @@ export class HttpTransport {
         remote_addr: req.socket?.remoteAddress || null,
         method: req.method, path: pathWithoutQuery(req.url),
       });
-      const resourceMetadataUrl = `${this.oauthServer.issuer}/.well-known/oauth-protected-resource`;
       this.sendJson(res, 401, {
         error: "Unauthorized",
         error_description: "Bearer token required",
       }, {
         "WWW-Authenticate": `Bearer resource_metadata="${resourceMetadataUrl}"`,
+      });
+      return;
+    }
+
+    // scope はこのサーバの唯一の許可値と厳密一致のみ受理する (RFC 6750 insufficient_scope)。
+    // 以前はトークンの存在だけを見ていたため、scope 修正前の ReadWrite サーバが発行した
+    // "gkill:read" トークンでも書き込みツールを呼べた (2026-08-30 レビュー P0)。
+    // 401 ではなく 403 を返すのは「トークンは本物だが権限が足りない = 再認可が要る」を
+    // クライアントに伝えるため。
+    if (tokenData.scope !== this.scope) {
+      this.logRequest(req, { statusCode: 403, reason: "insufficient_scope" });
+      this.server.accessLog.warn("token_scope_rejected", {
+        remote_addr: req.socket?.remoteAddress || null,
+        method: req.method, path: pathWithoutQuery(req.url),
+        token_scope: tokenData.scope ?? null, required_scope: this.scope,
+      });
+      this.sendJson(res, 403, {
+        error: "insufficient_scope",
+        error_description: `This server requires scope "${this.scope}". Re-authorize to obtain it.`,
+      }, {
+        "WWW-Authenticate": `Bearer error="insufficient_scope", scope="${this.scope}", resource_metadata="${resourceMetadataUrl}"`,
       });
       return;
     }

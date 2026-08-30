@@ -72,13 +72,15 @@ export function startMcpServer(spec) {
     const persistPath = _resolvePath(gkillHome, "configs", spec.oauthStateFileName);
     const oauthServer = new OAuthServer({
       issuer,
+      // scope の正本はここ1箇所。metadata・認可既定値・トークン発行・Bearer 受理の
+      // 全てがこの値から生成される (transport は oauthServer.scope を読む)。
+      scope: spec.scope,
       persistPath,
       accessLog,
       authenticateUser: makeOAuthAuthenticateUser(spec.client, accessLog),
     });
     accessLog.info("server_start", { transport, log_level: mcpLogLevel, port });
     new HttpTransport(server, port, oauthServer, {
-      scope: spec.scope,
       enableFileLinks: spec.enableFileLinks,
     }).start();
   } else {

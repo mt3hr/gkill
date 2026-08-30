@@ -40,9 +40,12 @@ function createMockClient(overrides = {}) {
 }
 
 // authenticateUser は userId ごとに別セッションを返す (並行分離テストで token を見分けるため)。
-function makeOAuth(issuer = "http://127.0.0.1:0") {
+// scope の正本は OAuthServer なので、read 以外の variant は必ずここへ scope を渡す
+// (transport 側 options.scope とずれると HttpTransport の生成が throw する)。
+function makeOAuth(scope = "gkill:read", issuer = "http://127.0.0.1:0") {
   return new OAuthServer({
     issuer,
+    scope,
     authenticateUser: async (userId) => ({ sessionId: `sess-${userId}` }),
     persistPath: null,
   });
@@ -113,7 +116,7 @@ function mockRes() {
 describe("handleRequest — Bearer auth (C-01 regression)", () => {
   for (const variant of SERVER_VARIANTS) {
     test(`POST /mcp without Bearer returns 401 for ${variant.scope}`, () => {
-      const oauth = makeOAuth();
+      const oauth = makeOAuth(variant.scope);
       const server = variant.make(createMockClient(), null);
       const transport = new HttpTransport(server, 0, oauth, { scope: variant.scope });
       const req = { method: "POST", url: "/mcp", headers: {}, socket: { remoteAddress: "127.0.0.1" } };
@@ -138,7 +141,7 @@ describe("HttpTransport over real HTTP", () => {
   let port;
 
   async function startTransport(scope, client) {
-    oauth = makeOAuth();
+    oauth = makeOAuth(scope);
     const server = SERVER_VARIANTS.find((v) => v.scope === scope).make(client, null);
     transport = new HttpTransport(server, 0, oauth, { scope });
     const httpServer = transport.start();
@@ -185,6 +188,95 @@ describe("HttpTransport over real HTTP", () => {
     const body = await res.json();
     expect(body.result.serverInfo.name).toBeTruthy();
     expect(body.result.protocolVersion).toBe("2024-11-05");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 層2c: scope 境界 (2026-08-30 レビュー P0)
+// 以前は protected-resource が variant の scope・authorization-server が "gkill:read"
+// 固定で矛盾広告し、Bearer 受理はトークンの存在だけを見て scope を照合していなかった。
+// そのため ReadWrite サーバ上で "gkill:read" のトークンでも書き込みツールが呼べた。
+// ---------------------------------------------------------------------------
+describe("OAuth scope boundary (P0)", () => {
+  let oauth;
+  let transport;
+
+  afterEach(async () => {
+    if (transport) await transport.stop();
+    if (oauth) oauth.close();
+    transport = null;
+    oauth = null;
+  });
+
+  for (const variant of SERVER_VARIANTS) {
+    test(`both metadata endpoints advertise exactly [${variant.scope}]`, async () => {
+      oauth = makeOAuth(variant.scope);
+      const server = variant.make(createMockClient(), null);
+      transport = new HttpTransport(server, 0, oauth, {});
+      const httpServer = transport.start();
+      await new Promise((resolve) => httpServer.once("listening", resolve));
+      const port = httpServer.address().port;
+      const prm = await (await fetch(`http://127.0.0.1:${port}/.well-known/oauth-protected-resource`)).json();
+      const asm = await (await fetch(`http://127.0.0.1:${port}/.well-known/oauth-authorization-server`)).json();
+      // 元指摘: ReadWrite で protected-resource=gkill:readwrite / authorization-server=gkill:read。
+      expect(prm.scopes_supported).toEqual([variant.scope]);
+      expect(asm.scopes_supported).toEqual([variant.scope]);
+    });
+  }
+
+  test("a legacy token with a foreign scope gets 403 insufficient_scope", () => {
+    oauth = makeOAuth("gkill:readwrite");
+    const server = new ReadWriteServer(createMockClient(), null);
+    transport = new HttpTransport(server, 0, oauth, {});
+    // scope 修正前の ReadWrite サーバが発行した "gkill:read" のアクセストークンを再現する。
+    oauth.store.putAccessToken("legacy-access", {
+      clientId: "c",
+      scope: "gkill:read",
+      gkillSessionId: "sess-x",
+      userId: "u",
+    });
+    const req = {
+      method: "POST",
+      url: "/mcp",
+      headers: { authorization: "Bearer legacy-access" },
+      socket: { remoteAddress: "127.0.0.1" },
+    };
+    const res = mockRes();
+    transport.handleRequest(req, res);
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).error).toBe("insufficient_scope");
+    // 401 (トークン無効) と区別し、クライアントへ再認可を促すヘッダを返す。
+    expect(res.headers["WWW-Authenticate"]).toContain('error="insufficient_scope"');
+    expect(res.headers["WWW-Authenticate"]).toContain('scope="gkill:readwrite"');
+  });
+
+  test("a matching-scope token still reaches the MCP handler", () => {
+    oauth = makeOAuth("gkill:readwrite");
+    const server = new ReadWriteServer(createMockClient(), null);
+    transport = new HttpTransport(server, 0, oauth, {});
+    oauth.store.putAccessToken("good-access", {
+      clientId: "c",
+      scope: "gkill:readwrite",
+      gkillSessionId: "sess-x",
+      userId: "u",
+    });
+    const req = {
+      method: "GET",
+      url: "/mcp",
+      headers: { authorization: "Bearer good-access", accept: "application/json" },
+      socket: { remoteAddress: "127.0.0.1" },
+    };
+    const res = mockRes();
+    transport.handleRequest(req, res);
+    // 認証は通過し、SSE の Accept ヘッダ検査 (406) まで到達している = 401/403 で弾かれていない。
+    expect(res.statusCode).toBe(406);
+  });
+
+  test("mismatched transport/oauth scopes fail fast at construction", () => {
+    oauth = makeOAuth("gkill:read");
+    expect(
+      () => new HttpTransport(new ReadWriteServer(createMockClient(), null), 0, oauth, { scope: "gkill:readwrite" }),
+    ).toThrow("scope mismatch");
   });
 });
 
