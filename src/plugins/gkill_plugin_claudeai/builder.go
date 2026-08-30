@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"os"
 	"sync"
 	"time"
+
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 )
 
 // appName はstderrログの識別子。
@@ -74,7 +74,7 @@ func (b *builder) runOnce(pluginDir string, src expandedSource) {
 	if err := globalCache.build(pluginDir, src); err != nil {
 		globalCache.setMeta("build_state", "error")
 		globalCache.setMeta("build_error", err.Error())
-		fmt.Fprintf(os.Stderr, "%s: build error: %v\n", appName, err)
+		sdk.LogError("%s: build error: %v", appName, err)
 	}
 }
 

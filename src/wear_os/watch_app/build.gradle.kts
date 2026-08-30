@@ -12,6 +12,14 @@ android {
     // androidx 1.19.0 系が compileSdk 37 以上を要求する
     compileSdk = 37
 
+    testOptions {
+        // parseTemplates / parsePlaingTimeisList が android.util.Log を呼ぶため、
+        // JVM単体テストでは Log をno-op化する（モックされていないandroid APIで落とさない）。
+        // これが無いと Log.w/Log.e が throw し、失敗系のテストを @Ignore で落とすことになる
+        // （実際に GkillWearClientTest の2本がそれで無効化されていた）。phone_companion と同じ設定。
+        unitTests.isReturnDefaultValues = true
+    }
+
     defaultConfig {
         // Must match phone_companion applicationId for Wearable MessageClient to work
         applicationId = "com.mt3hr.gkill.wear"

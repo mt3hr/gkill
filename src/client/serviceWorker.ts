@@ -155,8 +155,9 @@ self.addEventListener('fetch', (event: FetchEvent) => {
           if (err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
             return Response.error()
           } else {
-            // abort以外はエラー出力する
-            console.error('[SW] fetch handler error', err)
+            // abort以外はログに残す。直後に素通しで取り直すので、成功すれば
+            // 利用者から見ると正常。だから error ではなく warn。
+            console.warn('[SW] fetch handler error', err)
             try { return await fetch(request.clone()) } catch { return Response.error() }
           }
         }
@@ -194,8 +195,9 @@ self.addEventListener('fetch', (event: FetchEvent) => {
           if (err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
             return Response.error()
           } else {
-            // abort以外はエラー出力する
-            console.error('[SW] fetch handler error', err)
+            // abort以外はログに残す。直後に素通しで取り直すので、成功すれば
+            // 利用者から見ると正常。だから error ではなく warn。
+            console.warn('[SW] fetch handler error', err)
             try { return await fetch(request.clone()) } catch { return Response.error() }
           }
         }
@@ -236,8 +238,9 @@ self.addEventListener('fetch', (event: FetchEvent) => {
           if (err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
             return Response.error()
           } else {
-            // abort以外はエラー出力する
-            console.error('[SW] fetch handler error', err)
+            // abort以外はログに残す。直後に素通しで取り直すので、成功すれば
+            // 利用者から見ると正常。だから error ではなく warn。
+            console.warn('[SW] fetch handler error', err)
             try { return await fetch(request.clone()) } catch { return Response.error() }
           }
         }

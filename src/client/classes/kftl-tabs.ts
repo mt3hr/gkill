@@ -165,7 +165,10 @@ export function parse_kftl_tabs(raw: string): KFTLTabsState | null {
     let parsed: unknown = null
     try {
         parsed = JSON.parse(raw)
-    } catch (_err: unknown) {
+    } catch (err: unknown) {
+        // 呼び出し元は空タブ1枚へ倒すので、黙って捨てると
+        // 「書きかけのメモが消えた」ことが誰にも見えない。
+        console.warn('[KFTL] saved tabs are broken, falling back to an empty tab', err)
         return null
     }
     if (parsed === null || typeof parsed !== 'object') {
@@ -220,7 +223,9 @@ function normalize_kftl_tab(raw: unknown): KFTLTabState | null {
 function read_local_storage(key: string): string | null {
     try {
         return localStorage.getItem(key)
-    } catch (_err: unknown) {
+    } catch (err: unknown) {
+        // 読めないと書きかけのメモが空タブ1枚に化ける。せめて痕跡を残す。
+        console.warn('[KFTL] localStorage is unavailable for read', err)
         return null
     }
 }
@@ -228,8 +233,10 @@ function read_local_storage(key: string): string | null {
 function write_local_storage(key: string, value: string): void {
     try {
         localStorage.setItem(key, value)
-    } catch (_err: unknown) {
-        // 保存できない環境ではタブの永続化を諦める
+    } catch (err: unknown) {
+        // 保存できない環境ではタブの永続化を諦める。
+        // 黙って諦めるとリロードで書きかけが消えたことに気付けない。
+        console.warn('[KFTL] localStorage is unavailable for write', err)
     }
 }
 

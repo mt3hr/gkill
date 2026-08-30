@@ -22,15 +22,16 @@ export class OAuthServer {
    * @param {string} options.issuer - Issuer URL (e.g., "http://localhost:8808").
    * @param {function} options.authenticateUser - async (userId, passwordSha256) => { sessionId } | null.
    * @param {string} [options.persistPath] - Path to JSON file for persisting refresh tokens and DCR clients.
+   * @param {object} [options.accessLog] - McpAccessLog, so store failures reach gkill_mcp_error.log.
    */
-  constructor({ issuer, authenticateUser, persistPath }) {
+  constructor({ issuer, authenticateUser, persistPath, accessLog }) {
     if (!issuer) throw new Error("OAuthServer requires an issuer URL");
     if (typeof authenticateUser !== "function") {
       throw new Error("OAuthServer requires an authenticateUser function");
     }
     this.issuer = issuer.replace(/\/+$/, "");
     this.authenticateUser = authenticateUser;
-    this.store = new OAuthStore(persistPath);
+    this.store = new OAuthStore(persistPath, accessLog || null);
     this.store.load();
     this.store.startCleanup();
   }

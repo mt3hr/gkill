@@ -59,6 +59,9 @@ export function startMcpServer(spec) {
     _resolvePath(gkillHome, "logs", spec.logFileName),
     mcpLogLevel,
     spec.scriptName,
+    // ERROR は gkill_mcp_error.log にも複製する。障害を探す運用者は
+    // "*_access.log" を開かないので、そこにしか無いと見つからない。
+    _resolvePath(gkillHome, "logs", "gkill_mcp_error.log"),
   );
 
   const server = new spec.ServerClass(spec.client, accessLog);
@@ -70,6 +73,7 @@ export function startMcpServer(spec) {
     const oauthServer = new OAuthServer({
       issuer,
       persistPath,
+      accessLog,
       authenticateUser: makeOAuthAuthenticateUser(spec.client, accessLog),
     });
     accessLog.info("server_start", { transport, log_level: mcpLogLevel, port });
