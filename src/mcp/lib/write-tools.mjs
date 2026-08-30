@@ -44,7 +44,7 @@ export const WRITE_TOOLS = [
       type: "object",
       properties: {
         url: { type: "string", description: "Full URL to bookmark (e.g., https://example.com/article)." },
-        title: { type: "string", description: "Human-readable title for the bookmark. Optional — if omitted, only the URL is stored." },
+        title: { type: "string", description: "Human-readable title for the bookmark. Optional — if omitted, the server fetches the page and fills the title from its <title> tag (see the outbound-fetch NOTE above); when that fetch fails the bookmark is stored with an empty title." },
         related_time: { type: "string", description: `When this bookmark relates to. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Defaults to now.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
