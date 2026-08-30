@@ -2,7 +2,7 @@
 
 ## 概要
 
-Wear OS (Pixel Watch) KFTL 入力アプリのテスト。スマホ側コンパニオンアプリ（7ファイル、116テスト）とウォッチ側アプリ（5ファイル、61テスト）の合計177テスト（12ファイル）で構成される。
+Wear OS (Pixel Watch) KFTL 入力アプリのテスト。スマホ側コンパニオンアプリ（8ファイル、120テスト）とウォッチ側アプリ（5ファイル、61テスト）の合計181テスト（13ファイル）で構成される。
 
 ## テストフレームワーク
 
@@ -10,7 +10,7 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 
 ## テストファイル一覧
 
-### phone_companion（スマホ側コンパニオン）— 110テスト
+### phone_companion（スマホ側コンパニオン）— 120テスト
 
 | ファイル | テスト数 | テスト内容 |
 |---------|---------|-----------|
@@ -18,8 +18,9 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 | `phone_companion/src/test/java/.../MainActivityTest.kt` | 8 | コンパニオンアプリの Activity ライフサイクル |
 | `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 28 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得・plaing検索クエリの形状検証。okhttp-tls の自己署名証明書での TLS ピン留め一致/不一致/未保存/既定モード/SAN欠落フォールバック検証を含む） |
 | `phone_companion/src/test/java/.../GkillServerTrustTest.kt` | 13 | TOFU+ピン留めの TrustManager。フィンガープリント計算・整形・照合、ピン一致/不一致/未保存の可否、ホストキー導出（okhttp-tls の HeldCertificate 使用） |
+| `phone_companion/src/test/java/.../GkillServerUrlPolicyTest.kt` | 4 | サーバーURLの受け入れ境界（平文HTTPはループバックのみ。LAN/公開ホスト・偽装ホスト名・不正形式の拒否、HTTPSの許可） |
 | `phone_companion/src/test/java/.../GkillWearableListenerServiceTest.kt` | 19 | ウォッチ→スマホ間メッセージパスのハンドリング |
-| `phone_companion/src/test/java/.../WearRequestHandlerTest.kt` | 15 | 時計要求ハンドラ（MockWebServer 使用、4ハンドラの成功/失敗/`ERROR:`プレフィックス契約と重複送信の `DUPLICATE`/force 上書き） |
+| `phone_companion/src/test/java/.../WearRequestHandlerTest.kt` | 17 | 時計要求ハンドラ（MockWebServer 使用、4ハンドラの成功/失敗/`ERROR:`プレフィックス契約と重複送信の `DUPLICATE`/force 上書き） |
 | `phone_companion/src/test/java/.../WearSubmitLedgerTest.kt` | 7 | KFTL 送信の重複台帳（成功時のみ記録・TTL・上限・永続化・破損時の空扱い） |
 
 ### watch_app（ウォッチ側アプリ）— 61テスト
