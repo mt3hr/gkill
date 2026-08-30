@@ -132,7 +132,7 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at update users account user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Error, "error at update users account user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at update users account", "error", fmt.Sprintf("%q", err))
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.UpdateUsersAccountStatusError,

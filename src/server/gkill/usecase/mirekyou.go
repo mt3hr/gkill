@@ -67,7 +67,7 @@ func (uc *UsecaseContext) AddMiReKyou(ctx context.Context, repositories *reps.Gk
 		err = repositories.WriteThroughMiReKyouCache(ctx, mirekyou)
 		if err != nil {
 			err = fmt.Errorf("error at add mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
-			slog.Log(ctx, gkill_log.Error, "error at add mirekyou user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.MiReKyouTempRep.AddMiReKyouInfo(ctx, mirekyou, *txID, userID, device)
@@ -152,7 +152,7 @@ func (uc *UsecaseContext) UpdateMiReKyou(ctx context.Context, repositories *reps
 		err = repositories.WriteThroughMiReKyouCache(ctx, mirekyou)
 		if err != nil {
 			err = fmt.Errorf("error at update mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
-			slog.Log(ctx, gkill_log.Error, "error at update mirekyou user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.MiReKyouTempRep.AddMiReKyouInfo(ctx, mirekyou, *txID, userID, device)
