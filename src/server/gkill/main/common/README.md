@@ -12,14 +12,17 @@ common/
 ├── common.go              # cobra CLI コマンド定義・サーバ初期化
 ├── common_test.go         # common.go のテスト
 ├── password_admin.go      # reset_password サブコマンド／ローカル管理者セッションの発行
-├── gkill_log/             # ログシステム（7ファイル）
+├── gkill_log/             # ログシステム（10ファイル）
 │   ├── gkill_log.go       # ロガー初期化・レベルルーティング
 │   ├── level.go           # カスタム slog.Level 定義（8レベル）
 │   ├── router.go          # ログルーター（分割/統合ファイル）
 │   ├── routing_handler.go # slog.Record 処理ハンドラ
-│   ├── sinks.go           # FileSink（ファイルベースログ出力）
+│   ├── sinks.go           # FileSink（ファイル出力・サイズ上限での世代回転）
 │   ├── switch_writer.go   # スレッドセーフなライター切り替え
-│   └── gkill_log_test.go  # ログシステムのテスト
+│   ├── sql_log.go         # TRACE_SQL の唯一の入口（引数の先行評価を避ける）
+│   ├── gkill_log_test.go  # ログシステムのテスト
+│   ├── no_eager_sql_format_test.go     # TRACE_SQL の引数を先行評価していないか
+│   └── log_level_source_scan_test.go   # ログレベルが内容と合っているか
 ├── gkill_options/         # グローバル設定オプション（2ファイル）
 │   ├── option.go          # 全 CLI フラグ定義（70+ パラメータ）
 │   └── option_test.go     # オプションのテスト
@@ -28,7 +31,7 @@ common/
     └── threads_test.go    # スレッド管理のテスト
 ```
 
-**合計: 14ファイル**（実装10 + テスト4）
+**合計: 20ファイル**（実装12 + テスト8）
 
 ## サブパッケージ
 
@@ -42,17 +45,22 @@ common/
 |--------|-------------|------|
 | `TraceSQL` | 最低 | SQL クエリトレース |
 | `Trace` | | 詳細トレース |
-| `Debug` | | デバッグ情報 |
+| `Debug` | | 開発時の詳細。**エラーの置き場ではない**（呼び出し元へ返り、境界が1行出すものだけ） |
 | `Access` | | HTTP アクセスログ |
-| `Info` | | 一般情報 |
-| `Warn` | | 警告 |
-| `Error` | | エラー |
+| `Info` | | 起動・終了・構築完了などの節目。1事象1行で流れ続けない |
+| `Warn` | | 動き続けるが結果が痩せる。監査に要る利用者由来の事象（認証失敗・認可拒否・レート制限） |
+| `Error` | | 運用者がいま知るべきサーバ側の障害。利用者の操作では起こらない |
 | `None` | 最高 | ログ無効化 |
+
+**既定は `error`。** 「`gkill_error.log` に出ていなければ起きていない」と言えることを既定にしてある。
+どの事象をどのレベルで出すかの判断基準は [ADR-1001](../../../../../documents/adr/1001-log-level-by-severity.md)、
+機械検査は `log_level_source_scan_test.go`。
 
 #### 特徴
 
 - **レベル別ファイル分割**: 各レベルごとに個別のログファイルに出力
 - **統合ログファイル**: 全レベルを1つのファイルにも統合出力
+- **ログローテーション**: 統合・レベル別の各ファイルを既定32 MiBで回転し、5世代を保持（CLIで変更可能）
 - **stdout ミラーリング**: オプションで標準出力にも出力
 - **ホットスワップ**: `SwitchWriter` によりログファイルの出力先を無停止で切り替え可能
 - **ルーティング**: `Router` が各 `slog.Record` を適切なファイルに振り分け
