@@ -2,6 +2,7 @@
 package gkill_log
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"log/slog"
@@ -106,4 +107,18 @@ func SetMode(mode SplitMode) {
 
 func SetStdoutMirror(isStdoutMirror bool) {
 	router.SetStdoutMirror(isStdoutMirror)
+}
+
+// Fatal は致命的な失敗を Error で残してからプロセスを終了します。
+//
+// **標準の log.Fatal を使わないこと。** あれは標準ロガーの stderr へ書くだけなので、
+// gkill_error.log には1行も残りません。起動に失敗したサーバでは、あとから原因を
+// 見られる場所がそこしかありません（サービスとして動いていると stderr は誰も見ない）。
+func Fatal(msg string, err error) {
+	if err != nil {
+		slog.Log(context.Background(), Error, msg, "error", fmt.Sprintf("%q", err))
+	} else {
+		slog.Log(context.Background(), Error, msg)
+	}
+	os.Exit(1)
 }
