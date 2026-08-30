@@ -58,8 +58,9 @@ export const READ_TOOLS = [
       "buckets (group_by only), partial (true when some attached data — tags/texts/notifications/TimeIs — could not be fetched and the " +
       "returned entries are incomplete; details land in warnings), warnings (always inspect this array even when partial is false: a " +
       "repository may have failed to load, so its records are absent; do not put a repository named by that warning back into query.reps), " +
-      "plugins (one description per plugin that appears in this " +
-      "response — the per-entry payload carries only rep_name/plugin_name so the text is not repeated per record), " +
+      "plugins (one {rep_name, plugin_name, description} entry per plugin that appears in this " +
+      "response — the per-entry payload carries only rep_name/plugin_name so the description text is not repeated per record; " +
+      "note gkill_get_rep_infos also returns a field called plugins[] with a different shape), " +
       "plugin_content (inline-content counts; present only when include_plugin_content is true). " +
       "Each entry also carries tag_entities[] / text_entities[] ({id, value}) alongside the plain tags[] / texts[] strings: those ids are the " +
       "annotation's OWN id, which is what gkill_update_text and gkill_delete_kyou(data_type:\"tag\"/\"text\") require — the plain string " +

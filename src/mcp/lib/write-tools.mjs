@@ -45,7 +45,7 @@ export const WRITE_TOOLS = [
       type: "object",
       properties: {
         url: { type: "string", description: "Full URL to bookmark (e.g., https://example.com/article)." },
-        title: { type: "string", description: "Human-readable title for the bookmark. Optional — if omitted, the server fetches the page and fills the title from its <title> tag (see the outbound-fetch NOTE above); when that fetch fails the bookmark is stored with an empty title." },
+        title: { type: "string", description: "Human-readable title for the bookmark. Optional — if omitted and fetch_metadata is true (the default), the server fetches the page and fills the title from its <title> tag (see the outbound-fetch NOTE above); with fetch_metadata:false, or when that fetch fails, the bookmark is stored with an empty title." },
         related_time: { type: "string", description: `When this bookmark relates to. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Defaults to now.` },
         fetch_metadata: {
           type: "boolean",
@@ -362,6 +362,7 @@ export const WRITE_TOOLS = [
       "The MCP server internally fetches the current entity, merges changes, and sends the update. " +
       "To obtain the entity ID: use the id from a previous gkill_add_urlog response, or search with gkill_get_kyous. " +
       "Response fields: updated_urlog (full URLog entity after update, with id, url, title, rep_name, related_time, etc.), updated_kyou (parent Kyou wrapper). " +
+      "Unlike gkill_add_urlog, this tool never causes outbound traffic: the server re-fetches the page only when explicitly asked to (a request key MCP does not send), so there are no fetch_metadata / fetch_favicon arguments here and a bookmark saved with fetching suppressed stays un-fetched. " +
       "Use cases: correct a URL typo, add/change a title for a previously untitled bookmark, change related_time.",
     inputSchema: {
       type: "object",
