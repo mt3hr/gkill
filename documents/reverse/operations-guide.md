@@ -110,6 +110,13 @@ $HOME/gkill/
 npm run release
 ```
 
+> **リリースの前提（2026-08-30 監査 F-009）**: `npm run release` 自体はテストを実行しない
+> （成果物の存在・SHA-256・APK 署名の検証だけを行う）。リリース対象コミットは、
+> 直近の Nightly（E2E・Android/Wear・govulncheck・npm audit）が green で、
+> ローカルの `npm test` も green のものに限ること。
+> APK 3本はリリース署名でビルドされる。署名鍵の受け渡しと未設定時の挙動は
+> `.claude/skills/gkill-build-test/SKILL.md` の「APK リリース署名」を参照。
+
 `release/` ディレクトリに各プラットフォーム向けバイナリが生成:
 - `linux_amd64_gkill_server_*.zip`
 - `linux_arm64_gkill_server_*.zip`
