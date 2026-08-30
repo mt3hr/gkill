@@ -3,6 +3,7 @@ package dvnf_cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -247,7 +248,8 @@ func copyFile(src, target string) error {
 	}
 	defer func() {
 		err := targetFile.Close()
-		if err != nil {
+		// コピー成功時は下の明示Closeが先に走るため、ここのErrClosedは正常系
+		if err != nil && !errors.Is(err, os.ErrClosed) {
 			slog.Log(context.Background(), gkill_log.Warn, "error at defer close file opened for write", "error", fmt.Sprintf("%q", err))
 		}
 	}()
