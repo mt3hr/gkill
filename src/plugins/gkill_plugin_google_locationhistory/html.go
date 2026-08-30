@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 	"html"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 )
 
 // configHTMLHead は設定画面の共通ヘッダ。

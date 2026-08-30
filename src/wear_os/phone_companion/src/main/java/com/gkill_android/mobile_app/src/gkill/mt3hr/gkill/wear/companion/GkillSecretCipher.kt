@@ -57,7 +57,8 @@ class AndroidKeystoreSecretCipher : GkillSecretCipher {
             val encrypted = cipher.doFinal(plain.toByteArray(Charsets.UTF_8))
             PREFIX + Base64.encodeToString(cipher.iv + encrypted, Base64.NO_WRAP)
         } catch (e: Exception) {
-            Log.w(TAG, "認証情報の暗号化に失敗しました", e)
+            // 保存した資格情報が失われる。次にウォッチから送るときに認証できなくなるので ERROR。
+            Log.e(TAG, "認証情報の暗号化に失敗しました", e)
             null
         }
     }
@@ -76,7 +77,8 @@ class AndroidKeystoreSecretCipher : GkillSecretCipher {
             )
             String(cipher.doFinal(raw, IV_LENGTH, raw.size - IV_LENGTH), Charsets.UTF_8)
         } catch (e: Exception) {
-            Log.w(TAG, "認証情報の復号に失敗しました", e)
+            // 同上。復号できないと保存済みの資格情報が使えず、利用者は入れ直すことになる。
+            Log.e(TAG, "認証情報の復号に失敗しました", e)
             null
         }
     }

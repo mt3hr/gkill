@@ -2437,7 +2437,9 @@ export class GkillAPI {
                         return await fetch(input, init)
                 } catch (e) {
                         if (!navigator.onLine || (e instanceof TypeError)) {
-                                console.error('[GkillAPI] network error:', e)
+                                // オフラインは PWA では想定内の状態。ここを error にすると
+                                // 電波の無い場所で使うたびにコンソールが赤くなる。
+                                console.warn('[GkillAPI] network error:', e)
                                 const body = {
                                         errors: [{
                                                 error_code: GkillErrorCodes.network_error,

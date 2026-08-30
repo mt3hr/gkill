@@ -80,7 +80,6 @@ class GkillWearClientTest {
     }
 
     @Test
-    @org.junit.Ignore("android.util.Log not available in JVM unit tests - parseTemplates catches exception internally but Log.e throws")
     fun parseTemplates_malformedJson_returnsEmptyList() {
         val result = GkillWearClient.parseTemplates("{invalid json")
 
@@ -198,7 +197,6 @@ class GkillWearClientTest {
     }
 
     @Test
-    @org.junit.Ignore("android.util.Log not available in JVM unit tests - parsePlaingTimeisList catches exception internally but Log.e throws")
     fun parsePlaingTimeisList_malformedJson_returnsEmptyList() {
         val result = GkillWearClient.parsePlaingTimeisList("not json at all")
 

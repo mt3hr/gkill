@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"runtime"
 	"sort"
 	"strconv"
@@ -82,7 +81,7 @@ func (b *builder) loop(pluginDir string, configOf func() pluginConfig) {
 // 1行でも混ざるとJSONストリームが壊れる。ログはstderrに出す。
 func (b *builder) runOnce(pluginDir string, config pluginConfig) {
 	if err := globalCache.build(pluginDir, config); err != nil {
-		fmt.Fprintf(os.Stderr, "gkill_plugin_fitbit: build error: %v\n", err)
+		sdk.LogError("gkill_plugin_fitbit: build error: %v", err)
 	}
 }
 
@@ -206,7 +205,7 @@ func (c *cache) build(pluginDir string, config pluginConfig) error {
 				prefix, _ := metricPrefixOf(entry.Name)
 				partials, err := ingestEntry(entry, defsForPrefix(prefix, enabled), loc)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "gkill_plugin_fitbit: ingest %s: %v\n", entry.Path, err)
+					sdk.LogWarn("gkill_plugin_fitbit: ingest %s: %v", entry.Path, err)
 					return
 				}
 				results[i] = partials
