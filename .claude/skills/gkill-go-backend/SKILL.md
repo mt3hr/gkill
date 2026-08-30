@@ -115,6 +115,37 @@ ERR000002 でログアウトさせるので、**存在しないユーザIDにパ
 
 **IDF走査の一時停止は参照カウント**（2026-08-21、監査 M-02）。`SetSkipIDF(true/false)` は共有 `*bool` ではなく `*atomic.Int64` を増減し「カウント>0 で skip」。重なるアップロード（と UpdateCache）が互いのフラグを倒し合って watcher が走る/変更を取りこぼすのを防ぐ。カウントが0へ戻ったときだけ catch-up 走査を1回キックする（`UpdateCache` の Add(-1) では catch-up しない＝1分周期のリビルド無限ループになるため。`SetSkipIDF` はアップロードハンドラからしか呼ばれず watcher から再入しない）。
 
+### ログレベル（2026-08-30）
+
+**既定のログレベルは `error`。** `--log` を付けなくても `gkill_error.log` に出る。
+以前の既定は `none` で、本番サービスのログファイルは全部0バイトだった。
+「`gkill_error.log` に出ていなければ起きていない」と言えることが前提になっている。
+
+**レベルは事象の重さで決める。判断は次の2つの軸をこの順で見る**（正本は [ADR-1001](../../../documents/adr/1001-log-level-by-severity.md)）:
+
+1. **そのエラーは呼び出し元へ返るか。** 返る（`return err` / `gkillErrors` に積んで `return`）なら
+   応答の `errors` に載り、`writeErrorStatus` が境界で1行出すので深部は **Debug でよい**
+   （同じ失敗を2回 Error で書かない）。返らない（ログして継続・`defer` 内・goroutine 内）なら
+   **そのログが唯一の記録なので Debug 禁止**。結果が痩せるだけなら Warn、データが壊れる・機能が止まるなら Error。
+2. **原因が利用者側か、サーバ側か。** 入力・認証・認可・レート制限は Warn 以下（`gkill_error.log` を
+   未ログインのアクセスで埋めない）。ディスク・DB・プロセス・設定は Error。
+
+**失敗したリクエストの1行は `writeErrorStatus(ctx, w, response.Errors)` が出す。**
+レベルはステータスから機械的に決まる（5xx=Error / 401・403・429=Warn / その他4xx=Debug）。
+新しいハンドラは `writeErrorStatus(r.Context(), w, response.Errors)` の形で書くこと
+（`response_status_guard_test.go` がエンコード行の直前にあることを機械検査する）。
+アクセスログのミドルウェアは `Access` のまま触らない（レベルを可変にすると `gkill_access.log` の網羅性が崩れる）。
+
+**メッセージに操作名を入れる。** `slog.Log(ctx, gkill_log.Debug, "error", "error", ...)` の形は禁止
+（メッセージでの集計もアラートも作れない）。直前の `fmt.Errorf("error at XXX ...")` の操作名を
+メッセージへ移す。値は `fmt.Sprintf("%q", ...)` で包む（CodeQL の log-injection バリアがこの形）。
+
+**`log.Fatal` を使わない。** 標準ロガーの stderr へ書くだけで `gkill_error.log` に残らない。
+`gkill_log.Fatal(msg, err)` を通すこと（例外は `gkill_log.Init` 自身のレベル不正だけ。ルータがまだ無い）。
+
+守るテスト: `main/common/gkill_log/log_level_source_scan_test.go`（無情報メッセージ・defer Close の
+対象別レベル・握り潰しの検出）/ `gkill_server_api/response_status_log_test.go`（ステータス→レベル）。
+
 ## 関連スキル
 
 - [gkill-find-query](../gkill-find-query/SKILL.md) — `FindQuery` の null 意味論（Go/TS/MCP の3実装共通）
@@ -131,6 +162,7 @@ ERR000002 でログアウトさせるので、**存在しないユーザIDにパ
 - [ADR-0105 FindQuery.IDs のチャンク分割](../../../documents/adr/0105-chunk-find-query-ids.md)
 - [ADR-0107 ReKyou ターゲット解決のメモ化](../../../documents/adr/0107-memoize-rekyou-target-resolution.md)
 - [ADR-0801 性能判定は allocs で（ns/op ではなく）](../../../documents/adr/0801-perf-judge-by-allocs-not-ns-op.md)
+- [ADR-1001 ログレベルは事象の重さで決める](../../../documents/adr/1001-log-level-by-severity.md)
 - [ADR-0201 追記専用 DAO](../../../documents/adr/0201-append-only-dao.md)
 - [ADR-0202 キャッシュ再構築は実DBが変わったときだけ](../../../documents/adr/0202-rebuild-cache-only-on-db-change.md)
 - [ADR-0203 ライトスルーは reps 数判定ではなく](../../../documents/adr/0203-write-through-cache-not-reps-count.md)
