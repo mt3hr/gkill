@@ -24,8 +24,9 @@ import (
 // 設定がまだ無い利用者・端末の組み合わせでは、既定の設定を作成してから返します。
 // 応答にはDBに保存された設定だけでなく、実行時にしか決まらない値
 // （管理者かどうか、ローカルアプリのセッションかどうか、バージョン情報、
-// グローバルIP・プライベートIP、ホスト名、ブックマークレット用セッションID）も詰めて返します。
+// プライベートIP、ホスト名、ブックマークレット用セッションID）も詰めて返します。
 // IPとホスト名の取得に失敗してもエラーにはせず、その項目を空のまま返します。
+// GlobalIP は常に空です（外部サービスへの公開IP照会は 2026-08-30 に廃止）。
 func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
@@ -131,10 +132,6 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	if err != nil {
 		slog.Log(r.Context(), gkill_log.Debug, "error at get private ipv4 addresses", "error", fmt.Sprintf("%q", err))
 	}
-	globalIP, err := globalIP(context.Background())
-	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error at get global ip", "error", fmt.Sprintf("%q", err))
-	}
 	privateIPStr := ""
 	if len(privateIP) != 0 {
 		privateIPStr = privateIP[0].String()
@@ -160,7 +157,10 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	response.ApplicationConfig.Device = device
 	response.ApplicationConfig.UserIsAdmin = auth.Account.IsAdmin
 	response.ApplicationConfig.CacheClearCountLimit = gkill_options.CacheClearCountLimit
-	response.ApplicationConfig.GlobalIP = globalIP.String()
+	// GlobalIP は空のまま返す。以前は設定取得のたびに外部サービスへ公開IPを問い合わせていたが、
+	// 取得値を読む画面が1つも無く、README の外部通信の説明にも載らない暗黙の外向き通信
+	// だったため廃止した（2026-08-30 監査 F-005）。互換のためフィールド自体は残す。
+	response.ApplicationConfig.GlobalIP = ""
 	response.ApplicationConfig.PrivateIP = privateIPStr
 
 	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(r.Context(), device)
