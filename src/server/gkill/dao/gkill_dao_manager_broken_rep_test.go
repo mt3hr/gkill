@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
@@ -132,19 +133,42 @@ func setupBrokenRepTest(t *testing.T, brokenRepDirName string, useToWrite bool) 
 	return manager, userID, device, dataDir
 }
 
-// captureBrokenRepLogs は GetRepositories が出す構造化ログを検査するため、
-// テスト中だけ slog の出力先を差し替える。
-func captureBrokenRepLogs(t *testing.T) *bytes.Buffer {
-	t.Helper()
-
-	var buffer bytes.Buffer
-	original := slog.Default()
-	slog.SetDefault(slog.New(slog.NewJSONHandler(&buffer, &slog.HandlerOptions{Level: gkill_log.TraceSQL})))
-	t.Cleanup(func() { slog.SetDefault(original) })
-	return &buffer
+// syncLogBuffer は捕捉用の bytes.Buffer をミューテックスで包む。
+//
+// GetRepositories は通知ループ（GkillNotificator）のゴルーチンを起動し、
+// そのゴルーチンはテストが検査している間も slog（差し替えた出力先）へ書き続ける。
+// 素の bytes.Buffer だと通知側の Write とテスト側の String が競合し、
+// CI の `go test -race ./gkill/dao/...` で実際にデータレースとして検出された。
+type syncLogBuffer struct {
+	mu     sync.Mutex
+	buffer bytes.Buffer
 }
 
-func findBrokenRepLogRecords(t *testing.T, buffer *bytes.Buffer, message string) []map[string]any {
+func (b *syncLogBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buffer.Write(p)
+}
+
+func (b *syncLogBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buffer.String()
+}
+
+// captureBrokenRepLogs は GetRepositories が出す構造化ログを検査するため、
+// テスト中だけ slog の出力先を差し替える。
+func captureBrokenRepLogs(t *testing.T) *syncLogBuffer {
+	t.Helper()
+
+	buffer := &syncLogBuffer{}
+	original := slog.Default()
+	slog.SetDefault(slog.New(slog.NewJSONHandler(buffer, &slog.HandlerOptions{Level: gkill_log.TraceSQL})))
+	t.Cleanup(func() { slog.SetDefault(original) })
+	return buffer
+}
+
+func findBrokenRepLogRecords(t *testing.T, buffer *syncLogBuffer, message string) []map[string]any {
 	t.Helper()
 
 	records := []map[string]any{}
