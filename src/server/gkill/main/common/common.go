@@ -65,6 +65,7 @@ var (
 				matchFiles, err := zglob.Glob(filenamePattern)
 				if err != nil {
 					err = fmt.Errorf("error at glob %s: %w", filenamePattern, err)
+					slog.Log(cmd.Context(), gkill_log.Error, "error at glob idf target dir", "pattern", fmt.Sprintf("%q", filenamePattern), "error", fmt.Sprintf("%q", err))
 					fmt.Printf("%s\n", err)
 					errs = append(errs, err)
 					continue

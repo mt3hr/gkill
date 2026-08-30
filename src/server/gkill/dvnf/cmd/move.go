@@ -2,7 +2,6 @@ package dvnf_cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -41,13 +40,13 @@ var moveOpt = struct {
 	robo            bool // 有効な場合、srcでマッチするものがなかったらパニクる
 }{}
 
-func runMove(_ *cobra.Command, _ []string) {
+func runMove(_ *cobra.Command, _ []string) error {
 	var err error
 
 	// 何かを動かす前に見る。壊れたパターンは黙って何にも当たらないので、
 	// 除外し損ねたまま運んでしまう。
 	if err := validateIgnorePatterns(moveOpt.ignorePattern); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	dvnfdir, childdir := splitDVNFPathnium(moveOpt.target)
@@ -58,20 +57,20 @@ func runMove(_ *cobra.Command, _ []string) {
 		_, err = dvnf.CreateNewDVNF(opt, true)
 		if err != nil {
 			err = fmt.Errorf("error at create new dvnf %s_%s: %w", opt.Device, opt.Directory, err)
-			log.Fatal(err)
+			return err
 		}
 	}
 	// 最新のdvnfを取得する。なければ今のdvnfを。
 	dvnfdir, err = dvnf.GetLatestDVNF(opt)
 	if err != nil {
 		err = fmt.Errorf("error at get latest dvnf %s_%s: %w", opt.Device, opt.Directory, err)
-		log.Fatal(err)
+		return err
 	}
 	if dvnfdir == "" {
 		dvnfdir, err = dvnf.NewDVNF(opt)
 		if err != nil {
 			err = fmt.Errorf("error at new dvnf %s_%s: %w", opt.Device, opt.Directory, err)
-			log.Fatal(err)
+			return err
 		}
 	}
 
@@ -80,7 +79,7 @@ func runMove(_ *cobra.Command, _ []string) {
 	target, err = filepath.Abs(target)
 	if err != nil {
 		err = fmt.Errorf("error at target to absolute path %s: %w", target, err)
-		log.Fatal(err)
+		return err
 	}
 
 	// srcにマッチするものをすべて取得する。globなど
@@ -88,12 +87,12 @@ func runMove(_ *cobra.Command, _ []string) {
 	matches, err := glob(src)
 	if err != nil && moveOpt.robo {
 		err = fmt.Errorf("error at glob %s: %w", src, err)
-		log.Fatal(err)
+		return err
 	}
 
 	// srcが存在しなければ何もしない
 	if len(matches) == 0 {
-		return
+		return nil
 	}
 
 	// 移動する。親ディレクトリを作成しつつ
@@ -107,9 +106,10 @@ func runMove(_ *cobra.Command, _ []string) {
 		err := move(path, target, moveOpt.ignore, moveOpt.ignorePattern)
 		if err != nil {
 			err = fmt.Errorf("error at move from %s to %s: %w", path, target, err)
-			log.Fatal(err)
+			return err
 		}
 	}
+	return nil
 }
 
 func move(src, target string, ignores []string, ignorePatterns []string) error {

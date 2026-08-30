@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -47,11 +46,11 @@ var copyOpt = &struct {
 	robo          bool // 有効な場合、srcでマッチするものがなかったらパニクる
 }{}
 
-func runCopy(_ *cobra.Command, _ []string) {
+func runCopy(_ *cobra.Command, _ []string) error {
 	// 何かを動かす前に見る。壊れたパターンは黙って何にも当たらないので、
 	// 除外し損ねたまま運んでしまう。
 	if err := validateIgnorePatterns(copyOpt.ignorePattern); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	var err error
@@ -63,7 +62,7 @@ func runCopy(_ *cobra.Command, _ []string) {
 		_, err = dvnf.CreateNewDVNF(opt, true)
 		if err != nil {
 			err = fmt.Errorf("error create new dvnf %s_%s: %w", opt.Device, opt.Directory, err)
-			log.Fatal(err)
+			return err
 		}
 	}
 
@@ -71,13 +70,13 @@ func runCopy(_ *cobra.Command, _ []string) {
 	dvnfdir, err = dvnf.GetLatestDVNF(opt)
 	if err != nil {
 		err = fmt.Errorf("error at get latest dvnf %s_%s: %w", opt.Device, opt.Directory, err)
-		log.Fatal(err)
+		return err
 	}
 	if dvnfdir == "" {
 		dvnfdir, err = dvnf.NewDVNF(opt)
 		if err != nil {
 			err = fmt.Errorf("error at new dvnf %s_%s: %w", opt.Device, opt.Directory, err)
-			log.Fatal(err)
+			return err
 		}
 	}
 
@@ -86,7 +85,7 @@ func runCopy(_ *cobra.Command, _ []string) {
 	target, err = filepath.Abs(target)
 	if err != nil {
 		err = fmt.Errorf("error at target to absolute path %s: %w", target, err)
-		log.Fatal(err)
+		return err
 	}
 
 	// srcにマッチするものをすべて取得する。globなど
@@ -94,12 +93,12 @@ func runCopy(_ *cobra.Command, _ []string) {
 	matches, err := glob(src)
 	if err != nil && copyOpt.robo {
 		err = fmt.Errorf("error at glob %s: %w", src, err)
-		log.Fatal(err)
+		return err
 	}
 
 	// srcが存在しなければ何もしない
 	if len(matches) == 0 {
-		return
+		return nil
 	}
 
 	// コピーする。親ディレクトリを作成しつつ
@@ -115,7 +114,7 @@ func runCopy(_ *cobra.Command, _ []string) {
 			srcStat, err := os.Stat(path)
 			if err != nil {
 				err = fmt.Errorf("error at get stat %s: %w", path, err)
-				log.Fatal(err)
+				return err
 			}
 
 			var targetStat os.FileInfo
@@ -136,9 +135,10 @@ func runCopy(_ *cobra.Command, _ []string) {
 		err := copy(path, target, copyOpt.ignore, copyOpt.ignorePattern)
 		if err != nil {
 			err = fmt.Errorf("error at copy from %s to %s: %w", path, target, err)
-			log.Fatal(err)
+			return err
 		}
 	}
+	return nil
 }
 
 func copy(src, target string, ignores []string, ignorePatterns []string) error {
