@@ -568,6 +568,23 @@ describe("delete / restore batch form", () => {
     const result = normalizeDeleteArgs({ targets: '[{"id":"a","data_type":"kmemo"}]' });
     expect(result.targets).toEqual([{ id: "a", data_type: "kmemo" }]);
   });
+
+  // describe 名のとおり restore も同じ経路 (normalizeDeleteTargets) を通ることを
+  // restore 側の実関数で1本固定する (これまで中身は全部 delete だった)。
+  test("restore batch form works the same way and folds projections", () => {
+    const result = normalizeRestoreArgs({ targets: [{ id: "a", data_type: "mi_create" }] });
+    expect(result.batch).toBe(true);
+    expect(result.targets).toEqual([{ id: "a", data_type: "mi" }]);
+  });
+
+  // ツール説明は「単件・一括のどちらも無い呼び出しは実行時に拒否される」と AI へ約束している。
+  // その分岐 (verb 入りの専用文言) はここでしか到達しない。
+  test("rejects a call with no target at all, naming the batch alternative with the right verb", () => {
+    expectThrowsField(() => normalizeDeleteArgs({}), "id");
+    expect(() => normalizeDeleteArgs({})).toThrow(/delete several entries/);
+    expectThrowsField(() => normalizeRestoreArgs({}), "id");
+    expect(() => normalizeRestoreArgs({})).toThrow(/restore several entries/);
+  });
 });
 
 describe("追加と更新は同じフィールド表から作る", () => {
@@ -673,6 +690,14 @@ describe("後付けフラグの正規化", () => {
     expect(() => normalizeUrlogArgs({ url: "https://example.com", fetch_metadata: "yes" })).toThrow(/boolean/);
   });
 
+  test("urlog: 前後に空白の付いた正規JSON文字列も復元される (検出器と同じ受理範囲)", () => {
+    // 検出器 (detectStaleSchemaSignals → parseCanonicalJSONValue) は trim してから JSON.parse
+    // する。正規化側の受理範囲がそれより狭いと「stale 警告は出るのに型エラーで落ちる」
+    // 入力が生まれるので、両者は同じ trim 済み比較で揃える。
+    const normalized = normalizeUrlogArgs({ url: "https://example.com", fetch_metadata: " false " });
+    expect(normalized.fetch_metadata).toBe(false);
+  });
+
   test("mi: allow_create_board の既定は add=true / update=undefined (未指定=許可)", () => {
     expect(normalizeMiArgs({ title: "t" }).allow_create_board).toBe(true);
     expect(normalizeUpdateMiArgs({ id: "m1", title: "t" }).allow_create_board).toBeUndefined();
@@ -683,7 +708,8 @@ describe("後付けフラグの正規化", () => {
     expect(normalizeUpdateMiArgs({ id: "m1", board_name: "b", allow_create_board: false }).allow_create_board).toBe(false);
   });
 
-  test("mi: 正規JSON文字列 \"false\" は boolean へ復元される (古スキーマ救済)", () => {
+  test("mi: 正規JSON文字列 \"false\" は boolean へ復元される (古スキーマ救済。add / update とも)", () => {
+    expect(normalizeMiArgs({ title: "t", allow_create_board: "false" }).allow_create_board).toBe(false);
     expect(normalizeUpdateMiArgs({ id: "m1", board_name: "b", allow_create_board: "false" }).allow_create_board).toBe(false);
   });
 });

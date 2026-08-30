@@ -34,17 +34,27 @@ class McpServer extends McpServerBase {
   }
 }
 
+// 起動 spec の静的な部分。scope / ポート / file-link 可否は「このサーバが何者か」の宣言で、
+// OAuth の scope はこの1値から metadata・認可既定値・トークン発行・受理検証まで全部が生成される
+// （lib/mcp-server-bootstrap.mjs）。テストが宣言値そのものを固定できるよう export する
+// —— ReadWrite サーバが gkill:read を広告していた事故は、テストが自前の値で
+// OAuthServer を組み立てていて、ここの宣言を誰も読んでいなかったために漏れた。
+// ServerClass と client は起動時にだけ作る（import 時に環境変数を読む副作用を避ける）。
+export const START_SPEC = Object.freeze({
+  scriptName: "gkill-read-server.mjs",
+  logFileName: "gkill_mcp_read_access.log",
+  oauthStateFileName: "mcp_oauth_read_state.json",
+  defaultPort: 8808,
+  scope: "gkill:read",
+  enableFileLinks: true,
+});
+
 // Entry point — guarded so importing this module for tests does not start a transport.
 if (isDirectRun(import.meta.url)) {
   startMcpServer({
     ServerClass: McpServer,
     client: new GkillReadClient(),
-    scriptName: "gkill-read-server.mjs",
-    logFileName: "gkill_mcp_read_access.log",
-    oauthStateFileName: "mcp_oauth_read_state.json",
-    defaultPort: 8808,
-    scope: "gkill:read",
-    enableFileLinks: true,
+    ...START_SPEC,
   });
 }
 

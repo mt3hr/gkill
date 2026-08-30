@@ -14,6 +14,7 @@ import {
   normalizeRepInfosArgs,
   normalizeKyouHistoryArgs,
   detectStaleSchemaSignals,
+  STALE_SCHEMA_ARG_KINDS_BY_TOOL,
 } from "../lib/normalization.mjs";
 import { encodeGpsCursor } from "../lib/gps-cursor.mjs";
 import { paginateGpsLogs } from "../lib/read-handlers.mjs";
@@ -1163,12 +1164,26 @@ describe("detectStaleSchemaSignals", () => {
     expect(detectStaleSchemaSignals("gkill_get_kyous", { group_by: "day", cursor: "x" })).toBeNull();
   });
 
-  test("covers every tool that has a revival table", () => {
-    expect(detectStaleSchemaSignals("gkill_get_gps_log", { limit: "250" }).revived).toEqual(["limit"]);
-    expect(detectStaleSchemaSignals("gkill_get_application_config", { fields: '["tag_struct"]' }).revived).toEqual(["fields"]);
-    expect(detectStaleSchemaSignals("gkill_get_idf_file", { is_video: "true" }).revived).toEqual(["is_video"]);
-    expect(detectStaleSchemaSignals("gkill_get_all_rep_names", { limit: "10" }).revived).toEqual(["limit"]);
-    expect(detectStaleSchemaSignals("gkill_get_kyou_history", { limit: "10" }).revived).toEqual(["limit"]);
+  test("covers every tool that has a revival table (table-driven, cannot fall behind)", () => {
+    // 以前はツールをハードコード列挙していて、表へ足した分だけこのテストが黙って
+    // 古びていた (13 エントリ中 5 ツールしか見ていなかった)。表そのものを回し、
+    // 全 (tool, key, kind) が「正規JSON文字列で届いたら古さの証拠として報告される」
+    // ことを固定する。表へ1行足せば自動でここの検査対象になる。
+    const SAMPLE_BY_KIND = {
+      boolean: "true",
+      number: "5",
+      string_array: '["x"]',
+      object_array: '[{"id":"a","data_type":"kmemo"}]',
+    };
+    expect(STALE_SCHEMA_ARG_KINDS_BY_TOOL.size).toBeGreaterThanOrEqual(13);
+    for (const [tool, kinds] of STALE_SCHEMA_ARG_KINDS_BY_TOOL) {
+      for (const [key, kind] of kinds) {
+        const sample = SAMPLE_BY_KIND[kind];
+        expect(sample, `no sample value for kind "${kind}" — add one to SAMPLE_BY_KIND`).toBeDefined();
+        const signals = detectStaleSchemaSignals(tool, { [key]: sample });
+        expect(signals?.revived ?? [], `${tool}.${key} (${kind}) not reported as revivable`).toContain(key);
+      }
+    }
   });
 });
 

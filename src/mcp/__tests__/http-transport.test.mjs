@@ -40,8 +40,9 @@ function createMockClient(overrides = {}) {
 }
 
 // authenticateUser は userId ごとに別セッションを返す (並行分離テストで token を見分けるため)。
-// scope の正本は OAuthServer なので、read 以外の variant は必ずここへ scope を渡す
-// (transport 側 options.scope とずれると HttpTransport の生成が throw する)。
+// scope の正本は OAuthServer のこの1値。HttpTransport は oauthServer.scope を読むので、
+// transport の options へ scope を渡さない (二重指定は「transport にも渡すのが普通」という
+// 誤った作法を読み手へ伝えるだけ。不一致 throw の検査は専用テストが1本だけ持つ)。
 function makeOAuth(scope = "gkill:read", issuer = "http://127.0.0.1:0") {
   return new OAuthServer({
     issuer,
@@ -118,7 +119,7 @@ describe("handleRequest — Bearer auth (C-01 regression)", () => {
     test(`POST /mcp without Bearer returns 401 for ${variant.scope}`, () => {
       const oauth = makeOAuth(variant.scope);
       const server = variant.make(createMockClient(), null);
-      const transport = new HttpTransport(server, 0, oauth, { scope: variant.scope });
+      const transport = new HttpTransport(server, 0, oauth, {});
       const req = { method: "POST", url: "/mcp", headers: {}, socket: { remoteAddress: "127.0.0.1" } };
       const res = mockRes();
 
@@ -143,7 +144,7 @@ describe("HttpTransport over real HTTP", () => {
   async function startTransport(scope, client) {
     oauth = makeOAuth(scope);
     const server = SERVER_VARIANTS.find((v) => v.scope === scope).make(client, null);
-    transport = new HttpTransport(server, 0, oauth, { scope });
+    transport = new HttpTransport(server, 0, oauth, {});
     const httpServer = transport.start();
     await new Promise((resolve) => httpServer.once("listening", resolve));
     port = httpServer.address().port;
@@ -227,6 +228,13 @@ describe("OAuth scope boundary (P0)", () => {
   test("a legacy token with a foreign scope gets 403 insufficient_scope", () => {
     oauth = makeOAuth("gkill:readwrite");
     const server = new ReadWriteServer(createMockClient(), null);
+    // 403 の監査イベントは運用者が scope 拒否を知る唯一の窓なので、応答と一緒に固定する。
+    const warns = [];
+    server.accessLog = {
+      info() {},
+      warn(msg, fields) { warns.push({ msg, fields }); },
+      error() {},
+    };
     transport = new HttpTransport(server, 0, oauth, {});
     // scope 修正前の ReadWrite サーバが発行した "gkill:read" のアクセストークンを再現する。
     oauth.store.putAccessToken("legacy-access", {
@@ -248,6 +256,14 @@ describe("OAuth scope boundary (P0)", () => {
     // 401 (トークン無効) と区別し、クライアントへ再認可を促すヘッダを返す。
     expect(res.headers["WWW-Authenticate"]).toContain('error="insufficient_scope"');
     expect(res.headers["WWW-Authenticate"]).toContain('scope="gkill:readwrite"');
+    // どの scope のトークンが何を要求されて拒否されたかまでログに残る
+    // (logRequest の http_request 行も 403 なので warn に並ぶ。ここでは監査イベント側だけを見る)。
+    const scopeWarns = warns.filter((w) => w.msg === "token_scope_rejected");
+    expect(scopeWarns).toEqual([
+      expect.objectContaining({
+        fields: expect.objectContaining({ token_scope: "gkill:read", required_scope: "gkill:readwrite" }),
+      }),
+    ]);
   });
 
   test("a matching-scope token still reaches the MCP handler", () => {
@@ -277,6 +293,15 @@ describe("OAuth scope boundary (P0)", () => {
     expect(
       () => new HttpTransport(new ReadWriteServer(createMockClient(), null), 0, oauth, { scope: "gkill:readwrite" }),
     ).toThrow("scope mismatch");
+  });
+
+  test("a transport with no scope source at all fails fast at construction", () => {
+    // oauthServer が scope を持たないフェイクで、options.scope も無い組み合わせ。
+    // ここで通すと Bearer 受理の scope 照合 (tokenData.scope !== this.scope) が
+    // undefined 比較になり、全トークンを 403 で弾く事故になる。
+    expect(
+      () => new HttpTransport(new ReadWriteServer(createMockClient(), null), 0, { issuer: "https://mcp.example.test" }, {}),
+    ).toThrow("requires a scope");
   });
 });
 
@@ -316,7 +341,7 @@ describe("concurrent requests keep session context separate (C-02 regression)", 
     });
 
     oauth = makeOAuth();
-    transport = new HttpTransport(new ReadServer(client, null), 0, oauth, { scope: "gkill:read" });
+    transport = new HttpTransport(new ReadServer(client, null), 0, oauth, {});
     const httpServer = transport.start();
     await new Promise((resolve) => httpServer.once("listening", resolve));
     port = httpServer.address().port;
@@ -427,7 +452,7 @@ describe("body caps, explicit timeouts, and log query redaction (2026-08-30 audi
     oauth = makeOAuth();
     const server = new ReadServer(createMockClient(), null);
     server.accessLog = makeCapturingLog([]);
-    transport = new HttpTransport(server, 0, oauth, { scope: "gkill:read" });
+    transport = new HttpTransport(server, 0, oauth, {});
     const req = makeFakeReq();
     const res = mockRes();
 
@@ -443,7 +468,7 @@ describe("body caps, explicit timeouts, and log query redaction (2026-08-30 audi
     oauth = makeOAuth();
     const server = new ReadServer(createMockClient(), null);
     server.accessLog = makeCapturingLog([]);
-    transport = new HttpTransport(server, 0, oauth, { scope: "gkill:read" });
+    transport = new HttpTransport(server, 0, oauth, {});
     const req = makeFakeReq();
     const res = mockRes();
 
@@ -461,7 +486,7 @@ describe("body caps, explicit timeouts, and log query redaction (2026-08-30 audi
     const logs = [];
     const server = new ReadServer(createMockClient(), null);
     server.accessLog = makeCapturingLog(logs);
-    transport = new HttpTransport(server, 0, oauth, { scope: "gkill:read" });
+    transport = new HttpTransport(server, 0, oauth, {});
     const registerSpy = vi.spyOn(oauth, "handleRegister");
     const httpServer = transport.start();
     const port = await new Promise((resolve) =>
@@ -487,7 +512,7 @@ describe("body caps, explicit timeouts, and log query redaction (2026-08-30 audi
     const logs = [];
     const server = new ReadServer(createMockClient(), null);
     server.accessLog = makeCapturingLog(logs);
-    transport = new HttpTransport(server, 0, oauth, { scope: "gkill:read" });
+    transport = new HttpTransport(server, 0, oauth, {});
 
     const req = {
       method: "GET",
@@ -506,7 +531,7 @@ describe("body caps, explicit timeouts, and log query redaction (2026-08-30 audi
     process.env.MCP_BIND_ADDR = "127.0.0.1";
     oauth = makeOAuth();
     const server = new ReadServer(createMockClient(), null);
-    transport = new HttpTransport(server, 0, oauth, { scope: "gkill:read" });
+    transport = new HttpTransport(server, 0, oauth, {});
     const httpServer = transport.start();
     await new Promise((resolve) => httpServer.on("listening", resolve));
 
