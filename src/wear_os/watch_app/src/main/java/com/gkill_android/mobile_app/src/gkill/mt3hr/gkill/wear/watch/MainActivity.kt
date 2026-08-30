@@ -366,7 +366,8 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     }
 
     private suspend fun submitTemplate(node: TemplateNode, force: Boolean = false) {
-        Log.d(TAG, "submitTemplate: ${node.name} (force=$force)")
+        // テンプレート名は利用者の記録内容そのものなので logcat へ出さない(2026-08-30 監査 F-008)
+        Log.d(TAG, "submitTemplate: (force=$force)")
         val sent = wearClient.sendSubmitRequest(node.template, force)
         if (sent == null) {
             Log.w(TAG, "submitTemplate: no phone node found")
@@ -445,7 +446,8 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     }
 
     private suspend fun endTimeis(node: PlaingTimeIsNode) {
-        Log.d(TAG, "endTimeis: ${node.id}")
+        // Kyou ID は記録と突き合わせられる識別子なので logcat へ出さない(2026-08-30 監査 F-008)
+        Log.d(TAG, "endTimeis")
         // Send "id\nrep_name" format
         val payload = "${node.id}\n${node.rep_name}"
         val sent = wearClient.sendEndTimeisRequest(payload)
