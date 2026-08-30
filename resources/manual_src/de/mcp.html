@@ -67,6 +67,7 @@
 
   <h2>Aus der Ferne nutzen (HTTP-Verbindung)</h2>
   <p>Wenn die KI nicht auf demselben PC l&auml;uft, kann der MCP-Server selbst per HTTP lauschen, sodass eine KI aus dem Internet eine Verbindung herstellt. Dieser Modus autorisiert die Verbindung per OAuth, daher muss gkill selbst nicht im Internet ver&ouml;ffentlicht werden.</p>
+  <p>Die Autorisierung erfolgt je Verbindungsart (nur Lesen, Schreiben oder Lesen und Schreiben). Eine als &bdquo;nur Lesen&ldquo; autorisierte Verbindung kann nicht zum Schreiben verwendet werden. Wenn Sie die Art wechseln oder eine bisher funktionierende Verbindung wegen fehlender Berechtigung fehlschl&auml;gt, trennen Sie sie auf der KI-Seite und autorisieren Sie sie erneut.</p>
   <pre><code># Beispiel: Lesen &amp; Schreiben per HTTP bereitstellen
 MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
 GKILL_BASE_URL=http://localhost:9999 \

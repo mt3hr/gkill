@@ -67,6 +67,7 @@
 
   <h2>远程使用（HTTP 连接）</h2>
   <p>如果 AI 不在同一台电脑上，可以让 MCP 服务器自身通过 HTTP 监听，供互联网上的 AI 连接。此方式在连接时会进行 OAuth 授权，因此无需把 gkill 本体公开到互联网上。</p>
+  <p>授权按连接种类（只读、写入、读写）分别进行。以只读方式授权的连接不能直接用于写入。更换种类后，或者原本可用的连接开始因权限不足而失败时，请在 AI 侧断开该连接并重新授权。</p>
   <pre><code># 以 HTTP 方式监听读写服务器的示例
 MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
 GKILL_BASE_URL=http://localhost:9999 \
