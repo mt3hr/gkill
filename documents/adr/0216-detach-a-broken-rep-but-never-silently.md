@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-30 |
-| Sources | `265aa709` / `src/server/gkill/dao/gkill_dao_manager.go` |
+| Sources | `27fe2a02` / `a6914b6d` / `src/server/gkill/dao/gkill_dao_manager.go` |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/dao/gkill_dao_manager_broken_rep_test.go` |
@@ -15,7 +15,7 @@
 丸ごと落ちる**。auth middleware（`auth_middleware.go`）は全リクエストでこれを呼ぶので、
 rep 1本の障害が **そのユーザの全 API の 500** になる。
 
-2026-08-30、USB接続ディスク上の directory rep の索引DB（`Notes/Dnote/.gkill/gkill_id.db`）が
+2026-08-30、USB接続ディスク上の directory rep の索引DB（`〈外部ストレージ〉/〈記録保管場所〉/.gkill/gkill_id.db`）が
 SQLITE_CORRUPT になり、実際にそうなった。`/api/get_kyous` も `/api/get_gps_log` も一律 500。
 **設定画面も開けないので、壊れた rep を無効化して自力で復旧する手段が残らない。**
 `/api/reload_repositories` すら先頭で `GetRepositories` を呼ぶため使えない。
@@ -122,6 +122,7 @@ git の判定1箇所を除いて元コードと1文字も違わないことを�
 
 ## Related tests
 
-- `src/server/gkill/dao/gkill_dao_manager_broken_rep_test.go`（切り離し・書き込み先の除外・`IsEnable` の不変・破損DBの再現）
-- `src/server/gkill/api/gkill_server_api/broken_rep_warning_test.go`（警告が `errors` でなく `messages` に載ること・パスが漏れないこと）
+- `src/server/gkill/dao/gkill_dao_manager_broken_rep_test.go`（切り離し・書き込み先の除外・`IsEnable` の不変・破損DBの再現・個別/集約 Error ログ・正常時に集約ログが出ないこと）
+- `src/server/gkill/api/gkill_server_api/broken_rep_warning_test.go`（Web警告が `errors` でなく `messages` に載ること・パスが漏れないこと、MCPの通常/件数のみ/グループ化で `warnings` が残り `partial=false` と独立であること）
+- `src/server/gkill/api/gkill_server_api/response_status_test.go`（認証時の保管場所取得失敗が `ERR000018`・HTTP 500・Error ログへ一貫して伝播すること）
 - `src/server/gkill/dao/gkill_dao_manager_git_rep_test.go`（gitの非repスキップが警告に昇格していないこと）

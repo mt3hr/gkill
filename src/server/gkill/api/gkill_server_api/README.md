@@ -88,6 +88,10 @@ VAPID 鍵を含むサーバ設定とアプリケーション設定を初期化�
 5. `wrapAuthRepos` の場合: `GkillDAOManager.GetRepositories(userID, device)` でリポジトリ読み込み
 6. `AuthContext` を `context.Context` に格納
 
+書き込み先ではないリポジトリを1本だけ読み込めない場合、利用可能なリポジトリで処理を続ける。
+Web検索は既存の警告メッセージ、MCP検索は `warnings` で欠落を通知する。書き込み先または全体の取得失敗は
+`ERR000018`、HTTP 500、Error ログへ伝播し、認証失敗や検索0件に見せない。
+
 ## セキュリティ機能
 
 ### ローカルアクセス制限（`filter_local_only.go`）
