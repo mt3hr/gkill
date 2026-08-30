@@ -30,7 +30,9 @@ type GetKyousMCPResponse struct {
 	// 誤解しないための印。true のとき Warnings に失敗の内訳が入る。
 	Partial bool `json:"partial,omitempty"`
 	// Warnings は英語ベタ書きの警告列。付随データの欠落(Partial)に加え、
-	// 未知のフィルタ値(rep_types/tags/reps/data_types の綴り違い等)の指摘にも使う
+	// 未知のフィルタ値(rep_types/tags/reps/data_types の綴り違い等)や、読み込めなかった
+	// rep の欠落も指摘する。rep の欠落だけなら Partial は false のままなので、呼び出し側は
+	// Partial の値にかかわらず Warnings を確認すること。
 	// （黙って0件を返すと「該当なし」と区別が付かない。外部監査 S7）。
 	Warnings []string `json:"warnings,omitempty"`
 }

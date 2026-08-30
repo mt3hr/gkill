@@ -56,7 +56,9 @@ export const READ_TOOLS = [
       "Every entry always carries id and rep_name (v2). limit and max_size_mb are strict caps. " +
       "Response fields: kyous[], total_count (only on cursor-less responses), returned_count, remaining_count, has_more, next_cursor, " +
       "buckets (group_by only), partial (true when some attached data — tags/texts/notifications/TimeIs — could not be fetched and the " +
-      "returned entries are incomplete; details land in warnings), warnings, plugins (one description per plugin that appears in this " +
+      "returned entries are incomplete; details land in warnings), warnings (always inspect this array even when partial is false: a " +
+      "repository may have failed to load, so its records are absent; do not put a repository named by that warning back into query.reps), " +
+      "plugins (one description per plugin that appears in this " +
       "response — the per-entry payload carries only rep_name/plugin_name so the text is not repeated per record), " +
       "plugin_content (inline-content counts; present only when include_plugin_content is true). " +
       "Each entry also carries tag_entities[] / text_entities[] ({id, value}) alongside the plain tags[] / texts[] strings: those ids are the " +
