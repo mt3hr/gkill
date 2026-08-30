@@ -65,6 +65,10 @@ func (rr *responseRecorder) Unwrap() http.ResponseWriter {
 	return rr.ResponseWriter
 }
 
+// 静的検査用: Unwrap を満たしていること。http.ResponseController が Unwrap の鎖で
+// 底の *http.response へ届く必要があり、欠けると読み取り期限が本番経路でだけ静かに無効になる。
+var _ interface{ Unwrap() http.ResponseWriter } = (*responseRecorder)(nil)
+
 // ---------------------------------------------------------------------------
 // Middleware
 // ---------------------------------------------------------------------------
