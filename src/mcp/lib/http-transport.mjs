@@ -12,6 +12,19 @@ import { OAuthServer } from "./oauth-server.mjs";
 import { FileLinkStore } from "./file-link-store.mjs";
 import { THUMB_QUERY_REGEX, normalizeMimeType } from "./payload.mjs";
 
+// リクエストボディの経路別上限。上限なしの Buffer.concat は、無認証で到達できる
+// OAuth 経路からプロセスのメモリを枯渇させられる (2026-08-30 監査 F-004)。
+// MCP POST は Bearer 必須だが、有効な資格情報を持つクライアントにも上限は掛ける。
+const MAX_MCP_BODY_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_OAUTH_BODY_BYTES = 64 * 1024; // 64KB (フォーム/JSON の認可・トークン・登録)
+
+// ログへ書くパスはクエリを落とす。/oauth/authorize は client_id / redirect_uri /
+// state / code_challenge をクエリで受けるため、生の req.url を記録すると
+// 認可フローの秘匿値がアクセスログへ残る (2026-08-30 監査 F-003)。
+function pathWithoutQuery(url) {
+  return String(url || "").split("?")[0];
+}
+
 // HttpTransport: Streamable HTTP transport (MCP spec 2024-11-05).
 // Supports POST /mcp (requests), GET /mcp (SSE stream), DELETE /mcp (session end).
 // OAuth 2.1 endpoints for ChatGPT and Claude.ai MCP connectors.
@@ -50,13 +63,57 @@ export class HttpTransport {
     // httpServer はテストから stop() で確実に閉じられるようフィールドに保持する。
     // listen のポートに 0 を渡すと OS が空きポートを採番する (テスト用。本番は this.port)。
     this.httpServer = http.createServer((req, res) => this.handleRequest(req, res));
-    this.httpServer.listen(this.port, "0.0.0.0", () => {
+    // ヘッダとリクエスト全体の期限を明示する (Node 既定は 60s / 300s だが、
+    // 既定に暗黙依存すると Node の版で挙動が変わる)。スローなヘッダ送信と
+    // 終わらないリクエストをここで打ち切る (2026-08-30 監査 F-004)。
+    this.httpServer.headersTimeout = 20 * 1000;
+    this.httpServer.requestTimeout = 5 * 60 * 1000;
+    // bind 先は MCP_BIND_ADDR で絞れる (例: リバースプロキシ/トンネル併用時は 127.0.0.1)。
+    // 既定は互換のため全インターフェース待受のまま。
+    const bindAddr = process.env.MCP_BIND_ADDR || "0.0.0.0";
+    this.httpServer.listen(this.port, bindAddr, () => {
       const boundPort = this.httpServer.address()?.port ?? this.port;
       // 手で起動したときに見えるよう stderr へも出すが、ログにも1行残す。
       this.server.accessLog?.info?.("http_listening", { port: boundPort, issuer: this.oauthServer.issuer });
-      process.stderr.write(`MCP HTTP server listening on http://0.0.0.0:${boundPort}/mcp [OAuth issuer: ${this.oauthServer.issuer}]\n`);
+      process.stderr.write(`MCP HTTP server listening on http://${bindAddr}:${boundPort}/mcp [OAuth issuer: ${this.oauthServer.issuer}]\n`);
     });
     return this.httpServer;
+  }
+
+  // ボディを上限付きで収集する。超過したら 413 を返してソケットを破棄し、null で解決する。
+  // ボディを読む4経路 (MCP POST / OAuth authorize POST / token / register) は必ずここを通す。
+  collectBody(req, res, limitBytes, logReason) {
+    return new Promise((resolve) => {
+      const chunks = [];
+      let received = 0;
+      let done = false;
+      req.on("data", (chunk) => {
+        if (done) return;
+        received += chunk.length;
+        if (received > limitBytes) {
+          done = true;
+          this.logRequest(req, { statusCode: 413, reason: logReason });
+          res.writeHead(413, { "Content-Type": "application/json" });
+          // 413 を書き切ってから接続を破棄する (クライアントは残りのボディを送り続けるため)。
+          res.end(JSON.stringify({ error: "Payload Too Large" }), () => {
+            req.destroy();
+          });
+          resolve(null);
+          return;
+        }
+        chunks.push(chunk);
+      });
+      req.on("end", () => {
+        if (done) return;
+        done = true;
+        resolve(Buffer.concat(chunks));
+      });
+      req.on("error", () => {
+        if (done) return;
+        done = true;
+        resolve(null);
+      });
+    });
   }
 
   // テスト用。listen 中の httpServer を閉じ、file-link の掃除タイマーも止める。
@@ -112,24 +169,17 @@ export class HttpTransport {
     return null;
   }
 
+  // アクセスログへ1行書く。生の stderr へは書かない (MCP_LOG を素通りするので
+  // `MCP_LOG=none` でも止まらず、「MCP_LOG で制御できる」が嘘になる)。
+  // path はクエリを落とした形だけを記録する (pathWithoutQuery のコメント参照)。
+  // extra.redirect 等、ここに列挙されていないフィールドはログへ載らない。
   logRequest(req, extra = {}) {
-    const payload = {
-      method: req.method,
-      path: req.url,
-      sessionId: req.headers["mcp-session-id"] || null,
-      ...extra,
-    };
-    // 生の stderr へは書かない。MCP_LOG を素通りするので `MCP_LOG=none` でも止まらず、
-    // 資料が約束している「MCP_LOG で制御できる」が嘘になる。中身は下の accessLog に載る。
-    void payload;
-
-    // Also write to access log file
     const statusCode = extra.statusCode || 0;
     const level = statusCode >= 400 ? "warn" : "info";
     this.server.accessLog[level]("http_request", {
       remote_addr: req.socket?.remoteAddress || null,
       method: req.method,
-      path: req.url,
+      path: pathWithoutQuery(req.url),
       status: statusCode,
       ...(extra.methods ? { methods: extra.methods } : {}),
       ...(extra.reason ? { reason: extra.reason } : {}),
@@ -267,7 +317,7 @@ export class HttpTransport {
       this.logRequest(req, { statusCode: 401, reason: "unauthorized" });
       this.server.accessLog.warn("token_rejected", {
         remote_addr: req.socket?.remoteAddress || null,
-        method: req.method, path: req.url,
+        method: req.method, path: pathWithoutQuery(req.url),
       });
       const resourceMetadataUrl = `${this.oauthServer.issuer}/.well-known/oauth-protected-resource`;
       this.sendJson(res, 401, {
@@ -300,13 +350,15 @@ export class HttpTransport {
     }
   }
 
-  handlePost(req, res, requestContext = null) {
-    const chunks = [];
-    req.on("data", (chunk) => chunks.push(chunk));
-    req.on("end", async () => {
+  async handlePost(req, res, requestContext = null) {
+    const rawBody = await this.collectBody(req, res, MAX_MCP_BODY_BYTES, "mcp_body_too_large");
+    if (rawBody === null) {
+      return;
+    }
+    {
       let payload;
       try {
-        payload = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+        payload = JSON.parse(rawBody.toString("utf8"));
       } catch {
         this.logRequest(req, { statusCode: 400, reason: "parse_error" });
         this.sendJson(res, 400, { jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } });
@@ -330,7 +382,7 @@ export class HttpTransport {
         // ここは真の内部例外。accessLog を通さないと gkill_mcp_error.log に残らない。
         this.server.accessLog.error("http_handler_error", {
           method: req.method,
-          path: req.url,
+          path: pathWithoutQuery(req.url),
           error: String(error),
         });
         const id =
@@ -347,7 +399,7 @@ export class HttpTransport {
           reason: "internal_error",
         });
       }
-    });
+    }
   }
 
   handleGet(req, res) {
@@ -417,12 +469,12 @@ export class HttpTransport {
       return;
     }
     if (req.method === "POST") {
-      const chunks = [];
-      req.on("data", (chunk) => chunks.push(chunk));
-      req.on("end", async () => {
+      this.collectBody(req, res, MAX_OAUTH_BODY_BYTES, "oauth_authorize_body_too_large").then(async (rawBody) => {
+        if (rawBody === null) {
+          return;
+        }
         try {
-          const bodyStr = Buffer.concat(chunks).toString("utf8");
-          const formData = Object.fromEntries(new URLSearchParams(bodyStr));
+          const formData = Object.fromEntries(new URLSearchParams(rawBody.toString("utf8")));
           const result = await this.oauthServer.handleAuthorizePost(formData);
           this._sendOAuthResult(req, res, result, "oauth_authorize_post");
         } catch (error) {
@@ -440,11 +492,12 @@ export class HttpTransport {
       this.sendJson(res, 405, { error: "Method Not Allowed" }, { Allow: "POST" });
       return;
     }
-    const chunks = [];
-    req.on("data", (chunk) => chunks.push(chunk));
-    req.on("end", () => {
+    this.collectBody(req, res, MAX_OAUTH_BODY_BYTES, "oauth_token_body_too_large").then((rawBody) => {
+      if (rawBody === null) {
+        return;
+      }
       try {
-        const bodyStr = Buffer.concat(chunks).toString("utf8");
+        const bodyStr = rawBody.toString("utf8");
         // Token endpoint accepts both application/x-www-form-urlencoded and application/json
         let body;
         const contentType = req.headers["content-type"] || "";
@@ -468,11 +521,12 @@ export class HttpTransport {
       this.sendJson(res, 405, { error: "Method Not Allowed" }, { Allow: "POST" });
       return;
     }
-    const chunks = [];
-    req.on("data", (chunk) => chunks.push(chunk));
-    req.on("end", () => {
+    this.collectBody(req, res, MAX_OAUTH_BODY_BYTES, "oauth_register_body_too_large").then((rawBody) => {
+      if (rawBody === null) {
+        return;
+      }
       try {
-        const body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+        const body = JSON.parse(rawBody.toString("utf8"));
         const result = this.oauthServer.handleRegister(body);
         this.sendJson(res, result.status, result.body);
         this.logRequest(req, { statusCode: result.status, reason: "oauth_register" });
@@ -488,7 +542,8 @@ export class HttpTransport {
     if (result.redirect) {
       res.writeHead(result.status, { Location: result.redirect });
       res.end();
-      this.logRequest(req, { statusCode: result.status, reason, redirect: result.redirect });
+      // redirect URL は code / state を含むためログへ渡さない (2026-08-30 監査 F-003)。
+      this.logRequest(req, { statusCode: result.status, reason });
       return;
     }
     if (result.contentType === "text/html") {

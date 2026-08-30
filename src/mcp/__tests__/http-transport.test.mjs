@@ -13,6 +13,7 @@
  */
 
 import crypto from "node:crypto";
+import { EventEmitter } from "node:events";
 import { describe, test, expect, vi, afterEach } from "vitest";
 import { OAuthServer } from "../lib/oauth-server.mjs";
 import { HttpTransport } from "../lib/http-transport.mjs";
@@ -299,5 +300,126 @@ describe("handleFileServe security headers (M-06)", () => {
     expect(res.statusCode).toBe(200);
     expect(res.headers["X-Content-Type-Options"]).toBe("nosniff");
     expect(res.headers["Content-Security-Policy"]).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 2026-08-30 監査 F-003 / F-004: ボディ上限・明示タイムアウト・ログのクエリ除去
+// ---------------------------------------------------------------------------
+describe("body caps, explicit timeouts, and log query redaction (2026-08-30 audit)", () => {
+  let transport;
+  let oauth;
+
+  afterEach(async () => {
+    await transport?.stop();
+    oauth?.close();
+    delete process.env.MCP_BIND_ADDR;
+  });
+
+  function makeCapturingLog(logs) {
+    const push = (level) => (msg, fields) => logs.push({ level, msg, fields });
+    return { info: push("info"), warn: push("warn"), error: push("error") };
+  }
+
+  function makeFakeReq(url = "/oauth/register") {
+    const req = new EventEmitter();
+    req.method = "POST";
+    req.url = url;
+    req.headers = {};
+    req.socket = { remoteAddress: "127.0.0.1" };
+    req.destroy = vi.fn();
+    return req;
+  }
+
+  test("collectBody cuts an over-limit body with 413 and resolves null", async () => {
+    oauth = makeOAuth();
+    const server = new ReadServer(createMockClient(), null);
+    server.accessLog = makeCapturingLog([]);
+    transport = new HttpTransport(server, 0, oauth, { scope: "gkill:read" });
+    const req = makeFakeReq();
+    const res = mockRes();
+
+    const pending = transport.collectBody(req, res, 8, "test_body_too_large");
+    req.emit("data", Buffer.from("123456789")); // 9 bytes > limit 8
+    const rawBody = await pending;
+
+    expect(rawBody).toBeNull();
+    expect(res.statusCode).toBe(413);
+  });
+
+  test("collectBody passes an at-limit body through unchanged", async () => {
+    oauth = makeOAuth();
+    const server = new ReadServer(createMockClient(), null);
+    server.accessLog = makeCapturingLog([]);
+    transport = new HttpTransport(server, 0, oauth, { scope: "gkill:read" });
+    const req = makeFakeReq();
+    const res = mockRes();
+
+    const pending = transport.collectBody(req, res, 8, "test_body_too_large");
+    req.emit("data", Buffer.from("12345678")); // exactly the limit
+    req.emit("end");
+    const rawBody = await pending;
+
+    expect(rawBody?.toString("utf8")).toBe("12345678");
+    expect(res.statusCode).toBeNull();
+  });
+
+  test("POST /oauth/register over the cap is rejected before handleRegister (route wiring)", async () => {
+    oauth = makeOAuth();
+    const logs = [];
+    const server = new ReadServer(createMockClient(), null);
+    server.accessLog = makeCapturingLog(logs);
+    transport = new HttpTransport(server, 0, oauth, { scope: "gkill:read" });
+    const registerSpy = vi.spyOn(oauth, "handleRegister");
+    const httpServer = transport.start();
+    const port = await new Promise((resolve) =>
+      httpServer.on("listening", () => resolve(httpServer.address().port)));
+
+    const net = await import("node:net");
+    const sock = net.connect(port, "127.0.0.1");
+    const body = Buffer.alloc(64 * 1024 + 16, 0x61);
+    sock.write(`POST /oauth/register HTTP/1.1\r\nHost: t\r\nContent-Type: application/json\r\nContent-Length: ${body.length}\r\n\r\n`);
+    sock.write(body);
+
+    await vi.waitFor(() => {
+      expect(
+        logs.some((l) => l.fields?.reason === "oauth_register_body_too_large" && l.fields?.status === 413),
+      ).toBe(true);
+    });
+    expect(registerSpy).not.toHaveBeenCalled();
+    sock.destroy();
+  });
+
+  test("authorize query values (client_id/state/code_challenge) never reach the access log", () => {
+    oauth = makeOAuth();
+    const logs = [];
+    const server = new ReadServer(createMockClient(), null);
+    server.accessLog = makeCapturingLog(logs);
+    transport = new HttpTransport(server, 0, oauth, { scope: "gkill:read" });
+
+    const req = {
+      method: "GET",
+      url: "/oauth/authorize?client_id=SECRETCID&redirect_uri=https%3A%2F%2Fx%2FSECRETURI&state=SECRETSTATE&code_challenge=SECRETCC",
+      headers: {},
+      socket: { remoteAddress: "127.0.0.1" },
+    };
+    transport.logRequest(req, { statusCode: 200, reason: "oauth_authorize_get", redirect: "https://x/cb?code=SECRETCODE&state=SECRETSTATE" });
+
+    expect(logs.length).toBe(1);
+    expect(logs[0].fields.path).toBe("/oauth/authorize");
+    expect(JSON.stringify(logs)).not.toContain("SECRET");
+  });
+
+  test("explicit timeouts and MCP_BIND_ADDR are applied at start()", async () => {
+    process.env.MCP_BIND_ADDR = "127.0.0.1";
+    oauth = makeOAuth();
+    const server = new ReadServer(createMockClient(), null);
+    transport = new HttpTransport(server, 0, oauth, { scope: "gkill:read" });
+    const httpServer = transport.start();
+    await new Promise((resolve) => httpServer.on("listening", resolve));
+
+    expect(httpServer.headersTimeout).toBe(20 * 1000);
+    expect(httpServer.requestTimeout).toBe(5 * 60 * 1000);
+    expect(httpServer.address().address).toBe("127.0.0.1");
   });
 });

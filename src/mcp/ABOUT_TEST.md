@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。934テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 26（書き込み21 + Read便利5）+ プラグイン1 = 27ツール、統合サーバ 30 + プラグイン1 = 31ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
+MCP (Model Context Protocol) サーバのテスト。939テスト（22ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 9 + プラグイン1 = 10ツール、Write サーバ 26（書き込み21 + Read便利5）+ プラグイン1 = 27ツール、統合サーバ 30 + プラグイン1 = 31ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
 
 ## テストフレームワーク
 
@@ -26,7 +26,7 @@ Vitest（Node.js 環境）
 | `__tests__/oauth-store.test.mjs` | OAuthストア（認可コード、アクセストークン、リフレッシュトークン、クライアント登録、TTL期限切れ、定期クリーンアップ、JSONファイル永続化） |
 | `__tests__/oauth-server.test.mjs` | OAuth 2.1サーバ（メタデータ、認可フロー、トークン交換、PKCE検証、リフレッシュトークンローテーション、動的クライアント登録、E2Eフロー） |
 | `__tests__/file-link.test.mjs` | FileLinkStore（HTTPモード用の期限付きファイルリンクトークンの発行・解決・失効、`GET /files/{token}` 配信） |
-| `__tests__/http-transport.test.mjs` | HttpTransport の `/mcp` 経路の統合・回帰（実ポートで OAuth→Bearer→tools を通す。Bearer 401 検出 = C-01、並行リクエストの user/session 分離 = C-02、公開ファイル配信の nosniff / CSP sandbox = M-06。3サーバ共通） |
+| `__tests__/http-transport.test.mjs` | HttpTransport の `/mcp` 経路の統合・回帰（実ポートで OAuth→Bearer→tools を通す。Bearer 401 検出 = C-01、並行リクエストの user/session 分離 = C-02、公開ファイル配信の nosniff / CSP sandbox = M-06、ボディ上限 413・明示タイムアウト・アクセスログのクエリ除去 = 2026-08-30 監査 F-003/F-004。3サーバ共通） |
 
 ### プラグインツール（3サーバ共通）
 
