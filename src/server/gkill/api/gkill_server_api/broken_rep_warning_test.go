@@ -135,4 +135,32 @@ func TestHandleGetKyous_BrokenRepIsWarningNotError(t *testing.T) {
 	if !foundWarning {
 		t.Errorf("repの読み込み失敗が messages の警告(%s)として返っていない: %+v", message.FindKyousRepLoadWarningMessage, getResp.Messages)
 	}
+
+	// MCPは通常検索だけでなく、警告生成後に早期returnする count_only / group_by でも
+	// 同じ欠落を伝えること。partial は付随データ取得失敗専用なので立てない。
+	mcpCases := []struct {
+		name  string
+		extra map[string]any
+	}{
+		{name: "ordinary"},
+		{name: "count_only", extra: map[string]any{"count_only": true}},
+		{name: "group_by", extra: map[string]any{"group_by": "day"}},
+	}
+	for _, testCase := range mcpCases {
+		t.Run("mcp_"+testCase.name, func(t *testing.T) {
+			mcpResp := getKyousMCP(t, tsURL, sessionID, map[string]any{}, testCase.extra)
+			if mcpResp.Partial {
+				t.Error("読み込めない記録保管場所の警告だけでpartial=trueになっている")
+			}
+			found := false
+			for _, warning := range mcpResp.Warnings {
+				if strings.Contains(warning, "BrokenNote") && strings.Contains(warning, "query.reps") {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("MCPの%s応答に保管場所の欠落とquery.repsの注意が無い: %v", testCase.name, mcpResp.Warnings)
+			}
+		})
+	}
 }
