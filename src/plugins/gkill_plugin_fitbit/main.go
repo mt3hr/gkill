@@ -21,12 +21,14 @@ func main() {
 	// sdk.Run の flag.Parse は知らないフラグを受け取るとエラー終了するため先に処理する
 	if slices.Contains(os.Args[1:], "--gkill-print-manifest") {
 		if _, err := os.Stdout.Write(manifestJSON); err != nil {
+			sdk.LogError("error at write manifest.json to stdout: %v", err)
 			os.Exit(1)
 		}
 		return
 	}
 	if slices.Contains(os.Args[1:], "--gkill-print-config") {
 		if err := printDefaultConfig(); err != nil {
+			sdk.LogError("error at write default config.json to stdout: %v", err)
 			os.Exit(1)
 		}
 		return
@@ -55,7 +57,7 @@ func main() {
 			metrics, err := globalCache.QueryDailyMetrics(pluginDir, config, startUnix, endUnix, q.Limit)
 			if err != nil {
 				// 構築中や読めないときは空を返す。検索全体を落とさない
-				fmt.Fprintf(os.Stderr, "gkill_plugin_fitbit: find_kyous: %v\n", err)
+				sdk.LogError("gkill_plugin_fitbit: find_kyous: %v", err)
 				return []sdk.Kyou{}, nil
 			}
 

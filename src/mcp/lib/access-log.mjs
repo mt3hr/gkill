@@ -8,6 +8,14 @@
  *
  * Environment variable: MCP_LOG (default "info")
  *   none | error | warn | info | debug | trace
+ *
+ * ERROR entries are additionally mirrored to a separate file (gkill_mcp_error.log)
+ * so that an operator grepping the error logs finds MCP failures too.  Without it
+ * the only MCP log file is named "*_access.log", and nobody looking for a failure
+ * opens an access log.  This mirrors the Go side, which splits per level.
+ *
+ * Do NOT write logs with process.stderr.write: that path ignores MCP_LOG, so
+ * `MCP_LOG=none` would not silence it even though the manuals say it does.
  */
 
 import fs from "node:fs";
@@ -44,13 +52,17 @@ export class McpAccessLog {
    * @param {string} logFilePath  Absolute path to the log file.
    * @param {string} [levelName]  Minimum level name (default "info").
    * @param {string} [source]     Source identifier for log entries.
+   * @param {string} [errorFilePath] Absolute path for the ERROR-only mirror file.
    */
-  constructor(logFilePath, levelName = "info", source = "gkill-read-server.mjs") {
+  constructor(logFilePath, levelName = "info", source = "gkill-read-server.mjs", errorFilePath = null) {
     this.path = logFilePath;
     this.minLevel = LEVELS[levelName] ?? LEVELS.info;
     this.source = source;
+    this.errorPath = errorFilePath;
     /** @type {number|null} */
     this.fd = null;
+    /** @type {number|null} */
+    this.errorFd = null;
   }
 
   // -- public convenience methods ------------------------------------------

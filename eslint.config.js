@@ -33,6 +33,20 @@ export default [
     },
   },
   {
+    // ログの深刻度を機械で固定する。src/client には console.log / console.info が
+    // 1件も無く、エラーは console.error、想定内の劣化は console.warn、開発用の
+    // 詳細は console.debug という使い分けになっている。規約がどこにも無いので
+    // 慣習だけで支えられていて、次の1行で崩れる。allow に入っていない console.log は
+    // 「消し忘れた print デバッグ」なので、CI で止める。
+    // 対象は src/client 本体のみ（__tests__ と src/tools は CLI 出力として log を使う）。
+    name: 'app/no-console-log',
+    files: ['src/client/**/*.{ts,mts,tsx,vue}'],
+    ignores: ['src/client/__tests__/**'],
+    rules: {
+      'no-console': ['error', { allow: ['warn', 'error', 'debug'] }],
+    },
+  },
+  {
     // AGENTS.md「Naming convention (identifiers)」の機械化。
     // 対象は src/client 本体のみ:
     //  - .js/.mjs に当てるとルールがパーササービス要求でクラッシュするため files 必須

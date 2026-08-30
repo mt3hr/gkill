@@ -116,6 +116,7 @@ func main() {
 	// (sdk.Run の flag.Parse は知らないフラグを受け取るとエラー終了するため)
 	if slices.Contains(os.Args[1:], "--gkill-print-manifest") {
 		if _, err := os.Stdout.Write(manifestJSON); err != nil {
+			sdk.LogError("error at write manifest.json to stdout: %v", err)
 			os.Exit(1)
 		}
 		return
@@ -125,6 +126,7 @@ func main() {
 	// 通常はプラグイン起動時に自動生成されるので、これを使う必要はない。
 	if slices.Contains(os.Args[1:], "--gkill-print-config") {
 		if err := printDefaultConfig(); err != nil {
+			sdk.LogError("error at write default config.json to stdout: %v", err)
 			os.Exit(1)
 		}
 		return

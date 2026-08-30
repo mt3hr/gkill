@@ -4,10 +4,10 @@ package main
 // documents/adr/0305-plugin-background-builder-wal.md
 
 import (
-	"fmt"
-	"os"
 	"sync"
 	"time"
+
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 )
 
 // ビルダはプロセス内に1本だけ常駐する goroutine。
@@ -71,7 +71,7 @@ func (b *builder) runOnce(pluginDir string, config pluginConfig) {
 	if err := globalCache.build(pluginDir, config); err != nil {
 		globalCache.setMeta("build_state", "error")
 		globalCache.setMeta("build_error", err.Error())
-		fmt.Fprintf(os.Stderr, "%s: build error: %v\n", appName, err)
+		sdk.LogError("%s: build error: %v", appName, err)
 	}
 }
 

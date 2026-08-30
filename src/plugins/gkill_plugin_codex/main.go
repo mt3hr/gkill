@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	_ "embed"
-	"fmt"
 	"os"
 	"slices"
 	"strings"
@@ -55,6 +54,7 @@ func main() {
 	// (sdk.Run の flag.Parse は知らないフラグを受け取るとエラー終了するため)
 	if slices.Contains(os.Args[1:], "--gkill-print-manifest") {
 		if _, err := os.Stdout.Write(manifestJSON); err != nil {
+			sdk.LogError("error at write manifest.json to stdout: %v", err)
 			os.Exit(1)
 		}
 		return
@@ -64,6 +64,7 @@ func main() {
 	// 通常はプラグイン起動時に自動生成されるので、これを使う必要はない。
 	if slices.Contains(os.Args[1:], "--gkill-print-config") {
 		if err := printDefaultConfig(); err != nil {
+			sdk.LogError("error at write default config.json to stdout: %v", err)
 			os.Exit(1)
 		}
 		return
@@ -87,7 +88,7 @@ func main() {
 			hasWordFilter := len(q.Words) != 0 || len(q.NotWords) != 0
 			rows, err := globalCache.QueryKyous(pluginDir, q.CalendarStartDate, q.CalendarEndDate, q.Limit, hasWordFilter)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s: find kyous: %v\n", appName, err)
+				sdk.LogError("%s: find kyous: %v", appName, err)
 				return []sdk.Kyou{}, nil
 			}
 

@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -340,7 +339,7 @@ func (c *cache) refreshTitles(indexes []scannedFile) error {
 	for _, file := range indexes {
 		read, err := readSessionIndex(file.Path)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: read session index %s: %v\n", appName, file.Path, err)
+			sdk.LogWarn("%s: read session index %s: %v", appName, file.Path, err)
 			continue
 		}
 		for threadID, title := range read {
@@ -464,7 +463,7 @@ func (c *cache) ingest(changed []scannedFile, known map[string]scannedFile, conf
 				defer func() { <-semaphore }()
 				parsed, err := parseRollout(file.Path)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "%s: parse %s: %v\n", appName, file.Path, err)
+					sdk.LogWarn("%s: parse %s: %v", appName, file.Path, err)
 					return
 				}
 				results[i] = parsed

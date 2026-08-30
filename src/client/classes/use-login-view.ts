@@ -91,8 +91,9 @@ export function useLoginView(options: {
             emits('successed_login', res.session_id)
             return true
         } catch (e) {
-            // TLSの場合、サーバ証明書が入っていないとログインできない
-            console.error('[login] unexpected error:', e)
+            // TLSの場合、サーバ証明書が入っていないとログインできない。
+            // 実体は設定条件であって不具合ではないので warn。
+            console.warn('[login] request failed (certificate may be missing):', e)
             const error = new GkillError()
             error.error_code = GkillErrorCodes.required_certificate
             error.error_message = i18n.global.t("REQUEST_CERTIFICATE_REQUIRED_MESSAGE")

@@ -244,6 +244,8 @@ func parseRecordsJSON(entry sdk.SourceEntry) ([]rawPoint, error) {
 	}
 
 	points := []rawPoint{}
+	// 捨てた件数を数える。以前はカウンタもログも無く、GPSログが一部消えても検知できなかった。
+	skipped := 0
 	for decoder.More() {
 		var location recordsLocation
 		if err := decoder.Decode(&location); err != nil {
@@ -251,18 +253,21 @@ func parseRecordsJSON(entry sdk.SourceEntry) ([]rawPoint, error) {
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			skipped++
 			continue
 		}
 		unixMilli := int64(0)
 		if location.TimestampMs != "" {
 			parsed, err := strconv.ParseInt(location.TimestampMs, 10, 64)
 			if err != nil {
+				skipped++
 				continue
 			}
 			unixMilli = parsed
 		} else {
 			parsed, ok := parseRFC3339Milli(location.Timestamp)
 			if !ok {
+				skipped++
 				continue
 			}
 			unixMilli = parsed
@@ -288,6 +293,10 @@ func parseRecordsJSON(entry sdk.SourceEntry) ([]rawPoint, error) {
 			Source:     source,
 			DeviceID:   deviceID,
 		})
+	}
+	// 1件ずつは出さない（Takeout の巨大な Records.json で行数ぶん積む）。要約だけ残す。
+	if skipped != 0 {
+		sdk.LogWarn("gkill_plugin_google_locationhistory: skipped %d broken records in %s", skipped, entry.Path)
 	}
 	return points, nil
 }

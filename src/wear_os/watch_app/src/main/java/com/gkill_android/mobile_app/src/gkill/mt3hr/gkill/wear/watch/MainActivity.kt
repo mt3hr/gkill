@@ -281,7 +281,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     // ─── MessageClient callback ────────────────────────────────────────────────
 
     override fun onMessageReceived(event: MessageEvent) {
-        Log.i(TAG, "onMessageReceived path=${event.path}")
+        Log.d(TAG, "onMessageReceived path=${event.path}")
         val data = String(event.data, Charsets.UTF_8)
         when (event.path) {
             GkillWearClient.RESPONSE_PATH_TEMPLATES -> {
@@ -306,12 +306,12 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     // ─── Private helpers (record) ───────────────────────────────────────────────
 
     private suspend fun requestTemplates(force_reload: Boolean = false) {
-        Log.i(TAG, "requestTemplates: start (force_reload=$force_reload)")
+        Log.d(TAG, "requestTemplates: start (force_reload=$force_reload)")
 
         // 「🔄 更新」で来たとき以外は、キャッシュがあればそれを使う
         val cached = TemplateCacheManager.loadTemplates(this)
         if (!TemplateCacheManager.shouldFetchFromPhone(force_reload, cached.size)) {
-            Log.i(TAG, "requestTemplates: using cache (${cached.size} root nodes)")
+            Log.d(TAG, "requestTemplates: using cache (${cached.size} root nodes)")
             screenState = Screen.TemplateList(nodes = cached, title = "テンプレート", breadcrumb = emptyList())
             return
         }
@@ -319,15 +319,15 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         // ここで screenState を書き換えてはいけない。
         // すでに Screen.Loading の描画中で、force_reload の異なる Loading を代入すると
         // LaunchedEffect が張り直されて取得が繰り返される。
-        Log.i(TAG, "requestTemplates: fetching from phone")
+        Log.d(TAG, "requestTemplates: fetching from phone")
 
         val sent = wearClient.sendGetTemplatesRequest()
         if (sent == null) {
-            Log.e(TAG, "requestTemplates: no phone node found")
+            Log.w(TAG, "requestTemplates: no phone node found")
             useCacheOrError("スマホに接続できません。\nPixel Watch 2とスマホのペアリングを確認してください。")
             return
         }
-        Log.i(TAG, "requestTemplates: message sent to $sent, waiting...")
+        Log.d(TAG, "requestTemplates: message sent to $sent, waiting...")
 
         val deferred = CompletableDeferred<String>()
         pendingTemplatesDeferred = deferred
@@ -335,13 +335,13 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         val json = try {
             withTimeout(TEMPLATE_TIMEOUT_MS) { deferred.await() }
         } catch (e: TimeoutCancellationException) {
-            Log.e(TAG, "requestTemplates: timeout after ${TEMPLATE_TIMEOUT_MS}ms")
+            Log.w(TAG, "requestTemplates: timeout after ${TEMPLATE_TIMEOUT_MS}ms")
             pendingTemplatesDeferred = null
             useCacheOrError("スマホからの応答がタイムアウトしました。\nスマホでgkill Wear設定アプリを開き、接続テストを行ってください。")
             return
         }
 
-        Log.i(TAG, "requestTemplates: received (${json.take(60)})")
+        Log.d(TAG, "requestTemplates: received ${json.length} chars")
         if (json.startsWith("ERROR:")) {
             // 「🔄 更新」が失敗しただけで手元の一覧を捨てないよう、キャッシュがあればそれを残す
             useCacheOrError(json.removePrefix("ERROR:"))
@@ -366,10 +366,10 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     }
 
     private suspend fun submitTemplate(node: TemplateNode, force: Boolean = false) {
-        Log.i(TAG, "submitTemplate: ${node.name} (force=$force)")
+        Log.d(TAG, "submitTemplate: ${node.name} (force=$force)")
         val sent = wearClient.sendSubmitRequest(node.template, force)
         if (sent == null) {
-            Log.e(TAG, "submitTemplate: no phone node found")
+            Log.w(TAG, "submitTemplate: no phone node found")
             screenState = Screen.Result(success = false, error = "スマホに接続できません。")
             return
         }
@@ -380,7 +380,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         val result = try {
             withTimeout(SUBMIT_TIMEOUT_MS) { deferred.await() }
         } catch (e: TimeoutCancellationException) {
-            Log.e(TAG, "submitTemplate: timeout")
+            Log.w(TAG, "submitTemplate: timeout")
             pendingSubmitDeferred = null
             screenState = Screen.Result(
                 success = false,
@@ -406,18 +406,18 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     // ─── Private helpers (plaing) ───────────────────────────────────────────────
 
     private suspend fun requestPlaingTimeis() {
-        Log.i(TAG, "requestPlaingTimeis: start")
+        Log.d(TAG, "requestPlaingTimeis: start")
 
         val sent = wearClient.sendGetPlaingTimeisRequest()
         if (sent == null) {
-            Log.e(TAG, "requestPlaingTimeis: no phone node found")
+            Log.w(TAG, "requestPlaingTimeis: no phone node found")
             screenState = Screen.Result(
                 success = false,
                 error = "スマホに接続できません。\nPixel Watch 2とスマホのペアリングを確認してください。"
             )
             return
         }
-        Log.i(TAG, "requestPlaingTimeis: message sent to $sent, waiting...")
+        Log.d(TAG, "requestPlaingTimeis: message sent to $sent, waiting...")
 
         val deferred = CompletableDeferred<String>()
         pendingPlaingTimeisDeferred = deferred
@@ -425,7 +425,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         val json = try {
             withTimeout(PLAING_TIMEOUT_MS) { deferred.await() }
         } catch (e: TimeoutCancellationException) {
-            Log.e(TAG, "requestPlaingTimeis: timeout after ${PLAING_TIMEOUT_MS}ms")
+            Log.w(TAG, "requestPlaingTimeis: timeout after ${PLAING_TIMEOUT_MS}ms")
             pendingPlaingTimeisDeferred = null
             screenState = Screen.Result(
                 success = false,
@@ -434,7 +434,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
             return
         }
 
-        Log.i(TAG, "requestPlaingTimeis: received (${json.take(60)})")
+        Log.d(TAG, "requestPlaingTimeis: received ${json.length} chars")
         if (json.startsWith("ERROR:")) {
             screenState = Screen.Result(success = false, error = json.removePrefix("ERROR:"))
             return
@@ -445,12 +445,12 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     }
 
     private suspend fun endTimeis(node: PlaingTimeIsNode) {
-        Log.i(TAG, "endTimeis: ${node.id}")
+        Log.d(TAG, "endTimeis: ${node.id}")
         // Send "id\nrep_name" format
         val payload = "${node.id}\n${node.rep_name}"
         val sent = wearClient.sendEndTimeisRequest(payload)
         if (sent == null) {
-            Log.e(TAG, "endTimeis: no phone node found")
+            Log.w(TAG, "endTimeis: no phone node found")
             screenState = Screen.Result(success = false, error = "スマホに接続できません。")
             return
         }
@@ -461,7 +461,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         val result = try {
             withTimeout(END_TIMEIS_TIMEOUT_MS) { deferred.await() }
         } catch (e: TimeoutCancellationException) {
-            Log.e(TAG, "endTimeis: timeout")
+            Log.w(TAG, "endTimeis: timeout")
             pendingEndTimeisDeferred = null
             screenState = Screen.Result(
                 success = false,

@@ -40,7 +40,7 @@ class GkillWearClient(private val context: Context) {
             val nodes = nodeClient.connectedNodes.await()
             nodes.firstOrNull { it.isNearby }?.id ?: nodes.firstOrNull()?.id
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get connected nodes", e)
+            Log.w(TAG, "Failed to get connected nodes", e)
             null
         }
     }
@@ -71,7 +71,7 @@ class GkillWearClient(private val context: Context) {
             messageClient.sendMessage(nodeId, PATH_GET_TEMPLATES, ByteArray(0)).await()
             nodeId
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send get_templates request", e)
+            Log.w(TAG, "Failed to send get_templates request", e)
             null
         }
     }
@@ -86,7 +86,7 @@ class GkillWearClient(private val context: Context) {
             messageClient.sendMessage(nodeId, PATH_GET_PLAING_TIMEIS, ByteArray(0)).await()
             nodeId
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send get_plaing_timeis request", e)
+            Log.w(TAG, "Failed to send get_plaing_timeis request", e)
             null
         }
     }
@@ -101,7 +101,7 @@ class GkillWearClient(private val context: Context) {
             messageClient.sendMessage(nodeId, PATH_END_TIMEIS, timeisJson.toByteArray(Charsets.UTF_8)).await()
             nodeId
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send end_timeis request", e)
+            Log.w(TAG, "Failed to send end_timeis request", e)
             null
         }
     }
@@ -119,7 +119,7 @@ class GkillWearClient(private val context: Context) {
             messageClient.sendMessage(nodeId, path, kftlText.toByteArray(Charsets.UTF_8)).await()
             nodeId
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send submit request", e)
+            Log.w(TAG, "Failed to send submit request", e)
             null
         }
     }
@@ -135,7 +135,7 @@ class GkillWearClient(private val context: Context) {
                 if (jsonStr.startsWith("ERROR:")) return emptyList()
                 json.decodeFromString<List<PlaingTimeIsNode>>(jsonStr)
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to parse plaing timeis JSON: ${e.message}", e)
+                Log.w(TAG, "Failed to parse plaing timeis JSON: ${e.message}", e)
                 emptyList()
             }
         }
@@ -146,7 +146,7 @@ class GkillWearClient(private val context: Context) {
                 val root = json.decodeFromString<TemplateNode>(json_str)
                 filterNodes(root.children ?: emptyList())
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to parse templates JSON: ${e.message}", e)
+                Log.w(TAG, "Failed to parse templates JSON: ${e.message}", e)
                 emptyList()
             }
         }
