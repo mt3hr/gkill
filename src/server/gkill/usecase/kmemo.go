@@ -53,7 +53,7 @@ func (uc *UsecaseContext) AddKmemo(ctx context.Context, repositories *reps.Gkill
 		err = repositories.WriteThroughKmemoCache(ctx, kmemo)
 		if err != nil {
 			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
-			slog.Log(ctx, gkill_log.Error, "error at add kmemo user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.KmemoTempRep.AddKmemoInfo(ctx, kmemo, *txID, userID, device)
@@ -146,7 +146,7 @@ func (uc *UsecaseContext) UpdateKmemo(ctx context.Context, repositories *reps.Gk
 		err = repositories.WriteThroughKmemoCache(ctx, kmemo)
 		if err != nil {
 			err = fmt.Errorf("error at update kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
-			slog.Log(ctx, gkill_log.Error, "error at update kmemo user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.KmemoTempRep.AddKmemoInfo(ctx, kmemo, *txID, userID, device)

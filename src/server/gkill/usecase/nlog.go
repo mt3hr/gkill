@@ -52,7 +52,7 @@ func (uc *UsecaseContext) AddNlog(ctx context.Context, repositories *reps.GkillR
 		err = repositories.WriteThroughNlogCache(ctx, nlog)
 		if err != nil {
 			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
-			slog.Log(ctx, gkill_log.Error, "error at add nlog user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(ctx, nlog, *txID, userID, device)
@@ -144,7 +144,7 @@ func (uc *UsecaseContext) UpdateNlog(ctx context.Context, repositories *reps.Gki
 		err = repositories.WriteThroughNlogCache(ctx, nlog)
 		if err != nil {
 			err = fmt.Errorf("error at update nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
-			slog.Log(ctx, gkill_log.Error, "error at update nlog user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(ctx, nlog, *txID, userID, device)

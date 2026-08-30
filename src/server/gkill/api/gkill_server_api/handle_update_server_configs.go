@@ -138,7 +138,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 		if !ok || err != nil {
 			if err != nil {
 				err = fmt.Errorf("error at update server config user user id = %s device = %s: %w", userID, device, err)
-				slog.Log(r.Context(), gkill_log.Error, "error at update server config user user id =", "error", fmt.Sprintf("%q", err))
+				slog.Log(r.Context(), gkill_log.Error, "error at update server config", "error", fmt.Sprintf("%q", err))
 			}
 			gkillError := &message.GkillError{
 				ErrorCode:    message.UpdateServerConfigError,

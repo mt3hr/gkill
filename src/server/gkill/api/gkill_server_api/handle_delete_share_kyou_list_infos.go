@@ -98,7 +98,7 @@ func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r
 	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at delete ShareKyouListInfos user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Warn, "error at delete ShareKyouListInfos user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Warn, "error at delete ShareKyouListInfos", "error", fmt.Sprintf("%q", err))
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.DeleteShareKyouListInfosError,
