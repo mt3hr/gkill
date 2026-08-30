@@ -69,6 +69,7 @@ claude mcp add gkill \
 
   <h2>Using it Remotely (HTTP Connection)</h2>
   <p>If the AI is not on the same PC, you can have the MCP server itself listen over HTTP so an AI on the internet can connect. This mode authorises the connection with OAuth, so you do not need to expose gkill itself to the internet.</p>
+  <p>Authorisation is granted per connection type (read-only, write, or read-write). A connection authorised as read-only cannot be used for writing. If you switch types, or a connection that used to work starts failing for lack of permission, disconnect it on the AI side and authorise it again.</p>
   <pre><code># Example: serve read &amp; write over HTTP
 MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
 GKILL_BASE_URL=http://localhost:9999 \
