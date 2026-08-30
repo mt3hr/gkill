@@ -17,6 +17,7 @@ import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import zlib from 'node:zlib'
 import { renderAll, OUT_DIR, SRC_DIR } from './manual_build.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -1589,6 +1590,77 @@ function personalInfoScanFiles() {
     .filter((rel) => !rel.startsWith('resources/gkill_sample_data/'))
 }
 
+// ZIP コンテナ文書（xlsx / docx / zip）の列挙。Office 文書は ZIP+deflate なので、
+// 生バイトの UTF-8 走査では内部 XML の文字列が原理的に見えない（2026-08-30 の監査で、
+// 公開 xlsx の内部 XML に環境固有語が残っていたのに checkPersonalInfo が素通りしていた）。
+// そのため ZIP は展開してテキスト系エントリだけを同じ検査に通す。
+const PERSONAL_INFO_ZIP_EXEMPT = new Set([
+  // 既存の巨大証跡3件は実データ由来を許容する運用で対象外（gkill_sample_data と同じ判断。
+  // 数十〜100MB の展開回避も兼ねる）。新規に追加した ZIP/Office 文書は検査対象に入る。
+  'documents/evidences/gkill_全体テスト1_エビデンス.zip',
+  'documents/evidences/gkill_全体テスト2_エビデンス.xlsx',
+  'documents/evidences/gkill_全体テスト2_フィードバック分テスト_エビデンス.xlsx',
+])
+
+function personalInfoZipFiles() {
+  const out = execSync('git ls-files -z --cached --others --exclude-standard', { cwd: ROOT })
+  return out.toString('utf8').split('\0').filter(Boolean)
+    .filter((rel) => /\.(xlsx|docx|pptx|zip)$/.test(rel) && /^(src|resources|documents|\.github)\//.test(rel))
+    .filter((rel) => !rel.startsWith('resources/gkill_sample_data/'))
+    .filter((rel) => !PERSONAL_INFO_ZIP_EXEMPT.has(rel))
+}
+
+// ZIP の central directory を直接読み、テキスト系エントリを { name, text } で返す。
+// 依存を増やさないための最小実装（deflate は zlib、無圧縮はそのまま）。
+// ZIP64・未知の圧縮方式・壊れたヘッダは「読めないので検査できない」を err にする
+// （黙って素通りすると、この検査を足した理由がそのまま再発する）。
+function readZipTextEntries(rel) {
+  const buf = fs.readFileSync(abs(rel))
+  // End of Central Directory (0x06054b50) を末尾から探す（ZIP コメントは最大 64KB）
+  let eocd = -1
+  const scanEnd = Math.max(0, buf.length - 65557)
+  for (let i = buf.length - 22; i >= scanEnd; i--) {
+    if (buf.readUInt32LE(i) === 0x06054b50) { eocd = i; break }
+  }
+  if (eocd < 0) {
+    err(`ZIP として読めないため個人情報検査ができない: ${rel}`)
+    return []
+  }
+  const count = buf.readUInt16LE(eocd + 10)
+  const cdOffset = buf.readUInt32LE(eocd + 16)
+  if (count === 0xffff || cdOffset === 0xffffffff) {
+    err(`ZIP64 形式は個人情報検査が未対応: ${rel}（検査を拡張するか、理由を書いて対象から外すこと）`)
+    return []
+  }
+  const entries = []
+  let p = cdOffset
+  for (let i = 0; i < count; i++) {
+    if (p + 46 > buf.length || buf.readUInt32LE(p) !== 0x02014b50) {
+      err(`ZIP の central directory が壊れているため個人情報検査ができない: ${rel}`)
+      break
+    }
+    const method = buf.readUInt16LE(p + 10)
+    const compSize = buf.readUInt32LE(p + 20)
+    const nameLen = buf.readUInt16LE(p + 28)
+    const extraLen = buf.readUInt16LE(p + 30)
+    const commentLen = buf.readUInt16LE(p + 32)
+    const localOffset = buf.readUInt32LE(p + 42)
+    const name = buf.subarray(p + 46, p + 46 + nameLen).toString('utf8')
+    p += 46 + nameLen + extraLen + commentLen
+    // 画像等のバイナリは対象外（UTF-8 に無理やり載せると偶発一致の偽陽性だけが増える）
+    if (!/\.(xml|rels|txt|csv|json|html)$/i.test(name)) continue
+    if (compSize === 0) continue
+    const lNameLen = buf.readUInt16LE(localOffset + 26)
+    const lExtraLen = buf.readUInt16LE(localOffset + 28)
+    const dataStart = localOffset + 30 + lNameLen + lExtraLen
+    const data = buf.subarray(dataStart, dataStart + compSize)
+    if (method === 0) entries.push({ name, text: data.toString('utf8') })
+    else if (method === 8) entries.push({ name, text: zlib.inflateRawSync(data).toString('utf8') })
+    else err(`ZIP の圧縮方式 ${method} は個人情報検査が未対応: ${rel} → ${name}`)
+  }
+  return entries
+}
+
 function checkPersonalInfo() {
   const patterns = [
     [/[A-Za-z]:\\+Users\\+(?![〈<]|user(?:name)?\b)[A-Za-z0-9]/, 'Windows のユーザープロファイル実パス'],
@@ -1615,6 +1687,29 @@ function checkPersonalInfo() {
       const lowered = text.toLowerCase()
       for (const w of ngWords) {
         if (lowered.includes(w)) err(`個人情報の疑い（ローカル NG 語）: ${rel} に「${w}」`)
+      }
+    }
+  }
+  // ZIP コンテナ文書の内部テキスト。パターン検査は全部適用するが、NG 語は4文字以上に限る:
+  // 表計算 XML には数値・座標・base64 断片が大量にあり、2〜3文字の短語は偶発一致だらけで
+  // 信号にならない（gkill_sample_data を対象外にしたのと同じ判断）。
+  const zipNgWords = ngWords.filter((w) => w.length >= 4)
+  for (const rel of personalInfoZipFiles()) {
+    for (const entry of readZipTextEntries(rel)) {
+      const text = normalizeLF(entry.text)
+      const where = `${rel} 内 ${entry.name}`
+      for (const [re, label] of patterns) {
+        const mt = text.match(re)
+        if (mt) {
+          err(`個人情報の疑い（${label}）: ${where} → 「${mt[0].slice(0, 40)}」` +
+            '（$HOME や 〈ユーザー名〉 のプレースホルダに置き換えること）')
+        }
+      }
+      if (zipNgWords.length !== 0) {
+        const lowered = text.toLowerCase()
+        for (const w of zipNgWords) {
+          if (lowered.includes(w)) err(`個人情報の疑い（ローカル NG 語）: ${where} に「${w}」`)
+        }
       }
     }
   }
