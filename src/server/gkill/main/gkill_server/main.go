@@ -2,7 +2,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,7 +15,7 @@ import (
 
 func main() {
 	if err := ServerCmd.Execute(); err != nil {
-		log.Fatal(err)
+		gkill_log.Fatal("error at execute gkill_server command", err)
 	}
 }
 
@@ -56,7 +55,7 @@ var (
 			gkill_log.Init()
 			if gkill_options.IsOutputLog {
 				gkill_log.SetMinLevel(gkill_log.TraceSQL)
-				gkill_log.SetMode(gkill_log.SplitOnly)
+				gkill_log.SetMode(gkill_log.MergedAndSplit)
 				gkill_log.SetStdoutMirror(false)
 			}
 		},
@@ -65,7 +64,7 @@ var (
 
 			err = common.InitGkillServerAPI()
 			if err != nil {
-				log.Fatal(err)
+				gkill_log.Fatal("error at init gkill server api", err)
 			}
 
 			ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
@@ -76,7 +75,7 @@ var (
 			// ここでも同じことをすると起動のたびに2重に走る
 			err = common.LaunchGkillServerAPI(ctx)
 			if err != nil {
-				log.Fatal(err)
+				gkill_log.Fatal("error at launch gkill server api", err)
 			}
 		},
 	}

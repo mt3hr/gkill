@@ -112,19 +112,23 @@ var (
 		Use: "dvnf",
 	}
 	getCommand = &cobra.Command{
-		Run:   runGet,
-		Args:  cobra.MaximumNArgs(1),
-		Use:   "get",
-		Short: "dvnfディレクトリのパスを取得する",
+		RunE:          runGet,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.MaximumNArgs(1),
+		Use:           "get",
+		Short:         "dvnfディレクトリのパスを取得する",
 		Long: `dvnf get [dvnfPath]
 	dvnfディレクトリのパスを取得します。
 	オプションを渡さなかった場合はdvnfのルートフォルダを取得します。`,
 	}
 	moveCommand = &cobra.Command{
-		Run:   runMove,
-		Args:  cobra.ExactArgs(2),
-		Use:   "move",
-		Short: "ファイルやディレクトリをdvnfディレクトリに移動する",
+		RunE:          runMove,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.ExactArgs(2),
+		Use:           "move",
+		Short:         "ファイルやディレクトリをdvnfディレクトリに移動する",
 		Long: `dvnf move src target
 	ファイルやディレクトリをdvnfディレクトリへと移動します。
 	移動元が存在しないときには何もせず、移動先の親ディレクトリが存在しないときは作成します。
@@ -132,10 +136,12 @@ var (
 	target: 移動先dvnfパス`,
 	}
 	copyCommand = &cobra.Command{
-		Run:   runCopy,
-		Args:  cobra.ExactArgs(2),
-		Use:   "copy",
-		Short: "ファイルやディレクトリをdvnfディレクトリにコピーする",
+		RunE:          runCopy,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.ExactArgs(2),
+		Use:           "copy",
+		Short:         "ファイルやディレクトリをdvnfディレクトリにコピーする",
 		Long: `dvnf copy src target
 	ファイルやディレクトリをdvnfディレクトリへとコピーします。
 	移動元が存在しないときには何もせず、移動先の親ディレクトリが存在しないときは作成します。

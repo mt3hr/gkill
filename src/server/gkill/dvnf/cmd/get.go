@@ -2,7 +2,6 @@ package dvnf_cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -76,13 +75,13 @@ func newDVNFOption(dvnfdir string, useExt bool) *dvnf.Option {
 	}
 }
 
-func runGet(_ *cobra.Command, _ []string) {
+func runGet(_ *cobra.Command, _ []string) error {
 	var err error
 
 	// 引数がなければrootを返す
 	if getOpt.dvnfName == "" {
 		printDVNFRootDir(config)
-		return
+		return nil
 	}
 
 	// 引数があればExpandDVNF
@@ -95,7 +94,7 @@ func runGet(_ *cobra.Command, _ []string) {
 		_, err = dvnf.CreateNewDVNF(opt, true)
 		if err != nil {
 			err = fmt.Errorf("failed to create new dvnf %s_%s: %w", opt.Device, opt.Directory, err)
-			log.Fatal(err)
+			return err
 		}
 	}
 
@@ -103,7 +102,7 @@ func runGet(_ *cobra.Command, _ []string) {
 	dvnfdir, err = dvnf.GetLatestDVNF(opt)
 	if err != nil {
 		err = fmt.Errorf("failed to get latest dvnf %s_%s: %w", opt.Device, opt.Directory, err)
-		log.Fatal(err)
+		return err
 	}
 	exist := dvnfdir != ""
 	// まだ存在しなかったら現在のdvnfをはめる
@@ -111,7 +110,7 @@ func runGet(_ *cobra.Command, _ []string) {
 		dvnfdir, err = dvnf.NewDVNF(opt)
 		if err != nil {
 			err = fmt.Errorf("failed to new dvnf %s_%s: %w", opt.Device, opt.Directory, err)
-			log.Fatal(err)
+			return err
 		}
 	}
 	// autoCreateなら作る
@@ -119,7 +118,7 @@ func runGet(_ *cobra.Command, _ []string) {
 		err = os.MkdirAll(dvnfdir, os.ModePerm)
 		if err != nil {
 			err = fmt.Errorf("failed to create directory %s: %w", dvnfdir, err)
-			log.Fatal(err)
+			return err
 		}
 	}
 
@@ -131,22 +130,22 @@ func runGet(_ *cobra.Command, _ []string) {
 			err = os.MkdirAll(dir, os.ModePerm)
 			if err != nil {
 				err = fmt.Errorf("failed to create directory %s: %w", dir, err)
-				log.Fatal(err)
+				return err
 			}
 		}
 		fmt.Println(dir)
-		return
+		return nil
 	}
 	dvnfs, err := dvnf.GetDVNFs(opt)
 	if err != nil {
 		err = fmt.Errorf("failed to get dvnfs %s_%s: %w", opt.Device, opt.Directory, err)
-		log.Fatal(err)
+		return err
 	}
 	// 存在しなければdvnfdirをprintlnして終了
 	if len(dvnfs) == 0 {
 		dir := filepath.Join(dvnfdir, childdir)
 		fmt.Println(dir)
-		return
+		return nil
 	}
 	dvnf.SortDVNFs(dvnfs)
 	// あるならば全部printlnして終了
@@ -156,9 +155,10 @@ func runGet(_ *cobra.Command, _ []string) {
 			err = os.MkdirAll(dir, os.ModePerm)
 			if err != nil {
 				err = fmt.Errorf("failed to create directory %s: %w", dir, err)
-				log.Fatal(err)
+				return err
 			}
 		}
 		fmt.Println(dir)
 	}
+	return nil
 }
