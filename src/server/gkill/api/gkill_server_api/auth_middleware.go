@@ -9,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
@@ -18,8 +19,22 @@ import (
 
 // maxAuthBodyBytes は認証系ミドルウェアが認証前に読むボディの上限。
 // 未認証の攻撃者に無制限のメモリを確保させないための上限。大容量が正規に必要な
-// アップロード系（/api/upload_files 等）は wrapNoAuth 登録でこの経路を通らないので影響しない。
+// アップロード系（/api/upload_files 等）は wrapNoAuth 登録でこの経路を通らないため、
+// 別枠の maxUploadBodyBytes を wrapNoAuthCapped で掛ける（2026-08-30 監査 F-002）。
 const maxAuthBodyBytes = 32 * 1024 * 1024 // 32MB
+
+// maxUploadBodyBytes はアップロード2経路（/api/upload_files, /api/upload_gps_log_files）の
+// ボディ上限。ファイル本体が base64 のデータURIとしてJSONへ入るため、実ファイル合計の
+// 約1.33倍を見込んでも実容量で700MB級まで1リクエストで送れる値にしてある。
+// これを超えるファイルは rep ディレクトリへの直置き + UpdateCache の取り込みで入れる。
+const maxUploadBodyBytes = 1 << 30 // 1GB
+
+// noAuthBodyReadTimeout / uploadBodyReadTimeout は wrapNoAuthCapped が掛ける
+// そのリクエストの読み取り期限。サーバ全体の ReadTimeout は大容量応答を切らないよう
+// 0（無制限）のままにしてある（serve.go）ので、ヘッダだけ送って本文を極小レートで
+// 送り続ける型のスローボディはここで打ち切る。
+const noAuthBodyReadTimeout = 5 * time.Minute
+const uploadBodyReadTimeout = 30 * time.Minute
 
 // sessionPeek はリクエストボディからSessionIDとLocaleNameだけを読み取るための構造体
 type sessionPeek struct {
@@ -29,13 +44,19 @@ type sessionPeek struct {
 
 // readAuthBody は認証前のボディ読み取りを上限付きで行う。
 // 上限超過なら 413、その他の読み取り失敗なら 500 を返し、読めたかどうかを ok で返す。
+func readAuthBody(w http.ResponseWriter, r *http.Request, ctx context.Context) ([]byte, bool) {
+	return readBodyCapped(w, r, ctx, maxAuthBodyBytes)
+}
+
+// readBodyCapped は認証前のボディ読み取りを指定の上限付きで行う本体。
+// 上限超過なら 413、その他の読み取り失敗なら 500 を返し、読めたかどうかを ok で返す。
 //
 // どちらの失敗も writeGkillErrorResponse で JSON の errors 本文ごと返す。素の
 // WriteHeader だけだと本文が空になり、ステータスを見ずに res.json() する
 // クライアント(gkill-api.ts)側で例外になる(writeGkillErrorResponse の doc コメント)。
 // ボディが読めていないので locale_name も分からず、文言は既定言語で返す。
-func readAuthBody(w http.ResponseWriter, r *http.Request, ctx context.Context) ([]byte, bool) {
-	r.Body = http.MaxBytesReader(w, r.Body, maxAuthBodyBytes)
+func readBodyCapped(w http.ResponseWriter, r *http.Request, ctx context.Context, limitBytes int64) ([]byte, bool) {
+	r.Body = http.MaxBytesReader(w, r.Body, limitBytes)
 	rawBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		var maxErr *http.MaxBytesError
@@ -59,11 +80,39 @@ func readAuthBody(w http.ResponseWriter, r *http.Request, ctx context.Context) (
 }
 
 // wrapNoAuth wraps handler with filterLocalOnly only
+//
+// ボディを読む経路には使わないこと。認証ミドルウェアを通らないため readAuthBody の
+// 32MB上限が効かず、未認証の無制限ボディがそのままヒープへ載る。ボディ付きの
+// 無認証経路は wrapNoAuthCapped を使う（serve_noauth_body_cap_test.go が機械検査する）。
 func (g *GkillServerAPI) wrapNoAuth(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !g.filterLocalOnly(w, r) {
 			return
 		}
+		h(w, r)
+	}
+}
+
+// wrapNoAuthCapped は wrapNoAuth にボディ上限とリクエスト単位の読み取り期限を付けた版。
+// wrapNoAuth のボディ付き経路は認証ミドルウェアを通らず 32MB 上限が効かないため、
+// ここで経路別の上限を掛ける（2026-08-30 監査 F-002）。上限超過は 413 の JSON、
+// 期限超過は読み取りエラーとして打ち切られる。期限はこのリクエストの読み取りに
+// だけ効き、次のリクエストでは net/http がヘッダ読み取り時に張り直す。
+func (g *GkillServerAPI) wrapNoAuthCapped(h http.HandlerFunc, limitBytes int64, readTimeout time.Duration) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !g.filterLocalOnly(w, r) {
+			return
+		}
+		rc := http.NewResponseController(w)
+		if err := rc.SetReadDeadline(time.Now().Add(readTimeout)); err != nil {
+			// httptest.ResponseRecorder 等、期限を持てない実装では上限だけで守る
+			slog.Log(r.Context(), gkill_log.Debug, "error at set read deadline for no-auth capped route", "error", fmt.Sprintf("%q", err))
+		}
+		rawBody, ok := readBodyCapped(w, r, r.Context(), limitBytes)
+		if !ok {
+			return
+		}
+		r.Body = io.NopCloser(bytes.NewReader(rawBody))
 		h(w, r)
 	}
 }
