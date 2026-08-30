@@ -329,7 +329,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 - `git_commit_log`: Gitコミット記録
 
 #### 2) ツール選択フロー（推奨）
-1. まず `gkill_get_application_config` でタグ階層・ボード構造・リポジトリ構造を把握する
+1. まず `gkill_get_application_config` を `fields: ["user_id", "device"]` で呼び、**どのアカウントに接続しているか**を確かめる（read / write / readwrite が別アカウントを向いていることがある。この射影は42バイトで済む）。タグ階層・ボード構造が要るときだけ `fields: ["tag_struct"]` 等を追加で取る（無指定の全量は実測94KBある）
 2. 必要に応じて `gkill_get_all_tag_names` / `gkill_get_all_rep_names` / `gkill_get_mi_board_list` でメタ情報を補完
 3. `query.rep_types` で絞るときは `gkill_get_rep_infos` で正準値（`canonical_rep_types`）を引く（ApplicationConfig の表示ラベルと受理値は1:1でない）。「追加したはずのファイルが検索に出ない」ときも `indexed_at` で索引の鮮度を確かめる
 4. `gkill_get_kyous` でKyou一覧を取得（タグ・テキスト・型データはレスポンスにインライン）
@@ -347,7 +347,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 | `cursor` | string | 前回レスポンスの `next_cursor` をそのまま指定してページング（不透明文字列。v2は複合形式 `{RFC3339Nano}::{ID}`。組み立て・編集しない） |
 | `max_size_mb` | number | レスポンスの最大サイズMB（default: 0.25） |
 | `is_include_timeis` | boolean | 各Kyouに付随する TimeIs を含めるか（default: false） |
-| `count_only` / `group_by` | boolean / string | 件数だけ・バケット集計（month/day/week_of_day/hour/data_type/rep_name/url_domain/file_extension）。cursor とは併用不可 |
+| `count_only` / `group_by` | boolean / string | 件数だけ・バケット集計（month/day/week_of_day/hour/data_type/rep_name/create_app/update_app/url_domain/file_extension）。cursor とは併用不可 |
 | `data_types` / `num_min` / `num_max` / `idf_kinds` / `include_file_size` | - | リクエストレベルの絞り込み（v2。ADR-0604） |
 | `create_apps` / `update_apps` | array | 作成アプリ / 最終更新アプリの許可リスト（各記録の `create_app` / `update_app` と照合）。「MCP経由で作った記録」（`"gkill_mcp_readwrite"` / `"gkill_mcp_write"`）の絞り込みに使う |
 | `include_plugin_content` | boolean | プラグインKyouの本文をレスポンスに埋め込むか（default: false） |
@@ -364,6 +364,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 - `buckets[]`: group_by 指定時の集計（{key, count}）
 - `partial`: 付随データ（タグ・テキスト・通知・TimeIs）の一部取得に失敗し、返した Kyou の付随データが不完全なとき true（内訳は `warnings[]` に入る）。記録保管場所の読み込み失敗とは独立で、そちらの警告があっても false の場合がある
 - `warnings[]`: 未知のフィルタ値、付随データ欠落、読み込めなかった記録保管場所など。通常検索・count_only・group_by のどれでも確認する
+- `plugins[]`: このページに現れたプラグインの説明（rep_name ごとに1回。各Kyouのペイロードには rep_name / plugin_name しか載らない）。プラグインKyouが無いページでは省略
 - `plugin_content`: 本文埋め込みの集計（`include_plugin_content: true` のときのみ）
 
 #### 4) ペイロード（payload）フィールド
@@ -380,7 +381,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 | `idf` | file_name, is_image, is_video, is_audio, rep_name, mime_type |
 | `git_commit_log` | commit_message, addition, deletion |
 | `mi` | title, is_checked, board_name, limit_time, estimate_start_time, estimate_end_time |
-| `plugin` | data_type, rep_name, kyou_id, plugin_name, description（+ `include_plugin_content: true` のとき content_status / content_text / content_html / content_skipped_reason / content_error） |
+| `plugin` | data_type, rep_name, kyou_id, plugin_name（+ `include_plugin_content: true` のとき content_status / content_text / content_html / content_skipped_reason / content_error）。**プラグインの説明文は各ペイロードには載らない** —— 応答トップレベルの `plugins[]` に rep_name ごと1回だけ入る（同じ説明を件数ぶん繰り返さないため） |
 
 `kind: "plugin"` は上記の組み込み型に該当しないプラグイン由来のKyou。本文はgkillに入っていないので、`include_plugin_content: true` を渡して同じレスポンスに埋め込ませる。
 
@@ -421,13 +422,14 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 }
 ```
 
-Mi抽出:
+Mi抽出（**`for_mi` は `include_*_mi` を最低1つ要求する**。全て無指定だと0件+warningになる。`mi_sort_type: "limit_time"` は対応する射影 `include_limit_mi` が必要）:
 ```json
 {
   "query": {
     "for_mi": true,
     "mi_check_state": "uncheck",
-    "mi_sort_type": "limit_time"
+    "mi_sort_type": "limit_time",
+    "include_limit_mi": true
   }
 }
 ```
@@ -441,12 +443,12 @@ Mi抽出:
 }
 ```
 
-ページング（2ページ目以降）:
+ページング（2ページ目以降）。`cursor` には**前回応答の `next_cursor` をそのまま**渡す（v2 は `{RFC3339Nano}::{ID}` の複合形式。自分で組み立て・編集しない。旧クライアントの素のISO日時も後方互換で受理される）:
 ```json
 {
   "query": {},
   "limit": 50,
-  "cursor": "2026-02-25T10:30:00+09:00"
+  "cursor": "2026-02-25T10:30:00+09:00::01234567-89ab-cdef-0123-456789abcdef"
 }
 ```
 
@@ -458,10 +460,14 @@ Mi抽出:
 | パラメータ | 型 | 説明 |
 |---|---|---|
 | `locale_name` | string | ロケール（例: ja, en） |
+| `fields` | array | 返すトップレベルフィールドの許可リスト（射影）。接続先の確認だけなら `["user_id", "device"]` で足りる（全量取得は実測94KB、この射影なら42バイト） |
+| `include_ui_state` | boolean | ツリーエディタのUI一時状態キーを含めるか（default: false。既定で剥がされる） |
 
 **レスポンスフィールド:**
 | フィールド | 説明 |
 |---|---|
+| `user_id` | 接続アカウントのユーザーID。read / write / readwrite が別アカウントを向いていることがあるため、**書き込み前の接続先確認に使う** |
+| `device` | 接続アカウントのデバイス名 |
 | `tag_struct` | タグの親子階層構造。各要素は `tag_name`, `check_when_inited`（デフォルトチェック状態）, `is_force_hide`（非表示設定）, `children`（子タグ配列）を持つ |
 | `mi_board_struct` | タスクボードの構造 |
 | `rep_struct` | リポジトリの組織構造 |
