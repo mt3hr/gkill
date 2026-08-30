@@ -7,7 +7,7 @@
 | Sources | 2026-08-24 の実利用フィードバック（指摘9件のうち4件が「既に直っているのに見えていなかった」）。[ADR-0111](0111-drop-never-implemented-query-fields.md) の Consequences「旧スキーマはセッション寿命で固定される」 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/normalization.mjs`（`detectStaleSchemaSignals` / `staleSchemaWarning` / `appendStaleSchemaWarning`）/ `src/mcp/lib/read-handlers.mjs`（`handleReadToolCall`） |
+| Anchors | `src/mcp/lib/normalization.mjs`（`detectStaleSchemaSignals` / `staleSchemaWarning` / `appendStaleSchemaWarning`）/ `src/mcp/lib/read-handlers.mjs`（`handleReadToolCall`）/ `src/mcp/lib/write-handlers.mjs`（`handleWriteToolCall`）/ `src/mcp/lib/write-normalization.mjs`（`revivesStaleBoolean` / `DELETE_STALE_SCHEMA_ARG_KINDS`） |
 
 ## Context
 
@@ -38,8 +38,12 @@ MCP のツール一覧はクライアントがセッション初期化時に1回
 判定と付与は `handleReadToolCall` の**1箇所**で包む（ツールごとに書くと必ず足し忘れる）。
 1行サマリにも印を付ける（本文の `warnings` を読まない経路があるため）。
 
-書き込みツールには入れない。救済表に載る引数を持たず、`assertKnownKeys` が
-未知キーを先に弾くので、そもそも警告できる面が無い。
+後付け引数を持つ書き込みツールにも同じ判定を適用する（`handleWriteToolCall` も同じ1箇所方式で包む）。
+決定時点では書き込み側に救済表へ載る引数が無く「警告できる面が無い」としていたが、
+同日中に `gkill_delete_kyou` / `gkill_restore_kyou` の `targets`（オブジェクト配列）が、
+2026-08-30 に `gkill_add_urlog` の `fetch_metadata` / `fetch_favicon` と
+`gkill_add_mi` / `gkill_update_mi` の `allow_create_board`（いずれも後付け boolean）が加わり、
+適用範囲が読み書き両方へ広がった（決定そのもの —— 証明できるときだけ警告する —— は不変）。
 読み取りツールは readwrite サーバからも同じ `handleReadToolCall` を通るので網羅される。
 
 ## Rejected alternatives
@@ -66,7 +70,10 @@ MCP のツール一覧はクライアントがセッション初期化時に1回
 - 現行スキーマどおりの呼び出しには何も足さない（誤警告ゼロがこの仕組みの前提条件）
 - `gkill_get_kyou_history` の `limit` も他の後付け引数と同じ穴を持っていたので、
   救済表（`KYOU_HISTORY_STALE_SCHEMA_ARG_KINDS`）を足して揃えた
-- 救済表は4→6になった。**引数を足したら表と `STALE_SCHEMA_ARG_KINDS_BY_TOOL` の両方へ載せる**
+- 救済表は4→6になり、その後 delete/restore・urlog・mi の書き込みツールも加わった。
+  **引数を足したら表と `STALE_SCHEMA_ARG_KINDS_BY_TOOL` の両方へ載せる**
+  （書き込みの後付け boolean は `ENTITY_FIELD_SPECS` の `revivesStaleBoolean` も立てる。
+  この3点セットは `write-tool-handlers.test.mjs` の表駆動メタテストが機械強制する）
 
 ## Evidence
 
@@ -83,3 +90,9 @@ MCP のツール一覧はクライアントがセッション初期化時に1回
   - `normalizeKyouHistoryArgs — stale-schema revival`
 - `src/mcp/__tests__/read-handlers.test.mjs`
   - `handleReadToolCall — stale tool schema warning`（gkill 由来の warnings に足すこと、誤警告を出さないこと）
+- `src/mcp/__tests__/write-normalization.test.mjs`
+  - 後付けフラグの正規化（正規JSON文字列からの復元、trim 込みで検出器と同じ受理範囲）
+- `src/mcp/__tests__/write-handlers.test.mjs`
+  - urlog / mi の文字列フラグが復元され、成功応答に古さの警告が付くこと（end-to-end）
+- `src/mcp/__tests__/write-tool-handlers.test.mjs`
+  - 後付け boolean 引数は救済表・型復元の両方に載る（表駆動メタテスト）
