@@ -40,6 +40,9 @@ type cache struct {
 
 	// refreshing はバックグラウンドの走査が走行中かを表す。二重起動を防ぐ。
 	refreshing atomic.Bool
+
+	// refreshWG は走行中のバックグラウンド走査を数える。close が完了を待つためのもの。
+	refreshWG sync.WaitGroup
 }
 
 var globalCache = &cache{}
@@ -158,12 +161,31 @@ func (c *cache) kickRefresh(pluginDir string, config pluginConfig) {
 	if !c.refreshing.CompareAndSwap(false, true) {
 		return
 	}
-	go func() {
+	c.refreshWG.Go(func() {
 		defer c.refreshing.Store(false)
 		if err := c.refresh(pluginDir, config); err != nil {
 			fmt.Fprintln(stderrWriter, appName+": refresh: "+err.Error())
 		}
-	}()
+	})
+}
+
+// close はバックグラウンドの走査が終わるのを待ってからDBを閉じる。
+//
+// 待たずに閉じると、走査goroutineが閉じたDBへ触って「database is closed」を
+// 吐き続けるうえ、SQLiteのWAL/SHMファイルの再作成がテストの TempDir 削除と競合して
+// 「directory not empty」で落ちる（CI の TestCache_DedupesAcrossDuplicatedRows で実測）。
+// 本番のプラグインプロセスは終了時にOSへ返すだけなので通っていないが、
+// 停止手順としてはこちらが正しい形。
+func (c *cache) close() error {
+	c.refreshWG.Wait()
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.db == nil {
+		return nil
+	}
+	err := c.db.Close()
+	c.db = nil
+	return err
 }
 
 func (c *cache) refreshLocked(pluginDir string, config pluginConfig) error {

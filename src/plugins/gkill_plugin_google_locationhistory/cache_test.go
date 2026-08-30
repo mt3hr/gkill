@@ -96,11 +96,10 @@ func newTestCache(t *testing.T, pluginDir string) *cache {
 	if err := c.openDB(pluginDir); err != nil {
 		t.Fatalf("openDB: %v", err)
 	}
-	t.Cleanup(func() {
-		if c.db != nil {
-			_ = c.db.Close()
-		}
-	})
+	// GetGPSLogs が毎回バックグラウンド走査を蹴るので、素の db.Close() だと
+	// 走査goroutineが生き残り、TempDir の削除と競合してCIだけで落ちる。
+	// close() は走査の完了を待ってから閉じる。
+	t.Cleanup(func() { _ = c.close() })
 	return c
 }
 
