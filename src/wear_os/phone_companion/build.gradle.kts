@@ -26,6 +26,21 @@ android {
         versionName = (findProperty("versionName") as? String) ?: "1.0.0"
     }
 
+    // リリース署名。鍵の受け渡しと未設定時の止まり方は src/android/app/build.gradle.kts の
+    // 同名ブロックと同じ (2026-08-30 監査 F-006)。
+    val gkillSigningProp = { name: String -> (findProperty(name) as? String) ?: System.getenv(name) }
+    val gkillReleaseKeystore = gkillSigningProp("GKILL_RELEASE_KEYSTORE")
+    if (gkillReleaseKeystore != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(gkillReleaseKeystore)
+                storePassword = gkillSigningProp("GKILL_RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = gkillSigningProp("GKILL_RELEASE_KEY_ALIAS")
+                keyPassword = gkillSigningProp("GKILL_RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -33,6 +48,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.findByName("release")
         }
     }
     compileOptions {

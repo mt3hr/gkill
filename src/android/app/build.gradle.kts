@@ -21,6 +21,25 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // リリース署名。鍵はリポジトリ外で管理し、~/.gradle/gradle.properties または環境変数で渡す:
+    //   GKILL_RELEASE_KEYSTORE (keystoreパス) / GKILL_RELEASE_KEYSTORE_PASSWORD /
+    //   GKILL_RELEASE_KEY_ALIAS / GKILL_RELEASE_KEY_PASSWORD
+    // 未設定の assembleRelease は未署名 APK (app-release-unsigned.apk) になり、配布名への
+    // rename が見つからず release パイプラインが止まる (黙って debug 鍵の配布物を作らない。
+    // 2026-08-30 監査 F-006)。
+    val gkillSigningProp = { name: String -> (findProperty(name) as? String) ?: System.getenv(name) }
+    val gkillReleaseKeystore = gkillSigningProp("GKILL_RELEASE_KEYSTORE")
+    if (gkillReleaseKeystore != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(gkillReleaseKeystore)
+                storePassword = gkillSigningProp("GKILL_RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = gkillSigningProp("GKILL_RELEASE_KEY_ALIAS")
+                keyPassword = gkillSigningProp("GKILL_RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -28,6 +47,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.findByName("release")
         }
     }
     compileOptions {

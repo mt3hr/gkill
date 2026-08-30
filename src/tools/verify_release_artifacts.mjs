@@ -42,7 +42,7 @@ for (const name of expected) {
         console.error(`  NG   ${name} (サイズ0)`)
         continue
     }
-    // SHA-256 を計算して指紋を残す。APK の署名切り替えはしない (利用者判断) が、
+    // SHA-256 を計算して指紋を残す。
     // 配布物のハッシュ一覧があれば改竄検知・再配布時の照合に使える。
     const sum = createHash('sha256').update(fs.readFileSync(file)).digest('hex')
     sha256Lines.push(`${sum}  ${name}`)
@@ -91,6 +91,56 @@ if (missingSampleEntries.length !== 0) {
     process.exit(1)
 }
 console.log(`  OK   gkill_sample_data zip の必須エントリ ${requiredSampleEntries.length} 件を確認`)
+
+// APK 3件の署名検証。以前は assembleDebug の成果物を配布名へ rename しており、
+// debug 鍵で署名された APK が正式版として公開されていた (2026-08-30 監査 F-006)。
+// apksigner verify が通り、かつ署名者が Android の debug 証明書 (CN=Android Debug)
+// でないことを確認する。apksigner が見つからない場合は fail-closed で止める
+// (黙って未検証のまま配布物を作らない)。
+function findApksigner() {
+    const sdkRoot = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT
+    if (!sdkRoot) return null
+    const buildToolsDir = path.join(sdkRoot, 'build-tools')
+    let versions = []
+    try {
+        versions = fs.readdirSync(buildToolsDir).sort().reverse()
+    } catch {
+        return null
+    }
+    for (const v of versions) {
+        for (const bin of ['apksigner', 'apksigner.bat']) {
+            const candidate = path.join(buildToolsDir, v, bin)
+            if (fs.existsSync(candidate)) return candidate
+        }
+    }
+    return null
+}
+
+const apkNames = expected.filter((name) => name.endsWith('.apk'))
+const apksigner = findApksigner()
+if (apksigner === null) {
+    console.error('\napksigner が見つかりません (ANDROID_HOME / ANDROID_SDK_ROOT の build-tools 配下)。')
+    console.error('APK の署名検証ができないため release を中止します。')
+    process.exit(1)
+}
+for (const name of apkNames) {
+    const file = path.join(releaseDir, name)
+    let certsOut = ''
+    try {
+        certsOut = execFileSync(apksigner, ['verify', '--print-certs', file], { encoding: 'utf8' })
+    } catch (e) {
+        console.error(`\n  NG   ${name} の署名検証に失敗しました (未署名または署名破損): ${e.message}`)
+        process.exit(1)
+    }
+    if (certsOut.includes('CN=Android Debug')) {
+        console.error(`\n  NG   ${name} が Android の debug 鍵で署名されています。リリース鍵で署名し直すこと`)
+        process.exit(1)
+    }
+    const fingerprint = certsOut
+        .split('\n')
+        .find((line) => line.includes('certificate SHA-256 digest'))
+    console.log(`  OK   ${name} 署名検証済み${fingerprint ? ` (${fingerprint.trim()})` : ''}`)
+}
 
 // 全件そろったときだけ SHA256SUMS を書き出す。
 // `sha256sum -c release/SHA256SUMS_<version>.txt` で検証できる。
