@@ -1149,7 +1149,7 @@ func migrateShareKyouInfoSchemaFrom100(ctx context.Context, db *sql.DB, schemaVe
 	defer func() {
 		if !committed {
 			if err := tx.Rollback(); err != nil {
-				slog.Log(context.Background(), gkill_log.Error, "error at rollback share kyou info schema migration", "error", err)
+				slog.Log(context.Background(), gkill_log.Error, "error at rollback share kyou info schema migration", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -1184,7 +1184,7 @@ func migrateShareKyouInfoSchemaFrom100(ctx context.Context, db *sql.DB, schemaVe
 			}
 			migrated, changed, err := find.MigrateLegacyFindQueryJSON([]byte(findQueryJSON))
 			if err != nil {
-				slog.Log(ctx, gkill_log.Debug, "共有クエリJSONの移行をスキップしました（パース不能）", "id", id, "error", err)
+				slog.Log(ctx, gkill_log.Debug, "共有クエリJSONの移行をスキップしました（パース不能）", "id", id, "error", fmt.Sprintf("%q", err))
 				continue
 			}
 			if changed {

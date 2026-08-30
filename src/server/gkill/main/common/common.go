@@ -87,7 +87,7 @@ var (
 					idfKyouRep, err := reps.NewIDFDirRep(context.TODO(), "", filename, idDBFilename, true, router, autoIDF, &idfIgnore, nil)
 					if err != nil {
 						err = fmt.Errorf("error at new idf dir rep: %w", err)
-						slog.Log(cmd.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+						slog.Log(cmd.Context(), gkill_log.Debug, "error at new idf dir rep", "error", fmt.Sprintf("%q", err))
 						fmt.Printf("skip idf: %s\n", filename)
 						continue
 					}
@@ -98,7 +98,7 @@ var (
 					}(idfKyouRep, filename)
 					if err := idfKyouRep.IDF(context.TODO()); err != nil {
 						err = fmt.Errorf("error at idf %s: %w", filename, err)
-						slog.Log(cmd.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+						slog.Log(cmd.Context(), gkill_log.Debug, "error at idf", "error", fmt.Sprintf("%q", err))
 						fmt.Printf("%s\n", err)
 						errs = append(errs, err)
 					}
@@ -393,7 +393,7 @@ func init() {
 	if pprofAddr := os.Getenv("GKILL_PPROF_ADDR"); pprofAddr != "" {
 		go func() {
 			if err := http.ListenAndServe(pprofAddr, nil); err != nil {
-				slog.Log(context.Background(), gkill_log.Error, "error at listen pprof", "address", pprofAddr, "error", err)
+				slog.Log(context.Background(), gkill_log.Error, "error at listen pprof", "address", pprofAddr, "error", fmt.Sprintf("%q", err))
 			}
 		}()
 	}
@@ -425,7 +425,7 @@ func ResolveLocalServerEndpoint(ctx context.Context) (*LocalServerEndpoint, erro
 	}
 	defer func() {
 		if err := serverConfigDAO.Close(ctx); err != nil {
-			slog.Log(ctx, gkill_log.Warn, "error at close server config dao", "error", err)
+			slog.Log(ctx, gkill_log.Warn, "error at close server config dao", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
@@ -519,7 +519,7 @@ func PreLoadRepositories(ctx context.Context, gkillServerAPI *gkill_server_api.G
 	device, err := gkillServerAPI.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device for pre load users: %w", err)
-		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Error, "error at get device for pre load users", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -531,7 +531,7 @@ func PreLoadRepositories(ctx context.Context, gkillServerAPI *gkill_server_api.G
 			startTime := time.Now()
 			if _, err := gkillServerAPI.GkillDAOManager.GetRepositories(userID, device); err != nil {
 				err = fmt.Errorf("error at pre load repositories. user id = %s device = %s: %w", userID, device, err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+				slog.Log(ctx, gkill_log.Error, "error at pre load repositories. user id", "error", fmt.Sprintf("%q", err))
 				continue
 			}
 			slog.Log(ctx, gkill_log.Info, "pre loaded repositories", "userID", fmt.Sprintf("%q", userID), "device", fmt.Sprintf("%q", device), "elapsed", time.Since(startTime).String())
