@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 	"html"
 	"path/filepath"
 	"strings"
+
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 )
 
 // configHTMLHead は設定画面の共通ヘッダ。

@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 
 	"github.com/mattn/go-zglob"
 )
@@ -166,7 +167,7 @@ func collectSourceFiles(src expandedSource, matches func(name string) bool) []st
 		_ = filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 			if err != nil {
 				// 読めないエントリはスキップして続行するが、可観測性のため stderr に残す（stdout はプロトコルチャネル）。
-				fmt.Fprintf(os.Stderr, "source scan: skipped unreadable path %q: %v\n", path, err)
+				sdk.LogWarn("source scan: skipped unreadable path %q: %v", path, err)
 				return nil //nolint:nilerr
 			}
 			if d.IsDir() {

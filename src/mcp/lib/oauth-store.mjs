@@ -26,8 +26,9 @@ export class OAuthStore {
   /**
    * @param {string|null} [persistPath=null] - Path to JSON file for persisting refresh tokens and clients.
    *   When null, operates in memory only (backwards compatible with existing tests).
+   * @param {object|null} [accessLog=null] - McpAccessLog. When null, failures go to stderr only.
    */
-  constructor(persistPath = null) {
+  constructor(persistPath = null, accessLog = null) {
     /** @type {Map<string, {value: object, expiresAt: number}>} */
     this.codes = new Map();
     /** @type {Map<string, {value: object, expiresAt: number}>} */
@@ -39,6 +40,7 @@ export class OAuthStore {
 
     this._cleanupInterval = null;
     this._persistPath = persistPath || null;
+    this._accessLog = accessLog || null;
   }
 
   /** Start periodic cleanup of expired entries (default: every 5 minutes). */
@@ -241,6 +243,9 @@ export class OAuthStore {
       writeFileSync(tmpPath, JSON.stringify(data, null, 2), { encoding: "utf8", mode: 0o600 });
       renameSync(tmpPath, this._persistPath);
     } catch (err) {
+      // ここが落ちると refresh token と DCR クライアントが揮発し、次回は全部再認可になる。
+      // stderr だけだと MCP_LOG を素通りするうえ、サービス起動では誰も見ない。
+      this._accessLog?.error?.("oauth_state_save_error", { error: String(err.message) });
       process.stderr.write(`OAuth state save error: ${err.message}\n`);
     }
   }

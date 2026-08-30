@@ -81,14 +81,14 @@ func Run(h Handler) {
 
 	// プロトコルバージョン確認（将来の互換性のため）
 	if *protocolVersion != "1" {
-		fmt.Fprintf(os.Stderr, "unsupported protocol version: %s\n", *protocolVersion)
+		LogError("unsupported protocol version: %s", *protocolVersion)
 		os.Exit(1)
 	}
 
 	// config.jsonが無ければ雛形を作ってから読む。手で編集できるようにするため。
 	cfg, err := EnsureConfig(*pluginDir, h.DefaultConfig)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error at load config: %v\n", err)
+		LogWarn("error at load config, continuing with an empty config: %v", err)
 		// 設定読み込み失敗は致命的ではないので続行
 		cfg = Config{}
 	}

@@ -138,18 +138,20 @@ class MainActivity : AppCompatActivity() {
             try {
                 val gkillBinary = serverBinary()
 
-                Log.i("gkill", "バイナリパス: ${gkillBinary.absolutePath}")
-                Log.i("gkill", "バイナリサイズ: ${gkillBinary.length()} bytes")
-                Log.i("gkill", "実行可能: ${gkillBinary.canExecute()}")
-                Log.i("gkill", "読み取り可能: ${gkillBinary.canRead()}")
+                // 起動診断は DEBUG。端末の絶対パスを毎起動 logcat へ残す必要は無い
+                // （配布APKは assembleDebug で minify も無いので、INFO は誰の端末でも出る）。
+                Log.d("gkill", "バイナリパス: ${gkillBinary.absolutePath}")
+                Log.d("gkill", "バイナリサイズ: ${gkillBinary.length()} bytes")
+                Log.d("gkill", "実行可能: ${gkillBinary.canExecute()}")
+                Log.d("gkill", "読み取り可能: ${gkillBinary.canRead()}")
 
                 val homeDir = filesDir.parentFile?.absolutePath ?: filesDir.absolutePath
                 val gkillHomeDir = gkillHome
-                Log.i("gkill", "HOME: $homeDir")
-                Log.i("gkill", "GKILL_HOME: ${gkillHomeDir.absolutePath}")
+                Log.d("gkill", "HOME: $homeDir")
+                Log.d("gkill", "GKILL_HOME: ${gkillHomeDir.absolutePath}")
 
                 val nativeDir = applicationInfo.nativeLibraryDir
-                Log.i("gkill", "nativeLibraryDir: $nativeDir")
+                Log.d("gkill", "nativeLibraryDir: $nativeDir")
 
                 migrateLegacyHomeIfNeeded(gkillHomeDir)
                 gkillHomeDir.mkdirs()
@@ -178,11 +180,21 @@ class MainActivity : AppCompatActivity() {
                                 serverUrlLatch.countDown()
                             }
                         }
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {
+                        // 無言で握ると、ここが死んだときにサーバURLの検出も止まるのに
+                        // 何も残らない（画面は真っ白のまま待ち続ける）。
+                        Log.e("gkill", "gkill_server の標準出力の読み取りが止まった", e)
+                    }
                 }.start()
 
                 val exitCode = process.waitFor()
-                Log.e("gkill", "プロセス終了コード: $exitCode")
+                // 正常終了(0)まで ERROR で出していた。すぐ下の Toast は exitCode で
+                // 出し分けているのに、ログだけ揃っていなかった。
+                if (exitCode != 0) {
+                    Log.e("gkill", "プロセス終了コード: $exitCode")
+                } else {
+                    Log.i("gkill", "gkill_server が正常終了した")
+                }
                 runOnUiThread {
                     if (exitCode != 0) {
                         Toast.makeText(this, "gkill_server 異常終了 (code=$exitCode)", Toast.LENGTH_LONG).show()

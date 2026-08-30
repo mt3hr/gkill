@@ -30,13 +30,29 @@ function is_any_blocking_modal_open(): boolean {
     });
 }
 
+// is_scoped_enter_debug_enabled は localStorage の印を読む。
+// localStorage は private window などで例外を投げうるので必ず握る。
+function is_scoped_enter_debug_enabled(): boolean {
+    try {
+        return window.localStorage.getItem('gkill_debug_scoped_enter') !== null;
+    } catch {
+        return false;
+    }
+}
+
 export function useScopedEnterForKFTL(
     root_ref: Ref<HTMLElement | null>,
     open_kftl: () => void,
     enabled_ref?: Ref<boolean>,
     opts: { debug?: boolean } = {}
 ) {
-    const { debug = false } = opts;
+    // 既定は「localStorage に gkill_debug_scoped_enter を置いたら出る」。
+    //
+    // 以前は opts.debug の既定 false のままで、呼び出し側6箇所がどこも opts を渡して
+    // いなかったため、この console.debug は開発中ですら一度も出ていなかった。
+    // Enter ショートカットが効かない調査で最初に要るログなので、
+    // ビルドし直さずに点けられるようにしておく。
+    const { debug = is_scoped_enter_debug_enabled() } = opts;
     let listener: (e: KeyboardEvent) => void;
 
     onMounted(() => {

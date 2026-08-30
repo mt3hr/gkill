@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 )
 
 // 読み取りは buildMu を取らない。構築中でも「そこまで取り込めたぶん」を返す。

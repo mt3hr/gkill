@@ -20,8 +20,21 @@ export class StdioTransport {
     process.stdin.resume();
   }
 
+  // stdio では stdout がプロトコルのチャネルなので、ログは stderr と accessLog へ出す。
+  // **重さで呼び分けること。** stdin が壊れた（プロセスが続けられない）のと、
+  // 相手が壊れた1行を送ってきた（こちらは動き続ける）のを同じ見た目で出すと、
+  // ログから深刻度が読めない。
   logError(message, error) {
+    this._log("error", message, error);
+  }
+
+  logWarn(message, error) {
+    this._log("warn", message, error);
+  }
+
+  _log(level, message, error) {
     process.stderr.write(`${message}: ${String(error)}\n`);
+    this.server?.accessLog?.[level]?.(message.replace(/ /g, "_"), { error: String(error) });
   }
 
   writeMessage(message) {
@@ -62,7 +75,7 @@ export class StdioTransport {
         }
 
         if (!Number.isFinite(contentLength) || contentLength < 0) {
-          this.logError("invalid content-length header", headerText);
+          this.logWarn("invalid content-length header", headerText);
           this.buffer = Buffer.alloc(0);
           return;
         }
@@ -77,7 +90,7 @@ export class StdioTransport {
         try {
           message = JSON.parse(bodyBuffer.toString("utf8"));
         } catch (error) {
-          this.logError("invalid json body", error);
+          this.logWarn("invalid json body", error);
           continue;
         }
 
@@ -97,7 +110,7 @@ export class StdioTransport {
         message = JSON.parse(line);
       } catch (error) {
         // 不正な行を黙って捨てると、クライアント側の枠組みの不具合を追えない
-        this.logError("invalid json line", error);
+        this.logWarn("invalid json line", error);
         continue;
       }
       this.dispatch(message);

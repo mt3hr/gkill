@@ -1113,13 +1113,13 @@ function checkManuals() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 6-b. マニュアルの用語検査
-//   方針: マニュアルは開発コード名を出さず、UI（i18n）に出てくる語だけを使う。
+// 6-b. ユーザー向け資料の用語検査
+//   方針: ユーザー向け資料は開発コード名を出さず、UI（i18n）に出てくる語だけを使う。
 //   ここでは「UI ラベルとして使われていない開発コード名」を明示的に列挙して禁止する。
 //   ロケール値に出るかどうかで自動判定はしない —— NOT_FOUND_*_ERROR_MESSAGE が
 //   Kmemo / URLog / ReKyou 等をそのまま出しており、それを根拠にすると素通りしてしまうため。
 // ─────────────────────────────────────────────────────────────
-const MANUAL_FORBIDDEN_TERMS = [
+const USER_DOC_FORBIDDEN_TERMS = [
   'IDFKyou', 'IDF', 'WAN', 'MiReKyou', 'ReKyou', 'Kyou', 'KFTL',
   'Rykv', 'Mkfl', 'Dnote', 'Ryuu', 'Plaing', 'Lantana', 'Nlog',
   'URLog', 'TimeIs', 'Kmemo', 'DVNF', 'RepType',
@@ -1130,6 +1130,15 @@ const MANUAL_FORBIDDEN_TERMS = [
 ]
 // 例外: Saihate は ja 以外の SAIHATE_APP_NAME がそのまま "Saihate" なので UI ラベル。
 // `<code>` の中（server-config.html の rep type 一覧など、UI が生値を表示する箇所）は対象外。
+
+function checkUserDocTerms(body, rel) {
+  for (const term of USER_DOC_FORBIDDEN_TERMS) {
+    if (new RegExp(`(^|[^A-Za-z])${term}([^A-Za-z]|$)`).test(body)) {
+      err(`ユーザー向け資料用語NG: ${rel} に開発コード名「${term}」`
+        + '（i18n の UI 用語に置き換えること）')
+    }
+  }
+}
 
 function checkManualTerminology() {
   if (!fs.existsSync(SRC_DIR)) return
@@ -1149,14 +1158,20 @@ function checkManualTerminology() {
         .replace(/<!--[\s\S]*?-->/g, '')
         .replace(/\s(?:href|src)\s*=\s*"[^"]*"/g, '')
         .replace(/\s(?:href|src)\s*=\s*'[^']*'/g, '')
-      for (const term of MANUAL_FORBIDDEN_TERMS) {
-        if (new RegExp(`(^|[^A-Za-z])${term}([^A-Za-z]|$)`).test(body)) {
-          err(`マニュアル用語NG: resources/manual_src/${lang}/${page} に開発コード名「${term}」`
-            + '（i18n の UI 用語に置き換えること）')
-        }
-      }
+      checkUserDocTerms(body, `resources/manual_src/${lang}/${page}`)
     }
   }
+
+  const userGuidePath = path.join(ROOT, 'documents/reverse/user-guide.md')
+  if (!fs.existsSync(userGuidePath)) return
+  // コードフェンスとインラインコードは運用コマンド等の正確な表記に必要なので除外する。
+  // Markdownリンクは利用者に見えるラベルだけを残し、リンク先のファイル名・URLは検査しない。
+  const userGuideBody = fs.readFileSync(userGuidePath, 'utf8')
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`[^`\n]*`/g, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/\[([^\]]*)\]\([^)]+\)/g, '$1')
+  checkUserDocTerms(userGuideBody, 'documents/reverse/user-guide.md')
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1667,14 +1682,17 @@ function main() {
   checkManualTerminology()
   checkManualHelpPages()
 
+  // 警告とエラーは stderr へ。stdout に出すと、成功時の出力だけを捨てる
+  // パイプラインや stdout/stderr を分けている CI で失敗理由が消える
+  // （src/tools の他のCLIは元から console.error を使っている）。
   if (warnings.length) {
-    console.log(`\n⚠️  警告 ${warnings.length}件:`)
-    for (const w of warnings) console.log('  - ' + w)
+    console.warn(`\n⚠️  警告 ${warnings.length}件:`)
+    for (const w of warnings) console.warn('  - ' + w)
   }
   if (errors.length) {
-    console.log(`\n❌ エラー ${errors.length}件:`)
-    for (const e of errors) console.log('  - ' + e)
-    console.log(`\n実測メトリクス: handlers=${m.handlers} reqRes=${m.reqRes} views=${m.views} dialogs=${m.dialogs} pages=${m.pages} endpoints=${m.endpoints} i18nKeys=${m.i18nKeys} total=${m.componentTotal}`)
+    console.error(`\n❌ エラー ${errors.length}件:`)
+    for (const e of errors) console.error('  - ' + e)
+    console.error(`\n実測メトリクス: handlers=${m.handlers} reqRes=${m.reqRes} views=${m.views} dialogs=${m.dialogs} pages=${m.pages} endpoints=${m.endpoints} i18nKeys=${m.i18nKeys} total=${m.componentTotal}`)
     process.exit(1)
   }
   console.log(`✅ docs 検証OK（handlers=${m.handlers} reqRes=${m.reqRes} views=${m.views} dialogs=${m.dialogs} pages=${m.pages} endpoints=${m.endpoints} i18nKeys=${m.i18nKeys} total=${m.componentTotal}${warnings.length ? `, 警告${warnings.length}件` : ''}）`)

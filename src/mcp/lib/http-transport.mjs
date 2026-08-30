@@ -52,6 +52,8 @@ export class HttpTransport {
     this.httpServer = http.createServer((req, res) => this.handleRequest(req, res));
     this.httpServer.listen(this.port, "0.0.0.0", () => {
       const boundPort = this.httpServer.address()?.port ?? this.port;
+      // 手で起動したときに見えるよう stderr へも出すが、ログにも1行残す。
+      this.server.accessLog?.info?.("http_listening", { port: boundPort, issuer: this.oauthServer.issuer });
       process.stderr.write(`MCP HTTP server listening on http://0.0.0.0:${boundPort}/mcp [OAuth issuer: ${this.oauthServer.issuer}]\n`);
     });
     return this.httpServer;
@@ -117,7 +119,9 @@ export class HttpTransport {
       sessionId: req.headers["mcp-session-id"] || null,
       ...extra,
     };
-    process.stderr.write(`[${new Date().toISOString()}] MCP HTTP ${JSON.stringify(payload)}\n`);
+    // 生の stderr へは書かない。MCP_LOG を素通りするので `MCP_LOG=none` でも止まらず、
+    // 資料が約束している「MCP_LOG で制御できる」が嘘になる。中身は下の accessLog に載る。
+    void payload;
 
     // Also write to access log file
     const statusCode = extra.statusCode || 0;
@@ -323,7 +327,12 @@ export class HttpTransport {
         const responseBytes = this.sendJson(res, 200, response);
         this.logRequest(req, { methods, statusCode: 200, responseBytes });
       } catch (error) {
-        process.stderr.write(`HTTP handler error: ${String(error)}\n`);
+        // ここは真の内部例外。accessLog を通さないと gkill_mcp_error.log に残らない。
+        this.server.accessLog.error("http_handler_error", {
+          method: req.method,
+          path: req.url,
+          error: String(error),
+        });
         const id =
           payload && !Array.isArray(payload) && Object.prototype.hasOwnProperty.call(payload, "id") ? payload.id : null;
         const responseBytes = this.sendJson(res, 200, {
@@ -417,7 +426,7 @@ export class HttpTransport {
           const result = await this.oauthServer.handleAuthorizePost(formData);
           this._sendOAuthResult(req, res, result, "oauth_authorize_post");
         } catch (error) {
-          process.stderr.write(`OAuth authorize error: ${String(error)}\n`);
+          this.server.accessLog.error("oauth_authorize_error", { error: String(error) });
           this.sendJson(res, 500, { error: "Internal Server Error" });
         }
       });
@@ -448,7 +457,7 @@ export class HttpTransport {
         this.sendJson(res, result.status, result.body);
         this.logRequest(req, { statusCode: result.status, reason: "oauth_token" });
       } catch (error) {
-        process.stderr.write(`OAuth token error: ${String(error)}\n`);
+        this.server.accessLog.error("oauth_token_error", { error: String(error) });
         this.sendJson(res, 500, { error: "server_error", error_description: "Internal Server Error" });
       }
     });
@@ -468,7 +477,7 @@ export class HttpTransport {
         this.sendJson(res, result.status, result.body);
         this.logRequest(req, { statusCode: result.status, reason: "oauth_register" });
       } catch (error) {
-        process.stderr.write(`OAuth register error: ${String(error)}\n`);
+        this.server.accessLog.warn("oauth_register_invalid_request", { error: String(error) });
         this.sendJson(res, 400, { error: "invalid_client_metadata", error_description: "Invalid JSON" });
       }
     });

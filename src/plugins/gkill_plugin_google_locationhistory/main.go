@@ -36,12 +36,14 @@ func main() {
 	// sdk.Run の flag.Parse は知らないフラグを受け取るとエラー終了するため先に処理する
 	if slices.Contains(os.Args[1:], "--gkill-print-manifest") {
 		if _, err := os.Stdout.Write(manifestJSON); err != nil {
+			sdk.LogError("error at write manifest.json to stdout: %v", err)
 			os.Exit(1)
 		}
 		return
 	}
 	if slices.Contains(os.Args[1:], "--gkill-print-config") {
 		if err := printDefaultConfig(); err != nil {
+			sdk.LogError("error at write default config.json to stdout: %v", err)
 			os.Exit(1)
 		}
 		return

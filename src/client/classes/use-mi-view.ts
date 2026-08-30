@@ -893,7 +893,8 @@ export function useMiView(options: {
                 return
             }
         } catch (e: unknown) {
-            console.error(e)
+            // 他アプリからの D&D では日常的に起きる（Mi の JSON ではないものが落ちてくる）。
+            console.warn('[mi] dropped data is not a task', e)
             return
         }
 

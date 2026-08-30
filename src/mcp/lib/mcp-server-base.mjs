@@ -268,7 +268,10 @@ export class McpServerBase {
       } catch (error) {
         const detail = error instanceof GkillApiError ? error.detail : null;
         const messageText = error instanceof Error ? error.message : "Unknown tool error";
-        this.accessLog.error("tool_call_error", {
+        // 引数の型違い（errors.mjs の invalidArgument）は呼び出し側の誤りで、HTTP でいう 400。
+        // サーバ障害と同じ ERROR に混ぜると、ログの ERROR 件数が意味を持たなくなる。
+        const isCallerError = detail !== null && typeof detail.field === "string";
+        this.accessLog[isCallerError ? "warn" : "error"]("tool_call_error", {
           tool: params.name,
           user_id: ctx.userId || null,
           remote_addr: ctx.remoteAddr || null,
@@ -305,13 +308,15 @@ export function makeOAuthAuthenticateUser(client, accessLog) {
         locale_name: client.defaultLocale,
       });
       if (client.hasErrors(response) || !response.session_id) {
-        accessLog.warn("auth_failure", { user_id: userId });
+        accessLog.warn("auth_failure", { user_id: userId, reason: "rejected_by_gkill" });
         return null;
       }
       accessLog.info("auth_success", { user_id: userId });
       return { sessionId: response.session_id };
-    } catch {
-      accessLog.warn("auth_failure", { user_id: userId });
+    } catch (error) {
+      // 応答には理由を返さない（総当たりの手がかりになる）が、ログには残す。
+      // 捨てると「gkill へ届かない」のか「パスワードが違う」のかが区別できない。
+      accessLog.warn("auth_failure", { user_id: userId, reason: "request_failed", error: String(error) });
       return null;
     }
   };
