@@ -85,7 +85,7 @@ func (uc *UsecaseContext) AddText(ctx context.Context, repositories *reps.GkillR
 		err = repositories.WriteThroughTextCache(ctx, text)
 		if err != nil {
 			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-			slog.Log(ctx, gkill_log.Error, "error at add text user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(ctx, text, *txID, userID, device)
@@ -191,7 +191,7 @@ func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.Gki
 		err = repositories.WriteThroughTextCache(ctx, text)
 		if err != nil {
 			err = fmt.Errorf("error at update text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-			slog.Log(ctx, gkill_log.Error, "error at update text user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(ctx, text, *txID, userID, device)

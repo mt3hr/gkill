@@ -52,7 +52,7 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 		err = repositories.WriteThroughMiCache(ctx, mi)
 		if err != nil {
 			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
-			slog.Log(ctx, gkill_log.Error, "error at add mi user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.MiTempRep.AddMiInfo(ctx, mi, *txID, userID, device)
@@ -145,7 +145,7 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 		err = repositories.WriteThroughMiCache(ctx, mi)
 		if err != nil {
 			err = fmt.Errorf("error at update mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
-			slog.Log(ctx, gkill_log.Error, "error at update mi user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(ctx, gkill_log.Error, "error at write through cache", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.MiTempRep.AddMiInfo(ctx, mi, *txID, userID, device)

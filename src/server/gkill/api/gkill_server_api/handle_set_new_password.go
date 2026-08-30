@@ -157,7 +157,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at update account user id = %s: %w", request.UserID, err)
-			slog.Log(r.Context(), gkill_log.Error, "error at update account user id =", "error", fmt.Sprintf("%q", err))
+			slog.Log(r.Context(), gkill_log.Error, "error at update account", "error", fmt.Sprintf("%q", err))
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInfoUpdateError,

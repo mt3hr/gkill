@@ -3,9 +3,11 @@ package gkill_server_api
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
 // gkillのJSON APIは2026-08まで、異常時も必ずHTTP 200を返していた。
@@ -52,6 +55,43 @@ func decodeErrors(t *testing.T, resp *http.Response) []*message.GkillError {
 		t.Fatalf("decode body %q: %v", string(raw), err)
 	}
 	return body.Errors
+}
+
+// リポジトリ取得に失敗した認証済みAPIは、500とERR000018を返すだけでなく
+// Errorログを残すこと。Debugへ戻ると通常の運用設定では原因が記録されない。
+func TestResponseStatus_AuthRepositoryFailureReturns500AndLogsError(t *testing.T) {
+	ts, gkillAPI, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, ts.URL, gkillAPI, "admin", testPasswordSha256)
+	if err := gkillAPI.GkillDAOManager.ConfigDAOs.RepositoryDAO.Close(context.Background()); err != nil {
+		t.Fatalf("RepositoryDAO.Close failed: %v", err)
+	}
+
+	var logBuffer bytes.Buffer
+	originalLogger := slog.Default()
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&logBuffer, &slog.HandlerOptions{Level: gkill_log.TraceSQL})))
+	t.Cleanup(func() { slog.SetDefault(originalLogger) })
+
+	resp := postJSON(t, ts.URL+"/api/get_kyous", &req_res.GetKyousRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+	})
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusInternalServerError {
+		t.Errorf("status = %d, want 500", resp.StatusCode)
+	}
+	errs := decodeErrors(t, resp)
+	if len(errs) != 1 || errs[0].ErrorCode != message.RepositoriesGetError {
+		t.Fatalf("errors = %v, want [%s]", formatErrorCodes(errs), message.RepositoriesGetError)
+	}
+
+	logged := logBuffer.String()
+	if !strings.Contains(logged, `"level":"ERROR"`) ||
+		!strings.Contains(logged, "in auth middleware") {
+		t.Errorf("認証ミドルウェアのリポジトリ取得失敗がErrorログに無い: %s", logged)
+	}
 }
 
 // formatErrorCodes はエラーコードだけを並べる(失敗時のメッセージ用)。
