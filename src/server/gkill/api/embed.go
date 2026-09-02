@@ -6,6 +6,7 @@ import (
 	"embed"
 	"fmt"
 	"log/slog"
+	"mime"
 	"path/filepath"
 	"strings"
 
@@ -31,6 +32,16 @@ func GetLocalizer(localeName string) *i18n.Localizer {
 
 func init() {
 	ctx := context.Background()
+
+	// .webmanifest はGoの既定のMIME表に無いため、http.FileServer が中身を見て
+	// text/plain と判定してしまう。PWAのmanifestの正しいMIMEは
+	// application/manifest+json (W3C Web App Manifest)。
+	// ここで一度登録すれば embed/html を配る全 FileServer に効く。
+	if err := mime.AddExtensionType(".webmanifest", "application/manifest+json"); err != nil {
+		slog.Log(ctx, gkill_log.Error, "error at add extension type", "error", fmt.Sprintf("%q", err))
+		panic(err)
+	}
+
 	jsonFileNames := []string{}
 	locales, err := EmbedFS.ReadDir("embed/i18n/locales")
 	if err != nil {
