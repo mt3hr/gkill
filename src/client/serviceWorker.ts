@@ -4,7 +4,7 @@ import delete_gkill_kyou_cache from './classes/delete-gkill-cache';
 import { clientsClaim } from 'workbox-core'
 import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL, } from 'workbox-precaching'
 import { registerRoute, NavigationRoute } from 'workbox-routing'
-import { CacheFirst } from 'workbox-strategies'
+import { CacheFirst, NetworkFirst } from 'workbox-strategies'
 import { should_cache_response, should_cache_for_session, is_successful_gkill_response, parse_bool_loose, KYOU_CACHE_NAME, CONFIG_CACHE_NAME } from './classes/service-worker-utils';
 import {
   SHARE_FORCE_SAVE_FORM_KEY,
@@ -48,6 +48,31 @@ cleanupOutdatedCaches()
 self.addEventListener('activate', event => {
   event.waitUntil(caches.delete(KYOU_CACHE_NAME))
 })
+
+// PWA の manifest だけは precache より先にルートを取り、必ずネットワークを見に行く。
+// **この registerRoute は precacheAndRoute より前に置くこと**（Workbox のルータは
+// 登録順に最初に一致したものを使うので、後ろに置くと precache 側が先に持っていく）。
+//
+// Chrome が manifest を取りに来る fetch も Service Worker を通る。manifest は
+// vite-plugin-pwa が additionalManifestEntries で precache へ入れており
+// (vite.config.ts の globIgnores では外せない)、放っておくと precache の古いコピーが
+// 返り続ける。theme_color / icons / name を変えてサーバへ配っても端末へ届かず、
+// ホーム画面から消して入れ直しても直らない（再インストール時の取得も
+// Service Worker が答えるため）。実測: SW有効化後の再読み込みでは
+// manifest のネットワーク取得が1件も発生しなかった。
+//
+// なお **これだけでは即座には反映されない**。Chrome はインストール済みアプリの
+// manifest を保持していて起動のたびには読み直さず、独自の間隔（おおむね1日）で
+// 確認しに来る（新しいビルドを配って4回起動し直しても色は変わらなかった）。
+// ここで効くのは「Chrome が確認しに来たときに必ず現在の内容が返る」ことで、
+// 入れておかないと確認が来ても古いコピーが返るので永久に変わらない。
+//
+// NetworkFirst なのはオフライン時の取りこぼしを避けるため（取れなければ
+// Chrome は手元の写しを使い続けるだけで実害は無いが、素直に前回値を返しておく）。
+registerRoute(
+  ({ url }) => url.pathname === '/manifest.webmanifest',
+  new NetworkFirst({ cacheName: 'gkill-webmanifest-cache' }),
+)
 
 precacheAndRoute(self.__WB_MANIFEST, {
   directoryIndex: null as unknown as string,
