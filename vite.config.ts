@@ -69,8 +69,9 @@ const precacheGlobIgnores = [
   'assets/de-*.js',
 ]
 
+
 // https://vitejs.dev/config/
-export default defineConfig(() => {
+export default defineConfig(({ command }) => {
   // minifyは既定で有効。デバッグで読めるJSが欲しいときだけ MINIFY=false を指定する。
   // 既定offだと install_server / install_app (= prepare_install -> build) が
   // 未minifyの5MB近いJSをそのままGoバイナリに埋め込んでしまう。
@@ -96,7 +97,10 @@ export default defineConfig(() => {
       // テンプレートで実際に使われている Vuetify コンポーネントだけを import する。
       // これが無いと plugins/vuetify.ts の一括登録で全コンポーネント + 全CSSがバンドルされる
       vuetify({ autoImport: true }),
-      ...(process.env.NODE_ENV !== 'production' ? [vueDevTools()] : []),
+      // devサーバのときだけ入れる。判定はViteが渡す command で行う
+      // (process.env.NODE_ENV はViteがいつ設定するかに依存するので、
+      // 「本番ビルドにdev用プラグインが混ざる」形で静かに壊れうる)
+      ...(command === 'serve' ? [vueDevTools()] : []),
       VitePWA({
         registerType: 'autoUpdate',
         injectRegister: 'auto',
@@ -105,6 +109,21 @@ export default defineConfig(() => {
         filename: 'serviceWorker.ts',
         manifest: {
           version: package_json.version,
+          // 以下3つは vite-plugin-pwa の既定値 ('#42b883' / '#ffffff' / 'en') と
+          // マージされる。既定のまま放置すると「ビルドは通るが表示だけ違う」形で出るので、
+          // 既定と同じ値になるものも含めて明示的に固定すること。
+          //
+          // Android Chrome のPWAはステータスバー色をここから取る (index.htmlの
+          // <meta name="theme-color"> はstandalone起動では見られない)。
+          // 未指定だと既定の '#42b883' (Vueのブランド色) が入り、
+          // 画面最上部だけがアプリバー (color="primary") と違う緑になる
+          theme_color: '#2672ed',
+          // 起動スプラッシュの背景。manifestはテーマ切り替えに追従できないので、
+          // 既定テーマ (gkill_theme) の background に合わせた固定値にする。
+          // ダークテーマ利用時は起動時だけ白くなるが、これは避けられない
+          background_color: '#ffffff',
+          // i18n.ts の locale / fallbackLocale と index.html の <html lang> に合わせる
+          lang: 'ja',
           icons: [{
             src: "favicon.png",
             sizes: "144x144",
@@ -149,7 +168,11 @@ export default defineConfig(() => {
       }
     },
     define: {
-      __VUE_PROD_DEVTOOLS__: true,
+      // 本番ビルドへ Vue DevTools 連携コードを残すかどうか。true にすると
+      // vue-router が同梱する @vue/devtools-api (コンポーネントインスペクタの
+      // オーバーレイ一式) がそのまま本番バンドルに載る。
+      // デバッグで本番ビルドにDevToolsを繋ぎたいときだけ一時的に true に戻すこと
+      __VUE_PROD_DEVTOOLS__: false,
     },
   }
 })
