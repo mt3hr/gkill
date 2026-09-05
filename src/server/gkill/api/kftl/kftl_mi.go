@@ -33,15 +33,24 @@ func newKFTLMiRequest(requestID string, ctx *KFTLStatementLineContext) *kftlMiRe
 	}
 }
 
+// resolvedBoardName は書き込みに使う板名。空なら設定の既定板になる。
+// **既存判定（FindExistingForRepeat）と書き込みで同じ値を使うため**にここへ出してある。
+func (r *kftlMiRequest) resolvedBoardName() string {
+	if r.boardName != "" {
+		return r.boardName
+	}
+	if r.Ctx != nil && r.Ctx.ApplicationConfig != nil {
+		return r.Ctx.ApplicationConfig.MiDefaultBoard
+	}
+	return ""
+}
+
 func (r *kftlMiRequest) DoRequest(ctx context.Context) error {
 	if r.title == "" {
 		return nil // skip blank Mi
 	}
 
-	boardName := r.boardName
-	if boardName == "" && r.Ctx.ApplicationConfig != nil {
-		boardName = r.Ctx.ApplicationConfig.MiDefaultBoard
-	}
+	boardName := r.resolvedBoardName()
 
 	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
 		return err
@@ -77,6 +86,28 @@ func (r *kftlMiRequest) DoRequest(ctx context.Context) error {
 	return nil
 }
 
+// AnchorTimeForRepeat は予定日時のうち最初に埋まっているものを基準にする。
+// reps.Mi に RelatedTime 列は無いので、1つも埋まっていなければ繰り返しの入れ先が無い。
+func (r *kftlMiRequest) AnchorTimeForRepeat() (time.Time, bool) {
+	for _, t := range []*time.Time{r.estimateStartTime, r.estimateEndTime, r.limitTime} {
+		if t != nil {
+			return *t, true
+		}
+	}
+	return time.Time{}, false
+}
+
+// CloneForRepeat は3つの予定日時を**同じ日数だけ**ずらす。
+// 欄どうしの相対差（見積開始の2日後が期限、など）はそのまま保たれる。
+func (r *kftlMiRequest) CloneForRepeat(newRequestID string, dayShift int) KFTLRequest {
+	c := *r
+	c.KFTLRequestBase = r.cloneBase(newRequestID, dayShift)
+	c.estimateStartTime = shiftTimePtr(r.estimateStartTime, dayShift)
+	c.estimateEndTime = shiftTimePtr(r.estimateEndTime, dayShift)
+	c.limitTime = shiftTimePtr(r.limitTime, dayShift)
+	return &c
+}
+
 // ─── Statement lines ──────────────────────────────────────────────────────────
 
 // generateMiBlockNextConstructor は `ーみ` ブロックの中の「次の行」を決める先読み。
@@ -91,9 +122,10 @@ func (r *kftlMiRequest) DoRequest(ctx context.Context) error {
 // MiReKyou と違って専用のタグ行は要らない。汎用のタグ行がそのまま Mi へタグを付ける。
 //
 // **`？` はここで拾ってはいけない。** 見積開始・見積終了・期限の3行は
-// `？`/`?` を任意の接頭辞として自分で剥がす。generateDefaultConstructor へ委譲すると
-// `？` が関連時刻行に化けて、空行で位置を送る既存の書き方が壊れる
-// (reps.Mi に RelatedTime 列は無い)。
+// `？`/`?` で始まる行を入力エラーとして自分で弾く(parseScheduleFieldTime)。
+// generateDefaultConstructor へ委譲すると `？` が関連時刻行に化けて、
+// 空行で位置を送る既存の書き方が壊れる
+// (reps.Mi に RelatedTime 列は無いので、関連時刻としての付け先もそもそも無い)。
 //
 // 空行も拾わない。空行は今までどおり項目の位置を消費する。
 // Mirrors: generate_mi_block_next_constructor (kftl-mi-block.ts)
@@ -110,6 +142,12 @@ func generateMiBlockNextConstructor(nextLineText string, nextField StatementLine
 	case nextLineText == splitterStartText || nextLineText == splitterStartTextAscii:
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			return newKFTLStartTextStatementLine(lineText, ctx, false, resume)
+		}
+	case isRepeatSplitter(nextLineText):
+		// 繰り返しブロックもタグ・テキストと同じく項目の位置を消費しない。
+		// 拾わないと `？？` が予定日時の行として読まれ、`？` の禁止に引っかかる
+		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
+			return newKFTLStartRepeatStatementLine(lineText, ctx, false, resume, nil)
 		}
 	}
 	return nextField
@@ -219,14 +257,12 @@ func newKFTLMiLimitTimeStatementLine(lineText string, ctx *KFTLStatementLineCont
 }
 
 func (l *kftlMiLimitTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	s := strings.TrimPrefix(l.lineText, splitterRelatedTime)
-	s = strings.TrimPrefix(s, splitterRelatedTimeAscii)
-	if s == "" {
-		return nil // optional
-	}
-	t, err := parseDateTime(s, l.ctx.BaseTime)
+	t, ok, err := parseScheduleFieldTime(l.lineText, l.ctx.BaseTime)
 	if err != nil {
-		return nil // invalid → skip silently (mirrors TS: isNaN check)
+		return err
+	}
+	if !ok {
+		return nil
 	}
 	l.req.limitTime = &t
 	return nil
@@ -253,13 +289,11 @@ func newKFTLMiEstimateStartTimeStatementLine(lineText string, ctx *KFTLStatement
 }
 
 func (l *kftlMiEstimateStartTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	s := strings.TrimPrefix(l.lineText, splitterRelatedTime)
-	s = strings.TrimPrefix(s, splitterRelatedTimeAscii)
-	if s == "" {
-		return nil
-	}
-	t, err := parseDateTime(s, l.ctx.BaseTime)
+	t, ok, err := parseScheduleFieldTime(l.lineText, l.ctx.BaseTime)
 	if err != nil {
+		return err
+	}
+	if !ok {
 		return nil
 	}
 	l.req.estimateStartTime = &t
@@ -289,13 +323,11 @@ func newKFTLMiEstimateEndTimeStatementLine(lineText string, ctx *KFTLStatementLi
 }
 
 func (l *kftlMiEstimateEndTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	s := strings.TrimPrefix(l.lineText, splitterRelatedTime)
-	s = strings.TrimPrefix(s, splitterRelatedTimeAscii)
-	if s == "" {
-		return nil
-	}
-	t, err := parseDateTime(s, l.ctx.BaseTime)
+	t, ok, err := parseScheduleFieldTime(l.lineText, l.ctx.BaseTime)
 	if err != nil {
+		return err
+	}
+	if !ok {
 		return nil
 	}
 	l.req.estimateEndTime = &t

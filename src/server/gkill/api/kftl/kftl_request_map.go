@@ -55,6 +55,20 @@ func (m *KFTLRequestMap) Get(requestID string) (KFTLRequest, bool) {
 	return req, ok
 }
 
+// ReplaceAll は展開後のリクエスト列でマップを置き換える。
+// 繰り返しの展開でだけ使う（元のリクエストは複製に置き換わるので、消してから入れ直す）。
+func (m *KFTLRequestMap) ReplaceAll(reqs []KFTLRequest) {
+	m.entries = make(map[string]KFTLRequest, len(reqs))
+	m.order = m.order[:0]
+	for _, req := range reqs {
+		id := req.GetRequestID()
+		if _, ok := m.entries[id]; !ok {
+			m.order = append(m.order, id)
+		}
+		m.entries[id] = req
+	}
+}
+
 // All returns all requests in insertion order.
 func (m *KFTLRequestMap) All() []KFTLRequest {
 	result := make([]KFTLRequest, 0, len(m.order))

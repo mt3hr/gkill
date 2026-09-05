@@ -215,15 +215,22 @@ func TestApply_MiReKyouTimesWithoutPrefix(t *testing.T) {
 	}
 }
 
-func TestApply_MiReKyouTimesWithPrefix(t *testing.T) {
-	requestMap := helperApplyToRequestMap(t, "牛乳を買う\n～～\n仕事\n？2025-03-20\n\n?2025-03-22\n～～")
-	mireq := helperMiReKyouRequest(t, requestMap)
-
-	if mireq.estimateStartTime == nil || mireq.estimateStartTime.Day() != 20 {
-		t.Errorf("expected estimateStartTime on the 20th, got %v", mireq.estimateStartTime)
-	}
-	if mireq.limitTime == nil || mireq.limitTime.Day() != 22 {
-		t.Errorf("expected limitTime on the 22nd, got %v", mireq.limitTime)
+// 予定日時の欄に「？」を書くと行エラーになる。
+// 以前は関連時刻と同じ接頭辞として黙って剥がしていたが、剥がしたあとのパース失敗を
+// 未設定として握り潰す作りなので、書き損じが無音で消えていた。
+func TestApply_MiReKyouTimesRejectPrefix(t *testing.T) {
+	for _, text := range []string{
+		"牛乳を買う\n～～\n仕事\n？2025-03-20\n～～",
+		"牛乳を買う\n～～\n仕事\n\n\n?2025-03-22\n～～",
+	} {
+		_, err := helperApplyToRequestMapAllowError(t, text)
+		if err == nil {
+			t.Fatalf("？ が行エラーにならなかった: %q", text)
+		}
+		inputErrors := CollectKFTLInputErrors(err)
+		if len(inputErrors) == 0 || inputErrors[0].MessageID != "KFTL_SCHEDULE_TIME_PREFIX_NOT_ALLOWED_MESSAGE_TITLE" {
+			t.Errorf("入力エラーであること: %v", err)
+		}
 	}
 }
 

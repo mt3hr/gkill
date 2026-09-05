@@ -278,3 +278,39 @@ describe('支出の行ラベルの先読み', () => {
     expect(labels.filter(label => label === tag_label)).toHaveLength(1)
   })
 })
+
+/**
+ * 繰り返しの行ラベルの先読み。
+ * 4行(条件・回数・既存時・起点)を書き終えたあとの位置は受け皿なので、
+ * 「繰り返し↓」ではなくMiの期日行のあとと同じ「**********」で埋まるのが正しい。
+ * ここが「繰り返し↓」だと、書いてもいない行のラベルが上限(50行)ぶん並ぶ。
+ */
+describe('繰り返しの行ラベルの先読み', () => {
+  function label_names(text: string): Array<string> {
+    return new KFTLStatement(text).generate_line_label_data(new TextAreaInfo()).map(label_data => label_data.label)
+  }
+
+  const repeat_label = i18n.global.t('KFTL_REPEAT_LABEL_TITLE')
+  const none_label = i18n.global.t('KFTL_NONE_LABEL_TITLE')
+
+  test('起点より先の先読みはすべて「**********」になる', () => {
+    const labels = label_names('今日の日記\n？？\n毎日\n3\nno\n2026-09-10\n')
+    const origin_index = labels.indexOf(i18n.global.t('KFTL_REPEAT_ORIGIN_TITLE'))
+    expect(origin_index).toBeGreaterThan(0)
+    const lookahead_after_origin = labels.slice(origin_index + 1)
+    expect(lookahead_after_origin.length).toBeGreaterThan(1)
+    expect(lookahead_after_origin.every(label => label === none_label)).toBe(true)
+  })
+
+  test('実際に書いた開始行のラベルは「繰り返し↓」のまま', () => {
+    const labels = label_names('今日の日記\n？？\n毎日\n3\nno\n2026-09-10\n')
+    expect(labels.filter(label => label === repeat_label)).toHaveLength(1)
+  })
+
+  // 受け皿はブロックの中に留まるので、空行を挟んだあとの「？？」も閉じる行として読まれる
+  test('空行を挟んだあとの「？？」は終了行のラベルになる', () => {
+    const labels = label_names('今日の日記\n？？\n毎日\n3\nno\n2026-09-10\n\n？？\n')
+    expect(labels[6]).toBe(none_label)
+    expect(labels[7]).toBe(i18n.global.t('KFTL_REPEAT_END_LABEL_TITLE'))
+  })
+})

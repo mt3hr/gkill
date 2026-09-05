@@ -30,6 +30,18 @@ type KFTLRequest interface {
 	// GetCreatedRecords は DoRequest が実際に書いたものを返す。
 	// 実装は KFTLRequestBase に1本だけあり、全具象がそれを埋め込んでいる。
 	GetCreatedRecords() []KFTLCreatedRecord
+
+	// ─── 繰り返し（「？？」ブロック）────────────────────────────────────────
+	GetRepeatSpec() *repeatSpec
+	SetRepeatSpec(spec *repeatSpec) error
+	AnchorTimeForRepeat() (time.Time, bool)
+	// CloneForRepeat は繰り返しの1回ぶんを作る。**基底に既定実装を置かない** ――
+	// 置くと新しい型で override を忘れても通ってしまい、日時のずれない複製が黙って書かれる。
+	// 型を足したらコンパイルエラーで気づけるようにしてある。
+	CloneForRepeat(newRequestID string, dayShift int) KFTLRequest
+	// FindExistingForRepeat は「もう同じ記録があるか」を調べる（3行目が no のときだけ呼ばれる）。
+	// 実装は kftl_repeat_duplicate.go にまとめてある。
+	FindExistingForRepeat(ctx context.Context, from, to time.Time) (map[int64]struct{}, error)
 }
 
 // KFTLRequestBase is the base struct embedded by all concrete request types.
@@ -59,6 +71,10 @@ type KFTLRequestBase struct {
 
 	// created は DoRequest が実際に書いたもの。recordCreated / recordUpdated だけが積む。
 	created []KFTLCreatedRecord
+
+	// repeat は「？？」ブロックの指定。同じポインタを共有しているリクエストが
+	// 1つの繰り返しグループになる（支出ブロックの全支払いなど）。
+	repeat *repeatSpec
 }
 
 // recordCreated は新規作成した1件を控える。**書き込みが成功した直後にだけ呼ぶこと。**
@@ -108,6 +124,82 @@ func (b *KFTLRequestBase) AddTextLine(textID, line string) {
 	} else {
 		b.TextsMap[textID] = existing + "\n" + line
 	}
+}
+
+// ─── 繰り返し（「？？」ブロック）──────────────────────────────────────────────
+
+func (b *KFTLRequestBase) GetRepeatSpec() *repeatSpec { return b.repeat }
+
+// SetRepeatSpec は既定で受け入れる。繰り返しても意味が無い型
+// （打刻開始のみ・打刻終了の4種・プロトタイプ）だけが override して弾く。
+func (b *KFTLRequestBase) SetRepeatSpec(spec *repeatSpec) error {
+	b.repeat = spec
+	return nil
+}
+
+// AnchorTimeForRepeat は繰り返しの基準になる日時を返す。
+//
+// **呼ぶと確定させる。** related_time が未設定なら CreateTime を書き込む。
+// 確定させないと GetRelatedTime() が time.Now() へ落ちるので、
+// 複製した側が DoRequest の時点でそれぞれ現在時刻を引き、全回が同じ日時になる。
+//
+// 日時欄を複数持つ型（Mi / MiReKyou）と、開始時刻が主軸の型（TimeIs）は override する。
+func (b *KFTLRequestBase) AnchorTimeForRepeat() (time.Time, bool) {
+	if b.relatedTime == nil {
+		t := b.CreateTime
+		b.relatedTime = &t
+	}
+	return *b.relatedTime, true
+}
+
+// cloneBase は繰り返し複製の土台。**ここで採り直すものを1つでも落とすと静かに壊れる。**
+func (b *KFTLRequestBase) cloneBase(newRequestID string, dayShift int) KFTLRequestBase {
+	c := KFTLRequestBase{
+		RequestID:  newRequestID,
+		Ctx:        b.Ctx,
+		CreateTime: b.CreateTime,
+		// 複製に繰り返し指定を持たせない。持たせると展開が再帰する
+		repeat: nil,
+		// created は書いた側が積むので空で始める
+	}
+	// スライスとマップは実体を作る。シャローのままだとバッキングを共有する
+	if b.Tags != nil {
+		c.Tags = append([]string(nil), b.Tags...)
+	}
+	if b.TextsMap != nil {
+		c.TextsMap = make(map[string]string, len(b.TextsMap))
+		for _, text := range b.TextsMap {
+			// **textID を採り直す。** 使い回すと同じIDのテキストを回数ぶん書くことになり、
+			// append-only なので最後の1件以外が消える
+			c.TextsMap[sqlite3impl.GenerateNewID()] = text
+		}
+	}
+	c.relatedTime = shiftTimePtr(b.relatedTime, dayShift)
+	return c
+}
+
+// shiftTimePtr / shiftTime は暦日数でずらす。
+// duration 加算にしないのは壁時計時刻を保つため（夏時間のある地域で時刻がずれる）。
+func shiftTimePtr(t *time.Time, dayShift int) *time.Time {
+	if t == nil {
+		return nil
+	}
+	shifted := shiftTime(*t, dayShift)
+	return &shifted
+}
+
+func shiftTime(t time.Time, dayShift int) time.Time {
+	if dayShift == 0 {
+		return t
+	}
+	return t.AddDate(0, 0, dayShift)
+}
+
+// daysBetween は暦日の差。truncate を UTC で行うので夏時間の影響を受けない。
+func daysBetween(from, to time.Time) int {
+	a := time.Date(from.Year(), from.Month(), from.Day(), 0, 0, 0, 0, time.UTC)
+	b := time.Date(to.Year(), to.Month(), to.Day(), 0, 0, 0, 0, time.UTC)
+	return int(b.Sub(a).Hours() / 24)
 }
 
 // logWriteThroughCacheFailure logs a failed write-through to the cached rep.

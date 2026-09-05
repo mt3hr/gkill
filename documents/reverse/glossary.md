@@ -281,12 +281,12 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | EditSavedFindQueryListDialog | `src/client/pages/dialogs/edit-saved-find-query-list-dialog.vue` | 保存済み検索条件の一覧管理ダイアログ（`query_type` prop で rykv/mi の2インスタンス） |
 | MiFindQueryEditorView | `src/client/pages/views/mi-find-query-editor-view.vue` | MI専用検索条件エディタビュー |
 | MiFindQueryEditorDialog | `src/client/pages/dialogs/mi-find-query-editor-dialog.vue` | MI専用検索条件エディタダイアログ |
-| KFTLパーサー（フロント） | `src/client/classes/kftl/` | フロントエンド版KFTLパーサー（50ステートメント型。`kftl_*/` 配下の具象クラス数） |
+| KFTLパーサー（フロント） | `src/client/classes/kftl/` | フロントエンド版KFTLパーサー（53ステートメント型。`kftl_*/` 配下の具象クラス数） |
 | Dnote ユーティリティ | `src/client/classes/dnote/` | 集計機能ユーティリティ |
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（926キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（951キー/言語） |
 
 ### その他
 

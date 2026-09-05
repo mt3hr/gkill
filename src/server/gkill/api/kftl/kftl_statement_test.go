@@ -867,11 +867,11 @@ func helperApplyToRequestMapAllowError(t *testing.T, text string) (*KFTLRequestM
 	return requestMap, nil
 }
 
-// ─── H4: Mi ASCII ? time fields ─────────────────────────────────────────────
+// ─── H4: Mi ASCII splitter + time fields ─────────────────────────────────────────────
 
 func TestApply_AsciiMiLimitTime(t *testing.T) {
-	// /mi + title + board(empty) + start(empty) + end(empty) + ?2025-01-01 → limitTime should be parsed
-	text := "/mi\nTest Task\n\n\n\n?2025-01-01"
+	// /mi + title + board(empty) + start(empty) + end(empty) + 2025-01-01 → limitTime should be parsed
+	text := "/mi\nTest Task\n\n\n\n2025-01-01"
 	requestMap := helperApplyToRequestMap(t, text)
 	all := requestMap.All()
 	if len(all) != 1 {
@@ -887,8 +887,8 @@ func TestApply_AsciiMiLimitTime(t *testing.T) {
 }
 
 func TestApply_AsciiMiEstimateStartTime(t *testing.T) {
-	// /mi + title + board(empty) + ?2025-06-01 10:00
-	text := "/mi\nTest Task\n\n?2025-06-01 10:00"
+	// /mi + title + board(empty) + 2025-06-01 10:00
+	text := "/mi\nTest Task\n\n2025-06-01 10:00"
 	requestMap := helperApplyToRequestMap(t, text)
 	all := requestMap.All()
 	if len(all) != 1 {
@@ -904,8 +904,8 @@ func TestApply_AsciiMiEstimateStartTime(t *testing.T) {
 }
 
 func TestApply_AsciiMiEstimateEndTime(t *testing.T) {
-	// /mi + title + board(empty) + estimateStartTime(empty) + ?2025-06-01 18:00
-	text := "/mi\nTest Task\n\n\n?2025-06-01 18:00"
+	// /mi + title + board(empty) + estimateStartTime(empty) + 2025-06-01 18:00
+	text := "/mi\nTest Task\n\n\n2025-06-01 18:00"
 	requestMap := helperApplyToRequestMap(t, text)
 	all := requestMap.All()
 	if len(all) != 1 {
@@ -1333,7 +1333,7 @@ func TestStatement_MiTextBlockDoesNotConsumeFieldPosition(t *testing.T) {
 // TestApply_MiEmptyLineStillConsumesPosition は空行の扱いが変わっていないことを固定する。
 // 空行で項目を送る書き方は既存のテスト(TestApply_AsciiMiLimitTime ほか)が前提にしている。
 func TestApply_MiEmptyLineStillConsumesPosition(t *testing.T) {
-	requestMap := helperApplyToRequestMap(t, "/mi\nTest Task\n\n\n\n?2025-01-01")
+	requestMap := helperApplyToRequestMap(t, "/mi\nTest Task\n\n\n\n2025-01-01")
 	all := requestMap.All()
 	miReq, ok := all[0].(*kftlMiRequest)
 	if !ok {
@@ -1343,15 +1343,16 @@ func TestApply_MiEmptyLineStillConsumesPosition(t *testing.T) {
 		t.Errorf("空行は板名の位置を消費して空のままのはず: got %q", miReq.boardName)
 	}
 	if miReq.limitTime == nil {
-		t.Error("空行3つの後の ?2025-01-01 が期限として読まれていない")
+		t.Error("空行3つの後の 2025-01-01 が期限として読まれていない")
 	}
 }
 
-// TestApply_MiRelatedTimePrefixStillPositional は `？` を拾わない決定を固定する。
+// TestApply_MiRelatedTimePrefixStillPositional は `？` を先読みで拾わない決定を固定する。
 //
-// 見積開始・見積終了・期限の3行は `？`/`?` を任意の接頭辞として自分で剥がす。
-// ブロックの先読みで `？` を関連時刻行へ回すと、この3行が受け取れなくなる
-// （reps.Mi に RelatedTime 列は無いので、そもそも付け先が無い）。
+// `？` は予定日時の欄では入力エラーだが、それは「その位置に来たら弾く」であって
+// 「関連時刻行へ回す」ではない。ブロックの先読みで回してしまうと、板名のような
+// 日時でない欄が `？` で始まる文字列を受け取れなくなる
+// （reps.Mi に RelatedTime 列は無いので、そもそも関連時刻の付け先が無い）。
 func TestApply_MiRelatedTimePrefixStillPositional(t *testing.T) {
 	requestMap := helperApplyToRequestMap(t, "/mi\nTest\n?2025-01-01")
 	all := requestMap.All()

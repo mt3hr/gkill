@@ -40,7 +40,7 @@ src/client/
 │   │   └── req_res/                # リクエスト/レスポンス型 (169ファイル、サーバー側は186ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
-│   ├── kftl/                        # KFTLパーサー (50 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)
+│   ├── kftl/                        # KFTLパーサー (53 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)
 │   ├── dnote/                       # Dnote集計ユーティリティ（トレンドグラフ集計 dnote-trend-aggregator.ts・dnote-trend/ 含む）
 │   ├── lantana/                     # 気分値関連クラス
 │   ├── cascade-delete-kyou.ts       # Kyou削除の連鎖削除（Tag/Text/Notification/ReKyou/MiReKyou）

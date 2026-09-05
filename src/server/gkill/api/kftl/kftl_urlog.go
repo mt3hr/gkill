@@ -65,6 +65,13 @@ func (r *kftlURLogRequest) DoRequest(ctx context.Context) error {
 	return nil
 }
 
+// CloneForRepeat は繰り返しの1回ぶんを作る。日時は related_time だけなので基底に任せる。
+func (r *kftlURLogRequest) CloneForRepeat(newRequestID string, dayShift int) KFTLRequest {
+	c := *r
+	c.KFTLRequestBase = r.cloneBase(newRequestID, dayShift)
+	return &c
+}
+
 // ─── Statement lines ──────────────────────────────────────────────────────────
 
 // kftlStartURLogStatementLine handles "ーう".
