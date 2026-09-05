@@ -7,6 +7,8 @@ import { KFTLTagStatementLine } from '../kftl_tag/kftl-tag-statement-line'
 import { KFTLStartTextStatementLine } from '../kftl_text/kftl-start-text-statement-line'
 import { KFTLRelatedTimeStatementLine } from '../kftl_related_time/kftl-related-time-statement-line'
 import { KFTLNlogRelatedTimeStatementLine } from './kftl-nlog-related-time-statement-line'
+import { KFTLStartRepeatStatementLine } from '../kftl_repeat/kftl-start-repeat-statement-line'
+import type { RepeatSpec } from '../kftl_repeat/kftl-repeat-spec'
 
 /**
  * 支出ブロック(`ーん` / `/expense`)で、支払いをまたいで共有する状態。
@@ -29,10 +31,15 @@ export class KFTLNlogBlock {
     // `？`行で指定された関連時刻。ブロックの中のどこに書いてもブロック全体に効く
     related_time: Date | null
 
+    // `？？`ブロックの繰り返し指定。関連時刻と同じくブロック全体に効き、
+    // このブロックの全支払いが1つの繰り返しグループになる
+    repeat_spec: RepeatSpec | null
+
     constructor(block_target_id: string) {
         this.shop_name = ""
         this.block_target_id = block_target_id
         this.related_time = null
+        this.repeat_spec = null
     }
 }
 
@@ -56,6 +63,12 @@ export function generate_nlog_block_next_constructor(next_line_text: string, blo
     }
     if (KFTLStartTextStatementLine.is_this_type(next_line_text)) {
         return (line_text: string, context) => new KFTLStartTextStatementLine(line_text, context, false, reentry)
+    }
+    if (KFTLStartRepeatStatementLine.is_this_type(next_line_text)) {
+        // **関連時刻（`？`）の判定より前に置くこと。** 後ろだと `？？` がそちらに食われる。
+        // 繰り返しの指定はブロック共有なので、付け先はブロック
+        // （KFTLNlogRequest.set_repeat_spec がブロックへ流す）
+        return (line_text: string, context) => new KFTLStartRepeatStatementLine(line_text, context, false, reentry)
     }
     if (KFTLRelatedTimeStatementLine.is_this_type(next_line_text)) {
         return (line_text: string, context) => new KFTLNlogRelatedTimeStatementLine(line_text, context, block)

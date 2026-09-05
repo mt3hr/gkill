@@ -17,6 +17,7 @@
   <tr><td><code>、</code></td><td><code>,</code></td><td>Separator</td><td>Split into a new record</td></tr>
   <tr><td><code>、、</code></td><td><code>,,</code></td><td>Separator (+1 sec)</td><td>Split and increment timestamp by 1 second</td></tr>
   <tr><td><code>？</code></td><td><code>?</code></td><td>Related Time</td><td>Set a related date/time</td></tr>
+  <tr><td><code>？？</code></td><td><code>??</code></td><td>Repeat</td><td>Create the record above again on other dates</td></tr>
   <tr><td><code>ーか</code></td><td><code>/num</code></td><td>Numeric Record</td><td>Record a numeric value</td></tr>
   <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>Task</td><td>Create a task</td></tr>
   <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>Mood</td><td>Record mood value (0-10)</td></tr>
@@ -158,7 +159,7 @@ https://example.com
 Favorite site</pre>
 
 <h3>18. Repost Task: <code>~~</code></h3>
-<p>Opens with <code>~~</code> and closes with <code>~~</code>. Turns the record written just above into a task without rewriting its content. There is no title line: the original record is shown as it is. Inside the block, write the board name, estimated start time, estimated end time and deadline in that order (all optional). No <code>?</code> is needed before a date. A line starting with <code>#</code> becomes a tag on the task itself, and may be written before or after the board name.</p>
+<p>Opens with <code>~~</code> and closes with <code>~~</code>. Turns the record written just above into a task without rewriting its content. There is no title line: the original record is shown as it is. Inside the block, write the board name, estimated start time, estimated end time and deadline in that order (all optional). Writing <code>?</code> before a date is an error. A line starting with <code>#</code> becomes a tag on the task itself, and may be written before or after the board name.</p>
 <pre>Note about an article to read later
 ~~
 #work
@@ -168,7 +169,30 @@ Shopping
 2025-03-22
 ~~</pre>
 
-<h3>19. Save: <code>!</code></h3>
+<h3>19. Repeat: <code>??</code></h3>
+<p>Opens with <code>??</code> and closes with <code>??</code>. Creates the record written just above again on other dates. Inside the block, write these four lines in order. Lines 3 and 4 may be omitted by closing early with <code>??</code>.</p>
+<table>
+  <tr><th>Line</th><th>Meaning</th><th>How to write it</th></tr>
+  <tr><td>1</td><td>Which days (required)</td><td><code>daily</code> / <code>fri</code> / <code>mon,wed,fri</code> / <code>6w fri</code> / <code>monthly 15</code> / <code>2nd fri</code> / <code>last fri</code></td></tr>
+  <tr><td>2</td><td>How many times, or the last date (required)</td><td><code>3</code> / <code>2026-12-31</code></td></tr>
+  <tr><td>3</td><td>Add even if the same record already exists (optional, default <code>no</code>)</td><td><code>no</code> / <code>yes</code></td></tr>
+  <tr><td>4</td><td>Where to start from (optional, default now)</td><td><code>2026-09-12</code> / <code>9/12 18:00</code></td></tr>
+</table>
+<pre>/mi
+Weekly report
+Work
+18:00
+??
+fri
+3
+??</pre>
+<p>This example creates three "Weekly report" tasks at 18:00 on the next three Fridays. Every date and time the record holds is shifted by the same number of days, so the gaps between start, end and deadline are preserved. It cannot be used on a task with no date at all, because there would be nowhere to put the repeated dates.</p>
+<p>Because line 3 defaults to <code>no</code>, <strong>saving the same text again does not create duplicates.</strong> If a save fails partway, simply save the same text again and only the missing records are created.</p>
+<div class="tip">
+  <strong>Note:</strong> Dates that do not exist are skipped (<code>monthly 31</code> skips February, <code>5th fri</code> skips months without a fifth Friday). It cannot be used with the timestamp start (<code>/start</code>) or the timestamp end (<code>/end</code>, <code>/end?</code>, <code>/endt</code>, <code>/endt?</code>). At most 1000 records can be created in one save.
+</div>
+
+<h3>20. Save: <code>!</code></h3>
 <p>Terminates the document and triggers the save process.</p>
 <pre>!</pre>
 

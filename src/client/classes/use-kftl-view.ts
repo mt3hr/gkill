@@ -646,7 +646,19 @@ export function useKftlView(options: {
                 return
             }
             const statement = new KFTLStatement(get_submitting_content())
-            const kftl_requests = await statement.generate_requests()
+            let kftl_requests: Array<KFTLRequest>
+            try {
+                kftl_requests = await statement.generate_requests(props.gkill_api, props.application_config)
+            } catch (e: unknown) {
+                // 繰り返しの展開は、行ごとの検査を通り抜けた失敗（既存判定のAPIエラーなど）で投げる。
+                // 握り潰すと1件も保存されないまま成功に見える
+                const error = new GkillError()
+                error.error_code = GkillErrorCodes.kftl_has_invalid_line
+                error.error_message = e instanceof Error ? e.message : i18n.global.t("KFTL_FOUND_INVALID_LINE_MESSAGE")
+                set_submitting_content(remove_save_marker(get_submitting_content()))
+                emits('received_errors', [error])
+                return
+            }
 
             // TagStructに存在しないタグを検出したら、送信前に確認を取る
             if (!skip_unknown_tag_check) {

@@ -8,6 +8,7 @@ import { AddLantanaRequest } from '@/classes/api/req_res/add-lantana-request'
 
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { find_existing_anchors } from '../kftl_repeat/kftl-repeat-duplicate'
 
 export class KFTLLantanaRequest extends KFTLRequest {
 
@@ -55,6 +56,24 @@ export class KFTLLantanaRequest extends KFTLRequest {
     set_mood(mood: number): void {
         this.mood = mood
     }
+
+    override clone_for_repeat(new_request_id: string, day_shift: number): KFTLRequest {
+        const cloned = new KFTLLantanaRequest(new_request_id, this.get_context())
+        this.copy_base_state_for_repeat(cloned, day_shift)
+        cloned.mood = this.mood
+        return cloned
+    }
+
+    /**
+     * 気分値にはタイトルが無いので、同じ時刻に気分の記録があれば「既にある」とみなす。
+     * 値そのものは見ない（同じ時刻に別の気分値を2つ置く使い方は想定しない）。
+     */
+    override async find_existing_for_repeat(gkill_api: GkillAPI, _application_config: ApplicationConfig | null, from: Date, to: Date): Promise<Set<number>> {
+        return find_existing_anchors(gkill_api, from, to, false,
+            (data_type) => data_type === "lantana",
+            (kyou) => kyou.typed_lantana !== null ? kyou.typed_lantana.related_time : null)
+    }
+
 }
 
 

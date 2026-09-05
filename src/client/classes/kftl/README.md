@@ -8,7 +8,7 @@ KFTL（gkill 独自テキストフォーマット）のクライアント側パ�
 
 日本語プレフィックス（`。` `ーー` `ーみ` 等、i18n キー経由）に加えて、非日本語ロケール向けの
 **ASCII プレフィックス**（`#` `--` `~~` `/mi` `/mood` `/expense` `/num` `/url` `/start` `/end` `/timeis`
-`/end?` `/endt` `/endt?` `,` `,,` `?` `!`）も受け付ける。ASCII 定数と判定・除去ヘルパーは
+`/end?` `/endt` `/endt?` `,` `,,` `?` `??` `!`）も受け付ける。ASCII 定数と判定・除去ヘルパーは
 `kftl-prefixes.ts` に集約されており、Go 側 `kftl_factory.go` の `splitter*Ascii` 定数と対応する
 （対応表はサーバ側 [README](../../../server/gkill/api/kftl/README.md) を参照）。
 
@@ -16,7 +16,7 @@ KFTL（gkill 独自テキストフォーマット）のクライアント側パ�
 
 ```
 kftl/
-├── (ルートファイル 10個)         # コア型定義
+├── (ルートファイル 12個)         # コア型定義
 ├── kftl_kmemo/                 # Kmemo 行（2ファイル）
 ├── kftl_kc/                    # KC 行（4ファイル）
 ├── kftl_lantana/               # Lantana 行（3ファイル）
@@ -34,11 +34,12 @@ kftl/
 ├── kftl_text/                  # Text 行（3ファイル）
 ├── kftl_split/                 # Split 行（2ファイル）
 ├── kftl_related_time/          # RelatedTime 行（1ファイル）
+├── kftl_repeat/                # 繰り返し「？？」（7ファイル）
 ├── kftl_none/                  # None 行（1ファイル）
 └── kftl_prototype/             # プロトタイプ（1ファイル）
 ```
 
-## ルートファイル（11ファイル）
+## ルートファイル（12ファイル）
 
 | ファイル | サーバ側対応 | 役割 |
 |---------|-------------|------|
@@ -52,6 +53,8 @@ kftl/
 | `kftl-request-map.ts` | `kftl_request_map.go` | リクエスト ID マップ |
 | `line-label-data.ts` | — | 行ラベルデータ（UI 表示用） |
 | `text-area-info.ts` | — | テキストエリア情報（エディタ UI 用） |
+| `kftl-date-time.ts` | `kftl_related_time_statement_line.go`（`dateFormats`） | KFTL の日時文字列のパース（欠けた年月日は当日/現在年で補完） |
+| `kftl-schedule-field-time.ts` | `kftl_related_time_statement_line.go`（`parseScheduleFieldTime`） | Mi / MiReKyou の予定日時欄。行頭の `？`/`?` は例外にする |
 
 ## データ型別サブディレクトリ
 
@@ -210,6 +213,26 @@ TimeIs は最も複雑な KFTL 型で、開始/終了の複数パターンを持
 
 **`kftl_related_time/`（1ファイル）:**
 - `kftl-related-time-statement-line.ts` — 関連時刻行（`？` プレフィックス）
+
+### `kftl_repeat/`（7ファイル）— 繰り返し「？？」
+
+`？？` の単独行で開いて同じ記号で閉じる4行ブロック。**直前に書いた記録を日付を変えて何度も作る。**
+
+**展開（複製の生成）を `apply_this_line_to_request_map` でやらないこと。** `use-kftl-view.ts` は
+本文が変わるたびに `get_invalid_line_indexs()`（= 全行の apply）を呼ぶので、打鍵1回あたり
+最大1000件を作ることになる。展開は `generate_requests()` の最後だけ。打鍵のたびに走る経路は
+`validate_repeats`（複製しない検査だけ）を通る。設計と却下案は
+[ADR-0506](../../../../documents/adr/0506-kftl-repeat-block-expands-into-records.md)。
+
+| ファイル | サーバ側対応 | 役割 |
+|---------|-------------|------|
+| `kftl-repeat-spec.ts` | `kftl_repeat.go` | 条件の語彙・回数/終了日・既存時・起点のパースと候補日時の計算 |
+| `kftl-repeat-block.ts` | `kftl_repeat_lines.go`（`generateRepeatBlockNextConstructor`） | ブロックの中の次の行を決める先読みと行の位置の定数 |
+| `kftl-start-repeat-statement-line.ts` | 同（`kftlStartRepeatStatementLine`） | 開始行。付け先を決めて spec を渡す |
+| `kftl-repeat-field-statement-line.ts` | 同（`kftlRepeatFieldStatementLine`） | 位置で意味が決まる項目行 |
+| `kftl-end-repeat-statement-line.ts` | 同（`kftlEndRepeatStatementLine`） | 終了行。必須2行を検査する |
+| `kftl-repeat-expand.ts` | 同（`expandRepeats`） | 送信時の展開と、打鍵のたびに走る検査（`validate_repeats`） |
+| `kftl-repeat-duplicate.ts` | `kftl_repeat_duplicate.go` | 既存判定。期間で1回引いてヒットごとに型別データを読む（サーバ側は型別リポジトリを直接引くので1回で済む） |
 
 **`kftl_none/`（1ファイル）:**
 - `kftl-none-statement-line.ts` — 認識不能行（スキップ）

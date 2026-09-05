@@ -17,6 +17,7 @@
   <tr><td><code>、</code></td><td><code>,</code></td><td>分隔符</td><td>分割为新记录</td></tr>
   <tr><td><code>、、</code></td><td><code>,,</code></td><td>分隔符（+1秒）</td><td>分割并将时间戳增加1秒</td></tr>
   <tr><td><code>？</code></td><td><code>?</code></td><td>关联时间</td><td>设置关联日期/时间</td></tr>
+  <tr><td><code>？？</code></td><td><code>??</code></td><td>重复</td><td>按其他日期重复创建上方的记录</td></tr>
   <tr><td><code>ーか</code></td><td><code>/num</code></td><td>数值记录</td><td>记录数值数据</td></tr>
   <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>任务</td><td>创建任务</td></tr>
   <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>心情</td><td>记录心情值（0-10）</td></tr>
@@ -158,7 +159,7 @@ https://example.com
 收藏网站</pre>
 
 <h3>18. 转发任务: <code>~~</code></h3>
-<p>以<code>~~</code>开始，以<code>~~</code>结束。将紧邻上方的记录直接变为任务，无需重写内容。没有标题行（原记录会照原样显示）。在块内依次填写看板名称、预计开始时间、预计结束时间和截止日期（均可省略）。日期前不需要<code>?</code>。以<code>#</code>开头的行会成为任务自身的标签，写在看板名称之前或之后均可。</p>
+<p>以<code>~~</code>开始，以<code>~~</code>结束。将紧邻上方的记录直接变为任务，无需重写内容。没有标题行（原记录会照原样显示）。在块内依次填写看板名称、预计开始时间、预计结束时间和截止日期（均可省略）。日期前写<code>?</code>会出错。以<code>#</code>开头的行会成为任务自身的标签，写在看板名称之前或之后均可。</p>
 <pre>稍后阅读的文章备忘
 ~~
 #工作
@@ -168,7 +169,30 @@ https://example.com
 2025-03-22
 ~~</pre>
 
-<h3>19. 保存: <code>!</code></h3>
+<h3>19. 重复: <code>??</code></h3>
+<p>以<code>??</code>开始，以<code>??</code>结束。将紧邻上方的记录按其他日期重复创建。块内依次填写以下四行。第3行和第4行可以省略（提前用<code>??</code>闭合即可）。</p>
+<table>
+  <tr><th>行</th><th>含义</th><th>写法</th></tr>
+  <tr><td>1</td><td>重复的日期（必填）</td><td><code>daily</code> / <code>fri</code> / <code>mon,wed,fri</code> / <code>6w fri</code> / <code>monthly 15</code> / <code>2nd fri</code> / <code>last fri</code></td></tr>
+  <tr><td>2</td><td>次数，或结束日期（必填）</td><td><code>3</code> / <code>2026-12-31</code></td></tr>
+  <tr><td>3</td><td>已存在相同记录时是否仍然添加（可省略，默认<code>no</code>）</td><td><code>no</code> / <code>yes</code></td></tr>
+  <tr><td>4</td><td>从何时开始（可省略，默认当前）</td><td><code>2026-09-12</code> / <code>9/12 18:00</code></td></tr>
+</table>
+<pre>/mi
+周报
+工作
+18:00
+??
+fri
+3
+??</pre>
+<p>此例会在接下来的三个周五18:00各创建一个「周报」任务。记录所持有的所有日期时间会平移相同的天数，因此开始、结束和截止之间的间隔保持不变。完全没有填写日期时间的任务无法使用（因为没有地方放置重复的日期）。</p>
+<p>由于第3行默认为<code>no</code>，<strong>再次保存相同内容也不会重复创建。</strong>中途失败时，原样再保存一次即可只补齐剩余部分。</p>
+<div class="tip">
+  <strong>注意:</strong> 不存在的日期会被跳过（<code>monthly 31</code>跳过2月，<code>5th fri</code>跳过没有第5个周五的月份）。不能用于打卡开始（<code>/start</code>）和打卡结束（<code>/end</code>、<code>/end?</code>、<code>/endt</code>、<code>/endt?</code>）。一次保存最多创建1000条。
+</div>
+
+<h3>20. 保存: <code>!</code></h3>
 <p>终止文档并执行保存处理。</p>
 <pre>!</pre>
 

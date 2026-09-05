@@ -70,6 +70,20 @@ func (r *kftlTimeIsRequest) DoRequest(ctx context.Context) error {
 	return nil
 }
 
+// AnchorTimeForRepeat は打刻の開始時刻を基準にする。
+func (r *kftlTimeIsRequest) AnchorTimeForRepeat() (time.Time, bool) {
+	return r.startTime, true
+}
+
+// CloneForRepeat は開始と終了を同じ日数だけずらす。長さはそのまま保たれる。
+func (r *kftlTimeIsRequest) CloneForRepeat(newRequestID string, dayShift int) KFTLRequest {
+	c := *r
+	c.KFTLRequestBase = r.cloneBase(newRequestID, dayShift)
+	c.startTime = shiftTime(r.startTime, dayShift)
+	c.endTime = shiftTimePtr(r.endTime, dayShift)
+	return &c
+}
+
 // kftlStartTimeIsStatementLine handles "ーち".
 // Line sequence: ーち → title → start_time → end_time
 // Mirrors: kftl-start-time-is-statement-line.ts
@@ -247,6 +261,21 @@ func (r *kftlTimeIsStartRequest) DoRequest(ctx context.Context) error {
 	return nil
 }
 
+// SetRepeatSpec は打刻開始のみの繰り返しを弾く。
+//
+// end_time の無い打刻を回数ぶん作ると、**走行中のスタンプがその数だけ残る**。
+// 終わりの無いスタンプは以降の全記録を覆うので、掃除するまで検索結果に付き続ける。
+func (r *kftlTimeIsStartRequest) SetRepeatSpec(_ *repeatSpec) error {
+	return newKFTLInputError("KFTL_REPEAT_TYPE_NOT_SUPPORTED_MESSAGE_TITLE",
+		fmt.Errorf("repeat is not supported for a start-only timeis"))
+}
+
+func (r *kftlTimeIsStartRequest) CloneForRepeat(newRequestID string, dayShift int) KFTLRequest {
+	c := *r
+	c.KFTLRequestBase = r.cloneBase(newRequestID, dayShift)
+	return &c
+}
+
 // kftlStartTimeIsStartStatementLine handles "ーた".
 // Mirrors: kftl-start-time-is-start-statement-line.ts
 type kftlStartTimeIsStartStatementLine struct {
@@ -390,6 +419,21 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 	updated.RepName = repName
 	logWriteThroughCacheFailure(ctx, "timeis", updated.ID, r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, updated))
 	return nil
+}
+
+// SetRepeatSpec は打刻終了の繰り返しを弾く。
+//
+// 終了は PlaingTime に**現在時刻**を渡して「いま走っている1件」を探す。
+// 繰り返しても同じ1件を狙うだけで、2回目以降は既に閉じていてヒットしない。
+func (r *kftlTimeIsEndByTitleRequest) SetRepeatSpec(_ *repeatSpec) error {
+	return newKFTLInputError("KFTL_REPEAT_TYPE_NOT_SUPPORTED_MESSAGE_TITLE",
+		fmt.Errorf("repeat is not supported for a timeis end"))
+}
+
+func (r *kftlTimeIsEndByTitleRequest) CloneForRepeat(newRequestID string, dayShift int) KFTLRequest {
+	c := *r
+	c.KFTLRequestBase = r.cloneBase(newRequestID, dayShift)
+	return &c
 }
 
 // kftlStartTimeIsEndStatementLine handles "ーえ" (error if not found).
@@ -576,6 +620,19 @@ outer:
 	updated.RepName = repName
 	logWriteThroughCacheFailure(ctx, "timeis", updated.ID, r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, updated))
 	return nil
+}
+
+// SetRepeatSpec はタグ指定の打刻終了の繰り返しを弾く（理由はタイトル指定と同じ）。
+func (r *kftlTimeIsEndByTagRequest) SetRepeatSpec(_ *repeatSpec) error {
+	return newKFTLInputError("KFTL_REPEAT_TYPE_NOT_SUPPORTED_MESSAGE_TITLE",
+		fmt.Errorf("repeat is not supported for a timeis end"))
+}
+
+func (r *kftlTimeIsEndByTagRequest) CloneForRepeat(newRequestID string, dayShift int) KFTLRequest {
+	c := *r
+	c.KFTLRequestBase = r.cloneBase(newRequestID, dayShift)
+	c.searchTags = append([]string(nil), r.searchTags...)
+	return &c
 }
 
 // kftlStartTimeIsEndByTagStatementLine handles "ーたえ" (error if not found).

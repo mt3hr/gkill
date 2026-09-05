@@ -808,16 +808,16 @@ describe('KFTLのリポストタスク', () => {
         expect((mirekyou.limit_time as Date).getDate()).toBe(22)
     })
 
-    test('日時に「？」を付けても同じ結果になる', async () => {
+    // 予定日時の欄に「？」を書くと不正行として拾われ、保存そのものが止まる。
+    // 以前は関連時刻と同じ接頭辞として黙って剥がしていたので、書き損じに気づけなかった
+    test('日時に「？」を付けると不正行になり保存されない', async () => {
         const log: CallLog = { calls: [] }
         const { api, mirekyou_calls } = make_capturing_api(log)
         const { view } = mount_view(api)
 
         await submit_text(view, '牛乳を買う\n～～\n仕事\n？2025-03-20\n\n？2025-03-22\n～～')
 
-        const mirekyou = mirekyou_calls[0].mirekyou
-        expect((mirekyou.estimate_start_time as Date).getDate()).toBe(20)
-        expect((mirekyou.limit_time as Date).getDate()).toBe(22)
+        expect(mirekyou_calls.length).toBe(0)
     })
 
     test('ブロックの中のタグはリポストタスクに、閉じたあとのタグはメモに付く', async () => {

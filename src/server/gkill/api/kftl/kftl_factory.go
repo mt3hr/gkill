@@ -10,6 +10,7 @@ const (
 	splitterStartText             = "ーー"
 	splitterMiReKyou              = "～～"
 	splitterRelatedTime           = "？"
+	splitterRepeat                = "？？"
 	splitterSplit                 = "、"
 	splitterSplitNextSecond       = "、、"
 	splitterKC                    = "ーか"
@@ -32,6 +33,7 @@ const (
 	splitterStartTextAscii             = "--"
 	splitterMiReKyouAscii              = "~~"
 	splitterRelatedTimeAscii           = "?"
+	splitterRepeatAscii                = "??"
 	splitterSplitAscii                 = ","
 	splitterSplitNextSecondAscii       = ",,"
 	splitterKCAscii                    = "/num"
@@ -57,11 +59,11 @@ var argTakingPrefixes = []string{
 	splitterKC, splitterMi, splitterLantana, splitterNlog,
 	splitterTimeIsStart, splitterTimeIsEnd, splitterTimeIs,
 	splitterTimeIsEndIfExist, splitterTimeIsEndByTag, splitterTimeIsEndByTagIfExist,
-	splitterURLog, splitterStartText, splitterMiReKyou,
+	splitterURLog, splitterStartText, splitterMiReKyou, splitterRepeat,
 	splitterKCAscii, splitterMiAscii, splitterLantanaAscii, splitterNlogAscii,
 	splitterTimeIsStartAscii, splitterTimeIsEndAscii, splitterTimeIsAscii,
 	splitterTimeIsEndIfExistAscii, splitterTimeIsEndByTagAscii, splitterTimeIsEndByTagIfExistAscii,
-	splitterURLogAscii, splitterStartTextAscii, splitterMiReKyouAscii,
+	splitterURLogAscii, splitterStartTextAscii, splitterMiReKyouAscii, splitterRepeatAscii,
 }
 
 // prefixWrittenWithArgument は「既知のプレフィックス＋同じ行に引数」を書いた行かを返す。
@@ -116,6 +118,21 @@ func normalizeWaveDash(lineText string) string {
 func isMiReKyouSplitter(lineText string) bool {
 	normalized := normalizeWaveDash(lineText)
 	return normalized == splitterMiReKyou || normalized == splitterMiReKyouAscii
+}
+
+// isRepeatSplitter reports whether the line opens or closes a repeat block.
+// 完全一致でしか受けない。「？？金3」のように同じ行へ引数を書いたものは
+// argTakingPrefixes 側で行エラーになる。
+func isRepeatSplitter(lineText string) bool {
+	return lineText == splitterRepeat || lineText == splitterRepeatAscii
+}
+
+// isRepeatWrittenWithArgument は「？？ 金 3」のように繰り返しの記号と同じ行へ引数を書いた行か。
+// 規則そのものは prefixWrittenWithArgument が持つ（直後が空白のときだけ）。
+// クライアント側 is_repeat_prefix_with_argument と対。
+func isRepeatWrittenWithArgument(lineText string) bool {
+	prefix, ok := prefixWrittenWithArgument(lineText)
+	return ok && (prefix == splitterRepeat || prefix == splitterRepeatAscii)
 }
 
 // kftlFactory tracks the prev_line_is_meta_info state across lines.
@@ -208,6 +225,19 @@ func (f *kftlFactory) generateDefaultConstructor(nextLineText string, lastFunc S
 			// prevLineIsMetaInfo は書き換えずに渡すだけにする
 			return newKFTLStartMiReKyouStatementLine(lineText, ctx, f.prevLineIsMetaInfo)
 		}
+	case isRepeatSplitter(nextLineText):
+		// **「？」の前方一致より前に置くこと。** 後ろだと「？？」が関連時刻行に食われて
+		// ここへ永久に到達しない（「？」を1つ剥がした残りがパースに失敗するだけになる）
+		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
+			return newKFTLStartRepeatStatementLine(lineText, ctx, f.prevLineIsMetaInfo, nil, nil)
+		}
+	case isRepeatWrittenWithArgument(nextLineText):
+		// 「？？ 金 3」。既定の行（Kmemo）へ落として prefixWrittenWithArgument に拾わせる ――
+		// 「？」へ流すと「関連時刻がパースできません」という無関係な文言になる。
+		//
+		// **カーブアウトはここまで。** 「??なんだこれ」のように直後が空白でない行は
+		// 従来どおり下の「？」の前方一致へ流す（`？` 始まりの行は日時として解釈する既存仕様）
+		return lastFunc
 	case strings.HasPrefix(nextLineText, splitterRelatedTime) || strings.HasPrefix(nextLineText, splitterRelatedTimeAscii):
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			return newKFTLRelatedTimeStatementLine(lineText, ctx, f.prevLineIsMetaInfo)

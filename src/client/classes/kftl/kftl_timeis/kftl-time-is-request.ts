@@ -10,6 +10,9 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { find_existing_anchors } from '../kftl_repeat/kftl-repeat-duplicate'
+import { shift_days } from '../kftl_repeat/kftl-repeat-spec'
+import { is_timeis_data_type } from '../kftl_repeat/kftl-repeat-duplicate'
 
 export class KFTLTimeIsRequest extends KFTLRequest {
 
@@ -80,6 +83,28 @@ export class KFTLTimeIsRequest extends KFTLRequest {
 
         return errors
     }
+
+    /** 打刻の開始時刻を基準にする。 */
+    override anchor_time_for_repeat(): Date | null {
+        return this.start_time
+    }
+
+    /** 開始と終了を同じ日数だけずらす。長さはそのまま保たれる。 */
+    override clone_for_repeat(new_request_id: string, day_shift: number): KFTLRequest {
+        const cloned = new KFTLTimeIsRequest(new_request_id, this.get_context())
+        this.copy_base_state_for_repeat(cloned, day_shift)
+        cloned.title = this.title
+        cloned.start_time = shift_days(this.start_time, day_shift)
+        cloned.end_time = this.end_time === null ? null : shift_days(this.end_time, day_shift)
+        return cloned
+    }
+
+    override async find_existing_for_repeat(gkill_api: GkillAPI, _application_config: ApplicationConfig | null, from: Date, to: Date): Promise<Set<number>> {
+        return find_existing_anchors(gkill_api, from, to, false,
+            is_timeis_data_type,
+            (kyou) => (kyou.typed_timeis !== null && kyou.typed_timeis.title === this.title) ? kyou.typed_timeis.start_time : null)
+    }
+
 }
 
 
