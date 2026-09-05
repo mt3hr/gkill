@@ -189,6 +189,8 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0502](0502-kftl-errors-are-per-line.md) | メモ帳（KFTL）の失敗は行ごとに返し、入力ミスとサーバ障害を分ける | Accepted |
 | [0503](0503-kftl-prefix-misuse-is-an-input-error.md) | 引数の無い／引数を同じ行に書いたメモ帳のプレフィックスは、ゼロ値を書かずに行別エラーにする | Accepted |
 | [0504](0504-kftl-missing-configuration-is-an-input-error.md) | KFTL の実行フェーズの失敗も、設定不足なら行別の入力エラーにする | Accepted |
+| [0505](0505-schedule-time-field-rejects-related-time-prefix.md) | Mi / MiReKyou の予定日時欄では関連時刻の接頭辞「？」を入力エラーにする | Accepted |
+| [0506](0506-kftl-repeat-block-expands-into-records.md) | メモ帳の繰り返し「？？」は実体のレコードへ展開し、複製は送信時にだけ作る | Accepted |
 | [0601](0601-mcp-request-context-immutable.md) | MCP HTTPモードの1リクエスト文脈は不変オブジェクトを引数で流す | Accepted |
 | [0602](0602-mcp-inline-plugin-content.md) | MCP のプラグイン本文は get_kyous へインライン埋め込みし、同一プラグインへ並列に投げない | Accepted |
 | [0603](0603-mcp-cursor-pushes-period-end.md) | MCP のページングはカーソルを期間上限へ押し下げ、同一時刻のかたまりを割らない | Superseded |

@@ -17,6 +17,7 @@
   <tr><td><code>、</code></td><td><code>,</code></td><td>Séparateur</td><td>Diviser en un nouvel enregistrement</td></tr>
   <tr><td><code>、、</code></td><td><code>,,</code></td><td>Séparateur (+1 sec)</td><td>Diviser et incrementer l'horodatage d'1 seconde</td></tr>
   <tr><td><code>？</code></td><td><code>?</code></td><td>Heure associée</td><td>Definir une date/heure associée</td></tr>
+  <tr><td><code>？？</code></td><td><code>??</code></td><td>Répétition</td><td>Créer l enregistrement ci-dessus à d autres dates</td></tr>
   <tr><td><code>ーか</code></td><td><code>/num</code></td><td>Enregistrement numérique</td><td>Enregistrer une valeur numérique</td></tr>
   <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>Tâche</td><td>Créer une tâche</td></tr>
   <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>Humeur</td><td>Enregistrer une valeur d'humeur (0-10)</td></tr>
@@ -159,7 +160,7 @@ https://example.com
 Site favori</pre>
 
 <h3>18. Tâche de repost : <code>~~</code></h3>
-<p>Commence par <code>~~</code> et se termine par <code>~~</code>. Transforme l'enregistrement écrit juste au-dessus en tâche sans réécrire son contenu. Il n'y a pas de ligne de titre : l'enregistrement d'origine est affiché tel quel. Dans le bloc, indiquez le nom du tableau, la date de début prévue, la date de fin prévue et la date limite, dans cet ordre (tous facultatifs). Aucun <code>?</code> n'est nécessaire devant une date. Une ligne commençant par <code>#</code> devient une étiquette de la tâche elle-même, et peut être écrite avant ou après le nom du tableau.</p>
+<p>Commence par <code>~~</code> et se termine par <code>~~</code>. Transforme l'enregistrement écrit juste au-dessus en tâche sans réécrire son contenu. Il n'y a pas de ligne de titre : l'enregistrement d'origine est affiché tel quel. Dans le bloc, indiquez le nom du tableau, la date de début prévue, la date de fin prévue et la date limite, dans cet ordre (tous facultatifs). Écrire <code>?</code> devant une date provoque une erreur. Une ligne commençant par <code>#</code> devient une étiquette de la tâche elle-même, et peut être écrite avant ou après le nom du tableau.</p>
 <pre>Note sur un article à lire plus tard
 ~~
 #travail
@@ -169,7 +170,30 @@ Courses
 2025-03-22
 ~~</pre>
 
-<h3>19. Sauvegarder : <code>!</code></h3>
+<h3>19. Répétition : <code>??</code></h3>
+<p>Commence par <code>??</code> et se termine par <code>??</code>. Recrée à d autres dates l enregistrement écrit juste au-dessus. Dans le bloc, indiquez ces quatre lignes dans l ordre. Les lignes 3 et 4 peuvent être omises en fermant plus tôt avec <code>??</code>.</p>
+<table>
+  <tr><th>Ligne</th><th>Signification</th><th>Comment l écrire</th></tr>
+  <tr><td>1</td><td>Quels jours (obligatoire)</td><td><code>daily</code> / <code>fri</code> / <code>mon,wed,fri</code> / <code>6w fri</code> / <code>monthly 15</code> / <code>2nd fri</code> / <code>last fri</code></td></tr>
+  <tr><td>2</td><td>Combien de fois, ou la date de fin (obligatoire)</td><td><code>3</code> / <code>2026-12-31</code></td></tr>
+  <tr><td>3</td><td>Ajouter même si le même enregistrement existe déjà (facultatif, <code>no</code> par défaut)</td><td><code>no</code> / <code>yes</code></td></tr>
+  <tr><td>4</td><td>À partir de quand (facultatif, maintenant par défaut)</td><td><code>2026-09-12</code> / <code>9/12 18:00</code></td></tr>
+</table>
+<pre>/mi
+Rapport hebdomadaire
+Travail
+18:00
+??
+fri
+3
+??</pre>
+<p>Cet exemple crée trois tâches « Rapport hebdomadaire » à 18:00 les trois vendredis suivants. Toutes les dates et heures de l enregistrement sont décalées du même nombre de jours, les écarts entre début, fin et échéance sont donc conservés. Cela ne fonctionne pas sur une tâche sans aucune date, car il n y aurait nulle part où mettre les dates répétées.</p>
+<p>La ligne 3 valant <code>no</code> par défaut, <strong>enregistrer deux fois le même texte ne crée pas de doublons.</strong> Si un enregistrement échoue en cours de route, réenregistrez simplement le même texte et seuls les éléments manquants seront créés.</p>
+<div class="tip">
+  <strong>Remarque :</strong> Les dates qui n existent pas sont ignorées (<code>monthly 31</code> ignore février, <code>5th fri</code> ignore les mois sans cinquième vendredi). Impossible à utiliser avec le début de pointage (<code>/start</code>) ni avec la fin (<code>/end</code>, <code>/end?</code>, <code>/endt</code>, <code>/endt?</code>). Au maximum 1000 enregistrements par sauvegarde.
+</div>
+
+<h3>20. Sauvegarder : <code>!</code></h3>
 <p>Termine le document et exécuté le processus de sauvegarde.</p>
 <pre>!</pre>
 

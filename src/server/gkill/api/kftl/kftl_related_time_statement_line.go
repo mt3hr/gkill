@@ -55,6 +55,31 @@ func parseDateTime(s string, base time.Time) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("cannot parse date: %q", s)
 }
 
+// parseScheduleFieldTime は Mi / MiReKyou の予定日時欄(見積開始・見積終了・期限)の1行を読む。
+//
+// 行頭の「？」「?」は**入力エラー**にする。以前は関連時刻と同じ接頭辞として黙って剥がしていたが、
+// 剥がしたあとにパースへ失敗しても未設定として握り潰す作りなので、「？18:00」の打ち間違いも
+// 「？？」(繰り返しブロック)の書き損じも、エラーも警告も出ないまま日付だけが入らない形で
+// 落ちていた。剥がす前に弾く。Mi は related_time 列を持たないので、この欄に関連時刻の
+// 接頭辞を書けること自体に意味が無い。
+//
+// 空行は「未設定」。それ以外のパースできない行は今までどおり未設定として扱う
+// (日時として読めない行を一律に行エラーへ倒すと既存の書き方が広範に壊れるため、そこは変えない)。
+func parseScheduleFieldTime(lineText string, base time.Time) (time.Time, bool, error) {
+	if strings.HasPrefix(lineText, splitterRelatedTime) || strings.HasPrefix(lineText, splitterRelatedTimeAscii) {
+		return time.Time{}, false, newKFTLInputError("KFTL_SCHEDULE_TIME_PREFIX_NOT_ALLOWED_MESSAGE_TITLE",
+			fmt.Errorf("related time prefix is not allowed in a schedule datetime field: %q", lineText))
+	}
+	if strings.TrimSpace(lineText) == "" {
+		return time.Time{}, false, nil
+	}
+	t, err := parseDateTime(lineText, base)
+	if err != nil {
+		return time.Time{}, false, nil
+	}
+	return t, true, nil
+}
+
 // kftlRelatedTimeStatementLine handles "？datetime" lines.
 // Mirrors: src/classes/kftl/kftl_related_time/kftl-related-time-statement-line.ts
 type kftlRelatedTimeStatementLine struct {

@@ -9,7 +9,10 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
-import type { KFTLNlogBlock } from './kftl-nlog-block'
+import { KFTLNlogBlock } from './kftl-nlog-block'
+import { find_existing_anchors } from '../kftl_repeat/kftl-repeat-duplicate'
+import type { RepeatSpec } from '../kftl_repeat/kftl-repeat-spec'
+import { shift_days } from '../kftl_repeat/kftl-repeat-spec'
 
 /**
  * 支払い1件(品名と金額のペア1組)ぶんのリクエスト。
@@ -117,6 +120,56 @@ export class KFTLNlogRequest extends KFTLRequest {
 
     set_amount(amount: number): void {
         this.amount = amount
+    }
+
+
+    /**
+     * 繰り返しの指定は支出ブロックで共有する。
+     *
+     * 「？？」をブロックの中のどこに書いても、そのブロックの**全支払いが1つの繰り返しグループ**
+     * になる（店名・関連時刻と同じ扱い）。get_related_time がブロックを見ているのと同じ形。
+     */
+    override get_repeat_spec(): RepeatSpec | null {
+        return this.block.repeat_spec
+    }
+
+    override set_repeat_spec(spec: RepeatSpec): void {
+        this.block.repeat_spec = spec
+    }
+
+    /** ブロック共有の関連時刻を基準にする。**呼ぶと確定させる。** */
+    override anchor_time_for_repeat(): Date | null {
+        if (this.block.related_time === null) {
+            this.block.related_time = super.get_related_time()
+        }
+        return this.block.related_time
+    }
+
+    /**
+     * **ブロックも複製する。** 共有したままだと、回ごとにずらしたはずの関連時刻を
+     * 最後の1回が上書きし、全レコードが同じ日時になる（関連時刻の実体はブロック側にある）。
+     */
+    override clone_for_repeat(new_request_id: string, day_shift: number): KFTLRequest {
+        const block_copy = new KFTLNlogBlock(this.block.block_target_id)
+        block_copy.shop_name = this.block.shop_name
+        block_copy.related_time = this.block.related_time === null ? null : shift_days(this.block.related_time, day_shift)
+        block_copy.repeat_spec = null // 複製を再展開しない
+        const cloned = new KFTLNlogRequest(new_request_id, this.get_context(), block_copy)
+        this.copy_base_state_for_repeat(cloned, day_shift)
+        cloned.shop_name = this.shop_name
+        cloned.title = this.title
+        cloned.amount = this.amount
+        return cloned
+    }
+
+    /**
+     * 支払いごとに見る。**ブロック単位で見てはいけない** ――
+     * 同じ買い物でも品名が違えば別の記録なので、片方だけ既にある状態がふつうに起きる。
+     */
+    override async find_existing_for_repeat(gkill_api: GkillAPI, _application_config: ApplicationConfig | null, from: Date, to: Date): Promise<Set<number>> {
+        return find_existing_anchors(gkill_api, from, to, false,
+            (data_type) => data_type === "nlog",
+            (kyou) => (kyou.typed_nlog !== null && kyou.typed_nlog.title === this.title && kyou.typed_nlog.shop === this.shop_name) ? kyou.typed_nlog.related_time : null)
     }
 
 }

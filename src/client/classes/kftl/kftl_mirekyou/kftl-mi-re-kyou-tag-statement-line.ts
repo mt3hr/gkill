@@ -6,6 +6,7 @@ import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import type { KFTLMiReKyouRequest } from './kftl-mi-re-kyou-request'
 import { KFTLEndMiReKyouStatementLine } from './kftl-end-mi-re-kyou-statement-line'
+import { KFTLStartRepeatStatementLine } from '../kftl_repeat/kftl-start-repeat-statement-line'
 import { KFTLMiReKyouNoneStatementLine } from './kftl-mi-re-kyou-none-statement-line'
 import { KFTL_ASCII_TAG_PREFIX, matches_prefix, split_tags, strip_prefix } from '../kftl-prefixes'
 
@@ -64,6 +65,15 @@ export class KFTLMiReKyouTagStatementLine extends KFTLStatementLine {
     static generate_next_constructor(next_line_text: string, request: KFTLMiReKyouRequest, prev_line_is_meta_info: boolean, next_field_constructor: KFTLMiReKyouNextLineConstructor): KFTLMiReKyouNextLineConstructor {
         if (KFTLEndMiReKyouStatementLine.is_this_type(next_line_text)) {
             return (line_text: string, context: KFTLStatementLineContext) => new KFTLEndMiReKyouStatementLine(line_text, context, prev_line_is_meta_info)
+        }
+        if (KFTLStartRepeatStatementLine.is_this_type(next_line_text)) {
+            // タグ行と同じく項目の位置を消費しない。閉じたら同じ項目位置へ戻る。
+            // **付け先を明示する** ―― ブロックの中の target_id は「タスク化される元の記録」を
+            // 指していて、引かせると元の記録のほうが繰り返される
+            return (line_text: string, context: KFTLStatementLineContext) => new KFTLStartRepeatStatementLine(
+                line_text, context, prev_line_is_meta_info,
+                (next_text: string) => KFTLMiReKyouTagStatementLine.generate_next_constructor(next_text, request, prev_line_is_meta_info, next_field_constructor),
+                request)
         }
         if (matches_prefix(next_line_text, "KFTL_TAG_PREFIX", KFTL_ASCII_TAG_PREFIX)) {
             return (line_text: string, context: KFTLStatementLineContext) => new KFTLMiReKyouTagStatementLine(line_text, context, request, prev_line_is_meta_info, next_field_constructor)

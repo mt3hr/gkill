@@ -24,6 +24,8 @@ import { KFTLStartTimeIsEndByTagIfExistStatementLine } from "./kftl_timeis/kftl_
 import { KFTLStartTimeIsStartStatementLine } from "./kftl_timeis/kftl_timeis_start/kftl-start-time-is-start-statement-line"
 import { KFTLStartURLogStatementLine } from "./kftl_urlog/kftl-start-ur-log-statement-line"
 import { KFTLURLogTitleStatementLine } from "./kftl_urlog/kftlur-log-title-statement-line"
+import { KFTLStartRepeatStatementLine } from './kftl_repeat/kftl-start-repeat-statement-line'
+import { is_repeat_prefix_with_argument } from './kftl-prefixes'
 
 export class KFTLStatementLineConstructorFactory {
 
@@ -82,6 +84,12 @@ export class KFTLStatementLineConstructorFactory {
             // リポストタスクはKyou本体ではなく付随情報なので、Tag/StartTextと同じく
             // prev_line_is_meta_info は書き換えずに渡すだけにする
             return (line_text: string, context: KFTLStatementLineContext) => { return new KFTLStartMiReKyouStatementLine(line_text, context, this.prev_line_is_meta_info) }
+        }
+        if (KFTLStartRepeatStatementLine.is_this_type(line_text) || is_repeat_prefix_with_argument(line_text)) {
+            // **「？」の判定より前に置くこと。** 後ろだと「？？」が関連時刻行に食われる。
+            // 完全一致だけをブロックの開始にし、「？？ 金 3」のように引数を同じ行に書いたものは
+            // 開始行自身が行エラーにする（連鎖は乗っ取らない）
+            return (line_text: string, context: KFTLStatementLineContext) => new KFTLStartRepeatStatementLine(line_text, context, this.prev_line_is_meta_info)
         }
         if (KFTLRelatedTimeStatementLine.is_this_type(line_text)) {
             return (line_text: string, context: KFTLStatementLineContext) => { return new KFTLRelatedTimeStatementLine(line_text, context, this.prev_line_is_meta_info) }

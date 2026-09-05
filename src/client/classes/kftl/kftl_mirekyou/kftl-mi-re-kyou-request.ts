@@ -11,6 +11,9 @@ import { KFTLPrototypeRequest } from '../kftl_prototype/kftl-prototype-request'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { schedule_anchor_of, is_mirekyou_data_type } from '../kftl_repeat/kftl-repeat-duplicate'
+import { find_existing_anchors } from '../kftl_repeat/kftl-repeat-duplicate'
+import { shift_days } from '../kftl_repeat/kftl-repeat-spec'
 
 /**
  * 同じレコードで書いたKyouをタスク化する(MiReKyou)リクエスト。
@@ -129,6 +132,60 @@ export class KFTLMiReKyouRequest extends KFTLRequest {
 
     async set_estimate_end_time(estimate_end_time: Date | null): Promise<void> {
         this.estimate_end_time = estimate_end_time
+    }
+
+
+    /** 板名の解決はタスクと同じ。既存判定と書き込みで同じ値を使う。 */
+    resolved_board_name(application_config: ApplicationConfig | null): string {
+        if (this.board_name !== "") {
+            return this.board_name
+        }
+        return application_config !== null ? application_config.mi_default_board : ""
+    }
+
+    override anchor_time_for_repeat(): Date | null {
+        return schedule_anchor_of(this.estimate_start_time, this.estimate_end_time, this.limit_time)
+    }
+
+    /**
+     * 3つの予定日時をずらす。対象（target_id）は同じ記録を指したままで、
+     * 「同じ記録を繰り返しタスク化する」という意味になる。
+     */
+    override clone_for_repeat(new_request_id: string, day_shift: number): KFTLRequest {
+        const cloned = new KFTLMiReKyouRequest(new_request_id, this.target_id, this.get_context())
+        this.copy_base_state_for_repeat(cloned, day_shift)
+        cloned.board_name = this.board_name
+        cloned.request_map = this.request_map
+        cloned.estimate_start_time = this.estimate_start_time === null ? null : shift_days(this.estimate_start_time, day_shift)
+        cloned.estimate_end_time = this.estimate_end_time === null ? null : shift_days(this.estimate_end_time, day_shift)
+        cloned.limit_time = this.limit_time === null ? null : shift_days(this.limit_time, day_shift)
+        return cloned
+    }
+
+    /** リポストタスクはタイトルを持たないので、対象の記録と板名で見る。 */
+    override async find_existing_for_repeat(gkill_api: GkillAPI, application_config: ApplicationConfig | null, from: Date, to: Date): Promise<Set<number>> {
+        const board_name = this.resolved_board_name(application_config)
+        return find_existing_anchors(gkill_api, from, to, true,
+            is_mirekyou_data_type,
+            (kyou) => {
+                if (kyou.typed_mirekyou === null || kyou.typed_mirekyou.target_id !== this.target_id || kyou.typed_mirekyou.board_name !== board_name) {
+                    return null
+                }
+                return schedule_anchor_of(kyou.typed_mirekyou.estimate_start_time, kyou.typed_mirekyou.estimate_end_time, kyou.typed_mirekyou.limit_time)
+            })
+    }
+
+
+    get_estimate_start_time(): Date | null {
+        return this.estimate_start_time
+    }
+
+    get_estimate_end_time(): Date | null {
+        return this.estimate_end_time
+    }
+
+    get_limit_time(): Date | null {
+        return this.limit_time
     }
 
 }

@@ -39,6 +39,18 @@ func newKFTLMiReKyouRequest(requestID string, targetID string, ctx *KFTLStatemen
 	}
 }
 
+// resolvedBoardName は書き込みに使う板名。空なら設定の既定板になる。
+// **既存判定（FindExistingForRepeat）と書き込みで同じ値を使うため**にここへ出してある。
+func (r *kftlMiReKyouRequest) resolvedBoardName() string {
+	if r.boardName != "" {
+		return r.boardName
+	}
+	if r.Ctx != nil && r.Ctx.ApplicationConfig != nil {
+		return r.Ctx.ApplicationConfig.MiDefaultBoard
+	}
+	return ""
+}
+
 func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
 	// タスク化する対象は「同じレコードで書いたKyou」。レコードにKyou本体が無い
 	// (タグだけ書いてプロトタイプのまま終わった場合を含む)と、対象が存在しないMiReKyouになる。
@@ -76,10 +88,7 @@ func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
 			fmt.Errorf("not exist write mirekyou rep user id = %s device = %s", r.Ctx.UserID, r.Ctx.Device))
 	}
 
-	boardName := r.boardName
-	if boardName == "" && r.Ctx.ApplicationConfig != nil {
-		boardName = r.Ctx.ApplicationConfig.MiDefaultBoard
-	}
+	boardName := r.resolvedBoardName()
 
 	// ブロックの中に書いたタグはここでMiReKyou自身に書かれる
 	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
@@ -119,6 +128,27 @@ func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
 	return nil
 }
 
+// AnchorTimeForRepeat は Mi と同じく予定日時のうち最初に埋まっているもの。
+func (r *kftlMiReKyouRequest) AnchorTimeForRepeat() (time.Time, bool) {
+	for _, t := range []*time.Time{r.estimateStartTime, r.estimateEndTime, r.limitTime} {
+		if t != nil {
+			return *t, true
+		}
+	}
+	return time.Time{}, false
+}
+
+// CloneForRepeat は3つの予定日時をずらす。対象（targetID）は同じ記録を指したままで、
+// 「同じ記録を繰り返しタスク化する」という意味になる。
+func (r *kftlMiReKyouRequest) CloneForRepeat(newRequestID string, dayShift int) KFTLRequest {
+	c := *r
+	c.KFTLRequestBase = r.cloneBase(newRequestID, dayShift)
+	c.estimateStartTime = shiftTimePtr(r.estimateStartTime, dayShift)
+	c.estimateEndTime = shiftTimePtr(r.estimateEndTime, dayShift)
+	c.limitTime = shiftTimePtr(r.limitTime, dayShift)
+	return &c
+}
+
 // ─── ブロックの次の行を決める先読み ──────────────────────────────────────────
 
 // generateMiReKyouNextConstructor decides the constructor for the next line inside a MiReKyou block.
@@ -130,6 +160,14 @@ func generateMiReKyouNextConstructor(nextLineText string, req *kftlMiReKyouReque
 	if isMiReKyouSplitter(nextLineText) {
 		return func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
 			return newKFTLEndMiReKyouStatementLine(lt, c, prevLineIsMetaInfo)
+		}
+	}
+	if isRepeatSplitter(nextLineText) {
+		// タグ行と同じく項目の位置を消費しない。閉じたら同じ項目位置へ戻る
+		return func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
+			return newKFTLStartRepeatStatementLine(lt, c, prevLineIsMetaInfo, func(nextText string) StatementLineConstructorFunc {
+				return generateMiReKyouNextConstructor(nextText, req, prevLineIsMetaInfo, nextFieldConstructor)
+			}, req)
 		}
 	}
 	if strings.HasPrefix(nextLineText, splitterTag) || strings.HasPrefix(nextLineText, splitterTagAscii) {
@@ -244,7 +282,10 @@ func newKFTLMiReKyouEstimateStartTimeStatementLine(lineText string, ctx *KFTLSta
 }
 
 func (l *kftlMiReKyouEstimateStartTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	t, ok := parseMiReKyouTime(l.lineText, l.ctx.BaseTime)
+	t, ok, err := parseScheduleFieldTime(l.lineText, l.ctx.BaseTime)
+	if err != nil {
+		return err
+	}
 	if ok {
 		l.req.estimateStartTime = &t
 	}
@@ -281,7 +322,10 @@ func newKFTLMiReKyouEstimateEndTimeStatementLine(lineText string, ctx *KFTLState
 }
 
 func (l *kftlMiReKyouEstimateEndTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	t, ok := parseMiReKyouTime(l.lineText, l.ctx.BaseTime)
+	t, ok, err := parseScheduleFieldTime(l.lineText, l.ctx.BaseTime)
+	if err != nil {
+		return err
+	}
 	if ok {
 		l.req.estimateEndTime = &t
 	}
@@ -314,7 +358,10 @@ func newKFTLMiReKyouLimitTimeStatementLine(lineText string, ctx *KFTLStatementLi
 }
 
 func (l *kftlMiReKyouLimitTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	t, ok := parseMiReKyouTime(l.lineText, l.ctx.BaseTime)
+	t, ok, err := parseScheduleFieldTime(l.lineText, l.ctx.BaseTime)
+	if err != nil {
+		return err
+	}
 	if ok {
 		l.req.limitTime = &t
 	}
@@ -403,18 +450,3 @@ func (l *kftlEndMiReKyouStatementLine) ApplyThisLineToRequestMap(_ context.Conte
 func (l *kftlEndMiReKyouStatementLine) GetLabelName() string                  { return "endMirekyou" }
 func (l *kftlEndMiReKyouStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
 func (l *kftlEndMiReKyouStatementLine) GetStatementLineText() string          { return l.lineText }
-
-// parseMiReKyouTime parses an optional datetime line.
-// 「？」/「?」は付いていてもいなくてもよい。空行やパースできない行は未設定として扱う。
-func parseMiReKyouTime(lineText string, base time.Time) (time.Time, bool) {
-	s := strings.TrimPrefix(lineText, splitterRelatedTime)
-	s = strings.TrimPrefix(s, splitterRelatedTimeAscii)
-	if strings.TrimSpace(s) == "" {
-		return time.Time{}, false
-	}
-	t, err := parseDateTime(s, base)
-	if err != nil {
-		return time.Time{}, false
-	}
-	return t, true
-}

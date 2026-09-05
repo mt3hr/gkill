@@ -110,7 +110,7 @@ handle_*.go は106ファイル（実装91 + テスト15）で、1ハンドラ1�
 | `http_status_test.go` | 全エラーコードが対応表に載っていることのソース走査テスト |
 | `message_test.go` | コード形式テスト |
 
-### `kftl/`（26ファイル）— KFTL パーサ
+### `kftl/`（31ファイル）— KFTL パーサ
 
 詳細は [kftl/README.md](kftl/README.md) を参照。
 

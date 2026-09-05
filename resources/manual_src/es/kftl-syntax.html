@@ -17,6 +17,7 @@
   <tr><td><code>、</code></td><td><code>,</code></td><td>Separador</td><td>Dividir en un nuevo registro</td></tr>
   <tr><td><code>、、</code></td><td><code>,,</code></td><td>Separador (+1 seg)</td><td>Dividir e incrementar marca de tiempo en 1 segundo</td></tr>
   <tr><td><code>？</code></td><td><code>?</code></td><td>Hora relacionada</td><td>Establecer fecha/hora relacionada</td></tr>
+  <tr><td><code>？？</code></td><td><code>??</code></td><td>Repeticion</td><td>Crear el registro anterior en otras fechas</td></tr>
   <tr><td><code>ーか</code></td><td><code>/num</code></td><td>Registro numérico</td><td>Registrar un valor numérico</td></tr>
   <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>Tarea</td><td>Crear una tarea</td></tr>
   <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>Estado de ánimo</td><td>Registrar valor de ánimo (0-10)</td></tr>
@@ -159,7 +160,7 @@ https://example.com
 Sitio favorito</pre>
 
 <h3>18. Tarea de repost: <code>~~</code></h3>
-<p>Comienza con <code>~~</code> y termina con <code>~~</code>. Convierte el registro escrito justo encima en una tarea sin reescribir su contenido. No hay linea de titulo: el registro original se muestra tal cual. Dentro del bloque se escriben el nombre del tablero, la fecha de inicio prevista, la fecha de fin prevista y la fecha limite, en ese orden (todos opcionales). No hace falta <code>?</code> delante de una fecha. Una linea que empieza por <code>#</code> se convierte en una etiqueta de la propia tarea, y puede escribirse antes o despues del nombre del tablero.</p>
+<p>Comienza con <code>~~</code> y termina con <code>~~</code>. Convierte el registro escrito justo encima en una tarea sin reescribir su contenido. No hay linea de titulo: el registro original se muestra tal cual. Dentro del bloque se escriben el nombre del tablero, la fecha de inicio prevista, la fecha de fin prevista y la fecha limite, en ese orden (todos opcionales). Escribir <code>?</code> delante de una fecha produce un error. Una linea que empieza por <code>#</code> se convierte en una etiqueta de la propia tarea, y puede escribirse antes o despues del nombre del tablero.</p>
 <pre>Nota sobre un articulo para leer mas tarde
 ~~
 #trabajo
@@ -169,7 +170,30 @@ Compras
 2025-03-22
 ~~</pre>
 
-<h3>19. Guardar: <code>!</code></h3>
+<h3>19. Repeticion: <code>??</code></h3>
+<p>Comienza con <code>??</code> y termina con <code>??</code>. Crea de nuevo, en otras fechas, el registro escrito justo encima. Dentro del bloque se escriben estas cuatro lineas en orden. Las lineas 3 y 4 se pueden omitir cerrando antes con <code>??</code>.</p>
+<table>
+  <tr><th>Linea</th><th>Significado</th><th>Como se escribe</th></tr>
+  <tr><td>1</td><td>Que dias (obligatorio)</td><td><code>daily</code> / <code>fri</code> / <code>mon,wed,fri</code> / <code>6w fri</code> / <code>monthly 15</code> / <code>2nd fri</code> / <code>last fri</code></td></tr>
+  <tr><td>2</td><td>Cuantas veces, o la fecha final (obligatorio)</td><td><code>3</code> / <code>2026-12-31</code></td></tr>
+  <tr><td>3</td><td>Anadir aunque ya exista el mismo registro (opcional, por defecto <code>no</code>)</td><td><code>no</code> / <code>yes</code></td></tr>
+  <tr><td>4</td><td>Desde cuando empezar (opcional, por defecto ahora)</td><td><code>2026-09-12</code> / <code>9/12 18:00</code></td></tr>
+</table>
+<pre>/mi
+Informe semanal
+Trabajo
+18:00
+??
+fri
+3
+??</pre>
+<p>Este ejemplo crea tres tareas "Informe semanal" a las 18:00 los tres viernes siguientes. Todas las fechas y horas del registro se desplazan el mismo numero de dias, por lo que se conservan los intervalos entre inicio, fin y fecha limite. No se puede usar en una tarea sin ninguna fecha, porque no habria donde poner las fechas repetidas.</p>
+<p>Como la linea 3 vale <code>no</code> por defecto, <strong>volver a guardar el mismo texto no crea duplicados.</strong> Si un guardado falla a medias, basta con guardar el mismo texto otra vez y solo se crean los registros que faltan.</p>
+<div class="tip">
+  <strong>Nota:</strong> Las fechas que no existen se omiten (<code>monthly 31</code> omite febrero, <code>5th fri</code> omite los meses sin quinto viernes). No se puede usar con el inicio de marca de tiempo (<code>/start</code>) ni con el fin (<code>/end</code>, <code>/end?</code>, <code>/endt</code>, <code>/endt?</code>). Como maximo se pueden crear 1000 registros en un guardado.
+</div>
+
+<h3>20. Guardar: <code>!</code></h3>
 <p>Termina el documento y ejecuta el proceso de guardado.</p>
 <pre>!</pre>
 

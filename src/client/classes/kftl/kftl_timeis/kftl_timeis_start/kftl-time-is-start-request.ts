@@ -10,6 +10,7 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
+import type { RepeatSpec } from '../../kftl_repeat/kftl-repeat-spec'
 
 export class KFTLTimeIsStartRequest extends KFTLRequest {
 
@@ -66,6 +67,29 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
             }
         })
         return errors
+    }
+
+
+    /**
+     * 打刻開始のみの繰り返しを弾く。
+     *
+     * end_time の無い打刻を回数ぶん作ると、**走行中のスタンプがその数だけ残る**。
+     * 終わりの無いスタンプは以降の全記録を覆うので、掃除するまで検索結果に付き続ける。
+     */
+    override set_repeat_spec(_spec: RepeatSpec): void {
+        throw new Error(i18n.global.t("KFTL_REPEAT_TYPE_NOT_SUPPORTED_MESSAGE_TITLE"))
+    }
+
+    override clone_for_repeat(new_request_id: string, day_shift: number): KFTLRequest {
+        const cloned = new KFTLTimeIsStartRequest(new_request_id, this.get_context())
+        this.copy_base_state_for_repeat(cloned, day_shift)
+        cloned.title = this.title
+        return cloned
+    }
+
+    override async find_existing_for_repeat(_gkill_api: GkillAPI, _application_config: ApplicationConfig | null, _from: Date, _to: Date): Promise<Set<number>> {
+        // set_repeat_spec が断るのでここへは来ない
+        return new Set<number>()
     }
 
 }

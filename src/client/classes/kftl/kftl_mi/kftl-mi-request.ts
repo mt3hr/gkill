@@ -10,6 +10,9 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { schedule_anchor_of, is_mi_data_type } from '../kftl_repeat/kftl-repeat-duplicate'
+import { find_existing_anchors } from '../kftl_repeat/kftl-repeat-duplicate'
+import { shift_days } from '../kftl_repeat/kftl-repeat-spec'
 
 export class KFTLMiRequest extends KFTLRequest {
 
@@ -109,6 +112,66 @@ export class KFTLMiRequest extends KFTLRequest {
 
     async set_estimate_end_time(estimate_end_time: Date | null): Promise<void> {
         this.esitimate_end_time = estimate_end_time
+    }
+
+
+    /**
+     * 書き込みに使う板名。空なら設定の既定板になる。
+     * **既存判定と書き込みで同じ値を使うため**にここへ出してある。
+     */
+    resolved_board_name(application_config: ApplicationConfig | null): string {
+        if (this.board_name !== "") {
+            return this.board_name
+        }
+        return application_config !== null ? application_config.mi_default_board : ""
+    }
+
+    /**
+     * 予定日時のうち最初に埋まっているものを基準にする。
+     * タスクに関連時刻の列は無いので、1つも埋まっていなければ繰り返しの入れ先が無い。
+     */
+    override anchor_time_for_repeat(): Date | null {
+        return schedule_anchor_of(this.estimate_start_time, this.esitimate_end_time, this.limit_time)
+    }
+
+    /**
+     * 3つの予定日時を**同じ日数だけ**ずらす。
+     * 欄どうしの相対差（見積開始の2日後が期限、など）はそのまま保たれる。
+     */
+    override clone_for_repeat(new_request_id: string, day_shift: number): KFTLRequest {
+        const cloned = new KFTLMiRequest(new_request_id, this.get_context())
+        this.copy_base_state_for_repeat(cloned, day_shift)
+        cloned.title = this.title
+        cloned.board_name = this.board_name
+        cloned.estimate_start_time = this.estimate_start_time === null ? null : shift_days(this.estimate_start_time, day_shift)
+        cloned.esitimate_end_time = this.esitimate_end_time === null ? null : shift_days(this.esitimate_end_time, day_shift)
+        cloned.limit_time = this.limit_time === null ? null : shift_days(this.limit_time, day_shift)
+        return cloned
+    }
+
+    override async find_existing_for_repeat(gkill_api: GkillAPI, application_config: ApplicationConfig | null, from: Date, to: Date): Promise<Set<number>> {
+        const board_name = this.resolved_board_name(application_config)
+        return find_existing_anchors(gkill_api, from, to, true,
+            is_mi_data_type,
+            (kyou) => {
+                if (kyou.typed_mi === null || kyou.typed_mi.title !== this.title || kyou.typed_mi.board_name !== board_name) {
+                    return null
+                }
+                return schedule_anchor_of(kyou.typed_mi.estimate_start_time, kyou.typed_mi.estimate_end_time, kyou.typed_mi.limit_time)
+            })
+    }
+
+
+    get_estimate_start_time(): Date | null {
+        return this.estimate_start_time
+    }
+
+    get_estimate_end_time(): Date | null {
+        return this.esitimate_end_time
+    }
+
+    get_limit_time(): Date | null {
+        return this.limit_time
     }
 
 }

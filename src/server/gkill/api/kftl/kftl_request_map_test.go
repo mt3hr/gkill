@@ -13,6 +13,18 @@ type mockRequest struct {
 
 func (r *mockRequest) DoRequest(_ context.Context) error { return nil }
 
+// CloneForRepeat は基底に既定実装を置いていないので、具象ごとに要る
+// （置くと日時をずらさない複製が黙って書かれるため）。
+func (r *mockRequest) CloneForRepeat(newRequestID string, dayShift int) KFTLRequest {
+	c := *r
+	c.KFTLRequestBase = r.cloneBase(newRequestID, dayShift)
+	return &c
+}
+
+func (r *mockRequest) FindExistingForRepeat(_ context.Context, _, _ time.Time) (map[int64]struct{}, error) {
+	return nil, nil
+}
+
 func newMockRequest(id string) *mockRequest {
 	return &mockRequest{
 		KFTLRequestBase: KFTLRequestBase{
