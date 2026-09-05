@@ -8,6 +8,7 @@ import { AddKCRequest } from '@/classes/api/req_res/add-kc-request'
 
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { find_existing_anchors } from '../kftl_repeat/kftl-repeat-duplicate'
 
 export class KFTLKCRequest extends KFTLRequest {
 
@@ -62,6 +63,21 @@ export class KFTLKCRequest extends KFTLRequest {
     set_num_value(num_value: number): void {
         this.num_value = num_value
     }
+
+    override clone_for_repeat(new_request_id: string, day_shift: number): KFTLRequest {
+        const cloned = new KFTLKCRequest(new_request_id, this.get_context())
+        this.copy_base_state_for_repeat(cloned, day_shift)
+        cloned.title = this.title
+        cloned.num_value = this.num_value
+        return cloned
+    }
+
+    override async find_existing_for_repeat(gkill_api: GkillAPI, _application_config: ApplicationConfig | null, from: Date, to: Date): Promise<Set<number>> {
+        return find_existing_anchors(gkill_api, from, to, false,
+            (data_type) => data_type === "kc",
+            (kyou) => (kyou.typed_kc !== null && kyou.typed_kc.title === this.title) ? kyou.typed_kc.related_time : null)
+    }
+
 }
 
 

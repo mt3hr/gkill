@@ -40,6 +40,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `ーー` | Text | テキスト開始 |
 | `～～` | MiReKyou | 既存の記録をタスク化（開始・終了とも同じ記号） |
 | `？` | RelatedTime | 関連時刻 |
+| `？？` | Repeat | 繰り返し（開始・終了とも同じ記号。直前の記録を日付を変えて何度も作る） |
 | `、` | Split | 区切り（次ステートメントへ） |
 | `、、` | SplitNextSecond | 区切り（次秒へ） |
 | `ーか` | KC | 数値記録 |
@@ -65,6 +66,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `--` | `ーー` | Text |
 | `~~` | `～～` | MiReKyou |
 | `?` | `？` | RelatedTime |
+| `??` | `？？` | Repeat |
 | `,` | `、` | Split |
 | `,,` | `、、` | SplitNextSecond |
 | `/num` | `ーか` | KC |
@@ -80,7 +82,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `/url` | `ーう` | URLog |
 | `!` | `！` | Save |
 
-## ファイル一覧（24ファイル）
+## ファイル一覧（27ファイル）
 
 ### コア構造
 
@@ -120,9 +122,22 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `kftl_text_statement_lines.go` | Text 行（`ーー` プレフィックス）。出口を決めるのは終了行なので `resume` を開始行から終了行まで持ち回る |
 | `kftl_related_time_statement_line.go` | RelatedTime 行（`？` プレフィックス） |
 | `kftl_split_statement_lines.go` | Split / SplitNextSecond 行（`、` / `、、` プレフィックス） |
-| `kftl_none_statement_line.go` | None 行 — 認識できないプレフィックスの行（スキップ） |
+| `kftl_none_statement_line.go` | None 行 — どのプレフィックスにも一致しない行。空行なら無視、**非空なら入力エラー**。次の行の決め方は `generateDefaultConstructor` へ委譲するので、既知のプレフィックスの行はここへ来ない |
 
-### テスト（5ファイル）
+### 繰り返し（`？？`）
+
+`？？` の単独行で開いて同じ記号で閉じる4行ブロック。**直前に書いた記録を日付を変えて何度も作る。**
+展開（複製の生成）は行の解釈ではなく **`GenerateAndExecuteRequests` の実行ループ直前**でやる
+（クライアント側は本文が変わるたびに全行を解釈し直すので、そこで複製すると打鍵1回あたり最大1000件になる）。
+設計と却下案は [ADR-0506](../../../../../documents/adr/0506-kftl-repeat-block-expands-into-records.md)。
+
+| ファイル | 役割 |
+|---------|------|
+| `kftl_repeat.go` | 条件の語彙（曜日・毎日・N週おき・毎月N日・第N曜日・最終曜日）、回数/終了日、既存時、起点のパースと候補日時の計算 |
+| `kftl_repeat_lines.go` | 行クラス6種、ブロックの先読み、`expandRepeats`（同じ spec を共有するリクエストを1グループとして複製） |
+| `kftl_repeat_duplicate.go` | 型別の「同じ記録があるか」の判定。**型をまたいだ抜けが問題になるのでここへ集約**（1つ実装し忘れるとその型だけ既定の冪等性が黙って消える） |
+
+### テスト（8ファイル）
 
 | ファイル | 説明 |
 |---------|------|
@@ -131,6 +146,9 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `kftl_statement_test.go` | KFTL テキスト全体のパース・実行テスト |
 | `kftl_mirekyou_test.go` | MiReKyou ブロックの行の並び・タグの帰属・対象の解決テスト |
 | `kftl_nlog_test.go` | 支出ブロックの支払いごとのタグ・テキストの帰属、ブロック全体に効く関連時刻、ブロック前のメタ情報行の拒否 |
+| `kftl_date_time_test.go` | 関連時刻・打刻時刻の書式と、欠けた年月日の補完 |
+| `kftl_schedule_field_time_test.go` | Mi / MiReKyou の予定日時欄。関連時刻の接頭辞「？」を入力エラーにする（[ADR-0505](../../../../../documents/adr/0505-schedule-time-field-rejects-related-time-prefix.md)） |
+| `kftl_repeat_test.go` | 繰り返しブロックの語彙・候補日時（クライアント側と対の表）・行の並び・展開・繰り返せない型・既存スキップ |
 
 ## 開発ガイドライン
 

@@ -10,6 +10,8 @@ import { KFTLSplitAndNextSecondStatementLine } from "./kftl_split/kftl-split-and
 import { LineLabelData } from "./line-label-data"
 import { is_save_charactor_line } from "./kftl-prefixes"
 import type { TextAreaInfo } from "./text-area-info"
+import type { ApplicationConfig } from "../datas/config/application-config"
+import { expand_repeats, validate_repeats } from "./kftl_repeat/kftl-repeat-expand"
 
 export class KFTLStatement {
 
@@ -24,7 +26,14 @@ export class KFTLStatement {
         return this.statement_text
     }
 
-    async generate_requests(): Promise<Array<KFTLRequest>> {
+    /**
+     * 送信するリクエストを組み立てる。
+     *
+     * gkill_api / application_config は繰り返しの既存判定にだけ使う。
+     * 渡さなければ既存判定を飛ばす（単体テストのようにAPIが無い場合）。
+     */
+    async generate_requests(gkill_api: GkillAPI | null = null, application_config: ApplicationConfig | null = null): Promise<Array<KFTLRequest>> {
+        const base = new Date(Date.now())
         const requests = new Array<KFTLRequest>()
         const lines = this.generate_kftl_lines()
         const map = new KFTLRequestMap()
@@ -35,7 +44,10 @@ export class KFTLStatement {
         map.forEach(request => {
             requests.push(request)
         });
-        return requests
+        // 繰り返し（「？？」）の展開。**行の解釈が全部終わってから**やる。
+        // ここでやると「？？」をブロックのどこに書いても結果が同じになり、
+        // 打鍵のたびに走る get_invalid_line_indexs とも切り離せる
+        return expand_repeats(requests, base, gkill_api, application_config)
     }
 
     generate_line_label_data(text_area_info: TextAreaInfo): Array<LineLabelData> {
@@ -129,6 +141,17 @@ export class KFTLStatement {
             } catch (_e: unknown) {
                 invalid_line_indexs.push(i)
             }
+        }
+        // 繰り返しの検査。**ここでは複製しない** ―― この関数は本文が変わるたびに走るので、
+        // 展開すると打鍵1回あたり最大1000件を作ることになる。
+        // 行ごとの apply では見えない失敗（日時欄が無い・条件に合う日が無い・上限超過）を
+        // ここで「？？」の開始行へ結びつける
+        if (invalid_line_indexs.length === 0) {
+            const requests = new Array<KFTLRequest>()
+            map.forEach(request => {
+                requests.push(request)
+            });
+            invalid_line_indexs.push(...validate_repeats(requests, new Date(Date.now())))
         }
         return invalid_line_indexs
     }

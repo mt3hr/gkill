@@ -11,7 +11,7 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 多くは「例外もエラーも出さずに静かに壊れる」種類で、破っても目の前ではエラーにならない。
 
 - `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- ~~ /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes
-- `classes/kftl/` — KFTL parser (50 statement types; the Go side has 47). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
+- `classes/kftl/` — KFTL parser (53 statement types; the Go side has 50). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
 
 **Go 側のエラーは行ごとに返し、入力ミスとサーバ障害を分ける**（2026-08-24、[ADR-0502](../../../documents/adr/0502-kftl-errors-are-per-line.md)）。`kftl_statement.go` は3フェーズ直列で、**行をリクエストへ適用するフェーズまでは1バイトも書かない**。だからそこは最初の1件で止めず**全行を評価して `errors.Join` で束ねる**（利用者が1往復で全部直せる。TS 側は元からそうなっていて Go だけが遅れていた）。実行フェーズは書き込みが起きるので最初の失敗で止める。振り分けは `KFTLInputError` と `errors.As` で、入力ミスは `ERR000416`(**400**)・サーバ障害は `ERR000351`(500)。**打ち間違いを 500 で返さないこと** —— ステータスを見る層からサーバ障害と区別できなくなる。応答の `created[]` は**書き込みが成功した直後にリクエスト側が控えた**もので、`requestMap` を事前に列挙して作ってはいけない（本文が空の kmemo / Mi / Nlog は何も書かずに成功し、打刻の終了は既存レコードの更新なので嘘になる）。失敗しても**そこまでに書けたぶんを載せる**（KFTL は DB トランザクションを使わないので部分保存が残る）。多言語キーは各失敗に1対1で7言語ぶん既にあるので**新設しない**。`api/kftl/` に **.go を新規追加しない**（`verify_docs` がファイル数を数えている）。
 
@@ -51,13 +51,52 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 - 判定は**長いプレフィックスから**見る（短い側からだと `/end?` が「`/end` に引数 `?`」に化ける）。タグ（`。`/`#`）と関連時刻（`？`/`?`）は**前方一致で受理する設計なので対象に入れない** —— 入れると `# 見出し` や `?` 始まりの英文が壊れる
 - 検査は `ApplyThisLineToRequestMap` のフェーズで行う。**まだ1バイトも書いていない**ので全行を評価して束ねられる。`DoRequest` まで持ち越すと前の行は既に書かれている
 - 打ち間違いは `newKFTLInputError` を使う。`fmt.Errorf` のままだと ERR000351（HTTP 500）＋英語の生文言になる。**メッセージIDは既存の i18n キーを探してから足すこと**（キー追加は7言語 + Go の embed コピー + 件数を書いた資料4箇所に波及する）
-- **`api/kftl/` に .go を新規追加しない。** `verify_docs.mjs` がファイル数を数えて `api/README.md` と突き合わせる
+- **Mi / MiReKyou の予定日時欄（見積開始・見積終了・期限）で行頭の `？`/`?` を剥がさない。入力エラーにする。** 剥がすと、残りがパースに失敗しても未設定として握り潰されるので、`？18:00` の打ち間違いも `？？`（繰り返しブロック）の書き損じも**エラーも警告も出ないまま日付だけが入らない**。Mi 本体は作られるので保存が成功したように見える。判定は Go `parseScheduleFieldTime` / TS `parse_schedule_field_time` の**1箇所ずつに集約**する（6欄が同じ形で壊れていた）。TimeIs（`ーち`）の時刻行は `？` を剥がすままだが、そちらはパース失敗が既に行エラーなので黙って壊れない。却下案は [ADR-0505](../../../documents/adr/0505-schedule-time-field-rejects-related-time-prefix.md)
+- **`api/kftl/` に .go を足したら、`api/README.md` の件数と `kftl/README.md` の表を同じコミットで直す。** `verify_docs.mjs` がファイル数を数えて突き合わせる（**テストファイルも数に入る**）
 
 **KFTL の実行フェーズの失敗でも、原因が「利用者が直せる状態」なら `newKFTLInputError` に載せる。** `fmt.Errorf` のままだと `kftl_statement.go` の `errors.As` に引っかからず、`ERR000351`（HTTP 500）の「メモ帳のテキストの記録に失敗しました」だけが返って**行番号も理由も出ない**。2026-08-25 の実利用レビューは `~~`（リポストタスク）がこれで3回とも同じ文言で落ち、原因を MCP 経路の不具合と誤診した（実際は繋いだアカウントに `mirekyou` 型の rep が1件も無く、Web UI からでも同じく失敗する状態だった）。**`MessageID` を空にしないこと** —— 空だと `formatKFTLInputErrorMessage` が `Cause` の英文をそのまま応答へ載せ、利用者IDと端末名が漏れる（[ADR-0707](../../../documents/adr/0707-redact-environment-specific-strings.md)）。境界と却下案は [ADR-0504](../../../documents/adr/0504-kftl-missing-configuration-is-an-input-error.md)。
 
 **`~~` は既存レコードをタスク化できない。** 対象IDは `ctx.ThisStatementLineTargetID` ＝**同じ送信テキストの直前の行が採番したUUID**で、gkill に既にある記録を指す構文は無い。ツール説明にそう書き戻さないこと。
 
 **KFTL 経由で書いた記録は `create_app="gkill_kftl"` / `create_device=<サーバのdevice>`。** MCP から書いても同じで、手打ちのメモ帳と**区別する欄が無い**（`gkill_add_*` は `gkill_mcp_readwrite` / `mcp`）。`create_apps:["gkill_mcp_readwrite"]` を「MCP で作った記録の探し方」と案内しないこと。KFTL は DB トランザクションではないので、失敗した送信を再送するときは `idempotency_key` を同じ値で渡す（受け口は `SubmitKFTLTextRequest`。渡さないと孤児レコードが積む）。
+
+## 繰り返し「？？」
+
+`？？` の単独行で開いて同じ記号で閉じる4行ブロック（条件・回数/終了日・既存時・起点）。
+**直前に書いた記録を日付を変えて何度も作る。** 設計と却下案は [ADR-0506](../../../documents/adr/0506-kftl-repeat-block-expands-into-records.md)。
+
+- **展開（複製の生成）を行の解釈でやらない。送信時だけ。** Go は `GenerateAndExecuteRequests` の実行ループ直前、
+  TS は `generate_requests()` の最後。`use-kftl-view.ts` は本文が変わるたびに `get_invalid_line_indexs()`
+  （= 全行の apply）を呼ぶので、apply で複製すると**打鍵1回あたり最大1000件**を作る。
+  打鍵のたびに走る検査は `validate_repeats` / `validateRepeatSpec` 側（複製しない）
+- **複製ではレコードIDと「テキストのID」を採り直す。** テキストIDを使い回すと同じIDのテキストを回数ぶん書くことになり、
+  append-only なので**最後の1件以外が黙って消える**。TS は `set_texts()` が採り直すので必ずそれを通す
+- **`？？` の判定は `？` の前方一致より前に置く。** 後ろだと `？？` が関連時刻行に食われ、
+  「？」を1つ剥がした残りのパース失敗になる。完全一致だけをブロックの開始にし、
+  `？？ 金 3` のように引数を同じ行に書いたものは記号の書き方のエラーへ倒す
+- **4行を書き終えたあとの位置は受け皿。行ラベルは「`**********`」を並べ、空行は見逃す。**
+  行ラベルの先読み（`generate_line_label_data`）は次の行のコンストラクタがある限り空行を
+  上限50行ぶん組み立てるので、ここを「繰り返し↓」にすると**書いてもいない行のラベルで列が埋まる**
+  （`～～` で同じ事故が起きて `KFTLMiReKyouNoneStatementLine` を足したのと同じ）。
+  ラベルが「何も無い行」と言う以上、空行でエラーにもしない。テキストの行は今までどおり
+  `KFTL_REPEAT_NOT_CLOSED_MESSAGE_TITLE` で弾く（飲み込むと閉じ忘れたときに本文が繰り返し指定に化ける）。
+  **TS と Go の両方を直すこと** —— 片側だけ緩めると Web では通るのに時計・MCP からの
+  `submit_kftl_text` で落ちる。受け皿はブロックの中に留まるので、空行のあとの `？？` は今までどおり閉じる
+- **リポストタスク（`～～`）の中では付け先を明示する。** ブロックの中の `target_id` は
+  「タスク化される元の記録」を指していて、リポストタスク自身は別のIDで登録されている。
+  引かせると**元の記録のほうが繰り返される**（タグ行が `req` を持ち回っているのと同じ理由）
+- **支出（`ーん`）はブロック全体で1グループ。** 店名・関連時刻と同じ扱いで、
+  `kftlNlogRequest.SetRepeatSpec` がブロックへ流す。複製では**ブロックも複製する** ――
+  共有したままだと回ごとにずらした関連時刻を最後の1回が上書きして全レコードが同じ日時になる
+- **繰り返せない型を開けない。** `ーた`（打刻開始のみ）は end_time の無い打刻をN個作り、
+  終わりの無いスタンプが以降の全記録を覆う。終了4種（`ーえ` `ーいえ` `ーたえ` `ーいたえ`）は
+  「いま走っている1件」しか見ないので繰り返す意味がない。どちらも `SetRepeatSpec` で断る
+- **`CloneForRepeat` / `clone_for_repeat` の既定実装を基底に置かない。** 置くと新しい型で
+  実装を忘れても通り、**日時のずれない複製が黙って書かれる**。コンパイルエラーで気づく形を保つ
+- **既存判定（3行目の既定 `no`）の照合キーは書き込みと同じ値を使う。** 板名は既定板への解決を
+  同じ関数（`resolvedBoardName` / `resolved_board_name`）に通すこと。ずれると毎回重複する
+- **存在しない日は飛ばす。丸めない。** `毎月31` の2月、`第5金` の無い月。最も近い日へ丸めると
+  `毎月30` や `第4金` と重複して二重に作られる
 
 ## 関連スキル
 
@@ -71,3 +110,5 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 - [ADR-0502 メモ帳の失敗は行ごとに返す](../../../documents/adr/0502-kftl-errors-are-per-line.md)
 - [ADR-0503 引数の書き方を誤ったプレフィックスは行別エラー](../../../documents/adr/0503-kftl-prefix-misuse-is-an-input-error.md)
 - [ADR-0504 実行フェーズでも設定不足は行別の入力エラー](../../../documents/adr/0504-kftl-missing-configuration-is-an-input-error.md)
+- [ADR-0505 予定日時欄では関連時刻の接頭辞「？」を入力エラーにする](../../../documents/adr/0505-schedule-time-field-rejects-related-time-prefix.md)
+- [ADR-0506 繰り返し「？？」は実体のレコードへ展開し、複製は送信時にだけ作る](../../../documents/adr/0506-kftl-repeat-block-expands-into-records.md)

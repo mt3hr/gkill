@@ -25,6 +25,9 @@ type kftlNlogBlock struct {
 	shop string
 	// `？`行で指定された関連時刻。ブロックの中のどこに書いてもブロック全体に効く
 	relatedTime *time.Time
+	// `？？`ブロックの繰り返し指定。関連時刻と同じくブロック全体に効き、
+	// このブロックの全支払いが1つの繰り返しグループになる
+	repeat *repeatSpec
 }
 
 // generateNlogBlockNextConstructor は支出ブロックの中の「次の行」を決める先読み。
@@ -47,6 +50,13 @@ func generateNlogBlockNextConstructor(nextLineText string, block *kftlNlogBlock,
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			return newKFTLStartTextStatementLine(lineText, ctx, false, resume)
 		}
+	case isRepeatSplitter(nextLineText):
+		// **関連時刻（`？`）の前方一致より前に置くこと。** 後ろだと `？？` が
+		// そちらに食われて到達しない。繰り返しの指定はブロック共有なので、
+		// 付け先はブロック（kftlNlogRequest.SetRepeatSpec がブロックへ流す）
+		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
+			return newKFTLStartRepeatStatementLine(lineText, ctx, false, resume, nil)
+		}
 	case strings.HasPrefix(nextLineText, splitterRelatedTime) || strings.HasPrefix(nextLineText, splitterRelatedTimeAscii):
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			return newKFTLNlogRelatedTimeStatementLine(lineText, ctx, block)
@@ -62,7 +72,8 @@ func generateNlogBlockNextConstructor(nextLineText string, block *kftlNlogBlock,
 // Mirrors: assert_is_not_meta_info_line (kftl-nlog-block.ts)
 func assertIsNotMetaInfoLine(lineText string) error {
 	if strings.HasPrefix(lineText, splitterTag) || strings.HasPrefix(lineText, splitterTagAscii) ||
-		lineText == splitterStartText || lineText == splitterStartTextAscii {
+		lineText == splitterStartText || lineText == splitterStartTextAscii ||
+		isRepeatSplitter(lineText) {
 		return newKFTLInputError("KFTL_NLOG_META_INFO_MUST_BE_AFTER_AMOUNT_MESSAGE_TITLE",
 			fmt.Errorf("nlog tags and texts must be written after the amount line: %q", lineText))
 	}
@@ -150,6 +161,39 @@ func (r *kftlNlogRequest) DoRequest(ctx context.Context) error {
 	// キャッシュに書き込み
 	logWriteThroughCacheFailure(ctx, "nlog", nlog.ID, r.Ctx.Repositories.WriteThroughNlogCache(ctx, nlog))
 	return nil
+}
+
+// GetRepeatSpec / SetRepeatSpec は支出ブロックで共有する。
+//
+// 「？？」をブロックの中のどこに書いても、そのブロックの**全支払いが1つの繰り返しグループ**になる
+// （店名・関連時刻と同じ扱い）。GetRelatedTime がブロックを見ているのと同じ形。
+func (r *kftlNlogRequest) GetRepeatSpec() *repeatSpec { return r.block.repeat }
+
+func (r *kftlNlogRequest) SetRepeatSpec(spec *repeatSpec) error {
+	r.block.repeat = spec
+	return nil
+}
+
+// AnchorTimeForRepeat はブロック共有の関連時刻を基準にする。**呼ぶと確定させる。**
+func (r *kftlNlogRequest) AnchorTimeForRepeat() (time.Time, bool) {
+	if r.block.relatedTime == nil {
+		t := r.CreateTime
+		r.block.relatedTime = &t
+	}
+	return *r.block.relatedTime, true
+}
+
+// CloneForRepeat は**ブロックも複製する**。
+// 共有したままだと、回ごとにずらしたはずの関連時刻を最後の1回が上書きし、
+// 全レコードが同じ日時になる（関連時刻の実体はブロック側にあるため）。
+func (r *kftlNlogRequest) CloneForRepeat(newRequestID string, dayShift int) KFTLRequest {
+	c := *r
+	c.KFTLRequestBase = r.cloneBase(newRequestID, dayShift)
+	blockCopy := *r.block
+	blockCopy.repeat = nil // 複製を再展開しない
+	blockCopy.relatedTime = shiftTimePtr(r.block.relatedTime, dayShift)
+	c.block = &blockCopy
+	return &c
 }
 
 // ─── Statement lines ──────────────────────────────────────────────────────────

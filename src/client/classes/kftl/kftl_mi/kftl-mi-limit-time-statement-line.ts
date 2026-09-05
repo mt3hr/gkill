@@ -1,13 +1,12 @@
 'use strict'
 
-import { parse_kftl_date_time } from '../kftl-date-time'
+import { parse_schedule_field_time } from '../kftl-schedule-field-time'
 import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import type { KFTLMiRequest } from './kftl-mi-request'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
 import { i18n } from '@/i18n'
-import { KFTL_ASCII_TIMEIS_TIME_PREFIX, strip_prefix } from '../kftl-prefixes'
 
 export class KFTLMiLimitTimeStatementLine extends KFTLStatementLine {
 
@@ -19,7 +18,7 @@ export class KFTLMiLimitTimeStatementLine extends KFTLStatementLine {
 
     async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
         const request = request_map.get(this.get_context().get_this_statement_line_target_id()) as unknown as KFTLMiRequest
-        const time = parse_kftl_date_time(strip_prefix(this.get_context().get_this_statement_line_text(), "KFTL_TIMEIS_TIME_PREFIX", KFTL_ASCII_TIMEIS_TIME_PREFIX))
+        const time = parse_schedule_field_time(this.get_context().get_this_statement_line_text())
         if (time !== null) {
             request.set_limit_time(time)
         }
@@ -30,8 +29,11 @@ export class KFTLMiLimitTimeStatementLine extends KFTLStatementLine {
         if (line_text == "" || line_text == "\n") {
             return i18n.global.t("KFTL_MI_NO_LIMIT_TIME_TITLE")
         }
-        const time = parse_kftl_date_time(strip_prefix(line_text, "KFTL_TIMEIS_TIME_PREFIX", KFTL_ASCII_TIMEIS_TIME_PREFIX))
-        if (time === null) {
+        try {
+            if (parse_schedule_field_time(line_text) === null) {
+                return i18n.global.t("KFTL_MI_INVALID_LIMIT_TIME_TITLE")
+            }
+        } catch (_e: unknown) {
             return i18n.global.t("KFTL_MI_INVALID_LIMIT_TIME_TITLE")
         }
         return i18n.global.t("KFTL_MI_LIMIT_TIME_TITLE")

@@ -11,6 +11,7 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { find_existing_anchors } from '../kftl_repeat/kftl-repeat-duplicate'
 
 export class KFTLKmemoRequest extends KFTLRequest {
 
@@ -69,6 +70,20 @@ export class KFTLKmemoRequest extends KFTLRequest {
             this.kmemo_content += `\n${kmemo_line}`
         }
     }
+
+    override clone_for_repeat(new_request_id: string, day_shift: number): KFTLRequest {
+        const cloned = new KFTLKmemoRequest(new_request_id, this.get_context())
+        this.copy_base_state_for_repeat(cloned, day_shift)
+        cloned.kmemo_content = this.kmemo_content
+        return cloned
+    }
+
+    override async find_existing_for_repeat(gkill_api: GkillAPI, _application_config: ApplicationConfig | null, from: Date, to: Date): Promise<Set<number>> {
+        return find_existing_anchors(gkill_api, from, to, false,
+            (data_type) => data_type === "kmemo",
+            (kyou) => (kyou.typed_kmemo !== null && kyou.typed_kmemo.content === this.kmemo_content) ? kyou.typed_kmemo.related_time : null)
+    }
+
 }
 
 

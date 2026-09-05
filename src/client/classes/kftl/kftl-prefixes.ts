@@ -6,6 +6,7 @@ import { i18n } from '@/i18n'
 export const KFTL_ASCII_TAG_PREFIX = "#"
 export const KFTL_ASCII_TEXT_SPLITTER_TITLE = "--"
 export const KFTL_ASCII_RELATED_TIME_PREFIX = "?"
+export const KFTL_ASCII_REPEAT_PREFIX = "??"
 export const KFTL_ASCII_SPLIT_PREFIX = ","
 export const KFTL_ASCII_SPLIT_APPEND_TIME_PREFIX = ",,"
 export const KFTL_ASCII_KC_SPLITTER_TITLE = "/num"
@@ -60,6 +61,34 @@ export function strip_prefix(line_text: string, i18n_key: string, ascii_prefix: 
 // タグ列を「、」または「,」で分割する
 export function split_tags(text: string): Array<string> {
     return text.split(/[、,]/)
+}
+
+// 繰り返しブロックの開始/終了の行か。**完全一致でしか受けない** ――
+// 「？？ 金 3」のように同じ行へ引数を書いたものは別に弾く
+export function is_repeat_splitter(line_text: string): boolean {
+    return matches_exact(line_text, "KFTL_REPEAT_PREFIX", KFTL_ASCII_REPEAT_PREFIX)
+}
+
+// 繰り返しブロックの記号のあとに、同じ行へ引数を書いたか(「？？ 金 3」)。
+//
+// **直後が空白のときだけ**とみなす。空白が無ければ別の語なので本文のまま通す
+// (Go 側 prefixWrittenWithArgument と同じ規則。揃えないと「??なんだこれ」が
+// クライアントでだけエラーになる)。
+export function is_repeat_prefix_with_argument(line_text: string): boolean {
+    const trimmed = line_text.replace(/[ 	]+$/, '')
+    for (const prefix of [i18n.global.t("KFTL_REPEAT_PREFIX"), KFTL_ASCII_REPEAT_PREFIX]) {
+        if (trimmed === prefix) {
+            return false // 単独で書かれている＝正しい書き方
+        }
+        if (!trimmed.startsWith(prefix)) {
+            continue
+        }
+        const rest = trimmed.slice(prefix.length)
+        if (rest !== '' && rest !== rest.replace(/^[ 	]+/, '')) {
+            return true
+        }
+    }
+    return false
 }
 
 // 保存文字(全角「！」または半角「!」)の行か

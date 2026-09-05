@@ -168,6 +168,13 @@ func (s *KFTLStatement) GenerateAndExecuteRequests(
 		return nil, errors.Join(inputErrs...)
 	}
 
+	// 繰り返し（「？？」）の展開。**書き込みの直前、行の解釈が全部終わってから**やる。
+	// ここでやると「？？」をブロックのどこに書いても結果が同じになり、
+	// クライアント側の「本文が変わるたびに全行を解釈し直す」経路とも切り離せる。
+	if err := expandRepeats(ctx, requestMap, baseTime); err != nil {
+		return nil, err
+	}
+
 	// ここから先は書き込みが起きる。1件でも失敗したら止めるが、
 	// **既に書けたぶんはロールバックされない**（commit_tx はDBトランザクションではない）。
 	// 途中で失敗しても、そこまでに書けたぶんは呼び出し側へ返す。

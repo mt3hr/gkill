@@ -3,6 +3,7 @@
 import type { KFTLBlockReentryProvider, KFTLStatementLineConstructor } from '../kftl-statement-line'
 import { KFTLTagStatementLine } from '../kftl_tag/kftl-tag-statement-line'
 import { KFTLStartTextStatementLine } from '../kftl_text/kftl-start-text-statement-line'
+import { KFTLStartRepeatStatementLine } from '../kftl_repeat/kftl-start-repeat-statement-line'
 
 /**
  * タスクブロック(`ーみ` / `/mi`)の中の「次の行」を決める先読み。
@@ -31,6 +32,11 @@ export function generate_mi_block_next_constructor(next_line_text: string, next_
     }
     if (KFTLStartTextStatementLine.is_this_type(next_line_text)) {
         return (line_text: string, context) => new KFTLStartTextStatementLine(line_text, context, false, reentry)
+    }
+    if (KFTLStartRepeatStatementLine.is_this_type(next_line_text)) {
+        // 繰り返しブロックもタグ・テキストと同じく項目の位置を消費しない。
+        // 拾わないと `？？` が予定日時の行として読まれ、`？` の禁止に引っかかる
+        return (line_text: string, context) => new KFTLStartRepeatStatementLine(line_text, context, false, reentry)
     }
     return next_field_constructor
 }

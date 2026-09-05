@@ -12,6 +12,7 @@ import { GetKyousRequest } from "@/classes/api/req_res/get-kyous-request"
 import delete_gkill_kyou_cache from "@/classes/delete-gkill-cache"
 import { i18n } from "@/i18n"
 import type { ApplicationConfig } from "@/classes/datas/config/application-config"
+import type { RepeatSpec } from '../../kftl_repeat/kftl-repeat-spec'
 
 export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
 
@@ -124,4 +125,25 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
     set_error_when_target_does_not_exist(error_when_target_does_not_exist: boolean) {
         this.error_when_target_does_not_exist = error_when_target_does_not_exist
     }
+
+    /**
+     * タグ指定の打刻終了の繰り返しを弾く（理由はタイトル指定と同じ）。
+     */
+    override set_repeat_spec(_spec: RepeatSpec): void {
+        throw new Error(i18n.global.t("KFTL_REPEAT_TYPE_NOT_SUPPORTED_MESSAGE_TITLE"))
+    }
+
+    override clone_for_repeat(new_request_id: string, day_shift: number): KFTLRequest {
+        const cloned = new KFTLTimeIsEndByTagRequest(new_request_id, this.get_context())
+        this.copy_base_state_for_repeat(cloned, day_shift)
+        cloned.target_tag_names = [...this.target_tag_names]
+        cloned.error_when_target_does_not_exist = this.error_when_target_does_not_exist
+        return cloned
+    }
+
+    override async find_existing_for_repeat(_gkill_api: GkillAPI, _application_config: ApplicationConfig | null, _from: Date, _to: Date): Promise<Set<number>> {
+        // set_repeat_spec が断るのでここへは来ない
+        return new Set<number>()
+    }
+
 }

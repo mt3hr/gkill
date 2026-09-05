@@ -17,6 +17,7 @@
   <tr><td><code>、</code></td><td><code>,</code></td><td>Trennzeichen</td><td>In einen neuen Datensatz aufteilen</td></tr>
   <tr><td><code>、、</code></td><td><code>,,</code></td><td>Trennzeichen (+1 Sek.)</td><td>Aufteilen und Zeitstempel um 1 Sekunde erhöhen</td></tr>
   <tr><td><code>？</code></td><td><code>?</code></td><td>Zugehörige Zeit</td><td>Zugehöriges Datum/Uhrzeit festlegen</td></tr>
+  <tr><td><code>？？</code></td><td><code>??</code></td><td>Wiederholung</td><td>Den Eintrag darüber an weiteren Terminen anlegen</td></tr>
   <tr><td><code>ーか</code></td><td><code>/num</code></td><td>Numerischer Eintrag</td><td>Numerischen Wert aufzeichnen</td></tr>
   <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>Aufgabe</td><td>Aufgabe erstellen</td></tr>
   <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>Stimmung</td><td>Stimmungswert (0-10) aufzeichnen</td></tr>
@@ -159,7 +160,7 @@ https://example.com
 Lieblingsseite</pre>
 
 <h3>18. Repost-Aufgabe: <code>~~</code></h3>
-<p>Beginnt mit <code>~~</code> und endet mit <code>~~</code>. Macht den unmittelbar darüber geschriebenen Eintrag zu einer Aufgabe, ohne seinen Inhalt neu zu schreiben. Es gibt keine Titelzeile: der ursprüngliche Eintrag wird unverändert angezeigt. Im Block werden Boardname, geplanter Startzeitpunkt, geplanter Endzeitpunkt und Fälligkeitsdatum in dieser Reihenfolge eingetragen (alle optional). Vor einem Datum ist kein <code>?</code> nötig. Eine Zeile, die mit <code>#</code> beginnt, wird zu einem Schlagwort der Aufgabe selbst und darf vor oder nach dem Boardnamen stehen.</p>
+<p>Beginnt mit <code>~~</code> und endet mit <code>~~</code>. Macht den unmittelbar darüber geschriebenen Eintrag zu einer Aufgabe, ohne seinen Inhalt neu zu schreiben. Es gibt keine Titelzeile: der ursprüngliche Eintrag wird unverändert angezeigt. Im Block werden Boardname, geplanter Startzeitpunkt, geplanter Endzeitpunkt und Fälligkeitsdatum in dieser Reihenfolge eingetragen (alle optional). Ein <code>?</code> vor einem Datum führt zu einem Fehler. Eine Zeile, die mit <code>#</code> beginnt, wird zu einem Schlagwort der Aufgabe selbst und darf vor oder nach dem Boardnamen stehen.</p>
 <pre>Notiz zu einem Artikel für später
 ~~
 #arbeit
@@ -169,7 +170,30 @@ Einkaufen
 2025-03-22
 ~~</pre>
 
-<h3>19. Speichern: <code>!</code></h3>
+<h3>19. Wiederholung: <code>??</code></h3>
+<p>Beginnt mit <code>??</code> und endet mit <code>??</code>. Legt den unmittelbar darüber geschriebenen Eintrag an weiteren Terminen erneut an. Im Block werden die folgenden vier Zeilen der Reihe nach eingetragen. Zeile 3 und 4 können weggelassen werden, indem früher mit <code>??</code> geschlossen wird.</p>
+<table>
+  <tr><th>Zeile</th><th>Bedeutung</th><th>Schreibweise</th></tr>
+  <tr><td>1</td><td>Welche Tage (erforderlich)</td><td><code>daily</code> / <code>fri</code> / <code>mon,wed,fri</code> / <code>6w fri</code> / <code>monthly 15</code> / <code>2nd fri</code> / <code>last fri</code></td></tr>
+  <tr><td>2</td><td>Wie oft, oder das Enddatum (erforderlich)</td><td><code>3</code> / <code>2026-12-31</code></td></tr>
+  <tr><td>3</td><td>Auch anlegen, wenn derselbe Eintrag schon existiert (optional, Standard <code>no</code>)</td><td><code>no</code> / <code>yes</code></td></tr>
+  <tr><td>4</td><td>Ab wann (optional, Standard jetzt)</td><td><code>2026-09-12</code> / <code>9/12 18:00</code></td></tr>
+</table>
+<pre>/mi
+Wochenbericht
+Arbeit
+18:00
+??
+fri
+3
+??</pre>
+<p>Dieses Beispiel legt an den nächsten drei Freitagen jeweils um 18:00 eine Aufgabe „Wochenbericht“ an. Alle Datums- und Zeitangaben des Eintrags werden um dieselbe Anzahl Tage verschoben, die Abstände zwischen Beginn, Ende und Fälligkeit bleiben also erhalten. Bei einer Aufgabe ganz ohne Datum ist das nicht möglich, weil es keinen Platz für die wiederholten Termine gäbe.</p>
+<p>Da Zeile 3 standardmäßig <code>no</code> ist, <strong>entstehen beim erneuten Speichern desselben Textes keine Duplikate.</strong> Schlägt ein Speichervorgang mittendrin fehl, speichern Sie einfach denselben Text noch einmal; nur die fehlenden Einträge werden angelegt.</p>
+<div class="tip">
+  <strong>Hinweis:</strong> Nicht existierende Termine werden übersprungen (<code>monthly 31</code> überspringt den Februar, <code>5th fri</code> überspringt Monate ohne fünften Freitag). Mit dem Zeitstempel-Start (<code>/start</code>) und dem Zeitstempel-Ende (<code>/end</code>, <code>/end?</code>, <code>/endt</code>, <code>/endt?</code>) ist es nicht verwendbar. Pro Speichervorgang können höchstens 1000 Einträge angelegt werden.
+</div>
+
+<h3>20. Speichern: <code>!</code></h3>
 <p>Beendet das Dokument und führt den Speichervorgang aus.</p>
 <pre>!</pre>
 
