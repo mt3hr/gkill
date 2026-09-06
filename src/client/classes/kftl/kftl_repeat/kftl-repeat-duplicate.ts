@@ -1,6 +1,7 @@
 'use strict'
 
 import type { GkillAPI } from '../../api/gkill-api'
+import { MiCheckState } from '../../api/find_query/mi-check-state'
 import { GetKyousRequest } from '../../api/req_res/get-kyous-request'
 import type { Kyou } from '../../datas/kyou'
 
@@ -25,6 +26,15 @@ export async function find_existing_anchors(
     anchor_of: (kyou: Kyou) => Date | null,
 ): Promise<Set<number>> {
     const request = new GetKyousRequest()
+    // **コンストラクタの既定値をそのまま送ってはいけない。** FindKyouQuery は
+    // tags / reps を `[]` で初期化する。null が「フィルタ未使用」で、非nullの空配列は
+    // 「0件指定」なので、既定のまま送るとサーバは tags で無条件に0件にし
+    // （find_filter.go の filterTagsKyous）、rep 名の許可集合も空になる。
+    // 既存判定が常に空を返し、3行目が no でも全回が作られる
+    // ＝ 同じテキストを送るたびに増える。Go 側（kftl_repeat_duplicate.go の
+    // newRepeatDuplicateQuery）が Tags / Reps を nil のままにしているのと揃える
+    request.query.tags = null
+    request.query.reps = null
     request.query.calendar_start_date = from
     request.query.calendar_end_date = to
     if (for_schedule) {
@@ -36,6 +46,11 @@ export async function find_existing_anchors(
         request.query.include_limit_mi = true
         request.query.include_start_mi = true
         request.query.include_end_mi = true
+        // **チェック状態でも絞らない。** 既定は uncheck なので、そのままだと
+        // 完了済みのタスクが既存判定に引っかからず、再送で重複する。
+        // Go 側は MiCheckState を設定せず、空文字が filterMiForMi の default 節で
+        // 全件対象になる。TS は enum に空が無いので all を明示する
+        request.query.mi_check_state = MiCheckState.all
     }
 
     const response = await gkill_api.get_kyous(request)
