@@ -12,6 +12,7 @@ package reps
 import (
 	"bytes"
 	"context"
+	"errors"
 	"image"
 	"image/color"
 	"image/png"
@@ -233,5 +234,54 @@ func TestCachedThumbNamesOnMissingDirectory(t *testing.T) {
 	}
 	if len(names) != 0 {
 		t.Errorf("空のはず: got %d件", len(names))
+	}
+}
+
+// 失敗の印を焼くのはそのファイル固有の失敗のときだけ。
+// ffmpeg / ffprobe が無いのは環境の欠落なので、焼くと入れ直しても二度と作られなくなる。
+func TestMarkThumbFailedSkipsMissingFFTools(t *testing.T) {
+	thumbPath := filepath.Join(t.TempDir(), "thumb.jpg")
+	markerPath := thumbPath + thumbFailedMarkerSuffix
+
+	markThumbFailed(context.Background(), thumbPath, errFFToolsNotAvailable)
+	if _, err := os.Stat(markerPath); err == nil {
+		t.Error("ffmpeg/ffprobe が無いだけで失敗の印が焼かれている")
+	}
+
+	markThumbFailed(context.Background(), thumbPath, errors.New("broken image file"))
+	if _, err := os.Stat(markerPath); err != nil {
+		t.Errorf("ファイル固有の失敗で印が焼かれていない: %v", err)
+	}
+}
+
+// ffmpeg / ffprobe が無い環境で一括生成しても、印を焼き付けないこと。
+//
+// 2026-09-06 に本番サービス（LocalSystem 起動でシステムのPATHしか見えず、
+// ffmpeg は利用者のPATHにしか入っていなかった）が動画123件ぶんの印を焼き、
+// ffmpeg の見える CLI から generate_thumb_cache を何度回しても作られなくなった。
+func TestGenerateThumbCacheDoesNotMarkFailedWhenFFToolsMissing(t *testing.T) {
+	repo, contentDir, thumbCacheDir := newIDFRepForThumbBatchTest(t)
+	ctx := context.Background()
+
+	// 中身は問わない。ffmpeg の有無を見る分岐より先へは進まない
+	moviePath := filepath.Join(contentDir, "movie.mp4")
+	if err := os.WriteFile(moviePath, []byte("not a real movie"), os.ModePerm); err != nil {
+		t.Fatalf("WriteFile failed: %v", err)
+	}
+	if err := repo.IDF(ctx); err != nil {
+		t.Fatalf("IDF failed: %v", err)
+	}
+
+	origFFMPEG, origFFPROBE := existFFMPEG, existFFPROBE
+	existFFMPEG, existFFPROBE = false, false
+	t.Cleanup(func() { existFFMPEG, existFFPROBE = origFFMPEG, origFFPROBE })
+
+	if err := repo.GenerateThumbCache(ctx); err != nil {
+		t.Fatalf("GenerateThumbCache failed: %v", err)
+	}
+
+	name := thumbCacheNameForTest(t, repo, contentDir, "movie.mp4")
+	if _, err := os.Stat(filepath.Join(thumbCacheDir, name+thumbFailedMarkerSuffix)); err == nil {
+		t.Error("ffmpeg/ffprobe が無いだけで失敗の印が焼かれている")
 	}
 }

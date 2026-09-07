@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"image"
 	stdDraw "image/draw"
@@ -38,6 +39,18 @@ var (
 	existFFMPEG  = false
 	existFFPROBE = false
 )
+
+// errFFToolsNotAvailable は ffmpeg / ffprobe が PATH に無くて動画サムネイルを作れないこと。
+//
+// これは「そのファイルが変換できない」ではなく「この環境では今どの動画も変換できない」なので、
+// markThumbFailed の恒久マーカーからは外す（互換動画側が ffmpeg 不在でマーカーを残さず
+// 原本へフォールバックするのと同じ判断）。焼いてしまうと ffmpeg が使えるようになっても
+// 二度と生成されず、clear_cache thumb でキャッシュを丸ごと捨てるまで直らない。
+//
+// 2026-09-06 に実際にそうなった。本番サービスは LocalSystem 起動でシステムのPATHしか見えず、
+// ffmpeg は利用者のPATHにしか入っていなかったので、ブラウザで一覧を開いた1回で
+// 動画123件ぶんのマーカーが焼き付き、以後 generate_thumb_cache を何度回しても作られなくなった。
+var errFFToolsNotAvailable = errors.New("ffmpeg/ffprobe not available")
 
 func init() {
 	_, existFFMPEG = findInPath("ffmpeg")
@@ -211,7 +224,7 @@ func (t *thumbFileServer) GenerateThumbCacheFor(ctx context.Context, rel string,
 		}
 		if isVideo {
 			if !existFFMPEG || !existFFPROBE {
-				return nil, fmt.Errorf("ffmpeg/ffprobe not available")
+				return nil, errFFToolsNotAvailable
 			}
 			return nil, generateVideoThumbJpeg(ctx, abs, thumbPath, tw, th)
 		}
@@ -333,7 +346,7 @@ func (t *thumbFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		if isVideo {
 			if !existFFMPEG || !existFFPROBE {
-				return nil, fmt.Errorf("ffmpeg/ffprobe not available")
+				return nil, errFFToolsNotAvailable
 			}
 			return nil, generateVideoThumbJpeg(r.Context(), abs, thumbPath, tw, th)
 		}
@@ -438,8 +451,14 @@ const thumbFailedMarkerSuffix = ".failed"
 // ctx が切れているときは印を残しません。HTTP経由ではブラウザが待ちきれずに
 // 接続を切ると ffmpeg も一緒に落ちるので、それを恒久的な失敗として焼いてはいけません。
 // 互換動画側の markCompatFailed と同じ判断です。
+//
+// ffmpeg / ffprobe がそもそも無いときも残しません。環境が変われば作れるようになるものを
+// 焼くと、ffmpeg を入れ直しても二度と生成されなくなります（errFFToolsNotAvailable を参照）。
 func markThumbFailed(ctx context.Context, thumbPath string, cause error) {
 	if ctx.Err() != nil {
+		return
+	}
+	if errors.Is(cause, errFFToolsNotAvailable) {
 		return
 	}
 	markerPath := thumbPath + thumbFailedMarkerSuffix
