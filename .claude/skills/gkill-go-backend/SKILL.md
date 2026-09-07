@@ -47,6 +47,8 @@ Key packages:
 
 **索引を持つ rep は鮮度を出す。** rep ディレクトリへ置いただけのファイルは `UpdateCache` が `IDF()` を走らせるまで検索に出ないが、**定期実行も監視も無く、警告も出ない**ので「0件」が「まだ取り込んでいない」なのか「本当に無い」なのか区別できなかった。`get_rep_infos` の `indexed_at`（任意インタフェース `IndexUpdatedAt` を実装した rep だけ）で判断させる。**検索のたびにディレクトリを全走査して未採番を数えてはいけない**（実データは56万行規模）。
 
+**派生キャッシュの「失敗の印」は、そのファイル固有の失敗にだけ焼く。** サムネイル（`markThumbFailed`）と互換動画（`markCompatFailed`）は、生成に失敗したファイルの脇へ `.failed` を置いて二度と挑まない —— デコードできないファイルが一括生成のたびに全件やり直しになるため。**焼いてよいのは「何度やっても同じ結果になる失敗」だけ。** `ffmpeg` / `ffprobe` が PATH に無いのは「このファイルが変換できない」ではなく「今この環境ではどの動画も変換できない」なので、印にすると ffmpeg が使えるようになっても二度と生成されず、`clear_cache thumb` でキャッシュを丸ごと捨てるまで直らない（消したぶんの作り直しに数十分〜数時間かかる）。2026-09-06 にそうなった —— 本番サービスは LocalSystem 起動でシステムのPATHしか見えず、ffmpeg は利用者のPATHにしか入っていなかったので、**ブラウザで一覧を開いた1回**で動画1repぶんの印が焼き付き、ffmpeg の見える CLI から `generate_thumb_cache` を何度回しても作られなくなった。判定はセンチネル `errFFToolsNotAvailable` を `errors.Is` で見る（メッセージ文字列で照合しない）。`ctx` が切れているときに焼かないのと同じ判断で、互換動画側は ffmpeg 不在なら手前で原本へフォールバックして印を残さない。守るテストは `idf_thumb_batch_test.go` の `TestMarkThumbFailedSkipsMissingFFTools` / `TestGenerateThumbCacheDoesNotMarkFailedWhenFFToolsMissing`。
+
 **タグ語彙の列挙は2つある。検証には「対象の生死を問わない」ほうを使う。** `GkillRepositories.GetAllTagNames` は**対象が削除済みのタグを落とす** —— 記録を消してもタグは消えない（消すと `gkill_restore_kyou` で復活したときにタグが失われる）ので、落とさないと「選んでも0件」の候補が溜まり続ける。生存判定は最新版アドレス表を引くだけで**追加のI/Oは無い**（`GetAllTags` が既に `TargetID` を持って返る）。**アドレス表に載っていない対象は落とさないこと** —— プラグインや git の記録は表に載らないので、落とすと語彙が黙って痩せる。一方「そのタグ名は実在するか」の検証（`collectMCPUnknownValueWarnings`）は `GetAllTagNamesIncludingDeletedTargets` を使う。フィルタ済みの一覧で検証すると、`include_deleted_data:true` で削除済みを開いたタグ検索に**未知のタグという誤警告**が出る。却下案（カスケード削除・SQLへの降ろし）は [ADR-0112](../../../documents/adr/0112-tag-vocabulary-drops-dead-targets.md)。
 
 ### HTTP ステータス（2026-08 導入）
