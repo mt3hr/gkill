@@ -120,7 +120,7 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_google_locationhistory/
 | `rep_name` | `GoogleLocation` |
 | `provides` | `gpslog` |
 | プロトコルバージョン | `1` |
-| 最小 gkill バージョン | `1.1.7` |
+| 最小 gkill バージョン | `1.1.8` |
 
 ## ファイル構成
 

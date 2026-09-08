@@ -141,7 +141,7 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_fitbit/cache.db
 | `data_type` | `kc` |
 | `provides` | `kc`, `tag` |
 | プロトコルバージョン | `1` |
-| 最小 gkill バージョン | `1.1.7` |
+| 最小 gkill バージョン | `1.1.8` |
 
 ## ファイル構成
 
