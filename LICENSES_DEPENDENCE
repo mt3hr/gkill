@@ -3103,31 +3103,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-=== [github.com/mitchellh/go-homedir v1.1.0] ===
-License file: LICENSE
-
-The MIT License (MIT)
-
-Copyright (c) 2013 Mitchell Hashimoto
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
 === [github.com/ncruces/go-strftime v1.0.0] ===
 License file: LICENSE
 
@@ -4906,7 +4881,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-=== [golang.org/x/image v0.44.0] ===
+=== [golang.org/x/image v0.45.0] ===
 License file: LICENSE
 
 Copyright 2009 The Go Authors.
@@ -4937,7 +4912,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-=== [golang.org/x/mod v0.37.0] ===
+=== [golang.org/x/mod v0.38.0] ===
 License file: LICENSE
 
 Copyright 2009 The Go Authors.
@@ -5123,7 +5098,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-=== [golang.org/x/text v0.40.0] ===
+=== [golang.org/x/text v0.41.0] ===
 License file: LICENSE
 
 Copyright 2009 The Go Authors.
@@ -5154,7 +5129,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-=== [golang.org/x/tools v0.47.0] ===
+=== [golang.org/x/tools v0.48.0] ===
 License file: LICENSE
 
 Copyright 2009 The Go Authors.
@@ -13731,8 +13706,7 @@ License: Apache 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 
 === [com.google.guava:listenablefuture:1.0] ===
-License: The Apache Software License, Version 2.0
-License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+License: 不明（リポジトリURL参照）
 
 === [org.jetbrains.kotlin:kotlin-bom:1.8.22] ===
 License: The Apache Software License, Version 2.0
@@ -13968,6 +13942,10 @@ License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 License: The Apache Software License, Version 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 
+=== [androidx.concurrent:concurrent-futures-ktx:1.1.0] ===
+License: The Apache Software License, Version 2.0
+License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+
 === [androidx.concurrent:concurrent-futures-ktx:1.3.0] ===
 License: The Apache Software License, Version 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
@@ -14144,6 +14122,10 @@ License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 License: The Apache Software License, Version 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 
+=== [androidx.lifecycle:lifecycle-service:2.6.2] ===
+License: The Apache Software License, Version 2.0
+License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+
 === [androidx.lifecycle:lifecycle-viewmodel-android:2.11.0] ===
 License: The Apache Software License, Version 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
@@ -14240,6 +14222,18 @@ License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 License: The Apache Software License, Version 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 
+=== [androidx.room:room-common:2.6.1] ===
+License: The Apache Software License, Version 2.0
+License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+
+=== [androidx.room:room-ktx:2.6.1] ===
+License: The Apache Software License, Version 2.0
+License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+
+=== [androidx.room:room-runtime:2.6.1] ===
+License: The Apache Software License, Version 2.0
+License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+
 === [androidx.savedstate:savedstate-android:1.4.0] ===
 License: The Apache Software License, Version 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
@@ -14264,11 +14258,23 @@ License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 License: The Apache Software License, Version 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 
+=== [androidx.sqlite:sqlite-framework:2.4.0] ===
+License: The Apache Software License, Version 2.0
+License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+
+=== [androidx.sqlite:sqlite:2.4.0] ===
+License: The Apache Software License, Version 2.0
+License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+
 === [androidx.startup:startup-runtime:1.1.1] ===
 License: The Apache Software License, Version 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 
 === [androidx.startup:startup-runtime:1.2.0] ===
+License: The Apache Software License, Version 2.0
+License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+
+=== [androidx.tracing:tracing-ktx:1.2.0] ===
 License: The Apache Software License, Version 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 
@@ -14372,6 +14378,14 @@ License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 License: The Apache Software License, Version 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 
+=== [androidx.work:work-runtime-ktx:2.10.0] ===
+License: The Apache Software License, Version 2.0
+License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+
+=== [androidx.work:work-runtime:2.10.0] ===
+License: The Apache Software License, Version 2.0
+License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+
 === [com.google.android.gms:play-services-base:18.5.0] ===
 License: Android Software Development Kit License
 License URL: https://developer.android.com/studio/terms.html
@@ -14397,8 +14411,7 @@ License: Apache 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 
 === [com.google.guava:listenablefuture:1.0] ===
-License: The Apache Software License, Version 2.0
-License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+License: 不明（リポジトリURL参照）
 
 === [com.squareup.okhttp3:okhttp-android:5.4.0] ===
 License: The Apache Software License, Version 2.0
@@ -14422,6 +14435,14 @@ License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 
 === [org.jetbrains.kotlin:kotlin-stdlib-common:2.4.10] ===
 License: Apache-2.0
+License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+
+=== [org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22] ===
+License: The Apache License, Version 2.0
+License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
+
+=== [org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22] ===
+License: The Apache License, Version 2.0
 License URL: http://www.apache.org/licenses/LICENSE-2.0.txt
 
 === [org.jetbrains.kotlin:kotlin-stdlib:2.4.10] ===
