@@ -85,7 +85,7 @@ export function can_decide_query_locally(query: FindKyouQuery): LocalDecidabilit
         return { ok: false, reason: 'words' }
     }
     // TimeIs絞り込みはDB全体のTimeIs区間集合が要る。
-    // attached_timeis_kyou は別条件(plaing)で引いたものなので代用にならない。
+    // attached_timeis_kyou は別条件(playing)で引いたものなので代用にならない。
     // timeis_words は空配列でも「任意のTimeIsに覆われたKyou」という有効な指定
     if (query.timeis_words !== null || query.timeis_not_words !== null) {
         return { ok: false, reason: 'timeis' }
@@ -94,8 +94,8 @@ export function can_decide_query_locally(query: FindKyouQuery): LocalDecidabilit
     if (query.map_latitude !== null && query.map_longitude !== null && query.map_radius !== null) {
         return { ok: false, reason: 'map' }
     }
-    if (query.plaing_time !== null) {
-        return { ok: false, reason: 'plaing_time' }
+    if (query.playing_time !== null) {
+        return { ok: false, reason: 'playing_time' }
     }
     // 画像絞り込みが見る is_image / is_video はGoのKyouにはあるがTSのKyouには無く、
     // clone() で落ちるので判定できない

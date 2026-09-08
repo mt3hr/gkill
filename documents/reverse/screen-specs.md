@@ -28,7 +28,7 @@ top-level await のあるページの setup から `router.replace` すると、
 | `/rykv` | rykv-page | 履歴閲覧 | Kyou一覧・検索 |
 | `/kyou` | kyou-page | 記録詳細 | 個別記録の詳細表示 |
 | `/mkfl` | mkfl-page | 打刻メモ帳 | KFTL入力 + 稼働中TimeIs表示の複合ビュー |
-| `/plaing` | plaing-time-is-page | 打刻一覧 | アクティブな打刻セッション |
+| `/playing` | playing-time-is-page | 打刻一覧 | アクティブな打刻セッション |
 | `/dashboard` | dashboard-page | ダッシュボード | 日次サマリー画面（Dnote・GPS・MI一覧を1画面に集約） |
 | `/rudbeckia` | rudbeckia-page | ポート | 4画面をウィンドウとして開ける単一画面（開発コード rudbeckia） |
 | `/saihate` | saihate-page | さいはて | 記録特化画面（FABから各種記録を素早く追加、他画面への遷移なし） |
@@ -64,7 +64,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 | テンプレートボタン群 | 操作 | 定型文テンプレートの挿入。**上書きではなく新しいタブで開く** |
 | 送信ボタン | 操作 | KFTLテキストの送信・実行 |
 | 未知タグ確認 | 表示 | 送信前に、既存タグに無いタグが含まれていれば確認を求める（後述） |
-| ナビゲーションメニュー | 操作 | rykv/mi/kftl/plaing/mkfl/saihate間の切替 |
+| ナビゲーションメニュー | 操作 | rykv/mi/kftl/playing/mkfl/saihate間の切替 |
 | ローディングオーバーレイ | 表示 | 非同期処理中の表示 |
 
 **未知タグ確認:** 送信ボタンを押すと、リクエスト構築後・実行前に `collect_unknown_tags()`
@@ -164,7 +164,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 
 ### 2.6 打刻メモ帳画面（`/mkfl`）
 
-**コンポーネント:** `mkfl-page.vue` → `mkfl-view.vue` → `kftl-view.vue` + `plaing-time-is-view.vue`
+**コンポーネント:** `mkfl-page.vue` → `mkfl-view.vue` → `kftl-view.vue` + `playing-time-is-view.vue`
 
 打刻（TimeIs）とメモ（KFTL入力）を組み合わせた複合入力画面です。画面を上下に分割し、上半分でKFTLテキスト入力、下半分で稼働中のTimeIsを表示します。
 
@@ -175,9 +175,9 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 | 送信ボタン | 操作 | KFTLテキストの送信・実行 |
 | アクティブ打刻リスト | 表示 | 下半分：稼働中TimeIsの一覧・終了操作 |
 
-### 2.7 打刻一覧画面（`/plaing`）
+### 2.7 打刻一覧画面（`/playing`）
 
-**コンポーネント:** `plaing-time-is-page.vue` → `plaing-time-is-view.vue`
+**コンポーネント:** `playing-time-is-page.vue` → `playing-time-is-view.vue`
 
 アクティブな打刻（TimeIs）セッションの一覧と操作を行う画面です。
 
@@ -329,7 +329,7 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
 | 「+」→「画面」 | メニュー | ライフログビュー / タスク / 実行中 / ダッシュボードをウィンドウとして開く。同じ画面を上限まで並べられ、上限では最前面へフォーカスするだけ |
 | 「+」→「記録」 | メニュー | メモ帳・打刻メモ帳・数値記録・ブックマーク・打刻帳・タスク・支出・気分・アップロード・クリップボードを保存 |
 
-**ウィンドウの仕組み:** ホストするのはページではなく**ビュー**（`rykv-view` / `mi-view` / `plaing-time-is-view` / `dashboard-view`）です。ビューは自前の `v-app-bar` と `v-navigation-drawer` を持っているので、Vuetify の**入れ子レイアウト**（`<v-layout>` で包む）でウィンドウの中へ収めます。包まないとレイアウト部品が `position: fixed` のまま画面最上部へ飛びます。
+**ウィンドウの仕組み:** ホストするのはページではなく**ビュー**（`rykv-view` / `mi-view` / `playing-time-is-view` / `dashboard-view`）です。ビューは自前の `v-app-bar` と `v-navigation-drawer` を持っているので、Vuetify の**入れ子レイアウト**（`<v-layout>` で包む）でウィンドウの中へ収めます。包まないとレイアウト部品が `position: fixed` のまま画面最上部へ飛びます。
 
 **ホスト時のビューの差分:** 自前のFABを出さない（ポートのFABが唯一）、Enter/Ctrl+V のショートカットを登録しない（`window` レベルなので枚数ぶん多重登録される）、画面切替メニューはページ遷移せず `requested_navigate_page` を上げる（`reset_dialog_history()` はモジュール共有なので、呼ぶと並べている他のウィンドウまで一斉に閉じる）。
 
@@ -479,12 +479,12 @@ TXID / commit_tx は使わないので部分確定しうるが、追記型DAOの
 | 終了日時 | 表示 | 終了時刻（未終了は空） |
 | 経過時間 | 表示 | 開始から終了（または現在）までの経過 |
 
-**アクティブ打刻:** `plaing-time-is-view.vue` / `attached-time-is-plaing.vue`
+**アクティブ打刻:** `playing-time-is-view.vue` / `attached-time-is-playing.vue`
 
 | 項目 | 種別 | 説明 |
 |---|---|---|
 | リアルタイムタイマー | 表示 | 経過時間のリアルタイム更新 |
-| 終了ボタン | 操作 | 打刻終了（end-time-is-plaing-view） |
+| 終了ボタン | 操作 | 打刻終了（end-time-is-playing-view） |
 
 ### 3.4 lantana（気分）画面仕様
 
@@ -661,7 +661,7 @@ gkillの検索機能は複数のクエリコンポーネントを組み合わせ
 | `mi-extract-check-state-query.vue` | タスク完了状態フィルタ |
 | `find-query-editor-view.vue` | 高度な検索条件ビルダー（汎用Kyou向け） |
 | `mi-find-query-editor-view.vue` | MI専用検索条件エディタ（チェック状態フィルタ・ソート順・キーワード・タグ対応） |
-| `find-time-is-query-editor-view.vue` | 実行中TimeIs専用検索条件エディタ（キーワード・タグ絞り込みトグル・タグ対応。リポジトリと記録タイプはTimeIs固定で選ばせない。plaing検索カスタム条件用） |
+| `find-time-is-query-editor-view.vue` | 実行中TimeIs専用検索条件エディタ（キーワード・タグ絞り込みトグル・タグ対応。リポジトリと記録タイプはTimeIs固定で選ばせない。playing検索カスタム条件用） |
 | `rykv-query-editor-side-bar.vue` | RYKV画面用検索サイドバー |
 | `mi-query-editor-sidebar.vue` | Mi画面用検索サイドバー |
 | `clear-query-button.vue` | フィルタリセットボタン |
@@ -801,7 +801,7 @@ Teleport to body
 | `manage-account-dialog.vue` | アカウント管理 |
 | `create-account-dialog.vue` | アカウント作成 |
 | `edit-dashboard-dialog.vue` | ダッシュボード設定（MI検索条件・Dnote検索条件の編集） |
-| `edit-plaing-time-is-dialog.vue` | 実行中検索条件設定（「検索条件をカスタマイズする」チェックボックス＋条件編集ボタン。チェックOFFで未設定＝デフォルト動作に戻る） |
+| `edit-playing-time-is-dialog.vue` | 実行中検索条件設定（「検索条件をカスタマイズする」チェックボックス＋条件編集ボタン。チェックOFFで未設定＝デフォルト動作に戻る） |
 | `edit-saved-find-query-dialog.vue` | 保存済み検索条件のハブ（ライフログ検索条件・タスク検索条件の2ボタン） |
 | `edit-saved-find-query-list-dialog.vue` | 保存済み検索条件の一覧管理（名前・条件編集・並べ替え・削除。追加は右下FAB。`query_type` prop で rykv/mi の2インスタンス） |
 | `edit-dnote-dialog.vue` | Dnote（集計ビュー）設定 |
@@ -864,7 +864,7 @@ Rykv 配下のダイアログは個別に配置されるのではなく、`rykv-
 |---|---|
 | `find-query-editor-dialog.vue` | 汎用Kyou検索条件エディタ |
 | `mi-find-query-editor-dialog.vue` | MI専用検索条件エディタ（チェック状態フィルタ・ソート順・キーワード等） |
-| `find-time-is-query-editor-dialog.vue` | 実行中TimeIs専用検索条件エディタ（plaing検索カスタム条件用） |
+| `find-time-is-query-editor-dialog.vue` | 実行中TimeIs専用検索条件エディタ（playing検索カスタム条件用） |
 
 #### 共有ダイアログ
 
@@ -979,7 +979,7 @@ CRUDリレーイベント（ビュー層 18件）:
 | `attached-tag-context-menu.vue` | 付帯タグ |
 | `attached-text-context-menu.vue` | 付帯テキスト |
 | `attached-notification-context-menu.vue` | 付帯通知 |
-| `attached-time-is-plaing-context-menu.vue` | アクティブ打刻 |
+| `attached-time-is-playing-context-menu.vue` | アクティブ打刻 |
 | `device-struct-context-menu.vue` | デバイス構造（設定画面） |
 | `dnote-item-list-context-menu.vue` | Dnote項目リスト |
 | `dnote-list-query-context-menu.vue` | Dnoteクエリ |

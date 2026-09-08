@@ -37,7 +37,7 @@ Vitest
 | `src/client/__tests__/unit/datas/share-kyous-info.test.ts` | ShareKyousInfo（共有情報） |
 | `src/client/__tests__/unit/datas/dashboard-config.test.ts` | DashboardConfig（ダッシュボード設定: MI検索条件・Dnote検索条件） |
 | `src/client/__tests__/unit/datas/saved-find-query-config.test.ts` | SavedFindQueryConfig（保存済み検索条件: parse の不正データ耐性・往復・作業用コピーの参照切り） |
-| `src/client/__tests__/unit/datas/plaing-time-is-config.test.ts` | PlaingTimeIsConfig（実行中検索条件: plaing検索のカスタム条件。parse/to_json のラウンドトリップ） |
+| `src/client/__tests__/unit/datas/playing-time-is-config.test.ts` | PlayingTimeIsConfig（実行中検索条件: playing検索のカスタム条件。parse/to_json のラウンドトリップ） |
 | `src/client/__tests__/unit/datas/rep-type-map.test.ts` | RepTypeローカライズマップ・ApplicationConfig未定義RepType自動追加時の表示名ローカライズ |
 
 上記に加えて、エンティティ横断のテストが3つある。

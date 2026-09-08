@@ -3,7 +3,7 @@
 /**
  * Web Push の VAPID 公開鍵（URL-safe base64）を `pushManager.subscribe` に渡せる形へ変換する。
  *
- * 6つのページコンポーザブル（kftl / kyou / mi / mkfl / plaing / rykv）が
+ * 6つのページコンポーザブル（kftl / kyou / mi / mkfl / playing / rykv）が
  * 同じ関数をそれぞれ持っていて、戻り値の型注釈の有無だけが食い違っていた。
  * 型を書いていない3本は推論に任せていたぶん `as any` が要らず、
  * 書いていた3本は `applicationServerKey` に渡すところで `as any` を足していた

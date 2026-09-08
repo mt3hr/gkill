@@ -3,7 +3,7 @@
  *
  * 子ダイアログの適用ハンドラは clone にだけ書く。props.application_config を
  * 直接書き換えると、設定画面でキャンセルしても子ダイアログでの編集が残ってしまう
- * （Dnote / Ryuu / Dashboard / PlaingTimeIs の4つだけが props にも書いていた）。
+ * （Dnote / Ryuu / Dashboard / PlayingTimeIs の4つだけが props にも書いていた）。
  * ロケールとダークテーマは選ばせるために即時プレビューしているので、
  * 閉じるときに開いた時点の状態へ戻す必要がある。
  */
@@ -90,9 +90,9 @@ describe('子ダイアログの適用ハンドラ', () => {
             field: 'dashboard_json_data',
         },
         {
-            name: 'PlaingTimeIs',
-            apply: 'onRequestedApplyPlaingTimeIs',
-            field: 'plaing_timeis_json_data',
+            name: 'PlayingTimeIs',
+            apply: 'onRequestedApplyPlayingTimeIs',
+            field: 'playing_timeis_json_data',
         },
         {
             name: 'SavedFindQuery',
@@ -128,7 +128,7 @@ describe('子ダイアログの適用ハンドラ', () => {
         view.onRequestedApplyDnote({ edited: true })
         view.onRequestedApplyRyuuStruct({ edited: true })
         view.onRequestedApplyDashboardStruct({ edited: true })
-        view.onRequestedApplyPlaingTimeIs({ edited: true })
+        view.onRequestedApplyPlayingTimeIs({ edited: true })
         view.onRequestedApplySavedFindQueryStruct({ edited: true })
 
         expect(

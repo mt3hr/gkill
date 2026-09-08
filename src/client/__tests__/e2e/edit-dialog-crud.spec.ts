@@ -3,7 +3,7 @@ import type { Locator, Page } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
-  submitKftlText, navigateToRykv, navigateToMi, navigateToPlaing,
+  submitKftlText, navigateToRykv, navigateToMi, navigateToPlaying,
   makeUniqueLabel, expectPageToContainText, expectPageNotToContainText,
   clickContextMenuItem, clickDialogButton, waitForKyouByText, waitForAttachedText, openKyouDetailPane,
   MENU, SAVE_BUTTON,
@@ -208,12 +208,12 @@ test.describe('GUI Edit Dialog Flows', () => {
 
   // 項番41: 実行中TimeIsの終了ボタンで終了
   //
-  // 終了ボタンは Plaing 画面にだけ出る。rykv の一覧は
-  // rykv-view.vue で show_timeis_plaing_end_button="false" を渡しているので出ない。
+  // 終了ボタンは Playing 画面にだけ出る。rykv の一覧は
+  // rykv-view.vue で show_timeis_playing_end_button="false" を渡しているので出ない。
   test('実行中TimeIsを終了ボタンで終了すると終了日時が表示される', async ({ page }) => {
     const label = makeUniqueLabel('timeis_running_end')
     await submitKftlText(page, `ーた\n${label}`)
-    await navigateToPlaing(page)
+    await navigateToPlaying(page)
 
     // TimeIsのビューは v-card がルートで、タイトルと終了ボタンを同じカードに持つ
     const card = page.locator('.v-card').filter({ hasText: label }).last()
@@ -224,7 +224,7 @@ test.describe('GUI Edit Dialog Flows', () => {
     await endButton.click()
 
     // 終了ダイアログの確定ボタンは「終了」(END_TITLE)。保存ではない
-    // (end-time-is-plaing-view.vue)
+    // (end-time-is-playing-view.vue)
     await clickDialogButton(page, /^\s*終了\s*$/)
 
     // 終了すると rykv 側で終了日時が表示される

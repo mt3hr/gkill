@@ -18,7 +18,7 @@ src/client/__tests__/
 ├── unit/                    # ユニットテスト (2037テスト宣言, 171ファイル)
 │   ├── api/                 #   GkillAPI クライアント
 │   ├── classes/             #   ユーティリティクラス (47ファイル, kyou-view-relay / cascade-delete-kyou / confirm-dialog-close / edit-view-no-update-check / markdown-to-html / mermaid-render / use-dialog-history-stack / delayed-loading / foldable-struct-move / foldable-struct-check / kyou-content-text / use-context-menu-position / use-device-kind / linkify-text / application-config-update-fields-scan / dialog-autofocus / kyou-view-height-source-scan / mi-board-column-layout / mi-board-names / use-application-config-view / share-target-dedup 含む)
-│   ├── datas/               #   データモデル (35ファイル, dashboard-config / saved-find-query-config / plaing-time-is-config / mi-re-kyou / append-not-found-tags 含む)
+│   ├── datas/               #   データモデル (35ファイル, dashboard-config / saved-find-query-config / playing-time-is-config / mi-re-kyou / append-not-found-tags 含む)
 │   ├── dnote/               #   D-note モジュール (8ファイル, trend-aggregator.test.ts 含む)
 │   ├── kftl/                #   KFTL パーサ (6ファイル)
 │   ├── composables/         #   Vue Composable (59ファイル, kyou-view / idf-kyou-view / re-kyou-view / mi-re-kyou-view / save-clipboard-to-file-dialog / rykv-view-search-routing / mi-view-search-routing / rykv-sidebar-saved-query-apply / mi-sidebar-saved-query-apply / mi-board-query / foldable-struct-selected-items / kyou-list-view-loading / sidebar-child-query-sync-emission / kyou-list-view-scroll-to / rep-query-summary-detail / find-query-editor-dialog-default-signal / plugin-html-view / ryuu-relay-chain 含む)

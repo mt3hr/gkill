@@ -213,7 +213,7 @@ describe('registered_tag の配布', () => {
         expect(sink.applied_order).toEqual(['registered_tag', 'reload_list'])
     })
 
-    test('apply_registered_tag を持たないシンクでも落ちない（dashboard / plaing は列のタグ絞り込みが無い）', () => {
+    test('apply_registered_tag を持たないシンクでも落ちない（dashboard / playing は列のタグ絞り込みが無い）', () => {
         const sink: KyouChangeSink = {
             apply_registered: vi.fn(),
             apply_reload: vi.fn(),

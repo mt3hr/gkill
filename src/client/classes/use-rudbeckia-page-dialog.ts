@@ -117,7 +117,7 @@ export function useRudbeckiaPageDialog(options: {
     const help_screen_names: Record<RudbeckiaPageKind, string> = {
         rykv: 'rykv',
         mi: 'mi',
-        plaing: 'plaing',
+        playing: 'playing',
         dashboard: 'dashboard',
     }
     const help_screen_name = computed(() => help_screen_names[props.kind])

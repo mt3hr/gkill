@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
-import { submitKftlText, navigateToRykv, navigateToMi, navigateToPlaing, makeUniqueLabel, pageContainsText, expectPageToContainText, searchByKeyword } from './crud-helpers'
+import { submitKftlText, navigateToRykv, navigateToMi, navigateToPlaying, makeUniqueLabel, pageContainsText, expectPageToContainText, searchByKeyword } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
@@ -80,7 +80,7 @@ test.describe('KFTL CRUD Flows', () => {
   test('submit timeis start via KFTL', async ({ page }) => {
     const label = makeUniqueLabel('timeis_kftl')
     await submitKftlText(page, `ーた\n${label}`)
-    await navigateToPlaing(page)
+    await navigateToPlaying(page)
     await expectPageToContainText(page, label)
   })
 

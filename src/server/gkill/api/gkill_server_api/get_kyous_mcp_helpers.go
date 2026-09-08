@@ -771,12 +771,12 @@ func collectMCPUnknownValueWarnings(ctx context.Context, repositories *reps.Gkil
 	return warnings
 }
 
-// livePlaingTimeIsCandidates は付随 TimeIs の母集合から削除済みを落とす。
+// livePlayingTimeIsCandidates は付随 TimeIs の母集合から削除済みを落とす。
 //
 // **削除済みの除外はここでしか行われない。** FindTimeIs は rep の直叩きで、
 // GenerateFindSQLCommon も TimeIsRepositories も IS_DELETED を一切見ない。
 // gkill で削除済みを落としているのは find_filter.go の Kyou 集約だけで、
-// 付随 TimeIs の経路はそこを通らない（Web はクライアントが plaing_time 検索を投げ、
+// 付随 TimeIs の経路はそこを通らない（Web はクライアントが playing_time 検索を投げ、
 // 共有ページは FindFilter.FindKyous を通るので、どちらも落ちている。独自走査はMCPだけ）。
 //
 // 落とさないと「終了記録ごと消した未終了の打刻」が、開始時刻以降のあらゆる記録へ
@@ -787,7 +787,7 @@ func collectMCPUnknownValueWarnings(ctx context.Context, repositories *reps.Gkil
 // （git_commit_log が IsDeleted=true を「削除済みのみ検索」の逆の意味で読むため）。
 // レコードの .IsDeleted を読むのは同ファイルの削除済み除外が現にやっていること。
 // 呼び出し側は OnlyLatestData:true で引くので、ID ごと最新版1件へ畳んだ後を受け取る。
-func livePlaingTimeIsCandidates(found []reps.TimeIs) []reps.TimeIs {
+func livePlayingTimeIsCandidates(found []reps.TimeIs) []reps.TimeIs {
 	live := make([]reps.TimeIs, 0, len(found))
 	for _, timeis := range found {
 		if timeis.IsDeleted {
@@ -800,13 +800,13 @@ func livePlaingTimeIsCandidates(found []reps.TimeIs) []reps.TimeIs {
 
 // timeIsCoversMoment は、その瞬間にこの打刻が走っていたかを返す。
 // EndTime が nil の打刻は「まだ終わっていない」ので開始時刻より後をすべて覆う。
-// 判定の意味は plaing_time の SQL（START_TIME <= ? AND (? <= END_TIME OR END_TIME IS NULL)）
+// 判定の意味は playing_time の SQL（START_TIME <= ? AND (? <= END_TIME OR END_TIME IS NULL)）
 // と揃えてある。違うのは削除済みの扱いだけで、それは呼び出し前に
-// livePlaingTimeIsCandidates が落とす。
+// livePlayingTimeIsCandidates が落とす。
 func timeIsCoversMoment(timeis reps.TimeIs, moment time.Time) bool {
 	// SQL は両端を含む(>= と <=)ので、ここも含める。排他にすると、
 	// 打刻と同じ時刻に書かれた記録(KFTL で打刻と本文を一度に書いたときなど)が
-	// plaing_time では出るのにここでは付かない、という食い違いになる。
+	// playing_time では出るのにここでは付かない、という食い違いになる。
 	if moment.Before(timeis.StartTime) {
 		return false
 	}

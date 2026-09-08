@@ -68,13 +68,13 @@ func TestGkillRepositoriesFindTags_DoesNotMutateCallerQuery(t *testing.T) {
 
 	// IDs が nil（フィルタ未使用）のまま渡し、rep 側で ID 一覧が詰められても
 	// 呼び出し元の query.IDs が nil のままであることを確認する。
-	// ポインタフィールド（MiBoardName/PlaingTime等）は浅いコピーでポインタ先が共有されるので、
+	// ポインタフィールド（MiBoardName/PlayingTime等）は浅いコピーでポインタ先が共有されるので、
 	// 「ポインタ先へ書かず、差し替えは必ずポインタごと」の規約もここで固定する。
 	boardName := "board-mut"
-	plaingTime := time.Date(2024, 4, 1, 12, 0, 0, 0, time.UTC)
+	playingTime := time.Date(2024, 4, 1, 12, 0, 0, 0, time.UTC)
 	query := &find.FindQuery{
 		MiBoardName: &boardName,
-		PlaingTime:  &plaingTime,
+		PlayingTime:  &playingTime,
 	}
 
 	if _, err := repositories.FindTags(ctx, query); err != nil {
@@ -87,7 +87,7 @@ func TestGkillRepositoriesFindTags_DoesNotMutateCallerQuery(t *testing.T) {
 	if query.MiBoardName == nil || *query.MiBoardName != "board-mut" {
 		t.Errorf("呼び出し元の query.MiBoardName（ポインタ先）が書き換えられた: %v", query.MiBoardName)
 	}
-	if query.PlaingTime == nil || !query.PlaingTime.Equal(plaingTime) {
-		t.Errorf("呼び出し元の query.PlaingTime（ポインタ先）が書き換えられた: %v", query.PlaingTime)
+	if query.PlayingTime == nil || !query.PlayingTime.Equal(playingTime) {
+		t.Errorf("呼び出し元の query.PlayingTime（ポインタ先）が書き換えられた: %v", query.PlayingTime)
 	}
 }

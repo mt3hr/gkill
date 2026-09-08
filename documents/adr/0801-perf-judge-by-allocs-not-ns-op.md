@@ -50,7 +50,7 @@
 - `AllTags`（`Tag` 構造体240B×全件）を48バイトの中間表現へ
 - 結果ソートを32バイトのキー配列＋その場でのサイクル置換へ
 
-**索引の追加はトレードオフを明記して採る。** TIMEIS キャッシュの `START_TIME_UNIX` / `END_TIME_UNIX` 索引は期間絞り込みを `SCAN` → `SEARCH` にする一方、plaing 判定は逆に悪化する。期間絞り込みは検索のたび、plaing は `show_attached_timeis` が真の面だけなので採用した。
+**索引の追加はトレードオフを明記して採る。** TIMEIS キャッシュの `START_TIME_UNIX` / `END_TIME_UNIX` 索引は期間絞り込みを `SCAN` → `SEARCH` にする一方、playing 判定は逆に悪化する。期間絞り込みは検索のたび、playing は `show_attached_timeis` が真の面だけなので採用した。
 
 新しい最適化を提案するときは、この一覧に対して「なぜ今回は違うのか」を示すこと。
 

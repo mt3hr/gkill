@@ -9,14 +9,14 @@ package sqlite3impl
 //	経路                          索引なし   索引あり
 //	----------------------------  ---------  ------------------------------------------
 //	期間絞り込み(検索のたび)        SCAN T     SEARCH T USING INDEX (START>? AND START<?)
-//	plaing判定(ダイアログを開く時)  SCAN T     SEARCH T USING INDEX (START<?)
+//	playing判定(ダイアログを開く時)  SCAN T     SEARCH T USING INDEX (START<?)
 //
 // 期間絞り込みは範囲が閉じているので、走査する行が「その期間ぶん」に縮む(2万行→千行)。
-// plaing判定は `? >= START_TIME_UNIX` が開いた範囲(表の約半分に当たる)なので、
+// playing判定は `? >= START_TIME_UNIX` が開いた範囲(表の約半分に当たる)なので、
 // 索引を辿ってから表を引く形になり、素直に全表を舐めるより不利になる。
 //
 // それでも索引を採るのは、期間絞り込みが**すべての検索**で走るのに対し、
-// plaing判定は show_attached_timeis が真の面(ダイアログ・詳細ペイン)でしか飛ばないため。
+// playing判定は show_attached_timeis が真の面(ダイアログ・詳細ペイン)でしか飛ばないため。
 // 一覧の行では飛ばない(kyou-list-view.vue が false を渡している)。
 
 import (

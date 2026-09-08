@@ -31,7 +31,7 @@ export function useTagQuery(options: {
         cloned_application_config.value = props.application_config.clone()
         skip_emits_this_tick.value = true
         nextTick(() => skip_emits_this_tick.value = false)
-        // tags は null（フィルタ未使用。plaing検索の既定クエリ等）でありうる
+        // tags は null（フィルタ未使用。playing検索の既定クエリ等）でありうる
         update_check(cloned_query.value.tags ?? [], CheckState.checked, true, true)
         if (!props.inited) {
             emits('inited')

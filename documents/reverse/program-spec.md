@@ -549,7 +549,7 @@ sequenceDiagram
 
 全13ルートの定義一覧は [screen-transition.md](screen-transition.md) を、各画面の項目定義は [screen-specs.md](screen-specs.md) を参照。
 
-主要ルート: `/`（ログイン）, `/kftl`（KFTL入力）, `/mi`（タスクボード）, `/rykv`（履歴閲覧）, `/kyou`（記録詳細）, `/mkfl`（打刻メモ帳）, `/plaing`（打刻一覧）, `/dashboard`（日次サマリー）, `/rudbeckia`（ポート）, `/saihate`（記録特化）, `/set_new_password`（パスワード変更）, `/register_first_account`（初回登録）, `/shared_page`（共有）
+主要ルート: `/`（ログイン）, `/kftl`（KFTL入力）, `/mi`（タスクボード）, `/rykv`（履歴閲覧）, `/kyou`（記録詳細）, `/mkfl`（打刻メモ帳）, `/playing`（打刻一覧）, `/dashboard`（日次サマリー）, `/rudbeckia`（ポート）, `/saihate`（記録特化）, `/set_new_password`（パスワード変更）, `/register_first_account`（初回登録）, `/shared_page`（共有）
 
 この13ルートに加えて、コンポーネントを持たないリダイレクト専用ルートが2つある:
 

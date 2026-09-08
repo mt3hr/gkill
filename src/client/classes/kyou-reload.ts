@@ -10,7 +10,7 @@ import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 /**
  * Kyou 1件を最新化する唯一の手順。
  *
- * 以前は rykv / mi / plaing / shared-mi / upload-file / kyou-list-view-dialog の
+ * 以前は rykv / mi / playing / shared-mi / upload-file / kyou-list-view-dialog の
  * 6箇所に手書きでコピーされていて、手順が完全に一致していたのは rykv の列ループだけだった。
  * 特に `load_all` の `force_attached` を落としている実装では、
  * `Kyou.clone()` が `is_attached_tags_loaded` を引き継ぐせいで
@@ -43,7 +43,7 @@ export interface RefreshKyouInListOptions {
      * 省略時は元の配列を in-place で splice する。
      * `KyouListViewDialog` / `UploadFileView` は `model_value` が親の配列そのものなので
      * in-place でないと親と縁が切れる。
-     * 逆に rykv / mi / plaing / shared-mi は `Ref<Array<...>>` への copy-on-write で
+     * 逆に rykv / mi / playing / shared-mi は `Ref<Array<...>>` への copy-on-write で
      * 反応性を飛ばしているので、そちらは `replace` を渡すこと。
      */
     replace?: (next_list: Array<Kyou>) => void

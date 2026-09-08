@@ -363,9 +363,9 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 	}
 	endTime := r.GetRelatedTime()
 
-	plaingNow := time.Now()
+	playingNow := time.Now()
 	query := &find.FindQuery{
-		PlaingTime:     &plaingNow,
+		PlayingTime:     &playingNow,
 		OnlyLatestData: true,
 	}
 	playingEntries, err := r.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)
@@ -423,7 +423,7 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 
 // SetRepeatSpec は打刻終了の繰り返しを弾く。
 //
-// 終了は PlaingTime に**現在時刻**を渡して「いま走っている1件」を探す。
+// 終了は PlayingTime に**現在時刻**を渡して「いま走っている1件」を探す。
 // 繰り返しても同じ1件を狙うだけで、2回目以降は既に閉じていてヒットしない。
 func (r *kftlTimeIsEndByTitleRequest) SetRepeatSpec(_ *repeatSpec) error {
 	return newKFTLInputError("KFTL_REPEAT_TYPE_NOT_SUPPORTED_MESSAGE_TITLE",
@@ -548,9 +548,9 @@ func (r *kftlTimeIsEndByTagRequest) AddTag(tag string) {
 func (r *kftlTimeIsEndByTagRequest) DoRequest(ctx context.Context) error {
 	endTime := r.GetRelatedTime()
 
-	plaingNow := time.Now()
+	playingNow := time.Now()
 	query := &find.FindQuery{
-		PlaingTime:     &plaingNow,
+		PlayingTime:     &playingNow,
 		OnlyLatestData: true,
 	}
 	playingEntries, err := r.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)

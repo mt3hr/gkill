@@ -18,8 +18,8 @@
                     v-on="crudRelayHandlers" />
             </div>
             <div v-if="show_attached_timeis">
-                <AttachedTimeIsPlaing v-for="attached_timeis_plaing in cloned_kyou.attached_timeis_kyou"
-                    :key="attached_timeis_plaing.id" :timeis_kyou="attached_timeis_plaing"
+                <AttachedTimeIsPlaying v-for="attached_timeis_playing in cloned_kyou.attached_timeis_kyou"
+                    :key="attached_timeis_playing.id" :timeis_kyou="attached_timeis_playing"
                     :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
                     :highlight_targets="highlight_targets"
                     :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -79,7 +79,7 @@
                     ref="lantana_view" />
                 <TimeIsView v-if="cloned_kyou.typed_timeis" :timeis="cloned_kyou.typed_timeis" :draggable=draggable
                     :show_timeis_elapsed_time="show_timeis_elapsed_time"
-                    :show_timeis_plaing_end_button="show_timeis_plaing_end_button" :application_config="application_config"
+                    :show_timeis_playing_end_button="show_timeis_playing_end_button" :application_config="application_config"
                     :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
                     :height="height" :width="width"
                     :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -144,7 +144,7 @@
 <script setup lang="ts">
 import AttachedTag from './attached-tag.vue'
 import AttachedText from './attached-text.vue'
-import AttachedTimeIsPlaing from './attached-time-is-plaing.vue'
+import AttachedTimeIsPlaying from './attached-time-is-playing.vue'
 import AttachedNotification from './attached-notification.vue'
 import GitCommitLogView from './git-commit-log-view.vue'
 import IDFKyouView from './idf-kyou-view.vue'

@@ -21,7 +21,7 @@ import { tag_exists_in_tag_struct } from '@/classes/tag-struct'
  * 「一覧のキャッシュを force_reget で更新 → ツリーへ足す → clone() で反映」
  * という純粋なフロント処理だけ。サーバへは何も書かない。
  *
- * 以前は use-mi-page.ts だけが板とタグの両方を持ち、タグだけが rykv / plaing / mkfl に
+ * 以前は use-mi-page.ts だけが板とタグの両方を持ち、タグだけが rykv / playing / mkfl に
  * コピーされていて、dashboard / kyou / saihate / kftl には何も無かった。
  * 追随処理を持たないページで板やタグを増やすと、その画面のツリーと
  * 板名ドロップダウンが再読込まで古いままになる。

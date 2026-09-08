@@ -83,7 +83,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 | `include_end_timeis` | bool | 終了済みTimeIsを含めるか |
 | `calendar_start_date` | string \| null | 検索開始日時（RFC3339。開始/終了のどちらかが非nullで日付範囲フィルタ有効） |
 | `calendar_end_date` | string \| null | 検索終了日時（RFC3339） |
-| `plaing_time` | string \| null | 非nullならその時刻に実行中のTimeIsを検索 |
+| `playing_time` | string \| null | 非nullならその時刻に実行中のTimeIsを検索 |
 | `mi_board_name` | string \| null | 非nullならそのMi板だけに絞る（null=すべて） |
 | `only_latest_data` | bool | 最新データのみ取得するか |
 | `include_deleted_data` | bool | 削除済みデータを含めるか |
@@ -492,7 +492,7 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の9（`gki
 | `/serviceWorker.js` | GET | PWA Service Worker 配信 |
 | `/resources/manual/*` | GET | HTMLマニュアル配信（7言語）。`filterLocalOnly` によるアクセス制御付き |
 | `/` | GET | Vue SPA（embed された index.html）。`router.Path("/")` として個別登録 |
-| `/rykv` `/kftl` `/mi` `/mkfl` `/kyou` `/dashboard` `/rudbeckia` `/saihate` `/plaing` | GET | 同一SPAを配信（各パスが `PathPrefix` として個別登録される） |
+| `/rykv` `/kftl` `/mi` `/mkfl` `/kyou` `/dashboard` `/rudbeckia` `/saihate` `/playing` | GET | 同一SPAを配信（各パスが `PathPrefix` として個別登録される） |
 | `/shared_page` `/shared_mi` `/shared_rykv` | GET | 共有ページ用SPA。認証不要 |
 | `/set_new_password` `/register_first_account`（+旧 `/regist_first_account`） | GET | SPA。**この2つだけ `ifRedirectResetAdminAccountIsNotFound` を通らない**（`serve.go:262-276`）。管理者アカウント未設定時のリダイレクト先そのものなので、リダイレクト判定を通すとループするため |
 | （上記以外） | GET | catch-all の `PathPrefix("/")` が同一SPAを配信 |

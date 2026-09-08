@@ -78,7 +78,7 @@ const PERSISTED_FIELDS = [
     'kftl_template_struct',
     'dnote_json_data',
     'dashboard_json_data',
-    'plaing_timeis_json_data',
+    'playing_timeis_json_data',
     'saved_find_query_json_data',
 ] as const
 

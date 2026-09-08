@@ -191,17 +191,17 @@ export async function navigateToMi(page: Page): Promise<void> {
 }
 
 /**
- * Navigate to Plaing (TimeIs) page and wait for it to load.
+ * Navigate to Playing (TimeIs) page and wait for it to load.
  */
-export async function navigateToPlaing(page: Page): Promise<void> {
-  await navigateTo(page, '/plaing')
+export async function navigateToPlaying(page: Page): Promise<void> {
+  await navigateTo(page, '/playing')
 }
 
 /**
  * 最果て(saihate)へ移動する。
  *
  * **ここに ApplicationConfig の設定ダイアログは無い。** 最果てのアプリバーにあるのは
- * 再読込・ヘルプ・ログアウトだけで、設定の歯車(mdi-cog)は kftl / kyou / mkfl / plaing /
+ * 再読込・ヘルプ・ログアウトだけで、設定の歯車(mdi-cog)は kftl / kyou / mkfl / playing /
  * rudbeckia / dashboard / mi / rykv にある。設定を開きたいときは
  * openApplicationConfigDialog() を使うこと（名前が Settings なので取り違えやすい）。
  */

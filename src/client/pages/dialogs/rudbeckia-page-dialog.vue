@@ -29,9 +29,9 @@
                   <v-layout> で包むと Vuetify がそれらを「入れ子レイアウト」として扱い、
                   position: fixed ではなく position: absolute でこの箱の中へ配置する
                   (vuetify/lib/composables/layout.js:94,211,262)。包み忘れると画面最上部へ飛ぶ。
-                  実行中(plaing)はレイアウト部品を持たないので包まない。
+                  実行中(playing)はレイアウト部品を持たないので包まない。
                 -->
-                <v-layout v-if="kind !== 'plaing'" class="rudbeckia-hosted-layout"
+                <v-layout v-if="kind !== 'playing'" class="rudbeckia-hosted-layout"
                     :height="layout_height" :width="layout_width">
                     <RykvView v-if="kind === 'rykv'"
                         :app_content_height="view_height" :app_content_width="view_width"
@@ -58,7 +58,7 @@
                         :is_hosted_in_dialog="true" :kyou_change_channel="kyou_change_channel"
                         v-on="hostedViewHandlers" />
                 </v-layout>
-                <PlaingTimeIsView v-else
+                <PlayingTimeIsView v-else
                     :app_content_height="layout_height" :app_content_width="layout_width"
                     :application_config="application_config" :gkill_api="gkill_api"
                     :is_hosted_in_dialog="true" :kyou_change_channel="kyou_change_channel"
@@ -75,7 +75,7 @@ import { i18n } from '@/i18n'
 import RykvView from '../views/rykv-view.vue'
 import MiView from '../views/mi-view.vue'
 import DashboardView from '../views/dashboard-view.vue'
-import PlaingTimeIsView from '../views/plaing-time-is-view.vue'
+import PlayingTimeIsView from '../views/playing-time-is-view.vue'
 import HelpDialog from './help-dialog.vue'
 import type { RudbeckiaPageDialogProps } from './rudbeckia-page-dialog-props'
 import type { RudbeckiaPageDialogEmits } from './rudbeckia-page-dialog-emits'
@@ -148,7 +148,7 @@ defineExpose({ show, hide })
 /* 入れ子レイアウトで position: absolute になったアプリバー/サイドバーの基準は
    <v-layout> ではなく「最も近い位置指定済み祖先」＝ビューのルート。
    箱いっぱいに重ねておかないとバーがずれる。
-   .dashboard_view_wrap / .plaing_timeis_view_wrap は position: relative を持たないので
+   .dashboard_view_wrap / .playing_timeis_view_wrap は position: relative を持たないので
    ここで付ける（App.vue:96-99 が持っているのは rykv / mi / saihate だけ） */
 .rudbeckia-page-dialog .rudbeckia-hosted-layout > * {
     position: relative;

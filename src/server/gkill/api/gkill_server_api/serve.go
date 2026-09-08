@@ -255,7 +255,7 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
-	router.PathPrefix("/plaing").Handler(http.StripPrefix("/plaing",
+	router.PathPrefix("/playing").Handler(http.StripPrefix("/playing",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if ok := g.filterLocalOnly(w, r); !ok {
 				return

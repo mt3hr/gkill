@@ -74,7 +74,7 @@ test.describe('Settings Page CRUD', () => {
     expect(content!.length).toBeGreaterThan(0)
   })
 
-  test('plaing timeis search condition dialog opens from settings', async ({ page }) => {
+  test('playing timeis search condition dialog opens from settings', async ({ page }) => {
     // 設定画面は独立ページではなく、各ページのアプリバー歯車から開くダイアログ
     await navigateToRykv(page)
     await page.locator('button:has(.mdi-cog)').first().click()

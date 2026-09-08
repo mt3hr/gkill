@@ -13,8 +13,8 @@ Vitest
 | ファイル | 内容 |
 |---------|------|
 | `src/client/__tests__/unit/api/gkill-api.test.ts` | GkillAPI の全メソッドテスト、Go とのエンドポイント整合 |
-| `src/client/__tests__/unit/api/find-kyou-query.test.ts` | `FindKyouQuery`（rykv / mi / plaing の検索条件） |
-| `src/client/__tests__/unit/api/generate-plaing-timeis-query.test.ts` | `generate_plaing_timeis_query()`（plaing検索クエリの共通生成。カスタム条件の6フィールドコピー・未設定時の既定動作・共有ページでの不適用・rep名絞り込みを常に切ること・記録タイプのTimeIs固定） |
+| `src/client/__tests__/unit/api/find-kyou-query.test.ts` | `FindKyouQuery`（rykv / mi / playing の検索条件） |
+| `src/client/__tests__/unit/api/generate-playing-timeis-query.test.ts` | `generate_playing_timeis_query()`（playing検索クエリの共通生成。カスタム条件の6フィールドコピー・未設定時の既定動作・共有ページでの不適用・rep名絞り込みを常に切ること・記録タイプのTimeIs固定） |
 | `src/client/__tests__/unit/api/hydrate.test.ts` | `hydrate()` / `hydrate_all()` — 生JSONからクラスインスタンスへの詰め替え（`gkill-api.ts` / `datas/kyou.ts` のファイル全体 eslint-disable を解消したヘルパー） |
 | `src/client/__tests__/unit/api/delete-updated-gkill-caches.test.ts` | `delete_updated_gkill_caches()` — 検索直前の差分キャッシュ削除。ウォーターマーク（`last_cache_update_time`）を進めてよい条件 |
 | `src/client/__tests__/unit/api/normalize-legacy-find-kyou-query-json.test.ts` | 旧形式の検索条件JSON（`use_*` 有効化フラグ）の移行。Go / クライアント / MCP の3実装が**同じ16キー**を扱う必要がある |

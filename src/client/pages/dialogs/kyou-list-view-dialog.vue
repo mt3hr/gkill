@@ -26,7 +26,7 @@
                         :closable="false" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                         :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="false"
                         :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true" :show_content_only="false"
-                        :show_timeis_plaing_end_button="false" :show_rep_name="show_rep_name"
+                        :show_timeis_playing_end_button="false" :show_rep_name="show_rep_name"
                         :force_show_latest_kyou_info="force_show_latest_kyou_info"
                         ref="kyou_list_views" v-on="crudRelayHandlers" />
                 </v-card>

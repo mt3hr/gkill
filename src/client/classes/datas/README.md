@@ -80,7 +80,7 @@ datas/
 |---------|------|
 | `application-config.ts` | アプリケーション設定（KFTL テンプレート、表示設定等） |
 | `dashboard-config.ts` | ダッシュボード設定（MI検索条件・Dnote検索条件の2つの FindKyouQuery を保持） |
-| `plaing-time-is-config.ts` | 実行中検索条件（plaing検索カスタム条件の FindKyouQuery を1つ保持。null=未設定） |
+| `playing-time-is-config.ts` | 実行中検索条件（playing検索カスタム条件の FindKyouQuery を1つ保持。null=未設定） |
 | `saved-find-query-config.ts` | 保存済み検索条件（ライフログ用・タスク用の名前付き検索条件リスト。各アイテムは `{id, title, find_kyou_query}`） |
 | `server-config.ts` | サーバ設定（ポート、パス等） |
 | `repository.ts` | リポジトリ設定（データ保存先定義） |

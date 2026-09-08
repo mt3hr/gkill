@@ -23,7 +23,7 @@ export interface KyouChangeSink {
     /**
      * 他の画面で**新しく作られた**タグ名を、この画面の列の検索条件へ足す。
      *
-     * **optional。** 列のタグ絞り込みを持たない画面（dashboard / plaing）は実装しない。
+     * **optional。** 列のタグ絞り込みを持たない画面（dashboard / playing）は実装しない。
      * 受け手は「既知かどうか」を判定し直さないこと ―― 通知が届く頃には
      * 発生元の `check_tag_update` がタグツリーへ足し終えている可能性が高く、
      * やり直すと必ず取りこぼす。

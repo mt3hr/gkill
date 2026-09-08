@@ -10,7 +10,7 @@ import type { RudbeckiaPageKind } from "@/pages/views/rudbeckia-page-kind"
 
 /**
  * ホストしている画面ビューの emit をそのまま上げる面。
- * rykv / mi / plaing / dashboard の4つに共通する17件 ＋ ポート固有の2件。
+ * rykv / mi / playing / dashboard の4つに共通する17件 ＋ ポート固有の2件。
  */
 export interface RudbeckiaPageDialogEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void

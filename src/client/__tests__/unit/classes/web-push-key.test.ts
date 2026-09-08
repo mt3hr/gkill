@@ -1,7 +1,7 @@
 /**
  * Web Push の VAPID 公開鍵（URL-safe base64）を `pushManager.subscribe` に渡せる形へ変換する。
  *
- * 6つのページコンポーザブル（kftl / kyou / mi / mkfl / plaing / rykv）が
+ * 6つのページコンポーザブル（kftl / kyou / mi / mkfl / playing / rykv）が
  * 同じ処理をそれぞれ持っていたのを1箇所へ寄せた関数なので、
  * ここが壊れると6画面すべてでプッシュ購読が同時に失敗する。
  * しかも失敗は `subscribe()` の例外としてしか出ないため、

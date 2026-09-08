@@ -109,7 +109,7 @@ export const FIND_QUERY_SCHEMA = {
     include_start_mi: { type: "boolean", description: "Include the estimated-start projection of Mi tasks — only tasks that have an estimate_start_time (data_type mi_start). Effective only when for_mi=true. See include_create_mi for why at least one of the five must be set." },
     include_end_mi: { type: "boolean", description: "Include the estimated-end projection of Mi tasks — only tasks that have an estimate_end_time (data_type mi_end). Effective only when for_mi=true. See include_create_mi for why at least one of the five must be set." },
     include_end_timeis: { type: "boolean", description: "Also index ended TimeIs entries by their end time (data_type timeis_end). Default false, so a TimeIs is only found on the day it STARTED — an overnight sleep that began yesterday does not appear in today's calendar range unless you set this to true." },
-    plaing_time: {
+    playing_time: {
       type: "string",
       description:
         "Set to search TimeIs entries running at that moment — a point-in-time snapshot of what was happening, unlike calendar range. " +

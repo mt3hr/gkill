@@ -320,10 +320,10 @@ describe("KYOUS_QUERY_DATETIME_FIELDS", () => {
     expect(KYOUS_QUERY_DATETIME_FIELDS.size).toBeGreaterThan(0);
   });
 
-  test("contains calendar and plaing datetime fields", () => {
+  test("contains calendar and playing datetime fields", () => {
     expect(KYOUS_QUERY_DATETIME_FIELDS.has("calendar_start_date")).toBe(true);
     expect(KYOUS_QUERY_DATETIME_FIELDS.has("calendar_end_date")).toBe(true);
-    expect(KYOUS_QUERY_DATETIME_FIELDS.has("plaing_time")).toBe(true);
+    expect(KYOUS_QUERY_DATETIME_FIELDS.has("playing_time")).toBe(true);
     expect(KYOUS_QUERY_DATETIME_FIELDS.has("update_time")).toBe(true);
   });
 

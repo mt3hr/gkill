@@ -32,7 +32,7 @@
             :closable="false" :highlight_targets="[]" :list_height="list_height" :enable_context_menu="true"
             :enable_dialog="true" :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="false"
             :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true" :show_content_only="false"
-            :show_rep_name="true" :force_show_latest_kyou_info="true" :show_timeis_plaing_end_button="false"
+            :show_rep_name="true" :force_show_latest_kyou_info="true" :show_timeis_playing_end_button="false"
             v-on="crudRelayHandlers"
             ref="kyou_list_view_dialog" />
     </v-card>

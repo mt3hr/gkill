@@ -21,7 +21,7 @@ import type { TagStructElementData } from '@/classes/datas/config/tag-struct-ele
 import type { MiBoardStructElementData } from '@/classes/datas/config/mi-board-struct-element-data'
 import type { ComponentRef } from '@/classes/component-ref'
 import { DashboardConfig } from '@/classes/datas/config/dashboard-config'
-import { PlaingTimeIsConfig } from '@/classes/datas/config/plaing-time-is-config'
+import { PlayingTimeIsConfig } from '@/classes/datas/config/playing-time-is-config'
 import { SavedFindQueryConfig } from '@/classes/datas/config/saved-find-query-config'
 import { sort_mi_board_names_by_config_order } from '@/classes/mi-board-names'
 import { build_error_message_relay } from '@/classes/kyou-view-relay'
@@ -45,7 +45,7 @@ export function useApplicationConfigView(options: {
     const edit_dnote_dialog = ref<ComponentRef | null>(null)
     const edit_ryuu_dialog = ref<ComponentRef | null>(null)
     const edit_dashboard_dialog = ref<ComponentRef | null>(null)
-    const edit_plaing_time_is_dialog = ref<ComponentRef | null>(null)
+    const edit_playing_time_is_dialog = ref<ComponentRef | null>(null)
     const edit_saved_find_query_dialog = ref<ComponentRef | null>(null)
     const server_config_dialog = ref<ComponentRef | null>(null)
 
@@ -54,7 +54,7 @@ export function useApplicationConfigView(options: {
         { app_name: i18n.global.t('RYKV_APP_NAME'), page_name: 'rykv' },
         { app_name: i18n.global.t('MI_APP_NAME'), page_name: 'mi' },
         { app_name: i18n.global.t('KFTL_APP_NAME'), page_name: 'kftl' },
-        { app_name: i18n.global.t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
+        { app_name: i18n.global.t('PLAYING_TIMEIS_APP_NAME'), page_name: 'playing' },
         { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
         { app_name: i18n.global.t('RUDBECKIA_APP_NAME'), page_name: 'rudbeckia' },
     ])
@@ -292,7 +292,7 @@ javascript: (function () {
         application_config.ryuu_json_data = cloned_application_config.value.ryuu_json_data
         application_config.dnote_json_data = cloned_application_config.value.dnote_json_data
         application_config.dashboard_json_data = cloned_application_config.value.dashboard_json_data
-        application_config.plaing_timeis_json_data = cloned_application_config.value.plaing_timeis_json_data
+        application_config.playing_timeis_json_data = cloned_application_config.value.playing_timeis_json_data
         application_config.saved_find_query_json_data = cloned_application_config.value.saved_find_query_json_data
         application_config.mi_board_struct = cloned_application_config.value.mi_board_struct
         // この画面で編集しない永続化フィールドも詰め直す。
@@ -410,13 +410,13 @@ javascript: (function () {
         }
         edit_dashboard_dialog.value?.show(dnote_query, mi_query)
     }
-    function show_edit_plaing_time_is_dialog() {
-        let plaing_timeis_query = undefined
-        if (cloned_application_config.value.plaing_timeis_json_data) {
-            const config = PlaingTimeIsConfig.parse(cloned_application_config.value.plaing_timeis_json_data)
-            plaing_timeis_query = config.plaing_timeis_find_kyou_query ?? undefined
+    function show_edit_playing_time_is_dialog() {
+        let playing_timeis_query = undefined
+        if (cloned_application_config.value.playing_timeis_json_data) {
+            const config = PlayingTimeIsConfig.parse(cloned_application_config.value.playing_timeis_json_data)
+            playing_timeis_query = config.playing_timeis_find_kyou_query ?? undefined
         }
-        edit_plaing_time_is_dialog.value?.show(plaing_timeis_query)
+        edit_playing_time_is_dialog.value?.show(playing_timeis_query)
     }
     function show_edit_saved_find_query_dialog() {
         const config = SavedFindQueryConfig.parse(cloned_application_config.value.saved_find_query_json_data)
@@ -489,9 +489,9 @@ javascript: (function () {
         cloned_application_config.value.dashboard_json_data = dashboard_data
     }
 
-    function onRequestedApplyPlaingTimeIs(plaing_timeis_data: Record<string, unknown>): void {
+    function onRequestedApplyPlayingTimeIs(playing_timeis_data: Record<string, unknown>): void {
         has_pending_child_edits = true
-        cloned_application_config.value.plaing_timeis_json_data = plaing_timeis_data
+        cloned_application_config.value.playing_timeis_json_data = playing_timeis_data
     }
 
     function onRequestedApplySavedFindQueryStruct(saved_find_query_data: Record<string, unknown>): void {
@@ -518,7 +518,7 @@ javascript: (function () {
         edit_dnote_dialog,
         edit_ryuu_dialog,
         edit_dashboard_dialog,
-        edit_plaing_time_is_dialog,
+        edit_playing_time_is_dialog,
         edit_saved_find_query_dialog,
         server_config_dialog,
 
@@ -561,7 +561,7 @@ javascript: (function () {
         show_edit_dnote_dialog,
         show_edit_ryuu_dialog,
         show_edit_dashboard_dialog,
-        show_edit_plaing_time_is_dialog,
+        show_edit_playing_time_is_dialog,
         show_edit_saved_find_query_dialog,
         show_new_board_name_dialog,
         show_server_config_dialog,
@@ -577,7 +577,7 @@ javascript: (function () {
         onRequestedApplyDnote,
         onRequestedApplyRyuuStruct,
         onRequestedApplyDashboardStruct,
-        onRequestedApplyPlaingTimeIs,
+        onRequestedApplyPlayingTimeIs,
         onRequestedApplySavedFindQueryStruct,
 
         // Event relay objects

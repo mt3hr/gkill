@@ -160,6 +160,7 @@ export const LEGACY_USE_FLAG_KEYS = new Set([
   "use_timeis_tags",
   "use_calendar",
   "use_map",
+  // use_plaing は旧綴りのまま。我々の綴りではなく、過去の gkill が書き出したデータのキー名（ADR-0806）
   "use_plaing",
   "use_update_time",
   "use_mi_board_name",
@@ -193,7 +194,7 @@ export const KYOUS_QUERY_INTEGER_FIELDS = new Map([
 export const KYOUS_QUERY_DATETIME_FIELDS = new Map([
   ["calendar_start_date", { allowDateOnly: true, endOfDay: false }],
   ["calendar_end_date", { allowDateOnly: true, endOfDay: true }],
-  ["plaing_time", { allowDateOnly: true, endOfDay: false }],
+  ["playing_time", { allowDateOnly: true, endOfDay: false }],
   ["update_time", { allowDateOnly: true, endOfDay: false }],
 ]);
 
