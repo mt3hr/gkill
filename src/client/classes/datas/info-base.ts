@@ -2,7 +2,7 @@
 
 import { GkillAPI } from "../api/gkill-api"
 import { GkillError } from "../api/gkill-error"
-import { generate_plaing_timeis_query } from "../api/find_query/generate-plaing-timeis-query"
+import { generate_playing_timeis_query } from "../api/find_query/generate-playing-timeis-query"
 import { GetApplicationConfigRequest } from "../api/req_res/get-application-config-request"
 import { GetKyousRequest } from "../api/req_res/get-kyous-request"
 import { GetNotificationsByTargetIDRequest } from "../api/req_res/get-notifications-by-target-id-request"
@@ -177,8 +177,8 @@ export abstract class InfoBase {
         const application_config = gkill_api.get_saved_application_config()
             ?? (await gkill_api.get_application_config(new GetApplicationConfigRequest())).application_config
         // 検索条件の組み立ては実行中画面・KFTL終了候補と共通。
-        // ApplicationConfigのカスタム検索条件（plaing_timeis_json_data）もそこで適用される
-        req.query = generate_plaing_timeis_query(application_config, this.related_time)
+        // ApplicationConfigのカスタム検索条件（playing_timeis_json_data）もそこで適用される
+        req.query = generate_playing_timeis_query(application_config, this.related_time)
 
         const res = await GkillAPI.get_gkill_api().get_kyous(req)
         if (res.errors && res.errors.length !== 0) {

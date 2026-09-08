@@ -224,13 +224,13 @@ func TestHandleGetKyous_PluginFindFailureIsWarningNotError(t *testing.T) {
 	}
 }
 
-// plaing_time は *time.Time。null（未指定）なら実行中フィルタを掛けず、
+// playing_time は *time.Time。null（未指定）なら実行中フィルタを掛けず、
 // 非nilならその時刻を跨いでいる計測だけに絞る。
 //
 // Use* フラグ廃止前は use_plaing の真偽で切り替えていたため、
-// 「plaing_time は送るがフィルタは使わない」という組み合わせがありえた。
+// 「playing_time は送るがフィルタは使わない」という組み合わせがありえた。
 // 現在は値の有無がそのままフィルタの有無になる。
-func TestHandleGetKyous_PlaingTimeNullMeansNoPlaingFilter(t *testing.T) {
+func TestHandleGetKyous_PlayingTimeNullMeansNoPlayingFilter(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -244,38 +244,38 @@ func TestHandleGetKyous_PlaingTimeNullMeansNoPlaingFilter(t *testing.T) {
 	calendarStart := now.Add(-4 * time.Hour)
 	calendarEnd := now.Add(time.Hour)
 
-	// plaing_time 未指定（null）→ 実行中フィルタは掛からず両方返る
-	withoutPlaing := getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{
+	// playing_time 未指定（null）→ 実行中フィルタは掛からず両方返る
+	withoutPlaying := getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{
 		CalendarStartDate: &calendarStart,
 		CalendarEndDate:   &calendarEnd,
 	})
-	if len(withoutPlaing.Errors) != 0 {
-		t.Fatalf("get kyous errors: %+v", withoutPlaing.Errors)
+	if len(withoutPlaying.Errors) != 0 {
+		t.Fatalf("get kyous errors: %+v", withoutPlaying.Errors)
 	}
-	idsWithoutPlaing := kyouIDSet(withoutPlaing.Kyous)
-	if !idsWithoutPlaing[runningTimeIsID] {
-		t.Error("plaing_time=null なのに計測中のTimeIsが返っていない")
+	idsWithoutPlaying := kyouIDSet(withoutPlaying.Kyous)
+	if !idsWithoutPlaying[runningTimeIsID] {
+		t.Error("playing_time=null なのに計測中のTimeIsが返っていない")
 	}
-	if !idsWithoutPlaing[endedTimeIsID] {
-		t.Error("plaing_time=null では実行中フィルタを掛けてはいけない（終了済みのTimeIsも返るべき）")
+	if !idsWithoutPlaying[endedTimeIsID] {
+		t.Error("playing_time=null では実行中フィルタを掛けてはいけない（終了済みのTimeIsも返るべき）")
 	}
 
-	// plaing_time 指定（非nil）→ その時刻を跨いでいる計測だけ
-	plaingTime := now.Add(-30 * time.Minute)
-	withPlaing := getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{
+	// playing_time 指定（非nil）→ その時刻を跨いでいる計測だけ
+	playingTime := now.Add(-30 * time.Minute)
+	withPlaying := getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{
 		CalendarStartDate: &calendarStart,
 		CalendarEndDate:   &calendarEnd,
-		PlaingTime:        &plaingTime,
+		PlayingTime:        &playingTime,
 	})
-	if len(withPlaing.Errors) != 0 {
-		t.Fatalf("get kyous errors: %+v", withPlaing.Errors)
+	if len(withPlaying.Errors) != 0 {
+		t.Fatalf("get kyous errors: %+v", withPlaying.Errors)
 	}
-	idsWithPlaing := kyouIDSet(withPlaing.Kyous)
-	if !idsWithPlaing[runningTimeIsID] {
-		t.Error("plaing_time を跨いでいる計測中のTimeIsが返っていない")
+	idsWithPlaying := kyouIDSet(withPlaying.Kyous)
+	if !idsWithPlaying[runningTimeIsID] {
+		t.Error("playing_time を跨いでいる計測中のTimeIsが返っていない")
 	}
-	if idsWithPlaing[endedTimeIsID] {
-		t.Error("plaing_time を跨いでいない終了済みのTimeIsが返っている")
+	if idsWithPlaying[endedTimeIsID] {
+		t.Error("playing_time を跨いでいない終了済みのTimeIsが返っている")
 	}
 }
 

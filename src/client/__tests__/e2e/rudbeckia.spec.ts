@@ -28,7 +28,7 @@ const PAGE_DIALOG = '.gkill-floating-dialog.rudbeckia-page-dialog'
 const SCREEN_MENU = {
   rykv: /^\s*ライフログビュー\s*$/,
   mi: /^\s*タスク\s*$/,
-  plaing: /^\s*実行中\s*$/,
+  playing: /^\s*実行中\s*$/,
   dashboard: /^\s*ダッシュボード\s*$/,
 }
 
@@ -74,7 +74,7 @@ test.describe('ポート', () => {
   test('4つの画面をウィンドウとして開ける', async ({ page }) => {
     await openScreenWindow(page, SCREEN_MENU.rykv)
     await openScreenWindow(page, SCREEN_MENU.mi)
-    await openScreenWindow(page, SCREEN_MENU.plaing)
+    await openScreenWindow(page, SCREEN_MENU.playing)
     await openScreenWindow(page, SCREEN_MENU.dashboard)
 
     await expect(page.locator(PAGE_DIALOG), '4枚そろっていない').toHaveCount(4)

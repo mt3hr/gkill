@@ -16,7 +16,7 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 |---------|---------|-----------|
 | `phone_companion/src/test/java/.../GkillCredentialStoreTest.kt` | 24 | 認証情報ストアの保存・取得・削除。`GkillSecretCipher`（Android Keystore による暗号化）経由の保存と、ホスト別のピン留め証明書フィンガープリント保存も含む（MockK使用） |
 | `phone_companion/src/test/java/.../MainActivityTest.kt` | 8 | コンパニオンアプリの Activity ライフサイクル |
-| `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 28 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得・plaing検索クエリの形状検証。okhttp-tls の自己署名証明書での TLS ピン留め一致/不一致/未保存/既定モード/SAN欠落フォールバック検証を含む） |
+| `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 28 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得・playing検索クエリの形状検証。okhttp-tls の自己署名証明書での TLS ピン留め一致/不一致/未保存/既定モード/SAN欠落フォールバック検証を含む） |
 | `phone_companion/src/test/java/.../GkillServerTrustTest.kt` | 13 | TOFU+ピン留めの TrustManager。フィンガープリント計算・整形・照合、ピン一致/不一致/未保存の可否、ホストキー導出（okhttp-tls の HeldCertificate 使用） |
 | `phone_companion/src/test/java/.../GkillServerUrlPolicyTest.kt` | 4 | サーバーURLの受け入れ境界（平文HTTPはループバックのみ。LAN/公開ホスト・偽装ホスト名・不正形式の拒否、HTTPSの許可） |
 | `phone_companion/src/test/java/.../GkillWearableListenerServiceTest.kt` | 19 | ウォッチ→スマホ間メッセージパスのハンドリング |
@@ -31,7 +31,7 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 | `watch_app/src/test/java/.../TemplateCacheManagerTest.kt` | 9 | ウォッチ上のテンプレートキャッシュ管理と、スマホへ取りに行くかの判定（`shouldFetchFromPhone`） |
 | `watch_app/src/test/java/.../GkillWearClientTest.kt` | 11 | Wearable Data Layer クライアント |
 | `watch_app/src/test/java/.../data/model/TemplateNodeTest.kt` | 10 | テンプレートツリー構造のデータモデル |
-| `watch_app/src/test/java/.../data/model/PlaingTimeIsNodeTest.kt` | 13 | Plaing（計画）UIノードモデル |
+| `watch_app/src/test/java/.../data/model/PlayingTimeIsNodeTest.kt` | 13 | Playing（計画）UIノードモデル |
 
 ## テスト内容
 
@@ -40,7 +40,7 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 - **API 通信**: MockWebServer によるログイン、KFTL テキスト送信、テンプレート取得のテスト
 - **Watch-Phone 連携**: Wearable Data Layer メッセージパス（`/gkill/submit`, `/gkill/templates` 等）の送受信。受信は WorkManager ワーカーへ委譲し、処理本体は Android 非依存の `WearRequestHandler` に抽出
 - **重複送信対策**: 直近成功した KFTL テキストの完全一致台帳。一致時は `DUPLICATE` を返して時計側に確認（それでも送信）を出させる
-- **データモデル**: テンプレートノードと PlaingTimeIs ノードの構造検証
+- **データモデル**: テンプレートノードと PlayingTimeIs ノードの構造検証
 
 ## 実行方法
 

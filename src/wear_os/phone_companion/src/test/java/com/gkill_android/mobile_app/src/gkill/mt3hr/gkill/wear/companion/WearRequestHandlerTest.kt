@@ -178,30 +178,30 @@ class WearRequestHandlerTest {
         assertEquals(1, mockServer.requestCount)
     }
 
-    // ─── get_plaing_timeis ───────────────────────────────────────────────────
+    // ─── get_playing_timeis ───────────────────────────────────────────────────
 
     @Test
-    fun handleGetPlaingTimeis_success_returnsJsonArray() {
+    fun handleGetPlayingTimeis_success_returnsJsonArray() {
         mockServer.enqueue(response("""{"kyous":[],"errors":null}"""))
 
-        val resp = handler().handleGetPlaingTimeis()
+        val resp = handler().handleGetPlayingTimeis()
 
-        assertEquals(PATH_PLAING_TIMEIS, resp.path)
+        assertEquals(PATH_PLAYING_TIMEIS, resp.path)
         assertEquals("[]", String(resp.data, Charsets.UTF_8))
     }
 
     @Test
-    fun handleGetPlaingTimeis_error_returnsErrorPrefix() {
+    fun handleGetPlayingTimeis_error_returnsErrorPrefix() {
         mockServer.enqueue(response("""{"kyous":null,"errors":[{"error_code":"NO_SESSION","error_message":"expired"}]}"""))
 
-        val resp = handler().handleGetPlaingTimeis()
+        val resp = handler().handleGetPlayingTimeis()
 
-        assertEquals("ERROR:get_plaing_timeis_failed", String(resp.data, Charsets.UTF_8))
+        assertEquals("ERROR:get_playing_timeis_failed", String(resp.data, Charsets.UTF_8))
     }
 
     @Test
-    fun handleGetPlaingTimeis_loginFailed_returnsErrorLoginFailed() {
-        val resp = handler(session = null).handleGetPlaingTimeis()
+    fun handleGetPlayingTimeis_loginFailed_returnsErrorLoginFailed() {
+        val resp = handler(session = null).handleGetPlayingTimeis()
 
         assertEquals("ERROR:login_failed", String(resp.data, Charsets.UTF_8))
     }

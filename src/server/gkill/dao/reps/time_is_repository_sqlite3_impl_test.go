@@ -107,7 +107,7 @@ func TestTimeIsGetHistories(t *testing.T) {
 // このend分岐は以前 onlyLatestData を true に固定しており、
 // start分岐だけが query.OnlyLatestData を見るという非対称になっていた。
 // そのため履歴表示(OnlyLatestData=false)で終了時刻だけ旧版が消えていた。
-// 「Plaing検索(PlaingTime非nil)のときだけ最新版に固定する」のは仕様なのでそのまま。
+// 「Playing検索(PlayingTime非nil)のときだけ最新版に固定する」のは仕様なのでそのまま。
 //
 // endTimesOfTimeIsDataType は指定DataTypeの行の終了時刻を集める。
 func endTimesOfTimeIsDataType(timeiss []TimeIs, dataType string) []time.Time {

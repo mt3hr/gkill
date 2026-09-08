@@ -296,8 +296,9 @@ DNote 設定の JSON シリアライズ/デシリアライズ用辞書。
 保存済みデータ（サンプルデータ `resources/gkill_sample_data/configs/user_config.db` を含む）の
 移行が必須。かつての `Agregate*` → `Aggregate*` の改名は移行済み。
 
-なお `TextContentContainsPredicate` → `KmemoContentContainsPredicate` は
-述語辞書に旧名エイリアスを登録する方式で互換を取っている。
+かつて `TextContentContainsPredicate` → `KmemoContentContainsPredicate` の旧名エイリアスを
+述語辞書へ登録して互換を取っていたが、使っている保存データが0件だったので撤去した
+（互換を残さず、旧綴りのデータは一度きりの変換で直す方針。[ADR-0806](../../../../documents/adr/0806-fix-spellings-instead-of-freezing.md)）。
 
 ## トレンドグラフ（`dnote-trend/` + `dnote-trend-aggregator.ts`）
 

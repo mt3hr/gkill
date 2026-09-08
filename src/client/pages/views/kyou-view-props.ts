@@ -15,7 +15,7 @@ export interface KyouViewProps extends KyouViewPropsBase {
     show_mi_limit_time: boolean
     show_mi_estimate_start_time: boolean
     show_mi_estimate_end_time: boolean
-    show_timeis_plaing_end_button: boolean
+    show_timeis_playing_end_button: boolean
     show_timeis_elapsed_time: boolean
     show_attached_timeis: boolean
     show_attached_tags: boolean

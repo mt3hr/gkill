@@ -503,13 +503,13 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	// attached TimeIs を一括取得。削除済みの除外と「その瞬間に走っていたか」の判定は
 	// どちらも get_kyous_mcp_helpers.go の関数が正本（理由と実測はそちらのコメント）。
 	// 実測(2026-08-25 本番): 落とさないと付随16件のうち14件が削除済みで、最古は1年前の開始。
-	// 同じ瞬間を plaing_time で引くと2件しか返らない。
+	// 同じ瞬間を playing_time で引くと2件しか返らない。
 	var allTimeIs []reps.TimeIs
 	if request.ShouldIncludeTimeIs() {
 		findAllTimeIsQuery := &find.FindQuery{OnlyLatestData: true, IncludeEndTimeIs: true}
 		foundTimeIs, timeisErr := repositories.TimeIsReps.FindTimeIs(r.Context(), findAllTimeIsQuery)
 		noteDetailFailure("timeis", timeisErr)
-		allTimeIs = livePlaingTimeIsCandidates(foundTimeIs)
+		allTimeIs = livePlayingTimeIsCandidates(foundTimeIs)
 	}
 
 	// 付随 TimeIs のタグは打刻IDでメモ化する。同じ打刻が N 件の Kyou に付いても引くのは1回。

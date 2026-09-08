@@ -527,7 +527,7 @@ sequenceDiagram
     Watch-->>User: 記録完了表示
 ```
 
-**補足（plaing TimeIs）：** 進行中の TimeIs（作業中タイマー）は `/gkill/get_plaing_timeis`（→ `POST /api/get_kyous` + `POST /api/get_timeis`）で取得、終了は `/gkill/end_timeis`（→ `POST /api/get_timeis` + `POST /api/update_timeis`）で行います。Android APK 版は WebView + 内蔵 `libgkill_server.so` を exec して、同じ HTTP API をローカルで利用します。
+**補足（playing TimeIs）：** 進行中の TimeIs（作業中タイマー）は `/gkill/get_playing_timeis`（→ `POST /api/get_kyous` + `POST /api/get_timeis`）で取得、終了は `/gkill/end_timeis`（→ `POST /api/get_timeis` + `POST /api/update_timeis`）で行います。Android APK 版は WebView + 内蔵 `libgkill_server.so` を exec して、同じ HTTP API をローカルで利用します。
 
 **関連：** モバイル構成は [folder-structure.md](folder-structure.md)、KFTL 文法は [glossary.md](glossary.md)。
 
@@ -644,7 +644,7 @@ sequenceDiagram
     FF->>Reps: 各 Rep を検索
     API->>Reps: 見つかった ID を IDs 指定で再取得<br>ViewType!="mi" なら全種再取得
     opt 共有フラグに応じ付加
-        API->>Reps: GPSLog / Tags / Texts / plaing TimeIs
+        API->>Reps: GPSLog / Tags / Texts / playing TimeIs
     end
     API-->>Friend: {Kyous, Mis, GPSLogs, Tags, Texts, Title, ViewType}
 ```

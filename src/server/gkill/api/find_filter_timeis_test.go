@@ -343,7 +343,7 @@ func TestFindTimeIs_ExcludeRenamedAwayVersion(t *testing.T) {
 	}
 }
 
-func TestFilterPlaingTimeIsKyous_UsesInclusiveMergedIntervals(t *testing.T) {
+func TestFilterPlayingTimeIsKyous_UsesInclusiveMergedIntervals(t *testing.T) {
 	end11 := intervalTestTime(11)
 	end12 := intervalTestTime(12)
 	findCtx := &FindKyouContext{
@@ -363,8 +363,8 @@ func TestFilterPlaingTimeIsKyous_UsesInclusiveMergedIntervals(t *testing.T) {
 	}
 
 	filter := &FindFilter{}
-	if _, err := filter.filterPlaingTimeIsKyous(context.Background(), findCtx); err != nil {
-		t.Fatalf("filterPlaingTimeIsKyous failed: %v", err)
+	if _, err := filter.filterPlayingTimeIsKyous(context.Background(), findCtx); err != nil {
+		t.Fatalf("filterPlayingTimeIsKyous failed: %v", err)
 	}
 	for _, id := range []string{"start", "shared", "end", "open-end"} {
 		if _, exist := findCtx.MatchKyousCurrent[id]; !exist {

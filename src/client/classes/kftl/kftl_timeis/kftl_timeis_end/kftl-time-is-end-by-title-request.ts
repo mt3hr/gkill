@@ -8,7 +8,7 @@ import { GkillAPI } from '@/classes/api/gkill-api'
 import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request'
 import type { TimeIs } from '@/classes/datas/time-is'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import generate_get_plaing_timeis_kyous_query from '@/classes/api/generate-get-plaing-timeis-kyous-query'
+import generate_get_playing_timeis_kyous_query from '@/classes/api/generate-get-playing-timeis-kyous-query'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
@@ -43,30 +43,30 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
         const time = this.get_related_time() ? this.get_related_time()! : new Date(Date.now())
 
         // 対象のtimeisを取得する。
-        // plaing検索のカスタム検索条件（ApplicationConfig）が適用されるため、
+        // playing検索のカスタム検索条件（ApplicationConfig）が適用されるため、
         // 条件外の実行中TimeIsは終了対象として見つからない（仕様）。
         // 終了できないときは設定の実行中検索条件を確認すること
         let target_timeis: TimeIs | null = null
-        const get_plaing_timeis_query = generate_get_plaing_timeis_kyous_query(null)
-        const get_plaing_timeis_req = new GetKyousRequest()
-        get_plaing_timeis_req.query = get_plaing_timeis_query
+        const get_playing_timeis_query = generate_get_playing_timeis_kyous_query(null)
+        const get_playing_timeis_req = new GetKyousRequest()
+        get_playing_timeis_req.query = get_playing_timeis_query
 
         await gkill_api.delete_updated_gkill_caches()
-        const get_plaing_timeis_res = await gkill_api.get_kyous(get_plaing_timeis_req)
-        if (get_plaing_timeis_res.errors && get_plaing_timeis_res.errors.length !== 0) {
-            errors = errors.concat(get_plaing_timeis_res.errors)
+        const get_playing_timeis_res = await gkill_api.get_kyous(get_playing_timeis_req)
+        if (get_playing_timeis_res.errors && get_playing_timeis_res.errors.length !== 0) {
+            errors = errors.concat(get_playing_timeis_res.errors)
             return errors
         }
 
         const await_promises = Array<Promise<unknown>>()
-        for (let i = 0; i < get_plaing_timeis_res.kyous.length; i++) {
-            const timeis = get_plaing_timeis_res.kyous[i]
+        for (let i = 0; i < get_playing_timeis_res.kyous.length; i++) {
+            const timeis = get_playing_timeis_res.kyous[i]
             await_promises.push(timeis.load_typed_timeis())
         }
         await Promise.all(await_promises)
 
-        for (let i = 0; i < get_plaing_timeis_res.kyous.length; i++) {
-            const timeis_kyou = get_plaing_timeis_res.kyous[i]
+        for (let i = 0; i < get_playing_timeis_res.kyous.length; i++) {
+            const timeis_kyou = get_playing_timeis_res.kyous[i]
             if (timeis_kyou.typed_timeis) {
                 if (timeis_kyou.typed_timeis.title === this.title) {
                     target_timeis = timeis_kyou.typed_timeis

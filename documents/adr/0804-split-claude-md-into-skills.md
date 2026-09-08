@@ -22,7 +22,7 @@
 
 正本を3層に分ける。
 
-- **`AGENTS.md`** — 全AI共通の核（ビルド・ソースツリー・命名・凍結綴り・Kyou 型一覧・`errors` は成功時 null）と、
+- **`AGENTS.md`** — 全AI共通の核（ビルド・ソースツリー・命名・綴り方針・Kyou 型一覧・`errors` は成功時 null）と、
   **「触る場所ごとの必読資料」ルーティング表**（触るパス → スキル → 読み落とすと何が起きるか）＋症状表。
   Claude Code は `CLAUDE.md` の `@AGENTS.md` import で展開して読む
 - **`.claude/skills/gkill-*/SKILL.md`（13本）** — 領域別の禁止文・不変条件の**正本**。逐語移送で内容は変えない。

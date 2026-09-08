@@ -469,7 +469,7 @@ describe('GkillAPI', () => {
       const api = GkillAPI.get_instance()
       const req = {
         session_id: 'test-session',
-        query: { query_id: 'q1', words: null, tags: [], reps: [], plaing_time: null },
+        query: { query_id: 'q1', words: null, tags: [], reps: [], playing_time: null },
         abort_controller: new AbortController(),
         force_reget: false,
         locale_name: 'ja',
@@ -501,7 +501,7 @@ describe('GkillAPI', () => {
       const api = GkillAPI.get_instance()
       const req = {
         session_id: 'test-session',
-        query: { query_id: 'q1', words: null, tags: [], reps: [], plaing_time: null },
+        query: { query_id: 'q1', words: null, tags: [], reps: [], playing_time: null },
         abort_controller: new AbortController(),
         force_reget: false,
         locale_name: 'ja',
@@ -527,7 +527,7 @@ describe('GkillAPI', () => {
       abort_controller.abort()
       const req = {
         session_id: 'test-session',
-        query: { query_id: 'q1', words: null, tags: [], reps: [], plaing_time: null },
+        query: { query_id: 'q1', words: null, tags: [], reps: [], playing_time: null },
         abort_controller,
         force_reget: false,
         locale_name: 'ja',
@@ -2293,7 +2293,7 @@ describe('GkillAPI', () => {
         use_tags: true,
         tags: null,
         use_plaing: false,
-        plaing_time: '2020-01-01T00:00:00.000Z',
+        playing_time: '2020-01-01T00:00:00.000Z',
         use_update_time: true,
         update_time: '2020-01-01T00:00:00.000Z',
       }
@@ -2310,7 +2310,7 @@ describe('GkillAPI', () => {
       expect(loaded[0].keywords).toBe('old')
       expect(loaded[0].words).toBeNull()
       expect(loaded[0].tags).toEqual([])
-      expect(loaded[0].plaing_time).toBeNull()
+      expect(loaded[0].playing_time).toBeNull()
 
       // 旧形式を検出したら新形式で書き戻す(次回以降の読み込みで正規化が不要になる)
       const persisted = JSON.parse(window.localStorage.getItem(key)!) as Array<Record<string, unknown>>
@@ -2319,7 +2319,7 @@ describe('GkillAPI', () => {
       expect(Object.keys(persisted[0])).not.toContain('update_time')
       expect(persisted[0].words).toBeNull()
       expect(persisted[0].tags).toEqual([])
-      expect(persisted[0].plaing_time).toBeNull()
+      expect(persisted[0].playing_time).toBeNull()
     })
   })
 

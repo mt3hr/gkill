@@ -49,7 +49,7 @@
                 :highlight_targets="highlight_targets" :is_image_request_to_thumb_size="false" :is_image_view="false"
                 :kyou="target_kyou" :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true" :height="'unset'" :width="width"
+                :show_timeis_elapsed_time="true" :show_timeis_playing_end_button="true" :height="'unset'" :width="width"
                 :is_readonly_mi_check="false" :enable_context_menu="false" :show_attached_timeis="false"
                 :enable_dialog="enable_dialog" :show_rep_name="true" :force_show_latest_kyou_info="true"
                 :show_update_time="false" :show_related_time="true" :show_attached_tags="true" :show_attached_texts="true"

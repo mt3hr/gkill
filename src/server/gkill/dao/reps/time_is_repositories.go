@@ -462,9 +462,9 @@ loop:
 	matchTimeIssList := []TimeIs{}
 	for _, timeis := range matchTimeIss {
 
-		// Plaingで最新のものが範囲外だったらそれは追加しない
-		if query.PlaingTime != nil {
-			if query.PlaingTime.After(timeis.StartTime) && (timeis.EndTime == nil || query.PlaingTime.Before(*timeis.EndTime)) {
+		// Playingで最新のものが範囲外だったらそれは追加しない
+		if query.PlayingTime != nil {
+			if query.PlayingTime.After(timeis.StartTime) && (timeis.EndTime == nil || query.PlayingTime.Before(*timeis.EndTime)) {
 				matchTimeIssList = append(matchTimeIssList, timeis)
 			}
 		} else {

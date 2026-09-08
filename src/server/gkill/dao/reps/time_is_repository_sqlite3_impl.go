@@ -239,22 +239,22 @@ FROM TIMEIS
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
-	queryArgsForPlaingStart := []any{}
-	sqlWhereFilterPlaingTimeisStart := ""
+	queryArgsForPlayingStart := []any{}
+	sqlWhereFilterPlayingTimeisStart := ""
 	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
-	if query.PlaingTime != nil {
+	if query.PlayingTime != nil {
 		onlyLatestData = true
 	}
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
-	if query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
+	if query.PlayingTime != nil {
+		sqlWhereFilterPlayingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
+		queryArgsForPlayingStart = append(queryArgsForPlayingStart, (query.PlayingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlayingStart = append(queryArgsForPlayingStart, (query.PlayingTime).Format(sqlite3impl.TimeLayout))
 		whereCounter++
 		whereCounter++
 	}
@@ -270,22 +270,22 @@ FROM TIMEIS
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	queryArgsForPlaingEnd := []any{}
-	sqlWhereFilterPlaingTimeisEnd := ""
+	queryArgsForPlayingEnd := []any{}
+	sqlWhereFilterPlayingTimeisEnd := ""
 	ignoreCase = true
 
 	onlyLatestData = query.OnlyLatestData
-	if query.PlaingTime != nil {
+	if query.PlayingTime != nil {
 		onlyLatestData = true
 	}
 	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
 	}
-	if query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisEnd += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
+	if query.PlayingTime != nil {
+		sqlWhereFilterPlayingTimeisEnd += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
+		queryArgsForPlayingEnd = append(queryArgsForPlayingEnd, (query.PlayingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlayingEnd = append(queryArgsForPlayingEnd, (query.PlayingTime).Format(sqlite3impl.TimeLayout))
 		whereCounter++
 		whereCounter++
 	}
@@ -295,7 +295,7 @@ FROM TIMEIS
 	// (modernc.org/sqlite は SQLITE_TEMP_STORE=1 なので、それがディスクの一時ファイルに落ちる)。
 	// 腕の中の完全重複も、消費側が必ずIDキーのマップへ入れる(find_filter の kyouEntryKey / filterMiForMi)ので
 	// 観測可能な差は出ない。
-	sql := fmt.Sprintf("%s WHERE %s %s UNION ALL %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
+	sql := fmt.Sprintf("%s WHERE %s %s UNION ALL %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlayingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlayingTimeisEnd, sqlWhereFilterEndTimeIs)
 
 	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
@@ -311,9 +311,9 @@ FROM TIMEIS
 	}()
 
 	if gkill_log.TraceSQLEnabled(ctx) {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForStart)), "params_plaing_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlaingStart)), "params_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForEnd)), "params_plaing_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlaingEnd)))
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForStart)), "params_playing_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlayingStart)), "params_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForEnd)), "params_playing_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlayingEnd)))
 	}
-	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
+	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlayingStart, append(queryArgsForEnd, queryArgsForPlayingEnd...)...)...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
 		return nil, err
@@ -848,22 +848,22 @@ FROM TIMEIS
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
-	queryArgsForPlaingStart := []any{}
-	sqlWhereFilterPlaingTimeisStart := ""
+	queryArgsForPlayingStart := []any{}
+	sqlWhereFilterPlayingTimeisStart := ""
 	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
-	if query.PlaingTime != nil {
+	if query.PlayingTime != nil {
 		onlyLatestData = true
 	}
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
-	if query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
+	if query.PlayingTime != nil {
+		sqlWhereFilterPlayingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
+		queryArgsForPlayingStart = append(queryArgsForPlayingStart, (query.PlayingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlayingStart = append(queryArgsForPlayingStart, (query.PlayingTime).Format(sqlite3impl.TimeLayout))
 		whereCounter++
 		whereCounter++
 	}
@@ -876,7 +876,7 @@ FROM TIMEIS
 	whereCounter = 0
 	// start分岐と同じくquery依存にする(以前はend分岐だけtrue固定で非対称だった)
 	onlyLatestData = query.OnlyLatestData
-	if query.PlaingTime != nil {
+	if query.PlayingTime != nil {
 		onlyLatestData = true
 	}
 	relatedTimeColumnName = "RELATED_TIME"
@@ -884,17 +884,17 @@ FROM TIMEIS
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	queryArgsForPlaingEnd := []any{}
-	sqlWhereFilterPlaingTimeisEnd := ""
+	queryArgsForPlayingEnd := []any{}
+	sqlWhereFilterPlayingTimeisEnd := ""
 	ignoreCase = true
 	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
 	}
-	if query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisEnd += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
+	if query.PlayingTime != nil {
+		sqlWhereFilterPlayingTimeisEnd += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
+		queryArgsForPlayingEnd = append(queryArgsForPlayingEnd, (query.PlayingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlayingEnd = append(queryArgsForPlayingEnd, (query.PlayingTime).Format(sqlite3impl.TimeLayout))
 		whereCounter++
 		whereCounter++
 	}
@@ -904,7 +904,7 @@ FROM TIMEIS
 	// (modernc.org/sqlite は SQLITE_TEMP_STORE=1 なので、それがディスクの一時ファイルに落ちる)。
 	// 腕の中の完全重複も、消費側が必ずIDキーのマップへ入れる(find_filter の kyouEntryKey / filterMiForMi)ので
 	// 観測可能な差は出ない。
-	sql := fmt.Sprintf("%s WHERE %s %s UNION ALL %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
+	sql := fmt.Sprintf("%s WHERE %s %s UNION ALL %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlayingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlayingTimeisEnd, sqlWhereFilterEndTimeIs)
 
 	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
@@ -920,9 +920,9 @@ FROM TIMEIS
 	}()
 
 	if gkill_log.TraceSQLEnabled(ctx) {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForStart)), "params_plaing_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlaingStart)), "params_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForEnd)), "params_plaing_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlaingEnd)))
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForStart)), "params_playing_start", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlayingStart)), "params_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForEnd)), "params_playing_end", fmt.Sprintf("%q", fmt.Sprint(queryArgsForPlayingEnd)))
 	}
-	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
+	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlayingStart, append(queryArgsForEnd, queryArgsForPlayingEnd...)...)...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
 		return nil, err
@@ -1066,23 +1066,23 @@ WHERE
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-	queryArgsForPlaingStart := []any{}
-	sqlWhereFilterPlaingTimeisStart := ""
+	queryArgsForPlayingStart := []any{}
+	sqlWhereFilterPlayingTimeisStart := ""
 	findWordUseLike := true
 	ignoreCase := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
-	if query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
+	if query.PlayingTime != nil {
+		sqlWhereFilterPlayingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
+		queryArgsForPlayingStart = append(queryArgsForPlayingStart, (query.PlayingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlayingStart = append(queryArgsForPlayingStart, (query.PlayingTime).Format(sqlite3impl.TimeLayout))
 		whereCounter++
 		whereCounter++
 	}
 
-	sql += commonWhereSQL + sqlWhereFilterPlaingTimeisStart
+	sql += commonWhereSQL + sqlWhereFilterPlayingTimeisStart
 	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -1097,9 +1097,9 @@ WHERE
 	}()
 
 	if gkill_log.TraceSQLEnabled(ctx) {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(append(queryArgsForPlaingStart, queryArgs...))))
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(append(queryArgsForPlayingStart, queryArgs...))))
 	}
-	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlaingStart, queryArgs...)...)
+	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlayingStart, queryArgs...)...)
 
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
@@ -1249,23 +1249,23 @@ WHERE
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-	queryArgsForPlaingStart := []any{}
-	sqlWhereFilterPlaingTimeisStart := ""
+	queryArgsForPlayingStart := []any{}
+	sqlWhereFilterPlayingTimeisStart := ""
 	findWordUseLike := true
 	ignoreCase := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
-	if query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
+	if query.PlayingTime != nil {
+		sqlWhereFilterPlayingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
+		queryArgsForPlayingStart = append(queryArgsForPlayingStart, (query.PlayingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlayingStart = append(queryArgsForPlayingStart, (query.PlayingTime).Format(sqlite3impl.TimeLayout))
 		whereCounter++
 		whereCounter++
 	}
 
-	sql += commonWhereSQL + sqlWhereFilterPlaingTimeisStart
+	sql += commonWhereSQL + sqlWhereFilterPlayingTimeisStart
 	gkill_log.LogSQL(ctx, sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -1280,9 +1280,9 @@ WHERE
 	}()
 
 	if gkill_log.TraceSQLEnabled(ctx) {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(append(queryArgsForPlaingStart, queryArgs...))))
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(append(queryArgsForPlayingStart, queryArgs...))))
 	}
-	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlaingStart, queryArgs...)...)
+	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlayingStart, queryArgs...)...)
 
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)

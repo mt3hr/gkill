@@ -42,7 +42,7 @@ type KyouMCPDTO struct {
 	Payload      any                    `json:"payload,omitempty"`
 }
 
-// TimeIsMCPDTO は attached TimeIs（Plaing TimeIs）用DTO。
+// TimeIsMCPDTO は attached TimeIs（Playing TimeIs）用DTO。
 //
 // ID と時刻が要る。以前は Title と Tags しか無く、同じ題名の打刻が
 // 1つの応答に何度も並んでも**区別も特定もできなかった**（実測で lantana 3件に対し

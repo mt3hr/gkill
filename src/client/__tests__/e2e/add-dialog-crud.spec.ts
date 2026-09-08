@@ -3,7 +3,7 @@ import type { Locator, Page } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
-  submitKftlText, navigateToRykv, navigateToMi, navigateToPlaing,
+  submitKftlText, navigateToRykv, navigateToMi, navigateToPlaying,
   makeUniqueLabel, expectPageToContainText, clickFabButton,
   clickContextMenuItem, clickDialogButton, waitForKyouByText,
   MENU, SAVE_BUTTON,
@@ -75,26 +75,26 @@ test.describe('GUI Add Dialog Flows', () => {
     await expectPageToContainText(page, label)
   })
 
-  test('TimeIsを追加ダイアログから作るとPlaing画面に出る', async ({ page }) => {
+  test('TimeIsを追加ダイアログから作るとPlaying画面に出る', async ({ page }) => {
     const label = makeUniqueLabel('timeis_add')
 
     const dialog = await openAddDialog(page, MENU.addTimeIs)
     await fillDialogField(dialog, 0, label)
     await clickDialogButton(page, SAVE_BUTTON)
 
-    await navigateToPlaing(page)
+    await navigateToPlaying(page)
     await expectPageToContainText(page, label)
   })
 
   // 項番28: TimeIs追加(全項目入力)
-  test('TimeIsをタイトル入りで追加するとPlaing画面に出る', async ({ page }) => {
+  test('TimeIsをタイトル入りで追加するとPlaying画面に出る', async ({ page }) => {
     const label = makeUniqueLabel('timeis_full')
 
     const dialog = await openAddDialog(page, MENU.addTimeIs)
     await fillDialogField(dialog, 0, label)
     await clickDialogButton(page, SAVE_BUTTON)
 
-    await navigateToPlaing(page)
+    await navigateToPlaying(page)
     await expectPageToContainText(page, label)
   })
 

@@ -23,13 +23,13 @@ import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Text
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.GkillWearClient
-import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.PlaingTimeIsNode
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.PlayingTimeIsNode
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.TemplateNode
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.tile.TemplateCacheManager
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.ConfirmScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.LoadingScreen
-import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.PlaingEndConfirmScreen
-import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.PlaingTimeIsListScreen
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.PlayingEndConfirmScreen
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.PlayingTimeIsListScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.ResultScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.TemplateListScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.theme.GkillWearTheme
@@ -43,12 +43,12 @@ import kotlinx.coroutines.withTimeout
 private const val TAG = "GkillWatchMain"
 private const val TEMPLATE_TIMEOUT_MS = 20_000L
 private const val SUBMIT_TIMEOUT_MS = 30_000L
-private const val PLAING_TIMEOUT_MS = 20_000L
+private const val PLAYING_TIMEOUT_MS = 20_000L
 private const val END_TIMEIS_TIMEOUT_MS = 30_000L
 
 const val EXTRA_MODE = "mode"
 const val MODE_RECORD = "record"
-const val MODE_PLAING = "plaing"
+const val MODE_PLAYING = "playing"
 
 private sealed class Screen {
     object HomeMenu : Screen()
@@ -72,11 +72,11 @@ private sealed class Screen {
      */
     data class SubmitDuplicateConfirm(val node: TemplateNode) : Screen()
     data class Result(val success: Boolean, val error: String) : Screen()
-    // Plaing screens
-    object PlaingLoading : Screen()
-    data class PlaingList(val nodes: List<PlaingTimeIsNode>) : Screen()
-    data class PlaingEndConfirm(val node: PlaingTimeIsNode) : Screen()
-    data class PlaingEnding(val node: PlaingTimeIsNode) : Screen()
+    // Playing screens
+    object PlayingLoading : Screen()
+    data class PlayingList(val nodes: List<PlayingTimeIsNode>) : Screen()
+    data class PlayingEndConfirm(val node: PlayingTimeIsNode) : Screen()
+    data class PlayingEnding(val node: PlayingTimeIsNode) : Screen()
 }
 
 class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListener {
@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     // CompletableDeferred for awaiting phone responses with timeout
     private var pendingTemplatesDeferred: CompletableDeferred<String>? = null
     private var pendingSubmitDeferred: CompletableDeferred<String>? = null
-    private var pendingPlaingTimeisDeferred: CompletableDeferred<String>? = null
+    private var pendingPlayingTimeisDeferred: CompletableDeferred<String>? = null
     private var pendingEndTimeisDeferred: CompletableDeferred<String>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,7 +105,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         launchedFromTile = (mode != null)
         screenState = when (mode) {
             MODE_RECORD -> Screen.Loading()
-            MODE_PLAING -> Screen.PlaingLoading
+            MODE_PLAYING -> Screen.PlayingLoading
             else -> Screen.HomeMenu
         }
 
@@ -115,7 +115,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                     is Screen.HomeMenu -> {
                         HomeMenuScreen(
                             onRecord = { screenState = Screen.Loading() },
-                            onPlaing = { screenState = Screen.PlaingLoading }
+                            onPlaying = { screenState = Screen.PlayingLoading }
                         )
                     }
 
@@ -210,51 +210,51 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                         )
                     }
 
-                    // ─── Plaing screens ─────────────────────────────────────
-                    is Screen.PlaingLoading -> {
+                    // ─── Playing screens ─────────────────────────────────────
+                    is Screen.PlayingLoading -> {
                         LoadingScreen("実行中を取得中...")
                         LaunchedEffect(Unit) {
-                            requestPlaingTimeis()
+                            requestPlayingTimeis()
                         }
                     }
 
-                    is Screen.PlaingList -> {
+                    is Screen.PlayingList -> {
                         BackHandler {
                             navigateBackToTopOrFinish()
                         }
-                        PlaingTimeIsListScreen(
+                        PlayingTimeIsListScreen(
                             nodes = s.nodes,
                             onNodeSelected = { node ->
-                                screenState = Screen.PlaingEndConfirm(node)
+                                screenState = Screen.PlayingEndConfirm(node)
                             },
                             onRefresh = {
-                                screenState = Screen.PlaingLoading
+                                screenState = Screen.PlayingLoading
                             }
                         )
                     }
 
-                    is Screen.PlaingEndConfirm -> {
+                    is Screen.PlayingEndConfirm -> {
                         BackHandler {
-                            screenState = Screen.PlaingList(
+                            screenState = Screen.PlayingList(
                                 // Go back to the list; we need to re-fetch or keep state
-                                // For simplicity, go to PlaingLoading to refresh
+                                // For simplicity, go to PlayingLoading to refresh
                                 emptyList()
                             )
-                            screenState = Screen.PlaingLoading
+                            screenState = Screen.PlayingLoading
                         }
-                        PlaingEndConfirmScreen(
+                        PlayingEndConfirmScreen(
                             title = s.node.title.ifEmpty { s.node.id.take(8) },
                             startTime = s.node.start_time,
                             onConfirm = {
-                                screenState = Screen.PlaingEnding(s.node)
+                                screenState = Screen.PlayingEnding(s.node)
                             },
                             onCancel = {
-                                screenState = Screen.PlaingLoading
+                                screenState = Screen.PlayingLoading
                             }
                         )
                     }
 
-                    is Screen.PlaingEnding -> {
+                    is Screen.PlayingEnding -> {
                         LoadingScreen("終了中...")
                         LaunchedEffect(s.node) {
                             endTimeis(s.node)
@@ -292,9 +292,9 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                 pendingSubmitDeferred?.complete(data)
                 pendingSubmitDeferred = null
             }
-            GkillWearClient.RESPONSE_PATH_PLAING_TIMEIS -> {
-                pendingPlaingTimeisDeferred?.complete(data)
-                pendingPlaingTimeisDeferred = null
+            GkillWearClient.RESPONSE_PATH_PLAYING_TIMEIS -> {
+                pendingPlayingTimeisDeferred?.complete(data)
+                pendingPlayingTimeisDeferred = null
             }
             GkillWearClient.RESPONSE_PATH_END_TIMEIS_RESULT -> {
                 pendingEndTimeisDeferred?.complete(data)
@@ -404,30 +404,30 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         }
     }
 
-    // ─── Private helpers (plaing) ───────────────────────────────────────────────
+    // ─── Private helpers (playing) ───────────────────────────────────────────────
 
-    private suspend fun requestPlaingTimeis() {
-        Log.d(TAG, "requestPlaingTimeis: start")
+    private suspend fun requestPlayingTimeis() {
+        Log.d(TAG, "requestPlayingTimeis: start")
 
-        val sent = wearClient.sendGetPlaingTimeisRequest()
+        val sent = wearClient.sendGetPlayingTimeisRequest()
         if (sent == null) {
-            Log.w(TAG, "requestPlaingTimeis: no phone node found")
+            Log.w(TAG, "requestPlayingTimeis: no phone node found")
             screenState = Screen.Result(
                 success = false,
                 error = "スマホに接続できません。\nPixel Watch 2とスマホのペアリングを確認してください。"
             )
             return
         }
-        Log.d(TAG, "requestPlaingTimeis: message sent to $sent, waiting...")
+        Log.d(TAG, "requestPlayingTimeis: message sent to $sent, waiting...")
 
         val deferred = CompletableDeferred<String>()
-        pendingPlaingTimeisDeferred = deferred
+        pendingPlayingTimeisDeferred = deferred
 
         val json = try {
-            withTimeout(PLAING_TIMEOUT_MS) { deferred.await() }
+            withTimeout(PLAYING_TIMEOUT_MS) { deferred.await() }
         } catch (e: TimeoutCancellationException) {
-            Log.w(TAG, "requestPlaingTimeis: timeout after ${PLAING_TIMEOUT_MS}ms")
-            pendingPlaingTimeisDeferred = null
+            Log.w(TAG, "requestPlayingTimeis: timeout after ${PLAYING_TIMEOUT_MS}ms")
+            pendingPlayingTimeisDeferred = null
             screenState = Screen.Result(
                 success = false,
                 error = "スマホからの応答がタイムアウトしました。"
@@ -435,17 +435,17 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
             return
         }
 
-        Log.d(TAG, "requestPlaingTimeis: received ${json.length} chars")
+        Log.d(TAG, "requestPlayingTimeis: received ${json.length} chars")
         if (json.startsWith("ERROR:")) {
             screenState = Screen.Result(success = false, error = json.removePrefix("ERROR:"))
             return
         }
 
-        val nodes = GkillWearClient.parsePlaingTimeisList(json)
-        screenState = Screen.PlaingList(nodes = nodes)
+        val nodes = GkillWearClient.parsePlayingTimeisList(json)
+        screenState = Screen.PlayingList(nodes = nodes)
     }
 
-    private suspend fun endTimeis(node: PlaingTimeIsNode) {
+    private suspend fun endTimeis(node: PlayingTimeIsNode) {
         // Kyou ID は記録と突き合わせられる識別子なので logcat へ出さない(2026-08-30 監査 F-008)
         Log.d(TAG, "endTimeis")
         // Send "id\nrep_name" format
@@ -474,7 +474,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 
         if (result == "OK") {
             // 終了成功 → 一覧を再取得
-            screenState = Screen.PlaingLoading
+            screenState = Screen.PlayingLoading
         } else {
             screenState = Screen.Result(success = false, error = result.removePrefix("ERROR:"))
         }
@@ -487,7 +487,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 @Composable
 private fun HomeMenuScreen(
     onRecord: () -> Unit,
-    onPlaing: () -> Unit
+    onPlaying: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -516,7 +516,7 @@ private fun HomeMenuScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             label = { Text("▶ 実行中") },
-            onClick = onPlaing,
+            onClick = onPlaying,
             colors = ChipDefaults.secondaryChipColors()
         )
     }

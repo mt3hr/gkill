@@ -55,7 +55,7 @@ export class ApplicationConfig {
     dnote_json_data: unknown
     ryuu_json_data: unknown
     dashboard_json_data: unknown
-    plaing_timeis_json_data: unknown
+    playing_timeis_json_data: unknown
     saved_find_query_json_data: unknown
 
     user_is_admin: boolean
@@ -106,7 +106,7 @@ export class ApplicationConfig {
         application_config.ryuu_json_data = this.ryuu_json_data
         application_config.dashboard_json_data = this.dashboard_json_data
         // JSONデータは保存時に丸ごと差し替える運用なので参照コピーでよい（dashboard等と同じ）
-        application_config.plaing_timeis_json_data = this.plaing_timeis_json_data
+        application_config.playing_timeis_json_data = this.playing_timeis_json_data
         application_config.saved_find_query_json_data = this.saved_find_query_json_data
         application_config.account_is_admin = this.account_is_admin
         application_config.session_is_local = this.session_is_local

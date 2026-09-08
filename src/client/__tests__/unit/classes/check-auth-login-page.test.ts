@@ -33,7 +33,7 @@ describe('is_on_login_page', () => {
 
     test('他の画面はログイン画面ではない（セッション切れでは飛ばす必要がある）', () => {
         for (const pathname of [
-            '/kftl', '/rykv', '/mi', '/saihate', '/dashboard', '/plaing',
+            '/kftl', '/rykv', '/mi', '/saihate', '/dashboard', '/playing',
             '/mkfl', '/rudbeckia', '/kyou', '/shared_page',
             '/register_first_account', '/set_new_password',
         ]) {

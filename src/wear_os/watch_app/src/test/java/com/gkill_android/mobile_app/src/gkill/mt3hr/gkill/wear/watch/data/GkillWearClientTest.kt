@@ -6,7 +6,7 @@ import org.junit.Test
 
 /**
  * Unit tests for GkillWearClient companion object static methods:
- * parseTemplates and parsePlaingTimeisList.
+ * parseTemplates and parsePlayingTimeisList.
  */
 class GkillWearClientTest {
 
@@ -157,10 +157,10 @@ class GkillWearClientTest {
         assertEquals("leaf", result[0].name)
     }
 
-    // ─── parsePlaingTimeisList ─────────────────────────────────────────────
+    // ─── parsePlayingTimeisList ─────────────────────────────────────────────
 
     @Test
-    fun parsePlaingTimeisList_validJson_returnsList() {
+    fun parsePlayingTimeisList_validJson_returnsList() {
         val json = """[
             {
                 "id": "uuid-1",
@@ -180,7 +180,7 @@ class GkillWearClientTest {
             }
         ]"""
 
-        val result = GkillWearClient.parsePlaingTimeisList(json)
+        val result = GkillWearClient.parsePlayingTimeisList(json)
 
         assertEquals(2, result.size)
         assertEquals("uuid-1", result[0].id)
@@ -190,22 +190,22 @@ class GkillWearClientTest {
     }
 
     @Test
-    fun parsePlaingTimeisList_emptyArray_returnsEmptyList() {
-        val result = GkillWearClient.parsePlaingTimeisList("[]")
+    fun parsePlayingTimeisList_emptyArray_returnsEmptyList() {
+        val result = GkillWearClient.parsePlayingTimeisList("[]")
 
         assertTrue(result.isEmpty())
     }
 
     @Test
-    fun parsePlaingTimeisList_malformedJson_returnsEmptyList() {
-        val result = GkillWearClient.parsePlaingTimeisList("not json at all")
+    fun parsePlayingTimeisList_malformedJson_returnsEmptyList() {
+        val result = GkillWearClient.parsePlayingTimeisList("not json at all")
 
         assertTrue(result.isEmpty())
     }
 
     @Test
-    fun parsePlaingTimeisList_errorPrefix_returnsEmptyList() {
-        val result = GkillWearClient.parsePlaingTimeisList("ERROR:server error")
+    fun parsePlayingTimeisList_errorPrefix_returnsEmptyList() {
+        val result = GkillWearClient.parsePlayingTimeisList("ERROR:server error")
 
         assertTrue(result.isEmpty())
     }
@@ -216,7 +216,7 @@ class GkillWearClientTest {
     fun responsePathConstants_areCorrect() {
         assertEquals("/gkill/templates", GkillWearClient.RESPONSE_PATH_TEMPLATES)
         assertEquals("/gkill/submit_result", GkillWearClient.RESPONSE_PATH_SUBMIT_RESULT)
-        assertEquals("/gkill/plaing_timeis", GkillWearClient.RESPONSE_PATH_PLAING_TIMEIS)
+        assertEquals("/gkill/playing_timeis", GkillWearClient.RESPONSE_PATH_PLAYING_TIMEIS)
         assertEquals("/gkill/end_timeis_result", GkillWearClient.RESPONSE_PATH_END_TIMEIS_RESULT)
     }
 }

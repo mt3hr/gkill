@@ -724,11 +724,11 @@ func TestTimeIsMCPDTO_OmitsEndTimeWhileRunning(t *testing.T) {
 // FindTimeIs は rep の直叩きで IS_DELETED を見ないため、落とさないと
 // 「終了記録ごと消した未終了の打刻」が開始時刻以降のあらゆる記録へ永久に付く。
 // 本番実測(2026-08-25): ある kmemo に付いた付随 TimeIs 16件のうち14件が削除済みで、
-// 最古は1年前(2025-08-14)の開始。同じ瞬間を plaing_time で引くと2件しか返らなかった。
+// 最古は1年前(2025-08-14)の開始。同じ瞬間を playing_time で引くと2件しか返らなかった。
 //
-// livePlaingTimeIsCandidates の中身を「そのまま返す」に戻すとこのテストが落ちる。
-func TestLivePlaingTimeIsCandidates_DropsDeleted(t *testing.T) {
-	// 1年前に始めて未終了のまま削除した打刻。plaing の意味論では「まだ走っている」に見える。
+// livePlayingTimeIsCandidates の中身を「そのまま返す」に戻すとこのテストが落ちる。
+func TestLivePlayingTimeIsCandidates_DropsDeleted(t *testing.T) {
+	// 1年前に始めて未終了のまま削除した打刻。playing の意味論では「まだ走っている」に見える。
 	deletedGhost := reps.TimeIs{
 		IsDeleted: true,
 		ID:        "ghost",
@@ -741,7 +741,7 @@ func TestLivePlaingTimeIsCandidates_DropsDeleted(t *testing.T) {
 		StartTime: time.Date(2026, 8, 24, 8, 27, 38, 0, time.Local),
 	}
 
-	live := livePlaingTimeIsCandidates([]reps.TimeIs{deletedGhost, alive})
+	live := livePlayingTimeIsCandidates([]reps.TimeIs{deletedGhost, alive})
 
 	if len(live) != 1 {
 		t.Fatalf("削除済みが落ちていない: %d件 %+v", len(live), live)
@@ -760,8 +760,8 @@ func TestLivePlaingTimeIsCandidates_DropsDeleted(t *testing.T) {
 
 // 空でも nil を返さない（呼び出し側が len() で回すだけなので実害は無いが、
 // make の容量ヒントごと消す変更を検出する）。
-func TestLivePlaingTimeIsCandidates_AllDeleted(t *testing.T) {
-	live := livePlaingTimeIsCandidates([]reps.TimeIs{
+func TestLivePlayingTimeIsCandidates_AllDeleted(t *testing.T) {
+	live := livePlayingTimeIsCandidates([]reps.TimeIs{
 		{IsDeleted: true, ID: "a"},
 		{IsDeleted: true, ID: "b"},
 	})
@@ -770,7 +770,7 @@ func TestLivePlaingTimeIsCandidates_AllDeleted(t *testing.T) {
 	}
 }
 
-// 「その瞬間に走っていたか」の判定。plaing_time の SQL と同じ意味である必要がある
+// 「その瞬間に走っていたか」の判定。playing_time の SQL と同じ意味である必要がある
 // （START_TIME <= ? AND (? <= END_TIME OR END_TIME IS NULL)）。
 func TestTimeIsCoversMoment(t *testing.T) {
 	start := time.Date(2026, 8, 25, 9, 0, 0, 0, time.Local)

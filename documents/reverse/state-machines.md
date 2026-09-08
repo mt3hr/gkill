@@ -24,7 +24,7 @@ stateDiagram-v2
 
     note right of 実行中
         END_TIME = null
-        /plaing ページに表示される
+        /playing ページに表示される
         終了操作が可能
     end note
 

@@ -1,8 +1,8 @@
 /**
- * plaing検索（実行中TimeIs）のカスタム検索条件エディタの検証。
+ * playing検索（実行中TimeIs）のカスタム検索条件エディタの検証。
  *
  * このエディタ（use-find-time-is-query-editor-view）が書き込むフィールドと、
- * 適用側（generate-plaing-timeis-query）がカスタム条件から拾うフィールドは
+ * 適用側（generate-playing-timeis-query）がカスタム条件から拾うフィールドは
  * 1:1でなければならない。
  *   - エディタ側だけ増える → 「設定したのに検索に効かない」フィールドが生まれる
  *   - 適用側だけ増える     → 保存JSONに残った古い値が黙って復活する
@@ -20,7 +20,7 @@ vi.mock('@/i18n', () => ({
 
 import { nextTick, reactive, type Ref } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { generate_plaing_timeis_query } from '@/classes/api/find_query/generate-plaing-timeis-query'
+import { generate_playing_timeis_query } from '@/classes/api/find_query/generate-playing-timeis-query'
 import { deep_equals } from '@/classes/deep-equals'
 import { useFindTimeIsQueryEditorView } from '@/classes/use-find-time-is-query-editor-view'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
@@ -29,7 +29,7 @@ import type { FindTimeIsQueryEditorViewEmits } from '@/pages/views/find-time-is-
 
 // ── 両側で共有する期待集合 ──
 
-// generate-plaing-timeis-query.ts がカスタム条件から拾う（コピーする）フィールド。
+// generate-playing-timeis-query.ts がカスタム条件から拾う（コピーする）フィールド。
 // エディタが書けるのはこの6つだけ
 const copied_fields = ['keywords', 'not_words', 'tags', 'tags_and', 'words', 'words_and']
 
@@ -38,7 +38,7 @@ const editor_fixed_fields = ['hide_tags', 'rep_types']
 
 // 適用側が呼び出し元の意図で常に上書きするフィールド。
 // reps は「エディタから記録保管場所が消えた」ため明示的に切られる（null）
-const applier_owned_fields = ['hide_tags', 'plaing_time', 'rep_types', 'reps']
+const applier_owned_fields = ['hide_tags', 'playing_time', 'rep_types', 'reps']
 
 // ── 小道具 ──
 
@@ -58,7 +58,7 @@ function make_fake_application_config(): Record<string, unknown> {
             ],
         },
         for_share_kyou: false,
-        plaing_timeis_json_data: null,
+        playing_timeis_json_data: null,
     }
 }
 
@@ -121,7 +121,7 @@ describe('エディタが書き込むフィールド集合', () => {
 
         expect(
             changed_field_names(view.generate_query()),
-            'エディタの書き込み先が増減している。generate-plaing-timeis-query のコピーリストと必ず両方そろえること',
+            'エディタの書き込み先が増減している。generate-playing-timeis-query のコピーリストと必ず両方そろえること',
         ).toEqual([...copied_fields, ...editor_fixed_fields].sort())
     })
 
@@ -142,7 +142,7 @@ describe('エディタが書き込むフィールド集合', () => {
 })
 
 describe('適用側が拾うフィールド集合', () => {
-    test('generate_plaing_timeis_query はコピー対象6フィールドしか保存条件から採らない', () => {
+    test('generate_playing_timeis_query はコピー対象6フィールドしか保存条件から採らない', () => {
         const config = make_fake_application_config()
 
         const saved = new FindKyouQuery()
@@ -168,9 +168,9 @@ describe('適用側が拾うフィールド集合', () => {
         saved.period_of_time_week_of_days = [1, 2]
         saved.mi_board_name = '板A'
         saved.is_image_only = true
-        config.plaing_timeis_json_data = { plaing_timeis_find_kyou_query: JSON.parse(JSON.stringify(saved)) }
+        config.playing_timeis_json_data = { playing_timeis_find_kyou_query: JSON.parse(JSON.stringify(saved)) }
 
-        const applied = generate_plaing_timeis_query(config as unknown as ApplicationConfig, new Date(2026, 6, 2, 12, 0))
+        const applied = generate_playing_timeis_query(config as unknown as ApplicationConfig, new Date(2026, 6, 2, 12, 0))
 
         expect(
             changed_field_names(applied),
@@ -199,9 +199,9 @@ describe('エディタ→保存→適用の往復', () => {
         view.use_tag_filter.value = true
 
         const edited = view.generate_query('editor-query-id')
-        config.plaing_timeis_json_data = { plaing_timeis_find_kyou_query: JSON.parse(JSON.stringify(edited)) }
+        config.playing_timeis_json_data = { playing_timeis_find_kyou_query: JSON.parse(JSON.stringify(edited)) }
 
-        const applied = generate_plaing_timeis_query(config as unknown as ApplicationConfig, new Date(2026, 6, 2, 12, 0))
+        const applied = generate_playing_timeis_query(config as unknown as ApplicationConfig, new Date(2026, 6, 2, 12, 0))
 
         expect(applied.keywords, 'キーワードが効いていない').toBe('写真 -除外')
         expect(applied.words).toEqual(['写真'])
@@ -219,9 +219,9 @@ describe('エディタ→保存→適用の往復', () => {
 
         const edited = view.generate_query('editor-query-id')
         expect(edited.tags, 'OFFはnull（未使用）で表す').toBeNull()
-        config.plaing_timeis_json_data = { plaing_timeis_find_kyou_query: JSON.parse(JSON.stringify(edited)) }
+        config.playing_timeis_json_data = { playing_timeis_find_kyou_query: JSON.parse(JSON.stringify(edited)) }
 
-        const applied = generate_plaing_timeis_query(config as unknown as ApplicationConfig, new Date(2026, 6, 2, 12, 0))
+        const applied = generate_playing_timeis_query(config as unknown as ApplicationConfig, new Date(2026, 6, 2, 12, 0))
         expect(applied.tags, '往復でタグ絞り込みが勝手にONになっている').toBeNull()
     })
 })
@@ -280,7 +280,7 @@ describe('inited の集約', () => {
         await flush()
 
         expect(view.query.value.query_id, '既定条件にはIDを採番する').toBe('generated-uuid')
-        expect(view.query.value.tags, '未設定時のplaing検索と同じくタグフィルタ未使用').toBeNull()
+        expect(view.query.value.tags, '未設定時のplaying検索と同じくタグフィルタ未使用').toBeNull()
         expect(view.query.value.reps, '既定は全rep').toEqual(['timeis_dev_202601'])
         expect(view.use_tag_filter.value).toBe(false)
     })

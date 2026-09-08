@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
-  submitKftlText, navigateToRykv, navigateToPlaing,
+  submitKftlText, navigateToRykv, navigateToPlaying,
   makeUniqueLabel, expectPageToContainText,
 } from './crud-helpers'
 
@@ -25,7 +25,7 @@ test.describe('KFTL TimeIs End Flows', () => {
     // First, start a TimeIs
     const label = makeUniqueLabel('timeis_end_title')
     await submitKftlText(page, `ーた\n${label}`)
-    await navigateToPlaing(page)
+    await navigateToPlaying(page)
     await expectPageToContainText(page, label)
 
     // End it by title
@@ -41,7 +41,7 @@ test.describe('KFTL TimeIs End Flows', () => {
     // Start a TimeIs
     const label = makeUniqueLabel('timeis_end_ifexist')
     await submitKftlText(page, `ーた\n${label}`)
-    await navigateToPlaing(page)
+    await navigateToPlaying(page)
     await expectPageToContainText(page, label)
 
     // End it with "if exists" — should succeed without error
@@ -63,7 +63,7 @@ test.describe('KFTL TimeIs End Flows', () => {
     const label = makeUniqueLabel('timeis_end_tag')
     const tagName = makeUniqueLabel('endtag')
     await submitKftlText(page, `。${tagName}\nーた\n${label}`)
-    await navigateToPlaing(page)
+    await navigateToPlaying(page)
     await expectPageToContainText(page, label)
 
     // End all TimeIs with that tag
@@ -79,7 +79,7 @@ test.describe('KFTL TimeIs End Flows', () => {
     const label = makeUniqueLabel('timeis_end_tagifexist')
     const tagName = makeUniqueLabel('endtagie')
     await submitKftlText(page, `。${tagName}\nーた\n${label}`)
-    await navigateToPlaing(page)
+    await navigateToPlaying(page)
     await expectPageToContainText(page, label)
 
     // End with "if tag exists" — should succeed

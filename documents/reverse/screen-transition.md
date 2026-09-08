@@ -13,7 +13,7 @@ stateDiagram-v2
     LoginPage --> MiPage: ログイン成功 → /mi
     LoginPage --> KyouPage: ログイン成功 → /kyou
     LoginPage --> MkflPage: ログイン成功 → /mkfl
-    LoginPage --> PlaingPage: ログイン成功 → /plaing
+    LoginPage --> PlayingPage: ログイン成功 → /playing
     LoginPage --> DashboardPage: ログイン成功 → /dashboard
     LoginPage --> SaihatePage: ログイン成功 → /saihate
     LoginPage --> RudbeckiaPage: ログイン成功 → /rudbeckia
@@ -26,7 +26,7 @@ stateDiagram-v2
     MiPage --> RykvPage: ナビゲーション
     KyouPage --> RykvPage: ナビゲーション
     MkflPage --> RykvPage: ナビゲーション
-    PlaingPage --> RykvPage: ナビゲーション
+    PlayingPage --> RykvPage: ナビゲーション
     DashboardPage --> RykvPage: ナビゲーション
     RykvPage --> DashboardPage: ナビゲーション
 
@@ -35,7 +35,7 @@ stateDiagram-v2
     MiPage --> LoginPage: ログアウト
     KyouPage --> LoginPage: ログアウト
     MkflPage --> LoginPage: ログアウト
-    PlaingPage --> LoginPage: ログアウト
+    PlayingPage --> LoginPage: ログアウト
     DashboardPage --> LoginPage: ログアウト
     SaihatePage --> LoginPage: ログアウト
     RudbeckiaPage --> RykvPage: ナビゲーション
@@ -46,7 +46,7 @@ stateDiagram-v2
     OldSharedMiPage --> SharedPage: router.replace（リダイレクトのみ）
 ```
 
-**メイン画面群（認証必要）:** KFTLPage, RykvPage, MiPage, KyouPage, MkflPage, PlaingPage, DashboardPage, RudbeckiaPage, SaihatePage
+**メイン画面群（認証必要）:** KFTLPage, RykvPage, MiPage, KyouPage, MkflPage, PlayingPage, DashboardPage, RudbeckiaPage, SaihatePage
 
 **共有ページ（認証不要）:** SharedPage (`/shared_page`)。旧URL `/shared_mi` はルータの redirect で `/shared_page` へ吸収する
 
@@ -65,7 +65,7 @@ stateDiagram-v2
 | `/rykv` | RykvPage | 要 | ライフログ閲覧・検索・編集 |
 | `/kyou` | KyouPage | 要 | 単一 Kyou の記録詳細表示 |
 | `/mkfl` | MkflPage | 要 | 打刻メモ帳（KFTL入力+TimeIs表示） |
-| `/plaing` | PlaingPage | 要 | 稼働中 TimeIs 一覧 |
+| `/playing` | PlayingPage | 要 | 稼働中 TimeIs 一覧 |
 | `/dashboard` | DashboardPage | 要 | 日次サマリー（Dnote・GPS・MI一覧） |
 | `/rudbeckia` | RudbeckiaPage | 要 | ポート。4画面をウィンドウとして開ける単一画面 |
 | `/saihate` | SaihatePage | 要 | 記録特化画面（他画面への遷移なし） |
@@ -81,7 +81,7 @@ stateDiagram-v2
 |---------|------|---------|
 | **記録追加・入力系** | RykvPage（ライフログビュー）、KFTLPage、MkflPage | データの入力と追加。RykvはFABメニューから全データ型の追加が可能で最も汎用的。KFTLはテキスト構文入力、MkflはTimeIsとKFTL入力を同一画面で管理 |
 | **閲覧・検索系** | RykvPage（タイムライン表示）、KyouPage、DashboardPage | 記録されたデータの時系列閲覧・検索・フィルタリング。RykvはタイムラインとDnote集計ビューを統合。Dashboardは日次サマリー（Dnote・GPS・Mi一覧） |
-| **タスク管理系** | MiPage、PlaingPage | タスク（Mi）の管理。MiPageはカンバンボード形式でタスクを管理。PlaingPageは進行中のTimeIsセッションを一覧表示 |
+| **タスク管理系** | MiPage、PlayingPage | タスク（Mi）の管理。MiPageはカンバンボード形式でタスクを管理。PlayingPageは進行中のTimeIsセッションを一覧表示 |
 | **特殊・補助系** | SaihatePage、LoginPage、SetNewPasswordPage、RegisterFirstAccountPage、SharedPage、OldSharedMiPage | SaihatePageはナビゲーション不要の記録追加専用画面（ホーム画面ウィジェット等からの直接記録に使用）。認証フロー（ログイン・初回登録・パスワードリセット）と共有ページがこのグループに含まれる |
 
 ### 2.3 各画面の詳細説明
@@ -110,7 +110,7 @@ gkillの中心的な閲覧・操作画面。左サイドバーで検索条件（
 
 画面の上半分にKFTL入力エリア、下半分に進行中のTimeIs一覧を同時表示する複合画面。打刻の開始・終了操作とKFTLテキスト送信を行き来する場面に特化している。TimeIsの終了はKFTL構文（`/endt`等）での入力と画面上のボタン操作の両方で対応。
 
-#### PlaingPage（実行中画面）`/plaing`
+#### PlayingPage（実行中画面）`/playing`
 
 現在進行中（終了時刻未設定）のTimeIsセッションを一覧表示する画面。各セッションに終了ボタンを表示し、打刻の停止操作に特化する。TimeIsの詳細確認はRykvPageのコンテキストメニューから行う。
 
@@ -301,7 +301,7 @@ stateDiagram-v2
 
 **その他:** `mi-kyou-count-calendar.vue`（記録件数カレンダー）、
 `save-clipboard-to-file-dialog.vue`（Ctrl+V でクリップボード内容をファイル保存。
-rykv / mi / plaing / dashboard で有効。`classes/use-scoped-ctrl-v-for-clipboard.ts`）
+rykv / mi / playing / dashboard で有効。`classes/use-scoped-ctrl-v-for-clipboard.ts`）
 
 ## 5. 設定画面のダイアログ遷移
 
@@ -364,7 +364,7 @@ stateDiagram-v2
 |---|---|---|
 | `help-dialog.vue` | 各ページのツールバー | ヘルプ表示 |
 | `tutorial-dialog.vue` | 各ページのツールバー | チュートリアル表示 |
-| `save-clipboard-to-file-dialog.vue` | Ctrl+V（rykv / mi / plaing / dashboard） | クリップボードの内容をファイルとして保存 |
+| `save-clipboard-to-file-dialog.vue` | Ctrl+V（rykv / mi / playing / dashboard） | クリップボードの内容をファイルとして保存 |
 | `plugin-config-dialog.vue` | `plugin-html-view.vue` | プラグイン設定。プラグイン Kyou のコンテキストメニュー「プラグイン設定」から開く |
 
 ### KFTL の未知タグ確認

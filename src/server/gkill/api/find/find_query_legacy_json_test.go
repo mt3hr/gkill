@@ -91,7 +91,7 @@ func TestMigrateLegacyFindQueryJSONDisabledGroups(t *testing.T) {
 		"use_timeis_tags": true, "timeis_tags": ["tt1"],
 		"use_calendar": false, "calendar_start_date": "2020-01-01T00:00:00+09:00", "calendar_end_date": "2020-01-02T00:00:00+09:00",
 		"use_map": false, "map_radius": 500, "map_latitude": 35.6, "map_longitude": 139.7,
-		"use_plaing": false, "plaing_time": "2020-01-01T00:00:00+09:00",
+		"use_plaing": false, "playing_time": "2020-01-01T00:00:00+09:00",
 		"use_update_time": false, "update_time": "2020-01-01T00:00:00+09:00",
 		"use_mi_board_name": false, "mi_board_name": "board",
 		"use_period_of_time": false, "period_of_time_start_time_second": 3600, "period_of_time_end_time_second": 7200, "period_of_time_week_of_days": [0, 1, 2]
@@ -116,7 +116,7 @@ func TestMigrateLegacyFindQueryJSONDisabledGroups(t *testing.T) {
 		"timeis_words", "timeis_not_words", "timeis_tags",
 		"calendar_start_date", "calendar_end_date",
 		"map_radius", "map_latitude", "map_longitude",
-		"plaing_time", "update_time", "mi_board_name",
+		"playing_time", "update_time", "mi_board_name",
 		"period_of_time_start_time_second", "period_of_time_end_time_second", "period_of_time_week_of_days",
 	} {
 		assertNull(t, obj, key)
@@ -144,7 +144,7 @@ func TestMigrateLegacyFindQueryJSONEnabledGroups(t *testing.T) {
 		"use_timeis_tags": true, "timeis_tags": null,
 		"use_calendar": true, "calendar_start_date": "2020-01-01T00:00:00+09:00", "calendar_end_date": null,
 		"use_map": true, "map_radius": 0, "map_latitude": 35.6, "map_longitude": 139.7,
-		"use_plaing": true, "plaing_time": "2021-05-05T12:00:00+09:00",
+		"use_plaing": true, "playing_time": "2021-05-05T12:00:00+09:00",
 		"use_update_time": true, "update_time": "2022-02-02T00:00:00+09:00",
 		"use_mi_board_name": true,
 		"use_period_of_time": true, "period_of_time_start_time_second": 3600, "period_of_time_end_time_second": null, "period_of_time_week_of_days": null
@@ -180,8 +180,8 @@ func TestMigrateLegacyFindQueryJSONEnabledGroups(t *testing.T) {
 	if obj["map_radius"] != json.Number("0") {
 		t.Errorf("map_radius should be preserved as 0: %v", obj["map_radius"])
 	}
-	if obj["plaing_time"] != "2021-05-05T12:00:00+09:00" {
-		t.Errorf("plaing_time should be preserved: %v", obj["plaing_time"])
+	if obj["playing_time"] != "2021-05-05T12:00:00+09:00" {
+		t.Errorf("playing_time should be preserved: %v", obj["playing_time"])
 	}
 	if obj["update_time"] != "2022-02-02T00:00:00+09:00" {
 		t.Errorf("update_time should be preserved: %v", obj["update_time"])
@@ -351,10 +351,10 @@ func TestMigrateLegacyFindQueryJSONNumberPrecision(t *testing.T) {
 	}
 }
 
-// use_plaing=true かつ plaing_time が null/欠落の行は null のまま移行されること
-func TestMigrateLegacyFindQueryJSONPlaingWithoutTime(t *testing.T) {
+// use_plaing=true かつ playing_time が null/欠落の行は null のまま移行されること
+func TestMigrateLegacyFindQueryJSONPlayingWithoutTime(t *testing.T) {
 	for _, raw := range []string{
-		`{"use_plaing": true, "plaing_time": null}`,
+		`{"use_plaing": true, "playing_time": null}`,
 		`{"use_plaing": true}`,
 	} {
 		migrated, changed, err := MigrateLegacyFindQueryJSON([]byte(raw))
@@ -366,7 +366,7 @@ func TestMigrateLegacyFindQueryJSONPlaingWithoutTime(t *testing.T) {
 		}
 		obj := decodeMigratedObject(t, migrated)
 		assertKeyAbsent(t, obj, "use_plaing")
-		assertNull(t, obj, "plaing_time")
+		assertNull(t, obj, "playing_time")
 	}
 }
 

@@ -57,7 +57,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `rykv-page.vue` | `/rykv` | Rykv（レビュー）ページ |
 | `kyou-page.vue` | `/kyou` | Kyou（記録）一覧ページ |
 | `mkfl-page.vue` | `/mkfl` | Mkfl（ファイル管理）ページ |
-| `plaing-time-is-page.vue` | `/plaing` | 稼働中 TimeIs ページ |
+| `playing-time-is-page.vue` | `/playing` | 稼働中 TimeIs ページ |
 | `saihate-page.vue` | `/saihate` | Saihate（特殊ビュー）ページ |
 | `dashboard-page.vue` | `/dashboard` | ダッシュボード（日次サマリー）ページ |
 | `rudbeckia-page.vue` | `/rudbeckia` | ポート。4画面をウィンドウとして開ける単一画面（開発コード rudbeckia） |
@@ -207,7 +207,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `time-is-context-menu.vue` / `idf-kyou-context-menu.vue` | TimeIs / IDFKyou |
 | `re-kyou-context-menu.vue` / `mi-re-kyou-context-menu.vue` / `git-commit-log-context-menu.vue` | ReKyou / MiReKyou / GitCommitLog |
 | `attached-tag-context-menu.vue` / `attached-text-context-menu.vue` | 添付タグ/テキスト |
-| `attached-notification-context-menu.vue` / `attached-time-is-plaing-context-menu.vue` | 添付通知/稼働TimeIs |
+| `attached-notification-context-menu.vue` / `attached-time-is-playing-context-menu.vue` | 添付通知/稼働TimeIs |
 | `device-struct-context-menu.vue` / `kftl-template-struct-context-menu.vue` | 構造コンテキストメニュー |
 | `rep-struct-context-menu.vue` / `rep-type-struct-context-menu.vue` | リポジトリ構造 |
 | `tag-struct-context-menu.vue` / `mi-board-struct-context-menu.vue` / `ryuu-item-context-menu.vue` | タグ構造/板構造/Ryuu |
@@ -218,7 +218,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 |--------------|------|
 | `find-query-editor-view.vue` | 検索クエリエディタ |
 | `mi-find-query-editor-view.vue` | Mi 検索クエリエディタ |
-| `find-time-is-query-editor-view.vue` | 実行中検索条件エディタ（plaing検索カスタム条件用。キーワードとタグのみ。記録タイプはTimeIs固定） |
+| `find-time-is-query-editor-view.vue` | 実行中検索条件エディタ（playing検索カスタム条件用。キーワードとタグのみ。記録タイプはTimeIs固定） |
 | `keyword-query.vue` / `period-of-time-query.vue` | キーワード/期間 |
 | `tag-query.vue` / `rep-query.vue` | タグ/リポジトリ |
 | `time-is-query.vue` / `calendar-query.vue` / `map-query.vue` | TimeIs/カレンダー/地図 |
@@ -234,10 +234,10 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `kftl-dialog-host.vue` | メモ帳ダイアログの複数枚化。`show()` を呼ぶたびに1枚増える（配列に push して開くのは `rykv-dialog-host` と同じ形）。5画面はこれを1個置くだけでよい |
 | `mkfl-view.vue` | Mkfl ビュー |
 | `mi-kyou-count-calendar.vue` | Mi 件数カレンダー（検索条件に合致する日毎の件数表示） |
-| `plaing-time-is-view.vue` / `end-time-is-plaing-view.vue` | 稼働中 TimeIs |
+| `playing-time-is-view.vue` / `end-time-is-playing-view.vue` | 稼働中 TimeIs |
 | `attached-tag.vue` / `attached-text.vue` / `attached-notification.vue` | 添付情報 |
 | `linkified-text.vue` | テキスト中の URL をリンク化して表示（Kmemo / 付随テキスト / IDF テキスト / ZIP 内テキスト / URLog 説明文で使用） |
-| `attached-time-is-plaing.vue` | 添付稼働 TimeIs |
+| `attached-time-is-playing.vue` | 添付稼働 TimeIs |
 | `upload-file-view.vue` / `decide-related-time-uploaded-file-view.vue` | ファイルアップロード |
 | `share-kyou-view.vue` / `share-kyou-link-view.vue` / `share-kyou-footer.vue` | 共有 |
 | `shared-mi-view.vue` / `manage-share-task-list-view.vue` | 共有 Mi 管理 |
@@ -274,10 +274,10 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `confirm-reset-password-dialog.vue` | パスワードリセット確認 |
 | `edit-dashboard-dialog.vue` | ダッシュボード設定（MI検索条件・Dnote検索条件の編集） |
 | `add-dnote-correlation-graph-dialog.vue` / `edit-dnote-correlation-graph-dialog.vue` / `confirm-delete-dnote-correlation-graph-dialog.vue` | DNote 相関グラフの追加・編集・削除（トレンドグラフと同じ3点セットに揃えてある） |
-| `edit-plaing-time-is-dialog.vue` | 実行中検索条件設定（「検索条件をカスタマイズする」チェックボックス＋条件編集ボタン） |
+| `edit-playing-time-is-dialog.vue` | 実行中検索条件設定（「検索条件をカスタマイズする」チェックボックス＋条件編集ボタン） |
 | `edit-saved-find-query-dialog.vue` | 保存済み検索条件のハブ（ライフログ検索条件・タスク検索条件の2ボタン） |
 | `edit-saved-find-query-list-dialog.vue` | 保存済み検索条件の一覧管理（名前・条件編集・並べ替え・削除。追加は右下FAB。`query_type` prop で rykv/mi の2インスタンス） |
-| `end-time-is-plaing-dialog.vue` | TimeIs 終了 |
+| `end-time-is-playing-dialog.vue` | TimeIs 終了 |
 | `find-query-editor-dialog.vue` | 検索クエリエディタ |
 | `mi-find-query-editor-dialog.vue` | Mi 検索クエリエディタ |
 | `find-time-is-query-editor-dialog.vue` | 実行中検索条件エディタ |

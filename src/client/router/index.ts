@@ -8,7 +8,7 @@ import kyou_page from '../pages/kyou-page.vue'
 import saihate_page from '../pages/saihate-page.vue'
 import set_new_password_page from '../pages/set-new-password-page.vue'
 import shared_page from '../pages/shared-page.vue'
-import plaing_timeis_page from '@/pages/plaing-time-is-page.vue'
+import playing_timeis_page from '@/pages/playing-time-is-page.vue'
 import mkfl_page from '@/pages/mkfl-page.vue'
 import register_first_account_page from '@/pages/register-first-account-page.vue'
 import dashboard_page from '@/pages/dashboard-page.vue'
@@ -48,9 +48,9 @@ const router = createRouter({
       component: mkfl_page,
     },
     {
-      path: '/plaing',
-      name: 'plaing',
-      component: plaing_timeis_page,
+      path: '/playing',
+      name: 'playing',
+      component: playing_timeis_page,
     },
     {
       path: '/saihate',

@@ -88,10 +88,10 @@
         </v-row>
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api" :show_timeis_elapsed_time="true" :is_image_request_to_thumb_size="false"
-                :show_timeis_plaing_end_button="true" :highlight_targets="highlight_targets" :is_image_view="false"
+                :show_timeis_playing_end_button="true" :highlight_targets="highlight_targets" :is_image_view="false"
                 :kyou="cloned_kyou" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                :show_mi_limit_time="true" :show_urlog_plaing_end_button="true" :height="'unset'" :width="'100%'"
+                :show_mi_limit_time="true" :show_urlog_playing_end_button="true" :height="'unset'" :width="'100%'"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="true" :show_attached_timeis="true"
                 :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"

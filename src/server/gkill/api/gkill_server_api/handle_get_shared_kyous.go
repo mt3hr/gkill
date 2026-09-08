@@ -376,23 +376,23 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		queries = append(queries, timeisQuery)
 
 		if timeisQuery.CalendarStartDate != nil {
-			timeisPlaingHeadQuery := find.FindQuery{}
+			timeisPlayingHeadQuery := find.FindQuery{}
 			// 浅いコピー由来のポインタ共有を避けるため値コピーで新規に作る
-			plaingHeadTime := *timeisQuery.CalendarStartDate
-			timeisPlaingHeadQuery.PlaingTime = &plaingHeadTime
-			queries = append(queries, timeisPlaingHeadQuery)
+			playingHeadTime := *timeisQuery.CalendarStartDate
+			timeisPlayingHeadQuery.PlayingTime = &playingHeadTime
+			queries = append(queries, timeisPlayingHeadQuery)
 		}
 
 		if timeisQuery.CalendarEndDate != nil {
-			timeisPlaingHipQuery := find.FindQuery{}
-			plaingHipTime := *timeisQuery.CalendarEndDate
-			timeisPlaingHipQuery.PlaingTime = &plaingHipTime
-			queries = append(queries, timeisPlaingHipQuery)
+			timeisPlayingHipQuery := find.FindQuery{}
+			playingHipTime := *timeisQuery.CalendarEndDate
+			timeisPlayingHipQuery.PlayingTime = &playingHipTime
+			queries = append(queries, timeisPlayingHipQuery)
 		}
 
 		for _, query := range queries {
 			findFilter := &api.FindFilter{}
-			matchPlaingKyous, _, err := findFilter.FindKyous(r.Context(), userID, device, g.GkillDAOManager, &query)
+			matchPlayingKyous, _, err := findFilter.FindKyous(r.Context(), userID, device, g.GkillDAOManager, &query)
 			if err != nil {
 				err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error at find tags user id", "error", fmt.Sprintf("%q", err))
@@ -403,7 +403,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 				response.Errors = append(response.Errors, gkillError)
 				return
 			}
-			for _, timeisKyou := range matchPlaingKyous {
+			for _, timeisKyou := range matchPlayingKyous {
 				if existKyou, exist := attachedTimeIsKyousMap[timeisKyou.ID]; exist {
 					if timeisKyou.UpdateTime.After(existKyou.UpdateTime) {
 						attachedTimeIsKyousMap[timeisKyou.ID] = timeisKyou
@@ -418,10 +418,10 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 				ids = append(ids, id)
 			}
 			if len(ids) != 0 {
-				plaingTimeIss, err := repositories.TimeIsReps.FindTimeIs(r.Context(), &query)
+				playingTimeIss, err := repositories.TimeIsReps.FindTimeIs(r.Context(), &query)
 				if err != nil {
-					err = fmt.Errorf("error at find plaing timeis user id = %s device = %s: %w", userID, device, err)
-					slog.Log(r.Context(), gkill_log.Debug, "error at find plaing timeis user id", "error", fmt.Sprintf("%q", err))
+					err = fmt.Errorf("error at find playing timeis user id = %s device = %s: %w", userID, device, err)
+					slog.Log(r.Context(), gkill_log.Debug, "error at find playing timeis user id", "error", fmt.Sprintf("%q", err))
 					gkillError := &message.GkillError{
 						ErrorCode:    message.FindTextsShareKyouError,
 						ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TIMEIS_MESSAGE"}),
@@ -432,7 +432,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 				// 削除済みは Kyou 検索と同じ規則で落とす(ADR-0612)。ここは FindFilter を
 				// 通らない直叩きなので、落とさないと「終了していない削除済みの打刻」が
 				// 開始以降のすべての記録に *実行中* として永久に付き続ける。
-				for _, timeis := range livePlaingTimeIsCandidates(plaingTimeIss) {
+				for _, timeis := range livePlayingTimeIsCandidates(playingTimeIss) {
 					// 同じIDの版が複数来たら新しいほうを採る。
 					// 以前は先に無条件で代入していたため、直後の比較が必ず自分自身との
 					// 比較になり(else も到達不能で)、版の選択が働いていなかった。

@@ -411,7 +411,7 @@ Excel の「現状・改修案」シートの改修後 CRUD + コードの実装
 | **Rykv** | CRUD | CRUD | RUD | RUD | RUD | RUD | RUD | RUD |
 | **Dnote** | CRUD | CRUD | RUD | RUD | RUD | RUD | RUD | RUD |
 | **Mi** | CRUD | CRUD | - | - | CRUD | - | - | - |
-| **Plaing TimeIs** | - | - | - | - | - | - | - | R(終了操作) |
+| **Playing TimeIs** | - | - | - | - | - | - | - | R(終了操作) |
 | **URLog サーバ** | - | - | - | C(ブックマークレット) | - | - | - | - |
 | **Lantana ダイアログ** | - | C | C | - | - | C | - | - |
 

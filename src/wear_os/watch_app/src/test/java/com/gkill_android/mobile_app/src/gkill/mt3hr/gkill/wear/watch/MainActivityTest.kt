@@ -14,7 +14,7 @@ import org.junit.Test
  * The Screen sealed class is file-private, so it cannot be tested directly from here.
  *
  * What we CAN test on JVM:
- * - Public constants (EXTRA_MODE, MODE_RECORD, MODE_PLAING) defined at file level
+ * - Public constants (EXTRA_MODE, MODE_RECORD, MODE_PLAYING) defined at file level
  * - Timeout constant values (via expected values, since they are private)
  * - Response path constants from GkillWearClient companion object
  */
@@ -33,13 +33,13 @@ class MainActivityTest {
     }
 
     @Test
-    fun `MODE_PLAING constant is plaing`() {
-        assertEquals("plaing", MODE_PLAING)
+    fun `MODE_PLAYING constant is playing`() {
+        assertEquals("playing", MODE_PLAYING)
     }
 
     @Test
-    fun `MODE_RECORD and MODE_PLAING are distinct`() {
-        assertNotEquals(MODE_RECORD, MODE_PLAING)
+    fun `MODE_RECORD and MODE_PLAYING are distinct`() {
+        assertNotEquals(MODE_RECORD, MODE_PLAYING)
     }
 
     // ─── Timeout constant expected values ────────────────────────────────────────
@@ -63,10 +63,10 @@ class MainActivityTest {
     }
 
     @Test
-    fun `plaing timeout is 20 seconds`() {
-        // PLAING_TIMEOUT_MS = 20_000L (private in MainActivity.kt)
+    fun `playing timeout is 20 seconds`() {
+        // PLAYING_TIMEOUT_MS = 20_000L (private in MainActivity.kt)
         val expectedTimeout = 20_000L
-        assertTrue("Plaing timeout should be positive", expectedTimeout > 0)
+        assertTrue("Playing timeout should be positive", expectedTimeout > 0)
         assertEquals(20_000L, expectedTimeout)
     }
 
@@ -97,10 +97,10 @@ class MainActivityTest {
     }
 
     @Test
-    fun `response path plaing_timeis matches expected value`() {
+    fun `response path playing_timeis matches expected value`() {
         assertEquals(
-            "/gkill/plaing_timeis",
-            com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.GkillWearClient.RESPONSE_PATH_PLAING_TIMEIS
+            "/gkill/playing_timeis",
+            com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.GkillWearClient.RESPONSE_PATH_PLAYING_TIMEIS
         )
     }
 
@@ -120,14 +120,14 @@ class MainActivityTest {
         // It defines 11 states:
         //   HomeMenu, Loading, TemplateList, Confirm, Submitting,
         //   SubmitDuplicateConfirm, Result,
-        //   PlaingLoading, PlaingList, PlaingEndConfirm, PlaingEnding
+        //   PlayingLoading, PlayingList, PlayingEndConfirm, PlayingEnding
         //
         // These cannot be tested directly since they are private to the file.
         // This test documents the expected states for reference.
         val expectedStates = listOf(
             "HomeMenu", "Loading", "TemplateList", "Confirm", "Submitting",
             "SubmitDuplicateConfirm", "Result",
-            "PlaingLoading", "PlaingList", "PlaingEndConfirm", "PlaingEnding"
+            "PlayingLoading", "PlayingList", "PlayingEndConfirm", "PlayingEnding"
         )
         assertEquals(11, expectedStates.size)
     }
@@ -142,9 +142,9 @@ class MainActivityTest {
     }
 
     @Test
-    fun `mode plaing should map to PlaingLoading screen`() {
-        // In onCreate: MODE_PLAING -> Screen.PlaingLoading
-        assertEquals("plaing", MODE_PLAING)
+    fun `mode playing should map to PlayingLoading screen`() {
+        // In onCreate: MODE_PLAYING -> Screen.PlayingLoading
+        assertEquals("playing", MODE_PLAYING)
     }
 
     @Test
@@ -155,7 +155,7 @@ class MainActivityTest {
         val expectedScreen = "HomeMenu"
         val actualScreen = when (mode) {
             MODE_RECORD -> "Loading"
-            MODE_PLAING -> "PlaingLoading"
+            MODE_PLAYING -> "PlayingLoading"
             else -> "HomeMenu"
         }
         assertEquals(expectedScreen, actualScreen)

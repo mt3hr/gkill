@@ -267,12 +267,12 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	slog.Log(ctx, gkill_log.Trace, "finish filterHideTagsKyous", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
-	gkillErr, err = f.filterPlaingTimeIsKyous(ctx, findKyouContext)
+	gkillErr, err = f.filterPlayingTimeIsKyous(ctx, findKyouContext)
 	if err != nil {
-		err = fmt.Errorf("error at filter plaing time is kyous: %w", err)
+		err = fmt.Errorf("error at filter playing time is kyous: %w", err)
 		return nil, gkillErr, err
 	}
-	slog.Log(ctx, gkill_log.Trace, "finish filterPlaingTimeIsKyous", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
+	slog.Log(ctx, gkill_log.Trace, "finish filterPlayingTimeIsKyous", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 	gkillErr, err = f.filterLocationKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter location kyous: %w", err)
@@ -416,14 +416,14 @@ func RepsOfKyouRepType(repositories *reps.GkillRepositories, repType string) []r
 func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	repositories := findCtx.Repositories
 
-	// Step1: タイプ系フィルタ（ForMi / IsImageOnly / PlaingTime指定 / RepTypes指定）で候補repを構築する
+	// Step1: タイプ系フィルタ（ForMi / IsImageOnly / PlayingTime指定 / RepTypes指定）で候補repを構築する
 	// rep名指定（Reps）の有無に関わらず先に評価することで、rep種別指定がrep名指定に依存していたバグを修正する
 	// 複数指定された場合は和集合にする（以前はif/else ifだったため、
 	// ForMiとrep種別指定を併用するとRepTypesが無視されていた）
 	typeMatchReps := []reps.Repository{}
 	hasTypeFilter := findCtx.ParsedFindQuery.ForMi ||
 		findCtx.ParsedFindQuery.IsImageOnly ||
-		findCtx.ParsedFindQuery.PlaingTime != nil ||
+		findCtx.ParsedFindQuery.PlayingTime != nil ||
 		findCtx.ParsedFindQuery.RepTypes != nil
 
 	if findCtx.ParsedFindQuery.ForMi {
@@ -441,8 +441,8 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 			typeMatchReps = append(typeMatchReps, rep)
 		}
 	}
-	if findCtx.ParsedFindQuery.PlaingTime != nil {
-		// PlaingだったらTimeIsRep以外は無視する
+	if findCtx.ParsedFindQuery.PlayingTime != nil {
+		// PlayingだったらTimeIsRep以外は無視する
 		for _, rep := range repositories.TimeIsReps {
 			typeMatchReps = append(typeMatchReps, rep)
 		}
@@ -1137,10 +1137,10 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 		resultKyous[id] = sortedKyous
 	}
 
-	if query.PlaingTime != nil || query.ForMi {
+	if query.PlayingTime != nil || query.ForMi {
 		for id, kyousInID := range resultKyous {
 			// 最新版の代表射影1件に決定的に絞る(以前は不安定ソートで
-			// 開始/終了射影のどちらが残るかが実行毎に変わり、plaingの表示時刻が揺れていた)。
+			// 開始/終了射影のどちらが残るかが実行毎に変わり、playingの表示時刻が揺れていた)。
 			// 既に1件なら選び直す余地が無いので、スライスを作り直さない。
 			if len(kyousInID) == 1 {
 				continue
@@ -1554,7 +1554,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 	return nil, nil
 }
 
-func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+func (f *FindFilter) filterPlayingTimeIsKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	if !findCtx.ParsedFindQuery.HasTimeIsFilter() {
 		return nil, nil
 	}
@@ -2057,7 +2057,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 	defer releaseLatestDataAddressRead()
 
 	// キャッシュ設定(DisableLatestDataRepositoryCache)によらず同じ規則で判定する。
-	// 以前は2ブランチに分かれており、Plaing判定の粒度(Equal=ナノ秒 vs Unix=秒)、
+	// 以前は2ブランチに分かれており、Playing判定の粒度(Equal=ナノ秒 vs Unix=秒)、
 	// アドレス未登録時の扱い(素通し vs 全除外)、保持件数(1件 vs 同UpdateTime全件)が
 	// 食い違っていて、キャッシュ設定で検索結果が変わっていた。
 	for id, currentKyou := range findCtx.MatchKyousCurrent {
@@ -2081,7 +2081,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 		// 判定粒度はアドレス表の格納精度(Unix秒)に合わせる。
 		latestData, hasLatestData := latestDataAddressReader.Get(id)
 		if hasLatestData {
-			if findCtx.ParsedFindQuery.PlaingTime != nil {
+			if findCtx.ParsedFindQuery.PlayingTime != nil {
 				if newestUpdateTime.Unix() != latestData.DataUpdateTime.Unix() {
 					continue
 				}
