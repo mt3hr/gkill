@@ -474,8 +474,8 @@ describe("normalizeKyouQuery", () => {
       expect(result).not.toHaveProperty("map_radius");
     });
 
-    test("use_plaing:false removes playing_time", () => {
-      const result = normalizeKyouQuery({ use_plaing: false, playing_time: "2026-01-01" });
+    test("use_playing:false removes playing_time", () => {
+      const result = normalizeKyouQuery({ use_playing: false, playing_time: "2026-01-01" });
       expect(result).not.toHaveProperty("playing_time");
     });
 

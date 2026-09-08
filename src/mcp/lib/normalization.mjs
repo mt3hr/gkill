@@ -125,7 +125,7 @@ const LEGACY_USE_FLAG_VALUE_KEYS = new Map([
   ["use_timeis_tags", ["timeis_tags"]],
   ["use_calendar", ["calendar_start_date", "calendar_end_date"]],
   ["use_map", ["map_latitude", "map_longitude", "map_radius"]],
-  ["use_plaing", ["playing_time"]],
+  ["use_playing", ["playing_time"]],
   ["use_update_time", ["update_time"]],
   ["use_mi_board_name", ["mi_board_name"]],
   [

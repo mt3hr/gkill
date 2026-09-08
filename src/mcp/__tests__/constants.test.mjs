@@ -232,7 +232,7 @@ describe("LEGACY_USE_FLAG_KEYS", () => {
         "use_timeis_tags",
         "use_calendar",
         "use_map",
-        "use_plaing",
+        "use_playing",
         "use_update_time",
         "use_mi_board_name",
         "use_period_of_time",

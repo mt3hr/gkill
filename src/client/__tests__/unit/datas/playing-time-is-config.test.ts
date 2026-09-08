@@ -102,7 +102,7 @@ describe('PlayingTimeIsConfig', () => {
           query_id: 'legacy-playing',
           use_tags: false,
           tags: ['stale'],
-          use_plaing: false,
+          use_playing: false,
           playing_time: '2026-01-01T00:00:00.000Z',
         }),
       })
