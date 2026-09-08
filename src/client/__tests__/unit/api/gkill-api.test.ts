@@ -2292,7 +2292,7 @@ describe('GkillAPI', () => {
         words: ['old'],
         use_tags: true,
         tags: null,
-        use_plaing: false,
+        use_playing: false,
         playing_time: '2020-01-01T00:00:00.000Z',
         use_update_time: true,
         update_time: '2020-01-01T00:00:00.000Z',

@@ -1690,13 +1690,10 @@ const RETIRED_SPELLINGS = [
     // 公開済みの歴史記録。書き換えると「そのとき何を配ったか」が消える
     exemptPrefixes: ['documents/releasenote/'],
     // 行に含まれていれば見逃す語。
-    //   use_plaing           — 我々の綴りではなく、過去の gkill が書き出したデータのキー名。
-    //                          旧形式 FindQuery の use_* フラグは Go / client / MCP の3実装が
-    //                          同じキー集合で受ける約束（ADR-0106）なので、1キーだけ抜けない
     //   0802-freeze-plaing-… — 上の ADR へのリンク先ファイル名
     //   retired-spelling-ok  — 旧綴りを名指しする必要がある1行だけの明示的な逃げ道。
     //                          用語集の「凍結された綴り」表のように、記録することが目的の行に付ける
-    exemptLine: /use_plaing|0802-freeze-plaing-spelling|retired-spelling-ok/,
+    exemptLine: /0802-freeze-plaing-spelling|retired-spelling-ok/,
   },
 ]
 
