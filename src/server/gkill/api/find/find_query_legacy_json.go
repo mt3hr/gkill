@@ -25,8 +25,7 @@ var legacyUseFlagKeys = []string{
 	"use_timeis_tags",
 	"use_calendar",
 	"use_map",
-	// use_plaing は旧綴りのまま。我々の綴りではなく、過去の gkill が書き出したデータのキー名（ADR-0806）
-	"use_plaing",
+	"use_playing",
 	"use_update_time",
 	"use_mi_board_name",
 	"use_period_of_time",
@@ -169,12 +168,12 @@ func migrateLegacyFindQueryObject(obj map[string]any) {
 	applyLegacyNullableGroup(obj, "use_map", "map_radius", "map_latitude", "map_longitude")
 	applyLegacyNullableGroup(obj, "use_update_time", "update_time")
 
-	// Playing: 旧サーバは「use_plaing=true かつ時刻ゼロ値/null は現在時刻」と解釈していた。
+	// Playing: 旧サーバは「use_playing=true かつ時刻ゼロ値/null は現在時刻」と解釈していた。
 	// 新形式では表現できないため null のまま残す（永続化データでは実質未使用を確認済み）
-	if usePlaying, has := legacyFlagValue(obj, "use_plaing"); has {
+	if usePlaying, has := legacyFlagValue(obj, "use_playing"); has {
 		if usePlaying {
 			if value, exist := obj["playing_time"]; !exist || value == nil {
-				slog.Log(context.Background(), gkill_log.Warn, "旧形式FindQueryのuse_plaing=trueかつplaying_time未指定を検出しました。「現在時刻」の意味は新形式で保存できないため、フィルタ未使用(null)として移行します")
+				slog.Log(context.Background(), gkill_log.Warn, "旧形式FindQueryのuse_playing=trueかつplaying_time未指定を検出しました。「現在時刻」の意味は新形式で保存できないため、フィルタ未使用(null)として移行します")
 				obj["playing_time"] = nil
 			}
 		} else {
