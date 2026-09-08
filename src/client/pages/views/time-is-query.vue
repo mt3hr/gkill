@@ -4,7 +4,7 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-checkbox v-model="use_timeis"
                     @change="onChangeUseTimeis"
-                    :label="i18n.global.t('PLAING_TIMEIS_QUERY_TITLE')" hide-details class="pa-0 ma-0" />
+                    :label="i18n.global.t('PLAYING_TIMEIS_QUERY_TITLE')" hide-details class="pa-0 ma-0" />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pb-0 mb-0 pr-0 pt-2">
@@ -21,7 +21,7 @@
             </v-col>
             <v-col cols="10" class="pa-0 ma-0">
                 <v-text-field v-model="cloned_query.timeis_keywords"
-                    :label="i18n.global.t('PLAING_TIMEIS_QUERY_KEYWORD_TITLE')" hide-details
+                    :label="i18n.global.t('PLAYING_TIMEIS_QUERY_KEYWORD_TITLE')" hide-details
                     @change="onChangeTimeisKeywords" />
             </v-col>
         </v-row>
@@ -35,7 +35,7 @@
             <v-col cols="10" class="pa-0 ma-0">
                 <v-checkbox v-model="use_timeis_tags"
                     @click="onClickUseTimeisTags"
-                    :label="i18n.global.t('PLAING_TIMEIS_TAG_TITLE')" hide-details class="pa-0 ma-0" />
+                    :label="i18n.global.t('PLAYING_TIMEIS_TAG_TITLE')" hide-details class="pa-0 ma-0" />
             </v-col>
         </v-row>
     </div>

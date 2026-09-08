@@ -12,7 +12,7 @@ import org.junit.Test
 
 /**
  * Unit tests for GkillApiClient using MockWebServer.
- * Tests login, submitKFTLText, getKftlTemplateStructJson, getPlaingTimeis,
+ * Tests login, submitKFTLText, getKftlTemplateStructJson, getPlayingTimeis,
  * and endTimeis methods.
  */
 class GkillApiClientTest {
@@ -252,19 +252,19 @@ class GkillApiClientTest {
         assertNull(result)
     }
 
-    // ─── getPlaingTimeis ───────────────────────────────────────────────────
+    // ─── getPlayingTimeis ───────────────────────────────────────────────────
 
     // FindQuery is null-based: unused filters must be omitted (or null), never
     // sent as empty arrays ([] means "enabled with zero selections" = matches
-    // nothing). The plaing query must therefore contain only plaing_time.
+    // nothing). The playing query must therefore contain only playing_time.
     // A legacy client that sent use_*=false with empty arrays would silently
     // get zero results from a null-based server, so this pins the wire shape.
     @Test
-    fun getPlaingTimeis_sendsNullBasedPlaingQuery() {
+    fun getPlayingTimeis_sendsNullBasedPlayingQuery() {
         val responseJson = """{"kyous":[],"errors":null}"""
         mockServer.enqueue(MockResponse().setBody(responseJson).setResponseCode(200))
 
-        val result = client.getPlaingTimeis("session-123")
+        val result = client.getPlayingTimeis("session-123")
 
         assertEquals("[]", result)
 
@@ -277,11 +277,11 @@ class GkillApiClientTest {
         val queryJson = kotlinx.serialization.json.Json.parseToJsonElement(body)
             .jsonObject["query"]!!.jsonObject
 
-        // plaing_time is the only filter and must be a non-null string
-        val plaingTime = queryJson["plaing_time"]
-        assertNotNull(plaingTime)
-        assertTrue(plaingTime is kotlinx.serialization.json.JsonPrimitive)
-        assertTrue((plaingTime as kotlinx.serialization.json.JsonPrimitive).isString)
+        // playing_time is the only filter and must be a non-null string
+        val playingTime = queryJson["playing_time"]
+        assertNotNull(playingTime)
+        assertTrue(playingTime is kotlinx.serialization.json.JsonPrimitive)
+        assertTrue((playingTime as kotlinx.serialization.json.JsonPrimitive).isString)
 
         // no legacy use_* keys
         for (key in queryJson.keys) {
@@ -295,11 +295,11 @@ class GkillApiClientTest {
     }
 
     @Test
-    fun getPlaingTimeis_withErrors_returnsNull() {
+    fun getPlayingTimeis_withErrors_returnsNull() {
         val responseJson = """{"kyous":null,"errors":[{"error_code":"NO_SESSION","error_message":"session expired"}]}"""
         mockServer.enqueue(MockResponse().setBody(responseJson).setResponseCode(200))
 
-        val result = client.getPlaingTimeis("expired-session")
+        val result = client.getPlayingTimeis("expired-session")
 
         assertNull(result)
     }
@@ -307,11 +307,11 @@ class GkillApiClientTest {
     // Non-2xx get_kyous with an errors body: the failure decision comes from the
     // body's errors array (read after the status), and the call returns null.
     @Test
-    fun getPlaingTimeis_non2xxWithErrorsBody_returnsNull() {
+    fun getPlayingTimeis_non2xxWithErrorsBody_returnsNull() {
         val responseJson = """{"kyous":null,"errors":[{"error_code":"NO_SESSION","error_message":"session expired"}]}"""
         mockServer.enqueue(MockResponse().setBody(responseJson).setResponseCode(401))
 
-        val result = client.getPlaingTimeis("expired-session")
+        val result = client.getPlayingTimeis("expired-session")
 
         assertNull(result)
     }
@@ -321,13 +321,13 @@ class GkillApiClientTest {
     // called. Pins the no-status-cut semantics (the client previously returned
     // null on non-2xx before reading the body).
     @Test
-    fun getPlaingTimeis_non2xxGetKyousWithValidBody_continuesProcessing() {
+    fun getPlayingTimeis_non2xxGetKyousWithValidBody_continuesProcessing() {
         val kyousJson = """{"kyous":[{"id":"timeis-1","rep_name":"TimeIs"}],"errors":null}"""
         mockServer.enqueue(MockResponse().setBody(kyousJson).setResponseCode(500))
         val timeisJson = """{"timeis_histories":[{"title":"work","start_time":"2026-01-01T10:00:00+09:00","data_type":"timeis_start","is_deleted":false}],"errors":null}"""
         mockServer.enqueue(MockResponse().setBody(timeisJson).setResponseCode(200))
 
-        val result = client.getPlaingTimeis("session-123")
+        val result = client.getPlayingTimeis("session-123")
 
         assertNotNull(result)
         assertTrue(result!!.contains("timeis-1"))

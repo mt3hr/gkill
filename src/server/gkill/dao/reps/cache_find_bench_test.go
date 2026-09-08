@@ -13,7 +13,7 @@ package reps
 //	CachedKmemoFindKyous             18,830,218     500,209  1行あたり25確保。ほぼ全部が行スキャン
 //	CachedKmemoFindKyousCalendar        982,437      25,087  返る1000行ぶん。索引は効いている
 //	CachedTimeIsFindKyous             2,046,781      50,144  UNION ALL 化で一時Btreeが消えた
-//	CachedTimeIsFindKyousPlaing          15,906         152  返るのは数行
+//	CachedTimeIsFindKyousPlaying          15,906         152  返るのは数行
 //
 // **ns/op はこのマシンでは同一コードで10〜17msまでぶれる**ので判断に使わないこと。
 // 索引を足す/外すの判断は dao/sqlite3impl/timeis_range_index_test.go のクエリプランで行う。
@@ -183,13 +183,13 @@ func BenchmarkCachedTimeIsFindKyous(b *testing.B) {
 	}
 }
 
-// BenchmarkCachedTimeIsFindKyousPlaing はKyou 1件ごとの「実行中」判定と同じ形。
+// BenchmarkCachedTimeIsFindKyousPlaying はKyou 1件ごとの「実行中」判定と同じ形。
 // 一覧の行数ぶん飛ぶ経路なので、1回のコストがそのまま体感になる。
-func BenchmarkCachedTimeIsFindKyousPlaing(b *testing.B) {
+func BenchmarkCachedTimeIsFindKyousPlaying(b *testing.B) {
 	repo := newBenchCachedTimeIsRepo(b, benchRowCount)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local)
-	plaingTime := base.Add(time.Duration(benchRowCount/2) * time.Minute).Add(10 * time.Second)
-	query := &find.FindQuery{OnlyLatestData: true, PlaingTime: &plaingTime, IncludeEndTimeIs: true}
+	playingTime := base.Add(time.Duration(benchRowCount/2) * time.Minute).Add(10 * time.Second)
+	query := &find.FindQuery{OnlyLatestData: true, PlayingTime: &playingTime, IncludeEndTimeIs: true}
 	ctx := context.Background()
 	b.ReportAllocs()
 	b.ResetTimer()

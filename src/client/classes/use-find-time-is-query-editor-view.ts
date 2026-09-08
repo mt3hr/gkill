@@ -9,10 +9,10 @@ import type { FindTimeIsQueryEditorViewEmits } from '@/pages/views/find-time-is-
 import type KeywordQuery from '@/pages/views/keyword-query.vue'
 import type TagQuery from '@/pages/views/tag-query.vue'
 
-// plaing検索（実行中TimeIs）のカスタム検索条件エディタ。
+// playing検索（実行中TimeIs）のカスタム検索条件エディタ。
 // 編集面はキーワード・タグ絞り込みトグル・タグの3ブロックだけ。
-// 記録保管場所と記録タイプは選ばせない（plaing検索は常にTimeIsのrepに固定されるため）。
-// ここで書き込むフィールドは generate_plaing_timeis_query のコピーリストと
+// 記録保管場所と記録タイプは選ばせない（playing検索は常にTimeIsのrepに固定されるため）。
+// ここで書き込むフィールドは generate_playing_timeis_query のコピーリストと
 // 1:1で対応させること（片方だけ増やすと「設定したのに効かない」になる）。
 export function useFindTimeIsQueryEditorView(options: {
     props: FindTimeIsQueryEditorViewProps,
@@ -28,7 +28,7 @@ export function useFindTimeIsQueryEditorView(options: {
     const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
     const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
     // タグ絞り込みトグル（UI状態）。クエリ上は tags の null 判定が担う。
-    // 従来のplaing検索はタグ絞り込みなし（tags=null）なので既定OFF。
+    // 従来のplaying検索はタグ絞り込みなし（tags=null）なので既定OFF。
     // これを置かないと FindKyouQuery コンストラクタ既定の tags=[]（有効・0件）が保存され、
     // 「保存しただけでタグ絞り込みが勝手にONになる」事故が起きる
     const use_tag_filter = ref(false)
@@ -54,7 +54,7 @@ export function useFindTimeIsQueryEditorView(options: {
     watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
         if (old_value !== new_value && new_value) {
             // 初期値の規則: 値がセットされていれば(query_idが空でなければ)それを優先し、
-            // 無ければApplicationConfig既定(未設定時のplaing検索と同じ条件)を適用する。
+            // 無ければApplicationConfig既定(未設定時のplaying検索と同じ条件)を適用する。
             // 以前はgenerate_query()(=まだ空の子UIの写し)を既定にしていた
             default_query.value = get_default_query()
             nextTick(() => {
@@ -80,9 +80,9 @@ export function useFindTimeIsQueryEditorView(options: {
 
     // ── Business logic ──
     function get_default_query(): FindKyouQuery {
-        // 未設定時のplaing検索と同じ条件（全rep + use_tags=false）。
+        // 未設定時のplaying検索と同じ条件（全rep + use_tags=false）。
         // エディタの初期表示・クリアが「未設定の挙動」と定義上一致する
-        const q = FindKyouQuery.generate_default_query_for_plaing_timeis(props.application_config)
+        const q = FindKyouQuery.generate_default_query_for_playing_timeis(props.application_config)
         q.query_id = props.gkill_api.generate_uuid()
         return q
     }
@@ -93,7 +93,7 @@ export function useFindTimeIsQueryEditorView(options: {
             find_query.query_id = query_id
         }
 
-        // ↓ここで書くフィールドが generate_plaing_timeis_query のコピー対象
+        // ↓ここで書くフィールドが generate_playing_timeis_query のコピー対象
         if (keyword_query.value) {
             // 有効時は未パースプレースホルダの[]（パースは送信直前のcloneで行う）、無効時はnull
             const use_words = keyword_query.value.get_use_words()
@@ -113,7 +113,7 @@ export function useFindTimeIsQueryEditorView(options: {
             find_query.tags_and = tag_query.value.get_is_and_search()
         }
 
-        // plaing_time はここでは触らない（適用側が常に強制する）
+        // playing_time はここでは触らない（適用側が常に強制する）
 
         find_query.apply_hide_tags(props.application_config)
 

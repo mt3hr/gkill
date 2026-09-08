@@ -6,8 +6,8 @@ internal const val PATH_TEMPLATES = "/gkill/templates"
 internal const val PATH_SUBMIT = "/gkill/submit"
 internal const val PATH_SUBMIT_FORCE = "/gkill/submit_force"
 internal const val PATH_SUBMIT_RESULT = "/gkill/submit_result"
-internal const val PATH_GET_PLAING_TIMEIS = "/gkill/get_plaing_timeis"
-internal const val PATH_PLAING_TIMEIS = "/gkill/plaing_timeis"
+internal const val PATH_GET_PLAYING_TIMEIS = "/gkill/get_playing_timeis"
+internal const val PATH_PLAYING_TIMEIS = "/gkill/playing_timeis"
 internal const val PATH_END_TIMEIS = "/gkill/end_timeis"
 internal const val PATH_END_TIMEIS_RESULT = "/gkill/end_timeis_result"
 
@@ -16,7 +16,7 @@ internal val KNOWN_REQUEST_PATHS = setOf(
     PATH_GET_TEMPLATES,
     PATH_SUBMIT,
     PATH_SUBMIT_FORCE,
-    PATH_GET_PLAING_TIMEIS,
+    PATH_GET_PLAYING_TIMEIS,
     PATH_END_TIMEIS,
 )
 
@@ -48,7 +48,7 @@ class WearRequestHandler(
         PATH_GET_TEMPLATES -> handleGetTemplates()
         PATH_SUBMIT -> handleSubmit(requestData, force = false)
         PATH_SUBMIT_FORCE -> handleSubmit(requestData, force = true)
-        PATH_GET_PLAING_TIMEIS -> handleGetPlaingTimeis()
+        PATH_GET_PLAYING_TIMEIS -> handleGetPlayingTimeis()
         PATH_END_TIMEIS -> handleEndTimeis(requestData)
         else -> null
     }
@@ -85,12 +85,12 @@ class WearRequestHandler(
         }
     }
 
-    fun handleGetPlaingTimeis(): Response {
+    fun handleGetPlayingTimeis(): Response {
         val session = sessionProvider()
-            ?: return resp(PATH_PLAING_TIMEIS, "ERROR:login_failed")
-        val result = apiClient.getPlaingTimeis(session)
-            ?: return resp(PATH_PLAING_TIMEIS, "ERROR:get_plaing_timeis_failed")
-        return resp(PATH_PLAING_TIMEIS, result)
+            ?: return resp(PATH_PLAYING_TIMEIS, "ERROR:login_failed")
+        val result = apiClient.getPlayingTimeis(session)
+            ?: return resp(PATH_PLAYING_TIMEIS, "ERROR:get_playing_timeis_failed")
+        return resp(PATH_PLAYING_TIMEIS, result)
     }
 
     fun handleEndTimeis(requestData: ByteArray): Response {

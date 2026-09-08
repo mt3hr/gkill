@@ -196,7 +196,7 @@
             <v-card v-if="show_kyou">
                 <KyouView :application_config="application_config" :gkill_api="gkill_api"
                     :show_timeis_elapsed_time="true" :is_image_request_to_thumb_size="false"
-                    :show_timeis_plaing_end_button="false" :highlight_targets="highlight_targets" :is_image_view="false"
+                    :show_timeis_playing_end_button="false" :highlight_targets="highlight_targets" :is_image_view="false"
                     :kyou="cloned_kyou" :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
                     :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
                     :height="'unset'" :width="'100%'" :enable_context_menu="enable_context_menu"

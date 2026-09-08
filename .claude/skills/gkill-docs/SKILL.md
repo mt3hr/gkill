@@ -12,7 +12,7 @@ description: "gkill の資料層の役割分担と保守手順。AGENTS.md / CLA
 ## Documentation
 
 - `resources/manual/` — HTML manuals (7 languages, 22 pages per language), embedded via `//go:embed` and served at `/resources/manual/`
-- `documents/adr/` — Architecture Decision Record（現在 82 件）。**なぜそうなっているか**、とくに**採らなかった案とその理由**を残す層。Reverse docs = What / ADR = Why。禁止文の正本はこの CLAUDE.md とコードコメントのままで、ADR が持つのは却下案・実測値・事件譚だけ。索引と運用ルールは [documents/adr/README.md](../../../documents/adr/README.md)
+- `documents/adr/` — Architecture Decision Record（現在 83 件）。**なぜそうなっているか**、とくに**採らなかった案とその理由**を残す層。Reverse docs = What / ADR = Why。禁止文の正本はこの CLAUDE.md とコードコメントのままで、ADR が持つのは却下案・実測値・事件譚だけ。索引と運用ルールは [documents/adr/README.md](../../../documents/adr/README.md)
 - `documents/reverse/` — Reverse-engineered design documents (24 files). See `documents/reverse/README.md` for index. Key files: glossary.md (96 terms), api-endpoints.md (92 endpoints, 90 registered), usecase.md (86 use cases), sequence-diagrams.md (29 diagrams), scenario.md (cross-channel end-to-end usage scenarios with UML), testing-guide.md. `npm run verify_docs` (`src/tools/verify_docs.mjs`) machine-checks the counts, cross-links, referenced paths, Mermaid blocks, and manual freshness — it runs as part of `npm test`, so update the docs when a count changes.
 - `src/ABOUT_TEST.md` — Test specification index, links to 23 subdirectory `ABOUT_TEST.md` files
 - **What `verify_docs` covers** (extend it rather than hand-maintaining new numbers): file/test counts computed from the tree (`--list` prints them all), count assertions across `documents/reverse/*.md` + `CLAUDE.md` + `src/**/README.md` + `ABOUT_TEST.md`, markdown link resolution for that same set, `src/...` path references (warning; the backtick scan strips fenced blocks first — pairing across a ``` fence used to hide 65% of them), **a check that every filename mentioned in a doc actually exists** (this one alone caught 17 ghost entries left behind by deletions; `_`-prefixed suffix patterns and `xxx` placeholders are exempt), **ADR の番号帯**（`checkADRBands` — 帯の重なり・どの帯にも入らない番号・残り空きが10未満の帯を落とす。帯表は `documents/adr/README.md`「番号の付け方」がパースされる）, Mermaid block types, manual generation freshness / language page-set parity / a11y invariants / intra-manual links, a **terminology lint** that rejects internal code names (`IDF`, `WAN`, `Kyou`, `MiReKyou`, `Dnote`, `rudbeckia`, …) in `resources/manual_src/` outside `<code>` spans and `href`/`src` values, and a check that every `screen_name` the app passes to `HelpDialog` has a matching manual page. `--parity` (opt-in) reports per-page h2/h3/table drift against the Japanese original.
@@ -37,7 +37,8 @@ description: "gkill の資料層の役割分担と保守手順。AGENTS.md / CLA
 
 ## 詳しい設計と却下案（ADR）
 
-- [ADR-0802 plaing 綴りの凍結](../../../documents/adr/0802-freeze-plaing-spelling.md)
+- [ADR-0802 plaing 綴りの凍結（ADR-0806 が置き換え）](../../../documents/adr/0802-freeze-plaing-spelling.md)
+- [ADR-0806 綴りは凍結せず直す（互換を残さず、旧綴りのデータは一度きりで復旧）](../../../documents/adr/0806-fix-spellings-instead-of-freezing.md)
 - [ADR-0803 verify_docs はファイル名の実在も検査する](../../../documents/adr/0803-verify-docs-checks-filenames.md)
 - [ADR-0804 CLAUDE.md を AGENTS.md とスキルへ分割](../../../documents/adr/0804-split-claude-md-into-skills.md)
 - [ADR-0805 ADR の採番はサブシステム別100番幅](../../../documents/adr/0805-adr-numbering-by-subsystem-hundreds.md)

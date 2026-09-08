@@ -3,7 +3,7 @@
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <KyouListView class="decide_related_time_uploaded_files_kyou_list_view"
-                    :show_timeis_plaing_end_button="false" :application_config="application_config"
+                    :show_timeis_playing_end_button="false" :application_config="application_config"
                     :gkill_api="gkill_api" :matched_kyous="uploaded_kyous" :kyou_height="180" :width="400"
                     :list_height="app_content_height.valueOf() - 200" :query="new FindKyouQuery()"
                     :is_focused_list="false" :closable="false"

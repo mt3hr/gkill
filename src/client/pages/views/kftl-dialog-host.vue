@@ -34,7 +34,7 @@ const {
     dialogRelayHandlers,
 } = useKftlDialogHost({ emits })
 
-// 呼び出し側（rykv / mi / dashboard / saihate / plaing）は
+// 呼び出し側（rykv / mi / dashboard / saihate / playing）は
 // これまでどおり `kftl_dialog.value?.show()` を呼ぶだけでよい
 defineExpose({ show })
 </script>

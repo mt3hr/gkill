@@ -85,7 +85,7 @@
                                     :width="Math.max(0, app_content_width - 8)" :show_footer="true"
                                     :show_checkbox="false" :closable="false" :is_readonly_mi_check="false"
                                     :enable_context_menu="true" :enable_dialog="true" :show_content_only="false"
-                                    :show_timeis_plaing_end_button="false" :is_show_doc_image_toggle_button="false"
+                                    :show_timeis_playing_end_button="false" :is_show_doc_image_toggle_button="false"
                                     :is_show_arrow_button="false" :force_show_latest_kyou_info="true"
                                     :show_rep_name="false" :application_config="application_config"
                                     :gkill_api="gkill_api"

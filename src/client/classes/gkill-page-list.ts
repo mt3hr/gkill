@@ -22,7 +22,7 @@ export const gkill_page_list: ComputedRef<Array<GkillPageListItem>> = computed((
     { app_name: i18n.global.t('RYKV_APP_NAME'), page_name: 'rykv' },
     { app_name: i18n.global.t('MI_APP_NAME'), page_name: 'mi' },
     { app_name: i18n.global.t('KFTL_APP_NAME'), page_name: 'kftl' },
-    { app_name: i18n.global.t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
+    { app_name: i18n.global.t('PLAYING_TIMEIS_APP_NAME'), page_name: 'playing' },
     { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
     { app_name: i18n.global.t('DASHBOARD_APP_NAME'), page_name: 'dashboard' },
     { app_name: i18n.global.t('RUDBECKIA_APP_NAME'), page_name: 'rudbeckia' },
@@ -37,5 +37,5 @@ export const rudbeckia_page_list: ComputedRef<Array<GkillPageListItem>> = comput
     gkill_page_list.value.filter(page =>
         page.page_name === 'rykv'
         || page.page_name === 'mi'
-        || page.page_name === 'plaing'
+        || page.page_name === 'playing'
         || page.page_name === 'dashboard'))

@@ -45,7 +45,7 @@ type ApplicationConfig struct {
 
 	DashboardJSONData *json.RawMessage `json:"dashboard_json_data"`
 
-	PlaingTimeIsJSONData *json.RawMessage `json:"plaing_timeis_json_data"`
+	PlayingTimeIsJSONData *json.RawMessage `json:"playing_timeis_json_data"`
 
 	SavedFindQueryJSONData *json.RawMessage `json:"saved_find_query_json_data"`
 

@@ -15,7 +15,7 @@
                         <td valign="top">
                             <v-card>
                                 <v-card-title class="mi_board_column_title">{{ share_title }}</v-card-title>
-                                <KyouListView :kyou_height="56 + 35" :width="400" :show_timeis_plaing_end_button="false"
+                                <KyouListView :kyou_height="56 + 35" :width="400" :show_timeis_playing_end_button="false"
                                     :list_height="kyou_list_view_height.valueOf() - MI_BOARD_TITLE_HEIGHT"
                                     :application_config="application_config" :gkill_api="gkill_api"
                                     :matched_kyous="match_kyous" :query="new FindKyouQuery()"
@@ -52,7 +52,7 @@
                                                     :show_mi_create_time="true" :show_mi_estimate_end_time="true"
                                                     :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
                                                     :show_attached_timeis="true" :show_timeis_elapsed_time="false"
-                                                    :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
+                                                    :show_timeis_playing_end_button="true" :height="app_content_height.valueOf()"
                                                     :is_readonly_mi_check="true" :width="400" :enable_context_menu="false"
                                                     :show_rep_name="false" :force_show_latest_kyou_info="true"
                                                     :enable_dialog="false" :show_update_time="false" :show_related_time="true"

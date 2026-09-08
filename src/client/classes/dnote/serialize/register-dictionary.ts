@@ -84,11 +84,6 @@ export default function register_dictionary(): void {
     PredicateDictionary.set("GitCommitLogCodeLessThanPredicate", GitCommitLogCodeLessThanPredicate)
     PredicateDictionary.set("KmemoContentContainsPredicate", KmemoContentContainsPredicate)
     PredicateDictionary.set("KmemoContentEqualPredicate", KmemoContentEqualPredicate)
-    // "TextContent..." は保存済みJSONに残っている旧名で、実体は Kmemo 版と同じ。
-    // 対応する text-content-*-predicate.ts は誰からも使われていなかったので消したが、
-    // **この2行は消してはいけない** ―― 旧名で保存された Dnote が読めなくなる
-    PredicateDictionary.set("TextContentContainsPredicate", KmemoContentContainsPredicate)
-    PredicateDictionary.set("TextContentEqualPredicate", KmemoContentEqualPredicate)
     PredicateDictionary.set("LantanaMoodEqualPredicate", LantanaMoodEqualPredicate)
     PredicateDictionary.set("LantanaMoodGreaterThanPredicate", LantanaMoodGreaterThanPredicate)
     PredicateDictionary.set("LantanaMoodLessThanPredicate", LantanaMoodLessThanPredicate)

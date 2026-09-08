@@ -135,12 +135,12 @@ func TestApplicationConfigDelete(t *testing.T) {
 	}
 }
 
-func TestApplicationConfigPlaingTimeIsJSONDataRoundTrip(t *testing.T) {
+func TestApplicationConfigPlayingTimeIsJSONDataRoundTrip(t *testing.T) {
 	dao := newTempApplicationConfigDAO(t)
 	ctx := context.Background()
 
-	if def := GetDefaultApplicationConfig("user-pt", "dev-pt"); def.PlaingTimeIsJSONData == nil {
-		t.Fatal("GetDefaultApplicationConfig().PlaingTimeIsJSONData should not be nil")
+	if def := GetDefaultApplicationConfig("user-pt", "dev-pt"); def.PlayingTimeIsJSONData == nil {
+		t.Fatal("GetDefaultApplicationConfig().PlayingTimeIsJSONData should not be nil")
 	}
 
 	if _, err := dao.AddDefaultApplicationConfig(ctx, "user-pt", "dev-pt"); err != nil {
@@ -152,8 +152,8 @@ func TestApplicationConfigPlaingTimeIsJSONDataRoundTrip(t *testing.T) {
 		t.Fatalf("GetApplicationConfig failed: %v", err)
 	}
 
-	saved := json.RawMessage(`{"plaing_timeis_find_kyou_query":{"reps":["rep1"]}}`)
-	cfg.PlaingTimeIsJSONData = &saved
+	saved := json.RawMessage(`{"playing_timeis_find_kyou_query":{"reps":["rep1"]}}`)
+	cfg.PlayingTimeIsJSONData = &saved
 	ok, err := dao.UpdateApplicationConfig(ctx, cfg)
 	if err != nil {
 		t.Fatalf("UpdateApplicationConfig failed: %v", err)
@@ -166,11 +166,11 @@ func TestApplicationConfigPlaingTimeIsJSONDataRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetApplicationConfig after update failed: %v", err)
 	}
-	if got.PlaingTimeIsJSONData == nil {
-		t.Fatal("PlaingTimeIsJSONData should not be nil after update")
+	if got.PlayingTimeIsJSONData == nil {
+		t.Fatal("PlayingTimeIsJSONData should not be nil after update")
 	}
-	if string(*got.PlaingTimeIsJSONData) != string(saved) {
-		t.Errorf("PlaingTimeIsJSONData = %s, want %s", string(*got.PlaingTimeIsJSONData), string(saved))
+	if string(*got.PlayingTimeIsJSONData) != string(saved) {
+		t.Errorf("PlayingTimeIsJSONData = %s, want %s", string(*got.PlayingTimeIsJSONData), string(saved))
 	}
 }
 

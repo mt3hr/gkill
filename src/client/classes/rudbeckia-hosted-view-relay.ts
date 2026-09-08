@@ -12,7 +12,7 @@ import type { RudbeckiaPageKind } from '@/pages/views/rudbeckia-page-kind'
 
 /** ポートがダイアログとして開ける画面かどうか */
 export function is_rudbeckia_page_kind(page_name: string): page_name is RudbeckiaPageKind {
-    return page_name === 'rykv' || page_name === 'mi' || page_name === 'plaing' || page_name === 'dashboard'
+    return page_name === 'rykv' || page_name === 'mi' || page_name === 'playing' || page_name === 'dashboard'
 }
 
 /** ホストしたビューが出す17件のイベント名。手書きで羅列すると取りこぼす */

@@ -13,7 +13,7 @@ vi.mock('@/pages/kyou-page.vue', () => ({ default: { name: 'kyou-page' } }))
 vi.mock('@/pages/saihate-page.vue', () => ({ default: { name: 'saihate-page' } }))
 vi.mock('@/pages/set-new-password-page.vue', () => ({ default: { name: 'set-new-password-page' } }))
 vi.mock('@/pages/shared-page.vue', () => ({ default: { name: 'shared-page' } }))
-vi.mock('@/pages/plaing-time-is-page.vue', () => ({ default: { name: 'plaing-time-is-page' } }))
+vi.mock('@/pages/playing-time-is-page.vue', () => ({ default: { name: 'playing-time-is-page' } }))
 vi.mock('@/pages/mkfl-page.vue', () => ({ default: { name: 'mkfl-page' } }))
 vi.mock('@/pages/register-first-account-page.vue', () => ({ default: { name: 'register-first-account-page' } }))
 vi.mock('@/pages/dashboard-page.vue', () => ({ default: { name: 'dashboard-page' } }))
@@ -34,7 +34,7 @@ describe('router', () => {
   test('all route names match expected set', () => {
     const names = page_routes.map(r => r.name).sort()
     const expected = [
-      'dashboard', 'kftl', 'kyou', 'login', 'mi', 'mkfl', 'plaing',
+      'dashboard', 'kftl', 'kyou', 'login', 'mi', 'mkfl', 'playing',
       'register_first_account', 'rudbeckia', 'rykv', 'saihate',
       'set_new_password', 'shared_page',
     ].sort()

@@ -18,7 +18,7 @@ export interface KyouListViewProps extends GkillPropsBase {
     enable_context_menu: boolean
     enable_dialog: boolean
     show_content_only: boolean
-    show_timeis_plaing_end_button: boolean
+    show_timeis_playing_end_button: boolean
     is_show_doc_image_toggle_button: boolean
     is_show_arrow_button: boolean
     force_show_latest_kyou_info: boolean

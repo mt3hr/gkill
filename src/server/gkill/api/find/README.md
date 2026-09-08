@@ -44,7 +44,7 @@ Kyou 検索に使用するクエリ構造体と列挙型を定義する。
 | 時間帯 | `HasPeriodOfTimeFilter()` = 3値いずれか非nil | `PeriodOfTimeStartTimeSecond`, `PeriodOfTimeEndTimeSecond`（`*int64`）, `PeriodOfTimeWeekOfDays` | WeekOfDays: nil=曜日制限なし / `[]`=0件 / 全7曜日=制限なし |
 | 更新時刻 | `UpdateTime != nil` | `UpdateTime`（`*time.Time`） | — |
 | Mi タスク | `ForMi` / `MiBoardName != nil` | `MiBoardName`（`*string`）, `MiCheckState`, `MiSortType`, `IncludeCreateMi` 等 | — |
-| Plaing | `PlaingTime != nil` | `PlaingTime`（`*time.Time`） | — |
+| Playing | `PlayingTime != nil` | `PlayingTime`（`*time.Time`） | — |
 
 `MiCheckState` / `MiSortType` は常時有効（ゲートなし。サーバが値を無条件に読む）。
 

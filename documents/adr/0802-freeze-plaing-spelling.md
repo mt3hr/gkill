@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Status | Accepted |
+| Status | Superseded |
 | Date | 2026-08-05 |
 | Sources | `f093b748` / `41d63887` / `75235cab` / `documents/reverse/glossary.md`「凍結された綴り」節 / `AGENTS.md`「Frozen spellings」節 |
 | Supersedes | なし |
-| Superseded-by | なし |
+| Superseded-by | [ADR-0806](0806-fix-spellings-instead-of-freezing.md) |
 | Anchors | なし — 983箇所・182ファイルに分散しており、指す先が1つに決まらない |
 
 ## Context

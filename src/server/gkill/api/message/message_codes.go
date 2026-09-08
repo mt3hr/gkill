@@ -67,7 +67,7 @@ const (
 	GetIDFKyouSuccessMessage                = "MSG000062"
 	UpdateIDFKyouSuccessMessage             = "MSG000063"
 	UpdateShareKyouListInfoSuccessMessage   = "MSG000064"
-	GetPlaingTimeIsSuccessMessage           = "MSG000065"
+	GetPlayingTimeIsSuccessMessage           = "MSG000065"
 	AddNotificationSuccessMessage           = "MSG000066"
 	OpenDirectorySuccessMessage             = "MSG000067"
 	OpenFileSuccessMessage                  = "MSG000068"

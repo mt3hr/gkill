@@ -12,7 +12,7 @@ android {
     compileSdk = 37
 
     testOptions {
-        // getPlaingTimeis 等が android.util.Log を呼ぶため、JVM単体テストでは
+        // getPlayingTimeis 等が android.util.Log を呼ぶため、JVM単体テストでは
         // Log をno-op化する（モックされていないandroid APIで落とさない）
         unitTests.isReturnDefaultValues = true
     }

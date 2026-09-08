@@ -45,7 +45,7 @@ type FindQuery struct {
 	IncludeStartMi              bool         `json:"include_start_mi"`
 	IncludeEndMi                bool         `json:"include_end_mi"`
 	IncludeEndTimeIs            bool         `json:"include_end_timeis"`
-	PlaingTime                  *time.Time   `json:"plaing_time"`
+	PlayingTime                  *time.Time   `json:"playing_time"`
 	UpdateTime                  *time.Time   `json:"update_time"`
 	IsImageOnly                 bool         `json:"is_image_only"`
 	ForMi                       bool         `json:"for_mi"`

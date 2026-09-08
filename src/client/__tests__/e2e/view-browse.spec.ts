@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
-  submitKftlText, navigateToRykv, navigateToMi, navigateToPlaing,
+  submitKftlText, navigateToRykv, navigateToMi, navigateToPlaying,
   makeUniqueLabel, expectPageToContainText, findKyouByText, clickContextMenuItem,
 } from './crud-helpers'
 
@@ -62,12 +62,12 @@ test.describe('View/Browse Flows', () => {
     expect(hasTaskContent).toBe(true)
   })
 
-  test('plaing page shows timeis records', async ({ page }) => {
-    const label = makeUniqueLabel('plaing_view')
+  test('playing page shows timeis records', async ({ page }) => {
+    const label = makeUniqueLabel('playing_view')
     await submitKftlText(page, `ーた\n${label}`)
     // expectPageToContainText がリトライしながら待つので、固定sleepは要らない
 
-    await navigateToPlaing(page)
+    await navigateToPlaying(page)
     await expectPageToContainText(page, label)
   })
 })

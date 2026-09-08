@@ -377,7 +377,7 @@ erDiagram
   | KEY | DEVICE | 説明 |
   |---|---|---|
   | `DASHBOARD_JSON_DATA` | `ALL` | ダッシュボード設定（`DashboardConfig` の JSON 文字列）。`ignoreDeviceNameConfigKey` リストに含まれるためデバイス非依存で保存される |
-  | `PLAING_TIMEIS_JSON_DATA` | `ALL` | 実行中検索条件（`PlaingTimeIsConfig` の JSON 文字列）。`ignoreDeviceNameConfigKey` リストに含まれるためデバイス非依存で保存される |
+  | `PLAYING_TIMEIS_JSON_DATA` | `ALL` | 実行中検索条件（`PlayingTimeIsConfig` の JSON 文字列）。`ignoreDeviceNameConfigKey` リストに含まれるためデバイス非依存で保存される |
   | `SAVED_FIND_QUERY_JSON_DATA` | `ALL` | 保存済み検索条件（`SavedFindQueryConfig` の JSON 文字列。ライフログ用・タスク用の名前付き検索条件リスト）。`ignoreDeviceNameConfigKey` リストに含まれるためデバイス非依存で保存される |
   | その他設定キー | デバイス名 or `ALL` | テーマ・表示日数・テンプレート等のアプリ設定 |
 - **REPOSITORY**: データ保存先定義。TYPE でデータ型、FILE で SQLite3 ファイルパスを指定
@@ -434,11 +434,11 @@ type ApplicationConfig struct {
 
 `DashboardJSONData` フィールドは `*json.RawMessage` 型で、フロントエンドの `DashboardConfig` クラスを JSON として格納する。`DASHBOARD_JSON_DATA` キーで `APPLICATION_CONFIG` テーブルに保存され、デバイス名 `ALL` で読み書きされる（デバイス非依存設定）。
 
-`PlaingTimeIsJSONData` フィールドも同型（`*json.RawMessage`）で、フロントエンドの `PlaingTimeIsConfig` クラス（plaing検索のカスタム検索条件）を JSON として格納する。`PLAING_TIMEIS_JSON_DATA` キー・デバイス名 `ALL` で読み書きされる。
+`PlayingTimeIsJSONData` フィールドも同型（`*json.RawMessage`）で、フロントエンドの `PlayingTimeIsConfig` クラス（playing検索のカスタム検索条件）を JSON として格納する。`PLAYING_TIMEIS_JSON_DATA` キー・デバイス名 `ALL` で読み書きされる。
 
 `SavedFindQueryJSONData` フィールドも同型（`*json.RawMessage`）で、フロントエンドの `SavedFindQueryConfig` クラス（保存済み検索条件。ライフログ用・タスク用の名前付き `FindKyouQuery` リスト）を JSON として格納する。`SAVED_FIND_QUERY_JSON_DATA` キー・デバイス名 `ALL` で読み書きされる。
 
-SQLite3 実装（`application_config_dao_sqlite3_impl.go`）では、SELECT/INSERT ともに `DASHBOARD_JSON_DATA` / `PLAING_TIMEIS_JSON_DATA` / `SAVED_FIND_QUERY_JSON_DATA` キーへの対応が追加されている。
+SQLite3 実装（`application_config_dao_sqlite3_impl.go`）では、SELECT/INSERT ともに `DASHBOARD_JSON_DATA` / `PLAYING_TIMEIS_JSON_DATA` / `SAVED_FIND_QUERY_JSON_DATA` キーへの対応が追加されている。
 
 ## 5. テーブル設計の特徴
 

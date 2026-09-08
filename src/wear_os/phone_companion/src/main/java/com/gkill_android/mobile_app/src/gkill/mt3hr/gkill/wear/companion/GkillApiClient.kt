@@ -195,21 +195,21 @@ class GkillApiClient(
 
     /**
      * Fetches playing (ongoing) TimeIs list from gkill server.
-     * Returns JSON array string of PlaingTimeIsNode, or null on failure.
+     * Returns JSON array string of PlayingTimeIsNode, or null on failure.
      *
      * Steps:
      * 1. get_application_config → extract all rep_names from rep_struct tree
-     * 2. get_kyous with a non-null plaing_time → get Kyou IDs of playing items
+     * 2. get_kyous with a non-null playing_time → get Kyou IDs of playing items
      * 3. For each Kyou, get_timeis → get the latest TimeIs object
      * 4. Return as JSON array
      */
-    fun getPlaingTimeis(sessionId: String): String? {
+    fun getPlayingTimeis(sessionId: String): String? {
         val tag = "GkillApiClient"
         try {
-            // get_kyous with a non-null plaing_time (all other filters unused = omitted)
+            // get_kyous with a non-null playing_time (all other filters unused = omitted)
             val now = java.time.OffsetDateTime.now().format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-            Log.d(tag, "getPlaingTimeis: querying get_kyous")
-            val findQuery = buildPlaingFindQuery(now)
+            Log.d(tag, "getPlayingTimeis: querying get_kyous")
+            val findQuery = buildPlayingFindQuery(now)
             val getKyousBody = JsonObject(mapOf(
                 "session_id" to JsonPrimitive(sessionId),
                 "query" to findQuery,
@@ -236,7 +236,7 @@ class GkillApiClient(
                 return null
             }
             val kyous = kyousJson["kyous"]?.let { if (it is JsonNull) null else it.jsonArray } ?: JsonArray(emptyList())
-            Log.d(tag, "getPlaingTimeis: got ${kyous.size} playing kyous")
+            Log.d(tag, "getPlayingTimeis: got ${kyous.size} playing kyous")
             if (kyous.isEmpty()) return "[]"
 
             // Step 3: For each Kyou, get_timeis to get details
@@ -290,7 +290,7 @@ class GkillApiClient(
 
             return JsonArray(resultList).toString()
         } catch (e: Exception) {
-            Log.e(tag, "getPlaingTimeis error", e)
+            Log.e(tag, "getPlayingTimeis error", e)
             return null
         }
     }
@@ -369,12 +369,12 @@ class GkillApiClient(
     }
 
     // FindQuery is null-based: a filter group is active only when its value field is
-    // present and non-null. Omitted keys mean "filter unused", so the plaing query
-    // sends only plaing_time. Never send empty arrays for unused filters — [] means
+    // present and non-null. Omitted keys mean "filter unused", so the playing query
+    // sends only playing_time. Never send empty arrays for unused filters — [] means
     // "filter enabled with zero selections", which matches nothing.
-    private fun buildPlaingFindQuery(plaingTime: String): JsonObject {
+    private fun buildPlayingFindQuery(playingTime: String): JsonObject {
         return JsonObject(mapOf(
-            "plaing_time" to JsonPrimitive(plaingTime)
+            "playing_time" to JsonPrimitive(playingTime)
         ))
     }
 

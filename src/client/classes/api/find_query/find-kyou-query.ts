@@ -87,8 +87,8 @@ export class FindKyouQuery {
     calendar_start_date: Date | null
     calendar_end_date: Date | null
 
-    // plaing（非null=その時刻に実行中のTimeIsを検索）
-    plaing_time: Date | null
+    // playing（非null=その時刻に実行中のTimeIsを検索）
+    playing_time: Date | null
 
     // 時間帯（week_of_days: null=曜日制限なし / []=0件 / 全7曜日=制限なし）
     period_of_time_start_time_second: number | null
@@ -151,7 +151,7 @@ export class FindKyouQuery {
         // 値比較で吸収する安全網が復元列に対して一度も効かなくなる
         cloned.calendar_start_date = date_from_json(n.calendar_start_date, cloned.calendar_start_date)
         cloned.calendar_end_date = date_from_json(n.calendar_end_date, cloned.calendar_end_date)
-        cloned.plaing_time = date_from_json(n.plaing_time, cloned.plaing_time)
+        cloned.playing_time = date_from_json(n.playing_time, cloned.playing_time)
         cloned.period_of_time_start_time_second = nullable_number_from_json(n.period_of_time_start_time_second, cloned.period_of_time_start_time_second)
         cloned.period_of_time_end_time_second = nullable_number_from_json(n.period_of_time_end_time_second, cloned.period_of_time_end_time_second)
         cloned.period_of_time_week_of_days = nullable_array_from_json(n.period_of_time_week_of_days, cloned.period_of_time_week_of_days)
@@ -197,7 +197,7 @@ export class FindKyouQuery {
         cloned.map_radius = this.map_radius
         cloned.calendar_start_date = this.calendar_start_date
         cloned.calendar_end_date = this.calendar_end_date
-        cloned.plaing_time = this.plaing_time
+        cloned.playing_time = this.playing_time
         cloned.period_of_time_start_time_second = this.period_of_time_start_time_second
         cloned.period_of_time_end_time_second = this.period_of_time_end_time_second
         cloned.period_of_time_week_of_days = this.period_of_time_week_of_days === null ? null : this.period_of_time_week_of_days.concat()
@@ -245,7 +245,7 @@ export class FindKyouQuery {
         this.map_radius = null
         this.calendar_start_date = null
         this.calendar_end_date = null
-        this.plaing_time = null
+        this.playing_time = null
         this.period_of_time_start_time_second = null
         this.period_of_time_end_time_second = null
         this.period_of_time_week_of_days = null
@@ -441,17 +441,17 @@ export class FindKyouQuery {
         return query
     }
 
-    // ApplicationConfigから、デフォルトの検索条件を生成する。（plaing検索用）
-    // カスタム検索条件（plaing_timeis_json_data）が未設定のときの既定動作と、
+    // ApplicationConfigから、デフォルトの検索条件を生成する。（playing検索用）
+    // カスタム検索条件（playing_timeis_json_data）が未設定のときの既定動作と、
     // 検索条件エディタの初期表示・クリアの両方がこれを使う。
     // rykv/mi用と違い apply_hide_tags は呼ばない
-    // （従来のplaing検索は非表示タグを適用していなかったため、既定動作を変えない）。
-    static generate_default_query_for_plaing_timeis(application_config: ApplicationConfig): FindKyouQuery {
+    // （従来のplaying検索は非表示タグを適用していなかったため、既定動作を変えない）。
+    static generate_default_query_for_playing_timeis(application_config: ApplicationConfig): FindKyouQuery {
         const query = new FindKyouQuery()
         // タグフィルタは未使用（null）。旧 use_tags=false と等価
         query.tags = null
 
-        // RepはQuery時点では全部入れる。（サーバサイドでplaing_timeによりTimeIsのRepのみに絞る考慮が入っている）
+        // RepはQuery時点では全部入れる。（サーバサイドでplaying_timeによりTimeIsのRepのみに絞る考慮が入っている）
         // rep_name を持たない混入ノードは検索条件に入れない
         let rep_name_walk = (_rep: RepStructElementData): Array<string> => []
         rep_name_walk = (rep: RepStructElementData): Array<string> => {

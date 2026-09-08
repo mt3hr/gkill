@@ -25,7 +25,7 @@ func TestNoTagsConstant(t *testing.T) {
 // なければレコードを除外し、最新版が含まれていればその版のentryのみ残す。
 //
 // DisableLatestDataRepositoryCache では分岐しない、が不変条件。
-// 以前はキャッシュ有無で2ブランチに分かれており、Plaing判定の粒度・アドレス未登録時の扱い・
+// 以前はキャッシュ有無で2ブランチに分かれており、Playing判定の粒度・アドレス未登録時の扱い・
 // 保持件数が食い違っていた。統合済みなので両方の値で回す意味は無くなり、1回だけ実行する
 // (キャッシュ設定を読む分岐を復活させたらここは意味を持たなくなるので、そのときは再度2値で回すこと)。
 func TestReplaceLatestKyouInfos_ExcludeStaleKeepLatest(t *testing.T) {

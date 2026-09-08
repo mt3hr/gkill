@@ -101,8 +101,8 @@ describe('can_decide_query_locally', () => {
         expect(can_decide_query_locally(make_query({ map_latitude: 35, map_longitude: 139, map_radius: 1 })).ok).toBe(false)
     })
 
-    it('plaing_time / is_image_only は判定できない', () => {
-        expect(can_decide_query_locally(make_query({ plaing_time: new Date() })).ok).toBe(false)
+    it('playing_time / is_image_only は判定できない', () => {
+        expect(can_decide_query_locally(make_query({ playing_time: new Date() })).ok).toBe(false)
         expect(can_decide_query_locally(make_query({ is_image_only: true })).ok).toBe(false)
     })
 
