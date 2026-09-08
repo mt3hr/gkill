@@ -31,6 +31,7 @@ const legacy_use_flag_keys = [
     'use_timeis_tags',
     'use_map',
     'use_calendar',
+    // use_plaing は旧綴りのまま。我々の綴りではなく、過去の gkill が書き出したデータのキー名（ADR-0806）
     'use_plaing',
     'use_update_time',
     'use_period_of_time',
@@ -128,7 +129,7 @@ export function normalize_legacy_find_kyou_query_json(json: Record<string, unkno
 
     apply_nullable_group(normalized, 'use_calendar', ['calendar_start_date', 'calendar_end_date'])
     apply_nullable_group(normalized, 'use_map', ['map_latitude', 'map_longitude', 'map_radius'])
-    apply_nullable_group(normalized, 'use_plaing', ['plaing_time'])
+    apply_nullable_group(normalized, 'use_plaing', ['playing_time'])
 
     // Mi板名: use=true で値が null/undefined なら ""（旧「空板名比較」の保存）。
     // 番兵文字列や "" の null 化はここではしない（挙動保存優先。UI変換は表示層が担う）

@@ -66,7 +66,7 @@ src/client/
 │   ├── rykv-page.vue
 │   ├── saihate-page.vue
 │   ├── mkfl-page.vue
-│   ├── plaing-time-is-page.vue
+│   ├── playing-time-is-page.vue
 │   ├── dashboard-page.vue
 │   ├── set-new-password-page.vue
 │   ├── register-first-account-page.vue
@@ -204,7 +204,7 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 | `/rykv` | `rykv` | rykv-page.vue | ライフログビュー（Ryuu「関連情報」はこの画面内の機能） |
 | `/kyou` | `kyou` | kyou-page.vue | 記録詳細 |
 | `/mkfl` | `mkfl` | mkfl-page.vue | 打刻メモ帳（KFTL入力+TimeIs表示） |
-| `/plaing` | `plaing` | plaing-time-is-page.vue | アクティブ打刻一覧 |
+| `/playing` | `playing` | playing-time-is-page.vue | アクティブ打刻一覧 |
 | `/dashboard` | `dashboard` | dashboard-page.vue | 日次サマリー（Dnote・GPS・MI一覧） |
 | `/saihate` | `saihate` | saihate-page.vue | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | `set_new_password` | set-new-password-page.vue | パスワード設定 |
@@ -546,17 +546,17 @@ multipart POST がもう一度届く。届く内容が同一なので、再配�
 | MI検索条件 | `MiFindQueryEditorView` でMI一覧の絞り込み条件を設定 |
 | Dnote検索条件 | `FindQueryEditorView` でDnoteビューの条件を設定 |
 
-### PlaingTimeIsConfig クラスと実行中検索条件（ダッシュボード設定と同型）
+### PlayingTimeIsConfig クラスと実行中検索条件（ダッシュボード設定と同型）
 
 定義:
-- `src/client/classes/datas/config/plaing-time-is-config.ts`（設定クラス。`plaing_timeis_find_kyou_query: FindKyouQuery | null` を1本保持し、`parse()` / `to_json()` を持つ。null は「未設定＝従来どおり全リポジトリ対象」）
-- `src/client/classes/api/find_query/generate-plaing-timeis-query.ts`（適用の実体 `generate_plaing_timeis_query()`。GkillAPI 非依存の同期純関数）
-- `src/client/pages/dialogs/edit-plaing-time-is-dialog.vue` + `src/client/classes/use-edit-plaing-time-is-dialog.ts`（中間ダイアログ。Ryuu の関連情報アイテムと同じ「☑検索条件をカスタマイズする ＋ [検索条件]」形式で、チェックを外すと null＝未設定に戻る。`is_use_custom_find_kyou_query` は `current_query !== null` の computed get/set。dashboard版と違い emit は Save 時のみでキャンセルで破棄される）
+- `src/client/classes/datas/config/playing-time-is-config.ts`（設定クラス。`playing_timeis_find_kyou_query: FindKyouQuery | null` を1本保持し、`parse()` / `to_json()` を持つ。null は「未設定＝従来どおり全リポジトリ対象」）
+- `src/client/classes/api/find_query/generate-playing-timeis-query.ts`（適用の実体 `generate_playing_timeis_query()`。GkillAPI 非依存の同期純関数）
+- `src/client/pages/dialogs/edit-playing-time-is-dialog.vue` + `src/client/classes/use-edit-playing-time-is-dialog.ts`（中間ダイアログ。Ryuu の関連情報アイテムと同じ「☑検索条件をカスタマイズする ＋ [検索条件]」形式で、チェックを外すと null＝未設定に戻る。`is_use_custom_find_kyou_query` は `current_query !== null` の computed get/set。dashboard版と違い emit は Save 時のみでキャンセルで破棄される）
 - `src/client/pages/views/find-time-is-query-editor-view.vue` + `src/client/pages/dialogs/find-time-is-query-editor-dialog.vue`（+ 各 props/emits / use-*。Mi 版と同型の専用エディタ。編集面はキーワード・タグ絞り込みトグル・タグの3ブロック。記録保管場所と記録タイプは選ばせず、`generate_query()` が `rep_types=["timeis"]` を立てる）
 
-plaing検索（Kyou付随の実行中表示 `info-base.ts` の `load_attached_timeis()`・実行中画面・KFTLの/end系終了候補検索 `generate-get-plaing-timeis-kyous-query.ts`）の検索条件を `ApplicationConfig.plaing_timeis_json_data`（EAVキー `PLAING_TIMEIS_JSON_DATA`、DEVICE='ALL'）でカスタマイズできる。3経路すべてが `generate_plaing_timeis_query()` を通る。
+playing検索（Kyou付随の実行中表示 `info-base.ts` の `load_attached_timeis()`・実行中画面・KFTLの/end系終了候補検索 `generate-get-playing-timeis-kyous-query.ts`）の検索条件を `ApplicationConfig.playing_timeis_json_data`（EAVキー `PLAYING_TIMEIS_JSON_DATA`、DEVICE='ALL'）でカスタマイズできる。3経路すべてが `generate_playing_timeis_query()` を通る。
 
-**適用の意味論:** 保存クエリからコピーされるのは明示リストの6フィールドだけ（`keywords` / `words_and` / `words` / `not_words` / `tags` / `tags_and`。エディタの編集面と1:1。nullable値はnullガード付きコピー）。`plaing_time`（非null）と `rep_types=["timeis"]` は呼び出し元が常に強制上書きする（記録タイプはカスタム条件の有無によらずTimeIs固定。サーバのタイプ系フィルタは和集合で、`plaing_time` 非nullが既にTimeIsのrepへ絞っているため結果は変わらない冪等な明示）。**rep名での絞り込みは常に切る**（`reps=null`）―― 記録保管場所はエディタから外したので保存JSONの `reps` は無視するが、`new FindKyouQuery()` の既定が `reps=[]`（有効・0件指定）なので明示的にnullへ倒さないとサーバのrep名絞り込み（`find_filter.go` Step4）で常に0件になる。カスタム条件適用時のみ `apply_hide_tags` で非表示タグを反映する（未設定時は従来どおり適用しない）。カスタム条件で候補を絞ると、条件外の実行中TimeIsはKFTLの/endで終了できない（仕様）。Wear OS とサーバ内 KFTL の plaing 検索は別系統のため、この設定は Web クライアントにのみ効く。
+**適用の意味論:** 保存クエリからコピーされるのは明示リストの6フィールドだけ（`keywords` / `words_and` / `words` / `not_words` / `tags` / `tags_and`。エディタの編集面と1:1。nullable値はnullガード付きコピー）。`playing_time`（非null）と `rep_types=["timeis"]` は呼び出し元が常に強制上書きする（記録タイプはカスタム条件の有無によらずTimeIs固定。サーバのタイプ系フィルタは和集合で、`playing_time` 非nullが既にTimeIsのrepへ絞っているため結果は変わらない冪等な明示）。**rep名での絞り込みは常に切る**（`reps=null`）―― 記録保管場所はエディタから外したので保存JSONの `reps` は無視するが、`new FindKyouQuery()` の既定が `reps=[]`（有効・0件指定）なので明示的にnullへ倒さないとサーバのrep名絞り込み（`find_filter.go` Step4）で常に0件になる。カスタム条件適用時のみ `apply_hide_tags` で非表示タグを反映する（未設定時は従来どおり適用しない）。カスタム条件で候補を絞ると、条件外の実行中TimeIsはKFTLの/endで終了できない（仕様）。Wear OS とサーバ内 KFTL の playing 検索は別系統のため、この設定は Web クライアントにのみ効く。
 
 ### SavedFindQueryConfig クラスと保存済み検索条件（ダッシュボード設定と同型）
 
@@ -626,7 +626,7 @@ plaing検索（Kyou付随の実行中表示 `info-base.ts` の `load_attached_ti
 | `useScopedEnterForKFTL` | `use-scoped-enter-for-kftl.ts` | 対象 View にフォーカスがある状態で Enter キーを押すとメモ帳ダイアログを開く |
 | `useScopedCtrlVForClipboard` | `use-scoped-ctrl-v-for-clipboard.ts` | 対象 View 内が最後にクリックされた状態で Ctrl+V を押すとクリップボード保存ダイアログを開く |
 
-これらは `onMounted` / `onBeforeUnmount` でドキュメントレベルのイベントリスナーを管理し、`rykv-view.vue`・`mi-view.vue`・`plaing-time-is-view.vue` の各 composable から呼び出される。
+これらは `onMounted` / `onBeforeUnmount` でドキュメントレベルのイベントリスナーを管理し、`rykv-view.vue`・`mi-view.vue`・`playing-time-is-view.vue` の各 composable から呼び出される。
 
 ### クリップボード保存ダイアログ（`save-clipboard-to-file-dialog.vue`）
 
@@ -646,7 +646,7 @@ plaing検索（Kyou付随の実行中表示 `info-base.ts` の `load_attached_ti
 
 ### 未保存データ警告
 
-KFTL テキストエリアに内容がある状態でページ離脱しようとすると `beforeunload` イベントで警告を表示。加えて、各ページ composable（use-rykv-page, use-mi-page, use-mkfl-page, use-plaing-time-is-page, use-kyou-page, use-saihate-page）にも `beforeunload` ガードを追加し、ダイアログ表示中やロード中のページ離脱を防止。
+KFTL テキストエリアに内容がある状態でページ離脱しようとすると `beforeunload` イベントで警告を表示。加えて、各ページ composable（use-rykv-page, use-mi-page, use-mkfl-page, use-playing-time-is-page, use-kyou-page, use-saihate-page）にも `beforeunload` ガードを追加し、ダイアログ表示中やロード中のページ離脱を防止。
 
 ### 二重送信ガード
 

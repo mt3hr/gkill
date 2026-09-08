@@ -49,7 +49,7 @@ Webクライアントは `hide_tags` を ApplicationConfig の強制非表示タ
 
 - Web の挙動は実質不変（`hide_tags` は常に `tags` と併送されるため、従来から適用されていた
   経路がそのまま通る）。変わるのは `tags` 未指定の検索＝MCP経由と、
-  plaing の既定クエリのような hide_tags 空のケース（空なら no-op で不変）
+  playing の既定クエリのような hide_tags 空のケース（空なら no-op で不変）
 - 旧挙動を明示的に固定していた `TestFilterTagsTimeIs_NoTagFilter_DoesNotApplyHideTags` は
   期待を反転して `_AppliesHideTags` に改名した
 

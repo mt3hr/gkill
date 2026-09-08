@@ -406,7 +406,7 @@ MCP のプラグインツールは読み取り専用で `post_plugin_config` を
 
 ```mermaid
 flowchart TD
-    Start([rykv / mi / plaing / dashboard で Ctrl+V]) --> Read[クリップボードから内容を取得]
+    Start([rykv / mi / playing / dashboard で Ctrl+V]) --> Read[クリップボードから内容を取得]
     Read --> Dialog[save-clipboard-to-file-dialog を開く]
     Dialog --> Name[ファイル名・保存先リポジトリを決める]
     Name --> Upload[POST /api/upload_files を再利用]

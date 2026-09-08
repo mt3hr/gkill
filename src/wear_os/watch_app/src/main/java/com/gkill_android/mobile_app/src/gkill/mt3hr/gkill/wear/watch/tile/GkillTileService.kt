@@ -14,7 +14,7 @@ import androidx.wear.tiles.TileBuilders
 import androidx.wear.tiles.TileService
 import com.google.common.util.concurrent.ListenableFuture
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.EXTRA_MODE
-import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_PLAING
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_PLAYING
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_RECORD
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MainActivity
 
@@ -60,7 +60,7 @@ class GkillTileService : TileService() {
                     ).build()
             ).build()
 
-        val launchPlaing = ModifiersBuilders.Clickable.Builder()
+        val launchPlaying = ModifiersBuilders.Clickable.Builder()
             .setOnClick(
                 ActionBuilders.LaunchAction.Builder()
                     .setAndroidActivity(
@@ -70,7 +70,7 @@ class GkillTileService : TileService() {
                             .addKeyToExtraMapping(
                                 EXTRA_MODE,
                                 ActionBuilders.AndroidStringExtra.Builder()
-                                    .setValue(MODE_PLAING)
+                                    .setValue(MODE_PLAYING)
                                     .build()
                             )
                             .build()
@@ -94,7 +94,7 @@ class GkillTileService : TileService() {
                             .build()
                     )
                     .addContent(
-                        Chip.Builder(this, launchPlaing, deviceParams)
+                        Chip.Builder(this, launchPlaying, deviceParams)
                             .setPrimaryLabelContent("▶ 実行中")
                             .setWidth(chipWidth)
                             .build()

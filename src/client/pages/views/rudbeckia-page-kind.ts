@@ -6,7 +6,7 @@
  * メモ帳 / 打刻メモ帳は専用の追加ダイアログ（kftl-dialog / mkfl-dialog）が既にあるので
  * ここには含めない。記録(kyou)とさいはては対象外。
  */
-export type RudbeckiaPageKind = 'rykv' | 'mi' | 'plaing' | 'dashboard'
+export type RudbeckiaPageKind = 'rykv' | 'mi' | 'playing' | 'dashboard'
 
 export interface OpenedRudbeckiaPageDialog {
     id: string

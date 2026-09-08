@@ -18,7 +18,7 @@ api/
 ├── hydrate.ts                            # 生JSON→クラスインスタンスの詰め替え
 ├── drop-type-foldable-struct.ts          # ドロップ型折り畳み構造体
 ├── file-data.ts                          # ファイルデータ型
-├── generate-get-plaing-timeis-kyous-query.ts  # Plaing TimeIs クエリ生成
+├── generate-get-playing-timeis-kyous-query.ts  # Playing TimeIs クエリ生成
 ├── find_query/                           # 検索クエリ型
 ├── message/                              # エラー/メッセージ型
 └── req_res/                              # 全 Request/Response 型
@@ -36,7 +36,7 @@ api/
 | `hydrate.ts` | `hydrate()` / `hydrate_all()` — API から返る生 JSON をクラスインスタンスへ詰め替えるヘルパー |
 | `drop-type-foldable-struct.ts` | ドラッグ&ドロップ時のデータ型折り畳み構造体 |
 | `file-data.ts` | `FileData` 型（アップロードファイル情報） |
-| `generate-get-plaing-timeis-kyous-query.ts` | 稼働中 TimeIs の Kyou 取得クエリ生成ユーティリティ（実体は `find_query/generate-plaing-timeis-query.ts` へ委譲） |
+| `generate-get-playing-timeis-kyous-query.ts` | 稼働中 TimeIs の Kyou 取得クエリ生成ユーティリティ（実体は `find_query/generate-playing-timeis-query.ts` へ委譲） |
 
 ## サブディレクトリ
 
@@ -47,7 +47,7 @@ api/
 | ファイル | 説明 |
 |---------|------|
 | `find-kyou-query.ts` | `FindKyouQuery` — 検索条件（キーワード、日付範囲、タグ等） |
-| `generate-plaing-timeis-query.ts` | `generate_plaing_timeis_query()` — plaing検索クエリの共通生成（カスタム検索条件の適用と未設定時の既定動作。GkillAPI 非依存の純関数） |
+| `generate-playing-timeis-query.ts` | `generate_playing_timeis_query()` — playing検索クエリの共通生成（カスタム検索条件の適用と未設定時の既定動作。GkillAPI 非依存の純関数） |
 | `mi-check-state.ts` | Mi チェック状態 enum |
 | `mi-sort-type.ts` | Mi ソート順 enum |
 | `week-of-days.ts` | 曜日フィルタ enum |

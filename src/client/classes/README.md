@@ -91,12 +91,12 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-login-page.ts` / `use-login-view.ts` | ログインページ |
 | `use-kftl-page.ts` / `use-kftl-view.ts` | KFTL エディタ。`use-kftl-view.ts` はタブのホストも兼ねる（送信対象タブは `do_submit()` の引数で渡す。確認ダイアログの往復中も誤配送しないため）。保存マーカーの自動送信の入口は textarea の `@input` とテンプレート貼り付けの2つで、テンプレートは watch の印に相乗りせず直接判定を呼ぶ |
 | `use-kftl-dialog-host.ts` | メモ帳ダイアログの一覧（開いているウィンドウ）。スロット番号は空いている最小のものを払い出す ―― `useFloatingDialog` の保存キーとカスケード量がこれで決まる。上限8枚 |
-| `use-kftl-tabs.ts` | KFTL のタブを持つ**共有シングルトン**ストア。`/mkfl` ではインラインの KFTLView と plaing 側のメモ帳ダイアログが同時にマウントされるので、インスタンスごとに配列を持つと片方の古い配列でもう片方のタブが消える。独立した `effectScope(true)` で作る（setup 直下に watch を張ると最初のコンポーネントの unmount で永続化が止まる）。送信中のタブ id の排他（`try_begin_submit` / `end_submit`）もここが持つ ―― 送信中フラグはビューごとなので、ウィンドウをまたいだ二重送信を止められるのはここだけ |
+| `use-kftl-tabs.ts` | KFTL のタブを持つ**共有シングルトン**ストア。`/mkfl` ではインラインの KFTLView と playing 側のメモ帳ダイアログが同時にマウントされるので、インスタンスごとに配列を持つと片方の古い配列でもう片方のタブが消える。独立した `effectScope(true)` で作る（setup 直下に watch を張ると最初のコンポーネントの unmount で永続化が止まる）。送信中のタブ id の排他（`try_begin_submit` / `end_submit`）もここが持つ ―― 送信中フラグはビューごとなので、ウィンドウをまたいだ二重送信を止められるのはここだけ |
 | `use-mi-page.ts` | Mi ページ |
 | `use-kyou-page.ts` | Kyou ページ |
 | `use-rykv-page.ts` / `use-rykv-view.ts` | Rykv ページ |
 | `use-mkfl-page.ts` / `use-mkfl-view.ts` | Mkfl ページ |
-| `use-plaing-time-is-page.ts` / `use-plaing-time-is-view.ts` | 稼働中 TimeIs |
+| `use-playing-time-is-page.ts` / `use-playing-time-is-view.ts` | 稼働中 TimeIs |
 | `use-saihate-page.ts` | Saihate ページ |
 | `use-shared-page.ts` / `use-shared-mi-page.ts` | 共有ページ |
 | `use-set-new-password-page.ts` / `use-set-new-password-view.ts` | パスワード設定 |
@@ -152,8 +152,8 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | ファイル | 説明 |
 |---------|------|
 | `use-find-query-editor-view.ts` / `use-find-query-editor-dialog.ts` | 検索クエリエディタ |
-| `use-find-time-is-query-editor-view.ts` / `use-find-time-is-query-editor-dialog.ts` | 実行中検索条件エディタ（plaing検索カスタム条件用。編集面はキーワードとタグのみで、記録タイプはTimeIs固定） |
-| `use-edit-plaing-time-is-dialog.ts` | 実行中検索条件設定の中間ダイアログ（`is_use_custom_find_kyou_query` のON/OFFで未設定へ戻せる） |
+| `use-find-time-is-query-editor-view.ts` / `use-find-time-is-query-editor-dialog.ts` | 実行中検索条件エディタ（playing検索カスタム条件用。編集面はキーワードとタグのみで、記録タイプはTimeIs固定） |
+| `use-edit-playing-time-is-dialog.ts` | 実行中検索条件設定の中間ダイアログ（`is_use_custom_find_kyou_query` のON/OFFで未設定へ戻せる） |
 | `use-keyword-query.ts` | キーワードクエリ |
 | `use-period-of-time-query.ts` | 期間クエリ |
 | `use-tag-query.ts` | タグクエリ |
@@ -175,7 +175,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | ファイル | 説明 |
 |---------|------|
 | `use-save-clipboard-to-file-dialog.ts` | クリップボード内容ファイル保存ダイアログロジック |
-| `use-scoped-ctrl-v-for-clipboard.ts` | Ctrl+V キーボードショートカットハンドラ（rykv/mi/plaing 画面でクリップボード保存） |
+| `use-scoped-ctrl-v-for-clipboard.ts` | Ctrl+V キーボードショートカットハンドラ（rykv/mi/playing 画面でクリップボード保存） |
 | `use-scoped-enter-for-kftl.ts` | Enter キーショートカットハンドラ（KFTL ダイアログ起動） |
 | `use-dialog-history-stack.ts` | ダイアログ履歴スタック管理（バック操作・Escape キー対応） |
 | `use-delayed-loading.ts` | 読み込み中表示の遅延（速く終わった読み込みでインジケータを明滅させない） |

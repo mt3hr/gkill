@@ -1122,7 +1122,7 @@ function checkManuals() {
 // ─────────────────────────────────────────────────────────────
 const USER_DOC_FORBIDDEN_TERMS = [
   'IDFKyou', 'IDF', 'WAN', 'MiReKyou', 'ReKyou', 'Kyou', 'KFTL',
-  'Rykv', 'Mkfl', 'Dnote', 'Ryuu', 'Plaing', 'Lantana', 'Nlog',
+  'Rykv', 'Mkfl', 'Dnote', 'Ryuu', 'Playing', 'Lantana', 'Nlog',
   'URLog', 'TimeIs', 'Kmemo', 'DVNF', 'RepType',
   // ポート画面の開発コード名。URL（/rudbeckia）・ファイル名・保存キーには出るが、
   // 利用者に見せる呼び名は「ポート」だけ。現状マニュアル本文に漏れは無く、
@@ -1661,6 +1661,75 @@ function readZipTextEntries(rel) {
   return entries
 }
 
+// ─────────────────────────────────────────────────────────────
+// 6-e. 改名済みの綴りが復活していないか（ADR-0806）
+//
+//   ADR-0802 は plaing の綴りを凍結していたが、その決定は「文書だけが防御線で、
+//   一括置換で壊せる状態にある」と ADR 自身が書いていたとおり機械検査を持たなかった。
+//   ADR-0806 で playing へ全面改名したので、今度は逆向きに固定する。
+//   pre-commit が npm run verify_docs を機械強制するので、ここが一番強い止め金になる。
+//
+//   除外は「過去にそう書かれた事実」を記録するものだけ。増やすときは ADR-0806 の
+//   Consequences に理由を1行足すこと（allowlist が育つと防御線がまた文書へ戻る）。
+// ─────────────────────────────────────────────────────────────
+const RETIRED_SPELLINGS = [
+  {
+    label: 'plaing',
+    correct: 'playing',
+    adr: 'ADR-0806',
+    re: /plaing/i,
+    exemptFiles: new Set([
+      // 凍結を決めた ADR そのもの。documents/adr/README.md「ファイル名の slug は改名しない」
+      // に従い、ファイル名も本文もそのまま残す
+      'documents/adr/0802-freeze-plaing-spelling.md',
+      // 改名を決めた ADR。旧綴りを名指しできないと、何を直したのか書けない
+      'documents/adr/0806-fix-spellings-instead-of-freezing.md',
+      // この検査自身。旧綴りは検出パターンとして書く必要がある
+      'src/tools/verify_docs.mjs',
+    ]),
+    // 公開済みの歴史記録。書き換えると「そのとき何を配ったか」が消える
+    exemptPrefixes: ['documents/releasenote/'],
+    // 行に含まれていれば見逃す語。
+    //   use_plaing           — 我々の綴りではなく、過去の gkill が書き出したデータのキー名。
+    //                          旧形式 FindQuery の use_* フラグは Go / client / MCP の3実装が
+    //                          同じキー集合で受ける約束（ADR-0106）なので、1キーだけ抜けない
+    //   0802-freeze-plaing-… — 上の ADR へのリンク先ファイル名
+    //   retired-spelling-ok  — 旧綴りを名指しする必要がある1行だけの明示的な逃げ道。
+    //                          用語集の「凍結された綴り」表のように、記録することが目的の行に付ける
+    exemptLine: /use_plaing|0802-freeze-plaing-spelling|retired-spelling-ok/,
+  },
+]
+
+// 中身の綴りを直せない・直す意味がないもの。バイナリは NUL 判定でも落とすが、
+// 拡張子で先に弾いて数十MBの読み込みを避ける。
+const RETIRED_SPELLING_SKIP_EXT =
+  /\.(png|jpe?g|gif|webp|ico|pdf|zip|xlsx|docx|db|jar|so|dll|exe|keystore|jks|woff2?|ttf|mp4|webm)$/i
+
+function checkRetiredSpellings() {
+  // 追跡済み + 未追跡だが ignore されていない = リポジトリに入り得るファイルだけを見る
+  // （checkPersonalInfo と同じ列挙。生成物やローカル設定で偽陽性を出さないため）。
+  const out = execSync('git ls-files -z --cached --others --exclude-standard', { cwd: ROOT })
+  const files = out.toString('utf8').split('\0').filter(Boolean)
+  for (const spell of RETIRED_SPELLINGS) {
+    for (const rel of files) {
+      if (spell.exemptFiles.has(rel)) continue
+      if (spell.exemptPrefixes.some((p) => rel.startsWith(p))) continue
+      if (RETIRED_SPELLING_SKIP_EXT.test(rel)) continue
+      let buf
+      try { buf = fs.readFileSync(abs(rel)) } catch { continue }
+      if (buf.includes(0)) continue
+      const text = buf.toString('utf8')
+      if (!spell.re.test(text)) continue
+      normalizeLF(text).split('\n').forEach((line, i) => {
+        if (!spell.re.test(line)) return
+        if (spell.exemptLine.test(line)) return
+        err(`改名済みの綴りが復活している: ${rel}:${i + 1} → 「${spell.label}」は`
+          + `「${spell.correct}」へ改名済み（${spell.adr}）`)
+      })
+    }
+  }
+}
+
 function checkPersonalInfo() {
   const patterns = [
     [/[A-Za-z]:\\+Users\\+(?![〈<]|user(?:name)?\b)[A-Za-z0-9]/, 'Windows のユーザープロファイル実パス'],
@@ -1771,6 +1840,7 @@ function main() {
   checkAgentEntrypoints()
   checkADRSources()
   checkPersonalInfo()
+  checkRetiredSpellings()
   checkSkillAnchors()
   checkMermaid()
   checkManuals()

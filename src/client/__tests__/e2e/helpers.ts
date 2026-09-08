@@ -16,7 +16,7 @@ export async function loginAsAdmin(page: Page): Promise<void> {
   await expect(page, 'セッションが無効（ログイン画面へ戻された）。'
     + 'storageState は全テストで共有しているので、ログアウト等でセッションを壊すテストは'
     + 'test.use({ storageState: { cookies: [], origins: [] } }) で自前のセッションを持つこと')
-    .toHaveURL(/\/(kftl|rykv|mi|saihate|dashboard|plaing|mkfl|rudbeckia)/, { timeout: 30000 })
+    .toHaveURL(/\/(kftl|rykv|mi|saihate|dashboard|playing|mkfl|rudbeckia)/, { timeout: 30000 })
 }
 
 /** ログイン画面を開いて、ユーザID / パスワードの入力欄が描けるまで待つ */

@@ -9,7 +9,7 @@
     :enable_context_menu="enable_context_menu"
     :enable_dialog="enable_dialog"
     :is_readonly_mi_check="false"
-    :show_timeis_plaing_end_button="false"
+    :show_timeis_playing_end_button="false"
     v-on="dialog_events"
   />
   <EditKmemoDialog v-else-if="item.kind === 'edit_kmemo'" ref="dialog" :application_config="application_config"

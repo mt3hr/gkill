@@ -125,7 +125,7 @@ const LEGACY_USE_FLAG_VALUE_KEYS = new Map([
   ["use_timeis_tags", ["timeis_tags"]],
   ["use_calendar", ["calendar_start_date", "calendar_end_date"]],
   ["use_map", ["map_latitude", "map_longitude", "map_radius"]],
-  ["use_plaing", ["plaing_time"]],
+  ["use_plaing", ["playing_time"]],
   ["use_update_time", ["update_time"]],
   ["use_mi_board_name", ["mi_board_name"]],
   [
@@ -172,8 +172,8 @@ export function normalizeKyouQuery(query) {
     }
     if (KYOUS_QUERY_DATETIME_FIELDS.has(key)) {
       if (value === "") continue; // skip empty datetime strings (ChatGPT sends "" for unused fields)
-      // plaing_time はリテラル "now" を受け、現在時刻のRFC3339へ展開する
-      if (key === "plaing_time" && typeof value === "string" && value.trim() === "now") {
+      // playing_time はリテラル "now" を受け、現在時刻のRFC3339へ展開する
+      if (key === "playing_time" && typeof value === "string" && value.trim() === "now") {
         normalized[key] = formatLocalRfc3339(new Date());
         continue;
       }

@@ -3011,8 +3011,8 @@ export class GkillAPIForSharedKyou extends GkillAPI {
 
         async get_kyous(req: GetKyousRequest): Promise<GetKyousResponse> {
                 const res = new GetKyousResponse()
-                // plaing_time 非null = plaing検索（null=未使用は全件返す）
-                if (!req.query.plaing_time) {
+                // playing_time 非null = playing検索（null=未使用は全件返す）
+                if (!req.query.playing_time) {
                         res.kyous = this.kyous
                         return res
                 }
@@ -3027,7 +3027,7 @@ export class GkillAPIForSharedKyou extends GkillAPI {
                                 continue
                         }
                         const timeis = timeis_histories[0]
-                        if (timeis.start_time.getTime() < req.query.plaing_time.getTime() && (!timeis.end_time || timeis.end_time.getTime() > req.query.plaing_time.getTime())) {
+                        if (timeis.start_time.getTime() < req.query.playing_time.getTime() && (!timeis.end_time || timeis.end_time.getTime() > req.query.playing_time.getTime())) {
                                 kyous.set(timeis_kyou.id, timeis_kyou)
                         }
                 }

@@ -90,8 +90,8 @@ func TestFindQueryDefaultValues(t *testing.T) {
 	if q.MapRadius != nil {
 		t.Error("MapRadius should be nil by default")
 	}
-	if q.PlaingTime != nil {
-		t.Error("PlaingTime should be nil by default")
+	if q.PlayingTime != nil {
+		t.Error("PlayingTime should be nil by default")
 	}
 	if q.MiBoardName != nil {
 		t.Error("MiBoardName should be nil by default")
@@ -504,7 +504,7 @@ func TestFindQuery_AllFiltersEnabled(t *testing.T) {
 		IncludeStartMi:              true,
 		IncludeEndMi:                true,
 		IncludeEndTimeIs:            true,
-		PlaingTime:                  &now,
+		PlayingTime:                  &now,
 		UpdateTime:                  &now,
 		IsImageOnly:                 true,
 		ForMi:                       true,
@@ -589,8 +589,8 @@ func TestFindQuery_AllFiltersEnabled(t *testing.T) {
 	if restored.MapLatitude == nil || *restored.MapLatitude != 35.681236 {
 		t.Errorf("MapLatitude: got %v, want 35.681236", restored.MapLatitude)
 	}
-	if restored.PlaingTime == nil || !restored.PlaingTime.Equal(now) {
-		t.Errorf("PlaingTime: got %v, want %v", restored.PlaingTime, now)
+	if restored.PlayingTime == nil || !restored.PlayingTime.Equal(now) {
+		t.Errorf("PlayingTime: got %v, want %v", restored.PlayingTime, now)
 	}
 	if restored.MiBoardName == nil || *restored.MiBoardName != "all_filters_board" {
 		t.Errorf("MiBoardName: got %v, want %q", restored.MiBoardName, "all_filters_board")

@@ -1,19 +1,19 @@
 ---
 name: gkill-client-rudbeckia
-description: "ポート（開発コード rudbeckia）とフローティングウィンドウの約束。ビューを v-layout で包む理由、scoped CSS に 100vh を書かない、ホストされたビューの FAB と Enter/Ctrl+V 登録の禁止、ポートの FAB の z-index、複数枚の保存キー instance_key と slot 採番・cascade 段差の区別を扱う。rudbeckia-page.vue・use-rudbeckia-page.ts・rykv-view.vue・mi-view.vue・dashboard-view.vue・plaing-time-is-view.vue を編集するとき、ビューをウィンドウとしてホストするとき必読。「バーが画面最上部へ飛ぶ」「ウィンドウが重なって1枚に見える」「2枚目が1枚目の条件を上書きする」「集計リストだけ消える」の調査でも必読。"
+description: "ポート（開発コード rudbeckia）とフローティングウィンドウの約束。ビューを v-layout で包む理由、scoped CSS に 100vh を書かない、ホストされたビューの FAB と Enter/Ctrl+V 登録の禁止、ポートの FAB の z-index、複数枚の保存キー instance_key と slot 採番・cascade 段差の区別を扱う。rudbeckia-page.vue・use-rudbeckia-page.ts・rykv-view.vue・mi-view.vue・dashboard-view.vue・playing-time-is-view.vue を編集するとき、ビューをウィンドウとしてホストするとき必読。「バーが画面最上部へ飛ぶ」「ウィンドウが重なって1枚に見える」「2枚目が1枚目の条件を上書きする」「集計リストだけ消える」の調査でも必読。"
 ---
 
 # ポート（rudbeckia）とフローティングウィンドウの不変条件
 
-対象: `src/client/pages/rudbeckia-page.vue` / `use-rudbeckia-page.ts` / ホストされる `rykv-view.vue` / `mi-view.vue` / `dashboard-view.vue` / `plaing-time-is-view.vue`
+対象: `src/client/pages/rudbeckia-page.vue` / `use-rudbeckia-page.ts` / ホストされる `rykv-view.vue` / `mi-view.vue` / `dashboard-view.vue` / `playing-time-is-view.vue`
 
 **このファイルは全文が、実際に起きた事故の再発防止である。該当作業では飛ばさずに読むこと。**
 多くは「例外もエラーも出さずに静かに壊れる」種類で、破っても目の前ではエラーにならない。
 
 **ポート（開発コード rudbeckia）に画面をウィンドウとして載せる**（2026-08-17）。`/rudbeckia` は背景と FAB だけの1画面で、ライフログビュー / タスク / 実行中 / ダッシュボードをフローティングウィンドウとして開く。**開発コード `rudbeckia` は URL・ファイル名・識別子・保存キー・マニュアルのファイル名に使い、「ポート」は i18n の値とマニュアル本文にだけ出す。** 守るべき約束:
-- **ホストするのはページではなくビュー**（`rykv-view` / `mi-view` / `plaing-time-is-view` / `dashboard-view`）。ページは ApplicationConfig の取得・テーマ・`useConfigStructSync`・メッセージ表示・`resize_content`・`reset_dialog_history` を持つので、ダイアログの中に N 個置くわけにいかない。ポートがその1つぶんを担う
-- **`v-app-bar` / `v-navigation-drawer` / `v-main` を持つビューは `<v-layout :height :width>` で包む。** Vuetify は親レイアウトがあると `rootZIndex` を 100 下げ、レイアウト項目を `fixed` から `absolute` へ切り替える（`vuetify/lib/composables/layout.js:94,211,262`）。包まないと**画面最上部へ飛んでポート自身の上に重なる**。レイアウト部品を持たない実行中(plaing)は包まない
-- **包んだらビューのルートを箱いっぱいに重ねる。** `absolute` になったバー類の基準は `<v-layout>` ではなく最も近い位置指定済み祖先＝`.rykv_view_wrap` 等。`.dashboard_view_wrap` / `.plaing_timeis_view_wrap` は `position: relative` を持たないので埋め込み用の非スコープ CSS で付ける
+- **ホストするのはページではなくビュー**（`rykv-view` / `mi-view` / `playing-time-is-view` / `dashboard-view`）。ページは ApplicationConfig の取得・テーマ・`useConfigStructSync`・メッセージ表示・`resize_content`・`reset_dialog_history` を持つので、ダイアログの中に N 個置くわけにいかない。ポートがその1つぶんを担う
+- **`v-app-bar` / `v-navigation-drawer` / `v-main` を持つビューは `<v-layout :height :width>` で包む。** Vuetify は親レイアウトがあると `rootZIndex` を 100 下げ、レイアウト項目を `fixed` から `absolute` へ切り替える（`vuetify/lib/composables/layout.js:94,211,262`）。包まないと**画面最上部へ飛んでポート自身の上に重なる**。レイアウト部品を持たない実行中(playing)は包まない
+- **包んだらビューのルートを箱いっぱいに重ねる。** `absolute` になったバー類の基準は `<v-layout>` ではなく最も近い位置指定済み祖先＝`.rykv_view_wrap` 等。`.dashboard_view_wrap` / `.playing_timeis_view_wrap` は `position: relative` を持たないので埋め込み用の非スコープ CSS で付ける
 - **ビューの scoped CSS に `100vh` / `100vw` とメディアクエリを書かない。** ダイアログの中では基準が画面ではなく箱。`props.app_content_*` から `v-bind` する
 - **`drawer_mode_is_mobile` は `props.app_content_width` の computed。** 初期化時の1回代入だとダイアログをリサイズしてもドロワーの一時表示モードが切り替わらない。rykv と mi は対称なので必ず両方へ
 - **ホストしたビューは自前の FAB を出さない**（`is_hosted_in_dialog`）。`.position-fixed` は `position: fixed` なのでダイアログを抜けて画面右下へ居座り、ポートの FAB と重なる。ついでに打刻メモ帳ダイアログの二重 FAB もこれで消えた

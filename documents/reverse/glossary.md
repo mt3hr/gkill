@@ -59,7 +59,7 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 | **Mi** | タスク | `/mi` | タスク管理画面。ボード形式で Mi を表示し、チェック状態のフィルタ・ソート・共有機能を提供 | — |
 | **Kyou** | 記録 | `/kyou` | 記録一覧表示画面 | — |
 | **Mkfl** | 打刻メモ帳 | `/mkfl` | 打刻（TimeIs）とメモ（Kmemo）を組み合わせた複合入力ビュー | Master Key Fairy Lifelogger。記録導線を「あける」鍵開けの妖精 |
-| **Plaing** | 実行中 | `/plaing` | 稼働中の TimeIs（`EndTime` が null）を一覧表示する画面。状況キーワードやタグで絞り込み可能。**`plaing` は "playing" の誤綴りではなく製品綴りとして凍結**（下記参照） | Playing と Plain のミックス造語 |
+| **Playing** | 実行中 | `/playing` | 稼働中の TimeIs（`EndTime` が null）を一覧表示する画面。状況キーワードやタグで絞り込み可能。**かつて `plaing` と綴っていたが 2026-09-08 に `playing` へ改名した**（下記参照） | 旧綴り `plaing` は Playing と Plain のミックス造語だった <!-- retired-spelling-ok --> |
 | **Dashboard** | ダッシュボード | `/dashboard` | 特定日の記録を俯瞰する日次サマリー画面。DnoteView・GPSLogMap・KyouListView（MI一覧）を1画面に集約し、日付ナビゲーションで過去日のデータも確認できる | — |
 | **Saihate** | さいはて | `/saihate` | 記録だけに特化した画面。他画面への遷移ができない。「さいはてでも記録ができる」がコンセプト | 「最果て」。主にスマホのロック画面からアクセスする用途 |
 
@@ -145,11 +145,11 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | 用語 | UI表示名 | 説明 |
 |------|---------|------|
 | **Device / プロファイル** | プロファイル | デバイスや利用環境の設定単位。PC・スマートフォン・Wear OS 等のプロファイルを使い分けられる |
-| **ApplicationConfig** | 設定 | ユーザ別のアプリケーション設定。UI テーマ・デフォルト表示日数・テンプレート・構造定義等を含む。`dashboard_json_data` フィールドでダッシュボード設定、`plaing_timeis_json_data` フィールドで実行中検索条件、`saved_find_query_json_data` フィールドで保存済み検索条件も保持する |
+| **ApplicationConfig** | 設定 | ユーザ別のアプリケーション設定。UI テーマ・デフォルト表示日数・テンプレート・構造定義等を含む。`dashboard_json_data` フィールドでダッシュボード設定、`playing_timeis_json_data` フィールドで実行中検索条件、`saved_find_query_json_data` フィールドで保存済み検索条件も保持する |
 | **DashboardConfig** | ダッシュボード設定 | ダッシュボード画面の表示設定クラス（`src/client/classes/datas/config/dashboard-config.ts`）。`dashboard_mi_find_kyou_query`（MI一覧の検索条件）と `dashboard_dnote_find_kyou_query`（Dnoteビューの検索条件）の2つの `FindKyouQuery` を保持する。`ApplicationConfig.dashboard_json_data` にJSON文字列として格納される |
 | **dashboard_json_data** | — | `APPLICATION_CONFIG` テーブルの KEY として使用されるキー名。`DEVICE='ALL'`（デバイス非依存）で保存され、DashboardConfig の JSON 文字列を VALUE に格納する。`ignoreDeviceNameConfigKey` リストに含まれるため、デバイス固有設定の上書きを受けない |
-| **PlaingTimeIsConfig** | 実行中検索条件 | plaing検索（Kyou付随の実行中表示・実行中画面・KFTLの/end系終了候補検索）のカスタム検索条件クラス（`src/client/classes/datas/config/plaing-time-is-config.ts`）。`plaing_timeis_find_kyou_query`（`FindKyouQuery \| null`）を1本保持し、null は「未設定＝従来どおり全リポジトリ対象」を表す。適用の実体は `generate_plaing_timeis_query()`（`src/client/classes/api/find_query/generate-plaing-timeis-query.ts`）。Wear OS の `buildPlaingFindQuery`（`GkillApiClient.kt`）とサーバ内 KFTL（`kftl_timeis.go`）の plaing 検索は別系統のため、この設定は Web クライアントにのみ効く |
-| **plaing_timeis_json_data** | — | `APPLICATION_CONFIG` テーブルの KEY（`PLAING_TIMEIS_JSON_DATA`）として使用されるキー名。`DEVICE='ALL'`（デバイス非依存）で保存され、PlaingTimeIsConfig の JSON 文字列を VALUE に格納する。`ignoreDeviceNameConfigKey` リストに含まれる |
+| **PlayingTimeIsConfig** | 実行中検索条件 | playing検索（Kyou付随の実行中表示・実行中画面・KFTLの/end系終了候補検索）のカスタム検索条件クラス（`src/client/classes/datas/config/playing-time-is-config.ts`）。`playing_timeis_find_kyou_query`（`FindKyouQuery \| null`）を1本保持し、null は「未設定＝従来どおり全リポジトリ対象」を表す。適用の実体は `generate_playing_timeis_query()`（`src/client/classes/api/find_query/generate-playing-timeis-query.ts`）。Wear OS の `buildPlayingFindQuery`（`GkillApiClient.kt`）とサーバ内 KFTL（`kftl_timeis.go`）の playing 検索は別系統のため、この設定は Web クライアントにのみ効く |
+| **playing_timeis_json_data** | — | `APPLICATION_CONFIG` テーブルの KEY（`PLAYING_TIMEIS_JSON_DATA`）として使用されるキー名。`DEVICE='ALL'`（デバイス非依存）で保存され、PlayingTimeIsConfig の JSON 文字列を VALUE に格納する。`ignoreDeviceNameConfigKey` リストに含まれる |
 | **SavedFindQueryConfig** | 検索条件 | 保存済み検索条件クラス（`src/client/classes/datas/config/saved-find-query-config.ts`）。`saved_rykv_find_kyou_querys`（ライフログ用）と `saved_mi_find_kyou_querys`（タスク用）の2つの名前付き検索条件リストを保持する。各アイテムは `{id, title, find_kyou_query}`（Ryuu の関連情報クエリと同形式）。設定画面の「検索条件」ボタン → ハブダイアログ（`edit-saved-find-query-dialog.vue`）→ 種別別の一覧管理ダイアログ（`edit-saved-find-query-list-dialog.vue`、1コンポーネント2インスタンス）で登録・更新・削除・並べ替えする。rykv/mi サイドバーの呼び出しFAB（0件時非表示）から選択すると `apply_saved_query()` がサイドバーへ適用する（query_id は列側を維持。ホットリロードONなら自動検索、OFFなら検索ボタンで実行） |
 | **saved_find_query_json_data** | — | `APPLICATION_CONFIG` テーブルの KEY（`SAVED_FIND_QUERY_JSON_DATA`）として使用されるキー名。`DEVICE='ALL'`（デバイス非依存）で保存され、SavedFindQueryConfig の JSON 文字列を VALUE に格納する。`ignoreDeviceNameConfigKey` リストに含まれる |
 | **ServerConfig** | サーバ設定 | サーバ全体の設定。TLS・ポート番号・データディレクトリ・コマンドパス等 |
@@ -225,12 +225,16 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 
 ### 凍結された綴り
 
-以下は一見タイポに見えるが**製品綴りとして凍結**しており、修正しない。
-綴り修正の提案が繰り返されるのを防ぐためここに記録する。
+**現在、凍結している綴りは無い。** 綴り誤りを見つけたら互換を気にせず直してよい。
+永続データや外部契約に乗っていた場合は、併せて旧綴りのデータを一度きりの変換で直すこと。
 
-| 綴り | 一般的な綴り | 凍結理由 |
+| 綴り | 一般的な綴り | 現在の扱い |
 |---|---|---|
-| `plaing` / `Plaing` | playing | SPAルート `/plaing`・`FindQuery` の JSONキー（`plaing_time`）・MCP ツール入力スキーマ・Wear OS のデータレイヤーパス・7言語マニュアルのページ名・`default_page` の保存値と、互換面が5系統に及ぶ。造語としての由来もある（上表参照） |
+| `plaing` / `Plaing` | playing | **改名済み**（2026-09-08、[ADR-0806](../adr/0806-fix-spellings-instead-of-freezing.md)）。互換は残していない。旧綴りが追跡ファイルに再び現れると `npm run verify_docs` が落ちる <!-- retired-spelling-ok --> |
+| `agregate` | aggregate | **改名済み**。読み込み互換も撤去済み |
+
+かつては「永続データまたは外部契約に乗っている綴りは凍結する」という判定基準を採っており、
+`plaing` はその第1号だった（[ADR-0802](../adr/0802-freeze-plaing-spelling.md)。ADR-0806 が置き換え）。
 
 ## 10. 主要ファイルパス相互参照
 
@@ -272,7 +276,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（169ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
 | DashboardConfig | `src/client/classes/datas/config/dashboard-config.ts` | ダッシュボード設定クラス（MI検索条件・Dnote検索条件） |
-| PlaingTimeIsConfig | `src/client/classes/datas/config/plaing-time-is-config.ts` | 実行中検索条件クラス（plaing検索のカスタム条件） |
+| PlayingTimeIsConfig | `src/client/classes/datas/config/playing-time-is-config.ts` | 実行中検索条件クラス（playing検索のカスタム条件） |
 | SavedFindQueryConfig | `src/client/classes/datas/config/saved-find-query-config.ts` | 保存済み検索条件クラス（ライフログ用・タスク用の名前付き検索条件リスト） |
 | ダッシュボードページ | `src/client/pages/dashboard-page.vue` | `/dashboard` ルートのページコンポーネント |
 | ダッシュボードComposable | `src/client/classes/use-dashboard-page.ts` | ダッシュボードページのComposable |

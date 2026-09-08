@@ -417,7 +417,7 @@ describe('FindKyouQuery null判定の意味論', () => {
     expect(query.map_radius).toBeNull()
     expect(query.calendar_start_date).toBeNull()
     expect(query.calendar_end_date).toBeNull()
-    expect(query.plaing_time).toBeNull()
+    expect(query.playing_time).toBeNull()
     expect(query.period_of_time_start_time_second).toBeNull()
     expect(query.period_of_time_end_time_second).toBeNull()
     expect(query.period_of_time_week_of_days).toBeNull()
@@ -483,7 +483,7 @@ describe('FindKyouQuery null判定の意味論', () => {
     query.map_latitude = 35.65
     query.map_longitude = 139.74
     query.map_radius = 500
-    query.plaing_time = new Date(2026, 6, 2, 12, 0)
+    query.playing_time = new Date(2026, 6, 2, 12, 0)
     query.period_of_time_week_of_days = []
     query.mi_board_name = '板A'
 

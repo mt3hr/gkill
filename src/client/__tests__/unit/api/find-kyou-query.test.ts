@@ -494,7 +494,7 @@ describe('FindKyouQuery', () => {
     })
   })
 
-  describe('generate_default_query_for_plaing_timeis', () => {
+  describe('generate_default_query_for_playing_timeis', () => {
     test('タグフィルタは未使用(null)で、Rep は check_when_inited に関係なく全部入る', () => {
       const config = asConfig({
         rep_struct: makeRepStructElement({
@@ -506,7 +506,7 @@ describe('FindKyouQuery', () => {
         }),
       })
 
-      const query = FindKyouQuery.generate_default_query_for_plaing_timeis(config)
+      const query = FindKyouQuery.generate_default_query_for_playing_timeis(config)
 
       expect(query.tags).toBeNull()
       expect(query.reps).toEqual(['timeis_laptop_2024', 'kmemo_laptop_2024'])
@@ -523,7 +523,7 @@ describe('FindKyouQuery', () => {
         }),
       })
 
-      const query = FindKyouQuery.generate_default_query_for_plaing_timeis(config)
+      const query = FindKyouQuery.generate_default_query_for_playing_timeis(config)
 
       expect(query.reps).toEqual(['timeis_laptop_2024'])
     })
@@ -539,12 +539,12 @@ describe('FindKyouQuery', () => {
         }),
       })
 
-      const query = FindKyouQuery.generate_default_query_for_plaing_timeis(config)
+      const query = FindKyouQuery.generate_default_query_for_playing_timeis(config)
 
       expect(query.tags).toBeNull()
     })
 
-    test('apply_hide_tags は呼ばれない（従来のplaing検索の既定動作を変えない）', () => {
+    test('apply_hide_tags は呼ばれない（従来のplaying検索の既定動作を変えない）', () => {
       const config = asConfig({
         tag_struct: makeTagStructElement({
           name: 'root',
@@ -552,15 +552,15 @@ describe('FindKyouQuery', () => {
         }),
       })
 
-      const query = FindKyouQuery.generate_default_query_for_plaing_timeis(config)
+      const query = FindKyouQuery.generate_default_query_for_playing_timeis(config)
 
       expect(query.hide_tags).toEqual([])
     })
 
-    test('plaing_time は設定しない（呼び出し側が強制する）', () => {
-      const query = FindKyouQuery.generate_default_query_for_plaing_timeis(asConfig())
+    test('playing_time は設定しない（呼び出し側が強制する）', () => {
+      const query = FindKyouQuery.generate_default_query_for_playing_timeis(asConfig())
 
-      expect(query.plaing_time).toBeNull()
+      expect(query.playing_time).toBeNull()
     })
   })
 
@@ -593,7 +593,7 @@ describe('FindKyouQuery', () => {
       query.map_radius = 300
       query.calendar_start_date = new Date('2026-01-01T00:00:00Z')
       query.calendar_end_date = new Date('2026-01-31T23:59:59Z')
-      query.plaing_time = new Date('2026-01-15T12:00:00Z')
+      query.playing_time = new Date('2026-01-15T12:00:00Z')
       query.period_of_time_start_time_second = 3600
       query.period_of_time_end_time_second = 7200
       query.period_of_time_week_of_days = [1, 2, 3]
@@ -706,7 +706,7 @@ describe('FindKyouQuery', () => {
       query.query_id = 'saved-col'
       query.calendar_start_date = new Date('2025-03-10T00:00:00+09:00')
       query.calendar_end_date = new Date('2025-03-12T23:59:59.999+09:00')
-      query.plaing_time = new Date('2025-03-11T12:00:00+09:00')
+      query.playing_time = new Date('2025-03-11T12:00:00+09:00')
       query.period_of_time_week_of_days = [1, 3]
 
       const json = JSON.parse(JSON.stringify(query))
@@ -714,7 +714,7 @@ describe('FindKyouQuery', () => {
 
       expect(restored.calendar_start_date).toBeInstanceOf(Date)
       expect(restored.calendar_end_date).toBeInstanceOf(Date)
-      expect(restored.plaing_time).toBeInstanceOf(Date)
+      expect(restored.playing_time).toBeInstanceOf(Date)
       expect(deep_equals(restored, query)).toBe(true)
 
       // 配列は元JSONと参照を共有しない
@@ -730,7 +730,7 @@ describe('FindKyouQuery', () => {
 
       expect(restored.calendar_start_date).toBeNull()
       expect(restored.calendar_end_date).toBeNull()
-      expect(restored.plaing_time).toBeNull()
+      expect(restored.playing_time).toBeNull()
       expect(deep_equals(restored, empty)).toBe(true)
     })
 

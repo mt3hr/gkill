@@ -172,8 +172,8 @@
                                 i18n.global.t("EDIT_RYUU_TITLE") }}</v-btn>
                             <v-btn dark color="primary" @click="show_edit_dashboard_dialog">{{
                                 i18n.global.t("EDIT_DASHBOARD_TITLE") }}</v-btn>
-                            <v-btn dark color="primary" @click="show_edit_plaing_time_is_dialog">{{
-                                i18n.global.t("EDIT_PLAING_TIMEIS_TITLE") }}</v-btn>
+                            <v-btn dark color="primary" @click="show_edit_playing_time_is_dialog">{{
+                                i18n.global.t("EDIT_PLAYING_TIMEIS_TITLE") }}</v-btn>
                             <v-btn dark color="primary" @click="show_edit_saved_find_query_dialog">{{
                                 i18n.global.t("EDIT_SAVED_FIND_QUERY_TITLE") }}</v-btn>
                         </td>
@@ -251,11 +251,11 @@
             v-on="errorMessageRelayHandlers"
             @requested_apply_dashboard_struct="(data: DashboardData) => onRequestedApplyDashboardStruct(data)"
             @requested_reload_application_config="() => { }" ref="edit_dashboard_dialog" />
-        <EditPlaingTimeIsDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+        <EditPlayingTimeIsDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
-            @requested_apply_plaing_timeis="(data: PlaingTimeIsData) => onRequestedApplyPlaingTimeIs(data)"
-            @requested_reload_application_config="() => { }" ref="edit_plaing_time_is_dialog" />
+            @requested_apply_playing_timeis="(data: PlayingTimeIsData) => onRequestedApplyPlayingTimeIs(data)"
+            @requested_reload_application_config="() => { }" ref="edit_playing_time_is_dialog" />
         <EditSavedFindQueryDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
@@ -284,7 +284,7 @@ import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
 import ServerConfigDialog from '../dialogs/server-config-dialog.vue'
 import EditRyuuDialog from '../dialogs/edit-ryuu-dialog.vue'
 import EditDashboardDialog from '../dialogs/edit-dashboard-dialog.vue'
-import EditPlaingTimeIsDialog from '../dialogs/edit-plaing-time-is-dialog.vue'
+import EditPlayingTimeIsDialog from '../dialogs/edit-playing-time-is-dialog.vue'
 import EditSavedFindQueryDialog from '../dialogs/edit-saved-find-query-dialog.vue'
 
 import type { ApplicationConfigViewEmits } from './application-config-view-emits'
@@ -299,7 +299,7 @@ import type { MiBoardStructElementData } from "@/classes/datas/config/mi-board-s
 type DnoteData = Array<Record<string, unknown>>
 type RyuuData = Array<Record<string, unknown>>
 type DashboardData = Record<string, unknown>
-type PlaingTimeIsData = Record<string, unknown>
+type PlayingTimeIsData = Record<string, unknown>
 type SavedFindQueryData = Record<string, unknown>
 
 const props = defineProps<ApplicationConfigViewProps>()
@@ -317,7 +317,7 @@ const {
     edit_dnote_dialog,
     edit_ryuu_dialog,
     edit_dashboard_dialog,
-    edit_plaing_time_is_dialog,
+    edit_playing_time_is_dialog,
     edit_saved_find_query_dialog,
     server_config_dialog,
 
@@ -358,7 +358,7 @@ const {
     show_edit_dnote_dialog,
     show_edit_ryuu_dialog,
     show_edit_dashboard_dialog,
-    show_edit_plaing_time_is_dialog,
+    show_edit_playing_time_is_dialog,
     show_edit_saved_find_query_dialog,
     show_new_board_name_dialog,
     show_server_config_dialog,
@@ -374,7 +374,7 @@ const {
     onRequestedApplyDnote,
     onRequestedApplyRyuuStruct,
     onRequestedApplyDashboardStruct,
-    onRequestedApplyPlaingTimeIs,
+    onRequestedApplyPlayingTimeIs,
     onRequestedApplySavedFindQueryStruct,
 
     // Event relay objects

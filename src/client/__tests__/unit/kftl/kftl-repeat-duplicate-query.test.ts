@@ -211,8 +211,8 @@ describe('メモ帳から打刻を繰り返したときの既存スキップ', (
         expect(got.length, '9/11 は既にあるので飛ばす').toBe(2)
         expect(mock.sent[0].query.tags).toBeNull()
         expect(mock.sent[0].query.reps).toBeNull()
-        // 実行中だけに絞る条件（plaing_time）も立てない
-        expect(mock.sent[0].query.plaing_time).toBeNull()
+        // 実行中だけに絞る条件（playing_time）も立てない
+        expect(mock.sent[0].query.playing_time).toBeNull()
     })
 
     // 開始行と終了行は同じIDの同じ版なので、アンカーは1つにまとまる

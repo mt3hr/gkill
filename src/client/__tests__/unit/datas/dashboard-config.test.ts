@@ -29,7 +29,7 @@ function makeMinimalFindKyouQueryJson(overrides: Record<string, unknown> = {}): 
     map_radius: null,
     calendar_start_date: null,
     calendar_end_date: null,
-    plaing_time: null,
+    playing_time: null,
     period_of_time_start_time_second: null,
     period_of_time_end_time_second: null,
     period_of_time_week_of_days: null,

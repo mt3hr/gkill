@@ -82,9 +82,9 @@ const conversion_table: Array<ConversionCase> = [
     },
     {
         flag: 'use_plaing',
-        values: { plaing_time: '2026-01-15T12:00:00.000Z' },
-        when_true: { plaing_time: '2026-01-15T12:00:00.000Z' },
-        when_false: { plaing_time: null },
+        values: { playing_time: '2026-01-15T12:00:00.000Z' },
+        when_true: { playing_time: '2026-01-15T12:00:00.000Z' },
+        when_false: { playing_time: null },
     },
     {
         flag: 'use_update_time',
@@ -250,7 +250,7 @@ describe('normalize_legacy_find_kyou_query_json', () => {
             const { json } = normalize_legacy_find_kyou_query_json({ use_map: true, use_calendar: true, use_plaing: true })
             expect(json).not.toHaveProperty('map_latitude')
             expect(json).not.toHaveProperty('calendar_start_date')
-            expect(json).not.toHaveProperty('plaing_time')
+            expect(json).not.toHaveProperty('playing_time')
         })
     })
 

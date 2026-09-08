@@ -147,7 +147,7 @@ var errorCodeHTTPStatus = map[string]int{
 	InvalidGetIDFKyouRequestDataError:                               http.StatusBadRequest, // ERR000249
 	InvalidUpdateIDFKyouRequestDataError:                            http.StatusBadRequest, // ERR000252
 	InvalidUpdateShareKyouListInfoRequestDataError:                  http.StatusBadRequest, // ERR000257
-	InvalidGetPlaingTimeIsRequestDataError:                          http.StatusBadRequest, // ERR000265
+	InvalidGetPlayingTimeIsRequestDataError:                          http.StatusBadRequest, // ERR000265
 	InvalidGetMiTaskNotificationPublicKeyRequestDataError:           http.StatusBadRequest, // ERR000268
 	InvalidRegisterMiTaskNotificationRequest:                        http.StatusBadRequest, // ERR000270
 	InvalidAddNotificationRequestDataError:                          http.StatusBadRequest, // ERR000274
@@ -408,8 +408,8 @@ var errorCodeHTTPStatus = map[string]int{
 	FindMisShareKyouError:                                            http.StatusInternalServerError, // ERR000261
 	FindTagsShareKyouError:                                           http.StatusInternalServerError, // ERR000262
 	FindTextsShareKyouError:                                          http.StatusInternalServerError, // ERR000263
-	InvalidGetPlaingKyousResponseDataError:                           http.StatusInternalServerError, // ERR000264
-	FindKyousPlaingTimeIsError:                                       http.StatusInternalServerError, // ERR000266
+	InvalidGetPlayingKyousResponseDataError:                           http.StatusInternalServerError, // ERR000264
+	FindKyousPlayingTimeIsError:                                       http.StatusInternalServerError, // ERR000266
 	InvalidGetMiTaskNotificationPublicKeyResponseDataError:           http.StatusInternalServerError, // ERR000267
 	InvalidRegisterMiTaskNotificationResponse:                        http.StatusInternalServerError, // ERR000269
 	GenerateVAPIDKeysError:                                           http.StatusInternalServerError, // ERR000271

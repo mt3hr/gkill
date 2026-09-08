@@ -688,7 +688,7 @@ export function useKftlView(options: {
                 }
             }
 
-            let last_added_request_time = new Date(Date.now()) // 「、、」でずれた分をPlaingTimeIsにわたすための考慮。リロード時刻より大きかった場合はこの値でTimeIsをリロードする
+            let last_added_request_time = new Date(Date.now()) // 「、、」でずれた分をPlayingTimeIsにわたすための考慮。リロード時刻より大きかった場合はこの値でTimeIsをリロードする
             let errors = new Array<GkillError>()
             const result_kyou_ids = new Array<KFTLRequestResult>()
             const tx_id = kftl_requests.length > 0 ? kftl_requests[0].get_tx_id() : null

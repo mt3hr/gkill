@@ -2,7 +2,7 @@ package com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data
 
 import android.content.Context
 import android.util.Log
-import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.PlaingTimeIsNode
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.PlayingTimeIsNode
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.TemplateNode
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Wearable
@@ -17,8 +17,8 @@ private const val PATH_TEMPLATES     = "/gkill/templates"
 private const val PATH_SUBMIT              = "/gkill/submit"
 private const val PATH_SUBMIT_FORCE        = "/gkill/submit_force"
 private const val PATH_SUBMIT_RESULT       = "/gkill/submit_result"
-private const val PATH_GET_PLAING_TIMEIS   = "/gkill/get_plaing_timeis"
-private const val PATH_PLAING_TIMEIS       = "/gkill/plaing_timeis"
+private const val PATH_GET_PLAYING_TIMEIS   = "/gkill/get_playing_timeis"
+private const val PATH_PLAYING_TIMEIS       = "/gkill/playing_timeis"
 private const val PATH_END_TIMEIS          = "/gkill/end_timeis"
 private const val PATH_END_TIMEIS_RESULT   = "/gkill/end_timeis_result"
 
@@ -80,13 +80,13 @@ class GkillWearClient(private val context: Context) {
      * Sends a request to get the list of currently playing TimeIs.
      * Returns the nodeId if sent successfully, null otherwise.
      */
-    suspend fun sendGetPlaingTimeisRequest(): String? {
+    suspend fun sendGetPlayingTimeisRequest(): String? {
         val nodeId = getPhoneNodeId() ?: return null
         return try {
-            messageClient.sendMessage(nodeId, PATH_GET_PLAING_TIMEIS, ByteArray(0)).await()
+            messageClient.sendMessage(nodeId, PATH_GET_PLAYING_TIMEIS, ByteArray(0)).await()
             nodeId
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to send get_plaing_timeis request", e)
+            Log.w(TAG, "Failed to send get_playing_timeis request", e)
             null
         }
     }
@@ -127,15 +127,15 @@ class GkillWearClient(private val context: Context) {
     companion object {
         const val RESPONSE_PATH_TEMPLATES          = PATH_TEMPLATES
         const val RESPONSE_PATH_SUBMIT_RESULT      = PATH_SUBMIT_RESULT
-        const val RESPONSE_PATH_PLAING_TIMEIS      = PATH_PLAING_TIMEIS
+        const val RESPONSE_PATH_PLAYING_TIMEIS      = PATH_PLAYING_TIMEIS
         const val RESPONSE_PATH_END_TIMEIS_RESULT  = PATH_END_TIMEIS_RESULT
 
-        fun parsePlaingTimeisList(jsonStr: String): List<PlaingTimeIsNode> {
+        fun parsePlayingTimeisList(jsonStr: String): List<PlayingTimeIsNode> {
             return try {
                 if (jsonStr.startsWith("ERROR:")) return emptyList()
-                json.decodeFromString<List<PlaingTimeIsNode>>(jsonStr)
+                json.decodeFromString<List<PlayingTimeIsNode>>(jsonStr)
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to parse plaing timeis JSON: ${e.message}", e)
+                Log.w(TAG, "Failed to parse playing timeis JSON: ${e.message}", e)
                 emptyList()
             }
         }

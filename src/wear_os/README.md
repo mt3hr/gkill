@@ -65,7 +65,7 @@ Compose for Wear OS で構築されたウォッチアプリ。KFTL テンプレ�
 | ファイル | 役割 |
 |---------|------|
 | `GkillWearClient.kt` | Wearable Data Layer 通信。スマホ側へのメッセージ送受信 |
-| `model/PlaingTimeIsNode.kt` | 稼働中 TimeIs のデータモデル |
+| `model/PlayingTimeIsNode.kt` | 稼働中 TimeIs のデータモデル |
 | `model/TemplateNode.kt` | KFTL テンプレートのデータモデル |
 
 #### `presentation/` — UI 層（7ファイル）
@@ -78,8 +78,8 @@ Compose for Wear OS による画面構成。
 | `screens/ConfirmScreen.kt` | 送信確認 | 選択したテンプレートの送信確認 |
 | `screens/LoadingScreen.kt` | ローディング | 通信中の待機画面 |
 | `screens/ResultScreen.kt` | 結果表示 | 送信結果（成功/失敗）の表示 |
-| `screens/PlaingTimeIsListScreen.kt` | 稼働中 TimeIs | 稼働中タイマーの一覧・終了操作 |
-| `screens/PlaingEndConfirmScreen.kt` | TimeIs 終了確認 | タイマー終了の確認画面 |
+| `screens/PlayingTimeIsListScreen.kt` | 稼働中 TimeIs | 稼働中タイマーの一覧・終了操作 |
+| `screens/PlayingEndConfirmScreen.kt` | TimeIs 終了確認 | タイマー終了の確認画面 |
 | `theme/Theme.kt` | テーマ | Compose テーマ定義 |
 
 #### `tile/` — Wear OS タイル（2ファイル）

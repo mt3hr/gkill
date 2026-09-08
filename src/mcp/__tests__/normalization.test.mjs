@@ -234,19 +234,19 @@ describe("normalizeKyouQuery", () => {
   });
 
   test("skips empty string datetime fields", () => {
-    const result = normalizeKyouQuery({ plaing_time: "", update_time: "" });
-    expect(result).not.toHaveProperty("plaing_time");
+    const result = normalizeKyouQuery({ playing_time: "", update_time: "" });
+    expect(result).not.toHaveProperty("playing_time");
     expect(result).not.toHaveProperty("update_time");
   });
 
   test("skips empty string datetime alongside valid fields", () => {
     const result = normalizeKyouQuery({
       calendar_start_date: "2026-03-18",
-      plaing_time: "",
+      playing_time: "",
       update_time: "",
     });
     expect(result.calendar_start_date).toBeTruthy();
-    expect(result).not.toHaveProperty("plaing_time");
+    expect(result).not.toHaveProperty("playing_time");
     expect(result).not.toHaveProperty("update_time");
   });
 
@@ -314,7 +314,7 @@ describe("normalizeKyouQuery", () => {
         calendar_start_date: null,
         mi_board_name: null,
         map_latitude: null,
-        plaing_time: null,
+        playing_time: null,
         period_of_time_week_of_days: null,
       });
       expect(result).toEqual({ only_latest_data: true });
@@ -334,22 +334,22 @@ describe("normalizeKyouQuery", () => {
     });
   });
 
-  // --- plaing_time の "now" 展開 ---
-  describe("plaing_time literal now", () => {
+  // --- playing_time の "now" 展開 ---
+  describe("playing_time literal now", () => {
     test("expands \"now\" to the current local RFC3339 time", () => {
       const before = Date.now();
-      const result = normalizeKyouQuery({ plaing_time: "now" });
+      const result = normalizeKyouQuery({ playing_time: "now" });
       const after = Date.now();
-      expect(result.plaing_time).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/);
-      const parsed = Date.parse(result.plaing_time);
+      expect(result.playing_time).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/);
+      const parsed = Date.parse(result.playing_time);
       // 秒未満切り捨てぶんの1秒を許容する
       expect(parsed).toBeGreaterThanOrEqual(before - 1000);
       expect(parsed).toBeLessThanOrEqual(after + 1000);
     });
 
     test("trims surrounding whitespace before matching \"now\"", () => {
-      const result = normalizeKyouQuery({ plaing_time: "  now  " });
-      expect(result.plaing_time).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/);
+      const result = normalizeKyouQuery({ playing_time: "  now  " });
+      expect(result.playing_time).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/);
     });
 
     test("does not expand \"now\" for other datetime fields", () => {
@@ -474,9 +474,9 @@ describe("normalizeKyouQuery", () => {
       expect(result).not.toHaveProperty("map_radius");
     });
 
-    test("use_plaing:false removes plaing_time", () => {
-      const result = normalizeKyouQuery({ use_plaing: false, plaing_time: "2026-01-01" });
-      expect(result).not.toHaveProperty("plaing_time");
+    test("use_plaing:false removes playing_time", () => {
+      const result = normalizeKyouQuery({ use_plaing: false, playing_time: "2026-01-01" });
+      expect(result).not.toHaveProperty("playing_time");
     });
 
     test("use_update_time:false removes update_time", () => {

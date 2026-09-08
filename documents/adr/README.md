@@ -217,10 +217,11 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0706](0706-http-status-from-error-code.md) | HTTP ステータスはエラーコードから一元表で決める | Accepted |
 | [0707](0707-redact-environment-specific-strings.md) | 端末固有の文字列は出口で伏せ、プラグインの診断文はAIへ返さない | Accepted |
 | [0801](0801-perf-judge-by-allocs-not-ns-op.md) | 性能判断は ns/op ではなく allocs/op・B/op・EXPLAIN QUERY PLAN で行う | Accepted |
-| [0802](0802-freeze-plaing-spelling.md) | 綴りは「永続に乗るか」で決める — plaing は凍結、agregate は改名して読み込み互換を残す | Accepted |
+| [0802](0802-freeze-plaing-spelling.md) | 綴りは「永続に乗るか」で決める — plaing は凍結、agregate は改名して読み込み互換を残す | Superseded |
 | [0803](0803-verify-docs-checks-filenames.md) | 資料は件数だけでなく「資料に載っているファイル名の実在」も機械検査する | Accepted |
 | [0804](0804-split-claude-md-into-skills.md) | AI向け規約は AGENTS.md（核）と規約スキルへ分割し、入口の肥大化を機械検査で防ぐ | Accepted |
 | [0805](0805-adr-numbering-by-subsystem-hundreds.md) | ADR の採番はサブシステム別100番幅にし、帯の空きを機械検査する | Accepted |
+| [0806](0806-fix-spellings-instead-of-freezing.md) | 綴りは凍結せず直す — 互換を残さず、旧綴りのデータは一度きりで復旧する | Accepted |
 
 ### 1000番台 運用CLI・配布
 

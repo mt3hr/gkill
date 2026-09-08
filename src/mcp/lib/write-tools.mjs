@@ -120,7 +120,7 @@ export const WRITE_TOOLS = [
       "The repository is determined automatically by the server. " +
       "Response fields: added_timeis (full TimeIs entity with id, title, start_time, end_time, rep_name, etc.), added_kyou (parent Kyou wrapper). " +
       "The two overlap on purpose: added_kyou is the row shape a timeline shows (id, data_type, related_time, is_image/is_video), added_* is the entity with the fields you just wrote. Use added_*.id as the id everywhere — they are the same id. " +
-      "TimeIs records are used by gkill's plaing view to show what was happening at any given moment. " +
+      "TimeIs records are used by gkill's playing view to show what was happening at any given moment. " +
       "Multiple timeis can overlap (e.g., \"work\" and \"meeting\" can run simultaneously). " +
       "Use the returned id as target_id for gkill_add_tag to categorize the activity.",
     inputSchema: {

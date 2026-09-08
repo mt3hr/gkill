@@ -39,7 +39,7 @@ description: "rykv / mi / dashboard の列と検索の不変条件。列の同�
 `rykv-view-search-routing.test.ts` の「検索は期間が広くても1回で引く」「検索中の列に部分的な結果を出さない」。
 
 **記録の追加は再検索せず、その1件を列へ差し込む**（2026-08-15）。追加系ビューは `registered_kyou` だけを出し、`requested_reload_list` は「サーバが Kyou を返さなかった」ときのフォールバックに退いた。受け口は `use-registered-kyou-local-insert.ts` 1つで、rykv / mi / dashboard がこれを使う。判定と整列は純関数 `classes/kyou-local-insert.ts` にあり、意味論は `server/gkill/api/find_filter.go` の写し。守るべき約束:
-- **`/api/get_kyou` は FindQuery を受けない**ので、「その列の条件に一致するか」はクライアントで判定する。判定できるのは rep / タグ（完全一致・大小無視、`"no tags"` 番兵つき）/ カレンダー（両端含む）/ 時間帯 / mi の板名（大小**区別**）・完了状態・`include_*_mi`。判定できないのは本文検索・TimeIs・地図・plaing・画像のみ・`rep_types`（rep_name→rep_type の写像がクライアントに無い）で、**これらを使う列だけ従来どおり再検索する**。判定を足すときは「判定できないものを判定できると誤って宣言しない」ことがすべて —— 誤ると例外もエラーも出ずに黙って一致しない行が出る
+- **`/api/get_kyou` は FindQuery を受けない**ので、「その列の条件に一致するか」はクライアントで判定する。判定できるのは rep / タグ（完全一致・大小無視、`"no tags"` 番兵つき）/ カレンダー（両端含む）/ 時間帯 / mi の板名（大小**区別**）・完了状態・`include_*_mi`。判定できないのは本文検索・TimeIs・地図・playing・画像のみ・`rep_types`（rep_name→rep_type の写像がクライアントに無い）で、**これらを使う列だけ従来どおり再検索する**。判定を足すときは「判定できないものを判定できると誤って宣言しない」ことがすべて —— 誤ると例外もエラーも出ずに黙って一致しない行が出る
 - 並び順は非mi=`RelatedTime` 降順（**`.Unix()` 相当に秒へ切り捨ててから**比較。ミリ秒のままだと同一秒の隣接行で位置がずれる）、mi=ソート基準の時刻の昇順で**未設定は末尾**。mi の「未設定」は `typed_mi` ではなく `data_type` の接尾辞で判定する（一覧の既存行は `typed_mi` が未ロードなので、`typed_mi` を要求する比較子は既存行に対して動かない）
 - 差し込みは **in-place `splice`**。`focused_kyous_list` は `match_kyous_list[focused_column_index]` へのエイリアスなので、参照ごと差し替えると件数カレンダーや Dnote と縁が切れる（30万件のコピーも避けられる）。ただし Dnote は命令的 reload なので配列を触るだけでは追随せず、明示的に呼び直すこと
 - `add_*` の応答は **hydrate を通っていない生 JSON**（`related_time` が文字列、`clone()` も無い）。受け口で必ず実体化する
@@ -70,7 +70,7 @@ rykv / mi が同じものを使う。守るべき約束:
 - **ポート（rudbeckia）へも配る。** タグが検索条件に効くようになったので `kyou-change-bus.ts` の
   「タグは配る必要が無い」という前提が崩れた。publish するのは**未知と判定した発生元だけ**で、
   受け手は既知判定を**やり直さない**（届く頃にはツリーに載っているので必ず取りこぼす）。`apply_registered_tag` は
-  optional（dashboard / plaing は列のタグ絞り込みを持たない）。受け手では `reload_list` の畳み込みより**先**に適用する
+  optional（dashboard / playing は列のタグ絞り込みを持たない）。受け手では `reload_list` の畳み込みより**先**に適用する
   （逆だと旧条件のまま全件取り直す）
 - **今回の修正では直らないもの**（区別できる情報が保存データに無い）: 他端末で作られたタグ、過去に作ったタグ、
   プラグインKyouのタグ。本命の対処（既定クエリの物質化をやめる）が別件である理由は ADR-0404

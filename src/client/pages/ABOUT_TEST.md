@@ -52,7 +52,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | 新しいタグを含む保存は確認ダイアログを挟む（KFTL送信・タグ追加ダイアログの両方） | `confirmUnknownTagIfShown` が `submitKftlText` と `clickDialogButton` から呼ばれる |
 | 通知の時刻欄は readonly で、v-time-picker から選ばないと保存が通らない | `pickNotificationTime` |
 | リポストはコンテキストメニューを押しただけでは作られず、確認ダイアログで確定が要る | `clickDialogButton(page, MENU.rekyou)` |
-| TimeIs の終了ボタンは Plaing 画面にしか出ない（rykv は `show_timeis_plaing_end_button="false"`）。終了ダイアログの確定ボタンも「保存」ではなく「終了」 | Plaing へ遷移してから操作する |
+| TimeIs の終了ボタンは Playing 画面にしか出ない（rykv は `show_timeis_playing_end_button="false"`）。終了ダイアログの確定ボタンも「保存」ではなく「終了」 | Playing へ遷移してから操作する |
 | KFTL の `、、` は以降の行をすべてテキスト本文として取り込む | 記録＋テキストを作りたい場合はコンテキストメニューでテキストを付ける |
 | Mi のコンテキストメニューに「共有」は無い。共有はサイドバーのフッタから。しかもフッタは `application_config.is_show_share_footer` が既定 false で出ない | 設定画面の「共有フッターを表示」を有効にしてから操作する |
 | ダイアログは保存しても閉じるとは限らない（タグ追加など） | 完了の合図は「書き込みAPIの応答」。`clickDialogButton` が待ち、errors が空かも見る |
@@ -85,7 +85,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/mi-board.spec.ts` | `/mi` — タスクボード、JS エラーチェック、レスポンシブ、FAB |
 | `src/client/__tests__/e2e/rykv.spec.ts` | `/rykv` — JS エラーチェック、モバイルビューポート、URL永続化 |
 | `src/client/__tests__/e2e/mkfl.spec.ts` | `/mkfl` — ファイル管理 |
-| `src/client/__tests__/e2e/plaing.spec.ts` | `/plaing` — 計画ビュー |
+| `src/client/__tests__/e2e/playing.spec.ts` | `/playing` — 計画ビュー |
 | `src/client/__tests__/e2e/settings.spec.ts` | `/saihate` — 設定画面コンテンツ、JS エラーチェック、インタラクティブ操作 |
 | `src/client/__tests__/e2e/kyou-list.spec.ts` | `/kyou` — レコード一覧 |
 | `src/client/__tests__/e2e/share-page.spec.ts` | `/shared_page` — 不正な共有IDでエラーが表示され、読み込み中のまま止まらないこと（返る内容の網羅はGo側 handle_get_shared_kyous_test.go） |
@@ -102,9 +102,9 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/kftl-crud.spec.ts` | KFTL経由で全データ型記録 + 画面表示確認 |
 | `src/client/__tests__/e2e/kftl-timeis-end.spec.ts` | TimeIs終了の全4バリエーション（タイトル/タグ × 指定/存在すれば） |
 | `src/client/__tests__/e2e/add-dialog-crud.spec.ts` | FAB→追加ダイアログ (Mi/Lantana/Nlog/TimeIs/URLog/KC) + コンテキストメニューからのTag/Text追加 |
-| `src/client/__tests__/e2e/edit-dialog-crud.spec.ts` | 右クリック→編集 (Kmemo/Mi/TimeIs/Nlog/URLog/Tag/Text) + Plaing画面でのTimeIs終了、リポスト |
+| `src/client/__tests__/e2e/edit-dialog-crud.spec.ts` | 右クリック→編集 (Kmemo/Mi/TimeIs/Nlog/URLog/Tag/Text) + Playing画面でのTimeIs終了、リポスト |
 | `src/client/__tests__/e2e/delete-crud.spec.ts` | 右クリック→削除 (Kmemo/Mi/Nlog/URLog/TimeIs/Tag/Text/ReKyou)。作成→一覧に出る→削除→一覧から消える、を通しで確認 |
-| `src/client/__tests__/e2e/view-browse.spec.ts` | 履歴ダイアログ、混合データ型、Mi ボード/Plaing 表示、ZIPブラウズ |
+| `src/client/__tests__/e2e/view-browse.spec.ts` | 履歴ダイアログ、混合データ型、Mi ボード/Playing 表示、ZIPブラウズ |
 | `src/client/__tests__/e2e/view-history.spec.ts` | Lantana/Mi/Nlog/URLog/ReKyou/Tag/Text の履歴+リポスト+NoImage確認 |
 | `src/client/__tests__/e2e/notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴 |
 | `src/client/__tests__/e2e/mi-re-kyou.spec.ts` | MiReKyou（既存Kyouのタスク化）: rykvのコンテキストメニュー「タスクにする」→Mi画面に出る。API面はGo側の TestHandleAddMiReKyou_* 系へ移管 |
@@ -174,7 +174,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/dnote-relay-chain.test.ts` | Dnote の中継チェーンが `requested_reload_kyou` を親まで通すこと（タグ/テキスト/通知の変更はこれしか信号を出さない） |
 | `src/client/__tests__/unit/composables/edit-kyou-tags-view.test.ts` | 追加/編集画面に埋め込むタグ欄。値を集めるだけで登録は親の `save()` が行う |
 | `src/client/__tests__/unit/composables/edit-mi-board-struct-view.test.ts` | Mi の板構造の編集（削除の walk が「子で true が返ったら親が splice」の形になっていること） |
-| `src/client/__tests__/unit/composables/edit-plaing-time-is-dialog.test.ts` | 実行中検索のカスタム条件ダイアログ（「カスタマイズする」チェックの3状態の意味論） |
+| `src/client/__tests__/unit/composables/edit-playing-time-is-dialog.test.ts` | 実行中検索のカスタム条件ダイアログ（「カスタマイズする」チェックの3状態の意味論） |
 | `src/client/__tests__/unit/composables/edit-saved-find-query-list-dialog.test.ts` | 保存済み検索条件の一覧編集。受け取ったリストのクローンを編集し、適用まで元を書き換えないこと |
 | `src/client/__tests__/unit/composables/find-query-editor-view.test.ts` | 検索条件エディタ（Dnote/Ryuu が使う）。TimeIsのタグツリーへ流すのは `timeis_tags` であって `tags` ではないこと |
 | `src/client/__tests__/unit/composables/find-query-editor-dialog-default-signal.test.ts` | 検索条件エディタダイアログの初期値規則（`query_id` が空＝未セットの印を潰さないこと） |

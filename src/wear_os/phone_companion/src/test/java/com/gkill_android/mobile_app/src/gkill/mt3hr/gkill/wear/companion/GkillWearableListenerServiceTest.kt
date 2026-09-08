@@ -43,13 +43,13 @@ class GkillWearableListenerServiceTest {
     }
 
     @Test
-    fun `request path for get_plaing_timeis is correct`() {
-        assertEquals("/gkill/get_plaing_timeis", PATH_GET_PLAING_TIMEIS_EXPECTED)
+    fun `request path for get_playing_timeis is correct`() {
+        assertEquals("/gkill/get_playing_timeis", PATH_GET_PLAYING_TIMEIS_EXPECTED)
     }
 
     @Test
-    fun `response path for plaing_timeis is correct`() {
-        assertEquals("/gkill/plaing_timeis", PATH_PLAING_TIMEIS_EXPECTED)
+    fun `response path for playing_timeis is correct`() {
+        assertEquals("/gkill/playing_timeis", PATH_PLAYING_TIMEIS_EXPECTED)
     }
 
     @Test
@@ -75,8 +75,8 @@ class GkillWearableListenerServiceTest {
     }
 
     @Test
-    fun `request and response paths are distinct for plaing_timeis`() {
-        assertNotEquals(PATH_GET_PLAING_TIMEIS_EXPECTED, PATH_PLAING_TIMEIS_EXPECTED)
+    fun `request and response paths are distinct for playing_timeis`() {
+        assertNotEquals(PATH_GET_PLAYING_TIMEIS_EXPECTED, PATH_PLAYING_TIMEIS_EXPECTED)
     }
 
     @Test
@@ -93,8 +93,8 @@ class GkillWearableListenerServiceTest {
             PATH_TEMPLATES_EXPECTED,
             PATH_SUBMIT_EXPECTED,
             PATH_SUBMIT_RESULT_EXPECTED,
-            PATH_GET_PLAING_TIMEIS_EXPECTED,
-            PATH_PLAING_TIMEIS_EXPECTED,
+            PATH_GET_PLAYING_TIMEIS_EXPECTED,
+            PATH_PLAYING_TIMEIS_EXPECTED,
             PATH_END_TIMEIS_EXPECTED,
             PATH_END_TIMEIS_RESULT_EXPECTED,
         )
@@ -166,8 +166,8 @@ class GkillWearableListenerServiceTest {
         private const val PATH_TEMPLATES_EXPECTED = "/gkill/templates"
         private const val PATH_SUBMIT_EXPECTED = "/gkill/submit"
         private const val PATH_SUBMIT_RESULT_EXPECTED = "/gkill/submit_result"
-        private const val PATH_GET_PLAING_TIMEIS_EXPECTED = "/gkill/get_plaing_timeis"
-        private const val PATH_PLAING_TIMEIS_EXPECTED = "/gkill/plaing_timeis"
+        private const val PATH_GET_PLAYING_TIMEIS_EXPECTED = "/gkill/get_playing_timeis"
+        private const val PATH_PLAYING_TIMEIS_EXPECTED = "/gkill/playing_timeis"
         private const val PATH_END_TIMEIS_EXPECTED = "/gkill/end_timeis"
         private const val PATH_END_TIMEIS_RESULT_EXPECTED = "/gkill/end_timeis_result"
     }

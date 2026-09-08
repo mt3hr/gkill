@@ -7,7 +7,7 @@
 | Sources | 2026-08-25 の実利用レビュー（`is_include_timeis` が削除済みの打刻を添付する）と、本番アカウントでの実測 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go`（`livePlaingTimeIsCandidates` / `timeIsCoversMoment`）/ `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp.go`（付随 TimeIs の取得と添付） |
+| Anchors | `src/server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go`（`livePlayingTimeIsCandidates` / `timeIsCoversMoment`）/ `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp.go`（付随 TimeIs の取得と添付） |
 
 ## Context
 
@@ -18,7 +18,7 @@
 | | 件数 |
 |---|---|
 | `is_include_timeis:true` が付けた打刻 | **16件** |
-| 同じ瞬間を `plaing_time` で引いた打刻 | **2件** |
+| 同じ瞬間を `playing_time` で引いた打刻 | **2件** |
 
 差の14件はすべて削除済み。最古のものは**1年前（2025-08-14）に開始し、終了記録ごと消された**打刻で、
 それが「今日 17:30 に書いたメモ」へ *実行中* として付いていた。
@@ -27,7 +27,7 @@
 
 | 経路 | 実装 | 削除済み |
 |---|---|---|
-| Web の列 | クライアントが `plaing_time` 検索を投げる（`generate-plaing-timeis-query.ts`） | 落ちる |
+| Web の列 | クライアントが `playing_time` 検索を投げる（`generate-playing-timeis-query.ts`） | 落ちる |
 | 共有ページ | Kyou 側は `FindFilter.FindKyous`、打刻の実体は `TimeIsReps.FindTimeIs` 直叩き | **Kyou 側だけ落ちる** |
 | **MCP** | `TimeIsReps.FindTimeIs` を直叩きして Go 側で総当たり | **落ちない** |
 
@@ -42,7 +42,7 @@ gkill で削除済みを落としているのは `find_filter.go` の Kyou 集�
 
 **付随データの判定は、Kyou 検索が使っているのと同じ規則を通す。**
 
-- 削除済みの除外を `livePlaingTimeIsCandidates` に、覆っているかの判定を `timeIsCoversMoment` に切り出し、
+- 削除済みの除外を `livePlayingTimeIsCandidates` に、覆っているかの判定を `timeIsCoversMoment` に切り出し、
   ハンドラのループから追い出す。どちらも純関数なので単体で固定できる
 - 判定の作法は `find_filter.go` の削除済み除外と同じ「ID ごとの最新版の `IsDeleted`」。
   `FindTimeIs(OnlyLatestData:true)` が既に ID ごと1件へ畳んでいるので、受け取った行の `IsDeleted` が最新版のもの
@@ -66,7 +66,7 @@ gkill で削除済みを落としているのは `find_filter.go` の Kyou 集�
   現在の「一度だけ引いて Go 側で照合」のほうが桁で速い。**寄せるのは規則であって経路ではない**
 - **取得時に期間で絞って全件走査をやめる** — 走査対象は本番で28,435件あり、
   `Kyou数 × 28,435` 回の比較になる。しかし絞るには「ページの時間範囲を覆う打刻」を SQL で表す必要があり、
-  `FindQuery` にあるのは点の `PlaingTime` だけで範囲版が無い。期間で素直に絞ると
+  `FindQuery` にあるのは点の `PlayingTime` だけで範囲版が無い。期間で素直に絞ると
   **窓より前に始まった打刻が落ちる**（それこそが「走っている」打刻）。SQL の新設が要るので今回は見送り、
   削除済みの除外（16→2）とタグのメモ化で実害を消した
 - **付随打刻を共有テーブル（`timeis_ids[]` + 応答末尾の表）にする** — 重複の解消としては正しいが、
@@ -81,7 +81,7 @@ gkill で削除済みを落としているのは `find_filter.go` の Kyou 集�
 - **共有ページの実体側（`handle_get_shared_kyous.go` の `AttachedTimeIss`）は、当初の調査で
   「落ちる」と書いたが実際には落ちていなかった。** Kyou リストは `FindFilter` 経由なので落ちる一方、
   打刻の実体は `TimeIsReps.FindTimeIs` を直叩きしており、MCP とまったく同じ欠落を持っていた。
-  同日中に `livePlaingTimeIsCandidates` を通す形へ寄せた（同時に、先に無条件代入してから
+  同日中に `livePlayingTimeIsCandidates` を通す形へ寄せた（同時に、先に無条件代入してから
   自分自身と `UpdateTime` を比べていた版選択のデッドコードも除いた）
 - 判定が純関数2つになったので、規則を戻すと必ずテストが落ちる（下記）
 
@@ -89,17 +89,17 @@ gkill で削除済みを落としているのは `find_filter.go` の Kyou 集�
 
 本番実測（2026-08-25、記録数の多い実アカウント）:
 
-- `is_include_timeis:true` で1件の kmemo に付いた打刻が16件。`plaing_time` に同じ瞬間を渡すと2件
+- `is_include_timeis:true` で1件の kmemo に付いた打刻が16件。`playing_time` に同じ瞬間を渡すと2件
 - 混ざっていた打刻のひとつを `gkill_get_kyou_history` で引くと `latest_is_deleted: true`、
   `end_time: null`、開始は2025-08-14（1年前）
 - 生存する `timeis_start` の全期間件数は28,435件。`is_include_timeis:true` は毎回この全行を読む
 
-修正の検証: `livePlaingTimeIsCandidates` の `IsDeleted` スキップを外すと
-`TestLivePlaingTimeIsCandidates_DropsDeleted` と `..._AllDeleted` が落ちる（実施済み）。
+修正の検証: `livePlayingTimeIsCandidates` の `IsDeleted` スキップを外すと
+`TestLivePlayingTimeIsCandidates_DropsDeleted` と `..._AllDeleted` が落ちる（実施済み）。
 
 ## Related tests
 
 - `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp_v2_test.go`
-  - `TestLivePlaingTimeIsCandidates_DropsDeleted`（幽霊が今日の記録を覆うことも同時に固定）
-  - `TestLivePlaingTimeIsCandidates_AllDeleted`
-  - `TestTimeIsCoversMoment`（`plaing_time` の SQL と同じ意味であること）
+  - `TestLivePlayingTimeIsCandidates_DropsDeleted`（幽霊が今日の記録を覆うことも同時に固定）
+  - `TestLivePlayingTimeIsCandidates_AllDeleted`
+  - `TestTimeIsCoversMoment`（`playing_time` の SQL と同じ意味であること）
