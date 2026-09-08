@@ -138,7 +138,7 @@ describe('rykvサイドバーの機械的updated_query遮断', () => {
             use_rep_types: false,
             use_map: false,
             use_calendar: false,
-            use_plaing: false,
+            use_playing: false,
             use_period_of_time: false,
             use_mi_board_name: false,
             use_mi_sort_type: false,

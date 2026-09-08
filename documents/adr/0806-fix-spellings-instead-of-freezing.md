@@ -41,11 +41,14 @@ gkill は単一利用者のスタンドアロンアプリで、クライアン�
 
 ## Consequences
 
-**旧綴りは追跡ファイルに置けない。** `npm run verify_docs` の走査検査が落ちる。例外は3つだけで、いずれも「過去にそう書かれた事実」を記録するものに限る。
+**旧綴りは追跡ファイルに1つも置けない。** `npm run verify_docs` の走査検査が落ちる。例外は「過去にそう書かれた事実」を記録するものだけで、コードには1つも無い。
 
 1. `documents/adr/0802-freeze-plaing-spelling.md` — 凍結を決めた ADR そのもの。ファイル名の slug も本文も変えない
 2. `documents/releasenote/` と `documents/gkill_develop_document.xlsx` — 公開済みの歴史記録
-3. **`use_plaing`** — これは我々の綴りではなく、**過去の gkill が書き出したデータのキー名**。旧形式 `FindQuery` JSON の `use_*` フラグを Go / client / MCP の3実装が同じキー集合で受けることは [ADR-0106](0106-find-query-null-semantics.md) が別途決めた約束で、1キーだけ抜くとそのフラグを持つ古い保存クエリが移行されなくなる（MCP では未知キーとして throw する）。綴りの話とは別の互換なので、ここでは触らない
+3. この ADR 自身と `src/tools/verify_docs.mjs` — 何を直したのか・何を検出するのかを書くのに旧綴りが要る
+4. 用語集の「凍結された綴り」表など、記録することが目的の行。`<!-- retired-spelling-ok -->` を付けて1行ずつ明示的に逃がす
+
+旧形式 `FindQuery` JSON の `use_*` フラグにあった `use_plaing` も `use_playing` へ改名した。これは「我々の綴りではなくデータのキー名だから触らない」と一度は判断したが、**保存データを数えたら3つのDBすべてで `use_*` フラグ自体が0件**で、守る対象が存在しなかった。Go / client / MCP の3実装が同じ16キーを扱うという [ADR-0106](0106-find-query-null-semantics.md) の約束は、3実装を同時に改名したので保たれている。
 
 **互換を残さない選択の代償**は、更新前のPWAキャッシュ・更新前の Watch APK・進行中の MCP セッションが、更新するまで実行中まわりで動かないこと。ブラウザの localStorage に保存されていた列条件の `plaing_time` と、ポートの実行中ウィンドウの位置・サイズは一度だけ既定へ戻る。MCP へ旧引数 `plaing_time` を送ると未知キーとして throw する（黙って無視されるより良い）。
 
@@ -77,7 +80,7 @@ gkill は単一利用者のスタンドアロンアプリで、クライアン�
 | `share_kyou_info.db` | `FIND_QUERY_JSON` の `plaing_time` | 2行（全2行） |
 | サンプルデータの `user_config.db` | 上と同じ2種 | 2行 |
 | `DEFAULT_PAGE` の値 | **全20行が `rykv`** | 0行 |
-| `use_plaing` を含む保存行 | — | **0行** |
+| 旧形式の `use_*` フラグ（`use_plaing` 含む）を含む保存行 | 本番2DB＋サンプルDB | **0行** |
 | `Agregate*`（旧綴り）を含む生存行 | — | **0行**（未VACUUM領域のバイト列のみ） |
 
 ADR-0802 が「凍結しなくてよかった例」として挙げていた `agregate` は、調査時点で**読み込み互換コードが既に存在しなかった**。互換は消されていたのに、ADR と `dnote/README.md` の記述だけが「互換を取っている」と言い続けていた。読み込み互換が資料と実装のドリフト源になる実例として記録しておく。

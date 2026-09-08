@@ -160,8 +160,7 @@ export const LEGACY_USE_FLAG_KEYS = new Set([
   "use_timeis_tags",
   "use_calendar",
   "use_map",
-  // use_plaing は旧綴りのまま。我々の綴りではなく、過去の gkill が書き出したデータのキー名（ADR-0806）
-  "use_plaing",
+  "use_playing",
   "use_update_time",
   "use_mi_board_name",
   "use_period_of_time",

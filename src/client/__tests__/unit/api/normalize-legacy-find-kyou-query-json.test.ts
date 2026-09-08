@@ -81,7 +81,7 @@ const conversion_table: Array<ConversionCase> = [
         when_false: { calendar_start_date: null, calendar_end_date: null },
     },
     {
-        flag: 'use_plaing',
+        flag: 'use_playing',
         values: { playing_time: '2026-01-15T12:00:00.000Z' },
         when_true: { playing_time: '2026-01-15T12:00:00.000Z' },
         when_false: { playing_time: null },
@@ -247,7 +247,7 @@ describe('normalize_legacy_find_kyou_query_json', () => {
         })
 
         test('nullable系グループ（use_map=true 等）は欠落値を物質化しない', () => {
-            const { json } = normalize_legacy_find_kyou_query_json({ use_map: true, use_calendar: true, use_plaing: true })
+            const { json } = normalize_legacy_find_kyou_query_json({ use_map: true, use_calendar: true, use_playing: true })
             expect(json).not.toHaveProperty('map_latitude')
             expect(json).not.toHaveProperty('calendar_start_date')
             expect(json).not.toHaveProperty('playing_time')

@@ -106,7 +106,7 @@ src/
 
 **Naming convention (files):** `{action}-{feature}-{entity}-{component}` (e.g., `add-dnote-item-view.vue`, `confirm-delete-ryuu-item-dialog.vue`), kebab-case. Dnote and Ryuu follow the same pattern.
 
-**Frozen spellings:** **現在、凍結している綴りは無い。** かつて `plaing` / `Plaing` を「永続データと外部契約に乗っているから直さない」として凍結していたが（[ADR-0802](documents/adr/0802-freeze-plaing-spelling.md)）、2026-09-08 に `playing` へ全面改名し、**互換は一切残していない**（ルート `/playing`、`FindQuery` の `playing_time`、MCP ツールスキーマ、Wear OS データレイヤーパス、マニュアルのページ名、`default_page` の保存値）。旧綴りが追跡ファイルに再び現れると `npm run verify_docs` が落ちる。綴り誤りを見つけたら互換を気にせず直してよく、永続データに乗っていた場合は旧綴りのデータを一度きりの変換で直すこと。経緯・却下案・例外の1語は [ADR-0806](documents/adr/0806-fix-spellings-instead-of-freezing.md)。詳細は `documents/reverse/glossary.md` の「凍結された綴り」節。
+**Frozen spellings:** **現在、凍結している綴りは無い。** かつて `plaing` / `Plaing` を「永続データと外部契約に乗っているから直さない」として凍結していたが（[ADR-0802](documents/adr/0802-freeze-plaing-spelling.md)）、2026-09-08 に `playing` へ全面改名し、**互換は一切残していない**（ルート `/playing`、`FindQuery` の `playing_time`、MCP ツールスキーマ、Wear OS データレイヤーパス、マニュアルのページ名、`default_page` の保存値）。旧綴りが追跡ファイルに再び現れると `npm run verify_docs` が落ちる。綴り誤りを見つけたら互換を気にせず直してよく、永続データに乗っていた場合は旧綴りのデータを一度きりの変換で直すこと。経緯と却下案は [ADR-0806](documents/adr/0806-fix-spellings-instead-of-freezing.md)。詳細は `documents/reverse/glossary.md` の「凍結された綴り」節。
 
 **Naming convention (identifiers):** データクラスのプロパティ/メソッド・ローカル変数・通常関数は snake_case（Go 側 JSON タグとの写像）。コンポーザブルは `useXxx`、イベントコールバックは `onXxx`、CRUD リレーハンドラ束は `xxxHandlers`（束の生成は `kyou-view-relay.ts` に一元化。いずれも camelCase）。型は PascalCase、enum メンバーは snake_case。`@typescript-eslint/naming-convention` で機械検査される（`eslint.config.js` の `app/naming-convention` ブロック。対象は `src/client` 本体のみで、`__tests__`・`src/mcp`・`src/tools`・`*.d.ts` は別流儀として対象外）。
 

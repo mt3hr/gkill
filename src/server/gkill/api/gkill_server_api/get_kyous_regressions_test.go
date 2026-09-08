@@ -227,7 +227,7 @@ func TestHandleGetKyous_PluginFindFailureIsWarningNotError(t *testing.T) {
 // playing_time は *time.Time。null（未指定）なら実行中フィルタを掛けず、
 // 非nilならその時刻を跨いでいる計測だけに絞る。
 //
-// Use* フラグ廃止前は use_plaing の真偽で切り替えていたため、
+// Use* フラグ廃止前は use_playing の真偽で切り替えていたため、
 // 「playing_time は送るがフィルタは使わない」という組み合わせがありえた。
 // 現在は値の有無がそのままフィルタの有無になる。
 func TestHandleGetKyous_PlayingTimeNullMeansNoPlayingFilter(t *testing.T) {
