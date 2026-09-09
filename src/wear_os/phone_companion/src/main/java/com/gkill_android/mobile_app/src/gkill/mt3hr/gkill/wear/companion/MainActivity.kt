@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val tvTitle = TextView(this).apply {
-            text = "gkill Wear 設定"
+            text = "gkill wear 設定"
             textSize = 20f
             setPadding(0, 0, 0, p16)
             layoutParams = lp

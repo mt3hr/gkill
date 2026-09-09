@@ -342,7 +342,8 @@ Kyou 系のビュー/ダイアログは入れ子になっており、子の CRUD
 ```
 
 - **Android**: gkill_server バイナリを APK に同梱、WebView で表示
-- **Wear OS**: Pixel Watch から KFTL テンプレートベースの記録（Wearable Data Layer 経由）
+- **Wear OS**: Pixel Watch から KFTL テンプレートベースの記録と気分（Lantana）の記録
+  （Wearable Data Layer 経由）。気分も専用 API ではなく KFTL テキストに組み立てて同じ経路へ流す
 - **MCP Server**: AI エージェントからのアクセス。Read（10ツール、読み取りのみ）に加え、
   Write（27ツール）と ReadWrite（31ツール）があり、追加・更新・削除も行える
 - **プラグイン**: 外部データ源を独立バイナリとして後付けする拡張機構（stdio の改行区切り JSON）。

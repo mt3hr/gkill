@@ -2,7 +2,7 @@
 
 ## 概要
 
-Wear OS (Pixel Watch) KFTL 入力アプリのテスト。スマホ側コンパニオンアプリ（8ファイル、120テスト）とウォッチ側アプリ（5ファイル、61テスト）の合計181テスト（13ファイル）で構成される。
+Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（8ファイル、120テスト）とウォッチ側アプリ（6ファイル、80テスト）の合計200テスト（14ファイル）で構成される。
 
 ## テストフレームワーク
 
@@ -23,11 +23,12 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 | `phone_companion/src/test/java/.../WearRequestHandlerTest.kt` | 17 | 時計要求ハンドラ（MockWebServer 使用、4ハンドラの成功/失敗/`ERROR:`プレフィックス契約と重複送信の `DUPLICATE`/force 上書き） |
 | `phone_companion/src/test/java/.../WearSubmitLedgerTest.kt` | 7 | KFTL 送信の重複台帳（成功時のみ記録・TTL・上限・永続化・破損時の空扱い） |
 
-### watch_app（ウォッチ側アプリ）— 61テスト
+### watch_app（ウォッチ側アプリ）— 80テスト
 
 | ファイル | テスト数 | テスト内容 |
 |---------|---------|-----------|
-| `watch_app/src/test/java/.../MainActivityTest.kt` | 18 | ウォッチアプリの Activity テスト |
+| `watch_app/src/test/java/.../MainActivityTest.kt` | 21 | ウォッチアプリの Activity テスト（画面状態の件数、タイルが渡す `EXTRA_MODE` の値） |
+| `watch_app/src/test/java/.../data/LantanaKftlTest.kt` | 19 | 気分記録。星5個と気分値 1-10 の対応（Web 版の式との一致）、送信する KFTL テキストの完全一致、範囲外・未選択(0)の拒否 |
 | `watch_app/src/test/java/.../TemplateCacheManagerTest.kt` | 9 | ウォッチ上のテンプレートキャッシュ管理と、スマホへ取りに行くかの判定（`shouldFetchFromPhone`） |
 | `watch_app/src/test/java/.../GkillWearClientTest.kt` | 11 | Wearable Data Layer クライアント |
 | `watch_app/src/test/java/.../data/model/TemplateNodeTest.kt` | 10 | テンプレートツリー構造のデータモデル |
@@ -41,6 +42,7 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 - **Watch-Phone 連携**: Wearable Data Layer メッセージパス（`/gkill/submit`, `/gkill/templates` 等）の送受信。受信は WorkManager ワーカーへ委譲し、処理本体は Android 非依存の `WearRequestHandler` に抽出
 - **重複送信対策**: 直近成功した KFTL テキストの完全一致台帳。一致時は `DUPLICATE` を返して時計側に確認（それでも送信）を出させる
 - **データモデル**: テンプレートノードと PlayingTimeIs ノードの構造検証
+- **気分記録**: 星の塗り分けと気分値の対応、送信する KFTL テキスト（`?<日時>` / `/mood` / 値の3行）の完全一致。サーバ側の対の検査は `src/server/gkill/api/kftl/kftl_statement_test.go` の `TestStatement_LantanaFromWearOS`
 
 ## 実行方法
 

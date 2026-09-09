@@ -14,7 +14,7 @@ import org.junit.Test
  * The Screen sealed class is file-private, so it cannot be tested directly from here.
  *
  * What we CAN test on JVM:
- * - Public constants (EXTRA_MODE, MODE_RECORD, MODE_PLAYING) defined at file level
+ * - Public constants (EXTRA_MODE, MODE_RECORD, MODE_PLAYING, MODE_LANTANA) defined at file level
  * - Timeout constant values (via expected values, since they are private)
  * - Response path constants from GkillWearClient companion object
  */
@@ -38,8 +38,19 @@ class MainActivityTest {
     }
 
     @Test
+    fun `MODE_LANTANA constant is lantana`() {
+        assertEquals("lantana", MODE_LANTANA)
+    }
+
+    @Test
     fun `MODE_RECORD and MODE_PLAYING are distinct`() {
         assertNotEquals(MODE_RECORD, MODE_PLAYING)
+    }
+
+    @Test
+    fun `MODE_LANTANA is distinct from the other modes`() {
+        assertNotEquals(MODE_RECORD, MODE_LANTANA)
+        assertNotEquals(MODE_PLAYING, MODE_LANTANA)
     }
 
     // ─── Timeout constant expected values ────────────────────────────────────────
@@ -117,19 +128,21 @@ class MainActivityTest {
     @Test
     fun `screen states are documented for coverage`() {
         // The Screen sealed class is file-private in MainActivity.kt.
-        // It defines 11 states:
+        // It defines 13 states:
         //   HomeMenu, Loading, TemplateList, Confirm, Submitting,
         //   SubmitDuplicateConfirm, Result,
-        //   PlayingLoading, PlayingList, PlayingEndConfirm, PlayingEnding
+        //   PlayingLoading, PlayingList, PlayingEndConfirm, PlayingEnding,
+        //   LantanaSelect, LantanaConfirm
         //
         // These cannot be tested directly since they are private to the file.
         // This test documents the expected states for reference.
         val expectedStates = listOf(
             "HomeMenu", "Loading", "TemplateList", "Confirm", "Submitting",
             "SubmitDuplicateConfirm", "Result",
-            "PlayingLoading", "PlayingList", "PlayingEndConfirm", "PlayingEnding"
+            "PlayingLoading", "PlayingList", "PlayingEndConfirm", "PlayingEnding",
+            "LantanaSelect", "LantanaConfirm"
         )
-        assertEquals(11, expectedStates.size)
+        assertEquals(13, expectedStates.size)
     }
 
     // ─── Mode-to-screen mapping logic ────────────────────────────────────────────
@@ -148,6 +161,12 @@ class MainActivityTest {
     }
 
     @Test
+    fun `mode lantana should map to LantanaSelect screen`() {
+        // In onCreate: MODE_LANTANA -> Screen.LantanaSelect(0)
+        assertEquals("lantana", MODE_LANTANA)
+    }
+
+    @Test
     fun `null mode should map to HomeMenu screen`() {
         // In onCreate: else -> Screen.HomeMenu
         // When no EXTRA_MODE is set, the default is HomeMenu
@@ -156,6 +175,7 @@ class MainActivityTest {
         val actualScreen = when (mode) {
             MODE_RECORD -> "Loading"
             MODE_PLAYING -> "PlayingLoading"
+            MODE_LANTANA -> "LantanaSelect"
             else -> "HomeMenu"
         }
         assertEquals(expectedScreen, actualScreen)
