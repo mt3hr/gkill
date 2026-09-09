@@ -1,6 +1,6 @@
 ---
 name: gkill-mobile
-description: "Android APK ラッパ（src/android/）と Wear OS（src/wear_os/）の約束。同梱 gkill_server は 127.0.0.1 限定で起動（無指定だと LAN の第三者が無認証で全記録を読める）、jniLibs からの実行と useLegacyPackaging、configChanges、Wear companion の TLS TOFU/ピン留め、KFTL 送信の冪等キー（handle_submit_kftl_text.go と対。内容ハッシュにしない・markDone 配線を落とさない）を扱う。src/android/・src/wear_os/・handle_submit_kftl_text.go を編集するとき、SDK やビルド設定を上げるとき必読。「打刻が二重登録される」の調査でも必読。"
+description: "Android APK ラッパ（src/android/）と Wear OS（src/wear_os/）の約束。同梱 gkill_server は 127.0.0.1 限定で起動（無指定だと LAN の第三者が無認証で全記録を読める）、jniLibs からの実行と useLegacyPackaging、configChanges、Wear companion の TLS TOFU/ピン留め、KFTL 送信の冪等キー（handle_submit_kftl_text.go と対。内容ハッシュにしない・markDone 配線を落とさない）、ウォッチの気分記録が送る KFTL テキストの3行（ASCII接頭辞・関連時刻行）を扱う。src/android/・src/wear_os/・handle_submit_kftl_text.go を編集するとき、SDK やビルド設定を上げるとき必読。「打刻が二重登録される」の調査でも必読。"
 ---
 
 # Android / Wear OS の不変条件
@@ -14,7 +14,25 @@ description: "Android APK ラッパ（src/android/）と Wear OS（src/wear_os/�
 
 **Android**: APK wrapper (WebView) bundling the gkill_server binary as `jniLibs/arm64-v8a/libgkill_server.so` and exec'ing it from `nativeLibraryDir` — required because targetSdk 29+ forbids executing files under the app's data dir (W^X). Needs `packaging { jniLibs { useLegacyPackaging = true } }` so the `.so` is extracted as a real file. compileSdk 37 (androidx 1.19.x requires it), targetSdk 36, minSdk 26. **Wear OS**: Gradle multi-module project (phone_companion + watch_app), communicates via Wearable Data Layer. The Gradle wrapper is committed under `src/wear_os/`, so no copying is needed; `npm run setup_wear_os_gradle` re-syncs it from `src/android/` if it ever breaks.
 
+**ウォッチの気分記録は KFTL テキストで送り、ASCII接頭辞と関連時刻行を省かない**（2026-09-10）。
+星5個の UI が作る文字列は `?yyyy-MM-dd HH:mm:ss` / `/mood` / 値 の3行で、組み立ては
+`LantanaKftl.kt` の `buildLantanaKftlText` に集約する（送信そのものは `/gkill/submit` の使い回しで、
+companion もサーバも無改修）。**全角の `ーら` / `？` を使わないこと** ―― 接頭辞の判定は完全一致なので、
+長音符(U+30FC)を漢数字の一や全角ハイフンと取り違えると行が本文へ落ち、エラーも警告も出ないまま
+Kmemo が2件書かれる。**関連時刻の行を落とさないこと** ―― `WearSubmitLedger` はテキスト完全一致・TTL24時間で
+重複を判定するので、時刻が無いと「同じ日の2回目の同じ気分値」が毎回 `DUPLICATE` になる。
+送信が WorkManager で後回しになったときにタップ時刻ではなくサーバ受信時刻が残る問題も同時に防いでいる。
+**日時にオフセット付き ISO8601 を使わないこと** ―― `kftl_related_time_statement_line.go` の `dateFormats` に
+その形は無く、パースに失敗して送信全体が行エラーになる。**気分値 0 を送らないこと**（0 は「未入力」の意味で、
+KFTL パーサは 0 を受理してしまうため最低値の記録が黙って1件書かれる）。星と値の対応（左半分=2N-1 / 右半分=2N）は
+Web 版 `use-lantana-flowers-view.ts` と同じ式にする。画面状態を足したら `MainActivityTest.kt` の状態数も直す
+（`Screen` が file-private なので件数の突き合わせでしか守れない）。守るテストは `LantanaKftlTest.kt`（星と値の対応・
+文字列の完全一致・範囲外の拒否）/ `kftl_statement_test.go` の `TestStatement_LantanaFromWearOS`（サーバ側で
+同じ文字列から Lantana 1件・mood・related_time が出ること）。却下案は
+[ADR-1101](../../../documents/adr/1101-wear-mood-goes-through-kftl-text.md)。
+
 ## 関連スキル
 
 - [gkill-go-backend](../gkill-go-backend/SKILL.md) — サーバ側の冪等ストアと HTTP セキュリティ
 - [gkill-build-test](../gkill-build-test/SKILL.md) — ビルドパイプライン（embed 3コピー）
+- [gkill-client-kftl](../gkill-client-kftl/SKILL.md) — KFTL の接頭辞と行の解釈（ウォッチが組み立てるテキストの受け手）

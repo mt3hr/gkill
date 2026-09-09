@@ -96,13 +96,13 @@ class WearRequestWorker(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 NOTIF_CHANNEL_ID,
-                "gkill Wear 同期",
+                "gkill wear 同期",
                 NotificationManager.IMPORTANCE_LOW,
             )
             nm.createNotificationChannel(channel)
         }
         val notification: Notification = NotificationCompat.Builder(applicationContext, NOTIF_CHANNEL_ID)
-            .setContentTitle("gkill Wear")
+            .setContentTitle("gkill wear")
             .setContentText("時計からの要求を処理中")
             .setSmallIcon(android.R.drawable.stat_notify_sync)
             .setOngoing(true)

@@ -14,6 +14,7 @@ import androidx.wear.tiles.TileBuilders
 import androidx.wear.tiles.TileService
 import com.google.common.util.concurrent.ListenableFuture
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.EXTRA_MODE
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_LANTANA
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_PLAYING
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_RECORD
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MainActivity
@@ -77,6 +78,23 @@ class GkillTileService : TileService() {
                     ).build()
             ).build()
 
+        val launchLantana = ModifiersBuilders.Clickable.Builder()
+            .setOnClick(
+                ActionBuilders.LaunchAction.Builder()
+                    .setAndroidActivity(
+                        ActionBuilders.AndroidActivity.Builder()
+                            .setPackageName(packageName)
+                            .setClassName(MainActivity::class.java.name)
+                            .addKeyToExtraMapping(
+                                EXTRA_MODE,
+                                ActionBuilders.AndroidStringExtra.Builder()
+                                    .setValue(MODE_LANTANA)
+                                    .build()
+                            )
+                            .build()
+                    ).build()
+            ).build()
+
         val chipWidth = DimensionBuilders.dp(140f)
 
         return LayoutElementBuilders.Box.Builder()
@@ -96,6 +114,12 @@ class GkillTileService : TileService() {
                     .addContent(
                         Chip.Builder(this, launchPlaying, deviceParams)
                             .setPrimaryLabelContent("▶ 実行中")
+                            .setWidth(chipWidth)
+                            .build()
+                    )
+                    .addContent(
+                        Chip.Builder(this, launchLantana, deviceParams)
+                            .setPrimaryLabelContent("⭐️ 気分記録")
                             .setWidth(chipWidth)
                             .build()
                     )

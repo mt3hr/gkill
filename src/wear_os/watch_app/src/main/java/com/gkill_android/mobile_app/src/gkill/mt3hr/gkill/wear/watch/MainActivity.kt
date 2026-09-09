@@ -19,14 +19,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Text
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.GkillWearClient
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.buildLantanaKftlText
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.PlayingTimeIsNode
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.TemplateNode
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.tile.TemplateCacheManager
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.ConfirmScreen
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.LantanaConfirmScreen
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.LantanaSelectScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.LoadingScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.PlayingEndConfirmScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.PlayingTimeIsListScreen
@@ -39,6 +43,7 @@ import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
+import java.time.LocalDateTime
 
 private const val TAG = "GkillWatchMain"
 private const val TEMPLATE_TIMEOUT_MS = 20_000L
@@ -49,6 +54,7 @@ private const val END_TIMEIS_TIMEOUT_MS = 30_000L
 const val EXTRA_MODE = "mode"
 const val MODE_RECORD = "record"
 const val MODE_PLAYING = "playing"
+const val MODE_LANTANA = "lantana"
 
 private sealed class Screen {
     object HomeMenu : Screen()
@@ -64,19 +70,27 @@ private sealed class Screen {
         val breadcrumb: List<Pair<String, List<TemplateNode>>>
     ) : Screen()
     data class Confirm(val node: TemplateNode, val parentList: TemplateList) : Screen()
-    data class Submitting(val node: TemplateNode, val force: Boolean = false) : Screen()
+
+    /**
+     * 送信中。テンプレートと気分記録で経路を1本に保つため、
+     * ここから下は「どの画面から来たか」ではなく **KFTL テキスト**だけを持つ。
+     */
+    data class Submitting(val kftlText: String, val force: Boolean = false) : Screen()
 
     /**
      * スマホから DUPLICATE が返ったとき（直前に同じ内容を保存済み）の確認。
      * 「それでも送信」で force 付きの再送を行う。
      */
-    data class SubmitDuplicateConfirm(val node: TemplateNode) : Screen()
+    data class SubmitDuplicateConfirm(val kftlText: String) : Screen()
     data class Result(val success: Boolean, val error: String) : Screen()
     // Playing screens
     object PlayingLoading : Screen()
     data class PlayingList(val nodes: List<PlayingTimeIsNode>) : Screen()
     data class PlayingEndConfirm(val node: PlayingTimeIsNode) : Screen()
     data class PlayingEnding(val node: PlayingTimeIsNode) : Screen()
+    // Lantana (mood) screens
+    data class LantanaSelect(val mood: Int) : Screen()
+    data class LantanaConfirm(val mood: Int) : Screen()
 }
 
 class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListener {
@@ -106,6 +120,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         screenState = when (mode) {
             MODE_RECORD -> Screen.Loading()
             MODE_PLAYING -> Screen.PlayingLoading
+            MODE_LANTANA -> Screen.LantanaSelect(0)
             else -> Screen.HomeMenu
         }
 
@@ -115,7 +130,8 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                     is Screen.HomeMenu -> {
                         HomeMenuScreen(
                             onRecord = { screenState = Screen.Loading() },
-                            onPlaying = { screenState = Screen.PlayingLoading }
+                            onPlaying = { screenState = Screen.PlayingLoading },
+                            onLantana = { screenState = Screen.LantanaSelect(0) }
                         )
                     }
 
@@ -168,7 +184,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                         ConfirmScreen(
                             templateTitle = label,
                             onConfirm = {
-                                screenState = Screen.Submitting(s.node)
+                                screenState = Screen.Submitting(s.node.template)
                             },
                             onCancel = {
                                 screenState = s.parentList
@@ -178,8 +194,8 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 
                     is Screen.Submitting -> {
                         LoadingScreen("送信中...")
-                        LaunchedEffect(s.node, s.force) {
-                            submitTemplate(s.node, s.force)
+                        LaunchedEffect(s.kftlText, s.force) {
+                            submitKftl(s.kftlText, s.force)
                         }
                     }
 
@@ -189,7 +205,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                         }
                         DuplicateConfirmScreen(
                             onConfirm = {
-                                screenState = Screen.Submitting(s.node, force = true)
+                                screenState = Screen.Submitting(s.kftlText, force = true)
                             },
                             onCancel = {
                                 navigateBackToTopOrFinish()
@@ -259,6 +275,38 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                         LaunchedEffect(s.node) {
                             endTimeis(s.node)
                         }
+                    }
+
+                    // ─── Lantana (mood) screens ──────────────────────────────
+                    is Screen.LantanaSelect -> {
+                        BackHandler {
+                            navigateBackToTopOrFinish()
+                        }
+                        LantanaSelectScreen(
+                            mood = s.mood,
+                            onMoodSelected = { mood ->
+                                screenState = Screen.LantanaConfirm(mood)
+                            }
+                        )
+                    }
+
+                    is Screen.LantanaConfirm -> {
+                        BackHandler {
+                            screenState = Screen.LantanaSelect(s.mood)
+                        }
+                        LantanaConfirmScreen(
+                            mood = s.mood,
+                            onConfirm = {
+                                // 関連時刻は「✓ を押した瞬間」。送信が WorkManager で後回しに
+                                // なっても、タップした時刻が related_time として残る
+                                screenState = Screen.Submitting(
+                                    buildLantanaKftlText(s.mood, LocalDateTime.now())
+                                )
+                            },
+                            onCancel = {
+                                screenState = Screen.LantanaSelect(s.mood)
+                            }
+                        )
                     }
                 }
             }
@@ -337,7 +385,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         } catch (e: TimeoutCancellationException) {
             Log.w(TAG, "requestTemplates: timeout after ${TEMPLATE_TIMEOUT_MS}ms")
             pendingTemplatesDeferred = null
-            useCacheOrError("スマホからの応答がタイムアウトしました。\nスマホでgkill Wear設定アプリを開き、接続テストを行ってください。")
+            useCacheOrError("スマホからの応答がタイムアウトしました。\nスマホでgkill wear設定アプリを開き、接続テストを行ってください。")
             return
         }
 
@@ -365,12 +413,15 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         }
     }
 
-    private suspend fun submitTemplate(node: TemplateNode, force: Boolean = false) {
-        // テンプレート名は利用者の記録内容そのものなので logcat へ出さない(2026-08-30 監査 F-008)
-        Log.d(TAG, "submitTemplate: (force=$force)")
-        val sent = wearClient.sendSubmitRequest(node.template, force)
+    /**
+     * KFTL テキストをスマホ経由でサーバーへ送る。テンプレート記録と気分記録の共通経路。
+     */
+    private suspend fun submitKftl(kftlText: String, force: Boolean = false) {
+        // KFTL テキストは利用者の記録内容そのものなので logcat へ出さない(2026-08-30 監査 F-008)
+        Log.d(TAG, "submitKftl: (force=$force)")
+        val sent = wearClient.sendSubmitRequest(kftlText, force)
         if (sent == null) {
-            Log.w(TAG, "submitTemplate: no phone node found")
+            Log.w(TAG, "submitKftl: no phone node found")
             screenState = Screen.Result(success = false, error = "スマホに接続できません。")
             return
         }
@@ -381,7 +432,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         val result = try {
             withTimeout(SUBMIT_TIMEOUT_MS) { deferred.await() }
         } catch (e: TimeoutCancellationException) {
-            Log.w(TAG, "submitTemplate: timeout")
+            Log.w(TAG, "submitKftl: timeout")
             pendingSubmitDeferred = null
             screenState = Screen.Result(
                 success = false,
@@ -396,7 +447,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
             }
             // 直前に同じ内容を保存済み。黙って捨てず「それでも送信」の確認を出す
             result == "DUPLICATE" -> {
-                screenState = Screen.SubmitDuplicateConfirm(node)
+                screenState = Screen.SubmitDuplicateConfirm(kftlText)
             }
             else -> {
                 screenState = Screen.Result(success = false, error = result.removePrefix("ERROR:"))
@@ -482,43 +533,57 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 }
 
 /**
- * トップメニュー画面。「記録する」「再生中」の2つの選択肢を表示する。
+ * トップメニュー画面。「記録する」「実行中」「気分記録」の3つの選択肢を表示する。
+ *
+ * 丸画面に3項目とタイトルは Column + Arrangement.Center では収まらないので、
+ * 一覧系の画面と同じ ScalingLazyColumn でスクロールできるようにしてある。
  */
 @Composable
 private fun HomeMenuScreen(
     onRecord: () -> Unit,
-    onPlaying: () -> Unit
+    onPlaying: () -> Unit,
+    onLantana: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "gkill",
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp)
-        )
-        Chip(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            label = { Text("📝 記録する") },
-            onClick = onRecord,
-            colors = ChipDefaults.primaryChipColors()
-        )
-        Chip(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            label = { Text("▶ 実行中") },
-            onClick = onPlaying,
-            colors = ChipDefaults.secondaryChipColors()
-        )
+    ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
+        item {
+            Text(
+                text = "gkill",
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            )
+        }
+        item {
+            Chip(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                label = { Text("📝 記録する") },
+                onClick = onRecord,
+                colors = ChipDefaults.primaryChipColors()
+            )
+        }
+        item {
+            Chip(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                label = { Text("▶ 実行中") },
+                onClick = onPlaying,
+                colors = ChipDefaults.secondaryChipColors()
+            )
+        }
+        item {
+            Chip(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                label = { Text("⭐️ 気分記録") },
+                onClick = onLantana,
+                colors = ChipDefaults.secondaryChipColors()
+            )
+        }
     }
 }
 
