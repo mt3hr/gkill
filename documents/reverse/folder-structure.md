@@ -217,10 +217,12 @@ src/wear_os/
 ├── phone_companion/        # スマートフォン側コンパニオンアプリ
 │   └── src/main/java/...  # gkill_serverへのKFTL送信中継
 ├── watch_app/              # 腕時計側アプリ
-│   └── src/main/java/...  # KFTL入力UI
+│   └── src/main/java/...  # KFTL入力UI（テンプレート記録・実行中TimeIs終了・気分記録）
 ├── settings.gradle.kts
 └── build.gradle.kts
 ```
+
+**補足:** ウォッチアプリの表示名は`gkill wear`、コンパニオンは`gkill wear Companion`です（`res/values/strings.xml`）。記録の`update_app`に載る`gkill_wear`・通知チャンネルID`gkill_wear_sync`・SharedPreferences名`gkill_wear_prefs`・Keystoreエイリアス`gkill_wear_credential_key`は表示名ではなく機械的な識別子なので、改名に追随させてはいけません。
 
 **補足:** Gradleラッパー（`gradlew` / `gradlew.bat` / `gradle-wrapper.jar` / `gradle-wrapper.properties`）は`src/wear_os/`にコミット済みなので、コピーは通常不要です。`src/android/`側と揃え直したいときだけ`npm run setup_wear_os_gradle`を実行してください。
 

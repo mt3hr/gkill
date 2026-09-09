@@ -324,6 +324,70 @@ func TestStatement_LantanaWithRelatedTime(t *testing.T) {
 	}
 }
 
+// TestStatement_LantanaFromWearOS は Wear OS のウォッチアプリが実際に送る文字列を固定する。
+//
+// 対の実装: src/wear_os/watch_app/.../data/LantanaKftl.kt の buildLantanaKftlText。
+// ここが守るのは次の3点で、どれも破れてもサーバは 200 を返し、記録だけが黙って変わる:
+//   - ASCII プレフィックス "?" / "/mood" が日本語版と同じ行として解釈されること
+//     （外れると気分値ではなく Kmemo が2件書かれる）
+//   - 関連時刻が "yyyy-MM-dd HH:mm:ss" で読めること
+//     （dateFormats にオフセット付き ISO8601 は無い。付けると行エラーで送信全体が落ちる）
+//   - 関連時刻の行が Lantana へ引き継がれ、余分なリクエストが残らないこと
+func TestStatement_LantanaFromWearOS(t *testing.T) {
+	text := "?2026-09-10 14:32:05\n/mood\n7"
+
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 lines, got %d", len(lines))
+	}
+	wantLabels := []string{"relatedTime", "lantana", "lantanaMood"}
+	for i, want := range wantLabels {
+		if got := lines[i].GetLabelName(); got != want {
+			t.Errorf("line %d: expected %s, got %s", i, want, got)
+		}
+	}
+
+	requestMap := helperApplyToRequestMap(t, text)
+	requests := requestMap.All()
+	if len(requests) != 1 {
+		t.Fatalf("expected exactly 1 request (a leftover prototype would become a stray record), got %d", len(requests))
+	}
+	lantanaReq, ok := requests[0].(*kftlLantanaRequest)
+	if !ok {
+		t.Fatalf("expected *kftlLantanaRequest, got %T", requests[0])
+	}
+	if lantanaReq.mood != 7 {
+		t.Errorf("expected mood 7, got %d", lantanaReq.mood)
+	}
+	wantTime := time.Date(2026, 9, 10, 14, 32, 5, 0, time.Local)
+	if got := lantanaReq.GetRelatedTime(); !got.Equal(wantTime) {
+		t.Errorf("expected related time %s, got %s", wantTime, got)
+	}
+}
+
+// TestStatement_LantanaFromWearOSRejectsOutOfRangeMood は、ウォッチ側の検査をすり抜けた
+// 範囲外の気分値をサーバが行エラーにすることを確かめる（黙って保存しない）。
+func TestStatement_LantanaFromWearOSRejectsOutOfRangeMood(t *testing.T) {
+	lines := helperGenerateLines(t, "?2026-09-10 14:32:05\n/mood\n11")
+	requestMap := NewKFTLRequestMap()
+	var lastErr error
+	for _, line := range lines {
+		if err := line.ApplyThisLineToRequestMap(context.Background(), requestMap); err != nil {
+			lastErr = err
+		}
+	}
+	if lastErr == nil {
+		t.Fatal("expected an input error for mood 11, got nil")
+	}
+	var inputErr *KFTLInputError
+	if !errors.As(lastErr, &inputErr) {
+		t.Fatalf("expected *KFTLInputError, got %T", lastErr)
+	}
+	if inputErr.MessageID != "KFTL_LANTANA_OUT_OF_RANGE_MOOD_VALUE_MESSAGE_TITLE" {
+		t.Errorf("unexpected message id: %s", inputErr.MessageID)
+	}
+}
+
 func TestStatement_MiLine(t *testing.T) {
 	// "ーみ" triggers mi, next line is title (項番14)
 	text := "ーみ\nテストタスク"
