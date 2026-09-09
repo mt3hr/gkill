@@ -492,7 +492,7 @@ flowchart TD
 
 ## シナリオ7. Wear OS / Android からの記録
 
-**物語：** ユーザは外出先で、Pixel Watch から声や定型テンプレートで素早く記録する。ウォッチは単独ではサーバに繋がらず、ペアのスマホ（Phone Companion）が橋渡しして、スマホ内 or 家の gkill_server の HTTP API を叩く。
+**物語：** ユーザは外出先で、Pixel Watch から定型テンプレートや星5個の気分評価で素早く記録する。ウォッチは単独ではサーバに繋がらず、ペアのスマホ（Phone Companion）が橋渡しして、スマホ内 or 家の gkill_server の HTTP API を叩く。
 
 **差別化点：** ここでは**サーバ側 KFTL 一括パス** `POST /api/submit_kftl_text`（`HandleSubmitKFTLText` → `kftl.KFTLStatement.GenerateAndExecuteRequests`）を使います。ブラウザの fan-out（シナリオ2）と対照的に、テキストをサーバへ丸ごと渡し、サーバ側でパース＆書き込みします。
 
@@ -516,7 +516,7 @@ sequenceDiagram
     Phone-->>Watch: /gkill/templates (JSON)
 
     Note over Watch,Reps: ② KFTL 記録の送信
-    User->>Watch: テンプレ選択 / 入力して送信
+    User->>Watch: テンプレ選択 / 星で気分を選んで送信
     Watch->>Phone: /gkill/submit（KFTL テキスト）
     Phone->>ApiC: submitKFTLText(session, kftlText)
     ApiC->>API: POST /api/submit_kftl_text (wrapAuthRepos)
@@ -526,6 +526,8 @@ sequenceDiagram
     Phone-->>Watch: /gkill/submit_result（OK / ERROR:...）
     Watch-->>User: 記録完了表示
 ```
+
+**補足（気分記録）：** 星5個の気分（Lantana）も専用のメッセージパスや API を持たず、`?<yyyy-MM-dd HH:mm:ss>` / `/mood` / `<0-10 の値>` の3行の KFTL テキストへ組み立てて同じ `/gkill/submit` へ流します（`LantanaKftl.kt` の `buildLantanaKftlText`）。こうすると送信経路が1本に保たれ、サーバ側の冪等キーとスマホ側の重複台帳（`WearSubmitLedger`）がそのまま効きます。関連時刻の行を必ず添えるのは、台帳がテキストの完全一致で重複を見るためと、圏外からの遅延送信でもタップした時刻が残るようにするためです。理由と却下案は[ADR-1101](../adr/1101-wear-mood-goes-through-kftl-text.md)。
 
 **補足（playing TimeIs）：** 進行中の TimeIs（作業中タイマー）は `/gkill/get_playing_timeis`（→ `POST /api/get_kyous` + `POST /api/get_timeis`）で取得、終了は `/gkill/end_timeis`（→ `POST /api/get_timeis` + `POST /api/update_timeis`）で行います。Android APK 版は WebView + 内蔵 `libgkill_server.so` を exec して、同じ HTTP API をローカルで利用します。
 

@@ -2,9 +2,9 @@
 
 ## 概要
 
-Wear OS（Pixel Watch 等）用の KFTL 記録アプリ。Gradle マルチモジュールプロジェクトとして構成され、
-スマートフォン側のコンパニオンサービスとウォッチ側のアプリで協調動作する。
-ウォッチからテンプレートベースの KFTL テキストを送信し、gkill_server 経由でデータを記録する。
+Wear OS（Pixel Watch 等）用の gkill 記録アプリ（表示名 `gkill wear`）。Gradle マルチモジュール
+プロジェクトとして構成され、スマートフォン側のコンパニオンサービスとウォッチ側のアプリで協調動作する。
+ウォッチからテンプレートベースの KFTL テキストや気分値を送信し、gkill_server 経由でデータを記録する。
 
 ## ディレクトリ構造
 
@@ -27,7 +27,7 @@ wear_os/
     ├── build.gradle.kts
     └── src/main/
         ├── AndroidManifest.xml
-        ├── java/.../wear/watch/        # Kotlin ソース（13ファイル）
+        ├── java/.../wear/watch/        # Kotlin ソース（15ファイル）
         └── res/
             └── values/strings.xml
 ```
@@ -50,9 +50,10 @@ wear_os/
 | `GkillSecretCipher.kt` | 認証情報の暗号化・復号ユーティリティ |
 | `MainActivity.kt` | コンパニオンアプリのメインアクティビティ（認証情報設定画面・証明書ピンの承認） |
 
-### `watch_app/` — ウォッチ側アプリ（13ファイル）
+### `watch_app/` — ウォッチ側アプリ（15ファイル）
 
-Compose for Wear OS で構築されたウォッチアプリ。KFTL テンプレートの選択・送信を行う。
+Compose for Wear OS で構築されたウォッチアプリ。KFTL テンプレートの選択・送信と、
+星5個による気分（Lantana）の記録を行う。
 
 #### エントリポイント
 
@@ -60,15 +61,16 @@ Compose for Wear OS で構築されたウォッチアプリ。KFTL テンプレ�
 |---------|------|
 | `MainActivity.kt` | ウォッチアプリのエントリポイント。Compose UI のセットアップ |
 
-#### `data/` — データ層（3ファイル）
+#### `data/` — データ層（4ファイル）
 
 | ファイル | 役割 |
 |---------|------|
 | `GkillWearClient.kt` | Wearable Data Layer 通信。スマホ側へのメッセージ送受信 |
+| `LantanaKftl.kt` | 気分値と星5個の対応（Web 版と同じ 1-10 の刻み）、および送信する KFTL テキストの組み立て。Android API に触らないので JVM 単体テストできる |
 | `model/PlayingTimeIsNode.kt` | 稼働中 TimeIs のデータモデル |
 | `model/TemplateNode.kt` | KFTL テンプレートのデータモデル |
 
-#### `presentation/` — UI 層（7ファイル）
+#### `presentation/` — UI 層（8ファイル）
 
 Compose for Wear OS による画面構成。
 
@@ -80,6 +82,7 @@ Compose for Wear OS による画面構成。
 | `screens/ResultScreen.kt` | 結果表示 | 送信結果（成功/失敗）の表示 |
 | `screens/PlayingTimeIsListScreen.kt` | 稼働中 TimeIs | 稼働中タイマーの一覧・終了操作 |
 | `screens/PlayingEndConfirmScreen.kt` | TimeIs 終了確認 | タイマー終了の確認画面 |
+| `screens/LantanaScreen.kt` | 気分記録 | 星5個の選択画面と送信確認画面。星の左半分/右半分で気分値 1-10 を選ぶ |
 | `theme/Theme.kt` | テーマ | Compose テーマ定義 |
 
 #### `tile/` — Wear OS タイル（2ファイル）
@@ -88,7 +91,7 @@ Compose for Wear OS による画面構成。
 
 | ファイル | 役割 |
 |---------|------|
-| `GkillTileService.kt` | タイルサービス。「📝 記録する」「▶ 実行中」の2つの導線を表示する（テンプレートは並べない） |
+| `GkillTileService.kt` | タイルサービス。「📝 記録する」「▶ 実行中」「⭐️ 気分記録」の3つの導線を表示する（テンプレートは並べない） |
 | `TemplateCacheManager.kt` | テンプレートのローカルキャッシュ管理。読み書きするのは `MainActivity` のみ |
 
 ## メッセージパス（Watch ↔ Phone）
