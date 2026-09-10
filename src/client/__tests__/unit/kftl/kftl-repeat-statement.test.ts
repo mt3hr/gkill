@@ -10,6 +10,7 @@ import { KFTLKmemoRequest } from '@/classes/kftl/kftl_kmemo/kftl-kmemo-request'
 import { KFTLMiRequest } from '@/classes/kftl/kftl_mi/kftl-mi-request'
 import { KFTLMiReKyouRequest } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-request'
 import { KFTLNlogRequest } from '@/classes/kftl/kftl_nlog/kftl-nlog-request'
+import { KFTLTimeIsRequest } from '@/classes/kftl/kftl_timeis/kftl-time-is-request'
 import { KFTLStatementLineContext } from '@/classes/kftl/kftl-statement-line-context'
 import { expand_repeats } from '@/classes/kftl/kftl_repeat/kftl-repeat-expand'
 import { new_repeat_spec, parse_repeat_condition } from '@/classes/kftl/kftl_repeat/kftl-repeat-spec'
@@ -75,6 +76,25 @@ describe('繰り返しブロックの行と展開', () => {
             expect(nlogs[i].title, `[${i}] 品名`).toBe(want_titles[i])
             expect(nlogs[i].shop_name).toBe('スーパー')
         }
+    })
+
+    // 打刻の開始時刻行は related_time にしか入らず、KFTLTimeIsRequest.start_time は do_request が
+    // related_time から書くまで空。start_time をアンカーにすると 1970 からの日数ぶんずらされ、
+    // 2026-09-10 に送った打刻が 2083-05-17 で登録された。年を明示的に見るのはその再発シグネチャ
+    test('打刻は開始時刻を基準にし、開始と終了を同じ日数だけずらす', async () => {
+        const text = 'ーち\n仕事\n08:30\n17:30\n？？\n毎日\n5\n\n2026-09-07\n？？'
+        const timeiss = pick(await new KFTLStatement(text).generate_requests(), KFTLTimeIsRequest)
+        expect(timeiss.length).toBe(5)
+        for (let i = 0; i < timeiss.length; i++) {
+            const day = 7 + i
+            const start = timeiss[i].get_related_time()!
+            const end = timeiss[i].get_end_time()!
+            expect(start.getFullYear(), `[${i}] 開始の年`).toBe(2026)
+            expect(start.getTime(), `[${i}] 開始`).toBe(ymdhm(2026, 9, day, 8, 30).getTime())
+            expect(end.getTime(), `[${i}] 終了`).toBe(ymdhm(2026, 9, day, 17, 30).getTime())
+            expect(timeiss[i].get_title(), `[${i}] タイトル`).toBe('仕事')
+        }
+        expect(new Set(timeiss.map((request) => request.get_request_id())).size, 'IDは回ごとに別').toBe(5)
     })
 
     test('メモは関連時刻を基準にする', async () => {
