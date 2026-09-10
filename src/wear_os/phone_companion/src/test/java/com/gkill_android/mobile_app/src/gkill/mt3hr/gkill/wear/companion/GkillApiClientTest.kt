@@ -50,6 +50,8 @@ class GkillApiClientTest {
         val body = request.body.readUtf8()
         assertTrue(body.contains("\"user_id\":\"admin\""))
         assertTrue(body.contains("\"password_sha256\":\"sha256hash\""))
+        // 既定値のままでも locale_name はキーごと送る（サーバーがログイン失敗の文言を訳す手がかり）
+        assertTrue(body.contains("\"locale_name\":\"ja\""))
     }
 
     @Test
@@ -102,7 +104,8 @@ class GkillApiClientTest {
         val (sessionId, errorMsg) = client.loginWithError("admin", "sha256hash")
 
         assertNull(sessionId)
-        assertEquals("セッションIDが空です", errorMsg)
+        // 自前のエラーは ASCII コードで返し、表示側（GkillErrorText）が訳す
+        assertEquals(WIRE_ERR_EMPTY_SESSION_ID, errorMsg)
     }
 
     @Test
@@ -156,7 +159,7 @@ class GkillApiClientTest {
         val body = request.body.readUtf8()
         assertTrue(body.contains("\"session_id\":\"session-123\""))
         assertTrue(body.contains("\"kftl_text\":\"/m test memo\""))
-        // locale_name may be omitted by kotlinx.serialization when it's the default value
+        assertTrue(body.contains("\"locale_name\":\"ja\""))
     }
 
     @Test
@@ -217,7 +220,52 @@ class GkillApiClientTest {
         assertEquals("/api/get_application_config", request.path)
         val body = request.body.readUtf8()
         assertTrue(body.contains("\"session_id\":\"session-123\""))
-        // locale_name may be omitted by kotlinx.serialization when it's the default value
+        assertTrue(body.contains("\"locale_name\":\"ja\""))
+    }
+
+    // ─── locale_name ───────────────────────────────────────────────────────
+
+    // コンストラクタで渡した言語コードが、6 種類の API 呼び出しすべての本文に載ること。
+    // どれか1つでも "ja" 固定が残ると、その API のエラー文言だけ日本語で返ってくる。
+    @Test
+    fun localeName_isSentOnEveryRequest() {
+        val baseUrl = mockServer.url("/").toString().trimEnd('/')
+        val de = GkillApiClient(baseUrl, localeName = "de")
+
+        // login
+        mockServer.enqueue(MockResponse().setBody("""{"session_id":"s","errors":null}""").setResponseCode(200))
+        de.login("admin", "hash")
+        // get_application_config
+        mockServer.enqueue(MockResponse().setBody("""{"application_config":{"kftl_template_struct":{}},"errors":null}""").setResponseCode(200))
+        de.getKftlTemplateStructJson("s")
+        // submit_kftl_text
+        mockServer.enqueue(MockResponse().setBody("""{"errors":null}""").setResponseCode(200))
+        de.submitKFTLText("s", "/m memo")
+        // get_kyous (getPlayingTimeis の1段目)
+        mockServer.enqueue(MockResponse().setBody("""{"kyous":[],"errors":null}""").setResponseCode(200))
+        de.getPlayingTimeis("s")
+        // get_timeis + update_timeis (endTimeis)
+        mockServer.enqueue(MockResponse().setBody(
+            """{"timeis_histories":[{"id":"t1","title":"x","start_time":"2026-01-01T00:00:00+09:00"}],"errors":null}"""
+        ).setResponseCode(200))
+        mockServer.enqueue(MockResponse().setBody("""{"errors":null}""").setResponseCode(200))
+        de.endTimeis("s", "t1", "rep")
+
+        val expectedPaths = listOf(
+            "/api/login",
+            "/api/get_application_config",
+            "/api/submit_kftl_text",
+            "/api/get_kyous",
+            "/api/get_timeis",
+            "/api/update_timeis",
+        )
+        for (expected in expectedPaths) {
+            val request = mockServer.takeRequest()
+            assertEquals(expected, request.path)
+            val body = request.body.readUtf8()
+            assertTrue("$expected must carry locale_name=de: $body", body.contains("\"locale_name\":\"de\""))
+            assertFalse("$expected must not fall back to ja: $body", body.contains("\"locale_name\":\"ja\""))
+        }
     }
 
     @Test

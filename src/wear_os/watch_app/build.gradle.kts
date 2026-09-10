@@ -33,6 +33,14 @@ android {
         compose = true
     }
 
+    androidResources {
+        // UI 文字列は res/values*/strings.xml の7言語（既定 ja）。依存ライブラリが持つ80言語超の
+        // リソースを落とし、アプリ未対応の言語の端末でフレームワーク部品だけ別言語になる混在を防ぐ。
+        // "ja" は依存側の values-ja を残すために要る。Wear OS にアプリ別言語設定は無いので
+        // generateLocaleConfig は付けない（phone_companion と違う点）。
+        localeFilters += listOf("ja", "en", "zh", "ko", "es", "fr", "de")
+    }
+
     // リリース署名。鍵の受け渡しと未設定時の止まり方は src/android/app/build.gradle.kts の
     // 同名ブロックと同じ (2026-08-30 監査 F-006)。
     val gkillSigningProp = { name: String -> (findProperty(name) as? String) ?: System.getenv(name) }

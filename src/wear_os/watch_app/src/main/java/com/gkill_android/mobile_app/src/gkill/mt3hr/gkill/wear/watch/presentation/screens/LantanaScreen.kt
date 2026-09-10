@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.R
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.LANTANA_STAR_COUNT
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.StarFill
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.moodForHalf
@@ -136,7 +138,7 @@ fun LantanaSelectScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "気分",
+            text = stringResource(R.string.lantana_title),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -169,7 +171,7 @@ fun LantanaConfirmScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "この気分を記録しますか？",
+            text = stringResource(R.string.lantana_confirm),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()

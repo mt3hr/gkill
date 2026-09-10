@@ -33,11 +33,16 @@ import javax.net.ssl.TrustManager
  * separators) for this server's host. null means no pin is stored yet, so a
  * self-signed certificate will be rejected until the user pins it via the settings
  * screen. Ignored when [allowSelfSignedCert] is false.
+ * @param localeName 全リクエストの `locale_name` に載せる言語コード（ja / en / zh / ko / es / fr / de）。
+ * サーバーはこれで `error_message` を訳して返す。本番は [GkillLocale.serverLocaleName] で
+ * UI が解決したロケールを渡す。既定値を `Locale.getDefault()` 由来にしないのは、JVM 単体テストの
+ * 結果が実行機の OS 言語で変わるから（既定 = サーバー側フォールバックと同じ ja）。
  */
 class GkillApiClient(
     private val serverUrl: String,
     private val allowSelfSignedCert: Boolean = false,
-    private val pinnedCertSha256: String? = null
+    private val pinnedCertSha256: String? = null,
+    private val localeName: String = GkillLocale.DEFAULT_LOCALE_NAME
 ) {
 
     private val serverTrust: GkillServerTrust? =
@@ -77,8 +82,10 @@ class GkillApiClient(
 
     // ─── Data classes ──────────────────────────────────────────────────────────
 
+    // locale_name に既定値を置かない: Json は encodeDefaults=false なので、既定値のままだと
+    // キーごと送られずサーバー側フォールバック(ja)になる。常に明示して送る。
     @Serializable
-    data class LoginRequest(val user_id: String, val password_sha256: String)
+    data class LoginRequest(val user_id: String, val password_sha256: String, val locale_name: String)
 
     @Serializable
     data class LoginResponse(
@@ -87,7 +94,7 @@ class GkillApiClient(
     )
 
     @Serializable
-    data class GetApplicationConfigRequest(val session_id: String, val locale_name: String = "ja")
+    data class GetApplicationConfigRequest(val session_id: String, val locale_name: String)
 
     @Serializable
     data class GetApplicationConfigResponse(
@@ -105,7 +112,7 @@ class GkillApiClient(
     data class SubmitKFTLTextRequest(
         val session_id: String,
         val kftl_text: String,
-        val locale_name: String = "ja",
+        val locale_name: String,
         // 空文字はサーバーの omitempty と Json の encodeDefaults=false で送信時に落ちる。
         // ワーカー再送で同じキーを送ると二重登録にならない（監査 S3-wear）。
         val idempotency_key: String = ""
@@ -138,9 +145,13 @@ class GkillApiClient(
     /**
      * Logs in and returns Pair(session_id, errorMessage).
      * session_id is null on failure; errorMessage is empty on success.
+     *
+     * 失敗時の文字列はサーバーの `error_message`（locale_name で訳済み）か、
+     * このクラス自身が返す ASCII コード（[WIRE_ERR_EMPTY_RESPONSE] 等。表示前に
+     * [GkillErrorText.localize] で訳す）か、`HTTP <code>` / 例外メッセージのいずれか。
      */
     fun loginWithError(userId: String, passwordSha256: String): Pair<String?, String> {
-        val reqJson = json.encodeToString(LoginRequest.serializer(), LoginRequest(userId, passwordSha256))
+        val reqJson = json.encodeToString(LoginRequest.serializer(), LoginRequest(userId, passwordSha256, localeName))
         val body = reqJson.toRequestBody(jsonMediaType)
         val req = Request.Builder()
             .url("$serverUrl/api/login")
@@ -151,18 +162,18 @@ class GkillApiClient(
                 // gkillは異常時に4xx/5xxを返すが、理由(error_message)は本文にしか入っていない。
                 // ステータスで打ち切ると時計に「HTTP 401」としか出せないので、先に本文を読む。
                 val respJson = resp.body.string().ifEmpty {
-                    return Pair(null, if (resp.isSuccessful) "レスポンスが空です" else "HTTP ${resp.code}")
+                    return Pair(null, if (resp.isSuccessful) WIRE_ERR_EMPTY_RESPONSE else "HTTP ${resp.code}")
                 }
                 val loginResp = json.decodeFromString(LoginResponse.serializer(), respJson)
                 if (!loginResp.errors.isNullOrEmpty()) {
                     Pair(null, loginResp.errors.first().error_message)
                 } else {
                     val sid = loginResp.session_id.ifEmpty { null }
-                    if (sid != null) Pair(sid, "") else Pair(null, "セッションIDが空です")
+                    if (sid != null) Pair(sid, "") else Pair(null, WIRE_ERR_EMPTY_SESSION_ID)
                 }
             }
         } catch (e: Exception) {
-            Pair(null, e.message ?: "不明なエラー")
+            Pair(null, e.message ?: WIRE_ERR_UNKNOWN)
         }
     }
 
@@ -173,7 +184,7 @@ class GkillApiClient(
     fun getKftlTemplateStructJson(sessionId: String): String? {
         val reqJson = json.encodeToString(
             GetApplicationConfigRequest.serializer(),
-            GetApplicationConfigRequest(sessionId)
+            GetApplicationConfigRequest(sessionId, localeName)
         )
         val body = reqJson.toRequestBody(jsonMediaType)
         val req = Request.Builder()
@@ -213,7 +224,7 @@ class GkillApiClient(
             val getKyousBody = JsonObject(mapOf(
                 "session_id" to JsonPrimitive(sessionId),
                 "query" to findQuery,
-                "locale_name" to JsonPrimitive("ja")
+                "locale_name" to JsonPrimitive(localeName)
             ))
             val kyousReq = Request.Builder()
                 .url("$serverUrl/api/get_kyous")
@@ -249,7 +260,7 @@ class GkillApiClient(
                 val getTimeisBody = JsonObject(mapOf(
                     "session_id" to JsonPrimitive(sessionId),
                     "id" to JsonPrimitive(kyouId),
-                    "locale_name" to JsonPrimitive("ja")
+                    "locale_name" to JsonPrimitive(localeName)
                 ))
                 val timeisReq = Request.Builder()
                     .url("$serverUrl/api/get_timeis")
@@ -311,7 +322,7 @@ class GkillApiClient(
             val getTimeisBody = JsonObject(mapOf(
                 "session_id" to JsonPrimitive(sessionId),
                 "id" to JsonPrimitive(timeisId),
-                "locale_name" to JsonPrimitive("ja")
+                "locale_name" to JsonPrimitive(localeName)
             ))
             val timeisReq = Request.Builder()
                 .url("$serverUrl/api/get_timeis")
@@ -320,16 +331,16 @@ class GkillApiClient(
             val timeisRespBody = client.newCall(timeisReq).execute().use { resp ->
                 // 本文のerrorsを優先して読む。空のときだけステータスを出す。
                 resp.body.string().ifEmpty {
-                    return if (resp.isSuccessful) "empty response" else "HTTP ${resp.code}"
+                    return if (resp.isSuccessful) WIRE_ERR_EMPTY_RESPONSE else "HTTP ${resp.code}"
                 }
             }
             val timeisJson = json.parseToJsonElement(timeisRespBody).jsonObject
             val timeisErrors = timeisJson["errors"]?.let { if (it is JsonNull) null else it.jsonArray }
             if (timeisErrors != null && timeisErrors.isNotEmpty()) {
-                return timeisErrors.first().jsonObject["error_message"]?.jsonPrimitive?.content ?: "get_timeis error"
+                return timeisErrors.first().jsonObject["error_message"]?.jsonPrimitive?.content ?: WIRE_ERR_GET_TIMEIS_FAILED
             }
             val histories = timeisJson["timeis_histories"]?.let { if (it is JsonNull) null else it.jsonArray }
-            if (histories.isNullOrEmpty()) return "TimeIs not found"
+            if (histories.isNullOrEmpty()) return WIRE_ERR_TIMEIS_NOT_FOUND
 
             // Get the latest history entry and modify it
             val latest = histories.last().jsonObject.toMutableMap()
@@ -342,7 +353,7 @@ class GkillApiClient(
             val updateBody = JsonObject(mapOf(
                 "session_id" to JsonPrimitive(sessionId),
                 "timeis" to JsonObject(latest),
-                "locale_name" to JsonPrimitive("ja"),
+                "locale_name" to JsonPrimitive(localeName),
                 "want_response_kyou" to JsonPrimitive(false)
             ))
             val updateReq = Request.Builder()
@@ -352,19 +363,19 @@ class GkillApiClient(
             return client.newCall(updateReq).execute().use { resp ->
                 // 本文のerrorsを優先して読む。空のときだけステータスを出す。
                 val respBody = resp.body.string().ifEmpty {
-                    return if (resp.isSuccessful) "empty response" else "HTTP ${resp.code}"
+                    return if (resp.isSuccessful) WIRE_ERR_EMPTY_RESPONSE else "HTTP ${resp.code}"
                 }
                 val updateJson = json.parseToJsonElement(respBody).jsonObject
                 val updateErrors = updateJson["errors"]?.let { if (it is JsonNull) null else it.jsonArray }
                 if (updateErrors != null && updateErrors.isNotEmpty()) {
-                    updateErrors.first().jsonObject["error_message"]?.jsonPrimitive?.content ?: "update error"
+                    updateErrors.first().jsonObject["error_message"]?.jsonPrimitive?.content ?: WIRE_ERR_UPDATE_TIMEIS_FAILED
                 } else {
                     null // success
                 }
             }
         } catch (e: Exception) {
             Log.e(tag, "endTimeis error", e)
-            return e.message ?: "unknown error"
+            return e.message ?: WIRE_ERR_UNKNOWN
         }
     }
 
@@ -387,7 +398,7 @@ class GkillApiClient(
     fun submitKFTLText(sessionId: String, kftlText: String, idempotencyKey: String? = null): String? {
         val reqJson = json.encodeToString(
             SubmitKFTLTextRequest.serializer(),
-            SubmitKFTLTextRequest(sessionId, kftlText, idempotency_key = idempotencyKey ?: "")
+            SubmitKFTLTextRequest(sessionId, kftlText, localeName, idempotency_key = idempotencyKey ?: "")
         )
         val body = reqJson.toRequestBody(jsonMediaType)
         val req = Request.Builder()
@@ -398,13 +409,13 @@ class GkillApiClient(
             client.newCall(req).execute().use { resp ->
                 // 本文のerrorsを優先して読む。空のときだけステータスを出す。
                 val respJson = resp.body.string().ifEmpty {
-                    return if (resp.isSuccessful) "empty response" else "HTTP ${resp.code}"
+                    return if (resp.isSuccessful) WIRE_ERR_EMPTY_RESPONSE else "HTTP ${resp.code}"
                 }
                 val submitResp = json.decodeFromString(SubmitKFTLTextResponse.serializer(), respJson)
                 if (!submitResp.errors.isNullOrEmpty()) submitResp.errors.first().error_message else null
             }
         } catch (e: Exception) {
-            e.message ?: "unknown error"
+            e.message ?: WIRE_ERR_UNKNOWN
         }
     }
 }

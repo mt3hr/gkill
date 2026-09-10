@@ -20,6 +20,50 @@ internal val KNOWN_REQUEST_PATHS = setOf(
     PATH_END_TIMEIS,
 )
 
+// ─── 時計へ返す応答の語彙 ───────────────────────────────────────────────────
+// ハンドラ → ワーカーの境界では、失敗は `ERROR:` + 下の ASCII コードで表す（日本語を書かない）。
+// 時計に見せる文言への変換は WearRequestWorker が送信直前に GkillErrorText で行う。
+// コードを足したら GkillErrorText の照合と strings.xml の7言語にも足すこと
+// （GkillErrorTextTest が WIRE_ERROR_CODES を全件なめて訳漏れを落とす）。
+internal const val WIRE_OK = "OK"
+internal const val WIRE_DUPLICATE = "DUPLICATE"
+internal const val WIRE_ERROR_PREFIX = "ERROR:"
+
+/** セッションが取れなかった（ログイン失敗・資格情報未設定）。 */
+internal const val WIRE_ERR_LOGIN_FAILED = "login_failed"
+/** get_application_config が失敗した。 */
+internal const val WIRE_ERR_GET_CONFIG_FAILED = "get_config_failed"
+/** 実行中 TimeIs の取得が失敗した。 */
+internal const val WIRE_ERR_GET_PLAYING_TIMEIS_FAILED = "get_playing_timeis_failed"
+/** 終了要求に TimeIs の ID が無い。 */
+internal const val WIRE_ERR_EMPTY_TIMEIS_ID = "empty_timeis_id"
+/** サーバーが 2xx なのに本文が空だった。 */
+internal const val WIRE_ERR_EMPTY_RESPONSE = "empty_response"
+/** ログイン応答にセッションIDが無かった。 */
+internal const val WIRE_ERR_EMPTY_SESSION_ID = "empty_session_id"
+/** 例外にメッセージが無かった。 */
+internal const val WIRE_ERR_UNKNOWN = "unknown_error"
+/** get_timeis がエラーを返した（error_message も無い）。 */
+internal const val WIRE_ERR_GET_TIMEIS_FAILED = "get_timeis_failed"
+/** get_timeis の履歴が空だった。 */
+internal const val WIRE_ERR_TIMEIS_NOT_FOUND = "timeis_not_found"
+/** update_timeis がエラーを返した（error_message も無い）。 */
+internal const val WIRE_ERR_UPDATE_TIMEIS_FAILED = "update_timeis_failed"
+
+/** companion 自身が生成しうるエラーコードの全件。GkillErrorText の訳漏れ検査に使う。 */
+internal val WIRE_ERROR_CODES = listOf(
+    WIRE_ERR_LOGIN_FAILED,
+    WIRE_ERR_GET_CONFIG_FAILED,
+    WIRE_ERR_GET_PLAYING_TIMEIS_FAILED,
+    WIRE_ERR_EMPTY_TIMEIS_ID,
+    WIRE_ERR_EMPTY_RESPONSE,
+    WIRE_ERR_EMPTY_SESSION_ID,
+    WIRE_ERR_UNKNOWN,
+    WIRE_ERR_GET_TIMEIS_FAILED,
+    WIRE_ERR_TIMEIS_NOT_FOUND,
+    WIRE_ERR_UPDATE_TIMEIS_FAILED,
+)
+
 /**
  * 時計から届いた1件の要求を gkill サーバーAPIへ変換し、返すべき応答（パスとバイト列）を組み立てる。
  *
@@ -27,7 +71,7 @@ internal val KNOWN_REQUEST_PATHS = setOf(
  * 差し替えれば JVM 単体テストできる（[GkillWearableListenerService] / [WearRequestWorker] は
  * 破棄やプロセス死を跨ぐが、ここは純粋なロジックに保つ）。
  *
- * @param sessionProvider 有効なセッションIDを返す。失敗時は null（→ `ERROR:login_failed`）。
+ * @param sessionProvider 有効なセッションIDを返す。失敗時は null（→ `ERROR:` + [WIRE_ERR_LOGIN_FAILED]）。
  *   実運用ではキャッシュセッションの検証と再ログインを行うワーカー側の関数を渡す。
  * @param submitLedger 直近成功した KFTL テキストの台帳。重複送信を検出する。null なら無効。
  * @param idempotencyKey KFTL 送信に付けるサーバー側冪等キー。ワーカー再送で同じ値を送ると
@@ -55,9 +99,9 @@ class WearRequestHandler(
 
     fun handleGetTemplates(): Response {
         val session = sessionProvider()
-            ?: return resp(PATH_TEMPLATES, "ERROR:login_failed")
+            ?: return resp(PATH_TEMPLATES, WIRE_ERROR_PREFIX + WIRE_ERR_LOGIN_FAILED)
         val templatesJson = apiClient.getKftlTemplateStructJson(session)
-            ?: return resp(PATH_TEMPLATES, "ERROR:get_config_failed")
+            ?: return resp(PATH_TEMPLATES, WIRE_ERROR_PREFIX + WIRE_ERR_GET_CONFIG_FAILED)
         return resp(PATH_TEMPLATES, templatesJson)
     }
 
@@ -72,24 +116,24 @@ class WearRequestHandler(
     fun handleSubmit(requestData: ByteArray, force: Boolean): Response {
         val kftlText = String(requestData, Charsets.UTF_8)
         if (!force && submitLedger?.isDuplicate(kftlText) == true) {
-            return resp(PATH_SUBMIT_RESULT, "DUPLICATE")
+            return resp(PATH_SUBMIT_RESULT, WIRE_DUPLICATE)
         }
         val session = sessionProvider()
-            ?: return resp(PATH_SUBMIT_RESULT, "ERROR:login_failed")
+            ?: return resp(PATH_SUBMIT_RESULT, WIRE_ERROR_PREFIX + WIRE_ERR_LOGIN_FAILED)
         val error = apiClient.submitKFTLText(session, kftlText, idempotencyKey)
         return if (error == null) {
             submitLedger?.recordSuccess(kftlText)
-            resp(PATH_SUBMIT_RESULT, "OK")
+            resp(PATH_SUBMIT_RESULT, WIRE_OK)
         } else {
-            resp(PATH_SUBMIT_RESULT, "ERROR:$error")
+            resp(PATH_SUBMIT_RESULT, WIRE_ERROR_PREFIX + error)
         }
     }
 
     fun handleGetPlayingTimeis(): Response {
         val session = sessionProvider()
-            ?: return resp(PATH_PLAYING_TIMEIS, "ERROR:login_failed")
+            ?: return resp(PATH_PLAYING_TIMEIS, WIRE_ERROR_PREFIX + WIRE_ERR_LOGIN_FAILED)
         val result = apiClient.getPlayingTimeis(session)
-            ?: return resp(PATH_PLAYING_TIMEIS, "ERROR:get_playing_timeis_failed")
+            ?: return resp(PATH_PLAYING_TIMEIS, WIRE_ERROR_PREFIX + WIRE_ERR_GET_PLAYING_TIMEIS_FAILED)
         return resp(PATH_PLAYING_TIMEIS, result)
     }
 
@@ -100,15 +144,15 @@ class WearRequestHandler(
         val timeisId = parts.getOrNull(0) ?: ""
         val repName = parts.getOrNull(1) ?: ""
         if (timeisId.isEmpty()) {
-            return resp(PATH_END_TIMEIS_RESULT, "ERROR:empty_timeis_id")
+            return resp(PATH_END_TIMEIS_RESULT, WIRE_ERROR_PREFIX + WIRE_ERR_EMPTY_TIMEIS_ID)
         }
         val session = sessionProvider()
-            ?: return resp(PATH_END_TIMEIS_RESULT, "ERROR:login_failed")
+            ?: return resp(PATH_END_TIMEIS_RESULT, WIRE_ERROR_PREFIX + WIRE_ERR_LOGIN_FAILED)
         val error = apiClient.endTimeis(session, timeisId, repName)
         return if (error == null) {
-            resp(PATH_END_TIMEIS_RESULT, "OK")
+            resp(PATH_END_TIMEIS_RESULT, WIRE_OK)
         } else {
-            resp(PATH_END_TIMEIS_RESULT, "ERROR:$error")
+            resp(PATH_END_TIMEIS_RESULT, WIRE_ERROR_PREFIX + error)
         }
     }
 

@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -137,7 +138,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 
                     is Screen.Loading -> {
                         LoadingScreen(
-                            if (s.force_reload) "テンプレートを更新中..." else "読み込み中..."
+                            stringResource(if (s.force_reload) R.string.loading_refresh_templates else R.string.loading)
                         )
                         LaunchedEffect(s.force_reload) {
                             requestTemplates(s.force_reload)
@@ -193,7 +194,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                     }
 
                     is Screen.Submitting -> {
-                        LoadingScreen("送信中...")
+                        LoadingScreen(stringResource(R.string.loading_submit))
                         LaunchedEffect(s.kftlText, s.force) {
                             submitKftl(s.kftlText, s.force)
                         }
@@ -228,7 +229,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 
                     // ─── Playing screens ─────────────────────────────────────
                     is Screen.PlayingLoading -> {
-                        LoadingScreen("実行中を取得中...")
+                        LoadingScreen(stringResource(R.string.loading_playing))
                         LaunchedEffect(Unit) {
                             requestPlayingTimeis()
                         }
@@ -271,7 +272,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                     }
 
                     is Screen.PlayingEnding -> {
-                        LoadingScreen("終了中...")
+                        LoadingScreen(stringResource(R.string.loading_end_timeis))
                         LaunchedEffect(s.node) {
                             endTimeis(s.node)
                         }
@@ -360,7 +361,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         val cached = TemplateCacheManager.loadTemplates(this)
         if (!TemplateCacheManager.shouldFetchFromPhone(force_reload, cached.size)) {
             Log.d(TAG, "requestTemplates: using cache (${cached.size} root nodes)")
-            screenState = Screen.TemplateList(nodes = cached, title = "テンプレート", breadcrumb = emptyList())
+            screenState = Screen.TemplateList(nodes = cached, title = getString(R.string.template_list_title), breadcrumb = emptyList())
             return
         }
 
@@ -372,7 +373,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         val sent = wearClient.sendGetTemplatesRequest()
         if (sent == null) {
             Log.w(TAG, "requestTemplates: no phone node found")
-            useCacheOrError("スマホに接続できません。\nPixel Watch 2とスマホのペアリングを確認してください。")
+            useCacheOrError(getString(R.string.error_phone_not_connected_check_pairing))
             return
         }
         Log.d(TAG, "requestTemplates: message sent to $sent, waiting...")
@@ -385,7 +386,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         } catch (e: TimeoutCancellationException) {
             Log.w(TAG, "requestTemplates: timeout after ${TEMPLATE_TIMEOUT_MS}ms")
             pendingTemplatesDeferred = null
-            useCacheOrError("スマホからの応答がタイムアウトしました。\nスマホでgkill wear設定アプリを開き、接続テストを行ってください。")
+            useCacheOrError(getString(R.string.error_templates_timeout))
             return
         }
 
@@ -400,14 +401,14 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         TemplateCacheManager.saveRawJson(this, json)
 
         val nodes = GkillWearClient.parseTemplates(json)
-        screenState = Screen.TemplateList(nodes = nodes, title = "テンプレート", breadcrumb = emptyList())
+        screenState = Screen.TemplateList(nodes = nodes, title = getString(R.string.template_list_title), breadcrumb = emptyList())
     }
 
     private fun useCacheOrError(fallbackErrorMsg: String) {
         val cached = TemplateCacheManager.loadTemplates(this)
         if (cached.isNotEmpty()) {
             Log.i(TAG, "requestTemplates: falling back to cache (${cached.size} root nodes)")
-            screenState = Screen.TemplateList(nodes = cached, title = "テンプレート(キャッシュ)", breadcrumb = emptyList())
+            screenState = Screen.TemplateList(nodes = cached, title = getString(R.string.template_list_title_cached), breadcrumb = emptyList())
         } else {
             screenState = Screen.Result(success = false, error = fallbackErrorMsg)
         }
@@ -422,7 +423,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         val sent = wearClient.sendSubmitRequest(kftlText, force)
         if (sent == null) {
             Log.w(TAG, "submitKftl: no phone node found")
-            screenState = Screen.Result(success = false, error = "スマホに接続できません。")
+            screenState = Screen.Result(success = false, error = getString(R.string.error_phone_not_connected))
             return
         }
 
@@ -436,7 +437,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
             pendingSubmitDeferred = null
             screenState = Screen.Result(
                 success = false,
-                error = "送信タイムアウト。スマホの状態を確認してください。"
+                error = getString(R.string.error_submit_timeout)
             )
             return
         }
@@ -465,7 +466,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
             Log.w(TAG, "requestPlayingTimeis: no phone node found")
             screenState = Screen.Result(
                 success = false,
-                error = "スマホに接続できません。\nPixel Watch 2とスマホのペアリングを確認してください。"
+                error = getString(R.string.error_phone_not_connected_check_pairing)
             )
             return
         }
@@ -481,7 +482,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
             pendingPlayingTimeisDeferred = null
             screenState = Screen.Result(
                 success = false,
-                error = "スマホからの応答がタイムアウトしました。"
+                error = getString(R.string.error_playing_timeout)
             )
             return
         }
@@ -504,7 +505,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         val sent = wearClient.sendEndTimeisRequest(payload)
         if (sent == null) {
             Log.w(TAG, "endTimeis: no phone node found")
-            screenState = Screen.Result(success = false, error = "スマホに接続できません。")
+            screenState = Screen.Result(success = false, error = getString(R.string.error_phone_not_connected))
             return
         }
 
@@ -518,7 +519,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
             pendingEndTimeisDeferred = null
             screenState = Screen.Result(
                 success = false,
-                error = "終了タイムアウト。スマホの状態を確認してください。"
+                error = getString(R.string.error_end_timeis_timeout)
             )
             return
         }
@@ -533,7 +534,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 }
 
 /**
- * トップメニュー画面。「記録する」「実行中」「気分記録」の3つの選択肢を表示する。
+ * トップメニュー画面。「記録する」「実行中」「気分記録」の3つの選択肢を表示する（文言はタイルと同じ R.string.home_*）。
  *
  * 丸画面に3項目とタイトルは Column + Arrangement.Center では収まらないので、
  * 一覧系の画面と同じ ScalingLazyColumn でスクロールできるようにしてある。
@@ -559,7 +560,7 @@ private fun HomeMenuScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 2.dp),
-                label = { Text("📝 記録する") },
+                label = { Text(stringResource(R.string.home_record)) },
                 onClick = onRecord,
                 colors = ChipDefaults.primaryChipColors()
             )
@@ -569,7 +570,7 @@ private fun HomeMenuScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 2.dp),
-                label = { Text("▶ 実行中") },
+                label = { Text(stringResource(R.string.home_playing)) },
                 onClick = onPlaying,
                 colors = ChipDefaults.secondaryChipColors()
             )
@@ -579,7 +580,7 @@ private fun HomeMenuScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 2.dp),
-                label = { Text("⭐️ 気分記録") },
+                label = { Text(stringResource(R.string.home_lantana)) },
                 onClick = onLantana,
                 colors = ChipDefaults.secondaryChipColors()
             )
@@ -603,7 +604,7 @@ private fun DuplicateConfirmScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "同じ内容が直前に\n保存されています。\nそれでも送信しますか？",
+            text = stringResource(R.string.duplicate_confirm_message),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -613,7 +614,7 @@ private fun DuplicateConfirmScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 4.dp),
-            label = { Text("それでも送信") },
+            label = { Text(stringResource(R.string.duplicate_send_anyway)) },
             onClick = onConfirm,
             colors = ChipDefaults.primaryChipColors()
         )
@@ -621,7 +622,7 @@ private fun DuplicateConfirmScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 4.dp),
-            label = { Text("キャンセル") },
+            label = { Text(stringResource(R.string.cancel)) },
             onClick = onCancel,
             colors = ChipDefaults.secondaryChipColors()
         )

@@ -18,6 +18,7 @@ import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_LANTAN
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_PLAYING
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_RECORD
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MainActivity
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.R
 
 class GkillTileService : TileService() {
 
@@ -107,19 +108,19 @@ class GkillTileService : TileService() {
                     .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
                     .addContent(
                         Chip.Builder(this, launchRecord, deviceParams)
-                            .setPrimaryLabelContent("📝 記録する")
+                            .setPrimaryLabelContent(getString(R.string.home_record))
                             .setWidth(chipWidth)
                             .build()
                     )
                     .addContent(
                         Chip.Builder(this, launchPlaying, deviceParams)
-                            .setPrimaryLabelContent("▶ 実行中")
+                            .setPrimaryLabelContent(getString(R.string.home_playing))
                             .setWidth(chipWidth)
                             .build()
                     )
                     .addContent(
                         Chip.Builder(this, launchLantana, deviceParams)
-                            .setPrimaryLabelContent("⭐️ 気分記録")
+                            .setPrimaryLabelContent(getString(R.string.home_lantana))
                             .setWidth(chipWidth)
                             .build()
                     )
