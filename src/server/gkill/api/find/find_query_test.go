@@ -504,7 +504,7 @@ func TestFindQuery_AllFiltersEnabled(t *testing.T) {
 		IncludeStartMi:              true,
 		IncludeEndMi:                true,
 		IncludeEndTimeIs:            true,
-		PlayingTime:                  &now,
+		PlayingTime:                 &now,
 		UpdateTime:                  &now,
 		IsImageOnly:                 true,
 		ForMi:                       true,

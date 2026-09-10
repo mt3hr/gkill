@@ -140,7 +140,7 @@ func GetDefaultApplicationConfig(userID string, device string) *ApplicationConfi
 		KFTLTemplate:              (applicationConfigDefaultValue["KFTL_TEMPLATE_STRUCT"]).(*json.RawMessage),
 		DnoteJSONData:             (applicationConfigDefaultValue["DNOTE_JSON_DATA"]).(*json.RawMessage),
 		DashboardJSONData:         (applicationConfigDefaultValue["DASHBOARD_JSON_DATA"]).(*json.RawMessage),
-		PlayingTimeIsJSONData:      (applicationConfigDefaultValue["PLAYING_TIMEIS_JSON_DATA"]).(*json.RawMessage),
+		PlayingTimeIsJSONData:     (applicationConfigDefaultValue["PLAYING_TIMEIS_JSON_DATA"]).(*json.RawMessage),
 		SavedFindQueryJSONData:    (applicationConfigDefaultValue["SAVED_FIND_QUERY_JSON_DATA"]).(*json.RawMessage),
 	}
 }
@@ -170,7 +170,7 @@ var applicationConfigDefaultValue = map[string]any{
 	"KFTL_TEMPLATE_STRUCT":          &nullJSONStr,
 	"DNOTE_JSON_DATA":               &nullJSONStr,
 	"DASHBOARD_JSON_DATA":           &nullJSONStr,
-	"PLAYING_TIMEIS_JSON_DATA":       &nullJSONStr,
+	"PLAYING_TIMEIS_JSON_DATA":      &nullJSONStr,
 	"SAVED_FIND_QUERY_JSON_DATA":    &nullJSONStr,
 }
 
@@ -1072,7 +1072,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 			KFTLTemplate:              (applicationConfigDefaultValue["KFTL_TEMPLATE_STRUCT"]).(*json.RawMessage),
 			DnoteJSONData:             (applicationConfigDefaultValue["DNOTE_JSON_DATA"]).(*json.RawMessage),
 			DashboardJSONData:         (applicationConfigDefaultValue["DASHBOARD_JSON_DATA"]).(*json.RawMessage),
-			PlayingTimeIsJSONData:      (applicationConfigDefaultValue["PLAYING_TIMEIS_JSON_DATA"]).(*json.RawMessage),
+			PlayingTimeIsJSONData:     (applicationConfigDefaultValue["PLAYING_TIMEIS_JSON_DATA"]).(*json.RawMessage),
 			SavedFindQueryJSONData:    (applicationConfigDefaultValue["SAVED_FIND_QUERY_JSON_DATA"]).(*json.RawMessage),
 		}
 		return application_config, nil
@@ -1148,7 +1148,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"KFTL_TEMPLATE_STRUCT":          applicationConfig.KFTLTemplate,
 		"DNOTE_JSON_DATA":               applicationConfig.DnoteJSONData,
 		"DASHBOARD_JSON_DATA":           applicationConfig.DashboardJSONData,
-		"PLAYING_TIMEIS_JSON_DATA":       applicationConfig.PlayingTimeIsJSONData,
+		"PLAYING_TIMEIS_JSON_DATA":      applicationConfig.PlayingTimeIsJSONData,
 		"SAVED_FIND_QUERY_JSON_DATA":    applicationConfig.SavedFindQueryJSONData,
 	}
 	for key, value := range insertValuesMap {
@@ -1260,7 +1260,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"KFTL_TEMPLATE_STRUCT":          applicationConfigDefaultValue["KFTL_TEMPLATE_STRUCT"],
 		"DNOTE_JSON_DATA":               applicationConfigDefaultValue["DNOTE_JSON_DATA"],
 		"DASHBOARD_JSON_DATA":           applicationConfigDefaultValue["DASHBOARD_JSON_DATA"],
-		"PLAYING_TIMEIS_JSON_DATA":       applicationConfigDefaultValue["PLAYING_TIMEIS_JSON_DATA"],
+		"PLAYING_TIMEIS_JSON_DATA":      applicationConfigDefaultValue["PLAYING_TIMEIS_JSON_DATA"],
 		"SAVED_FIND_QUERY_JSON_DATA":    applicationConfigDefaultValue["SAVED_FIND_QUERY_JSON_DATA"],
 	}
 	for key, value := range insertValuesMap {
@@ -1366,7 +1366,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"KFTL_TEMPLATE_STRUCT":          applicationConfig.KFTLTemplate,
 		"DNOTE_JSON_DATA":               applicationConfig.DnoteJSONData,
 		"DASHBOARD_JSON_DATA":           applicationConfig.DashboardJSONData,
-		"PLAYING_TIMEIS_JSON_DATA":       applicationConfig.PlayingTimeIsJSONData,
+		"PLAYING_TIMEIS_JSON_DATA":      applicationConfig.PlayingTimeIsJSONData,
 		"SAVED_FIND_QUERY_JSON_DATA":    applicationConfig.SavedFindQueryJSONData,
 	}
 

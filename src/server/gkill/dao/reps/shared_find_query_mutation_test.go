@@ -74,7 +74,7 @@ func TestGkillRepositoriesFindTags_DoesNotMutateCallerQuery(t *testing.T) {
 	playingTime := time.Date(2024, 4, 1, 12, 0, 0, 0, time.UTC)
 	query := &find.FindQuery{
 		MiBoardName: &boardName,
-		PlayingTime:  &playingTime,
+		PlayingTime: &playingTime,
 	}
 
 	if _, err := repositories.FindTags(ctx, query); err != nil {
