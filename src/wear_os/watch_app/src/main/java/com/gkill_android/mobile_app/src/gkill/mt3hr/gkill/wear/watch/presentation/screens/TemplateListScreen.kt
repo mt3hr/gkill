@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -13,18 +14,19 @@ import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.CompactChip
 import androidx.wear.compose.material.Text
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.R
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.TemplateNode
 
 /**
  * Displays a scrollable list of KFTL templates.
  * - Folders (is_dir=true) navigate deeper
  * - Leaves (is_dir=false) show a confirmation screen
- * - 末尾の「🔄 更新」でスマホ経由のテンプレート再取得を要求する
+ * - 末尾の「🔄 更新」（R.string.refresh）でスマホ経由のテンプレート再取得を要求する
  */
 @Composable
 fun TemplateListScreen(
     nodes: List<TemplateNode>,
-    title: String = "テンプレート",
+    title: String = stringResource(R.string.template_list_title),
     onNodeSelected: (TemplateNode) -> Unit,
     onRefresh: () -> Unit
 ) {
@@ -53,7 +55,7 @@ fun TemplateListScreen(
 
         item {
             CompactChip(
-                label = { Text("🔄 更新") },
+                label = { Text(stringResource(R.string.refresh)) },
                 onClick = onRefresh
             )
         }

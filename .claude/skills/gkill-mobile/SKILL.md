@@ -1,6 +1,6 @@
 ---
 name: gkill-mobile
-description: "Android APK ラッパ（src/android/）と Wear OS（src/wear_os/）の約束。同梱 gkill_server は 127.0.0.1 限定で起動（無指定だと LAN の第三者が無認証で全記録を読める）、jniLibs からの実行と useLegacyPackaging、configChanges、Wear companion の TLS TOFU/ピン留め、KFTL 送信の冪等キー（handle_submit_kftl_text.go と対。内容ハッシュにしない・markDone 配線を落とさない）、ウォッチの気分記録が送る KFTL テキストの3行（ASCII接頭辞・関連時刻行）を扱う。src/android/・src/wear_os/・handle_submit_kftl_text.go を編集するとき、SDK やビルド設定を上げるとき必読。「打刻が二重登録される」の調査でも必読。"
+description: "Android APK ラッパ（src/android/）と Wear OS（src/wear_os/）の約束。同梱 gkill_server は 127.0.0.1 限定で起動（無指定だと LAN の第三者が無認証で全記録を読める）、jniLibs からの実行と useLegacyPackaging、configChanges、Wear companion の TLS TOFU/ピン留め、KFTL 送信の冪等キー（handle_submit_kftl_text.go と対。内容ハッシュにしない・markDone 配線を落とさない）、ウォッチの気分記録が送る KFTL テキストの3行（ASCII接頭辞・関連時刻行）、Wear OS の UI 文字列の7言語 strings.xml（既定 ja・locale_name はリソース由来・ワイヤコードは訳さない）を扱う。src/android/・src/wear_os/・handle_submit_kftl_text.go を編集するとき、SDK やビルド設定を上げるとき、文言を足す・直すとき必読。「打刻が二重登録される」「時計にエラーコードがそのまま出る」の調査でも必読。"
 ---
 
 # Android / Wear OS の不変条件
@@ -30,6 +30,31 @@ Web 版 `use-lantana-flowers-view.ts` と同じ式にする。画面状態を足
 文字列の完全一致・範囲外の拒否）/ `kftl_statement_test.go` の `TestStatement_LantanaFromWearOS`（サーバ側で
 同じ文字列から Lantana 1件・mood・related_time が出ること）。却下案は
 [ADR-1101](../../../documents/adr/1101-wear-mood-goes-through-kftl-text.md)。
+
+**Wear OS の UI 文字列は `strings.xml` の7言語セットで持ち、ワイヤコードと KFTL テキストは訳さない**（2026-09-10）。
+両モジュールの `res/values/strings.xml`（既定 = 日本語。Web の `fallbackLocale: 'ja'` とサーバの `GetLocalizer` の
+フォールバックと同じ）と `values-{en,zh,ko,es,fr,de}/strings.xml` が正本で、Kotlin に文言を直書きしない
+（Compose は `stringResource`、Activity / Service / Worker は `getString`）。**キーを足したら7ファイル同時に足すこと** ――
+Android のリソース解決はキーが欠けても例外を出さず既定言語へ静かに落ちるので、混在した画面が出るまで気づけない。
+守るのは両モジュールの `StringsParityTest.kt`（キー集合・`%1$s` の個数・`\'` `\"` `&amp;` `%%` のエスケープ。
+aapt2 のエスケープ検査は `assemble` でしか走らず `test` では黙っている）。**サーバへ送る `locale_name` を
+`Locale.getDefault()` から自前で判定しないこと** ―― API 24+ の言語優先リスト（例 `[ar, en]`）では UI は `values-en` に
+解決されるのに `getDefault()` は `ar` を返し、UI 英語・サーバ文言日本語に割れる。`GkillLocale.serverLocaleName(context)` =
+`R.string.server_locale_name`（各 `values-xx` に `xx`）から引く。`GkillApiClient` の既定値は定数 `ja`（環境依存にすると
+JVM テストが実行機の OS 言語で変わる）で、`LoginRequest` を含む全リクエストが `locale_name` を明示して送る
+（kotlinx.serialization は encodeDefaults=false なので既定値のままだとキーごと落ちてサーバ側フォールバックになる。
+2026-09-10 まで実際にそうなっていた）。**`WearRequestHandler` と `GkillApiClient` に日本語を戻さないこと** ――
+時計へ返す失敗は `ERROR:` + `WIRE_ERR_*` の ASCII コード（`WearRequestHandler.kt` 先頭に一元定義）で持ち、
+時計に見せる文言へは `WearRequestWorker` が送信直前に `GkillErrorText.localizeWireResponse` で訳す（時計側では訳さない。
+サーバの `error_message` もスマホの `locale_name` で訳されて届くので、時計に出る文言はすべてスマホのロケールで一貫する）。
+コードを足したら `strings.xml` の `error_*` と `GkillErrorText.stringResOf` にも足す（`GkillErrorTextTest` が
+`WIRE_ERROR_CODES` を全件なめて訳漏れを落とす。忘れると時計に `login_failed` のような生コードが出る）。
+`OK` / `DUPLICATE` / JSON 本文と KFTL テキストは訳さない。依存ライブラリの80言語超のリソースは
+`androidResources.localeFilters` で7言語に絞る（`"ja"` を含めるのは依存側の `values-ja` を残すため）。companion は
+`generateLocaleConfig = true` + `res/resources.properties`（`unqualifiedResLocale=ja`）で Android 13+ のアプリ別言語設定に出る
+―― **手書きの `locales_config.xml` と併用しないこと**（ビルドエラー）。タイルは `onTileRequest` 時の文言で固定されるので
+`LocaleChangedReceiver` が `LOCALE_CHANGED` で再描画を要求する。却下案は
+[ADR-1102](../../../documents/adr/1102-wear-ui-strings-in-android-resources-with-ja-default.md)。
 
 ## 関連スキル
 

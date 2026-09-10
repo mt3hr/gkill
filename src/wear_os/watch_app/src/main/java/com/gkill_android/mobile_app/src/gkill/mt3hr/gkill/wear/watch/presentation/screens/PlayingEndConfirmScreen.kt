@@ -14,13 +14,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Text
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.R
 import kotlinx.coroutines.delay
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * TimeIs終了確認画面。
@@ -51,7 +54,7 @@ fun PlayingEndConfirmScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "「$title」\nを終了しますか？",
+            text = stringResource(R.string.confirm_end_timeis, title),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -59,7 +62,7 @@ fun PlayingEndConfirmScreen(
         )
         if (elapsed.isNotEmpty()) {
             Text(
-                text = "経過: $elapsed",
+                text = stringResource(R.string.elapsed, elapsed),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,5 +102,6 @@ private fun formatElapsedConfirm(isoTime: String, tickSeconds: Long): String {
     val h = diffSec / 3600
     val m = (diffSec % 3600) / 60
     val s = diffSec % 60
-    return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
+    // 経過時間の桁は言語に依存させない（既定ロケールだと桁が現地化されうる）
+    return if (h > 0) String.format(Locale.ROOT, "%d:%02d:%02d", h, m, s) else String.format(Locale.ROOT, "%d:%02d", m, s)
 }

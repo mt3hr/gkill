@@ -40,6 +40,16 @@
             </intent-filter>
         </service>
 
+        <!-- 言語変更でタイルを描き直す（タイルは onTileRequest 時の文言で固定されるため）。
+             LOCALE_CHANGED は system uid から届くので exported="false" でも受け取れる -->
+        <receiver
+            android:name=".tile.LocaleChangedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

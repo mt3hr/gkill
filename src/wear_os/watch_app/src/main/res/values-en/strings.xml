@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_record">📝 Record</string>
+    <string name="home_playing">▶ In Progress</string>
+    <string name="home_lantana">⭐️ Mood</string>
+
+    <string name="loading">Loading…</string>
+    <string name="loading_refresh_templates">Updating templates…</string>
+    <string name="loading_submit">Sending…</string>
+    <string name="loading_playing">Loading in-progress entries…</string>
+    <string name="loading_end_timeis">Ending…</string>
+
+    <string name="template_list_title">Templates</string>
+    <string name="template_list_title_cached">Templates (cached)</string>
+    <string name="refresh">🔄 Refresh</string>
+    <string name="confirm_record_template">Record\n“%1$s”?</string>
+
+    <string name="playing_title">▶ In Progress</string>
+    <string name="playing_empty">No time entries\nin progress</string>
+    <string name="confirm_end_timeis">End\n“%1$s”?</string>
+    <string name="elapsed">Elapsed: %1$s</string>
+
+    <string name="result_success">✓ Recorded</string>
+    <string name="result_error">✕ Error:\n%1$s</string>
+    <string name="back">Back</string>
+
+    <string name="lantana_title">Mood</string>
+    <string name="lantana_confirm">Record this mood?</string>
+
+    <string name="duplicate_confirm_message">The same content was\nsaved just now.\nSend it anyway?</string>
+    <string name="duplicate_send_anyway">Send anyway</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="error_phone_not_connected">Cannot connect to the phone.</string>
+    <string name="error_phone_not_connected_check_pairing">Cannot connect to the phone.\nCheck that the watch is paired with the phone.</string>
+    <string name="error_templates_timeout">The phone did not respond in time.\nOpen the gkill wear settings app on the phone and run the connection test.</string>
+    <string name="error_playing_timeout">The phone did not respond in time.</string>
+    <string name="error_submit_timeout">Send timed out. Check the phone.</string>
+    <string name="error_end_timeis_timeout">End timed out. Check the phone.</string>
+</resources>

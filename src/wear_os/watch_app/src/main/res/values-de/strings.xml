@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_record">📝 Aufzeichnen</string>
+    <string name="home_playing">▶ Laufend</string>
+    <string name="home_lantana">⭐️ Stimmung</string>
+
+    <string name="loading">Wird geladen…</string>
+    <string name="loading_refresh_templates">Vorlagen werden aktualisiert…</string>
+    <string name="loading_submit">Wird gesendet…</string>
+    <string name="loading_playing">Laufende Einträge werden geladen…</string>
+    <string name="loading_end_timeis">Wird beendet…</string>
+
+    <string name="template_list_title">Vorlagen</string>
+    <string name="template_list_title_cached">Vorlagen (Cache)</string>
+    <string name="refresh">🔄 Aktualisieren</string>
+    <string name="confirm_record_template">„%1$s“\naufzeichnen?</string>
+
+    <string name="playing_title">▶ Laufend</string>
+    <string name="playing_empty">Keine laufenden\nZeiteinträge</string>
+    <string name="confirm_end_timeis">„%1$s“\nbeenden?</string>
+    <string name="elapsed">Dauer: %1$s</string>
+
+    <string name="result_success">✓ Aufgezeichnet</string>
+    <string name="result_error">✕ Fehler:\n%1$s</string>
+    <string name="back">Zurück</string>
+
+    <string name="lantana_title">Stimmung</string>
+    <string name="lantana_confirm">Diese Stimmung aufzeichnen?</string>
+
+    <string name="duplicate_confirm_message">Derselbe Inhalt wurde\ngerade gespeichert.\nTrotzdem senden?</string>
+    <string name="duplicate_send_anyway">Trotzdem senden</string>
+    <string name="cancel">Abbrechen</string>
+
+    <string name="error_phone_not_connected">Keine Verbindung zum Telefon.</string>
+    <string name="error_phone_not_connected_check_pairing">Keine Verbindung zum Telefon.\nPrüfen Sie, ob die Uhr mit dem Telefon gekoppelt ist.</string>
+    <string name="error_templates_timeout">Das Telefon hat nicht rechtzeitig geantwortet.\nÖffnen Sie die gkill wear Einstellungen auf dem Telefon und testen Sie die Verbindung.</string>
+    <string name="error_playing_timeout">Das Telefon hat nicht rechtzeitig geantwortet.</string>
+    <string name="error_submit_timeout">Zeitüberschreitung beim Senden. Prüfen Sie das Telefon.</string>
+    <string name="error_end_timeis_timeout">Zeitüberschreitung beim Beenden. Prüfen Sie das Telefon.</string>
+</resources>

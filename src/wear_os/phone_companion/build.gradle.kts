@@ -41,6 +41,16 @@ android {
         }
     }
 
+    androidResources {
+        // UI 文字列は res/values*/strings.xml の7言語（既定 ja）。依存ライブラリ（appcompat / material /
+        // play-services）が持つ80言語超のリソースを落とし、アプリ未対応の言語の端末で
+        // フレームワーク部品だけ別言語になる混在を防ぐ。"ja" は appcompat 側の values-ja を残すために要る。
+        localeFilters += listOf("ja", "en", "zh", "ko", "es", "fr", "de")
+        // Android 13+ のアプリ別言語設定。res/resources.properties の unqualifiedResLocale=ja と対で、
+        // manifest の android:localeConfig を自動生成する（手書きの locales_config.xml と併用不可）。
+        generateLocaleConfig = true
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
