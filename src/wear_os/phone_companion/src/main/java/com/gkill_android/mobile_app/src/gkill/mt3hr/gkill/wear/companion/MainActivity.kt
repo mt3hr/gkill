@@ -39,36 +39,35 @@ class MainActivity : AppCompatActivity() {
         }
 
         val tvTitle = TextView(this).apply {
-            text = "gkill wear 設定"
+            setText(R.string.settings_title)
             textSize = 20f
             setPadding(0, 0, 0, p16)
             layoutParams = lp
         }
 
         val etServerUrl = EditText(this).apply {
-            hint = "サーバーURL (例: http://localhost:9999)"
+            setHint(R.string.hint_server_url)
             setText(store.getServerUrl())
             layoutParams = lp
         }
         val etUserId = EditText(this).apply {
-            hint = "ユーザーID"
+            setHint(R.string.hint_user_id)
             setText(store.getUserId())
             layoutParams = lp
         }
         val etPassword = EditText(this).apply {
-            hint = "パスワード"
+            setHint(R.string.hint_password)
             inputType = android.text.InputType.TYPE_CLASS_TEXT or
                     android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             layoutParams = lp
         }
         val cbAllowSelfSigned = android.widget.CheckBox(this).apply {
-            text = "自己署名証明書を許可 (localhost等の自己署名HTTPSサーバー向け。" +
-                    "接続テストで証明書のフィンガープリントを確認してピン留めします)"
+            setText(R.string.allow_self_signed_label)
             isChecked = store.getAllowSelfSignedCert()
             layoutParams = lp
         }
         val btnSave = Button(this).apply {
-            text = "保存 & 接続テスト"
+            setText(R.string.save_and_test)
             layoutParams = lp
         }
         val tvStatus = TextView(this).apply {
@@ -95,12 +94,12 @@ class MainActivity : AppCompatActivity() {
             val password = etPassword.text.toString()
 
             if (serverUrl.isEmpty() || userId.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "全項目を入力してください", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.toast_fill_all_fields, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             // 平文HTTPはループバック限定。外部ホストへは資格情報が平文で流れるため保存前に拒否する
             if (!GkillServerUrlPolicy.isAllowed(serverUrl)) {
-                Toast.makeText(this, GkillServerUrlPolicy.REJECTION_MESSAGE, Toast.LENGTH_LONG).show()
+                Toast.makeText(this, R.string.url_policy_rejection, Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
 
@@ -112,7 +111,7 @@ class MainActivity : AppCompatActivity() {
             store.setAllowSelfSignedCert(allowSelfSigned)
             store.clearSession()
 
-            tvStatus.text = "接続テスト中..."
+            tvStatus.setText(R.string.status_testing)
 
             CoroutineScope(Dispatchers.IO).launch {
                 attemptConnect(serverUrl, userId, passwordSha256, allowSelfSigned, tvStatus, allowPinPrompt = true)
@@ -138,13 +137,14 @@ class MainActivity : AppCompatActivity() {
     ) {
         val hostKey = GkillServerTrust.hostKeyOf(serverUrl)
         val pin = store.getPinnedCertSha256(hostKey).ifEmpty { null }
-        val client = GkillApiClient(serverUrl, allowSelfSigned, pin)
+        // locale_name は UI と同じ言語（サーバーがログイン失敗の文言を訳して返す）
+        val client = GkillApiClient(serverUrl, allowSelfSigned, pin, GkillLocale.serverLocaleName(this))
         val (sessionId, errorMsg) = client.loginWithError(userId, passwordSha256)
 
         if (sessionId != null) {
             store.setSessionId(sessionId)
             withContext(Dispatchers.Main) {
-                tvStatus.text = "接続成功！ セッションID: ${sessionId.take(8)}..."
+                tvStatus.text = getString(R.string.status_connected, sessionId.take(8))
             }
             return
         }
@@ -155,13 +155,13 @@ class MainActivity : AppCompatActivity() {
                 showPinConfirmDialog(capturedFingerprint) { approved ->
                     if (approved) {
                         store.setPinnedCertSha256(hostKey, capturedFingerprint)
-                        tvStatus.text = "証明書を保存しました。再接続中..."
+                        tvStatus.setText(R.string.status_pin_saved_reconnecting)
                         CoroutineScope(Dispatchers.IO).launch {
                             // ピン保存後の再接続。確認ループを避けるため再プロンプトは無効
                             attemptConnect(serverUrl, userId, passwordSha256, allowSelfSigned, tvStatus, allowPinPrompt = false)
                         }
                     } else {
-                        tvStatus.text = "接続失敗: 証明書が未承認です"
+                        tvStatus.setText(R.string.status_failed_cert_unapproved)
                     }
                 }
             }
@@ -169,7 +169,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         withContext(Dispatchers.Main) {
-            tvStatus.text = "接続失敗: $errorMsg"
+            // errorMsg はサーバーの error_message（訳済み）か GkillApiClient の ASCII コード。後者はここで訳す
+            tvStatus.text = getString(R.string.status_failed, GkillErrorText.localize(this@MainActivity, errorMsg))
         }
     }
 
@@ -179,16 +180,11 @@ class MainActivity : AppCompatActivity() {
      */
     private fun showPinConfirmDialog(fingerprintHex: String, onResult: (Boolean) -> Unit) {
         AlertDialog.Builder(this)
-            .setTitle("証明書を確認してください")
-            .setMessage(
-                "サーバーの証明書は既知のCAで検証できませんでした。\n" +
-                        "この自己署名証明書を信頼して保存しますか？\n\n" +
-                        "SHA-256:\n${GkillServerTrust.formatFingerprint(fingerprintHex)}\n\n" +
-                        "心当たりが無い場合は「拒否」してください（中間者攻撃の可能性があります）。"
-            )
+            .setTitle(R.string.cert_dialog_title)
+            .setMessage(getString(R.string.cert_dialog_message, GkillServerTrust.formatFingerprint(fingerprintHex)))
             .setCancelable(false)
-            .setPositiveButton("信頼して保存") { _, _ -> onResult(true) }
-            .setNegativeButton("拒否") { _, _ -> onResult(false) }
+            .setPositiveButton(R.string.cert_dialog_trust) { _, _ -> onResult(true) }
+            .setNegativeButton(R.string.cert_dialog_reject) { _, _ -> onResult(false) }
             .show()
     }
 

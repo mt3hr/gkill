@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -18,10 +19,12 @@ import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.CompactChip
 import androidx.wear.compose.material.Text
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.R
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.PlayingTimeIsNode
 import kotlinx.coroutines.delay
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * 再生中のTimeIs一覧を表示する画面。
@@ -45,7 +48,7 @@ fun PlayingTimeIsListScreen(
     ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             Text(
-                text = "▶ 実行中",
+                text = stringResource(R.string.playing_title),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -56,7 +59,7 @@ fun PlayingTimeIsListScreen(
         if (nodes.isEmpty()) {
             item {
                 Text(
-                    text = "実行中のTimeIsは\nありません",
+                    text = stringResource(R.string.playing_empty),
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -81,7 +84,7 @@ fun PlayingTimeIsListScreen(
 
         item {
             CompactChip(
-                label = { Text("🔄 更新") },
+                label = { Text(stringResource(R.string.refresh)) },
                 onClick = onRefresh
             )
         }
@@ -123,5 +126,6 @@ private fun formatElapsed(isoTime: String, tickSeconds: Long): String {
     val h = diffSec / 3600
     val m = (diffSec % 3600) / 60
     val s = diffSec % 60
-    return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
+    // 経過時間の桁は言語に依存させない（既定ロケールだと桁が現地化されうる）
+    return if (h > 0) String.format(Locale.ROOT, "%d:%02d:%02d", h, m, s) else String.format(Locale.ROOT, "%d:%02d", m, s)
 }

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_record">📝 기록</string>
+    <string name="home_playing">▶ 진행 중</string>
+    <string name="home_lantana">⭐️ 기분</string>
+
+    <string name="loading">불러오는 중…</string>
+    <string name="loading_refresh_templates">템플릿 업데이트 중…</string>
+    <string name="loading_submit">전송 중…</string>
+    <string name="loading_playing">진행 중 항목을 가져오는 중…</string>
+    <string name="loading_end_timeis">종료 중…</string>
+
+    <string name="template_list_title">템플릿</string>
+    <string name="template_list_title_cached">템플릿(캐시)</string>
+    <string name="refresh">🔄 새로고침</string>
+    <string name="confirm_record_template">“%1$s”\n을(를) 기록할까요?</string>
+
+    <string name="playing_title">▶ 진행 중</string>
+    <string name="playing_empty">진행 중인\n타임 기록이 없습니다</string>
+    <string name="confirm_end_timeis">“%1$s”\n을(를) 종료할까요?</string>
+    <string name="elapsed">경과: %1$s</string>
+
+    <string name="result_success">✓ 기록했습니다</string>
+    <string name="result_error">✕ 오류:\n%1$s</string>
+    <string name="back">뒤로</string>
+
+    <string name="lantana_title">기분</string>
+    <string name="lantana_confirm">이 기분을 기록할까요?</string>
+
+    <string name="duplicate_confirm_message">같은 내용이 방금\n저장되었습니다.\n그래도 전송할까요?</string>
+    <string name="duplicate_send_anyway">그래도 전송</string>
+    <string name="cancel">취소</string>
+
+    <string name="error_phone_not_connected">스마트폰에 연결할 수 없습니다.</string>
+    <string name="error_phone_not_connected_check_pairing">스마트폰에 연결할 수 없습니다.\n워치와 스마트폰의 페어링을 확인해 주세요.</string>
+    <string name="error_templates_timeout">스마트폰의 응답이 시간 초과되었습니다.\n스마트폰에서 gkill wear 설정 앱을 열고 연결 테스트를 해 주세요.</string>
+    <string name="error_playing_timeout">스마트폰의 응답이 시간 초과되었습니다.</string>
+    <string name="error_submit_timeout">전송 시간 초과. 스마트폰 상태를 확인해 주세요.</string>
+    <string name="error_end_timeis_timeout">종료 시간 초과. 스마트폰 상태를 확인해 주세요.</string>
+</resources>

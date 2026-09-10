@@ -1,5 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">gkill wear</string>
-    <string name="tile_label">gkill wear</string>
+<!--
+  既定言語は日本語（Web の fallbackLocale・サーバーの GetLocalizer フォールバックと同じ）。
+  キーを足したら values-en / zh / ko / es / fr / de の6ファイルにも同時に足すこと。
+  StringsParityTest がキー集合・プレースホルダ・エスケープを検査して落とす。
+  チップとタイル（幅 140dp 固定）のラベルは1行で切り詰められるので短く保つ。
+  編集前に読む: .claude/skills/gkill-mobile/SKILL.md
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="ja">
+    <string name="app_name" translatable="false">gkill wear</string>
+    <string name="tile_label" translatable="false">gkill wear</string>
+
+    <!-- トップメニューとタイルの3導線（同じキーを共用） -->
+    <string name="home_record">📝 記録する</string>
+    <string name="home_playing">▶ 実行中</string>
+    <string name="home_lantana">⭐️ 気分記録</string>
+
+    <!-- 待機画面 -->
+    <string name="loading">読み込み中…</string>
+    <string name="loading_refresh_templates">テンプレートを更新中…</string>
+    <string name="loading_submit">送信中…</string>
+    <string name="loading_playing">実行中を取得中…</string>
+    <string name="loading_end_timeis">終了中…</string>
+
+    <!-- テンプレート一覧・送信確認 -->
+    <string name="template_list_title">テンプレート</string>
+    <string name="template_list_title_cached">テンプレート(キャッシュ)</string>
+    <string name="refresh">🔄 更新</string>
+    <string name="confirm_record_template">「%1$s」\nを記録しますか？</string>
+
+    <!-- 実行中の打刻 -->
+    <string name="playing_title">▶ 実行中</string>
+    <string name="playing_empty">実行中の打刻は\nありません</string>
+    <string name="confirm_end_timeis">「%1$s」\nを終了しますか？</string>
+    <string name="elapsed">経過: %1$s</string>
+
+    <!-- 結果 -->
+    <string name="result_success">✓ 記録しました</string>
+    <string name="result_error">✕ エラー:\n%1$s</string>
+    <string name="back">戻る</string>
+
+    <!-- 気分記録 -->
+    <string name="lantana_title">気分</string>
+    <string name="lantana_confirm">この気分を記録しますか？</string>
+
+    <!-- 重複送信の確認 -->
+    <string name="duplicate_confirm_message">同じ内容が直前に\n保存されています。\nそれでも送信しますか？</string>
+    <string name="duplicate_send_anyway">それでも送信</string>
+    <string name="cancel">キャンセル</string>
+
+    <!-- ウォッチ側で組み立てるエラー（スマホ由来の文言は ERROR: の後ろをそのまま表示する） -->
+    <string name="error_phone_not_connected">スマホに接続できません。</string>
+    <string name="error_phone_not_connected_check_pairing">スマホに接続できません。\nウォッチとスマホのペアリングを確認してください。</string>
+    <string name="error_templates_timeout">スマホからの応答がタイムアウトしました。\nスマホでgkill wear設定アプリを開き、接続テストを行ってください。</string>
+    <string name="error_playing_timeout">スマホからの応答がタイムアウトしました。</string>
+    <string name="error_submit_timeout">送信タイムアウト。スマホの状態を確認してください。</string>
+    <string name="error_end_timeis_timeout">終了タイムアウト。スマホの状態を確認してください。</string>
 </resources>
