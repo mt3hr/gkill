@@ -97,6 +97,14 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
   同じ関数（`resolvedBoardName` / `resolved_board_name`）に通すこと。ずれると毎回重複する
 - **存在しない日は飛ばす。丸めない。** `毎月31` の2月、`第5金` の無い月。最も近い日へ丸めると
   `毎月30` や `第4金` と重複して二重に作られる
+- **打刻（`ーち`）のアンカーは related_time（基底の `anchor_time_for_repeat`）。TS の `start_time` を返さない。**
+  TS では開始時刻行が `related_time` にしか書かず、`KFTLTimeIsRequest.start_time` は `do_request` が
+  related_time から入れるまで空。展開は送信時・`do_request` の前なので、`start_time` を基準にすると
+  1970 からの日数ぶん（約 20,700 日）ずらされ、**2026-09-10 に送った打刻 5 件が 2083-05-17〜 で登録された**
+  （エラーも警告も出ない）。Go は開始時刻行が `startTime` にも書くので Wear / MCP 経路では起きず、Web だけ壊れる。
+  vitest は `TZ: 'Asia/Tokyo'` なので epoch の時刻が 09:00 になり、既存判定のテストは件数が偶然合って素通しした。
+  守るテスト: `kftl-repeat-statement.test.ts`「打刻は開始時刻を基準にし、開始と終了を同じ日数だけずらす」/
+  Go `TestExpand_TimeIsRepeatShiftsStartAndEndTogether`（年を明示的に見る）
 
 ## 関連スキル
 
