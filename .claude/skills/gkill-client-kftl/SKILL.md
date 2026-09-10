@@ -105,6 +105,16 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
   vitest は `TZ: 'Asia/Tokyo'` なので epoch の時刻が 09:00 になり、既存判定のテストは件数が偶然合って素通しした。
   守るテスト: `kftl-repeat-statement.test.ts`「打刻は開始時刻を基準にし、開始と終了を同じ日数だけずらす」/
   Go `TestExpand_TimeIsRepeatShiftsStartAndEndTogether`（年を明示的に見る）
+- **アンカーの欄・ずらす欄・do_request が書く欄は同じ欄を指す。** 2083 年の事故はこの3つが別物だった型（打刻）だけで起きた。
+  8 型を監査した結果（2026-09-10）: kmemo / lantana / kc / urlog は related_time、支出はブロックの related_time、
+  タスク / リポストタスクは予定3欄、打刻は related_time（→ start_time）+ end_time で一致。`ーた` と終了4種は繰り返し自体を断るので起きない。
+  新しい型を足すときは **`do_request` が実際に送る値**を `kftl-repeat-statement.test.ts`「繰り返しで書き込まれる時刻」の表へ1行足すこと
+  （request オブジェクトの欄だけ見る表では捕まらない）
+- **Go の `doBaseRequest` へ関連時刻は引数で渡す（`r.GetRelatedTime()`）。基底の中で `b.GetRelatedTime()` を引かない。**
+  埋め込み基底のメソッドは外側の override を見ない（Go は仮想ディスパッチしない）ので、支出（`ーん`）がブロック共有の時刻を
+  override で返していても基底で引くと `？`行の時刻がタグ・テキストに乗らず「今」で書かれる（TS は `super.do_request` 内の
+  `this.get_related_time()` が override に届くので Web と Wear / MCP で結果が違っていた）。
+  守るテスト: Go `TestHandleSubmitKFTLText_RepeatWritesShiftedTimes`「支出の関連時刻がタグにも乗る」
 
 ## 関連スキル
 

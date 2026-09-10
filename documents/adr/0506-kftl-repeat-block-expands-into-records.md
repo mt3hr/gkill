@@ -104,6 +104,15 @@
   - `TestApply_RepeatRejectsForbiddenTypes` / `TestExpand_SkipsOccurrencesThatAlreadyExist`
   - `TestExpand_TimeIsRepeatShiftsStartAndEndTogether`（打刻の開始・終了が同じ日数だけずれ、年が変わらない。
     TS 側で `start_time` をアンカーにして 2083 年に登録された事故の再発防止。TS と対）
+  - `TestExpand_RelatedTimeTypesShiftTogether`（気分値・数値・ブックマーク。2083 年の事故のあとの全型監査で
+    この3型には繰り返しのテストが無かった）/ `TestExpand_NlogRepeatKeepsBlockTimeForTags`（支出の `？`行の時刻が
+    複製のタグ・テキストに使う関連時刻にも乗る）
+- `src/server/gkill/api/gkill_server_api/handle_submit_kftl_text_test.go`
+  - `TestHandleSubmitKFTLText_RepeatWritesShiftedTimes`（HTTP で送って型別 API で引き直し、**書き込まれた**打刻の
+    開始・終了の年を見る。Wear / MCP が通る Go 経路。支出の `？`行の時刻がタグに乗ることも同じテストで見る ――
+    `doBaseRequest` が埋め込み基底の `GetRelatedTime` を引いていた頃は Nlog の override が効かず、タグだけ「今」だった）
 - `src/client/__tests__/unit/kftl/kftl-repeat.test.ts`（Go と対の表）
 - `src/client/__tests__/unit/kftl/kftl-repeat-statement.test.ts`（行の並び・展開・不正行・既存スキップ。
-  「打刻は開始時刻を基準にし、開始と終了を同じ日数だけずらす」が Go の TimeIs テストと対）
+  「打刻は開始時刻を基準にし、開始と終了を同じ日数だけずらす」が Go の TimeIs テストと対。
+  「繰り返しで書き込まれる時刻」は 8 型ぶん do_request まで通し、API へ渡る本体・タグ・テキストの時刻欄を年まで固定する ――
+  request オブジェクトの欄だけ見る表では「アンカーの欄 ≠ do_request が書く欄」の事故を捕まえられない）

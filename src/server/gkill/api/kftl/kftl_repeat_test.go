@@ -566,6 +566,84 @@ func TestExpand_RepeatClonesTagsAndTextsWithFreshTextIDs(t *testing.T) {
 	}
 }
 
+// related_time が主軸の残り3型（気分値・数値・ブックマーク）。
+// 2083 年の事故（打刻）のあとの全型監査で、この3型には繰り返しのテストが1本も無かった。
+// 本体の関連時刻と、タグ・テキストに使う基底の関連時刻（doBaseRequest へ渡す値）の両方を年まで見る。
+// TS 側の対: kftl-repeat-statement.test.ts「繰り返しで書き込まれる時刻」
+func TestExpand_RelatedTimeTypesShiftTogether(t *testing.T) {
+	cases := []struct {
+		name string
+		text string
+		pick func(KFTLRequest) (KFTLRequest, bool)
+	}{
+		{"気分値", "ーら\n5\n。気分\n？？\n毎日\n3\n？？", func(r KFTLRequest) (KFTLRequest, bool) {
+			v, ok := r.(*kftlLantanaRequest)
+			return v, ok
+		}},
+		{"数値", "ーか\n体重\n60\n。健康\n？？\n毎日\n3\n？？", func(r KFTLRequest) (KFTLRequest, bool) {
+			v, ok := r.(*kftlKCRequest)
+			return v, ok
+		}},
+		{"ブックマーク", "ーう\nhttps://example.com/\n例\n。ブックマーク\n？？\n毎日\n3\n？？", func(r KFTLRequest) (KFTLRequest, bool) {
+			v, ok := r.(*kftlURLogRequest)
+			return v, ok
+		}},
+	}
+	want := []time.Time{ymdhm(2026, 9, 3, 10, 0), ymdhm(2026, 9, 4, 10, 0), ymdhm(2026, 9, 5, 10, 0)}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			var picked []KFTLRequest
+			for _, r := range helperExpandOK(t, c.text) {
+				if v, ok := c.pick(r); ok {
+					picked = append(picked, v)
+				}
+			}
+			if len(picked) != 3 {
+				t.Fatalf("件数 = %d, want 3", len(picked))
+			}
+			for i, r := range picked {
+				got := r.GetRelatedTime()
+				if got.Year() != 2026 {
+					t.Errorf("[%d] 関連時刻の年 = %d, want 2026", i, got.Year())
+				}
+				if !got.Equal(want[i]) {
+					t.Errorf("[%d] 関連時刻 = %v, want %v", i, got, want[i])
+				}
+				if len(r.GetTags()) != 1 {
+					t.Errorf("[%d] タグ = %v, want 1件", i, r.GetTags())
+				}
+			}
+		})
+	}
+}
+
+// 支出ブロックの `？`行の時刻は、複製でもタグ・テキストに使う関連時刻（GetRelatedTime の override）に乗る。
+// doBaseRequest が埋め込み基底の GetRelatedTime を引いていた頃は override が効かず、
+// タグ・テキストだけ「今」で書かれていた。引数で渡す配線そのものは構造体からは見えないので、
+// 書き込みまで通した検証は gkill_server_api の TestHandleSubmitKFTLText_RepeatWritesShiftedTimes にある
+func TestExpand_NlogRepeatKeepsBlockTimeForTags(t *testing.T) {
+	text := "ーん\nスーパー\n牛乳\n200\n。食費\n？2026-09-07 12:00\n？？\n金\n3\n？？"
+	var nlogs []*kftlNlogRequest
+	for _, r := range helperExpandOK(t, text) {
+		if n, ok := r.(*kftlNlogRequest); ok {
+			nlogs = append(nlogs, n)
+		}
+	}
+	if len(nlogs) != 3 {
+		t.Fatalf("件数 = %d, want 3", len(nlogs))
+	}
+	want := []time.Time{ymdhm(2026, 9, 4, 12, 0), ymdhm(2026, 9, 11, 12, 0), ymdhm(2026, 9, 18, 12, 0)}
+	for i, n := range nlogs {
+		// 外側の型で引く。doBaseRequest へ渡すのもこの値
+		if got := n.GetRelatedTime(); !got.Equal(want[i]) {
+			t.Errorf("[%d] タグ・テキストに使う関連時刻 = %v, want %v", i, got, want[i])
+		}
+		if len(n.GetTags()) != 1 || n.GetTags()[0] != "食費" {
+			t.Errorf("[%d] タグ = %v", i, n.GetTags())
+		}
+	}
+}
+
 // 「～～」に揃える。閉じ忘れても必須2行が揃っていれば有効。
 func TestExpand_UnclosedRepeatStillExpands(t *testing.T) {
 	text := "今日の日記\n？？\n毎日\n3"

@@ -91,7 +91,7 @@ func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
 	boardName := r.resolvedBoardName()
 
 	// ブロックの中に書いたタグはここでMiReKyou自身に書かれる
-	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
+	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err
 	}
 
