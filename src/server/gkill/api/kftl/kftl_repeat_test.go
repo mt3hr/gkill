@@ -479,6 +479,44 @@ func TestExpand_NlogRepeatCoversWholeBlock(t *testing.T) {
 	}
 }
 
+// 打刻は開始時刻を基準にし、開始と終了を同じ日数だけずらす。
+// TS 側は start_time が do_request まで空で、それをアンカーにして 1970 からの日数ぶんずれ
+// 2026-09-10 に送った打刻が 2083 年で登録された。Go は開始時刻行が startTime にも書くので
+// 元から正しいが、同じケース表（利用者の入力そのもの）で年が変わらないことを両側で固定する。
+// TS 側の対: kftl-repeat-statement.test.ts「打刻は開始時刻を基準にし、開始と終了を同じ日数だけずらす」
+func TestExpand_TimeIsRepeatShiftsStartAndEndTogether(t *testing.T) {
+	text := "ーち\n仕事\n08:30\n17:30\n？？\n毎日\n5\n\n2026-09-07\n？？"
+	var timeiss []*kftlTimeIsRequest
+	for _, r := range helperExpandOK(t, text) {
+		if ti, ok := r.(*kftlTimeIsRequest); ok {
+			timeiss = append(timeiss, ti)
+		}
+	}
+	if len(timeiss) != 5 {
+		t.Fatalf("件数 = %d, want 5", len(timeiss))
+	}
+	ids := map[string]struct{}{}
+	for i, ti := range timeiss {
+		day := 7 + i
+		if ti.startTime.Year() != 2026 {
+			t.Errorf("[%d] 開始の年 = %d, want 2026", i, ti.startTime.Year())
+		}
+		if want := ymdhm(2026, 9, day, 8, 30); !ti.startTime.Equal(want) {
+			t.Errorf("[%d] 開始 = %v, want %v", i, ti.startTime, want)
+		}
+		if want := ymdhm(2026, 9, day, 17, 30); ti.endTime == nil || !ti.endTime.Equal(want) {
+			t.Errorf("[%d] 終了 = %v, want %v", i, ti.endTime, want)
+		}
+		if ti.title != "仕事" {
+			t.Errorf("[%d] title = %q", i, ti.title)
+		}
+		ids[ti.RequestID] = struct{}{}
+	}
+	if len(ids) != 5 {
+		t.Errorf("IDは回ごとに別のはず: %d 種", len(ids))
+	}
+}
+
 func TestExpand_KmemoRepeatUsesRelatedTime(t *testing.T) {
 	text := "今日の日記\n？？\n毎日\n3\n？？"
 	var kmemos []*kftlKmemoRequest

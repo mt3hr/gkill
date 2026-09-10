@@ -18,14 +18,19 @@ export class KFTLTimeIsRequest extends KFTLRequest {
 
     private title: string
 
-    private start_time: Date
+    /**
+     * 書き込む開始時刻。**do_request が related_time から入れるまで null。**
+     * 開始時刻行（kftl-time-is-start-time-statement-line.ts）は related_time にしか書かないので、
+     * 送信前にここを読んではいけない。Go 側（kftl_timeis.go）は開始時刻行が startTime にも書くので形が違う
+     */
+    private start_time: Date | null
 
     private end_time: Date | null
 
     constructor(line_text: string, context: KFTLStatementLineContext) {
         super(line_text, context)
         this.title = ""
-        this.start_time = new Date(0)
+        this.start_time = null
         this.end_time = null
     }
 
@@ -39,6 +44,14 @@ export class KFTLTimeIsRequest extends KFTLRequest {
 
     async set_end_time(end_time: Date | null): Promise<void> {
         this.end_time = end_time
+    }
+
+    get_title(): string {
+        return this.title
+    }
+
+    get_end_time(): Date | null {
+        return this.end_time
     }
 
     async do_request(gkill_api: GkillAPI, application_config: ApplicationConfig): Promise<Array<GkillError>> {
@@ -58,8 +71,10 @@ export class KFTLTimeIsRequest extends KFTLRequest {
         const timeis_req = new AddTimeisRequest()
         timeis_req.tx_id = this.get_tx_id()
         timeis_req.timeis.id = this.get_request_id()
-        await this.set_start_time(related_time ? related_time : new Date(Date.now()))
-        timeis_req.timeis.start_time = this.start_time
+        // 開始時刻はここで初めて確定する（開始時刻行は related_time にしか書かない）
+        const start_time = related_time ? related_time : new Date(Date.now())
+        await this.set_start_time(start_time)
+        timeis_req.timeis.start_time = start_time
         timeis_req.timeis.end_time = this.end_time
         timeis_req.timeis.title = this.title
         timeis_req.timeis.create_app = "gkill_kftl"
@@ -84,17 +99,26 @@ export class KFTLTimeIsRequest extends KFTLRequest {
         return errors
     }
 
-    /** 打刻の開始時刻を基準にする。 */
+    /**
+     * 打刻の開始時刻を基準にする。TS では開始時刻行が related_time に入り、do_request もそれを
+     * start_time として書くので、基底（related_time。未設定なら「今」で確定）がそのまま開始時刻。
+     *
+     * **`this.start_time` を返してはいけない。** 展開は送信時・do_request の前なので epoch(1970-01-01) のままで、
+     * 1970 からの日数ぶんずらされて 2026-09-10 に送った打刻が 2083-05-17 で登録された。
+     * 守るテスト: kftl-repeat-statement.test.ts「打刻は開始時刻を基準にし、開始と終了を同じ日数だけずらす」
+     */
     override anchor_time_for_repeat(): Date | null {
-        return this.start_time
+        return super.anchor_time_for_repeat()
     }
 
-    /** 開始と終了を同じ日数だけずらす。長さはそのまま保たれる。 */
+    /**
+     * 開始と終了を同じ日数だけずらす。長さはそのまま保たれる。
+     * 開始は copy_base_state_for_repeat がずらした related_time から do_request が入れるので、ここでは触らない
+     */
     override clone_for_repeat(new_request_id: string, day_shift: number): KFTLRequest {
         const cloned = new KFTLTimeIsRequest(new_request_id, this.get_context())
         this.copy_base_state_for_repeat(cloned, day_shift)
         cloned.title = this.title
-        cloned.start_time = shift_days(this.start_time, day_shift)
         cloned.end_time = this.end_time === null ? null : shift_days(this.end_time, day_shift)
         return cloned
     }

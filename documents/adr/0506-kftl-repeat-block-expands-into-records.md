@@ -102,5 +102,8 @@
   - `TestExpand_NlogRepeatCoversWholeBlock`（支出はブロック単位で6件）
   - `TestExpand_MiReKyouRepeat`（元の記録は増えない）
   - `TestApply_RepeatRejectsForbiddenTypes` / `TestExpand_SkipsOccurrencesThatAlreadyExist`
+  - `TestExpand_TimeIsRepeatShiftsStartAndEndTogether`（打刻の開始・終了が同じ日数だけずれ、年が変わらない。
+    TS 側で `start_time` をアンカーにして 2083 年に登録された事故の再発防止。TS と対）
 - `src/client/__tests__/unit/kftl/kftl-repeat.test.ts`（Go と対の表）
-- `src/client/__tests__/unit/kftl/kftl-repeat-statement.test.ts`（行の並び・展開・不正行・既存スキップ）
+- `src/client/__tests__/unit/kftl/kftl-repeat-statement.test.ts`（行の並び・展開・不正行・既存スキップ。
+  「打刻は開始時刻を基準にし、開始と終了を同じ日数だけずらす」が Go の TimeIs テストと対）
