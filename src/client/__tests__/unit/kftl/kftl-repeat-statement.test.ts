@@ -3,6 +3,13 @@ import { i18n } from '../../helpers/setup-i18n'
 
 // Mock @/i18n so all KFTL modules use our test i18n
 vi.mock('@/i18n', () => ({ i18n }))
+// do_request がキャッシュ削除を呼ぶ。「繰り返しで書き込まれる時刻」の表だけが do_request まで通す
+vi.mock('@/classes/delete-gkill-cache', () => ({
+    default: vi.fn().mockResolvedValue(undefined),
+    delete_gkill_config_cache: vi.fn().mockResolvedValue(undefined),
+    delete_gkill_all_tag_names_cache: vi.fn().mockResolvedValue(undefined),
+    delete_gkill_attached_datas_cache: vi.fn().mockResolvedValue(undefined),
+}))
 
 import { KFTLStatement } from '@/classes/kftl/kftl-statement'
 import { KFTLRequest } from '@/classes/kftl/kftl-request'
@@ -14,7 +21,18 @@ import { KFTLTimeIsRequest } from '@/classes/kftl/kftl_timeis/kftl-time-is-reque
 import { KFTLStatementLineContext } from '@/classes/kftl/kftl-statement-line-context'
 import { expand_repeats } from '@/classes/kftl/kftl_repeat/kftl-repeat-expand'
 import { new_repeat_spec, parse_repeat_condition } from '@/classes/kftl/kftl_repeat/kftl-repeat-spec'
-import type { GkillAPI } from '@/classes/api/gkill-api'
+import { GkillAPI } from '@/classes/api/gkill-api'
+import { ApplicationConfig } from '@/classes/datas/config/application-config'
+import type { AddKmemoRequest } from '@/classes/api/req_res/add-kmemo-request'
+import type { AddLantanaRequest } from '@/classes/api/req_res/add-lantana-request'
+import type { AddKCRequest } from '@/classes/api/req_res/add-kc-request'
+import type { AddURLogRequest } from '@/classes/api/req_res/add-ur-log-request'
+import type { AddNlogRequest } from '@/classes/api/req_res/add-nlog-request'
+import type { AddMiRequest } from '@/classes/api/req_res/add-mi-request'
+import type { AddMiReKyouRequest } from '@/classes/api/req_res/add-mi-re-kyou-request'
+import type { AddTimeisRequest } from '@/classes/api/req_res/add-timeis-request'
+import type { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
+import type { AddTextRequest } from '@/classes/api/req_res/add-text-request'
 
 // Go の src/server/gkill/api/kftl/kftl_repeat_test.go の結合テストと対。
 // 2026-09-02 は水曜。時刻はアンカーから取り、起点ちょうどは含めない。
@@ -271,4 +289,130 @@ describe('既存スキップ', () => {
         const got = await expand_repeats(make(existing, 2, false), base, dummy_api, null)
         expect(got.length).toBe(0)
     })
+})
+
+// ─── 繰り返しで書き込まれる時刻（do_request が実際に送る値）───────────────────
+//
+// 上の表は request オブジェクトの欄を見ている。2083 年の事故は「アンカーに使う欄」と
+// 「do_request が書く欄」が別物だったのが原因で、オブジェクトの欄だけ見ても捕まらない
+// （打刻は related_time が正しくても start_time が epoch のままだった）。
+// ここでは do_request まで通し、API へ渡るペイロードの時刻欄すべて（本体・タグ・テキスト）を
+// 8型ぶん年まで固定する。Go 側の対: kftl_repeat_test.go の TestExpand_* と
+// gkill_server_api の TestHandleSubmitKFTLText_RepeatWritesShiftedTimes（HTTP 経路）
+
+interface WirePayloads {
+    records: Array<{ kind: string; times: Array<Date | null> }>
+    tags: Array<Date>
+    texts: Array<Date>
+}
+
+/** add_* のペイロードから時刻欄だけを控える API。成功時の errors は本物と同じく null */
+function make_wire_api(): { api: GkillAPI; payloads: WirePayloads } {
+    const ok = { messages: null, errors: null }
+    const payloads: WirePayloads = { records: [], tags: [], texts: [] }
+    const api = {
+        generate_uuid: () => GkillAPI.get_gkill_api().generate_uuid(),
+        add_kmemo: async (req: AddKmemoRequest) => { payloads.records.push({ kind: 'kmemo', times: [req.kmemo.related_time] }); return ok },
+        add_lantana: async (req: AddLantanaRequest) => { payloads.records.push({ kind: 'lantana', times: [req.lantana.related_time] }); return ok },
+        add_kc: async (req: AddKCRequest) => { payloads.records.push({ kind: 'kc', times: [req.kc.related_time] }); return ok },
+        add_urlog: async (req: AddURLogRequest) => { payloads.records.push({ kind: 'urlog', times: [req.urlog.related_time] }); return ok },
+        add_nlog: async (req: AddNlogRequest) => { payloads.records.push({ kind: 'nlog', times: [req.nlog.related_time] }); return ok },
+        add_mi: async (req: AddMiRequest) => { payloads.records.push({ kind: 'mi', times: [req.mi.estimate_start_time, req.mi.estimate_end_time, req.mi.limit_time] }); return ok },
+        add_mirekyou: async (req: AddMiReKyouRequest) => { payloads.records.push({ kind: 'mirekyou', times: [req.mirekyou.estimate_start_time, req.mirekyou.estimate_end_time, req.mirekyou.limit_time] }); return ok },
+        add_timeis: async (req: AddTimeisRequest) => { payloads.records.push({ kind: 'timeis', times: [req.timeis.start_time, req.timeis.end_time] }); return ok },
+        add_tag: async (req: AddTagRequest) => { payloads.tags.push(req.tag.related_time); return ok },
+        add_text: async (req: AddTextRequest) => { payloads.texts.push(req.text.related_time); return ok },
+    } as unknown as GkillAPI
+    return { api: api, payloads: payloads }
+}
+
+describe('繰り返しで書き込まれる時刻', () => {
+    const submit_time = ymdhm(2026, 9, 2, 10, 0)
+    beforeEach(() => {
+        vi.useFakeTimers()
+        vi.setSystemTime(submit_time)
+    })
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
+    // attached: タグ・テキストの関連時刻。related_time が主軸の型は本体と同じ日時へずれる。
+    // タスク / リポストタスクは related_time 列を持たず、タグは基底の related_time（未設定→送信時刻）で
+    // 書かれるのでずれない（Go の nil→Now と同じ。変えるなら TS / Go を同時に）
+    const cases: Array<{ name: string; text: string; kind: string; want: Array<Array<Date | null>>; attached: 'shifted' | 'submit_time'; has_text: boolean }> = [
+        { name: 'メモ', kind: 'kmemo', attached: 'shifted', has_text: true,
+            text: '今日の日記\n。日記\nーー\n本文\nーー\n？？\n毎日\n3\n？？',
+            want: [[ymdhm(2026, 9, 3, 10, 0)], [ymdhm(2026, 9, 4, 10, 0)], [ymdhm(2026, 9, 5, 10, 0)]] },
+        { name: '気分値', kind: 'lantana', attached: 'shifted', has_text: true,
+            text: 'ーら\n5\n。気分\nーー\n本文\nーー\n？？\n毎日\n3\n？？',
+            want: [[ymdhm(2026, 9, 3, 10, 0)], [ymdhm(2026, 9, 4, 10, 0)], [ymdhm(2026, 9, 5, 10, 0)]] },
+        { name: '数値', kind: 'kc', attached: 'shifted', has_text: true,
+            text: 'ーか\n体重\n60\n。健康\nーー\n本文\nーー\n？？\n毎日\n3\n？？',
+            want: [[ymdhm(2026, 9, 3, 10, 0)], [ymdhm(2026, 9, 4, 10, 0)], [ymdhm(2026, 9, 5, 10, 0)]] },
+        { name: 'ブックマーク', kind: 'urlog', attached: 'shifted', has_text: true,
+            text: 'ーう\nhttps://example.com/\n例\n。ブックマーク\nーー\n本文\nーー\n？？\n毎日\n3\n？？',
+            want: [[ymdhm(2026, 9, 3, 10, 0)], [ymdhm(2026, 9, 4, 10, 0)], [ymdhm(2026, 9, 5, 10, 0)]] },
+        { name: '支出', kind: 'nlog', attached: 'shifted', has_text: true,
+            text: 'ーん\nスーパー\n牛乳\n200\n。食費\nーー\n本文\nーー\n？？\n金\n3\n？？',
+            want: [[ymdhm(2026, 9, 4, 10, 0)], [ymdhm(2026, 9, 11, 10, 0)], [ymdhm(2026, 9, 18, 10, 0)]] },
+        { name: 'タスク', kind: 'mi', attached: 'submit_time', has_text: true,
+            text: 'ーみ\n週報\n仕事\n18:00\n19:00\n20:00\n。仕事\nーー\n本文\nーー\n？？\n金\n2\n？？',
+            want: [
+                [ymdhm(2026, 9, 4, 18, 0), ymdhm(2026, 9, 4, 19, 0), ymdhm(2026, 9, 4, 20, 0)],
+                [ymdhm(2026, 9, 11, 18, 0), ymdhm(2026, 9, 11, 19, 0), ymdhm(2026, 9, 11, 20, 0)],
+            ] },
+        // リポストタスクのブロックはタグ行しか受けない（テキストブロックは無い）
+        { name: 'リポストタスク', kind: 'mirekyou', attached: 'submit_time', has_text: false,
+            text: '牛乳を買う\n～～\n仕事\n18:00\n。仕事\n？？\n金\n2\n？？\n～～',
+            want: [[ymdhm(2026, 9, 4, 18, 0), null, null], [ymdhm(2026, 9, 11, 18, 0), null, null]] },
+        // 2026-09-10 に 2083-05-17 で登録された本文そのもの（タグ・テキストを足してある）
+        { name: '打刻', kind: 'timeis', attached: 'shifted', has_text: true,
+            text: 'ーち\n仕事\n08:30\n17:30\n。仕事\nーー\n本文\nーー\n？？\n毎日\n5\n\n2026-09-07\n？？',
+            want: [7, 8, 9, 10, 11].map((day) => [ymdhm(2026, 9, day, 8, 30), ymdhm(2026, 9, day, 17, 30)]) },
+    ]
+
+    for (const c of cases) {
+        test(c.name, async () => {
+            const { api, payloads } = make_wire_api()
+            const config = new ApplicationConfig()
+            config.device = 'test-device'
+            config.user_id = 'testuser'
+            config.mi_default_board = '仕事'
+            // 既存判定は飛ばす（API 無し）。送信時の流れどおり、展開した順に do_request する
+            for (const request of await new KFTLStatement(c.text).generate_requests()) {
+                const errors = await request.do_request(api, config)
+                expect(errors, `${c.name}: do_request のエラー`).toEqual([])
+            }
+
+            const records = payloads.records.filter((record) => record.kind === c.kind)
+            expect(records.length, `${c.name}: 本体の件数`).toBe(c.want.length)
+            for (let i = 0; i < c.want.length; i++) {
+                expect(records[i].times.length, `[${i}] 時刻欄の数`).toBe(c.want[i].length)
+                for (let j = 0; j < c.want[i].length; j++) {
+                    const want = c.want[i][j]
+                    const got = records[i].times[j]
+                    if (want === null) {
+                        expect(got, `[${i}][${j}] 未設定のまま`).toBeNull()
+                        continue
+                    }
+                    expect(got, `[${i}][${j}] 時刻欄が無い`).not.toBeNull()
+                    // 年を別に見る。epoch を起点にずらすと 2083 年になる（件数は合うので件数では見抜けない）
+                    expect(got!.getFullYear(), `[${i}][${j}] 年`).toBe(2026)
+                    expect(got!.getTime(), `[${i}][${j}] 時刻`).toBe(want.getTime())
+                }
+            }
+
+            // タグ・テキストは1レコードに1つずつ、本体と同じ順で書かれる
+            expect(payloads.tags.length, `${c.name}: タグの件数`).toBe(c.want.length)
+            expect(payloads.texts.length, `${c.name}: テキストの件数`).toBe(c.has_text ? c.want.length : 0)
+            const attached_want = (i: number): Date => c.attached === 'shifted' ? records[i].times[0]! : submit_time
+            for (let i = 0; i < c.want.length; i++) {
+                expect(payloads.tags[i].getFullYear(), `[${i}] タグの年`).toBe(2026)
+                expect(payloads.tags[i].getTime(), `[${i}] タグの関連時刻`).toBe(attached_want(i).getTime())
+                if (c.has_text) {
+                    expect(payloads.texts[i].getTime(), `[${i}] テキストの関連時刻`).toBe(attached_want(i).getTime())
+                }
+            }
+        })
+    }
 })
