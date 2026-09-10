@@ -365,7 +365,7 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 
 	playingNow := time.Now()
 	query := &find.FindQuery{
-		PlayingTime:     &playingNow,
+		PlayingTime:    &playingNow,
 		OnlyLatestData: true,
 	}
 	playingEntries, err := r.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)
@@ -550,7 +550,7 @@ func (r *kftlTimeIsEndByTagRequest) DoRequest(ctx context.Context) error {
 
 	playingNow := time.Now()
 	query := &find.FindQuery{
-		PlayingTime:     &playingNow,
+		PlayingTime:    &playingNow,
 		OnlyLatestData: true,
 	}
 	playingEntries, err := r.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)
