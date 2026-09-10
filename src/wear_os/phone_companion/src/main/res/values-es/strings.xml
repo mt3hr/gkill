@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_locale_name">es</string>
+
+    <string name="settings_title">Configuración de gkill wear</string>
+    <string name="hint_server_url">URL del servidor (p. ej. http://localhost:9999)</string>
+    <string name="hint_user_id">ID de usuario</string>
+    <string name="hint_password">Contraseña</string>
+    <string name="allow_self_signed_label">Permitir certificado autofirmado (para servidores HTTPS autofirmados como localhost. La prueba de conexión muestra la huella del certificado y la fija)</string>
+    <string name="save_and_test">Guardar y probar conexión</string>
+    <string name="toast_fill_all_fields">Rellena todos los campos</string>
+    <string name="url_policy_rejection">http:// solo se permite para hosts locales (localhost / 127.0.0.1). Usa https:// para servidores externos</string>
+    <string name="status_testing">Probando la conexión…</string>
+    <string name="status_connected">¡Conexión correcta! ID de sesión: %1$s…</string>
+    <string name="status_pin_saved_reconnecting">Certificado guardado. Reconectando…</string>
+    <string name="status_failed_cert_unapproved">Error de conexión: certificado no aprobado</string>
+    <string name="status_failed">Error de conexión: %1$s</string>
+
+    <string name="cert_dialog_title">Verifica el certificado</string>
+    <string name="cert_dialog_message">No se pudo verificar el certificado del servidor con una CA conocida.\n¿Confiar en este certificado autofirmado y guardarlo?\n\nSHA-256:\n%1$s\n\nSi no lo reconoces, elige “Rechazar” (podría ser un ataque de intermediario).</string>
+    <string name="cert_dialog_trust">Confiar y guardar</string>
+    <string name="cert_dialog_reject">Rechazar</string>
+
+    <string name="notif_channel_sync">Sincronización de gkill wear</string>
+    <string name="notif_text">Procesando la solicitud del reloj</string>
+
+    <string name="error_login_failed">Error de inicio de sesión</string>
+    <string name="error_get_config_failed">No se pudo cargar la configuración</string>
+    <string name="error_get_playing_timeis_failed">No se pudieron cargar las entradas en curso</string>
+    <string name="error_empty_timeis_id">No se especificó la entrada de tiempo a finalizar</string>
+    <string name="error_empty_response">Respuesta vacía</string>
+    <string name="error_empty_session_id">El ID de sesión está vacío</string>
+    <string name="error_unknown">Error desconocido</string>
+    <string name="error_get_timeis_failed">No se pudo cargar la entrada de tiempo</string>
+    <string name="error_timeis_not_found">Entrada de tiempo no encontrada</string>
+    <string name="error_update_timeis_failed">No se pudo actualizar la entrada de tiempo</string>
+</resources>

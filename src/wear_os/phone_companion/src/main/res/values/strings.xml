@@ -1,4 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">gkill wear Companion</string>
+<!--
+  既定言語は日本語（Web の fallbackLocale・サーバーの GetLocalizer フォールバックと同じ）。
+  キーを足したら values-en / zh / ko / es / fr / de の6ファイルにも同時に足すこと。
+  StringsParityTest がキー集合・プレースホルダ・エスケープを検査して落とす。
+  編集前に読む: .claude/skills/gkill-mobile/SKILL.md
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="ja">
+    <string name="app_name" translatable="false">gkill wear Companion</string>
+    <!-- 通知タイトル。ブランド名なので訳さない -->
+    <string name="notif_title" translatable="false">gkill wear</string>
+
+    <!--
+      サーバーへ送る locale_name。UI が解決したロケールと必ず一致させるため、
+      Locale.getDefault() ではなくこのリソースから引く（GkillLocale.serverLocaleName）。
+      各 values-xx では自分の言語コードを書く。
+    -->
+    <string name="server_locale_name">ja</string>
+
+    <!-- 設定画面 -->
+    <string name="settings_title">gkill wear 設定</string>
+    <string name="hint_server_url">サーバーURL (例: http://localhost:9999)</string>
+    <string name="hint_user_id">ユーザーID</string>
+    <string name="hint_password">パスワード</string>
+    <string name="allow_self_signed_label">自己署名証明書を許可 (localhost等の自己署名HTTPSサーバー向け。接続テストで証明書のフィンガープリントを確認してピン留めします)</string>
+    <string name="save_and_test">保存 &amp; 接続テスト</string>
+    <string name="toast_fill_all_fields">全項目を入力してください</string>
+    <string name="url_policy_rejection">http:// はローカル(localhost / 127.0.0.1)専用です。外部サーバーへは https:// を使ってください</string>
+    <string name="status_testing">接続テスト中…</string>
+    <string name="status_connected">接続成功！ セッションID: %1$s…</string>
+    <string name="status_pin_saved_reconnecting">証明書を保存しました。再接続中…</string>
+    <string name="status_failed_cert_unapproved">接続失敗: 証明書が未承認です</string>
+    <string name="status_failed">接続失敗: %1$s</string>
+
+    <!-- 自己署名証明書のピン留め確認ダイアログ。本文は「拒否」ボタンの文言を参照している -->
+    <string name="cert_dialog_title">証明書を確認してください</string>
+    <string name="cert_dialog_message">サーバーの証明書は既知のCAで検証できませんでした。\nこの自己署名証明書を信頼して保存しますか？\n\nSHA-256:\n%1$s\n\n心当たりが無い場合は「拒否」してください（中間者攻撃の可能性があります）。</string>
+    <string name="cert_dialog_trust">信頼して保存</string>
+    <string name="cert_dialog_reject">拒否</string>
+
+    <!-- WorkManager の前景通知 -->
+    <string name="notif_channel_sync">gkill wear 同期</string>
+    <string name="notif_text">時計からの要求を処理中</string>
+
+    <!--
+      エラーコード → 文言（GkillErrorText）。WearRequestHandler.kt の WIRE_ERR_* と1対1。
+      コードを足したらここと GkillErrorText.stringResOf にも足す（GkillErrorTextTest が落とす）。
+    -->
+    <string name="error_login_failed">ログインに失敗しました</string>
+    <string name="error_get_config_failed">設定の取得に失敗しました</string>
+    <string name="error_get_playing_timeis_failed">実行中の取得に失敗しました</string>
+    <string name="error_empty_timeis_id">終了対象が指定されていません</string>
+    <string name="error_empty_response">レスポンスが空です</string>
+    <string name="error_empty_session_id">セッションIDが空です</string>
+    <string name="error_unknown">不明なエラー</string>
+    <string name="error_get_timeis_failed">打刻の取得に失敗しました</string>
+    <string name="error_timeis_not_found">打刻が見つかりません</string>
+    <string name="error_update_timeis_failed">打刻の更新に失敗しました</string>
 </resources>

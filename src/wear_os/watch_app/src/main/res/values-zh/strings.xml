@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_record">📝 记录</string>
+    <string name="home_playing">▶ 进行中</string>
+    <string name="home_lantana">⭐️ 心情</string>
+
+    <string name="loading">加载中…</string>
+    <string name="loading_refresh_templates">正在更新模板…</string>
+    <string name="loading_submit">发送中…</string>
+    <string name="loading_playing">正在获取进行中的记录…</string>
+    <string name="loading_end_timeis">结束中…</string>
+
+    <string name="template_list_title">模板</string>
+    <string name="template_list_title_cached">模板（缓存）</string>
+    <string name="refresh">🔄 刷新</string>
+    <string name="confirm_record_template">要记录\n“%1$s”吗？</string>
+
+    <string name="playing_title">▶ 进行中</string>
+    <string name="playing_empty">没有进行中的\n打卡记录</string>
+    <string name="confirm_end_timeis">要结束\n“%1$s”吗？</string>
+    <string name="elapsed">已用时间：%1$s</string>
+
+    <string name="result_success">✓ 已记录</string>
+    <string name="result_error">✕ 错误：\n%1$s</string>
+    <string name="back">返回</string>
+
+    <string name="lantana_title">心情</string>
+    <string name="lantana_confirm">要记录这个心情吗？</string>
+
+    <string name="duplicate_confirm_message">刚刚已保存了\n相同的内容。\n仍要发送吗？</string>
+    <string name="duplicate_send_anyway">仍然发送</string>
+    <string name="cancel">取消</string>
+
+    <string name="error_phone_not_connected">无法连接到手机。</string>
+    <string name="error_phone_not_connected_check_pairing">无法连接到手机。\n请确认手表已与手机配对。</string>
+    <string name="error_templates_timeout">手机响应超时。\n请在手机上打开 gkill wear 设置应用并进行连接测试。</string>
+    <string name="error_playing_timeout">手机响应超时。</string>
+    <string name="error_submit_timeout">发送超时。请检查手机状态。</string>
+    <string name="error_end_timeis_timeout">结束超时。请检查手机状态。</string>
+</resources>

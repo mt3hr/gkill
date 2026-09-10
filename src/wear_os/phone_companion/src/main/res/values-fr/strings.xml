@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_locale_name">fr</string>
+
+    <string name="settings_title">Paramètres gkill wear</string>
+    <string name="hint_server_url">URL du serveur (ex. : http://localhost:9999)</string>
+    <string name="hint_user_id">Identifiant utilisateur</string>
+    <string name="hint_password">Mot de passe</string>
+    <string name="allow_self_signed_label">Autoriser un certificat auto-signé (pour les serveurs HTTPS auto-signés comme localhost. Le test de connexion affiche l\'empreinte du certificat et l\'épingle)</string>
+    <string name="save_and_test">Enregistrer et tester la connexion</string>
+    <string name="toast_fill_all_fields">Veuillez remplir tous les champs</string>
+    <string name="url_policy_rejection">http:// est réservé aux hôtes locaux (localhost / 127.0.0.1). Utilisez https:// pour les serveurs externes</string>
+    <string name="status_testing">Test de connexion…</string>
+    <string name="status_connected">Connexion réussie ! ID de session : %1$s…</string>
+    <string name="status_pin_saved_reconnecting">Certificat enregistré. Reconnexion…</string>
+    <string name="status_failed_cert_unapproved">Échec de la connexion : certificat non approuvé</string>
+    <string name="status_failed">Échec de la connexion : %1$s</string>
+
+    <string name="cert_dialog_title">Vérifiez le certificat</string>
+    <string name="cert_dialog_message">Le certificat du serveur n\'a pas pu être vérifié par une AC connue.\nFaire confiance à ce certificat auto-signé et l\'enregistrer ?\n\nSHA-256 :\n%1$s\n\nSi vous ne le reconnaissez pas, choisissez « Refuser » (attaque de l\'intermédiaire possible).</string>
+    <string name="cert_dialog_trust">Faire confiance et enregistrer</string>
+    <string name="cert_dialog_reject">Refuser</string>
+
+    <string name="notif_channel_sync">Synchronisation gkill wear</string>
+    <string name="notif_text">Traitement de la demande de la montre</string>
+
+    <string name="error_login_failed">Échec de l\'authentification</string>
+    <string name="error_get_config_failed">Impossible de charger les paramètres</string>
+    <string name="error_get_playing_timeis_failed">Impossible de charger les entrées en cours</string>
+    <string name="error_empty_timeis_id">Aucune entrée de temps à terminer n\'est spécifiée</string>
+    <string name="error_empty_response">Réponse vide</string>
+    <string name="error_empty_session_id">L\'ID de session est vide</string>
+    <string name="error_unknown">Erreur inconnue</string>
+    <string name="error_get_timeis_failed">Impossible de charger l\'entrée de temps</string>
+    <string name="error_timeis_not_found">Entrée de temps introuvable</string>
+    <string name="error_update_timeis_failed">Impossible de mettre à jour l\'entrée de temps</string>
+</resources>

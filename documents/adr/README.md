@@ -229,6 +229,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 |---|---|---|
 | [1001](1001-log-level-by-severity.md) | ログレベルは事象の重さで決める。既定でエラーだけは必ず残す | Accepted |
 | [1101](1101-wear-mood-goes-through-kftl-text.md) | ウォッチの気分記録は専用メッセージパスを足さず、KFTL テキストを既存の送信経路へ流す | Accepted |
+| [1102](1102-wear-ui-strings-in-android-resources-with-ja-default.md) | Wear OS の UI 文字列は Android リソースの7言語セット（既定 ja）で持ち、時計へ渡すエラー文言はスマホ側で訳す | Accepted |
 
 ## 旧→新 対応表
 

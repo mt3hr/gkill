@@ -41,7 +41,13 @@ class WearRequestWorker(
         val store = GkillCredentialStore(applicationContext)
         val hostKey = GkillServerTrust.hostKeyOf(store.getServerUrl())
         val pin = store.getPinnedCertSha256(hostKey).ifEmpty { null }
-        val apiClient = GkillApiClient(store.getServerUrl(), store.getAllowSelfSignedCert(), pin)
+        val apiClient = GkillApiClient(
+            store.getServerUrl(),
+            store.getAllowSelfSignedCert(),
+            pin,
+            // サーバーの error_message を UI と同じ言語で返してもらう
+            localeName = GkillLocale.serverLocaleName(applicationContext),
+        )
 
         val ledger = WearSubmitLedger(SharedPrefsLedgerStorage(applicationContext))
         val handler = WearRequestHandler(
@@ -56,7 +62,9 @@ class WearRequestWorker(
             Log.w(TAG, "Unknown path: $path")
             return Result.success()
         }
-        sendMessage(nodeId, response.path, response.data)
+        // ハンドラは ASCII のエラーコードを返す。時計に見せる文言へは送信直前のここで訳す
+        // （OK / DUPLICATE / JSON はそのまま）。時計側では訳さない。
+        sendMessage(nodeId, response.path, GkillErrorText.localizeWireResponse(applicationContext, response.data))
         return Result.success()
     }
 
@@ -94,16 +102,17 @@ class WearRequestWorker(
     override suspend fun getForegroundInfo(): ForegroundInfo {
         val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // 同じ ID で作り直すとチャンネル名は更新されるので、言語が変わっても追従する
             val channel = NotificationChannel(
                 NOTIF_CHANNEL_ID,
-                "gkill wear 同期",
+                applicationContext.getString(R.string.notif_channel_sync),
                 NotificationManager.IMPORTANCE_LOW,
             )
             nm.createNotificationChannel(channel)
         }
         val notification: Notification = NotificationCompat.Builder(applicationContext, NOTIF_CHANNEL_ID)
-            .setContentTitle("gkill wear")
-            .setContentText("時計からの要求を処理中")
+            .setContentTitle(applicationContext.getString(R.string.notif_title))
+            .setContentText(applicationContext.getString(R.string.notif_text))
             .setSmallIcon(android.R.drawable.stat_notify_sync)
             .setOngoing(true)
             .build()

@@ -9,15 +9,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Text
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.R
 import kotlinx.coroutines.delay
 
 /**
  * Shows the result of the KFTL submission.
- * - success=true  → green check, "記録しました"
+ * - success=true  → green check, R.string.result_success
  * - success=false → error message
  */
 @Composable
@@ -41,7 +43,7 @@ fun ResultScreen(
     ) {
         if (success) {
             Text(
-                text = "✓ 記録しました",
+                text = stringResource(R.string.result_success),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -49,7 +51,7 @@ fun ResultScreen(
             )
         } else {
             Text(
-                text = "✕ エラー:\n$errorMessage",
+                text = stringResource(R.string.result_error, errorMessage),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -57,7 +59,7 @@ fun ResultScreen(
             )
         }
         Button(onClick = onDismiss) {
-            Text("戻る")
+            Text(stringResource(R.string.back))
         }
     }
 }

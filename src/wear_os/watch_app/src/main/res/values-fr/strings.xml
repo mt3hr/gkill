@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_record">📝 Enregistrer</string>
+    <string name="home_playing">▶ En cours</string>
+    <string name="home_lantana">⭐️ Humeur</string>
+
+    <string name="loading">Chargement…</string>
+    <string name="loading_refresh_templates">Mise à jour des modèles…</string>
+    <string name="loading_submit">Envoi…</string>
+    <string name="loading_playing">Chargement des entrées en cours…</string>
+    <string name="loading_end_timeis">Fin en cours…</string>
+
+    <string name="template_list_title">Modèles</string>
+    <string name="template_list_title_cached">Modèles (cache)</string>
+    <string name="refresh">🔄 Actualiser</string>
+    <string name="confirm_record_template">Enregistrer\n« %1$s » ?</string>
+
+    <string name="playing_title">▶ En cours</string>
+    <string name="playing_empty">Aucune entrée de temps\nen cours</string>
+    <string name="confirm_end_timeis">Terminer\n« %1$s » ?</string>
+    <string name="elapsed">Écoulé : %1$s</string>
+
+    <string name="result_success">✓ Enregistré</string>
+    <string name="result_error">✕ Erreur :\n%1$s</string>
+    <string name="back">Retour</string>
+
+    <string name="lantana_title">Humeur</string>
+    <string name="lantana_confirm">Enregistrer cette humeur ?</string>
+
+    <string name="duplicate_confirm_message">Le même contenu vient\nd\'être enregistré.\nEnvoyer quand même ?</string>
+    <string name="duplicate_send_anyway">Envoyer quand même</string>
+    <string name="cancel">Annuler</string>
+
+    <string name="error_phone_not_connected">Connexion au téléphone impossible.</string>
+    <string name="error_phone_not_connected_check_pairing">Connexion au téléphone impossible.\nVérifiez que la montre est appairée au téléphone.</string>
+    <string name="error_templates_timeout">Le téléphone n\'a pas répondu à temps.\nOuvrez l\'application de paramètres gkill wear sur le téléphone et testez la connexion.</string>
+    <string name="error_playing_timeout">Le téléphone n\'a pas répondu à temps.</string>
+    <string name="error_submit_timeout">Délai d\'envoi dépassé. Vérifiez le téléphone.</string>
+    <string name="error_end_timeis_timeout">Délai de fin dépassé. Vérifiez le téléphone.</string>
+</resources>

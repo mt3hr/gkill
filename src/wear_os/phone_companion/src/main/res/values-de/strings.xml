@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_locale_name">de</string>
+
+    <string name="settings_title">gkill wear Einstellungen</string>
+    <string name="hint_server_url">Server-URL (z. B. http://localhost:9999)</string>
+    <string name="hint_user_id">Benutzer-ID</string>
+    <string name="hint_password">Passwort</string>
+    <string name="allow_self_signed_label">Selbstsigniertes Zertifikat zulassen (für selbstsignierte HTTPS-Server wie localhost. Der Verbindungstest zeigt den Fingerabdruck des Zertifikats an und pinnt ihn)</string>
+    <string name="save_and_test">Speichern &amp; Verbindung testen</string>
+    <string name="toast_fill_all_fields">Bitte alle Felder ausfüllen</string>
+    <string name="url_policy_rejection">http:// ist nur für lokale Hosts (localhost / 127.0.0.1) erlaubt. Für externe Server https:// verwenden</string>
+    <string name="status_testing">Verbindung wird getestet…</string>
+    <string name="status_connected">Verbindung erfolgreich! Sitzungs-ID: %1$s…</string>
+    <string name="status_pin_saved_reconnecting">Zertifikat gespeichert. Erneute Verbindung…</string>
+    <string name="status_failed_cert_unapproved">Verbindung fehlgeschlagen: Zertifikat nicht bestätigt</string>
+    <string name="status_failed">Verbindung fehlgeschlagen: %1$s</string>
+
+    <string name="cert_dialog_title">Zertifikat prüfen</string>
+    <string name="cert_dialog_message">Das Serverzertifikat konnte von keiner bekannten CA verifiziert werden.\nDiesem selbstsignierten Zertifikat vertrauen und es speichern?\n\nSHA-256:\n%1$s\n\nWenn Sie es nicht kennen, wählen Sie „Ablehnen“ (möglicher Man-in-the-Middle-Angriff).</string>
+    <string name="cert_dialog_trust">Vertrauen und speichern</string>
+    <string name="cert_dialog_reject">Ablehnen</string>
+
+    <string name="notif_channel_sync">gkill wear Synchronisierung</string>
+    <string name="notif_text">Anfrage der Uhr wird verarbeitet</string>
+
+    <string name="error_login_failed">Anmeldung fehlgeschlagen</string>
+    <string name="error_get_config_failed">Einstellungen konnten nicht geladen werden</string>
+    <string name="error_get_playing_timeis_failed">Laufende Einträge konnten nicht geladen werden</string>
+    <string name="error_empty_timeis_id">Kein zu beendender Zeiteintrag angegeben</string>
+    <string name="error_empty_response">Leere Antwort</string>
+    <string name="error_empty_session_id">Sitzungs-ID ist leer</string>
+    <string name="error_unknown">Unbekannter Fehler</string>
+    <string name="error_get_timeis_failed">Zeiteintrag konnte nicht geladen werden</string>
+    <string name="error_timeis_not_found">Zeiteintrag nicht gefunden</string>
+    <string name="error_update_timeis_failed">Zeiteintrag konnte nicht aktualisiert werden</string>
+</resources>

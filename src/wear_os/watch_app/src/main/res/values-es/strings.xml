@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_record">📝 Registrar</string>
+    <string name="home_playing">▶ En curso</string>
+    <string name="home_lantana">⭐️ Ánimo</string>
+
+    <string name="loading">Cargando…</string>
+    <string name="loading_refresh_templates">Actualizando plantillas…</string>
+    <string name="loading_submit">Enviando…</string>
+    <string name="loading_playing">Cargando entradas en curso…</string>
+    <string name="loading_end_timeis">Finalizando…</string>
+
+    <string name="template_list_title">Plantillas</string>
+    <string name="template_list_title_cached">Plantillas (caché)</string>
+    <string name="refresh">🔄 Actualizar</string>
+    <string name="confirm_record_template">¿Registrar\n“%1$s”?</string>
+
+    <string name="playing_title">▶ En curso</string>
+    <string name="playing_empty">No hay entradas\nde tiempo en curso</string>
+    <string name="confirm_end_timeis">¿Finalizar\n“%1$s”?</string>
+    <string name="elapsed">Transcurrido: %1$s</string>
+
+    <string name="result_success">✓ Registrado</string>
+    <string name="result_error">✕ Error:\n%1$s</string>
+    <string name="back">Volver</string>
+
+    <string name="lantana_title">Estado de ánimo</string>
+    <string name="lantana_confirm">¿Registrar este estado de ánimo?</string>
+
+    <string name="duplicate_confirm_message">El mismo contenido\nse guardó hace un momento.\n¿Enviar de todos modos?</string>
+    <string name="duplicate_send_anyway">Enviar de todos modos</string>
+    <string name="cancel">Cancelar</string>
+
+    <string name="error_phone_not_connected">No se puede conectar con el teléfono.</string>
+    <string name="error_phone_not_connected_check_pairing">No se puede conectar con el teléfono.\nComprueba que el reloj está emparejado con el teléfono.</string>
+    <string name="error_templates_timeout">El teléfono no respondió a tiempo.\nAbre la app de configuración de gkill wear en el teléfono y prueba la conexión.</string>
+    <string name="error_playing_timeout">El teléfono no respondió a tiempo.</string>
+    <string name="error_submit_timeout">Tiempo de envío agotado. Comprueba el teléfono.</string>
+    <string name="error_end_timeis_timeout">Tiempo de finalización agotado. Comprueba el teléfono.</string>
+</resources>

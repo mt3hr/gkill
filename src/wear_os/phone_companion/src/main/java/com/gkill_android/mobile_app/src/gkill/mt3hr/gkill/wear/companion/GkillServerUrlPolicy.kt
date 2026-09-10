@@ -8,13 +8,11 @@ import java.net.URI
  * 平文HTTPはループバック(localhost / 127.0.0.0/8 / ::1)だけ許可する。
  * それ以外のホストへ http:// で繋ぐと password_sha256 とセッションIDが平文で流れ、
  * 経路上の第三者に再利用可能な資格情報を渡すことになる(2026-08-30 監査 F-007)。
- * network_security_config でも遮断されるが、保存前にここで拒否して理由を示す。
+ * network_security_config でも遮断されるが、保存前にここで拒否して理由を示す
+ * (文言は `R.string.url_policy_rejection`。この object は Android 非依存に保つ)。
  * HTTPS は制限しない(自己署名は GkillServerTrust の TOFU/ピン留めが受け持つ)。
  */
 object GkillServerUrlPolicy {
-
-    const val REJECTION_MESSAGE =
-        "http:// はローカル(localhost / 127.0.0.1)専用です。外部サーバーへは https:// を使ってください"
 
     fun isAllowed(serverUrl: String): Boolean {
         val uri = try {

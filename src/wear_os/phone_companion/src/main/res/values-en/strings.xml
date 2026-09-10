@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_locale_name">en</string>
+
+    <string name="settings_title">gkill wear Settings</string>
+    <string name="hint_server_url">Server URL (e.g. http://localhost:9999)</string>
+    <string name="hint_user_id">User ID</string>
+    <string name="hint_password">Password</string>
+    <string name="allow_self_signed_label">Allow self-signed certificate (for self-signed HTTPS servers such as localhost. The connection test shows the certificate fingerprint and pins it)</string>
+    <string name="save_and_test">Save &amp; Test Connection</string>
+    <string name="toast_fill_all_fields">Please fill in all fields</string>
+    <string name="url_policy_rejection">http:// is only allowed for local hosts (localhost / 127.0.0.1). Use https:// for remote servers</string>
+    <string name="status_testing">Testing connection…</string>
+    <string name="status_connected">Connected! Session ID: %1$s…</string>
+    <string name="status_pin_saved_reconnecting">Certificate saved. Reconnecting…</string>
+    <string name="status_failed_cert_unapproved">Connection failed: certificate not approved</string>
+    <string name="status_failed">Connection failed: %1$s</string>
+
+    <string name="cert_dialog_title">Verify the certificate</string>
+    <string name="cert_dialog_message">The server certificate could not be verified by a known CA.\nTrust and save this self-signed certificate?\n\nSHA-256:\n%1$s\n\nIf you do not recognize it, choose “Reject” (this may be a man-in-the-middle attack).</string>
+    <string name="cert_dialog_trust">Trust and save</string>
+    <string name="cert_dialog_reject">Reject</string>
+
+    <string name="notif_channel_sync">gkill wear sync</string>
+    <string name="notif_text">Processing a request from the watch</string>
+
+    <string name="error_login_failed">Login failed</string>
+    <string name="error_get_config_failed">Failed to load settings</string>
+    <string name="error_get_playing_timeis_failed">Failed to load in-progress entries</string>
+    <string name="error_empty_timeis_id">No time entry specified to end</string>
+    <string name="error_empty_response">Empty response</string>
+    <string name="error_empty_session_id">Session ID is empty</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="error_get_timeis_failed">Failed to load the time entry</string>
+    <string name="error_timeis_not_found">Time entry not found</string>
+    <string name="error_update_timeis_failed">Failed to update the time entry</string>
+</resources>

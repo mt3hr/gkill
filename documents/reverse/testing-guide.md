@@ -17,8 +17,8 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
 | MCP サーバ | 1015 | 24 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
-| Wear OS | 200 | 14 | JUnit 4 + MockK |
-| **合計** | **4,707** | **431** | |
+| Wear OS | 226 | 17 | JUnit 4 + MockK |
+| **合計** | **4,733** | **434** | |
 
 数え直すコマンド:
 
@@ -422,8 +422,8 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 - インストルメンテーションテスト: Android フレームワーク統合
 
 **Wear OS** (`src/wear_os/`): JUnit 4 + MockK
-- phone_companion（7ファイル / 116テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer、playing検索クエリの形状検証含む）、メッセージハンドリング、サーバ証明書の信頼（フィンガープリント計算とピン照合）、二重送信防止台帳
-- watch_app（6ファイル / 80テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル、気分記録の KFTL 組み立て
+- phone_companion（10ファイル / 140テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer、playing検索クエリの形状検証・全 API への `locale_name` 送信含む）、メッセージハンドリング、サーバ証明書の信頼（フィンガープリント計算とピン照合）、二重送信防止台帳、エラーコード→文言の照合（`GkillErrorText`）、`strings.xml` の7言語セットの整合
+- watch_app（7ファイル / 86テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル、気分記録の KFTL 組み立て、`strings.xml` の7言語セットの整合
 
 ## 4. テスト設定ファイル
 
