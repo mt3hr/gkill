@@ -254,8 +254,13 @@ func updateLatestDataRepositoryAddress(ctx context.Context, repos *reps.GkillRep
 
 // doBaseRequest adds tags and texts for the given targetID.
 // Mirrors: KFTLRequest.do_request() in TS (the tag/text portion).
-func (b *KFTLRequestBase) doBaseRequest(ctx context.Context, targetID string) error {
-	relatedTime := b.GetRelatedTime()
+//
+// relatedTime は呼ぶ側（外側の型）が `r.GetRelatedTime()` で渡す。
+// **埋め込み基底のメソッドは外側の override を見ない**（Go は埋め込みで仮想ディスパッチしない）ので、
+// ここで `b.GetRelatedTime()` を引くと kftlNlogRequest がブロック共有の時刻を返す override が効かず、
+// 支出（ーん）の `？`行の時刻がタグ・テキストに乗らないまま「今」で書かれていた
+// （TS は `super.do_request` の中の `this.get_related_time()` が override に届くので揃っていなかった）。
+func (b *KFTLRequestBase) doBaseRequest(ctx context.Context, targetID string, relatedTime time.Time) error {
 	now := b.CreateTime
 
 	// Add tags

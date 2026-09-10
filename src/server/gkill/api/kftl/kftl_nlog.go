@@ -128,7 +128,7 @@ func (r *kftlNlogRequest) DoRequest(ctx context.Context) error {
 			fmt.Errorf("nlog title has no amount: %q", r.title))
 	}
 
-	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
+	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err
 	}
 	relatedTime := r.GetRelatedTime()

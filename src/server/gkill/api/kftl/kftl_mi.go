@@ -52,7 +52,7 @@ func (r *kftlMiRequest) DoRequest(ctx context.Context) error {
 
 	boardName := r.resolvedBoardName()
 
-	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
+	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err
 	}
 
