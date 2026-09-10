@@ -265,7 +265,7 @@ func TestHandleGetKyous_PlayingTimeNullMeansNoPlayingFilter(t *testing.T) {
 	withPlaying := getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{
 		CalendarStartDate: &calendarStart,
 		CalendarEndDate:   &calendarEnd,
-		PlayingTime:        &playingTime,
+		PlayingTime:       &playingTime,
 	})
 	if len(withPlaying.Errors) != 0 {
 		t.Fatalf("get kyous errors: %+v", withPlaying.Errors)
