@@ -17,6 +17,7 @@ Vitest
 | `src/client/__tests__/unit/kftl/kftl-type-detection.test.ts` | ステートメント型の判定（日本語プレフィックス + ASCIIプレフィックス、否定ケース含む） |
 | `src/client/__tests__/unit/kftl/kftl-request-generation.test.ts` | 解析結果からの API リクエスト生成（ASCIIプレフィックス入力: `#tag1,tag2`、`?日時`、`,`/`,,` 区切り、`--` ブロック、保存文字 `!` を含む） |
 | `src/client/__tests__/unit/kftl/kftl-individual-types.test.ts` | ステートメント型ごとの補足テスト（Split と SplitAndNextSecond の排他、Kmemo の catch-all、プレフィックスの一意性、startsWith 型と exact 型の差） |
+| `src/client/__tests__/unit/kftl/kftl-repeat-statement.test.ts` | 繰り返し「？？」の行の並び・展開・不正行・既存スキップ。「繰り返しで書き込まれる時刻」は 8 型ぶん do_request まで通し、API へ渡る本体・タグ・テキストの時刻欄を年まで固定する（打刻が 2083 年で登録された事故の再発防止） |
 | `src/client/__tests__/unit/kftl/kftl-submit-emits.test.ts` | 送信の結果を一覧へ伝える経路（tx の commit/discard、`registered_kyou` / `updated_kyou`、タブ、複数ウィンドウ、MiReKyou ブロックの送信） |
 
 ## テスト内容

@@ -36,7 +36,7 @@ func (r *kftlTimeIsRequest) DoRequest(ctx context.Context) error {
 	if r.title == "" {
 		return nil
 	}
-	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
+	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err
 	}
 	relatedTime := r.GetRelatedTime()
@@ -230,7 +230,7 @@ func (r *kftlTimeIsStartRequest) DoRequest(ctx context.Context) error {
 	if r.title == "" {
 		return nil
 	}
-	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
+	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err
 	}
 	relatedTime := r.GetRelatedTime()
@@ -392,7 +392,7 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 
 	// タグ・テキストの書き込みは「終了対象が見つかってから」。以前はこの判定より前にあり、
 	// 終了できなかったときでもタグだけが実在しないIDを指したまま残っていた。
-	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
+	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err
 	}
 
@@ -593,7 +593,7 @@ outer:
 	}
 
 	// タイトル指定版と同じ理由で、終了対象が見つかってから書く
-	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
+	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err
 	}
 

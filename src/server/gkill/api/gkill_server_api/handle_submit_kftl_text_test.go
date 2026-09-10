@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
@@ -269,4 +270,88 @@ func TestHandleSubmitKFTLText_InvalidInputLines(t *testing.T) {
 	if got := countKmemosByContent(t, tsURL, sessionID, word); got != 0 {
 		t.Errorf("不正行を含む本文の正しい行が保存されている: 件数 = %d, want 0", got)
 	}
+}
+
+// 繰り返し「？？」で実際に書き込まれる時刻の年チェック（Wear / MCP が通る Go 経路）。
+//
+// 2026-09-10 に Web の打刻（ーち）が 2083 年で登録された事故は、kftl パッケージ側の
+// テストが「件数」しか見ていなかったので素通りした。ここでは HTTP で送って型別 API で
+// 引き直し、**書き込まれた値**を年まで見る。時刻のみの行は送信日の日付で補完されるが、
+// 起点 2026-09-07 から暦日数でずらすので、いつ実行しても同じ日付に着地する。
+func TestHandleSubmitKFTLText_RepeatWritesShiftedTimes(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
+
+	t.Run("打刻の開始と終了が起点からの日付で書かれ、年が変わらない", func(t *testing.T) {
+		text := "ーち\nrepeatWiredWork\n08:30\n17:30\n？？\n毎日\n3\n\n2026-09-07\n？？"
+		res := submitKFTL(t, tsURL, sessionID, text, "")
+		if len(res.Errors) > 0 {
+			t.Fatalf("submit kftl text errors: %+v", res.Errors)
+		}
+		if len(res.Created) != 3 {
+			t.Fatalf("created の件数 = %d, want 3: %+v", len(res.Created), res.Created)
+		}
+		gotStarts := map[int64]bool{}
+		for i, created := range res.Created {
+			if created.DataType != "timeis" {
+				t.Fatalf("created[%d].DataType = %q, want timeis", i, created.DataType)
+			}
+			resp := postJSON(t, tsURL+"/api/get_timeis", &req_res.GetTimeisRequest{SessionID: sessionID, ID: created.ID, LocaleName: "en"})
+			var got req_res.GetTimeisResponse
+			if err := json.NewDecoder(resp.Body).Decode(&got); err != nil {
+				t.Fatalf("decode get timeis response: %v", err)
+			}
+			resp.Body.Close()
+			if len(got.Errors) > 0 || len(got.TimeisHistories) == 0 {
+				t.Fatalf("get timeis id=%s: errors=%+v histories=%d", created.ID, got.Errors, len(got.TimeisHistories))
+			}
+			timeIs := got.TimeisHistories[0]
+			if timeIs.StartTime.Year() != 2026 {
+				t.Errorf("[%d] 開始の年 = %d, want 2026 (2083 年の再発シグネチャ)", i, timeIs.StartTime.Year())
+			}
+			if timeIs.EndTime == nil {
+				t.Fatalf("[%d] 終了が無い", i)
+			}
+			wantEnd := time.Date(2026, 9, timeIs.StartTime.Day(), 17, 30, 0, 0, time.Local)
+			if !timeIs.EndTime.Equal(wantEnd) {
+				t.Errorf("[%d] 終了 = %v, want %v (開始と同じ日数だけずれる)", i, timeIs.EndTime, wantEnd)
+			}
+			gotStarts[timeIs.StartTime.Unix()] = true
+		}
+		for day := 7; day <= 9; day++ {
+			want := time.Date(2026, 9, day, 8, 30, 0, 0, time.Local)
+			if !gotStarts[want.Unix()] {
+				t.Errorf("開始 %v が書かれていない (書かれた開始: %v)", want, gotStarts)
+			}
+		}
+	})
+
+	// 支出ブロックの `？`行の時刻はタグにも乗る。doBaseRequest が埋め込み基底の GetRelatedTime を
+	// 引いていた頃は Nlog の override（ブロック共有の時刻）が効かず、タグだけ「今」で書かれていた
+	// （TS は override に届くので Web と Wear / MCP で結果が違っていた）。
+	t.Run("支出の関連時刻がタグにも乗る", func(t *testing.T) {
+		text := "ーん\nrepeatWiredShop\nrepeatWiredItem\n200\n。repeatWiredTag\n？2026-09-07 12:00"
+		res := submitKFTL(t, tsURL, sessionID, text, "")
+		if len(res.Errors) > 0 {
+			t.Fatalf("submit kftl text errors: %+v", res.Errors)
+		}
+		if len(res.Created) != 1 || res.Created[0].DataType != "nlog" {
+			t.Fatalf("created = %+v, want nlog 1件", res.Created)
+		}
+		resp := postJSON(t, tsURL+"/api/get_tags_by_id", &req_res.GetTagsByTargetIDRequest{SessionID: sessionID, TargetID: res.Created[0].ID, LocaleName: "en"})
+		defer resp.Body.Close()
+		var got req_res.GetTagsByTargetIDResponse
+		if err := json.NewDecoder(resp.Body).Decode(&got); err != nil {
+			t.Fatalf("decode get tags response: %v", err)
+		}
+		if len(got.Errors) > 0 || len(got.Tags) != 1 {
+			t.Fatalf("get tags: errors=%+v tags=%+v, want 1件", got.Errors, got.Tags)
+		}
+		want := time.Date(2026, 9, 7, 12, 0, 0, 0, time.Local)
+		if !got.Tags[0].RelatedTime.Equal(want) {
+			t.Errorf("タグの関連時刻 = %v, want %v (ブロックの `？`行の時刻。基底で引くと「今」になる)", got.Tags[0].RelatedTime, want)
+		}
+	})
 }

@@ -112,7 +112,7 @@ func (r *kftlKmemoRequest) DoRequest(ctx context.Context) error {
 		return nil // skip blank kmemo
 	}
 
-	if err := r.doBaseRequest(ctx, r.RequestID); err != nil {
+	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err
 	}
 
