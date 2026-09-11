@@ -60,6 +60,7 @@ go-astilectron を使用して Electron ライクなデスクトップウィン�
 | `update_cache` | キャッシュ更新 |
 | `clear_cache` | ディスク上の派生キャッシュ削除 |
 | `reset_password` | パスワードを無効化してリセットURLを再発行（`common/password_admin.go`） |
+| `add_tag` | 検索条件 JSON（FindKyouQuery）に一致する Kyou へタグを付与（`common/add_tag.go`。稼働中サーバの HTTP クライアント） |
 
 ## common/ 配下
 

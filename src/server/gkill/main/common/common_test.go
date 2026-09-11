@@ -23,7 +23,7 @@ func TestSubcommandsUseRunE(t *testing.T) {
 		"optimize":             OptimizeCmd,
 		"update_cache":         UpdateCacheCmd,
 		"reset_password":       ResetPasswordCmd,
-		"auto_tag":             AutoTagCmd,
+		"add_tag":              AddTagCmd,
 	}
 	for name, cmd := range cmds {
 		if cmd == nil {
