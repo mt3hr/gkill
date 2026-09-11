@@ -24,26 +24,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// addTagAppName はタグのCREATE_APP/UPDATE_APPへ刻む名前。
-//
-// サブコマンドは2026-09に auto_tag から add_tag へ改名したが、**この値は変えていない**。
-// 付与元をあとから見分けるための値なので、変えると過去に付けたぶんと出所が食い違う。
-// さらに addTagIDNamespace の材料でもあるので、変えるとタグIDまで食い違い、
-// 再実行が AlreadyExistTagError で止まらずに全件付け直しになる。
-const addTagAppName = "gkill_auto_tag"
+// addTagAppName はタグのCREATE_APP/UPDATE_APPへ刻む名前。出所の表示用で、判定には使わない。
+// 旧 auto_tag が付けたぶんは "gkill_auto_tag" のまま残っている。
+const addTagAppName = "gkill_add_tag"
 
 // addTagLocaleName はAPIへ渡すロケール。エラーメッセージの取得にしか使わない。
 const addTagLocaleName = "ja"
-
-// addTagIDNamespace は自動付与したタグのIDを決めるための名前空間。
-//
-// 同じ(対象ID, タグ名)には常に同じIDを振る。これが冪等性の要で、
-// 「付いているか」の判定を取りこぼしても、サーバ側が同じIDのタグを
-// AlreadyExistTagErrorで弾くので二重登録にならない。
-// 論理削除されたタグも同じIDで弾かれるため、消したタグが復活することもない。
-//
-// 文字列を変えると過去に付与したぶんとIDが食い違い、全件が付け直しになる。
-var addTagIDNamespace = uuid.NewSHA1(uuid.NameSpaceOID, []byte("github.com/mt3hr/gkill/"+addTagAppName))
 
 var (
 	addTagRuleArgs      []string
@@ -104,7 +90,8 @@ type addTagTarget struct {
 // 認証はissueLocalSessionで発行する対象ユーザの短命セッション
 // (APIはセッションのユーザとして動くので、管理者セッションでは対象ユーザのrepを見られない)。
 //
-// すでに同じタグが付いているKyouには何もしないので、何度実行してもよい。
+// すでに同じタグが付いているKyou(画面から付けたものも含む)には何もしないので、何度実行してもよい。
+// 判定はタグ名だけで、画面から消したタグは「付いていない」ので次回付け直される。
 var AddTagCmd = &cobra.Command{
 	Use:   "add_tag",
 	Short: `add_tag 'user_id' --rules_file <path> | --rule '<json>'`,
@@ -556,9 +543,29 @@ func putAddTagTarget(targets map[string]*addTagTarget, kyou reps.Kyou, tagName s
 	target.Tags = append(target.Tags, tagName)
 }
 
-// addTagID は(対象ID, タグ名)から決まるタグのIDを返す。
-func addTagID(targetID string, tagName string) string {
-	return uuid.NewSHA1(addTagIDNamespace, []byte(targetID+"\x00"+tagName)).String()
+// newAddTagRow は1件ぶんのタグ行を組み立てる。
+//
+// IDは画面から付けるときと同じランダムなUUID。かつて(旧 auto_tag)は(対象ID, タグ名)から
+// 決まるUUIDv5にして、消したタグの行が同じIDで残ることを使って「手で消したタグは
+// 付け直さない」を実現していたが、要件は「付いていなければ付ける」なので2026-09-11にやめた。
+// 「付いているか」はタグ名の差分(collectByQuery)で決まり、IDは判定に関わらない。
+func newAddTagRow(targetID string, tagName string, kyou reps.Kyou, userID string, device string, runAt time.Time) reps.Tag {
+	return reps.Tag{
+		IsDeleted: false,
+		ID:        uuid.New().String(),
+		TargetID:  targetID,
+		Tag:       tagName,
+		// タグの関連時刻は対象のKyouの時刻に合わせる
+		RelatedTime:  kyou.RelatedTime,
+		CreateTime:   runAt,
+		CreateApp:    addTagAppName,
+		CreateDevice: device,
+		CreateUser:   userID,
+		UpdateTime:   runAt,
+		UpdateApp:    addTagAppName,
+		UpdateDevice: device,
+		UpdateUser:   userID,
+	}
 }
 
 // addTags は集めた対象へタグを付ける。
@@ -573,26 +580,11 @@ func addTags(ctx context.Context, client *addTagAPIClient, userID string, target
 	// 途中で止めて再開したときに同じ順で進むよう、並びを決めておく
 	slices.Sort(targetIDs)
 
-	added, alreadyExist := 0, 0
+	added := 0
 	for _, targetID := range targetIDs {
 		target := targets[targetID]
 		for _, tagName := range target.Tags {
-			tag := reps.Tag{
-				IsDeleted: false,
-				ID:        addTagID(targetID, tagName),
-				TargetID:  targetID,
-				Tag:       tagName,
-				// タグの関連時刻は対象のKyouの時刻に合わせる
-				RelatedTime:  target.Kyou.RelatedTime,
-				CreateTime:   runAt,
-				CreateApp:    addTagAppName,
-				CreateDevice: client.Endpoint.Device,
-				CreateUser:   userID,
-				UpdateTime:   runAt,
-				UpdateApp:    addTagAppName,
-				UpdateDevice: client.Endpoint.Device,
-				UpdateUser:   userID,
-			}
+			tag := newAddTagRow(targetID, tagName, target.Kyou, userID, client.Endpoint.Device, runAt)
 
 			if addTagDryRun {
 				fmt.Printf("(dry run) add tag: target = %s tag = %s rep = %s\n", targetID, tagName, target.Kyou.RepName)
@@ -600,14 +592,8 @@ func addTags(ctx context.Context, client *addTagAPIClient, userID string, target
 				continue
 			}
 
-			exist, err := client.AddTag(ctx, tag)
-			if err != nil {
+			if err := client.AddTag(ctx, tag); err != nil {
 				return fmt.Errorf("error at add tag target = %s tag = %s user id = %s: %w", targetID, tagName, userID, err)
-			}
-			if exist {
-				// 同じIDのタグが既にある。消されたタグを付け直さないための経路でもあるので、失敗ではない
-				alreadyExist++
-				continue
 			}
 			added++
 			if shouldRefreshAddTagSession(added) {
@@ -622,7 +608,7 @@ func addTags(ctx context.Context, client *addTagAPIClient, userID string, target
 		}
 	}
 
-	fmt.Printf("%s: added = %d already_exist = %d elapsed = %s\n", userID, added, alreadyExist, time.Since(runAt).String())
+	fmt.Printf("%s: added = %d elapsed = %s\n", userID, added, time.Since(runAt).String())
 	return nil
 }
 
@@ -687,12 +673,10 @@ func (c *addTagAPIClient) post(ctx context.Context, path string, requestBody any
 	}
 	if resp.StatusCode != http.StatusOK {
 		// 非2xxでも、本文のerrorsに中身があるならここでは打ち切らない。
-		// エラーの意味はerror_codeにしか入っておらず、その判定は呼び出し側にしかできない。
-		// 特にAddTagはERR000056(既存ID)を「既に付いている」として飲む必要があり、
-		// 2026-08からERR000056はHTTP 409で届くため、ここで打ち切ると
-		// 冪等なはずの再実行が最初の既存タグで失敗するようになってしまう。
-		// それ以外の呼び出し側もaddTagResponseErrorでerror_message込みのエラーにする
-		// (本文のerrorsを優先する判断はMCPのgkill-client.mjsと同じ)。
+		// エラーの意味はerror_codeにしか入っておらず、呼び出し側が addTagResponseError で
+		// error_code と error_message 込みのエラーにする(「HTTP 401」だけでは
+		// セッション切れなのか権限不足なのか分からない。本文のerrorsを優先する判断は
+		// MCPのgkill-client.mjsと同じ)。
 		// 本文にエラーの中身が無いときだけ、ステータスを唯一の手掛かりとして返す。
 		probe := struct {
 			Errors []*message.GkillError `json:"errors"`
@@ -784,27 +768,19 @@ func (c *addTagAPIClient) FindTaggedKyouIDs(ctx context.Context, query *find.Fin
 	return taggedIDs, nil
 }
 
-// AddTag はタグを1件付ける。
-// 同じIDのタグが既にある場合はtrueを返す(失敗ではない)。
-func (c *addTagAPIClient) AddTag(ctx context.Context, tag reps.Tag) (alreadyExist bool, err error) {
+// AddTag はタグを1件付ける。応答のerrorsに中身があれば(既存IDの ERR000056 も含めて)失敗。
+// IDはランダムなので既存IDに当たることは無く、当たったならそれは異常。
+func (c *addTagAPIClient) AddTag(ctx context.Context, tag reps.Tag) error {
 	response := &req_res.AddTagResponse{}
-	err = c.post(ctx, "/api/add_tag", &req_res.AddTagRequest{
+	err := c.post(ctx, "/api/add_tag", &req_res.AddTagRequest{
 		SessionID:  c.SessionID,
 		Tag:        tag,
 		LocaleName: addTagLocaleName,
 	}, response)
 	if err != nil {
-		return false, err
+		return err
 	}
-	for _, gkillError := range response.Errors {
-		if gkillError != nil && gkillError.ErrorCode == message.AlreadyExistTagError {
-			return true, nil
-		}
-	}
-	if err := addTagResponseError("/api/add_tag", response.Errors); err != nil {
-		return false, err
-	}
-	return false, nil
+	return addTagResponseError("/api/add_tag", response.Errors)
 }
 
 // addTagResponseError は応答のerrorsを1つのerrorにまとめる。
