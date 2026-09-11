@@ -100,7 +100,7 @@ ERR000002 でログアウトさせるので、**存在しないユーザIDにパ
 - **本文をステータスより先に読む消費者**は直した ——
   MCP（`gkill-client.mjs` の `post()`。直さないと `callApi` の自動再ログインに到達せず、
   長寿命プロセスなのでセッション期限以降ずっと復旧できなくなる）、
-  `auto_tag` CLI、Wear OS companion、E2E ヘルパ。
+  `add_tag` CLI（当時の名前は auto_tag）、Wear OS companion、E2E ヘルパ。
   衛星リポジトリ（`gkill_autolog` / `gkill_autocomplete`）も同じ理由で直した。
 - Service Worker は `service-worker-utils.ts` が既に `!response.ok` を見ているので、
   **非200がキャッシュに焼き付くことはない**（むしろ本文のパースを1回省ける）。
@@ -139,7 +139,7 @@ gzip として読むと最初の空メンバで EOF になるため丸ごと失�
 （84本の API がすべて無条件に `res.json()` してから `error_code` で分岐）。
 よってボディを変えなければクライアントは無改修で通る。
 一方で**本文より先にステータスで打ち切る**実装は
-MCP（`gkill-client.mjs:108`）、`auto_tag` CLI（`auto_tag.go:381`）、
+MCP（`gkill-client.mjs:108`）、`add_tag` CLI（当時の名前は auto_tag。現 `add_tag.go` の `post`）、
 Wear OS companion（`GkillApiClient.kt` の7箇所）、
 衛星の `gkill_autolog` / `gkill_autocomplete` にあり、いずれも直した。
 

@@ -151,7 +151,7 @@ func findLocalAdminUserID(ctx context.Context, configDBRootDir string) (string, 
 
 // issueLocalSession は指定したユーザの短命セッションをローカルのDBへ直接書いて発行する。
 //   - refresh は、発行したセッションの有効期限を今から localAdminSessionTTL 先へ延ばす。
-//     auto_tag のように長時間走るコマンドが、処理の合間に呼んで期限切れを防ぐために使う。
+//     add_tag のように長時間走るコマンドが、処理の合間に呼んで期限切れを防ぐために使う。
 //   - cleanup は、発行したセッションを削除してDAOを閉じる。
 //
 // APIはセッションのユーザとして動くので、あるユーザのKyouを扱うサブコマンドは
@@ -195,7 +195,7 @@ func issueLocalSession(ctx context.Context, configDBRootDir string, device strin
 		LoginTime:       time.Now(),
 		ExpirationTime:  time.Now().Add(localAdminSessionTTL),
 		// IsLocalAppUser は open_file/open_directory（サーバ上でコマンド起動）のゲート。
-		// CLI が発行する短命セッション（update_cache / auto_tag）はどれも不要なので false にする（最小権限）。
+		// CLI が発行する短命セッション（update_cache / add_tag）はどれも不要なので false にする（最小権限）。
 		IsLocalAppUser: false,
 	}
 	if _, err := loginSessionDAO.AddLoginSession(ctx, loginSession); err != nil {
