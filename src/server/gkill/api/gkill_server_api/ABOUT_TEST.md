@@ -40,7 +40,7 @@ Go `testing` パッケージ
 | `auth_middleware_capped_test.go` | 無認証経路のボディ上限（±1バイト境界・413 の JSON 本文）、スローボディの読み取り期限、`serve.go` のボディ付き `wrapNoAuth` 登録が capped 版であることのソース走査（F-002）。加えて accessLog の `responseRecorder` と gzip の `gzipResponseWriter` が `Unwrap` を持つこと —— どちらかが欠けると `http.ResponseController` が底の接続へ届かず、読み取り期限が本番経路でだけ静かに無効になる（コンパイル時アサーションも両ファイルに常設） |
 | `handle_add_urlog_skip_wiring_test.go` | ソース走査ガード。`handle_add_urlog.go` が `FillURLogFieldSkipping` へ `request.SkipFetchMetadata, request.SkipFetchFavicon` をこの順で渡すこと。両方 bool なので入れ替えてもコンパイルも既存テストも通り、MCP の「両方 false なら外向き通信なし」の約束が黙って破れる（reps 層のテストはハンドラを通らない。実HTTP取得のテストは safefetch の SSRF 対策と干渉するため置けない） |
 | `handle_browse_zip_contents_test.go` | ZIP 展開（`extractZip`）の正常系と、圧縮爆弾の拒否 |
-| `handle_submit_kftl_text_test.go` | KFTL 送信の冪等キー、作成された記録の `created[]` 返却、利用者の書き間違い（ERR000416）が不正行ごとに行番号・行テキスト付きで積まれ HTTP 400 になること（解釈フェーズの失敗では正しい行も保存されない）、繰り返し「？？」で**書き込まれた**打刻の開始・終了が起点からの日付で年が変わらないこと、支出の `？`行の時刻がタグにも乗ること（Wear / MCP が通る Go 経路の年チェック） |
+| `handle_submit_kftl_text_test.go` | KFTL 送信の冪等キー、作成された記録の `created[]` 返却、利用者の書き間違い（ERR000416）が不正行ごとに行番号・行テキスト付きで積まれ HTTP 400 になること（解釈フェーズの失敗では正しい行も保存されない）、繰り返し「？？」で**書き込まれた**打刻の開始・終了が起点からの日付で年が変わらないこと、支出の `？`行の時刻がタグにも乗ること（Wear / MCP が通る Go 経路の年チェック）、要求の `create_app` が書き込まれた記録の `create_app` / `update_app` に載り、無指定と空白は `gkill_kftl` に落ちること（Wear の `gkill_wear`） |
 | `kftl_idempotency_test.go` | 冪等キー台帳（`markDone` 後の達成済み判定、TTL 失効で再実行対象へ戻ること、`markDone` 時の GC） |
 | `shared_file_authz_test.go` | 共有経路のファイル配信の認可。共有クエリの結果に含まれるファイルだけを許可し、同一 rep 内の兄弟ファイルは 403 にすること（許可集合の突き合わせと URL パスの正規化） |
 | `web_push_test.go` | WebPush 送信失敗（`webpush.SendNotification` が nil resp を返す）で panic しないこと |

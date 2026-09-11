@@ -58,7 +58,7 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 
 **`~~` は既存レコードをタスク化できない。** 対象IDは `ctx.ThisStatementLineTargetID` ＝**同じ送信テキストの直前の行が採番したUUID**で、gkill に既にある記録を指す構文は無い。ツール説明にそう書き戻さないこと。
 
-**KFTL 経由で書いた記録は `create_app="gkill_kftl"` / `create_device=<サーバのdevice>`。** MCP から書いても同じで、手打ちのメモ帳と**区別する欄が無い**（`gkill_add_*` は `gkill_mcp_readwrite` / `mcp`）。`create_apps:["gkill_mcp_readwrite"]` を「MCP で作った記録の探し方」と案内しないこと。KFTL は DB トランザクションではないので、失敗した送信を再送するときは `idempotency_key` を同じ値で渡す（受け口は `SubmitKFTLTextRequest`。渡さないと孤児レコードが積む）。
+**KFTL 経由で書いた記録は `create_app="gkill_kftl"` / `create_device=<サーバのdevice>`。** MCP から書いても同じで、手打ちのメモ帳と**区別する欄が無い**（`gkill_add_*` は `gkill_mcp_readwrite` / `mcp`）。`create_apps:["gkill_mcp_readwrite"]` を「MCP で作った記録の探し方」と案内しないこと。例外は Wear OS で、companion が `SubmitKFTLTextRequest` の任意項目 `create_app` に `gkill_wear` を載せるので `create_app="gkill_wear"` になる（2026-09-11〜。サーバは空なら `gkill_kftl` に落とす。詳細は [gkill-mobile](../gkill-mobile/SKILL.md)）。KFTL は DB トランザクションではないので、失敗した送信を再送するときは `idempotency_key` を同じ値で渡す（受け口は `SubmitKFTLTextRequest`。渡さないと孤児レコードが積む）。
 
 ## 繰り返し「？？」
 

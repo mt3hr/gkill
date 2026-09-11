@@ -108,7 +108,7 @@ func applyMCPDataTypesFilter(kyous []reps.Kyou, dataTypes []string) []reps.Kyou 
 // applyMCPCreateAppsFilter は「どのアプリが書いた記録か」で絞る。
 // nil=未使用、非nil空=0件（FindQuery の null 意味論に揃える）。
 //
-// gkill_kftl / gkill_mcp_readwrite / gkill_mcp_write / urlog_bookmarklet / git などの値が
+// gkill_kftl / gkill_wear / gkill_mcp_readwrite / gkill_mcp_write / urlog_bookmarklet / git などの値が
 // 全レコードに入っているのに、引く手段だけが無かった（2026-08-24 の再監査）。
 //
 // **FindQuery に足していないのは意図的**。ReKyou / MiReKyou のワード委譲は

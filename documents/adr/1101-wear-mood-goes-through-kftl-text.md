@@ -84,6 +84,10 @@ KFTL テキストを組み立てて既存の `/gkill/submit` へ流す。
 
 - 気分記録は `create_app="gkill_kftl"` になり、メモ帳から手で書いた記録と**区別する欄が無い**。
   「ウォッチからつけた気分」を後から検索で絞ることはできない。
+  → **2026-09-11 に解消。** `SubmitKFTLTextRequest` に任意の `create_app` を足し、companion が
+  `gkill_wear`（`GkillApiClient.APP_NAME`。打刻終了の `update_app` と同じ値）を送るようにした。
+  無指定は従来どおり `gkill_kftl`（MCP と旧 companion）。それ以前にウォッチから書いた記録は
+  `create_device` もサーバ名で Web と同じなので識別できず、遡って直す手段は無い。
 - 送信画面の状態が KFTL テキストを持つようになったので、テンプレート記録側も
   `TemplateNode` ではなくテキストを持つ。テンプレートの表示名を送信中・重複確認の画面に
   出したくなったら、状態にラベルを足し直す必要がある。

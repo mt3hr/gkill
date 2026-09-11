@@ -160,6 +160,9 @@ class GkillApiClientTest {
         assertTrue(body.contains("\"session_id\":\"session-123\""))
         assertTrue(body.contains("\"kftl_text\":\"/m test memo\""))
         assertTrue(body.contains("\"locale_name\":\"ja\""))
+        // create_app は必ず載せる。データクラス側に既定値を付けると encodeDefaults=false で
+        // キーごと落ち、サーバーがエラーを出さずに "gkill_kftl" へ戻す（手打ちのメモ帳と区別できなくなる）。
+        assertTrue("create_app must be sent: $body", body.contains("\"create_app\":\"gkill_wear\""))
     }
 
     @Test

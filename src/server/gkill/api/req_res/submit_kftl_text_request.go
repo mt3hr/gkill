@@ -8,4 +8,9 @@ type SubmitKFTLTextRequest struct {
 	// 空なら冪等判定をしない（従来どおり毎回登録）。Wear のワーカー再送で
 	// 結果だけ届かなかったとき、同じキーで再送しても二重登録にならない（監査 S3-wear）。
 	IdempotencyKey string `json:"idempotency_key,omitempty"`
+	// CreateApp は生成される Kyou の create_app / update_app に載せるアプリ名。
+	// 空なら "gkill_kftl"（メモ帳と同じ）。Wear companion が "gkill_wear" を名乗るために使う。
+	// MCP は送らないので従来どおり "gkill_kftl" になる。add_kmemo 等と同じくクライアント申告で、
+	// サーバ側の許可リストは無い。
+	CreateApp string `json:"create_app,omitempty"`
 }
