@@ -149,6 +149,7 @@ export const READ_TOOLS = [
           description:
             "Allowlist of the app that WROTE each entry, matched against the create_app now returned on every " +
             "result. Known values: \"gkill\" (web UI and uploads), \"gkill_kftl\" (the KFTL notepad — AND anything written through gkill_submit_kftl, which the server stamps with this same value), " +
+            "\"gkill_wear\" (the Wear OS watch app, both records it creates and timeis it ends), " +
             "\"gkill_mcp_readwrite\" / \"gkill_mcp_write\" (these MCP servers), \"urlog_bookmarklet\", " +
             "\"git\", and whatever a plugin sets. This finds records written by the gkill_add_* / gkill_update_* tools, but NOT ones written through gkill_submit_kftl: those carry \"gkill_kftl\" and are indistinguishable from hand-typed notepad entries (create_device is the server's device name for both). " +
             "null/omitted = no filter, [] = match nothing.",

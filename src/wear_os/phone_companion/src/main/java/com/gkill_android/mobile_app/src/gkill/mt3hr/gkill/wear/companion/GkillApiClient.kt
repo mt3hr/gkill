@@ -45,6 +45,15 @@ class GkillApiClient(
     private val localeName: String = GkillLocale.DEFAULT_LOCALE_NAME
 ) {
 
+    companion object {
+        /**
+         * 記録の `create_app` / `update_app` に載せるアプリ名。KFTL 送信の `create_app` と
+         * 打刻終了の `update_app` の両方で使う。表示名ではなく機械的な識別子なので、
+         * アプリ名の改名に追随させてはいけない（検索の `create_apps` 絞り込みの語彙になる）。
+         */
+        const val APP_NAME = "gkill_wear"
+    }
+
     private val serverTrust: GkillServerTrust? =
         if (allowSelfSignedCert) GkillServerTrust(pinnedCertSha256) else null
 
@@ -115,7 +124,10 @@ class GkillApiClient(
         val locale_name: String,
         // 空文字はサーバーの omitempty と Json の encodeDefaults=false で送信時に落ちる。
         // ワーカー再送で同じキーを送ると二重登録にならない（監査 S3-wear）。
-        val idempotency_key: String = ""
+        val idempotency_key: String = "",
+        // 記録の create_app / update_app に載る。既定値を置かない: encodeDefaults=false で
+        // キーごと落ちると、サーバーはエラーを出さずに "gkill_kftl"（メモ帳と同じ値）へ戻す。
+        val create_app: String
     )
 
     @Serializable
@@ -347,7 +359,7 @@ class GkillApiClient(
             val now = java.time.OffsetDateTime.now().format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME)
             latest["end_time"] = JsonPrimitive(now)
             latest["update_time"] = JsonPrimitive(now)
-            latest["update_app"] = JsonPrimitive("gkill_wear")
+            latest["update_app"] = JsonPrimitive(APP_NAME)
 
             // Step 2: update_timeis
             val updateBody = JsonObject(mapOf(
@@ -398,7 +410,7 @@ class GkillApiClient(
     fun submitKFTLText(sessionId: String, kftlText: String, idempotencyKey: String? = null): String? {
         val reqJson = json.encodeToString(
             SubmitKFTLTextRequest.serializer(),
-            SubmitKFTLTextRequest(sessionId, kftlText, localeName, idempotency_key = idempotencyKey ?: "")
+            SubmitKFTLTextRequest(sessionId, kftlText, localeName, idempotency_key = idempotencyKey ?: "", create_app = APP_NAME)
         )
         val body = reqJson.toRequestBody(jsonMediaType)
         val req = Request.Builder()
