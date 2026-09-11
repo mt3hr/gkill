@@ -46,7 +46,7 @@ const userId = (ctx ? ctx.userId : this.currentUserId) || this.client.userId;
 
 - **Go 側の `handle_add_*` / `handle_update_*` で `auth.UserID` を強制的に上書きする** —
   自己申告をやめれば根本解決に見えるが、同じ経路を Web UI・Wear OS・他端末からの同期が使っており、
-  取り込み系（git / IDF / plugin / auto_tag）は**意図的に他人名義で書く**（取り込み元の作者を残す）。
+  取り込み系（git / IDF / plugin / add_tag）は**意図的に他人名義で書く**（取り込み元の作者を残す）。
   18本のハンドラすべての意味を変える変更になるので、MCP の穴を塞ぐ対価としては大きすぎる
 - **フォールバックを黙って外し、`userId` が空なら空のまま書く** — `create_user:""` のレコードが
   できるだけで、追跡不能になるのは同じ。しかも空文字は検索条件としては「未使用」に見えるので、
