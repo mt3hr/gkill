@@ -457,7 +457,7 @@ func TestFormatEffectiveQueryShowsOnlySpecifiedFields(t *testing.T) {
 	}
 }
 
-// ── 付与予定とタグ ID ──
+// ── 付与予定とタグ行 ──
 
 func TestPutAddTagTargetDoesNotDuplicateSameTag(t *testing.T) {
 	targets := map[string]*addTagTarget{}
@@ -475,41 +475,34 @@ func TestPutAddTagTargetDoesNotDuplicateSameTag(t *testing.T) {
 	}
 }
 
-func TestAddTagIDIsStableForSameTargetAndTag(t *testing.T) {
-	// IDが変わると過去に付与したぶんと食い違い、全件が付け直しになる。
-	// 冪等性はこのIDとサーバ側のAlreadyExistTagErrorだけで担保している
-	first := addTagID("kyou1", "gkill")
-	if first != addTagID("kyou1", "gkill") {
-		t.Error("tag id should be stable")
+// タグ行のIDは呼ぶたびに違うランダムなUUID(画面から付けるときと同じ)。
+//
+// かつては(対象ID, タグ名)から決まるUUIDv5で「手で消したタグは付け直さない」を
+// 実現していたが、要件は「付いていなければ付ける」なので2026-09-11にやめた。
+// 決定的なIDへ戻すと、画面から消したタグが二度と付かなくなる。
+func TestNewAddTagRowUsesFreshUUIDAndAppName(t *testing.T) {
+	kyou := reps.Kyou{ID: "kyou1", RepName: "AutoScreenshot_dev1_20260101", RelatedTime: queryTime(t, "2026-09-01T00:00:00+09:00")}
+	runAt := queryTime(t, "2026-09-11T12:00:00+09:00")
+
+	first := newAddTagRow("kyou1", "autolog_screenshot", kyou, "testuser", "test_device", runAt)
+	second := newAddTagRow("kyou1", "autolog_screenshot", kyou, "testuser", "test_device", runAt)
+	if first.ID == second.ID {
+		t.Errorf("同じ(対象, タグ名)でもIDは毎回変わるべき(決定的IDへ戻すと消したタグが付け直されない): %q", first.ID)
 	}
-	if first == addTagID("kyou1", "gkill_autolog") {
-		t.Error("different tag names should get different ids")
-	}
-	if first == addTagID("kyou2", "gkill") {
-		t.Error("different targets should get different ids")
-	}
-	if _, err := uuid.Parse(first); err != nil {
+	if _, err := uuid.Parse(first.ID); err != nil {
 		t.Errorf("tag id should be a uuid: %v", err)
 	}
-	// 区切りが無いと "ab"+"c" と "a"+"bc" が同じIDになってしまう
-	if addTagID("ab", "c") == addTagID("a", "bc") {
-		t.Error("tag id should not collide across the target/tag boundary")
+	if first.TargetID != "kyou1" || first.Tag != "autolog_screenshot" || first.IsDeleted {
+		t.Errorf("row: %#v", first)
 	}
-}
-
-func TestAddTagIDMatchesPreviouslyIssuedID(t *testing.T) {
-	// auto_tag と呼ばれていた頃(さらに前は独立バイナリ)に付与したタグと同じIDになること。
-	// 名前空間の文字列を変えると全件が付け直しになるので、値で固定しておく。
-	// サブコマンドを add_tag へ改名しても "gkill_auto_tag" のままであることがこの検査の要
-	want := uuid.NewSHA1(
-		uuid.NewSHA1(uuid.NameSpaceOID, []byte("github.com/mt3hr/gkill/gkill_auto_tag")),
-		[]byte("kyou1\x00gkill"),
-	).String()
-	if got := addTagID("kyou1", "gkill"); got != want {
-		t.Errorf("addTagID = %q, want %q", got, want)
+	if !first.RelatedTime.Equal(kyou.RelatedTime) {
+		t.Errorf("RelatedTime should follow the kyou: %v", first.RelatedTime)
 	}
-	if addTagAppName != "gkill_auto_tag" {
-		t.Errorf("addTagAppName = %q, want gkill_auto_tag (CREATE_APP に刻まれた過去の値と揃える)", addTagAppName)
+	if first.CreateApp != "gkill_add_tag" || first.UpdateApp != "gkill_add_tag" {
+		t.Errorf("CREATE_APP/UPDATE_APP = %q/%q, want gkill_add_tag", first.CreateApp, first.UpdateApp)
+	}
+	if first.CreateUser != "testuser" || first.CreateDevice != "test_device" || !first.CreateTime.Equal(runAt) {
+		t.Errorf("provenance: %#v", first)
 	}
 }
 
@@ -741,13 +734,12 @@ func TestAddTagGetAllRepNames_Non2xxCarriesErrorMessage(t *testing.T) {
 	}
 }
 
-// 既存IDのタグはHTTP 409 + ERR000056で届き、AddTagは「既に付いている」(スキップ)として飲む。
+// 既存IDの ERR000056(HTTP 409)も他のエラーと同じく失敗として返す。
 //
-// add_tagの冪等性はこの経路が要で、「付いているか」の判定を取りこぼしても
-// サーバが同じIDを弾いて二重登録にならず、手で消したタグも同じIDで弾かれて復活しない。
-// 2026-08からERR000056はHTTP 409で届くようになったため、ステータスで
-// 打ち切るとこのスキップに到達できず、冪等なはずの再実行が失敗になってしまう。
-func TestAddTagAddTag_AlreadyExistOver409IsSkip(t *testing.T) {
+// かつては「既に付いている」(スキップ)として飲んでいたが、IDがランダムになった今は
+// 既存IDに当たること自体が異常。飲むと本当の失敗を「成功・0件」に見せてしまう。
+// error_code と error_message が伝わることも固定する。
+func TestAddTagAddTag_AlreadyExistOver409IsFailure(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
@@ -756,16 +748,35 @@ func TestAddTagAddTag_AlreadyExistOver409IsSkip(t *testing.T) {
 	defer server.Close()
 
 	client := newAddTagTestClient(server)
-	alreadyExist, err := client.AddTag(context.Background(), reps.Tag{
-		ID:       addTagID("kyou1", "gkill"),
-		TargetID: "kyou1",
-		Tag:      "gkill",
-	})
-	if err != nil {
-		t.Fatalf("409 + ERR000056 はスキップ扱いのはず: %v", err)
+	err := client.AddTag(context.Background(), newAddTagRow("kyou1", "gkill", reps.Kyou{ID: "kyou1"}, "testuser", "test_device", queryTime(t, "2026-09-11T12:00:00+09:00")))
+	if err == nil {
+		t.Fatal("409 + ERR000056 は失敗になるべき(スキップ扱いにしない)")
 	}
-	if !alreadyExist {
-		t.Error("alreadyExist = false, want true")
+	if !strings.Contains(err.Error(), message.AlreadyExistTagError) || !strings.Contains(err.Error(), "すでに存在するタグです") {
+		t.Errorf("エラー文に error_code / error_message が入っていない: %v", err)
+	}
+}
+
+// 200 + errors:null は成功で、送ったタグ行がそのまま /api/add_tag へ届く。
+func TestAddTagAddTag_Success(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/add_tag" {
+			t.Errorf("path = %q, want /api/add_tag", r.URL.Path)
+		}
+		request := &req_res.AddTagRequest{}
+		if err := json.NewDecoder(r.Body).Decode(request); err != nil {
+			t.Errorf("リクエスト本文がJSONとして読めない: %v", err)
+		} else if request.Tag.Tag != "gkill" || request.Tag.TargetID != "kyou1" || request.Tag.CreateApp != "gkill_add_tag" {
+			t.Errorf("tag が届いていない: %#v", request.Tag)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"messages":null,"errors":null,"added_tag":null}`))
+	}))
+	defer server.Close()
+
+	client := newAddTagTestClient(server)
+	if err := client.AddTag(context.Background(), newAddTagRow("kyou1", "gkill", reps.Kyou{ID: "kyou1"}, "testuser", "test_device", queryTime(t, "2026-09-11T12:00:00+09:00"))); err != nil {
+		t.Fatalf("AddTag: %v", err)
 	}
 }
 
