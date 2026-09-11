@@ -27,7 +27,7 @@ type GetKyousMCPRequest struct {
 	DataTypes []string `json:"data_types"`
 
 	// CreateApps / UpdateApps は「どのアプリが書いたか / 最後に更新したか」の許可リスト。
-	// gkill_kftl / gkill_mcp_readwrite / gkill_mcp_write / urlog_bookmarklet / gkill / git など。
+	// gkill_kftl / gkill_wear / gkill_mcp_readwrite / gkill_mcp_write / urlog_bookmarklet / gkill / git など。
 	// nil=未使用、非nil空=0件（FindQuery の null 意味論に揃える）。
 	//
 	// FindQuery に足していないのは意図的。ReKyou / MiReKyou のワード委譲が
