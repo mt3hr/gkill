@@ -31,6 +31,18 @@ Web 版 `use-lantana-flowers-view.ts` と同じ式にする。画面状態を足
 同じ文字列から Lantana 1件・mood・related_time が出ること）。却下案は
 [ADR-1101](../../../documents/adr/1101-wear-mood-goes-through-kftl-text.md)。
 
+**ウォッチから書いた記録は `create_app="gkill_wear"` で、Kotlin の `create_app` に既定値を付けない**（2026-09-11）。
+`/api/submit_kftl_text` はサーバが `gkill_kftl` を固定で書いていたが、`SubmitKFTLTextRequest` の任意項目 `create_app`
+で申告できるようにし、companion は `GkillApiClient.APP_NAME`（`gkill_wear`。打刻終了の `update_app` と同じ定数）を送る。
+**データクラス側の `create_app` に既定値を書かないこと** ―― kotlinx.serialization は encodeDefaults=false なので、
+既定値のままだとキーごと落ち、サーバはエラーも警告も出さずに `gkill_kftl`（メモ帳と同じ値）へ戻す
+（`locale_name` で 2026-09-10 まで実際に起きていた壊れ方と同型。既定値を付けると
+`GkillApiClientTest.submitKFTLText_success_returnsNull` が落ちることを実測済み）。**サーバ側の既定値 `gkill_kftl` を変えないこと**
+―― MCP と旧 companion は `create_app` を送らないので、既定値が動くと既存の記録と値が割れる。
+2026-09-11 より前にウォッチから書いた記録は `create_device` もサーバ名で Web と同じなので識別できず、遡って直せない。
+守るテストは `handle_submit_kftl_text_test.go` の `TestHandleSubmitKFTLText_CreateApp`（指定値が書かれる・無指定と空白は
+`gkill_kftl`）/ `GkillApiClientTest.submitKFTLText_success_returnsNull`（本文に `create_app` が載る）。
+
 **Wear OS の UI 文字列は `strings.xml` の7言語セットで持ち、ワイヤコードと KFTL テキストは訳さない**（2026-09-10）。
 両モジュールの `res/values/strings.xml`（既定 = 日本語。Web の `fallbackLocale: 'ja'` とサーバの `GetLocalizer` の
 フォールバックと同じ）と `values-{en,zh,ko,es,fr,de}/strings.xml` が正本で、Kotlin に文言を直書きしない

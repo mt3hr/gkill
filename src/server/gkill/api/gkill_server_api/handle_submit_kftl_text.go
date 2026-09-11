@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/kftl"
@@ -26,7 +27,8 @@ import (
 // 既定値を登録してから読み直すので、初回リクエストでもエラーにはしません。
 // 記録は書き込み用repへ直接行います。リクエストにTXIDはなく、
 // commit_tx/discard_txの未確定状態は経由しません。
-// 生成されるKyouのCreateApp/UpdateAppは "gkill_kftl" 固定です。
+// 生成されるKyouのCreateApp/UpdateAppはリクエストの create_app で、無指定なら "gkill_kftl" です
+// （Wear companion は "gkill_wear" を送る。MCP は送らない）。
 func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.SubmitKFTLTextRequest{}
@@ -108,6 +110,13 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 		}
 	}
 
+	// create_app / update_app に載せるアプリ名。無指定はメモ帳と同じ "gkill_kftl"。
+	// Wear companion は "gkill_wear" を送り、手打ちのメモ帳と区別できるようにしている（2026-09-11）。
+	createApp := strings.TrimSpace(request.CreateApp)
+	if createApp == "" {
+		createApp = "gkill_kftl"
+	}
+
 	statement := &kftl.KFTLStatement{StatementText: request.KFTLText}
 	createdRecords, err := statement.GenerateAndExecuteRequests(
 		r.Context(),
@@ -115,7 +124,7 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 		applicationConfig,
 		userID,
 		device,
-		"gkill_kftl",
+		createApp,
 		request.LocaleName,
 	)
 	// 成功・失敗どちらでも、実際に書けたものは載せる。KFTLはDBトランザクションを使わないので

@@ -23,11 +23,19 @@ func submitKFTL(t *testing.T, tsURL, sessionID, kftlText, idempotencyKey string)
 // 利用者の書き間違い(ERR000416)は 400 で返るため、ステータスも検証対象になる。
 func submitKFTLWithStatus(t *testing.T, tsURL, sessionID, kftlText, idempotencyKey string) (int, req_res.SubmitKFTLTextResponse) {
 	t.Helper()
+	return submitKFTLWithCreateApp(t, tsURL, sessionID, kftlText, idempotencyKey, "")
+}
+
+// submitKFTLWithCreateApp は create_app を指定して /api/submit_kftl_text を叩く。
+// 空なら要求から create_app キーが落ちる(omitempty)ので「無指定」の経路になる。
+func submitKFTLWithCreateApp(t *testing.T, tsURL, sessionID, kftlText, idempotencyKey, createApp string) (int, req_res.SubmitKFTLTextResponse) {
+	t.Helper()
 	resp := postJSON(t, tsURL+"/api/submit_kftl_text", &req_res.SubmitKFTLTextRequest{
 		SessionID:      sessionID,
 		LocaleName:     "en",
 		KFTLText:       kftlText,
 		IdempotencyKey: idempotencyKey,
+		CreateApp:      createApp,
 	})
 	defer resp.Body.Close()
 
@@ -352,6 +360,84 @@ func TestHandleSubmitKFTLText_RepeatWritesShiftedTimes(t *testing.T) {
 		want := time.Date(2026, 9, 7, 12, 0, 0, 0, time.Local)
 		if !got.Tags[0].RelatedTime.Equal(want) {
 			t.Errorf("タグの関連時刻 = %v, want %v (ブロックの `？`行の時刻。基底で引くと「今」になる)", got.Tags[0].RelatedTime, want)
+		}
+	})
+}
+
+// getKmemoApps は /api/get_kmemo で最新版を引き、書き込まれた create_app / update_app を返す。
+func getKmemoApps(t *testing.T, tsURL, sessionID, id string) (string, string) {
+	t.Helper()
+	resp := postJSON(t, tsURL+"/api/get_kmemo", &req_res.GetKmemoRequest{SessionID: sessionID, ID: id, LocaleName: "en"})
+	defer resp.Body.Close()
+	var got req_res.GetKmemoResponse
+	if err := json.NewDecoder(resp.Body).Decode(&got); err != nil {
+		t.Fatalf("decode get kmemo response: %v", err)
+	}
+	if len(got.Errors) > 0 || len(got.KmemoHistories) == 0 {
+		t.Fatalf("get kmemo id=%s: errors=%+v histories=%d", id, got.Errors, len(got.KmemoHistories))
+	}
+	return got.KmemoHistories[0].CreateApp, got.KmemoHistories[0].UpdateApp
+}
+
+// 要求の create_app が書き込まれた記録の create_app / update_app に載ること（2026-09-11）。
+//
+// Wear companion は "gkill_wear" を送って手打ちのメモ帳と区別する。2026-09-11 までは
+// ハンドラが "gkill_kftl" を固定で渡していて、ウォッチからつけた記録を後から絞る手段が無かった。
+// 無指定（MCP と旧 companion）は従来どおり "gkill_kftl" に落ちる —— ここが崩れると
+// 既存の記録と新しい記録の値が割れるので、既定値も同時に固定する。
+func TestHandleSubmitKFTLText_CreateApp(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
+
+	t.Run("create_app を指定するとその値で書かれる", func(t *testing.T) {
+		_, res := submitKFTLWithCreateApp(t, tsURL, sessionID, "createAppWearWord", "", "gkill_wear")
+		if len(res.Errors) > 0 {
+			t.Fatalf("submit kftl text errors: %+v", res.Errors)
+		}
+		if len(res.Created) != 1 || res.Created[0].DataType != "kmemo" {
+			t.Fatalf("created = %+v, want kmemo 1件", res.Created)
+		}
+		createApp, updateApp := getKmemoApps(t, tsURL, sessionID, res.Created[0].ID)
+		if createApp != "gkill_wear" {
+			t.Errorf("create_app = %q, want gkill_wear", createApp)
+		}
+		if updateApp != "gkill_wear" {
+			t.Errorf("update_app = %q, want gkill_wear", updateApp)
+		}
+	})
+
+	t.Run("create_app が無ければ従来どおり gkill_kftl になる", func(t *testing.T) {
+		_, res := submitKFTLWithCreateApp(t, tsURL, sessionID, "createAppDefaultWord", "", "")
+		if len(res.Errors) > 0 {
+			t.Fatalf("submit kftl text errors: %+v", res.Errors)
+		}
+		if len(res.Created) != 1 || res.Created[0].DataType != "kmemo" {
+			t.Fatalf("created = %+v, want kmemo 1件", res.Created)
+		}
+		createApp, updateApp := getKmemoApps(t, tsURL, sessionID, res.Created[0].ID)
+		if createApp != "gkill_kftl" {
+			t.Errorf("create_app = %q, want gkill_kftl (無指定の既定値)", createApp)
+		}
+		if updateApp != "gkill_kftl" {
+			t.Errorf("update_app = %q, want gkill_kftl (無指定の既定値)", updateApp)
+		}
+	})
+
+	// 空白だけの指定は無指定と同じ扱い。" " のような値が create_app に書かれると
+	// 絞り込みで見つからない記録になる。
+	t.Run("空白だけの create_app は無指定と同じ", func(t *testing.T) {
+		_, res := submitKFTLWithCreateApp(t, tsURL, sessionID, "createAppBlankWord", "", "  ")
+		if len(res.Errors) > 0 {
+			t.Fatalf("submit kftl text errors: %+v", res.Errors)
+		}
+		if len(res.Created) != 1 {
+			t.Fatalf("created = %+v, want 1件", res.Created)
+		}
+		createApp, _ := getKmemoApps(t, tsURL, sessionID, res.Created[0].ID)
+		if createApp != "gkill_kftl" {
+			t.Errorf("create_app = %q, want gkill_kftl (空白は無指定扱い)", createApp)
 		}
 	})
 }

@@ -177,7 +177,8 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 {
   "session_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
   "kftl_text": "今日の朝食\n#食事\n/mood\n8\n/num\n体重\n65.5",
-  "locale_name": "ja"
+  "locale_name": "ja",
+  "create_app": "gkill_wear"
 }
 
 // レスポンス例（成功時。created は実際に書けた記録の一覧）
@@ -193,6 +194,8 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
   ]
 }
 ```
+
+`create_app` は任意で、生成される記録の `create_app` / `update_app` に載る（省略時は `gkill_kftl` = メモ帳と同じ）。Wear companion は `gkill_wear` を送り、MCP の `gkill_submit_kftl` は送らない。`idempotency_key` も任意（同じキーの再送を1回の登録に畳む。Wear のワーカー再送が使う）。
 
 `created[]` の要素は `{id, data_type, updated}`。記録本体（kmemo / mi / timeis 等）だけが載り、行から作られたタグ・テキストは載らない。`updated: true` は新規作成ではなく既存レコードの更新（`/end` 系の打刻終了）を表す。KFTLはDBトランザクションを使わないため、**途中で失敗してもそこまでに書けたぶんが `created[]` に載る**（部分保存の後始末用）。冪等キーで畳まれた再送は実行されないので `created` は空になる。
 
@@ -416,7 +419,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 
 | パス | 説明 |
 |---|---|
-| `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得（IDFペイロードに`rep_name`/`is_image`等含む）。リクエストの `create_apps` / `update_apps` は「どのアプリが書いたか / 最後に更新したか」の許可リスト（`gkill_kftl` / `gkill_mcp_readwrite` / `urlog_bookmarklet` など。null=フィルタ未使用、非nullの空配列=0件）。応答の各 `kyous[]` には `create_app` / `update_app` が常時載り、絞り込みの結果を応答から検証できる |
+| `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得（IDFペイロードに`rep_name`/`is_image`等含む）。リクエストの `create_apps` / `update_apps` は「どのアプリが書いたか / 最後に更新したか」の許可リスト（`gkill_kftl` / `gkill_wear` / `gkill_mcp_readwrite` / `urlog_bookmarklet` など。null=フィルタ未使用、非nullの空配列=0件）。応答の各 `kyous[]` には `create_app` / `update_app` が常時載り、絞り込みの結果を応答から検証できる |
 | `/api/get_rep_infos_mcp` | rep名・rep種別・canonical_rep_types・プラグイン一覧の取得。`rep_infos[].indexed_at` はその rep の索引の最終更新時刻（RFC3339。索引を持つ rep のみ＝現状は IDF）で、**索引が止まっていることを検知できる**（rep に置いただけのファイルは update_cache を通すまで検索に出ず、警告も出ないため）。`attached_data_reps[]`（`{rep_name, data_kind}`。data_kind は tag / text / notification / gpslog）はタグ・テキスト・通知・GPSログの書き込み先 rep の一覧で、「add_tag / add_text がどこへ書かれるか」を書く前に知るためのもの。**`rep_infos` と混ぜてはいけない別リスト** —— `query.reps` へ渡すと Kyou の `rep_name` と一致せず静かに0件になる |
 
 MCPサーバは10個のReadツールを提供する。内訳は固有の9（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_rep_infos`, `gkill_get_idf_file`, `gkill_get_kyou_history`）と、3サーバ共通のプラグインツール1つ（`gkill_get_plugin_list`。`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_kyou_history` は型別の `/api/get_*`（`/api/get_kmemo` 等）が返す histories をそのまま返す ―― 削除済みの版も含むので、`gkill_get_kyous` からは見えなくなった記録を読み返す唯一の経路になる。
