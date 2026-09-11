@@ -104,6 +104,7 @@ cobra のルートコマンドに登録されるサブコマンド群を定義�
 - `update_cache` — キャッシュ手動更新
 - `clear_cache` — ディスク上の派生キャッシュ削除
 - `reset_password` — パスワードを無効化してリセットURLを再発行（定義は `password_admin.go`）
+- `add_tag` — 検索条件 JSON（FindKyouQuery）に一致する Kyou へタグを付与（定義は `add_tag.go`。稼働中サーバの HTTP クライアント）
 
 ## 関連ドキュメント
 
