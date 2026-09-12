@@ -17,8 +17,8 @@ dnote/
 ├── dnote-key-getter/           # グルーピングキー（9ファイル）
 ├── dnote-predicate/            # 検索条件述語（33ファイル）
 │   └── target-kyou-predicate/  # 対象 Kyou 述語（5ファイル）
-├── dnote-trend/                # トレンドグラフ型定義（3ファイル）
-├── pulldown-menu/              # UI プルダウンメニュー（7ファイル）
+├── dnote-trend/                # トレンドグラフ型定義（4ファイル）
+├── pulldown-menu/              # UI プルダウンメニュー（8ファイル）
 └── serialize/                  # シリアライズ辞書（5ファイル）
 ```
 
@@ -256,7 +256,7 @@ AND / OR / NOT の論理演算で組み合わせ可能な述語群（33 .ts フ�
 | `equal-tags-or-target-kyou-predicate.ts` | タグが一部対象と等しい |
 | `equal-title-target-kyou-predicate.ts` | タイトル一致 |
 
-## `pulldown-menu/`（7ファイル）— UI プルダウンメニュー
+## `pulldown-menu/`（8ファイル）— UI プルダウンメニュー
 
 DNote 設定 UI 用のプルダウンメニューアイテム定義。
 
@@ -269,6 +269,7 @@ DNote 設定 UI 用のプルダウンメニューアイテム定義。
 | `trend-granularity-menu-items.ts` | トレンドグラフ集計粒度（日/週/月）の選択肢。相関グラフも同じものを使う |
 | `trend-chart-type-menu-items.ts` | トレンドグラフ種別（折れ線/棒）の選択肢 |
 | `correlation-method-menu-items.ts` | 相関の手法（Pearson/Spearman）の選択肢 |
+| `timeis-span-policy-menu-items.ts` | 相関グラフの指標ごとの「日をまたぐ打刻の計上先」（分割/開始/終了）の選択肢 |
 
 ## `serialize/`（5ファイル）— シリアライズ辞書
 
@@ -313,6 +314,7 @@ Predicate と AggregateTarget を流用して `related_time` を日/週/月単�
 | `dnote-trend/dnote-trend-types.ts` | 粒度（day/week/month）とグラフ種別（line/bar）の型 |
 | `dnote-trend/dnote-trend-point.ts` | バケット1点分の集計結果 |
 | `dnote-trend/aggregated-value-to-number.ts` | 累積値（number / AverageInfo）の数値化 |
+| `dnote-trend/time-of-day-deviation.ts` | 時刻平均（開始時刻・終了時刻）を系列全体の平均時刻からのずれ（−12h〜+12h）に直す純関数。0 時からのミリ秒のままだと 23:30 と 00:30 が両端に割れて折れ線が崖になり相関も壊れるので、集計の最後にバケット全体を見て一括で直す。表示文字列は時刻のまま |
 
 定義は `dnote_json_data` の各定義オブジェクト内 `dnote_trend_graph_view_data` に保存される（キー欠落時は空扱い＝後方互換）。
 
@@ -338,8 +340,18 @@ PearsonとSpearmanに対応し、係数、比較期間数、p値、Fisher変換�
 Kyou の絡まない計算だけを単体で読めて単体で試せるようにするため。
 外部の統計ライブラリは使っておらず、log Γ のLanczos近似と正則化不完全ベータ関数を自前で持つ。
 
-**既知の制約**: 複数バケットをまたぐ TimeIs は `related_time`（開始時刻）のバケットにのみ計上される。
-バケット内の経過時間はバケット境界でトリムされるため、またいだ先のバケットには時間が計上されない。
+### 指標ごとのオプション（2026-09 追加）
+
+`DnoteCorrelationMetric` は条件・集計対象に加えて2つのオプションを持つ。どちらも JSON にキーが無ければ既定へ倒す。
+
+| キー | 既定 | 意味 |
+|---|---|---|
+| `missing_as_zero` | `false` | 記録が無いバケットを「0 の観測」として相関へ含める。既定ではペアごとに除外されるため、購入や打刻のような疎なイベントは「あった日どうし」しか比べられず、「無かった日」との対比が消える（実データで 酒購入→翌夜のノンレム時心拍 が除外だと +0.15・n=84、0 埋めだと +0.31・n=239）。件数・合計の集計対象でだけ効き（`is_zero_based_aggregate_type`）、平均・時刻では保存時に落とす。今日より後のバケットは 0 にしない（未来の日が両側とも 0 の観測になって相関を薄める） |
+| `timeis_span_policy` | `"split"` | 日をまたぐ TimeIs の計上先。`split` は 0:00 で区切って両側へ（トレンドグラフと同じ）。`start` / `end` は分割せず開始した／終了した側のバケットへ丸ごと入れ、経過時間もバケット境界で切り詰めない。睡眠を「起床した朝の指標」と突き合わせるときは `end` にする（実データで 睡眠時間→体調スコア が split だと 0.04、end だと +0.24） |
+
+**TimeIs の分割について**: トレンドグラフと `split` の相関指標では、複数バケットをまたぐ TimeIs は期間が重なる全バケットへ振り分けられ、
+各バケット内の経過時間はバケット境界（0:00）で切り詰められる。`dnote-trend-aggregator.ts` の TimeIs 分岐がその実装で、
+`trend-aggregator.test.ts` の「0:00区切り」が守る。
 
 ## 開発ガイドライン
 

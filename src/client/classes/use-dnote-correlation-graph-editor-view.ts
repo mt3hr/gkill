@@ -10,10 +10,13 @@ import {
     clone_dnote_correlation_graph,
     DnoteCorrelationGraphQuery,
     DnoteCorrelationMetric,
+    is_zero_based_aggregate_type,
     type DnoteCorrelationMethod,
+    type DnoteTimeIsSpanPolicy,
 } from "@/classes/dnote/dnote-correlation"
 import type { DnoteTrendGranularity } from "@/classes/dnote/dnote-trend/dnote-trend-types"
 import correlation_method_menu_items from "@/classes/dnote/pulldown-menu/correlation-method-menu-items"
+import timeis_span_policy_menu_items from "@/classes/dnote/pulldown-menu/timeis-span-policy-menu-items"
 import type DnoteCorrelationGraphEditorViewEmits from "@/pages/views/dnote-correlation-graph-editor-view-emits"
 import type DnoteCorrelationGraphEditorViewProps from "@/pages/views/dnote-correlation-graph-editor-view-props"
 
@@ -24,6 +27,8 @@ interface MetricDraft {
     title: string
     aggregate_target: string
     root_predicate: PredicateGroupType
+    missing_as_zero: boolean
+    timeis_span_policy: DnoteTimeIsSpanPolicy
 }
 
 export function useDnoteCorrelationGraphEditorView(options: {
@@ -42,6 +47,7 @@ export function useDnoteCorrelationGraphEditorView(options: {
     const aggregate_targets: Ref<Array<DnoteSelectItem>> = ref(aggregate_target_menu_items)
     const granularities: Ref<Array<DnoteSelectItem>> = ref(trend_granularity_menu_items)
     const methods: Ref<Array<DnoteSelectItem>> = ref(correlation_method_menu_items)
+    const timeis_span_policies: Ref<Array<DnoteSelectItem>> = ref(timeis_span_policy_menu_items)
     const validation_message = ref("")
 
     // ── Business logic ──
@@ -56,6 +62,8 @@ export function useDnoteCorrelationGraphEditorView(options: {
             title: metric.title,
             aggregate_target: String(metric.aggregate_target.to_json().type),
             root_predicate: predicate_struct_from_json(metric.predicate.predicate_struct_to_json()) as PredicateGroupType,
+            missing_as_zero: metric.missing_as_zero,
+            timeis_span_policy: metric.timeis_span_policy,
         }))
         validation_message.value = ""
     }
@@ -67,7 +75,14 @@ export function useDnoteCorrelationGraphEditorView(options: {
             title: i18n.global.t("DNOTE_CORRELATION_METRIC_DEFAULT_TITLE", { number: metrics.value.length + 1 }),
             aggregate_target: aggregate_targets.value[0].value,
             root_predicate: { logic: "AND", predicates: [] },
+            missing_as_zero: false,
+            timeis_span_policy: "split",
         })
+    }
+
+    // 「記録が無い期間を0とみなす」は件数・合計の集計対象でだけ意味を持つ（平均の0は観測ではない）
+    function supports_missing_as_zero(draft: MetricDraft): boolean {
+        return is_zero_based_aggregate_type(draft.aggregate_target)
     }
 
     function delete_metric(index: number): void {
@@ -113,6 +128,9 @@ export function useDnoteCorrelationGraphEditorView(options: {
             metric.title = draft.title.trim()
             metric.aggregate_target = build_dnote_aggregate_target_from_json({ type: draft.aggregate_target })
             metric.predicate = build_dnote_predicate_from_json(predicate_struct_to_json(draft.root_predicate))
+            // 集計対象を平均へ切り替えた後にチェックだけ残らないよう、保存時に落とす
+            metric.missing_as_zero = draft.missing_as_zero && supports_missing_as_zero(draft)
+            metric.timeis_span_policy = draft.timeis_span_policy
             return metric
         })
         validation_message.value = ""
@@ -133,11 +151,13 @@ export function useDnoteCorrelationGraphEditorView(options: {
         aggregate_targets,
         granularities,
         methods,
+        timeis_span_policies,
         validation_message,
 
         // Business logic
         load_query,
         add_metric,
+        supports_missing_as_zero,
         delete_metric,
         move_metric,
         save,

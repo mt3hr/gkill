@@ -894,6 +894,10 @@ Kyou にも Vue にも依存しない。`dnote-correlation-graph-view.vue` が�
 粒度と時間ずれ（lag）は全指標で共通。lag はバケットの添字差で表すため、
 日・週・月のどの粒度でも「行の指標が lag だけ先」という同じ意味になる。
 記録が1件も無いバケットの0は観測値ではないので、相関には混ぜない。
+ただし指標が `missing_as_zero` を選んでいれば（件数・合計の集計対象のみ）、今日までのバケットに限って 0 の観測として残す。
+購入や打刻のような疎なイベントを「あった日」と「無かった日」で比べるための逃げ道で、既定の除外だと「あった日どうし」しか比べられない。
+`timeis_span_policy` は日をまたぐ TimeIs の計上先（分割／開始日／終了日）で、`DnoteTrendAggregator` のオプションとして渡す。
+時刻平均（開始時刻・終了時刻）は `dnote-trend/time-of-day-deviation.ts` が系列全体の平均時刻からのずれに直すので、0 時をまたいでも値が跳ばない。
 
 ```mermaid
 classDiagram
@@ -916,6 +920,8 @@ classDiagram
         +string title
         +DnotePredicate predicate
         +DnoteAggregateTarget aggregate_target
+        +boolean missing_as_zero
+        +DnoteTimeIsSpanPolicy timeis_span_policy
     }
 
     class DnoteCorrelationCell {

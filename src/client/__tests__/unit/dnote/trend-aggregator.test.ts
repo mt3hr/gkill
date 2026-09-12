@@ -26,6 +26,8 @@ import DataTypePrefixPredicate from '@/classes/dnote/dnote-predicate/data-type-p
 import AggregateCountKyou from '@/classes/dnote/dnote-aggregate-target/aggregate-count-kyou'
 import AggregateSumNlogAmount from '@/classes/dnote/dnote-aggregate-target/aggregate-sum-nlog-amount'
 import AggregateSumTimeIsTime from '@/classes/dnote/dnote-aggregate-target/aggregate-sum-timeis-time'
+import AggregateAverageTimeIsStartTime from '@/classes/dnote/dnote-aggregate-target/aggregate-average-timeis-start-time'
+import { time_of_day_deviations } from '@/classes/dnote/dnote-trend/time-of-day-deviation'
 
 const controller = new AbortController()
 // カレンダー未使用（新形式では null が「フィルタ未使用」の正規値）
@@ -304,6 +306,104 @@ describe('DnoteTrendAggregator TimeIs 0:00区切り', () => {
     expect(points[0].value).toBe(4 * HOUR)
     expect(points[1].value).toBe(0)
     expect(points[1].match_kyous.length).toBe(0)
+  })
+
+  // 相関グラフの「日をまたぐ打刻の計上先」。睡眠を起床日の指標と突き合わせるための逃げ道で、
+  // 分割せず丸ごと片側へ入れ、経過時間もバケット境界で切り詰めない
+  test('timeis_span_policy=end は終了した日に丸ごと計上し、経過時間を切り詰めない', async () => {
+    const predicate = new DataTypePrefixPredicate('timeis')
+    const target = new AggregateSumTimeIsTime()
+    const aggregator = new DnoteTrendAggregator(predicate, target, 'day', { timeis_span_policy: 'end' })
+
+    // 7/17 22:00 〜 7/18 03:00
+    const kyous = [makeTimeisKyou(new Date(2026, 6, 17, 22, 0), new Date(2026, 6, 18, 3, 0))]
+
+    const query = makeCloneableQuery(new Date(2026, 6, 17, 0, 0), new Date(2026, 6, 18, 23, 59, 59))
+    const points = await aggregator.aggregate_trend(controller, kyous, query, true)
+
+    expect(points.map(p => p.value)).toEqual([0, 5 * HOUR])
+    expect(points[0].match_kyous.length).toBe(0)
+    expect(points[1].match_kyous.length).toBe(1)
+  })
+
+  test('timeis_span_policy=start は開始した日に丸ごと計上する', async () => {
+    const predicate = new DataTypePrefixPredicate('timeis')
+    const target = new AggregateSumTimeIsTime()
+    const aggregator = new DnoteTrendAggregator(predicate, target, 'day', { timeis_span_policy: 'start' })
+
+    const kyous = [makeTimeisKyou(new Date(2026, 6, 17, 22, 0), new Date(2026, 6, 18, 3, 0))]
+
+    const query = makeCloneableQuery(new Date(2026, 6, 17, 0, 0), new Date(2026, 6, 18, 23, 59, 59))
+    const points = await aggregator.aggregate_trend(controller, kyous, query, true)
+
+    expect(points.map(p => p.value)).toEqual([5 * HOUR, 0])
+  })
+
+  test('計上先が検索範囲の外に出た打刻はどのバケットにも入らない', async () => {
+    const predicate = new DataTypePrefixPredicate('timeis')
+    const target = new AggregateSumTimeIsTime()
+    const aggregator = new DnoteTrendAggregator(predicate, target, 'day', { timeis_span_policy: 'end' })
+
+    // 7/18 22:00 〜 7/19 03:00（終了日が範囲の外）
+    const kyous = [makeTimeisKyou(new Date(2026, 6, 18, 22, 0), new Date(2026, 6, 19, 3, 0))]
+
+    const query = makeCloneableQuery(new Date(2026, 6, 17, 0, 0), new Date(2026, 6, 18, 23, 59, 59))
+    const points = await aggregator.aggregate_trend(controller, kyous, query, true)
+
+    expect(points.map(p => p.value)).toEqual([0, 0])
+  })
+})
+
+// 時刻の平均は 0 時からのミリ秒のままだと 23:30 と 00:30 が両端に割れる。
+// 系列の平均時刻からのずれに直すので、0 時をまたいでも折れ線と相関がつながる
+describe('時刻平均の 0 時またぎ', () => {
+  const HOUR = 60 * 60 * 1000
+
+  // 0 時をまたぐと分割で翌日のバケットにも同じ開始時刻が入るので、またがない長さにする
+  function makeTimeisKyou(start: Date, id: string) {
+    const obj = makeKyouWithTimeis()
+    obj.id = id
+    obj.related_time = start
+    obj.typed_timeis = makeTimeis({ id, start_time: start, end_time: new Date(start.getTime() + 20 * 60 * 1000) }) as never
+    obj.clone = () => ({ ...obj })
+    return obj as never
+  }
+
+  test('time_of_day_deviations は平均時刻からのずれを −12h〜+12h で返す', () => {
+    const at = (hour: number) => {
+      const angle = (hour / 24) * 2 * Math.PI
+      return { sin_total: Math.sin(angle), cos_total: Math.cos(angle), total_count: 1 }
+    }
+    // 23:00 と 01:00 の平均は 0:00。ずれは −1h と +1h
+    const deviations = time_of_day_deviations([at(23), at(1), null])
+    expect(deviations[0]! / HOUR).toBeCloseTo(-1, 6)
+    expect(deviations[1]! / HOUR).toBeCloseTo(1, 6)
+    expect(deviations[2]).toBeNull()
+  })
+
+  test('開始時刻の平均は 0 時をまたいでも値が跳ばない', async () => {
+    const predicate = new DataTypePrefixPredicate('timeis')
+    const target = new AggregateAverageTimeIsStartTime()
+    const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
+
+    // 7/17 23:30 開始、7/18 00:30 開始。0 時からのミリ秒だと 23.5h と 0.5h に割れる
+    const kyous = [
+      makeTimeisKyou(new Date(2026, 6, 17, 23, 30), 'late'),
+      makeTimeisKyou(new Date(2026, 6, 18, 0, 30), 'early'),
+    ]
+    const query = {
+      calendar_start_date: new Date(2026, 6, 17, 0, 0),
+      calendar_end_date: new Date(2026, 6, 18, 23, 59, 59),
+      clone(): unknown { return { ...this } },
+    } as never
+    const points = await aggregator.aggregate_trend(controller, kyous, query, true)
+
+    expect(points.length).toBe(2)
+    expect(points[0].value / HOUR).toBeCloseTo(-0.5, 6)
+    expect(points[1].value / HOUR).toBeCloseTo(0.5, 6)
+    // 表示文字列は時刻のまま
+    expect(points[0].value_string).toBe('23:30')
+    expect(points[1].value_string).toBe('00:30')
   })
 })
 
