@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"os"
 	"slices"
-	"strings"
 	"sync/atomic"
 	"time"
 
@@ -85,25 +84,13 @@ func main() {
 
 			// 単語で絞るなら LIMIT を SQL へ押し込まない。
 			// 絞る前に切ると、後段のフィルタで落ちたぶん取りこぼす。
-			hasWordFilter := len(q.Words) != 0 || len(q.NotWords) != 0
-			rows, err := globalCache.QueryKyous(pluginDir, q.CalendarStartDate, q.CalendarEndDate, q.Limit, hasWordFilter)
+			matcher := q.Matcher()
+			rows, err := globalCache.QueryKyous(pluginDir, q.CalendarStartDate, q.CalendarEndDate, q.Limit, matcher.HasWords())
 			if err != nil {
 				sdk.LogError("%s: find kyous: %v", appName, err)
 				return []sdk.Kyou{}, nil
 			}
-
-			kyous := make([]sdk.Kyou, 0, len(rows))
-			for _, row := range rows {
-				// スレッド名は search_text に焼いていないので、照合時に連結する
-				if !matchWordsText(row.SearchText+"\n"+row.Title, q) {
-					continue
-				}
-				kyous = append(kyous, kyouOf(row))
-				if q.Limit > 0 && len(kyous) >= q.Limit {
-					break
-				}
-			}
-			return kyous, nil
+			return kyousOfRows(rows, q), nil
 		},
 
 		// SDKの既定実装は FindKyous を全件やり直して線形探索するので必ず自前で持つ。
@@ -162,6 +149,26 @@ func main() {
 	})
 }
 
+// kyousOfRows はキャッシュの行をワードで絞って Kyou にする。
+//
+// ワード判定は SDK に任せる（gkill 本体は再判定しないので、ここが唯一の判定）。
+// 対象は search_text とスレッド名（スレッド名は search_text に焼いていないので照合時に連結する）。
+// LIMIT は絞った後に掛ける。
+func kyousOfRows(rows []kyouRow, q sdk.Query) []sdk.Kyou {
+	matcher := q.Matcher()
+	kyous := make([]sdk.Kyou, 0, len(rows))
+	for _, row := range rows {
+		if !matcher.MatchText(row.SearchText+"\n"+row.Title, row.ID) {
+			continue
+		}
+		kyous = append(kyous, kyouOf(row))
+		if q.Limit > 0 && len(kyous) >= q.Limit {
+			break
+		}
+	}
+	return kyous
+}
+
 // kyouOf はキャッシュの1行を gkill へ返す Kyou にする。
 //
 // タグは付けない。gkill 1.1.7 以降は manifest.json に "provides": ["tag"] を書けば
@@ -194,41 +201,4 @@ func unixToTime(unix int64) time.Time {
 		return time.Time{}
 	}
 	return time.Unix(unix, 0).UTC()
-}
-
-// matchWordsText はワード検索条件にテキストが合致するかチェックする。
-func matchWordsText(text string, q sdk.Query) bool {
-	if len(q.Words) == 0 && len(q.NotWords) == 0 {
-		return true
-	}
-
-	target := strings.ToLower(text)
-
-	if len(q.Words) > 0 {
-		if q.WordsAnd {
-			for _, word := range q.Words {
-				if !strings.Contains(target, strings.ToLower(word)) {
-					return false
-				}
-			}
-		} else {
-			matched := false
-			for _, word := range q.Words {
-				if strings.Contains(target, strings.ToLower(word)) {
-					matched = true
-					break
-				}
-			}
-			if !matched {
-				return false
-			}
-		}
-	}
-
-	for _, word := range q.NotWords {
-		if strings.Contains(target, strings.ToLower(word)) {
-			return false
-		}
-	}
-	return true
 }

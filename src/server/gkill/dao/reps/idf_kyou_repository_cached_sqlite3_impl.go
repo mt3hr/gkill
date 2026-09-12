@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	"github.com/mt3hr/gkill/src/server/gkill/api/find_word"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
@@ -241,8 +242,8 @@ WHERE
 		}
 	}()
 
-	words := lowerFindWords(query.Words)
-	notWords := lowerFindWords(query.NotWords)
+	words := find_word.LowerWords(query.Words)
+	notWords := find_word.LowerWords(query.NotWords)
 
 	kyous := map[string][]Kyou{}
 	for rows.Next() {
@@ -299,7 +300,7 @@ WHERE
 
 			match := true
 			if query.HasWordFilter() {
-				match = matchFindWords(findWordTextOfIDFKyou(ctx, idf.TargetFile, filename), words, notWords, query.WordsAnd)
+				match = find_word.MatchLoweredWords(findWordTextOfIDFKyou(ctx, idf.TargetFile, filename), findWordIDOf(query, idf.ID), words, notWords, query.WordsAnd)
 			}
 
 			if match {
@@ -946,8 +947,8 @@ WHERE
 		}
 	}()
 
-	words := lowerFindWords(query.Words)
-	notWords := lowerFindWords(query.NotWords)
+	words := find_word.LowerWords(query.Words)
+	notWords := find_word.LowerWords(query.NotWords)
 
 	idfKyous := []IDFKyou{}
 	for rows.Next() {
@@ -1007,7 +1008,7 @@ WHERE
 
 			match := true
 			if query.HasWordFilter() {
-				match = matchFindWords(findWordTextOfIDFKyou(ctx, idf.TargetFile, filename), words, notWords, query.WordsAnd)
+				match = find_word.MatchLoweredWords(findWordTextOfIDFKyou(ctx, idf.TargetFile, filename), findWordIDOf(query, idf.ID), words, notWords, query.WordsAnd)
 			}
 
 			if match {

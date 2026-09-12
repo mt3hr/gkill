@@ -40,6 +40,8 @@ type cachedMessage struct {
 	Text            string
 	RelatedTimeUnix int64
 	CreateTimeUnix  int64
+	// ConvTitle は会話タイトル。GetMessages が conv_cache から JOIN で載せる（ワード検索の対象にするため）。
+	ConvTitle string
 }
 
 // cacheStats は設定画面に出す統計。ファイルは1バイトも開かずに作る。
@@ -185,8 +187,13 @@ func (c *pluginCache) GetMessages(pluginDir string) ([]cachedMessage, error) {
 	if db == nil {
 		return nil, fmt.Errorf("cache db is not opened")
 	}
-	rows, err := db.Query(`SELECT msg_id, conv_id, sender, text, related_time_unix, create_time_unix
-		FROM msg_cache ORDER BY related_time_unix DESC`)
+	// 会話タイトルはワード検索の対象にするので LEFT JOIN で一緒に取る（msg_cache には焼かない。
+	// 焼くと既存キャッシュの作り直しが要る）。
+	rows, err := db.Query(`SELECT m.msg_id, m.conv_id, m.sender, m.text, m.related_time_unix, m.create_time_unix,
+		       COALESCE(c.title, '')
+		FROM msg_cache m
+		LEFT JOIN conv_cache c ON m.conv_id = c.conv_id
+		ORDER BY m.related_time_unix DESC`)
 	if err != nil {
 		return nil, fmt.Errorf("error at query messages: %w", err)
 	}
@@ -194,7 +201,7 @@ func (c *pluginCache) GetMessages(pluginDir string) ([]cachedMessage, error) {
 	var msgs []cachedMessage
 	for rows.Next() {
 		var m cachedMessage
-		if err := rows.Scan(&m.MsgID, &m.ConvID, &m.Sender, &m.Text, &m.RelatedTimeUnix, &m.CreateTimeUnix); err != nil {
+		if err := rows.Scan(&m.MsgID, &m.ConvID, &m.Sender, &m.Text, &m.RelatedTimeUnix, &m.CreateTimeUnix, &m.ConvTitle); err != nil {
 			continue
 		}
 		msgs = append(msgs, m)

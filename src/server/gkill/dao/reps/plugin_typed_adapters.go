@@ -18,10 +18,12 @@ package reps
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	"github.com/mt3hr/gkill/src/server/gkill/api/find_word"
 	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 )
@@ -101,6 +103,11 @@ func (b *pluginAdapterBase) findKinds(query *find.FindQuery) map[gkill_plugin.Pl
 }
 
 // findKyous は索引から Kyou を集める。プラグインへは往復しない。
+//
+// ワード条件は、レコードが持つ種別（kinds のうち実データがあるもの）の検索対象テキストを
+// まとめて判定する（列は native と同じ。pluginTypedFindWordText を参照）。
+// 以前はここでワードを見ておらず、rep_types 指定・ForMi・ReKyou の委譲で型別アダプタが選ばれると、
+// 語に関係なくプラグインの記録が全件当たっていた。
 func (b *pluginAdapterBase) findKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	snapshot := b.index.Ensure(ctx)
 	kinds := b.findKinds(query)
@@ -108,6 +115,9 @@ func (b *pluginAdapterBase) findKyous(ctx context.Context, query *find.FindQuery
 	kyous := []Kyou{}
 	for _, record := range snapshot.records {
 		if !recordHasAnyKind(record, kinds) {
+			continue
+		}
+		if !pluginMatchWords(pluginTypedFindWordTextForKinds(record, kinds), record.ID, query) {
 			continue
 		}
 		for _, kyou := range record.Kyous {
@@ -207,43 +217,72 @@ func sameSecond(a time.Time, b time.Time) bool {
 	return a.Unix() == b.Unix()
 }
 
-// pluginMatchWords はワード検索の共通判定。
-// 対象列とIDを連結した文字列に対する大小無視の部分一致で、
-// WordsAndがtrueなら全語、falseならいずれか1語。NotWordsは常に除外。
+// pluginMatchWords はワード検索の共通判定。規則は api/find_word（native の Go 判定・SDK と同じ）。
+// 対象列は大小無視の部分一致、ID は前方一致（除外語は ID を見ない）。
+// 空文字の語は入口（FindQuery.WithNormalizedWords）で落ちている前提で、ここでは特別扱いしない。
 func pluginMatchWords(target string, id string, query *find.FindQuery) bool {
 	if query == nil || !query.HasWordFilter() {
 		return true
 	}
-	haystack := strings.ToLower(target + "\x00" + id)
+	return find_word.MatchLoweredWords(
+		strings.ToLower(target), findWordIDOf(query, id),
+		find_word.LowerWords(query.Words), find_word.LowerWords(query.NotWords), query.WordsAnd)
+}
 
-	for _, notWord := range query.NotWords {
-		if notWord == "" {
+// pluginTypedFindWordText は種別ごとのワード検索対象テキストを返す。
+// 列は native の各 rep が SQL で見る列と同じ（NUL 区切りで連結し、境界をまたいだ語が当たらないようにする）:
+//
+//	Kmemo=CONTENT / KC=TITLE+NUM_VALUE / URLog=URL+TITLE+DESCRIPTION / Nlog=TITLE+SHOP+AMOUNT /
+//	Lantana=MOOD / TimeIs=TITLE / Mi=TITLE+BOARD_NAME
+//
+// レコードがその種別の実データを持たなければ空文字。
+func pluginTypedFindWordText(record *pluginTypedRecord, kind gkill_plugin.PluginProvidedKind) string {
+	switch kind {
+	case gkill_plugin.PluginProvidesKmemo:
+		if record.Kmemo != nil {
+			return record.Kmemo.Content
+		}
+	case gkill_plugin.PluginProvidesKC:
+		if record.KC != nil {
+			return record.KC.Title + "\x00" + record.KC.NumValue.String()
+		}
+	case gkill_plugin.PluginProvidesURLog:
+		if record.URLog != nil {
+			return record.URLog.URL + "\x00" + record.URLog.Title + "\x00" + record.URLog.Description
+		}
+	case gkill_plugin.PluginProvidesNlog:
+		if record.Nlog != nil {
+			return record.Nlog.Title + "\x00" + record.Nlog.Shop + "\x00" + record.Nlog.Amount.String()
+		}
+	case gkill_plugin.PluginProvidesLantana:
+		if record.Lantana != nil {
+			return strconv.Itoa(record.Lantana.Mood)
+		}
+	case gkill_plugin.PluginProvidesTimeIs:
+		if record.TimeIs != nil {
+			return record.TimeIs.Title
+		}
+	case gkill_plugin.PluginProvidesMi:
+		if record.Mi != nil {
+			return record.Mi.Title + "\x00" + record.Mi.BoardName
+		}
+	}
+	return ""
+}
+
+// pluginTypedFindWordTextForKinds は kinds のうちレコードが持つ種別の検索対象テキストを NUL 区切りで連結して返す。
+// findKyous 用（同じプラグインの複数種別が1レコードに同居しうる）。
+func pluginTypedFindWordTextForKinds(record *pluginTypedRecord, kinds map[gkill_plugin.PluginProvidedKind]struct{}) string {
+	texts := make([]string, 0, len(kinds))
+	for _, kind := range gkill_plugin.AllPluginProvidedKinds {
+		if _, ok := kinds[kind]; !ok {
 			continue
 		}
-		if strings.Contains(haystack, strings.ToLower(notWord)) {
-			return false
+		if text := pluginTypedFindWordText(record, kind); text != "" {
+			texts = append(texts, text)
 		}
 	}
-	if len(query.Words) == 0 {
-		return true
-	}
-	matchedAny := false
-	for _, word := range query.Words {
-		if word == "" {
-			continue
-		}
-		matched := strings.Contains(haystack, strings.ToLower(word))
-		if query.WordsAnd && !matched {
-			return false
-		}
-		if matched {
-			matchedAny = true
-		}
-	}
-	if query.WordsAnd {
-		return true
-	}
-	return matchedAny
+	return strings.Join(texts, "\x00")
 }
 
 // pluginMatchIDs は query.IDs による絞り込み。nilなら素通し。
@@ -298,7 +337,7 @@ func (p *pluginKmemoRepositoryImpl) FindKmemo(ctx context.Context, query *find.F
 		if !pluginMatchIDs(record.ID, query) || !pluginMatchCalendar(record.Kmemo.RelatedTime, query) {
 			continue
 		}
-		if !pluginMatchWords(record.Kmemo.Content, record.ID, query) {
+		if !pluginMatchWords(pluginTypedFindWordText(record, gkill_plugin.PluginProvidesKmemo), record.ID, query) {
 			continue
 		}
 		kmemos = append(kmemos, *record.Kmemo)
@@ -357,7 +396,7 @@ func (p *pluginKCRepositoryImpl) FindKC(ctx context.Context, query *find.FindQue
 			continue
 		}
 		// キーワードの対象列はTITLE。数値は検索対象にしない（ネイティブと同じ）。
-		if !pluginMatchWords(record.KC.Title, record.ID, query) {
+		if !pluginMatchWords(pluginTypedFindWordText(record, gkill_plugin.PluginProvidesKC), record.ID, query) {
 			continue
 		}
 		kcs = append(kcs, *record.KC)
@@ -415,7 +454,7 @@ func (p *pluginURLogRepositoryImpl) FindURLog(ctx context.Context, query *find.F
 		if !pluginMatchIDs(record.ID, query) || !pluginMatchCalendar(record.URLog.RelatedTime, query) {
 			continue
 		}
-		if !pluginMatchWords(record.URLog.URL+"\x00"+record.URLog.Title+"\x00"+record.URLog.Description, record.ID, query) {
+		if !pluginMatchWords(pluginTypedFindWordText(record, gkill_plugin.PluginProvidesURLog), record.ID, query) {
 			continue
 		}
 		urlog := *record.URLog
@@ -478,7 +517,7 @@ func (p *pluginNlogRepositoryImpl) FindNlog(ctx context.Context, query *find.Fin
 		if !pluginMatchIDs(record.ID, query) || !pluginMatchCalendar(record.Nlog.RelatedTime, query) {
 			continue
 		}
-		if !pluginMatchWords(record.Nlog.Title+"\x00"+record.Nlog.Shop, record.ID, query) {
+		if !pluginMatchWords(pluginTypedFindWordText(record, gkill_plugin.PluginProvidesNlog), record.ID, query) {
 			continue
 		}
 		nlogs = append(nlogs, *record.Nlog)
@@ -529,15 +568,15 @@ func (p *pluginLantanaRepositoryImpl) GetKyouHistories(ctx context.Context, id s
 func (p *pluginLantanaRepositoryImpl) FindLantana(ctx context.Context, query *find.FindQuery) ([]Lantana, error) {
 	snapshot := p.index.Ensure(ctx)
 	lantanas := []Lantana{}
-	// Lantanaに検索対象の文字列列は無い。ネイティブと同じくワード検索が有効なら0件にする。
-	if query != nil && query.HasWordFilter() {
-		return lantanas, nil
-	}
 	for _, record := range snapshot.records {
 		if record.Lantana == nil {
 			continue
 		}
 		if !pluginMatchIDs(record.ID, query) || !pluginMatchCalendar(record.Lantana.RelatedTime, query) {
+			continue
+		}
+		// Lantana は native と同じく気分値（MOOD）を文字列として照合する
+		if !pluginMatchWords(pluginTypedFindWordText(record, gkill_plugin.PluginProvidesLantana), record.ID, query) {
 			continue
 		}
 		lantanas = append(lantanas, *record.Lantana)
@@ -595,7 +634,7 @@ func (p *pluginTimeIsRepositoryImpl) FindTimeIs(ctx context.Context, query *find
 		if !pluginMatchIDs(record.ID, query) {
 			continue
 		}
-		if !pluginMatchWords(record.TimeIs.Title, record.ID, query) {
+		if !pluginMatchWords(pluginTypedFindWordText(record, gkill_plugin.PluginProvidesTimeIs), record.ID, query) {
 			continue
 		}
 		// 期間は開始時刻で判定する。終了時刻が無い（計測中）ものも拾う。
@@ -657,7 +696,7 @@ func (p *pluginMiRepositoryImpl) FindMi(ctx context.Context, query *find.FindQue
 		if !pluginMatchIDs(record.ID, query) {
 			continue
 		}
-		if !pluginMatchWords(record.Mi.Title, record.ID, query) {
+		if !pluginMatchWords(pluginTypedFindWordText(record, gkill_plugin.PluginProvidesMi), record.ID, query) {
 			continue
 		}
 		// 板名はnilが「すべて」。

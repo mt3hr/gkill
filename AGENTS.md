@@ -18,7 +18,7 @@ gkill の不変条件の多くは「例外もエラーも出さずに静かに�
 | 触るファイル | 先に読む | 読み落とすと |
 |---|---|---|
 | `src/server/gkill/api/**`・`src/server/gkill/dao/**`・`src/server/gkill/usecase/**`・`req_res/**` | [gkill-go-backend](.claude/skills/gkill-go-backend/SKILL.md) | rep名絞り込みがキャッシュを丸ごとバイパスし検索が11rep→約940rep・20.7秒になる／`FindQuery.IDs` が6553件でエラーも立てず0件になる／追加したタグが最大1分消え PWA に焼き付く |
-| `src/server/gkill/api/find/**`・`find_filter.go`・`src/client/classes/api/find_query/**`・`src/mcp/lib/constants.mjs` | [gkill-find-query](.claude/skills/gkill-find-query/SKILL.md) | null と `[]` の意味を取り違えて例外もエラーも出ずに全件 or 0件になる／TS 側の `undefined` が localStorage 往復で既定値を復活させる |
+| `src/server/gkill/api/find/**`・`find_word/**`・`find_filter.go`・`src/client/classes/api/find_query/**`・`src/mcp/lib/constants.mjs` | [gkill-find-query](.claude/skills/gkill-find-query/SKILL.md) | null と `[]` の意味を取り違えて例外もエラーも出ずに全件 or 0件になる／TS 側の `undefined` が localStorage 往復で既定値を復活させる／ワード照合を SQL と Go の片方だけ変えて rep 種別ごとに結果が食い違う |
 | `src/server/gkill/main/**`・`gkill_options/**`・`local_rep_cache_path.go` | [gkill-cli-ops](.claude/skills/gkill-cli-ops/SKILL.md) | update_cache / add_tag をオフライン操作と誤解する（実体は起動中サーバの HTTP クライアント）／派生キャッシュの削除で他ユーザーの分を巻き込む |
 | `package.json`・`src/tools/**`・`vite.config.ts`・`playwright.config.ts`・`src/client/__tests__/e2e/**` | [gkill-build-test](.claude/skills/gkill-build-test/SKILL.md) | embed 無しの裸 `go build` が「コンパイルは通るのに起動即死する」バイナリを作る／E2E がポート固定で本番サーバと衝突する |
 | `src/plugins/**`・`src/server/gkill/plugin/**`・`api/gkill_plugin/**`・`dao/reps/plugin_*.go`・`plugin-html-view.vue` | [gkill-plugin](.claude/skills/gkill-plugin/SKILL.md) | 1件ずつプラグインへ聞きに行き、一覧の行数ぶんの直列 stdio でプロセスが殺され続ける／Takeout の歩数が2倍になる |
@@ -39,6 +39,7 @@ gkill の不変条件の多くは「例外もエラーも出さずに静かに�
 |---|---|
 | 検索が黙って0件になる／HTTP 200 で `errors` が null なのに結果が空 | gkill-go-backend, gkill-find-query |
 | タグの個数で検索結果が変わる | gkill-go-backend |
+| `1` や `a` のような短い語で無関係な記録が出る／除外語で消える／気分記録が検索に出ない | gkill-find-query |
 | 実在する記録にタグ/テキストを付けると ERR000092（対象が見つからない） | gkill-go-backend |
 | 追加したタグ・記録が最大1分見えない／PWA が古いまま焼き付く | gkill-go-backend |
 | 全種類の検索が数分止まる | gkill-go-backend |

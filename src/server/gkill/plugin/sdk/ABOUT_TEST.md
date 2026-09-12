@@ -2,10 +2,10 @@
 
 ## 概要
 
-プラグイン作者向け Go SDK のテスト。**45テスト（4ファイル）**。
+プラグイン作者向け Go SDK のテスト。**47テスト（5ファイル）**。
 
 `sdk.Run()` の stdin/stdout ループ、`sdk.EnsureConfig()` の `config.json` 自動生成、
-`sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置を検証する。
+`sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置、`sdk.Query.MatchText()` のワード判定を検証する。
 SDK は gkill 本体と別プロセスで動くプラグイン側のライブラリなので、ここでの回帰は
 全プラグイン（chatgpt / claudeai / claudecode / fitbit / locationhistory / example）に同時に波及する。
 
@@ -17,6 +17,7 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 | `config_test.go` | 4 | `EnsureConfig()`（`TestEnsureConfig_*`） |
 | `source_test.go` | 18 | `OpenSources()` の ZIP 走査（`TestOpenSources_*` ほか） |
 | `cache_path_test.go` | 5 | `CacheDBPath()` / `IsSafePathElement()`（`TestCacheDBPath_*`） |
+| `match_words_test.go` | 2 | `Query.MatchText()` / `Query.Matcher()`（`TestQueryMatchText` / `TestQueryMatcherDoesNotMutateQuery`）。gkill 本体と同じ規則（大小無視の部分一致、ID は前方一致、除外語は ID を見ない、空語は無視）で、元の Query を書き換えないこと |
 
 ## sdk_test.go — stdio ループ
 

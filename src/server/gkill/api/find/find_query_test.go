@@ -730,3 +730,62 @@ func TestFindQuery_DataTypeFilter(t *testing.T) {
 		}
 	}
 }
+
+// WithNormalizedWords は4つの語スライスを正規化した浅いコピーを返し、元の query を書き換えない。
+// nil=フィルタ未使用 / 非nil空=語なし の区別は保つ。
+func TestFindQuery_WithNormalizedWords(t *testing.T) {
+	words := []string{" foo ", "", "　"}
+	notWords := []string{"bar", " "}
+	timeIsWords := []string{}
+	original := &FindQuery{
+		Words:          words,
+		NotWords:       notWords,
+		TimeIsWords:    timeIsWords,
+		TimeIsNotWords: nil,
+		WordsAnd:       true,
+	}
+
+	normalized := original.WithNormalizedWords()
+
+	if normalized == original {
+		t.Fatalf("コピーを返すべきで、同じポインタを返してはいけない")
+	}
+	if got := normalized.Words; len(got) != 1 || got[0] != "foo" {
+		t.Errorf("Words = %q, want [foo]", got)
+	}
+	if got := normalized.NotWords; len(got) != 1 || got[0] != "bar" {
+		t.Errorf("NotWords = %q, want [bar]", got)
+	}
+	if normalized.TimeIsWords == nil || len(normalized.TimeIsWords) != 0 {
+		t.Errorf("非nilの空スライスは非nilの空のままであるべき: %#v", normalized.TimeIsWords)
+	}
+	if normalized.TimeIsNotWords != nil {
+		t.Errorf("nil は nil のままであるべき: %#v", normalized.TimeIsNotWords)
+	}
+	if !normalized.WordsAnd {
+		t.Errorf("語以外のフィールドはそのまま写るべき")
+	}
+
+	// 元の query とスライスは触らない
+	if original.Words[0] != " foo " || original.Words[1] != "" || len(original.Words) != 3 {
+		t.Errorf("元の Words を書き換えてはいけない: %q", original.Words)
+	}
+	if len(original.NotWords) != 2 || original.NotWords[1] != " " {
+		t.Errorf("元の NotWords を書き換えてはいけない: %q", original.NotWords)
+	}
+	if !original.HasWordFilter() || !normalized.HasWordFilter() {
+		t.Errorf("正規化でワードフィルタの有効/無効が変わってはいけない")
+	}
+}
+
+// 語がすべて空になっても、フィルタ有効（非nil）のまま「語なし=素通し」になる。
+func TestFindQuery_WithNormalizedWords_AllEmptyStaysEnabled(t *testing.T) {
+	q := &FindQuery{Words: []string{"", " "}, NotWords: []string{"　"}}
+	n := q.WithNormalizedWords()
+	if n.Words == nil || len(n.Words) != 0 || n.NotWords == nil || len(n.NotWords) != 0 {
+		t.Errorf("全部空なら非nilの空スライスになるべき: Words=%#v NotWords=%#v", n.Words, n.NotWords)
+	}
+	if !n.HasWordFilter() {
+		t.Errorf("非nilなのでフィルタは有効のまま（SQL条件なし=素通し）であるべき")
+	}
+}
