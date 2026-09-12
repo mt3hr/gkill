@@ -87,6 +87,17 @@ export function useFoldableStruct(options: {
 
     // チェックボックスのチェック状態を最新の状態に更新します。
     // 親であれば子の状態を見ます
+    //
+    // グループ行の表示は**配下の葉だけ**から導出する。入れ物（フォルダ・ルート）の
+    // モデル is_checked は数えずに子へ降りるだけにする。
+    // 入れ物の is_checked が true になるのはフォルダ行を直接クリックした経路
+    // （change_group_by_user / click_group_by_user が自分の key を載せる）だけで、
+    // 葉を1つずつチェックした経路や、クエリからの再同期
+    // （get_selected_items() は入れ物を返さないので pre_uncheck_all でフォルダは false に戻る）
+    // では false のまま。それを数えると、フォルダ自身は葉から見てチェック表示なのに
+    // その親だけが「子が全部チェック済みなのに indeterminate」になる。
+    // 葉が1つも無ければ未チェック（空虚に「全部チェック済み」としない）。
+    // indeterminate な葉は「部分的にチェック」として親を indeterminate にする
     function update_check() {
         if (is_item()) {
             check.value = (props.struct_obj).is_checked
@@ -96,15 +107,20 @@ export function useFoldableStruct(options: {
                     child_foldable_structs.value[i].update_check()
                 }
             }
-            let exist_checked = false
-            let all_checked = true
+            let leaf_count = 0
+            let checked_count = 0
+            let exist_indeterminate = false
 
             let f = (_struct: FoldableStructModel) => { }
             const func = (struct: FoldableStructModel) => {
-                if (struct.is_checked) {
-                    exist_checked = true
-                } else {
-                    all_checked = false
+                if (!is_struct_container_node(struct)) {
+                    leaf_count++
+                    if (struct.is_checked) {
+                        checked_count++
+                    }
+                    if (struct.indeterminate) {
+                        exist_indeterminate = true
+                    }
                 }
                 if (struct.children) {
                     struct.children.forEach(child => {
@@ -114,6 +130,9 @@ export function useFoldableStruct(options: {
             }
             f = func
             struct_list.value.forEach(struct_child => f(struct_child))
+
+            const all_checked = leaf_count > 0 && checked_count === leaf_count && !exist_indeterminate
+            const exist_checked = checked_count > 0 || exist_indeterminate
 
             if (all_checked) {
                 check.value = true

@@ -13,12 +13,12 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
 | Go バックエンド | 1227 | 178 | Go `testing` |
-| フロントエンド ユニット | 2048 | 171 | Vitest |
+| フロントエンド ユニット | 2057 | 172 | Vitest |
 | フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
 | MCP サーバ | 1015 | 24 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 226 | 17 | JUnit 4 + MockK |
-| **合計** | **4,782** | **437** | |
+| **合計** | **4,791** | **438** | |
 
 数え直すコマンド:
 
@@ -309,7 +309,7 @@ src/client/__tests__/
 │   ├── datas/                         ← データモデル（35ファイル）
 │   ├── dnote/                         ← D-note モジュール（8ファイル、trend-aggregator.test.ts 含む）
 │   ├── kftl/                          ← KFTL パーサ（7ファイル）
-│   ├── composables/                   ← Vue Composable（59ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（60ファイル。add-views / edit-views /
 │   │                                     confirm-delete / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /
