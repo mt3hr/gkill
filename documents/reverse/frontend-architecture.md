@@ -18,7 +18,7 @@
 | 図表描画 | mermaid | ^11.16.0 |
 | 型チェック | vue-tsc 3 | ^3.3.9 |
 | リンター | ESLint 10 + eslint-plugin-vue 10 (flat config) | ^10.8.0 / ^10.10.0 |
-| ユニットテスト | Vitest + jsdom | ^4.1.10 / ^30.0.1 |
+| ユニットテスト | Vitest + jsdom | ^4.1.11 / ^30.0.1 |
 | E2Eテスト | @playwright/test | ^1.62.1 |
 
 > バージョンは `package.json` の値。表を更新するときは `package.json` を正とすること。
