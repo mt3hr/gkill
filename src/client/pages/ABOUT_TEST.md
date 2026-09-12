@@ -136,7 +136,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/dialog-autofocus.spec.ts` | ダイアログを開いたら最初のテキスト入力欄にカーソルが載ること（選び方の判定そのものは `unit/classes/dialog-autofocus.test.ts`） |
 | `src/client/__tests__/e2e/sample-data-smoke.spec.ts` | 配布サンプルデータの起動スモーク。run-e2e.mjs がサンプルデータのコピーを home にした gkill_server を別ポートで起動し（URL は `GKILL_E2E_SAMPLE_URL`）、embed 配信のフロントエンドへ README 記載の資格情報でログインして rykv に記録が出ること。ログインはレート制限を消費するので1回だけ |
 
-### Composable ユニットテスト（59ファイル）
+### Composable ユニットテスト（60ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -181,6 +181,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/find-time-is-query-editor.test.ts` | 実行中検索のカスタム条件エディタが書き込むフィールドの対応 |
 | `src/client/__tests__/unit/composables/foldable-struct-device-gates.test.ts` | ツリーの端末種別ゲート（D&Dの可否は `is_pc`、ロングプレス補完は `has_touch`。兼用するとタッチ対応PCでD&Dが死ぬ） |
 | `src/client/__tests__/unit/composables/foldable-struct-selected-items.test.ts` | `get_selected_items()` が「入れ物」（フォルダ・ルート）を返さないこと。返すとAND検索が必ず0件になる |
+| `src/client/__tests__/unit/composables/foldable-struct-update-check.test.ts` | フォルダ行のチェック表示を葉からだけ導出すること。入れ物の `is_checked` を数えると、子が全部チェック済みでも親が indeterminate になる |
 | `src/client/__tests__/unit/composables/kftl-dialog-host.test.ts` | メモ帳ウィンドウの一覧を持つホスト（＋メニューのたびに1枚増える・slot 番号の採番と返却） |
 | `src/client/__tests__/unit/composables/kftl-tab-store.test.ts` | メモ帳のタブを持つ共有ストア（モジュールシングルトン。独立した `effectScope` の中で作らないと最初のコンポーネントの unmount で永続化ごと止まる） |
 | `src/client/__tests__/unit/composables/kyou-change-propagation.test.ts` | ポートで並べた画面のあいだの変更伝播（自分が出した通知は受けない・`reload_list` は1ドレイン1回に畳む） |
