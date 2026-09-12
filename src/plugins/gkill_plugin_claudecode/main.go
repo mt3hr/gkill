@@ -90,6 +90,53 @@ func sourceProviderOf(pluginDir string) func() expandedSource {
 	}
 }
 
+// kyousOfMessages はキャッシュの発言一覧を検索条件で絞って Kyou にする。
+//
+// ワード判定は SDK に任せる（gkill 本体は再判定しないので、ここが唯一の判定）。
+// 対象は search_text（発言本文＋セッション名＋project/branch＋ツール名/要約）。LIMIT は絞った後に掛ける。
+func kyousOfMessages(messages []messageSummary, q sdk.Query) []sdk.Kyou {
+	matcher := q.Matcher()
+
+	var kyous []sdk.Kyou
+	for _, t := range messages {
+		relatedTime := unixToTime(t.RelatedTimeUnix)
+
+		// カレンダーフィルタ
+		if q.CalendarStartDate != nil && relatedTime.Before(*q.CalendarStartDate) {
+			continue
+		}
+		if q.CalendarEndDate != nil && relatedTime.After(*q.CalendarEndDate) {
+			continue
+		}
+
+		// ワードフィルタ（発言単位）
+		if !matcher.MatchText(t.SearchText, t.MessageID) {
+			continue
+		}
+
+		updateTime := unixToTime(t.UpdateTimeUnix)
+		if updateTime.IsZero() {
+			updateTime = relatedTime
+		}
+
+		kyous = append(kyous, sdk.Kyou{
+			ID:          t.MessageID,
+			RepName:     repName,
+			DataType:    dataType,
+			RelatedTime: relatedTime,
+			CreateTime:  relatedTime,
+			UpdateTime:  updateTime,
+			CreateApp:   appName,
+			UpdateApp:   appName,
+		})
+	}
+
+	if q.Limit > 0 && len(kyous) > q.Limit {
+		kyous = kyous[:q.Limit]
+	}
+	return kyous
+}
+
 // sourcePatternsOf はデータソースのパターン一覧を取り出す。
 //
 // SDKはconfig.jsonをプロセス起動時に一度だけ読むが、この設定はプラグインフォルダの
@@ -149,45 +196,7 @@ func main() {
 			if err != nil {
 				return []sdk.Kyou{}, nil
 			}
-
-			var kyous []sdk.Kyou
-			for _, t := range messages {
-				relatedTime := unixToTime(t.RelatedTimeUnix)
-
-				// カレンダーフィルタ
-				if q.CalendarStartDate != nil && relatedTime.Before(*q.CalendarStartDate) {
-					continue
-				}
-				if q.CalendarEndDate != nil && relatedTime.After(*q.CalendarEndDate) {
-					continue
-				}
-
-				// ワードフィルタ（発言単位）
-				if !matchWordsText(t.SearchText, q) {
-					continue
-				}
-
-				updateTime := unixToTime(t.UpdateTimeUnix)
-				if updateTime.IsZero() {
-					updateTime = relatedTime
-				}
-
-				kyous = append(kyous, sdk.Kyou{
-					ID:          t.MessageID,
-					RepName:     repName,
-					DataType:    dataType,
-					RelatedTime: relatedTime,
-					CreateTime:  relatedTime,
-					UpdateTime:  updateTime,
-					CreateApp:   appName,
-					UpdateApp:   appName,
-				})
-			}
-
-			if q.Limit > 0 && len(kyous) > q.Limit {
-				kyous = kyous[:q.Limit]
-			}
-			return kyous, nil
+			return kyousOfMessages(messages, q), nil
 		},
 
 		GetContentHTML: func(_ context.Context, kyouID string, cfg sdk.Config) (string, error) {
@@ -228,43 +237,6 @@ func main() {
 			return cfg, nil
 		},
 	})
-}
-
-// matchWordsText はワード検索条件にテキストが合致するかチェックする。
-func matchWordsText(text string, q sdk.Query) bool {
-	if len(q.Words) == 0 && len(q.NotWords) == 0 {
-		return true
-	}
-
-	target := strings.ToLower(text)
-
-	if len(q.Words) > 0 {
-		if q.WordsAnd {
-			for _, w := range q.Words {
-				if !strings.Contains(target, strings.ToLower(w)) {
-					return false
-				}
-			}
-		} else {
-			matched := false
-			for _, w := range q.Words {
-				if strings.Contains(target, strings.ToLower(w)) {
-					matched = true
-					break
-				}
-			}
-			if !matched {
-				return false
-			}
-		}
-	}
-
-	for _, w := range q.NotWords {
-		if strings.Contains(target, strings.ToLower(w)) {
-			return false
-		}
-	}
-	return true
 }
 
 // タグによる絞り込みは行わない。

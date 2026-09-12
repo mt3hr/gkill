@@ -16,6 +16,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	"github.com/mt3hr/gkill/src/server/gkill/api/find_word"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 )
@@ -136,10 +137,10 @@ loop:
 			}
 
 			if query.HasWordFilter() {
-				words := lowerFindWords(query.Words)
-				notWords := lowerFindWords(query.NotWords)
-				findWordText := findWordTextOfGitCommit(commit.Message, commit.ID().String())
-				match = match && matchFindWords(findWordText, words, notWords, query.WordsAnd)
+				words := find_word.LowerWords(query.Words)
+				notWords := find_word.LowerWords(query.NotWords)
+				findWordText := findWordTextOfGitCommit(commit.Message)
+				match = match && find_word.MatchLoweredWords(findWordText, findWordIDOf(query, commit.ID().String()), words, notWords, query.WordsAnd)
 			}
 
 			if !match {
@@ -374,10 +375,10 @@ loop:
 			}
 
 			if query.HasWordFilter() {
-				words := lowerFindWords(query.Words)
-				notWords := lowerFindWords(query.NotWords)
-				findWordText := findWordTextOfGitCommit(commit.Message, commit.ID().String())
-				match = match && matchFindWords(findWordText, words, notWords, query.WordsAnd)
+				words := find_word.LowerWords(query.Words)
+				notWords := find_word.LowerWords(query.NotWords)
+				findWordText := findWordTextOfGitCommit(commit.Message)
+				match = match && find_word.MatchLoweredWords(findWordText, findWordIDOf(query, commit.ID().String()), words, notWords, query.WordsAnd)
 			}
 
 			if !match {

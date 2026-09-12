@@ -6,12 +6,14 @@ gkill プラグインシステムのサーバー側実装。プラグインプ�
 
 ```
 plugin/
-└── sdk/                # プラグイン作者向け Go SDK（11ファイル。うちテスト4）
+└── sdk/                # プラグイン作者向け Go SDK（13ファイル。うちテスト5）
     ├── types.go        # 公開型定義（Query, Kyou, Config）
+    ├── match_words.go  # Query.MatchText / Matcher — ワード判定（gkill 本体と同じ規則。本体は再判定しないので FindKyous で必ず通す）
     ├── handler.go      # Handler struct（プラグイン作者が実装するインターフェース）
     ├── sdk.go          # Run() — メインループ（stdin/stdout 改行区切りJSONループ）
     ├── config.go       # LoadConfig / SaveConfig / EnsureConfig（config.json 読み書き）
     ├── sdk_test.go     # Run() ループのテスト（TestRunLoop_* 14本）
+    ├── match_words_test.go # Query.MatchText のテスト
     └── config_test.go  # EnsureConfig のテスト（4本）
 ```
 

@@ -37,6 +37,12 @@ type FindFilter struct {
 }
 
 func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string, gkillDAOManager *dao.GkillDAOManager, findQuery *find.FindQuery) ([]reps.Kyou, []*message.GkillError, error) {
+	// 検索語の正規化（前後の空白を落とし、空になった語を捨てる）は Kyou 検索の入口であるここで1回だけ行う。
+	// 空文字の語を通すと SQL の LIKE '%%' が全件に一致し、除外語なら全件が消える。
+	// 画面のパーサは空語を作らないが、MCP や API の直叩きでは届く。
+	// 呼び出し元の query は書き換えず、浅いコピーを以後の全処理で使う。
+	findQuery = findQuery.WithNormalizedWords()
+
 	// ReKyou/MiReKyouのターゲット解決を1検索の中で使い回すためのメモ。
 	// 委譲が入れ子になっていて、同じqueryでの解決が何度も走る。
 	// メモが無くても各repは今までどおり自前で解決するので、
@@ -57,6 +63,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext.RelatedTagIDs = map[string]struct{}{}
 	findKyouContext.MatchTags = map[string]reps.Tag{}
 	findKyouContext.MatchTexts = map[string]reps.Text{}
+	findKyouContext.NotWordMatchTexts = map[string]reps.Text{}
 	findKyouContext.MatchTimeIssAtFindTimeIs = map[string]reps.TimeIs{}
 	findKyouContext.MatchTimeIssAtFilterTags = map[string]reps.TimeIs{}
 	findKyouContext.MatchTimeIsTags = map[string]reps.Tag{}
@@ -99,9 +106,9 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	slog.Log(ctx, gkill_log.Trace, "finish update latest data repository address")
 
 	wg := &sync.WaitGroup{}
-	// 容量は送信箇所数(現在6: タグ2+タグ検索1+テキスト1+TimeIs2)以上であればよい(全送信がブロックしないためのバッファ)
-	errch := make(chan error, 6)
-	gkillErrch := make(chan []*message.GkillError, 6)
+	// 容量は送信箇所数(現在7: タグ2+タグ検索1+テキスト2+TimeIs2)以上であればよい(全送信がブロックしないためのバッファ)
+	errch := make(chan error, 7)
+	gkillErrch := make(chan []*message.GkillError, 7)
 	defer close(errch)
 	defer close(gkillErrch)
 
@@ -152,6 +159,22 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 				e = fmt.Errorf("error at find texts: %w", e)
 			} else {
 				slog.Log(ctx, gkill_log.Trace, "finish findTexts", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
+			}
+			errch <- e
+			gkillErrch <- ge
+		}()
+	}
+
+	// 除外語を含む付随テキストの取得（findKyous でその対象を落とす）
+	if len(findQuery.NotWords) != 0 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ge, e := f.findNotWordTexts(ctx, findKyouContext)
+			if e != nil {
+				e = fmt.Errorf("error at find not word texts: %w", e)
+			} else {
+				slog.Log(ctx, gkill_log.Trace, "finish findNotWordTexts", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
 			errch <- e
 			gkillErrch <- ge
@@ -924,8 +947,31 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 	}
 	filterByRepName := findCtx.ParsedFindQuery.Reps != nil
 
+	// 除外語（NotWords）の意味は「本体か付随テキストに除外語を含む記録を落とす」。実装は語の有無で2経路。
+	//
+	//   (A) 語なし・除外語あり: 「素通しした全体から除外語のヒットを引く」。
+	//       本検索は除外語を外した素通しで全体 S を取り、除外語を**肯定語として**検索した集合 E と、
+	//       除外語を含む付随テキストの対象を S から引く。ReKyou は E の中で委譲が働くので参照先の除外語も効く。
+	//       E は IDs で絞らない（S は全件なので、絞ると 4000 件チャンク × rep 数の無駄になる）。
+	//   (B) 語あり・除外語あり: 本検索は従来どおり SQL の NOT LIKE（本体）＋ ReKyou 委譲で除外し、
+	//       付随テキストで合流した記録だけ本体側を再検査する（IDs で絞った肯定検索）。
+	//       (B) も (A) に統一しない理由: `foo -の` のような頻出除外語で E が巨大になり、本検索と同規模の走査と
+	//       実体化が2回になる。SQL の NOT LIKE は同じ走査の中で済む。
+	//
+	// 除外語を肯定語として再検索する内部クエリは必ず WordsSkipIDMatch を立てる。
+	// 立てないと「ID が除外語で始まる記録」まで除外され、「除外語は ID を見ない」が破れる。
+	notWords := findCtx.ParsedFindQuery.NotWords
+	notWordsOnly := len(findCtx.ParsedFindQuery.Words) == 0 && len(notWords) != 0
+
+	mainQuery := findCtx.ParsedFindQuery
+	if notWordsOnly {
+		copied := *findCtx.ParsedFindQuery
+		copied.NotWords = nil
+		mainQuery = &copied
+	}
+
 	// repで検索
-	kyousMap, err := matchReps.FindKyous(ctx, findCtx.ParsedFindQuery)
+	kyousMap, err := matchReps.FindKyous(ctx, mainQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -950,6 +996,44 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 			kyousMap[id] = []reps.Kyou{}
 		}
 		kyousMap[id] = append(kyousMap[id], textMatchKyous...)
+	}
+
+	// 除外語の適用（上のコメントの (A) / (B)）
+	if len(notWords) != 0 {
+		var excludeQuery *find.FindQuery
+		if notWordsOnly {
+			// (A) 素通しした全体から引くための集合 E。Calendar / IDs 等はコピー元のまま（S の部分集合になり安い）
+			copied := *findCtx.ParsedFindQuery
+			copied.Words = notWords
+			copied.NotWords = nil
+			copied.WordsAnd = false
+			copied.WordsSkipIDMatch = true
+			excludeQuery = &copied
+		} else if len(targetIDs) != 0 {
+			// (B) 付随テキストで合流した記録の本体側を再検査する。
+			// ID 再検索に NotWords を直接足す案は不採用: ReKyou の委譲が IDs 付きで走り、
+			// 付随テキストが当たった ReKyou が全部落ちる。肯定検索なら ReKyou は保守的に残る
+			excludeQuery = &find.FindQuery{
+				IDs:              targetIDs,
+				Words:            notWords,
+				WordsAnd:         false,
+				WordsSkipIDMatch: true,
+				OnlyLatestData:   true,
+			}
+		}
+		if excludeQuery != nil {
+			excludeKyousMap, err := matchReps.FindKyous(ctx, excludeQuery)
+			if err != nil {
+				return nil, err
+			}
+			for id := range excludeKyousMap {
+				delete(kyousMap, id)
+			}
+		}
+		// 付随テキストに除外語を含む記録は、本体がどうであれ落とす
+		for _, text := range findCtx.NotWordMatchTexts {
+			delete(kyousMap, text.TargetID)
+		}
 	}
 
 	// 削除済みのものは消す。
@@ -1973,13 +2057,23 @@ func dedupAdjacentResultKyous(kyous []reps.Kyou) []reps.Kyou {
 
 func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	return f.findTextsGeneric(ctx, findCtx,
-		findCtx.ParsedFindQuery.Words, findCtx.ParsedFindQuery.NotWords, findCtx.ParsedFindQuery.WordsAnd,
+		findCtx.ParsedFindQuery.Words, findCtx.ParsedFindQuery.NotWords, findCtx.ParsedFindQuery.WordsAnd, false,
 		findCtx.MatchTexts)
 }
 
+// findNotWordTexts は除外語を**含む**付随テキストを集める（除外語を肯定語として検索する）。
+// findKyous がその TargetID を結果から落とす。ID が除外語で始まるテキストまで拾わないよう ID 照合は切る。
+func (f *FindFilter) findNotWordTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	return f.findTextsGeneric(ctx, findCtx,
+		findCtx.ParsedFindQuery.NotWords, nil, false, true,
+		findCtx.NotWordMatchTexts)
+}
+
+// findTextsGeneric は付随テキスト(Text rep)を語で検索して targetMap に最新版だけ集める。
+// skipIDMatch は肯定語で ID を照合しない指示（find.FindQuery.WordsSkipIDMatch）。
 func (f *FindFilter) findTextsGeneric(
 	ctx context.Context, findCtx *FindKyouContext,
-	words, notWords []string, wordsAnd bool,
+	words, notWords []string, wordsAnd bool, skipIDMatch bool,
 	targetMap map[string]reps.Text,
 ) ([]*message.GkillError, error) {
 	// words, notWordsをパースする
@@ -1993,9 +2087,10 @@ func (f *FindFilter) findTextsGeneric(
 	}
 
 	findTextsQuery := &find.FindQuery{
-		Words:    w,
-		NotWords: nw,
-		WordsAnd: wordsAnd,
+		Words:            w,
+		NotWords:         nw,
+		WordsAnd:         wordsAnd,
+		WordsSkipIDMatch: skipIDMatch,
 		// 編集前の本文でヒットしないよう、IDごとの最新版のみを対象にする
 		OnlyLatestData: true,
 	}
@@ -2043,7 +2138,7 @@ func (f *FindFilter) filterImageKyous(ctx context.Context, findCtx *FindKyouCont
 
 func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	return f.findTextsGeneric(ctx, findCtx,
-		findCtx.ParsedFindQuery.TimeIsWords, findCtx.ParsedFindQuery.TimeIsNotWords, findCtx.ParsedFindQuery.TimeIsWordsAnd,
+		findCtx.ParsedFindQuery.TimeIsWords, findCtx.ParsedFindQuery.TimeIsNotWords, findCtx.ParsedFindQuery.TimeIsWordsAnd, false,
 		findCtx.MatchTimeIsTexts)
 }
 func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {

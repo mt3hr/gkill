@@ -22,6 +22,7 @@ type FindKyouContext struct {
 	RelatedTagIDs                    map[string]struct{}
 	MatchTags                        map[string]reps.Tag    `json:"match_tags"`
 	MatchTexts                       map[string]reps.Text   `json:"match_texts"`
+	NotWordMatchTexts                map[string]reps.Text   `json:"not_word_match_texts"`
 	MatchTimeIssAtFindTimeIs         map[string]reps.TimeIs `json:"match_time_iss_at_find_time_is"`
 	MatchTimeIssAtFilterTags         map[string]reps.TimeIs `json:"match_time_iss_at_filter_tags"`
 	MatchMisAtFilterMi               map[string]reps.Mi     `json:"match_mis_at_filter_mi"`

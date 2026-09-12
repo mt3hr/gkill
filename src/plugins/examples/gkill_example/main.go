@@ -14,6 +14,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	sdk "github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
@@ -58,22 +59,27 @@ func main() {
 				},
 			}
 
-			// 日付フィルタ（CalendarStartDate / CalendarEndDate が指定されている場合）
-			if q.CalendarStartDate != nil || q.CalendarEndDate != nil {
-				var filtered []sdk.Kyou
-				for _, k := range kyous {
-					if q.CalendarStartDate != nil && k.RelatedTime.Before(*q.CalendarStartDate) {
-						continue
-					}
-					if q.CalendarEndDate != nil && k.RelatedTime.After(*q.CalendarEndDate) {
-						continue
-					}
-					filtered = append(filtered, k)
+			// 日付フィルタ（CalendarStartDate / CalendarEndDate が指定されている場合）と
+			// ワードフィルタ（Words / NotWords / WordsAnd）。
+			// gkill 本体はプラグインが返した Kyou のワードを再判定しない（本文は本体に無い）ので、
+			// ワード判定はプラグインの責任。自前のループは書かず、SDK の q.Matcher() / q.MatchText を通す。
+			// 判定に掛ける文字列は「検索対象にしたいもの」を連結する（ここでは本文テキスト）。
+			matcher := q.Matcher()
+			filtered := make([]sdk.Kyou, 0, len(kyous))
+			for _, k := range kyous {
+				if q.CalendarStartDate != nil && k.RelatedTime.Before(*q.CalendarStartDate) {
+					continue
 				}
-				kyous = filtered
+				if q.CalendarEndDate != nil && k.RelatedTime.After(*q.CalendarEndDate) {
+					continue
+				}
+				if !matcher.MatchText(strings.Join(k.Texts, "\n"), k.ID) {
+					continue
+				}
+				filtered = append(filtered, k)
 			}
 
-			return kyous, nil
+			return filtered, nil
 		},
 
 		GetContentHTML: func(ctx context.Context, kyouID string, cfg sdk.Config) (string, error) {

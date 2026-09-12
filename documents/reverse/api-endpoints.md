@@ -73,9 +73,9 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 | フィールド | 型 | 説明 |
 |---|---|---|
-| `words` | []string \| null | 検索キーワード（`words`/`not_words` のどちらかが非nullでテキスト検索有効） |
+| `words` | []string \| null | 検索キーワード（`words`/`not_words` のどちらかが非nullでテキスト検索有効。`[]` は「語なし」で素通し。照合規則は下記の「`words` / `not_words` の照合規則」） |
 | `words_and` | bool | `words` をAND条件にするか（false=OR） |
-| `not_words` | []string \| null | 除外キーワード |
+| `not_words` | []string \| null | 除外キーワード（対象列と付随テキストに含む記録を落とす。ID は見ない） |
 | `tags` | []string \| null | タグ名一覧（非nullでタグフィルタ有効） |
 | `tags_and` | bool | `tags` をAND条件にするか |
 | `reps` | []string \| null | リポジトリ名一覧（非nullでリポジトリフィルタ有効。下記の注を参照） |
@@ -90,6 +90,28 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 > ページング用の `page` / `page_size` フィールドは存在しない。`FindQuery` にページング機構はない。
 > かつての `use_*` 有効化フラグ群は全廃された（値のnull判定に一本化）。
+
+**`words` / `not_words` の照合規則**（部分一致・大小無視。SQL の `GenerateFindSQLCommon`、Go の `find_word.MatchLoweredWords`、プラグイン SDK の `Query.MatchText` が同じ規則。正本は [ADR-0113](../adr/0113-word-filter-columns-and-id-prefix.md)）:
+
+| 型 | 語を照合する列 |
+|---|---|
+| kmemo | CONTENT |
+| urlog | URL / TITLE / DESCRIPTION |
+| nlog | TITLE / SHOP / AMOUNT（金額を文字列として） |
+| timeis | TITLE |
+| kc | TITLE / NUM_VALUE（数値を文字列として） |
+| mi | TITLE / BOARD_NAME |
+| lantana | MOOD（気分値を文字列として。`7` で気分7） |
+| idf | ファイル名＋rep内相対パス＋ `.md` / `.txt` の本文 |
+| rekyou / mirekyou | 参照先の記録で判定 |
+| git_commit_log | コミットメッセージ（コミットハッシュは ID として前方一致） |
+| プラグイン | プラグインが決める（gkill 側は再判定しない）。型別リポジトリ経由（`rep_types` 指定）では上表と同じ列 |
+| 付随テキスト | TEXT（当たった記録を結果に合流させる） |
+
+- 肯定語（`words`）は「対象列に含む **OR** ID が語で**始まる**」。ID は前方一致だけなので、UUID 丸ごとの貼り付けや git の短縮ハッシュは引けるが、`1` / `a` のような短い語で無関係な記録が出ることはない
+- 除外語（`not_words`）は「対象列と付随テキストに含まない」。**ID は見ない**
+- `words` が空で `not_words` だけのときは「素通しした全体から除外語のヒットを引く」（参照先に除外語がある rekyou も消える）
+- 空文字・空白だけの語はサーバ入口で捨てられる（`[""]` は `[]` と同じ）
 
 **`reps` の意味論**（ここを取り違えると、エラーも警告も出ないまま結果だけが変わる）:
 

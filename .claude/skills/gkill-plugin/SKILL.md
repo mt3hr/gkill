@@ -82,9 +82,12 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 
 **プラグイン本文（`plugin-html-view.vue`）の iframe 越しの受け渡し**（2026-08-15 に「Ryuu の PluginKyou がときどき空白」「本文をダブルクリックしても KyouDialog が開かない」を潰して確立）。本文の入れ方は `is_list_view = typeof props.height === 'number'` で分岐し、一覧は `srcdoc` 直書き、Ryuu(`'fit-content'`)・rykv 詳細ペイン(`'auto'`)・KyouDialog(`'unset'`) は定数ローダーへの postMessage 注入（ダイアログの `pushState` より後に iframe がナビゲートするとブラウザバックが2回要るため、ローダー方式は外せない）。注入は**ローダーが `gkill_plugin_loader_ready` を名乗ってから**行う ―― `iframe.contentWindow` は about:blank の時点から真なので、それを見て先に送るとリスナー未登録の iframe に届いて黙って消え、`sent_html` のせいで送り直さないぶん本文が二度と入らない（ServiceWorker が `get_plugin_content_html` をキャッシュ優先で返すので、2回目以降の表示ほど負けやすい＝「ときどき」）。ready のたびに `sent_html` を落として送り直し、Kyou が変わったら iframe ごと作り直す（`:key`。`document.open()` はローダーが `window` に張ったリスナーごと捨てるので使い回すと2件目が入らない）。**`@load` で `sent_html` を落としてはいけない**（`document.close()` でも `load` は発火しうるので注入ループになる）。iframe 内のダブルクリックは親のDOMへ伝播しないので、本文HTMLの末尾に転送スクリプトを足して `gkill_iframe_dblclick` を受け、**親が本物の `dblclick` を撃ち直す**（新しい emit 経路を作らないので `kyou-view.vue` と `ryuu-item-view.vue` の既存の `@dblclick` がそのまま拾う）。テーマ通知を最初のサイズ通知だけに限るのは、本文側がテーマ受信で測り直して送り返すため（毎回返すと10ms周期のピンポンになる）。`plugin-html-view.test.ts` が守る。
 
+**ワード検索の判定はプラグインが唯一の判定者。SDK の `Query.MatchText` を使い、自前のループを書かない。** gkill 本体はプラグインが返した Kyou の本文を持たないので、`words` / `not_words` を再判定しない（`plugin_repository_impl.go` の `pluginKyouMatchesQuery` は Calendar と IDs だけ）。判定規則は本体の各 rep と同じで、正本は `api/find_word`（大小無視の部分一致、肯定語は「text に含む OR ID が語で始まる」、除外語は text だけ、空語は無視）。2026-09-12 まで SDK に判定が無く、4プラグインが同じループをコピペし、fitbit は空文字の語で結果が変わり、雛形の `gkill_example` はワードを完全に無視していた（雛形を写した第三者プラグインも無視する）。**照合に掛けるテキストはプラグインが決める**（chatgpt / claudeai は本文＋会話タイトル、claudecode / codex は `search_text`＋セッション名、fitbit は指標名・キー・単位・数値・デバイス・日付）。一覧をループで判定するときは `q.Matcher()` を1回作って回す。**単語で絞るときは SQL の LIMIT を押し込まない**（`matcher.HasWords()` で切り替える。絞る前に切ると後段で落ちたぶん取りこぼす。codex / fitbit の `QueryKyous` / `FindKyous`）。**型別アダプタ（`plugin_typed_adapters.go`）は索引の型別データを native と同じ列で判定する**（KC=TITLE+NUM_VALUE、Mi=TITLE+BOARD_NAME、Lantana=MOOD 等）ので、`rep_types` 指定や Mi 画面ではプラグインが独自に照合対象へ足した語（fitbit の "Fitbit"）は当たらない。索引にプラグインの照合テキストを持たせる案は却下（[ADR-0113](../../../documents/adr/0113-word-filter-columns-and-id-prefix.md)）。守るテストは `plugin/sdk/match_words_test.go`、各プラグインの `find_kyous_test.go`、`dao/reps/plugin_typed_adapters_test.go` の `TestPluginTypedAdapter_FindKyousFiltersByWord`。
+
 ## 関連スキル
 
 - [gkill-go-backend](../gkill-go-backend/SKILL.md) — `len(XxxReps) == 1` 判定禁止（provides プラグイン1つで長さが2になる）と検索フィルタ
+- [gkill-find-query](../gkill-find-query/SKILL.md) — ワード検索の照合規則（SQL / Go / SDK の3実装を揃える）
 - [gkill-mcp](../gkill-mcp/SKILL.md) — MCP からのプラグイン本文取得（`include_plugin_content`、同一プラグインへ並列に投げない）
 - [gkill-client-foundation](../gkill-client-foundation/SKILL.md) — クライアント全域の規約（plugin-html-view の周辺）
 
@@ -96,4 +99,5 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 - [ADR-0304 GPSLog 専用プラグインは Rep に出さない](../../../documents/adr/0304-plugin-emits-kyou-false.md)
 - [ADR-0305 常駐ビルダと WAL](../../../documents/adr/0305-plugin-background-builder-wal.md)
 - [ADR-0306 Codex のスレッドIDはファイル名から](../../../documents/adr/0306-codex-thread-id-from-filename.md)
+- [ADR-0113 ワード検索の型別の対象列と ID の前方一致（プラグインは SDK の判定を使う）](../../../documents/adr/0113-word-filter-columns-and-id-prefix.md)
 - [ADR-0707 端末固有の文字列は出口で伏せる](../../../documents/adr/0707-redact-environment-specific-strings.md)
