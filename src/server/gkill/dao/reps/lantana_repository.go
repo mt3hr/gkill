@@ -10,10 +10,11 @@ import (
 
 // LantanaRepository は気分値（lantana）のリポジトリが満たす契約です。
 // Repository の共通契約に、気分値（Mood）を持つ Lantana 実体を直接扱うメソッドを足したものです。
-// 保持するのは数値だけでテキスト列を持たないため、キーワード検索は常に0件になります。
+// テキスト列を持たないので、キーワード検索は気分値（MOOD）を文字列として照合します（`7` で気分7が当たる。
+// 他の型と同じ部分一致なので `1` は 1 と 10 に当たる）。除外語も同じ列だけを見ます。
 type LantanaRepository interface {
 	// FindKyous の契約は Repository.FindKyous を参照。
-	// lantana は検索対象のテキスト列を持たないため、ワード条件（query.Words / query.NotWords）が有効なクエリでは常に0件です。
+	// ワード条件（query.Words / query.NotWords）は気分値（MOOD）を文字列として照合します。
 	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	// GetKyou の契約は Repository.GetKyou を参照。
@@ -49,7 +50,7 @@ type LantanaRepository interface {
 	// 集約は Kyou.ID（query.OnlyLatestData が false なら ID に UpdateTime の Unix 秒を連結したキー）
 	// ごとに UpdateTime が最も新しい1件だけを残します。
 	// query.UpdateCache が true のときは検索前にキャッシュを更新します。
-	// FindKyous と同じく、ワード条件が有効なクエリでは常に0件です。
+	// FindKyous と同じく、ワード条件は気分値（MOOD）を文字列として照合します。
 	FindLantana(ctx context.Context, query *find.FindQuery) ([]Lantana, error)
 
 	// GetLantana は id に対応するLantanaを1件、気分値込みで返します。

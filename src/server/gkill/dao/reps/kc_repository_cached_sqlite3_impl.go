@@ -189,7 +189,7 @@ WHERE
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "NUM_VALUE"}
 	ignoreFindWord := false
 	// 結果は map[string][]Kyou に収めるので、SQL側で並べても順序は捨てられる。
 	// 最終的な並び順は find_filter の Go 側ソートで決まる。
@@ -317,7 +317,7 @@ WHERE
 	// 版の数だけ走査するので遅くもある。Tag / Text では既に同じ修正が入っている。
 	onlyLatestData := updateTime == nil
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "NUM_VALUE"}
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
@@ -440,7 +440,7 @@ WHERE
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "NUM_VALUE"}
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
@@ -757,7 +757,7 @@ WHERE
 	// OnlyLatestData=true でも全版(編集履歴)が重複して返っていた(非cached実装はquery依存)
 	onlyLatestData := query.OnlyLatestData
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "NUM_VALUE"}
 	ignoreFindWord := false
 	appendOrderBy := true
 	findWordUseLike := true
@@ -882,7 +882,7 @@ WHERE
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "NUM_VALUE"}
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
@@ -1015,7 +1015,7 @@ WHERE
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "NUM_VALUE"}
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true

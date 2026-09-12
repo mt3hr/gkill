@@ -382,9 +382,9 @@ func main() {
 
 | フィールド | 型 | 説明 |
 |---|---|---|
-| `Words` | `[]string` | 含むワード |
-| `NotWords` | `[]string` | 除外ワード |
-| `WordsAnd` | `bool` | `true` = AND 検索 |
+| `Words` | `[]string` | 含むワード。**判定は `q.MatchText(text, kyouID)`（または `q.Matcher()`）で行う。** gkill 本体はプラグインが返した Kyou のワードを再判定しないので、ここが唯一の判定。規則は本体と同じ（大小無視の部分一致、ID は前方一致、除外語は ID を見ない、空語は無視）。自前のループを書かない |
+| `NotWords` | `[]string` | 除外ワード（同上） |
+| `WordsAnd` | `bool` | `true` = AND 検索（同上） |
 | `Tags` | `[]string` | 含むタグ |
 | `NotTags` | `[]string` | 除外タグ |
 | `TagsAnd` | `bool` | `true` = AND 検索 |

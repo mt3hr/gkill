@@ -9,7 +9,7 @@ Kyou 検索に使用するクエリ構造体と列挙型を定義する。
 
 | ファイル | 説明 |
 |---------|------|
-| `find_query.go` | `FindQuery` 構造体 — 39 フィールドの検索条件とゲート判定ヘルパー |
+| `find_query.go` | `FindQuery` 構造体 — 40 フィールドの検索条件とゲート判定ヘルパー |
 | `find_query_legacy_json.go` | 旧形式（`use_*` フラグ入り）JSON を新形式へ書き換える移行ウォーカー |
 | `period_of_time.go` | 時間帯フィルタの秒値正規化（`NormalizeSecondOfDay` で 0..86399 の秒オブデイへ、`SecondOfDayToHHMMSS` 等） |
 | `rep_types.go` | `KyouRepTypes` — `RepTypes` が受理する正準値の一覧（`selectMatchRepsFromQuery` との集合一致をテストで固定） |
@@ -22,7 +22,7 @@ Kyou 検索に使用するクエリ構造体と列挙型を定義する。
 
 ## FindQuery 構造体
 
-39 フィールドの検索条件構造体。フィルタグループの有効/無効は **値の null 判定** で表す:
+40 フィールドの検索条件構造体。フィルタグループの有効/無効は **値の null 判定** で表す:
 
 - `nil`（JSON では `null` またはキー欠落）= フィルタ未使用
 - 非nilの空スライス（JSON では `[]`）= フィルタ有効だが空指定

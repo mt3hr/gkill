@@ -173,13 +173,79 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	}
 	*whereCounter++
 
-	// ワードand検索である場合のSQL追記
+	// ワード検索のSQL追記。
+	//
+	// 規則は api/find_word（Go側の判定）と同じで、**片方だけを変えないこと**:
+	//   - 肯定語は「対象列のどれかに含む OR ID が語で始まる」。ID は前方一致だけ。
+	//     部分一致だったころは `1` / `a` / `cafe` のような hex だけの短い語が UUID に偶然含まれ、
+	//     本文と無関係な記録が「ランダムに」出ていた（1文字なら ~86% の UUID が当たる）。
+	//     前方一致なら UUID 丸ごとの貼り付けと git の短縮ハッシュはそのまま引ける。
+	//   - and検索は「語ごとにAND、列どうしはOR」。外側を列にしてANDで連結すると「全列に含む」に
+	//     なってしまい、URLog(URL/TITLE/DESCRIPTION)やNlog(TITLE/SHOP)のように複数列を持つrepで、
+	//     片方の列にしか無い語が落ちる。
+	//   - 除外語は「対象列のどれにも含まない」。**ID は見ない**（同じ理由で `-1` が無関係な記録を消していた）。
+	//     否定側の対象列はIFNULLで包む。SQLの NULL NOT LIKE x はNULL(偽扱い)なので、
+	//     素のままだとNULL列を持つ行(urlogのDESCRIPTION等)が除外語と無関係でも丸ごと消えてしまう。
+	//   - query.WordsSkipIDMatch が真なら肯定語でも ID を見ない（除外語を肯定語として再検索する内部クエリ用）。
 	if query.HasWordFilter() {
-		if len(findWordTargetColumns) == 0 {
-			// 検索対象列が無いrep(Lantana等)はID列だけを対象にする。
-			// 他のrepでもID列は常に検索対象なので、それと同じ意味論に揃える。
-			// 以前は無条件で 1=0 を出力しており、ID検索が効かないうえ、
-			// 除外語(NotWords)だけの検索でも全件が消えていた。
+		appendWordSQL := func(word string) {
+			sqlBuilder.WriteString(" ( ")
+			for i, findWordTargetColumnName := range findWordTargetColumns {
+				if i != 0 {
+					sqlBuilder.WriteString(" OR ")
+				}
+				if findWordUseLike {
+					fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?) ESCAPE '\\'", lower, findWordTargetColumnName, lower)
+					*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(word)+"%")
+				} else {
+					fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
+					*queryArgs = append(*queryArgs, word)
+				}
+			}
+			if !query.WordsSkipIDMatch {
+				if len(findWordTargetColumns) != 0 {
+					sqlBuilder.WriteString(" OR ")
+				}
+				if findWordUseLike {
+					fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?) ESCAPE '\\'", lower, "ID", lower)
+					*queryArgs = append(*queryArgs, EscapeLikePattern(word)+"%")
+				} else {
+					fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, "ID", lower)
+					*queryArgs = append(*queryArgs, word)
+				}
+			} else if len(findWordTargetColumns) == 0 {
+				// 見る列が無く ID も見ないなら、語に一致しうる文字列が無い
+				sqlBuilder.WriteString(" 0 = 1 ")
+			}
+			sqlBuilder.WriteString(" ) ")
+		}
+		appendNotWordSQL := func(notWord string) {
+			sqlBuilder.WriteString(" ( ")
+			for i, findWordTargetColumnName := range findWordTargetColumns {
+				if i != 0 {
+					sqlBuilder.WriteString(" AND ")
+				}
+				if findWordUseLike {
+					fmt.Fprintf(sqlBuilder, "%s(IFNULL(%s,'')) NOT LIKE %s(?) ESCAPE '\\'", lower, findWordTargetColumnName, lower)
+					*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(notWord)+"%")
+				} else {
+					fmt.Fprintf(sqlBuilder, "%s(IFNULL(%s,'')) <> %s(?)", lower, findWordTargetColumnName, lower)
+					*queryArgs = append(*queryArgs, notWord)
+				}
+			}
+			sqlBuilder.WriteString(" ) ")
+		}
+
+		if ignoreFindWord && len(findWordTargetColumns) != 0 {
+			// 検索対象列はあるがSQLでは絞らない。
+			// IDFRepのように、ファイル名だけでなくrep内相対パスや
+			// .md/.txt の本文まで見てGo側で判定するリポジトリ向け。
+			// ここでSQLが先に絞ると、列に無い語がGo側の判定に到達できなくなる。
+		} else {
+			// 検索対象列が無い呼び出し（ReKyou / Mi / Tag / Notification の Get 系など、ID 指定で1件を引く
+			// 内部クエリ）もここを通る。肯定語は ID の前方一致だけ、除外語は ID を見ないので何も出さない。
+			// Kyou の検索経路でここへ来る型は無い（Lantana も MOOD 列を見る）。
+			// 以前は無条件で 1=0 を出力しており、ID検索が効かないうえ、除外語だけの検索でも全件が消えていた。
 			if len(query.Words) != 0 {
 				if *whereCounter != 0 {
 					sqlBuilder.WriteString(" AND ")
@@ -193,18 +259,12 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 							sqlBuilder.WriteString(" OR ")
 						}
 					}
-					if findWordUseLike {
-						fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?) ESCAPE '\\'", lower, "ID", lower)
-						*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(word)+"%")
-					} else {
-						fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, "ID", lower)
-						*queryArgs = append(*queryArgs, word)
-					}
+					appendWordSQL(word)
 					*whereCounter++
 				}
 				sqlBuilder.WriteString(" ) ")
 			}
-			if len(query.NotWords) != 0 {
+			if len(query.NotWords) != 0 && len(findWordTargetColumns) != 0 {
 				if *whereCounter != 0 {
 					sqlBuilder.WriteString(" AND ")
 				}
@@ -213,166 +273,10 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 					if i != 0 {
 						sqlBuilder.WriteString(" AND ")
 					}
-					if findWordUseLike {
-						fmt.Fprintf(sqlBuilder, "%s(%s) NOT LIKE %s(?) ESCAPE '\\'", lower, "ID", lower)
-						*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(notWord)+"%")
-					} else {
-						fmt.Fprintf(sqlBuilder, "%s(%s) <> %s(?)", lower, "ID", lower)
-						*queryArgs = append(*queryArgs, notWord)
-					}
+					appendNotWordSQL(notWord)
 					*whereCounter++
 				}
 				sqlBuilder.WriteString(" ) ")
-			}
-		} else if ignoreFindWord {
-			// 検索対象列はあるがSQLでは絞らない。
-			// IDFRepのように、ファイル名だけでなくrep内相対パスや
-			// .md/.txt の本文まで見てGo側で判定するリポジトリ向け。
-			// ここでSQLが先に絞ると、列に無い語がGo側の判定に到達できなくなる。
-		} else {
-			if len(query.Words) != 0 {
-				if query.WordsAnd {
-					if *whereCounter != 0 {
-						sqlBuilder.WriteString(" AND ")
-					}
-					// and検索は「語ごとにAND、列どうしはOR」。
-					// 外側を列にしてANDで連結すると「全列に含む」になってしまい、
-					// URLog(URL/TITLE/DESCRIPTION)やNlog(TITLE/SHOP)のように
-					// 複数列を持つrepで、片方の列にしか無い語が落ちる。
-					for i, word := range query.Words {
-						if i == 0 {
-							sqlBuilder.WriteString(" ( ")
-						} else {
-							sqlBuilder.WriteString(" AND ")
-						}
-
-						sqlBuilder.WriteString(" ( ")
-						for _, findWordTargetColumnName := range findWordTargetColumns {
-							if findWordUseLike {
-								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?) ESCAPE '\\'", lower, findWordTargetColumnName, lower)
-								*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(word)+"%")
-							} else {
-								fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
-								*queryArgs = append(*queryArgs, word)
-							}
-							sqlBuilder.WriteString(" OR ")
-						}
-						if findWordUseLike {
-							fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?) ESCAPE '\\'", lower, "ID", lower)
-							*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(word)+"%")
-						} else {
-							fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, "ID", lower)
-							*queryArgs = append(*queryArgs, word)
-						}
-						sqlBuilder.WriteString(" ) ")
-
-						if i == len(query.Words)-1 {
-							sqlBuilder.WriteString(" ) ")
-						}
-						*whereCounter++
-					}
-				} else {
-					// ワードor検索である場合のSQL追記
-					if *whereCounter != 0 {
-						sqlBuilder.WriteString(" AND ")
-					}
-					for j, findWordTargetColumnName := range findWordTargetColumns {
-						if j == 0 {
-							sqlBuilder.WriteString(" ( ")
-						} else {
-							sqlBuilder.WriteString(" OR ")
-						}
-
-						for i, word := range query.Words {
-							if i == 0 {
-								sqlBuilder.WriteString(" ( ")
-							} else {
-								sqlBuilder.WriteString(" OR ")
-							}
-							if findWordUseLike {
-								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?) ESCAPE '\\'", lower, findWordTargetColumnName, lower)
-								*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(word)+"%")
-
-								sqlBuilder.WriteString(" OR ")
-
-								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?) ESCAPE '\\'", lower, "ID", lower)
-								*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(word)+"%")
-							} else {
-								fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
-								*queryArgs = append(*queryArgs, word)
-
-								sqlBuilder.WriteString(" OR ")
-
-								fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, "ID", lower)
-								*queryArgs = append(*queryArgs, word)
-							}
-							if i == len(query.Words)-1 {
-								sqlBuilder.WriteString(" ) ")
-							}
-							*whereCounter++
-						}
-
-						if j == len(findWordTargetColumns)-1 {
-							sqlBuilder.WriteString(" ) ")
-						}
-					}
-				}
-			}
-
-			if len(query.NotWords) != 0 {
-				// notワードを除外するSQLを追記
-				if *whereCounter != 0 {
-					sqlBuilder.WriteString(" AND ")
-				}
-				for j, findWordTargetColumnName := range findWordTargetColumns {
-					if j == 0 {
-						sqlBuilder.WriteString(" ( ")
-					} else {
-						sqlBuilder.WriteString(" AND ")
-					}
-
-					for i, notWord := range query.NotWords {
-						if i == 0 {
-							sqlBuilder.WriteString(" ( ")
-						} else {
-							sqlBuilder.WriteString(" AND ")
-						}
-						// 肯定側は「対象列かIDのどちらかに一致」なのでORでよいが、
-						// 否定側はド・モルガンによりANDでなければならない。
-						//   NOT(COL LIKE ? OR ID LIKE ?) = COL NOT LIKE ? AND ID NOT LIKE ?
-						// ここがORだったころは、IDがUUIDで検索語を含むことは実質ないため
-						// 右辺が常に真になり、除外がまったく効いていなかった。
-						//
-						// 否定側の対象列はIFNULLで包む。SQLの NULL NOT LIKE x はNULL(偽扱い)なので、
-						// 素のままだとNULL列を持つ行(urlogのDESCRIPTION等)が
-						// 除外語と無関係でも丸ごと消えてしまう。
-						if findWordUseLike {
-							fmt.Fprintf(sqlBuilder, "%s(IFNULL(%s,'')) NOT LIKE %s(?) ESCAPE '\\'", lower, findWordTargetColumnName, lower)
-							*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(notWord)+"%")
-
-							sqlBuilder.WriteString(" AND ")
-
-							fmt.Fprintf(sqlBuilder, "%s(%s) NOT LIKE %s(?) ESCAPE '\\'", lower, "ID", lower)
-							*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(notWord)+"%")
-						} else {
-							fmt.Fprintf(sqlBuilder, "%s(IFNULL(%s,'')) <> %s(?)", lower, findWordTargetColumnName, lower)
-							*queryArgs = append(*queryArgs, notWord)
-
-							sqlBuilder.WriteString(" AND ")
-
-							fmt.Fprintf(sqlBuilder, "%s(%s) <> %s(?)", lower, "ID", lower)
-							*queryArgs = append(*queryArgs, notWord)
-						}
-						if i == len(query.NotWords)-1 {
-							sqlBuilder.WriteString(" ) ")
-						}
-						*whereCounter++
-					}
-
-					if j == len(findWordTargetColumns)-1 {
-						sqlBuilder.WriteString(" ) ")
-					}
-				}
 			}
 		}
 	}

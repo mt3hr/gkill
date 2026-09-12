@@ -532,8 +532,8 @@ func TestGenerateFindSQLCommon_IgnoreFindWordSkipsWordSQL(t *testing.T) {
 	}
 }
 
-// 検索対象列を持たないrep(Lantana等)は、他のrepと同じくID列だけをキーワードの対象にします。
-// ignoreFindWord の値によらないこと。
+// 検索対象列を持たない呼び出し（ID指定で1件を引く内部クエリ）は、他のrepと同じくID列だけを
+// キーワードの対象にします（前方一致）。ignoreFindWord の値によらないこと。
 // 以前は無条件で '1 = 0' を出力しており、ID検索が効かないうえ、
 // 除外語(NotWords)だけの検索でも全件が消えていました。
 func TestGenerateFindSQLCommon_NoFindWordTargetColumnsMatchesIDOnly(t *testing.T) {
@@ -557,8 +557,8 @@ func TestGenerateFindSQLCommon_NoFindWordTargetColumnsMatchesIDOnly(t *testing.T
 		if !strings.Contains(sql, "(ID) LIKE") {
 			t.Errorf("検索対象列が無いときはID列だけを対象にするはず (ignoreFindWord=%v), got %q", ignoreFindWord, sql)
 		}
-		if len(queryArgs) != 1 {
-			t.Errorf("バインド値はIDの1個のはず (ignoreFindWord=%v), got %v", ignoreFindWord, queryArgs)
+		if len(queryArgs) != 1 || queryArgs[0] != "hello%" {
+			t.Errorf("バインド値はIDの前方一致パターン1個のはず (ignoreFindWord=%v), got %v", ignoreFindWord, queryArgs)
 		}
 		if err := assertValidWhereClause(t, sql, queryArgs); err != nil {
 			t.Errorf("生成されたWHERE句がSQLiteで実行できない (ignoreFindWord=%v): %v (sql=%q)", ignoreFindWord, err, sql)
@@ -566,8 +566,8 @@ func TestGenerateFindSQLCommon_NoFindWordTargetColumnsMatchesIDOnly(t *testing.T
 	}
 }
 
-// 検索対象列を持たないrepは、除外語(NotWords)だけの検索では全件が残ります。
-// 本文が無いので除外語に該当しえないため。以前は '1 = 0' で全件が消えていました。
+// 検索対象列を持たない呼び出しは、除外語(NotWords)だけの検索では全件が残ります。
+// 本文が無いので除外語に該当しえないため（除外語は ID を見ない）。以前は '1 = 0' で全件が消えていました。
 func TestGenerateFindSQLCommon_NoFindWordTargetColumnsNotWordsOnlyPasses(t *testing.T) {
 	query := &find.FindQuery{
 		Words:    []string{},
@@ -588,8 +588,11 @@ func TestGenerateFindSQLCommon_NoFindWordTargetColumnsNotWordsOnlyPasses(t *test
 	if strings.Contains(sql, "1 = 0") {
 		t.Errorf("除外語だけの検索で全件を消してはいけない, got %q", sql)
 	}
-	if !strings.Contains(sql, "(ID) NOT LIKE") {
-		t.Errorf("除外語はID列を対象にするはず, got %q", sql)
+	if strings.Contains(sql, "NOT LIKE") {
+		t.Errorf("除外語はID列を見ないので条件を出さないはず, got %q", sql)
+	}
+	if len(queryArgs) != 0 {
+		t.Errorf("除外語だけならバインド値を積まないはず, got %v", queryArgs)
 	}
 	if err := assertValidWhereClause(t, sql, queryArgs); err != nil {
 		t.Errorf("生成されたWHERE句がSQLiteで実行できない: %v (sql=%q)", err, sql)
@@ -999,5 +1002,191 @@ func TestGenerateFindSQLCommon_PeriodOfTimeOvernightWindow(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// 肯定語の ID 照合は前方一致だけ。
+// 部分一致だったころは `1` / `a` のような hex だけの短い語が UUID に偶然含まれ、
+// 本文と無関係な記録が「ランダムに」出ていた。UUID 丸ごとの貼り付けと git の短縮ハッシュは前方一致で引ける。
+func TestGenerateFindSQLCommon_IDMatchesByPrefixOnly(t *testing.T) {
+	query := &find.FindQuery{
+		Words:    []string{"abc"},
+		WordsAnd: false,
+	}
+	whereCounter := 0
+	queryArgs := []any{}
+
+	sql, err := GenerateFindSQLCommon(
+		query, "MY_TABLE", "T", &whereCounter,
+		false, "RELATED_TIME",
+		[]string{"TITLE", "SHOP"}, true, false,
+		false, true, &queryArgs,
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	matchedIDs := matchedIDsOfTwoColumnTable(t, sql, queryArgs, [][3]string{
+		{"abc12345-0000", "no", "no"},        // ID が語で始まる → 当たる
+		{"12345abc-0000", "no", "no"},        // ID の途中に語 → 当たらない
+		{"ffff-0000", "title has ABC", "no"}, // 列に含む（大小無視）→ 当たる
+		{"eeee-0000", "no", "no"},            // どこにも無い → 当たらない
+	})
+
+	want := map[string]bool{"abc12345-0000": true, "ffff-0000": true}
+	if len(matchedIDs) != len(want) {
+		t.Fatalf("ID は前方一致だけのはず: got %v, want %v", matchedIDs, want)
+	}
+	for _, id := range matchedIDs {
+		if !want[id] {
+			t.Errorf("一致してはいけない行が一致した: %q (matched=%v)", id, matchedIDs)
+		}
+	}
+}
+
+// 除外語は ID を見ない。`-1` で UUID に 1 を含む記録が消えていた事故の再発防止。
+func TestGenerateFindSQLCommon_NotWordsDoNotLookAtID(t *testing.T) {
+	query := &find.FindQuery{
+		Words:    []string{},
+		NotWords: []string{"abc"},
+	}
+	whereCounter := 0
+	queryArgs := []any{}
+
+	sql, err := GenerateFindSQLCommon(
+		query, "MY_TABLE", "T", &whereCounter,
+		false, "RELATED_TIME",
+		[]string{"TITLE", "SHOP"}, true, false,
+		false, true, &queryArgs,
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.Contains(sql, "(ID) NOT LIKE") {
+		t.Errorf("除外語は ID 列を見てはいけない, got %q", sql)
+	}
+
+	matchedIDs := matchedIDsOfTwoColumnTable(t, sql, queryArgs, [][3]string{
+		{"abc12345-0000", "keep", "keep"},   // ID が除外語で始まっても残る
+		{"1111-0000", "has abc here", "no"}, // TITLE に除外語 → 消える
+		{"2222-0000", "no", "shop ABC"},     // SHOP に除外語（大小無視）→ 消える
+		{"3333-0000", "keep", "keep"},       // 残る
+	})
+
+	want := map[string]bool{"abc12345-0000": true, "3333-0000": true}
+	if len(matchedIDs) != len(want) {
+		t.Fatalf("除外語は対象列だけで判定するはず: got %v, want %v", matchedIDs, want)
+	}
+	for _, id := range matchedIDs {
+		if !want[id] {
+			t.Errorf("除外されるべき行が残った: %q (matched=%v)", id, matchedIDs)
+		}
+	}
+}
+
+// WordsSkipIDMatch が真なら肯定語でも ID を見ない（除外語を肯定語として再検索する内部クエリ用）。
+func TestGenerateFindSQLCommon_WordsSkipIDMatch(t *testing.T) {
+	query := &find.FindQuery{
+		Words:            []string{"abc"},
+		WordsAnd:         false,
+		WordsSkipIDMatch: true,
+	}
+	whereCounter := 0
+	queryArgs := []any{}
+
+	sql, err := GenerateFindSQLCommon(
+		query, "MY_TABLE", "T", &whereCounter,
+		false, "RELATED_TIME",
+		[]string{"TITLE", "SHOP"}, true, false,
+		false, true, &queryArgs,
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.Contains(sql, "(ID) LIKE") {
+		t.Errorf("WordsSkipIDMatch のときは ID 列を見てはいけない, got %q", sql)
+	}
+	if len(queryArgs) != 2 {
+		t.Errorf("バインド値は対象列2つぶんのはず, got %v", queryArgs)
+	}
+
+	matchedIDs := matchedIDsOfTwoColumnTable(t, sql, queryArgs, [][3]string{
+		{"abc12345-0000", "no", "no"},  // ID が語で始まっても当たらない
+		{"1111-0000", "has abc", "no"}, // 列に含む → 当たる
+	})
+	if len(matchedIDs) != 1 || matchedIDs[0] != "1111-0000" {
+		t.Errorf("列だけで判定するはず: got %v", matchedIDs)
+	}
+
+	// 見る列が無く ID も見ないなら、何にも一致しない（素通しにしてはいけない）
+	whereCounter = 0
+	queryArgs = []any{}
+	sql, err = GenerateFindSQLCommon(
+		query, "MY_TABLE", "T", &whereCounter,
+		false, "RELATED_TIME",
+		[]string{}, true, false,
+		false, true, &queryArgs,
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(sql, "0 = 1") {
+		t.Errorf("列も ID も見ないなら一致しえないはず, got %q", sql)
+	}
+	if err := assertValidWhereClause(t, sql, queryArgs); err != nil {
+		t.Errorf("生成されたWHERE句がSQLiteで実行できない: %v (sql=%q)", err, sql)
+	}
+}
+
+// 数値列（Nlog の AMOUNT / KC の NUM_VALUE / Lantana の MOOD）は列名を渡すだけで、
+// SQLite の暗黙変換により文字列として部分一致する。TEXT 保存の値も INTEGER 保存の値も同じ。
+func TestGenerateFindSQLCommon_NumericColumnMatchesAsText(t *testing.T) {
+	query := &find.FindQuery{
+		Words:    []string{"1500"},
+		WordsAnd: false,
+	}
+	whereCounter := 0
+	queryArgs := []any{}
+
+	whereSQL, err := GenerateFindSQLCommon(
+		query, "MY_TABLE", "T", &whereCounter,
+		false, "RELATED_TIME",
+		[]string{"TITLE", "SHOP"}, true, false,
+		false, true, &queryArgs,
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// SHOP 列を数値列に見立てる。TEXT の "1500" と INTEGER の 1500 の両方を入れる
+	db, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatalf("error at open memory db: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+	if _, err := db.Exec(`CREATE TABLE MY_TABLE (ID, TITLE, SHOP, RELATED_TIME, UPDATE_TIME)`); err != nil {
+		t.Fatalf("error at create table: %v", err)
+	}
+	if _, err := db.Exec(`INSERT INTO MY_TABLE (ID, TITLE, SHOP) VALUES ('text-1500', 'x', '1500'), ('int-1500', 'x', 1500), ('int-315', 'x', 315), ('real-1500', 'x', 1500.0)`); err != nil {
+		t.Fatalf("error at insert: %v", err)
+	}
+	rows, err := db.Query(`SELECT ID FROM MY_TABLE AS T WHERE `+whereSQL, queryArgs...)
+	if err != nil {
+		t.Fatalf("error at select: %v", err)
+	}
+	defer func() { _ = rows.Close() }()
+	matched := map[string]bool{}
+	for rows.Next() {
+		id := ""
+		if err := rows.Scan(&id); err != nil {
+			t.Fatalf("error at scan: %v", err)
+		}
+		matched[id] = true
+	}
+	if !matched["text-1500"] || !matched["int-1500"] || !matched["real-1500"] {
+		t.Errorf("数値列は保存型によらず文字列として当たるはず: got %v", matched)
+	}
+	if matched["int-315"] {
+		t.Errorf("語を含まない数値は当たらないはず: got %v", matched)
 	}
 }

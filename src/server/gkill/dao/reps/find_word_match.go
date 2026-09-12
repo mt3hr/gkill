@@ -9,51 +9,27 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
-// matchFindWords は検索対象テキストがキーワード条件を満たすか判定します。
-//
-// text・words・notWords はいずれも呼び出し元で小文字化済みであること。
-// 肯定語が空のときは肯定条件なしとして扱い、AND・OR どちらでも通します。
-// 除外語はいずれか1語でも含まれていれば不一致です。
+// キーワード判定の本体は api/find_word.MatchLoweredWords にある。
 //
 // SQLite で検索するリポジトリは sqlite3impl.GenerateFindSQLCommon が生成する
-// WHERE 句で同じ判定をしています。片方だけを変えるとリポジトリ種別によって
-// 検索結果が食い違うので、意味を変えるときは必ず両方を揃えること。
-//
-// 以前はこの判定が各リポジトリに直接書かれており、除外語のループが
-// match = strings.Contains(...) と代入になっていたため、
-// 「除外語を含まない」行まで不一致として落としていた。
-// 除外語を1語でも指定すると全件0件になるのがその症状。
-// 同様に OR 検索の分岐が match = false から始まっていたため、
-// 除外語だけを指定した検索（肯定語が空）も必ず0件になっていた。
-func matchFindWords(text string, words []string, notWords []string, wordsAnd bool) bool {
-	if wordsAnd {
-		for _, word := range words {
-			if !strings.Contains(text, word) {
-				return false
-			}
-		}
-	} else if len(words) != 0 {
-		matched := false
-		for _, word := range words {
-			if strings.Contains(text, word) {
-				matched = true
-				break
-			}
-		}
-		if !matched {
-			return false
-		}
-	}
+// WHERE 句で同じ判定をしていて、プラグイン SDK（plugin/sdk の Query.MatchText）も同じ関数を使う。
+// Go 側で判定する IDF / git（local_dir）/ プラグイン型別アダプタは、このファイルのヘルパで
+// 検索対象テキストと ID を組み立てて find_word へ渡す。規則を変えるときは SQL 側も揃えること。
 
-	for _, notWord := range notWords {
-		if strings.Contains(text, notWord) {
-			return false
-		}
+// findWordIDOf はキーワード判定に渡す ID を返します。
+//
+// 肯定語は「対象テキストに含む OR ID が語で始まる」だが、query.WordsSkipIDMatch が真のときは
+// ID を見ない（除外語を肯定語として再検索する内部クエリ用。find.FindQuery の doc を参照）。
+// find_word.MatchLoweredWords は空の id を「ID 照合なし」と解釈する。
+func findWordIDOf(query *find.FindQuery, id string) string {
+	if query.WordsSkipIDMatch {
+		return ""
 	}
-	return true
+	return strings.ToLower(id)
 }
 
 // findWordTextOfIDFKyou はIDFKyouのキーワード検索対象テキストを小文字で組み立てます。
@@ -93,26 +69,10 @@ func findWordTextOfIDFKyou(ctx context.Context, targetFile string, absolutePath 
 
 // findWordTextOfGitCommit はGitCommitLogのキーワード検索対象テキストを小文字で組み立てます。
 //
-// 対象はコミットメッセージとコミットIDです。
-// NUL区切りで連結しているのは、境界をまたいだ検索語が誤ってヒットしないようにするため。
-// 連結した1本のテキストとして扱うことで、肯定語は「どちらかに含む」、
-// 除外語は「どちらにも含まない」となり、キャッシュ側のSQL（COMMIT_MESSAGE と ID を見る）と
-// 同じ意味になります。
-func findWordTextOfGitCommit(message string, commitID string) string {
-	return strings.ToLower(message) + "\x00" + strings.ToLower(commitID)
-}
-
-// lowerFindWords は検索語を小文字化した新しいスライスを返します。
-//
-// query は全リポジトリで共有されているので、スライスの中身を直接書き換えると
-// 並列に走っている他リポジトリの検索語まで小文字化して壊してしまう。必ず複製すること。
-func lowerFindWords(words []string) []string {
-	if len(words) == 0 {
-		return nil
-	}
-	lowered := make([]string, len(words))
-	for i, word := range words {
-		lowered[i] = strings.ToLower(word)
-	}
-	return lowered
+// 対象はコミットメッセージだけです。コミットIDは検索対象テキストに連結せず、
+// find_word.MatchLoweredWords の id 引数として渡します（肯定語は前方一致、除外語は見ない）。
+// キャッシュ側のSQL（COMMIT_MESSAGE 列 + ID の前方一致）と同じ意味になります。
+// 以前は NUL 区切りで ID を連結して部分一致させており、短い hex 語で無関係なコミットが当たっていました。
+func findWordTextOfGitCommit(message string) string {
+	return strings.ToLower(message)
 }

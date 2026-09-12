@@ -54,21 +54,21 @@ func main() {
 				endUnix = &unix
 			}
 
-			metrics, err := globalCache.QueryDailyMetrics(pluginDir, config, startUnix, endUnix, q.Limit)
+			// ワード判定は SDK に任せる（gkill 本体は再判定しないので、ここが唯一の判定）。
+			// 単語で絞るなら LIMIT を SQL へ押し込まない。絞る前に切ると、後段のフィルタで落ちたぶん取りこぼす。
+			matcher := q.Matcher()
+			sqlLimit := q.Limit
+			if matcher.HasWords() {
+				sqlLimit = 0
+			}
+			metrics, err := globalCache.QueryDailyMetrics(pluginDir, config, startUnix, endUnix, sqlLimit)
 			if err != nil {
 				// 構築中や読めないときは空を返す。検索全体を落とさない
 				sdk.LogError("gkill_plugin_fitbit: find_kyous: %v", err)
 				return []sdk.Kyou{}, nil
 			}
 
-			kyous := make([]sdk.Kyou, 0, len(metrics))
-			for _, metric := range metrics {
-				if !matchWordsText(metric.SearchText, q) {
-					continue
-				}
-				kyous = append(kyous, kyouOf(metric))
-			}
-			return kyous, nil
+			return kyousOfMetrics(metrics, q), nil
 		},
 
 		// GetKyou は必ず実装する。
@@ -187,38 +187,23 @@ func kyouOf(metric dailyMetric) sdk.Kyou {
 	}
 }
 
-// matchWordsText はワード検索の判定。
-// WordsAnd が true なら全語、false ならいずれか1語。NotWords は常に除外。
-func matchWordsText(text string, q sdk.Query) bool {
-	lower := strings.ToLower(text)
-	for _, notWord := range q.NotWords {
-		if notWord == "" {
+// kyousOfMetrics は集計結果をワードで絞って Kyou にする。
+//
+// ワード判定は SDK に任せる（gkill 本体は再判定しないので、ここが唯一の判定）。
+// 対象は search_text（指標名・キー・単位・数値・デバイス・日付）。LIMIT は絞った後に掛ける。
+func kyousOfMetrics(metrics []dailyMetric, q sdk.Query) []sdk.Kyou {
+	matcher := q.Matcher()
+	kyous := make([]sdk.Kyou, 0, len(metrics))
+	for _, metric := range metrics {
+		if !matcher.MatchText(metric.SearchText, metric.KyouID) {
 			continue
 		}
-		if strings.Contains(lower, strings.ToLower(notWord)) {
-			return false
+		kyous = append(kyous, kyouOf(metric))
+		if q.Limit > 0 && len(kyous) >= q.Limit {
+			break
 		}
 	}
-	if len(q.Words) == 0 {
-		return true
-	}
-	matchedAny := false
-	for _, word := range q.Words {
-		if word == "" {
-			continue
-		}
-		matched := strings.Contains(lower, strings.ToLower(word))
-		if q.WordsAnd && !matched {
-			return false
-		}
-		if matched {
-			matchedAny = true
-		}
-	}
-	if q.WordsAnd {
-		return true
-	}
-	return matchedAny
+	return kyous
 }
 
 // extractPluginDir は起動引数から --gkill-plugin-dir を取り出す。

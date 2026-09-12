@@ -60,7 +60,7 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `shared_find_query_mutation_test.go` | 共有 FindQuery の変更検証 |
 | `plugin_repository_impl_test.go` | プラグインのサブプロセス管理（後述）と、検索失敗をエラーではなく警告として返す結線 |
 | `find_warnings_test.go` | 検索中の警告コレクタ（収集、コレクタ未設定時の無害さ、並行追加） |
-| `find_word_match_test.go` | キーワード一致判定の共通化。除外語のみの検索、AND/OR、ファイル本文の走査、絶対パスを検索対象に含めないこと |
+| `find_word_match_test.go` | キーワード検索の対象テキスト組み立て（判定本体は `api/find_word/match_words_test.go`）。IDF のファイル本文の走査と絶対パスを検索対象に含めないこと、git のコミットIDをテキストに連結せず ID 前方一致で引くこと、`WordsSkipIDMatch` で ID 照合を切ること |
 | `cached_find_only_latest_test.go` | 「最新版のみ」指定がキャッシュ実装でも非キャッシュ実装と同じに効くこと（Nlog / KC / TimeIs） |
 | `get_kyou_latest_version_test.go` | 単体取得が最新版を返すこと |
 | `repositories_id_chunk_test.go` | IDリストの分割（`findChunkedByIDs`）。SQLite のバインド変数上限を超えると**エラーが立たないまま0件**になるので、上限またぎを実データ寸法で固定する |

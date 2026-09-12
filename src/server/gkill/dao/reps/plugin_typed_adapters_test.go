@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -353,7 +354,7 @@ func TestPluginTypedRepositories_NoProvidesRegistersNothing(t *testing.T) {
 	}
 }
 
-// TestPluginKCAdapter_FindKCFiltersByWord は、KCの検索対象列がTITLEであることを確認する。
+// TestPluginKCAdapter_FindKCFiltersByWord は、KCの検索対象列が native と同じ TITLE + NUM_VALUE であることを確認する。
 func TestPluginKCAdapter_FindKCFiltersByWord(t *testing.T) {
 	fake := newFakePluginRepositoryWithProvides(t, behaviorTyped, allTypedProvides)
 	ctx := context.Background()
@@ -377,6 +378,94 @@ func TestPluginKCAdapter_FindKCFiltersByWord(t *testing.T) {
 	}
 	if len(filtered) != 1 || filtered[0].Title != "歩数1" {
 		t.Errorf("FindKC(歩数1) = %+v, want 1件（歩数1）", filtered)
+	}
+
+	// 数値（NUM_VALUE）でも当たる
+	byValue, err := adapters.KC.FindKC(ctx, &find.FindQuery{Words: []string{"1002"}})
+	if err != nil {
+		t.Fatalf("FindKC(数値): %v", err)
+	}
+	if len(byValue) != 1 || byValue[0].NumValue.String() != "1002" {
+		t.Errorf("FindKC(1002) = %+v, want 1件（NUM_VALUE=1002）", byValue)
+	}
+}
+
+// findKyous（型別アダプタの Kyou 検索）もワードで絞る。
+// 以前はここでワードを見ておらず、rep_types 指定や ForMi で型別アダプタが選ばれると
+// 語に関係なくプラグインの記録が全件当たっていた。
+func TestPluginTypedAdapter_FindKyousFiltersByWord(t *testing.T) {
+	fake := newFakePluginRepositoryWithProvides(t, behaviorTyped, allTypedProvides)
+	ctx := context.Background()
+	adapters := NewPluginTypedRepositories(fake.rep)
+	if err := fake.rep.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache: %v", err)
+	}
+
+	count := func(query *find.FindQuery) map[string]bool {
+		t.Helper()
+		got, err := adapters.KC.FindKyous(ctx, query)
+		if err != nil {
+			t.Fatalf("FindKyous: %v", err)
+		}
+		ids := map[string]bool{}
+		for _, kyous := range got {
+			for _, kyou := range kyous {
+				ids[kyou.ID] = true
+			}
+		}
+		return ids
+	}
+
+	if ids := count(&find.FindQuery{Words: []string{"歩数1"}}); len(ids) != 1 || !ids["typed-1"] {
+		t.Errorf("FindKyous(歩数1) = %v, want typed-1 だけ", ids)
+	}
+	if ids := count(&find.FindQuery{Words: []string{}, NotWords: []string{"歩数1"}}); len(ids) != fakeTypedKyouCount-1 || ids["typed-1"] {
+		t.Errorf("FindKyous(-歩数1) = %v, want typed-1 以外", ids)
+	}
+	// ID は前方一致
+	if ids := count(&find.FindQuery{Words: []string{"typed-2"}}); len(ids) != 1 || !ids["typed-2"] {
+		t.Errorf("FindKyous(typed-2) = %v, want ID 前方一致で typed-2 だけ", ids)
+	}
+	if ids := count(&find.FindQuery{Words: []string{"ped-2"}}); len(ids) != 0 {
+		t.Errorf("FindKyous(ped-2) = %v, want ID の途中の部分一致では当たらない", ids)
+	}
+	// 語なし（非nil空）は素通し
+	if ids := count(&find.FindQuery{Words: []string{}, NotWords: []string{}}); len(ids) != fakeTypedKyouCount {
+		t.Errorf("FindKyous(語なし) = %v, want 全件", ids)
+	}
+}
+
+// Lantana は native と同じく気分値（MOOD）を文字列として照合する。
+// 以前は「ワード条件が有効なら0件」で、除外語だけの検索でも消えていた（native は残る）。
+func TestPluginTypedFindWordText_Lantana(t *testing.T) {
+	record := &pluginTypedRecord{ID: "lantana-1", Lantana: &Lantana{ID: "lantana-1", Mood: 7}}
+	if got := pluginTypedFindWordText(record, gkill_plugin.PluginProvidesLantana); got != "7" {
+		t.Fatalf("Lantana の検索対象テキストは気分値のはず: got %q", got)
+	}
+	if !pluginMatchWords(pluginTypedFindWordText(record, gkill_plugin.PluginProvidesLantana), record.ID, &find.FindQuery{Words: []string{"7"}}) {
+		t.Errorf("気分7は `7` で当たるべき")
+	}
+	if pluginMatchWords(pluginTypedFindWordText(record, gkill_plugin.PluginProvidesLantana), record.ID, &find.FindQuery{Words: []string{"8"}}) {
+		t.Errorf("気分7は `8` で当たってはいけない")
+	}
+	if pluginMatchWords(pluginTypedFindWordText(record, gkill_plugin.PluginProvidesLantana), record.ID, &find.FindQuery{Words: []string{}, NotWords: []string{"7"}}) {
+		t.Errorf("気分7は `-7` で消えるべき")
+	}
+	if !pluginMatchWords(pluginTypedFindWordText(record, gkill_plugin.PluginProvidesLantana), record.ID, &find.FindQuery{Words: []string{}, NotWords: []string{"8"}}) {
+		t.Errorf("気分7は `-8` で残るべき")
+	}
+	// 他の型の列も native と同じ
+	mi := &pluginTypedRecord{ID: "mi-1", Mi: &Mi{Title: "買い物", BoardName: "家事"}}
+	if !pluginMatchWords(pluginTypedFindWordText(mi, gkill_plugin.PluginProvidesMi), mi.ID, &find.FindQuery{Words: []string{"家事"}}) {
+		t.Errorf("Mi は BOARD_NAME でも当たるべき")
+	}
+	nlog := &pluginTypedRecord{ID: "nlog-1", Nlog: &Nlog{Title: "昼食", Shop: "食堂", Amount: json.Number("1500")}}
+	if !pluginMatchWords(pluginTypedFindWordText(nlog, gkill_plugin.PluginProvidesNlog), nlog.ID, &find.FindQuery{Words: []string{"1500"}}) {
+		t.Errorf("Nlog は AMOUNT でも当たるべき")
+	}
+	// 実データを持たない種別は空文字
+	if got := pluginTypedFindWordText(record, gkill_plugin.PluginProvidesKmemo); got != "" {
+		t.Errorf("持たない種別は空文字のはず: got %q", got)
 	}
 }
 

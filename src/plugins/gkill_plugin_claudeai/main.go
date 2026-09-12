@@ -150,48 +150,7 @@ func main() {
 			if err != nil {
 				return []sdk.Kyou{}, nil
 			}
-
-			var kyous []sdk.Kyou
-			for _, msg := range msgs {
-				relatedTime := unixToTimeFromCache(msg.RelatedTimeUnix)
-
-				// カレンダーフィルタ
-				if q.CalendarStartDate != nil && relatedTime.Before(*q.CalendarStartDate) {
-					continue
-				}
-				if q.CalendarEndDate != nil && relatedTime.After(*q.CalendarEndDate) {
-					continue
-				}
-
-				// ワードフィルタ（メッセージ単位）
-				if !matchWordsText(msg.Text, q) {
-					continue
-				}
-
-				createTime := unixToTimeFromCache(msg.CreateTimeUnix)
-				updateTime := unixToTimeFromCache(msg.UpdateTimeUnix)
-				if updateTime.IsZero() {
-					updateTime = createTime
-				}
-
-				k := sdk.Kyou{
-					ID:          msg.MsgID,
-					RepName:     repName,
-					DataType:    dataType,
-					RelatedTime: relatedTime,
-					CreateTime:  createTime,
-					UpdateTime:  updateTime,
-					CreateApp:   "gkill_plugin_claudeai",
-					UpdateApp:   "gkill_plugin_claudeai",
-				}
-				kyous = append(kyous, k)
-			}
-
-			if q.Limit > 0 && len(kyous) > q.Limit {
-				kyous = kyous[:q.Limit]
-			}
-
-			return kyous, nil
+			return kyousOfMessages(msgs, q), nil
 		},
 
 		GetContentHTML: func(ctx context.Context, kyouID string, cfg sdk.Config) (string, error) {
@@ -232,41 +191,53 @@ func main() {
 	})
 }
 
-// matchWordsText はワード検索条件にメッセージテキストが合致するかチェックする。
-func matchWordsText(text string, q sdk.Query) bool {
-	if len(q.Words) == 0 && len(q.NotWords) == 0 {
-		return true
-	}
+// kyousOfMessages はキャッシュのメッセージ一覧を検索条件で絞って Kyou にする。
+//
+// ワード判定は SDK に任せる（gkill 本体は再判定しないので、ここが唯一の判定）。
+// 対象はメッセージ本文と会話タイトル。LIMIT は絞った後に掛ける。
+func kyousOfMessages(msgs []cachedMessage, q sdk.Query) []sdk.Kyou {
+	matcher := q.Matcher()
 
-	target := strings.ToLower(text)
+	var kyous []sdk.Kyou
+	for _, msg := range msgs {
+		relatedTime := unixToTimeFromCache(msg.RelatedTimeUnix)
 
-	if len(q.Words) > 0 {
-		if q.WordsAnd {
-			for _, w := range q.Words {
-				if !strings.Contains(target, strings.ToLower(w)) {
-					return false
-				}
-			}
-		} else {
-			matched := false
-			for _, w := range q.Words {
-				if strings.Contains(target, strings.ToLower(w)) {
-					matched = true
-					break
-				}
-			}
-			if !matched {
-				return false
-			}
+		// カレンダーフィルタ
+		if q.CalendarStartDate != nil && relatedTime.Before(*q.CalendarStartDate) {
+			continue
 		}
+		if q.CalendarEndDate != nil && relatedTime.After(*q.CalendarEndDate) {
+			continue
+		}
+
+		// ワードフィルタ（メッセージ単位。本文と会話タイトル）
+		if !matcher.MatchText(msg.Text+"\n"+msg.ConvTitle, msg.MsgID) {
+			continue
+		}
+
+		createTime := unixToTimeFromCache(msg.CreateTimeUnix)
+		updateTime := unixToTimeFromCache(msg.UpdateTimeUnix)
+		if updateTime.IsZero() {
+			updateTime = createTime
+		}
+
+		k := sdk.Kyou{
+			ID:          msg.MsgID,
+			RepName:     repName,
+			DataType:    dataType,
+			RelatedTime: relatedTime,
+			CreateTime:  createTime,
+			UpdateTime:  updateTime,
+			CreateApp:   "gkill_plugin_claudeai",
+			UpdateApp:   "gkill_plugin_claudeai",
+		}
+		kyous = append(kyous, k)
 	}
 
-	for _, w := range q.NotWords {
-		if strings.Contains(target, strings.ToLower(w)) {
-			return false
-		}
+	if q.Limit > 0 && len(kyous) > q.Limit {
+		kyous = kyous[:q.Limit]
 	}
-	return true
+	return kyous
 }
 
 // renderSingleMsgHTML は1メッセージのみのHTMLを生成する。

@@ -46,11 +46,17 @@ export const FIND_QUERY_SCHEMA = {
     },
     words: {
       type: "array",
-      description: "Keywords to match; omit or pass null for no keyword filter, [] matches nothing.",
+      description:
+        "Keywords to match (case-insensitive substring). Matched against each type's text fields (kmemo content; urlog url/title/description; nlog title/shop/amount; timeis title; kc title/value; mi title/board name; lantana mood value as text; idf file path and .md/.txt body; git commit message; plugin-defined text) and against attached texts; an entry whose ID starts with the keyword also matches. Omit or pass null for no keyword filter; [] (or only blank strings) applies no keyword condition, i.e. everything passes.",
       items: { type: "string" },
     },
     words_and: { type: "boolean", description: "AND logic for words (true=all must match, false=any)." },
-    not_words: { type: "array", description: "Keywords to exclude.", items: { type: "string" } },
+    not_words: {
+      type: "array",
+      description:
+        "Keywords to exclude: drops entries whose text fields (same fields as words) or attached texts contain any of them. IDs are never matched. With words omitted or empty, the result is everything minus these matches.",
+      items: { type: "string" },
+    },
     reps: {
       type: "array",
       description:

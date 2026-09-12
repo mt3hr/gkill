@@ -49,11 +49,17 @@ type PluginGPSLogQuery struct {
 }
 
 // PluginQuery はプラグインへの検索条件。FindQueryのサブセット。
+//
+// ワード条件（Words / NotWords / WordsAnd）の判定はプラグインの責任。gkill 本体は本文を持たないので、
+// 返ってきた Kyou のワードを再判定しない（plugin_repository_impl.go の pluginKyouMatchesQuery は
+// Calendar と IDs しか見ない）。規則は本体の各リポジトリと同じで、SDK の sdk.Query.MatchText が
+// 同じ実装（api/find_word）を提供する。プラグインはそれを使い、自前のループを書かないこと。
 type PluginQuery struct {
 	// Words は全文検索キーワード（AND/OR はWordsAndで制御）。
+	// 大小無視の部分一致。Kyou の ID が語で始まる場合も一致（ID は前方一致だけ）。
 	Words []string `json:"words"`
 
-	// NotWords は除外キーワード。
+	// NotWords は除外キーワード。対象テキストに含む Kyou を落とす（ID は見ない）。
 	NotWords []string `json:"not_words"`
 
 	// WordsAnd は true のとき全Words AND 検索、false のとき OR。
