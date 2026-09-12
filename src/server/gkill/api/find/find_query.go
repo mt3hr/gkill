@@ -8,6 +8,8 @@ package find
 
 import (
 	"time"
+
+	"github.com/mt3hr/gkill/src/server/gkill/api/find_word"
 )
 
 // FindQuery は Kyou 検索の条件。
@@ -70,6 +72,35 @@ type FindQuery struct {
 	//
 	// JSONには出しません（クライアントから指定させる項目ではないため）。
 	ExcludeURLogThumbnailImage bool `json:"-"`
+
+	// WordsSkipIDMatch は肯定語（Words）で ID 列を照合しないことを指示します。
+	//
+	// 通常の肯定語は「対象列に含む OR ID が語で始まる」で、除外語は ID を見ない。
+	// 除外語を含む記録を落とすために除外語を**肯定語として**再検索する内部クエリ
+	// （find_filter.go の除外語の再検査）では、この旗が無いと「ID が除外語で始まる記録」まで
+	// 除外されて「除外語は ID を見ない」が破れる（`-a` で 1/16 の記録が消える）。
+	//
+	// SQL 側は sqlite3impl.GenerateFindSQLCommon が、Go 側は find_word.MatchLoweredWords に
+	// 空の id を渡すことで従う。
+	// JSONには出しません（クライアントから指定させる項目ではないため）。
+	WordsSkipIDMatch bool `json:"-"`
+}
+
+// WithNormalizedWords は Words / NotWords / TimeIsWords / TimeIsNotWords の各語から前後の空白を落とし、
+// 空になった語を捨てた浅いコピーを返します（find_word.NormalizeWords。nil は nil のまま、非nil は空でも非nil のまま）。
+//
+// Kyou 検索の入口（FindFilter.FindKyous）で1回だけ通します。空文字の語を通すと SQL の LIKE '%%' が
+// 全件に一致し、除外語なら全件が消える。画面のパーサは空語を作らないが、MCP や API の直叩きでは届く。
+//
+// 呼び出し元の FindQuery とそのスライスは書き換えません（query は共有されるため。
+// dao/reps/shared_find_query_mutation_test.go の約束）。
+func (q *FindQuery) WithNormalizedWords() *FindQuery {
+	copied := *q
+	copied.Words = find_word.NormalizeWords(q.Words)
+	copied.NotWords = find_word.NormalizeWords(q.NotWords)
+	copied.TimeIsWords = find_word.NormalizeWords(q.TimeIsWords)
+	copied.TimeIsNotWords = find_word.NormalizeWords(q.TimeIsNotWords)
+	return &copied
 }
 
 // HasWordFilter はキーワード検索グループが有効かを返す。

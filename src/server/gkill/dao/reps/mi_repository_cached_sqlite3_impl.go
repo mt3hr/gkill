@@ -294,7 +294,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "CREATE_TIME_UNIX"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
@@ -318,7 +318,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	queryArgsForCheck := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "RELATED_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -341,7 +341,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	queryArgsForLimit := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "LIMIT_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -364,7 +364,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	queryArgsForStart := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -387,7 +387,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	queryArgsForEnd := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -614,7 +614,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "CREATE_TIME_UNIX"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
@@ -638,7 +638,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 	queryArgsForCheck := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "RELATED_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -661,7 +661,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 	queryArgsForLimit := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "LIMIT_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -684,7 +684,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 	queryArgsForStart := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -707,7 +707,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 	queryArgsForEnd := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -936,7 +936,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "CREATE_TIME_UNIX"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
@@ -960,7 +960,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	queryArgsForCheck := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "RELATED_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -983,7 +983,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	queryArgsForLimit := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "LIMIT_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -1006,7 +1006,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	queryArgsForStart := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -1029,7 +1029,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	queryArgsForEnd := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -1488,7 +1488,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "CREATE_TIME_UNIX"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
@@ -1512,7 +1512,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	queryArgsForCheck := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "UPDATE_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -1535,7 +1535,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	queryArgsForLimit := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "LIMIT_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -1558,7 +1558,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	queryArgsForStart := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -1581,7 +1581,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	queryArgsForEnd := []any{}
 	whereCounter = 0
 	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -1852,7 +1852,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 	// GenerateFindSQLCommon は query.OnlyLatestData を読まず、この引数しか見ない（既定 false のままだと最古版を返す）。
 	onlyLatestData := query.OnlyLatestData
 	relatedTimeColumnName := "CREATE_TIME_UNIX"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
@@ -1874,7 +1874,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 	whereCounter = 0
 	onlyLatestData = query.OnlyLatestData
 	relatedTimeColumnName = "CREATE_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -1896,7 +1896,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 	whereCounter = 0
 	onlyLatestData = query.OnlyLatestData
 	relatedTimeColumnName = "LIMIT_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -1918,7 +1918,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 	whereCounter = 0
 	onlyLatestData = query.OnlyLatestData
 	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -1940,7 +1940,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 	whereCounter = 0
 	onlyLatestData = query.OnlyLatestData
 	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -2215,7 +2215,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "CREATE_TIME_UNIX"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
@@ -2237,7 +2237,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	whereCounter = 0
 	onlyLatestData = false
 	relatedTimeColumnName = "CREATE_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -2259,7 +2259,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	whereCounter = 0
 	onlyLatestData = false
 	relatedTimeColumnName = "LIMIT_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -2281,7 +2281,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	whereCounter = 0
 	onlyLatestData = false
 	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
@@ -2303,7 +2303,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	whereCounter = 0
 	onlyLatestData = false
 	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
-	findWordTargetColumns = []string{"TITLE"}
+	findWordTargetColumns = []string{"TITLE", "BOARD_NAME"}
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true

@@ -163,7 +163,7 @@ cmd := exec.CommandContext(context.Background(),
 
 | コマンド（`PluginRequest.Command`） | 説明 |
 |---|---|
-| `find_kyous` | 検索クエリに合致する Kyou 一覧を返す |
+| `find_kyous` | 検索クエリに合致する Kyou 一覧を返す。**ワード条件（`words` / `not_words` / `words_and`）の判定はプラグインの責任** — gkill 側は本文を持たないので再判定しない（`plugin_repository_impl.go` の `pluginKyouMatchesQuery` は Calendar と IDs だけ）。判定は SDK の `sdk.Query.MatchText`（本体と同じ規則: 大小無視の部分一致、ID は前方一致、除外語は ID を見ない）を使う。型別リポジトリ経由（`rep_types` 指定・Mi 画面）では索引の型別データを本体と同じ列で判定するので、プラグインが独自に照合対象へ足した語はそこでは当たらない |
 | `get_kyou` | 指定 ID の Kyou 1 件を返す |
 | `get_rep_name` | gkill 上のリポジトリ表示名を返す（`sdk/sdk.go:106-108`） |
 | `get_content_html` | 指定 ID の Kyou のコンテンツ HTML を返す |

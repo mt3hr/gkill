@@ -17,7 +17,7 @@ api/
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
 ├── *_test.go                    # 検索フィルタ・rep名絞り込みなどのテスト（14ファイル）
-├── gkill_server_api/            # HTTP ハンドラ（145ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（146ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・全90ルート登録
@@ -32,6 +32,7 @@ api/
 │   ├── gkill_server_api_rate_limit.go # レートリミット
 │   └── handle_*.go              # 各エンドポイントのハンドラ（106ファイル。うちテスト15）
 ├── find/                        # 検索クエリ型定義
+├── find_word/                   # ワード検索の Go 側判定（本体とプラグイン SDK が共用。標準ライブラリのみ）
 ├── gkill_plugin/                # プラグイン通信プロトコル型
 ├── gpslogs/                     # GPS ログパーサ
 ├── kftl/                        # KFTL パーサ → kftl/README.md 参照
@@ -69,7 +70,7 @@ handle_*.go は106ファイル（実装91 + テスト15）で、1ハンドラ1�
 
 | ファイル | 説明 |
 |---------|------|
-| `find_query.go` | `FindQuery` 構造体 — 検索条件（39フィールド: キーワード、日付範囲、タグ、データ型等。値がnullなら未使用） |
+| `find_query.go` | `FindQuery` 構造体 — 検索条件（40フィールド: キーワード、日付範囲、タグ、データ型等。値がnullなら未使用）と、検索語の正規化 `WithNormalizedWords` |
 | `find_query_legacy_json.go` | 旧形式（`use_*` フラグ入り）JSON を新形式へ書き換える移行ウォーカー |
 | `period_of_time.go` | 時間帯フィルタの秒値正規化ヘルパー |
 | `rep_types.go` | `KyouRepTypes` — `RepTypes` が受理する正準値の一覧 |
@@ -79,6 +80,13 @@ handle_*.go は106ファイル（実装91 + テスト15）で、1ハンドラ1�
 | `find_query_test.go` | JSON シリアライズ・デシリアライズテスト |
 | `find_query_legacy_json_test.go` | 旧形式 JSON 移行のテスト |
 | `period_of_time_test.go` | 時間帯フィルタの秒値正規化のテスト |
+
+### `find_word/`（2ファイル）— ワード検索の Go 側判定
+
+| ファイル | 説明 |
+|---------|------|
+| `match_words.go` | `MatchLoweredWords`（肯定語は「対象テキストに含む OR ID が語で始まる」、除外語は対象テキストだけ）/ `LowerWords` / `NormalizeWords`。SQL 側の `sqlite3impl.GenerateFindSQLCommon` と同じ規則で、本体（IDF / git / プラグイン型別アダプタ）とプラグイン SDK（`sdk.Query.MatchText`）が共用する。SDK が引き込めるよう標準ライブラリ以外に依存しない |
+| `match_words_test.go` | 判定規則（AND/OR・除外語・ID 前方一致・ID 照合なし）と正規化のテスト |
 
 ### `gkill_plugin/`（3ファイル）— プラグイン通信プロトコル型
 
