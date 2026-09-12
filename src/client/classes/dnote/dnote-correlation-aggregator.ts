@@ -3,20 +3,35 @@ import type { Kyou } from "../datas/kyou"
 import { DnoteTrendAggregator } from "./dnote-trend-aggregator"
 import type DnoteTrendPoint from "./dnote-trend/dnote-trend-point"
 import { correlation_statistics } from "./dnote-correlation/correlation-statistics"
-import type {
-    DnoteCorrelationCell,
-    DnoteCorrelationGraphQuery,
-    DnoteCorrelationMethod,
-    DnoteCorrelationPairPoint,
-    DnoteCorrelationResult,
+import moment from "moment"
+import {
+    is_missing_as_zero_effective,
+    type DnoteCorrelationCell,
+    type DnoteCorrelationGraphQuery,
+    type DnoteCorrelationMethod,
+    type DnoteCorrelationPairPoint,
+    type DnoteCorrelationResult,
 } from "./dnote-correlation"
+
+export interface BuildCorrelationCellOptions {
+    /** 行／列の指標で「記録が無いバケットを 0 の観測とみなす」か */
+    row_missing_as_zero?: boolean
+    column_missing_as_zero?: boolean
+    /** 今日のバケットキー（YYYY-MM-DD）。テストで固定するために差し替えられる */
+    today_bucket_key?: string
+}
 
 /**
  * 2つの指標の時系列を突き合わせて、行列の1セル分（散布図の点列＋統計量）を組み立てる。
  * 統計量そのものの計算は dnote-correlation/correlation-statistics.ts が持つ。
  */
-export function build_correlation_cell(row_metric_id: string, column_metric_id: string, row_series: Array<DnoteTrendPoint>, column_series: Array<DnoteTrendPoint>, lag: number, method: DnoteCorrelationMethod): DnoteCorrelationCell {
+export function build_correlation_cell(row_metric_id: string, column_metric_id: string, row_series: Array<DnoteTrendPoint>, column_series: Array<DnoteTrendPoint>, lag: number, method: DnoteCorrelationMethod, options: BuildCorrelationCellOptions = {}): DnoteCorrelationCell {
     const points = new Array<DnoteCorrelationPairPoint>()
+    const row_missing_as_zero = options.row_missing_as_zero ?? false
+    const column_missing_as_zero = options.column_missing_as_zero ?? false
+    // 0 とみなすのは過去のバケットだけ。検索範囲が未来まで伸びていると、
+    // まだ来ていない日が両側とも「0」の観測になって相関を薄める
+    const today_bucket_key = options.today_bucket_key ?? moment().format('YYYY-MM-DD')
     // 正のlagは「行の指標が先、列の指標が後」を表す。
     // インデックスで対応付けることで日・週・月のどの粒度でも同じ意味になる。
     for (let row_index = 0; row_index < row_series.length; row_index++) {
@@ -25,7 +40,9 @@ export function build_correlation_cell(row_metric_id: string, column_metric_id: 
         const row_point = row_series[row_index]
         const column_point = column_series[column_index]
         // 記録が存在しないバケットの0は観測値ではないため、相関へ混ぜない。
-        if (row_point.match_kyous.length === 0 || column_point.match_kyous.length === 0) continue
+        // 指標が missing_as_zero を選んでいるときだけ、過去のバケットに限って 0 の観測として扱う
+        if (row_point.match_kyous.length === 0 && !(row_missing_as_zero && row_point.bucket_key <= today_bucket_key)) continue
+        if (column_point.match_kyous.length === 0 && !(column_missing_as_zero && column_point.bucket_key <= today_bucket_key)) continue
         if (!Number.isFinite(row_point.value) || !Number.isFinite(column_point.value)) continue
         points.push({
             row_bucket_key: row_point.bucket_key,
@@ -59,14 +76,17 @@ export class DnoteCorrelationAggregator {
         // 指標ごとの系列は互いに独立なので並行に集計してよい
         const series = new Map<string, Array<DnoteTrendPoint>>()
         await Promise.all(this.query.metrics.map(async metric => {
-            const aggregator = new DnoteTrendAggregator(metric.predicate, metric.aggregate_target, this.query.granularity)
+            const aggregator = new DnoteTrendAggregator(metric.predicate, metric.aggregate_target, this.query.granularity, { timeis_span_policy: metric.timeis_span_policy })
             series.set(metric.id, await aggregator.aggregate_trend(abort_controller, kyous, find_kyou_query, kyou_is_loaded))
         }))
 
         const cells = this.query.metrics.map(row_metric => this.query.metrics.map(column_metric => {
             const row_series = series.get(row_metric.id) ?? []
             const column_series = series.get(column_metric.id) ?? []
-            return build_correlation_cell(row_metric.id, column_metric.id, row_series, column_series, this.query.lag, this.query.method)
+            return build_correlation_cell(row_metric.id, column_metric.id, row_series, column_series, this.query.lag, this.query.method, {
+                row_missing_as_zero: is_missing_as_zero_effective(row_metric),
+                column_missing_as_zero: is_missing_as_zero_effective(column_metric),
+            })
         }))
         return { query: this.query, series, cells }
     }

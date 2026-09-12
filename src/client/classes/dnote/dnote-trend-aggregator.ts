@@ -7,9 +7,16 @@ import load_kyous from "./kyou-loader";
 import type DnoteTrendPoint from "./dnote-trend/dnote-trend-point";
 import type { DnoteTrendGranularity } from "./dnote-trend/dnote-trend-types";
 import aggregated_value_to_number from "./dnote-trend/aggregated-value-to-number";
+import { is_time_of_day_totals, time_of_day_deviations } from "./dnote-trend/time-of-day-deviation";
+import type { DnoteTimeIsSpanPolicy } from "./dnote-correlation";
 
 // バケット数の上限（広すぎる検索範囲による暴走防止。超過時は新しい側を優先）
 const max_bucket_count = 400
+
+export interface DnoteTrendAggregatorOptions {
+    /** 日をまたぐ TimeIs の計上先。省略時は 0:00 で分割（トレンドグラフの既定） */
+    timeis_span_policy?: DnoteTimeIsSpanPolicy
+}
 
 function start_of_unit(granularity: DnoteTrendGranularity): moment.unitOfTime.StartOf {
     switch (granularity) {
@@ -38,11 +45,13 @@ export class DnoteTrendAggregator {
     private dnote_predicate: DnotePredicate
     private dnote_aggregate_target: DnoteAggregateTarget
     private granularity: DnoteTrendGranularity
+    private timeis_span_policy: DnoteTimeIsSpanPolicy
 
-    constructor(dnote_predicate: DnotePredicate, dnote_aggregate_target: DnoteAggregateTarget, granularity: DnoteTrendGranularity) {
+    constructor(dnote_predicate: DnotePredicate, dnote_aggregate_target: DnoteAggregateTarget, granularity: DnoteTrendGranularity, options: DnoteTrendAggregatorOptions = {}) {
         this.dnote_predicate = dnote_predicate
         this.dnote_aggregate_target = dnote_aggregate_target
         this.granularity = granularity
+        this.timeis_span_policy = options.timeis_span_policy ?? "split"
     }
 
     // 渡されたkyousを粒度単位のバケットに区切って集計する。
@@ -112,10 +121,31 @@ export class DnoteTrendAggregator {
             cursor = cursor.clone().add(1, step)
         }
 
+        // 「開始／終了した期間にまとめる」ときは経過時間を切り詰めない。
+        // AggregateSumTimeIsTime 等は bucket_query の calendar 範囲で切り詰めるので、範囲を外した複製を渡す
+        const untrimmed_query = typeof find_kyou_query.clone === 'function' ? find_kyou_query.clone() : find_kyou_query
+        if (untrimmed_query !== find_kyou_query) {
+            untrimmed_query.calendar_start_date = null
+            untrimmed_query.calendar_end_date = null
+        }
+
         // predicateにマッチしたKyouをバケットへ振り分けて集計
         for (let i = 0; i < cloned_kyous.length; i++) {
             const kyou = cloned_kyous[i]
             if (!(await this.dnote_predicate.is_match(kyou, null))) {
+                continue
+            }
+            if (kyou.typed_timeis && this.timeis_span_policy !== "split") {
+                // 睡眠のように「終わった朝の指標」と突き合わせたい打刻は、0:00 で割ると
+                // 前夜ぶんと当夜ぶんが混ざって信号が消える。丸ごと片側のバケットへ入れる
+                const raw_end = kyou.typed_timeis.end_time ? kyou.typed_timeis.end_time.getTime() : Date.now()
+                const anchor = this.timeis_span_policy === "start" ? kyou.typed_timeis.start_time.getTime() : raw_end
+                const bucket = buckets.get(moment(anchor).startOf(unit).format('YYYY-MM-DD'))
+                if (!bucket) {
+                    continue
+                }
+                bucket.aggregated_value = await this.dnote_aggregate_target.append_aggregate_element_value(bucket.aggregated_value, kyou, untrimmed_query)
+                bucket.point.match_kyous.push(kyou.clone())
                 continue
             }
             if (kyou.typed_timeis) {
@@ -150,6 +180,17 @@ export class DnoteTrendAggregator {
             }
             bucket.point.value = aggregated_value_to_number(bucket.aggregated_value)
             bucket.point.value_string = await this.dnote_aggregate_target.result_to_string(bucket.aggregated_value)
+        }
+
+        // 時刻の平均（開始時刻・終了時刻）は「0時からのミリ秒」のままだと 0 時で値が跳ぶ。
+        // 系列全体の平均時刻からのずれに直して、折れ線と相関が 0 時をまたいでもつながるようにする。
+        // 表示文字列（時刻の整形）は変えない
+        const bucket_list = [...buckets.values()]
+        if (bucket_list.some(bucket => is_time_of_day_totals(bucket.aggregated_value))) {
+            const deviations = time_of_day_deviations(bucket_list.map(bucket => is_time_of_day_totals(bucket.aggregated_value) ? bucket.aggregated_value : null))
+            for (let i = 0; i < bucket_list.length; i++) {
+                bucket_list[i].point.value = deviations[i] ?? 0
+            }
         }
         return points
     }

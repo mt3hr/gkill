@@ -26,6 +26,12 @@
       </v-row>
       <v-select v-model="metric.aggregate_target" :items="aggregate_targets" item-title="label" item-value="value"
         :label="i18n.global.t('DNOTE_AGGREGATE_TARGET')" />
+      <!-- 件数・合計以外では0が観測にならないので選べない -->
+      <v-checkbox v-model="metric.missing_as_zero" :disabled="!supports_missing_as_zero(metric)"
+        :label="i18n.global.t('DNOTE_CORRELATION_MISSING_AS_ZERO_TITLE')"
+        :hint="i18n.global.t('DNOTE_CORRELATION_MISSING_AS_ZERO_HINT')" persistent-hint density="compact" />
+      <v-select v-model="metric.timeis_span_policy" :items="timeis_span_policies" item-title="label" item-value="value"
+        :label="i18n.global.t('DNOTE_CORRELATION_TIMEIS_SPAN_POLICY_TITLE')" />
       <PredicateGroup v-model="metric.root_predicate" :is_root="true" />
     </v-card>
 
@@ -65,11 +71,13 @@ const {
   aggregate_targets,
   granularities,
   methods,
+  timeis_span_policies,
   validation_message,
 
   // Business logic
   load_query,
   add_metric,
+  supports_missing_as_zero,
   delete_metric,
   move_metric,
   save,

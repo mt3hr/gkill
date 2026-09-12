@@ -152,8 +152,10 @@
 
   <h2>Gráfico de correlación</h2>
   <p>Agrega de 2 a 10 métricas por el mismo día, semana o mes y muestra sus relaciones mediante un mapa de calor y un gráfico de dispersión. Cada métrica tiene nombre, objetivo de agregación y condiciones.</p>
-  <p>Seleccione una celda para ver el coeficiente, el número de períodos emparejados, el valor p, el intervalo de confianza del 95 % y la dispersión. Están disponibles Pearson y Spearman; los resultados inferenciales de Spearman son aproximaciones analíticas. La correlación no demuestra causalidad.</p>
+  <p>Seleccione una celda para ver el coeficiente, el número de períodos emparejados, el valor p, el intervalo de confianza del 95 % y la dispersión. Están disponibles Pearson y Spearman.</p>
   <p>Con un desfase positivo, la métrica de fila de un período anterior se compara con la métrica de columna de uno posterior. Se excluyen los períodos sin alguna observación.</p>
+  <p>Al marcar "Tratar los periodos sin registros como 0" en una métrica, los periodos sin registros de esa métrica se incluyen como observaciones de 0. Sirve para comparar los días en que algo ocurrió con los días en que no, en eventos que no suceden a diario como compras o registros de tiempo. Solo está disponible en métricas de recuento y suma, y los periodos anteriores al inicio del registro también serán 0, así que acote el rango de fechas.</p>
+  <p>"Dónde contar los registros que abarcan varios periodos" permite elegir, por métrica, si una entrada de tiempo que abarca varios periodos se divide entre ellos o se cuenta entero en el periodo en que empezó o terminó. Para registros como el sueño, que quiera comparar con las métricas de la mañana en que terminó, elija "Todo en el periodo en que terminó".</p>
 
   <h2>Edición de grupo de condiciones</h2>
   <table>
