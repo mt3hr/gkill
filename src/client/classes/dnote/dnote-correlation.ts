@@ -9,12 +9,40 @@ import { build_dnote_aggregate_target_from_json, build_dnote_predicate_from_json
 
 export type DnoteCorrelationMethod = "pearson" | "spearman"
 
+/**
+ * 日をまたぐ TimeIs をどのバケットへ計上するか。
+ * split: 0:00 で区切って両方へ（トレンドグラフと同じ）
+ * start / end: 分割せず、開始した／終了した側のバケットへ丸ごと
+ */
+export type DnoteTimeIsSpanPolicy = "split" | "start" | "end"
+
 /** 相関グラフの1指標。トレンドグラフ1本ぶんと同じ「条件＋集計対象」を持つ */
 export class DnoteCorrelationMetric {
     id = ""
     title = ""
     predicate: DnotePredicate = new AndPredicate([])
     aggregate_target: DnoteAggregateTarget = new AggregateCountKyou()
+    /**
+     * 記録が無いバケットを「0 の観測」として相関へ含める。
+     * 既定ではペアごとに除外されるため、購入や打刻のような疎なイベントは
+     * 「あった日どうし」しか比べられず、「無かった日」との対比が消える。
+     * 件数・合計の集計対象でだけ意味を持つ（平均の 0 は観測ではない）
+     */
+    missing_as_zero = false
+    timeis_span_policy: DnoteTimeIsSpanPolicy = "split"
+}
+
+/**
+ * 0 起点で描く（=記録が無ければ 0 と読める）集計対象かどうか。
+ * missing_as_zero が効くのはこの種類だけで、平均・時刻の 0 は観測値ではない
+ */
+export function is_zero_based_aggregate_type(type: unknown): boolean {
+    return typeof type === "string" && (type.startsWith("AggregateCount") || type.startsWith("AggregateSum"))
+}
+
+/** 設定は手で書き換えられるので、集計対象と噛み合わない missing_as_zero はここで無視する */
+export function is_missing_as_zero_effective(metric: DnoteCorrelationMetric): boolean {
+    return metric.missing_as_zero && is_zero_based_aggregate_type(metric.aggregate_target.to_json().type)
 }
 
 /** 相関グラフの設定。粒度と時間ずれ(lag)は全指標で共通にする（指標ごとだと行列の意味が定まらない） */
@@ -81,6 +109,8 @@ export function parse_dnote_correlation_graph(json: Record<string, unknown>): Dn
         if (metric_json.aggregate_target && typeof metric_json.aggregate_target === "object") {
             metric.aggregate_target = build_dnote_aggregate_target_from_json(metric_json.aggregate_target as Record<string, unknown>)
         }
+        metric.missing_as_zero = metric_json.missing_as_zero === true
+        metric.timeis_span_policy = metric_json.timeis_span_policy === "start" || metric_json.timeis_span_policy === "end" ? metric_json.timeis_span_policy : "split"
         return metric
     })
     return query
@@ -98,6 +128,8 @@ export function serialize_dnote_correlation_graph(query: DnoteCorrelationGraphQu
             title: metric.title,
             predicate: metric.predicate.predicate_struct_to_json(),
             aggregate_target: metric.aggregate_target.to_json(),
+            missing_as_zero: metric.missing_as_zero,
+            timeis_span_policy: metric.timeis_span_policy,
         })),
     }
 }

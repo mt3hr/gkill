@@ -17,8 +17,8 @@ Vitest
 | `src/client/__tests__/unit/dnote/aggregate-targets.test.ts` | 集計ターゲット（実装は19種） |
 | `src/client/__tests__/unit/dnote/aggregators.test.ts` | DnoteAgregator / DnoteListAggregator |
 | `src/client/__tests__/unit/dnote/serialization.test.ts` | 辞書データのシリアライゼーション |
-| `src/client/__tests__/unit/dnote/trend-aggregator.test.ts` | DnoteTrendAggregator（トレンドグラフの時系列バケット集計: 日/週/月粒度、ゼロ埋め、バケット上限） |
-| `src/client/__tests__/unit/dnote/correlation-aggregator.test.ts` | Pearson／Spearman、p値、信頼区間、lag、欠損除外、設定往復 |
+| `src/client/__tests__/unit/dnote/trend-aggregator.test.ts` | DnoteTrendAggregator（トレンドグラフの時系列バケット集計: 日/週/月粒度、ゼロ埋め、バケット上限、TimeIs の 0:00 区切りと計上先 `timeis_span_policy`、時刻平均の 0 時またぎ） |
+| `src/client/__tests__/unit/dnote/correlation-aggregator.test.ts` | Pearson／Spearman、p値、信頼区間、lag、欠損除外と `missing_as_zero`（未来のバケットは 0 にしない・件数／合計でだけ効く）、設定往復（指標オプションの既定値） |
 | `src/client/__tests__/unit/dnote/kyou-loader.test.ts` | Dnote 用 Kyou ローダ（対象 Kyou の読み込み） |
 
 ## テスト内容
@@ -28,7 +28,7 @@ Vitest
 - **Aggregate Targets**: カウント、合計、平均、最小、最大など。`dnote-aggregate-target/` の22ファイルのうち19種が集計対象（残り3つは `average-info.ts` / `time-of-day-average-info.ts` / `format-aggregated-number.ts` のヘルパ）。表示用の丸め（`format-aggregated-number.ts`）もここでテストする。丸めを通すのは平均系と浮動小数の合計系のみで、整数しか出ない集計と時刻整形の集計は対象外
 - **Aggregators**: `DnoteAgregator`（単一集計）と `DnoteListAggregator`（リスト集計）の動作検証
 - **Serialization**: D-note 設定辞書の JSON シリアライゼーション / デシリアライゼーション
-- **Correlation**: 相関統計、方向付きlag、欠損のペアワイズ除外、相関グラフ設定のシリアライズ
+- **Correlation**: 相関統計、方向付きlag、欠損のペアワイズ除外と `missing_as_zero` による 0 埋め、相関グラフ設定のシリアライズ
 
 ## 対象ディレクトリと対応表
 
@@ -41,11 +41,11 @@ Vitest
 | `dnote-predicate/target-kyou-predicate/` | 5 | `predicates.test.ts` |
 | `dnote-aggregate-target/` | 22 | `aggregate-targets.test.ts` |
 | `dnote-key-getter/` | 9 | `key-getters.test.ts` |
-| `dnote-trend/` | 3 | `trend-aggregator.test.ts` |
+| `dnote-trend/` | 4 | `trend-aggregator.test.ts` |
 | `dnote-correlation/` | 1 | `correlation-aggregator.test.ts` |
 | `serialize/` | 5 | `serialization.test.ts` |
 | `dnote-filter/` | 2 | 専用テストなし（`aggregators.test.ts` から間接的に通る） |
-| `pulldown-menu/` | 7 | 専用テストなし（UI プルダウンの選択肢定義） |
+| `pulldown-menu/` | 8 | 専用テストなし（UI プルダウンの選択肢定義） |
 
 ## 実行方法
 

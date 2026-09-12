@@ -40,10 +40,6 @@
           {{ i18n.global.t('DNOTE_CORRELATION_CONFIDENCE_INTERVAL_TITLE') }}:
           {{ format_interval(selected_cell.confidence_low, selected_cell.confidence_high) }}
         </p>
-        <p v-if="model_value?.method === 'spearman'" class="text-medium-emphasis">
-          {{ i18n.global.t('DNOTE_CORRELATION_SPEARMAN_APPROXIMATION_NOTE') }}
-        </p>
-        <p class="text-medium-emphasis">{{ i18n.global.t('DNOTE_CORRELATION_CAUSATION_NOTE') }}</p>
 
         <!-- viewBoxは固定座標系。実データはuseDnoteCorrelationGraphView側でこの座標へ写像済み -->
         <svg v-if="scatter_points.length > 0" class="correlation_scatter" viewBox="0 0 600 320"
@@ -282,9 +278,11 @@ defineExpose({
   line-height: 1.2;
 }
 
-/* 選択枠は背景色に埋もれることがあるため、内側にもう1本線を重ねる */
+/* 選択枠は背景色（正は primary の青、負は error の赤）に埋もれることがあるため、
+   内側にもう1本線を重ねて2px相当の輪にする。色は文字と同じ表面色に揃える
+   （highlight のミント色はこの画面では使わない: 青と赤の上に緑が乗ると3色目になる） */
 .matrix_cell.selected {
-  border-color: rgb(var(--v-theme-highlight));
+  border-color: rgb(var(--v-theme-on-surface));
   box-shadow: inset 0 0 0 1px rgb(var(--v-theme-on-surface));
 }
 
@@ -345,7 +343,7 @@ defineExpose({
 
 .scatter_point:focus {
   outline: none;
-  stroke: rgb(var(--v-theme-highlight));
+  stroke: rgb(var(--v-theme-on-surface));
   stroke-width: 3;
 }
 

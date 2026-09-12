@@ -2,6 +2,7 @@ import { computed, nextTick, type Ref, ref } from 'vue'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { Kyou } from '@/classes/datas/kyou'
 import { DnoteTrendAggregator } from '@/classes/dnote/dnote-trend-aggregator'
+import { is_zero_based_aggregate_type } from '@/classes/dnote/dnote-correlation'
 import type DnoteTrendPoint from '@/classes/dnote/dnote-trend/dnote-trend-point'
 import type DnoteTrendGraphViewProps from '@/pages/views/dnote-trend-graph-view-props'
 import type DnoteTrendGraphQuery from '@/pages/views/dnote-trend-graph-query'
@@ -50,10 +51,7 @@ export function useDnoteTrendGraphView(options: {
     })
 
     // 件数・合計系は0起点、平均系はオートスケール
-    const is_zero_based = computed(() => {
-        const type = model_value.value?.aggregate_target.to_json().type
-        return typeof type === 'string' && (type.startsWith('AggregateCount') || type.startsWith('AggregateSum'))
-    })
+    const is_zero_based = computed(() => is_zero_based_aggregate_type(model_value.value?.aggregate_target.to_json().type))
 
     // 0起点でも、出費のように値が負になりうる系列では0を下限にすると
     // VSparkline内部のスケールが反転・発散して描画座標が領域外に飛ぶ。

@@ -152,8 +152,10 @@
 
   <h2>Korrelationsdiagramm</h2>
   <p>Aggregiert 2 bis 10 Metriken nach demselben Tag, derselben Woche oder demselben Monat und zeigt ihre Beziehungen als Heatmap und Streudiagramm. Jede Metrik besitzt Name, Aggregationsziel und Bedingungen.</p>
-  <p>Wählen Sie eine Zelle, um Koeffizient, Anzahl gepaarter Zeiträume, p-Wert, 95%-Konfidenzintervall und Streudiagramm anzuzeigen. Pearson und Spearman stehen zur Verfügung; Spearman-Werte sind analytische Näherungen. Korrelation beweist keine Kausalität.</p>
+  <p>Wählen Sie eine Zelle, um Koeffizient, Anzahl gepaarter Zeiträume, p-Wert, 95%-Konfidenzintervall und Streudiagramm anzuzeigen. Pearson und Spearman stehen zur Verfügung.</p>
   <p>Bei positivem Zeitversatz wird die Zeilenmetrik aus einem früheren Zeitraum mit der Spaltenmetrik aus einem späteren verglichen. Zeiträume ohne eine der Beobachtungen werden ausgeschlossen.</p>
+  <p>Mit „Zeiträume ohne Einträge als 0 werten“ an einer Metrik gehen Zeiträume ohne Einträge dieser Metrik als Beobachtung 0 in die Berechnung ein. Damit lassen sich bei Ereignissen, die nicht täglich vorkommen (Einkäufe, Stempel), Tage mit und ohne Ereignis vergleichen. Nur für Anzahl- und Summenmetriken wählbar; Zeiträume vor Beginn der Aufzeichnung werden ebenfalls 0, daher den Datumsbereich eingrenzen.</p>
+  <p>„Zuordnung von Stempeln, die Zeiträume überspannen“ legt je Metrik fest, ob ein Zeiteintrag über mehrere Zeiträume aufgeteilt oder ganz dem Start- oder Endzeitraum zugeordnet wird. Für Stempel wie Schlaf, die mit den Metriken des Morgens verglichen werden sollen, an dem sie endeten, „Ganz in den Endzeitraum“ wählen.</p>
 
   <h2>Bedingungsgruppe bearbeiten</h2>
   <table>

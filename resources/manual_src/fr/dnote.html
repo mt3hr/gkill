@@ -152,8 +152,10 @@
 
   <h2>Graphique de corrélation</h2>
   <p>Agrège de 2 à 10 métriques par même jour, semaine ou mois et affiche leurs relations sous forme de carte thermique et de nuage de points. Chaque métrique possède un nom, une cible d'agrégation et des conditions.</p>
-  <p>Sélectionnez une cellule pour afficher le coefficient, le nombre de périodes appariées, la valeur p, l'intervalle de confiance à 95 % et le nuage de points. Pearson et Spearman sont disponibles ; les résultats inférentiels de Spearman sont des approximations analytiques. Une corrélation ne prouve pas une causalité.</p>
+  <p>Sélectionnez une cellule pour afficher le coefficient, le nombre de périodes appariées, la valeur p, l'intervalle de confiance à 95 % et le nuage de points. Pearson et Spearman sont disponibles.</p>
   <p>Avec un décalage positif, la métrique de ligne d'une période antérieure est comparée à la métrique de colonne d'une période ultérieure. Les périodes où une observation manque sont exclues.</p>
+  <p>En cochant « Considérer les périodes sans enregistrement comme 0 » sur une métrique, les périodes sans enregistrement de cette métrique sont incluses comme observations à 0. Utile pour comparer les jours où quelque chose s'est produit avec ceux où rien ne s'est produit, pour des événements qui n'arrivent pas tous les jours comme les achats ou les pointages. Disponible uniquement pour les métriques de comptage et de somme ; les périodes antérieures au début des enregistrements deviennent aussi 0, restreignez donc la plage de dates.</p>
+  <p>« Où compter les pointages à cheval sur plusieurs périodes » permet de choisir, par métrique, si une entrée de temps à cheval sur plusieurs périodes est répartie entre elles ou comptée entièrement dans la période de début ou de fin. Pour un pointage comme le sommeil, à comparer aux métriques du matin où il s'est terminé, choisissez « Tout dans la période de fin ».</p>
 
   <h2>Édition du groupe de conditions</h2>
   <table>
