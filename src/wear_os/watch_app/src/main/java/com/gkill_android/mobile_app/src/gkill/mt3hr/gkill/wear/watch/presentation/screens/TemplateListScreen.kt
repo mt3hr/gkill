@@ -10,12 +10,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
-import androidx.wear.compose.material.Chip
-import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.CompactChip
 import androidx.wear.compose.material.Text
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.R
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.TemplateNode
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.components.MenuChip
 
 /**
  * Displays a scrollable list of KFTL templates.
@@ -43,13 +42,10 @@ fun TemplateListScreen(
         items(nodes) { node ->
             val label = if (node.title.isNotEmpty()) node.title else node.name
             val prefix = if (node.is_dir) "📁 " else ""
-            Chip(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
-                label = { Text("$prefix$label") },
-                onClick = { onNodeSelected(node) },
-                colors = ChipDefaults.primaryChipColors()
+            // タイルと同じ見た目（140dp・中央揃え）。ScalingLazyColumn の既定で中央に並ぶ
+            MenuChip(
+                label = "$prefix$label",
+                onClick = { onNodeSelected(node) }
             )
         }
 

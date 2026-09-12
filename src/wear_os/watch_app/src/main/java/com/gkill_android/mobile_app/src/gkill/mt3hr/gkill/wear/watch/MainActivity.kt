@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,7 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.foundation.lazy.AutoCenteringParams
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Text
@@ -29,6 +31,7 @@ import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.buildL
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.PlayingTimeIsNode
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.TemplateNode
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.tile.TemplateCacheManager
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.components.MenuChip
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.ConfirmScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.LantanaConfirmScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.LantanaSelectScreen
@@ -534,10 +537,12 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 }
 
 /**
- * トップメニュー画面。「記録する」「実行中」「気分記録」の3つの選択肢を表示する（文言はタイルと同じ R.string.home_*）。
+ * トップメニュー画面。「記録する」「実行中」「気分記録」の3つの選択肢を、
+ * タイル（GkillTileService.buildLayout）と同じ配置で出す: MenuChip を隙間なく縦に3つ・画面中央・タイトル無し。
+ * 文言もタイルと同じ R.string.home_*。
  *
- * 丸画面に3項目とタイトルは Column + Arrangement.Center では収まらないので、
- * 一覧系の画面と同じ ScalingLazyColumn でスクロールできるようにしてある。
+ * ScalingLazyColumn にしないこと。端の項目が縮小・減光されてタイルと見た目が割れる。
+ * 3チップ（52dp × 3）が丸画面に収まることは、タイルが同じ配置で収まっているのが根拠。
  */
 @Composable
 private fun HomeMenuScreen(
@@ -545,23 +550,59 @@ private fun HomeMenuScreen(
     onPlaying: () -> Unit,
     onLantana: () -> Unit
 ) {
-    ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            MenuChip(label = stringResource(R.string.home_record), onClick = onRecord)
+            MenuChip(label = stringResource(R.string.home_playing), onClick = onPlaying)
+            MenuChip(label = stringResource(R.string.home_lantana), onClick = onLantana)
+        }
+    }
+}
+
+/**
+ * 直前に同じ内容を保存済みのときの確認画面。「それでも送信」でforce再送する。
+ *
+ * 3行の本文＋チップ2つは 192dp の丸画面から余白を引いた高さに収まらないので、
+ * 固定の Column ではなく ScalingLazyColumn でスクロールできるようにする
+ * （固定だと下の「キャンセル」がエラーも出さずに画面外へ落ちる。2026-09-13 に実際に起きた）。
+ * 最初は本文（item 0）を中央に置く。既定の item 1 中央だと本文の1行目が丸画面の上端で欠ける。
+ * 「それでも送信」は本文の下に見え、「キャンセル」は一段スクロール（Back でもキャンセル扱い）。
+ */
+@Composable
+private fun DuplicateConfirmScreen(
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit
+) {
+    ScalingLazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        state = rememberScalingLazyListState(initialCenterItemIndex = 0),
+        autoCentering = AutoCenteringParams(itemIndex = 0)
+    ) {
         item {
             Text(
-                text = "gkill",
+                text = stringResource(R.string.duplicate_confirm_message),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp)
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
             )
         }
         item {
             Chip(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
-                label = { Text(stringResource(R.string.home_record)) },
-                onClick = onRecord,
+                    .padding(horizontal = 8.dp),
+                label = {
+                    Text(
+                        text = stringResource(R.string.duplicate_send_anyway),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                onClick = onConfirm,
                 colors = ChipDefaults.primaryChipColors()
             )
         }
@@ -569,62 +610,17 @@ private fun HomeMenuScreen(
             Chip(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
-                label = { Text(stringResource(R.string.home_playing)) },
-                onClick = onPlaying,
+                    .padding(horizontal = 8.dp),
+                label = {
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                onClick = onCancel,
                 colors = ChipDefaults.secondaryChipColors()
             )
         }
-        item {
-            Chip(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
-                label = { Text(stringResource(R.string.home_lantana)) },
-                onClick = onLantana,
-                colors = ChipDefaults.secondaryChipColors()
-            )
-        }
-    }
-}
-
-/**
- * 直前に同じ内容を保存済みのときの確認画面。「それでも送信」でforce再送する。
- */
-@Composable
-private fun DuplicateConfirmScreen(
-    onConfirm: () -> Unit,
-    onCancel: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = stringResource(R.string.duplicate_confirm_message),
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp)
-        )
-        Chip(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            label = { Text(stringResource(R.string.duplicate_send_anyway)) },
-            onClick = onConfirm,
-            colors = ChipDefaults.primaryChipColors()
-        )
-        Chip(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            label = { Text(stringResource(R.string.cancel)) },
-            onClick = onCancel,
-            colors = ChipDefaults.secondaryChipColors()
-        )
     }
 }

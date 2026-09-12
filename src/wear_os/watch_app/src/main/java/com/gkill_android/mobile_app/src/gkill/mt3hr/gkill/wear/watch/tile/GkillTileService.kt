@@ -19,6 +19,7 @@ import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_PLAYIN
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_RECORD
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MainActivity
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.R
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.components.MENU_CHIP_WIDTH_DP
 
 class GkillTileService : TileService() {
 
@@ -96,7 +97,8 @@ class GkillTileService : TileService() {
                     ).build()
             ).build()
 
-        val chipWidth = DimensionBuilders.dp(140f)
+        // アプリのトップメニュー・一覧のチップ（MenuChip）と同じ幅。タイルが見た目の基準
+        val chipWidth = DimensionBuilders.dp(MENU_CHIP_WIDTH_DP)
 
         return LayoutElementBuilders.Box.Builder()
             .setWidth(DimensionBuilders.expand())
