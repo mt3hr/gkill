@@ -30,7 +30,7 @@ wear_os/
     ├── build.gradle.kts
     └── src/main/
         ├── AndroidManifest.xml
-        ├── java/.../wear/watch/        # Kotlin ソース（16ファイル）
+        ├── java/.../wear/watch/        # Kotlin ソース（17ファイル）
         └── res/
             ├── values/strings.xml      # 既定（日本語）
             └── values-{en,zh,ko,es,fr,de}/strings.xml
@@ -57,7 +57,7 @@ wear_os/
 | `GkillSecretCipher.kt` | 認証情報の暗号化・復号ユーティリティ |
 | `MainActivity.kt` | コンパニオンアプリのメインアクティビティ（認証情報設定画面・証明書ピンの承認） |
 
-### `watch_app/` — ウォッチ側アプリ（16ファイル）
+### `watch_app/` — ウォッチ側アプリ（17ファイル）
 
 Compose for Wear OS で構築されたウォッチアプリ。KFTL テンプレートの選択・送信と、
 星5個による気分（Lantana）の記録を行う。
@@ -66,7 +66,7 @@ Compose for Wear OS で構築されたウォッチアプリ。KFTL テンプレ�
 
 | ファイル | 役割 |
 |---------|------|
-| `MainActivity.kt` | ウォッチアプリのエントリポイント。Compose UI のセットアップ |
+| `MainActivity.kt` | ウォッチアプリのエントリポイント。Compose UI のセットアップ。トップメニュー（タイルと同じ配置の3チップ）と重複確認画面（ScalingLazyColumn）もここにある |
 
 #### `data/` — データ層（4ファイル）
 
@@ -77,12 +77,14 @@ Compose for Wear OS で構築されたウォッチアプリ。KFTL テンプレ�
 | `model/PlayingTimeIsNode.kt` | 稼働中 TimeIs のデータモデル |
 | `model/TemplateNode.kt` | KFTL テンプレートのデータモデル |
 
-#### `presentation/` — UI 層（8ファイル）
+#### `presentation/` — UI 層（9ファイル）
 
-Compose for Wear OS による画面構成。
+Compose for Wear OS による画面構成。チップの見た目はタイル（`tile/GkillTileService.kt`）が基準で、
+アプリ側は `components/MenuChip.kt` を使って揃える。
 
 | ファイル | 画面 | 説明 |
 |---------|------|------|
+| `components/MenuChip.kt` | 共通部品 | タイルのチップと同じ見た目のチップ（140dp 固定幅・primary 色・文字中央揃え・末尾省略）。幅の定数 `MENU_CHIP_WIDTH_DP` をタイルと共有する |
 | `screens/TemplateListScreen.kt` | テンプレート一覧 | KFTL テンプレートの選択画面 |
 | `screens/ConfirmScreen.kt` | 送信確認 | 選択したテンプレートの送信確認 |
 | `screens/LoadingScreen.kt` | ローディング | 通信中の待機画面 |
@@ -98,7 +100,7 @@ Compose for Wear OS による画面構成。
 
 | ファイル | 役割 |
 |---------|------|
-| `GkillTileService.kt` | タイルサービス。「📝 記録する」「▶ 実行中」「⭐️ 気分記録」の3つの導線を表示する（テンプレートは並べない） |
+| `GkillTileService.kt` | タイルサービス。「📝 記録する」「▶ 実行中」「⭐️ 気分記録」の3つの導線を表示する（テンプレートは並べない）。チップの見た目はアプリ側の基準で、幅は `presentation/components/MenuChip.kt` の `MENU_CHIP_WIDTH_DP` を共有する |
 | `TemplateCacheManager.kt` | テンプレートのローカルキャッシュ管理。読み書きするのは `MainActivity` のみ |
 | `LocaleChangedReceiver.kt` | 端末の言語変更（`LOCALE_CHANGED`）でタイルの再描画を要求する。タイルのレイアウトは `onTileRequest` 時の文言で固定されるため |
 

@@ -68,6 +68,18 @@ JVM テストが実行機の OS 言語で変わる）で、`LoginRequest` を含
 `LocaleChangedReceiver` が `LOCALE_CHANGED` で再描画を要求する。却下案は
 [ADR-1102](../../../documents/adr/1102-wear-ui-strings-in-android-resources-with-ja-default.md)。
 
+**ウォッチアプリのチップはタイルと同じ見た目にし、確認画面は ScalingLazyColumn で収める**（2026-09-13）。
+見た目の基準はタイル（`GkillTileService.kt`。protolayout-material の `Chip` 既定 = 140dp × 52dp・primary 色・
+文字中央揃え・副ラベル無しなら2行/有りなら1行で末尾省略・隙間なく縦積み・画面中央）で、アプリ側は
+`presentation/components/MenuChip.kt` を使う。幅の定数 `MENU_CHIP_WIDTH_DP` はタイルと共有しているので
+**片方だけ変えないこと**、タイトルや隙間を片側だけ足さないこと。**トップメニューを `ScalingLazyColumn` に
+しないこと** ―― 端の項目が縮小・減光されてタイルと見た目が割れる（3チップ 156dp が丸画面に収まるのは、タイルが
+同じ配置で収まっているのが根拠）。**本文＋操作チップ2つの確認画面を固定 `Column` にしないこと** ―― 192dp の
+丸画面から余白を引くと 160dp しか無く、3行本文＋全幅チップ2つ（約190dp）では下の「キャンセル」が
+エラーも警告も出さずに画面外へ落ちる（2026-09-13 に重複確認で実際に起きた）。`ScalingLazyColumn` に
+`initialCenterItemIndex = 0` / `AutoCenteringParams(itemIndex = 0)` で本文を最初に中央へ置く（既定の item 1 中央だと
+本文の1行目が上端で欠ける）。却下案は [ADR-1103](../../../documents/adr/1103-wear-app-chips-match-tile.md)。
+
 ## 関連スキル
 
 - [gkill-go-backend](../gkill-go-backend/SKILL.md) — サーバ側の冪等ストアと HTTP セキュリティ
