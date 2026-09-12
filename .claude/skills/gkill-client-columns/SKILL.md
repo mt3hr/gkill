@@ -107,6 +107,7 @@ rykv / mi が同じものを使う。守るべき約束:
 - 除外する場所は4つ: `use-foldable-struct.ts` の `get_selected_items()`（対話経路。tag/rep/timeis の3コンポーザブルが**唯一この関数から**条件を読む）、`collect-inited-tag-names.ts`、`find-kyou-query.ts` の `device_name_walk` / `rep_type_name_walk`（既定クエリ経路）、同 `apply_rep_summary_to_detaul` の `collect_checked_keys`。**最後のものは `indeterminate=false` のクリアが入れ物にも要るので、walk は打ち切らず集合へ入れないだけにする**
 - **フォルダ名と同名のタグが実在しても条件は落ちない。** `apply_check_state_to_struct` が key 一致でツリー全体を走査して葉のほうにもチェックを入れるため。実運用の `TAG_STRUCT` ではフォルダの大半が同名タグを持たない純粋な入れ物で、しかもその一部は `check_when_inited=true` で保存されている ―― つまり誤クリックしなくても既定の検索条件に幽霊タグが入りうる
 - 入れ物かどうかを `is_dir` だけで見ないこと。保存済みJSONのルートに `is_dir` が無い実例があり（`gkill-api.ts` は `children` が falsy のときしか立てない）、そのときルートは**葉として描かれて `__root__` がそのまま条件に入る**
+- 入れ物のモデル `is_checked` は**表示の真偽にも使わない**（2026-09-13）。グループ行のチェックボックス表示は `use-foldable-struct.ts` の `update_check()` が**配下の葉だけ**から導出する（全葉チェック→チェック、一部または indeterminate な葉→indeterminate、葉が0個→未チェック）。フォルダの `is_checked` が true になるのはフォルダ行を直接クリックした経路だけで、葉を1つずつチェックした経路や、クエリからの再同期（`get_selected_items()` は入れ物を返さないので `pre_uncheck_all` でフォルダは false に戻る）では false のまま。それを数えると、フォルダ自身はチェック表示なのにその親だけが**「子が全部チェック済みなのに indeterminate」**になる。守るテストは `foldable-struct-update-check.test.ts`
 
 ## 関連スキル
 
