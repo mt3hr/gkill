@@ -1,10 +1,8 @@
 'use strict'
 
 import { GkillAPI } from '@/classes/api/gkill-api'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
-import { KFTLKmemoRequest } from './kftl-kmemo-request'
 import { i18n } from '@/i18n'
 
 export class KFTLKmemoStatementLine extends KFTLStatementLine {
@@ -16,19 +14,6 @@ export class KFTLKmemoStatementLine extends KFTLStatementLine {
             : GkillAPI.get_gkill_api().generate_uuid()
         context.set_this_statement_line_target_id(target_id)
         context.set_next_statement_line_target_id(target_id)
-    }
-
-    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        const target_id = this.get_context().get_this_statement_line_target_id()
-        let kmemo_request: KFTLKmemoRequest
-        try {
-            kmemo_request = request_map.get(target_id) as KFTLKmemoRequest
-            kmemo_request.add_kmemo_line(this.get_statement_line_text())
-        } catch (_e: unknown) {
-            kmemo_request = new KFTLKmemoRequest(this.get_context().get_this_statement_line_target_id(), this.get_context())
-            kmemo_request.add_kmemo_line(this.get_statement_line_text())
-            request_map.set(target_id, kmemo_request)
-        }
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

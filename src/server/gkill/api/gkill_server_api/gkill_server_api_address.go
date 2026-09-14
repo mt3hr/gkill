@@ -110,6 +110,8 @@ func (g *GkillServerAPI) apiRoutes() []apiRoute {
 		// プラグイン関連
 		{Path: "/api/get_plugin_list", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandleGetPluginList},
 		{Path: "/api/get_plugin_content_html", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandleGetPluginContentHTML},
+		// メモ帳（KFTL）の解析だけ。書かないので repositories は要らない
+		{Path: "/api/parse_kftl_text", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandleParseKFTLText},
 		{Path: "/api/get_plugin_config_html", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandleGetPluginConfigHTML},
 		{Path: "/api/post_plugin_config", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandlePostPluginConfig},
 

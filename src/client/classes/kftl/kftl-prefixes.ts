@@ -58,11 +58,6 @@ export function strip_prefix(line_text: string, i18n_key: string, ascii_prefix: 
     return line_text
 }
 
-// タグ列を「、」または「,」で分割する
-export function split_tags(text: string): Array<string> {
-    return text.split(/[、,]/)
-}
-
 // 繰り返しブロックの開始/終了の行か。**完全一致でしか受けない** ――
 // 「？？ 金 3」のように同じ行へ引数を書いたものは別に弾く
 export function is_repeat_splitter(line_text: string): boolean {

@@ -1,11 +1,7 @@
 'use strict'
 
-import { GkillAPI } from '@/classes/api/gkill-api'
-import type { KFTLRequest } from '../kftl-request'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine, type KFTLBlockReentryProvider } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
-import { KFTLPrototypeRequest } from '../kftl_prototype/kftl-prototype-request'
 import { KFTLTextStatementLine } from './kftl-text-statement-line'
 import { i18n } from '@/i18n'
 import { KFTL_ASCII_TEXT_SPLITTER_TITLE, matches_exact } from '../kftl-prefixes'
@@ -20,16 +16,6 @@ export class KFTLStartTextStatementLine extends KFTLStatementLine {
         context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLTextStatementLine(line_text, context, prev_line_is_meta_info, block_reentry))
         context.set_next_statement_line_target_id(context.get_this_statement_line_target_id())
 
-    }
-
-    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        let request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLRequest
-        if (!request) {
-            request_map.set(this.get_context().get_this_statement_line_target_id(), new KFTLPrototypeRequest(this.get_context().get_this_statement_line_target_id(), this.get_context()))
-            request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLRequest
-        }
-        request.set_current_text_id(GkillAPI.get_gkill_api().generate_uuid())
-        return new Promise<void>((resolve) => resolve())
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

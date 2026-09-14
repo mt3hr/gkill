@@ -1,10 +1,7 @@
 'use strict'
 
-import type { KFTLRequestMap } from '../../kftl-request-map'
 import { KFTLStatementLine } from '../../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../../kftl-statement-line-context'
-import { KFTLPrototypeRequest } from '../../kftl_prototype/kftl-prototype-request'
-import type { KFTLTimeIsRequest } from '../kftl-time-is-request'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { KFTLTimeIsEndTitleStatementLine } from './kftl-time-is-end-title-statement-line'
 import { i18n } from '@/i18n'
@@ -18,16 +15,6 @@ export class KFTLStartTimeIsEndStatementLine extends KFTLStatementLine {
         context.set_this_statement_line_target_id(target_id)
         context.set_next_statement_line_target_id(context.get_this_statement_line_target_id())
         context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLTimeIsEndTitleStatementLine(line_text, context))
-    }
-
-    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        // この行は区切りでしかなく、実際のリクエストは次行の
-        // KFTLTimeIsEndTitleStatementLine が同じtarget_idに上書きする。
-        // ここではプロトタイプが未登録のときに用意するだけでよい
-        const request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLTimeIsRequest
-        if (!request) {
-            request_map.set(this.get_context().get_this_statement_line_target_id(), new KFTLPrototypeRequest(this.get_context().get_this_statement_line_target_id(), this.get_context()))
-        }
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

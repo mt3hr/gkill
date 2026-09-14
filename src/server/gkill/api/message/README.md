@@ -14,7 +14,7 @@ gkill API のエラーコードとメッセージコードの定数定義、お�
 | `redact.go` | `RedactEnvironmentSpecific` — レスポンスへ載る自由文からホームのユーザー名・メールアドレスを伏せる（[ADR-0707](../../../../../documents/adr/0707-redact-environment-specific-strings.md)） |
 | `redact_test.go` | 伏せ方の表駆動テスト（形は残す・二重適用しない・`@example.` は残す） |
 | `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` |
-| `error_codes.go` | エラーコード定数（378 定数: `ERR000001` 〜 `ERR000418`、欠番 41。うち 37 は存在しないエンドポイント（`get_gkill_info` / `get_kftl_template` / `update_*_struct` 等）のコードを 2026-09-14 に削除した跡。ADR-0709） |
+| `error_codes.go` | エラーコード定数（380 定数: `ERR000001` 〜 `ERR000418`、欠番 41。うち 37 は存在しないエンドポイント（`get_gkill_info` / `get_kftl_template` / `update_*_struct` 等）のコードを 2026-09-14 に削除した跡。ADR-0709） |
 | `message_codes.go` | メッセージコード定数（83 定数: `MSG000001` 〜 `MSG000090`、欠番 7） |
 | `http_status.go` | エラーコード → HTTP ステータス対応表（`errorCodeHTTPStatus`、`HTTPStatusOf` / `HTTPStatusForErrors`） |
 | `http_status_test.go` | 全エラーコードが対応表に載っていることを `error_codes.go` のソース走査で固定するテスト |
@@ -34,11 +34,11 @@ type GkillMessage struct {
 }
 ```
 
-## エラーコード体系（378 コード）
+## エラーコード体系（380 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|
-| `ERR000001` 〜 `ERR000419` | アカウント・認証（ログイン、パスワードリセット等） |
+| `ERR000001` 〜 `ERR000421` | アカウント・認証（ログイン、パスワードリセット等） |
 | `ERR000023` 〜 `ERR000095` | CRUD 操作（Add, Update, Get, NotFound — 全データ型） |
 | `ERR000098` 〜 `ERR000199` | 複合操作（共有リスト、MiSharedTasks、GPSLog 等） |
 | `ERR000203` 〜 `ERR000280` | 拡張機能（KFTL、通知、構造体、Danote） |

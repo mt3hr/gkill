@@ -28,7 +28,7 @@
 
 > どちらも `omitempty` を付けていないので、**成功時は nil スライスがそのまま `"errors": null` / `"messages": null` として出る**。TypeScript 側で受けるときは `res.errors ?? []` を通してからスプレッドすること（素の `[...res.errors]` は例外になる）。
 
-## 全ファイル一覧（186ファイル: 型定義185 + テスト `req_res_test.go` 1）
+## 全ファイル一覧（188ファイル: 型定義187 + テスト `req_res_test.go` 1）
 
 ### 認証系（10ファイル）
 
@@ -184,6 +184,7 @@
 | `register_gkill_notification_request.go` / `register_gkill_notification_response.go` | Web Push 通知登録 |
 | `reload_repositoriers_request.go` / `reload_repositories_response.go` | リポジトリ再読み込み |
 | `submit_kftl_text_request.go` / `submit_kftl_text_response.go` | KFTL テキスト送信 |
+| `parse_kftl_text_request.go` / `parse_kftl_text_response.go` | KFTL テキストの解析だけ（`invalid_lines` / `tags` / `mi_board_names` / `record_count`。空は `[]`） |
 | `urlog_bookmarklet_request.go` | URLog ブックマークレットアドレス |
 | `get_kyous_mcp_request.go` / `get_kyous_mcp_response.go` | MCP 用 Kyou 取得 |
 

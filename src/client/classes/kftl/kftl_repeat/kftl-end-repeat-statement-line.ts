@@ -1,11 +1,10 @@
 'use strict'
 
 import { i18n } from '@/i18n'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine, type KFTLBlockReentryProvider } from '../kftl-statement-line'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
-import { validate_repeat_spec, type RepeatSpec } from './kftl-repeat-spec'
+import type { RepeatSpec } from './kftl-repeat-spec'
 
 /**
  * 繰り返しブロック「？？」を閉じる行。
@@ -31,13 +30,6 @@ export class KFTLEndRepeatStatementLine extends KFTLStatementLine {
         } else {
             context.set_next_statement_line_constructor(KFTLStatementLineConstructorFactory.get_instance().generate_none_constructor(context.get_next_statement_line_text()))
         }
-    }
-
-    async apply_this_line_to_request_map(_request_map: KFTLRequestMap): Promise<void> {
-        // 必須2行の検査。展開の側でも同じ検査をするが（閉じ忘れたブロックはここへ来ない）、
-        // 閉じてあるなら**この行を不正行として示せる**ほうが直しやすい
-        validate_repeat_spec(this.spec)
-        return new Promise<void>((resolve) => resolve())
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

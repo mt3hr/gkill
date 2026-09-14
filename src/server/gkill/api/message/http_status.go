@@ -157,6 +157,7 @@ var errorCodeHTTPStatus = map[string]int{
 	AccountInvalidDiscardTxRequestDataError:                         http.StatusBadRequest, // ERR000333
 	InvalidSubmitKFTLTextRequestDataError:                           http.StatusBadRequest, // ERR000350
 	SubmitKFTLTextInvalidInputError:                                 http.StatusBadRequest, // ERR000416
+	InvalidParseKFTLTextRequestDataError:                            http.StatusBadRequest, // ERR000420
 	InvalidGetKyousMCPRequestDataError:                              http.StatusBadRequest, // ERR000352
 	InvalidUpdateCacheRequestDataError:                              http.StatusBadRequest, // ERR000355
 	InvalidURLogBookmarkletRequestDataError:                         http.StatusBadRequest, // ERR000372
@@ -477,4 +478,5 @@ var errorCodeHTTPStatus = map[string]int{
 	InternalServerPanicError:                                         http.StatusInternalServerError, // ERR000415
 	ReadRequestBodyError:                                             http.StatusInternalServerError, // ERR000418
 	CommitTxRolledBackError:                                          http.StatusInternalServerError, // ERR000419
+	ParseKFTLTextError:                                               http.StatusInternalServerError, // ERR000421
 }

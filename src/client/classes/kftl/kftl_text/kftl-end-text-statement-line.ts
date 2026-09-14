@@ -1,8 +1,6 @@
 'use strict'
 
 import { i18n } from '@/i18n'
-import type { KFTLRequest } from '../kftl-request'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine, type KFTLBlockReentryProvider } from '../kftl-statement-line'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
@@ -22,11 +20,6 @@ export class KFTLEndTextStatementLine extends KFTLStatementLine {
         } else {
             context.set_next_statement_line_constructor(KFTLStatementLineConstructorFactory.get_instance().generate_none_constructor(context.get_next_statement_line_text()))
         }
-    }
-
-    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        const request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLRequest
-        request.set_current_text_id(null)
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

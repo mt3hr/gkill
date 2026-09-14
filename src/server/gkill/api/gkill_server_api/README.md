@@ -29,11 +29,11 @@ gkill_server_api/
 ├── gkill_server_api_access_log.go   # アクセスログ
 ├── gkill_server_api_rate_limit.go   # ログインレートリミット
 ├── plugin_content_html_cache.go     # プラグイン本文HTMLのキャッシュ（TTL・件数上限・singleflight）
-├── handle_*.go                      # 各エンドポイントのハンドラ（実装91ファイル + テスト16ファイル）
+├── handle_*.go                      # 各エンドポイントのハンドラ（実装92ファイル + テスト17ファイル）
 └── *_test.go                        # テスト全31ファイル（handle_*_test.go 14本を含む。一覧は ABOUT_TEST.md）
 ```
 
-**合計: 143ファイル**（基盤19 + ハンドラ実装91 + テスト31 + README.md 1 + ABOUT_TEST.md 1）
+**合計: 143ファイル**（基盤19 + ハンドラ実装92 + テスト31 + README.md 1 + ABOUT_TEST.md 1）
 `.go` だけなら141ファイル。`handle_*.go` という名前のファイルは105あるが、うち14はテスト。
 
 ## GkillServerAPI 構造体
@@ -135,7 +135,8 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 | `handle_browse_zip_contents.go` | ZIP ファイル内容のブラウジング。パストラバーサル防止、Shift_JIS→UTF-8 変換、singleflight 重複防止 |
 | `handle_file_serve.go` | `/files/` パスでリポジトリ内ファイルを配信 |
 | `handle_get_kyous_mcp.go` | MCP サーバ向け専用 Kyou 取得エンドポイント |
-| `handle_submit_kftl_text.go` | KFTL テキストのパース・実行 |
+| `handle_submit_kftl_text.go` | KFTL テキストのパース・実行（Web / Wear OS / MCP 共通の入口） |
+| `handle_parse_kftl_text.go` | KFTL テキストの解析だけ（書かない）。おかしな行・付くタグ・板名を返す。Web のメモ帳のピンク表示と未知タグ・板名の確認が使う |
 
 ## フロントエンドルーティング
 

@@ -135,7 +135,7 @@ func (r *kftlKmemoRequest) DoRequest(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("error at add kmemo info id=%s: %w", r.RequestID, err)
 	}
-	r.recordCreated("kmemo", kmemo.ID)
+	r.recordCreated("kmemo", kmemo.ID, r.GetRelatedTime())
 	return nil
 }
 

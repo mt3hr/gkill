@@ -85,7 +85,12 @@ func TestRequestResponse_JSONFieldNames(t *testing.T) {
 		{"SubmitKFTLTextResponse", SubmitKFTLTextResponse{}, []string{"messages", "errors", "created"}},
 		// updated=false は「新規作成」を意味する値なので、omitempty が付くとキーごと消えて
 		// 更新（打刻の終了）と区別できなくなる。ゼロ値で3キーとも出ることを固定する。
-		{"SubmitKFTLTextCreated", SubmitKFTLTextCreated{}, []string{"id", "data_type", "updated"}},
+		{"SubmitKFTLTextCreated", SubmitKFTLTextCreated{}, []string{"id", "data_type", "updated", "related_time"}},
+		{"ParseKFTLTextRequest", ParseKFTLTextRequest{}, []string{"session_id", "kftl_text", "locale_name"}},
+		// invalid_lines / tags / mi_board_names は「空」を [] で返す契約（クライアントは空 = 送信してよい）。
+		// omitempty が付くとキーごと消えるので、ゼロ値で全キーが出ることを固定する。
+		{"ParseKFTLTextResponse", ParseKFTLTextResponse{}, []string{"messages", "errors", "invalid_lines", "tags", "mi_board_names", "record_count"}},
+		{"ParseKFTLTextInvalidLine", ParseKFTLTextInvalidLine{}, []string{"line_number", "line_text", "message"}},
 		{"AddShareKyouListInfoRequest", AddShareKyouListInfoRequest{}, []string{"session_id", "share_kyou_list_info", "locale_name"}},
 		{"CommitTxRequest", CommitTxRequest{}, []string{"session_id", "tx_id", "locale_name"}},
 	}

@@ -17,7 +17,7 @@ api/
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
 ├── *_test.go                    # 検索フィルタ・rep名絞り込みなどのテスト（14ファイル）
-├── gkill_server_api/            # HTTP ハンドラ（149ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（151ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・全90ルート登録
@@ -60,8 +60,8 @@ api/
 
 詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
 
-`GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全90エンドポイントを登録する。
-handle_*.go は107ファイル（実装91 + テスト16）で、1ハンドラ1ファイルとして分割されている。
+`GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全91エンドポイントを登録する。
+handle_*.go は109ファイル（実装92 + テスト17）で、1ハンドラ1ファイルとして分割されている。
 ビジネスロジックは `usecase/` 層に委譲し、ハンドラは HTTP リクエスト/レスポンスの変換に専念する。
 
 ### `find/`（10ファイル）— 検索クエリ型定義
@@ -112,17 +112,17 @@ handle_*.go は107ファイル（実装91 + テスト16）で、1ハンドラ1�
 | `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用。`EnsureNotEmpty`（エラー無し失敗の受け皿）もここ |
 | `gkill_error_test.go` | `EnsureNotEmpty` のテスト |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
-| `error_codes.go` | エラーコード定数（378定数、ERR000001〜ERR000419・欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの。ADR-0709） |
+| `error_codes.go` | エラーコード定数（380定数、ERR000001〜ERR000421・欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの。ADR-0709） |
 | `message_codes.go` | メッセージコード定数（83定数、MSG000001〜MSG000090・欠番7） |
 | `http_status.go` | エラーコード → HTTP ステータス対応表（`HTTPStatusOf` / `HTTPStatusForErrors`） |
 | `http_status_test.go` | 全エラーコードが対応表に載っていることのソース走査テスト |
 | `message_test.go` | コード形式テスト |
 
-### `kftl/`（31ファイル）— KFTL パーサ
+### `kftl/`（32ファイル）— KFTL パーサ
 
 詳細は [kftl/README.md](kftl/README.md) を参照。
 
-### `req_res/`（186ファイル）— Request/Response 構造体
+### `req_res/`（188ファイル）— Request/Response 構造体
 
 詳細は [req_res/README.md](req_res/README.md) を参照。
 
@@ -133,7 +133,7 @@ handle_*.go は107ファイル（実装91 + テスト16）で、1ハンドラ1�
 | `safefetch.go` | `GetCapped`（scheme 検査・接続先 IP 検証・サイズ上限）、`LooksLikeSupportedImage` / `CheckImageDimensions`。利用者入力由来の URL 取得はここを通す |
 | `safefetch_test.go` | SSRF 防御・サイズ上限・画像判定のテスト |
 
-## 全エンドポイント一覧（90エンドポイント）
+## 全エンドポイント一覧（91エンドポイント）
 
 全エンドポイントは `/api/` 配下に配置（POST 中心、一部 GET）。正本は `gkill_server_api/gkill_server_api_address.go` のルート表 `apiRoutes()` で、`serve.go` の `registerAPIRoutes` が gorilla/mux へそのまま登録する（テストハーネスも同じ表を使う。ADR-0709）。Service Worker（`/serviceWorker.js`、GET）だけは API ではなく、`router.PathPrefix` で別途配信している。
 

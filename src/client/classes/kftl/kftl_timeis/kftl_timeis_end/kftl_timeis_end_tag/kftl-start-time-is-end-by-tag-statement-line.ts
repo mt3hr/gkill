@@ -1,9 +1,7 @@
 'use strict'
 
-import type { KFTLRequestMap } from '@/classes/kftl/kftl-request-map'
 import type { KFTLStatementLineContext } from '@/classes/kftl/kftl-statement-line-context'
 import { KFTLStatementLine } from '../../../kftl-statement-line'
-import { KFTLTimeIsEndByTagRequest } from '../kftl-time-is-end-by-tag-request'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { KFTLTimeIsEndByTagTagNameStatementLine } from './kftl-time-is-end-by-tag-tag-name-statement-line'
 import { i18n } from '@/i18n'
@@ -17,13 +15,6 @@ export class KFTLStartTimeIsEndByTagStatementLine extends KFTLStatementLine {
         context.set_this_statement_line_target_id(target_id)
         context.set_next_statement_line_target_id(target_id)
         context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLTimeIsEndByTagTagNameStatementLine(line_text, context))
-    }
-
-    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        const req = new KFTLTimeIsEndByTagRequest(this.get_context().get_this_statement_line_target_id(), this.get_context())
-        req.set_error_when_target_does_not_exist(true)
-        request_map.set(this.get_context().get_this_statement_line_target_id(), req)
-        return new Promise<void>((resolve) => resolve())
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
