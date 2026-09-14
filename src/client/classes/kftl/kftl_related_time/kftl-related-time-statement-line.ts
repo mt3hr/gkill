@@ -1,12 +1,9 @@
 'use strict'
 
 import { parse_kftl_date_time } from '../kftl-date-time'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
-import type { KFTLRequest } from '../kftl-request'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
-import { KFTLPrototypeRequest } from '../kftl_prototype/kftl-prototype-request'
 import { i18n } from '@/i18n'
 import { KFTL_ASCII_RELATED_TIME_PREFIX, matches_prefix, strip_prefix } from '../kftl-prefixes'
 
@@ -21,20 +18,6 @@ export class KFTLRelatedTimeStatementLine extends KFTLStatementLine {
         } else {
             context.set_next_statement_line_constructor(KFTLStatementLineConstructorFactory.get_instance().generate_none_constructor(context.get_next_statement_line_text()))
         }
-    }
-
-    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        let request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLRequest
-        if (!request) {
-            request_map.set(this.get_context().get_this_statement_line_target_id(), new KFTLPrototypeRequest(this.get_context().get_this_statement_line_target_id(), this.get_context()))
-            request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLRequest
-        }
-        const time = parse_kftl_date_time(strip_prefix(this.get_context().get_this_statement_line_text(), "KFTL_RELATED_TIME_PREFIX", KFTL_ASCII_RELATED_TIME_PREFIX))
-        if (time === null) {
-            throw new Error(i18n.global.t("KFTL_INVALID_PARSE_RELATED_TIME_ERROR_MESSAGE_TITLE"))
-        }
-        request.set_related_time(time)
-        return new Promise<void>((resolve) => resolve())
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

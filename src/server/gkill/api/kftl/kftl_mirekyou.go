@@ -39,6 +39,10 @@ func newKFTLMiReKyouRequest(requestID string, targetID string, ctx *KFTLStatemen
 	}
 }
 
+// MiBoardName は利用者が書いたとおりの板名（空欄なら空）。既定板へは解決しない。
+// Analyze が「まだ無い板名」の確認に使う（miBoardNameProvider）。
+func (r *kftlMiReKyouRequest) MiBoardName() string { return r.boardName }
+
 // resolvedBoardName は書き込みに使う板名。空なら設定の既定板になる。
 // **既存判定（FindExistingForRepeat）と書き込みで同じ値を使うため**にここへ出してある。
 func (r *kftlMiReKyouRequest) resolvedBoardName() string {
@@ -116,7 +120,7 @@ func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.TempReps.MiReKyouTempRep.AddMiReKyouInfo(ctx, mirekyou, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return fmt.Errorf("error at add mirekyou info id=%s: %w", r.RequestID, err)
 	}
-	r.recordCreated("mirekyou", mirekyou.ID)
+	r.recordCreated("mirekyou", mirekyou.ID, r.GetRelatedTime())
 	return nil
 }
 

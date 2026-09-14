@@ -1,11 +1,18 @@
 package kftl
 
 import (
+	"context"
 	"time"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 )
+
+// FindKyousFunc は Kyou 検索の全経路（rep 選択・語・タグ・非表示タグ）を通す検索。
+// 実体は api.FindFilter.FindKyous で、ハンドラが KFTLStatement.FindKyous に閉包で渡す。
+// kftl パッケージから api を import しないための間接（api → kftl の逆向き依存を避ける）。
+type FindKyousFunc func(ctx context.Context, query *find.FindQuery) ([]reps.Kyou, error)
 
 // StatementLineConstructorFunc is a function that creates a KFTLStatementLine.
 type StatementLineConstructorFunc func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine
@@ -48,6 +55,9 @@ type KFTLStatementLineContext struct {
 	ApplicationName   string
 	LocaleName        string
 	ApplicationConfig *user_config.ApplicationConfig
+	// FindKyous は打刻終了（`/end` 系）の対象検索でタグ条件を効かせるための Kyou 検索。
+	// nil なら語の条件だけで絞る（テストや直叩き）。
+	FindKyous FindKyousFunc
 }
 
 // GetPrevLine returns the last line in KFTLStatementLines, or nil if empty.

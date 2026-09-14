@@ -186,59 +186,65 @@ sequenceDiagram
 
 **物語：** 出勤前、ユーザは KFTL 画面に「起きた」「今日のタスク3つ」「気分7」などを一気に打ち込み、保存する。1 回の入力から複数種類の Kyou（kmemo / mi / lantana …）がまとめて生成される。
 
-**重要な差別化点：** 対話 UI の KFTL は**ブラウザ側でパース**され、1 つの `TXID` を共有した **N 本の `add_*` API 呼び出しへ fan-out** します（サーバ側 `/api/submit_kftl_text` は使いません。そちらは MCP / モバイルのサーバ側一括パス→シナリオ7・11）。
+**重要な差別化点：** 対話 UI の KFTL も **サーバ側の1実装**（`POST /api/submit_kftl_text` → `kftl.KFTLStatement.GenerateAndExecuteRequests`）で解釈・記録します（2026-09-15、[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)）。ブラウザの TypeScript（`classes/kftl/`）は**行ラベルの分類器だけ**で、「おかしな行」のピンク表示と未知タグ・未知板名の確認は書かない解析 `POST /api/parse_kftl_text` の応答から作ります。以前はブラウザ側でパースして `add_*` を tx で fan-out していましたが、Go だけに入った修正が Web に届かない事故が繰り返されたので廃止しました。MCP / モバイルのサーバ側一括パス（シナリオ7・11）と同じ入口です。
 
 ```mermaid
 sequenceDiagram
     actor User as ユーザ
     participant View as kftl-view.vue<br>(use-kftl-view.ts)
-    participant Stmt as KFTLStatement (TS)
-    participant Req as KFTLRequest[]
+    participant Stmt as KFTLStatement (TS)<br>行ラベルのみ
     participant GkillAPI as GkillAPI (TS)
     participant API as GkillServerAPI (Go)
-    participant UC as UsecaseContext
-    participant Reps as 各 Repository
+    participant KFTL as kftl.KFTLStatement (Go)
+    participant Reps as TempReps → CommitTx
 
-    User->>View: 複数行を入力し保存<br>(末尾保存文字で自動発火も)
-    View->>Stmt: new KFTLStatement(text)
-    View->>Stmt: generate_requests()
-    Stmt->>Req: 行を型付き Request へ<br>(kmemo/mi/lantana/kc/nlog/timeis…)
-    Note over Req: 1つの tx_id(UUID) を全 Request で共有
-    loop 各 KFTLRequest
-        View->>Req: do_request(gkill_api, app_config)
-        Req->>GkillAPI: add_kmemo / add_mi / add_lantana …
-        GkillAPI->>API: POST /api/add_xxx<br>{..., TXID 共有, WantResponseKyou}
-        API->>API: AuthFromContext (wrapAuthRepos)
-        API->>UC: UsecaseCtx.AddXxx(repositories, ...)
-        UC->>Reps: 追記(append-only)
-        API-->>GkillAPI: {AddedXxx, AddedKyou, messages}
+    User->>View: 打鍵
+    View->>Stmt: generate_line_label_data()（即時）
+    View->>GkillAPI: parse_kftl_text（打鍵が止まって300ms後）
+    GkillAPI->>API: POST /api/parse_kftl_text (wrapAuth)
+    API->>KFTL: Analyze（prepareRequests。書かない）
+    API-->>View: {invalid_lines, tags, mi_board_names}
+    View-->>User: おかしな行をピンクに
+    User->>View: 保存<br>(末尾保存文字で自動発火も)
+    View->>GkillAPI: parse_kftl_text（送信対象タブの本文で改めて）
+    GkillAPI-->>View: invalid_lines が空・未知タグ/板名の確認
+    View->>GkillAPI: submit_kftl_text {kftl_text, idempotency_key}
+    GkillAPI->>API: POST /api/submit_kftl_text (wrapAuthRepos)
+    API->>KFTL: GenerateAndExecuteRequests（同じ prepareRequests）
+    KFTL->>Reps: 各 DoRequest は temp rep へ → CommitTx（1トランザクション）
+    API-->>View: {created: [{id, data_type, updated}]}
+    loop created[]
+        View->>GkillAPI: get_kyou(id)
+        View-->>View: registered_kyou / updated_kyou を emit
     end
-    View-->>User: 記録完了・入力欄クリア
+    View-->>User: 記録完了・タブを閉じる
 ```
 
-パース〜dispatch の分岐（各行がどの API に振り分けられるか）を補足します。
+サーバ側の解釈（各行がどの記録になるか）を補足します。TS の行分類器も同じ接頭辞規則で行の種別を決めますが、
+それは行ラベルのためだけです。
 
 ```mermaid
 flowchart TD
-    Start([KFTL テキスト複数行]) --> Split[行ごとに解析<br/>kftl-statement-line.ts]
+    Start([KFTL テキスト複数行]) --> Split[行ごとに解釈<br/>kftl_factory.go]
     Split --> Prefix{行頭プレフィックス判定<br/>日本語 / ASCII}
-    Prefix -->|通常テキスト| Kmemo[kftl-kmemo-request → add_kmemo]
-    Prefix -->|/mi ・タスク| Mi[kftl-mi-request → add_mi]
-    Prefix -->|~~ ・記録をタスク化| MiReKyou[kftl-mi-re-kyou-request → add_mirekyou]
-    Prefix -->|/mood ・気分| Lantana[kftl-lantana-request → add_lantana]
-    Prefix -->|/num| Kc[kftl-kc-request → add_kc]
-    Prefix -->|/expense| Nlog[kftl-nlog-request → add_nlog]
-    Prefix -->|/start /end /timeis| TimeIs[kftl-timeis-request → add/update_timeis]
-    Prefix -->|/url| Urlog[kftl-urlog-request → add_urlog]
-    Kmemo --> Tx[全 Request が同一 TXID を共有]
-    Mi --> Tx
-    MiReKyou --> Tx
-    Lantana --> Tx
-    Kc --> Tx
-    Nlog --> Tx
-    TimeIs --> Tx
-    Urlog --> Tx
-    Tx --> Done([順次 do_request で送信])
+    Prefix -->|通常テキスト| Kmemo[kftlKmemoRequest]
+    Prefix -->|/mi ・タスク| Mi[kftlMiRequest]
+    Prefix -->|~~ ・記録をタスク化| MiReKyou[kftlMiReKyouRequest]
+    Prefix -->|/mood ・気分| Lantana[kftlLantanaRequest]
+    Prefix -->|/num| Kc[kftlKCRequest]
+    Prefix -->|/expense| Nlog[kftlNlogRequest]
+    Prefix -->|/start /end /timeis| TimeIs[kftlTimeIs*Request]
+    Prefix -->|/url| Urlog[kftlURLogRequest]
+    Kmemo --> Apply[全行を適用して行別エラーを束ねる<br/>→ 繰り返し「？？」の展開]
+    Mi --> Apply
+    MiReKyou --> Apply
+    Lantana --> Apply
+    Kc --> Apply
+    Nlog --> Apply
+    TimeIs --> Apply
+    Urlog --> Apply
+    Apply -->|parse_kftl_text| Analyze([invalid_lines / tags / mi_board_names を返す])
+    Apply -->|submit_kftl_text| Exec([temp rep へ DoRequest → CommitTx])
 ```
 
 **関連：** KFTL の文法・プレフィックスは [glossary.md](glossary.md)、パーサ構造は [frontend-architecture.md](frontend-architecture.md)、サーバ側 KFTL は本資料シナリオ7。
@@ -494,7 +500,7 @@ flowchart TD
 
 **物語：** ユーザは外出先で、Pixel Watch から定型テンプレートや星5個の気分評価で素早く記録する。ウォッチは単独ではサーバに繋がらず、ペアのスマホ（Phone Companion）が橋渡しして、スマホ内 or 家の gkill_server の HTTP API を叩く。
 
-**差別化点：** ここでは**サーバ側 KFTL 一括パス** `POST /api/submit_kftl_text`（`HandleSubmitKFTLText` → `kftl.KFTLStatement.GenerateAndExecuteRequests`）を使います。ブラウザの fan-out（シナリオ2）と対照的に、テキストをサーバへ丸ごと渡し、サーバ側でパース＆書き込みします。
+**差別化点：** ここでも**サーバ側 KFTL 一括パス** `POST /api/submit_kftl_text`（`HandleSubmitKFTLText` → `kftl.KFTLStatement.GenerateAndExecuteRequests`）を使います。ブラウザ（シナリオ2）と同じ入口で、テキストをサーバへ丸ごと渡し、サーバ側でパース＆書き込みします（2026-09-15 までブラウザだけは `add_*` へ fan-out していました）。
 
 ```mermaid
 sequenceDiagram

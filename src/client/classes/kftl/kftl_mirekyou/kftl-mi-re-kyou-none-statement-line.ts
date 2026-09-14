@@ -1,7 +1,6 @@
 'use strict'
 
 import { i18n } from '@/i18n'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import type { KFTLMiReKyouNextLineConstructor } from './kftl-mi-re-kyou-tag-statement-line'
@@ -28,17 +27,6 @@ export class KFTLMiReKyouNoneStatementLine extends KFTLStatementLine {
         context.set_is_next_prototype(context.is_this_prototype())
         context.set_next_statement_line_target_id(context.get_this_statement_line_target_id())
         context.set_next_statement_line_constructor(generate_next_constructor(context.get_next_statement_line_text()))
-    }
-
-    async apply_this_line_to_request_map(_request_map: KFTLRequestMap): Promise<void> {
-        const line_text = this.get_context().get_this_statement_line_text()
-        if (line_text == "" || line_text == "\n") {
-            return new Promise<void>((resolve) => resolve())
-        }
-        // 項目行を全部書き終えたあとに来られるのはタグ行か閉じる行だけ。
-        // テキストは飲み込まずにおかしな行として出す。飲み込むと、閉じ忘れたときに
-        // メモの本文が丸ごとリポストタスクに吸われてしまう
-        throw new Error(i18n.global.t('KFTL_NONE_VALUE_IS_NOT_BLANK_MESSAGE_TITLE'))
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

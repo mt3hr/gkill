@@ -1,7 +1,6 @@
 'use strict'
 
 import { GkillAPI } from '../api/gkill-api'
-import type { KFTLRequestMap } from './kftl-request-map'
 import { KFTLStatementLineContext } from './kftl-statement-line-context'
 import type { TextAreaInfo } from './text-area-info'
 
@@ -62,8 +61,6 @@ export abstract class KFTLStatementLine {
         }
         return null
     }
-
-    abstract apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void>
 
     abstract get_label_name(context: KFTLStatementLineContext): string
 

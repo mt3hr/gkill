@@ -1,10 +1,8 @@
 'use strict'
 
 import { i18n } from '@/i18n'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
-import type { KFTLNlogRequest } from './kftl-nlog-request'
 import { generate_nlog_block_next_constructor, type KFTLNlogBlock } from './kftl-nlog-block'
 
 export class KFTLNlogAmountStatementLine extends KFTLStatementLine {
@@ -15,12 +13,6 @@ export class KFTLNlogAmountStatementLine extends KFTLStatementLine {
         // その支払いに付いたうえでブロックの中に留まる
         context.set_next_statement_line_target_id(context.get_this_statement_line_target_id())
         context.set_next_statement_line_constructor(generate_nlog_block_next_constructor(this.get_context().get_next_statement_line_text(), block))
-    }
-
-    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        const amount = this.parse_amount()
-        const nlog_request = request_map.get(this.get_context().get_this_statement_line_target_id()) as unknown as KFTLNlogRequest
-        nlog_request.set_amount(amount)
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

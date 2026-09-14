@@ -34,13 +34,13 @@ src/client/
 ├── env.d.ts                         # TypeScript環境型定義
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,400行)
+│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,500行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
-│   │   └── req_res/                # リクエスト/レスポンス型 (169ファイル、サーバー側は186ファイル)
+│   │   └── req_res/                # リクエスト/レスポンス型 (173ファイル、サーバー側は188ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
-│   ├── kftl/                        # KFTLパーサー (53 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)
+│   ├── kftl/                        # KFTLパーサー (53 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)。行ラベルの分類器だけで、解釈と書き込みはサーバ（ADR-0507）
 │   ├── dnote/                       # Dnote集計ユーティリティ（トレンドグラフ集計 dnote-trend-aggregator.ts・dnote-trend/ 含む）
 │   ├── lantana/                     # 気分値関連クラス
 │   ├── cascade-delete-kyou.ts       # Kyou削除の連鎖削除（Tag/Text/Notification/ReKyou/MiReKyou）
@@ -254,10 +254,10 @@ Props/Emit のみで状態を持ち回すため、Kyou の CRUD イベントは 
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts` に定義。約3,400行。
+`src/client/classes/api/gkill-api.ts` に定義。約3,500行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
-- Web クライアントが叩く86エンドポイントに対応するメソッドを持つ（`gkill-api.ts` が保持する `/api/` アドレスは86件。MCP / Wear OS / CLI 専用の4件を除いた全ルートで、Go のルート表との突き合わせは `gkill-api.test.ts`）
+- Web クライアントが叩く88エンドポイントに対応するメソッドを持つ（`gkill-api.ts` が保持する `/api/` アドレスは88件。MCP / CLI 専用の3件を除いた全ルートで、Go のルート表との突き合わせは `gkill-api.test.ts`。`submit_kftl_text` は 2026-09-15 から Web も叩く）
 - `GkillAPIForSharedKyou` サブクラス（共有データ用）
 - 各メソッドは `fetch()` → JSONパース → エラーチェック → データ返却
 

@@ -5,9 +5,9 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、107ファイル。テスト15ファイルを含み、実装は91ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、109ファイル。テスト15ファイルを含み、実装は91ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（186ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（188ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、17ファイル）
 
 ## 共通仕様
@@ -210,16 +210,16 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
   ],
   "errors": null,
   "created": [
-    { "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "data_type": "kmemo", "updated": false },
-    { "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "data_type": "lantana", "updated": false },
-    { "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "data_type": "kc", "updated": false }
+    { "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "data_type": "kmemo", "updated": false, "related_time": "2026-09-15T08:00:00+09:00" },
+    { "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "data_type": "lantana", "updated": false, "related_time": "2026-09-15T08:00:00+09:00" },
+    { "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "data_type": "kc", "updated": false, "related_time": "2026-09-15T08:00:00+09:00" }
   ]
 }
 ```
 
 `create_app` は任意で、生成される記録の `create_app` / `update_app` に載る（省略時は `gkill_kftl` = メモ帳と同じ）。Wear companion は `gkill_wear` を送り、MCP の `gkill_submit_kftl` は送らない。`idempotency_key` も任意（同じキーの再送を1回の登録に畳む。Wear のワーカー再送が使う）。
 
-`created[]` の要素は `{id, data_type, updated}`。記録本体（kmemo / mi / timeis 等）だけが載り、行から作られたタグ・テキストは載らない。`updated: true` は新規作成ではなく既存レコードの更新（`/end` 系の打刻終了）を表す。確定は temp rep → `CommitTx` の1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、**途中で失敗すると何も残らず `created[]` は空**になる（2026-09-15 までは実 rep へ直書きで、そこまでに書けたぶんが載っていた）。冪等キーで畳まれた再送も実行されないので `created` は空になる。
+`created[]` の要素は `{id, data_type, updated, related_time}`。記録本体（kmemo / mi / timeis 等）だけが載り、行から作られたタグ・テキストは載らない。`related_time` は書いた記録の関連時刻（打刻の終了は終了時刻。Web が実行中画面の引き直し基準に使う。2026-09-15 追加）。`updated: true` は新規作成ではなく既存レコードの更新（`/end` 系の打刻終了）を表す。確定は temp rep → `CommitTx` の1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、**途中で失敗すると何も残らず `created[]` は空**になる（2026-09-15 までは実 rep へ直書きで、そこまでに書けたぶんが載っていた）。冪等キーで畳まれた再送も実行されないので `created` は空になる。
 
 失敗の返し方は2系統に分かれる（経緯は `documents/adr/0502-kftl-errors-are-per-line.md`）:
 
@@ -227,6 +227,42 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 |---|---|
 | 入力ミス（気分値が0-10の範囲外、終了対象の打刻が無い等） | **行ごとに** `ERR000416` を1件ずつ立て、行番号・行テキスト付きで HTTP 400。書き込み前の検査は全行を評価してから返すので、不正行が複数あっても1往復で全部分かる |
 | サーバ側の失敗 | 従来どおり `ERR000351` 1件で HTTP 500 |
+
+#### `/api/parse_kftl_text` — KFTLテキストの解析だけ（書かない）
+
+Web のメモ帳が打鍵のたび（止まって300ms後）に投げて「おかしな行」をピンクにし、保存の直前にも投げて未知タグ・未知板名の確認に使う（`documents/adr/0507-kftl-single-implementation-on-server.md`）。解析は `submit_kftl_text` と同じ `kftl.KFTLStatement.prepareRequests`（行の解釈 → 全行の適用 → 繰り返しの展開）を通るので、ここで通った入力が送信で弾かれることは無い。DB を読まないので `wrapAuth`（repositories 不要）。
+
+```json
+// リクエスト例
+{
+  "session_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "kftl_text": "今日の朝食
+#食事
+/mood 8",
+  "locale_name": "ja"
+}
+
+// レスポンス例（書き間違いは errors ではなく invalid_lines。HTTP 200）
+{
+  "messages": null,
+  "errors": null,
+  "invalid_lines": [
+    { "line_number": 3, "line_text": "/mood 8", "message": "不正な行があります (line 3: \"/mood 8\"): プレフィックスは1行に単独で書き、値は次の行に書いてください" }
+  ],
+  "tags": ["食事"],
+  "mi_board_names": [],
+  "record_count": 0
+}
+```
+
+| フィールド | 説明 |
+|---|---|
+| `invalid_lines[]` | `{line_number（1始まり。0は行不明）, line_text, message（ローカライズ済。submit の `errors[].error_message` と同じ文面）}`。空なら送信してよい（null ではなく `[]`） |
+| `tags[]` | 送信すると付くタグ名（重複なし・出現順）。ブロックの中のタグも含む |
+| `mi_board_names[]` | Mi / MiReKyou に書かれた板名（空欄は含めない。既定板へは解決しない） |
+| `record_count` | 繰り返しを展開したあとの、書き込みの候補になる件数 |
+
+`errors` に載るのはリクエスト JSON の不正（`ERR000420`、400）と設定の取得失敗・解析のサーバ側失敗（`ERR000421`、500）だけ。
 
 #### `/api/upload_files` — ファイルアップロード
 
@@ -400,10 +436,11 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/browse_zip_contents` | ZIPファイル内容閲覧。IDFKyouのZIPファイルを `$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/` に展開し、ZipEntry リスト（パス・サイズ・種別フラグ `is_image`/`is_text`/`is_video`/`is_audio`/`is_pdf`・配信URL）を返却する。種別フラグはクライアントの開き方（プレビュー・再生・新タブ・ダウンロード）の分岐に使う。セッション認証必須。パストラバーサル防止、Shift_JISファイル名デコード、アトミック展開に対応 |
 | `/api/get_idf_kyou_by_relative_path` | IDFKyou相対パス解決。基準IDFKyou（`target_id`）のファイルからの相対パス（`relative_path`）を同一Rep内で解決し、対象ファイルのIDFKyou IDを返却する（Markdown内相対リンクのKyouDialog表示用）。見つからない場合は `kyou_id` 空文字。セッション認証必須。パストラバーサル防止対応 |
 
-## KFTL（1件）
+## KFTL（2件）
 
 | パス | 説明 |
 |---|---|
+| `/api/parse_kftl_text` | KFTLテキストの解析だけ。書き間違いを `invalid_lines`（行番号つき）で、付くタグを `tags`、板名を `mi_board_names` で返す。何も書かない（`wrapAuth`）。Web のメモ帳のピンク表示と未知タグ・板名の確認が使う |
 | `/api/submit_kftl_text` | KFTLテキスト送信・パース・保存。応答の `created[]` に確定した記録が載る（失敗時は何も残らず空）。入力ミスは行ごとの `ERR000416`（HTTP 400）、サーバ障害は `ERR000351`（500）で返る。詳細は上の代表例と `documents/adr/0502-kftl-errors-are-per-line.md` |
 
 ## トランザクション（2件）
@@ -527,9 +564,9 @@ MCPサーバは11個のReadツールを提供する。内訳は固有の10（`gk
 
 ## 補足
 
-- **合計:** `/api/` エンドポイント 90件（89 POST + 1 GET）+ 非APIルート 19件（PathPrefix 18 + Path 1）
+- **合計:** `/api/` エンドポイント 91件（90 POST + 1 GET）+ 非APIルート 19件（PathPrefix 18 + Path 1）
 - **ルート表（正本）:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` の `apiRoutes()`。パス・HTTPメソッド・認証区分・無認証ボディ上限・ハンドラを1行1ルートで持ち、本番（`serve.go`）とテストハーネスがそのまま登録する。表に載っている = 実行時に応答する（「定義はあるが未登録」は構造的に起きない。[ADR-0709](../adr/0709-api-route-table-single-source.md)）
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（186ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（188ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（17ファイル）
 - かつて `get_kftl_template` と `get_gkill_info` はアドレス定義だけがあり（ハンドラ未登録で実行時404）、Web クライアントにも同じ残骸が揃っていた。2026-09-14 にルート表を正本化した際に削除した。Web クライアント（`gkill-api.ts`）の `xxx_address` / `xxx_method` は `gkill-api.test.ts` が表と突き合わせる

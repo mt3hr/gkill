@@ -9,11 +9,6 @@ import {
     parse_repeat_count_or_until,
     parse_repeat_add_if_exists,
     parse_repeat_origin,
-    occurrences_of,
-    days_between,
-    shift_days,
-    new_repeat_spec,
-    type RepeatSpec,
 } from '@/classes/kftl/kftl_repeat/kftl-repeat-spec'
 
 // Go の src/server/gkill/api/kftl/kftl_repeat_test.go と対のテーブル。
@@ -115,108 +110,5 @@ describe('parse_repeat_origin', () => {
     })
 })
 
-// ─── 候補日時 ─────────────────────────────────────────────────────────────────
-
-function spec_of(cond_text: string, count: number, origin: Date, until: Date | null = null): RepeatSpec {
-    const spec = new_repeat_spec(0)
-    spec.cond = parse_repeat_condition(cond_text)
-    spec.count = count
-    spec.until = until
-    spec.origin = origin
-    return spec
-}
-
-function expect_times(got: Array<Date>, want: Array<Date>): void {
-    expect(got.map((d) => d.getTime())).toEqual(want.map((d) => d.getTime()))
-}
-
-// 2026-09-02 は水曜。時刻はアンカーから取り、起点ちょうどは含めない。
-describe('occurrences_of', () => {
-    const origin = ymdhm(2026, 9, 2, 10, 0)
-
-    test('毎日。アンカーが起点より後なら当日も入る', () => {
-        const got = occurrences_of(spec_of('毎日', 3, origin), ymdhm(2026, 9, 2, 18, 0), origin)
-        expect_times(got, [ymdhm(2026, 9, 2, 18, 0), ymdhm(2026, 9, 3, 18, 0), ymdhm(2026, 9, 4, 18, 0)])
-    })
-
-    test('毎日。アンカーが起点より前なら当日は落ちる', () => {
-        const got = occurrences_of(spec_of('毎日', 3, origin), ymdhm(2026, 9, 2, 8, 0), origin)
-        expect_times(got, [ymdhm(2026, 9, 3, 8, 0), ymdhm(2026, 9, 4, 8, 0), ymdhm(2026, 9, 5, 8, 0)])
-    })
-
-    test('曜日', () => {
-        const got = occurrences_of(spec_of('金', 3, origin), ymdhm(2026, 9, 2, 18, 0), origin)
-        expect_times(got, [ymdhm(2026, 9, 4, 18, 0), ymdhm(2026, 9, 11, 18, 0), ymdhm(2026, 9, 18, 18, 0)])
-    })
-
-    test('複数曜日は書いた順ではなく日付順', () => {
-        const got = occurrences_of(spec_of('月水金', 4, origin), ymdhm(2026, 9, 2, 18, 0), origin)
-        expect_times(got, [
-            ymdhm(2026, 9, 2, 18, 0), ymdhm(2026, 9, 4, 18, 0),
-            ymdhm(2026, 9, 7, 18, 0), ymdhm(2026, 9, 9, 18, 0),
-        ])
-    })
-
-    test('N週おきは最初の一致を基準にする', () => {
-        const got = occurrences_of(spec_of('6週金', 3, origin), ymdhm(2026, 9, 2, 18, 0), origin)
-        expect_times(got, [ymdhm(2026, 9, 4, 18, 0), ymdhm(2026, 10, 16, 18, 0), ymdhm(2026, 11, 27, 18, 0)])
-    })
-
-    test('毎月N日', () => {
-        const got = occurrences_of(spec_of('毎月15', 3, origin), ymdhm(2026, 9, 2, 18, 0), origin)
-        expect_times(got, [ymdhm(2026, 9, 15, 18, 0), ymdhm(2026, 10, 15, 18, 0), ymdhm(2026, 11, 15, 18, 0)])
-    })
-
-    test('第N曜日', () => {
-        const got = occurrences_of(spec_of('第2金', 3, origin), ymdhm(2026, 9, 2, 18, 0), origin)
-        expect_times(got, [ymdhm(2026, 9, 11, 18, 0), ymdhm(2026, 10, 9, 18, 0), ymdhm(2026, 11, 13, 18, 0)])
-    })
-
-    test('最終曜日', () => {
-        const got = occurrences_of(spec_of('最終金', 3, origin), ymdhm(2026, 9, 2, 18, 0), origin)
-        expect_times(got, [ymdhm(2026, 9, 25, 18, 0), ymdhm(2026, 10, 30, 18, 0), ymdhm(2026, 11, 27, 18, 0)])
-    })
-
-    // 存在しない日はその月を飛ばす。最も近い日へ丸めると第4金・毎月30と重複する
-    test('毎月31は31日の無い月を飛ばす', () => {
-        const jan = ymdhm(2026, 1, 1, 0, 0)
-        const got = occurrences_of(spec_of('毎月31', 3, jan), ymdhm(2026, 1, 1, 9, 0), jan)
-        expect_times(got, [ymdhm(2026, 1, 31, 9, 0), ymdhm(2026, 3, 31, 9, 0), ymdhm(2026, 5, 31, 9, 0)])
-    })
-
-    test('第5金は第5金の無い月を飛ばす', () => {
-        const jan = ymdhm(2026, 1, 1, 0, 0)
-        const got = occurrences_of(spec_of('第5金', 3, jan), ymdhm(2026, 1, 1, 9, 0), jan)
-        expect_times(got, [ymdhm(2026, 1, 30, 9, 0), ymdhm(2026, 5, 29, 9, 0), ymdhm(2026, 7, 31, 9, 0)])
-    })
-
-    test('起点ちょうどは含めない', () => {
-        const got = occurrences_of(spec_of('毎日', 2, origin), ymdhm(2026, 9, 2, 10, 0), origin)
-        expect_times(got, [ymdhm(2026, 9, 3, 10, 0), ymdhm(2026, 9, 4, 10, 0)])
-    })
-
-    test('終了日で止まる', () => {
-        const until = new Date(2026, 8, 15, 23, 59, 59)
-        const got = occurrences_of(spec_of('金', 0, origin, until), ymdhm(2026, 9, 2, 18, 0), origin)
-        expect_times(got, [ymdhm(2026, 9, 4, 18, 0), ymdhm(2026, 9, 11, 18, 0)])
-    })
-
-    // 上限は黙って切り詰めず例外にする（部分確定するので大量生成の途中失敗が痛い）
-    test('上限超過は例外', () => {
-        const until = new Date(2036, 8, 2, 23, 59, 59) // 約10年ぶん = 3600件超
-        expect(() => occurrences_of(spec_of('毎日', 0, origin, until), ymdhm(2026, 9, 2, 18, 0), origin)).toThrow()
-    })
-})
-
-describe('日数のずらし', () => {
-    test('days_between は暦日の差', () => {
-        expect(days_between(ymdhm(2026, 9, 2, 18, 0), ymdhm(2026, 9, 4, 9, 0))).toBe(2)
-        expect(days_between(ymdhm(2026, 9, 4, 9, 0), ymdhm(2026, 9, 2, 18, 0))).toBe(-2)
-        expect(days_between(ymdhm(2026, 9, 2, 0, 0), ymdhm(2026, 9, 2, 23, 0))).toBe(0)
-    })
-
-    test('shift_days は壁時計時刻を保つ', () => {
-        const shifted = shift_days(ymdhm(2026, 9, 2, 18, 30), 9)
-        expect(shifted.getTime()).toBe(ymdhm(2026, 9, 11, 18, 30).getTime())
-    })
-})
+// 候補日時の計算（occurrences_of）・日数のずらし・上限は Go 側だけが持つ（ADR-0507）。
+// 対のテストは src/server/gkill/api/kftl/kftl_repeat_test.go。

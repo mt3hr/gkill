@@ -181,6 +181,10 @@ import type { CommitTXRequest } from "./req_res/commit-tx-request"
 import type { CommitTXResponse } from "./req_res/commit-tx-response"
 import type { DiscardTXRequest } from "./req_res/discard-tx-request"
 import type { DiscardTXResponse } from "./req_res/discard-tx-response"
+import type { SubmitKFTLTextRequest } from "./req_res/submit-kftl-text-request"
+import type { SubmitKFTLTextResponse } from "./req_res/submit-kftl-text-response"
+import type { ParseKFTLTextRequest } from "./req_res/parse-kftl-text-request"
+import type { ParseKFTLTextResponse } from "./req_res/parse-kftl-text-response"
 import type { BrowseZipContentsRequest } from "./req_res/browse-zip-contents-request"
 import type { BrowseZipContentsResponse } from "./req_res/browse-zip-contents-response"
 import type { GetIDFKyouByRelativePathRequest } from "./req_res/get-idf-kyou-by-relative-path-request"
@@ -314,6 +318,8 @@ export class GkillAPI {
         get_updated_datas_by_time_address: string
         commit_tx_address: string
         discard_tx_address: string
+        submit_kftl_text_address: string
+        parse_kftl_text_address: string
         browse_zip_contents_address: string
         get_idf_kyou_by_relative_path_address: string
 
@@ -402,6 +408,8 @@ export class GkillAPI {
         get_updated_datas_by_time_method: string
         commit_tx_method: string
         discard_tx_method: string
+        submit_kftl_text_method: string
+        parse_kftl_text_method: string
         browse_zip_contents_method: string
         get_idf_kyou_by_relative_path_method: string
 
@@ -493,6 +501,8 @@ export class GkillAPI {
                 this.get_updated_datas_by_time_address = "/api/get_updated_datas_by_time"
                 this.commit_tx_address = "/api/commit_tx"
                 this.discard_tx_address = "/api/discard_tx"
+                this.submit_kftl_text_address = "/api/submit_kftl_text"
+                this.parse_kftl_text_address = "/api/parse_kftl_text"
                 this.browse_zip_contents_address = "/api/browse_zip_contents"
                 this.get_idf_kyou_by_relative_path_address = "/api/get_idf_kyou_by_relative_path"
                 this.get_plugin_list_address = "/api/get_plugin_list"
@@ -579,6 +589,8 @@ export class GkillAPI {
                 this.get_updated_datas_by_time_method = "POST"
                 this.commit_tx_method = "POST"
                 this.discard_tx_method = "POST"
+                this.submit_kftl_text_method = "POST"
+                this.parse_kftl_text_method = "POST"
                 this.browse_zip_contents_method = "POST"
                 this.get_idf_kyou_by_relative_path_method = "POST"
                 this.get_plugin_list_method = "POST"
@@ -2227,6 +2239,40 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: DiscardTXResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        // メモ帳（KFTL）のテキストをサーバに解釈・記録させる。解釈と書き込みはサーバの1実装だけ（ADR-0507）。
+        // 失敗したときは何も残らない（応答の created は空）。
+        async submit_kftl_text(req: SubmitKFTLTextRequest): Promise<SubmitKFTLTextResponse> {
+                const res = await this.gkill_fetch(this.submit_kftl_text_address, {
+                        'method': this.submit_kftl_text_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: SubmitKFTLTextResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        // メモ帳（KFTL）のテキストを解析だけする。何も書かない。
+        // 書き間違いは errors ではなく invalid_lines に載る（HTTP 200）。
+        async parse_kftl_text(req: ParseKFTLTextRequest): Promise<ParseKFTLTextResponse> {
+                const res = await this.gkill_fetch(this.parse_kftl_text_address, {
+                        'method': this.parse_kftl_text_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: ParseKFTLTextResponse = json
                 this.check_auth(response)
                 return response
         }

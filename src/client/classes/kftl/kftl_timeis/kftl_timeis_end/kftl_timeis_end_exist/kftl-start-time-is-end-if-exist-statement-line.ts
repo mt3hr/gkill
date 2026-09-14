@@ -1,10 +1,8 @@
 'use strict'
 
-import type { KFTLRequestMap } from '@/classes/kftl/kftl-request-map'
 import type { KFTLStatementLineContext } from '@/classes/kftl/kftl-statement-line-context'
 import { KFTLStatementLine } from '../../../kftl-statement-line'
 import { GkillAPI } from '@/classes/api/gkill-api'
-import { KFTLTimeIsEndByTitleRequest } from '../kftl-time-is-end-by-title-request'
 import { KFTLTimeIsEndIfExistTitleStatementLine } from './kftl-time-is-end-if-exist-title-statement-line'
 import { i18n } from '@/i18n'
 import { KFTL_ASCII_TIMEIS_END_END_SPLITTER_TITLE, matches_exact } from '../../../kftl-prefixes'
@@ -17,14 +15,6 @@ export class KFTLStartTimeIsEndIfExistStatementLine extends KFTLStatementLine {
         context.set_this_statement_line_target_id(target_id)
         context.set_next_statement_line_target_id(target_id)
         context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLTimeIsEndIfExistTitleStatementLine(line_text, context))
-    }
-
-    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        const req = new KFTLTimeIsEndByTitleRequest(this.get_context().get_this_statement_line_target_id(), this.get_context())
-        req.set_title(this.get_context().get_this_statement_line_text())
-        req.set_error_when_target_does_not_exist(false)
-        request_map.set(this.get_context().get_this_statement_line_target_id(), req)
-        return new Promise<void>((resolve) => resolve())
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
