@@ -50,7 +50,7 @@ func (r *kftlLantanaRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.TempReps.LantanaTempRep.AddLantanaInfo(ctx, lantana, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return err
 	}
-	r.recordCreated("lantana", lantana.ID)
+	r.recordCreated("lantana", lantana.ID, r.GetRelatedTime())
 	return nil
 }
 

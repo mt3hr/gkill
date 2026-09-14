@@ -54,6 +54,9 @@ type KFTLCreatedRecord struct {
 	DataType string
 	// Updated は新規作成ではなく既存レコードの更新であることを表す（打刻の終了）。
 	Updated bool
+	// RelatedTime は書いた記録の関連時刻（打刻の終了は終了時刻）。Web が「、、」でずらした分を
+	// 実行中画面へ渡す（saved_kyou_by_kftl）ために、引き直しを待たず応答から取れるようにする。
+	RelatedTime time.Time
 }
 
 // Mirrors: src/classes/kftl/kftl-request.ts
@@ -75,13 +78,14 @@ type KFTLRequestBase struct {
 }
 
 // recordCreated は新規作成した1件を控える。**書き込みが成功した直後にだけ呼ぶこと。**
-func (b *KFTLRequestBase) recordCreated(dataType, id string) {
-	b.created = append(b.created, KFTLCreatedRecord{ID: id, DataType: dataType})
+// 関連時刻は呼び出し側が引数で渡す（基底の中で b.GetRelatedTime() を引くと支出ブロックの override が効かない）。
+func (b *KFTLRequestBase) recordCreated(dataType, id string, relatedTime time.Time) {
+	b.created = append(b.created, KFTLCreatedRecord{ID: id, DataType: dataType, RelatedTime: relatedTime})
 }
 
 // recordUpdated は既存レコードを更新した1件を控える（打刻の終了）。
-func (b *KFTLRequestBase) recordUpdated(dataType, id string) {
-	b.created = append(b.created, KFTLCreatedRecord{ID: id, DataType: dataType, Updated: true})
+func (b *KFTLRequestBase) recordUpdated(dataType, id string, relatedTime time.Time) {
+	b.created = append(b.created, KFTLCreatedRecord{ID: id, DataType: dataType, Updated: true, RelatedTime: relatedTime})
 }
 
 // GetCreatedRecords は DoRequest が実際に書いたものを返す。

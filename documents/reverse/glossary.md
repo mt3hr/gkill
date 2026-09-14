@@ -122,9 +122,9 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | コンポーネント | 説明 |
 |---------------|------|
 | **kftlFactory** | 行頭プレフィックスから `KFTLStatementLine` の種別を決定するファクトリ。`prevLineIsMetaInfo` フラグで行の文脈を管理する |
-| **KFTLStatement** | KFTL テキスト全体をパースし、リクエストを生成・実行する |
+| **KFTLStatement** | KFTL テキスト全体をパースし、リクエストを生成・実行する（Go）。`prepareRequests`（行の解釈 → 全行の適用 → 繰り返しの展開）を `Analyze`（`/api/parse_kftl_text`。書かない）と `GenerateAndExecuteRequests`（`/api/submit_kftl_text`）が共有する。TS 側の同名クラスは行ラベルの分類器だけ（[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)） |
 | **KFTLStatementLine** | 各行の処理を担当するインタフェース。データ型ごとに実装がある |
-| **KFTLRequest / KFTLRequestMap** | パース結果のリクエスト。ID ベースでグルーピングされ、`DoRequest()` でリポジトリに保存する |
+| **KFTLRequest / KFTLRequestMap** | パース結果のリクエスト（Go のみ）。ID ベースでグルーピングされ、`DoRequest()` で temp rep へ積み、最後に `CommitTx` で確定する |
 
 ## 5. アーキテクチャ用語
 
@@ -133,7 +133,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | **Repository 4層パターン** | 各データ型のデータアクセスを4層で実装するパターン: (1) `*_repository.go`（インタフェース定義） → (2) `*_repository_sqlite3_impl.go`（SQLite3 直接アクセス） → (3) `*_repository_cached_sqlite3_impl.go`（キャッシュ付きラッパー） → (4) `*_repository_temp_sqlite3_impl.go`（トランザクション用一時リポジトリ） |
 | **GkillRepositories** | ユーザ別の全リポジトリ集約構造体。読み取り用（`XxxReps` = 複数リポジトリの集約）と書き込み用（`WriteXxxRep` = 単一リポジトリ）を保持する |
 | **GkillDAOManager** | 全 DAO の中央管理。`GetRepositories()` でユーザ別リポジトリを取得し、`GetTempReps()` でトランザクション用一時リポジトリを管理する |
-| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（90件）を提供する。`gkill_server_api/` パッケージ（handle_*.go 107ファイル）に分割実装 |
+| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（91件）を提供する。`gkill_server_api/` パッケージ（handle_*.go 109ファイル）に分割実装 |
 | **TempReps** | KFTL パース時のトランザクション用一時リポジトリ。`CommitTX` で本リポジトリに反映、`DiscardTX` で破棄する |
 | **Rep / 記録保管場所** | データ保存先の SQLite3 ファイル。ユーザ・デバイス・データ型ごとに割り当てられる |
 | **RepType / 記録タイプ** | リポジトリの分類。メモ帳、打刻帳、支出、数値記録、タスク、気分、ブックマーク、リポスト等 |
@@ -244,11 +244,11 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
-| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全90エンドポイントのパス・メソッド・認証区分・ハンドラを1行1ルートで持つルート表（89 POST + 1 GET）。`serve.go` とテストハーネスがそのまま登録する正本 |
+| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全91エンドポイントのパス・メソッド・認証区分・ハンドラを1行1ルートで持つルート表（89 POST + 1 GET）。`serve.go` とテストハーネスがそのまま登録する正本 |
 | APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 106ファイル、1ハンドラ1ファイル） |
 | アクセスログミドルウェア | `src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go` | gorilla/mux ミドルウェア。全HTTPリクエストのアクセスログを `ACCESS` レベルで記録 |
-| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（186ファイル） |
-| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000419 の定数定義（計378件。欠番41、うち37は存在しないエンドポイントのコードを削除した跡） |
+| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（188ファイル） |
+| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000421 の定数定義（計380件。欠番41、うち37は存在しないエンドポイントのコードを削除した跡） |
 | GkillError / GkillMessage | `src/server/gkill/api/message/` | エラー・メッセージ構造体 |
 | KFTLパーサー | `src/server/gkill/api/kftl/` | KFTL テキストパース・リクエスト生成 |
 | Embed（SPA埋め込み） | `src/server/gkill/api/embed.go` | `//go:embed embed` ディレクティブ |
@@ -272,8 +272,8 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | エントリポイント | `src/client/main.ts` | アプリ初期化（Vuetify, Router, i18n, v-long-press） |
 | ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
 | ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
-| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約3,400行） |
-| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（169ファイル） |
+| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約3,500行） |
+| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（173ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
 | DashboardConfig | `src/client/classes/datas/config/dashboard-config.ts` | ダッシュボード設定クラス（MI検索条件・Dnote検索条件） |
 | PlayingTimeIsConfig | `src/client/classes/datas/config/playing-time-is-config.ts` | 実行中検索条件クラス（playing検索のカスタム条件） |
@@ -285,7 +285,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | EditSavedFindQueryListDialog | `src/client/pages/dialogs/edit-saved-find-query-list-dialog.vue` | 保存済み検索条件の一覧管理ダイアログ（`query_type` prop で rykv/mi の2インスタンス） |
 | MiFindQueryEditorView | `src/client/pages/views/mi-find-query-editor-view.vue` | MI専用検索条件エディタビュー |
 | MiFindQueryEditorDialog | `src/client/pages/dialogs/mi-find-query-editor-dialog.vue` | MI専用検索条件エディタダイアログ |
-| KFTLパーサー（フロント） | `src/client/classes/kftl/` | フロントエンド版KFTLパーサー（53ステートメント型。`kftl_*/` 配下の具象クラス数） |
+| KFTLパーサー（フロント） | `src/client/classes/kftl/` | フロントエンド版KFTL行分類器（53ステートメント型。`kftl_*/` 配下の具象クラス数）。行ラベル専用で、解釈と書き込みはサーバ（ADR-0507） |
 | Dnote ユーティリティ | `src/client/classes/dnote/` | 集計機能ユーティリティ |
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |

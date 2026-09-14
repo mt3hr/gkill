@@ -30,7 +30,6 @@ function build_statement_lines(
   line_texts: Array<string>,
   first_line_constructor: { (line_text: string, context: KFTLStatementLineContext): KFTLStatementLine } = (line_text, context) => new KFTLStartMiStatementLine(line_text, context),
 ): Array<KFTLStatementLine> {
-  const tx_id = 'test_tx'
   const lines = new Array<KFTLStatementLine>()
   let prev_context: KFTLStatementLineContext | null = null
   for (let i = 0; i < line_texts.length; i++) {
@@ -38,7 +37,7 @@ function build_statement_lines(
     const next_line_text = i < line_texts.length - 1 ? line_texts[i + 1] : ''
     const target_id = prev_context?.get_next_statement_line_target_id() ?? 'test_target'
     const is_prototype = prev_context ? prev_context.is_next_prototype() : true
-    const context = new KFTLStatementLineContext(tx_id, line_text, target_id, next_line_text, lines.slice(0, i), is_prototype)
+    const context = new KFTLStatementLineContext(line_text, target_id, next_line_text, lines.slice(0, i), is_prototype)
     const next_constructor = prev_context?.get_next_statement_line_constructor() ?? null
     lines.push(next_constructor ? next_constructor(line_text, context) : first_line_constructor(line_text, context))
     prev_context = context

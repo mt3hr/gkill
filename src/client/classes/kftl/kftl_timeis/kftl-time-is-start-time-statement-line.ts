@@ -1,14 +1,9 @@
 'use strict'
 
-import { parse_kftl_date_time } from '../kftl-date-time'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
-import { KFTLPrototypeRequest } from '../kftl_prototype/kftl-prototype-request'
-import type { KFTLTimeIsRequest } from './kftl-time-is-request'
 import { KFTLTimeIsEndTimeStatementLine } from './kftl-time-is-end-time-statement-line'
 import { i18n } from '@/i18n'
-import { KFTL_ASCII_TIMEIS_TIME_PREFIX, strip_prefix } from '../kftl-prefixes'
 
 export class KFTLTimeIsStartTimeStatementLine extends KFTLStatementLine {
 
@@ -16,19 +11,6 @@ export class KFTLTimeIsStartTimeStatementLine extends KFTLStatementLine {
         super(line_text, context)
         context.set_next_statement_line_target_id(context.get_this_statement_line_target_id())
         context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLTimeIsEndTimeStatementLine(line_text, context))
-    }
-
-    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        let request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLTimeIsRequest
-        if (!request) {
-            request_map.set(this.get_context().get_this_statement_line_target_id(), new KFTLPrototypeRequest(this.get_context().get_this_statement_line_target_id(), this.get_context()))
-            request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLTimeIsRequest
-        }
-        const time = parse_kftl_date_time(strip_prefix(this.get_context().get_this_statement_line_text(), "KFTL_TIMEIS_TIME_PREFIX", KFTL_ASCII_TIMEIS_TIME_PREFIX))
-        if (time === null) {
-            throw new Error(i18n.global.t("KFTL_TIMEIS_INVALID_PARSE_TIME_ERROR_MESSAGE_TITLE"))
-        }
-        request.set_related_time(time)
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

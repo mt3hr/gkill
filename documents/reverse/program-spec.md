@@ -205,12 +205,12 @@ graph LR
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api/`パッケージ（handle_*.go 107ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
+`gkill/api/gkill_server_api/`パッケージ（handle_*.go 109ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約3,500行）から分割・移動されました。
 
 #### 主な責務
 
 - HTTPサーバーの起動・停止（`serve.go`, `close.go`）
-- 全90エンドポイント（89 POST + 1 GET）のハンドリング（`handle_*.go`）。GETは `urlog_bookmarklet_page` のみ。ルート表（`gkill_server_api_address.go` の `apiRoutes()`）が正本で、`serve.go` とテストハーネスがそのまま登録する
+- 全91エンドポイント（90 POST + 1 GET）のハンドリング（`handle_*.go`）。GETは `urlog_bookmarklet_page` のみ。ルート表（`gkill_server_api_address.go` の `apiRoutes()`）が正本で、`serve.go` とテストハーネスがそのまま登録する
 - GkillDAOManagerの保持・提供
 - 認証ミドルウェアによるセッション検証（`auth_middleware.go`）
 - レスポンス構築
@@ -224,7 +224,7 @@ graph LR
 | ラッパー関数 | 件数 | 認証レベル | AuthContextの内容 | 用途 |
 |---|---|---|---|---|
 | `wrapNoAuth` | 13 | ミドルウェアでの認証なし（`filterLocalOnly` は通る）。ボディを読む12本は `wrapNoAuthCapped` で経路別のボディ上限つき | — | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet` 等 |
-| `wrapAuth` | 19 | セッション認証 | Account, UserID, Device | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, プラグイン4本 等 |
+| `wrapAuth` | 20 | セッション認証 | Account, UserID, Device | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, プラグイン4本 等 |
 | `wrapAuthRepos` | 58 | セッション＋リポジトリ | Account, UserID, Device, Repositories | データCRUD系ハンドラ |
 
 > **`logout` / `reset_password` / `set_new_password` は `wrapAuth` ではなく `wrapNoAuth`** です
@@ -274,7 +274,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 - HTTPリクエスト/レスポンスに依存しない
 - ハンドラとMCPサーバーの両方から再利用可能
 
-### エンドポイント分類（90件 = 89 POST + 1 GET。カテゴリは排他で、合計がルート表の行数と一致する）
+### エンドポイント分類（91件 = 90 POST + 1 GET。カテゴリは排他で、合計がルート表の行数と一致する）
 
 | カテゴリ | エンドポイント数 | 内訳 |
 |---|---|---|
@@ -285,7 +285,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 | 共有 | 5 | get_share_kyou_list_infos, add_share_kyou_list_info, update_share_kyou_list_info, delete_share_kyou_list_infos, get_shared_kyous |
 | 通知 | 2 | get_gkill_notification_public_key, register_gkill_notification |
 | 設定 | 7 | get_application_config, update_application_config, get_server_configs, update_server_configs, get_repositories, update_user_reps, reload_repositories |
-| KFTL | 1 | submit_kftl_text |
+| KFTL | 2 | submit_kftl_text, parse_kftl_text |
 | トランザクション | 2 | commit_tx, discard_tx |
 | キャッシュ | 1 | update_cache |
 | ファイル | 4 | upload_files, upload_gpslog_files, get_gps_log, browse_zip_contents |
@@ -294,7 +294,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 
 ### ルーティング定義
 
-`gkill/api/gkill_server_api/gkill_server_api_address.go` の `apiRoutes()` が返すルート表で定義されます（90件。パス・HTTPメソッド・認証区分・無認証ボディ上限・ハンドラを1行1ルート）。大半は`POST /api/{endpoint}`形式ですが、`urlog_bookmarklet_page` のみ `GET` です。`serve.go` の `registerAPIRoutes` が表の認証区分（`authNone` / `authSession` / `authSessionRepos`）から `wrapNoAuth`（capped 含む）/ `wrapAuth` / `wrapAuthRepos` を選んで登録し、テストハーネス（`gkill_server_api_test.go` の `setupTestRouter`）も同じ関数を呼びます。表・ハンドラ・doc コメント・認証区分の整合は `api_routes_test.go` が、Web クライアント（`gkill-api.ts`）との整合は `gkill-api.test.ts` が機械検査します（[ADR-0709](../adr/0709-api-route-table-single-source.md)）。
+`gkill/api/gkill_server_api/gkill_server_api_address.go` の `apiRoutes()` が返すルート表で定義されます（91件。パス・HTTPメソッド・認証区分・無認証ボディ上限・ハンドラを1行1ルート）。大半は`POST /api/{endpoint}`形式ですが、`urlog_bookmarklet_page` のみ `GET` です。`serve.go` の `registerAPIRoutes` が表の認証区分（`authNone` / `authSession` / `authSessionRepos`）から `wrapNoAuth`（capped 含む）/ `wrapAuth` / `wrapAuthRepos` を選んで登録し、テストハーネス（`gkill_server_api_test.go` の `setupTestRouter`）も同じ関数を呼びます。表・ハンドラ・doc コメント・認証区分の整合は `api_routes_test.go` が、Web クライアント（`gkill-api.ts`）との整合は `gkill-api.test.ts` が機械検査します（[ADR-0709](../adr/0709-api-route-table-single-source.md)）。
 
 API 以外のルートは19件（`PathPrefix` 18 + `Path` 1）で、SPA 配信・`/files/`・`/zip_cache/`・
 `/resources/manual/` 等がここに含まれます。
@@ -388,11 +388,11 @@ type kftlFactory struct {
 4. 型に応じたリクエスト（Add/Update）を生成
 5. リクエストを実行
 
-### ステートメント型（Go 47種類 / TypeScript 50種類）
+### ステートメント型（Go 50種類 / TypeScript 53種類）
 
 KFTLは以下のステートメント型をサポートしています。
 
-サーバ側の具象型は `src/server/gkill/api/kftl/*.go` の `kftl*StatementLine` 構造体（47個）。
+サーバ側の具象型は `src/server/gkill/api/kftl/*.go` の `kftl*StatementLine` 構造体（50個）。
 1つのデータ型が複数行で構成されるため、行の役割ごとに型が分かれている。
 
 | カテゴリ | ステートメント型（Go） | 説明 |
@@ -414,7 +414,10 @@ KFTLは以下のステートメント型をサポートしています。
 | 区切り | `kftlSplit` / `kftlSplitAndNextSecond` | ステートメント区切り（`、` / `、、`） |
 | その他 | `kftlNoneStatementLine` | 該当なし |
 
-> クライアント側（`src/client/classes/kftl/kftl_*/`）は同じ構成で 50 クラス。
+> クライアント側（`src/client/classes/kftl/kftl_*/`）は同じ構成で 53 クラス（Go が旗で共用する「存在時のみ終了」のタイトル行などを別クラスにしている）。
+> ただしクライアント側は**行ラベルの分類器だけ**で、解釈（行別エラー・繰り返しの展開）と書き込みはサーバの1実装が担う
+> （[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)）。Web も `POST /api/submit_kftl_text` で送り、
+> 「おかしな行」は `POST /api/parse_kftl_text`（`KFTLStatement.Analyze`。submit と同じ `prepareRequests`）の応答で塗る。
 > `notification` / `template` / `time_set` というステートメント型は**存在しません**。
 
 ### プレフィックスの二重対応

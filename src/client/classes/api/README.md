@@ -59,7 +59,7 @@ api/
 | `gkill_error.ts` | エラーコード定義 |
 | `gkill_message.ts` | メッセージコード定義 |
 
-### `req_res/`（169ファイル）— Request/Response 型
+### `req_res/`（173ファイル）— Request/Response 型
 
 サーバ側 `api/req_res/` と1対1で対応する TypeScript 型定義。
 各エンドポイントに `*-request.ts` + `*-response.ts` のペアが存在。
@@ -143,6 +143,8 @@ api/
 
 - `commit-tx-request.ts` / `commit-tx-response.ts`
 - `discard-tx-request.ts` / `discard-tx-response.ts`
+- `submit-kftl-text-request.ts` / `submit-kftl-text-response.ts`（メモ帳の送信。解釈と書き込みはサーバ。ADR-0507）
+- `parse-kftl-text-request.ts` / `parse-kftl-text-response.ts`（メモ帳の解析だけ。おかしな行・付くタグ・板名）
 - `delete-share-kyou-list-infos-request.ts` / `delete-share-kyou-list-infos-response.ts`
 - `generate-tls-file-request.ts` / `generate-tls-file-response.ts`
 - `open-directory-request.ts` / `open-directory-response.ts`
@@ -152,7 +154,7 @@ api/
 - `upload-files-request.ts` / `upload-files-response.ts`
 - `upload-gps-log-files-request.ts` / `upload-gps-log-files-response.ts`
 
-> `update_cache` / `get_kyous_mcp` / `submit_kftl_text` / `urlog_bookmarklet` は専用の req_res 型を持たない（サーバ側の構造体を直接JSONで扱うか、汎用型で送る）。
+> `update_cache` / `get_kyous_mcp` / `urlog_bookmarklet` は専用の req_res 型を持たない（サーバ側の構造体を直接JSONで扱うか、汎用型で送る）。
 
 ## 開発ガイドライン
 

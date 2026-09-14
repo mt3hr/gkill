@@ -229,6 +229,7 @@ func TestAPIRoutes_AuthKindGolden(t *testing.T) {
 		"/api/browse_zip_contents":               {authNone, bodyAuth},
 		"/api/get_idf_kyou_by_relative_path":     {authNone, bodyAuth},
 		"/api/get_application_config":            {authSession, bodyNone},
+		"/api/parse_kftl_text":                   {authSession, bodyNone},
 		"/api/get_server_configs":                {authSession, bodyNone},
 		"/api/update_application_config":         {authSession, bodyNone},
 		"/api/update_account_status":             {authSession, bodyNone},

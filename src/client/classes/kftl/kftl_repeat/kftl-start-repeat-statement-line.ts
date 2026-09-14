@@ -2,8 +2,6 @@
 
 import { i18n } from '@/i18n'
 import { is_repeat_splitter } from '../kftl-prefixes'
-import type { KFTLRequest } from '../kftl-request'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine, type KFTLBlockReentryProvider } from '../kftl-statement-line'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
@@ -22,24 +20,15 @@ export class KFTLStartRepeatStatementLine extends KFTLStatementLine {
 
     private spec: RepeatSpec
 
-    /**
-     * 付け先を明示するとき。null なら target_id で request_map から引く。
-     *
-     * **リポストタスク（`～～`）は必ず渡すこと。** ブロックの中の target_id は
-     * 「タスク化される元の記録」を指していて、リポストタスク自身は別のIDで登録されている。
-     * 引かせると元の記録のほうが繰り返されてしまう（タグ行が request を持ち回るのと同じ理由）。
-     */
-    private target: KFTLRequest | null
 
     /** 「？？ 金 3」のように同じ行へ引数を書いたか。 */
     private written_with_argument: boolean
 
-    constructor(line_text: string, context: KFTLStatementLineContext, prev_line_is_meta_info: boolean, block_reentry: KFTLBlockReentryProvider | null = null, target: KFTLRequest | null = null) {
+    constructor(line_text: string, context: KFTLStatementLineContext, prev_line_is_meta_info: boolean, block_reentry: KFTLBlockReentryProvider | null = null) {
         super(line_text, context)
         context.set_is_next_prototype(context.is_this_prototype())
         context.set_next_statement_line_target_id(context.get_this_statement_line_target_id())
         this.spec = new_repeat_spec(context.get_kftl_statement_lines().length)
-        this.target = target
         this.written_with_argument = !is_repeat_splitter(line_text)
 
         if (this.written_with_argument) {
@@ -56,25 +45,6 @@ export class KFTLStartRepeatStatementLine extends KFTLStatementLine {
 
         context.set_next_statement_line_constructor(generate_repeat_block_next_constructor(
             context.get_next_statement_line_text(), this.spec, REPEAT_FIELD_CONDITION, prev_line_is_meta_info, block_reentry))
-    }
-
-    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        if (this.written_with_argument) {
-            throw new Error(i18n.global.t("KFTL_PREFIX_MUST_BE_ALONE_ON_LINE_MESSAGE_TITLE"))
-        }
-        let request = this.target
-        if (request === null) {
-            // **付け先が無ければここで弾く。** タグ行のようにプロトタイプを作ってはいけない ――
-            // 作ると「繰り返しの対象が無い」まま展開まで進み、何も作らずに黙って終わる
-            const found = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLRequest
-            if (!found) {
-                throw new Error(i18n.global.t("KFTL_REPEAT_NO_TARGET_MESSAGE_TITLE"))
-            }
-            request = found
-        }
-        // 繰り返しても意味が無い型（打刻開始のみ・打刻終了・プロトタイプ）はここで断る
-        request.set_repeat_spec(this.spec)
-        return new Promise<void>((resolve) => resolve())
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

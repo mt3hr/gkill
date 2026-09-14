@@ -18,6 +18,10 @@ import (
 // Mirrors: src/classes/kftl/kftl-statement.ts
 type KFTLStatement struct {
 	StatementText string
+	// FindKyous は打刻終了の対象検索に使う Kyou 検索（任意）。ハンドラが api.FindFilter を閉包で渡す。
+	// 設定の playing 検索条件のタグ・非表示タグは Kyou 検索の層（find_filter.go）でしか効かないので、
+	// これが無いと `/end` は語の条件だけで対象を探す。
+	FindKyous FindKyousFunc
 }
 
 // KFTLInputError は「利用者の書いたテキストが悪い」失敗を表す。
@@ -138,19 +142,86 @@ func CollectKFTLInputErrors(err error) []*KFTLInputError {
 	return collected
 }
 
-// GenerateAndExecuteRequests parses StatementText, generates KFTLRequests,
-// and executes each request against the provided repositories.
-func (s *KFTLStatement) GenerateAndExecuteRequests(
+// KFTLAnalysis は Analyze の結果。書き込みは一切していない。
+type KFTLAnalysis struct {
+	// InputErrors は行別の入力エラー（1件も無ければ空）。
+	InputErrors []*KFTLInputError
+	// Tags は送信すると付くタグ名（重複なし・出現順）。未知タグの確認に使う。
+	Tags []string
+	// MiBoardNames は Mi / MiReKyou に書かれた板名（空欄は含めない・重複なし・出現順）。
+	// 既定板への解決はしない —— 確認ダイアログは利用者が書いたとおりの名前で聞く。
+	MiBoardNames []string
+	// RecordCount は繰り返しを展開したあとの、書き込みの候補になるリクエスト数。
+	RecordCount int
+}
+
+// miBoardNameProvider は板名を持つリクエスト（Mi / MiReKyou）が実装する。
+// KFTLRequest インタフェースには足さない —— 板名の無い型に空実装を撒くと、
+// 型を足したときに「板名を返し忘れた」がコンパイルエラーにならず、確認が黙って抜ける。
+type miBoardNameProvider interface {
+	MiBoardName() string
+}
+
+// Analyze は StatementText を解釈して、書き込みをせずに結果だけ返す。
+//
+// Web のメモ帳が「おかしな行」のピンク表示・未知タグ／未知板名の確認に使う（ADR-0507）。
+// **GenerateAndExecuteRequests と同じ prepareRequests を通す**ので、ここで通った入力が
+// 送信で弾かれることも、その逆も起きない。DB は読まない（repos は nil。繰り返しの既存判定は
+// repositoriesOf が nil を「既存なし」と扱う）ので、打鍵のたびに呼ばれても軽い。
+func (s *KFTLStatement) Analyze(
+	ctx context.Context,
+	applicationConfig *user_config.ApplicationConfig,
+	userID, device, localeName string,
+) (*KFTLAnalysis, error) {
+	analysis := &KFTLAnalysis{}
+	requestMap, err := s.prepareRequests(ctx, nil, applicationConfig, userID, device, "", localeName, sqlite3impl.GenerateNewID(), time.Now())
+	if err != nil {
+		inputErrors := CollectKFTLInputErrors(err)
+		if len(inputErrors) == 0 {
+			return nil, err
+		}
+		analysis.InputErrors = inputErrors
+		return analysis, nil
+	}
+	seenTags := map[string]struct{}{}
+	seenBoards := map[string]struct{}{}
+	for _, req := range requestMap.All() {
+		analysis.RecordCount++
+		for _, tag := range req.GetTags() {
+			if _, ok := seenTags[tag]; ok {
+				continue
+			}
+			seenTags[tag] = struct{}{}
+			analysis.Tags = append(analysis.Tags, tag)
+		}
+		if provider, ok := req.(miBoardNameProvider); ok {
+			boardName := provider.MiBoardName()
+			if boardName == "" {
+				continue
+			}
+			if _, ok := seenBoards[boardName]; ok {
+				continue
+			}
+			seenBoards[boardName] = struct{}{}
+			analysis.MiBoardNames = append(analysis.MiBoardNames, boardName)
+		}
+	}
+	return analysis, nil
+}
+
+// prepareRequests は「行の解釈 → 行をリクエストへ適用（全行評価）→ 繰り返しの展開」までを行う。
+// **ここまでは1バイトも書かない。** 書かない入口（Analyze）と書く入口（GenerateAndExecuteRequests）が
+// 同じ関数を通ることで、検査の内容が2つの入口でずれない。
+func (s *KFTLStatement) prepareRequests(
 	ctx context.Context,
 	repos *reps.GkillRepositories,
 	applicationConfig *user_config.ApplicationConfig,
 	userID, device, appName, localeName string,
-) ([]KFTLCreatedRecord, error) {
+	txID string,
+	baseTime time.Time,
+) (*KFTLRequestMap, error) {
 	factory := newKFTLFactory()
 	factory.reset()
-
-	txID := sqlite3impl.GenerateNewID()
-	baseTime := time.Now()
 
 	lines, err := s.generateKFTLLines(factory, txID, baseTime, repos, applicationConfig, userID, device, appName, localeName)
 	if err != nil {
@@ -174,6 +245,24 @@ func (s *KFTLStatement) GenerateAndExecuteRequests(
 	// ここでやると「？？」をブロックのどこに書いても結果が同じになり、
 	// クライアント側の「本文が変わるたびに全行を解釈し直す」経路とも切り離せる。
 	if err := expandRepeats(ctx, requestMap, baseTime); err != nil {
+		return nil, err
+	}
+	return requestMap, nil
+}
+
+// GenerateAndExecuteRequests parses StatementText, generates KFTLRequests,
+// and executes each request against the provided repositories.
+func (s *KFTLStatement) GenerateAndExecuteRequests(
+	ctx context.Context,
+	repos *reps.GkillRepositories,
+	applicationConfig *user_config.ApplicationConfig,
+	userID, device, appName, localeName string,
+) ([]KFTLCreatedRecord, error) {
+	txID := sqlite3impl.GenerateNewID()
+	baseTime := time.Now()
+
+	requestMap, err := s.prepareRequests(ctx, repos, applicationConfig, userID, device, appName, localeName, txID, baseTime)
+	if err != nil {
 		return nil, err
 	}
 
@@ -278,6 +367,7 @@ func (s *KFTLStatement) generateKFTLLines(
 			ApplicationName:           appName,
 			LocaleName:                localeName,
 			ApplicationConfig:         applicationConfig,
+			FindKyous:                 s.FindKyous,
 		}
 
 		// Determine line constructor: use prev line's NextStatementLineConstructor if set,

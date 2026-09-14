@@ -9,12 +9,13 @@ import { KFTL_ASCII_SAVE_CHARACTOR } from '@/classes/kftl/kftl-prefixes'
 import { TextAreaInfo } from '@/classes/kftl/text-area-info'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
-import { CommitTXRequest } from '@/classes/api/req_res/commit-tx-request'
+import { SubmitKFTLTextRequest } from '@/classes/api/req_res/submit-kftl-text-request'
+import { ParseKFTLTextRequest } from '@/classes/api/req_res/parse-kftl-text-request'
+import type { ParseKFTLTextResponse } from '@/classes/api/req_res/parse-kftl-text-response'
 import { useConfirmUnknownTag } from '@/classes/use-confirm-unknown-tag'
 import type { KFTLProps } from '@/pages/views/kftl-props'
 import type { KFTLViewEmits } from '@/pages/views/kftl-view-emits'
-import type { KFTLRequest, KFTLRequestResult } from '@/classes/kftl/kftl-request'
-import { discard_tx, fetch_committed_kyou } from '@/classes/gkill-tx'
+import { fetch_committed_kyou } from '@/classes/gkill-tx'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { ComponentRef } from '@/classes/component-ref'
 import { useConfirmUnknownMiBoard } from '@/classes/use-confirm-unknown-mi-board'
@@ -31,6 +32,24 @@ import { build_error_message_relay } from '@/classes/kyou-view-relay'
  * E2E は class の `.kftl_text_area` で掴むこと
  */
 export const KFTL_TEXT_AREA_ELEMENT_ID_PREFIX = "kftl_text_area"
+
+/**
+ * サーバの KFTL が書いた1件（submit_kftl_text の created[] の写し）。
+ * `updated` は新規作成ではなく既存レコードの更新（打刻の終了）。
+ */
+export interface KFTLSavedRecord {
+    id: string
+    kind: 'registered' | 'updated'
+    related_time: Date | null
+}
+
+/**
+ * 打鍵が止まってから「おかしな行」の判定をサーバへ投げるまでの待ち時間。
+ *
+ * 判定は Go の1実装だけが持つ（ADR-0507）ので、打鍵のたびに投げると1文字ごとに往復する。
+ * 行ラベルは TS で即時に出るので、ピンクだけがこの分だけ遅れる。
+ */
+export const KFTL_INVALID_LINE_DEBOUNCE_MS = 300
 
 export function useKftlView(options: {
     props: KFTLProps,
@@ -212,7 +231,7 @@ export function useKftlView(options: {
         void old_value
 
         update_line_labels()
-        await refresh_invalid_lines()
+        refresh_invalid_lines()
     }, { flush: 'post' })
 
     /**
@@ -235,7 +254,9 @@ export function useKftlView(options: {
         active_tab_id.value = new_tab_ids[Math.max(0, next_index)]
     })
 
-    watch(line_label_datas, async () => {
+    // 不正行はサーバの判定が打鍵の後から着地するので、ラベルだけでなく不正行の変化でも塗り直す
+    // （ラベルだけを見ていると、ピンクは次にラベルが変わるまで出ない）
+    watch([line_label_datas, invalid_line_numbers], async () => {
         line_label_styles.value.splice(0)
         let prev_target_id = ""
         let background_is_gray = true
@@ -291,11 +312,16 @@ export function useKftlView(options: {
         resize()
         await nextTick()
         update_line_labels()
-        await refresh_invalid_lines()
+        refresh_invalid_lines()
     })
     onUnmounted(() => {
         window.removeEventListener("resize", onResize)
         window.removeEventListener("beforeunload", onBeforeunload)
+        if (invalid_line_timer !== null) {
+            clearTimeout(invalid_line_timer)
+            invalid_line_timer = null
+        }
+        invalid_line_abort_controller?.abort()
     })
 
     // ── Internal helpers ──
@@ -339,21 +365,75 @@ export function useKftlView(options: {
     }
 
     /**
+     * 本文をサーバに解析だけさせる（何も書かない）。
+     *
+     * 「何が正しい入力か」は Go の1実装だけが持つ（ADR-0507）。TS 側に判定を残すと、
+     * 2026-08-24 に Go だけへ入った「`/mood` 単独は気分0を書かない」のような修正が
+     * Web に届かないまま残る（2026-09-14 まで実際にそうだった）。
+     */
+    async function parse_kftl_text(content: string, abort_controller?: AbortController): Promise<ParseKFTLTextResponse> {
+        const req = new ParseKFTLTextRequest()
+        req.kftl_text = content
+        if (abort_controller) {
+            req.abort_controller = abort_controller
+        }
+        return props.gkill_api.parse_kftl_text(req)
+    }
+
+    /**
      * 不正な行の洗い出し。DOM に依存しないので、textarea がまだ無くても動く。
      *
-     * `do_submit` の先頭でこの結果を見て中断するため、タブを切り替えた直後に
-     * 前のタブぶんの結果が着地すると「おかしな行があります」で保存できなくなる。
-     * 世代トークンで最後の1回だけを書き戻す
+     * 判定はサーバ（parse_kftl_text）なので、打鍵が止まってから
+     * `KFTL_INVALID_LINE_DEBOUNCE_MS` だけ待って1回だけ投げ、飛行中の前回は中断する。
+     * 表示用の結果なので、通信に失敗したら前回の値をそのまま残す（オフラインで消えない）。
+     *
+     * 世代トークンを持つのは、await を挟むあいだにタブが切り替わると
+     * 前のタブぶんの結果が後から着地するため。送信の可否はこれを見ずに
+     * `do_submit` が送信対象タブの本文で改めて解析する
      */
     let invalid_line_generation = 0
-    async function refresh_invalid_lines(): Promise<void> {
+    let invalid_line_timer: ReturnType<typeof setTimeout> | null = null
+    let invalid_line_abort_controller: AbortController | null = null
+    function refresh_invalid_lines(): void {
+        if (invalid_line_timer !== null) {
+            clearTimeout(invalid_line_timer)
+        }
+        invalid_line_timer = setTimeout(() => {
+            invalid_line_timer = null
+            void fetch_invalid_lines()
+        }, KFTL_INVALID_LINE_DEBOUNCE_MS)
+    }
+
+    async function fetch_invalid_lines(): Promise<void> {
         const generation = ++invalid_line_generation
-        const statement = new KFTLStatement(text_area_content.value)
-        const invalid_lines = await statement.get_invalid_line_indexs()
+        invalid_line_abort_controller?.abort()
+        const abort_controller = new AbortController()
+        invalid_line_abort_controller = abort_controller
+        let res: ParseKFTLTextResponse
+        try {
+            res = await parse_kftl_text(text_area_content.value, abort_controller)
+        } catch (_e: unknown) {
+            // 中断・オフライン。前回の表示を残す
+            return
+        }
         if (generation !== invalid_line_generation) {
             return
         }
-        invalid_line_numbers.value = invalid_lines
+        if (res.errors && res.errors.length !== 0) {
+            return
+        }
+        invalid_line_numbers.value = invalid_line_indexes_of(res)
+    }
+
+    /** サーバの1始まりの行番号を、行ラベルの添字（0始まり）へ。行が分からない（0）ものは塗れないので落とす */
+    function invalid_line_indexes_of(res: ParseKFTLTextResponse): Array<number> {
+        const indexes = new Array<number>()
+        for (const invalid_line of res.invalid_lines ?? []) {
+            if (invalid_line.line_number >= 1) {
+                indexes.push(invalid_line.line_number - 1)
+            }
+        }
+        return indexes
     }
 
     function is_invalid_line(line_index: number): boolean {
@@ -547,14 +627,10 @@ export function useKftlView(options: {
         await submit()
     }
 
-    // 追加されるタグのうち、TagStructに存在しないものを重複なく集める。
-    // 実在判定は共有ゲート(use-confirm-unknown-tag.ts)に任せ、ここは行から集めるだけ
-    function collect_unknown_tags(kftl_requests: Array<KFTLRequest>): Array<string> {
-        const candidates = new Array<string>()
-        for (let i = 0; i < kftl_requests.length; i++) {
-            candidates.push(...kftl_requests[i].get_tags())
-        }
-        return confirm_unknown_tag.collect_unknown_tags(candidates)
+    // 追加されるタグ（サーバの解析結果）のうち、TagStructに存在しないものを重複なく集める。
+    // 実在判定は共有ゲート(use-confirm-unknown-tag.ts)に任せる
+    function collect_unknown_tags(tags: ReadonlyArray<string>): Array<string> {
+        return confirm_unknown_tag.collect_unknown_tags([...tags])
     }
 
     async function submit(): Promise<void> {
@@ -607,7 +683,7 @@ export function useKftlView(options: {
         await do_submit(target_tab_id, true, true)
     }
 
-    // 保存本体。KFTLは複数リクエストをtxで束ねて送るので、二重送信すると
+    // 保存本体。サーバが1回の submit_kftl_text で全部書くので、二重送信すると
     // Kyouが丸ごと重複登録される。フラグはここで立てる
     // （テンプレートの :disabled / :readonly はこのフラグを見ている。
     //   以前は保存マーカー検出経路でしか立てておらず、保存ボタン経由では実質ノーガードだった）
@@ -633,23 +709,13 @@ export function useKftlView(options: {
         is_submitting.value = true
         try {
             // 表示用の invalid_line_numbers はアクティブなタブのもので、しかも await をまたいで
-            // 遅れて着地する。送信の可否は送信対象タブから引き直して判定する
-            const invalid_lines = await new KFTLStatement(get_submitting_content()).get_invalid_line_indexs()
-            if (invalid_lines.length != 0) {
-                const error = new GkillError()
-                error.error_code = GkillErrorCodes.kftl_has_invalid_line
-                error.error_message = i18n.global.t("KFTL_FOUND_INVALID_LINE_MESSAGE")
-                set_submitting_content(remove_save_marker(get_submitting_content()))
-                emits('received_errors', [error])
-                return
-            }
-            const statement = new KFTLStatement(get_submitting_content())
-            let kftl_requests: Array<KFTLRequest>
+            // 遅れて着地する。送信の可否は送信対象タブの本文をサーバに改めて解析させて判定する。
+            // 解析は送信と同じ prepareRequests を通るので、ここで通れば送信で弾かれない
+            let parsed: ParseKFTLTextResponse
             try {
-                kftl_requests = await statement.generate_requests(props.gkill_api, props.application_config)
+                parsed = await parse_kftl_text(get_submitting_content())
             } catch (e: unknown) {
-                // 繰り返しの展開は、行ごとの検査を通り抜けた失敗（既存判定のAPIエラーなど）で投げる。
-                // 握り潰すと1件も保存されないまま成功に見える
+                // 通信失敗（オフライン等）。握り潰すと1件も保存されないまま成功に見えるので、本文を残してエラーにする
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.kftl_has_invalid_line
                 error.error_message = e instanceof Error ? e.message : i18n.global.t("KFTL_FOUND_INVALID_LINE_MESSAGE")
@@ -657,10 +723,30 @@ export function useKftlView(options: {
                 emits('received_errors', [error])
                 return
             }
+            if (parsed.errors && parsed.errors.length !== 0) {
+                set_submitting_content(remove_save_marker(get_submitting_content()))
+                emits('received_errors', parsed.errors)
+                return
+            }
+            if ((parsed.invalid_lines ?? []).length !== 0) {
+                // 行番号つきの理由は行ごとに出す（サーバの submit と同じ文面）
+                const errors = parsed.invalid_lines.map(invalid_line => {
+                    const error = new GkillError()
+                    error.error_code = GkillErrorCodes.kftl_has_invalid_line
+                    error.error_message = invalid_line.message
+                    return error
+                })
+                if (target_tab_id === active_tab_id.value) {
+                    invalid_line_numbers.value = invalid_line_indexes_of(parsed)
+                }
+                set_submitting_content(remove_save_marker(get_submitting_content()))
+                emits('received_errors', errors)
+                return
+            }
 
             // TagStructに存在しないタグを検出したら、送信前に確認を取る
             if (!skip_unknown_tag_check) {
-                const not_found = collect_unknown_tags(kftl_requests)
+                const not_found = collect_unknown_tags(parsed.tags ?? [])
                 if (not_found.length > 0) {
                     // 保存マーカーを消しておかないと、確認中の入力で再度submitされてしまう
                     set_submitting_content(remove_save_marker(get_submitting_content()))
@@ -675,8 +761,7 @@ export function useKftlView(options: {
             // 板名行は自由入力なので、打ち間違いがそのまま新しい板になってしまう。
             // タグの確認を通した後に改めてここへ来る（確認は1つずつ順に出す）
             if (!skip_unknown_mi_board_check) {
-                const board_names = kftl_requests.map(kftl_request => kftl_request.get_mi_board_name())
-                const not_found_boards = confirm_unknown_mi_board.collect_unknown_mi_boards(board_names)
+                const not_found_boards = confirm_unknown_mi_board.collect_unknown_mi_boards([...(parsed.mi_board_names ?? [])])
                 if (not_found_boards.length > 0) {
                     // タグ確認と同じ理由で保存マーカーを消しておく
                     set_submitting_content(remove_save_marker(get_submitting_content()))
@@ -686,46 +771,24 @@ export function useKftlView(options: {
                 }
             }
 
-            let last_added_request_time = new Date(Date.now()) // 「、、」でずれた分をPlayingTimeIsにわたすための考慮。リロード時刻より大きかった場合はこの値でTimeIsをリロードする
-            let errors = new Array<GkillError>()
-            const result_kyou_ids = new Array<KFTLRequestResult>()
-            const tx_id = kftl_requests.length > 0 ? kftl_requests[0].get_tx_id() : null
-            for (let i = 0; i < kftl_requests.length; i++) {
-                const request = kftl_requests[i]
-                const request_related_time = request.get_related_time()
-                if (request_related_time && request_related_time.getTime() > last_added_request_time.getTime()) {
-                    last_added_request_time = request_related_time
+            // 解釈も書き込みもサーバの1実装（ADR-0507）。Wear OS / MCP と同じ入口。
+            // 失敗したら何も残らない（commit は1つの SQLite トランザクション。ADR-0219）
+            const submit_req = new SubmitKFTLTextRequest()
+            submit_req.kftl_text = get_submitting_content()
+            submit_req.idempotency_key = props.gkill_api.generate_uuid()
+            const submit_res = await props.gkill_api.submit_kftl_text(submit_req)
+            const saved_records = (submit_res.created ?? []).map<KFTLSavedRecord>(created => {
+                const related_time = created.related_time ? new Date(created.related_time) : null
+                return {
+                    id: created.id,
+                    kind: created.updated ? 'updated' : 'registered',
+                    related_time: related_time !== null && !Number.isNaN(related_time.getTime()) ? related_time : null,
                 }
-                await request.do_request(props.gkill_api, props.application_config).then(request_errors => errors = errors.concat(request_errors))
-                result_kyou_ids.push(...request.get_result_kyou_ids())
-            }
-            if (errors.length != 0) {
-                emits('received_errors', errors)
+            })
+            if (submit_res.errors && submit_res.errors.length !== 0) {
+                emits('received_errors', submit_res.errors)
                 set_submitting_content(remove_save_marker(get_submitting_content()))
-
-                if (tx_id) {
-                    const discard_errors = await discard_tx(props.gkill_api, tx_id)
-                    if (discard_errors.length != 0) {
-                        emits('received_errors', discard_errors)
-                    }
-                    return
-                }
-            }
-            if (tx_id) {
-                const commit_req = new CommitTXRequest()
-                commit_req.tx_id = tx_id
-                const commit_res = await props.gkill_api.commit_tx(commit_req)
-                if (commit_res.errors && commit_res.errors.length != 0) {
-                    emits('received_errors', commit_res.errors)
-                    set_submitting_content(remove_save_marker(get_submitting_content()))
-                    // commit は1つの SQLite トランザクションなので失敗したら何も書かれていない。
-                    // temp に積んだ行だけが残るので捨てる（残すと同じ tx_id の再 commit で丸ごと二重登録になる）
-                    const discard_errors = await discard_tx(props.gkill_api, tx_id)
-                    if (discard_errors.length != 0) {
-                        emits('received_errors', discard_errors)
-                    }
-                    return
-                }
+                return
             }
 
             // 保存できたタブは閉じる。0枚になるなら空のタブが1枚できる（use-kftl-tabs.ts）
@@ -735,13 +798,15 @@ export function useKftlView(options: {
             message.message_code = GkillMessageCodes.saved_kftls
             message.message = i18n.global.t("SAVED_MESSAGE")
             emits('received_messages', [message])
-            emits('saved_kyou_by_kftl', last_added_request_time)
-            // 保存はcommitで完了している。この先は一覧へ知らせるための引き直しだけなので、
+            // 「、、」でずれた関連時刻を実行中画面へ渡す。板・タグツリーの取り直しもこの合図で走るので、
+            // 引き直し（下）を待たずに出す。値は応答の created[].related_time から取る
+            emits('saved_kyou_by_kftl', last_added_request_time_of(saved_records))
+            // 保存はサーバで完了している。この先は一覧へ知らせるための引き直しだけなので、
             // 入力欄と各ボタンをreadonly/disabledのまま待たせない
             // （引き直しはKyouの件数ぶん往復するので、待たせると体感で数秒固まる）
             is_requested_submit.value = false
             is_submitting.value = false
-            await emit_saved_kyous(result_kyou_ids)
+            await emit_saved_kyous(saved_records)
         } finally {
             // 解放点はここ1箇所だけ。タグ確認・板名確認で抜ける return もここを通るので
             // 確認待ちの間は手放され、confirm_submit / confirm_mi_board_submit からの
@@ -756,17 +821,29 @@ export function useKftlView(options: {
     }
 
     /**
-     * commit後に、作った / 更新した Kyou を引き直して上げる。
+     * 「、、」でずれた分を PlayingTimeIs にわたすための時刻。
+     * 書いた記録の関連時刻の最大値と「今」の大きい方（リロード時刻より大きければその値で TimeIs を引き直す）
+     */
+    function last_added_request_time_of(results: ReadonlyArray<KFTLSavedRecord>): Date {
+        let last_added_request_time = new Date(Date.now())
+        for (const result of results) {
+            if (result.related_time && result.related_time.getTime() > last_added_request_time.getTime()) {
+                last_added_request_time = result.related_time
+            }
+        }
+        return last_added_request_time
+    }
+
+    /**
+     * 保存後に、作った / 更新した Kyou を引き直して上げる。
      *
-     * tx中は add_* が added_kyou を返せない（一時リポジトリにしか無い）ので、
-     * commitを終えたここで初めて実体が手に入る。
-     * commitより前に引くと「まだ無い」応答をServiceWorkerのPOSTキャッシュが
-     * 掴んでしまうため、引く前にそのidのキャッシュを捨てる。
+     * サーバの submit_kftl_text は created[] に id と関連時刻しか返さない（実体は引き直す）。
+     * ServiceWorkerのPOSTキャッシュが古い応答を掴んでいることがあるので、引く前にそのidのキャッシュを捨てる。
      *
      * 他のAdd系ダイアログと同じく registered_kyou で上げるので、
      * rykv / mi / dashboard 側は KFTL 専用の分岐を持たなくてよい。
      */
-    async function emit_saved_kyous(results: ReadonlyArray<KFTLRequestResult>): Promise<void> {
+    async function emit_saved_kyous(results: ReadonlyArray<KFTLSavedRecord>): Promise<void> {
         if (results.length === 0) {
             return
         }
@@ -861,6 +938,7 @@ export function useKftlView(options: {
         text_area_element_id,
         line_label_datas,
         line_label_styles,
+        invalid_line_numbers,
         is_requested_submit,
         title_height,
         unknown_tags: confirm_unknown_tag.unknown_tags,

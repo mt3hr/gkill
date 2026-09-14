@@ -10,9 +10,11 @@ import (
 	"strings"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/api/kftl"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -118,7 +120,10 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 		createApp = "gkill_kftl"
 	}
 
-	statement := &kftl.KFTLStatement{StatementText: request.KFTLText}
+	statement := &kftl.KFTLStatement{
+		StatementText: request.KFTLText,
+		FindKyous:     g.kftlFindKyousFunc(userID, device),
+	}
 	createdRecords, err := statement.GenerateAndExecuteRequests(
 		r.Context(),
 		repositories,
@@ -211,10 +216,27 @@ func toSubmitKFTLTextCreated(records []kftl.KFTLCreatedRecord) []*req_res.Submit
 	created := make([]*req_res.SubmitKFTLTextCreated, 0, len(records))
 	for _, record := range records {
 		created = append(created, &req_res.SubmitKFTLTextCreated{
-			ID:       record.ID,
-			DataType: record.DataType,
-			Updated:  record.Updated,
+			ID:          record.ID,
+			DataType:    record.DataType,
+			Updated:     record.Updated,
+			RelatedTime: record.RelatedTime,
 		})
 	}
 	return created
+}
+
+// kftlFindKyousFunc は KFTL の打刻終了（`/end` 系）が対象を探すときの Kyou 検索。
+//
+// 設定の playing 検索条件（`playing_timeis_json_data`）のタグ・非表示タグは Kyou 検索の層
+// （`api.FindFilter`）でしか効かないので、kftl パッケージには閉包で渡す（kftl → api の import を作らない）。
+// 2026-09-15 まで Web だけが設定条件を適用していて、Wear / MCP 経由の `/end` は全 rep から探していた。
+func (g *GkillServerAPI) kftlFindKyousFunc(userID, device string) kftl.FindKyousFunc {
+	return func(ctx context.Context, query *find.FindQuery) ([]reps.Kyou, error) {
+		findFilter := &api.FindFilter{}
+		kyous, _, err := findFilter.FindKyous(ctx, userID, device, g.GkillDAOManager, query)
+		if err != nil {
+			return nil, fmt.Errorf("error at find kyous for kftl user id = %s device = %s: %w", userID, device, err)
+		}
+		return kyous, nil
+	}
 }

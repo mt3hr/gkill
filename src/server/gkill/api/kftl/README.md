@@ -82,14 +82,14 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `/url` | `ーう` | URLog |
 | `!` | `！` | Save |
 
-## ファイル一覧（27ファイル）
+## ファイル一覧（32ファイル）
 
 ### コア構造
 
 | ファイル | 役割 |
 |---------|------|
 | `kftl_factory.go` | `kftlFactory` — 行コンストラクタファクトリ。プレフィックス定数定義。各データ型の `generateXxxConstructor()` メソッドを提供 |
-| `kftl_statement.go` | `KFTLStatement` — KFTL テキスト全体のパースエントリポイント。`GenerateAndExecuteRequests()` でパース→リクエスト生成→実行を一括処理。各リクエストは一時リポジトリに積み、末尾で `CommitTx`（1つの SQLite トランザクション）で確定する。失敗したら `DiscardTx` して何も残さない |
+| `kftl_statement.go` | `KFTLStatement` — KFTL テキスト全体のパースエントリポイント。`prepareRequests()`（行の解釈→全行の適用→繰り返しの展開。書かない）を、`GenerateAndExecuteRequests()`（temp rep へ実行→`CommitTx`）と `Analyze()`（`/api/parse_kftl_text`。行別エラー・タグ・板名・件数だけ返す）が共有する（ADR-0507）。各リクエストは一時リポジトリに積み、末尾で `CommitTx`（1つの SQLite トランザクション）で確定する。失敗したら `DiscardTx` して何も残さない |
 | `kftl_statement_line.go` | `KFTLStatementLine` インタフェース — 各行が実装すべきメソッド定義。`StatementLineConstructorFunc` 型定義 |
 | `kftl_statement_line_context.go` | `KFTLStatementLineContext` — 行パース時のコンテキスト（BaseTime, AddSecond, UserID, Device 等） |
 
@@ -137,13 +137,14 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `kftl_repeat_lines.go` | 行クラス6種、ブロックの先読み、`expandRepeats`（同じ spec を共有するリクエストを1グループとして複製） |
 | `kftl_repeat_duplicate.go` | 型別の「同じ記録があるか」の判定。**型をまたいだ抜けが問題になるのでここへ集約**（1つ実装し忘れるとその型だけ既定の冪等性が黙って消える） |
 
-### テスト（8ファイル）
+### テスト（9ファイル）
 
 | ファイル | 説明 |
 |---------|------|
 | `kftl_factory_test.go` | ファクトリのプレフィックス判定テスト |
 | `kftl_request_map_test.go` | リクエストマップの集約テスト |
 | `kftl_statement_test.go` | KFTL テキスト全体のパース・実行テスト |
+| `kftl_analyze_test.go` | `Analyze`（書かない入口）が `GenerateAndExecuteRequests` と同じ行エラー集合を返すこと、タグ・板名・件数の列挙、空白だけの値の行の拒否、`/end` 系の対象検索に設定の playing 条件（語・タグ・非表示タグ）を写すこと |
 | `kftl_mirekyou_test.go` | MiReKyou ブロックの行の並び・タグの帰属・対象の解決テスト |
 | `kftl_nlog_test.go` | 支出ブロックの支払いごとのタグ・テキストの帰属、ブロック全体に効く関連時刻、ブロック前のメタ情報行の拒否 |
 | `kftl_date_time_test.go` | 関連時刻・打刻時刻の書式と、欠けた年月日の補完 |
@@ -157,7 +158,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 1. `kftl_factory.go` に新しいプレフィックス定数を追加
 2. 新しい `kftl_xxx.go` ファイルを作成し、`KFTLStatementLine` インタフェースを実装
 3. `kftl_factory.go` の `generateDefaultConstructor` に新しいプレフィックスの分岐を追加
-4. TypeScript 側 `src/client/classes/kftl/` にも対応する実装を追加
+4. TypeScript 側 `src/client/classes/kftl/` にも行の分類（行ラベル用）を追加。検証・書き込みは足さない（判定はここだけ。ADR-0507）
 
 ### 命名規則
 

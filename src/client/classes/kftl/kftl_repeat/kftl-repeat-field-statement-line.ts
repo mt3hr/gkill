@@ -1,7 +1,6 @@
 'use strict'
 
 import { i18n } from '@/i18n'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine, type KFTLBlockReentryProvider } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import {
@@ -38,36 +37,6 @@ export class KFTLRepeatFieldStatementLine extends KFTLStatementLine {
         this.index = index
         context.set_next_statement_line_constructor(generate_repeat_block_next_constructor(
             context.get_next_statement_line_text(), spec, index + 1, prev_line_is_meta_info, block_reentry))
-    }
-
-    async apply_this_line_to_request_map(_request_map: KFTLRequestMap): Promise<void> {
-        const line_text = this.get_statement_line_text()
-        switch (this.index) {
-            case REPEAT_FIELD_CONDITION:
-                this.spec.cond = parse_repeat_condition(line_text)
-                break
-            case REPEAT_FIELD_COUNT: {
-                const parsed = parse_repeat_count_or_until(line_text)
-                this.spec.count = parsed.count
-                this.spec.until = parsed.until
-                break
-            }
-            case REPEAT_FIELD_ADD_IF_EXISTS:
-                this.spec.add_if_exists = parse_repeat_add_if_exists(line_text)
-                break
-            case REPEAT_FIELD_ORIGIN:
-                this.spec.origin = parse_repeat_origin(line_text)
-                break
-            default:
-                // 4行を書き終えたあとの位置。**空行は見逃す** ―― 行ラベルは「**********」を出しているので、
-                // ここでエラーにすると「何も無い行」と言いながらピンクになる。閉じる前に行を空けられるようにする。
-                // テキストは飲み込まない。飲み込むと、閉じ忘れたときに本文が繰り返し指定として読まれる
-                if (line_text === "" || line_text === "\n") {
-                    break
-                }
-                throw new Error(i18n.global.t("KFTL_REPEAT_NOT_CLOSED_MESSAGE_TITLE"))
-        }
-        return new Promise<void>((resolve) => resolve())
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

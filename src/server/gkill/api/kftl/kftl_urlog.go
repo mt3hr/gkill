@@ -56,7 +56,7 @@ func (r *kftlURLogRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.TempReps.URLogTempRep.AddURLogInfo(ctx, urlog, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return fmt.Errorf("error at add urlog info id=%s: %w", r.RequestID, err)
 	}
-	r.recordCreated("urlog", urlog.ID)
+	r.recordCreated("urlog", urlog.ID, r.GetRelatedTime())
 	return nil
 }
 

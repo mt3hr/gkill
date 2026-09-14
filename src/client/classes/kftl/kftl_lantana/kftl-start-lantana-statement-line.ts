@@ -1,10 +1,8 @@
 'use strict'
 
 import { GkillAPI } from '@/classes/api/gkill-api'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
-import { KFTLLantanaRequest } from './kftl-lantana-request'
 import { KFTLLantanaMoodStatementLine } from './kftl-lantana-mood-statement-line'
 import { i18n } from '@/i18n'
 import { KFTL_ASCII_LANTANA_SPLITTER_TITLE, matches_exact } from '../kftl-prefixes'
@@ -17,11 +15,6 @@ export class KFTLStartLantanaStatementLine extends KFTLStatementLine {
         context.set_this_statement_line_target_id(target_id)
         context.set_next_statement_line_target_id(target_id)
         context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLLantanaMoodStatementLine(line_text, context))
-    }
-
-    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        const req = new KFTLLantanaRequest(this.get_context().get_this_statement_line_target_id(), this.get_context())
-        request_map.set(this.get_context().get_this_statement_line_target_id(), req)
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

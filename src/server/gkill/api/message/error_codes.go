@@ -412,4 +412,10 @@ const (
 	// 2026-09-15 まで commit は種別ごとの逐次追記で、途中の種別で失敗すると書けた種別だけが残っていました
 	// （部分確定）。500 です。documents/adr/0219-commit-tx-is-one-sqlite-transaction.md
 	CommitTxRolledBackError = "ERR000419"
+
+	// InvalidParseKFTLTextRequestDataError は /api/parse_kftl_text のリクエスト JSON が読めないときのものです。400 です。
+	InvalidParseKFTLTextRequestDataError = "ERR000420"
+	// ParseKFTLTextError は /api/parse_kftl_text の解析がサーバ側の理由で失敗したときのものです。
+	// 利用者の書き間違いはエラーではなく応答の invalid_lines に載るので、ここに来るのは設定の取得失敗などです。500 です。
+	ParseKFTLTextError = "ERR000421"
 )

@@ -154,7 +154,7 @@ func (r *kftlNlogRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.TempReps.NlogTempRep.AddNlogInfo(ctx, nlog, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return fmt.Errorf("error at add nlog info id=%s: %w", r.RequestID, err)
 	}
-	r.recordCreated("nlog", nlog.ID)
+	r.recordCreated("nlog", nlog.ID, r.GetRelatedTime())
 	return nil
 }
 

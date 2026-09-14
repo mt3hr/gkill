@@ -55,7 +55,6 @@ describe('GkillAPI', () => {
 
     // Webクライアント以外から叩かれるため gkill-api.ts に無いのが正しいアドレス。
     const NON_WEB_CLIENT_ADDRESSES = [
-      '/api/submit_kftl_text', // MCPサーバ / Wear OS から使う
       '/api/get_kyous_mcp', // MCPサーバ専用
       '/api/get_rep_infos_mcp', // MCPサーバ専用
       '/api/update_cache', // 保守用。現状どのクライアントからも呼んでいない

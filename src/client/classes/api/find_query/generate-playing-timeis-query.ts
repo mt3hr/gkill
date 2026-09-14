@@ -5,14 +5,14 @@ import { PlayingTimeIsConfig } from '@/classes/datas/config/playing-time-is-conf
 import { FindKyouQuery } from './find-kyou-query'
 
 // playing検索（指定時刻に実行中のTimeIsの検索）のクエリを生成する。
-// Kyou付随の実行中表示（info-base.ts の load_attached_timeis）・実行中画面・
-// KFTLの/end系終了候補検索（generate-get-playing-timeis-kyous-query.ts）の
-// すべてがここを通る。
+// Kyou付随の実行中表示（info-base.ts の load_attached_timeis）と実行中画面
+// （generate-get-playing-timeis-kyous-query.ts）がここを通る。
 // ApplicationConfigに保存されたカスタム検索条件（playing_timeis_json_data）が
 // あればそれを適用する。カスタム条件で候補を絞ると、条件外の実行中TimeIsは
 // KFTLの/endで終了できなくなる（仕様）。
-// Wear OS（GkillApiClient.kt）とサーバ内KFTL（kftl_timeis.go）のplaying検索は
-// 別系統のため、この設定は効かない。
+// サーバ内KFTL（kftl_timeis.go の playingTimeIsQueryFromConfig）も同じ欄を写して
+// /end 系の対象を探すので、Web / Wear OS / MCP のどの経路でも同じ条件が効く（2026-09-15〜、ADR-0507）。
+// 欄を増やすときは両方へ。
 // GkillAPIには依存しない同期の純関数（application_configは呼び出し元が渡す）。
 export function generate_playing_timeis_query(application_config: ApplicationConfig | null, playing_time: Date): FindKyouQuery {
     let query = new FindKyouQuery()
