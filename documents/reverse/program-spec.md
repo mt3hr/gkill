@@ -210,7 +210,7 @@ graph LR
 #### 主な責務
 
 - HTTPサーバーの起動・停止（`serve.go`, `close.go`）
-- 全90エンドポイント（89 POST + 1 GET）のハンドリング（`handle_*.go`）。GETは `urlog_bookmarklet_page` のみ。アドレス定義は92件で、`get_kftl_template` と `get_gkill_info` の2件は未登録
+- 全90エンドポイント（89 POST + 1 GET）のハンドリング（`handle_*.go`）。GETは `urlog_bookmarklet_page` のみ。ルート表（`gkill_server_api_address.go` の `apiRoutes()`）が正本で、`serve.go` とテストハーネスがそのまま登録する
 - GkillDAOManagerの保持・提供
 - 認証ミドルウェアによるセッション検証（`auth_middleware.go`）
 - レスポンス構築
@@ -223,12 +223,12 @@ graph LR
 
 | ラッパー関数 | 件数 | 認証レベル | AuthContextの内容 | 用途 |
 |---|---|---|---|---|
-| `wrapNoAuth` | 13 | ミドルウェアでの認証なし（`filterLocalOnly` は通る） | — | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet` 等 |
+| `wrapNoAuth` | 13 | ミドルウェアでの認証なし（`filterLocalOnly` は通る）。ボディを読む12本は `wrapNoAuthCapped` で経路別のボディ上限つき | — | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet` 等 |
 | `wrapAuth` | 19 | セッション認証 | Account, UserID, Device | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, プラグイン4本 等 |
 | `wrapAuthRepos` | 58 | セッション＋リポジトリ | Account, UserID, Device, Repositories | データCRUD系ハンドラ |
 
 > **`logout` / `reset_password` / `set_new_password` は `wrapAuth` ではなく `wrapNoAuth`** です
-> （`serve.go:30-32`）。セッションの検証はハンドラ内で行います。
+> （ルート表では `Auth: authNone`）。セッションの検証はハンドラ内で行います。
 >
 > また `wrapNoAuth` は「認証を一切しない」という意味ではありません。ルータ上は未認証ですが、
 > `upload_files` / `upload_gpslog_files` / `browse_zip_contents` /
@@ -274,7 +274,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 - HTTPリクエスト/レスポンスに依存しない
 - ハンドラとMCPサーバーの両方から再利用可能
 
-### エンドポイント分類（アドレス定義92件 = 91 POST + 1 GET。うち `get_kftl_template` / `get_gkill_info` の2件は未登録で、登録済みは90件。カテゴリは排他で、合計が定義数と一致する）
+### エンドポイント分類（90件 = 89 POST + 1 GET。カテゴリは排他で、合計がルート表の行数と一致する）
 
 | カテゴリ | エンドポイント数 | 内訳 |
 |---|---|---|
@@ -285,19 +285,16 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 | 共有 | 5 | get_share_kyou_list_infos, add_share_kyou_list_info, update_share_kyou_list_info, delete_share_kyou_list_infos, get_shared_kyous |
 | 通知 | 2 | get_gkill_notification_public_key, register_gkill_notification |
 | 設定 | 7 | get_application_config, update_application_config, get_server_configs, update_server_configs, get_repositories, update_user_reps, reload_repositories |
-| KFTL | 2 | submit_kftl_text, get_kftl_template（**未登録**） |
+| KFTL | 1 | submit_kftl_text |
 | トランザクション | 2 | commit_tx, discard_tx |
 | キャッシュ | 1 | update_cache |
 | ファイル | 4 | upload_files, upload_gpslog_files, get_gps_log, browse_zip_contents |
 | プラグイン | 4 | get_plugin_list, get_plugin_content_html, get_plugin_config_html, post_plugin_config |
-| その他 | 9 | generate_tls_file, get_gkill_info（**未登録**）, open_directory, open_file, urlog_bookmarklet, urlog_bookmarklet_page（唯一の GET）, get_updated_datas_by_time, get_kyous_mcp, get_rep_infos_mcp |
-
-> `get_kftl_template` と `get_gkill_info` はアドレス定義だけがあり、`HandleFunc` 登録も
-> ハンドラ実装も存在しません（実行時404）。`gkill-api.ts` には呼び出しメソッドが残っています。
+| その他 | 8 | generate_tls_file, open_directory, open_file, urlog_bookmarklet, urlog_bookmarklet_page（唯一の GET）, get_updated_datas_by_time, get_kyous_mcp, get_rep_infos_mcp |
 
 ### ルーティング定義
 
-`gkill/api/gkill_server_api/gkill_server_api_address.go`で全エンドポイントのルートが定義されます（92件、うち90件が登録済み）。大半は`POST /api/{endpoint}`形式ですが、`urlog_bookmarklet_page` のみ `GET` です。各ルートは`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でラップされたハンドラに紐づけられます。
+`gkill/api/gkill_server_api/gkill_server_api_address.go` の `apiRoutes()` が返すルート表で定義されます（90件。パス・HTTPメソッド・認証区分・無認証ボディ上限・ハンドラを1行1ルート）。大半は`POST /api/{endpoint}`形式ですが、`urlog_bookmarklet_page` のみ `GET` です。`serve.go` の `registerAPIRoutes` が表の認証区分（`authNone` / `authSession` / `authSessionRepos`）から `wrapNoAuth`（capped 含む）/ `wrapAuth` / `wrapAuthRepos` を選んで登録し、テストハーネス（`gkill_server_api_test.go` の `setupTestRouter`）も同じ関数を呼びます。表・ハンドラ・doc コメント・認証区分の整合は `api_routes_test.go` が、Web クライアント（`gkill-api.ts`）との整合は `gkill-api.test.ts` が機械検査します（[ADR-0709](../adr/0709-api-route-table-single-source.md)）。
 
 API 以外のルートは19件（`PathPrefix` 18 + `Path` 1）で、SPA 配信・`/files/`・`/zip_cache/`・
 `/resources/manual/` 等がここに含まれます。

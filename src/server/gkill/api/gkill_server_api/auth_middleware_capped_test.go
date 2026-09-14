@@ -1,7 +1,7 @@
 package gkill_server_api
 
 // wrapNoAuthCapped の境界動作（上限±1バイト・413 の JSON 本文・読み取り期限）と、
-// serve.go のボディ付き wrapNoAuth 経路がすべて capped 版で登録されていることのソース走査。
+// ルート表（apiRoutes）のボディ付き無認証経路がすべて上限つきで登録されていることの検査。
 //
 // 2026-08-30 監査 F-002: wrapNoAuth の経路は認証ミドルウェアを通らないため
 // readAuthBody の 32MB 上限が効かず、未認証の無制限ボディがそのままヒープへ載っていた。
@@ -15,9 +15,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -151,49 +148,55 @@ func TestResponseWriterWrappersUnwrapForResponseController(t *testing.T) {
 	}
 }
 
-// serve.go の登録をソース走査で固定する。素の wrapNoAuth に残ってよいのは
-// ボディを読まない経路だけ。ボディ付きの経路を wrapNoAuth で足すと、
-// 未認証の無制限ボディがそのままヒープへ載る（目の前ではエラーにならない）。
-func TestServeSourceNoAuthBodyRoutesAreCapped(t *testing.T) {
-	src, err := os.ReadFile("serve.go")
-	if err != nil {
-		t.Fatalf("read serve.go: %v", err)
-	}
-	text := string(src)
+// ルート表（apiRoutes）の無認証経路がすべてボディ上限つきで登録されていることを固定する。
+// 素の wrapNoAuth（bodyNone）に残ってよいのはボディを読まない経路だけ。
+// ボディ付きの経路を bodyNone で足すと、未認証の無制限ボディがそのままヒープへ載る
+// （目の前ではエラーにならない）。validateAPIRoutes が起動時にも同じ検査をするが、
+// アップロード2本が大容量側の上限であること・それ以外が 32MB 側であることは表の意図なので
+// ここで名指しで固定する。
+func TestAPIRoutesNoAuthBodyRoutesAreCapped(t *testing.T) {
+	gkillAPI := &GkillServerAPI{}
+	routes := gkillAPI.apiRoutes()
 
+	// GET でボディを読まない経路だけが bodyNone を許される
 	allowedBareNoAuth := map[string]bool{
-		// GET でボディを読まない配信系だけ
-		"HandleFileServe":            true,
-		"HandleZipCacheFileServe":    true,
-		"HandleURLogBookmarkletPage": true,
+		"/api/urlog_bookmarklet_page": true,
 	}
-	re := regexp.MustCompile(`g\.wrapNoAuth\(g\.(\w+)\)`)
-	for _, m := range re.FindAllStringSubmatch(text, -1) {
-		if !allowedBareNoAuth[m[1]] {
-			t.Errorf("%s が素の wrapNoAuth で登録されている。ボディを読む経路は wrapNoAuthCapped を使うこと（2026-08-30 監査 F-002）", m[1])
-		}
-	}
-
 	// アップロード2経路は大容量側の上限・期限で登録する
-	for _, want := range []string{
-		"g.wrapNoAuthCapped(g.HandleUploadFiles, maxUploadBodyBytes, uploadBodyReadTimeout)",
-		"g.wrapNoAuthCapped(g.HandleUploadGPSLogFiles, maxUploadBodyBytes, uploadBodyReadTimeout)",
-	} {
-		if !strings.Contains(text, want) {
-			t.Errorf("serve.go に %q が見当たらない", want)
-		}
+	uploadPaths := map[string]bool{
+		"/api/upload_files":        true,
+		"/api/upload_gpslog_files": true,
 	}
 
-	// 残りのボディ付き無認証経路は 32MB の上限で登録する
-	for _, handlerName := range []string{
-		"HandleLogin", "HandleLogout", "HandleResetPassword", "HandleSetNewPassword",
-		"HandleGetSharedKyous", "HandleURLogBookmarkletAddress",
-		"HandleGetKyousMCP", "HandleGetRepInfosMCP",
-		"HandleBrowseZipContents", "HandleGetIDFKyouByRelativePath",
-	} {
-		want := fmt.Sprintf("g.wrapNoAuthCapped(g.%s, maxAuthBodyBytes, noAuthBodyReadTimeout)", handlerName)
-		if !strings.Contains(text, want) {
-			t.Errorf("serve.go に %q が見当たらない", want)
+	seen := map[string]bool{}
+	for _, rt := range routes {
+		if rt.Auth != authNone {
+			continue
+		}
+		seen[rt.Path] = true
+		switch {
+		case allowedBareNoAuth[rt.Path]:
+			if rt.Body != bodyNone || rt.Method != http.MethodGet {
+				t.Errorf("%s はボディを読まない GET 配信なので bodyNone のまま: body=%d method=%s", rt.Path, rt.Body, rt.Method)
+			}
+		case uploadPaths[rt.Path]:
+			if rt.Body != bodyUpload {
+				t.Errorf("%s はアップロード経路なので bodyUpload（maxUploadBodyBytes / uploadBodyReadTimeout）で登録すること", rt.Path)
+			}
+		default:
+			if rt.Body != bodyAuth {
+				t.Errorf("%s が素の wrapNoAuth 相当で登録されている。ボディを読む無認証経路は bodyAuth を使うこと（2026-08-30 監査 F-002）", rt.Path)
+			}
+		}
+	}
+	for path := range allowedBareNoAuth {
+		if !seen[path] {
+			t.Errorf("免除リストの %s が表に無い。リストから消すこと", path)
+		}
+	}
+	for path := range uploadPaths {
+		if !seen[path] {
+			t.Errorf("アップロード経路 %s が表に無い。リストから消すこと", path)
 		}
 	}
 }

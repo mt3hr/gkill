@@ -38,14 +38,20 @@ describe('GkillAPI', () => {
     })
   })
 
-  // エンドポイントのURLはTypeScript側(gkill-api.ts)とGo側(gkill_server_api_address.go)で
-  // 独立に書かれている。片方だけリネームするとビルドもtype-checkも通り、
-  // 実行して404になって初めて気付く。両者の集合を突き合わせて防ぐ。
+  // エンドポイントのURLとHTTPメソッドは TypeScript 側(gkill-api.ts)と Go 側
+  // (gkill_server_api_address.go の apiRoutes 表)で独立に書かれている。
+  // 片方だけリネームするとビルドも type-check も通り、実行して 404 になって初めて気付く。
+  // Go 側の表を正本として、両者の集合を突き合わせて防ぐ（ADR-0709）。
+  //
+  // かつては Go 側もアドレス定義と serve.go の登録が別々で、「定義はあるが未登録」の
+  // 残骸（get_kftl_template / get_gkill_info）が TS 側にも揃って残り、この突き合わせを
+  // 通り抜けていた。表は登録そのものなので、表に載っている = 実行時に応答する。
   //
   // 「login_address は /api/login である」といった個別テストは定数の言い換えでしかなく、
   // このズレを検出できないので置き換えた。
   describe('endpoint address parity with Go', () => {
-    const GO_ADDRESS_FILE = 'src/server/gkill/api/gkill_server_api/gkill_server_api_address.go'
+    const GO_ROUTES_FILE = 'src/server/gkill/api/gkill_server_api/gkill_server_api_address.go'
+    const TS_API_FILE = 'src/client/classes/api/gkill-api.ts'
 
     // Webクライアント以外から叩かれるため gkill-api.ts に無いのが正しいアドレス。
     const NON_WEB_CLIENT_ADDRESSES = [
@@ -53,45 +59,57 @@ describe('GkillAPI', () => {
       '/api/get_kyous_mcp', // MCPサーバ専用
       '/api/get_rep_infos_mcp', // MCPサーバ専用
       '/api/update_cache', // 保守用。現状どのクライアントからも呼んでいない
-      '/serviceWorker.js', // Web Push用のService Worker配信。APIではない
     ]
 
-    function goAddresses(): Set<string> {
-      const source = readFileSync(GO_ADDRESS_FILE, 'utf8')
-      const addresses = new Set<string>()
-      for (const m of source.matchAll(/gkillAPIAddress\.\w+Address\s*=\s*"([^"]+)"/g)) {
-        addresses.add(m[1])
+    // Go の表の1行 `{Path: "/api/login", Method: "POST", Auth: ..., Body: ..., Handler: g.HandleLogin},`
+    // からパスとメソッドを読む。書式は gkill_server_api_address.go の冒頭コメントで契約している。
+    function goRoutes(): Map<string, string> {
+      const source = readFileSync(GO_ROUTES_FILE, 'utf8')
+      const routes = new Map<string, string>()
+      for (const m of source.matchAll(/\{Path:\s*"([^"]+)",\s*Method:\s*"(GET|POST)"/g)) {
+        routes.set(m[1], m[2])
       }
-      return addresses
+      return routes
     }
 
-    function clientAddresses(): Set<string> {
+    // クライアント側は `xxx_address` / `xxx_method` のフィールド対。
+    // `/serviceWorker.js` だけは API ではない配信パスで、Go 側も表に載せていない。
+    function clientRoutes(): Map<string, { address: string; method: string | undefined; prefix: string }> {
       const api = GkillAPI.get_instance() as unknown as Record<string, unknown>
-      const addresses = new Set<string>()
+      const routes = new Map<string, { address: string; method: string | undefined; prefix: string }>()
       for (const [key, value] of Object.entries(api)) {
-        if (key.endsWith('_address') && typeof value === 'string' && value.startsWith('/')) {
-          addresses.add(value)
+        if (key.endsWith('_address') && typeof value === 'string' && value.startsWith('/api/')) {
+          const prefix = key.slice(0, -'_address'.length)
+          const method = api[`${prefix}_method`]
+          routes.set(value, { address: value, method: typeof method === 'string' ? method : undefined, prefix })
         }
       }
-      return addresses
+      return routes
     }
 
-    test('Goが登録しているアドレスを読み取れている', () => {
+    function clientMethodFieldPrefixes(): string[] {
+      const api = GkillAPI.get_instance() as unknown as Record<string, unknown>
+      return Object.keys(api)
+        .filter((key) => key.endsWith('_method') && typeof api[key] === 'string')
+        .map((key) => key.slice(0, -'_method'.length))
+    }
+
+    test('Goの表を読み取れている', () => {
       // 抽出の正規表現が実装の書き方とズレていないことの確認。
       // ここが0件のまま下のテストが通ると、何も検証していないことになる。
-      expect(goAddresses().size).toBeGreaterThan(80)
+      expect(goRoutes().size).toBeGreaterThan(80)
     })
 
-    test('クライアントのアドレスがすべてGo側にも存在する', () => {
-      const go = goAddresses()
-      const missingInGo = [...clientAddresses()].filter((address) => !go.has(address))
+    test('クライアントのアドレスがすべてGoの表にも存在する', () => {
+      const go = goRoutes()
+      const missingInGo = [...clientRoutes().keys()].filter((address) => !go.has(address))
 
       expect(missingInGo, 'クライアントが叩くのにサーバが登録していないアドレス（404になる）').toEqual([])
     })
 
-    test('Go側のアドレスがすべてクライアントにも存在する', () => {
-      const client = clientAddresses()
-      const missingInClient = [...goAddresses()]
+    test('Goの表のアドレスがすべてクライアントにも存在する', () => {
+      const client = clientRoutes()
+      const missingInClient = [...goRoutes().keys()]
         .filter((address) => !client.has(address))
         .filter((address) => !NON_WEB_CLIENT_ADDRESSES.includes(address))
 
@@ -100,10 +118,47 @@ describe('GkillAPI', () => {
 
     // 許容リストの腐り防止。サーバ側のルートが消えたら、リストも更新する必要がある。
     test('Webクライアント以外向けの許容リストが実在するアドレスだけを指している', () => {
-      const go = goAddresses()
+      const go = goRoutes()
       const stale = NON_WEB_CLIENT_ADDRESSES.filter((address) => !go.has(address))
 
       expect(stale, 'サーバから消えたのでリストからも消すこと').toEqual([])
+    })
+
+    // xxx_address には同名の xxx_method が対になっている。
+    // 相方の無い _method は、かつて存在したエンドポイントの残骸
+    // （update_tag_struct_method 等が6件残っていた）。
+    test('xxx_address と xxx_method が対になっている', () => {
+      const routes = clientRoutes()
+      const addressWithoutMethod = [...routes.values()]
+        .filter((r) => r.method === undefined)
+        .map((r) => `${r.prefix}_address`)
+      expect(addressWithoutMethod, '対になる _method が無い').toEqual([])
+
+      const api = GkillAPI.get_instance() as unknown as Record<string, unknown>
+      const methodWithoutAddress = clientMethodFieldPrefixes()
+        .filter((prefix) => typeof api[`${prefix}_address`] !== 'string')
+        .map((prefix) => `${prefix}_method`)
+      expect(methodWithoutAddress, '対になる _address が無い（消えたエンドポイントの残骸）').toEqual([])
+    })
+
+    test('クライアントのHTTPメソッドがGoの表と一致する', () => {
+      const go = goRoutes()
+      const mismatched = [...clientRoutes().values()]
+        .filter((r) => go.has(r.address) && go.get(r.address) !== r.method)
+        .map((r) => `${r.address}: client=${r.method} go=${go.get(r.address)}`)
+
+      expect(mismatched, 'メソッドが違うと gorilla/mux が 405 を返す').toEqual([])
+    })
+
+    // gkill_fetch(this.X_address, { 'method': this.Y_method ... }) の X と Y が同じであること。
+    // 別のメソッドをコピーして address だけ直した、を拾う（型は両方 string なので TS は通る）。
+    test('gkill_fetch の address と method の配線が同じエンドポイントを指す', () => {
+      const source = readFileSync(TS_API_FILE, 'utf8')
+      const wired = [...source.matchAll(/gkill_fetch\(this\.(\w+)_address,\s*\{\s*'method':\s*this\.(\w+)_method/g)]
+      expect(wired.length, '配線の抽出が0件（正規表現が実装の書き方とズレている）').toBeGreaterThan(80)
+
+      const crossed = wired.filter((m) => m[1] !== m[2]).map((m) => `${m[1]}_address × ${m[2]}_method`)
+      expect(crossed, 'address と method が別のエンドポイントを指している').toEqual([])
     })
   })
 
