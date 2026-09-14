@@ -46,15 +46,18 @@ type pluginQuery struct {
 
 // pluginResponse はプラグインからgkillへのレスポンス。
 type pluginResponse struct {
-	ID             string   `json:"id"`
-	Kyous          []Kyou   `json:"kyous,omitempty"`
-	Kyou           *Kyou    `json:"kyou,omitempty"`
-	RepName        string   `json:"rep_name,omitempty"`
-	HTML           string   `json:"html,omitempty"`
-	Pong           bool     `json:"pong,omitempty"`
-	GPSLogs        []GPSLog `json:"gps_logs,omitempty"`
-	HasMoreGPSLogs bool     `json:"has_more_gps_logs,omitempty"`
-	Errors         []string `json:"errors,omitempty"`
+	ID      string `json:"id"`
+	Kyous   []Kyou `json:"kyous,omitempty"`
+	Kyou    *Kyou  `json:"kyou,omitempty"`
+	RepName string `json:"rep_name,omitempty"`
+	// RepNames はポインタで持つ。nil なら欄ごと出さず（gkill は「未対応」と読む）、
+	// 空スライスへのポインタなら "rep_names": [] を出す（gkill は「いまは0個」と読む）。
+	RepNames       *[]string `json:"rep_names,omitempty"`
+	HTML           string    `json:"html,omitempty"`
+	Pong           bool      `json:"pong,omitempty"`
+	GPSLogs        []GPSLog  `json:"gps_logs,omitempty"`
+	HasMoreGPSLogs bool      `json:"has_more_gps_logs,omitempty"`
+	Errors         []string  `json:"errors,omitempty"`
 }
 
 // pluginGPSLogQueryToQuery はプロトコル上の取得条件を公開型に変換する。
@@ -130,6 +133,20 @@ func runLoop(h Handler, cfg Config, pluginDir, userID string, in io.Reader, out 
 
 		case "get_rep_name":
 			resp := pluginResponse{ID: req.ID, RepName: h.RepName}
+			if h.RepNames != nil {
+				repNames, err := h.RepNames(newCtx(userID), cfg)
+				if err != nil {
+					writeError(encoder, req.ID, err.Error())
+					continue
+				}
+				// nil を返されても「いまは0個」として [] を出す。
+				// 欄を落とすと gkill が manifest の rep_name にフォールバックしてしまい、
+				// 実装しているのに「未対応」と読まれる。
+				if repNames == nil {
+					repNames = []string{}
+				}
+				resp.RepNames = &repNames
+			}
 			_ = encoder.Encode(resp)
 
 		case "find_kyous":

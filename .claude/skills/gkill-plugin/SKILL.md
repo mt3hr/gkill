@@ -15,6 +15,21 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 ```
   plugins/    # Standalone plugin binaries (each has its own go.mod, manifest.json, executable)
               #   examples/gkill_example/  — sample plugin (fixed Kyou response)
+              #   gkill_plugin_archived_git_commit_log/ — Git repositories archived as zip
+              #                              (`name/.git/…`, root `.git/…`, several per zip, nested).
+              #                              Reads the zip's central directory only (sdk.OpenSources),
+              #                              streams the `.git/**` entries into a go-billy memfs and
+              #                              opens it with go-git — never extracts. One Kyou per
+              #                              commit with the native shape (ID = hash, rep name =
+              #                              repository dir name, times = committer, user = author,
+              #                              app = "git"), `provides: ["git_commit_log"]` and
+              #                              `data_type: git_commit_log` so the native
+              #                              GitCommitLogView draws it and commits that also live
+              #                              in a working repo collapse to one row. Declares one
+              #                              rep name per repository through `rep_names`.
+              #                              Same hash in two zips = one row; fingerprint per repo
+              #                              is sha256 of (entry name, CRC32, size). Real data:
+              #                              54 zips → 721 commits / 48 rep names in <10s
               #   gkill_plugin_chatgpt/    — ChatGPT conversation history plugin
               #   gkill_plugin_claudeai/   — Claude.ai conversation history plugin
               #   gkill_plugin_claudecode/ — Claude Code chat log plugin (one Kyou per human
@@ -52,8 +67,8 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               # keeps an `export` table and folds only the lowest-rank export per (metric, day);
               # locationhistory needs no ranking because its read-time `SELECT DISTINCT (time, lat,
               # lng)` already collapses points across exports.
-              # The six shippable plugins (chatgpt / claudeai / claudecode / codex / fitbit /
-              # locationhistory — gkill_example is
+              # The seven shippable plugins (archived_git_commit_log / chatgpt / claudeai /
+              # claudecode / codex / fitbit / locationhistory — gkill_example is
               # excluded) take `source_dirs` in config.json (folders/globs), auto-create
               # that config.json next to manifest.json on first start (existing files are never
               # overwritten, via sdk.EnsureConfig + Handler.DefaultConfig), and can print their
@@ -62,13 +77,15 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               # ($GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db — resolved in
               # plugin/sdk/cache_path.go (sdk.CacheDBPath) from the inherited GKILL_HOME env
               # var, falling back to the plugin folder), so `clear_cache plugin` can wipe them.
-              # The 6 plugins had a byte-identical cache_path.go each; it now lives in the SDK
+              # The 6 older plugins had a byte-identical cache_path.go each; it now lives in the SDK
 ```
 
 - `gkill/api/gkill_plugin/` — Plugin protocol types: `PluginManifest`, `PluginRequest`, `PluginResponse`, `PluginKyou`, `PluginTypedData`, `PluginGPSLog` (stdio newline-delimited JSON)
-- `gkill/plugin/sdk/` — Plugin author SDK. `sdk.Run(sdk.Handler{...})` starts the stdio JSON message loop. `Handler` has 8 fields: `FindKyous` (required), `GetKyou`, `GetContentHTML`, `GetConfigHTML`, `PostConfig`, `GetGPSLogs`, `RepName`, `DefaultConfig`. Plugins are standalone binaries in `src/plugins/`
+- `gkill/plugin/sdk/` — Plugin author SDK. `sdk.Run(sdk.Handler{...})` starts the stdio JSON message loop. `Handler` has 9 fields: `FindKyous` (required), `GetKyou`, `GetContentHTML`, `GetConfigHTML`, `PostConfig`, `GetGPSLogs`, `RepName`, `RepNames`, `DefaultConfig`. Plugins are standalone binaries in `src/plugins/`
 
-**プラグインの型別/付随データ:** `manifest.json` の `provides`（既定は空＝従来どおり）に種別を書くと、そのプラグインの記録が **native と同じ型別リポジトリに載る**。`kc` を宣言して `data_type: "kc"` を返せば `typed_kc` が埋まり Dnote の推移グラフで集計できる。`tag` を宣言すればタグ一覧（`get_all_tag_names`）に載るので、rykv の既定の絞り込み「タグ無し」から漏れる問題が起きない。`gpslog` は Kyou ではないので専用コマンド `get_gps_logs`（ページング必須）で受け渡す。**`provides` が `gpslog` だけのプラグインには型別索引を作らない**（`PluginManifest.NeedsTypedIndex()`）—— 索引の材料が1件も無いので、作ると `state:"never_built"` / `record_count:0` で永久に固定され「索引が壊れている」と誤読される。GPSの取り込み状況は `get_plugin_list` の別枠 `gps_index`。また `emits_kyou:false` のプラグインの `rep_name` / `data_type` は**どの検索値でもない**ので、「渡せる値」を並べる一覧（`get_all_rep_names` / `get_rep_infos` の `plugins[]` / 既知 data_type 集合）には載せないこと（[ADR-0608](../../../documents/adr/0608-plugin-role-is-emits-kyou-and-provides.md)）。
+**1本のプラグインが複数の rep 名を名乗れる（`rep_names`）。** `get_rep_name` の応答に `rep_names[]` を載せると（SDK は `Handler.RepNames`）、gkill はその名前を `get_all_rep_names`・rep 名の絞り込み（`find_filter.go` Step4）・本文取得の引き当て（`PluginManager.GetPluginByRepName`）・MCP の `get_rep_infos.plugins[]` / `get_plugin_list.rep_names` に使う。**null（欄なし）と `[]` は別**: null は「未対応」で manifest の `rep_name` 1つ、`[]` は「いまは0個」。名前を列挙する側は `GetRepName` を直接見ず **`reps.RepNamesOf`** を通すこと（`GetRepName` は代表名で、MatchReps のキーとログ用）。本体側は `pluginRepositoryImpl.GetRepNames` が **TTL 60秒**でキャッシュし、失敗しても前回値か manifest 名にフォールバックしてエラーにしない（Step4 は fan-out の外で逐次に走るので、失敗を返すと全検索が落ち、毎回取りに行くと全検索が期限ぶん止まる）。申告済みの名前は `warnPluginRepNameMismatchOnce` の対象外。zip の Git リポジトリを束ねる `gkill_plugin_archived_git_commit_log` が最初の利用者（[ADR-0308](../../../documents/adr/0308-plugin-multiple-rep-names.md)）。
+
+**プラグインの型別/付随データ:** `manifest.json` の `provides`（既定は空＝従来どおり）に種別を書くと、そのプラグインの記録が **native と同じ型別リポジトリに載る**。`kc` を宣言して `data_type: "kc"` を返せば `typed_kc` が埋まり Dnote の推移グラフで集計できる。`git_commit_log` を宣言して `data_type: "git_commit_log"` で `typed.git_commit_log{commit_message, addition, deletion}` を返せば `GitCommitLogReps` に載り、クライアントは native の `GitCommitLogView` で描き、MCP は `git_commit_log` payload を組み、**稼働中リポジトリと同じハッシュのコミットは `(ID, data_type, related_time)` の重複除去で1件に畳まれる**（別 data_type にすると2件並ぶ。[ADR-0309](../../../documents/adr/0309-plugin-provides-git-commit-log.md)）。型別アダプタは全部読み取り専用で、`AddXxxInfo` はエラー、`WriteXxxRep` には決して入らない。`tag` を宣言すればタグ一覧（`get_all_tag_names`）に載るので、rykv の既定の絞り込み「タグ無し」から漏れる問題が起きない。`gpslog` は Kyou ではないので専用コマンド `get_gps_logs`（ページング必須）で受け渡す。**`provides` が `gpslog` だけのプラグインには型別索引を作らない**（`PluginManifest.NeedsTypedIndex()`）—— 索引の材料が1件も無いので、作ると `state:"never_built"` / `record_count:0` で永久に固定され「索引が壊れている」と誤読される。GPSの取り込み状況は `get_plugin_list` の別枠 `gps_index`。また `emits_kyou:false` のプラグインの `rep_name` / `data_type` は**どの検索値でもない**ので、「渡せる値」を並べる一覧（`get_all_rep_names` / `get_rep_infos` の `plugins[]` / 既知 data_type 集合）には載せないこと（[ADR-0608](../../../documents/adr/0608-plugin-role-is-emits-kyou-and-provides.md)）。
 
 アダプタ（`dao/reps/plugin_typed_adapters.go` / `plugin_attached_adapters.go` / `gps_log_repository_plugin_impl.go`）の**読み取りは決してプラグインへ往復しない**。`PluginTypedIndex`（`plugin_typed_index.go`）が `find_kyous` 1回ぶんの不変スナップショットを持ち、そこから即答する。プラグイン呼び出しは容量1のスロットで直列化されるので、1件ずつ聞きに行くと一覧の行数ぶんの直列 stdio 呼び出しになりプロセスが殺され続ける。`GetLatestDataRepositoryAddress` は**型別は空・付随は実データ**（型別が返すと `UpdateTime` の揺れでレコードごと消え、付随が返さないと `--cache_in_memory=false` でタグが全部落ちる）。アダプタの `Close` は no-op（プロセスを閉じるのは本体と `PluginManager.CloseAll` だけ）。登録は `gkill_dao_manager.go` の `KCReps`→`Reps` コピーループより**後**（先だと二重検索になる）。詳細は `documents/reverse/plugin-system.md` の14章、却下案は [ADR-0302](../../../documents/adr/0302-plugin-provides-typed-index.md)。
 
@@ -99,5 +116,7 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 - [ADR-0304 GPSLog 専用プラグインは Rep に出さない](../../../documents/adr/0304-plugin-emits-kyou-false.md)
 - [ADR-0305 常駐ビルダと WAL](../../../documents/adr/0305-plugin-background-builder-wal.md)
 - [ADR-0306 Codex のスレッドIDはファイル名から](../../../documents/adr/0306-codex-thread-id-from-filename.md)
+- [ADR-0308 プラグインが複数の rep 名を名乗る](../../../documents/adr/0308-plugin-multiple-rep-names.md)
+- [ADR-0309 provides に git_commit_log](../../../documents/adr/0309-plugin-provides-git-commit-log.md)
 - [ADR-0113 ワード検索の型別の対象列と ID の前方一致（プラグインは SDK の判定を使う）](../../../documents/adr/0113-word-filter-columns-and-id-prefix.md)
 - [ADR-0707 端末固有の文字列は出口で伏せる](../../../documents/adr/0707-redact-environment-specific-strings.md)

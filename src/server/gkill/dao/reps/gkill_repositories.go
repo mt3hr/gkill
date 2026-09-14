@@ -1661,7 +1661,9 @@ func (g *GkillRepositories) GetAllRepNames(ctx context.Context) ([]string, error
 	repNames := map[string]struct{}{}
 	existErr := false
 	wg := &sync.WaitGroup{}
-	ch := make(chan string, len(repImpls))
+	// 1つの rep が複数の名前を名乗ることがある（RepNamesProvider。zip の Git リポジトリを
+	// 束ねるプラグインなど）ので、rep ごとに名前の束を1つ送る。容量は rep 数で足りる。
+	ch := make(chan []string, len(repImpls))
 	errch := make(chan error, len(repImpls))
 	defer close(ch)
 	defer close(errch)
@@ -1669,12 +1671,12 @@ func (g *GkillRepositories) GetAllRepNames(ctx context.Context) ([]string, error
 	// 並列処理
 	for _, rep := range repImpls {
 		err := threads.Go(ctx, wg, func() {
-			repName, err := rep.GetRepName(ctx)
+			names, err := RepNamesOf(ctx, rep)
 			if err != nil {
 				errch <- err
 				return
 			}
-			ch <- repName
+			ch <- names
 		})
 		if err != nil {
 			errch <- err
@@ -1697,12 +1699,14 @@ errloop:
 		return nil, err
 	}
 
-	// タグ名集約
+	// rep名集約
 loop:
 	for {
 		select {
-		case repName := <-ch:
-			repNames[repName] = struct{}{}
+		case names := <-ch:
+			for _, repName := range names {
+				repNames[repName] = struct{}{}
+			}
 		default:
 			break loop
 		}

@@ -52,6 +52,12 @@ func (b *pluginAdapterBase) GetRepName(_ context.Context) (string, error) {
 	return b.repName(), nil
 }
 
+// GetRepNames はプラグイン本体が申告した rep 名の全集合を返す（RepNamesProvider）。
+// 型別リポジトリ側の rep 名照合（rep_types 指定の検索）でも、Kyou ごとの rep 名で選ばれるようにする。
+func (b *pluginAdapterBase) GetRepNames(ctx context.Context) ([]string, error) {
+	return b.plugin.GetRepNames(ctx)
+}
+
 // UpdateCache は索引を作り直す。実際にプラグインを叩くかは索引側の最短間隔が決める。
 func (b *pluginAdapterBase) UpdateCache(ctx context.Context) error {
 	return b.index.Refresh(ctx)
@@ -206,6 +212,10 @@ func recordHasAnyKind(record *pluginTypedRecord, kinds map[gkill_plugin.PluginPr
 			if record.Mi != nil {
 				return true
 			}
+		case gkill_plugin.PluginProvidesGitCommitLog:
+			if record.GitCommitLog != nil {
+				return true
+			}
 		}
 	}
 	return false
@@ -233,7 +243,7 @@ func pluginMatchWords(target string, id string, query *find.FindQuery) bool {
 // 列は native の各 rep が SQL で見る列と同じ（NUL 区切りで連結し、境界をまたいだ語が当たらないようにする）:
 //
 //	Kmemo=CONTENT / KC=TITLE+NUM_VALUE / URLog=URL+TITLE+DESCRIPTION / Nlog=TITLE+SHOP+AMOUNT /
-//	Lantana=MOOD / TimeIs=TITLE / Mi=TITLE+BOARD_NAME
+//	Lantana=MOOD / TimeIs=TITLE / Mi=TITLE+BOARD_NAME / GitCommitLog=COMMIT_MESSAGE
 //
 // レコードがその種別の実データを持たなければ空文字。
 func pluginTypedFindWordText(record *pluginTypedRecord, kind gkill_plugin.PluginProvidedKind) string {
@@ -265,6 +275,12 @@ func pluginTypedFindWordText(record *pluginTypedRecord, kind gkill_plugin.Plugin
 	case gkill_plugin.PluginProvidesMi:
 		if record.Mi != nil {
 			return record.Mi.Title + "\x00" + record.Mi.BoardName
+		}
+	case gkill_plugin.PluginProvidesGitCommitLog:
+		if record.GitCommitLog != nil {
+			// native の git rep と同じくコミットメッセージだけ（findWordTextOfGitCommit）。
+			// rep 名や author を足すと rep_types 指定の検索だけ結果が変わる。
+			return record.GitCommitLog.CommitMessage
 		}
 	}
 	return ""
@@ -737,6 +753,81 @@ func (p *pluginMiRepositoryImpl) UnWrapTyped() ([]MiRepository, error) {
 }
 func (p *pluginMiRepositoryImpl) UnWrap() ([]Repository, error) { return []Repository{p}, nil }
 
+// ---- GitCommitLog ----
+
+// pluginGitCommitLogRepositoryImpl は provides に git_commit_log を書いたプラグインの GitCommitLogRepository アダプタ。
+// zip に固めた Git リポジトリを読むプラグインが、native の git rep と同じ経路
+// （クライアントの get_git_commit_log・Dnote の集計・MCP の git_commit_log payload）に載るための口。
+type pluginGitCommitLogRepositoryImpl struct{ pluginAdapterBase }
+
+var _ GitCommitLogRepository = (*pluginGitCommitLogRepositoryImpl)(nil)
+
+func (p *pluginGitCommitLogRepositoryImpl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	return p.findKyous(ctx, query)
+}
+func (p *pluginGitCommitLogRepositoryImpl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	return p.getKyou(ctx, id, updateTime)
+}
+func (p *pluginGitCommitLogRepositoryImpl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	return p.getKyouHistories(ctx, id)
+}
+func (p *pluginGitCommitLogRepositoryImpl) FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]GitCommitLog, error) {
+	snapshot := p.index.Ensure(ctx)
+	gitCommitLogs := []GitCommitLog{}
+	for _, record := range snapshot.records {
+		if record.GitCommitLog == nil {
+			continue
+		}
+		if !pluginMatchIDs(record.ID, query) || !pluginMatchCalendar(record.GitCommitLog.RelatedTime, query) {
+			continue
+		}
+		// キーワードの対象列はコミットメッセージだけ（native と同じ）。
+		if !pluginMatchWords(pluginTypedFindWordText(record, gkill_plugin.PluginProvidesGitCommitLog), record.ID, query) {
+			continue
+		}
+		gitCommitLogs = append(gitCommitLogs, *record.GitCommitLog)
+	}
+	if len(gitCommitLogs) == 0 {
+		return nil, nil
+	}
+	return gitCommitLogs, nil
+}
+func (p *pluginGitCommitLogRepositoryImpl) FindGitCommitLogByIDs(ctx context.Context, ids []string) ([]GitCommitLog, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	snapshot := p.index.Ensure(ctx)
+	gitCommitLogs := []GitCommitLog{}
+	for _, id := range ids {
+		record, ok := snapshot.byID[id]
+		if !ok || record.GitCommitLog == nil {
+			continue
+		}
+		gitCommitLogs = append(gitCommitLogs, *record.GitCommitLog)
+	}
+	if len(gitCommitLogs) == 0 {
+		return nil, nil
+	}
+	return gitCommitLogs, nil
+}
+func (p *pluginGitCommitLogRepositoryImpl) GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error) {
+	record := p.lookup(ctx, id)
+	if record == nil || record.GitCommitLog == nil {
+		return nil, nil
+	}
+	if updateTime != nil && !sameSecond(record.GitCommitLog.UpdateTime, *updateTime) {
+		return nil, nil
+	}
+	found := *record.GitCommitLog
+	return &found, nil
+}
+func (p *pluginGitCommitLogRepositoryImpl) UnWrapTyped() ([]GitCommitLogRepository, error) {
+	return []GitCommitLogRepository{p}, nil
+}
+func (p *pluginGitCommitLogRepositoryImpl) UnWrap() ([]Repository, error) {
+	return []Repository{p}, nil
+}
+
 // PluginTypedRepositories はプラグイン1本ぶんのアダプタ一式です。
 // manifest.json の provides に無い種別は nil になります。
 type PluginTypedRepositories struct {
@@ -747,6 +838,7 @@ type PluginTypedRepositories struct {
 	Lantana      LantanaRepository
 	TimeIs       TimeIsRepository
 	Mi           MiRepository
+	GitCommitLog GitCommitLogRepository
 	Tag          TagRepository
 	Text         TextRepository
 	Notification NotificationRepository
@@ -785,6 +877,9 @@ func NewPluginTypedRepositories(plugin PluginRepository) PluginTypedRepositories
 	}
 	if _, ok := provided[gkill_plugin.PluginProvidesMi]; ok {
 		adapters.Mi = &pluginMiRepositoryImpl{base(gkill_plugin.PluginProvidesMi)}
+	}
+	if _, ok := provided[gkill_plugin.PluginProvidesGitCommitLog]; ok {
+		adapters.GitCommitLog = &pluginGitCommitLogRepositoryImpl{base(gkill_plugin.PluginProvidesGitCommitLog)}
 	}
 	if _, ok := provided[gkill_plugin.PluginProvidesTag]; ok {
 		adapters.Tag = &pluginTagRepositoryImpl{base(gkill_plugin.PluginProvidesTag)}

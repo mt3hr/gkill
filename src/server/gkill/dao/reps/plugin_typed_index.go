@@ -98,6 +98,8 @@ type pluginTypedRecord struct {
 	Lantana *Lantana
 	TimeIs  *TimeIs
 	Mi      *Mi
+	// GitCommitLog は provides に git_commit_log を書いたプラグインのコミット。
+	GitCommitLog *GitCommitLog
 
 	Tags          []Tag
 	Texts         []Text
@@ -151,8 +153,11 @@ func newEmptyPluginIndexSnapshot(ok bool) *pluginIndexSnapshot {
 // pluginIndexSource は索引が材料を取ってくる相手です。pluginRepositoryImpl が実装します。
 // インターフェースにしているのは索引を単体テストできるようにするためです。
 type pluginIndexSource interface {
-	// indexRepName はリポジトリ表示名を返します。
+	// indexRepName はリポジトリ表示名（manifest の rep_name）を返します。
 	indexRepName() string
+	// indexIsDeclaredRepName は name が get_rep_name で申告済みの rep 名かを返します。
+	// 申告済みなら manifest 名との不一致として警告しません。
+	indexIsDeclaredRepName(name string) bool
 	// indexPluginName はプラグイン名を返します（ログ・警告用）。
 	indexPluginName() string
 	// indexProvidedKinds は manifest.provides の集合を返します。
@@ -425,11 +430,11 @@ func (i *PluginTypedIndex) buildSnapshot(pluginKyous []gkill_plugin.PluginKyou) 
 			record.Texts = nil
 			record.Notifications = nil
 			record.Kmemo, record.KC, record.URLog = nil, nil, nil
-			record.Nlog, record.Lantana, record.TimeIs, record.Mi = nil, nil, nil, nil
+			record.Nlog, record.Lantana, record.TimeIs, record.Mi, record.GitCommitLog = nil, nil, nil, nil, nil
 		}
 		record.UpdateTime = pluginKyou.UpdateTime
 		record.IsDeleted = pluginKyou.IsDeleted
-		record.Kyous = append(record.Kyous, convertPluginKyouToKyou(pluginKyou, repName))
+		record.Kyous = append(record.Kyous, convertPluginKyouToKyouWith(pluginKyou, repName, i.source.indexIsDeclaredRepName))
 
 		i.applyTypedData(record, pluginKyou, provided)
 		i.applyAttachedData(snapshot, record, pluginKyou, repName, provided)
@@ -593,6 +598,26 @@ func (i *PluginTypedIndex) applyTypedData(record *pluginTypedRecord, pluginKyou 
 			applied = "mi"
 		} else {
 			i.warnMultipleTyped(base.ID, applied, "mi")
+		}
+	}
+	if typed.GitCommitLog != nil {
+		if applied == "" {
+			if _, ok := provided[gkill_plugin.PluginProvidesGitCommitLog]; ok {
+				record.GitCommitLog = &GitCommitLog{
+					IsDeleted: base.IsDeleted, ID: base.ID, RepName: base.RepName,
+					RelatedTime: base.RelatedTime, DataType: base.DataType,
+					CreateTime: base.CreateTime, CreateApp: base.CreateApp,
+					CreateDevice: base.CreateDevice, CreateUser: base.CreateUser,
+					UpdateTime: base.UpdateTime, UpdateApp: base.UpdateApp,
+					UpdateDevice: base.UpdateDevice, UpdateUser: base.UpdateUser,
+					CommitMessage: typed.GitCommitLog.CommitMessage,
+					Addition:      typed.GitCommitLog.Addition,
+					Deletion:      typed.GitCommitLog.Deletion,
+				}
+			}
+			applied = "git_commit_log"
+		} else {
+			i.warnMultipleTyped(base.ID, applied, "git_commit_log")
 		}
 	}
 }

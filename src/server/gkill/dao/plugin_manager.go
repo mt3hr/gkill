@@ -268,12 +268,25 @@ func (pm *PluginManager) GetPluginByName(name string) reps.PluginRepository {
 }
 
 // GetPluginByRepName はリポジトリ表示名でプラグインを検索する。見つからなければ nil を返す。
-func (pm *PluginManager) GetPluginByRepName(repName string) reps.PluginRepository {
-	pm.mu.RLock()
-	defer pm.mu.RUnlock()
-
-	for _, p := range pm.plugins {
+//
+// まず manifest の rep_name で引き、無ければ各プラグインが get_rep_name で申告した rep_names
+// （GetRepNames。短時間キャッシュされ、未取得ならプラグインへ取りに行く）でも引く。
+// zip の Git リポジトリを束ねるプラグインの Kyou はリポジトリ名を rep_name に持つので、
+// クライアントが Kyou.rep_name で本文を取りに来たとき manifest 名だけでは引き当てられない。
+// 2段にしているのは、既存プラグインの引き当てで stdio へ行かないため。
+func (pm *PluginManager) GetPluginByRepName(ctx context.Context, repName string) reps.PluginRepository {
+	plugins := pm.GetPluginRepositories()
+	for _, p := range plugins {
 		if p.GetManifest().RepName == repName {
+			return p
+		}
+	}
+	for _, p := range plugins {
+		repNames, err := p.GetRepNames(ctx)
+		if err != nil {
+			continue
+		}
+		if slices.Contains(repNames, repName) {
 			return p
 		}
 	}

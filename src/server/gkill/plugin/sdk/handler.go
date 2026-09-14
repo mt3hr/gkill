@@ -34,6 +34,16 @@ type Handler struct {
 	// RepName はリポジトリ表示名（manifest.jsonのrep_nameと一致させること）。
 	RepName string
 
+	// RepNames はこのプラグインの記録が名乗る rep 名の全集合を返す。
+	// 1本のプラグインが複数のリポジトリを代表し、Kyou.RepName ごとに別の名前を出すときに実装する。
+	// nil のままなら gkill は manifest の rep_name 1つだけとみなす（従来どおり）。
+	//
+	// 実装するなら、まだ1件も取り込んでいない間は nil ではなく**空スライス**を返すこと。
+	// gkill は「実装していない(null)」と「いまは0個([])」を区別する。
+	// 返した名前は get_all_rep_names に載り、query.reps の絞り込みと本文取得の引き当てに使われるので、
+	// FindKyous が返す Kyou.RepName はこの集合のどれかに一致させること。
+	RepNames func(ctx context.Context, cfg Config) ([]string, error)
+
 	// DefaultConfig はconfig.jsonが無いときに書き出す既定設定。
 	// nilなら生成しない。既存のconfig.jsonは上書きされない。
 	DefaultConfig Config

@@ -11,6 +11,11 @@ type PluginInfo struct {
 	Description string `json:"description"`
 	DataType    string `json:"data_type"`
 	RepName     string `json:"rep_name"`
+	// RepNames はプラグインが get_rep_name で申告した rep 名の全集合。
+	// 1本のプラグインが複数のリポジトリを代表する（zip に固めた Git リポジトリなど）とき、
+	// Kyou.rep_name と query.reps に使う値はこちらで、RepName（manifest）ではない。
+	// 申告しないプラグイン（従来どおり manifest の rep_name 1つ）では省略。
+	RepNames []string `json:"rep_names,omitempty"`
 	// EmitsKyou はこのプラグインがKyouを返すか（manifestのemits_kyou。未指定はtrue）。
 	//
 	// **falseのときDataTypeとRepNameは検索に使える値ではない。** そのプラグインは
