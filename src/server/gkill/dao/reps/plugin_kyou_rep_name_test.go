@@ -98,3 +98,40 @@ func TestWarnPluginRepNameMismatchOnce_WarnsOncePerPair(t *testing.T) {
 		t.Errorf("組み合わせが違えば別枠で警告するはず: count = %d, want 2", count)
 	}
 }
+
+// get_rep_name で申告済みの rep 名（rep_names）は不一致ではないので、警告しないこと。
+// zip の Git リポジトリを束ねるプラグインは manifest 名と違う名前を数十個名乗るのが正常で、
+// そのたびに「不一致」と出すとログが誤報で埋まる。
+func TestConvertPluginKyouToKyouWith_DeclaredRepNameDoesNotWarn(t *testing.T) {
+	const manifestRepName = "gkill_plugin_declared_test"
+	const declaredRepName = "racoonboard"
+	const undeclaredRepName = "not_declared"
+
+	warnedPluginRepNameMismatches.Delete(manifestRepName + " -> " + declaredRepName)
+	warnedPluginRepNameMismatches.Delete(manifestRepName + " -> " + undeclaredRepName)
+	t.Cleanup(func() {
+		warnedPluginRepNameMismatches.Delete(manifestRepName + " -> " + declaredRepName)
+		warnedPluginRepNameMismatches.Delete(manifestRepName + " -> " + undeclaredRepName)
+	})
+
+	count := 0
+	original := slog.Default()
+	slog.SetDefault(slog.New(&countingLogHandler{count: &count, msg: "plugin rep_name mismatch"}))
+	t.Cleanup(func() { slog.SetDefault(original) })
+
+	isDeclared := func(name string) bool { return name == declaredRepName }
+
+	got := convertPluginKyouToKyouWith(gkill_plugin.PluginKyou{ID: "kyou-1", RepName: declaredRepName}, manifestRepName, isDeclared)
+	if got.RepName != declaredRepName {
+		t.Errorf("RepName = %q, want %q（申告名はそのまま残す）", got.RepName, declaredRepName)
+	}
+	if count != 0 {
+		t.Errorf("申告済みの名前で警告した: count = %d, want 0", count)
+	}
+
+	// 申告していない名前は従来どおり1回警告する
+	convertPluginKyouToKyouWith(gkill_plugin.PluginKyou{ID: "kyou-2", RepName: undeclaredRepName}, manifestRepName, isDeclared)
+	if count != 1 {
+		t.Errorf("未申告の名前で警告しなかった: count = %d, want 1", count)
+	}
+}

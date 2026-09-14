@@ -68,14 +68,14 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 | `version` | プラグインのバージョン（例: `"1.0.0"`） |
 | `description` | プラグインの説明文 |
 | `data_type` | このプラグインが生成する Kyou の `data_type` 値。`provides` を使わないなら既存の `data_type`（kmemo, kc 等）と衝突しない一意な名前にする。**`provides` に型別データを書く場合は逆に、その種別と同じ値（`kc` 等）にしなければならない**（クライアントは `data_type` の接頭辞で型別ビューを出し分けるため） |
-| `rep_name` | タイムライン上でのリポジトリ表示名。`GetRepName()` が返す値 |
+| `rep_name` | タイムライン上でのリポジトリ表示名。`GetRepName()` が返す値。`get_rep_name` で `rep_names` を申告するプラグインでは、記録が名乗るのは申告した名前で、こちらは設定画面の引き当てに使う識別子になる |
 | `executable` | 実行ファイル名（拡張子なし、OS に応じて `.exe` 等を自動付与） |
 | `min_gkill_version` | このプラグインが動作する最低 gkill バージョン |
 | `provides` | このプラグインが Kyou のメタ情報以外に提供するデータ種別（省略可）。詳細は「14. 型別データ・付随データの提供」参照 |
 
 ### manifest.json / config.json の自動生成
 
-同梱プラグイン3本（chatgpt / claudeai / claudecode）は manifest.json を `//go:embed` でバイナリに埋め込んでおり、
+同梱プラグイン7本（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / google_locationhistory）は manifest.json を `//go:embed` でバイナリに埋め込んでおり、
 次のフラグで標準出力に書き出せる。サンプルの `gkill_example` は埋め込みもフラグも持たない。
 
 | フラグ | 出力 |
@@ -165,7 +165,7 @@ cmd := exec.CommandContext(context.Background(),
 |---|---|
 | `find_kyous` | 検索クエリに合致する Kyou 一覧を返す。**ワード条件（`words` / `not_words` / `words_and`）の判定はプラグインの責任** — gkill 側は本文を持たないので再判定しない（`plugin_repository_impl.go` の `pluginKyouMatchesQuery` は Calendar と IDs だけ）。判定は SDK の `sdk.Query.MatchText`（本体と同じ規則: 大小無視の部分一致、ID は前方一致、除外語は ID を見ない）を使う。型別リポジトリ経由（`rep_types` 指定・Mi 画面）では索引の型別データを本体と同じ列で判定するので、プラグインが独自に照合対象へ足した語はそこでは当たらない |
 | `get_kyou` | 指定 ID の Kyou 1 件を返す |
-| `get_rep_name` | gkill 上のリポジトリ表示名を返す（`sdk/sdk.go:106-108`） |
+| `get_rep_name` | gkill 上のリポジトリ表示名を返す。応答の `rep_name` は manifest と同じ代表名。**`rep_names[]` を載せると、1本のプラグインが複数の rep 名（zip に固めた Git リポジトリごとの名前など）を名乗れる**（SDK は `Handler.RepNames`）。gkill はその名前を `get_all_rep_names`・`query.reps` の絞り込み・本文取得の引き当て・MCP の `get_rep_infos.plugins[]` / `get_plugin_list.rep_names` に使い、**TTL 60 秒**でキャッシュする（rep 名の列挙のたびに送る）。null（欄なし）は「未対応 → manifest の1つ」、`[]` は「いまは0個」で意味が違う。失敗しても前回値か manifest 名にフォールバックしてエラーにしない（[ADR-0308](../adr/0308-plugin-multiple-rep-names.md)） |
 | `get_content_html` | 指定 ID の Kyou のコンテンツ HTML を返す |
 | `get_config_html` | プラグイン設定画面の HTML を返す |
 | `post_config` | 設定フォームの送信データを受け取る |
@@ -666,10 +666,11 @@ GitCommitLogContextMenu と同じ項目に加えて、プラグイン固有の�
 | gkill_plugin_codex | Codex | `codex_turn` | `src/plugins/gkill_plugin_codex/` |
 | gkill_plugin_fitbit | Fitbit | `kc` | `src/plugins/gkill_plugin_fitbit/` |
 | gkill_plugin_google_locationhistory | GoogleLocation | `google_location_visit` | `src/plugins/gkill_plugin_google_locationhistory/` |
+| gkill_plugin_archived_git_commit_log | ArchivedGit（manifest）。記録はリポジトリ名を名乗る（`rep_names`） | `git_commit_log`（`provides: ["git_commit_log"]`） | `src/plugins/gkill_plugin_archived_git_commit_log/` |
 | gkill_example | （サンプル） | `example_kyou` | `src/plugins/examples/gkill_example/` |
 
 `gkill_example` は固定の Kyou を返すだけのサンプル実装で、`DefaultConfig` を持たない
-（＝ `config.json` を生成しない）。それ以外の5つは `source_dirs` 設定と SQLite3 キャッシュを持つ。
+（＝ `config.json` を生成しない）。それ以外の7つは `source_dirs` 設定と SQLite3 キャッシュを持つ。
 
 ### ビルド手順
 
@@ -691,6 +692,9 @@ GOOS=windows GOARCH=amd64 go build -o gkill_plugin_fitbit.exe .
 
 cd src/plugins/gkill_plugin_google_locationhistory
 GOOS=windows GOARCH=amd64 go build -o gkill_plugin_google_locationhistory.exe .
+
+cd src/plugins/gkill_plugin_archived_git_commit_log
+GOOS=windows GOARCH=amd64 go build -o gkill_plugin_archived_git_commit_log.exe .
 ```
 
 デプロイ先: `$GKILL_HOME/plugins/{userID}/{pluginName}/`
@@ -705,7 +709,7 @@ AIクライアント（MCP）からもプラグインの記録を読める。プ
 
 | ツール名 | gkill API | 説明 |
 |---|---|---|
-| `gkill_get_plugin_list` | `/api/get_plugin_list` | プラグイン一覧（name / version / description / data_type / rep_name / emits_kyou / provides / is_alive / process_running / has_last_error / typed_index / gps_index。診断用は has_last_error 以降 — 実装は `req_res/get_plugin_list_response.go`） |
+| `gkill_get_plugin_list` | `/api/get_plugin_list` | プラグイン一覧（name / version / description / data_type / rep_name / rep_names（複数の rep 名を申告するプラグインだけ）/ emits_kyou / provides / is_alive / process_running / has_last_error / typed_index / gps_index。診断用は has_last_error 以降 — 実装は `req_res/get_plugin_list_response.go`） |
 
 APIの `last_error` と `typed_index.last_build_error` は、**MCP では中身を返さない**。どちらもプラグインが動いている端末のディレクトリ構成を含み、AIの文脈へ入れば資料やコミットメッセージへ引き写される経路ができるため、`plugin-tools.mjs` の `handlePluginToolCall` が落として `has_last_error` / `has_last_build_error` だけを立てる（落としたときだけ `warnings` に1行）。Go 側も出口で端末固有の情報を伏せる（[ADR-0707](../adr/0707-redact-environment-specific-strings.md)）。
 
@@ -775,7 +779,7 @@ gkill_get_kyous              … include_plugin_content:true を付けて検索�
 
 | 値 | 提供するもの | 登録されるリポジトリ |
 |---|---|---|
-| `kmemo` / `kc` / `urlog` / `nlog` / `lantana` / `timeis` / `mi` | Kyou の型別データ | `KmemoReps` / `KCReps` / … |
+| `kmemo` / `kc` / `urlog` / `nlog` / `lantana` / `timeis` / `mi` / `git_commit_log` | Kyou の型別データ | `KmemoReps` / `KCReps` / … / `GitCommitLogReps` |
 | `tag` / `text` / `notification` | Kyou の付随データ | `TagReps` / `TextReps` / `NotificationReps` |
 | `gpslog` | GPS ログ（Kyou ではない） | `GPSLogReps` |
 
@@ -798,7 +802,9 @@ gkill_get_kyous              … include_plugin_content:true を付けて検索�
 ```
 
 `typed` に非nilにしてよいのは高々1つ。2つ以上あるときは
-Kmemo→KC→URLog→Nlog→Lantana→TimeIs→Mi の順で最初の1つだけを採用し、残りは警告ログに落とす。
+Kmemo→KC→URLog→Nlog→Lantana→TimeIs→Mi→GitCommitLog の順で最初の1つだけを採用し、残りは警告ログに落とす。
+`git_commit_log` は `typed.git_commit_log{commit_message, addition, deletion}` で、ID をコミットハッシュ・時刻をコミッタ日時にすると native の git rep と同じ形になり、
+稼働中リポジトリと同じハッシュのコミットは検索結果の重複除去（`(ID, data_type, related_time)`）で1件に畳まれる（[ADR-0309](../adr/0309-plugin-provides-git-commit-log.md)）。
 
 型別データは **ID も時刻も持たない**。親の `PluginKyou` からコピーされる。
 クライアントは「Kyou の `update_time` と型別データの `update_time` が**秒精度で一致する版**」を選んで表示するので

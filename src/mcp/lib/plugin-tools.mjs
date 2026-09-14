@@ -38,15 +38,20 @@ export const PLUGIN_TOOLS = [
       "data into gkill — for example Claude Code / Claude.ai / ChatGPT conversation logs, Fitbit daily metrics, " +
       "Google location history. " +
       "IMPORTANT — plugins do not all play the same role, and emits_kyou tells you which one you are looking at. " +
-      "When emits_kyou is true the plugin supplies kyou: filter gkill_get_kyous with query.reps (its rep_name) or " +
+      "When emits_kyou is true the plugin supplies kyou: filter gkill_get_kyous with query.reps (its rep_name, or " +
+      "any entry of rep_names when that field is present — a plugin that wraps several repositories, such as Git " +
+      "repositories archived as zip, names each of them and its kyou carry those names, not rep_name) or " +
       "the top-level data_types (its data_type), and pass include_plugin_content:true to get their bodies in the " +
-      "same call. query.rep_types does NOT work for plugins — they are not in the canonical rep-type vocabulary. " +
+      "same call. query.rep_types does NOT work for plugins — they are not in the canonical rep-type vocabulary " +
+      "(a plugin whose provides names a typed kind such as kc or git_commit_log is the exception: its records also " +
+      "answer to that rep_types value). " +
       "When emits_kyou is false the plugin supplies no kyou at all, and its data_type / rep_name are NOT query " +
       "values: passing them matches nothing. Read that plugin's data through the route matching provides — today " +
       "provides:[\"gpslog\"] means gkill_get_gps_log. " +
       "provides lists what the plugin supplies beyond kyou metadata (kmemo, kc, urlog, nlog, lantana, timeis, mi, " +
-      "tag, text, notification, gpslog); an absent provides means it supplies plain kyou only. " +
-      "Response fields: plugins[] with name, version, description, data_type, rep_name, emits_kyou, provides, " +
+      "git_commit_log, tag, text, notification, gpslog); an absent provides means it supplies plain kyou only. " +
+      "Response fields: plugins[] with name, version, description, data_type, rep_name, rep_names (only when the " +
+      "plugin declares several), emits_kyou, provides, " +
       "is_alive (responds to a ping), " +
       "process_running (started; read without side effects), has_last_error, typed_index, and gps_index. " +
       "has_last_error is true when the plugin process wrote something to stderr — that is the signal to look at " +

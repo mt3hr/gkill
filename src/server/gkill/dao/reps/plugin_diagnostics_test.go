@@ -65,8 +65,9 @@ type statsTestIndexSource struct {
 	kyous []gkill_plugin.PluginKyou
 }
 
-func (s *statsTestIndexSource) indexRepName() string    { return "StatsTestRep" }
-func (s *statsTestIndexSource) indexPluginName() string { return "stats_test_plugin" }
+func (s *statsTestIndexSource) indexRepName() string               { return "StatsTestRep" }
+func (s *statsTestIndexSource) indexIsDeclaredRepName(string) bool { return false }
+func (s *statsTestIndexSource) indexPluginName() string            { return "stats_test_plugin" }
 func (s *statsTestIndexSource) indexProvidedKinds() map[gkill_plugin.PluginProvidedKind]struct{} {
 	return map[gkill_plugin.PluginProvidedKind]struct{}{}
 }

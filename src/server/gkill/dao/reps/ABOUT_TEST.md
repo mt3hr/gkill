@@ -47,7 +47,7 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `re_kyou_cached_deadlock_test.go` | 共有RWMutexの再帰RLockによる検索恒久ハングの回帰テスト |
 | `git_commit_log_cached_nested_pool_test.go` | gitキャッシュビルド中フォールバックのネスト並列プール枯渇と isCacheBuilding データ競合の回帰テスト |
 | `mi_re_kyou_cached_nested_pool_test.go` | MiReKyou キャッシュのネスト並列プール枯渇の回帰テスト（`git_commit_log_cached_nested_pool_test.go` と同種） |
-| `gkill_repositories_test.go` | 最新版アドレスキャッシュの排他制御（後述） |
+| `gkill_repositories_test.go` | 最新版アドレスキャッシュの排他制御（後述）と、`GetAllRepNames` が `RepNamesProvider` の申告名を全部並べること（1リーフが複数の名前を返しても集約が詰まらない） |
 | `target_resolution_memo_test.go` | ReKyou/MiReKyou ワード委譲検索のターゲット解決メモ |
 | `db_file_change_detector_test.go` | DBファイル変更検出（キャッシュ無効化トリガ） |
 | `derived_cache_path_test.go` | 派生キャッシュ（サムネ/動画/ZIP）のユーザ別パス解決 |
@@ -58,7 +58,7 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `idf_kyou_repository_batch_test.go` | IDFKyou のバッチ処理 |
 | `ur_log_cache_thumbnail_test.go` | URLog サムネイルキャッシュ |
 | `shared_find_query_mutation_test.go` | 共有 FindQuery の変更検証 |
-| `plugin_repository_impl_test.go` | プラグインのサブプロセス管理（後述）と、検索失敗をエラーではなく警告として返す結線 |
+| `plugin_repository_impl_test.go` | プラグインのサブプロセス管理（後述）と、検索失敗をエラーではなく警告として返す結線。`GetRepNames`（`get_rep_name` の `rep_names`）が null なら manifest の1つ、申告名は空と重複を除いて TTL 内はキャッシュから答え、失敗してもエラーにせず前回値か manifest 名に落ちること |
 | `find_warnings_test.go` | 検索中の警告コレクタ（収集、コレクタ未設定時の無害さ、並行追加） |
 | `find_word_match_test.go` | キーワード検索の対象テキスト組み立て（判定本体は `api/find_word/match_words_test.go`）。IDF のファイル本文の走査と絶対パスを検索対象に含めないこと、git のコミットIDをテキストに連結せず ID 前方一致で引くこと、`WordsSkipIDMatch` で ID 照合を切ること |
 | `cached_find_only_latest_test.go` | 「最新版のみ」指定がキャッシュ実装でも非キャッシュ実装と同じに効くこと（Nlog / KC / TimeIs） |
@@ -66,7 +66,8 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `repositories_id_chunk_test.go` | IDリストの分割（`findChunkedByIDs`）。SQLite のバインド変数上限を超えると**エラーが立たないまま0件**になるので、上限またぎを実データ寸法で固定する |
 | `local_rep_cache_granular_test.go` | ローカルキャッシュのコピー省略判定。**「コピーが要るか」の判定を `os.Remove` より後に置くと常に「要コピー」になり**、毎回1.3GBコピーし直したうえで変更検知が丸ごと無効化される |
 | `plugin_typed_adapters_test.go` | プラグインの型別/付随データのアダプタ。読み取りが索引から即答し、**プラグインへ往復しない**こと（1件ずつ聞きに行くと一覧の行数ぶんの直列 stdio 呼び出しになる） |
-| `plugin_kyou_rep_name_test.go` | プラグイン Kyou の `RepName`。空なら manifest の `rep_name` で埋め、空でない不一致は上書きせず**組み合わせごとに1回だけ**警告すること |
+| `plugin_git_commit_log_adapter_test.go` | `provides: ["git_commit_log"]` の型別アダプタ。native の `GitCommitLog` と同じ列（Kyou ごとの rep 名を保つ）で `GetGitCommitLog` / `FindGitCommitLog` / `FindGitCommitLogByIDs` が引け、ワードの対象列はコミットメッセージだけ、`RepNamesOf` が申告名を返すこと。採用順の末尾が GitCommitLog であること |
+| `plugin_kyou_rep_name_test.go` | プラグイン Kyou の `RepName`。空なら manifest の `rep_name` で埋め、空でない不一致は上書きせず**組み合わせごとに1回だけ**警告すること。`get_rep_name` で申告済みの名前は警告しないこと |
 | `gps_log_repository_plugin_impl_test.go` | GPSLog 専用プラグイン（`emits_kyou: false`）のリポジトリ実装 |
 | `cache_find_bench_test.go` / `tag_find_bench_test.go` / `kyou_json_bench_test.go` | ベンチマーク（`go test` の既定では走らない）。タグ絞り込みの2経路の交差点や、応答JSONの組み立てを実測するためのもの |
 | `mi_find_kyous_parity_test.go` | Mi のキャッシュ実装と非キャッシュ実装で、大小無視と「最新版のみ」の扱いが一致すること |
