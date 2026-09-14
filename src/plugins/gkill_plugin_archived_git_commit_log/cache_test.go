@@ -383,3 +383,50 @@ func TestMissingPatternIsReported(t *testing.T) {
 		t.Errorf("problems = %+v, want missing_pattern が1件", problems)
 	}
 }
+
+// 複数の zip に入っているコミットの rep 名は「最新のコミットを持つリポジトリ」のものになること。
+// 改名したプロジェクト（古い名前の zip と、続きを含む新しい名前の zip）の共通の履歴は新しい名前に付き、
+// 新しい zip を外せば古い名前に戻る。zip のパス順（取り込み順）には依らない。
+func TestSharedCommitsTakeTheNameOfTheNewestRepository(t *testing.T) {
+	c, pluginDir := newTestCache(t)
+	dir := t.TempDir()
+
+	// 古い名前 "weplog"（パス順では zzz_ で後ろ、取り込み順では最後になるようにする）
+	work := filepath.Join(t.TempDir(), "weplog")
+	hashes := initTestRepo(t, work, twoCommits())
+	oldZip := filepath.Join(dir, "zzz_old", "weplog.zip")
+	zipDir(t, oldZip, work, "weplog")
+
+	// 続きを積んで新しい名前 "urlog" で固める（パス順では前）
+	extra := initTestRepoAppend(t, work, testCommit{Message: "renamed", When: testTimeJST.Add(24 * time.Hour), Files: map[string]*string{"x.txt": str("x")}})
+	newZip := filepath.Join(dir, "aaa_new", "urlog.zip")
+	zipDir(t, newZip, work, "urlog")
+
+	mustBuild(t, c, pluginDir, oldZip, newZip)
+
+	byHash := commitsByHash(t, c, pluginDir)
+	if len(byHash) != 3 {
+		t.Fatalf("コミット数 = %d, want 3", len(byHash))
+	}
+	for _, hash := range append(hashes, extra) {
+		if byHash[hash].RepName != "urlog" {
+			t.Errorf("%s の rep 名 = %q, want urlog（最新のコミットを持つ側）", hash[:8], byHash[hash].RepName)
+		}
+	}
+	names, _ := c.RepNames(pluginDir)
+	if !slices.Equal(names, []string{"urlog"}) {
+		t.Errorf("RepNames = %v, want [urlog]（古い名前は現れない）", names)
+	}
+
+	// 新しい zip を外すと古い名前に戻る
+	mustBuild(t, c, pluginDir, oldZip)
+	byHash = commitsByHash(t, c, pluginDir)
+	if len(byHash) != 2 {
+		t.Fatalf("新しい zip を外した後のコミット数 = %d, want 2", len(byHash))
+	}
+	for _, hash := range hashes {
+		if byHash[hash].RepName != "weplog" {
+			t.Errorf("%s の rep 名 = %q, want weplog（残った zip の名前に戻る）", hash[:8], byHash[hash].RepName)
+		}
+	}
+}

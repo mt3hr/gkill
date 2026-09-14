@@ -27,9 +27,11 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              GitCommitLogView draws it and commits that also live
               #                              in a working repo collapse to one row. Declares one
               #                              rep name per repository through `rep_names`.
-              #                              Same hash in two zips = one row; fingerprint per repo
+              #                              Same hash in two zips = one row named after the repo
+              #                              whose newest commit is latest (renames follow the new
+              #                              name; recomputed every build); fingerprint per repo
               #                              is sha256 of (entry name, CRC32, size). Real data:
-              #                              54 zips → 721 commits / 48 rep names in <10s
+              #                              88 zips (97 .git) → 3,447 commits / 78 rep names in ~60s
               #   gkill_plugin_chatgpt/    — ChatGPT conversation history plugin
               #   gkill_plugin_claudeai/   — Claude.ai conversation history plugin
               #   gkill_plugin_claudecode/ — Claude Code chat log plugin (one Kyou per human

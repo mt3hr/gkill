@@ -19,7 +19,7 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | Wear OS (`wear_os/`) | 226 | 17 | JUnit 4 + MockK |
 | **合計** | **4,815** | **441** | |
 
-`src/plugins/` の Go テスト 178件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
+`src/plugins/` の Go テスト 179件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
 ### テストの書き方の方針
 

@@ -15,7 +15,7 @@ import (
 )
 
 // cacheSchemaVersion はDDLの世代。上げると次回の起動で作り直す。
-const cacheSchemaVersion = "1"
+const cacheSchemaVersion = "2"
 
 // cache はキャッシュDBを持つ。プロセス内に1つ。
 //
@@ -103,13 +103,15 @@ func initSchema(db *sql.DB) error {
   rep_name     TEXT    NOT NULL,
   fingerprint  TEXT    NOT NULL,
   commit_count INTEGER NOT NULL,
+  newest_unix  INTEGER NOT NULL,
   scanned_unix INTEGER NOT NULL,
   note         TEXT    NOT NULL,
   PRIMARY KEY (archive_path, git_dir)
 ) WITHOUT ROWID`,
 
 		// commit_log はコミット1件。同じハッシュは複数の zip に入っていても1行
-		// （rep_name は最初に見たリポジトリのもの）。
+		// （rep_name は、そのコミットを含むリポジトリのうち最新のコミットを持つもの。
+		// assignRepNames が構築のたびに決め直す）。
 		`CREATE TABLE IF NOT EXISTS commit_log (
   hash            TEXT    PRIMARY KEY,
   rep_name        TEXT    NOT NULL,
@@ -298,6 +300,11 @@ func (c *cache) build(ctx context.Context, pluginDir string, config pluginConfig
 			return err
 		}
 	}
+	if len(changed) != 0 || len(removed) != 0 {
+		if err := c.assignRepNames(); err != nil {
+			return err
+		}
+	}
 
 	c.setMeta("build_state", "idle")
 	c.setMeta("last_scan_unix", strconv.FormatInt(time.Now().Unix(), 10))
@@ -326,6 +333,28 @@ func (c *cache) removeRepos(removed []knownRepo) error {
 		return fmt.Errorf("error at delete orphan commits: %w", err)
 	}
 	return tx.Commit()
+}
+
+// assignRepNames は各コミットの rep 名を決め直す。
+//
+// 同じコミットが複数のリポジトリ（別の時期に固めた zip、改名前後の zip）に入っているとき、
+// **最新のコミットを持つリポジトリ**の名前を採る（同着なら zip のパス順）。
+// 改名したプロジェクトの共通の履歴は新しい名前の側に付き、古い zip にしか無いコミットは
+// 古い名前のまま残る。zip を足しても外しても、この規則で決め直すので取り込み順に依らない。
+// アーカイブの日付ではなくコミットの日付で決めるのは、zip の mtime が同期で動くことがあり、
+// 中身から決まる値のほうが安定するため（後から固めた zip に古いコミットしか無いことはない）。
+func (c *cache) assignRepNames() error {
+	db := c.conn()
+	if _, err := db.Exec(`UPDATE commit_log SET rep_name = (
+  SELECT r.rep_name FROM commit_repo cr
+  JOIN repo r ON r.archive_path = cr.archive_path AND r.git_dir = cr.git_dir
+  WHERE cr.hash = commit_log.hash
+  ORDER BY r.newest_unix DESC, r.archive_path, r.git_dir
+  LIMIT 1
+) WHERE EXISTS (SELECT 1 FROM commit_repo cr WHERE cr.hash = commit_log.hash)`); err != nil {
+		return fmt.Errorf("error at assign rep names: %w", err)
+	}
+	return nil
 }
 
 // deleteOrphanCommits は commit_repo から参照されなくなったコミットを消す。
@@ -369,7 +398,7 @@ func (c *cache) ingestBundle(ctx context.Context, bundle repoBundle, maxGitDirBy
 		if err != nil {
 			return fmt.Errorf("error at marshal file stats: %w", err)
 		}
-		// 同じハッシュは同じコミットなので、先に入っていれば触らない（rep_name は最初に見たもの）
+		// 同じハッシュは同じコミットなので、先に入っていれば触らない（rep_name は assignRepNames が決め直す）
 		if _, err := tx.Exec(`INSERT INTO commit_log (
   hash, rep_name, committer_unix, tz_offset_sec, author_name, author_email, message,
   addition, deletion, file_stats_json, stats_error
@@ -389,9 +418,13 @@ func (c *cache) ingestBundle(ctx context.Context, bundle repoBundle, maxGitDirBy
 	if readErr != nil {
 		note = readErr.Error()
 	}
-	if _, err := tx.Exec(`INSERT OR REPLACE INTO repo (archive_path, git_dir, rep_name, fingerprint, commit_count, scanned_unix, note)
-VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		bundle.ArchivePath, bundle.GitDir, bundle.RepName, bundle.Fingerprint, len(records), time.Now().Unix(), note); err != nil {
+	var newestUnix int64
+	for _, record := range records {
+		newestUnix = max(newestUnix, record.CommitterUnix)
+	}
+	if _, err := tx.Exec(`INSERT OR REPLACE INTO repo (archive_path, git_dir, rep_name, fingerprint, commit_count, newest_unix, scanned_unix, note)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		bundle.ArchivePath, bundle.GitDir, bundle.RepName, bundle.Fingerprint, len(records), newestUnix, time.Now().Unix(), note); err != nil {
 		return fmt.Errorf("error at upsert repo: %w", err)
 	}
 	return tx.Commit()
