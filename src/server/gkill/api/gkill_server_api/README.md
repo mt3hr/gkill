@@ -11,8 +11,8 @@ gorilla/mux を使用した HTTP API ハンドラ層。`GkillServerAPI` 構造�
 ```
 gkill_server_api/
 ├── gkill_server_api.go              # GkillServerAPI 構造体・初期化
-├── gkill_server_api_address.go      # 全エンドポイントの URL パス定義
-├── serve.go                         # gorilla/mux ルーター設定・ルート登録
+├── gkill_server_api_address.go      # ルート表 apiRoutes()（パス・メソッド・認証区分・ハンドラの正本）と registerAPIRoutes
+├── serve.go                         # gorilla/mux ルーター設定（ミドルウェア・PathPrefix 配信。API はルート表を登録するだけ）
 ├── close.go                         # グレースフルシャットダウン
 ├── auth.go                          # セッション・アカウント検証
 ├── auth_context.go                  # AuthContext 構造体・コンテキストキー
@@ -41,7 +41,6 @@ gkill_server_api/
 ```go
 type GkillServerAPI struct {
     server           *http.Server
-    APIAddress       *GkillServerAPIAddress
     GkillDAOManager  *dao.GkillDAOManager
     FindFilter       *api.FindFilter
     UsecaseCtx       *usecase.UsecaseContext
@@ -160,11 +159,10 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 ### 新しいハンドラの追加方法
 
 1. `req_res/` に Request/Response 構造体を追加
-2. `gkill_server_api_address.go` にアドレス定数を追加
-3. `handle_xxx.go` を新規作成（1ハンドラ1ファイル）
-4. ビジネスロジックは `usecase/` 層に実装し、ハンドラから呼び出す
-5. `serve.go` の `resetRouter()` 内で `router.HandleFunc()` を登録
-6. 適切なミドルウェアラッパー（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`）を選択
+2. `handle_xxx.go` を新規作成（1ハンドラ1ファイル）
+3. ビジネスロジックは `usecase/` 層に実装し、ハンドラから呼び出す
+4. `gkill_server_api_address.go` のルート表 `apiRoutes()` に1行足す。認証区分は `Auth`（`authNone` / `authSession` / `authSessionRepos` = `wrapNoAuth` / `wrapAuth` / `wrapAuthRepos`）で選び、無認証でボディを読む経路は `Body` に上限（`bodyAuth` / `bodyUpload`）を付ける。`serve.go` やテストハーネスに `HandleFunc` を直に書かない（本番とテストで登録がずれる。ADR-0709）
+5. `api_routes_test.go` の golden に認証区分を1行足す。表とハンドラ・doc コメントの突き合わせは同じテストが機械検査する
 
 ### doc コメントの方針
 
@@ -176,7 +174,7 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 
 - ハンドラファイル: `handle_xxx.go`（snake_case）
 - ハンドラメソッド: `HandleXxx(w, r)` パターン
-- アドレス定数: `XxxAddress` パターン
+- ルート表の行: `{Path: "/api/xxx", Method: "POST", Auth: authXxx, Body: bodyXxx, Handler: g.HandleXxx},`
 
 ## 関連ドキュメント
 

@@ -31,7 +31,6 @@ func (g *GkillServerAPI) Close() error {
 		if g.RebootServerCh != nil {
 			close(g.RebootServerCh)
 		}
-		g.APIAddress = nil
 		g.GkillDAOManager = nil
 		g.FindFilter = nil
 		g.RebootServerCh = nil

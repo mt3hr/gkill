@@ -159,9 +159,9 @@ func setupTestGkillServerAPI(t *testing.T) (*GkillServerAPI, func()) {
 	return gkillAPI, cleanup
 }
 
-// setupTestRouter creates a GkillServerAPI and registers all routes on the
+// setupTestRouter creates a GkillServerAPI and registers all API routes on the
 // GkillDAOManager's mux.Router, returning an httptest.Server ready for requests.
-// This mirrors the route registration logic in GkillServerAPI.Serve().
+// It uses the same route table as GkillServerAPI.Serve() (registerAPIRoutes).
 func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 	t.Helper()
 
@@ -169,90 +169,13 @@ func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 
 	router := gkillAPI.GkillDAOManager.GetRouter()
 
-	// Register key API routes using auth middleware wrappers (mirrors Serve() route registrations)
-
-	// --- wrapNoAuth routes (no authentication required) ---
-	router.HandleFunc(gkillAPI.APIAddress.LoginAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleLogin)).Methods(gkillAPI.APIAddress.LoginMethod)
-	router.HandleFunc(gkillAPI.APIAddress.LogoutAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleLogout)).Methods(gkillAPI.APIAddress.LogoutMethod)
-	router.HandleFunc(gkillAPI.APIAddress.ResetPasswordAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleResetPassword)).Methods(gkillAPI.APIAddress.ResetPasswordMethod)
-	router.HandleFunc(gkillAPI.APIAddress.SetNewPasswordAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleSetNewPassword)).Methods(gkillAPI.APIAddress.SetNewPasswordMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UploadFilesAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleUploadFiles)).Methods(gkillAPI.APIAddress.UploadFilesMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UploadGPSLogFilesAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleUploadGPSLogFiles)).Methods(gkillAPI.APIAddress.UploadGPSLogFilesMethod)
-	router.HandleFunc(gkillAPI.APIAddress.BrowseZipContentsAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleBrowseZipContents)).Methods(gkillAPI.APIAddress.BrowseZipContentsMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetSharedKyousAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleGetSharedKyous)).Methods(gkillAPI.APIAddress.GetSharedKyousMethod)
-
-	// --- wrapAuth routes (authentication required, no repos) ---
-	router.HandleFunc(gkillAPI.APIAddress.GetApplicationConfigAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetApplicationConfig)).Methods(gkillAPI.APIAddress.GetApplicationConfigMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetServerConfigsAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetServerConfigs)).Methods(gkillAPI.APIAddress.GetServerConfigsMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateCacheAddress, gkillAPI.wrapAuth(gkillAPI.HandleUpdateCache)).Methods(gkillAPI.APIAddress.UpdateCacheMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddAccountAddress, gkillAPI.wrapAuth(gkillAPI.HandleAddAccount)).Methods(gkillAPI.APIAddress.AddAccountMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateAccountStatusAddress, gkillAPI.wrapAuth(gkillAPI.HandleUpdateAccountStatus)).Methods(gkillAPI.APIAddress.UpdateAccountStatusMethod)
-	router.HandleFunc(gkillAPI.APIAddress.ReloadRepositoriesAddress, gkillAPI.wrapAuth(gkillAPI.HandleReloadRepositories)).Methods(gkillAPI.APIAddress.ReloadRepositoriesMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetUpdatedDatasByTimeAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetUpdatedDatasByTime)).Methods(gkillAPI.APIAddress.GetUpdatedDatasByTimeMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetPluginListAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetPluginList)).Methods(gkillAPI.APIAddress.GetPluginListMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetPluginContentHTMLAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetPluginContentHTML)).Methods(gkillAPI.APIAddress.GetPluginContentHTMLMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetPluginConfigHTMLAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetPluginConfigHTML)).Methods(gkillAPI.APIAddress.GetPluginConfigHTMLMethod)
-	router.HandleFunc(gkillAPI.APIAddress.PostPluginConfigAddress, gkillAPI.wrapAuth(gkillAPI.HandlePostPluginConfig)).Methods(gkillAPI.APIAddress.PostPluginConfigMethod)
-
-	// --- wrapAuthRepos routes (authentication + repos required) ---
-	router.HandleFunc(gkillAPI.APIAddress.AddKmemoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddKmemo)).Methods(gkillAPI.APIAddress.AddKmemoMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddTagAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddTag)).Methods(gkillAPI.APIAddress.AddTagMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetKyousAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetKyous)).Methods(gkillAPI.APIAddress.GetKyousMethod)
-	router.HandleFunc(gkillAPI.APIAddress.SubmitKFTLTextAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleSubmitKFTLText)).Methods(gkillAPI.APIAddress.SubmitKFTLTextMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetKmemoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetKmemo)).Methods(gkillAPI.APIAddress.GetKmemoMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddMiAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddMi)).Methods(gkillAPI.APIAddress.AddMiMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetMiAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetMi)).Methods(gkillAPI.APIAddress.GetMiMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddTimeisAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddTimeis)).Methods(gkillAPI.APIAddress.AddTimeisMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetTimeisAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTimeis)).Methods(gkillAPI.APIAddress.GetTimeisMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetTagsByTargetIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTagsByTargetID)).Methods(gkillAPI.APIAddress.GetTagsByTargetIDMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddLantanaAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddLantana)).Methods(gkillAPI.APIAddress.AddLantanaMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetLantanaAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetLantana)).Methods(gkillAPI.APIAddress.GetLantanaMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddKCAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddKC)).Methods(gkillAPI.APIAddress.AddKCMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetKCAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetKC)).Methods(gkillAPI.APIAddress.GetKCMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddNlogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddNlog)).Methods(gkillAPI.APIAddress.AddNlogMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetNlogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetNlog)).Methods(gkillAPI.APIAddress.GetNlogMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddURLogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddURLog)).Methods(gkillAPI.APIAddress.AddURLogMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetURLogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetURLog)).Methods(gkillAPI.APIAddress.GetURLogMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddTextAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddText)).Methods(gkillAPI.APIAddress.AddTextMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetTextsByTargetIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTextsByTargetID)).Methods(gkillAPI.APIAddress.GetTextsByTargetIDMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddNotificationAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddNotification)).Methods(gkillAPI.APIAddress.AddNotificationMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetNotificationsByTargetIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetNotificationsByTargetID)).Methods(gkillAPI.APIAddress.GetNotificationsByTargetIDMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddRekyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddRekyou)).Methods(gkillAPI.APIAddress.AddRekyouMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetRekyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetRekyou)).Methods(gkillAPI.APIAddress.GetRekyouMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddMiReKyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddMiReKyou)).Methods(gkillAPI.APIAddress.AddMiReKyouMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetMiReKyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetMiReKyou)).Methods(gkillAPI.APIAddress.GetMiReKyouMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetReKyousByTargetIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetReKyousByTargetID)).Methods(gkillAPI.APIAddress.GetReKyousByTargetIDMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetMiReKyousByTargetIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetMiReKyousByTargetID)).Methods(gkillAPI.APIAddress.GetMiReKyousByTargetIDMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateMiReKyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateMiReKyou)).Methods(gkillAPI.APIAddress.UpdateMiReKyouMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateKmemoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateKmemo)).Methods(gkillAPI.APIAddress.UpdateKmemoMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateMiAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateMi)).Methods(gkillAPI.APIAddress.UpdateMiMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateTagAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateTag)).Methods(gkillAPI.APIAddress.UpdateTagMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateTextAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateText)).Methods(gkillAPI.APIAddress.UpdateTextMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateNotificationAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateNotification)).Methods(gkillAPI.APIAddress.UpdateNotificationMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateKCAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateKC)).Methods(gkillAPI.APIAddress.UpdateKCMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateURLogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateURLog)).Methods(gkillAPI.APIAddress.UpdateURLogMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateNlogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateNlog)).Methods(gkillAPI.APIAddress.UpdateNlogMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateTimeisAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateTimeis)).Methods(gkillAPI.APIAddress.UpdateTimeisMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateLantanaAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateLantana)).Methods(gkillAPI.APIAddress.UpdateLantanaMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateRekyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateRekyou)).Methods(gkillAPI.APIAddress.UpdateRekyouMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetKyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetKyou)).Methods(gkillAPI.APIAddress.GetKyouMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetMiBoardListAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetMiBoardList)).Methods(gkillAPI.APIAddress.GetMiBoardListMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetAllTagNamesAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetAllTagNames)).Methods(gkillAPI.APIAddress.GetAllTagNamesMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetAllRepNamesAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetAllRepNames)).Methods(gkillAPI.APIAddress.GetAllRepNamesMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetTagHistoriesByTagIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTagHistoriesByTagID)).Methods(gkillAPI.APIAddress.GetTagHistoriesByTagIDMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetTextHistoriesByTextIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTextHistoriesByTextID)).Methods(gkillAPI.APIAddress.GetTextHistoriesByTextIDMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetNotificationHistoriesByNotificationIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetNotificationHistoriesByNotificationID)).Methods(gkillAPI.APIAddress.GetNotificationHistoriesByNotificationIDMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetRepositoriesAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetRepositories)).Methods(gkillAPI.APIAddress.GetRepositoriesMethod)
-	router.HandleFunc(gkillAPI.APIAddress.AddShareKyouListInfoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddShareKyouListInfo)).Methods(gkillAPI.APIAddress.AddShareKyouListInfoMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateShareKyouListInfoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateShareKyouListInfo)).Methods(gkillAPI.APIAddress.UpdateShareKyouListInfoMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetShareKyouListInfosAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetShareKyouListInfos)).Methods(gkillAPI.APIAddress.GetShareKyouListInfosMethod)
-	router.HandleFunc(gkillAPI.APIAddress.DeleteShareKyouListInfosAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleDeleteShareKyouListInfos)).Methods(gkillAPI.APIAddress.DeleteShareKyouListInfosMethod)
-	router.HandleFunc(gkillAPI.APIAddress.CommitTXAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleCommitTx)).Methods(gkillAPI.APIAddress.CommitTXMethod)
-	router.HandleFunc(gkillAPI.APIAddress.DiscardTXAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleDiscardTX)).Methods(gkillAPI.APIAddress.DiscardTXMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetKyousMCPAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetKyousMCP)).Methods(gkillAPI.APIAddress.GetKyousMCPMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetRepInfosMCPAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetRepInfosMCP)).Methods(gkillAPI.APIAddress.GetRepInfosMCPMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetGitCommitLogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetGitCommitLog)).Methods(gkillAPI.APIAddress.GetGitCommitLogMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetGPSLogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetGPSLog)).Methods(gkillAPI.APIAddress.GetGPSLogMethod)
+	// 本番の Serve() と同じ表（gkill_server_api_address.go の apiRoutes）を同じラッパーで登録する。
+	// かつてはここに部分コピーが手書きされ、アップロード2本が上限なし・MCP 2本が wrapAuthRepos と
+	// 本番と違う登録になっていた（ADR-0709）。ミドルウェア（recover / accessLog / gzip）は掛けない。
+	if err := gkillAPI.registerAPIRoutes(router); err != nil {
+		optCleanup()
+		t.Fatalf("registerAPIRoutes failed: %v", err)
+	}
 
 	ts := httptest.NewServer(router)
 
@@ -313,78 +236,12 @@ func postJSON(t *testing.T, url string, body any) *http.Response {
 
 // --- Tests ---
 
-func TestNewGKillAPIAddress_AllFieldsPopulated(t *testing.T) {
-	addr := NewGKillAPIAddress()
-
-	// Verify that all address fields are non-empty
-	if addr.LoginAddress == "" {
-		t.Error("LoginAddress is empty")
-	}
-	if addr.LoginMethod == "" {
-		t.Error("LoginMethod is empty")
-	}
-	if addr.LogoutAddress == "" {
-		t.Error("LogoutAddress is empty")
-	}
-	if addr.AddKmemoAddress == "" {
-		t.Error("AddKmemoAddress is empty")
-	}
-	if addr.GetKyousAddress == "" {
-		t.Error("GetKyousAddress is empty")
-	}
-	if addr.GetApplicationConfigAddress == "" {
-		t.Error("GetApplicationConfigAddress is empty")
-	}
-	if addr.SubmitKFTLTextAddress == "" {
-		t.Error("SubmitKFTLTextAddress is empty")
-	}
-	if addr.UpdateCacheAddress == "" {
-		t.Error("UpdateCacheAddress is empty")
-	}
-
-	// Verify all methods are POST
-	if addr.LoginMethod != "POST" {
-		t.Errorf("LoginMethod = %q, want POST", addr.LoginMethod)
-	}
-	if addr.GetKyousMethod != "POST" {
-		t.Errorf("GetKyousMethod = %q, want POST", addr.GetKyousMethod)
-	}
-}
-
-func TestNewGKillAPIAddress_PathPrefixes(t *testing.T) {
-	addr := NewGKillAPIAddress()
-
-	// All API addresses should start with /api/ (except serviceWorker.js)
-	addresses := []struct {
-		name string
-		addr string
-	}{
-		{"Login", addr.LoginAddress},
-		{"Logout", addr.LogoutAddress},
-		{"AddKmemo", addr.AddKmemoAddress},
-		{"GetKyous", addr.GetKyousAddress},
-		{"AddTag", addr.AddTagAddress},
-		{"GetApplicationConfig", addr.GetApplicationConfigAddress},
-		{"SubmitKFTLText", addr.SubmitKFTLTextAddress},
-		{"UpdateCache", addr.UpdateCacheAddress},
-	}
-
-	for _, tc := range addresses {
-		if len(tc.addr) < 5 || tc.addr[:5] != "/api/" {
-			t.Errorf("%s address %q does not start with /api/", tc.name, tc.addr)
-		}
-	}
-}
-
 func TestSetupGkillServerAPI(t *testing.T) {
 	gkillAPI, cleanup := setupTestGkillServerAPI(t)
 	defer cleanup()
 
 	if gkillAPI == nil {
 		t.Fatal("setupTestGkillServerAPI returned nil")
-	}
-	if gkillAPI.APIAddress == nil {
-		t.Fatal("APIAddress is nil")
 	}
 	if gkillAPI.GkillDAOManager == nil {
 		t.Fatal("GkillDAOManager is nil")
@@ -783,70 +640,32 @@ func TestAuthMiddleware_RejectsInvalidSession(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
 	defer cleanup()
 
-	addr := gkillAPI.APIAddress
-
-	// wrapAuth / wrapAuthRepos で登録され、ミドルウェアが認証するエンドポイント。
-	middlewareAuthed := []authRequiredEndpoint{
-		{"GetApplicationConfig", addr.GetApplicationConfigAddress},
-		{"GetServerConfigs", addr.GetServerConfigsAddress},
-		{"UpdateCache", addr.UpdateCacheAddress},
-		{"ReloadRepositories", addr.ReloadRepositoriesAddress},
-		{"GetUpdatedDatasByTime", addr.GetUpdatedDatasByTimeAddress},
-		{"GetPluginList", addr.GetPluginListAddress},
-		{"GetPluginContentHTML", addr.GetPluginContentHTMLAddress},
-		{"GetPluginConfigHTML", addr.GetPluginConfigHTMLAddress},
-		{"PostPluginConfig", addr.PostPluginConfigAddress},
-		{"UpdateApplicationConfig", addr.UpdateApplicationConfigAddress},
-		{"UpdateServerConfigs", addr.UpdateServerConfigsAddress},
-		{"UpdateUserReps", addr.UpdateUserRepsAddress},
-		{"AddKmemo", addr.AddKmemoAddress},
-		{"AddMi", addr.AddMiAddress},
-		{"AddTimeis", addr.AddTimeisAddress},
-		{"AddLantana", addr.AddLantanaAddress},
-		{"AddTag", addr.AddTagAddress},
-		{"AddNlog", addr.AddNlogAddress},
-		{"UpdateTag", addr.UpdateTagAddress},
-		{"UpdateText", addr.UpdateTextAddress},
-		{"UpdateNotification", addr.UpdateNotificationAddress},
-		{"UpdateKC", addr.UpdateKCAddress},
-		{"UpdateURLog", addr.UpdateURLogAddress},
-		{"UpdateNlog", addr.UpdateNlogAddress},
-		{"UpdateTimeis", addr.UpdateTimeisAddress},
-		{"UpdateLantana", addr.UpdateLantanaAddress},
-		{"UpdateRekyou", addr.UpdateRekyouAddress},
-		{"AddMiReKyou", addr.AddMiReKyouAddress},
-		{"GetMiReKyou", addr.GetMiReKyouAddress},
-		{"UpdateMiReKyou", addr.UpdateMiReKyouAddress},
-		{"GetReKyousByTargetID", addr.GetReKyousByTargetIDAddress},
-		{"GetMiReKyousByTargetID", addr.GetMiReKyousByTargetIDAddress},
-		{"GetKyou", addr.GetKyouAddress},
-		{"GetMiBoardList", addr.GetMiBoardListAddress},
-		{"GetAllTagNames", addr.GetAllTagNamesAddress},
-		{"GetAllRepNames", addr.GetAllRepNamesAddress},
-		{"GetTagHistoriesByTagID", addr.GetTagHistoriesByTagIDAddress},
-		{"GetTextHistoriesByTextID", addr.GetTextHistoriesByTextIDAddress},
-		{"GetNotificationHistoriesByNotificationID", addr.GetNotificationHistoriesByNotificationIDAddress},
-		{"GetRepositories", addr.GetRepositoriesAddress},
-		{"AddShareKyouListInfo", addr.AddShareKyouListInfoAddress},
-		{"UpdateShareKyouListInfo", addr.UpdateShareKyouListInfoAddress},
-		{"GetShareKyouListInfos", addr.GetShareKyouListInfosAddress},
-		{"DeleteShareKyouListInfos", addr.DeleteShareKyouListInfosAddress},
-		{"CommitTx", addr.CommitTXAddress},
-		{"DiscardTx", addr.DiscardTXAddress},
-		{"SubmitKFTLText", addr.SubmitKFTLTextAddress},
-		{"GetKyousMCP", addr.GetKyousMCPAddress},
-		{"GetRepInfosMCP", addr.GetRepInfosMCPAddress},
-		{"GetGitCommitLog", addr.GetGitCommitLogAddress},
-		{"GetGPSLog", addr.GetGPSLogAddress},
-	}
-
 	// wrapNoAuth で登録されているが、ハンドラ自身が getAccountFromSessionID で
 	// セッションを検証するエンドポイント。ミドルウェア任せではないので、
 	// 自前チェックが外れていないことをここで押さえる。
-	handlerAuthed := []authRequiredEndpoint{
-		{"UploadFiles", addr.UploadFilesAddress},
-		{"UploadGPSLogFiles", addr.UploadGPSLogFilesAddress},
-		{"BrowseZipContents", addr.BrowseZipContentsAddress},
+	selfAuthedPaths := map[string]bool{
+		"/api/upload_files":                  true,
+		"/api/upload_gpslog_files":           true,
+		"/api/browse_zip_contents":           true,
+		"/api/get_idf_kyou_by_relative_path": true,
+		"/api/get_kyous_mcp":                 true,
+		"/api/get_rep_infos_mcp":             true,
+	}
+
+	// ルート表（apiRoutes）から機械的に組む。wrapAuth / wrapAuthRepos の経路は
+	// ミドルウェアが認証するので全数を対象にでき、表に足した経路は自動で検査に入る。
+	var middlewareAuthed, handlerAuthed []authRequiredEndpoint
+	for _, rt := range gkillAPI.apiRoutes() {
+		ep := authRequiredEndpoint{name: strings.TrimPrefix(rt.Path, "/api/"), path: rt.Path}
+		switch {
+		case rt.Auth != authNone:
+			middlewareAuthed = append(middlewareAuthed, ep)
+		case selfAuthedPaths[rt.Path]:
+			handlerAuthed = append(handlerAuthed, ep)
+		}
+	}
+	if len(middlewareAuthed) < 70 || len(handlerAuthed) != len(selfAuthedPaths) {
+		t.Fatalf("表の読み取りが想定外: middleware=%d handler=%d", len(middlewareAuthed), len(handlerAuthed))
 	}
 
 	groups := []struct {
@@ -5822,24 +5641,12 @@ func TestHandleUpdateRekyou_Nonexistent_ReturnsError(t *testing.T) {
 
 // --- Section: Config update tests ---
 
-// setupTestRouterWithConfigRoutes extends setupTestRouter with config update routes.
+// setupTestRouterWithConfigRoutes は setupTestRouter と同じ。
+// かつては基底のハーネスに無い設定更新3経路をここで足していたが、
+// 今はルート表（apiRoutes）が全経路を登録するので差分は無い。呼び出し側の互換のために残す。
 func setupTestRouterWithConfigRoutes(t *testing.T) (tsURL string, gkillAPI *GkillServerAPI, cleanup func()) {
 	t.Helper()
-
-	ts, gkillAPI, baseCleanup := setupTestRouter(t)
-
-	router := gkillAPI.GkillDAOManager.GetRouter()
-
-	// Register config update routes not in the base setupTestRouter (wrapAuth — auth only, no repos)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateApplicationConfigAddress, gkillAPI.wrapAuth(gkillAPI.HandleUpdateApplicationConfig)).Methods(gkillAPI.APIAddress.UpdateApplicationConfigMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateServerConfigsAddress, gkillAPI.wrapAuth(gkillAPI.HandleUpdateServerConfigs)).Methods(gkillAPI.APIAddress.UpdateServerConfigsMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateUserRepsAddress, gkillAPI.wrapAuth(gkillAPI.HandleUpdateUserReps)).Methods(gkillAPI.APIAddress.UpdateUserRepsMethod)
-
-	cleanup = func() {
-		ts.Close()
-		baseCleanup()
-	}
-
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	return ts.URL, gkillAPI, cleanup
 }
 
