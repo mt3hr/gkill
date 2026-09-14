@@ -34,6 +34,7 @@ vi.mock('@/classes/kyou-reload', () => ({
 // 本番同様に gkill-api を先に評価させる(mi-re-kyou-view.test.ts と同じ事情)
 import '@/classes/api/gkill-api'
 import { useMiView } from '@/classes/use-mi-view'
+import { refresh_kyou_in_list } from '@/classes/kyou-reload'
 import type { MiViewProps } from '@/pages/views/mi-view-props'
 import type { MiViewEmits } from '@/pages/views/mi-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
@@ -250,6 +251,25 @@ describe('useMiView 列(板)×検索ルーティング', () => {
     expect(pending_get_kyous.length).toBe(1)
     expect(pending_get_kyous[0].req.query.keywords).toBe('edited-in-sidebar')
     expect(view.querys.value[0].query_id).toBe('col-a')
+  })
+
+  // refresh_kyou は最初の await より前に飛行中の表へ登録するので、列ごとの引き直しを
+  // 同じ tick で呼び出せば2列目以降が同じ往復に合流する。1本ずつ await すると先発が
+  // 決着して表から消えたあとに次が始まり、対象が載っている列の数だけフルの引き直しが走る
+  test('reload_kyouは列ごとの引き直しを同じtickで全部呼び出す(1本ずつawaitして合流を取りこぼさない)', async () => {
+    const { view } = createView()
+    const query_a = makeColumnQuery('col-a')
+    const query_b = makeBoardColumnQuery('col-b', 'board-b')
+    setupColumns(view, [query_a, query_b], [kyous(['a1']), kyous(['a1', 'b1'])])
+
+    // 1列目の引き直しを永久に飛行中にしておく。直列 await だと2列目が呼ばれない
+    vi.mocked(refresh_kyou_in_list).mockImplementation((() => new Promise<void>(() => { })) as never)
+    vi.mocked(refresh_kyou_in_list).mockClear()
+    view.reload_kyou({ id: 'a1' } as unknown as Kyou)
+
+    expect(vi.mocked(refresh_kyou_in_list)).toHaveBeenCalledTimes(2)
+    const requested_ats = vi.mocked(refresh_kyou_in_list).mock.calls.map((call) => (call[2] as { requested_at: number }).requested_at)
+    expect(requested_ats[0]).toBe(requested_ats[1])
   })
 
   test('列を閉じたら最近傍の列にフォーカスが移る', async () => {
