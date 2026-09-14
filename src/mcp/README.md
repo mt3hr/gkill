@@ -6,9 +6,9 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| **Read専用** | `gkill-read-server.mjs` | 10 (9 read + 1 plugin) | 8808 | 読み取りのみ |
-| **Write専用** | `gkill-write-server.mjs` | 27 (21 write + 5 read convenience + 1 plugin) | 8809 | 書き込み中心 |
-| **Read/Write統合** | `gkill-readwrite-server.mjs` | 31 (9 read + 21 write + 1 plugin) | 8810 | 全機能 |
+| **Read専用** | `gkill-read-server.mjs` | 11 (10 read + 1 plugin) | 8808 | 読み取りのみ |
+| **Write専用** | `gkill-write-server.mjs` | 28 (21 write + 6 read convenience + 1 plugin) | 8809 | 書き込み中心 |
+| **Read/Write統合** | `gkill-readwrite-server.mjs` | 32 (10 read + 21 write + 1 plugin) | 8810 | 全機能 |
 
 プラグインツール `gkill_get_plugin_list` は3サーバ共通で提供します（読み取り専用）。プラグインKyouの本文は `gkill_get_kyous` の `include_plugin_content` でレスポンスに埋め込みます。
 
@@ -38,8 +38,10 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 | `lib/file-link-store.mjs` | HTTPモード | 期限付きファイルリンク（`GET /files/{token}`） |
 | `lib/html-text.mjs` | 3サーバ | プラグインのコンテンツHTML → プレーンテキスト |
 | `lib/access-log.mjs` / `errors.mjs` / `constants.mjs` | 3サーバ | アクセスログ・エラー型・定数 |
+| `lib/status-tool.mjs` | 3サーバ | ツール一覧の世代 `schema_revision` の計算と `gkill_status` への焼き込み |
+| `tool-schema-budget.mjs` / `tool-schema-budget.json` | 3サーバ | tools/list のバイト量の計測と予算（`npm run mcp:schema-budget -- --update` で更新） |
 
-> ツール数（上の表の 10 / 27 / 31）は `verify_docs` が `lib/*-tools.mjs` のスプレッドを辿って
+> ツール数（上の表の 11 / 28 / 32）は `verify_docs` が `lib/*-tools.mjs` のスプレッドを辿って
 > 実測と突き合わせます。サーバ本体だけを見ても数えられないので、ツールを増やすときは
 > 必ず `lib/` 側の配列へ足してください。
 
@@ -173,9 +175,10 @@ curl -v -X POST http://localhost:8808/mcp \
 
 ### 提供ツール
 
-#### Readツール（9 — Read専用/ReadWrite統合サーバで使用可能）
+#### Readツール（10 — Read専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
+| `gkill_status` | このサーバが何者かを返す（引数なし。3サーバ共通）: `server_kind`（read / write / readwrite）、接続先の `account.user_id` / `account.device`、gkill のビルド（`gkill.version` / `commit_hash` / `build_time`）、`transport`、`started_at` / `uptime_seconds`、`tool_count`、`schema_revision`。**`schema_revision` はツール一覧の世代**で、同じ値が `gkill_status` の説明文末尾にも焼き込まれている。応答と説明文の値が違えば、クライアントが握っている一覧が古い（一覧は接続時に1回しか取られない。サーバを再起動しても直らず、接続し直しが要る）。gkill へ届かないときも失敗にせず `gkill_reachable:false` + `gkill_error`（HTTP ステータスのみ）で返す |
 | `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却） |
 | `gkill_get_mi_board_list` | Miボード名一覧を取得 |
 | `gkill_get_all_tag_names` | 全タグ名を取得 |
@@ -254,7 +257,7 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 | `gkill_delete_kyou` | エントリのソフト削除 |
 | `gkill_restore_kyou` | ソフト削除の取り消し（`is_deleted` を戻す） |
 
-Write専用サーバにはRead便利ツール4つ（`gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_kyou_history`）も含まれます。`gkill_get_kyou_history` を載せているのは、`gkill_delete_kyou` / `gkill_restore_kyou` と同じサーバから「いま何を消したのか」を確かめられないと、取り消しが当てずっぽうになるためです。
+Write専用サーバにはRead便利ツール6つ（`gkill_status`, `gkill_get_application_config`, `gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_kyou_history`）も含まれます。`gkill_status` / `gkill_get_application_config` は「どのアカウントへ書くのか」を書く前に確かめるためのものです。`gkill_get_kyou_history` を載せているのは、`gkill_delete_kyou` / `gkill_restore_kyou` と同じサーバから「いま何を消したのか」を確かめられないと、取り消しが当てずっぽうになるためです。
 
 ##### 更新系の引数
 
@@ -329,7 +332,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 - `git_commit_log`: Gitコミット記録
 
 #### 2) ツール選択フロー（推奨）
-1. まず `gkill_get_application_config` を `fields: ["user_id", "device"]` で呼び、**どのアカウントに接続しているか**を確かめる（read / write / readwrite が別アカウントを向いていることがある。この射影は42バイトで済む）。タグ階層・ボード構造が要るときだけ `fields: ["tag_struct"]` 等を追加で取る（無指定の全量は実測94KBある）
+1. まず `gkill_status`（引数なし）を呼び、**どのアカウントに接続しているか**（`account.user_id` / `account.device`）と、**握っているツール一覧が古くないか**（応答の `schema_revision` と `gkill_status` の説明文末尾の値が一致するか）を確かめる（read / write / readwrite が別アカウントを向いていることがある。`gkill_get_application_config` を `fields: ["user_id", "device"]` で呼んでも接続先は分かる）。タグ階層・ボード構造が要るときだけ `fields: ["tag_struct"]` 等を追加で取る（無指定の全量は実測94KBある）
 2. 必要に応じて `gkill_get_all_tag_names` / `gkill_get_all_rep_names` / `gkill_get_mi_board_list` でメタ情報を補完
 3. `query.rep_types` で絞るときは `gkill_get_rep_infos` で正準値（`canonical_rep_types`）を引く（ApplicationConfig の表示ラベルと受理値は1:1でない）。「追加したはずのファイルが検索に出ない」ときも `indexed_at` で索引の鮮度を確かめる
 4. `gkill_get_kyous` でKyou一覧を取得（タグ・テキスト・型データはレスポンスにインライン）
@@ -393,7 +396,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 
 #### 6) `gkill_get_kyous` の実用クエリ例
 
-フィルタは**値フィールドが非nullで存在すれば有効**になる（旧 `use_X` フラグは廃止。後方互換として受理はされ、`use_X: false` はそのグループの値を無効化、`use_X: true` は無視される）。使わないフィルタはキーごと省略するか `null` を渡す。空配列 `[]` は「フィルタ有効だが0件指定」（例外: `timeis_words: []` は「任意のTimeIsに覆われたKyou」）。
+フィルタは**値フィールドが非nullで存在すれば有効**になる（旧 `use_X` フラグは廃止済みで、公開スキーマには載らない。古い一覧を握ったクライアントからの送信だけ後方互換で受理し、届いたら古さの警告が付く。ADR-0620）。使わないフィルタはキーごと省略するか `null` を渡す。空配列 `[]` は「フィルタ有効だが0件指定」（例外: `timeis_words: []` は「任意のTimeIsに覆われたKyou」）。
 
 最小（デフォルト条件）:
 ```json
@@ -487,6 +490,7 @@ Mi抽出（**`for_mi` は `include_*_mi` を最低1つ要求する**。全て無
   - セッション再取得（再ログイン）後に同一リクエストを1回再試行
 - 入力不正系:
   - 引数を見直して再実行（特に日時フォーマット）
+  - `Invalid argument ... is not supported` は書き間違いか、**握っているツール一覧が古い**（改名・削除前の名前を載せている）かのどちらか。一覧にその名前があるなら後者で、MCP クライアントを接続し直す（サーバの再起動では直らない）。`gkill_status` の応答の `schema_revision` と、その説明文末尾の値が違えば古い
 - データなし:
   - エラーではなく空配列として扱う
 

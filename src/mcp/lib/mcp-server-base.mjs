@@ -25,6 +25,7 @@ import { summarizeReadToolPayload, isReadToolName, handleReadToolCall } from "./
 import { summarizeWriteToolPayload, handleWriteToolCall } from "./write-handlers.mjs";
 import { handlePluginToolCall, isPluginToolName } from "./plugin-tools.mjs";
 import { unknownToolMessage } from "./constants.mjs";
+import { computeSchemaRevision, stampSchemaRevision } from "./status-tool.mjs";
 
 // summarizeToolPayload は結果の1行要約を返す。plugin → read → write の順に委ねる。
 // 各要約器は対象外のツールに null を返すので、持っていないツールの分は素通りする
@@ -55,7 +56,16 @@ export class McpServerBase {
   constructor(client, accessLog, options) {
     this.serverName = options.serverName;
     this.serverVersion = options.serverVersion;
-    this.tools = options.tools;
+    // serverKind: gkill_status が名乗る種別（read / write / readwrite）。
+    this.serverKind = options.serverKind ?? null;
+    // schemaRevision: このサーバが配るツール一覧の世代。tools/list の中身から決定的に計算し、
+    // gkill_status の description 末尾へ焼き込む（クライアントが握っている一覧の世代を
+    // AI 自身が応答と比べられる唯一の経路）。静的な READ_TOOLS は書き換えず、
+    // このサーバ用に gkill_status だけ差し替えた配列を持つ（lib/status-tool.mjs）。
+    this.schemaRevision = computeSchemaRevision(options.tools);
+    this.tools = stampSchemaRevision(options.tools, this.schemaRevision);
+    // startedAt: プロセスの世代。「ソースは直っているのに AI からは古い」の切り分けに要る。
+    this.startedAt = new Date();
     // readToolNames: null なら READ_TOOLS 全部。Set ならそのうち載せる分だけ
     // （書き込み専用サーバは4本だけ載せる）。「read ツールか」の判定自体は
     // isReadToolName が正本で、ここは選抜集合。選抜集合だけで判定すると
@@ -100,7 +110,13 @@ export class McpServerBase {
 
     if (isReadToolName(name) && (this.readToolNames === null || this.readToolNames.has(name))) {
       return handleReadToolCall(
-        { client: this.client, sid, isLocalTransport: this.isLocalTransport },
+        {
+          client: this.client,
+          sid,
+          isLocalTransport: this.isLocalTransport,
+          server: this.describeServer(),
+          accessLog: this.accessLog,
+        },
         name,
         args,
       );
@@ -132,6 +148,20 @@ export class McpServerBase {
       name,
       args,
     );
+  }
+
+  // describeServer は gkill_status が返す「このサーバは何者か」の静的な部分。
+  // 環境変数の値（GKILL_BASE_URL / GKILL_USER）は端末の情報なので含めない（ADR-0707）。
+  describeServer() {
+    return {
+      kind: this.serverKind,
+      name: this.serverName,
+      version: this.serverVersion,
+      schemaRevision: this.schemaRevision,
+      toolCount: this.tools.length,
+      transport: this.isLocalTransport ? "stdio" : "http",
+      startedAt: this.startedAt,
+    };
   }
 
   buildToolResult(name, payload, isError = false, ctx = null) {
@@ -242,7 +272,10 @@ export class McpServerBase {
         result: {
           protocolVersion: "2024-11-05",
           capabilities: { tools: {} },
-          serverInfo: { name: this.serverName, version: this.serverVersion },
+          // version にツール一覧の世代を添える（semver のビルドメタデータ形式）。
+          // クライアントの接続情報画面や initialize のログから、どの世代の一覧を
+          // 配ったサーバかが読める。AI 向けの経路は gkill_status の description。
+          serverInfo: { name: this.serverName, version: `${this.serverVersion}+schema.${this.schemaRevision}` },
         },
       };
     }

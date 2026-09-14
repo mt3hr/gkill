@@ -29,6 +29,29 @@ import {
 } from "./constants.mjs";
 
 export const READ_TOOLS = [
+  // gkill_status は3サーバ全部に載る（write 専用サーバは WRITE_SERVER_READ_TOOL_NAMES で選ぶ）。
+  // description の末尾には McpServerBase が起動時に「そのサーバの」schema_revision を
+  // 焼き込む（lib/status-tool.mjs の stampSchemaRevision）。ここに書く文はその印の前に来る。
+  // 引数は取らない —— 引数を足すと STALE_SCHEMA_ARG_KINDS_BY_TOOL の対象になり、
+  // 「古さを確かめるツール自身が古いスキーマで壊れる」ことになる。
+  {
+    name: "gkill_status",
+    description:
+      "Report what this MCP server is: server_kind (read / write / readwrite), the gkill account it is connected to " +
+      "(account.user_id / account.device), the gkill build (gkill.version / commit_hash / build_time), transport (stdio / http), " +
+      "started_at / uptime_seconds, tool_count and schema_revision. " +
+      "schema_revision identifies the generation of the tool list a client holds. This description ends with the revision of " +
+      "the list you were given; if the response's schema_revision differs, your client fetched the tools before the server " +
+      "changed them (tool lists are fetched once per client session) — reconnect the MCP client before trusting any argument " +
+      "name or description in this list. " +
+      "Call it first when a search or write behaves unexpectedly: a different account or a stale tool list explains most of them. " +
+      "Takes no arguments.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+  },
   {
     name: "gkill_get_kyous",
     description:
@@ -97,18 +120,9 @@ export const READ_TOOLS = [
           description: `Include attached TimeIs (playing) data for each kyou — i.e., which TimeIs was running when each record was created. Each entry carries id, title, tags, start_time and end_time (absent while still running), so you can tell same-titled stamps apart and fetch one with query.ids. Default: ${DEFAULT_KYOUS_INCLUDE_TIMEIS}. Deleted stamps are excluded, by the same rule the search itself uses. A stamp with no end_time is still running by definition, so it covers every record after its start — an old stamp you forgot to close attaches to everything since, and that is data to clean up, not a bug. This is expensive in a way limit does not bound: every call reads the whole TimeIs history (tens of thousands of rows in a real account) and the attachment ignores query.reps / rep_types / the calendar range, so narrowing the search does not narrow what gets attached. Leave it off unless you actually need it. Note: this does NOT filter out TimeIs-type kyous from results; those always appear regardless of this flag. Only controls inline playing attachment on other data types.`,
           default: DEFAULT_KYOUS_INCLUDE_TIMEIS,
         },
-        include_id: {
-          type: "boolean",
-          description:
-            "Deprecated (v2): entity IDs are always included now. Accepted for backward compatibility and ignored.",
-          default: true,
-        },
-        include_rep_name: {
-          type: "boolean",
-          description:
-            "Deprecated (v2): rep_name is always included now. Accepted for backward compatibility and ignored.",
-          default: true,
-        },
+        // include_id / include_rep_name（v2 で廃止。id / rep_name は常時付与）はここに載せない。
+        // 受理は normalizeKyouArgs が続けるが、公開スキーマに載せると AI が
+        // 「false なら id が消えるのか」と考える余地を作るだけになる（ADR-0620）。
         count_only: {
           type: "boolean",
           default: false,

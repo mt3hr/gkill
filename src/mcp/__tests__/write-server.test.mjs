@@ -402,13 +402,13 @@ describe("JSON-RPC protocol", () => {
     expect(response.result).toEqual({});
   });
 
-  test("tools/list returns 27 tools", async () => {
+  test("tools/list returns 28 tools", async () => {
     const response = await server.handleMessage({
       jsonrpc: "2.0",
       id: 3,
       method: "tools/list",
     });
-    expect(response.result.tools).toHaveLength(27);
+    expect(response.result.tools).toHaveLength(28);
   });
 
   test("tools/list includes all expected tool names", async () => {
@@ -440,6 +440,7 @@ describe("JSON-RPC protocol", () => {
     expect(names).toContain("gkill_update_tag");
     expect(names).toContain("gkill_update_text");
     // Read convenience tools
+    expect(names).toContain("gkill_status");
     expect(names).toContain("gkill_get_all_rep_names");
     expect(names).toContain("gkill_get_mi_board_list");
     expect(names).toContain("gkill_get_all_tag_names");

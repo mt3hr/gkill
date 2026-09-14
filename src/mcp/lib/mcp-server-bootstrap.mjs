@@ -38,6 +38,13 @@ export function isDirectRun(importMetaUrl) {
   return _resolvePath(process.argv[1]) === _fileURLToPath(importMetaUrl);
 }
 
+// startInfo は server_start ログに載せる「このプロセスがどの世代のツール一覧を配るか」。
+// 「ソースは直っているのに AI からは古い」の切り分けは、まずここと gkill_status の
+// schema_revision を見比べる（プロセスが古いのか、クライアントの一覧が古いのか）。
+function startInfo(server) {
+  return { pid: process.pid, schema_revision: server.schemaRevision, tool_count: server.tools.length };
+}
+
 // startMcpServer はアクセスログを開き、サーバを作り、MCP_TRANSPORT に従って
 // stdio か HTTP のトランスポートを起動する。
 //
@@ -79,13 +86,13 @@ export function startMcpServer(spec) {
       accessLog,
       authenticateUser: makeOAuthAuthenticateUser(spec.client, accessLog),
     });
-    accessLog.info("server_start", { transport, log_level: mcpLogLevel, port });
+    accessLog.info("server_start", { transport, log_level: mcpLogLevel, port, ...startInfo(server) });
     new HttpTransport(server, port, oauthServer, {
       enableFileLinks: spec.enableFileLinks,
     }).start();
   } else {
     server.currentUserId = spec.client.userId || null;
-    accessLog.info("server_start", { transport, log_level: mcpLogLevel });
+    accessLog.info("server_start", { transport, log_level: mcpLogLevel, ...startInfo(server) });
     new StdioTransport(server).start();
   }
 
