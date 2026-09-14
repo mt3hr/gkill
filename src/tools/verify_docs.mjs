@@ -615,6 +615,16 @@ function buildCountAssertions(m) {
   add('documents/reverse/testing-guide.md', `Write ${mcpWriteOnly}ツール定義（実物 import）`)
   add('documents/reverse/testing-guide.md', `全${mcpRW}ツールディスパッチ`)
   add('documents/reverse/api-endpoints.md', `MCPツール${mcpRead}個`)
+  // 2026-09-14 に検査から漏れていた言及（operations-guide の表は2世代前の 24/30、
+  // glossary の用語行は 26、「Read便利ツール4つ」は3ファイルで実体5より1少なかった）。
+  add('documents/reverse/api-endpoints.md', `MCPサーバは${mcpRead}個のReadツールを提供する。内訳は固有の${mcpReadOnly}`)
+  add('documents/reverse/operations-guide.md', `\`gkill-read-server.mjs\` | ${mcpRead} (${mcpReadOnly} read + 1 plugin)`)
+  add('documents/reverse/operations-guide.md', `\`gkill-write-server.mjs\` | ${mcpWrite} (${mcpWriteOnly} write + ${mcpWriteConvenience} read convenience + 1 plugin)`)
+  add('documents/reverse/operations-guide.md', `\`gkill-readwrite-server.mjs\` | ${mcpRW} (${mcpReadOnly} read + ${mcpWriteOnly} write + 1 plugin)`)
+  add('documents/reverse/glossary.md', `**Read専用**（\`gkill-read-server.mjs\`、${mcpRead}ツール）・**Write専用**（\`gkill-write-server.mjs\`、${mcpWrite}ツール）・**ReadWrite統合**（\`gkill-readwrite-server.mjs\`、${mcpRW}ツール）`)
+  add('documents/reverse/mcp-setup-guide.md', `Read便利ツール${mcpWriteConvenience}つ付属`)
+  add('src/mcp/README.md', `Read便利ツール${mcpWriteConvenience}つ（`)
+  add('src/mcp/ABOUT_TEST.md', `Read便利${mcpWriteConvenience}ツール`)
 
   // ── KFTL ステートメント型数 / glossary 用語数
   add('.claude/skills/gkill-client-kftl/SKILL.md', `KFTL parser (${m.kftlStatementTs} statement types; the Go side has ${m.kftlStatementGo})`)

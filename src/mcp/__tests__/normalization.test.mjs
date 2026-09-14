@@ -14,8 +14,13 @@ import {
   normalizeRepInfosArgs,
   normalizeKyouHistoryArgs,
   detectStaleSchemaSignals,
+  staleSchemaWarning,
+  appendStaleSchemaWarning,
+  normalizeStatusArgs,
   STALE_SCHEMA_ARG_KINDS_BY_TOOL,
 } from "../lib/normalization.mjs";
+import { READ_TOOLS } from "../lib/read-tools.mjs";
+import { FIND_QUERY_SCHEMA } from "../lib/find-query-schema.mjs";
 import { encodeGpsCursor } from "../lib/gps-cursor.mjs";
 import { paginateGpsLogs } from "../lib/read-handlers.mjs";
 import {
@@ -1313,5 +1318,96 @@ describe("normalizeKftlArgs — idempotency_key", () => {
 
   test("省略できる", () => {
     expect(normalizeKftlArgs({ kftl_text: "メモ" }).idempotency_key).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 未知の引数名（2026-09-14 レビュー P0）
+//
+// ChatGPT が改名前の検索条件名を、握ったままの古い一覧どおりに送って
+// 「is not supported」だけを受け取った。タイプミスと古い一覧はサーバから区別できないので、
+// 両方の可能性と再接続・gkill_status の照合を案内する。文言はトップレベルと query で同じ正本。
+// ---------------------------------------------------------------------------
+describe("unknown argument names point at a possibly stale tool list", () => {
+  const EXPECTED = /is not supported.*misspelled.*tool list.*stale.*reconnect the MCP client.*gkill_status.*schema_revision/s;
+
+  test("query-level unknown key", () => {
+    let caught;
+    try {
+      normalizeKyouQuery({ no_such_field: "2026-09-14" });
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(GkillApiError);
+    expect(caught.message).toMatch(/^Invalid argument 'query\.no_such_field': /);
+    expect(caught.message).toMatch(EXPECTED);
+    expect(caught.detail.field).toBe("query.no_such_field");
+    expect(caught.detail.allowed).toContain("playing_time");
+  });
+
+  test("top-level unknown key uses the same wording", () => {
+    let caught;
+    try {
+      normalizeKyouArgs({ no_such_arg: true });
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught.message).toMatch(/^Invalid argument 'arguments\.no_such_arg': /);
+    expect(caught.message).toMatch(EXPECTED);
+  });
+
+  test("the stale-schema warning also names gkill_status as the way to compare revisions", () => {
+    const text = staleSchemaWarning({ revived: ["count_only"], deprecated: [] });
+    expect(text).toMatch(/gkill_status.*schema_revision/s);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 廃止済み引数は公開スキーマに載せず、受理と古さの検出だけ残す（ADR-0620）
+// ---------------------------------------------------------------------------
+describe("deprecated arguments are accepted at runtime but absent from the advertised schema", () => {
+  const kyousTool = READ_TOOLS.find((tool) => tool.name === "gkill_get_kyous");
+
+  test("include_id / include_rep_name / only_latest_data are not advertised", () => {
+    expect(kyousTool.inputSchema.properties).not.toHaveProperty("include_id");
+    expect(kyousTool.inputSchema.properties).not.toHaveProperty("include_rep_name");
+    expect(FIND_QUERY_SCHEMA.properties).not.toHaveProperty("only_latest_data");
+    for (const key of Object.keys(FIND_QUERY_SCHEMA.properties)) {
+      expect(key.startsWith("use_"), `legacy flag ${key} must not be advertised`).toBe(false);
+    }
+    // 説明文も旧 use_X フラグを説明しない（「受理する」と書けば AI は使う）
+    expect(FIND_QUERY_SCHEMA.description).not.toMatch(/use_X/);
+  });
+
+  test("they are still accepted, and their arrival is reported as stale-schema evidence", () => {
+    const normalized = normalizeKyouArgs({
+      include_id: true,
+      include_rep_name: false,
+      query: { only_latest_data: false, use_words: true, words: ["x"] },
+    });
+    expect(normalized.query).toEqual({ words: ["x"], only_latest_data: true });
+    const payload = appendStaleSchemaWarning({ kyous: [] }, "gkill_get_kyous", {
+      include_id: true,
+      include_rep_name: false,
+      query: { only_latest_data: false, use_words: true, words: ["x"] },
+    });
+    expect(payload.warnings).toHaveLength(1);
+    expect(payload.warnings[0]).toMatch(/deprecated arguments were sent: include_id, include_rep_name, query\.only_latest_data, query\.use_words/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// normalizeStatusArgs — 引数を取らない
+// ---------------------------------------------------------------------------
+describe("normalizeStatusArgs", () => {
+  test("accepts undefined / null / {}", () => {
+    expect(normalizeStatusArgs(undefined)).toEqual({});
+    expect(normalizeStatusArgs(null)).toEqual({});
+    expect(normalizeStatusArgs({})).toEqual({});
+  });
+
+  test("rejects any argument (so the tool never lands in the stale-schema revival table)", () => {
+    expect(() => normalizeStatusArgs({ locale_name: "ja" })).toThrow(/arguments\.locale_name.*is not supported/);
+    expect(STALE_SCHEMA_ARG_KINDS_BY_TOOL.has("gkill_status")).toBe(false);
   });
 });

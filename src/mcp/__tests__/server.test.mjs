@@ -353,6 +353,41 @@ describe("handleMessage", () => {
     expect(response.result.capabilities.tools).toBeDefined();
   });
 
+  // ツール一覧の世代（2026-09-14 レビュー P0）。initialize の version と
+  // gkill_status の description 末尾と gkill_status の応答が、同じ値を指すこと。
+  test("initialize version, the stamped gkill_status description and the gkill_status response agree on schema_revision", async () => {
+    const initialize = await server.handleMessage({ jsonrpc: "2.0", method: "initialize", id: 1 });
+    const match = /\+schema\.([0-9a-f]{12})$/.exec(initialize.result.serverInfo.version);
+    expect(match).not.toBeNull();
+    const revision = match[1];
+
+    const list = await server.handleMessage({ jsonrpc: "2.0", method: "tools/list", id: 2 });
+    const status = list.result.tools.find((tool) => tool.name === "gkill_status");
+    expect(status.description.endsWith(` [schema_revision: ${revision}]`)).toBe(true);
+    // 他のツールには焼き込まない
+    for (const tool of list.result.tools) {
+      if (tool.name !== "gkill_status") {
+        expect(tool.description).not.toContain("[schema_revision:");
+      }
+    }
+
+    mockClient.callApi.mockResolvedValue({
+      application_config: { user_id: "testuser", device: "testdevice", version: "9.9.9" },
+    });
+    const call = await server.handleMessage({
+      jsonrpc: "2.0",
+      method: "tools/call",
+      id: 3,
+      params: { name: "gkill_status", arguments: {} },
+    });
+    expect(call.result.isError).toBe(false);
+    expect(call.result.structuredContent.schema_revision).toBe(revision);
+    expect(call.result.structuredContent.server_kind).toBe("read");
+    expect(call.result.structuredContent.tool_count).toBe(list.result.tools.length);
+    expect(call.result.structuredContent.transport).toBe("http"); // isLocalTransport は既定 false
+    expect(call.result.content[0].text).toContain("Connected to testuser@testdevice via read server");
+  });
+
   test("responds to ping", async () => {
     const response = await server.handleMessage({
       jsonrpc: "2.0",
@@ -373,9 +408,10 @@ describe("handleMessage", () => {
     expect(response.jsonrpc).toBe("2.0");
     expect(response.id).toBe(2);
     expect(Array.isArray(response.result.tools)).toBe(true);
-    expect(response.result.tools.length).toBe(10);
+    expect(response.result.tools.length).toBe(11);
 
     const toolNames = response.result.tools.map((t) => t.name);
+    expect(toolNames).toContain("gkill_status");
     expect(toolNames).toContain("gkill_get_kyous");
     expect(toolNames).toContain("gkill_get_all_tag_names");
     expect(toolNames).toContain("gkill_get_idf_file");
