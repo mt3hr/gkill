@@ -54,7 +54,7 @@ Key packages:
 ### HTTP ステータス（2026-08 導入）
 
 **エラーコード → HTTP ステータスの表が正本。** `api/message/http_status.go` の
-`errorCodeHTTPStatus`（414件、400/401/403/404/409/413/429/500）と `HTTPStatusForErrors`。
+`errorCodeHTTPStatus`（377件、400/401/403/404/409/413/429/500）と `HTTPStatusForErrors`。
 2026-08 まで `/api/*` の JSON ハンドラは**全部が暗黙の200**で、セッション切れも権限不足も
 内部エラーも「成功」に見えていた。ステータスを見る層（監視・プロキシ・アクセスログ・
 素朴なHTTPクライアント）から障害が完全に隠れていた。
@@ -102,6 +102,32 @@ ERR000002 でログアウトさせるので、**存在しないユーザIDにパ
 `use-ur-log-view.ts` の `base64_to_data_uri` と揃える）と `CheckImageDimensions` を通す。
 スキーム無しURLは `u.Hostname()` が空になり Google が汎用アイコンを**200**で返すので、
 リクエスト前に弾く（`dao/reps/ur_log.go` の `getFavicon`）。
+
+### HTTP API のルート表（2026-09 導入）
+
+**ルートの正本は `gkill_server_api_address.go` の `apiRoutes()` の表1つ。`serve.go` にもテストハーネス
+（`gkill_server_api_test.go` の `setupTestRouter`）にも `router.HandleFunc` を直に書かない。** 両方が
+`registerAPIRoutes` で同じ表を登録する。表の1行は `{Path: "/api/xxx", Method: "POST", Auth: authXxx, Body: bodyXxx, Handler: g.HandleXxx},`
+を**1行で**書く（`verify_docs` と `gkill-api.test.ts` が正規表現で読む。`Method` は `http.MethodPost` ではなく文字列リテラル）。
+2026-09-14 まで同じ表が Go 定義・`serve.go`・テストハーネスの部分コピー・`gkill-api.ts` の4箇所に手書きされ、
+「アドレス定義はあるがハンドラ未登録で実行時404」の残骸が2件、テストハーネスには本番と違うラッパーで登録された経路が
+4本あった（アップロード2本が上限なし、MCP 2本が `wrapAuthRepos`）。
+
+守ること3つ。
+
+1. **エンドポイントを足したら、ハンドラ・表の1行・`api_routes_test.go` の golden の1行・Web から叩くなら
+   `gkill-api.ts` の `xxx_address` / `xxx_method` の対、を揃える。** 表へ足し忘れるとハンドラがあっても 404
+   だが、`TestAPIRoutes_EveryHandlerIsRouted` が `HandleXxx` の反射列挙と表を双方向に突き合わせて落とす。
+2. **認証区分（`Auth`）は表と golden の2箇所を意図して直す。** `TestAPIRoutes_AuthKindGolden` が名指しで
+   固定しているので、`wrapAuthRepos → wrapNoAuth` のような退行はテストを落とさずには通らない。
+   無認証で POST を受ける経路は `Body` に `bodyAuth` / `bodyUpload` を付ける（`validateAPIRoutes` が起動時に拒否、
+   `TestAPIRoutesNoAuthBodyRoutesAreCapped` が名指しで固定）。
+3. **doc コメントの `// POST /api/xxx（wrapXxx）` 行は表と一致させる**（`TestAPIRoutes_DocCommentMatchesTable`）。
+   `（wrapNoAuth）` は capped 版も含む区分名。
+
+Web クライアント側は生成せず、`gkill-api.test.ts`「endpoint address parity with Go」が表とパス・メソッド・
+`_address`↔`_method` の対・`gkill_fetch` の配線を突き合わせる。OpenAPI 正本化＋生成を採らなかった理由と却下案は
+[ADR-0709](../../../documents/adr/0709-api-route-table-single-source.md)。
 
 ### HTTP セキュリティ（2026-08 外部監査由来）
 

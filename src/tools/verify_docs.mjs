@@ -94,25 +94,25 @@ function computeMetrics() {
   const dialogs = listFiles('src/client/pages/dialogs', (f) => f.endsWith('.vue')).length
   const pages = listFiles('src/client/pages', (f) => f.endsWith('.vue')).length
 
-  // 登録エンドポイント数 = serve.go の HandleFunc 登録数
-  const serve = readText('src/server/gkill/api/gkill_server_api/serve.go')
-  const endpoints = (serve.match(/HandleFunc\(/g) || []).length
-
-  // アドレス定義数 = gkill_server_api_address.go の XxxMethod 定数。
-  //   登録数（endpoints）より多い＝ハンドラ未実装のアドレスがある、という関係。
-  //   両方を別々に検査しないと「定義90・登録88」のような古い組が資料に残り続ける。
+  // エンドポイント数 = gkill_server_api_address.go のルート表（apiRoutes）の行数。
+  //   表は serve.go とテストハーネスがそのまま登録する正本なので「定義数」と「登録数」は同じ数。
+  //   かつては定義（アドレス定数）と登録（serve.go の HandleFunc）が別で、「92件定義・90件登録」
+  //   という二重の数を資料に書かせていた（ADR-0709）。
+  //   行の書式 `{Path: "...", Method: "...", Auth: ..., Body: ..., Handler: g.HandleXxx},` は
+  //   表の冒頭コメントで契約している（TS 側の gkill-api.test.ts も同じ正規表現で読む）。
   const addressGo = readText('src/server/gkill/api/gkill_server_api/gkill_server_api_address.go')
-  const endpointMethods = addressGo.match(/Method\s*=\s*"(GET|POST|PUT|DELETE)"/g) || []
-  const endpointsDefined = endpointMethods.length
-  const endpointsPost = endpointMethods.filter((m) => m.includes('"POST"')).length
-  const endpointsGet = endpointMethods.filter((m) => m.includes('"GET"')).length
+  const routeRows = [...addressGo.matchAll(/\{Path:\s*"([^"]+)",\s*Method:\s*"(GET|POST)",\s*Auth:\s*(\w+),/g)]
+  const endpoints = routeRows.length
+  const endpointsPost = routeRows.filter((m) => m[2] === 'POST').length
+  const endpointsGet = routeRows.filter((m) => m[2] === 'GET').length
+  if (endpoints === 0) err('ルート表（gkill_server_api_address.go の apiRoutes）を読み取れない。行の書式が変わったなら verify_docs の正規表現も直すこと')
 
-  // 認証ラッパー別の登録数（serve.go）。PathPrefix 経由の2件は HandleFunc ではないので除く。
-  const wrapCount = (name) =>
-    (serve.match(new RegExp(`HandleFunc\\([^\\n]*g\\.${name}\\(`, 'g')) || []).length
-  const wrapNoAuth = wrapCount('wrapNoAuth')
-  const wrapAuth = wrapCount('wrapAuth')
-  const wrapAuthRepos = wrapCount('wrapAuthRepos')
+  // 認証区分別の件数。表の authNone / authSession / authSessionRepos は
+  // auth_middleware.go の wrapNoAuth（capped 含む）/ wrapAuth / wrapAuthRepos と1対1。
+  const authCount = (kind) => routeRows.filter((m) => m[3] === kind).length
+  const wrapNoAuth = authCount('authNone')
+  const wrapAuth = authCount('authSession')
+  const wrapAuthRepos = authCount('authSessionRepos')
 
   // i18n キー数（全ロケール一致を検査、ja を代表値に）
   const localeFiles = listFiles('src/locales', (f) => f.endsWith('.json'))
@@ -129,7 +129,7 @@ function computeMetrics() {
 
   return {
     handlers, reqRes, views, dialogs, pages, endpoints, i18nKeys,
-    endpointsDefined, endpointsPost, endpointsGet,
+    endpointsPost, endpointsGet,
     wrapNoAuth, wrapAuth, wrapAuthRepos,
     componentTotal: views + dialogs + pages,
     localeKeyCounts,
@@ -493,8 +493,8 @@ function buildCountAssertions(m) {
   add('documents/reverse/folder-structure.md', `${m.i18nKeys}キー/言語`)
   add('AGENTS.md', `${m.i18nKeys} keys per locale`)
 
-  // endpoints（登録数）
-  add('documents/reverse/glossary.md', `${m.endpoints}登録`)
+  // endpoints（ルート表の行数）
+  add('documents/reverse/glossary.md', `全エンドポイント（${m.endpoints}件）`)
   add('documents/reverse/program-spec.md', `全${m.endpoints}エンドポイント`)
 
   // コンポーネント合計
@@ -780,21 +780,22 @@ function buildCountAssertions(m) {
     `(${m.classesApiReqRes}ファイル、サーバー側は${m.reqRes}ファイル)`)
   add('documents/reverse/glossary.md', `TypeScript 版入出力型（${m.classesApiReqRes}ファイル）`)
 
-  // エンドポイント: 定義数と登録数は別物なので両方検査する
+  // エンドポイント: ルート表の行数が唯一の数（定義 = 登録）。内訳（POST/GET・認証区分）も表から数える
   add('documents/reverse/api-endpoints.md',
-    `${m.endpointsDefined}件定義（${m.endpointsPost} POST + ${m.endpointsGet} GET。うち${m.endpoints}件はハンドラ登録済み`)
-  add('documents/reverse/README.md', `全${m.endpointsDefined}エンドポイント（登録済み${m.endpoints}）`)
-  add('documents/reverse/README.md', `（${m.endpointsDefined}件定義・${m.endpoints}件登録）`)
-  add('documents/reverse/folder-structure.md', `（${m.endpointsDefined}件定義・${m.endpoints}件登録）`)
-  add('documents/reverse/folder-structure.md', `${m.endpointsDefined}エンドポイント定義・${m.endpoints}登録`)
-  add('documents/reverse/glossary.md', `（${m.endpointsDefined}定義・${m.endpoints}登録）`)
-  add('documents/reverse/glossary.md', `全${m.endpointsDefined}エンドポイントのパス・メソッド定義`)
-  add('documents/reverse/program-spec.md', `アドレス定義は${m.endpointsDefined}件`)
+    `エンドポイント ${m.endpoints}件（${m.endpointsPost} POST + ${m.endpointsGet} GET）`)
+  add('documents/reverse/README.md', `全${m.endpoints}エンドポイントのリファレンス`)
+  add('documents/reverse/README.md', `全APIエンドポイントのリファレンス（${m.endpoints}件）`)
+  add('documents/reverse/folder-structure.md', `APIエンドポイント一覧（${m.endpoints}件）`)
+  add('documents/reverse/folder-structure.md',
+    `ルート表（${m.endpoints}エンドポイント: ${m.endpointsPost} POST + ${m.endpointsGet} GET`)
+  add('documents/reverse/glossary.md', `全${m.endpoints}エンドポイントのパス・メソッド・認証区分・ハンドラ`)
+  add('documents/reverse/program-spec.md', `全${m.endpoints}エンドポイント（${m.endpointsPost} POST + ${m.endpointsGet} GET）のハンドリング`)
   add('documents/reverse/program-spec.md',
-    `アドレス定義${m.endpointsDefined}件 = ${m.endpointsPost} POST + ${m.endpointsGet} GET`)
-  add('documents/reverse/program-spec.md', `（${m.endpointsDefined}件、うち${m.endpoints}件が登録済み）`)
-  add('src/server/gkill/api/README.md',
-    `## 全エンドポイント一覧（${m.endpointsDefined}エンドポイント定義・${m.endpoints}登録）`)
+    `### エンドポイント分類（${m.endpoints}件 = ${m.endpointsPost} POST + ${m.endpointsGet} GET`)
+  add('documents/reverse/program-spec.md', `ルート表で定義されます（${m.endpoints}件`)
+  add('src/server/gkill/api/README.md', `## 全エンドポイント一覧（${m.endpoints}エンドポイント）`)
+  add('documents/reverse/program-spec.md', `| \`wrapNoAuth\` | ${m.wrapNoAuth} |`)
+  add('documents/reverse/program-spec.md', `| \`wrapAuth\` | ${m.wrapAuth} |`)
   add('documents/reverse/program-spec.md', `| \`wrapAuthRepos\` | ${m.wrapAuthRepos} |`)
 
   // エラー/メッセージコードは件数だけでなく採番の上端も見る。

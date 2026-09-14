@@ -297,8 +297,6 @@ export class GkillAPI {
         add_account_address: string
         generate_tls_file_address: string
         get_gps_log_address: string
-        get_kftl_template_address: string
-        get_gkill_info_address: string
         get_share_kyou_list_infos_address: string
         add_share_kyou_list_info_address: string
         update_share_kyou_list_info_address: string
@@ -368,7 +366,6 @@ export class GkillAPI {
         get_mirekyou_method: string
         get_rekyous_by_target_id_method: string
         get_mirekyous_by_target_id_method: string
-        get_git_commit_logs_method: string
         get_mi_board_list_method: string
         get_all_tag_names_method: string
         get_all_rep_names_method: string
@@ -383,19 +380,12 @@ export class GkillAPI {
         update_application_config_method: string
         upload_files_method: string
         upload_gpslog_files_method: string
-        update_tag_struct_method: string
-        update_rep_struct_method: string
-        update_device_struct_method: string
-        update_rep_type_struct_method: string
-        update_kftl_template_method: string
         update_account_status_method: string
         update_user_reps_method: string
-        update_server_config_method: string
+        update_server_configs_method: string
         add_account_method: string
         generate_tls_file_method: string
         get_gps_log_method: string
-        get_kftl_template_method: string
-        get_gkill_info_method: string
         get_share_kyou_list_infos_method: string
         add_share_kyou_list_info_method: string
         update_share_kyou_list_info_method: string
@@ -486,8 +476,6 @@ export class GkillAPI {
                 this.add_account_address = "/api/add_user"
                 this.generate_tls_file_address = "/api/generate_tls_file"
                 this.get_gps_log_address = "/api/get_gps_log"
-                this.get_kftl_template_address = "/api/get_kftl_template"
-                this.get_gkill_info_address = "/api/get_gkill_info"
                 this.get_share_kyou_list_infos_address = "/api/get_share_kyou_list_infos"
                 this.add_share_kyou_list_info_address = "/api/add_share_kyou_list_info"
                 this.update_share_kyou_list_info_address = "/api/update_share_kyou_list_info"
@@ -555,7 +543,6 @@ export class GkillAPI {
                 this.get_mirekyou_method = "POST"
                 this.get_rekyous_by_target_id_method = "POST"
                 this.get_mirekyous_by_target_id_method = "POST"
-                this.get_git_commit_logs_method = "POST"
                 this.get_mi_board_list_method = "POST"
                 this.get_all_tag_names_method = "POST"
                 this.get_all_rep_names_method = "POST"
@@ -570,19 +557,12 @@ export class GkillAPI {
                 this.upload_files_method = "POST"
                 this.upload_gpslog_files_method = "POST"
                 this.update_application_config_method = "POST"
-                this.update_tag_struct_method = "POST"
-                this.update_rep_struct_method = "POST"
-                this.update_device_struct_method = "POST"
-                this.update_rep_type_struct_method = "POST"
-                this.update_kftl_template_method = "POST"
                 this.update_account_status_method = "POST"
                 this.update_user_reps_method = "POST"
-                this.update_server_config_method = "POST"
+                this.update_server_configs_method = "POST"
                 this.add_account_method = "POST"
                 this.generate_tls_file_method = "POST"
                 this.get_gps_log_method = "POST"
-                this.get_kftl_template_method = "POST"
-                this.get_gkill_info_method = "POST"
                 this.get_share_kyou_list_infos_method = "POST"
                 this.add_share_kyou_list_info_method = "POST"
                 this.update_share_kyou_list_info_method = "POST"
@@ -1920,7 +1900,7 @@ export class GkillAPI {
 
         async update_server_config(req: UpdateServerConfigsRequest): Promise<UpdateServerConfigsResponse> {
                 const res = await this.gkill_fetch(this.update_server_configs_address, {
-                        'method': this.update_server_config_method,
+                        'method': this.update_server_configs_method,
                         headers: {
                                 'Content-Type': 'application/json'
                         },

@@ -127,7 +127,6 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 
 	findFilter := &api.FindFilter{}
 	return &GkillServerAPI{
-		APIAddress:       NewGKillAPIAddress(),
 		GkillDAOManager:  gkillDAOManager,
 		FindFilter:       findFilter,
 		UsecaseCtx:       usecase.NewUsecaseContext(gkillDAOManager, findFilter),
@@ -140,8 +139,6 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 
 type GkillServerAPI struct {
 	server *http.Server
-
-	APIAddress *GkillServerAPIAddress
 
 	GkillDAOManager *dao.GkillDAOManager
 
