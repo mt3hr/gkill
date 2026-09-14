@@ -863,6 +863,39 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 	return matchKyou, nil
 }
 
+// GetKyouHistoriesByRepName はIDが一致するKyouの全版を UpdateTime 降順で返します。
+// `/api/get_kyou`（update_time 指定なし）の実体で、`Repositories.GetKyouHistoriesByRepName` の前段。
+//
+// 最新版アドレス表にそのIDが載っていれば、プラグインrepを問い合わせ先から外す。
+// プラグインKyouのIDは表に載らない（GetKyou のコメント参照）ので、載っている＝ネイティブの記録で、
+// プラグインへ聞いても必ず空で返る。プラグインへの問い合わせは1プラグインずつ直列のIPCで、
+// 実データでは引き直しのたびに6本のサブプロセス往復が積み上がり、キュー待ちの上限（10秒）を
+// 超えると `/api/get_kyou` 全体が ERR000101 で落ちていた（1〜2秒に36件のバーストとして
+// `gkill_error.log` に残っていた）。表に無いID（プラグインKyou・追加直後の記録）は従来どおり全repへ聞く。
+// rep名の指定があるときは絞り込まない（一致する leaf だけを回る経路なので元から1本）。
+func (g *GkillRepositories) GetKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]Kyou, error) {
+	targetReps := g.Reps
+	// アドレス表を持たない組み立て（テストの素の構造体など）では絞り込まず全repへ聞く
+	if repName == nil && g.LatestDataRepositoryAddressDAO != nil {
+		latestDataRepositoryAddress, err := g.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddress(ctx, id)
+		if err != nil {
+			err = fmt.Errorf("error at get latest data repository addresses by id %s: %w", id, err)
+			return nil, err
+		}
+		if latestDataRepositoryAddress != nil {
+			withoutPlugins := make(Repositories, 0, len(g.Reps))
+			for _, rep := range g.Reps {
+				if _, isPlugin := rep.(PluginRepository); isPlugin {
+					continue
+				}
+				withoutPlugins = append(withoutPlugins, rep)
+			}
+			targetReps = withoutPlugins
+		}
+	}
+	return targetReps.GetKyouHistoriesByRepName(ctx, id, repName)
+}
+
 func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	select {
 	case <-updateCacheThreadPool:

@@ -359,7 +359,8 @@ describe('useRykvView 列×検索ルーティング', () => {
     const dispatched_list_a = view.match_kyous_list.value[0]
     view.reload_kyou({ id: 'a1' } as unknown as Kyou)
     await flushAsync()
-    expect(pending_refreshes.length).toBe(1)
+    // 全列ぶんが同じtickで dispatch される(a1を含まない列1は実実装ではno-op)
+    expect(pending_refreshes.length).toBe(2)
     // dispatch時点の配列を掴んでいること(ここが保証の根拠)
     expect(pending_refreshes[0].list).toBe(dispatched_list_a)
 
@@ -370,20 +371,15 @@ describe('useRykvView 列×検索ルーティング', () => {
     pending_refreshes[0].list.splice(0, 1, { id: 'a1', refreshed: true } as never)
     expect(kyouIds(view.match_kyous_list.value[0])).toEqual(['fresh'])
     pending_refreshes[0].resolve()
-    await flushAsync()
-
-    // a1を含まない列1のrefreshも完了させる(実実装ではno-opになる)
-    expect(pending_refreshes.length).toBe(2)
     pending_refreshes[1].resolve()
     await flushAsync()
 
     // 交錯しなければ、該当行だけが新しいインスタンスに差し替わる
     view.reload_kyou({ id: 'b1' } as unknown as Kyou)
     await flushAsync()
-    expect(pending_refreshes.length).toBe(3)
+    expect(pending_refreshes.length).toBe(4)
     pending_refreshes[2].resolve()
     await flushAsync()
-    expect(pending_refreshes.length).toBe(4)
     // 交錯していない列は、掴んだ配列がそのまま現在の列なので反映される
     expect(pending_refreshes[3].list).toBe(view.match_kyous_list.value[1])
     pending_refreshes[3].list.splice(0, 1, { id: 'b1', refreshed: true } as never)
@@ -412,6 +408,25 @@ describe('useRykvView 列×検索ルーティング', () => {
 
     expect(view.match_kyous_list.value[0]).toBe(before)
     expect(view.focused_kyous_list.value).toBe(view.match_kyous_list.value[0])
+  })
+
+  // refresh_kyou は最初の await より前に飛行中の表へ登録するので、列ごとの引き直しを
+  // 同じ tick で呼び出せば2列目以降が同じ往復に合流する。1本ずつ await すると先発が
+  // 決着して表から消えたあとに次が始まり、対象が載っている列の数だけフルの引き直しが走る
+  test('reload_kyouは列ごとの引き直しを同じtickで全部呼び出す(1本ずつawaitして合流を取りこぼさない)', async () => {
+    const { view } = createView()
+    const query_a = makeColumnQuery('col-a')
+    const query_b = makeColumnQuery('col-b')
+    setupColumns(view, [query_a, query_b], [kyous(['a1']), kyous(['a1', 'b1'])])
+
+    // 1列目の引き直しを永久に飛行中にしておく。直列 await だと2列目が呼ばれない
+    vi.mocked(refresh_kyou_in_list).mockImplementation((() => new Promise<void>(() => { })) as never)
+    vi.mocked(refresh_kyou_in_list).mockClear()
+    view.reload_kyou({ id: 'a1' } as unknown as Kyou)
+
+    expect(vi.mocked(refresh_kyou_in_list)).toHaveBeenCalledTimes(2)
+    const requested_ats = vi.mocked(refresh_kyou_in_list).mock.calls.map((call) => (call[2] as { requested_at: number }).requested_at)
+    expect(requested_ats[0]).toBe(requested_ats[1])
   })
 
   test('フォーカス列以外の検索完了はカレンダー(focused_kyous_list)を差し替えない', async () => {
@@ -467,7 +482,8 @@ describe('useRykvView 列×検索ルーティング', () => {
 
     view.reload_kyou({ id: 'a1' } as unknown as Kyou)
     await flushAsync()
-    expect(pending_refreshes.length).toBe(1)
+    // 全列ぶんが同じtickで dispatch される(列1は実実装ではno-op)
+    expect(pending_refreshes.length).toBe(2)
 
     // 列0(col-a)がreload中に閉じられ、indexがずれた状況
     await view.close_list_view(0)
@@ -478,6 +494,7 @@ describe('useRykvView 列×検索ルーティング', () => {
     expect(view.match_kyous_list.value.length).toBe(1)
     expect(kyouIds(view.match_kyous_list.value[0])).toEqual(['b1'])
     pending_refreshes[0].resolve()
+    pending_refreshes[1].resolve()
   })
 
   test('フォーカス切替のflush中に届く機械的updated_queryは検索にならない(抑止のnextTick登録順回帰)', async () => {

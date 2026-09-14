@@ -29,7 +29,7 @@ func (uc *UsecaseContext) GetKyouHistories(ctx context.Context, repositories *re
 			kyouHistories = []reps.Kyou{*kyou}
 		}
 	} else {
-		kyouHistories, err = repositories.Reps.GetKyouHistoriesByRepName(ctx, id, repName)
+		kyouHistories, err = repositories.GetKyouHistoriesByRepName(ctx, id, repName)
 	}
 
 	if err != nil {
