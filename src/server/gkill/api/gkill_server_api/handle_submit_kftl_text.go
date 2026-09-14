@@ -25,8 +25,9 @@ import (
 //
 // 解釈にはテンプレート等を含むApplicationConfigが要ります。未登録の利用者・端末に対しては
 // 既定値を登録してから読み直すので、初回リクエストでもエラーにはしません。
-// 記録は書き込み用repへ直接行います。リクエストにTXIDはなく、
-// commit_tx/discard_txの未確定状態は経由しません。
+// 記録はサーバ内で発行した TXID で temp rep に積み、最後に reps.CommitTx が1つの SQLite
+// トランザクションで書き込み用repへ確定します。途中で失敗したら DiscardTx して何も残しません
+// （2026-09-15 まで実 rep へ直書きで、失敗した行より前の記録が残る設計でした）。
 // 生成されるKyouのCreateApp/UpdateAppはリクエストの create_app で、無指定なら "gkill_kftl" です
 // （Wear companion は "gkill_wear" を送る。MCP は送らない）。
 func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Request) {
@@ -127,8 +128,7 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 		createApp,
 		request.LocaleName,
 	)
-	// 成功・失敗どちらでも、実際に書けたものは載せる。KFTLはDBトランザクションを使わないので
-	// 途中で失敗しても前のリクエストぶんは残る。何が残ったか分からないと後始末ができない。
+	// 確定は1つのトランザクションなので、失敗したときは何も残らず created は空になる。
 	response.Created = toSubmitKFTLTextCreated(createdRecords)
 
 	if err != nil {
@@ -173,8 +173,8 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 // formatKFTLExecutionErrorMessage は実行フェーズの失敗に行番号を添える。
 //
 // 原因そのもの(DBのエラー等)は端末固有の情報を含みうるので載せない。載せるのは
-// 「何行目で止まったか」だけ —— 定型文1本では、created[] のどこまでが書けて
-// どこで止まったのかが応答から分からなかった。行テキストは利用者自身が書いたもの。
+// 「何行目で止まったか」だけ（行テキストは利用者自身が書いたもの）。確定は1つの
+// トランザクションなので何も残らないが、直すべき行は分からないと困る。
 func formatKFTLExecutionErrorMessage(localizer *i18n.Localizer, err error) string {
 	base := localizer.MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"})
 	var executionError *kftl.KFTLExecutionError

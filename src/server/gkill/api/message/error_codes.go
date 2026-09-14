@@ -406,4 +406,10 @@ const (
 	// ReadRequestBodyError は認証系ミドルウェアの先読み(readAuthBody)での
 	// リクエストボディ読み取り失敗(上限超過以外)です。サーバ側の失敗として 500 です。
 	ReadRequestBodyError = "ERR000418"
+
+	// CommitTxRolledBackError は /api/commit_tx の確定（temp rep → 実 rep の1つの SQLite トランザクション）が
+	// 失敗して ROLLBACK されたときのものです。**実 rep には何も書かれていません**（temp rep の行は残ります）。
+	// 2026-09-15 まで commit は種別ごとの逐次追記で、途中の種別で失敗すると書けた種別だけが残っていました
+	// （部分確定）。500 です。documents/adr/0219-commit-tx-is-one-sqlite-transaction.md
+	CommitTxRolledBackError = "ERR000419"
 )

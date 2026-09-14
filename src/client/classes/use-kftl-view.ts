@@ -9,14 +9,12 @@ import { KFTL_ASCII_SAVE_CHARACTOR } from '@/classes/kftl/kftl-prefixes'
 import { TextAreaInfo } from '@/classes/kftl/text-area-info'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
-import { DiscardTXRequest } from '@/classes/api/req_res/discard-tx-request'
 import { CommitTXRequest } from '@/classes/api/req_res/commit-tx-request'
 import { useConfirmUnknownTag } from '@/classes/use-confirm-unknown-tag'
 import type { KFTLProps } from '@/pages/views/kftl-props'
 import type { KFTLViewEmits } from '@/pages/views/kftl-view-emits'
 import type { KFTLRequest, KFTLRequestResult } from '@/classes/kftl/kftl-request'
-import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
-import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { discard_tx, fetch_committed_kyou } from '@/classes/gkill-tx'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { ComponentRef } from '@/classes/component-ref'
 import { useConfirmUnknownMiBoard } from '@/classes/use-confirm-unknown-mi-board'
@@ -706,11 +704,9 @@ export function useKftlView(options: {
                 set_submitting_content(remove_save_marker(get_submitting_content()))
 
                 if (tx_id) {
-                    const deiscard_req = new DiscardTXRequest()
-                    deiscard_req.tx_id = tx_id
-                    const discard_res = await props.gkill_api.discard_tx(deiscard_req)
-                    if (discard_res.errors && discard_res.errors.length != 0) {
-                        emits('received_errors', discard_res.errors)
+                    const discard_errors = await discard_tx(props.gkill_api, tx_id)
+                    if (discard_errors.length != 0) {
+                        emits('received_errors', discard_errors)
                     }
                     return
                 }
@@ -722,6 +718,12 @@ export function useKftlView(options: {
                 if (commit_res.errors && commit_res.errors.length != 0) {
                     emits('received_errors', commit_res.errors)
                     set_submitting_content(remove_save_marker(get_submitting_content()))
+                    // commit は1つの SQLite トランザクションなので失敗したら何も書かれていない。
+                    // temp に積んだ行だけが残るので捨てる（残すと同じ tx_id の再 commit で丸ごと二重登録になる）
+                    const discard_errors = await discard_tx(props.gkill_api, tx_id)
+                    if (discard_errors.length != 0) {
+                        emits('received_errors', discard_errors)
+                    }
                     return
                 }
             }
@@ -768,20 +770,7 @@ export function useKftlView(options: {
         if (results.length === 0) {
             return
         }
-        const kyous = await Promise.all(results.map(async (result) => {
-            try {
-                await delete_gkill_kyou_cache(result.id)
-            } catch (_err: unknown) {
-                // Cache API が使えない環境ではスキップ
-            }
-            const req = new GetKyouRequest()
-            req.id = result.id
-            const res = await props.gkill_api.get_kyou(req)
-            if (res.errors && res.errors.length !== 0) {
-                return null
-            }
-            return res.kyou_histories[0] ?? null
-        }))
+        const kyous = await Promise.all(results.map(result => fetch_committed_kyou(props.gkill_api, result.id)))
 
         let is_emitted = false
         for (let i = 0; i < results.length; i++) {

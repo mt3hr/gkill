@@ -211,6 +211,33 @@ describe('useEditKmemoView', () => {
     await view.save()
 
     expect(props.gkill_api.update_kmemo).not.toHaveBeenCalled()
+    // タグだけでも tx を通す（経路を1本にする）
+    expect(props.gkill_api.add_tag.mock.calls[0][0].tx_id).not.toBeNull()
+    expect(props.gkill_api.commit_tx).toHaveBeenCalledTimes(1)
+  })
+
+  // 本文とタグは1つの tx に積む。タグが積めなければ discard_tx して本文の更新も残らない
+  test('タグの追加が失敗したら discard_tx して updated_kyou も requested_reload_kyou も出さない', async () => {
+    props.gkill_api.add_tag.mockResolvedValue({ added_tag: null, messages: [], errors: [{ error_code: 'ERR_TEST', error_message: 'ng' }] })
+    const view = useEditKmemoView({ props, emits })
+    view.kyou_tags_view.value = {
+      has_pending_changes: () => true,
+      get_tag_names: () => ['既知タグ'],
+      get_removed_tags: () => [],
+      reset: () => { },
+    }
+    view.kmemo_value.value = '更新メモ'
+
+    await view.save()
+
+    expect(props.gkill_api.update_kmemo).toHaveBeenCalledTimes(1)
+    expect(props.gkill_api.update_kmemo.mock.calls[0][0].tx_id).not.toBeNull()
+    expect(props.gkill_api.commit_tx).not.toHaveBeenCalled()
+    expect(props.gkill_api.discard_tx).toHaveBeenCalledTimes(1)
+    const events = emits.mock.calls.map((call: unknown[]) => call[0])
+    expect(events).toContain('received_errors')
+    expect(events).not.toContain('updated_kyou')
+    expect(events).not.toContain('requested_reload_kyou')
   })
 
   // タグの変更は updated_kyou を出さないので、これが唯一の反映信号になる

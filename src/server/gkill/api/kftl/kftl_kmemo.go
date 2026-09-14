@@ -131,16 +131,11 @@ func (r *kftlKmemoRequest) DoRequest(ctx context.Context) error {
 		UpdateDevice: r.Ctx.Device,
 		UpdateUser:   r.Ctx.UserID,
 	}
-	err := r.Ctx.Repositories.WriteKmemoRep.AddKmemoInfo(ctx, kmemo)
+	err := r.Ctx.Repositories.TempReps.KmemoTempRep.AddKmemoInfo(ctx, kmemo, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device)
 	if err != nil {
 		return fmt.Errorf("error at add kmemo info id=%s: %w", r.RequestID, err)
 	}
-	repName, repNameErr := r.Ctx.Repositories.WriteKmemoRep.GetRepName(ctx)
-	logGetRepNameFailure(ctx, "kmemo", kmemo.ID, repNameErr)
 	r.recordCreated("kmemo", kmemo.ID)
-	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
-	// キャッシュに書き込み
-	logWriteThroughCacheFailure(ctx, "kmemo", kmemo.ID, r.Ctx.Repositories.WriteThroughKmemoCache(ctx, kmemo))
 	return nil
 }
 

@@ -3,6 +3,8 @@
  *
  * Kyou削除時に、付随するTag/Text/Notificationと、それを参照しているReKyou/MiReKyouも
  * 連鎖して論理削除されることを確認する。
+ * 削除は全件を1つの tx_id で一時リポジトリに積み commit_tx で確定する（2026-09-15）。
+ * 1本でも失敗したら discard_tx して何も消さない。守るべき約束はそこ。
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -134,8 +136,23 @@ function create_cascade_api(graph: {
       update_rekyou: vi.fn(async (req: { rekyou: RefStub }) => { call_order.push(`update_rekyou:${req.rekyou.id}`); return ok }),
       update_mirekyou: vi.fn(async (req: { mirekyou: RefStub }) => { call_order.push(`update_mirekyou:${req.mirekyou.id}`); return ok }),
       update_kmemo: vi.fn(async (req: { kmemo: MetaStub }) => { call_order.push(`update_kmemo:${req.kmemo.id}`); return ok }),
+      generate_uuid: vi.fn(() => 'tx-1'),
+      commit_tx: vi.fn(async (req: { tx_id: string }) => { call_order.push(`commit_tx:${req.tx_id}`); return ok }),
+      discard_tx: vi.fn(async (req: { tx_id: string }) => { call_order.push(`discard_tx:${req.tx_id}`); return ok }),
     },
   }
+}
+
+/** 投げた update 系リクエストの tx_id を全部集める */
+function collect_tx_ids(api: ReturnType<typeof create_cascade_api>['api']): Array<string | null> {
+  const ids = new Array<string | null>()
+  for (const call of api.update_tag.mock.calls) ids.push((call[0] as { tx_id?: string | null }).tx_id ?? null)
+  for (const call of api.update_text.mock.calls) ids.push((call[0] as { tx_id?: string | null }).tx_id ?? null)
+  for (const call of api.update_notification.mock.calls) ids.push((call[0] as { tx_id?: string | null }).tx_id ?? null)
+  for (const call of api.update_rekyou.mock.calls) ids.push((call[0] as { tx_id?: string | null }).tx_id ?? null)
+  for (const call of api.update_mirekyou.mock.calls) ids.push((call[0] as { tx_id?: string | null }).tx_id ?? null)
+  for (const call of api.update_kmemo.mock.calls) ids.push((call[0] as { tx_id?: string | null }).tx_id ?? null)
+  return ids
 }
 
 type CascadeAPIStub = ReturnType<typeof create_cascade_api>['api']
@@ -190,6 +207,38 @@ describe('cascade_delete_kyou', () => {
     expect(result.deleted_ids.sort()).toEqual(['kmemo-1', 'mirekyou-1', 'rekyou-1'])
   })
 
+  it('全件を同じ tx_id で積み、commit_tx を1回だけ呼ぶ', async () => {
+    const { api, call_order } = create_cascade_api({
+      tags: { 'kmemo-1': [make_meta_stub('tag-1', 'kmemo-1')] },
+      rekyous: { 'kmemo-1': [make_ref_stub('rekyou-1', 'kmemo-1')] },
+    })
+
+    const result = await run(make_kmemo_kyou('kmemo-1'), api)
+
+    expect(result.errors).toHaveLength(0)
+    // tag / rekyou / 本体の3本すべてに同じ tx_id
+    expect(collect_tx_ids(api)).toEqual(['tx-1', 'tx-1', 'tx-1'])
+    expect(api.commit_tx).toHaveBeenCalledTimes(1)
+    expect(api.commit_tx.mock.calls[0][0].tx_id).toBe('tx-1')
+    expect(api.discard_tx).not.toHaveBeenCalled()
+    // commit は全部積み終わった後
+    expect(call_order.indexOf('commit_tx:tx-1')).toBeGreaterThan(call_order.indexOf('update_kmemo:kmemo-1'))
+  })
+
+  it('commit_tx が失敗したら discard_tx して deleted_ids は空（何も消えていない）', async () => {
+    const { api } = create_cascade_api({
+      rekyous: { 'kmemo-1': [make_ref_stub('rekyou-1', 'kmemo-1')] },
+    })
+    const failure = { error_code: 'ERR000419', error_message: 'rolled back', show_keep: true }
+    api.commit_tx.mockImplementation(async () => ({ messages: [], errors: [failure] }))
+
+    const result = await run(make_kmemo_kyou('kmemo-1'), api)
+
+    expect(result.deleted_ids).toEqual([])
+    expect(result.errors.map(e => e.error_code)).toEqual(['ERR000419'])
+    expect(api.discard_tx).toHaveBeenCalledTimes(1)
+  })
+
   it('多段の参照を再帰的に辿る', async () => {
     const { api } = create_cascade_api({
       rekyous: {
@@ -205,7 +254,7 @@ describe('cascade_delete_kyou', () => {
     expect(api.update_rekyou).toHaveBeenCalledTimes(3)
   })
 
-  it('S3-cascade: 削除に失敗したReKyouの id は deleted_ids に入らない（失敗行は画面に残す）', async () => {
+  it('ReKyou の1本が積めなかったら discard_tx して何も消さない（deleted_ids は空）', async () => {
     const { api } = create_cascade_api({
       rekyous: {
         'kmemo-1': [make_ref_stub('rekyou-ok', 'kmemo-1'), make_ref_stub('rekyou-ng', 'kmemo-1')],
@@ -221,21 +270,27 @@ describe('cascade_delete_kyou', () => {
 
     const result = await run(make_kmemo_kyou('kmemo-1'), api)
 
-    expect(result.deleted_ids).toContain('kmemo-1')
-    expect(result.deleted_ids).toContain('rekyou-ok')
-    expect(result.deleted_ids).not.toContain('rekyou-ng')
-    expect(result.errors.length).toBeGreaterThan(0)
+    // 以前は「消せた行だけ deleted_ids に入れて失敗行を画面に残す」だったが、
+    // 今は1つのトランザクションなので部分成功が無い
+    expect(result.deleted_ids).toEqual([])
+    expect(result.errors.map(e => e.error_code)).toEqual(['ERR_TEST'])
+    expect(api.commit_tx).not.toHaveBeenCalled()
+    expect(api.discard_tx).toHaveBeenCalledTimes(1)
   })
 
-  it('S3-cascade: Kyou本体の削除が失敗したら root の id は deleted_ids に入らない', async () => {
-    const { api } = create_cascade_api({})
+  it('Kyou本体が積めなかったら discard_tx して何も消さない', async () => {
+    const { api } = create_cascade_api({
+      tags: { 'kmemo-1': [make_meta_stub('tag-1', 'kmemo-1')] },
+    })
     const failure = { error_code: 'ERR_TEST', error_message: 'failed', show_keep: true }
     api.update_kmemo.mockImplementation(async () => ({ messages: [], errors: [failure] }))
 
     const result = await run(make_kmemo_kyou('kmemo-1'), api)
 
-    expect(result.deleted_ids).not.toContain('kmemo-1')
+    expect(result.deleted_ids).toEqual([])
     expect(result.errors.length).toBeGreaterThan(0)
+    expect(api.commit_tx).not.toHaveBeenCalled()
+    expect(api.discard_tx).toHaveBeenCalledTimes(1)
   })
 
   it('循環参照でも止まる', async () => {
@@ -300,7 +355,7 @@ describe('cascade_delete_kyou', () => {
     expect(api.update_tag.mock.calls[0][0].tag.id).toBe('tag-on-rekyou')
   })
 
-  it('1本失敗しても他は全部投げてエラーを集約する', async () => {
+  it('付随データの1本が積めなかったら本体は積まず discard_tx する', async () => {
     const { api } = create_cascade_api({
       tags: {
         'kmemo-1': [make_meta_stub('tag-1', 'kmemo-1'), make_meta_stub('tag-2', 'kmemo-1')],
@@ -314,9 +369,13 @@ describe('cascade_delete_kyou', () => {
 
     expect(result.errors).toHaveLength(1)
     expect(result.errors[0].error_code).toBe('ERR_TEST')
+    // 付随データは並列に積むので全部投げるが、本体には進まない
     expect(api.update_tag).toHaveBeenCalledTimes(2)
     expect(api.update_text).toHaveBeenCalledTimes(1)
-    expect(api.update_kmemo).toHaveBeenCalledTimes(1)
+    expect(api.update_kmemo).not.toHaveBeenCalled()
+    expect(api.commit_tx).not.toHaveBeenCalled()
+    expect(api.discard_tx).toHaveBeenCalledTimes(1)
+    expect(result.deleted_ids).toEqual([])
   })
 
   it('付随データの逆引きはforce_regetを立てる', async () => {
@@ -380,8 +439,12 @@ describe('cascade_delete_kyou', () => {
 
     expect(result.errors).toHaveLength(1)
     expect(result.errors[0].error_code).toBe('ERR900093')
-    // 打ち切っても、そこまでに集めた分は消す
-    expect(api.update_rekyou).toHaveBeenCalled()
+    // 見えていない参照元を残したまま本体だけ消すと、参照先の無いリポストが残る。
+    // 探索に失敗したら1本も積まない
+    expect(api.update_rekyou).not.toHaveBeenCalled()
+    expect(api.update_kmemo).not.toHaveBeenCalled()
+    expect(api.commit_tx).not.toHaveBeenCalled()
+    expect(result.deleted_ids).toEqual([])
   })
 
   // サーバは成功時 Errors を nil のまま返す。json:"errors" に omitempty が無いので

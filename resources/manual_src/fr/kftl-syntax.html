@@ -188,7 +188,7 @@ fri
 3
 ??</pre>
 <p>Cet exemple crée trois tâches « Rapport hebdomadaire » à 18:00 les trois vendredis suivants. Toutes les dates et heures de l enregistrement sont décalées du même nombre de jours, les écarts entre début, fin et échéance sont donc conservés. Cela ne fonctionne pas sur une tâche sans aucune date, car il n y aurait nulle part où mettre les dates répétées.</p>
-<p>La ligne 3 valant <code>no</code> par défaut, <strong>enregistrer deux fois le même texte ne crée pas de doublons.</strong> Si un enregistrement échoue en cours de route, réenregistrez simplement le même texte et seuls les éléments manquants seront créés.</p>
+<p>La ligne 3 valant <code>no</code> par défaut, <strong>enregistrer deux fois le même texte ne crée pas de doublons.</strong> Si l'enregistrement échoue, rien n'est créé : réenregistrez simplement le même texte.</p>
 <div class="tip">
   <strong>Remarque :</strong> Les dates qui n existent pas sont ignorées (<code>monthly 31</code> ignore février, <code>5th fri</code> ignore les mois sans cinquième vendredi). Impossible à utiliser avec le début de pointage (<code>/start</code>) ni avec la fin (<code>/end</code>, <code>/end?</code>, <code>/endt</code>, <code>/endt?</code>). Au maximum 1000 enregistrements par sauvegarde.
 </div>

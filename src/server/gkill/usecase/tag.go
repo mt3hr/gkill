@@ -102,30 +102,35 @@ func (uc *UsecaseContext) AddTag(ctx context.Context, repositories *reps.GkillRe
 		}
 	}
 
-	repName, err := repositories.WriteTagRep.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error at get rep name user id", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.GetTagError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_ADDED_GET_MESSAGE"}),
-		})
-		return nil, gkillErrors, nil
-	}
-	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
-		IsDeleted:                              tag.IsDeleted,
-		TargetID:                               tag.ID,
-		TargetIDInData:                         &tag.TargetID,
-		DataUpdateTime:                         tag.UpdateTime,
-		LatestDataRepositoryName:               repName,
-		LatestDataRepositoryAddressUpdatedTime: time.Now(),
-	}
-	repositories.SetLatestDataRepositoryAddress(tag.ID, latestDataRepositoryAddress)
+	// **tx 中は最新版アドレス表を進めない。** 実体は temp rep にしか無く、表は commit_tx が確定時に書く。
+	// ここで進めると、失敗 → discard_tx のあとに表だけが新しい時刻で残り、find_filter.go の
+	// 「表より古い版は除外」で**既存の記録が検索から消える**（2026-09-15 まで実際にそうなっていた）。
+	if txID == nil {
+		repName, err := repositories.WriteTagRep.GetRepName(ctx)
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
+			slog.Log(ctx, gkill_log.Debug, "error at get rep name user id", "error", fmt.Sprintf("%q", err))
+			gkillErrors = append(gkillErrors, &message.GkillError{
+				ErrorCode:    message.GetTagError,
+				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_ADDED_GET_MESSAGE"}),
+			})
+			return nil, gkillErrors, nil
+		}
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
+			IsDeleted:                              tag.IsDeleted,
+			TargetID:                               tag.ID,
+			TargetIDInData:                         &tag.TargetID,
+			DataUpdateTime:                         tag.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		}
+		repositories.SetLatestDataRepositoryAddress(tag.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
-	if err != nil {
-		err = fmt.Errorf("error at add or update latest data repository address for tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
-		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
+		if err != nil {
+			err = fmt.Errorf("error at add or update latest data repository address for tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
+			slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
+		}
 	}
 
 	addedTag, err := repositories.GetTag(ctx, tag.ID, nil)
@@ -209,30 +214,35 @@ func (uc *UsecaseContext) UpdateTag(ctx context.Context, repositories *reps.Gkil
 		}
 	}
 
-	repName, err := repositories.WriteTagRep.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error at get rep name user id", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.GetTagError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_UPDATED_GET_MESSAGE"}),
-		})
-		return nil, gkillErrors, nil
-	}
-	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
-		IsDeleted:                              tag.IsDeleted,
-		TargetID:                               tag.ID,
-		TargetIDInData:                         &tag.TargetID,
-		DataUpdateTime:                         tag.UpdateTime,
-		LatestDataRepositoryName:               repName,
-		LatestDataRepositoryAddressUpdatedTime: time.Now(),
-	}
-	repositories.SetLatestDataRepositoryAddress(tag.ID, latestDataRepositoryAddress)
+	// **tx 中は最新版アドレス表を進めない。** 実体は temp rep にしか無く、表は commit_tx が確定時に書く。
+	// ここで進めると、失敗 → discard_tx のあとに表だけが新しい時刻で残り、find_filter.go の
+	// 「表より古い版は除外」で**既存の記録が検索から消える**（2026-09-15 まで実際にそうなっていた）。
+	if txID == nil {
+		repName, err := repositories.WriteTagRep.GetRepName(ctx)
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
+			slog.Log(ctx, gkill_log.Debug, "error at get rep name user id", "error", fmt.Sprintf("%q", err))
+			gkillErrors = append(gkillErrors, &message.GkillError{
+				ErrorCode:    message.GetTagError,
+				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_UPDATED_GET_MESSAGE"}),
+			})
+			return nil, gkillErrors, nil
+		}
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
+			IsDeleted:                              tag.IsDeleted,
+			TargetID:                               tag.ID,
+			TargetIDInData:                         &tag.TargetID,
+			DataUpdateTime:                         tag.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		}
+		repositories.SetLatestDataRepositoryAddress(tag.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
-	if err != nil {
-		err = fmt.Errorf("error at add or update latest data repository address for tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
-		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
+		if err != nil {
+			err = fmt.Errorf("error at add or update latest data repository address for tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
+			slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
+		}
 	}
 
 	updatedTag, err := repositories.GetTag(ctx, tag.ID, nil)

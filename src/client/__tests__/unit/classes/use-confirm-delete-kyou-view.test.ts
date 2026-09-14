@@ -62,6 +62,10 @@ function create_api() {
     get_rekyous_by_target_id: vi.fn(async () => ({ rekyous: [], ...empty })),
     get_mirekyous_by_target_id: vi.fn(async () => ({ mirekyous: [], ...empty })),
     update_mirekyou: vi.fn(async () => empty),
+    // 削除は tx で束ねて commit_tx で確定する（cascade-delete-kyou.ts）
+    generate_uuid: vi.fn(() => 'tx-1'),
+    commit_tx: vi.fn(async () => empty),
+    discard_tx: vi.fn(async () => empty),
   }
 }
 

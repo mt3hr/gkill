@@ -363,6 +363,13 @@ export async function clickContextMenuItem(page: Page, label: RegExp | string): 
  * 中断されることがある。かといってダイアログが閉じるのを待つのも正しくない
  * （タグ追加のように、保存しても開いたままのダイアログがある）。
  * そこで「書き込みAPIの応答が返ってきたこと」を完了の合図にする。
+ *
+ * **追加/編集画面は本体とタグを tx_id で束ねて commit_tx で確定する**（ADR-0410）。
+ * 最初の書き込み応答（add_* / update_*）は一時リポジトリに積んだだけで、実 rep へは
+ * commit_tx で書かれる。そこで、最初の書き込みリクエストに tx_id が付いていたら
+ * commit_tx の応答まで待つ。待たずに画面遷移すると commit が中断され、記録は1件も
+ * 書かれない（2026-09-15 に Mi 画面系の E2E がそれで落ちた）。
+ * commit_tx の待ち受けはクリックの前に張る —— 応答が先に返ってから張ると永久に待つ。
  */
 export async function clickDialogButton(page: Page, label: RegExp | string): Promise<void> {
   // ダイアログは重なって開くことがある。閉じたはずの前のダイアログを掴まないよう、
@@ -371,6 +378,9 @@ export async function clickDialogButton(page: Page, label: RegExp | string): Pro
   await expect(button).toBeVisible({ timeout: 15000 })
 
   const responsePromise = page.waitForResponse((res) => isWriteApiResponse(res.url()), { timeout: 30000 })
+  // tx を使わない保存（テキスト・通知の単独追加など）では commit_tx は飛ばない。
+  // その場合この promise は使わずに捨てるので、タイムアウトの reject を握り潰しておく
+  const commitPromise = page.waitForResponse((res) => res.url().includes('/api/commit_tx'), { timeout: 30000 }).catch(() => null)
   await button.click()
   // 新しいタグ・新しい板を伴う保存では、確定しないとリクエストが飛ばない
   await confirmUnknownTagIfShown(page)
@@ -387,6 +397,17 @@ export async function clickDialogButton(page: Page, label: RegExp | string): Pro
   const body = await response.json().catch(() => null)
   const errors = (body as { errors?: unknown[] } | null)?.errors ?? []
   expect(errors, `${response.url()} がエラーを返した`).toHaveLength(0)
+
+  const request_body = response.request().postDataJSON() as { tx_id?: string | null } | null
+  if (!request_body?.tx_id) {
+    return
+  }
+  const commit = await commitPromise
+  expect(commit, 'tx_id 付きの保存なのに commit_tx が飛ばなかった').not.toBeNull()
+  expect(commit!.ok(), `/api/commit_tx が HTTP ${commit!.status()} を返した`).toBe(true)
+  const commit_body = await commit!.json().catch(() => null)
+  const commit_errors = (commit_body as { errors?: unknown[] } | null)?.errors ?? []
+  expect(commit_errors, '/api/commit_tx がエラーを返した').toHaveLength(0)
 }
 
 /**

@@ -41,6 +41,7 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 
 | ファイル | テスト内容 |
 |---------|-----------|
+| `commit_tx_test.go` | `CommitTx` / `DiscardTx`（ADR-0219）。書き込み rep のファイルを ATTACH した1接続のトランザクションで確定し、1行でも失敗したら前に書いた種別も含めて何も残らないこと・temp が失敗時は残り成功時は消えること・既存 ID の新しい版は `Updated=true`・書き込み rep 未設定は書く前に返すこと・13 型の leaf テーブル名が重複しないこと（非修飾名の解決の前提。ソース走査） |
 | `cached_and_temp_test.go` | キャッシュ層 / 一時リポジトリ層の動作検証（MiReKyou のキャッシュ再構築・TX分離を含む）。各 `TestCached*_AddAndGet` は **Add した直後に Get で取り直せること**を確認する（後述） |
 | `re_kyou_granular_cache_test.go` | ReKyou のグラニュラーキャッシュ動作検証 |
 | `idf_granular_cache_test.go` | IDFKyou のグラニュラーキャッシュ動作検証（`re_kyou_granular_cache_test.go` の IDFKyou 版） |

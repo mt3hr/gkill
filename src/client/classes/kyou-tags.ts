@@ -1,8 +1,10 @@
 // 編集前に読む: .claude/skills/gkill-client-tags/SKILL.md（この領域の不変条件の正本）
 'use strict'
 
-// add_tag の完了前に registered_kyou を emit してはいけない理由:
+// add_tag（tx なら commit_tx）の完了前に registered_kyou を emit してはいけない理由:
 // documents/adr/0403-add-tag-before-registered-kyou.md
+// 複数書き込みの操作を tx_id で束ねて commit_tx で確定する理由と却下案:
+// documents/adr/0410-bundle-multi-write-operations-in-tx.md
 
 import type { GkillAPI } from '@/classes/api/gkill-api'
 import type { GkillError } from '@/classes/api/gkill-error'
@@ -19,11 +21,14 @@ import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
  * 同じ処理が add-tag-view / KFTL / 12本のコンテキストメニュー / 削除確認ビューへ
  * 手書きで複製されていたので、ここ1つに寄せる。
  *
- * **`tx_id` は使わない。** TXID指定時のタグは一時リポジトリにしか無いので
- * `add_tag` は `added_tag` を返せず（`handle_add_tag.go` の doc コメント）、
- * 呼び出し元は `registered_tag` を上げられなくなる。
- * しかも `commit_tx` はDBトランザクションではなく部分確定しうる
- * （`handle_commit_tx.go`）ので、束ねても原子性は買えない。
+ * **Kyou 本体と一緒に保存する画面（追加7・編集10・ReKyou 作成）は `tx_id` を渡す。**
+ * tx 中のタグは一時リポジトリにしか無いので `add_tag` / `update_tag` は応答に実体を
+ * 載せられない（`handle_add_tag.go` の doc コメント）。サーバは渡した内容をそのまま書くので、
+ * ここではクライアントで組み立てた Tag を `added_tags` / `removed_tags` に積み、
+ * 呼び出し元は commit_tx が通ってから `registered_tag` / `deleted_tag` を上げる。
+ * commit_tx は1つの SQLite トランザクション（`dao/reps/commit_tx.go`）なので、
+ * 本体とタグは「全部書くか、何も書かないか」になる。
+ * タグだけを足す単発の操作（コンテキストメニュー等）は `tx_id` 無しで従来どおり直接書く。
  */
 
 /** タグ名の区切り文字。KFTLのタグ接頭辞「。」(句点)とは別物 */
@@ -88,6 +93,7 @@ export async function add_tags_to_target(
     application_config: ApplicationConfig,
     target_id: string,
     tag_names: Array<string>,
+    tx_id?: string,
 ): Promise<AddTagsResult> {
     const result: AddTagsResult = {
         added_tags: new Array<Tag>(),
@@ -119,6 +125,7 @@ export async function add_tags_to_target(
         await delete_gkill_kyou_cache(new_tag.target_id)
         const req = new AddTagRequest()
         req.tag = new_tag
+        req.tx_id = tx_id ?? null
         const res = await gkill_api.add_tag(req)
         if (res.errors && res.errors.length !== 0) {
             result.errors.push(...res.errors)
@@ -127,17 +134,30 @@ export async function add_tags_to_target(
         if (res.messages && res.messages.length !== 0) {
             result.messages.push(...res.messages)
         }
-        result.added_tags.push(res.added_tag)
+        // tx 中は added_tag が返らない（一時リポジトリにしか無い）ので、送った Tag をそのまま積む
+        result.added_tags.push(tx_id ? new_tag : res.added_tag)
     }
 
     // 履歴は実際に付いたものだけ。1つも付かなかったのに履歴が動くと
-    // 次回の履歴チップが「付けられなかったタグ」で埋まる
-    if (result.added_tags.length !== 0) {
-        const history_value = tag_names.join(tag_name_separator)
-        gkill_api.set_saved_last_added_tag(history_value)
-        gkill_api.push_tag_to_history(history_value)
+    // 次回の履歴チップが「付けられなかったタグ」で埋まる。
+    // tx 中はまだ付いていない（commit で決まる）ので、呼び出し元が commit 後に record_added_tag_history を呼ぶ
+    if (!tx_id && result.added_tags.length !== 0) {
+        record_added_tag_history(gkill_api, tag_names)
     }
     return result
+}
+
+/**
+ * 付けたタグ名をタグ履歴（前回のタグ・履歴チップ）へ積む。
+ * tx で束ねた画面は commit_tx が通ってから呼ぶこと（積んでから失敗すると履歴だけが動く）。
+ */
+export function record_added_tag_history(gkill_api: GkillAPI, tag_names: Array<string>): void {
+    if (tag_names.length === 0) {
+        return
+    }
+    const history_value = tag_names.join(tag_name_separator)
+    gkill_api.set_saved_last_added_tag(history_value)
+    gkill_api.push_tag_to_history(history_value)
 }
 
 /**
@@ -151,6 +171,7 @@ export async function remove_attached_tags(
     gkill_api: GkillAPI,
     application_config: ApplicationConfig,
     tags: Array<Tag>,
+    tx_id?: string,
 ): Promise<RemoveTagsResult> {
     const result: RemoveTagsResult = {
         removed_tags: new Array<Tag>(),
@@ -173,6 +194,7 @@ export async function remove_attached_tags(
         await delete_gkill_kyou_cache(updated_tag.target_id)
         const req = new UpdateTagRequest()
         req.tag = updated_tag
+        req.tx_id = tx_id ?? null
         const res = await gkill_api.update_tag(req)
         if (res.errors && res.errors.length !== 0) {
             result.errors.push(...res.errors)
@@ -181,7 +203,8 @@ export async function remove_attached_tags(
         if (res.messages && res.messages.length !== 0) {
             result.messages.push(...res.messages)
         }
-        result.removed_tags.push(res.updated_tag)
+        // tx 中の updated_tag は実リポジトリを読み直した**古い版**なので、送った Tag をそのまま積む
+        result.removed_tags.push(tx_id ? updated_tag : res.updated_tag)
     }
     return result
 }
@@ -201,8 +224,9 @@ export async function apply_kyou_tag_changes(
     target_id: string,
     tag_names: Array<string>,
     tags_to_remove: Array<Tag>,
+    tx_id?: string,
 ): Promise<ApplyTagChangesResult> {
-    const added = await add_tags_to_target(gkill_api, application_config, target_id, tag_names)
+    const added = await add_tags_to_target(gkill_api, application_config, target_id, tag_names, tx_id)
     if (added.errors.length !== 0) {
         return {
             added_tags: added.added_tags,
@@ -211,7 +235,7 @@ export async function apply_kyou_tag_changes(
             messages: added.messages,
         }
     }
-    const removed = await remove_attached_tags(gkill_api, application_config, tags_to_remove)
+    const removed = await remove_attached_tags(gkill_api, application_config, tags_to_remove, tx_id)
     return {
         added_tags: added.added_tags,
         removed_tags: removed.removed_tags,

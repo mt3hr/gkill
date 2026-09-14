@@ -43,7 +43,7 @@ description: "rykv / mi / dashboard の列と検索の不変条件。列の同�
 - 並び順は非mi=`RelatedTime` 降順（**`.Unix()` 相当に秒へ切り捨ててから**比較。ミリ秒のままだと同一秒の隣接行で位置がずれる）、mi=ソート基準の時刻の昇順で**未設定は末尾**。mi の「未設定」は `typed_mi` ではなく `data_type` の接尾辞で判定する（一覧の既存行は `typed_mi` が未ロードなので、`typed_mi` を要求する比較子は既存行に対して動かない）
 - 差し込みは **in-place `splice`**。`focused_kyous_list` は `match_kyous_list[focused_column_index]` へのエイリアスなので、参照ごと差し替えると件数カレンダーや Dnote と縁が切れる（30万件のコピーも避けられる）。ただし Dnote は命令的 reload なので配列を触るだけでは追随せず、明示的に呼び直すこと
 - `add_*` の応答は **hydrate を通っていない生 JSON**（`related_time` が文字列、`clone()` も無い）。受け口で必ず実体化する
-- KFTL は送信全体を tx で包むが、**tx 中の `add_*` は `added_kyou` を返せない**。リクエストクラスが id だけ積み（`get_result_kyou_ids()`）、`commit_tx` の**あと**に `get_kyou` で引いてから emit する。「終了」系は既存 TimeIs の更新なので `updated_kyou`
+- KFTL は送信全体を tx で包むが、**tx 中の `add_*` は `added_kyou` を返せない**。リクエストクラスが id だけ積み（`get_result_kyou_ids()`）、`commit_tx` の**あと**に `get_kyou` で引いてから emit する（引き直しは `gkill-tx.ts` の `fetch_committed_kyou`。2026-09-15 から追加/編集/削除画面も同じ tx の流れ、ADR-0410）。「終了」系は既存 TimeIs の更新なので `updated_kyou`
 - 守るテスト: `kyou-local-insert.test.ts` / `kyou-local-insert-mi-parity.test.ts`（Go の `find_filter_mi_test.go` と対）/ `registered-kyou-local-insert.test.ts`（rykv・mi 両方でパラメタライズ）/ `kftl-submit-emits.test.ts` 判定できない条件の一覧と却下案は [ADR-0402](../../../documents/adr/0402-insert-registered-kyou-locally.md)。
 
 **利用者がその場で作ったタグは、開いている列の検索条件へ足す**（2026-08-19）。

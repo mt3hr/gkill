@@ -1031,6 +1031,15 @@ func (n *notificationRepositorySQLite3Impl) AddNotificationInfo(ctx context.Cont
 			}
 		}()
 	}
+	return insertNotificationRow(ctx, db, notification)
+}
+
+// insertNotificationRow は Notification を1行 INSERT する。契約は AddNotificationInfo と同じで、書き込み先だけを引数で受ける。
+//
+// rep 自身の接続（AddNotificationInfo）にも、commit_tx が書き込み rep のファイルを ATTACH した1接続の
+// トランザクション（commit_tx.go）にも同じ SQL を打てるようにするための切り出し。
+// INSERT の列と検査はここだけに置き、AddXxxInfo 側へ複製しないこと（ずれると tx 経由の追記だけ壊れる）。
+func insertNotificationRow(ctx context.Context, db sqlite3impl.Preparer, notification Notification) error {
 	sql := `
 INSERT INTO NOTIFICATION (
   IS_DELETED,

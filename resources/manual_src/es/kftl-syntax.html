@@ -188,7 +188,7 @@ fri
 3
 ??</pre>
 <p>Este ejemplo crea tres tareas "Informe semanal" a las 18:00 los tres viernes siguientes. Todas las fechas y horas del registro se desplazan el mismo numero de dias, por lo que se conservan los intervalos entre inicio, fin y fecha limite. No se puede usar en una tarea sin ninguna fecha, porque no habria donde poner las fechas repetidas.</p>
-<p>Como la linea 3 vale <code>no</code> por defecto, <strong>volver a guardar el mismo texto no crea duplicados.</strong> Si un guardado falla a medias, basta con guardar el mismo texto otra vez y solo se crean los registros que faltan.</p>
+<p>Como la linea 3 vale <code>no</code> por defecto, <strong>volver a guardar el mismo texto no crea duplicados.</strong> Si el guardado falla, no se crea nada, así que basta con guardar el mismo texto otra vez.</p>
 <div class="tip">
   <strong>Nota:</strong> Las fechas que no existen se omiten (<code>monthly 31</code> omite febrero, <code>5th fri</code> omite los meses sin quinto viernes). No se puede usar con el inicio de marca de tiempo (<code>/start</code>) ni con el fin (<code>/end</code>, <code>/end?</code>, <code>/endt</code>, <code>/endt?</code>). Como maximo se pueden crear 1000 registros en un guardado.
 </div>

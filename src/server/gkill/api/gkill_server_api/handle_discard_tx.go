@@ -3,6 +3,7 @@ package gkill_server_api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
@@ -20,9 +22,9 @@ import (
 // req_res.DiscardTxRequest / req_res.DiscardTxResponse
 //
 // 削除対象は (txID, userID, device) に一致する行だけなので、他人・他端末の未確定データは消しません。
-// 途中のtemp repで失敗するとその時点で打ち切るので、残りの種別の未確定データは残ります。
+// 1種別で失敗しても止めずに全種別を試し、最初に失敗した種別のコードで返します。
 // 成功してもMessagesには何も積まないため、呼び出し側はErrorsが空かどうかで判断します。
-// commit後の後始末にも使います（HandleCommitTxはtemp repの行を消しません）。
+// commit が成功したときは HandleCommitTx が temp rep の行を消すので、呼ぶのは失敗したときだけです。
 func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
@@ -70,134 +72,44 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 
 	txID := request.TXID
 
-	err = repositories.TempReps.IDFKyouTempRep.DeleteByTXID(r.Context(), txID, userID, device)
+	// 1種別が失敗しても止めずに全種別を試す（止めると残りの種別の未確定データが残り続ける）。
+	// 応答のコードは従来どおり種別別（ERR000334〜345・401）で、最初に失敗した種別のものを載せる。
+	err = repositories.DiscardTx(r.Context(), txID, userID, device)
 	if err != nil {
-		err = fmt.Errorf("error at delete idfKyou by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete idfKyou by tx id", "error", fmt.Sprintf("%q", err))
+		err = fmt.Errorf("error at discard tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error at discard tx", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxDeleteIDFKyouError,
+			ErrorCode:    discardTxErrorCode(err),
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}
-	err = repositories.TempReps.KCTempRep.DeleteByTXID(r.Context(), txID, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at delete kc by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete kc by tx id", "error", fmt.Sprintf("%q", err))
-		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxDeleteKCError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		})
-		return
+}
+
+// discardTxErrorCodes は temp rep の破棄に失敗した種別ごとのエラーコード。
+var discardTxErrorCodes = map[string]string{
+	"idf_kyou":     message.CommitTxDeleteIDFKyouError,
+	"kc":           message.CommitTxDeleteKCError,
+	"kmemo":        message.CommitTxDeleteKmemoError,
+	"lantana":      message.CommitTxDeleteLantanaError,
+	"mi":           message.CommitTxDeleteMiError,
+	"nlog":         message.CommitTxDeleteNlogError,
+	"notification": message.CommitTxDeleteNotificationError,
+	"rekyou":       message.CommitTxDeleteReKyouError,
+	"mirekyou":     message.CommitTxGetMiReKyouError,
+	"tag":          message.CommitTxDeleteTagError,
+	"text":         message.CommitTxDeleteTextError,
+	"timeis":       message.CommitTxDeleteTimeIsError,
+	"urlog":        message.CommitTxDeleteURLogError,
+}
+
+// discardTxErrorCode は reps.DiscardTx の束ねたエラーから、最初に失敗した種別のコードを引く。
+func discardTxErrorCode(err error) string {
+	var discardErr *reps.DiscardTxError
+	if errors.As(err, &discardErr) {
+		if code, ok := discardTxErrorCodes[discardErr.DataType]; ok {
+			return code
+		}
 	}
-	err = repositories.TempReps.KmemoTempRep.DeleteByTXID(r.Context(), txID, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at delete kmemo by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete kmemo by tx id", "error", fmt.Sprintf("%q", err))
-		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxDeleteKmemoError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		})
-		return
-	}
-	err = repositories.TempReps.LantanaTempRep.DeleteByTXID(r.Context(), txID, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at delete lantana by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete lantana by tx id", "error", fmt.Sprintf("%q", err))
-		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxDeleteLantanaError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		})
-		return
-	}
-	err = repositories.TempReps.MiTempRep.DeleteByTXID(r.Context(), txID, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at delete mi by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete mi by tx id", "error", fmt.Sprintf("%q", err))
-		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxDeleteMiError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		})
-		return
-	}
-	err = repositories.TempReps.NlogTempRep.DeleteByTXID(r.Context(), txID, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at delete nlog by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete nlog by tx id", "error", fmt.Sprintf("%q", err))
-		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxDeleteNlogError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		})
-		return
-	}
-	err = repositories.TempReps.NotificationTempRep.DeleteByTXID(r.Context(), txID, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at delete notification by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete notification by tx id", "error", fmt.Sprintf("%q", err))
-		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxDeleteNotificationError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		})
-		return
-	}
-	err = repositories.TempReps.ReKyouTempRep.DeleteByTXID(r.Context(), txID, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at delete rekyou by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete rekyou by tx id", "error", fmt.Sprintf("%q", err))
-		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxDeleteReKyouError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		})
-		return
-	}
-	err = repositories.TempReps.MiReKyouTempRep.DeleteByTXID(r.Context(), txID, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at delete mirekyou by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete mirekyou by tx id", "error", fmt.Sprintf("%q", err))
-		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxGetMiReKyouError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		})
-		return
-	}
-	err = repositories.TempReps.TagTempRep.DeleteByTXID(r.Context(), txID, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at delete tag by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete tag by tx id", "error", fmt.Sprintf("%q", err))
-		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxDeleteTagError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		})
-		return
-	}
-	err = repositories.TempReps.TextTempRep.DeleteByTXID(r.Context(), txID, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at delete text by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete text by tx id", "error", fmt.Sprintf("%q", err))
-		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxDeleteTextError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		})
-		return
-	}
-	err = repositories.TempReps.TimeIsTempRep.DeleteByTXID(r.Context(), txID, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at delete timeis by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete timeis by tx id", "error", fmt.Sprintf("%q", err))
-		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxDeleteTimeIsError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		})
-		return
-	}
-	err = repositories.TempReps.URLogTempRep.DeleteByTXID(r.Context(), txID, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at delete urlog by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at delete urlog by tx id", "error", fmt.Sprintf("%q", err))
-		response.Errors = append(response.Errors, &message.GkillError{
-			ErrorCode:    message.CommitTxDeleteURLogError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		})
-		return
-	}
+	return message.CommitTxDeleteIDFKyouError
 }

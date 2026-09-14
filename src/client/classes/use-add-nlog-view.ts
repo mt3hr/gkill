@@ -11,7 +11,9 @@ import type { AddNlogViewProps } from '@/pages/views/add-nlog-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import type { ComponentRef } from '@/classes/component-ref'
 import { useConfirmUnknownTag } from '@/classes/use-confirm-unknown-tag'
-import { add_tags_to_target } from '@/classes/kyou-tags'
+import { add_tags_to_target, record_added_tag_history } from '@/classes/kyou-tags'
+import { fetch_committed_kyou, run_in_tx } from '@/classes/gkill-tx'
+import type { Tag } from '@/classes/datas/tag'
 
 export function useAddNlogView(options: {
     props: AddNlogViewProps,
@@ -152,36 +154,47 @@ export function useAddNlogView(options: {
             new_nlog.update_time = new Date(Date.now())
             new_nlog.update_user = props.application_config.user_id
 
-            // 追加リクエストを飛ばす
+            // 本体・タグ（・通知）を1つの tx に積んで commit_tx で確定する。commit は1つの SQLite
+            // トランザクションなので「全部書くか、何も書かないか」になる。tx 中の add_* は応答に
+            // Kyou もタグも載せられない（一時リポジトリにしか無い）ので、実体は commit 後に引き直す
             await delete_gkill_kyou_cache(new_nlog.id)
-            const req = new AddNlogRequest()
-            req.want_response_kyou = true
-            req.nlog = new_nlog
-            const res = await props.gkill_api.add_nlog(req)
-            if (res.errors && res.errors.length !== 0) {
-                emits('received_errors', res.errors)
+            const messages = new Array<GkillMessage>()
+            let added_tags = new Array<Tag>()
+            const tx = await run_in_tx(props.gkill_api, async (tx_id) => {
+                const req = new AddNlogRequest()
+                req.nlog = new_nlog
+                req.tx_id = tx_id
+                const res = await props.gkill_api.add_nlog(req)
+                if (res.errors && res.errors.length !== 0) {
+                    return res.errors
+                }
+                if (res.messages && res.messages.length !== 0) {
+                    messages.push(...res.messages)
+                }
+                const tag_result = await add_tags_to_target(props.gkill_api, props.application_config, new_nlog.id, tag_names, tx_id)
+                added_tags = tag_result.added_tags
+                messages.push(...tag_result.messages)
+                return tag_result.errors
+            })
+            if (!tx.committed) {
+                emits('received_errors', tx.errors)
                 return
             }
-            if (res.messages && res.messages.length !== 0) {
-                emits('received_messages', res.messages)
+            if (messages.length !== 0) {
+                emits('received_messages', messages)
             }
+            record_added_tag_history(props.gkill_api, tag_names)
 
-            // タグは registered_kyou より必ず先に付ける。
-            // 先に emit すると、タグで絞り込んだ列が空のタグ列を見て「一致しない」と判定し、
+            // タグは registered_kyou より必ず先に上げる（commit 済みなので順序が崩れることはない）。
+            // 先に registered_kyou を emit すると、タグで絞り込んだ列が空のタグ列を見て「一致しない」と判定し、
             // エラーも出ないまま行が現れない
-            const tag_result = await add_tags_to_target(props.gkill_api, props.application_config, new_nlog.id, tag_names)
-            tag_result.added_tags.forEach(added_tag => emits('registered_tag', added_tag))
-            if (tag_result.messages.length !== 0) {
-                emits('received_messages', tag_result.messages)
-            }
-            if (tag_result.errors.length !== 0) {
-                emits('received_errors', tag_result.errors)
-            }
+            added_tags.forEach(added_tag => emits('registered_tag', added_tag))
 
             // 追加した記録は列へ局所挿入されるので、リスト全体の引き直しは要求しない。
-            // Kyouが返らなかったときだけ、従来どおり引き直しへ落とす
-            if (res.added_kyou) {
-                emits('registered_kyou', res.added_kyou)
+            // Kyouが引けなかったときだけ、従来どおり引き直しへ落とす
+            const added_kyou = await fetch_committed_kyou(props.gkill_api, new_nlog.id)
+            if (added_kyou) {
+                emits('registered_kyou', added_kyou)
             } else {
                 emits('requested_reload_list')
             }
