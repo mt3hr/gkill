@@ -122,9 +122,9 @@ export class Kyou extends InfoBase {
         const await_promises = new Array<Promise<Array<GkillError>>>()
         try {
             await_promises.push(this.load_typed_datas(query))
-            // load_attached_histories はここでは呼ばない。
-            // 直後の load_attached_datas が同じものを読むので、
-            // 両方書くと 1件につき /api/get_kyou が2回飛ぶ。
+            // load_attached_histories はここでも load_attached_datas でも呼ばない。
+            // 版履歴を読むのは履歴ダイアログ（use-kyou-histories-view.ts）だけで、
+            // そこは開いたときに自前で load_attached_histories() を呼ぶ
             await_promises.push(this.load_attached_datas(force_attached, options))
             return await Promise.all(await_promises).then((errors_list) => {
                 const errors = new Array<GkillError>()
@@ -220,7 +220,10 @@ export class Kyou extends InfoBase {
             if (options?.include_timeis !== false) {
                 await_promises.push(this.load_attached_timeis(force))
             }
-            await_promises.push(this.load_attached_histories())
+            // 版履歴（load_attached_histories）はここで先読みしない。
+            // attached_histories を読むのは履歴ダイアログだけで、そこは自前で引く。
+            // ここで読むと引き直しのたびに /api/get_kyou が reload() と合わせて2回飛ぶ
+            // （版履歴を集める API なので、往復の中でいちばん重い。ADR-0218）
             return await Promise.all(await_promises).then((errors_list) => {
                 const errors = new Array<GkillError>()
                 errors_list.forEach(e => {
