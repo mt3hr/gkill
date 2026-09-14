@@ -207,6 +207,8 @@ function computeTestMetrics() {
   const unitFiles = listFilesRec('src/client/__tests__/unit', (f) => f.endsWith('.test.ts'))
   const e2eFiles = listFilesRec('src/client/__tests__/e2e', (f) => f.endsWith('.spec.ts'))
   const mcpFiles = listFilesRec('src/mcp/__tests__', (f) => /\.test\.(mjs|js|ts)$/.test(f))
+  // src/tools/ のリリースゲート・attestation ランナーのテスト（vitest.config.tools.ts）
+  const toolsFiles = listFilesRec('src/tools/__tests__', (f) => /\.test\.(mjs|js|ts)$/.test(f))
   const kt = (dir) => countMatches(listFilesRec(dir, (f) => f.endsWith('.kt')), /@Test/g)
   // @Test を1つでも含む .kt の本数（＝テストファイル数）
   const ktFiles = (dir) => listFilesRec(dir, (f) => f.endsWith('.kt'))
@@ -226,6 +228,8 @@ function computeTestMetrics() {
     e2eTestFiles: e2eFiles.length,
     mcpTests: countMatches(mcpFiles, VITEST_RE),
     mcpTestFiles: mcpFiles.length,
+    toolsTests: countMatches(toolsFiles, VITEST_RE),
+    toolsTestFiles: toolsFiles.length,
     pluginGoTests: countMatches(
       listFilesRec('src/plugins', (f) => f.endsWith('_test.go')), GO_TEST_RE),
     sdkTests: countMatches(
@@ -250,9 +254,9 @@ function computeTestMetrics() {
 
   // ABOUT_TEST.md の「合計」行。手計算で合わないまま放置されやすいので実測から出す。
   // Wear OS は phone_companion + watch_app の2モジュール分。
-  m.totalTests = m.goTests + m.unitTests + m.e2eTests + m.mcpTests +
+  m.totalTests = m.goTests + m.unitTests + m.e2eTests + m.mcpTests + m.toolsTests +
     m.androidTests + m.wearCompanionTests + m.wearWatchTests
-  m.totalTestFiles = m.goTestFiles + m.unitTestFiles + m.e2eTestFiles + m.mcpTestFiles +
+  m.totalTestFiles = m.goTestFiles + m.unitTestFiles + m.e2eTestFiles + m.mcpTestFiles + m.toolsTestFiles +
     m.androidTestFiles + m.wearTestFiles
   return m
 }
@@ -540,6 +544,7 @@ function buildCountAssertions(m) {
     `| フロントエンド ユニット (\`client/\`) | ${m.unitTests} | ${m.unitTestFiles} |`,
     `| フロントエンド E2E (\`client/\`) | ${m.e2eTests} | ${m.e2eTestFiles} |`,
     `| MCP サーバ (\`mcp/\`) | ${m.mcpTests} | ${m.mcpTestFiles} |`,
+    `| ツール (\`tools/\`) | ${m.toolsTests} | ${m.toolsTestFiles} |`,
     `| Android (\`android/\`) | ${m.androidTests} | ${m.androidTestFiles} |`,
     `| Wear OS (\`wear_os/\`) | ${m.wearCompanionTests + m.wearWatchTests} | ${m.wearTestFiles} |`,
   ]
@@ -549,6 +554,8 @@ function buildCountAssertions(m) {
   add('documents/reverse/testing-guide.md', `| フロントエンド ユニット | ${m.unitTests} | ${m.unitTestFiles} |`)
   add('documents/reverse/testing-guide.md', `| フロントエンド E2E | ${m.e2eTests} |`)
   add('documents/reverse/testing-guide.md', `| MCP サーバ | ${m.mcpTests} | ${m.mcpTestFiles} |`)
+  add('documents/reverse/testing-guide.md', `| ツール | ${m.toolsTests} | ${m.toolsTestFiles} |`)
+  add('src/tools/ABOUT_TEST.md', `${m.toolsTests}テスト（${m.toolsTestFiles}ファイル）`)
   add('documents/reverse/testing-guide.md', `| Android | ${m.androidTests} | ${m.androidTestFiles} |`)
   add('documents/reverse/testing-guide.md', `| Wear OS | ${m.wearCompanionTests + m.wearWatchTests} | ${m.wearTestFiles} |`)
   add('src/server/ABOUT_TEST.md', `${m.goTests}テスト関数、${m.goTestFiles}テストファイル、${m.goTestPkgs}パッケージ`)

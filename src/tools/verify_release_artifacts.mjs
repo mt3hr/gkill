@@ -5,12 +5,16 @@ import path from 'node:path'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { execFileSync } from 'node:child_process'
+import { head, headTree, dirtyEntries, releaseAttestationName } from './attestation.mjs'
 
 const require = createRequire(import.meta.url)
 const version = require('../../package.json').version
 const releaseDir = 'release'
 
 const expected = [
+    // リリースゲート（verify_release_gate.mjs）が release の先頭で書いた記録。
+    // 成果物として SHA256SUMS に載せ、下でビルド中に HEAD が動いていないことも検査する
+    releaseAttestationName(version),
     `windows_amd64_gkill_${version}.zip`,
     `windows_amd64_gkill_server_${version}.zip`,
     `linux_amd64_gkill_server_${version}.zip`,
@@ -141,6 +145,26 @@ for (const name of apkNames) {
         .find((line) => line.includes('certificate SHA-256 digest'))
     console.log(`  OK   ${name} 署名検証済み${fingerprint ? ` (${fingerprint.trim()})` : ''}`)
 }
+
+// リリースゲートの記録が「今ビルドしたもの」を指しているかを検査する。
+// ゲートは release の先頭で通るが、prepare_install 〜 APK ビルドの 30 分の間に
+// コミットや編集が入っても Go / Gradle は黙ってそれを取り込む。ゲート時の HEAD と
+// tree に一致し、かつ今も作業ツリーがクリーンでなければ成果物とは認めない。
+const attestation = JSON.parse(fs.readFileSync(path.join(releaseDir, releaseAttestationName(version)), 'utf8'))
+const nowHead = head()
+const nowTree = headTree()
+if (attestation.head !== nowHead || attestation.tree !== nowTree) {
+    console.error(`\n  NG   リリースゲート通過後に HEAD が動いている (gate ${String(attestation.head).slice(0, 7)} → now ${nowHead.slice(0, 7)})。`)
+    console.error('       npm run release を最初からやり直すこと')
+    process.exit(1)
+}
+const dirty = dirtyEntries()
+if (dirty.length !== 0) {
+    console.error(`\n  NG   ビルド中に作業ツリーが変わっている (${dirty.length} 件: ${dirty.slice(0, 5).join(' / ')})。`)
+    console.error('       npm run release を最初からやり直すこと')
+    process.exit(1)
+}
+console.log(`  OK   リリースゲートの記録と HEAD ${nowHead.slice(0, 7)} / tree ${nowTree.slice(0, 7)} が一致、作業ツリーはクリーン`)
 
 // 全件そろったときだけ SHA256SUMS を書き出す。
 // `sha256sum -c release/SHA256SUMS_<version>.txt` で検証できる。

@@ -16,9 +16,10 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | フロントエンド ユニット | 2064 | 172 | Vitest |
 | フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
 | MCP サーバ | 1015 | 24 | Vitest |
+| ツール | 41 | 1 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 226 | 17 | JUnit 4 + MockK |
-| **合計** | **4,825** | **443** | |
+| **合計** | **4,866** | **444** | |
 
 数え直すコマンド:
 
@@ -31,7 +32,7 @@ grep -rhE "^\s*test\(" src/client/__tests__/e2e --include=*.spec.ts | wc -l  # E
 
 > `src/plugins/*` の Go テスト（`loader_test.go`、`reader_test.go` 等）は
 > 各プラグインが**独立した Go モジュール**のため、上記の集計（`src/server` 基準）には含まれない
-> （`test_server` は `cd src/server && go test ./...`）。実行は `npm run test_plugins`
+> （`test_server` は `src/tools/run_test_suite.mjs` 経由で `src/server` にて `go test ./...`）。実行は `npm run test_plugins`
 > （`src/tools/test_plugins.mjs` が go.mod を持つディレクトリを探して1つずつ回す）が担当し、
 > `npm test` からも呼ばれる。詳細は `src/plugins/ABOUT_TEST.md` を参照。
 
@@ -48,7 +49,7 @@ npm test
 ```
 
 このコマンドは以下を順次実行します：
-`install_server`（ビルド） → **`verify_docs`（docs CI）** → server → client → MCP → plugins → Android → Wear OS
+`install_server`（ビルド） → **`verify_docs`（docs CI）** → server → client → MCP → tools → plugins → Android → Wear OS
 
 `verify_docs` を重いテスト群より前に置いているのは、実行が速く失敗が早いため。
 また `install_server` の後に置くのは、`checkManuals()` の生成鮮度チェックを
@@ -65,10 +66,18 @@ npm test
 | `npm run test_client_e2e` | フロントエンド E2E のみ（gkill_server 自動起動・停止） | 20分前後 |
 | `npm run test_e2e_server` | E2E 用 gkill_server 単体起動 (`$HOME/gkill_test`) | — |
 | `npm run test_mcp` | MCP サーバ | 数秒 |
+| `npm run test_tools` | `src/tools/` のリリースゲート・attestation ランナー（`vitest.config.tools.ts`。使い捨て git リポジトリを作るので git が要る） | 30秒前後 |
 | `npm run test_plugins` | 同梱プラグイン（独立 Go モジュール7つ） | 数秒 |
 | `npm run vet_plugins` | 同梱プラグインへ `go vet`（CI の `plugins` ジョブが `test_plugins` の前に回す。`npm test` には入っていない） | 数秒 |
 | `npm run test_android` | Android | Gradle 依存 |
 | `npm run test_wear_os` | Wear OS | Gradle 依存 |
+
+`verify_docs` と `test_*` はすべて `src/tools/run_test_suite.mjs` を経由する。スイートが exit 0 で終わると、
+作業ツリーの tree hash を `test_attestation.local.json`（gitignore 済み）に記録し、`npm run release` の
+リリースゲートがそれを検査する（詳細は `operations-guide.md` 3.3、規約は `.claude/skills/gkill-build-test/SKILL.md`）。
+`npm run test_client_e2e -- --workers=2` のような余剰引数はそのままスイートへ渡る。並列度・レポータ系は
+記録されるが、`-run` / `--grep` / ファイル名のような絞り込みは「全件通った」と言えないので記録されない。
+`verify_docs -- --list` のように引数が検査内容を置き換えるスイートは、引数が 1 つでもあれば記録されない。
 
 ### Go パッケージ単位での実行
 
@@ -155,7 +164,7 @@ npx playwright test --debug
 
 | ワークフロー | 内容 |
 |---|---|
-| `ci.yml` | ビルドとテスト。次の4ジョブを並列に回す。<br>・`go` … build / vet / **gofmt**（`test -z "$(gofmt -l .)"`。無かったころ60ファイル分の崩れが溜まっていた）/ test / dao配下の `-race`<br>・`frontend` … type-check / **`npx eslint --max-warnings 0`**（`npm run lint` は `--fix` なのでCIでは使わない。固定sleepや条件分岐の警告を溜めないための歯止め）/ Vitest / MCP<br>・`docs` … `build_manuals` → `verify_docs`<br>・`plugins` … 各プラグインモジュールの **`go vet`** → `go test` |
+| `ci.yml` | ビルドとテスト。次の4ジョブを並列に回す。<br>・`go` … build / vet / **gofmt**（`test -z "$(gofmt -l .)"`。無かったころ60ファイル分の崩れが溜まっていた）/ test / dao配下の `-race`<br>・`frontend` … type-check / **`npx eslint --max-warnings 0`**（`npm run lint` は `--fix` なのでCIでは使わない。固定sleepや条件分岐の警告を溜めないための歯止め）/ Vitest / MCP / tools（`test_tools`）<br>・`docs` … `build_manuals` → `verify_docs`<br>・`plugins` … 各プラグインモジュールの **`go vet`** → `go test` |
 | `codeql.yml` | CodeQL 解析（go / java-kotlin / javascript-typescript） |
 
 `ci.yml` は E2E・Android・Wear OS を含まない。ローカルの `npm test` は

@@ -15,9 +15,10 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | フロントエンド ユニット (`client/`) | 2064 | 172 | Vitest |
 | フロントエンド E2E (`client/`) | 251 | 45 | Playwright |
 | MCP サーバ (`mcp/`) | 1015 | 24 | Vitest |
+| ツール (`tools/`) | 41 | 1 | Vitest |
 | Android (`android/`) | 15 | 2 | JUnit 4 |
 | Wear OS (`wear_os/`) | 226 | 17 | JUnit 4 + MockK |
-| **合計** | **4,825** | **443** | |
+| **合計** | **4,866** | **444** | |
 
 `src/plugins/` の Go テスト 179件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
@@ -40,6 +41,7 @@ grep -rhE '^func Test' src/server --include=*.go | wc -l
 # フロントエンド ユニット / MCP / E2E: 行頭のテスト宣言
 grep -rhE '^\s*(it|test)(\.each)?\(' src/client/__tests__/unit --include=*.test.ts | wc -l
 grep -rhE '^\s*(it|test)(\.each)?\(' src/mcp/__tests__ --include=*.test.mjs | wc -l
+grep -rhE '^\s*(it|test)(\.each)?\(' src/tools/__tests__ --include=*.test.mjs | wc -l
 grep -rhE '^\s*test\(' src/client/__tests__/e2e --include=*.spec.ts | wc -l
 
 # 上と同じ定義を機械的に出す（doc の数値はこれと突合される）
@@ -52,14 +54,15 @@ npm run verify_docs -- --list
 
 | コマンド | 対象 |
 |---------|------|
-| `npm test` | 全テスト。先に `install_server`（ビルド）と `verify_docs`（docs CI）を実行してから server + client + MCP + plugins + Android + Wear OS |
+| `npm test` | 全テスト。先に `install_server`（ビルド）と `verify_docs`（docs CI）を実行してから server + client + MCP + tools + plugins + Android + Wear OS。各 `test_*` は `src/tools/run_test_suite.mjs` 経由で、成功したスイートを `test_attestation.local.json` に記録する（`npm run release` のゲートが読む） |
 | `npm run test_plugins` | `src/plugins/` の各プラグイン（独立 Go モジュール） |
 | `npm run vet_plugins` | 同梱プラグインへ `go vet`（CI の `plugins` ジョブが `test_plugins` の前に回す。`npm test` には入っていない） |
-| `npm run test_server` | Go バックエンド (`cd src/server && go test ./...`) |
+| `npm run test_server` | Go バックエンド (`src/server` で `go test ./...`) |
 | `npm run test_client` | フロントエンド（ユニット + E2E） |
 | `npm run test_client_unit` | フロントエンドユニットテストのみ |
 | `npm run test_client_e2e` | フロントエンド E2E テストのみ |
 | `npm run test_mcp` | MCP サーバ |
+| `npm run test_tools` | `src/tools/` のリリースゲート・attestation ランナー |
 | `npm run test_android` | Android |
 | `npm run test_wear_os` | Wear OS |
 
@@ -90,3 +93,4 @@ npm run verify_docs -- --list
 | `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) | Wear OS テスト（226テスト） |
 | `server/gkill/plugin/sdk/` | [server/gkill/plugin/sdk/ABOUT_TEST.md](server/gkill/plugin/sdk/ABOUT_TEST.md) | プラグイン SDK（stdio ループ + EnsureConfig + ZIP走査 + キャッシュDBパス + ワード判定 + rep_names、51テスト） |
 | `plugins/` | [plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) | 同梱プラグイン（独立モジュール。`npm run test_plugins` で実行） |
+| `tools/` | [tools/ABOUT_TEST.md](tools/ABOUT_TEST.md) | リリースゲート・attestation ランナー（41テスト） |
