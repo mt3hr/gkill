@@ -12,6 +12,7 @@ import {
   assertStringArray,
   assertIntegerArray,
   assertKnownKeys,
+  unknownKeyMessage,
 } from "./validation.mjs";
 import {
   RFC3339_REGEX,
@@ -207,7 +208,8 @@ export function normalizeKyouQuery(query) {
     // 未知キーは受け付けない。
     // query は MCP 経由で AI クライアントが自由に組み立てられるため、
     // 検証していないキーでの動的な書き込みを残すとプロトタイプ汚染の経路になる。
-    throw invalidArgument(field, "is not supported", value, {
+    // 文言は assertKnownKeys と同じ正本（古い一覧の可能性と再接続を案内する）。
+    throw invalidArgument(field, unknownKeyMessage(), value, {
       allowed: Array.from(KYOUS_QUERY_ALL_FIELDS).sort(),
     });
   }
@@ -393,8 +395,11 @@ export const STALE_SCHEMA_ARG_KINDS_BY_TOOL = new Map([
 
 // 受理はするが既に意味を持たない引数。送られてきたこと自体が
 // 「クライアントの掴んでいるスキーマが v2 より前」の証拠になる。
-const DEPRECATED_TOP_LEVEL_ARGS = new Set(["include_id", "include_rep_name"]);
-const DEPRECATED_QUERY_FIELDS = new Set(["only_latest_data"]);
+// **公開スキーマ（tools/list）には載せない**（ADR-0620）。受理集合（KYOUS_TOP_LEVEL_FIELDS /
+// KYOUS_QUERY_ALL_FIELDS）には残す。schema-contract.test.mjs が「スキーマのキー集合 =
+// 受理集合 − この2表」を固定する。export はそのテストのため。
+export const DEPRECATED_TOP_LEVEL_ARGS = new Set(["include_id", "include_rep_name"]);
+export const DEPRECATED_QUERY_FIELDS = new Set(["only_latest_data"]);
 
 /**
  * detectStaleSchemaSignals はクライアントのツールスキーマが古いことの「証拠」を集める。
@@ -472,7 +477,9 @@ export function staleSchemaWarning(signals) {
     "Tool schemas are fetched once per client session, so a server-side fix stays invisible until the " +
     "client reconnects. Reconnect the MCP client to pick up the current schema — features you may not be " +
     "seeing include gkill_get_gps_log cursor/limit/count_only/group_by, the top-level data_types filter " +
-    "on gkill_get_kyous, and the fields projection on gkill_get_application_config."
+    "on gkill_get_kyous, and the fields projection on gkill_get_application_config. " +
+    "gkill_status returns the server's current schema_revision; the gkill_status description in your tool list " +
+    "ends with the revision you were given, so the two can be compared directly."
   );
 }
 
@@ -732,6 +739,15 @@ export function normalizeRepNamesArgs(args) {
 // normalizeTagNamesArgs は gkill_get_all_tag_names の引数を検証する。
 export function normalizeTagNamesArgs(args) {
   return normalizeNameListArgs(args, TAG_NAMES_STALE_SCHEMA_ARG_KINDS, DEFAULT_TAG_NAMES_LIMIT, MAX_TAG_NAMES_LIMIT);
+}
+
+// normalizeStatusArgs は gkill_status の引数を検証する。引数は1つも取らない。
+// 引数を足すと STALE_SCHEMA_ARG_KINDS_BY_TOOL の対象になり、「古さを確かめるツール自身が
+// 古いスキーマで壊れる」ことになるので、将来も足さない。
+export function normalizeStatusArgs(args) {
+  const source = args == null ? {} : assertObject(args, "arguments");
+  assertKnownKeys(source, new Set(), "arguments");
+  return {};
 }
 
 export function normalizeLocaleOnlyArgs(args) {

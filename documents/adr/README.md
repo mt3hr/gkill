@@ -213,6 +213,8 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0616](0616-update-rejects-an-empty-patch.md) | 更新は「変わる欄が1つも無い」なら書かずに断る | Accepted |
 | [0617](0617-oauth-scope-is-one-value-per-server-kind.md) | OAuth の scope はサーバ種別ごとに1値 | Accepted |
 | [0618](0618-urlog-outbound-fetch-is-default-on-with-opt-out.md) | urlog の外向き取得は既定で行い、引数で項目別に抑止する | Accepted |
+| [0619](0619-mcp-schema-revision-and-stale-tool-list.md) | ツール一覧の世代は gkill_status の schema_revision で見せ、未知の引数名では再接続を案内し、tools/list のバイト量を予算で固定する | Accepted |
+| [0620](0620-advertised-schema-omits-deprecated-arguments.md) | 廃止済み引数は公開スキーマに載せず、受理と古さの検出だけ残す | Accepted |
 | [0701](0701-argon2id-password-storage.md) | パスワードは Argon2id で保存し、ワイヤ形式（password_sha256）は変えない | Accepted |
 | [0702](0702-share-owner-from-session.md) | 共有情報の所有者はリクエスト本文ではなくセッションから決める | Accepted |
 | [0703](0703-shared-file-authz-by-query.md) | 共有ページのファイル配信は共有クエリを再評価した許可パス集合にだけ許す | Accepted |

@@ -27,6 +27,7 @@ class McpServer extends McpServerBase {
   constructor(client, accessLog = null) {
     super(client, accessLog, {
       serverName: "gkill-readwrite-mcp",
+      serverKind: "readwrite",
       serverVersion: readPackageVersion(),
       tools: TOOLS,
       // READ_TOOLS を全部載せる（read サーバと同じ）。加えて書き込みも持つ。

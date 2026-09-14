@@ -3,6 +3,10 @@
 // read / readwrite の2サーバで同一定義を使う。フィルタの活性化は
 // 「値フィールドが非nullで存在すること」で決まり、旧 use_X フラグは廃止済み
 // (後方互換の受理変換は lib/normalization.mjs の normalizeKyouQuery が行う)。
+// 廃止済みのキー（only_latest_data / use_X）はこのスキーマには載せない。
+// **properties のキー集合は normalizeKyouQuery の受理集合（KYOUS_QUERY_ALL_FIELDS）から
+// 廃止済みを引いたものと一致させること** —— schema-contract.test.mjs が固定する。
+// 片方だけ改名すると「tools/list どおりに呼ぶと未知キーで拒否される」になる。
 
 import { ISO_DATETIME_DESC, DATE_ONLY_DESC } from "./constants.mjs";
 
@@ -10,7 +14,7 @@ export const FIND_QUERY_SCHEMA = {
   type: "object",
   description:
     "gkill find query. Omitted fields follow server defaults. Datetime fields use ISO-8601 strings. " +
-    "A filter group activates when its value field is present and non-null. Omit (or pass null for) fields you don't filter by. An empty array [] means 'filter enabled but matches nothing' (except timeis_words: [] which means 'only Kyous covered by any TimeIs'). Legacy use_X boolean flags are deprecated: accepted for backward compatibility (use_X:false removes that group's values; use_X:true is dropped). " +
+    "A filter group activates when its value field is present and non-null. Omit (or pass null for) fields you don't filter by. An empty array [] means 'filter enabled but matches nothing' (except timeis_words: [] which means 'only Kyous covered by any TimeIs'). " +
     "Recommended filtering strategy: fetch ApplicationConfig and all tag names first, then build a visible-tag allowlist — a tag is visible when is_force_hide=false AND check_when_inited=true in ApplicationConfig tag_struct. Pass visible tags via tags/timeis_tags. For repositories, prefer checked leaf rep_types from ApplicationConfig and treat unchecked leaf rep_type leaves as inferred hidden sources. " +
     "Payload varies by data_type, and data_type is finer-grained than payload.kind: Mi, MiReKyou and TimeIs each surface under several data_type values (one per projection) that all share a single payload.kind. Mapping — " +
     "kmemo -> kind 'kmemo' (content; note texts[] is a separate list of annotations attached to the entry, not its body), " +
@@ -159,7 +163,8 @@ export const FIND_QUERY_SCHEMA = {
         "projection you did enable decides the axis and this value is ignored.",
       enum: ["create_time", "estimate_start_time", "estimate_end_time", "limit_time"],
     },
-    only_latest_data: { type: "boolean", description: "Deprecated: accepted for backward compatibility and ignored — the MCP layer always forces this to true, whatever you pass. Past versions of an entry are only visible through gkill_get_kyou_history." },
+    // only_latest_data（MCP 層が常に true へ強制する）と旧 use_X フラグはここに載せない。
+    // normalizeKyouQuery は今までどおり受理し、届いたら古いスキーマの証拠として警告する（ADR-0620）。
   },
   additionalProperties: true,
 };

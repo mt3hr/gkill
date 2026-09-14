@@ -21,6 +21,9 @@ export const KYOUS_TOP_LEVEL_FIELDS = new Set([
   "cursor",
   "max_size_mb",
   "is_include_timeis",
+  // include_id / include_rep_name は公開スキーマ（read-tools.mjs）には無い。
+  // v2 で廃止したが、古い一覧を握ったセッションが送り続けるので受理だけ残す
+  // （届いたら detectStaleSchemaSignals が古さの証拠として警告する。ADR-0620）。
   "include_id",
   "include_rep_name",
   "include_plugin_content",
