@@ -146,19 +146,20 @@ describe('useKyouListViewDialog rykvダイアログのホスト', () => {
         expect(emits).not.toHaveBeenCalledWith('requested_open_rykv_dialog', 'add_tag', kyou, undefined)
     })
 
-    it('開いた直後にそのKyouを最新化する', async () => {
+    // 引き直しは id キーの「引き直し中」表示を同じ Kyou を出している一覧の行にも点けるので、
+    // 開くたびに引いていたころは親の一覧が読み込み中に見えていた。
+    // アプリ内の編集は updated_kyou / requested_reload_kyou で行が既に最新化されているので、
+    // 開いた時点の Kyou をそのまま出す
+    it('開いた直後には引き直さない', async () => {
         const kyou = make_kyou('kyou-1')
-        // 差し替わったことが分かるように別idにする（refは中身をproxyで包むので参照比較できない）
-        const refreshed = make_kyou('kyou-1-refreshed')
-        refresh_kyou_mock.mockResolvedValue(refreshed)
         const { dialog } = build_dialog()
 
         dialog.crudRelayHandlers.requested_open_rykv_dialog('kyou', kyou)
         await Promise.resolve()
         await Promise.resolve()
 
-        expect(refresh_kyou_mock).toHaveBeenCalledWith(kyou)
-        expect(dialog.opened_dialogs.value[0].kyou.id).toBe('kyou-1-refreshed')
+        expect(refresh_kyou_mock).not.toHaveBeenCalled()
+        expect(dialog.opened_dialogs.value[0].kyou.id).toBe('kyou-1')
     })
 
     it('host_rykv_dialogs=false なら従来どおり親へ中継する', () => {

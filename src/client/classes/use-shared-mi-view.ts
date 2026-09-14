@@ -87,20 +87,11 @@ export function useSharedMiView(options: {
             payload: payload ?? null,
             opened_at: Date.now(),
         })
-        // 開いた直後にも最新化する。リストのKyouは検索時点のものなので、
-        // 別経路で更新されていると古い内容でダイアログが開いてしまう
-        ;(async (): Promise<void> => {
-            const refreshed = await refresh_kyou(kyou)
-            if (!refreshed) {
-                return
-            }
-            for (let i = 0; i < opened_dialogs.value.length; i++) {
-                if (opened_dialogs.value[i].id === dialog_id) {
-                    opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: refreshed }
-                    return
-                }
-            }
-        })().catch((err: unknown) => console.error(err))
+        // 開いた直後の引き直しはしない。アプリ内の編集は updated_kyou / requested_reload_kyou で
+        // 行が既に最新化されているので、ここで引き直しても同じ内容を取り直すだけになる。
+        // 引き直しは id キーの「引き直し中」表示を同じ Kyou を出している一覧の行にも点けるので、
+        // ダイアログを開くたびに親の一覧が読み込み中に見えていた。
+        // 別経路（同期スクリプト・他端末）の書き込みは次の検索で拾う
     }
 
     function close_rykv_dialog(dialog_id: string): void {
