@@ -537,10 +537,6 @@ func (m *miReKyouRepositorySQLite3Impl) getMiReKyousByID(ctx context.Context, id
 }
 
 func (m *miReKyouRepositorySQLite3Impl) AddMiReKyouInfo(ctx context.Context, mirekyou MiReKyou) error {
-	if strings.TrimSpace(mirekyou.TargetID) == "" {
-		return fmt.Errorf("mirekyou target id must not be empty")
-	}
-
 	db, closeDB, err := m.getDBConnection(ctx)
 	if err != nil {
 		return err
@@ -549,6 +545,19 @@ func (m *miReKyouRepositorySQLite3Impl) AddMiReKyouInfo(ctx context.Context, mir
 
 	m.m.Lock()
 	defer m.m.Unlock()
+
+	return insertMiReKyouRow(ctx, db, mirekyou)
+}
+
+// insertMiReKyouRow は MiReKyou を1行 INSERT する。契約は AddMiReKyouInfo と同じで、書き込み先だけを引数で受ける。
+//
+// rep 自身の接続（AddMiReKyouInfo）にも、commit_tx が書き込み rep のファイルを ATTACH した1接続の
+// トランザクション（commit_tx.go）にも同じ SQL を打てるようにするための切り出し。
+// INSERT の列と検査はここだけに置き、AddXxxInfo 側へ複製しないこと（ずれると tx 経由の追記だけ壊れる）。
+func insertMiReKyouRow(ctx context.Context, db sqlite3impl.Preparer, mirekyou MiReKyou) error {
+	if strings.TrimSpace(mirekyou.TargetID) == "" {
+		return fmt.Errorf("mirekyou target id must not be empty")
+	}
 
 	sql := `INSERT INTO ` + miReKyouTableName + ` (` + miReKyouInsertColumnNames + `) VALUES (` + miReKyouInsertPlaceHolders + `)`
 	gkill_log.LogSQL(ctx, sql)

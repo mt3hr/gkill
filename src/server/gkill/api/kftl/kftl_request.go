@@ -3,13 +3,10 @@ package kftl
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
 // KFTLRequest is the interface implemented by all KFTL request types.
@@ -202,56 +199,6 @@ func daysBetween(from, to time.Time) int {
 	return int(b.Sub(a).Hours() / 24)
 }
 
-// logWriteThroughCacheFailure logs a failed write-through to the cached rep.
-//
-// A missed write-through is repaired by the next UpdateCache (1m by default),
-// so the save itself is not failed here. Discarding it with `_ =` however leaves
-// no trace at all, which makes "the tag I just added is invisible for a minute"
-// impossible to diagnose afterwards.
-// The 25 write-through calls in usecase/*.go wrap + slog the same way.
-func logWriteThroughCacheFailure(ctx context.Context, dataType string, id string, err error) {
-	if err == nil {
-		return
-	}
-	err = fmt.Errorf("error at write through %s cache id = %s: %w", dataType, id, err)
-	// The record is saved but the cache is not, so it stays invisible for up to a minute.
-	// Error, because nothing else reports it: the response is a success.
-	slog.Log(ctx, gkill_log.Error, "error at write through cache", "data_type", fmt.Sprintf("%q", dataType), "error", fmt.Sprintf("%q", err))
-}
-
-// logGetRepNameFailure logs a failed rep name lookup.
-//
-// Bailing out here would stop the KFTL submission midway even though the record
-// itself is already saved (commit_tx is not a DB transaction, so nothing rolls back).
-// Keep going and just leave a trace.
-func logGetRepNameFailure(ctx context.Context, dataType string, id string, err error) {
-	if err == nil {
-		return
-	}
-	err = fmt.Errorf("error at get rep name for %s id = %s: %w", dataType, id, err)
-	slog.Log(ctx, gkill_log.Warn, "error at get rep name", "data_type", fmt.Sprintf("%q", dataType), "error", fmt.Sprintf("%q", err))
-}
-
-// updateLatestDataRepositoryAddress updates the in-memory cache and DAO for one entity.
-// Mirrors the pattern used in gkill_server_api.go L2070-2082.
-func updateLatestDataRepositoryAddress(ctx context.Context, repos *reps.GkillRepositories,
-	id string, targetIDInData *string, isDeleted bool, updateTime time.Time, repName string) {
-	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
-		IsDeleted:                              isDeleted,
-		TargetID:                               id,
-		TargetIDInData:                         targetIDInData,
-		DataUpdateTime:                         updateTime,
-		LatestDataRepositoryName:               repName,
-		LatestDataRepositoryAddressUpdatedTime: time.Now(),
-	}
-	repos.SetLatestDataRepositoryAddress(id, latestDataRepositoryAddress)
-	if _, err := repos.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(
-		ctx, latestDataRepositoryAddress); err != nil {
-		err = fmt.Errorf("error at add or update latest data repository address id = %s: %w", id, err)
-		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
-	}
-}
-
 // doBaseRequest adds tags and texts for the given targetID.
 // Mirrors: KFTLRequest.do_request() in TS (the tag/text portion).
 //
@@ -279,15 +226,10 @@ func (b *KFTLRequestBase) doBaseRequest(ctx context.Context, targetID string, re
 			UpdateDevice: b.Ctx.Device,
 			UpdateUser:   b.Ctx.UserID,
 		}
-		err := b.Ctx.Repositories.WriteTagRep.AddTagInfo(ctx, tagObj)
+		err := b.Ctx.Repositories.TempReps.TagTempRep.AddTagInfo(ctx, tagObj, b.Ctx.TXID, b.Ctx.UserID, b.Ctx.Device)
 		if err != nil {
 			return fmt.Errorf("error at add tag info target_id=%s tag=%s: %w", targetID, tag, err)
 		}
-		repName, repNameErr := b.Ctx.Repositories.WriteTagRep.GetRepName(ctx)
-		logGetRepNameFailure(ctx, "tag", tagObj.ID, repNameErr)
-		updateLatestDataRepositoryAddress(ctx, b.Ctx.Repositories, tagObj.ID, &targetID, false, now, repName)
-		// キャッシュに書き込み
-		logWriteThroughCacheFailure(ctx, "tag", tagObj.ID, b.Ctx.Repositories.WriteThroughTagCache(ctx, tagObj))
 	}
 
 	// Add texts
@@ -309,15 +251,10 @@ func (b *KFTLRequestBase) doBaseRequest(ctx context.Context, targetID string, re
 			UpdateDevice: b.Ctx.Device,
 			UpdateUser:   b.Ctx.UserID,
 		}
-		err := b.Ctx.Repositories.WriteTextRep.AddTextInfo(ctx, textObj)
+		err := b.Ctx.Repositories.TempReps.TextTempRep.AddTextInfo(ctx, textObj, b.Ctx.TXID, b.Ctx.UserID, b.Ctx.Device)
 		if err != nil {
 			return fmt.Errorf("error at add text info target_id=%s text_id=%s: %w", targetID, textID, err)
 		}
-		repName, repNameErr := b.Ctx.Repositories.WriteTextRep.GetRepName(ctx)
-		logGetRepNameFailure(ctx, "text", textObj.ID, repNameErr)
-		updateLatestDataRepositoryAddress(ctx, b.Ctx.Repositories, textObj.ID, &targetID, false, now, repName)
-		// キャッシュに書き込み
-		logWriteThroughCacheFailure(ctx, "text", textObj.ID, b.Ctx.Repositories.WriteThroughTextCache(ctx, textObj))
 	}
 
 	return nil

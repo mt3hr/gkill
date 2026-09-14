@@ -25,6 +25,8 @@ description: "gkill のビルド・テスト・E2E 実行・リリースゲー�
 
 **Ports are never fixed in tests.** `run-e2e.mjs` allocates free ports from the OS (`src/client/__tests__/e2e/free-port.mjs`) and passes them as `--address 127.0.0.1:<port>` (gkill_server) and `--port <port> --strictPort` (Vite), so a production gkill_server occupying `:9999` never collides. The ports reach the tests via `GKILL_E2E_BASE_URL` / `GKILL_E2E_VITE_URL` (read by `playwright.config.ts`, `check-server.ts`, `auth.setup.ts`), and Vite's `/api` proxy target via `GKILL_API_PROXY_TARGET` (`vite.config.ts`) — which also prevents E2E writes from ever reaching a production server. Leftover-process cleanup only kills `gkill_server` processes whose command line contains `gkill_test`. Nothing else in `npm test` binds a fixed port: Go tests use `httptest` (ephemeral), and MCP/Android/Wear OS tests bind none.
 
+**E2E の保存待ちは commit_tx まで**（2026-09-15）。追加/編集画面は本体とタグを `tx_id` で束ねて `commit_tx` で確定する（ADR-0410）ので、`crud-helpers.ts` の `clickDialogButton` は最初の書き込み応答（`add_*` / `update_*`＝一時リポジトリに積んだだけ）を見たあと、そのリクエストに `tx_id` が付いていれば `commit_tx` の応答まで待つ。ここを待たずに `page.goto` で遷移すると commit が中断されて**記録は1件も書かれない**（Mi 画面系の spec がそれで落ちた）。commit_tx の `waitForResponse` は**クリックの前に張る**（応答が先に返ってから張ると永久に待つ）。tx を使わない保存では commit_tx は飛ばないので、その promise は使わずに捨てる。
+
 **Test details:** See `documents/reverse/testing-guide.md`, `src/ABOUT_TEST.md` for per-directory test specs.
 
 ## 関連スキル

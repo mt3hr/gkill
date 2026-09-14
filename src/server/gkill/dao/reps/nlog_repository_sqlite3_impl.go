@@ -1203,6 +1203,15 @@ func (n *nlogRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog Nlog) 
 			}
 		}()
 	}
+	return insertNlogRow(ctx, db, nlog)
+}
+
+// insertNlogRow は Nlog を1行 INSERT する。契約は AddNlogInfo と同じで、書き込み先だけを引数で受ける。
+//
+// rep 自身の接続（AddNlogInfo）にも、commit_tx が書き込み rep のファイルを ATTACH した1接続の
+// トランザクション（commit_tx.go）にも同じ SQL を打てるようにするための切り出し。
+// INSERT の列と検査はここだけに置き、AddXxxInfo 側へ複製しないこと（ずれると tx 経由の追記だけ壊れる）。
+func insertNlogRow(ctx context.Context, db sqlite3impl.Preparer, nlog Nlog) error {
 
 	if strings.TrimSpace(nlog.Title) == "" {
 		return fmt.Errorf("nlog title must not be empty")

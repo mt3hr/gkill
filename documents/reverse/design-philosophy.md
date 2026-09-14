@@ -150,7 +150,7 @@ VALUES (TRUE, ?, ..., datetime('now'), ...)
 
 - **Interface 分離**: 実装の差し替え可能性（テスト、将来のDB変更）
 - **キャッシュ層**: 読み取りパフォーマンスの最適化
-- **一時リポジトリ**: KFTL パース時のトランザクション（一括追加→コミット/ロールバック）
+- **一時リポジトリ**: 複数書き込みの操作（KFTL・追加/編集/削除画面）の積み場。`commit_tx` が書き込み rep のファイルを ATTACH した1接続の SQLite トランザクションで確定する（全部書くか何も書かないか。[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）
 
 ### GkillRepositories（集約アクセスポイント）
 

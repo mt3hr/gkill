@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1254 | 183 | Go `testing` |
-| フロントエンド ユニット | 2064 | 172 | Vitest |
+| Go バックエンド | 1263 | 185 | Go `testing` |
+| フロントエンド ユニット | 2077 | 173 | Vitest |
 | フロントエンド E2E | 251 | 45（+auth.setup.ts） | Playwright |
 | MCP サーバ | 1049 | 27 | Vitest |
 | ツール | 41 | 1 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 226 | 17 | JUnit 4 + MockK |
-| **合計** | **4,900** | **447** | |
+| **合計** | **4,922** | **450** | |
 
 数え直すコマンド:
 
@@ -218,7 +218,7 @@ src/server/gkill/
 │   ├── req_res/req_res_test.go        ← ワイヤ契約（JSONタグ名 / omitempty）
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（38ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（39ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── response_status_guard_test.go         ← 全ハンドラが writeErrorStatus を呼ぶこと（ソース走査）
@@ -247,7 +247,7 @@ src/server/gkill/
 │   ├── gkill_notification/            ← 通知ターゲット
 │   ├── hide_files/                    ← ファイル非表示
 │   ├── sqlite3impl/                   ← SQLite3 ユーティリティ
-│   └── reps/                          ← リポジトリ実装（61ファイル。repositories_get_kyou_histories_cache_test.go, plugin_repository_impl_test.go, plugin_git_commit_log_adapter_test.go, git_commit_log_cached_unique_test.go, ur_log_fill_skip_test.go 等）
+│   └── reps/                          ← リポジトリ実装（62ファイル。repositories_get_kyou_histories_cache_test.go, plugin_repository_impl_test.go, plugin_git_commit_log_adapter_test.go, git_commit_log_cached_unique_test.go, ur_log_fill_skip_test.go 等）
 │       ├── *_repository_sqlite3_impl_test.go  ← 11データ型
 │       ├── cached_and_temp_test.go    ← キャッシュ層・一時層
 │       └── cache/                     ← キャッシュ更新
@@ -293,7 +293,7 @@ src/client/__tests__/
 │   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
 │   │   ├── find-kyou-query.test.ts   ← 検索クエリビルダー
 │   │   └── hydrate.test.ts           ← hydrate() / hydrate_all()（JSON→クラス詰め替え）
-│   ├── classes/                       ← ユーティリティ（47ファイル）
+│   ├── classes/                       ← ユーティリティ（48ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts

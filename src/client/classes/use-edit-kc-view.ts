@@ -11,7 +11,9 @@ import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 import type { ComponentRef } from '@/classes/component-ref'
 import { useConfirmUnknownTag } from '@/classes/use-confirm-unknown-tag'
-import { apply_kyou_tag_changes } from '@/classes/kyou-tags'
+import { apply_kyou_tag_changes, record_added_tag_history, type ApplyTagChangesResult } from '@/classes/kyou-tags'
+import { fetch_committed_kyou, run_in_tx } from '@/classes/gkill-tx'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 export function useEditKCView(options: {
     props: EditKCViewProps,
@@ -170,35 +172,62 @@ export function useEditKCView(options: {
                 return
             }
 
-            // 中身が変わったときだけ更新リクエストを飛ばす
-            if (is_body_changed()) {
-                const updated_kc = kc.clone()
-                updated_kc.title = title.value
-                updated_kc.num_value = num_value.value
-                updated_kc.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
-                updated_kc.update_app = "gkill"
-                updated_kc.update_device = props.application_config.device
-                updated_kc.update_time = new Date(Date.now())
-                updated_kc.update_user = props.application_config.user_id
+            // 本体の更新とタグの変更を1つの tx に積んで commit_tx で確定する（全部書くか、何も書かないか）。
+            // tx 中の update_* は応答に Kyou もタグも載せられないので、実体は commit 後に引き直す
+            const body_changed = is_body_changed()
+            const messages = new Array<GkillMessage>()
+            // クロージャの中で代入するので、TS の制御フロー解析に潰されないよう入れ物に持つ
+            const staged: { tag_changes: ApplyTagChangesResult | null } = { tag_changes: null }
+            const tx = await run_in_tx(props.gkill_api, async (tx_id) => {
+                // 中身が変わったときだけ更新リクエストを積む（変わっていないのに積むと中身の同じ新しい版が1つ増える）
+                if (body_changed) {
+                    const updated_kc = kc.clone()
+                    updated_kc.title = title.value
+                    updated_kc.num_value = num_value.value
+                    updated_kc.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
+                    updated_kc.update_app = "gkill"
+                    updated_kc.update_device = props.application_config.device
+                    updated_kc.update_time = new Date(Date.now())
+                    updated_kc.update_user = props.application_config.user_id
 
-                await delete_gkill_kyou_cache(updated_kc.id)
-                const req = new UpdateKCRequest()
-                req.want_response_kyou = true
-                req.kc = updated_kc
+                    await delete_gkill_kyou_cache(updated_kc.id)
+                    const req = new UpdateKCRequest()
+                    req.kc = updated_kc
+                    req.tx_id = tx_id
+                    const res = await props.gkill_api.update_kc(req)
+                    if (res.errors && res.errors.length !== 0) {
+                        return res.errors
+                    }
+                    if (res.messages && res.messages.length !== 0) {
+                        messages.push(...res.messages)
+                    }
+                }
 
-                const res = await props.gkill_api.update_kc(req)
-                if (res.errors && res.errors.length !== 0) {
-                    emits('received_errors', res.errors)
-                    return
-                }
-                if (res.messages && res.messages.length !== 0) {
-                    emits('received_messages', res.messages)
-                }
-                emits('updated_kyou', res.updated_kyou!)
+                // 確認ダイアログは非モーダルなので、確認中にタグ欄を書き換えられる。取り直す
+                staged.tag_changes = await stage_tag_changes(tx_id)
+                messages.push(...staged.tag_changes.messages)
+                return staged.tag_changes.errors
+            })
+            if (!tx.committed) {
+                emits('received_errors', tx.errors)
+                return
+            }
+            if (messages.length !== 0) {
+                emits('received_messages', messages)
+            }
+            const committed_tag_changes = staged.tag_changes
+            if (committed_tag_changes) {
+                record_added_tag_history(props.gkill_api, committed_tag_changes.added_tags.map(added_tag => added_tag.tag))
             }
 
-            // 確認ダイアログは非モーダルなので、確認中にタグ欄を書き換えられる。取り直す
-            await apply_tag_changes()
+            if (body_changed) {
+                const updated_kyou = await fetch_committed_kyou(props.gkill_api, props.kyou.id)
+                if (updated_kyou) {
+                    emits('updated_kyou', updated_kyou)
+                }
+            }
+            committed_tag_changes?.added_tags.forEach(added_tag => emits('registered_tag', added_tag))
+            committed_tag_changes?.removed_tags.forEach(removed_tag => emits('deleted_tag', removed_tag))
 
             // タグの変更は updated_kyou を出さないので、これが唯一の反映信号になる
             emits('requested_reload_kyou', props.kyou)
@@ -209,22 +238,14 @@ export function useEditKCView(options: {
         }
     }
 
-    /** タグ欄で足したもの・外したものをサーバへ反映する */
-    async function apply_tag_changes(): Promise<void> {
+    /** タグ欄で足したもの・外したものを tx に積む。emit は呼び出し元が commit 後に行う */
+    async function stage_tag_changes(tx_id: string): Promise<ApplyTagChangesResult> {
         const tags_view = kyou_tags_view.value
         if (!tags_view) {
-            return
+            return { added_tags: [], removed_tags: [], errors: [], messages: [] }
         }
-        const result = await apply_kyou_tag_changes(props.gkill_api, props.application_config, cloned_kyou.value.id,
-            tags_view.get_tag_names(), tags_view.get_removed_tags())
-        result.added_tags.forEach(added_tag => emits('registered_tag', added_tag))
-        result.removed_tags.forEach(removed_tag => emits('deleted_tag', removed_tag))
-        if (result.messages.length !== 0) {
-            emits('received_messages', result.messages)
-        }
-        if (result.errors.length !== 0) {
-            emits('received_errors', result.errors)
-        }
+        return apply_kyou_tag_changes(props.gkill_api, props.application_config, cloned_kyou.value.id,
+            tags_view.get_tag_names(), tags_view.get_removed_tags(), tx_id)
     }
 
     function now_to_related_date_time(): void {

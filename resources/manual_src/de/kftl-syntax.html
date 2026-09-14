@@ -188,7 +188,7 @@ fri
 3
 ??</pre>
 <p>Dieses Beispiel legt an den nächsten drei Freitagen jeweils um 18:00 eine Aufgabe „Wochenbericht“ an. Alle Datums- und Zeitangaben des Eintrags werden um dieselbe Anzahl Tage verschoben, die Abstände zwischen Beginn, Ende und Fälligkeit bleiben also erhalten. Bei einer Aufgabe ganz ohne Datum ist das nicht möglich, weil es keinen Platz für die wiederholten Termine gäbe.</p>
-<p>Da Zeile 3 standardmäßig <code>no</code> ist, <strong>entstehen beim erneuten Speichern desselben Textes keine Duplikate.</strong> Schlägt ein Speichervorgang mittendrin fehl, speichern Sie einfach denselben Text noch einmal; nur die fehlenden Einträge werden angelegt.</p>
+<p>Da Zeile 3 standardmäßig <code>no</code> ist, <strong>entstehen beim erneuten Speichern desselben Textes keine Duplikate.</strong> Schlägt das Speichern fehl, wird nichts angelegt; speichern Sie einfach denselben Text noch einmal.</p>
 <div class="tip">
   <strong>Hinweis:</strong> Nicht existierende Termine werden übersprungen (<code>monthly 31</code> überspringt den Februar, <code>5th fri</code> überspringt Monate ohne fünften Freitag). Mit dem Zeitstempel-Start (<code>/start</code>) und dem Zeitstempel-Ende (<code>/end</code>, <code>/end?</code>, <code>/endt</code>, <code>/endt?</code>) ist es nicht verwendbar. Pro Speichervorgang können höchstens 1000 Einträge angelegt werden.
 </div>

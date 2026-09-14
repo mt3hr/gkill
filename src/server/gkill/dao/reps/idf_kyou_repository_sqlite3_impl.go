@@ -2119,6 +2119,20 @@ func (i *idfKyouRepositorySQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKy
 			}
 		}()
 	}
+	// 自 rep の名前は TARGET_REP_NAME を空にする判定に使う（下の insertIDFKyouRow のコメント）。
+	ownRepName, err := i.GetRepName(ctx)
+	if err != nil {
+		return err
+	}
+	return insertIDFKyouRow(ctx, db, idfKyou, ownRepName)
+}
+
+// insertIDFKyouRow は IDFKyou を1行 INSERT する。契約は AddIDFKyouInfo と同じで、書き込み先だけを引数で受ける。
+//
+// rep 自身の接続（AddIDFKyouInfo）にも、commit_tx が書き込み rep のファイルを ATTACH した1接続の
+// トランザクション（commit_tx.go）にも同じ SQL を打てるようにするための切り出し。
+// INSERT の列と検査はここだけに置き、AddXxxInfo 側へ複製しないこと（ずれると tx 経由の追記だけ壊れる）。
+func insertIDFKyouRow(ctx context.Context, db sqlite3impl.Preparer, idfKyou IDFKyou, ownRepName string) error {
 	sql := `
 INSERT INTO IDF (
   IS_DELETED,
@@ -2164,12 +2178,9 @@ INSERT INTO IDF (
 
 	// ファイルがこのid.dbと同じフォルダにある場合はTARGET_REP_NAMEを空にする。
 	// 空にすることでDVNFによるフォルダリネーム後も正しく解決できる。
-	repName, err := i.GetRepName(ctx)
-	if err != nil {
-		return err
-	}
+	// ownRepName は書き込み先 rep 自身の名前（AddIDFKyouInfo / commit_tx が GetRepName で取って渡す）。
 	targetRepNameForDB := idfKyou.RepName
-	if targetRepNameForDB == repName || targetRepNameForDB == "" {
+	if targetRepNameForDB == ownRepName || targetRepNameForDB == "" {
 		targetRepNameForDB = ""
 	}
 

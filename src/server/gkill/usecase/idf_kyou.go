@@ -67,29 +67,34 @@ func (uc *UsecaseContext) UpdateIDFKyou(ctx context.Context, repositories *reps.
 		}
 	}
 
-	repName, err := repositories.WriteIDFKyouRep.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error at get rep name user id", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE"}),
-		})
-		return gkillErrors, nil
-	}
-	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
-		IsDeleted:                              idfKyou.IsDeleted,
-		TargetID:                               idfKyou.ID,
-		DataUpdateTime:                         idfKyou.UpdateTime,
-		LatestDataRepositoryName:               repName,
-		LatestDataRepositoryAddressUpdatedTime: time.Now(),
-	}
-	repositories.SetLatestDataRepositoryAddress(idfKyou.ID, latestDataRepositoryAddress)
+	// **tx 中は最新版アドレス表を進めない。** 実体は temp rep にしか無く、表は commit_tx が確定時に書く。
+	// ここで進めると、失敗 → discard_tx のあとに表だけが新しい時刻で残り、find_filter.go の
+	// 「表より古い版は除外」で**既存の記録が検索から消える**（2026-09-15 まで実際にそうなっていた）。
+	if txID == nil {
+		repName, err := repositories.WriteIDFKyouRep.GetRepName(ctx)
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
+			slog.Log(ctx, gkill_log.Debug, "error at get rep name user id", "error", fmt.Sprintf("%q", err))
+			gkillErrors = append(gkillErrors, &message.GkillError{
+				ErrorCode:    message.GetIDFKyouError,
+				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE"}),
+			})
+			return gkillErrors, nil
+		}
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
+			IsDeleted:                              idfKyou.IsDeleted,
+			TargetID:                               idfKyou.ID,
+			DataUpdateTime:                         idfKyou.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		}
+		repositories.SetLatestDataRepositoryAddress(idfKyou.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
-	if err != nil {
-		err = fmt.Errorf("error at add or update latest data repository address for idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
-		slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
+		if err != nil {
+			err = fmt.Errorf("error at add or update latest data repository address for idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
+			slog.Log(ctx, gkill_log.Error, "error at add or update latest data repository address", "error", fmt.Sprintf("%q", err))
+		}
 	}
 
 	return nil, nil

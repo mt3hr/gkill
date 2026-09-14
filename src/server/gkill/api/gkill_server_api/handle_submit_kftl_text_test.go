@@ -184,12 +184,13 @@ func TestHandleSubmitKFTLText_CreatedRecords(t *testing.T) {
 		}
 	})
 
-	// 実行フェーズの途中失敗では、そこまでに書けたぶんが created に載る。
-	// KFTLはDBトランザクションを使わないので部分保存が残る——何が残ったか
-	// 分からないと利用者は後始末ができない。
-	t.Run("途中失敗でも書けたぶんは created に載る", func(t *testing.T) {
+	// 実行フェーズの途中失敗では何も残らず、created は空になる。
+	// 2026-09-15 まで KFTL は実 rep へ直書きで、失敗した行より前の kmemo が残り、
+	// 利用者が created[] を見て後始末する設計だった。今は temp rep に積んで最後に
+	// 1つの SQLite トランザクションで確定するので、失敗したら**何も残らない**。
+	t.Run("途中失敗では何も残らず created は空", func(t *testing.T) {
 		const word = "createdPartialMemoWord"
-		// kmemo は先に書けるが、実在しない打刻の終了(ーえ)が実行フェーズで失敗する。
+		// kmemo は先に積まれるが、実在しない打刻の終了(ーえ)が実行フェーズで失敗する。
 		status, res := submitKFTLWithStatus(t, tsURL, sessionID, word+"\n、\nーえ\ncreatedPartialNoSuchTimeIs", "")
 		if status != http.StatusBadRequest {
 			t.Errorf("status = %d, want 400 (終了対象なしは利用者入力の問題)", status)
@@ -197,11 +198,11 @@ func TestHandleSubmitKFTLText_CreatedRecords(t *testing.T) {
 		if len(res.Errors) != 1 || res.Errors[0].ErrorCode != message.SubmitKFTLTextInvalidInputError {
 			t.Fatalf("errors = %+v, want %s 1件", res.Errors, message.SubmitKFTLTextInvalidInputError)
 		}
-		if len(res.Created) != 1 || res.Created[0].DataType != "kmemo" {
-			t.Errorf("失敗前に書けた kmemo が created に載っていない: %+v", res.Created)
+		if len(res.Created) != 0 {
+			t.Errorf("失敗した送信の created = %+v, want 空(何も残っていない)", res.Created)
 		}
-		if got := countKmemosByContent(t, tsURL, sessionID, word); got != 1 {
-			t.Errorf("部分保存された kmemo の件数 = %d, want 1(ロールバックはされない)", got)
+		if got := countKmemosByContent(t, tsURL, sessionID, word); got != 0 {
+			t.Errorf("失敗した送信の kmemo が残っている: %d 件, want 0(部分確定)", got)
 		}
 	})
 

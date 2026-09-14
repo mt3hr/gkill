@@ -14,7 +14,7 @@ description: "Kyou の追加/編集画面のタグ欄（18本共通の edit-kyou
 - **`add_tag` が完了してから `registered_kyou` を emit する。** 局所挿入（`use-registered-kyou-local-insert.ts`）は渡された Kyou をそのまま使わず `refresh_kyou` で引き直すので、その時点でサーバにタグが入っていれば `attached_tags` 込みで差し込まれる。逆に先に emit すると `kyou-local-insert.ts` の `matches_tags()` が空のタグ列を見て「一致しない」と判定し、**エラーも警告も出ないまま行が現れない**。順序が唯一の防御線
 - **編集画面の「更新がなかったらエラー」ガードはタグの変更でも通す**（10本すべて、エラーコードは `*_is_no_update`）。ただし**本体が無変更なら `update_*` を呼ばない** —— 呼ぶと中身の同じ新しい版が1つ増える。判定は各コンポーザブルの `is_body_changed()` に切り出してある
 - **タグの変更は `updated_kyou` を出さない。** 反映信号は `requested_reload_kyou` だけなので、タグだけ変えたときも必ず出す
-- **`tx_id` は使わない。** TXID指定時のタグ／Kyou は一時リポジトリにしか無いので `add_tag` は `added_tag` を返せず（`handle_add_tag.go`）、`registered_tag` を上げられない。しかも `commit_tx` はDBトランザクションではなく部分確定しうる（`handle_commit_tx.go`）ので束ねても原子性は買えない
+- **本体とタグ（Mi は通知も）は1つの `tx_id` で束ねて `commit_tx` で確定する**（2026-09-15、[ADR-0410](../../../documents/adr/0410-bundle-multi-write-operations-in-tx.md)）。共通ヘルパは `classes/gkill-tx.ts` の `run_in_tx`（work が失敗／throw → `discard_tx`、通れば `commit_tx`、commit が失敗しても `discard_tx`）。`commit_tx` は1つの SQLite トランザクション（ADR-0219）なので「全部書くか、何も書かないか」になる。18画面は書き込みが1件でも常に tx を通す（経路を2本にしない）。単発の1 API 操作（コンテキストメニューのタグ追加等）は tx にしない。**tx 中の `add_*` / `update_*` / `add_tag` は応答に実体を載せられない**（一時リポジトリにしか無い。`want_response_kyou` も送らない）ので、タグは `kyou-tags.ts` が**クライアントで組み立てた Tag** を `added_tags` / `removed_tags` に積み、Kyou は commit 後に `fetch_committed_kyou`（SW キャッシュ削除 → `get_kyou`）で引き直す。タグ履歴（`record_added_tag_history`）は commit 成功後に呼ぶ。上の「`add_tag` が完了してから `registered_kyou`」は「**commit が終わってから**」と読む。単体テストの gkill_api モックには `generate_uuid` / `commit_tx` / `discard_tx` / `get_kyou`（`kyou_histories`）が要る（無いと `run_in_tx` が throw して「保存に失敗」の経路に落ち、テストが静かに通らない）
 - **同じ名前の重複はクライアントで落とす。** サーバの重複チェックはタグIDだけを見る（`usecase/tag.go`）ので、入力欄の中の重複も、削除マークの付いていない既存タグと同名のものも `get_tag_names()` が落とす
 - **既存タグは `get_tags_by_target_id` で子ビューが自分で引く。** 編集ビューの `load()` が呼ぶのは `load_typed_datas()` だけで `props.kyou.attached_tags` は空のまま
 - **⊗ を押した既存タグは保存を押すまで消さない**（押し間違えを戻せるように）。実削除は `is_deleted=true` の版を足す `update_tag`
@@ -22,7 +22,7 @@ description: "Kyou の追加/編集画面のタグ欄（18本共通の edit-kyou
 - **タグ欄は既存フィールドより後ろ（アクション行の直前）に置く。** E2E ヘルパ `fillDialogField(dialog, N, ...)` は入力欄の位置インデックスで掴むので、前に挿すと既存 spec が総崩れになる
 - 未知タグ確認は共有部品 `pages/dialogs/confirm-unknown-tag-dialog.vue` + `classes/use-confirm-unknown-tag.ts`（板名版と対）。`add-tag-view` / KFTL に手書き複製されていたマークアップと、`add_tag` の手順を12本のコンテキストメニュー・削除確認から寄せた
 - **「確認が開いているか」を呼び出し元が持つときは `closed` イベントで倒す。** `unknown_tags` の空判定で代用すると、ブラウザバックで閉じたときに空にならないので開きっぱなし扱いになる（KFTLのタブ操作が永久ロックされる）。ただし **`closed` は `requested_confirm` より先に来る**（ダイアログが `hide()` してから emit するため）ので、確認の続行で読む値（KFTLの `submit_target_tab_id` 等）を `closed` で消してはいけない
-- 守るテスト: `kyou-tags.test.ts` / `edit-kyou-tags-view.test.ts` / `add-views.test.ts` の「registered_kyou は add_tag が終わってから emit される」/ `edit-views.test.ts` の「タグ欄」節 / `e2e/add-dialog-crud.spec.ts` の「URLogを本文とタグ入りで一度に追加できる」 順序が唯一の防御線である理由と却下案（tx_id で束ねる等）は [ADR-0403](../../../documents/adr/0403-add-tag-before-registered-kyou.md)。
+- 守るテスト: `kyou-tags.test.ts` / `edit-kyou-tags-view.test.ts` / `gkill-tx.test.ts` / `add-views.test.ts` の「registered_kyou は add_tag と commit_tx が終わってから emit される」「タグの追加が失敗したら discard_tx して…」/ `edit-views.test.ts` の「タグ欄」節 / `e2e/add-dialog-crud.spec.ts` の「URLogを本文とタグ入りで一度に追加できる」 順序が唯一の防御線である理由は [ADR-0403](../../../documents/adr/0403-add-tag-before-registered-kyou.md)、tx で束ねる理由と却下案は [ADR-0410](../../../documents/adr/0410-bundle-multi-write-operations-in-tx.md)。
 
 ## 関連スキル
 
@@ -33,3 +33,4 @@ description: "Kyou の追加/編集画面のタグ欄（18本共通の edit-kyou
 ## 詳しい設計と却下案（ADR）
 
 - [ADR-0403 add_tag が終わってから registered_kyou](../../../documents/adr/0403-add-tag-before-registered-kyou.md)
+- [ADR-0410 複数書き込みの操作は tx_id で束ねて commit_tx で確定する](../../../documents/adr/0410-bundle-multi-write-operations-in-tx.md)

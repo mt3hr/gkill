@@ -99,6 +99,10 @@ function build(spec: CaseSpec, api_impl: () => Promise<unknown>) {
   const api = {
     [spec.api_name]: vi.fn(api_impl),
     generate_uuid: vi.fn(() => 'mock-uuid'),
+    // リポスト作成は本体とタグを tx で束ねて commit_tx で確定し、commit 後に get_kyou で引き直す（ADR-0410）
+    commit_tx: vi.fn(async () => ok_response),
+    discard_tx: vi.fn(async () => ok_response),
+    get_kyou: vi.fn(async () => ({ ...ok_response, kyou_histories: [make_kyou_stub()] })),
   }
   const props: Record<string, unknown> = {
     kyou: make_kyou_stub(),
@@ -169,10 +173,11 @@ describe('確認ダイアログは操作が終わったら必ず閉じる', () =
     expect(emitted(emits, 'requested_reload_list'), '局所挿入できるのに全列の引き直しまで要求している').toHaveLength(0)
   })
 
-  // Kyouが返らないと局所挿入できないので、そのときだけ従来の引き直しへ落とす
+  // Kyouが引けないと局所挿入できないので、そのときだけ従来の引き直しへ落とす
   it('リポスト作成でKyouが返らなかったら requested_reload_list へ落とす', async () => {
     const spec = cases[3]
-    const { view, emits } = build(spec, async () => ({ ...ok_response }))
+    const { view, emits, api } = build(spec, async () => ({ ...ok_response }))
+    api.get_kyou.mockResolvedValue({ ...ok_response, kyou_histories: [] })
 
     await (view.rekyou as () => Promise<void>)()
 

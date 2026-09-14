@@ -205,7 +205,7 @@ graph LR
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api/`パッケージ（handle_*.go 106ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
+`gkill/api/gkill_server_api/`パッケージ（handle_*.go 107ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
 
 #### 主な責務
 
@@ -587,7 +587,7 @@ Kyou の削除は Kyou 単体の論理削除ではなく、`src/client/classes/c
 
 1. **探索（readのみ）** — `discover_cascade_delete_targets()` が幅優先で辿ります。1件のidにつき `get_tags_by_target_id` / `get_texts_by_target_id` / `get_notifications_by_target_id` / `get_rekyous_by_target_id` / `get_mirekyous_by_target_id` の5本を並列に投げ、見つかった ReKyou / MiReKyou をさらに辿ります。訪問済みid集合で循環参照を止め、深さ上限は32（`max_cascade_depth`）、1階層あたり16件ずつ（`request_chunk_size`）にファンアウトを絞ります。Tag/Text/Notification は Service Worker が `target_id` 単位でキャッシュしているので `force_reget` を立てます。
 2. **削除（write）** — `mutate_cascade_delete_targets()` が Tag/Text/Notification → ReKyou（深い方から）→ MiReKyou → **最後に Kyou 自身**の順で `update_*` に `is_deleted=true` を投げます。Kyou を先に消すとサーバの `FindKyous` が参照元を結果から外し、途中で失敗したときに残骸を再発見できなくなるためです。
-3. **原子性はありません** — TXID / `commit_tx` は使いません（DBトランザクションではなく部分確定しうるため）。1本失敗しても止めずに全部投げ、エラーは集約して `received_errors` で返します。追記型DAOなので同じダイアログを開き直して再実行すれば収束します。
+3. **全件を1つの `tx_id` で積み、`commit_tx` で確定します**（2026-09-15、[ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）。`commit_tx` は1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、全部消えるか何も消えないかのどちらかです。1本でも積めなければ `discard_tx` してエラーを `received_errors` で返し、行はすべて画面に残します。
 4. 共有画面（`application_config.for_share_kyou`）では削除自体を行いません。
 
 エラーコードは `ERR900093`（`cascade_delete_depth_exceeded`）/ `ERR900094`（`cascade_delete_failed`）、文言は `CASCADE_DELETE_DEPTH_EXCEEDED_MESSAGE` / `FAILED_CASCADE_DELETE_KYOU_MESSAGE` です。呼び出し元の `use-confirm-delete-kyou-view.ts` はダイアログのクローズを `finally` に置き、例外が出ても「消えているのに閉じない」状態にならないようにしています。

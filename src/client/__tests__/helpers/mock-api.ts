@@ -29,9 +29,13 @@ export function createMockGkillAPI() {
       return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
     }),
 
+    // Transaction（追加/編集/削除画面は複数書き込みを tx_id で束ねて commit_tx で確定する。gkill-tx.ts）
+    commit_tx: vi.fn().mockResolvedValue({ committed: [], messages: [], errors: [] }),
+    discard_tx: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+
     // Data read operations
     get_kyous: vi.fn().mockResolvedValue({ kyous: [], messages: [], errors: [] }),
-    get_kyou: vi.fn().mockResolvedValue({ kyou: null, messages: [], errors: [] }),
+    get_kyou: vi.fn().mockResolvedValue({ kyou_histories: [], messages: [], errors: [] }),
     get_kmemo: vi.fn().mockResolvedValue({ kmemo: null, messages: [], errors: [] }),
     get_mi: vi.fn().mockResolvedValue({ mi: null, messages: [], errors: [] }),
     get_tags_by_target_id: vi.fn().mockResolvedValue({ tags: [], messages: [], errors: [] }),

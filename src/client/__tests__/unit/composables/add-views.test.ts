@@ -296,19 +296,31 @@ describe('useAddURLogView', () => {
   // attached_tags 込みで差し込まれる。逆に registered_kyou を先に emit すると、
   // タグで絞り込んだ列が空のタグ列を見て「一致しない」と判定し、
   // エラーも出ないまま行が現れない。順序が唯一の防御線
-  test('registered_kyou は add_tag が終わってから emit される', async () => {
+  // 2026-09-15 からは本体とタグを1つの tx に積み、commit_tx が通ってから引き直して emit する。
+  // 「タグが付いてから」の約束は「commit が終わってから」に読み替わった（ADR-0410）
+  test('registered_kyou は add_tag と commit_tx が終わってから emit される', async () => {
     const call_order: string[] = []
-    props.gkill_api.add_urlog.mockImplementation(() => {
+    props.gkill_api.add_urlog.mockImplementation((req: { tx_id: string | null }) => {
       call_order.push('add_urlog')
-      return Promise.resolve({ added_kyou: { id: 'new-urlog-id' }, messages: [], errors: [] })
+      expect(req.tx_id).not.toBeNull()
+      // tx 中は added_kyou が返らない（一時リポジトリにしか無い）
+      return Promise.resolve({ added_kyou: null, messages: [], errors: [] })
     })
     // 遅延させて「先にemitしていないか」を確実に捕まえる
-    props.gkill_api.add_tag.mockImplementation((req: { tag: { tag: string } }) => new Promise(resolve => {
+    props.gkill_api.add_tag.mockImplementation((req: { tag: { tag: string }, tx_id: string | null }) => new Promise(resolve => {
       setTimeout(() => {
         call_order.push('add_tag')
-        resolve({ added_tag: req.tag, messages: [], errors: [] })
+        expect(req.tx_id).not.toBeNull()
+        resolve({ added_tag: null, messages: [], errors: [] })
       }, 10)
     }))
+    props.gkill_api.commit_tx.mockImplementation(() => new Promise(resolve => {
+      setTimeout(() => {
+        call_order.push('commit_tx')
+        resolve({ committed: [], messages: [], errors: [] })
+      }, 10)
+    }))
+    props.gkill_api.get_kyou.mockResolvedValue({ kyou_histories: [{ id: 'new-urlog-id' }], messages: [], errors: [] })
     // emitされた瞬間に記録する。save()が返ってから mock.calls を読むと
     // 実際の順序に関わらず registered_kyou が最後に積まれて検査にならない
     const ordered_emits = vi.fn((event: string) => {
@@ -325,7 +337,40 @@ describe('useAddURLogView', () => {
 
     await view.save()
 
-    expect(call_order).toEqual(['add_urlog', 'add_tag', 'registered_kyou'])
+    expect(call_order).toEqual(['add_urlog', 'add_tag', 'commit_tx', 'registered_kyou'])
+    expect(props.gkill_api.discard_tx).not.toHaveBeenCalled()
+  })
+
+  test('タグの追加が失敗したら discard_tx して registered_kyou を出さない（何も保存されていない）', async () => {
+    props.gkill_api.add_urlog.mockResolvedValue({ added_kyou: null, messages: [], errors: [] })
+    props.gkill_api.add_tag.mockResolvedValue({ added_tag: null, messages: [], errors: [{ error_code: 'ERR_TEST', error_message: 'ng' }] })
+    const view = useAddURLogView({ props, emits })
+    view.url.value = 'https://example.com/'
+    view.kyou_tags_view.value = { get_tag_names: () => ['既知タグ'], reset: () => { } }
+    props.application_config.tag_struct = { children: [{ tag_name: '既知タグ', children: [] }] }
+
+    await view.save()
+
+    expect(props.gkill_api.commit_tx).not.toHaveBeenCalled()
+    expect(props.gkill_api.discard_tx).toHaveBeenCalledTimes(1)
+    const events = emits.mock.calls.map(call => call[0])
+    expect(events).toContain('received_errors')
+    expect(events).not.toContain('registered_kyou')
+    expect(events).not.toContain('registered_tag')
+  })
+
+  test('commit_tx が失敗したら discard_tx して registered_kyou を出さない', async () => {
+    props.gkill_api.add_urlog.mockResolvedValue({ added_kyou: null, messages: [], errors: [] })
+    props.gkill_api.commit_tx.mockResolvedValue({ committed: [], messages: [], errors: [{ error_code: 'ERR000419', error_message: 'rolled back' }] })
+    const view = useAddURLogView({ props, emits })
+    view.url.value = 'https://example.com/'
+
+    await view.save()
+
+    expect(props.gkill_api.discard_tx).toHaveBeenCalledTimes(1)
+    const events = emits.mock.calls.map(call => call[0])
+    expect(events).toContain('received_errors')
+    expect(events).not.toContain('registered_kyou')
   })
 
   test('タグ名が新しいときは保存せず確認ダイアログを開く', async () => {
