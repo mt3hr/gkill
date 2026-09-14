@@ -20,13 +20,15 @@ import { CROSS_SERVER_TOOL_MENTIONS } from "../lib/constants.mjs";
 // Tool definition presence
 // ---------------------------------------------------------------------------
 describe("Tool definitions", () => {
-  test("read server exposes 10 tools (9 read + 1 plugin)", () => {
-    expect(READ_TOOLS).toHaveLength(9);
+  test("read server exposes 11 tools (10 read + 1 plugin)", () => {
+    expect(READ_TOOLS).toHaveLength(10);
     expect(PLUGIN_TOOLS).toHaveLength(1);
   });
 
   test("read tool names are the v2 set", () => {
     expect(READ_TOOLS.map((tool) => tool.name)).toEqual([
+      // gkill_status は先頭（接続先と一覧の世代を最初に見せる）
+      "gkill_status",
       "gkill_get_kyous",
       "gkill_get_mi_board_list",
       "gkill_get_all_tag_names",

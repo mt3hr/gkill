@@ -12,6 +12,7 @@
     "mcp:gkill-write-http": "cross-env MCP_TRANSPORT=http MCP_PORT=8809 node src/mcp/gkill-write-server.mjs",
     "mcp:gkill-readwrite": "node src/mcp/gkill-readwrite-server.mjs",
     "mcp:gkill-readwrite-http": "cross-env MCP_TRANSPORT=http MCP_PORT=8810 node src/mcp/gkill-readwrite-server.mjs",
+    "mcp:schema-budget": "node src/tools/mcp_schema_budget.mjs",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",

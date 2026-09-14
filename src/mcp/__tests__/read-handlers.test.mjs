@@ -194,6 +194,155 @@ describe("handleReadToolCall — gkill_get_application_config", () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// gkill_status（2026-09-14 レビュー P0: クライアントの古い一覧を AI 自身が見分ける経路）
+// ---------------------------------------------------------------------------
+describe("handleReadToolCall — gkill_status", () => {
+  const serverInfo = {
+    kind: "readwrite",
+    name: "gkill-readwrite-mcp",
+    version: "1.2.3",
+    schemaRevision: "0123456789ab",
+    toolCount: 32,
+    transport: "http",
+    startedAt: new Date(Date.now() - 90_000),
+  };
+
+  test("returns the server description plus the account and build gkill reports", async () => {
+    const ctx = {
+      ...makeCtx(async () => ({
+        application_config: {
+          user_id: "testuser",
+          device: "testdevice",
+          version: "9.9.9",
+          commit_hash: "abcdef0",
+          build_time: "2026-09-14T00:00:00+09:00",
+          tag_struct: { name: "root" },
+        },
+      })),
+      server: serverInfo,
+    };
+    const payload = await handleReadToolCall(ctx, "gkill_status", {});
+    expect(payload.server_kind).toBe("readwrite");
+    expect(payload.server_name).toBe("gkill-readwrite-mcp");
+    expect(payload.server_version).toBe("1.2.3");
+    expect(payload.schema_revision).toBe("0123456789ab");
+    expect(payload.tool_count).toBe(32);
+    expect(payload.transport).toBe("http");
+    expect(payload.started_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/);
+    expect(payload.uptime_seconds).toBeGreaterThanOrEqual(89);
+    expect(payload.gkill_reachable).toBe(true);
+    expect(payload.account).toEqual({ user_id: "testuser", device: "testdevice" });
+    expect(payload.gkill).toEqual({ version: "9.9.9", commit_hash: "abcdef0", build_time: "2026-09-14T00:00:00+09:00" });
+    // ApplicationConfig の残り（tag_struct 等）は載せない
+    expect(payload).not.toHaveProperty("tag_struct");
+    expect(ctx.client.callApi).toHaveBeenCalledWith("/api/get_application_config", {}, true, "sid-1");
+  });
+
+  // gkill へ届かなくても MCP 側の情報は返す。「MCP は生きているが gkill が落ちている」を
+  // 区別できるのがこのツールの仕事で、失敗させるとその区別が消える。
+  test("still answers when gkill is unreachable, without leaking the error text", async () => {
+    const warn = vi.fn();
+    const ctx = {
+      ...makeCtx(async () => {
+        throw new GkillApiError("connect ECONNREFUSED http://127.0.0.1:9999/api/get_application_config", { status: 503 });
+      }),
+      server: serverInfo,
+      accessLog: { warn },
+    };
+    const payload = await handleReadToolCall(ctx, "gkill_status", {});
+    expect(payload.gkill_reachable).toBe(false);
+    expect(payload.gkill_error).toBe("HTTP 503");
+    expect(payload.schema_revision).toBe("0123456789ab");
+    expect(payload).not.toHaveProperty("account");
+    // 接続先 URL を含みうる本文は応答に載せず、ログにだけ残す（ADR-0707）
+    expect(JSON.stringify(payload)).not.toContain("127.0.0.1");
+    expect(warn).toHaveBeenCalledWith("status_gkill_unreachable", expect.objectContaining({ error: expect.stringContaining("ECONNREFUSED") }));
+  });
+
+  test("reports 'unreachable' when the failure carries no HTTP status", async () => {
+    const ctx = { ...makeCtx(async () => { throw new Error("socket hang up"); }), server: serverInfo };
+    const payload = await handleReadToolCall(ctx, "gkill_status", {});
+    expect(payload.gkill_reachable).toBe(false);
+    expect(payload.gkill_error).toBe("unreachable");
+  });
+
+  // 接続先 URL を detail に持つ Network error も "unreachable" に畳む（URL は載せない）
+  test("folds a network error (whose detail carries the URL) into 'unreachable'", async () => {
+    const ctx = {
+      ...makeCtx(async () => {
+        throw new GkillApiError("Network error at /api/get_application_config.", { url: "https://127.0.0.1:9999/api/get_application_config", message: "ECONNREFUSED" });
+      }),
+      server: serverInfo,
+    };
+    const payload = await handleReadToolCall(ctx, "gkill_status", {});
+    expect(payload.gkill_error).toBe("unreachable");
+    expect(JSON.stringify(payload)).not.toContain("127.0.0.1");
+  });
+
+  // 資格情報の誤りは何度呼んでも直らず、ログインの回数制限を食う。名指しで止める。
+  test("names a login failure with its error code and tells the caller not to retry", async () => {
+    const ctx = {
+      ...makeCtx(async () => {
+        throw new GkillApiError("Login failed: ERR000005: ユーザIDまたはパスワードが違います", {
+          errors: [{ error_code: "ERR000005", error_message: "ユーザIDまたはパスワードが違います" }],
+          messages: null,
+        });
+      }),
+      server: serverInfo,
+    };
+    const payload = await handleReadToolCall(ctx, "gkill_status", {});
+    expect(payload.gkill_reachable).toBe(false);
+    expect(payload.gkill_error).toMatch(/^login_failed \(ERR000005\) — do not retry/);
+    expect(payload.gkill_error).toMatch(/rate limit/);
+  });
+
+  test("names an API error by its error code only", async () => {
+    const ctx = {
+      ...makeCtx(async () => {
+        throw new GkillApiError("API error at /api/get_application_config: ERR000999: x", {
+          errors: [{ error_code: "ERR000999", error_message: "x" }],
+        });
+      }),
+      server: serverInfo,
+    };
+    const payload = await handleReadToolCall(ctx, "gkill_status", {});
+    expect(payload.gkill_error).toBe("api_error (ERR000999)");
+  });
+
+  test("takes no arguments and names the stale-list possibility when one is sent", async () => {
+    const ctx = { ...makeCtx(), server: serverInfo };
+    await expect(handleReadToolCall(ctx, "gkill_status", { locale_name: "ja" })).rejects.toThrow(
+      /arguments\.locale_name.*is not supported.*stale/s,
+    );
+  });
+
+  test("summary names the account, the kind and the revision", () => {
+    expect(
+      summarizeReadToolPayload("gkill_status", {
+        server_kind: "read",
+        schema_revision: "0123456789ab",
+        uptime_seconds: 42,
+        gkill_reachable: true,
+        account: { user_id: "testuser", device: "testdevice" },
+      }),
+    ).toBe("Connected to testuser@testdevice via read server (schema_revision 0123456789ab, up 42s).");
+    expect(
+      summarizeReadToolPayload("gkill_status", {
+        server_kind: "read",
+        schema_revision: "0123456789ab",
+        uptime_seconds: 42,
+        gkill_reachable: false,
+        gkill_error: "HTTP 503",
+      }),
+    ).toBe("MCP read server is up (schema_revision 0123456789ab, up 42s) but gkill is NOT reachable (HTTP 503).");
+  });
+
+  test("isReadToolName covers gkill_status", () => {
+    expect(isReadToolName("gkill_status")).toBe(true);
+  });
+});
+
 describe("stripAppConfigUiState", () => {
   test("recurses arrays and objects, leaves scalars", () => {
     const stripped = stripAppConfigUiState({

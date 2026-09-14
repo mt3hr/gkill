@@ -14,7 +14,7 @@ import {
   APP_CONFIG_UI_STATE_KEYS,
   ENTITY_TARGETS,
 } from "./constants.mjs";
-import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs, normalizeAppConfigArgs, normalizeKyouHistoryArgs, normalizeRepNamesArgs, normalizeTagNamesArgs, normalizeRepInfosArgs, appendStaleSchemaWarning, assertAggregationNotCombinedWithCursor } from "./normalization.mjs";
+import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs, normalizeAppConfigArgs, normalizeKyouHistoryArgs, normalizeRepNamesArgs, normalizeTagNamesArgs, normalizeRepInfosArgs, normalizeStatusArgs, appendStaleSchemaWarning, assertAggregationNotCombinedWithCursor, formatLocalRfc3339 } from "./normalization.mjs";
 import { inlinePluginContents, summarizeInlinePluginContent } from "./plugin-tools.mjs";
 import { normalizeMimeType, entityNotFoundMessage, appendStaleSchemaNoteToSummary } from "./payload.mjs";
 import { READ_TOOLS } from "./read-tools.mjs";
@@ -42,6 +42,10 @@ export async function handleReadToolCall(ctx, name, args) {
 
 async function dispatchReadToolCall(ctx, name, args) {
   switch (name) {
+      case "gkill_status": {
+        normalizeStatusArgs(args);
+        return buildStatusPayload(ctx);
+      }
       case "gkill_get_kyous": {
         const normalized = normalizeKyouArgs(args);
         const response = await ctx.client.callApi(
@@ -347,6 +351,75 @@ async function dispatchReadToolCall(ctx, name, args) {
   }
 }
 
+// buildStatusPayload は gkill_status の応答を組む。
+//
+// サーバ側の静的な部分（ctx.server: McpServerBase.describeServer）は必ず返し、
+// gkill 由来の部分（接続先アカウントとビルド）は取れたときだけ足す。
+// gkill へ届かないときも失敗にしない —— 「MCP は生きているが gkill が落ちている」を
+// 区別できるのがこのツールの仕事で、失敗させると区別が消える。
+// 届かない理由の本文は載せない（gkill-client のエラーは接続先 URL を含みうる。ADR-0707）。
+// HTTP ステータスだけは端末固有ではないので gkill_error に載せ、全文はアクセスログへ残す。
+async function buildStatusPayload(ctx) {
+  const server = ctx.server ?? {};
+  const startedAt = server.startedAt instanceof Date ? server.startedAt : null;
+  const payload = {
+    server_kind: server.kind ?? null,
+    server_name: server.name ?? null,
+    server_version: server.version ?? null,
+    schema_revision: server.schemaRevision ?? null,
+    tool_count: server.toolCount ?? null,
+    transport: server.transport ?? (ctx.isLocalTransport ? "stdio" : "http"),
+    started_at: startedAt ? formatLocalRfc3339(startedAt) : null,
+    uptime_seconds: startedAt ? Math.max(0, Math.floor((Date.now() - startedAt.getTime()) / 1000)) : null,
+    gkill_reachable: false,
+  };
+  try {
+    // 接続先とビルドは ApplicationConfig にしか載っていない（専用 API は無い）。
+    // 応答は大きいが MCP と gkill は同じ端末なので、ここで数十KB読むのは許容する。
+    const response = await ctx.client.callApi("/api/get_application_config", {}, true, ctx.sid);
+    const config = response.application_config || {};
+    payload.gkill_reachable = true;
+    payload.account = { user_id: config.user_id ?? null, device: config.device ?? null };
+    payload.gkill = {
+      version: config.version ?? null,
+      commit_hash: config.commit_hash ?? null,
+      build_time: config.build_time ?? null,
+    };
+  } catch (error) {
+    payload.gkill_error = classifyGkillFailure(error);
+    ctx.accessLog?.warn?.("status_gkill_unreachable", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+  return payload;
+}
+
+// classifyGkillFailure は gkill へ届かなかった理由を、端末固有の情報を含まない語に畳む。
+//
+// gkill-client の Network error は detail に接続先 URL を持ち、Login failed / API error は
+// gkill の応答（errors[] の error_code）を持つ。応答に載せてよいのは HTTP ステータスと
+// エラーコードだけ（ADR-0707）。ログイン失敗だけは「再試行するな」を添える ——
+// 資格情報の誤りは何度呼んでも直らず、gkill のログインは IP ごとに回数制限があるので、
+// 確認のつもりの連打が他の経路のログインまで巻き込む（2026-09 の実測。ERR000005）。
+function classifyGkillFailure(error) {
+  if (!(error instanceof GkillApiError)) {
+    return "unreachable";
+  }
+  const detail = error.detail;
+  const errorCode = Array.isArray(detail?.errors) ? detail.errors[0]?.error_code : undefined;
+  const codeSuffix = typeof errorCode === "string" && errorCode !== "" ? ` (${errorCode})` : "";
+  if (error.message.startsWith("Login failed")) {
+    return `login_failed${codeSuffix} — do not retry: the credentials this MCP server holds are rejected, and every attempt counts against gkill's per-IP login rate limit`;
+  }
+  if (typeof detail?.status === "number") {
+    return `HTTP ${detail.status}`;
+  }
+  if (codeSuffix !== "") {
+    return `api_error${codeSuffix}`;
+  }
+  return "unreachable";
+}
+
 // summarizeReadToolPayload は読み取りツールの結果要約を返す。対象外のツールは null。
 // summarizeReadToolPayload は1行サマリを返す。
 // 古スキーマの印の付け方は payload.mjs が正本（書き込み側と同じ文言にするため）。
@@ -356,6 +429,17 @@ export function summarizeReadToolPayload(name, payload) {
 
 function summarizeReadToolPayloadBody(name, payload) {
   switch (name) {
+    case "gkill_status": {
+      const kind = payload.server_kind ?? "unknown";
+      const revision = payload.schema_revision ?? "unknown";
+      const uptime = payload.uptime_seconds ?? 0;
+      if (!payload.gkill_reachable) {
+        return `MCP ${kind} server is up (schema_revision ${revision}, up ${uptime}s) but gkill is NOT reachable (${payload.gkill_error ?? "unreachable"}).`;
+      }
+      const userId = payload.account?.user_id ?? "unknown";
+      const device = payload.account?.device ?? "unknown";
+      return `Connected to ${userId}@${device} via ${kind} server (schema_revision ${revision}, up ${uptime}s).`;
+    }
     case "gkill_get_kyous": {
       // v2: total_count は cursor 無し応答にのみ入る。残量の真実は remaining_count。
       // 旧実装の `total_count ?? returned_count` はカーソルページで

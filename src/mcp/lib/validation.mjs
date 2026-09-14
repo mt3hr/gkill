@@ -82,6 +82,25 @@ export function assertIntegerArray(value, field, { min = null, max = null } = {}
   return value.map((item, index) => assertInteger(item, `${field}[${index}]`, { min, max }));
 }
 
+// unknownKeyMessage は「その名前の引数は無い」の文言。**未知キーを弾く全箇所がこれを使う。**
+//
+// 呼び出し側の書き間違いと、クライアントが握っている古いツール一覧（改名・削除前の
+// 名前を今も載せている）とは、サーバからは区別できない。ツール一覧はクライアントの
+// セッション寿命で固定されるので、サーバを直しても生きているセッションには届かない
+// （2026-09-14 のレビューで、ChatGPT が改名前の検索条件名を一覧どおりに送って
+// 「is not supported」だけを受け取り、行き止まりになった）。
+// entityNotFoundMessage と同じく**区別できないことを言う**: 一覧にその名前があるなら
+// 一覧が古い、と両方の可能性を示し、再接続と gkill_status の照合を案内する。
+// 改名前の名前そのものは書かない（旧綴りは verify_docs が禁止する。ADR-0806）。
+export function unknownKeyMessage() {
+  return (
+    "is not supported (see detail.allowed for the accepted names). Either the name is misspelled, or the tool list " +
+    "your client holds is stale: tool lists are fetched once per client session, so a field renamed or removed on the " +
+    "server stays in your list until you reconnect. If your tool schema lists this name, reconnect the MCP client; " +
+    "gkill_status reports the server's current schema_revision to compare against the one in its description"
+  );
+}
+
 // assertKnownKeys は未知のキーを弾く。
 // field は「どのオブジェクトの中か」を示す接頭辞で、既定は "arguments"（ツール引数の直下）。
 // 既定を置く前は write 側20箇所が第3引数を渡しておらず、
@@ -90,7 +109,7 @@ export function assertIntegerArray(value, field, { min = null, max = null } = {}
 export function assertKnownKeys(value, allowedKeys, field = "arguments") {
   for (const key of Object.keys(value)) {
     if (!allowedKeys.has(key)) {
-      throw invalidArgument(`${field}.${key}`, "is not supported", value[key], {
+      throw invalidArgument(`${field}.${key}`, unknownKeyMessage(), value[key], {
         allowed: Array.from(allowedKeys).sort(),
       });
     }

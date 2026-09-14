@@ -232,9 +232,9 @@ AI連携用のMCP（Model Context Protocol）サーバーです。
 
 ```
 src/mcp/
-├── gkill-read-server.mjs      # Read専用MCPサーバー（10ツール = 固有9 + プラグイン1、port 8808）
-├── gkill-write-server.mjs     # Write専用MCPサーバー（27ツール = 固有26 + プラグイン1、port 8809）
-├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（31ツール = 固有30 + プラグイン1、port 8810）
+├── gkill-read-server.mjs      # Read専用MCPサーバー（11ツール = 固有10 + プラグイン1、port 8808）
+├── gkill-write-server.mjs     # Write専用MCPサーバー（28ツール = 固有27 + プラグイン1、port 8809）
+├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（32ツール = 固有31 + プラグイン1、port 8810）
 └── lib/
     ├── mcp-server-base.mjs    # 3サーバ共通の JSON-RPC 受け口
     ├── stdio-transport.mjs    # stdio トランスポート
