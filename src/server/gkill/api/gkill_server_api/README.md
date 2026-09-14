@@ -97,7 +97,9 @@ Web検索は既存の警告メッセージ、MCP検索は `warnings` で欠落�
 ### ローカルアクセス制限（`filter_local_only.go`）
 
 `ServerConfig.IsLocalOnlyAccess` が有効な場合、`localhost`、`127.0.0.1`、`[::1]`、`::1` からのアクセスのみ許可。
-それ以外のリクエストには HTTP 403 を返す。
+それ以外のリクエストには HTTP 403 を返す。**既定で有効**（初回起動ブロック `gkill_server_api.go` が
+`server_config.DefaultIsLocalOnlyAccess` を引く。待受も `server_config.DefaultListenAddress` = `127.0.0.1:9999` で
+ループバック限定）。LAN 公開はサーバ設定画面で両方を開く明示操作。既存の設定は移行しない（ADR-0708）。
 
 ### ログインレートリミット（`gkill_server_api_rate_limit.go`）
 

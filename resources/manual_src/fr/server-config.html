@@ -10,11 +10,11 @@
   <table>
     <tr><th>Param&egrave;tre</th><th>Type</th><th>Description</th></tr>
     <tr><td>Profil</td><td>Liste d&eacute;roulante + Ajouter/Supprimer</td><td>S&eacute;lectionner le profil actif, en cr&eacute;er un nouveau ou en supprimer un existant</td></tr>
-    <tr><td>Acc&egrave;s local uniquement</td><td>Case &agrave; cocher</td><td>Restreindre les connexions &agrave; l'acc&egrave;s local uniquement</td></tr>
+    <tr><td>Acc&egrave;s local uniquement</td><td>Case &agrave; cocher</td><td>Restreindre les connexions &agrave; l'acc&egrave;s local uniquement (activ&eacute; par d&eacute;faut)</td></tr>
     <tr><td>Service de notifications</td><td>Case &agrave; cocher</td><td>Activer le service de notifications push</td></tr>
     <tr><td>Activer TLS</td><td>Case &agrave; cocher</td><td>Activer HTTPS</td></tr>
     <tr><td>G&eacute;n&eacute;rer TLS auto-sign&eacute;</td><td>Bouton</td><td>Cr&eacute;er des fichiers de certificat TLS auto-sign&eacute;s</td></tr>
-    <tr><td>Adresse</td><td>Texte</td><td>Adresse d'&eacute;coute du serveur (ex. : :9999)</td></tr>
+    <tr><td>Adresse</td><td>Texte</td><td>Adresse d'&eacute;coute du serveur. La valeur par d&eacute;faut est <code>127.0.0.1:9999</code> (cet appareil uniquement). Laissez la partie h&ocirc;te vide, comme <code>:9999</code>, pour &eacute;couter sur toutes les interfaces r&eacute;seau</td></tr>
     <tr><td>Fichier TLS CERT</td><td>Texte</td><td>Chemin vers le fichier de certificat TLS</td></tr>
     <tr><td>Fichier TLS KEY</td><td>Texte</td><td>Chemin vers le fichier de cl&eacute; priv&eacute;e TLS</td></tr>
     <tr><td>Commande d'ouverture de r&eacute;pertoire</td><td>Texte</td><td>Commande du syst&egrave;me d'exploitation pour ouvrir un r&eacute;pertoire</td></tr>
@@ -29,6 +29,16 @@
   <p><strong>Appliquer</strong> : Enregistrer les param&egrave;tres.<br><strong>Annuler</strong> : Annuler les modifications et fermer l'&eacute;cran.</p>
 
   <div class="tip">Les modifications n&eacute;cessitent un red&eacute;marrage du serveur pour prendre effet.</div>
+
+  <h2>Utiliser gkill depuis d'autres appareils</h2>
+  <p>Par d&eacute;faut, seul l'appareil qui ex&eacute;cute le serveur peut se connecter (l'adresse d'&eacute;coute est <code>127.0.0.1:9999</code> et &laquo; Acc&egrave;s local uniquement &raquo; est activ&eacute;). Pour utiliser gkill depuis un smartphone ou un autre PC, un administrateur modifie ces deux param&egrave;tres.</p>
+  <ol>
+    <li>D&eacute;finissez <strong>Adresse</strong> sur <code>:9999</code> (toutes les interfaces) ou sur l'adresse IP de cet appareil sur le r&eacute;seau local (ex. : <code>192.168.0.10:9999</code>).</li>
+    <li>D&eacute;sactivez <strong>Acc&egrave;s local uniquement</strong>.</li>
+    <li>Appuyez sur <strong>Appliquer</strong>. Le serveur red&eacute;marre et les autres appareils peuvent ouvrir <code>http://(adresse IP de cet appareil):9999</code>.</li>
+  </ol>
+  <div class="tip"><strong>Astuce :</strong> Lorsque vous servez d'autres appareils, il est recommand&eacute; d'activer <strong>Activer TLS</strong> (vous pouvez cr&eacute;er un certificat avec &laquo; G&eacute;n&eacute;rer des fichiers TLS auto-sign&eacute;s &raquo;). Si TLS reste d&eacute;sactiv&eacute;, les mots de passe circulent sur le r&eacute;seau sans chiffrement.</div>
+
 
   <h2>Gestion du stockage</h2>
   <p>Les dépôts de données sont les emplacements ou les enregistrements sont sauvegardes. Plusieurs dépôts peuvent etre configurés selon l'usage ou l'appareil.</p>

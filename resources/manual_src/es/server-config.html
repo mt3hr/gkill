@@ -10,11 +10,11 @@
   <table>
     <tr><th>Configuraci&oacute;n</th><th>Tipo</th><th>Descripci&oacute;n</th></tr>
     <tr><td>Perfil</td><td>Desplegable + A&ntilde;adir/Eliminar</td><td>Seleccionar el perfil activo, crear uno nuevo o eliminar uno existente</td></tr>
-    <tr><td>Solo acceso local</td><td>Casilla</td><td>Restringir las conexiones solo a acceso local</td></tr>
+    <tr><td>Solo acceso local</td><td>Casilla</td><td>Restringir las conexiones solo a acceso local (activado por defecto)</td></tr>
     <tr><td>Servicio de notificaciones</td><td>Casilla</td><td>Activar el servicio de notificaciones push</td></tr>
     <tr><td>Activar TLS</td><td>Casilla</td><td>Activar HTTPS</td></tr>
     <tr><td>Generar TLS autofirmado</td><td>Bot&oacute;n</td><td>Crear archivos de certificado TLS autofirmados</td></tr>
-    <tr><td>Direcci&oacute;n</td><td>Texto</td><td>Direcci&oacute;n de escucha del servidor (ej.: :9999)</td></tr>
+    <tr><td>Direcci&oacute;n</td><td>Texto</td><td>Direcci&oacute;n de escucha del servidor. El valor por defecto es <code>127.0.0.1:9999</code> (solo este dispositivo). Deje vac&iacute;a la parte del host, como <code>:9999</code>, para escuchar en todas las interfaces de red</td></tr>
     <tr><td>Archivo TLS CERT</td><td>Texto</td><td>Ruta al archivo de certificado TLS</td></tr>
     <tr><td>Archivo TLS KEY</td><td>Texto</td><td>Ruta al archivo de clave privada TLS</td></tr>
     <tr><td>Comando para abrir directorio</td><td>Texto</td><td>Comando del sistema operativo para abrir un directorio</td></tr>
@@ -29,6 +29,16 @@
   <p><strong>Aplicar</strong>: Guardar la configuraci&oacute;n.<br><strong>Cancelar</strong>: Descartar los cambios y cerrar la pantalla.</p>
 
   <div class="tip">Los cambios requieren reiniciar el servidor para que surtan efecto.</div>
+
+  <h2>Usar gkill desde otros dispositivos</h2>
+  <p>Por defecto, solo el dispositivo que ejecuta el servidor puede conectarse (la direcci&oacute;n de escucha es <code>127.0.0.1:9999</code> y "Solo acceso local" est&aacute; activado). Para usar gkill desde un tel&eacute;fono u otro PC, un administrador cambia estos dos ajustes.</p>
+  <ol>
+    <li>Establezca <strong>Direcci&oacute;n</strong> en <code>:9999</code> (todas las interfaces) o en la direcci&oacute;n IP de este dispositivo en la red local (ej.: <code>192.168.0.10:9999</code>).</li>
+    <li>Desactive <strong>Solo acceso local</strong>.</li>
+    <li>Pulse <strong>Aplicar</strong>. El servidor se reinicia y los dem&aacute;s dispositivos pueden abrir <code>http://(direcci&oacute;n IP de este dispositivo):9999</code>.</li>
+  </ol>
+  <div class="tip"><strong>Consejo:</strong> Al dar servicio a otros dispositivos, se recomienda activar <strong>Habilitar TLS</strong> (puede crear un certificado con "Generar archivos TLS autofirmados"). Con TLS desactivado, las contrase&ntilde;as viajan por la red sin cifrar.</div>
+
 
   <h2>Gestión del almacenamiento</h2>
   <p>Los repositorios de datos son los lugares donde se guardan los registros. Se pueden configurar múltiples repositorios según el proposito o dispositivo.</p>
