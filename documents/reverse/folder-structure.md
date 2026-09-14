@@ -48,7 +48,7 @@ src/
 ├── android/      # Android APKラッパー
 ├── wear_os/      # Wear OSアプリ（phone_companion + watch_app）
 ├── mcp/          # MCPサーバー（AI連携用）
-├── plugins/      # スタンドアロンプラグインバイナリ（examples/gkill_example, gkill_plugin_chatgpt, gkill_plugin_claudeai, gkill_plugin_claudecode, gkill_plugin_codex, gkill_plugin_fitbit, gkill_plugin_google_locationhistory）
+├── plugins/      # スタンドアロンプラグインバイナリ（examples/gkill_example, gkill_plugin_archived_git_commit_log, gkill_plugin_chatgpt, gkill_plugin_claudeai, gkill_plugin_claudecode, gkill_plugin_codex, gkill_plugin_fitbit, gkill_plugin_google_locationhistory）
 ├── locales/      # i18nリソース（7言語対応）
 ├── tools/        # ユーティリティスクリプト
 └── README.md     # 実装資料への導線
@@ -274,6 +274,7 @@ gkill本体とは独立してビルドされるプラグインバイナリです
 src/plugins/
 ├── examples/
 │   └── gkill_example/                  # サンプルプラグイン（固定のKyouレスポンスを返す）
+├── gkill_plugin_archived_git_commit_log/ # zip に固めた Git リポジトリのコミットログ（展開せず .git を go-git で読む）
 ├── gkill_plugin_chatgpt/               # ChatGPT会話履歴プラグイン
 ├── gkill_plugin_claudeai/              # Claude.ai会話履歴プラグイン
 ├── gkill_plugin_claudecode/            # Claude Code チャットログプラグイン
@@ -284,13 +285,13 @@ src/plugins/
 └── README.md
 ```
 
-各プラグインは独立した `go.mod` を持つ別モジュール。同梱プラグイン6本（chatgpt / claudeai /
+各プラグインは独立した `go.mod` を持つ別モジュール。同梱プラグイン7本（archived_git_commit_log / chatgpt / claudeai /
 claudecode / codex / fitbit / google_locationhistory）は
 `manifest.json` をバイナリに `//go:embed` しており、`--gkill-print-manifest` / `--gkill-print-config` で
 内容を標準出力に書き出せる（`gkill_example` は埋め込みもフラグも `DefaultConfig` も持たない）。
-この6本は `config.json` の `source_dirs` で取り込み元フォルダを指定し、
+この7本は `config.json` の `source_dirs` で取り込み元（フォルダ・glob・zip の実パス）を指定し、
 SQLite3 キャッシュを `$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db` に置く
-（解決は SDK の `sdk.CacheDBPath`。6本が同じ実装を持っていたので集約した）。
+（解決は SDK の `sdk.CacheDBPath`。先行の6本が同じ実装を持っていたので集約した）。
 
 > `src/plugins/*` の Go テストは別モジュールのため、`npm run test_server`（`cd src/server && go test ./...`）
 > では実行されない。`npm run test_plugins` が各モジュールを回し、`npm test` からも呼ばれる。

@@ -76,22 +76,37 @@ plugins/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
 │   └── README.md
-└── gkill_plugin_codex/          # Codex CLI セッションログプラグイン
+├── gkill_plugin_codex/          # Codex CLI セッションログプラグイン
+│   ├── main.go
+│   ├── types.go
+│   ├── reader.go               # 巨大行(実データ最大19.9MB)に耐えるレコードリーダ
+│   ├── scan.go
+│   ├── loader.go               # ファイル → 正規化した要素列
+│   ├── fold.go                 # 要素列 → Kyou、サブエージェントの畳み込み
+│   ├── cache.go
+│   ├── query.go                # 読み取り(ロックを取らない)
+│   ├── builder.go              # 常駐バックグラウンドビルダ
+│   ├── config.go
+│   ├── render.go
+│   ├── html.go
+│   ├── uuid.go
+│   ├── *_test.go
+│   ├── testdata/
+│   ├── go.mod / go.sum
+│   ├── manifest.json
+│   └── README.md
+└── gkill_plugin_archived_git_commit_log/  # zip に固めた Git リポジトリのコミットログ
     ├── main.go
     ├── types.go
-    ├── reader.go               # 巨大行(実データ最大19.9MB)に耐えるレコードリーダ
-    ├── scan.go
-    ├── loader.go               # ファイル → 正規化した要素列
-    ├── fold.go                 # 要素列 → Kyou、サブエージェントの畳み込み
+    ├── scan.go                 # zip 内のパスから .git の場所と rep 名を決める・束の指紋
+    ├── gitread.go              # .git のエントリを memfs へ流し込み go-git で読む
     ├── cache.go
     ├── query.go                # 読み取り(ロックを取らない)
     ├── builder.go              # 常駐バックグラウンドビルダ
     ├── config.go
     ├── render.go
     ├── html.go
-    ├── uuid.go
-    ├── *_test.go
-    ├── testdata/
+    ├── *_test.go               # テストのたびに go-git でリポジトリを作って zip にする
     ├── go.mod / go.sum
     ├── manifest.json
     └── README.md
@@ -108,6 +123,7 @@ plugins/
 | [`gkill_plugin_codex`](gkill_plugin_codex/README.md) | `codex_turn` | Codex CLI のセッションログを、自分の発言と一連の応答に分けてタイムライン表示（サブエージェントは親に畳み込む） |
 | [`gkill_plugin_fitbit`](gkill_plugin_fitbit/README.md) | `kc` | Google Takeout の Fitbit / Google Health を日別集計し、数値記録として返す（推移グラフで集計できる） |
 | [`gkill_plugin_google_locationhistory`](gkill_plugin_google_locationhistory/README.md) | `google_location_visit` | Google Takeout のロケーション履歴を位置情報ログとして読み込む（記録は作らない） |
+| [`gkill_plugin_archived_git_commit_log`](gkill_plugin_archived_git_commit_log/README.md) | `git_commit_log` | zip に固めて保管した Git リポジトリのコミットログを、稼働中の Git リポジトリと同じ形（rep 名はリポジトリ名・ID はコミットハッシュ）で返す。zip は展開しない |
 
 ---
 
@@ -186,6 +202,22 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
 採用するので、古い書き出しを消さなくても歩数などが二重にならない。
 位置情報のほうは読み出し時に同じ点を1つに畳むので、そもそも重ならない
 （むしろ Google は古いデータを間引くので、古い書き出しを残すと消えた期間が保たれる）。
+
+### gkill_plugin_archived_git_commit_log
+
+作業を終えたリポジトリを zip に固めて保管しているとき、その中の `.git` を読んでコミットログをタイムラインに出す。
+**zip は展開しない。** 中央ディレクトリを見て `.git/**` のエントリだけをメモリに読み、go-git で開く。
+
+1. 配置先ディレクトリに `manifest.json`・実行ファイルを置き、gkill_server を再起動する
+2. 初回起動で作られる `config.json` の `source_dirs` に、zip の実パス（1行1つ）か zip を置いたフォルダを書く
+   （フォルダは配下の `*.zip` を再帰で拾う。`.git` の無い zip は読み飛ばす）。設定画面からも書ける
+3. コミットは稼働中の Git リポジトリと同じ形（`data_type: git_commit_log`・ID はコミットハッシュ・rep 名は
+   `.git` を含むディレクトリ名・時刻はコミッタ日時）で出るので、同じコミットが稼働中のリポジトリにもあれば1件に畳まれる。
+   同じリポジトリを別の時期に固めた zip が複数あっても、コミットは1件ずつ
+
+1つの zip に複数のリポジトリ（入れ子を含む）が入っていてもよく、それぞれ別の rep 名になる。
+ルート直下に `.git/` がある zip は zip のファイル名が rep 名になる。
+`.git` がファイル（worktree / submodule の `gitdir:` ポインタ）のものと、分割 zip は読めない。
 
 ---
 
@@ -303,7 +335,7 @@ gkill_server はプラグインをサブプロセスとして起動し、stdin/s
 |---|---|---|
 | `ping` | gkill → plugin | 死活確認。`pong: true` を返す |
 | `close` | gkill → plugin | プロセス終了 |
-| `get_rep_name` | gkill → plugin | `rep_name` を返す |
+| `get_rep_name` | gkill → plugin | `rep_name` を返す。`rep_names[]` を添えると、1本のプラグインが複数の rep 名（リポジトリごとの名前など）を名乗れる（SDK は `Handler.RepNames`）。null と `[]` は別で、null は「未対応 → manifest の1つ」。gkill は rep 名の列挙のたび（TTL 60 秒）に送る |
 | `find_kyous` | gkill → plugin | 検索条件付きで Kyou 一覧を返す |
 | `get_kyou` | gkill → plugin | ID 指定で 1 件返す |
 | `get_content_html` | gkill → plugin | Kyou 詳細表示用 HTML を返す |
@@ -465,6 +497,10 @@ go build -o gkill_plugin_fitbit .
 # gkill_plugin_google_locationhistory
 cd src/plugins/gkill_plugin_google_locationhistory
 go build -o gkill_plugin_google_locationhistory .
+
+# gkill_plugin_archived_git_commit_log
+cd src/plugins/gkill_plugin_archived_git_commit_log
+go build -o gkill_plugin_archived_git_commit_log .
 ```
 
 ---
