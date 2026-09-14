@@ -6,6 +6,7 @@ import {
   submitKftlText, navigateToRykv, navigateToMi, navigateToPlaying,
   makeUniqueLabel, expectPageToContainText, expectPageNotToContainText,
   clickContextMenuItem, clickDialogButton, waitForKyouByText, waitForAttachedText, openKyouDetailPane,
+  searchByKeyword, waitForKyouRowByRepName,
   MENU, SAVE_BUTTON,
 } from './crud-helpers'
 
@@ -247,8 +248,12 @@ test.describe('GUI Edit Dialog Flows', () => {
     await clickContextMenuItem(page, MENU.rekyou)
     await clickDialogButton(page, MENU.rekyou)
 
-    // 元の記録とリポストで同じ本文が2件以上出る
+    // 元の記録とリポストで同じ本文が2件以上出る。
+    // 一覧は仮想スクロールなので、他のテストの記録に押し出されると元の記録が描画されず
+    // 「1件」に見える（2026-09-15 のフルランで2回とも落ちた）。re-kyou.spec.ts と同じく本文で絞ってから数える
     await navigateToRykv(page)
+    await searchByKeyword(page, label)
+    await waitForKyouRowByRepName(page, 'ReKyou')
     await expect
       .poll(async () => await page.locator('#app').getByText(label, { exact: false }).count(), { timeout: 30000 })
       .toBeGreaterThan(1)
