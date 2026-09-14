@@ -66,6 +66,12 @@ function resolve_typed_data_prefix(data_type: string): string | null {
     return null
 }
 
+/** load_all / load_attached_datas で付随データのうち何を読むか。省略時は全部読む */
+export type LoadAttachedDatasOptions = {
+    /** 実行中TimeIs（/api/get_kyous の検索）を読むか。false なら飛ばし、フラグも触らない */
+    include_timeis?: boolean
+}
+
 export class Kyou extends InfoBase {
     is_deleted: boolean
     image_source: string
@@ -112,14 +118,14 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_all(query?: FindKyouQuery, force_attached = false): Promise<Array<GkillError>> {
+    async load_all(query?: FindKyouQuery, force_attached = false, options?: LoadAttachedDatasOptions): Promise<Array<GkillError>> {
         const await_promises = new Array<Promise<Array<GkillError>>>()
         try {
             await_promises.push(this.load_typed_datas(query))
             // load_attached_histories はここでは呼ばない。
             // 直後の load_attached_datas が同じものを読むので、
             // 両方書くと 1件につき /api/get_kyou が2回飛ぶ。
-            await_promises.push(this.load_attached_datas(force_attached))
+            await_promises.push(this.load_attached_datas(force_attached, options))
             return await Promise.all(await_promises).then((errors_list) => {
                 const errors = new Array<GkillError>()
                 errors_list.forEach(e => {
@@ -203,13 +209,17 @@ export class Kyou extends InfoBase {
         return errors
     }
 
-    async load_attached_datas(force = false): Promise<Array<GkillError>> {
+    async load_attached_datas(force = false, options?: LoadAttachedDatasOptions): Promise<Array<GkillError>> {
         const await_promises = new Array<Promise<Array<GkillError>>>()
         try {
             await_promises.push(this.load_attached_tags(force))
             await_promises.push(this.load_attached_texts(force))
             await_promises.push(this.load_attached_notifications(force))
-            await_promises.push(this.load_attached_timeis(force))
+            // 実行中TimeIsだけは付随データの中で唯一「検索」（/api/get_kyous、SWキャッシュ対象外）なので、
+            // 呼び出し元が要らないと言えば飛ばせる。フラグは触らないので、表示する側の遅延読み込みが後で取る
+            if (options?.include_timeis !== false) {
+                await_promises.push(this.load_attached_timeis(force))
+            }
             await_promises.push(this.load_attached_histories())
             return await Promise.all(await_promises).then((errors_list) => {
                 const errors = new Array<GkillError>()

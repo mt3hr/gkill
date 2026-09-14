@@ -18,12 +18,14 @@ import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { build_mi_reload_query, is_kyou_reloading, new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
 import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import type { Kyou } from '@/classes/datas/kyou'
+import type { Kyou, LoadAttachedDatasOptions } from '@/classes/datas/kyou'
 
 const cache_delete_mock = delete_gkill_kyou_cache as unknown as ReturnType<typeof vi.fn>
 
 interface FakeKyouOptions {
     reload_throws?: boolean
+    /** 発生元が実行中TimeIsを読み込み済みか（詳細ペイン・ダイアログの KyouView 由来） */
+    timeis_loaded?: boolean
     /** 引き直しを飛行中のまま止めておくための関門。resolve するまで reload が返らない */
     reload_gate?: Promise<void>
 }
@@ -41,6 +43,8 @@ function make_kyou(id: string, calls: Array<string>, options?: FakeKyouOptions) 
         id: id,
         is_typed_data_loaded: true,
         is_attached_tags_loaded: true,
+        // 一覧の行は実行中TimeIsを読まない（show_attached_timeis=false）のが既定
+        is_attached_timeis_loaded: options?.timeis_loaded ?? false,
         abort_controller: new AbortController(),
         async reload(is_updated_info: boolean, _query?: FindKyouQuery): Promise<Array<never>> {
             calls.push(`reload:${is_updated_info}`)
@@ -55,16 +59,17 @@ function make_kyou(id: string, calls: Array<string>, options?: FakeKyouOptions) 
             }
             return []
         },
-        async load_all(_query?: FindKyouQuery, force_attached = false): Promise<Array<never>> {
-            // force_attached と、その時点の is_typed_data_loaded を一緒に記録する。
+        async load_all(_query?: FindKyouQuery, force_attached = false, load_options?: LoadAttachedDatasOptions): Promise<Array<never>> {
+            // force_attached と、その時点の is_typed_data_loaded と、実行中TimeIsを読むかを一緒に記録する。
             // 「フラグを倒してから load_all する」順序が崩れたらここで落ちる
-            calls.push(`load_all:${force_attached}:typed_loaded=${kyou.is_typed_data_loaded}`)
+            calls.push(`load_all:${force_attached}:typed_loaded=${kyou.is_typed_data_loaded}:timeis=${load_options?.include_timeis !== false}`)
             return []
         },
         clone() {
             const cloned = make_kyou(id, calls, options)
             cloned.is_typed_data_loaded = kyou.is_typed_data_loaded
             cloned.is_attached_tags_loaded = kyou.is_attached_tags_loaded
+            cloned.is_attached_timeis_loaded = kyou.is_attached_timeis_loaded
             cloned.abort_controller = kyou.abort_controller
             return cloned
         },
@@ -103,9 +108,29 @@ describe('refresh_kyou', () => {
         expect(cache_delete_mock).toHaveBeenCalledWith('kyou-1')
         expect(calls).toEqual([
             'reload:true',
-            'load_all:true:typed_loaded=false',
+            'load_all:true:typed_loaded=false:timeis=false',
         ])
         expect(refreshed).not.toBeNull()
+    })
+
+    it('発生元が実行中TimeIsを読んでいなければ（一覧の行）、引き直しでも実行中TimeIs検索を撃たない', async () => {
+        const calls = new Array<string>()
+        const kyou = make_kyou('kyou-1', calls, { timeis_loaded: false })
+
+        const refreshed = await refresh_kyou(as_kyou(kyou))
+
+        expect(calls).toContain('load_all:true:typed_loaded=false:timeis=false')
+        // 読んでいない印はそのまま。表示する側の遅延読み込みが必要になったときに取る
+        expect(refreshed?.is_attached_timeis_loaded).toBe(false)
+    })
+
+    it('発生元が実行中TimeIsを読み込み済みなら（詳細ペイン・ダイアログ）、引き直しでも読み直す', async () => {
+        const calls = new Array<string>()
+        const kyou = make_kyou('kyou-1', calls, { timeis_loaded: true })
+
+        await refresh_kyou(as_kyou(kyou))
+
+        expect(calls).toContain('load_all:true:typed_loaded=false:timeis=true')
     })
 
     it('引数のKyouは変更しない', async () => {
