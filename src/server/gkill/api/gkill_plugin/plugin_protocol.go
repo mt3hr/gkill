@@ -105,6 +105,17 @@ type PluginResponse struct {
 	// RepName は get_rep_name コマンドのレスポンス。
 	RepName string `json:"rep_name,omitempty"`
 
+	// RepNames は get_rep_name コマンドで、このプラグインの記録が名乗る rep 名の全集合。
+	// 1本のプラグインが複数のリポジトリ（zip に固めた Git リポジトリなど）を代表するとき、
+	// Kyou.RepName ごとに別の名前を出すために使う。
+	//
+	// **nil（JSON の null / 欠落）と空配列は意味が違う。** nil は「この応答に対応していない」
+	// （古いプラグイン・Handler.RepNames 未設定）で、gkill は manifest の rep_name 1つとみなす。
+	// 空配列は「いまは名乗る名前が無い」（まだ1件も取り込んでいない）で、gkill は 0 個とみなす。
+	// そのため omitempty を付けない。ここに並べた名前は get_all_rep_names に載り、
+	// query.reps の絞り込みと本文取得（get_plugin_content_html）の引き当てに使われる。
+	RepNames []string `json:"rep_names"`
+
 	// HTML は get_content_html / get_config_html コマンドのレスポンス。
 	HTML string `json:"html,omitempty"`
 
@@ -145,7 +156,9 @@ type PluginKyou struct {
 	// ID は記録の一意識別子。UUIDまたはSNSのポストID等。
 	ID string `json:"id"`
 
-	// RepName はリポジトリ表示名（manifest.jsonのrep_nameと一致させること）。
+	// RepName はリポジトリ表示名。manifest.json の rep_name か、get_rep_name で申告した
+	// rep_names のどれかに一致させること。空なら gkill が manifest の rep_name で埋める。
+	// どちらでもない名前は残るが警告が出て、rep 絞り込みの対象にもならない。
 	RepName string `json:"rep_name"`
 
 	// RelatedTime はこの記録が示す日時（ツイート投稿時刻等）。
@@ -202,7 +215,7 @@ type PluginKyou struct {
 // PluginTypedData はPluginKyouに載せる型別データ。
 //
 // 非nilにしてよいのは高々1つ。2つ以上が非nilのときgkillは
-// Kmemo→KC→URLog→Nlog→Lantana→TimeIs→Mi の順で最初の1つだけを採用し、
+// Kmemo→KC→URLog→Nlog→Lantana→TimeIs→Mi→GitCommitLog の順で最初の1つだけを採用し、
 // 残りは警告ログに落とす（プラグイン側の実装ミスを静かに握り潰さないため）。
 //
 // 各構造体が持つのはその型固有の列だけで、ID・各種時刻・RepName・DataTypeは持たない。
@@ -231,6 +244,11 @@ type PluginTypedData struct {
 
 	// Mi はタスク。data_typeは"mi_create"/"mi_check"/"mi_limit"/"mi_start"/"mi_end"のいずれかにすること。
 	Mi *PluginMi `json:"mi,omitempty"`
+
+	// GitCommitLog は Git のコミット。data_typeは"git_commit_log"にすること。
+	// ID はコミットハッシュ、RelatedTime / CreateTime / UpdateTime はコミッタ日時、
+	// CreateUser / UpdateUser は author 名にすると native の git rep と同じ形になる。
+	GitCommitLog *PluginGitCommitLog `json:"git_commit_log,omitempty"`
 }
 
 // PluginKmemo はKmemoの本文。
@@ -285,6 +303,17 @@ type PluginMi struct {
 	LimitTime         *time.Time `json:"limit_time,omitempty"`
 	EstimateStartTime *time.Time `json:"estimate_start_time,omitempty"`
 	EstimateEndTime   *time.Time `json:"estimate_end_time,omitempty"`
+}
+
+// PluginGitCommitLog は Git のコミット1件の、Kyou のメタ情報以外の部分。
+// native の reps.GitCommitLog と同じ列（コミットメッセージ・追加行数・削除行数）。
+type PluginGitCommitLog struct {
+	// CommitMessage はコミットメッセージ（末尾の改行も含めそのまま）。
+	CommitMessage string `json:"commit_message"`
+	// Addition は追加行数の合計。
+	Addition int `json:"addition"`
+	// Deletion は削除行数の合計。
+	Deletion int `json:"deletion"`
 }
 
 // PluginNotification はKyouに付ける通知。

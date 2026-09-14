@@ -482,10 +482,17 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	// プラグインをrep_name別に引けるようにする。
 	// プラグインKyouの本文はgkill側に保存されないため、ペイロードには
 	// コンテンツHTML取得に必要なrep_name/kyou_idを載せる。
+	// 申告された rep 名（get_rep_name の rep_names）でも引けるようにする。
+	// zip の Git リポジトリを束ねるプラグインの Kyou はリポジトリ名を rep_name に持つ。
 	pluginManifestByRepName := map[string]gkill_plugin.PluginManifest{}
 	for _, pluginRep := range repositories.PluginReps {
 		manifest := pluginRep.GetManifest()
 		pluginManifestByRepName[manifest.RepName] = manifest
+		if repNames, err := pluginRep.GetRepNames(r.Context()); err == nil {
+			for _, repName := range repNames {
+				pluginManifestByRepName[repName] = manifest
+			}
+		}
 	}
 
 	// 付随データの取得失敗を種別ごとに数える。1件でも失敗したら response.Partial を立て、

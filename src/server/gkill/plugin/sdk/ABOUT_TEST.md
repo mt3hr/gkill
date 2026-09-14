@@ -2,18 +2,18 @@
 
 ## 概要
 
-プラグイン作者向け Go SDK のテスト。**47テスト（5ファイル）**。
+プラグイン作者向け Go SDK のテスト。**51テスト（5ファイル）**。
 
 `sdk.Run()` の stdin/stdout ループ、`sdk.EnsureConfig()` の `config.json` 自動生成、
 `sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置、`sdk.Query.MatchText()` のワード判定を検証する。
 SDK は gkill 本体と別プロセスで動くプラグイン側のライブラリなので、ここでの回帰は
-全プラグイン（chatgpt / claudeai / claudecode / fitbit / locationhistory / example）に同時に波及する。
+全プラグイン（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / locationhistory / example）に同時に波及する。
 
 ## テストファイル
 
 | ファイル | テスト数 | 対象 |
 |---------|---------|------|
-| `sdk_test.go` | 18 | `Run()` のメッセージループ（`TestRunLoop_*`）と型別データの往復 |
+| `sdk_test.go` | 22 | `Run()` のメッセージループ（`TestRunLoop_*`）と型別データの往復 |
 | `config_test.go` | 4 | `EnsureConfig()`（`TestEnsureConfig_*`） |
 | `source_test.go` | 18 | `OpenSources()` の ZIP 走査（`TestOpenSources_*` ほか） |
 | `cache_path_test.go` | 5 | `CacheDBPath()` / `IsSafePathElement()`（`TestCacheDBPath_*`） |
@@ -27,7 +27,11 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 | テスト | 検証内容 |
 |-------|---------|
 | `TestRunLoop_Ping` | `ping` に応答する |
-| `TestRunLoop_GetRepName` | `get_rep_name` がマニフェストの `rep_name` を返す |
+| `TestRunLoop_GetRepName` | `get_rep_name` がマニフェストの `rep_name` を返す。`Handler.RepNames` 未設定なら `rep_names` は出ない |
+| `TestRunLoop_GetRepName_OmitsRepNamesWhenNotImplemented` | 未実装のプラグインの応答に `rep_names` 欄そのものが無い（欄があると gkill は「複数 rep 名に対応」と読む） |
+| `TestRunLoop_GetRepName_ReturnsRepNames` | `Handler.RepNames` の名前がそのまま `rep_names` に載り、`rep_name` と併存する |
+| `TestRunLoop_GetRepName_EmptyRepNamesIsEmptyArrayNotOmitted` | 実装済みで0個（nil / 空スライス）なら `"rep_names": []` を出す。欄を落とすと manifest 名にフォールバックされ「未対応」と読まれる |
+| `TestRunLoop_GetRepName_ErrorGoesToErrors` | `RepNames` のエラーは `errors` に載り、名前は返さない |
 | `TestRunLoop_FindKyous` | `find_kyous` が Handler の結果を返す |
 | `TestRunLoop_FindKyousNotImplemented` | `FindKyous` 未設定時にエラー応答になる |
 | `TestRunLoop_FindKyousError` | Handler がエラーを返したとき、エラーとして中継される |

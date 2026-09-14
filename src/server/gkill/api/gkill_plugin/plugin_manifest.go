@@ -25,6 +25,11 @@ const (
 	PluginProvidesTimeIs PluginProvidedKind = "timeis"
 	// PluginProvidesMi はタスクを提供することを表す。
 	PluginProvidesMi PluginProvidedKind = "mi"
+	// PluginProvidesGitCommitLog は Git のコミットログを提供することを表す。
+	// native の git rep と同じ data_type "git_commit_log" で返すと、クライアントは
+	// native と同じ GitCommitLogView で描き、稼働中リポジトリと重なるコミットは
+	// (ID, data_type, related_time) の重複除去で1件に畳まれる。
+	PluginProvidesGitCommitLog PluginProvidedKind = "git_commit_log"
 	// PluginProvidesTag はタグを提供することを表す。
 	PluginProvidesTag PluginProvidedKind = "tag"
 	// PluginProvidesText はテキストを提供することを表す。
@@ -40,7 +45,7 @@ const (
 // AllPluginProvidedKinds はprovidesに書ける値の全集合。
 var AllPluginProvidedKinds = []PluginProvidedKind{
 	PluginProvidesKmemo, PluginProvidesKC, PluginProvidesURLog, PluginProvidesNlog,
-	PluginProvidesLantana, PluginProvidesTimeIs, PluginProvidesMi,
+	PluginProvidesLantana, PluginProvidesTimeIs, PluginProvidesMi, PluginProvidesGitCommitLog,
 	PluginProvidesTag, PluginProvidesText, PluginProvidesNotification,
 	PluginProvidesGPSLog,
 }

@@ -548,12 +548,20 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 		}
 		selected := false
 		for _, repImpl := range repImpls {
-			repName, err := repImpl.GetRepName(ctx)
+			// 1つの leaf が複数の名前を名乗ることがある（RepNamesProvider。zip の Git リポジトリを
+			// 束ねるプラグインは manifest の名前ではなくリポジトリ名を名乗る）。
+			// GetRepName だけを見ると、その名前を選んでもプラグインが検索対象に入らず静かに0件になる。
+			repNames, err := reps.RepNamesOf(ctx, repImpl)
 			if err != nil {
 				return nil, err
 			}
-			if _, exist := targetRepNameSet[repName]; exist {
-				selected = true
+			for _, repName := range repNames {
+				if _, exist := targetRepNameSet[repName]; exist {
+					selected = true
+					break
+				}
+			}
+			if selected {
 				break
 			}
 		}

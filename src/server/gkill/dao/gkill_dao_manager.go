@@ -607,6 +607,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				if adapters.Mi != nil {
 					repositories.MiReps = append(repositories.MiReps, adapters.Mi)
 				}
+				// GitCommitLogReps はキャッシュ包装（上の CacheGitCommitLogReps）と
+				// Reps へのコピーループを既に通っているので、ここで足したアダプタは
+				// キャッシュに包まれず、Reps にも二重に入らない。
+				if adapters.GitCommitLog != nil {
+					repositories.GitCommitLogReps = append(repositories.GitCommitLogReps, adapters.GitCommitLog)
+				}
 				if adapters.Tag != nil {
 					repositories.TagReps = append(repositories.TagReps, adapters.Tag)
 				}

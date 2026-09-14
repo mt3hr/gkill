@@ -409,7 +409,9 @@ export const READ_TOOLS = [
       "strings query.rep_types accepts — e.g. files/images live under \"directory\", not \"idf\". It is the " +
       "vocabulary, not an inventory: every value is listed whether or not this account has such a repository, " +
       "so filtering by one of them and getting zero hits is not an anomaly — check rep_infos[] for what exists here), and plugins[] " +
-      "({rep_name, data_type, plugin_name} — plugins are matched via query.reps or data_types, never rep_types). " +
+      "({rep_name, data_type, plugin_name} — plugins are matched via query.reps or data_types, never rep_types; " +
+      "a plugin that names several repositories, such as Git repositories archived as zip, appears once per name " +
+      "with the same plugin_name, and each rep_name is a valid query.reps value). " +
       "plugins[] lists only plugins that actually supply kyou: one that emits none (a GPS-only plugin, say) is " +
       "absent here by design, because its manifest rep_name would silently match nothing — look for it in " +
       "attached_data_reps[] instead, and call gkill_get_plugin_list to see every plugin with its emits_kyou/provides. " +

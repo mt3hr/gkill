@@ -80,6 +80,8 @@ type TypedData struct {
 	Lantana *Lantana `json:"lantana,omitempty"`
 	TimeIs  *TimeIs  `json:"timeis,omitempty"`
 	Mi      *Mi      `json:"mi,omitempty"`
+	// GitCommitLog は Git のコミット。data_typeは"git_commit_log"にすること。
+	GitCommitLog *GitCommitLog `json:"git_commit_log,omitempty"`
 }
 
 // Kmemo はテキストメモの本文。data_typeは"kmemo"にすること。
@@ -132,6 +134,16 @@ type Mi struct {
 	LimitTime         *time.Time `json:"limit_time,omitempty"`
 	EstimateStartTime *time.Time `json:"estimate_start_time,omitempty"`
 	EstimateEndTime   *time.Time `json:"estimate_end_time,omitempty"`
+}
+
+// GitCommitLog は Git のコミット1件（コミットメッセージ・追加行数・削除行数）。
+// data_typeは"git_commit_log"にすること。ID はコミットハッシュ、
+// RelatedTime / CreateTime / UpdateTime はコミッタ日時、CreateUser / UpdateUser は author 名にすると
+// native の git rep と同じ形になり、同じコミットが稼働中リポジトリにもあれば1件に畳まれる。
+type GitCommitLog struct {
+	CommitMessage string `json:"commit_message"`
+	Addition      int    `json:"addition"`
+	Deletion      int    `json:"deletion"`
 }
 
 // Notification はKyouに付ける通知。
