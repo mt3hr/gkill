@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装91ファイル）に対する統合テストを含む。テストファイルは全36本（うち handle_*_test.go は15本）。
+`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装91ファイル）に対する統合テストを含む。テストファイルは全37本（うち handle_*_test.go は16本）。
 
 ## テストフレームワーク
 
@@ -30,6 +30,7 @@ Go `testing` パッケージ
 | `utils_ssrf_test.go` | `httpGetBase64Data` の SSRF 対策（スキーム制限、内部アドレス拒否、サイズ上限、タイムアウト） |
 | `get_kyous_tag_filter_test.go` | タグ絞り込み（AND / 「タグ無し」仮想タグ、強制非表示タグを2経路のどちらで取っても同じ結果になること） |
 | `get_kyous_rep_filter_test.go` | rep名での絞り込みを**キャッシュ有無の両方**で。`UpdateCache` の**前後で2回**見るのが要点で、追加直後はキャッシュ表の `REP_NAME` が空のため「空の行は残す」分岐で全部素通りし、そこだけでは許可リスト側の分岐を一度も検証できない |
+| `handle_commit_tx_atomic_test.go` | `/api/commit_tx` が「全部書くか、何も書かないか」であること（キャッシュON/OFF）。kc と本文が空の kmemo を同じ tx に積んで commit すると ERR000419 で返り kc も残らないこと、成功時に `committed[]` が全件を返し temp を消費すること（同じ tx_id の再 commit で版が増えない）、既存 TimeIs を tx で更新して discard しても検索に出続けること（tx 中に最新版アドレス表を進めると消えていた） |
 | `get_kyous_tx_rep_filter_test.go` | `commit_tx` で確定した記録が rep絞り込みを通ること（キャッシュON/OFF）。一時リポジトリの合成rep名がキャッシュへ入ると、メモ帳構文で書いた記録だけが一覧から丸ごと消える |
 | `handle_get_kyous_mcp_test.go` | MCP用の記録取得（大量IDでの分割、応答形状） |
 | `handle_get_kyous_mcp_v2_test.go` | get_kyous_mcp v2 の回帰（複合カーソルのラウンドトリップと受理・拒否、count_only / group_by、データ型・数値・作成/更新アプリのリクエストレベルフィルタ、未知値の警告、残件数の意味論）。プラグインIDは任意文字列なので「ID側に `::` が含まれる」ケースを必ず含める。付随 TimeIs から削除済みを落とすこと（`livePlayingTimeIsCandidates`）と、「その瞬間に走っていたか」の判定が `playing_time` の SQL と同じ意味であること（`timeIsCoversMoment`）、tag / text / notification が実体IDを運ぶこと |
@@ -43,7 +44,7 @@ Go `testing` パッケージ
 | `api_routes_test.go` | ルート表（`gkill_server_api_address.go` の `apiRoutes`）が唯一の正本であることの4本。`validateAPIRoutes` が重複・`/api/` 以外・無認証 POST で上限なし・認証つきに上限指定を拒むこと、`HandleXxx` の反射列挙と表の双方向突き合わせ（免除は PathPrefix 配信の `HandleFileServe` / `HandleZipCacheFileServe`）、各 `handle_*.go` の doc コメント `// POST /api/xxx（wrapXxx）` が表のパス・メソッド・認証区分と一致すること、90 ルートの認証区分とボディ上限を名指しで固定する golden（表だけ直すと落ちる。ADR-0709） |
 | `handle_add_urlog_skip_wiring_test.go` | ソース走査ガード。`handle_add_urlog.go` が `FillURLogFieldSkipping` へ `request.SkipFetchMetadata, request.SkipFetchFavicon` をこの順で渡すこと。両方 bool なので入れ替えてもコンパイルも既存テストも通り、MCP の「両方 false なら外向き通信なし」の約束が黙って破れる（reps 層のテストはハンドラを通らない。実HTTP取得のテストは safefetch の SSRF 対策と干渉するため置けない） |
 | `handle_browse_zip_contents_test.go` | ZIP 展開（`extractZip`）の正常系と、圧縮爆弾の拒否 |
-| `handle_submit_kftl_text_test.go` | KFTL 送信の冪等キー、作成された記録の `created[]` 返却、利用者の書き間違い（ERR000416）が不正行ごとに行番号・行テキスト付きで積まれ HTTP 400 になること（解釈フェーズの失敗では正しい行も保存されない）、繰り返し「？？」で**書き込まれた**打刻の開始・終了が起点からの日付で年が変わらないこと、支出の `？`行の時刻がタグにも乗ること（Wear / MCP が通る Go 経路の年チェック）、要求の `create_app` が書き込まれた記録の `create_app` / `update_app` に載り、無指定と空白は `gkill_kftl` に落ちること（Wear の `gkill_wear`） |
+| `handle_submit_kftl_text_test.go` | KFTL 送信の冪等キー、作成された記録の `created[]` 返却（途中失敗では何も残らず空）、利用者の書き間違い（ERR000416）が不正行ごとに行番号・行テキスト付きで積まれ HTTP 400 になること（解釈フェーズの失敗では正しい行も保存されない）、繰り返し「？？」で**書き込まれた**打刻の開始・終了が起点からの日付で年が変わらないこと、支出の `？`行の時刻がタグにも乗ること（Wear / MCP が通る Go 経路の年チェック）、要求の `create_app` が書き込まれた記録の `create_app` / `update_app` に載り、無指定と空白は `gkill_kftl` に落ちること（Wear の `gkill_wear`） |
 | `kftl_idempotency_test.go` | 冪等キー台帳（`markDone` 後の達成済み判定、TTL 失効で再実行対象へ戻ること、`markDone` 時の GC） |
 | `shared_file_authz_test.go` | 共有経路のファイル配信の認可。共有クエリの結果に含まれるファイルだけを許可し、同一 rep 内の兄弟ファイルは 403 にすること（許可集合の突き合わせと URL パスの正規化） |
 | `web_push_test.go` | WebPush 送信失敗（`webpush.SendNotification` が nil resp を返す）で panic しないこと |

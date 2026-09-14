@@ -1216,6 +1216,15 @@ func (u *urlogRepositorySQLite3Impl) AddURLogInfo(ctx context.Context, urlog URL
 			}
 		}()
 	}
+	return insertURLogRow(ctx, db, urlog)
+}
+
+// insertURLogRow は URLog を1行 INSERT する。契約は AddURLogInfo と同じで、書き込み先だけを引数で受ける。
+//
+// rep 自身の接続（AddURLogInfo）にも、commit_tx が書き込み rep のファイルを ATTACH した1接続の
+// トランザクション（commit_tx.go）にも同じ SQL を打てるようにするための切り出し。
+// INSERT の列と検査はここだけに置き、AddXxxInfo 側へ複製しないこと（ずれると tx 経由の追記だけ壊れる）。
+func insertURLogRow(ctx context.Context, db sqlite3impl.Preparer, urlog URLog) error {
 
 	if strings.TrimSpace(urlog.URL) == "" {
 		return fmt.Errorf("urlog url must not be empty")

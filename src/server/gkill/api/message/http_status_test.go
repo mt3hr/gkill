@@ -71,7 +71,7 @@ func TestErrorCodeHTTPStatus_Distribution(t *testing.T) {
 		http.StatusConflict:              16,
 		http.StatusRequestEntityTooLarge: 1,
 		http.StatusTooManyRequests:       1,
-		http.StatusInternalServerError:   236,
+		http.StatusInternalServerError:   237,
 	}
 
 	got := map[int]int{}

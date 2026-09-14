@@ -53,15 +53,10 @@ func (r *kftlURLogRequest) DoRequest(ctx context.Context) error {
 		UpdateDevice: r.Ctx.Device,
 		UpdateUser:   r.Ctx.UserID,
 	}
-	if err := r.Ctx.Repositories.WriteURLogRep.AddURLogInfo(ctx, urlog); err != nil {
+	if err := r.Ctx.Repositories.TempReps.URLogTempRep.AddURLogInfo(ctx, urlog, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return fmt.Errorf("error at add urlog info id=%s: %w", r.RequestID, err)
 	}
-	repName, repNameErr := r.Ctx.Repositories.WriteURLogRep.GetRepName(ctx)
-	logGetRepNameFailure(ctx, "urlog", urlog.ID, repNameErr)
 	r.recordCreated("urlog", urlog.ID)
-	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
-	// キャッシュに書き込み
-	logWriteThroughCacheFailure(ctx, "urlog", urlog.ID, r.Ctx.Repositories.WriteThroughURLogCache(ctx, urlog))
 	return nil
 }
 

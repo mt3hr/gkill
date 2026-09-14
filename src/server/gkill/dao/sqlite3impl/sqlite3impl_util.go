@@ -101,6 +101,15 @@ const ConfigDBDSNParams = "?_pragma=busy_timeout(6000)" +
 	"&_pragma=synchronous(FULL)" +
 	"&_pragma=journal_mode(DELETE)"
 
+// Preparer は *sql.DB / *sql.Tx / *sql.Conn が共通に持つ PrepareContext だけを切り出したもの。
+//
+// 各 rep の追記 INSERT（insertXxxRow）はこれを受け取る。rep 自身の接続（AddXxxInfo）にも、
+// commit_tx が書き込み rep のファイルを ATTACH した1接続のトランザクションにも同じ SQL を打つため。
+// documents/adr/0219-commit-tx-is-one-sqlite-transaction.md
+type Preparer interface {
+	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
+}
+
 func GetSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", "file:"+filename+sqliteDataDSNParams)
 	if err != nil {
@@ -114,6 +123,23 @@ func GetSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error
 	db.SetMaxIdleConns(runtime.NumCPU())
 	db.SetConnMaxLifetime(0)
 	return db, err
+}
+
+// OpenSQLiteDBConnectionForTx は commit_tx 用に、データ用 DSN + BEGIN IMMEDIATE で1本だけ開く。
+//
+// ATTACH は接続単位の状態なので、プールから毎回違う接続が出てくる通常の *sql.DB では
+// 「ATTACH した接続」と「INSERT を打つ接続」がずれる。MaxOpenConns を 1 にしてそれを防ぐ。
+// 呼び出し側は使い終わったら Close すること（rep 自身の接続とは別物で、共有しない）。
+func OpenSQLiteDBConnectionForTx(ctx context.Context, filename string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite", "file:"+filename+sqliteDataDSNParams+"&_txlock=immediate")
+	if err != nil {
+		err = fmt.Errorf("error at open database for tx %s: %w", filename, err)
+		return nil, err
+	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+	db.SetConnMaxLifetime(0)
+	return db, nil
 }
 
 // GenerateFindSQLCommon は全リポジトリ共通の検索WHERE句（と必要ならORDER BY）を組み立てます。

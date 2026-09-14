@@ -23,7 +23,8 @@
 
 - **先に `registered_kyou` を emit して、タグは後から付ける** — `kyou-local-insert.ts` の `matches_tags()` が空のタグ列を見て「一致しない」と判定し、**エラーも警告も出ないまま行が現れない**。タグで絞り込んでいる列で必ず起きる。
 
-- **`tx_id` で Kyou とタグを束ねる** — **使えない。** TXID指定時のタグ／Kyou は一時リポジトリにしか無いので `add_tag` は `added_tag` を返せず（`handle_add_tag.go`）、`registered_tag` を上げられない。しかも `commit_tx` はDBトランザクションではなく**部分確定しうる**ので、束ねても原子性は買えない。
+- **`tx_id` で Kyou とタグを束ねる** — 当時は**使えなかった。** TXID指定時のタグ／Kyou は一時リポジトリにしか無いので `add_tag` は `added_tag` を返せず（`handle_add_tag.go`）、`registered_tag` を上げられない。しかも `commit_tx` はDBトランザクションではなく**部分確定しうる**ので、束ねても原子性は買えない。
+  → 2026-09-15 に `commit_tx` が1つの SQLite トランザクションになり（[ADR-0219](0219-commit-tx-is-one-sqlite-transaction.md)）、この案を採用に転じた（[ADR-0410](0410-bundle-multi-write-operations-in-tx.md)）。タグはクライアントで組み立てたものを使い、Kyou は commit 後に引き直す。本 ADR の「add_tag が終わってから registered_kyou」は「commit が終わってから」と読み替える。
 
 - **重複するタグ名をサーバに任せる** — サーバの重複チェックは**タグIDだけ**を見る（`usecase/tag.go`）。入力欄の中の重複も、削除マークの付いていない既存タグと同名のものも通ってしまう。クライアントの `get_tag_names()` が落とす。
 

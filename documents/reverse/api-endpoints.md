@@ -5,7 +5,7 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、106ファイル。テスト15ファイルを含み、実装は91ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、107ファイル。テスト15ファイルを含み、実装は91ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（186ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、17ファイル）
@@ -219,7 +219,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 `create_app` は任意で、生成される記録の `create_app` / `update_app` に載る（省略時は `gkill_kftl` = メモ帳と同じ）。Wear companion は `gkill_wear` を送り、MCP の `gkill_submit_kftl` は送らない。`idempotency_key` も任意（同じキーの再送を1回の登録に畳む。Wear のワーカー再送が使う）。
 
-`created[]` の要素は `{id, data_type, updated}`。記録本体（kmemo / mi / timeis 等）だけが載り、行から作られたタグ・テキストは載らない。`updated: true` は新規作成ではなく既存レコードの更新（`/end` 系の打刻終了）を表す。KFTLはDBトランザクションを使わないため、**途中で失敗してもそこまでに書けたぶんが `created[]` に載る**（部分保存の後始末用）。冪等キーで畳まれた再送は実行されないので `created` は空になる。
+`created[]` の要素は `{id, data_type, updated}`。記録本体（kmemo / mi / timeis 等）だけが載り、行から作られたタグ・テキストは載らない。`updated: true` は新規作成ではなく既存レコードの更新（`/end` 系の打刻終了）を表す。確定は temp rep → `CommitTx` の1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、**途中で失敗すると何も残らず `created[]` は空**になる（2026-09-15 までは実 rep へ直書きで、そこまでに書けたぶんが載っていた）。冪等キーで畳まれた再送も実行されないので `created` は空になる。
 
 失敗の返し方は2系統に分かれる（経緯は `documents/adr/0502-kftl-errors-are-per-line.md`）:
 
@@ -404,14 +404,14 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 
 | パス | 説明 |
 |---|---|
-| `/api/submit_kftl_text` | KFTLテキスト送信・パース・保存。応答の `created[]` に実際に書けた記録が載る（部分保存時もそこまで載る）。入力ミスは行ごとの `ERR000416`（HTTP 400）、サーバ障害は `ERR000351`（500）で返る。詳細は上の代表例と `documents/adr/0502-kftl-errors-are-per-line.md` |
+| `/api/submit_kftl_text` | KFTLテキスト送信・パース・保存。応答の `created[]` に確定した記録が載る（失敗時は何も残らず空）。入力ミスは行ごとの `ERR000416`（HTTP 400）、サーバ障害は `ERR000351`（500）で返る。詳細は上の代表例と `documents/adr/0502-kftl-errors-are-per-line.md` |
 
 ## トランザクション（2件）
 
 | パス | 説明 |
 |---|---|
-| `/api/commit_tx` | トランザクションコミット（一時リポジトリ → 本リポジトリに反映） |
-| `/api/discard_tx` | トランザクション破棄（一時リポジトリを破棄） |
+| `/api/commit_tx` | トランザクションコミット（一時リポジトリ → 本リポジトリに反映）。書き込み rep のファイルを ATTACH した1接続の SQLite トランザクションで全種別を追記し、失敗したら `ERR000419` で何も書かない。成功時は `committed[]`（`{id, data_type, updated}`）に全件が載り、一時リポジトリの行は消える（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)） |
+| `/api/discard_tx` | トランザクション破棄（一時リポジトリを破棄）。commit が失敗したときの後始末 |
 
 ## 共有（5件）
 

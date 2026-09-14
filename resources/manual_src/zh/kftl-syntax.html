@@ -187,7 +187,7 @@ fri
 3
 ??</pre>
 <p>此例会在接下来的三个周五18:00各创建一个「周报」任务。记录所持有的所有日期时间会平移相同的天数，因此开始、结束和截止之间的间隔保持不变。完全没有填写日期时间的任务无法使用（因为没有地方放置重复的日期）。</p>
-<p>由于第3行默认为<code>no</code>，<strong>再次保存相同内容也不会重复创建。</strong>中途失败时，原样再保存一次即可只补齐剩余部分。</p>
+<p>由于第3行默认为<code>no</code>，<strong>再次保存相同内容也不会重复创建。</strong>保存失败时不会创建任何内容，原样再保存一次即可。</p>
 <div class="tip">
   <strong>注意:</strong> 不存在的日期会被跳过（<code>monthly 31</code>跳过2月，<code>5th fri</code>跳过没有第5个周五的月份）。不能用于打卡开始（<code>/start</code>）和打卡结束（<code>/end</code>、<code>/end?</code>、<code>/endt</code>、<code>/endt?</code>）。一次保存最多创建1000条。
 </div>

@@ -1377,6 +1377,15 @@ func (t *timeIsRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis 
 			}
 		}()
 	}
+	return insertTimeIsRow(ctx, db, timeis)
+}
+
+// insertTimeIsRow は TimeIs を1行 INSERT する。契約は AddTimeIsInfo と同じで、書き込み先だけを引数で受ける。
+//
+// rep 自身の接続（AddTimeIsInfo）にも、commit_tx が書き込み rep のファイルを ATTACH した1接続の
+// トランザクション（commit_tx.go）にも同じ SQL を打てるようにするための切り出し。
+// INSERT の列と検査はここだけに置き、AddXxxInfo 側へ複製しないこと（ずれると tx 経由の追記だけ壊れる）。
+func insertTimeIsRow(ctx context.Context, db sqlite3impl.Preparer, timeis TimeIs) error {
 
 	if strings.TrimSpace(timeis.Title) == "" {
 		return fmt.Errorf("timeis title must not be empty")

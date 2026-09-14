@@ -216,7 +216,7 @@ sequenceDiagram
 
 > **Kyou自身を最後に消す理由。** サーバの `FindKyous` は参照先が削除済みの ReKyou を検索結果から外すため、Kyou を先に消すと参照元を辿れなくなる。探索（read）と削除（write）を完全に分けてあるのも同じ理由で、削除が途中で失敗しても Kyou 自身が生きていれば同じダイアログをもう一度開くだけで残骸を再発見できる。追記型 DAO なので再実行で収束する。
 >
-> **TXID / commit_tx は使わない。** 名前に反して DB トランザクションではなく部分確定しうるため、原子性は得られない。1本失敗しても止めずに全部投げ、エラーは集約して返す（`ERR900094 cascade_delete_failed`、深さ超過は `ERR900093 cascade_delete_depth_exceeded`）。
+> **全件を1つの tx_id で積み、commit_tx で確定する。** commit_tx は1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、全部消えるか何も消えないかのどちらかになる（[ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）。1本でも積めなければ discard_tx してエラーを返す（`ERR900094 cascade_delete_failed`、深さ超過は `ERR900093 cascade_delete_depth_exceeded`）。
 >
 > **削除成功メッセージは出ない。** 画面からその行が消えることが結果の提示になる。
 
@@ -698,12 +698,13 @@ sequenceDiagram
         UI->>API: POST /api/commit_tx<br>{session_id, tx_id}
         API->>TempReps: GetAllData(tx_id)
         TempReps-->>API: 一時データ一覧
+        API->>MainReps: ATTACH 関係する書き込み rep のファイル<br>BEGIN IMMEDIATE
         loop 各データ
-            API->>MainReps: AddXxxInfo(data)
-            MainReps-->>API: OK
+            API->>MainReps: insertXxxRow(tx, data)
         end
+        API->>MainReps: COMMIT（失敗なら ROLLBACK で何も残らない）
         API->>TempReps: Clear(tx_id)
-        API-->>UI: {messages: "コミット成功"}
+        API-->>UI: {committed: [...], messages: "コミット成功"}
     else 破棄
         UI->>API: POST /api/discard_tx<br>{session_id, tx_id}
         API->>TempReps: Clear(tx_id)
@@ -1057,7 +1058,8 @@ sequenceDiagram
 
 入力ミス（気分値の範囲外・`/end` の終了対象なし等）は `ERR000416`（HTTP 400）で
 **不正行ごとに1件ずつ**積まれ、メッセージに行番号と行テキストが載る。サーバ障害は
-従来どおり `ERR000351`（HTTP 500）1件。どちらの失敗でも応答の `created[]` には
-**そこまでに書けた記録**（`{id, data_type, updated}`）が載る — KFTL は DB トランザクションを
-使わないため部分保存が残り、これが無いと後始末ができない
+従来どおり `ERR000351`（HTTP 500）1件。どちらの失敗でも**何も残らず** `created[]` は空
+（各行は temp rep に積まれ、最後の `CommitTx` が1つの SQLite トランザクションで確定する。
+[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）。成功時の `created[]` は
+確定した記録（`{id, data_type, updated}`）
 （[ADR-0502](../adr/0502-kftl-errors-are-per-line.md)）。

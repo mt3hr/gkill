@@ -476,4 +476,5 @@ var errorCodeHTTPStatus = map[string]int{
 	InvalidGetRepInfosMCPResponseDataError:                           http.StatusInternalServerError, // ERR000412
 	InternalServerPanicError:                                         http.StatusInternalServerError, // ERR000415
 	ReadRequestBodyError:                                             http.StatusInternalServerError, // ERR000418
+	CommitTxRolledBackError:                                          http.StatusInternalServerError, // ERR000419
 }
