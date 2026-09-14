@@ -484,10 +484,31 @@ loop:
 	return kyouHistoriesList, nil
 }
 
+// GetKyouHistoriesByRepName はIDが一致するKyouの全版を、全repから集めて UpdateTime 降順で返します。
+//
+// **rep名の指定が無いときは `UnWrap()` しない。** 包まれたrep（インメモリキャッシュrep・
+// `--cache_reps_local` のローカルコピー層）をそのまま回す。各キャッシュrepは
+// GetKyouHistories をキャッシュ表へのSQL 1本で実装しており、全版（最新版だけではない）を持っている。
+// `UnWrap()` するとキャッシュを丸ごとバイパスして生の leaf rep（USB接続の元DBや
+// git リポジトリの全コミット走査、プラグインへのIPC）へ戻る。実データでは leaf が約850本あり、
+// `/api/get_kyou` 1回ごとに SQLite を ~760本開いて閉じ、git 84本を全走査していた
+// （selectMatchRepsFromQuery について ADR-0101 が禁止したのと同じ壊れ方。ADR-0218）。
+// キャッシュOFFのときは `r` が元々 leaf なので挙動は変わらない。
+//
+// rep名の指定があるときだけ `UnWrap()` する。キャッシュrepの `GetRepName()` は
+// "MiReps" のような集約名を返すので、leaf の名前で照合するには剥がすしかない
+// （ReKyou の表示不具合を直した e568c8b8 の意図。`re_kyou_granular_cache_test.go` が守る）。
+// 一致する leaf だけを dispatch するので、この経路の走査は常に1本程度で済む。
 func (r Repositories) GetKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]Kyou, error) {
-	repImpls, err := r.UnWrap()
-	if err != nil {
-		return nil, err
+	var err error
+	var repImpls []Repository
+	if repName == nil {
+		repImpls = r
+	} else {
+		repImpls, err = r.UnWrap()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	kyouHistories := map[string]Kyou{}

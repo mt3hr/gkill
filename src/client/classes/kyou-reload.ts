@@ -182,8 +182,14 @@ async function fetch_refreshed_kyou(kyou: Kyou, query?: FindKyouQuery): Promise<
     // 早期returnして種別データが古いまま残る
     refreshed.is_typed_data_loaded = false
     // force_attached=true でないと is_attached_*_loaded が立っている Kyou の
-    // 添付データ（タグ/テキスト/通知）を引き直せない
-    await refreshed.load_all(query, true)
+    // 添付データ（タグ/テキスト/通知）を引き直せない。
+    //
+    // 実行中TimeIsだけは、発生元が読んでいたときにしか引き直さない。
+    // 付随データの中で唯一「検索」（/api/get_kyous、SWキャッシュ対象外）で、一覧の行は
+    // 表示しない（show_attached_timeis=false）のに、以前は行の引き直しのたびに撃っていた。
+    // 読んでいなければ is_attached_timeis_loaded は false のまま返り、表示する側
+    // （詳細ペイン・ダイアログの KyouView）の遅延読み込みが必要になったときに取る
+    await refreshed.load_all(query, true, { include_timeis: kyou.is_attached_timeis_loaded })
     return refreshed
 }
 

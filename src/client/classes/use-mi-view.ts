@@ -375,7 +375,12 @@ export function useMiView(options: {
         // 列・focused・開いているダイアログは同じ更新を受けて独立に引き直す。
         // 同じ値を渡して1往復に合流させる(渡さないと系統ごとに往復が増える)
         const requested_at = requested_at_arg ?? new_reload_batch();
+        // 列・ダイアログは**同期のループで全部呼び出してから**まとめて待つ。
+        // refresh_kyou は最初の await より前に飛行中の表へ登録するので、同じ tick で呼べば
+        // 2本目以降が同じ往復に合流する。1本ずつ await すると先発が決着して表から消えたあとに
+        // 次が始まり、対象が載っている列の数だけ（ダイアログの枚数だけ）フルの引き直しが走る
         (async (): Promise<void> => {
+            const column_reloads = new Array<Promise<void>>()
             for (let i = 0; i < match_kyous_list.value.length; i++) {
                 const column_query = querys.value[i]
                 const target_list = match_kyous_list.value[i]
@@ -398,11 +403,12 @@ export function useMiView(options: {
                 // 列が再検索されていれば match_kyous_list[i] は別の配列になっており、
                 // ここで掴んでいる target_list は誰も見ていないので書いても無害。
                 // 書き戻す位置は refresh_kyou_in_list が await のあとにidで取り直す。
-                await refresh_kyou_in_list(target_list, kyou, {
+                column_reloads.push(refresh_kyou_in_list(target_list, kyou, {
                     requested_at: requested_at,
                     query: column_query,
-                })
+                }))
             }
+            await Promise.all(column_reloads)
         })();
         (async (): Promise<void> => {
             if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
@@ -414,19 +420,20 @@ export function useMiView(options: {
         })();
         (async (): Promise<void> => {
             const target_dialogs = opened_dialogs.value.filter(dialog => dialog.kyou.id === kyou.id)
-            for (const target_dialog of target_dialogs) {
+            const dialog_reloads = target_dialogs.map(async (target_dialog): Promise<void> => {
                 const refreshed = await refresh_kyou(kyou, find_column_query_for(kyou.id), requested_at)
                 if (!refreshed) {
-                    continue
+                    return
                 }
                 // await中にダイアログの開閉で並びが変わりうるので、書き戻し先はIDで引き直す。
                 // 位置のまま書くと別のダイアログのkyouを差し替えてしまう
                 const current_index = opened_dialogs.value.findIndex(dialog => dialog.id === target_dialog.id)
                 if (current_index === -1) {
-                    continue
+                    return
                 }
                 opened_dialogs.value[current_index] = { ...opened_dialogs.value[current_index], kyou: refreshed }
-            }
+            })
+            await Promise.all(dialog_reloads)
         })();
     }
 
