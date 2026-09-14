@@ -10,11 +10,11 @@
   <table>
     <tr><th>Einstellung</th><th>Typ</th><th>Beschreibung</th></tr>
     <tr><td>Profil</td><td>Dropdown + Hinzuf&uuml;gen/L&ouml;schen</td><td>Aktives Profil ausw&auml;hlen, ein neues erstellen oder ein vorhandenes l&ouml;schen</td></tr>
-    <tr><td>Nur lokaler Zugriff</td><td>Kontrollk&auml;stchen</td><td>Verbindungen auf lokalen Zugriff beschr&auml;nken</td></tr>
+    <tr><td>Nur lokaler Zugriff</td><td>Kontrollk&auml;stchen</td><td>Verbindungen auf lokalen Zugriff beschr&auml;nken (standardm&auml;&szlig;ig aktiviert)</td></tr>
     <tr><td>Benachrichtigungsdienst</td><td>Kontrollk&auml;stchen</td><td>Push-Benachrichtigungsdienst aktivieren</td></tr>
     <tr><td>TLS aktivieren</td><td>Kontrollk&auml;stchen</td><td>HTTPS aktivieren</td></tr>
     <tr><td>Selbstsigniertes TLS generieren</td><td>Schaltfl&auml;che</td><td>Selbstsignierte TLS-Zertifikatsdateien erstellen</td></tr>
-    <tr><td>Adresse</td><td>Text</td><td>Server-Lausch-Adresse (z.B.: :9999)</td></tr>
+    <tr><td>Adresse</td><td>Text</td><td>Server-Lausch-Adresse. Standard ist <code>127.0.0.1:9999</code> (nur dieses Ger&auml;t). Lassen Sie den Host-Teil leer, wie <code>:9999</code>, um auf allen Netzwerkschnittstellen zu lauschen</td></tr>
     <tr><td>TLS-CERT-Datei</td><td>Text</td><td>Pfad zur TLS-Zertifikatsdatei</td></tr>
     <tr><td>TLS-KEY-Datei</td><td>Text</td><td>Pfad zur TLS-Privatschl&uuml;sseldatei</td></tr>
     <tr><td>Befehl zum &Ouml;ffnen von Verzeichnissen</td><td>Text</td><td>Betriebssystembefehl zum &Ouml;ffnen eines Verzeichnisses</td></tr>
@@ -29,6 +29,16 @@
   <p><strong>&Uuml;bernehmen</strong>: Einstellungen speichern.<br><strong>Abbrechen</strong>: &Auml;nderungen verwerfen und den Bildschirm schlie&szlig;en.</p>
 
   <div class="tip">&Auml;nderungen erfordern einen Neustart des Servers, um wirksam zu werden.</div>
+
+  <h2>gkill von anderen Ger&auml;ten aus verwenden</h2>
+  <p>Standardm&auml;&szlig;ig kann sich nur das Ger&auml;t verbinden, auf dem der Server l&auml;uft (die Lausch-Adresse ist <code>127.0.0.1:9999</code> und &bdquo;Nur lokaler Zugriff&ldquo; ist aktiviert). Um gkill von einem Smartphone oder einem anderen PC aus zu verwenden, &auml;ndert ein Administrator diese beiden Einstellungen.</p>
+  <ol>
+    <li>Setzen Sie <strong>Adresse</strong> auf <code>:9999</code> (alle Schnittstellen) oder auf die LAN-IP-Adresse dieses Ger&auml;ts (z.B. <code>192.168.0.10:9999</code>).</li>
+    <li>Deaktivieren Sie <strong>Nur lokaler Zugriff</strong>.</li>
+    <li>Dr&uuml;cken Sie <strong>&Uuml;bernehmen</strong>. Der Server startet neu, und andere Ger&auml;te k&ouml;nnen <code>http://(IP-Adresse dieses Ger&auml;ts):9999</code> &ouml;ffnen.</li>
+  </ol>
+  <div class="tip"><strong>Tipp:</strong> Wenn Sie andere Ger&auml;te bedienen, empfehlen wir, <strong>TLS aktivieren</strong> einzuschalten (ein Zertifikat k&ouml;nnen Sie mit &bdquo;Selbstsignierte TLS-Dateien erzeugen&ldquo; erstellen). Bleibt TLS deaktiviert, werden Passw&ouml;rter unverschl&uuml;sselt &uuml;ber das Netzwerk &uuml;bertragen.</div>
+
 
   <h2>Speicherverwaltung</h2>
   <p>Daten-Repositories sind die Speicherorte für Aufzeichnungen. Mehrere Repositories können je nach Verwendungszweck oder Gerat konfiguriert werden.</p>

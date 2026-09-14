@@ -10,11 +10,11 @@
   <table>
     <tr><th>Setting</th><th>Type</th><th>Description</th></tr>
     <tr><td>Profile</td><td>Dropdown + Add/Delete</td><td>Select the active profile, create a new one, or delete an existing one</td></tr>
-    <tr><td>Local Access Only</td><td>Checkbox</td><td>Restrict connections to local access only</td></tr>
+    <tr><td>Local Access Only</td><td>Checkbox</td><td>Restrict connections to local access only (on by default)</td></tr>
     <tr><td>Notification Service</td><td>Checkbox</td><td>Enable the push notification service</td></tr>
     <tr><td>Enable TLS</td><td>Checkbox</td><td>Enable HTTPS</td></tr>
     <tr><td>Generate Self-signed TLS</td><td>Button</td><td>Create self-signed TLS certificate files</td></tr>
-    <tr><td>Address</td><td>Text</td><td>Server listen address (e.g., :9999)</td></tr>
+    <tr><td>Address</td><td>Text</td><td>Server listen address. Default is <code>127.0.0.1:9999</code> (this device only). Leave the host part empty, like <code>:9999</code>, to listen on all network interfaces</td></tr>
     <tr><td>TLS CERT File</td><td>Text</td><td>Path to the TLS certificate file</td></tr>
     <tr><td>TLS KEY File</td><td>Text</td><td>Path to the TLS private key file</td></tr>
     <tr><td>Open Directory Command</td><td>Text</td><td>OS command to open a directory</td></tr>
@@ -29,6 +29,16 @@
   <p><strong>Apply</strong>: Save the settings.<br><strong>Cancel</strong>: Discard changes and close the screen.</p>
 
   <div class="tip">Changes require a server restart to take effect.</div>
+
+  <h2>Using gkill from Other Devices</h2>
+  <p>By default, only the device running the server can connect (the listen address is <code>127.0.0.1:9999</code> and "Local Access Only" is on). To use gkill from a smartphone or another PC, an administrator changes these two settings.</p>
+  <ol>
+    <li>Set <strong>Address</strong> to <code>:9999</code> (all interfaces) or to this device's LAN IP address (e.g., <code>192.168.0.10:9999</code>).</li>
+    <li>Turn off <strong>Local Access Only</strong>.</li>
+    <li>Press <strong>Apply</strong>. The server restarts and other devices can open <code>http://(this device's IP address):9999</code>.</li>
+  </ol>
+  <div class="tip"><strong>Tip:</strong> When serving other devices, we recommend turning on <strong>Enable TLS</strong> (you can create a certificate with "Generate Self-Signed TLS Files"). With TLS off, passwords travel over the network unencrypted.</div>
+
 
   <h2>Storage Management</h2>
   <p>Storage (repositories) are the directories or locations where gkill saves your record data. You can configure multiple storage locations by purpose (text memos, files, GPS logs, etc.) or by device.</p>

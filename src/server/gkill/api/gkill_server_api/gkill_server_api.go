@@ -58,11 +58,15 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 	}
 
 	if len(serverConfigs) == 0 {
+		// 待受はループバック限定で始める（既定値の正本は server_config の定数）。
+		// LAN の他端末から使うときはサーバ設定画面でアドレスと「ローカルアクセスのみ許可」を開く。
+		// 既に server_config.db がある環境（旧既定 ":9999" + 許可なし）はこのブロックを通らないので、
+		// 既存の設定を黙って書き換えることはない。
 		serverConfig := &server_config.ServerConfig{
 			EnableThisDevice:     true,
 			Device:               "gkill",
-			IsLocalOnlyAccess:    false,
-			Address:              ":9999",
+			IsLocalOnlyAccess:    server_config.DefaultIsLocalOnlyAccess,
+			Address:              server_config.DefaultListenAddress,
 			EnableTLS:            false,
 			TLSCertFile:          gkill_options.TLSCertFileDefault,
 			TLSKeyFile:           gkill_options.TLSKeyFileDefault,

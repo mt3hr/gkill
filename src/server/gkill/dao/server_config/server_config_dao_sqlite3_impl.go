@@ -140,8 +140,8 @@ func GetDefaultServerConfig(device string) *ServerConfig {
 var serverConfigDefaultValue = map[string]any{
 	"DEVICE":                         "",
 	"ENABLE_THIS_DEVICE":             false,
-	"IS_LOCAL_ONLY_ACCESS":           true,
-	"ADDRESS":                        ":9999",
+	"IS_LOCAL_ONLY_ACCESS":           DefaultIsLocalOnlyAccess,
+	"ADDRESS":                        DefaultListenAddress,
 	"ENABLE_TLS":                     false,
 	"TLS_CERT_FILE":                  gkill_options.TLSCertFileDefault,
 	"TLS_KEY_FILE":                   gkill_options.TLSKeyFileDefault,

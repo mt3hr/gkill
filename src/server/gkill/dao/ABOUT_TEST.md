@@ -35,7 +35,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `server_config/server_config_dao_sqlite3_impl_test.go` | サーバ設定（アドレス、TLS、デバイス名） |
+| `server_config/server_config_dao_sqlite3_impl_test.go` | サーバ設定（アドレス、TLS、デバイス名）。`GetDefaultServerConfig` と行が無い端末の `GetServerConfig` が既定の定数（`DefaultListenAddress` = `127.0.0.1:9999`、`DefaultIsLocalOnlyAccess` = true）を返すこと |
 | `user_config/application_config_dao_sqlite3_impl_test.go` | アプリケーション設定 |
 | `user_config/repository_dao_sqlite3_impl_test.go` | リポジトリ定義 |
 
