@@ -283,6 +283,12 @@ DBの値がそのままログインに使える状態で、`update_cache` サブ
 
 上記以外からのリクエストには HTTP 403 Forbidden を返す。
 
+**既定で有効。** 初回起動で作られるサーバ設定は `IsLocalOnlyAccess = true`、待受アドレスも
+`127.0.0.1:9999`（ループバック限定）で、bind とアプリ層の2枚で閉じている。既定値の正本は
+`src/server/gkill/dao/server_config/server_config.go` の `DefaultListenAddress` / `DefaultIsLocalOnlyAccess`。
+LAN の他端末から使うのはサーバ設定画面で両方を開く明示操作（手順は `operations-guide.md` 4.3）。
+2026-09-14 より前に作られた既存の設定は移行されない（[ADR-0708](../adr/0708-local-only-listen-by-default.md)）。
+
 **実装箇所:** `src/server/gkill/api/gkill_server_api/filter_local_only.go` (`filterLocalOnly` メソッド)
 
 #### エンドポイント別アクセス制御

@@ -220,6 +220,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0705](0705-per-user-derived-cache-dir.md) | 派生キャッシュは利用者IDでディレクトリを分ける | Accepted |
 | [0706](0706-http-status-from-error-code.md) | HTTP ステータスはエラーコードから一元表で決める | Accepted |
 | [0707](0707-redact-environment-specific-strings.md) | 端末固有の文字列は出口で伏せ、プラグインの診断文はAIへ返さない | Accepted |
+| [0708](0708-local-only-listen-by-default.md) | 待受の既定はループバック限定 — LAN 公開は設定画面での明示操作にし、既存の設定は移行も拒否もしない | Accepted |
 | [0801](0801-perf-judge-by-allocs-not-ns-op.md) | 性能判断は ns/op ではなく allocs/op・B/op・EXPLAIN QUERY PLAN で行う | Accepted |
 | [0802](0802-freeze-plaing-spelling.md) | 綴りは「永続に乗るか」で決める — plaing は凍結、agregate は改名して読み込み互換を残す | Superseded |
 | [0803](0803-verify-docs-checks-filenames.md) | 資料は件数だけでなく「資料に載っているファイル名の実在」も機械検査する | Accepted |

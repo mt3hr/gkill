@@ -141,3 +141,37 @@ func TestServerConfigDelete(t *testing.T) {
 		t.Error("deleted device should return default EnableThisDevice=false")
 	}
 }
+
+// GetDefaultServerConfig（行が無い端末のフォールバック）と定数が一致すること。
+// 初回起動ブロックも同じ定数を引くので、既定の待受が2系統に分かれて食い違う事故を防ぐ（ADR-0708）。
+func TestGetDefaultServerConfigUsesListenDefaults(t *testing.T) {
+	got := GetDefaultServerConfig("any-device")
+	if got.Address != DefaultListenAddress {
+		t.Errorf("Address = %q, want %q", got.Address, DefaultListenAddress)
+	}
+	if got.IsLocalOnlyAccess != DefaultIsLocalOnlyAccess {
+		t.Errorf("IsLocalOnlyAccess = %v, want %v", got.IsLocalOnlyAccess, DefaultIsLocalOnlyAccess)
+	}
+	if got.EnableTLS {
+		t.Error("EnableTLS = true。既定では証明書が無いので TLS は無効であること")
+	}
+}
+
+// 行が無い端末を GetServerConfig すると、SQL のフォールバックではなく GetDefaultServerConfig が返ること。
+// どちらの経路でも既定はループバック限定になる。
+func TestGetServerConfigUnknownDeviceReturnsListenDefaults(t *testing.T) {
+	dao := newTempServerConfigDAO(t)
+	got, err := dao.GetServerConfig(context.Background(), "unknown-device")
+	if err != nil {
+		t.Fatalf("GetServerConfig failed: %v", err)
+	}
+	if got == nil {
+		t.Fatal("GetServerConfig returned nil")
+	}
+	if got.Address != DefaultListenAddress {
+		t.Errorf("Address = %q, want %q", got.Address, DefaultListenAddress)
+	}
+	if got.IsLocalOnlyAccess != DefaultIsLocalOnlyAccess {
+		t.Errorf("IsLocalOnlyAccess = %v, want %v", got.IsLocalOnlyAccess, DefaultIsLocalOnlyAccess)
+	}
+}

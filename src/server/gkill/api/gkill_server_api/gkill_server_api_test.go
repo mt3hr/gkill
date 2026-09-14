@@ -8281,6 +8281,38 @@ func TestLocalOnlyAccess_AcceptsLocalhost(t *testing.T) {
 	}
 }
 
+// 初回起動で自動生成されるサーバ設定はループバック限定 + ローカルアクセスのみ許可であること。
+// 初回起動ブロック（gkill_server_api.go）はリテラルではなく server_config の定数を引くので、
+// ここが落ちるのは定数を変えたか、ブロックが定数を引かなくなったかのどちらか（ADR-0708）。
+func TestNewGkillServerAPI_FirstRunDefaultsAreLocalOnly(t *testing.T) {
+	gkillAPI, cleanup := setupTestGkillServerAPI(t)
+	defer cleanup()
+
+	device, err := gkillAPI.GetDevice()
+	if err != nil {
+		t.Fatalf("GetDevice failed: %v", err)
+	}
+	serverConfig, err := gkillAPI.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(context.Background(), device)
+	if err != nil {
+		t.Fatalf("GetServerConfig failed: %v", err)
+	}
+	if serverConfig == nil {
+		t.Fatal("初回起動ブロックがサーバ設定を作っていない")
+	}
+	if serverConfig.Address != server_config.DefaultListenAddress {
+		t.Errorf("Address = %q, want %q", serverConfig.Address, server_config.DefaultListenAddress)
+	}
+	if !isLoopbackOnlyBindAddress(serverConfig.Address) {
+		t.Errorf("Address = %q はループバック限定ではない。初回起動しただけで LAN から届く", serverConfig.Address)
+	}
+	if !serverConfig.IsLocalOnlyAccess {
+		t.Error("IsLocalOnlyAccess = false。既定は「ローカルアクセスのみ許可」であること")
+	}
+	if serverConfig.EnableTLS {
+		t.Error("EnableTLS = true。初回起動時に証明書は無いので TLS は無効で始まること")
+	}
+}
+
 // 項番86: TLSファイルパス変更がServerConfigに反映されること
 func TestHandleUpdateServerConfigs_TLSPathChange(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
