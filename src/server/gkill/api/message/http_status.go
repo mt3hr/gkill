@@ -112,7 +112,6 @@ var errorCodeHTTPStatus = map[string]int{
 	InvalidGetLantanaRequestDataError:                               http.StatusBadRequest, // ERR000113
 	InvalidGetReKyouRequestDataError:                                http.StatusBadRequest, // ERR000115
 	InvalidGetGitCommitLogRequestDataError:                          http.StatusBadRequest, // ERR000117
-	InvalidGetGitCommitLogsRequestDataError:                         http.StatusBadRequest, // ERR000120
 	InvalidGetMiBoardNamesRequestDataError:                          http.StatusBadRequest, // ERR000123
 	InvalidGetAllTagNamesRequestDataError:                           http.StatusBadRequest, // ERR000126
 	InvalidGetTagsByTargetIDRequestDataError:                        http.StatusBadRequest, // ERR000129
@@ -123,23 +122,16 @@ var errorCodeHTTPStatus = map[string]int{
 	InvalidGetServerConfigRequestDataError:                          http.StatusBadRequest, // ERR000144
 	InvalidUploadFilesRequestDataError:                              http.StatusBadRequest, // ERR000147
 	InvalidUploadGPSLogFilesRequestDataError:                        http.StatusBadRequest, // ERR000149
-	InvalidUpdateTagStructRequestDataError:                          http.StatusBadRequest, // ERR000162
-	InvalidUpdateRepStructRequestDataError:                          http.StatusBadRequest, // ERR000167
-	InvalidUpdateDeviceStructRequestDataError:                       http.StatusBadRequest, // ERR000172
-	InvalidUpdateRepTypeStructRequestDataError:                      http.StatusBadRequest, // ERR000177
 	InvalidUpdateAccountStatusRequestDataError:                      http.StatusBadRequest, // ERR000179
 	InvalidUpdateUserRepsRequestDataError:                           http.StatusBadRequest, // ERR000182
 	AccountInvalidAddAccountRequestDataError:                        http.StatusBadRequest, // ERR000185
 	InvalidGetGPSLogRequestDataError:                                http.StatusBadRequest, // ERR000190
-	InvalidGetGkillInfoRequestDataError:                             http.StatusBadRequest, // ERR000193
 	InvalidGetShareKyouListInfosRequestDataError:                    http.StatusBadRequest, // ERR000195
 	InvalidDeleteShareKyouListInfosRequestDataError:                 http.StatusBadRequest, // ERR000198
 	InvalidGetMiSharedTasksRequestDataError:                         http.StatusBadRequest, // ERR000201
-	InvalidGetKFTLTemplateRequestDataError:                          http.StatusBadRequest, // ERR000210
 	InvalidAddShareKyouListInfoRequestDataError:                     http.StatusBadRequest, // ERR000212
 	AccountInvalidGenerateTLSFileRequestDataError:                   http.StatusBadRequest, // ERR000217
 	InvalidUpdateApplicationConfigRequestDataError:                  http.StatusBadRequest, // ERR000225
-	InvalidUpdateKFTLTemplateRequestDataError:                       http.StatusBadRequest, // ERR000228
 	InvalidUpdateServerConfigRequestDataError:                       http.StatusBadRequest, // ERR000233
 	InvalidGetRepositoriesRequestDataError:                          http.StatusBadRequest, // ERR000241
 	InvalidGetAllRepNamesRequestDataError:                           http.StatusBadRequest, // ERR000244
@@ -191,17 +183,12 @@ var errorCodeHTTPStatus = map[string]int{
 
 	// ---- 403 Forbidden — 誰かは分かるが、やらせない ----
 	// 権限不足・無効化済みアカウント・ローカル限定アクセス違反。
-	AccountIsNotEnableError:         http.StatusForbidden, // ERR000003
-	AccountNotHasAdminError:         http.StatusForbidden, // ERR000014
-	TagStructInvalidUserID:          http.StatusForbidden, // ERR000159
-	RepStructInvalidUserID:          http.StatusForbidden, // ERR000164
-	DeviceStructInvalidUserID:       http.StatusForbidden, // ERR000169
-	RepTypeStructInvalidUserID:      http.StatusForbidden, // ERR000174
-	KFTLTemplateStructInvalidUserID: http.StatusForbidden, // ERR000229
-	AccountDisabledError:            http.StatusForbidden, // ERR000238
-	OpenFolderNotLocalAccountError:  http.StatusForbidden, // ERR000296
-	CannotDisableOwnAccountError:    http.StatusForbidden, // ERR000409
-	LocalOnlyAccessDeniedError:      http.StatusForbidden, // ERR000414
+	AccountIsNotEnableError:        http.StatusForbidden, // ERR000003
+	AccountNotHasAdminError:        http.StatusForbidden, // ERR000014
+	AccountDisabledError:           http.StatusForbidden, // ERR000238
+	OpenFolderNotLocalAccountError: http.StatusForbidden, // ERR000296
+	CannotDisableOwnAccountError:   http.StatusForbidden, // ERR000409
+	LocalOnlyAccessDeniedError:     http.StatusForbidden, // ERR000414
 
 	// ---- 404 Not Found — 指定されたものが無い ----
 	// 「サーバの設定ファイルが無い」は利用者の指定ミスではないので 500 に置いてある。
@@ -311,8 +298,6 @@ var errorCodeHTTPStatus = map[string]int{
 	InvalidGetReKyouResponseDataError:                                http.StatusInternalServerError, // ERR000114
 	InvalidGetGitCommitLogResponseDataError:                          http.StatusInternalServerError, // ERR000116
 	GetGitCommitLogError:                                             http.StatusInternalServerError, // ERR000118
-	InvalidGetGitCommitLogsResponseDataError:                         http.StatusInternalServerError, // ERR000119
-	GetGitCommitLogsError:                                            http.StatusInternalServerError, // ERR000121
 	InvalidGetMiBoardNamesResponseDataError:                          http.StatusInternalServerError, // ERR000122
 	GetMiBoardNamesError:                                             http.StatusInternalServerError, // ERR000124
 	InvalidGetAllTagNamesResponseDataError:                           http.StatusInternalServerError, // ERR000125
@@ -337,18 +322,6 @@ var errorCodeHTTPStatus = map[string]int{
 	GenerateGPXFileContentError:                                      http.StatusInternalServerError, // ERR000155
 	WriteGPXFileError:                                                http.StatusInternalServerError, // ERR000156
 	NotImplementsError:                                               http.StatusInternalServerError, // ERR000157
-	DeleteUsersTagStructError:                                        http.StatusInternalServerError, // ERR000158
-	AddUsersTagStructError:                                           http.StatusInternalServerError, // ERR000160
-	InvalidUpdateTagStructResponseDataError:                          http.StatusInternalServerError, // ERR000161
-	DeleteUsersRepStructError:                                        http.StatusInternalServerError, // ERR000163
-	AddUsersRepStructError:                                           http.StatusInternalServerError, // ERR000165
-	InvalidUpdateRepStructResponseDataError:                          http.StatusInternalServerError, // ERR000166
-	DeleteUsersDeviceStructError:                                     http.StatusInternalServerError, // ERR000168
-	AddUsersDeviceStructError:                                        http.StatusInternalServerError, // ERR000170
-	InvalidUpdateDeviceStructResponseDataError:                       http.StatusInternalServerError, // ERR000171
-	DeleteUsersRepTypeStructError:                                    http.StatusInternalServerError, // ERR000173
-	AddUsersRepTypeStructError:                                       http.StatusInternalServerError, // ERR000175
-	InvalidUpdateRepTypeStructResponseDataError:                      http.StatusInternalServerError, // ERR000176
 	InvalidUpdateAccountStatusResponseDataError:                      http.StatusInternalServerError, // ERR000178
 	UpdateUsersAccountStatusError:                                    http.StatusInternalServerError, // ERR000180
 	InvalidUpdateUserRepsResponseDataError:                           http.StatusInternalServerError, // ERR000181
@@ -358,7 +331,6 @@ var errorCodeHTTPStatus = map[string]int{
 	AddAccountError:                                                  http.StatusInternalServerError, // ERR000188
 	InvalidGetGPSLogResponseDataError:                                http.StatusInternalServerError, // ERR000189
 	GetGPSLogError:                                                   http.StatusInternalServerError, // ERR000191
-	InvalidGetGkillInfoResponseDataError:                             http.StatusInternalServerError, // ERR000192
 	InvalidGetShareKyouListInfosResponseDataError:                    http.StatusInternalServerError, // ERR000194
 	GetShareKyouListInfosError:                                       http.StatusInternalServerError, // ERR000196
 	InvalidDeleteShareKyouListInfosResponseDataError:                 http.StatusInternalServerError, // ERR000197
@@ -366,12 +338,6 @@ var errorCodeHTTPStatus = map[string]int{
 	InvalidGetMiSharedTasksResponseDataError:                         http.StatusInternalServerError, // ERR000200
 	GetMiSharedTasksError:                                            http.StatusInternalServerError, // ERR000202
 	FindMiKyousError:                                                 http.StatusInternalServerError, // ERR000203
-	GetKFTLTemplateError:                                             http.StatusInternalServerError, // ERR000204
-	GetTagStructError:                                                http.StatusInternalServerError, // ERR000205
-	GetRepStructError:                                                http.StatusInternalServerError, // ERR000206
-	GetDeviceStructError:                                             http.StatusInternalServerError, // ERR000207
-	GetRepTypeStructError:                                            http.StatusInternalServerError, // ERR000208
-	InvalidGetKFTLTemplateResponseDataError:                          http.StatusInternalServerError, // ERR000209
 	InvalidAddShareKyouListInfoResponseDataError:                     http.StatusInternalServerError, // ERR000211
 	GetShareKyouListInfoError:                                        http.StatusInternalServerError, // ERR000213
 	AddShareKyouListInfoError:                                        http.StatusInternalServerError, // ERR000215
@@ -384,9 +350,6 @@ var errorCodeHTTPStatus = map[string]int{
 	GetIDFKyouError:                                                  http.StatusInternalServerError, // ERR000223
 	InvalidUpdateApplicationconfigResponseDataError:                  http.StatusInternalServerError, // ERR000224
 	UpdateApplicationConfigError:                                     http.StatusInternalServerError, // ERR000226
-	InvalidUpdateKFTLTemplateResponseDataError:                       http.StatusInternalServerError, // ERR000227
-	DeleteUsersKFTLTemplateError:                                     http.StatusInternalServerError, // ERR000230
-	AddUsersKFTLTemplateError:                                        http.StatusInternalServerError, // ERR000231
 	InvalidUpdateServerConfigResponseDataError:                       http.StatusInternalServerError, // ERR000232
 	UpdateServerConfigError:                                          http.StatusInternalServerError, // ERR000234
 	GetAllAccountConfigError:                                         http.StatusInternalServerError, // ERR000235

@@ -257,7 +257,7 @@ Props/Emit のみで状態を持ち回すため、Kyou の CRUD イベントは 
 `src/client/classes/api/gkill-api.ts` に定義。約3,400行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
-- 全90登録エンドポイントに対応するメソッドを持つ（`gkill-api.ts` が保持する `/api/` アドレスは88件）
+- Web クライアントが叩く86エンドポイントに対応するメソッドを持つ（`gkill-api.ts` が保持する `/api/` アドレスは86件。MCP / Wear OS / CLI 専用の4件を除いた全ルートで、Go のルート表との突き合わせは `gkill-api.test.ts`）
 - `GkillAPIForSharedKyou` サブクラス（共有データ用）
 - 各メソッドは `fetch()` → JSONパース → エラーチェック → データ返却
 

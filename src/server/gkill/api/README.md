@@ -17,7 +17,7 @@ api/
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
 ├── *_test.go                    # 検索フィルタ・rep名絞り込みなどのテスト（14ファイル）
-├── gkill_server_api/            # HTTP ハンドラ（147ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（148ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・全90ルート登録
@@ -112,8 +112,8 @@ handle_*.go は106ファイル（実装91 + テスト15）で、1ハンドラ1�
 | `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用。`EnsureNotEmpty`（エラー無し失敗の受け皿）もここ |
 | `gkill_error_test.go` | `EnsureNotEmpty` のテスト |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
-| `error_codes.go` | エラーコード定数（414定数、ERR000001〜ERR000418・欠番4つ: ERR000243 / ERR000387 / ERR000388 / ERR000389） |
-| `message_codes.go` | メッセージコード定数（90定数） |
+| `error_codes.go` | エラーコード定数（377定数、ERR000001〜ERR000418・欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの。ADR-0709） |
+| `message_codes.go` | メッセージコード定数（83定数、MSG000001〜MSG000090・欠番7） |
 | `http_status.go` | エラーコード → HTTP ステータス対応表（`HTTPStatusOf` / `HTTPStatusForErrors`） |
 | `http_status_test.go` | 全エラーコードが対応表に載っていることのソース走査テスト |
 | `message_test.go` | コード形式テスト |
@@ -133,9 +133,9 @@ handle_*.go は106ファイル（実装91 + テスト15）で、1ハンドラ1�
 | `safefetch.go` | `GetCapped`（scheme 検査・接続先 IP 検証・サイズ上限）、`LooksLikeSupportedImage` / `CheckImageDimensions`。利用者入力由来の URL 取得はここを通す |
 | `safefetch_test.go` | SSRF 防御・サイズ上限・画像判定のテスト |
 
-## 全エンドポイント一覧（92エンドポイント定義・90登録）
+## 全エンドポイント一覧（90エンドポイント）
 
-全エンドポイントは `/api/` 配下に配置（POST 中心、一部 GET）。`gkill_server_api/serve.go` 内で gorilla/mux に登録。`GetKFTLTemplate` と `GetGkillInfo` の2件はアドレス定義のみで未登録。`GkillWebpushServiceWorkerJs`（`/serviceWorker.js`、GET）だけは `/api/` 配下ではなく、`router.PathPrefix` で別途登録している。
+全エンドポイントは `/api/` 配下に配置（POST 中心、一部 GET）。正本は `gkill_server_api/gkill_server_api_address.go` のルート表 `apiRoutes()` で、`serve.go` の `registerAPIRoutes` が gorilla/mux へそのまま登録する（テストハーネスも同じ表を使う。ADR-0709）。Service Worker（`/serviceWorker.js`、GET）だけは API ではなく、`router.PathPrefix` で別途配信している。
 
 ### 認証系（5エンドポイント）
 
@@ -262,7 +262,7 @@ handle_*.go は106ファイル（実装91 + テスト15）で、1ハンドラ1�
 | `GetPluginConfigHTML` | プラグイン設定画面 HTML 取得 |
 | `PostPluginConfig` | プラグイン設定フォームのデータ保存 |
 
-### 通知・TLS・トランザクション・その他（12エンドポイント）
+### 通知・TLS・トランザクション・その他（10エンドポイント）
 
 | エンドポイント | 説明 |
 |---------------|------|
@@ -276,21 +276,19 @@ handle_*.go は106ファイル（実装91 + テスト15）で、1ハンドラ1�
 | `SubmitKFTLText` | KFTL テキスト送信・実行 |
 | `GetKyousMCP` | MCP 用 Kyou 取得 |
 | `GetRepInfosMCP` | MCP 用 rep 一覧取得（Kyou を供給する rep の rep_name と rep_type、rep_types の正準値一覧。ファイルパスは返さない） |
-| `GetKFTLTemplate` | KFTL テンプレート取得（※アドレス定義のみ、未登録） |
-| `GetGkillInfo` | アプリケーション情報取得（※アドレス定義のみ、未登録） |
 
 ## 開発ガイドライン
 
 ### ハンドラの追加方法
 
 1. `req_res/` に Request/Response 構造体を追加
-2. `gkill_server_api/gkill_server_api_address.go` にアドレス定数を追加
-3. `gkill_server_api/handle_xxx.go` にハンドラメソッドを実装（1ハンドラ1ファイル）
-4. ビジネスロジックは `usecase/` 層に実装し、ハンドラから呼び出す
-5. `gkill_server_api/serve.go` の `resetRouter()` 内で `router.HandleFunc()` を登録
+2. `gkill_server_api/handle_xxx.go` にハンドラメソッドを実装（1ハンドラ1ファイル。doc コメントは「1行説明 / 空行 / `POST /api/xxx（wrapXxx）` / req_res 型」）
+3. ビジネスロジックは `usecase/` 層に実装し、ハンドラから呼び出す
+4. `gkill_server_api/gkill_server_api_address.go` のルート表 `apiRoutes()` に1行足す（パス・メソッド・認証区分・無認証ならボディ上限・ハンドラ）。`serve.go` に `HandleFunc` を直に書かない
+5. `api_routes_test.go` の golden（認証区分の固定）にも1行足す。Web クライアントから叩くなら `gkill-api.ts` に `xxx_address` / `xxx_method` とメソッドを足す（`gkill-api.test.ts` が表と突き合わせる）
 
 ### 命名規則
 
 - ハンドラメソッド: `HandleXxx(w, r)` パターン
-- アドレス定数: `XxxAddress` パターン
+- ルート表の行: `{Path: "/api/xxx", Method: "POST", Auth: authXxx, Body: bodyXxx, Handler: g.HandleXxx},`（1行で書く。verify_docs と TS のテストが正規表現で読む）
 - 全ハンドラは `GkillServerAPI` 構造体のメソッドとして実装

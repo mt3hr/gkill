@@ -400,11 +400,10 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/browse_zip_contents` | ZIPファイル内容閲覧。IDFKyouのZIPファイルを `$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/` に展開し、ZipEntry リスト（パス・サイズ・種別フラグ `is_image`/`is_text`/`is_video`/`is_audio`/`is_pdf`・配信URL）を返却する。種別フラグはクライアントの開き方（プレビュー・再生・新タブ・ダウンロード）の分岐に使う。セッション認証必須。パストラバーサル防止、Shift_JISファイル名デコード、アトミック展開に対応 |
 | `/api/get_idf_kyou_by_relative_path` | IDFKyou相対パス解決。基準IDFKyou（`target_id`）のファイルからの相対パス（`relative_path`）を同一Rep内で解決し、対象ファイルのIDFKyou IDを返却する（Markdown内相対リンクのKyouDialog表示用）。見つからない場合は `kyou_id` 空文字。セッション認証必須。パストラバーサル防止対応 |
 
-## KFTL（2件）
+## KFTL（1件）
 
 | パス | 説明 |
 |---|---|
-| `/api/get_kftl_template` | KFTLテンプレート構造取得（※アドレス定義のみ、ハンドラ未実装。リクエストは404となる。テンプレートは `get_application_config` 経由で取得する） |
 | `/api/submit_kftl_text` | KFTLテキスト送信・パース・保存。応答の `created[]` に実際に書けた記録が載る（部分保存時もそこまで載る）。入力ミスは行ごとの `ERR000416`（HTTP 400）、サーバ障害は `ERR000351`（500）で返る。詳細は上の代表例と `documents/adr/0502-kftl-errors-are-per-line.md` |
 
 ## トランザクション（2件）
@@ -452,14 +451,13 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の9（`gki
 |---|---|
 | `/api/generate_tls_file` | TLS証明書ファイル生成 |
 
-## その他（4件）
+## その他（3件）
 
 | パス | 説明 |
 |---|---|
 | `/api/urlog_bookmarklet` | URLogブックマークレット用エンドポイント。ブラウザのブックマークレットから現在のページのURL・タイトルをURLogとして直接追加する。ログイン時にブックマークレット専用セッション（`ApplicationName="urlog_bookmarklet"`）が自動作成され、通常のセッションとは分離される |
 | `/api/urlog_bookmarklet_page` | URLogブックマークレット導入ページ配信（GET）。ブックマークレット登録用のHTMLページを返す |
 | `/api/update_cache` | キャッシュ更新トリガー。**管理者セッション必須**（`wrapAuth` + `IsAdmin`）。`session_id` と `user_ids` を受け取り、指定ユーザーのインメモリキャッシュを再構築する。CLI `gkill_server update_cache ユーザーID...` は対象ユーザーIDの文字列配列を受け取り、**認証情報の指定は不要**（ローカルの `configs/account.db` から有効な管理者アカウントを自動選択し、その名義で有効期限5分のログインセッションを `configs/account_state.db` へ直接発行して呼び出し、完了後に削除する。パスワードはArgon2idで保存されており DB から復元できないため `/api/login` は経由しない） |
-| `/api/get_gkill_info` | アプリケーション情報取得（※アドレス定義のみ、ハンドラ未実装。リクエストは404となる。将来の拡張用と推定） |
 
 ## プラグイン（4件）
 
@@ -529,9 +527,9 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の9（`gki
 
 ## 補足
 
-- **合計:** `/api/` エンドポイント 92件定義（91 POST + 1 GET。うち90件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 19件（PathPrefix 18 + Path 1）
-- **全エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`
+- **合計:** `/api/` エンドポイント 90件（89 POST + 1 GET）+ 非APIルート 19件（PathPrefix 18 + Path 1）
+- **ルート表（正本）:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` の `apiRoutes()`。パス・HTTPメソッド・認証区分・無認証ボディ上限・ハンドラを1行1ルートで持ち、本番（`serve.go`）とテストハーネスがそのまま登録する。表に載っている = 実行時に応答する（「定義はあるが未登録」は構造的に起きない。[ADR-0709](../adr/0709-api-route-table-single-source.md)）
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル）
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（186ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（17ファイル）
-- `get_kftl_template` と `get_gkill_info` はアドレス定義（`gkill_server_api_address.go`）が存在するが、`HandleFunc` 登録もハンドラ関数実装も存在しない。コードベース全体を調査した結果、これらは**未実装のエンドポイント**であることが確認された。リクエストは404となる
+- かつて `get_kftl_template` と `get_gkill_info` はアドレス定義だけがあり（ハンドラ未登録で実行時404）、Web クライアントにも同じ残骸が揃っていた。2026-09-14 にルート表を正本化した際に削除した。Web クライアント（`gkill-api.ts`）の `xxx_address` / `xxx_method` は `gkill-api.test.ts` が表と突き合わせる

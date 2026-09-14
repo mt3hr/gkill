@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装91ファイル）に対する統合テストを含む。テストファイルは全35本（うち handle_*_test.go は15本）。
+`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装91ファイル）に対する統合テストを含む。テストファイルは全36本（うち handle_*_test.go は15本）。
 
 ## テストフレームワーク
 
@@ -12,7 +12,7 @@ Go `testing` パッケージ
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `gkill_server_api_test.go` | API ハンドラ統合テスト（全エンドポイント）。初回起動で自動生成されるサーバ設定が `127.0.0.1:9999` + ローカルアクセスのみ許可であること（`TestNewGkillServerAPI_FirstRunDefaultsAreLocalOnly`）を含む |
+| `gkill_server_api_test.go` | API ハンドラ統合テスト（全エンドポイント。ルート表 `apiRoutes` を本番と同じ `registerAPIRoutes` で登録するので、本番と同じ認証ラッパーを通る）。`TestAuthMiddleware_RejectsInvalidSession` は表から機械的に対象を組み、認証つき全経路とハンドラ内で自己認証する6経路が不正セッションを 401 で拒むこと。初回起動で自動生成されるサーバ設定が `127.0.0.1:9999` + ローカルアクセスのみ許可であること（`TestNewGkillServerAPI_FirstRunDefaultsAreLocalOnly`）を含む |
 | `handle_get_shared_kyous_test.go` | 共有ページ（認証なしの公開エンドポイント）の共有スコープ検証。共有条件に一致するKyouが0件のとき、実体データまで含めて1件も返さないこと（キーワード以外の条件で0件になった場合も含む。ID絞り込みを外すと実体取得は条件を解釈しないため全件返ってしまう） |
 | `get_kyous_word_filter_test.go` | ワード検索の型別の照合規則と除外語の適用経路。Lantana は気分値・Nlog は金額・KC は数値・Mi は板名でも当たること、ID は前方一致だけで除外語は ID を見ないこと、除外語が付随テキスト経由にも効くこと、語なし・除外語だけは「素通しした全体から引く」（参照先に除外語がある ReKyou も消える）こと、空文字・空白だけの語が素通しになること |
 | `get_kyous_regressions_test.go` | 記録取得の回帰。プラグイン検索失敗が警告として返ること（エラーにしない）、実行中の指定が無いときは実行中で絞らないこと、打刻タグでの絞り込みが記録側のタグ指定なしでも効くこと |
@@ -39,7 +39,8 @@ Go `testing` パッケージ
 | `broken_rep_warning_test.go` | 読み込めない書き込み先以外の rep があるとき、Web検索は既存の警告メッセージ、MCP検索は `warnings` を返し、利用可能な rep の結果は維持すること。MCPの通常・`count_only`・`group_by` の全経路で警告が消えず、`partial` は警告と独立して false のままであること |
 | `response_status_guard_test.go` | ソース走査ガード。JSON ハンドラのエンコード行の直前に `writeErrorStatus` があること（既存ハンドラのコピペでこの1行が抜けると、そのエンドポイントだけ異常時も 200 へ戻る）、免除リストのファイルが実在すること、ミドルウェアがステータスと JSON 本文を書くこと |
 | `response_status_log_test.go` | 失敗した応答の1行ログ（`writeErrorStatus`）。ステータス→ログレベルの機械的対応（5xx=Error / 401・403 を Error にしない）、成功時は1行も出さないこと、エラーコード・メソッド・パス・ユーザIDが載ること。深部のエラーは Debug 側にあり、既定ログレベルではこの1行が障害の唯一の痕跡になる |
-| `auth_middleware_capped_test.go` | 無認証経路のボディ上限（±1バイト境界・413 の JSON 本文）、スローボディの読み取り期限、`serve.go` のボディ付き `wrapNoAuth` 登録が capped 版であることのソース走査（F-002）。加えて accessLog の `responseRecorder` と gzip の `gzipResponseWriter` が `Unwrap` を持つこと —— どちらかが欠けると `http.ResponseController` が底の接続へ届かず、読み取り期限が本番経路でだけ静かに無効になる（コンパイル時アサーションも両ファイルに常設） |
+| `auth_middleware_capped_test.go` | 無認証経路のボディ上限（±1バイト境界・413 の JSON 本文）、スローボディの読み取り期限、ルート表の無認証経路がすべて上限つき（`bodyAuth` / `bodyUpload`）で、素の `wrapNoAuth` 相当が GET の配信1本だけであることの名指し固定（F-002）。加えて accessLog の `responseRecorder` と gzip の `gzipResponseWriter` が `Unwrap` を持つこと —— どちらかが欠けると `http.ResponseController` が底の接続へ届かず、読み取り期限が本番経路でだけ静かに無効になる（コンパイル時アサーションも両ファイルに常設） |
+| `api_routes_test.go` | ルート表（`gkill_server_api_address.go` の `apiRoutes`）が唯一の正本であることの4本。`validateAPIRoutes` が重複・`/api/` 以外・無認証 POST で上限なし・認証つきに上限指定を拒むこと、`HandleXxx` の反射列挙と表の双方向突き合わせ（免除は PathPrefix 配信の `HandleFileServe` / `HandleZipCacheFileServe`）、各 `handle_*.go` の doc コメント `// POST /api/xxx（wrapXxx）` が表のパス・メソッド・認証区分と一致すること、90 ルートの認証区分とボディ上限を名指しで固定する golden（表だけ直すと落ちる。ADR-0709） |
 | `handle_add_urlog_skip_wiring_test.go` | ソース走査ガード。`handle_add_urlog.go` が `FillURLogFieldSkipping` へ `request.SkipFetchMetadata, request.SkipFetchFavicon` をこの順で渡すこと。両方 bool なので入れ替えてもコンパイルも既存テストも通り、MCP の「両方 false なら外向き通信なし」の約束が黙って破れる（reps 層のテストはハンドラを通らない。実HTTP取得のテストは safefetch の SSRF 対策と干渉するため置けない） |
 | `handle_browse_zip_contents_test.go` | ZIP 展開（`extractZip`）の正常系と、圧縮爆弾の拒否 |
 | `handle_submit_kftl_text_test.go` | KFTL 送信の冪等キー、作成された記録の `created[]` 返却、利用者の書き間違い（ERR000416）が不正行ごとに行番号・行テキスト付きで積まれ HTTP 400 になること（解釈フェーズの失敗では正しい行も保存されない）、繰り返し「？？」で**書き込まれた**打刻の開始・終了が起点からの日付で年が変わらないこと、支出の `？`行の時刻がタグにも乗ること（Wear / MCP が通る Go 経路の年チェック）、要求の `create_app` が書き込まれた記録の `create_app` / `update_app` に載り、無指定と空白は `gkill_kftl` に落ちること（Wear の `gkill_wear`） |
