@@ -97,8 +97,10 @@ function resolve_query(resolver: KyouReloadQueryResolver | undefined, kyou_in_li
  * （キャッシュではないのでTTLは持たない。持つと「更新直後に別経路で更新→古い結果が返る」が起きる）。
  *
  * ただし合流してよいのは「同じ更新から派生した引き直し」だけ。無条件に合流していたころは、
- * ダイアログを開いたときの引き直し（`open_rykv_dialog` が毎回投げる）がまだ飛行中のうちに
- * 保存すると、そこへぶら下がって更新前の Kyou を配り、表示を古い内容で上書きしていた。
+ * ダイアログを開いたときの引き直し（当時は `open_rykv_dialog` が毎回投げていた。今は投げない）が
+ * まだ飛行中のうちに保存すると、そこへぶら下がって更新前の Kyou を配り、表示を古い内容で上書きしていた。
+ * 開いた時の引き直しは無くなったが、連続保存など「前の更新の引き直しが飛行中に次の更新が来る」形は
+ * 同じなので、この判定は残す。
  * 同じ更新から派生したことは呼び出し元しか知らないので、`requested_at` を渡してもらって
  * 「その時刻より後に始まった引き直しだけ相乗りしてよい」と判定する。
  */
@@ -227,9 +229,9 @@ export async function refresh_kyou(kyou: Kyou, query?: FindKyouQuery, requested_
         const in_flight = in_flight_reloads.get(key)
         // 相乗りしてよいのは requested_at より後に始まった引き直しだけ。
         // requested_at より前に始まったものは、その更新をまだ見ていない可能性がある。
-        // 無条件に合流していたころは、ダイアログを開いたときの引き直し
-        // （open_rykv_dialog が毎回投げる）がまだ飛行中のうちに保存すると、
-        // 更新前の Kyou を掴んで列・focused・ダイアログを一斉に古い内容へ戻していた
+        // 無条件に合流していたころは、先行して飛行中だった引き直し（当時はダイアログを開くたびに
+        // 投げていた）に保存後の引き直しがぶら下がり、更新前の Kyou を掴んで
+        // 列・focused・ダイアログを一斉に古い内容へ戻していた
         if (in_flight && in_flight.started_at >= requested_at) {
             const shared = await in_flight.promise
             // 同一インスタンスを複数のリストに置くと後段の load_typed_datas 等で副作用が出る
