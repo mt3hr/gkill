@@ -1,6 +1,6 @@
 ---
 name: gkill-client-kftl
-description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-tabs.ts）、保存マーカーの beforeinput/input 対、複数ウィンドウの二重送信防止と送信タブの排他、メモ帳ダイアログの複数枚化（KFTLDialogHost・slot 採番）、KFTL パーサ（TS/Go の2実装）を扱う。src/client/classes/kftl/・kftl-tabs.ts・use-kftl-tabs.ts・use-kftl-view.ts・kftl-view.vue・mkfl-view.vue・kftl-dialog.vue・use-kftl-dialog-host.ts・src/server/gkill/api/kftl/ を編集するとき必読。「メモ帳が二重登録される」「別のタブへ保存された」「行ラベルが消える」「タブをクリックしただけで保存が走る」の調査でも必読。"
+description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-tabs.ts）、保存マーカーの beforeinput/input 対、複数ウィンドウの二重送信防止と送信タブの排他、メモ帳ダイアログの複数枚化（KFTLDialogHost・slot 採番）、KFTL の解釈と書き込みがサーバの1実装（Go）だけであること（TS は行ラベルの分類器、ピンクと確認は /api/parse_kftl_text の応答）を扱う。src/client/classes/kftl/・kftl-tabs.ts・use-kftl-tabs.ts・use-kftl-view.ts・kftl-view.vue・mkfl-view.vue・kftl-dialog.vue・use-kftl-dialog-host.ts・src/server/gkill/api/kftl/ を編集するとき必読。「メモ帳が二重登録される」「別のタブへ保存された」「行ラベルが消える」「タブをクリックしただけで保存が走る」「Web だけ書き間違いが通る」の調査でも必読。"
 ---
 
 # KFTL（メモ帳）の不変条件
@@ -10,10 +10,44 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 **このファイルは全文が、実際に起きた事故の再発防止である。該当作業では飛ばさずに読むこと。**
 多くは「例外もエラーも出さずに静かに壊れる」種類で、破っても目の前ではエラーにならない。
 
-- `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- ~~ /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes
-- `classes/kftl/` — KFTL parser (53 statement types; the Go side has 50). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
+- `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- ~~ /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes. **解釈（何が正しい入力か）と書き込みはここだけが持つ**（ADR-0507）
+- `classes/kftl/` — 行ラベルのための行分類器 (53 statement types; the Go side has 50). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`. 検証・リクエスト組み立て・API 呼び出しは**持たない**
 
-**Go 側のエラーは行ごとに返し、入力ミスとサーバ障害を分ける**（2026-08-24、[ADR-0502](../../../documents/adr/0502-kftl-errors-are-per-line.md)）。`kftl_statement.go` は3フェーズ直列で、**行をリクエストへ適用するフェーズまでは1バイトも書かない**。だからそこは最初の1件で止めず**全行を評価して `errors.Join` で束ねる**（利用者が1往復で全部直せる。TS 側は元からそうなっていて Go だけが遅れていた）。実行フェーズは書き込みが起きるので最初の失敗で止める。振り分けは `KFTLInputError` と `errors.As` で、入力ミスは `ERR000416`(**400**)・サーバ障害は `ERR000351`(500)。**打ち間違いを 500 で返さないこと** —— ステータスを見る層からサーバ障害と区別できなくなる。応答の `created[]` は**書き込みが成功した直後にリクエスト側が控えた**もので、`requestMap` を事前に列挙して作ってはいけない（本文が空の kmemo / Mi / Nlog は何も書かずに成功し、打刻の終了は既存レコードの更新なので嘘になる）。失敗しても**そこまでに書けたぶんを載せる**（KFTL は DB トランザクションを使わないので部分保存が残る）。多言語キーは各失敗に1対1で7言語ぶん既にあるので**新設しない**。`api/kftl/` に **.go を新規追加しない**（`verify_docs` がファイル数を数えている）。
+## 解釈と書き込みはサーバの1実装（2026-09-15、[ADR-0507](../../../documents/adr/0507-kftl-single-implementation-on-server.md)）
+
+2026-09-15 まで KFTL は TS（Web: 解析して `add_*` を tx で fan-out）と Go（Wear / MCP: `/api/submit_kftl_text`）の2実装だった。
+ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り、**Web は3週間、気分0を書き続けた**（2026-09-14 に実測）。
+2083 年の打刻・支出の関連時刻がタグに乗らない事故も「片方だけ直した／片方だけ壊れた」型。守ること:
+
+- **TS `classes/kftl/` は行ラベルの分類器だけ。** 検証ルール・リクエスト組み立て・`add_*` 呼び出し・繰り返しの展開を**戻さない**。
+  ラベルは打鍵と同時に出す（利用者の要件）が、「おかしな行」のピンクは `/api/parse_kftl_text` の `invalid_lines`
+  （打鍵が止まって `KFTL_INVALID_LINE_DEBOUNCE_MS`=300ms 後に1回、世代トークン + AbortController、通信失敗は前回値を保持）
+- **`line_label_styles` の watch は `line_label_datas` と `invalid_line_numbers` の両方を見る。** ピンクはサーバから
+  打鍵の後に着地するので、ラベルだけを見ていると次にラベルが変わるまでピンクが出ない
+- **送信は `do_submit` で「送信対象タブの本文を `parse_kftl_text` → `invalid_lines` があれば止める → `tags` / `mi_board_names` で
+  未知タグ・未知板名の確認 → `submit_kftl_text`（`idempotency_key` は送信ごとに新しい UUID）→ `created[]` を
+  `fetch_committed_kyou` で引き直して `registered_kyou` / `updated_kyou`」。** 表示用の `invalid_line_numbers` で送信の可否を決めない
+  （アクティブタブのもので、しかも遅れて着地する）。**`saved_kyou_by_kftl` は `created[].related_time` の最大値で、引き直し（`get_kyou`）の前に出す**
+  —— 板・タグツリーの取り直しがこの合図で走るので、引き直しの後ろへ回すと保存直後に一覧へ移ったとき新しいタグが
+  ツリーに無いまま絞られ、記録が見えない（`kftl-submit-emits.test.ts`「引き直しより前に」が固定する）
+- **Go の `Analyze`（parse）と `GenerateAndExecuteRequests`（submit）は同じ `prepareRequests` を通す。** 片方の入口にだけ検査を足さない
+  （`TestAnalyze_ReportsTheSameInvalidLinesAsExecute` が固定する）。`Analyze` は repos=nil で `expandRepeats` まで回す
+  （既存判定は `repositoriesOf` が nil を「既存なし」と扱う）ので、件数の上限も解析で分かる
+- **板名は `miBoardNameProvider`（`MiBoardName()`）で Mi / MiReKyou だけが実装する。** `KFTLRequest` インタフェースに足して
+  空実装を撒くと、型を足したときに「返し忘れ」がコンパイルエラーにならず確認が黙って抜ける。返すのは**利用者が書いたとおりの板名**
+  （既定板へ解決しない。確認ダイアログは書いた名前で聞く）
+- **`/end` 系の対象検索は設定の playing 検索条件を通す**（`playingTimeIsQueryFromConfig` + `findPlayingTimeIsEntries`）。
+  語の条件は rep の SQL が見るが、**タグ・非表示タグは Kyou 検索の層（`api.FindFilter`）でしか効かない**ので、ハンドラが
+  `KFTLStatement.FindKyous` に閉包で渡す（kftl → api の import は作らない）。閉包が無い（テスト・直叩き）ときは語だけで絞る。
+  2026-09-15 まで Web だけが条件を適用し、Wear / MCP の `/end` は条件外の打刻も終わらせていた
+- **接頭辞を足す・変えるときは Go `kftl_factory.go` と TS `kftl-prefixes.ts` の両方を同じコミットで直す。**
+  TS 側がずれても保存は壊れないが、ラベルが嘘になる（`kftl-type-detection.test.ts` が守る）
+- **契約は足すだけ。** `SubmitKFTLTextRequest` / `Response` の既存フィールドを変えると Wear（`GkillApiClient.kt`）と MCP（`write-handlers.mjs`）が壊れる。
+  `parse_kftl_text` は wrapAuth（repositories 不要。DB を読まないので打鍵のたびに呼ばれても軽い）
+- 守るテスト: `kftl-submit-emits.test.ts`「サーバが不正行を返したら送信せず…」「おかしな行の表示」/
+  Go `kftl_analyze_test.go` / `handle_parse_kftl_text_test.go`
+
+**Go 側のエラーは行ごとに返し、入力ミスとサーバ障害を分ける**（2026-08-24、[ADR-0502](../../../documents/adr/0502-kftl-errors-are-per-line.md)）。`kftl_statement.go` は3フェーズ直列で、**行をリクエストへ適用するフェーズまでは1バイトも書かない**。だからそこは最初の1件で止めず**全行を評価して `errors.Join` で束ねる**（利用者が1往復で全部直せる。TS 側は元からそうなっていて Go だけが遅れていた）。実行フェーズは書き込みが起きるので最初の失敗で止める。振り分けは `KFTLInputError` と `errors.As` で、入力ミスは `ERR000416`(**400**)・サーバ障害は `ERR000351`(500)。**打ち間違いを 500 で返さないこと** —— ステータスを見る層からサーバ障害と区別できなくなる。応答の `created[]` は**書き込みが成功した直後にリクエスト側が控えた**もので、`requestMap` を事前に列挙して作ってはいけない（本文が空の kmemo / Mi / Nlog は何も書かずに成功し、打刻の終了は既存レコードの更新なので嘘になる）。失敗しても**そこまでに書けたぶんを載せる**（KFTL は DB トランザクションを使わないので部分保存が残る）。多言語キーは各失敗に1対1で7言語ぶん既にあるので**新設しない**。`api/kftl/` に .go を足したら `api/README.md` の件数を同じコミットで直す（`verify_docs` がファイル数を数えている）。
 
 **KFTL（メモ帳）のタブ**（2026-08-16）。`kftl-view.vue` がタブのホストで、`/kftl` ページ・各画面のメモ帳ダイアログ（`kftl-dialog.vue`）・打刻メモ帳（`mkfl-view.vue`）の**3系統すべて**に効く。純関数は `classes/kftl-tabs.ts`、状態は `classes/use-kftl-tabs.ts`。守るべき約束:
 - **`v-window` を使わず、アクティブなタブ1枚だけを描画する。** 非表示の textarea は `clientWidth` が0になり、`kftl-statement-line.ts` の `1 + parseInt(text_width / 0)` が **`NaN`**（`Infinity` ではない）を返して行ラベルが丸ごと消える
@@ -65,12 +99,10 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 `？？` の単独行で開いて同じ記号で閉じる4行ブロック（条件・回数/終了日・既存時・起点）。
 **直前に書いた記録を日付を変えて何度も作る。** 設計と却下案は [ADR-0506](../../../documents/adr/0506-kftl-repeat-block-expands-into-records.md)。
 
-- **展開（複製の生成）を行の解釈でやらない。送信時だけ。** Go は `GenerateAndExecuteRequests` の実行ループ直前、
-  TS は `generate_requests()` の最後。`use-kftl-view.ts` は本文が変わるたびに `get_invalid_line_indexs()`
-  （= 全行の apply）を呼ぶので、apply で複製すると**打鍵1回あたり最大1000件**を作る。
-  打鍵のたびに走る検査は `validate_repeats` / `validateRepeatSpec` 側（複製しない）
+- **展開（複製の生成）を行の解釈でやらない。`prepareRequests` の最後（実行ループの直前）だけ。** 行の解釈に置くと
+  「？？」をブロックのどこに書くかで結果が変わる。展開は Go だけが持つ（TS には無い。戻さない）
 - **複製ではレコードIDと「テキストのID」を採り直す。** テキストIDを使い回すと同じIDのテキストを回数ぶん書くことになり、
-  append-only なので**最後の1件以外が黙って消える**。TS は `set_texts()` が採り直すので必ずそれを通す
+  append-only なので**最後の1件以外が黙って消える**
 - **`？？` の判定は `？` の前方一致より前に置く。** 後ろだと `？？` が関連時刻行に食われ、
   「？」を1つ剥がした残りのパース失敗になる。完全一致だけをブロックの開始にし、
   `？？ 金 3` のように引数を同じ行に書いたものは記号の書き方のエラーへ倒す
@@ -80,8 +112,8 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
   （`～～` で同じ事故が起きて `KFTLMiReKyouNoneStatementLine` を足したのと同じ）。
   ラベルが「何も無い行」と言う以上、空行でエラーにもしない。テキストの行は今までどおり
   `KFTL_REPEAT_NOT_CLOSED_MESSAGE_TITLE` で弾く（飲み込むと閉じ忘れたときに本文が繰り返し指定に化ける）。
-  **TS と Go の両方を直すこと** —— 片側だけ緩めると Web では通るのに時計・MCP からの
-  `submit_kftl_text` で落ちる。受け皿はブロックの中に留まるので、空行のあとの `？？` は今までどおり閉じる
+  エラーは Go、ラベルは TS —— **ラベルの受け皿（TS）とエラーの受け皿（Go）を同じ位置に置くこと**。
+  ずれると「ピンクなのにラベルは何も無い行」になる。受け皿はブロックの中に留まるので、空行のあとの `？？` は今までどおり閉じる
 - **リポストタスク（`～～`）の中では付け先を明示する。** ブロックの中の `target_id` は
   「タスク化される元の記録」を指していて、リポストタスク自身は別のIDで登録されている。
   引かせると**元の記録のほうが繰り返される**（タグ行が `req` を持ち回っているのと同じ理由）
@@ -91,29 +123,25 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 - **繰り返せない型を開けない。** `ーた`（打刻開始のみ）は end_time の無い打刻をN個作り、
   終わりの無いスタンプが以降の全記録を覆う。終了4種（`ーえ` `ーいえ` `ーたえ` `ーいたえ`）は
   「いま走っている1件」しか見ないので繰り返す意味がない。どちらも `SetRepeatSpec` で断る
-- **`CloneForRepeat` / `clone_for_repeat` の既定実装を基底に置かない。** 置くと新しい型で
+- **`CloneForRepeat` の既定実装を基底に置かない。** 置くと新しい型で
   実装を忘れても通り、**日時のずれない複製が黙って書かれる**。コンパイルエラーで気づく形を保つ
 - **既存判定（3行目の既定 `no`）の照合キーは書き込みと同じ値を使う。** 板名は既定板への解決を
-  同じ関数（`resolvedBoardName` / `resolved_board_name`）に通すこと。ずれると毎回重複する
+  同じ関数（`resolvedBoardName`）に通すこと。ずれると毎回重複する
 - **存在しない日は飛ばす。丸めない。** `毎月31` の2月、`第5金` の無い月。最も近い日へ丸めると
   `毎月30` や `第4金` と重複して二重に作られる
-- **打刻（`ーち`）のアンカーは related_time（基底の `anchor_time_for_repeat`）。TS の `start_time` を返さない。**
-  TS では開始時刻行が `related_time` にしか書かず、`KFTLTimeIsRequest.start_time` は `do_request` が
-  related_time から入れるまで空。展開は送信時・`do_request` の前なので、`start_time` を基準にすると
-  1970 からの日数ぶん（約 20,700 日）ずらされ、**2026-09-10 に送った打刻 5 件が 2083-05-17〜 で登録された**
-  （エラーも警告も出ない）。Go は開始時刻行が `startTime` にも書くので Wear / MCP 経路では起きず、Web だけ壊れる。
-  vitest は `TZ: 'Asia/Tokyo'` なので epoch の時刻が 09:00 になり、既存判定のテストは件数が偶然合って素通しした。
-  守るテスト: `kftl-repeat-statement.test.ts`「打刻は開始時刻を基準にし、開始と終了を同じ日数だけずらす」/
-  Go `TestExpand_TimeIsRepeatShiftsStartAndEndTogether`（年を明示的に見る）
-- **アンカーの欄・ずらす欄・do_request が書く欄は同じ欄を指す。** 2083 年の事故はこの3つが別物だった型（打刻）だけで起きた。
+- **打刻（`ーち`）のアンカーは related_time（基底の `AnchorTimeForRepeat`）。** 2026-09-10 まで TS 側は
+  `start_time`（`do_request` まで空）を基準にしていて、1970 からの日数ぶん（約 20,700 日）ずらされ、
+  **Web から送った打刻 5 件が 2083-05-17〜 で登録された**（エラーも警告も出ない。Go は起きなかった）。
+  TS の展開は消えたが、**アンカーの欄・ずらす欄・DoRequest が書く欄は同じ欄を指す**という約束は Go でも同じ。
   8 型を監査した結果（2026-09-10）: kmemo / lantana / kc / urlog は related_time、支出はブロックの related_time、
   タスク / リポストタスクは予定3欄、打刻は related_time（→ start_time）+ end_time で一致。`ーた` と終了4種は繰り返し自体を断るので起きない。
-  新しい型を足すときは **`do_request` が実際に送る値**を `kftl-repeat-statement.test.ts`「繰り返しで書き込まれる時刻」の表へ1行足すこと
-  （request オブジェクトの欄だけ見る表では捕まらない）
+  新しい型を足すときは **DoRequest が実際に書く値**を `handle_submit_kftl_text_test.go`
+  `TestHandleSubmitKFTLText_RepeatWritesShiftedTimes` の表へ足すこと（request オブジェクトの欄だけ見る表では捕まらない）。
+  守るテスト: Go `TestExpand_TimeIsRepeatShiftsStartAndEndTogether`（年を明示的に見る）
 - **Go の `doBaseRequest` へ関連時刻は引数で渡す（`r.GetRelatedTime()`）。基底の中で `b.GetRelatedTime()` を引かない。**
   埋め込み基底のメソッドは外側の override を見ない（Go は仮想ディスパッチしない）ので、支出（`ーん`）がブロック共有の時刻を
-  override で返していても基底で引くと `？`行の時刻がタグ・テキストに乗らず「今」で書かれる（TS は `super.do_request` 内の
-  `this.get_related_time()` が override に届くので Web と Wear / MCP で結果が違っていた）。
+  override で返していても基底で引くと `？`行の時刻がタグ・テキストに乗らず「今」で書かれる（2026-09-10 まで TS 側は届いていたので
+  Web と Wear / MCP で結果が違っていた —— 2実装だった頃の典型）。
   守るテスト: Go `TestHandleSubmitKFTLText_RepeatWritesShiftedTimes`「支出の関連時刻がタグにも乗る」
 
 ## 関連スキル
@@ -130,3 +158,4 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 - [ADR-0504 実行フェーズでも設定不足は行別の入力エラー](../../../documents/adr/0504-kftl-missing-configuration-is-an-input-error.md)
 - [ADR-0505 予定日時欄では関連時刻の接頭辞「？」を入力エラーにする](../../../documents/adr/0505-schedule-time-field-rejects-related-time-prefix.md)
 - [ADR-0506 繰り返し「？？」は実体のレコードへ展開し、複製は送信時にだけ作る](../../../documents/adr/0506-kftl-repeat-block-expands-into-records.md)
+- [ADR-0507 メモ帳の解釈と書き込みはサーバの1実装に寄せる](../../../documents/adr/0507-kftl-single-implementation-on-server.md)

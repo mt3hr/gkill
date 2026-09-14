@@ -300,13 +300,19 @@ sequenceDiagram
     participant Repos as GkillRepositories
 
     User->>UI: KFTLテキスト入力<br>(プレフィックス付き複数行)
+    Note over UI: 行ラベルは TS の分類器で即時。<br>打鍵が止まって300ms後に parse_kftl_text で<br>おかしな行をピンクに（書かない解析）
     User->>UI: 保存ボタン or 「！」入力
-    UI->>UI: collect_unknown_tags()<br>(use-kftl-view.ts)
-    alt 未使用のタグが含まれる
+    UI->>API: POST /api/parse_kftl_text<br>{session_id, kftl_text}（送信対象タブの本文）
+    API-->>UI: {invalid_lines, tags, mi_board_names}
+    alt invalid_lines がある
+        UI-->>User: 行番号つきのエラー（送らない）
+    end
+    UI->>UI: collect_unknown_tags(tags) / collect_unknown_mi_boards(mi_board_names)<br>(use-kftl-view.ts)
+    alt 未使用のタグ・板名が含まれる
         UI-->>User: 「新しいタグです。追加しますか？」と確認
         User->>UI: 承認（do_submit(skip_unknown_tag_check=true) で再送）
     end
-    UI->>API: POST /api/submit_kftl_text<br>{session_id, kftl_text}
+    UI->>API: POST /api/submit_kftl_text<br>{session_id, kftl_text, idempotency_key}
     API->>Handler: handleSubmitKFTLText
     Handler->>Handler: wrapAuthRepos ミドルウェアで認証済み（AuthFromContext）
     Handler->>Handler: GetRepositories + GetApplicationConfig
@@ -320,23 +326,33 @@ sequenceDiagram
         Stmt->>ReqMap: line.ApplyThisLineToRequestMap
         Note right of ReqMap: IDベースでリクエストを<br>グルーピング・蓄積
     end
+    Stmt->>Stmt: 繰り返し「？？」の展開<br>（ここまでが prepareRequests。parse_kftl_text も同じ）
     loop 各リクエストを実行
         Stmt->>ReqMap: req.DoRequest(ctx)
-        ReqMap->>Repos: AddKmemoInfo / AddKCInfo / AddTimeIsInfo / etc.
+        ReqMap->>Repos: TempReps へ AddKmemoInfo / AddKCInfo / AddTimeIsInfo / etc.
         Repos-->>ReqMap: OK
     end
-    Stmt-->>Handler: OK
+    Stmt->>Repos: CommitTx（1つの SQLite トランザクション。失敗は ROLLBACK で何も残らない）
+    Stmt-->>Handler: created[]
     Handler-->>API: OK
-    API-->>UI: {messages}
-    UI-->>User: 保存成功メッセージ
+    API-->>UI: {messages, created: [{id, data_type, updated}]}
+    loop created[]
+        UI->>API: POST /api/get_kyou（引き直し）
+        UI->>UI: registered_kyou / updated_kyou を emit
+    end
+    UI-->>User: 保存成功メッセージ・タブを閉じる
 ```
 
-> **新規タグの確認ゲート**は完全にクライアント側の処理。`do_submit(skip_unknown_tag_check)`
-> （`use-kftl-view.ts` の `do_submit()`）が未確認のときだけ `collect_unknown_tags()` を呼び、
+> **解釈と書き込みはサーバの1実装**（[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)）。
+> 2026-09-15 までブラウザは TS でパースして `add_*` を1つの TXID で fan-out していたが、Go だけに入った修正が
+> Web に届かない事故が繰り返されたので、Wear / MCP と同じ `submit_kftl_text` に寄せた。TS の `classes/kftl/` は
+> 行ラベルの分類器だけで、「おかしな行」は `parse_kftl_text`（`kftl.KFTLStatement.Analyze`。`submit` と同じ
+> `prepareRequests` を通る）の `invalid_lines` で塗る。
+> **新規タグ・板名の確認ゲート**はクライアント側の処理。`do_submit(skip_unknown_tag_check, skip_unknown_mi_board_check)`
+> （`use-kftl-view.ts` の `do_submit()`）が `parse_kftl_text` の `tags` / `mi_board_names` を既存の構造と突き合わせ、
 > 打ち間違いで似たタグが増えるのを防ぐ。サーバ側は確認の有無を関知しない。
 > なお `do_submit()` の先頭には `is_requested_submit` の二重送信ガードがある
-> （同 `do_submit()` の先頭）。KFTL は複数リクエストを1つの TXID で束ねて送るため、
-> 二重送信すると Kyou が丸ごと重複登録される。
+> （同 `do_submit()` の先頭）。サーバが1回の送信で全部書くため、二重送信すると Kyou が丸ごと重複登録される。
 >
 > 確認ダイアログを挟むと `do_submit()` は1回の保存操作で2〜3回呼ばれる。**送信対象のタブは
 > `do_submit(target_tab_id, ...)` の引数で渡す**（持ち越し用の `submit_target_tab_id` を

@@ -1,10 +1,14 @@
 /**
  * KFTL送信の結果を一覧へ伝える経路のテスト。
  *
- * KFTLは送信全体をトランザクションで包むが、tx中の add_* は added_kyou を返せない
- * （一時リポジトリにしか無い）。そのためリクエストクラスはidだけ積み、
- * commit_tx のあとに get_kyou で実体を引いてから registered_kyou / updated_kyou を上げる。
- * commitより前に引くと「まだ無い」応答を掴むので、順序はここで固定する。
+ * 解釈と書き込みはサーバの1実装（/api/submit_kftl_text）だけが行い、応答の created[] には
+ * id しか載らない（ADR-0507）。ビューは送信のあとに get_kyou で実体を引いてから
+ * registered_kyou / updated_kyou を上げる。送信より前に引くと「まだ無い」応答を掴むので、
+ * 順序はここで固定する。「おかしな行」「付くタグ」「板名」も /api/parse_kftl_text の応答で決まる。
+ *
+ * API のモックは、本文を「、」で区切った件数ぶんの id を返し、「。」で始まる行をタグとして
+ * 返す小さな偽サーバ。判定の中身（何が不正か）はサーバの責務なので、ここでは応答を差し替えて
+ * ビューの振る舞いだけを見る。
  */
 import { afterEach, beforeEach, describe, test, expect, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick } from 'vue'
@@ -26,34 +30,70 @@ interface CallLog {
     calls: Array<string>
 }
 
+/** 偽サーバの解析: 「、」だけの行で記録を区切り、「。」で始まる行をタグとして数える */
+function fake_parse(kftl_text: string) {
+    const lines = kftl_text.split('\n')
+    const tags = new Array<string>()
+    let record_count = 0
+    let has_body = false
+    for (const line of lines) {
+        if (line === '、') {
+            if (has_body) {
+                record_count++
+            }
+            has_body = false
+            continue
+        }
+        if (line.startsWith('。')) {
+            const tag = line.slice(1)
+            if (tag !== '' && !tags.includes(tag)) {
+                tags.push(tag)
+            }
+            continue
+        }
+        if (line !== '' && line !== '！') {
+            has_body = true
+        }
+    }
+    if (has_body) {
+        record_count++
+    }
+    return { tags, record_count }
+}
+
 function make_api(log: CallLog, overrides: Record<string, unknown> = {}) {
-    const ok = { messages: null, errors: null }
-    const record = (name: string, result: unknown = ok) => vi.fn(async () => {
-        log.calls.push(name)
-        return result
-    })
     return {
         generate_uuid: vi.fn(() => `uuid-${log.calls.length}-${Math.random().toString(36).slice(2, 8)}`),
-        add_kmemo: record('add_kmemo'),
-        add_kc: record('add_kc'),
-        add_lantana: record('add_lantana'),
-        add_mi: record('add_mi'),
-        add_mirekyou: record('add_mirekyou'),
-        add_nlog: record('add_nlog'),
-        add_urlog: record('add_urlog'),
-        add_timeis: record('add_timeis'),
-        add_tag: record('add_tag'),
-        add_text: record('add_text'),
-        update_timeis: record('update_timeis'),
-        get_kyous: vi.fn(async () => ({ kyous: [], messages: null, errors: null })),
-        commit_tx: record('commit_tx'),
-        discard_tx: record('discard_tx'),
+        parse_kftl_text: vi.fn(async (req: { kftl_text: string }) => {
+            log.calls.push('parse_kftl_text')
+            const parsed = fake_parse(req.kftl_text)
+            return { messages: null, errors: null, invalid_lines: [], tags: parsed.tags, mi_board_names: [], record_count: parsed.record_count }
+        }),
+        submit_kftl_text: vi.fn(async (req: { kftl_text: string }) => {
+            log.calls.push('submit_kftl_text')
+            const parsed = fake_parse(req.kftl_text)
+            const created = new Array<{ id: string, data_type: string, updated: boolean }>()
+            for (let i = 0; i < parsed.record_count; i++) {
+                created.push({ id: `created-${i}`, data_type: 'kmemo', updated: false })
+            }
+            return { messages: null, errors: null, created }
+        }),
         get_kyou: vi.fn(async (req: { id: string }) => {
             log.calls.push(`get_kyou:${req.id}`)
             return { kyou_histories: [{ id: req.id }], messages: null, errors: null }
         }),
         ...overrides,
     }
+}
+
+/** 送信が失敗する API。サーバは何も残さないので created は空 */
+function make_failing_api(log: CallLog) {
+    return make_api(log, {
+        submit_kftl_text: vi.fn(async () => {
+            log.calls.push('submit_kftl_text')
+            return { messages: null, errors: [{ error_code: 'ERR', error_message: 'ng' }], created: [] }
+        }),
+    })
 }
 
 // KFTLViewは行ラベルの計算で本物のtextareaを id 引きするので、DOMに置いておく。
@@ -160,34 +200,80 @@ describe('KFTL送信後のイベント', () => {
         expect(emitted(emits, 'requested_reload_list').length).toBe(0)
     })
 
-    test('get_kyou は commit_tx より後に呼ぶ（commit前はまだ検索に出ない）', async () => {
+    test('get_kyou は submit_kftl_text より後に呼ぶ（送信前はまだ無い）', async () => {
         const log: CallLog = { calls: [] }
         const { view } = mount_view(make_api(log))
 
         await submit_text(view, 'メモ')
 
-        const commit_index = log.calls.indexOf('commit_tx')
+        const submit_index = log.calls.indexOf('submit_kftl_text')
         const get_kyou_index = log.calls.findIndex(call => call.startsWith('get_kyou:'))
-        expect(commit_index).toBeGreaterThanOrEqual(0)
-        expect(get_kyou_index).toBeGreaterThan(commit_index)
+        expect(submit_index).toBeGreaterThanOrEqual(0)
+        expect(get_kyou_index).toBeGreaterThan(submit_index)
     })
 
-    test('エラーで破棄したときは何も上げない', async () => {
+    test('送信の直前にサーバへ解析させ、解析→送信の順になる', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        await submit_text(view, 'メモ')
+
+        const parse_index = log.calls.lastIndexOf('parse_kftl_text')
+        const submit_index = log.calls.indexOf('submit_kftl_text')
+        expect(parse_index).toBeGreaterThanOrEqual(0)
+        expect(submit_index).toBeGreaterThan(parse_index)
+    })
+
+    test('送信に失敗したときは何も上げず、エラーだけ上げる', async () => {
+        const log: CallLog = { calls: [] }
+        const { view, emits } = mount_view(make_failing_api(log))
+
+        await submit_text(view, 'メモ')
+
+        expect(log.calls).toContain('submit_kftl_text')
+        expect(emitted(emits, 'received_errors').length).toBe(1)
+        expect(emitted(emits, 'registered_kyou').length).toBe(0)
+        expect(emitted(emits, 'updated_kyou').length).toBe(0)
+        expect(emitted(emits, 'requested_reload_list').length).toBe(0)
+        expect(emitted(emits, 'saved_kyou_by_kftl').length).toBe(0)
+    })
+
+    test('打刻の終了（updated）は registered_kyou ではなく updated_kyou で上げる', async () => {
         const log: CallLog = { calls: [] }
         const api = make_api(log, {
-            add_kmemo: vi.fn(async () => {
-                log.calls.push('add_kmemo')
-                return { messages: null, errors: [{ error_code: 'ERR', error_message: 'ng' }] }
+            submit_kftl_text: vi.fn(async () => {
+                log.calls.push('submit_kftl_text')
+                return { messages: null, errors: null, created: [{ id: 'ended-timeis', data_type: 'timeis', updated: true }] }
             }),
         })
         const { view, emits } = mount_view(api)
 
-        await submit_text(view, 'メモ')
+        await submit_text(view, 'ーいえ\n作業')
 
-        expect(log.calls).toContain('discard_tx')
+        expect(emitted(emits, 'updated_kyou').length).toBe(1)
         expect(emitted(emits, 'registered_kyou').length).toBe(0)
-        expect(emitted(emits, 'updated_kyou').length).toBe(0)
-        expect(emitted(emits, 'requested_reload_list').length).toBe(0)
+    })
+
+    // 「おかしな行」の判定はサーバ。2026-09-14 まで TS 側の判定が Go に追随しておらず、
+    // `/mood` 単独が Web からだけ気分0で書かれていた（ADR-0503 の抜け）
+    test('サーバが不正行を返したら送信せず、その行をピンクにしてエラーを上げる', async () => {
+        const log: CallLog = { calls: [] }
+        const api = make_api(log, {
+            parse_kftl_text: vi.fn(async () => {
+                log.calls.push('parse_kftl_text')
+                return {
+                    messages: null, errors: null, tags: [], mi_board_names: [], record_count: 0,
+                    invalid_lines: [{ line_number: 2, line_text: '/mood', message: 'Invalid line found (line 2: "/mood"): needs a value' }],
+                }
+            }),
+        })
+        const { view, emits } = mount_view(api)
+
+        await submit_text(view, 'メモ\n/mood')
+
+        expect(log.calls).not.toContain('submit_kftl_text')
+        expect(emitted(emits, 'received_errors').length).toBe(1)
+        expect(view.invalid_line_numbers.value).toEqual([1])
     })
 
     test('引き直せなかったときだけ requested_reload_list へ1回落とす', async () => {
@@ -240,6 +326,33 @@ describe('KFTL送信後のイベント', () => {
 
         expect(emitted(emits, 'saved_kyou_by_kftl').length).toBe(1)
     })
+
+    // 板・タグツリーの取り直しはこの合図で走る。引き直し（get_kyou）の完了を待ってから出すと、
+    // 保存直後に別の画面へ移ったとき新しいタグがツリーに無いまま一覧が絞られ、記録が見えない
+    test('saved_kyou_by_kftl は引き直し（get_kyou）より前に、応答の関連時刻で上がる', async () => {
+        const log: CallLog = { calls: [] }
+        let saved_before_get_kyou: boolean | null = null
+        const emits_holder: { emits: ReturnType<typeof vi.fn> | null } = { emits: null }
+        const api = make_api(log, {
+            submit_kftl_text: vi.fn(async () => {
+                log.calls.push('submit_kftl_text')
+                return { messages: null, errors: null, created: [{ id: 'c1', data_type: 'kmemo', updated: false, related_time: '2099-01-02T03:04:05+09:00' }] }
+            }),
+            get_kyou: vi.fn(async (req: { id: string }) => {
+                log.calls.push(`get_kyou:${req.id}`)
+                saved_before_get_kyou = emitted(emits_holder.emits!, 'saved_kyou_by_kftl').length === 1
+                return { kyou_histories: [{ id: req.id }], messages: null, errors: null }
+            }),
+        })
+        const { view, emits } = mount_view(api)
+        emits_holder.emits = emits
+
+        await submit_text(view, 'メモ')
+
+        expect(saved_before_get_kyou, '引き直しの前に saved_kyou_by_kftl が出ていない').toBe(true)
+        const [time] = emitted(emits, 'saved_kyou_by_kftl')[0] as [Date]
+        expect(time.getTime()).toBe(new Date('2099-01-02T03:04:05+09:00').getTime())
+    })
 })
 
 /**
@@ -262,7 +375,7 @@ describe('KFTLの保存マーカー', () => {
         await flush_microtasks()
         await flush_microtasks()
 
-        expect(log.calls, 'マーカーで保存が走っていない').toContain('add_kmemo')
+        expect(log.calls, 'マーカーで保存が走っていない').toContain('submit_kftl_text')
     })
 
     // 「たまに保存されない」の正体
@@ -281,7 +394,7 @@ describe('KFTLの保存マーカー', () => {
         await flush_microtasks()
         await flush_microtasks()
 
-        expect(log.calls, '解析待ちの間の1文字で保存が消えている').toContain('add_kmemo')
+        expect(log.calls, '解析待ちの間の1文字で保存が消えている').toContain('submit_kftl_text')
     })
 
     // 「素早く入力すると \n！\n が反応しない」の正体。
@@ -306,7 +419,7 @@ describe('KFTLの保存マーカー', () => {
         await flush_microtasks()
         await flush_microtasks()
 
-        expect(log.calls, 'マーカー行が確定したのに保存が走っていない').toContain('add_kmemo')
+        expect(log.calls, 'マーカー行が確定したのに保存が走っていない').toContain('submit_kftl_text')
     })
 
     // 実機で報告された形。IMEの確定Enterと改行Enterで、マーカー行の後ろに
@@ -330,7 +443,7 @@ describe('KFTLの保存マーカー', () => {
         await flush_microtasks()
         await flush_microtasks()
 
-        expect(log.calls, 'マーカーの後ろに空行があると保存が走らない').toContain('add_kmemo')
+        expect(log.calls, 'マーカーの後ろに空行があると保存が走らない').toContain('submit_kftl_text')
     })
 
     // バックスペースはマーカー行を増やさないので、保存の起点にはならない。
@@ -343,7 +456,7 @@ describe('KFTLの保存マーカー', () => {
         view.text_area_content.value = 'てすと\n！\n\n'
         await nextTick()
         await flush_microtasks()
-        expect(log.calls).not.toContain('add_kmemo')
+        expect(log.calls).not.toContain('submit_kftl_text')
 
         // 末尾の改行を1つ消す = マーカー行が本文の末尾になる
         view.onTextAreaBeforeInput()
@@ -353,7 +466,7 @@ describe('KFTLの保存マーカー', () => {
         await flush_microtasks()
         await flush_microtasks()
 
-        expect(log.calls, 'バックスペースで保存が走っている').not.toContain('add_kmemo')
+        expect(log.calls, 'バックスペースで保存が走っている').not.toContain('submit_kftl_text')
     })
 
     // IMEでは「変換の確定」と「改行」が別々の入力として着地する。
@@ -369,7 +482,7 @@ describe('KFTLの保存マーカー', () => {
         view.onTextAreaInput()
         await nextTick()
         await flush_microtasks()
-        expect(log.calls, 'マーカー行が閉じる前に保存が走っている').not.toContain('add_kmemo')
+        expect(log.calls, 'マーカー行が閉じる前に保存が走っている').not.toContain('submit_kftl_text')
 
         // 改行でマーカー行が確定する
         view.onTextAreaBeforeInput()
@@ -379,7 +492,7 @@ describe('KFTLの保存マーカー', () => {
         await flush_microtasks()
         await flush_microtasks()
 
-        expect(log.calls, '改行でマーカー行が確定したのに保存が走っていない').toContain('add_kmemo')
+        expect(log.calls, '改行でマーカー行が確定したのに保存が走っていない').toContain('submit_kftl_text')
     })
 
     // IME変換中は v-model がモデルを更新しない(Vueが composing の間 input を捨てる)。
@@ -402,7 +515,7 @@ describe('KFTLの保存マーカー', () => {
         view.onTextAreaInput()
         await nextTick()
         await flush_microtasks()
-        expect(log.calls, '本文が変わっていないのに保存が走っている').not.toContain('add_kmemo')
+        expect(log.calls, '本文が変わっていないのに保存が走っている').not.toContain('submit_kftl_text')
 
         // 確定と改行がまとめて着地する(1回のフラッシュ窓に収まる場合)
         view.onTextAreaBeforeInput()
@@ -412,7 +525,7 @@ describe('KFTLの保存マーカー', () => {
         await flush_microtasks()
         await flush_microtasks()
 
-        expect(log.calls, 'IME確定で保存が走っていない').toContain('add_kmemo')
+        expect(log.calls, 'IME確定で保存が走っていない').toContain('submit_kftl_text')
     })
 
     // マーカーが1行目にある場合。前後の改行を要求する endsWith では拾えない
@@ -427,7 +540,7 @@ describe('KFTLの保存マーカー', () => {
         await flush_microtasks()
         await flush_microtasks()
 
-        expect(log.calls, '1行目のマーカーで保存が走っていない').toContain('add_kmemo')
+        expect(log.calls, '1行目のマーカーで保存が走っていない').toContain('submit_kftl_text')
     })
 
     // マーカーが増えていないなら「保存して」という新しい指示ではない。
@@ -440,7 +553,7 @@ describe('KFTLの保存マーカー', () => {
         view.text_area_content.value = 'メモ\n！\nつづき'
         await nextTick()
         await flush_microtasks()
-        expect(log.calls).not.toContain('add_kmemo')
+        expect(log.calls).not.toContain('submit_kftl_text')
 
         // ここから利用者が打つ。マーカーは増えていない
         view.onTextAreaBeforeInput()
@@ -450,7 +563,7 @@ describe('KFTLの保存マーカー', () => {
         await flush_microtasks()
         await flush_microtasks()
 
-        expect(log.calls, 'マーカーが増えていないのに保存が走っている').not.toContain('add_kmemo')
+        expect(log.calls, 'マーカーが増えていないのに保存が走っている').not.toContain('submit_kftl_text')
     })
 
     test('利用者が打っていないのに本文が変わっただけでは保存しない', async () => {
@@ -463,7 +576,7 @@ describe('KFTLの保存マーカー', () => {
         await flush_microtasks()
         await flush_microtasks()
 
-        expect(log.calls, '打っていないのに保存が走っている').not.toContain('add_kmemo')
+        expect(log.calls, '打っていないのに保存が走っている').not.toContain('submit_kftl_text')
     })
 })
 
@@ -497,15 +610,9 @@ describe('KFTLのタブ', () => {
         expect(second_tab_id).not.toBe(first_tab_id)
     })
 
-    test('エラーで破棄したときはタブを閉じない', async () => {
+    test('送信に失敗したときはタブを閉じない', async () => {
         const log: CallLog = { calls: [] }
-        const api = make_api(log, {
-            add_kmemo: vi.fn(async () => {
-                log.calls.push('add_kmemo')
-                return { messages: null, errors: [{ error_code: 'ERR', error_message: 'ng' }] }
-            }),
-        })
-        const { view } = mount_view(api)
+        const { view } = mount_view(make_failing_api(log))
         const tabs = useKftlTabs()
         const tab_id = view.active_tab_id.value
 
@@ -579,7 +686,7 @@ describe('KFTLのタブ', () => {
         await nextTick()
         await flush_microtasks()
 
-        expect(log.calls).not.toContain('add_kmemo')
+        expect(log.calls).not.toContain('submit_kftl_text')
         expect(tabs.tabs.value.length).toBe(2)
     })
 
@@ -609,8 +716,7 @@ describe('KFTLのタブ', () => {
         await view.paste_template(make_template('メモ\n！\n'))
         await flush_microtasks()
 
-        expect(log.calls).toContain('add_kmemo')
-        expect(log.calls).toContain('commit_tx')
+        expect(log.calls).toContain('submit_kftl_text')
         expect(tabs.tabs.value.length, '保存できたタブが閉じていない').toBe(1)
     })
 
@@ -622,7 +728,7 @@ describe('KFTLのタブ', () => {
         await view.paste_template(make_template('ーみ\n買い物'))
         await flush_microtasks()
 
-        expect(log.calls).not.toContain('add_kmemo')
+        expect(log.calls).not.toContain('submit_kftl_text')
         expect(tabs.tabs.value.length).toBe(2)
     })
 
@@ -637,7 +743,7 @@ describe('KFTLのタブ', () => {
         await view.paste_template(make_template('メモ\n！\n'))
         await flush_microtasks()
 
-        expect(log.calls.filter(call => call === 'add_kmemo').length).toBe(1)
+        expect(log.calls.filter(call => call === 'submit_kftl_text').length).toBe(1)
     })
 })
 
@@ -704,7 +810,7 @@ describe('KFTLを複数のウィンドウで開く', () => {
         await first_window.view.paste_template(make_template('メモ\n！\n'))
         await flush_microtasks()
 
-        expect(log.calls.filter(call => call === 'add_kmemo').length).toBe(1)
+        expect(log.calls.filter(call => call === 'submit_kftl_text').length).toBe(1)
         expect(second_window.view.active_tab_id.value, '別のウィンドウまで貼り先へ移った').toBe(second_tab_id)
     })
 
@@ -726,8 +832,7 @@ describe('KFTLを複数のウィンドウで開く', () => {
         ])
         await flush_microtasks()
 
-        expect(log.calls.filter(call => call === 'add_kmemo').length).toBe(1)
-        expect(log.calls.filter(call => call === 'commit_tx').length).toBe(1)
+        expect(log.calls.filter(call => call === 'submit_kftl_text').length).toBe(1)
     })
 })
 
@@ -737,225 +842,122 @@ describe('KFTLを複数のウィンドウで開く', () => {
  * MiReKyou は対象の Kyou とは別の Kyou なので、1回の送信で2件登録される。
  * ブロックの中に書いたタグは対象ではなく MiReKyou 自身に付く。
  */
-describe('KFTLのリポストタスク', () => {
-    interface AddMiReKyouCall { mirekyou: Record<string, unknown> }
-    interface AddKmemoCall { kmemo: Record<string, unknown> }
-    interface AddTagCall { tag: Record<string, unknown> }
 
-    function make_capturing_api(log: CallLog) {
-        const ok = { messages: null, errors: null }
-        const mirekyou_calls = new Array<AddMiReKyouCall>()
-        const kmemo_calls = new Array<AddKmemoCall>()
-        const tag_calls = new Array<AddTagCall>()
-        const api = make_api(log, {
-            add_mirekyou: vi.fn(async (req: AddMiReKyouCall) => {
-                log.calls.push('add_mirekyou')
-                mirekyou_calls.push(req)
-                return ok
-            }),
-            add_kmemo: vi.fn(async (req: AddKmemoCall) => {
-                log.calls.push('add_kmemo')
-                kmemo_calls.push(req)
-                return ok
-            }),
-            add_tag: vi.fn(async (req: AddTagCall) => {
-                log.calls.push('add_tag')
-                tag_calls.push(req)
-                return ok
-            }),
-        })
-        return { api, mirekyou_calls, kmemo_calls, tag_calls }
-    }
-
-    test('メモとリポストタスクの両方を登録し、registered_kyou を2件上げる', async () => {
-        const log: CallLog = { calls: [] }
-        const { view, emits } = mount_view(make_api(log))
-
-        await submit_text(view, '牛乳を買う\n～～\n仕事\n～～')
-
-        expect(log.calls).toContain('add_kmemo')
-        expect(log.calls).toContain('add_mirekyou')
-        expect(emitted(emits, 'registered_kyou').length).toBe(2)
-    })
-
-    test('target_id が同じレコードで書いたメモの id を指す', async () => {
-        const log: CallLog = { calls: [] }
-        const { api, mirekyou_calls, kmemo_calls } = make_capturing_api(log)
-        const { view } = mount_view(api)
-
-        await submit_text(view, '牛乳を買う\n～～\n仕事\n～～')
-
-        expect(mirekyou_calls.length).toBe(1)
-        expect(kmemo_calls.length).toBe(1)
-        expect(mirekyou_calls[0].mirekyou.target_id).toBe(kmemo_calls[0].kmemo.id)
-        expect(mirekyou_calls[0].mirekyou.id).not.toBe(kmemo_calls[0].kmemo.id)
-        expect(mirekyou_calls[0].mirekyou.is_checked).toBe(false)
-        expect(mirekyou_calls[0].mirekyou.board_name).toBe('仕事')
-    })
-
-    // Mi の KFTL と同じく、日時の前の「？」は要らない
-    test('日時は「？」なしのベタ書きでも解釈される', async () => {
-        const log: CallLog = { calls: [] }
-        const { api, mirekyou_calls } = make_capturing_api(log)
-        const { view } = mount_view(api)
-
-        await submit_text(view, '牛乳を買う\n～～\n仕事\n2025-03-20\n\n2025-03-22\n～～')
-
-        const mirekyou = mirekyou_calls[0].mirekyou
-        expect((mirekyou.estimate_start_time as Date).getFullYear()).toBe(2025)
-        expect((mirekyou.estimate_start_time as Date).getDate()).toBe(20)
-        expect(mirekyou.estimate_end_time).toBeNull()
-        expect((mirekyou.limit_time as Date).getDate()).toBe(22)
-    })
-
-    // 予定日時の欄に「？」を書くと不正行として拾われ、保存そのものが止まる。
-    // 以前は関連時刻と同じ接頭辞として黙って剥がしていたので、書き損じに気づけなかった
-    test('日時に「？」を付けると不正行になり保存されない', async () => {
-        const log: CallLog = { calls: [] }
-        const { api, mirekyou_calls } = make_capturing_api(log)
-        const { view } = mount_view(api)
-
-        await submit_text(view, '牛乳を買う\n～～\n仕事\n？2025-03-20\n\n？2025-03-22\n～～')
-
-        expect(mirekyou_calls.length).toBe(0)
-    })
-
-    test('ブロックの中のタグはリポストタスクに、閉じたあとのタグはメモに付く', async () => {
-        const log: CallLog = { calls: [] }
-        const { api, mirekyou_calls, kmemo_calls, tag_calls } = make_capturing_api(log)
-        const { view } = mount_view(api)
-
-        await submit_text(view, '牛乳を買う\n～～\n。今日中\n仕事\n～～\n。買い物')
-
-        const mi_re_kyou_id = mirekyou_calls[0].mirekyou.id
-        const kmemo_id = kmemo_calls[0].kmemo.id
-        const tag_of = (name: string) => tag_calls.find(call => call.tag.tag === name)
-        expect(tag_of('今日中')?.tag.target_id).toBe(mi_re_kyou_id)
-        expect(tag_of('買い物')?.tag.target_id).toBe(kmemo_id)
-    })
-
-    // 対象の無いMiReKyouは検索でターゲット解決に失敗して結果から落ちるので、
-    // 画面に出ないのに消せない行が残る。書く前にエラーにしてトランザクションごと捨てる
-    test('レコードに対象のメモが無ければ何も保存せず破棄する', async () => {
-        const log: CallLog = { calls: [] }
-        const { view, emits } = mount_view(make_api(log))
-
-        await submit_text(view, '～～\n仕事\n～～')
-
-        expect(log.calls).not.toContain('add_mirekyou')
-        expect(log.calls).toContain('discard_tx')
-        expect(log.calls).not.toContain('commit_tx')
-        expect(emitted(emits, 'registered_kyou').length).toBe(0)
-    })
-
-    // 板名行は自由入力なので、打ち間違いがそのまま新しい板になる。
-    // Mi と同じくリポストタスクでも送信前に確認を出す
+// リポストタスク（`～～`）や支出（`ーん`）で何が書かれるか（target_id・タグの付け先・支払いごとの Nlog）は
+// サーバの Go 実装だけが持つ（ADR-0507）。対のテストは kftl_mirekyou_test.go / kftl_nlog_test.go /
+// handle_submit_kftl_text_test.go。ここではサーバの解析結果（tags / mi_board_names）から確認が出ることだけを見る。
+describe('サーバの解析結果からの確認', () => {
     test('まだ無い板名なら送信前に確認を出して保存しない', async () => {
         const log: CallLog = { calls: [] }
-        const { view } = mount_view(make_api(log))
+        const api = make_api(log, {
+            parse_kftl_text: vi.fn(async () => {
+                log.calls.push('parse_kftl_text')
+                return { messages: null, errors: null, invalid_lines: [], tags: [], mi_board_names: ['まだ無い板'], record_count: 1 }
+            }),
+        })
+        const { view } = mount_view(api)
 
-        view.text_area_content.value = '牛乳を買う\n～～\n未知の板\n～～'
+        view.text_area_content.value = 'ーみ\nタスク\nまだ無い板'
         await view.submit()
 
-        expect(view.unknown_mi_boards.value).toEqual(['未知の板'])
-        expect(log.calls).not.toContain('add_mirekyou')
+        expect(view.unknown_mi_boards.value).toEqual(['まだ無い板'])
+        expect(log.calls).not.toContain('submit_kftl_text')
     })
 
-    test('ブロックの中の知らないタグでも送信前に確認を出す', async () => {
+    test('板名の確認を通すと送信される', async () => {
+        const log: CallLog = { calls: [] }
+        const api = make_api(log, {
+            parse_kftl_text: vi.fn(async () => {
+                log.calls.push('parse_kftl_text')
+                return { messages: null, errors: null, invalid_lines: [], tags: [], mi_board_names: ['まだ無い板'], record_count: 1 }
+            }),
+        })
+        const { view, emits } = mount_view(api)
+
+        view.text_area_content.value = 'ーみ\nタスク\nまだ無い板'
+        await view.submit()
+        await view.confirm_mi_board_submit()
+
+        expect(log.calls).toContain('submit_kftl_text')
+        expect(emitted(emits, 'registered_kyou').length).toBe(1)
+    })
+
+    test('知らないタグはサーバの tags から拾って確認を出す', async () => {
         const log: CallLog = { calls: [] }
         const { view } = mount_view(make_api(log))
 
-        view.text_area_content.value = '牛乳を買う\n～～\n。知らないタグ\n仕事\n～～'
+        view.text_area_content.value = 'メモ\n。知らないタグ'
         await view.submit()
 
-        expect(view.unknown_tags.value).toContain('知らないタグ')
-        expect(log.calls).not.toContain('add_mirekyou')
+        expect(view.is_confirm_unknown_tag_open.value).toBe(true)
+        expect(log.calls).not.toContain('submit_kftl_text')
     })
 })
 
-/**
- * 支出は1つの「ーん」ブロックから支払いの数だけ Kyou が出る唯一の記法。
- * タグとテキストは支払いごとに付くので、add_tag / add_text の target_id が
- * その支払いの add_nlog の id と一致していなければならない。
- * 一致していないと、エラーも警告も出ないままタグだけが宙に浮く。
- */
-describe('KFTLの支出', () => {
-    interface NlogCallLog {
-        nlog_ids: Array<string>
-        tags: Array<{ tag: string, target_id: string }>
-        texts: Array<{ id: string, target_id: string, text: string }>
-    }
+describe('おかしな行の表示', () => {
+    // 判定はサーバなので、打鍵のたびに投げず、止まってから1回だけ投げる
+    test('打鍵が止まってから1回だけ解析を投げ、行番号を添字に直してピンクにする', async () => {
+        vi.useFakeTimers()
+        try {
+            const log: CallLog = { calls: [] }
+            const api = make_api(log, {
+                parse_kftl_text: vi.fn(async (req: { kftl_text: string }) => {
+                    log.calls.push('parse_kftl_text')
+                    const invalid_lines = req.kftl_text.includes('/mood')
+                        ? [{ line_number: 3, line_text: '/mood', message: 'needs a value' }]
+                        : []
+                    return { messages: null, errors: null, invalid_lines, tags: [], mi_board_names: [], record_count: 1 }
+                }),
+            })
+            const { view } = mount_view(api)
+            await vi.runAllTimersAsync()
+            const before = log.calls.filter(call => call === 'parse_kftl_text').length
 
-    function make_nlog_api(log: CallLog, nlog_log: NlogCallLog) {
-        return make_api(log, {
-            add_nlog: vi.fn(async (req: { nlog: { id: string } }) => {
-                log.calls.push('add_nlog')
-                nlog_log.nlog_ids.push(req.nlog.id)
-                return { messages: null, errors: null }
-            }),
-            add_tag: vi.fn(async (req: { tag: { tag: string, target_id: string } }) => {
-                log.calls.push('add_tag')
-                nlog_log.tags.push({ tag: req.tag.tag, target_id: req.tag.target_id })
-                return { messages: null, errors: null }
-            }),
-            add_text: vi.fn(async (req: { text: { id: string, target_id: string, text: string } }) => {
-                log.calls.push('add_text')
-                nlog_log.texts.push({ id: req.text.id, target_id: req.text.target_id, text: req.text.text })
-                return { messages: null, errors: null }
-            }),
-        })
-    }
+            view.text_area_content.value = 'メ'
+            await nextTick()
+            view.text_area_content.value = 'メモ'
+            await nextTick()
+            view.text_area_content.value = 'メモ\n、\n/mood'
+            await nextTick()
+            // デバウンスの途中では投げない
+            await vi.advanceTimersByTimeAsync(100)
+            expect(log.calls.filter(call => call === 'parse_kftl_text').length).toBe(before)
 
-    test('支払いの数だけ add_nlog と registered_kyou が出る', async () => {
-        const log: CallLog = { calls: [] }
-        const nlog_log: NlogCallLog = { nlog_ids: [], tags: [], texts: [] }
-        const { view, emits } = mount_view(make_nlog_api(log, nlog_log))
-
-        await submit_text(view, 'ーん\nコンビニ\nおにぎり\n150\nお茶\n120')
-
-        expect(nlog_log.nlog_ids.length).toBe(2)
-        expect(new Set(nlog_log.nlog_ids).size).toBe(2)
-        expect(emitted(emits, 'registered_kyou').length).toBe(2)
+            await vi.advanceTimersByTimeAsync(400)
+            expect(log.calls.filter(call => call === 'parse_kftl_text').length, '3回の打鍵で1回だけ投げる').toBe(before + 1)
+            expect(view.invalid_line_numbers.value).toEqual([2])
+        } finally {
+            vi.useRealTimers()
+        }
     })
 
-    // 以前は Nlog だけ id を採番し直していたので、タグがどの Nlog にも紐づいていなかった
-    test('タグの target_id がその支払いの Nlog の id と一致する', async () => {
-        const log: CallLog = { calls: [] }
-        const nlog_log: NlogCallLog = { nlog_ids: [], tags: [], texts: [] }
-        const { view } = mount_view(make_nlog_api(log, nlog_log))
+    test('解析に失敗（オフライン）したら前回のピンクを残す', async () => {
+        vi.useFakeTimers()
+        try {
+            const log: CallLog = { calls: [] }
+            let fail = false
+            const api = make_api(log, {
+                parse_kftl_text: vi.fn(async () => {
+                    log.calls.push('parse_kftl_text')
+                    if (fail) {
+                        throw new Error('offline')
+                    }
+                    return { messages: null, errors: null, invalid_lines: [{ line_number: 1, line_text: '/mood', message: 'ng' }], tags: [], mi_board_names: [], record_count: 0 }
+                }),
+            })
+            const { view } = mount_view(api)
+            view.text_area_content.value = '/mood'
+            await nextTick()
+            await vi.advanceTimersByTimeAsync(500)
+            expect(view.invalid_line_numbers.value).toEqual([0])
 
-        await submit_text(view, 'ーん\nコンビニ\nおにぎり\n150\n。食費\nお茶\n120\n。飲み物')
-
-        expect(nlog_log.nlog_ids.length).toBe(2)
-        expect(nlog_log.tags.length).toBe(2)
-        const food = nlog_log.tags.find(tag => tag.tag === '食費')!
-        const drink = nlog_log.tags.find(tag => tag.tag === '飲み物')!
-        expect(nlog_log.nlog_ids).toContain(food.target_id)
-        expect(nlog_log.nlog_ids).toContain(drink.target_id)
-        expect(food.target_id).not.toBe(drink.target_id)
-    })
-
-    test('テキストの target_id もその支払いの Nlog の id と一致する', async () => {
-        const log: CallLog = { calls: [] }
-        const nlog_log: NlogCallLog = { nlog_ids: [], tags: [], texts: [] }
-        const { view } = mount_view(make_nlog_api(log, nlog_log))
-
-        await submit_text(view, 'ーん\nコンビニ\nおにぎり\n150\nーー\n朝ごはん用\nーー\nお茶\n120')
-
-        expect(nlog_log.texts.length).toBe(1)
-        expect(nlog_log.texts[0].text).toBe('朝ごはん用')
-        expect(nlog_log.nlog_ids).toContain(nlog_log.texts[0].target_id)
-    })
-
-    test('ブロックの中の知らないタグでも送信前に確認を出す', async () => {
-        const log: CallLog = { calls: [] }
-        const nlog_log: NlogCallLog = { nlog_ids: [], tags: [], texts: [] }
-        const { view } = mount_view(make_nlog_api(log, nlog_log))
-
-        view.text_area_content.value = 'ーん\nコンビニ\nおにぎり\n150\n。知らないタグ'
-        await view.submit()
-
-        expect(view.unknown_tags.value).toContain('知らないタグ')
-        expect(log.calls).not.toContain('add_nlog')
+            fail = true
+            view.text_area_content.value = '/mood\n'
+            await nextTick()
+            await vi.advanceTimersByTimeAsync(500)
+            expect(view.invalid_line_numbers.value, '通信失敗で前回の表示が消えている').toEqual([0])
+        } finally {
+            vi.useRealTimers()
+        }
     })
 })

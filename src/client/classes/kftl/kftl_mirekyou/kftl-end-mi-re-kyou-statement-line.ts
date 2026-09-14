@@ -1,7 +1,6 @@
 'use strict'
 
 import { i18n } from '@/i18n'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
@@ -25,11 +24,6 @@ export class KFTLEndMiReKyouStatementLine extends KFTLStatementLine {
         } else {
             context.set_next_statement_line_constructor(KFTLStatementLineConstructorFactory.get_instance().generate_none_constructor(context.get_next_statement_line_text()))
         }
-    }
-
-    async apply_this_line_to_request_map(_request_map: KFTLRequestMap): Promise<void> {
-        // 閉じるだけ。リクエストへの書き込みは無い
-        return new Promise<void>((resolve) => resolve())
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

@@ -2,7 +2,6 @@
 
 import { parse_kftl_date_time } from '../kftl-date-time'
 import { i18n } from '@/i18n'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { KFTL_ASCII_RELATED_TIME_PREFIX, strip_prefix } from '../kftl-prefixes'
@@ -28,11 +27,6 @@ export class KFTLNlogRelatedTimeStatementLine extends KFTLStatementLine {
         context.set_is_next_prototype(context.is_this_prototype())
         context.set_next_statement_line_target_id(context.get_this_statement_line_target_id())
         context.set_next_statement_line_constructor(generate_nlog_block_next_constructor(context.get_next_statement_line_text(), block))
-    }
-
-    async apply_this_line_to_request_map(_request_map: KFTLRequestMap): Promise<void> {
-        this.block.related_time = this.parse_related_time()
-        return new Promise<void>((resolve) => resolve())
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

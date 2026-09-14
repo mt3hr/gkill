@@ -56,10 +56,10 @@ flowchart TD
 
     ApplyToMap --> LoopStart
 
-    LoopEnd --> CollectTags[collect_unknown_tags<br>既存タグに無いタグを収集]
-    CollectTags --> UnknownTagCheck{未知のタグがある?<br>かつ未承認?}
-    UnknownTagCheck -->|Yes| ConfirmDialog([確認を表示して実行中断<br>承認されたら skip_unknown_tag_check=true で再実行])
-    UnknownTagCheck -->|No| ExecStart{次の未実行<br>リクエストがある?}
+    LoopEnd --> Expand[繰り返し「？？」の展開<br>prepareRequests の最後]
+    Expand --> Entry{入口}
+    Entry -->|parse_kftl_text| Analyze([invalid_lines / tags / mi_board_names を返す<br>何も書かない])
+    Entry -->|submit_kftl_text| ExecStart{次の未実行<br>リクエストがある?}
     ExecStart -->|Yes| ExecReq[リクエストの DoRequest 実行<br>Repository へ保存]
     ExecReq --> ExecCheck{エラー発生?}
     ExecCheck -->|Yes| Error([エラー返却])
@@ -67,9 +67,11 @@ flowchart TD
     ExecStart -->|No| Success([成功返却])
 ```
 
-> **未知タグの確認はクライアント側の分岐。** `classes/use-kftl-view.ts` の `do_submit()` が
-> リクエスト構築後・`DoRequest` 実行前に判定する。タイプミスによるタグの乱立を防ぐためのもので、
-> サーバ側 `/api/submit_kftl_text` には該当する処理は無い。
+> **未知タグ・未知板名の確認はクライアント側の分岐。** `classes/use-kftl-view.ts` の `do_submit()` が
+> `parse_kftl_text` の応答（`tags` / `mi_board_names`）を既存のタグ構造・板構造と突き合わせて判定し、
+> 未知なら確認を出して中断、承認されたら `submit_kftl_text` へ進む。タイプミスによるタグの乱立を防ぐためのもので、
+> サーバ側 `/api/submit_kftl_text` には該当する処理は無い。解釈そのもの（行の適用・行別エラー・展開）は
+> `parse` と `submit` で同じ `prepareRequests` を通る（[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)）。
 
 ### プレフィックスの2系統
 

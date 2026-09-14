@@ -627,7 +627,7 @@ function buildCountAssertions(m) {
   add('src/mcp/ABOUT_TEST.md', `Read便利${mcpWriteConvenience}ツール`)
 
   // ── KFTL ステートメント型数 / glossary 用語数
-  add('.claude/skills/gkill-client-kftl/SKILL.md', `KFTL parser (${m.kftlStatementTs} statement types; the Go side has ${m.kftlStatementGo})`)
+  add('.claude/skills/gkill-client-kftl/SKILL.md', `行ラベルのための行分類器 (${m.kftlStatementTs} statement types; the Go side has ${m.kftlStatementGo})`)
   add('documents/reverse/folder-structure.md', `KFTLパーサー（${m.kftlStatementTs}ステートメント型）`)
   // frontend-architecture / glossary にも同じ数がある。folder-structure だけ検査していたため
   // 48/50 の割れが残っていた（2026-08-24 監査）。

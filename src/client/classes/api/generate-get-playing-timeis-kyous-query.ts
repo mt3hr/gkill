@@ -3,7 +3,7 @@ import { FindKyouQuery } from "./find_query/find-kyou-query"
 import { generate_playing_timeis_query } from "./find_query/generate-playing-timeis-query"
 import { GkillAPI } from "./gkill-api"
 
-// 実行中画面とKFTLの/end系終了候補検索が使うplaying検索クエリを生成する。
+// 実行中画面が使うplaying検索クエリを生成する（KFTLの/end系の対象検索はサーバ側 kftl_timeis.go が同じ条件で行う）。
 // 基準時刻は現在時刻（fixed_timeが未来を指すときはfixed_time+1秒）。
 // 検索条件の組み立ては generate_playing_timeis_query に委譲しており、
 // ApplicationConfigのカスタム検索条件（playing_timeis_json_data）もそこで適用される。

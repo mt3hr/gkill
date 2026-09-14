@@ -4,21 +4,17 @@ import { i18n } from '@/i18n'
 import { parse_kftl_date_time } from '../kftl-date-time'
 
 /**
- * 繰り返しブロック「？？」の仕様。行の解釈と展開は同じディレクトリの他のファイル。
+ * 繰り返しブロック「？？」の4行の読み方。**行ラベル（「毎週金曜」「3回」の表示）のためだけ**にある。
  *
- * **展開（クローン生成）をここでやらないこと。** 候補日時の計算は上限つきで軽いが、
- * レコードの複製は送信時（generate_requests の最後）に回す。
- * `use-kftl-view.ts` は本文が変わるたびに全行の apply_this_line_to_request_map を回すので、
- * 解釈のフェーズで複製すると打鍵1回あたり最大 REPEAT_MAX_RECORDS 件を作ることになる。
+ * 候補日時の計算・展開・既存判定・上限はサーバの Go 実装（kftl_repeat.go / kftl_repeat_lines.go）
+ * だけが持つ（ADR-0507）。ここに展開を戻さないこと ―― `use-kftl-view.ts` は本文が変わるたびに
+ * 全行を分類し直すので、打鍵1回あたり最大1000件を作ることになる。
  *
- * Mirrors: src/server/gkill/api/kftl/kftl_repeat.go
+ * Mirrors: src/server/gkill/api/kftl/kftl_repeat.go（parse 系のみ）
  */
 
-/** 1つの「？？」ブロック、および1回の送信が作れるレコード数の上限。 */
+/** 1つの「？？」ブロック、および1回の送信が作れるレコード数の上限（Go の repeatMaxRecords と同じ値）。回数行のラベルの判定に使う。 */
 export const REPEAT_MAX_RECORDS = 1000
-/** 候補の走査打ち切り（約10年）。条件に一致する日が来ない書き方で回り続けないようにする。 */
-const REPEAT_SCAN_DAYS = 3653
-const REPEAT_SCAN_MONTHS = 120
 
 export type RepeatCondKind = 'daily' | 'weekday' | 'nth_weekday' | 'month_day'
 
@@ -269,154 +265,4 @@ export function parse_repeat_origin(line_text: string): Date | null {
         throw new Error(i18n.global.t("KFTL_REPEAT_INVALID_ORIGIN_MESSAGE_TITLE"))
     }
     return parsed
-}
-
-// ─── 必須2行の検査 ───────────────────────────────────────────────────────────
-
-export function validate_repeat_spec(spec: RepeatSpec): void {
-    if (spec.cond === null) {
-        throw new Error(i18n.global.t("KFTL_REPEAT_CONDITION_REQUIRED_MESSAGE_TITLE"))
-    }
-    if (spec.count === 0 && spec.until === null) {
-        throw new Error(i18n.global.t("KFTL_REPEAT_COUNT_REQUIRED_MESSAGE_TITLE"))
-    }
-}
-
-// ─── 候補日時の計算 ───────────────────────────────────────────────────────────
-
-/**
- * 条件に一致する日時を順に返す。
- *
- * 時刻はアンカー（そのレコードが持つ日時欄のうち最初に埋まっているもの）から取る。
- * **起点ちょうどは含めない**（`候補 > 起点`）。
- */
-export function occurrences_of(spec: RepeatSpec, anchor: Date, base: Date): Array<Date> {
-    if (spec.cond === null) {
-        throw new Error(i18n.global.t("KFTL_REPEAT_CONDITION_REQUIRED_MESSAGE_TITLE"))
-    }
-    const cond = spec.cond
-    const origin = spec.origin !== null ? spec.origin : base
-    const at = (year: number, month: number, day: number): Date =>
-        new Date(year, month, day, anchor.getHours(), anchor.getMinutes(), anchor.getSeconds())
-
-    const out: Array<Date> = []
-    // accept は候補を1つ受け取り、走査を続けてよいかを返す
-    const accept = (candidate: Date): boolean => {
-        if (candidate.getTime() <= origin.getTime()) {
-            return true // 起点以前。まだ先に候補がある
-        }
-        if (spec.until !== null && candidate.getTime() > spec.until.getTime()) {
-            return false
-        }
-        out.push(candidate)
-        if (out.length > REPEAT_MAX_RECORDS) {
-            throw new Error(i18n.global.t("KFTL_REPEAT_LIMIT_EXCEEDED_MESSAGE_TITLE"))
-        }
-        return !(spec.count > 0 && out.length >= spec.count)
-    }
-
-    if (cond.kind === 'nth_weekday' || cond.kind === 'month_day') {
-        let year = origin.getFullYear()
-        let month = origin.getMonth()
-        for (let i = 0; i <= REPEAT_SCAN_MONTHS; i++) {
-            const day = monthly_candidate(cond, year, month)
-            if (day !== null && !accept(at(year, month, day))) {
-                break
-            }
-            month++
-            if (month > 11) {
-                month = 0
-                year++
-            }
-        }
-    } else if (cond.kind === 'weekday' && cond.week_interval > 1) {
-        // N週おきは「最初の一致」を基準にして、そこから N 週ずつ送る。
-        // 日送りで拾うと基準週が決まらない
-        const weekday = cond.weekdays[0]
-        const cursor = new Date(origin.getFullYear(), origin.getMonth(), origin.getDate())
-        let found = false
-        for (let i = 0; i < 8; i++) { // 今日がその曜日でも時刻が過ぎていれば翌週まで送る
-            if (cursor.getDay() === weekday && at(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()).getTime() > origin.getTime()) {
-                found = true
-                break
-            }
-            cursor.setDate(cursor.getDate() + 1)
-        }
-        if (found) {
-            const step = 7 * cond.week_interval
-            for (let i = 0; i * step <= REPEAT_SCAN_DAYS; i++) {
-                if (!accept(at(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()))) {
-                    break
-                }
-                cursor.setDate(cursor.getDate() + step)
-            }
-        }
-    } else {
-        const cursor = new Date(origin.getFullYear(), origin.getMonth(), origin.getDate())
-        for (let i = 0; i <= REPEAT_SCAN_DAYS; i++) {
-            if (matches_daily_or_weekday(cond, cursor) && !accept(at(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()))) {
-                break
-            }
-            cursor.setDate(cursor.getDate() + 1)
-        }
-    }
-    return out
-}
-
-function matches_daily_or_weekday(cond: RepeatCond, date: Date): boolean {
-    if (cond.kind === 'daily') {
-        return true
-    }
-    return cond.weekdays.includes(date.getDay())
-}
-
-/**
- * その月の候補日（日にちだけ）を返す。無ければ null。
- *
- * **存在しない日はその月を飛ばす**（第5金が無い月、2月の「毎月31」など）。
- * 最も近い日へ丸めると「第4金」「毎月30」と重複するので、丸めない。
- */
-function monthly_candidate(cond: RepeatCond, year: number, month: number): number | null {
-    if (cond.kind === 'month_day') {
-        const date = new Date(year, month, cond.month_day)
-        return date.getMonth() !== month ? null : cond.month_day
-    }
-    if (cond.kind === 'nth_weekday') {
-        const weekday = cond.weekdays[0]
-        if (cond.nth === -1) {
-            // 「翌月の0日」= 当月の末日
-            const last = new Date(year, month + 1, 0)
-            while (last.getDay() !== weekday) {
-                last.setDate(last.getDate() - 1)
-            }
-            return last.getDate()
-        }
-        const first = new Date(year, month, 1)
-        const offset = (weekday - first.getDay() + 7) % 7
-        const date = new Date(year, month, 1 + offset + (cond.nth - 1) * 7)
-        return date.getMonth() !== month ? null : date.getDate()
-    }
-    return null
-}
-
-// ─── 日数のずらし ─────────────────────────────────────────────────────────────
-
-/**
- * 暦日数でずらす。ミリ秒加算にしないのは壁時計時刻を保つため
- * （夏時間のある地域で時刻がずれる）。
- */
-export function shift_days(date: Date, day_shift: number): Date {
-    if (day_shift === 0) {
-        return new Date(date.getTime())
-    }
-    const shifted = new Date(date.getTime())
-    shifted.setDate(shifted.getDate() + day_shift)
-    return shifted
-}
-
-/** 暦日の差。時刻を落としてから引くので夏時間の影響を受けない。 */
-export function days_between(from: Date, to: Date): number {
-    const a = Date.UTC(from.getFullYear(), from.getMonth(), from.getDate())
-    const b = Date.UTC(to.getFullYear(), to.getMonth(), to.getDate())
-    return Math.round((b - a) / 86400000)
 }

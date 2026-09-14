@@ -1,10 +1,8 @@
 'use strict'
 
 import { GkillAPI } from '@/classes/api/gkill-api'
-import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
-import { KFTLTimeIsRequest } from './kftl-time-is-request'
 import { KFTLTimeIsTitleStatementLine } from './kftl-time-is-title-statement-line'
 import { i18n } from '@/i18n'
 import { KFTL_ASCII_TIMEIS_SPLITTER_TITLE, matches_exact } from '../kftl-prefixes'
@@ -17,11 +15,6 @@ export class KFTLStartTimeIsStatementLine extends KFTLStatementLine {
         context.set_this_statement_line_target_id(target_id)
         context.set_next_statement_line_target_id(target_id)
         context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLTimeIsTitleStatementLine(line_text, context))
-    }
-
-    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        const req = new KFTLTimeIsRequest(this.get_context().get_this_statement_line_target_id(), this.get_context())
-        request_map.set(this.get_context().get_this_statement_line_target_id(), req)
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {

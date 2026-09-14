@@ -7,7 +7,6 @@ vi.mock('@/i18n', () => ({ i18n }))
 import { KFTLKmemoStatementLine } from '@/classes/kftl/kftl_kmemo/kftl-kmemo-statement-line'
 import { KFTLSplitStatementLine } from '@/classes/kftl/kftl_split/kftl-split-statement-line'
 import { KFTLSplitAndNextSecondStatementLine } from '@/classes/kftl/kftl_split/kftl-split-and-next-second-statement-line'
-import { KFTLPrototypeRequest } from '@/classes/kftl/kftl_prototype/kftl-prototype-request'
 import { KFTLTagStatementLine } from '@/classes/kftl/kftl_tag/kftl-tag-statement-line'
 import { KFTLRelatedTimeStatementLine } from '@/classes/kftl/kftl_related_time/kftl-related-time-statement-line'
 import { KFTLStartTextStatementLine } from '@/classes/kftl/kftl_text/kftl-start-text-statement-line'
@@ -29,7 +28,6 @@ import { KFTLStartURLogStatementLine } from '@/classes/kftl/kftl_urlog/kftl-star
  *
  * This file tests additional behaviors not covered there:
  * - Split vs SplitAndNextSecond distinction (mutual exclusivity)
- * - KFTLPrototypeRequest.is_prototype_request static method
  * - Prefix uniqueness across all type detectors
  * - Kmemo catch-all with various special characters
  */
@@ -57,14 +55,6 @@ describe('KFTL Individual Type Supplementary Tests', () => {
       expect(KFTLSplitAndNextSecondStatementLine.is_this_type('、、')).toBe(true)
       expect(KFTLSplitAndNextSecondStatementLine.is_this_type('、')).toBe(false)
       expect(KFTLSplitAndNextSecondStatementLine.is_this_type('、、、')).toBe(false)
-    })
-  })
-
-  // ─── KFTLPrototypeRequest ────────────────────────────────────────────────────
-
-  describe('KFTLPrototypeRequest.is_prototype_request', () => {
-    test('is_prototype_request is a static method', () => {
-      expect(typeof KFTLPrototypeRequest.is_prototype_request).toBe('function')
     })
   })
 

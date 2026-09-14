@@ -52,7 +52,7 @@ func (r *kftlKCRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.TempReps.KCTempRep.AddKCInfo(ctx, kc, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return err
 	}
-	r.recordCreated("kc", kc.ID)
+	r.recordCreated("kc", kc.ID, r.GetRelatedTime())
 	return nil
 }
 

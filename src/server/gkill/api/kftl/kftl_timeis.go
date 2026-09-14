@@ -2,6 +2,7 @@ package kftl
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 )
 
 // ─── KFTLTimeIsRequest (ーち): full TimeIs with start + optional end ──────────
@@ -61,7 +63,7 @@ func (r *kftlTimeIsRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, timeis, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return err
 	}
-	r.recordCreated("timeis", timeis.ID)
+	r.recordCreated("timeis", timeis.ID, r.GetRelatedTime())
 	return nil
 }
 
@@ -247,7 +249,7 @@ func (r *kftlTimeIsStartRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, timeis, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return err
 	}
-	r.recordCreated("timeis", timeis.ID)
+	r.recordCreated("timeis", timeis.ID, r.GetRelatedTime())
 	return nil
 }
 
@@ -325,6 +327,124 @@ func (l *kftlTimeIsStartTitleStatementLine) GetLabelName() string               
 func (l *kftlTimeIsStartTitleStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
 func (l *kftlTimeIsStartTitleStatementLine) GetStatementLineText() string          { return l.lineText }
 
+// ─── 終了対象の検索条件 ────────────────────────────────────────────────────────
+
+// configOf はリクエストの文脈から ApplicationConfig を取る（テストのように無ければ nil）。
+func configOf(base *KFTLRequestBase) *user_config.ApplicationConfig {
+	if base.Ctx == nil {
+		return nil
+	}
+	return base.Ctx.ApplicationConfig
+}
+
+// playingTimeIsQueryFromConfig は「いま走っている打刻」を探す検索条件を作る。
+//
+// 設定の playing 検索条件（`playing_timeis_json_data` の `playing_timeis_find_kyou_query`）が
+// あれば、TS の `generate_playing_timeis_query` が写すのと同じ欄
+// （words / words_and / not_words / tags / tags_and）と、タグ構造の `is_force_hide` から
+// 組んだ非表示タグを写す。2026-09-15 まで Web だけが設定条件を適用し、Wear / MCP 経由の
+// `/end` は全 rep から探していたので、条件で絞っている利用者は経路ごとに終わる打刻が
+// 違っていた（ADR-0507）。rep 名では絞らない（TS も `reps = null`）。
+// 設定が無い・壊れているときは従来どおり「実行中の打刻すべて」。
+func playingTimeIsQueryFromConfig(applicationConfig *user_config.ApplicationConfig, playingNow time.Time) *find.FindQuery {
+	query := &find.FindQuery{
+		PlayingTime:    &playingNow,
+		OnlyLatestData: true,
+		RepTypes:       []string{"timeis"},
+	}
+	if applicationConfig == nil || applicationConfig.PlayingTimeIsJSONData == nil {
+		return query
+	}
+	var wrapper struct {
+		PlayingTimeIsFindKyouQuery json.RawMessage `json:"playing_timeis_find_kyou_query"`
+	}
+	if err := json.Unmarshal(*applicationConfig.PlayingTimeIsJSONData, &wrapper); err != nil {
+		return query
+	}
+	if len(wrapper.PlayingTimeIsFindKyouQuery) == 0 || string(wrapper.PlayingTimeIsFindKyouQuery) == "null" {
+		return query
+	}
+	// 保存された条件は世代がまばら（use_* を持つ旧形式が残りうる）ので、null 意味論へ揃えてから読む
+	migrated, _, err := find.MigrateLegacyFindQueryJSON(wrapper.PlayingTimeIsFindKyouQuery)
+	if err != nil {
+		return query
+	}
+	var saved find.FindQuery
+	if err := json.Unmarshal(migrated, &saved); err != nil {
+		return query
+	}
+	query.Words = saved.Words
+	query.WordsAnd = saved.WordsAnd
+	query.NotWords = saved.NotWords
+	query.Tags = saved.Tags
+	query.TagsAnd = saved.TagsAnd
+	query.HideTags = forceHideTagNames(applicationConfig.TagStruct)
+	return query
+}
+
+// findPlayingTimeIsEntries は「いま走っている打刻」を、設定の playing 検索条件で絞って返す。
+//
+// 語の条件は rep の SQL が見るが、**タグ・非表示タグは Kyou 検索の層（api.FindFilter）でしか効かない**。
+// そこで、条件にタグが含まれるときは閉包 FindKyous（ハンドラが渡す）で同じ条件の Kyou を引き、
+// その ID 集合と rep の結果を突き合わせる。閉包が無い（テスト・直叩き）ときは語だけで絞る。
+func findPlayingTimeIsEntries(ctx context.Context, base *KFTLRequestBase) ([]reps.TimeIs, error) {
+	query := playingTimeIsQueryFromConfig(configOf(base), time.Now())
+	playingEntries, err := base.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	needTagFilter := query.Tags != nil || len(query.HideTags) != 0
+	if !needTagFilter || base.Ctx.FindKyous == nil {
+		return playingEntries, nil
+	}
+	kyous, err := base.Ctx.FindKyous(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("error at find kyous for playing timeis: %w", err)
+	}
+	matched := make(map[string]struct{}, len(kyous))
+	for _, kyou := range kyous {
+		matched[kyou.ID] = struct{}{}
+	}
+	filtered := playingEntries[:0]
+	for _, entry := range playingEntries {
+		if _, ok := matched[entry.ID]; ok {
+			filtered = append(filtered, entry)
+		}
+	}
+	return filtered, nil
+}
+
+// forceHideTagNames はタグ構造のうち `is_force_hide` のタグ名を集める（TS の `apply_hide_tags` と同じ）。
+func forceHideTagNames(tagStruct *json.RawMessage) []string {
+	if tagStruct == nil {
+		return nil
+	}
+	type node struct {
+		TagName     string  `json:"tag_name"`
+		IsForceHide bool    `json:"is_force_hide"`
+		Children    []*node `json:"children"`
+	}
+	var root node
+	if err := json.Unmarshal(*tagStruct, &root); err != nil {
+		return nil
+	}
+	var names []string
+	var walk func(n *node)
+	walk = func(n *node) {
+		if n == nil {
+			return
+		}
+		if n.IsForceHide && n.TagName != "" {
+			names = append(names, n.TagName)
+		}
+		for _, child := range n.Children {
+			walk(child)
+		}
+	}
+	walk(&root)
+	return names
+}
+
 // ─── TimeIs End by title (ーえ / ーいえ) ──────────────────────────────────────
 
 // kftlTimeIsEndByTitleRequest finds a playing TimeIs by title and sets its end_time.
@@ -353,12 +473,7 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 	}
 	endTime := r.GetRelatedTime()
 
-	playingNow := time.Now()
-	query := &find.FindQuery{
-		PlayingTime:    &playingNow,
-		OnlyLatestData: true,
-	}
-	playingEntries, err := r.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)
+	playingEntries, err := findPlayingTimeIsEntries(ctx, &r.KFTLRequestBase)
 	if err != nil {
 		return fmt.Errorf("error finding playing timeis: %w", err)
 	}
@@ -396,7 +511,7 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 	if err := r.Ctx.Repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, updated, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return err
 	}
-	r.recordUpdated("timeis", target.ID)
+	r.recordUpdated("timeis", target.ID, endTime)
 	return nil
 }
 
@@ -527,12 +642,7 @@ func (r *kftlTimeIsEndByTagRequest) AddTag(tag string) {
 func (r *kftlTimeIsEndByTagRequest) DoRequest(ctx context.Context) error {
 	endTime := r.GetRelatedTime()
 
-	playingNow := time.Now()
-	query := &find.FindQuery{
-		PlayingTime:    &playingNow,
-		OnlyLatestData: true,
-	}
-	playingEntries, err := r.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)
+	playingEntries, err := findPlayingTimeIsEntries(ctx, &r.KFTLRequestBase)
 	if err != nil {
 		return fmt.Errorf("error finding playing timeis for tag-end: %w", err)
 	}
@@ -586,7 +696,7 @@ outer:
 	if err := r.Ctx.Repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, updated, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return err
 	}
-	r.recordUpdated("timeis", target.ID)
+	r.recordUpdated("timeis", target.ID, endTime)
 	return nil
 }
 

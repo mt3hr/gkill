@@ -7,7 +7,7 @@
 | Sources | 2026-09-05〜06 の設計相談。[ADR-0502](0502-kftl-errors-are-per-line.md) / [ADR-0505](0505-schedule-time-field-rejects-related-time-prefix.md) |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/server/gkill/api/kftl/kftl_repeat.go` / `kftl_repeat_lines.go` / `kftl_repeat_duplicate.go` / `src/client/classes/kftl/kftl_repeat/` |
+| Anchors | `src/server/gkill/api/kftl/kftl_repeat.go` / `kftl_repeat_lines.go` / `kftl_repeat_duplicate.go` / `src/client/classes/kftl/kftl_repeat/`（行ラベル用の読み方のみ） |
 
 ## Context
 
@@ -32,7 +32,8 @@
 - 記法は `？？`（ASCII `??`）の**単独行**で開いて同じ記号で閉じる4行ブロック。
   条件・回数/終了日（必須2行）と、既存時・起点（省略可）
 - **展開（複製の生成）は送信時にだけ行う。** 行の解釈のフェーズではブロックが
-  spec を埋めるだけにして、複製は Go なら実行ループの直前、TS なら `generate_requests()` の最後で作る
+  spec を埋めるだけにして、複製は実行ループの直前（`prepareRequests` の最後）で作る
+  （決定当時は TS にも `generate_requests()` の最後に同じ展開があった。2026-09-15 の [ADR-0507](0507-kftl-single-implementation-on-server.md) で Go だけになった）
 - 繰り返しの単位は**同じ spec を共有しているリクエスト群**。支出ブロックは全支払いが
   共有するので、ブロックまるごとが1グループになる
 - 3行目の既定は `no`（既存があればその回を作らない）
@@ -111,8 +112,11 @@
   - `TestHandleSubmitKFTLText_RepeatWritesShiftedTimes`（HTTP で送って型別 API で引き直し、**書き込まれた**打刻の
     開始・終了の年を見る。Wear / MCP が通る Go 経路。支出の `？`行の時刻がタグに乗ることも同じテストで見る ――
     `doBaseRequest` が埋め込み基底の `GetRelatedTime` を引いていた頃は Nlog の override が効かず、タグだけ「今」だった）
-- `src/client/__tests__/unit/kftl/kftl-repeat.test.ts`（Go と対の表）
-- `src/client/__tests__/unit/kftl/kftl-repeat-statement.test.ts`（行の並び・展開・不正行・既存スキップ。
-  「打刻は開始時刻を基準にし、開始と終了を同じ日数だけずらす」が Go の TimeIs テストと対。
-  「繰り返しで書き込まれる時刻」は 8 型ぶん do_request まで通し、API へ渡る本体・タグ・テキストの時刻欄を年まで固定する ――
-  request オブジェクトの欄だけ見る表では「アンカーの欄 ≠ do_request が書く欄」の事故を捕まえられない）
+- `src/client/__tests__/unit/kftl/kftl-repeat.test.ts`（4行の読み方。行ラベル用。候補日時の計算は Go だけ）
+- 2026-09-15 の [ADR-0507](0507-kftl-single-implementation-on-server.md) で TS 側の展開・既存判定は消えた。
+  かつての TS テスト（行の並び・展開・不正行・既存スキップ・「繰り返しで書き込まれる時刻」）が
+  守っていたことは、Go の `kftl_repeat_test.go` と `TestHandleSubmitKFTLText_RepeatWritesShiftedTimes` が引き継ぐ:
+
+  ```
+  src/client/__tests__/unit/kftl/kftl-repeat-statement.test.ts（削除済み）
+  ```
