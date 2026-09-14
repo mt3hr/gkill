@@ -91,6 +91,11 @@ ERR000101 が百行余り、1〜2秒に数十件のバーストで残ってい�
   約1万コミット、Kyou を出すプラグイン数本。`threads` のプールは `NumCPU()`
 - `gkill_error.log`（修正前の2週間ほど）: `/api/get_kyou` の ERR000101 が百行余り。ある時刻に数十件、
   09-13T22:44:23 に 5 件のバースト。`/api/get_mi` / `get_tags_by_id` にはバーストが無い
+- 修正前の本番（`performance.getEntriesByType('resource')` で計測）: mi 画面で行をダブルクリックして
+  ダイアログを開いただけで、`open_rykv_dialog` の引き直しが出す `/api/get_kyou` が **十数秒**。
+  同じ引き直しの他の往復は `/api/get_kyous`（実行中 TimeIs 検索）数百 ms、`get_texts_by_id` 数百 ms、
+  `get_gkill_notifications_by_id` 数百 ms、`get_tags_by_id` 数十 ms。SW キャッシュ命中は数 ms。
+  `get_kyou` が終わるまで後続の `get_mirekyou` 等が始まらないので、スピナーの長さ ≒ `get_kyou` の時間
 - 同じ経路の過去の実測は ADR-0101（git rep だけでプロファイル1窓あたり 十数秒）
 - 修正後の所要時間は本番へ配布してから同じ操作で再測定する（この ADR を書いた時点では未測定）
 
