@@ -20,7 +20,7 @@ gkill の不変条件の多くは「例外もエラーも出さずに静かに�
 | `src/server/gkill/api/**`・`src/server/gkill/dao/**`・`src/server/gkill/usecase/**`・`req_res/**` | [gkill-go-backend](.claude/skills/gkill-go-backend/SKILL.md) | rep名絞り込みがキャッシュを丸ごとバイパスし検索が11rep→約940rep・20.7秒になる／`FindQuery.IDs` が6553件でエラーも立てず0件になる／追加したタグが最大1分消え PWA に焼き付く |
 | `src/server/gkill/api/find/**`・`find_word/**`・`find_filter.go`・`src/client/classes/api/find_query/**`・`src/mcp/lib/constants.mjs` | [gkill-find-query](.claude/skills/gkill-find-query/SKILL.md) | null と `[]` の意味を取り違えて例外もエラーも出ずに全件 or 0件になる／TS 側の `undefined` が localStorage 往復で既定値を復活させる／ワード照合を SQL と Go の片方だけ変えて rep 種別ごとに結果が食い違う |
 | `src/server/gkill/main/**`・`gkill_options/**`・`local_rep_cache_path.go` | [gkill-cli-ops](.claude/skills/gkill-cli-ops/SKILL.md) | update_cache / add_tag をオフライン操作と誤解する（実体は起動中サーバの HTTP クライアント）／派生キャッシュの削除で他ユーザーの分を巻き込む |
-| `package.json`・`src/tools/**`・`vite.config.ts`・`playwright.config.ts`・`src/client/__tests__/e2e/**` | [gkill-build-test](.claude/skills/gkill-build-test/SKILL.md) | embed 無しの裸 `go build` が「コンパイルは通るのに起動即死する」バイナリを作る／E2E がポート固定で本番サーバと衝突する |
+| `package.json`・`src/tools/**`・`vite.config.ts`・`playwright.config.ts`・`src/client/__tests__/e2e/**` | [gkill-build-test](.claude/skills/gkill-build-test/SKILL.md) | embed 無しの裸 `go build` が「コンパイルは通るのに起動即死する」バイナリを作る／E2E がポート固定で本番サーバと衝突する／リリースゲートを外してテスト未実施のコミットが配布される |
 | `src/plugins/**`・`src/server/gkill/plugin/**`・`api/gkill_plugin/**`・`dao/reps/plugin_*.go`・`plugin-html-view.vue` | [gkill-plugin](.claude/skills/gkill-plugin/SKILL.md) | 1件ずつプラグインへ聞きに行き、一覧の行数ぶんの直列 stdio でプロセスが殺され続ける／Takeout の歩数が2倍になる |
 | `src/client/**`（どのファイルでも） | [gkill-client-foundation](.claude/skills/gkill-client-foundation/SKILL.md) | 中継束・再読込手順の手書きで「タグを足しても表示が変わらない」が再発する／成功時 `errors` は null をスプレッドして TypeError |
 | `use-rykv-view.ts`・`use-mi-view.ts`（**対称実装。修正は必ず両方へ**）・`use-dashboard-page.ts`・`kyou-local-insert.ts`・`kyou-change-bus.ts` ほか列まわり | [gkill-client-columns](.claude/skills/gkill-client-columns/SKILL.md) | 検索結果が別の列に出る／初期化が永久スピナーで固まる／追加した記録がエラーも警告も出ないまま一覧から消える |
@@ -69,19 +69,21 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 | `npm run install_app` | Full build: frontend → embed → `go install` (desktop app with go-astilectron window) |
 | `npm run go_install` | Go install only (skip frontend rebuild) |
 | `npm run go_mod` | Regenerate `go.mod` and `go.sum` from scratch |
-| `npm test` | Run all tests (build + docs verification + server + client + MCP + plugins + Android + Wear OS) |
+| `npm test` | Run all tests (build + docs verification + server + client + MCP + tools + plugins + Android + Wear OS)。各 `test_*` は `src/tools/run_test_suite.mjs` 経由で、成功時に `test_attestation.local.json` へ記録する |
 | `npm run test_plugins` | Go tests for each standalone plugin module under `src/plugins/` |
 | `npm run vet_plugins` | `go vet` for the same plugin modules (CI runs it before `test_plugins`; `npm test` does not) |
 | `npm run verify_docs` | Docs CI: checks doc counts against code, cross-links, referenced paths, Mermaid blocks, manual freshness. `--list` prints the measured metrics |
-| `npm run test_server` | Go tests (`cd src/server && go test ./...`) |
+| `npm run test_server` | Go tests (`go test ./...` in `src/server`) |
 | `npm run test_client_unit` | Vitest unit tests |
 | `npm run test_client_e2e` | Playwright E2E tests (gkill_server + Vite を空きポートで自動起動・停止、`$HOME/gkill_test`使用) |
 | `npm run test_mcp` | MCP server tests (Vitest) |
-| `npm run release` | Cross-compile release for all platforms |
+| `npm run test_tools` | `src/tools/` のリリースゲート・attestation ランナーのテスト (Vitest) |
+| `npm run verify_release_gate` | リリースゲート。作業ツリーがクリーン・全スイートの attestation が HEAD の tree と一致・GitHub の CI / Nightly が緑でなければ止める（抜け道なし） |
+| `npm run release` | `verify_release_gate` → Cross-compile release for all platforms |
 
 **Prerequisites:** Go 1.26.6+ (`src/server/go.mod` declares `go 1.26.6`), Node.js 20.19+ (24.x recommended — `package.json` has no `engines` field, so this is not enforced), `npm i`
 
-ビルドパイプラインの内訳・`go build` の罠・dev プロキシ・E2E 環境の詳細は [gkill-build-test](.claude/skills/gkill-build-test/SKILL.md)。
+ビルドパイプラインの内訳・`go build` の罠・dev プロキシ・E2E 環境・リリースゲートの詳細は [gkill-build-test](.claude/skills/gkill-build-test/SKILL.md)。
 
 ## Architecture
 

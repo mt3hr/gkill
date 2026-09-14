@@ -115,10 +115,39 @@ $HOME/gkill/
 npm run release
 ```
 
-> **リリースの前提（2026-08-30 監査 F-009）**: `npm run release` 自体はテストを実行しない
-> （成果物の存在・SHA-256・APK 署名の検証だけを行う）。リリース対象コミットは、
-> 直近の Nightly（E2E・Android/Wear・govulncheck・npm audit）が green で、
-> ローカルの `npm test` も green のものに限ること。
+> **リリースゲート（2026-09-14。2026-08-30 監査 F-009 の運用規約を機械強制に置き換え）**:
+> `npm run release` は先頭で `npm run verify_release_gate`（`src/tools/verify_release_gate.mjs`）を
+> 通し、次が全部そろわないと止まる。**抜け道のフラグは無い。**
+>
+> 1. 作業ツリーがクリーン（untracked も不可）
+> 2. 必須9スイート（`verify_docs` / `test_server` / `test_client_unit` / `test_client_e2e` /
+>    `test_mcp` / `test_tools` / `test_plugins` / `test_android` / `test_wear_os`）が **今の HEAD の tree** に
+>    対して `test_attestation.local.json` に記録済み。記録は `npm run test_*` の実体
+>    `src/tools/run_test_suite.mjs` が成功時にだけ書く（`npm test` 一発でも、段階ごとに回しても同じ）
+> 3. E2E は PATH 上の `gkill_server` も同じ tree から作られている（`gkill_server version` の `tree:`）
+> 4. GitHub Actions の CI がこの HEAD で success、直近の Nightly が success かつ 48 時間以内・HEAD の祖先・
+>    以後に依存の宣言（`package.json` / `package-lock.json` / `go.mod` / `go.sum`）が変わっていない
+>
+> 通ると `release/RELEASE_ATTESTATION_<version>.json` が書かれ、`verify_release_artifacts` が SHA256SUMS に
+> 載せて、ビルド後にも HEAD が動いていないことを再検査する。
+>
+> **実際の流れ**: バージョンを上げてコミット → push → CI の完了を待つ → その最終ツリーで
+> `npm run test_*` を全部通す（`npm test` でも可。バージョン bump も tree を変えるので bump の後に回す）
+> → WSL で `npm run release`。段階ごとに回すときの並列度指定は `npm run test_client_e2e -- --workers=2` の
+> ように渡せる（並列度・レポータは記録される。`-run` / `--grep` / ファイル名の絞り込みは記録されない）。
+>
+> NG の読み方: 「記録なし / tree 不一致」→ そのスイートを今のツリーで回す。「gkill_server が別のツリー」→
+> `npm run put_version_info_embed` からビルドし直して E2E を回す。「CI run が無い」→ push していない。
+> 「Nightly 以後に依存の宣言が変わっている」→ GitHub Actions 画面で Nightly を手動実行して待つ。
+> ネットワーク不通・API エラーもそのまま NG（fail-closed）。
+>
+> Nightly の run 単位の success が保証するのは govulncheck / npm audit（E2E と Android/Wear は
+> continue-on-error）。E2E・Android/Wear の実証はローカルの attestation（2.）が担う。
+>
+> リポジトリ外の配置スクリプト（`~/Git/scripts` の `releaseGkillServer.sh` / `ReleaseGkillPlugins.ps1`）は
+> `npm run release` を経由せずビルドスクリプトを直接呼ぶため**このゲートを通らない**。そちらからも
+> 先頭で `npm run verify_release_gate` を呼ぶこと。
+>
 > APK 3本はリリース署名でビルドされる。署名鍵の受け渡しと未設定時の挙動は
 > `.claude/skills/gkill-build-test/SKILL.md` の「APK リリース署名」を参照。
 
