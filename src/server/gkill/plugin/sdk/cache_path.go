@@ -18,7 +18,7 @@ import (
 // 置き場所を解決できないとき(gkill以外から手動起動したときなど)は、
 // プラグインフォルダ直下にフォールバックする。
 //
-// 同梱プラグイン6本が1文字違わず同じものを持っていたのでSDKへ移した。
+// 先行の同梱プラグイン6本が1文字違わず同じものを持っていたのでSDKへ移した。
 func CacheDBPath(pluginDir string) string {
 	dir := PluginCacheDir(pluginDir)
 	if dir == "" {

@@ -12,7 +12,8 @@
 | `src/server/gkill/dao/reps/` | `plugin_repository_impl.go` のリポジトリ層テスト |
 | `src/plugins/gkill_plugin_claudecode/loader_test.go` | ターン分割・ファイル種別判定・サブエージェント紐付け・ツール要約・HTML生成のユニットテスト（`testdata/` の合成トランスクリプトを使用） |
 | `src/plugins/gkill_plugin_codex/{reader,loader,fold,cache,render,config}_test.go` | 巨大行リーダ・`session_meta` の identity/environment 分離・IDE前置きの剥がし・Kyou ID の安定性・差分再構築・構築中の並行読み取りのユニットテスト（`testdata/` の合成ロールアウトを使用） |
-| `src/plugins/gkill_plugin_{chatgpt,claudeai,claudecode,codex,fitbit}/find_kyous_test.go` | FindKyous のワード判定。SDK の `Query.MatchText`（gkill 本体と同じ規則）で肯定語・除外語・AND/OR・ID 前方一致が効くこと、chatgpt / claudeai は会話タイトル、codex はスレッド名にも当たること、fitbit は数値でも当たり空文字の語で全件が消えないこと、LIMIT が絞った後に掛かること。gkill 本体はプラグインが返した Kyou のワードを再判定しないので、ここが唯一の判定 |
+| `src/plugins/gkill_plugin_archived_git_commit_log/{cache,scan,find_kyous,config,render}_test.go` | zip の中の Git リポジトリの取り込み。testdata に `.git` は置けないので、テストのたびに go-git でリポジトリを作って `archive/zip` で固める（`testutil_test.go`）。native の git rep と同じ列（ID=ハッシュ・rep 名=ディレクトリ名・コミッタ日時とゾーン・author・行数）で入ること、同じリポジトリを2つの zip に入れても1件で zip を外すと他に無いコミットだけ消えること、コミット0件の `git init` 直後は0件で正常、`.git` の無い zip は素通り、1 zip に複数（入れ子・ルート直下）、packfile、指紋による増分、`.git` の上限超過は理由を残して飛ばす、構築中の並行読み取り |
+| `src/plugins/gkill_plugin_{chatgpt,claudeai,claudecode,codex,fitbit,archived_git_commit_log}/find_kyous_test.go` | FindKyous のワード判定。SDK の `Query.MatchText`（gkill 本体と同じ規則）で肯定語・除外語・AND/OR・ID 前方一致が効くこと、chatgpt / claudeai は会話タイトル、codex はスレッド名、archived_git_commit_log はリポジトリ名と author 名にも当たること、fitbit は数値でも当たり空文字の語で全件が消えないこと、LIMIT が絞った後に掛かること。gkill 本体はプラグインが返した Kyou のワードを再判定しないので、ここが唯一の判定 |
 | `src/server/gkill/plugin/sdk/match_words_test.go` | `sdk.Query.MatchText` / `Matcher` の判定規則と、元の Query を書き換えないこと |
 | `src/server/gkill/plugin/sdk/cache_path_test.go` | キャッシュDBの置き場所の解決（`sdk.CacheDBPath`）。`GKILL_HOME` あり／なし（pluginDirから推定）／想定外の構成（プラグインフォルダにフォールバック）／pluginDirが空、の4パターンとパス要素の検証。6プラグインが1文字違わず同じものを持っていたのでSDKへ移した |
 
@@ -33,6 +34,7 @@ cd src/plugins/gkill_plugin_claudecode && go test ./...
 cd src/plugins/gkill_plugin_codex      && go test ./...
 cd src/plugins/gkill_plugin_chatgpt    && go test ./...
 cd src/plugins/gkill_plugin_claudeai   && go test ./...
+cd src/plugins/gkill_plugin_archived_git_commit_log && go test ./...
 ```
 
 `gkill_plugin_codex` でとくに落としてはいけないテスト:
@@ -53,8 +55,9 @@ SDK 自体のテストは `src/server/gkill/plugin/sdk/` にあり、`src/server
 
 - `config_test.go`（4テスト）— `EnsureConfig`（config.json の自動生成）。生成される／既存ファイルを
   上書きしない／`DefaultConfig` が nil なら作らない／`pluginDir` が空ならカレントディレクトリを汚さない。
-- `sdk_test.go`（14テスト）— `Run()` の stdin/stdout ループ本体（`TestRunLoop_*`）。コマンド分岐、
-  未実装時のフォールバック、壊れた JSON でも止まらないこと、`close` / stdin クローズでの終了などを固定している。
+- `sdk_test.go`（18テスト）— `Run()` の stdin/stdout ループ本体（`TestRunLoop_*`）。コマンド分岐、
+  未実装時のフォールバック、壊れた JSON でも止まらないこと、`close` / stdin クローズでの終了、
+  `get_rep_name` の `rep_names`（未実装なら欄なし・実装済みで0個なら `[]`・エラーは `errors`）を固定している。
 
 ## 新しいプラグインのテスト方針
 
