@@ -82,7 +82,7 @@ export class ServerConfig {
         this.enable_this_device = false
         this.device = ""
         this.is_local_only_access = true
-        this.address = ":9999"
+        this.address = "127.0.0.1:9999"
         this.enable_tls = false
         this.tls_cert_file = ""
         this.tls_key_file = ""

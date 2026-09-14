@@ -10,11 +10,11 @@
   <table>
     <tr><th>设置名称</th><th>类型</th><th>说明</th></tr>
     <tr><td>配置文件</td><td>下拉菜单 + 添加/删除</td><td>选择活动配置文件、创建新配置或删除现有配置</td></tr>
-    <tr><td>仅限本地访问</td><td>复选框</td><td>将连接限制为仅本地访问</td></tr>
+    <tr><td>仅限本地访问</td><td>复选框</td><td>将连接限制为仅本地访问（默认开启）</td></tr>
     <tr><td>通知服务</td><td>复选框</td><td>启用推送通知服务</td></tr>
     <tr><td>启用TLS</td><td>复选框</td><td>启用HTTPS</td></tr>
     <tr><td>生成自签名TLS</td><td>按钮</td><td>创建自签名TLS证书文件</td></tr>
-    <tr><td>地址</td><td>文本</td><td>服务器监听地址（例如: :9999）</td></tr>
+    <tr><td>地址</td><td>文本</td><td>服务器监听地址。默认值为 <code>127.0.0.1:9999</code>（仅限本设备）。如果像 <code>:9999</code> 这样留空主机部分，将在所有网络接口上监听</td></tr>
     <tr><td>TLS CERT文件</td><td>文本</td><td>TLS证书文件的路径</td></tr>
     <tr><td>TLS KEY文件</td><td>文本</td><td>TLS私钥文件的路径</td></tr>
     <tr><td>打开目录命令</td><td>文本</td><td>用于打开目录的操作系统命令</td></tr>
@@ -29,6 +29,16 @@
   <p><strong>应用</strong>: 保存设置。<br><strong>取消</strong>: 放弃更改并关闭画面。</p>
 
   <div class="tip">更改设置后需要重新启动服务器才能生效。</div>
+
+  <h2>从其他设备使用</h2>
+  <p>默认情况下，只有运行服务器的设备可以连接（监听地址为 <code>127.0.0.1:9999</code>，且"仅限本地访问"已开启）。要从智能手机或其他电脑使用，管理员需要更改以下两项设置。</p>
+  <ol>
+    <li>将<strong>地址</strong>设为 <code>:9999</code>（所有接口）或本设备的局域网IP地址（例如 <code>192.168.0.10:9999</code>）。</li>
+    <li>关闭<strong>仅限本地访问</strong>。</li>
+    <li>点击<strong>应用</strong>。服务器重新启动后，其他设备即可通过 <code>http://（本设备的IP地址）:9999</code> 打开。</li>
+  </ol>
+  <div class="tip"><strong>提示：</strong> 从其他设备使用时，建议开启<strong>启用TLS</strong>（可通过"生成自签名TLS文件"创建证书）。如果TLS保持关闭，密码将以未加密的形式在网络上传输。</div>
+
 
   <h2>存储位置管理</h2>
   <p>存储位置（存储库）是gkill保存记录数据的目录或场所。可以根据用途（文本备忘录、文件、GPS日志等）和设备分别设置多个存储位置。</p>

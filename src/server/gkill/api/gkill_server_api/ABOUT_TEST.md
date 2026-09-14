@@ -12,13 +12,14 @@ Go `testing` パッケージ
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `gkill_server_api_test.go` | API ハンドラ統合テスト（全エンドポイント） |
+| `gkill_server_api_test.go` | API ハンドラ統合テスト（全エンドポイント）。初回起動で自動生成されるサーバ設定が `127.0.0.1:9999` + ローカルアクセスのみ許可であること（`TestNewGkillServerAPI_FirstRunDefaultsAreLocalOnly`）を含む |
 | `handle_get_shared_kyous_test.go` | 共有ページ（認証なしの公開エンドポイント）の共有スコープ検証。共有条件に一致するKyouが0件のとき、実体データまで含めて1件も返さないこと（キーワード以外の条件で0件になった場合も含む。ID絞り込みを外すと実体取得は条件を解釈しないため全件返ってしまう） |
 | `get_kyous_word_filter_test.go` | ワード検索の型別の照合規則と除外語の適用経路。Lantana は気分値・Nlog は金額・KC は数値・Mi は板名でも当たること、ID は前方一致だけで除外語は ID を見ないこと、除外語が付随テキスト経由にも効くこと、語なし・除外語だけは「素通しした全体から引く」（参照先に除外語がある ReKyou も消える）こと、空文字・空白だけの語が素通しになること |
 | `get_kyous_regressions_test.go` | 記録取得の回帰。プラグイン検索失敗が警告として返ること（エラーにしない）、実行中の指定が無いときは実行中で絞らないこと、打刻タグでの絞り込みが記録側のタグ指定なしでも効くこと |
 | `gzip_middleware_test.go` | API応答のgzip圧縮。`Accept-Encoding` を見て圧縮すること、対象外パスや非対応クライアントには圧縮をかけないこと、ストリーミング応答を壊さないこと |
 | `gkill_server_api_rate_limit_test.go` | ログインレート制限テスト（IP別カウント、ウィンドウ期限、IP抽出） |
 | `filter_local_only_test.go` | `isLocalRequest` の localhost 判定（ループバック/LAN/外部/詐称ホスト名/空 RemoteAddr の8ケース）。`filterLocalOnly` と `handle_get_kyous_mcp.go` の `file_path` 可否がこれで決まる |
+| `close_bind_address_test.go` | `isLoopbackOnlyBindAddress` の待受アドレス判定（ホスト部が空・`0.0.0.0`・`[::]`・LAN は全インターフェース扱い、`127.0.0.0/8`・`[::1]`・`localhost` はループバック）と、`server_config.DefaultListenAddress` / `DefaultIsLocalOnlyAccess` がループバック限定であること（ADR-0708） |
 | `handle_get_idf_kyou_by_relative_path_test.go` | Markdown 相対リンクの IDFKyou 解決ハンドラ（同一 Rep 内解決、パストラバーサル防止） |
 | `handle_zip_cache_file_serve_test.go` | `/zip_cache/` の利用者分離（他人のキャッシュを読めないこと、ユーザーごとに分かれていない旧レイアウトを配信しないこと、`../` / `..%2F` で抜けられないこと、セッション無し・不正セッションの拒否）と、利用者ファイル配信のセキュリティヘッダ（後述）、ZIP展開物一覧の種別フラグ（`TestBuildZipEntriesMediaFlags`、後述） |
 | `handle_reset_password_test.go` | パスワードリセットのセッション検証（後述） |
