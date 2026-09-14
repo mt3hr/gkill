@@ -103,8 +103,8 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | 1100-1199 | モバイル（Android / Wear OS） |
 | 1200-1299 | ポート（rudbeckia）・画面ホスト |
 
-0900 と 1200 の2帯はまだ ADR が無い予約帯で、0件のまま置いてある。新しい領域の決定を書く人が
-帯そのものを発明せずに済むようにするため。
+1200 帯はまだ ADR が無い予約帯で、0件のまま置いてある。新しい領域の決定を書く人が
+帯そのものを発明せずに済むようにするため（0900 帯は 2026-09-14 の ADR-0901 で使い始めた）。
 
 **この表に件数を書かない。** ADR が増えるたびに古びる数字を手で持つことになる。
 帯ごとの使用数と残り空きは `npm run verify_docs` の `checkADRBands` が実ファイルから数え、
@@ -228,6 +228,12 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0804](0804-split-claude-md-into-skills.md) | AI向け規約は AGENTS.md（核）と規約スキルへ分割し、入口の肥大化を機械検査で防ぐ | Accepted |
 | [0805](0805-adr-numbering-by-subsystem-hundreds.md) | ADR の採番はサブシステム別100番幅にし、帯の空きを機械検査する | Accepted |
 | [0806](0806-fix-spellings-instead-of-freezing.md) | 綴りは凍結せず直す — 互換を残さず、旧綴りのデータは一度きりで復旧する | Accepted |
+
+### 0900番台 ビルド・テスト・CI
+
+| 番号 | 決定 | Status |
+|---|---|---|
+| [0901](0901-release-requires-tested-attestation.md) | リリースはテスト済み attestation と CI / Nightly の緑を機械で要求する（人の記憶に頼らない） | Accepted |
 
 ### 1000番台 運用CLI・配布
 

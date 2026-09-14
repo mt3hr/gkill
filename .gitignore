@@ -54,6 +54,9 @@ coverage
 !/.claude/skills/
 # 個人情報検査のローカル NG 語リスト（コミットしない。checkPersonalInfo が読む）
 verify_docs_personal_ngwords.local.txt
+# テスト済み attestation（run_test_suite.mjs が書き、verify_release_gate.mjs が読む。環境固有・コミットしない）
+# *.local は「.local で終わる名前」にしか当たらないので明示する
+test_attestation.local.json
 
 # Wear OS (Gradle project)
 src/wear_os/.gradle/

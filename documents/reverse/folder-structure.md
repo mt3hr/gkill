@@ -324,6 +324,11 @@ src/tools/
 ├── manual_ascii_fix.mjs         # マニュアルのASCII正規化
 ├── extract_manual_src.mjs       # 既存マニュアルから manual_src を抽出
 ├── verify_release_artifacts.mjs # リリース成果物の検証（npm run verify_release_artifacts）
+├── verify_release_gate.mjs      # リリースゲート。attestation・CI・Nightly を検査（npm run verify_release_gate。release の先頭）
+├── run_test_suite.mjs           # npm run test_* / verify_docs の実体。成功時に attestation を記録
+├── attestation.mjs              # attestation の共有ライブラリ（git ヘルパ・記録・評価・GitHub API）
+├── put_version_info.mjs         # version.json の生成（npm run put_version_info_embed）
+├── __tests__/                   # 上記のテスト（npm run test_tools、vitest.config.tools.ts）
 ├── test_plugins.mjs             # src/plugins/ 配下の各 Go モジュールを個別に go test（npm run test_plugins）
 ├── gradle_test.mjs              # Android / Wear OS の Gradle テスト（npm run test_android / test_wear_os）
 ├── codeql.mjs                   # CodeQL のローカル実行。CLI が無ければスキップ（npm run codeql）
@@ -331,8 +336,9 @@ src/tools/
 └── README.md
 ```
 
-このうち `dev.mjs` / `verify_docs.mjs` / `build_manuals.mjs` / `verify_release_artifacts.mjs` / `test_plugins.mjs` /
-`gradle_test.mjs` / `codeql.mjs` / `license_getter.mjs` は `package.json` の npm スクリプトから直接呼ばれる。
+このうち `dev.mjs` / `build_manuals.mjs` / `verify_release_artifacts.mjs` / `verify_release_gate.mjs` / `run_test_suite.mjs` /
+`put_version_info.mjs` / `codeql.mjs` / `license_getter.mjs` は `package.json` の npm スクリプトから直接呼ばれる。
+`verify_docs.mjs` / `test_plugins.mjs` / `gradle_test.mjs` は `run_test_suite.mjs` 経由で呼ばれる（成功時に attestation を記録するため）。
 
 ## documents/ — ドキュメント
 

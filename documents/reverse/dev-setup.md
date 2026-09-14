@@ -80,7 +80,7 @@ gkill_server version
 | コマンド | 説明 |
 |---|---|
 | `npm run clean_app_embed` | embed用ディレクトリをクリーン |
-| `npm run put_version_info_embed` | `version.json`（コミットハッシュ+ビルド日時+バージョン）を生成 |
+| `npm run put_version_info_embed` | `version.json`（コミットハッシュ+ビルド日時+バージョン+作業ツリーの tree hash）を生成（`src/tools/put_version_info.mjs`） |
 | `npm run copy_dist_to_app_embed` | `dist/`をembedディレクトリにコピー |
 | `npm run copy_i18n_to_app_embed` | `src/locales/`をembedディレクトリにコピー |
 | `npm run build_manuals` | `resources/manual_src/` の原稿から `resources/manual/`（7言語HTMLマニュアル）を生成 |
@@ -92,7 +92,8 @@ gkill_server version
 
 | コマンド | 説明 |
 |---|---|
-| `npm run release` | 全プラットフォーム向けクロスコンパイル → zip 化 → サンプルデータ生成 → 成果物検証 |
+| `npm run release` | リリースゲート → 全プラットフォーム向けクロスコンパイル → zip 化 → サンプルデータ生成 → 成果物検証 |
+| `npm run verify_release_gate` | リリースゲート（`src/tools/verify_release_gate.mjs`）。作業ツリーがクリーン・必須9スイートの attestation が HEAD の tree と一致・E2E の `gkill_server` も同じ tree・GitHub の CI が HEAD で success・直近 Nightly が success（48時間以内・祖先・依存未変更）を fail-closed で検査し、通れば `release/RELEASE_ATTESTATION_<version>.json` を書く。`release` の先頭で実行される（抜け道フラグ無し。詳細は `operations-guide.md` 3.3） |
 | `npm run build_x_compile` | 全ターゲットのクロスコンパイル |
 | `npm run build_go_parallel` | Go ビルドの並列実行 |
 | `npm run copy_android_release` | Android APK をリリースディレクトリへコピー |
@@ -114,7 +115,10 @@ gkill_server version
 | `src/tools/manual_build.mjs` | マニュアル生成の実体。`build_manuals.mjs` と `verify_docs.mjs` の両方から import される |
 | `node src/tools/manual_a11y.mjs` | マニュアルのアクセシビリティ検査 |
 | `node src/tools/manual_ascii_fix.mjs` | fr/es マニュアルの ASCII 代替表記（アクセント欠落）を辞書ベースで是正（コード/pre/href は保護。要ネイティブレビューの初回パス） |
-| `npm run verify_release_artifacts` | リリース成果物（zip/apk）の検証。`npm run release` の最後に実行される |
+| `npm run verify_release_artifacts` | リリース成果物（zip/apk/RELEASE_ATTESTATION）の検証。`npm run release` の最後に実行され、ゲート通過後に HEAD が動いていないことも再検査する |
+| `src/tools/run_test_suite.mjs` | `npm run test_*` / `verify_docs` の実体。スイートを 1 本走らせ、成功したら `test_attestation.local.json` に作業ツリーの tree hash を記録する（`-- --workers=2` のような余剰引数は素通し。絞り込み引数のときは記録しない） |
+| `src/tools/attestation.mjs` | attestation の共有ライブラリ（git ヘルパ・記録の読み書き・ゲートの評価関数・GitHub API）。`run_test_suite.mjs` / `verify_release_gate.mjs` / `put_version_info.mjs` / `verify_release_artifacts.mjs` から import される |
+| `src/tools/put_version_info.mjs` | `npm run put_version_info_embed` の実体（`version.json` に `tree_hash` を含めて書く） |
 | `src/tools/license_getter.mjs` | 依存パッケージのライセンス情報収集（`npm run license_getter` で `LICENSES_DEPENDENCE` を生成。Go 8モジュール（`src/server` + `src/plugins` の各プラグイン。自動発見）+ npm 本番依存 + Android / Wear OS の Gradle 依存。Gradle 環境が無ければ `--skip-gradle`） |
 
 **マニュアル編集の流儀:** マニュアルは手書きHTMLではなく `resources/manual_src/` の原稿（HTMLフラグメント）を編集し、`npm run build_manuals` で `resources/manual/` を再生成する。`resources/manual/` を直接編集しても `verify_docs` の生成鮮度チェックで検出される。共通の head/style/テーマスクリプトは `_layout.html` に集約されている。
@@ -238,9 +242,14 @@ graph TD
 {
   "commit_hash": "0c9fe181...",
   "build_time": "2026-03-19T10:30:00+09:00",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "tree_hash": "78bf3de6..."
 }
 ```
+
+`tree_hash` はビルドした作業ツリーの tree hash（`src/tools/attestation.mjs` の `workingTree()`。クリーンなら `HEAD^{tree}`）。
+`gkill_server version` が `tree:` 行として出力し、E2E の attestation が「PATH 上のバイナリが今のツリーから作られている」ことの
+証拠に使う。git が無い環境では `commit_hash` と同じく `unknown` になり、ビルドは止めない。
 
 ## 5. クロスコンパイル設定
 
