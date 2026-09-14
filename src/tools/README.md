@@ -14,10 +14,67 @@ gkill プロジェクト用のユーティリティスクリプト。
 | `manual_a11y.mjs` | マニュアルのアクセシビリティ検査ヘルパー |
 | `manual_ascii_fix.mjs` | マニュアル内の文字化け・ASCII 修正ユーティリティ |
 | `extract_manual_src.mjs` | 既存 `resources/manual/` から `manual_src/` を抽出する移行ツール |
-| `verify_release_artifacts.mjs` | `npm run release` 成果物の検証 |
+| `verify_release_artifacts.mjs` | `npm run release` 成果物の検証（存在・SHA-256・APK 署名・リリースゲート記録との一致） |
+| `verify_release_gate.mjs` | `npm run verify_release_gate` の実体。`npm run release` の先頭で、テスト済み attestation・GitHub の CI / Nightly を検査して通らなければ止める |
+| `run_test_suite.mjs` | `npm run test_*` / `npm run verify_docs` の実体。スイートを 1 本走らせ、成功時に `test_attestation.local.json` へ作業ツリーの tree hash を記録する |
+| `attestation.mjs` | 上 2 つと `put_version_info.mjs` / `verify_release_artifacts.mjs` の共有ライブラリ（git ヘルパ・記録の読み書き・評価関数・GitHub API） |
+| `put_version_info.mjs` | `npm run put_version_info_embed` の実体。`embed/version.json`（commit / build_time / version / tree_hash）を書く |
+| `__tests__/attestation.test.mjs` | 上記 4 ファイルのテスト（`npm run test_tools`、`vitest.config.tools.ts`） |
 | `test_plugins.mjs` | `npm run test_plugins` / `npm run vet_plugins` の実体。`src/plugins/` 配下の各 Go モジュールに `go test` / `go vet` を回す |
 | `gradle_test.mjs` | `npm run test_android` / `npm run test_wear_os` の実体。Windows では `cmd /c <絶対パス>gradlew.bat`、それ以外は `./gradlew`（絶対パス）を使う |
 | `codeql.mjs` | `npm run codeql` の実体。CI と同じ設定で CodeQL をローカル実行し、ベースラインに無い指摘が出たら失敗する。CodeQL CLI が無ければスキップして正常終了する |
+
+## リリースゲート（run_test_suite.mjs / attestation.mjs / verify_release_gate.mjs）
+
+「Nightly green + ローカル `npm test` green のコミットだけリリースする」を人の記憶ではなく機械で強制する
+（2026-09-14、フィードバック #10。2026-08-30 監査 F-006 はリリース工程に検証ギャップがあった実例）。
+規約の正本は `.claude/skills/gkill-build-test/SKILL.md`「リリースゲート（テスト済み attestation）」、経緯と却下案は
+`documents/adr/0901-release-requires-tested-attestation.md`。
+
+```bash
+npm run test_server                       # 通れば test_attestation.local.json に test_server を記録
+npm run test_client_e2e -- --workers=2    # 余剰引数は素通し。並列度は記録される
+npm run test_client_unit -- xxx.test.ts   # 絞り込みなので記録されない（警告だけ出る）
+npm run verify_release_gate               # release の先頭で自動実行。単体でも使える
+```
+
+### なぜ commit SHA ではなく tree hash に束縛するか
+
+attestation は「作業ツリーの tree hash」に束縛する。dirty なツリーでテストを通し、そのまま全部コミットすれば
+`HEAD^{tree}` が一致するので再テスト無しでリリースできる。ゲート側は「作業ツリーがクリーン」を別に要求するので、
+結局「`HEAD^{tree}` == attested tree」＝テスト済みコミット、と同値になる。commit SHA に束縛すると
+「テスト → コミット」の順序が全部再テストになる。
+
+### なぜ git を `-c core.autocrlf=true` で呼び、クリーン判定に `git status` を使わないか
+
+release は WSL で走るが、WSL 側の git は autocrlf 未設定で、Windows が CRLF で checkout した追跡ファイル
+184 件が偽 dirty に見える（2026-09-14 実測）。さらに `git status` は index の stat cache と**サイズが違うだけ**で
+内容を読まずに modified と言う（`ie_modified` の `DATA_CHANGED` 短絡）ので、`-c core.autocrlf=true` を付けても
+CRLF でサイズが変わったファイルは偽 dirty のまま。`git diff --name-only HEAD` は内容を改行変換のうえで比べる
+（`diffcore_skip_stat_unmatch`）ので、クリーン判定はこれと `git ls-files --others --exclude-standard` で行う。
+
+### 記録しない引数
+
+余剰引数はスイートへ素通しする。並列度・レポータ形式（go `-p` / `-count` / `-v` / `-timeout`、vitest `--pool` /
+`--maxWorkers` / `--no-file-parallelism` / `--reporter`、playwright `--workers` / `--retries` / `--reporter`）は
+網羅性を変えないので記録する。それ以外（`-run`、`--grep`、ファイル名）は「全件通った」と言えないので記録しない。
+`verify_docs` / `test_plugins` / `test_android` / `test_wear_os` は引数が検査内容そのものを置き換える
+（`--list` は検査せず exit 0、`vet` はテストでない、Gradle は引数が `test` タスクを置き換える）ので、
+引数が 1 つでもあれば記録しない。記録しない場合も exit は 0（スイート自体は通っている）。
+
+### E2E は PATH 上の gkill_server の tree も記録する
+
+E2E は PATH の `gkill_server` を起動するので、古いバイナリで通しても現在のツリーを検証したことにならない。
+`put_version_info.mjs` が `version.json` に `tree_hash` を焼き込み、`gkill_server version` が `tree:` 行で出す。
+ランナーはそれを `server_tree` として記録し、ゲートは attested tree との一致を要求する。
+`version` サブコマンドも `PersistentPreRun` でログを初期化するので、run-e2e.mjs と同じ
+`--gkill_home_dir <home>/gkill_test --log none` を付けて呼ぶ（本番の `~/gkill/logs` を触らない）。
+
+### 記録ファイルは .gitignore の明示行で無視する
+
+`test_attestation.local.json` は `*.local`（`.local` で終わる名前にしか当たらない）では無視されない。
+無視されていないと自分自身が作業ツリーを汚し、tree hash も clean 判定も壊れるので、
+`assertAttestationIgnored` が `git check-ignore` で確かめてから記録・検査する。
 
 ### gradle_test.mjs — ラッパーは絶対パスで呼ぶ
 

@@ -129,7 +129,7 @@ npm run go_install
 
 ビルドフロー:
 1. `dist/` と埋め込みディレクトリをクリーン
-2. `version.json` 生成（コミットハッシュ + ビルド時刻 + バージョン）
+2. `version.json` 生成（コミットハッシュ + ビルド時刻 + バージョン + 作業ツリーの tree hash。`tools/put_version_info.mjs`）
 3. `vue-tsc` 型チェック + `vite build`
 4. `dist/` → `server/gkill/api/embed/html/` にコピー
 5. `locales/` → `server/gkill/api/embed/i18n/locales/` にコピー
@@ -152,7 +152,11 @@ npm run go_install
 | `manual_ascii_fix.mjs` | マニュアル原稿の記号正規化 |
 | `extract_manual_src.mjs` | 生成済みマニュアルから `manual_src` フラグメントを抽出（移行用） |
 | `verify_docs.mjs` | docs CI。件数・リンク・参照パス・Mermaid・マニュアルを検証 |
-| `verify_release_artifacts.mjs` | リリース成果物の存在確認 |
+| `verify_release_artifacts.mjs` | リリース成果物の存在確認・APK 署名検証・リリースゲート記録との一致 |
+| `verify_release_gate.mjs` | リリースゲート（`npm run verify_release_gate`。`release` の先頭）。作業ツリーがクリーン・必須9スイートの attestation が HEAD の tree と一致・GitHub の CI / Nightly が緑でなければ止める |
+| `run_test_suite.mjs` | `npm run test_*` / `verify_docs` の実体。スイート成功時に `test_attestation.local.json` へ作業ツリーの tree hash を記録する |
+| `attestation.mjs` | attestation の共有ライブラリ（git ヘルパ・記録・評価関数・GitHub API） |
+| `put_version_info.mjs` | `npm run put_version_info_embed` の実体（`version.json`。`tree_hash` を含む） |
 | `test_plugins.mjs` | `npm run test_plugins` / `npm run vet_plugins` の実体。`src/plugins/` 配下の各 Go モジュール（独立プラグイン）へ `go test` / `go vet` を回す |
 | `license_getter.mjs` | 依存ライブラリのライセンス一覧を生成する（`npm run license_getter`） |
 
@@ -257,6 +261,7 @@ npm run go_install
 | `server/gkill/main/` | [server/gkill/main/ABOUT_TEST.md](server/gkill/main/ABOUT_TEST.md) |
 | `server/gkill/usecase/` | [server/gkill/usecase/ABOUT_TEST.md](server/gkill/usecase/ABOUT_TEST.md) |
 | `plugins/` | [plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) |
+| `tools/` | [tools/ABOUT_TEST.md](tools/ABOUT_TEST.md) |
 | `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) |
 | `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) |
 | `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) |

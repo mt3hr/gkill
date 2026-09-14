@@ -622,7 +622,7 @@ Vuetifyで2つのテーマを定義しています。
 
 | コマンド | 説明 |
 |---|---|
-| `version` | バージョン情報表示（バージョン、ビルド日時、コミットハッシュ） |
+| `version` | バージョン情報表示（バージョン、ビルド日時、コミットハッシュ、ビルドした作業ツリーの tree hash。`tree:` 行は E2E の attestation が読む） |
 | `idf` | 指定ディレクトリのIDF（IDファイル）生成。`-i`/`--ignore` で除外ファイル名を指定。**`gkill_server` にのみ登録**されており、デスクトップアプリ `gkill` からは使えない |
 | `dvnf` | DVNFファイル操作（`get [dvnfPath]` / `copy src target` / `move src target`）。共通フラグ `--new`/`-n`、`--auto_create`、`--device`。詳細は [dvnf-rep-type-spec.md](dvnf-rep-type-spec.md) |
 | `generate_thumb_cache` | サムネイルキャッシュ生成 |

@@ -125,6 +125,7 @@ var (
 			fmt.Printf("%s:\t%s\n", AppName, version.Version)
 			fmt.Printf("%s:\t%s\n", "build_time", version.BuildTime)
 			fmt.Printf("%s:\t\t%s\n", "hash", version.CommitHash)
+			fmt.Printf("%s:\t\t%s\n", "tree", version.TreeHash)
 			return nil
 		},
 	}
