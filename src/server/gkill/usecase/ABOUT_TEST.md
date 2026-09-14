@@ -32,8 +32,8 @@
 | `TestNoUnreachablePackages` | どこからも import されないパッケージを残さない | バイト単位の複製が2重管理され、片方だけテストが薄いまま放置される |
 | `TestAggregateFindChunksIDs` | 集約リポジトリの Find 入口が `findChunkedByIDs` を通る | IDリストがSQLのバインド上限(32766)を超えたとき、**GkillError が立たないまま「HTTP 200・errors:null・0件」**で返る |
 | `TestNoRepNameFilterInDaoReps` | `dao/reps` で `FindQuery.Reps` による絞り込みをしない | ReKyou / MiReKyou のワード委譲が利用者のクエリをそのまま `FindKyousSequential` へ渡すので、チェックしていないrepに参照先を持つリポストが**黙って語句検索に当たらなくなる** |
-| `TestCommitTxSetsRealRepNameBeforeWriteThrough` | `commit_tx` の13型すべてが、キャッシュへ書き戻す直前に実rep名を入れる | 一時リポジトリの合成名（`"KmemoTemp"` 等）がキャッシュへ入り、確定した記録が rep絞り込みから漏れて**一覧から丸ごと消える** |
-| `TestCommitTxRestoresIDFTargetRepNameBeforeRealWrite` | IDF だけは `TargetRepName` を**実DBへ書く前に**戻す | leaf の `AddIDFKyouInfo` が `TARGET_REP_NAME` として永続化するので、合成名が入るとファイルの所在が実データごと壊れる。キャッシュではないので `UpdateCache` でも直らない |
+| `TestCommitTxSetsRealRepNameBeforeWriteThrough` | `dao/reps/commit_tx.go` の共通関数 `commitTxAfterRows` が `setRepName` を `writeThrough` より前に呼び、13型すべてが `WriteThroughXxxCache` を渡してそこを通る | 一時リポジトリの合成名（`"KmemoTemp"` 等）がキャッシュへ入り、確定した記録が rep絞り込みから漏れて**一覧から丸ごと消える** |
+| `TestCommitTxRestoresIDFTargetRepNameBeforeRealWrite` | IDF だけは `TargetRepName` を**実DBへ書く前に**（`writeStagedTxAtomically` より前で）戻す | leaf の `AddIDFKyouInfo` が `TARGET_REP_NAME` として永続化するので、合成名が入るとファイルの所在が実データごと壊れる。キャッシュではないので `UpdateCache` でも直らない |
 
 > 13型・457メソッドのようにコピペで増える形は、**1つだけ抜けても他が緑のまま通る**。
 > 型ごとに振る舞いのテストを書くより、書き方をソースで見張るほうが確実で速い。

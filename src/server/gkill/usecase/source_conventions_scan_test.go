@@ -298,99 +298,106 @@ func TestNoRepNameFilterInDaoReps(t *testing.T) {
 // 合成名になり、rep名での絞り込み（filterKyousByRepName）から漏れて
 // **確定したばかりの記録が一覧から消える**。
 //
-// 13型すべてが同じ2行の組（`x.RepName = repName` → `WriteThroughXxxCache`）で書かれている
-// コピペ形なので、1型だけ抜けても他の12型のテストは緑のまま通る。順序ごと機械で固定する。
+// 2026-09-15 に確定処理が handle_commit_tx.go の13ブロックから dao/reps/commit_tx.go の
+// commitTxAfterRows（1箇所）へ移った。13型が同じ関数を通るので、守るのは
+// (1) commitTxAfterRows の中で setRepName が writeThrough より前にあること、
+// (2) afterCommitTx が13型ぶん commitTxAfterRows を呼び、それぞれ WriteThroughXxxCache を渡していること。
 var (
-	commitTxWriteThroughPattern = regexp.MustCompile(`WriteThrough\w+Cache\(r\.Context\(\), (\w+)\)`)
-	// 期待される直前の行。IDF だけは「実DBへ永続化する TargetRepName の復元」が別にあるが、
-	// キャッシュ用の代入はこの形で他の12型と揃っている
-	commitTxRepNameAssign = "%s.RepName = repName"
+	commitTxAfterRowsCallPattern   = regexp.MustCompile(`commitTxAfterRows\(ctx, g, "(\w+)", g\.Write\w+Rep, staged\.\w+,`)
+	commitTxWriteThroughArgPattern = regexp.MustCompile(`^\s*g\.WriteThrough(\w+)Cache,$`)
 	// この数を下回ったら正規表現がずれている
 	commitTxExpectedTypes = 13
 )
 
-func TestCommitTxSetsRealRepNameBeforeWriteThrough(t *testing.T) {
-	path := filepath.Join(sourceScanGkillRoot, "api", "gkill_server_api", "handle_commit_tx.go")
+func commitTxSourceLines(t *testing.T) []string {
+	t.Helper()
+	path := filepath.Join(sourceScanGkillRoot, "dao", "reps", "commit_tx.go")
 	content, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("%s を読めない: %v", path, err)
 	}
-	lines := strings.Split(string(content), "\n")
+	return strings.Split(string(content), "\n")
+}
 
+func TestCommitTxSetsRealRepNameBeforeWriteThrough(t *testing.T) {
+	lines := commitTxSourceLines(t)
+
+	// (1) 共通関数の中で setRepName → writeThrough の順
+	setIndex, writeIndex := -1, -1
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "setRepName(&rows[i], repName)") && setIndex < 0 {
+			setIndex = i
+		}
+		if strings.HasPrefix(trimmed, "if err := writeThrough(ctx, rows[i]); err != nil {") && writeIndex < 0 {
+			writeIndex = i
+		}
+	}
+	if setIndex < 0 || writeIndex < 0 {
+		t.Fatalf("commit_tx.go に setRepName / writeThrough の呼び出しが無い（set=%d write=%d）。実装が変わった可能性がある", setIndex, writeIndex)
+	}
+	if setIndex > writeIndex {
+		t.Fatalf("commit_tx.go:%d: writeThrough が setRepName（%d行目）より前にある。"+
+			"一時リポジトリの合成rep名がキャッシュへ入ると、確定した記録が rep絞り込みから漏れる", writeIndex+1, setIndex+1)
+	}
+
+	// (2) 13型が同じ関数を通り、WriteThroughXxxCache を渡している
 	found := 0
 	violations := []string{}
 	for i, line := range lines {
-		m := commitTxWriteThroughPattern.FindStringSubmatch(line)
+		m := commitTxAfterRowsCallPattern.FindStringSubmatch(line)
 		if m == nil {
 			continue
 		}
 		found++
-		want := fmt.Sprintf(commitTxRepNameAssign, m[1])
-		// 直前の実コード行（空行とコメントは飛ばす）
-		prev := ""
-		prevLine := 0
-		for j := i - 1; j >= 0; j-- {
-			candidate := strings.TrimSpace(lines[j])
-			if candidate == "" || strings.HasPrefix(candidate, "//") {
-				continue
+		// 呼び出しの引数は3行に割れている。次の2行のどちらかに WriteThroughXxxCache があること
+		ok := false
+		for j := i + 1; j <= i+2 && j < len(lines); j++ {
+			if commitTxWriteThroughArgPattern.MatchString(lines[j]) {
+				ok = true
+				break
 			}
-			prev = candidate
-			prevLine = j + 1
-			break
 		}
-		if prev != want {
-			violations = append(violations, fmt.Sprintf(
-				"handle_commit_tx.go:%d: %q の直前(%d行目)が %q ではなく %q",
-				i+1, strings.TrimSpace(line), prevLine, want, prev))
+		if !ok {
+			violations = append(violations, fmt.Sprintf("commit_tx.go:%d: %q の呼び出しに WriteThroughXxxCache が渡っていない", i+1, m[1]))
 		}
 	}
 	if found < commitTxExpectedTypes {
-		t.Fatalf("write-through が %d 件しか見つからない（%d 件のはず）。正規表現がずれている可能性がある",
+		t.Fatalf("commitTxAfterRows の呼び出しが %d 件しか見つからない（%d 件のはず）。正規表現がずれている可能性がある",
 			found, commitTxExpectedTypes)
 	}
 	if len(violations) != 0 {
-		t.Fatalf("commit_tx でキャッシュへ書き戻す前に実rep名を入れていない型がある。"+
-			"一時リポジトリの合成rep名がキャッシュへ入ると、確定した記録が rep絞り込みから漏れる:\n%s",
+		t.Fatalf("commit_tx でキャッシュへ書き戻していない型がある。反映を飛ばすと確定した記録が最大1分見えない:\n%s",
 			strings.Join(violations, "\n"))
 	}
 }
 
 // IDF だけは「キャッシュ用の rep名」とは別に、**実DBへ永続化される** TARGET_REP_NAME の
-// 復元が要る。leaf の AddIDFKyouInfo が idfKyou.RepName を TARGET_REP_NAME 列として書くので、
+// 復元が要る。leaf の insertIDFKyouRow が idfKyou.RepName を TARGET_REP_NAME 列として書くので、
 // temp rep の合成名 "IDF_TEMP" のまま渡すと **ファイルの所在が実データごと壊れ、
 // UpdateCache でも直らない**（キャッシュではないため）。この範囲で唯一の不可逆な失敗モード。
 func TestCommitTxRestoresIDFTargetRepNameBeforeRealWrite(t *testing.T) {
-	path := filepath.Join(sourceScanGkillRoot, "api", "gkill_server_api", "handle_commit_tx.go")
-	content, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatalf("%s を読めない: %v", path, err)
-	}
-	lines := strings.Split(string(content), "\n")
+	lines := commitTxSourceLines(t)
 
-	addIndex := -1
+	restoreIndex, writeIndex := -1, -1
 	for i, line := range lines {
-		if strings.Contains(line, "WriteIDFKyouRep.AddIDFKyouInfo(r.Context(), idfKyou)") {
-			addIndex = i
-			break
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "staged.idfKyous[i].RepName = staged.idfKyous[i].TargetRepName" && restoreIndex < 0 {
+			restoreIndex = i
+		}
+		if strings.HasPrefix(trimmed, "err = g.writeStagedTxAtomically(") && writeIndex < 0 {
+			writeIndex = i
 		}
 	}
-	if addIndex < 0 {
-		t.Fatal("handle_commit_tx.go に WriteIDFKyouRep.AddIDFKyouInfo の呼び出しが無い。実装が変わった可能性がある")
+	if restoreIndex < 0 {
+		t.Fatal("commit_tx.go に TargetRepName の復元（staged.idfKyous[i].RepName = staged.idfKyous[i].TargetRepName）が無い。" +
+			"temp rep の合成名のまま書くと TARGET_REP_NAME が実DBへ入り、ファイルの所在が壊れる（UpdateCache でも直らない）")
 	}
-
-	// 直前の実コード行が TargetRepName の復元であること
-	for j := addIndex - 1; j >= 0; j-- {
-		trimmed := strings.TrimSpace(lines[j])
-		if trimmed == "" || strings.HasPrefix(trimmed, "//") {
-			continue
-		}
-		if trimmed != "idfKyou.RepName = idfKyou.TargetRepName" {
-			t.Fatalf("handle_commit_tx.go:%d: AddIDFKyouInfo の直前が "+
-				"%q ではなく %q。temp rep の合成名のまま書くと TARGET_REP_NAME が実DBへ入り、"+
-				"ファイルの所在が壊れる（UpdateCache でも直らない）",
-				j+1, "idfKyou.RepName = idfKyou.TargetRepName", trimmed)
-		}
-		break
+	if writeIndex < 0 {
+		t.Fatal("commit_tx.go に writeStagedTxAtomically の呼び出しが無い。実装が変わった可能性がある")
+	}
+	if restoreIndex > writeIndex {
+		t.Fatalf("commit_tx.go:%d: TargetRepName の復元が実 rep への書き込み（%d行目）より後にある", restoreIndex+1, writeIndex+1)
 	}
 }
 

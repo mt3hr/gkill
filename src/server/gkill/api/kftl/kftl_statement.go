@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
 // KFTLStatement is the entry point for parsing and executing KFTL text.
@@ -175,34 +177,50 @@ func (s *KFTLStatement) GenerateAndExecuteRequests(
 		return nil, err
 	}
 
-	// ここから先は書き込みが起きる。1件でも失敗したら止めるが、
-	// **既に書けたぶんはロールバックされない**（commit_tx はDBトランザクションではない）。
-	// 途中で失敗しても、そこまでに書けたぶんは呼び出し側へ返す。
-	// 残ってしまったものが分からないと利用者は後始末ができない。
+	// ここから先は書き込みが起きる —— ただし各 DoRequest が書くのは txID 付きの temp rep で、
+	// 実 rep へは最後の CommitTx が**1つの SQLite トランザクション**で確定する。
+	// 途中で失敗したら DiscardTx して何も残さない（2026-09-15 まで実 rep へ直書きしていて、
+	// 失敗した行より前の記録が残り、利用者が created[] を見て後始末する設計だった）。
+	// 打刻の終了は実 rep から対象を引くので、同じテキスト内で開始した打刻は見つからない（TS 側と同じ）。
 	var created []KFTLCreatedRecord
 	for _, req := range requestMap.All() {
 		err := req.DoRequest(ctx)
-		created = append(created, req.GetCreatedRecords()...)
 		if err != nil {
+			discardStagedTx(ctx, repos, txID, userID, device)
 			lineNumber, lineText := 0, ""
 			if lineCtx := req.GetContext(); lineCtx != nil {
 				lineNumber, lineText = lineCtx.LineIndex+1, lineCtx.ThisStatementLineText
 			}
 			var inputErr *KFTLInputError
 			if errors.As(err, &inputErr) {
-				return created, withLine(err, lineNumber, lineText)
+				return nil, withLine(err, lineNumber, lineText)
 			}
 			// 行番号を構造として持たせる。文字列へ畳むと、ハンドラが
 			// 「何行目で止まったか」を利用者へ返せない。
-			return created, &KFTLExecutionError{
+			return nil, &KFTLExecutionError{
 				LineNumber: lineNumber,
 				LineText:   lineText,
 				RequestID:  req.GetRequestID(),
 				Cause:      err,
 			}
 		}
+		created = append(created, req.GetCreatedRecords()...)
+	}
+	if _, err := repos.CommitTx(ctx, txID, userID, device); err != nil {
+		// CommitTx は失敗時に temp rep の行を残す（再 commit できるように）。ここでは再試行しないので捨てる。
+		discardStagedTx(ctx, repos, txID, userID, device)
+		return nil, &KFTLExecutionError{Cause: fmt.Errorf("error at commit kftl tx id = %s: %w", txID, err)}
 	}
 	return created, nil
+}
+
+// discardStagedTx は失敗した送信の temp rep の行を捨てる。捨て損ねても利用者には返らない
+// （本命のエラーが別にある）ので、ここが唯一の記録として Error で残す。
+func discardStagedTx(ctx context.Context, repos *reps.GkillRepositories, txID, userID, device string) {
+	if err := repos.DiscardTx(ctx, txID, userID, device); err != nil {
+		err = fmt.Errorf("error at discard kftl tx id = %s: %w", txID, err)
+		slog.Log(ctx, gkill_log.Error, "error at discard kftl tx", "error", fmt.Sprintf("%q", err))
+	}
 }
 
 // generateKFTLLines splits the statement text into lines and constructs

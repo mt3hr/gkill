@@ -47,15 +47,10 @@ func (r *kftlLantanaRequest) DoRequest(ctx context.Context) error {
 		UpdateDevice: r.Ctx.Device,
 		UpdateUser:   r.Ctx.UserID,
 	}
-	if err := r.Ctx.Repositories.WriteLantanaRep.AddLantanaInfo(ctx, lantana); err != nil {
+	if err := r.Ctx.Repositories.TempReps.LantanaTempRep.AddLantanaInfo(ctx, lantana, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return err
 	}
-	repName, repNameErr := r.Ctx.Repositories.WriteLantanaRep.GetRepName(ctx)
-	logGetRepNameFailure(ctx, "lantana", lantana.ID, repNameErr)
 	r.recordCreated("lantana", lantana.ID)
-	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
-	// キャッシュに書き込み
-	logWriteThroughCacheFailure(ctx, "lantana", lantana.ID, r.Ctx.Repositories.WriteThroughLantanaCache(ctx, lantana))
 	return nil
 }
 

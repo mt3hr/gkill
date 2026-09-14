@@ -436,7 +436,7 @@ flowchart TD
 MiReKyou はタイトルを持たないため、対象 Kyou が削除されると表示できるものが無くなる。
 ただし**画面から対象 Kyou を削除した場合は、その MiReKyou も連鎖して論理削除される**ので、
 この状態は通常見えない（`classes/cascade-delete-kyou.ts`。→ 本資料「Kyou 連鎖削除フロー」）。
-見えるのは連鎖削除が途中で失敗して部分確定した場合や、MCP・他クライアントから対象 Kyou だけを消した場合。
+見えるのは MCP・他クライアントから対象 Kyou だけを消した場合（画面の連鎖削除は1つのトランザクションなので途中で失敗しても部分確定しない）。
 また `DATA_TYPE` は `mirekyou_create` / `_check` / `_limit` / `_start` / `_end` の5種に射影され、
 いずれも `mi` で始まるので前方一致判定では `mirekyou` を先に評価する必要がある。
 
@@ -476,6 +476,7 @@ flowchart TD
 **Tag / Text / Notification の逆引きだけ `force_reget=true`。** Service Worker が `target_id` 単位で
 キャッシュしているため、古い一覧のまま消すと取りこぼす（ReKyou / MiReKyou の逆引きには付けていない）。
 
-**原子性は無い。** TXID / commit_tx は使わない。1本失敗しても止めずに全部投げ、
-エラーは `ERR900094 cascade_delete_failed` として集約して返す。途中で失敗しても
-Kyou 自身が最後まで生きていれば、同じダイアログをもう一度開くだけで残骸を再発見できる。
+**全件を1つの tx_id で積み、commit_tx で確定する**（2026-09-15、[ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）。
+commit_tx は1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、
+全部消えるか何も消えないかのどちらか。1本でも積めなければ discard_tx して
+`ERR900094 cascade_delete_failed` を返し、行はすべて画面に残す。探索に失敗したときも1本も積まない。

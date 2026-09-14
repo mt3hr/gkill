@@ -187,7 +187,7 @@ fri
 3
 ??</pre>
 <p>This example creates three "Weekly report" tasks at 18:00 on the next three Fridays. Every date and time the record holds is shifted by the same number of days, so the gaps between start, end and deadline are preserved. It cannot be used on a task with no date at all, because there would be nowhere to put the repeated dates.</p>
-<p>Because line 3 defaults to <code>no</code>, <strong>saving the same text again does not create duplicates.</strong> If a save fails partway, simply save the same text again and only the missing records are created.</p>
+<p>Because line 3 defaults to <code>no</code>, <strong>saving the same text again does not create duplicates.</strong> If a save fails, nothing is created, so simply save the same text again.</p>
 <div class="tip">
   <strong>Note:</strong> Dates that do not exist are skipped (<code>monthly 31</code> skips February, <code>5th fri</code> skips months without a fifth Friday). It cannot be used with the timestamp start (<code>/start</code>) or the timestamp end (<code>/end</code>, <code>/end?</code>, <code>/endt</code>, <code>/endt?</code>). At most 1000 records can be created in one save.
 </div>

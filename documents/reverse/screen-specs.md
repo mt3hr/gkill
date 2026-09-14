@@ -383,7 +383,7 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
 2. 削除（write）: 集めたものを全件 `is_deleted=true` で論理削除する。Kyou 自身は**最後**に消す（先に消すとサーバの FindKyous が参照元を結果から外し、途中で失敗したときに残骸を再発見できなくなるため）。
 3. 画面からは消したID分だけ `deleted_kyou` を発行して取り除く（全件再検索はしない）。
 
-TXID / commit_tx は使わないので部分確定しうるが、追記型DAOのため同じダイアログをもう一度開いて再実行すれば収束する。失敗時は `ERR900094 cascade_delete_failed`（i18n キー `FAILED_CASCADE_DELETE_KYOU_MESSAGE`）。共有画面では削除自体を行わない。
+全件を1つの tx_id で積み commit_tx で確定するので、全部消えるか何も消えないかのどちらか（[ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）。失敗時は `ERR900094 cascade_delete_failed`（i18n キー `FAILED_DELETE_KYOU_NOTHING_DELETED_MESSAGE`）で、行はすべて画面に残る。共有画面では削除自体を行わない。
 
 ### 3.1 kmemo（テキストメモ）画面仕様
 

@@ -73,6 +73,7 @@ SQLite3 をバックエンドとし、4層のアーキテクチャで構成さ�
 | `repositories.go` | `Repositories` — 複数リポジトリ集約の基底インタフェース |
 | `gkill_repositories.go` | `GkillRepositories` — 全データ型のリポジトリを統合管理する構造体 |
 | `temp_reps.go` | `TempReps` — トランザクション用一時リポジトリの集約 |
+| `commit_tx.go` | `GkillRepositories.CommitTx` / `DiscardTx` — 一時リポジトリに積んだ全種別を、書き込み rep のファイルを ATTACH した1接続の SQLite トランザクションで確定する（失敗したら何も書かない。ADR-0219） |
 
 ### Kmemo（テキストメモ）— 8ファイル
 

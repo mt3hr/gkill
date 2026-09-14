@@ -42,7 +42,9 @@ describe('Kyou.load_all のリクエスト本数', () => {
     mockApi.get_saved_application_config = vi.fn().mockReturnValue({ for_share_kyou: true })
   })
 
-  test('履歴取得(/api/get_kyou)は1回だけ', async () => {
+  // 2026-09-14（3e4d0fd8）から load_all は版履歴を先読みしない。読むのは履歴ダイアログだけで、
+  // そこは開いたときに自前で load_attached_histories() を呼ぶ（gkill-client-foundation スキル）
+  test('履歴取得(/api/get_kyou)は先読みしない', async () => {
     const { Kyou } = await import('@/classes/datas/kyou')
     const kyou = new Kyou()
     kyou.id = 'kyou-1'
@@ -50,7 +52,7 @@ describe('Kyou.load_all のリクエスト本数', () => {
 
     await kyou.load_all()
 
-    expect(mockApi.get_kyou).toHaveBeenCalledTimes(1)
+    expect(mockApi.get_kyou).not.toHaveBeenCalled()
   })
 
   test('保存済みのアプリ設定があれば get_application_config を呼ばない', async () => {

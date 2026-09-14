@@ -78,9 +78,20 @@ describe('編集ビューは関連日時だけ変えても保存できる', () =
     vi.spyOn(console, 'error').mockImplementation(() => { })
   })
 
+  /** 編集は本体とタグを tx で束ねて commit_tx で確定する（ADR-0410）。そのぶんのモック */
+  function make_tx_api<T extends Record<string, unknown>>(update: T) {
+    return {
+      ...update,
+      generate_uuid: vi.fn(() => 'tx-1'),
+      commit_tx: vi.fn(async () => ({ ...ok_response })),
+      discard_tx: vi.fn(async () => ({ ...ok_response })),
+      get_kyou: vi.fn(async () => ({ ...ok_response, kyou_histories: [{ id: 'kyou-1' }] })),
+    }
+  }
+
   it('kmemo: 本文はそのままで日時だけ変えたら更新リクエストが飛ぶ', async () => {
     const emits = vi.fn()
-    const api = { update_kmemo: vi.fn(async () => ({ ...ok_response, updated_kyou: { id: 'kyou-1' } })) }
+    const api = make_tx_api({ update_kmemo: vi.fn(async () => ({ ...ok_response })) })
     const kyou = make_kyou('typed_kmemo', make_typed_stub({ content: '本文' }))
     const view = useEditKmemoView({
       props: { kyou: kyou as never, gkill_api: api as never, application_config: application_config as never } as never,
@@ -98,7 +109,7 @@ describe('編集ビューは関連日時だけ変えても保存できる', () =
 
   it('kmemo: 本文も日時も変えなければ「更新なし」で閉じない', async () => {
     const emits = vi.fn()
-    const api = { update_kmemo: vi.fn(async () => ({ ...ok_response })) }
+    const api = make_tx_api({ update_kmemo: vi.fn(async () => ({ ...ok_response })) })
     const kyou = make_kyou('typed_kmemo', make_typed_stub({ content: '本文' }))
     const view = useEditKmemoView({
       props: { kyou: kyou as never, gkill_api: api as never, application_config: application_config as never } as never,
@@ -114,7 +125,7 @@ describe('編集ビューは関連日時だけ変えても保存できる', () =
 
   it('kc: タイトルと数値はそのままで日時だけ変えたら更新リクエストが飛ぶ', async () => {
     const emits = vi.fn()
-    const api = { update_kc: vi.fn(async () => ({ ...ok_response, updated_kyou: { id: 'kyou-1' } })) }
+    const api = make_tx_api({ update_kc: vi.fn(async () => ({ ...ok_response })) })
     const kyou = make_kyou('typed_kc', make_typed_stub({ title: 'タイトル', num_value: 1 }))
     const view = useEditKCView({
       props: { kyou: kyou as never, gkill_api: api as never, application_config: application_config as never } as never,

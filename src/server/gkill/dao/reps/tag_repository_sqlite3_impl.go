@@ -1064,6 +1064,15 @@ func (t *tagRepositorySQLite3Impl) AddTagInfo(ctx context.Context, tag Tag) erro
 			}
 		}()
 	}
+	return insertTagRow(ctx, db, tag)
+}
+
+// insertTagRow は Tag を1行 INSERT する。契約は AddTagInfo と同じで、書き込み先だけを引数で受ける。
+//
+// rep 自身の接続（AddTagInfo）にも、commit_tx が書き込み rep のファイルを ATTACH した1接続の
+// トランザクション（commit_tx.go）にも同じ SQL を打てるようにするための切り出し。
+// INSERT の列と検査はここだけに置き、AddXxxInfo 側へ複製しないこと（ずれると tx 経由の追記だけ壊れる）。
+func insertTagRow(ctx context.Context, db sqlite3impl.Preparer, tag Tag) error {
 	if strings.TrimSpace(tag.Tag) == "" {
 		return fmt.Errorf("tag must not be empty")
 	}

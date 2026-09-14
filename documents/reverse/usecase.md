@@ -181,7 +181,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 削除は編集エンドポイントで `IS_DELETED=true` を設定することで実現。
 専用の Delete エンドポイントは存在しない（Append-Only 方式）。
 
-ただし Kyou の削除は**単独の update 1本では終わらない**。画面から Kyou を削除すると、付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou も同じ操作で連鎖して論理削除される（`classes/cascade-delete-kyou.ts`）。消す順序は「付随データ → 参照元（深い方から）→ Kyou 自身」で、**Kyou 自身が最後**。サーバの `FindKyous` は参照先が削除済みの ReKyou を検索結果から外すため、先に Kyou を消すと参照元を辿れなくなるためである。TXID / commit_tx は使わないので部分確定しうるが、Kyou 自身が最後まで生きていれば同じダイアログを開き直すだけで残骸を再発見できる。関連エラーコードは `ERR900093 cascade_delete_depth_exceeded`（参照の連鎖が32段を超えた）と `ERR900094 cascade_delete_failed`。
+ただし Kyou の削除は**単独の update 1本では終わらない**。画面から Kyou を削除すると、付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou も同じ操作で連鎖して論理削除される（`classes/cascade-delete-kyou.ts`）。消す順序は「付随データ → 参照元（深い方から）→ Kyou 自身」で、**Kyou 自身が最後**。サーバの `FindKyous` は参照先が削除済みの ReKyou を検索結果から外すため、先に Kyou を消すと参照元を辿れなくなるためである。全件を1つの tx_id で積み commit_tx で確定する（1つの SQLite トランザクション。[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md) / [ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）ので、全部消えるか何も消えないかのどちらか。関連エラーコードは `ERR900093 cascade_delete_depth_exceeded`（参照の連鎖が32段を超えた）と `ERR900094 cascade_delete_failed`。
 
 詳細は [sequence-diagrams.md](sequence-diagrams.md) の「Kyou データ削除（論理削除・連鎖削除）」と [activity-diagrams.md](activity-diagrams.md) の「Kyou 連鎖削除フロー」を参照。
 

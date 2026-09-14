@@ -113,18 +113,10 @@ func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
 		UpdateDevice:      r.Ctx.Device,
 		UpdateUser:        r.Ctx.UserID,
 	}
-	if err := r.Ctx.Repositories.WriteMiReKyouRep.AddMiReKyouInfo(ctx, mirekyou); err != nil {
+	if err := r.Ctx.Repositories.TempReps.MiReKyouTempRep.AddMiReKyouInfo(ctx, mirekyou, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return fmt.Errorf("error at add mirekyou info id=%s: %w", r.RequestID, err)
 	}
-	repName, repNameErr := r.Ctx.Repositories.WriteMiReKyouRep.GetRepName(ctx)
-	logGetRepNameFailure(ctx, "mirekyou", mirekyou.ID, repNameErr)
 	r.recordCreated("mirekyou", mirekyou.ID)
-	// ReKyouと同じくTargetIDInDataにリポスト対象のIDを入れる
-	// (usecase.updateMiReKyouLatestDataRepositoryAddress と揃える)
-	targetIDInData := r.targetID
-	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, &targetIDInData, false, now, repName)
-	// キャッシュに書き込み
-	logWriteThroughCacheFailure(ctx, "mirekyou", mirekyou.ID, r.Ctx.Repositories.WriteThroughMiReKyouCache(ctx, mirekyou))
 	return nil
 }
 

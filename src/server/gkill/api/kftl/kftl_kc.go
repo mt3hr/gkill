@@ -49,15 +49,10 @@ func (r *kftlKCRequest) DoRequest(ctx context.Context) error {
 		UpdateDevice: r.Ctx.Device,
 		UpdateUser:   r.Ctx.UserID,
 	}
-	if err := r.Ctx.Repositories.WriteKCRep.AddKCInfo(ctx, kc); err != nil {
+	if err := r.Ctx.Repositories.TempReps.KCTempRep.AddKCInfo(ctx, kc, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return err
 	}
-	repName, repNameErr := r.Ctx.Repositories.WriteKCRep.GetRepName(ctx)
-	logGetRepNameFailure(ctx, "kc", kc.ID, repNameErr)
 	r.recordCreated("kc", kc.ID)
-	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
-	// キャッシュに書き込み
-	logWriteThroughCacheFailure(ctx, "kc", kc.ID, r.Ctx.Repositories.WriteThroughKCCache(ctx, kc))
 	return nil
 }
 

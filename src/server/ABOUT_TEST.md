@@ -2,7 +2,7 @@
 
 ## 概要
 
-Go バックエンドのテスト。1254テスト関数、183テストファイル、32パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
+Go バックエンドのテスト。1263テスト関数、185テストファイル、32パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
 
 ## テストフレームワーク
 
@@ -35,7 +35,7 @@ src/server/gkill/
 │   ├── gkill_notification/       # 通知ターゲット
 │   ├── hide_files/               # ファイル非表示
 │   ├── sqlite3impl/              # SQLite3 ユーティリティ
-│   └── reps/                     # リポジトリ実装 (61ファイル)
+│   └── reps/                     # リポジトリ実装 (62ファイル)
 ├── dvnf/                    # DVNF ファイル管理 (3ファイル)
 └── main/                    # CLI エントリポイント (10ファイル)
     ├── common/                   # 共有ロジック・オプション・ログ・スレッド
@@ -47,7 +47,7 @@ src/server/gkill/
 
 | カテゴリ | テストファイル数 | 内容 |
 |---------|----------------|------|
-| API 統合 | 38 | 全データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント、SSRF・レート制限、デバイス名キャッシュ、プラグイン本文HTMLキャッシュ、rep名絞り込み（キャッシュON/OFF・tx確定後）、タグ絞り込み、時間帯フィルタ、MCP用取得、壊れたrepのWeb/MCP警告、認証時rep取得失敗のHTTP 500とErrorログ、無認証経路のボディ上限・読み取り期限（wrapNoAuthCapped）、ルート表（apiRoutes）とハンドラ・doc コメント・認証区分の突き合わせ、URLog登録の取得抑止フラグ配線のソース走査 |
+| API 統合 | 39 | 全データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント、SSRF・レート制限、デバイス名キャッシュ、プラグイン本文HTMLキャッシュ、rep名絞り込み（キャッシュON/OFF・tx確定後）、タグ絞り込み、時間帯フィルタ、MCP用取得、壊れたrepのWeb/MCP警告、認証時rep取得失敗のHTTP 500とErrorログ、無認証経路のボディ上限・読み取り期限（wrapNoAuthCapped）、ルート表（apiRoutes）とハンドラ・doc コメント・認証区分の突き合わせ、URLog登録の取得抑止フラグ配線のソース走査 |
 | 検索フィルタ・クエリ | 17 | `api/` 直下の検索フィルタ・タグ絞り込み・対象リポジトリ選択キャッシュ・rep名での結果絞り込み・並び替え・rep種別語彙の網羅 + `api/find/` のクエリビルダー・時間帯の秒解釈・検索語の正規化 + `api/find_word/` のワード判定（SQL とプラグイン SDK と揃える規則） |
 | 埋め込み配信 | 1 | `embed.go` の `init()` が登録する `.webmanifest` のMIME型（登録を落とすと `http.FileServer` が中身を見て `text/plain` で配ってしまい、PWAのmanifestが仕様どおりのMIMEでなくなる。ビルドもvetも通るのでここでしか気付けない） |
 | サンプルデータ | 1 | 配布サンプル `resources/gkill_sample_data` の現行コード互換性（アカウント認証・rep定義14件のパス実在と種別・全件検索で主要repから記録が返る・秘密鍵が空で配布されている） |
@@ -62,12 +62,12 @@ src/server/gkill/
 | 設定 | 3 | サーバ設定、アプリ設定、リポジトリ定義 |
 | 共有・通知 | 3 | 共有情報 CRUD、通知ターゲット |
 | ユーティリティ | 9 | SQLite3 ユーティリティ、ファイル非表示 |
-| リポジトリ | 63 | `reps/` 直下61（13データ型の SQLite3 実装 + キャッシュ + 一時 + プラグイン + プラグイン診断 + プラグインの GitCommitLog 型別アダプタ + デッドロック/ネスト並列回帰 + gitキャッシュUNIQUE + GPS集約dedup + 最新版アドレスのrep名走査 + URLog取得抑止フラグ + get_kyou の版履歴がキャッシュrepを回ること）+ `reps/cache/`・`reps/rep_cache_updater/` の2 |
+| リポジトリ | 64 | `reps/` 直下61（13データ型の SQLite3 実装 + キャッシュ + 一時 + プラグイン + プラグイン診断 + プラグインの GitCommitLog 型別アダプタ + デッドロック/ネスト並列回帰 + gitキャッシュUNIQUE + GPS集約dedup + 最新版アドレスのrep名走査 + URLog取得抑止フラグ + get_kyou の版履歴がキャッシュrepを回ること）+ `reps/cache/`・`reps/rep_cache_updater/` の2 |
 | DVNF | 3 | ファイル管理、CLI コマンドの引数解析、copy/move 共用 `copyFile` の実ファイル操作（内容一致・copyLastMod の mtime 保存） |
 | CLI/Main | 10 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ、スレッド、エントリポイント、パスワード管理、add_tag バッチ（ルール JSON の検証・HTTP投稿と応答判定を含む） |
 | プラグイン SDK | 5 | `Run()` の stdio ループ（18本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本）+ ワード判定 `Query.MatchText`（2本） |
 
-**合計 183 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
+**合計 185 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
 ずれたら `checkCounts` が落とす）。
 
 ## 規約のソース走査（`usecase/source_conventions_scan_test.go`）

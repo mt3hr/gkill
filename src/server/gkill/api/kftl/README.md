@@ -89,7 +89,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | ファイル | 役割 |
 |---------|------|
 | `kftl_factory.go` | `kftlFactory` — 行コンストラクタファクトリ。プレフィックス定数定義。各データ型の `generateXxxConstructor()` メソッドを提供 |
-| `kftl_statement.go` | `KFTLStatement` — KFTL テキスト全体のパースエントリポイント。`GenerateAndExecuteRequests()` でパース→リクエスト生成→実行を一括処理 |
+| `kftl_statement.go` | `KFTLStatement` — KFTL テキスト全体のパースエントリポイント。`GenerateAndExecuteRequests()` でパース→リクエスト生成→実行を一括処理。各リクエストは一時リポジトリに積み、末尾で `CommitTx`（1つの SQLite トランザクション）で確定する。失敗したら `DiscardTx` して何も残さない |
 | `kftl_statement_line.go` | `KFTLStatementLine` インタフェース — 各行が実装すべきメソッド定義。`StatementLineConstructorFunc` 型定義 |
 | `kftl_statement_line_context.go` | `KFTLStatementLineContext` — 行パース時のコンテキスト（BaseTime, AddSecond, UserID, Device 等） |
 
