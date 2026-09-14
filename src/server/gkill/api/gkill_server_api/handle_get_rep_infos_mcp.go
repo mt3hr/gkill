@@ -198,16 +198,26 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 	// そのプラグインのKyouは存在しないため、渡してもエラーも警告も無く0件になる。
 	// GPSログの供給元としては AttachedDataReps に data_kind="gpslog" で載っており、
 	// そちらが「query.repsの値ではない」と明示されている枠（ADR-0607）。
+	// 1本のプラグインが複数の rep 名を申告する（get_rep_name の rep_names。zip の Git リポジトリを
+	// 束ねるプラグインなど）ときは、その名前1つにつき1行にする。query.reps に渡せる値は
+	// 申告された名前であって manifest の rep_name ではないので、manifest 名の行は作らない
+	// （まだ1件も取り込んでおらず申告が空なら、行も無い。渡しても0件になる値を載せない）。
 	for _, pluginRep := range repositories.PluginReps {
 		manifest := pluginRep.GetManifest()
 		if !manifest.EmitsKyouOrDefault() {
 			continue
 		}
-		response.Plugins = append(response.Plugins, req_res.PluginRepInfoMCPDTO{
-			RepName:    manifest.RepName,
-			DataType:   manifest.DataType,
-			PluginName: manifest.Name,
-		})
+		repNames, err := pluginRep.GetRepNames(r.Context())
+		if err != nil {
+			repNames = []string{manifest.RepName}
+		}
+		for _, repName := range repNames {
+			response.Plugins = append(response.Plugins, req_res.PluginRepInfoMCPDTO{
+				RepName:    repName,
+				DataType:   manifest.DataType,
+				PluginName: manifest.Name,
+			})
+		}
 	}
 	slices.SortFunc(response.Plugins, func(a, b req_res.PluginRepInfoMCPDTO) int {
 		return strings.Compare(a.RepName, b.RepName)

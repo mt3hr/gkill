@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -69,6 +70,97 @@ func TestRunLoop_GetRepName(t *testing.T) {
 
 	if resp.RepName != "MyPlugin" {
 		t.Errorf("RepName = %q, want %q", resp.RepName, "MyPlugin")
+	}
+	if resp.RepNames != nil {
+		t.Errorf("RepNames = %v, want nil（Handler.RepNames 未設定なら欄を出さない）", *resp.RepNames)
+	}
+}
+
+// rawGetRepName は get_rep_name の応答を生の JSON オブジェクトとして返す。
+// gkill は "rep_names" の欠落と [] を区別するので、デコード後の型ではなく生の欄の有無を見る。
+func rawGetRepName(t *testing.T, h Handler) map[string]json.RawMessage {
+	t.Helper()
+	var in bytes.Buffer
+	if err := json.NewEncoder(&in).Encode(pluginRequest{ID: "req-1", Command: "get_rep_name"}); err != nil {
+		t.Fatalf("encode request: %v", err)
+	}
+	var out bytes.Buffer
+	runLoop(h, Config{}, t.TempDir(), "testuser", &in, &out)
+	raw := map[string]json.RawMessage{}
+	if err := json.Unmarshal(out.Bytes(), &raw); err != nil {
+		t.Fatalf("decode raw response %q: %v", out.String(), err)
+	}
+	return raw
+}
+
+// Handler.RepNames を実装していないプラグインの応答には rep_names 欄そのものが無いこと。
+// 欄があると gkill は「複数 rep 名に対応している」と読み、manifest の rep_name を使わなくなる。
+func TestRunLoop_GetRepName_OmitsRepNamesWhenNotImplemented(t *testing.T) {
+	raw := rawGetRepName(t, Handler{RepName: "MyPlugin"})
+	if _, exist := raw["rep_names"]; exist {
+		t.Errorf("rep_names 欄が出ている: %s（未実装なら欄ごと落とす）", raw["rep_names"])
+	}
+}
+
+// Handler.RepNames が返した名前がそのまま rep_names に載ること。
+func TestRunLoop_GetRepName_ReturnsRepNames(t *testing.T) {
+	var gotCfg Config
+	h := Handler{
+		RepName: "ArchivedGit",
+		RepNames: func(_ context.Context, cfg Config) ([]string, error) {
+			gotCfg = cfg
+			return []string{"racoonboard", "ocha"}, nil
+		},
+	}
+	resp := runLoopOnce(t, h, pluginRequest{ID: "req-1", Command: "get_rep_name"})
+	if resp.RepName != "ArchivedGit" {
+		t.Errorf("RepName = %q, want %q（manifest 名は rep_names と併存する）", resp.RepName, "ArchivedGit")
+	}
+	if resp.RepNames == nil || !slices.Equal(*resp.RepNames, []string{"racoonboard", "ocha"}) {
+		t.Errorf("RepNames = %v, want [racoonboard ocha]", resp.RepNames)
+	}
+	if gotCfg == nil {
+		t.Error("RepNames に cfg が渡っていない")
+	}
+}
+
+// まだ1件も無いとき（nil を返した／空スライスを返した）は "rep_names": [] を出すこと。
+// 欄を落とすと gkill は manifest の rep_name にフォールバックし、実装済みなのに「未対応」と読む。
+func TestRunLoop_GetRepName_EmptyRepNamesIsEmptyArrayNotOmitted(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		result []string
+	}{
+		{name: "nil", result: nil},
+		{name: "empty", result: []string{}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			raw := rawGetRepName(t, Handler{
+				RepName:  "ArchivedGit",
+				RepNames: func(_ context.Context, _ Config) ([]string, error) { return tc.result, nil },
+			})
+			got, exist := raw["rep_names"]
+			if !exist {
+				t.Fatal("rep_names 欄が無い（実装済みなら [] を出す）")
+			}
+			if string(got) != "[]" {
+				t.Errorf("rep_names = %s, want []", got)
+			}
+		})
+	}
+}
+
+// RepNames がエラーを返したら errors に載せ、rep_name も rep_names も出さないこと。
+func TestRunLoop_GetRepName_ErrorGoesToErrors(t *testing.T) {
+	resp := runLoopOnce(t, Handler{
+		RepName:  "ArchivedGit",
+		RepNames: func(_ context.Context, _ Config) ([]string, error) { return nil, errors.New("cache is broken") },
+	}, pluginRequest{ID: "req-1", Command: "get_rep_name"})
+	if len(resp.Errors) != 1 || resp.Errors[0] != "cache is broken" {
+		t.Errorf("Errors = %v, want [cache is broken]", resp.Errors)
+	}
+	if resp.RepNames != nil {
+		t.Errorf("RepNames = %v, want nil（エラー時は名前を返さない）", *resp.RepNames)
 	}
 }
 

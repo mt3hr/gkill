@@ -54,7 +54,7 @@ func (g *GkillServerAPI) HandleGetPluginConfigHTML(w http.ResponseWriter, r *htt
 	userID := auth.UserID
 
 	pm := g.GkillDAOManager.GetPluginManager(userID)
-	pluginRepo := pm.GetPluginByRepName(request.RepName)
+	pluginRepo := pm.GetPluginByRepName(r.Context(), request.RepName)
 	if pluginRepo == nil {
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.GetPluginConfigHTMLError,

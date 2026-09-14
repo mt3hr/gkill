@@ -15,6 +15,13 @@ type PluginRepository interface {
 	// GetManifest はプラグインのmanifest情報を返す。
 	GetManifest() gkill_plugin.PluginManifest
 
+	// GetRepNames はこのプラグインの記録が名乗る rep 名の全集合を返す（RepNamesProvider）。
+	// get_rep_name の応答 rep_names を短時間キャッシュして返し、応答に rep_names が無い
+	// （古いプラグイン・未実装）なら manifest の rep_name 1つを返す。
+	// プラグインが応答しないときは前回の値か manifest の名前にフォールバックし、エラーにしない
+	// （名前の列挙で検索全体を落とさないため）。
+	GetRepNames(ctx context.Context) ([]string, error)
+
 	// GetContentHTML は指定KyouIDの詳細ビューHTMLをプラグインから取得する。
 	GetContentHTML(ctx context.Context, kyouID string) (string, error)
 

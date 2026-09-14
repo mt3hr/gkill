@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -121,6 +122,37 @@ type pluginRepositoryImpl struct {
 	lastFindErrLogUnixNano atomic.Int64
 	// findErrCount は間引いた分も含む FindKyous の失敗の累計。
 	findErrCount atomic.Int64
+
+	// repNames は get_rep_name の応答 rep_names のキャッシュ。nil = 未取得。
+	// 名前の列挙は検索のたび（find_filter.go の Step4）に来るので、
+	// pluginRepNamesTTL の間は stdio へ行かずにここから答える。
+	repNames atomic.Pointer[pluginRepNamesCache]
+}
+
+// pluginRepNamesTTL は申告された rep 名を持ち回る時間。
+// プラグインが取り込みを進めて名前が増えても、この時間以内には一覧へ現れる
+// （「追加した記録が最大1分見えない」のと同じ約束）。
+//
+// 取得に失敗したときもフォールバック値をこの時間だけ持ち回る。
+// 応答しないプラグインへ検索のたびに取りに行くと、Step4 は fan-out の外で逐次に走るので
+// 全検索が期限（pluginCallTimeout）ぶん止まる。失敗のコストは1分に1回に抑える。
+const pluginRepNamesTTL = time.Minute
+
+// pluginRepNamesCache は申告された rep 名のスナップショット。
+type pluginRepNamesCache struct {
+	names     []string
+	fetchedAt time.Time
+	// declared は names が get_rep_name の応答（rep_names 非 null）から来たことを表す。
+	// false は manifest の rep_name にフォールバックした値。
+	declared bool
+}
+
+// isDeclared は name が申告済みの rep 名かを返す。
+func (c *pluginRepNamesCache) isDeclared(name string) bool {
+	if c == nil || !c.declared {
+		return false
+	}
+	return slices.Contains(c.names, name)
 }
 
 // インターフェース適合確認（コンパイル時チェック）
@@ -189,6 +221,11 @@ func (p *pluginRepositoryImpl) TypedIndex() *PluginTypedIndex {
 // indexRepName は索引用にリポジトリ表示名を返す。
 func (p *pluginRepositoryImpl) indexRepName() string {
 	return p.manifest.RepName
+}
+
+// indexIsDeclaredRepName は索引用に、name が申告済みの rep 名かを返す。
+func (p *pluginRepositoryImpl) indexIsDeclaredRepName(name string) bool {
+	return p.isDeclaredRepName(name)
 }
 
 // indexPluginName は索引用にプラグイン名を返す。
@@ -558,7 +595,7 @@ func (p *pluginRepositoryImpl) FindKyous(ctx context.Context, query *find.FindQu
 
 	kyous := make([]Kyou, 0, len(pluginKyous))
 	for _, pk := range pluginKyous {
-		k := convertPluginKyouToKyou(pk, p.manifest.RepName)
+		k := convertPluginKyouToKyouWith(pk, p.manifest.RepName, p.isDeclaredRepName)
 		if pluginKyouMatchesQuery(k, query) {
 			kyous = append(kyous, k)
 		}
@@ -581,7 +618,7 @@ func (p *pluginRepositoryImpl) GetKyou(ctx context.Context, id string, updateTim
 	if resp.Kyou == nil {
 		return nil, nil
 	}
-	kyou := convertPluginKyouToKyou(*resp.Kyou, p.manifest.RepName)
+	kyou := convertPluginKyouToKyouWith(*resp.Kyou, p.manifest.RepName, p.isDeclaredRepName)
 	return &kyou, nil
 }
 
@@ -604,7 +641,79 @@ func (p *pluginRepositoryImpl) GetRepName(_ context.Context) (string, error) {
 	return p.manifest.RepName, nil
 }
 
+// GetRepNames は申告された rep 名の全集合を返す（RepNamesProvider）。
+//
+// pluginRepNamesTTL 以内のキャッシュがあればそれを返し、無ければ get_rep_name を送る。
+// 応答に rep_names が無い（null）プラグインは manifest の rep_name 1つ。
+// 取得に失敗しても**エラーにしない**: 前回の値があればそれを、無ければ manifest の名前を返す。
+// ここは GetAllRepNames と検索の rep 名照合から呼ばれ、失敗を返すとその1本のために
+// 検索全体が落ちる。FindKyous の失敗が警告止まりなのと同じ扱いにする。
+func (p *pluginRepositoryImpl) GetRepNames(ctx context.Context) ([]string, error) {
+	if cached := p.repNames.Load(); cached != nil && time.Since(cached.fetchedAt) < pluginRepNamesTTL {
+		return slices.Clone(cached.names), nil
+	}
+
+	names, declared, err := p.fetchRepNames(ctx)
+	if err != nil {
+		previous := p.repNames.Load()
+		fallback := &pluginRepNamesCache{names: []string{p.manifest.RepName}, fetchedAt: time.Now()}
+		if previous != nil {
+			fallback.names = previous.names
+			fallback.declared = previous.declared
+		}
+		slog.Log(ctx, gkill_log.Warn, "plugin get_rep_name failed, using fallback rep names",
+			"plugin_name", fmt.Sprintf("%q", p.manifest.Name),
+			"fallback_rep_names", fmt.Sprintf("%q", fallback.names),
+			"error", fmt.Sprintf("%q", err))
+		p.repNames.Store(fallback)
+		return slices.Clone(fallback.names), nil
+	}
+	p.repNames.Store(&pluginRepNamesCache{names: names, fetchedAt: time.Now(), declared: declared})
+	return slices.Clone(names), nil
+}
+
+// fetchRepNames は get_rep_name を送り、申告された rep 名を返す。
+// 2つ目の戻り値は応答に rep_names があったか（null なら false で manifest の名前を返す）。
+// 空文字と重複は落とす。
+func (p *pluginRepositoryImpl) fetchRepNames(ctx context.Context) ([]string, bool, error) {
+	resp, err := p.callCommand(ctx, gkill_plugin.PluginRequest{
+		ID:      uuid.New().String(),
+		Command: "get_rep_name",
+	})
+	if err != nil {
+		return nil, false, err
+	}
+	if resp.RepNames == nil {
+		return []string{p.manifest.RepName}, false, nil
+	}
+	names := make([]string, 0, len(resp.RepNames))
+	seen := make(map[string]struct{}, len(resp.RepNames))
+	for _, name := range resp.RepNames {
+		if name == "" {
+			continue
+		}
+		if _, exist := seen[name]; exist {
+			continue
+		}
+		seen[name] = struct{}{}
+		names = append(names, name)
+	}
+	return names, true, nil
+}
+
+// isDeclaredRepName は name が get_rep_name で申告済みの rep 名かを返す。
+// キャッシュだけを見て、プラグインへは行かない（Kyou 1件ごとに呼ばれるため）。
+// 未取得なら false で、従来どおり manifest 名との不一致として1回だけ警告される。
+func (p *pluginRepositoryImpl) isDeclaredRepName(name string) bool {
+	return p.repNames.Load().isDeclared(name)
+}
+
 func (p *pluginRepositoryImpl) UpdateCache(ctx context.Context) error {
+	// 取り込みが進んで名前が増えていることがあるので、申告された rep 名は取り直す。
+	// 捨てずに古くするだけにするのは、取り直しに失敗したとき前回の値へ戻れるようにするため。
+	if cached := p.repNames.Load(); cached != nil {
+		p.repNames.Store(&pluginRepNamesCache{names: cached.names, declared: cached.declared})
+	}
 	// providesを宣言していないプラグインでは索引を持たない。
 	// 従来どおり何もしないことで、既存プラグインに新たなfind_kyousを発生させない。
 	if p.typedIndex == nil {
@@ -813,11 +922,19 @@ func warnPluginRepNameMismatchOnce(manifestRepName string, actualRepName string)
 // 空でない不一致は**上書きしない**。Kyou.rep_name はAPI応答にも出ていて、
 // クライアントのコンテキストメニューや get_kyou_histories_by_rep_name が乗っているため。
 // 代わりに組み合わせごとに1回だけ警告する。
+// get_rep_name で申告済みの名前（rep_names）は不一致ではないので警告しない
+// （convertPluginKyouToKyouWith）。
 func convertPluginKyouToKyou(pk gkill_plugin.PluginKyou, manifestRepName string) Kyou {
+	return convertPluginKyouToKyouWith(pk, manifestRepName, nil)
+}
+
+// convertPluginKyouToKyouWith は convertPluginKyouToKyou の、申告済み rep 名の判定付き版。
+// isDeclared が nil なら manifest の rep_name だけを正しい名前とみなす。
+func convertPluginKyouToKyouWith(pk gkill_plugin.PluginKyou, manifestRepName string, isDeclared func(string) bool) Kyou {
 	repName := pk.RepName
 	if repName == "" {
 		repName = manifestRepName
-	} else if repName != manifestRepName {
+	} else if repName != manifestRepName && (isDeclared == nil || !isDeclared(repName)) {
 		warnPluginRepNameMismatchOnce(manifestRepName, repName)
 	}
 	return Kyou{

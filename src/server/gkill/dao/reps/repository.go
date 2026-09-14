@@ -80,3 +80,31 @@ type Repository interface {
 	// リポジトリ名でのフィルタや、IDFの実ファイル配信で具象実装を列挙するのに使います。
 	UnWrap() ([]Repository, error)
 }
+
+// RepNamesProvider は、1つのリーフ実装が複数の rep 名を名乗るリポジトリが満たす任意の契約です。
+//
+// プラグイン1本が複数の Git リポジトリを代表するとき、Kyou.RepName はリポジトリごとに
+// 別の名前になります。GetRepName が返す1つの名前だけを見て名前を列挙・照合すると、
+// サイドバーの rep 一覧に載らず、rep 名の絞り込み（find_filter.go の Step4）で検索対象からも
+// 外れて、エラーも警告も無いまま0件になります。名前を**列挙する側**は GetRepName ではなく
+// RepNamesOf を使ってください。GetRepName は引き続き「この実装を代表する1つの名前」で、
+// MatchReps のキーやログにはそちらを使います。
+type RepNamesProvider interface {
+	// GetRepNames はこの実装の記録が名乗る rep 名の全集合を返します。
+	// 空スライスは「いまは名乗る名前が無い」で、その間は rep 名の絞り込みで選ばれません。
+	GetRepNames(ctx context.Context) ([]string, error)
+}
+
+// RepNamesOf は rep が名乗る rep 名の全集合を返します。
+// RepNamesProvider を実装していれば GetRepNames を、そうでなければ GetRepName の1つを返します。
+// GetAllRepNames と find_filter.go の rep 名照合はこれを通し、GetRepName を直接見ないこと。
+func RepNamesOf(ctx context.Context, rep Repository) ([]string, error) {
+	if provider, ok := rep.(RepNamesProvider); ok {
+		return provider.GetRepNames(ctx)
+	}
+	repName, err := rep.GetRepName(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return []string{repName}, nil
+}

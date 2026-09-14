@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"slices"
 	"sync"
 	"testing"
 	"time"
@@ -342,5 +343,44 @@ func TestCompareMiProjectionPreference(t *testing.T) {
 	// どちらも正準でないなら順序を作らない（UpdateTime 側の判断に委ねる）
 	if compareMiProjectionPreference("mi_check", "mi_limit") != 0 {
 		t.Error("正準でない射影同士に順序を作っている")
+	}
+}
+
+// repNamesStubRep は名前だけを持つリーフ。GetAllRepNames の列挙の確認用。
+type repNamesStubRep struct {
+	Repository
+	repName  string
+	repNames []string // nil なら RepNamesProvider を名乗らない
+}
+
+func (s *repNamesStubRep) GetRepName(_ context.Context) (string, error) { return s.repName, nil }
+func (s *repNamesStubRep) UnWrap() ([]Repository, error)                { return []Repository{s}, nil }
+
+// repNamesProviderStubRep は複数の rep 名を名乗るリーフ。
+type repNamesProviderStubRep struct{ repNamesStubRep }
+
+func (s *repNamesProviderStubRep) GetRepNames(_ context.Context) ([]string, error) {
+	return s.repNames, nil
+}
+
+// UnWrap は自分自身（外側の型）を返す。埋め込み側の UnWrap に任せると内側の型が返り、
+// RepNamesProvider を名乗らないリーフとして数えられてしまう。
+func (s *repNamesProviderStubRep) UnWrap() ([]Repository, error) { return []Repository{s}, nil }
+
+// GetAllRepNames が RepNamesProvider の申告名を全部並べ、名乗らないリーフは GetRepName の1つになること。
+// プラグインが名乗った名前がここに載らないと、サイドバーの rep 一覧に出ず利用者が選べない。
+// 1つのリーフが複数の名前を返しても集約が詰まらない（チャネル容量）ことも兼ねる。
+func TestGkillRepositoriesGetAllRepNames_IncludesDeclaredRepNames(t *testing.T) {
+	plugin := &repNamesProviderStubRep{repNamesStubRep{repName: "ArchivedGit", repNames: []string{"racoonboard", "ocha", "urlog"}}}
+	native := &repNamesStubRep{repName: "ocha"}
+	repositories := &GkillRepositories{Reps: Repositories{plugin, native}}
+
+	got, err := repositories.GetAllRepNames(context.Background())
+	if err != nil {
+		t.Fatalf("GetAllRepNames failed: %v", err)
+	}
+	want := []string{"ocha", "racoonboard", "urlog"}
+	if !slices.Equal(got, want) {
+		t.Errorf("GetAllRepNames = %v, want %v（申告名を全部・manifest名は入れない・同名は1つ）", got, want)
 	}
 }

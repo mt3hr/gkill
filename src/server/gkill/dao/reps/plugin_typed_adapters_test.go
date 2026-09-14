@@ -481,8 +481,9 @@ type stubIndexSource struct {
 	kyous    []gkill_plugin.PluginKyou
 }
 
-func (s *stubIndexSource) indexRepName() string    { return "StubRep" }
-func (s *stubIndexSource) indexPluginName() string { return "stub_plugin" }
+func (s *stubIndexSource) indexRepName() string               { return "StubRep" }
+func (s *stubIndexSource) indexIsDeclaredRepName(string) bool { return false }
+func (s *stubIndexSource) indexPluginName() string            { return "stub_plugin" }
 func (s *stubIndexSource) indexProvidedKinds() map[gkill_plugin.PluginProvidedKind]struct{} {
 	return map[gkill_plugin.PluginProvidedKind]struct{}{}
 }

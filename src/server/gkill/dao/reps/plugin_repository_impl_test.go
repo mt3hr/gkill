@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -45,7 +46,14 @@ const (
 	// リクエストのたびにコマンド名を state ファイルに追記するので、
 	// 「アダプタが1件ずつプラグインへ往復していないか」を回数で検査できる。
 	behaviorTyped = "typed"
+	// behaviorMultiRep は get_rep_name で複数の rep 名（rep_names）を申告する。
+	// 呼ばれた回数を state ファイルに追記し、statePath+".rep_names_fail" があれば
+	// errors を返す。find_kyous はリポジトリ名を rep_name に持つ Kyou を返す。
+	behaviorMultiRep = "multi_rep"
 )
+
+// fakeMultiRepNames は behaviorMultiRep の偽プラグインが申告する rep 名（重複と空を含む生の値）。
+var fakeMultiRepNames = []string{"racoonboard", "ocha", "", "ocha"}
 
 // fakeTypedKyouCount は behaviorTyped の偽プラグインが返すKyouの件数。
 const fakeTypedKyouCount = 3
@@ -162,6 +170,32 @@ func runFakePlugin() {
 					})
 				}
 				resp.HasMoreGPSLogs = offset+len(resp.GPSLogs) < fakeGPSLogTotal
+				_ = encoder.Encode(resp)
+				continue
+			}
+		}
+		if behavior == behaviorMultiRep {
+			statePath := os.Getenv(envPluginStateFile)
+			switch req.Command {
+			case "get_rep_name":
+				if f, err := os.OpenFile(statePath+".rep_names_calls", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600); err == nil {
+					fmt.Fprintln(f, req.ID)
+					_ = f.Close()
+				}
+				if _, err := os.Stat(statePath + ".rep_names_fail"); err == nil {
+					resp.Errors = []string{"rep names unavailable"}
+				} else {
+					resp.RepName = "fake_plugin_rep"
+					resp.RepNames = append([]string{}, fakeMultiRepNames...)
+				}
+				_ = encoder.Encode(resp)
+				continue
+			case "find_kyous":
+				k1 := fakePluginKyou("commit-1")
+				k1.RepName = "racoonboard"
+				k2 := fakePluginKyou("commit-2")
+				k2.RepName = "ocha"
+				resp.Kyous = []gkill_plugin.PluginKyou{k1, k2}
 				_ = encoder.Encode(resp)
 				continue
 			}
@@ -818,5 +852,143 @@ func TestPluginRepository_FindKyousSuccessLeavesNoWarning(t *testing.T) {
 
 	if warnings := PluginFindWarnings(ctx); len(warnings) != 0 {
 		t.Errorf("正常時に警告が立ってはいけない: got %v", warnings)
+	}
+}
+
+// countRepNamesCalls は behaviorMultiRep の偽プラグインが get_rep_name を何回受けたかを返す。
+func countRepNamesCalls(t *testing.T, statePath string) int {
+	t.Helper()
+	b, err := os.ReadFile(statePath + ".rep_names_calls")
+	if os.IsNotExist(err) {
+		return 0
+	}
+	if err != nil {
+		t.Fatalf("read rep_names calls: %v", err)
+	}
+	return strings.Count(string(b), "\n")
+}
+
+// TestPluginRepository_GetRepNames_FallsBackToManifestWhenNotDeclared は、
+// rep_names を返さない（null）従来のプラグインでは manifest の rep_name 1つになることを確認する。
+// ここが崩れると既存プラグインが rep 一覧から消える。
+func TestPluginRepository_GetRepNames_FallsBackToManifestWhenNotDeclared(t *testing.T) {
+	fp := newFakePluginRepository(t, behaviorNormal)
+	names, err := fp.rep.GetRepNames(context.Background())
+	if err != nil {
+		t.Fatalf("GetRepNames failed: %v", err)
+	}
+	if !slices.Equal(names, []string{"fake_plugin_rep"}) {
+		t.Errorf("GetRepNames = %v, want [fake_plugin_rep]（rep_names が null なら manifest の1つ）", names)
+	}
+}
+
+// TestPluginRepository_GetRepNames_DeclaredNamesAreCached は、申告された名前が
+// 空と重複を除いて返り、TTL 内の2回目は stdio へ行かないことを確認する。
+// 名前の列挙は検索のたびに来るので、毎回プラグインへ往復すると全検索が直列に遅くなる。
+func TestPluginRepository_GetRepNames_DeclaredNamesAreCached(t *testing.T) {
+	fp := newFakePluginRepository(t, behaviorMultiRep)
+	ctx := context.Background()
+
+	names, err := fp.rep.GetRepNames(ctx)
+	if err != nil {
+		t.Fatalf("GetRepNames failed: %v", err)
+	}
+	if !slices.Equal(names, []string{"racoonboard", "ocha"}) {
+		t.Errorf("GetRepNames = %v, want [racoonboard ocha]（空と重複は落とす）", names)
+	}
+
+	names2, err := fp.rep.GetRepNames(ctx)
+	if err != nil {
+		t.Fatalf("GetRepNames(2回目) failed: %v", err)
+	}
+	if !slices.Equal(names2, names) {
+		t.Errorf("2回目の GetRepNames = %v, want %v", names2, names)
+	}
+	if calls := countRepNamesCalls(t, fp.statePath); calls != 1 {
+		t.Errorf("get_rep_name の呼び出し回数 = %d, want 1（TTL 内はキャッシュから答える）", calls)
+	}
+
+	// 返したスライスを呼び出し側が壊してもキャッシュは変わらない
+	names2[0] = "broken"
+	names3, _ := fp.rep.GetRepNames(ctx)
+	if names3[0] != "racoonboard" {
+		t.Errorf("キャッシュが呼び出し側の書き換えで壊れた: %v", names3)
+	}
+
+	// UpdateCache で捨てると取り直す
+	if err := fp.rep.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache failed: %v", err)
+	}
+	if _, err := fp.rep.GetRepNames(ctx); err != nil {
+		t.Fatalf("GetRepNames(UpdateCache 後) failed: %v", err)
+	}
+	if calls := countRepNamesCalls(t, fp.statePath); calls != 2 {
+		t.Errorf("UpdateCache 後の get_rep_name 呼び出し回数 = %d, want 2", calls)
+	}
+}
+
+// TestPluginRepository_GetRepNames_FailureFallsBackWithoutError は、get_rep_name が失敗しても
+// エラーにせず、前回の値（無ければ manifest 名）を返すことを確認する。
+// 名前の列挙で失敗を返すと、そのプラグイン1本のために検索全体が落ちる。
+func TestPluginRepository_GetRepNames_FailureFallsBackWithoutError(t *testing.T) {
+	fp := newFakePluginRepository(t, behaviorMultiRep)
+	ctx := context.Background()
+
+	// 初回から失敗: manifest 名にフォールバック
+	if err := os.WriteFile(fp.statePath+".rep_names_fail", []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	names, err := fp.rep.GetRepNames(ctx)
+	if err != nil {
+		t.Fatalf("失敗時にエラーを返してはいけない: %v", err)
+	}
+	if !slices.Equal(names, []string{"fake_plugin_rep"}) {
+		t.Errorf("初回失敗時 = %v, want [fake_plugin_rep]", names)
+	}
+	// 失敗もキャッシュされ、TTL 内は取りに行かない（応答しないプラグインで全検索が止まらないため）
+	_, _ = fp.rep.GetRepNames(ctx)
+	if calls := countRepNamesCalls(t, fp.statePath); calls != 1 {
+		t.Errorf("失敗直後の再呼び出しで stdio へ行った: calls = %d, want 1", calls)
+	}
+
+	// 成功 → 失敗: 前回の申告値を返す
+	_ = os.Remove(fp.statePath + ".rep_names_fail")
+	_ = fp.rep.UpdateCache(ctx)
+	names, _ = fp.rep.GetRepNames(ctx)
+	if !slices.Equal(names, []string{"racoonboard", "ocha"}) {
+		t.Fatalf("成功時 = %v, want [racoonboard ocha]", names)
+	}
+	if err := os.WriteFile(fp.statePath+".rep_names_fail", []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_ = fp.rep.UpdateCache(ctx)
+	names, err = fp.rep.GetRepNames(ctx)
+	if err != nil {
+		t.Fatalf("失敗時にエラーを返してはいけない: %v", err)
+	}
+	if !slices.Equal(names, []string{"racoonboard", "ocha"}) {
+		t.Errorf("2回目の失敗時 = %v, want 前回の申告値 [racoonboard ocha]", names)
+	}
+}
+
+// TestPluginRepository_FindKyousKeepsDeclaredRepNames は、申告済みの rep 名を持つ Kyou が
+// manifest 名で上書きされずに返ることを確認する（rep 絞り込みは Kyou.RepName で行われる）。
+func TestPluginRepository_FindKyousKeepsDeclaredRepNames(t *testing.T) {
+	fp := newFakePluginRepository(t, behaviorMultiRep)
+	ctx := context.Background()
+	if _, err := fp.rep.GetRepNames(ctx); err != nil {
+		t.Fatal(err)
+	}
+	got, err := fp.rep.FindKyous(ctx, &find.FindQuery{})
+	if err != nil {
+		t.Fatalf("FindKyous failed: %v", err)
+	}
+	kyous := got["fake_plugin_rep"]
+	repNames := map[string]string{}
+	for _, k := range kyous {
+		repNames[k.ID] = k.RepName
+	}
+	if repNames["commit-1"] != "racoonboard" || repNames["commit-2"] != "ocha" {
+		t.Errorf("Kyou.RepName が申告名のまま残っていない: %v", repNames)
 	}
 }

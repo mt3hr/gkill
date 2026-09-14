@@ -387,3 +387,60 @@ func TestSelectMatchRepsFromQuery_PartiallyMatchedWrapperKeepsCachedRep(t *testi
 		t.Errorf("枝刈り判定の UnWrap() が呼ばれていない (A=%d B=%d)", unwrapCallsA, unwrapCallsB)
 	}
 }
+
+// stubMultiNameRep は複数の rep 名を名乗るリーフ（RepNamesProvider）。
+// zip の Git リポジトリを束ねるプラグインは manifest の名前（GetRepName）ではなく
+// リポジトリ名（GetRepNames）を名乗る。
+type stubMultiNameRep struct {
+	reps.IDFKyouRepository
+	repName  string
+	repNames []string
+}
+
+func (s *stubMultiNameRep) GetRepName(_ context.Context) (string, error) { return s.repName, nil }
+func (s *stubMultiNameRep) GetRepNames(_ context.Context) ([]string, error) {
+	return s.repNames, nil
+}
+func (s *stubMultiNameRep) UnWrap() ([]reps.Repository, error) { return []reps.Repository{s}, nil }
+
+// rep名指定が、リーフの GetRepName ではなく申告した rep 名の集合（GetRepNames）と照合されること。
+//
+// プラグインの Kyou はリポジトリ名を rep_name に持ち、GUI はサイドバーで選ばれた
+// その名前を query.reps に送る。manifest 名だけで照合すると、名前が一覧に載っているのに
+// そのプラグインが検索対象から外れ、エラーも警告も無く0件になる。
+func TestSelectMatchRepsFromQuery_RepsMatchDeclaredRepNames(t *testing.T) {
+	ctx := context.Background()
+
+	for _, tc := range []struct {
+		name string
+		reps []string
+		want bool
+	}{
+		{name: "申告名の1つを指定すれば選ばれる", reps: []string{"racoonboard"}, want: true},
+		{name: "manifest名（GetRepName）の指定では選ばれない", reps: []string{"ArchivedGit"}, want: false},
+		{name: "どの申告名でもなければ選ばれない", reps: []string{"other"}, want: false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			plugin := &stubMultiNameRep{repName: "ArchivedGit", repNames: []string{"racoonboard", "ocha"}}
+			findCtx := &FindKyouContext{
+				MatchReps: map[string]reps.Repository{},
+				Repositories: &reps.GkillRepositories{
+					IDFKyouReps: reps.IDFKyouRepositories{plugin},
+				},
+				ParsedFindQuery: &find.FindQuery{
+					IsImageOnly: true,
+					Reps:        tc.reps,
+				},
+			}
+
+			f := &FindFilter{}
+			if _, err := f.selectMatchRepsFromQuery(ctx, findCtx); err != nil {
+				t.Fatalf("selectMatchRepsFromQuery failed: %v", err)
+			}
+			_, selected := findCtx.MatchReps["ArchivedGit"]
+			if selected != tc.want {
+				t.Errorf("selected = %v, want %v (MatchReps=%v)", selected, tc.want, findCtx.MatchReps)
+			}
+		})
+	}
+}
