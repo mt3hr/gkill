@@ -20,6 +20,7 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 		writeGkillErrorResponse(r.Context(), w, &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		})
 		return false
 	}
@@ -32,6 +33,7 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 		writeGkillErrorResponse(r.Context(), w, &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
 			ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
+			Cause:        err,
 		})
 		return false
 	}

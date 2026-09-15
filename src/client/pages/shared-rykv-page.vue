@@ -8,20 +8,7 @@
             :kyou_change_channel="null /* 単独ページ。画面間の伝播はポートの中だけ */" :column_state_instance_key="''"
             @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
             @received_messages="(...messages: unknown[]) => write_messages(messages[0] as Array<GkillMessage>)" />
-        <div class="alert_container" role="status" aria-live="polite">
-            <v-slide-y-transition group>
-                <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
-                    v-for="message in messages" :key="message.id">
-                    <template v-slot:activator="{ props }">
-                        <v-alert v-bind="props" :color="message.is_error ? 'error' : undefined"
-                            :role="message.is_error ? 'alert' : undefined"
-                            :closable="message.closable" @click:close="close_message(message.id)">
-                            {{ message.message }}
-                        </v-alert>
-                    </template>
-                </v-tooltip>
-            </v-slide-y-transition>
-        </div>
+        <GkillMessageFeedView />
     </div>
 </template>
 
@@ -32,6 +19,7 @@ import rykvView from './views/rykv-view.vue'
 import type { KyouViewEmits } from './views/kyou-view-emits'
 import type { SharedRYKVPageProps } from './shared-rykv-page-props'
 import { useSharedRykvPage } from '@/classes/use-shared-rykv-page'
+import GkillMessageFeedView from './views/gkill-message-feed-view.vue'
 
 const props = defineProps<SharedRYKVPageProps>()
 defineEmits<KyouViewEmits>()
@@ -42,12 +30,10 @@ const {
     app_title_bar_height,
     app_content_height,
     app_content_width,
-    messages,
 
     // Event handlers
     write_errors,
     write_messages,
-    close_message,
 } = useSharedRykvPage({ props })
 </script>
 <style scoped>

@@ -5,20 +5,7 @@
             :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
             @received_messages="(...messages: unknown[]) => write_messages(messages[0] as Array<GkillMessage>)" />
-        <div class="alert_container" role="status" aria-live="polite">
-            <v-slide-y-transition group>
-                <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
-                    v-for="message in messages" :key="message.id">
-                    <template v-slot:activator="{ props }">
-                        <v-alert v-bind="props" :color="message.is_error ? 'error' : undefined"
-                            :role="message.is_error ? 'alert' : undefined"
-                            :closable="message.closable" @click:close="close_message(message.id)">
-                            {{ message.message }}
-                        </v-alert>
-                    </template>
-                </v-tooltip>
-            </v-slide-y-transition>
-        </div>
+        <GkillMessageFeedView />
     </div>
 </template>
 
@@ -28,6 +15,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import sharedMiTaskView from './views/shared-mi-view.vue'
 import type { SharedMiPageProps } from './shared-mi-page-props'
 import { useSharedMiPage } from '@/classes/use-shared-mi-page'
+import GkillMessageFeedView from './views/gkill-message-feed-view.vue'
 
 const props = defineProps<SharedMiPageProps>()
 
@@ -38,12 +26,10 @@ const {
     app_content_height,
     app_content_width,
     share_kyou_id,
-    messages,
 
     // Event handlers
     write_errors,
     write_messages,
-    close_message,
 } = useSharedMiPage({ props })
 </script>
 <style scoped>

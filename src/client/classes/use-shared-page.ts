@@ -9,6 +9,7 @@ import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-applicati
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { useRoute } from 'vue-router'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
+import { useGkillMessageFeed } from '@/classes/use-gkill-message-feed'
 
 export function useSharedPage() {
     const route = useRoute()
@@ -22,10 +23,17 @@ export function useSharedPage() {
     const application_config: Ref<ApplicationConfig | null> = ref(null)
     const is_loading: Ref<boolean> = ref(true)
 
-    const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
+    const { push_errors, push_messages } = useGkillMessageFeed()
+
+    function write_errors(errors_: Array<GkillError>): void {
+        push_errors(errors_)
+    }
+
+    function write_messages(messages_: Array<GkillMessage>): void {
+        push_messages(messages_)
+    }
 
     // ── Helpers ──
-    const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 
     gkill_api_plane.value = GkillAPI.get_instance()
 
@@ -86,67 +94,6 @@ export function useSharedPage() {
         }
     }
 
-    function write_errors(errors_: Array<GkillError>): void {
-        const received_errors = new Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>()
-        for (let i = 0; i < errors_.length; i++) {
-            if (errors_[i] && errors_[i].error_message) {
-                received_errors.push({
-                    code: errors_[i].error_code,
-                    message: errors_[i].error_message,
-                    id: GkillAPI.get_instance().generate_uuid(),
-                    show_snackbar: true,
-                    closable: errors_[i].show_keep,
-                    auto_close_duration_milli_seconds: errors_[i].show_keep ? null : 2500,
-                    is_error: true,
-                })
-            }
-        }
-        messages.value.push(...received_errors)
-        for (let j = 0; j < received_errors.length; j++) {
-            const auto_close_duration_milli_seconds = received_errors[j].auto_close_duration_milli_seconds
-            if (auto_close_duration_milli_seconds) {
-                sleep(auto_close_duration_milli_seconds).then(() => {
-                    close_message(received_errors[j].id)
-                })
-            }
-        }
-    }
-
-    function write_messages(messages_: Array<GkillMessage>): void {
-        const received_messages = new Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>()
-        for (let i = 0; i < messages_.length; i++) {
-            if (messages_[i] && messages_[i].message) {
-                received_messages.push({
-                    code: messages_[i].message_code,
-                    message: messages_[i].message,
-                    id: GkillAPI.get_instance().generate_uuid(),
-                    show_snackbar: true,
-                    closable: messages_[i].show_keep,
-                    auto_close_duration_milli_seconds: messages_[i].show_keep ? null : 2500,
-                    is_error: false,
-                })
-            }
-        }
-        messages.value.push(...received_messages)
-        for (let j = 0; j < received_messages.length; j++) {
-            const auto_close_duration_milli_seconds = received_messages[j].auto_close_duration_milli_seconds
-            if (auto_close_duration_milli_seconds) {
-                sleep(auto_close_duration_milli_seconds).then(() => {
-                    close_message(received_messages[j].id)
-                })
-            }
-        }
-    }
-
-    function close_message(message_id: string): void {
-        for (let i = 0; i < messages.value.length; i++) {
-            if (messages.value[i].id === message_id) {
-                messages.value.splice(i, 1)
-                return
-            }
-        }
-    }
-
     // ── Lifecycle ──
     onMounted(async () => {
         await reset_dialog_history()
@@ -163,9 +110,7 @@ export function useSharedPage() {
         gkill_api_for_share,
         application_config,
         is_loading,
-        messages,
 
         // Event handlers
-        close_message,
     }
 }

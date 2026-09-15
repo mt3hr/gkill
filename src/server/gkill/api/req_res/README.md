@@ -23,10 +23,10 @@
 - `SessionID string` — 認証セッション（login 以外）
 
 **Response 共通:**
-- `Errors []*message.GkillError` — エラー情報（json タグは `errors`）
-- `Messages []*message.GkillMessage` — メッセージ情報（json タグは `messages`）
+- `Errors message.GkillErrors` — エラー情報（json タグは `errors`）
+- `Messages message.GkillMessages` — メッセージ情報（json タグは `messages`）
 
-> どちらも `omitempty` を付けていないので、**成功時は nil スライスがそのまま `"errors": null` / `"messages": null` として出る**。TypeScript 側で受けるときは `res.errors ?? []` を通してからスプレッドすること（素の `[...res.errors]` は例外になる）。
+> どちらも名前付きスライス型で、**成功時（nil）でも `"errors": []` / `"messages": []` として出る**（`message.GkillErrors` / `GkillMessages` の `MarshalJSON`。2026-09-15 までは `null` だった）。TypeScript 側の `res.errors ?? []` のガードは古い応答のために残してある。
 
 ## 全ファイル一覧（188ファイル: 型定義187 + テスト `req_res_test.go` 1）
 

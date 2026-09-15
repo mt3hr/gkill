@@ -25,6 +25,7 @@ func (uc *UsecaseContext) AddLantana(ctx context.Context, repositories *reps.Gki
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -38,6 +39,11 @@ func (uc *UsecaseContext) AddLantana(ctx context.Context, repositories *reps.Gki
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteLantanaRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_ADD_LANTANA_MESSAGE", "lantana"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteLantanaRep.AddLantanaInfo(ctx, lantana)
 		if err != nil {
@@ -46,6 +52,7 @@ func (uc *UsecaseContext) AddLantana(ctx context.Context, repositories *reps.Gki
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddLantanaError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -62,6 +69,7 @@ func (uc *UsecaseContext) AddLantana(ctx context.Context, repositories *reps.Gki
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddLantanaError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -78,6 +86,7 @@ func (uc *UsecaseContext) AddLantana(ctx context.Context, repositories *reps.Gki
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetLantanaError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_ADDED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -111,6 +120,7 @@ func (uc *UsecaseContext) UpdateLantana(ctx context.Context, repositories *reps.
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -124,6 +134,11 @@ func (uc *UsecaseContext) UpdateLantana(ctx context.Context, repositories *reps.
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteLantanaRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_UPDATE_LANTANA_MESSAGE", "lantana"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err := repositories.WriteLantanaRep.AddLantanaInfo(ctx, lantana)
 		if err != nil {
@@ -132,6 +147,7 @@ func (uc *UsecaseContext) UpdateLantana(ctx context.Context, repositories *reps.
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateLantanaError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -159,6 +175,7 @@ func (uc *UsecaseContext) UpdateLantana(ctx context.Context, repositories *reps.
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateLantanaError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -175,6 +192,7 @@ func (uc *UsecaseContext) UpdateLantana(ctx context.Context, repositories *reps.
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetLantanaError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_UPDATED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -208,6 +226,7 @@ func (uc *UsecaseContext) GetLantanaHistories(ctx context.Context, repositories 
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_LANTANA_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}

@@ -50,6 +50,7 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ACCOUNT_AUTH_MESSAGE"}),
+			Cause:        err,
 		}
 		return nil, gkillError, err
 	}

@@ -6,9 +6,9 @@ import (
 )
 
 type UpdateMiReKyouResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	UpdatedMiReKyou *reps.MiReKyou `json:"updated_mirekyou"`
 

@@ -6,9 +6,9 @@ import (
 )
 
 type AddAccountResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	AddedAccountInfo *account.Account `json:"added_account_info"`
 }

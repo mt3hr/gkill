@@ -256,10 +256,11 @@ func TestResponseStatus_Conflict(t *testing.T) {
 }
 
 // TestResponseStatus_SuccessIsStill200 は成功時が今までどおり 200 で、
-// ボディの形も変わっていないことを確認する。
+// errors / messages が **空配列 []** で返ることを確認する。
 //
-// この改修で変えたのはステータス行だけ。ボディを1バイトでも変えると、
-// ステータスを見ないクライアント(gkill-api.ts)側で回帰する。
+// 2026-08 のステータス導入時は「ボディを1バイトも変えない」を守り null のままだったが、
+// 2026-09-15（ADR-0710）に境界で [] に揃えた。消費者側の `res.errors ?? []` /
+// `&& length` のガードはそのまま通る（[] は truthy で長さ 0）。
 func TestResponseStatus_SuccessIsStill200(t *testing.T) {
 	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
@@ -283,10 +284,14 @@ func TestResponseStatus_SuccessIsStill200(t *testing.T) {
 	if err := json.Unmarshal(raw, &body); err != nil {
 		t.Fatalf("decode body: %v", err)
 	}
-	// 成功時の errors / messages は omitempty が無いので null で返る。
-	// ここが [] に変わるとクライアントの判定(res.errors ?? [])の前提が動く。
-	if got := string(body["errors"]); got != "null" {
-		t.Errorf("成功時の errors = %s, want null", got)
+	// 成功時の errors は null ではなく []（message.GkillErrors の MarshalJSON）。
+	// null に戻ると、全消費者が「サーバの偶然の実装詳細」を防御する状態へ戻る。
+	if got := string(body["errors"]); got != "[]" {
+		t.Errorf("成功時の errors = %s, want []", got)
+	}
+	// messages は成功メッセージが1件以上入る（null ではない）
+	if got := string(body["messages"]); got == "null" || got == "" {
+		t.Errorf("成功時の messages = %s, want 配列", got)
 	}
 	if _, ok := body["application_config"]; !ok {
 		t.Error("application_config がレスポンスに無い")

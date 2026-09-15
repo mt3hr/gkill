@@ -47,6 +47,7 @@ func (g *GkillServerAPI) HandleGetIDFKyouByRelativePath(w http.ResponseWriter, r
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetIDFKyouByRelativePathRequestDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 		}
@@ -59,6 +60,7 @@ func (g *GkillServerAPI) HandleGetIDFKyouByRelativePath(w http.ResponseWriter, r
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetIDFKyouByRelativePathRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -79,6 +81,7 @@ func (g *GkillServerAPI) HandleGetIDFKyouByRelativePath(w http.ResponseWriter, r
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -91,6 +94,7 @@ func (g *GkillServerAPI) HandleGetIDFKyouByRelativePath(w http.ResponseWriter, r
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -121,6 +125,7 @@ func (g *GkillServerAPI) HandleGetIDFKyouByRelativePath(w http.ResponseWriter, r
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetIDFKyouByRelativePathRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -134,6 +139,7 @@ func (g *GkillServerAPI) HandleGetIDFKyouByRelativePath(w http.ResponseWriter, r
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFKyouByRelativePathError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -146,6 +152,7 @@ func (g *GkillServerAPI) HandleGetIDFKyouByRelativePath(w http.ResponseWriter, r
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetIDFKyouByRelativePathError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -160,6 +167,7 @@ func (g *GkillServerAPI) HandleGetIDFKyouByRelativePath(w http.ResponseWriter, r
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetIDFKyouByRelativePathError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return

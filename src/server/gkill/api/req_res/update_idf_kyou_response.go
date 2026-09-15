@@ -6,9 +6,9 @@ import (
 )
 
 type UpdateIDFKyouResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	UpdatedIDFKyou *reps.IDFKyou `json:"updated_idf_kyou"`
 

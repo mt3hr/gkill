@@ -2459,27 +2459,68 @@ export class GkillAPI {
         }
 
         private async gkill_fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+                let res: Response
                 try {
-                        return await fetch(input, init)
+                        res = await fetch(input, init)
                 } catch (e) {
                         if (!navigator.onLine || (e instanceof TypeError)) {
                                 // オフラインは PWA では想定内の状態。ここを error にすると
                                 // 電波の無い場所で使うたびにコンソールが赤くなる。
                                 console.warn('[GkillAPI] network error:', e)
-                                const body = {
-                                        errors: [{
-                                                error_code: GkillErrorCodes.network_error,
-                                                error_message: i18n.global.t('NETWORK_ERROR_MESSAGE')
-                                        }],
-                                        messages: []
-                                }
-                                return new Response(JSON.stringify(body), {
-                                        status: 200,
-                                        headers: { 'Content-Type': 'application/json' }
-                                })
+                                return GkillAPI.synthesize_error_response(GkillErrorCodes.network_error, i18n.global.t('NETWORK_ERROR_MESSAGE'))
                         }
                         throw e
                 }
+
+                // JSON 以外の応答（プロキシの HTML エラーページ、止まっているサーバの代わりに応答する何か）。
+                // 呼び出し側はステータスを見ずに res.json() するので、ここで受けないと SyntaxError が
+                // unhandledrejection に落ちて、利用者には「押しても何も起きない」にしか見えない。
+                // Content-Type が無い応答（テストのモック等）は従来どおり素通しする。
+                const content_type = GkillAPI.response_content_type(res)
+                if (content_type !== '' && !/json/i.test(content_type)) {
+                        let snippet = ''
+                        try {
+                                snippet = (await res.text()).slice(0, 200)
+                        } catch (_e) {
+                                // 本文が読めなくても、JSON でなかったことだけ伝えればよい
+                        }
+                        console.warn('[GkillAPI] non-JSON response:', res.status, content_type, snippet)
+                        return GkillAPI.synthesize_error_response(
+                                GkillErrorCodes.bad_response,
+                                i18n.global.t('BAD_RESPONSE_ERROR_MESSAGE', [String(res.status)]),
+                                res.status,
+                        )
+                }
+                return res
+        }
+
+        // Response の Content-Type。headers を持たないモック（テスト）では空文字
+        private static response_content_type(res: Response): string {
+                try {
+                        return res.headers?.get?.('content-type') ?? ''
+                } catch (_e) {
+                        return ''
+                }
+        }
+
+        // クライアント側で作る失敗応答。サーバの形（errors / messages とも配列、error_kind 付き）に合わせる。
+        // ステータスは呼び出し側が見ないので、渡されなければ 200 のまま（従来どおり）
+        private static synthesize_error_response(error_code: string, error_message: string, status: number = 200): Response {
+                const body = {
+                        errors: [{
+                                error_code: error_code,
+                                error_message: error_message,
+                                error_kind: GkillErrorCodes.network_error === error_code ? 'network' : 'server',
+                                reason: '',
+                        }],
+                        messages: [],
+                }
+                // Response のコンストラクタは 200〜599 しか受け付けない
+                const response_status = status >= 200 && status <= 599 ? status : 200
+                return new Response(JSON.stringify(body), {
+                        status: response_status,
+                        headers: { 'Content-Type': 'application/json' }
+                })
         }
 
         // 認証が通っていなかったらログイン画面に遷移する

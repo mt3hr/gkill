@@ -7,8 +7,8 @@ import (
 )
 
 type SubmitKFTLTextResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
-	Errors   []*message.GkillError   `json:"errors"`
+	Messages message.GkillMessages `json:"messages"`
+	Errors   message.GkillErrors   `json:"errors"`
 
 	// Created は確定したレコード。KFTLは1つのテキストから複数のKyouを作るのに、
 	// 2026-08-24 まで応答は「記録しました」の1文だけで、件数も種別もIDも返らなかった。

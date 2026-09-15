@@ -6,9 +6,9 @@ import (
 )
 
 type UpdateTagResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	UpdatedTag *reps.Tag `json:"updated_tag"`
 }

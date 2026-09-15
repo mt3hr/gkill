@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"io"
 	"log/slog"
 	"os"
@@ -74,11 +75,12 @@ const (
 
 // ErrPluginBusy はプラグインの実行スロットが空かずに待ちきれなかったことを表す。
 // プラグインが壊れているわけではないので、プロセスは回収しない。
-var ErrPluginBusy = errors.New("plugin is busy")
+// 応答の reason（plugin_busy）はこの型が名乗る（message.Reasoner）。errors.Is の同一性は変わらない。
+var ErrPluginBusy error = &message.ReasonError{Msg: "plugin is busy", Reason: message.ReasonPluginBusy}
 
 // ErrPluginReturnedErrors は、プラグインが応答の Errors 欄（アプリケーションエラー）を
 // 返したことを表す番兵。プロセス自体は健全なので、この場合はプロセスを殺さず・再送しない。
-var ErrPluginReturnedErrors = errors.New("plugin returned application errors")
+var ErrPluginReturnedErrors error = &message.ReasonError{Msg: "plugin returned application errors", Reason: message.ReasonPluginError}
 
 // pluginRepositoryImpl は PluginRepository インターフェースの実装。
 // プラグインバイナリをサブプロセスとして起動し、stdio 改行区切りJSONで通信する。

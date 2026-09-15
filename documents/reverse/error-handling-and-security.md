@@ -11,26 +11,39 @@
 type GkillError struct {
     ErrorCode    string `json:"error_code"`
     ErrorMessage string `json:"error_message"`
+    Cause        error  `json:"-"` // if err != nil の中で組み立てるときは必ず Cause: err（reason とログの源）
 }
+// ワイヤ（MarshalJSON が付ける）:
+// {"error_code":"ERR000023","error_message":"メモ追加に失敗しました","error_kind":"server","reason":"db_busy"}
 
 // src/server/gkill/api/message/gkill_message.go
 type GkillMessage struct {
     MessageCode string `json:"message_code"`
     Message     string `json:"message"`
+    Level       string `json:"level"` // "info"（既定）/ "warning"（成功したが対処が要る）
 }
 ```
 
 **判定ルール:**
-- `errors` が `null` または空配列 → 正常（HTTP 200）
+- `errors` が空配列（古い応答では `null`）→ 正常（HTTP 200）
 - `errors` に要素あり → 失敗。**HTTP ステータスも `error_code` から決まった値になる**
-  （400/401/403/404/409/429/500）
+  （400/401/403/404/409/413/429/500）
 - 詳細は下の「1.3 HTTPステータスコードの使い分け」
 
-> **成功時の `errors` は空配列ではなく `null` で返る。** レスポンス構造体のタグは `json:"errors"` で `omitempty` が付いておらず（`src/server/gkill/api/req_res/` 配下 90 箇所すべて）、ハンドラは `response := &req_res.XxxResponse{}` と初期化してエラー時だけ `append` するため、成功時は nil slice がそのまま `null` になる。クライアントで `[...res.errors]` のように素のスプレッドをすると `TypeError` で落ち、呼び出し元のダイアログクローズまで巻き添えになるので、必ず `res.errors ?? []` を通すこと（`cascade-delete-kyou.ts` 参照）。
+> **成功時の `errors` / `messages` は `[]` で返る**（2026-09-15、[ADR-0710](../adr/0710-error-kind-and-reason-on-the-wire.md)）。レスポンス構造体の型は `message.GkillErrors` / `message.GkillMessages`（名前付きスライス）で、`MarshalJSON` が nil を `[]` にする。それ以前は `[]*message.GkillError` に `omitempty` が無く、ハンドラが失敗時だけ `append` するので成功時は `null` だった。クライアントの `res.errors ?? []` / `if (res.errors && res.errors.length !== 0)` のガード（約180箇所）は**残してある** —— SW キャッシュに残った古い応答や古いサーバとの組み合わせでは今も `null` が来うる。
+
+#### `error_kind`（誰の問題か）と `reason`（何が起きたか）
+
+利用者向け文言（`error_message`）は操作単位（「メモ追加に失敗しました」）で、何をすれば直るかは書いていない。代わりに **機械語のトークン**を2つ付け、ヒント文は消費者側（Web: `src/client/classes/api/message/error-hints.ts` + i18n の `ERROR_HINT_*`、MCP: そのままモデルへ）が引く。
+
+- `error_kind`（必ず載る。9種）: `input`(400) / `auth`(401) / `permission`(403) / `not_found`(404) / `conflict`(409) / `too_large`(413) / `rate_limit`(429) / `config`(500 のうち設定で直せる不備: TLS ファイル無し・書き込み rep 未設定) / `server`(500)。正本は `error_kind.go` の `KindOf`（既定は HTTP ステータス、`errorCodeKindOverride` で上書き）
+- `reason`（分類できたときだけ。14種）: `write_rep_missing` / `storage_unavailable` / `storage_corrupted` / `storage_readonly` / `storage_full` / `storage_io_error` / `db_busy` / `timeout` / `canceled` / `plugin_busy` / `plugin_error` / `external_fetch_failed` / `local_only_access` / `tls_files_missing`。正本は `error_reason.go` の `ReasonOf` —— `GkillError.Cause` を `errors.Is` / `errors.As` で分類する（`message.Reasoner` を実装した dao の番兵 → `context` → `*sqlite.Error` の結果コード → `fs.ErrNotExist` 等 → `net`）。**文字列照合はしない。** Cause から決まらないときは `errorCodeReason`（コード → reason）へ落ちる
+
+`if err != nil` の中で `GkillError` を組み立てる箇所（521箇所）には `Cause: err` が付いており、`gkill_error_cause_scan_test.go` が付け忘れを落とす。`writeErrorStatus` が出す `request failed` の1行にも `reasons` / `causes` が載る（呼び出し側の中断 `canceled` だけの 5xx は Debug）。
 
 ### 1.2 エラーコード体系
 
-エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **380件** のエラーコードが存在する（ERR000001〜ERR000421、欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの — [ADR-0709](../adr/0709-api-route-table-single-source.md)）。クライアントだけで発生するエラーには別系統の `ERR9xxxxx` を割り当てている（3.6 参照）。
+エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **381件** のエラーコードが存在する（ERR000001〜ERR000422、欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの — [ADR-0709](../adr/0709-api-route-table-single-source.md)）。クライアントだけで発生するエラーには別系統の `ERR9xxxxx` を割り当てている（3.6 参照）。
 
 ```bash
 # 数え直すとき
@@ -85,7 +98,7 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 
 | ステータス | 使用場面 |
 |---|---|
-| 200 | 正常レスポンス（`errors` は `null`） |
+| 200 | 正常レスポンス（`errors` は `[]`） |
 | 400 | リクエストJSONのパース失敗・入力値のバリデーション失敗 |
 | 401 | セッションが無い・不正・期限切れ、ログイン失敗 |
 | 403 | 管理者権限が無い・アカウントが無効・ローカル限定アクセス違反 |
@@ -93,14 +106,14 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 | 409 | 同じIDが既にある（重複追加） |
 | 413 | 認証前のリクエストボディが 32MB を超えた（`ERR000417`。他と同じく JSON の `errors` 本文つきで返る） |
 | 429 | ログインのレート制限（IP毎15分10回） |
-| 500 | サーバ内部の失敗（取得・追加・更新・削除の失敗、panic） |
+| 500 | サーバ内部の失敗（取得・追加・更新・削除の失敗、panic）。書き込み rep 未設定（`ERR000422`）も 500 だが `error_kind` は `config` |
 
 **ステータスはエラーコードから決まる。** 対応表の正本は
 `src/server/gkill/api/message/http_status.go` の `errorCodeHTTPStatus`。
 `documents/adr/0706-http-status-from-error-code.md` に経緯と却下案がある。
 
-**ステータスが変わってもレスポンスボディは変わらない。** 判定は今までどおり
-`errors` 配列で行ってよく、クライアント（`gkill-api.ts`）は実際にステータスを見ていない。
+**判定は今までどおり `errors` 配列で行ってよい。** クライアント（`gkill-api.ts`）はステータスを見ておらず、
+`gkill_fetch` が Content-Type を見て JSON 以外の応答だけを `bad_response`（`ERR900100`）の合成応答にする。
 ただし**本文を読む前にステータスで打ち切ってはいけない** —— `error_code` は
 本文にしか入っていないので、打ち切ると「HTTP 401」しか分からなくなる。
 
@@ -433,11 +446,22 @@ Wear OS companion アプリの gkill サーバー接続は、デフォルトで�
 
 `src/client/classes/api/gkill-api.ts` のシングルトン `GkillAPI` は以下のパターンでエラーを処理：
 
-1. `fetch()` でPOSTリクエスト送信
+1. `fetch()` でPOSTリクエスト送信（`gkill_fetch`。ネットワーク失敗と JSON 以外の応答はここで `GkillError` の合成応答にする）
 2. レスポンスJSON をパース
 3. `response.errors` 配列を確認
-4. エラーあり → UIにエラーメッセージ表示
+4. エラーあり → `received_errors` でページまで上げ、ページが `useGkillMessageFeed().push_errors` へ流す
 5. 正常 → データをコンポーネントに返却
+
+#### 3.1.1 エラー / メッセージの表示（フィード）
+
+表示は `src/client/classes/use-gkill-message-feed.ts`（モジュール単位のシングルトン）と `src/client/pages/views/gkill-message-feed-view.vue` の1組（2026-09-15、[ADR-0411](../adr/0411-error-feed-stays-until-closed.md)）。それ以前は 16 本の `use-*-page.ts` と 15 本の `*-page.vue` に同型のコピーがあり、サーバ由来のエラーは JSON に `show_keep` が無いので「閉じられない・2.5秒で消える」だった。
+
+- **エラーと `level: warning` のメッセージは閉じるまで残る。自動で消えるのは info（2.5秒）だけ**
+- 同じ code + 本文の連続は1枚にまとめて `×N`
+- 1枚に本文・ヒント（`reason` → クライアント生成コード → `error_kind` の順で `error-hints.ts` が i18n キーを選ぶ）・`コード · reason` のフッター・「詳細をコピー」（コード・reason・kind・本文・ヒント・時刻・パス）
+- 中断（`reason: canceled`）は出さない
+- 握られなかった例外（`main.ts` の `unhandledrejection`（abort 以外）・`window.onerror`・`app.config.errorHandler`）も `push_client_exception` で同じフィードへ出る（`ERR900101`）
+- E2E は `.v-alert[role="alert"]` でエラーを掴む（エラーだけ `role="alert"`）
 
 ### 3.2 ネットワークエラーハンドリング
 
@@ -475,11 +499,13 @@ Wear OS companion アプリの gkill サーバー接続は、デフォルトで�
 
 ### 3.6 クライアント側エラーコード（ERR9xxxxx）
 
-サーバの `ERR0xxxxx` とは別系統で、クライアントだけで発生するエラーに `ERR9xxxxx` を割り当てている。定義は `src/client/classes/api/message/gkill_error.ts` の `GkillErrorCodes` enum（`ERR900001`〜`ERR900099` の99件）。サーバには存在しないコードで、`received_errors` イベントに乗ってそのまま画面に出る。
+サーバの `ERR0xxxxx` とは別系統で、クライアントだけで発生するエラーに `ERR9xxxxx` を割り当てている。定義は `src/client/classes/api/message/gkill_error.ts` の `GkillErrorCodes` enum（`ERR900001`〜`ERR900101` の101件）。サーバには存在しないコードで、`received_errors` イベントに乗ってそのまま画面に出る。
 
 | コード | 名前 | 説明 |
 |---|---|---|
 | `ERR900088` | network_error | `gkill_fetch()` がオフライン/fetch 失敗を検出したときに合成する |
+| `ERR900100` | bad_response | `gkill_fetch()` が JSON 以外の応答（プロキシの HTML エラーページ等）を受けたときに合成する。本文に HTTP ステータスを含む |
+| `ERR900101` | unexpected_client_error | 握られなかった例外（`unhandledrejection` / `window.onerror` / `app.config.errorHandler`）をフィードへ出すときのコード |
 | `ERR900093` | cascade_delete_depth_exceeded | 連鎖削除の参照の深さが上限（32、`max_cascade_depth`）を超えたので途中で打ち切った |
 | `ERR900094` | cascade_delete_failed | 連鎖削除が想定外の例外で失敗した |
 | `ERR900095` | failed_delete_tag | タグ削除の確認ダイアログが例外で落ちた |

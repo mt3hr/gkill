@@ -65,6 +65,7 @@ func readBodyCapped(w http.ResponseWriter, r *http.Request, ctx context.Context,
 			writeGkillErrorResponse(ctx, w, &message.GkillError{
 				ErrorCode:    message.RequestBodyTooLargeError,
 				ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "REQUEST_BODY_TOO_LARGE_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, false
 		}
@@ -72,6 +73,7 @@ func readBodyCapped(w http.ResponseWriter, r *http.Request, ctx context.Context,
 		writeGkillErrorResponse(ctx, w, &message.GkillError{
 			ErrorCode:    message.ReadRequestBodyError,
 			ErrorMessage: localeUnawareLocalizer().MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, false
 	}
@@ -181,6 +183,7 @@ func (g *GkillServerAPI) authMiddleware(next http.Handler) http.Handler {
 			writeGkillErrorResponse(ctx, w, &message.GkillError{
 				ErrorCode:    message.GetDeviceError,
 				ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+				Cause:        err,
 			})
 			return
 		}
@@ -235,6 +238,7 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 			writeGkillErrorResponse(ctx, w, &message.GkillError{
 				ErrorCode:    message.GetDeviceError,
 				ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+				Cause:        err,
 			})
 			return
 		}
@@ -252,6 +256,7 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 			writeGkillErrorResponse(ctx, w, &message.GkillError{
 				ErrorCode:    message.RepositoriesGetError,
 				ErrorMessage: api.GetLocalizer(peek.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+				Cause:        err,
 			})
 			return
 		}

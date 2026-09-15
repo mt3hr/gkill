@@ -2,7 +2,7 @@
 
 ## 概要
 
-Go バックエンドのテスト。1272テスト関数、187テストファイル、32パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
+Go バックエンドのテスト。1287テスト関数、190テストファイル、32パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
 
 ## テストフレームワーク
 
@@ -47,14 +47,14 @@ src/server/gkill/
 
 | カテゴリ | テストファイル数 | 内容 |
 |---------|----------------|------|
-| API 統合 | 40 | 全データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント、SSRF・レート制限、デバイス名キャッシュ、プラグイン本文HTMLキャッシュ、rep名絞り込み（キャッシュON/OFF・tx確定後）、タグ絞り込み、時間帯フィルタ、MCP用取得、壊れたrepのWeb/MCP警告、認証時rep取得失敗のHTTP 500とErrorログ、無認証経路のボディ上限・読み取り期限（wrapNoAuthCapped）、ルート表（apiRoutes）とハンドラ・doc コメント・認証区分の突き合わせ、URLog登録の取得抑止フラグ配線のソース走査 |
+| API 統合 | 41 | 全データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント、SSRF・レート制限、デバイス名キャッシュ、プラグイン本文HTMLキャッシュ、rep名絞り込み（キャッシュON/OFF・tx確定後）、タグ絞り込み、時間帯フィルタ、MCP用取得、壊れたrepのWeb/MCP警告、認証時rep取得失敗のHTTP 500とErrorログ、無認証経路のボディ上限・読み取り期限（wrapNoAuthCapped）、ルート表（apiRoutes）とハンドラ・doc コメント・認証区分の突き合わせ、URLog登録の取得抑止フラグ配線のソース走査、`if err != nil` の中の `GkillError` に `Cause` が付いていることのソース走査（usecase も対象。reason とログの cause の源）、失敗応答の1行に `reasons` / `causes` が載り中断だけの 5xx は Debug になること |
 | 検索フィルタ・クエリ | 17 | `api/` 直下の検索フィルタ・タグ絞り込み・対象リポジトリ選択キャッシュ・rep名での結果絞り込み・並び替え・rep種別語彙の網羅 + `api/find/` のクエリビルダー・時間帯の秒解釈・検索語の正規化 + `api/find_word/` のワード判定（SQL とプラグイン SDK と揃える規則） |
 | 埋め込み配信 | 1 | `embed.go` の `init()` が登録する `.webmanifest` のMIME型（登録を落とすと `http.FileServer` が中身を見て `text/plain` で配ってしまい、PWAのmanifestが仕様どおりのMIMEでなくなる。ビルドもvetも通るのでここでしか気付けない） |
 | サンプルデータ | 1 | 配布サンプル `resources/gkill_sample_data` の現行コード互換性（アカウント認証・rep定義14件のパス実在と種別・全件検索で主要repから記録が返る・秘密鍵が空で配布されている） |
 | KFTL パーサ | 6 | Factory、Statement、Request Map、MiReKyou、NLog、時刻 |
 | req_res | 1 | ワイヤ契約の検証5本（JSONタグ名・MCP DTO の omitempty・プラグインpayload）。旧「JSON往復テスト」は削除済み |
 | safefetch | 1 | SSRF 対策の共有フェッチ9本（接続直前の実IP検査・スキーム/サイズ上限・画像寸法・2xx判定） |
-| メッセージ・GPS | 5 | メッセージコード体系、`EnsureNotEmpty`、エラーコード→HTTPステータス対応表、端末固有情報の伏せ処理、GPS ログ解析 |
+| メッセージ・GPS | 7 | メッセージコード体系、`EnsureNotEmpty`、ワイヤの形（成功時 `[]`・`error_kind`・`reason`・`Cause` が漏れない）、エラーコード→HTTPステータス対応表、エラーコード→`error_kind`（全コード網羅・上書き表の実在・件数）、Go の error→`reason` の分類（modernc.org/sqlite が実際に返す CANTOPEN / NOTADB / READONLY / BUSY で確認・コードからの既定・語彙）、端末固有情報の伏せ処理、GPS ログ解析 |
 | プラグインプロトコル | 1 | `gkill_plugin` の stdio メッセージ型 |
 | ユースケース | 3 | write-through のキャッシュ反映、キャッシュ実装の INSERT 列と引数の対応、規約のソース走査（下記） |
 | DAO 管理 | 5 | GkillDAOManager ライフサイクル、壊れた索引DBを持つrepの扱い（切り離し、書き込み先のfail-closed、`IsEnable`不変、失敗時のClose、rep名予測、個別/集約Errorログ、正常時の集約ログ抑止）、Git rep のディレクトリ限定 glob（非リポジトリの混入で全体を殺さない）、IDF rep だけの読み込み経路（ADR-0307）、リポジトリ定義のパターン展開（rep_file_glob） |
@@ -67,7 +67,7 @@ src/server/gkill/
 | CLI/Main | 10 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ、スレッド、エントリポイント、パスワード管理、add_tag バッチ（ルール JSON の検証・HTTP投稿と応答判定を含む） |
 | プラグイン SDK | 5 | `Run()` の stdio ループ（18本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本）+ ワード判定 `Query.MatchText`（2本） |
 
-**合計 187 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
+**合計 190 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
 ずれたら `checkCounts` が落とす）。
 
 ## 規約のソース走査（`usecase/source_conventions_scan_test.go`）

@@ -25,6 +25,7 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -38,6 +39,11 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteReKyouRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_ADD_REKYOU_MESSAGE", "rekyou"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteReKyouRep.AddReKyouInfo(ctx, rekyou)
 		if err != nil {
@@ -46,6 +52,7 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddReKyouError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -62,6 +69,7 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddReKyouError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -78,6 +86,7 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetReKyouError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_ADDED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -112,6 +121,7 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -125,6 +135,11 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteReKyouRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_UPDATE_REKYOU_MESSAGE", "rekyou"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteReKyouRep.AddReKyouInfo(ctx, rekyou)
 		if err != nil {
@@ -133,6 +148,7 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateReKyouError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -160,6 +176,7 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateReKyouError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -176,6 +193,7 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetReKyouError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_UPDATED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -210,6 +228,7 @@ func (uc *UsecaseContext) GetReKyouHistories(ctx context.Context, repositories *
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REKYOU_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -229,6 +248,7 @@ func (uc *UsecaseContext) GetReKyousByTargetID(ctx context.Context, repositories
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetReKyousByTargetIDError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REKYOU_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
