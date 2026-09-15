@@ -442,3 +442,95 @@ func TestHandleSubmitKFTLText_CreateApp(t *testing.T) {
 		}
 	})
 }
+
+// countKyousByDataType は全件検索して data_type が前方一致する Kyou の件数を返す
+// （打刻は "timeis_start" / "timeis_end" の2種で出るので前方一致）。
+func countKyousByDataType(t *testing.T, tsURL, sessionID, dataType string) int {
+	t.Helper()
+	res := getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{})
+	if len(res.Errors) > 0 {
+		t.Fatalf("get kyous errors: %+v", res.Errors)
+	}
+	count := 0
+	for _, kyou := range res.Kyous {
+		if strings.HasPrefix(kyou.DataType, dataType) {
+			count++
+		}
+	}
+	return count
+}
+
+// 保存マーカー「！」で保存したときの、内容の無い記録（ADR-0508）。
+//
+// Web のメモ帳はマーカー行を含めたまま送る。2026-09-15 まで generateKFTLLines がマーカー行を
+// 「次の行」に入れたまま break していたので、`ーち`+「！」は requireNextLineText を素通りして
+// タイトル空のまま DoRequest に届き、200「保存しました」でタブが閉じて何も残らなかった
+// （`ーら`+「！」は**気分値0が1件書かれ**、`ーか`+「！」は 500 だった）。
+// 利用者の報告（「`ーち` で内容を入力しなくてもエラーにならない」）の再現そのもの。
+func TestHandleSubmitKFTLText_SaveMarkerAfterBarePrefixIsInputError(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
+
+	t.Run("ーち + マーカーは parse でも submit でも行1の入力エラーで、何も書かれない", func(t *testing.T) {
+		before := countKyousByDataType(t, tsURL, sessionID, "timeis")
+
+		pStatus, pRes := parseKFTL(t, tsURL, sessionID, "ーち\n！\n")
+		if pStatus != http.StatusOK || len(pRes.InvalidLines) != 1 {
+			t.Fatalf("parse: status = %d, invalid_lines = %+v, want 200 と 1件", pStatus, pRes.InvalidLines)
+		}
+		if got := pRes.InvalidLines[0]; got.LineNumber != 1 || got.LineText != "ーち" || !strings.Contains(got.Message, "Write the value on the next line") {
+			t.Errorf("parse invalid_lines[0] = %+v, want 行1 ーち + 値の行の文言", got)
+		}
+
+		sStatus, sRes := submitKFTLWithStatus(t, tsURL, sessionID, "ーち\n！\n", "marker-timeis")
+		if sStatus != http.StatusBadRequest {
+			t.Errorf("submit: status = %d, want 400（2026-09-15 までは 200 で「保存しました」だった）", sStatus)
+		}
+		if len(sRes.Errors) != 1 || sRes.Errors[0].ErrorCode != message.SubmitKFTLTextInvalidInputError {
+			t.Fatalf("submit: errors = %+v, want ERR000416 1件", sRes.Errors)
+		}
+		if !strings.Contains(sRes.Errors[0].ErrorMessage, `(line 1: "ーち")`) {
+			t.Errorf("submit: error_message = %q, want 行1の行情報", sRes.Errors[0].ErrorMessage)
+		}
+		if len(sRes.Created) != 0 {
+			t.Errorf("submit: created = %+v, want 空", sRes.Created)
+		}
+		if after := countKyousByDataType(t, tsURL, sessionID, "timeis"); after != before {
+			t.Errorf("打刻の件数が %d → %d に増えた（タイトル空の打刻が書かれている）", before, after)
+		}
+	})
+
+	t.Run("ーら + マーカーで気分値0が書かれない", func(t *testing.T) {
+		before := countKyousByDataType(t, tsURL, sessionID, "lantana")
+		sStatus, sRes := submitKFTLWithStatus(t, tsURL, sessionID, "ーら\n！\n", "marker-lantana")
+		if sStatus != http.StatusBadRequest || len(sRes.Created) != 0 {
+			t.Errorf("status = %d, created = %+v, want 400 と 空", sStatus, sRes.Created)
+		}
+		if after := countKyousByDataType(t, tsURL, sessionID, "lantana"); after != before {
+			t.Errorf("気分記録の件数が %d → %d に増えた（気分値0が書かれている。ADR-0503 の事故の再発）", before, after)
+		}
+	})
+
+	t.Run("ーか + マーカーは 500 ではなく行別の 400", func(t *testing.T) {
+		sStatus, sRes := submitKFTLWithStatus(t, tsURL, sessionID, "ーか\n！\n", "marker-kc")
+		if sStatus != http.StatusBadRequest {
+			t.Errorf("status = %d, want 400（2026-09-15 までは rep の生 error で 500 だった）", sStatus)
+		}
+		if len(sRes.Errors) != 1 || sRes.Errors[0].ErrorCode != message.SubmitKFTLTextInvalidInputError {
+			t.Errorf("errors = %+v, want ERR000416 1件", sRes.Errors)
+		}
+	})
+
+	t.Run("値があれば今までどおり保存される", func(t *testing.T) {
+		before := countKyousByDataType(t, tsURL, sessionID, "timeis")
+		sStatus, sRes := submitKFTLWithStatus(t, tsURL, sessionID, "ーち\nmarkerOkTitle\n！\n", "marker-ok")
+		if sStatus != http.StatusOK || len(sRes.Errors) != 0 || len(sRes.Created) != 1 {
+			t.Fatalf("status = %d, errors = %+v, created = %+v", sStatus, sRes.Errors, sRes.Created)
+		}
+		if after := countKyousByDataType(t, tsURL, sessionID, "timeis"); after != before+1 {
+			t.Errorf("打刻の件数 = %d, want %d", after, before+1)
+		}
+	})
+}

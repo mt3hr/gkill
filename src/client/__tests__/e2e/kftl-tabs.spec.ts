@@ -171,6 +171,26 @@ test.describe('KFTL Tabs', () => {
     await expect(textarea).toHaveValue(keep)
   })
 
+  // 利用者の報告（2026-09-15）の再現。`ーち` だけ書いて「！」で保存すると、2026-09-15 の Go 一本化から
+  // 200「保存しました」でタブが閉じ、何も書かれなかった。サーバの generateKFTLLines がマーカー行を
+  // 「次の行」に数えていて、`ーち` の requireNextLineText を素通りしていた（ADR-0508）。
+  // 旧 Web は「内容がない打刻の保存がスキップされました」で止めていたので、その振る舞いへ戻す:
+  // 行別のエラーが出て、本文（マーカーを除く）が残り、タブは閉じない
+  test('接頭辞だけの行を保存マーカーで保存するとエラーになり、タブは閉じない', async ({ page }) => {
+    await openKftl(page)
+
+    const textarea = page.locator(TEXT_AREA)
+    await addTab(page)
+    await textarea.fill('ーち')
+    await textarea.press('End')
+    await textarea.pressSequentially('\n！\n')
+
+    // サーバの行別エラー（行テキストが埋め込まれる）が出て、マーカーだけが取り除かれる
+    await expect(page.locator('.gkill_feed_message').filter({ hasText: 'ーち' })).toBeVisible()
+    await expect(textarea).toHaveValue('ーち\n')
+    await expect(page.locator(TAB)).toHaveCount(2)
+  })
+
   // IMEで打ったときの回帰。実機で「順当にIMEから入力すると保存が走らないのに、
   // バックスペースを押すと走る」と報告された形。
   //

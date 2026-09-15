@@ -29,7 +29,24 @@ func newKFTLKCRequest(requestID string, ctx *KFTLStatementLineContext) *kftlKCRe
 	}
 }
 
+// ValidateContent はタイトルか数値の欠けた数値記録を入力エラーにする。
+//
+// rep（insertKCRow）は空のタイトル・空の値を fmt.Errorf で拒むので、ここで止めないと
+// ERR000351（HTTP 500）「メモ帳のテキストの記録に失敗しました」になり、行番号も理由も出ない
+// （2026-09-15 の実測: `ーか`+「！」と `ーか`,`タイトル`（値の行無し）がこれだった。ADR-0508）。
+// 通常は start 行とタイトル行の requireNextLineText が先に止める。
+func (r *kftlKCRequest) ValidateContent() error {
+	if r.title == "" || r.numValue.String() == "" {
+		return newKFTLInputError("KFTL_KC_INVALID_NUM_VALUE_MESSAGE_TITLE",
+			fmt.Errorf("kc title or num_value is empty: id=%s title=%q num_value=%q", r.RequestID, r.title, r.numValue.String()))
+	}
+	return nil
+}
+
 func (r *kftlKCRequest) DoRequest(ctx context.Context) error {
+	if err := r.ValidateContent(); err != nil {
+		return err
+	}
 	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err
 	}
@@ -120,6 +137,10 @@ func newKFTLKCTitleStatementLine(lineText string, ctx *KFTLStatementLineContext,
 }
 
 func (l *kftlKCTitleStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
+	// タイトルの次は数値の行。無いまま終わると、rep が空の値を拒んで 500 になっていた（ADR-0508）。
+	if err := requireNextLineText(l.ctx); err != nil {
+		return err
+	}
 	l.req.title = l.lineText
 	return nil
 }

@@ -7064,11 +7064,20 @@ func TestHandleSubmitKFTLText_EmptyText(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&submitResp); err != nil {
 		t.Fatalf("decode submit kftl text response: %v", err)
 	}
-	// Empty text should either succeed with a message or have no errors
-	// (it's valid to submit empty — just no records created)
-	// We mainly verify it doesn't panic or return unexpected errors
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("status = %d, want 200", resp.StatusCode)
+	// 空のテキストは「内容がないメモ」の入力エラー（400 + ERR000416、行1）。
+	// 2026-09-15 までは 200「保存しました」で何も書かれず、旧 Web（TS）が出していた
+	// ERR900012「内容がないメモの保存がスキップされました」が消えていた（ADR-0508）。
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("status = %d, want 400", resp.StatusCode)
+	}
+	if len(submitResp.Errors) != 1 || submitResp.Errors[0].ErrorCode != message.SubmitKFTLTextInvalidInputError {
+		t.Fatalf("errors = %+v, want ERR000416 1件", submitResp.Errors)
+	}
+	if msg := submitResp.Errors[0].ErrorMessage; !strings.Contains(msg, `(line 1: "")`) || !strings.Contains(msg, "Memo with no content was skipped") {
+		t.Errorf("error_message = %q, want 行1 + 空メモの文言", msg)
+	}
+	if len(submitResp.Created) != 0 {
+		t.Errorf("created = %+v, want 空", submitResp.Created)
 	}
 }
 

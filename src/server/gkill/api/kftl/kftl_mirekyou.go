@@ -55,20 +55,21 @@ func (r *kftlMiReKyouRequest) resolvedBoardName() string {
 	return ""
 }
 
-func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
-	// タスク化する対象は「同じレコードで書いたKyou」。レコードにKyou本体が無い
-	// (タグだけ書いてプロトタイプのまま終わった場合を含む)と、対象が存在しないMiReKyouになる。
-	// そういうMiReKyouは検索でターゲット解決に失敗して結果から落ちるので、
-	// 画面に出ないのに消せない行がリポジトリに残ってしまう。書く前に弾く。
-	//
-	// **入力エラーとして返す。** ここは実行フェーズだが、原因はどれも
-	// 「送ったテキストの書き方」か「アカウントの設定」で、利用者が直せる。
-	// fmt.Errorf のままだと errors.As に引っかからず ERR000351 (HTTP 500) の
-	// 「メモ帳のテキストの記録に失敗しました」だけが返り、**行番号も理由も出ない**
-	// (2026-08-25 の実利用レビュー: ~~ の最小形が3回とも同じ文言で落ち、
-	//  切り分けに5回の試行を要した)。ADR-0502 / ADR-0503 の続き。
-	// TS 側 (kftl-mi-re-kyou-request.ts) は同じ検査で
-	// NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE を返しており、Go だけが遅れていた。
+// ValidateContent はタスク化する対象が無いリポストタスクを入力エラーにする。
+//
+// タスク化する対象は「同じレコードで書いたKyou」。レコードにKyou本体が無い
+// (タグだけ書いてプロトタイプのまま終わった場合を含む)と、対象が存在しないMiReKyouになる。
+// そういうMiReKyouは検索でターゲット解決に失敗して結果から落ちるので、
+// 画面に出ないのに消せない行がリポジトリに残ってしまう。書く前に弾く。
+//
+// **入力エラーとして返す。** 原因はどれも「送ったテキストの書き方」で、利用者が直せる。
+// fmt.Errorf のままだと errors.As に引っかからず ERR000351 (HTTP 500) の
+// 「メモ帳のテキストの記録に失敗しました」だけが返り、**行番号も理由も出ない**
+// (2026-08-25 の実利用レビュー: ~~ の最小形が3回とも同じ文言で落ち、
+// 切り分けに5回の試行を要した)。ADR-0502 / ADR-0503 の続き。
+// 2026-09-15 まで DoRequest だけが見ていて、`～～` 単独は Analyze（ピンク）に出ず
+// 送信で初めて 400 になっていた。判定に要るのは requestMap だけなので書く前に移した（ADR-0508）。
+func (r *kftlMiReKyouRequest) ValidateContent() error {
 	if r.requestMap == nil {
 		return newKFTLInputError("NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE",
 			fmt.Errorf("mirekyou request map is not set: id=%s", r.RequestID))
@@ -82,8 +83,16 @@ func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
 		return newKFTLInputError("NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE",
 			fmt.Errorf("not found mirekyou target in this record (prototype only): target_id=%s", r.targetID))
 	}
+	return nil
+}
+
+func (r *kftlMiReKyouRequest) DoRequest(ctx context.Context) error {
+	if err := r.ValidateContent(); err != nil {
+		return err
+	}
 
 	// MiReKyouは後から追加されたrep種別なので、既存の設定DBには書き込み用repが無いことがある。
+	// 原因は「アカウントの設定」で利用者が直せるので、実行フェーズでも入力エラーにする（ADR-0504）。
 	// doBaseRequestより前に判定して、このリクエストは何も書かずに終わらせる。
 	// **原因の文面を利用者へ返さない。** 利用者IDと端末名が入っており、
 	// MessageID が空だと handle_submit_kftl_text.go がそれをそのまま応答へ載せる (ADR-0707)。

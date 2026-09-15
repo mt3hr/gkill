@@ -62,6 +62,12 @@ func newKFTLInputError(messageID string, cause error) *KFTLInputError {
 // `/expense` `/url` `/mi` `/start` `/timeis` は無言で0件だった。
 // どちらも利用者からは「なぜそうなったか」が分からない（2026-08-24 の実利用報告）。
 // 書き込みが起きる前のこのフェーズで行別エラーへ倒す（ADR-0502）。
+//
+// 「次の行」に保存マーカー「！」は含まれない。generateKFTLLines がマーカー行で本文を
+// 切り詰めてから NextStatementLineText を組み立てるので、`ーち` の直後が「！」なら
+// ここは "" を見る。2026-09-15 まではマーカー行がそのまま「次の行」に入り、Web の
+// 「！」で保存する経路だけがこの検査を素通りしてタイトル空のまま DoRequest に届いていた
+// （`ーら`+「！」は気分値0を書き、`ーか`+「！」は 500 になっていた。ADR-0508）。
 func requireNextLineText(ctx *KFTLStatementLineContext) error {
 	if strings.TrimSpace(ctx.NextStatementLineText) != "" {
 		return nil
@@ -241,6 +247,15 @@ func (s *KFTLStatement) prepareRequests(
 		return nil, errors.Join(inputErrs...)
 	}
 
+	// 内容が空のリクエストと、付け先の無いメタ情報（プロトタイプ）の検査。
+	// 行ごとの適用では分からない（kmemo の本文は複数行を束ねて初めて空と分かる）ので、
+	// 全行を適用し終えてから、まだ1バイトも書いていないここで見る。
+	// 行エラーが1件でもあれば呼ばない —— 適用に失敗した行のぶんだけ map が欠けていて、
+	// 「付け先が無い」のような偽のエラーを重ねてしまう。
+	if err := validateRequestContents(requestMap); err != nil {
+		return nil, err
+	}
+
 	// 繰り返し（「？？」）の展開。**書き込みの直前、行の解釈が全部終わってから**やる。
 	// ここでやると「？？」をブロックのどこに書いても結果が同じになり、
 	// クライアント側の「本文が変わるたびに全行を解釈し直す」経路とも切り離せる。
@@ -248,6 +263,36 @@ func (s *KFTLStatement) prepareRequests(
 		return nil, err
 	}
 	return requestMap, nil
+}
+
+// validateRequestContents は「書く前に分かる、内容の欠けたリクエスト」を行別エラーにする。
+//
+// 2026-09-15 まで DoRequest が「本文が空なら何も書かずに nil」で済ませていたので、
+// `ーち` だけ書いて「！」で保存すると 200「保存しました」でタブが閉じ、何も残らなかった
+// （旧 Web の TS は ERR9000xx「内容がない打刻の保存がスキップされました」で送信を止めていた）。
+// タグ行だけ・関連時刻行だけの送信（付け先の記録が無いプロトタイプ）も黙って0件だった。
+// Analyze と GenerateAndExecuteRequests の両方がここを通るので、Web は打鍵中にピンクになり、
+// 送信も同じ理由で止まる（ADR-0508）。
+//
+// 各型の判定は ValidateContent が持つ。基底に既定実装を置かないので、型を足したら
+// 「何を空とみなすか」を書かないとコンパイルが通らない。
+func validateRequestContents(requestMap *KFTLRequestMap) error {
+	var inputErrs []error
+	for _, req := range requestMap.All() {
+		err := req.ValidateContent()
+		if err == nil {
+			continue
+		}
+		lineNumber, lineText := 0, ""
+		if lineCtx := req.GetContext(); lineCtx != nil {
+			lineNumber, lineText = lineCtx.LineIndex+1, lineCtx.ThisStatementLineText
+		}
+		inputErrs = append(inputErrs, withLine(err, lineNumber, lineText))
+	}
+	if len(inputErrs) != 0 {
+		return errors.Join(inputErrs...)
+	}
+	return nil
 }
 
 // GenerateAndExecuteRequests parses StatementText, generates KFTLRequests,
@@ -323,7 +368,19 @@ func (s *KFTLStatement) generateKFTLLines(
 	applicationConfig *user_config.ApplicationConfig,
 	userID, device, appName, localeName string,
 ) ([]KFTLStatementLine, error) {
+	// 保存マーカー「！」の行で本文を切り詰める（1行目は除く。「！」だけのメモは本文）。
+	// **NextStatementLineText を組み立てる前に切ること。** ループの末尾で break する形だと、
+	// マーカー直前の行の「次の行」が「！」になり、requireNextLineText が「値の行がある」と
+	// 誤判定して `ーち`+「！」がタイトル空のまま DoRequest まで届く（2026-09-15 まで Web の
+	// 「！」で保存する経路だけがこれを踏んでいた。ADR-0508）。
+	// Mirrors: if (i != 0 && line_text == KFTL_SAVE_CHARACTOR) break
 	lineTexts := strings.Split(s.StatementText, "\n")
+	for i, lineText := range lineTexts {
+		if i != 0 && (lineText == splitterSaveCharacter || lineText == splitterSaveCharacterAscii) {
+			lineTexts = lineTexts[:i]
+			break
+		}
+	}
 	var lines []KFTLStatementLine
 	var prevCtx *KFTLStatementLineContext
 	prevAddSecond := 0
@@ -386,13 +443,6 @@ func (s *KFTLStatement) generateKFTLLines(
 		}
 
 		prevCtx = lineCtx
-
-		// Stop at save character (except on first line)
-		// Mirrors: if (i != 0 && line_text == KFTL_SAVE_CHARACTOR) break
-		if i != 0 && (lineText == splitterSaveCharacter || lineText == splitterSaveCharacterAscii) {
-			break
-		}
-
 		lines = append(lines, line)
 	}
 

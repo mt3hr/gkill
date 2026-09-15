@@ -605,6 +605,7 @@
     "KFTL_REPEAT_INVALID_DUPLICATE_MESSAGE_TITLE": "La ligne si-existe doit être yes ou no",
     "KFTL_REPEAT_INVALID_ORIGIN_MESSAGE_TITLE": "Le point de départ est invalide",
     "KFTL_REPEAT_NO_TARGET_MESSAGE_TITLE": "Aucun enregistrement à répéter ici",
+    "KFTL_META_INFO_NO_TARGET_MESSAGE_TITLE": "Aucun enregistrement auquel rattacher l'étiquette, le texte ou l'heure associée",
     "KFTL_REPEAT_TYPE_NOT_SUPPORTED_MESSAGE_TITLE": "Ce type ne peut pas être répété",
     "KFTL_REPEAT_NOT_CLOSED_MESSAGE_TITLE": "Le bloc de répétition n'est pas fermé",
     "KFTL_REPEAT_NO_DATE_FIELD_MESSAGE_TITLE": "Aucun champ date/heure à répéter",

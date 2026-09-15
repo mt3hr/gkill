@@ -47,7 +47,7 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
 - 守るテスト: `kftl-submit-emits.test.ts`「サーバが不正行を返したら送信せず…」「おかしな行の表示」/
   Go `kftl_analyze_test.go` / `handle_parse_kftl_text_test.go`
 
-**Go 側のエラーは行ごとに返し、入力ミスとサーバ障害を分ける**（2026-08-24、[ADR-0502](../../../documents/adr/0502-kftl-errors-are-per-line.md)）。`kftl_statement.go` は3フェーズ直列で、**行をリクエストへ適用するフェーズまでは1バイトも書かない**。だからそこは最初の1件で止めず**全行を評価して `errors.Join` で束ねる**（利用者が1往復で全部直せる。TS 側は元からそうなっていて Go だけが遅れていた）。実行フェーズは書き込みが起きるので最初の失敗で止める。振り分けは `KFTLInputError` と `errors.As` で、入力ミスは `ERR000416`(**400**)・サーバ障害は `ERR000351`(500)。**打ち間違いを 500 で返さないこと** —— ステータスを見る層からサーバ障害と区別できなくなる。応答の `created[]` は**書き込みが成功した直後にリクエスト側が控えた**もので、`requestMap` を事前に列挙して作ってはいけない（本文が空の kmemo / Mi / Nlog は何も書かずに成功し、打刻の終了は既存レコードの更新なので嘘になる）。失敗しても**そこまでに書けたぶんを載せる**（KFTL は DB トランザクションを使わないので部分保存が残る）。多言語キーは各失敗に1対1で7言語ぶん既にあるので**新設しない**。`api/kftl/` に .go を足したら `api/README.md` の件数を同じコミットで直す（`verify_docs` がファイル数を数えている）。
+**Go 側のエラーは行ごとに返し、入力ミスとサーバ障害を分ける**（2026-08-24、[ADR-0502](../../../documents/adr/0502-kftl-errors-are-per-line.md)）。`kftl_statement.go` は3フェーズ直列で、**行をリクエストへ適用するフェーズまでは1バイトも書かない**。だからそこは最初の1件で止めず**全行を評価して `errors.Join` で束ねる**（利用者が1往復で全部直せる。TS 側は元からそうなっていて Go だけが遅れていた）。実行フェーズは書き込みが起きるので最初の失敗で止める。振り分けは `KFTLInputError` と `errors.As` で、入力ミスは `ERR000416`(**400**)・サーバ障害は `ERR000351`(500)。**打ち間違いを 500 で返さないこと** —— ステータスを見る層からサーバ障害と区別できなくなる。応答の `created[]` は**書き込みが成功した直後にリクエスト側が控えた**もので、`requestMap` を事前に列挙して作ってはいけない（支払いの後ろの空行が作る空の Nlog は何も書かずに成功し、打刻の終了は既存レコードの更新なので嘘になる）。失敗したら何も残らない（`CommitTx` の1トランザクション。ADR-0219）。多言語キーは各失敗に1対1で7言語ぶん既にあるので**新設しない**（例外は ADR-0508 の「付け先の無いメタ情報」1件）。`api/kftl/` に .go を足したら `api/README.md` の件数を同じコミットで直す（`verify_docs` がファイル数を数えている）。
 
 **KFTL（メモ帳）のタブ**（2026-08-16）。`kftl-view.vue` がタブのホストで、`/kftl` ページ・各画面のメモ帳ダイアログ（`kftl-dialog.vue`）・打刻メモ帳（`mkfl-view.vue`）の**3系統すべて**に効く。純関数は `classes/kftl-tabs.ts`、状態は `classes/use-kftl-tabs.ts`。守るべき約束:
 - **`v-window` を使わず、アクティブなタブ1枚だけを描画する。** 非表示の textarea は `clientWidth` が0になり、`kftl-statement-line.ts` の `1 + parseInt(text_width / 0)` が **`NaN`**（`Infinity` ではない）を返して行ラベルが丸ごと消える
@@ -81,6 +81,10 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
 プレフィックスの判定は**完全一致**（`kftl_factory.go` の `generateDefaultConstructor`）で、値は次の行に書く。外したときは**書き込みの前に**行別エラーへ倒すこと（[ADR-0503](../../../documents/adr/0503-kftl-prefix-misuse-is-an-input-error.md)）。
 
 - **単独プレフィックス**（次に値の行が無い）は `requireNextLineText` で弾く。放置すると `/mood` 単独が**気分値 0（最低）の記録を黙って1件書き**、`/num` 単独が空の数値記録を書く。他は無言で0件になる
+- **保存マーカー「！」の行は「次の行」に数えない。** `generateKFTLLines` は `strings.Split` の直後に最初のマーカー行（1行目は除く）で本文を切り詰めてから `NextStatementLineText` を組み立てる。ループ末尾の break に戻すと、Web の「！」で保存する経路だけ `ーち`+「！」が `requireNextLineText` を素通りしてタイトル空のまま `DoRequest` に届く（2026-09-15 の利用者報告。`ーら`+「！」は気分値0を書き、`ーか`+「！」は 500 だった。[ADR-0508](../../../documents/adr/0508-kftl-blank-records-are-input-errors.md)）
+- **内容の無い記録と付け先の無いメタ情報は、書く前に `validateRequestContents` が行別エラーにする。** `KFTLRequest.ValidateContent()` は基底に既定実装を置かない（型を足したら「何を空とみなすか」を書かないとコンパイルが通らない）。`prepareRequests` が全行を適用した後・`expandRepeats` の前に呼ぶので Analyze（ピンク）と送信で同じ結果になる。`DoRequest` の `title == "" → return nil` に戻さない —— 空のメモ・打刻・タスク・ブックマークは旧 Web の `ERR9000xx` と同じ文言で**送信全体が止まる**（`メモ`,`、`,空行 は先頭のメモも書かれない）。kmemo の空は「全行が空白」（`joinLines` は `["",""]` を改行1文字にする）。残ったプロトタイプ（`。タグ` だけ・`？時刻` だけ・`ーー` だけ）は `KFTL_META_INFO_NO_TARGET_MESSAGE_TITLE`。例外は `？時刻` の直後の `ーん` で、関連時刻を取り込んだあと `KFTLRequestMap.Delete` で外す（残すと誤爆する）
+- **予定日時欄（Mi / MiReKyou の見積開始・見積終了・期限）の、空でないのに読めない行は入力エラー**（`parseScheduleFieldTime`。ADR-0505 が据え置いた部分を ADR-0508 で改めた）。空行だけが「未設定」。`、` で6行を埋めずに次の記録へ移ると、以前は `、` が見積開始に食われ後ろの本文も残りの欄に黙って消えていた
+- Web は本文が空白だけなら `parse_kftl_text` を投げずピンクを消す（`fetch_invalid_lines`）。投げると**新しい空のタブの1行目が常にピンク**になる。送信はサーバに聞くので空のタブで保存を押せばエラーが出る
 - **プレフィックス＋同じ行の引数**（`/mood 8`）は `prefixWrittenWithArgument` で弾く。完全一致判定なので本文へ落ち、気分記録のつもりが本文「/mood 8」のメモ1件になっていた
 - 判定は**長いプレフィックスから**見る（短い側からだと `/end?` が「`/end` に引数 `?`」に化ける）。タグ（`。`/`#`）と関連時刻（`？`/`?`）は**前方一致で受理する設計なので対象に入れない** —— 入れると `# 見出し` や `?` 始まりの英文が壊れる
 - 検査は `ApplyThisLineToRequestMap` のフェーズで行う。**まだ1バイトも書いていない**ので全行を評価して束ねられる。`DoRequest` まで持ち越すと前の行は既に書かれている
@@ -159,3 +163,4 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
 - [ADR-0505 予定日時欄では関連時刻の接頭辞「？」を入力エラーにする](../../../documents/adr/0505-schedule-time-field-rejects-related-time-prefix.md)
 - [ADR-0506 繰り返し「？？」は実体のレコードへ展開し、複製は送信時にだけ作る](../../../documents/adr/0506-kftl-repeat-block-expands-into-records.md)
 - [ADR-0507 メモ帳の解釈と書き込みはサーバの1実装に寄せる](../../../documents/adr/0507-kftl-single-implementation-on-server.md)
+- [ADR-0508 保存マーカー行は値の行に数えず、内容の無い記録・付け先の無いメタ情報・読めない予定日時は書く前に行別エラーにする](../../../documents/adr/0508-kftl-blank-records-are-input-errors.md)
