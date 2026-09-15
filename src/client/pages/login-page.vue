@@ -16,20 +16,7 @@
             @received_messages="onReceivedMessages"
             @successed_login="onSuccessedLogin" />
         <HelpDialog screen_name="login" ref="help_dialog" />
-        <div class="alert_container" role="status" aria-live="polite">
-            <v-slide-y-transition group>
-                <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
-                    v-for="message in messages" :key="message.id">
-                    <template v-slot:activator="{ props }">
-                        <v-alert v-bind="props" :color="message.is_error ? 'error' : undefined"
-                            :role="message.is_error ? 'alert' : undefined"
-                            :closable="message.closable" @click:close="onCloseMessage(message.id)">
-                            {{ message.message }}
-                        </v-alert>
-                    </template>
-                </v-tooltip>
-            </v-slide-y-transition>
-        </div>
+        <GkillMessageFeedView />
     </v-main>
 </template>
 
@@ -39,6 +26,7 @@ import { i18n } from '@/i18n'
 import LoginView from './views/login-view.vue'
 import HelpDialog from './dialogs/help-dialog.vue'
 import { useLoginPage } from '@/classes/use-login-page'
+import GkillMessageFeedView from './views/gkill-message-feed-view.vue'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
@@ -51,13 +39,11 @@ const {
     app_content_height,
     app_content_width,
     gkill_version,
-    messages,
 
     // Event handlers
     onReceivedErrors,
     onReceivedMessages,
     onSuccessedLogin,
-    onCloseMessage,
 } = useLoginPage()
 </script>
 
@@ -71,20 +57,6 @@ const {
 .gkill_version {
     font-size: small;
     margin-right: 15px;
-}
-
-.alert_container>div {
-    width: fit-content;
-}
-
-.alert_container {
-    justify-items: end;
-    position: fixed;
-    top: 60px;
-    right: 10px;
-    display: grid;
-    grid-gap: .5em;
-    z-index: 99;
 }
 
 .gkill_context_menu_list {

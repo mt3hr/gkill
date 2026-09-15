@@ -46,6 +46,7 @@ func (g *GkillServerAPI) HandleGetPluginConfigHTML(w http.ResponseWriter, r *htt
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.InvalidGetPluginConfigHTMLRequestDataError,
 			ErrorMessage: "プラグイン設定HTML取得リクエストのパースに失敗しました",
+			Cause:        err,
 		})
 		return
 	}
@@ -70,6 +71,7 @@ func (g *GkillServerAPI) HandleGetPluginConfigHTML(w http.ResponseWriter, r *htt
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.GetPluginConfigHTMLError,
 			ErrorMessage: fmt.Sprintf("プラグイン設定HTMLの取得に失敗しました: %s", err.Error()),
+			Cause:        err,
 		})
 		return
 	}

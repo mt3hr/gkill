@@ -43,6 +43,7 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetAllTagNamesResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_TAG_NAMES_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -56,6 +57,7 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetAllTagNamesRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_TAG_NAMES_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -73,7 +75,7 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 		// そのまま返すと errors:null + 0件 になり、呼び出し側からは
 		// 「成功・該当0件」と区別が付かない。理由は message.EnsureNotEmpty のコメント
 		gkillErrors = message.EnsureNotEmpty(gkillErrors, message.GetAllTagNamesError,
-			api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_TAG_NAMES_MESSAGE"}))
+			api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_TAG_NAMES_MESSAGE"}), err)
 		response.Errors = append(response.Errors, gkillErrors...)
 		return
 	}

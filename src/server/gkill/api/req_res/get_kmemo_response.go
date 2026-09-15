@@ -6,9 +6,9 @@ import (
 )
 
 type GetKmemoResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	KmemoHistories []reps.Kmemo `json:"kmemo_histories"`
 }

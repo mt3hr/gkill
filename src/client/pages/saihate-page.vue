@@ -115,20 +115,7 @@
             <TutorialDialog :application_config="application_config" :gkill_api="gkill_api"
                 ref="tutorial_dialog" />
         </v-main>
-        <div class="alert_container">
-            <v-slide-y-transition group>
-                <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
-                    v-for="message in messages" :key="message.id">
-                    <template v-slot:activator="{ props }">
-                        <v-alert v-bind="props" :color="message.is_error ? 'error' : undefined"
-                            :role="message.is_error ? 'alert' : undefined"
-                            :closable="message.closable" @click:close="close_message(message.id)">
-                            {{ message.message }}
-                        </v-alert>
-                    </template>
-                </v-tooltip>
-            </v-slide-y-transition>
-        </div>
+        <GkillMessageFeedView />
     </div>
 </template>
 
@@ -153,6 +140,7 @@ import TutorialDialog from './dialogs/tutorial-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { useSaihatePage } from '@/classes/use-saihate-page'
+import GkillMessageFeedView from './views/gkill-message-feed-view.vue'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 const tutorial_dialog = ref<InstanceType<typeof TutorialDialog> | null>(null)
@@ -182,7 +170,6 @@ const {
     app_content_height,
     app_content_width,
     is_loading,
-    messages,
     duplicated_shared_entry,
 
     // Methods
@@ -190,7 +177,6 @@ const {
     write_messages,
     saihateKyouHandlers,
     onSavedKyouByKftl,
-    close_message,
     floating_action_button_style,
 
     // Dialog show methods

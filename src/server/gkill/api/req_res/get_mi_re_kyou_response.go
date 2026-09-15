@@ -6,9 +6,9 @@ import (
 )
 
 type GetMiReKyouResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	MiReKyouHistories []reps.MiReKyou `json:"mirekyou_histories"`
 }

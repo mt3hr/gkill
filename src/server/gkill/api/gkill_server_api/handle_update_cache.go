@@ -42,6 +42,7 @@ func (g *GkillServerAPI) HandleUpdateCache(w http.ResponseWriter, r *http.Reques
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateCacheResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_CACHE_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 		}
@@ -54,6 +55,7 @@ func (g *GkillServerAPI) HandleUpdateCache(w http.ResponseWriter, r *http.Reques
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateCacheRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_CACHE_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -79,6 +81,7 @@ func (g *GkillServerAPI) HandleUpdateCache(w http.ResponseWriter, r *http.Reques
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_CACHE_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -92,6 +95,7 @@ func (g *GkillServerAPI) HandleUpdateCache(w http.ResponseWriter, r *http.Reques
 			gkillError := &message.GkillError{
 				ErrorCode:    message.RepositoriesGetError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_CACHE_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -104,6 +108,7 @@ func (g *GkillServerAPI) HandleUpdateCache(w http.ResponseWriter, r *http.Reques
 			gkillError := &message.GkillError{
 				ErrorCode:    message.UpdateCacheError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_CACHE_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return

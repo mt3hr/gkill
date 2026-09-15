@@ -9,7 +9,7 @@ Vue コンポーネント（`pages/`）から使用されるロジック層。
 
 ```
 classes/
-├── (ルートファイル 366個)        # use-*.ts Composable + ユーティリティ
+├── (ルートファイル 368個)        # use-*.ts Composable + ユーティリティ
 ├── api/                        # GkillAPI クライアント → api/README.md
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md
@@ -180,6 +180,8 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-dialog-history-stack.ts` | ダイアログ履歴スタック管理（バック操作・Escape キー対応） |
 | `use-delayed-loading.ts` | 読み込み中表示の遅延（速く終わった読み込みでインジケータを明滅させない） |
 | `use-device-kind.ts` | 端末種別（PC / タブレット / スマートフォン）とタッチの有無。ドラッグ&ドロップの可否は `is_pc` で判断する。モジュールレベルのシングルトン |
+| `use-gkill-message-feed.ts` | 画面右上のエラー / メッセージのフィード（モジュールレベルのシングルトン）。エラーと warning は閉じるまで残し、info だけ 2.5 秒で消す。同じエラーの連打は ×N にまとめる。`main.ts` の握られなかった例外もここへ（ADR-0411） |
+| `use-gkill-message-feed-view.ts` | フィード表示（`gkill-message-feed-view.vue`）のロジック。色・role・「詳細をコピー」 |
 
 ### ユーティリティファイル
 

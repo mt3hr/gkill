@@ -47,7 +47,10 @@ func writeErrorStatus(ctx context.Context, w http.ResponseWriter, errs []*messag
 //
 // エラーコードを載せるのは、これが「どのAPIがどの理由で落ちたか」を1行で示す唯一の行に
 // なるためです。自由文の error_message は載せません（i18n 済みの利用者向け文面で、
-// 原因の特定には使えない）。原因そのものは深部の Debug ログにあります。
+// 原因の特定には使えない）。代わりに **reason（分類）と cause（GkillError.Cause の文面）** を載せます。
+// 2026-09-15 まで原因は深部の Debug ログにしかなく、既定のログレベル（error）では
+// 「500 が返るが理由がどこにも出ない」状態でした。cause はサーバのログなので伏せません
+// （ADR-0707: 伏せるのはレスポンスだけ）。
 func logResponseFailure(ctx context.Context, status int, errs []*message.GkillError) {
 	level := gkill_log.Debug
 	switch {
@@ -55,6 +58,11 @@ func logResponseFailure(ctx context.Context, status int, errs []*message.GkillEr
 		level = gkill_log.Error
 	case status == http.StatusUnauthorized, status == http.StatusForbidden, status == http.StatusTooManyRequests:
 		level = gkill_log.Warn
+	}
+	// 呼び出し側が中断した（Web の AbortController 等。reason=canceled）だけの 500 はサーバの障害ではない。
+	// 検索欄を打ち直すたびに出るので、Error のままだと gkill_error.log が利用者の操作で埋まる。
+	if level == gkill_log.Error && allErrorsCanceled(errs) {
+		level = gkill_log.Debug
 	}
 
 	// レベルが無効なら組み立てない。Go は引数を呼び出し前に評価するので、
@@ -65,14 +73,28 @@ func logResponseFailure(ctx context.Context, status int, errs []*message.GkillEr
 	}
 
 	errorCodes := make([]string, 0, len(errs))
+	reasons := make([]string, 0, len(errs))
+	causes := make([]string, 0, len(errs))
 	for _, gkillError := range errs {
 		if gkillError == nil {
 			continue
 		}
 		errorCodes = append(errorCodes, gkillError.ErrorCode)
+		if reason := message.ReasonOf(gkillError.Cause); reason != "" {
+			reasons = append(reasons, reason)
+		}
+		if gkillError.Cause != nil {
+			causes = append(causes, gkillError.Cause.Error())
+		}
 	}
 
 	args := []any{"status", status, "error_codes", fmt.Sprintf("%q", errorCodes)}
+	if len(reasons) != 0 {
+		args = append(args, "reasons", fmt.Sprintf("%q", reasons))
+	}
+	if len(causes) != 0 {
+		args = append(args, "causes", fmt.Sprintf("%q", causes))
+	}
 	if info := accessLogInfoFromContext(ctx); info != nil {
 		args = append(args,
 			"method", fmt.Sprintf("%q", info.Method),
@@ -103,7 +125,25 @@ func writeGkillErrorResponse(ctx context.Context, w http.ResponseWriter, gkillEr
 	}
 	errs := []*message.GkillError{gkillError}
 	writeErrorStatus(ctx, w, errs)
+	// messages も載せる（常に [] の契約。無いと消費者が undefined を吸収することになる）
 	_ = json.NewEncoder(w).Encode(struct {
-		Errors []*message.GkillError `json:"errors"`
+		Messages message.GkillMessages `json:"messages"`
+		Errors   message.GkillErrors   `json:"errors"`
 	}{Errors: errs})
+}
+
+// allErrorsCanceled は errs の全件が「呼び出し側の中断」に分類されるときだけ true。
+// 1件でも中断以外（または Cause 無し）が混ざっていれば false。
+func allErrorsCanceled(errs []*message.GkillError) bool {
+	found := false
+	for _, gkillError := range errs {
+		if gkillError == nil {
+			continue
+		}
+		if message.ReasonOf(gkillError.Cause) != message.ReasonCanceled {
+			return false
+		}
+		found = true
+	}
+	return found
 }

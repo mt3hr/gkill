@@ -3,18 +3,23 @@
 ## 概要
 
 gkill API のエラーコードとメッセージコードの定数定義、およびレスポンス用構造体を提供する。
-全 API レスポンスは `[]GkillMessage` と `[]GkillError` を含み、クライアント側でエラー判定・表示に使用される。
+全 API レスポンスは `GkillMessages`（`messages`）と `GkillErrors`（`errors`）を含み、クライアント側でエラー判定・表示に使用される。
+**成功時も `messages` / `errors` は `null` ではなく `[]`**（2026-09-15、[ADR-0710](../../../../../documents/adr/0710-error-kind-and-reason-on-the-wire.md)）。
 
-## ファイル一覧（10ファイル）
+## ファイル一覧（14ファイル）
 
 | ファイル | 説明 |
 |---------|------|
-| `gkill_error.go` | `GkillError` 構造体 — `ErrorCode` + `ErrorMessage`。`EnsureNotEmpty`（エラー無し失敗の受け皿）と、`ErrorMessage` を伏せる `MarshalJSON` もここ |
-| `gkill_error_test.go` | `EnsureNotEmpty` が「失敗したのに GkillError が1つも無い」状態を潰すこと、`MarshalJSON` が端末固有の情報を伏せることのテスト |
+| `gkill_error.go` | `GkillError` 構造体 — `ErrorCode` + `ErrorMessage` + `Cause`（JSON には出ない Go の error）。`GkillErrors`（nil を `[]` で出す名前付きスライス）、`EnsureNotEmpty`（エラー無し失敗の受け皿）、`ErrorMessage` を伏せて `error_kind` / `reason` を付ける `MarshalJSON` もここ |
+| `gkill_error_test.go` | `EnsureNotEmpty`、`MarshalJSON` の伏せ処理、ワイヤの形（`[]` / `error_kind` / `reason` / `Cause` が漏れない）のテスト |
+| `error_kind.go` | `KindOf(code)` — エラーコード → `error_kind`（誰の問題か）。既定は HTTP ステータスから、`errorCodeKindOverride` で 500 のうち設定不備を `config` に |
+| `error_kind_test.go` | 全コードに kind が決まること、上書き表の実在、名指しの割り当て、kind ごとの件数 |
+| `error_reason.go` | `ReasonOf(err)` — Go の error → `reason`（何が起きたか）。`Reasoner` インタフェース / `ReasonError`、SQLite 結果コード・context・OS・net の分類、`errorCodeReason`（Cause 無しでコードから決まる理由） |
+| `error_reason_test.go` | 分類の表駆動テスト（modernc.org/sqlite が実際に返すエラーで CANTOPEN / NOTADB / READONLY / BUSY を起こす）、コードからの既定、語彙の一覧 |
 | `redact.go` | `RedactEnvironmentSpecific` — レスポンスへ載る自由文からホームのユーザー名・メールアドレスを伏せる（[ADR-0707](../../../../../documents/adr/0707-redact-environment-specific-strings.md)） |
 | `redact_test.go` | 伏せ方の表駆動テスト（形は残す・二重適用しない・`@example.` は残す） |
-| `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` |
-| `error_codes.go` | エラーコード定数（380 定数: `ERR000001` 〜 `ERR000418`、欠番 41。うち 37 は存在しないエンドポイント（`get_gkill_info` / `get_kftl_template` / `update_*_struct` 等）のコードを 2026-09-14 に削除した跡。ADR-0709） |
+| `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` + `Level`（`info` 既定 / `warning`）。`GkillMessages`（nil を `[]` で出す） |
+| `error_codes.go` | エラーコード定数（381 定数: `ERR000001` 〜 `ERR000422`、欠番 41。うち 37 は存在しないエンドポイント（`get_gkill_info` / `get_kftl_template` / `update_*_struct` 等）のコードを 2026-09-14 に削除した跡。ADR-0709） |
 | `message_codes.go` | メッセージコード定数（83 定数: `MSG000001` 〜 `MSG000090`、欠番 7） |
 | `http_status.go` | エラーコード → HTTP ステータス対応表（`errorCodeHTTPStatus`、`HTTPStatusOf` / `HTTPStatusForErrors`） |
 | `http_status_test.go` | 全エラーコードが対応表に載っていることを `error_codes.go` のソース走査で固定するテスト |
@@ -26,15 +31,56 @@ gkill API のエラーコードとメッセージコードの定数定義、お�
 type GkillError struct {
     ErrorCode    string `json:"error_code"`
     ErrorMessage string `json:"error_message"`
+    Cause        error  `json:"-"` // if err != nil の中で組み立てるときは必ず Cause: err
 }
+// ワイヤ: {"error_code":"ERR000023","error_message":"メモ追加に失敗しました","error_kind":"server","reason":"db_busy"}
+// error_kind は必ず載る（KindOf）。reason は Cause から分類できたとき、またはコードから決まるときだけ（reasonForError）。
 
 type GkillMessage struct {
     MessageCode string `json:"message_code"`
     Message     string `json:"message"`
+    Level       string `json:"level"` // "info"（空なら MarshalJSON が補う）/ "warning"
 }
 ```
 
-## エラーコード体系（380 コード）
+### error_kind（誰の問題か）— 9 種
+
+| kind | 由来 | 消費者の既定のヒント |
+|---|---|---|
+| `input` | 400 | 入力・送信内容を確認。画面から操作していて出るなら再読込して最新版で |
+| `auth` | 401 | （Web の `check_auth` がログイン画面へ飛ばす） |
+| `permission` | 403 | 権限が無い（管理者アカウント） |
+| `not_found` | 404 | 別の端末で削除・更新された可能性。一覧を再読込 |
+| `conflict` | 409 | 同じ記録が既にある（二重送信）。一覧を再読込 |
+| `too_large` | 413 | 送信データを小さく |
+| `rate_limit` | 429 | しばらく待つ |
+| `config` | 500 のうち `errorCodeKindOverride`（TLS ファイル無し・書き込み rep 未設定） | 設定画面で直す |
+| `server` | 500（既定）・未分類のコード | 再試行 → `gkill_error.log` |
+
+### reason（何が起きたか）— 14 種
+
+`ReasonOf` は `errors.Is` / `errors.As` だけで判定する（文字列は見ない）。順序は Reasoner → context → SQLite 結果コード → OS → net。
+
+| reason | 判定 |
+|---|---|
+| `write_rep_missing` | `reps.CommitTxWriteRepMissingError` / コード `WriteRepMissingError` |
+| `storage_unavailable` | `SQLITE_CANTOPEN` / `fs.ErrNotExist` |
+| `storage_corrupted` | `SQLITE_CORRUPT` / `SQLITE_NOTADB` |
+| `storage_readonly` | `SQLITE_READONLY` / `fs.ErrPermission` |
+| `storage_full` | `SQLITE_FULL` / `syscall.ENOSPC` |
+| `storage_io_error` | `SQLITE_IOERR` |
+| `db_busy` | `SQLITE_BUSY` / `SQLITE_LOCKED` |
+| `timeout` | `context.DeadlineExceeded` / `net.Error.Timeout()` |
+| `canceled` | `context.Canceled`（Web は表示しない。ログも Debug） |
+| `plugin_busy` | `reps.ErrPluginBusy` |
+| `plugin_error` | `reps.ErrPluginReturnedErrors` |
+| `external_fetch_failed` | `*url.Error` / `net.Error` |
+| `local_only_access` | コード `LocalOnlyAccessDeniedError` |
+| `tls_files_missing` | コード `NotFoundTLSCertFileError` / `NotFoundTLSKeyFileError` |
+
+語彙の一覧は `reasonTokens` / `errorKinds` の1スライスに固定してあり、Web 側の表（`src/client/classes/api/message/error-hints.ts`）と `error-hints.test.ts` が突き合わせる。
+
+## エラーコード体系（381 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|
@@ -49,8 +95,10 @@ type GkillMessage struct {
 | `ERR000413` 〜 `ERR000415` | 操作対象アカウント不在（404）、ローカル限定アクセス拒否（403）、panic回収（500） |
 | `ERR000416` | メモ帳（KFTL）のテキスト自体が正しくない（400）。行ごとに1件ずつ立てる。サーバ側の失敗は `ERR000351`（500）のまま |
 | `ERR000417` 〜 `ERR000418` | 認証系ミドルウェアの先読み `readAuthBody` の失敗（ボディ上限超過は 413、読み取り失敗は 500） |
+| `ERR000419` 〜 `ERR000421` | commit_tx の ROLLBACK（何も書かれていない）、`parse_kftl_text` のリクエスト不正 / サーバ側失敗 |
+| `ERR000422` | 書き込み先 rep 未設定（500 だが kind `config` / reason `write_rep_missing`。以前は nil ポインタ panic） |
 
-`ERR9000xx` 帯はフロントエンドだけで採番するコードで、Go 側の `error_codes.go` には存在しない（定義元は `src/client/classes/api/message/gkill_error.ts`、現在99定数）。番号が衝突しないよう帯を分けてあるので、Go 側でこの帯を使ってはならない。
+`ERR9000xx` 帯はフロントエンドだけで採番するコードで、Go 側の `error_codes.go` には存在しない（定義元は `src/client/classes/api/message/gkill_error.ts`、現在101定数）。番号が衝突しないよう帯を分けてあるので、Go 側でこの帯を使ってはならない。
 
 ## メッセージコード体系（89 コード）
 
@@ -62,6 +110,8 @@ type GkillMessage struct {
 | `MSG000041` 〜 `MSG000074` | 設定・アップロード・KC・トランザクション |
 | `MSG000075` 〜 `MSG000090` | KFTL、MCP、キャッシュ、通知、ZIP ブラウズ、ReKyou/MiReKyou の対象ID逆引き、プラグイン検索失敗の警告、MCP向けrep一覧、rep読み込み失敗の警告 |
 
+`MSG000088`（プラグイン検索失敗）と `MSG000090`（rep 読み込み失敗）は `Level: warning` で返す。成功はしたが対処が要る知らせで、Web は閉じるまで残す（info は 2.5 秒で消える）。
+
 ## HTTP ステータスコードとの関係
 
 **エラーコードごとの対応表が `http_status.go` にある**（`errorCodeHTTPStatus`）。
@@ -70,17 +120,18 @@ type GkillMessage struct {
 | HTTP ステータス | 割り当てているエラーコード | 件数 |
 |----------------|--------------------------|------|
 | 200 | （`errors` が空のとき） | — |
-| 400 | `Invalid*RequestDataError` ほか入力値のバリデーション失敗 | 103 |
+| 400 | `Invalid*RequestDataError` ほか入力値のバリデーション失敗 | 96 |
 | 401 | `AccountSessionNotFoundError` / `AccountSessionExpiredError` / `AccountInvalidPasswordError` / `AccountNotFoundError` | 4 |
-| 403 | `AccountNotHasAdminError` / `AccountDisabledError` / `LocalOnlyAccessDeniedError` ほか | 11 |
+| 403 | `AccountNotHasAdminError` / `AccountDisabledError` / `LocalOnlyAccessDeniedError` ほか | 6 |
 | 404 | `NotFound*` / `TargetAccountNotFoundError` | 18 |
 | 409 | `AlreadyExist*` / `AccountPasswordResetTokenIsNotNilError` | 16 |
 | 413 | `RequestBodyTooLargeError`（認証前ボディの上限超過。`writeGkillErrorResponse` 経由で JSON 本文つきで返る） | 1 |
 | 429 | `LoginRateLimitError` | 1 |
-| 500 | `Get*` / `Add*` / `Update*` / `Delete*` / `CommitTx*` / `Invalid*ResponseDataError` ほか | 260 |
+| 500 | `Get*` / `Add*` / `Update*` / `Delete*` / `CommitTx*` / `Invalid*ResponseDataError` / `WriteRepMissingError` ほか | 239 |
 
 **エラーコードを足したら表にも1行足すこと。** `http_status_test.go` が
-`error_codes.go` をソース走査して未分類のコードを落とす。
+`error_codes.go` をソース走査して未分類のコードを落とす（kind は `KindOf` がステータスから導くので、
+`config` にしたいときだけ `errorCodeKindOverride` へ足す）。
 名前の規則からは導けない（`Invalid*` が 400 と 500 に、`NotFound*` が 401 と 404 に跨る）ので、
 推論に置き換えないこと。経緯と却下案は
 [ADR-0706](../../../../../documents/adr/0706-http-status-from-error-code.md)。

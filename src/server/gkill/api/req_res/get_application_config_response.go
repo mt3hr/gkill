@@ -6,9 +6,9 @@ import (
 )
 
 type GetApplicationConfigResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	ApplicationConfig *user_config.ApplicationConfig `json:"application_config"`
 }

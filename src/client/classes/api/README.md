@@ -52,12 +52,13 @@ api/
 | `mi-sort-type.ts` | Mi ソート順 enum |
 | `week-of-days.ts` | 曜日フィルタ enum |
 
-### `message/`（2ファイル）— エラー/メッセージ型
+### `message/`（3ファイル）— エラー/メッセージ型
 
 | ファイル | 説明 |
 |---------|------|
 | `gkill_error.ts` | エラーコード定義 |
 | `gkill_message.ts` | メッセージコード定義 |
+| `error-hints.ts` | サーバの `error_kind` / `reason`（機械語トークン）→ ヒント文（何をすれば直るか）の i18n キー。reason 優先。語彙は Go 側 `error_kind.go` / `error_reason.go` が正本 |
 
 ### `req_res/`（173ファイル）— Request/Response 型
 

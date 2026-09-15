@@ -38,7 +38,7 @@ func (g *GkillServerAPI) recoverMiddleware(next http.Handler) http.Handler {
 				w.WriteHeader(http.StatusInternalServerError)
 				json.NewEncoder(w).Encode(map[string]any{
 					"errors": []map[string]any{
-						{"error_code": message.InternalServerPanicError, "error_message": "内部エラーが発生しました"},
+						{"error_code": message.InternalServerPanicError, "error_message": "内部エラーが発生しました", "error_kind": message.ErrorKindServer},
 					},
 					"messages": []any{},
 				})

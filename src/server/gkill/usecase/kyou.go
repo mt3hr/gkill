@@ -38,6 +38,7 @@ func (uc *UsecaseContext) GetKyouHistories(ctx context.Context, repositories *re
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -68,7 +69,7 @@ func (uc *UsecaseContext) GetKyous(ctx context.Context, userID, device, localeNa
 			// そのまま返すと errors:null + 0件 になり、呼び出し側からは
 			// 「成功・該当0件」と区別が付かない。理由はEnsureNotEmptyのコメント。
 			gkillErrors = message.EnsureNotEmpty(gkillErrors, message.FindKyousError,
-				api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}))
+				api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}), err)
 		}
 		return nil, nil, gkillErrors, nil
 	}
@@ -77,6 +78,7 @@ func (uc *UsecaseContext) GetKyous(ctx context.Context, userID, device, localeNa
 	for _, pluginName := range reps.PluginFindWarnings(ctx) {
 		warningMessages = append(warningMessages, &message.GkillMessage{
 			MessageCode: message.FindKyousPluginWarningMessage,
+			Level:       message.MessageLevelWarning,
 			Message:     api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_FIND_PLUGIN_MESSAGE"}) + " (" + pluginName + ")",
 		})
 	}
@@ -95,6 +97,7 @@ func (uc *UsecaseContext) GetKyous(ctx context.Context, userID, device, localeNa
 		if i >= maxNamedRepLoadWarnings {
 			warningMessages = append(warningMessages, &message.GkillMessage{
 				MessageCode: message.FindKyousRepLoadWarningMessage,
+				Level:       message.MessageLevelWarning,
 				Message: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOAD_REP_MESSAGE"}) +
 					" (+" + strconv.Itoa(len(repLoadWarnings)-maxNamedRepLoadWarnings) + ")",
 			})
@@ -102,6 +105,7 @@ func (uc *UsecaseContext) GetKyous(ctx context.Context, userID, device, localeNa
 		}
 		warningMessages = append(warningMessages, &message.GkillMessage{
 			MessageCode: message.FindKyousRepLoadWarningMessage,
+			Level:       message.MessageLevelWarning,
 			Message:     api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOAD_REP_MESSAGE"}) + " (" + message.RedactEnvironmentSpecific(repName) + ")",
 		})
 	}

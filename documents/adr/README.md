@@ -191,6 +191,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0408](0408-props-emit-only-no-pinia.md) | フロントエンドの状態管理は Props/Emit と GkillAPI シングルトンのみ | Accepted |
 | [0409](0409-context-menu-position-by-vuetify.md) | コンテキストメニューの位置は手計算せず Vuetify の実測配置に任せる | Accepted |
 | [0410](0410-bundle-multi-write-operations-in-tx.md) | 複数書き込みになる画面の操作は tx_id で束ねて commit_tx で確定する | Accepted |
+| [0411](0411-error-feed-stays-until-closed.md) | エラー表示は1つのフィードに集約し、閉じるまで残す・コピーできる・握られなかった例外も同じ場所へ出す | Accepted |
 | [0501](0501-save-marker-beforeinput-input-pair.md) | KFTL保存マーカーの判定は beforeinput→input の対で行う | Accepted |
 | [0502](0502-kftl-errors-are-per-line.md) | メモ帳（KFTL）の失敗は行ごとに返し、入力ミスとサーバ障害を分ける | Accepted |
 | [0503](0503-kftl-prefix-misuse-is-an-input-error.md) | 引数の無い／引数を同じ行に書いたメモ帳のプレフィックスは、ゼロ値を書かずに行別エラーにする | Accepted |
@@ -227,6 +228,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0707](0707-redact-environment-specific-strings.md) | 端末固有の文字列は出口で伏せ、プラグインの診断文はAIへ返さない | Accepted |
 | [0708](0708-local-only-listen-by-default.md) | 待受の既定はループバック限定 — LAN 公開は設定画面での明示操作にし、既存の設定は移行も拒否もしない | Accepted |
 | [0709](0709-api-route-table-single-source.md) | HTTP API のルート表は Go 側の1つの表を正本にし、OpenAPI からの生成は採らない | Accepted |
+| [0710](0710-error-kind-and-reason-on-the-wire.md) | `errors` / `messages` は成功時も `[]`、エラーには機械語の `error_kind` と `reason` を載せる | Accepted |
 | [0801](0801-perf-judge-by-allocs-not-ns-op.md) | 性能判断は ns/op ではなく allocs/op・B/op・EXPLAIN QUERY PLAN で行う | Accepted |
 | [0802](0802-freeze-plaing-spelling.md) | 綴りは「永続に乗るか」で決める — plaing は凍結、agregate は改名して読み込み互換を残す | Superseded |
 | [0803](0803-verify-docs-checks-filenames.md) | 資料は件数だけでなく「資料に載っているファイル名の実在」も機械検査する | Accepted |

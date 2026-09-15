@@ -6,9 +6,9 @@ import (
 )
 
 type GetRepositoriesResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	Repositories []*user_config.Repository `json:"repositories"`
 }

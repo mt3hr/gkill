@@ -6,9 +6,9 @@ import (
 )
 
 type UpdateKCResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	UpdatedKC *reps.KC `json:"updated_kc"`
 

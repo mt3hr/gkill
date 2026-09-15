@@ -543,6 +543,7 @@ func (g *GkillServerAPI) resolveSelfAuthContext(
 		return "", "", nil, &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		}
 	}
 
@@ -553,6 +554,7 @@ func (g *GkillServerAPI) resolveSelfAuthContext(
 		return "", "", nil, &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: reposFailureMessageID}),
+			Cause:        err,
 		}
 	}
 	return userID, device, repositories, nil

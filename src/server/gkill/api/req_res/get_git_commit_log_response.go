@@ -6,9 +6,9 @@ import (
 )
 
 type GetGitCommitLogResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	GitCommitLogHistories []reps.GitCommitLog `json:"git_commit_log_histories"`
 }

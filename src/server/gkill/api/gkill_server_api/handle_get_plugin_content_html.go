@@ -47,6 +47,7 @@ func (g *GkillServerAPI) HandleGetPluginContentHTML(w http.ResponseWriter, r *ht
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.InvalidGetPluginContentHTMLRequestDataError,
 			ErrorMessage: "プラグインコンテンツHTML取得リクエストのパースに失敗しました",
+			Cause:        err,
 		})
 		return
 	}
@@ -75,6 +76,7 @@ func (g *GkillServerAPI) HandleGetPluginContentHTML(w http.ResponseWriter, r *ht
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.GetPluginContentHTMLError,
 			ErrorMessage: fmt.Sprintf("プラグインコンテンツHTMLの取得に失敗しました: %s", err.Error()),
+			Cause:        err,
 		})
 		return
 	}

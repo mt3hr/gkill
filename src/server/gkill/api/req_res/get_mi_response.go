@@ -6,9 +6,9 @@ import (
 )
 
 type GetMiResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	MiHistories []reps.Mi `json:"mi_histories"`
 }

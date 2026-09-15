@@ -15,20 +15,7 @@
             @received_errors="onReceivedErrors"
             @received_messages="onReceivedMessages" />
         <HelpDialog screen_name="getting-started" ref="help_dialog" />
-        <div class="alert_container" role="status" aria-live="polite">
-            <v-slide-y-transition group>
-                <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
-                    v-for="message in messages" :key="message.id">
-                    <template v-slot:activator="{ props }">
-                        <v-alert v-bind="props" :color="message.is_error ? 'error' : undefined"
-                            :role="message.is_error ? 'alert' : undefined"
-                            :closable="message.closable" @click:close="onCloseMessage(message.id)">
-                            {{ message.message }}
-                        </v-alert>
-                    </template>
-                </v-tooltip>
-            </v-slide-y-transition>
-        </div>
+        <GkillMessageFeedView />
     </v-main>
 </template>
 
@@ -39,6 +26,7 @@ import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import RegisterFirstAccountView from './views/register-first-account-view.vue'
 import HelpDialog from './dialogs/help-dialog.vue'
 import { useRegisterFirstAccountPage } from '@/classes/use-register-first-account-page'
+import GkillMessageFeedView from './views/gkill-message-feed-view.vue'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
@@ -51,12 +39,10 @@ const {
     app_content_height,
     app_content_width,
     gkill_version,
-    messages,
 
     // Event handlers
     onReceivedErrors,
     onReceivedMessages,
-    onCloseMessage,
 } = useRegisterFirstAccountPage()
 </script>
 
@@ -72,19 +58,6 @@ const {
     margin-right: 15px;
 }
 
-.alert_container>div {
-    width: fit-content;
-}
-
-.alert_container {
-    justify-items: end;
-    position: fixed;
-    top: 60px;
-    right: 10px;
-    display: grid;
-    grid-gap: .5em;
-    z-index: 99;
-}
 </style>
 <style scoped>
 :root {

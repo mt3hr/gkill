@@ -15,7 +15,7 @@ description: "gkill フロントエンド（src/client/）全域の約束。他�
 Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + PWA (vite-plugin-pwa + Workbox)
 
 - `router/index.ts` — 13 page routes (login, kftl, mi, rykv, kyou, mkfl, playing, saihate, dashboard, rudbeckia, set_new_password, register_first_account, shared_page) + 2 redirect-only routes（`/regist_first_account` → `/register_first_account`、`/shared_mi` → `/shared_page`。どちらも query を引き継ぐ）。**旧パスの吸収は redirect でやること** ―― コンポーネントの setup から `router.replace` すると、`<script setup>` に top-level await があるページでは初回ナビゲーションが完了しなくなる（`/shared_mi` が実際にそうなっていた。share_id 無しで throw して setup ごと落ちていたため、redirect が一度も走らず露見していなかった）
-- `pages/views/` — 202 view components, `pages/dialogs/` — 116 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend/correlation graph components (client-side aggregation, no server API)
+- `pages/views/` — 203 view components, `pages/dialogs/` — 116 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend/correlation graph components (client-side aggregation, no server API)
 - `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,500 lines), client-side API wrapper
 - `classes/cascade-delete-kyou.ts` — cascade delete for Kyou. The attached Tag / Text / Notification and the ReKyou / MiReKyou that reference the Kyou are looked up in reverse via `GetReKyousByTargetID` / `GetMiReKyousByTargetID` and logically deleted together with it. Depth cap 32 (`max_cascade_depth`), 16 lookups in flight per level (`request_chunk_size`). Discovery runs to completion before any write (deleting the Kyou first makes the server's `FindKyous` drop the referencing records from its results, so the reverse lookup can no longer find them); if discovery fails nothing is written. **All updates are staged with one `tx_id` and confirmed by `commit_tx`** (`gkill-tx.ts` `run_in_tx`, 2026-09-15, ADR-0410): `commit_tx` is one SQLite transaction (ADR-0219), so either everything is deleted or nothing is — `deleted_ids` is every visited id on success and empty on failure. On failure: ERR900093 `cascade_delete_depth_exceeded` / ERR900094 `cascade_delete_failed`, i18n key `FAILED_DELETE_KYOU_NOTHING_DELETED_MESSAGE`
 - `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target; `/zip_cache/.*` on NavigationRoute denylist)
@@ -49,6 +49,23 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 **実行中 TimeIs は発生元が読み込み済みのときだけ引き直す**（`fetch_refreshed_kyou` の `load_all(query, true, { include_timeis })`）。付随データの中で唯一「検索」（`/api/get_kyous`、SW キャッシュ対象外）で、一覧の行は表示しない（`show_attached_timeis=false`）のに、以前は行の引き直しのたびに撃っていた。読んでいなければ `is_attached_timeis_loaded=false` のまま返り、詳細ペイン・ダイアログの KyouView の遅延読み込みが必要なときに取る。タグ/テキスト/通知は従来どおり無条件に強制引き直しする（ここを条件付きにすると「タグを足しても表示が変わらない」が戻る）。経緯は [ADR-0218](../../../documents/adr/0218-get-kyou-histories-via-cached-reps.md)。 **版履歴（`Kyou.load_attached_histories`）は `load_attached_datas` / `load_all` / 引き直しで先読みしない**（2026-09-14）。`attached_histories` を読むのは履歴ダイアログ（`use-kyou-histories-view.ts`）だけで、そこは開いたときに自前で引く。先読みしていたころは引き直し1回につき `/api/get_kyou`（版履歴を集める、往復の中でいちばん重い API）が `reload()` と合わせて2回飛んでいた。
 
 引き直しは**呼び出し元のダイアログや行より長生きさせる**。`fetch_refreshed_kyou` は作業用クローンに専用の `AbortController` を入れ直しており、`KyouView` の `onUnmounted` abort で保存直後の引き直しが道連れになることはない。引き直し中は `is_kyou_reloading(id)` が真になり、`KyouView` が**中身を残したまま**右上にスピナーを重ねる（`.kyou_reloading`。中身を差し替える `show_loading_indicator` とは別物で、消すと行がちらつき詳細ビューでは高さが跳ねる）。状態は id キーのモジュールレベルに置く ―― `KyouView` は id が同じなら再マウントされず props が差し替わるだけなので、コンポーネントローカルに持つと倒せない。
+
+**エラー / メッセージの表示は `useGkillMessageFeed()` の1つのフィードへ流す**（2026-09-15、[ADR-0411](../../../documents/adr/0411-error-feed-stays-until-closed.md)）。
+`classes/use-gkill-message-feed.ts` がモジュール単位のシングルトンで一覧を持ち、`pages/views/gkill-message-feed-view.vue` が描く。
+ページや hosted view に `write_errors` / `write_messages` / `messages` の配列を**新しく書かない**（以前は 16+15 箇所に同型コピーがあり、
+サーバ由来のエラーは `show_keep` が無くて undefined → 「閉じられない・2.5秒で消える」で、本物の障害ほど早く消えていた）。
+`received_errors` → ページの emit 連鎖はそのままで、ページの `write_errors` は `push_errors` に委譲するだけ。
+- **エラーと warning（`GkillMessage.level === 'warning'`）は閉じるまで残す。自動で消えるのは info（2.5秒）だけ。**
+  同じ code + 本文の連続は1枚にまとめて `×N`。中断（`reason: canceled`）は出さない
+- 1枚に本文・ヒント・`コード · reason` のフッター・「詳細をコピー」を出す。ヒントは `classes/api/message/error-hints.ts` が
+  `reason`（優先）→ クライアント生成コード → `error_kind` の順で i18n キーへ写す。語彙は Go 側（`error_kind.go` /
+  `error_reason.go`）が正本で、`error-hints.test.ts` がソースを突き合わせる。トークンを足したら 7言語の `ERROR_HINT_*` も足す
+- **E2E は `.v-alert[role="alert"]` でエラーを掴む**（6 spec）。エラーだけ `role="alert"` の形を変えないこと
+- 握られなかった例外は `main.ts`（`unhandledrejection` の abort 以外・`window.onerror`・`app.config.errorHandler`）が
+  `push_client_exception` で同じフィードへ出す（ERR900101）。`app.config.errorHandler` を置くと Vue のコンソール出力が止まるので
+  ハンドラ内で `console.error` を出し直している。`gkill_fetch` は Content-Type が JSON でない応答を `bad_response`（ERR900100）の
+  合成応答にする（`res.json()` の SyntaxError が握られて画面に何も出ないのを防ぐ）
+- 守るテスト: `use-gkill-message-feed.test.ts` / `error-hints.test.ts` / `gkill-api-bad-response.test.ts`
 
 **タグ/テキスト/通知の変更は `updated_kyou` を出さない。** 唯一の信号が `requested_reload_kyou` なので、Kyou を抱えて表示するコンポーネントは必ずこれを処理すること。
 
@@ -99,4 +116,5 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 
 - [ADR-0408 Props/Emit のみ（Pinia を入れない）](../../../documents/adr/0408-props-emit-only-no-pinia.md)
 - [ADR-0409 コンテキストメニュー位置は Vuetify に任せる](../../../documents/adr/0409-context-menu-position-by-vuetify.md)
+- [ADR-0411 エラー表示は1つのフィードに集約し、閉じるまで残す](../../../documents/adr/0411-error-feed-stays-until-closed.md)
 - [ADR-0218 `/api/get_kyou` の版履歴はキャッシュ rep を回す（引き直しの往復削減）](../../../documents/adr/0218-get-kyou-histories-via-cached-reps.md)

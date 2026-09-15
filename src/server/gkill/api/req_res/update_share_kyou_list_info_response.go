@@ -6,9 +6,9 @@ import (
 )
 
 type UpdateShareKyouListInfoResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	ShareKyouListInfo *share_kyou_info.ShareKyouInfo `json:"share_kyou_list_info"`
 }

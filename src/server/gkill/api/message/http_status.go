@@ -479,4 +479,5 @@ var errorCodeHTTPStatus = map[string]int{
 	ReadRequestBodyError:                                             http.StatusInternalServerError, // ERR000418
 	CommitTxRolledBackError:                                          http.StatusInternalServerError, // ERR000419
 	ParseKFTLTextError:                                               http.StatusInternalServerError, // ERR000421
+	WriteRepMissingError:                                             http.StatusInternalServerError, // ERR000422
 }

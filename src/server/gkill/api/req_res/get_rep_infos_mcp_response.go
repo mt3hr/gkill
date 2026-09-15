@@ -57,8 +57,8 @@ type PluginRepInfoMCPDTO struct {
 // 表示ラベルと無関係な directory である」ことは総当たりでしか判明しなかった）。
 // このエンドポイントが語彙とrep一覧の突き合わせ先になる。
 type GetRepInfosMCPResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
-	Errors   []*message.GkillError   `json:"errors"`
+	Messages message.GkillMessages `json:"messages"`
+	Errors   message.GkillErrors   `json:"errors"`
 	// RepInfos はKyouを供給するrepの一覧（(rep_name, rep_type) で重複排除済み）。
 	// ファイルパスは含めない。
 	RepInfos []RepInfoMCPDTO `json:"rep_infos"`

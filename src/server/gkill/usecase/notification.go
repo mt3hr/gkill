@@ -26,6 +26,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -39,6 +40,11 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 		return nil, gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteNotificationRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_ADD_NOTIFICATION_MESSAGE", "notification"))
+		return nil, gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteNotificationRep.AddNotificationInfo(ctx, notification)
 		if err != nil {
@@ -47,6 +53,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddNotificationError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -63,6 +70,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddNotificationError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -79,6 +87,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetNotificationError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -106,6 +115,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -125,6 +135,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -138,6 +149,11 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 		return nil, gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteNotificationRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_UPDATE_NOTIFICATION_MESSAGE", "notification"))
+		return nil, gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteNotificationRep.AddNotificationInfo(ctx, notification)
 		if err != nil {
@@ -146,6 +162,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateNotificationError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -173,6 +190,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateNotificationError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -189,6 +207,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetNotificationError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_UPDATED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -216,6 +235,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_UPDATED_GET_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -234,6 +254,7 @@ func (uc *UsecaseContext) GetNotificationsByTargetID(ctx context.Context, reposi
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationsByTargetIDError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -264,6 +285,7 @@ func (uc *UsecaseContext) GetNotificationHistoriesByNotificationID(ctx context.C
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationHistoriesByNotificationIDError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
