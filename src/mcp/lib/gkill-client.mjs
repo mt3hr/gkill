@@ -69,12 +69,22 @@ export class GkillClient {
     return responseBody.errors.some((err) => AUTH_ERROR_CODES.has(err.error_code));
   }
 
+  // Renders "CODE: message [kind=..., reason=...]". `error_kind` (whose problem it is) and
+  // `reason` (what happened; only when the server could classify it) are machine tokens the
+  // server adds (ADR-0710) — they tell the model what to do next (e.g. reason=write_rep_missing
+  // means "configure a write repository", db_busy means "retry shortly") without the user's locale.
   formatErrors(responseBody) {
     if (!this.hasErrors(responseBody)) {
       return "";
     }
     return responseBody.errors
-      .map((err) => `${err.error_code ?? "UNKNOWN"}: ${err.error_message ?? "unknown error"}`)
+      .map((err) => {
+        const tokens = [];
+        if (err.error_kind) tokens.push(`kind=${err.error_kind}`);
+        if (err.reason) tokens.push(`reason=${err.reason}`);
+        const suffix = tokens.length > 0 ? ` [${tokens.join(", ")}]` : "";
+        return `${err.error_code ?? "UNKNOWN"}: ${err.error_message ?? "unknown error"}${suffix}`;
+      })
       .join("; ");
   }
 

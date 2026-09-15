@@ -6,9 +6,9 @@ import (
 )
 
 type AddNlogResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	AddedNlog *reps.Nlog `json:"added_nlog"`
 

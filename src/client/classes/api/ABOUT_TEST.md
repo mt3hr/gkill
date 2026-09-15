@@ -20,6 +20,7 @@ Vitest
 | `src/client/__tests__/unit/api/normalize-legacy-find-kyou-query-json.test.ts` | 旧形式の検索条件JSON（`use_*` 有効化フラグ）の移行。Go / クライアント / MCP の3実装が**同じ16キー**を扱う必要がある |
 | `src/client/__tests__/unit/api/collect-inited-tag-names.test.ts` | 既定でチェックされるタグ名の収集。ツリーの「入れ物」（フォルダ・ルート）を混ぜないこと（混ぜるとAND検索が必ず0件になる） |
 | `src/client/__tests__/unit/api/yield-to-main.test.ts` | 大量応答の処理をメインスレッドへ譲る分割（30万件でUIが固まらないようにするための偽チャンク） |
+| `src/client/__tests__/unit/api/gkill-api-bad-response.test.ts` | `gkill_fetch()` が JSON 以外の応答（プロキシの HTML エラーページ等）を `bad_response`（ERR900100）の合成応答にすること。JSON なら 500 でも本文を読むこと・Content-Type の無いモックは素通しすること |
 
 ## テスト内容
 

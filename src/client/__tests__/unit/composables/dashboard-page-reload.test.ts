@@ -37,6 +37,7 @@ import { createApp, defineComponent, h } from 'vue'
 import { useDashboardPage } from '@/classes/use-dashboard-page'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { useGkillMessageFeed, reset_feed_items } from '@/classes/use-gkill-message-feed'
 
 function make_fake_api() {
     return {
@@ -151,8 +152,10 @@ describe('ApplicationConfig 取得の失敗', () => {
 
 describe('DashboardView からのイベント中継', () => {
     // ビューは一覧の更新を自分で済ませたうえで registered_kyou / updated_kyou を上げてくる。
-    // ページの仕事は板ツリー/タグツリーの追随とメッセージ表示だけ
-    test('received_errors はスナックバーのメッセージ列へ積む', async () => {
+    // ページの仕事は板ツリー/タグツリーの追随とメッセージ表示だけ。
+    // メッセージの置き場はページ固有の配列ではなく use-gkill-message-feed のシングルトン（2026-09-15）
+    test('received_errors はメッセージフィードへ積む', async () => {
+        reset_feed_items()
         const { page } = mount_page()
 
         page.dashboardViewHandlers.received_errors([
@@ -160,7 +163,9 @@ describe('DashboardView からのイベント中継', () => {
         ] as unknown as Parameters<typeof page.dashboardViewHandlers.received_errors>[0])
         await vi.advanceTimersByTimeAsync(0)
 
-        expect(page.messages.value).toHaveLength(1)
-        expect(page.messages.value[0].is_error).toBe(true)
+        const { feed_items } = useGkillMessageFeed()
+        expect(feed_items.value).toHaveLength(1)
+        expect(feed_items.value[0].level).toBe('error')
+        expect(feed_items.value[0].code).toBe('ERR000001')
     })
 })

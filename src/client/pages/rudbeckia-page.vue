@@ -148,20 +148,7 @@
             <HelpDialog screen_name="rudbeckia" ref="help_dialog" />
             <TutorialDialog :application_config="application_config" :gkill_api="gkill_api" ref="tutorial_dialog" />
         </v-main>
-        <div class="alert_container" role="status" aria-live="polite">
-            <v-slide-y-transition group>
-                <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
-                    v-for="message in messages" :key="message.id">
-                    <template v-slot:activator="{ props }">
-                        <v-alert v-bind="props" :color="message.is_error ? 'error' : undefined"
-                            :role="message.is_error ? 'alert' : undefined" :closable="message.closable"
-                            @click:close="close_message(message.id)">
-                            {{ message.message }}
-                        </v-alert>
-                    </template>
-                </v-tooltip>
-            </v-slide-y-transition>
-        </div>
+        <GkillMessageFeedView />
     </div>
 </template>
 
@@ -188,6 +175,7 @@ import type { RudbeckiaPageKind } from './views/rudbeckia-page-kind'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { useRudbeckiaPage } from '@/classes/use-rudbeckia-page'
+import GkillMessageFeedView from './views/gkill-message-feed-view.vue'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 const tutorial_dialog = ref<InstanceType<typeof TutorialDialog> | null>(null)
@@ -219,7 +207,6 @@ const {
     app_content_height,
     app_content_width,
     is_loading,
-    messages,
 
     // Computed
     kyou_change_bus,
@@ -229,7 +216,6 @@ const {
     // Methods
     write_errors,
     write_messages,
-    close_message,
     load_application_config,
     open_page_dialog,
     navigate_to_page,

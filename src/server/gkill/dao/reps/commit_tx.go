@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"log/slog"
 	"time"
 
@@ -47,6 +48,9 @@ type CommitTxWriteRepMissingError struct {
 func (e *CommitTxWriteRepMissingError) Error() string {
 	return fmt.Sprintf("commit tx: write repository for %s is not configured", e.DataType)
 }
+
+// ErrorReason は応答の reason（write_rep_missing）。message.Reasoner の実装。
+func (e *CommitTxWriteRepMissingError) ErrorReason() string { return message.ReasonWriteRepMissing }
 
 // DiscardTxError は temp rep の1種別の破棄失敗。DiscardTx は止まらず全種別を試し、errors.Join で束ねて返す。
 type DiscardTxError struct {

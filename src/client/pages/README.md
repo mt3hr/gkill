@@ -10,7 +10,7 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 16 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（202 .vue）
+├── views/                          # View コンポーネント（203 .vue）
 └── dialogs/                        # Dialog コンポーネント（116 .vue）
 ```
 
@@ -69,7 +69,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（202 .vue）
+## views/ — 全 View コンポーネント一覧（203 .vue）
 
 ### データ追加系（23コンポーネント）
 
@@ -245,6 +245,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `rykv-view.vue` / `rykv-dialog-host.vue` / `rykv-dialog-host-item.vue` | Rykv |
 | `ryuu-view.vue` / `ryuu-item-view.vue` | Ryuu |
 | `sidebar-header.vue` | サイドバーヘッダー |
+| `gkill-message-feed-view.vue` | 画面右上のエラー / メッセージ表示（全ページ共通。本文・ヒント・`コード · reason`・詳細をコピー） |
 | `foldable-struct.vue` / `rep-struct-element.vue` / `tag-struct-element.vue` | 構造要素 |
 | `saihate-stars-overlay.vue` / `snow-fall-overlay.vue` | オーバーレイ効果 |
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |

@@ -6,9 +6,9 @@ import (
 )
 
 type GetTextHistoryByTextIDResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	TextHistories []reps.Text `json:"text_histories"`
 }

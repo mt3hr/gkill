@@ -23,9 +23,9 @@ type ZipEntry struct {
 }
 
 type BrowseZipContentsResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	Entries []*ZipEntry `json:"entries"`
 }

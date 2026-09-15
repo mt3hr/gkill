@@ -50,6 +50,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 				gkillError := &message.GkillError{
 					ErrorCode:    message.InvalidUpdateServerConfigResponseDataError,
 					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
+					Cause:        err,
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -63,6 +64,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateServerConfigRequestDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -97,6 +99,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 					gkillError := &message.GkillError{
 						ErrorCode:    message.NotFoundTLSCertFileError,
 						ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "CERT_FILE_NOT_CREATED_MESSAGE"}),
+						Cause:        err,
 					}
 					response.Errors = append(response.Errors, gkillError)
 					return
@@ -108,6 +111,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 					gkillError := &message.GkillError{
 						ErrorCode:    message.NotFoundTLSCertFileError,
 						ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "CERT_FILE_NOT_CREATED_MESSAGE"}),
+						Cause:        err,
 					}
 					response.Errors = append(response.Errors, gkillError)
 					return
@@ -126,6 +130,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 					gkillError := &message.GkillError{
 						ErrorCode:    message.GenerateVAPIDKeysError,
 						ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "KEY_GENERATION_ERROR_MESSAGE"}),
+						Cause:        err,
 					}
 					response.Errors = append(response.Errors, gkillError)
 					return
@@ -157,6 +162,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 			gkillError := &message.GkillError{
 				ErrorCode:    message.UpdateServerConfigError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return

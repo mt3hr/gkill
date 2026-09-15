@@ -6,9 +6,9 @@ import (
 )
 
 type UpdateLantanaResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	UpdatedLantana *reps.Lantana `json:"updated_lantana"`
 

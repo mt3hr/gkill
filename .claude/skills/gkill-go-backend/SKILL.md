@@ -105,6 +105,34 @@ ERR000002 でログアウトさせるので、**存在しないユーザIDにパ
 スキーム無しURLは `u.Hostname()` が空になり Google が汎用アイコンを**200**で返すので、
 リクエスト前に弾く（`dao/reps/ur_log.go` の `getFavicon`）。
 
+### エラーの種類と理由（2026-09 導入）
+
+**`GkillError` は `error_code` + `error_message` に加えて、marshal 時に `error_kind`（誰の問題か）と `reason`（何が起きたか）を
+機械語のトークンで載せる。** 文面（633箇所の `ErrorMessage`）は操作単位のまま変えない —— 「メモ追加に失敗しました」に
+「書き込み先が未設定」「USB が外れた」「DB がロック中」を足すのは、文面ではなく別フィールドの仕事。
+正本は `api/message/error_kind.go`（`KindOf`。既定は HTTP ステータス、500 のうち設定不備だけ `errorCodeKindOverride` で `config`）と
+`error_reason.go`（`ReasonOf`。`errors.Is` / `errors.As` だけで分類、**文字列照合はしない**）。
+ヒント文はワイヤに載せず、消費者側（Web の `error-hints.ts` + i18n）が引く。経緯と却下案は [ADR-0710](../../../documents/adr/0710-error-kind-and-reason-on-the-wire.md)。
+
+守ること4つ。
+
+1. **`if err != nil` の中で `GkillError` を組み立てるときは `Cause: err` を付ける。** reason の分類と、
+   `writeErrorStatus` が出す `request failed` の1行の `causes` の源。付け忘れても応答は返るので目の前では気付かない。
+   `gkill_error_cause_scan_test.go` がソース走査で落とす。`EnsureNotEmpty` の第4引数も同じ（手元の `err` を渡す）。
+   `err` 以外の名前（`decodeErr` 等）で受けているならその識別子を渡す。
+2. **`errors` / `messages` は成功時も `[]`。** レスポンス構造体の型は `message.GkillErrors` / `message.GkillMessages`
+   （`[]*message.GkillError` に戻すと成功時が `null` に戻る）。ハンドラより手前で書く経路（`writeGkillErrorResponse` /
+   `recoverMiddleware`）も同じ形（`messages` も配列、`error_kind` 付き）。
+3. **dao の番兵・型付きエラーは `message.Reasoner`（`ErrorReason() string`）を実装する**（`reps.ErrPluginBusy` /
+   `ErrPluginReturnedErrors` / `CommitTxWriteRepMissingError`）。`errors.Is` の同一性は保つ。新しい理由を足すときは
+   Go の `reasonTokens`、Web の `error-hints.ts`、i18n 7言語の `ERROR_HINT_REASON_*` を揃える（`error-hints.test.ts` が突き合わせる）。
+4. **書き込み先 rep が nil なら `writeRepMissingError`（usecase/write_rep_missing.go）で返す。** 2026-09-15 まで tx を使わない
+   `add_*` は nil ポインタ参照で panic し「内部エラーが発生しました」だけが出ていた。`WriteRepMissingError`（ERR000422）は
+   500 だが kind `config` / reason `write_rep_missing` で、Web は「設定 → 保存先で書き込み先を選ぶ」と案内する。
+
+`GkillMessage` には `Level`（`info` 既定 / `warning`）がある。成功はしたが対処が要る知らせ（rep 読み込み失敗 MSG000090・
+プラグイン警告 MSG000088）は `warning` で返す —— Web は閉じるまで残す（info は 2.5 秒で消える）。
+
 ### HTTP API のルート表（2026-09 導入）
 
 **ルートの正本は `gkill_server_api_address.go` の `apiRoutes()` の表1つ。`serve.go` にもテストハーネス
@@ -163,7 +191,9 @@ Web クライアント側は生成せず、`gkill-api.test.ts`「endpoint addres
    未ログインのアクセスで埋めない）。ディスク・DB・プロセス・設定は Error。
 
 **失敗したリクエストの1行は `writeErrorStatus(ctx, w, response.Errors)` が出す。**
-レベルはステータスから機械的に決まる（5xx=Error / 401・403・429=Warn / その他4xx=Debug）。
+レベルはステータスから機械的に決まる（5xx=Error / 401・403・429=Warn / その他4xx=Debug。呼び出し側の中断
+`reason=canceled` だけの 5xx は Debug）。行には `error_codes` に加えて `reasons` と `causes`（`GkillError.Cause` の文面）が載る
+ので、深部のログが Debug でも原因はここで追える。
 新しいハンドラは `writeErrorStatus(r.Context(), w, response.Errors)` の形で書くこと
 （`response_status_guard_test.go` がエンコード行の直前にあることを機械検査する）。
 アクセスログのミドルウェアは `Access` のまま触らない（レベルを可変にすると `gkill_access.log` の網羅性が崩れる）。
@@ -213,3 +243,4 @@ Web クライアント側は生成せず、`gkill-api.test.ts`「endpoint addres
 - [ADR-0705 派生キャッシュはユーザー別ディレクトリ](../../../documents/adr/0705-per-user-derived-cache-dir.md)
 - [ADR-0707 端末固有の文字列は出口で伏せる](../../../documents/adr/0707-redact-environment-specific-strings.md)
 - [ADR-0708 待受の既定はループバック限定](../../../documents/adr/0708-local-only-listen-by-default.md)
+- [ADR-0710 `errors` / `messages` は成功時も `[]`、`error_kind` と `reason` を載せる](../../../documents/adr/0710-error-kind-and-reason-on-the-wire.md)

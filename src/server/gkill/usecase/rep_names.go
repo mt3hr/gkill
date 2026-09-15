@@ -23,6 +23,7 @@ func (uc *UsecaseContext) GetAllTagNames(ctx context.Context, repositories *reps
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetAllTagNamesError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_TAG_NAMES_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -41,6 +42,7 @@ func (uc *UsecaseContext) GetAllRepNames(ctx context.Context, repositories *reps
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetAllRepNamesError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_REP_NAMES_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}

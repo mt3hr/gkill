@@ -6,9 +6,9 @@ import (
 )
 
 type GetTimeisResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	TimeisHistories []reps.TimeIs `json:"timeis_histories"`
 }

@@ -27,7 +27,8 @@ usecase/
 ├── rekyou.go            # ReKyou 追加・更新・履歴取得
 ├── mirekyou.go          # MiReKyou（既存記録のタスク化）追加・更新・履歴取得
 ├── git_commit_log.go    # GitCommitLog 取得
-└── rep_names.go         # 全タグ名・全リポジトリ名取得
+├── rep_names.go         # 全タグ名・全リポジトリ名取得
+└── write_rep_missing.go # 書き込み先 rep 未設定の GkillError（reason: write_rep_missing）
 ```
 
 ## 設計思想
@@ -64,11 +65,12 @@ type UsecaseContext struct {
 - `txID == nil`: 通常書き込み（WriteXxxRep に直接追加）
 - `txID != nil`: トランザクション書き込み（TempReps に追加、後で CommitTX でコミット）
 
-## ファイル一覧（17ファイル）
+## ファイル一覧（18ファイル）
 
 | ファイル | 説明 | 関数数 |
 |---------|------|--------|
 | `usecase.go` | `UsecaseContext` 構造体定義、`NewUsecaseContext()` コンストラクタ | 1 |
+| `write_rep_missing.go` | `writeRepMissingError()` — その種別の書き込み先 rep が nil のときの GkillError（`WriteRepMissingError` ERR000422、kind `config` / reason `write_rep_missing`）。tx を使わない Add*/Update* が nil ポインタ参照で panic する前に返す | 1 |
 | `kyou.go` | Kyou 一覧検索（FindFilter 経由）、履歴取得 | 2 |
 | `kmemo.go` | Kmemo（テキストメモ）の追加・更新・履歴取得 | 3 |
 | `timeis.go` | TimeIs（タイムスタンプ）の追加・更新・履歴取得 | 3 |
@@ -86,7 +88,7 @@ type UsecaseContext struct {
 | `git_commit_log.go` | GitCommitLog の取得 | 1 |
 | `rep_names.go` | 全タグ名一覧・全リポジトリ名一覧の取得 | 2 |
 
-**合計: 51 関数**（コンストラクタ 1 + Add 系 12 + Update 系 13 + Get 系 24 + 非公開ヘルパ 1）
+**合計: 52 関数**（コンストラクタ 1 + Add 系 12 + Update 系 13 + Get 系 24 + 非公開ヘルパ 2）
 
 ## エクスポート関数一覧
 

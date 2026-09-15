@@ -56,20 +56,7 @@
             <TutorialDialog :application_config="application_config" :gkill_api="gkill_api"
                 ref="tutorial_dialog" />
         </v-main>
-        <div class="alert_container" role="status" aria-live="polite">
-            <v-slide-y-transition group>
-                <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
-                    v-for="message in messages" :key="message.id">
-                    <template v-slot:activator="{ props }">
-                        <v-alert v-bind="props" :color="message.is_error ? 'error' : undefined"
-                            :role="message.is_error ? 'alert' : undefined"
-                            :closable="message.closable" @click:close="onCloseMessage(message.id)">
-                            {{ message.message }}
-                        </v-alert>
-                    </template>
-                </v-tooltip>
-            </v-slide-y-transition>
-        </div>
+        <GkillMessageFeedView />
     </div>
 </template>
 
@@ -85,6 +72,7 @@ import TutorialDialog from './dialogs/tutorial-dialog.vue'
 import kftlView from './views/kftl-view.vue'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import { useKftlPage } from '@/classes/use-kftl-page'
+import GkillMessageFeedView from './views/gkill-message-feed-view.vue'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 const tutorial_dialog = ref<InstanceType<typeof TutorialDialog> | null>(null)
@@ -103,13 +91,11 @@ const {
     app_content_width,
     is_show_application_config_dialog,
     is_loading,
-    messages,
 
     // Methods
     show_application_config_dialog,
 
     // Event handlers
-    onCloseMessage,
     onReceivedErrors,
     onReceivedMessages,
     onRegisteredKyou,

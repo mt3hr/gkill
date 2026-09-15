@@ -32,7 +32,7 @@ client/
 │   ├── dto/                 # DTO（2ファイル）
 │   └── lantana/             # Lantana ユーティリティ（1ファイル）
 ├── pages/                   # Vue ページ → pages/README.md
-│   ├── views/               # View コンポーネント（202 .vue）
+│   ├── views/               # View コンポーネント（203 .vue）
 │   └── dialogs/             # Dialog コンポーネント（116 .vue）
 ├── plugins/
 │   └── vuetify.ts           # Vuetify プラグイン設定

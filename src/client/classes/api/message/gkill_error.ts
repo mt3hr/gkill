@@ -100,6 +100,11 @@ export enum GkillErrorCodes {
     failed_delete_notification = "ERR900097",
     failed_add_rekyou = "ERR900098",
     // Android共有の保存に失敗したとき。黙って閉じると共有が失われたことに気づけない
-    failed_save_shared_data = "ERR900099"
+    failed_save_shared_data = "ERR900099",
+    // サーバ（かプロキシ）が JSON 以外を返したとき（gkill_fetch が合成する）。
+    // ステータスを見ずに res.json() する設計なので、ここで受けないと SyntaxError が握られて画面に何も出ない
+    bad_response = "ERR900100",
+    // 画面の処理で握られなかった例外（main.ts の unhandledrejection / errorHandler が拾う）
+    unexpected_client_error = "ERR900101"
 }
 

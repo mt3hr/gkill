@@ -341,6 +341,9 @@ function computeMiscMetrics() {
   const msgCodeMax = codeMax('src/server/gkill/api/message/message_codes.go', /MSG000\d+/g)
 
   // クライアント専用のエラーコード（ERR9xxxxx）。Go 側の error_codes.go には存在しない帯。
+  // error_kind / reason の語彙数（Go の定数が正本。Web の error-hints.ts は error-hints.test.ts が突き合わせる）
+  const errorKinds = codeCount('src/server/gkill/api/message/error_kind.go', /ErrorKind\w+\s*=\s*"[a-z_]+"/g)
+  const reasonTokens = codeCount('src/server/gkill/api/message/error_reason.go', /^\s*Reason\w+\s*=\s*"[a-z_]+"/gm)
   const clientErrCodes = codeCount('src/client/classes/api/message/gkill_error.ts', /ERR9\d{5}/g)
   const clientErrCodeMax = codeMax('src/client/classes/api/message/gkill_error.ts', /ERR9\d{5}/g)
 
@@ -443,6 +446,8 @@ function computeMiscMetrics() {
     msgCodeMax,
     clientErrCodes,
     clientErrCodeMax,
+    errorKinds,
+    reasonTokens,
     findQueryFields,
     goVersion,
     repsIfaceMethods: repsIfaceDocs.total,
@@ -668,6 +673,13 @@ function buildCountAssertions(m) {
   add('src/server/gkill/api/message/README.md', `（${m.errCodes} 定数:`)
   add('src/server/gkill/api/message/README.md', `（${m.msgCodes} 定数:`)
   add('src/server/gkill/api/message/README.md', `## エラーコード体系（${m.errCodes} コード）`)
+  // error_kind / reason の語彙数。Go の定数を足したら資料の表と Web の error-hints.ts も揃える
+  add('src/server/gkill/api/message/README.md', `### error_kind（誰の問題か）— ${m.errorKinds} 種`)
+  add('src/server/gkill/api/message/README.md', `### reason（何が起きたか）— ${m.reasonTokens} 種`)
+  add('documents/reverse/error-handling-and-security.md', `\`error_kind\`（必ず載る。${m.errorKinds}種）`)
+  add('documents/reverse/error-handling-and-security.md', `\`reason\`（分類できたときだけ。${m.reasonTokens}種）`)
+  add('AGENTS.md', `（誰の問題か。${m.errorKinds}種）`)
+  add('AGENTS.md', `（何が起きたか。${m.reasonTokens}種）`)
   add('src/server/gkill/api/find/README.md', `${m.findQueryFields} フィールドの検索条件`)
   add('src/server/gkill/api/README.md', `（${m.findQueryFields}フィールド:`)
   add('src/server/README.md', `**Go バージョン**: ${m.goVersion}`)

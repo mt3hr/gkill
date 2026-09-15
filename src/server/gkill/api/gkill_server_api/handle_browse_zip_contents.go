@@ -66,6 +66,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidBrowseZipContentsRequestDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 		}
@@ -78,6 +79,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidBrowseZipContentsRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -98,6 +100,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -110,6 +113,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -174,6 +178,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		gkillError := &message.GkillError{
 			ErrorCode:    message.BrowseZipContentsError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+			Cause:        extractErr,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -187,6 +192,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		gkillError := &message.GkillError{
 			ErrorCode:    message.BrowseZipContentsError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

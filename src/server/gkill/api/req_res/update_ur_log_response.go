@@ -6,9 +6,9 @@ import (
 )
 
 type UpdateURLogResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	UpdatedURLog *reps.URLog `json:"updated_urlog"`
 
