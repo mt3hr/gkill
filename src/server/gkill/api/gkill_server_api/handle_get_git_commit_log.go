@@ -43,6 +43,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetGitCommitLogResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GIT_COMMIT_LOG_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -56,6 +57,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetGitCommitLogRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GIT_COMMIT_LOG_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -73,7 +75,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 		// そのまま返すと errors:null + 0件 になり、呼び出し側からは
 		// 「成功・該当0件」と区別が付かない。理由は message.EnsureNotEmpty のコメント
 		gkillErrors = message.EnsureNotEmpty(gkillErrors, message.GetGitCommitLogError,
-			api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GIT_COMMIT_LOG_MESSAGE"}))
+			api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GIT_COMMIT_LOG_MESSAGE"}), err)
 		response.Errors = append(response.Errors, gkillErrors...)
 		return
 	}

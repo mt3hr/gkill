@@ -26,6 +26,7 @@ func (uc *UsecaseContext) AddTag(ctx context.Context, repositories *reps.GkillRe
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTagError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -58,6 +59,7 @@ func (uc *UsecaseContext) AddTag(ctx context.Context, repositories *reps.GkillRe
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetTagError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -72,6 +74,11 @@ func (uc *UsecaseContext) AddTag(ctx context.Context, repositories *reps.GkillRe
 		}
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteTagRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_ADD_TAG_MESSAGE", "tag"))
+		return nil, gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteTagRep.AddTagInfo(ctx, tag)
 		if err != nil {
@@ -80,6 +87,7 @@ func (uc *UsecaseContext) AddTag(ctx context.Context, repositories *reps.GkillRe
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddTagError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -97,6 +105,7 @@ func (uc *UsecaseContext) AddTag(ctx context.Context, repositories *reps.GkillRe
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddTagError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -113,6 +122,7 @@ func (uc *UsecaseContext) AddTag(ctx context.Context, repositories *reps.GkillRe
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetTagError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_ADDED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -140,6 +150,7 @@ func (uc *UsecaseContext) AddTag(ctx context.Context, repositories *reps.GkillRe
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTagError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_ADDED_GET_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -159,6 +170,7 @@ func (uc *UsecaseContext) UpdateTag(ctx context.Context, repositories *reps.Gkil
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTagError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -172,6 +184,11 @@ func (uc *UsecaseContext) UpdateTag(ctx context.Context, repositories *reps.Gkil
 		return nil, gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteTagRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_UPDATE_TAG_MESSAGE", "tag"))
+		return nil, gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteTagRep.AddTagInfo(ctx, tag)
 		if err != nil {
@@ -180,6 +197,7 @@ func (uc *UsecaseContext) UpdateTag(ctx context.Context, repositories *reps.Gkil
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateTagError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -209,6 +227,7 @@ func (uc *UsecaseContext) UpdateTag(ctx context.Context, repositories *reps.Gkil
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateTagError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -225,6 +244,7 @@ func (uc *UsecaseContext) UpdateTag(ctx context.Context, repositories *reps.Gkil
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetTagError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_UPDATED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return nil, gkillErrors, nil
 		}
@@ -252,6 +272,7 @@ func (uc *UsecaseContext) UpdateTag(ctx context.Context, repositories *reps.Gkil
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTagError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_UPDATED_GET_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -270,6 +291,7 @@ func (uc *UsecaseContext) GetTagsByTargetID(ctx context.Context, repositories *r
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTagsByTargetIDError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REPOSITORIES_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -300,6 +322,7 @@ func (uc *UsecaseContext) GetTagHistoriesByTagID(ctx context.Context, repositori
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTagHistoriesByTagIDError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAG_HISTORIES_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}

@@ -43,6 +43,7 @@ func (g *GkillServerAPI) HandleGetMiReKyousByTargetID(w http.ResponseWriter, r *
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetMiReKyousByTargetIDResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_REKYOU_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -56,6 +57,7 @@ func (g *GkillServerAPI) HandleGetMiReKyousByTargetID(w http.ResponseWriter, r *
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetMiReKyousByTargetIDRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_REKYOU_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -73,6 +75,7 @@ func (g *GkillServerAPI) HandleGetMiReKyousByTargetID(w http.ResponseWriter, r *
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiReKyousByTargetIDError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_REKYOU_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

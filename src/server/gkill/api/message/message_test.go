@@ -181,7 +181,12 @@ func TestGkillMessage_JSONRoundTrip(t *testing.T) {
 	if err := json.Unmarshal(data, &restored); err != nil {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
-	if restored != original {
-		t.Errorf("restored = %+v, want %+v", restored, original)
+	// Level が空なら MarshalJSON が "info" を補うので、往復後は明示の info になる
+	want := original
+	if want.Level == "" {
+		want.Level = MessageLevelInfo
+	}
+	if restored != want {
+		t.Errorf("restored = %+v, want %+v", restored, want)
 	}
 }

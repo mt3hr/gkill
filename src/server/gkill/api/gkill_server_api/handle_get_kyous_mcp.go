@@ -82,6 +82,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetKyousMCPResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 		}
@@ -94,6 +95,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetKyousMCPRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -139,6 +141,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetKyousMCPRequestDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
+				Cause:        parseErr,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -200,7 +203,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			// そのまま返すと errors:null + 0件 になり、呼び出し側からは
 			// 「成功・該当0件」と区別が付かない。理由はEnsureNotEmptyのコメント。
 			gkillErrors = message.EnsureNotEmpty(gkillErrors, message.FindKyousError,
-				api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}))
+				api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}), err)
 		}
 		response.Errors = append(response.Errors, gkillErrors...)
 		return

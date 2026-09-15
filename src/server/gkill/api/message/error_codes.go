@@ -418,4 +418,11 @@ const (
 	// ParseKFTLTextError は /api/parse_kftl_text の解析がサーバ側の理由で失敗したときのものです。
 	// 利用者の書き間違いはエラーではなく応答の invalid_lines に載るので、ここに来るのは設定の取得失敗などです。500 です。
 	ParseKFTLTextError = "ERR000421"
+
+	// WriteRepMissingError はその種別の書き込み先 rep が未設定のまま追加・更新しようとしたときのものです。
+	// 2026-09-15 まで tx を使わない add_* 経路は nil ポインタ参照で panic し「内部エラーが発生しました」に
+	// なっていました（tx 経路は dao/reps/commit_tx.go の CommitTxWriteRepMissingError）。
+	// 利用者が設定→保存先で直せる不備なので、ステータスは 500 のまま error_kind を config、
+	// reason を write_rep_missing にしてあります（error_kind.go / error_reason.go）。
+	WriteRepMissingError = "ERR000422"
 )

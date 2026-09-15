@@ -47,6 +47,7 @@ func (g *GkillServerAPI) HandlePostPluginConfig(w http.ResponseWriter, r *http.R
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.InvalidPostPluginConfigRequestDataError,
 			ErrorMessage: "プラグイン設定保存リクエストのパースに失敗しました",
+			Cause:        err,
 		})
 		return
 	}
@@ -70,6 +71,7 @@ func (g *GkillServerAPI) HandlePostPluginConfig(w http.ResponseWriter, r *http.R
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.PostPluginConfigError,
 			ErrorMessage: fmt.Sprintf("プラグイン設定の保存に失敗しました: %s", err.Error()),
+			Cause:        err,
 		})
 		return
 	}

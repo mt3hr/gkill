@@ -25,6 +25,7 @@ func (uc *UsecaseContext) AddNlog(ctx context.Context, repositories *reps.GkillR
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNlogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -38,6 +39,11 @@ func (uc *UsecaseContext) AddNlog(ctx context.Context, repositories *reps.GkillR
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteNlogRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_ADD_NLOG_MESSAGE", "nlog"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteNlogRep.AddNlogInfo(ctx, nlog)
 		if err != nil {
@@ -46,6 +52,7 @@ func (uc *UsecaseContext) AddNlog(ctx context.Context, repositories *reps.GkillR
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddNlogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -62,6 +69,7 @@ func (uc *UsecaseContext) AddNlog(ctx context.Context, repositories *reps.GkillR
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddNlogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -78,6 +86,7 @@ func (uc *UsecaseContext) AddNlog(ctx context.Context, repositories *reps.GkillR
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetNlogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_ADDED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -111,6 +120,7 @@ func (uc *UsecaseContext) UpdateNlog(ctx context.Context, repositories *reps.Gki
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNlogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -124,6 +134,11 @@ func (uc *UsecaseContext) UpdateNlog(ctx context.Context, repositories *reps.Gki
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteNlogRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_UPDATE_NLOG_MESSAGE", "nlog"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteNlogRep.AddNlogInfo(ctx, nlog)
 		if err != nil {
@@ -132,6 +147,7 @@ func (uc *UsecaseContext) UpdateNlog(ctx context.Context, repositories *reps.Gki
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateNlogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -159,6 +175,7 @@ func (uc *UsecaseContext) UpdateNlog(ctx context.Context, repositories *reps.Gki
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateNlogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -175,6 +192,7 @@ func (uc *UsecaseContext) UpdateNlog(ctx context.Context, repositories *reps.Gki
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetNlogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_UPDATED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -208,6 +226,7 @@ func (uc *UsecaseContext) GetNlogHistories(ctx context.Context, repositories *re
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNlogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NLOG_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}

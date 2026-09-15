@@ -5,9 +5,9 @@ import "github.com/mt3hr/gkill/src/server/gkill/api/message"
 // GetKyousMCPResponse は /api/get_kyous_mcp のレスポンス。
 // 契約の全体は documents/adr/0604-mcp-composite-cursor-strict-limits.md を参照。
 type GetKyousMCPResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
-	Errors   []*message.GkillError   `json:"errors"`
-	Kyous    []KyouMCPDTO            `json:"kyous,omitempty"`
+	Messages message.GkillMessages `json:"messages"`
+	Errors   message.GkillErrors   `json:"errors"`
+	Kyous    []KyouMCPDTO          `json:"kyous,omitempty"`
 	// TotalCount は「条件に合う全件数」。**cursor 無しの応答(1ページ目・count_only・group_by)にのみ**入る。
 	// カーソルは検索の期間上限へ押し下げられるため、2ページ目以降のハンドラは全件数を知らない
 	// (知ろうとすると毎ページ全期間を検索し直すことになる。ADR-0603 の事故の教訓)。

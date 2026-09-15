@@ -25,6 +25,7 @@ func (uc *UsecaseContext) AddKC(ctx context.Context, repositories *reps.GkillRep
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKCError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -38,6 +39,11 @@ func (uc *UsecaseContext) AddKC(ctx context.Context, repositories *reps.GkillRep
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteKCRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_ADD_KC_MESSAGE", "kc"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteKCRep.AddKCInfo(ctx, kc)
 		if err != nil {
@@ -46,6 +52,7 @@ func (uc *UsecaseContext) AddKC(ctx context.Context, repositories *reps.GkillRep
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddKCError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -62,6 +69,7 @@ func (uc *UsecaseContext) AddKC(ctx context.Context, repositories *reps.GkillRep
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddKCError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -78,6 +86,7 @@ func (uc *UsecaseContext) AddKC(ctx context.Context, repositories *reps.GkillRep
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetKCError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_ADDED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -111,6 +120,7 @@ func (uc *UsecaseContext) UpdateKC(ctx context.Context, repositories *reps.Gkill
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKCError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -124,6 +134,11 @@ func (uc *UsecaseContext) UpdateKC(ctx context.Context, repositories *reps.Gkill
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteKCRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_UPDATE_KC_MESSAGE", "kc"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteKCRep.AddKCInfo(ctx, kc)
 		if err != nil {
@@ -132,6 +147,7 @@ func (uc *UsecaseContext) UpdateKC(ctx context.Context, repositories *reps.Gkill
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateKCError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -159,6 +175,7 @@ func (uc *UsecaseContext) UpdateKC(ctx context.Context, repositories *reps.Gkill
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateKCError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -175,6 +192,7 @@ func (uc *UsecaseContext) UpdateKC(ctx context.Context, repositories *reps.Gkill
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetKCError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_UPDATED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -208,6 +226,7 @@ func (uc *UsecaseContext) GetKCHistories(ctx context.Context, repositories *reps
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKCError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KC_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}

@@ -43,6 +43,7 @@ func (g *GkillServerAPI) HandleGetReKyousByTargetID(w http.ResponseWriter, r *ht
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetReKyousByTargetIDResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REKYOU_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -56,6 +57,7 @@ func (g *GkillServerAPI) HandleGetReKyousByTargetID(w http.ResponseWriter, r *ht
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetReKyousByTargetIDRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REKYOU_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -73,6 +75,7 @@ func (g *GkillServerAPI) HandleGetReKyousByTargetID(w http.ResponseWriter, r *ht
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetReKyousByTargetIDError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REKYOU_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

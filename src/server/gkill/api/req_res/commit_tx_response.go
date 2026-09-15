@@ -5,9 +5,9 @@ import (
 )
 
 type CommitTxResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	// Committed は確定した全件。確定は1つの SQLite トランザクションなので、
 	// 失敗したときは空（何も書かれていない）で、成功したときだけ全件が載る。

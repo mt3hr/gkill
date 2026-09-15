@@ -25,6 +25,7 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetMiError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -38,6 +39,11 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteMiRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_ADD_MI_MESSAGE", "mi"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteMiRep.AddMiInfo(ctx, mi)
 		if err != nil {
@@ -46,6 +52,7 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddMiError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -62,6 +69,7 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddMiError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -78,6 +86,7 @@ func (uc *UsecaseContext) AddMi(ctx context.Context, repositories *reps.GkillRep
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetMiError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_ADDED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -112,6 +121,7 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetMiError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -125,6 +135,11 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteMiRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_UPDATE_MI_MESSAGE", "mi"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteMiRep.AddMiInfo(ctx, mi)
 		if err != nil {
@@ -133,6 +148,7 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateMiError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -160,6 +176,7 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateMiError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -176,6 +193,7 @@ func (uc *UsecaseContext) UpdateMi(ctx context.Context, repositories *reps.Gkill
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetMiError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_UPDATED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -209,6 +227,7 @@ func (uc *UsecaseContext) GetMiHistories(ctx context.Context, repositories *reps
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetMiError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -227,6 +246,7 @@ func (uc *UsecaseContext) GetMiBoardList(ctx context.Context, repositories *reps
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetMiBoardNamesError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}
@@ -239,6 +259,7 @@ func (uc *UsecaseContext) GetMiBoardList(ctx context.Context, repositories *reps
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetMiBoardNamesError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}

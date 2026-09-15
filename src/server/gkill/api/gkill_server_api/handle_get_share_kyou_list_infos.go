@@ -42,6 +42,7 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetShareKyouListInfosResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -55,6 +56,7 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetShareKyouListInfosRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -72,6 +74,7 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetShareKyouListInfosError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

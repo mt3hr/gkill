@@ -6,9 +6,9 @@ import (
 )
 
 type GetTagsByTargetIDResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	Tags []reps.Tag `json:"tags"`
 }

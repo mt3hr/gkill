@@ -25,6 +25,7 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetURLogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -38,6 +39,11 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteURLogRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_ADD_URLOG_MESSAGE", "urlog"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteURLogRep.AddURLogInfo(ctx, urlog)
 		if err != nil {
@@ -46,6 +52,7 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddURLogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -62,6 +69,7 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddURLogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -78,6 +86,7 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetURLogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -111,6 +120,7 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetURLogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -124,6 +134,11 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteURLogRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_UPDATE_URLOG_MESSAGE", "urlog"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteURLogRep.AddURLogInfo(ctx, urlog)
 		if err != nil {
@@ -132,6 +147,7 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateURLogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -159,6 +175,7 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateURLogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -175,6 +192,7 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetURLogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_UPDATED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -208,6 +226,7 @@ func (uc *UsecaseContext) GetURLogHistories(ctx context.Context, repositories *r
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetURLogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_URLOG_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}

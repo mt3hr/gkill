@@ -50,6 +50,7 @@ func (g *GkillServerAPI) HandleParseKFTLText(w http.ResponseWriter, r *http.Requ
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidParseKFTLTextRequestDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 		}
@@ -62,6 +63,7 @@ func (g *GkillServerAPI) HandleParseKFTLText(w http.ResponseWriter, r *http.Requ
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidParseKFTLTextRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -104,6 +106,7 @@ func (g *GkillServerAPI) HandleParseKFTLText(w http.ResponseWriter, r *http.Requ
 		gkillError := &message.GkillError{
 			ErrorCode:    message.ParseKFTLTextError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

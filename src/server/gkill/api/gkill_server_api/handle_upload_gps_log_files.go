@@ -59,6 +59,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUploadGPSLogFilesResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -72,6 +73,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUploadGPSLogFilesRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -92,6 +94,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -104,6 +107,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -125,6 +129,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidStatusGetRepNameError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -162,6 +167,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetRepPathError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -186,6 +192,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 				gkillError = &message.GkillError{
 					ErrorCode:    message.ConvertGPSLogError,
 					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+					Cause:        err,
 				}
 				gkillErrorCh <- gkillError
 				return
@@ -200,6 +207,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 				gkillError = &message.GkillError{
 					ErrorCode:    message.ConvertGPSLogError,
 					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+					Cause:        err,
 				}
 				gkillErrorCh <- gkillError
 				return
@@ -266,6 +274,7 @@ loop:
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetRepPathError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -283,6 +292,7 @@ loop:
 					gkillErrorCh2 <- &message.GkillError{
 						ErrorCode:    message.ConvertGPSLogError,
 						ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+						Cause:        err,
 					}
 					return
 				}
@@ -294,6 +304,7 @@ loop:
 					gkillErrorCh2 <- &message.GkillError{
 						ErrorCode:    message.ConvertGPSLogError,
 						ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+						Cause:        err,
 					}
 					return
 				}
@@ -307,6 +318,7 @@ loop:
 				gkillErrorCh2 <- &message.GkillError{
 					ErrorCode:    message.GenerateGPXFileContentError,
 					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+					Cause:        err,
 				}
 				return
 			}
@@ -318,6 +330,7 @@ loop:
 				gkillErrorCh2 <- &message.GkillError{
 					ErrorCode:    message.GetRepPathError,
 					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+					Cause:        err,
 				}
 				return
 			}
@@ -341,6 +354,7 @@ loop:
 				gkillErrorCh2 <- &message.GkillError{
 					ErrorCode:    message.WriteGPXFileError,
 					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+					Cause:        err,
 				}
 				return
 			}

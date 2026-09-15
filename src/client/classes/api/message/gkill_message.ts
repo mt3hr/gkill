@@ -23,5 +23,7 @@ export enum GkillMessageCodes {
     start_export_kyous = "MSG9000022",
     finish_export_kyous = "MSG9000023",
     copied_kyou_content = "MSG9000024",
-    skipped_duplicated_shared_data = "MSG9000025"
+    skipped_duplicated_shared_data = "MSG9000025",
+    // エラー表示の「詳細をコピー」が成功したとき
+    copied_error_detail = "MSG9000026"
 }

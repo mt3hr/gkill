@@ -49,6 +49,7 @@ func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Requ
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.InvalidGetPluginListRequestDataError,
 			ErrorMessage: "プラグイン一覧取得リクエストのパースに失敗しました",
+			Cause:        err,
 		})
 		return
 	}

@@ -26,6 +26,7 @@ func (uc *UsecaseContext) AddKmemo(ctx context.Context, repositories *reps.Gkill
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -39,6 +40,11 @@ func (uc *UsecaseContext) AddKmemo(ctx context.Context, repositories *reps.Gkill
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteKmemoRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_ADD_KMEMO_MESSAGE", "kmemo"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteKmemoRep.AddKmemoInfo(ctx, kmemo)
 		if err != nil {
@@ -47,6 +53,7 @@ func (uc *UsecaseContext) AddKmemo(ctx context.Context, repositories *reps.Gkill
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddKmemoError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -63,6 +70,7 @@ func (uc *UsecaseContext) AddKmemo(ctx context.Context, repositories *reps.Gkill
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddKmemoError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -79,6 +87,7 @@ func (uc *UsecaseContext) AddKmemo(ctx context.Context, repositories *reps.Gkill
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetKmemoError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_ADDED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -113,6 +122,7 @@ func (uc *UsecaseContext) UpdateKmemo(ctx context.Context, repositories *reps.Gk
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
+			Cause:        err,
 		})
 		return gkillErrors, nil
 	}
@@ -126,6 +136,11 @@ func (uc *UsecaseContext) UpdateKmemo(ctx context.Context, repositories *reps.Gk
 		return gkillErrors, nil
 	}
 
+	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
+	if txID == nil && repositories.WriteKmemoRep == nil {
+		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_UPDATE_KMEMO_MESSAGE", "kmemo"))
+		return gkillErrors, nil
+	}
 	if txID == nil {
 		err = repositories.WriteKmemoRep.AddKmemoInfo(ctx, kmemo)
 		if err != nil {
@@ -134,6 +149,7 @@ func (uc *UsecaseContext) UpdateKmemo(ctx context.Context, repositories *reps.Gk
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateKmemoError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -161,6 +177,7 @@ func (uc *UsecaseContext) UpdateKmemo(ctx context.Context, repositories *reps.Gk
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateKmemoError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -177,6 +194,7 @@ func (uc *UsecaseContext) UpdateKmemo(ctx context.Context, repositories *reps.Gk
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.GetKmemoError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_UPDATED_GET_MESSAGE"}),
+				Cause:        err,
 			})
 			return gkillErrors, nil
 		}
@@ -211,6 +229,7 @@ func (uc *UsecaseContext) GetKmemoHistories(ctx context.Context, repositories *r
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KMEMO_MESSAGE"}),
+			Cause:        err,
 		})
 		return nil, gkillErrors, nil
 	}

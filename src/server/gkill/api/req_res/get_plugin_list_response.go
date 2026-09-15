@@ -89,7 +89,7 @@ type PluginTypedIndexStatsMCPDTO struct {
 }
 
 type GetPluginListResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
-	Errors   []*message.GkillError   `json:"errors"`
-	Plugins  []PluginInfo            `json:"plugins"`
+	Messages message.GkillMessages `json:"messages"`
+	Errors   message.GkillErrors   `json:"errors"`
+	Plugins  []PluginInfo          `json:"plugins"`
 }

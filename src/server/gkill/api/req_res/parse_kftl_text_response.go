@@ -7,8 +7,8 @@ import "github.com/mt3hr/gkill/src/server/gkill/api/message"
 // 書き間違いは errors ではなく invalid_lines に載る（解析そのものは成功しているので HTTP 200）。
 // errors に載るのはリクエスト JSON の不正や設定の取得失敗だけ。
 type ParseKFTLTextResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
-	Errors   []*message.GkillError   `json:"errors"`
+	Messages message.GkillMessages `json:"messages"`
+	Errors   message.GkillErrors   `json:"errors"`
 
 	// InvalidLines は行別の入力エラー。1件も無ければ空配列（null にしない。
 	// クライアントは「空 = 送信してよい」で判定するので、null と [] を区別させない）。

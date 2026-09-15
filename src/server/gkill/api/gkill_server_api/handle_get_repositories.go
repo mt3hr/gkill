@@ -43,6 +43,7 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetRepositoriesResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REPOSITORIES_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -56,6 +57,7 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetRepositoriesRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REPOSITORIES_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -73,6 +75,7 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetRepositoriesError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REPOSITORIES_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

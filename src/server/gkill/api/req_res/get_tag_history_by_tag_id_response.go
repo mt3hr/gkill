@@ -6,9 +6,9 @@ import (
 )
 
 type GetTagHistoryByTagIDResponse struct {
-	Messages []*message.GkillMessage `json:"messages"`
+	Messages message.GkillMessages `json:"messages"`
 
-	Errors []*message.GkillError `json:"errors"`
+	Errors message.GkillErrors `json:"errors"`
 
 	TagHistories []reps.Tag `json:"tag_histories"`
 }

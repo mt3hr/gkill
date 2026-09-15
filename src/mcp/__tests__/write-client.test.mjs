@@ -158,6 +158,19 @@ describe("error helpers", () => {
     });
     expect(result).toBe("E1: msg1; E2: msg2");
   });
+
+  test("formatErrors appends the server's error_kind / reason tokens when present", () => {
+    const client = new GkillWriteClient();
+    const result = client.formatErrors({
+      errors: [
+        { error_code: "ERR000023", error_message: "failed", error_kind: "config", reason: "write_rep_missing" },
+        { error_code: "ERR000070", error_message: "not found", error_kind: "not_found" },
+      ],
+    });
+    expect(result).toBe(
+      "ERR000023: failed [kind=config, reason=write_rep_missing]; ERR000070: not found [kind=not_found]",
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------
