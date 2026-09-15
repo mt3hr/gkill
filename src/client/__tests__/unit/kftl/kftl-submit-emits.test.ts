@@ -961,3 +961,85 @@ describe('おかしな行の表示', () => {
         }
     })
 })
+
+describe('内容が空のメモ（ADR-0508）', () => {
+    // サーバは空のメモを「内容がないメモ」の入力エラーにするので、打鍵のたびの解析へ空の本文を
+    // 投げると新しい空のタブの1行目が常にピンクになる。空白だけなら聞かずにピンクを消す
+    test('本文が空白だけならサーバへ解析を投げず、ピンクも出さない', async () => {
+        vi.useFakeTimers()
+        try {
+            const log: CallLog = { calls: [] }
+            const api = make_api(log, {
+                parse_kftl_text: vi.fn(async (req: { kftl_text: string }) => {
+                    log.calls.push('parse_kftl_text')
+                    const invalid_lines = req.kftl_text.trim() === ''
+                        ? [{ line_number: 1, line_text: '', message: 'blank memo' }]
+                        : []
+                    return { messages: null, errors: null, invalid_lines, tags: [], mi_board_names: [], record_count: 0 }
+                }),
+            })
+            const { view } = mount_view(api)
+            await vi.runAllTimersAsync()
+            expect(view.invalid_line_numbers.value, '新しい空のタブはピンクにならない').toEqual([])
+            const before = log.calls.filter(call => call === 'parse_kftl_text').length
+
+            view.text_area_content.value = '\n \n'
+            await nextTick()
+            await vi.advanceTimersByTimeAsync(500)
+            expect(log.calls.filter(call => call === 'parse_kftl_text').length, '空白だけの本文は投げない').toBe(before)
+            expect(view.invalid_line_numbers.value).toEqual([])
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+
+    // 空のタブで保存ボタンを押したときはサーバに聞き、サーバの「内容がないメモ」がそのまま出る
+    test('空のタブを保存するとサーバの入力エラーを上げ、タブは閉じない', async () => {
+        const log: CallLog = { calls: [] }
+        const api = make_api(log, {
+            parse_kftl_text: vi.fn(async (req: { kftl_text: string }) => {
+                log.calls.push('parse_kftl_text')
+                const invalid_lines = req.kftl_text.trim() === ''
+                    ? [{ line_number: 1, line_text: '', message: 'Memo with no content was skipped' }]
+                    : []
+                return { messages: null, errors: null, invalid_lines, tags: [], mi_board_names: [], record_count: 0 }
+            }),
+        })
+        const { view, emits } = mount_view(api)
+        const tab_id = view.active_tab_id.value
+
+        await submit_text(view, '')
+        await flush_microtasks()
+
+        expect(log.calls.filter(call => call === 'submit_kftl_text').length).toBe(0)
+        expect(emitted(emits, 'received_errors').length).toBe(1)
+        expect(useKftlTabs().has_tab(tab_id), 'タブは残る').toBe(true)
+    })
+
+    // 確認ダイアログの隙に別のウィンドウが同じタブを保存して閉じた場合。消えたタブの本文は "" なので、
+    // そのまま送るとサーバの「内容がないメモ」が出る。閉じたタブは黙って見送る
+    test('確認中に別のウィンドウが閉じたタブへの再入は何も送らず、エラーも上げない', async () => {
+        const log: CallLog = { calls: [] }
+        const api = make_api(log)
+        const { view, emits } = mount_view(api)
+        const tabs = useKftlTabs()
+        const tab_id = view.active_tab_id.value
+
+        // 知らないタグで確認を開き、送信対象タブを持ち越させる
+        view.text_area_content.value = 'メモ\n。知らないタグ'
+        await view.submit()
+        expect(view.is_confirm_unknown_tag_open.value, '前提: 確認が開いている').toBe(true)
+        const calls_before = log.calls.length
+
+        // 別のウィンドウがそのタブを保存して閉じた
+        tabs.close_tab(tab_id)
+        expect(tabs.has_tab(tab_id), '前提: タブは閉じている').toBe(false)
+
+        await view.confirm_submit()
+        await flush_microtasks()
+
+        expect(log.calls.slice(calls_before).filter(call => call === 'parse_kftl_text' || call === 'submit_kftl_text')).toEqual([])
+        expect(emitted(emits, 'received_errors')).toEqual([])
+        expect(view.is_requested_submit.value, 'ロックは解放される').toBe(false)
+    })
+})

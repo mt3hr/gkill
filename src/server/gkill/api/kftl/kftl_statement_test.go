@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -1625,6 +1626,33 @@ func TestStatement_JapanesePrefixWithoutValueLineIsInputError(t *testing.T) {
 	inputErrors := helperSubmitExpectingInputErrors(t, "ーら")
 	if inputErrors[0].MessageID != "KFTL_REQUIRE_VALUE_LINE_MESSAGE_TITLE" {
 		t.Errorf("メッセージID = %q, want KFTL_REQUIRE_VALUE_LINE_MESSAGE_TITLE", inputErrors[0].MessageID)
+	}
+}
+
+// 内容が空の記録は、送信全体を書く前に止める（ADR-0508）。
+//
+// 旧 Web（TS）は「内容がないメモの保存がスキップされました」で tx を捨てていたので、
+// `メモ`,`、`,空行 のように前に正しい記録があっても1件も書かれなかった。Go でも同じ ——
+// validateRequestContents は prepareRequests の中（1バイトも書く前）なので created は空。
+// 2026-09-15 までは DoRequest が空の kmemo だけを黙って飛ばし、先頭のメモは書かれていた。
+func TestStatement_BlankRecordAbortsWholeSubmissionBeforeWriting(t *testing.T) {
+	cases := []struct {
+		text      string
+		line      int
+		messageID string
+	}{
+		{"メモ\n、\n\n！\n", 3, "KFTL_KMEMO_BLANK_SKIP_SAVE_MESSAGE_TITLE"},
+		{"メモ\n、\nーち\n！\n", 3, "KFTL_REQUIRE_VALUE_LINE_MESSAGE_TITLE"},
+		{"メモ\n、\n。タグ\n！\n", 3, "KFTL_META_INFO_NO_TARGET_MESSAGE_TITLE"},
+	}
+	for _, c := range cases {
+		t.Run(strings.ReplaceAll(c.text, "\n", "|"), func(t *testing.T) {
+			// helperSubmitExpectingInputErrors が created == 0（書き込み前の失敗）も見る
+			inputErrors := helperSubmitExpectingInputErrors(t, c.text)
+			if len(inputErrors) != 1 || inputErrors[0].LineNumber != c.line || inputErrors[0].MessageID != c.messageID {
+				t.Errorf("inputErrors = %+v, want line %d %s 1件", inputErrors, c.line, c.messageID)
+			}
+		})
 	}
 }
 

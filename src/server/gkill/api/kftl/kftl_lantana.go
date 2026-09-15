@@ -16,6 +16,9 @@ import (
 type kftlLantanaRequest struct {
 	KFTLRequestBase
 	mood int
+	// hasMood は値の行を通ったか。0 は正当な気分値なので mood の値では「未入力」を判定できない。
+	// 立っていないまま DoRequest に届くと**気分値0（最低）の記録が黙って書かれる**（ADR-0503 の事故）。
+	hasMood bool
 }
 
 func newKFTLLantanaRequest(requestID string, ctx *KFTLStatementLineContext) *kftlLantanaRequest {
@@ -28,7 +31,21 @@ func newKFTLLantanaRequest(requestID string, ctx *KFTLStatementLineContext) *kft
 	}
 }
 
+// ValidateContent は値の行を通っていない気分記録を入力エラーにする。
+// 通常は start 行の requireNextLineText が先に止める。ここは保存マーカーの穴（ADR-0508）のような
+// 経路で値の行を通らずに届いたときの防御線 —— 通すと気分値0が書かれる。
+func (r *kftlLantanaRequest) ValidateContent() error {
+	if !r.hasMood {
+		return newKFTLInputError("KFTL_LANTANA_INVALID_MOOD_VALUE_MESSAGE_TITLE",
+			fmt.Errorf("lantana mood line is missing: id=%s", r.RequestID))
+	}
+	return nil
+}
+
 func (r *kftlLantanaRequest) DoRequest(ctx context.Context) error {
+	if err := r.ValidateContent(); err != nil {
+		return err
+	}
 	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err
 	}
@@ -127,6 +144,7 @@ func (l *kftlLantanaMoodStatementLine) ApplyThisLineToRequestMap(_ context.Conte
 			fmt.Errorf("lantana mood must be 0-10, got %d", n))
 	}
 	l.req.mood = n
+	l.req.hasMood = true
 	return nil
 }
 func (l *kftlLantanaMoodStatementLine) GetLabelName() string                  { return "lantanaMood" }

@@ -1,6 +1,9 @@
 package kftl
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
 // KFTLRequestMap maps requestID → KFTLRequest, preserving insertion order.
 // If an existing entry is a KFTLPrototypeRequest, the new entry inherits its
@@ -53,6 +56,19 @@ func (m *KFTLRequestMap) Set(requestID string, req KFTLRequest) error {
 func (m *KFTLRequestMap) Get(requestID string) (KFTLRequest, bool) {
 	req, ok := m.entries[requestID]
 	return req, ok
+}
+
+// Delete は役目を終えたプロトタイプを外す（順序からも消す）。
+//
+// 使うのは `？時刻` の直後の `ーん` だけ —— 関連時刻をブロックへ取り込んだあとも
+// プロトタイプが map に残ると、validateRequestContents が「付け先の無い関連時刻」として弾く。
+// 他のプロトタイプは次の記録の Set が置き換えるので、消す場面は無い。
+func (m *KFTLRequestMap) Delete(requestID string) {
+	if _, ok := m.entries[requestID]; !ok {
+		return
+	}
+	delete(m.entries, requestID)
+	m.order = slices.DeleteFunc(m.order, func(id string) bool { return id == requestID })
 }
 
 // ReplaceAll は展開後のリクエスト列でマップを置き換える。

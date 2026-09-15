@@ -38,6 +38,23 @@ func TestAnalyze_ReportsTheSameInvalidLinesAsExecute(t *testing.T) {
 		"/mi\n\n",                        // 値の行が空
 		"repeat memo\n？？\n毎日\n？？",        // 繰り返しの回数行が無い
 		"？2026-13-45\nmemo",              // 日時の解釈失敗
+		// ── 保存マーカー「！」の穴と、書く前の内容検査（ADR-0508）──
+		"/timeis\n!\n",           // マーカーは値の行ではない（2026-09-15 まで 200・0件だった）
+		"ーら\n！\n",                // 同上（気分値0が書かれていた）
+		"/num\n!\n",              // 同上（500 になっていた）
+		"",                       // 空メモ
+		"\n！\n",                  // 空行だけで保存
+		"#tag\n\n!\n",            // タグの後ろに空行だけ
+		"memo\n,\n\n!\n",         // 区切りの後ろが空行（先頭のメモも書かれない）
+		"/num\ntitle",            // 数値の行が無い
+		"/expense\nshop",         // 店名だけ
+		"#tag\n!\n",              // 付け先の無いタグ
+		"?2026-09-15 10:00",      // 付け先の無い関連時刻
+		"memo\n,\n#tag",          // 区切りの後ろにタグだけ
+		"/mi\ntitle\nboard\nabc", // 予定日時欄が読めない
+		"/end",                   // 打刻終了の題名が無い（DoRequest から移した）
+		"/endt\n",                // 打刻終了のタグが無い（同上）
+		"~~\nboard\n\n\n\n~~",    // リポストタスクの対象が無い（同上）
 	}
 	for _, text := range cases {
 		t.Run(strings.ReplaceAll(text, "\n", "|"), func(t *testing.T) {
@@ -156,11 +173,153 @@ func TestStatement_PrefixFollowedByBlankValueLineIsInputError(t *testing.T) {
 	}
 }
 
-// kmemo の空本文（空行だけ）はエラーにしない。空行は区切りとして普通に書かれる。
+// 本文があれば、後ろに続く空行はエラーにしない（空行は区切りとして普通に書かれる）。
+// 本文が空白だけのメモがエラーになるのは TestAnalyze_BlankRecordsAreInputErrors。
 func TestAnalyze_BlankKmemoIsNotAnError(t *testing.T) {
 	analysis := helperAnalyze(t, "memo\n\n\n")
 	if len(analysis.InputErrors) != 0 {
-		t.Errorf("空行だけの kmemo がエラーになった: %+v", analysis.InputErrors)
+		t.Errorf("本文のある kmemo の後ろの空行がエラーになった: %+v", analysis.InputErrors)
+	}
+}
+
+// ─── 書く前の内容検査（validateRequestContents。ADR-0508）─────────────────────
+//
+// 2026-09-15 まで DoRequest が「内容が空なら何も書かずに nil」で済ませていて、
+// `ーち` だけ書いて「！」で保存すると 200「保存しました」でタブが閉じ、何も残らなかった
+// （旧 Web の TS は ERR9000xx で送信を止めていた）。Analyze で捕まる＝打鍵中にピンクになる。
+
+// 内容が空の記録は、型ごとの文言（旧 Web と同じキー）で、その記録を作った行の番号つきのエラーになる。
+func TestAnalyze_BlankRecordsAreInputErrors(t *testing.T) {
+	cases := []struct {
+		name      string
+		text      string
+		line      int
+		messageID string
+	}{
+		{"空のテキスト", "", 1, "KFTL_KMEMO_BLANK_SKIP_SAVE_MESSAGE_TITLE"},
+		{"空行だけで保存", "\n！\n", 1, "KFTL_KMEMO_BLANK_SKIP_SAVE_MESSAGE_TITLE"},
+		{"空白だけの本文", "  \n　\n", 1, "KFTL_KMEMO_BLANK_SKIP_SAVE_MESSAGE_TITLE"},
+		{"改行だけの本文は本文 \\n として書かれない", "\n\n！\n", 1, "KFTL_KMEMO_BLANK_SKIP_SAVE_MESSAGE_TITLE"},
+		{"タグの後ろに空行だけ", "。タグ\n\n！\n", 2, "KFTL_KMEMO_BLANK_SKIP_SAVE_MESSAGE_TITLE"},
+		{"区切りの後ろが空行", "メモ\n、\n\n！\n", 3, "KFTL_KMEMO_BLANK_SKIP_SAVE_MESSAGE_TITLE"},
+		{"付け先の無いタグ", "。タグ\n！\n", 1, "KFTL_META_INFO_NO_TARGET_MESSAGE_TITLE"},
+		{"付け先の無い関連時刻", "？2026-09-15 10:00", 1, "KFTL_META_INFO_NO_TARGET_MESSAGE_TITLE"},
+		{"付け先の無いテキスト開始", "ーー\n！\n", 1, "KFTL_META_INFO_NO_TARGET_MESSAGE_TITLE"},
+		{"区切りの後ろにタグだけ", "メモ\n、\n。タグ", 3, "KFTL_META_INFO_NO_TARGET_MESSAGE_TITLE"},
+		{"打刻終了の題名が無い", "ーえ", 1, "KFTL_TIMEIS_END_REQUIRE_END_TITLE_MESSAGE_TITLE"},
+		{"打刻終了(if exist)の題名が無い", "ーいえ\n！\n", 1, "KFTL_TIMEIS_END_REQUIRE_END_TITLE_MESSAGE_TITLE"},
+		{"タグ打刻終了のタグが無い", "ーたえ\n", 1, "KFTL_TIMEIS_END_REQUIRE_END_TAG_MESSAGE_TITLE"},
+		{"リポストタスクの対象が無い", "～～\n板\n\n\n\n～～", 1, "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			analysis := helperAnalyze(t, c.text)
+			if len(analysis.InputErrors) == 0 {
+				t.Fatalf("%q がエラーにならなかった（黙って0件になる）", c.text)
+			}
+			got := analysis.InputErrors[0]
+			if got.LineNumber != c.line || got.MessageID != c.messageID {
+				t.Errorf("%q: [0] = line %d %s, want line %d %s", c.text, got.LineNumber, got.MessageID, c.line, c.messageID)
+			}
+		})
+	}
+}
+
+// 保存マーカー「！」の行は値の行に数えない。
+// 2026-09-15 まで `ーち`+「！」は requireNextLineText を素通りし、タイトル空のまま DoRequest に届いて
+// 200・0件（`ーら` は気分値0を1件、`ーか` は 500）だった。マーカー無し（保存ボタン）と同じ結果にする。
+func TestAnalyze_SaveMarkerLineIsNotAValueLine(t *testing.T) {
+	for _, prefix := range []string{"ーち", "ーた", "ーみ", "ーう", "ーん", "ーら", "ーか", "/timeis", "/start", "/mi", "/url", "/expense", "/mood", "/num"} {
+		for _, marker := range []string{"！", "!"} {
+			text := prefix + "\n" + marker + "\n"
+			t.Run(strings.ReplaceAll(text, "\n", "|"), func(t *testing.T) {
+				analysis := helperAnalyze(t, text)
+				if len(analysis.InputErrors) != 1 {
+					t.Fatalf("InputErrors = %+v, want 1件", analysis.InputErrors)
+				}
+				got := analysis.InputErrors[0]
+				if got.LineNumber != 1 || got.MessageID != "KFTL_REQUIRE_VALUE_LINE_MESSAGE_TITLE" {
+					t.Errorf("[0] = line %d %s, want line 1 KFTL_REQUIRE_VALUE_LINE_MESSAGE_TITLE", got.LineNumber, got.MessageID)
+				}
+				if analysis.RecordCount != 0 {
+					t.Errorf("RecordCount = %d, want 0", analysis.RecordCount)
+				}
+			})
+		}
+	}
+	// 値があれば今までどおり通る（マーカーの切り詰めで正常系を壊していない）
+	for _, text := range []string{"ーち\nタイトル\n！\n", "メモ\n！\n", "ーら\n5\n！\n", "ーか\nタイトル\n1\n!\n", "！"} {
+		t.Run("ok:"+strings.ReplaceAll(text, "\n", "|"), func(t *testing.T) {
+			analysis := helperAnalyze(t, text)
+			if len(analysis.InputErrors) != 0 {
+				t.Errorf("InputErrors = %+v, want 空", analysis.InputErrors)
+			}
+			if analysis.RecordCount != 1 {
+				t.Errorf("RecordCount = %d, want 1", analysis.RecordCount)
+			}
+		})
+	}
+}
+
+// 「？時刻」の直後の `ーん` は関連時刻をブロックへ取り込む。取り込んだプロトタイプが map に残って
+// 「付け先の無い関連時刻」に誤爆しないこと（KFTLRequestMap.Delete）。支払いは今までどおり数える。
+func TestAnalyze_RelatedTimeBeforeExpenseBlockIsNotAnOrphan(t *testing.T) {
+	analysis := helperAnalyze(t, "？2026-09-15 10:00\nーん\n店\n品\n100\nお茶\n120")
+	if len(analysis.InputErrors) != 0 {
+		t.Fatalf("InputErrors = %+v, want 空", analysis.InputErrors)
+	}
+	if analysis.RecordCount != 2 {
+		t.Errorf("RecordCount = %d, want 2（支払い2件。プロトタイプは数えない）", analysis.RecordCount)
+	}
+}
+
+// 店名だけで支出ブロックが終わると入力エラー。支払いの後ろの空行は今までどおり許す。
+func TestAnalyze_ExpenseShopNameNeedsAnItemLine(t *testing.T) {
+	for _, text := range []string{"ーん\n店", "ーん\n店\n！\n", "ーん\n店\n\n！\n"} {
+		t.Run(strings.ReplaceAll(text, "\n", "|"), func(t *testing.T) {
+			analysis := helperAnalyze(t, text)
+			if len(analysis.InputErrors) != 1 {
+				t.Fatalf("InputErrors = %+v, want 1件", analysis.InputErrors)
+			}
+			if got := analysis.InputErrors[0]; got.LineNumber != 2 || got.MessageID != "KFTL_REQUIRE_VALUE_LINE_MESSAGE_TITLE" {
+				t.Errorf("[0] = line %d %s, want line 2 KFTL_REQUIRE_VALUE_LINE_MESSAGE_TITLE", got.LineNumber, got.MessageID)
+			}
+		})
+	}
+	analysis := helperAnalyze(t, "ーん\n店\n品\n100\n\n！\n")
+	if len(analysis.InputErrors) != 0 {
+		t.Errorf("支払いの後ろの空行がエラーになった: %+v", analysis.InputErrors)
+	}
+}
+
+// 予定日時欄（見積開始・見積終了・期限）の、空でないのに読めない行は入力エラー。
+// ADR-0505 が据え置いた「未設定として握り潰す」を ADR-0508 でやめた。空行は今までどおり未設定。
+func TestAnalyze_UnparsableScheduleFieldIsInputError(t *testing.T) {
+	cases := []struct {
+		name string
+		text string
+		line int
+	}{
+		{"Mi の見積開始", "ーみ\nタイトル\n板\nabc", 4},
+		{"Mi の期限", "ーみ\nタイトル\n板\n\n\nabc", 6},
+		{"6行を埋めずに区切りへ", "ーみ\nタイトル\n板\n、\nメモ", 4},
+		{"MiReKyou の見積終了", "メモ\n～～\n板\n\nabc\n\n～～", 5},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			analysis := helperAnalyze(t, c.text)
+			if len(analysis.InputErrors) == 0 {
+				t.Fatalf("%q がエラーにならなかった（日付だけ入らず黙って保存される）", c.text)
+			}
+			got := analysis.InputErrors[0]
+			if got.LineNumber != c.line || got.MessageID != "KFTL_TIMEIS_INVALID_PARSE_TIME_ERROR_MESSAGE_TITLE" {
+				t.Errorf("[0] = line %d %s, want line %d KFTL_TIMEIS_INVALID_PARSE_TIME_ERROR_MESSAGE_TITLE", got.LineNumber, got.MessageID, c.line)
+			}
+		})
+	}
+	analysis := helperAnalyze(t, "ーみ\nタイトル\n板\n\n\n\n。タグ")
+	if len(analysis.InputErrors) != 0 {
+		t.Errorf("空行で欄を飛ばす書き方がエラーになった: %+v", analysis.InputErrors)
 	}
 }
 
