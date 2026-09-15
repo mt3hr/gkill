@@ -13,12 +13,12 @@ Go `testing` パッケージ
 | ファイル | テスト内容 |
 |---------|-----------|
 | `kftl_factory_test.go` | KftlFactory のインスタンス生成とKFTLテキスト全体の解析・リクエスト生成 |
-| `kftl_statement_test.go` | ステートメント単位の解析ロジック（日本語プレフィックス + ASCIIプレフィックス + ASCII内容パース + バリデーション、計94テスト） |
+| `kftl_statement_test.go` | ステートメント単位の解析ロジック（日本語プレフィックス + ASCIIプレフィックス + ASCII内容パース + バリデーション、内容の無い記録が書く前に送信全体を止めること、計103テスト） |
 | `kftl_request_map_test.go` | リクエストマップの構築と各データ型へのマッピング |
 | `kftl_mirekyou_test.go` | MiReKyou ブロック（`～～` / `~~`）の行の並び、タグの帰属、対象の解決、書き込み用rep未設定時のガード（計20テスト）。ガードは「サーバ障害」ではなく行別の入力エラーとして返り、多言語メッセージIDが空でないこと（空だと原因の英文がそのまま応答へ載り、利用者IDと端末名が漏れる） |
 | `kftl_date_time_test.go` | 日時文字列の解釈。時刻のみ・年省略・完全日時の補完を固定の基準時で検査、年境界で前日と推定しないこと、不正入力の拒否。クライアント側 `kftl-date-time.test.ts` と対（計3テスト） |
-| `kftl_analyze_test.go` | `Analyze`（`/api/parse_kftl_text` の入口。書かない）が `GenerateAndExecuteRequests` と同じ `prepareRequests` を通ること（同じ入力で同じ行エラー集合）、タグ・板名・件数の列挙（ブロックの中も）、繰り返しの展開が DB 無しで回ること、空白だけの値の行が行エラーになること、`/end` 系の対象検索に設定の playing 条件を写すこと（`playingTimeIsQueryFromConfig` / `findPlayingTimeIsEntries`） |
-| `kftl_schedule_field_time_test.go` | Mi / MiReKyou の予定日時欄の「？」拒否と接頭辞なしの受理 |
+| `kftl_analyze_test.go` | `Analyze`（`/api/parse_kftl_text` の入口。書かない）が `GenerateAndExecuteRequests` と同じ `prepareRequests` を通ること（同じ入力で同じ行エラー集合）、タグ・板名・件数の列挙（ブロックの中も）、繰り返しの展開が DB 無しで回ること、空白だけの値の行が行エラーになること、`/end` 系の対象検索に設定の playing 条件を写すこと（`playingTimeIsQueryFromConfig` / `findPlayingTimeIsEntries`）。書く前の内容検査（ADR-0508）: 保存マーカー行を値の行に数えないこと（14接頭辞×2マーカー）、内容の無い記録・付け先の無いプロトタイプ・店名だけの支出・読めない予定日時欄が型ごとの文言と行番号で行エラーになること、`？時刻` の直後の `ーん` が誤爆しないこと（計13テスト） |
+| `kftl_schedule_field_time_test.go` | Mi / MiReKyou の予定日時欄の「？」拒否、接頭辞なしの受理、空行は未設定、空でないのに読めない行は入力エラー（ADR-0508） |
 | `kftl_repeat_test.go` | 繰り返し「？？」の語彙・候補日時・展開・繰り返せない型・既存スキップ |
 | `kftl_nlog_test.go` | Nlog（支出「ーん」）ブロック。支払い1組ごとに1リクエストになり、金額行の後に書いたタグ・テキストが「直前の支払い」だけに付くこと、店名・関連時刻はブロック全体で共有されること、ブロック外・不正位置のタグ/テキストの拒否、小数金額、ASCIIプレフィックス（計13テスト） |
 

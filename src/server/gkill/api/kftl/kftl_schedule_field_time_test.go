@@ -62,15 +62,23 @@ func TestParseScheduleFieldTime(t *testing.T) {
 		}
 	})
 
-	// 日時として読めない行を一律に行エラーへ倒すと既存の書き方が広範に壊れるので、
-	// ここは従来どおり未設定のまま。変えるのは「？」だけ。
-	t.Run("読めない行は未設定のままエラーにしない", func(t *testing.T) {
-		_, ok, err := parseScheduleFieldTime("not a time", base)
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
-		if ok {
-			t.Error("未設定であること")
+	// 2026-09-15 まで「未設定」として握り潰していた（ADR-0505 の据え置き）。`abc` の打ち間違いも、
+	// 6行を埋めずに `、` で次の記録へ移ろうとした `、` も、日付だけ入らず後ろの本文まで欄に食われていた。
+	// 空でないのに読めない行は入力エラー（ADR-0508）。空行だけが「未設定」。
+	t.Run("読めない行は入力エラーにする", func(t *testing.T) {
+		for _, in := range []string{"not a time", "abc", "、", "，"} {
+			_, ok, err := parseScheduleFieldTime(in, base)
+			if ok {
+				t.Errorf("%q: 設定済みになってはいけない", in)
+			}
+			if err == nil {
+				t.Errorf("%q: エラーになること", in)
+				continue
+			}
+			inputErrors := CollectKFTLInputErrors(err)
+			if len(inputErrors) != 1 || inputErrors[0].MessageID != "KFTL_TIMEIS_INVALID_PARSE_TIME_ERROR_MESSAGE_TITLE" {
+				t.Errorf("%q: 入力エラー KFTL_TIMEIS_INVALID_PARSE_TIME_ERROR_MESSAGE_TITLE 1件であること, got %+v", in, inputErrors)
+			}
 		}
 	})
 

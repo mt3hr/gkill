@@ -605,6 +605,7 @@
     "KFTL_REPEAT_INVALID_DUPLICATE_MESSAGE_TITLE": "The if-exists line must be yes or no",
     "KFTL_REPEAT_INVALID_ORIGIN_MESSAGE_TITLE": "The start point is invalid",
     "KFTL_REPEAT_NO_TARGET_MESSAGE_TITLE": "There is no record to repeat here",
+    "KFTL_META_INFO_NO_TARGET_MESSAGE_TITLE": "There is no record to attach the tag, text, or related time to",
     "KFTL_REPEAT_TYPE_NOT_SUPPORTED_MESSAGE_TITLE": "This type cannot be repeated",
     "KFTL_REPEAT_NOT_CLOSED_MESSAGE_TITLE": "The repeat block is not closed",
     "KFTL_REPEAT_NO_DATE_FIELD_MESSAGE_TITLE": "There is no datetime field to repeat",

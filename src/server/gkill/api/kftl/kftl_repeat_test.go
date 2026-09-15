@@ -768,6 +768,9 @@ type repeatMockRequest struct {
 
 func (r *repeatMockRequest) DoRequest(_ context.Context) error { return nil }
 
+// ValidateContent も基底に既定実装が無い（書き忘れをコンパイルで捕まえるため）ので、モックにも要る。
+func (r *repeatMockRequest) ValidateContent() error { return nil }
+
 func (r *repeatMockRequest) CloneForRepeat(newRequestID string, dayShift int) KFTLRequest {
 	c := *r
 	c.KFTLRequestBase = r.cloneBase(newRequestID, dayShift)

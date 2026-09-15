@@ -28,9 +28,20 @@ func newKFTLURLogRequest(requestID string, ctx *KFTLStatementLineContext) *kftlU
 	}
 }
 
-func (r *kftlURLogRequest) DoRequest(ctx context.Context) error {
+// ValidateContent は URL もタイトルも無いブックマークを入力エラーにする（旧 Web の ERR900020 と同じ文言）。
+// 通常は start 行の requireNextLineText が先に止める。ここは保存マーカーの穴（ADR-0508）のような
+// 経路で空のまま届いたときの防御線。
+func (r *kftlURLogRequest) ValidateContent() error {
 	if r.url == "" && r.title == "" {
-		return nil // skip blank URLog
+		return newKFTLInputError("KFTL_URLOG_BLANK_SKIP_SAVE_MESSAGE_TITLE",
+			fmt.Errorf("urlog url and title are empty: id=%s", r.RequestID))
+	}
+	return nil
+}
+
+func (r *kftlURLogRequest) DoRequest(ctx context.Context) error {
+	if err := r.ValidateContent(); err != nil {
+		return err
 	}
 
 	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {

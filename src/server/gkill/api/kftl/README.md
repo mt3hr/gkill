@@ -20,9 +20,17 @@ KFTLStatement（テキスト全体を保持）
 KFTLStatementLine（各行の解釈）
     ↓  行グループ化・リクエスト生成
 KFTLRequest（データ追加リクエスト）
+    ↓  書く前の内容検査（validateRequestContents → 各型の ValidateContent）
+    ↓  繰り返し「？？」の展開
     ↓  実行
 Repository への保存
 ```
+
+行分割の前に、保存マーカー「！」の行（1行目は除く）で本文を切り詰める。マーカー行を残したまま
+`NextStatementLineText` を組み立てると、`ーち`+「！」が `requireNextLineText` を素通りしてタイトル空のまま
+実行に届く（ADR-0508）。書く前の内容検査は Analyze（`/api/parse_kftl_text`）と送信の両方が通るので、
+本文の無いメモ・タイトルの無い打刻やタスク・付け先の無いタグ/関連時刻/テキストは、打鍵中にピンクになり、
+送信でも同じ理由で止まる（1バイトも書かない）。
 
 ### kftlFactory パターン
 
@@ -89,7 +97,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | ファイル | 役割 |
 |---------|------|
 | `kftl_factory.go` | `kftlFactory` — 行コンストラクタファクトリ。プレフィックス定数定義。各データ型の `generateXxxConstructor()` メソッドを提供 |
-| `kftl_statement.go` | `KFTLStatement` — KFTL テキスト全体のパースエントリポイント。`prepareRequests()`（行の解釈→全行の適用→繰り返しの展開。書かない）を、`GenerateAndExecuteRequests()`（temp rep へ実行→`CommitTx`）と `Analyze()`（`/api/parse_kftl_text`。行別エラー・タグ・板名・件数だけ返す）が共有する（ADR-0507）。各リクエストは一時リポジトリに積み、末尾で `CommitTx`（1つの SQLite トランザクション）で確定する。失敗したら `DiscardTx` して何も残さない |
+| `kftl_statement.go` | `KFTLStatement` — KFTL テキスト全体のパースエントリポイント。`prepareRequests()`（行の解釈→全行の適用→内容検査 `validateRequestContents`→繰り返しの展開。書かない）を、`GenerateAndExecuteRequests()`（temp rep へ実行→`CommitTx`）と `Analyze()`（`/api/parse_kftl_text`。行別エラー・タグ・板名・件数だけ返す）が共有する（ADR-0507）。各リクエストは一時リポジトリに積み、末尾で `CommitTx`（1つの SQLite トランザクション）で確定する。失敗したら `DiscardTx` して何も残さない |
 | `kftl_statement_line.go` | `KFTLStatementLine` インタフェース — 各行が実装すべきメソッド定義。`StatementLineConstructorFunc` 型定義 |
 | `kftl_statement_line_context.go` | `KFTLStatementLineContext` — 行パース時のコンテキスト（BaseTime, AddSecond, UserID, Device 等） |
 
@@ -97,9 +105,9 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 
 | ファイル | 役割 |
 |---------|------|
-| `kftl_request.go` | `KFTLRequest` インタフェース — リクエストの共通メソッド定義（`Execute()`, `GetID()` 等） |
-| `kftl_prototype_request.go` | `KFTLPrototypeRequest` — リクエストのプロトタイプ実装。新規 Kyou 追加時の共通ロジック |
-| `kftl_request_map.go` | `KFTLRequestMap` — リクエストの ID マップ管理。同一 ID のリクエストを集約 |
+| `kftl_request.go` | `KFTLRequest` インタフェース — リクエストの共通メソッド定義（`DoRequest()`, `ValidateContent()`, `GetRequestID()` 等）。`ValidateContent()` は基底に既定実装を置かない（型を足したら「何を空とみなすか」を書かないとコンパイルが通らない。ADR-0508） |
+| `kftl_prototype_request.go` | `KFTLPrototypeRequest` — タグ・テキスト・関連時刻の一時的な置き場所。次の記録の `Set` が中身を引き継いで置き換える。全行を適用し終えても残っていれば「付け先の記録が無い」入力エラー（`ValidateContent`。ADR-0508） |
+| `kftl_request_map.go` | `KFTLRequestMap` — リクエストの ID マップ管理（挿入順を保持）。プロトタイプからの引き継ぎ、`Delete`（`？時刻` の直後の `ーん` が取り込んだプロトタイプを外す） |
 
 ### データ型別パーサ
 
