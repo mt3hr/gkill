@@ -407,6 +407,13 @@ export function useKftlView(options: {
     async function fetch_invalid_lines(): Promise<void> {
         const generation = ++invalid_line_generation
         invalid_line_abort_controller?.abort()
+        // 本文が空白だけならサーバに聞かない。サーバは空のメモを「内容がないメモ」の入力エラーに
+        // するので（ADR-0508）、聞くと**新しい空のタブの1行目が常にピンク**になる。
+        // 送信（do_submit）は今までどおりサーバに聞くので、空のタブで保存を押せばエラーが出る
+        if (text_area_content.value.trim() === "") {
+            invalid_line_numbers.value = []
+            return
+        }
         const abort_controller = new AbortController()
         invalid_line_abort_controller = abort_controller
         let res: ParseKFTLTextResponse
@@ -708,6 +715,13 @@ export function useKftlView(options: {
         is_requested_submit.value = true
         is_submitting.value = true
         try {
+            // 確認ダイアログが開いている隙に別のウィンドウが同じタブを保存して閉じていると、
+            // ここへ来た時点でタブが無い。get_tab_content は "" を返すので、サーバへ送ると
+            // 「内容がないメモ」のエラー（ADR-0508）が出てしまう。閉じたタブは黙って見送る。
+            // **claim（try_begin_submit）の後・try の中**に置く —— 前に置くと return が finally を通らず永久ロック
+            if (!tabs_store.has_tab(target_tab_id)) {
+                return
+            }
             // 表示用の invalid_line_numbers はアクティブなタブのもので、しかも await をまたいで
             // 遅れて着地する。送信の可否は送信対象タブの本文をサーバに改めて解析させて判定する。
             // 解析は送信と同じ prepareRequests を通るので、ここで通れば送信で弾かれない
@@ -813,7 +827,7 @@ export function useKftlView(options: {
             // 再入で取り直す（**持ち越すと再入で自己デッドロックする**）。
             // 確認が開いている隙に別ウィンドウが同じタブを送れるが、そのときは本文から
             // 保存マーカーが除去済みで、後続の確認は消えたタブを対象にするため
-            // get_tab_content が "" を返してリクエスト0件で無害に終わる
+            // try の先頭の has_tab で見送る（消えたタブの "" を送ると空メモのエラーになる）
             tabs_store.end_submit(target_tab_id)
             is_requested_submit.value = false
             is_submitting.value = false

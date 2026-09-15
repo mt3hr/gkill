@@ -605,6 +605,7 @@
     "KFTL_REPEAT_INVALID_DUPLICATE_MESSAGE_TITLE": "既存時の指定は yes か no です",
     "KFTL_REPEAT_INVALID_ORIGIN_MESSAGE_TITLE": "起点の日時が変です",
     "KFTL_REPEAT_NO_TARGET_MESSAGE_TITLE": "繰り返す記録がありません",
+    "KFTL_META_INFO_NO_TARGET_MESSAGE_TITLE": "タグ・テキスト・関連時刻を付ける記録がありません",
     "KFTL_REPEAT_TYPE_NOT_SUPPORTED_MESSAGE_TITLE": "この種類は繰り返せません",
     "KFTL_REPEAT_NOT_CLOSED_MESSAGE_TITLE": "繰り返しブロックが閉じていません",
     "KFTL_REPEAT_NO_DATE_FIELD_MESSAGE_TITLE": "繰り返す日時の欄がありません",

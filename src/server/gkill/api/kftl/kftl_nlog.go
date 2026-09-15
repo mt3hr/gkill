@@ -117,6 +117,16 @@ func (r *kftlNlogRequest) GetRelatedTime() time.Time {
 	return r.KFTLRequestBase.GetRelatedTime()
 }
 
+// ValidateContent は支払いの中身を検査しない。
+//
+// 品名も金額も無い支払いは「支払いの後ろの空行が品名行として解釈されただけ」で、ブロックの
+// 後ろに空行を置ける書き方のためにエラーにも支払いにもしない（TestNlogBlock_TrailingBlankLineIsIgnored）。
+// 「店名だけでブロックが終わる」は店名行の requireNextLineText が、「品名だけで金額が無い」は
+// DoRequest が既存のとおり弾く。
+func (r *kftlNlogRequest) ValidateContent() error {
+	return nil
+}
+
 func (r *kftlNlogRequest) DoRequest(ctx context.Context) error {
 	// 末尾の改行が品名行として解釈されただけの空の支払い。エラーにせず、支払いも作らない
 	if r.title == "" && !r.hasAmount {
@@ -244,6 +254,10 @@ func (l *kftlStartNlogStatementLine) ApplyThisLineToRequestMap(_ context.Context
 			fmt.Errorf("nlog tags and texts must be written after the amount line"))
 	}
 	l.block.relatedTime = proto.relatedTime
+	// 関連時刻はブロックへ取り込んだので、プロトタイプの役目はここで終わり。
+	// map に残すと validateRequestContents が「付け先の無い関連時刻」として弾く（ADR-0508）。
+	// 支払いは品名行が別の ID で作るので、消してもブロックの中身には影響しない
+	requestMap.Delete(l.ctx.ThisStatementLineTargetID)
 	return nil
 }
 func (l *kftlStartNlogStatementLine) GetLabelName() string                  { return "nlog" }
@@ -269,6 +283,11 @@ func newKFTLNlogShopNameStatementLine(lineText string, ctx *KFTLStatementLineCon
 
 func (l *kftlNlogShopNameStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
 	if err := assertIsNotMetaInfoLine(l.lineText); err != nil {
+		return err
+	}
+	// 店名の次は品名の行。店名だけでブロックが終わると支払いが1件も作られず、
+	// 2026-09-15 まで 200「保存しました」で黙って0件だった（ADR-0508）。
+	if err := requireNextLineText(l.ctx); err != nil {
 		return err
 	}
 	l.block.shop = l.lineText

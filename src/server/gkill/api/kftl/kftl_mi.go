@@ -49,9 +49,20 @@ func (r *kftlMiRequest) resolvedBoardName() string {
 	return ""
 }
 
-func (r *kftlMiRequest) DoRequest(ctx context.Context) error {
+// ValidateContent はタイトルの無いタスクを入力エラーにする（旧 Web の ERR900013 と同じ文言）。
+// 通常は start 行の requireNextLineText が先に止める。ここは保存マーカーの穴（ADR-0508）のような
+// 経路でタイトル空のまま届いたときの防御線。
+func (r *kftlMiRequest) ValidateContent() error {
 	if r.title == "" {
-		return nil // skip blank Mi
+		return newKFTLInputError("KFTL_MI_TITLE_BLANK_SKIP_SAVE_MESSAGE_TITLE",
+			fmt.Errorf("mi title is empty: id=%s", r.RequestID))
+	}
+	return nil
+}
+
+func (r *kftlMiRequest) DoRequest(ctx context.Context) error {
+	if err := r.ValidateContent(); err != nil {
+		return err
 	}
 
 	boardName := r.resolvedBoardName()

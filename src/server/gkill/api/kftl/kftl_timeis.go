@@ -34,9 +34,20 @@ func newKFTLTimeIsRequest(requestID string, ctx *KFTLStatementLineContext) *kftl
 	}
 }
 
-func (r *kftlTimeIsRequest) DoRequest(ctx context.Context) error {
+// ValidateContent はタイトルの無い打刻を入力エラーにする（旧 Web の ERR900016 と同じ文言）。
+// 通常は start 行の requireNextLineText が先に止める。ここは保存マーカーの穴（ADR-0508）のような
+// 経路でタイトル空のまま届いたときの防御線。
+func (r *kftlTimeIsRequest) ValidateContent() error {
 	if r.title == "" {
-		return nil
+		return newKFTLInputError("KFTL_TIMEIS_BLANK_SKIP_SAVE_MESSAGE_TITLE",
+			fmt.Errorf("timeis title is empty: id=%s", r.RequestID))
+	}
+	return nil
+}
+
+func (r *kftlTimeIsRequest) DoRequest(ctx context.Context) error {
+	if err := r.ValidateContent(); err != nil {
+		return err
 	}
 	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err
@@ -223,9 +234,18 @@ func newKFTLTimeIsStartRequest(requestID string, ctx *KFTLStatementLineContext) 
 	}
 }
 
-func (r *kftlTimeIsStartRequest) DoRequest(ctx context.Context) error {
+// ValidateContent はタイトルの無い打刻開始を入力エラーにする（`ーち` と同じ理由・同じ文言）。
+func (r *kftlTimeIsStartRequest) ValidateContent() error {
 	if r.title == "" {
-		return nil
+		return newKFTLInputError("KFTL_TIMEIS_BLANK_SKIP_SAVE_MESSAGE_TITLE",
+			fmt.Errorf("timeis start title is empty: id=%s", r.RequestID))
+	}
+	return nil
+}
+
+func (r *kftlTimeIsStartRequest) DoRequest(ctx context.Context) error {
+	if err := r.ValidateContent(); err != nil {
+		return err
 	}
 	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err
@@ -466,10 +486,19 @@ func newKFTLTimeIsEndByTitleRequest(requestID string, ctx *KFTLStatementLineCont
 	}
 }
 
-func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
+// ValidateContent はタイトル行の無い打刻終了を入力エラーにする。
+// 2026-09-15 まで DoRequest だけが見ていて、`ーえ` 単独は Analyze（ピンク）に出ず送信で初めて 400 になっていた。
+func (r *kftlTimeIsEndByTitleRequest) ValidateContent() error {
 	if r.title == "" {
 		return newKFTLInputError("KFTL_TIMEIS_END_REQUIRE_END_TITLE_MESSAGE_TITLE",
 			fmt.Errorf("timeis end: title is empty"))
+	}
+	return nil
+}
+
+func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
+	if err := r.ValidateContent(); err != nil {
+		return err
 	}
 	endTime := r.GetRelatedTime()
 
@@ -639,20 +668,28 @@ func (r *kftlTimeIsEndByTagRequest) AddTag(tag string) {
 	r.searchTags = append(r.searchTags, tag)
 }
 
+// ValidateContent はタグの行を書かなかった打刻終了を入力エラーにする。
+// searchTags が空だと DoRequest の照合はどの打刻とも一致せず、
+// 「終了対象の打刻が存在しませんでした」という**原因と違う**エラーになっていた
+// （if-exist 版では無言で0件）。打ち間違いとして名指しする。
+// 2026-09-15 まで DoRequest だけが見ていて、Analyze（ピンク）には出なかった。
+func (r *kftlTimeIsEndByTagRequest) ValidateContent() error {
+	if len(r.searchTags) == 0 {
+		return newKFTLInputError("KFTL_TIMEIS_END_REQUIRE_END_TAG_MESSAGE_TITLE",
+			fmt.Errorf("end-by-tag needs at least one tag on the next line"))
+	}
+	return nil
+}
+
 func (r *kftlTimeIsEndByTagRequest) DoRequest(ctx context.Context) error {
+	if err := r.ValidateContent(); err != nil {
+		return err
+	}
 	endTime := r.GetRelatedTime()
 
 	playingEntries, err := findPlayingTimeIsEntries(ctx, &r.KFTLRequestBase)
 	if err != nil {
 		return fmt.Errorf("error finding playing timeis for tag-end: %w", err)
-	}
-
-	// タグの行を書かなかった場合。searchTags が空だと下の照合はどの打刻とも一致せず、
-	// 「終了対象の打刻が存在しませんでした」という**原因と違う**エラーになっていた
-	// （if-exist 版では無言で0件）。打ち間違いとして名指しする。
-	if len(r.searchTags) == 0 {
-		return newKFTLInputError("KFTL_TIMEIS_END_REQUIRE_END_TAG_MESSAGE_TITLE",
-			fmt.Errorf("end-by-tag needs at least one tag on the next line"))
 	}
 
 	var target *reps.TimeIs

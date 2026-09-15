@@ -63,8 +63,12 @@ func parseDateTime(s string, base time.Time) (time.Time, error) {
 // 落ちていた。剥がす前に弾く。Mi は related_time 列を持たないので、この欄に関連時刻の
 // 接頭辞を書けること自体に意味が無い。
 //
-// 空行は「未設定」。それ以外のパースできない行は今までどおり未設定として扱う
-// (日時として読めない行を一律に行エラーへ倒すと既存の書き方が広範に壊れるため、そこは変えない)。
+// 空行は「未設定」（空行で項目の位置を送る書き方のため）。空でないのに日時として読めない行は
+// **入力エラー**にする。2026-09-15 までは未設定として握り潰していて（ADR-0505 はそこを据え置いた）、
+// `ーみ`,`タイトル`,`板`,`abc` の `abc` も、6行を埋めずに `、` で次の記録へ移ろうとした `、` も、
+// エラーも警告も出ないまま日付だけが入らず、`、` の後ろの本文まで残りの欄に食われていた。
+// タグ行・テキスト開始行・`？？` は generateMiBlockNextConstructor / generateMiReKyouNextConstructor が
+// 先読みで拾って項目の位置を消費しないので、ここへは来ない（ADR-0508）。
 func parseScheduleFieldTime(lineText string, base time.Time) (time.Time, bool, error) {
 	if strings.HasPrefix(lineText, splitterRelatedTime) || strings.HasPrefix(lineText, splitterRelatedTimeAscii) {
 		return time.Time{}, false, newKFTLInputError("KFTL_SCHEDULE_TIME_PREFIX_NOT_ALLOWED_MESSAGE_TITLE",
@@ -75,7 +79,8 @@ func parseScheduleFieldTime(lineText string, base time.Time) (time.Time, bool, e
 	}
 	t, err := parseDateTime(lineText, base)
 	if err != nil {
-		return time.Time{}, false, nil
+		return time.Time{}, false, newKFTLInputError("KFTL_TIMEIS_INVALID_PARSE_TIME_ERROR_MESSAGE_TITLE",
+			fmt.Errorf("invalid schedule datetime %q: %w", lineText, err))
 	}
 	return t, true, nil
 }

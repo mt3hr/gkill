@@ -605,6 +605,7 @@
     "KFTL_REPEAT_INVALID_DUPLICATE_MESSAGE_TITLE": "기존 시 지정은 yes 또는 no 입니다",
     "KFTL_REPEAT_INVALID_ORIGIN_MESSAGE_TITLE": "기준 일시가 잘못되었습니다",
     "KFTL_REPEAT_NO_TARGET_MESSAGE_TITLE": "반복할 기록이 없습니다",
+    "KFTL_META_INFO_NO_TARGET_MESSAGE_TITLE": "태그·텍스트·관련 시각을 붙일 기록이 없습니다",
     "KFTL_REPEAT_TYPE_NOT_SUPPORTED_MESSAGE_TITLE": "이 종류는 반복할 수 없습니다",
     "KFTL_REPEAT_NOT_CLOSED_MESSAGE_TITLE": "반복 블록이 닫히지 않았습니다",
     "KFTL_REPEAT_NO_DATE_FIELD_MESSAGE_TITLE": "반복할 일시 항목이 없습니다",

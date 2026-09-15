@@ -13,6 +13,9 @@ type mockRequest struct {
 
 func (r *mockRequest) DoRequest(_ context.Context) error { return nil }
 
+// ValidateContent も基底に既定実装が無い（書き忘れをコンパイルで捕まえるため）ので、モックにも要る。
+func (r *mockRequest) ValidateContent() error { return nil }
+
 // CloneForRepeat は基底に既定実装を置いていないので、具象ごとに要る
 // （置くと日時をずらさない複製が黙って書かれるため）。
 func (r *mockRequest) CloneForRepeat(newRequestID string, dayShift int) KFTLRequest {

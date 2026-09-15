@@ -3,6 +3,7 @@ package kftl
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
@@ -106,11 +107,28 @@ func (r *kftlKmemoRequest) addKmemoLine(line string) {
 	r.contentLines = append(r.contentLines, line)
 }
 
-func (r *kftlKmemoRequest) DoRequest(ctx context.Context) error {
-	content := joinLines(r.contentLines)
-	if content == "" {
-		return nil // skip blank kmemo
+// ValidateContent は本文が空白だけのメモを入力エラーにする。
+//
+// 2026-09-15 まで DoRequest が「空なら何も書かずに nil」で済ませていて、本文無しで「！」を打つ・
+// `。タグ` の後ろに空行だけ・`、` の後ろが空行、のどれも 200「保存しました」でタブが閉じていた
+// （旧 Web の TS は ERR900012 で送信を止めていた）。
+// 判定は「全行が空白」。joinLines は ["",""] を "\n" にするので `== ""` では
+// 改行だけのメモが本文 "\n" として書かれてしまう（旧 TS の add_kmemo_line は空行を畳んでいた）。
+// 本文があれば末尾の空行はそのまま（`メモ\n\n\n` はエラーにしない。TestAnalyze_BlankKmemoIsNotAnError）。
+func (r *kftlKmemoRequest) ValidateContent() error {
+	if strings.TrimSpace(joinLines(r.contentLines)) == "" {
+		return newKFTLInputError("KFTL_KMEMO_BLANK_SKIP_SAVE_MESSAGE_TITLE",
+			fmt.Errorf("kmemo content is blank: id=%s", r.RequestID))
 	}
+	return nil
+}
+
+func (r *kftlKmemoRequest) DoRequest(ctx context.Context) error {
+	// prepareRequests が先に弾く。ここは書き込みフェーズまで来てしまった経路の二重の防御線
+	if err := r.ValidateContent(); err != nil {
+		return err
+	}
+	content := joinLines(r.contentLines)
 
 	if err := r.doBaseRequest(ctx, r.RequestID, r.GetRelatedTime()); err != nil {
 		return err

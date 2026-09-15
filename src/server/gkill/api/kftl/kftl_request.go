@@ -13,6 +13,12 @@ import (
 // Mirrors: src/classes/kftl/kftl-request.ts (abstract class)
 type KFTLRequest interface {
 	DoRequest(ctx context.Context) error
+	// ValidateContent は「書く前に分かる、内容の欠け」を入力エラーで返す
+	// （本文の無いメモ・タイトルの無い打刻やタスク・値の行を通っていない気分・付け先の無いプロトタイプ）。
+	// prepareRequests が全行を適用した後に呼ぶので、Analyze（ピンク）と送信の両方で同じ結果になる。
+	// **基底に既定実装を置かない** —— 置くと新しい型で書き忘れても通り、空の記録が黙って書かれるか
+	// 黙って0件になる。DoRequest はこれをもう一度呼んで、書き込みフェーズまで来た経路でも書かない（ADR-0508）。
+	ValidateContent() error
 	GetRequestID() string
 	GetTags() []string
 	GetTextsMap() map[string]string
@@ -46,9 +52,10 @@ type KFTLRequest interface {
 //
 // KFTL は1つのテキストから複数のKyouを作るのに、応答は「記録しました」の1文だけで、
 // 件数も種別もIDも返していなかった（2026-08-24 の再監査）。IDそのものは
-// リクエストIDと同じ値で最初から手元にあったが、**本文が空の kmemo / Mi / Nlog は
+// リクエストIDと同じ値で最初から手元にあったが、**支払いの後ろの空行が作る空の Nlog は
 // 何も書かずに成功し、打刻の終了は既存レコードの更新**なので、リクエストを
-// 事前に並べるだけでは「作られたもの」にならない。書いた側が控える。
+// 事前に並べるだけでは「作られたもの」にならない。書いた側が控える
+// （本文が空の kmemo / Mi / 打刻は 2026-09-15 から書く前に行別エラーになる。ADR-0508）。
 type KFTLCreatedRecord struct {
 	ID       string
 	DataType string
