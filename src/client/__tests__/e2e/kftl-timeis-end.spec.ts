@@ -3,7 +3,7 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToPlaying,
-  makeUniqueLabel, expectPageToContainText,
+  makeUniqueLabel, expectPageToContainText, expectPageNotToContainText,
 } from './crud-helpers'
 
 let apiReachable = false
@@ -13,6 +13,10 @@ test.beforeAll(async () => {
   apiReachable = await checkGkillApiViaVite()
 })
 
+// 終了系（ーえ / ーいえ / ーたえ / ーいたえ）は「エラーが出ない」だけでなく、
+// 終了したあと実行中画面からその打刻が**消えている**ことまで見る。
+// 2026-09-16 まではエラーの有無しか見ておらず、終了対象の選び方が不定順で
+// いま走っている打刻が終わらない不具合（ADR-0509）を素通ししていた。
 test.describe('KFTL TimeIs End Flows', () => {
   test.beforeEach(async ({ page }) => {
     test.skip(!apiReachable, 'gkill API not reachable via Vite dev server')
@@ -30,7 +34,9 @@ test.describe('KFTL TimeIs End Flows', () => {
 
     // End it by title
     await submitKftlText(page, `ーえ\n${label}`)
-    // Verify page still renders correctly
+    // 終了した打刻は実行中画面から消える
+    await navigateToPlaying(page)
+    await expectPageNotToContainText(page, label)
     await navigateToRykv(page)
     const app = page.locator('#app')
     await expect(app).toBeVisible()
@@ -46,6 +52,9 @@ test.describe('KFTL TimeIs End Flows', () => {
 
     // End it with "if exists" — should succeed without error
     await submitKftlText(page, `ーいえ\n${label}`)
+    // 終了した打刻は実行中画面から消える
+    await navigateToPlaying(page)
+    await expectPageNotToContainText(page, label)
     await navigateToRykv(page)
     const app = page.locator('#app')
     await expect(app).toBeVisible()
@@ -66,8 +75,11 @@ test.describe('KFTL TimeIs End Flows', () => {
     await navigateToPlaying(page)
     await expectPageToContainText(page, label)
 
-    // End all TimeIs with that tag
+    // End the running TimeIs with that tag
     await submitKftlText(page, `ーたえ\n${tagName}`)
+    // 終了した打刻は実行中画面から消える
+    await navigateToPlaying(page)
+    await expectPageNotToContainText(page, label)
     await navigateToRykv(page)
     const app = page.locator('#app')
     await expect(app).toBeVisible()
@@ -84,6 +96,9 @@ test.describe('KFTL TimeIs End Flows', () => {
 
     // End with "if tag exists" — should succeed
     await submitKftlText(page, `ーいたえ\n${tagName}`)
+    // 終了した打刻は実行中画面から消える
+    await navigateToPlaying(page)
+    await expectPageNotToContainText(page, label)
     await navigateToRykv(page)
     const app = page.locator('#app')
     await expect(app).toBeVisible()

@@ -3,6 +3,7 @@ package kftl
 import (
 	"context"
 	"encoding/json"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -435,5 +436,57 @@ func TestFindPlayingTimeIsEntries_TagFilterGoesThroughFindKyous(t *testing.T) {
 	}
 	if findKyousCalls != 0 {
 		t.Errorf("タグ条件が無いのに FindKyous が %d 回呼ばれた", findKyousCalls)
+	}
+}
+
+// 終了対象の候補は**開始時刻の新しい順**で、**削除済みを含まない**。
+//
+// 呼び出し側（ーえ / ーたえ 系）は先頭から一致した1件だけを終えるので、この並びがそのまま「どれを終えるか」になる。
+// TimeIsReps.FindTimeIs は map 由来で順序を保証せず削除済みも落とさない（2026-09-16 まで Go はそれをそのまま先頭から
+// 取っていて、同じタグの終え忘れが N 件あると 1/N でしか当たらず、削除済みの打刻に終了を書くこともあった。ADR-0509）。
+// 並びの検査は修正前だと 1/24（4件の順列）でしか通らず、削除済みの検査は修正前は必ず落ちる。
+func TestFindPlayingTimeIsEntries_NewestFirstAndSkipsDeleted(t *testing.T) {
+	ctx := context.Background()
+	timeIsRep, err := reps.NewTimeIsRepositorySQLite3Impl(ctx, filepath.Join(t.TempDir(), "timeis.db"), true)
+	if err != nil {
+		t.Fatalf("NewTimeIsRepositorySQLite3Impl: %v", err)
+	}
+	t.Cleanup(func() { _ = timeIsRep.Close(ctx) })
+
+	base := time.Date(2026, 3, 1, 9, 0, 0, 0, time.Local)
+	running := func(id string, start time.Time, isDeleted bool) reps.TimeIs {
+		return reps.TimeIs{
+			ID: id, Title: "playing", StartTime: start, IsDeleted: isDeleted,
+			CreateTime: start, UpdateTime: start,
+			CreateApp: "test", CreateDevice: "test", CreateUser: "test",
+			UpdateApp: "test", UpdateDevice: "test", UpdateUser: "test",
+		}
+	}
+	// 追加順はわざと新旧を混ぜる（rep の返す順に依存しないことを見る）
+	for _, timeis := range []reps.TimeIs{
+		running("second-oldest", base.AddDate(0, 1, 0), false),
+		running("newest", base.AddDate(0, 3, 0), false),
+		running("oldest", base, false),
+		running("deleted-running", base.AddDate(0, 4, 0), true),
+		running("third", base.AddDate(0, 2, 0), false),
+	} {
+		if err := timeIsRep.AddTimeIsInfo(ctx, timeis); err != nil {
+			t.Fatalf("AddTimeIsInfo(%s): %v", timeis.ID, err)
+		}
+	}
+
+	req := &KFTLRequestBase{Ctx: &KFTLStatementLineContext{
+		Repositories: &reps.GkillRepositories{TimeIsReps: reps.TimeIsRepositories{timeIsRep}},
+	}}
+	entries, err := findPlayingTimeIsEntries(ctx, req)
+	if err != nil {
+		t.Fatalf("findPlayingTimeIsEntries: %v", err)
+	}
+	var ids []string
+	for _, entry := range entries {
+		ids = append(ids, entry.ID)
+	}
+	if got, want := strings.Join(ids, ","), "newest,third,second-oldest,oldest"; got != want {
+		t.Errorf("候補の並び = %q, want %q（開始時刻の新しい順・削除済み除外）", got, want)
 	}
 }
