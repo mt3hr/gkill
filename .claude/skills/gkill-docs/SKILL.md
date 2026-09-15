@@ -11,7 +11,7 @@ description: "gkill の資料層の役割分担と保守手順。AGENTS.md / CLA
 
 ## Documentation
 
-- `resources/manual/` — HTML manuals (7 languages, 22 pages per language), embedded via `//go:embed` and served at `/resources/manual/`
+- `resources/manual/` — HTML manuals (7 languages, 23 pages per language), embedded via `//go:embed` and served at `/resources/manual/`
 - `documents/adr/` — Architecture Decision Record（現在 101 件）。**なぜそうなっているか**、とくに**採らなかった案とその理由**を残す層。Reverse docs = What / ADR = Why。禁止文の正本はこの CLAUDE.md とコードコメントのままで、ADR が持つのは却下案・実測値・事件譚だけ。索引と運用ルールは [documents/adr/README.md](../../../documents/adr/README.md)
 - `documents/reverse/` — Reverse-engineered design documents (24 files). See `documents/reverse/README.md` for index. Key files: glossary.md (96 terms), api-endpoints.md (92 endpoints, 90 registered), usecase.md (86 use cases), sequence-diagrams.md (29 diagrams), scenario.md (cross-channel end-to-end usage scenarios with UML), testing-guide.md. `npm run verify_docs` (`src/tools/verify_docs.mjs`) machine-checks the counts, cross-links, referenced paths, Mermaid blocks, and manual freshness — it runs as part of `npm test`, so update the docs when a count changes.
 - `src/ABOUT_TEST.md` — Test specification index, links to 24 subdirectory `ABOUT_TEST.md` files
