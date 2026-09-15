@@ -40,6 +40,18 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
   語の条件は rep の SQL が見るが、**タグ・非表示タグは Kyou 検索の層（`api.FindFilter`）でしか効かない**ので、ハンドラが
   `KFTLStatement.FindKyous` に閉包で渡す（kftl → api の import は作らない）。閉包が無い（テスト・直叩き）ときは語だけで絞る。
   2026-09-15 まで Web だけが条件を適用し、Wear / MCP の `/end` は条件外の打刻も終わらせていた
+- **終了対象の候補は `findPlayingTimeIsEntries` の出口で「開始時刻の新しい順・同着 ID 昇順」に並べ、削除済みを落とす**
+  （`sortPlayingTimeIsEntries`。閉包の有無に関わらず通す）。呼び出し側は先頭一致の**最新の1件だけ**を終える。
+  `TimeIsReps.FindTimeIs` は順序を保証せず（map 由来で毎回変わる）削除済みも落とさないので、並べずに先頭を取ると
+  同じタグの終え忘れが N 件あるとき走っている1件に当たる確率が 1/N になり、削除済みの打刻に終了を書くこともある
+  （2026-09-16 の利用者報告。実データでは検索タグ1つに終え忘れ 3〜4 件＋削除済み実行中 4〜6 件。[ADR-0509](../../../documents/adr/0509-kftl-timeis-end-targets-the-latest-running-record.md)）。
+  一致する全件を終えない（数か月前の開始に「今」の終了時刻が入る）
+- **検索タグ（`ーたえ` / `ーいたえ` の次の行）は `addSearchTag` で `searchTags` だけに積む。本体 `Tags`（`KFTLRequestBase.AddTag`）に混ぜない。**
+  混ぜると `doBaseRequest` が Kyou の無い `r.RequestID` へ Tag 行を書いて終了のたびに宙に浮いた Tag が増え、
+  `Analyze().Tags` にも載って Web の未知タグ確認が余計に出る
+- **終了4行（`ーえ` `ーいえ` `ーたえ` `ーいたえ`）も直前のプロトタイプを引き継ぐ**（`endTargetIDInheritingPrototype`。他の型と同じ
+  `prevLine.GetContext().ThisIsPrototype` 判定）。常に新しい UUID を採ると `？18:00` / `ーいたえ` / `X` の関連時刻が宙に浮き、
+  ADR-0508 の「付け先の無いメタ情報」で行エラーになる（それ以前は黙って「今」で終わっていた）
 - **接頭辞を足す・変えるときは Go `kftl_factory.go` と TS `kftl-prefixes.ts` の両方を同じコミットで直す。**
   TS 側がずれても保存は壊れないが、ラベルが嘘になる（`kftl-type-detection.test.ts` が守る）
 - **契約は足すだけ。** `SubmitKFTLTextRequest` / `Response` の既存フィールドを変えると Wear（`GkillApiClient.kt`）と MCP（`write-handlers.mjs`）が壊れる。
@@ -164,3 +176,4 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
 - [ADR-0506 繰り返し「？？」は実体のレコードへ展開し、複製は送信時にだけ作る](../../../documents/adr/0506-kftl-repeat-block-expands-into-records.md)
 - [ADR-0507 メモ帳の解釈と書き込みはサーバの1実装に寄せる](../../../documents/adr/0507-kftl-single-implementation-on-server.md)
 - [ADR-0508 保存マーカー行は値の行に数えず、内容の無い記録・付け先の無いメタ情報・読めない予定日時は書く前に行別エラーにする](../../../documents/adr/0508-kftl-blank-records-are-input-errors.md)
+- [ADR-0509 メモ帳の打刻終了は「開始時刻が最新の実行中1件」を終え、削除済みは候補にしない](../../../documents/adr/0509-kftl-timeis-end-targets-the-latest-running-record.md)

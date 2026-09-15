@@ -1,6 +1,7 @@
 package gkill_server_api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 )
 
 // submitKFTL は /api/submit_kftl_text を叩き、応答を返す。
@@ -533,4 +535,244 @@ func TestHandleSubmitKFTLText_SaveMarkerAfterBarePrefixIsInputError(t *testing.T
 			t.Errorf("打刻の件数 = %d, want %d", after, before+1)
 		}
 	})
+}
+
+// 打刻終了（ーえ / ーたえ 系）の**対象の決め方**のハンドラ層テスト（2026-09-16 の利用者報告。ADR-0509）。
+//
+// 2026-09-15 の Go 寄せ（ADR-0507）まで Web は get_kyous の並び（開始時刻降順・削除済み除外）に乗って
+// 常に最新の1件を終えていたが、Go は TimeIsReps.FindTimeIs の不定順（map 由来）の先頭を取っていた。
+// 同じタグを持つ終え忘れが N 件あると、いま走っている1件に当たる確率が 1/N で、削除済みの打刻に
+// 終了を書くこともあった。既存の TimeIsEndByTagIfExist_WithMatch は「エラーが出ない」しか見ておらず、
+// 実行中が1件しか無い環境では不定順でも当たるので捕まらなかった。ここでは**どの打刻が終わったか**を見る。
+// cache_in_memory の ON/OFF で FindTimeIs の経路が変わるので両方で回す。
+func TestHandleSubmitKFTLText_TimeIsEndTargetsLatestRunning(t *testing.T) {
+	for _, cacheInMemory := range []bool{false, true} {
+		name := "cache_in_memory=false"
+		if cacheInMemory {
+			name = "cache_in_memory=true"
+		}
+		t.Run(name, func(t *testing.T) {
+			if cacheInMemory {
+				useCacheInMemory(t)
+			}
+			tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+			defer cleanup()
+			sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
+			now := time.Now().Truncate(time.Second)
+
+			// addRunningTimeIs は終了時刻の無い打刻を1件足し、その ID を返す。
+			addRunningTimeIs := func(t *testing.T, title string, start time.Time) string {
+				t.Helper()
+				id := GenerateNewID()
+				resp := postJSON(t, tsURL+"/api/add_timeis", &req_res.AddTimeIsRequest{
+					SessionID: sessionID, LocaleName: "en",
+					TimeIs: reps.TimeIs{
+						ID: id, Title: title, StartTime: start, EndTime: nil, DataType: "timeis",
+						CreateTime: start, CreateApp: "test", CreateUser: "admin",
+						UpdateTime: start, UpdateApp: "test", UpdateUser: "admin",
+					},
+				})
+				resp.Body.Close()
+				return id
+			}
+			addTag := func(t *testing.T, targetID, tag string, relatedTime time.Time) {
+				t.Helper()
+				resp := postJSON(t, tsURL+"/api/add_tag", &req_res.AddTagRequest{
+					SessionID: sessionID, LocaleName: "en",
+					Tag: reps.Tag{
+						ID: GenerateNewID(), TargetID: targetID, Tag: tag, RelatedTime: relatedTime,
+						CreateTime: relatedTime, CreateApp: "test", CreateUser: "admin",
+						UpdateTime: relatedTime, UpdateApp: "test", UpdateUser: "admin",
+					},
+				})
+				resp.Body.Close()
+			}
+			// markDeleted は打刻を削除済みにする（版を1つ足す。終了時刻は無いまま）。
+			markDeleted := func(t *testing.T, id, title string, start time.Time) {
+				t.Helper()
+				resp := postJSON(t, tsURL+"/api/update_timeis", &req_res.UpdateTimeisRequest{
+					SessionID: sessionID, LocaleName: "en",
+					TimeIs: reps.TimeIs{
+						ID: id, Title: title, StartTime: start, EndTime: nil, DataType: "timeis", IsDeleted: true,
+						CreateTime: start, CreateApp: "test", CreateUser: "admin",
+						UpdateTime: start.Add(time.Second), UpdateApp: "test", UpdateUser: "admin",
+					},
+				})
+				resp.Body.Close()
+			}
+			// latestTimeIs は最新版を返す。
+			latestTimeIs := func(t *testing.T, id string) reps.TimeIs {
+				t.Helper()
+				resp := postJSON(t, tsURL+"/api/get_timeis", &req_res.GetTimeisRequest{SessionID: sessionID, LocaleName: "en", ID: id})
+				defer resp.Body.Close()
+				var res req_res.GetTimeisResponse
+				if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+					t.Fatalf("decode get timeis response: %v", err)
+				}
+				if len(res.Errors) != 0 || len(res.TimeisHistories) == 0 {
+					t.Fatalf("get timeis %s: errors=%+v histories=%d", id, res.Errors, len(res.TimeisHistories))
+				}
+				latest := res.TimeisHistories[0]
+				for _, history := range res.TimeisHistories[1:] {
+					if history.UpdateTime.After(latest.UpdateTime) {
+						latest = history
+					}
+				}
+				return latest
+			}
+			// countTagRowsByName は Tag rep に実際にある行数を名前で数える（Kyou の無い ID に付いた Tag は get_kyous では見えない）。
+			countTagRowsByName := func(t *testing.T, tagName string) int {
+				t.Helper()
+				device, err := gkillAPI.GetDevice()
+				if err != nil {
+					t.Fatalf("GetDevice: %v", err)
+				}
+				repositories, err := gkillAPI.GkillDAOManager.GetRepositories("admin", device)
+				if err != nil {
+					t.Fatalf("GetRepositories: %v", err)
+				}
+				tags, err := repositories.TagReps.FindTags(context.Background(), &find.FindQuery{Words: []string{tagName}, OnlyLatestData: true})
+				if err != nil {
+					t.Fatalf("FindTags: %v", err)
+				}
+				count := 0
+				for _, found := range tags {
+					if found.Tag == tagName && !found.IsDeleted {
+						count++
+					}
+				}
+				return count
+			}
+			// endTimeOf は終了時刻を "nil" か秒精度の文字列で返す（比較用）。
+			endTimeOf := func(timeis reps.TimeIs) string {
+				if timeis.EndTime == nil {
+					return "nil"
+				}
+				return timeis.EndTime.Truncate(time.Second).Format(time.RFC3339)
+			}
+
+			t.Run("ーたえ は同じタグの実行中のうち開始時刻が最新の1件だけを終える", func(t *testing.T) {
+				tag := "endtag_latest_" + GenerateNewID()[:8]
+				oldest := addRunningTimeIs(t, "endByTagOldest", now.Add(-3*time.Hour))
+				middle := addRunningTimeIs(t, "endByTagMiddle", now.Add(-2*time.Hour))
+				newest := addRunningTimeIs(t, "endByTagNewest", now.Add(-1*time.Hour))
+				for _, id := range []string{oldest, middle, newest} {
+					addTag(t, id, tag, now)
+				}
+
+				res := submitKFTL(t, tsURL, sessionID, "ーたえ\n"+tag, "")
+				if len(res.Errors) != 0 {
+					t.Fatalf("ーたえ でエラー: %+v", res.Errors)
+				}
+				if len(res.Created) != 1 || res.Created[0].ID != newest || !res.Created[0].Updated {
+					t.Errorf("created = %+v, want 最新の打刻 %s の updated=true 1件", res.Created, newest)
+				}
+				if got := latestTimeIs(t, newest); got.EndTime == nil {
+					t.Errorf("最新の打刻が終わっていない: %+v", got)
+				}
+				for _, id := range []string{oldest, middle} {
+					if got := latestTimeIs(t, id); got.EndTime != nil {
+						t.Errorf("古い打刻 %s に終了時刻が書かれた: %s（終えるのは最新の1件だけ）", id, endTimeOf(got))
+					}
+				}
+			})
+
+			t.Run("ーえ は同じ題名の実行中のうち開始時刻が最新の1件だけを終える", func(t *testing.T) {
+				title := "endByTitle_" + GenerateNewID()[:8]
+				oldest := addRunningTimeIs(t, title, now.Add(-3*time.Hour))
+				newest := addRunningTimeIs(t, title, now.Add(-1*time.Hour))
+
+				res := submitKFTL(t, tsURL, sessionID, "ーえ\n"+title, "")
+				if len(res.Errors) != 0 {
+					t.Fatalf("ーえ でエラー: %+v", res.Errors)
+				}
+				if len(res.Created) != 1 || res.Created[0].ID != newest {
+					t.Errorf("created = %+v, want 最新の打刻 %s", res.Created, newest)
+				}
+				if got := latestTimeIs(t, oldest); got.EndTime != nil {
+					t.Errorf("古い打刻に終了時刻が書かれた: %s", endTimeOf(got))
+				}
+			})
+
+			t.Run("削除済みの実行中は終了の対象にしない", func(t *testing.T) {
+				tag := "endtag_deleted_" + GenerateNewID()[:8]
+				live := addRunningTimeIs(t, "endByTagLive", now.Add(-2*time.Hour))
+				deleted := addRunningTimeIs(t, "endByTagDeleted", now.Add(-1*time.Hour)) // 最新なので、含まれていればこちらが選ばれる
+				addTag(t, live, tag, now)
+				addTag(t, deleted, tag, now)
+				markDeleted(t, deleted, "endByTagDeleted", now.Add(-1*time.Hour))
+
+				res := submitKFTL(t, tsURL, sessionID, "ーたえ\n"+tag, "")
+				if len(res.Errors) != 0 {
+					t.Fatalf("ーたえ でエラー: %+v", res.Errors)
+				}
+				if len(res.Created) != 1 || res.Created[0].ID != live {
+					t.Errorf("created = %+v, want 生きている打刻 %s", res.Created, live)
+				}
+				if got := latestTimeIs(t, live); got.EndTime == nil {
+					t.Errorf("生きている打刻が終わっていない: %+v", got)
+				}
+				if got := latestTimeIs(t, deleted); got.EndTime != nil || !got.IsDeleted {
+					t.Errorf("削除済みの打刻が触られた: end=%s is_deleted=%v", endTimeOf(got), got.IsDeleted)
+				}
+			})
+
+			t.Run("検索タグは Tag 行として書かれず parse_kftl_text の tags にも載らない", func(t *testing.T) {
+				tag := "endtag_notwritten_" + GenerateNewID()[:8]
+				id := addRunningTimeIs(t, "endByTagNoLeak", now.Add(-1*time.Hour))
+				addTag(t, id, tag, now)
+
+				parseResp := postJSON(t, tsURL+"/api/parse_kftl_text", &req_res.ParseKFTLTextRequest{SessionID: sessionID, LocaleName: "en", KFTLText: "ーたえ\n" + tag})
+				var parsed req_res.ParseKFTLTextResponse
+				if err := json.NewDecoder(parseResp.Body).Decode(&parsed); err != nil {
+					t.Fatalf("decode parse kftl text response: %v", err)
+				}
+				parseResp.Body.Close()
+				if len(parsed.Tags) != 0 {
+					t.Errorf("parse の tags に検索タグが載っている: %v（未知タグ確認が余計に出る）", parsed.Tags)
+				}
+
+				before := len(getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{Tags: []string{tag}}).Kyous)
+				res := submitKFTL(t, tsURL, sessionID, "ーたえ\n"+tag, "")
+				if len(res.Errors) != 0 {
+					t.Fatalf("ーたえ でエラー: %+v", res.Errors)
+				}
+				// タグ付きの記録は打刻1件のまま（付け先の無い Tag 行は Kyou を出さないので件数では見えない）。
+				// Tag rep の行数で見る: 終了前後で増えていないこと。
+				after := len(getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{Tags: []string{tag}}).Kyous)
+				if before != after {
+					t.Errorf("タグ %q の記録数が %d → %d に変わった", tag, before, after)
+				}
+				if tagRows := countTagRowsByName(t, tag); tagRows != 1 {
+					t.Errorf("タグ %q の Tag 行 = %d, want 1（終了で付け先の無い Tag 行が増えた）", tag, tagRows)
+				}
+			})
+
+			t.Run("？時刻 を前に書くとその時刻で終わる", func(t *testing.T) {
+				endAt := now.Add(-30 * time.Minute)
+				endAtText := endAt.Format("2006-01-02 15:04:05")
+
+				tag := "endtag_reltime_" + GenerateNewID()[:8]
+				byTag := addRunningTimeIs(t, "endByTagRelTime", now.Add(-2*time.Hour))
+				addTag(t, byTag, tag, now)
+				res := submitKFTL(t, tsURL, sessionID, "？"+endAtText+"\nーいたえ\n"+tag, "")
+				if len(res.Errors) != 0 {
+					t.Fatalf("？時刻 + ーいたえ でエラー: %+v（付け先の無いメタ情報になっていないか）", res.Errors)
+				}
+				if got := endTimeOf(latestTimeIs(t, byTag)); got != endAt.Format(time.RFC3339) {
+					t.Errorf("ーいたえ の終了時刻 = %s, want %s（？時刻 が引き継がれていない）", got, endAt.Format(time.RFC3339))
+				}
+
+				title := "endByTitleRelTime_" + GenerateNewID()[:8]
+				byTitle := addRunningTimeIs(t, title, now.Add(-2*time.Hour))
+				res = submitKFTL(t, tsURL, sessionID, "？"+endAtText+"\nーえ\n"+title, "")
+				if len(res.Errors) != 0 {
+					t.Fatalf("？時刻 + ーえ でエラー: %+v", res.Errors)
+				}
+				if got := endTimeOf(latestTimeIs(t, byTitle)); got != endAt.Format(time.RFC3339) {
+					t.Errorf("ーえ の終了時刻 = %s, want %s", got, endAt.Format(time.RFC3339))
+				}
+			})
+		})
+	}
 }

@@ -7867,7 +7867,11 @@ func TestHandleNotification_HistoryAfterEdit(t *testing.T) {
 	}
 }
 
-// 項番21: TimeIsEndByTagIfExist with matching tag should succeed
+// 項番21: TimeIsEndByTagIfExist with matching tag should succeed.
+//
+// 「エラーが出ない」だけでなく**終わったこと**を見る。ーいたえ は対象が無くても成功で返るので、
+// 応答だけ見ていると「何も終えていない」を見逃す（2026-09-16 まではそうなっていて、
+// 終了対象の選び方が不定順だった不具合を素通しした。ADR-0509）。
 func TestHandleSubmitKFTLText_TimeIsEndByTagIfExist_WithMatch(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -7877,9 +7881,37 @@ func TestHandleSubmitKFTLText_TimeIsEndByTagIfExist_WithMatch(t *testing.T) {
 
 	tag := fmt.Sprintf("endtag_%d", time.Now().UnixNano())
 	// Start a TimeIs with a tag
-	helperSubmitKFTLAndVerify(t, tsURL, sessionID, fmt.Sprintf("。%s\nーた\nタグ終了テスト作業", tag))
+	started := submitKFTL(t, tsURL, sessionID, fmt.Sprintf("。%s\nーた\nタグ終了テスト作業", tag), "")
+	if len(started.Errors) != 0 || len(started.Created) != 1 {
+		t.Fatalf("打刻開始: errors=%+v created=%+v", started.Errors, started.Created)
+	}
+	// 開始と同じ秒に終えると UPDATE_TIME が並んで最新版が一意に定まらない（リポジトリは秒精度で保存する）ので、
+	// 次の秒まで待ってから終える。
+	time.Sleep(time.Until(time.Now().Truncate(time.Second).Add(time.Second)))
 	// End it by tag if exist
-	helperSubmitKFTLAndVerify(t, tsURL, sessionID, fmt.Sprintf("ーいたえ\n%s", tag))
+	ended := submitKFTL(t, tsURL, sessionID, fmt.Sprintf("ーいたえ\n%s", tag), "")
+	if len(ended.Errors) != 0 {
+		t.Fatalf("ーいたえ でエラー: %+v", ended.Errors)
+	}
+	if len(ended.Created) != 1 || ended.Created[0].ID != started.Created[0].ID || !ended.Created[0].Updated {
+		t.Fatalf("created = %+v, want 開始した打刻 %s の updated=true 1件", ended.Created, started.Created[0].ID)
+	}
+
+	resp := postJSON(t, tsURL+"/api/get_timeis", &req_res.GetTimeisRequest{SessionID: sessionID, LocaleName: "en", ID: started.Created[0].ID})
+	defer resp.Body.Close()
+	var res req_res.GetTimeisResponse
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		t.Fatalf("decode get timeis response: %v", err)
+	}
+	endedVersions := 0
+	for _, history := range res.TimeisHistories {
+		if history.EndTime != nil {
+			endedVersions++
+		}
+	}
+	if endedVersions == 0 {
+		t.Errorf("ーいたえ の後も終了時刻の入った版が無い: %+v", res.TimeisHistories)
+	}
 }
 
 // 項番35: Kmemo update with empty content — verify behavior

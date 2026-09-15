@@ -1253,16 +1253,24 @@ func TestApply_AsciiRelatedTimeValue(t *testing.T) {
 }
 
 func TestApply_AsciiEndByTagTagNames(t *testing.T) {
-	// /endt のタグ名行が "," で分割されること
+	// /endt のタグ名行が "," で分割されて**検索タグ**に積まれること。
+	// 本体の Tags には混ぜない —— 混ぜると doBaseRequest が Kyou の無い ID へ Tag 行を書き、
+	// Analyze の Tags（未知タグ確認）にも載る（2026-09-16 まで AddTag の override が両方に積んでいた）。
 	text := "/endt\nwork,home"
 	requestMap := helperApplyToRequestMap(t, text)
 	all := requestMap.All()
 	if len(all) != 1 {
 		t.Fatalf("expected 1 request, got %d", len(all))
 	}
-	tags := all[0].GetTags()
-	if len(tags) != 2 || tags[0] != "work" || tags[1] != "home" {
-		t.Errorf("expected tags [work home], got %v", tags)
+	req, ok := all[0].(*kftlTimeIsEndByTagRequest)
+	if !ok {
+		t.Fatalf("expected *kftlTimeIsEndByTagRequest, got %T", all[0])
+	}
+	if got := strings.Join(req.searchTags, ","); got != "work,home" {
+		t.Errorf("searchTags = %q, want work,home", got)
+	}
+	if tags := req.GetTags(); len(tags) != 0 {
+		t.Errorf("検索タグが本体の Tags に混ざっている: %v（付け先の無い Tag 行が書かれる）", tags)
 	}
 }
 
