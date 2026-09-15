@@ -1,0 +1,94 @@
+<!-- title: Wenn ein Fehler erscheint - Hilfe -->
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Wenn ein Fehler erscheint</span></nav>
+  <h1>Wenn ein Fehler erscheint</h1>
+  <p>Schlägt ein Vorgang fehl, erscheint oben rechts eine rot umrandete Meldung. <strong>Fehler verschwinden nicht von selbst</strong> – schließen Sie sie mit dem × oben rechts. Tritt derselbe Fehler mehrfach auf, wird er zu einer Karte mit einem Zähler wie „×3“ zusammengefasst. Erfolgsmeldungen (schwarz umrandet) verschwinden nach wenigen Sekunden. Gelbe Karten bedeuten „der Vorgang war erfolgreich, aber etwas sollte geprüft werden“; auch sie bleiben, bis Sie sie schließen.</p>
+
+  <h2>Die Meldung lesen</h2>
+  <table>
+    <tr>
+      <th>Teil</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Erste Zeile (fett)</td>
+      <td>Was fehlgeschlagen ist (z. B. „Notiz konnte nicht hinzugefügt werden“)</td>
+    </tr>
+    <tr>
+      <td>Zweite Zeile</td>
+      <td>Was als Nächstes zu versuchen ist. Ist die Ursache bekannt, passt der Hinweis dazu; sonst ist es der allgemeine Hinweis für diese Fehlerart</td>
+    </tr>
+    <tr>
+      <td>Unterste Zeile (Code)</td>
+      <td>Der Fehlercode (eine Nummer, die mit <code>ERR</code> beginnt) und die Ursachenklasse (z. B. <code>db_busy</code>). Diese Angaben beschleunigen die Diagnose, wenn Sie um Hilfe bitten</td>
+    </tr>
+    <tr>
+      <td>Kopieren-Schaltfläche</td>
+      <td>Kopiert Code, Ursache, Text, Zeit und Seitenpfad in die Zwischenablage. Fügen Sie dies ein, wenn Sie das Problem melden</td>
+    </tr>
+  </table>
+
+  <h2>Was bei welcher Ursache zu tun ist</h2>
+  <table>
+    <tr>
+      <th>Hinweis in der zweiten Zeile</th>
+      <th>Was tun</th>
+    </tr>
+    <tr>
+      <td>Für diesen Datensatztyp ist kein Schreibziel konfiguriert. Wählen Sie unter Einstellungen → Speicherort zuweisen eine Ablage zum Schreiben.</td>
+      <td>Öffnen Sie Einstellungen → Speicherort zuweisen und wählen Sie für diesen Datensatztyp eine Ablage zum Schreiben</td>
+    </tr>
+    <tr>
+      <td>Die Ablagedatei kann nicht geöffnet werden. Prüfen Sie die Verbindung externer Festplatten, USB- oder Netzlaufwerke und Einstellungen → Ablage.</td>
+      <td>Schließen Sie die externe Festplatte oder das Netzlaufwerk wieder an und prüfen Sie den Pfad unter Einstellungen → Ablage</td>
+    </tr>
+    <tr>
+      <td>Die Datenbank des Speicherorts ist möglicherweise beschädigt. Erwägen Sie eine Wiederherstellung aus einem Backup.</td>
+      <td>Stellen Sie die Datenbankdatei aus einem Backup wieder her. Eine beschädigte Ablage wird automatisch aus der Suche ausgenommen und eine gelbe Warnung erscheint</td>
+    </tr>
+    <tr>
+      <td>Ein anderer Vorgang (Cache-Aktualisierung oder Import) belegt die Datenbank. Warten Sie kurz und versuchen Sie es erneut.</td>
+      <td>Warten Sie kurz und wiederholen Sie den Vorgang</td>
+    </tr>
+    <tr>
+      <td>Der Vorgang wurde nicht rechtzeitig abgeschlossen. Schränken Sie Zeitraum oder Bedingungen ein und versuchen Sie es erneut.</td>
+      <td>Schränken Sie Zeitraum oder Bedingungen der Suche ein und suchen Sie erneut</td>
+    </tr>
+    <tr>
+      <td>Die Erweiterung hat nicht geantwortet. Warten Sie kurz und versuchen Sie es erneut, oder prüfen Sie den Status unter Einstellungen → Erweiterungseinstellungen.</td>
+      <td>Warten Sie kurz und versuchen Sie es erneut, oder prüfen Sie den Status unter Einstellungen → Erweiterungseinstellungen</td>
+    </tr>
+    <tr>
+      <td>Der Zieldatensatz wurde nicht gefunden. Er wurde möglicherweise auf einem anderen Gerät gelöscht oder geändert. Laden Sie die Liste neu.</td>
+      <td>Laden Sie die Liste neu. Der Datensatz wurde auf einem anderen Gerät gelöscht oder geändert</td>
+    </tr>
+    <tr>
+      <td>Derselbe Datensatz ist bereits gespeichert (möglicherweise doppelt gesendet). Laden Sie die Liste neu und prüfen Sie.</td>
+      <td>Laden Sie die Liste neu und prüfen Sie, ob derselbe Datensatz bereits existiert</td>
+    </tr>
+    <tr>
+      <td>Die maximale Anzahl an Versuchen ist erreicht. Warten Sie etwas (ca. 15 Minuten) und versuchen Sie es erneut.</td>
+      <td>Warten Sie etwa 15 Minuten und melden Sie sich erneut an</td>
+    </tr>
+    <tr>
+      <td>Dieser Server erlaubt nur lokalen Zugriff. Öffnen Sie ihn vom selben Rechner aus oder ändern Sie die Servereinstellungen.</td>
+      <td>Öffnen Sie die App in einem Browser auf demselben Rechner wie der Server, oder prüfen Sie „nur lokalen Zugriff erlauben“ in den Servereinstellungen</td>
+    </tr>
+    <tr>
+      <td>Dies ist ein serverseitiges Problem. Versuchen Sie es erneut; bleibt es bestehen, prüfen Sie gkill_error.log auf dem Server.</td>
+      <td>Wiederholen Sie den Vorgang; bleibt das Problem, melden Sie es mit dem Text aus „Details kopieren“ und <code>gkill_error.log</code></td>
+    </tr>
+    <tr>
+      <td>Ein Netzwerkfehler ist aufgetreten. Bitte prüfen Sie Ihre Verbindung.</td>
+      <td>Prüfen Sie die Netzwerkverbindung. Ohne Verbindung können keine Datensätze hinzugefügt werden</td>
+    </tr>
+  </table>
+
+  <h2>Wenn nichts erscheint</h2>
+  <p>Passiert beim Drücken einer Schaltfläche nichts, laden Sie die Seite neu. Unerwartete Fehler in der App werden jetzt ebenfalls oben rechts angezeigt. Bleibt das Problem bestehen, enthält die <code>gkill_error.log</code> des Servers eine Zeile zum Zeitpunkt des Fehlers.</p>
+
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="getting-started.html">Erste Schritte (Anleitung zur Ersteinrichtung)</a></li>
+    <li><a href="application-config.html">Hilfe zum Einstellungsbildschirm</a></li>
+    <li><a href="server-config.html">Hilfe zu den Servereinstellungen</a></li>
+  </ul>
