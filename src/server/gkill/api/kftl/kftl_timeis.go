@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -349,6 +350,20 @@ func (l *kftlTimeIsStartTitleStatementLine) GetStatementLineText() string       
 
 // ─── 終了対象の検索条件 ────────────────────────────────────────────────────────
 
+// endTargetIDInheritingPrototype は打刻終了4行（ーえ / ーいえ / ーたえ / ーいたえ）の target_id を決める。
+//
+// 他の記録型（`ーち` の newKFTLStartTimeIsStatementLine など）と同じく、直前の行がプロトタイプ
+// （`？時刻` / `。タグ` の置き場所）ならその ID を引き継ぎ、requestMap.Set がプロトタイプの関連時刻・タグを
+// 終了リクエストへ移す。`？18:00` / `ーいたえ` / `X` で 18:00 に終わるのはこれによる（旧 TS の終了4行も同じだった）。
+// 2026-09-16 まで Go の終了4行だけが常に新しい UUID を採っていて、関連時刻のプロトタイプが宙に浮き、
+// ADR-0508 の「付け先の無いメタ情報」で行エラーになっていた（それ以前は黙って「今」で終わっていた）。
+func endTargetIDInheritingPrototype(ctx *KFTLStatementLineContext) string {
+	if prevLine := ctx.GetPrevLine(); prevLine != nil && prevLine.GetContext().ThisIsPrototype {
+		return prevLine.GetContext().ThisStatementLineTargetID
+	}
+	return sqlite3impl.GenerateNewID()
+}
+
 // configOf はリクエストの文脈から ApplicationConfig を取る（テストのように無ければ nil）。
 func configOf(base *KFTLRequestBase) *user_config.ApplicationConfig {
 	if base.Ctx == nil {
@@ -407,6 +422,13 @@ func playingTimeIsQueryFromConfig(applicationConfig *user_config.ApplicationConf
 // 語の条件は rep の SQL が見るが、**タグ・非表示タグは Kyou 検索の層（api.FindFilter）でしか効かない**。
 // そこで、条件にタグが含まれるときは閉包 FindKyous（ハンドラが渡す）で同じ条件の Kyou を引き、
 // その ID 集合と rep の結果を突き合わせる。閉包が無い（テスト・直叩き）ときは語だけで絞る。
+//
+// **返す並びは開始時刻の新しい順（同着は ID 昇順）で、削除済みは含めない。** 呼び出し側（`ーえ` / `ーたえ` 系）は
+// 先頭から一致した1件だけを終えるので、この並びがそのまま「どの打刻を終えるか」になる。
+// `TimeIsReps.FindTimeIs` は順序を保証せず（map 由来で毎回変わる）、削除済みも落とさない。
+// 2026-09-15 の Go 寄せ（ADR-0507）まで Web は `get_kyous` の並び（RelatedTime 降順・削除済み除外）に乗っていて
+// 常に最新の1件を終えていたが、Go は不定順の先頭を取っていたので、同じタグの終え忘れが N 件あると
+// いま走っている1件に当たる確率が 1/N になり、削除済みの打刻に終了を書くこともあった（2026-09-16 の利用者報告。ADR-0509）。
 func findPlayingTimeIsEntries(ctx context.Context, base *KFTLRequestBase) ([]reps.TimeIs, error) {
 	query := playingTimeIsQueryFromConfig(configOf(base), time.Now())
 	playingEntries, err := base.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)
@@ -414,24 +436,35 @@ func findPlayingTimeIsEntries(ctx context.Context, base *KFTLRequestBase) ([]rep
 		return nil, err
 	}
 	needTagFilter := query.Tags != nil || len(query.HideTags) != 0
-	if !needTagFilter || base.Ctx.FindKyous == nil {
-		return playingEntries, nil
-	}
-	kyous, err := base.Ctx.FindKyous(ctx, query)
-	if err != nil {
-		return nil, fmt.Errorf("error at find kyous for playing timeis: %w", err)
-	}
-	matched := make(map[string]struct{}, len(kyous))
-	for _, kyou := range kyous {
-		matched[kyou.ID] = struct{}{}
-	}
-	filtered := playingEntries[:0]
-	for _, entry := range playingEntries {
-		if _, ok := matched[entry.ID]; ok {
-			filtered = append(filtered, entry)
+	if needTagFilter && base.Ctx.FindKyous != nil {
+		kyous, err := base.Ctx.FindKyous(ctx, query)
+		if err != nil {
+			return nil, fmt.Errorf("error at find kyous for playing timeis: %w", err)
 		}
+		matched := make(map[string]struct{}, len(kyous))
+		for _, kyou := range kyous {
+			matched[kyou.ID] = struct{}{}
+		}
+		playingEntries = slices.DeleteFunc(playingEntries, func(entry reps.TimeIs) bool {
+			_, ok := matched[entry.ID]
+			return !ok
+		})
 	}
-	return filtered, nil
+	return sortPlayingTimeIsEntries(playingEntries), nil
+}
+
+// sortPlayingTimeIsEntries は削除済みを落とし、開始時刻の新しい順（同着は ID 昇順）に並べる。
+// 鍵は Kyou 検索の並び（find_filter.go の sortResultKyousByKey。timeis_start の RelatedTime は開始時刻）と同じ。
+// 閉包の有無に関わらず findPlayingTimeIsEntries の出口で必ず通す。
+func sortPlayingTimeIsEntries(entries []reps.TimeIs) []reps.TimeIs {
+	entries = slices.DeleteFunc(entries, func(entry reps.TimeIs) bool { return entry.IsDeleted })
+	slices.SortFunc(entries, func(a, b reps.TimeIs) int {
+		if c := b.StartTime.Compare(a.StartTime); c != 0 {
+			return c
+		}
+		return strings.Compare(a.ID, b.ID)
+	})
+	return entries
 }
 
 // forceHideTagNames はタグ構造のうち `is_force_hide` のタグ名を集める（TS の `apply_hide_tags` と同じ）。
@@ -568,7 +601,7 @@ type kftlStartTimeIsEndStatementLine struct {
 }
 
 func newKFTLStartTimeIsEndStatementLine(lineText string, ctx *KFTLStatementLineContext) *kftlStartTimeIsEndStatementLine {
-	targetID := sqlite3impl.GenerateNewID()
+	targetID := endTargetIDInheritingPrototype(ctx)
 	ctx.ThisStatementLineTargetID = targetID
 	ctx.NextStatementLineTargetID = &targetID
 	ctx.ThisIsPrototype = true
@@ -618,7 +651,7 @@ type kftlStartTimeIsEndIfExistStatementLine struct {
 }
 
 func newKFTLStartTimeIsEndIfExistStatementLine(lineText string, ctx *KFTLStatementLineContext) *kftlStartTimeIsEndIfExistStatementLine {
-	targetID := sqlite3impl.GenerateNewID()
+	targetID := endTargetIDInheritingPrototype(ctx)
 	ctx.ThisStatementLineTargetID = targetID
 	ctx.NextStatementLineTargetID = &targetID
 	ctx.ThisIsPrototype = true
@@ -662,9 +695,12 @@ func newKFTLTimeIsEndByTagRequest(requestID string, ctx *KFTLStatementLineContex
 	}
 }
 
-// Override AddTag so searchTags also gets the value.
-func (r *kftlTimeIsEndByTagRequest) AddTag(tag string) {
-	r.KFTLRequestBase.AddTag(tag)
+// addSearchTag は終了対象を探すタグを積む。**本体の Tags（KFTLRequestBase.AddTag）には混ぜない。**
+// 2026-09-16 まで AddTag の override が両方に積んでいて、doBaseRequest が検索タグを
+// 付け先の無い ID（r.RequestID は新規 UUID で Kyou は無い）へ Tag 行として書き、終了に成功するたびに
+// 宙に浮いた Tag が1行増えていた。Analyze の Tags にも載るので、タグ木に無い語を検索タグに書くと
+// Web で「未知タグ」の確認が余計に出ていた。旧 TS は add_target_tag_name を別に持っていた。
+func (r *kftlTimeIsEndByTagRequest) addSearchTag(tag string) {
 	r.searchTags = append(r.searchTags, tag)
 }
 
@@ -758,7 +794,7 @@ type kftlStartTimeIsEndByTagStatementLine struct {
 }
 
 func newKFTLStartTimeIsEndByTagStatementLine(lineText string, ctx *KFTLStatementLineContext) *kftlStartTimeIsEndByTagStatementLine {
-	targetID := sqlite3impl.GenerateNewID()
+	targetID := endTargetIDInheritingPrototype(ctx)
 	ctx.ThisStatementLineTargetID = targetID
 	ctx.NextStatementLineTargetID = &targetID
 	ctx.ThisIsPrototype = true
@@ -787,7 +823,7 @@ type kftlStartTimeIsEndByTagIfExistStatementLine struct {
 }
 
 func newKFTLStartTimeIsEndByTagIfExistStatementLine(lineText string, ctx *KFTLStatementLineContext) *kftlStartTimeIsEndByTagIfExistStatementLine {
-	targetID := sqlite3impl.GenerateNewID()
+	targetID := endTargetIDInheritingPrototype(ctx)
 	ctx.ThisStatementLineTargetID = targetID
 	ctx.NextStatementLineTargetID = &targetID
 	ctx.ThisIsPrototype = true
@@ -831,7 +867,7 @@ func (l *kftlTimeIsEndByTagTagStatementLine) ApplyThisLineToRequestMap(_ context
 	for _, tag := range strings.FieldsFunc(l.lineText, func(r rune) bool { return r == '、' || r == ',' }) {
 		tag = strings.TrimSpace(tag)
 		if tag != "" {
-			l.req.AddTag(tag)
+			l.req.addSearchTag(tag)
 		}
 	}
 	return nil

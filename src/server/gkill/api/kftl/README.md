@@ -152,7 +152,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `kftl_factory_test.go` | ファクトリのプレフィックス判定テスト |
 | `kftl_request_map_test.go` | リクエストマップの集約テスト |
 | `kftl_statement_test.go` | KFTL テキスト全体のパース・実行テスト |
-| `kftl_analyze_test.go` | `Analyze`（書かない入口）が `GenerateAndExecuteRequests` と同じ行エラー集合を返すこと、タグ・板名・件数の列挙、空白だけの値の行の拒否、`/end` 系の対象検索に設定の playing 条件（語・タグ・非表示タグ）を写すこと |
+| `kftl_analyze_test.go` | `Analyze`（書かない入口）が `GenerateAndExecuteRequests` と同じ行エラー集合を返すこと、タグ・板名・件数の列挙、空白だけの値の行の拒否、`/end` 系の対象検索に設定の playing 条件（語・タグ・非表示タグ）を写し、候補を開始時刻の新しい順に並べて削除済みを落とすこと |
 | `kftl_mirekyou_test.go` | MiReKyou ブロックの行の並び・タグの帰属・対象の解決テスト |
 | `kftl_nlog_test.go` | 支出ブロックの支払いごとのタグ・テキストの帰属、ブロック全体に効く関連時刻、ブロック前のメタ情報行の拒否 |
 | `kftl_date_time_test.go` | 関連時刻・打刻時刻の書式と、欠けた年月日の補完 |
