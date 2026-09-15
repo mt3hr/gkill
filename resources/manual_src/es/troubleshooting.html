@@ -1,0 +1,94 @@
+<!-- title: Cuando aparece un error - Ayuda -->
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros pasos</a> &gt; <span>Cuando aparece un error</span></nav>
+  <h1>Cuando aparece un error</h1>
+  <p>Cuando una operación falla, aparece un mensaje con borde rojo en la parte superior derecha de la pantalla. <strong>Los errores no desaparecen solos</strong>: ciérrelos con la × de la esquina. Si el mismo error se repite, se agrupa en una sola tarjeta con un contador como «×3». Los avisos de éxito (borde negro) desaparecen a los pocos segundos. Las tarjetas amarillas significan «la operación tuvo éxito, pero hay algo que conviene revisar» y también permanecen hasta cerrarlas.</p>
+
+  <h2>Cómo leer el mensaje</h2>
+  <table>
+    <tr>
+      <th>Parte</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Primera línea (negrita)</td>
+      <td>Qué falló (p. ej. «Error al añadir la nota»)</td>
+    </tr>
+    <tr>
+      <td>Segunda línea</td>
+      <td>Qué probar a continuación. Si la causa se conoce, el consejo se ajusta a ella; si no, es el consejo general para ese tipo de error</td>
+    </tr>
+    <tr>
+      <td>Última línea (código)</td>
+      <td>El código de error (un número que empieza por <code>ERR</code>) y la clasificación de la causa (p. ej. <code>db_busy</code>). Indicarlos al pedir ayuda acelera el diagnóstico</td>
+    </tr>
+    <tr>
+      <td>Botón copiar</td>
+      <td>Copia al portapapeles el código, la causa, el texto, la hora y la ruta de la pantalla. Péguelo al informar del problema</td>
+    </tr>
+  </table>
+
+  <h2>Qué hacer según la causa</h2>
+  <table>
+    <tr>
+      <th>Consejo de la segunda línea</th>
+      <th>Qué hacer</th>
+    </tr>
+    <tr>
+      <td>No hay destino de escritura configurado para este tipo de registro. En Configuración → Asignar almacenamiento, elija un repositorio para escribir.</td>
+      <td>Abra Configuración → Asignar almacenamiento y elija un repositorio de escritura para ese tipo de registro</td>
+    </tr>
+    <tr>
+      <td>No se puede abrir el archivo del repositorio. Compruebe la conexión de discos externos, USB o unidades de red y revise Configuración → Repositorio.</td>
+      <td>Vuelva a conectar el disco externo o la unidad de red y compruebe la ruta en Configuración → Repositorio</td>
+    </tr>
+    <tr>
+      <td>La base de datos del repositorio puede estar dañada. Considere restaurarla desde una copia de seguridad.</td>
+      <td>Restaure el archivo de base de datos desde una copia de seguridad. Un repositorio dañado se excluye automáticamente de las búsquedas y aparece un aviso amarillo</td>
+    </tr>
+    <tr>
+      <td>Otra operación (actualización de caché o importación) está usando la base de datos. Espere un momento e inténtelo de nuevo.</td>
+      <td>Espere un momento y repita la operación</td>
+    </tr>
+    <tr>
+      <td>La operación no terminó a tiempo. Acote el periodo o las condiciones e inténtelo de nuevo.</td>
+      <td>Acote el periodo o las condiciones de búsqueda y vuelva a buscar</td>
+    </tr>
+    <tr>
+      <td>El complemento no respondió. Espere un momento e inténtelo de nuevo, o revise su estado en Configuración → Configuración del complemento.</td>
+      <td>Espere un momento y reintente, o revise el estado en Configuración → Configuración del complemento</td>
+    </tr>
+    <tr>
+      <td>No se encontró el registro. Puede haber sido eliminado o actualizado desde otro dispositivo. Recargue la lista.</td>
+      <td>Recargue la lista. El registro se eliminó o actualizó desde otro dispositivo</td>
+    </tr>
+    <tr>
+      <td>El mismo registro ya está guardado (posible envío duplicado). Recargue la lista y compruébelo.</td>
+      <td>Recargue la lista y compruebe si el mismo registro ya existe</td>
+    </tr>
+    <tr>
+      <td>Se alcanzó el límite de intentos. Espere un rato (unos 15 minutos) e inténtelo de nuevo.</td>
+      <td>Espere unos 15 minutos e inicie sesión de nuevo</td>
+    </tr>
+    <tr>
+      <td>Este servidor solo permite acceso local. Ábralo desde el mismo equipo que el servidor o cambie la configuración del servidor.</td>
+      <td>Abra la aplicación en un navegador del mismo equipo que el servidor, o revise «permitir solo acceso local» en la configuración del servidor</td>
+    </tr>
+    <tr>
+      <td>Es un problema del servidor. Inténtelo de nuevo; si persiste, revise gkill_error.log en el servidor.</td>
+      <td>Repita la operación; si persiste, infórmelo con el texto de «Copiar detalles» y <code>gkill_error.log</code></td>
+    </tr>
+    <tr>
+      <td>Se produjo un error de red. Compruebe su conexión.</td>
+      <td>Compruebe la conexión de red. Sin conexión no se pueden añadir registros</td>
+    </tr>
+  </table>
+
+  <h2>Cuando no aparece nada</h2>
+  <p>Si al pulsar un botón no ocurre nada, recargue la página. Los errores inesperados dentro de la aplicación también se muestran ahora arriba a la derecha. Si el problema persiste, el archivo <code>gkill_error.log</code> del servidor conserva una línea con la hora del fallo.</p>
+
+  <h2>Documentos relacionados</h2>
+  <ul>
+    <li><a href="getting-started.html">Primeros pasos (guía de configuración inicial)</a></li>
+    <li><a href="application-config.html">Ayuda de la pantalla de configuración</a></li>
+    <li><a href="server-config.html">Ayuda de la configuración del servidor</a></li>
+  </ul>

@@ -1,0 +1,94 @@
+<!-- title: Quand une erreur s'affiche - Aide -->
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Quand une erreur s'affiche</span></nav>
+  <h1>Quand une erreur s'affiche</h1>
+  <p>Lorsqu'une opération échoue, un message à bordure rouge apparaît en haut à droite de l'écran. <strong>Les erreurs ne disparaissent pas d'elles-mêmes</strong> : fermez-les avec le × en haut à droite. Si la même erreur se répète, elle est regroupée sur une seule carte avec un compteur tel que « ×3 ». Les avis de réussite (bordure noire) disparaissent après quelques secondes. Les cartes jaunes signifient « l'opération a réussi, mais quelque chose mérite vérification » ; elles restent aussi jusqu'à leur fermeture.</p>
+
+  <h2>Lire le message</h2>
+  <table>
+    <tr>
+      <th>Partie</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Première ligne (gras)</td>
+      <td>Ce qui a échoué (ex. « Échec de l'ajout de la note »)</td>
+    </tr>
+    <tr>
+      <td>Deuxième ligne</td>
+      <td>Ce qu'il faut essayer ensuite. Si la cause est connue, le conseil lui correspond ; sinon, c'est le conseil général pour ce type d'erreur</td>
+    </tr>
+    <tr>
+      <td>Dernière ligne (code)</td>
+      <td>Le code d'erreur (un numéro commençant par <code>ERR</code>) et la classification de la cause (ex. <code>db_busy</code>). Les indiquer lors d'une demande d'aide accélère le diagnostic</td>
+    </tr>
+    <tr>
+      <td>Bouton copier</td>
+      <td>Copie dans le presse-papiers le code, la cause, le texte, l'heure et le chemin de l'écran. Collez-le lorsque vous signalez le problème</td>
+    </tr>
+  </table>
+
+  <h2>Que faire selon la cause</h2>
+  <table>
+    <tr>
+      <th>Conseil de la deuxième ligne</th>
+      <th>Que faire</th>
+    </tr>
+    <tr>
+      <td>Aucune destination d'écriture n'est configurée pour ce type d'enregistrement. Dans Paramètres → Attribuer le stockage, choisissez un dépôt d'écriture.</td>
+      <td>Ouvrez Paramètres → Attribuer le stockage et choisissez un dépôt d'écriture pour ce type d'enregistrement</td>
+    </tr>
+    <tr>
+      <td>Le fichier du dépôt ne peut pas être ouvert. Vérifiez la connexion des disques externes, clés USB ou lecteurs réseau, puis Paramètres → Dépôt.</td>
+      <td>Rebranchez le disque externe ou le lecteur réseau et vérifiez le chemin dans Paramètres → Dépôt</td>
+    </tr>
+    <tr>
+      <td>La base de données du dépôt est peut-être corrompue. Envisagez une restauration depuis une sauvegarde.</td>
+      <td>Restaurez le fichier de base de données depuis une sauvegarde. Un dépôt corrompu est automatiquement exclu des recherches et un avertissement jaune s'affiche</td>
+    </tr>
+    <tr>
+      <td>Une autre opération (mise à jour du cache ou import) utilise la base de données. Patientez un instant puis réessayez.</td>
+      <td>Patientez un instant puis recommencez l'opération</td>
+    </tr>
+    <tr>
+      <td>L'opération n'a pas abouti dans le temps imparti. Réduisez la période ou les conditions puis réessayez.</td>
+      <td>Réduisez la période ou les conditions de recherche puis relancez la recherche</td>
+    </tr>
+    <tr>
+      <td>L'extension n'a pas répondu. Patientez puis réessayez, ou vérifiez son état dans Paramètres → Paramètres de l’extension.</td>
+      <td>Patientez puis réessayez, ou vérifiez l'état dans Paramètres → Paramètres de l’extension</td>
+    </tr>
+    <tr>
+      <td>L'enregistrement cible est introuvable. Il a peut-être été supprimé ou modifié depuis un autre appareil. Rechargez la liste.</td>
+      <td>Rechargez la liste. L'enregistrement a été supprimé ou modifié depuis un autre appareil</td>
+    </tr>
+    <tr>
+      <td>Le même enregistrement est déjà sauvegardé (envoi en double possible). Rechargez la liste et vérifiez.</td>
+      <td>Rechargez la liste et vérifiez si le même enregistrement existe déjà</td>
+    </tr>
+    <tr>
+      <td>La limite de tentatives est atteinte. Patientez un moment (environ 15 minutes) puis réessayez.</td>
+      <td>Attendez environ 15 minutes puis reconnectez-vous</td>
+    </tr>
+    <tr>
+      <td>Ce serveur n'autorise que l'accès local. Ouvrez-le depuis la même machine que le serveur ou modifiez les paramètres du serveur.</td>
+      <td>Ouvrez l'application dans un navigateur sur la même machine que le serveur, ou vérifiez « n'autoriser que l'accès local » dans les paramètres du serveur</td>
+    </tr>
+    <tr>
+      <td>Il s'agit d'un problème côté serveur. Réessayez ; si cela persiste, consultez gkill_error.log sur le serveur.</td>
+      <td>Recommencez l'opération ; si cela persiste, signalez-le avec le texte de « Copier les détails » et <code>gkill_error.log</code></td>
+    </tr>
+    <tr>
+      <td>Une erreur réseau s'est produite. Vérifiez votre connexion.</td>
+      <td>Vérifiez la connexion réseau. Sans connexion, impossible d'ajouter des enregistrements</td>
+    </tr>
+  </table>
+
+  <h2>Quand rien ne s'affiche</h2>
+  <p>Si un bouton ne fait rien, rechargez la page. Les erreurs inattendues dans l'application s'affichent désormais aussi en haut à droite. Si le problème persiste, le fichier <code>gkill_error.log</code> du serveur conserve une ligne à l'heure de l'échec.</p>
+
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="getting-started.html">Premiers pas (guide de configuration initiale)</a></li>
+    <li><a href="application-config.html">Aide de l'écran des paramètres</a></li>
+    <li><a href="server-config.html">Aide des paramètres du serveur</a></li>
+  </ul>

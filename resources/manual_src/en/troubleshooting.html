@@ -1,0 +1,94 @@
+<!-- title: When an error appears - Help -->
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>When an error appears</span></nav>
+  <h1>When an error appears</h1>
+  <p>When an operation fails, a red message appears at the top right of the screen. <strong>Errors do not disappear on their own</strong> — close them with the × at the top right. If the same error happens repeatedly it is collapsed into one card with a count such as “×3”. Success notices (black) disappear after a few seconds. Yellow cards mean “the operation succeeded, but there is something you should check”; they also stay until closed.</p>
+
+  <h2>Reading the message</h2>
+  <table>
+    <tr>
+      <th>Part</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>First line (bold)</td>
+      <td>What failed (e.g. “Failed to add memo”)</td>
+    </tr>
+    <tr>
+      <td>Second line</td>
+      <td>What to try next. When the cause is known the advice matches it; otherwise it is the general advice for that kind of error</td>
+    </tr>
+    <tr>
+      <td>Bottom line (code)</td>
+      <td>The error code (a number starting with <code>ERR</code>) and the cause classification (e.g. <code>db_busy</code>). Quoting these when you ask for help speeds up diagnosis</td>
+    </tr>
+    <tr>
+      <td>Copy button</td>
+      <td>Copies the code, cause, message, time and page path to the clipboard. Paste it when reporting the problem</td>
+    </tr>
+  </table>
+
+  <h2>What to do for each cause</h2>
+  <table>
+    <tr>
+      <th>Second-line advice</th>
+      <th>What to do</th>
+    </tr>
+    <tr>
+      <td>No write destination is configured for this record type. In Settings → Assign Storage, choose a repository to write to.</td>
+      <td>Open Settings → Assign Storage and choose one repository to write this record type to</td>
+    </tr>
+    <tr>
+      <td>The repository file cannot be opened. Check that external disks, USB drives or network drives are connected, and review Settings → Repository.</td>
+      <td>Reconnect the external disk or network drive and check the path in Settings → Repository</td>
+    </tr>
+    <tr>
+      <td>The repository database may be corrupted. Consider restoring it from a backup.</td>
+      <td>Restore the database file from a backup. A broken repository is left out of searches automatically and a yellow warning appears</td>
+    </tr>
+    <tr>
+      <td>Another operation (cache update or import) is holding the database. Wait a moment and try again.</td>
+      <td>Wait a moment and repeat the operation</td>
+    </tr>
+    <tr>
+      <td>The operation did not finish in time. Narrow the period or conditions and try again.</td>
+      <td>Narrow the search period or conditions and search again</td>
+    </tr>
+    <tr>
+      <td>The plugin did not respond. Wait a moment and try again, or check its status in Settings → Plugin Settings.</td>
+      <td>Wait a moment and retry, or check the status in Settings → Plugin Settings</td>
+    </tr>
+    <tr>
+      <td>The target record was not found. It may have been deleted or updated from another device. Reload the list.</td>
+      <td>Reload the list. The record was deleted or updated from another device</td>
+    </tr>
+    <tr>
+      <td>The same record is already saved (possibly a duplicate submission). Reload the list and check.</td>
+      <td>Reload the list and check whether the same record already exists</td>
+    </tr>
+    <tr>
+      <td>The attempt limit was reached. Wait a while (about 15 minutes) and try again.</td>
+      <td>Wait about 15 minutes and log in again</td>
+    </tr>
+    <tr>
+      <td>This server is set to allow local access only. Open it from the same machine as the server, or change the server settings.</td>
+      <td>Open the app in a browser on the same machine as the server, or review “allow local access only” in the server settings</td>
+    </tr>
+    <tr>
+      <td>This is a server-side problem. Try again; if it persists, check gkill_error.log on the server.</td>
+      <td>Repeat the operation; if it persists, report it with the text from “Copy details” and <code>gkill_error.log</code></td>
+    </tr>
+    <tr>
+      <td>A network error occurred. Please check your connection.</td>
+      <td>Check your network connection. Records cannot be added without a connection</td>
+    </tr>
+  </table>
+
+  <h2>When nothing appears</h2>
+  <p>If pressing a button does nothing, reload the page. Unexpected errors inside the app are now also shown at the top right. If the problem persists, the server's <code>gkill_error.log</code> keeps a line for the time of the failure.</p>
+
+  <h2>Related documents</h2>
+  <ul>
+    <li><a href="getting-started.html">Getting Started (initial setup guide)</a></li>
+    <li><a href="application-config.html">Settings help</a></li>
+    <li><a href="server-config.html">Server settings help</a></li>
+  </ul>
