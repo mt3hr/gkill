@@ -158,6 +158,8 @@
   <p>插件导入的内容会被保存下来以加快显示速度。大幅更换导入来源等情况下想全部重新读取时，请先停止gkill，然后执行下面的命令。</p>
   <pre>gkill_server clear_cache plugin 用户ID</pre>
   <p>下次启动gkill并搜索时，就会从导入来源重新读取。</p>
+  <p>如果想事先完成重新读取，请接着执行下面的命令。它会等待每个插件导入完成，因此第一次可能需要几分钟。把 <code>all</code> 换成插件的文件夹名，就只重新读取该插件。即使gkill没有启动也可以执行。</p>
+  <pre>gkill_server generate_plugin_cache all 用户ID</pre>
 
   <h2>显示不正常时</h2>
   <table>

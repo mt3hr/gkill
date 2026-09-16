@@ -158,6 +158,8 @@
   <p>Was ein Plugin importiert, wird gespeichert, damit die Anzeige schnell bleibt. Wenn Sie die Quelle stark verändert haben und alles neu einlesen möchten, beenden Sie gkill und führen Sie den folgenden Befehl aus.</p>
   <pre>gkill_server clear_cache plugin BENUTZER-ID</pre>
   <p>Beim nächsten Start von gkill werden die Daten bei einer Suche wieder aus der Quelle gelesen.</p>
+  <p>Wenn Sie den Import lieber vorab abschließen möchten, führen Sie anschließend den folgenden Befehl aus. Er wartet, bis jedes Plugin mit dem Import fertig ist; der erste Durchlauf kann daher einige Minuten dauern. Ersetzen Sie <code>all</code> durch den Ordnernamen eines Plugins, um nur dieses neu einzulesen. Der Befehl funktioniert auch, wenn gkill nicht läuft.</p>
+  <pre>gkill_server generate_plugin_cache all BENUTZER-ID</pre>
 
   <h2>Wenn nichts richtig angezeigt wird</h2>
   <table>

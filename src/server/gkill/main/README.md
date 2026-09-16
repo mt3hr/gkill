@@ -59,6 +59,7 @@ go-astilectron を使用して Electron ライクなデスクトップウィン�
 | `optimize` | データベース最適化 |
 | `update_cache` | キャッシュ更新 |
 | `clear_cache` | ディスク上の派生キャッシュ削除 |
+| `generate_plugin_cache` | プラグインのキャッシュを稼働中サーバ無しで同期構築（`common/generate_plugin_cache.go`。プラグインバイナリを `--gkill-build-cache` で単独起動） |
 | `reset_password` | パスワードを無効化してリセットURLを再発行（`common/password_admin.go`） |
 | `add_tag` | 検索条件 JSON（FindKyouQuery）に一致する Kyou へタグを付与（`common/add_tag.go`。稼働中サーバの HTTP クライアント） |
 

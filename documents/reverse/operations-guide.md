@@ -664,6 +664,8 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 | `gkill_server optimize ユーザーID` | データベース最適化（VACUUM） |
 | `gkill_server update_cache ユーザーID...` | HTTP API経由でキャッシュ更新（対象ユーザーIDの文字列配列。認証情報の指定は不要。管理者名義の短命セッションをローカルDBへ自己発行して使う） |
 | `gkill_server clear_cache <thumb\|video\|zip\|plugin\|all> <all\|user_id...>` | ディスク上の派生キャッシュを削除。対象は必須で、`all`で全体、user_id指定で該当ユーザーのリポジトリ分のみ |
+| `gkill_server generate_plugin_cache <plugin_name\|all> ユーザーID...` | プラグインのキャッシュ（`caches/plugin_cache/`）を同期構築する。稼働中サーバは不要で、各プラグインバイナリを `--gkill-build-cache` 付きで単独起動して終わるまで待つ（逐次・タイムアウト無し）。`plugin_name` は manifest.json の `name`（＝フォルダ名）。同期スクリプトでは新しいデータを置いた直後・`update_cache` の前に置く |
+| `gkill_server add_tag ユーザーID... --rules_file <path>` | 検索条件 JSON に一致する記録へタグを付ける（稼働中サーバの HTTP クライアント。`main/common/add_tag.go`） |
 | `gkill_server reset_password ユーザーID...` | 指定アカウントのパスワードを無効化し、リセットトークンを再発行してURLを表示する。account.db を直接開くのでサーバー稼働中でも実行できる。パスワードはArgon2idで保存されておりDBから復元できないため、**管理者がパスワードを忘れたときやトークンが期限切れになったときの唯一の復帰経路**（`main/common/password_admin.go`） |
 
 ## 11. MCP HTTPサーバーのデプロイ

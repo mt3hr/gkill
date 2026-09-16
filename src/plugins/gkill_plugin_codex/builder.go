@@ -68,11 +68,20 @@ func (b *builder) loop(pluginDir string, configOf func() pluginConfig) {
 // os.Stdout には絶対に書かない。あれはプロトコルのチャネルで、
 // 1行でも混ざるとJSONストリームが壊れる。ログはstderrに出す。
 func (b *builder) runOnce(pluginDir string, config pluginConfig) {
+	_ = buildOnce(pluginDir, config)
+}
+
+// buildOnce は走査→取り込み→畳み直しを1周し、失敗を cache_meta に残してから返す。
+// 常駐ビルダ（runOnce）と単独モード（Handler.BuildCache。gkill_server generate_plugin_cache）の
+// 両方がここを通るので、どちらで失敗しても設定画面の build_state は同じ見え方になる。
+func buildOnce(pluginDir string, config pluginConfig) error {
 	if err := globalCache.build(pluginDir, config); err != nil {
 		globalCache.setMeta("build_state", "error")
 		globalCache.setMeta("build_error", err.Error())
 		sdk.LogError("%s: build error: %v", appName, err)
+		return err
 	}
+	return nil
 }
 
 // startBuilder はハンドラの先頭から呼ぶ。起動していなければ起こし、
