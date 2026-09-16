@@ -123,6 +123,11 @@ func TestHandleGetKyous_BrokenRepIsWarningNotError(t *testing.T) {
 		}
 		foundWarning = true
 
+		// level が warning でないと Web のエラー表示が「閉じるまで残す」扱いにならず 2.5 秒で消える
+		// （error_kind と同じく、落ちても応答は返るので目の前ではエラーにならない）
+		if msg.Level != message.MessageLevelWarning {
+			t.Errorf("警告の level = %q, want %q", msg.Level, message.MessageLevelWarning)
+		}
 		if !strings.Contains(msg.Message, "BrokenNote") {
 			t.Errorf("警告にrep名が入っていない。利用者はどのrepが消えたか分からない: %q", msg.Message)
 		}

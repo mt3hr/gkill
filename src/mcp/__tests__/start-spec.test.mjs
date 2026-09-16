@@ -16,6 +16,7 @@ import { describe, test, expect } from "vitest";
 import { START_SPEC as READ_SPEC } from "../gkill-read-server.mjs";
 import { START_SPEC as WRITE_SPEC } from "../gkill-write-server.mjs";
 import { START_SPEC as READWRITE_SPEC } from "../gkill-readwrite-server.mjs";
+import { startInfo } from "../lib/mcp-server-bootstrap.mjs";
 
 const SPECS = [
   ["read", READ_SPEC, { scope: "gkill:read", defaultPort: 8808, enableFileLinks: true }],
@@ -50,5 +51,27 @@ describe("server START_SPEC declarations", () => {
       "utf8",
     );
     expect(bootstrapSource).toContain("scope: spec.scope");
+  });
+});
+
+// server_start ログの世代情報。「ソースは直っているのに AI からは古い」の切り分けは
+// ここと gkill_status の schema_revision を見比べて行う（プロセスが古いのか、クライアントの
+// 一覧が古いのか）。schema_revision 自体は status-tool.test.mjs が固定する。
+describe("server_start log carries the tool-list generation", () => {
+  test("startInfo reports pid, schema_revision and tool_count of the running server", () => {
+    const info = startInfo({ schemaRevision: "abc123def456", tools: [{}, {}, {}] });
+    expect(info).toEqual({ pid: process.pid, schema_revision: "abc123def456", tool_count: 3 });
+  });
+
+  test("both transports log server_start with startInfo (stdio and http)", () => {
+    const bootstrapSource = readFileSync(
+      resolve(dirname(fileURLToPath(import.meta.url)), "../lib/mcp-server-bootstrap.mjs"),
+      "utf8",
+    );
+    const lines = bootstrapSource.split("\n").filter((line) => line.includes('"server_start"'));
+    expect(lines.length, "stdio と http の2箇所で server_start を出す").toBe(2);
+    for (const line of lines) {
+      expect(line).toContain("...startInfo(server)");
+    }
   });
 });

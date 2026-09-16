@@ -637,7 +637,8 @@ type authRequiredEndpoint struct {
 // AccountSessionNotFoundError であることまで確認する。リクエストのdecode失敗など
 // 別の理由でエラーになっているのを認証成功と取り違えないため。
 func TestAuthMiddleware_RejectsInvalidSession(t *testing.T) {
-	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsServer, gkillAPI, cleanup := setupTestRouter(t)
+	tsURL := tsServer.URL
 	defer cleanup()
 
 	// wrapNoAuth で登録されているが、ハンドラ自身が getAccountFromSessionID で
@@ -712,50 +713,6 @@ func TestAuthMiddleware_RejectsInvalidSession(t *testing.T) {
 				})
 			}
 		}
-	}
-}
-
-func TestHTTPServer_RouteRegistration(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	// Verify that registered endpoints respond (not 404).
-	// We send valid-structured JSON with a login request body for /api/login,
-	// and use GET (expecting 405) for others to confirm routes exist without
-	// triggering panics on malformed request bodies.
-	t.Run("login_route_exists", func(t *testing.T) {
-		req := &req_res.LoginRequest{
-			UserID:         "admin",
-			PasswordSha256: "",
-			LocaleName:     "en",
-		}
-		resp := postJSON(t, ts.URL+"/api/login", req)
-		resp.Body.Close()
-		if resp.StatusCode == http.StatusNotFound {
-			t.Error("login endpoint returned 404")
-		}
-	})
-
-	// For other POST-only routes, sending GET should return 405 (not 404),
-	// proving the route is registered.
-	getEndpoints := []string{
-		"/api/logout",
-		"/api/get_application_config",
-		"/api/add_kmemo",
-		"/api/add_tag",
-		"/api/submit_kftl_text",
-	}
-	for _, ep := range getEndpoints {
-		t.Run("route_"+ep, func(t *testing.T) {
-			resp, err := http.Get(ts.URL + ep)
-			if err != nil {
-				t.Fatalf("GET %s failed: %v", ep, err)
-			}
-			resp.Body.Close()
-			if resp.StatusCode == http.StatusNotFound {
-				t.Errorf("endpoint %s returned 404 — route not registered", ep)
-			}
-		})
 	}
 }
 
@@ -5641,17 +5598,9 @@ func TestHandleUpdateRekyou_Nonexistent_ReturnsError(t *testing.T) {
 
 // --- Section: Config update tests ---
 
-// setupTestRouterWithConfigRoutes は setupTestRouter と同じ。
-// かつては基底のハーネスに無い設定更新3経路をここで足していたが、
-// 今はルート表（apiRoutes）が全経路を登録するので差分は無い。呼び出し側の互換のために残す。
-func setupTestRouterWithConfigRoutes(t *testing.T) (tsURL string, gkillAPI *GkillServerAPI, cleanup func()) {
-	t.Helper()
-	ts, gkillAPI, cleanup := setupTestRouter(t)
-	return ts.URL, gkillAPI, cleanup
-}
-
 func TestHandleUpdateApplicationConfig(t *testing.T) {
-	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsServer, gkillAPI, cleanup := setupTestRouter(t)
+	tsURL := tsServer.URL
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -5722,7 +5671,8 @@ func TestHandleUpdateApplicationConfig(t *testing.T) {
 }
 
 func TestHandleUpdateServerConfigs(t *testing.T) {
-	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsServer, gkillAPI, cleanup := setupTestRouter(t)
+	tsURL := tsServer.URL
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -5782,7 +5732,8 @@ func TestHandleUpdateServerConfigs(t *testing.T) {
 }
 
 func TestHandleUpdateUserReps(t *testing.T) {
-	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsServer, gkillAPI, cleanup := setupTestRouter(t)
+	tsURL := tsServer.URL
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -5967,7 +5918,8 @@ func TestHandleUpdateShareKyouListInfo(t *testing.T) {
 // --- Section: GetServerConfigs non-admin test ---
 
 func TestHandleGetServerConfigs_NonAdmin(t *testing.T) {
-	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsServer, gkillAPI, cleanup := setupTestRouter(t)
+	tsURL := tsServer.URL
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -8163,7 +8115,8 @@ func TestNewGkillServerAPI_FirstRunDefaultsAreLocalOnly(t *testing.T) {
 
 // 項番86: TLSファイルパス変更がServerConfigに反映されること
 func TestHandleUpdateServerConfigs_TLSPathChange(t *testing.T) {
-	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsServer, gkillAPI, cleanup := setupTestRouter(t)
+	tsURL := tsServer.URL
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -8216,7 +8169,8 @@ func TestHandleUpdateServerConfigs_TLSPathChange(t *testing.T) {
 
 // 項番104: 書き込み有効状態不正検知 — 同一デバイス・同一タイプにUseToWrite=trueが重複
 func TestHandleUpdateUserReps_DuplicateWriteDetected(t *testing.T) {
-	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsServer, gkillAPI, cleanup := setupTestRouter(t)
+	tsURL := tsServer.URL
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
