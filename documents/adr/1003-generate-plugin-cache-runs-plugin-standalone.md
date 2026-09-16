@@ -80,9 +80,10 @@ fitbit の初回構築は実測 155 秒なので、最初に開いた画面は�
   常駐ビルダと重なるのはその瞬間に画面を開いている場合だけ。
 - **サーバ側の型別索引は次の `update_cache`（か TTL 5 分の自動再構築）まで新しい cache.db を読まない。**
   同期スクリプトでは `generate_plugin_cache all <user>` を `update_cache` の**前**に置く。
-- **SDK を使わないプラグイン（`gkill_plugin_uguisu`）は `--gkill-build-cache` に応えられないので、`all` に
-  含まれると毎回「結果行が無い」エラー行と exit 1 になる。** 静かではないので意図どおり。uguisu 側で
-  `no_cache` を印字して exit 0 にすれば消える。
+- **SDK を使わないプラグインは自前で `--gkill-build-cache` に結果行を返す必要がある。** 返さないと
+  `all` に含まれるたびに「結果行が無い」エラー行と exit 1 になる（静かではないので意図どおり）。
+  `gkill_plugin_uguisu` は同日に対応し、キャッシュを持たないので `no_cache` を1行返す。
+  対応前のバイナリが配置されている間はその1本だけ失敗行が出る。
 - **旧 SDK でビルドしたプラグインバイナリは exit 2 で失敗に数える。** 配布（`ReleaseGkillPlugins.ps1` /
   Termux の `update_gkill_plugins.sh`）で7本を同時に入れ替えるまで、運用スクリプトの新しい行は失敗を印字する
   （exit code は見ていないので同期は止まらない）。
