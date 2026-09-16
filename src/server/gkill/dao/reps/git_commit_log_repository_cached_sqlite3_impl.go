@@ -29,6 +29,12 @@ type gitCommitLogRepositoryCachedSQLite3Impl struct {
 	// 並行UpdateCache（1分周期の更新とCLIのupdate_cacheの重なり等）で無ロックに
 	// 書かれるためatomic。素のboolはraceになる
 	lastUpdateCacheChanged atomic.Bool
+	// cacheBuilt は UpdateCache がキャッシュ表を実リポジトリに揃え終えたことを表す。
+	// 立つのは UpdateCache の完走（ref 一致・差分なし・差分適用・バックグラウンド構築の完了）のどれか。
+	// 読み取りの「SQL で 0 件 → 下層の生リポジトリへ聞き直す」フォールバックは、これが偽のときだけ許す。
+	// 構築済みなのに落とすと、キャッシュに無い ID（archived プラグインのコミット・存在しないハッシュ）を
+	// 引かれるたびに全 leaf で git log の全走査が走る（ADR-0221）
+	cacheBuilt atomic.Bool
 }
 
 // ensureGitCommitLogCacheUnique は既存キャッシュの重複行を掃除してから ID の UNIQUE 索引を張る。
@@ -55,6 +61,16 @@ func ensureGitCommitLogCacheUnique(ctx context.Context, db *sqllib.DB, dbName st
 		return fmt.Errorf("error at create unique git commit log cache index %s: %w", dbName, err)
 	}
 	return nil
+}
+
+// shouldFallbackOnMiss は、SQL で 0 件だったときに下層の生リポジトリへ聞き直してよいかを返す。
+//
+// 許すのは「キャッシュがまだ実リポジトリを写していない」あいだだけ（初回の UpdateCache 前、
+// バックグラウンド構築の失敗後）。構築済みの 0 件は「そのコミットは native の rep に無い」の答えそのもので、
+// 集約 GitCommitLogReps の隣（プラグインアダプタ）が持っていれば集約側で拾う。
+// 経緯と実測: documents/adr/0221-git-cache-miss-does-not-fall-back-to-raw-walk.md
+func (g *gitCommitLogRepositoryCachedSQLite3Impl) shouldFallbackOnMiss() bool {
+	return !g.cacheBuilt.Load()
 }
 
 func NewGitRepCachedSQLite3Impl(ctx context.Context, gitRep GitCommitLogRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (GitCommitLogRepository, error) {
@@ -476,11 +492,15 @@ WHERE
 		return nil, err
 	}
 	if len(kyous) == 0 {
-		// SQLiteにデータがない場合（キャッシュ未構築など）は下層実装にフォールバック
-		if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
-			return aggregated.GetKyouSequential(ctx, id, updateTime)
+		// キャッシュ未構築のあいだだけ下層実装にフォールバック。
+		// 構築済みの 0 件は「無い」で返す（下層へ落とすと全 leaf で git log の全走査になる。shouldFallbackOnMiss 参照）
+		if g.shouldFallbackOnMiss() {
+			if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
+				return aggregated.GetKyouSequential(ctx, id, updateTime)
+			}
+			return g.gitRep.GetKyou(ctx, id, updateTime)
 		}
-		return g.gitRep.GetKyou(ctx, id, updateTime)
+		return nil, nil
 	}
 	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
 	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
@@ -609,8 +629,8 @@ WHERE
 		err = fmt.Errorf("error at iterate rows: %w", err)
 		return nil, err
 	}
-	if len(kyous) == 0 {
-		// SQLiteにデータがない場合（キャッシュ未構築など）は下層実装にフォールバック
+	if len(kyous) == 0 && g.shouldFallbackOnMiss() {
+		// キャッシュ未構築のあいだだけ下層実装にフォールバック（構築済みの 0 件は「無い」。shouldFallbackOnMiss 参照）
 		if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
 			return aggregated.GetKyouHistoriesSequential(ctx, id)
 		}
@@ -645,6 +665,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 		persistedRefHashes, err := g.loadPersistedRefHashes(ctx)
 		if err == nil && refHashesEqual(currentRefHashes, persistedRefHashes) {
 			g.lastUpdateCacheChanged.Store(false)
+			g.cacheBuilt.Store(true)
 			return nil
 		}
 	}
@@ -682,6 +703,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 	// データ変更がなければref hashesだけ更新
 	if len(newIDs) == 0 && len(deletedIDs) == 0 {
 		g.lastUpdateCacheChanged.Store(false)
+		g.cacheBuilt.Store(true)
 		if g.ownDB {
 			g.saveRefHashes(ctx, g.getCurrentRefHashes(ctx))
 		}
@@ -700,6 +722,8 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 				slog.Log(bgCtx, gkill_log.Warn, "error at background git commit log cache build", "error", fmt.Sprintf("%q", err))
 			} else {
 				slog.Log(bgCtx, gkill_log.Info, "git commit log cache build completed", "numCommits", len(newIDs))
+				// 失敗した回は立てない（キャッシュが部分的なので、読み取りは下層へ落ちる従来の形を保つ）
+				g.cacheBuilt.Store(true)
 			}
 			g.isCacheBuilding.Store(false)
 		}()
@@ -714,6 +738,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 		return err
 	}
 	g.lastUpdateCacheChanged.Store(true)
+	g.cacheBuilt.Store(true)
 	return nil
 }
 
@@ -1383,11 +1408,16 @@ WHERE
 		return nil, err
 	}
 	if len(gitCommitLog) == 0 {
-		// SQLiteにデータがない場合（キャッシュ未構築など）は下層実装にフォールバック
-		if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
-			return aggregated.GetGitCommitLogSequential(ctx, id, updateTime)
+		// キャッシュ未構築のあいだだけ下層実装にフォールバック。
+		// 構築済みの 0 件は「無い」で返す。/api/get_git_commit_log は rykv の行ごとに呼ばれるので、
+		// ここで下層へ落とすと archived プラグインのコミット行 1 つにつき全 leaf の git log 全走査になる
+		if g.shouldFallbackOnMiss() {
+			if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
+				return aggregated.GetGitCommitLogSequential(ctx, id, updateTime)
+			}
+			return g.gitRep.GetGitCommitLog(ctx, id, updateTime)
 		}
-		return g.gitRep.GetGitCommitLog(ctx, id, updateTime)
+		return nil, nil
 	}
 	// 最新版に絞ってもrepをまたいだ同一版が複数返りうるので、UpdateTimeが最大のものを選ぶ。
 	// 格納順の先頭を返すと、どれが返るかがSQLiteの都合で決まってしまう。
