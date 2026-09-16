@@ -82,6 +82,7 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 |---|---|
 | `--gkill-print-manifest` | 埋め込み済みの `manifest.json` |
 | `--gkill-print-config` | 既定の `config.json` |
+| `--gkill-build-cache` | （SDK 共通）stdio ループに入らず `Handler.BuildCache` を同期で1回実行し、stdout に結果行 `built` / `no_cache` を1行だけ書いて終了する。`gkill_server generate_plugin_cache` が使う（下記「単独モード」） |
 
 また初回起動時に `sdk.EnsureConfig`（`plugin/sdk/config.go:37-54`）が
 `Handler.DefaultConfig` の内容で manifest.json の隣に `config.json` を作成する。
@@ -106,6 +107,21 @@ cmd := exec.CommandContext(context.Background(),
 
 `context.Background()` を使用するため、HTTP リクエストがキャンセルされてもプロセスは終了しない。
 個々の呼び出しの打ち切りについても同様で、詳細は下記「タイムアウトと打ち切り」を参照。
+
+### 単独モード（`--gkill-build-cache`）
+
+`gkill_server generate_plugin_cache <plugin_name|all> <user_id...>`（`main/common/generate_plugin_cache.go`）は
+稼働中サーバに頼らず、上と同じ引数に `--gkill-build-cache` を足してプラグインを直接起動し、終わるまで待つ。
+`sdk.Run` はこのフラグを見ると stdio ループに入らず `Handler.BuildCache(ctx, cfg)` を同期で1回呼び、
+stdout に結果行（`built`、`BuildCache` が nil なら `no_cache`）を1行だけ書いて exit 0、エラーなら stderr に出して exit 1 で終わる。
+同梱7本は既存の同期構築関数（`build` / `refresh`）を `BuildCache` から呼ぶだけで、常駐ビルダは起こさない
+（`plugin/sdk/build_cache_test.go` の `TestBundledPluginsWireBuildCache` が配線をソース走査で固定する）。
+
+gkill 側は子プロセスの stdin を繋がず（フラグを知らない旧バイナリが stdio ループへ入っても EOF で終わる）、
+stdout 全体が結果行と完全一致するときだけ成功にする。exit 0 で stdout が空（旧 SDK・SDK を使わない独自実装）や
+exit 2（Go の `flag` が未知フラグで落ちた旧 SDK）は失敗として報告する。プラグインは逐次に起動し、タイムアウトは無い。
+実行ファイルの解決は常駐起動と同じ `reps.PluginExecutablePath`。経緯と却下案は
+[ADR-1003](../adr/1003-generate-plugin-cache-runs-plugin-standalone.md)。
 
 ### 通信フォーマット
 
@@ -286,6 +302,7 @@ gkill 本体は起動時に環境変数 `GKILL_HOME` を設定し（`common.Init
 パス要素として使える値かの検証は `sdk.IsSafePathElement`）。
 
 キャッシュは `clear_cache plugin <all|user_id...>` で削除できる（`clear_cache all` にも含まれる）。
+`generate_plugin_cache <plugin_name|all> <user_id...>` で稼働中サーバ無しに同期構築できる（4章「単独モード」）。
 
 ### テーブル構成
 

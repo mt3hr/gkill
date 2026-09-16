@@ -74,12 +74,27 @@ func pluginGPSLogQueryToQuery(q *pluginGPSLogQuery) GPSLogQuery {
 	}
 }
 
+// 単独モード（--gkill-build-cache）が stdout に書く結果行。
+// gkill 側（main/common/generate_plugin_cache.go）はこの2語のどちらかが stdout の全文と
+// 一致するときだけ成功とみなす。それ以外（空・別の文字列）は「対応していない古いバイナリか、
+// stdout を汚した」として失敗にする。綴りを変えるなら gkill 側も一緒に変えること。
+const (
+	// BuildCacheResultBuilt は BuildCache が成功したことを表す。
+	BuildCacheResultBuilt = "built"
+	// BuildCacheResultNoCache は Handler.BuildCache が nil（キャッシュを持たないプラグイン）だったことを表す。
+	BuildCacheResultNoCache = "no_cache"
+)
+
 // Run はプラグインのメインループを起動する。
 // プラグイン作者はHandlerを実装してこの関数を呼び出すだけでよい。
+//
+// `--gkill-build-cache` 付きで起動されたときは stdio ループに入らず、
+// Handler.BuildCache を同期で1回実行して終了する（runBuildCache）。
 func Run(h Handler) {
 	pluginDir := flag.String("gkill-plugin-dir", "", "gkillが管理するetcディレクトリのパス")
 	userID := flag.String("gkill-user-id", "", "ユーザID")
 	protocolVersion := flag.String("gkill-protocol-version", "1", "プロトコルバージョン")
+	buildCache := flag.Bool("gkill-build-cache", false, "キャッシュを同期で構築して終了する（stdio ループには入らない）")
 	flag.Parse()
 
 	// プロトコルバージョン確認（将来の互換性のため）
@@ -96,9 +111,34 @@ func Run(h Handler) {
 		cfg = Config{}
 	}
 
+	if *buildCache {
+		// signal.NotifyContext は張らない。張ると SIGINT の既定動作（即終了）が抑止され、
+		// ctx を見ない構築関数が Ctrl+C の後も走り続ける。
+		if !runBuildCache(newCtx(*userID), h, cfg, os.Stdout) {
+			os.Exit(1)
+		}
+		return
+	}
+
 	if runLoop(h, cfg, *pluginDir, *userID, os.Stdin, os.Stdout) {
 		os.Exit(0)
 	}
+}
+
+// runBuildCache は Handler.BuildCache を同期実行し、結果行を out に1行だけ書く。
+// 成功（built / no_cache）なら true。失敗なら LogError（stderr）して false。
+// 出力を引数にしているのはテストのため。
+func runBuildCache(ctx context.Context, h Handler, cfg Config, out io.Writer) bool {
+	if h.BuildCache == nil {
+		fmt.Fprintln(out, BuildCacheResultNoCache)
+		return true
+	}
+	if err := h.BuildCache(ctx, cfg); err != nil {
+		LogError("build cache: %v", err)
+		return false
+	}
+	fmt.Fprintln(out, BuildCacheResultBuilt)
+	return true
 }
 
 // runLoop は改行区切りJSONのメッセージループ本体。

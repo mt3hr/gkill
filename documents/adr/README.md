@@ -250,6 +250,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 |---|---|---|
 | [1001](1001-log-level-by-severity.md) | ログレベルは事象の重さで決める。既定でエラーだけは必ず残す | Accepted |
 | [1002](1002-add-tag-rules-are-find-queries.md) | add_tag のルールは検索条件 JSON そのもの。接頭辞は画面の「記録種別」で表し、曖昧な指定はサーバに触る前に落とす | Accepted |
+| [1003](1003-generate-plugin-cache-runs-plugin-standalone.md) | generate_plugin_cache はプラグインを単独モードで直接起動して同期構築する。稼働中サーバにも stdio プロトコルにも足さない | Accepted |
 | [1101](1101-wear-mood-goes-through-kftl-text.md) | ウォッチの気分記録は専用メッセージパスを足さず、KFTL テキストを既存の送信経路へ流す | Accepted |
 | [1102](1102-wear-ui-strings-in-android-resources-with-ja-default.md) | Wear OS の UI 文字列は Android リソースの7言語セット（既定 ja）で持ち、時計へ渡すエラー文言はスマホ側で訳す | Accepted |
 | [1103](1103-wear-app-chips-match-tile.md) | ウォッチアプリのチップはタイルと同じ見た目にし、確認画面は ScalingLazyColumn で収める | Accepted |

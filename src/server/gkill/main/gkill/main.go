@@ -48,6 +48,7 @@ func init() {
 	AppCmd.AddCommand(common.OptimizeCmd)
 	AppCmd.AddCommand(common.UpdateCacheCmd)
 	AppCmd.AddCommand(common.ClearCacheCmd)
+	AppCmd.AddCommand(common.GeneratePluginCacheCmd)
 	AppCmd.AddCommand(common.ResetPasswordCmd)
 	AppCmd.AddCommand(common.AddTagCmd)
 }

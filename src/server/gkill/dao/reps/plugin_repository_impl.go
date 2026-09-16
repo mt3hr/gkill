@@ -293,11 +293,7 @@ func (p *pluginRepositoryImpl) ensureStarted() error {
 		p.retire(p.proc)
 	}
 
-	execName := p.manifest.Executable
-	if runtime.GOOS == "windows" {
-		execName += ".exe"
-	}
-	execPath := filepath.Join(p.pluginDir, execName)
+	execPath := PluginExecutablePath(p.pluginDir, p.manifest.Executable)
 
 	// プロセスはリクエストのキャンセルで終了させないためBackground contextを使う
 	cmd := exec.CommandContext(context.Background(),
@@ -828,10 +824,24 @@ func (p *pluginRepositoryImpl) UnWrap() ([]Repository, error) {
 	return []Repository{p}, nil
 }
 
+// PluginExecutablePath はプラグインの実行ファイルのパスを返す。Windows では .exe を付ける。
+// 常駐起動（ensureStarted）と単独起動（main/common の generate_plugin_cache）が同じ規則で
+// 解決するためにここに置く。CLI 側でインラインに再実装すると Windows でだけ静かにずれる。
+func PluginExecutablePath(pluginDir string, executable string) string {
+	if runtime.GOOS == "windows" {
+		executable += ".exe"
+	}
+	return filepath.Join(pluginDir, executable)
+}
+
 // --- PluginRepository 追加メソッド ---
 
 func (p *pluginRepositoryImpl) GetManifest() gkill_plugin.PluginManifest {
 	return p.manifest
+}
+
+func (p *pluginRepositoryImpl) GetPluginDir() string {
+	return p.pluginDir
 }
 
 func (p *pluginRepositoryImpl) GetContentHTML(ctx context.Context, kyouID string) (string, error) {

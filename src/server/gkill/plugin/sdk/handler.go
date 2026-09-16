@@ -47,4 +47,16 @@ type Handler struct {
 	// DefaultConfig はconfig.jsonが無いときに書き出す既定設定。
 	// nilなら生成しない。既存のconfig.jsonは上書きされない。
 	DefaultConfig Config
+
+	// BuildCache は `--gkill-build-cache` 付きで起動されたとき、stdio ループに入らずに
+	// 同期で1回だけ呼ばれる（gkill_server generate_plugin_cache の実体）。
+	// キャッシュを最新にしてから返ること。常駐ビルダ（EnsureStarted / Kick）は起こさず、
+	// 構築関数（build / refresh）を直接呼ぶ。stdio のハンドラ期限（数十ミリ秒）はここには無い。
+	//
+	// nil のプラグインは「キャッシュを持たない」とみなされ、SDK が stdout に no_cache を出して
+	// exit 0 で終わる（generate_plugin_cache の all 指定でそのプラグインが赤くならない）。
+	// os.Stdout には書かないこと。結果行（built / no_cache）は SDK が書き、gkill 側はその行だけで
+	// 成否を判定する。診断は LogWarn / LogError（stderr）。
+	// エラーを返すと SDK は stderr にそれを出して exit 1 で終わる。
+	BuildCache func(ctx context.Context, cfg Config) error
 }

@@ -6,13 +6,14 @@ gkill プラグインシステムのサーバー側実装。プラグインプ�
 
 ```
 plugin/
-└── sdk/                # プラグイン作者向け Go SDK（13ファイル。うちテスト5）
+└── sdk/                # プラグイン作者向け Go SDK（14ファイル。うちテスト6）
     ├── types.go        # 公開型定義（Query, Kyou, Config）
     ├── match_words.go  # Query.MatchText / Matcher — ワード判定（gkill 本体と同じ規則。本体は再判定しないので FindKyous で必ず通す）
     ├── handler.go      # Handler struct（プラグイン作者が実装するインターフェース）
-    ├── sdk.go          # Run() — メインループ（stdin/stdout 改行区切りJSONループ）
+    ├── sdk.go          # Run() — メインループ（stdin/stdout 改行区切りJSONループ）と --gkill-build-cache の単独モード
     ├── config.go       # LoadConfig / SaveConfig / EnsureConfig（config.json 読み書き）
-    ├── sdk_test.go     # Run() ループのテスト（TestRunLoop_* 14本）
+    ├── sdk_test.go     # Run() ループのテスト（TestRunLoop_* 21本 + 型別データの往復）
+    ├── build_cache_test.go # 単独モード（runBuildCache）と同梱プラグインの BuildCache 配線の走査
     ├── match_words_test.go # Query.MatchText のテスト
     └── config_test.go  # EnsureConfig のテスト（4本）
 ```
@@ -72,6 +73,7 @@ gkill サーバーとプラグインプロセスは **stdin/stdout 改行区切�
 - `--gkill-plugin-dir <path>` — プラグイン専用ディレクトリ（config.json を保存する場所）
 - `--gkill-user-id <id>` — リクエスト元ユーザー ID
 - `--gkill-protocol-version <version>` — プロトコルバージョン（現在は `"1"`）
+- `--gkill-build-cache` — stdio ループに入らず `Handler.BuildCache` を同期で1回呼んで終了する（`gkill_server generate_plugin_cache` が使う）。stdout に結果行 `built` / `no_cache` を1行だけ書く
 
 ## 型別データ・付随データ
 

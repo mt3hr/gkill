@@ -140,6 +140,11 @@ func main() {
 		RepName:       repName,
 		DefaultConfig: defaultConfig(),
 
+		// 単独モード（gkill_server generate_plugin_cache）。常駐ビルダは起こさず同期で1周する。
+		BuildCache: func(_ context.Context, cfg sdk.Config) error {
+			return buildOnce(pluginDir, sourceOf(pluginDir, cfg))
+		},
+
 		// ハンドラは全部「ビルダを起こして、今キャッシュにあるぶんを即返す」。
 		// 初回が空なのは仕様。取り込みはバックグラウンドで進む。
 		FindKyous: func(ctx context.Context, q sdk.Query, cfg sdk.Config) ([]sdk.Kyou, error) {

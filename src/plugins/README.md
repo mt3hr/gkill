@@ -329,6 +329,17 @@ gkill_server はプラグインをサブプロセスとして起動し、stdin/s
 ./gkill_plugin_xxx --gkill-print-config > config.json
 ```
 
+### キャッシュの単独構築（`--gkill-build-cache`）
+
+SDK 共通のフラグ。通常の起動引数に足すと `sdk.Run` は stdio ループに入らず、`Handler.BuildCache` を同期で1回呼んで終了する。
+`gkill_server generate_plugin_cache <plugin_name|all> <user_id...>` がこれを使い、稼働中サーバ無しでキャッシュを作る。
+結果は stdout に1行だけ（`built`、`BuildCache` が nil なら `no_cache`）、診断は stderr、失敗は exit 1。
+`BuildCache` の中では常駐ビルダを起こさず、ビルダが呼ぶのと同じ構築関数をそのまま呼ぶ。
+
+```bash
+./gkill_plugin_xxx --gkill-plugin-dir {pluginDir} --gkill-user-id {userID} --gkill-protocol-version 1 --gkill-build-cache
+```
+
 ### コマンド一覧
 
 | コマンド | 方向 | 説明 |

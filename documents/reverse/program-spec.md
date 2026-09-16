@@ -635,6 +635,8 @@ Vuetifyで2つのテーマを定義しています。
 | `optimize` | リポジトリ最適化 |
 | `update_cache` | キャッシュ更新（稼働中サーバーにHTTPリクエスト。認証情報の指定は不要で、管理者名義の短命セッションをローカルDBへ自己発行して使う） |
 | `clear_cache` | ディスク上の派生キャッシュ削除（`<thumb\|video\|zip\|plugin\|all> <all\|user_id...>`。`all`で全体、user_id指定で該当ユーザー分のみ） |
+| `generate_plugin_cache` | プラグインのキャッシュを稼働中サーバ無しで同期構築（`<plugin_name\|all> <user_id...>`。各プラグインバイナリを `--gkill-build-cache` で単独起動して終わるまで待つ。stdout の結果行 `built` / `no_cache` 以外は失敗。`main/common/generate_plugin_cache.go`） |
+| `add_tag` | 検索条件 JSON（FindKyouQuery）に一致する Kyou へタグを付与（`<user_id...> --rules_file <path>`。稼働中サーバの HTTP クライアント。`main/common/add_tag.go`） |
 | `reset_password` | 指定アカウントのパスワードを無効化し、リセットトークンを再発行してURLを表示（`ユーザーID...`）。account.db を直接開く。管理者がパスワードを忘れたときの唯一の復帰経路 |
 
 ### パーシステントフラグ
