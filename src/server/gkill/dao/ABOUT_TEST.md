@@ -55,7 +55,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 | `sqlite3impl/index_usage_test.go` | 主要クエリがインデックスを使うこと（EXPLAIN QUERY PLAN で確認） |
 | `sqlite3impl/unixepoch_index_test.go` | 時刻比較を `unixepoch()` に統一してもインデックスが効くこと |
 | `sqlite3impl/sqlite_connection_test.go` | SQLite3 接続の設定（PRAGMA 等） |
-| `sqlite3impl/localtime_check_test.go` | SQLite の `'localtime'` と Go の `time.Local` が同じ壁時計かの自己検査（3テスト + 子プロセス用の `TestMain`）。実行環境で一致すること、Linux では Go 側だけ Asia/Tokyo に固定し `TZ=:/nonexistent` の子プロセスで libc が UTC へ落ちる Android の状態を再現して「不一致」と言えること、`TZ=:<TZif ファイル>` と POSIX 文字列（`JST-9` / `<+09>-9`）のどちらでも一致に戻ること。食い違うと時間帯フィルタの SQL 段と Go 段が別の壁時計で判定し、検索がエラーも警告も出ないまま0件になる |
+| `sqlite3impl/localtime_check_test.go` | SQLite の `'localtime'` と Go の `time.Local` が同じ壁時計かの自己検査（4テスト + 子プロセス用の `TestMain`）。実行環境で一致すること、Linux では Go 側だけ Asia/Tokyo に固定し `TZ=:/nonexistent` の子プロセスで libc が UTC へ落ちる Android の状態を再現して「不一致」と言えること、`TZ=:<TZif ファイル>` と POSIX 文字列（`JST-9` / `<+09>-9`）のどちらでも一致に戻ること、`TZ=:<相対名>` は CWD にそのファイルが実在しても musl が zoneinfo ディレクトリでしか探さず UTC に落ちること（同じファイルの絶対パスなら一致。Termux で `TZ=:$HOME/...` のリテラルになっていた事故の再現）。食い違うと時間帯フィルタの SQL 段と Go 段が別の壁時計で判定し、検索がエラーも警告も出ないまま0件になる |
 | `hide_files/file_hider_test.go` | ファイル非表示ロジック |
 
 ## テスト内容
