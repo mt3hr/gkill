@@ -8,6 +8,12 @@ package common
 // TZ 環境変数 → /etc/localtime → どちらも無ければ UTC を使う。Android にはどちらも無いので、
 // 時間帯フィルタの SQL 段（UTC）と Go 段（JST）が別の壁時計で判定し、9時間より狭い窓の検索が
 // エラーも警告も出ないまま常に0件になっていた（2026-09-16）。
+//
+// TZ=:<パス> のパスは展開済みの絶対パスでなければならない。musl の do_tzset は ':' の後ろが
+// '/' でも '.' でも始まらない名前を /usr/share/zoneinfo/ 等の zoneinfo ディレクトリで探し、
+// 見つからなければエラーを出さず UTC にする。既定の --gkill_home_dir は "$HOME/gkill" の未展開文字列で、
+// 初版はそれをそのまま渡していたので TZ=:$HOME/gkill/tz/localtime（リテラル）になり、
+// --gkill_home_dir を渡さない Termux では修正前と同じく UTC のままだった（2026-09-16 同日）。
 // documents/adr/0220-sqlite-localtime-follows-libc-zone.md
 
 import (
@@ -79,13 +85,19 @@ func applyLibcTimezone(gkillHomeDir string) string {
 }
 
 // applyLibcTimezoneFor は applyLibcTimezone の本体。tzdata の読み手を差し替えられるようにしてある（テスト用）。
+//
+// gkillHomeDir は環境変数を展開し絶対パスにしてから使う（呼び出し側が展開済みでも二重の展開は無害）。
+// 絶対パスにできなければ TZif 経路は使わず POSIX 文字列へ落とす —— 相対名の TZ は musl が黙って UTC にするので、
+// 半年ずれるかもしれない fallback のほうがまだ正しい。
 func applyLibcTimezoneFor(zoneName string, gkillHomeDir string, loadTZif func(name string) ([]byte, error)) string {
-	tzif, err := loadTZif(zoneName)
+	path, err := localtimeTZifPath(gkillHomeDir)
 	if err == nil {
-		path := filepath.Join(gkillHomeDir, "tz", "localtime")
-		if err = writeFileIfChanged(path, tzif); err == nil {
-			if err = os.Setenv("TZ", ":"+path); err == nil {
-				return "TZ=:" + path
+		var tzif []byte
+		if tzif, err = loadTZif(zoneName); err == nil {
+			if err = writeFileIfChanged(path, tzif); err == nil {
+				if err = os.Setenv("TZ", ":"+path); err == nil {
+					return "TZ=:" + path
+				}
 			}
 		}
 	}
@@ -94,6 +106,24 @@ func applyLibcTimezoneFor(zoneName string, gkillHomeDir string, loadTZif func(na
 		return ""
 	}
 	return fmt.Sprintf("TZ=%s (TZif unavailable: %v)", posix, err)
+}
+
+// localtimeTZifPath は TZif を置く場所 <gkillHomeDir>/tz/localtime を、環境変数を展開した絶対パスで返す。
+// musl は TZ=:<パス> のパスが '/' か '.' で始まらないと zoneinfo ディレクトリの相対名として扱うので、
+// 絶対パスにできないときはエラーにする（呼び出し側は POSIX 文字列へ落とす）。
+func localtimeTZifPath(gkillHomeDir string) (string, error) {
+	expanded := os.ExpandEnv(gkillHomeDir)
+	if expanded == "" {
+		return "", fmt.Errorf("gkill home dir %q expands to empty", gkillHomeDir)
+	}
+	path, err := filepath.Abs(filepath.Join(expanded, "tz", "localtime"))
+	if err != nil {
+		return "", fmt.Errorf("resolve absolute path of %q: %w", gkillHomeDir, err)
+	}
+	if !filepath.IsAbs(path) {
+		return "", fmt.Errorf("gkill home dir %q did not resolve to an absolute path: %q", gkillHomeDir, path)
+	}
+	return path, nil
 }
 
 // checkSQLiteLocaltime は SQLite の 'localtime' と Go の time.Local を突き合わせ、食い違っていれば
@@ -115,7 +145,7 @@ func checkSQLiteLocaltime(ctx context.Context) {
 		"sqlite_local", fmt.Sprintf("%q", result.SQLiteLocal), "sqlite_weekday", result.SQLiteWeekday,
 		"local", fmt.Sprintf("%q", time.Local.String()), "tz_env", fmt.Sprintf("%q", os.Getenv("TZ")),
 		"applied", fmt.Sprintf("%q", libcTimezoneApplied),
-		"hint", "set TZ to a zone the libc can read (TZ=:/path/to/TZif or a POSIX string such as JST-9) before starting")
+		"hint", "set TZ to a zone the libc can read (TZ=:/absolute/path/to/TZif or a POSIX string such as JST-9) before starting; a relative path such as TZ=:$HOME/... is looked up under /usr/share/zoneinfo and silently falls back to UTC")
 }
 
 // loadAndroidTZif は端末の packed tzdata から name の TZif バイト列を取り出す。

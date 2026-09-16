@@ -172,6 +172,66 @@ func TestApplyLibcTimezoneFor(t *testing.T) {
 	}
 }
 
+// 未展開の "$VAR/gkill"（既定の --gkill_home_dir はこの形）や相対パスを渡しても、TZ には展開済みの絶対パスが入り、
+// CWD に文字どおり "$VAR" という名のディレクトリを掘らないこと。
+// musl は TZ=:<相対名> を zoneinfo ディレクトリで探して無ければ黙って UTC にするので、ここが崩れると
+// Termux（--gkill_home_dir 無しで起動する）で時間帯検索が0件に戻る（2026-09-16 に実際にそうなった）。
+func TestApplyLibcTimezoneForExpandsEnvAndUsesAbsolutePath(t *testing.T) {
+	t.Setenv("TZ", "") // 終了時に元へ戻す
+	home := t.TempDir()
+	t.Setenv("GKILL_TEST_HOME", home)
+	t.Chdir(t.TempDir()) // CWD を隔離して、汚したかどうかを見られるようにする
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tokyo := fakeTZif("tokyo")
+	loader := func(string) ([]byte, error) { return tokyo, nil }
+
+	applied := applyLibcTimezoneFor("Asia/Tokyo", "$GKILL_TEST_HOME/gkill", loader)
+	want := filepath.Join(home, "gkill", "tz", "localtime")
+	if applied != "TZ=:"+want {
+		t.Fatalf("applied = %q, want %q", applied, "TZ=:"+want)
+	}
+	got := os.Getenv("TZ")
+	if got != ":"+want {
+		t.Fatalf("TZ = %q, want %q", got, ":"+want)
+	}
+	if strings.Contains(got, "$") || !filepath.IsAbs(strings.TrimPrefix(got, ":")) {
+		t.Fatalf("TZ が展開済みの絶対パスでない: %q", got)
+	}
+	if written, err := os.ReadFile(want); err != nil || !bytes.Equal(written, tokyo) {
+		t.Fatalf("展開先に TZif が書かれていない: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(cwd, "$GKILL_TEST_HOME")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("CWD 直下に文字どおり $GKILL_TEST_HOME というディレクトリを掘った: %v", err)
+	}
+
+	// 相対パスでも絶対パスにしてから渡す
+	rel := filepath.Join("rel", "gkill")
+	applied = applyLibcTimezoneFor("Asia/Tokyo", rel, loader)
+	wantRel, err := filepath.Abs(filepath.Join(rel, "tz", "localtime"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !filepath.IsAbs(wantRel) || applied != "TZ=:"+wantRel {
+		t.Fatalf("相対パス: applied = %q, want %q", applied, "TZ=:"+wantRel)
+	}
+	if got := os.Getenv("TZ"); got != ":"+wantRel {
+		t.Fatalf("相対パス: TZ = %q", got)
+	}
+	if _, err := os.Stat(wantRel); err != nil {
+		t.Fatalf("相対パス: TZif が書かれていない: %v", err)
+	}
+
+	// 展開すると空になる（未設定の変数だけ）なら TZif 経路を使わず POSIX 文字列へ落ちる
+	applied = applyLibcTimezoneFor("Asia/Tokyo", "$GKILL_TEST_UNSET_HOME", loader)
+	if !strings.HasPrefix(applied, "TZ=") || strings.HasPrefix(applied, "TZ=:") || !strings.Contains(applied, "expands to empty") {
+		t.Fatalf("空に展開されるパスで fallback しない: %q", applied)
+	}
+}
+
 // Android 以外では何もしない（環境変数 TZ を触らない）。
 func TestApplyLibcTimezoneIsAndroidOnly(t *testing.T) {
 	t.Setenv("TZ", "keep-me")
