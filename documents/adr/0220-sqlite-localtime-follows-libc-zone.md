@@ -61,6 +61,14 @@ Android では、Go の `time.Local` を直すのと同じ `fixTimezone` の経�
 - `TZ` を環境変数へ入れるのは最初の SQLite 接続より前でなければ効かない。modernc の libc は最初の接続を開くときに
   `os.Environ()` を一度だけ写し取り、以後 `os.Setenv` しても `getenv` には映らない。`InitGkillOptions` の末尾で入れているのは
   そのため（`InitGkillServerAPI` が最初の接続を開く）。
+- **`TZ=:<パス>` のパスは環境変数を展開した絶対パスでなければならない。** musl の `do_tzset` は `:` の後ろが `/` でも `.` でも
+  始まらない名前を `/usr/share/zoneinfo/` `/share/zoneinfo/` `/etc/zoneinfo/` の相対名として探し、無ければエラーも警告も出さず
+  UTC にする。既定の `--gkill_home_dir` は `$HOME/gkill` の**未展開文字列**（`gkill_options/option.go`。他の利用箇所は使う側で
+  `os.ExpandEnv` する流儀）で、この ADR の初版はそれをそのまま `applyLibcTimezone` に渡していたため、`TZ=:$HOME/gkill/tz/localtime`
+  （リテラル）になり、CWD 直下に文字どおり `$HOME` という名のディレクトリを掘って TZif を置いたうえで libc は UTC のままだった。
+  APK 同梱サーバは `MainActivity` が絶対パスで `--gkill_home_dir` を渡すので踏まず、`--gkill_home_dir` を渡さない Termux だけが
+  同日（2026-09-16）に「修正後も0件」として見つかった。いまは `InitGkillOptions` が展開済みの絶対パスを渡し、
+  `applyLibcTimezoneFor` 側でも `os.ExpandEnv` + `filepath.Abs` して絶対パスにできなければ TZif 経路を使わず POSIX 文字列へ落ちる。
 - `$GKILL_HOME/tz/localtime` は起動のたびに中身を比べ、同じなら書き直さない。端末のゾーンを変えれば次の起動で置き換わる。
 - 自己検査は Android では起動ログで確認できる（一致なら Debug、不一致なら Error）。CI（Linux + tzdata）では
   `TZ=:/nonexistent` の子プロセスで Android と同じ食い違いを再現し、検出できることを固定している。
@@ -74,8 +82,14 @@ Android では、Go の `time.Local` を直すのと同じ `fixTimezone` の経�
   でも `12:09:04`。Go の `time.Local` は `TZ=JST-9` を解釈できず UTC のまま（POSIX 文字列は libc 専用）。
 - Go 本体 `time/zoneinfo_android.go`: `initLocal() { localLoc = *UTC }`（`// TODO: getprop persist.sys.timezone`）。
 - 全 rep で日付範囲なしの時間帯検索は 65 秒（7,247件）。SQL 段を外す案を採らない根拠。
+- musl 転写（modernc libc v1.74.3 の `_do_tzset`）: `TZ=:$HOME/gkill/tz/localtime` は `posix_form` 0 → 先頭が `/` でも `.` でもない →
+  `search` の3ディレクトリで `__map_file` → 全て失敗 → `s = __utc`。WSL の子プロセスで、CWD に文字どおり `$HOME/gkill/tz/localtime`
+  として本物の TZif を置いても `datetime(…,'localtime')` は `03:09:04`（UTC）、同じファイルを絶対パスで渡すと `12:09:04`
+  （`TestCheckLocaltimeAgreesWithGo_RelativeTZPathFallsBackToUTC`）。
+- 未展開のまま渡す旧実装に `$GKILL_TEST_HOME/gkill` を与えると `TZ=:$GKILL_TEST_HOME\gkill\tz\localtime` になる
+  （`TestApplyLibcTimezoneForExpandsEnvAndUsesAbsolutePath` を旧実装で走らせた変異確認）。
 
 ## Related tests
 
-- `src/server/gkill/dao/sqlite3impl/localtime_check_test.go`
-- `src/server/gkill/main/common/fix_timezone_test.go`
+- `src/server/gkill/dao/sqlite3impl/localtime_check_test.go`（`TestCheckLocaltimeAgreesWithGo_RelativeTZPathFallsBackToUTC` を含む）
+- `src/server/gkill/main/common/fix_timezone_test.go`（`TestApplyLibcTimezoneForExpandsEnvAndUsesAbsolutePath` を含む）

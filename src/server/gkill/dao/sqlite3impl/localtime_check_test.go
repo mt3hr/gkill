@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -47,7 +48,15 @@ func runLocaltimeChild() {
 // runLocaltimeChildWithTZ は TZ だけ差し替えた子プロセスを起動し、stdout の1行を返す。
 func runLocaltimeChildWithTZ(t *testing.T, tz string) string {
 	t.Helper()
+	return runLocaltimeChildWithTZInDir(t, tz, "")
+}
+
+// runLocaltimeChildWithTZInDir は runLocaltimeChildWithTZ の作業ディレクトリ指定版（空なら親と同じ）。
+// TZ=:<相対名> が CWD のファイルを見るかどうかを確かめるのに使う。
+func runLocaltimeChildWithTZInDir(t *testing.T, tz string, dir string) string {
+	t.Helper()
 	cmd := exec.Command(os.Args[0])
+	cmd.Dir = dir
 	env := []string{envLocaltimeChild + "=1"}
 	for _, kv := range os.Environ() {
 		if strings.HasPrefix(kv, "TZ=") || strings.HasPrefix(kv, envLocaltimeChild+"=") {
@@ -115,5 +124,39 @@ func TestCheckLocaltimeAgreesWithGo_TZFileAndPosixStringAlign(t *testing.T) {
 		if !strings.HasPrefix(got, "agrees=true ") {
 			t.Fatalf("TZ=%q で一致しない: %s", tz, got)
 		}
+	}
+}
+
+// 修正の前提そのもの: TZ=:<相対名> は、その名前のファイルが CWD に実在しても musl は zoneinfo ディレクトリ
+// （/usr/share/zoneinfo/ 等）でしか探さず、無ければエラーなしで UTC に落ちる。
+// fixTimezone が渡すパスが展開済みの絶対パスでなければならない理由（2026-09-16、Termux で既定の
+// --gkill_home_dir="$HOME/gkill" を未展開のまま渡して TZ=:$HOME/gkill/tz/localtime になっていた）。
+func TestCheckLocaltimeAgreesWithGo_RelativeTZPathFallsBackToUTC(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("modernc の libc が TZ / /etc/localtime を読む musl 転写になるのは linux だけ")
+	}
+	tzif, err := os.ReadFile("/usr/share/zoneinfo/Asia/Tokyo")
+	if err != nil {
+		t.Skipf("tzdata が無い環境: %v", err)
+	}
+	// Termux で実際にできていた形: CWD 直下に文字どおり "$HOME" という名のディレクトリ
+	dir := t.TempDir()
+	rel := filepath.Join("$HOME", "gkill", "tz", "localtime")
+	abs := filepath.Join(dir, rel)
+	if err := os.MkdirAll(filepath.Dir(abs), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(abs, tzif, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	got := runLocaltimeChildWithTZInDir(t, ":"+rel, dir)
+	if !strings.HasPrefix(got, "agrees=false ") || !strings.Contains(got, "sqlite=03:09:04/3") {
+		t.Fatalf("相対名の TZ=:%s で musl が UTC に落ちる前提が崩れた（テストの前提を見直すこと）: %s", rel, got)
+	}
+	// 同じファイルを絶対パスで渡せば一致する。中身ではなくパスの形の問題であること
+	got = runLocaltimeChildWithTZInDir(t, ":"+abs, dir)
+	if !strings.HasPrefix(got, "agrees=true ") {
+		t.Fatalf("絶対パスの TZ=:%s で一致しない: %s", abs, got)
 	}
 }

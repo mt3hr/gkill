@@ -471,7 +471,10 @@ func ResolveLocalServerEndpoint(ctx context.Context) (*LocalServerEndpoint, erro
 }
 
 func InitGkillOptions() {
-	os.Setenv("GKILL_HOME", filepath.Clean(os.ExpandEnv(gkill_options.GkillHomeDir)))
+	// 既定の GkillHomeDir は "$HOME/gkill" の未展開文字列（gkill_options/option.go）。
+	// 他の利用箇所は使う側で os.ExpandEnv するが、ここで展開したものが要る箇所が2つある。
+	gkillHomeDir := filepath.Clean(os.ExpandEnv(gkill_options.GkillHomeDir))
+	os.Setenv("GKILL_HOME", gkillHomeDir)
 	gkill_options.LibDir = fmt.Sprintf("%s/lib/base_directory", gkill_options.GkillHomeDir)
 	gkill_options.CacheDir = fmt.Sprintf("%s/caches", gkill_options.GkillHomeDir)
 	gkill_options.LogDir = fmt.Sprintf("%s/logs", gkill_options.GkillHomeDir)
@@ -482,7 +485,10 @@ func InitGkillOptions() {
 
 	// Android では libc（SQLite の 'localtime'）にも端末のゾーンを教える。
 	// 最初の SQLite 接続（InitGkillServerAPI）より前でなければ効かない（fix_timezone.go）。
-	libcTimezoneApplied = applyLibcTimezone(gkill_options.GkillHomeDir)
+	// 渡すのは展開済みの絶対パス。未展開の "$HOME/gkill" を渡すと TZ=:$HOME/... のリテラルになり、
+	// musl は相対名を zoneinfo ディレクトリで探して無ければエラーなしで UTC にする
+	// （2026-09-16、Termux の既定起動で実際にそうなった。APK は絶対パスを渡すので再現しない）。
+	libcTimezoneApplied = applyLibcTimezone(gkillHomeDir)
 }
 
 func InitGkillServerAPI() error {
