@@ -4,6 +4,7 @@
  * ゼロ値の日付を出さないこと、その間を読み込み中として扱うことを検証する。
  */
 import { describe, test, expect, vi } from 'vitest'
+import { createApp, defineComponent, h, nextTick, shallowReactive } from 'vue'
 // use-kyou-view は req_res 経由で GkillAPIRequest に依存する。
 // GkillAPIRequest→GkillAPI→ApplicationConfig→req_res の循環importがあるため、
 // 本番同様に gkill-api を先に評価させないと class extends が undefined になる。
@@ -230,5 +231,112 @@ describe('useKyouView 引き直し中表示', () => {
         } finally {
             vi.useRealTimers()
         }
+    })
+})
+
+/**
+ * 一覧（v-virtual-scroll）の行使い回しを模した Kyou。props.kyou が差し替わるたびに
+ * KyouView の watcher が前の clone の abort_controller を abort() し、新しい clone で reload() する。
+ * reload は本物の fetch と同じく、呼ばれた時点の abort_controller が abort されたら AbortError で reject する。
+ * clone() のあとに watcher が abort_controller を差し替えるので、signal は呼ばれた時点で読む。
+ */
+function make_scrolling_kyou(id: string, options?: { reload_failure?: Error }): Kyou {
+    const time = new Date(2025, 2, 15, 9, 0, 0)
+    const make = (): unknown => {
+        const kyou = {
+            id: id,
+            rep_name: 'test-rep',
+            data_type: 'kmemo',
+            related_time: time,
+            create_time: time,
+            update_time: time,
+            abort_controller: new AbortController(),
+            attached_tags: [],
+            attached_texts: [],
+            attached_notifications: [],
+            attached_timeis_kyou: [],
+            is_typed_data_loaded: true,
+            load_typed_datas: vi.fn().mockResolvedValue([]),
+            load_attached_tags: vi.fn().mockResolvedValue([]),
+            load_attached_texts: vi.fn().mockResolvedValue([]),
+            load_attached_notifications: vi.fn().mockResolvedValue([]),
+            load_attached_timeis: vi.fn().mockResolvedValue([]),
+            reload: (): Promise<Array<never>> => {
+                if (options?.reload_failure) {
+                    return Promise.reject(options.reload_failure)
+                }
+                const signal = kyou.abort_controller.signal
+                return new Promise((_resolve, reject) => {
+                    signal.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')), { once: true })
+                })
+            },
+            clone: make,
+        }
+        return kyou
+    }
+    return make() as unknown as Kyou
+}
+
+// 一覧を速くスクロールすると、飛行中の reload を自分で abort() することになる。
+// async watcher の reject は unhandledrejection ではなく Vue の errorHandler へ落ちるので、
+// watcher の中で受けないと ERR900101（AbortError）として右上に積み上がる（2026-09-16 に実際に出た）
+describe('useKyouView 行使い回し中の reload の中断', () => {
+    function mount_view(props: KyouViewProps) {
+        const captured_errors = new Array<unknown>()
+        const app = createApp(defineComponent({
+            setup() {
+                useKyouView({ props, emits: noop_emits })
+                return () => h('div')
+            },
+        }))
+        app.config.errorHandler = (err) => { captured_errors.push(err) }
+        app.mount(document.createElement('div'))
+        return { app, captured_errors }
+    }
+
+    function make_props(kyou: Kyou): KyouViewProps {
+        return shallowReactive({
+            kyou: kyou,
+            highlight_targets: [],
+            height: 180,
+            width: 400,
+            show_related_time: true,
+            show_update_time: true,
+            show_rep_name: true,
+            enable_context_menu: true,
+            enable_dialog: true,
+            force_show_latest_kyou_info: true,
+        }) as unknown as KyouViewProps
+    }
+
+    test('props.kyou の差し替えと unmount で打ち切った reload は errorHandler へ漏らさない', async () => {
+        const props = make_props(make_scrolling_kyou('kyou-0'))
+        const { app, captured_errors } = mount_view(props)
+        await flush()
+
+        // 1行目: reload が飛行中になる
+        props.kyou = make_scrolling_kyou('kyou-1')
+        await nextTick()
+        // 2行目: watcher が 1行目の reload を abort() する
+        props.kyou = make_scrolling_kyou('kyou-2')
+        await flush()
+        // 画面を離れる: onUnmounted が 2行目の reload を abort() する
+        app.unmount()
+        await flush()
+
+        expect(captured_errors).toEqual([])
+    })
+
+    test('中断以外の reload の失敗は黙らせず errorHandler へ届く', async () => {
+        const props = make_props(make_scrolling_kyou('kyou-0'))
+        const { app, captured_errors } = mount_view(props)
+        await flush()
+
+        const failure = new Error('boom')
+        props.kyou = make_scrolling_kyou('kyou-1', { reload_failure: failure })
+        await flush()
+
+        expect(captured_errors).toEqual([failure])
+        app.unmount()
     })
 })

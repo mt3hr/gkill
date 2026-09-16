@@ -61,9 +61,13 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
   `reason`（優先）→ クライアント生成コード → `error_kind` の順で i18n キーへ写す。語彙は Go 側（`error_kind.go` /
   `error_reason.go`）が正本で、`error-hints.test.ts` がソースを突き合わせる。トークンを足したら 7言語の `ERROR_HINT_*` も足す
 - **E2E は `.v-alert[role="alert"]` でエラーを掴む**（6 spec）。エラーだけ `role="alert"` の形を変えないこと
-- 握られなかった例外は `main.ts`（`unhandledrejection` の abort 以外・`window.onerror`・`app.config.errorHandler`）が
-  `push_client_exception` で同じフィードへ出す（ERR900101）。`app.config.errorHandler` を置くと Vue のコンソール出力が止まるので
-  ハンドラ内で `console.error` を出し直している。`gkill_fetch` は Content-Type が JSON でない応答を `bad_response`（ERR900100）の
+- 握られなかった例外は `main.ts`（`unhandledrejection`・`window.onerror`・`app.config.errorHandler`。配線は
+  `classes/global-exception-feed.ts`）が `push_client_exception` で同じフィードへ出す（ERR900101）。**中断（`is_abort_error`）は
+  3つの入口すべてで出さない**（2026-09-16）―― `unhandledrejection` だけで握っていたころ、KyouListView を速くスクロールすると
+  ERR900101（AbortError）が右上に積み上がった。v-virtual-scroll の行使い回しで `props.kyou` が差し替わるたびに `use-kyou-view.ts` の
+  watcher が飛行中の `reload()` を自分で `abort()` しており、**async な watcher / lifecycle hook の reject は `unhandledrejection`
+  ではなく Vue の `errorHandler` へ落ちる**。watcher 側も中断だけ受けて抜け、中断以外は投げ直す（黙らせるのは中断だけ）。
+  `app.config.errorHandler` を置くと Vue のコンソール出力が止まるので、ハンドラ内で `console.error` を出し直している。`gkill_fetch` は Content-Type が JSON でない応答を `bad_response`（ERR900100）の
   合成応答にする（`res.json()` の SyntaxError が握られて画面に何も出ないのを防ぐ）
 - 守るテスト: `use-gkill-message-feed.test.ts` / `error-hints.test.ts` / `gkill-api-bad-response.test.ts`
 
