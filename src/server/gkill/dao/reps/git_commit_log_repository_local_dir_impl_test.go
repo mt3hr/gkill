@@ -381,3 +381,57 @@ func TestGitCommitLogLocalDirFindKyousWordFilter(t *testing.T) {
 		})
 	}
 }
+
+// このリポジトリに無いハッシュは、履歴を歩かずに nil で返ること。
+//
+// Log(From: hash) は無いハッシュでもエラーになり、Log(All: true) の全走査で切り分けていた。
+// キャッシュ包装の外れ時フォールバックと合わさって、archived プラグインのコミットや
+// 別リポジトリのハッシュを引かれるたびに全 leaf で全履歴を復号していた（ADR-0221）。
+// 存在確認（hasCommit）は packfile の索引を引くだけで、ErrObjectNotFound のときだけ false になる。
+func TestGitCommitLogLocalDirMissingHashReturnsNil(t *testing.T) {
+	ctx := context.Background()
+	rep, firstHash, _ := newTempGitCommitLogRepo(t)
+	impl := rep.(*gitCommitLogRepositoryLocalImpl)
+
+	if !impl.hasCommit(firstHash) {
+		t.Fatalf("hasCommit(%s) = false, want true", firstHash)
+	}
+	found, err := rep.GetGitCommitLog(ctx, firstHash, nil)
+	if err != nil {
+		t.Fatalf("GetGitCommitLog(%s) error: %v", firstHash, err)
+	}
+	if found == nil || found.ID != firstHash {
+		t.Fatalf("GetGitCommitLog(%s) = %v, want the commit", firstHash, found)
+	}
+
+	for _, id := range []string{
+		"0123456789abcdef0123456789abcdef01234567", // 形は正しいがこのリポジトリに無い
+		"not-a-commit-hash",                        // 別種別の ID（GkillRepositories.GetKyou は全 leaf へ配る）
+		"",                                         // 空。Log(From: zero) は HEAD 起点の全走査になる
+	} {
+		if impl.hasCommit(id) {
+			t.Errorf("hasCommit(%q) = true, want false", id)
+		}
+		log, err := rep.GetGitCommitLog(ctx, id, nil)
+		if err != nil {
+			t.Fatalf("GetGitCommitLog(%q) error: %v", id, err)
+		}
+		if log != nil {
+			t.Errorf("GetGitCommitLog(%q) = %v, want nil", id, log)
+		}
+		kyou, err := rep.GetKyou(ctx, id, nil)
+		if err != nil {
+			t.Fatalf("GetKyou(%q) error: %v", id, err)
+		}
+		if kyou != nil {
+			t.Errorf("GetKyou(%q) = %v, want nil", id, kyou)
+		}
+		histories, err := rep.GetKyouHistories(ctx, id)
+		if err != nil {
+			t.Fatalf("GetKyouHistories(%q) error: %v", id, err)
+		}
+		if len(histories) != 0 {
+			t.Errorf("GetKyouHistories(%q) len = %d, want 0", id, len(histories))
+		}
+	}
+}
