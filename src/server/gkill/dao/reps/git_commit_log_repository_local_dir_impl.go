@@ -5,6 +5,7 @@ package reps
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -180,6 +181,19 @@ loop:
 	return kyous, nil
 }
 
+// hasCommit は id のコミットがこのリポジトリに在るかを、履歴を歩かずに答える。
+//
+// Log(From: hash) はハッシュが無いだけでもエラーになり、呼び出し側は Log(All: true) の全走査で
+// 切り分けていた。archived プラグインのコミットや別リポジトリのハッシュを引かれるたびに
+// 全履歴を復号していたので、先に packfile の索引で存在を引く（コミット数に比例しない）。
+// ErrObjectNotFound 以外の失敗は「分からない」として true を返し、従来の Log 経路に任せる
+// （Android 環境などで Log(From) が別の理由で失敗する想定を残す）。
+// 経緯と実測: documents/adr/0221-git-cache-miss-does-not-fall-back-to-raw-walk.md
+func (g *gitCommitLogRepositoryLocalImpl) hasCommit(id string) bool {
+	_, err := g.gitrep.CommitObject(plumbing.NewHash(id))
+	return !errors.Is(err, plumbing.ErrObjectNotFound)
+}
+
 func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	g.m.RLock()
 	defer g.m.RUnlock()
@@ -189,6 +203,11 @@ func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string
 	repName, err := g.GetRepName(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	// このリポジトリに無いハッシュはここで終わる（下の Log(All: true) は全履歴の復号になる）
+	if !g.hasCommit(id) {
+		return nil, nil
 	}
 
 	// 判定OKであればKyouを作る
@@ -530,6 +549,11 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 	repName, err := g.GetRepName(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	// このリポジトリに無いハッシュはここで終わる（下の Log(All: true) は全履歴の復号になる）
+	if !g.hasCommit(id) {
+		return nil, nil
 	}
 
 	// 判定OKであればKyouを作る
