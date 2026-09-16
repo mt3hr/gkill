@@ -460,7 +460,7 @@ Wear OS companion アプリの gkill サーバー接続は、デフォルトで�
 - 同じ code + 本文の連続は1枚にまとめて `×N`
 - 1枚に本文・ヒント（`reason` → クライアント生成コード → `error_kind` の順で `error-hints.ts` が i18n キーを選ぶ）・`コード · reason` のフッター・「詳細をコピー」（コード・reason・kind・本文・ヒント・時刻・パス）
 - 中断（`reason: canceled`）は出さない
-- 握られなかった例外（`main.ts` の `unhandledrejection`（abort 以外）・`window.onerror`・`app.config.errorHandler`）も `push_client_exception` で同じフィードへ出る（`ERR900101`）
+- 握られなかった例外（`main.ts` の `unhandledrejection`・`window.onerror`・`app.config.errorHandler`。配線は `classes/global-exception-feed.ts`）も `push_client_exception` で同じフィードへ出る（`ERR900101`）。中断（`is_abort_error`）は3つの入口すべてで出さない（2026-09-16。async な watcher の reject は `unhandledrejection` ではなく Vue の `errorHandler` へ落ちるので、片方だけで握ると一覧の速いスクロールで積み上がる）
 - E2E は `.v-alert[role="alert"]` でエラーを掴む（エラーだけ `role="alert"`）
 
 ### 3.2 ネットワークエラーハンドリング
