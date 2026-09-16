@@ -112,6 +112,7 @@ func (g *GkillServerAPI) HandleGetIDFKyouByRelativePath(w http.ResponseWriter, r
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFKyouByRelativePathError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

@@ -43,7 +43,7 @@ export function createMockGkillAPI() {
     get_notifications_by_target_id: vi.fn().mockResolvedValue({ notifications: [], messages: [], errors: [] }),
     get_rekyous_by_target_id: vi.fn().mockResolvedValue({ rekyous: [], messages: [], errors: [] }),
     get_mirekyous_by_target_id: vi.fn().mockResolvedValue({ mirekyous: [], messages: [], errors: [] }),
-    get_mi_board_list: vi.fn().mockResolvedValue({ mi_board_names: [], messages: [], errors: [] }),
+    get_mi_board_list: vi.fn().mockResolvedValue({ boards: [], messages: [], errors: [] }),
     get_all_tag_names: vi.fn().mockResolvedValue({ tag_names: [], messages: [], errors: [] }),
     get_all_rep_names: vi.fn().mockResolvedValue({ rep_names: [], messages: [], errors: [] }),
     get_application_config: vi.fn().mockResolvedValue({ application_config: null, messages: [], errors: [] }),
@@ -74,21 +74,13 @@ export function createMockGkillAPI() {
     update_rekyou: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
     update_mirekyou: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
 
-    // Delete operations
-    delete_kmemo: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
-    delete_tag: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
-    delete_text: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
-    delete_mi: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
-    delete_timeis: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
-    delete_lantana: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
-    delete_nlog: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
-    delete_urlog: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
-    delete_kc: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    // 削除の API は無い。削除は is_deleted=true の版を update_* で足す
+    // （cascade-delete-kyou.ts / use-confirm-delete-*-view.ts）。実在しない delete_* を
+    // ここに置くと、それを叩くテストが緑になってしまう
 
     // Notification
     add_notification: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
     update_notification: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
-    delete_notification: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
 
     // Context menu helpers
     get_saved_tag_history: vi.fn(() => []),
@@ -105,7 +97,7 @@ export function createMockGkillAPI() {
 
     // Upload
     upload_files: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
-    upload_gps_log_files: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    upload_gpslog_files: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
 
     // Endpoint addresses (for verification)
     login_address: '/api/login',

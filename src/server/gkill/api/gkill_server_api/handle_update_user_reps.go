@@ -110,6 +110,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddUpdatedRepositoriesByUser,
 			ErrorMessage: fmt.Sprintf("%s%s", api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_WITH_ERROR_MESSAGE"}), err),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		if err != nil {

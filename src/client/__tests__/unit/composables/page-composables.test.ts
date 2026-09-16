@@ -1,10 +1,18 @@
 /**
- * Page Composable tests.
- * Tests basic initialization and interface of page-level composables.
- * Page composables often have heavy dependency chains (Vue router, Vuetify, etc.),
- * so we test what's safely importable.
+ * ページ用コンポーザブルの生成テスト。
+ *
+ * 以前は動的 import を try/catch で包み、import に失敗したコンポーザブルを黙ってスキップしていた
+ * （「1本でも import できれば緑」）。依存の循環や壊れた import が起きても検出できない形だったので、
+ * 4本を静的に import して、生成できることと返り値の形をそれぞれ固定する。
+ * ページの実挙動は dashboard-page-reload.test.ts などの専用テストが見る。
+ * useDashboardPage は vuetify の useTheme と router を引き込む（router は全ページ→CSS まで辿る）ので、
+ * dashboard-page-reload.test.ts と同じ形で差し替える。
  */
-import { vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
+
+vi.mock('vuetify', () => ({
+  useTheme: () => ({ global: { name: { value: 'gkill_theme' } } }),
+}))
 
 vi.mock('@/i18n', () => ({
   default: { global: { t: (key: string) => key, locale: 'ja' } },
@@ -18,6 +26,8 @@ vi.mock('@/classes/api/gkill-api', () => ({
       generate_uuid: vi.fn(() => 'mock-uuid'),
       get_session_id_from_cookie_store: vi.fn().mockResolvedValue('mock-session'),
       check_auth: vi.fn(),
+      set_use_dark_theme: vi.fn(),
+      set_saved_application_config: vi.fn(),
       get_application_config: vi.fn().mockResolvedValue({
         application_config: { device: 'test', user_id: 'admin' },
         messages: [],
@@ -38,9 +48,19 @@ vi.mock('@/classes/api/gkill-api', () => ({
 vi.mock('@/classes/delete-gkill-cache', () => ({
   default: vi.fn().mockResolvedValue(undefined),
   delete_gkill_config_cache: vi.fn().mockResolvedValue(undefined),
+  delete_gkill_all_tag_names_cache: vi.fn().mockResolvedValue(undefined),
+  delete_gkill_attached_datas_cache: vi.fn().mockResolvedValue(undefined),
 }))
 
-// Mock vue-router to prevent router dependency issues
+vi.mock('@/classes/use-dialog-history-stack', () => ({
+  reset_dialog_history: vi.fn().mockResolvedValue(undefined),
+}))
+
+// router は全ページを引き込むので、ページが使う replace / push だけ差し替える
+vi.mock('@/router', () => ({
+  default: { replace: vi.fn(), push: vi.fn() },
+}))
+
 vi.mock('vue-router', () => ({
   useRouter: vi.fn(() => ({
     push: vi.fn(),
@@ -54,48 +74,22 @@ vi.mock('vue-router', () => ({
   })),
 }))
 
-// Try importing page composables - some may fail due to heavy dependencies
-const pageComposables: Array<{ name: string; factory: unknown }> = []
+import { useLoginPage } from '@/classes/use-login-page'
+import { useSetNewPasswordPage } from '@/classes/use-set-new-password-page'
+import { useRegisterFirstAccountPage } from '@/classes/use-register-first-account-page'
+import { useDashboardPage } from '@/classes/use-dashboard-page'
 
-async function tryImport(name: string, path: string, exportName: string) {
-  try {
-    const mod = await import(path)
-    if (mod[exportName]) {
-      pageComposables.push({ name, factory: mod[exportName] })
-    }
-  } catch {
-    // Import failed due to dependency chain - skip gracefully
-  }
-}
-
-await tryImport('useLoginPage', '@/classes/use-login-page', 'useLoginPage')
-await tryImport('useSetNewPasswordPage', '@/classes/use-set-new-password-page', 'useSetNewPasswordPage')
-await tryImport('useRegisterFirstAccountPage', '@/classes/use-register-first-account-page', 'useRegisterFirstAccountPage')
-await tryImport('useDashboardPage', '@/classes/use-dashboard-page', 'useDashboardPage')
+const page_composables: Array<[string, () => Record<string, unknown>]> = [
+  ['useLoginPage', () => useLoginPage() as unknown as Record<string, unknown>],
+  ['useSetNewPasswordPage', () => useSetNewPasswordPage() as unknown as Record<string, unknown>],
+  ['useRegisterFirstAccountPage', () => useRegisterFirstAccountPage() as unknown as Record<string, unknown>],
+  ['useDashboardPage', () => useDashboardPage() as unknown as Record<string, unknown>],
+]
 
 describe('Page Composables', () => {
-  test('at least one page composable is importable', () => {
-    expect(pageComposables.length).toBeGreaterThan(0)
+  test.each(page_composables)('%s は生成でき、state か handler を1つ以上返す', (_name, factory) => {
+    const result = factory()
+    expect(result).toBeDefined()
+    expect(Object.keys(result).length).toBeGreaterThan(0)
   })
-
-  // Dynamic tests for each successfully imported composable
-  for (const { name, factory } of pageComposables) {
-    describe(name, () => {
-      test('can be instantiated', () => {
-        const result = factory()
-        expect(result).toBeDefined()
-      })
-
-      test('returns an object with methods or refs', () => {
-        const result = factory()
-        const keys = Object.keys(result)
-        expect(keys.length).toBeGreaterThan(0)
-      })
-    })
-  }
 })
-
-// 「モック自身が動くこと」を確かめる自己言及テスト（GkillAPI/vue-router のモック検査、
-// ローカル配列へのpush検査）はここにあったが、production コードを一切通らないので削除した。
-// ページコンポーザブルの実挙動は上の生成テストと、個別の
-// dashboard-page-reload.test.ts などの専用テストで見る。

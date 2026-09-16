@@ -2,6 +2,9 @@ package usecase
 
 import (
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -478,5 +481,70 @@ func TestWriteThroughSetsWriteRepName(t *testing.T) {
 		t.Fatalf("キャッシュへ書き戻す前に書き込み先repの実名を入れていない型がある。"+
 			"追加した記録が rep絞り込みから最大1分消える:\n%s",
 			strings.Join(violations, "\n"))
+	}
+}
+
+// Add*/Update* は書き込み先 rep が nil なら writeRepMissingError（write_rep_missing.go）を返す。
+//
+// 2026-09-15 まで、tx を使わない Add*/Update* は WriteXxxRep が nil のまま AddXxxInfo を呼んで
+// nil ポインタ参照で panic し、利用者には「内部エラーが発生しました」しか出なかった。
+// 「設定→保存先で直せる」と伝わるのはこのガードがあるときだけで、新しい種別を足すときに
+// 忘れてもコンパイルも既存テストも通る（ハンドラ経由のテストは書き込み先がある前提）。
+// UsecaseContext の Add*/Update* が本体でこの関数を呼んでいることを走査で見張る。
+func TestUsecaseAddUpdateGuardsWriteRepMissing(t *testing.T) {
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		t.Fatalf("ReadDir: %v", err)
+	}
+	checked := 0
+	violations := []string{}
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+		fset := token.NewFileSet()
+		file, err := parser.ParseFile(fset, name, nil, 0)
+		if err != nil {
+			t.Fatalf("parse %s: %v", name, err)
+		}
+		for _, decl := range file.Decls {
+			fd, ok := decl.(*ast.FuncDecl)
+			if !ok || fd.Recv == nil || fd.Body == nil || len(fd.Recv.List) != 1 {
+				continue
+			}
+			star, ok := fd.Recv.List[0].Type.(*ast.StarExpr)
+			if !ok {
+				continue
+			}
+			recv, ok := star.X.(*ast.Ident)
+			if !ok || recv.Name != "UsecaseContext" {
+				continue
+			}
+			if !strings.HasPrefix(fd.Name.Name, "Add") && !strings.HasPrefix(fd.Name.Name, "Update") {
+				continue
+			}
+			checked++
+			found := false
+			ast.Inspect(fd.Body, func(n ast.Node) bool {
+				call, ok := n.(*ast.CallExpr)
+				if !ok {
+					return true
+				}
+				if id, ok := call.Fun.(*ast.Ident); ok && id.Name == "writeRepMissingError" {
+					found = true
+				}
+				return !found
+			})
+			if !found {
+				violations = append(violations, fmt.Sprintf("%s: %s", fset.Position(fd.Pos()), fd.Name.Name))
+			}
+		}
+	}
+	if checked < 25 {
+		t.Fatalf("UsecaseContext の Add*/Update* が %d 本しか見つからない（25本あるはず）", checked)
+	}
+	if len(violations) != 0 {
+		t.Fatalf("書き込み先 rep が nil のときの writeRepMissingError ガードが無い（nil ポインタ参照で panic する）:\n%s", strings.Join(violations, "\n"))
 	}
 }

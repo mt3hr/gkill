@@ -38,6 +38,7 @@ vi.mock('@/classes/kyou-reload', () => ({
 // GkillAPIRequest→GkillAPI→ApplicationConfig→req_res の循環importがあるため、
 // 本番同様に gkill-api を先に評価させる
 import '@/classes/api/gkill-api'
+import { refresh_kyou } from '@/classes/kyou-reload'
 import { useRykvView } from '@/classes/use-rykv-view'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { RykvViewProps } from '@/pages/views/rykv-view-props'
@@ -314,5 +315,25 @@ describe('useRykvView 初期化', () => {
       const first_saved = api.get_saved_rykv_find_kyou_querys('') as Array<{ query_id: string }>
       expect(first_saved.map((query) => query.query_id), '2枚目の初期化で1枚目の列条件が消えた').toEqual(['col-a'])
     })
+  })
+})
+
+// 引き直しは id キーの「引き直し中」表示を同じ Kyou を出している一覧の行にも点けるので、
+// ダイアログを開くたびに引いていたころは親の一覧が読み込み中に見えていた（2026-09-14 修正）。
+// use-kyou-list-view-dialog.test.ts と同じ約束を列画面側でも固定する（rykv / mi は対称実装）
+describe('useRykvView ダイアログ', () => {
+  test('開いた直後には引き直さない', async () => {
+    const { view, start_init } = createView(['col-a'])
+    start_init()
+    await flushAsync()
+    vi.mocked(refresh_kyou).mockClear()
+    const kyou = { id: 'kyou-1', clone: () => ({ id: 'kyou-1' }) } as unknown as Kyou
+
+    view.open_rykv_dialog('kyou', kyou)
+    await flushAsync()
+
+    expect(vi.mocked(refresh_kyou)).not.toHaveBeenCalled()
+    expect(view.opened_dialogs.value).toHaveLength(1)
+    expect(view.opened_dialogs.value[0].kyou.id).toBe('kyou-1')
   })
 })

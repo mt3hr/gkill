@@ -109,6 +109,7 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetApplicationConfigError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return

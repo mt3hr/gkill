@@ -28,7 +28,7 @@ test.describe('Login page', () => {
   test('login with invalid credentials shows error', async ({ page }) => {
     await submitLogin(page, 'nonexistent_user', 'wrong_password')
 
-    // login-page.vue はエラーを role="alert" の v-alert で出す。
+    // ログイン失敗のエラーは画面右上のフィード（gkill-message-feed-view.vue）が role="alert" の v-alert で出す。
     // 「#app が見えている」だけの確認だと、何が起きても緑になってしまう
     await expect(page.locator('.v-alert[role="alert"]').first(), 'ログイン失敗のエラーが出ない')
       .toBeVisible({ timeout: 30000 })

@@ -26,6 +26,7 @@ test.describe('Shared Mi Page', () => {
     // share_id を付けずに開いたので「共有情報が見つからない」が出る。
     // 以前は old-shared-mi-page.vue が `query.share_id!.toString()` で setup ごと落ち、
     // **エラーも出ない真っ白な画面**になっていた（今回サーバ/クライアント側を修正済み）。
+    // エラーは右上のフィード（gkill-message-feed-view.vue）が `.v-alert[role="alert"]` で出す。
     // `[role="alert"]` だけだと Vuetify が入力欄ごとに置く `v-input__details`（常に存在・不可視）を
     // 掴むので、必ず `.v-alert` まで絞ること
     await expect(page, '共有ページへ移動しない').toHaveURL(/shared_page/, { timeout: 30000 })
