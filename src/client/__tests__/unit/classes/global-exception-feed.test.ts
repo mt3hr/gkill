@@ -49,12 +49,28 @@ describe('global-exception-feed', () => {
         expect(push_mock).toHaveBeenCalledWith(thrown)
     })
 
+    test('window error: 中断は出さない', () => {
+        onWindowError({ error: new DOMException('aborted', 'AbortError'), message: 'Uncaught AbortError' })
+        expect(push_mock).not.toHaveBeenCalled()
+    })
+
     test('Vue の errorHandler は console に出し直してからフィードへ', () => {
         const console_error = vi.spyOn(console, 'error').mockImplementation(() => { })
         const thrown = new Error('render failed')
         onVueError(thrown, 'render function')
         expect(console_error).toHaveBeenCalledWith(thrown, 'render function')
         expect(push_mock).toHaveBeenCalledWith(thrown)
+        console_error.mockRestore()
+    })
+
+    // KyouListView を速くスクロールすると v-virtual-scroll が KyouView を再利用し、props.kyou の
+    // async watcher が飛行中の reload を自分で abort() する。その reject は unhandledrejection ではなく
+    // Vue の errorHandler へ落ちる。ここで握らないと ERR900101 が右上に積み上がる（2026-09-16 に実際に出た）
+    test('Vue の errorHandler: 中断は console にもフィードにも出さない', () => {
+        const console_error = vi.spyOn(console, 'error').mockImplementation(() => { })
+        onVueError(new DOMException('aborted', 'AbortError'), 'watcher callback')
+        expect(console_error).not.toHaveBeenCalled()
+        expect(push_mock).not.toHaveBeenCalled()
         console_error.mockRestore()
     })
 })
