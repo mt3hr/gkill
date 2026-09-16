@@ -44,27 +44,19 @@ import { useCalendarQuery } from '@/classes/use-calendar-query'
 import { useMapQuery } from '@/classes/use-map-query'
 import { usePeriodOfTimeQuery } from '@/classes/use-period-of-time-query'
 
-// Try importing query composables
-const queryComposables: Array<{ name: string; factory: unknown }> = []
+import { useTagQuery } from '@/classes/use-tag-query'
+import { useRepQuery } from '@/classes/use-rep-query'
 
-async function tryImport(name: string, path: string, exportName: string) {
-  try {
-    const mod = await import(path)
-    if (mod[exportName]) {
-      queryComposables.push({ name, factory: mod[exportName] })
-    }
-  } catch {
-    // Import failed - skip
-  }
-}
-
-// The query composables may have various names - try common patterns
-await tryImport('useCalendarQuery', '@/classes/use-calendar-query', 'useCalendarQuery')
-await tryImport('useTagQuery', '@/classes/use-tag-query', 'useTagQuery')
-await tryImport('useMapQuery', '@/classes/use-map-query', 'useMapQuery')
-await tryImport('useRepQuery', '@/classes/use-rep-query', 'useRepQuery')
-await tryImport('usePeriodOfTimeQuery', '@/classes/use-period-of-time-query', 'usePeriodOfTimeQuery')
-await tryImport('useTimeIsQuery', '@/classes/use-time-is-query', 'useTimeIsQuery')
+// 生成テストの対象。以前は動的 import を try/catch で包んで失敗を黙ってスキップしていた
+// （import が壊れても「1本でも通れば緑」）ので、静的 import に置き換えて全本を固定する
+const query_composables: Array<[string, unknown]> = [
+  ['useCalendarQuery', useCalendarQuery],
+  ['useTagQuery', useTagQuery],
+  ['useMapQuery', useMapQuery],
+  ['useRepQuery', useRepQuery],
+  ['usePeriodOfTimeQuery', usePeriodOfTimeQuery],
+  ['useTimeIsQuery', useTimeIsQuery],
+]
 
 // Build minimal mock props that satisfy what query composables access
 function createMockQueryProps() {
@@ -88,18 +80,11 @@ function createMockQueryProps() {
 }
 
 describe('Query Composables', () => {
-  test('at least one query composable is importable', () => {
-    expect(queryComposables.length).toBeGreaterThan(0)
+  test.each(query_composables)('%s は生成できる', (_name, factory) => {
+    const result = (factory as (options: unknown) => unknown)({ props: createMockQueryProps(), emits: vi.fn() })
+    expect(result).toBeDefined()
+    expect(Object.keys(result as object).length).toBeGreaterThan(0)
   })
-
-  for (const { name, factory } of queryComposables) {
-    describe(name, () => {
-      test('can be instantiated', () => {
-        const result = (factory as (options: unknown) => unknown)({ props: createMockQueryProps(), emits: vi.fn() })
-        expect(result).toBeDefined()
-      })
-    })
-  }
 })
 
 // ── 挙動テスト用の小道具 ──

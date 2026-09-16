@@ -490,3 +490,21 @@ describe('ポートに載せたとき', () => {
         ])
     })
 })
+
+// 引き直しは id キーの「引き直し中」表示を同じ Kyou を出している一覧の行にも点けるので、
+// ダイアログを開くたびに引いていたころは Mi リストが読み込み中に見えていた（2026-09-14 修正）
+describe('ダイアログを開いた直後', () => {
+    test('引き直さず、開いた時点の Kyou をそのまま出す', async () => {
+        const { view } = mount_view()
+        const kyou = { ...make_kyou('kyou-1'), clone: () => make_kyou('kyou-1') } as unknown as Kyou
+
+        view.open_rykv_dialog('kyou', kyou)
+        await Promise.resolve()
+        await Promise.resolve()
+
+        expect(refresh_kyou_mock).not.toHaveBeenCalled()
+        expect(refresh_kyou_in_list_mock).not.toHaveBeenCalled()
+        expect(view.opened_dialogs.value).toHaveLength(1)
+        expect(view.opened_dialogs.value[0].kyou.id).toBe('kyou-1')
+    })
+})

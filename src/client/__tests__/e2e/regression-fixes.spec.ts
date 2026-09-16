@@ -48,7 +48,7 @@ test.describe('Regression Tests for Previously Fixed Bugs', () => {
     await dialog.getByRole('button', { name: '保存', exact: true }).click()
 
     // `[role="alert"]` だけだと Vuetify が入力欄ごとに置く `v-input__details`
-    // （常に存在して不可視）を掴む。実際のエラー表示は `.v-alert` なのでそこまで絞る
+    // （常に存在して不可視）を掴む。実際のエラー表示は右上のフィード（gkill-message-feed-view.vue）の `.v-alert` なのでそこまで絞る
     await expect(page.locator('.v-alert[role="alert"]').first(), '本文が空でも保存できてしまっている')
       .toBeVisible({ timeout: 30000 })
     await expect(dialog, '弾かれたのに編集ダイアログが閉じている').toBeVisible()

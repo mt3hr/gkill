@@ -41,7 +41,7 @@ export function isDirectRun(importMetaUrl) {
 // startInfo は server_start ログに載せる「このプロセスがどの世代のツール一覧を配るか」。
 // 「ソースは直っているのに AI からは古い」の切り分けは、まずここと gkill_status の
 // schema_revision を見比べる（プロセスが古いのか、クライアントの一覧が古いのか）。
-function startInfo(server) {
+export function startInfo(server) {
   return { pid: process.pid, schema_revision: server.schemaRevision, tool_count: server.tools.length };
 }
 

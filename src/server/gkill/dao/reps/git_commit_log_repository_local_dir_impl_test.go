@@ -11,6 +11,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 	"time"
 
@@ -318,6 +319,64 @@ func TestBuildPeriodOfTimeSecondsSecondOfDayInput(t *testing.T) {
 				if got := matchPeriodOfTime(p.at, stOK, stSec, etOK, etSec); got != p.want {
 					t.Errorf("matchPeriodOfTime(%v) = %v, want %v", p.at.Format("15:04:05"), got, p.want)
 				}
+			}
+		})
+	}
+}
+
+// ワード検索は SQL 側（GenerateFindSQLCommon）と同じ規則で Go 側が判定する（find_word パッケージ）:
+// 対象はコミットメッセージだけ（作者名・ファイル名は見ない）、ID（ハッシュ）は肯定語の前方一致だけ、
+// 除外語は ID を見ない。git の rep だけ規則がずれると「短縮ハッシュで引けない」「-1 で消える」の形で出る。
+func TestGitCommitLogLocalDirFindKyousWordFilter(t *testing.T) {
+	rep, firstHash, secondHash := newTempGitCommitLogRepo(t)
+	ctx := context.Background()
+
+	tests := []struct {
+		name  string
+		query *find.FindQuery
+		want  []string
+	}{
+		{"本文の部分一致", &find.FindQuery{Words: []string{"second"}}, []string{secondHash}},
+		{"大小無視", &find.FindQuery{Words: []string{"SECOND"}}, []string{secondHash}},
+		{"OR は片方でも一致", &find.FindQuery{Words: []string{"first.txt", "second.txt"}}, []string{firstHash, secondHash}},
+		{"AND は両方を含む行だけ（両方を含む行は無い）", &find.FindQuery{Words: []string{"first.txt", "second.txt"}, WordsAnd: true}, nil},
+		{"除外語は本文で落とす", &find.FindQuery{NotWords: []string{"first"}}, []string{secondHash}},
+		{"ID は短縮ハッシュの前方一致で引ける", &find.FindQuery{Words: []string{firstHash[:8]}}, []string{firstHash}},
+		{"ID の途中の文字列では引けない", &find.FindQuery{Words: []string{firstHash[4:12]}}, nil},
+		{"WordsSkipIDMatch なら ID を照合しない", &find.FindQuery{Words: []string{firstHash[:8]}, WordsSkipIDMatch: true}, nil},
+		{"除外語は ID を見ない", &find.FindQuery{NotWords: []string{firstHash[:8]}}, []string{firstHash, secondHash}},
+		{"作者名は対象外", &find.FindQuery{Words: []string{"test_user"}}, nil},
+		{"IDs との AND", &find.FindQuery{Words: []string{"commit"}, IDs: []string{secondHash}}, []string{secondHash}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kyous, err := rep.FindKyous(ctx, tt.query)
+			if err != nil {
+				t.Fatalf("FindKyous failed: %v", err)
+			}
+			got := make([]string, 0, len(kyous))
+			for id := range kyous {
+				got = append(got, id)
+			}
+			slices.Sort(got)
+			want := slices.Clone(tt.want)
+			slices.Sort(want)
+			if !slices.Equal(got, want) {
+				t.Errorf("FindKyous = %v, want %v", got, want)
+			}
+
+			// FindGitCommitLog（型別取得）も同じ判定を通る
+			commitLogs, err := rep.FindGitCommitLog(ctx, tt.query)
+			if err != nil {
+				t.Fatalf("FindGitCommitLog failed: %v", err)
+			}
+			gotLogs := make([]string, 0, len(commitLogs))
+			for _, commitLog := range commitLogs {
+				gotLogs = append(gotLogs, commitLog.ID)
+			}
+			slices.Sort(gotLogs)
+			if !slices.Equal(gotLogs, want) {
+				t.Errorf("FindGitCommitLog = %v, want %v", gotLogs, want)
 			}
 		})
 	}

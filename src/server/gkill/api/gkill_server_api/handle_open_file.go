@@ -79,6 +79,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 		gkillError := &message.GkillError{
 			ErrorCode:    message.OpenFolderError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FILE_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

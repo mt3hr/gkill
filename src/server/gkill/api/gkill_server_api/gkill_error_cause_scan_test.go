@@ -32,6 +32,28 @@ func isErrLikeIdent(e ast.Expr) (string, bool) {
 	return "", false
 }
 
+// errNotNilInCond は条件式のどこかに `X != nil`（X が err 系の識別子）を含めば X の名前を返す。
+//
+// `err != nil || !ok` / `!ok && err != nil` / `(err != nil)` のような複合条件も対象。
+// 2026-09-16 まで単体の `err != nil` しか見ておらず、`||` で他の条件と繋いだ 27 箇所が
+// 検査から漏れて Cause 無しのまま残っていた。`||` の枝では err が nil のまま入ることも
+// あるが、`Cause: err` は nil なら何も付かないだけで無害（非 nil のときだけ reason とログに効く）。
+func errNotNilInCond(cond ast.Expr) (string, bool) {
+	switch v := cond.(type) {
+	case *ast.ParenExpr:
+		return errNotNilInCond(v.X)
+	case *ast.BinaryExpr:
+		if v.Op == token.LOR || v.Op == token.LAND {
+			if name, ok := errNotNilInCond(v.X); ok {
+				return name, true
+			}
+			return errNotNilInCond(v.Y)
+		}
+		return errNotNilCondIdent(v)
+	}
+	return "", false
+}
+
 // errNotNilCondIdent は `X != nil`（X が err 系の識別子）なら X の名前を返す。
 func errNotNilCondIdent(cond ast.Expr) (string, bool) {
 	be, ok := cond.(*ast.BinaryExpr)
@@ -70,29 +92,39 @@ func compositeLitHasKey(cl *ast.CompositeLit, key string) bool {
 	return false
 }
 
-// findGkillErrorLitsWithoutCause は「err 系の if ブロック内にあるのに Cause が無い GkillError リテラル」の位置を集める。
-func findGkillErrorLitsWithoutCause(fset *token.FileSet, file *ast.File) []token.Position {
-	var missing []token.Position
-	var visit func(n ast.Node, inErrBlock bool)
-	visit = func(n ast.Node, inErrBlock bool) {
+// causeMissing は Cause の無い GkillError リテラルの位置と、囲んでいる if の err 系識別子名。
+type causeMissing struct {
+	pos      token.Position
+	errIdent string
+}
+
+// findGkillErrorLitsWithoutCause は「err 系の if ブロック内にあるのに Cause が無い GkillError リテラル」を集める。
+// errIdent（"" なら err ブロックの外）を持ち回り、外側の if の識別子を内側へ引き継ぐ。
+func findGkillErrorLitsWithoutCause(fset *token.FileSet, file *ast.File) []causeMissing {
+	var missing []causeMissing
+	var visit func(n ast.Node, errIdent string)
+	visit = func(n ast.Node, errIdent string) {
 		if n == nil {
 			return
 		}
 		switch v := n.(type) {
 		case *ast.IfStmt:
 			if v.Init != nil {
-				visit(v.Init, inErrBlock)
+				visit(v.Init, errIdent)
 			}
-			visit(v.Cond, inErrBlock)
-			_, isErrCond := errNotNilCondIdent(v.Cond)
-			visit(v.Body, inErrBlock || isErrCond)
+			visit(v.Cond, errIdent)
+			bodyIdent := errIdent
+			if name, ok := errNotNilInCond(v.Cond); ok {
+				bodyIdent = name
+			}
+			visit(v.Body, bodyIdent)
 			if v.Else != nil {
-				visit(v.Else, inErrBlock)
+				visit(v.Else, errIdent)
 			}
 			return
 		case *ast.CompositeLit:
-			if isMessageGkillErrorLit(v) && inErrBlock && !compositeLitHasKey(v, "Cause") {
-				missing = append(missing, fset.Position(v.Lbrace))
+			if isMessageGkillErrorLit(v) && errIdent != "" && !compositeLitHasKey(v, "Cause") {
+				missing = append(missing, causeMissing{pos: fset.Position(v.Lbrace), errIdent: errIdent})
 			}
 		}
 		ast.Inspect(n, func(child ast.Node) bool {
@@ -101,14 +133,14 @@ func findGkillErrorLitsWithoutCause(fset *token.FileSet, file *ast.File) []token
 			}
 			switch child.(type) {
 			case *ast.IfStmt, *ast.CompositeLit:
-				visit(child, inErrBlock)
+				visit(child, errIdent)
 				return false
 			}
 			return true
 		})
 	}
 	for _, decl := range file.Decls {
-		visit(decl, false)
+		visit(decl, "")
 	}
 	return missing
 }
@@ -137,8 +169,8 @@ func TestGkillErrorInErrBlockHasCause(t *testing.T) {
 				t.Fatalf("parse %s: %v", path, err)
 			}
 			checked++
-			for _, pos := range findGkillErrorLitsWithoutCause(fset, file) {
-				t.Errorf("%s:%d: if err != nil の中の message.GkillError に Cause が無い。`Cause: err,` を足すこと", pos.Filename, pos.Line)
+			for _, m := range findGkillErrorLitsWithoutCause(fset, file) {
+				t.Errorf("%s:%d: if %s != nil の中の message.GkillError に Cause が無い。`Cause: %s,` を足すこと", m.pos.Filename, m.pos.Line, m.errIdent, m.errIdent)
 			}
 		}
 	}

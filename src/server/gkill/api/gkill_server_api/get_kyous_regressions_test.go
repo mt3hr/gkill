@@ -216,6 +216,10 @@ func TestHandleGetKyous_PluginFindFailureIsWarningNotError(t *testing.T) {
 	for _, msg := range getResp.Messages {
 		if msg.MessageCode == message.FindKyousPluginWarningMessage {
 			foundWarning = true
+			// level が warning でないと Web のエラー表示が閉じるまで残らず 2.5 秒で消える
+			if msg.Level != message.MessageLevelWarning {
+				t.Errorf("警告の level = %q, want %q", msg.Level, message.MessageLevelWarning)
+			}
 			break
 		}
 	}

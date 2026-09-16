@@ -87,6 +87,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 			gkillError = &message.GkillError{
 				ErrorCode:    message.AccountSessionNotFoundError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
+				Cause:        err,
 			}
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -146,6 +147,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInfoUpdateError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

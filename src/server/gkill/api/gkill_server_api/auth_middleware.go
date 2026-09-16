@@ -164,6 +164,7 @@ func (g *GkillServerAPI) authMiddleware(next http.Handler) http.Handler {
 			writeGkillErrorResponse(ctx, w, &message.GkillError{
 				ErrorCode:    message.AccountSessionNotFoundError,
 				ErrorMessage: "session_id is required",
+				Cause:        err,
 			})
 			return
 		}
@@ -219,6 +220,7 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 			writeGkillErrorResponse(ctx, w, &message.GkillError{
 				ErrorCode:    message.AccountSessionNotFoundError,
 				ErrorMessage: "session_id is required",
+				Cause:        err,
 			})
 			return
 		}

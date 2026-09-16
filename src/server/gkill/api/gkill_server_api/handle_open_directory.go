@@ -79,6 +79,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 		gkillError := &message.GkillError{
 			ErrorCode:    message.OpenFolderError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FOLDER_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

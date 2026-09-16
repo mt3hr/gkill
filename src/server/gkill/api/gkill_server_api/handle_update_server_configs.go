@@ -148,6 +148,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 			gkillError := &message.GkillError{
 				ErrorCode:    message.UpdateServerConfigError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
+				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
