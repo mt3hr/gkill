@@ -344,6 +344,7 @@ loop:
 				gkillErrorCh2 <- &message.GkillError{
 					ErrorCode:    message.WriteGPXFileError,
 					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+					Cause:        writeErr,
 				}
 				return
 			}

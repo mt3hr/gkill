@@ -129,11 +129,13 @@ func commitTxGkillError(err error, localeName string) *message.GkillError {
 			return &message.GkillError{
 				ErrorCode:    code,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+				Cause:        err,
 			}
 		}
 	}
 	return &message.GkillError{
 		ErrorCode:    message.CommitTxRolledBackError,
 		ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SAVE_NOTHING_SAVED_MESSAGE"}),
+		Cause:        err,
 	}
 }

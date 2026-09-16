@@ -140,6 +140,7 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 		gkillError := &message.GkillError{
 			ErrorCode:    message.UpdateUsersAccountStatusError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_ACCOUNT_STATUS_STRUCT_UPDATED_GET_MESSAGE"}),
+			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

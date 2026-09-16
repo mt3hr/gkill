@@ -21,10 +21,10 @@ import { KFTLStartURLogStatementLine } from '@/classes/kftl/kftl_urlog/kftl-star
 /**
  * Supplementary individual KFTL type tests.
  *
- * The comprehensive type detection (17 types, 28 tests) and request generation
- * (kmemo, tag, split, related-time, 15 tests) are covered in:
- * - kftl-type-detection.test.ts
- * - kftl-request-generation.test.ts
+ * Type detection by prefix is covered in kftl-type-detection.test.ts and the
+ * line-label chains in kftl-line-labels.test.ts. Request generation no longer
+ * exists on the TypeScript side: the server's Go implementation interprets and
+ * writes KFTL text (ADR-0507), and the TS statement classes only produce line labels.
  *
  * This file tests additional behaviors not covered there:
  * - Split vs SplitAndNextSecond distinction (mutual exclusivity)

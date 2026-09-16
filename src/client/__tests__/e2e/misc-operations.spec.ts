@@ -71,7 +71,7 @@ test.describe('Misc Operations', () => {
     await expect(page, '共有ページへ移動しない').toHaveURL(/shared_page/, { timeout: 30000 })
 
     // 存在しない共有IDなので handle_get_shared_kyous がエラーを返し、
-    // shared-page.vue が role="alert" の v-alert で見せる。
+    // 画面右上のフィード（gkill-message-feed-view.vue）が role="alert" の v-alert で見せる。
     // 「画面が描けた」だけの確認だと、黙って空のページが出ていても緑になる
     // `[role="alert"]` だけだと Vuetify が入力欄ごとに置く `v-input__details`
     // （常に存在して不可視）を掴んでしまう。`.v-alert` まで絞る

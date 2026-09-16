@@ -20,7 +20,8 @@ import (
 // check_auth がこれを見るとログアウトさせる。操作対象不在の経路で混ぜると
 // 操作した管理者がその場で締め出される（2026-08 に ERR000413 へ分離）。
 func TestHandleUpdateUserReps_TargetAccountNotFoundReturns404(t *testing.T) {
-	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsServer, gkillAPI, cleanup := setupTestRouter(t)
+	tsURL := tsServer.URL
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"

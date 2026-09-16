@@ -142,6 +142,12 @@ export function firstDisallowedArg(args, allowed) {
   return null
 }
 
+// `gkill_server version` の出力から tree hash の行を読む。無ければ null
+export function parseServerTreeHash(stdout) {
+  const m = /^tree:\s+(\S+)\s*$/m.exec(stdout || '')
+  return m ? m[1] : null
+}
+
 // PATH 上の gkill_server が埋め込んでいる tree hash。run-e2e.mjs と同じホームと --log none で
 // 呼び、本番の ~/gkill/logs を触らない（version サブコマンドも PersistentPreRun でログを初期化する）。
 export function serverTreeHash() {
@@ -152,8 +158,20 @@ export function serverTreeHash() {
     'version',
   ], { encoding: 'utf8' })
   if (res.error || res.status !== 0) return null
-  const m = /^tree:\s+(\S+)\s*$/m.exec(res.stdout || '')
-  return m ? m[1] : null
+  return parseServerTreeHash(res.stdout)
+}
+
+// 記録するかの判定。スイートの結果と環境と引数から決まり、ここ以外で記録の可否を決めない。
+//   { record: true }                      … 記録する
+//   { record: false, reason: '...' }      … 記録しない理由（exit には影響しない）
+// 「失敗したのに記録する」変更は attestation の前提を壊すので、この関数を単体テストで固定する。
+export function decideRecording({ status, signal, ci, args, allowed }) {
+  if (signal) return { record: false, reason: `${signal} で中断` }
+  if (status !== 0) return { record: false, reason: `exit ${status}` }
+  if (ci) return { record: false, reason: 'CI 環境' }
+  const bad = firstDisallowedArg(args, allowed)
+  if (bad !== null) return { record: false, reason: `引数 ${bad} は全件実行を保証しない` }
+  return { record: true }
 }
 
 function main() {
@@ -182,13 +200,9 @@ function main() {
   if (res.status !== 0) process.exit(res.status)
 
   // ここから先はスイートが通ったあとの記録。失敗しても exit 0 のまま（警告だけ出す）
-  if (process.env.CI) {
-    console.error(`[attestation] CI 環境なので ${suite} は記録しない`)
-    return
-  }
-  const bad = firstDisallowedArg(args, spec.allowed)
-  if (bad !== null) {
-    console.error(`[attestation] ${suite} は記録しない: 引数 ${bad} は全件実行を保証しない（許可: ${spec.allowed.map((r) => r.flag).join(' ') || 'なし'}）`)
+  const decision = decideRecording({ status: res.status, signal: res.signal, ci: Boolean(process.env.CI), args, allowed: spec.allowed })
+  if (!decision.record) {
+    console.error(`[attestation] ${suite} は記録しない: ${decision.reason}（許可: ${spec.allowed.map((r) => r.flag).join(' ') || 'なし'}）`)
     return
   }
   try {
