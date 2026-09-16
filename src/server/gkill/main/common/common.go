@@ -479,24 +479,18 @@ func InitGkillOptions() {
 	gkill_options.TLSCertFileDefault = fmt.Sprintf("%s/tls/cert.cer", gkill_options.GkillHomeDir)
 	gkill_options.TLSKeyFileDefault = fmt.Sprintf("%s/tls/key.pem", gkill_options.GkillHomeDir)
 	gkill_options.DataDirectoryDefault = fmt.Sprintf("%s/datas", gkill_options.GkillHomeDir)
-}
 
-func fixTimezone() {
-	if runtime.GOOS == "android" {
-		out, err := exec.Command("/system/bin/getprop", "persist.sys.timezone").Output()
-		if err != nil {
-			return
-		}
-		z, err := time.LoadLocation(strings.TrimSpace(string(out)))
-		if err != nil {
-			return
-		}
-		time.Local = z
-	}
+	// Android では libc（SQLite の 'localtime'）にも端末のゾーンを教える。
+	// 最初の SQLite 接続（InitGkillServerAPI）より前でなければ効かない（fix_timezone.go）。
+	libcTimezoneApplied = applyLibcTimezone(gkill_options.GkillHomeDir)
 }
 
 func InitGkillServerAPI() error {
 	var err error
+
+	// SQLite の 'localtime' と Go の time.Local が同じ壁時計かを、実データを開く前に1回だけ見る。
+	// 食い違っていると時間帯フィルタが黙って0件になるので、ここで原因を1行残す（fix_timezone.go）。
+	checkSQLiteLocaltime(context.Background())
 
 	gkillServerAPI, err = gkill_server_api.NewGkillServerAPI()
 	if err != nil {

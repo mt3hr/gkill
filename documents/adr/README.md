@@ -172,6 +172,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0217](0217-upload-batch-atomicity-not-guaranteed.md) | アップロードのバッチ原子性は保証しない（ファイル単位の原子性のみ） | Accepted |
 | [0218](0218-get-kyou-histories-via-cached-reps.md) | `/api/get_kyou` の版履歴はキャッシュ rep を回して集める（`UnWrap()` は rep 名照合のときだけ） | Accepted |
 | [0219](0219-commit-tx-is-one-sqlite-transaction.md) | commit_tx は書き込み rep のファイルを ATTACH した1接続の SQLite トランザクションで確定する | Accepted |
+| [0220](0220-sqlite-localtime-follows-libc-zone.md) | SQLite の 'localtime' は libc のゾーンで決まるので、Android では libc にも端末のゾーンを教える | Accepted |
 | [0301](0301-plugin-cancel-vs-kill.md) | プラグインの打ち切りは「待つのをやめる」と「プロセスを殺す」を分け、期限はスロットを取ってから張る | Accepted |
 | [0302](0302-plugin-provides-typed-index.md) | プラグインは provides で型別/付随データを提供でき、アダプタの読み取りは索引から即答する | Accepted |
 | [0303](0303-plugin-cache-use-crc32-and-size.md) | Google Takeout は ZIP のまま読み、差分判定は (CRC32, Size)、世代は「フォルダ + 書き出し時刻」 | Accepted |
