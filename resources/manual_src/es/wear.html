@@ -1,0 +1,81 @@
+<!-- title: Reloj (Wear OS) - Ayuda -->
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros pasos</a> &gt; <span>Reloj (Wear OS)</span></nav>
+  <h1>Reloj (Wear OS)</h1>
+  <p>Desde un reloj Wear OS (como un Pixel Watch) puede registrar con plantillas del bloc de notas, terminar una entrada de tiempo en curso y registrar su estado de ánimo. Intervienen dos aplicaciones: «gkill wear» en el reloj y «Configuración de gkill wear» en el teléfono. El teléfono retransmite cada registro al servidor, así que debe estar cerca y emparejado con el reloj.</p>
+
+  <h2>Qué necesita</h2>
+  <ul>
+    <li>Un reloj Wear OS emparejado con su teléfono</li>
+    <li>Un servidor gkill al que el teléfono pueda conectarse (si se ejecuta en un PC doméstico, permita las conexiones de otros dispositivos en la configuración del servidor)</li>
+    <li>Su ID de usuario y contraseña de gkill</li>
+  </ul>
+
+  <h2>Configurar el teléfono</h2>
+  <ol>
+    <li>Instale y abra «Configuración de gkill wear» en el teléfono.</li>
+    <li>Introduzca la URL del servidor, el ID de usuario y la contraseña y pulse «Guardar y probar conexión».</li>
+    <li>Para un servidor HTTPS autofirmado, active «Permitir certificado autofirmado». La primera prueba de conexión muestra la huella del certificado; confirme que pertenece a su servidor y pulse «Confiar y guardar» (pulse «Rechazar» si no la reconoce).</li>
+    <li>Cuando aparezca «Conexión correcta», la configuración está lista. No hay nada que configurar en el reloj.</li>
+  </ol>
+  <div class="tip">
+    http:// solo funciona para el propio teléfono (localhost). Use https:// para un servidor de su red doméstica o externo.
+  </div>
+
+  <h2>Uso en el reloj</h2>
+  <p>Abra la ficha o la aplicación «gkill wear» en el reloj y verá tres entradas.</p>
+  <table>
+    <tr>
+      <th>Entrada</th>
+      <th>Qué hace</th>
+    </tr>
+    <tr>
+      <td>📝 Registrar</td>
+      <td>Elija una plantilla del bloc de notas y regístrela. Las plantillas son las que edita en «Plantillas del bloc de notas» en la pantalla de configuración (la primera vez se obtienen a través del teléfono y después se muestran desde la caché; «🔄 Actualizar» las vuelve a obtener).</td>
+    </tr>
+    <tr>
+      <td>▶ En curso</td>
+      <td>Lista las entradas de tiempo en curso. Elija una, confirme «¿Terminar?» y se registra la hora de fin.</td>
+    </tr>
+    <tr>
+      <td>⭐️ Ánimo</td>
+      <td>Registra su estado de ánimo con cinco estrellas. Toque la mitad izquierda o derecha de una estrella para elegir en pasos de 0,5 (1–10); el valor es el mismo que el del registro de ánimo en la web.</td>
+    </tr>
+  </table>
+
+  <h2>Idioma de la pantalla</h2>
+  <p>Las pantallas del reloj y del teléfono siguen el idioma del dispositivo y están disponibles en siete idiomas (japonés, inglés, chino, coreano, español, francés y alemán). Al cambiar el idioma del reloj, la ficha se vuelve a dibujar automáticamente.</p>
+
+  <h2>Enviar el mismo contenido dos veces</h2>
+  <p>Si acaba de enviar el mismo contenido, el reloj pregunta «El mismo contenido se guardó hace un momento. ¿Enviar de todos modos?». Esto evita que un reenvío se registre dos veces. Elija «Enviar de todos modos» si realmente quiere una segunda copia.</p>
+
+  <h2>Cuando algo falla</h2>
+  <table>
+    <tr>
+      <th>Mensaje</th>
+      <th>Qué hacer</th>
+    </tr>
+    <tr>
+      <td>No se puede conectar con el teléfono</td>
+      <td>Compruebe que el reloj está emparejado con el teléfono y que el Bluetooth del teléfono está activado.</td>
+    </tr>
+    <tr>
+      <td>El teléfono no respondió a tiempo</td>
+      <td>Abra «Configuración de gkill wear» en el teléfono y ejecute «Guardar y probar conexión». Compruebe también que el servidor está en marcha y que su URL no ha cambiado.</td>
+    </tr>
+    <tr>
+      <td>✕ Error: Fallo de inicio de sesión</td>
+      <td>Vuelva a introducir el ID de usuario y la contraseña en la aplicación de configuración del teléfono. Tras cambiar la contraseña debe iniciar sesión de nuevo en todos los dispositivos.</td>
+    </tr>
+    <tr>
+      <td>El registro no aparece en la lista</td>
+      <td>Los registros escritos desde el reloj se guardan con «gkill wear» como aplicación de origen. Si su búsqueda filtra por aplicación de origen o por ubicación, revise esas condiciones.</td>
+    </tr>
+  </table>
+
+  <h2>Documentos relacionados</h2>
+  <ul>
+    <li><a href="kftl.html">Pantalla del bloc de notas</a></li>
+    <li><a href="kftl-template-struct.html">Estructura de plantillas</a></li>
+    <li><a href="playing.html">Pantalla de en curso</a></li>
+    <li><a href="troubleshooting.html">Cuando aparece un error</a></li>
+  </ul>

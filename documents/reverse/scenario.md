@@ -186,7 +186,7 @@ sequenceDiagram
 
 **物語：** 出勤前、ユーザは KFTL 画面に「起きた」「今日のタスク3つ」「気分7」などを一気に打ち込み、保存する。1 回の入力から複数種類の Kyou（kmemo / mi / lantana …）がまとめて生成される。
 
-**重要な差別化点：** 対話 UI の KFTL も **サーバ側の1実装**（`POST /api/submit_kftl_text` → `kftl.KFTLStatement.GenerateAndExecuteRequests`）で解釈・記録します（2026-09-15、[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)）。ブラウザの TypeScript（`classes/kftl/`）は**行ラベルの分類器だけ**で、「おかしな行」のピンク表示と未知タグ・未知板名の確認は書かない解析 `POST /api/parse_kftl_text` の応答から作ります。以前はブラウザ側でパースして `add_*` を tx で fan-out していましたが、Go だけに入った修正が Web に届かない事故が繰り返されたので廃止しました。MCP / モバイルのサーバ側一括パス（シナリオ7・11）と同じ入口です。
+**重要な差別化点：** 対話 UI の KFTL も **サーバ側の1実装**（`POST /api/submit_kftl_text` → `kftl.KFTLStatement.GenerateAndExecuteRequests`）で解釈・記録します（2026-09-15、[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)）。ブラウザの TypeScript（`classes/kftl/`）は**行ラベルの分類器だけ**で、「おかしな行」のピンク表示と未知タグ・未知板名の確認は書かない解析 `POST /api/parse_kftl_text` の応答から作ります。以前はブラウザ側でパースして `add_*` を tx で fan-out していましたが、Go だけに入った修正が Web に届かない事故が繰り返されたので廃止しました。MCP / モバイルのサーバ側一括パス（シナリオ7・11）と同じ入口です。種別だけ書いて「！」で保存したような**内容の無い記録は書く前に行別エラー**になり、200 で何も書かれない「静かな空振り」は起きません（[ADR-0508](../adr/0508-kftl-blank-records-are-input-errors.md)）。
 
 ```mermaid
 sequenceDiagram

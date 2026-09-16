@@ -2,7 +2,7 @@
 
 ## 概要
 
-Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（10ファイル、140テスト）とウォッチ側アプリ（7ファイル、86テスト）の合計226テスト（17ファイル）で構成される。
+Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（10ファイル、140テスト）とウォッチ側アプリ（8ファイル、88テスト）の合計228テスト（17ファイル）で構成される。
 
 ## テストフレームワーク
 
@@ -25,13 +25,14 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 | `phone_companion/src/test/java/.../GkillErrorTextTest.kt` | 12 | エラーコード→文言の照合。`WIRE_ERROR_CODES` 全件に訳があること（コードを足して訳を忘れると落ちる）、未知文字列・`HTTP 500` の素通し、`ERROR:` 付き応答だけ訳して `OK`/`DUPLICATE`/JSON はバイト列のまま |
 | `phone_companion/src/test/java/.../StringsParityTest.kt` | 7 | `res/values` と `values-{en,zh,ko,es,fr,de}` の `strings.xml` の整合（ロケール集合・キー集合の一致・`translatable="false"` の非重複・空値なし・`%1$s` プレースホルダの一致・未エスケープの `'` `"` と孤立 `%` の検出・`server_locale_name` がディレクトリ名と一致） |
 
-### watch_app（ウォッチ側アプリ）— 86テスト
+### watch_app（ウォッチ側アプリ）— 88テスト
 
 | ファイル | テスト数 | テスト内容 |
 |---------|---------|-----------|
 | `watch_app/src/test/java/.../MainActivityTest.kt` | 21 | ウォッチアプリの Activity テスト（画面状態の件数、タイルが渡す `EXTRA_MODE` の値） |
 | `watch_app/src/test/java/.../data/LantanaKftlTest.kt` | 16 | 気分記録。星5個と気分値 1-10 の対応（Web 版の式との一致）、送信する KFTL テキストの完全一致、範囲外・未選択(0)の拒否 |
 | `watch_app/src/test/java/.../TemplateCacheManagerTest.kt` | 9 | ウォッチ上のテンプレートキャッシュ管理と、スマホへ取りに行くかの判定（`shouldFetchFromPhone`） |
+| `watch_app/src/test/java/.../tile/LocaleChangedReceiverTest.kt` | 2 | 端末の言語変更でタイルの再描画を要求すること（`TileService.getUpdater` を MockK で差し替え）と、`LOCALE_CHANGED` 以外のブロードキャストを無視すること。タイルのレイアウトは `onTileRequest` 時の文言で固定されるので、ここが無いと言語を切り替えてもタイルだけ古い言語のまま残る |
 | `watch_app/src/test/java/.../GkillWearClientTest.kt` | 11 | Wearable Data Layer クライアント |
 | `watch_app/src/test/java/.../data/model/TemplateNodeTest.kt` | 10 | テンプレートツリー構造のデータモデル |
 | `watch_app/src/test/java/.../data/model/PlayingTimeIsNodeTest.kt` | 13 | Playing（計画）UIノードモデル |

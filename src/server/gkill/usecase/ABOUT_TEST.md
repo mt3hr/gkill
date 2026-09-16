@@ -28,6 +28,7 @@
 | テスト | 見張っている規約 | 破ったときの症状 |
 |-------|----------------|----------------|
 | `TestWriteThroughCacheErrorIsNotDiscarded` | キャッシュ反映のエラーを `_ =` で捨てない | 反映が落ちても呼び出し元に何も伝わらず、次の `UpdateCache` まで古い応答が見える |
+| `TestUsecaseAddUpdateGuardsWriteRepMissing` | `UsecaseContext` の `Add*` / `Update*`（25本）が本体で `writeRepMissingError(` を呼ぶ | 書き込み先 rep が nil のまま `AddXxxInfo` を呼んで nil ポインタ参照で panic し、利用者には「内部エラー」しか出ない（2026-09-15 まで tx を使わない全 Add/Update がそうだった） |
 | `TestPeriodOfTimeWeekOfDaysHasNilGuard` | `PeriodOfTimeWeekOfDays` を nil ガード無しで `len()` しない | nil が「7曜日ではない」と判定され、許可曜日が1つも立たず**全件消える** |
 | `TestNoUnreachablePackages` | どこからも import されないパッケージを残さない | バイト単位の複製が2重管理され、片方だけテストが薄いまま放置される |
 | `TestAggregateFindChunksIDs` | 集約リポジトリの Find 入口が `findChunkedByIDs` を通る | IDリストがSQLのバインド上限(32766)を超えたとき、**GkillError が立たないまま「HTTP 200・errors:null・0件」**で返る |

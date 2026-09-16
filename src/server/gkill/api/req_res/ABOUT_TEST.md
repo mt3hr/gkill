@@ -16,6 +16,7 @@ Go `testing` パッケージ
 | ファイル | テスト内容 |
 |---------|-----------|
 | `req_res_test.go` | JSONフィールド名の契約、omitempty、`ShouldIncludeTimeIs` の三値解釈 |
+| `response_error_field_type_scan_test.go` | ソース走査。全 `*_response.go` の `Errors` / `Messages` が名前付きスライス型 `message.GkillErrors` / `message.GkillMessages`（json タグ `errors` / `messages`）であること |
 
 ## テスト内容
 
@@ -30,6 +31,10 @@ Go `testing` パッケージ
 - **ネストしたペイロード** (`TestKyouMCPDTO_CarriesPluginPayload`)
   `KyouMCPDTO.Payload` は `any` 型。MCPクライアントは `payload.kind` を見て
   分岐するので、具体的なペイロードがそのままネストして出ることを確認する
+- **応答の `Errors` / `Messages` の型** (`TestResponseErrorAndMessageFieldsUseNamedSliceTypes`)
+  成功時に `errors: []` / `messages: []` を返すのは名前付きスライス型の `MarshalJSON` が nil を `[]` に揃えるからで
+  （2026-09-15 まで null だった。ADR-0710・外部レビュー #8）、素の `[]*message.GkillError` で書いた応答型だけが
+  `errors: null` へ静かに戻る。コンパイルもキー名のテストも通るので、型をソース走査で固定する
 - **`ShouldIncludeTimeIs`** — `is_include_timeis` が未指定 / true / false の三値。
   `*bool` にしているのは「未指定なら true」を表すためで、
   省略時にTimeIsが落ちるとMCPクライアント側の記録内容が黙って減る

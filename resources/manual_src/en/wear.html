@@ -1,0 +1,81 @@
+<!-- title: Watch (Wear OS) - Help -->
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Watch (Wear OS)</span></nav>
+  <h1>Watch (Wear OS)</h1>
+  <p>From a Wear OS watch (such as a Pixel Watch) you can record with notepad templates, end a time entry that is in progress, and record your mood. Two apps are involved: “gkill wear” on the watch and “gkill wear Settings” on the phone. The phone relays every record to the server, so the phone must be nearby and paired with the watch.</p>
+
+  <h2>What you need</h2>
+  <ul>
+    <li>A Wear OS watch paired with your phone</li>
+    <li>A gkill server the phone can reach (if it runs on a home PC, allow connections from other devices in the server settings)</li>
+    <li>Your gkill user ID and password</li>
+  </ul>
+
+  <h2>Setting up the phone</h2>
+  <ol>
+    <li>Install and open “gkill wear Settings” on the phone.</li>
+    <li>Enter the server URL, user ID and password, then tap “Save &amp; Test Connection”.</li>
+    <li>For a self-signed HTTPS server, turn on “Allow self-signed certificate”. The first connection test shows the certificate fingerprint; confirm it belongs to your server and tap “Trust and save” (tap “Reject” if you do not recognize it).</li>
+    <li>When “Connected” appears, setup is complete. There is nothing to configure on the watch.</li>
+  </ol>
+  <div class="tip">
+    http:// only works for the phone itself (localhost). Use https:// for a server on your home network or elsewhere.
+  </div>
+
+  <h2>Using the watch</h2>
+  <p>Open the tile or the “gkill wear” app on the watch and you will see three entries.</p>
+  <table>
+    <tr>
+      <th>Entry</th>
+      <th>What it does</th>
+    </tr>
+    <tr>
+      <td>📝 Record</td>
+      <td>Pick a notepad template and record it. The templates are the ones you edit under “Notepad templates” in the settings screen (fetched through the phone the first time, then shown from the cache; “🔄 Refresh” fetches them again).</td>
+    </tr>
+    <tr>
+      <td>▶ In Progress</td>
+      <td>Lists the time entries currently running. Pick one, confirm “End?”, and the end time is recorded.</td>
+    </tr>
+    <tr>
+      <td>⭐️ Mood</td>
+      <td>Records your mood with five stars. Tap the left or right half of a star to choose in 0.5 steps (1–10); the value is the same as the mood record on the web.</td>
+    </tr>
+  </table>
+
+  <h2>Display language</h2>
+  <p>The watch and phone screens follow the device language and are available in seven languages (Japanese, English, Chinese, Korean, Spanish, French, German). When you change the watch language, the tile is redrawn automatically.</p>
+
+  <h2>Sending the same content twice</h2>
+  <p>If you just sent the same content, the watch asks “The same content was saved just now. Send it anyway?”. This prevents a resent message from being recorded twice. Choose “Send anyway” if you really want a second copy.</p>
+
+  <h2>When something goes wrong</h2>
+  <table>
+    <tr>
+      <th>Message</th>
+      <th>What to do</th>
+    </tr>
+    <tr>
+      <td>Cannot connect to the phone</td>
+      <td>Check that the watch is paired with the phone and that Bluetooth on the phone is on.</td>
+    </tr>
+    <tr>
+      <td>The phone did not respond in time</td>
+      <td>Open “gkill wear Settings” on the phone and run “Save &amp; Test Connection”. Also check that the server is running and that its URL has not changed.</td>
+    </tr>
+    <tr>
+      <td>✕ Error: Login failed</td>
+      <td>Re-enter the user ID and password in the phone settings app. After changing your password you must sign in again on every device.</td>
+    </tr>
+    <tr>
+      <td>The record does not appear in the list</td>
+      <td>Records written from the watch are saved with “gkill wear” as the creating app. If your search filters by creating app or repository, check those conditions.</td>
+    </tr>
+  </table>
+
+  <h2>Related pages</h2>
+  <ul>
+    <li><a href="kftl.html">Notepad screen</a></li>
+    <li><a href="kftl-template-struct.html">Template structure</a></li>
+    <li><a href="playing.html">In-progress screen</a></li>
+    <li><a href="troubleshooting.html">When an error appears</a></li>
+  </ul>
