@@ -195,6 +195,8 @@ fri
 
 <h3>20. Sauvegarder : <code>!</code></h3>
 <p>Termine le document et exécuté le processus de sauvegarde.</p>
+<p>La ligne <code>!</code> elle-même ne compte pas comme ligne de valeur. Par exemple, si vous n'écrivez que <code>!</code> sur la ligne qui suit <code>/timeis</code>, l'erreur « aucun contenu » apparaît car le titre manque et rien n'est enregistré. Écrivez le texte, le nombre ou le titre sur la ligne qui suit la ligne de type, puis ajoutez <code>!</code>.</p>
+<p>Un enregistrement sans contenu (une note sans texte, une tâche sans titre, une dépense avec seulement le nom du magasin, un enregistrement numérique sans valeur), une étiquette ou une heure associée sans rien à rattacher et une date prévue illisible sont signalés comme des erreurs par ligne avant tout enregistrement (la ligne devient rose). Si une seule ligne est en erreur, cette sauvegarde n'écrit rien.</p>
 <pre>!</pre>
 
 <h2>Exemple complet</h2>

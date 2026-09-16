@@ -9,7 +9,7 @@ Vue コンポーネント（`pages/`）から使用されるロジック層。
 
 ```
 classes/
-├── (ルートファイル 368個)        # use-*.ts Composable + ユーティリティ
+├── (ルートファイル 369個)        # use-*.ts Composable + ユーティリティ
 ├── api/                        # GkillAPI クライアント → api/README.md
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md
@@ -182,6 +182,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-device-kind.ts` | 端末種別（PC / タブレット / スマートフォン）とタッチの有無。ドラッグ&ドロップの可否は `is_pc` で判断する。モジュールレベルのシングルトン |
 | `use-gkill-message-feed.ts` | 画面右上のエラー / メッセージのフィード（モジュールレベルのシングルトン）。エラーと warning は閉じるまで残し、info だけ 2.5 秒で消す。同じエラーの連打は ×N にまとめる。`main.ts` の握られなかった例外もここへ（ADR-0411） |
 | `use-gkill-message-feed-view.ts` | フィード表示（`gkill-message-feed-view.vue`）のロジック。色・role・「詳細をコピー」 |
+| `global-exception-feed.ts` | `main.ts` が window / Vue に登録する例外の配線。中断（`abort-error.ts` で判定）と ResizeObserver の通知は出さず、それ以外の握られなかった例外をフィードへ流す（`main.ts` は mount の副作用があるので、ここへ切り出してテストする） |
 
 ### ユーティリティファイル
 

@@ -147,6 +147,11 @@ npm run release
 > リポジトリ外の配置スクリプト（`~/Git/scripts` の `releaseGkillServer.sh` / `ReleaseGkillPlugins.ps1`）は
 > `npm run release` を経由せずビルドスクリプトを直接呼ぶため**このゲートを通らない**。そちらからも
 > 先頭で `npm run verify_release_gate` を呼ぶこと。
+
+> MCP のツール説明を変えたら `node src/tools/mcp_schema_budget.mjs` で tools/list のバイト量が予算内かを見る。
+> 意図した変更なら `npm run mcp:schema-budget -- --update` で予算ファイル（`src/mcp/tool-schema-budget.json`）を
+> 書き直してから同じコミットに入れる（`test_mcp` の予算テストが照合する）。MCP の NSSM サービスは作業ツリーを
+> 直接実行しているので、コミット後に再起動しないと古い説明のまま配り続ける。
 >
 > APK 3本はリリース署名でビルドされる。署名鍵の受け渡しと未設定時の挙動は
 > `.claude/skills/gkill-build-test/SKILL.md` の「APK リリース署名」を参照。

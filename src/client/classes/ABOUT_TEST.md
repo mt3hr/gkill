@@ -66,6 +66,11 @@ Vitest
 | `src/client/__tests__/unit/classes/use-kyou-list-view-dialog.test.ts` | 一覧ダイアログ。20件のイベント中継と、自分で記録詳細ダイアログをホストする経路 |
 | `src/client/__tests__/unit/classes/mi-board-struct.test.ts` | 板ツリーへの板の存在判定と追加（冪等、空文字スキップ、子配列の初期化） |
 | `src/client/__tests__/unit/classes/mi-board-column-layout.test.ts` | 板の列見出しの高さ定数が CSS と一致すること（二重管理のズレ検出） |
+| `src/client/__tests__/unit/classes/gkill-tx.test.ts` | 複数書き込みを tx_id で束ねて commit_tx で確定する共通ヘルパ（ADR-0410）。work の失敗・throw・commit の失敗のどれでも discard_tx すること、commit 後の引き直しがキャッシュを捨ててから引くこと |
+| `src/client/__tests__/unit/classes/use-gkill-message-feed.test.ts` | 画面右上のエラー / メッセージのフィード。エラーと warning は閉じるまで残り info だけ自動で消えること、同じエラーの連打が ×N にまとまること、reason / kind からヒントが付くこと、null と中断は出さないこと、握られなかった例外がコード付きで出ること、コピー用テキスト |
+| `src/client/__tests__/unit/classes/use-gkill-message-feed-view.test.ts` | フィード表示（`gkill-message-feed-view.vue`）のロジック。`role="alert"` はエラーだけ（warning / info に付けると「検索完了」のたびに読み上げが割り込む）、閉じると `has_items` が追随すること、「詳細をコピー」がクリップボード不可の環境（http の LAN アクセス等）で `prompt` へ落ち「コピーしました」を出さないこと |
+| `src/client/__tests__/unit/classes/error-hints.test.ts` | `error_kind` / `reason` → ヒントの i18n キー。語彙が Go 側の `error_kind.go` / `error_reason.go` と一致し、全キーが ja / en に実在すること |
+| `src/client/__tests__/unit/classes/global-exception-feed.test.ts` | `main.ts` が window / Vue に登録する例外の配線（`global-exception-feed.ts`）。中断（`classes/abort-error.ts` の1実装で判定）は既定の出力ごと握りつぶし、リソース読込失敗と ResizeObserver の通知は出さず、それ以外はフィードへ流すこと。Vue の errorHandler は console に出し直してからフィードへ |
 
 ### 走査型テスト（型では検出できない書き間違いをソース走査で検出する）
 
@@ -88,6 +93,8 @@ Vitest
 | `src/client/__tests__/unit/classes/dnote-correlation-matrix-layout.test.ts` | 相関マトリクスのレイアウト計算 |
 | `src/client/__tests__/unit/classes/kyou-attached-tags-nowrap-source-scan.test.ts` | 付随タグの折り返し指定をソース走査で固定 |
 | `src/client/__tests__/unit/classes/kyou-detail-pane-attached-source-scan.test.ts` | 詳細ペインが付随データを出す配線をソース走査で固定 |
+| `src/client/__tests__/unit/classes/service-worker-webmanifest-route-source-scan.test.ts` | PWA の manifest 専用ルートが `precacheAndRoute` より先に登録され、ネットワークを先に見る戦略になっていること。後ろにあると precache の古い manifest が返り続け、theme_color やアイコンを変えても端末へ永久に届かない |
+| `src/client/__tests__/unit/classes/tx-bundle-source-scan.test.ts` | 複数書き込みの保存経路（`use-add-*-view` / `use-edit-*-view` / リポスト作成 / 連鎖削除）が `run_in_tx` を通し、Kyou の add_*/update_* ごとに `tx_id` を積んでいること（ADR-0410）。tx を通さず Kyou を書くのはチェック切り替え・打刻終了の単発書き込み4本の許可リストに限る。外れても型検査も既存テストも通ったまま「本体だけ書けてタグが無い記録」が静かに残るので走査で見張る |
 
 ## テスト内容
 

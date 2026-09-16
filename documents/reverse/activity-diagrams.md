@@ -72,6 +72,8 @@ flowchart TD
 > 未知なら確認を出して中断、承認されたら `submit_kftl_text` へ進む。タイプミスによるタグの乱立を防ぐためのもので、
 > サーバ側 `/api/submit_kftl_text` には該当する処理は無い。解釈そのもの（行の適用・行別エラー・展開）は
 > `parse` と `submit` で同じ `prepareRequests` を通る（[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)）。
+> 行の適用のあと、各リクエストの `ValidateContent` が内容の無い記録・付け先の無いメタ情報・読めない予定日時を行別エラーにする
+> （[ADR-0508](../adr/0508-kftl-blank-records-are-input-errors.md)。保存マーカー「！」の行は値の行に数えない）。
 
 ### プレフィックスの2系統
 

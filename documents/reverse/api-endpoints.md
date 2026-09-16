@@ -5,9 +5,9 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、109ファイル。テスト15ファイルを含み、実装は91ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、112ファイル。テスト15ファイルを含み、実装は91ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（188ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（189ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、17ファイル）
 
 ## 共通仕様
@@ -230,7 +230,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 #### `/api/parse_kftl_text` — KFTLテキストの解析だけ（書かない）
 
-Web のメモ帳が打鍵のたび（止まって300ms後）に投げて「おかしな行」をピンクにし、保存の直前にも投げて未知タグ・未知板名の確認に使う（`documents/adr/0507-kftl-single-implementation-on-server.md`）。解析は `submit_kftl_text` と同じ `kftl.KFTLStatement.prepareRequests`（行の解釈 → 全行の適用 → 繰り返しの展開）を通るので、ここで通った入力が送信で弾かれることは無い。DB を読まないので `wrapAuth`（repositories 不要）。
+Web のメモ帳が打鍵のたび（止まって300ms後）に投げて「おかしな行」をピンクにし、保存の直前にも投げて未知タグ・未知板名の確認に使う（`documents/adr/0507-kftl-single-implementation-on-server.md`）。解析は `submit_kftl_text` と同じ `kftl.KFTLStatement.prepareRequests`（行の解釈 → 全行の適用 → 繰り返しの展開）を通るので、ここで通った入力が送信で弾かれることは無い。内容の無い記録（種別だけ・空の本文・店名だけの支出）、付け先の無いタグ・関連時刻、読めない予定日時も `invalid_lines` に載る（[ADR-0508](../adr/0508-kftl-blank-records-are-input-errors.md)。保存マーカー「！」の行は値の行に数えない）。DB を読まないので `wrapAuth`（repositories 不要）。
 
 ```json
 // リクエスト例
@@ -567,6 +567,6 @@ MCPサーバは11個のReadツールを提供する。内訳は固有の10（`gk
 - **合計:** `/api/` エンドポイント 91件（90 POST + 1 GET）+ 非APIルート 19件（PathPrefix 18 + Path 1）
 - **ルート表（正本）:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` の `apiRoutes()`。パス・HTTPメソッド・認証区分・無認証ボディ上限・ハンドラを1行1ルートで持ち、本番（`serve.go`）とテストハーネスがそのまま登録する。表に載っている = 実行時に応答する（「定義はあるが未登録」は構造的に起きない。[ADR-0709](../adr/0709-api-route-table-single-source.md)）
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（188ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（189ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（17ファイル）
 - かつて `get_kftl_template` と `get_gkill_info` はアドレス定義だけがあり（ハンドラ未登録で実行時404）、Web クライアントにも同じ残骸が揃っていた。2026-09-14 にルート表を正本化した際に削除した。Web クライアント（`gkill-api.ts`）の `xxx_address` / `xxx_method` は `gkill-api.test.ts` が表と突き合わせる

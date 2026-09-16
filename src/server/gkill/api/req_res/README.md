@@ -28,7 +28,7 @@
 
 > どちらも名前付きスライス型で、**成功時（nil）でも `"errors": []` / `"messages": []` として出る**（`message.GkillErrors` / `GkillMessages` の `MarshalJSON`。2026-09-15 までは `null` だった）。TypeScript 側の `res.errors ?? []` のガードは古い応答のために残してある。
 
-## 全ファイル一覧（188ファイル: 型定義187 + テスト `req_res_test.go` 1）
+## 全ファイル一覧（189ファイル: 型定義187 + テスト 2）
 
 ### 認証系（10ファイル）
 
@@ -176,7 +176,7 @@
 |---------|------|
 | `delete_share_kyou_list_info_request.go` / `delete_share_kyou_list_infos_response.go` | 共有リスト情報削除 |
 
-### その他操作系（11ファイル）
+### その他操作系（13ファイル）
 
 | ファイル | 説明 |
 |---------|------|
@@ -187,6 +187,7 @@
 | `parse_kftl_text_request.go` / `parse_kftl_text_response.go` | KFTL テキストの解析だけ（`invalid_lines` / `tags` / `mi_board_names` / `record_count`。空は `[]`） |
 | `urlog_bookmarklet_request.go` | URLog ブックマークレットアドレス |
 | `get_kyous_mcp_request.go` / `get_kyous_mcp_response.go` | MCP 用 Kyou 取得 |
+| `get_rep_infos_mcp_request.go` / `get_rep_infos_mcp_response.go` | MCP 用の rep 情報（rep_types の正準語彙・付随データ rep・索引の鮮度） |
 
 ### ユーティリティ型（5ファイル）
 

@@ -1,0 +1,81 @@
+<!-- title: Montre (Wear OS) - Aide -->
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Montre (Wear OS)</span></nav>
+  <h1>Montre (Wear OS)</h1>
+  <p>Depuis une montre Wear OS (comme une Pixel Watch), vous pouvez enregistrer avec des modèles du bloc-notes, terminer une entrée de temps en cours et enregistrer votre humeur. Deux applications interviennent : « gkill wear » sur la montre et « Paramètres gkill wear » sur le téléphone. Le téléphone relaie chaque enregistrement vers le serveur : il doit donc être à proximité et appairé à la montre.</p>
+
+  <h2>Ce qu'il vous faut</h2>
+  <ul>
+    <li>Une montre Wear OS appairée à votre téléphone</li>
+    <li>Un serveur gkill joignable depuis le téléphone (s'il tourne sur un PC domestique, autorisez les connexions d'autres appareils dans les paramètres du serveur)</li>
+    <li>Votre identifiant et votre mot de passe gkill</li>
+  </ul>
+
+  <h2>Configurer le téléphone</h2>
+  <ol>
+    <li>Installez et ouvrez « Paramètres gkill wear » sur le téléphone.</li>
+    <li>Saisissez l'URL du serveur, l'identifiant et le mot de passe, puis appuyez sur « Enregistrer et tester la connexion ».</li>
+    <li>Pour un serveur HTTPS auto-signé, activez « Autoriser un certificat auto-signé ». Le premier test de connexion affiche l'empreinte du certificat ; vérifiez qu'elle est bien celle de votre serveur et appuyez sur « Faire confiance et enregistrer » (appuyez sur « Refuser » si vous ne la reconnaissez pas).</li>
+    <li>Quand « Connexion réussie » s'affiche, la configuration est terminée. Il n'y a rien à régler sur la montre.</li>
+  </ol>
+  <div class="tip">
+    http:// ne fonctionne que pour le téléphone lui-même (localhost). Utilisez https:// pour un serveur de votre réseau domestique ou externe.
+  </div>
+
+  <h2>Utilisation sur la montre</h2>
+  <p>Ouvrez la tuile ou l'application « gkill wear » sur la montre : trois entrées s'affichent.</p>
+  <table>
+    <tr>
+      <th>Entrée</th>
+      <th>Fonction</th>
+    </tr>
+    <tr>
+      <td>📝 Enregistrer</td>
+      <td>Choisissez un modèle du bloc-notes et enregistrez-le. Les modèles sont ceux que vous modifiez dans « Modèles du bloc-notes » de l'écran des paramètres (récupérés via le téléphone la première fois, puis affichés depuis le cache ; « 🔄 Actualiser » les récupère à nouveau).</td>
+    </tr>
+    <tr>
+      <td>▶ En cours</td>
+      <td>Liste les entrées de temps en cours. Choisissez-en une, confirmez « Terminer ? » et l'heure de fin est enregistrée.</td>
+    </tr>
+    <tr>
+      <td>⭐️ Humeur</td>
+      <td>Enregistre votre humeur avec cinq étoiles. Touchez la moitié gauche ou droite d'une étoile pour choisir par pas de 0,5 (1–10) ; la valeur est la même que celle de l'enregistrement d'humeur sur le web.</td>
+    </tr>
+  </table>
+
+  <h2>Langue d'affichage</h2>
+  <p>Les écrans de la montre et du téléphone suivent la langue de l'appareil et existent en sept langues (japonais, anglais, chinois, coréen, espagnol, français, allemand). Quand vous changez la langue de la montre, la tuile est redessinée automatiquement.</p>
+
+  <h2>Envoyer deux fois le même contenu</h2>
+  <p>Si vous venez d'envoyer le même contenu, la montre demande « Le même contenu vient d'être enregistré. Envoyer quand même ? ». Cela évite qu'un renvoi soit enregistré deux fois. Choisissez « Envoyer quand même » si vous voulez vraiment une seconde copie.</p>
+
+  <h2>En cas de problème</h2>
+  <table>
+    <tr>
+      <th>Message</th>
+      <th>Que faire</th>
+    </tr>
+    <tr>
+      <td>Connexion au téléphone impossible</td>
+      <td>Vérifiez que la montre est appairée au téléphone et que le Bluetooth du téléphone est activé.</td>
+    </tr>
+    <tr>
+      <td>Le téléphone n'a pas répondu à temps</td>
+      <td>Ouvrez « Paramètres gkill wear » sur le téléphone et lancez « Enregistrer et tester la connexion ». Vérifiez aussi que le serveur fonctionne et que son URL n'a pas changé.</td>
+    </tr>
+    <tr>
+      <td>✕ Erreur : échec de la connexion</td>
+      <td>Saisissez à nouveau l'identifiant et le mot de passe dans l'application de paramètres du téléphone. Après un changement de mot de passe, il faut se reconnecter sur tous les appareils.</td>
+    </tr>
+    <tr>
+      <td>L'enregistrement n'apparaît pas dans la liste</td>
+      <td>Les enregistrements écrits depuis la montre sont sauvegardés avec « gkill wear » comme application d'origine. Si votre recherche filtre par application d'origine ou par emplacement, vérifiez ces conditions.</td>
+    </tr>
+  </table>
+
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="kftl.html">Écran du bloc-notes</a></li>
+    <li><a href="kftl-template-struct.html">Structure des modèles</a></li>
+    <li><a href="playing.html">Écran en cours</a></li>
+    <li><a href="troubleshooting.html">Quand une erreur s'affiche</a></li>
+  </ul>

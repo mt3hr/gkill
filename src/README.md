@@ -85,7 +85,7 @@ src/
 │   └── gkill/
 │       ├── api/     #   HTTP API (91エンドポイント)
 │       │   ├── kftl/    #   KFTL パーサ
-│       │   └── req_res/ #   Request/Response 構造体 (188ファイル)
+│       │   └── req_res/ #   Request/Response 構造体 (189ファイル)
 │       ├── dao/     #   データアクセス層 (SQLite3)
 │       │   └── reps/#   メインリポジトリ (4層実装)
 │       ├── plugin/  #   プラグイン作者向け Go SDK (sdk.Run / sdk.Handler)

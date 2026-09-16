@@ -136,14 +136,15 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/dialog-autofocus.spec.ts` | ダイアログを開いたら最初のテキスト入力欄にカーソルが載ること（選び方の判定そのものは `unit/classes/dialog-autofocus.test.ts`） |
 | `src/client/__tests__/e2e/sample-data-smoke.spec.ts` | 配布サンプルデータの起動スモーク。run-e2e.mjs がサンプルデータのコピーを home にした gkill_server を別ポートで起動し（URL は `GKILL_E2E_SAMPLE_URL`）、embed 配信のフロントエンドへ README 記載の資格情報でログインして rykv に記録が出ること。ログインはレート制限を消費するので1回だけ |
 
-### Composable ユニットテスト（60ファイル）
+### Composable ユニットテスト（61ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
 | `src/client/__tests__/unit/composables/add-views.test.ts` | Mi, Tag, Nlog, URLog, Lantana, TimeIs, KC の追加ビュー Composable |
 | `src/client/__tests__/unit/composables/edit-views.test.ts` | Kmemo, Mi, Nlog, URLog, TimeIs, Lantana, KC の編集ビュー Composable |
+| `src/client/__tests__/unit/composables/tx-bundle-views.test.ts` | tx で束ねる保存経路のうち直接テストが無かった5画面（リポスト作成・リポストタスク追加/編集・リポスト編集・ファイル記録の編集）。書き込み（tx_id 付き）→ commit_tx → registered_kyou / updated_kyou の順、失敗時は discard_tx して何も emit しないこと、変更なしは何も書かないこと |
+| `src/client/__tests__/unit/composables/shared-mi-view-dialog.test.ts` | 共有ページのダイアログホスト。開いた直後に引き直さないこと（rykv / mi / dashboard と同じ約束）、closed で該当ダイアログだけ閉じること |
 | `src/client/__tests__/unit/composables/context-menus.test.ts` | 10エンティティ型のコンテキストメニュー Composable（ZIPブラウズ項目含む） |
-| `src/client/__tests__/unit/composables/confirm-delete.test.ts` | 削除確認ダイアログ Composable |
 | `src/client/__tests__/unit/composables/page-composables.test.ts` | ページレベル Composable |
 | `src/client/__tests__/unit/composables/query-composables.test.ts` | クエリ操作 Composable パターン |
 | `src/client/__tests__/unit/composables/save-clipboard-to-file-dialog.test.ts` | クリップボード保存ダイアログ Composable（初期状態、MIME判定、ファイルサイズ表示、load_clipboard エラーパス、save_or_confirm、useScopedCtrlVForClipboard キー処理） |
@@ -169,7 +170,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/config-struct-sync.test.ts` | 板ツリー・タグツリーのセッション中追随。どちらもサーバに実体が無く、一覧APIから起動時に組み立てられる |
 | `src/client/__tests__/unit/composables/confirm-unknown-mi-board.test.ts` | 「新しい板です」確認ゲート。板はサーバ側に実体が無いので、打ち間違いが無言で新しい板を生やす |
 | `src/client/__tests__/unit/composables/dashboard-page-reload.test.ts` | useDashboardPage（設定の取得・テーマ・メッセージ・ツリー追随・ログアウトだけの薄いページ）。設定取得の失敗が永久スピナーにならないこと |
-| `src/client/__tests__/unit/composables/dashboard-view-reload.test.ts` | useDashboardView の再読込（`registered_kyou` のデバウンス、日付変更と初回ロードの共通化） |
+| `src/client/__tests__/unit/composables/dashboard-view-reload.test.ts` | useDashboardView の再読込（`registered_kyou` のデバウンス、日付変更と初回ロードの共通化）と、ダイアログを開いた直後に引き直さないこと（rykv / mi の initial-load テストにも同じ1本がある） |
 | `src/client/__tests__/unit/composables/dnote-correlation-graph-crud.test.ts` | 相関グラフの CRUD 導線がトレンドグラフと同じ形で端まで繋がっていること |
 | `src/client/__tests__/unit/composables/dnote-relay-chain.test.ts` | Dnote の中継チェーンが `requested_reload_kyou` を親まで通すこと（タグ/テキスト/通知の変更はこれしか信号を出さない） |
 | `src/client/__tests__/unit/composables/edit-kyou-tags-view.test.ts` | 追加/編集画面に埋め込むタグ欄。値を集めるだけで登録は親の `save()` が行う |
