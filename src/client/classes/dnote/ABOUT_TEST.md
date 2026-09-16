@@ -20,6 +20,7 @@ Vitest
 | `src/client/__tests__/unit/dnote/trend-aggregator.test.ts` | DnoteTrendAggregator（トレンドグラフの時系列バケット集計: 日/週/月粒度、ゼロ埋め、バケット上限、TimeIs の 0:00 区切りと計上先 `timeis_span_policy`、時刻平均の 0 時またぎ） |
 | `src/client/__tests__/unit/dnote/correlation-aggregator.test.ts` | Pearson／Spearman、p値、信頼区間、lag、欠損除外と `missing_as_zero`（未来のバケットは 0 にしない・件数／合計でだけ効く）、設定往復（指標オプションの既定値） |
 | `src/client/__tests__/unit/dnote/kyou-loader.test.ts` | Dnote 用 Kyou ローダ（対象 Kyou の読み込み） |
+| `src/client/__tests__/unit/dnote/correlation-graph-editor-view.test.ts` | 相関グラフの編集画面（`use-dnote-correlation-graph-editor-view.ts`）。`missing_as_zero` は件数・合計の集計対象でだけ選べ、平均のまま残ったチェックは保存時に落とすこと、指標2〜10本・名前の空/重複・lag の非整数の入力検査、`initial_query` の差し替えで読み直すこと |
 
 ## テスト内容
 
@@ -28,7 +29,7 @@ Vitest
 - **Aggregate Targets**: カウント、合計、平均、最小、最大など。`dnote-aggregate-target/` の22ファイルのうち19種が集計対象（残り3つは `average-info.ts` / `time-of-day-average-info.ts` / `format-aggregated-number.ts` のヘルパ）。表示用の丸め（`format-aggregated-number.ts`）もここでテストする。丸めを通すのは平均系と浮動小数の合計系のみで、整数しか出ない集計と時刻整形の集計は対象外
 - **Aggregators**: `DnoteAgregator`（単一集計）と `DnoteListAggregator`（リスト集計）の動作検証
 - **Serialization**: D-note 設定辞書の JSON シリアライゼーション / デシリアライゼーション
-- **Correlation**: 相関統計、方向付きlag、欠損のペアワイズ除外と `missing_as_zero` による 0 埋め、相関グラフ設定のシリアライズ
+- **Correlation**: 相関統計、方向付きlag、欠損のペアワイズ除外と `missing_as_zero` による 0 埋め、相関グラフ設定のシリアライズ、編集画面の保存時の正規化（集計対象と噛み合わない `missing_as_zero` を落とす）
 
 ## 対象ディレクトリと対応表
 

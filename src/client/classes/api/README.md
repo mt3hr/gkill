@@ -37,6 +37,7 @@ api/
 | `drop-type-foldable-struct.ts` | ドラッグ&ドロップ時のデータ型折り畳み構造体 |
 | `file-data.ts` | `FileData` 型（アップロードファイル情報） |
 | `generate-get-playing-timeis-kyous-query.ts` | 稼働中 TimeIs の Kyou 取得クエリ生成ユーティリティ（実体は `find_query/generate-playing-timeis-query.ts` へ委譲） |
+| `yield-to-main.ts` | 大きな応答の詰め替え中にメインスレッドへ制御を返す（30万件応答の描画ブロック対策） |
 
 ## サブディレクトリ
 

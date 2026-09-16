@@ -2,7 +2,7 @@
 
 ## 概要
 
-`src/tools/` のうち、リリースゲート（テスト済み attestation）を構成する 4 ファイルのテスト。
+`src/tools/` のうち、リリースゲート（テスト済み attestation）を構成する 6 ファイル（`attestation.mjs` / `run_test_suite.mjs` / `verify_release_gate.mjs` / `verify_release_artifacts.mjs` / `put_version_info.mjs` / `mcp_schema_budget.mjs` を除く判定関数）のテスト。
 壊れると「テスト未実施のコミットが配布される」（2026-08-30 監査 F-006 の再来）に戻るので、
 ローカル `npm test` と CI（`ci.yml` の `frontend` ジョブ）の両方で回す。
 
@@ -13,9 +13,12 @@ git を実際に呼ぶので、`git` が PATH に要る。リポジトリ本体�
 
 ## テストファイル
 
+55テスト（2ファイル）。静的計数、`test.each` は 1 と数える。
+
 | ファイル | テスト内容 |
 |---------|-----------|
-| `src/tools/__tests__/attestation.test.mjs` | `attestation.mjs` / `run_test_suite.mjs` / `verify_release_gate.mjs` の単体・結合テスト（41テスト（1ファイル）。静的計数、`test.each` は 1 と数える） |
+| `src/tools/__tests__/attestation.test.mjs` | `attestation.mjs` / `run_test_suite.mjs`（引数許可リスト・`SUITES` 表）/ `verify_release_gate.mjs` の単体・結合テスト（読む側） |
+| `src/tools/__tests__/release_scripts.test.mjs` | 書く側。`run_test_suite.mjs` の記録条件（`decideRecording`: 失敗・シグナル中断・CI・絞り込み引数では記録しない）と `gkill_server version` からの tree 読み取り、`put_version_info.mjs` の `version.json`（tree_hash・git が無いときは環境変数の SHA か unknown で止めない）、`verify_release_artifacts.mjs` の成果物一覧（12件）・7za 一覧の読み方・必須エントリ・debug 署名判定・apksigner の探索 |
 
 ## テスト内容
 
@@ -29,6 +32,9 @@ git を実際に呼ぶので、`git` が PATH に要る。リポジトリ本体�
 - **記録ファイル**: 無ければ空、追記で別スイートが残る、temp ファイルが残らない、壊れた JSON・違うスキーマは「記録なし」扱い
 - **GitHub API**: URL の形、非 2xx は投げる（fail-closed）、トークンがあれば `Authorization`、fetch が無い環境は投げる
 - **`runGate` end-to-end**（fetch スタブ）: 全部そろえば `RELEASE_ATTESTATION_<version>.json` を書く／dirty／attestation 不足は 1 スイート 1 件／GitHub 不通は CI と Nightly の 2 件／CI failure + Nightly が古い／Nightly 以後の依存変更
+- **記録の条件（`decideRecording`）**: 成功・非 CI・許可された引数だけなら記録し、exit 非 0・シグナル中断・CI・絞り込み引数・引数が検査内容を置き換えるスイートの引数ありでは記録しない。「失敗したのに記録する」変更は attestation の前提を壊す
+- **`version.json`**: `build_time` はローカル時刻＋タイムゾーン、`commit_hash` / `tree_hash` は git から、git が無ければ `GITHUB_SHA` / `COMMIT_SHA` か unknown でビルドを止めない
+- **成果物の検証**: 成果物はゲートの記録 + Go 7種 + APK 3本 + サンプルデータの 12 件、`7za l -slt` の `Path = ` 行だけを拾い区切りを `/` に揃える、必須エントリの欠けの列挙、`CN=Android Debug` の検出、`build-tools` の最新版から `apksigner` を探す
 
 ## 実行方法
 

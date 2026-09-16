@@ -14,7 +14,7 @@ gkill/
 ├── public/                 # 静的アセット（favicon.ico等）
 ├── release/                # リリースビルド成果物（クロスコンパイル時に生成）
 ├── resources/              # リソースファイル
-│   ├── manual/             # 生成済みHTMLマニュアル（7言語×23ページ、go:embed対象。gitignore済みで build_manuals が生成する）
+│   ├── manual/             # 生成済みHTMLマニュアル（7言語×24ページ、go:embed対象。gitignore済みで build_manuals が生成する）
 │   ├── manual_src/         # マニュアルの原本（7言語 + _layout.html）。build_manuals.mjs の入力
 │   └── gkill_sample_data/  # サンプルデータ
 ├── .github/                # GitHub Actions ワークフロー
@@ -128,14 +128,14 @@ src/server/
     │   ├── find_kyou_context.go    # 検索コンテキスト
     │   ├── find/                   # 検索クエリ構造体
     │   ├── message/                # メッセージ/エラー構造体
-    │   ├── req_res/                # リクエスト/レスポンス構造体（188ファイル）
+    │   ├── req_res/                # リクエスト/レスポンス構造体（189ファイル）
     │   ├── kftl/                   # KFTLパーサー（バックエンド側、50ステートメント型）
     │   │   ├── kftl_factory.go     # ファクトリ（ステートメント生成、日本語/ASCII両プレフィックス）
     │   │   └── *.go                # 各ステートメント型実装
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（152ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（156ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
     │       ├── gkill_server_api_address.go  # ルート表（91エンドポイント: 90 POST + 1 GET。パス・メソッド・認証区分・ハンドラの正本）
@@ -146,7 +146,7 @@ src/server/
     │       ├── utils.go            # ユーティリティ関数
     │       ├── web_push.go         # WebPush通知
     │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
-    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、109ファイル）
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、112ファイル）
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     ├── dao/                        # データアクセス層

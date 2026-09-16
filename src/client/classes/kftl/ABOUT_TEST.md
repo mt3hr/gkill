@@ -18,6 +18,7 @@ Vitest
 |---------|-----------|
 | `src/client/__tests__/unit/kftl/kftl-statement.test.ts` | 行の分類（ブロックの行の並び・タグ行やテキストブロックを挟んだときの位置）と行ラベルの先読み（50行上限、受け皿の「**********」） |
 | `src/client/__tests__/unit/kftl/kftl-type-detection.test.ts` | ステートメント型の判定（日本語プレフィックス + ASCIIプレフィックス、否定ケース含む） |
+| `src/client/__tests__/unit/kftl/kftl-line-labels.test.ts` | 直線的な型（数値記録・気分・打刻6種・ブックマーク・テキスト・区切り・関連時刻・タグ）の行ラベルの連鎖と「変な○○」判定。ASCII 接頭辞が日本語と同じラベル列になること。TS が分類器だけになった後（ADR-0507）、接頭辞を Go 側と揃えて足したときにラベルの連鎖だけ古いまま残るのを止める |
 | `src/client/__tests__/unit/kftl/kftl-individual-types.test.ts` | ステートメント型ごとの補足テスト（Split と SplitAndNextSecond の排他、Kmemo の catch-all、プレフィックスの一意性、startsWith 型と exact 型の差） |
 | `src/client/__tests__/unit/kftl/kftl-date-time.test.ts` | KFTL の日時文字列のパース（欠けた年月日の補完。ラベルの「読めない」判定に使う） |
 | `src/client/__tests__/unit/kftl/kftl-schedule-field-time.test.ts` | Mi / MiReKyou の予定日時欄のパース。行頭の `？`/`?` は例外にする（ラベルを「不正な期限」にするため） |

@@ -34,7 +34,7 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 
 | ファイル | テスト対象 |
 |---------|-----------|
-| `git_commit_log_repository_local_dir_impl_test.go` | git コミットログ（ローカルディレクトリ直読み）。削除フラグ付きなら該当なし、ID 指定の意味論（未指定=全件 / 非nil空=0件 / 実ハッシュ=1件）、期間の両端を含むこと、**git リポジトリでないパスなら `ErrNotGitRepository` を包んだエラーを返すこと**（呼び出し側がその rep だけスキップできるようにするため） |
+| `git_commit_log_repository_local_dir_impl_test.go` | git コミットログ（ローカルディレクトリ直読み）。削除フラグ付きなら該当なし、ID 指定の意味論（未指定=全件 / 非nil空=0件 / 実ハッシュ=1件）、期間の両端を含むこと、**git リポジトリでないパスなら `ErrNotGitRepository` を包んだエラーを返すこと**（呼び出し側がその rep だけスキップできるようにするため）、ワード検索が SQL 側と同じ規則であること（対象はコミットメッセージだけ・ハッシュは肯定語の前方一致だけ・除外語はハッシュを見ない・`WordsSkipIDMatch`。`FindKyous` と `FindGitCommitLog` の両方） |
 | `gps_log_repository_gpx_dir_impl_test.go` | GPS ログ（GPX ディレクトリ直読み）。日付ごとのファイル解決、期間の両端を含むこと、開始と終了が逆なら入れ替えること、該当日のファイルが無ければ読み飛ばすこと |
 
 ### キャッシュ・一時・ユーティリティテスト
@@ -49,6 +49,7 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `git_commit_log_cached_nested_pool_test.go` | gitキャッシュビルド中フォールバックのネスト並列プール枯渇と isCacheBuilding データ競合の回帰テスト |
 | `mi_re_kyou_cached_nested_pool_test.go` | MiReKyou キャッシュのネスト並列プール枯渇の回帰テスト（`git_commit_log_cached_nested_pool_test.go` と同種） |
 | `gkill_repositories_test.go` | 最新版アドレスキャッシュの排他制御（後述）と、`GetAllRepNames` が `RepNamesProvider` の申告名を全部並べること（1リーフが複数の名前を返しても集約が詰まらない） |
+| `repositories_get_kyou_histories_cache_test.go` | `/api/get_kyou`（update_time 指定なし）の実体 `GetKyouHistoriesByRepName` の回帰。rep 名の指定が無いときは `UnWrap()` せずキャッシュ rep の `GetKyouHistories` を回すこと（剥がすと leaf 約850本を毎回なめて引き直しが十数秒になる。ADR-0218） |
 | `target_resolution_memo_test.go` | ReKyou/MiReKyou ワード委譲検索のターゲット解決メモ |
 | `db_file_change_detector_test.go` | DBファイル変更検出（キャッシュ無効化トリガ） |
 | `derived_cache_path_test.go` | 派生キャッシュ（サムネ/動画/ZIP）のユーザ別パス解決 |

@@ -27,6 +27,8 @@ Go `testing` パッケージ
 | `sort_result_kyous_test.go` | 検索結果の並べ替え |
 | `find_filter_pipeline_bench_test.go` | 検索パイプラインのベンチマーク（`go test` の既定では走らない） |
 | `gkill_sample_data_test.go` | 配布サンプル `resources/gkill_sample_data` が現行コードで動くこと（account.db のスキーマと Argon2id 認証、REPOSITORY 14件の `$GKILL_HOME` 展開後パス実在と種別が既知集合に含まれること、`FindKyous` で主要repから記録が返ること、Web Push 鍵が空で配布されていること）。**コミット済みDBを直接開かず、必ずテンポラリへコピーしてから検証する**（DAOは開くだけでスキーマ移行・IDF走査によりDBを変異させる） |
+| `embed_mime_test.go` | `embed.go` の `init()` が登録する MIME 型の固定。登録行を落としても build / vet は通り、「manifest が text/plain で配られる」形で静かに壊れる |
+| `rep_types_coverage_test.go` | rep_types の正準語彙（`find.KyouRepTypes`）と実装の switch 群の対応。どちらかに値を足し忘れると「その rep 種別だけ検索から静かに消える」 |
 
 #### `find_filter_test.go` の内容
 

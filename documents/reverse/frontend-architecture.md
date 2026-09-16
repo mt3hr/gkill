@@ -37,7 +37,7 @@ src/client/
 │   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,500行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
-│   │   └── req_res/                # リクエスト/レスポンス型 (173ファイル、サーバー側は188ファイル)
+│   │   └── req_res/                # リクエスト/レスポンス型 (173ファイル、サーバー側は189ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
 │   ├── kftl/                        # KFTLパーサー (53 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)。行ラベルの分類器だけで、解釈と書き込みはサーバ（ADR-0507）
@@ -147,7 +147,7 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 
 ### Dnote相関グラフ コンポーネント
 
-取得済みKyouと既存の `DnoteTrendAggregator` を再利用し、2～10指標の相関ヒートマップと選択セルの散布図をクライアント側で表示する。追加・編集・削除は共通の相関グラフダイアログを使い、設定は `dnote_json_data` 内へ保存する。
+取得済みKyouと既存の `DnoteTrendAggregator` を再利用し、2～10指標の相関ヒートマップと選択セルの散布図をクライアント側で表示する。追加・編集・削除は共通の相関グラフダイアログを使い、設定は `dnote_json_data` 内へ保存する。指標ごとのオプションは「記録が無い期間を0とみなす」（`missing_as_zero`。件数・合計でだけ有効。編集画面 `use-dnote-correlation-graph-editor-view.ts` は集計対象を平均へ変えたあと残ったチェックを保存時に落とす）と「日をまたぐ打刻の計上先」（`timeis_span_policy`）。
 
 **iframe セキュリティ:** `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）でセッションCookieを隔離する。
 

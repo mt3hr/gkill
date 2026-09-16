@@ -343,7 +343,7 @@ sequenceDiagram
     UI-->>User: 保存成功メッセージ・タブを閉じる
 ```
 
-> **解釈と書き込みはサーバの1実装**（[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)）。
+> **解釈と書き込みはサーバの1実装**（[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)）。内容の無い記録は書く前に行別エラー（[ADR-0508](../adr/0508-kftl-blank-records-are-input-errors.md)）。
 > 2026-09-15 までブラウザは TS でパースして `add_*` を1つの TXID で fan-out していたが、Go だけに入った修正が
 > Web に届かない事故が繰り返されたので、Wear / MCP と同じ `submit_kftl_text` に寄せた。TS の `classes/kftl/` は
 > 行ラベルの分類器だけで、「おかしな行」は `parse_kftl_text`（`kftl.KFTLStatement.Analyze`。`submit` と同じ
