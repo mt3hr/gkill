@@ -1,4 +1,4 @@
-import { log_unless_aborted } from '@/classes/abort-error'
+import { is_abort_error, log_unless_aborted } from '@/classes/abort-error'
 import { computed, watch, type Ref, ref, nextTick, onUnmounted } from 'vue'
 import { format_time } from '@/classes/format-date-time'
 import { useDelayedLoading } from '@/classes/use-delayed-loading'
@@ -103,7 +103,19 @@ export function useKyouView(options: {
         // スピナーも中身も出ない空白の時間ができる
         is_typed_datas_loading.value = !cloned_kyou.value.is_typed_data_loaded
         if (props.force_show_latest_kyou_info) {
-            await cloned_kyou.value.reload(props.force_show_latest_kyou_info);//最新を読み込むためにReload
+            try {
+                await cloned_kyou.value.reload(props.force_show_latest_kyou_info);//最新を読み込むためにReload
+            } catch (err: unknown) {
+                // v-virtual-scroll の再利用で props.kyou が続けて差し替わると、上の abort() が
+                // この reload を打ち切る。中断は正常な流れなので、ここで受けて何もせず抜ける
+                // （打ち切られた時点で cloned_kyou は後発に差し替わっていて、付随データの読み込みも
+                // 後発の watcher が始める）。中断以外は投げ直し、Vue の errorHandler 経由で
+                // ERR900101 としてフィードに出す（黙らせるのは中断だけ）
+                if (!is_abort_error(err)) {
+                    throw err
+                }
+                return
+            }
         }
         load_attached_infos() // awaitしない(watcherをブロックせずバックグラウンドで読み込む)
     })

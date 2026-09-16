@@ -29,8 +29,10 @@
 - 同じ code + 本文の連続は1枚にまとめて `×N` を出す（オフライン中の連打で画面が埋まらないように）。
 - 1枚に本文・ヒント（`error_kind` / `reason` から i18n。ADR-0710）・`コード · reason` のフッター・
   「詳細をコピー」ボタン（コード・reason・本文・ヒント・時刻・パス）を出す。
-- `main.ts` の `unhandledrejection`（abort 以外）・`window.onerror`・`app.config.errorHandler` から
-  `push_client_exception` で同じフィードへ出す（ERR900101）。`gkill_fetch` は Content-Type が JSON でない
+- `main.ts` の `unhandledrejection`・`window.onerror`・`app.config.errorHandler` から
+  `push_client_exception` で同じフィードへ出す（ERR900101）。中断（abort）は3つの入口すべてで出さない
+  （当初は `unhandledrejection` だけで握っていたが、async な watcher の reject は Vue の `errorHandler` へ
+  落ちるので、一覧の速いスクロールで ERR900101 が積み上がった。2026-09-16 に揃えた）。`gkill_fetch` は Content-Type が JSON でない
   応答を `bad_response`（ERR900100）の合成応答にする。
 - 中断（`reason: canceled`）は出さない。
 
