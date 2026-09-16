@@ -55,6 +55,12 @@ func main() {
 		RepName:       repName,
 		DefaultConfig: defaultConfig(),
 
+		// 単独モード（gkill_server generate_plugin_cache）。バックグラウンドの走査（kickRefresh）は
+		// 起こさず、同期で1周する。
+		BuildCache: func(_ context.Context, cfg sdk.Config) error {
+			return globalCache.refresh(pluginDir, configOf(pluginDir, cfg))
+		},
+
 		// 位置情報だけを提供するプラグインなので Kyou は出さない。
 		//
 		// FindKyous を nil にすると find_kyous が「未実装」エラーになり、

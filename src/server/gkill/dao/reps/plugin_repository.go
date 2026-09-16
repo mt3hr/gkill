@@ -15,6 +15,11 @@ type PluginRepository interface {
 	// GetManifest はプラグインのmanifest情報を返す。
 	GetManifest() gkill_plugin.PluginManifest
 
+	// GetPluginDir はプラグインの置き場所（$GKILL_HOME/plugins/{userID}/{pluginName}/）を返す。
+	// generate_plugin_cache がプラグインを単独モードで起動するときの --gkill-plugin-dir と
+	// 実行ファイル（PluginExecutablePath）の解決に使う。
+	GetPluginDir() string
+
 	// GetRepNames はこのプラグインの記録が名乗る rep 名の全集合を返す（RepNamesProvider）。
 	// get_rep_name の応答 rep_names を短時間キャッシュして返し、応答に rep_names が無い
 	// （古いプラグイン・未実装）なら manifest の rep_name 1つを返す。

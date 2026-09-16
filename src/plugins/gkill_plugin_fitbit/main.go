@@ -40,6 +40,13 @@ func main() {
 		RepName:       repName,
 		DefaultConfig: defaultConfig(),
 
+		// 単独モード（gkill_server generate_plugin_cache）。常駐ビルダは起こさず同期で1周する。
+		// build は取り込みを完走したあと走査時の問題（読めない ZIP 等）を返すので、それもそのまま
+		// 返して exit 1 にする（静かに成功にすると壊れた ZIP に気づけない。キャッシュ自体は使える）。
+		BuildCache: func(_ context.Context, cfg sdk.Config) error {
+			return globalCache.build(pluginDir, configOf(pluginDir, cfg))
+		},
+
 		FindKyous: func(_ context.Context, q sdk.Query, cfg sdk.Config) ([]sdk.Kyou, error) {
 			config := configOf(pluginDir, cfg)
 			startBuilder(pluginDir, cfg)

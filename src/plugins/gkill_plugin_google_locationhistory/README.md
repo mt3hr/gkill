@@ -32,6 +32,9 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_google_locationhistory/
 ./gkill_plugin_google_locationhistory --gkill-print-config   > config.json
 ```
 
+キャッシュを稼働中の gkill 無しで先に作っておくには `gkill_server generate_plugin_cache gkill_plugin_google_locationhistory <user_id>`
+（内部でこのバイナリを `--gkill-build-cache` 付きで起動し、走査が終わるまで待つ）。
+
 ### 3. 取り込み元のフォルダを指定する
 
 **Google Takeout の ZIP は展開せず、そのままフォルダに置く。**

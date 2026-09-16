@@ -2,9 +2,9 @@
 
 ## 概要
 
-プラグイン作者向け Go SDK のテスト。**51テスト（5ファイル）**。
+プラグイン作者向け Go SDK のテスト。**56テスト（6ファイル）**。
 
-`sdk.Run()` の stdin/stdout ループ、`sdk.EnsureConfig()` の `config.json` 自動生成、
+`sdk.Run()` の stdin/stdout ループ、`--gkill-build-cache` の単独モード、`sdk.EnsureConfig()` の `config.json` 自動生成、
 `sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置、`sdk.Query.MatchText()` のワード判定を検証する。
 SDK は gkill 本体と別プロセスで動くプラグイン側のライブラリなので、ここでの回帰は
 全プラグイン（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / locationhistory / example）に同時に波及する。
@@ -14,6 +14,7 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 | ファイル | テスト数 | 対象 |
 |---------|---------|------|
 | `sdk_test.go` | 22 | `Run()` のメッセージループ（`TestRunLoop_*`）と型別データの往復 |
+| `build_cache_test.go` | 5 | `--gkill-build-cache` の単独モード（`TestRunBuildCache_*`）と、同梱プラグインが `Handler.BuildCache` を配線していることのソース走査（`TestBundledPluginsWireBuildCache`） |
 | `config_test.go` | 4 | `EnsureConfig()`（`TestEnsureConfig_*`） |
 | `source_test.go` | 18 | `OpenSources()` の ZIP 走査（`TestOpenSources_*` ほか） |
 | `cache_path_test.go` | 5 | `CacheDBPath()` / `IsSafePathElement()`（`TestCacheDBPath_*`） |
@@ -48,6 +49,20 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 | `TestRunLoop_GetGPSLogsNotImplemented` | `GetGPSLogs` 未設定時にエラー応答になる |
 | `TestRunLoop_GetGPSLogsNilQuery` | クエリが nil でも落ちない |
 | `TestKyouTypedDataRoundTrip` | 型別データ（`PluginTypedData`）が JSON を往復しても壊れないこと |
+
+## build_cache_test.go — 単独モード
+
+`--gkill-build-cache` 付きで起動されたとき `Run()` は stdio ループに入らず `runBuildCache` を1回だけ呼ぶ。
+gkill 側（`gkill_server generate_plugin_cache`）は stdout の結果行だけで成否を判定するので、
+「何を stdout に書くか」を固定している。
+
+| テスト | 検証内容 |
+|-------|---------|
+| `TestRunBuildCache_NilHandlerPrintsNoCache` | `BuildCache` が nil なら `no_cache` を出して成功扱い（`all` 指定でキャッシュ無しプラグインを赤くしない） |
+| `TestRunBuildCache_SuccessPrintsBuilt` | 1回だけ呼ばれ、`EnsureConfig` の結果と `newCtx` の user id がそのまま渡り、`built` を出す |
+| `TestRunBuildCache_ErrorGoesToStderrAndReturnsFalse` | 失敗は stderr（`ERROR: build cache: …`）に出て false。stdout には何も書かない（書くと gkill が成功と読む） |
+| `TestRunBuildCache_WritesOnlyResultLineToStdout` | `LogWarn` を呼んでも stdout は結果行1行だけ（gkill 側は完全一致で判定する） |
+| `TestBundledPluginsWireBuildCache` | `src/plugins/gkill_plugin_*/main.go` を走査し、全部 `BuildCache:` を配線していること。欠けると `generate_plugin_cache all` でそのプラグインだけ `no_cache` になりエラーも出ない |
 
 ## config_test.go — EnsureConfig
 
