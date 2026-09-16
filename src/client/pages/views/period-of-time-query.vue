@@ -37,9 +37,12 @@
                 </v-menu>
             </v-col>
             <v-col cols="auto" class="pt-2 pa-0 ma-0">
+                <!-- 選択=塗り潰し / 未選択=枠線。:active だけだと塗り潰し済みの primary に薄い
+                     オーバーレイが乗るだけで、選んだ曜日のほうが薄く見えて反転して読める -->
                 <v-item-group v-model="week_of_days" multiple class="pa-0 ma-0">
                     <v-item v-for="w in [0, 1, 2, 3, 4, 5, 6]" :key="w" :value="w" v-slot="{ isSelected, toggle }">
-                        <v-btn color="primary" class="pa-0 ma-0" min-width="40" :active="isSelected" @click="toggle">
+                        <v-btn color="primary" class="pa-0 ma-0 period_of_time_week_of_day_button" min-width="40"
+                            :variant="isSelected ? 'flat' : 'outlined'" :aria-pressed="isSelected" @click="toggle">
                             {{ i18n.global.t(to_week_of_days_label(w)) }}
                         </v-btn>
                     </v-item>

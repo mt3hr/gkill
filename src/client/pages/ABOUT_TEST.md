@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、45 specファイル252テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、46 specファイル253テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## E2E の書き方の規約
 
@@ -74,7 +74,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 
 ## テストファイル一覧
 
-### E2E テスト（45 specファイル, 252テスト宣言）
+### E2E テスト（46 specファイル, 253テスト宣言）
 
 #### ページ表示・ナビゲーション系（14ファイル）
 
@@ -130,6 +130,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/mi-board-columns.spec.ts` | mi の板列×検索: 各板の列に自板のタスクだけが出る、板クリック後に別列で検索しても板名表示と検索条件が汚染されない |
 | `src/client/__tests__/e2e/saved-find-query.spec.ts` | 保存済み検索条件: 設定画面で登録→設定適用→ライフログビューのサイドバーFABから呼び出してサイドバーへ反映、タスク側は未登録なのでFAB非表示 |
 | `src/client/__tests__/e2e/rykv-sidebar-defaults.spec.ts` | rykv の既定検索条件と「プロファイル×記録分類→記録先詳細」の算出。列を足すと設定由来の既定条件で検索が飛ぶこと、記録分類のチェック変更が記録先詳細と検索条件へ反映されること |
+| `src/client/__tests__/e2e/rykv-period-of-time.spec.ts` | rykv サイドバーの「時間帯」の曜日ボタン。チェック直後は全曜日（`[]` の0件指定ではない）で検索して記録が消えないこと、1つ押せばその曜日だけになり今日以外の曜日では今日の記録が消えること、全曜日の往復でローカルの未選択が全点灯に化けないこと、選択が塗り潰し（`v-btn--variant-flat`）・未選択が枠線で `aria-pressed` が付くこと |
 | `src/client/__tests__/e2e/column-view-initial-load.spec.ts` | 初期検索の完了を待たずに画面を見せること。準備完了の合図はルート要素の `data-gkill-view-ready`（全画面オーバーレイを待つセレクタでは、出る前に `toBeHidden` が通る窓ができる） |
 | `src/client/__tests__/e2e/kftl-tabs.spec.ts` | メモ帳のタブ（追加・切替・閉じる・localStorage への永続化）と、IMEで確定してから改行したときの保存マーカー。**IME は CDP の `Input.imeSetComposition` でしか再現できない**（`pressSequentially` は中間の本文を必ず観測してしまい常に緑になる） |
 | `src/client/__tests__/e2e/kftl-multi-dialog.spec.ts` | メモ帳ウィンドウを複数枚開く。タブの一覧と中身は共有シングルトン、「いま映しているタブ」だけがウィンドウごと |

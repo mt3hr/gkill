@@ -383,7 +383,71 @@ describe('usePeriodOfTimeQuery: week_of_days の null 判定', () => {
     props.find_kyou_query = q_off
     await flush_watchers()
     expect(view.get_use_period_of_time()).toBe(false)
-    expect(view.get_period_of_time_week_of_days()).toEqual([])
+    expect(view.week_of_days.value, 'null着信でローカルの選択は空に戻る').toEqual([])
+  })
+
+  // 時間帯にチェックを入れた直後は曜日が未選択で、そのまま [] を送ると「0件指定」になる
+  // （曜日を押すまで対象なし）。画面の未選択は全曜日(=曜日制限なし)として送り、
+  // 1つ押せばその曜日だけになる。2026-09-16 に「水を1回押しても出ない」の調査で見つけた
+  test('曜日が未選択なら全曜日(制限なし)を送り、1つ押せばその曜日だけになる', async () => {
+    const emits = vi.fn()
+    const props = reactive({ application_config: make_fake_application_config(), find_kyou_query: new FindKyouQuery() })
+    const view = usePeriodOfTimeQuery({ props: props as never, emits: emits as never })
+
+    expect(view.get_period_of_time_week_of_days(), '未選択は [] ではなく全7曜日').toEqual([0, 1, 2, 3, 4, 5, 6])
+
+    view.week_of_days.value = [3]
+    await flush_watchers()
+    expect(view.get_period_of_time_week_of_days(), '1つ押せばその曜日だけ').toEqual([3])
+    expect(emits).toHaveBeenLastCalledWith('request_update_period_of_time', null, null, [3])
+
+    view.week_of_days.value = []
+    await flush_watchers()
+    expect(view.get_period_of_time_week_of_days(), '全部外せばまた全曜日').toEqual([0, 1, 2, 3, 4, 5, 6])
+    expect(emits).toHaveBeenLastCalledWith('request_update_period_of_time', null, null, [0, 1, 2, 3, 4, 5, 6])
+  })
+
+  test('全7曜日が戻ってきてもローカルの未選択は保つ（次の1押しが「その曜日だけ」になる）', async () => {
+    const props = reactive({ application_config: make_fake_application_config(), find_kyou_query: new FindKyouQuery() })
+    const view = usePeriodOfTimeQuery({ props: props as never, emits: vi.fn() as never })
+
+    // 時間帯チェック直後の往復: 全曜日で検索した結果が props に戻る
+    const q_all = new FindKyouQuery()
+    q_all.query_id = 'q1'
+    q_all.period_of_time_week_of_days = [0, 1, 2, 3, 4, 5, 6]
+    props.find_kyou_query = q_all
+    await flush_watchers()
+    expect(view.get_use_period_of_time()).toBe(true)
+    expect(view.week_of_days.value, '全点灯へ書き換えない').toEqual([])
+    expect(view.get_period_of_time_week_of_days()).toEqual([0, 1, 2, 3, 4, 5, 6])
+
+    // 利用者が明示的に全部押した状態も、全曜日の往復で崩さない
+    view.week_of_days.value = [6, 5, 4, 3, 2, 1, 0]
+    await flush_watchers()
+    const q_all2 = new FindKyouQuery()
+    q_all2.query_id = 'q1'
+    q_all2.period_of_time_week_of_days = [6, 5, 4, 3, 2, 1, 0]
+    props.find_kyou_query = q_all2
+    await flush_watchers()
+    expect(view.week_of_days.value).toEqual([6, 5, 4, 3, 2, 1, 0])
+
+    // 全曜日でない着信（保存条件の復元・別の列へのフォーカス切替）は従来どおり上書きする
+    const q_some = new FindKyouQuery()
+    q_some.query_id = 'q2'
+    q_some.period_of_time_week_of_days = [1, 2]
+    props.find_kyou_query = q_some
+    await flush_watchers()
+    expect(view.week_of_days.value).toEqual([1, 2])
+    expect(view.get_period_of_time_week_of_days()).toEqual([1, 2])
+
+    // 旧UIが保存した [] (0件指定) は、そのまま復元すると未選択=全曜日として次回送られる
+    const q_empty = new FindKyouQuery()
+    q_empty.query_id = 'q3'
+    q_empty.period_of_time_week_of_days = []
+    props.find_kyou_query = q_empty
+    await flush_watchers()
+    expect(view.week_of_days.value).toEqual([])
+    expect(view.get_period_of_time_week_of_days()).toEqual([0, 1, 2, 3, 4, 5, 6])
   })
 })
 
