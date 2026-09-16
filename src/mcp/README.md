@@ -253,7 +253,7 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 | `gkill_update_kc` | 数値記録更新 |
 | `gkill_update_tag` | タグ更新 |
 | `gkill_update_text` | テキスト注釈更新 |
-| `gkill_submit_kftl` | KFTLテキスト一括処理。応答の `created[]`（`{id, data_type, updated}`）に実際に書かれた記録が書かれた順で並ぶ。`created[].id` を `gkill_add_tag` / `gkill_add_text` の `target_id` に使えば、KFTLで作った記録へ後からタグ・注釈を付けられる |
+| `gkill_submit_kftl` | KFTLテキスト一括処理。応答の `created[]`（`{id, data_type, updated, related_time}`）に実際に書かれた記録が書かれた順で並ぶ。`created[].id` を `gkill_add_tag` / `gkill_add_text` の `target_id` に使えば、KFTLで作った記録へ後からタグ・注釈を付けられる |
 | `gkill_delete_kyou` | エントリのソフト削除 |
 | `gkill_restore_kyou` | ソフト削除の取り消し（`is_deleted` を戻す） |
 
