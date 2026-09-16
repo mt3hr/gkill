@@ -158,6 +158,8 @@
   <p>Ce qu'une extension importe est conservé afin d'accélérer l'affichage. Si vous avez remplacé une grande partie de la source et souhaitez tout relire, arrêtez gkill puis exécutez la commande suivante.</p>
   <pre>gkill_server clear_cache plugin IDENTIFIANT</pre>
   <p>Au prochain démarrage de gkill, une recherche relira les données depuis la source.</p>
+  <p>Si vous préférez que l'importation soit terminée à l'avance, exécutez ensuite la commande suivante. Elle attend que chaque extension ait fini d'importer ; la première exécution peut donc prendre quelques minutes. Remplacez <code>all</code> par le nom du dossier d'une extension pour ne relire que celle-ci. Elle fonctionne même si gkill n'est pas lancé.</p>
+  <pre>gkill_server generate_plugin_cache all IDENTIFIANT</pre>
 
   <h2>Si rien ne s'affiche correctement</h2>
   <table>

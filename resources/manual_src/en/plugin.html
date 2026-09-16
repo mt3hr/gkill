@@ -158,6 +158,8 @@
   <p>What a plugin imports is kept on disk to make display fast. If you have replaced a large part of the source and want everything read again, stop gkill and run the following command.</p>
   <pre>gkill_server clear_cache plugin YOUR_USER_ID</pre>
   <p>The next time you start gkill and search, the data is read from the source again.</p>
+  <p>If you would rather have the import finished beforehand, run the following command next. It waits for each plugin to finish importing, so the first run can take a few minutes. Replace <code>all</code> with a plugin's folder name to re-read only that plugin. It works even while gkill is not running.</p>
+  <pre>gkill_server generate_plugin_cache all YOUR_USER_ID</pre>
 
   <h2>When nothing shows up</h2>
   <table>

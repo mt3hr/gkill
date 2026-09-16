@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"sync"
@@ -990,5 +991,29 @@ func TestPluginRepository_FindKyousKeepsDeclaredRepNames(t *testing.T) {
 	}
 	if repNames["commit-1"] != "racoonboard" || repNames["commit-2"] != "ocha" {
 		t.Errorf("Kyou.RepName が申告名のまま残っていない: %v", repNames)
+	}
+}
+
+// TestPluginExecutablePath_AppendsExeOnWindows は実行ファイルの解決規則を固定する。
+// 常駐起動（ensureStarted）と単独起動（generate_plugin_cache）がここを共有するので、
+// 片方だけ .exe の付け忘れで Windows だけ起動できない、が起きない。
+func TestPluginExecutablePath_AppendsExeOnWindows(t *testing.T) {
+	dir := filepath.Join("plugins", "testuser", "gkill_plugin_x")
+	want := filepath.Join(dir, "gkill_plugin_x")
+	if runtime.GOOS == "windows" {
+		want += ".exe"
+	}
+	if got := PluginExecutablePath(dir, "gkill_plugin_x"); got != want {
+		t.Errorf("PluginExecutablePath = %q, want %q", got, want)
+	}
+}
+
+// TestNewPluginRepository_GetPluginDir は発見時に渡したプラグインの置き場所がそのまま返ることを固定する。
+// generate_plugin_cache はこれを --gkill-plugin-dir に渡す。
+func TestNewPluginRepository_GetPluginDir(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "gkill_plugin_x")
+	rep := NewPluginRepository("testuser", dir, gkill_plugin.PluginManifest{Name: "gkill_plugin_x", Executable: "gkill_plugin_x"})
+	if got := rep.GetPluginDir(); got != dir {
+		t.Errorf("GetPluginDir = %q, want %q", got, dir)
 	}
 }

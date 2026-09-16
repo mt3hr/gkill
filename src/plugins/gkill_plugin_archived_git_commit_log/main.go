@@ -75,6 +75,11 @@ func main() {
 		RepName:       repName,
 		DefaultConfig: defaultConfig(),
 
+		// 単独モード（gkill_server generate_plugin_cache）。常駐ビルダは起こさず同期で1周する。
+		BuildCache: func(ctx context.Context, cfg sdk.Config) error {
+			return buildOnce(ctx, pluginDir, configOf(pluginDir, cfg))
+		},
+
 		// 記録が名乗る rep 名はリポジトリ名。gkill はこれを rep 一覧・rep 絞り込み・本文取得の
 		// 引き当てに使う。まだ1件も無ければ空スライス（nil だと「未対応」と読まれ manifest 名に落ちる）。
 		RepNames: func(_ context.Context, cfg sdk.Config) ([]string, error) {

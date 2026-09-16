@@ -158,6 +158,8 @@
   <p>Lo que importa un complemento se guarda para que la visualización sea rápida. Si ha cambiado buena parte del origen y quiere que se lea todo de nuevo, detenga gkill y ejecute la orden siguiente.</p>
   <pre>gkill_server clear_cache plugin ID_DE_USUARIO</pre>
   <p>La próxima vez que inicie gkill y busque, los datos se leerán otra vez desde el origen.</p>
+  <p>Si prefiere dejar la importación hecha de antemano, ejecute a continuación la orden siguiente. Espera a que cada complemento termine de importar, por lo que la primera vez puede tardar unos minutos. Sustituya <code>all</code> por el nombre de la carpeta de un complemento para releer solo ese complemento. Funciona aunque gkill no esté en ejecución.</p>
+  <pre>gkill_server generate_plugin_cache all ID_DE_USUARIO</pre>
 
   <h2>Cuando no se muestra bien</h2>
   <table>

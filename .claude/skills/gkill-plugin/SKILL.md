@@ -75,7 +75,9 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               # that config.json next to manifest.json on first start (existing files are never
               # overwritten, via sdk.EnsureConfig + Handler.DefaultConfig), and can print their
               # embedded manifest.json / default config.json via --gkill-print-manifest /
-              # --gkill-print-config. Their SQLite caches live under gkill's own cache dir
+              # --gkill-print-config, and build their cache synchronously without the stdio loop
+              # via --gkill-build-cache (SDK-level; `gkill_server generate_plugin_cache` drives it,
+              # see gkill-cli-ops). Their SQLite caches live under gkill's own cache dir
               # ($GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db — resolved in
               # plugin/sdk/cache_path.go (sdk.CacheDBPath) from the inherited GKILL_HOME env
               # var, falling back to the plugin folder), so `clear_cache plugin` can wipe them.
@@ -83,7 +85,7 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 ```
 
 - `gkill/api/gkill_plugin/` — Plugin protocol types: `PluginManifest`, `PluginRequest`, `PluginResponse`, `PluginKyou`, `PluginTypedData`, `PluginGPSLog` (stdio newline-delimited JSON)
-- `gkill/plugin/sdk/` — Plugin author SDK. `sdk.Run(sdk.Handler{...})` starts the stdio JSON message loop. `Handler` has 9 fields: `FindKyous` (required), `GetKyou`, `GetContentHTML`, `GetConfigHTML`, `PostConfig`, `GetGPSLogs`, `RepName`, `RepNames`, `DefaultConfig`. Plugins are standalone binaries in `src/plugins/`
+- `gkill/plugin/sdk/` — Plugin author SDK. `sdk.Run(sdk.Handler{...})` starts the stdio JSON message loop. `Handler` has 10 fields: `FindKyous` (required), `GetKyou`, `GetContentHTML`, `GetConfigHTML`, `PostConfig`, `GetGPSLogs`, `RepName`, `RepNames`, `DefaultConfig`, `BuildCache` (called once, synchronously, outside the stdio loop when the binary is started with `--gkill-build-cache`; nil = "no cache", reported as `no_cache`). Plugins are standalone binaries in `src/plugins/`
 
 **1本のプラグインが複数の rep 名を名乗れる（`rep_names`）。** `get_rep_name` の応答に `rep_names[]` を載せると（SDK は `Handler.RepNames`）、gkill はその名前を `get_all_rep_names`・rep 名の絞り込み（`find_filter.go` Step4）・本文取得の引き当て（`PluginManager.GetPluginByRepName`）・MCP の `get_rep_infos.plugins[]` / `get_plugin_list.rep_names` に使う。**null（欄なし）と `[]` は別**: null は「未対応」で manifest の `rep_name` 1つ、`[]` は「いまは0個」。名前を列挙する側は `GetRepName` を直接見ず **`reps.RepNamesOf`** を通すこと（`GetRepName` は代表名で、MatchReps のキーとログ用）。本体側は `pluginRepositoryImpl.GetRepNames` が **TTL 60秒**でキャッシュし、失敗しても前回値か manifest 名にフォールバックしてエラーにしない（Step4 は fan-out の外で逐次に走るので、失敗を返すと全検索が落ち、毎回取りに行くと全検索が期限ぶん止まる）。申告済みの名前は `warnPluginRepNameMismatchOnce` の対象外。zip の Git リポジトリを束ねる `gkill_plugin_archived_git_commit_log` が最初の利用者（[ADR-0308](../../../documents/adr/0308-plugin-multiple-rep-names.md)）。
 
@@ -95,7 +97,7 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 
 `plugin_repository_impl.go` manages plugin subprocess lifecycle (start, slot-guarded stdio, one persistent reader goroutine per process, response-ID matching, auto-restart on crash). **呼び出し元のキャンセル（HTTPクライアントの切断）ではプロセスを回収しない**（フロントは全リクエストに `AbortController` を張っているため）。回収するのは gkill 自身のデッドライン超過時だけ。直列化は mutex ではなく容量1のチャネル（`callSlot`）で行い、**期限はスロットを取ってから張る**。順番待ちの上限は別枠（`maxPluginQueueWait` 既定10秒）で、待ちきれなければ `ErrPluginBusy` を返すだけでプロセスには手を出さない。プラグイン rep は `Repositories` の fan-out でスレッドプールのスロットを取らない（`goForRep`）ので、プラグインのロック待ちで検索全体が止まることはない
 
-**プラグインの重い構築は常駐ビルダ + WAL + バッチcommit**（2026-08-21、監査 M-6）。claudecode も codex/fitbit と同じく `builder.go`（`EnsureStarted`/`Kick`/`loop`、mu(DB初期化)/buildMu(構築)分離で読み取り無待機、WAL 自前DSN、`cache_meta` に進捗）へ移行済み。`GetMessages`/`GetMessage`/`GetStats` は refresh を呼ばず現キャッシュ即答+Kick。同期・単一tx構築（デッドラインkill→進捗ゼロループ）を新規に書かないこと。 却下案（同期構築／ロック共有／デッドライン延長）と実測は [ADR-0305](../../../documents/adr/0305-plugin-background-builder-wal.md)。
+**プラグインの重い構築は常駐ビルダ + WAL + バッチcommit**（2026-08-21、監査 M-6）。claudecode も codex/fitbit と同じく `builder.go`（`EnsureStarted`/`Kick`/`loop`、mu(DB初期化)/buildMu(構築)分離で読み取り無待機、WAL 自前DSN、`cache_meta` に進捗）へ移行済み。`GetMessages`/`GetMessage`/`GetStats` は refresh を呼ばず現キャッシュ即答+Kick。同期・単一tx構築（デッドラインkill→進捗ゼロループ）を新規に書かないこと。 却下案（同期構築／ロック共有／デッドライン延長）と実測は [ADR-0305](../../../documents/adr/0305-plugin-background-builder-wal.md)。**同期構築を書いてよい唯一の場所は `Handler.BuildCache`**（`--gkill-build-cache` の単独モードで、stdio ループの外。ハンドラ期限が無い）。同梱7本は常駐ビルダが呼ぶのと同じ構築関数（`buildOnce` / `build` / `refresh`）をそこから呼ぶだけで、`EnsureStarted` / `Kick` は起こさない。配線の欠落は `plugin/sdk/build_cache_test.go` のソース走査が落とす（欠けると `generate_plugin_cache all` でそのプラグインだけ `no_cache` になり、エラーも出ない）。
 
 **stderr の診断は人間が読む前提で書く。** gkill はプラグインプロセスの stderr 末尾4KBをリングに保持し、`get_plugin_list` の `last_error` に載せる（`plugin_stderr_ring.go`。「is_alive=true なのに0件」の唯一の手がかり）。**プラグイン側に「実パスを書くな」の制約は課さない** —— 読み取り元やホームは診断に要る（ホームが `systemprofile` へ化ける事故はそれでしか分からない）。代わりに出口で伏せる: リングには生のまま入れ、`handle_get_plugin_list.go` が `message.RedactEnvironmentSpecific` を通してユーザー名を伏せ、MCP は中身自体を返さず `has_last_error` だけを返す（[ADR-0707](../../../documents/adr/0707-redact-environment-specific-strings.md)）。stdout はプロトコルのチャネルなので、診断を書くのは必ず stderr 側。
 

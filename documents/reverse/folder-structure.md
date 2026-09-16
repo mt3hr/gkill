@@ -178,6 +178,8 @@ src/server/
     └── main/                       # エントリーポイント
         ├── common/                 # 共通初期化・CLIコマンド
         │   ├── common.go           # 初期化フロー、サブコマンド定義
+        │   ├── add_tag.go          # add_tag サブコマンド（稼働中サーバの HTTP クライアント）
+        │   ├── generate_plugin_cache.go # generate_plugin_cache サブコマンド（プラグインを単独起動して同期構築）
         │   ├── password_admin.go   # reset_password サブコマンド、ローカル管理者セッションの発行
         │   ├── gkill_options/      # CLIフラグ・ディレクトリ構造定義
         │   ├── gkill_log/          # ログ設定

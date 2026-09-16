@@ -11,7 +11,12 @@ gkill の CLI 共有初期化ロジック、ログシステム、グローバル
 common/
 ├── common.go              # cobra CLI コマンド定義・サーバ初期化
 ├── common_test.go         # common.go のテスト
+├── add_tag.go             # add_tag サブコマンド（稼働中サーバの HTTP クライアント）
+├── add_tag_test.go        # add_tag のテスト
+├── generate_plugin_cache.go      # generate_plugin_cache サブコマンド（プラグインを単独起動して同期構築）
+├── generate_plugin_cache_test.go # generate_plugin_cache のテスト（偽プラグインをヘルパープロセスで起動）
 ├── password_admin.go      # reset_password サブコマンド／ローカル管理者セッションの発行
+├── password_admin_test.go # password_admin.go のテスト
 ├── gkill_log/             # ログシステム（10ファイル）
 │   ├── gkill_log.go       # ロガー初期化・レベルルーティング
 │   ├── level.go           # カスタム slog.Level 定義（8レベル）
@@ -31,7 +36,7 @@ common/
     └── threads_test.go    # スレッド管理のテスト
 ```
 
-**合計: 20ファイル**（実装12 + テスト8）
+**合計: 22ファイル**（実装13 + テスト9）
 
 ## サブパッケージ
 
@@ -103,6 +108,7 @@ cobra のルートコマンドに登録されるサブコマンド群を定義�
 - `optimize` — データベース最適化
 - `update_cache` — キャッシュ手動更新
 - `clear_cache` — ディスク上の派生キャッシュ削除
+- `generate_plugin_cache` — プラグインのキャッシュを稼働中サーバ無しで同期構築（定義は `generate_plugin_cache.go`。各プラグインバイナリを `--gkill-build-cache` で単独起動し、stdout の結果行 `built` / `no_cache` で成否を判定）
 - `reset_password` — パスワードを無効化してリセットURLを再発行（定義は `password_admin.go`）
 - `add_tag` — 検索条件 JSON（FindKyouQuery）に一致する Kyou へタグを付与（定義は `add_tag.go`。稼働中サーバの HTTP クライアント）
 

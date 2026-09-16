@@ -15,15 +15,16 @@ import (
 // あわせて、usageの二重印字(SilenceUsage)とエラーの二重印字(SilenceErrors)を止めていることも確認する。
 func TestSubcommandsUseRunE(t *testing.T) {
 	cmds := map[string]*cobra.Command{
-		"idf":                  IDFCmd,
-		"version":              VersionCommand,
-		"generate_thumb_cache": GenerateThumbCacheCmd,
-		"generate_video_cache": GenerateVideoCacheCmd,
-		"clear_cache":          ClearCacheCmd,
-		"optimize":             OptimizeCmd,
-		"update_cache":         UpdateCacheCmd,
-		"reset_password":       ResetPasswordCmd,
-		"add_tag":              AddTagCmd,
+		"idf":                   IDFCmd,
+		"version":               VersionCommand,
+		"generate_thumb_cache":  GenerateThumbCacheCmd,
+		"generate_video_cache":  GenerateVideoCacheCmd,
+		"clear_cache":           ClearCacheCmd,
+		"generate_plugin_cache": GeneratePluginCacheCmd,
+		"optimize":              OptimizeCmd,
+		"update_cache":          UpdateCacheCmd,
+		"reset_password":        ResetPasswordCmd,
+		"add_tag":               AddTagCmd,
 	}
 	for name, cmd := range cmds {
 		if cmd == nil {
