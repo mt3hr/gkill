@@ -3,7 +3,7 @@ import type { ApplicationConfig } from '@/classes/datas/config/application-confi
 import type { PeriodOfTimeQueryEmits } from '@/pages/views/period-of-time-query-emits'
 import type { PeriodOfTimeQueryProps } from '@/pages/views/period-of-time-query-props'
 import moment from 'moment'
-import { WeekOfDays } from '@/classes/api/find_query/week-of-days'
+import { ALL_WEEK_OF_DAYS, is_all_week_of_days, WeekOfDays } from '@/classes/api/find_query/week-of-days'
 
 export function usePeriodOfTimeQuery(options: {
     props: PeriodOfTimeQueryProps,
@@ -66,10 +66,17 @@ export function usePeriodOfTimeQuery(options: {
     )
 
     watch(() => props.find_kyou_query.period_of_time_week_of_days, () => {
-        week_of_days.value.splice(0)
         // 古い世代のビルドが保存したクエリではフィールドが欠落しうる
         // (spread of undefined は TypeError で同期が死ぬ)
-        week_of_days.value.push(...(props.find_kyou_query.period_of_time_week_of_days ?? []))
+        const incoming = props.find_kyou_query.period_of_time_week_of_days ?? []
+        // 画面の「未選択」は全曜日として送る(get_period_of_time_week_of_days)ので、
+        // 全7曜日が戻ってきたときにローカルを全点灯へ書き換えると、次に1つ押した瞬間に
+        // 「その曜日だけ」ではなく「その曜日を外した6つ」になる。意味が同じ間は選択を保つ
+        if (is_all_week_of_days(incoming) && (week_of_days.value.length === 0 || is_all_week_of_days(week_of_days.value))) {
+            return
+        }
+        week_of_days.value.splice(0)
+        week_of_days.value.push(...incoming)
     })
 
     // ── Watchers: local state -> emits ──
@@ -118,7 +125,13 @@ export function usePeriodOfTimeQuery(options: {
         return moment().startOf("day").hour(h).minute(m).second(0).unix()
     }
 
+    // 曜日の指定。画面で1つも押していなければ全曜日(=曜日制限なし)を返す。
+    // [] をそのまま送ると「0件指定」で、時間帯にチェックを入れた瞬間から曜日を押すまで
+    // 対象なしになる。1つ押せばその曜日だけになるのが、利用者が期待する形
     function get_period_of_time_week_of_days(): Array<number> {
+        if (week_of_days.value.length === 0) {
+            return ALL_WEEK_OF_DAYS.concat()
+        }
         return week_of_days.value.concat()
     }
 
