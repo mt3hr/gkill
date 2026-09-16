@@ -122,7 +122,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | コンポーネント | 説明 |
 |---------------|------|
 | **kftlFactory** | 行頭プレフィックスから `KFTLStatementLine` の種別を決定するファクトリ。`prevLineIsMetaInfo` フラグで行の文脈を管理する |
-| **KFTLStatement** | KFTL テキスト全体をパースし、リクエストを生成・実行する（Go）。`prepareRequests`（行の解釈 → 全行の適用 → 繰り返しの展開）を `Analyze`（`/api/parse_kftl_text`。書かない）と `GenerateAndExecuteRequests`（`/api/submit_kftl_text`）が共有する。TS 側の同名クラスは行ラベルの分類器だけ（[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)） |
+| **KFTLStatement** | KFTL テキスト全体をパースし、リクエストを生成・実行する（Go）。`prepareRequests`（行の解釈 → 全行の適用 → 繰り返しの展開）を `Analyze`（`/api/parse_kftl_text`。書かない）と `GenerateAndExecuteRequests`（`/api/submit_kftl_text`）が共有する。TS 側の同名クラスは行ラベルの分類器だけ（[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)）。保存マーカー「！」の行は値の行に数えず、内容の無い記録・付け先の無いメタ情報・読めない予定日時は `ValidateContent` で書く前に行別エラーにする（[ADR-0508](../adr/0508-kftl-blank-records-are-input-errors.md)） |
 | **KFTLStatementLine** | 各行の処理を担当するインタフェース。データ型ごとに実装がある |
 | **KFTLRequest / KFTLRequestMap** | パース結果のリクエスト（Go のみ）。ID ベースでグルーピングされ、`DoRequest()` で temp rep へ積み、最後に `CommitTx` で確定する |
 
@@ -133,7 +133,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | **Repository 4層パターン** | 各データ型のデータアクセスを4層で実装するパターン: (1) `*_repository.go`（インタフェース定義） → (2) `*_repository_sqlite3_impl.go`（SQLite3 直接アクセス） → (3) `*_repository_cached_sqlite3_impl.go`（キャッシュ付きラッパー） → (4) `*_repository_temp_sqlite3_impl.go`（トランザクション用一時リポジトリ） |
 | **GkillRepositories** | ユーザ別の全リポジトリ集約構造体。読み取り用（`XxxReps` = 複数リポジトリの集約）と書き込み用（`WriteXxxRep` = 単一リポジトリ）を保持する |
 | **GkillDAOManager** | 全 DAO の中央管理。`GetRepositories()` でユーザ別リポジトリを取得し、`GetTempReps()` でトランザクション用一時リポジトリを管理する |
-| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（91件）を提供する。`gkill_server_api/` パッケージ（handle_*.go 109ファイル）に分割実装 |
+| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（91件）を提供する。`gkill_server_api/` パッケージ（handle_*.go 112ファイル）に分割実装 |
 | **TempReps** | KFTL パース時のトランザクション用一時リポジトリ。`CommitTX` で本リポジトリに反映、`DiscardTX` で破棄する |
 | **Rep / 記録保管場所** | データ保存先の SQLite3 ファイル。ユーザ・デバイス・データ型ごとに割り当てられる |
 | **RepType / 記録タイプ** | リポジトリの分類。メモ帳、打刻帳、支出、数値記録、タスク、気分、ブックマーク、リポスト等 |
@@ -172,7 +172,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **KeyGetter / 集計キー** | 集計キー | グルーピング基準。関連日・関連年月・関連曜日・タグ・データタイプ・タイトル・店名・気分値等から選択 |
 | **AggregateTarget / 集計対象** | 集計対象 | 集計関数。件数・合計・平均・最大値・最小値を、支出額・気分値・作業時間・コード行数等に適用可能 |
 | **DnoteTrendGraph / トレンドグラフ** | トレンドグラフ | 時系列集計グラフ。取得済み Kyou を `DnoteTrendAggregator`（`src/client/classes/dnote/dnote-trend-aggregator.ts`）が集計粒度（日/週/月）で時系列集計し、スパークライン（折れ線/棒）で表示する。集計項目・集計リストと並ぶ第3の集計要素。サーバーAPIを持たずクライアント側のみで完結する |
-| **DnoteCorrelationGraph / 相関グラフ** | 相関グラフ | 2～10個の独立した指標を同じ粒度で集計し、Pearson／Spearmanの方向付き相関行列と散布図を表示する第4の集計要素。サーバーAPIを持たずクライアント側のみで完結する |
+| **DnoteCorrelationGraph / 相関グラフ** | 相関グラフ | 2～10個の独立した指標を同じ粒度で集計し、Pearson／Spearmanの方向付き相関行列と散布図を表示する第4の集計要素。指標ごとに「記録が無い期間を0とみなす」（`missing_as_zero`。件数・合計の集計対象でだけ有効で、平均では保存時に落とす）と「日をまたぐ打刻の計上先」（`timeis_span_policy`: `split` / `start` / `end`）を持つ。サーバーAPIを持たずクライアント側のみで完結する |
 
 ### Predicate の主なカテゴリ
 
@@ -245,9 +245,9 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
 | APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全91エンドポイントのパス・メソッド・認証区分・ハンドラを1行1ルートで持つルート表（89 POST + 1 GET）。`serve.go` とテストハーネスがそのまま登録する正本 |
-| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 106ファイル、1ハンドラ1ファイル） |
+| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 112ファイル、1ハンドラ1ファイル） |
 | アクセスログミドルウェア | `src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go` | gorilla/mux ミドルウェア。全HTTPリクエストのアクセスログを `ACCESS` レベルで記録 |
-| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（188ファイル） |
+| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（189ファイル） |
 | エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000422 の定数定義（計381件。欠番41、うち37は存在しないエンドポイントのコードを削除した跡） |
 | GkillError / GkillMessage | `src/server/gkill/api/message/` | エラー・メッセージ構造体 |
 | KFTLパーサー | `src/server/gkill/api/kftl/` | KFTL テキストパース・リクエスト生成 |

@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1296 | 190 | Go `testing` |
-| フロントエンド ユニット | 1986 | 172 | Vitest |
+| Go バックエンド | 1302 | 195 | Go `testing` |
+| フロントエンド ユニット | 2013 | 178 | Vitest |
 | フロントエンド E2E | 252 | 45（+auth.setup.ts） | Playwright |
-| MCP サーバ | 1050 | 27 | Vitest |
-| ツール | 41 | 1 | Vitest |
+| MCP サーバ | 1052 | 27 | Vitest |
+| ツール | 55 | 2 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
-| Wear OS | 226 | 17 | JUnit 4 + MockK |
-| **合計** | **4,866** | **454** | |
+| Wear OS | 228 | 18 | JUnit 4 + MockK |
+| **合計** | **4,917** | **467** | |
 
 数え直すコマンド:
 
@@ -66,7 +66,7 @@ npm test
 | `npm run test_client_e2e` | フロントエンド E2E のみ（gkill_server 自動起動・停止） | 20分前後 |
 | `npm run test_e2e_server` | E2E 用 gkill_server 単体起動 (`$HOME/gkill_test`) | — |
 | `npm run test_mcp` | MCP サーバ | 数秒 |
-| `npm run test_tools` | `src/tools/` のリリースゲート・attestation ランナー（`vitest.config.tools.ts`。使い捨て git リポジトリを作るので git が要る） | 30秒前後 |
+| `npm run test_tools` | `src/tools/` のリリースゲート・attestation ランナーとリリース工程の書く側（記録条件・`version.json`・成果物検証。`vitest.config.tools.ts`。使い捨て git リポジトリを作るので git が要る） | 30秒前後 |
 | `npm run test_plugins` | 同梱プラグイン（独立 Go モジュール7つ） | 数秒 |
 | `npm run vet_plugins` | 同梱プラグインへ `go vet`（CI の `plugins` ジョブが `test_plugins` の前に回す。`npm test` には入っていない） | 数秒 |
 | `npm run test_android` | Android | Gradle 依存 |
@@ -215,10 +215,10 @@ src/server/gkill/
 │   │   ├── gkill_error_test.go
 │   │   └── http_status_test.go        ← ステータス表の網羅・分布・名指し固定（下記）
 │   ├── kftl/                          ← KFTL パーサ（6ファイル）
-│   ├── req_res/req_res_test.go        ← ワイヤ契約（JSONタグ名 / omitempty）
+│   ├── req_res/                       ← ワイヤ契約（JSONタグ名 / omitempty）と応答型の Errors / Messages の型（ソース走査）
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（41ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（45ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── response_status_guard_test.go         ← 全ハンドラが writeErrorStatus を呼ぶこと（ソース走査）
@@ -234,7 +234,12 @@ src/server/gkill/
 │       ├── handle_reset_password_test.go         ← パスワードリセット
 │       ├── plugin_content_html_cache_test.go     ← プラグイン本文HTMLのキャッシュ
 │       ├── get_kyous_rep_filter_test.go          ← rep名絞り込み（キャッシュON/OFF × UpdateCache前後）
-│       └── get_kyous_tx_rep_filter_test.go       ← tx確定した記録がrep絞り込みを通ること
+│       ├── get_kyous_tx_rep_filter_test.go       ← tx確定した記録がrep絞り込みを通ること
+│       ├── gkill_error_cause_scan_test.go        ← if err != nil 内の GkillError に Cause があること（複合条件も。ソース走査）
+│       ├── handle_commit_tx_error_code_test.go   ← commit_tx の失敗コード写し（13種別・Cause）
+│       ├── handle_discard_tx_test.go             ← discard_tx の失敗コード写し
+│       ├── handle_add_without_write_rep_test.go  ← 書き込み先 rep 無しは panic ではなく config エラー
+│       └── security_headers_middleware_test.go   ← セキュリティヘッダ3つと経路側の Set が勝つこと
 ├── plugin/
 │   └── sdk/                           ← プラグインSDK（4ファイル: sdk / config / source / cache_path）
 ├── dao/
@@ -254,7 +259,7 @@ src/server/gkill/
 ├── usecase/                           ← 規約のソース走査 + キャッシュ反映（3ファイル）
 │   ├── write_through_cache_test.go    ← 書き込み後のキャッシュ反映
 │   ├── cached_rep_insert_alignment_test.go ← INSERT の列並びと引数の並びの一致
-│   └── source_conventions_scan_test.go ← 規約8件のソース走査（下記）
+│   └── source_conventions_scan_test.go ← 規約9件のソース走査（下記）
 ├── dvnf/                              ← DVNF ファイル管理（3ファイル。copyFile の実ファイル操作を含む）
 └── main/                              ← CLI・エントリポイント（10ファイル）
 ```
@@ -293,7 +298,7 @@ src/client/__tests__/
 │   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
 │   │   ├── find-kyou-query.test.ts   ← 検索クエリビルダー
 │   │   └── hydrate.test.ts           ← hydrate() / hydrate_all()（JSON→クラス詰め替え）
-│   ├── classes/                       ← ユーティリティ（50ファイル）
+│   ├── classes/                       ← ユーティリティ（53ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
@@ -314,12 +319,15 @@ src/client/__tests__/
 │   │   ├── convention-source-scan.test.ts ← 棚卸し全体の安全網（規約9件のソース走査）
 │   │   ├── check-auth-login-page.test.ts  ← ログイン画面ではセッション無効の飛ばしを止めること
 │   │   ├── abort-error.test.ts            ← 中断判定（20箇所の手書きを集約した先）
-│   │   └── web-push-key.test.ts           ← VAPID公開鍵のバイト列化（6ページ分を集約した先）
+│   │   ├── web-push-key.test.ts           ← VAPID公開鍵のバイト列化（6ページ分を集約した先）
+│   │   ├── use-gkill-message-feed.test.ts ← 右上のエラー / メッセージのフィード（view 版は表示ロジック）
+│   │   ├── global-exception-feed.test.ts  ← main.ts の例外配線（中断と ResizeObserver の通知は出さない）
+│   │   └── tx-bundle-source-scan.test.ts  ← 複数書き込みの保存経路が run_in_tx / tx_id を通ること（ソース走査）
 │   ├── datas/                         ← データモデル（35ファイル）
-│   ├── dnote/                         ← D-note モジュール（8ファイル、trend-aggregator.test.ts 含む）
-│   ├── kftl/                          ← KFTL パーサ（7ファイル）
-│   ├── composables/                   ← Vue Composable（60ファイル。add-views / edit-views /
-│   │                                     confirm-delete / context-menus / page-composables /
+│   ├── dnote/                         ← D-note モジュール（9ファイル、trend-aggregator / correlation-graph-editor-view 含む）
+│   ├── kftl/                          ← KFTL 行分類器（8ファイル。kftl-line-labels 含む）
+│   ├── composables/                   ← Vue Composable（61ファイル。add-views / edit-views /
+│   │                                     tx-bundle-views / shared-mi-view-dialog / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /
 │   │                                     gps-log-map / overlay-and-ur-log-view /
@@ -401,7 +409,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | `oauth-server.test.mjs` | OAuth サーバ（メタデータ、認可、トークン交換、PKCE、DCR、RFC 8707、E2E フロー） |
 | `status-tool.test.mjs` | ツール一覧の世代 `schema_revision` の計算と `gkill_status` への焼き込み（決定性・自己参照除外・冪等・3サーバで別値） |
 | `schema-contract.test.mjs` | tools/list どおりに呼べる契約（スキーマのキー集合 = 受理集合 − 廃止済み、全プロパティ指定スモーク、3サーバの同名ツール同一、世代の一致） |
-| `tool-schema-budget.test.mjs` | tools/list のバイト量が予算ファイル内であること（超過・過小の両方で失敗） |
+| `tool-schema-budget.test.mjs` | tools/list のバイト量が予算ファイル `src/mcp/tool-schema-budget.json` 内であること（超過・過小の両方で失敗）。説明文を意図して変えたときは `npm run mcp:schema-budget -- --update` で予算を書き直す |
 
 **プラグインツール（3サーバ共通）:**
 

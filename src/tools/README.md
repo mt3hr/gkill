@@ -19,7 +19,9 @@ gkill プロジェクト用のユーティリティスクリプト。
 | `run_test_suite.mjs` | `npm run test_*` / `npm run verify_docs` の実体。スイートを 1 本走らせ、成功時に `test_attestation.local.json` へ作業ツリーの tree hash を記録する |
 | `attestation.mjs` | 上 2 つと `put_version_info.mjs` / `verify_release_artifacts.mjs` の共有ライブラリ（git ヘルパ・記録の読み書き・評価関数・GitHub API） |
 | `put_version_info.mjs` | `npm run put_version_info_embed` の実体。`embed/version.json`（commit / build_time / version / tree_hash）を書く |
-| `__tests__/attestation.test.mjs` | 上記 4 ファイルのテスト（`npm run test_tools`、`vitest.config.tools.ts`） |
+| `mcp_schema_budget.mjs` | `npm run mcp:schema-budget` の実体。MCP の tools/list のバイト量を予算ファイル `src/mcp/tool-schema-budget.json` と突き合わせる（`--update` で実測を予算へ書く）。判定は `src/mcp/tool-schema-budget.mjs` が正本 |
+| `__tests__/attestation.test.mjs` | 上記のうち attestation / run_test_suite（引数許可リスト）/ verify_release_gate のテスト（`npm run test_tools`、`vitest.config.tools.ts`） |
+| `__tests__/release_scripts.test.mjs` | run_test_suite の記録条件・put_version_info・verify_release_artifacts の判定関数のテスト |
 | `test_plugins.mjs` | `npm run test_plugins` / `npm run vet_plugins` の実体。`src/plugins/` 配下の各 Go モジュールに `go test` / `go vet` を回す |
 | `gradle_test.mjs` | `npm run test_android` / `npm run test_wear_os` の実体。Windows では `cmd /c <絶対パス>gradlew.bat`、それ以外は `./gradlew`（絶対パス）を使う |
 | `codeql.mjs` | `npm run codeql` の実体。CI と同じ設定で CodeQL をローカル実行し、ベースラインに無い指摘が出たら失敗する。CodeQL CLI が無ければスキップして正常終了する |

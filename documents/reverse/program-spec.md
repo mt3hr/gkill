@@ -205,7 +205,7 @@ graph LR
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api/`パッケージ（handle_*.go 109ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約3,500行）から分割・移動されました。
+`gkill/api/gkill_server_api/`パッケージ（handle_*.go 112ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約3,500行）から分割・移動されました。
 
 #### 主な責務
 
@@ -418,6 +418,8 @@ KFTLは以下のステートメント型をサポートしています。
 > ただしクライアント側は**行ラベルの分類器だけ**で、解釈（行別エラー・繰り返しの展開）と書き込みはサーバの1実装が担う
 > （[ADR-0507](../adr/0507-kftl-single-implementation-on-server.md)）。Web も `POST /api/submit_kftl_text` で送り、
 > 「おかしな行」は `POST /api/parse_kftl_text`（`KFTLStatement.Analyze`。submit と同じ `prepareRequests`）の応答で塗る。
+> 保存マーカー「！」の行は値の行に数えず、内容の無い記録（種別だけ・店名だけの支出・空の数値）、付け先の無いタグ・関連時刻、
+> 読めない予定日時は**書く前に行別エラー**にする（[ADR-0508](../adr/0508-kftl-blank-records-are-input-errors.md)）。
 > `notification` / `template` / `time_set` というステートメント型は**存在しません**。
 
 ### プレフィックスの二重対応

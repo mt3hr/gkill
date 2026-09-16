@@ -283,11 +283,24 @@ SQLite3 をバックエンドとし、4層のアーキテクチャで構成さ�
 | `idf_thumb_file_server.go` | サムネイル画像のファイルサーバ |
 | `idf_video_file_server.go` | 動画ファイルのファイルサーバ |
 
-### 共通ユーティリティ — 1ファイル
+### 共通ユーティリティ・横断ヘルパ — 14ファイル
 
 | ファイル | 説明 |
 |---------|------|
 | `local_rep_cache_path.go` | ローカルキャッシュ実装のキャッシュ DB パス解決。パス要素として使える値かを検証してからパスを組み立てる |
+| `local_rep_cache_copy.go` | 元 DB ファイルをローカルキャッシュへコピーし直す必要があるかの判定（mtime + サイズ） |
+| `db_file_change_detector.go` | rep の実 DB ファイルが前回のキャッシュ再構築から変わったかの検知（フルリビルドの抑止） |
+| `update_cache_stat.go` | `UpdateCache` の rep 単位の所要時間の集計と遅い rep のログ出し |
+| `rep_load_failures.go` | 構築時に読み込めなかった rep の記録（警告メッセージへ載る。パスは入れない） |
+| `find_warnings.go` | 検索中に起きた「致命的ではない欠落」（プラグイン失敗等）を context 経由で集める |
+| `find_word_match.go` | キーワード検索の対象テキストの組み立て（IDF の本文・git のコミットメッセージ。判定本体は `api/find_word`） |
+| `target_resolution_memo.go` | ReKyou / MiReKyou のワード委譲検索で参照先の解決をメモ化する（ADR-0107） |
+| `gps_log_period.go` | `GetGPSLogs` の期間指定の正規化 |
+| `gps_log_repository_plugin_impl.go` | GPS ログを提供するプラグインを `GPSLogRepository` として見せるアダプタ |
+| `plugin_typed_index.go` | プラグインが返した型別データ・付随データのインメモリ索引（provides の実体。常駐ビルダ + WAL） |
+| `plugin_typed_adapters.go` | 型別データ（Kmemo / KC / Nlog / … / GitCommitLog）を既存のリポジトリ契約に見せかけるアダプタ。索引から即答し、プラグインへは往復しない |
+| `plugin_attached_adapters.go` | 付随データ（タグ・テキスト・通知）を既存のリポジトリ契約に見せかけるアダプタ |
+| `plugin_stderr_ring.go` | プラグインの stderr の直近分を保持するリングバッファ（`last_error` の材料） |
 
 ## サブディレクトリ
 

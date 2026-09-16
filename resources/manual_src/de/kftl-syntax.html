@@ -195,6 +195,8 @@ fri
 
 <h3>20. Speichern: <code>!</code></h3>
 <p>Beendet das Dokument und führt den Speichervorgang aus.</p>
+<p>Die Zeile <code>!</code> selbst zählt nicht als Wertzeile. Schreiben Sie zum Beispiel in der Zeile nach <code>/timeis</code> nur <code>!</code>, erscheint der Fehler „kein Inhalt“, weil der Titel fehlt, und nichts wird gespeichert. Schreiben Sie in die Zeile nach der Typzeile den Text, die Zahl oder den Titel und fügen Sie dann <code>!</code> an.</p>
+<p>Ein Eintrag ohne Inhalt (eine Notiz ohne Text, eine Aufgabe ohne Titel, eine Ausgabe nur mit dem Ladennamen, ein Zahlenwert ohne Zahl), ein Tag oder eine zugehörige Zeit ohne Ziel und ein unlesbares Termindatum werden vor dem Speichern als Fehler je Zeile angezeigt (die Zeile wird rosa). Hat auch nur eine Zeile einen Fehler, schreibt dieser Speichervorgang nichts.</p>
 <pre>!</pre>
 
 <h2>Vollständiges Beispiel</h2>

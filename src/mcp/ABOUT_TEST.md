@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。1050テスト（27ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 10 + プラグイン1 = 11ツール、Write サーバ 27（書き込み21 + Read便利6）+ プラグイン1 = 28ツール、統合サーバ 31 + プラグイン1 = 32ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
+MCP (Model Context Protocol) サーバのテスト。1052テスト（27ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 10 + プラグイン1 = 11ツール、Write サーバ 27（書き込み21 + Read便利6）+ プラグイン1 = 28ツール、統合サーバ 31 + プラグイン1 = 32ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
 
 ## テストフレームワーク
 
@@ -31,7 +31,7 @@ Vitest（Node.js 環境）
 | `__tests__/status-tool.test.mjs` | ツール一覧の世代 `schema_revision`（`lib/status-tool.mjs`）: 一覧から決定的に計算され1文字の差で変わること・`gkill_status` 自身は計算対象に入らないこと・焼き込みが静的配列を書き換えず冪等であること・3サーバで値が違うこと・`gkill_status` が引数を取らないこと（2026-09-14 MCPレビュー P0） |
 | `__tests__/schema-contract.test.mjs` | 「tools/list どおりに呼ぶと失敗しない」の契約: スキーマのキー集合 = 正規化器の受理集合 − 廃止済み、全ツールをスキーマの全プロパティ指定で呼んで未知キーで拒否されないこと、3サーバの同名ツールが同じ JSON（`gkill_status` の焼き込みだけ剥がして比較）、`initialize` の version・説明文の印・応答の `schema_revision` の一致（ADR-0619 / ADR-0620） |
 | `__tests__/tool-schema-budget.test.mjs` | tools/list のバイト量が予算ファイル `tool-schema-budget.json` の範囲内であること（超過で失敗、1024 バイト以上の減少でも予算の追随を要求）、計測の決定性、over / under / missing の判定と文言 |
-| `__tests__/start-spec.test.mjs` | 3エントリスクリプトの起動 spec（`START_SPEC`）の宣言値固定。scope / 既定ポート / file-link 可否・3サーバ間の重複禁止・bootstrap が `spec.scope` を OAuthServer へ渡す配線（ReadWrite が gkill:read を広告していた事故の再発防止。2026-08-30 MCPレビュー P0） |
+| `__tests__/start-spec.test.mjs` | 3エントリスクリプトの起動 spec（`START_SPEC`）の宣言値固定。scope / 既定ポート / file-link 可否・3サーバ間の重複禁止・bootstrap が `spec.scope` を OAuthServer へ渡す配線（ReadWrite が gkill:read を広告していた事故の再発防止。2026-08-30 MCPレビュー P0）。`server_start` ログの世代情報 `startInfo`（pid / schema_revision / tool_count）と、stdio・http の両トランスポートがそれを出すこと |
 
 ### プラグインツール（3サーバ共通）
 

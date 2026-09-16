@@ -194,6 +194,8 @@ fri
 
 <h3>20. Save: <code>!</code></h3>
 <p>Terminates the document and triggers the save process.</p>
+<p>The <code>!</code> line itself does not count as a value line. For example, writing only <code>!</code> on the line after <code>/timeis</code> gives a &quot;no content&quot; error because the title is missing, and nothing is saved. Write the body, number or title on the line after the type line, then add <code>!</code>.</p>
+<p>A record with no content (a memo without text, a task without a title, an expense with only a shop name, a numeric record without a value), a tag or related time with nothing to attach to, and an unreadable schedule date are reported as per-line errors before anything is saved (the line turns pink). If even one line has an error, nothing is written by that save.</p>
 <pre>!</pre>
 
 <h2>Comprehensive Example</h2>

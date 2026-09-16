@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装91ファイル）に対する統合テストを含む。テストファイルは全37本（うち handle_*_test.go は16本）。
+`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装92ファイル）に対する統合テストを含む。テストファイルは全45本（うち handle_*_test.go は20本）。
 
 ## テストフレームワーク
 
@@ -41,7 +41,7 @@ Go `testing` パッケージ
 | `response_status_guard_test.go` | ソース走査ガード。JSON ハンドラのエンコード行の直前に `writeErrorStatus` があること（既存ハンドラのコピペでこの1行が抜けると、そのエンドポイントだけ異常時も 200 へ戻る）、免除リストのファイルが実在すること、ミドルウェアがステータスと JSON 本文を書くこと |
 | `response_status_log_test.go` | 失敗した応答の1行ログ（`writeErrorStatus`）。ステータス→ログレベルの機械的対応（5xx=Error / 401・403 を Error にしない）、成功時は1行も出さないこと、エラーコード・メソッド・パス・ユーザIDが載ること。深部のエラーは Debug 側にあり、既定ログレベルではこの1行が障害の唯一の痕跡になる |
 | `auth_middleware_capped_test.go` | 無認証経路のボディ上限（±1バイト境界・413 の JSON 本文）、スローボディの読み取り期限、ルート表の無認証経路がすべて上限つき（`bodyAuth` / `bodyUpload`）で、素の `wrapNoAuth` 相当が GET の配信1本だけであることの名指し固定（F-002）。加えて accessLog の `responseRecorder` と gzip の `gzipResponseWriter` が `Unwrap` を持つこと —— どちらかが欠けると `http.ResponseController` が底の接続へ届かず、読み取り期限が本番経路でだけ静かに無効になる（コンパイル時アサーションも両ファイルに常設） |
-| `api_routes_test.go` | ルート表（`gkill_server_api_address.go` の `apiRoutes`）が唯一の正本であることの4本。`validateAPIRoutes` が重複・`/api/` 以外・無認証 POST で上限なし・認証つきに上限指定を拒むこと、`HandleXxx` の反射列挙と表の双方向突き合わせ（免除は PathPrefix 配信の `HandleFileServe` / `HandleZipCacheFileServe`）、各 `handle_*.go` の doc コメント `// POST /api/xxx（wrapXxx）` が表のパス・メソッド・認証区分と一致すること、90 ルートの認証区分とボディ上限を名指しで固定する golden（表だけ直すと落ちる。ADR-0709） |
+| `api_routes_test.go` | ルート表（`gkill_server_api_address.go` の `apiRoutes`）が唯一の正本であることの4本。`validateAPIRoutes` が重複・`/api/` 以外・無認証 POST で上限なし・認証つきに上限指定を拒むこと、`HandleXxx` の反射列挙と表の双方向突き合わせ（免除は PathPrefix 配信の `HandleFileServe` / `HandleZipCacheFileServe`）、各 `handle_*.go` の doc コメント `// POST /api/xxx（wrapXxx）` が表のパス・メソッド・認証区分と一致すること、91 ルートの認証区分とボディ上限を名指しで固定する golden（表だけ直すと落ちる。ADR-0709） |
 | `handle_add_urlog_skip_wiring_test.go` | ソース走査ガード。`handle_add_urlog.go` が `FillURLogFieldSkipping` へ `request.SkipFetchMetadata, request.SkipFetchFavicon` をこの順で渡すこと。両方 bool なので入れ替えてもコンパイルも既存テストも通り、MCP の「両方 false なら外向き通信なし」の約束が黙って破れる（reps 層のテストはハンドラを通らない。実HTTP取得のテストは safefetch の SSRF 対策と干渉するため置けない） |
 | `handle_browse_zip_contents_test.go` | ZIP 展開（`extractZip`）の正常系と、圧縮爆弾の拒否 |
 | `handle_submit_kftl_text_test.go` | KFTL 送信の冪等キー、作成された記録の `created[]` 返却（途中失敗では何も残らず空）、利用者の書き間違い（ERR000416）が不正行ごとに行番号・行テキスト付きで積まれ HTTP 400 になること（解釈フェーズの失敗では正しい行も保存されない）、繰り返し「？？」で**書き込まれた**打刻の開始・終了が起点からの日付で年が変わらないこと、支出の `？`行の時刻がタグにも乗ること（Wear / MCP が通る Go 経路の年チェック）、要求の `create_app` が書き込まれた記録の `create_app` / `update_app` に載り、無指定と空白は `gkill_kftl` に落ちること（Wear の `gkill_wear`）、打刻終了（`ーえ` / `ーたえ` 系）が同じ題名・タグの実行中のうち開始時刻が最新の1件だけを終え、削除済みを触らず、検索タグを Tag 行として書かず、`？時刻` を前に書くとその時刻で終わること（cache_in_memory の両方。ADR-0509） |
@@ -52,6 +52,11 @@ Go `testing` パッケージ
 | `handle_file_serve_test.go` | `/files/` 配信で `GetRepositories` 失敗が 500 になること。req_res を使わずファイル本体を返す経路で `response_status_guard_test.go` の免除対象のため、ここで直に固定する（かつては 403 で、認可の失敗とサーバ障害がステータスから区別できなかった） |
 | `handle_get_plugin_list_test.go` | `/api/get_plugin_list` が provides 宣言のあるプラグインに型別索引の統計（typed_index）と State / LastBuildError / LastAttemptAt を返すこと（「is_alive=true なのに0件」の理由を API から診断できるようにするため） |
 | `handle_update_user_reps_test.go` | 存在しないユーザIDへのリポジトリ一覧更新が `TargetAccountNotFoundError`（ERR000413）+ HTTP 404 になること。認証経路の `AccountNotFoundError`（ERR000002）を混ぜるとクライアントの check_auth が操作した管理者をログアウトさせるため、コードを分けている |
+| `gkill_error_cause_scan_test.go` | ソース走査ガード。`if err != nil` の中で組み立てる `message.GkillError` に `Cause` が付いていること（このパッケージと usecase）。`err != nil` を OR / AND で他の条件と繋いだ複合条件も対象（2026-09-16 まで単体の `err != nil` しか見ておらず、OR で繋いだ 28 箇所が Cause 無しのまま残っていた）。Cause が無いとそのエラーだけ reason が出ず、`gkill_error.log` の1行に cause が載らない |
+| `handle_add_without_write_rep_test.go` | 書き込み先 rep が無いまま `add_kmemo` すると、panic の 500 ではなく `WriteRepMissingError`（ERR000422）+ `error_kind=config` / `reason=write_rep_missing` で返ること（設定→保存先で直せると伝わる）。設定 DAO は「種別ごとに書き込み先1つ」を検査するので、DB ファイルを消して glob が何も見つけない状態を再現する |
+| `handle_discard_tx_test.go` | `discard_tx` の失敗コード写し（`discardTxErrorCode`）。`errors.Join` の束から先頭の種別のコードを引くこと、`DiscardTxError` でない失敗と未知の種別は idf_kyou のコードへ落ちること、`reps.DiscardTx` が報告しうる13種別が表に載っていること |
+| `handle_commit_tx_error_code_test.go` | `commit_tx` の失敗コード写し（`commitTxGkillError`）。temp rep の読み出し失敗が種別別のコード（ERR000320〜331・401）で返り `Cause` に元の error を持つこと、読み出し以外の失敗・未知の種別・書き込み先の未設定は ERR000419 に畳み、書き込み先の未設定は reason `write_rep_missing` になること。表の13種別の網羅 |
+| `security_headers_middleware_test.go` | `securityHeadersMiddleware`（`Serve()` のルータにしか掛からず、ハンドラのテストハーネスは通らない）。`X-Content-Type-Options` / `X-Frame-Options` / `Referrer-Policy` の3つが付くこと、ミドルウェアが**先**に既定を置き経路側（`withUserContentSecurityHeaders`）の `Set` が最終値になること、外側で先に付いた値は既定で潰さないこと |
 
 `response_status_test.go` は認証中の `GetRepositories` 失敗も対象にする。既存の `ERR000018` を本文に残し、
 HTTP 500 と Error ログへ同じ失敗が伝播することを、DAOを意図的に閉じた状態で検証する。

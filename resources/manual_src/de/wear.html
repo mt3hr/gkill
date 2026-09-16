@@ -1,0 +1,81 @@
+<!-- title: Uhr (Wear OS) - Hilfe -->
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Uhr (Wear OS)</span></nav>
+  <h1>Uhr (Wear OS)</h1>
+  <p>Von einer Wear-OS-Uhr (z. B. einer Pixel Watch) aus können Sie mit Notizblock-Vorlagen aufzeichnen, einen laufenden Zeiteintrag beenden und Ihre Stimmung festhalten. Beteiligt sind zwei Apps: „gkill wear“ auf der Uhr und „gkill wear Einstellungen“ auf dem Smartphone. Das Smartphone leitet jeden Eintrag an den Server weiter, muss also in der Nähe und mit der Uhr gekoppelt sein.</p>
+
+  <h2>Was Sie brauchen</h2>
+  <ul>
+    <li>Eine mit dem Smartphone gekoppelte Wear-OS-Uhr</li>
+    <li>Einen gkill-Server, den das Smartphone erreichen kann (läuft er auf einem PC zu Hause, erlauben Sie in den Servereinstellungen Verbindungen von anderen Geräten)</li>
+    <li>Ihre gkill-Benutzer-ID und Ihr Passwort</li>
+  </ul>
+
+  <h2>Smartphone einrichten</h2>
+  <ol>
+    <li>Installieren und öffnen Sie „gkill wear Einstellungen“ auf dem Smartphone.</li>
+    <li>Geben Sie Server-URL, Benutzer-ID und Passwort ein und tippen Sie auf „Speichern &amp; Verbindung testen“.</li>
+    <li>Bei einem selbstsignierten HTTPS-Server schalten Sie „Selbstsigniertes Zertifikat zulassen“ ein. Der erste Verbindungstest zeigt den Fingerabdruck des Zertifikats; prüfen Sie, dass er zu Ihrem Server gehört, und tippen Sie auf „Vertrauen und speichern“ (bei Unklarheit auf „Ablehnen“).</li>
+    <li>Erscheint „Verbindung erfolgreich“, ist die Einrichtung abgeschlossen. Auf der Uhr gibt es nichts einzustellen.</li>
+  </ol>
+  <div class="tip">
+    http:// funktioniert nur für das Smartphone selbst (localhost). Für einen Server im Heimnetz oder außerhalb verwenden Sie https://.
+  </div>
+
+  <h2>Bedienung auf der Uhr</h2>
+  <p>Öffnen Sie die Kachel oder die App „gkill wear“ auf der Uhr; es gibt drei Einstiege.</p>
+  <table>
+    <tr>
+      <th>Einstieg</th>
+      <th>Funktion</th>
+    </tr>
+    <tr>
+      <td>📝 Aufzeichnen</td>
+      <td>Wählen Sie eine Notizblock-Vorlage und zeichnen Sie sie auf. Die Vorlagen sind die, die Sie unter „Notizblock-Vorlagen“ im Einstellungsbildschirm bearbeiten (beim ersten Mal über das Smartphone geladen, danach aus dem Cache; „🔄 Aktualisieren“ lädt sie neu).</td>
+    </tr>
+    <tr>
+      <td>▶ Laufend</td>
+      <td>Listet die laufenden Zeiteinträge. Wählen Sie einen aus, bestätigen Sie „Beenden?“ und die Endzeit wird gespeichert.</td>
+    </tr>
+    <tr>
+      <td>⭐️ Stimmung</td>
+      <td>Hält Ihre Stimmung mit fünf Sternen fest. Tippen Sie auf die linke oder rechte Hälfte eines Sterns, um in 0,5-Schritten (1–10) zu wählen; der Wert entspricht der Stimmungsaufzeichnung im Web.</td>
+    </tr>
+  </table>
+
+  <h2>Anzeigesprache</h2>
+  <p>Die Bildschirme von Uhr und Smartphone folgen der Gerätesprache und sind in sieben Sprachen verfügbar (Japanisch, Englisch, Chinesisch, Koreanisch, Spanisch, Französisch, Deutsch). Wenn Sie die Sprache der Uhr ändern, wird die Kachel automatisch neu gezeichnet.</p>
+
+  <h2>Denselben Inhalt zweimal senden</h2>
+  <p>Haben Sie gerade denselben Inhalt gesendet, fragt die Uhr „Derselbe Inhalt wurde gerade gespeichert. Trotzdem senden?“. Das verhindert, dass eine erneut übertragene Nachricht doppelt gespeichert wird. Wählen Sie „Trotzdem senden“, wenn Sie wirklich eine zweite Kopie wollen.</p>
+
+  <h2>Wenn etwas nicht klappt</h2>
+  <table>
+    <tr>
+      <th>Meldung</th>
+      <th>Was tun</th>
+    </tr>
+    <tr>
+      <td>Keine Verbindung zum Telefon</td>
+      <td>Prüfen Sie, ob die Uhr mit dem Smartphone gekoppelt ist und ob Bluetooth auf dem Smartphone eingeschaltet ist.</td>
+    </tr>
+    <tr>
+      <td>Das Telefon hat nicht rechtzeitig geantwortet</td>
+      <td>Öffnen Sie „gkill wear Einstellungen“ auf dem Smartphone und führen Sie „Speichern &amp; Verbindung testen“ aus. Prüfen Sie auch, ob der Server läuft und ob sich seine URL geändert hat.</td>
+    </tr>
+    <tr>
+      <td>✕ Fehler: Anmeldung fehlgeschlagen</td>
+      <td>Geben Sie Benutzer-ID und Passwort in der Einstellungs-App des Smartphones erneut ein. Nach einer Passwortänderung müssen Sie sich auf allen Geräten neu anmelden.</td>
+    </tr>
+    <tr>
+      <td>Der Eintrag erscheint nicht in der Liste</td>
+      <td>Von der Uhr geschriebene Einträge werden mit „gkill wear“ als erstellender App gespeichert. Filtert Ihre Suche nach erstellender App oder Ablageort, prüfen Sie diese Bedingungen.</td>
+    </tr>
+  </table>
+
+  <h2>Verwandte Seiten</h2>
+  <ul>
+    <li><a href="kftl.html">Notizblock-Bildschirm</a></li>
+    <li><a href="kftl-template-struct.html">Vorlagenstruktur</a></li>
+    <li><a href="playing.html">Laufend-Bildschirm</a></li>
+    <li><a href="troubleshooting.html">Wenn ein Fehler erscheint</a></li>
+  </ul>

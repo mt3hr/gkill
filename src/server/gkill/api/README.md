@@ -17,7 +17,7 @@ api/
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
 ├── *_test.go                    # 検索フィルタ・rep名絞り込みなどのテスト（14ファイル）
-├── gkill_server_api/            # HTTP ハンドラ（152ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（156ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・全90ルート登録
@@ -61,7 +61,7 @@ api/
 詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
 
 `GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全91エンドポイントを登録する。
-handle_*.go は109ファイル（実装92 + テスト17）で、1ハンドラ1ファイルとして分割されている。
+handle_*.go は112ファイル（実装92 + テスト20）で、1ハンドラ1ファイルとして分割されている。
 ビジネスロジックは `usecase/` 層に委譲し、ハンドラは HTTP リクエスト/レスポンスの変換に専念する。
 
 ### `find/`（10ファイル）— 検索クエリ型定義
@@ -122,7 +122,7 @@ handle_*.go は109ファイル（実装92 + テスト17）で、1ハンドラ1�
 
 詳細は [kftl/README.md](kftl/README.md) を参照。
 
-### `req_res/`（188ファイル）— Request/Response 構造体
+### `req_res/`（189ファイル）— Request/Response 構造体
 
 詳細は [req_res/README.md](req_res/README.md) を参照。
 
