@@ -30,16 +30,17 @@ const (
 // pluginDir に依存しない値にすること(--gkill-print-config から同じものを出すため)。
 func defaultConfig() sdk.Config {
 	return sdk.Config{
-		configKeyComment: "source_dirs にフォルダかファイルのパスを書きます。" +
+		configKeyComment: "source_dirs に ChatGPT からエクスポートした ZIP を置いたフォルダか、ZIP そのもののパスを書きます。" +
+			"ZIP は解凍しないでください(解凍したフォルダや conversations.json は読みません)。" +
 			"* ** ? [] のワイルドカード、先頭の ~ と環境変数($HOME など)が使えます。" +
-			"フォルダを指定すると再帰的に走査して conversations-000.json などの新形式、" +
-			"無ければ conversations.json を探し、ファイルを直接指定するとその中身をそのまま読みます。" +
+			"フォルダを指定すると再帰的に *.zip を探し、ZIP の中の conversations-000.json などの分割ファイル" +
+			"(無ければ conversations.json)を読みます。" +
 			"空にするとこのプラグインのフォルダを見ます。" +
 			"編集は次の検索から反映されます(gkillの再起動は不要)。" +
 			"_ で始まるキーは説明用なので消して構いません。",
 		configKeyExampleSourceDirs: []string{
-			"~/Kyou/ChatGPTExport",
-			"D:/Dropbox/chatgpt_export/**/conversations*.json",
+			"~/Kyou/ChatGPT_*",
+			"D:/Dropbox/chatgpt_export/*.zip",
 		},
 		configKeySourceDirs: []string{},
 	}
@@ -85,11 +86,6 @@ func sourcePatternsOf(pluginDir string, cfg sdk.Config) []string {
 	return parseSourcePatterns(c[configKeySourceDirs], pluginDir)
 }
 
-// sourceOf は設定を実在するフォルダ・ファイルへ展開する。
-func sourceOf(pluginDir string, cfg sdk.Config) expandedSource {
-	return expandSourcePatterns(sourcePatternsOf(pluginDir, cfg))
-}
-
 // latestConfig はハンドラが受け取った最新の設定。ビルダから読む。
 var latestConfig atomic.Pointer[sdk.Config]
 
@@ -100,15 +96,16 @@ func rememberConfig(cfg sdk.Config) {
 	latestConfig.Store(&cfg)
 }
 
-// sourceProviderOf はビルダに渡す「今のデータソースを返す関数」を作る。
+// sourceProviderOf はビルダに渡す「今のデータソースの指定を返す関数」を作る。
 // 設定画面や config.json の編集を反映できるよう、呼ばれるたびに読み直す。
-func sourceProviderOf(pluginDir string) func() expandedSource {
-	return func() expandedSource {
+// 展開（グロブ・ZIP を開く）はビルダ側の build がやる。
+func sourceProviderOf(pluginDir string) func() []string {
+	return func() []string {
 		var base sdk.Config
 		if stored := latestConfig.Load(); stored != nil {
 			base = *stored
 		}
-		return sourceOf(pluginDir, base)
+		return sourcePatternsOf(pluginDir, base)
 	}
 }
 
@@ -142,7 +139,7 @@ func main() {
 
 		// 単独モード（gkill_server generate_plugin_cache）。常駐ビルダは起こさず同期で1周する。
 		BuildCache: func(_ context.Context, cfg sdk.Config) error {
-			return buildOnce(pluginDir, sourceOf(pluginDir, cfg))
+			return buildOnce(pluginDir, sourcePatternsOf(pluginDir, cfg))
 		},
 
 		// ハンドラは全部「ビルダを起こして、今キャッシュにあるぶんを即返す」。
@@ -174,8 +171,9 @@ func main() {
 			rememberConfig(cfg)
 			startBuilder(pluginDir, provider)
 
+			// 展開はグロブと stat だけで ZIP は開かない（ZIP を開くのはビルダだけ）。
 			patterns := sourcePatternsOf(pluginDir, cfg)
-			src := expandSourcePatterns(patterns)
+			src := sdk.ExpandSourcePatterns(patterns)
 			stats := globalCache.GetStats(pluginDir)
 			return renderConfigHTML(pluginDir, stats, patterns, src), nil
 		},

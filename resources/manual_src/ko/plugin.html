@@ -76,13 +76,16 @@
     </tr>
     <tr>
       <td>파일을 직접 지정한 경우</td>
-      <td>그 파일의 내용을 그대로 읽어 들입니다</td>
+      <td>그 파일을 읽어 들입니다(ZIP으로 제공되는 데이터는 ZIP 파일을 지정합니다)</td>
     </tr>
     <tr>
       <td>비워 둔 경우</td>
       <td>ChatGPT·Claude.ai는 플러그인의 폴더를, ClaudeCode·Codex는 각 CLI가 로그를 저장하는 표준 위치를 봅니다</td>
     </tr>
   </table>
+  <h3>ChatGPT·Claude.ai의 데이터를 가져올 때</h3>
+  <p>ChatGPT·Claude.ai의 대화 기록은 각 서비스에서 내려받은 <strong>ZIP 파일을 풀지 말고 그대로 폴더에 두세요</strong>. 풀어서 꺼낸 JSON 파일은 읽지 않습니다.</p>
+  <p><code>source_dirs</code>에는 그 ZIP 파일을 둔 폴더를 적습니다. ZIP 파일 자체를 적어도 됩니다. 새로 내려받은 ZIP을 같은 폴더에 추가하면 같은 대화는 새 쪽만 사용되고, 오래된 ZIP에만 있는 대화는 그대로 남습니다.</p>
   <h3>Google Takeout의 데이터를 가져올 때</h3>
   <p>건강 데이터와 위치 정보 이력 두 가지는 Google Takeout에서 내려받은 <strong>ZIP 파일을 풀지 말고 그대로 폴더에 두세요</strong>. 직접 푼 폴더는 읽지 않습니다.</p>
   <p><code>source_dirs</code>에는 그 ZIP 파일을 둔 폴더를 적습니다. ZIP 파일 자체를 적어도 됩니다.</p>

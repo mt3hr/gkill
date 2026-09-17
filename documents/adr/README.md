@@ -183,6 +183,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0307](0307-skip-plugin-discovery-when-only-idf-is-needed.md) | IDF のリポジトリしか要らない経路ではプラグインを探索しない | Accepted |
 | [0308](0308-plugin-multiple-rep-names.md) | プラグイン1本が複数の rep 名を名乗れる（get_rep_name の rep_names） | Accepted |
 | [0309](0309-plugin-provides-git-commit-log.md) | zip の Git リポジトリは provides に git_commit_log を書いて native と同じ経路に載せる | Accepted |
+| [0310](0310-chat-export-plugins-read-zip.md) | ChatGPT / Claude.ai の会話履歴はエクスポート ZIP のまま読み、展開済みの JSON は読まない | Accepted |
 | [0401](0401-do-not-split-search-window-in-client.md) | クライアント側で検索を期間の窓へ刻んで複数回 get_kyous を投げない | Accepted |
 | [0402](0402-insert-registered-kyou-locally.md) | 記録の追加は列を再検索せず、その1件をクライアントで判定して差し込む | Accepted |
 | [0403](0403-add-tag-before-registered-kyou.md) | タグ欄付きの追加/編集画面は add_tag が完了してから registered_kyou を emit する | Accepted |
