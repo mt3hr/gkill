@@ -39,6 +39,13 @@ type AttachedDataRepInfoMCPDTO struct {
 	RepName string `json:"rep_name"`
 	// DataKind は tag / text / notification / gpslog のいずれか。
 	DataKind string `json:"data_kind"`
+	// UseToWrite は、この rep が add_tag / add_text / 通知 / GPS ログの書き込み先か。
+	//
+	// 「gkill_add_tag はどこへ書くのか」に答えるには、歴代端末ぶん並ぶ Tag_ rep の
+	// うち書き込み先の1つだけが要る。この欄が無いと呼び出し側は一覧を丸ごと読むしかなく、
+	// 本番では約120行がコンテキストを埋めていた（2026-09-18 の実利用報告）。
+	// RepInfoMCPDTO と同じ理由で omitempty は付けない。
+	UseToWrite bool `json:"use_to_write"`
 }
 
 // PluginRepInfoMCPDTO はプラグインrepの対応表。

@@ -116,6 +116,11 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	}
 	request.Query.OnlyLatestData = true
 
+	// カーソル押し下げ**前**の検索条件を控える。cursor 頁で Mi / MiReKyou の代表射影を
+	// 「1頁目と同じ窓」で選び直すために使う（revalidateMiEntriesAgainstOriginalWindow）。
+	// 浅いコピーでよい —— 押し下げは CalendarEndDate のポインタを差し替えるだけで、指す先は書き換えない。
+	originalQuery := *request.Query
+
 	// カーソルをクエリの期間上限へ押し下げる。
 	//
 	// ★これが無いと、ページ1枚(最大1000件)を返すためだけに毎回全期間を検索し直す。
@@ -157,6 +162,18 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	// 黙って片方を無視すると呼び出し側が気付けない（不正カーソル黙殺と同じ罠）ためエラーにする。
 	if hasCursor && (request.CountOnly || request.GroupBy != "") {
 		err = fmt.Errorf("error at get kyous mcp: count_only/group_by cannot be combined with cursor")
+		slog.Log(r.Context(), gkill_log.Debug, "error at get kyous mcp", "error", fmt.Sprintf("%q", err))
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.InvalidGetKyousMCPRequestDataError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
+		})
+		return
+	}
+	// count_only と group_by の併用もエラー。group_by は既に「件数だけ（buckets + total_count）」を
+	// 返す口なので、count_only を重ねる意味は無く、以前は count_only の早期 return が group_by を
+	// 黙って捨てていた（buckets が無い応答。2026-09-18 の実利用報告）。理由つきの文言は MCP 層が先に出す。
+	if request.CountOnly && request.GroupBy != "" {
+		err = fmt.Errorf("error at get kyous mcp: count_only cannot be combined with group_by")
 		slog.Log(r.Context(), gkill_log.Debug, "error at get kyous mcp", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.InvalidGetKyousMCPRequestDataError,
@@ -219,7 +236,12 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
 		})
 	}
-	allKyous = applyMCPDataTypesFilter(allKyous, request.DataTypes)
+	// query.ids の不一致は、絞り込みの前の結果と突き合わせる（絞り込みで落ちた ID を
+	// 「一致なし」と言わないため）。他の未知値警告と同じく count_only でも出る。
+	response.Warnings = append(response.Warnings, collectMCPUnmatchedIDWarnings(request.Query, allKyous)...)
+	// data_types のエンティティ名（timeis / mi / mirekyou）は射影名へ展開してから照合する。
+	// 警告側（collectMCPUnknownValueWarnings）には展開前の値を渡す（expandMCPDataTypes のコメント）。
+	allKyous = applyMCPDataTypesFilter(allKyous, expandMCPDataTypes(request.DataTypes))
 	allKyous = applyMCPCreateAppsFilter(allKyous, request.CreateApps)
 	allKyous = applyMCPUpdateAppsFilter(allKyous, request.UpdateApps)
 	if request.NumMin != nil || request.NumMax != nil {
@@ -318,6 +340,17 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	}
 
 	batch := allKyous[startIdx:]
+
+	// ★cursor 頁では Mi / MiReKyou の entry を元の窓で選び直す。
+	//   押し下げた窓では Mi の代表射影が変わり（mi_check の時刻は UPDATE_TIME なので窓外へ落ち、
+	//   CREATE_TIME の mi_create が代表になる）、1頁目に返した記録がカーソルより後ろに
+	//   別の射影名で再出現していた。remaining_count が減らない（145→145→143）のはその副作用で、
+	//   実害は同じ記録がページをまたいで重複すること（2026-09-18 の実利用報告。ADR-0621）。
+	if hasCursor {
+		revalidated, revalidateWarnings := g.revalidateMiEntriesAgainstOriginalWindow(r.Context(), userID, device, &originalQuery, batch)
+		response.Warnings = append(response.Warnings, revalidateWarnings...)
+		batch = revalidated
+	}
 
 	// 候補IDを収集。
 	// ★v2ではLimitは厳密な上限。複合カーソルが同一時刻のかたまりの途中からでも

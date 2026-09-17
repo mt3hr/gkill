@@ -6,6 +6,7 @@ package gkill_server_api
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -97,7 +98,7 @@ func TestHandleGetKyousMCP_CountOnly(t *testing.T) {
 	}
 }
 
-// count_only / group_by と cursor の併用はエラー（黙って片方を無視しない）。未知のgroup_by値もエラー。
+// count_only / group_by と cursor の併用、count_only と group_by の併用はエラー（黙って片方を無視しない）。未知のgroup_by値もエラー。
 func TestHandleGetKyousMCP_CountOnlyAndGroupByRejectCursor(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -125,6 +126,9 @@ func TestHandleGetKyousMCP_CountOnlyAndGroupByRejectCursor(t *testing.T) {
 	postExpectError(map[string]any{"count_only": true, "cursor": nowCursor}, "count_only+cursor")
 	postExpectError(map[string]any{"group_by": "month", "cursor": nowCursor}, "group_by+cursor")
 	postExpectError(map[string]any{"group_by": "unknown_axis"}, "未知のgroup_by値")
+	// count_only + group_by も同じ扱い。以前は count_only の早期 return が group_by を黙って捨て、
+	// buckets の無い応答が「集計できた」顔で返っていた（2026-09-18 の実利用報告）。
+	postExpectError(map[string]any{"count_only": true, "group_by": "data_type"}, "count_only+group_by")
 }
 
 // group_by の集計: バケットの合計が total_count と一致し、時刻系キーは昇順で返る。
@@ -910,6 +914,337 @@ func TestMiSortTypeIgnoredWarning(t *testing.T) {
 		got := miSortTypeIgnoredWarning(&query)
 		if (got != "") != c.wantWarn {
 			t.Errorf("%s: warning=%q, want warning=%v", c.name, got, c.wantWarn)
+		}
+	}
+}
+
+// addTestCheckedMiWithTimes は作成時刻と更新時刻を分けて指定した完了済み Mi を1件足す。
+// mi_check 射影の RelatedTime は UPDATE_TIME なので、create と update を離すと
+// 「どの窓で検索するかで代表射影が変わる」記録になる（ADR-0621 の再現材料）。
+func addTestCheckedMiWithTimes(t *testing.T, tsURL string, sessionID string, title string, createTime time.Time, updateTime time.Time) string {
+	t.Helper()
+	id := GenerateNewID()
+	resp := postJSON(t, tsURL+"/api/add_mi", &req_res.AddMiRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+		Mi: reps.Mi{
+			ID:         id,
+			Title:      title,
+			BoardName:  "Inbox",
+			DataType:   "mi",
+			IsChecked:  true,
+			CreateTime: createTime,
+			CreateApp:  "test",
+			CreateUser: "admin",
+			UpdateTime: updateTime,
+			UpdateApp:  "test",
+			UpdateUser: "admin",
+		},
+	})
+	defer resp.Body.Close()
+	var addResp req_res.AddMiResponse
+	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
+		t.Fatalf("decode add mi response: %v", err)
+	}
+	if len(addResp.Errors) > 0 {
+		t.Fatalf("add mi errors: %+v", addResp.Errors)
+	}
+	return id
+}
+
+// walkMCPPages は next_cursor を辿って最後まで読み、各頁の応答を順に返す。
+// limits は頁ごとの limit で、足りない頁は最後の値を使う。
+func walkMCPPages(t *testing.T, tsURL string, sessionID string, query map[string]any, limits []int) []req_res.GetKyousMCPResponse {
+	t.Helper()
+	pages := []req_res.GetKyousMCPResponse{}
+	cursor := ""
+	for i := 0; ; i++ {
+		limit := limits[len(limits)-1]
+		if i < len(limits) {
+			limit = limits[i]
+		}
+		extra := map[string]any{"limit": limit}
+		if cursor != "" {
+			extra["cursor"] = cursor
+		}
+		page := getKyousMCP(t, tsURL, sessionID, query, extra)
+		pages = append(pages, page)
+		if !page.HasMore {
+			return pages
+		}
+		if page.NextCursor == "" {
+			t.Fatalf("page %d: has_more=true なのに next_cursor が空", i+1)
+		}
+		if i > 1000 {
+			t.Fatal("ページングが終わらない")
+		}
+		cursor = page.NextCursor
+	}
+}
+
+// assertMCPPagesAreExact は「各頁の remaining は前頁の remaining − returned」「cursor 頁に total_count 無し」
+// 「ID の重複ゼロ」「Σreturned = total = 最終頁 remaining 0」を検査する。
+func assertMCPPagesAreExact(t *testing.T, pages []req_res.GetKyousMCPResponse, total int) {
+	t.Helper()
+	if len(pages) == 0 {
+		t.Fatal("頁が1つも無い")
+	}
+	first := pages[0]
+	if first.TotalCount == nil || *first.TotalCount != total {
+		t.Fatalf("1頁目の total_count = %v, want %d", first.TotalCount, total)
+	}
+	seen := map[string]int{}
+	sum := 0
+	prevRemaining := total
+	for i, page := range pages {
+		sum += page.ReturnedCount
+		if page.RemainingCount != prevRemaining-page.ReturnedCount {
+			t.Errorf("page %d: remaining=%d, want %d (前頁 remaining %d − returned %d)", i+1, page.RemainingCount, prevRemaining-page.ReturnedCount, prevRemaining, page.ReturnedCount)
+		}
+		prevRemaining = page.RemainingCount
+		if i > 0 && page.TotalCount != nil {
+			t.Errorf("page %d: cursor 頁に total_count が入っている: %d", i+1, *page.TotalCount)
+		}
+		for _, kyou := range page.Kyous {
+			seen[kyou.ID]++
+		}
+	}
+	for id, n := range seen {
+		if n > 1 {
+			t.Errorf("ID %s が %d 回返った（ページをまたいだ重複）", id, n)
+		}
+	}
+	if sum != total {
+		t.Errorf("Σreturned = %d, want %d", sum, total)
+	}
+	if len(seen) != total {
+		t.Errorf("返った ID の種類 = %d, want %d", len(seen), total)
+	}
+	last := pages[len(pages)-1]
+	if last.RemainingCount != 0 || last.HasMore {
+		t.Errorf("最終頁: remaining=%d has_more=%v", last.RemainingCount, last.HasMore)
+	}
+}
+
+// 2026-09-18 の実利用報告: 150件を limit 5 → 3 → 3 で読むと remaining_count が 145 → 145 → 143 と
+// 単調に減らなかった。正体はカーソルの期間押し下げで Mi の代表射影が変わり
+// （1頁目は mi_check=UPDATE_TIME、2頁目以降の狭い窓では mi_create=CREATE_TIME）、
+// 返却済みの Mi がカーソルより後ろに別の射影名で再出現していたこと。
+// 残件数は副作用で、実害は同じ記録がページをまたいで重複すること（ADR-0621）。
+func TestHandleGetKyousMCP_RemainingCountMonotonicAcrossPages(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	base := time.Now().Truncate(time.Second).Add(-24 * time.Hour)
+	const kmemoCount = 146
+	const miCount = 4
+	const total = kmemoCount + miCount
+	for i := range kmemoCount {
+		addTestKmemoWithRelatedTime(t, tsURL, sessionID, fmt.Sprintf("単調減少用メモ%d", i), base.Add(time.Duration(i)*time.Minute))
+	}
+	// Mi は CREATE_TIME を古い側（メモ列の末尾と同じ時刻帯）、UPDATE_TIME を全メモより新しい側に置く。
+	// 1頁目は mi_check（UPDATE_TIME）として先頭に出て、2頁目以降の押し下げた窓では mi_check が窓外へ落ちる。
+	for i := range miCount {
+		addTestCheckedMiWithTimes(t, tsURL, sessionID, fmt.Sprintf("単調減少用タスク%d", i),
+			base.Add(time.Duration(i)*time.Minute), base.Add(200*time.Minute))
+	}
+
+	pages := walkMCPPages(t, tsURL, sessionID, map[string]any{}, []int{5, 3, 3})
+
+	// 前提の確認: 1頁目の先頭 4 件は mi_check（UPDATE_TIME が最新）。
+	// これが崩れると以降の検査が「再現していないのに通る」ことになる。
+	first := pages[0]
+	if len(first.Kyous) != 5 {
+		t.Fatalf("1頁目 returned=%d, want 5", len(first.Kyous))
+	}
+	for i := range miCount {
+		if first.Kyous[i].DataType != "mi_check" {
+			t.Fatalf("1頁目 %d 件目の data_type=%q, want mi_check（前提が崩れている）", i+1, first.Kyous[i].DataType)
+		}
+	}
+
+	// 報告どおりの形: 145 → 142 → 139
+	for i, want := range []int{145, 142, 139} {
+		if len(pages) <= i {
+			t.Fatalf("page %d が無い", i+1)
+		}
+		if pages[i].RemainingCount != want {
+			t.Errorf("page %d: remaining=%d, want %d", i+1, pages[i].RemainingCount, want)
+		}
+	}
+	assertMCPPagesAreExact(t, pages, total)
+}
+
+// for_mi 検索（RelatedTime が mi_sort_type の射影時刻へ上書きされる経路）でも
+// 同じ材料でページをまたいだ重複が出ないこと。
+func TestHandleGetKyousMCP_ForMiPagingDoesNotRepeatTasks(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	base := time.Now().Truncate(time.Second).Add(-24 * time.Hour)
+	const miCount = 6
+	for i := range miCount {
+		addTestCheckedMiWithTimes(t, tsURL, sessionID, fmt.Sprintf("for_mi頁送り用タスク%d", i),
+			base.Add(time.Duration(i)*time.Minute), base.Add(200*time.Minute))
+	}
+
+	query := map[string]any{"for_mi": true, "include_create_mi": true, "include_check_mi": true}
+	pages := walkMCPPages(t, tsURL, sessionID, query, []int{1})
+	assertMCPPagesAreExact(t, pages, miCount)
+}
+
+// expandMCPDataTypes: エンティティ名は全射影へ、nil は nil、空は空、重複は落ちて順序は保つ。
+func TestExpandMCPDataTypes(t *testing.T) {
+	if got := expandMCPDataTypes(nil); got != nil {
+		t.Errorf("nil は nil のまま（未使用）のはず: %v", got)
+	}
+	if got := expandMCPDataTypes([]string{}); got == nil || len(got) != 0 {
+		t.Errorf("空は非nilの空（0件指定）のはず: %#v", got)
+	}
+	got := expandMCPDataTypes([]string{"mi", "kmemo", "mi_create", "timeis", "zzz_bogus"})
+	want := []string{"mi_create", "mi_check", "mi_limit", "mi_start", "mi_end", "kmemo", "timeis_start", "timeis_end", "zzz_bogus"}
+	if strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Errorf("expand = %v, want %v", got, want)
+	}
+	for _, projection := range miProjectionDataTypes {
+		if _, ok := knownMCPDataTypes(&reps.GkillRepositories{})[projection]; !ok {
+			t.Errorf("射影 %q が knownMCPDataTypes に無い（表が2つに割れている）", projection)
+		}
+	}
+}
+
+// 2026-09-18 の実利用報告: data_types:["timeis"] / ["mi"] が警告なしで0件、
+// ["timeis","mi","idf"] が idf 単体と同じ件数。エンティティ名は射影へ展開して受理する（ADR-0623）。
+func TestHandleGetKyousMCP_DataTypesAcceptsEntityNames(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	now := time.Now().Truncate(time.Second)
+	addTestKmemo(t, tsURL, sessionID, "エンティティ名用メモ")
+	endTime := now.Add(-30 * time.Minute)
+	addTestTimeIsWithPeriod(t, tsURL, sessionID, "エンティティ名用打刻", now.Add(-time.Hour), &endTime)
+	addTestCheckedMiWithTimes(t, tsURL, sessionID, "エンティティ名用タスク", now.Add(-2*time.Hour), now.Add(-time.Hour))
+
+	count := func(dataTypes []string) (int, []string) {
+		res := getKyousMCP(t, tsURL, sessionID, map[string]any{}, map[string]any{"count_only": true, "data_types": dataTypes})
+		if res.TotalCount == nil {
+			t.Fatalf("count_only なのに total_count が無い: %v", dataTypes)
+		}
+		return *res.TotalCount, res.Warnings
+	}
+	assertNoUnknownWarning := func(dataTypes []string, warnings []string) {
+		t.Helper()
+		for _, warning := range warnings {
+			if strings.Contains(warning, "unknown data_type") {
+				t.Errorf("%v が未知値として警告された: %q", dataTypes, warning)
+			}
+		}
+	}
+
+	timeisCount, warnings := count([]string{"timeis"})
+	assertNoUnknownWarning([]string{"timeis"}, warnings)
+	if timeisCount == 0 {
+		t.Fatal("data_types:[timeis] が0件（エンティティ名が射影へ展開されていない）")
+	}
+	if projected, _ := count([]string{"timeis_start", "timeis_end"}); projected != timeisCount {
+		t.Errorf("timeis(%d) と timeis_start+timeis_end(%d) の件数が違う", timeisCount, projected)
+	}
+
+	miCount, warnings := count([]string{"mi"})
+	assertNoUnknownWarning([]string{"mi"}, warnings)
+	if miCount != 1 {
+		t.Errorf("data_types:[mi] = %d, want 1（潰し込み後の代表1件）", miCount)
+	}
+
+	kmemoCount, _ := count([]string{"kmemo"})
+	sum, warnings := count([]string{"timeis", "mi", "kmemo"})
+	assertNoUnknownWarning([]string{"timeis", "mi", "kmemo"}, warnings)
+	if sum != timeisCount+miCount+kmemoCount {
+		t.Errorf("[timeis,mi,kmemo] = %d, want %d+%d+%d", sum, timeisCount, miCount, kmemoCount)
+	}
+
+	// 綴り違いの警告は従来どおり
+	if _, warnings := count([]string{"zzz_bogus"}); !slices.ContainsFunc(warnings, func(w string) bool { return strings.Contains(w, "zzz_bogus") }) {
+		t.Errorf("未知の data_type が警告されていない: %v", warnings)
+	}
+}
+
+// num_min / num_max の結果に kc / nlog / lantana が混ざったら警告する（単位の無い1本の軸で比べているため）。
+// 1種類だけなら黙る。2026-09-18 の実利用報告: num_min:7 だけで気分・歩数・円が混ざって 20,624 件。
+func TestHandleGetKyousMCP_NumFilterWarnsWhenKindsMix(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	addTestKC(t, tsURL, sessionID, "歩数", "10")
+	addTestLantana(t, tsURL, sessionID, 8)
+
+	hasMixWarning := func(warnings []string) bool {
+		return slices.ContainsFunc(warnings, func(w string) bool { return strings.Contains(w, "unit-less axis") })
+	}
+
+	mixed := getKyousMCP(t, tsURL, sessionID, map[string]any{}, map[string]any{"num_min": 7})
+	if len(mixed.Kyous) != 2 {
+		t.Fatalf("kc 10 と lantana 8 の両方が num_min:7 に当たるはず: %d件", len(mixed.Kyous))
+	}
+	if !hasMixWarning(mixed.Warnings) {
+		t.Errorf("種別混在の警告が無い: %v", mixed.Warnings)
+	}
+	for _, want := range []string{"1 kc", "1 lantana"} {
+		if !slices.ContainsFunc(mixed.Warnings, func(w string) bool { return strings.Contains(w, want) }) {
+			t.Errorf("警告に %q が無い: %v", want, mixed.Warnings)
+		}
+	}
+
+	only := getKyousMCP(t, tsURL, sessionID, map[string]any{}, map[string]any{"num_min": 7, "data_types": []string{"lantana"}})
+	if len(only.Kyous) != 1 || only.Kyous[0].DataType != "lantana" {
+		t.Fatalf("data_types:[lantana] で lantana 1件のはず: %+v", only.Kyous)
+	}
+	if hasMixWarning(only.Warnings) {
+		t.Errorf("1種類しか無いのに混在警告が出ている: %v", only.Warnings)
+	}
+}
+
+// query.ids のうち結果に出なかった ID は警告で名指しする（存在しない／削除済み／他条件で落ちた、は区別しない）。
+// tags / reps / rep_types / data_types だけが警告され、ids だけ無言だった（2026-09-18 の実利用報告）。
+func TestHandleGetKyousMCP_UnmatchedIDsWarn(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	realID := addTestKmemo(t, tsURL, sessionID, "ids用メモ")
+	bogusID := "00000000-0000-4000-8000-000000000000"
+
+	res := getKyousMCP(t, tsURL, sessionID, map[string]any{"ids": []string{realID, bogusID}}, map[string]any{"count_only": true})
+	if res.TotalCount == nil || *res.TotalCount != 1 {
+		t.Fatalf("実在する1件だけが数えられるはず: %v", res.TotalCount)
+	}
+	idWarnings := []string{}
+	for _, warning := range res.Warnings {
+		if strings.HasPrefix(warning, "query.ids:") {
+			idWarnings = append(idWarnings, warning)
+		}
+	}
+	if len(idWarnings) != 1 {
+		t.Fatalf("query.ids の警告が1行のはず: %v", res.Warnings)
+	}
+	if !strings.Contains(idWarnings[0], bogusID) || !strings.Contains(idWarnings[0], "1 of 2") {
+		t.Errorf("不在 ID を名指ししていない: %q", idWarnings[0])
+	}
+	if strings.Contains(idWarnings[0], realID) {
+		t.Errorf("実在する ID まで不一致扱い: %q", idWarnings[0])
+	}
+	if !strings.Contains(idWarnings[0], "cannot tell these apart") {
+		t.Errorf("「区別できない」と言っていない: %q", idWarnings[0])
+	}
+
+	ok := getKyousMCP(t, tsURL, sessionID, map[string]any{"ids": []string{realID}}, map[string]any{})
+	for _, warning := range ok.Warnings {
+		if strings.HasPrefix(warning, "query.ids:") {
+			t.Errorf("全 ID が一致しているのに警告が出た: %q", warning)
 		}
 	}
 }
