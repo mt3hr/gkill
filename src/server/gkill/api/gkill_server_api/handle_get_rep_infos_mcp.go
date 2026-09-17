@@ -138,14 +138,18 @@ func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Req
 	// RepInfos にも GetAllRepNames にも出てこない。だが add_tag / add_text の
 	// 書き込み先はここなので、書く前に知れないと「どこへ書かれるのか」が分からない。
 	// **RepInfos へ混ぜないこと** ―― 混ぜると query.reps へ渡されて静かに0件になる。
+	// use_to_write は RepInfos と同じ集合（WriteTargetRepNames。Tag / Text / Notification / GPSLog の
+	// Write rep も含む）で判定する。歴代端末ぶん並ぶ格納先のうち、今の書き込み先を1行で引けるようにする。
 	appendAttachedDataRep := func(dataKind string, repNames []string) {
 		for _, repName := range repNames {
 			if repName == "" {
 				continue
 			}
+			_, useToWrite := writeTargets[repName]
 			response.AttachedDataReps = append(response.AttachedDataReps, req_res.AttachedDataRepInfoMCPDTO{
-				RepName:  repName,
-				DataKind: dataKind,
+				RepName:    repName,
+				DataKind:   dataKind,
+				UseToWrite: useToWrite,
 			})
 		}
 	}
