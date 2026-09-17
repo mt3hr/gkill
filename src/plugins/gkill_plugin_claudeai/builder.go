@@ -36,9 +36,9 @@ type builder struct {
 var globalBuilder = &builder{kick: make(chan struct{}, 1)}
 
 // EnsureStarted はビルダを起動する。何度呼んでも1本しか起きない。
-func (b *builder) EnsureStarted(pluginDir string, sourceOf func() expandedSource) {
+func (b *builder) EnsureStarted(pluginDir string, patternsOf func() []string) {
 	b.startOnce.Do(func() {
-		go b.loop(pluginDir, sourceOf)
+		go b.loop(pluginDir, patternsOf)
 	})
 }
 
@@ -50,19 +50,19 @@ func (b *builder) Kick() {
 	}
 }
 
-func (b *builder) loop(pluginDir string, sourceOf func() expandedSource) {
+func (b *builder) loop(pluginDir string, patternsOf func() []string) {
 	ticker := time.NewTicker(builderIdleInterval)
 	defer ticker.Stop()
 
 	// 起動直後に1回走らせる
-	b.runOnce(pluginDir, sourceOf())
+	b.runOnce(pluginDir, patternsOf())
 
 	for {
 		select {
 		case <-b.kick:
 		case <-ticker.C:
 		}
-		b.runOnce(pluginDir, sourceOf())
+		b.runOnce(pluginDir, patternsOf())
 	}
 }
 
@@ -70,15 +70,15 @@ func (b *builder) loop(pluginDir string, sourceOf func() expandedSource) {
 //
 // os.Stdout には絶対に書かない。あれはプロトコルのチャネルで、
 // 1行でも混ざるとJSONストリームが壊れる。ログはstderrに出す。
-func (b *builder) runOnce(pluginDir string, src expandedSource) {
-	_ = buildOnce(pluginDir, src)
+func (b *builder) runOnce(pluginDir string, patterns []string) {
+	_ = buildOnce(pluginDir, patterns)
 }
 
 // buildOnce は走査→取り込み→掃除を1周し、失敗を cache_meta に残してから返す。
 // 常駐ビルダ（runOnce）と単独モード（Handler.BuildCache。gkill_server generate_plugin_cache）の
 // 両方がここを通るので、どちらで失敗しても設定画面の build_state は同じ見え方になる。
-func buildOnce(pluginDir string, src expandedSource) error {
-	if err := globalCache.build(pluginDir, src); err != nil {
+func buildOnce(pluginDir string, patterns []string) error {
+	if err := globalCache.build(pluginDir, patterns); err != nil {
 		globalCache.setMeta("build_state", "error")
 		globalCache.setMeta("build_error", err.Error())
 		sdk.LogError("%s: build error: %v", appName, err)
@@ -89,7 +89,7 @@ func buildOnce(pluginDir string, src expandedSource) error {
 
 // startBuilder はハンドラの先頭から呼ぶ。起動していなければ起こし、
 // 起動済みなら作り直しを促すだけで、待たずに戻る。
-func startBuilder(pluginDir string, sourceOf func() expandedSource) {
-	globalBuilder.EnsureStarted(pluginDir, sourceOf)
+func startBuilder(pluginDir string, patternsOf func() []string) {
+	globalBuilder.EnsureStarted(pluginDir, patternsOf)
 	globalBuilder.Kick()
 }

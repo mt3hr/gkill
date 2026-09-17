@@ -1,8 +1,8 @@
 {
   "protocol_version": "1",
   "name": "gkill_plugin_chatgpt",
-  "version": "1.1.8",
-  "description": "ChatGPT のチャット履歴をgkillタイムラインに表示する。conversations.jsonをプラグインフォルダに置いて使用。",
+  "version": "1.2.0",
+  "description": "ChatGPT のチャット履歴をgkillタイムラインに表示する。エクスポートした ZIP を解凍せずにデータソースのフォルダへ置いて使用。",
   "data_type": "chatgpt_conversation",
   "rep_name": "ChatGPT",
   "executable": "gkill_plugin_chatgpt",

@@ -96,7 +96,7 @@ const maxShownExpanded = 20
 // gkillの設定ダイアログは設定HTMLを表示するだけで、保存(post_plugin_config)を呼ぶ導線が
 // まだ無い。プラグイン側から本体を変更するわけにもいかないので、ここでは編集フォームを出さず、
 // 現状の表示とconfig.jsonの編集手順の案内にとどめる。
-func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src expandedSource) string {
+func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src sdk.ExpandedSource) string {
 	var sb strings.Builder
 	sb.WriteString(configHTMLHead)
 	sb.WriteString(`<h2>Claude.ai チャット履歴プラグイン</h2>`)
@@ -107,8 +107,8 @@ func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src
 		sb.WriteString(`<div class="ok">`)
 		fmt.Fprintf(&sb, `<p>✓ <strong>%d 件</strong>のメッセージ(会話 %d 件)を読み込んでいます</p>`,
 			stats.MessageCount, stats.ConvCount)
-		sb.WriteString(`<p>データを更新するには、Claude.ai から再エクスポートして ` +
-			`<code>conversations.json</code> を置き換えてください。</p>`)
+		sb.WriteString(`<p>データを更新するには、Claude.ai から再エクスポートして ZIP を置き換えてください` +
+			`（古い ZIP を残しても、同じ会話は新しいほうだけを使います）。</p>`)
 		sb.WriteString(`</div>`)
 	} else {
 		sb.WriteString(`<div class="warn">`)
@@ -117,15 +117,16 @@ func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src
 		sb.WriteString(`<p>エクスポート手順:</p><ol>`)
 		sb.WriteString(`<li>Claude.ai にログイン → 左下のアカウントアイコン → <strong>Settings</strong></li>`)
 		sb.WriteString(`<li>「Privacy」→「<strong>Export data</strong>」をクリック</li>`)
-		sb.WriteString(`<li>ZIPが届いたら解凍し、<code>conversations.json</code> を取り出す</li>`)
-		sb.WriteString(`<li>下の「データソース」で指定したフォルダに置く</li>`)
+		sb.WriteString(`<li>ZIP（<code>conversations-000.zip</code> など）が届いたら<strong>解凍せず</strong>、` +
+			`そのまま下の「データソース」で指定したフォルダに置く</li>`)
+		sb.WriteString(`<li>ZIP の中の <code>conversations.json</code> を自動で読みます。解凍した JSON は読みません</li>`)
 		sb.WriteString(`</ol></div>`)
 	}
 
 	renderBuildProgress(&sb, stats)
 
 	sb.WriteString(`<table>`)
-	fmt.Fprintf(&sb, `<tr><td class="k">読み込んだファイル数</td><td>%d</td></tr>`, stats.FileCount)
+	fmt.Fprintf(&sb, `<tr><td class="k">ZIP 内の会話ファイル数</td><td>%d</td></tr>`, stats.FileCount)
 	fmt.Fprintf(&sb, `<tr><td class="k">会話数</td><td>%d</td></tr>`, stats.ConvCount)
 	fmt.Fprintf(&sb, `<tr><td class="k">メッセージ数</td><td>%d</td></tr>`, stats.MessageCount)
 	fmt.Fprintf(&sb, `<tr><td class="k">最終スキャン</td><td>%s</td></tr>`,
@@ -141,6 +142,13 @@ func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src
 		}
 		sb.WriteString(`</ul></div>`)
 	}
+	if len(stats.SourceProblems) > 0 {
+		sb.WriteString(`<div class="warn"><p>走査で見つかった問題:</p><ul>`)
+		for _, problem := range stats.SourceProblems {
+			sb.WriteString(`<li><code>` + html.EscapeString(problem.Path) + `</code> ` + html.EscapeString(problem.Message) + `</li>`)
+		}
+		sb.WriteString(`</ul></div>`)
+	}
 	if stats.LastScanError != "" {
 		sb.WriteString(`<div class="warn"><p>スキャン時のエラー:</p><p><code>` +
 			html.EscapeString(stats.LastScanError) + `</code></p></div>`)
@@ -149,7 +157,7 @@ func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src
 	sb.WriteString(`<h3>設定されている指定</h3><ul>`)
 	for _, p := range patterns {
 		sb.WriteString(`<li><code>` + html.EscapeString(p) + `</code>`)
-		if hasGlobMeta(p) {
+		if sdk.HasGlobMeta(p) {
 			sb.WriteString(` <span class="tag">パターン</span>`)
 		}
 		sb.WriteString(`</li>`)
@@ -191,8 +199,9 @@ func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src
 	sb.WriteString(`<div class="hint">` +
 		`<code>source_dirs</code> は<strong>配列で複数指定</strong>できます(1つなら文字列でも可)。` +
 		`ワイルドカード <code>*</code> <code>**</code> <code>?</code> <code>[]</code> が使えます — ` +
-		`マッチしたフォルダは再帰的に走査して <code>conversations.json</code> を探し、` +
-		`マッチしたファイルはそのまま読みます。` +
+		`マッチしたフォルダは再帰的に走査して <code>*.zip</code> を探し、ZIP の中の <code>conversations.json</code> を読みます。` +
+		`ZIP を直接指定してもかまいません。` +
+		`<strong>ZIP は解凍しないでください</strong>(解凍したフォルダや JSON は読みません)。` +
 		`先頭の <code>~</code> と環境変数(<code>$HOME</code> など)も展開されます` +
 		`(ただしgkillをWindowsサービスで動かしている場合は実行アカウントのホームになるため、絶対パスが確実です)。` +
 		`キーごと省略するか空にすると、このプラグインのフォルダを見ます。` +

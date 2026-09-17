@@ -137,25 +137,25 @@ $GKILL_HOME/plugins/{userID}/{プラグイン名}/
   {実行ファイル}          # Linux/macOS: gkill_plugin_xxx
                           # Windows:      gkill_plugin_xxx.exe
   config.json             # データソース設定（初回起動時に自動生成される）
-  conversations.json      # データファイル（プラグインフォルダに直接置く場合のみ）
+  <エクスポート>.zip       # データファイル（プラグインフォルダに直接置く場合のみ。ZIP は解凍しない）
 ```
 
 ### gkill_plugin_claudeai
 
-1. Claude.ai の設定ページからデータをエクスポートし `conversations.json` を取得する
+1. Claude.ai の設定ページからデータをエクスポートし、届いた ZIP（`conversations-000.zip` など）を**解凍せず**そのまま使う
 2. 配置先ディレクトリに `manifest.json`・実行ファイルを置き、gkill_server を再起動する
 3. 同じディレクトリに `config.json` が自動生成されるので、`source_dirs` に
-   `conversations.json` を置いたフォルダ（またはファイル）を書く
+   ZIP を置いたフォルダ（または ZIP そのもの）を書く。解凍したフォルダや `conversations.json` は読まない
 
 `source_dirs` を空のままにすると、従来どおりプラグインフォルダ自身を見る。
 
 ### gkill_plugin_chatgpt
 
-1. ChatGPT の設定ページからデータをエクスポートし ZIP を解凍する
-   - 新形式: `conversations-000.json`, `conversations-001.json`, ... （複数ファイル）
-   - 旧形式: `conversations.json`（単一ファイル）
+1. ChatGPT の設定ページからデータをエクスポートし、届いた ZIP を**解凍せず**そのまま使う
+   - ZIP の中の `conversations-000.json`, `conversations-001.json`, ...（分割ファイル）を読む
+   - 無ければ旧形式の `conversations.json`（単一ファイル）を読む
 2. 配置先ディレクトリに `manifest.json`・実行ファイルを置き、gkill_server を再起動する
-3. 自動生成された `config.json` の `source_dirs` に、解凍先フォルダを書く
+3. 自動生成された `config.json` の `source_dirs` に、ZIP を置いたフォルダ（または ZIP そのもの）を書く
 
 こちらも `source_dirs` が空ならプラグインフォルダ自身を見る。
 
@@ -229,7 +229,7 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
 ```json
 {
   "_comment": "書式の説明（読み飛ばされるので消してよい）",
-  "_example_source_dirs": ["~/Kyou/ClaudeAIExport", "D:/Dropbox/claude_export/**/conversations*.json"],
+  "_example_source_dirs": ["~/Kyou/ClaudeAI_*", "D:/Dropbox/claude_export/conversations-*.zip"],
   "source_dirs": []
 }
 ```
@@ -241,9 +241,9 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
 
 `source_dirs` の書式:
 
-- **フォルダ** を指定すると再帰的に走査し、そのプラグインが読むファイル名（`conversations.json`、
-  `*.jsonl` など）を探す
-- **ファイル** を直接指定すると、名前が規則に合わなくてもそのまま読む
+- **フォルダ** を指定すると再帰的に走査し、そのプラグインが読むファイル名（claudecode の
+  `*.jsonl`、ZIP を読むプラグインなら `*.zip`）を探す
+- **ファイル** を直接指定すると、名前が規則に合わなくてもそのまま読む（ZIP を読むプラグインでは ZIP に限る）
 - ワイルドカード `*` `**` `?` `[]` が使える（[go-zglob](https://github.com/mattn/go-zglob)）
 - 先頭の `~` と環境変数（`$HOME` など）を展開する。ただし gkill を Windows サービスで動かして
   いる場合は**実行アカウントのホーム**になるため、絶対パスのほうが確実
@@ -251,7 +251,7 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
   claudecode は `~/.claude/projects`、codex は `~/.codex/sessions` と
   `~/.codex/session_index.jsonl`、fitbit / 位置情報は `~/Kyou/GoogleTakeout_*`）を使う
 - 編集は**次の検索から反映される**（gkill_server の再起動は不要）
-- **fitbit と位置情報だけは ZIP しか読まない。** フォルダを指定するとその下の `*.zip` を
+- **claudecode / codex 以外の5本（chatgpt / claudeai / fitbit / 位置情報 / archived_git_commit_log）は ZIP しか読まない。** フォルダを指定するとその下の `*.zip` を
   再帰的に探し、ZIP の中を走査する。ZIP を直接指定してもよい
 
 ---
