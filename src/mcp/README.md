@@ -6,9 +6,9 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| **Read専用** | `gkill-read-server.mjs` | 11 (10 read + 1 plugin) | 8808 | 読み取りのみ |
-| **Write専用** | `gkill-write-server.mjs` | 28 (21 write + 6 read convenience + 1 plugin) | 8809 | 書き込み中心 |
-| **Read/Write統合** | `gkill-readwrite-server.mjs` | 32 (10 read + 21 write + 1 plugin) | 8810 | 全機能 |
+| **Read専用** | `gkill-read-server.mjs` | 12 (11 read + 1 plugin) | 8808 | 読み取りのみ |
+| **Write専用** | `gkill-write-server.mjs` | 29 (21 write + 7 read convenience + 1 plugin) | 8809 | 書き込み中心 |
+| **Read/Write統合** | `gkill-readwrite-server.mjs` | 33 (11 read + 21 write + 1 plugin) | 8810 | 全機能 |
 
 プラグインツール `gkill_get_plugin_list` は3サーバ共通で提供します（読み取り専用）。プラグインKyouの本文は `gkill_get_kyous` の `include_plugin_content` でレスポンスに埋め込みます。
 
@@ -41,7 +41,7 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 | `lib/status-tool.mjs` | 3サーバ | ツール一覧の世代 `schema_revision` の計算と `gkill_status` への焼き込み |
 | `tool-schema-budget.mjs` / `tool-schema-budget.json` | 3サーバ | tools/list のバイト量の計測と予算（`npm run mcp:schema-budget -- --update` で更新） |
 
-> ツール数（上の表の 11 / 28 / 32）は `verify_docs` が `lib/*-tools.mjs` のスプレッドを辿って
+> ツール数（上の表の 12 / 29 / 33）は `verify_docs` が `lib/*-tools.mjs` のスプレッドを辿って
 > 実測と突き合わせます。サーバ本体だけを見ても数えられないので、ツールを増やすときは
 > 必ず `lib/` 側の配列へ足してください。
 
@@ -175,17 +175,18 @@ curl -v -X POST http://localhost:8808/mcp \
 
 ### 提供ツール
 
-#### Readツール（10 — Read専用/ReadWrite統合サーバで使用可能）
+#### Readツール（11 — Read専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_status` | このサーバが何者かを返す（引数なし。3サーバ共通）: `server_kind`（read / write / readwrite）、接続先の `account.user_id` / `account.device`、gkill のビルド（`gkill.version` / `commit_hash` / `build_time`）、`transport`、`started_at` / `uptime_seconds`、`tool_count`、`schema_revision`。**`schema_revision` はツール一覧の世代**で、同じ値が `gkill_status` の説明文末尾にも焼き込まれている。応答と説明文の値が違えば、クライアントが握っている一覧が古い（一覧は接続時に1回しか取られない。サーバを再起動しても直らず、接続し直しが要る）。gkill へ届かないときも失敗にせず `gkill_reachable:false` + `gkill_error`（HTTP ステータスのみ）で返す |
-| `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却） |
+| `gkill_get_mcp_help` | ツール説明の本文を topic ごとに返す（引数 `topic`: `search` / `pagination` / `mi` / `data_types` / `plugin` / `idf` / `deleted` / `rep` / `kftl`。省略で index。3サーバ共通、gkill へは往復しない）。**ツール一覧の説明文は要約**で、応答フィールドの一覧・Mi の射影・KFTL の文法全文などはここにある（正本は `lib/help-topics.mjs`。ADR-0622） |
+| `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却）。`data_types` はエンティティ名 `timeis` / `mi` / `mirekyou` も受理して全射影へ展開する（ADR-0623）。`count_only` と `group_by` は cursor と同じく併用不可（エラー）。`query.ids` の不一致・`num_min` / `num_max` の種別混在は `warnings[]` に出る |
 | `gkill_get_mi_board_list` | Miボード名一覧を取得 |
 | `gkill_get_all_tag_names` | 全タグ名を取得 |
 | `gkill_get_all_rep_names` | Kyouを供給するリポジトリ名を取得。`contains`（大小無視の部分一致）と `limit`（既定200）で絞れ、`total_count` / `truncated` が付く。rep が数百ある環境で「その名前があるか」を確かめるために全件を読まずに済む |
 | `gkill_get_gps_log` | 期間指定でGPSログを取得。`limit` / `cursor`（不透明トークン。`next_cursor` をそのまま返す）でページングし、`count_only` / `group_by:"day"` で件数・日別カバレッジだけ取れる。**カーソルは `gkill_get_kyous` のものと別方式**（Node製base64url。コーデックの正本は `lib/gps-cursor.mjs` 1本で、発行側と受理側の両方がそこを使う） |
 | `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等） |
-| `gkill_get_rep_infos` | リポジトリ一覧を構造化メタデータ付きで取得。`query.rep_types` が受理する正準値 `canonical_rep_types[]`（表示ラベルと1:1でない）、索引付きrepの最終更新 `indexed_at`（古いと「追加したはずのファイルが検索に出ない」の原因）、タグ・テキスト・通知・GPSログの格納先 `attached_data_reps[]`（`query.reps` には渡せない）を返す |
+| `gkill_get_rep_infos` | リポジトリ一覧を構造化メタデータ付きで取得。`query.rep_types` が受理する正準値 `canonical_rep_types[]`（表示ラベルと1:1でない）、索引付きrepの最終更新 `indexed_at`（古いと「追加したはずのファイルが検索に出ない」の原因）、タグ・テキスト・通知・GPSログの格納先 `attached_data_reps[]`（`query.reps` には渡せない。`use_to_write` 付き）を返す。列は `fields`、行は `writable_only` / `rep_types` / `rep_names` / `contains` / `data_kinds` で絞る（「`gkill_add_tag` はどこへ書くか」は `writable_only:true, data_kinds:["tag"]` で1行） |
 | `gkill_get_idf_file` | IDFファイルの実データを取得（画像はMCP image blockで返却）。`thumb=WxH`（一辺最大1024、動画は `is_video: true` 併用）で縮小取得できる。上限は `GKILL_MCP_MAX_FILE_BYTES`（既定8MB） |
 | `gkill_get_kyou_history` | 1件の全版を取得（削除済みの版も含む）。`gkill_get_kyous` から見えなくなった記録を読み返す唯一の経路 |
 
@@ -257,7 +258,7 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 | `gkill_delete_kyou` | エントリのソフト削除 |
 | `gkill_restore_kyou` | ソフト削除の取り消し（`is_deleted` を戻す） |
 
-Write専用サーバにはRead便利ツール6つ（`gkill_status`, `gkill_get_application_config`, `gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_kyou_history`）も含まれます。`gkill_status` / `gkill_get_application_config` は「どのアカウントへ書くのか」を書く前に確かめるためのものです。`gkill_get_kyou_history` を載せているのは、`gkill_delete_kyou` / `gkill_restore_kyou` と同じサーバから「いま何を消したのか」を確かめられないと、取り消しが当てずっぽうになるためです。
+Write専用サーバにはRead便利ツール7つ（`gkill_status`, `gkill_get_mcp_help`, `gkill_get_application_config`, `gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_kyou_history`）も含まれます。`gkill_status` / `gkill_get_application_config` は「どのアカウントへ書くのか」を書く前に確かめるためのものです。`gkill_get_kyou_history` を載せているのは、`gkill_delete_kyou` / `gkill_restore_kyou` と同じサーバから「いま何を消したのか」を確かめられないと、取り消しが当てずっぽうになるためです。
 
 ##### 更新系の引数
 

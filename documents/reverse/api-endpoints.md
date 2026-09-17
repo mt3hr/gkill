@@ -473,14 +473,14 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 |---|---|
 | `/api/get_gps_log` | GPSログ取得（日付範囲指定） |
 
-## MCP連携（2件 + MCPツール11個）
+## MCP連携（2件 + MCPツール12個）
 
 | パス | 説明 |
 |---|---|
 | `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得（IDFペイロードに`rep_name`/`is_image`等含む）。リクエストの `create_apps` / `update_apps` は「どのアプリが書いたか / 最後に更新したか」の許可リスト（`gkill_kftl` / `gkill_wear` / `gkill_mcp_readwrite` / `urlog_bookmarklet` など。null=フィルタ未使用、非nullの空配列=0件）。応答の各 `kyous[]` には `create_app` / `update_app` が常時載り、絞り込みの結果を応答から検証できる |
 | `/api/get_rep_infos_mcp` | rep名・rep種別・canonical_rep_types・プラグイン一覧の取得。`rep_infos[].indexed_at` はその rep の索引の最終更新時刻（RFC3339。索引を持つ rep のみ＝現状は IDF）で、**索引が止まっていることを検知できる**（rep に置いただけのファイルは update_cache を通すまで検索に出ず、警告も出ないため）。`attached_data_reps[]`（`{rep_name, data_kind}`。data_kind は tag / text / notification / gpslog）はタグ・テキスト・通知・GPSログの書き込み先 rep の一覧で、「add_tag / add_text がどこへ書かれるか」を書く前に知るためのもの。**`rep_infos` と混ぜてはいけない別リスト** —— `query.reps` へ渡すと Kyou の `rep_name` と一致せず静かに0件になる |
 
-MCPサーバは11個のReadツールを提供する。内訳は固有の10（`gkill_status`, `gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_rep_infos`, `gkill_get_idf_file`, `gkill_get_kyou_history`）と、3サーバ共通のプラグインツール1つ（`gkill_get_plugin_list`。`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_kyou_history` は型別の `/api/get_*`（`/api/get_kmemo` 等）が返す histories をそのまま返す ―― 削除済みの版も含むので、`gkill_get_kyous` からは見えなくなった記録を読み返す唯一の経路になる。`gkill_status` はバックエンドを叩かずに答えられる部分（サーバ種別・ツール一覧の世代 `schema_revision`・起動時刻）と、`/api/get_application_config` から取る接続先アカウントとビルド情報を返す（届かないときは `gkill_reachable:false`）。
+MCPサーバは12個のReadツールを提供する。内訳は固有の11（`gkill_status`, `gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_rep_infos`, `gkill_get_idf_file`, `gkill_get_kyou_history`）と、3サーバ共通のプラグインツール1つ（`gkill_get_plugin_list`。`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_kyou_history` は型別の `/api/get_*`（`/api/get_kmemo` 等）が返す histories をそのまま返す ―― 削除済みの版も含むので、`gkill_get_kyous` からは見えなくなった記録を読み返す唯一の経路になる。`gkill_status` はバックエンドを叩かずに答えられる部分（サーバ種別・ツール一覧の世代 `schema_revision`・起動時刻）と、`/api/get_application_config` から取る接続先アカウントとビルド情報を返す（届かないときは `gkill_reachable:false`）。
 
 ## TLS・セキュリティ（1件）
 
