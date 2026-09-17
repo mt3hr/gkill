@@ -235,41 +235,22 @@ export const WRITE_TOOLS = [
   },
   {
     name: "gkill_submit_kftl",
+    // 文法の全文（~~ / ?? 反復・/expense の対・/end 系・行ごとの失敗規則）は help topic kftl へ移した（ADR-0622）。
+    // ここに残すのは「接頭辞は行単独」の規則・接頭辞の一覧・例・応答とトランザクションの要約。
     description:
-      "Submit KFTL-formatted text for batch processing. KFTL is gkill's line-based text format that creates multiple records from a single text block. " +
-      "CRITICAL parsing rules: " +
-      "(1) Text is split by newlines (\\n). Each line is processed independently. " +
-      "(2) Prefixes MUST be on their own line with NOTHING else on that line. The prefix line and the data value MUST be on SEPARATE lines. " +
-      "For example, '/mood' must be alone on one line, and '8' on the next line. Writing '/mood 8' on one line is rejected per-line, and so is a prefix with no value line after it. " +
-      "(3) Lines without a recognized prefix are treated as kmemo (text memo) content. Adjacent non-prefixed lines are merged into a single kmemo. " +
-      "(4) To create SEPARATE records, insert a separator line (、 or ,) between them. Without separators, consecutive lines merge into one kmemo. " +
-      "Supported prefix lines (must be the ENTIRE line, not part of a line): " +
-      "/mi or ーみ → task in up to five positional lines: title, then board name, estimated start, estimated end, deadline (same order as the ~~ block). Write the three datetimes BARE — a leading ? on those lines is rejected per-line, " +
-      "~~ or ～～ → turn the record written just ABOVE into a task (repost task). Opens AND closes with the same ~~ marker, and is meaningless on its own — the record it tasks must come first. There is NO title line (the original record is shown as-is). Inside the block: board name, estimated start, estimated end, deadline (all optional; write the datetimes BARE — a leading ? on one of those lines is now rejected per-line, because ?? there would silently parse as a broken date). Lines starting with # inside the block become tags on the TASK itself and may appear before or after the board name. Use /mi for a brand new task. ~~ can ONLY task a record created earlier in THIS SAME submission (its target is the id the previous line just minted) — it cannot reference a record that already exists in gkill, and there is no syntax that can. It also needs a mirekyou repository configured for the account; without one the whole submission fails and nothing is written, " +
-      "/mood or ーら → next line is mood value (0-10), " +
-      "/expense or ーん → next lines: shop name, then (title/description, amount) pairs repeating — one expense record per pair. " +
-      "A #tag line or a -- text block written after an amount line attaches to that one payment only; write them after the amount, never before /expense. " +
-      "(IMPORTANT: the prefix is /expense, NOT /nlog), " +
-      "/url or ーう → next line is the URL, and the line AFTER that is its title, " +
-      "/num or ーか → next line is title, then the line after that is the numeric value, " +
-      "/start or ーた → next line is timeis start label, " +
-      "/end or ーえ → end a running timeis. The NEXT LINE IS REQUIRED and must be the exact title of the running timeis to close; omitting it fails with \"打刻終了タイトルを指定してください\", " +
-      "/timeis or ーち → timeis in three fixed lines: title, then start datetime, then end datetime, " +
-      "/end? or ーいえ → same as /end but tolerates \"no such running timeis\". The title line is STILL REQUIRED — the if-exists part only forgives a missing target, not a missing title, " +
-      "/endt or ーたえ → end a running timeis by tag. The NEXT LINE IS REQUIRED and holds the tag name(s), separated by 、 or , and written WITHOUT the # / 。 prefix, " +
-      "/endt? or ーいたえ → same as /endt but tolerates \"no such running timeis\"; the tag line is still required, " +
-      "# or 。 → tag (attach to previous record). Matched by PREFIX, so a Markdown heading line like \"# Title\" becomes a tag, " +
-      "? or ？ → related time. Also matched by prefix, so any line starting with ? is parsed as a datetime and fails if it is not one. A line that is exactly ?? is the repeat block below, not a related time, "
-      + "?? or ？？ → repeat block: make the record written just above it repeat. Opens AND closes with the same ?? marker, and the marker must be the WHOLE line (\"?? fri 3\" is rejected). Inside, up to four positional lines: (1) the rule — daily / a weekday such as fri or mon,wed,fri / 6w fri (every 6th Friday) / monthly 15 / 2nd fri / last fri, (2) how many times, OR an end date, (3) whether to add even when an equivalent record already exists: yes or no, DEFAULT NO, (4) the start point, in any datetime format ? accepts, default now. Lines 3 and 4 can be omitted by closing early. Every datetime field of the repeated record is shifted by the SAME number of days, so the gaps between estimated start / end / deadline are preserved; the time of day comes from the record's first filled datetime field. A task with NO datetime field is rejected — there is nowhere to put the repeated dates. Candidates are strictly AFTER the start point, and days that do not exist are SKIPPED rather than rounded (monthly 31 skips February, 2nd fri is fine but 5th fri skips months without one). Because line 3 defaults to no, submitting the SAME text twice does not create duplicates. Repeating is refused for /start (it would leave N never-closed running stamps that then cover every later record) and for /end, /end?, /endt, /endt? (they only ever look at the ONE timeis running right now). Inside an /expense block the repeat covers the WHOLE block, so 2 payments x 3 times = 6 records. At most 1000 records per submission; over that the whole submission is rejected rather than truncated, " +
-      "-- or ーー → text block start/end, " +
-      "! or ！ → stop processing. On the FIRST line it does nothing (processing continues). The marker line itself is NOT a value line: a prefix followed only by ! (e.g. \"/timeis\\n!\") is a per-line error, not an empty record, " +
-      "(no prefix) → kmemo text content. " +
-      "Separator lines: 、 or , → separate into a new entity; 、、 or ,, → separate + increment time by 1 second. " +
-      "Example (creates 3 records: kmemo + mood + expense): " +
-      "\"今日はいい天気だった\\n、\\n/mood\\n8\\n、\\n/expense\\nカフェ\\nアイスコーヒー\\n-500\\n!\" " +
-      "Response fields: messages[] (server processing messages) and created[] ({id, data_type, updated, related_time}) — one entry per record actually written, in the order they were written. A record with no content (a blank kmemo, a task or bookmark with no title, an expense with only a shop name, a numeric record with no value), a tag / related time with nothing to attach to, or an unreadable schedule date is a per-line INPUT ERROR that rejects the whole submission (nothing is written) — it is never silently skipped. Ending a timeis reports the existing record with updated:true rather than a new id. Use created[].id as target_id for gkill_add_tag / gkill_add_text. " +
-      "On failure the errors are reported one per bad line, and NOTHING is written: the whole submission is one database transaction (records are staged and committed together), so created[] comes back empty whether the failure was a bad VALUE caught while parsing (a mood outside 0-10, a prefix with no argument) or a failure while writing (a missing write repository, a database error — the error names the line it stopped at). Simply fix the text and submit again. Pass the same idempotency_key on a retry so that a replay of an ALREADY SUCCESSFUL submission (e.g. the response was lost) is folded instead of written twice. "
-      + "Provenance: records written through this tool carry create_app=\"gkill_kftl\" (the same value the web notepad writes) and create_device set to the SERVER's device name, not \"mcp\". The server accepts an optional create_app on this request (the Wear OS companion sends \"gkill_wear\" through it), but this tool does not send one, so MCP-submitted KFTL is indistinguishable from hand-typed notepad KFTL and create_apps:[\"gkill_mcp_readwrite\"] does NOT find them.",
+      "Submit KFTL-formatted text: gkill's line-based format that creates multiple records from one text block. " +
+      "CRITICAL: text is split by newlines and each prefix MUST be alone on its own line, with the value on the NEXT line ('/mood' then '8'; '/mood 8' on one line is rejected). " +
+      "Lines without a prefix are kmemo text (adjacent lines merge into one kmemo); separate records with a line that is just 、 or , (、、 also advances the time by 1 second). " +
+      "Prefixes (each the ENTIRE line): /mi or ーみ (task: title, board, estimated start, estimated end, deadline on the following lines), ~~ (turn the record just above into a task; opens and closes with ~~), " +
+      "/mood or ーら (0-10), /expense or ーん (shop, then title/amount pairs — NOT /nlog), /url or ーう (URL then title), /num or ーか (title then value), " +
+      "/start or ーた (start a timeis), /end or ーえ (end a running timeis; the title line is REQUIRED), /timeis or ーち (title, start, end), /end? /endt /endt? (variants), " +
+      "# or 。 (tag for the previous record), ? or ？ (related time), ?? (repeat block), -- or ーー (text block), ! or ！ (stop). " +
+      "Example (kmemo + mood + expense): \"今日はいい天気だった\\n、\\n/mood\\n8\\n、\\n/expense\\nカフェ\\nアイスコーヒー\\n-500\\n!\". " +
+      "Response: messages[] and created[] ({id, data_type, updated, related_time}) in write order; use created[].id as target_id for gkill_add_tag / gkill_add_text. " +
+      "The whole submission is one transaction: any per-line error (a value-less prefix, a mood outside 0-10, an unreadable date, a missing write repository) rejects it and NOTHING is written — fix the text and resend. " +
+      "Pass the same idempotency_key on a retry so a replay of an already successful submission is folded instead of written twice. " +
+      "Records carry create_app \"gkill_kftl\" (same as the web notepad), so create_apps:[\"gkill_mcp_readwrite\"] does not find them. " +
+      "Full syntax (~~ and ?? repeat rules, /expense pairs, the /end family, per-line failure rules): gkill_get_mcp_help topic:kftl.",
     inputSchema: {
       type: "object",
       properties: {

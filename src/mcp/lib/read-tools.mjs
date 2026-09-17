@@ -27,6 +27,7 @@ import {
   MAX_TAG_NAMES_LIMIT,
   MAX_REP_NAMES_LIMIT,
 } from "./constants.mjs";
+import { HELP_TOPIC_NAMES } from "./help-topics.mjs";
 
 export const READ_TOOLS = [
   // gkill_status は3サーバ全部に載る（write 専用サーバは WRITE_SERVER_READ_TOOL_NAMES で選ぶ）。
@@ -52,42 +53,43 @@ export const READ_TOOLS = [
       additionalProperties: false,
     },
   },
+  // ツール一覧の説明文は要約で、本文はここから topic ごとに取り出す（lib/help-topics.mjs、ADR-0622）。
+  // gkill_status と同じく3サーバ全部に載る（write 専用サーバは WRITE_SERVER_READ_TOOL_NAMES で選ぶ）。
+  // topic は string なので古スキーマ救済表には載せない。enum なのは schema-contract のスモークが
+  // enum[0]（index）で呼ぶため。
+  {
+    name: "gkill_get_mcp_help",
+    description:
+      "Return the detailed guide for one topic of this MCP server. The tool descriptions in this list are summaries; " +
+      "read the relevant topic before a first search (search / pagination / mi / data_types), before reading files (idf) " +
+      "or plugin bodies (plugin), before writing KFTL text (kftl), when looking for deleted entries (deleted) or repository " +
+      "names (rep), and whenever a response carries warnings you do not understand. Omit topic (or pass \"index\") for " +
+      "the list of topics. Static text — no round trip to gkill.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        topic: {
+          type: "string",
+          enum: HELP_TOPIC_NAMES,
+          description: "Topic to read. Default: index (the list of topics with one line each).",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
   {
     name: "gkill_get_kyous",
+    // 説明文は要約にとどめる。応答フィールドの一覧・クエリの意味論・射影・ペイロード形などの
+    // 本文は lib/help-topics.mjs（gkill_get_mcp_help）へ移した（ADR-0622）。
+    // tool-handlers.test.mjs が固定する3句（partial と独立に warnings を見る）はここに残す。
     description:
-      "Search life-log entries (kyou) with optional filters and return enriched results including tags, texts, notifications, and typed payload inline. " +
-      "Each result contains data_type, related_time, create_app / update_app (the app that wrote / last updated it — filter on these with the create_apps / update_apps parameters), tags[], texts[], notifications[], timeis[] (attached TimeIs), and payload (type-specific fields). " +
-      "Supports cursor-based pagination via next_cursor / cursor parameters. " +
-      "Use limit and max_size_mb to control response size. They cap what is RETURNED, not what is SEARCHED: the backend still scans every matching repository, so on a large account a broad query with limit:3 takes about as long as one with limit:100. To make a query faster, narrow calendar_start_date/calendar_end_date, data_types, or reps instead of shrinking limit. " +
-      "Available data_type values: kmemo (text memo), kc (numeric record), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image — use gkill_get_idf_file to fetch file content), git_commit_log (git commit), rekyou (repost of another entry), " +
-      "timeis_start / timeis_end (time stamp), mi_create / mi_check / mi_limit / mi_start / mi_end (task, one value per projection), mirekyou_create / mirekyou_check / mirekyou_limit / mirekyou_start / mirekyou_end (an existing entry turned into a task). Which Mi projection you see depends on query.for_mi: WITH it the data_type follows query.mi_sort_type (mi_create when unset), WITHOUT it the five collapse to one representative per record (mi_start wins, then mi_check), so a plain date search mostly shows mi_check / mi_start. mi_create still survives for tasks whose create_time falls in the window while their update_time does not, so it is rare but NOT absent — do not read its low count as proof that no task was created. Plugins add their own data_type values (e.g. claude_conversation) — list them with gkill_get_plugin_list, and set include_plugin_content:true to read their bodies in this same response. " +
-      "A filter activates simply by being present and non-null in the query; omit (or pass null for) filters you don't use. " +
-      "Most used query fields: calendar_start_date/calendar_end_date, words, tags, for_mi. Advanced: map_latitude/map_longitude/map_radius, playing_time, period_of_time_*, update_time. " +
-      "Common query patterns: " +
-      "Date range: {calendar_start_date:\"2026-03-01\", calendar_end_date:\"2026-03-07\"}. " +
-      "Keyword search: {words:[\"keyword\"]}. " +
-      "Tag filter: {tags:[\"tagname\"]}. " +
-      "Mi tasks: {for_mi:true, mi_check_state:\"uncheck\", include_create_mi:true} — for_mi needs at least one include_*_mi flag or it returns nothing. " +
-      "Practical recommendation: start with a minimal query, keep limit small, and add filters gradually. Hidden tags can be searched intentionally by passing them directly in query.tags or query.timeis_tags. rep_types are backend-specific and may be case-sensitive, so do not assume ApplicationConfig display labels map 1:1 to accepted query values. " +
-      "If a query fails, first retry with fewer query fields, a smaller limit, and is_include_timeis=false; then add rep_types or TimeIs expansion back step by step. " +
-      "The server always applies only_latest_data=true. " +
-      "Results are returned in reverse chronological order (newest first, by related_time; ties break by id ascending). " +
-      "For counts and histograms use count_only / group_by instead of fetching records — they skip all payload construction. " +
-      "calendar_start_date/calendar_end_date are both INCLUSIVE, so adjacent hand-made windows double-count the boundary day; prefer group_by. " +
-      "Unknown filter values (rep_types / tags / reps / data_types typos) are reported in warnings[] instead of silently matching nothing; " +
-      "canonical rep_types values come from gkill_get_rep_infos. " +
-      "Every entry always carries id and rep_name (v2). limit and max_size_mb are strict caps. " +
-      "Response fields: kyous[], total_count (only on cursor-less responses), returned_count, remaining_count, has_more, next_cursor, " +
-      "buckets (group_by only), partial (true when some attached data — tags/texts/notifications/TimeIs — could not be fetched and the " +
-      "returned entries are incomplete; details land in warnings), warnings (always inspect this array even when partial is false: a " +
-      "repository may have failed to load, so its records are absent; do not put a repository named by that warning back into query.reps), " +
-      "plugins (one {rep_name, plugin_name, description} entry per plugin that appears in this " +
-      "response — the per-entry payload carries only rep_name/plugin_name so the description text is not repeated per record; " +
-      "note gkill_get_rep_infos also returns a field called plugins[] with a different shape), " +
-      "plugin_content (inline-content counts; present only when include_plugin_content is true). " +
-      "Each entry also carries tag_entities[] / text_entities[] ({id, value}) alongside the plain tags[] / texts[] strings: those ids are the " +
-      "annotation's OWN id, which is what gkill_update_text and gkill_delete_kyou(data_type:\"tag\"/\"text\") require — the plain string " +
-      "arrays cannot be edited or deleted because they carry no id. notifications[] carries id for the same reason.",
+      "Search life-log entries (kyou) and return them newest first with tags, texts, notifications and the type-specific payload inline. " +
+      "Start with query.calendar_start_date / calendar_end_date, query.words, query.tags, limit and data_types; tasks need query.for_mi plus include_create_mi (see gkill_get_mcp_help topic:mi). " +
+      "ALWAYS inspect warnings[] even when partial is false: a repository may have failed to load, so its records are absent — do not put a repository named by that warning back into query.reps. Unknown filter values and ids that match nothing are reported there too. " +
+      "limit / max_size_mb cap what is RETURNED, not what is SEARCHED — narrow the calendar range, data_types or reps to make a query faster. " +
+      "Page by passing next_cursor back as cursor; cursor pages omit total_count, so read remaining_count. count_only / group_by give counts and histograms without payloads. " +
+      "Every entry carries id and rep_name; tag_entities[] / text_entities[] carry the annotation ids that gkill_update_text / gkill_delete_kyou need. " +
+      "Details: gkill_get_mcp_help topics search (response fields, query semantics, payload shapes), pagination, mi, data_types, plugin, idf, deleted.",
     inputSchema: {
       type: "object",
       properties: {
@@ -117,7 +119,7 @@ export const READ_TOOLS = [
         },
         is_include_timeis: {
           type: "boolean",
-          description: `Include attached TimeIs (playing) data for each kyou — i.e., which TimeIs was running when each record was created. Each entry carries id, title, tags, start_time and end_time (absent while still running), so you can tell same-titled stamps apart and fetch one with query.ids. Default: ${DEFAULT_KYOUS_INCLUDE_TIMEIS}. Deleted stamps are excluded, by the same rule the search itself uses. A stamp with no end_time is still running by definition, so it covers every record after its start — an old stamp you forgot to close attaches to everything since, and that is data to clean up, not a bug. This is expensive in a way limit does not bound: every call reads the whole TimeIs history (tens of thousands of rows in a real account) and the attachment ignores query.reps / rep_types / the calendar range, so narrowing the search does not narrow what gets attached. Leave it off unless you actually need it. Note: this does NOT filter out TimeIs-type kyous from results; those always appear regardless of this flag. Only controls inline playing attachment on other data types.`,
+          description: `Attach the TimeIs (playing) entries that were running when each record was created, as timeis[] ({id, title, tags, start_time, end_time — absent while still running}). Default: ${DEFAULT_KYOUS_INCLUDE_TIMEIS}. Expensive in a way limit does not bound (every call reads the whole TimeIs history and ignores query.reps / the calendar range), so leave it off unless you need it. Does not filter TimeIs-type kyous out of the results. Details: gkill_get_mcp_help topic:search.`,
           default: DEFAULT_KYOUS_INCLUDE_TIMEIS,
         },
         // include_id / include_rep_name（v2 で廃止。id / rep_name は常時付与）はここに載せない。
@@ -127,46 +129,35 @@ export const READ_TOOLS = [
           type: "boolean",
           default: false,
           description:
-            "Return only total_count (no kyous[], no attached data, no payloads). The cheapest way to size a query " +
-            "before fetching, and the right tool for building histograms with repeated narrow queries is group_by instead. " +
-            "Cannot be combined with cursor.",
+            "Return only total_count (no kyous[], no payloads) — the cheapest way to size a query. " +
+            "Cannot be combined with cursor or group_by (group_by already returns counts only).",
         },
         group_by: {
           type: "string",
           enum: ["month", "day", "week_of_day", "hour", "data_type", "rep_name", "create_app", "update_app", "url_domain", "file_extension"],
           description:
-            "Aggregate matching entries server-side and return buckets:[{key,count}] plus total_count instead of kyous[]. " +
-            "Time keys use the server's local timezone. url_domain covers only urlog entries and file_extension only idf " +
-            "entries (others are excluded with a warning). At most 1000 buckets; overflow folds into \"(other)\". " +
-            "This replaces manual window-splitting (which double-counts boundary days because calendar bounds are inclusive). " +
-            "Cannot be combined with cursor.",
+            "Aggregate server-side and return buckets:[{key,count}] plus total_count instead of kyous[]. " +
+            "Time keys use the server's local timezone; url_domain covers only urlog and file_extension only idf entries; " +
+            "at most 1000 buckets. Prefer this over hand-made windows (inclusive calendar bounds double-count the boundary day). " +
+            "Cannot be combined with cursor or count_only.",
         },
         data_types: {
           type: "array",
           items: { type: "string" },
           description:
-            "Allowlist of data_type strings exactly as they appear in results (e.g. [\"nlog\"], " +
-            "plugin types like [\"claude_conversation\"]). This is how you separate Mi from MiReKyou projections and " +
-            "how you filter plugin records (rep_types cannot). Unknown values produce warnings, not errors. " +
-            "Mi projections are collapsed to one representative per record unless query.for_mi=true (plus an " +
-            "include_*_mi flag) is set, so filtering on [\"mi_create\"] without it returns far fewer rows than " +
-            "the number of tasks actually created — a low count is NOT proof that no task was created. " +
-            "The response says so in warnings. " +
-            "Plugins may reuse a built-in data_type: [\"kc\"] can return step counts, account balances and " +
-            "hand-entered measurements at once, because they are different repositories wearing the same type. " +
-            "Add query.reps to separate them. " +
-            "null/omitted = no filter, [] = match nothing.",
+            "Allowlist of data_type strings as they appear in results (e.g. [\"nlog\"], plugin types like [\"claude_conversation\"]). " +
+            "The entity names timeis / mi / mirekyou are accepted too and expand to all their projections. " +
+            "Unknown values produce warnings, not errors. Filtering on Mi projection names without query.for_mi returns " +
+            "far fewer rows than the number of tasks (they collapse to one representative) — the response warns. " +
+            "Details: gkill_get_mcp_help topic:data_types. null/omitted = no filter, [] = match nothing.",
         },
         create_apps: {
           type: "array",
           items: { type: "string" },
           description:
-            "Allowlist of the app that WROTE each entry, matched against the create_app now returned on every " +
-            "result. Known values: \"gkill\" (web UI and uploads), \"gkill_kftl\" (the KFTL notepad — AND anything written through gkill_submit_kftl, which the server stamps with this same value), " +
-            "\"gkill_wear\" (the Wear OS watch app, both records it creates and timeis it ends), " +
-            "\"gkill_mcp_readwrite\" / \"gkill_mcp_write\" (these MCP servers), \"urlog_bookmarklet\", " +
-            "\"git\", and whatever a plugin sets. This finds records written by the gkill_add_* / gkill_update_* tools, but NOT ones written through gkill_submit_kftl: those carry \"gkill_kftl\" and are indistinguishable from hand-typed notepad entries (create_device is the server's device name for both). " +
-            "null/omitted = no filter, [] = match nothing.",
+            "Allowlist of the app that WROTE each entry (matched against create_app): \"gkill\" (web UI and uploads), " +
+            "\"gkill_kftl\" (the notepad AND gkill_submit_kftl), \"gkill_wear\", \"gkill_mcp_readwrite\" / \"gkill_mcp_write\" " +
+            "(these MCP servers), \"urlog_bookmarklet\", \"git\", or a plugin's value. null/omitted = no filter, [] = match nothing.",
         },
         update_apps: {
           type: "array",
@@ -179,11 +170,9 @@ export const READ_TOOLS = [
         num_min: {
           type: "number",
           description:
-            "Lower bound (inclusive) on the numeric payload value: nlog amount, kc num_value, lantana mood. " +
-            "When num_min/num_max is set, entries of other kinds are excluded from results. " +
-            "The comparison ignores units — yen, step counts and a 0-10 mood are all measured on the same " +
-            "axis, so num_min:7 mixes them. Pair it with data_types (and query.reps for plugin-supplied kc) " +
-            "whenever the number means something specific.",
+            "Lower bound (inclusive) on the numeric payload value: nlog amount, kc num_value, lantana mood; other kinds " +
+            "are excluded. The comparison ignores units (yen, step counts and a 0-10 mood share one axis), so pair it " +
+            "with data_types — the response warns when kinds mix.",
         },
         num_max: {
           type: "number",
@@ -206,16 +195,11 @@ export const READ_TOOLS = [
                 include_plugin_content: {
           type: "boolean",
           description:
-            "Inline the body of plugin kyous (payload.kind='plugin') into this response, so you do not need a " +
-            "separate follow-up call per entry. Default: false. " +
-            "When true, each plugin payload gains content_status ('ok' | 'truncated' | 'skipped' | 'error'), plus " +
-            "content_text (and content_html when plugin_content_format includes html) when the body was fetched, " +
-            "content_skipped_reason ('max_kyous' | 'budget' | 'deadline' | 'rep_error') when it was skipped, and " +
-            "content_error when the fetch failed. Only content_status='ok' means the body is complete. " +
-            `At most ${MAX_INLINE_PLUGIN_CONTENT_KYOUS} plugin kyous per call are inlined, and ${INLINE_PLUGIN_CONTENT_TOTAL_TEXT_LENGTH} characters in total. ` +
-            "To read one long body in full, narrow the query to that single entry (query.ids) and " +
-            "raise plugin_content_max_text_length. " +
-            "Enable this only when you actually intend to read plugin bodies: it costs one extra request per plugin kyou.",
+            "Inline the body of plugin kyous (payload.kind='plugin') into this response instead of one follow-up call " +
+            "per entry. Default: false. Adds content_status ('ok' | 'truncated' | 'skipped' | 'error') and content_text " +
+            "per plugin payload; only 'ok' means the body is complete. " +
+            `At most ${MAX_INLINE_PLUGIN_CONTENT_KYOUS} plugin kyous and ${INLINE_PLUGIN_CONTENT_TOTAL_TEXT_LENGTH} characters per call. ` +
+            "Details: gkill_get_mcp_help topic:plugin.",
           default: false,
         },
         plugin_content_max_text_length: {
@@ -410,34 +394,20 @@ export const READ_TOOLS = [
   },
   {
     name: "gkill_get_rep_infos",
+    // 列を削る fields に加えて、行を削る writable_only / rep_types / rep_names / contains を持つ。
+    // 本番では fields で rep_infos[] を落としても、Archived Git の rep 名・歴代端末の GPSLogs_ / Tag_ / Text_
+    // だけで数百行あり、「gkill_add_tag はどこへ書くか」を知るために全部読むことになっていた
+    // （2026-09-18 の実利用報告）。絞り込みは Node 側（gkill は4配列を丸ごと返す）。
     description:
-      "List repositories with structured metadata: rep_infos[] ({rep_name, rep_type, and indexed_at for repositories " +
-      "that keep an index — when that index was last refreshed. Files dropped into a repository directory do not " +
-      "appear in searches until the cache is updated, and nothing warns you, so a stale indexed_at is the reason " +
-      "a file you know you added comes back as zero hits: pass query.update_cache=true or run the update_cache CLI), " +
-      "Each rep_infos[] entry also carries use_to_write: whether that repository is the write target for " +
-      "its type. A repository can be listed and searchable yet not writable, and then every write of that " +
-      "type fails with a message that does not say why (the KFTL ~~ task-from-record line is the usual " +
-      "victim). Check it before writing, not after. " +
-      "canonical_rep_types[] (the exact " +
-      "strings query.rep_types accepts — e.g. files/images live under \"directory\", not \"idf\". It is the " +
-      "vocabulary, not an inventory: every value is listed whether or not this account has such a repository, " +
-      "so filtering by one of them and getting zero hits is not an anomaly — check rep_infos[] for what exists here), and plugins[] " +
-      "({rep_name, data_type, plugin_name} — plugins are matched via query.reps or data_types, never rep_types; " +
-      "a plugin that names several repositories, such as Git repositories archived as zip, appears once per name " +
-      "with the same plugin_name, and each rep_name is a valid query.reps value). " +
-      "plugins[] lists only plugins that actually supply kyou: one that emits none (a GPS-only plugin, say) is " +
-      "absent here by design, because its manifest rep_name would silently match nothing — look for it in " +
-      "attached_data_reps[] instead, and call gkill_get_plugin_list to see every plugin with its emits_kyou/provides. " +
-      "Call this instead of guessing rep_types casing; ApplicationConfig display labels do not map 1:1 to query values. " +
-      "Also returns attached_data_reps[] ({rep_name, data_kind}) — where tags, texts, notifications and GPS logs are " +
-      "stored. On the ReadWrite server that answers \"where does gkill_add_tag write?\" before you write, which " +
-      "nothing else could (the Write-only server does not carry this tool). " +
-      "IMPORTANT: these are NOT query.reps values. They hold attached data, not kyou entries, so passing one to " +
-      "query.reps matches no kyou and silently returns zero results. Use rep_infos[] for filtering and " +
-      "attached_data_reps[] only to know where attached data lives. " +
-      "rep_infos[] alone can run to several hundred entries (a repository appears once per rep_type it supplies), " +
-      "so narrow with fields when you only need the vocabulary and the lookup tables.",
+      "List repositories: rep_infos[] ({rep_name, rep_type, use_to_write, indexed_at} — the kyou repositories; rep_name is a " +
+      "query.reps value, rep_type a query.rep_types value, use_to_write whether it is the write target for its type, " +
+      "indexed_at when its index was last refreshed), canonical_rep_types[] (the exact strings query.rep_types accepts — " +
+      "the vocabulary, not an inventory), plugins[] ({rep_name, data_type, plugin_name} — values for query.reps / data_types; " +
+      "plugins that emit no kyou are absent by design) and attached_data_reps[] ({rep_name, data_kind, use_to_write} — where " +
+      "tags, texts, notifications and GPS logs are stored; NOT query.reps values, passing one there silently matches nothing). " +
+      "rep_infos[] and attached_data_reps[] run to hundreds of rows on an account with a long device history, so narrow: " +
+      "\"where does gkill_add_tag write?\" is writable_only:true, data_kinds:[\"tag\"]; the vocabulary alone is " +
+      "fields:[\"canonical_rep_types\"]. Details: gkill_get_mcp_help topic:rep.",
     inputSchema: {
       type: "object",
       properties: {
@@ -452,6 +422,32 @@ export const READ_TOOLS = [
             "Return only these top-level fields. Default: all. " +
             "fields:[\"canonical_rep_types\",\"plugins\",\"attached_data_reps\"] skips the large rep_infos[] list.",
         },
+        writable_only: {
+          type: "boolean",
+          default: false,
+          description:
+            "Keep only rows with use_to_write:true in rep_infos[] and attached_data_reps[] (the current write target per " +
+            "type / per attached-data kind). plugins[] becomes [] because plugins are never write targets.",
+        },
+        rep_types: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Keep only rep_infos[] rows with one of these rep_type values. Checked against canonical_rep_types[]; an unknown " +
+            "value is rejected rather than silently matching nothing. No effect on the other lists.",
+        },
+        rep_names: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Keep only rows whose rep_name is exactly one of these (case-sensitive), across rep_infos[] / plugins[] / attached_data_reps[].",
+        },
+        contains: {
+          type: "string",
+          description:
+            "Keep only rows whose rep_name contains this text (case-insensitive), across rep_infos[] / plugins[] / " +
+            "attached_data_reps[] — the same rule as gkill_get_all_rep_names.",
+        },
         data_kinds: {
           type: "array",
           items: {
@@ -459,12 +455,8 @@ export const READ_TOOLS = [
             enum: ["tag", "text", "notification", "gpslog"],
           },
           description:
-            "Narrow attached_data_reps[] to these data_kind values. Omit for all of them. " +
-            "That list carries one entry per repository per kind, so an account with a long device history " +
-            "runs to a hundred or more entries even though only one kind is usually wanted " +
-            "(e.g. data_kinds:[\"tag\"] to see where gkill_add_tag writes). " +
-            "Unknown values are rejected rather than silently matching nothing. " +
-            "Has no effect on rep_infos[] / canonical_rep_types[] / plugins[].",
+            "Narrow attached_data_reps[] to these data_kind values (e.g. data_kinds:[\"tag\"] to see where gkill_add_tag writes). " +
+            "Unknown values are rejected rather than silently matching nothing. No effect on the other lists.",
         },
       },
       additionalProperties: false,
@@ -473,24 +465,14 @@ export const READ_TOOLS = [
   {
     name: "gkill_get_idf_file",
     description:
-      "Retrieve actual file content for an IDF (file/image/video/audio) kyou entry. " +
-      "First use gkill_get_kyous to find IDF entries (data_type 'idf'), then call this tool " +
-      "with the rep_name and file_name from the IDF payload to get the file content as base64. " +
-      "For images the content also comes back as an MCP image content block. That block is what puts the " +
-      "picture in front of the model and lets it be used as a reference image for image generation, and " +
-      "this tool is its only producer. " +
-      "The payload's 'file_url' is a link to hand a human (paste it in a reply, open it in a browser, " +
-      "embed it in HTML): MCP never fetches it for you, and a client that can fetch URLs on its own still " +
-      "ends up with bytes outside the conversation rather than a picture it can look at. " +
-      "On stdio clients the payload carries 'file_path' instead; reading that from the filesystem avoids " +
-      "base64 and has no size cap, so prefer it whenever it is present. " +
-      "This tool is capped by GKILL_MCP_MAX_FILE_BYTES (default 8MB); pass thumb to stay under it " +
-      "(and is_video:true alongside thumb to grab a frame out of a video). " +
-      "Response fields: file_name, mime_type, file_size_bytes, is_image, thumb (echoed back only when a downscaled " +
-      "version was returned — its absence means you got the original), and file_content_base64 (the file body; " +
-      "for images the bytes are delivered ONLY as the MCP image content block, and structuredContent carries " +
-      "image_content_attached:true instead of the base64 — its absence from structuredContent does not mean " +
-      "the image was not returned).",
+      "Retrieve the content of an IDF (file/image/video/audio) entry found by gkill_get_kyous, given the rep_name and " +
+      "file_name from its payload, as base64. For images the bytes come back ONLY as an MCP image content block " +
+      "(structuredContent carries image_content_attached:true instead of the base64) — that block is what puts the " +
+      "picture in front of the model and lets it serve as a reference image, and this tool is its only producer. " +
+      "Capped by GKILL_MCP_MAX_FILE_BYTES (default 8MB): pass thumb to downscale (and is_video:true to grab a frame " +
+      "from a video). On stdio clients prefer the payload's file_path (no base64, no cap); file_url is a link to hand " +
+      "a human, never fetched for you. Response fields: file_name, mime_type, file_size_bytes, is_image, thumb (echoed " +
+      "only when downscaled), file_content_base64. Details: gkill_get_mcp_help topic:idf.",
     inputSchema: {
       type: "object",
       properties: {

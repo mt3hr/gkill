@@ -6,7 +6,7 @@
 // 実装はこの1箇所が正本で、サーバ側は isReadToolName / handleReadToolCall /
 // summarizeReadToolPayload へ委譲するだけにする。
 
-import { GkillApiError } from "./errors.mjs";
+import { GkillApiError, invalidArgument } from "./errors.mjs";
 import {
   MAX_IDF_FILE_BYTES,
   APP_CONFIG_FIELDS,
@@ -14,7 +14,8 @@ import {
   APP_CONFIG_UI_STATE_KEYS,
   ENTITY_TARGETS,
 } from "./constants.mjs";
-import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs, normalizeAppConfigArgs, normalizeKyouHistoryArgs, normalizeRepNamesArgs, normalizeTagNamesArgs, normalizeRepInfosArgs, normalizeStatusArgs, appendStaleSchemaWarning, assertAggregationNotCombinedWithCursor, formatLocalRfc3339 } from "./normalization.mjs";
+import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs, normalizeAppConfigArgs, normalizeKyouHistoryArgs, normalizeRepNamesArgs, normalizeTagNamesArgs, normalizeRepInfosArgs, normalizeStatusArgs, normalizeMcpHelpArgs, appendStaleSchemaWarning, assertAggregationNotCombinedWithCursor, formatLocalRfc3339 } from "./normalization.mjs";
+import { buildHelpPayload } from "./help-topics.mjs";
 import { inlinePluginContents, summarizeInlinePluginContent } from "./plugin-tools.mjs";
 import { normalizeMimeType, entityNotFoundMessage, appendStaleSchemaNoteToSummary } from "./payload.mjs";
 import { READ_TOOLS } from "./read-tools.mjs";
@@ -45,6 +46,11 @@ async function dispatchReadToolCall(ctx, name, args) {
       case "gkill_status": {
         normalizeStatusArgs(args);
         return buildStatusPayload(ctx);
+      }
+      case "gkill_get_mcp_help": {
+        // 静的な本文。gkill へは往復しない（ADR-0622）。
+        const normalized = normalizeMcpHelpArgs(args);
+        return buildHelpPayload(normalized.topic);
       }
       case "gkill_get_kyous": {
         const normalized = normalizeKyouArgs(args);
@@ -182,6 +188,7 @@ async function dispatchReadToolCall(ctx, name, args) {
           const wanted = new Set(normalized.data_kinds);
           full.attached_data_reps = full.attached_data_reps.filter((rep) => wanted.has(rep?.data_kind));
         }
+        applyRepInfosRowFilters(full, normalized);
         // fields 射影。rep_infos[] だけで本番は数百件になるのに、
         // 「正準値と対応表だけ欲しい」呼び出しが多かった。
         // 許可リストの照合は normalizeRepInfosArgs も行うが、動的なプロパティ書き込みの
@@ -422,6 +429,53 @@ function classifyGkillFailure(error) {
 
 // summarizeReadToolPayload は読み取りツールの結果要約を返す。対象外のツールは null。
 // summarizeReadToolPayload は1行サマリを返す。
+// applyRepInfosRowFilters は gkill_get_rep_infos の行絞り込み（rep_types / rep_names / contains / writable_only）を
+// 4配列へ**その場で**適用する。fields 射影の前に呼ぶ。
+//
+// 列を削る fields だけでは、本番の応答は Archived Git の rep 名（plugins[] に78行）・歴代端末の GPSLogs_ / Tag_ /
+// Text_（attached_data_reps[] に約120行）で埋まり、「gkill_add_tag はどこへ書くか」を知るために全部を読むことに
+// なっていた（2026-09-18 の実利用報告）。rep_types の値は応答の canonical_rep_types[] と照合し、無い値は
+// 0件で黙らずエラーにする（正準値の表を Node に複製しない）。contains の規則は gkill_get_all_rep_names と同じ。
+function applyRepInfosRowFilters(full, normalized) {
+  if (normalized.rep_types) {
+    const canonical = new Set(full.canonical_rep_types);
+    if (canonical.size > 0) {
+      for (const repType of normalized.rep_types) {
+        if (!canonical.has(repType)) {
+          throw invalidArgument(
+            "rep_types",
+            `must be one of the canonical rep types: ${full.canonical_rep_types.join(", ")}`,
+            repType,
+          );
+        }
+      }
+    }
+    const wanted = new Set(normalized.rep_types);
+    full.rep_infos = full.rep_infos.filter((rep) => wanted.has(rep?.rep_type));
+  }
+  if (normalized.rep_names) {
+    const wanted = new Set(normalized.rep_names);
+    const keep = (rep) => wanted.has(rep?.rep_name);
+    full.rep_infos = full.rep_infos.filter(keep);
+    full.plugins = full.plugins.filter(keep);
+    full.attached_data_reps = full.attached_data_reps.filter(keep);
+  }
+  if (normalized.contains) {
+    const needle = normalized.contains.toLowerCase();
+    const keep = (rep) => typeof rep?.rep_name === "string" && rep.rep_name.toLowerCase().includes(needle);
+    full.rep_infos = full.rep_infos.filter(keep);
+    full.plugins = full.plugins.filter(keep);
+    full.attached_data_reps = full.attached_data_reps.filter(keep);
+  }
+  if (normalized.writable_only) {
+    const keep = (rep) => rep?.use_to_write === true;
+    full.rep_infos = full.rep_infos.filter(keep);
+    full.attached_data_reps = full.attached_data_reps.filter(keep);
+    // プラグインは書き込み先にならない
+    full.plugins = [];
+  }
+}
+
 // 古スキーマの印の付け方は payload.mjs が正本（書き込み側と同じ文言にするため）。
 export function summarizeReadToolPayload(name, payload) {
   return appendStaleSchemaNoteToSummary(summarizeReadToolPayloadBody(name, payload), payload);
@@ -439,6 +493,10 @@ function summarizeReadToolPayloadBody(name, payload) {
       const userId = payload.account?.user_id ?? "unknown";
       const device = payload.account?.device ?? "unknown";
       return `Connected to ${userId}@${device} via ${kind} server (schema_revision ${revision}, up ${uptime}s).`;
+    }
+    case "gkill_get_mcp_help": {
+      const length = typeof payload.text === "string" ? payload.text.length : 0;
+      return `Help topic "${payload.topic ?? "index"}": ${payload.title ?? ""} (${length} chars).`;
     }
     case "gkill_get_kyous": {
       // v2: total_count は cursor 無し応答にのみ入る。残量の真実は remaining_count。
@@ -501,11 +559,18 @@ function summarizeReadToolPayloadBody(name, payload) {
       // fields で rep_infos を外した呼び出しに「Fetched 0 repositories」と言うと、
       // 自分で外しただけなのに「リポジトリが0件」と読める（2026-08-25 の実利用レビュー）。
       const parts = [];
-      parts.push(
-        Array.isArray(payload.rep_infos)
-          ? `${payload.rep_infos.length} repositories`
-          : "repositories omitted by fields",
-      );
+      if (Array.isArray(payload.rep_infos)) {
+        // use_to_write を持つ行があるときだけ書ける本数を添える（古い gkill の応答には欄が無い）。
+        const writable = payload.rep_infos.filter((rep) => rep?.use_to_write === true).length;
+        const hasWriteFlag = payload.rep_infos.some((rep) => typeof rep?.use_to_write === "boolean");
+        parts.push(
+          hasWriteFlag
+            ? `${payload.rep_infos.length} repositories (${writable} writable)`
+            : `${payload.rep_infos.length} repositories`,
+        );
+      } else {
+        parts.push("repositories omitted by fields");
+      }
       parts.push(
         Array.isArray(payload.canonical_rep_types)
           ? `${payload.canonical_rep_types.length} canonical rep types`

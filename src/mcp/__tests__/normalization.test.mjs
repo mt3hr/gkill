@@ -1267,6 +1267,37 @@ describe("normalizeKyouArgs — 集計と cursor の併用", () => {
     expect(result.cursor).toBe("2026-08-24T17:25:56+09:00::abc");
   });
 
+  // count_only + group_by は、以前は count_only の早期 return が group_by を黙って捨て、
+  // buckets の無い応答が「集計できた」顔で返っていた（2026-09-18 の実利用報告）。
+  test("count_only + group_by を MCP 層で弾く（cursor 併用と同じ扱い）", () => {
+    expect(() => normalizeKyouArgs({ count_only: true, group_by: "data_type" }))
+      .toThrow(/count_only[\s\S]*cannot be combined with group_by/);
+    // count_only:false は「集計しない」なので group_by と併用できる
+    expect(normalizeKyouArgs({ count_only: false, group_by: "data_type" }).group_by).toBe("data_type");
+  });
+
+  test("count_only + group_by も GPS と同じ文言で弾く", () => {
+    const gpsError = (() => {
+      try {
+        paginateGpsLogs([], { count_only: true, group_by: "day", limit: 1 });
+      } catch (error) {
+        return error;
+      }
+      return null;
+    })();
+    const kyouError = (() => {
+      try {
+        normalizeKyouArgs({ count_only: true, group_by: "day" });
+      } catch (error) {
+        return error;
+      }
+      return null;
+    })();
+    expect(gpsError).not.toBeNull();
+    expect(kyouError).not.toBeNull();
+    expect(gpsError.message).toBe(kyouError.message);
+  });
+
   test("GPS と get_kyous が同じ規則・同じ文言で弾く", () => {
     const gpsError = (() => {
       try {
@@ -1305,6 +1336,47 @@ describe("normalizeRepInfosArgs — data_kinds", () => {
 
   test("省略時は絞り込まない", () => {
     expect(normalizeRepInfosArgs({}).data_kinds).toBeUndefined();
+  });
+});
+
+// 行の絞り込み（2026-09-18 の実利用報告: fields で rep_infos[] を落としても Archived Git の rep 名・
+// 歴代端末の GPSLogs_ / Tag_ / Text_ だけで数百行残り、「gkill_add_tag はどこへ書くか」に全部を読んでいた）。
+describe("normalizeRepInfosArgs — 行の絞り込み", () => {
+  test("writable_only / rep_types / rep_names / contains を受理する", () => {
+    const normalized = normalizeRepInfosArgs({
+      writable_only: true,
+      rep_types: ["kmemo", "directory"],
+      rep_names: ["Kmemo_pc"],
+      contains: "tag_",
+    });
+    expect(normalized).toEqual({
+      writable_only: true,
+      rep_types: ["kmemo", "directory"],
+      rep_names: ["Kmemo_pc"],
+      contains: "tag_",
+    });
+  });
+
+  test("型違いは弾く", () => {
+    expect(() => normalizeRepInfosArgs({ writable_only: "yes" })).toThrow(GkillApiError);
+    expect(() => normalizeRepInfosArgs({ rep_types: "kmemo" })).toThrow(GkillApiError);
+    expect(() => normalizeRepInfosArgs({ rep_names: [1] })).toThrow(GkillApiError);
+    expect(() => normalizeRepInfosArgs({ contains: "" })).toThrow(GkillApiError);
+  });
+
+  // 古い一覧を握るクライアントからは配列 / boolean が正規JSON文字列で届く。
+  // data_kinds は 2026-08-25 の追加時に救済表へ載せ忘れていた。
+  test("古スキーマ経由の文字列を復元する（data_kinds の載せ忘れも含む）", () => {
+    const normalized = normalizeRepInfosArgs({
+      data_kinds: '["tag"]',
+      writable_only: "true",
+      rep_types: '["kmemo"]',
+      rep_names: '["Kmemo_pc"]',
+    });
+    expect(normalized.data_kinds).toEqual(["tag"]);
+    expect(normalized.writable_only).toBe(true);
+    expect(normalized.rep_types).toEqual(["kmemo"]);
+    expect(normalized.rep_names).toEqual(["Kmemo_pc"]);
   });
 });
 

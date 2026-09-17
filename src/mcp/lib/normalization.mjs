@@ -3,6 +3,7 @@
 import { invalidArgument, GkillApiError } from "./errors.mjs";
 import { THUMB_QUERY_REGEX, MAX_THUMB_SIZE } from "./payload.mjs";
 import { isValidGpsCursor } from "./gps-cursor.mjs";
+import { HELP_TOPIC_NAMES } from "./help-topics.mjs";
 import {
   assertObject,
   assertBoolean,
@@ -348,8 +349,16 @@ const REP_NAMES_STALE_SCHEMA_ARG_KINDS = new Map([["limit", "number"]]);
 // この表へ載せないと既存セッションからは文字列で届いて型エラーになる。
 const TAG_NAMES_STALE_SCHEMA_ARG_KINDS = new Map([["limit", "number"]]);
 
-// gkill_get_rep_infos の射影引数。
-const REP_INFOS_STALE_SCHEMA_ARG_KINDS = new Map([["fields", "string_array"]]);
+// gkill_get_rep_infos の射影引数（fields）と行絞り込み（data_kinds / writable_only / rep_types / rep_names）。
+// contains は string なので対象外。data_kinds は 2026-08-25 の追加時にここへ載せ忘れており、
+// 古い一覧を握るクライアントからは配列が正規JSON文字列で届いて型エラーになっていた（2026-09-18 に発見）。
+const REP_INFOS_STALE_SCHEMA_ARG_KINDS = new Map([
+  ["fields", "string_array"],
+  ["data_kinds", "string_array"],
+  ["writable_only", "boolean"],
+  ["rep_types", "string_array"],
+  ["rep_names", "string_array"],
+]);
 
 // gkill_delete_kyou / gkill_restore_kyou の targets（オブジェクトの配列）。
 // 実体は write-normalization.mjs 側にも同じ表があるが、あちらは「復元する」ため、
@@ -644,27 +653,44 @@ export function normalizeKyouArgs(args) {
   return normalized;
 }
 
-// assertAggregationNotCombinedWithCursor は count_only / group_by と cursor の併用を弾く。
+// assertAggregationNotCombinedWithCursor は count_only / group_by と cursor の併用、
+// および count_only と group_by の併用を弾く。
 //
 // count_only / group_by は「条件に合う全件」を数える口なので、途中から再開する cursor と
 // 意味が両立しない。gkill 側にも同じ検査があるが、返るのは ERR000352「記録の取得に失敗しました」
 // という汎用文で、**理由が本文に一切乗らない**（実測 2026-08-25: 検索失敗と区別が付かなかった）。
 // GPS 側（paginateGpsLogs）は前から MCP 層で理由つきに弾いており、get_kyous だけが
 // 素通しだった。同じ規則の2形態を1つにするためここへ寄せてある（ADR-0611）。
+//
+// count_only と group_by の併用は、以前は count_only の早期 return が group_by を黙って捨て、
+// buckets の無い応答が「集計できた」顔で返っていた（gkill 側も GPS 側も同じ順序。
+// 2026-09-18 の実利用報告）。group_by は既に件数だけを返す口なので重ねる意味が無く、
+// cursor 併用と同じくエラーにする。
 export function assertAggregationNotCombinedWithCursor(args) {
-  if (!args || !args.cursor) {
+  if (!args) {
     return;
   }
-  for (const field of ["count_only", "group_by"]) {
-    if (args[field]) {
-      throw invalidArgument(
-        field,
-        "cannot be combined with cursor: it counts everything the query matches, " +
-          "while a cursor resumes partway through. Drop the cursor to aggregate, " +
-          "or drop count_only/group_by to page",
-        args[field],
-      );
+  if (args.cursor) {
+    for (const field of ["count_only", "group_by"]) {
+      if (args[field]) {
+        throw invalidArgument(
+          field,
+          "cannot be combined with cursor: it counts everything the query matches, " +
+            "while a cursor resumes partway through. Drop the cursor to aggregate, " +
+            "or drop count_only/group_by to page",
+          args[field],
+        );
+      }
     }
+  }
+  if (args.count_only && args.group_by) {
+    throw invalidArgument(
+      "count_only",
+      "cannot be combined with group_by: group_by already returns only counts " +
+        "(buckets plus total_count, no entries). Drop count_only to get the buckets, " +
+        "or drop group_by to get the single total",
+      args.count_only,
+    );
   }
 }
 
@@ -675,7 +701,11 @@ export function normalizeRepInfosArgs(args) {
     args == null ? {} : assertObject(args, "arguments"),
     REP_INFOS_STALE_SCHEMA_ARG_KINDS,
   );
-  assertKnownKeys(source, new Set(["locale_name", "fields", "data_kinds"]), "arguments");
+  assertKnownKeys(
+    source,
+    new Set(["locale_name", "fields", "data_kinds", "writable_only", "rep_types", "rep_names", "contains"]),
+    "arguments",
+  );
   const normalized = {};
   if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
     normalized.locale_name = assertTrimmedString(source.locale_name, "locale_name");
@@ -688,6 +718,22 @@ export function normalizeRepInfosArgs(args) {
       }
     }
     normalized.fields = fields;
+  }
+  // 行の絞り込み。fields は列を削るだけで、本番では fields で rep_infos[] を落としても
+  // Archived Git の rep 名・歴代端末の GPSLogs_ / Tag_ / Text_ だけで数百行残っていた
+  // （2026-09-18 の実利用報告）。rep_types の値は応答の canonical_rep_types と照合するので
+  // ハンドラ側（read-handlers.mjs）で検査する —— 正準値の表を Node に複製しない。
+  if (Object.prototype.hasOwnProperty.call(source, "writable_only") && source.writable_only !== undefined) {
+    normalized.writable_only = assertBoolean(source.writable_only, "writable_only");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "rep_types") && source.rep_types !== undefined) {
+    normalized.rep_types = assertStringArray(source.rep_types, "rep_types");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "rep_names") && source.rep_names !== undefined) {
+    normalized.rep_names = assertStringArray(source.rep_names, "rep_names");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "contains") && source.contains !== undefined) {
+    normalized.contains = assertTrimmedString(source.contains, "contains");
   }
   // attached_data_reps は本番で約120件。fields は「その配列を返すか返さないか」しか
   // 選べず、中身は絞れなかった。綴り違いは0件ではなくエラーにする
@@ -739,6 +785,23 @@ export function normalizeRepNamesArgs(args) {
 // normalizeTagNamesArgs は gkill_get_all_tag_names の引数を検証する。
 export function normalizeTagNamesArgs(args) {
   return normalizeNameListArgs(args, TAG_NAMES_STALE_SCHEMA_ARG_KINDS, DEFAULT_TAG_NAMES_LIMIT, MAX_TAG_NAMES_LIMIT);
+}
+
+// normalizeMcpHelpArgs は gkill_get_mcp_help の引数を検証する。topic は省略可（index）。
+// string 型なので古スキーマ救済表には載せない。未知の topic はここで弾く（本文の取り違えを黙って index に
+// 倒すと「読んだつもり」になる）。
+export function normalizeMcpHelpArgs(args) {
+  const source = args == null ? {} : assertObject(args, "arguments");
+  assertKnownKeys(source, new Set(["topic"]), "arguments");
+  const normalized = {};
+  if (Object.prototype.hasOwnProperty.call(source, "topic") && source.topic !== undefined && source.topic !== null) {
+    const topic = assertTrimmedString(source.topic, "topic");
+    if (!HELP_TOPIC_NAMES.includes(topic)) {
+      throw invalidArgument("topic", `must be one of: ${HELP_TOPIC_NAMES.join(", ")}`, topic);
+    }
+    normalized.topic = topic;
+  }
+  return normalized;
 }
 
 // normalizeStatusArgs は gkill_status の引数を検証する。引数は1つも取らない。
