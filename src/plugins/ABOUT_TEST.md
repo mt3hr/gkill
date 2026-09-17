@@ -13,6 +13,7 @@
 | `src/plugins/gkill_plugin_claudecode/loader_test.go` | ターン分割・ファイル種別判定・サブエージェント紐付け・ツール要約・HTML生成のユニットテスト（`testdata/` の合成トランスクリプトを使用） |
 | `src/plugins/gkill_plugin_codex/{reader,loader,fold,cache,render,config}_test.go` | 巨大行リーダ・`session_meta` の identity/environment 分離・IDE前置きの剥がし・Kyou ID の安定性・差分再構築・構築中の並行読み取りのユニットテスト（`testdata/` の合成ロールアウトを使用） |
 | `src/plugins/gkill_plugin_archived_git_commit_log/{cache,scan,find_kyous,config,render}_test.go` | zip の中の Git リポジトリの取り込み。testdata に `.git` は置けないので、テストのたびに go-git でリポジトリを作って `archive/zip` で固める（`testutil_test.go`）。native の git rep と同じ列（ID=ハッシュ・rep 名=ディレクトリ名・コミッタ日時とゾーン・author・行数）で入ること、同じリポジトリを2つの zip に入れても1件で zip を外すと他に無いコミットだけ消えること、コミット0件の `git init` 直後は0件で正常、`.git` の無い zip は素通り、1 zip に複数（入れ子・ルート直下）、packfile、指紋による増分、`.git` の上限超過は理由を残して飛ばす、構築中の並行読み取り |
+| `src/plugins/gkill_plugin_{chatgpt,claudeai}/cache_test.go` | エクスポート ZIP の直読み。テストのたびに `archive/zip` で ZIP を組む（バイナリは commit しない）。ZIP を作り直しても中身が同じなら作り直さない（署名は Path:CRC32:Size で更新時刻を見ない。Claude.ai の実物は 1980 年固定）、展開済みの `conversations.json` を直置き・直接指定しても読まず既存キャッシュを残して `source_problems` に出る、会話ファイルを含まない ZIP（`projects-000.zip` 等）は素通り、同じ ZIP に分割形式と旧形式があれば分割形式だけ（優先はアーカイブ単位）、同じ会話 ID が2つの ZIP にあれば update_time が新しい版だけ、プラグインフォルダ自身の `manifest.json` / `config.json` は「展開済みフォルダ」と警告しない、バッチ commit の永続性、読み取りが `buildMu` を取らないこと、gen 掃除 |
 | `src/plugins/gkill_plugin_{chatgpt,claudeai,claudecode,codex,fitbit,archived_git_commit_log}/find_kyous_test.go` | FindKyous のワード判定。SDK の `Query.MatchText`（gkill 本体と同じ規則）で肯定語・除外語・AND/OR・ID 前方一致が効くこと、chatgpt / claudeai は会話タイトル、codex はスレッド名、archived_git_commit_log はリポジトリ名と author 名にも当たること、fitbit は数値でも当たり空文字の語で全件が消えないこと、LIMIT が絞った後に掛かること。gkill 本体はプラグインが返した Kyou のワードを再判定しないので、ここが唯一の判定 |
 | `src/server/gkill/plugin/sdk/match_words_test.go` | `sdk.Query.MatchText` / `Matcher` の判定規則と、元の Query を書き換えないこと |
 | `src/server/gkill/plugin/sdk/cache_path_test.go` | キャッシュDBの置き場所の解決（`sdk.CacheDBPath`）。`GKILL_HOME` あり／なし（pluginDirから推定）／想定外の構成（プラグインフォルダにフォールバック）／pluginDirが空、の4パターンとパス要素の検証。6プラグインが1文字違わず同じものを持っていたのでSDKへ移した |
@@ -64,5 +65,5 @@ SDK 自体のテストは `src/server/gkill/plugin/sdk/` にあり、`src/server
 新しいプラグインを作成した場合は以下を推奨：
 
 1. `main.go` の `FindKyous` ロジックをユニットテスト可能な関数に分離する
-2. ローカルに `conversations.json`（または相当データファイル）を用意し、手動動作確認を行う
+2. ローカルにエクスポート ZIP（または相当データファイル）を用意し、手動動作確認を行う
 3. プラグインを gkill に組み込み、E2E で Kyou がタイムラインに表示されることを確認する

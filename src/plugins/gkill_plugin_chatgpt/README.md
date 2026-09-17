@@ -1,12 +1,12 @@
 # gkill_plugin_chatgpt
 
-ChatGPT のチャット履歴を gkill タイムラインに表示するプラグイン。ChatGPT からエクスポートした `conversations.json` を読み込み、会話を Kyou として gkill に統合する。
+ChatGPT のチャット履歴を gkill タイムラインに表示するプラグイン。ChatGPT からエクスポートした ZIP を解凍せずにそのまま読み込み、会話を Kyou として gkill に統合する。
 
 ## セットアップ
 
 ### 1. データファイルの準備
 
-ChatGPT の設定ページ（Settings → Data controls → Export data）からチャット履歴をエクスポートし、ZIPを解凍して `conversations.json` を取得する。
+ChatGPT の設定ページ（Settings → Data controls → Export data）からチャット履歴をエクスポートし、届いた ZIP を**解凍せず**そのまま置く。ZIP の中の `conversations-000.json` などの分割ファイル（無ければ `conversations.json`）を読む。
 
 ### 2. ビルド
 
@@ -24,7 +24,7 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_chatgpt/
 ├── manifest.json           # このディレクトリの manifest.json をコピー
 ├── gkill_plugin_chatgpt    # ビルドしたバイナリ（.exe は自動補完）
 ├── config.json             # データソース設定（初回起動時に自動生成される）
-└── conversations.json      # ChatGPT からエクスポートしたデータ
+└── <エクスポート>.zip       # ChatGPT からエクスポートした ZIP（解凍しない）
                             # （config.json で別フォルダを指定するなら不要）
 ```
 
@@ -46,24 +46,26 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_chatgpt/cache.db
 ```json
 {
   "_comment": "書式の説明（読み飛ばされるので消してよい）",
-  "_example_source_dirs": ["~/Kyou/ChatGPTExport", "D:/Dropbox/chatgpt_export/**/conversations*.json"],
+  "_example_source_dirs": ["~/Kyou/ChatGPT_*", "D:/Dropbox/chatgpt_export/*.zip"],
   "source_dirs": [
-    "~/Kyou/ChatGPTExport",
+    "~/Kyou/ChatGPT_*",
     "D:/Dropbox/export"
   ]
 }
 ```
 
 - 配列でも文字列（改行区切り）でも書ける
+- **ZIP しか読まない。解凍しないこと。** 解凍したフォルダや取り出した `conversations.json` は読まず、
+  設定画面の「走査で見つかった問題」に「ZIP ではないので読みません」と出る
 - ワイルドカード `*` `**` `?` `[]` が使える。マッチしたフォルダは再帰的に走査して
-  `conversations-000.json` などの分割ファイル（無ければ `conversations.json`） を探し、マッチしたファイルはそのまま読む
+  `*.zip` を探し、ZIP の中の `conversations-000.json` などの分割ファイル（無ければ `conversations.json`）を読む。ZIP を直接指定してもよい
 - 先頭の `~` と環境変数（`$HOME` など）を展開する
   （Windows サービスとして動かす場合は実行アカウントのホームになるため、絶対パスが確実）
 - `source_dirs` を空にすると、プラグインフォルダ直下を見る（従来どおりの配置）
 - `_` で始まるキーは書式の説明用。プラグインは読まないので消してよい
 - 編集は次の検索から反映される（gkill の再起動は不要）
 
-現在の指定と見つかったファイルは、gkill のプラグイン設定画面で確認できる。
+現在の指定・ZIP 内の会話ファイル数・走査で見つかった問題は、gkill のプラグイン設定画面で確認できる。新しいエクスポートの ZIP を同じフォルダに足すと、同じ会話は `update_time` が新しいほうだけを使い、古い ZIP にしか無い会話は残る。
 
 ### manifest.json / config.json の出力
 
@@ -89,7 +91,7 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_chatgpt/cache.db
 | ファイル | 内容 |
 |---|---|
 | `main.go` | エントリポイント、SDK ハンドラ登録 |
-| `loader.go` | `conversations.json` の読み込み・パース |
+| `loader.go` | ZIP 内の `conversations*.json` の選別・要素ごとの流し読み・同じ会話 ID の畳み込み |
 | `cache.go` | SQLite3 キャッシュ（テーブル定義・差分判定） |
 | `html.go` | 会話詳細の HTML 生成 |
 | `types.go` | ChatGPT エクスポート形式の型定義 |

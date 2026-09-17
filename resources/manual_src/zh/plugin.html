@@ -76,13 +76,16 @@
     </tr>
     <tr>
       <td>直接指定文件时</td>
-      <td>照原样读取该文件的内容</td>
+      <td>读取该文件（以ZIP形式提供的数据请指定ZIP文件）</td>
     </tr>
     <tr>
       <td>留空时</td>
       <td>ChatGPT和Claude.ai会查看插件所在的文件夹，ClaudeCode和Codex会分别查看各自 CLI 保存日志的标准位置</td>
     </tr>
   </table>
+  <h3>导入ChatGPT、Claude.ai的数据时</h3>
+  <p>ChatGPT和Claude.ai的对话记录，请把从各服务下载的<strong>ZIP文件不要解压，直接放到文件夹里</strong>。解压后取出的JSON文件不会被读取。</p>
+  <p><code>source_dirs</code> 里写放置该ZIP文件的文件夹。直接写ZIP文件本身也可以。把新下载的ZIP放进同一个文件夹时，同一段对话只使用较新的那份，只存在于旧ZIP里的对话会照样保留。</p>
   <h3>导入Google Takeout的数据时</h3>
   <p>健康数据和位置信息历史这两种，请把从Google Takeout下载的<strong>ZIP文件不要解压，直接放到文件夹里</strong>。已经解压的文件夹不会被读取。</p>
   <p><code>source_dirs</code> 里写放置该ZIP文件的文件夹。直接写ZIP文件本身也可以。</p>

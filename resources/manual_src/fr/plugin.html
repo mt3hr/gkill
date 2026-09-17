@@ -76,13 +76,16 @@
     </tr>
     <tr>
       <td>Si vous indiquez directement un fichier</td>
-      <td>Il lit le contenu de ce fichier tel quel</td>
+      <td>Il lit ce fichier (pour les données livrées en ZIP, indiquez le fichier ZIP)</td>
     </tr>
     <tr>
       <td>Si vous le laissez vide</td>
       <td>ChatGPT et Claude.ai regardent le dossier de l'extension ; ClaudeCode et Codex regardent chacun l'emplacement par défaut des journaux de leur CLI</td>
     </tr>
   </table>
+  <h3>Lors de l&rsquo;importation de données ChatGPT ou Claude.ai</h3>
+  <p>Pour l&rsquo;historique des conversations ChatGPT et Claude.ai, <strong>laissez le fichier ZIP téléchargé depuis chaque service tel quel et placez-le simplement dans un dossier</strong>. Les fichiers JSON que vous en avez extraits ne sont pas lus.</p>
+  <p>Dans <code>source_dirs</code>, indiquez le dossier qui contient le fichier ZIP. Vous pouvez aussi indiquer le chemin du fichier ZIP lui-même. Si vous ajoutez un ZIP fraîchement téléchargé dans le même dossier, seule la copie la plus récente de chaque conversation est utilisée, et les conversations qui n&rsquo;existent que dans l&rsquo;ancien ZIP sont conservées.</p>
   <h3>Lors de l&rsquo;importation de données Google Takeout</h3>
   <p>Pour les données de santé et l&rsquo;historique des positions, <strong>laissez le fichier ZIP téléchargé depuis Google Takeout tel quel et placez-le simplement dans un dossier</strong>. Les dossiers que vous avez décompressés vous-même ne sont pas lus.</p>
   <p>Dans <code>source_dirs</code>, indiquez le dossier qui contient le fichier ZIP. Vous pouvez aussi indiquer le chemin du fichier ZIP lui-même.</p>
