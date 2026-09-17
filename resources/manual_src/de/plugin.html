@@ -76,13 +76,16 @@
     </tr>
     <tr>
       <td>Wenn Sie direkt eine Datei angeben</td>
-      <td>Der Inhalt dieser Datei wird unverändert eingelesen</td>
+      <td>Diese Datei wird eingelesen (bei Daten, die als ZIP kommen, geben Sie die ZIP-Datei an)</td>
     </tr>
     <tr>
       <td>Wenn Sie es leer lassen</td>
       <td>ChatGPT und Claude.ai sehen im Plugin-Ordner nach; ClaudeCode und Codex jeweils am Standardspeicherort ihrer CLI-Protokolle</td>
     </tr>
   </table>
+  <h3>Beim Importieren von ChatGPT- oder Claude.ai-Daten</h3>
+  <p>Legen Sie für den Gesprächsverlauf von ChatGPT und Claude.ai die vom jeweiligen Dienst heruntergeladene <strong>ZIP-Datei unentpackt in einen Ordner</strong>. Selbst daraus entpackte JSON-Dateien werden nicht gelesen.</p>
+  <p>Tragen Sie in <code>source_dirs</code> den Ordner ein, der die ZIP-Datei enthält. Sie können auch den Pfad der ZIP-Datei selbst angeben. Wenn Sie eine neu heruntergeladene ZIP-Datei in denselben Ordner legen, wird von jedem Gespräch nur die neuere Kopie verwendet; Gespräche, die nur in der alten ZIP-Datei vorkommen, bleiben erhalten.</p>
   <h3>Beim Importieren von Google-Takeout-Daten</h3>
   <p>Legen Sie für Gesundheitsdaten und Standortverlauf die von Google Takeout heruntergeladene <strong>ZIP-Datei unentpackt in einen Ordner</strong>. Selbst entpackte Ordner werden nicht gelesen.</p>
   <p>Tragen Sie in <code>source_dirs</code> den Ordner ein, der die ZIP-Datei enthält. Sie können auch den Pfad der ZIP-Datei selbst angeben.</p>

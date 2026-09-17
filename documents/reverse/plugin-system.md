@@ -50,8 +50,8 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 {
   "protocol_version": "1",
   "name": "gkill_plugin_claudeai",
-  "version": "1.1.8",
-  "description": "Claude.ai のチャット履歴をgkillタイムラインに表示する。conversations.json をプラグインフォルダに置いて使用。",
+  "version": "1.2.0",
+  "description": "Claude.ai のチャット履歴をgkillタイムラインに表示する。エクスポートした ZIP を解凍せずにデータソースのフォルダへ置いて使用。",
   "data_type": "claude_conversation",
   "rep_name": "Claude.ai",
   "executable": "gkill_plugin_claudeai",
@@ -314,7 +314,7 @@ gkill 本体は起動時に環境変数 `GKILL_HOME` を設定し（`common.Init
 
 | カラム | 型 | 説明 |
 |---|---|---|
-| `key` | TEXT PRIMARY KEY | メタ情報のキー（ソース署名の保存に使う） |
+| `key` | TEXT PRIMARY KEY | メタ情報のキー（`schema_version`・`source_signature`（ZIP エントリの `Path:CRC32:Size` を並べたもの）・`source_problems`（走査の問題。JSON）・`file_count`・構築状態） |
 | `value` | TEXT NOT NULL | 値 |
 
 **conv_cache（会話テーブル）**
@@ -392,8 +392,8 @@ Claude Code と似ているが**2段構成**になっている点が違う。
 
 プラグインによって3方式ある。
 
-- **ChatGPT / Claude.ai（全体再構築）** — `cache_meta` に保存したソースの**署名**を現在のソース状態と
-  突き合わせ（`needsRebuild`）、変化していれば `rebuild()` が**キャッシュ全体を作り直す**。
+- **ChatGPT / Claude.ai（全体再構築）** — `build(pluginDir, patterns)` が `sdk.OpenSources` でエクスポート ZIP を開き、会話エントリの `Path:CRC32:Size` を並べた**署名**を `cache_meta` の前回値と
+  突き合わせ、変化していれば全会話を読み直して gen 付きでバッチ upsert し、`finalizeBuild` が古い gen を掃除する（**キャッシュ全体を作り直す**）。同じ会話 ID が複数の ZIP にあれば update_time が新しい版だけを採る（ADR-0310）。
 - **Claude Code（セッション単位の差分更新）** — `refresh`（`cache.go:209`）が `file_cache` の
   `MtimeUnix` / `Size` を突き合わせて（`:236-243`）変化のあったファイルだけを `dirtySessions` として拾い、
   そのセッションだけ作り直す。変化が無ければ早期リターンする（`:255-257`）。
@@ -407,16 +407,16 @@ Claude Code と似ているが**2段構成**になっている点が違う。
 
 | プラグイン | メソッド | 説明 |
 |---|---|---|
-| ChatGPT / Claude.ai | `GetMessages(pluginDir, src)` | 全メッセージ一覧取得（`FindKyous` で使用） |
-| ChatGPT / Claude.ai | `GetMsgByID(pluginDir, src, msgID)` | `msg_cache LEFT JOIN conv_cache WHERE msg_id = ?` で1件取得 |
+| ChatGPT / Claude.ai | `GetMessages(pluginDir)` | 全メッセージ一覧取得（`FindKyous` で使用） |
+| ChatGPT / Claude.ai | `GetMsgByID(pluginDir, msgID)` | `msg_cache LEFT JOIN conv_cache WHERE msg_id = ?` で1件取得 |
 | ChatGPT / Claude.ai | `GetConvForMsg(...)` | メッセージが属する会話を取得 |
 | Claude Code | `GetMessages(pluginDir, src)` / `GetMessage(pluginDir, src, messageID)` / `GetStats(...)` | Claude Code は `GetMsgByID` ではなく `GetMessage` |
 
-いずれも第2引数に展開済みソース（`expandedSource`）を取る。
+Claude Code のメソッドは第2引数に展開済みソース（`expandedSource`）を取る。ChatGPT / Claude.ai の読み取りはキャッシュだけを見る（ZIP を開くのはビルダの `build(pluginDir, patterns)` だけ）。
 
 ### source_dirs 設定
 
-3プラグインとも `config.json` の `source_dirs` キーで取り込み元フォルダを指定する
+3プラグインとも `config.json` の `source_dirs` キーで取り込み元を指定する（ChatGPT / Claude.ai はエクスポート ZIP を置いたフォルダか ZIP そのもの。展開済み JSON は読まない）
 （Claude Code の既定は `["~/.claude/projects"]`）。
 
 - `*` `**` `?` `[]` のグロブ、`~`、環境変数を展開する
@@ -988,8 +988,8 @@ GPS ログは Kyou ではない（ID も更新時刻も持たない）ので、K
 
 ### 取り込み元の ZIP — `sdk.OpenSources`
 
-Google Takeout を取り込む2つのプラグイン（fitbit / 位置情報）は、**ZIP を展開せずそのまま読む**。
-走査は `plugin/sdk/source.go` に置いてあり、両プラグインで共通。
+Google Takeout を取り込む2つのプラグイン（fitbit / 位置情報）、zip の Git リポジトリ（archived_git_commit_log）、ChatGPT / Claude.ai の会話履歴（ADR-0310）は、**ZIP を展開せずそのまま読む**。
+走査は `plugin/sdk/source.go` に置いてあり、5本で共通。
 
 - **展開しない。** 中央ディレクトリを読んでエントリを列挙し、読むときにその場で伸長する。
   本体の `handle_browse_zip_contents.go` は `caches/zip_cache/` へ展開するが、実データは
@@ -1010,7 +1010,7 @@ Google Takeout を取り込む2つのプラグイン（fitbit / 位置情報）�
 - エントリ名のデコードは本体の `decodeZipEntryName` と同じ3段階
   （汎用フラグ bit 11 → `utf8.ValidString` → Shift_JIS）
 
-**世代をまたいで合算しないのは fitbit だけの問題。** 位置情報は読み出し時に
+**世代をまたいで合算しないのは fitbit だけの問題。** ChatGPT / Claude.ai は会話 ID ごとに update_time が新しい版だけを採る（ADR-0310）。位置情報は読み出し時に
 `SELECT DISTINCT (時刻, 緯度, 経度)` で重複を除くので、別の書き出しの同じ点は自動的に1つに畳まれる。
 むしろ Google は古いデータを間引くので、古い書き出しを残しておくと消えた期間が保たれる。
 fitbit 側は `export` 表に順位を持ち、日が重なったときは rank が最小の世代の行だけを合算する。

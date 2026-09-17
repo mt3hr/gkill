@@ -3,7 +3,6 @@ module github.com/mt3hr/gkill_plugin_claudeai
 go 1.26.6
 
 require (
-	github.com/mattn/go-zglob v0.0.6
 	github.com/mt3hr/gkill/src/server v0.0.0
 	modernc.org/sqlite v1.55.0
 )
@@ -12,6 +11,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/mattn/go-isatty v0.0.23 // indirect
+	github.com/mattn/go-zglob v0.0.6 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	golang.org/x/sys v0.47.0 // indirect

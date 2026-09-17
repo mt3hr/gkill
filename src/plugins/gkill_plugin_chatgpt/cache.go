@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,7 +13,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// pluginCache は conversations*.json から組み立てたメッセージを SQLite3 にキャッシュする。
+// pluginCache はエクスポート ZIP の中の conversations*.json から組み立てたメッセージを SQLite3 にキャッシュする。
 // gkillのキャッシュディレクトリ配下(sdk.CacheDBPath 参照)に保存する。
 //
 // ロックを2つに分けているのが要点。
@@ -55,6 +56,8 @@ type cacheStats struct {
 	BuildError    string
 	BuildTotal    int
 	BuildDone     int
+	// SourceProblems は前回の走査で見つかった問題（ZIP ではないものの指定など）。
+	SourceProblems []sourceProblemRow
 }
 
 // cacheSchemaVersion はキャッシュのスキーマ版。
@@ -173,6 +176,40 @@ func (c *pluginCache) getMeta(key string) string {
 	value := ""
 	_ = db.QueryRow(`SELECT value FROM cache_meta WHERE key = ?`, key).Scan(&value)
 	return value
+}
+
+// sourceProblemRow は設定画面に出す走査の問題。cache_meta に JSON で置く。
+// 「展開済みの JSON を指している」「conversations*.json を直接指定している」のような
+// 旧配置の指定はここに出るのが唯一の手がかり（黙って0件にはしない）。
+type sourceProblemRow struct {
+	Kind    string `json:"kind"`
+	Path    string `json:"path"`
+	Message string `json:"message"`
+}
+
+// storeSourceProblems は走査の問題を保存する。0件でも書いて前回の問題を消す。
+func (c *pluginCache) storeSourceProblems(problems []sdk.SourceProblem) {
+	rows := make([]sourceProblemRow, 0, len(problems))
+	for _, problem := range problems {
+		rows = append(rows, sourceProblemRow{Kind: string(problem.Kind), Path: problem.Path, Message: problem.Message})
+	}
+	encoded, err := json.Marshal(rows)
+	if err != nil {
+		return
+	}
+	c.setMeta("source_problems", string(encoded))
+}
+
+func (c *pluginCache) loadSourceProblems() []sourceProblemRow {
+	rows := []sourceProblemRow{}
+	value := c.getMeta("source_problems")
+	if value == "" {
+		return rows
+	}
+	if err := json.Unmarshal([]byte(value), &rows); err != nil {
+		return []sourceProblemRow{}
+	}
+	return rows
 }
 
 // GetMessages はFindKyous用に全メッセージを返す。
@@ -299,6 +336,7 @@ func (c *pluginCache) GetStats(pluginDir string) cacheStats {
 	if stats.BuildError != "" {
 		stats.LastScanError = stats.BuildError
 	}
+	stats.SourceProblems = c.loadSourceProblems()
 	return stats
 }
 
@@ -313,11 +351,13 @@ var ingestConvHook func(convID string) error
 // build はソースを走査し、変化があれば全会話をバッチで作り直す。
 // ビルダ以外から呼ばないこと。
 //
-// ChatGPT のエクスポートは conversations*.json が丸ごと入れ替わる形なので、
-// 差分は「署名(path:mtime:size)が変わったら全会話を読み直す」。ただし取り込みは
+// ChatGPT のエクスポートは ZIP の中の conversations*.json が丸ごと入れ替わる形なので、
+// 差分は「署名(Path:CRC32:Size)が変わったら全会話を読み直す」。ただし取り込みは
 // 会話をバッチに分けて1バッチ=1トランザクションでコミットするので、途中で殺されても
 // 先行バッチの行は残り、進捗ゼロには戻らない。世代(gen)で古い版を印し、最後にまとめて掃除する。
-func (c *pluginCache) build(pluginDir string, src expandedSource) error {
+//
+// ZIP を展開はしない。中央ディレクトリを読んで会話ファイルのエントリだけを伸長ストリームで読む。
+func (c *pluginCache) build(pluginDir string, patterns []string) error {
 	c.buildMu.Lock()
 	defer c.buildMu.Unlock()
 
@@ -328,14 +368,23 @@ func (c *pluginCache) build(pluginDir string, src expandedSource) error {
 	c.setMeta("build_state", "scanning")
 	c.setMeta("build_error", "")
 
-	files := findConversationFiles(src)
-	signature := sourceSignature(files)
-	if signature == "" {
+	sources, scanErr := openSources(patterns)
+	defer func() { _ = sources.Close() }()
+	if scanErr != nil {
+		// 読めないフォルダがあっても走査は続いている。可観測性のため stderr に残す（stdout はプロトコルチャネル）。
+		sdk.LogWarn("%s: source scan: %v", appName, scanErr)
+	}
+	// 0件でも書く。前回の問題を消すため。
+	c.storeSourceProblems(relevantProblems(sources.Problems(), pluginDir))
+
+	entries := findConversationEntries(sources)
+	if len(entries) == 0 {
 		// ソースが見つからない。既存キャッシュは残したままエラーを返す(取得は非致命)。
 		c.setMeta("build_state", "idle")
-		return fmt.Errorf("conversations.json または conversations-NNN.json が見つかりません")
+		return fmt.Errorf("conversations-NNN.json または conversations.json を含む ZIP が見つかりません。ChatGPT からエクスポートした ZIP を解凍せずにデータソースのフォルダへ置いてください")
 	}
-	c.setMeta("file_count", strconv.Itoa(len(files)))
+	c.setMeta("file_count", strconv.Itoa(len(entries)))
+	signature := sourceSignature(entries)
 
 	stored := c.getMeta("source_signature")
 	msgCount := 0
@@ -346,10 +395,13 @@ func (c *pluginCache) build(pluginDir string, src expandedSource) error {
 		return nil
 	}
 
-	convs, err := loadConversations(src)
+	convs, err := loadConversations(entries)
 	if err != nil {
 		return err
 	}
+	// 読み終えたので ZIP はここで閉じる（取り込み中に利用者が ZIP を差し替えられるように）。
+	_ = sources.Close()
+	convs = dedupeConversations(convs)
 
 	// 新しい世代番号。finalize が成功するまで build_gen メタは書かないので、
 	// 途中で殺されても次回は同じ gen を再利用する(再 upsert は冪等)。

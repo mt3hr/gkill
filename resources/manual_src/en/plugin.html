@@ -76,13 +76,16 @@
     </tr>
     <tr>
       <td>When you give a file directly</td>
-      <td>It reads the contents of that file as-is</td>
+      <td>It reads that file (for data that arrives as a ZIP, give the ZIP file)</td>
     </tr>
     <tr>
       <td>When you leave it empty</td>
       <td>ChatGPT and Claude.ai look in the plugin folder; ClaudeCode and Codex each look where their CLI stores its logs by default</td>
     </tr>
   </table>
+  <h3>When you import data from ChatGPT or Claude.ai</h3>
+  <p>For ChatGPT and Claude.ai conversation history, <strong>leave the ZIP file you downloaded from each service as it is and just put it in a folder</strong>. JSON files you have extracted from it are not read.</p>
+  <p>In <code>source_dirs</code>, write the folder that holds the ZIP file. You may also write the path of the ZIP file itself. If you add a newly downloaded ZIP to the same folder, only the newer copy of each conversation is used, and conversations that exist only in the older ZIP stay as they are.</p>
   <h3>When you import data from Google Takeout</h3>
   <p>For health data and location history, <strong>leave the ZIP file you downloaded from Google Takeout as it is and just put it in a folder</strong>. Folders you have unzipped yourself are not read.</p>
   <p>In <code>source_dirs</code>, write the folder that holds the ZIP file. You may also write the path of the ZIP file itself.</p>

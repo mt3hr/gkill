@@ -78,7 +78,7 @@ gkill 側（`gkill_server generate_plugin_cache`）は stdout の結果行だけ
 
 ## source_test.go — ZIP 走査
 
-Google Takeout の ZIP を展開せずに読むための走査。fitbit と位置情報の両プラグインが使う。
+Google Takeout の ZIP を展開せずに読むための走査。fitbit / 位置情報 / archived_git_commit_log / chatgpt / claudeai の5本が使う。
 テスト用の ZIP は `archive/zip` で実行時に組み立てる（バイナリをコミットしない）。
 
 | テスト | 検証内容 |

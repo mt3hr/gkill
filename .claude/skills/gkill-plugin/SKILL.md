@@ -32,8 +32,19 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              name; recomputed every build); fingerprint per repo
               #                              is sha256 of (entry name, CRC32, size). Real data:
               #                              88 zips (97 .git) → 3,447 commits / 78 rep names in ~60s
-              #   gkill_plugin_chatgpt/    — ChatGPT conversation history plugin
-              #   gkill_plugin_claudeai/   — Claude.ai conversation history plugin
+              #   gkill_plugin_chatgpt/    — ChatGPT conversation history plugin. Reads the export
+              #                              ZIP as-is via sdk.OpenSources, never the extracted JSON
+              #                              (a loose conversations*.json folder/file is reported as
+              #                              `source_problems` on the config screen, not silently 0).
+              #                              Per archive `conversations-NNN.json` is preferred, else
+              #                              `conversations.json`. Signature = Path:CRC32:Size of the
+              #                              entries → whole rebuild on change; the same conversation
+              #                              id across zips → the newest update_time wins and the
+              #                              other version's messages are dropped (ADR-0310)
+              #   gkill_plugin_claudeai/   — Claude.ai conversation history plugin. Same zip rules as
+              #                              chatgpt: `conversations-000.zip` holds one
+              #                              `conversations.json` (203MB real) whose entry mtime is
+              #                              fixed at 1980-01-01, so only CRC32/Size can detect change
               #   gkill_plugin_claudecode/ — Claude Code chat log plugin (one Kyou per human
               #                              message + one per its whole response run,
               #                              source folder configurable, SQLite differential cache)
@@ -60,8 +71,9 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #   gkill_plugin_google_locationhistory/ — Google Takeout location history as
               #                              GPSLog (no Kyou, `emits_kyou: false` so it stays out
               #                              of the rep list). Format detected by content, not path
-              # The two Takeout plugins read the export **as a zip, never extracted** — scan lives
-              # in `plugin/sdk/source.go` (`sdk.OpenSources`), shared by both. Differential test is
+              # The two Takeout plugins, archived_git_commit_log, chatgpt and claudeai read their
+              # zips **as a zip, never extracted** — scan lives in `plugin/sdk/source.go`
+              # (`sdk.OpenSources`), shared by all five. Differential test is
               # `(CRC32, Size)`, NOT mtime: Takeout stamps every entry with the same export time, so
               # mtime never moves when content changes. One export = "dir + the takeout timestamp in
               # the zip name", so split `-1-001`/`-1-002` parts merge but a second export dropped in
@@ -122,5 +134,6 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 - [ADR-0306 Codex のスレッドIDはファイル名から](../../../documents/adr/0306-codex-thread-id-from-filename.md)
 - [ADR-0308 プラグインが複数の rep 名を名乗る](../../../documents/adr/0308-plugin-multiple-rep-names.md)
 - [ADR-0309 provides に git_commit_log](../../../documents/adr/0309-plugin-provides-git-commit-log.md)
+- [ADR-0310 ChatGPT / Claude.ai はエクスポート ZIP のまま読み、展開済み JSON は読まない](../../../documents/adr/0310-chat-export-plugins-read-zip.md)
 - [ADR-0113 ワード検索の型別の対象列と ID の前方一致（プラグインは SDK の判定を使う）](../../../documents/adr/0113-word-filter-columns-and-id-prefix.md)
 - [ADR-0707 端末固有の文字列は出口で伏せる](../../../documents/adr/0707-redact-environment-specific-strings.md)

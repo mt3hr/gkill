@@ -13,8 +13,9 @@ package sdk
 //   - Takeout は展開後 3.73GB あり、ディスクに二重に置くことになる
 //   - あちらのキャッシュのキーは sha1(パス) だけなので、中身を差し替えても古い展開が残る
 //
-// fitbit と位置情報の2つが同じものを必要としたのでSDKに置いた。
-// 先行する3つのプラグイン(chatgpt/claudeai/claudecode)はZIPを読まないので手を入れていない。
+// fitbit と位置情報の2つが同じものを必要としたのでSDKに置いた。その後 archived_git_commit_log
+// （zip の Git リポジトリ）と chatgpt / claudeai（エクスポート ZIP。ADR-0310）も使うようになり、
+// 5本で共通。claudecode だけは JSONL のフォルダを読むので ZIP を扱わない。
 
 import (
 	"archive/zip"
