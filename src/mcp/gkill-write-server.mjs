@@ -25,6 +25,8 @@ import { isDirectRun, readPackageVersion, startMcpServer } from "./lib/mcp-serve
 const WRITE_SERVER_READ_TOOL_NAMES = new Set([
   // 接続先の確認とツール一覧の世代（schema_revision）の照合。3サーバ全部に載る。
   "gkill_status",
+  // ツール説明の本文（KFTL の文法全文など）。説明文は要約なので、これも3サーバ全部に載る（ADR-0622）。
+  "gkill_get_mcp_help",
   // 「どのアカウントへ書くのか」を書く前に確かめる手段。
   // 3サーバが別アカウントを向いていることがあり、これが無いと
   // 書き込み専用サーバだけが自分の接続先を答えられなかった

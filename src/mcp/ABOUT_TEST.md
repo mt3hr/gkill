@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。1052テスト（27ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 10 + プラグイン1 = 11ツール、Write サーバ 27（書き込み21 + Read便利6）+ プラグイン1 = 28ツール、統合サーバ 31 + プラグイン1 = 32ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
+MCP (Model Context Protocol) サーバのテスト。1074テスト（28ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 11 + プラグイン1 = 12ツール、Write サーバ 28（書き込み21 + Read便利7）+ プラグイン1 = 29ツール、統合サーバ 32 + プラグイン1 = 33ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、アクセスログをカバーする。
 
 ## テストフレームワーク
 
@@ -15,10 +15,10 @@ Vitest（Node.js 環境）
 | ファイル | テスト内容 |
 |---------|-----------|
 | `__tests__/validation.test.mjs` | MCP ツール入力のバリデーション |
-| `__tests__/normalization.test.mjs` | クエリデータの正規化処理。`count_only` / `group_by` と `cursor` の併用をMCP層で弾くこと（GPS と同じ文言であることも含む）、`gkill_get_rep_infos` の `data_kinds` 絞り込み、古スキーマ救済表 `STALE_SCHEMA_ARG_KINDS_BY_TOOL` の全エントリを表駆動で回す検出網羅（ハードコード列挙が表に置き去りにされていた反省） |
+| `__tests__/normalization.test.mjs` | クエリデータの正規化処理。`count_only` / `group_by` と `cursor` の併用、および `count_only` と `group_by` の併用をMCP層で弾くこと（GPS と同じ文言であることも含む）、`gkill_get_rep_infos` の `data_kinds` 絞り込みと行絞り込み（`writable_only` / `rep_types` / `rep_names` / `contains`。古スキーマ経由の文字列復元も）、古スキーマ救済表 `STALE_SCHEMA_ARG_KINDS_BY_TOOL` の全エントリを表駆動で回す検出網羅（ハードコード列挙が表に置き去りにされていた反省） |
 | `__tests__/constants.test.mjs` | 定数定義の検証 |
-| `__tests__/tool-handlers.test.mjs` | Read 10ツール分のハンドラ実行ロジック（`lib/read-tools.mjs` のツール名一覧・エンドポイント対応表・summarize）。`gkill_get_kyous` の Description が `partial=false` と独立に `warnings` を確認し、読み込めない保管場所を `query.reps` へ指定し直さないようAIへ伝えることも固定する |
-| `__tests__/read-handlers.test.mjs` | 読み取りディスパッチの正本 `lib/read-handlers.mjs`（get_kyous v2 パラメータの転送と応答の素通し、トップレベル `plugins[]` の条件付きコピー（count_only でも来たものは素通し）、application_config の fields 射影 + UI状態キー strip、GPS の Node側ページング（複合カーソル・count_only・日別バケット）、rep_infos、idf_file の `/files/` クエリ組み立て・thumb エコー・サイズ上限超過の案内） |
+| `__tests__/tool-handlers.test.mjs` | Read 11ツール分のハンドラ実行ロジック（`lib/read-tools.mjs` のツール名一覧・エンドポイント対応表・summarize）。`gkill_get_kyous` の Description が `partial=false` と独立に `warnings` を確認し、読み込めない保管場所を `query.reps` へ指定し直さないようAIへ伝えることも固定する |
+| `__tests__/read-handlers.test.mjs` | 読み取りディスパッチの正本 `lib/read-handlers.mjs`（get_kyous v2 パラメータの転送と応答の素通し、トップレベル `plugins[]` の条件付きコピー（count_only でも来たものは素通し）、application_config の fields 射影 + UI状態キー strip、GPS の Node側ページング（複合カーソル・count_only・日別バケット・count_only×group_by の拒否）、rep_infos の行絞り込み（書き込み先だけを1行で引けること・`rep_types` の正準値照合）、idf_file の `/files/` クエリ組み立て・thumb エコー・サイズ上限超過の案内） |
 | `__tests__/client.test.mjs` | GkillReadClient（fetch モック使用、ログイン・認証リトライ等） |
 | `__tests__/server.test.mjs` | McpServer のセットアップとトランスポート管理、セッションオーバーライド、プラグインツール振り分け、IDF base64 の text/structuredContent 分離と `image_content_attached`、`warnings` / `partial` の1行要約への昇格（複合・並び順・stale との混在時の件数・200字境界。2026-08-30 MCPレビュー P1） |
 | `__tests__/access-log.test.mjs` | McpAccessLog（レベルフィルタリング・JSON形式・lazy open・close・sourceパラメータ） |
@@ -29,6 +29,7 @@ Vitest（Node.js 環境）
 | `__tests__/http-transport.test.mjs` | HttpTransport の `/mcp` 経路の統合・回帰（実ポートで OAuth→Bearer→tools を通す。Bearer 401 検出 = C-01、並行リクエストの user/session 分離 = C-02、公開ファイル配信の nosniff / CSP sandbox = M-06、ボディ上限 413・明示タイムアウト・アクセスログのクエリ除去 = 2026-08-30 監査 F-003/F-004、scope 境界 = metadata 一致・不一致トークンの 403 と `token_scope_rejected` 監査ログ・scope 源が両方欠けた生成の fail-fast = 2026-08-30 MCPレビュー P0。3サーバ共通） |
 | `__tests__/readme-examples.test.mjs` | README の ```json 例を実物の正規化器（normalizeKyouArgs）へ通す同期検査。Mi 例の include_*_mi 必須・`mi_sort_type` と射影の対応・cursor 例の v2 複合形式・group_by の語彙列挙とスキーマ enum の一致も固定（2026-08-30 MCPレビュー P1） |
 | `__tests__/status-tool.test.mjs` | ツール一覧の世代 `schema_revision`（`lib/status-tool.mjs`）: 一覧から決定的に計算され1文字の差で変わること・`gkill_status` 自身は計算対象に入らないこと・焼き込みが静的配列を書き換えず冪等であること・3サーバで値が違うこと・`gkill_status` が引数を取らないこと（2026-09-14 MCPレビュー P0） |
+| `__tests__/help-topics.test.mjs` | `gkill_get_mcp_help`（`lib/help-topics.mjs`）: 全 topic に本文があり index が全 topic を列挙すること、説明文から移した知識（KFTL の `~~` / `??` / `/endt?`、Mi の射影、warnings の規則 …）が本文に実在すること、本文が名指しするツール名が実在すること、3サーバ全部に載り gkill へ往復しないこと、未知の topic をエラーにすること（ADR-0622。2026-09-18 MCPレビュー） |
 | `__tests__/schema-contract.test.mjs` | 「tools/list どおりに呼ぶと失敗しない」の契約: スキーマのキー集合 = 正規化器の受理集合 − 廃止済み、全ツールをスキーマの全プロパティ指定で呼んで未知キーで拒否されないこと、3サーバの同名ツールが同じ JSON（`gkill_status` の焼き込みだけ剥がして比較）、`initialize` の version・説明文の印・応答の `schema_revision` の一致（ADR-0619 / ADR-0620） |
 | `__tests__/tool-schema-budget.test.mjs` | tools/list のバイト量が予算ファイル `tool-schema-budget.json` の範囲内であること（超過で失敗、1024 バイト以上の減少でも予算の追随を要求）、計測の決定性、over / under / missing の判定と文言 |
 | `__tests__/start-spec.test.mjs` | 3エントリスクリプトの起動 spec（`START_SPEC`）の宣言値固定。scope / 既定ポート / file-link 可否・3サーバ間の重複禁止・bootstrap が `spec.scope` を OAuthServer へ渡す配線（ReadWrite が gkill:read を広告していた事故の再発防止。2026-08-30 MCPレビュー P0）。`server_start` ログの世代情報 `startInfo`（pid / schema_revision / tool_count）と、stdio・http の両トランスポートがそれを出すこと |
@@ -46,7 +47,7 @@ Vitest（Node.js 環境）
 |---------|-----------|
 | `__tests__/write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲検証、data_type検証等）。追加と更新が同じ `ENTITY_FIELD_SPECS` から作られること（URLのスキーム検証が add / update で同一文言、`target_id` は add 専用、patch セマンティクスの維持）、`idempotency_key` の受理、後付けフラグ（urlog の `fetch_metadata` / `fetch_favicon`、mi の `allow_create_board`）の既定値・addOnly・古スキーマ文字列の復元（trim 込みで検出器と同じ受理範囲）、delete / restore の対象無指定を verb 入り文言で拒否すること・restore 側の一括形式 |
 | `__tests__/write-client.test.mjs` | GkillWriteClient（環境変数、login、callApi、認証リトライ） |
-| `__tests__/write-server.test.mjs` | McpWriteServer（JSON-RPC、28ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造、warnings の1行要約昇格が書き込み側にも掛かり stale 専用文言と二重にならないこと） |
+| `__tests__/write-server.test.mjs` | McpWriteServer（JSON-RPC、29ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造、warnings の1行要約昇格が書き込み側にも掛かり stale 専用文言と二重にならないこと） |
 | `__tests__/write-tool-handlers.test.mjs` | Write 21ツール定義（実物 import）・削除の語彙が enum / DELETE_DATA_TYPES / 対応表2つで一致すること・summarizeWriteToolPayload・後付け boolean 引数が検出表と型復元の両方に載ることの表駆動メタ検査・urlog の外向き取得説明が add（fetch_metadata 条件）/ update（再取得しない明言）の両側で言い切っていること |
 
 ### Read/Write統合サーバ
@@ -54,7 +55,7 @@ Vitest（Node.js 環境）
 | ファイル | テスト内容 |
 |---------|-----------|
 | `__tests__/readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
-| `__tests__/readwrite-server.test.mjs` | McpServer 統合（32ツール全ディスパッチ、プラグインツール振り分け、IDF画像ブロック、エンティティデフォルト値） |
+| `__tests__/readwrite-server.test.mjs` | McpServer 統合（33ツール全ディスパッチ、プラグインツール振り分け、IDF画像ブロック、エンティティデフォルト値） |
 | `__tests__/write-handlers.test.mjs` | 書き込みディスパッチの正本（add/update/delete/restore のエンドポイント、update の patch セマンティクス、create_app がサーバ種別で埋まること、既削除の delete / 未削除の restore を拒む冪等ガード、update_time が同一秒でも必ず進むこと、応答がサーバ保存版を返すこと（mergeStored）、`end_time: null` の3値パッチ）。1行要約が `ENTITY_TARGETS` 駆動であること（9型×add/update）と、古スキーマの印が書き込みの要約にも付くこと。urlog の外向き取得抑止フラグが `skip_fetch_*` へ反転して写り実体へ漏れないこと、`gkill_update_urlog` が再取得キー `re_get_urlog_content` を送らないこと、`allow_create_board:false` の板名照合（add / update とも登録前に弾く。既定板への補完値は照合せず・既定では照合の往復ゼロ・古スキーマ文字列でも発火・エラー文言は write サーバ搭載ツールだけを名指し） |
 
 ## テスト内容
@@ -63,7 +64,7 @@ Vitest（Node.js 環境）
 - **Normalization**: 日付フォーマット、文字列トリム、デフォルト値補完
 - **Write Normalization**: Write専用入力検証（mood 0-10範囲、amount数値型、data_type列挙値、unknown keys拒否等）
 - **Constants**: ツール名、エラーコード、デフォルト設定値
-- **Tool Handlers**: Read 10ツール + Write 21ツール（add系9 + update系9 + submit_kftl + delete_kyou + restore_kyou）+ Read便利6ツール + プラグイン1ツール（3サーバ共通）
+- **Tool Handlers**: Read 11ツール + Write 21ツール（add系9 + update系9 + submit_kftl + delete_kyou + restore_kyou）+ Read便利7ツール + プラグイン1ツール（3サーバ共通）
 - **Warning Contract**: 記録保管場所の読み込み失敗が既存の `warnings` に残り、`partial` と混同されず、再指定による0件化を Description が防ぐこと
 - **Plugin Tools**: `gkill_get_plugin_list` の定義・引数検証・エンドポイント振り分けと、`gkill_get_kyous` の `include_plugin_content` によるプラグイン本文のインライン埋め込み（並列度・予算・デッドライン・失敗隔離）、コンテンツHTMLのテキスト変換
 - **Client**: GkillReadClient / GkillWriteClient / GkillClient（統合）のAPIラッパー（認証、エラーハンドリング、レスポンスパース）
@@ -83,7 +84,7 @@ Vitest（Node.js 環境）
 - ツール定義: `lib/read-tools.mjs` / `lib/write-tools.mjs` / `lib/plugin-tools.mjs`
 - gkill 本体との通信: `lib/gkill-client.mjs`
 
-ツール数（Read 11 / Write 28 / ReadWrite 32）は `verify_docs` が `lib/*-tools.mjs` の
+ツール数（Read 12 / Write 29 / ReadWrite 33）は `verify_docs` が `lib/*-tools.mjs` の
 スプレッドを辿って実測と突き合わせる。**サーバ本体だけを見ても数えられない。**
 
 ## 設定ファイル

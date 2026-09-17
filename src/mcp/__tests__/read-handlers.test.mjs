@@ -49,9 +49,9 @@ describe("handleReadToolCall — gkill_get_kyous v2", () => {
       remaining_count: 0,
       has_more: false,
     }));
+    // count_only と group_by は併用できない（2026-09-18 以降はエラー）ので、group_by は別の呼び出しで確かめる
     await handleReadToolCall(ctx, "gkill_get_kyous", {
       count_only: true,
-      group_by: "month",
       data_types: ["nlog"],
       create_apps: ["appA"],
       update_apps: ["appB"],
@@ -64,7 +64,9 @@ describe("handleReadToolCall — gkill_get_kyous v2", () => {
     const [pathname, body] = ctx.client.callApi.mock.calls[0];
     expect(pathname).toBe("/api/get_kyous_mcp");
     expect(body.count_only).toBe(true);
-    expect(body.group_by).toBe("month");
+    await handleReadToolCall(ctx, "gkill_get_kyous", { group_by: "month" });
+    expect(ctx.client.callApi.mock.calls[1][1].group_by).toBe("month");
+    expect(ctx.client.callApi.mock.calls[1][1].count_only).toBe(false);
     expect(body.data_types).toEqual(["nlog"]);
     expect(body.create_apps).toEqual(["appA"]);
     expect(body.update_apps).toEqual(["appB"]);
@@ -415,6 +417,13 @@ describe("paginateGpsLogs", () => {
     expect(() => paginateGpsLogs(logs, { group_by: "day", cursor: "x", limit: 1 })).toThrow(GkillApiError);
   });
 
+  // GPS 側も count_only の早期 return が group_by を黙って捨てていた（get_kyous と同じ順序の同じ穴）。
+  test("count_only and group_by reject each other instead of silently dropping the buckets", () => {
+    expect(() => paginateGpsLogs(logs, { count_only: true, group_by: "day", limit: 1 })).toThrow(
+      /count_only[\s\S]*cannot be combined with group_by/,
+    );
+  });
+
   test("cursor roundtrip and invalid cursor", () => {
     const cursor = encodeGpsCursor("2026-08-02T12:00:00+09:00", 2);
     expect(decodeGpsCursor(cursor)).toEqual({ t: "2026-08-02T12:00:00+09:00", n: 2 });
@@ -525,6 +534,78 @@ describe("handleReadToolCall — gkill_get_rep_infos", () => {
 
   test("isReadToolName covers the new tool", () => {
     expect(isReadToolName("gkill_get_rep_infos")).toBe(true);
+  });
+
+  // 行の絞り込み（2026-09-18 の実利用報告）。応答の形は本番の縮図:
+  // Kyou rep は rep_type ごとに1行、Archived Git の rep 名は plugins[] に、
+  // 歴代端末の Tag_ / Text_ / GPSLogs_ は attached_data_reps[] に並ぶ。
+  const ROW_FILTER_RESPONSE = {
+    rep_infos: [
+      { rep_name: "Kmemo_pc", rep_type: "kmemo", use_to_write: true },
+      { rep_name: "Kmemo_phone_2024", rep_type: "kmemo", use_to_write: false },
+      { rep_name: "Files_pc", rep_type: "directory", use_to_write: true },
+    ],
+    canonical_rep_types: ["kmemo", "directory", "mi"],
+    plugins: [
+      { rep_name: "archived_git_alpha", data_type: "git_commit_log", plugin_name: "archived" },
+      { rep_name: "archived_git_beta", data_type: "git_commit_log", plugin_name: "archived" },
+    ],
+    attached_data_reps: [
+      { rep_name: "Tag_pc", data_kind: "tag", use_to_write: true },
+      { rep_name: "Tag_phone_2024", data_kind: "tag", use_to_write: false },
+      { rep_name: "Text_pc", data_kind: "text", use_to_write: true },
+      { rep_name: "GPSLogs_phone_2024", data_kind: "gpslog", use_to_write: false },
+    ],
+  };
+
+  test("writable_only keeps the write targets only and empties plugins", async () => {
+    const ctx = makeCtx(async () => structuredClone(ROW_FILTER_RESPONSE));
+    const payload = await handleReadToolCall(ctx, "gkill_get_rep_infos", { writable_only: true });
+    expect(payload.rep_infos.map((rep) => rep.rep_name)).toEqual(["Kmemo_pc", "Files_pc"]);
+    expect(payload.attached_data_reps.map((rep) => rep.rep_name)).toEqual(["Tag_pc", "Text_pc"]);
+    expect(payload.plugins).toEqual([]);
+    // 正準値の語彙は行絞り込みの影響を受けない
+    expect(payload.canonical_rep_types).toEqual(["kmemo", "directory", "mi"]);
+  });
+
+  test("『gkill_add_tag はどこへ書くか』は writable_only + data_kinds:[tag] で1行になる", async () => {
+    const ctx = makeCtx(async () => structuredClone(ROW_FILTER_RESPONSE));
+    const payload = await handleReadToolCall(ctx, "gkill_get_rep_infos", {
+      writable_only: true,
+      data_kinds: ["tag"],
+      fields: ["attached_data_reps"],
+    });
+    expect(payload).toEqual({ attached_data_reps: [{ rep_name: "Tag_pc", data_kind: "tag", use_to_write: true }] });
+  });
+
+  test("rep_types narrows rep_infos and is checked against canonical_rep_types", async () => {
+    const ctx = makeCtx(async () => structuredClone(ROW_FILTER_RESPONSE));
+    const payload = await handleReadToolCall(ctx, "gkill_get_rep_infos", { rep_types: ["directory"] });
+    expect(payload.rep_infos.map((rep) => rep.rep_name)).toEqual(["Files_pc"]);
+    // 他の配列には効かない
+    expect(payload.plugins).toHaveLength(2);
+    expect(payload.attached_data_reps).toHaveLength(4);
+    await expect(handleReadToolCall(ctx, "gkill_get_rep_infos", { rep_types: ["Kmemo"] })).rejects.toThrow(
+      /rep_types[\s\S]*canonical rep types: kmemo, directory, mi/,
+    );
+  });
+
+  test("rep_names is exact and case-sensitive across all three lists", async () => {
+    const ctx = makeCtx(async () => structuredClone(ROW_FILTER_RESPONSE));
+    const payload = await handleReadToolCall(ctx, "gkill_get_rep_infos", {
+      rep_names: ["Kmemo_pc", "archived_git_beta", "Text_pc", "tag_pc"],
+    });
+    expect(payload.rep_infos.map((rep) => rep.rep_name)).toEqual(["Kmemo_pc"]);
+    expect(payload.plugins.map((rep) => rep.rep_name)).toEqual(["archived_git_beta"]);
+    expect(payload.attached_data_reps.map((rep) => rep.rep_name)).toEqual(["Text_pc"]);
+  });
+
+  test("contains is a case-insensitive substring across all three lists", async () => {
+    const ctx = makeCtx(async () => structuredClone(ROW_FILTER_RESPONSE));
+    const payload = await handleReadToolCall(ctx, "gkill_get_rep_infos", { contains: "PHONE_2024" });
+    expect(payload.rep_infos.map((rep) => rep.rep_name)).toEqual(["Kmemo_phone_2024"]);
+    expect(payload.plugins).toEqual([]);
+    expect(payload.attached_data_reps.map((rep) => rep.rep_name)).toEqual(["Tag_phone_2024", "GPSLogs_phone_2024"]);
   });
 
   test("applyFileLinks leaves rep_infos payload unchanged (no file-link mint)", () => {

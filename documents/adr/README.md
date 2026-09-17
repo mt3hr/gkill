@@ -224,6 +224,9 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0618](0618-urlog-outbound-fetch-is-default-on-with-opt-out.md) | urlog の外向き取得は既定で行い、引数で項目別に抑止する | Accepted |
 | [0619](0619-mcp-schema-revision-and-stale-tool-list.md) | ツール一覧の世代は gkill_status の schema_revision で見せ、未知の引数名では再接続を案内し、tools/list のバイト量を予算で固定する | Accepted |
 | [0620](0620-advertised-schema-omits-deprecated-arguments.md) | 廃止済み引数は公開スキーマに載せず、受理と古さの検出だけ残す | Accepted |
+| [0621](0621-cursor-pages-revalidate-mi-against-original-window.md) | カーソル頁では Mi の代表射影を元の期間で再検証する（押し下げで代表が変わり、返却済みの記録が再出現していた） | Accepted |
+| [0622](0622-tool-descriptions-are-summaries-details-via-help-tool.md) | ツール説明は要約にとどめ、詳細は gkill_get_mcp_help で取り出す | Accepted |
+| [0623](0623-data-types-expands-entity-names-to-projections.md) | data_types はエンティティ名を射影へ展開して受理する | Accepted |
 | [0701](0701-argon2id-password-storage.md) | パスワードは Argon2id で保存し、ワイヤ形式（password_sha256）は変えない | Accepted |
 | [0702](0702-share-owner-from-session.md) | 共有情報の所有者はリクエスト本文ではなくセッションから決める | Accepted |
 | [0703](0703-shared-file-authz-by-query.md) | 共有ページのファイル配信は共有クエリを再評価した許可パス集合にだけ許す | Accepted |
