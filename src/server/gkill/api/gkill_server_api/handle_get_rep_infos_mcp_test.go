@@ -149,6 +149,31 @@ func TestHandleGetRepInfosMCPListsAttachedDataReps(t *testing.T) {
 		t.Errorf("タグの格納先が出ていない: %+v", infoResp.AttachedDataReps)
 	}
 
+	// use_to_write: 歴代端末ぶん並ぶ格納先のうち書き込み先を1行で引けること
+	// （「gkill_add_tag はどこへ書くのか」への答え。2026-09-18 の実利用報告）。
+	// テスト環境の rep は書き込み先として作られるので、種別ごとに最低1つは立つ。
+	writableByKind := map[string]int{}
+	for _, attached := range infoResp.AttachedDataReps {
+		if attached.UseToWrite {
+			writableByKind[attached.DataKind]++
+		}
+	}
+	for _, kind := range []string{"tag", "text"} {
+		if writableByKind[kind] == 0 {
+			t.Errorf("%s の格納先に use_to_write:true の行が無い: %+v", kind, infoResp.AttachedDataReps)
+		}
+	}
+	// Kyou rep 側も同じ集合で判定する（rep_infos[].use_to_write は以前は無検査だった）
+	writableKyouReps := 0
+	for _, info := range infoResp.RepInfos {
+		if info.UseToWrite {
+			writableKyouReps++
+		}
+	}
+	if writableKyouReps == 0 {
+		t.Errorf("rep_infos に use_to_write:true の行が無い: %+v", infoResp.RepInfos)
+	}
+
 	// **別々のフィールドで返すこと。** 同じ配列へ混ぜると、呼び出し側が
 	// 付随データのrep名を query.reps へ渡し、Kyou の rep_name と一致せず静かに0件になる。
 	//

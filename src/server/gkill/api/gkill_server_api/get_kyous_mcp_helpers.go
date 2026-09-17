@@ -7,6 +7,7 @@ package gkill_server_api
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"path/filepath"
 	"slices"
@@ -18,6 +19,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
 // mcpCursor は get_kyous_mcp のページングカーソルの解釈結果。
@@ -83,6 +85,89 @@ var mcpIDFKindValues = []string{"image", "video", "audio", "zip", "other"}
 // mcpBucketLimit は group_by の最大バケット数。超過分は "(other)" へ合算する。
 // url_domain のような自由値キーの爆発から応答サイズを守る（max_size_mb は group_by に適用されないため）。
 const mcpBucketLimit = 1000
+
+// isWindowDependentMCPKind は「同じ記録が複数の射影を持ち、検索窓によって代表が変わりうる」
+// ペイロード種別か。Mi / MiReKyou がそれで、TimeIs は start / end が別 entry として両方残るので違う。
+func isWindowDependentMCPKind(dataType string) bool {
+	switch payloadKindOfDataType(dataType) {
+	case "mi", "mirekyou":
+		return true
+	}
+	return false
+}
+
+// mcpKyouEntryKey は「記録 × 射影」で entry を識別するキー。
+type mcpKyouEntryKey struct {
+	id       string
+	dataType string
+}
+
+// revalidateMiEntriesAgainstOriginalWindow は cursor 頁の batch から、
+// 「元の窓で選ばれる代表射影と違う射影で出てきた」Mi / MiReKyou の entry を落とす。
+//
+// Mi rep の FindKyous は5射影を UNION し、各腕が自分の時刻列（mi_create=CREATE_TIME、
+// mi_check=UPDATE_TIME …）で期間フィルタされる。for_mi 無しの検索は replaceLatestKyouInfos が
+// newestKyouEntry で代表1件へ潰す（_start 優先 → DataType 辞書順なので mi_check < mi_create）。
+// カーソルを CalendarEndDate へ押し下げると mi_check の腕だけが窓外へ落ち、同じ Mi が
+// mi_create として**カーソルより後ろに**再出現する。1頁目に返した記録の重複であり、
+// remaining_count もそのぶん膨らむ（カーソルが遡るほど該当 Mi が増えるので、減らない・微減する）。
+//
+// 直し方は「元の窓で同じ検索をこの ID 群だけに掛け直す」。潰し込みの規則（newestKyouEntry）を
+// ここへ複製しないのは ADR-0611（同じ規則を2形態で持たない）。元の窓での代表 (ID, DataType) が
+// 押し下げた窓での entry と一致すれば代表は同じ（元の代表は窓の中にあり、窓を狭めても
+// 優先順位は変わらない）。一致しなければ元の代表はカーソルより上にあった＝返却済みなので落とす。
+//
+// 却下案（潰し込みを窓非依存にする・押し下げをやめる・Node 側で ID の重複除去）は ADR-0621。
+// 再検索に失敗しても頁は失敗させず、警告を1行足して batch をそのまま返す
+// （重複が出うるだけで、失敗にすると頁送りそのものが止まる）。
+func (g *GkillServerAPI) revalidateMiEntriesAgainstOriginalWindow(ctx context.Context, userID string, device string, originalQuery *find.FindQuery, batch []reps.Kyou) ([]reps.Kyou, []string) {
+	miIDs := make([]string, 0)
+	seen := map[string]struct{}{}
+	for _, kyou := range batch {
+		if !isWindowDependentMCPKind(kyou.DataType) {
+			continue
+		}
+		if _, ok := seen[kyou.ID]; ok {
+			continue
+		}
+		seen[kyou.ID] = struct{}{}
+		miIDs = append(miIDs, kyou.ID)
+	}
+	if len(miIDs) == 0 {
+		return batch, nil
+	}
+
+	// IDs は他の条件と AND されるので、元の条件 + この ID 群 = 「1頁目がこの ID 群をどう見たか」。
+	// 元の query に IDs があっても batch はその部分集合なので、差し替えて構わない。
+	query := *originalQuery
+	query.IDs = miIDs
+	representatives, gkillErrors, err := g.FindFilter.FindKyous(ctx, userID, device, g.GkillDAOManager, &query)
+	if err != nil || len(gkillErrors) != 0 {
+		if err == nil {
+			err = fmt.Errorf("gkill errors: %d", len(gkillErrors))
+		}
+		slog.Log(ctx, gkill_log.Debug, "error at revalidate mi entries against original window", "error", fmt.Sprintf("%q", err))
+		return batch, []string{fmt.Sprintf(
+			"could not re-validate %d task entries against the full query window; remaining_count may be inflated and a task already returned on an earlier page may appear again under another data_type",
+			len(miIDs))}
+	}
+
+	keep := make(map[mcpKyouEntryKey]struct{}, len(representatives))
+	for _, kyou := range representatives {
+		keep[mcpKyouEntryKey{id: kyou.ID, dataType: kyou.DataType}] = struct{}{}
+	}
+	out := make([]reps.Kyou, 0, len(batch))
+	for _, kyou := range batch {
+		if !isWindowDependentMCPKind(kyou.DataType) {
+			out = append(out, kyou)
+			continue
+		}
+		if _, ok := keep[mcpKyouEntryKey{id: kyou.ID, dataType: kyou.DataType}]; ok {
+			out = append(out, kyou)
+		}
+	}
+	return out, nil
+}
 
 // applyMCPDataTypesFilter は DTO の data_type 文字列（mi_create / claude_conversation 等）の
 // 許可リストで結果を絞る。nil=未使用、非nil空=0件（FindQuery の null 意味論に揃える）。
@@ -221,6 +306,7 @@ func applyMCPNumFilter(ctx context.Context, repositories *reps.GkillRepositories
 	}
 
 	out := kyous[:0]
+	matchedByKind := map[string]int{}
 	for _, kyou := range kyous {
 		value, ok := valueByID[kyou.ID]
 		if !ok {
@@ -233,8 +319,34 @@ func applyMCPNumFilter(ctx context.Context, repositories *reps.GkillRepositories
 			continue
 		}
 		out = append(out, kyou)
+		matchedByKind[payloadKindOfDataType(kyou.DataType)]++
+	}
+	if warning := mixedNumKindsWarning(matchedByKind); warning != "" {
+		warnings = append(warnings, warning)
 	}
 	return out, warnings, nil
+}
+
+// mixedNumKindsWarning は num_min / num_max の結果に2種類以上の数値種別が混ざったときの案内。
+//
+// 3種の値は単位を無視して1本の数直線で比べられる（歩数の kc、円の nlog、0〜10 の lantana）。
+// スキーマの説明文には書いてあるが実行時には何も言わず、「気分が7以上の日」を数えたつもりで
+// 歩数7歩以上まで数えていた（2026-09-18 の実利用報告: num_min:7 だけで 20,624件）。
+// 結果が1種類だけなら曖昧さは無いので黙る（data_types で絞った呼び出しを毎回うるさくしない）。
+func mixedNumKindsWarning(matchedByKind map[string]int) string {
+	parts := make([]string, 0, 3)
+	for _, kind := range []string{"kc", "nlog", "lantana"} {
+		if count := matchedByKind[kind]; count > 0 {
+			parts = append(parts, fmt.Sprintf("%d %s", count, kind))
+		}
+	}
+	if len(parts) < 2 {
+		return ""
+	}
+	return fmt.Sprintf(
+		"num_min/num_max compared %s records on one unit-less axis (kc values, nlog amounts and a 0-10 lantana mood are not comparable); "+
+			"add data_types:[\"lantana\"] (or [\"kc\"] / [\"nlog\"]) so the bound means one thing",
+		strings.Join(parts, ", "))
 }
 
 // classifyIDFKind は IDF の種別を image/video/audio/zip/other のどれかへ寄せる。
@@ -462,11 +574,17 @@ func knownMCPDataTypes(repositories *reps.GkillRepositories) map[string]struct{}
 	known := map[string]struct{}{}
 	for _, dataType := range []string{
 		"kmemo", "kc", "urlog", "nlog", "lantana", "rekyou", "idf", "git_commit_log",
-		"timeis", "timeis_start", "timeis_end",
-		"mi", "mi_create", "mi_check", "mi_limit", "mi_start", "mi_end",
-		"mirekyou", "mirekyou_create", "mirekyou_check", "mirekyou_limit", "mirekyou_start", "mirekyou_end",
 	} {
 		known[dataType] = struct{}{}
+	}
+	// エンティティ名（timeis / mi / mirekyou）とその射影名。エンティティ名は
+	// expandMCPDataTypes が射影へ展開するので、既知として通してよい（以前は既知なのに
+	// 完全一致する DataType が存在せず、警告ゼロで必ず0件だった）。
+	for entity, projections := range mcpEntityDataTypeProjections {
+		known[entity] = struct{}{}
+		for _, projection := range projections {
+			known[projection] = struct{}{}
+		}
 	}
 	for _, pluginRep := range repositories.PluginReps {
 		manifest := pluginRep.GetManifest()
@@ -620,9 +738,116 @@ func miSortTypeIgnoredWarning(query *find.FindQuery) string {
 
 // miProjectionDataTypes は Mi / MiReKyou の射影名の全集合。
 // knownMCPDataTypes が既知として通す値のうち、for_mi を立てないと出てこないもの。
-var miProjectionDataTypes = []string{
-	"mi_create", "mi_check", "mi_limit", "mi_start", "mi_end",
-	"mirekyou_create", "mirekyou_check", "mirekyou_limit", "mirekyou_start", "mirekyou_end",
+var miProjectionDataTypes = slices.Concat(
+	mcpEntityDataTypeProjections["mi"],
+	mcpEntityDataTypeProjections["mirekyou"],
+)
+
+// mcpEntityDataTypeProjections は「エンティティ名 → その記録が検索結果に出るときの射影名」の唯一の表。
+//
+// data_type には語彙が2つある。検索結果と add_* / update_* の応答が返すのは射影名
+// （mi_create / timeis_start …）、delete / restore / history が受理するのはエンティティ名（mi / timeis …。
+// MCP 側の対応表は lib/constants.mjs の PROJECTION_TO_ENTITY_DATA_TYPE で、射影名→エンティティ名の向き）。
+// data_types は検索結果の射影名に対する完全一致なので、エンティティ名をそのまま渡すと
+// 「既知の値なのに必ず0件」になっていた —— knownMCPDataTypes が素の mi / timeis / mirekyou を
+// 既知として通す一方、Kyou の DataType にその値は SQL が射影名を焼き込むため決して入らない
+// （2026-09-18 の実利用報告: ["timeis","mi","idf"] が idf 単体と同じ件数で警告ゼロ）。
+// エンティティ名は全射影へ展開して受理する（expandMCPDataTypes。ADR-0623）。
+//
+// 射影の一覧は knownMCPDataTypes と miProjectionDataTypes もここから引く（表を2つ持たない）。
+var mcpEntityDataTypeProjections = map[string][]string{
+	"timeis":   {"timeis_start", "timeis_end"},
+	"mi":       {"mi_create", "mi_check", "mi_limit", "mi_start", "mi_end"},
+	"mirekyou": {"mirekyou_create", "mirekyou_check", "mirekyou_limit", "mirekyou_start", "mirekyou_end"},
+}
+
+// expandMCPDataTypes は data_types の各値のうちエンティティ名（timeis / mi / mirekyou）を
+// その全射影へ展開する。nil は nil（未使用）、空は空（0件指定）のまま。重複は落とし、順序は保つ。
+//
+// 警告側（collectMCPUnknownValueWarnings）には展開前の値を渡すこと。miProjectionWarning は
+// 「射影名を明示したのに for_mi が無い」を見るもので、素の mi は全射影を含むので
+// 潰し込み後も「タスク1件 = 1行」になり、その警告は当てはまらない。
+func expandMCPDataTypes(dataTypes []string) []string {
+	if dataTypes == nil {
+		return nil
+	}
+	expanded := make([]string, 0, len(dataTypes))
+	seen := make(map[string]struct{}, len(dataTypes))
+	appendUnique := func(dataType string) {
+		if _, ok := seen[dataType]; ok {
+			return
+		}
+		seen[dataType] = struct{}{}
+		expanded = append(expanded, dataType)
+	}
+	for _, dataType := range dataTypes {
+		projections, isEntity := mcpEntityDataTypeProjections[dataType]
+		if !isEntity {
+			appendUnique(dataType)
+			continue
+		}
+		for _, projection := range projections {
+			appendUnique(projection)
+		}
+	}
+	return expanded
+}
+
+// collectMCPUnmatchedIDWarnings は query.ids のうち検索結果に1件も現れなかった ID を警告にする。
+//
+// tags / reps / rep_types / data_types は照合用の一覧があるので綴り違いを名指しできるが、
+// ID には「全 ID 一覧」が無い（56万件の主キーを毎リクエスト集めることになる）。代わりに
+// 「要求した ID − 結果に出た ID」を取る。存在しないのか、最新版が削除済みなのか、
+// 他の条件（期間・タグ）で落ちたのかは検索からは区別できないので、**区別できないことを言う**
+// （entityNotFoundMessage と同じ判断。ADR-0611）。列挙は20件で打ち切る。
+//
+// 渡す kyous はリクエストレベル絞り込み（data_types / num / idf_kinds）の**前**の結果。
+// 絞り込みで落ちた ID まで「一致なし」と言うと、data_types を付けた瞬間に大量の誤警告になる。
+func collectMCPUnmatchedIDWarnings(query *find.FindQuery, kyous []reps.Kyou) []string {
+	if query == nil || len(query.IDs) == 0 {
+		return nil
+	}
+	found := make(map[string]struct{}, len(kyous))
+	for _, kyou := range kyous {
+		found[kyou.ID] = struct{}{}
+	}
+	requested := uniqueStringsInOrder(query.IDs)
+	missing := make([]string, 0)
+	for _, id := range requested {
+		if _, ok := found[id]; !ok {
+			missing = append(missing, id)
+		}
+	}
+	if len(missing) == 0 {
+		return nil
+	}
+	const listLimit = 20
+	listed := missing
+	suffix := ""
+	if len(missing) > listLimit {
+		listed = missing[:listLimit]
+		suffix = fmt.Sprintf(" (and %d more)", len(missing)-listLimit)
+	}
+	return []string{fmt.Sprintf(
+		"query.ids: %d of %d requested id(s) matched nothing: %s%s. "+
+			"An id matches nothing when it does not exist, when its latest version is deleted "+
+			"(query.include_deleted_data opens those), or when the other query conditions exclude it — "+
+			"the search cannot tell these apart",
+		len(missing), len(requested), strings.Join(listed, ", "), suffix)}
+}
+
+// uniqueStringsInOrder は順序を保って重複を除く。
+func uniqueStringsInOrder(values []string) []string {
+	seen := make(map[string]struct{}, len(values))
+	out := make([]string, 0, len(values))
+	for _, value := range values {
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		out = append(out, value)
+	}
+	return out
 }
 
 // miProjectionWarning は「Mi の射影名で絞ったのに for_mi を立てていない」ときの案内を返す。
