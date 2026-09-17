@@ -402,13 +402,13 @@ describe("JSON-RPC protocol", () => {
     expect(response.result).toEqual({});
   });
 
-  test("tools/list returns 28 tools", async () => {
+  test("tools/list returns 29 tools", async () => {
     const response = await server.handleMessage({
       jsonrpc: "2.0",
       id: 3,
       method: "tools/list",
     });
-    expect(response.result.tools).toHaveLength(28);
+    expect(response.result.tools).toHaveLength(29);
   });
 
   test("tools/list includes all expected tool names", async () => {

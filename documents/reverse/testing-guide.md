@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1332 | 200 | Go `testing` |
+| Go バックエンド | 1338 | 200 | Go `testing` |
 | フロントエンド ユニット | 2019 | 178 | Vitest |
 | フロントエンド E2E | 253 | 46（+auth.setup.ts） | Playwright |
-| MCP サーバ | 1052 | 27 | Vitest |
+| MCP サーバ | 1074 | 28 | Vitest |
 | ツール | 55 | 2 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 228 | 18 | JUnit 4 + MockK |
-| **合計** | **4,954** | **473** | |
+| **合計** | **4,982** | **474** | |
 
 数え直すコマンド:
 
@@ -399,7 +399,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | `validation.test.mjs` | Read入力パラメータ検証（必須/型/範囲） |
 | `normalization.test.mjs` | 日付・文字列・デフォルト値の正規化 |
 | `constants.test.mjs` | ツール名、エラーコード、デフォルト設定値 |
-| `tool-handlers.test.mjs` | Read 10ツール分のハンドラ実行ロジック（`lib/read-tools.mjs` を実物 import したツール名一覧・エンドポイント対応表・summarize） |
+| `tool-handlers.test.mjs` | Read 11ツール分のハンドラ実行ロジック（`lib/read-tools.mjs` を実物 import したツール名一覧・エンドポイント対応表・summarize） |
 | `file-link.test.mjs` | FileLinkStore（HTTPモード用の期限付きファイルリンクトークンの発行・解決・失効、`GET /files/{token}` 配信） |
 | `client.test.mjs` | GkillReadClient（fetch モック、認証、レスポンスパース） |
 | `server.test.mjs` | McpServer ライフサイクル、トランスポート管理、gkill_get_idf_file ツール |
@@ -408,6 +408,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | `oauth-store.test.mjs` | OAuth ストア（トークン/コード/クライアント CRUD、TTL 有効期限、JSON ファイル永続化） |
 | `oauth-server.test.mjs` | OAuth サーバ（メタデータ、認可、トークン交換、PKCE、DCR、RFC 8707、E2E フロー） |
 | `status-tool.test.mjs` | ツール一覧の世代 `schema_revision` の計算と `gkill_status` への焼き込み（決定性・自己参照除外・冪等・3サーバで別値） |
+| `help-topics.test.mjs` | `gkill_get_mcp_help` の topic 本文（全 topic に本文・index の列挙・説明文から移した知識の実在・名指しするツール名の実在・3サーバ搭載・gkill へ往復しない） |
 | `schema-contract.test.mjs` | tools/list どおりに呼べる契約（スキーマのキー集合 = 受理集合 − 廃止済み、全プロパティ指定スモーク、3サーバの同名ツール同一、世代の一致） |
 | `tool-schema-budget.test.mjs` | tools/list のバイト量が予算ファイル `src/mcp/tool-schema-budget.json` 内であること（超過・過小の両方で失敗）。説明文を意図して変えたときは `npm run mcp:schema-budget -- --update` で予算を書き直す |
 
@@ -424,7 +425,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 |-------------|-----------|
 | `write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲、data_type列挙値） |
 | `write-client.test.mjs` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
-| `write-server.test.mjs` | McpWriteServer（28ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
+| `write-server.test.mjs` | McpWriteServer（29ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
 | `write-tool-handlers.test.mjs` | Write 21ツール定義（実物 import）・削除の語彙が3箇所で一致すること・summarizeWriteToolPayload |
 | `write-handlers.test.mjs` | 書き込みディスパッチ（add/update/delete のエンドポイント、patch セマンティクス、create_app のサーバ種別） |
 
@@ -433,7 +434,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | テストファイル | テスト内容 |
 |-------------|-----------|
 | `readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
-| `readwrite-server.test.mjs` | McpServer統合（全32ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
+| `readwrite-server.test.mjs` | McpServer統合（全33ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
 
 ### 3.5 Android / Wear OS
 

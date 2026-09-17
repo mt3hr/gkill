@@ -20,8 +20,8 @@ import { CROSS_SERVER_TOOL_MENTIONS } from "../lib/constants.mjs";
 // Tool definition presence
 // ---------------------------------------------------------------------------
 describe("Tool definitions", () => {
-  test("read server exposes 11 tools (10 read + 1 plugin)", () => {
-    expect(READ_TOOLS).toHaveLength(10);
+  test("read server exposes 12 tools (11 read + 1 plugin)", () => {
+    expect(READ_TOOLS).toHaveLength(11);
     expect(PLUGIN_TOOLS).toHaveLength(1);
   });
 
@@ -29,6 +29,8 @@ describe("Tool definitions", () => {
     expect(READ_TOOLS.map((tool) => tool.name)).toEqual([
       // gkill_status は先頭（接続先と一覧の世代を最初に見せる）
       "gkill_status",
+      // 説明文の本文（ADR-0622）。status の次に置き、検索より先に目に入るようにする
+      "gkill_get_mcp_help",
       "gkill_get_kyous",
       "gkill_get_mi_board_list",
       "gkill_get_all_tag_names",
@@ -61,6 +63,17 @@ describe("Tool definitions", () => {
     expect(description).toContain("even when partial is false");
     expect(description).toContain("failed to load");
     expect(description).toContain("do not put a repository named by that warning back into query.reps");
+  });
+
+  // 説明文は要約で、本文は gkill_get_mcp_help（ADR-0622）。要約が本文の在処を案内していなければ、
+  // 移した知識は誰にも読まれない。
+  test("summarized descriptions point at gkill_get_mcp_help", () => {
+    for (const name of ["gkill_get_kyous", "gkill_get_rep_infos", "gkill_get_idf_file"]) {
+      const description = READ_TOOLS.find((tool) => tool.name === name)?.description || "";
+      expect(description, name).toContain("gkill_get_mcp_help");
+    }
+    const kftl = WRITE_TOOLS.find((tool) => tool.name === "gkill_submit_kftl")?.description || "";
+    expect(kftl).toContain("gkill_get_mcp_help topic:kftl");
   });
 });
 

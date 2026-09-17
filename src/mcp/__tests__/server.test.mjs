@@ -408,7 +408,7 @@ describe("handleMessage", () => {
     expect(response.jsonrpc).toBe("2.0");
     expect(response.id).toBe(2);
     expect(Array.isArray(response.result.tools)).toBe(true);
-    expect(response.result.tools.length).toBe(11);
+    expect(response.result.tools.length).toBe(12);
 
     const toolNames = response.result.tools.map((t) => t.name);
     expect(toolNames).toContain("gkill_status");
