@@ -16,7 +16,8 @@ import (
 )
 
 // cacheSchemaVersion はDDLの版。変えると下の表を作り直す。
-const cacheSchemaVersion = "2"
+// "3": sample_daily をデータソース単位に分けた（2026-09-20。時計とスマホの歩数が合算されていた）。
+const cacheSchemaVersion = "3"
 
 // cache はSQLite3のキャッシュ。
 //
@@ -135,6 +136,9 @@ CREATE TABLE IF NOT EXISTS sample_daily (
   date_local     TEXT    NOT NULL,
   export_id      TEXT    NOT NULL,
   source_path    TEXT    NOT NULL,
+  -- CSV の data source 列。同じファイルの同じ日に時計とスマホの行が並ぶので、
+  -- ここで分けておかないと畳み直しで「どちらを採るか」を選べない。
+  data_source    TEXT    NOT NULL,
   sum_value      REAL    NOT NULL,
   count_value    INTEGER NOT NULL,
   min_value      REAL    NOT NULL,
@@ -142,12 +146,11 @@ CREATE TABLE IF NOT EXISTS sample_daily (
   last_value     REAL    NOT NULL,
   last_unix      INTEGER NOT NULL,
   src_mtime_unix INTEGER NOT NULL,
-  devices        TEXT    NOT NULL,
   hour_sums      TEXT    NOT NULL,
   hour_counts    TEXT    NOT NULL,
   -- export_id を source_path の前に置く。1日ぶんの行が世代ごとに固まるので、
   -- 畳み直しが範囲走査だけで済む。一意性には寄与しない（source_pathが世代を決めるため）。
-  PRIMARY KEY (metric_key, date_local, export_id, source_path)
+  PRIMARY KEY (metric_key, date_local, export_id, source_path, data_source)
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS idx_sample_daily_src    ON sample_daily(source_path);
 CREATE INDEX IF NOT EXISTS idx_sample_daily_export ON sample_daily(export_id);
@@ -217,6 +220,22 @@ func (c *cache) resetIfGenerationChanged(timezone string) error {
 	return nil
 }
 
+// refoldAllIfFoldRuleChanged は畳み直しの規則（secondary_data_sources）が前回と違えば
+// 全日を dirty に積む。部分集計はデータソース単位で持っているので、取り込み直しは要らない
+// （実データ 19,709 日で数秒）。
+func (c *cache) refoldAllIfFoldRuleChanged(rule string) error {
+	if c.meta("fold_rule") == rule {
+		return nil
+	}
+	if _, err := c.db.Exec(`
+INSERT OR IGNORE INTO dirty_day(metric_key, date_local)
+  SELECT DISTINCT metric_key, date_local FROM sample_daily`); err != nil {
+		return fmt.Errorf("error at mark all days dirty for fold rule change: %w", err)
+	}
+	c.setMeta("fold_rule", rule)
+	return nil
+}
+
 // loadFileCache は前回のスキャン結果を読む。
 func (c *cache) loadFileCache() (map[string]scannedFile, error) {
 	known := map[string]scannedFile{}
@@ -252,21 +271,15 @@ INSERT OR IGNORE INTO dirty_day(metric_key, date_local)
 	rowCount := int64(0)
 	for _, partial := range partials {
 		rowCount += partial.CountValue
-		devices := make([]string, 0, len(partial.Devices))
-		for device := range partial.Devices {
-			devices = append(devices, device)
-		}
-		sort.Strings(devices)
 
 		if _, err := tx.Exec(`
 INSERT OR REPLACE INTO sample_daily(
-  metric_key, date_local, export_id, source_path, sum_value, count_value, min_value, max_value,
-  last_value, last_unix, src_mtime_unix, devices, hour_sums, hour_counts)
+  metric_key, date_local, export_id, source_path, data_source, sum_value, count_value, min_value, max_value,
+  last_value, last_unix, src_mtime_unix, hour_sums, hour_counts)
 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-			partial.MetricKey, partial.DateLocal, file.ExportID, file.Path,
+			partial.MetricKey, partial.DateLocal, file.ExportID, file.Path, partial.DataSource,
 			partial.SumValue, partial.CountValue, partial.MinValue, partial.MaxValue,
 			partial.LastValue, partial.LastUnix, file.MtimeUnix,
-			strings.Join(devices, "\n"),
 			formatFloatVector(partial.HourSums[:]),
 			formatIntVector(partial.HourCounts[:]),
 		); err != nil {
@@ -437,11 +450,14 @@ WITH batch AS (
   SELECT metric_key, date_local FROM dirty_day ORDER BY metric_key, date_local LIMIT ?
 )`
 
-// foldSelectSQL は畳み直す日ぶんの集計を取る。
+// foldSelectSQL は畳み直す日ぶんの集計を、採用した世代の中でデータソース別に取る。
 //
 // 世代（export）をまたいで足さないのが肝。同じ (指標, 日) に複数の世代の寄与があるときは
 // rank が最小＝いちばん新しい世代の行だけを使う。
 // 分割された ZIP は同じ世代なので合算され、別の日に書き出したぶんは合算されない。
+//
+// データソース（時計 / スマホ / アプリ）はここでは足さない。どれを採るかは設定
+// （secondary_data_sources）で決まるので、SQL で束ねずに Go 側の chooseDataSources へ渡す。
 const foldSelectSQL = foldBatchCTE + `,
 winner AS (
   SELECT s.metric_key, s.date_local, MIN(e.rank) AS rank
@@ -450,30 +466,32 @@ winner AS (
     JOIN export e ON e.export_id  = s.export_id
    GROUP BY s.metric_key, s.date_local
 )
-SELECT s.metric_key, s.date_local,
+SELECT s.metric_key, s.date_local, s.data_source,
        SUM(s.sum_value), SUM(s.count_value),
        MIN(s.min_value), MAX(s.max_value),
        MAX(s.src_mtime_unix),
        -- 採用した世代。JOIN で1つに絞ってあるので、この集約は「その1つ」を返す
        MIN(s.export_id),
-       GROUP_CONCAT(s.devices,     char(10)),
        GROUP_CONCAT(s.hour_sums,   char(10)),
        GROUP_CONCAT(s.hour_counts, char(10)),
        GROUP_CONCAT(s.source_path, char(10)),
        (SELECT s2.last_value FROM sample_daily s2
           JOIN export e2 ON e2.export_id = s2.export_id
          WHERE s2.metric_key = s.metric_key AND s2.date_local = s.date_local
-           AND e2.rank = w.rank
-         ORDER BY s2.last_unix DESC LIMIT 1)
+           AND s2.data_source = s.data_source AND e2.rank = w.rank
+         ORDER BY s2.last_unix DESC LIMIT 1),
+       MAX(s.last_unix)
 FROM sample_daily s
 JOIN winner w ON w.metric_key = s.metric_key AND w.date_local = s.date_local
 JOIN export e ON e.export_id  = s.export_id  AND e.rank      = w.rank
-GROUP BY s.metric_key, s.date_local`
+GROUP BY s.metric_key, s.date_local, s.data_source
+ORDER BY s.metric_key, s.date_local, s.data_source`
 
 // foldDirtyDays は再計算対象の日を畳み直して daily_metric を更新する。
 // 一度に処理する件数を limit で区切る（1トランザクションが長くならないように）。
+// secondary は「時計の行が無い日にだけ使う」データソース名（chooseDataSources）。
 // 返り値は処理した件数。
-func (c *cache) foldDirtyDays(loc *time.Location, limit int) (int, error) {
+func (c *cache) foldDirtyDays(loc *time.Location, limit int, secondary []string) (int, error) {
 	tx, err := c.db.Begin()
 	if err != nil {
 		return 0, fmt.Errorf("error at begin fold tx: %w", err)
@@ -510,33 +528,25 @@ func (c *cache) foldDirtyDays(loc *time.Location, limit int) (int, error) {
 		return 0, fmt.Errorf("error at fold dirty days: %w", err)
 	}
 
-	type folded struct {
-		metricKey   string
-		dateLocal   string
-		sum         float64
-		count       int64
-		minValue    float64
-		maxValue    float64
-		maxMtime    int64
-		exportID    string
-		devices     string
-		hourSums    string
-		hourCounts  string
-		sourcePaths string
-		lastValue   float64
-	}
-	batch := []folded{}
+	// (指標, 日) ごとにデータソース別の行を集める。ORDER BY で並んでいるので隣接する
+	perDay := [][]foldedSource{}
 	for rows.Next() {
-		var f folded
+		var f foldedSource
 		var lastValue sql.NullFloat64
-		if err := rows.Scan(&f.metricKey, &f.dateLocal, &f.sum, &f.count,
+		var lastUnix sql.NullInt64
+		if err := rows.Scan(&f.metricKey, &f.dateLocal, &f.dataSource, &f.sum, &f.count,
 			&f.minValue, &f.maxValue, &f.maxMtime, &f.exportID,
-			&f.devices, &f.hourSums, &f.hourCounts, &f.sourcePaths, &lastValue); err != nil {
+			&f.hourSums, &f.hourCounts, &f.sourcePaths, &lastValue, &lastUnix); err != nil {
 			_ = rows.Close()
 			return 0, fmt.Errorf("error at scan folded day: %w", err)
 		}
 		f.lastValue = lastValue.Float64
-		batch = append(batch, f)
+		f.lastUnix = lastUnix.Int64
+		if n := len(perDay); n != 0 && perDay[n-1][0].metricKey == f.metricKey && perDay[n-1][0].dateLocal == f.dateLocal {
+			perDay[n-1] = append(perDay[n-1], f)
+			continue
+		}
+		perDay = append(perDay, []foldedSource{f})
 	}
 	if err := rows.Err(); err != nil {
 		_ = rows.Close()
@@ -545,7 +555,11 @@ func (c *cache) foldDirtyDays(loc *time.Location, limit int) (int, error) {
 	_ = rows.Close()
 
 	processed := map[string]struct{}{}
-	for _, f := range batch {
+	for _, sources := range perDay {
+		f, ok := mergeFoldedSources(chooseDataSources(sources, secondary))
+		if !ok {
+			continue
+		}
 		processed[f.metricKey+"\x00"+f.dateLocal] = struct{}{}
 		def, exist := metricByKey[f.metricKey]
 		if !exist {
@@ -576,7 +590,7 @@ func (c *cache) foldDirtyDays(loc *time.Location, limit int) (int, error) {
 		value *= def.scaleOf()
 		numValue := strconv.FormatFloat(value, 'f', def.Round, 64)
 
-		devices := dedupeLines(f.devices)
+		devices := dedupeLines(f.dataSource)
 		sourcePaths := dedupeLines(f.sourcePaths)
 		hourSums := sumFloatVectors(f.hourSums)
 		hourCounts := sumIntVectors(f.hourCounts)

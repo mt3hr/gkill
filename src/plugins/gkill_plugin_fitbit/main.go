@@ -139,6 +139,10 @@ func main() {
 				}
 				cfg[configKeyMetrics] = keys
 			}
+			if value, ok := form[configKeySecondaryDataSources]; ok {
+				// 空欄は「全部合算する」の明示。既定に戻すのではない
+				cfg[configKeySecondaryDataSources] = splitSourceDirsForm(value)
+			}
 			if value, ok := form[configKeyScanWorkers]; ok {
 				workers, err := strconv.Atoi(strings.TrimSpace(value))
 				if err == nil {

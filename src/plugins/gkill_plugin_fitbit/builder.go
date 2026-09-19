@@ -98,6 +98,10 @@ func (c *cache) build(pluginDir string, config pluginConfig) error {
 	if err := c.resetIfGenerationChanged(config.Timezone); err != nil {
 		return err
 	}
+	// データソースの採り方が変わったら全日を畳み直す（取り込み直しはしない）
+	if err := c.refoldAllIfFoldRuleChanged(config.foldRule()); err != nil {
+		return err
+	}
 	loc, err := loadLocation(config.Timezone)
 	if err != nil {
 		c.setMeta("build_state", "error")
@@ -233,7 +237,7 @@ func (c *cache) build(pluginDir string, config pluginConfig) error {
 
 	c.setMeta("build_state", "folding")
 	for {
-		processed, err := c.foldDirtyDays(loc, foldBatchDays)
+		processed, err := c.foldDirtyDays(loc, foldBatchDays, config.SecondaryDataSources)
 		if err != nil {
 			return err
 		}
