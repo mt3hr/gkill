@@ -16,9 +16,11 @@ export const FIND_QUERY_SCHEMA = {
   // search / mi / idf / plugin へ移した（ADR-0622）。ここは活性化の規則だけ。
   description:
     "gkill find query. A filter activates when its value field is present and non-null; omit (or pass null for) fields " +
-    "you don't filter by. [] means 'filter enabled but matches nothing' (except timeis_words: [], which means 'only kyous " +
-    "covered by any TimeIs'). Datetime fields use ISO-8601 strings. Payload shapes per data_type, the Mi / TimeIs " +
-    "projections and how to read idf files: gkill_get_mcp_help topics search, mi and idf.",
+    "you don't filter by. [] means 'filter enabled but matches nothing' for tags / hide_tags / reps / rep_types / ids / " +
+    "timeis_tags / period_of_time_week_of_days. Two exceptions: words / not_words: [] apply NO keyword condition " +
+    "(everything passes — an empty keyword list does not narrow), and timeis_words: [] means 'only kyous covered by any " +
+    "TimeIs'. Datetime fields are RFC 3339 strings with a timezone offset (or YYYY-MM-DD where noted). Payload shapes " +
+    "per data_type, the Mi / TimeIs projections and how to read idf files: gkill_get_mcp_help topics search, mi and idf.",
   properties: {
     update_cache: {
       type: "boolean",
@@ -43,10 +45,10 @@ export const FIND_QUERY_SCHEMA = {
     words: {
       type: "array",
       description:
-        "Keywords to match (case-insensitive substring). Matched against each type's text fields (kmemo content; urlog url/title/description; nlog title/shop/amount; timeis title; kc title/value; mi title/board name; lantana mood value as text; idf file path and .md/.txt body; git commit message; plugin-defined text) and against attached texts; an entry whose ID starts with the keyword also matches. Omit or pass null for no keyword filter; [] (or only blank strings) applies no keyword condition, i.e. everything passes.",
+        "Keywords to match (case-insensitive substring). Matched against each type's text fields (kmemo content; urlog url/title/description; nlog title/shop/amount; timeis title; kc title/value; mi title/board name; lantana mood value as text; idf file path and .md/.txt body; git commit message; plugin-defined text) and against attached texts; an entry whose ID starts with the keyword also matches. Omit or pass null for no keyword filter. [] applies NO keyword condition — everything passes, the result is NOT narrowed (unlike tags / reps / ids, where [] matches nothing); pass at least one keyword to filter.",
       items: { type: "string" },
     },
-    words_and: { type: "boolean", description: "AND logic for words (true=all must match, false=any)." },
+    words_and: { type: "boolean", description: "AND logic for words (true=all must match, false=any). No effect when words is omitted or empty." },
     not_words: {
       type: "array",
       description:
@@ -89,7 +91,7 @@ export const FIND_QUERY_SCHEMA = {
     timeis_tags_and: { type: "boolean", description: "AND logic for timeis_tags." },
     calendar_start_date: {
       type: "string",
-      description: `Start of the date-range filter (INCLUSIVE); set to activate. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
+      description: `Start of the date-range filter (INCLUSIVE); set to activate. Date-only values expand to 00:00:00 local. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
     },
     calendar_end_date: {
       type: "string",
@@ -98,14 +100,15 @@ export const FIND_QUERY_SCHEMA = {
     map_radius: {
       type: "number",
       description:
-        "Search radius in meters. The map filter activates only when map_latitude, map_longitude and map_radius are all set.",
+        "Search radius in METERS (500 = 500 m), greater than 0. The map filter needs all three of map_latitude, map_longitude and map_radius: " +
+        "a call with only one or two of them is rejected here, because gkill would otherwise silently ignore the location condition.",
     },
-    map_latitude: { type: "number", description: "Center latitude. See map_radius for activation." },
-    map_longitude: { type: "number", description: "Center longitude. See map_radius for activation." },
+    map_latitude: { type: "number", description: "Center latitude in degrees (-90..90). Requires map_longitude and map_radius too — see map_radius." },
+    map_longitude: { type: "number", description: "Center longitude in degrees (-180..180). Requires map_latitude and map_radius too — see map_radius." },
     // 5つのinclude_*_miはMiのSQL射影そのものを選ぶスイッチで、既定(全false)では
     // 検索が0件になる。「絞り込み」ではなく「行の供給源」なので、
     // for_mi=trueのときは最低1つtrueにしないと何も返らないことを明記する。
-    include_create_mi: { type: "boolean", description: "Include the created-time projection of Mi tasks (data_type mi_create). Effective only when for_mi=true. The five include_*_mi flags select which projections supply rows — with all five false (the default) a for_mi search returns ZERO entries, so set at least one (include_create_mi:true is the usual start)." },
+    include_create_mi: { type: "boolean", description: "Include the created-time projection of Mi tasks (data_type mi_create). Effective only when for_mi=true. The five include_*_mi flags select which projections supply rows; when for_mi is set with none of them, this one is assumed (and warnings[] says so) — set the others explicitly to look at check / deadline / estimate timestamps." },
     include_check_mi: { type: "boolean", description: "Include the checked-time projection (data_type mi_check). Effective only when for_mi=true; see include_create_mi." },
     include_limit_mi: { type: "boolean", description: "Include the deadline projection — only tasks with a limit_time (data_type mi_limit). Effective only when for_mi=true; see include_create_mi." },
     include_start_mi: { type: "boolean", description: "Include the estimated-start projection — only tasks with an estimate_start_time (data_type mi_start). Effective only when for_mi=true; see include_create_mi." },
@@ -122,7 +125,7 @@ export const FIND_QUERY_SCHEMA = {
       description: `Filter by last update time (records updated after this time); set to activate. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
     },
     is_image_only: { type: "boolean", description: "Return only entries that have images attached." },
-    for_mi: { type: "boolean", description: "Restrict the search to task entries — BOTH Mi and MiReKyou. Requires at least one include_*_mi flag, otherwise zero entries. Also decides which projection you see (with for_mi: mi_sort_type; without it: one collapsed representative per task). Details: gkill_get_mcp_help topic:mi." },
+    for_mi: { type: "boolean", description: "Restrict the search to task entries — BOTH Mi and MiReKyou. Pair it with the include_*_mi flags that choose the timestamp projection (include_create_mi is assumed when none is given, with a note in warnings[]). Also decides which projection you see (with for_mi: mi_sort_type; without it: one collapsed representative per task). Details: gkill_get_mcp_help topic:mi." },
     period_of_time_start_time_second: {
       type: "integer",
       description: "Start of time-of-day window, seconds from 00:00:00 (0-86399); set to activate time-of-day filtering.",
@@ -154,5 +157,7 @@ export const FIND_QUERY_SCHEMA = {
     // only_latest_data（MCP 層が常に true へ強制する）と旧 use_X フラグはここに載せない。
     // normalizeKyouQuery は今までどおり受理し、届いたら古いスキーマの証拠として警告する（ADR-0620）。
   },
-  additionalProperties: true,
+  // 未知キーは normalizeKyouQuery が拒否する。true のままだと「スキーマ上は何でも通る」と読めて
+  // 実際は拒否される不一致になっていた（2026-09-18 の実利用報告）。廃止済みキーは公開しないが受理は続く。
+  additionalProperties: false,
 };

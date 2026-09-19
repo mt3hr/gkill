@@ -210,12 +210,65 @@ describe("normalizeKyouQuery", () => {
   });
 
   test("validates number fields", () => {
-    const result = normalizeKyouQuery({ map_latitude: 35.6762 });
+    const result = normalizeKyouQuery({ map_latitude: 35.6762, map_longitude: 139.6503, map_radius: 500 });
     expect(result.map_latitude).toBe(35.6762);
+    expect(result.map_longitude).toBe(139.6503);
+    expect(result.map_radius).toBe(500);
   });
 
   test("throws for non-number in number field", () => {
-    expect(() => normalizeKyouQuery({ map_latitude: "35.6762" })).toThrow(GkillApiError);
+    expect(() => normalizeKyouQuery({ map_latitude: "35.6762", map_longitude: 139.65, map_radius: 500 })).toThrow(GkillApiError);
+  });
+
+  // 地図条件は3値揃わないと gkill が黙って無視する（map_latitude だけでも通常検索と同じ件数が返る。
+  // 2026-09-18 の実利用報告）。入口で欠けた欄を名指しして断る（ADR-0625）。
+  test("rejects a partial map filter and names the missing fields", () => {
+    let thrown;
+    try {
+      normalizeKyouQuery({ map_latitude: 35.6762 });
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBeInstanceOf(GkillApiError);
+    expect(thrown.detail?.field).toBe("query.map_longitude");
+    expect(thrown.message).toContain("map_longitude, map_radius");
+    expect(thrown.message).toContain("meters");
+    expect(() => normalizeKyouQuery({ map_latitude: 35.6762, map_longitude: 139.65 })).toThrow(/query.map_radius/);
+  });
+
+  test("rejects out-of-range map values", () => {
+    expect(() => normalizeKyouQuery({ map_latitude: 95, map_longitude: 139.65, map_radius: 500 })).toThrow(/between -90 and 90/);
+    expect(() => normalizeKyouQuery({ map_latitude: 35, map_longitude: 200, map_radius: 500 })).toThrow(/between -180 and 180/);
+    expect(() => normalizeKyouQuery({ map_latitude: 35, map_longitude: 139.65, map_radius: 0 })).toThrow(/greater than 0/);
+  });
+
+  // 未知キーは全部集めて1回で返し、廃止済み（only_latest_data / use_*）は allowed に載せない。
+  test("reports every unknown query key at once and hides deprecated keys from allowed", () => {
+    let thrown;
+    try {
+      normalizeKyouQuery({ wordz: ["a"], tagz: ["b"] });
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBeInstanceOf(GkillApiError);
+    expect(thrown.detail?.field).toBe("query.wordz");
+    expect(thrown.detail?.unknown).toEqual(["wordz", "tagz"]);
+    expect(thrown.message).toContain("2 unknown names");
+    expect(thrown.detail?.allowed).not.toContain("only_latest_data");
+    expect(thrown.detail?.allowed).not.toContain("use_tags");
+    expect(thrown.detail?.allowed).toContain("words");
+  });
+
+  test("names the missing timezone offset instead of just saying ISO-8601", () => {
+    let thrown;
+    try {
+      normalizeKyouQuery({ calendar_start_date: "2026-09-18T00:00:00" });
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBeInstanceOf(GkillApiError);
+    expect(thrown.message).toContain("no timezone offset");
+    expect(thrown.message).toContain("2026-09-18T00:00:00+09:00");
   });
 
   test("validates integer fields with min/max", () => {
@@ -1481,5 +1534,49 @@ describe("normalizeStatusArgs", () => {
   test("rejects any argument (so the tool never lands in the stale-schema revival table)", () => {
     expect(() => normalizeStatusArgs({ locale_name: "ja" })).toThrow(/arguments\.locale_name.*is not supported/);
     expect(STALE_SCHEMA_ARG_KINDS_BY_TOOL.has("gkill_status")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 2026-09-19 の MCP 実利用報告への対応（ADR-0626 / 0627 / 0629 / 0630）
+// ---------------------------------------------------------------------------
+describe("for_mi default projection, opt-in flags and history offset", () => {
+  test("normalizeKyouArgs assumes include_create_mi for a bare for_mi and records a note", () => {
+    const result = normalizeKyouArgs({ query: { for_mi: true } });
+    expect(result.query.include_create_mi).toBe(true);
+    expect(result.notes).toHaveLength(1);
+    expect(result.notes[0]).toContain("include_create_mi:true was assumed");
+    expect(normalizeKyouArgs({ query: { for_mi: true, include_check_mi: true } }).notes).toBeUndefined();
+    expect(normalizeKyouArgs({ query: { for_mi: true, include_check_mi: true } }).query.include_create_mi).toBeUndefined();
+    expect(normalizeKyouArgs({ query: {} }).notes).toBeUndefined();
+  });
+
+  test("normalizeKyouArgs defaults include_attached_ids / include_file_urls to false and revives stale strings", () => {
+    const defaults = normalizeKyouArgs({});
+    expect(defaults.include_attached_ids).toBe(false);
+    expect(defaults.include_file_urls).toBe(false);
+    expect(normalizeKyouArgs({ include_attached_ids: true, include_file_urls: true }).include_file_urls).toBe(true);
+    expect(() => normalizeKyouArgs({ include_file_urls: "yes" })).toThrow(GkillApiError);
+    // 古い一覧を握るクライアントからは正規JSON文字列で届く
+    expect(normalizeKyouArgs({ include_attached_ids: "true" }).include_attached_ids).toBe(true);
+  });
+
+  test("normalizeKyouHistoryArgs accepts offset (also as a stale-schema string) and rejects a negative one", () => {
+    expect(normalizeKyouHistoryArgs({ id: "a", data_type: "kmemo" }).offset).toBe(0);
+    expect(normalizeKyouHistoryArgs({ id: "a", data_type: "kmemo", offset: 40 }).offset).toBe(40);
+    expect(normalizeKyouHistoryArgs({ id: "a", data_type: "kmemo", offset: "40" }).offset).toBe(40);
+    expect(() => normalizeKyouHistoryArgs({ id: "a", data_type: "kmemo", offset: -1 })).toThrow(GkillApiError);
+  });
+
+  test("top-level unknown keys hide deprecated names from allowed", () => {
+    let thrown;
+    try {
+      normalizeKyouArgs({ limitt: 3 });
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBeInstanceOf(GkillApiError);
+    expect(thrown.detail.allowed).not.toContain("include_id");
+    expect(thrown.detail.allowed).toContain("include_attached_ids");
   });
 });

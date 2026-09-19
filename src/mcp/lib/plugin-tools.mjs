@@ -38,9 +38,11 @@ export const PLUGIN_TOOLS = [
       "data into gkill — for example Claude Code / Claude.ai / ChatGPT conversation logs, Fitbit daily metrics, " +
       "Google location history. " +
       "IMPORTANT — plugins do not all play the same role, and emits_kyou tells you which one you are looking at. " +
-      "When emits_kyou is true the plugin supplies kyou: filter gkill_get_kyous with query.reps (its rep_name, or " +
-      "any entry of rep_names when that field is present — a plugin that wraps several repositories, such as Git " +
-      "repositories archived as zip, names each of them and its kyou carry those names, not rep_name) or " +
+      "When emits_kyou is true the plugin supplies kyou: filter gkill_get_kyous with query.reps using an entry of " +
+      "rep_names[] (ALWAYS present: the rep names its kyou actually carry — a plugin that wraps several repositories, " +
+      "such as Git repositories archived as zip, lists each repository there, and rep_names is [] until its index is " +
+      "built) — rep_name itself is the plugin's manifest label and is NOT a query.reps value unless it also appears " +
+      "in rep_names — or " +
       "the top-level data_types (its data_type), and pass include_plugin_content:true to get their bodies in the " +
       "same call. query.rep_types does NOT work for plugins — they are not in the canonical rep-type vocabulary " +
       "(a plugin whose provides names a typed kind such as kc or git_commit_log is the exception: its records also " +
@@ -50,8 +52,8 @@ export const PLUGIN_TOOLS = [
       "provides:[\"gpslog\"] means gkill_get_gps_log. " +
       "provides lists what the plugin supplies beyond kyou metadata (kmemo, kc, urlog, nlog, lantana, timeis, mi, " +
       "git_commit_log, tag, text, notification, gpslog); an absent provides means it supplies plain kyou only. " +
-      "Response fields: plugins[] with name, version, description, data_type, rep_name, rep_names (only when the " +
-      "plugin declares several), emits_kyou, provides, " +
+      "Response fields: plugins[] with name, version, description, data_type, rep_name (manifest label), rep_names " +
+      "(the query.reps values; always present for kyou-emitting plugins), emits_kyou, provides, " +
       "is_alive (responds to a ping), " +
       "process_running (started; read without side effects), has_last_error, typed_index, and gps_index. " +
       "has_last_error is true when the plugin process wrote something to stderr — that is the signal to look at " +
@@ -224,24 +226,25 @@ export async function handlePluginToolCall(call, name, args) {
 }
 
 // isPluginPayload は get_kyous のペイロードがプラグイン由来かを判定する。
-// 本文取得には rep_name と kyou_id の両方が要るので、揃っていないものは対象外にする。
 function isPluginPayload(value) {
+  return value !== null && typeof value === "object" && value.kind === "plugin";
+}
+
+// hasPluginContentKey は本文取得に要る rep_name と id を Kyou が持つかを判定する。
+// 2026-09-19 までペイロード側にも rep_name / kyou_id が写されていたが、Kyou 側と常に同値で
+// 毎件3欄が二重に並ぶだけだったので落とした（ADR-0629）。鍵は Kyou 側から取る。
+function hasPluginContentKey(kyou) {
   return (
-    value !== null &&
-    typeof value === "object" &&
-    value.kind === "plugin" &&
-    typeof value.rep_name === "string" &&
-    value.rep_name !== "" &&
-    typeof value.kyou_id === "string" &&
-    value.kyou_id !== ""
+    typeof kyou.rep_name === "string" && kyou.rep_name !== "" && typeof kyou.id === "string" && kyou.id !== ""
   );
 }
 
 /**
- * collectPluginPayloads は kyous[] から kind:"plugin" のペイロードを取得順に集める。
+ * collectPluginPayloads は kyous[] から kind:"plugin" のエントリを取得順に集める。
  *
- * @param {unknown} kyous get_kyous のレスポンスの kyous 配列。
- * @returns {Array<object>} プラグインペイロードの配列 (元オブジェクトの参照)。
+ * @param {Array<object>} kyous get_kyous のレスポンスの kyous 配列。
+ * @returns {Array<{rep_name: string, kyou_id: string, payload: object}>} 本文取得の鍵（Kyou 側の
+ *   rep_name / id）と、本文を書き込む先のペイロード (元オブジェクトの参照)。
  */
 export function collectPluginPayloads(kyous) {
   if (!Array.isArray(kyous)) {
@@ -252,8 +255,8 @@ export function collectPluginPayloads(kyous) {
     if (kyou === null || typeof kyou !== "object") {
       continue;
     }
-    if (isPluginPayload(kyou.payload)) {
-      payloads.push(kyou.payload);
+    if (isPluginPayload(kyou.payload) && hasPluginContentKey(kyou)) {
+      payloads.push({ rep_name: kyou.rep_name, kyou_id: kyou.id, payload: kyou.payload });
     }
   }
   return payloads;
@@ -374,8 +377,8 @@ export async function inlinePluginContents(call, kyous, options = {}) {
   // 件数上限は「取得しにいく対象の数」に対して掛ける。
   const entries = [];
   const entryByKey = new Map();
-  for (const payload of payloads) {
-    const key = `${payload.rep_name} ${payload.kyou_id}`;
+  for (const { rep_name, kyou_id, payload } of payloads) {
+    const key = `${rep_name} ${kyou_id}`;
     const hit = entryByKey.get(key);
     if (hit) {
       hit.payloads.push(payload);
@@ -385,7 +388,7 @@ export async function inlinePluginContents(call, kyous, options = {}) {
       markSkipped([payload], "max_kyous");
       continue;
     }
-    const entry = { rep_name: payload.rep_name, kyou_id: payload.kyou_id, payloads: [payload] };
+    const entry = { rep_name, kyou_id, payloads: [payload] };
     entryByKey.set(key, entry);
     entries.push(entry);
   }

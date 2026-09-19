@@ -18,9 +18,10 @@ import {
   encodeGpsCursor,
   decodeGpsCursor,
   summarizeReadToolPayload,
+  enforceKyousSizeBudget,
 } from "../lib/read-handlers.mjs";
 import { normalizeGpsArgs } from "../lib/normalization.mjs";
-import { applyFileLinks } from "../lib/payload.mjs";
+import { applyFileLinks, MINT_FILE_LINKS } from "../lib/payload.mjs";
 import { FileLinkStore } from "../lib/file-link-store.mjs";
 import { GkillApiError } from "../lib/errors.mjs";
 import { MAX_IDF_FILE_BYTES } from "../lib/constants.mjs";
@@ -999,5 +1000,187 @@ describe("handleReadToolCall — gkill_get_all_rep_names", () => {
     // "o" は GoogleLocation と Kmemo に一致する（Fitbit には無い）
     // gkill 側には絞り込みの口が無いので送らない（送ると未知キーで弾かれる）
     expect(ctx.client.callApi).toHaveBeenCalledWith("/api/get_all_rep_names", {}, true, "sid-1");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 2026-09-19 の MCP 実利用報告への対応（ADR-0624 / 0626 / 0627 / 0629 / 0630）
+// ---------------------------------------------------------------------------
+describe("enforceKyousSizeBudget — max_size_mb after plugin content is inlined", () => {
+  function kyou(id, text) {
+    return {
+      id,
+      rep_name: "P",
+      data_type: "t",
+      related_time: `2026-09-1${id}T00:00:00+09:00`,
+      payload: { kind: "plugin", content_status: "ok", content_text: text },
+    };
+  }
+
+  test("holds back the entries that push the page over the budget and moves the cursor", () => {
+    const payload = {
+      kyous: [kyou(1, "a".repeat(300)), kyou(2, "b".repeat(300)), kyou(3, "c".repeat(300))],
+      returned_count: 3,
+      remaining_count: 0,
+      has_more: false,
+      plugin_content: { requested: 3, inlined: 3, truncated: 0, skipped: 0, errors: 0, total_text_length: 900 },
+    };
+    const oneEntry = Buffer.byteLength(JSON.stringify(payload.kyous[0]), "utf8");
+    enforceKyousSizeBudget(payload, (oneEntry * 2) / (1024 * 1024));
+
+    expect(payload.kyous.map((entry) => entry.id)).toEqual([1, 2]);
+    expect(payload.returned_count).toBe(2);
+    expect(payload.remaining_count).toBe(1);
+    expect(payload.has_more).toBe(true);
+    // Go の encodeMCPCursor と同じ {related_time}::{id}
+    expect(payload.next_cursor).toBe("2026-09-12T00:00:00+09:00::2");
+    expect(payload.warnings.join(" ")).toMatch(/1 of 3 entries were held back/);
+    expect(payload.plugin_content.inlined).toBe(2);
+    expect(payload.plugin_content.total_text_length).toBe(600);
+  });
+
+  test("returns a first entry that alone exceeds the budget, with a warning", () => {
+    const payload = { kyous: [kyou(1, "a".repeat(3000)), kyou(2, "b")], returned_count: 2, remaining_count: 0, has_more: false };
+    enforceKyousSizeBudget(payload, 100 / (1024 * 1024));
+
+    expect(payload.kyous).toHaveLength(1);
+    expect(payload.has_more).toBe(true);
+    expect(payload.warnings.some((warning) => /exceeds max_size_mb/.test(warning))).toBe(true);
+  });
+
+  test("leaves a page within the budget untouched", () => {
+    const payload = { kyous: [kyou(1, "a")], returned_count: 1, remaining_count: 4, has_more: true, next_cursor: "keep" };
+    enforceKyousSizeBudget(payload, 1);
+    expect(payload).toEqual({ kyous: [kyou(1, "a")], returned_count: 1, remaining_count: 4, has_more: true, next_cursor: "keep" });
+  });
+});
+
+describe("handleReadToolCall — gkill_get_kyous 2026-09-19 additions", () => {
+  function page(extra = {}) {
+    return { kyous: [], returned_count: 0, remaining_count: 0, has_more: false, ...extra };
+  }
+
+  test("forwards include_attached_ids and marks file-link minting only when asked", async () => {
+    const ctx = makeCtx(async () => page());
+    const plain = await handleReadToolCall(ctx, "gkill_get_kyous", {});
+    expect(ctx.client.callApi.mock.calls[0][1].include_attached_ids).toBe(false);
+    expect(plain[MINT_FILE_LINKS]).toBeUndefined();
+
+    const asked = await handleReadToolCall(ctx, "gkill_get_kyous", { include_attached_ids: true, include_file_urls: true });
+    expect(ctx.client.callApi.mock.calls[1][1].include_attached_ids).toBe(true);
+    expect(asked[MINT_FILE_LINKS]).toBe(true);
+    // 印は Symbol なので JSON には出ない
+    expect(JSON.stringify(asked)).not.toContain("mint_file_links");
+  });
+
+  test("for_mi without a projection flag assumes include_create_mi and says so in warnings", async () => {
+    const ctx = makeCtx(async () => page({ warnings: ["from gkill"] }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_kyous", { query: { for_mi: true } });
+    expect(ctx.client.callApi.mock.calls[0][1].query.include_create_mi).toBe(true);
+    expect(payload.warnings[0]).toMatch(/include_create_mi:true was assumed/);
+    expect(payload.warnings[1]).toBe("from gkill");
+  });
+
+  test("for_mi with an explicit projection flag is left alone", async () => {
+    const ctx = makeCtx(async () => page());
+    const payload = await handleReadToolCall(ctx, "gkill_get_kyous", { query: { for_mi: true, include_limit_mi: true } });
+    expect(ctx.client.callApi.mock.calls[0][1].query.include_create_mi).toBeUndefined();
+    expect(payload.warnings).toBeUndefined();
+  });
+});
+
+describe("handleReadToolCall — gkill_get_kyou_history offset and data_type", () => {
+  const HISTORIES = {
+    mi_histories: [
+      { id: "m1", data_type: "mi_check", update_time: "2026-01-03T00:00:00+09:00" },
+      { id: "m1", data_type: "mi_check", update_time: "2026-01-02T00:00:00+09:00" },
+      { id: "m1", data_type: "mi_create", update_time: "2026-01-01T00:00:00+09:00" },
+    ],
+  };
+
+  test("offset reads the older versions and next_offset points at the rest", async () => {
+    const ctx = makeCtx(async () => HISTORIES);
+    const first = await handleReadToolCall(ctx, "gkill_get_kyou_history", { id: "m1", data_type: "mi_start", limit: 1 });
+    expect(first.offset).toBe(0);
+    expect(first.has_more).toBe(true);
+    expect(first.next_offset).toBe(1);
+    // 版の data_type は射影名ではなくこの口の語彙（エンティティ名）
+    expect(first.versions[0].data_type).toBe("mi");
+
+    const last = await handleReadToolCall(ctx, "gkill_get_kyou_history", { id: "m1", data_type: "mi", limit: 1, offset: 2 });
+    expect(last.returned_count).toBe(1);
+    expect(last.versions[0].update_time).toBe("2026-01-01T00:00:00+09:00");
+    expect(last.has_more).toBe(false);
+    expect(last.next_offset).toBeUndefined();
+
+    const beyond = await handleReadToolCall(ctx, "gkill_get_kyou_history", { id: "m1", data_type: "mi", offset: 5 });
+    expect(beyond.returned_count).toBe(0);
+    expect(beyond.has_more).toBe(false);
+  });
+
+  test("summary tells where to continue", () => {
+    const summary = summarizeReadToolPayload("gkill_get_kyou_history", {
+      version_count: 3, returned_count: 1, offset: 1, has_more: true, next_offset: 2, latest_is_deleted: false,
+    });
+    expect(summary).toContain("from offset 1");
+    expect(summary).toContain("offset:2");
+  });
+});
+
+describe("handleReadToolCall — gkill_get_application_config compact / contains / max_size_mb", () => {
+  const CONFIG = {
+    user_id: "u",
+    device: "d",
+    tag_struct: [],
+    rep_struct: [
+      {
+        name: "dir",
+        is_dir: true,
+        children: [
+          { name: "Kmemo_A", rep_name: "Kmemo_A", is_dir: false, children: null, ignore_check_rep_rykv: false, check_when_inited: true },
+          { name: "別名", rep_name: "Kmemo_B", is_dir: false, children: null, ignore_check_rep_rykv: true, check_when_inited: false },
+        ],
+      },
+    ],
+  };
+
+  test("compact drops default-valued node fields and keeps the visibility flags", async () => {
+    const ctx = makeCtx(async () => ({ application_config: CONFIG }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_application_config", { fields: ["rep_struct"] });
+    const [dir] = payload.rep_struct;
+    const [a, b] = dir.children;
+    expect(dir.is_dir).toBe(true);
+    expect(a).toEqual({ rep_name: "Kmemo_A", check_when_inited: true });
+    expect(b).toEqual({ name: "別名", rep_name: "Kmemo_B", ignore_check_rep_rykv: true, check_when_inited: false });
+  });
+
+  test("compact:false returns the raw tree", async () => {
+    const ctx = makeCtx(async () => ({ application_config: CONFIG }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_application_config", { fields: ["rep_struct"], compact: false });
+    const [a] = payload.rep_struct[0].children;
+    expect(a.children).toBeNull();
+    expect(a.is_dir).toBe(false);
+    expect(a.name).toBe("Kmemo_A");
+  });
+
+  test("contains keeps matching leaves and drops folders left empty", async () => {
+    const ctx = makeCtx(async () => ({ application_config: CONFIG }));
+    const hit = await handleReadToolCall(ctx, "gkill_get_application_config", { fields: ["rep_struct"], contains: "kmemo_b" });
+    expect(hit.rep_struct).toHaveLength(1);
+    expect(hit.rep_struct[0].children.map((leaf) => leaf.rep_name)).toEqual(["Kmemo_B"]);
+
+    const miss = await handleReadToolCall(ctx, "gkill_get_application_config", { fields: ["rep_struct"], contains: "zzz" });
+    expect(miss.rep_struct).toEqual([]);
+  });
+
+  test("max_size_mb replaces the largest struct with omitted_bytes and warns", async () => {
+    const ctx = makeCtx(async () => ({ application_config: CONFIG }));
+    const payload = await handleReadToolCall(ctx, "gkill_get_application_config", {
+      fields: ["rep_struct", "tag_struct"],
+      max_size_mb: 100 / (1024 * 1024),
+    });
+    expect(payload.rep_struct.omitted_bytes).toBeGreaterThan(0);
+    expect(payload.tag_struct).toEqual([]);
+    expect(payload.warnings.join(" ")).toContain("rep_struct");
   });
 });

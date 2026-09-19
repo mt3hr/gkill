@@ -2,12 +2,15 @@ package gkill_server_api
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
@@ -77,12 +80,39 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 	device := auth.Device
 	repositories := auth.Repositories
 
-	// 冪等キー付きの再送で、既に成功済みなら再実行せず成功で返す（二重登録防止）。
+	// create_app / update_app に載せるアプリ名。無指定はメモ帳と同じ "gkill_kftl"。
+	// Wear companion は "gkill_wear" を送り、手打ちのメモ帳と区別できるようにしている（2026-09-11）。
+	// 冪等キーの指紋にも入るので、再送判定より前に決める。
+	createApp := strings.TrimSpace(request.CreateApp)
+	if createApp == "" {
+		createApp = "gkill_kftl"
+	}
+
+	// 冪等キー付きの再送で、既に成功済みなら再実行せず元の結果を返す（二重登録防止）。
 	// キーは利用者ごとに名前空間を切る。
+	//
+	// 同じキーで**別の本文**が届いたら 409 で断り、何も書かない。2026-09-19 までは本文を見ずに
+	// 「成功・created は空」で返しており、保存されていない本文にも成功メッセージが返っていた
+	// （2026-09-18 の MCP 実利用報告）。同じ本文なら元の created[] を replayed:true で返す ——
+	// 応答を受け取り損ねた呼び出し側が再送で ID を回収できる（ADR-0510）。
 	idempotencyKey := ""
+	fingerprint := ""
 	if request.IdempotencyKey != "" {
 		idempotencyKey = userID + ":" + request.IdempotencyKey
-		if kftlIdempotencyStore.alreadyDone(idempotencyKey) {
+		fingerprint = kftlSubmissionFingerprint(request.KFTLText, createApp)
+		if entry, ok := kftlIdempotencyStore.lookup(idempotencyKey); ok {
+			if entry.fingerprint != fingerprint {
+				err := fmt.Errorf("error at submit kftl text: idempotency key reused with a different body user id = %s device = %s", userID, device)
+				slog.Log(r.Context(), gkill_log.Debug, "error at submit kftl text: idempotency key conflict", "error", fmt.Sprintf("%q", err))
+				response.Errors = append(response.Errors, &message.GkillError{
+					ErrorCode:    message.SubmitKFTLTextIdempotencyKeyConflictError,
+					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "KFTL_IDEMPOTENCY_KEY_CONFLICT_MESSAGE"}),
+					Cause:        err,
+				})
+				return
+			}
+			response.Created = append([]*req_res.SubmitKFTLTextCreated{}, entry.created...)
+			response.Replayed = true
 			response.Messages = append(response.Messages, &message.GkillMessage{
 				MessageCode: message.SubmitKFTLTextSuccessMessage,
 				Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_SUBMIT_KFTL_TEXT_MESSAGE"}),
@@ -114,13 +144,6 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-	}
-
-	// create_app / update_app に載せるアプリ名。無指定はメモ帳と同じ "gkill_kftl"。
-	// Wear companion は "gkill_wear" を送り、手打ちのメモ帳と区別できるようにしている（2026-09-11）。
-	createApp := strings.TrimSpace(request.CreateApp)
-	if createApp == "" {
-		createApp = "gkill_kftl"
 	}
 
 	statement := &kftl.KFTLStatement{
@@ -168,10 +191,11 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// 成功したときだけ記録する。以降この利用者の同じキーの再送は再実行されずに畳まれる。
+	// 成功したときだけ、本文の指紋と created[] ごと記録する。以降この利用者の同じキーの再送は
+	// 再実行されずに畳まれ、同じ本文なら元の created[] が返る。
 	// 意図的な再送は別メッセージ＝別キーなので畳まれない（監査 S3-wear）。
 	if idempotencyKey != "" {
-		kftlIdempotencyStore.markDone(idempotencyKey)
+		kftlIdempotencyStore.markDone(idempotencyKey, fingerprint, response.Created)
 	}
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
@@ -214,20 +238,32 @@ func formatKFTLInputErrorMessage(localizer *i18n.Localizer, inputError *kftl.KFT
 }
 
 // toSubmitKFTLTextCreated は kftl パッケージの記録を応答DTOへ写す。
+//
+// 0件でも非 nil の空スライスを返し、JSON では `created: []` になる（`null` にしない。
+// 説明文が「失敗時は created[] が空」と言っているのに実応答は `null` だった。2026-09-18 の MCP 実利用報告）。
+// related_time は保存層（sqlite3impl.TimeLayout）と同じ秒精度へ丸める —— 丸めないと
+// Windows の時計解像度で 7 桁の小数秒が応答にだけ載り、保存値と一致しない。
 func toSubmitKFTLTextCreated(records []kftl.KFTLCreatedRecord) []*req_res.SubmitKFTLTextCreated {
-	if len(records) == 0 {
-		return nil
-	}
 	created := make([]*req_res.SubmitKFTLTextCreated, 0, len(records))
 	for _, record := range records {
 		created = append(created, &req_res.SubmitKFTLTextCreated{
 			ID:          record.ID,
 			DataType:    record.DataType,
 			Updated:     record.Updated,
-			RelatedTime: record.RelatedTime,
+			RelatedTime: record.RelatedTime.Truncate(time.Second),
 		})
 	}
 	return created
+}
+
+// kftlSubmissionFingerprint は冪等キーの衝突判定に使う本文の指紋。
+//
+// 本文（kftl_text）と create_app を SHA-256 で畳む。create_app も入れるのは、同じ本文でも
+// 名乗るアプリが違えば別の記録になるため。本文そのものは台帳に置かない（メモリに利用者の本文を
+// 10分間残さない）。
+func kftlSubmissionFingerprint(kftlText, createApp string) string {
+	sum := sha256.Sum256([]byte(kftlText + "\x00" + createApp))
+	return hex.EncodeToString(sum[:])
 }
 
 // kftlFindKyousFunc は KFTL の打刻終了（`/end` 系）が対象を探すときの Kyou 検索。

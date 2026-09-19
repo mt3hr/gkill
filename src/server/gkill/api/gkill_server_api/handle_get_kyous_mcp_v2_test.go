@@ -4,6 +4,7 @@ package gkill_server_api
 // 未知値警告）の回帰テスト。契約: documents/adr/0604-mcp-composite-cursor-strict-limits.md
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -305,11 +306,11 @@ func TestHandleGetKyousMCP_NumFilter(t *testing.T) {
 	}
 }
 
-// git payload: addition/deletion の0が消えず、commit_hash が入る（omitempty除去の回帰）。
+// git payload: addition/deletion の0が消えず（omitempty除去の回帰）、commit_hash は持たない
+// （Kyou の id がハッシュそのもの。毎件 40 桁の二重持ちを落とした。ADR-0629）。
 func TestHandleGetKyousMCP_GitPayloadZeroDiffAndHash(t *testing.T) {
 	dto := req_res.GitPayloadMCPDTO{
 		Kind:          "git_commit_log",
-		CommitHash:    "3f9e40c1",
 		CommitMessage: "empty diff commit",
 		Addition:      0,
 		Deletion:      0,
@@ -322,10 +323,84 @@ func TestHandleGetKyousMCP_GitPayloadZeroDiffAndHash(t *testing.T) {
 	if err := json.Unmarshal(encoded, &decoded); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
-	for _, key := range []string{"addition", "deletion", "commit_hash"} {
+	for _, key := range []string{"addition", "deletion"} {
 		if _, ok := decoded[key]; !ok {
 			t.Errorf("%q がJSONから消えている(omitempty除去の回帰): %s", key, encoded)
 		}
+	}
+	if _, ok := decoded["commit_hash"]; ok {
+		t.Errorf("commit_hash が復活している（Kyou の id と同値の二重持ち）: %s", encoded)
+	}
+}
+
+// 未知の mi_board_name は警告で名指しする（tags / reps / data_types と同じ。以前は無警告で 0 件だった）。
+func TestHandleGetKyousMCP_UnknownMiBoardNameWarns(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+	addTestMiForMCP(t, tsURL, sessionID, "板名警告のタスク", "realboard", nil)
+
+	unknown := getKyousMCP(t, tsURL, sessionID, map[string]any{"for_mi": true, "include_create_mi": true, "mi_board_name": "no_such_board"}, nil)
+	if !slices.ContainsFunc(unknown.Warnings, func(w string) bool { return strings.Contains(w, `unknown mi_board_name "no_such_board"`) }) {
+		t.Errorf("未知の板名が警告されていない: %v", unknown.Warnings)
+	}
+	known := getKyousMCP(t, tsURL, sessionID, map[string]any{"for_mi": true, "include_create_mi": true, "mi_board_name": "realboard"}, nil)
+	if slices.ContainsFunc(known.Warnings, func(w string) bool { return strings.Contains(w, "unknown mi_board_name") }) {
+		t.Errorf("実在する板名に警告が出ている: %v", known.Warnings)
+	}
+}
+
+// 地図条件の3値が揃わないときは警告で名指しする（欠けると地図条件ごと黙って無視される）。
+func TestPartialMapFilterWarning(t *testing.T) {
+	lat, lng, radius := 35.0, 135.0, 500.0
+	if got := partialMapFilterWarning(&find.FindQuery{}); got != "" {
+		t.Errorf("地図条件なしで警告が出ている: %q", got)
+	}
+	if got := partialMapFilterWarning(&find.FindQuery{MapLatitude: &lat, MapLongitude: &lng, MapRadius: &radius}); got != "" {
+		t.Errorf("3値揃いで警告が出ている: %q", got)
+	}
+	got := partialMapFilterWarning(&find.FindQuery{MapLatitude: &lat})
+	for _, want := range []string{"query.map_latitude is set", "map_longitude / map_radius is missing", "meters"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("警告に %q が無い: %q", want, got)
+		}
+	}
+}
+
+// group_by の week_of_day / hour は 0 件のバケットも並べる（定義域が有限なので省略しない）。
+func TestBucketizeMCPKyous_TimeKeyedBucketsAreComplete(t *testing.T) {
+	kyous := []reps.Kyou{{ID: "a", RelatedTime: time.Date(2026, 9, 20, 9, 0, 0, 0, time.Local)}} // 日曜 9 時
+	week, _, err := bucketizeMCPKyous(context.Background(), nil, kyous, "week_of_day")
+	if err != nil {
+		t.Fatalf("week_of_day: %v", err)
+	}
+	if len(week) != 7 || week[0].Key != "sunday" || week[0].Count != 1 || week[6].Key != "saturday" || week[6].Count != 0 {
+		t.Errorf("week_of_day のバケット = %+v, want 日〜土の7つ（0件も並ぶ）", week)
+	}
+	hour, _, err := bucketizeMCPKyous(context.Background(), nil, kyous, "hour")
+	if err != nil {
+		t.Fatalf("hour: %v", err)
+	}
+	if len(hour) != 24 || hour[0].Key != "00" || hour[9].Key != "09" || hour[9].Count != 1 || hour[23].Key != "23" {
+		t.Errorf("hour のバケット = %+v, want 00〜23 の24個（0件も並ぶ）", hour)
+	}
+}
+
+// include_attached_ids を立てたときだけ tag_entities / text_entities が組まれる（既定は tags[] だけ）。
+func TestHandleGetKyousMCP_AttachedIDsAreOptIn(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+	kmemoID := addTestKmemo(t, tsURL, sessionID, "付随IDのメモ")
+	addTestTagTo(t, tsURL, sessionID, kmemoID, "attachedidtag")
+
+	plain := getKyousMCP(t, tsURL, sessionID, map[string]any{"ids": []string{kmemoID}}, nil)
+	if len(plain.Kyous) != 1 || len(plain.Kyous[0].Tags) != 1 || plain.Kyous[0].TagEntities != nil {
+		t.Errorf("既定: tags=%v tag_entities=%v, want tags 1件 / tag_entities 無し", plain.Kyous[0].Tags, plain.Kyous[0].TagEntities)
+	}
+	withIDs := getKyousMCP(t, tsURL, sessionID, map[string]any{"ids": []string{kmemoID}}, map[string]any{"include_attached_ids": true})
+	if len(withIDs.Kyous) != 1 || len(withIDs.Kyous[0].TagEntities) != 1 || withIDs.Kyous[0].TagEntities[0].ID == "" {
+		t.Errorf("include_attached_ids: tag_entities=%v, want id 付き1件", withIDs.Kyous[0].TagEntities)
 	}
 }
 

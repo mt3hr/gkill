@@ -936,6 +936,7 @@
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "找不到转发任务",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "找不到转发任务的目标",
     "KFTL_MI_REKYOU_NO_WRITE_REP_MESSAGE_TITLE": "未配置用于保存转发任务的存储库",
+    "KFTL_IDEMPOTENCY_KEY_CONFLICT_MESSAGE": "相同的重发键被用于不同的内容。新的内容请使用新的键",
     "KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE": "{0}的请求已经设置",
     "NO_DEVICE_NAME": "无",
     "ALL_MI_BOARD_NAME": "全部",

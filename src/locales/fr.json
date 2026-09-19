@@ -936,6 +936,7 @@
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "Tâche de repost introuvable",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "Cible de la tâche de repost introuvable",
     "KFTL_MI_REKYOU_NO_WRITE_REP_MESSAGE_TITLE": "Aucun dépôt n'est configuré pour enregistrer les tâches de repost",
+    "KFTL_IDEMPOTENCY_KEY_CONFLICT_MESSAGE": "La même clé de renvoi a été réutilisée avec un contenu différent. Utilisez une nouvelle clé pour un nouveau contenu",
     "KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE": "La requête de {0} est déjà définie",
     "NO_DEVICE_NAME": "Aucun",
     "ALL_MI_BOARD_NAME": "Tous",

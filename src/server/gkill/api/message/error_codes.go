@@ -425,4 +425,12 @@ const (
 	// 利用者が設定→保存先で直せる不備なので、ステータスは 500 のまま error_kind を config、
 	// reason を write_rep_missing にしてあります（error_kind.go / error_reason.go）。
 	WriteRepMissingError = "ERR000422"
+
+	// SubmitKFTLTextIdempotencyKeyConflictError は /api/submit_kftl_text の再送キー（idempotency_key）が
+	// 別の本文で使い回されたときのものです。再送キーは「成功した送信の再配送を1回に畳む」ためのもので、
+	// サーバは成功した送信の本文の指紋（本文と create_app の SHA-256）と created[] を10分間控えています。
+	// 同じキー・同じ本文なら元の created[] を replayed:true で返し、指紋が違えば何も書かずにこのコードで
+	// 409 を返します。2026-09-19 までは本文を見ずに「成功・created は空」で返しており、保存されていない
+	// 本文にも成功メッセージが返っていました（ADR-0510）。
+	SubmitKFTLTextIdempotencyKeyConflictError = "ERR000423"
 )

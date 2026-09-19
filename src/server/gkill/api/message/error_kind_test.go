@@ -99,7 +99,7 @@ func TestErrorKinds_Distribution(t *testing.T) {
 		ErrorKindAuth:       4,
 		ErrorKindPermission: 6,
 		ErrorKindNotFound:   18,
-		ErrorKindConflict:   16,
+		ErrorKindConflict:   17,
 		ErrorKindTooLarge:   1,
 		ErrorKindRateLimit:  1,
 		ErrorKindConfig:     3,

@@ -433,11 +433,20 @@ func bucketizeMCPKyous(ctx context.Context, repositories *reps.GkillRepositories
 		}
 	case "hour":
 		timeKeyed = true
+		// 定義域が有限（24）なので 0 件の時間も並べる。空の時間が消えると「その時間の記録は無い」と
+		// 「バケットが出ていない」を呼び出し側が区別できない（2026-09-18 の実利用報告）。
+		for hour := range 24 {
+			counts[fmt.Sprintf("%02d", hour)] = 0
+		}
 		for _, kyou := range kyous {
 			counts[kyou.RelatedTime.In(time.Local).Format("15")]++
 		}
 	case "week_of_day":
 		timeKeyed = true
+		// 曜日も同じく7つ全部を並べる（0 件の曜日を省略しない）。
+		for _, key := range mcpWeekOfDayKeys {
+			counts[key] = 0
+		}
 		for _, kyou := range kyous {
 			counts[mcpWeekOfDayKeys[int(kyou.RelatedTime.In(time.Local).Weekday())]]++
 		}
@@ -912,6 +921,10 @@ func collectMCPUnknownValueWarnings(ctx context.Context, repositories *reps.Gkil
 	if warning := forMiWithoutProjectionWarning(query); warning != "" {
 		warnings = append(warnings, warning)
 	}
+	if warning := partialMapFilterWarning(query); warning != "" {
+		warnings = append(warnings, warning)
+	}
+	warnings = append(warnings, unknownMiBoardNameWarnings(ctx, repositories, query)...)
 
 	for _, repType := range query.RepTypes {
 		if !find.IsKyouRepType(repType) {
@@ -963,6 +976,10 @@ func collectMCPUnknownValueWarnings(ctx context.Context, repositories *reps.Gkil
 					continue
 				}
 				if hint := nonKyouPluginHint(repositories, repName); hint != "" {
+					warnings = append(warnings, fmt.Sprintf("unknown rep %q in query.reps: %s", repName, hint))
+					continue
+				}
+				if hint := pluginManifestRepNameHint(ctx, repositories, repName); hint != "" {
 					warnings = append(warnings, fmt.Sprintf("unknown rep %q in query.reps: %s", repName, hint))
 					continue
 				}
@@ -1039,4 +1056,83 @@ func timeIsCoversMoment(timeis reps.TimeIs, moment time.Time) bool {
 		return true
 	}
 	return !moment.After(*timeis.EndTime)
+}
+
+// partialMapFilterWarning は地図条件の3値（map_latitude / map_longitude / map_radius）が揃っていない
+// ときの案内を返す。該当しなければ空文字。
+//
+// FindQuery.HasMapFilter は3値が全部非 nil のときだけ真で、欠けると地図条件ごと**黙って無視**される
+// （map_latitude だけ渡しても通常検索と同じ件数が返る。2026-09-18 の実利用報告）。MCP（Node）は入口で
+// 拒否するので、ここは API を直接叩く経路のための網。単位（メートル）もここで言う。
+func partialMapFilterWarning(query *find.FindQuery) string {
+	if query == nil || query.HasMapFilter() {
+		return ""
+	}
+	present := []string{}
+	missing := []string{}
+	for _, field := range []struct {
+		name  string
+		value *float64
+	}{
+		{"map_latitude", query.MapLatitude},
+		{"map_longitude", query.MapLongitude},
+		{"map_radius", query.MapRadius},
+	} {
+		if field.value != nil {
+			present = append(present, field.name)
+		} else {
+			missing = append(missing, field.name)
+		}
+	}
+	if len(present) == 0 {
+		return ""
+	}
+	return fmt.Sprintf(
+		"query.%s is set but query.%s is missing, so the map filter is NOT applied (it activates only with all three of "+
+			"map_latitude, map_longitude and map_radius; map_radius is in meters). The result is the search without the location condition",
+		strings.Join(present, " / "), strings.Join(missing, " / "))
+}
+
+// unknownMiBoardNameWarnings は query.mi_board_name が板一覧に無いときの案内を返す。
+//
+// tags / reps / rep_types / data_types には未知値の警告があるのに板名だけ無く、綴り違いが
+// 警告ゼロで 0 件になっていた（2026-09-18 の実利用報告）。照合は完全一致（板名は大文字小文字を区別する）。
+// 一覧の取得に失敗したときはリクエストを失敗させず、検証を飛ばした旨だけ返す。
+func unknownMiBoardNameWarnings(ctx context.Context, repositories *reps.GkillRepositories, query *find.FindQuery) []string {
+	if query == nil || query.MiBoardName == nil || *query.MiBoardName == "" {
+		return nil
+	}
+	boardNames, err := repositories.MiReps.GetBoardNames(ctx)
+	if err != nil {
+		return []string{fmt.Sprintf("could not validate query.mi_board_name against the board list: %v", err)}
+	}
+	if slices.Contains(boardNames, *query.MiBoardName) {
+		return nil
+	}
+	return []string{fmt.Sprintf("unknown mi_board_name %q (no board with this name exists; board names are case-sensitive — list them with get_mi_board_list)", *query.MiBoardName)}
+}
+
+// pluginManifestRepNameHint は query.reps の値が「プラグインの manifest の rep_name」に一致するが、
+// そのプラグインの記録が別の rep 名（get_rep_name の申告値）を名乗っているときの案内を返す。
+// 一致しなければ空文字。
+//
+// zip の Git リポジトリを束ねるプラグインは manifest に "ArchivedGit" と名乗りつつ、Kyou の rep_name は
+// リポジトリ名。get_plugin_list の rep_name をそのまま query.reps へ渡すと必ず 0 件だった（2026-09-18 の
+// 実利用報告）。綴りは合っているので「綴りを確かめろ」では直せない —— 使う値の在処を名指しする。
+func pluginManifestRepNameHint(ctx context.Context, repositories *reps.GkillRepositories, value string) string {
+	for _, pluginRep := range repositories.PluginReps {
+		manifest := pluginRep.GetManifest()
+		if manifest.RepName != value || !manifest.EmitsKyouOrDefault() {
+			continue
+		}
+		repNames, err := pluginRep.GetRepNames(ctx)
+		if err != nil {
+			return fmt.Sprintf("%q is the manifest name of plugin %q, not a searchable rep name; its records use the rep names listed in get_plugin_list rep_names[] (get_rep_infos plugins[] lists them too)", value, manifest.Name)
+		}
+		if len(repNames) == 0 {
+			return fmt.Sprintf("%q is the manifest name of plugin %q, not a searchable rep name; the plugin has declared no rep names yet (its index is probably not built), so it currently matches nothing", value, manifest.Name)
+		}
+		return fmt.Sprintf("%q is the manifest name of plugin %q, not a searchable rep name; its records use %d rep name(s) listed in get_plugin_list rep_names[] (e.g. %q)", value, manifest.Name, len(repNames), repNames[0])
+	}
+	return ""
 }

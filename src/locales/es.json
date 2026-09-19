@@ -936,6 +936,7 @@
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "Tarea de repost no encontrada",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "Objetivo de la tarea de repost no encontrado",
     "KFTL_MI_REKYOU_NO_WRITE_REP_MESSAGE_TITLE": "No hay un repositorio configurado para guardar tareas de repost",
+    "KFTL_IDEMPOTENCY_KEY_CONFLICT_MESSAGE": "La misma clave de reenvío se reutilizó con un contenido distinto. Use una clave nueva para el contenido nuevo",
     "KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE": "La solicitud de {0} ya está configurada",
     "NO_DEVICE_NAME": "Ninguno",
     "ALL_MI_BOARD_NAME": "Todos",

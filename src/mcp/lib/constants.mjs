@@ -1,6 +1,9 @@
 // Shared constants for gkill MCP validation/normalization.
 
-export const ISO_DATETIME_DESC = "ISO-8601 datetime string, e.g. 2026-02-25T10:30:00+09:00";
+// 受理するのは RFC 3339（オフセット必須）。ISO-8601 の他の形（秒なし・基本形式・オフセットなし）は弾くので、
+// 説明も「ISO-8601」ではなく受理する形を言う（2026-09-18 の実利用報告: オフセット無しを弾いた文言が「ISO-8601で」だけだった）。
+export const ISO_DATETIME_DESC =
+  "RFC 3339 datetime WITH a timezone offset, e.g. 2026-02-25T10:30:00+09:00 (Z is accepted; a value without an offset is rejected)";
 export const DATE_ONLY_DESC = "YYYY-MM-DD date string";
 export const DEFAULT_KYOUS_LIMIT = 20;
 export const DEFAULT_KYOUS_MAX_SIZE_MB = 0.25;
@@ -38,6 +41,19 @@ export const KYOUS_TOP_LEVEL_FIELDS = new Set([
   "num_max",
   "idf_kinds",
   "include_file_size",
+  // 2026-09-19（ADR-0629 / ADR-0630）。どちらも既定 false のオプトイン。
+  "include_attached_ids",
+  "include_file_urls",
+]);
+
+// for_mi の射影を選ぶ5フラグ。for_mi:true で1つも立っていない検索は必ず0件なので、
+// MCP の入口で include_create_mi を補う（normalizeKyouArgs。ADR-0627）。
+export const MI_PROJECTION_FLAG_FIELDS = Object.freeze([
+  "include_create_mi",
+  "include_check_mi",
+  "include_limit_mi",
+  "include_start_mi",
+  "include_end_mi",
 ]);
 
 // v2 (ADR-0604) の集計・絞り込みの列挙値。サーバ側(get_kyous_mcp_helpers.go)と揃えること。

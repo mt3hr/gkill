@@ -19,7 +19,7 @@ gkill API のエラーコードとメッセージコードの定数定義、お�
 | `redact.go` | `RedactEnvironmentSpecific` — レスポンスへ載る自由文からホームのユーザー名・メールアドレスを伏せる（[ADR-0707](../../../../../documents/adr/0707-redact-environment-specific-strings.md)） |
 | `redact_test.go` | 伏せ方の表駆動テスト（形は残す・二重適用しない・`@example.` は残す） |
 | `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` + `Level`（`info` 既定 / `warning`）。`GkillMessages`（nil を `[]` で出す） |
-| `error_codes.go` | エラーコード定数（381 定数: `ERR000001` 〜 `ERR000422`、欠番 41。うち 37 は存在しないエンドポイント（`get_gkill_info` / `get_kftl_template` / `update_*_struct` 等）のコードを 2026-09-14 に削除した跡。ADR-0709） |
+| `error_codes.go` | エラーコード定数（382 定数: `ERR000001` 〜 `ERR000423`、欠番 41。うち 37 は存在しないエンドポイント（`get_gkill_info` / `get_kftl_template` / `update_*_struct` 等）のコードを 2026-09-14 に削除した跡。ADR-0709） |
 | `message_codes.go` | メッセージコード定数（83 定数: `MSG000001` 〜 `MSG000090`、欠番 7） |
 | `http_status.go` | エラーコード → HTTP ステータス対応表（`errorCodeHTTPStatus`、`HTTPStatusOf` / `HTTPStatusForErrors`） |
 | `http_status_test.go` | 全エラーコードが対応表に載っていることを `error_codes.go` のソース走査で固定するテスト |
@@ -80,7 +80,7 @@ type GkillMessage struct {
 
 語彙の一覧は `reasonTokens` / `errorKinds` の1スライスに固定してあり、Web 側の表（`src/client/classes/api/message/error-hints.ts`）と `error-hints.test.ts` が突き合わせる。
 
-## エラーコード体系（381 コード）
+## エラーコード体系（382 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|
@@ -97,6 +97,7 @@ type GkillMessage struct {
 | `ERR000417` 〜 `ERR000418` | 認証系ミドルウェアの先読み `readAuthBody` の失敗（ボディ上限超過は 413、読み取り失敗は 500） |
 | `ERR000419` 〜 `ERR000421` | commit_tx の ROLLBACK（何も書かれていない）、`parse_kftl_text` のリクエスト不正 / サーバ側失敗 |
 | `ERR000422` | 書き込み先 rep 未設定（500 だが kind `config` / reason `write_rep_missing`。以前は nil ポインタ panic） |
+| `ERR000423` | メモ帳（KFTL）の再送キー `idempotency_key` を別の本文で使い回した（409）。同じ本文なら元の `created[]` を `replayed:true` で返す |
 
 `ERR9000xx` 帯はフロントエンドだけで採番するコードで、Go 側の `error_codes.go` には存在しない（定義元は `src/client/classes/api/message/gkill_error.ts`、現在101定数）。番号が衝突しないよう帯を分けてあるので、Go 側でこの帯を使ってはならない。
 
@@ -124,7 +125,7 @@ type GkillMessage struct {
 | 401 | `AccountSessionNotFoundError` / `AccountSessionExpiredError` / `AccountInvalidPasswordError` / `AccountNotFoundError` | 4 |
 | 403 | `AccountNotHasAdminError` / `AccountDisabledError` / `LocalOnlyAccessDeniedError` ほか | 6 |
 | 404 | `NotFound*` / `TargetAccountNotFoundError` | 18 |
-| 409 | `AlreadyExist*` / `AccountPasswordResetTokenIsNotNilError` | 16 |
+| 409 | `AlreadyExist*` / `AccountPasswordResetTokenIsNotNilError` / `SubmitKFTLTextIdempotencyKeyConflictError` | 17 |
 | 413 | `RequestBodyTooLargeError`（認証前ボディの上限超過。`writeGkillErrorResponse` 経由で JSON 本文つきで返る） | 1 |
 | 429 | `LoginRateLimitError` | 1 |
 | 500 | `Get*` / `Add*` / `Update*` / `Delete*` / `CommitTx*` / `Invalid*ResponseDataError` / `WriteRepMissingError` ほか | 239 |

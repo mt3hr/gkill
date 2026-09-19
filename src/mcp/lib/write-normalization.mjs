@@ -185,9 +185,12 @@ const ENTITY_FIELD_SPECS = {
       // 「must be a string」の型エラーになり、呼び出し側は自分の入力ミスだと誤診する。
       { name: "board_name", kind: "string" },
       { name: "is_checked", kind: "boolean", defaultOnAdd: false },
-      { name: "limit_time", kind: "datetime" },
-      { name: "estimate_start_time", kind: "datetime" },
-      { name: "estimate_end_time", kind: "datetime" },
+      // 予定日時3欄は null で「消す」（timeis.end_time と同じ3値パッチ）。無いと一度入れた期限を
+      // MCP から二度と外せず、null を渡しても「触らない」と解釈されて黙って無視されていた
+      // （2026-09-18 の実利用報告。Go 側 reps.Mi の3欄は *time.Time なので nil を保存できる）。
+      { name: "limit_time", kind: "datetime", nullClears: true },
+      { name: "estimate_start_time", kind: "datetime", nullClears: true },
+      { name: "estimate_end_time", kind: "datetime", nullClears: true },
       // false のとき、実在しない board_name を「新しい板の作成」ではなく typo として弾く
       // (実在確認は write-handlers が板一覧と照合する。エンティティには載せない)。
       // 既定 true = 従来どおり未知の板名は新しい板を作る (2026-08-30 MCPレビュー、フラグ追加)。
@@ -453,6 +456,21 @@ function normalizeDeleteTargets(args, verb) {
   return args.targets.map((target, index) => {
     if (!isPlainObject(target)) {
       throw invalidArgument(`targets[${index}]`, "must be an object with id and data_type", target);
+    }
+    // gkill_submit_kftl の created[] をそのまま渡すと updated / related_time が未知キーになる。
+    // 汎用の「未知の引数」ではなく、変換の仕方と「updated:true は消してはいけない」を言う
+    // （打刻の終了は既存記録の更新で、消すと元から在った打刻が消える。2026-09-18 の実利用報告）。
+    if (
+      Object.prototype.hasOwnProperty.call(target, "updated") ||
+      Object.prototype.hasOwnProperty.call(target, "related_time")
+    ) {
+      throw invalidArgument(
+        `targets[${index}]`,
+        "looks like a gkill_submit_kftl created[] entry: pass only {id, data_type} (drop updated / related_time), and skip " +
+          "entries with updated:true — those are pre-existing records the submission updated (a timeis it ended), not records " +
+          "it created, so deleting them is not an undo. Use created.filter(c => !c.updated).map(({id, data_type}) => ({id, data_type}))",
+        target,
+      );
     }
     assertKnownKeys(target, new Set(["id", "data_type"]), `targets[${index}]`);
     const id = assertTrimmedString(target.id, `targets[${index}].id`);

@@ -25,11 +25,14 @@ const CONTENT_HTML =
   "<div class=\"sender\">あなた</div>プラグインの内容取得を実装したい</div></body></html>";
 
 // プラグインKyouを1件持つ get_kyous レスポンス相当の kyous 配列を作る。
+// 本文取得の鍵（rep_name / id）は Kyou 側にあり、ペイロードには写さない（ADR-0629）。
 function pluginKyou(repName, kyouID, extra = {}) {
   return {
+    id: kyouID,
+    rep_name: repName,
     data_type: "claude_code_message",
     related_time: "2026-08-05T10:00:00+09:00",
-    payload: { kind: "plugin", data_type: "claude_code_message", rep_name: repName, kyou_id: kyouID, ...extra },
+    payload: { kind: "plugin", plugin_name: "gkill_plugin_claudecode", ...extra },
   };
 }
 
@@ -282,10 +285,15 @@ describe("collectPluginPayloads", () => {
       "not an object",
       {},
       { payload: null },
-      { payload: { kind: "plugin", rep_name: "", kyou_id: "1" } },
-      { payload: { kind: "plugin", rep_name: "A" } },
+      { rep_name: "", id: "1", payload: { kind: "plugin" } },
+      { rep_name: "A", payload: { kind: "plugin" } },
     ];
     expect(collectPluginPayloads(kyous)).toEqual([]);
+  });
+
+  test("takes rep_name and kyou_id from the kyou, not from the payload", () => {
+    const kyous = [{ rep_name: "A", id: "1", payload: { kind: "plugin", rep_name: "stale", kyou_id: "stale" } }];
+    expect(collectPluginPayloads(kyous)).toEqual([{ rep_name: "A", kyou_id: "1", payload: kyous[0].payload }]);
   });
 
   test("returns an empty array for a non-array input", () => {
