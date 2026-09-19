@@ -1015,6 +1015,12 @@ Google Takeout を取り込む2つのプラグイン（fitbit / 位置情報）�
 むしろ Google は古いデータを間引くので、古い書き出しを残しておくと消えた期間が保たれる。
 fitbit 側は `export` 表に順位を持ち、日が重なったときは rank が最小の世代の行だけを合算する。
 
+**同じ CSV の中のデータソースもまたいで合算しない（fitbit）。** 歩数の CSV には 2025-12 から
+スマホ（`Phone Health Connect`）の行が時計（`Pixel Watch 2`）の行と同じ日に並び、Fitbit アプリ自身の
+日計は時計の値だけを採る。部分集計 `sample_daily` は (ファイル, 日, データソース) 単位で持ち、
+畳み直し（`chooseDataSources`）で時計の行が1つでもあればそれだけ、無ければ設定
+`secondary_data_sources` を書いた順に1つだけ採る（ADR-0312）。
+
 ### 制限
 
 - 索引は最新版だけを持つので、**プラグインの型別データに履歴は無い**（`Get*Histories` は0件か1件）

@@ -17,10 +17,11 @@ const (
 
 // 設定キー。
 const (
-	configKeySourceDirs  = "source_dirs"
-	configKeyTimezone    = "timezone"
-	configKeyMetrics     = "metrics"
-	configKeyScanWorkers = "scan_workers"
+	configKeySourceDirs           = "source_dirs"
+	configKeyTimezone             = "timezone"
+	configKeyMetrics              = "metrics"
+	configKeySecondaryDataSources = "secondary_data_sources"
+	configKeyScanWorkers          = "scan_workers"
 
 	// JSONにはコメントが書けないので、読み飛ばされるキーで書式を書き残す。
 	configKeyComment           = "_comment"
@@ -50,13 +51,18 @@ type dailyMetric struct {
 	UpdateUnix  int64
 }
 
-// partialDaily はファイル1つが1日に寄与する部分集計。
+// partialDaily はファイル1つの中の1つのデータソースが1日に寄与する部分集計。
 //
 // ファイル単位で持つのが要点。心拍のように現地1日がUTC2ファイルにまたがる場合でも、
 // 変化したファイルの寄与だけを差し替えて、日次の値は畳み直せる。
+//
+// データソース（CSV の `data source` 列）単位でも分けて持つ。同じファイルの同じ日に
+// 時計（Pixel Watch 2）とスマホ（Phone Health Connect）の行が並ぶことがあり、
+// ここで混ぜて足すと畳み直しのときに「どちらを採るか」を選べなくなる（歩数が2倍になる）。
 type partialDaily struct {
 	MetricKey  string
 	DateLocal  string
+	DataSource string // CSV の data source 列の値。列が無ければ空
 	SumValue   float64
 	CountValue int64
 	MinValue   float64
@@ -64,7 +70,6 @@ type partialDaily struct {
 	LastValue  float64
 	LastUnix   int64
 	ExportID   string
-	Devices    map[string]struct{}
 	HourSums   [24]float64
 	HourCounts [24]int64
 }

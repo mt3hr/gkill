@@ -54,7 +54,25 @@ func testEntry(t *testing.T, fileName string) sdk.SourceEntry {
 
 // ingestForTest はテストデータの1ファイルを取り込んで
 // (指標キー, 現地日付) → 部分集計 の形で返す。
+//
+// 部分集計はデータソース単位なので、同じ (指標, 日) に2つのデータソースがある
+// ファイルには使えない（黙って片方を上書きしないよう落とす）。そのときは ingestForTestBySource。
 func ingestForTest(t *testing.T, fileName string, prefix string) map[string]partialDaily {
+	t.Helper()
+	byKey := map[string]partialDaily{}
+	for key, partial := range ingestForTestBySource(t, fileName, prefix) {
+		dayKey := partial.MetricKey + "|" + partial.DateLocal
+		if _, duplicated := byKey[dayKey]; duplicated {
+			t.Fatalf("%s の %s に複数のデータソースがある（%s）。ingestForTestBySource を使うこと", fileName, dayKey, key)
+		}
+		byKey[dayKey] = partial
+	}
+	return byKey
+}
+
+// ingestForTestBySource はテストデータの1ファイルを取り込んで
+// (指標キー, 現地日付, データソース) → 部分集計 の形で返す。
+func ingestForTestBySource(t *testing.T, fileName string, prefix string) map[string]partialDaily {
 	t.Helper()
 	partials, err := ingestEntry(testEntry(t, fileName), metricsByPrefix[prefix], testLocation(t))
 	if err != nil {
@@ -62,28 +80,35 @@ func ingestForTest(t *testing.T, fileName string, prefix string) map[string]part
 	}
 	byKey := map[string]partialDaily{}
 	for _, partial := range partials {
-		byKey[partial.MetricKey+"|"+partial.DateLocal] = partial
+		byKey[partial.MetricKey+"|"+partial.DateLocal+"|"+partial.DataSource] = partial
 	}
 	return byKey
 }
 
-// TestIngestFile_StepsSumsPerLocalDay は、歩数がJSTの日ごとに合計されることを確認する。
+// TestIngestFile_StepsSumsPerLocalDay は、歩数がJSTの日ごと・データソースごとに合計されることを確認する。
+//
+// データソースを混ぜて足さないのが要点。実データでは 2025-12 から時計とスマホの行が
+// 同じ日に並び、混ぜると畳み直しで「どちらを採るか」を選べず歩数が2倍になる。
 func TestIngestFile_StepsSumsPerLocalDay(t *testing.T) {
-	partials := ingestForTest(t, "steps_2024-04-01.csv", "steps")
+	partials := ingestForTestBySource(t, "steps_2024-04-01.csv", "steps")
 
-	// 02:05Z / 02:28Z / 10:00Z はすべて JST の 2024-04-03
-	partial, exist := partials["steps_daily|2024-04-03"]
+	// 02:05Z / 02:28Z / 10:00Z はすべて JST の 2024-04-03。時計2行(40+29)とアプリ1行(31)
+	watch, exist := partials["steps_daily|2024-04-03|Pixel Watch 2"]
 	if !exist {
-		t.Fatalf("2024-04-03 の歩数が無い: %v", partials)
+		t.Fatalf("2024-04-03 の時計の歩数が無い: %v", partials)
 	}
-	if partial.SumValue != 100 {
-		t.Errorf("歩数の合計 = %v, want 100", partial.SumValue)
+	if watch.SumValue != 69 || watch.CountValue != 2 {
+		t.Errorf("時計の歩数 = %v (%d件), want 69 (2件)", watch.SumValue, watch.CountValue)
 	}
-	if partial.CountValue != 3 {
-		t.Errorf("件数 = %d, want 3", partial.CountValue)
+	app, exist := partials["steps_daily|2024-04-03|Fitbit App"]
+	if !exist {
+		t.Fatalf("2024-04-03 のアプリの歩数が無い: %v", partials)
 	}
-	if len(partial.Devices) != 2 {
-		t.Errorf("デバイス = %v, want 2種", partial.Devices)
+	if app.SumValue != 31 || app.CountValue != 1 {
+		t.Errorf("アプリの歩数 = %v (%d件), want 31 (1件)", app.SumValue, app.CountValue)
+	}
+	if len(partials) != 2 {
+		t.Errorf("部分集計 = %d件, want 2（データソース別）: %v", len(partials), partials)
 	}
 }
 

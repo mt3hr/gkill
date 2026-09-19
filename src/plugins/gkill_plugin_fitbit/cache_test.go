@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -105,11 +106,30 @@ func testConfig(t *testing.T, sourceDir string) pluginConfig {
 	t.Helper()
 	patterns := []string{sourceDir}
 	return pluginConfig{
-		Patterns:    patterns,
-		Source:      sdk.ExpandSourcePatterns(patterns),
-		Timezone:    "Asia/Tokyo",
-		ScanWorkers: 1,
+		Patterns:             patterns,
+		Source:               sdk.ExpandSourcePatterns(patterns),
+		Timezone:             "Asia/Tokyo",
+		ScanWorkers:          1,
+		SecondaryDataSources: defaultSecondaryDataSources(),
 	}
+}
+
+// stepsCSV は歩数のCSV本文を組み立てる。行は (UTC時刻, 歩数, データソース)。
+func stepsCSV(rows ...[3]string) []byte {
+	var sb strings.Builder
+	sb.WriteString("timestamp,steps,data source\n")
+	for _, row := range rows {
+		sb.WriteString(row[0] + "," + row[1] + "," + row[2] + "\n")
+	}
+	return []byte(sb.String())
+}
+
+// stepsSourceDir は歩数CSV1本だけを詰めたZIPを置いたフォルダを作る。
+func stepsSourceDir(t *testing.T, body []byte) string {
+	t.Helper()
+	dir := filepath.Join(t.TempDir(), "GoogleTakeout_Test_20240501")
+	writeTestZip(t, dir, testZipName, map[string][]byte{"steps_2025-12-15.csv": body}, testExportTime)
+	return dir
 }
 
 // buildAndRead はキャッシュを作って (指標キー|日付) → 値 の形で返す。
@@ -478,5 +498,89 @@ func TestCache_QueryFiltersByPeriod(t *testing.T) {
 	}
 	if len(metrics) == 0 {
 		t.Error("期間内の記録が0件")
+	}
+}
+
+// TestCache_TrackerWinsOverPhoneWithinADay は、同じ日に時計とスマホの行が並ぶとき
+// 時計の行だけが日次の値になることを確認する。
+//
+// 実データでは 2025-12-15 から歩数 CSV にスマホ（Phone Health Connect）の行が時計の行と
+// 同じ日に並び、両方を足すと歩数がほぼ2倍になっていた（2026-09-12: 時計 11,284 に対し 22,788）。
+// Fitbit アプリ自身の日計は時計の値と一致する。
+func TestCache_TrackerWinsOverPhoneWithinADay(t *testing.T) {
+	sourceDir := stepsSourceDir(t, stepsCSV(
+		// JST 2025-12-15: 時計 100+200、スマホ 150+250（スマホは足さない）
+		[3]string{"2025-12-15T02:00:00Z", "100", "Pixel Watch 2"},
+		[3]string{"2025-12-15T02:30:00Z", "150", "Phone Health Connect"},
+		[3]string{"2025-12-15T03:00:00Z", "200", "Pixel Watch 2"},
+		[3]string{"2025-12-15T03:30:00Z", "250", "Phone Health Connect"},
+		// JST 2025-12-16: スマホだけ（時計を着けていない日）。スマホの値を使う
+		[3]string{"2025-12-16T02:00:00Z", "50", "Phone Health Connect"},
+		[3]string{"2025-12-16T03:00:00Z", "60", "Phone Health Connect"},
+		// JST 2025-12-17: 日の途中で時計を替えた。時計どうしは足し、スマホは足さない
+		[3]string{"2025-12-17T02:00:00Z", "10", "Pixel Watch 2"},
+		[3]string{"2025-12-17T03:00:00Z", "20", "Pixel Watch 3"},
+		[3]string{"2025-12-17T03:30:00Z", "5", "Phone Health Connect"},
+	))
+	pluginDir := t.TempDir()
+	c := newTestCache(t, pluginDir)
+	metrics := buildAndRead(t, c, pluginDir, testConfig(t, sourceDir))
+
+	both := metrics["steps_daily|2025-12-15"]
+	if both.NumValue != "300" || both.SampleCount != 2 || both.Devices != "Pixel Watch 2" {
+		t.Errorf("時計とスマホが並ぶ日 = %s (%d件, %q), want 300 (2件, \"Pixel Watch 2\")",
+			both.NumValue, both.SampleCount, both.Devices)
+	}
+	// 時刻別の内訳にもスマホの行が漏れていないこと（02:00Z = JST 11時、03:00Z = JST 12時）
+	hours := parseFloatVector(both.HourSums)
+	if len(hours) != 24 || hours[11] != 100 || hours[12] != 200 {
+		t.Errorf("時刻別の歩数 = %v, want [11]=100 [12]=200", hours)
+	}
+
+	phoneOnly := metrics["steps_daily|2025-12-16"]
+	if phoneOnly.NumValue != "110" || phoneOnly.Devices != "Phone Health Connect" {
+		t.Errorf("スマホだけの日 = %s (%q), want 110 (\"Phone Health Connect\")", phoneOnly.NumValue, phoneOnly.Devices)
+	}
+
+	twoTrackers := metrics["steps_daily|2025-12-17"]
+	if twoTrackers.NumValue != "30" || twoTrackers.Devices != "Pixel Watch 2\nPixel Watch 3" {
+		t.Errorf("時計を替えた日 = %s (%q), want 30 (\"Pixel Watch 2\nPixel Watch 3\")", twoTrackers.NumValue, twoTrackers.Devices)
+	}
+}
+
+// TestCache_SecondaryDataSourcesChangeRefolds は、secondary_data_sources を変えると
+// 取り込み直さずに全日が畳み直されることを確認する。
+func TestCache_SecondaryDataSourcesChangeRefolds(t *testing.T) {
+	sourceDir := stepsSourceDir(t, stepsCSV(
+		[3]string{"2025-12-15T02:00:00Z", "100", "Pixel Watch 2"},
+		[3]string{"2025-12-15T02:30:00Z", "150", "Phone Health Connect"},
+		[3]string{"2025-12-15T03:00:00Z", "200", "Pixel Watch 2"},
+		[3]string{"2025-12-15T03:30:00Z", "250", "Phone Health Connect"},
+	))
+	pluginDir := t.TempDir()
+	c := newTestCache(t, pluginDir)
+
+	byDefault := buildAndRead(t, c, pluginDir, testConfig(t, sourceDir))["steps_daily|2025-12-15"]
+	if byDefault.NumValue != "300" {
+		t.Fatalf("既定 = %s, want 300", byDefault.NumValue)
+	}
+
+	// 空 = 全部合算（2026-09-20 以前の挙動）
+	sumAll := testConfig(t, sourceDir)
+	sumAll.SecondaryDataSources = []string{}
+	summed := buildAndRead(t, c, pluginDir, sumAll)["steps_daily|2025-12-15"]
+	if summed.NumValue != "700" || summed.Devices != "Phone Health Connect\nPixel Watch 2" {
+		t.Errorf("全部合算 = %s (%q), want 700", summed.NumValue, summed.Devices)
+	}
+	if c.meta("build_total_files") != "0" {
+		t.Errorf("規則の変更で取り込み直している（変更ファイル数 = %s, want 0）", c.meta("build_total_files"))
+	}
+
+	// 時計のほうを補助にすればスマホが勝つ
+	preferPhone := testConfig(t, sourceDir)
+	preferPhone.SecondaryDataSources = []string{"Pixel Watch 2"}
+	phone := buildAndRead(t, c, pluginDir, preferPhone)["steps_daily|2025-12-15"]
+	if phone.NumValue != "400" || phone.Devices != "Phone Health Connect" {
+		t.Errorf("時計を補助にした = %s (%q), want 400 (\"Phone Health Connect\")", phone.NumValue, phone.Devices)
 	}
 }

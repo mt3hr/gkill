@@ -68,6 +68,7 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_fitbit/cache.db
 | `source_dirs` | 取り込み元。**ZIP だけを読む**（展開済みのフォルダは対象外）。フォルダを指定するとその下の `*.zip` を再帰的に探し、ZIP の中の `Google Health/Physical Activity_GoogleData` を自動的に見つける。ZIP を直接指定してもよい。`* ** ? []` のワイルドカード、先頭の `~`、環境変数が使える |
 | `timezone` | **「この日はどの日か」を決めるタイムゾーン**（既定 `Asia/Tokyo`）。サンプルの時刻はUTCなので、これが無いと日の境目が決まらない。変更すると集計をやり直す |
 | `metrics` | 取り込む指標のキー。空なら全部。キーは設定画面の一覧を参照 |
+| `secondary_data_sources` | **時計の行が無い日にだけ使う**データソース名（CSV の `data source` 列の値。大小無視）。既定は `Phone Health Connect` と `Google Health App`。時計の行がある日にはここに書いたソースの行を足さない。空配列なら全ソースを合算する。キーが無ければ既定 |
 | `scan_workers` | 同時に読むファイル数。0 なら自動（CPU数の半分、最大4） |
 
 編集は**次の検索から反映される**（gkill の再起動は不要）。
@@ -117,6 +118,12 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_fitbit/cache.db
 - **変化したかどうかは CRC32 で見る**。Takeout は書き出し時刻を全エントリに
   同じ値で入れるので、エントリの更新時刻は中身が変わっても動かない。
   CRC32 は ZIP の中央ディレクトリに入っているので、読むのに伸長は要らない
+- **データソースをまたいで合算しない**。歩数の CSV には 2025-12 からスマホ（`Phone Health Connect`）の行が
+  時計（`Pixel Watch 2`）の行と同じ日に並ぶ。Fitbit アプリ自身の日計は時計の値だけで、スマホの行は足していない。
+  部分集計は (ファイル, 日, データソース) 単位で持ち、畳み直すときに **時計の行が1つでもあれば時計だけ**
+  （時計が複数なら足す。日の途中で替えたときのため）、無ければ `secondary_data_sources` を書いた順に1つだけ採る。
+  「大きいほうを採る」にはしない（スマホの歩数が時計より多い日でも、アプリの日計は時計の値）。
+  この設定を変えると取り込み直さずに全日を畳み直す
 - **書き出しをまたいで合算しない**。「ZIP を含むフォルダ + ZIP名の書き出し時刻」を
   1つの取り込み世代とし、日が重なったときは新しい世代の値だけを使う。
   同じ世代（分割された `-001` `-002` …）は合算する。
@@ -153,7 +160,8 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_fitbit/cache.db
 | `main.go` | エントリポイント、SDK ハンドラ登録、記録への変換、ワード検索 |
 | `config.go` | `config.json` の読み直しと解釈 |
 | `metrics.go` | 指標レジストリ、ファイル名の接頭辞解決、列の解決 |
-| `loader.go` | 取り込み元のZIPを開く・CSV1本ぶんの部分集計 |
+| `loader.go` | 取り込み元のZIPを開く・CSV1本ぶんの部分集計（データソース別） |
+| `data_source.go` | 同じ日に並ぶ複数のデータソース（時計 / スマホ / アプリ）からどれを採るかの判定と束ね |
 | `timeparse.go` | 高速なタイムスタンプ解析と現地日付のバケット |
 | `builder.go` | バックグラウンドの取り込み |
 | `cache.go` | SQLite3 キャッシュ（部分集計と差分更新） |
