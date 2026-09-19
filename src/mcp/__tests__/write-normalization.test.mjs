@@ -555,6 +555,20 @@ describe("delete / restore batch form", () => {
     expectThrowsField(() => normalizeDeleteArgs({ targets: [] }), "targets");
   });
 
+  // gkill_submit_kftl の created[] をそのまま渡すと updated / related_time が未知キーになる。
+  // 汎用の「is not supported」ではなく、変換の仕方と updated:true を消してはいけない理由を言う。
+  test("explains how to pass gkill_submit_kftl created[] entries", () => {
+    const created = [{ id: "a", data_type: "kmemo", updated: false, related_time: "2026-09-19T10:00:00+09:00" }];
+    expectThrowsField(() => normalizeDeleteArgs({ targets: created }), "targets[0]");
+    try {
+      normalizeDeleteArgs({ targets: created });
+    } catch (e) {
+      expect(e.message).toContain("created.filter(c => !c.updated)");
+      expect(e.message).toContain("updated:true");
+    }
+    expect(normalizeRestoreArgs({ targets: [{ id: "a", data_type: "kmemo" }] }).targets).toEqual([{ id: "a", data_type: "kmemo" }]);
+  });
+
   test("reports which entry is malformed", () => {
     expectThrowsField(
       () => normalizeDeleteArgs({ targets: [{ id: "a", data_type: "kmemo" }, { id: "b", data_type: "bogus" }]}),

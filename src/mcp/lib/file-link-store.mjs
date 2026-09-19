@@ -65,9 +65,22 @@ export class FileLinkStore {
    * @returns {string} the opaque token
    */
   mint(data, ttlMs = this.ttlMs) {
+    return this.mintLink(data, ttlMs).token;
+  }
+
+  /**
+   * Mint a token for one file and also return when it expires, so the response
+   * can say how long the URL stays valid (the link is useless to a human who
+   * opens it an hour later without knowing that).
+   * @param {object} data - { gkillSessionId, repName, fileName, isImage }
+   * @param {number} [ttlMs=this.ttlMs]
+   * @returns {{token: string, expiresAt: number}} the opaque token and its expiry (epoch ms)
+   */
+  mintLink(data, ttlMs = this.ttlMs) {
     const token = generateToken();
-    this.links.set(token, { value: data, expiresAt: Date.now() + ttlMs });
-    return token;
+    const expiresAt = Date.now() + ttlMs;
+    this.links.set(token, { value: data, expiresAt });
+    return { token, expiresAt };
   }
 
   /**

@@ -2,7 +2,7 @@
   "protocol_version": "1",
   "name": "gkill_plugin_claudecode",
   "version": "1.1.8",
-  "description": "Claude Code のチャットログ(セッションJSONL)をgkillタイムラインに表示する。1ターン(人間のプロンプト起点)を1Kyouとして扱う。設定画面でデータソースのフォルダを指定して使用。",
+  "description": "Claude Code のチャットログ(セッションJSONL)をgkillタイムラインに表示する。1発言(人間の発言1つ、またはそれに対する一連の応答)を1Kyouとして扱う(ChatGPT / Claude.ai プラグインと同じ粒度)。設定画面でデータソースのフォルダを指定して使用。",
   "data_type": "claude_code_turn",
   "rep_name": "ClaudeCode",
   "executable": "gkill_plugin_claudecode",

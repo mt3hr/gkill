@@ -71,18 +71,22 @@ func TestRequestResponse_JSONFieldNames(t *testing.T) {
 		// --- MCPサーバが参照する ---
 		// v2(ADR-0604): include_id/include_rep_name は廃止（id/rep_name 常時付与）。
 		// count_only/group_by/data_types/num_min/num_max/idf_kinds/include_file_size を追加
-		{"GetKyousMCPRequest", GetKyousMCPRequest{}, []string{"session_id", "query", "locale_name", "limit", "cursor", "max_size_mb", "is_include_timeis", "count_only", "group_by", "data_types", "num_min", "num_max", "idf_kinds", "include_file_size"}},
-		// KyouMCPDTO の id / rep_name / create_app / update_app / is_deleted / update_time は
+		{"GetKyousMCPRequest", GetKyousMCPRequest{}, []string{"session_id", "query", "locale_name", "limit", "cursor", "max_size_mb", "is_include_timeis", "count_only", "group_by", "data_types", "num_min", "num_max", "idf_kinds", "include_file_size", "include_attached_ids"}},
+		// KyouMCPDTO の id / rep_name / create_app / update_app / update_time は
 		// omitempty を付けない契約（空と「フィールドが無い」を区別するため。kyou_mcp_dto.go）。
+		// is_deleted は 2026-09-19 から true のときだけ載る（ADR-0629。下の omitempty 側で固定）。
 		// ゼロ値のまま marshal してキーが出ることを見るので、タグ名の固定と同時に
 		// omitempty（time.Time は omitzero）の紛れ込みも検出する。
-		{"KyouMCPDTO", KyouMCPDTO{}, []string{"id", "data_type", "rep_name", "create_app", "update_app", "related_time", "is_deleted", "update_time"}},
+		{"KyouMCPDTO", KyouMCPDTO{}, []string{"id", "data_type", "rep_name", "create_app", "update_app", "related_time", "update_time"}},
+		// rep_names は「query.reps に渡せる値」として常に載せる（申告が空でも `[]`。ADR-0311）。
+		{"PluginInfo", PluginInfo{RepNames: []string{}}, []string{"name", "data_type", "rep_name", "rep_names", "emits_kyou"}},
 
 		// --- その他 ---
 		{"SubmitKFTLTextRequest", SubmitKFTLTextRequest{}, []string{"session_id", "kftl_text", "locale_name"}},
-		// created は実際に書いた記録の一覧（MCP の submit_kftl が response.created を参照）。
-		// 冪等キーで再送を畳んだとき「実行していない」を空で表すので、omitempty で消さない。
-		{"SubmitKFTLTextResponse", SubmitKFTLTextResponse{}, []string{"messages", "errors", "created"}},
+		// created は実際に書いた記録の一覧（MCP の submit_kftl が response.created を参照）。失敗時も `[]` で
+		// omitempty で消さない。replayed は冪等キーで畳んだ再送の印で、false でも出す
+		// （「今回書いた」と「控えの再生」を区別する。ADR-0510）。
+		{"SubmitKFTLTextResponse", SubmitKFTLTextResponse{}, []string{"messages", "errors", "created", "replayed"}},
 		// updated=false は「新規作成」を意味する値なので、omitempty が付くとキーごと消えて
 		// 更新（打刻の終了）と区別できなくなる。ゼロ値で3キーとも出ることを固定する。
 		{"SubmitKFTLTextCreated", SubmitKFTLTextCreated{}, []string{"id", "data_type", "updated", "related_time"}},
@@ -187,7 +191,7 @@ func TestMCPPayloadDTO_JSONFieldNames(t *testing.T) {
 			// Kyou 1件ごとに焼き込むと20件取るだけで同じ文が20回並ぶ。
 			// 応答トップレベルの PluginDescriptionMCPDTO へ rep_name ごと1回だけ出す。
 			PluginPayloadMCPDTO{Kind: "plugin", PluginName: "p"},
-			[]string{"kind", "data_type", "rep_name", "kyou_id", "plugin_name"},
+			[]string{"kind", "plugin_name"},
 		},
 		{
 			"PluginDescriptionMCPDTO",
@@ -246,9 +250,16 @@ func TestMCPPayloadDTO_OmitsEmptyOptionalFields(t *testing.T) {
 			[]string{"description"},
 		},
 		{
+			// rep_name / kyou_id / data_type は Kyou 側にあるので持たない（ADR-0629）
 			"PluginPayloadMCPDTO",
-			PluginPayloadMCPDTO{Kind: "plugin", DataType: "claude_code_message", RepName: "Claude Code", KyouID: "id-1"},
-			[]string{"plugin_name", "description"},
+			PluginPayloadMCPDTO{Kind: "plugin"},
+			[]string{"plugin_name", "description", "rep_name", "kyou_id", "data_type"},
+		},
+		{
+			// commit_hash は Kyou の id と同値なので持たない（ADR-0629）
+			"GitPayloadMCPDTO",
+			GitPayloadMCPDTO{Kind: "git_commit_log", CommitMessage: "m"},
+			[]string{"commit_hash"},
 		},
 		{
 			"TimeIsPayloadMCPDTO",
@@ -256,10 +267,11 @@ func TestMCPPayloadDTO_OmitsEmptyOptionalFields(t *testing.T) {
 			[]string{"end_time"},
 		},
 		{
-			// id / rep_name は v2 から常時出力（追撃クエリの前提。ADR-0604）
+			// id / rep_name は v2 から常時出力（追撃クエリの前提。ADR-0604）。
+			// is_deleted は削除済みのときだけ（生きている記録の毎件 false は定常のオーバーヘッド。ADR-0629）
 			"KyouMCPDTO",
 			KyouMCPDTO{DataType: "kmemo", RelatedTime: time.Now()},
-			[]string{"tags", "texts", "notifications", "timeis", "payload"},
+			[]string{"tags", "texts", "notifications", "timeis", "payload", "is_deleted", "tag_entities", "text_entities"},
 		},
 	}
 
@@ -277,17 +289,17 @@ func TestMCPPayloadDTO_OmitsEmptyOptionalFields(t *testing.T) {
 
 // TestKyouMCPDTO_CarriesPluginPayload は KyouMCPDTO.Payload が any 型でも
 // 具体的なペイロードがそのままネストして出ることを確認する。
-// MCPクライアントは payload.kind を見て分岐するので、ここが崩れると
-// gkill_get_plugin_content に渡す rep_name / kyou_id が取れなくなる。
+// MCPクライアントは payload.kind を見て分岐し、本文取得に要る rep_name / id は
+// Kyou 側の欄から取る（ペイロードには写さない。ADR-0629）。
 func TestKyouMCPDTO_CarriesPluginPayload(t *testing.T) {
 	dto := KyouMCPDTO{
+		ID:          "id-1",
+		RepName:     "Claude Code",
 		DataType:    "claude_code_message",
 		RelatedTime: time.Date(2026, 7, 30, 10, 0, 0, 0, time.UTC),
 		Payload: PluginPayloadMCPDTO{
-			Kind:     "plugin",
-			DataType: "claude_code_message",
-			RepName:  "Claude Code",
-			KyouID:   "id-1",
+			Kind:       "plugin",
+			PluginName: "gkill_plugin_claudecode",
 		},
 	}
 
@@ -297,6 +309,8 @@ func TestKyouMCPDTO_CarriesPluginPayload(t *testing.T) {
 	}
 
 	var raw struct {
+		ID       string              `json:"id"`
+		RepName  string              `json:"rep_name"`
 		DataType string              `json:"data_type"`
 		Payload  PluginPayloadMCPDTO `json:"payload"`
 	}
@@ -310,10 +324,10 @@ func TestKyouMCPDTO_CarriesPluginPayload(t *testing.T) {
 	if raw.Payload.Kind != "plugin" {
 		t.Errorf("payload.kind = %q, want %q", raw.Payload.Kind, "plugin")
 	}
-	if raw.Payload.RepName != "Claude Code" {
-		t.Errorf("payload.rep_name = %q, want %q", raw.Payload.RepName, "Claude Code")
+	if raw.Payload.PluginName != "gkill_plugin_claudecode" {
+		t.Errorf("payload.plugin_name = %q, want %q", raw.Payload.PluginName, "gkill_plugin_claudecode")
 	}
-	if raw.Payload.KyouID != "id-1" {
-		t.Errorf("payload.kyou_id = %q, want %q", raw.Payload.KyouID, "id-1")
+	if raw.RepName != "Claude Code" || raw.ID != "id-1" {
+		t.Errorf("rep_name / id = %q / %q, want Claude Code / id-1（本文取得の鍵は Kyou 側）", raw.RepName, raw.ID)
 	}
 }

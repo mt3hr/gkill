@@ -109,8 +109,8 @@ describe("help topics", () => {
     for (const [topic, entry] of Object.entries(HELP_TOPICS)) {
       for (const match of entry.text.matchAll(/gkill_[a-z_]+/g)) {
         const name = match[0];
-        // create_app の値（gkill_kftl / gkill_mcp_readwrite / gkill_mcp_write / gkill_wear）は素通し
-        if (["gkill_kftl", "gkill_mcp_readwrite", "gkill_mcp_write", "gkill_wear"].includes(name)) continue;
+        // create_app の値（gkill_kftl / gkill_mcp_readwrite / gkill_mcp_write / gkill_wear / gkill_autolog）は素通し
+        if (["gkill_kftl", "gkill_mcp_readwrite", "gkill_mcp_write", "gkill_wear", "gkill_autolog"].includes(name)) continue;
         expect(ALL_TOOL_NAMES.has(name), `${topic}: ${name}`).toBe(true);
       }
     }

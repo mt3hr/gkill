@@ -936,6 +936,7 @@
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "리포스트 작업을 찾을 수 없습니다",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "리포스트 작업 대상을 찾을 수 없습니다",
     "KFTL_MI_REKYOU_NO_WRITE_REP_MESSAGE_TITLE": "리포스트 작업을 저장할 저장소가 설정되어 있지 않습니다",
+    "KFTL_IDEMPOTENCY_KEY_CONFLICT_MESSAGE": "같은 재전송 키가 다른 내용에 재사용되었습니다. 새 내용에는 새 키를 사용하세요",
     "KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE": "{0} 요청이 이미 설정되어 있습니다",
     "NO_DEVICE_NAME": "없음",
     "ALL_MI_BOARD_NAME": "전체",

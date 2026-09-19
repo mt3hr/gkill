@@ -936,6 +936,7 @@
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "Repost task not found",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "Repost task target not found",
     "KFTL_MI_REKYOU_NO_WRITE_REP_MESSAGE_TITLE": "No repository is configured to store repost tasks",
+    "KFTL_IDEMPOTENCY_KEY_CONFLICT_MESSAGE": "The same idempotency key was reused with different content. Use a new key for new content",
     "KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE": "{0} request is already set",
     "NO_DEVICE_NAME": "None",
     "ALL_MI_BOARD_NAME": "All",

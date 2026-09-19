@@ -217,9 +217,9 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 }
 ```
 
-`create_app` は任意で、生成される記録の `create_app` / `update_app` に載る（省略時は `gkill_kftl` = メモ帳と同じ）。Wear companion は `gkill_wear` を送り、MCP の `gkill_submit_kftl` は送らない。`idempotency_key` も任意（同じキーの再送を1回の登録に畳む。Wear のワーカー再送が使う）。
+`create_app` は任意で、生成される記録の `create_app` / `update_app` に載る（省略時は `gkill_kftl` = メモ帳と同じ）。Wear companion は `gkill_wear` を送り、MCP の `gkill_submit_kftl` は送らない。`idempotency_key` も任意（同じキーの再送を1回の登録に畳む。Wear のワーカー再送と MCP が使う）。サーバは成功した送信の本文の指紋（本文と `create_app` の SHA-256）と `created[]` を利用者ごとに10分間控え、同じキー・同じ本文なら元の `created[]` を `replayed: true` で返し、同じキーで別の本文なら `ERR000423`（409）で何も書かない（[ADR-0510](../adr/0510-kftl-idempotency-key-carries-fingerprint-and-result.md)。2026-09-19 まで本文を見ず「成功・`created` 空」で返していた）。
 
-`created[]` の要素は `{id, data_type, updated, related_time}`。記録本体（kmemo / mi / timeis 等）だけが載り、行から作られたタグ・テキストは載らない。`related_time` は書いた記録の関連時刻（打刻の終了は終了時刻。Web が実行中画面の引き直し基準に使う。2026-09-15 追加）。`updated: true` は新規作成ではなく既存レコードの更新（`/end` 系の打刻終了）を表す。確定は temp rep → `CommitTx` の1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、**途中で失敗すると何も残らず `created[]` は空**になる（2026-09-15 までは実 rep へ直書きで、そこまでに書けたぶんが載っていた）。冪等キーで畳まれた再送も実行されないので `created` は空になる。
+`created[]` の要素は `{id, data_type, updated, related_time}`。記録本体（kmemo / mi / timeis 等）だけが載り、行から作られたタグ・テキストは載らない。`related_time` は書いた記録の関連時刻（打刻の終了は終了時刻。Web が実行中画面の引き直し基準に使う。2026-09-15 追加）。`updated: true` は新規作成ではなく既存レコードの更新（`/end` 系の打刻終了）を表す。確定は temp rep → `CommitTx` の1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、**途中で失敗すると何も残らず `created` は `[]`**になる（`null` ではない。2026-09-15 までは実 rep へ直書きで、そこまでに書けたぶんが載っていた）。冪等キーで畳まれた再送は実行されないが、`created` には元の送信の控えが `replayed: true` とともに載る（2026-09-19 まで空だった）。`related_time` は保存層と同じ秒精度。
 
 失敗の返し方は2系統に分かれる（経緯は `documents/adr/0502-kftl-errors-are-per-line.md`）:
 

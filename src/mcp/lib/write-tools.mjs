@@ -246,9 +246,9 @@ export const WRITE_TOOLS = [
       "/start or ーた (start a timeis), /end or ーえ (end a running timeis; the title line is REQUIRED), /timeis or ーち (title, start, end), /end? /endt /endt? (variants), " +
       "# or 。 (tag for the previous record), ? or ？ (related time), ?? (repeat block), -- or ーー (text block), ! or ！ (stop). " +
       "Example (kmemo + mood + expense): \"今日はいい天気だった\\n、\\n/mood\\n8\\n、\\n/expense\\nカフェ\\nアイスコーヒー\\n-500\\n!\". " +
-      "Response: messages[] and created[] ({id, data_type, updated, related_time}) in write order; use created[].id as target_id for gkill_add_tag / gkill_add_text. " +
-      "The whole submission is one transaction: any per-line error (a value-less prefix, a mood outside 0-10, an unreadable date, a missing write repository) rejects it and NOTHING is written — fix the text and resend. " +
-      "Pass the same idempotency_key on a retry so a replay of an already successful submission is folded instead of written twice. " +
+      "Response: messages[], created[] ({id, data_type, updated, related_time}) in write order, and replayed (true when an idempotency_key replay returned the original created[]); use created[].id as target_id for gkill_add_tag / gkill_add_text. " +
+      "The whole submission is one transaction: any per-line error (a value-less prefix, a mood outside 0-10, an unreadable date, a missing write repository) rejects it and NOTHING is written (created:[]) — fix the text and resend. " +
+      "Pass the same idempotency_key on a retry: the same key with the same text returns the original created[] (replayed:true) instead of writing twice; the same key with different text is rejected (409). " +
       "Records carry create_app \"gkill_kftl\" (same as the web notepad), so create_apps:[\"gkill_mcp_readwrite\"] does not find them. " +
       "Full syntax (~~ and ?? repeat rules, /expense pairs, the /end family, per-line failure rules): gkill_get_mcp_help topic:kftl.",
     inputSchema: {
@@ -260,9 +260,11 @@ export const WRITE_TOOLS = [
           type: "string",
           description:
             "Optional replay guard. A failed submission writes nothing, so retrying it is always safe; the guard is for "
-            + "replaying a submission that already SUCCEEDED (e.g. the response was lost): retrying with the SAME key folds "
-            + "the replay into the original submission instead of writing every record again. Omit it and every retry "
-            + "writes afresh. Use any stable string you can reproduce for the retry (e.g. a uuid you generate once per submission).",
+            + "replaying a submission that already SUCCEEDED (e.g. the response was lost): retrying with the SAME key and the SAME "
+            + "kftl_text returns the ORIGINAL created[] with replayed:true and writes nothing, so the ids can be recovered. The same key "
+            + "with DIFFERENT text is rejected (409, ERR000423) and writes nothing — use a fresh key for new content. A key is remembered "
+            + "for 10 minutes. Omit it and every retry writes afresh. Use any stable string you can reproduce for the retry "
+            + "(e.g. a uuid you generate once per submission).",
         },
       },
       required: ["kftl_text"],
@@ -299,7 +301,9 @@ export const WRITE_TOOLS = [
           description:
             "Batch form: delete several entries in one call, instead of id + data_type. " +
             "At most 100 entries; they are processed one by one in order. " +
-            "gkill_submit_kftl returns created[] in exactly this shape, so its response can be passed straight back here. " +
+            "gkill_submit_kftl's created[] is NOT this shape: it carries updated / related_time, which are rejected here — " +
+            "pass created.filter(c => !c.updated).map(({id, data_type}) => ({id, data_type})); entries with updated:true are " +
+            "pre-existing records the submission merely updated (a timeis it ended), not records it created. " +
             "This is NOT a transaction: on partial failure the response lists every entry with ok / error, " +
             "plus succeeded_count and failed_count, so you can see how far it got. " +
             "Cannot be combined with id / data_type.",
@@ -447,9 +451,9 @@ export const WRITE_TOOLS = [
           default: true,
         },
         is_checked: { type: "boolean", description: "Set to true to mark as completed, false to reopen. Omit to keep unchanged." },
-        limit_time: { type: "string", description: `New deadline. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
-        estimate_start_time: { type: "string", description: `New estimated start time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
-        estimate_end_time: { type: "string", description: `New estimated end time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
+        limit_time: { type: ["string", "null"], description: `New deadline. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged; pass null to clear the deadline.` },
+        estimate_start_time: { type: ["string", "null"], description: `New estimated start time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged; pass null to clear it.` },
+        estimate_end_time: { type: ["string", "null"], description: `New estimated end time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged; pass null to clear it.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
       },
       required: ["id"],
@@ -546,7 +550,9 @@ export const WRITE_TOOLS = [
           description:
             "Batch form: restore several entries in one call, instead of id + data_type. " +
             "At most 100 entries; they are processed one by one in order. " +
-            "gkill_submit_kftl returns created[] in exactly this shape, so its response can be passed straight back here. " +
+            "gkill_submit_kftl's created[] is NOT this shape: it carries updated / related_time, which are rejected here — " +
+            "pass created.filter(c => !c.updated).map(({id, data_type}) => ({id, data_type})); entries with updated:true are " +
+            "pre-existing records the submission merely updated (a timeis it ended), not records it created. " +
             "This is NOT a transaction: on partial failure the response lists every entry with ok / error, " +
             "plus succeeded_count and failed_count, so you can see how far it got. " +
             "Cannot be combined with id / data_type.",

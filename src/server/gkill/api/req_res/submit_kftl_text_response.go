@@ -13,8 +13,12 @@ type SubmitKFTLTextResponse struct {
 	// Created は確定したレコード。KFTLは1つのテキストから複数のKyouを作るのに、
 	// 2026-08-24 まで応答は「記録しました」の1文だけで、件数も種別もIDも返らなかった。
 	// 確定は1つの SQLite トランザクション（commit_tx と同じ）なので、失敗したときは何も
-	// 残らず空。冪等キーで再送を畳んだときも実行していないので空。
+	// 残らず空（`[]`。`null` にはしない）。冪等キーで再送を畳んだときは**元の送信の created[]** が入る
+	// （2026-09-19 まで空だった。応答を受け取り損ねた呼び出し側が ID を回収できるように）。
 	Created []*SubmitKFTLTextCreated `json:"created"`
+	// Replayed は冪等キーで畳んだ再送であることを表す。true のとき Created は元の送信の控えで、
+	// 今回は何も書いていない。契約は足すだけ（Wear / Web / MCP は未知のキーを無視する）。
+	Replayed bool `json:"replayed"`
 }
 
 // SubmitKFTLTextCreated はKFTLが書いた1件。
