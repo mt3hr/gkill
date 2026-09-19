@@ -286,8 +286,7 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
 配置先のフォルダ名がすべて同じ文字列である必要がある（配布スクリプトがこの1つの名前から
 ソース・ビルド出力・配置先を組み立てるため）。
 
-接頭辞まで規約なのは、Termux 側の配布スクリプト
-（`termux-tasker/update_gkill_plugins.sh`）が更新前に
+接頭辞まで規約なのは、Termux 側の配布スクリプトが更新前に
 
 ```bash
 pkill -KILL -f gkill_plugin_
