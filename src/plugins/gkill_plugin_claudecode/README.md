@@ -34,7 +34,7 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_claudecode/cache.db
 ```
 
 `manifest.json` はバイナリに埋め込まれているので、配置先で吐かせることもできる。
-配布スクリプト（`scripts/UpdateGkillPlugins.ps1` / `termux-tasker/update_gkill_plugins.sh`）は
+配布スクリプトは
 バイナリだけを配り、`manifest.json` が無ければこれで生成する。バイナリと必ず一致する。
 既定の `config.json` も同様に吐ける（通常は起動時に自動生成されるので不要）。
 

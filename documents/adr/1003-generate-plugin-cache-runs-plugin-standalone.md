@@ -21,7 +21,7 @@ SQLite キャッシュ（`caches/plugin_cache/{user}/{plugin}/cache.db`）は、
 fitbit の初回構築は実測 155 秒なので、最初に開いた画面は数分のあいだ結果が痩せる。
 
 サムネイル（`generate_thumb_cache`）と互換動画（`generate_video_cache`）には「同期の後に CLI で作っておく」
-道具があり、運用スクリプト（`SyncDatas.ps1` / `hbg_download.sh`）はそれを `update_cache` と並べて回している。
+道具があり、運用スクリプトはそれを `update_cache` と並べて回している。
 プラグインのキャッシュにも同列の道具が要る。
 
 ## Decision
@@ -84,8 +84,7 @@ fitbit の初回構築は実測 155 秒なので、最初に開いた画面は�
   `all` に含まれるたびに「結果行が無い」エラー行と exit 1 になる（静かではないので意図どおり）。
   `gkill_plugin_uguisu` は同日に対応し、キャッシュを持たないので `no_cache` を1行返す。
   対応前のバイナリが配置されている間はその1本だけ失敗行が出る。
-- **旧 SDK でビルドしたプラグインバイナリは exit 2 で失敗に数える。** 配布（`ReleaseGkillPlugins.ps1` /
-  Termux の `update_gkill_plugins.sh`）で7本を同時に入れ替えるまで、運用スクリプトの新しい行は失敗を印字する
+- **旧 SDK でビルドしたプラグインバイナリは exit 2 で失敗に数える。** 配布で7本を同時に入れ替えるまで、運用スクリプトの新しい行は失敗を印字する
   （exit code は見ていないので同期は止まらない）。
 - `BuildCache` の配線が欠けたプラグインは `all` でも `no_cache` として通り、キャッシュが作られないのに
   エラーが出ない。同梱7本は `plugin/sdk/build_cache_test.go` のソース走査が固定する。第三者プラグインは守れない。
