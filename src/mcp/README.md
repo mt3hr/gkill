@@ -185,10 +185,10 @@ curl -v -X POST http://localhost:8808/mcp \
 | `gkill_get_all_tag_names` | 全タグ名を取得 |
 | `gkill_get_all_rep_names` | Kyouを供給するリポジトリ名を取得。`contains`（大小無視の部分一致）と `limit`（既定200）で絞れ、`total_count` / `truncated` が付く。rep が数百ある環境で「その名前があるか」を確かめるために全件を読まずに済む |
 | `gkill_get_gps_log` | 期間指定でGPSログを取得。`limit` / `cursor`（不透明トークン。`next_cursor` をそのまま返す）でページングし、`count_only` / `group_by:"day"` で件数・日別カバレッジだけ取れる。**カーソルは `gkill_get_kyous` のものと別方式**（Node製base64url。コーデックの正本は `lib/gps-cursor.mjs` 1本で、発行側と受理側の両方がそこを使う） |
-| `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等） |
+| `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等）。`fields` で列を、`contains` で葉を絞り、`compact`（既定 true）が既定値の欄（`children` の null / 空・`is_dir:false`・`ignore_check_rep_rykv:false`・識別欄と同じ `name`）を落とす。`max_size_mb`（既定 0.25）を超える struct は `{omitted_bytes}` に置き換えて必ず収める（ADR-0629） |
 | `gkill_get_rep_infos` | リポジトリ一覧を構造化メタデータ付きで取得。`query.rep_types` が受理する正準値 `canonical_rep_types[]`（表示ラベルと1:1でない）、索引付きrepの最終更新 `indexed_at`（古いと「追加したはずのファイルが検索に出ない」の原因）、タグ・テキスト・通知・GPSログの格納先 `attached_data_reps[]`（`query.reps` には渡せない。`use_to_write` 付き）を返す。列は `fields`、行は `writable_only` / `rep_types` / `rep_names` / `contains` / `data_kinds` で絞る（「`gkill_add_tag` はどこへ書くか」は `writable_only:true, data_kinds:["tag"]` で1行） |
 | `gkill_get_idf_file` | IDFファイルの実データを取得（画像はMCP image blockで返却）。`thumb=WxH`（一辺最大1024、動画は `is_video: true` 併用）で縮小取得できる。上限は `GKILL_MCP_MAX_FILE_BYTES`（既定8MB） |
-| `gkill_get_kyou_history` | 1件の全版を取得（削除済みの版も含む）。`gkill_get_kyous` から見えなくなった記録を読み返す唯一の経路 |
+| `gkill_get_kyou_history` | 1件の全版を取得（削除済みの版も含む）。`gkill_get_kyous` から見えなくなった記録を読み返す唯一の経路。`limit`（既定20・上限200）と `offset` で頁を送り、`has_more` のとき `next_offset` が続きの位置（ADR-0626）。版の `data_type` はエンティティ名 |
 
 ##### ファイル実パス導線
 
@@ -254,8 +254,8 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 | `gkill_update_kc` | 数値記録更新 |
 | `gkill_update_tag` | タグ更新 |
 | `gkill_update_text` | テキスト注釈更新 |
-| `gkill_submit_kftl` | KFTLテキスト一括処理。応答の `created[]`（`{id, data_type, updated, related_time}`）に実際に書かれた記録が書かれた順で並ぶ。`created[].id` を `gkill_add_tag` / `gkill_add_text` の `target_id` に使えば、KFTLで作った記録へ後からタグ・注釈を付けられる |
-| `gkill_delete_kyou` | エントリのソフト削除 |
+| `gkill_submit_kftl` | KFTLテキスト一括処理。応答の `created[]`（`{id, data_type, updated, related_time}`。失敗時は `[]`、`related_time` は秒精度）に実際に書かれた記録が書かれた順で並ぶ。`replayed: true` は同じ `idempotency_key`・同じ本文の再送で、`created[]` は元の送信の控え（同じキーで別の本文は 409 `ERR000423`。ADR-0510）。`created[].id` を `gkill_add_tag` / `gkill_add_text` の `target_id` に使えば、KFTLで作った記録へ後からタグ・注釈を付けられる |
+| `gkill_delete_kyou` | エントリのソフト削除。`gkill_submit_kftl` の `created[]` は `updated` / `related_time` を持つのでそのまま `targets` に渡せない —— `created.filter(c => !c.updated).map(({id, data_type}) => ({id, data_type}))` を渡す（`updated:true` は既存記録の更新で、消すと元から在った打刻が消える） |
 | `gkill_restore_kyou` | ソフト削除の取り消し（`is_deleted` を戻す） |
 
 Write専用サーバにはRead便利ツール7つ（`gkill_status`, `gkill_get_mcp_help`, `gkill_get_application_config`, `gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_kyou_history`）も含まれます。`gkill_status` / `gkill_get_application_config` は「どのアカウントへ書くのか」を書く前に確かめるためのものです。`gkill_get_kyou_history` を載せているのは、`gkill_delete_kyou` / `gkill_restore_kyou` と同じサーバから「いま何を消したのか」を確かめられないと、取り消しが当てずっぽうになるためです。
@@ -349,8 +349,10 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 | `locale_name` | string | ロケール（例: ja, en） |
 | `limit` | integer | 最大取得件数（default: 20） |
 | `cursor` | string | 前回レスポンスの `next_cursor` をそのまま指定してページング（不透明文字列。v2は複合形式 `{RFC3339Nano}::{ID}`。組み立て・編集しない） |
-| `max_size_mb` | number | レスポンスの最大サイズMB（default: 0.25） |
+| `max_size_mb` | number | `kyous[]` の最大サイズMB（default: 0.25。厳密上限。`include_plugin_content` で本文を埋め込んだ後にも守り直し、押し出した分は次頁へ。ADR-0624） |
 | `is_include_timeis` | boolean | 各Kyouに付随する TimeIs を含めるか（default: false） |
+| `include_attached_ids` | boolean | `tag_entities[]` / `text_entities[]`（注釈自身の id）を載せるか（default: false。ADR-0629） |
+| `include_file_urls` | boolean | HTTP 接続のとき idf の公開URL（`file_url` / `file_url_full` / `file_url_expires_at`）を発行するか（default: false。ADR-0630） |
 | `count_only` / `group_by` | boolean / string | 件数だけ・バケット集計（month/day/week_of_day/hour/data_type/rep_name/create_app/update_app/url_domain/file_extension）。cursor とは併用不可 |
 | `data_types` / `num_min` / `num_max` / `idf_kinds` / `include_file_size` | - | リクエストレベルの絞り込み（v2。ADR-0604） |
 | `create_apps` / `update_apps` | array | 作成アプリ / 最終更新アプリの許可リスト（各記録の `create_app` / `update_app` と照合）。「MCP経由で作った記録」（`"gkill_mcp_readwrite"` / `"gkill_mcp_write"`）の絞り込みに使う |
@@ -359,7 +361,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 | `plugin_content_format` | string | 埋め込む形式。`text`（既定）/ `html` / `both` |
 
 レスポンスフィールド:
-- `kyous[]`: Kyou DTOの配列（各要素に `id`, `rep_name`, `data_type`, `related_time`, `create_app` / `update_app`（作成/最終更新アプリ名）, `tags[]`, `texts[]`, `notifications[]`, `timeis[]`（`is_include_timeis: true` のときの付随TimeIs）, `payload` を含む）
+- `kyous[]`: Kyou DTOの配列（各要素に `id`, `rep_name`, `data_type`, `related_time`, `create_app` / `update_app`（作成/最終更新アプリ名）, `tags[]`, `texts[]`, `notifications[]`, `timeis[]`（`is_include_timeis: true` のときの付随TimeIs）, `is_deleted`（削除済みのときだけ。無ければ生きている）, `payload` を含む。`tag_entities[]` / `text_entities[]` は `include_attached_ids: true` のときだけ）
 - `total_count`: クエリ全体の件数（**cursor 無し応答のみ**。count_only/group_by を含む）
 - `returned_count`: 今回返却した件数
 - `remaining_count`: この続きに残っている件数（全応答）

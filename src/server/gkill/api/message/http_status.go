@@ -230,6 +230,8 @@ var errorCodeHTTPStatus = map[string]int{
 	AlreadyExistNotificationError:          http.StatusConflict, // ERR000276
 	AlreadyExistKCError:                    http.StatusConflict, // ERR000307
 	AlreadyExistMiReKyouError:              http.StatusConflict, // ERR000393
+	// 再送キーの使い回し（同じ idempotency_key で別の本文）。「今の状態（控えてある元の送信）と衝突する」ので 409。
+	SubmitKFTLTextIdempotencyKeyConflictError: http.StatusConflict, // ERR000423
 
 	// ---- 413 Request Entity Too Large — リクエスト本文が大きすぎる ----
 	// 認証系ミドルウェアの先読み上限（maxAuthBodyBytes）超過。

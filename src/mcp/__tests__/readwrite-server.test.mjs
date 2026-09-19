@@ -25,13 +25,13 @@ function createMockClient(overrides = {}) {
 // get_kyous が返すプラグインKyou 1件分。
 function pluginKyouResult() {
   return {
+    id: "kyou-1",
+    rep_name: "Claude Code",
     data_type: "claude_code_message",
     related_time: "2026-08-05T10:00:00+09:00",
     payload: {
       kind: "plugin",
-      data_type: "claude_code_message",
-      rep_name: "Claude Code",
-      kyou_id: "kyou-1",
+      plugin_name: "gkill_plugin_claudecode",
     },
   };
 }

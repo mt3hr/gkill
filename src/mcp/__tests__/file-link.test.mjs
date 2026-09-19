@@ -8,6 +8,7 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import { McpServer, HttpTransport } from "../gkill-read-server.mjs";
 import { FileLinkStore } from "../lib/file-link-store.mjs";
+import { MINT_FILE_LINKS } from "../lib/payload.mjs";
 
 // ---------------------------------------------------------------------------
 // FileLinkStore
@@ -71,8 +72,9 @@ describe("buildToolResult file_url injection", () => {
     server.currentSessionId = "sess-xyz";
   });
 
-  function idfResult(extra = {}) {
-    return {
+  // include_file_urls:true のときハンドラが立てる印（ADR-0630）。無ければリモートでも鋳造しない。
+  function idfResult(extra = {}, { requested = true } = {}) {
+    const payload = {
       kyous: [
         {
           data_type: "idf",
@@ -87,10 +89,29 @@ describe("buildToolResult file_url injection", () => {
         },
       ],
     };
+    if (requested) {
+      payload[MINT_FILE_LINKS] = true;
+    }
+    return payload;
   }
+
+  test("remote client without include_file_urls gets no file_url, and file_path is still removed", () => {
+    const result = server.buildToolResult("gkill_get_kyous", idfResult({}, { requested: false }), false);
+    const p = result.structuredContent.kyous[0].payload;
+
+    expect(p.file_path).toBeUndefined();
+    expect(p.file_url).toBeUndefined();
+    expect(p.file_url_expires_at).toBeUndefined();
+    expect(store.links.size).toBe(0);
+    // 印は Symbol なので JSON には出ない
+    expect(JSON.stringify(result.structuredContent)).not.toContain("mint_file_links");
+  });
 
   test("image payload gets a thumbnail file_url plus a full-size file_url_full, and file_path is removed", () => {
     const result = server.buildToolResult("gkill_get_kyous", idfResult(), false);
+    const expires = Date.parse(result.structuredContent.kyous[0].payload.file_url_expires_at);
+    expect(Number.isFinite(expires)).toBe(true);
+    expect(expires).toBeGreaterThan(Date.now());
     const p = result.structuredContent.kyous[0].payload;
 
     expect(p.file_path).toBeUndefined();

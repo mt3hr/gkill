@@ -79,11 +79,14 @@ func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Requ
 			// 読み取り元の絶対パスを書く（書いてよい）。出口で伏せるのはこちらの責務。
 			LastError: message.RedactEnvironmentSpecific(pluginRepo.LastStderr()),
 		}
-		// 申告された rep 名。manifest の rep_name 1つに畳まれる（未申告の）プラグインでは出さない。
+		// rep_names は「query.reps に渡せる値」として常に載せる（申告があればその値、無ければ manifest の
+		// rep_name 1つ、取得に失敗しても manifest の rep_name 1つ）。申告が空（索引未構築）なら空配列を返し、
+		// キーごと消さない（DTO のコメント参照。ADR-0311）。
 		// IsAlive でプロセスは起動済みなので、ここで取りに行っても起動の副作用は増えない。
 		if manifest.EmitsKyouOrDefault() {
-			if repNames, err := pluginRepo.GetRepNames(r.Context()); err == nil && !(len(repNames) == 1 && repNames[0] == manifest.RepName) {
-				info.RepNames = repNames
+			info.RepNames = []string{manifest.RepName}
+			if repNames, err := pluginRepo.GetRepNames(r.Context()); err == nil {
+				info.RepNames = append([]string{}, repNames...)
 			}
 		}
 		// provides宣言のあるプラグインは索引統計（鮮度・件数・時刻範囲）も返す（外部監査 D1）

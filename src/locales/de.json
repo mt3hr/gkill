@@ -936,6 +936,7 @@
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "Repost-Aufgabe nicht gefunden",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "Ziel der Repost-Aufgabe nicht gefunden",
     "KFTL_MI_REKYOU_NO_WRITE_REP_MESSAGE_TITLE": "Es ist kein Repository zum Speichern von Repost-Aufgaben konfiguriert",
+    "KFTL_IDEMPOTENCY_KEY_CONFLICT_MESSAGE": "Derselbe Wiederholungsschlüssel wurde mit anderem Inhalt erneut verwendet. Verwenden Sie für neuen Inhalt einen neuen Schlüssel",
     "KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE": "Die Anfrage für {0} ist bereits gesetzt",
     "NO_DEVICE_NAME": "Keine",
     "ALL_MI_BOARD_NAME": "Alle",

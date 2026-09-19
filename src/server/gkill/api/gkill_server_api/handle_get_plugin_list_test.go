@@ -249,6 +249,11 @@ func TestHandleGetPluginList_EmitsKyouAndProvides(t *testing.T) {
 	if len(kyouOnly.Provides) != 0 {
 		t.Errorf("provides 無しなのに provides が返っている: %v", kyouOnly.Provides)
 	}
+	// rep_names は「query.reps に渡せる値」として常に載る。申告しない（できない）プラグインは
+	// manifest の rep_name 1つ（ADR-0311。以前は申告があるときだけ載り、索引未構築だとキーごと消えた）
+	if len(kyouOnly.RepNames) != 1 || kyouOnly.RepNames[0] != "KyouOnlyTestRep" {
+		t.Errorf("rep_names = %v, want [KyouOnlyTestRep]（申告が無ければ manifest の rep_name）", kyouOnly.RepNames)
+	}
 
 	gpsOnly := findPluginInfoByName(listResp.Plugins, "gpslog_only_plugin")
 	if gpsOnly == nil {
@@ -256,6 +261,9 @@ func TestHandleGetPluginList_EmitsKyouAndProvides(t *testing.T) {
 	}
 	if gpsOnly.EmitsKyou {
 		t.Error("emits_kyou=false のプラグインが emits_kyou=true になっている")
+	}
+	if gpsOnly.RepNames != nil {
+		t.Errorf("Kyou を出さないプラグインの rep_names = %v, want null（検索値は無い）", gpsOnly.RepNames)
 	}
 	if len(gpsOnly.Provides) != 1 || gpsOnly.Provides[0] != "gpslog" {
 		t.Errorf("provides = %v, want [gpslog]", gpsOnly.Provides)

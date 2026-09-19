@@ -208,14 +208,22 @@ describe("summarizeWriteToolPayload", () => {
   });
 
   test("gkill_submit_kftl says so when nothing was written", () => {
-    // 空行だけのテキストと、冪等キーで畳まれた再送はどちらも何も書かない
+    // 空行だけのテキストは何も書かない
     expect(summarizeWriteToolPayload("gkill_submit_kftl", { messages: [{}] }))
-      .toBe("KFTL submitted: nothing was written (blank lines and idempotent replays write nothing).");
+      .toBe("KFTL submitted: nothing was written (blank lines write nothing).");
   });
 
-  test("gkill_delete_kyou lists the updated_* keys", () => {
+  test("gkill_submit_kftl says a replay returned the original created[]", () => {
+    // 冪等キーで畳んだ再送は元の created[] を replayed:true で返し、今回は何も書かない（ADR-0510）
+    expect(summarizeWriteToolPayload("gkill_submit_kftl", { messages: [{}], replayed: true, created: [{ id: "a", data_type: "kmemo" }] }))
+      .toBe("KFTL replay folded: 1 record(s) of the original submission returned again (replayed:true, nothing written this time).");
+  });
+
+  test("gkill_delete_kyou names the type and id instead of the response keys", () => {
+    expect(summarizeWriteToolPayload("gkill_delete_kyou", { updated_kmemo: { id: "k1" }, updated_kyou: { id: "k1" } }))
+      .toBe("Deleted (soft): kmemo k1");
     expect(summarizeWriteToolPayload("gkill_delete_kyou", { updated_kmemo: {}, updated_kyou: {} }))
-      .toBe("Deleted (soft): updated_kmemo, updated_kyou");
+      .toBe("Deleted (soft): kmemo (id unknown)");
     expect(summarizeWriteToolPayload("gkill_delete_kyou", {}))
       .toBe("Deleted (soft): completed");
   });

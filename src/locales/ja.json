@@ -936,6 +936,7 @@
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "リポストタスクが見つかりませんでした",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "リポストタスク対象の情報が見つかりませんでした",
     "KFTL_MI_REKYOU_NO_WRITE_REP_MESSAGE_TITLE": "リポストタスクの保存先が設定されていません",
+    "KFTL_IDEMPOTENCY_KEY_CONFLICT_MESSAGE": "同じ再送キーで別の内容が送られました。新しい内容には新しいキーを使ってください",
     "KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE": "{0}のリクエストはすでに設定されています",
     "NO_DEVICE_NAME": "なし",
     "ALL_MI_BOARD_NAME": "すべて",
