@@ -6,6 +6,12 @@
 
 // リモート向け file_url の既定サムネサイズ (gkillの ?thumb=WxH に渡す。長辺上限1024)。
 export const DEFAULT_FILE_LINK_THUMB = "1024x1024";
+
+// MINT_FILE_LINKS は「この応答には公開ファイルURLを発行してよい」の印。
+// gkill_get_kyous のハンドラが include_file_urls:true のときだけ payload に立て、
+// buildToolResult（mcp-server-base.mjs）が HTTP のときに見る。Symbol なので JSON には出ず、
+// structuredContent にも混ざらない。以前は HTTP なら全応答で idf ごとに2本鋳造していた（ADR-0630）。
+export const MINT_FILE_LINKS = Symbol("gkill.mint_file_links");
 // 配信ルートが受け付けるサムネ指定の検証用。
 export const THUMB_QUERY_REGEX = /^\d{1,4}x\d{1,4}$/;
 // 一辺の上限。Go 側 thumbFileServer.maxSize の写し
@@ -55,7 +61,7 @@ export function applyFileLinks(value, ctx, gkillSessionId) {
   }
   if (isIdfPayload(value)) {
     delete value.file_path;
-    const token = ctx.store.mint({
+    const { token, expiresAt } = ctx.store.mintLink({
       gkillSessionId,
       repName: value.rep_name,
       fileName: value.file_name,
@@ -69,6 +75,8 @@ export function applyFileLinks(value, ctx, gkillSessionId) {
     } else {
       value.file_url = base;
     }
+    // 期限を添える。無いと人間へ渡したリンクがいつ切れるか誰にも分からない（2026-09-18 の実利用報告）。
+    value.file_url_expires_at = new Date(expiresAt).toISOString();
     return value;
   }
   for (const key of Object.keys(value)) applyFileLinks(value[key], ctx, gkillSessionId);

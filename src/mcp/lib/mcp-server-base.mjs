@@ -19,7 +19,7 @@
 
 import { GkillApiError, isPlainObject, invalidArgument } from "./errors.mjs";
 import { assertTrimmedString } from "./validation.mjs";
-import { applyFileLinks, appendWarningsToSummary, normalizeMimeType, stripFilePaths, summarizeToolError } from "./payload.mjs";
+import { applyFileLinks, appendWarningsToSummary, normalizeMimeType, stripFilePaths, summarizeToolError, MINT_FILE_LINKS } from "./payload.mjs";
 import { summarizePluginToolPayload } from "./plugin-tools.mjs";
 import { summarizeReadToolPayload, isReadToolName, handleReadToolCall } from "./read-handlers.mjs";
 import { summarizeWriteToolPayload, handleWriteToolCall } from "./write-handlers.mjs";
@@ -165,11 +165,13 @@ export class McpServerBase {
   }
 
   buildToolResult(name, payload, isError = false, ctx = null) {
-    // ローカルクライアントには実パスを渡す。リモートには実パスを渡さず、
-    // 代わりに期限付きの公開ファイルURLを注入する (発行できないときは実パスを消すだけ)。
+    // ローカルクライアントには実パスを渡す。リモートには実パスを渡さず、代わりに期限付きの
+    // 公開ファイルURLを注入する —— ただし**呼び出し側が include_file_urls で頼んだときだけ**
+    // （ハンドラが MINT_FILE_LINKS の印を立てる。JSON には出ない Symbol）。頼まれていなければ
+    // 実パスを消すだけ。以前は HTTP なら全応答で idf ごとにトークンを2本鋳造していた（ADR-0630）。
     // file-link トークンは ctx.sessionId で鋳造する。ctx 未指定 (単体テスト) のみ this.currentSessionId。
     if (!this.isLocalTransport) {
-      if (this.fileLinkContext && !isError) {
+      if (this.fileLinkContext && !isError && payload && payload[MINT_FILE_LINKS] === true) {
         applyFileLinks(payload, this.fileLinkContext, ctx ? ctx.sessionId : this.currentSessionId);
       } else {
         stripFilePaths(payload);

@@ -205,6 +205,15 @@ async function runUpdate(ctx, dataType, args) {
         `pass at least one of ${spec.patchFields.join(", ")}).`,
     );
   }
+  // 指定された欄が全部いまの値と同じでも弾く（引数の有無だけ見ていると同じ内容の版が積まれる。
+  // 2026-09-18 の実利用報告で履歴が4版に。delete の already deleted ガードと対称。ADR-0628）。
+  if (patchedFields.every((field) => valuesEquivalent(current[field], normalized[field]))) {
+    throw new GkillApiError(
+      `No effective change for ${dataType} ${normalized.id}: every specified field (${patchedFields.join(", ")}) ` +
+        "already has that value, so nothing was written (gkill is append-only and an identical version would only " +
+        "add noise to the history). Pass a different value to update.",
+    );
+  }
   for (const field of patchedFields) {
     current[field] = normalized[field];
   }
@@ -221,9 +230,52 @@ async function runUpdate(ctx, dataType, args) {
     true, ctx.sid,
   );
   return {
-    [target.responseKey]: mergeStored(current, response[target.responseKey]),
+    [target.responseKey]: withEntityDataType(mergeStored(current, response[target.responseKey]), dataType),
     updated_kyou: response.updated_kyou || null,
   };
+}
+
+// valuesEquivalent は「パッチの値がいまの値と同じか」。日時はオフセット違いを同じ瞬間として比べ、
+// 数値は Number で、null（消す）はいまの値が空なら同じとみなす。
+const RFC3339_LIKE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
+function valuesEquivalent(current, next) {
+  if (current === next) return true;
+  const currentEmpty = current === null || current === undefined || current === "";
+  if (next === null || next === undefined) return currentEmpty;
+  if (currentEmpty) return false;
+  if (typeof next === "string" && typeof current === "string") {
+    if (RFC3339_LIKE.test(current) && RFC3339_LIKE.test(next)) {
+      const a = Date.parse(current);
+      const b = Date.parse(next);
+      return Number.isFinite(a) && Number.isFinite(b) && a === b;
+    }
+    return current === next;
+  }
+  if (typeof next === "number" || typeof current === "number") return Number(current) === Number(next);
+  return false;
+}
+
+// withEntityDataType は応答の実体の data_type をこの口の語彙（エンティティ名）に揃える。
+// gkill の型別 API は射影名（mi_create / mi_check …）を経路ごとに違う規則で返すので、同じ Mi が
+// 検索 / 履歴 / 削除応答で3通りの data_type を名乗っていた（2026-09-18 の実利用報告）。
+function withEntityDataType(entity, dataType) {
+  return entity !== null && typeof entity === "object" ? { ...entity, data_type: dataType } : entity;
+}
+
+// describeTargetNotFound は add_tag / add_text の「対象の記録が無い」（error_kind not_found）を、
+// 汎用の「タグ追加に失敗しました」ではなく target_id を名指しした文言で包み直す。それ以外はそのまま返す。
+function describeTargetNotFound(error, targetId, kind) {
+  if (!(error instanceof GkillApiError)) return error;
+  const errors = Array.isArray(error.detail?.errors) ? error.detail.errors : [];
+  const notFound =
+    errors.some((entry) => entry && entry.error_kind === "not_found") || /kind=not_found/.test(String(error.message));
+  if (!notFound) return error;
+  return new GkillApiError(
+    `target_id ${JSON.stringify(targetId)} matched no kyou, so the ${kind} was not added. target_id must be the id of an ` +
+      "entry (kmemo / mi / timeis / urlog ...), not a tag or text id, and the entry must not be deleted (check it with " +
+      `gkill_get_kyou_history or gkill_get_kyous query.ids). Server said: ${error.message}`,
+    error.detail,
+  );
 }
 
 /**
@@ -275,7 +327,7 @@ async function softDeleteOne(ctx, entry, deleting, localeName) {
   const result = {};
   // 復活はキー名だけ restored_ に付け替える（サーバ側の応答キーは updated_ のまま）
   const responseKey = deleting ? target.responseKey : `restored_${entry.data_type}`;
-  result[responseKey] = mergeStored(current, response[target.responseKey]);
+  result[responseKey] = withEntityDataType(mergeStored(current, response[target.responseKey]), entry.data_type);
   if (response.updated_kyou) result.updated_kyou = response.updated_kyou;
   return result;
 }
@@ -556,11 +608,16 @@ async function dispatchWriteToolCall(ctx, name, args) {
           update_device: WRITE_DEVICE, update_user: ctx.userId,
           is_deleted: false,
         };
-        const response = await ctx.client.callApi(
-          "/api/add_tag",
-          { tag, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
+        let response;
+        try {
+          response = await ctx.client.callApi(
+            "/api/add_tag",
+            { tag, want_response_kyou: true, locale_name: normalized.locale_name },
+            true, ctx.sid,
+          );
+        } catch (error) {
+          throw describeTargetNotFound(error, normalized.target_id, "tag");
+        }
         // AddTagResponse に added_kyou は無い（常に null が返るだけだった）
         return { added_tag: response.added_tag || null };
       }
@@ -582,11 +639,16 @@ async function dispatchWriteToolCall(ctx, name, args) {
           update_device: WRITE_DEVICE, update_user: ctx.userId,
           is_deleted: false,
         };
-        const response = await ctx.client.callApi(
-          "/api/add_text",
-          { text, want_response_kyou: true, locale_name: normalized.locale_name },
-          true, ctx.sid,
-        );
+        let response;
+        try {
+          response = await ctx.client.callApi(
+            "/api/add_text",
+            { text, want_response_kyou: true, locale_name: normalized.locale_name },
+            true, ctx.sid,
+          );
+        } catch (error) {
+          throw describeTargetNotFound(error, normalized.target_id, "text");
+        }
         // AddTextResponse に added_kyou は無い（常に null が返るだけだった）
         return { added_text: response.added_text || null };
       }
@@ -603,9 +665,15 @@ async function dispatchWriteToolCall(ctx, name, args) {
           true, ctx.sid,
         );
         // created は「実際に書かれたもの」。KFTL は1つのテキストから複数の Kyou を作るので、
-        // これが無いと呼び出し側は何が作られたか分からない。
-        // 失敗時も途中まで書けたぶんが入る（KFTL は DB トランザクションを使わない）。
-        return { messages: response.messages || [], created: response.created || [] };
+        // これが無いと呼び出し側は何が作られたか分からない。確定は1つのトランザクションなので
+        // 失敗時は空（そのとき gkill はエラーを返し、ここへは来ない）。
+        // replayed:true は冪等キーで畳んだ再送で、created は元の送信の控え（今回は何も書いていない。
+        // 同じキーで別の本文は gkill が 409 ERR000423 で断る。ADR-0510）。
+        return {
+          messages: response.messages || [],
+          created: response.created || [],
+          replayed: Boolean(response.replayed),
+        };
       }
 
       case "gkill_delete_kyou": {
@@ -684,8 +752,12 @@ function summarizeWriteToolPayloadBody(name, payload) {
   switch (name) {
     case "gkill_submit_kftl": {
       const created = Array.isArray(payload.created) ? payload.created : [];
+      if (payload.replayed) {
+        // 畳んだ再送。created は元の送信の控えで、今回は1件も書いていない。
+        return `KFTL replay folded: ${created.length} record(s) of the original submission returned again (replayed:true, nothing written this time).`;
+      }
       if (created.length === 0) {
-        return "KFTL submitted: nothing was written (blank lines and idempotent replays write nothing).";
+        return "KFTL submitted: nothing was written (blank lines write nothing).";
       }
       const kinds = {};
       for (const record of created) {
@@ -701,17 +773,25 @@ function summarizeWriteToolPayloadBody(name, payload) {
       if (Array.isArray(payload.results)) {
         return batchSoftDeleteSummary("Restored", payload);
       }
-      const keys = Object.keys(payload).filter((k) => k.startsWith("restored_"));
-      return `Restored: ${keys.length > 0 ? keys.join(", ") : "completed"}`;
+      return `Restored: ${describeSingleSoftDelete(payload, "restored_")}`;
     }
     case "gkill_delete_kyou": {
       if (Array.isArray(payload.results)) {
         return batchSoftDeleteSummary("Deleted (soft)", payload);
       }
-      const keys = Object.keys(payload).filter((k) => k.startsWith("updated_"));
-      return `Deleted (soft): ${keys.length > 0 ? keys.join(", ") : "completed"}`;
+      return `Deleted (soft): ${describeSingleSoftDelete(payload, "updated_")}`;
     }
     default:
       return null;
   }
+}
+
+// describeSingleSoftDelete は単件の削除・復活の要約に「型 id」を出す。
+// 以前は応答キー名（updated_kmemo, updated_kyou）を並べるだけで、何を消したのか id が無かった。
+function describeSingleSoftDelete(payload, prefix) {
+  const keys = Object.keys(payload).filter((key) => key.startsWith(prefix) && key !== `${prefix}kyou`);
+  if (keys.length === 0) {
+    return "completed";
+  }
+  return keys.map((key) => `${key.slice(prefix.length)} ${payload[key]?.id ?? "(id unknown)"}`).join(", ");
 }

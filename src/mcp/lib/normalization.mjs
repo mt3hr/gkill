@@ -24,6 +24,7 @@ import {
   DEFAULT_KYOUS_MAX_SIZE_MB,
   DEFAULT_KYOUS_INCLUDE_TIMEIS,
   KYOUS_TOP_LEVEL_FIELDS,
+  MI_PROJECTION_FLAG_FIELDS,
   KYOUS_QUERY_BOOLEAN_FIELDS,
   KYOUS_QUERY_STRING_ARRAY_FIELDS,
   KYOUS_QUERY_NUMBER_FIELDS,
@@ -91,6 +92,17 @@ export function normalizeDateOnlyToRfc3339(value, { endOfDay = false } = {}) {
   return formatLocalRfc3339(date);
 }
 
+// for_mi 単独の検索に include_create_mi を補ったときに warnings へ足す1行（normalizeKyouArgs → read-handlers）。
+export const FOR_MI_DEFAULT_PROJECTION_NOTE =
+  "query.for_mi was set without any include_*_mi flag, so include_create_mi:true was assumed (the five flags choose " +
+  "which time projection supplies rows; with none of them a for_mi search returns nothing). Set include_check_mi / " +
+  "include_limit_mi / include_start_mi / include_end_mi explicitly to look at other timestamps";
+
+// オフセットの無い日時（2026-09-18T00:00:00 / 2026-09-18T00:00）。RFC 3339 としては不完全だが
+// ISO-8601 としては妥当なので、「ISO-8601 で」とだけ言われた呼び出し側は何が足りないのか分からなかった
+// （2026-09-18 の実利用報告）。足りないもの（オフセット）を名指しする。
+const DATETIME_WITHOUT_OFFSET_REGEX = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?$/;
+
 export function normalizeDateTimeString(value, field, { allowDateOnly = false, endOfDay = false } = {}) {
   const trimmed = assertTrimmedString(value, field);
   if (RFC3339_REGEX.test(trimmed) && Number.isFinite(Date.parse(trimmed))) {
@@ -101,6 +113,16 @@ export function normalizeDateTimeString(value, field, { allowDateOnly = false, e
     if (normalized) {
       return normalized;
     }
+  }
+  if (DATETIME_WITHOUT_OFFSET_REGEX.test(trimmed)) {
+    throw invalidArgument(
+      field,
+      `has no timezone offset: append one (e.g. ${trimmed.slice(0, 10)}T${trimmed.slice(11, 19).padEnd(8, ":00").slice(0, 8)}+09:00, or Z for UTC). ` +
+        `Accepted forms: ${ISO_DATETIME_DESC}` +
+        (allowDateOnly ? ` or ${DATE_ONLY_DESC} (the day is expanded locally)` : "") +
+        "; seconds are required",
+      value,
+    );
   }
   const allowedFormat = allowDateOnly ? `${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` : ISO_DATETIME_DESC;
   throw invalidArgument(field, `must be ${allowedFormat}`, value);
@@ -140,6 +162,13 @@ export function normalizeKyouQuery(query) {
   const source = assertObject(query, "query");
   const normalized = {};
   const disabledLegacyFlags = [];
+
+  // 未知キーは受け付けない。
+  // query は MCP 経由で AI クライアントが自由に組み立てられるため、
+  // 検証していないキーでの動的な書き込みを残すとプロトタイプ汚染の経路になる。
+  // 文言は assertKnownKeys と同じ正本（古い一覧の可能性と再接続を案内する）。全部集めて1回で投げ、
+  // 廃止済み（only_latest_data / use_*）は受理するが detail.allowed には載せない（ADR-0620）。
+  assertKnownKeys(source, KYOUS_QUERY_ALL_FIELDS, "query", new Set([...DEPRECATED_QUERY_FIELDS, ...LEGACY_USE_FLAG_KEYS]));
 
   for (const [key, value] of Object.entries(source)) {
     const field = `query.${key}`;
@@ -206,10 +235,7 @@ export function normalizeKyouQuery(query) {
       normalized[key] = sortType;
       continue;
     }
-    // 未知キーは受け付けない。
-    // query は MCP 経由で AI クライアントが自由に組み立てられるため、
-    // 検証していないキーでの動的な書き込みを残すとプロトタイプ汚染の経路になる。
-    // 文言は assertKnownKeys と同じ正本（古い一覧の可能性と再接続を案内する）。
+    // ここへ来るキーは無い（assertKnownKeys がループの前に全部弾く）。万一の取りこぼしは同じ文言で。
     throw invalidArgument(field, unknownKeyMessage(), value, {
       allowed: Array.from(KYOUS_QUERY_ALL_FIELDS).sort(),
     });
@@ -250,8 +276,47 @@ export function normalizeKyouQuery(query) {
     );
   }
 
+  assertMapFilterComplete(normalized);
+
   normalized.only_latest_data = true;
   return normalized;
+}
+
+// assertMapFilterComplete は地図条件の3値が揃っていることと値の範囲を検査する。
+//
+// gkill の FindQuery.HasMapFilter は3値が全部非 null のときだけ真で、欠けると地図条件ごと
+// **黙って無視**される（map_latitude だけ渡しても通常検索と同じ件数。2026-09-18 の実利用報告）。
+// 「条件を指定したのに効かなかった」ことは応答からは分からないので、入口で欠けた欄を名指しして断る。
+// 半径 0 以下も Go 側が黙って素通しするので同じく断る（単位はメートル。ADR-0625）。
+function assertMapFilterComplete(normalized) {
+  const fields = ["map_latitude", "map_longitude", "map_radius"];
+  const present = fields.filter((field) => normalized[field] !== undefined);
+  if (present.length === 0) {
+    return;
+  }
+  if (present.length !== fields.length) {
+    const missing = fields.filter((field) => normalized[field] === undefined);
+    throw invalidArgument(
+      `query.${missing[0]}`,
+      `is required when ${present.map((field) => `query.${field}`).join(" / ")} is set: the map filter activates only ` +
+        `with all three of map_latitude, map_longitude and map_radius (meters); with any of them missing gkill silently ` +
+        `ignores the location condition and returns the unfiltered result. Missing: ${missing.join(", ")}`,
+      undefined,
+    );
+  }
+  if (normalized.map_latitude < -90 || normalized.map_latitude > 90) {
+    throw invalidArgument("query.map_latitude", "must be between -90 and 90 (degrees)", normalized.map_latitude);
+  }
+  if (normalized.map_longitude < -180 || normalized.map_longitude > 180) {
+    throw invalidArgument("query.map_longitude", "must be between -180 and 180 (degrees)", normalized.map_longitude);
+  }
+  if (!(normalized.map_radius > 0)) {
+    throw invalidArgument(
+      "query.map_radius",
+      "must be greater than 0 (meters); gkill silently skips the map filter for a radius of 0 or less",
+      normalized.map_radius,
+    );
+  }
 }
 
 // 旧スキーマキャッシュ救済（2026-08-23 本番実測）: ツール一覧のスキーマを
@@ -324,6 +389,9 @@ const KYOUS_STALE_SCHEMA_ARG_KINDS = new Map([
   ["num_max", "number"],
   ["idf_kinds", "string_array"],
   ["include_file_size", "boolean"],
+  // 2026-09-19 追加（ADR-0629 / ADR-0630）
+  ["include_attached_ids", "boolean"],
+  ["include_file_urls", "boolean"],
 ]);
 
 const GPS_STALE_SCHEMA_ARG_KINDS = new Map([
@@ -334,6 +402,9 @@ const GPS_STALE_SCHEMA_ARG_KINDS = new Map([
 const APP_CONFIG_STALE_SCHEMA_ARG_KINDS = new Map([
   ["fields", "string_array"],
   ["include_ui_state", "boolean"],
+  // 2026-09-19 追加（ADR-0629）。contains は string なので対象外。
+  ["compact", "boolean"],
+  ["max_size_mb", "number"],
 ]);
 
 // gkill_get_idf_file に 2026-08-24 (b303de73) で足したサムネ引数。
@@ -365,8 +436,11 @@ const REP_INFOS_STALE_SCHEMA_ARG_KINDS = new Map([
 // こちらは「古さを検出する」ため（detectStaleSchemaSignals が引く）。
 const DELETE_TARGETS_STALE_SCHEMA_ARG_KINDS = new Map([["targets", "object_array"]]);
 
-// gkill_get_kyou_history の limit。data_type / id は string 型なので対象外。
-const KYOU_HISTORY_STALE_SCHEMA_ARG_KINDS = new Map([["limit", "number"]]);
+// gkill_get_kyou_history の limit / offset。data_type / id は string 型なので対象外。
+const KYOU_HISTORY_STALE_SCHEMA_ARG_KINDS = new Map([
+  ["limit", "number"],
+  ["offset", "number"],
+]);
 
 // gkill_add_urlog の外向き取得抑止フラグ（2026-08-30 追加。後付け boolean）。
 // 型の復元そのものは write-normalization.mjs の revivesStaleBoolean が行い、
@@ -521,7 +595,7 @@ export function normalizeKyouArgs(args) {
     args == null ? {} : assertObject(args, "arguments"),
     KYOUS_STALE_SCHEMA_ARG_KINDS,
   );
-  assertKnownKeys(source, KYOUS_TOP_LEVEL_FIELDS, "arguments");
+  assertKnownKeys(source, KYOUS_TOP_LEVEL_FIELDS, "arguments", DEPRECATED_TOP_LEVEL_ARGS);
 
   const normalized = {
     query: normalizeKyouQuery(Object.prototype.hasOwnProperty.call(source, "query") ? source.query : {}),
@@ -531,7 +605,21 @@ export function normalizeKyouArgs(args) {
     include_plugin_content: DEFAULT_INCLUDE_PLUGIN_CONTENT,
     plugin_content_max_text_length: DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
     plugin_content_format: DEFAULT_PLUGIN_CONTENT_FORMAT,
+    include_attached_ids: false,
+    include_file_urls: false,
   };
+
+  // for_mi:true で5つの include_*_mi が1つも立っていない検索は必ず0件（射影の供給源が無い）。
+  // Go は警告を返すが、実利用の AI は 0 件を「タスクが無かった」と読んだ（2026-08-25）ので、
+  // MCP の入口で include_create_mi を補い、補ったことを warnings で知らせる（ADR-0627。
+  // for_mi 自体を勝手に立てるのは ADR-0610 で否決 —— 検索対象を Mi に限定してしまうため）。
+  if (
+    normalized.query.for_mi === true &&
+    !MI_PROJECTION_FLAG_FIELDS.some((field) => normalized.query[field] === true)
+  ) {
+    normalized.query.include_create_mi = true;
+    normalized.notes = [FOR_MI_DEFAULT_PROJECTION_NOTE];
+  }
 
   if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
     normalized.locale_name = assertTrimmedString(source.locale_name, "locale_name");
@@ -616,6 +704,12 @@ export function normalizeKyouArgs(args) {
   }
   if (Object.prototype.hasOwnProperty.call(source, "include_file_size") && source.include_file_size !== undefined) {
     normalized.include_file_size = assertBoolean(source.include_file_size, "include_file_size");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "include_attached_ids") && source.include_attached_ids !== undefined) {
+    normalized.include_attached_ids = assertBoolean(source.include_attached_ids, "include_attached_ids");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "include_file_urls") && source.include_file_urls !== undefined) {
+    normalized.include_file_urls = assertBoolean(source.include_file_urls, "include_file_urls");
   }
   if (
     Object.prototype.hasOwnProperty.call(source, "include_plugin_content") &&
@@ -894,7 +988,7 @@ export function normalizeAppConfigArgs(args) {
     args == null ? {} : assertObject(args, "arguments"),
     APP_CONFIG_STALE_SCHEMA_ARG_KINDS,
   );
-  assertKnownKeys(source, new Set(["locale_name", "fields", "include_ui_state"]), "arguments");
+  assertKnownKeys(source, new Set(["locale_name", "fields", "include_ui_state", "compact", "contains", "max_size_mb"]), "arguments");
   const normalized = {};
   if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
     normalized.locale_name = assertTrimmedString(source.locale_name, "locale_name");
@@ -909,6 +1003,19 @@ export function normalizeAppConfigArgs(args) {
       }
     }
     normalized.fields = fields;
+  }
+  // compact（既定 true）: struct ツリーの既定値の欄を落とす。contains: 葉の名前で刈る。
+  // max_size_mb（既定は get_kyous と同じ）: 超える struct を大きい順に省略して必ず収める（ADR-0629）。
+  normalized.compact = true;
+  if (Object.prototype.hasOwnProperty.call(source, "compact") && source.compact !== undefined) {
+    normalized.compact = assertBoolean(source.compact, "compact");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "contains") && source.contains !== undefined) {
+    normalized.contains = assertTrimmedString(source.contains, "contains");
+  }
+  normalized.max_size_mb = DEFAULT_KYOUS_MAX_SIZE_MB;
+  if (Object.prototype.hasOwnProperty.call(source, "max_size_mb") && source.max_size_mb !== undefined) {
+    normalized.max_size_mb = assertNumber(source.max_size_mb, "max_size_mb", { minExclusive: 0 });
   }
   normalized.include_ui_state = false;
   if (Object.prototype.hasOwnProperty.call(source, "include_ui_state") && source.include_ui_state !== undefined) {
@@ -975,7 +1082,7 @@ export function normalizeKyouHistoryArgs(args) {
     assertObject(args, "arguments", { allowUndefined: true }) ?? {},
     KYOU_HISTORY_STALE_SCHEMA_ARG_KINDS,
   );
-  assertKnownKeys(source, new Set(["id", "data_type", "limit", "locale_name"]), "arguments");
+  assertKnownKeys(source, new Set(["id", "data_type", "limit", "offset", "locale_name"]), "arguments");
   const id = assertTrimmedString(source.id, "id");
   // 検索結果が返すのは射影名（mi_create / timeis_start）で、ここが受理するのは
   // エンティティ種別（mi / timeis）。説明どおり「結果から取った data_type」を
@@ -987,6 +1094,9 @@ export function normalizeKyouHistoryArgs(args) {
   const limit = source.limit !== undefined
     ? assertInteger(source.limit, "limit", { min: 1, max: MAX_KYOU_HISTORY_LIMIT })
     : DEFAULT_KYOU_HISTORY_LIMIT;
+  // offset は続きを読むための位置（新しい順の先頭からの版数）。gkill は全版を返し Node が切るので、
+  // ページングは Node だけで完結する（limit の公開上限 200 を超える履歴へ進む唯一の経路。ADR-0626）。
+  const offset = source.offset !== undefined ? assertInteger(source.offset, "offset", { min: 0 }) : 0;
   const locale_name = source.locale_name !== undefined ? assertTrimmedString(source.locale_name, "locale_name") : undefined;
-  return { id, data_type, limit, locale_name };
+  return { id, data_type, limit, offset, locale_name };
 }

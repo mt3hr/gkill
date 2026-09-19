@@ -68,7 +68,7 @@ func TestErrorCodeHTTPStatus_Distribution(t *testing.T) {
 		http.StatusUnauthorized:          4,
 		http.StatusForbidden:             6,
 		http.StatusNotFound:              18,
-		http.StatusConflict:              16,
+		http.StatusConflict:              17,
 		http.StatusRequestEntityTooLarge: 1,
 		http.StatusTooManyRequests:       1,
 		http.StatusInternalServerError:   239,

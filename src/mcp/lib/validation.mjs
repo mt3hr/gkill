@@ -106,12 +106,20 @@ export function unknownKeyMessage() {
 // 既定を置く前は write 側20箇所が第3引数を渡しておらず、
 // エラーが `Invalid argument 'undefined.contnet'` と出て、
 // 呼び出し側からは自分の書き間違いなのか実装の不具合なのか判別できなかった。
-export function assertKnownKeys(value, allowedKeys, field = "arguments") {
-  for (const key of Object.keys(value)) {
-    if (!allowedKeys.has(key)) {
-      throw invalidArgument(`${field}.${key}`, unknownKeyMessage(), value[key], {
-        allowed: Array.from(allowedKeys).sort(),
-      });
-    }
+//
+// 未知のキーは**全部集めて1回で**投げる（detail.unknown）。1件ずつ返すと、キーを3つ
+// 間違えた呼び出しは3往復になる（2026-09-18 の実利用報告。KFTL は全行まとめて返す）。
+// detail.field は先頭の未知キー（既存の呼び出し側とテストは1件の形を前提にしている）。
+// hiddenKeys は「受理はするが detail.allowed に載せない」キー（廃止済み引数。公開スキーマにも無いので、
+// 一覧に出すと「only_latest_data:false なら過去版が読めるのか」と考える余地を作るだけ。ADR-0620）。
+export function assertKnownKeys(value, allowedKeys, field = "arguments", hiddenKeys = null) {
+  const unknown = Object.keys(value).filter((key) => !allowedKeys.has(key) && !(hiddenKeys && hiddenKeys.has(key)));
+  if (unknown.length === 0) {
+    return;
   }
+  const suffix = unknown.length > 1 ? ` (${unknown.length} unknown names in this object: ${unknown.join(", ")})` : "";
+  throw invalidArgument(`${field}.${unknown[0]}`, unknownKeyMessage() + suffix, value[unknown[0]], {
+    allowed: Array.from(allowedKeys).filter((key) => !(hiddenKeys && hiddenKeys.has(key))).sort(),
+    unknown,
+  });
 }

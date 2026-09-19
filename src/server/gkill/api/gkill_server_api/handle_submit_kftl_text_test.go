@@ -70,18 +70,24 @@ func TestHandleSubmitKFTLText_IdempotencyKey(t *testing.T) {
 
 	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
 
-	// 同じ冪等キーの再送は1回に畳まれる。
-	t.Run("同じ冪等キーの再送は登録が1回に畳まれる", func(t *testing.T) {
+	// 同じ冪等キー・同じ本文の再送は1回に畳まれ、元の created[] が replayed:true で返る。
+	t.Run("同じ冪等キーの再送は登録が1回に畳まれ、元の created を replayed:true で返す", func(t *testing.T) {
 		const word = "idemkeyDedupWord"
 		res1 := submitKFTL(t, tsURL, sessionID, word, "wear-key-1")
 		if len(res1.Errors) > 0 {
 			t.Fatalf("1回目でエラー: %+v", res1.Errors)
 		}
+		if res1.Replayed {
+			t.Error("1回目の送信が replayed=true になっている")
+		}
+		if len(res1.Created) != 1 {
+			t.Fatalf("1回目の created = %+v, want 1件", res1.Created)
+		}
 		if got := countKmemosByContent(t, tsURL, sessionID, word); got != 1 {
 			t.Fatalf("1回目の登録後の件数 = %d, want 1", got)
 		}
 
-		// 同じキーでもう一度。成功で返るが登録は増えない。
+		// 同じキー・同じ本文でもう一度。成功で返るが登録は増えず、created は1回目の控え。
 		res2 := submitKFTL(t, tsURL, sessionID, word, "wear-key-1")
 		if len(res2.Errors) > 0 {
 			t.Fatalf("2回目でエラー: %+v", res2.Errors)
@@ -89,8 +95,41 @@ func TestHandleSubmitKFTLText_IdempotencyKey(t *testing.T) {
 		if len(res2.Messages) == 0 {
 			t.Fatal("2回目が成功メッセージを返していない(畳まれた再送も成功で返すべき)")
 		}
+		if !res2.Replayed {
+			t.Error("畳んだ再送が replayed=true でない（呼び出し側が「今回書いた」と誤読する）")
+		}
+		if len(res2.Created) != 1 || res2.Created[0].ID != res1.Created[0].ID || res2.Created[0].DataType != res1.Created[0].DataType {
+			t.Errorf("畳んだ再送の created = %+v, want 1回目と同じ %+v（応答を失った呼び出し側が ID を回収する経路）", res2.Created, res1.Created)
+		}
 		if got := countKmemosByContent(t, tsURL, sessionID, word); got != 1 {
-			t.Errorf("同じ冪等キーの再送後の件数 = %d, want 1(markDown 未配線なら2になる)", got)
+			t.Errorf("同じ冪等キーの再送後の件数 = %d, want 1(markDone 未配線なら2になる)", got)
+		}
+	})
+
+	// 同じ冪等キーで別の本文は衝突。何も書かず 409 で返す（2026-09-19 まで「成功・created 空」で返し、
+	// 保存されていない本文にも成功メッセージが返っていた）。
+	t.Run("同じ冪等キーで別の本文は 409 で何も書かない", func(t *testing.T) {
+		const wordA, wordB = "idemkeyConflictWordA", "idemkeyConflictWordB"
+		res1 := submitKFTL(t, tsURL, sessionID, wordA, "wear-key-conflict")
+		if len(res1.Errors) > 0 {
+			t.Fatalf("1回目でエラー: %+v", res1.Errors)
+		}
+
+		status, res2 := submitKFTLWithStatus(t, tsURL, sessionID, wordB, "wear-key-conflict")
+		if status != http.StatusConflict {
+			t.Errorf("status = %d, want 409", status)
+		}
+		if len(res2.Errors) != 1 || res2.Errors[0].ErrorCode != message.SubmitKFTLTextIdempotencyKeyConflictError {
+			t.Fatalf("errors = %+v, want %s 1件", res2.Errors, message.SubmitKFTLTextIdempotencyKeyConflictError)
+		}
+		if res2.Replayed || len(res2.Created) != 0 {
+			t.Errorf("衝突した送信の replayed / created = %v / %+v, want false / 空", res2.Replayed, res2.Created)
+		}
+		if got := countKmemosByContent(t, tsURL, sessionID, wordB); got != 0 {
+			t.Errorf("衝突した本文が書かれている: %d 件, want 0", got)
+		}
+		if got := countKmemosByContent(t, tsURL, sessionID, wordA); got != 1 {
+			t.Errorf("元の本文の件数 = %d, want 1（衝突が元の記録に影響してはいけない）", got)
 		}
 	})
 
@@ -208,8 +247,9 @@ func TestHandleSubmitKFTLText_CreatedRecords(t *testing.T) {
 		}
 	})
 
-	// 冪等キーで畳んだ再送は再実行していないので created は空。
-	t.Run("冪等キーで畳んだ再送は created が空", func(t *testing.T) {
+	// 冪等キーで畳んだ再送は再実行していないが、created には元の送信の控えが replayed:true で載る。
+	// 2026-09-19 まで空だったので、1回目の応答を受け取り損ねると作成 ID を内容検索で探すしかなかった。
+	t.Run("冪等キーで畳んだ再送は元の created を replayed:true で返す", func(t *testing.T) {
 		const word = "createdIdemResendWord"
 		res1 := submitKFTL(t, tsURL, sessionID, word, "created-resend-key-1")
 		if len(res1.Errors) > 0 {
@@ -226,10 +266,51 @@ func TestHandleSubmitKFTLText_CreatedRecords(t *testing.T) {
 		if len(res2.Messages) == 0 {
 			t.Fatal("畳まれた再送も成功で返すべき")
 		}
-		if len(res2.Created) != 0 {
-			t.Errorf("畳んだ再送の created = %+v, want 空(再実行していないので何も書いていない)", res2.Created)
+		if !res2.Replayed {
+			t.Error("畳んだ再送が replayed=true でない")
+		}
+		if len(res2.Created) != 1 || res2.Created[0].ID != res1.Created[0].ID {
+			t.Errorf("畳んだ再送の created = %+v, want 1回目と同じ %+v", res2.Created, res1.Created)
 		}
 	})
+
+	// related_time は保存層と同じ秒精度。丸めないと Windows の時計解像度で 7 桁の小数秒が
+	// 応答にだけ載り、保存値と一致しない（2026-09-18 の MCP 実利用報告）。
+	t.Run("created の related_time は秒精度", func(t *testing.T) {
+		res := submitKFTL(t, tsURL, sessionID, "createdSecondPrecisionWord", "")
+		if len(res.Errors) > 0 || len(res.Created) != 1 {
+			t.Fatalf("errors=%+v created=%+v", res.Errors, res.Created)
+		}
+		if res.Created[0].RelatedTime.Nanosecond() != 0 {
+			t.Errorf("related_time = %s, want 秒精度（小数秒なし）", res.Created[0].RelatedTime.Format(time.RFC3339Nano))
+		}
+	})
+}
+
+// 失敗時の created は JSON で `[]`（`null` ではない）。
+// 説明文は「失敗時は created[] が空」と言っているのに、2026-09-19 まで実応答は `"created": null` だった。
+func TestHandleSubmitKFTLText_CreatedIsEmptyArrayOnFailure(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
+
+	resp := postJSON(t, tsURL+"/api/submit_kftl_text", &req_res.SubmitKFTLTextRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+		KFTLText:   "/mood\n99",
+	})
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("status = %d, want 400", resp.StatusCode)
+	}
+	var raw map[string]json.RawMessage
+	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
+		t.Fatalf("decode raw response: %v", err)
+	}
+	if got := strings.TrimSpace(string(raw["created"])); got != "[]" {
+		t.Errorf("失敗時の created = %s, want [] (null ではない)", got)
+	}
 }
 
 // KFTL の `ーみ` で書いたタスクの create_device / create_user が入れ替わらないこと（2026-09-19）。

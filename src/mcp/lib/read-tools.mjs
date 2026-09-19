@@ -88,7 +88,7 @@ export const READ_TOOLS = [
       "ALWAYS inspect warnings[] even when partial is false: a repository may have failed to load, so its records are absent — do not put a repository named by that warning back into query.reps. Unknown filter values and ids that match nothing are reported there too. " +
       "limit / max_size_mb cap what is RETURNED, not what is SEARCHED — narrow the calendar range, data_types or reps to make a query faster. " +
       "Page by passing next_cursor back as cursor; cursor pages omit total_count, so read remaining_count. count_only / group_by give counts and histograms without payloads. " +
-      "Every entry carries id and rep_name; tag_entities[] / text_entities[] carry the annotation ids that gkill_update_text / gkill_delete_kyou need. " +
+      "Every entry carries id and rep_name; pass include_attached_ids:true when you need tag_entities[] / text_entities[] (the annotation ids that gkill_update_text / gkill_delete_kyou need). " +
       "Details: gkill_get_mcp_help topics search (response fields, query semantics, payload shapes), pagination, mi, data_types, plugin, idf, deleted.",
     inputSchema: {
       type: "object",
@@ -114,7 +114,7 @@ export const READ_TOOLS = [
         },
         max_size_mb: {
           type: "number",
-          description: `Max response size in MB. Default: ${DEFAULT_KYOUS_MAX_SIZE_MB}.`,
+          description: `Max size of kyous[] in MB (strict; only a first entry that alone exceeds it is returned anyway, with a warning). Enforced again after plugin bodies are inlined with include_plugin_content — entries pushed over it move to the next cursor page. Default: ${DEFAULT_KYOUS_MAX_SIZE_MB}.`,
           default: DEFAULT_KYOUS_MAX_SIZE_MB,
         },
         is_include_timeis: {
@@ -157,7 +157,8 @@ export const READ_TOOLS = [
           description:
             "Allowlist of the app that WROTE each entry (matched against create_app): \"gkill\" (web UI and uploads), " +
             "\"gkill_kftl\" (the notepad AND gkill_submit_kftl), \"gkill_wear\", \"gkill_mcp_readwrite\" / \"gkill_mcp_write\" " +
-            "(these MCP servers), \"urlog_bookmarklet\", \"git\", or a plugin's value. null/omitted = no filter, [] = match nothing.",
+            "(these MCP servers), \"urlog_bookmarklet\", \"git\", \"idf\" (indexed files), \"gkill_autolog\", or a plugin's value; " +
+            "group_by:\"create_app\" lists the values actually present. null/omitted = no filter, [] = match nothing.",
         },
         update_apps: {
           type: "array",
@@ -219,6 +220,22 @@ export const READ_TOOLS = [
             "into content_html, 'both' fills both. Prefer 'text': plugin content HTML is mostly presentation CSS/JS.",
           enum: ["text", "html", "both"],
           default: DEFAULT_PLUGIN_CONTENT_FORMAT,
+        },
+        include_attached_ids: {
+          type: "boolean",
+          description:
+            "Also return tag_entities[] / text_entities[] ({id, value}) per entry — the annotation's OWN id, needed only " +
+            "to edit or delete a tag / text (gkill_update_text, gkill_delete_kyou data_type:\"tag\"/\"text\"). Default: false, " +
+            "because they duplicate tags[] / texts[] on every entry.",
+          default: false,
+        },
+        include_file_urls: {
+          type: "boolean",
+          description:
+            "HTTP clients only: mint expiring public links (file_url / file_url_full, with file_url_expires_at) for the idf " +
+            "entries in this page, to hand to a human. Default: false — leave it off unless you intend to hand someone a link; " +
+            "the model cannot fetch them (use gkill_get_idf_file to look at a file). No effect on stdio clients.",
+          default: false,
         },
       },
       additionalProperties: false,
@@ -365,7 +382,7 @@ export const READ_TOOLS = [
       "Recommended first call: use this before gkill_get_kyous to understand the data organization, visible tags, and board names. " +
       "Response fields: tag_struct (tag parent-child hierarchy with check_when_inited, is_force_hide, children), mi_board_struct (task board hierarchy), rep_struct (repository hierarchy — this is the tree the web settings screen saves, so it is null until someone has pressed Apply there at least once; an account used only through MCP or the CLI will always see null, and that is not an error. For the actual list of repositories, call gkill_get_rep_infos instead), rep_type_struct (repository type hierarchy), device_struct (device hierarchy), kftl_template_struct (KFTL templates), mi_default_board (default board name, e.g. \"Inbox\"), show_tags_in_list (boolean). " +
       "Note that display labels in this config may not map 1:1 to accepted rep_types query values — canonical query values come from gkill_get_rep_infos. " +
-      "The full config is large (~90k chars even after UI-state stripping); prefer narrowing with fields, e.g. fields:[\"tag_struct\"].",
+      "The full config is large; narrow with fields (e.g. fields:[\"tag_struct\"]) and contains, keep compact on (default: default-valued node fields are omitted), and the response is capped by max_size_mb (over-sized struct fields are replaced by {omitted_bytes} with a warning).",
     inputSchema: {
       type: "object",
       properties: {
@@ -387,6 +404,29 @@ export const READ_TOOLS = [
           description:
             "When false (default), transient tree-editor keys (is_checked, indeterminate, key, seq, seq_in_parent, " +
             "is_open_default, parent_folder_id, id) are stripped from struct nodes. check_when_inited and is_force_hide are always kept.",
+        },
+        compact: {
+          type: "boolean",
+          default: true,
+          description:
+            "When true (default), struct nodes omit their default-valued fields: an absent children means no children, " +
+            "an absent is_dir means false (a leaf), an absent ignore_check_rep_rykv means false, and an absent name means " +
+            "the name equals the node's identity field (rep_name / tag / device / rep_type / board_name). " +
+            "check_when_inited and is_force_hide are never omitted. Pass false for the raw tree.",
+        },
+        contains: {
+          type: "string",
+          description:
+            "Keep only tree leaves whose name / rep_name / tag / device / rep_type / board_name contains this text " +
+            "(case-insensitive); folders left without a matching leaf are dropped. Omit for the whole tree.",
+        },
+        max_size_mb: {
+          type: "number",
+          default: DEFAULT_KYOUS_MAX_SIZE_MB,
+          description:
+            `Cap on the response size in MB (default ${DEFAULT_KYOUS_MAX_SIZE_MB}). Trees cannot be paged, so when the ` +
+            "response would exceed it the largest struct fields are replaced by {omitted_bytes} until it fits, and " +
+            "warnings[] says which — narrow with fields / contains, or raise the cap.",
         },
       },
       additionalProperties: false,
@@ -540,10 +580,18 @@ export const READ_TOOLS = [
         },
         limit: {
           type: "integer",
-          description: `Max versions to return, newest first (1-${MAX_KYOU_HISTORY_LIMIT}). Default: ${DEFAULT_KYOU_HISTORY_LIMIT}. Histories are unbounded — every edit appends one.`,
+          description: `Max versions to return, newest first (1-${MAX_KYOU_HISTORY_LIMIT}). Default: ${DEFAULT_KYOU_HISTORY_LIMIT}. Histories are unbounded — every edit appends one; read further with offset.`,
           default: DEFAULT_KYOU_HISTORY_LIMIT,
           minimum: 1,
           maximum: MAX_KYOU_HISTORY_LIMIT,
+        },
+        offset: {
+          type: "integer",
+          description:
+            "Number of versions to skip from the newest. When has_more is true, pass the response's next_offset here to " +
+            "read the older versions. Default: 0.",
+          default: 0,
+          minimum: 0,
         },
         locale_name: { type: "string", description: "Locale, e.g. ja/en." },
       },

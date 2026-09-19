@@ -15,6 +15,7 @@
 import { describe, test, expect, vi } from "vitest";
 
 import { handleWriteToolCall, isWriteToolName, summarizeWriteToolPayload } from "../lib/write-handlers.mjs";
+import { GkillApiError } from "../lib/errors.mjs";
 import { WRITE_TOOLS } from "../lib/write-tools.mjs";
 import { READ_TOOLS } from "../lib/read-tools.mjs";
 import { WRITE_SERVER_READ_TOOL_NAMES } from "../gkill-write-server.mjs";
@@ -151,6 +152,26 @@ describe("handleWriteToolCall — add tools", () => {
     const [pathname, body] = ctx.client.callApi.mock.calls[0];
     expect(pathname).toBe("/api/submit_kftl_text");
     expect(body.kftl_text).toBe("memo");
+  });
+
+  // 冪等キーで畳んだ再送は gkill が元の created[] を replayed:true で返す（ADR-0510）。
+  // 落とすと「今回書いた」のか「元の控え」なのかが呼び出し側から区別できない。
+  test("gkill_submit_kftl passes replayed and the original created[] through", async () => {
+    const created = [{ id: "k1", data_type: "kmemo", updated: false, related_time: "2026-09-19T10:00:00+09:00" }];
+    const ctx = makeCtx(async () => ({ messages: [{ message: "ok" }], created, replayed: true }));
+    const result = await handleWriteToolCall(ctx, "gkill_submit_kftl", { kftl_text: "memo", idempotency_key: "k" });
+
+    expect(result.replayed).toBe(true);
+    expect(result.created).toEqual(created);
+    expect(summarizeWriteToolPayload("gkill_submit_kftl", result)).toMatch(/replay.*nothing written/);
+  });
+
+  test("gkill_submit_kftl reports replayed:false on a fresh submission", async () => {
+    const ctx = makeCtx(async () => ({ messages: [{ message: "ok" }], created: [{ id: "k1", data_type: "kmemo", updated: false }] }));
+    const result = await handleWriteToolCall(ctx, "gkill_submit_kftl", { kftl_text: "memo" });
+
+    expect(result.replayed).toBe(false);
+    expect(summarizeWriteToolPayload("gkill_submit_kftl", result)).toContain("wrote 1 record(s)");
   });
 });
 
@@ -587,9 +608,9 @@ describe("summarizeWriteToolPayload — batch soft delete", () => {
   });
 
   // 単件の応答は従来の文言のまま（既存の読み手を壊さない）
-  test("the single-entry form keeps the old wording", () => {
+  test("the single-entry form names the type and id", () => {
     const summary = summarizeWriteToolPayload("gkill_delete_kyou", { updated_kmemo: { id: "k1" } });
-    expect(summary).toBe("Deleted (soft): updated_kmemo");
+    expect(summary).toBe("Deleted (soft): kmemo k1");
   });
 });
 
@@ -993,5 +1014,68 @@ describe("handleWriteToolCall — allow_create_board", () => {
 
     expect(ctx.client.callApi.mock.calls[0][0]).toBe("/api/get_mi_board_list");
     expect(payload.warnings?.some((w) => String(w).includes("tool schema snapshot looks stale"))).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 2026-09-19 の MCP 実利用報告への対応（ADR-0628 ほか）
+// ---------------------------------------------------------------------------
+describe("handleWriteToolCall — 2026-09-19 additions", () => {
+  test("an update whose values all equal the current version is rejected instead of stacking a version", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi.mockResolvedValueOnce({
+      mi_histories: [{ id: "m1", title: "same", is_checked: false, limit_time: "2026-01-01T00:00:00+09:00", data_type: "mi_check" }],
+    });
+    // 同じ瞬間を別のオフセットで書いても「同じ」
+    await expect(
+      handleWriteToolCall(ctx, "gkill_update_mi", { id: "m1", title: "same", limit_time: "2025-12-31T15:00:00Z" }),
+    ).rejects.toThrow(/No effective change/);
+    expect(ctx.client.callApi).toHaveBeenCalledTimes(1);
+  });
+
+  test("update_mi clears limit_time with null and reports the entity data_type", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ mi_histories: [{ id: "m1", title: "t", limit_time: "2026-01-01T00:00:00+09:00", data_type: "mi_check" }] })
+      .mockResolvedValueOnce({ updated_mi: { id: "m1", data_type: "mi_create" }, updated_kyou: { id: "m1" } });
+    const result = await handleWriteToolCall(ctx, "gkill_update_mi", { id: "m1", limit_time: null });
+
+    expect(ctx.client.callApi.mock.calls[1][1].mi.limit_time).toBeNull();
+    expect(result.updated_mi.data_type).toBe("mi");
+  });
+
+  test("clearing a limit_time that is already empty is a no-op and is rejected", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi.mockResolvedValueOnce({ mi_histories: [{ id: "m1", title: "t", limit_time: null, data_type: "mi_check" }] });
+    await expect(handleWriteToolCall(ctx, "gkill_update_mi", { id: "m1", limit_time: null })).rejects.toThrow(/No effective change/);
+  });
+
+  test("delete reports the entity data_type and the summary names the id", async () => {
+    const ctx = makeCtx();
+    ctx.client.callApi
+      .mockResolvedValueOnce({ mi_histories: [{ id: "m1", is_deleted: false, data_type: "mi_check" }] })
+      .mockResolvedValueOnce({ updated_mi: { id: "m1", data_type: "mi_create" }, updated_kyou: { id: "m1" } });
+    const result = await handleWriteToolCall(ctx, "gkill_delete_kyou", { id: "m1", data_type: "mi_start" });
+
+    expect(result.updated_mi.data_type).toBe("mi");
+    expect(summarizeWriteToolPayload("gkill_delete_kyou", result)).toBe("Deleted (soft): mi m1");
+  });
+
+  test("add_tag names the target_id when the server says the target does not exist", async () => {
+    const ctx = makeCtx(async () => {
+      throw new GkillApiError("ERR000092: タグ追加に失敗しました [kind=not_found]", {
+        errors: [{ error_code: "ERR000092", error_kind: "not_found" }],
+      });
+    });
+    await expect(handleWriteToolCall(ctx, "gkill_add_tag", { tag: "t", target_id: "nope" })).rejects.toThrow(
+      /target_id "nope" matched no kyou/,
+    );
+  });
+
+  test("add_text leaves other failures untouched", async () => {
+    const ctx = makeCtx(async () => {
+      throw new GkillApiError("ERR000057: dup [kind=conflict]", { errors: [{ error_kind: "conflict" }] });
+    });
+    await expect(handleWriteToolCall(ctx, "gkill_add_text", { text: "t", target_id: "k1" })).rejects.toThrow(/ERR000057/);
   });
 });

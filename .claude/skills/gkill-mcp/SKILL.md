@@ -116,6 +116,30 @@ write 専用サーバにも載せた）。write 専用サーバは read を数�
 
 **HTTPモードの1リクエスト文脈は `server.current*` 共有フィールドに書かず、不変の `requestContext={sessionId,userId,remoteAddr}` を `handlePayload→handleMessage→handleToolCall/buildToolResult` へ引数で流す**（2026-08-21、監査 C-02）。以前は `_lastTokenUserId` と `server.currentSessionId/currentUserId/currentRemoteAddr` に書いて await をまたいで読んでいたため、並行リクエストで別要求の user/session が混線し、他人のセッションに紐づく file-link URL 発行や書き込みレコードの作成者誤記が起きた。`mcp-server-base.mjs` の入口で `requestContext ?? Object.freeze({...this.current*})` にフォールバックするので stdio と既存の直接呼び出しテストは無改修。**http-transport 側から `server.current*` への書き込みを復活させないこと**（渡し忘れは sessionId=null→gkill側401で顕在化し、静かな混線には戻らない）。OAuth は S256 必須・未登録 client_id は認可拒否（`oauth-server.mjs` の `_validateAuthorizeParams`）、公開ファイル配信は nosniff + CSP sandbox（Go 側 `withUserContentSecurityHeaders` のミラー）、`oauth-store.mjs` の保存は temp+rename の 0600。守るテストは `src/mcp/__tests__/http-transport.test.mjs`（Bearer 401 = C-01 回帰・並行分離 = C-02 回帰・M-06）。 却下案（AsyncLocalStorage 等）と渡し忘れが顕在化する理由は [ADR-0601](../../../documents/adr/0601-mcp-request-context-immutable.md)。
 
+**`words:[]` は絞らない（説明に書き分けてあり、挙動は変えない）。** 非 null の `[]` が「0件」なのは `tags` / `hide_tags` / `reps` / `rep_types` / `ids` / `timeis_tags` / `period_of_time_week_of_days`。`words` / `not_words` の `[]` は条件なしで**全件が通り**（SQL も Go の `find_word` も語が0個なら条件を出さない。`HasWordFilter` が真でも同じ）、`timeis_words:[]` は「任意の打刻に覆われた記録」。AI がキーワードを抽出できずに `[]` を渡すと無関係な記録が正常な結果として返るので、`find-query-schema.mjs` と `SEARCH_TOPIC` は3種類を書き分けている。**「`[]` は一致なし（例外は `timeis_words` だけ）」の要約に戻さないこと。**
+
+**地図条件は入口で3値を要求する。** `normalizeKyouQuery` の `assertMapFilterComplete` が `map_latitude` / `map_longitude` / `map_radius` の1〜2個だけの指定を欠けた欄を名指しして拒否し、範囲（緯度 −90..90・経度 −180..180・半径 > 0）も弾く。gkill の `HasMapFilter` は3値揃いでしか真にならず、欠けると地図条件ごと**黙って無視**される（`map_latitude` だけで通常検索と同じ件数が返っていた。2026-09-18 の実利用報告）。半径の単位は**メートル**（Go が `/1000` して km にする）で、スキーマ・ヘルプ・Go の警告（`partialMapFilterWarning`。API 直叩き向け）の全部に書いてある（[ADR-0625](../../../documents/adr/0625-mcp-map-filter-requires-all-three-values.md)）。
+
+**`max_size_mb` はプラグイン本文を埋め込んだ後に Node が守り直す。** Go は本文の無い DTO しか測れないので、`inlinePluginContents` の後で `enforceKyousSizeBudget`（`read-handlers.mjs`）が Go と同じ規則（2件目以降は足す前に判定、先頭1件は超えても返して警告）で `kyous[]` を切り、押し出した分は `remaining_count` / `has_more` / `next_cursor`（Go の `encodeMCPCursor` と同じ `{related_time}::{id}`。DTO の `related_time` はローカル時刻の RFC3339Nano で同じ書式）を直して次頁へ回し、`warnings[]` に件数を書く。**Node がカーソルを組み立てる唯一の箇所**なので、Go のカーソル形を変えるときはここも直す（[ADR-0624](../../../documents/adr/0624-mcp-max-size-is-enforced-after-plugin-inline.md)）。
+
+**`gkill_get_kyou_history` は `offset` で続きを読む。** gkill は全版を返し Node が切るので、ページングは Node で完結する（`next_offset` を `offset` に渡す。`limit` の公開上限 200 を超える履歴へ進む唯一の経路。`KYOU_HISTORY_STALE_SCHEMA_ARG_KINDS` に載せてある）。**版の `data_type` はエンティティ名に揃えて返す** —— 型別 API は射影名を経路ごとに違う規則で返す（検索 = `compareKyouEntryPriority` で `mi_start`、履歴 = UNION の出力順で `mi_check`、更新応答 = `compareMiProjectionPreference` で `mi_create`）ので、同じ Mi が3通りの名前を名乗っていた。delete / restore / update_* の応答（`withEntityDataType`）も同じく揃える。検索結果は射影名のまま（[ADR-0626](../../../documents/adr/0626-mcp-kyou-history-pages-with-offset.md)）。
+
+**`for_mi` だけの検索は入口で `include_create_mi` を補う。** 5フラグが全て未指定なら `normalizeKyouArgs` が `include_create_mi:true` を足し、`normalized.notes` → `payload.warnings[]` の先頭で知らせる（`FOR_MI_DEFAULT_PROJECTION_NOTE`）。`for_mi` 自体は補わない（ADR-0610）。Go の `forMiWithoutProjectionWarning` は API 直叩き向けにそのまま（[ADR-0627](../../../documents/adr/0627-mcp-for-mi-defaults-include-create-mi.md)）。
+
+**更新は現在値と同じ値だけのパッチも断る。** `runUpdate` は指定された全欄を `valuesEquivalent`（日時はオフセット違いを同じ瞬間として、数値は `Number`、`null` は現在値が空なら同じ）で現在値と比べ、全欄同じなら「No effective change」で書かない（ADR-0616 の「引数の有無」だけの判定では同じ内容の版が積まれていた）。Mi の `limit_time` / `estimate_start_time` / `estimate_end_time` は `timeis.end_time` と同じ `nullClears`（`null` で消す。以前は黙って無視されていた）（[ADR-0628](../../../documents/adr/0628-mcp-update-rejects-a-no-op-patch-by-value.md)）。
+
+**応答の定常オーバーヘッドは削ってある。戻さないこと。** `tag_entities[]` / `text_entities[]` は `include_attached_ids:true` のときだけ（Go の `GetKyousMCPRequest.IncludeAttachedIDs`）。`is_deleted` は `omitempty` で削除済みにだけ現れる（監査 C4 の判断を is_deleted に限って覆した。`is_zip` / `addition` / `deletion` は据え置き）。`PluginPayloadMCPDTO` は `kind` / `plugin_name` だけで、**本文取得の鍵は Kyou 側の `rep_name` / `id`**（`collectPluginPayloads` がそちらを読み、`{rep_name, kyou_id, payload}` を返す。payload へ戻さない）。`GitPayloadMCPDTO.commit_hash` は無い（`id` がハッシュ）。`gkill_get_application_config` は `compact`（既定 true。`children` の null / 空・`is_dir:false`・`ignore_check_rep_rykv:false`・識別欄と同じ `name` を落とす。**`check_when_inited` / `is_force_hide` は落とさない**）・`contains`（葉の名前で刈る）・`max_size_mb`（超える struct を大きい順に `{omitted_bytes}` へ置き換えて必ず収める）を持つ（[ADR-0629](../../../documents/adr/0629-mcp-trims-per-entry-overhead.md)）。
+
+**公開ファイルURLは `include_file_urls` で頼まれたときだけ鋳造する。** ハンドラが payload に `MINT_FILE_LINKS`（`payload.mjs` の Symbol。JSON には出ない）を立て、`buildToolResult` は HTTP かつ印があるときだけ `applyFileLinks`、それ以外は `stripFilePaths`。発行した URL には `file_url_expires_at` を添える（`FileLinkStore.mintLink`）。印を通常のプロパティにしない・`buildToolResult` へ引数を通さない（[ADR-0630](../../../documents/adr/0630-mcp-file-urls-are-opt-in-with-expiry.md)）。
+
+**未知キーは束ねて1回で返し、廃止済みは `detail.allowed` に載せない。** `assertKnownKeys` は全部の未知キーを `detail.unknown` に集めて先頭のキーを `detail.field` にし、第4引数 `hiddenKeys`（`DEPRECATED_TOP_LEVEL_ARGS` / `DEPRECATED_QUERY_FIELDS ∪ LEGACY_USE_FLAG_KEYS`）は受理するが列挙しない（載せると「`only_latest_data:false` なら過去版が読めるのか」と考えさせるだけ。ADR-0620）。`FIND_QUERY_SCHEMA` の `additionalProperties` は `false`（「スキーマ上は何でも通る」と実際の拒否の不一致をやめた）。オフセットの無い日時は `normalizeDateTimeString` が「no timezone offset」と名指しする（`ISO_DATETIME_DESC` も「RFC 3339 with offset」と言う）。
+
+**KFTL の `created[]` は delete の `targets[]` ではない。** `updated` / `related_time` を持つので `normalizeDeleteTargets` が「`created.filter(c => !c.updated).map(({id, data_type}) => ({id, data_type}))` を渡せ。`updated:true` は既存記録の更新（打刻の終了）で、消すと元から在った打刻が消える」と案内する。説明文で「そのまま渡せる」と書き戻さないこと。`gkill_submit_kftl` の応答は `replayed`（冪等キーで畳んだ再送。`created` は元の控え）を持ち、同じキーで別の本文は gkill が 409 `ERR000423` で断る（[ADR-0510](../../../documents/adr/0510-kftl-idempotency-key-carries-fingerprint-and-result.md)）。
+
+**`gkill_add_tag` / `gkill_add_text` の not_found は target_id を名指しする。** gkill の文言は全失敗経路で「タグ追加に失敗しました」1本なので、`describeTargetNotFound`（`write-handlers.mjs`）が `error_kind:"not_found"` のときだけ「target_id X matched no kyou ...」で包み直す（元の detail は保持）。単件の delete / restore の要約は「Deleted (soft): kmemo <id>」（キー名ではなく型と id。`describeSingleSoftDelete`）、`gkill_get_all_tag_names` の要約は `truncated` のとき「N of M」。
+
+**未知の `mi_board_name` と、プラグインの名札を `query.reps` に渡したときは Go が警告する。** `unknownMiBoardNameWarnings`（`GetBoardNames` との完全一致）と `pluginManifestRepNameHint`（値が emits_kyou なプラグインの manifest `rep_name` に一致したら「名札であって検索値ではない。`rep_names[]` を使え」）。`gkill_get_plugin_list` の `rep_names` は Kyou を出すプラグインでは**常に**「`query.reps` に渡せる値」（申告値。索引未構築なら `[]`。申告しなければ `[manifest の rep_name]`）で、`omitempty` に戻さない（[ADR-0311](../../../documents/adr/0311-plugin-list-rep-names-are-always-the-query-values.md)）。`group_by` の `week_of_day`（`sunday`..`saturday`）と `hour`（`00`..`23`）は 0 件のバケットも並べる（定義域が有限）。
+
 ## 関連スキル
 
 - [gkill-plugin](../gkill-plugin/SKILL.md) — プラグインの stdio 直列化（並列に投げても速くならない理由）
@@ -141,3 +165,12 @@ write 専用サーバにも載せた）。write 専用サーバは read を数�
 - [ADR-0621 カーソル頁では Mi の代表射影を元の期間で再検証する](../../../documents/adr/0621-cursor-pages-revalidate-mi-against-original-window.md)
 - [ADR-0622 ツール説明は要約にとどめ、詳細は gkill_get_mcp_help で取り出す](../../../documents/adr/0622-tool-descriptions-are-summaries-details-via-help-tool.md)
 - [ADR-0623 data_types はエンティティ名を射影へ展開して受理する](../../../documents/adr/0623-data-types-expands-entity-names-to-projections.md)
+- [ADR-0624 max_size_mb はプラグイン本文を埋め込んだ後に Node が守り直す](../../../documents/adr/0624-mcp-max-size-is-enforced-after-plugin-inline.md)
+- [ADR-0625 地図条件は MCP 入口で3値を要求し、Go は欠けを警告する](../../../documents/adr/0625-mcp-map-filter-requires-all-three-values.md)
+- [ADR-0626 gkill_get_kyou_history は offset で続きを読む](../../../documents/adr/0626-mcp-kyou-history-pages-with-offset.md)
+- [ADR-0627 for_mi だけの検索は MCP の入口で include_create_mi を補う](../../../documents/adr/0627-mcp-for-mi-defaults-include-create-mi.md)
+- [ADR-0628 更新は現在値と同じ値だけのパッチも書かずに断る](../../../documents/adr/0628-mcp-update-rejects-a-no-op-patch-by-value.md)
+- [ADR-0629 応答の定常オーバーヘッドを削る](../../../documents/adr/0629-mcp-trims-per-entry-overhead.md)
+- [ADR-0630 公開ファイルURLは include_file_urls で頼まれたときだけ発行し、期限を添える](../../../documents/adr/0630-mcp-file-urls-are-opt-in-with-expiry.md)
+- [ADR-0510 メモ帳の再送キーは本文の指紋と結果を控える](../../../documents/adr/0510-kftl-idempotency-key-carries-fingerprint-and-result.md)
+- [ADR-0311 プラグイン一覧の rep_names は常に「query.reps に渡せる値」](../../../documents/adr/0311-plugin-list-rep-names-are-always-the-query-values.md)

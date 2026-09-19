@@ -184,6 +184,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0308](0308-plugin-multiple-rep-names.md) | プラグイン1本が複数の rep 名を名乗れる（get_rep_name の rep_names） | Accepted |
 | [0309](0309-plugin-provides-git-commit-log.md) | zip の Git リポジトリは provides に git_commit_log を書いて native と同じ経路に載せる | Accepted |
 | [0310](0310-chat-export-plugins-read-zip.md) | ChatGPT / Claude.ai の会話履歴はエクスポート ZIP のまま読み、展開済みの JSON は読まない | Accepted |
+| [0311](0311-plugin-list-rep-names-are-always-the-query-values.md) | プラグイン一覧の rep_names は常に「query.reps に渡せる値」 | Accepted |
 | [0401](0401-do-not-split-search-window-in-client.md) | クライアント側で検索を期間の窓へ刻んで複数回 get_kyous を投げない | Accepted |
 | [0402](0402-insert-registered-kyou-locally.md) | 記録の追加は列を再検索せず、その1件をクライアントで判定して差し込む | Accepted |
 | [0403](0403-add-tag-before-registered-kyou.md) | タグ欄付きの追加/編集画面は add_tag が完了してから registered_kyou を emit する | Accepted |
@@ -204,6 +205,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0507](0507-kftl-single-implementation-on-server.md) | メモ帳の解釈と書き込みはサーバの1実装に寄せ、Web は行ラベルだけを手元で出す | Accepted |
 | [0508](0508-kftl-blank-records-are-input-errors.md) | 保存マーカー行は値の行に数えず、内容の無い記録・付け先の無いメタ情報・読めない予定日時は書く前に行別エラーにする | Accepted |
 | [0509](0509-kftl-timeis-end-targets-the-latest-running-record.md) | メモ帳の打刻終了は「開始時刻が最新の実行中1件」を終え、削除済みは候補にしない | Accepted |
+| [0510](0510-kftl-idempotency-key-carries-fingerprint-and-result.md) | メモ帳の再送キーは本文の指紋と結果を控え、同じ本文は再生し、別の本文は 409 で断る | Accepted |
 | [0601](0601-mcp-request-context-immutable.md) | MCP HTTPモードの1リクエスト文脈は不変オブジェクトを引数で流す | Accepted |
 | [0602](0602-mcp-inline-plugin-content.md) | MCP のプラグイン本文は get_kyous へインライン埋め込みし、同一プラグインへ並列に投げない | Accepted |
 | [0603](0603-mcp-cursor-pushes-period-end.md) | MCP のページングはカーソルを期間上限へ押し下げ、同一時刻のかたまりを割らない | Superseded |
@@ -227,6 +229,13 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0621](0621-cursor-pages-revalidate-mi-against-original-window.md) | カーソル頁では Mi の代表射影を元の期間で再検証する（押し下げで代表が変わり、返却済みの記録が再出現していた） | Accepted |
 | [0622](0622-tool-descriptions-are-summaries-details-via-help-tool.md) | ツール説明は要約にとどめ、詳細は gkill_get_mcp_help で取り出す | Accepted |
 | [0623](0623-data-types-expands-entity-names-to-projections.md) | data_types はエンティティ名を射影へ展開して受理する | Accepted |
+| [0624](0624-mcp-max-size-is-enforced-after-plugin-inline.md) | max_size_mb はプラグイン本文を埋め込んだ後に Node が守り直す | Accepted |
+| [0625](0625-mcp-map-filter-requires-all-three-values.md) | 地図条件は MCP 入口で3値を要求し、Go は欠けを警告する | Accepted |
+| [0626](0626-mcp-kyou-history-pages-with-offset.md) | gkill_get_kyou_history は offset で続きを読む | Accepted |
+| [0627](0627-mcp-for-mi-defaults-include-create-mi.md) | for_mi だけの検索は MCP の入口で include_create_mi を補う | Accepted |
+| [0628](0628-mcp-update-rejects-a-no-op-patch-by-value.md) | 更新は現在値と同じ値だけのパッチも書かずに断る | Accepted |
+| [0629](0629-mcp-trims-per-entry-overhead.md) | 応答の定常オーバーヘッドを削る（付随 ID はオプトイン・is_deleted は true のときだけ・重複欄を落とす・設定ツリーを圧縮） | Accepted |
+| [0630](0630-mcp-file-urls-are-opt-in-with-expiry.md) | 公開ファイルURLは include_file_urls で頼まれたときだけ発行し、期限を添える | Accepted |
 | [0701](0701-argon2id-password-storage.md) | パスワードは Argon2id で保存し、ワイヤ形式（password_sha256）は変えない | Accepted |
 | [0702](0702-share-owner-from-session.md) | 共有情報の所有者はリクエスト本文ではなくセッションから決める | Accepted |
 | [0703](0703-shared-file-authz-by-query.md) | 共有ページのファイル配信は共有クエリを再評価した許可パス集合にだけ許す | Accepted |

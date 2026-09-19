@@ -579,24 +579,29 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	for i := range candidateCount {
 		kyou := batch[i]
 
-		// タグ取得
+		// タグ取得。ID 付きの tag_entities は include_attached_ids のときだけ組む（既定では
+		// tags[] と同じ内容が毎件二重に並ぶだけだった。ADR-0629）
 		tags, tagsErr := repositories.TagReps.GetTagsByTargetID(r.Context(), kyou.ID)
 		noteDetailFailure("tags", tagsErr)
 		tagStrings := make([]string, 0, len(tags))
-		tagEntities := make([]req_res.AttachedEntityMCPDTO, 0, len(tags))
+		var tagEntities []req_res.AttachedEntityMCPDTO
 		for _, tag := range tags {
 			tagStrings = append(tagStrings, tag.Tag)
-			tagEntities = append(tagEntities, req_res.AttachedEntityMCPDTO{ID: tag.ID, Value: tag.Tag})
+			if request.IncludeAttachedIDs {
+				tagEntities = append(tagEntities, req_res.AttachedEntityMCPDTO{ID: tag.ID, Value: tag.Tag})
+			}
 		}
 
 		// テキスト取得
 		texts, textsErr := repositories.TextReps.GetTextsByTargetID(r.Context(), kyou.ID)
 		noteDetailFailure("texts", textsErr)
 		textStrings := make([]string, 0, len(texts))
-		textEntities := make([]req_res.AttachedEntityMCPDTO, 0, len(texts))
+		var textEntities []req_res.AttachedEntityMCPDTO
 		for _, text := range texts {
 			textStrings = append(textStrings, text.Text)
-			textEntities = append(textEntities, req_res.AttachedEntityMCPDTO{ID: text.ID, Value: text.Text})
+			if request.IncludeAttachedIDs {
+				textEntities = append(textEntities, req_res.AttachedEntityMCPDTO{ID: text.ID, Value: text.Text})
+			}
 		}
 
 		// 通知取得
@@ -727,9 +732,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			if gcl, ok := gitCommitLogMap[kyou.ID]; ok {
 				payload = req_res.GitPayloadMCPDTO{
 					Kind: "git_commit_log",
-					// git_commit_log の Kyou ID はフル40文字のコミットハッシュそのもの
-					// (git_commit_log_repository_local_dir_impl.go の kyou.ID = commit.Hash.String())
-					CommitHash:    gcl.ID,
+					// コミットハッシュは Kyou の id そのもの（DTO のコメント参照）
 					CommitMessage: gcl.CommitMessage,
 					Addition:      gcl.Addition,
 					Deletion:      gcl.Deletion,
@@ -772,11 +775,9 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			// 既存のdata_typeに該当しないKyouはプラグイン由来。
 			// data_typeはプラグインが自由に決めるので、rep_nameで引き当てる。
 			if manifest, ok := pluginManifestByRepName[kyou.RepName]; ok {
+				// rep_name / id / data_type は Kyou 側にあるので写さない（DTO のコメント参照）
 				payload = req_res.PluginPayloadMCPDTO{
 					Kind:       "plugin",
-					DataType:   kyou.DataType,
-					RepName:    kyou.RepName,
-					KyouID:     kyou.ID,
 					PluginName: manifest.Name,
 				}
 				// 説明文は応答トップレベルへ rep_name ごと1回だけ（DTOのコメント参照）。

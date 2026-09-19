@@ -14,10 +14,12 @@
 const SEARCH_TOPIC =
   "gkill_get_kyous searches life-log entries (kyou) and returns enriched results: each entry carries id, rep_name, " +
   "data_type, related_time, create_app / update_app (the app that wrote / last updated it), tags[], texts[], " +
-  "notifications[], timeis[] (attached TimeIs when is_include_timeis is set), tag_entities[] / text_entities[] " +
+  "notifications[], timeis[] (attached TimeIs when is_include_timeis is set), is_deleted (present ONLY on " +
+  "soft-deleted entries, i.e. with query.include_deleted_data; absent means the entry is live) and payload " +
+  "(type-specific fields). Pass include_attached_ids:true to also get tag_entities[] / text_entities[] " +
   "({id, value}: the annotation's OWN id, which is what gkill_update_text and gkill_delete_kyou(data_type:\"tag\"/\"text\") " +
-  "require — the plain tags[] / texts[] strings carry no id and cannot be edited or deleted) and payload " +
-  "(type-specific fields).\n\n" +
+  "require — the plain tags[] / texts[] strings carry no id and cannot be edited or deleted); they are off by default " +
+  "because they duplicate tags[] / texts[] on every entry.\n\n" +
   "Response fields: kyous[], total_count (only on cursor-less responses), returned_count, remaining_count, has_more, " +
   "next_cursor, buckets (group_by only), partial, warnings, plugins, plugin_content.\n\n" +
   "ALWAYS inspect warnings[], even when partial is false. partial only says that some attached data (tags / texts / " +
@@ -27,11 +29,16 @@ const SEARCH_TOPIC =
   "(rep_types / tags / reps / data_types typos, ids that match nothing) are also reported in warnings[] rather than " +
   "silently matching nothing.\n\n" +
   "Query semantics: a filter activates simply by being present and non-null; omit (or pass null for) filters you " +
-  "don't use. [] means 'filter enabled but matches nothing' (except timeis_words: [], which means 'only kyous " +
-  "covered by any TimeIs'). Most used fields: calendar_start_date / calendar_end_date (both INCLUSIVE; date-only " +
-  "values expand to 23:59:59 local), words, tags, for_mi. Advanced: map_latitude / map_longitude / map_radius, " +
-  "playing_time, period_of_time_*, update_time. The server always applies only_latest_data=true. Results come back " +
-  "newest first by related_time, ties by id ascending.\n\n" +
+  "don't use. [] means 'filter enabled but matches nothing' for tags / hide_tags / reps / rep_types / ids / " +
+  "timeis_tags / period_of_time_week_of_days. Two exceptions: words / not_words: [] apply NO keyword condition — " +
+  "everything passes and the result is NOT narrowed (so an empty keyword list returns the same count as no keyword " +
+  "at all; pass at least one word to filter) — and timeis_words: [] means 'only kyous covered by any TimeIs'. " +
+  "Most used fields: calendar_start_date / calendar_end_date (both INCLUSIVE; a date-only calendar_start_date " +
+  "expands to 00:00:00 local and a date-only calendar_end_date to 23:59:59 local), words, tags, for_mi. Advanced: " +
+  "map_latitude / map_longitude / map_radius (all three required, radius in METERS; a partial set is rejected " +
+  "because gkill would otherwise silently drop the location condition), playing_time, period_of_time_*, update_time. " +
+  "The server always applies only_latest_data=true. Results come back newest first by related_time, ties by id " +
+  "ascending.\n\n" +
   "Common query patterns: date range {calendar_start_date:\"2026-03-01\", calendar_end_date:\"2026-03-07\"}; " +
   "keyword {words:[\"keyword\"]}; tag {tags:[\"tagname\"]}; tasks {for_mi:true, mi_check_state:\"uncheck\", " +
   "include_create_mi:true} (for_mi needs at least one include_*_mi flag or it returns nothing — see topic mi).\n\n" +
@@ -51,7 +58,7 @@ const SEARCH_TOPIC =
   "data_type values that share one kind): kmemo -> 'kmemo' (content; texts[] is a separate list of annotations, " +
   "not the body); kc -> 'kc' (title, num_value); lantana -> 'lantana' (mood 0-10); nlog -> 'nlog' (title, shop, " +
   "amount); urlog -> 'urlog' (title, url, description); git_commit_log -> 'git_commit_log' (commit_message, " +
-  "addition, deletion); idf -> 'idf' (file_name, is_image, is_video, is_audio, is_zip, rep_name, mime_type — see " +
+  "addition, deletion; the entry's id IS the full commit hash); idf -> 'idf' (file_name, is_image, is_video, is_audio, is_zip, rep_name, mime_type — see " +
   "topic idf); timeis_start / timeis_end -> 'timeis' (title, start_time, end_time); mi_* -> 'mi' (title, is_checked, " +
   "board_name, create_time, limit_time, estimate_start_time, estimate_end_time); mirekyou_* -> 'mirekyou' (an " +
   "existing entry turned into a task: target_id plus the same scheduling fields, no title of its own — pass " +
@@ -72,13 +79,19 @@ const PAGINATION_TOPIC =
   "every matching repository, so on a large account a broad query with limit:3 takes about as long as one with " +
   "limit:100. To make a query faster, narrow calendar_start_date / calendar_end_date, data_types or reps instead " +
   "of shrinking limit. The one exception to the cap: when the first entry of a page alone exceeds max_size_mb it " +
-  "is returned anyway (with a warning) so that paging keeps progressing.\n\n" +
+  "is returned anyway (with a warning) so that paging keeps progressing. With include_plugin_content the cap is " +
+  "enforced again AFTER the plugin bodies are inlined (they are not stored in gkill, so the backend cannot measure " +
+  "them): entries pushed over the budget are held back, remaining_count / has_more / next_cursor are adjusted and " +
+  "warnings[] says how many were held back — they come with the next cursor page.\n\n" +
   "Counting and histograms: count_only:true returns only total_count and skips all payload construction — the " +
   "cheapest way to size a query before fetching. group_by:\"month\"|\"day\"|\"week_of_day\"|\"hour\"|\"data_type\"|" +
   "\"rep_name\"|\"create_app\"|\"update_app\"|\"url_domain\"|\"file_extension\" returns buckets:[{key,count}] plus " +
   "total_count instead of kyous[] (time keys use the server's local timezone; url_domain covers only urlog and " +
-  "file_extension only idf entries; at most 1000 buckets, overflow folds into \"(other)\"). Prefer group_by over " +
-  "hand-made windows: calendar bounds are inclusive, so adjacent windows double-count the boundary day.\n\n" +
+  "file_extension only idf entries; at most 1000 buckets, overflow folds into \"(other)\"). week_of_day keys are " +
+  "the English day names sunday..saturday in that order and hour keys are \"00\"..\"23\"; both list every bucket, " +
+  "zero counts included (the query filter period_of_time_week_of_days uses integers instead: 0=sunday..6=saturday). " +
+  "Prefer group_by over hand-made windows: calendar bounds are inclusive, so adjacent windows double-count the " +
+  "boundary day.\n\n" +
   "Combination rules: count_only and group_by cannot be combined with cursor (they count everything the query " +
   "matches, while a cursor resumes partway through), and count_only cannot be combined with group_by (group_by " +
   "already returns only counts). All three combinations are rejected with an explanation instead of silently " +
@@ -96,9 +109,11 @@ const MI_TOPIC =
   "but NOT absent — never read its low count as proof that no task was created. WITH for_mi:true the search is " +
   "restricted to Mi and MiReKyou, the data_type follows query.mi_sort_type (mi_create when unset) and the five " +
   "include_*_mi flags select which projections supply rows: they do not narrow an existing result set, and with " +
-  "all five false (the default) a for_mi search returns ZERO entries. Set at least one; include_create_mi:true is " +
-  "the usual starting point. mi_check_state (\"all\" / \"checked\" / \"uncheck\") and mi_board_name narrow " +
-  "further; discover board names with gkill_get_mi_board_list.\n\n" +
+  "all five false a for_mi search would return ZERO entries — so when for_mi is set without any of them this " +
+  "server assumes include_create_mi:true and says so in warnings[]. Set include_check_mi / include_limit_mi / " +
+  "include_start_mi / include_end_mi explicitly to look at other timestamps. mi_check_state (\"all\" / " +
+  "\"checked\" / \"uncheck\") and mi_board_name narrow further; discover board names with gkill_get_mi_board_list " +
+  "(an unknown mi_board_name is reported in warnings[]).\n\n" +
   "mi_sort_type is NOT only a sort order: it decides the timestamp that calendar_start_date / calendar_end_date, " +
   "the time-of-day window and the weekday filter are matched against, and it sets the data_type of the results. " +
   "It only takes effect through the matching include_*_mi projection (limit_time needs include_limit_mi, and so " +
@@ -117,7 +132,9 @@ const DATA_TYPES_TOPIC =
   "mirekyou_end, plus whatever data_type each plugin defines (e.g. claude_conversation — list them with " +
   "gkill_get_plugin_list). gkill_delete_kyou / gkill_restore_kyou / gkill_get_kyou_history take ENTITY names " +
   "(kmemo, kc, nlog, lantana, urlog, timeis, mi, mirekyou, rekyou, tag, text, notification); they also accept " +
-  "projection names and fold them, so a data_type copied out of a response works there.\n\n" +
+  "projection names and fold them, so a data_type copied out of a response works there. The responses of " +
+  "gkill_get_kyou_history, gkill_delete_kyou, gkill_restore_kyou and the update tools (gkill_update_mi and the " +
+  "rest) carry the ENTITY name (a task is \"mi\" there, whichever projection a search showed it under).\n\n" +
   "The data_types filter of gkill_get_kyous is an allowlist matched against the projection names in results. " +
   "Entity names timeis / mi / mirekyou are accepted too and expand to all their projections (timeis → " +
   "timeis_start + timeis_end; mi → the five mi_*), so [\"timeis\",\"mi\",\"idf\"] counts all three kinds. " +
@@ -135,12 +152,14 @@ const DATA_TYPES_TOPIC =
   "filter on the app that wrote / last updated an entry: known values are \"gkill\" (web UI and uploads), " +
   "\"gkill_kftl\" (the notepad AND gkill_submit_kftl, which the server stamps with the same value), " +
   "\"gkill_wear\", \"gkill_mcp_readwrite\" / \"gkill_mcp_write\" (the MCP servers), \"urlog_bookmarklet\", " +
-  "\"git\", and whatever a plugin sets. Records written through gkill_submit_kftl carry \"gkill_kftl\" and are " +
+  "\"git\", \"idf\" (files indexed from the filesystem), \"gkill_autolog\" (the automatic activity logger) and " +
+  "whatever a plugin sets; the values actually present in your data are listed by group_by:\"create_app\". " +
+  "Records written through gkill_submit_kftl carry \"gkill_kftl\" and are " +
   "indistinguishable from hand-typed notepad entries, so create_apps:[\"gkill_mcp_readwrite\"] does NOT find them.";
 
 const PLUGIN_TOPIC =
   "Plugin-provided entries (any data_type that is not one of the built-ins) have payload.kind='plugin' carrying " +
-  "data_type / rep_name / kyou_id / plugin_name. Their body is NOT stored in gkill, so set " +
+  "plugin_name only — the entry's own id / rep_name / data_type identify it. Their body is NOT stored in gkill, so set " +
   "include_plugin_content:true on the same gkill_get_kyous call to get it inline: each plugin payload then " +
   "gains content_status ('ok' | 'truncated' | 'skipped' | 'error'), content_text (and content_html when " +
   "plugin_content_format includes html), content_skipped_reason ('max_kyous' | 'budget' | 'deadline' | " +
@@ -156,8 +175,11 @@ const PLUGIN_TOPIC =
   "Which plugins exist, whether each one is alive and whether its index has ever been built: gkill_get_plugin_list " +
   "(emits_kyou / provides / typed_index). A plugin that emits no kyou (a GPS-only plugin, say) never matches " +
   "query.reps or data_types — read its data with gkill_get_gps_log instead. Plugins are matched via query.reps or " +
-  "data_types, never rep_types; the per-plugin rep names that query.reps accepts come from gkill_get_rep_infos " +
-  "plugins[]. gkill_get_plugin_list does not count entries per plugin (that would round-trip to every plugin in " +
+  "data_types, never rep_types; the rep names that query.reps accepts are gkill_get_plugin_list rep_names[] " +
+  "(always present; [] until the plugin's index is built) or gkill_get_rep_infos plugins[] — NOT the plugin's " +
+  "rep_name, which is its manifest label (a plugin wrapping several archived Git repositories names each repository " +
+  "in rep_names while its rep_name matches nothing; the response warns when you pass it). gkill_get_plugin_list " +
+  "does not count entries per plugin (that would round-trip to every plugin in " +
   "series); count with count_only:true plus data_types:[<plugin data_type>] instead. The write-only server has no " +
   "gkill_get_kyous, so plugin bodies can only be read from the read or readwrite server.";
 
@@ -175,11 +197,13 @@ const IDF_TOPIC =
   "\"1024x1024\") to get a downscaled JPEG instead of the original, and is_video:true alongside thumb to grab a " +
   "frame out of a video (a video fetched whole normally blows the cap). The response echoes thumb only when a " +
   "downscaled version was returned — its absence means you got the original.\n" +
-  "3. file_url / file_url_full (HTTP clients only): expiring public links minted by the MCP server (images: " +
-  "file_url is a downscaled thumbnail, file_url_full the original, no size cap). These are links to hand a human — " +
-  "paste them in a reply, open them in a browser, embed them in HTML. MCP never fetches them for you, and a client " +
-  "that can fetch URLs on its own still ends up with bytes outside the conversation rather than a picture it can " +
-  "look at.\n\n" +
+  "3. file_url / file_url_full (HTTP clients only, and only when the gkill_get_kyous call passed " +
+  "include_file_urls:true): expiring public links minted by the MCP server (images: file_url is a downscaled " +
+  "thumbnail, file_url_full the original, no size cap), with file_url_expires_at saying when they stop working " +
+  "(default one hour). These are links to hand a human — paste them in a reply, open them in a browser, embed them " +
+  "in HTML. MCP never fetches them for you, and a client that can fetch URLs on its own still ends up with bytes " +
+  "outside the conversation rather than a picture it can look at. Leave include_file_urls off unless you intend to " +
+  "hand a link to a human: every link is a minted token.\n\n" +
   "Files dropped into a repository directory do not appear in searches until the index is refreshed, and nothing " +
   "warns you: gkill_get_rep_infos rep_infos[].indexed_at tells you when that last happened; pass " +
   "query.update_cache:true (an operational side effect, not free) or run the update_cache CLI to refresh. Narrow " +
@@ -189,7 +213,8 @@ const DELETED_TOPIC =
   "gkill is append-only: an update adds a new version of an entry and a delete adds a version with " +
   "is_deleted=true. Ordinary searches (gkill_get_kyous) only ever return the LATEST version of each entry, and by " +
   "default only entries that are not deleted.\n\n" +
-  "query.include_deleted_data:true also returns soft-deleted entries (they carry is_deleted:true), but still only " +
+  "query.include_deleted_data:true also returns soft-deleted entries (they carry is_deleted:true; live entries " +
+  "carry no is_deleted field at all), but still only " +
   "their latest version. Note that a deleted entry is indexed by the time it was DELETED, not by its original " +
   "related_time, so a calendar range with this flag on also surfaces entries created on other days that merely " +
   "happened to be deleted inside the range. rekyou / mirekyou entries stay hidden even with this flag (their " +
@@ -197,13 +222,17 @@ const DELETED_TOPIC =
   "gkill_get_kyou_history(id, data_type) reads every stored version of ONE entry, newest first, including deleted " +
   "versions — the only way to see what an entry used to say or to read back something deleted by mistake. " +
   "latest_is_deleted tells you first whether the newest version is a deletion; data_type must match the entry's " +
-  "actual type (the lookup is per-type, so a wrong data_type looks exactly like a wrong id). update_time is stored " +
-  "at one-second resolution, so two versions written within the same second collapse into one.\n\n" +
+  "actual type (the lookup is per-type, so a wrong data_type looks exactly like a wrong id), and every version in " +
+  "the response carries that entity name as its data_type. limit (default 20, max 200) caps one call; when " +
+  "has_more is true pass next_offset as offset to read the older versions, however many there are. update_time " +
+  "is stored at one-second resolution, so two versions written within the same second collapse into one.\n\n" +
   "gkill_delete_kyou soft-deletes (it refuses an already-deleted entry instead of stacking another version, so a " +
   "retry after an uncertain response is safe; a speculative call on an active entry WILL delete it); " +
   "gkill_restore_kyou undoes a soft delete (and refuses an already-active entry). Both live on servers that " +
   "expose write tools. idf (file) and git_commit_log entries cannot be deleted this way — they are managed by the " +
-  "filesystem and git repositories.";
+  "filesystem and git repositories. To undo a gkill_submit_kftl submission, delete only what it CREATED: " +
+  "created.filter(c => !c.updated).map(({id, data_type}) => ({id, data_type})) — entries with updated:true are " +
+  "pre-existing records it merely updated.";
 
 const REP_TOPIC =
   "Two different names describe where an entry lives. rep_type is the KIND of repository and is the vocabulary " +
@@ -290,18 +319,26 @@ const KFTL_TOPIC =
   "(no prefix) → kmemo text content.\n\n" +
   "Example (creates 3 records: kmemo + mood + expense): " +
   "\"今日はいい天気だった\\n、\\n/mood\\n8\\n、\\n/expense\\nカフェ\\nアイスコーヒー\\n-500\\n!\"\n\n" +
-  "Response fields: messages[] (server processing messages) and created[] ({id, data_type, updated, related_time}) " +
-  "— one entry per record actually written, in the order they were written. Ending a timeis reports the existing " +
-  "record with updated:true rather than a new id. Use created[].id as target_id for gkill_add_tag / gkill_add_text.\n\n" +
+  "Response fields: messages[] (server processing messages), created[] ({id, data_type, updated, related_time}) " +
+  "— one entry per record actually written, in the order they were written; related_time is stored at one-second " +
+  "resolution — and replayed (see idempotency below). Ending a timeis reports the existing record with updated:true " +
+  "rather than a new id. Use created[].id as target_id for gkill_add_tag / gkill_add_text. created[] is NOT the " +
+  "targets[] shape of gkill_delete_kyou: to undo a submission pass " +
+  "created.filter(c => !c.updated).map(({id, data_type}) => ({id, data_type})) — the two extra fields are rejected " +
+  "there, and entries with updated:true are pre-existing records the submission merely updated (a timeis it ended), " +
+  "so deleting them is not an undo.\n\n" +
   "Failures: a record with no content (a blank kmemo, a task or bookmark with no title, an expense with only a shop " +
   "name, a numeric record with no value), a tag / related time with nothing to attach to, or an unreadable " +
   "schedule date is a per-line INPUT ERROR that rejects the whole submission — it is never silently skipped. " +
-  "The whole submission is one database transaction: errors are reported one per bad line and NOTHING is written, " +
-  "so created[] comes back empty whether the failure was a bad VALUE caught while parsing (a mood outside 0-10, a " +
-  "prefix with no argument) or a failure while writing (a missing write repository, a database error — the error " +
-  "names the line it stopped at). Simply fix the text and submit again. Pass the same idempotency_key on a retry " +
-  "so that a replay of an ALREADY SUCCESSFUL submission (e.g. the response was lost) is folded instead of written " +
-  "twice.\n\n" +
+  "The whole submission is one database transaction: errors are reported one per bad line (errors[]) and NOTHING is " +
+  "written, so the response carries created:[] (an empty array) whether the failure was a bad VALUE caught while " +
+  "parsing (a mood outside 0-10, a prefix with no argument) or a failure while writing (a missing write repository, " +
+  "a database error — the error names the line it stopped at). Simply fix the text and submit again.\n\n" +
+  "Idempotency: pass the same idempotency_key on a retry of an ALREADY SUCCESSFUL submission (e.g. the response was " +
+  "lost). The same key with the SAME kftl_text writes nothing and returns the ORIGINAL created[] with replayed:true, " +
+  "so the ids of the first submission can be recovered without searching. The same key with DIFFERENT text is " +
+  "rejected with 409 (ERR000423) and writes nothing — a key is not a session, use a fresh one for new content. Keys " +
+  "are remembered for 10 minutes; a failed submission is never remembered, so retrying it always writes afresh.\n\n" +
   "Provenance: records written through this tool carry create_app=\"gkill_kftl\" (the same value the web notepad " +
   "writes) and create_device set to the SERVER's device name, not \"mcp\". MCP-submitted KFTL is therefore " +
   "indistinguishable from hand-typed notepad KFTL and create_apps:[\"gkill_mcp_readwrite\"] does NOT find them.";

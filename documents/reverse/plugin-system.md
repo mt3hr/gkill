@@ -10,7 +10,7 @@
 |---|---|
 | 実行モデル | 外部バイナリをサブプロセスとして起動し stdin/stdout で通信 |
 | 通信プロトコル | 改行区切り JSON（newline-delimited JSON） |
-| データ粒度 | プラグインが決める。ChatGPT / Claude.ai は 1 メッセージ = 1 Kyou、Claude Code は 1 ターン（自分の発言と、それに対する一連の応答）= 1 Kyou（`data_type` は `claude_code_turn`） |
+| データ粒度 | プラグインが決める。ChatGPT / Claude.ai は 1 メッセージ = 1 Kyou、Claude Code も 1 発言（人間の発言1つ、またはそれに対する一連の応答）= 1 Kyou で、1 ターンから人間側と応答側の 2 件が出る（`data_type` は歴史的に `claude_code_turn` のまま） |
 | コンテンツ表示 | `GetContentHTML` が返す HTML を iframe (srcdoc) で描画 |
 | ダークテーマ | postMessage 経由で親ページからテーマを通知、CSS変数で切り替え |
 

@@ -112,7 +112,7 @@ handle_*.go は112ファイル（実装92 + テスト20）で、1ハンドラ1�
 | `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用。`EnsureNotEmpty`（エラー無し失敗の受け皿）もここ |
 | `gkill_error_test.go` | `EnsureNotEmpty` のテスト |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
-| `error_codes.go` | エラーコード定数（381定数、ERR000001〜ERR000422・欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの。ADR-0709） |
+| `error_codes.go` | エラーコード定数（382定数、ERR000001〜ERR000423・欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの。ADR-0709） |
 | `message_codes.go` | メッセージコード定数（83定数、MSG000001〜MSG000090・欠番7） |
 | `http_status.go` | エラーコード → HTTP ステータス対応表（`HTTPStatusOf` / `HTTPStatusForErrors`） |
 | `http_status_test.go` | 全エラーコードが対応表に載っていることのソース走査テスト |

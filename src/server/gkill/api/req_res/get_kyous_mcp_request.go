@@ -44,6 +44,10 @@ type GetKyousMCPRequest struct {
 	IDFKinds []string `json:"idf_kinds"`
 	// IncludeFileSize は idf ペイロードに file_size(バイト)を載せる(ページ内のみ os.Stat)。
 	IncludeFileSize bool `json:"include_file_size"`
+	// IncludeAttachedIDs は tag_entities / text_entities（付随データ自身の ID 付き）を載せる。
+	// 既定 false。タグ4つで約500字が tags[] と二重に毎件並び、読むだけの呼び出しでは注釈 ID の
+	// 使い道がほぼ無い（2026-09-18 の実利用報告）。注釈を直す・消すときだけ true にする（ADR-0629）。
+	IncludeAttachedIDs bool `json:"include_attached_ids"`
 }
 
 func (r *GetKyousMCPRequest) ShouldIncludeTimeIs() bool {

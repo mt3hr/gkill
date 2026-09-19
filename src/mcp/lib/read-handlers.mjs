@@ -17,7 +17,7 @@ import {
 import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs, normalizeAppConfigArgs, normalizeKyouHistoryArgs, normalizeRepNamesArgs, normalizeTagNamesArgs, normalizeRepInfosArgs, normalizeStatusArgs, normalizeMcpHelpArgs, appendStaleSchemaWarning, assertAggregationNotCombinedWithCursor, formatLocalRfc3339 } from "./normalization.mjs";
 import { buildHelpPayload } from "./help-topics.mjs";
 import { inlinePluginContents, summarizeInlinePluginContent } from "./plugin-tools.mjs";
-import { normalizeMimeType, entityNotFoundMessage, appendStaleSchemaNoteToSummary } from "./payload.mjs";
+import { normalizeMimeType, entityNotFoundMessage, appendStaleSchemaNoteToSummary, MINT_FILE_LINKS } from "./payload.mjs";
 import { READ_TOOLS } from "./read-tools.mjs";
 import { encodeGpsCursor, decodeGpsCursor } from "./gps-cursor.mjs";
 
@@ -73,10 +73,17 @@ async function dispatchReadToolCall(ctx, name, args) {
             num_max: normalized.num_max,
             idf_kinds: normalized.idf_kinds,
             include_file_size: normalized.include_file_size || false,
+            // tag_entities / text_entities は頼まれたときだけ組ませる（ADR-0629）
+            include_attached_ids: normalized.include_attached_ids || false,
           },
           true,
           ctx.sid,
         );
+        // 入口で補った既定（for_mi の include_create_mi）は Go の warnings と同じ列に並べる。
+        const warnings = [
+          ...(Array.isArray(normalized.notes) ? normalized.notes : []),
+          ...(Array.isArray(response.warnings) ? response.warnings : []),
+        ];
         const payload = {
           kyous: Array.isArray(response.kyous) ? response.kyous : [],
           // v2: total_count は cursor 無し応答（1ページ目・count_only・group_by）にのみ入る。
@@ -98,9 +105,7 @@ async function dispatchReadToolCall(ctx, name, args) {
           // 警告は partial に限らず常設（未知フィルタ値の指摘等）。
           // partial は付随データ欠落専用の印として従来の意味を保つ (M-05)。
           ...(response.partial ? { partial: true } : {}),
-          ...(Array.isArray(response.warnings) && response.warnings.length > 0
-            ? { warnings: response.warnings }
-            : {}),
+          ...(warnings.length > 0 ? { warnings } : {}),
         };
         if (normalized.include_plugin_content) {
           payload.plugin_content = await inlinePluginContents(
@@ -112,6 +117,12 @@ async function dispatchReadToolCall(ctx, name, args) {
               localeName: normalized.locale_name,
             },
           );
+          // 本文を足した後の実サイズで max_size_mb を守り直す（Go は本文の無い DTO しか測れない。ADR-0624）
+          enforceKyousSizeBudget(payload, normalized.max_size_mb);
+        }
+        if (normalized.include_file_urls) {
+          // HTTP のときだけ buildToolResult が公開URLを鋳造する印（JSON には出ない。ADR-0630）
+          payload[MINT_FILE_LINKS] = true;
         }
         return payload;
       }
@@ -249,7 +260,14 @@ async function dispatchReadToolCall(ctx, name, args) {
         if (!normalized.include_ui_state) {
           projected = stripAppConfigUiState(projected);
         }
-        return projected;
+        // contains で葉を刈り、compact で既定値の欄を落とし、max_size_mb に必ず収める（ADR-0629）。
+        if (normalized.contains !== undefined) {
+          projected = filterAppConfigStructs(projected, normalized.contains);
+        }
+        if (normalized.compact) {
+          projected = compactAppConfigStructs(projected);
+        }
+        return capAppConfigSize(projected, normalized.max_size_mb);
       }
       case "gkill_get_idf_file": {
         const normalized = normalizeIdfFileArgs(args);
@@ -341,14 +359,25 @@ async function dispatchReadToolCall(ctx, name, args) {
         if (!Array.isArray(histories) || histories.length === 0) {
           throw new GkillApiError(entityNotFoundMessage(normalized.id, normalized.data_type));
         }
-        const versions = histories.slice(0, normalized.limit);
+        // 各版の data_type は射影名（mi_check など。SQL の UNION の出力順で決まり、検索の mi_start とも
+        // 更新応答の mi_create とも違う）で返ってくるので、この口が受理する語彙（エンティティ名）に揃える。
+        // 同じ Mi が経路ごとに3通りの data_type を名乗っていた（2026-09-18 の実利用報告）。
+        const versions = histories
+          .slice(normalized.offset, normalized.offset + normalized.limit)
+          .map((version) =>
+            version !== null && typeof version === "object" ? { ...version, data_type: normalized.data_type } : version,
+          );
+        const hasMore = normalized.offset + versions.length < histories.length;
         return {
           id: normalized.id,
           data_type: normalized.data_type,
           latest_is_deleted: Boolean(histories[0].is_deleted),
           version_count: histories.length,
+          offset: normalized.offset,
           returned_count: versions.length,
-          has_more: histories.length > versions.length,
+          has_more: hasMore,
+          // 続きは next_offset を offset に渡す（履歴は Node が全版を持っているので offset で足りる。ADR-0626）
+          ...(hasMore ? { next_offset: normalized.offset + versions.length } : {}),
           versions,
         };
       }
@@ -523,8 +552,13 @@ function summarizeReadToolPayloadBody(name, payload) {
     }
     case "gkill_get_mi_board_list":
       return `Fetched ${Array.isArray(payload.boards) ? payload.boards.length : 0} Mi boards.`;
-    case "gkill_get_all_tag_names":
-      return `Fetched ${Array.isArray(payload.tag_names) ? payload.tag_names.length : 0} tag names.`;
+    case "gkill_get_all_tag_names": {
+      const returned = Array.isArray(payload.tag_names) ? payload.tag_names.length : 0;
+      if (payload.truncated) {
+        return `Fetched ${returned} of ${payload.total_count} matching tag names (truncated — narrow with contains or raise limit).`;
+      }
+      return `Fetched ${returned} tag names.`;
+    }
     case "gkill_get_all_rep_names": {
       const returned = Array.isArray(payload.rep_names) ? payload.rep_names.length : 0;
       if (payload.truncated) {
@@ -553,7 +587,9 @@ function summarizeReadToolPayloadBody(name, payload) {
       const total = payload.version_count ?? 0;
       const shown = payload.returned_count ?? 0;
       const deleted = payload.latest_is_deleted ? " — latest version is DELETED" : "";
-      return `Returned ${shown} of ${total} versions${payload.has_more ? " (more available)" : ""}${deleted}.`;
+      const offset = payload.offset ? ` from offset ${payload.offset}` : "";
+      const more = payload.has_more ? ` (more available: pass offset:${payload.next_offset})` : "";
+      return `Returned ${shown} of ${total} versions${offset}${more}${deleted}.`;
     }
     case "gkill_get_rep_infos": {
       // fields で rep_infos を外した呼び出しに「Fetched 0 repositories」と言うと、
@@ -583,6 +619,199 @@ function summarizeReadToolPayloadBody(name, payload) {
     default:
       return null;
   }
+}
+
+// ApplicationConfig の struct ツリーを持つキー。葉の識別欄はキーごとに違う。
+const APP_CONFIG_STRUCT_KEYS = ["tag_struct", "mi_board_struct", "rep_struct", "rep_type_struct", "device_struct", "kftl_template_struct"];
+// 葉の「識別欄」。name がこれと同じ値なら name を落とせる（compact）。contains の照合対象でもある。
+const STRUCT_IDENTITY_KEYS = ["rep_name", "tag", "device", "rep_type", "board_name", "title", "template_name"];
+
+// isStructNode はツリーのノード（配列の要素）か。
+function isStructNode(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+// compactStructNode は既定値の欄を落とす（ADR-0629）。落とすのは
+//   children が null / []、is_dir:false、ignore_check_rep_rykv:false、識別欄と同じ name
+// だけ。check_when_inited / is_force_hide は可視判定に要るので触らない（省略された値の意味は説明文に書く）。
+// 葉ノードが毎回 name==rep_name, children:null, is_dir:false, ignore_check_rep_rykv:false を持ち、
+// rep_struct だけで 25,000 トークンを超えていた（2026-09-18 の実利用報告）。
+function compactStructNode(node) {
+  if (Array.isArray(node)) {
+    return node.map((child) => compactStructNode(child));
+  }
+  if (!isStructNode(node)) {
+    return node;
+  }
+  const out = {};
+  for (const [key, value] of Object.entries(node)) {
+    if (key === "children") {
+      if (value === null || (Array.isArray(value) && value.length === 0)) continue;
+      out[key] = compactStructNode(value);
+      continue;
+    }
+    if ((key === "is_dir" || key === "ignore_check_rep_rykv") && value === false) continue;
+    if (key === "name" && STRUCT_IDENTITY_KEYS.some((idKey) => node[idKey] === value)) continue;
+    out[key] = value;
+  }
+  return out;
+}
+
+// compactAppConfigStructs は応答（fields 射影後）の struct ツリーだけを compact する。
+export function compactAppConfigStructs(projected) {
+  const out = { ...projected };
+  for (const key of APP_CONFIG_STRUCT_KEYS) {
+    if (key in out && out[key] !== null && out[key] !== undefined) {
+      out[key] = compactStructNode(out[key]);
+    }
+  }
+  return out;
+}
+
+// filterStructNodes は葉の識別欄か name に needle（大小無視の部分一致）を含む葉だけを残し、
+// 葉が1つも残らない入れ物（children を持つノード）ごと落とす。
+function filterStructNodes(nodes, needle) {
+  if (!Array.isArray(nodes)) {
+    return nodes;
+  }
+  const lowered = needle.toLowerCase();
+  const matches = (node) =>
+    [...STRUCT_IDENTITY_KEYS, "name"].some(
+      (key) => typeof node[key] === "string" && node[key].toLowerCase().includes(lowered),
+    );
+  const out = [];
+  for (const node of nodes) {
+    if (!isStructNode(node)) continue;
+    if (Array.isArray(node.children)) {
+      const children = filterStructNodes(node.children, needle);
+      if (children.length > 0) {
+        out.push({ ...node, children });
+      }
+      continue;
+    }
+    if (matches(node)) {
+      out.push(node);
+    }
+  }
+  return out;
+}
+
+// filterAppConfigStructs は contains で struct ツリーを刈る。ツリー以外の欄はそのまま。
+export function filterAppConfigStructs(projected, needle) {
+  const out = { ...projected };
+  for (const key of APP_CONFIG_STRUCT_KEYS) {
+    if (key in out && Array.isArray(out[key])) {
+      out[key] = filterStructNodes(out[key], needle);
+    }
+  }
+  return out;
+}
+
+// capAppConfigSize は応答の JSON バイト数を max_size_mb に必ず収める。
+// 超えていたら struct 欄を大きい順に {omitted_bytes} へ置き換え、warnings で fields / contains を案内する。
+// ツリーはページングできないので、切る単位は欄1つ。get_rep_infos と違い rep_struct だけが
+// 「丸ごと取るか丸ごと落とすか」の2択だった（2026-09-18 の実利用報告）。
+export function capAppConfigSize(projected, maxSizeMb) {
+  const maxBytes = Math.floor(maxSizeMb * 1024 * 1024);
+  const size = (value) => Buffer.byteLength(JSON.stringify(value), "utf8");
+  if (size(projected) <= maxBytes) {
+    return projected;
+  }
+  const out = { ...projected };
+  const warnings = [];
+  const candidates = APP_CONFIG_STRUCT_KEYS.filter((key) => key in out && out[key] !== undefined)
+    .map((key) => ({ key, bytes: size(out[key]) }))
+    .sort((a, b) => b.bytes - a.bytes);
+  for (const { key, bytes } of candidates) {
+    if (size(out) <= maxBytes) break;
+    out[key] = { omitted_bytes: bytes };
+    warnings.push(
+      `${key} (${bytes} bytes) was omitted to keep the response under max_size_mb (${maxBytes} bytes): ` +
+        "narrow it with contains, request only the fields you need, or raise max_size_mb",
+    );
+  }
+  out.warnings = [...(Array.isArray(out.warnings) ? out.warnings : []), ...warnings];
+  return out;
+}
+
+// enforceKyousSizeBudget は include_plugin_content で本文を足した後の kyous[] を max_size_mb に収め直す。
+//
+// Go（handle_get_kyous_mcp.go）は本文の無い DTO の JSON を測って打ち切るので、Node が後から足す本文
+// （最大 4000 字 × 20 件）は予算の外だった（max_size_mb:0.002・limit:2 で 3,596 バイトが警告なしで返る。
+// 2026-09-18 の実利用報告）。規則は Go と同じ: 2件目以降は足す前に判定、先頭1件は超えても返して警告。
+// 押し出した分は次頁へ —— カーソルは Go の encodeMCPCursor と同じ `{related_time}::{id}`
+// （related_time はローカル時刻の RFC3339Nano で、Go の parseMCPCursor がそのまま受ける）。ADR-0624。
+export function enforceKyousSizeBudget(payload, maxSizeMb) {
+  if (!payload || !Array.isArray(payload.kyous) || payload.kyous.length === 0) {
+    return payload;
+  }
+  const maxBytes = Math.floor(maxSizeMb * 1024 * 1024);
+  const kept = [];
+  let running = 0;
+  let firstAlone = null;
+  for (const kyou of payload.kyous) {
+    const bytes = Buffer.byteLength(JSON.stringify(kyou), "utf8");
+    if (kept.length > 0 && running + bytes > maxBytes) break;
+    if (kept.length === 0 && bytes > maxBytes) firstAlone = bytes;
+    running += bytes;
+    kept.push(kyou);
+  }
+  const heldBack = payload.kyous.length - kept.length;
+  const warnings = Array.isArray(payload.warnings) ? [...payload.warnings] : [];
+  if (firstAlone !== null) {
+    warnings.push(
+      `single record with plugin content (${firstAlone} bytes) exceeds max_size_mb (${maxBytes} bytes); returned anyway to keep pagination progressing — lower plugin_content_max_text_length to shrink it`,
+    );
+  }
+  if (heldBack > 0) {
+    const last = kept[kept.length - 1];
+    payload.kyous = kept;
+    payload.returned_count = kept.length;
+    payload.remaining_count = (payload.remaining_count ?? 0) + heldBack;
+    payload.has_more = true;
+    payload.next_cursor = `${last.related_time}::${last.id}`;
+    warnings.push(
+      `plugin content pushed the page over max_size_mb (${maxBytes} bytes): ${heldBack} of ${kept.length + heldBack} entries were held back and will be returned on the next cursor page (next_cursor is set)`,
+    );
+    if (payload.plugin_content && typeof payload.plugin_content === "object") {
+      payload.plugin_content = recountInlinePluginContent(kept, payload.plugin_content);
+    }
+  }
+  if (warnings.length > 0) {
+    payload.warnings = warnings;
+  }
+  return payload;
+}
+
+// recountInlinePluginContent は残した kyous[] から plugin_content の件数を数え直す。
+function recountInlinePluginContent(kyous, previous) {
+  const stats = { ...previous, requested: 0, inlined: 0, truncated: 0, skipped: 0, errors: 0, total_text_length: 0 };
+  for (const kyou of kyous) {
+    const payload = kyou?.payload;
+    if (!payload || payload.kind !== "plugin") continue;
+    stats.requested += 1;
+    switch (payload.content_status) {
+      case "ok":
+        stats.inlined += 1;
+        break;
+      case "truncated":
+        stats.inlined += 1;
+        stats.truncated += 1;
+        break;
+      case "skipped":
+        stats.skipped += 1;
+        break;
+      case "error":
+        stats.errors += 1;
+        break;
+      default:
+        break;
+    }
+    stats.total_text_length +=
+      (typeof payload.content_text === "string" ? payload.content_text.length : 0) +
+      (typeof payload.content_html === "string" ? payload.content_html.length : 0);
+  }
+  return stats;
 }
 
 // stripAppConfigUiState は struct ツリーから UI 状態キーを再帰的に剥がす。

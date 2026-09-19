@@ -23,12 +23,13 @@ type KyouMCPDTO struct {
 	CreateApp   string    `json:"create_app"`
 	UpdateApp   string    `json:"update_app"`
 	RelatedTime time.Time `json:"related_time"`
-	// IsDeleted / UpdateTime は query.include_deleted_data で削除済みを混ぜたときに
-	// 「どれが削除済みか」「どちらが新しいか」を判別するために要る。
-	// omitempty は付けない。false / ゼロ値のときに黙って消えると、
-	// 「生きている」と「フィールドが無い」の区別が付かなくなる
-	// （IsZip / Addition / Deletion と同じ理由。外部監査 C4 / C5）。
-	IsDeleted     bool                 `json:"is_deleted"`
+	// IsDeleted は削除済みのときだけ載る（omitempty）。query.include_deleted_data で削除済みを
+	// 混ぜたときに「どれが削除済みか」を見分けるための欄で、既定の検索では全件 false なので
+	// 毎件 `"is_deleted":false` が定常のオーバーヘッドになっていた（2026-09-18 の実利用報告）。
+	// 「無ければ生きている」と読ませる（外部監査 C4 の判断を is_deleted に限って覆す。ADR-0629。
+	// IsZip / Addition / Deletion は据え置き —— あちらは false / 0 に「値が取れなかった」と紛れる意味がある）。
+	// UpdateTime は「どちらが新しいか」の判別に要るので omitempty を付けない。
+	IsDeleted     bool                 `json:"is_deleted,omitempty"`
 	UpdateTime    time.Time            `json:"update_time"`
 	Tags          []string             `json:"tags,omitempty"`
 	Texts         []string             `json:"texts,omitempty"`
@@ -36,7 +37,8 @@ type KyouMCPDTO struct {
 	TimeIs        []TimeIsMCPDTO       `json:"timeis,omitempty"`
 	// TagEntities / TextEntities は Tags / Texts と同じ内容を ID 付きで返す枠。順序も同じ。
 	// 既存の Tags / Texts を置き換えないのは、Web の列と Wear OS が []string を前提に
-	// しているため（ワイヤ互換）。詳細は AttachedEntityMCPDTO のコメント。
+	// しているため（ワイヤ互換）。**リクエストの include_attached_ids:true のときだけ組む**
+	// （既定では二重持ちが毎件並ぶだけだった。ADR-0629）。詳細は AttachedEntityMCPDTO のコメント。
 	TagEntities  []AttachedEntityMCPDTO `json:"tag_entities,omitempty"`
 	TextEntities []AttachedEntityMCPDTO `json:"text_entities,omitempty"`
 	Payload      any                    `json:"payload,omitempty"`
@@ -184,13 +186,11 @@ type IDFPayloadMCPDTO struct {
 
 // PluginPayloadMCPDTO はプラグインが提供するKyouのペイロード。
 // プラグインKyouの本文はgkill側に保存されておらず、プラグインから
-// コンテンツHTMLとして取り出すしかないので、その取得に必要な
-// rep_name / kyou_id をペイロードに含める（idfのrep_name/file_nameと同じ考え方）。
+// コンテンツHTMLとして取り出すしかない。取得に要る rep_name / id は Kyou 側（KyouMCPDTO の
+// rep_name / id）にあり、ここへ写すと毎件3欄が二重に並ぶだけだった（data_type も同じ。
+// 2026-09-18 の実利用報告。ADR-0629）。MCP の inlinePluginContents は Kyou 側の欄を読む。
 type PluginPayloadMCPDTO struct {
 	Kind       string `json:"kind"` // "plugin"
-	DataType   string `json:"data_type"`
-	RepName    string `json:"rep_name"`
-	KyouID     string `json:"kyou_id"`
 	PluginName string `json:"plugin_name,omitempty"`
 	// Description はここには入れない。プラグインの説明文は130〜150字あり、
 	// Kyou 1件ごとに焼き込むと20件取るだけで同じ文が20回並ぶ
@@ -206,11 +206,12 @@ type PluginDescriptionMCPDTO struct {
 	Description string `json:"description,omitempty"`
 }
 
+// GitPayloadMCPDTO はコミットのペイロード。コミットハッシュは Kyou の id そのもの
+// （git_commit_log_repository_local_dir_impl.go の kyou.ID = commit.Hash.String()）なので、
+// ここには持たない（外部監査 C2 で足した commit_hash は id と常に同値で、毎件 40 桁が二重に並ぶだけだった。
+// 2026-09-18 の実利用報告。ADR-0629）。
 type GitPayloadMCPDTO struct {
-	Kind string `json:"kind"` // "git_commit_log"
-	// CommitHash はコミットハッシュ。Kyou の id と同値だが、ペイロード単体でも
-	// 自明になるよう明示する(重複排除・突合の鍵。外部監査 C2)。
-	CommitHash    string `json:"commit_hash"`
+	Kind          string `json:"kind"` // "git_commit_log"
 	CommitMessage string `json:"commit_message"`
 	// Addition / Deletion に omitempty を付けてはいけない:
 	// int の 0 はキーごと消え、「差分0行のコミット」と「値が取れなかった」を
