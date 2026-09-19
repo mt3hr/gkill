@@ -3,6 +3,7 @@ package reps
 import (
 	"context"
 	"database/sql"
+	"reflect"
 	"sync"
 	"testing"
 	"time"
@@ -22,6 +23,34 @@ func openMemoryDB(t *testing.T) *sql.DB {
 	}
 	t.Cleanup(func() { db.Close() })
 	return db
+}
+
+// auditFields は監査欄6つ（作成/更新のアプリ・端末・利用者）。
+type auditFields struct {
+	CreateApp, CreateDevice, CreateUser string
+	UpdateApp, UpdateDevice, UpdateUser string
+}
+
+// auditFieldsOf は任意のエンティティから監査欄6つを reflect で抜く（型ごとに書かないため）。
+func auditFieldsOf(entity any) auditFields {
+	v := reflect.Indirect(reflect.ValueOf(entity))
+	get := func(name string) string { return v.FieldByName(name).String() }
+	return auditFields{
+		CreateApp: get("CreateApp"), CreateDevice: get("CreateDevice"), CreateUser: get("CreateUser"),
+		UpdateApp: get("UpdateApp"), UpdateDevice: get("UpdateDevice"), UpdateUser: get("UpdateUser"),
+	}
+}
+
+// assertAuditFieldsRoundTrip は temp rep の Add → GetXxxByTXID で監査欄6つが同じ向きで戻ることを固定する。
+//
+// SELECT の列順と rows.Scan の順がずれても SQLite はエラーを出さない。Mi の temp rep は
+// 2026-03-05〜2026-09-19 の間 CREATE_DEVICE と CREATE_USER が入れ替わって実 rep へ確定していた
+// （KFTL の `ーみ` だけが踏む経路。フィクスチャの device と user は値が違うので入れ替わりを検出できる）。
+func assertAuditFieldsRoundTrip(t *testing.T, want, got auditFields) {
+	t.Helper()
+	if want != got {
+		t.Errorf("監査欄が往復で変わった（SELECT の列順と Scan の順がずれていないか）: got %+v want %+v", got, want)
+	}
 }
 
 // ===========================================================================
@@ -797,6 +826,7 @@ func TestTempKmemo_AddAndGetByTXID(t *testing.T) {
 	if len(kmemos) != 1 {
 		t.Fatalf("expected 1 kmemo, got %d", len(kmemos))
 	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(k), auditFieldsOf(kmemos[0]))
 	if kmemos[0].ID != "temp-kmemo-001" {
 		t.Errorf("ID = %q, want %q", kmemos[0].ID, "temp-kmemo-001")
 	}
@@ -884,6 +914,7 @@ func TestTempMi_AddAndGetByTXID(t *testing.T) {
 	if len(mis) != 1 {
 		t.Fatalf("expected 1 mi, got %d", len(mis))
 	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(mi), auditFieldsOf(mis[0]))
 	if mis[0].Title != "一時タスク" {
 		t.Errorf("Title = %q, want %q", mis[0].Title, "一時タスク")
 	}
@@ -931,6 +962,7 @@ func TestTempTag_AddAndGetByTXID(t *testing.T) {
 	if len(tags) != 1 {
 		t.Fatalf("expected 1 tag, got %d", len(tags))
 	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(tag), auditFieldsOf(tags[0]))
 	if tags[0].Tag != "一時タグ" {
 		t.Errorf("Tag = %q, want %q", tags[0].Tag, "一時タグ")
 	}
@@ -978,6 +1010,7 @@ func TestTempTimeIs_AddAndGetByTXID(t *testing.T) {
 	if len(timeiss) != 1 {
 		t.Fatalf("expected 1 timeis, got %d", len(timeiss))
 	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(ti), auditFieldsOf(timeiss[0]))
 	if timeiss[0].Title != "一時時間" {
 		t.Errorf("Title = %q, want %q", timeiss[0].Title, "一時時間")
 	}
@@ -1025,6 +1058,7 @@ func TestTempKC_AddAndGetByTXID(t *testing.T) {
 	if len(kcs) != 1 {
 		t.Fatalf("expected 1 kc, got %d", len(kcs))
 	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(kc), auditFieldsOf(kcs[0]))
 	if kcs[0].ID != "temp-kc-001" {
 		t.Errorf("ID = %q, want %q", kcs[0].ID, "temp-kc-001")
 	}
@@ -1072,6 +1106,7 @@ func TestTempNlog_AddAndGetByTXID(t *testing.T) {
 	if len(nlogs) != 1 {
 		t.Fatalf("expected 1 nlog, got %d", len(nlogs))
 	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(n), auditFieldsOf(nlogs[0]))
 	if nlogs[0].ID != "temp-nlog-001" {
 		t.Errorf("ID = %q, want %q", nlogs[0].ID, "temp-nlog-001")
 	}
@@ -1119,6 +1154,7 @@ func TestTempURLog_AddAndGetByTXID(t *testing.T) {
 	if len(urlogs) != 1 {
 		t.Fatalf("expected 1 urlog, got %d", len(urlogs))
 	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(u), auditFieldsOf(urlogs[0]))
 	if urlogs[0].ID != "temp-urlog-001" {
 		t.Errorf("ID = %q, want %q", urlogs[0].ID, "temp-urlog-001")
 	}
@@ -1166,6 +1202,7 @@ func TestTempLantana_AddAndGetByTXID(t *testing.T) {
 	if len(lantanas) != 1 {
 		t.Fatalf("expected 1 lantana, got %d", len(lantanas))
 	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(l), auditFieldsOf(lantanas[0]))
 	if lantanas[0].Mood != 8 {
 		t.Errorf("Mood = %d, want 8", lantanas[0].Mood)
 	}
@@ -1213,6 +1250,7 @@ func TestTempText_AddAndGetByTXID(t *testing.T) {
 	if len(texts) != 1 {
 		t.Fatalf("expected 1 text, got %d", len(texts))
 	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(txt), auditFieldsOf(texts[0]))
 	if texts[0].Text != "一時テキスト" {
 		t.Errorf("Text = %q, want %q", texts[0].Text, "一時テキスト")
 	}
@@ -1260,6 +1298,7 @@ func TestTempNotification_AddAndGetByTXID(t *testing.T) {
 	if len(notifs) != 1 {
 		t.Fatalf("expected 1 notification, got %d", len(notifs))
 	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(n), auditFieldsOf(notifs[0]))
 	if notifs[0].Content != "一時通知" {
 		t.Errorf("Content = %q, want %q", notifs[0].Content, "一時通知")
 	}
@@ -1307,6 +1346,7 @@ func TestTempReKyou_AddAndGetByTXID(t *testing.T) {
 	if len(rekyous) != 1 {
 		t.Fatalf("expected 1 rekyou, got %d", len(rekyous))
 	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(rk), auditFieldsOf(rekyous[0]))
 	if rekyous[0].TargetID != "target-001" {
 		t.Errorf("TargetID = %q, want %q", rekyous[0].TargetID, "target-001")
 	}
@@ -1575,6 +1615,7 @@ func TestTempMiReKyou_AddAndGetByTXID(t *testing.T) {
 	if len(mirekyous) != 1 {
 		t.Fatalf("expected 1 mirekyou, got %d", len(mirekyous))
 	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(mirekyou), auditFieldsOf(mirekyous[0]))
 	if mirekyous[0].TargetID != "target-001" {
 		t.Errorf("TargetID = %q, want %q", mirekyous[0].TargetID, "target-001")
 	}
