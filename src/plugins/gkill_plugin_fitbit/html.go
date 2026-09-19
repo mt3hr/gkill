@@ -184,6 +184,11 @@ func renderConfigHTML(pluginDir string, config pluginConfig, stats cacheStats) s
 	sb.WriteString(`<div class="hint">取り込む指標（1行に1つ。空欄なら全部。キーは下の一覧を参照）</div>`)
 	fmt.Fprintf(&sb, `<textarea id="gkill_metrics" rows="3">%s</textarea>`,
 		html.EscapeString(strings.Join(config.Metrics, "\n")))
+	sb.WriteString(`<div class="hint">時計の行が無い日にだけ使うデータソース（1行に1つ。CSV の data source 列の値。` +
+		`歩数の CSV にはスマホ(Phone Health Connect)と時計の行が同じ日に並ぶことがあり、両方を足すと2倍になります。` +
+		`ここに書いたソースは時計の行がある日には使いません。空欄なら全部を合算します）</div>`)
+	fmt.Fprintf(&sb, `<textarea id="gkill_secondary_data_sources" rows="3">%s</textarea>`,
+		html.EscapeString(strings.Join(config.SecondaryDataSources, "\n")))
 	sb.WriteString(`<div class="hint">同時に読むファイル数（0 なら自動）</div>`)
 	fmt.Fprintf(&sb, `<input type="text" id="gkill_scan_workers" value="%s">`, strconv.Itoa(config.ScanWorkers))
 	sb.WriteString(`<p><button id="gkill_save">保存</button><span id="gkill_save_result" class="hint"></span></p>`)
@@ -252,6 +257,7 @@ const configSaveScript = `<script>
   var sourceDirs = document.getElementById('gkill_source_dirs');
   var timezone = document.getElementById('gkill_timezone');
   var metrics = document.getElementById('gkill_metrics');
+  var secondaryDataSources = document.getElementById('gkill_secondary_data_sources');
   var scanWorkers = document.getElementById('gkill_scan_workers');
   var btn = document.getElementById('gkill_save');
   var out = document.getElementById('gkill_save_result');
@@ -263,6 +269,7 @@ const configSaveScript = `<script>
       source_dirs: sourceDirs.value,
       timezone: timezone ? timezone.value : '',
       metrics: metrics ? metrics.value : '',
+      secondary_data_sources: secondaryDataSources ? secondaryDataSources.value : '',
       scan_workers: scanWorkers ? scanWorkers.value : ''
     } }, '*');
   });

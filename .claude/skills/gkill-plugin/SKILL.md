@@ -67,7 +67,15 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              <1s incremental on 245MB, 52 files → 301 Kyou)
               #   gkill_plugin_fitbit/     — Google Takeout Fitbit/Google Health, aggregated to
               #                              one KC per (day, metric). 34 metrics, background
-              #                              build (~155s first / <1s incremental on a 271MB zip)
+              #                              build (~155s first / <1s incremental on a 271MB zip).
+              #                              Partials are per (file, day, data source): since
+              #                              2025-12 the steps CSV carries the phone's
+              #                              `Phone Health Connect` rows beside the watch's on
+              #                              the same day, and the Fitbit app's own daily total
+              #                              is the watch alone. The fold takes every tracker
+              #                              source when one exists, else the first listed
+              #                              `secondary_data_sources` (ADR-0312); summing them
+              #                              doubled 273 days of steps
               #   gkill_plugin_google_locationhistory/ — Google Takeout location history as
               #                              GPSLog (no Kyou, `emits_kyou: false` so it stays out
               #                              of the rep list). Format detected by content, not path
@@ -137,5 +145,6 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 - [ADR-0308 プラグインが複数の rep 名を名乗る](../../../documents/adr/0308-plugin-multiple-rep-names.md)
 - [ADR-0309 provides に git_commit_log](../../../documents/adr/0309-plugin-provides-git-commit-log.md)
 - [ADR-0310 ChatGPT / Claude.ai はエクスポート ZIP のまま読み、展開済み JSON は読まない](../../../documents/adr/0310-chat-export-plugins-read-zip.md)
+- [ADR-0312 fitbit は同じ日に並ぶデータソースを合算せず、時計を優先して1系統だけ採る](../../../documents/adr/0312-fitbit-one-data-source-per-day.md)
 - [ADR-0113 ワード検索の型別の対象列と ID の前方一致（プラグインは SDK の判定を使う）](../../../documents/adr/0113-word-filter-columns-and-id-prefix.md)
 - [ADR-0707 端末固有の文字列は出口で伏せる](../../../documents/adr/0707-redact-environment-specific-strings.md)

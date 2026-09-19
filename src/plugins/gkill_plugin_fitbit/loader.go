@@ -121,7 +121,8 @@ func ingestEntry(entry sdk.SourceEntry, defs []metricDef, loc *time.Location) ([
 
 	deviceIndex := findCol(headerCopy, "datasource")
 	bucket := newLocalDayBucket(loc)
-	// (metricKey, dateLocal) → 部分集計
+	// (metricKey, dateLocal, dataSource) → 部分集計。
+	// データソースを混ぜないのは、畳み直しで「時計とスマホのどちらを採るか」を選ぶため。
 	partials := map[string]*partialDaily{}
 
 	for {
@@ -197,15 +198,15 @@ func ingestEntry(entry sdk.SourceEntry, defs []metricDef, loc *time.Location) ([
 				}
 			}
 
-			key := plan.def.Key + "\x00" + dateLocal
+			key := plan.def.Key + "\x00" + dateLocal + "\x00" + device
 			partial, exist := partials[key]
 			if !exist {
 				partial = &partialDaily{
-					MetricKey: plan.def.Key,
-					DateLocal: dateLocal,
-					MinValue:  math.Inf(1),
-					MaxValue:  math.Inf(-1),
-					Devices:   map[string]struct{}{},
+					MetricKey:  plan.def.Key,
+					DateLocal:  dateLocal,
+					DataSource: device,
+					MinValue:   math.Inf(1),
+					MaxValue:   math.Inf(-1),
 				}
 				partials[key] = partial
 			}
@@ -216,9 +217,6 @@ func ingestEntry(entry sdk.SourceEntry, defs []metricDef, loc *time.Location) ([
 			if unixSec >= partial.LastUnix {
 				partial.LastUnix = unixSec
 				partial.LastValue = value
-			}
-			if device != "" {
-				partial.Devices[device] = struct{}{}
 			}
 			partial.HourSums[hourOfDay] += value
 			partial.HourCounts[hourOfDay]++

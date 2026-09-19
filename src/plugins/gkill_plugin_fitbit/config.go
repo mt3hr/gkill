@@ -14,6 +14,30 @@ type pluginConfig struct {
 	Timezone    string
 	Metrics     []string
 	ScanWorkers int
+
+	// SecondaryDataSources は「時計の行が無い日にだけ使う」データソース名（大小無視）。
+	// 空なら全データソースを合算する（2026-09-20 以前の挙動）。既定は defaultSecondaryDataSources。
+	SecondaryDataSources []string
+}
+
+// defaultSecondaryDataSources は既定の補助データソース。
+//
+// Takeout の CSV では 2025-12 からスマホの歩数計（Phone Health Connect）の行が時計の行と
+// 同じ日に並ぶ。Fitbit アプリ自身の日計は時計の値だけを採り、スマホの行は足さない
+// （実データ 273 日で毎日一致）。アプリ本体（Google Health App）の行も、時計と同じ日に
+// あるときは端数（距離で数 m）で、アプリの日計には入っていない。
+func defaultSecondaryDataSources() []string {
+	return []string{"Phone Health Connect", "Google Health App"}
+}
+
+// foldRule は畳み直しの規則を1つの文字列にしたもの。cache_meta に控えて、
+// 変わったら全日を畳み直させる（取り込み直しは要らない）。
+func (c pluginConfig) foldRule() string {
+	normalized := make([]string, 0, len(c.SecondaryDataSources))
+	for _, source := range c.SecondaryDataSources {
+		normalized = append(normalized, normalizeDataSource(source))
+	}
+	return "secondary=" + strings.Join(normalized, "\n")
 }
 
 // enabledMetrics は取り込む指標のキー集合を返す。空なら全部。
@@ -42,6 +66,11 @@ func defaultConfig() sdk.Config {
 			"timezone は「この日はどの日か」を決めるタイムゾーンです(既定 Asia/Tokyo)。" +
 			"変えると集計をやり直します。" +
 			"metrics を空にすると全指標を取り込みます。" +
+			"secondary_data_sources は「時計の行が無い日にだけ使う」データソース名です" +
+			"(CSV の data source 列の値。大小無視)。" +
+			"Takeout の歩数 CSV にはスマホ(Phone Health Connect)と時計(Pixel Watch 2 など)の行が" +
+			"同じ日に並ぶことがあり、両方を足すと歩数が2倍になります。ここに書いたソースは" +
+			"時計の行がある日には使わず、無い日にだけ書いた順で採ります。空にすると全部を合算します。" +
 			"scan_workers は同時に読むファイル数で、0 なら自動。" +
 			"編集は次の検索から反映されます(gkill の再起動は不要)。" +
 			"_ で始まるキーは説明用なので消して構いません。",
@@ -50,10 +79,11 @@ func defaultConfig() sdk.Config {
 			"~/Downloads/takeout-20260808T230152Z-1-001.zip",
 			"D:/backup/GoogleTakeout_*",
 		},
-		configKeySourceDirs:  []string{defaultSourcePattern},
-		configKeyTimezone:    defaultTimezone,
-		configKeyMetrics:     []string{},
-		configKeyScanWorkers: 0,
+		configKeySourceDirs:           []string{defaultSourcePattern},
+		configKeyTimezone:             defaultTimezone,
+		configKeyMetrics:              []string{},
+		configKeySecondaryDataSources: defaultSecondaryDataSources(),
+		configKeyScanWorkers:          0,
 	}
 }
 
@@ -77,12 +107,20 @@ func configOf(pluginDir string, cfg sdk.Config) pluginConfig {
 		timezone = strings.TrimSpace(value)
 	}
 
+	// キーが無い（この設定を知らない古い config.json）なら既定、空配列なら「全部合算」。
+	// nil と [] を区別するのは、既存の config.json を自動生成し直さないため。
+	secondary := defaultSecondaryDataSources()
+	if value, present := latest[configKeySecondaryDataSources]; present {
+		secondary = parseStringList(value)
+	}
+
 	return pluginConfig{
-		Patterns:    patterns,
-		Source:      sdk.ExpandSourcePatterns(patterns),
-		Timezone:    timezone,
-		Metrics:     parseStringList(latest[configKeyMetrics]),
-		ScanWorkers: parseInt(latest[configKeyScanWorkers]),
+		Patterns:             patterns,
+		Source:               sdk.ExpandSourcePatterns(patterns),
+		Timezone:             timezone,
+		Metrics:              parseStringList(latest[configKeyMetrics]),
+		ScanWorkers:          parseInt(latest[configKeyScanWorkers]),
+		SecondaryDataSources: secondary,
 	}
 }
 
