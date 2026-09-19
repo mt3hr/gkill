@@ -71,7 +71,7 @@ attestation は commit SHA ではなく**作業ツリーの tree hash**に束縛
   （上記の実測）。`git diff --name-only HEAD` + `ls-files --others --exclude-standard` にした
 - **GitHub Actions でリリース成果物を作る（provenance attestation を使う）** — NDK・署名鍵・7za・WSL 前提を
   丸ごと CI へ移す大改修で、2026-08-30 監査の F-012（SBOM / provenance）でも見送っている
-- **リポジトリ外の配置スクリプト（`~/Git/scripts`）にもゲートを入れる** — 別リポジトリなので本 ADR の
+- **リポジトリ外の配置スクリプトにもゲートを入れる** — 別リポジトリなので本 ADR の
   範囲外（ユーザー決定）。資料で「呼ぶ側で `npm run verify_release_gate` を先に実行する」と案内するに留める
 
 ## Consequences

@@ -144,7 +144,7 @@ npm run release
 > Nightly の run 単位の success が保証するのは govulncheck / npm audit（E2E と Android/Wear は
 > continue-on-error）。E2E・Android/Wear の実証はローカルの attestation（2.）が担う。
 >
-> リポジトリ外の配置スクリプト（`~/Git/scripts` の `releaseGkillServer.sh` / `ReleaseGkillPlugins.ps1`）は
+> リポジトリ外の配置スクリプトは
 > `npm run release` を経由せずビルドスクリプトを直接呼ぶため**このゲートを通らない**。そちらからも
 > 先頭で `npm run verify_release_gate` を呼ぶこと。
 
