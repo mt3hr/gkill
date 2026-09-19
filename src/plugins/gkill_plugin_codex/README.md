@@ -46,7 +46,7 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_codex/
 > **PowerShell 5.1 では `>` を使わないこと。** UTF-16LE で書かれ、さらにプラグインの UTF-8 出力を
 > CP932 として解釈するので二重に壊れる。壊れた `manifest.json` は
 > `plugin_manager.go` が**無言で読み飛ばす**ので、プラグインが消えたようにしか見えない。
-> `scripts/UpdateGkillPlugins.ps1` はこれを避けるため `StandardOutputEncoding` と
+> 配布スクリプトはこれを避けるため `StandardOutputEncoding` と
 > `File.WriteAllText(..., UTF8Encoding(false))` を使っている。
 
 置いたら gkill を再起動する（リポジトリの構築時にプラグインを探すため）。
