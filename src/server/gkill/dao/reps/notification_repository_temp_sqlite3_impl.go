@@ -249,6 +249,9 @@ func (n *notificationTempRepositorySQLite3Impl) GetNotificationsByTXID(ctx conte
 	defer n.m.RUnlock()
 	var err error
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに利用者名が端末名として実 rep へ確定する（2026-09-19 まで実際にそうだった。
+	// cached_and_temp_test.go の assertAuditFieldsRoundTrip が固定する）。
 	sql := `
 SELECT 
   IS_DELETED,
@@ -259,8 +262,8 @@ SELECT
   IS_NOTIFICATED,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
