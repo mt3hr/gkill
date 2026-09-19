@@ -232,6 +232,70 @@ func TestHandleSubmitKFTLText_CreatedRecords(t *testing.T) {
 	})
 }
 
+// KFTL の `ーみ` で書いたタスクの create_device / create_user が入れ替わらないこと（2026-09-19）。
+//
+// kftl パッケージは正しく Ctx.Device / Ctx.UserID を入れていたが、Mi の temp rep の
+// GetMisByTXID が SELECT を表の列順（CREATE_USER, CREATE_DEVICE）で書き、Scan は
+// (CreateDevice, CreateUser) の順で受けていたため、temp rep → CommitTx を通る KFTL の Mi だけ
+// 利用者名が端末名として確定していた（Web の add_mi は temp rep を通らないので正常）。
+// 同じ送信の kmemo（temp rep の列順が正しい）と突き合わせることで、端末名の実値を知らずに固定する。
+func TestHandleSubmitKFTLText_MiAuditFieldsAreNotSwapped(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
+
+	res := submitKFTL(t, tsURL, sessionID, "auditSwapMemoWord\n、\nーみ\nauditSwapTaskTitle", "")
+	if len(res.Errors) > 0 {
+		t.Fatalf("submit kftl text errors: %+v", res.Errors)
+	}
+	var kmemoID, miID string
+	for _, created := range res.Created {
+		switch created.DataType {
+		case "kmemo":
+			kmemoID = created.ID
+		case "mi":
+			miID = created.ID
+		}
+	}
+	if kmemoID == "" || miID == "" {
+		t.Fatalf("created = %+v, want kmemo と mi が1件ずつ", res.Created)
+	}
+
+	kmemoResp := postJSON(t, tsURL+"/api/get_kmemo", &req_res.GetKmemoRequest{SessionID: sessionID, ID: kmemoID, LocaleName: "en"})
+	defer kmemoResp.Body.Close()
+	var kmemoRes req_res.GetKmemoResponse
+	if err := json.NewDecoder(kmemoResp.Body).Decode(&kmemoRes); err != nil {
+		t.Fatalf("decode get kmemo response: %v", err)
+	}
+	if len(kmemoRes.Errors) > 0 || len(kmemoRes.KmemoHistories) == 0 {
+		t.Fatalf("get kmemo: errors=%+v histories=%d", kmemoRes.Errors, len(kmemoRes.KmemoHistories))
+	}
+	miResp := postJSON(t, tsURL+"/api/get_mi", &req_res.GetMiRequest{SessionID: sessionID, ID: miID, LocaleName: "en"})
+	defer miResp.Body.Close()
+	var miRes req_res.GetMiResponse
+	if err := json.NewDecoder(miResp.Body).Decode(&miRes); err != nil {
+		t.Fatalf("decode get mi response: %v", err)
+	}
+	if len(miRes.Errors) > 0 || len(miRes.MiHistories) == 0 {
+		t.Fatalf("get mi: errors=%+v histories=%d", miRes.Errors, len(miRes.MiHistories))
+	}
+
+	kmemo, mi := kmemoRes.KmemoHistories[0], miRes.MiHistories[0]
+	if kmemo.CreateUser != "admin" {
+		t.Fatalf("kmemo の create_user = %q, want admin（比較の基準が壊れている）", kmemo.CreateUser)
+	}
+	if mi.CreateUser != kmemo.CreateUser {
+		t.Errorf("mi の create_user = %q, want %q（kmemo と同じ利用者）", mi.CreateUser, kmemo.CreateUser)
+	}
+	if mi.CreateDevice != kmemo.CreateDevice {
+		t.Errorf("mi の create_device = %q, want %q（kmemo と同じ端末。利用者名が入っていれば temp rep の列順がずれている）", mi.CreateDevice, kmemo.CreateDevice)
+	}
+	if mi.UpdateUser != kmemo.UpdateUser || mi.UpdateDevice != kmemo.UpdateDevice {
+		t.Errorf("mi の update_user / update_device = %q / %q, want %q / %q", mi.UpdateUser, mi.UpdateDevice, kmemo.UpdateUser, kmemo.UpdateDevice)
+	}
+}
+
 // 入力ミス行を含む本文の応答のハンドラ層テスト(2026-08-24 の再監査対応の固定)。
 //
 // 2026-08-24 までは気分値の打ち間違いもDB障害も同じ ERR000351(500) + 定型文1本に

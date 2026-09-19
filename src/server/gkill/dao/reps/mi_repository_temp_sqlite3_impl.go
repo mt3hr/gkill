@@ -287,12 +287,15 @@ func (m *miTempRepositorySQLite3Impl) GetBoardNames(ctx context.Context) ([]stri
 	return impl.GetBoardNames(ctx)
 }
 
+// GetKyousByTXID は未使用（commit_tx.go は GetMisByTXID だけを使う）。
+// MI 表に無い TARGET_REP_NAME / RELATED_TIME を SELECT しているので、呼べば必ず失敗する。
+// 直すか消すかは別件（2026-09-19 に気付いた印だけ残す）。
 func (m *miTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	var err error
 	sql := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   TARGET_REP_NAME,
@@ -417,8 +420,14 @@ func (m *miTempRepositorySQLite3Impl) GetMisByTXID(ctx context.Context, txID str
 	defer m.m.RUnlock()
 	var err error
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。
+	// 表の列順（CREATE_USER, CREATE_DEVICE）に合わせて書くと Scan と逆になり、
+	// エラーも警告も出ずに利用者名が端末名として実 rep へ確定する。
+	// KFTL の `ーみ` だけがこの経路（temp rep → CommitTx）を通るので、Web の Mi は正しく
+	// KFTL の Mi だけ create_device に利用者IDが入っていた（2026-03-05〜2026-09-19）。
+	// 往復テスト cached_and_temp_test.go の assertAuditFieldsRoundTrip が6欄を固定する。
 	sql := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   TITLE,
@@ -429,8 +438,8 @@ SELECT
   ESTIMATE_END_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
