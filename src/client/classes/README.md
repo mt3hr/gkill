@@ -9,7 +9,7 @@ Vue コンポーネント（`pages/`）から使用されるロジック層。
 
 ```
 classes/
-├── (ルートファイル 369個)        # use-*.ts Composable + ユーティリティ
+├── (ルートファイル 371個)        # use-*.ts Composable + ユーティリティ
 ├── api/                        # GkillAPI クライアント → api/README.md
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md
@@ -126,7 +126,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-edit-kftl-template-struct-*.ts` | KFTL テンプレート編集 |
 | `use-edit-rep-struct-*.ts` / `use-edit-rep-type-struct-*.ts` | リポジトリ構造編集 |
 | `use-edit-tag-struct-*.ts` | タグ構造編集 |
-| `use-edit-mi-board-struct-view.ts` / `use-mi-board-struct-context-menu.ts` | 板構造編集（Mi の板の並び順の変更と削除） |
+| `use-edit-mi-board-struct-view.ts` / `use-mi-board-struct-context-menu.ts` / `use-edit-mi-board-struct-element-dialog.ts` / `use-edit-mi-board-struct-element-view.ts` | 板構造編集（Mi の板の並び順の変更と削除、板ごとの説明の編集） |
 | `use-manage-account-view.ts` | アカウント管理 |
 
 ### コンテキストメニュー系 Composable

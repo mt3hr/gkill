@@ -400,6 +400,12 @@ func handleGetApplicationConfig(ctx *CallContext, args any) (*jsonobj.Object, er
 			if !AppConfigFields.Has(field) {
 				continue
 			}
+			// descriptions は full に無い仮想欄（ツリーから組む）。full.Value で Undefined を入れると
+			// encode で黙って消えるので、ここで組み立てる。fields を省いた既定の全量には載せない。
+			if field == AppConfigDescriptionsField {
+				projected.Set(field, BuildAppConfigDescriptions(full))
+				continue
+			}
 			projected.Set(field, full.Value(field))
 		}
 	}
@@ -410,6 +416,7 @@ func handleGetApplicationConfig(ctx *CallContext, args any) (*jsonobj.Object, er
 	// contains で葉を刈り、compact で既定値の欄を落とし、max_size_mb に必ず収める（ADR-0629）。
 	if normalized.Defined("contains") {
 		projected = FilterAppConfigStructs(projected, jsString(normalized.Value("contains")))
+		projected = FilterAppConfigDescriptions(projected, jsString(normalized.Value("contains")))
 	}
 	if jsTruthy(normalized.Value("compact")) {
 		projected = CompactAppConfigStructs(projected)
@@ -833,7 +840,111 @@ func summarizeReadToolPayloadBody(name string, payload *jsonobj.Object) (string,
 var appConfigStructKeys = []string{"tag_struct", "mi_board_struct", "rep_struct", "rep_type_struct", "device_struct", "kftl_template_struct"}
 
 // 葉の「識別欄」。name がこれと同じ値なら name を落とせる（compact）。contains の照合対象でもある。
-var structIdentityKeys = []string{"rep_name", "tag", "device", "rep_type", "board_name", "title", "template_name"}
+// 語彙は Web の TS クラス（src/client/classes/datas/config/*-struct-element-data.ts）が正本で、
+// 実データは tag_name / rep_name / rep_type_name / device_name / board_name / title（KFTL テンプレート）。
+// 以前は偽 gkill のフィクスチャに合わせて tag / device / rep_type と書かれており、実環境では
+// tag / device / rep_type の3ツリーで name 落としも contains の照合も効いていなかった（ADR-0632）。
+var structIdentityKeys = []string{"tag_name", "rep_name", "rep_type_name", "device_name", "board_name", "title"}
+
+// AppConfigDescriptionsField は fields で明示したときだけ組む仮想欄（ADR-0632）。
+const AppConfigDescriptionsField = "descriptions"
+
+// structIdentityOf は葉の識別欄の値（無ければ name）。
+func structIdentityOf(node *jsonobj.Object) string {
+	for _, key := range structIdentityKeys {
+		if s, ok := node.Value(key).(string); ok && s != "" {
+			return s
+		}
+	}
+	return jsString(node.Value("name"))
+}
+
+// BuildAppConfigDescriptions は 6 ツリーを深さ優先で歩き、description が非空のノードだけを
+// {struct, name, path, is_dir(true のときだけ), description} の平坦な配列にする。
+// name は葉なら識別欄・フォルダなら表示名、path は祖先の表示名を "/" で連結したもの。
+// ルート（深さ 0）は path にも一覧にも含めない —— ルート名は保存時に "__root__" が補われるが
+// 古い設定では "" のこともあるので、リテラル比較ではなく深さで除く。
+// ツリーが未設定（null / Undefined）なら飛ばし、配列ルート（旧形）は各要素を深さ 0 として歩く。
+func BuildAppConfigDescriptions(full *jsonobj.Object) []any {
+	out := []any{}
+	var walk func(structKey string, node any, depth int, ancestors []string)
+	walk = func(structKey string, node any, depth int, ancestors []string) {
+		if items, ok := jsonobj.AsArray(node); ok {
+			for _, item := range items {
+				walk(structKey, item, depth, ancestors)
+			}
+			return
+		}
+		if !IsPlainObject(node) {
+			return
+		}
+		o := node.(*jsonobj.Object)
+		isDir := o.Value("is_dir") == true
+		name := jsString(o.Value("name"))
+		if !isDir {
+			name = structIdentityOf(o)
+		}
+		if depth > 0 {
+			if description, ok := o.Value("description").(string); ok && description != "" {
+				entry := jsonobj.Obj(
+					"struct", structKey,
+					"name", name,
+					"path", strings.Join(append(append([]string{}, ancestors...), name), "/"),
+				)
+				if isDir {
+					entry.Set("is_dir", true)
+				}
+				entry.Set("description", description)
+				out = append(out, entry)
+			}
+		}
+		children, ok := jsonobj.AsArray(o.Value("children"))
+		if !ok {
+			return
+		}
+		next := ancestors
+		if depth > 0 {
+			next = append(append([]string{}, ancestors...), name)
+		}
+		for _, child := range children {
+			walk(structKey, child, depth+1, next)
+		}
+	}
+	for _, key := range appConfigStructKeys {
+		value := full.Value(key)
+		if value == nil || jsonobj.IsUndefined(value) {
+			continue
+		}
+		walk(key, value, 0, nil)
+	}
+	return out
+}
+
+// FilterAppConfigDescriptions は contains を descriptions 一覧に掛ける（name / path / description の大小無視の部分一致）。
+// ツリー用の filterStructNodes に流すと葉扱いで識別欄しか見ないので、一覧は別に刈る。
+func FilterAppConfigDescriptions(projected *jsonobj.Object, needle string) *jsonobj.Object {
+	items, ok := jsonobj.AsArray(projected.Value(AppConfigDescriptionsField))
+	if !ok {
+		return projected
+	}
+	lowered := strings.ToLower(needle)
+	kept := []any{}
+	for _, item := range items {
+		if !IsPlainObject(item) {
+			continue
+		}
+		entry := item.(*jsonobj.Object)
+		for _, key := range []string{"name", "path", "description"} {
+			if s, isString := entry.Value(key).(string); isString && strings.Contains(strings.ToLower(s), lowered) {
+				kept = append(kept, entry)
+				break
+			}
+		}
+	}
+	out := projected.Clone()
+	out.Set(AppConfigDescriptionsField, kept)
+	return out
+}
 
 // jsStrictEquals は `===`（オブジェクトは同一性、数値は値、Undefined / null はそれぞれ同士だけ）。
 func jsStrictEquals(a, b any) bool {
@@ -888,6 +999,10 @@ func compactStructNode(node any) any {
 			continue
 		}
 		if (key == "is_dir" || key == "ignore_check_rep_rykv") && value == false {
+			continue
+		}
+		// description は利用者の運用メモ。空文字は「書いていない」なので落とし、非空は必ず残す（ADR-0632）
+		if key == "description" && value == "" {
 			continue
 		}
 		if key == "name" {
@@ -957,12 +1072,30 @@ func filterStructNodes(nodes any, needle string) any {
 }
 
 // FilterAppConfigStructs は contains で struct ツリーを刈る。ツリー以外の欄はそのまま。
+// 実データのツリーはルート 1 オブジェクト（{name:"__root__", children:[...], is_dir:true}）なので、
+// ルートの children を刈って同じルートに戻す（1 件も残らなければ children:[]）。配列ルート（旧形）もそのまま受ける。
+// 以前は配列しか見ておらず、実環境では contains が何も刈らなかった（ADR-0632）。
 func FilterAppConfigStructs(projected *jsonobj.Object, needle string) *jsonobj.Object {
 	out := projected.Clone()
 	for _, key := range appConfigStructKeys {
-		if _, isArray := jsonobj.AsArray(out.Value(key)); out.Has(key) && isArray {
-			out.Set(key, filterStructNodes(out.Value(key), needle))
+		if !out.Has(key) {
+			continue
 		}
+		value := out.Value(key)
+		if _, isArray := jsonobj.AsArray(value); isArray {
+			out.Set(key, filterStructNodes(value, needle))
+			continue
+		}
+		if !IsPlainObject(value) {
+			continue
+		}
+		root := value.(*jsonobj.Object)
+		if _, hasChildren := jsonobj.AsArray(root.Value("children")); !hasChildren {
+			continue
+		}
+		copied := root.Clone()
+		copied.Set("children", filterStructNodes(root.Value("children"), needle))
+		out.Set(key, copied)
 	}
 	return out
 }

@@ -5,6 +5,8 @@
         </v-card-title>
         <v-text-field class="input" type="text" v-model="title" :label="i18n.global.t('TEMPLATE_NAME_TITLE')" />
         <v-textarea v-model="template" :label="i18n.global.t('TEMPLATE_CONTENT_TITLE')" />
+        <v-textarea v-model="description" :label="i18n.global.t('DESCRIPTION_TITLE')"
+            :hint="i18n.global.t('STRUCT_DESCRIPTION_HINT')" persistent-hint auto-grow rows="2" />
         <v-card-action>
             <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -32,6 +34,7 @@ const emits = defineEmits<AddNewKFTLTemplateStructElementViewEmits>()
 const {
     title,
     template,
+    description,
     emits_kftl_template_name,
     reset_kftl_template_name,
 } = useAddNewKftlTemplateStructElementView({ props, emits })

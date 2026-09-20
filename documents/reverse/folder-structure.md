@@ -78,8 +78,8 @@ src/client/
 │   ├── shared-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── views/              # ビューコンポーネント（203ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（116ファイル、browse-zip-contents-dialog.vue 含む）
+│   ├── views/              # ビューコンポーネント（204ファイル）
+│   └── dialogs/            # ダイアログコンポーネント（117ファイル、browse-zip-contents-dialog.vue 含む）
 ├── i18n.ts                 # i18n設定（ja のみ静的、他6言語は動的import）
 ├── assets/                 # 画像等の静的アセット
 ├── classes/
@@ -95,7 +95,7 @@ src/client/
 │   ├── kftl/               # KFTLパーサー（53ステートメント型）。行ラベル専用の分類器、解釈と書き込みはサーバ（ADR-0507）
 │   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
-│   └── use-*.ts            # Composition関数群（331ファイル）
+│   └── use-*.ts            # Composition関数群（333ファイル）
 ├── __tests__/              # テスト
 │   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
 │   ├── helpers/            # テストヘルパー
@@ -317,7 +317,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-986キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+989キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 

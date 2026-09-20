@@ -11,12 +11,15 @@ export function useEditDeviceStructElementView(options: {
 
     // ── State refs ──
     const check_when_inited: Ref<boolean> = ref(props.struct_obj.check_when_inited)
+    // 説明（運用メモ）。古い保存データには欄が無いので undefined を空文字に倒す
+    const description: Ref<string> = ref(props.struct_obj.description ?? "")
 
     // ── Methods ──
     async function apply(): Promise<void> {
         const device_struct = new DeviceStructElementData()
         device_struct.id = props.struct_obj.id
         device_struct.check_when_inited = check_when_inited.value
+        device_struct.description = description.value
         device_struct.children = props.struct_obj.children
         device_struct.indeterminate = false
         device_struct.is_dir = props.struct_obj.is_dir
@@ -31,6 +34,7 @@ export function useEditDeviceStructElementView(options: {
     return {
         // State
         check_when_inited,
+        description,
 
         // Methods
         apply,

@@ -137,7 +137,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/dialog-autofocus.spec.ts` | ダイアログを開いたら最初のテキスト入力欄にカーソルが載ること（選び方の判定そのものは `unit/classes/dialog-autofocus.test.ts`） |
 | `src/client/__tests__/e2e/sample-data-smoke.spec.ts` | 配布サンプルデータの起動スモーク。run-e2e.mjs がサンプルデータのコピーを home にした gkill_server を別ポートで起動し（URL は `GKILL_E2E_SAMPLE_URL`）、embed 配信のフロントエンドへ README 記載の資格情報でログインして rykv に記録が出ること。ログインはレート制限を消費するので1回だけ |
 
-### Composable ユニットテスト（61ファイル）
+### Composable ユニットテスト（62ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|

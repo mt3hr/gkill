@@ -110,6 +110,11 @@ func TestHelpTopics(t *testing.T) {
 		for _, phrase := range []string{"include_plugin_content", "content_status", "plugin_content_max_text_length", "gkill_get_plugin_list"} {
 			mustContain(t, plugin, phrase)
 		}
+		// 設定ツリーの description（利用者の運用メモ）と一覧射影、識別欄の実データ語彙（ADR-0632）
+		config := mustHelpTopic(t, "config").Text
+		for _, phrase := range []string{"description", "fields:[\"descriptions\"]", "tag_name", "rep_type_name", "device_name", "board_name", "check_when_inited=true", "do not infer"} {
+			mustContain(t, config, phrase)
+		}
 	})
 
 	// 本文は説明文の走査（tool_handlers_test.go）の対象外なので、綴り違いのツール名はここで落とす。

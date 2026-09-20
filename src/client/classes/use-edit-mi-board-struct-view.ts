@@ -12,7 +12,7 @@ import { build_error_message_relay } from '@/classes/kyou-view-relay'
  *
  * 板はフォルダ分けも表示名の変更もしない ―― フラットな一覧を並べ替えて、
  * 使わなくなった板を消すだけ。板名は実データ(Mi/MiReKyou のレコード)由来なので
- * ここでは触らない。
+ * ここでは触らない。編集できるのは板の説明（MCP へ渡す運用メモ）だけ。
  */
 export function useEditMiBoardStructView(options: {
     props: EditMiBoardStructViewProps,
@@ -22,6 +22,7 @@ export function useEditMiBoardStructView(options: {
 
     // ── Template refs ──
     const foldable_struct = ref<ComponentRef | null>(null)
+    const edit_mi_board_struct_element_dialog = ref<ComponentRef | null>(null)
     const mi_board_struct_context_menu = ref<ComponentRef | null>(null)
     const confirm_delete_mi_board_struct_dialog = ref<ComponentRef | null>(null)
 
@@ -61,6 +62,38 @@ export function useEditMiBoardStructView(options: {
         }
         walk(cloned_application_config.value.mi_board_struct)
         return found
+    }
+
+    function show_edit_mi_board_struct_dialog(id: string): void {
+        // ルート自身は update_mi_board_struct の walk（子だけを splice）で差し替わらないので開かない
+        if (id === cloned_application_config.value.mi_board_struct.id) {
+            return
+        }
+        const target_struct_object = find_mi_board_struct(id)
+        if (!target_struct_object) {
+            return
+        }
+        edit_mi_board_struct_element_dialog.value?.show(target_struct_object)
+    }
+
+    // 編集ダイアログが組み直したノードを id 一致で差し替える（他の構造ツリーと同じ形）
+    function update_mi_board_struct(mi_board_struct_obj: MiBoardStructElementData): void {
+        let walk = (_board: MiBoardStructElementData): boolean => false
+        walk = (board: MiBoardStructElementData): boolean => {
+            const children = board.children
+            if (board.id === mi_board_struct_obj.id) {
+                return true
+            } else if (children) {
+                for (let i = 0; i < children.length; i++) {
+                    if (walk(children[i])) {
+                        children.splice(i, 1, mi_board_struct_obj)
+                        return false
+                    }
+                }
+            }
+            return false
+        }
+        walk(cloned_application_config.value.mi_board_struct)
     }
 
     async function apply(): Promise<void> {
@@ -104,6 +137,10 @@ export function useEditMiBoardStructView(options: {
     }
 
     // ── Template event handlers ──
+    function onDblclickedItem(_e: MouseEvent, id: string | null): void {
+        if (id) show_edit_mi_board_struct_dialog(id)
+    }
+
     function onRequestedCloseDialog(): void {
         emits('requested_close_dialog')
     }
@@ -115,6 +152,7 @@ export function useEditMiBoardStructView(options: {
     return {
         // Template refs
         foldable_struct,
+        edit_mi_board_struct_element_dialog,
         mi_board_struct_context_menu,
         confirm_delete_mi_board_struct_dialog,
 
@@ -124,6 +162,8 @@ export function useEditMiBoardStructView(options: {
         // Business logic
         reload_cloned_application_config,
         show_mi_board_contextmenu,
+        show_edit_mi_board_struct_dialog,
+        update_mi_board_struct,
         apply,
         show_confirm_delete_mi_board_struct_dialog,
         delete_mi_board_struct,
@@ -131,6 +171,7 @@ export function useEditMiBoardStructView(options: {
         move_mi_board_struct_down,
 
         // Template event handlers
+        onDblclickedItem,
         onRequestedCloseDialog,
 
         // Event relay objects

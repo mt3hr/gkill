@@ -11,12 +11,15 @@ export function useEditRepTypeStructElementView(options: {
 
     // ── State refs ──
     const check_when_inited: Ref<boolean> = ref(props.struct_obj.check_when_inited)
+    // 説明（運用メモ）。古い保存データには欄が無いので undefined を空文字に倒す
+    const description: Ref<string> = ref(props.struct_obj.description ?? "")
 
     // ── Methods ──
     async function apply(): Promise<void> {
         const rep_type_struct = new RepTypeStructElementData()
         rep_type_struct.id = props.struct_obj.id
         rep_type_struct.check_when_inited = check_when_inited.value
+        rep_type_struct.description = description.value
         rep_type_struct.children = props.struct_obj.children
         rep_type_struct.indeterminate = false
         rep_type_struct.is_dir = props.struct_obj.is_dir
@@ -32,6 +35,7 @@ export function useEditRepTypeStructElementView(options: {
     return {
         // State
         check_when_inited,
+        description,
 
         // Methods
         apply,

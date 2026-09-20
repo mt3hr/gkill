@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。1121テスト（36ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 11 + プラグイン1 = 12ツール、Write サーバ 28（書き込み21 + Read便利7）+ プラグイン1 = 29ツール、統合サーバ 32 + プラグイン1 = 33ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、ログ、設定ファイル、旧 Node 実装とのゴールデン一致をカバーする（テスト数は `t.Run` のサブテスト宣言の静的計数）。
+MCP (Model Context Protocol) サーバのテスト。1127テスト（36ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 11 + プラグイン1 = 12ツール、Write サーバ 28（書き込み21 + Read便利7）+ プラグイン1 = 29ツール、統合サーバ 32 + プラグイン1 = 33ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、ログ、設定ファイル、旧 Node 実装とのゴールデン一致をカバーする（テスト数は `t.Run` のサブテスト宣言の静的計数）。
 
 2026-09-20 に Node.js 実装（旧 `src/mcp`、vitest 28 ファイル）を Go へ移した。旧テストの `describe` → `TestXxx`、`test` → `t.Run("<原文のタイトル>")` で 1:1 に対応し、タイトル集合の照合で未移植 0 を確認してある（意図した例外は [ADR-0631](../../../../documents/adr/0631-mcp-lives-in-gkill-server.md)）。
 
@@ -38,7 +38,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 | `config_test.go` | 設定ファイル `gkill_mcp.json` の生成（既定値・0600・既存は書き換えない・壊れていれば起動を止める）と、フラグ > 環境変数 > ファイル > 既定値の優先順位（`ResolveSettings`） |
 | `import_graph_test.go` | package `mcp` が `gkill/api` / `dao` / `usecase` / `main/common` を import しないこと（MCP は起動中サーバの HTTP クライアント） |
 | `stdio_e2e_test.go` | stdio の端から端まで。テストバイナリ自身を子プロセスにして NDJSON と Content-Length の両枠組みで initialize → tools/call → ping を通し、stdout に JSON-RPC 以外の行が無いこと・壊れた行が stderr に警告されることを固定する |
-| `golden_test.go` | 旧 Node 実装から採ったゴールデン（`testdata/golden/`。要求コーパス 328 件）との**バイト一致**: tools/list（3サーバ）と `schema_revision`、tools/call の応答（stdio / http × 3サーバ）、gkill へ送った要求（パス・クエリ・Cookie・本文）。時刻・UUID・トークンは採取時と同じ固定列。ゴールデン自身が `jsonobj` で往復してもバイト単位で変わらないことも固定。ツールを意図して変えたときは `GKILL_MCP_UPDATE_GOLDEN=1 go test ./gkill/mcp/ -run Golden` で Go の出力へ書き直し、`git diff testdata/golden` を読んでからコミットする（Node 実装はもう無いので、以後は前回コミットした Go の出力との回帰検査になる） |
+| `golden_test.go` | 旧 Node 実装から採ったゴールデン（`testdata/golden/`。要求コーパス 331 件）との**バイト一致**: tools/list（3サーバ）と `schema_revision`、tools/call の応答（stdio / http × 3サーバ）、gkill へ送った要求（パス・クエリ・Cookie・本文）。時刻・UUID・トークンは採取時と同じ固定列。ゴールデン自身が `jsonobj` で往復してもバイト単位で変わらないことも固定。ツールを意図して変えたときは `GKILL_MCP_UPDATE_GOLDEN=1 go test ./gkill/mcp/ -run Golden` で Go の出力へ書き直し、`git diff testdata/golden` を読んでからコミットする（Node 実装はもう無いので、以後は前回コミットした Go の出力との回帰検査になる） |
 
 ### プラグインツール（3サーバ共通）
 

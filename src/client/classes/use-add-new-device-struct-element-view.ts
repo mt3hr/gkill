@@ -16,6 +16,7 @@ export function useAddNewDeviceStructElementView(options: {
     const device_name: Ref<string> = ref("")
     const check_when_inited: Ref<boolean> = ref(true)
     const is_force_hide: Ref<boolean> = ref(false)
+    const description: Ref<string> = ref("")
 
     // ── Business logic ──
     function emits_device_name(): void {
@@ -31,6 +32,7 @@ export function useAddNewDeviceStructElementView(options: {
         device_struct_element.id = props.gkill_api.generate_uuid()
         device_struct_element.is_dir = false
         device_struct_element.check_when_inited = check_when_inited.value
+        device_struct_element.description = description.value
         device_struct_element.children = null
         device_struct_element.indeterminate = false
         device_struct_element.key = device_name.value
@@ -44,6 +46,7 @@ export function useAddNewDeviceStructElementView(options: {
         device_name.value = ""
         check_when_inited.value = true
         is_force_hide.value = false
+        description.value = ""
     }
 
     // ── Return ──
@@ -52,6 +55,7 @@ export function useAddNewDeviceStructElementView(options: {
         device_name,
         check_when_inited,
         is_force_hide,
+        description,
 
         // Business logic
         emits_device_name,
