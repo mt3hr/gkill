@@ -26,7 +26,6 @@ gkill/
 ├── tsconfig*.json          # TypeScript設定
 ├── vite.config.ts          # Viteビルド設定
 ├── vitest.config.ts        # Vitest（クライアント）設定
-├── vitest.config.mcp.ts    # Vitest（MCP）設定
 ├── playwright.config.ts    # Playwright E2E設定
 ├── eslint.config.js        # ESLint flat config
 ├── env.d.ts                # 環境変数型定義
@@ -47,7 +46,6 @@ src/
 ├── server/       # バックエンド（Go）
 ├── android/      # Android APKラッパー
 ├── wear_os/      # Wear OSアプリ（phone_companion + watch_app）
-├── mcp/          # MCPサーバー（AI連携用）
 ├── plugins/      # スタンドアロンプラグインバイナリ（examples/gkill_example, gkill_plugin_archived_git_commit_log, gkill_plugin_chatgpt, gkill_plugin_claudeai, gkill_plugin_claudecode, gkill_plugin_codex, gkill_plugin_fitbit, gkill_plugin_google_locationhistory）
 ├── locales/      # i18nリソース（7言語対応）
 ├── tools/        # ユーティリティスクリプト
@@ -228,39 +226,46 @@ src/wear_os/
 
 **補足:** Gradleラッパー（`gradlew` / `gradlew.bat` / `gradle-wrapper.jar` / `gradle-wrapper.properties`）は`src/wear_os/`にコミット済みなので、コピーは通常不要です。`src/android/`側と揃え直したいときだけ`npm run setup_wear_os_gradle`を実行してください。
 
-### src/mcp/ — MCPサーバー
+### src/server/gkill/mcp/ — MCPサーバー
 
-AI連携用のMCP（Model Context Protocol）サーバーです。
+AI連携用のMCP（Model Context Protocol）サーバーです。`gkill_server mcp --kind <kind>` サブコマンド（`src/server/gkill/main/common/mcp.go` が配線）で起動し、起動中の gkill_server への HTTP クライアントとして動きます。2026-09-20 に Node.js 実装から Go へ移しました（[ADR-0631](../adr/0631-mcp-lives-in-gkill-server.md)）。
 
 ```
-src/mcp/
-├── gkill-read-server.mjs      # Read専用MCPサーバー（12ツール = 固有11 + プラグイン1、port 8808）
-├── gkill-write-server.mjs     # Write専用MCPサーバー（29ツール = 固有28 + プラグイン1、port 8809）
-├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（33ツール = 固有32 + プラグイン1、port 8810）
-└── lib/
-    ├── mcp-server-base.mjs    # 3サーバ共通の JSON-RPC 受け口
-    ├── stdio-transport.mjs    # stdio トランスポート
-    ├── http-transport.mjs     # Streamable HTTP トランスポート
-    ├── gkill-client.mjs       # gkill 本体を叩く HTTP クライアント（ログイン・認証リトライ・ファイル取得）
-    ├── payload.mjs            # レスポンスのペイロード加工
-    ├── read-tools.mjs         # 読み取りツール定義（read / readwrite が共有。write も4つだけ取る）
-    ├── read-handlers.mjs      # 読み取りツールのディスパッチと要約（3サーバ共有の正本）
-    ├── write-tools.mjs        # 書き込みツール定義（write / readwrite が共有）
-    ├── write-handlers.mjs     # 書き込みツールのディスパッチと要約（write / readwrite 共有の正本）
-    ├── find-query-schema.mjs  # gkill_get_kyous の検索条件スキーマ
-    ├── access-log.mjs         # MCPアクセスログモジュール（MCP_LOG環境変数で制御）
-    ├── plugin-tools.mjs       # 3サーバ共通のプラグインツール（gkill_get_plugin_list）とプラグイン本文のインライン埋め込み
-    ├── html-text.mjs          # プラグインコンテンツHTML→プレーンテキスト変換
-    ├── file-link-store.mjs    # HTTPモード用ファイルリンクストア（期限付きトークンで /files/{token} 配信）
-    ├── normalization.mjs      # Read入力正規化
-    ├── write-normalization.mjs # Write入力正規化
-    ├── validation.mjs         # 入力バリデーション
-    ├── constants.mjs          # 共通定数
-    ├── errors.mjs             # エラークラス
-    ├── oauth-server.mjs       # OAuth 2.1サーバー
-    ├── oauth-store.mjs        # トークン/コード永続化
-    ├── oauth-html.mjs         # OAuth ログインページテンプレート
-    └── pkce.mjs               # PKCE検証
+src/server/gkill/mcp/
+├── server_read.go             # Read専用MCPサーバー（12ツール = 固有11 + プラグイン1、port 8808）
+├── server_write.go            # Write専用MCPサーバー（29ツール = 固有28 + プラグイン1、port 8809）
+├── server_readwrite.go        # Read/Write統合MCPサーバー（33ツール = 固有32 + プラグイン1、port 8810）
+├── bootstrap.go               # 起動ブロック（Start。stdio / http の選択、server_start ログ）
+├── config.go                  # 設定ファイル gkill_mcp.json の生成・読み込み・優先順位
+├── jsonobj/                   # 順序つき JSON（JSON.stringify 互換の直列化。応答のバイト一致のため）
+├── internal/fakegkill/        # 偽 gkill（ゴールデンの採取と再生が共用）
+├── testdata/golden/           # 旧 Node 実装から採ったゴールデン（tools/list・応答・上流要求）
+├── tool_schema_budget.go/json # tools/list のバイト量の計測と予算
+├── README.md / ABOUT_TEST.md
+└── （旧 lib/ 相当。ファイル名は旧 *.mjs と 1:1）
+    ├── server_base.go    # 3サーバ共通の JSON-RPC 受け口
+    ├── stdio_transport.go    # stdio トランスポート
+    ├── http_transport.go     # Streamable HTTP トランスポート
+    ├── gkill_client.go       # gkill 本体を叩く HTTP クライアント（ログイン・認証リトライ・ファイル取得）
+    ├── payload.go            # レスポンスのペイロード加工
+    ├── read_tools.go         # 読み取りツール定義（read / readwrite が共有。write も4つだけ取る）
+    ├── read_handlers.go      # 読み取りツールのディスパッチと要約（3サーバ共有の正本）
+    ├── write_tools.go        # 書き込みツール定義（write / readwrite が共有）
+    ├── write_handlers.go     # 書き込みツールのディスパッチと要約（write / readwrite 共有の正本）
+    ├── find_query_schema.go  # gkill_get_kyous の検索条件スキーマ
+    ├── access_log.go         # gkill_log 上のロガー（レベルは MCP_LOG / 設定 / --log で制御）
+    ├── plugin_tools.go       # 3サーバ共通のプラグインツール（gkill_get_plugin_list）とプラグイン本文のインライン埋め込み
+    ├── html_text.go          # プラグインコンテンツHTML→プレーンテキスト変換
+    ├── file_link_store.go    # HTTPモード用ファイルリンクストア（期限付きトークンで /files/{token} 配信）
+    ├── normalization.go      # Read入力正規化
+    ├── write_normalization.go # Write入力正規化
+    ├── validation.go         # 入力バリデーション
+    ├── constants.go          # 共通定数
+    ├── errors.go             # エラークラス
+    ├── oauth_server.go       # OAuth 2.1サーバー
+    ├── oauth_store.go        # トークン/コード永続化
+    ├── oauth_html.go         # OAuth ログインページテンプレート
+    └── pkce.go               # PKCE検証
 ```
 
 3つのサーバファイルは**ツールの取捨選択とディスパッチだけ**を持ち、実装は `lib/` にあります。
@@ -411,9 +416,9 @@ $HOME/gkill/
 │   ├── gkill_trace.log
 │   ├── gkill_trace_sql.log
 │   ├── gkill.log           # 統合ログ
-│   ├── gkill_mcp_read_access.log      # Read MCPサーバアクセスログ（MCP_LOG環境変数で制御）
-│   ├── gkill_mcp_write_access.log     # Write MCPサーバアクセスログ
-│   └── gkill_mcp_readwrite_access.log # Read/Write MCPサーバアクセスログ
+│   ├── gkill_mcp_read.log             # Read MCPサーバの統合ログ（gkill_log の別名ファイル群。レベル別の gkill_mcp_read_{error,warn,info,access,debug,trace,trace_sql}.log も同じ接頭辞）
+│   ├── gkill_mcp_write.log            # Write MCPサーバ（同上）
+│   └── gkill_mcp_readwrite.log        # Read/Write MCPサーバ（同上）
 ├── lib/base_directory/     # ライブラリファイル
 └── tls/                    # TLS証明書（オプション）
     ├── cert.cer

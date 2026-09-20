@@ -15,11 +15,12 @@
 
   <h2>Integration Types</h2>
   <table>
-    <tr><th>Type</th><th>What it can do</th><th>File to run</th><th>Tools</th><th>Port (HTTP)</th></tr>
-    <tr><td>Read-only</td><td>View and search records only. Adding or modifying is not allowed</td><td>gkill-read-server.mjs</td><td>12</td><td>8808</td></tr>
-    <tr><td>Write-only</td><td>Add, update and delete records. It can also read storage names, tag names and board names</td><td>gkill-write-server.mjs</td><td>29</td><td>8809</td></tr>
-    <tr><td>Read &amp; Write</td><td>View, add, update and delete records</td><td>gkill-readwrite-server.mjs</td><td>33</td><td>8810</td></tr>
+    <tr><th>Type</th><th>What it can do</th><th>Command</th><th>Tools</th><th>Port (HTTP)</th></tr>
+    <tr><td>Read-only</td><td>View and search records only. Adding or modifying is not allowed</td><td>gkill_server mcp --kind read</td><td>12</td><td>8808</td></tr>
+    <tr><td>Write-only</td><td>Add, update and delete records. It can also read storage names, tag names and board names</td><td>gkill_server mcp --kind write</td><td>29</td><td>8809</td></tr>
+    <tr><td>Read &amp; Write</td><td>View, add, update and delete records</td><td>gkill_server mcp --kind readwrite</td><td>33</td><td>8810</td></tr>
   </table>
+  <p>The MCP server is part of gkill_server and starts with <code>gkill_server mcp --kind &lt;type&gt;</code> (gkill_server itself must be running). The connection and credentials come from environment variables or from the config file <code>configs/gkill_mcp.json</code>, which is generated on first start. Logs go to <code>logs/gkill_mcp_&lt;type&gt;.log</code> (per-level files share the prefix).</p>
   <p>Every type includes one tool for listing the plugins in use. The contents of records imported by plugins can be received inline with the search results.</p>
 
   <h2>File Delivery</h2>
@@ -40,8 +41,8 @@
   <pre><code>{
   "mcpServers": {
     "gkill": {
-      "command": "node",
-      "args": ["C:/path/to/gkill/src/mcp/gkill-read-server.mjs"],
+      "command": "gkill_server",
+      "args": ["mcp", "--kind", "read"],
       "env": {
         "GKILL_BASE_URL": "http://localhost:9999",
         "GKILL_USER": "your-user-id",
@@ -62,20 +63,20 @@ claude mcp add gkill \
   --env GKILL_BASE_URL=http://localhost:9999 \
   --env GKILL_USER=your-user-id \
   --env GKILL_PASSWORD_SHA256=your-hash \
-  -- node /path/to/gkill/src/mcp/gkill-read-server.mjs</code></pre>
+  -- gkill_server mcp --kind read</code></pre>
   <div class="tip">
-    <strong>Tip:</strong> Adjust the path above to wherever you placed the gkill source. To change the type, swap the file name for <code>gkill-write-server.mjs</code> or <code>gkill-readwrite-server.mjs</code>.
+    <strong>Tip:</strong> <code>gkill_server</code> is assumed to be on your PATH (write the full path otherwise). To change the type, set <code>--kind</code> to <code>write</code> or <code>readwrite</code>.
   </div>
 
   <h2>Using it Remotely (HTTP Connection)</h2>
   <p>If the AI is not on the same PC, you can have the MCP server itself listen over HTTP so an AI on the internet can connect. This mode authorises the connection with OAuth, so you do not need to expose gkill itself to the internet.</p>
   <p>Authorisation is granted per connection type (read-only, write, or read-write). A connection authorised as read-only cannot be used for writing. If you switch types, or a connection that used to work starts failing for lack of permission, disconnect it on the AI side and authorise it again.</p>
   <pre><code># Example: serve read &amp; write over HTTP
-MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
+MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
 GKILL_BASE_URL=http://localhost:9999 \
 GKILL_USER=your-user-id \
 GKILL_PASSWORD_SHA256=your-hash \
-node /path/to/gkill/src/mcp/gkill-readwrite-server.mjs</code></pre>
+gkill_server mcp --kind readwrite --transport http</code></pre>
   <div class="tip">
     <strong>Tip:</strong> You can also publish the gkill server itself to the internet. In that case set <code>GKILL_BASE_URL</code> to its public address and enable TLS (HTTPS) from <a href="server-config.html">Server Settings</a>.
   </div>

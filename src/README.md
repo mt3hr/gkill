@@ -35,7 +35,7 @@ gkill はライフログアプリケーション。テキストメモ、ブッ�
 │  ・Wear OS (Pixel Watch) KFTL 入力       │  ← src/wear_os/
 ├─────────────────────────────────────────┤
 │  AI 連携                                 │
-│  ・MCP Server (Read/Write/ReadWrite)     │  ← src/mcp/
+│  ・MCP Server (Read/Write/ReadWrite)     │  ← src/server/gkill/mcp/
 └─────────────────────────────────────────┘
 ```
 
@@ -105,7 +105,6 @@ src/
 ├── wear_os/         # Wear OS (Pixel Watch) KFTL 入力アプリ
 │   ├── phone_companion/  # スマホ側コンパニオン
 │   └── watch_app/        # ウォッチ側アプリ
-├── mcp/             # MCP Server (AI 連携)
 ├── locales/         # i18n 翻訳ファイル (7言語)
 └── tools/           # ユーティリティスクリプト
 ```
@@ -178,7 +177,7 @@ npm run go_install
 | `npm run test_server` | Go バックエンド |
 | `npm run test_client_unit` | フロントエンド ユニット（Vitest） |
 | `npm run test_client_e2e` | フロントエンド E2E（Playwright。gkill_server と Vite を自動起動・停止） |
-| `npm run test_mcp` | MCP サーバ |
+| `npm run test_mcp` | MCP サーバ（Go。`test_server` にも含まれる） |
 | `npm run test_plugins` | 同梱プラグイン（`src/plugins/` の独立 Go モジュール） |
 | `npm run vet_plugins` | 同梱プラグインへ `go vet`（CI の `plugins` ジョブが `test_plugins` の前に回す。`npm test` には入っていない） |
 | `npm run test_android` | Android |
@@ -232,7 +231,7 @@ npm run go_install
 | `android/` | [android/README.md](android/README.md) |
 | `wear_os/` | [wear_os/README.md](wear_os/README.md) |
 | `locales/` | [locales/README.md](locales/README.md) |
-| `mcp/` | [mcp/README.md](mcp/README.md) |
+| `server/gkill/mcp/` | [server/gkill/mcp/README.md](server/gkill/mcp/README.md)（MCP Server。`gkill_server mcp` サブコマンド） |
 | `plugins/` | [plugins/README.md](plugins/README.md)（各プラグインにも個別の README がある: [gkill_example](plugins/examples/gkill_example/README.md) / [chatgpt](plugins/gkill_plugin_chatgpt/README.md) / [claudeai](plugins/gkill_plugin_claudeai/README.md) / [claudecode](plugins/gkill_plugin_claudecode/README.md) / [codex](plugins/gkill_plugin_codex/README.md) / [fitbit](plugins/gkill_plugin_fitbit/README.md) / [google_locationhistory](plugins/gkill_plugin_google_locationhistory/README.md) / [archived_git_commit_log](plugins/gkill_plugin_archived_git_commit_log/README.md)） |
 | `tools/` | [tools/README.md](tools/README.md) |
 
@@ -262,6 +261,6 @@ npm run go_install
 | `server/gkill/usecase/` | [server/gkill/usecase/ABOUT_TEST.md](server/gkill/usecase/ABOUT_TEST.md) |
 | `plugins/` | [plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) |
 | `tools/` | [tools/ABOUT_TEST.md](tools/ABOUT_TEST.md) |
-| `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) |
+| `server/gkill/mcp/` | [server/gkill/mcp/ABOUT_TEST.md](server/gkill/mcp/ABOUT_TEST.md) |
 | `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) |
 | `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) |

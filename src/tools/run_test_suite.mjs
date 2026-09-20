@@ -86,10 +86,12 @@ export const SUITES = {
     allowed: PLAYWRIGHT_FLAGS,
     recordsServerTree: true,
   },
+  // MCP サーバは Go（src/server/gkill/mcp）。test_server の ./... にも含まれるが、
+  // スイート名は attestation の互換のため残す（ゲートは test_mcp の記録も要求する）。
   test_mcp: {
-    command: [...vitest, '--config', 'vitest.config.mcp.ts'],
-    cwd: ROOT,
-    allowed: VITEST_FLAGS,
+    command: [goBin, 'test', './gkill/mcp/...'],
+    cwd: path.join(ROOT, 'src', 'server'),
+    allowed: GO_FLAGS,
   },
   test_tools: {
     command: [...vitest, '--config', 'vitest.config.tools.ts'],

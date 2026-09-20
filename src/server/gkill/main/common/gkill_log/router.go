@@ -124,6 +124,24 @@ func (r *Router) SetSplitFile(level slog.Level, path string) error {
 	return s.SetFile(path)
 }
 
+// Close は開いている全てのファイル（レベル別・統合）を閉じる。
+//
+// テストが一時ディレクトリを片付けるときと、MCP サブコマンドのように
+// gkill_log を自前の Router で使う側が終了時に呼ぶ。stdout の sink は閉じない。
+// 何度呼んでも安全。
+func (r *Router) Close() error {
+	var firstErr error
+	for _, s := range r.byLevel {
+		if err := s.Close(); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	if err := r.merged.Close(); err != nil && firstErr == nil {
+		firstErr = err
+	}
+	return firstErr
+}
+
 // stdoutは常にstdoutで良いが、必要なら差し替えも可
 func (r *Router) SetStdoutWriter() {
 	r.stdout.sw.Set(os.Stdout)

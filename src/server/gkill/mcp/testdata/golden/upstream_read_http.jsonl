@@ -1,0 +1,328 @@
+{"name":"initialize","requests":[]}
+{"name":"initialize without id is a notification","requests":[]}
+{"name":"notifications/initialized","requests":[]}
+{"name":"ping","requests":[]}
+{"name":"ping with string id","requests":[]}
+{"name":"ping with null id","requests":[]}
+{"name":"tools/list","requests":[]}
+{"name":"unknown method","requests":[]}
+{"name":"invalid request: missing jsonrpc","requests":[]}
+{"name":"invalid request: missing method","requests":[]}
+{"name":"invalid request: wrong jsonrpc version","requests":[]}
+{"name":"invalid request: scalar payload","requests":[]}
+{"name":"invalid request: string payload","requests":[]}
+{"name":"batch: ping + status + notification","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"batch: empty array","requests":[]}
+{"name":"batch: only notifications","requests":[]}
+{"name":"batch: contains invalid element","requests":[]}
+{"name":"tools/call: params not an object","requests":[]}
+{"name":"tools/call: params missing","requests":[]}
+{"name":"tools/call: name missing","requests":[]}
+{"name":"tools/call: name not a string","requests":[]}
+{"name":"tools/call: unknown tool","requests":[]}
+{"name":"tools/call: removed tool gkill_get_idf_file_path","requests":[]}
+{"name":"tools/call: removed tool gkill_get_plugin_content","requests":[]}
+{"name":"tools/call: arguments is a string","requests":[]}
+{"name":"tools/call: arguments is an array","requests":[]}
+{"name":"tools/call: arguments null","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"tools/call: arguments omitted","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"status: default","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"status: locale ja","requests":[]}
+{"name":"status: unknown key","requests":[]}
+{"name":"status: gkill returns a business error","requests":[]}
+{"name":"status: gkill returns HTML 502","requests":[]}
+{"name":"status: session expires once and the client re-logs in","requests":[]}
+{"name":"help: index","requests":[]}
+{"name":"help: empty topic","requests":[]}
+{"name":"help: search","requests":[]}
+{"name":"help: pagination","requests":[]}
+{"name":"help: mi","requests":[]}
+{"name":"help: data_types","requests":[]}
+{"name":"help: plugin","requests":[]}
+{"name":"help: idf","requests":[]}
+{"name":"help: deleted","requests":[]}
+{"name":"help: rep","requests":[]}
+{"name":"help: kftl","requests":[]}
+{"name":"help: unknown topic","requests":[]}
+{"name":"help: unknown key","requests":[]}
+{"name":"kyous: default","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: limit 2","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":2,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: limit 0","requests":[]}
+{"name":"kyous: limit 1001","requests":[]}
+{"name":"kyous: limit 2.5","requests":[]}
+{"name":"kyous: stale limit as string","requests":[]}
+{"name":"kyous: cursor page 2","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"cursor\":\"2026-09-11T10:00:00+09:00::plug-err\",\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: cursor invalid","requests":[]}
+{"name":"kyous: cursor with empty id","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"cursor\":\"2026-09-11T10:00:00+09:00::\",\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: count_only","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":true,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: count_only with cursor","requests":[]}
+{"name":"kyous: stale count_only as string","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":true,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: group_by day","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"group_by\":\"day\",\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: group_by month","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"group_by\":\"month\",\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: group_by invalid","requests":[]}
+{"name":"kyous: group_by with cursor","requests":[]}
+{"name":"kyous: group_by with count_only","requests":[]}
+{"name":"kyous: no matches","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"words\":[\"nothing\"],\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: count_only no matches","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"words\":[\"nothing\"],\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":true,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: partial response","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"words\":[\"partial\"],\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: server warnings","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"words\":[\"warn\"],\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: calendar dates date-only","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"calendar_start_date\":\"2026-09-01T00:00:00+09:00\",\"calendar_end_date\":\"2026-09-30T23:59:59+09:00\",\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: calendar dates with time","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"calendar_start_date\":\"2026-09-01T10:00:00+09:00\",\"calendar_end_date\":\"2026-09-30T23:00:00Z\",\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: calendar date without offset","requests":[]}
+{"name":"kyous: calendar dates 'now'","requests":[]}
+{"name":"kyous: map three values","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"map_latitude\":35.66,\"map_longitude\":139.7,\"map_radius\":500,\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: map two values only","requests":[]}
+{"name":"kyous: map radius as string","requests":[]}
+{"name":"kyous: unknown query field","requests":[]}
+{"name":"kyous: deprecated query field only_latest_data","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: deprecated top-level include_id","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: legacy use_ flags","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"words\":[\"a\"],\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: null query fields are unused","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: empty tags array and words","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"tags\":[],\"words\":[\"x\",\"y\"],\"words_and\":true,\"not_words\":[\"z\"],\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: tags with non-string element","requests":[]}
+{"name":"kyous: query is a string (stale schema)","requests":[]}
+{"name":"kyous: query is an invalid JSON string","requests":[]}
+{"name":"kyous: query is an array","requests":[]}
+{"name":"kyous: data_types","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"data_types\":[\"kmemo\",\"mi\",\"claude_conversation\"],\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: data_types empty","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"data_types\":[],\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: data_types not an array","requests":[]}
+{"name":"kyous: create_apps and update_apps","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"create_apps\":[\"gkill\",\"gkill_mcp_readwrite\"],\"update_apps\":[\"gkill\"],\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: num range","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"num_min\":1,\"num_max\":10.5,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: num_min greater than num_max","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"num_min\":10,\"num_max\":1,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: num_min as string","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"num_min\":1,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: idf_kinds","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"idf_kinds\":[\"image\",\"video\"],\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: idf_kinds invalid","requests":[]}
+{"name":"kyous: include_file_size","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":true,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: include_attached_ids","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":true,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: include_plugin_content text","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginRep\",\"kyou_id\":\"plug-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginErrRep\",\"kyou_id\":\"plug-err\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: include_plugin_content html","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginRep\",\"kyou_id\":\"plug-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginErrRep\",\"kyou_id\":\"plug-err\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: include_plugin_content both with short max","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginRep\",\"kyou_id\":\"plug-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginErrRep\",\"kyou_id\":\"plug-err\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: include_plugin_content invalid format","requests":[]}
+{"name":"kyous: plugin_content_max_text_length 0","requests":[]}
+{"name":"kyous: plugin content pushes the page over max_size_mb","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":2,\"max_size_mb\":0.0005,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginRep\",\"kyou_id\":\"plug-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: single record over max_size_mb is still returned","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":1,\"max_size_mb\":0.0001,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginRep\",\"kyou_id\":\"plug-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: include_plugin_content on page 2 (long content)","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"cursor\":\"2026-09-11T10:00:00+09:00::plug-err\",\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginRep\",\"kyou_id\":\"plug-2\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: include_plugin_content with locale en","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"en\",\"limit\":1,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginRep\",\"kyou_id\":\"plug-1\",\"locale_name\":\"en\",\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: include_file_urls","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: include_file_urls false","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: is_include_timeis false","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: max_size_mb 0","requests":[]}
+{"name":"kyous: max_size_mb 11","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":11,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: for_mi only","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"for_mi\":true,\"only_latest_data\":true,\"include_create_mi\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: for_mi with include_check_mi","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"for_mi\":true,\"include_check_mi\":true,\"mi_board_name\":\"Work\",\"mi_check_state\":\"uncheck\",\"mi_sort_type\":\"create_time\",\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: playing_time and include_end_timeis","requests":[]}
+{"name":"kyous: reps and rep_types","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"reps\":[\"Files\",\"Kmemo_fakepc\"],\"rep_types\":[\"kmemo\",\"directory\"],\"hide_tags\":[\"secret\"],\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: period_of_time","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"period_of_time_start_time_second\":32400,\"period_of_time_end_time_second\":64800,\"period_of_time_week_of_days\":[1,2,3],\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: ids","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"ids\":[\"k1\",\"k2\"],\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: update_time and is_image_only","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"update_time\":\"2026-09-01T00:00:00+09:00\",\"is_image_only\":true,\"include_deleted_data\":true,\"update_cache\":false,\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: locale en","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"en\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: locale not a string","requests":[]}
+{"name":"kyous: unknown top-level key","requests":[]}
+{"name":"kyous: gkill business error","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"gkill-error\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: gkill HTML 502","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"server-error\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"}]}
+{"name":"kyous: session expires once","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"expire-session\",\"limit\":1,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/login","body":"{\"user_id\":\"testuser\",\"password_sha256\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"locale_name\":\"ja\"}"},{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"expire-session\",\"limit\":1,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-login\"}"}]}
+{"name":"mi boards: default","requests":[{"method":"POST","path":"/api/get_mi_board_list","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"mi boards: locale en","requests":[{"method":"POST","path":"/api/get_mi_board_list","body":"{\"locale_name\":\"en\",\"session_id\":\"sess-http\"}"}]}
+{"name":"mi boards: unknown key","requests":[]}
+{"name":"tag names: default","requests":[{"method":"POST","path":"/api/get_all_tag_names","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"tag names: contains work","requests":[{"method":"POST","path":"/api/get_all_tag_names","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"tag names: limit 2","requests":[{"method":"POST","path":"/api/get_all_tag_names","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"tag names: contains empty","requests":[]}
+{"name":"tag names: limit 0","requests":[]}
+{"name":"tag names: stale limit string","requests":[{"method":"POST","path":"/api/get_all_tag_names","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"tag names: locale en","requests":[{"method":"POST","path":"/api/get_all_tag_names","body":"{\"locale_name\":\"en\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep names: default","requests":[{"method":"POST","path":"/api/get_all_rep_names","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep names: contains fake limit 3","requests":[{"method":"POST","path":"/api/get_all_rep_names","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep names: no match","requests":[{"method":"POST","path":"/api/get_all_rep_names","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep names: contains not a string","requests":[]}
+{"name":"gps: date-only range","requests":[{"method":"POST","path":"/api/get_gps_log","body":"{\"start_date\":\"2026-09-13T00:00:00+09:00\",\"end_date\":\"2026-09-15T23:59:59+09:00\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"gps: datetime range","requests":[{"method":"POST","path":"/api/get_gps_log","body":"{\"start_date\":\"2026-09-13T00:00:00+09:00\",\"end_date\":\"2026-09-15T23:59:59Z\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"gps: limit 2","requests":[{"method":"POST","path":"/api/get_gps_log","body":"{\"start_date\":\"2026-09-13T00:00:00+09:00\",\"end_date\":\"2026-09-15T23:59:59+09:00\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"gps: limit 3 ends inside a same-time run","requests":[{"method":"POST","path":"/api/get_gps_log","body":"{\"start_date\":\"2026-09-13T00:00:00+09:00\",\"end_date\":\"2026-09-15T23:59:59+09:00\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"gps: next page from the same-time run","requests":[{"method":"POST","path":"/api/get_gps_log","body":"{\"start_date\":\"2026-09-13T00:00:00+09:00\",\"end_date\":\"2026-09-15T23:59:59+09:00\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"gps: page after limit 2","requests":[{"method":"POST","path":"/api/get_gps_log","body":"{\"start_date\":\"2026-09-13T00:00:00+09:00\",\"end_date\":\"2026-09-15T23:59:59+09:00\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"gps: invalid cursor","requests":[]}
+{"name":"gps: count_only","requests":[{"method":"POST","path":"/api/get_gps_log","body":"{\"start_date\":\"2026-09-13T00:00:00+09:00\",\"end_date\":\"2026-09-15T23:59:59+09:00\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"gps: group_by day","requests":[{"method":"POST","path":"/api/get_gps_log","body":"{\"start_date\":\"2026-09-13T00:00:00+09:00\",\"end_date\":\"2026-09-15T23:59:59+09:00\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"gps: group_by invalid","requests":[]}
+{"name":"gps: count_only with cursor","requests":[]}
+{"name":"gps: missing end_date","requests":[]}
+{"name":"gps: no points","requests":[{"method":"POST","path":"/api/get_gps_log","body":"{\"start_date\":\"2030-01-01T00:00:00+09:00\",\"end_date\":\"2030-01-02T23:59:59+09:00\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"gps: count_only no points","requests":[{"method":"POST","path":"/api/get_gps_log","body":"{\"start_date\":\"2030-01-01T00:00:00+09:00\",\"end_date\":\"2030-01-02T23:59:59+09:00\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"gps: stale limit string and count_only string","requests":[{"method":"POST","path":"/api/get_gps_log","body":"{\"start_date\":\"2026-09-13T00:00:00+09:00\",\"end_date\":\"2026-09-15T23:59:59+09:00\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"gps: end before start","requests":[]}
+{"name":"app config: default","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"app config: fields tag_struct","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"app config: scalar fields","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"app config: include_ui_state","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"app config: compact","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"app config: contains","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"app config: contains no match","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"app config: capped by max_size_mb","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"app config: fields invalid","requests":[]}
+{"name":"app config: fields empty","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"app config: stale fields string","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"app config: locale en","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"en\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep infos: default","requests":[{"method":"POST","path":"/api/get_rep_infos_mcp","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep infos: fields canonical_rep_types","requests":[{"method":"POST","path":"/api/get_rep_infos_mcp","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep infos: fields plugins and attached","requests":[{"method":"POST","path":"/api/get_rep_infos_mcp","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep infos: writable_only","requests":[{"method":"POST","path":"/api/get_rep_infos_mcp","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep infos: rep_types","requests":[{"method":"POST","path":"/api/get_rep_infos_mcp","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep infos: rep_types invalid","requests":[{"method":"POST","path":"/api/get_rep_infos_mcp","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep infos: rep_names","requests":[{"method":"POST","path":"/api/get_rep_infos_mcp","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep infos: contains","requests":[{"method":"POST","path":"/api/get_rep_infos_mcp","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep infos: data_kinds tag","requests":[{"method":"POST","path":"/api/get_rep_infos_mcp","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"rep infos: data_kinds invalid","requests":[]}
+{"name":"rep infos: fields invalid","requests":[]}
+{"name":"rep infos: stale writable_only string","requests":[{"method":"POST","path":"/api/get_rep_infos_mcp","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"idf: png","requests":[{"method":"GET","path":"/files/Files/photo.png","cookie":"gkill_session_id=sess-http"}]}
+{"name":"idf: png thumb","requests":[{"method":"GET","path":"/files/Files/photo.png","query":"thumb=256x256","cookie":"gkill_session_id=sess-http"}]}
+{"name":"idf: pdf in a subdirectory","requests":[{"method":"GET","path":"/files/Files/docs/doc.pdf","cookie":"gkill_session_id=sess-http"}]}
+{"name":"idf: text with a space in the path","requests":[{"method":"GET","path":"/files/Files/notes/sub dir/memo.txt","cookie":"gkill_session_id=sess-http"}]}
+{"name":"idf: video thumb","requests":[{"method":"GET","path":"/files/Files/movie.mp4","query":"is_video=true&thumb=320x240","cookie":"gkill_session_id=sess-http"}]}
+{"name":"idf: video without thumb","requests":[]}
+{"name":"idf: too large","requests":[{"method":"GET","path":"/files/Files/big.bin","cookie":"gkill_session_id=sess-http"}]}
+{"name":"idf: not found","requests":[{"method":"GET","path":"/files/Files/unknown.txt","cookie":"gkill_session_id=sess-http"}]}
+{"name":"idf: unknown rep","requests":[{"method":"GET","path":"/files/Nope/photo.png","cookie":"gkill_session_id=sess-http"}]}
+{"name":"idf: thumb invalid","requests":[]}
+{"name":"idf: thumb too big","requests":[]}
+{"name":"idf: no content type","requests":[{"method":"GET","path":"/files/Files/no-type.dat","cookie":"gkill_session_id=sess-http"}]}
+{"name":"idf: missing file_name","requests":[]}
+{"name":"idf: stale is_video string","requests":[{"method":"GET","path":"/files/Files/movie.mp4","query":"is_video=true&thumb=320x240","cookie":"gkill_session_id=sess-http"}]}
+{"name":"idf: unknown key","requests":[]}
+{"name":"history: kmemo km-1","requests":[{"method":"POST","path":"/api/get_kmemo","body":"{\"id\":\"km-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: km-many limit 2","requests":[{"method":"POST","path":"/api/get_kmemo","body":"{\"id\":\"km-many\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: km-many offset 2 limit 2","requests":[{"method":"POST","path":"/api/get_kmemo","body":"{\"id\":\"km-many\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: km-many offset 4 limit 2","requests":[{"method":"POST","path":"/api/get_kmemo","body":"{\"id\":\"km-many\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: km-many offset beyond","requests":[{"method":"POST","path":"/api/get_kmemo","body":"{\"id\":\"km-many\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: deleted latest","requests":[{"method":"POST","path":"/api/get_kmemo","body":"{\"id\":\"km-del\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: unknown id","requests":[{"method":"POST","path":"/api/get_kmemo","body":"{\"id\":\"nope\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: projection data_type mi_create","requests":[{"method":"POST","path":"/api/get_mi","body":"{\"id\":\"mi-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: invalid data_type","requests":[]}
+{"name":"history: timeis","requests":[{"method":"POST","path":"/api/get_timeis","body":"{\"id\":\"ti-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: urlog","requests":[{"method":"POST","path":"/api/get_urlog","body":"{\"id\":\"url-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: nlog","requests":[{"method":"POST","path":"/api/get_nlog","body":"{\"id\":\"nlog-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: lantana","requests":[{"method":"POST","path":"/api/get_lantana","body":"{\"id\":\"lan-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: kc","requests":[{"method":"POST","path":"/api/get_kc","body":"{\"id\":\"kc-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: tag","requests":[{"method":"POST","path":"/api/get_tag_histories_by_tag_id","body":"{\"id\":\"tag-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: text","requests":[{"method":"POST","path":"/api/get_text_histories_by_text_id","body":"{\"id\":\"text-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: rekyou","requests":[{"method":"POST","path":"/api/get_rekyou","body":"{\"id\":\"rk-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: mirekyou","requests":[{"method":"POST","path":"/api/get_mirekyou","body":"{\"id\":\"mrk-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: notification","requests":[{"method":"POST","path":"/api/get_gkill_notification_histories_by_notification_id","body":"{\"id\":\"nt-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: limit 0","requests":[]}
+{"name":"history: stale limit and offset strings","requests":[{"method":"POST","path":"/api/get_kmemo","body":"{\"id\":\"km-many\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: locale en","requests":[{"method":"POST","path":"/api/get_kmemo","body":"{\"id\":\"km-1\",\"locale_name\":\"en\",\"session_id\":\"sess-http\"}"}]}
+{"name":"history: missing id","requests":[]}
+{"name":"plugin list: default","requests":[{"method":"POST","path":"/api/get_plugin_list","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"plugin list: locale en","requests":[{"method":"POST","path":"/api/get_plugin_list","body":"{\"locale_name\":\"en\",\"session_id\":\"sess-http\"}"}]}
+{"name":"plugin list: unknown key","requests":[]}
+{"name":"add kmemo: content only","requests":[]}
+{"name":"add kmemo: with related_time","requests":[]}
+{"name":"add kmemo: related_time now","requests":[]}
+{"name":"add kmemo: related_time without offset","requests":[]}
+{"name":"add kmemo: related_time date-only","requests":[]}
+{"name":"add kmemo: missing content","requests":[]}
+{"name":"add kmemo: empty content","requests":[]}
+{"name":"add kmemo: content not a string","requests":[]}
+{"name":"add kmemo: unknown key","requests":[]}
+{"name":"add kmemo: locale en","requests":[]}
+{"name":"add kmemo: gkill error","requests":[]}
+{"name":"add urlog: url only","requests":[]}
+{"name":"add urlog: no fetch","requests":[]}
+{"name":"add urlog: invalid url","requests":[]}
+{"name":"add urlog: stale fetch flags","requests":[]}
+{"name":"add urlog: missing url","requests":[]}
+{"name":"add nlog: full","requests":[]}
+{"name":"add nlog: decimal negative amount","requests":[]}
+{"name":"add nlog: amount string","requests":[]}
+{"name":"add nlog: missing amount","requests":[]}
+{"name":"add lantana: mood 7","requests":[]}
+{"name":"add lantana: mood 0","requests":[]}
+{"name":"add lantana: mood 11","requests":[]}
+{"name":"add lantana: mood 2.5","requests":[]}
+{"name":"add lantana: mood string","requests":[]}
+{"name":"add timeis: title only","requests":[]}
+{"name":"add timeis: with start and end","requests":[]}
+{"name":"add timeis: end before start","requests":[]}
+{"name":"add timeis: end_time null","requests":[]}
+{"name":"add timeis: missing title","requests":[]}
+{"name":"add mi: title only (default board)","requests":[]}
+{"name":"add mi: existing board with guard","requests":[]}
+{"name":"add mi: unknown board with guard","requests":[]}
+{"name":"add mi: unknown board allowed","requests":[]}
+{"name":"add mi: unknown board default guard","requests":[]}
+{"name":"add mi: with schedule","requests":[]}
+{"name":"add mi: stale is_checked and allow_create_board strings","requests":[]}
+{"name":"add mi: is_checked not boolean","requests":[]}
+{"name":"add mi: default board when config fails","requests":[]}
+{"name":"add kc: full","requests":[]}
+{"name":"add kc: integer value","requests":[]}
+{"name":"add kc: num_value string","requests":[]}
+{"name":"add tag: ok","requests":[]}
+{"name":"add tag: target not found","requests":[]}
+{"name":"add tag: missing target","requests":[]}
+{"name":"add tag: empty tag","requests":[]}
+{"name":"add text: ok","requests":[]}
+{"name":"add text: target not found","requests":[]}
+{"name":"kftl: text","requests":[]}
+{"name":"kftl: blank text","requests":[]}
+{"name":"kftl: with idempotency key","requests":[]}
+{"name":"kftl: replayed","requests":[]}
+{"name":"kftl: conflict","requests":[]}
+{"name":"kftl: missing text","requests":[]}
+{"name":"kftl: text not a string","requests":[]}
+{"name":"kftl: locale en","requests":[]}
+{"name":"delete: kmemo km-1","requests":[]}
+{"name":"delete: already deleted","requests":[]}
+{"name":"delete: unknown id","requests":[]}
+{"name":"delete: mi via projection name","requests":[]}
+{"name":"delete: timeis","requests":[]}
+{"name":"delete: tag","requests":[]}
+{"name":"delete: notification","requests":[]}
+{"name":"delete: batch mixed","requests":[]}
+{"name":"delete: batch single","requests":[]}
+{"name":"delete: both id and targets","requests":[]}
+{"name":"delete: empty targets","requests":[]}
+{"name":"delete: neither","requests":[]}
+{"name":"delete: invalid data_type","requests":[]}
+{"name":"delete: targets element invalid","requests":[]}
+{"name":"delete: stale targets string","requests":[]}
+{"name":"delete: duplicate targets","requests":[]}
+{"name":"delete: locale en","requests":[]}
+{"name":"restore: km-del","requests":[]}
+{"name":"restore: already active","requests":[]}
+{"name":"restore: unknown id","requests":[]}
+{"name":"restore: batch","requests":[]}
+{"name":"update kmemo: content","requests":[]}
+{"name":"update kmemo: no fields","requests":[]}
+{"name":"update kmemo: same content","requests":[]}
+{"name":"update kmemo: same related_time different offset","requests":[]}
+{"name":"update kmemo: same second bumps update_time","requests":[]}
+{"name":"update kmemo: unknown id","requests":[]}
+{"name":"update kmemo: related_time","requests":[]}
+{"name":"update kmemo: missing id","requests":[]}
+{"name":"update kmemo: deleted record","requests":[]}
+{"name":"update urlog: title","requests":[]}
+{"name":"update urlog: url","requests":[]}
+{"name":"update nlog: amount","requests":[]}
+{"name":"update nlog: same amount","requests":[]}
+{"name":"update lantana: mood","requests":[]}
+{"name":"update lantana: mood out of range","requests":[]}
+{"name":"update timeis: set end_time","requests":[]}
+{"name":"update timeis: clear end_time","requests":[]}
+{"name":"update timeis: clear already-null end_time","requests":[]}
+{"name":"update timeis: end before start","requests":[]}
+{"name":"update timeis: title","requests":[]}
+{"name":"update mi: title","requests":[]}
+{"name":"update mi: unknown board with guard","requests":[]}
+{"name":"update mi: unknown board allowed","requests":[]}
+{"name":"update mi: known board with guard","requests":[]}
+{"name":"update mi: clear limit_time","requests":[]}
+{"name":"update mi: same limit_time in UTC","requests":[]}
+{"name":"update mi: check","requests":[]}
+{"name":"update mi: stale allow_create_board string","requests":[]}
+{"name":"update kc: num_value","requests":[]}
+{"name":"update kc: same num_value","requests":[]}
+{"name":"update tag: tag","requests":[]}
+{"name":"update text: text","requests":[]}
+{"name":"update text: unknown key","requests":[]}

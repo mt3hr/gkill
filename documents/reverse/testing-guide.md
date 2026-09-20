@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1345 | 200 | Go `testing` |
+| Go バックエンド | 1350 | 202 | Go `testing` |
 | フロントエンド ユニット | 2019 | 178 | Vitest |
 | フロントエンド E2E | 253 | 46（+auth.setup.ts） | Playwright |
-| MCP サーバ | 1106 | 28 | Vitest |
+| MCP サーバ | 1121 | 36 | Go `testing` |
 | ツール | 55 | 2 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 228 | 18 | JUnit 4 + MockK |
-| **合計** | **5,021** | **474** | |
+| **合計** | **5,041** | **484** | |
 
 数え直すコマンド:
 
@@ -65,7 +65,7 @@ npm test
 | `npm run test_client_unit` | フロントエンド ユニットのみ | 数十秒 |
 | `npm run test_client_e2e` | フロントエンド E2E のみ（gkill_server 自動起動・停止） | 20分前後 |
 | `npm run test_e2e_server` | E2E 用 gkill_server 単体起動 (`$HOME/gkill_test`) | — |
-| `npm run test_mcp` | MCP サーバ | 数秒 |
+| `npm run test_mcp` | MCP サーバ（`src/server` で `go test ./gkill/mcp/...`） | 数秒 |
 | `npm run test_tools` | `src/tools/` のリリースゲート・attestation ランナーとリリース工程の書く側（記録条件・`version.json`・成果物検証。`vitest.config.tools.ts`。使い捨て git リポジトリを作るので git が要る） | 30秒前後 |
 | `npm run test_plugins` | 同梱プラグイン（独立 Go モジュール7つ） | 数秒 |
 | `npm run vet_plugins` | 同梱プラグインへ `go vet`（CI の `plugins` ジョブが `test_plugins` の前に回す。`npm test` には入っていない） | 数秒 |
@@ -261,7 +261,7 @@ src/server/gkill/
 │   ├── cached_rep_insert_alignment_test.go ← INSERT の列並びと引数の並びの一致
 │   └── source_conventions_scan_test.go ← 規約9件のソース走査（下記）
 ├── dvnf/                              ← DVNF ファイル管理（3ファイル。copyFile の実ファイル操作を含む）
-└── main/                              ← CLI・エントリポイント（12ファイル）
+└── main/                              ← CLI・エントリポイント（14ファイル）
 ```
 
 **テスト戦略:**
@@ -388,53 +388,57 @@ src/client/__tests__/
 | `global-setup.ts` | Playwright グローバルセットアップ（no-op — サーバ管理は `run-e2e.mjs` が担当） |
 | `global-teardown.ts` | Playwright グローバルティアダウン（no-op — Playwright が自動停止） |
 
-### 3.4 MCP サーバ（`src/mcp/__tests__/`）
+### 3.4 MCP サーバ（`src/server/gkill/mcp/*_test.go`）
 
-MCP テストは全てモック/スタブベースで動作し、実行中の gkill_server は不要です。OAuth テスト（`oauth-server.test.mjs`, `oauth-store.test.mjs`）もインメモリストアを使用するため、外部環境変数（`GKILL_BASE_URL` 等）の設定は不要です。3種のMCPサーバ（Read/Write/ReadWrite）のテストを含みます。
+MCP テストは全てモック/スタブベース（`mock_client_test.go` と偽 gkill `internal/fakegkill`）で動作し、実行中の gkill_server は不要です。OAuth テスト（`oauth_server_test.go`, `oauth_store_test.go`）もインメモリストアを使用するため、外部環境変数（`GKILL_BASE_URL` 等）の設定は不要です。3種のMCPサーバ（Read/Write/ReadWrite）のテストを含みます。2026-09-20 に Node.js 実装から Go へ移し、旧 vitest の `describe` / `test` を `TestXxx` / `t.Run` に 1:1 で対応させてあります（件数は `t.Run` を数える）。
 
 **共通・Read専用サーバ:**
 
 | テストファイル | テスト内容 |
 |-------------|-----------|
-| `validation.test.mjs` | Read入力パラメータ検証（必須/型/範囲） |
-| `normalization.test.mjs` | 日付・文字列・デフォルト値の正規化 |
-| `constants.test.mjs` | ツール名、エラーコード、デフォルト設定値 |
-| `tool-handlers.test.mjs` | Read 11ツール分のハンドラ実行ロジック（`lib/read-tools.mjs` を実物 import したツール名一覧・エンドポイント対応表・summarize） |
-| `file-link.test.mjs` | FileLinkStore（HTTPモード用の期限付きファイルリンクトークンの発行・解決・失効、`GET /files/{token}` 配信） |
-| `client.test.mjs` | GkillReadClient（fetch モック、認証、レスポンスパース） |
-| `server.test.mjs` | McpServer ライフサイクル、トランスポート管理、gkill_get_idf_file ツール |
-| `access-log.test.mjs` | McpAccessLog（レベルフィルタリング、JSON形式、sourceパラメータ） |
-| `pkce.test.mjs` | PKCE検証（S256/plain） |
-| `oauth-store.test.mjs` | OAuth ストア（トークン/コード/クライアント CRUD、TTL 有効期限、JSON ファイル永続化） |
-| `oauth-server.test.mjs` | OAuth サーバ（メタデータ、認可、トークン交換、PKCE、DCR、RFC 8707、E2E フロー） |
-| `status-tool.test.mjs` | ツール一覧の世代 `schema_revision` の計算と `gkill_status` への焼き込み（決定性・自己参照除外・冪等・3サーバで別値） |
-| `help-topics.test.mjs` | `gkill_get_mcp_help` の topic 本文（全 topic に本文・index の列挙・説明文から移した知識の実在・名指しするツール名の実在・3サーバ搭載・gkill へ往復しない） |
-| `schema-contract.test.mjs` | tools/list どおりに呼べる契約（スキーマのキー集合 = 受理集合 − 廃止済み、全プロパティ指定スモーク、3サーバの同名ツール同一、世代の一致） |
-| `tool-schema-budget.test.mjs` | tools/list のバイト量が予算ファイル `src/mcp/tool-schema-budget.json` 内であること（超過・過小の両方で失敗）。説明文を意図して変えたときは `npm run mcp:schema-budget -- --update` で予算を書き直す |
+| `validation_test.go` | Read入力パラメータ検証（必須/型/範囲） |
+| `normalization_test.go` | 日付・文字列・デフォルト値の正規化 |
+| `constants_test.go` | ツール名、エラーコード、デフォルト設定値 |
+| `tool_handlers_test.go` | Read 11ツール分のハンドラ実行ロジック（`read_tools.go` を実物 import したツール名一覧・エンドポイント対応表・summarize） |
+| `file_link_test.go` | FileLinkStore（HTTPモード用の期限付きファイルリンクトークンの発行・解決・失効、`GET /files/{token}` 配信） |
+| `client_test.go` | GkillReadClient（fetch モック、認証、レスポンスパース） |
+| `server_test.go` | McpServer ライフサイクル、トランスポート管理、gkill_get_idf_file ツール |
+| `access_log_test.go` | McpAccessLog（レベルフィルタリング、JSON形式、sourceパラメータ） |
+| `pkce_test.go` | PKCE検証（S256/plain） |
+| `oauth_store_test.go` | OAuth ストア（トークン/コード/クライアント CRUD、TTL 有効期限、JSON ファイル永続化） |
+| `oauth_server_test.go` | OAuth サーバ（メタデータ、認可、トークン交換、PKCE、DCR、RFC 8707、E2E フロー） |
+| `status_tool_test.go` | ツール一覧の世代 `schema_revision` の計算と `gkill_status` への焼き込み（決定性・自己参照除外・冪等・3サーバで別値） |
+| `help_topics_test.go` | `gkill_get_mcp_help` の topic 本文（全 topic に本文・index の列挙・説明文から移した知識の実在・名指しするツール名の実在・3サーバ搭載・gkill へ往復しない） |
+| `schema_contract_test.go` | tools/list どおりに呼べる契約（スキーマのキー集合 = 受理集合 − 廃止済み、全プロパティ指定スモーク、3サーバの同名ツール同一、世代の一致） |
+| `tool_schema_budget_test.go` | tools/list のバイト量が予算ファイル `src/server/gkill/mcp/tool_schema_budget.json` 内であること（超過・過小の両方で失敗）。説明文を意図して変えたときは `gkill_server mcp schema-budget --update` で予算を書き直す |
+| `golden_test.go` | 旧 Node 実装から採ったゴールデン（`testdata/golden/`。要求コーパス 328 件）との**バイト一致**（tools/list・`schema_revision`・tools/call の応答（stdio / http × 3サーバ）・gkill へ送った要求） |
+| `config_test.go` | 設定ファイル `gkill_mcp.json` の生成と、フラグ > 環境変数 > ファイル > 既定値の優先順位 |
+| `import_graph_test.go` | package `mcp` が本体の `api` / `dao` / `usecase` を import しないこと |
+| `stdio_e2e_test.go` | テストバイナリを子プロセスにした stdio の端から端まで（NDJSON / Content-Length、stdout に JSON-RPC 以外が出ない） |
 
 **プラグインツール（3サーバ共通）:**
 
 | テストファイル | テスト内容 |
 |-------------|-----------|
-| `plugin-tools.test.mjs` | `gkill_get_plugin_list` の定義とエンドポイント振り分け、`inlinePluginContents`（rep内直列・rep間並列、format別レスポンス、truncated、重複取得の集約、rep単位の失敗打ち切り、max_kyous/budget/deadline のskip、統計の整合）、summarize |
-| `html-text.test.mjs` | プラグインコンテンツHTMLのプレーンテキスト変換、HTMLエンティティのデコード |
+| `plugin_tools_test.go` | `gkill_get_plugin_list` の定義とエンドポイント振り分け、`inlinePluginContents`（rep内直列・rep間並列、format別レスポンス、truncated、重複取得の集約、rep単位の失敗打ち切り、max_kyous/budget/deadline のskip、統計の整合）、summarize |
+| `html_text_test.go` | プラグインコンテンツHTMLのプレーンテキスト変換、HTMLエンティティのデコード |
 
 **Write専用サーバ:**
 
 | テストファイル | テスト内容 |
 |-------------|-----------|
-| `write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲、data_type列挙値） |
-| `write-client.test.mjs` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
-| `write-server.test.mjs` | McpWriteServer（29ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
-| `write-tool-handlers.test.mjs` | Write 21ツール定義（実物 import）・削除の語彙が3箇所で一致すること・summarizeWriteToolPayload |
-| `write-handlers.test.mjs` | 書き込みディスパッチ（add/update/delete のエンドポイント、patch セマンティクス、create_app のサーバ種別） |
+| `write_normalization_test.go` | Write入力の正規化（11 normalizer関数、mood範囲、data_type列挙値） |
+| `write_client_test.go` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
+| `write_server_test.go` | McpWriteServer（29ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
+| `write_tool_handlers_test.go` | Write 21ツール定義（実物 import）・削除の語彙が3箇所で一致すること・summarizeWriteToolPayload |
+| `write_handlers_test.go` | 書き込みディスパッチ（add/update/delete のエンドポイント、patch セマンティクス、create_app のサーバ種別） |
 
 **Read/Write統合サーバ:**
 
 | テストファイル | テスト内容 |
 |-------------|-----------|
-| `readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
-| `readwrite-server.test.mjs` | McpServer統合（全33ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
+| `readwrite_client_test.go` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
+| `readwrite_server_test.go` | McpServer統合（全33ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
 
 ### 3.5 Android / Wear OS
 
@@ -451,7 +455,6 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | ファイル | 用途 |
 |---------|------|
 | `vitest.config.ts` | フロントエンドユニットテスト設定（jsdom, Vue 3, パスエイリアス） |
-| `vitest.config.mcp.ts` | MCP サーバテスト設定（Node.js 環境, shebang 除去） |
 | `playwright.config.ts` | E2E テスト設定（`baseURL`、`timeout: 60000`、`retries: CI?2:1`、`workers: CI?1:4`、`projects: setup/default` + `storageState`、`globalSetup`/`globalTeardown`）。**`webServer` は使っていない** — gkill_server と Vite の起動は `run-e2e.mjs` が行う |
 | `src/client/__tests__/e2e/run-e2e.mjs` | E2E テストランナー（gkill_server 自動起動・停止、`$HOME/gkill_test` クリーン） |
 | `src/server/go.mod` | Go テストの依存管理 |
@@ -625,8 +628,8 @@ cd src/wear_os && ./gradlew test
 
 ### MCP サーバ テスト
 
-- テストファイルは `src/mcp/__tests__/` 配下に `{module}.test.mjs` 形式で配置
-- `vitest.config.mcp.ts` で Node.js 環境を指定
+- テストファイルは `src/server/gkill/mcp/` 配下に `{module}_test.go` 形式で配置（旧 vitest の `describe` → `TestXxx`、`test` → `t.Run`）
+- gkill への往復は `mockClient`（`mock_client_test.go`）か偽 gkill（`internal/fakegkill`）で代替する。応答の形を変えたら `golden_test.go` が落ちるので、意図した変更なら `testdata/golden/` の当該行を更新して理由をコミットメッセージに書く
 
 ### 新しいデータ型を追加した場合のテスト
 

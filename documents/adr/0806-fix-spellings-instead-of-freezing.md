@@ -89,4 +89,4 @@ ADR-0802 が「凍結しなくてよかった例」として挙げていた `agr
 
 - `src/tools/verify_docs.mjs` — 追跡ファイルに旧綴りが現れたら落ちる走査検査。`.githooks/pre-commit` が `npm run verify_docs` を機械強制するので、ADR-0802 が「文書だけが防御線」と書いていた状態はここで解消した
 - `src/client/__tests__/unit/router.test.ts` — ルート名の集合（`playing` を含む）
-- `src/mcp/__tests__/constants.test.mjs` — `KYOUS_QUERY_DATETIME_FIELDS` に `playing_time` があること
+- `src/server/gkill/mcp/constants_test.go` — `KYOUS_QUERY_DATETIME_FIELDS` に `playing_time` があること

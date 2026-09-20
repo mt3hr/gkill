@@ -54,7 +54,7 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
   ADR-0508 の「付け先の無いメタ情報」で行エラーになる（それ以前は黙って「今」で終わっていた）
 - **接頭辞を足す・変えるときは Go `kftl_factory.go` と TS `kftl-prefixes.ts` の両方を同じコミットで直す。**
   TS 側がずれても保存は壊れないが、ラベルが嘘になる（`kftl-type-detection.test.ts` が守る）
-- **契約は足すだけ。** `SubmitKFTLTextRequest` / `Response` の既存フィールドを変えると Wear（`GkillApiClient.kt`）と MCP（`write-handlers.mjs`）が壊れる。
+- **契約は足すだけ。** `SubmitKFTLTextRequest` / `Response` の既存フィールドを変えると Wear（`GkillApiClient.kt`）と MCP（`write_handlers.go`）が壊れる。
   `parse_kftl_text` は wrapAuth（repositories 不要。DB を読まないので打鍵のたびに呼ばれても軽い）
 - 守るテスト: `kftl-submit-emits.test.ts`「サーバが不正行を返したら送信せず…」「おかしな行の表示」/
   Go `kftl_analyze_test.go` / `handle_parse_kftl_text_test.go`
