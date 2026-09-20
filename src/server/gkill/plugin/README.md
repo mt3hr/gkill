@@ -6,15 +6,18 @@ gkill プラグインシステムのサーバー側実装。プラグインプ�
 
 ```
 plugin/
-└── sdk/                # プラグイン作者向け Go SDK（14ファイル。うちテスト6）
+└── sdk/                # プラグイン作者向け Go SDK（16ファイル。うちテスト7）
     ├── types.go        # 公開型定義（Query, Kyou, Config）
     ├── match_words.go  # Query.MatchText / Matcher — ワード判定（gkill 本体と同じ規則。本体は再判定しないので FindKyous で必ず通す）
     ├── handler.go      # Handler struct（プラグイン作者が実装するインターフェース）
     ├── sdk.go          # Run() — メインループ（stdin/stdout 改行区切りJSONループ）と --gkill-build-cache の単独モード
     ├── config.go       # LoadConfig / SaveConfig / EnsureConfig（config.json 読み書き）
+    ├── log.go          # LogWarn / LogError（stderr の接頭辞行 + gkill_log）と LogInfo / LogDebug（gkill_log だけ）
+    ├── plugin_log.go   # Run() が開く $GKILL_HOME/logs/gkill_plugin_<name>*.log（レベル・回転は本体から環境変数で継ぐ。ADR-0313）
     ├── sdk_test.go     # Run() ループのテスト（TestRunLoop_* 21本 + 型別データの往復）
     ├── build_cache_test.go # 単独モード（runBuildCache）と同梱プラグインの BuildCache 配線の走査
     ├── match_words_test.go # Query.MatchText のテスト
+    ├── plugin_log_test.go # gkill_log へのログ（置き場・静的フィールド・stderr だけへの退避・stdout の清浄）
     └── config_test.go  # EnsureConfig のテスト（4本）
 ```
 

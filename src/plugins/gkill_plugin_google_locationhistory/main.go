@@ -4,7 +4,6 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"io"
 	"os"
 	"slices"
 	"strconv"
@@ -15,11 +14,6 @@ import (
 
 //go:embed manifest.json
 var manifestJSON []byte
-
-// stderrWriter はログの出力先。
-// os.Stdout には絶対に書かない。あれはプロトコルのチャネルで、
-// 1行でも混ざるとJSONストリームが壊れる。
-var stderrWriter io.Writer = os.Stderr
 
 // pluginConfig は設定を解釈した結果。
 type pluginConfig struct {
