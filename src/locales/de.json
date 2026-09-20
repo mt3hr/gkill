@@ -984,5 +984,8 @@
     "UNEXPECTED_CLIENT_ERROR_MESSAGE": "In der App ist ein unerwarteter Fehler aufgetreten",
     "ERROR_HINT_UNEXPECTED_CLIENT_ERROR": "Laden Sie die Seite neu. Bleibt das Problem bestehen, nutzen Sie „Details kopieren“, um die Angaben zu sichern und zu melden.",
     "ERROR_ALERT_COPY_TITLE": "Details kopieren",
-    "ERROR_ALERT_COPIED_MESSAGE": "Fehlerdetails kopiert"
+    "ERROR_ALERT_COPIED_MESSAGE": "Fehlerdetails kopiert",
+    "DESCRIPTION_TITLE": "Beschreibung",
+    "STRUCT_DESCRIPTION_HINT": "Nutzungshinweise für die KI-Anbindung (MCP): wofür dieser Eintrag ist und wie Sie ihn verwenden",
+    "EDIT_MI_BOARD_STRUCT_ELEMENT_TITLE": "Board bearbeiten"
 }

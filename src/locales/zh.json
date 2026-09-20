@@ -984,5 +984,8 @@
     "UNEXPECTED_CLIENT_ERROR_MESSAGE": "界面处理时发生了意外错误",
     "ERROR_HINT_UNEXPECTED_CLIENT_ERROR": "请重新加载页面。若仍未解决，请用“复制详情”保存内容并反馈",
     "ERROR_ALERT_COPY_TITLE": "复制详情",
-    "ERROR_ALERT_COPIED_MESSAGE": "已复制错误详情"
+    "ERROR_ALERT_COPIED_MESSAGE": "已复制错误详情",
+    "DESCRIPTION_TITLE": "说明",
+    "STRUCT_DESCRIPTION_HINT": "传给 AI 集成（MCP）的使用备注：写明此项目的用途以及你如何使用它",
+    "EDIT_MI_BOARD_STRUCT_ELEMENT_TITLE": "编辑看板"
 }

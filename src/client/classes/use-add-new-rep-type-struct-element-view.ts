@@ -15,6 +15,7 @@ export function useAddNewRepTypeStructElementView(options: {
     // ── State refs ──
     const rep_type_name: Ref<string> = ref("")
     const check_when_inited: Ref<boolean> = ref(true)
+    const description: Ref<string> = ref("")
 
     // ── Business logic ──
     function emits_rep_type_name(): void {
@@ -30,6 +31,7 @@ export function useAddNewRepTypeStructElementView(options: {
         rep_type_struct_element.id = props.gkill_api.generate_uuid()
         rep_type_struct_element.is_dir = false
         rep_type_struct_element.check_when_inited = check_when_inited.value
+        rep_type_struct_element.description = description.value
         rep_type_struct_element.children = null
         rep_type_struct_element.indeterminate = false
         rep_type_struct_element.key = rep_type_name.value
@@ -42,6 +44,7 @@ export function useAddNewRepTypeStructElementView(options: {
     function reset_rep_type_name(): void {
         rep_type_name.value = ""
         check_when_inited.value = true
+        description.value = ""
     }
 
     // ── Return ──
@@ -49,6 +52,7 @@ export function useAddNewRepTypeStructElementView(options: {
         // State
         rep_type_name,
         check_when_inited,
+        description,
 
         // Business logic
         emits_rep_type_name,

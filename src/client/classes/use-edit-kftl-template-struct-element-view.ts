@@ -12,6 +12,8 @@ export function useEditKFTLTemplateStructElementView(options: {
     // ── State refs ──
     const title: Ref<string> = ref(props.struct_obj.title)
     const template: Ref<string | null> = ref(props.struct_obj.template)
+    // 説明（運用メモ）。古い保存データには欄が無いので undefined を空文字に倒す
+    const description: Ref<string> = ref(props.struct_obj.description ?? "")
 
     // ── Methods ──
     async function apply(): Promise<void> {
@@ -19,6 +21,7 @@ export function useEditKFTLTemplateStructElementView(options: {
         kftl_template_struct.id = props.struct_obj.id
         kftl_template_struct.title = title.value
         kftl_template_struct.template = template.value ? template.value : ""
+        kftl_template_struct.description = description.value
         kftl_template_struct.key = title.value
         kftl_template_struct.name = title.value
         kftl_template_struct.is_dir = props.struct_obj.is_dir
@@ -32,6 +35,7 @@ export function useEditKFTLTemplateStructElementView(options: {
         // State
         title,
         template,
+        description,
 
         // Methods
         apply,

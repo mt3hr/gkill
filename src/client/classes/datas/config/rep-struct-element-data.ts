@@ -14,6 +14,9 @@ export class RepStructElementData implements FoldableStructModel {
 
     ignore_check_rep_rykv: boolean
 
+    // 利用者が設定画面で書く運用メモ。MCP（AI連携）が読む。空文字は未記入
+    description: string
+
     children: Array<RepStructElementData> | null
 
     key: string
@@ -30,6 +33,7 @@ export class RepStructElementData implements FoldableStructModel {
         this.rep_name = ""
         this.check_when_inited = false
         this.ignore_check_rep_rykv = false
+        this.description = ""
         this.children = null
         this.key = ""
         this.is_checked = false

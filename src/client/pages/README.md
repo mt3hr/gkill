@@ -10,8 +10,8 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 16 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（203 .vue）
-└── dialogs/                        # Dialog コンポーネント（116 .vue）
+├── views/                          # View コンポーネント（204 .vue）
+└── dialogs/                        # Dialog コンポーネント（117 .vue）
 ```
 
 ## 設計パターン
@@ -69,7 +69,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（203 .vue）
+## views/ — 全 View コンポーネント一覧（204 .vue）
 
 ### データ追加系（23コンポーネント）
 
@@ -98,7 +98,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `add-new-rep-type-struct-element-view.vue` | リポジトリ型要素追加 |
 | `add-new-tag-struct-element-view.vue` | タグ構造要素追加 |
 
-### データ編集系（32コンポーネント）
+### データ編集系（33コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -124,7 +124,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `edit-rep-struct-view.vue` / `edit-rep-struct-element-view.vue` | リポジトリ構造編集 |
 | `edit-rep-type-struct-view.vue` / `edit-rep-type-struct-element-view.vue` | リポジトリ型構造編集 |
 | `edit-tag-struct-view.vue` / `edit-tag-struct-element-view.vue` | タグ構造編集 |
-| `edit-mi-board-struct-view.vue` | 板構造編集（フラットな一覧の並べ替え・削除。板名も表示名も編集しない） |
+| `edit-mi-board-struct-view.vue` / `edit-mi-board-struct-element-view.vue` | 板構造編集（フラットな一覧の並べ替え・削除と、板ごとの説明の編集。板名も表示名も編集しない） |
 
 ### データ表示系（26コンポーネント）
 
@@ -251,15 +251,15 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
 | `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（116 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（117 .vue）
 
 ### データ追加ダイアログ（22コンポーネント）
 
 `add-kc-dialog.vue`, `add-lantana-dialog.vue`, `add-mi-dialog.vue`, `add-mi-re-kyou-dialog.vue`, `add-nlog-dialog.vue`, `add-time-is-dialog.vue`, `add-ur-log-dialog.vue`, `add-tag-dialog.vue`, `add-text-dialog.vue`, `add-notification-dialog.vue`, `add-rep-dialog.vue`, `add-ryuu-item-dialog.vue`, `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `add-new-device-struct-element-dialog.vue`, `add-new-folder-dialog.vue`, `add-new-kftl-template-struct-element-dialog.vue`, `add-new-rep-struct-element-dialog.vue`, `add-new-rep-type-struct-element-dialog.vue`, `add-new-tag-struct-element-dialog.vue`
 
-### データ編集ダイアログ（35コンポーネント）
+### データ編集ダイアログ（36コンポーネント）
 
-`edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-mi-re-kyou-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`, `edit-mi-board-struct-dialog.vue`
+`edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-mi-re-kyou-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`, `edit-mi-board-struct-dialog.vue`, `edit-mi-board-struct-element-dialog.vue`
 
 ### 削除確認ダイアログ（25コンポーネント）
 

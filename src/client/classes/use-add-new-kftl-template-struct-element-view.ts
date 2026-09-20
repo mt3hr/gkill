@@ -14,6 +14,7 @@ export function useAddNewKftlTemplateStructElementView(options: {
 
     const title: Ref<string> = ref("")
     const template: Ref<string> = ref("")
+    const description: Ref<string> = ref("")
 
     function emits_kftl_template_name(): void {
         if (title.value === "") {
@@ -39,6 +40,7 @@ export function useAddNewKftlTemplateStructElementView(options: {
         kftl_template_struct_element.title = title.value
         kftl_template_struct_element.name = title.value
         kftl_template_struct_element.template = template.value
+        kftl_template_struct_element.description = description.value
         emits('requested_add_kftl_template_struct_element', kftl_template_struct_element)
         emits('requested_close_dialog')
     }
@@ -46,11 +48,13 @@ export function useAddNewKftlTemplateStructElementView(options: {
     function reset_kftl_template_name(): void {
         title.value = ""
         template.value = ""
+        description.value = ""
     }
 
     return {
         title,
         template,
+        description,
         emits_kftl_template_name,
         reset_kftl_template_name,
     }

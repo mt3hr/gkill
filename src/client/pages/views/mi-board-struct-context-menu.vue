@@ -1,6 +1,9 @@
 <template>
     <v-menu v-model="is_show" :target="menu_target" location="bottom start">
         <v-list class="gkill_context_menu_list">
+            <v-list-item @click="emits('requested_edit_mi_board', id)">
+                <v-list-item-title>{{ i18n.global.t("EDIT_TITLE") }}</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="emits('requested_move_up_mi_board', id)">
                 <v-list-item-title>{{ i18n.global.t("MOVE_UP_TITLE") }}</v-list-item-title>
             </v-list-item>
