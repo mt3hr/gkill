@@ -7,7 +7,7 @@
 | Sources | 2026-09-18 の MCP 実利用報告「設計課題（コンテキスト経済）」（`rep_struct` だけで 25,000 トークン超、`is_deleted:false` 常時、`tags[]` と `tag_entities[]` の二重持ちでタグ4つ約500字、plugin payload の `data_type` / `rep_name` / `kyou_id` と git の `commit_hash==id` の重複）。利用者の判断: 設計課題のうちこの束だけを今回やり、`is_deleted` は true のときだけにする |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/server/gkill/api/req_res/kyou_mcp_dto.go` / `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp.go`（`include_attached_ids`）/ `src/mcp/lib/read-handlers.mjs`（`compactAppConfigStructs` / `filterAppConfigStructs` / `capAppConfigSize`）/ `src/mcp/lib/plugin-tools.mjs`（`collectPluginPayloads`） |
+| Anchors | `src/server/gkill/api/req_res/kyou_mcp_dto.go` / `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp.go`（`include_attached_ids`）/ `src/server/gkill/mcp/read_handlers.go`（`compactAppConfigStructs` / `filterAppConfigStructs` / `capAppConfigSize`）/ `src/server/gkill/mcp/plugin_tools.go`（`collectPluginPayloads`） |
 
 ## Context
 
@@ -58,5 +58,5 @@
 
 - `src/server/gkill/api/req_res/req_res_test.go`（omitempty の固定と欄名）
 - `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp_v2_test.go`（`TestHandleGetKyousMCP_AttachedIDsAreOptIn` / `TestHandleGetKyousMCP_GitPayloadZeroDiffAndHash`）
-- `src/mcp/__tests__/read-handlers.test.mjs`（「gkill_get_application_config compact / contains / max_size_mb」）
-- `src/mcp/__tests__/plugin-tools.test.mjs`（`collectPluginPayloads`）
+- `src/server/gkill/mcp/read_handlers_test.go`（「gkill_get_application_config compact / contains / max_size_mb」）
+- `src/server/gkill/mcp/plugin_tools_test.go`（`collectPluginPayloads`）

@@ -2,7 +2,7 @@
 
 ## 概要
 
-Go バックエンドのテスト。1345テスト関数、200テストファイル、32パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
+Go バックエンドのテスト。1350テスト関数、202テストファイル、32パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
 
 ## テストフレームワーク
 
@@ -23,6 +23,7 @@ src/server/gkill/
 │   ├── req_res/                  # ワイヤ契約（JSONタグ名 / omitempty）
 │   └── safefetch/                # SSRF 対策の共有フェッチ
 ├── usecase/                 # ユースケース層 (3ファイル。write-through 反映・INSERT列ずれ・規約のソース走査)
+├── mcp/                     # MCP サーバ（gkill_server mcp。36ファイル / 1121 の t.Run。別枠で数える → mcp/ABOUT_TEST.md）
 ├── plugin/                  # プラグイン作者向け SDK
 │   └── sdk/                      # Run() の stdio ループ + EnsureConfig + ZIP走査 + キャッシュDBパス (4ファイル / 45テスト)
 ├── dao/                     # データアクセス層
@@ -67,7 +68,7 @@ src/server/gkill/
 | CLI/Main | 11 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ、スレッド、エントリポイント、パスワード管理、add_tag バッチ（ルール JSON の検証・HTTP投稿と応答判定を含む）、generate_plugin_cache（偽プラグインをテストバイナリ自身で起動し、結果行の分類・stdin nil・利用者確認の順序を固定） |
 | プラグイン SDK | 6 | `Run()` の stdio ループ（22本）+ `--gkill-build-cache` の単独モードと同梱プラグインの配線走査（5本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本）+ ワード判定 `Query.MatchText`（2本） |
 
-**合計 200 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
+**合計 202 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
 ずれたら `checkCounts` が落とす）。
 
 ## 規約のソース走査（`usecase/source_conventions_scan_test.go`）
@@ -120,3 +121,4 @@ TimeIs・位置情報の区間判定を総当たりから二分探索へ変え�
 | `gkill/plugin/sdk/` | [gkill/plugin/sdk/ABOUT_TEST.md](gkill/plugin/sdk/ABOUT_TEST.md) |
 | `gkill/dvnf/` | [gkill/dvnf/ABOUT_TEST.md](gkill/dvnf/ABOUT_TEST.md) |
 | `gkill/main/` | [gkill/main/ABOUT_TEST.md](gkill/main/ABOUT_TEST.md) |
+| `gkill/mcp/` | [gkill/mcp/ABOUT_TEST.md](gkill/mcp/ABOUT_TEST.md)（この表の件数には含めない。`verify_docs` が別枠で数える） |

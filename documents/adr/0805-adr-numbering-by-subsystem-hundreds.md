@@ -19,8 +19,8 @@ ADR は「壊れたときに同じ場所を読み直すことになる範囲」�
 
 1. `0059`（MCP）で 0050-0059 帯が満杯になる
 2. 次のコミット `70608e23` で、**中身が MCP の ADR 3本（旧 0063 / 0064 / 0065）が、
-   空いていた「開発規約と資料」帯へ置かれた**。アンカーは `src/mcp/lib/write-normalization.mjs`、
-   `src/mcp/lib/write-handlers.mjs`、`src/server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go` で、
+   空いていた「開発規約と資料」帯へ置かれた**。アンカーは `src/server/gkill/mcp/write_normalization.go`、
+   `src/server/gkill/mcp/write_handlers.go`、`src/server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go` で、
    `.claude/skills/gkill-mcp/SKILL.md` が MCP の関連 ADR として引いている
 3. さらに次のコミット `95d8b1b5` で、ようやく継続帯「0090-0099 MCP（続）」が新設された
 
@@ -90,7 +90,7 @@ ADR の番号帯をサブシステム別の**100番幅**にし、全73本を一�
   および索引とメタ表のリンクで**ラベル側にだけ残る素の4桁**（角括弧の中に `ADR-` を付けずに
   番号だけ書いてある側。ここは番号でもファイル名でもないので、素直に置換すると取り残される）。
 - 再採番後の帯の空き: 最も詰まっている MCP 帯（16本）でも残り84。閾値10には遠い。
-- 移行時に見つかった罠: `src/mcp/lib/plugin-tools.mjs` は生の NUL バイトを1個含むため
+- 移行時に見つかった罠: `src/server/gkill/mcp/plugin_tools.go` は生の NUL バイトを1個含むため
   ripgrep がバイナリ判定で丸ごとスキップする。ADR 参照が4箇所あるので、
   この種の一括置換を ripgrep で回すとこのファイルだけ静かに取り残される。
   列挙は `git ls-files`、読み書きは Node の `readFileSync` で行った。

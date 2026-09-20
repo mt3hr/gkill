@@ -25,9 +25,8 @@
 
 | ソフトウェア | バージョン | 用途 |
 |---|---|---|
-| Node.js | 20.19 以上（24.x 推奨） | MCPサーバーの実行 |
-| gkill_server | 最新ビルド | バックエンドAPI |
-| npm | Node.js に付属 | 依存パッケージ管理 |
+| gkill_server | 最新ビルド（MCP サーバは `gkill_server mcp` サブコマンドとして同梱） | バックエンドAPI と MCP サーバー |
+| Go / Node.js / npm | Go 1.26.6+、Node.js 20.19+（24.x 推奨） | 自分でビルドする場合のみ（`npm run install_server`） |
 
 ### 事前準備
 
@@ -38,17 +37,14 @@ git clone https://github.com/mt3hr/gkill.git
 cd gkill
 ```
 
-2. npm依存パッケージをインストール済みであること
+2. gkill_server がビルド済みで、`gkill_server` が PATH に通っていること（まだの場合。`go install` の既定の出力先は `$HOME/go/bin`）
 
 ```bash
 npm install
-```
-
-3. gkill_server がビルド済みであること（まだの場合）
-
-```bash
 npm run install_server
 ```
+
+3. MCP サーバーの設定ファイル `$GKILL_HOME/configs/gkill_mcp.json` は**初回起動時に既定値で自動生成**されます。環境変数で指定した値はファイルより優先されるので、この資料の例はそのまま動きます（フラグ > 環境変数 > ファイル > 既定値）
 
 4. gkill_server を少なくとも1回起動し、**初回アカウント登録（`/register_first_account`）まで完了していること**。初回起動で `admin` ユーザーは作成されますが、`PasswordResetToken` が設定された状態のため、パスワードを設定するまで MCP サーバーからの認証は失敗します
 
@@ -151,10 +147,8 @@ Claude Desktop はローカルのMCPサーバーとstdioで通信します。
 {
   "mcpServers": {
     "gkill-readwrite": {
-      "command": "node",
-      "args": [
-        "/path/to/gkill/src/mcp/gkill-readwrite-server.mjs"
-      ],
+      "command": "gkill_server",
+      "args": ["mcp", "--kind", "readwrite"],
       "env": {
         "GKILL_BASE_URL": "http://127.0.0.1:9999",
         "GKILL_USER": "admin",
@@ -167,16 +161,14 @@ Claude Desktop はローカルのMCPサーバーとstdioで通信します。
 
 #### Windows の場合の注意点
 
-Windows では `command` にNode.jsのフルパスを指定し、`args` にもフルパスを使います。
+Windows では `command` に gkill_server.exe のフルパスを指定します（`go install` なら `%USERPROFILE%\go\bin\gkill_server.exe`）。
 
 ```json
 {
   "mcpServers": {
     "gkill-readwrite": {
-      "command": "C:\\Program Files\\nodejs\\node.exe",
-      "args": [
-        "C:\\Users\\<ユーザー名>\\Git\\gkill\\src\\mcp\\gkill-readwrite-server.mjs"
-      ],
+      "command": "C:\\Users\\<ユーザー名>\\go\\bin\\gkill_server.exe",
+      "args": ["mcp", "--kind", "readwrite"],
       "env": {
         "GKILL_BASE_URL": "http://127.0.0.1:9999",
         "GKILL_USER": "admin",
@@ -187,7 +179,7 @@ Windows では `command` にNode.jsのフルパスを指定し、`args` にも�
 }
 ```
 
-> **Tip**: Node.js のパスは `where node`（Windows）または `which node`（macOS/Linux）で確認できます。
+> **Tip**: gkill_server のパスは `where gkill_server`（Windows）または `which gkill_server`（macOS/Linux）で確認できます。
 
 #### TLS + 自己署名証明書の場合
 
@@ -197,14 +189,13 @@ gkill_server がTLS（自己署名証明書）を使っている場合は、以�
 {
   "mcpServers": {
     "gkill-readwrite": {
-      "command": "node",
-      "args": ["..."],
+      "command": "gkill_server",
+      "args": ["mcp", "--kind", "readwrite"],
       "env": {
         "GKILL_BASE_URL": "https://127.0.0.1:9999",
         "GKILL_USER": "admin",
         "GKILL_PASSWORD_SHA256": "<SHA256ハッシュ>",
-        "GKILL_INSECURE": "true",
-        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+        "GKILL_INSECURE": "true"
       }
     }
   }
@@ -245,8 +236,8 @@ Claude Code ではプロジェクトルートに `.mcp.json` ファイルを配�
 {
   "mcpServers": {
     "gkill-readwrite": {
-      "command": "node",
-      "args": ["src/mcp/gkill-readwrite-server.mjs"],
+      "command": "gkill_server",
+      "args": ["mcp", "--kind", "readwrite"],
       "env": {
         "GKILL_BASE_URL": "http://127.0.0.1:9999",
         "GKILL_USER": "admin",
@@ -265,8 +256,8 @@ Claude Code ではプロジェクトルートに `.mcp.json` ファイルを配�
 {
   "mcpServers": {
     "gkill-readwrite": {
-      "command": "C:\\Program Files\\nodejs\\node.exe",
-      "args": ["C:\\Users\\<ユーザー名>\\Git\\gkill\\src\\mcp\\gkill-readwrite-server.mjs"],
+      "command": "C:\\Users\\<ユーザー名>\\go\\bin\\gkill_server.exe",
+      "args": ["mcp", "--kind", "readwrite"],
       "env": {
         "GKILL_BASE_URL": "http://127.0.0.1:9999",
         "GKILL_USER": "admin",
@@ -283,14 +274,13 @@ Claude Code ではプロジェクトルートに `.mcp.json` ファイルを配�
 {
   "mcpServers": {
     "gkill-readwrite": {
-      "command": "node",
-      "args": ["src/mcp/gkill-readwrite-server.mjs"],
+      "command": "gkill_server",
+      "args": ["mcp", "--kind", "readwrite"],
       "env": {
         "GKILL_BASE_URL": "https://192.168.x.x:9999",
         "GKILL_USER": "admin",
         "GKILL_PASSWORD_SHA256": "<SHA256ハッシュ>",
         "GKILL_INSECURE": "true",
-        "NODE_TLS_REJECT_UNAUTHORIZED": "0",
         "NO_PROXY": "192.168.x.x,localhost,127.0.0.1",
         "HTTP_PROXY": "",
         "HTTPS_PROXY": "",
@@ -396,10 +386,9 @@ cloudflared tunnel run gkill-mcp
 $env:GKILL_BASE_URL = "http://127.0.0.1:9999"
 $env:GKILL_USER = "admin"
 $env:GKILL_PASSWORD_SHA256 = "<SHA256ハッシュ>"
-$env:MCP_TRANSPORT = "http"
 $env:MCP_PORT = "8810"
 $env:MCP_OAUTH_ISSUER = "https://mcp.example.com"
-npm run mcp:gkill-readwrite-http
+gkill_server mcp --kind readwrite --transport http
 ```
 
 #### Bash (Linux / macOS / Git Bash)
@@ -408,10 +397,9 @@ npm run mcp:gkill-readwrite-http
 GKILL_BASE_URL="http://127.0.0.1:9999" \
 GKILL_USER="admin" \
 GKILL_PASSWORD_SHA256="<SHA256ハッシュ>" \
-MCP_TRANSPORT="http" \
 MCP_PORT="8810" \
 MCP_OAUTH_ISSUER="https://mcp.example.com" \
-npm run mcp:gkill-readwrite-http
+gkill_server mcp --kind readwrite --transport http
 ```
 
 > **重要**: `MCP_OAUTH_ISSUER` には、Claude.ai からアクセス可能な公開URLを指定してください。`http://localhost:...` のままだとOAuth認証が失敗します。
@@ -508,7 +496,8 @@ Claude Code では `/mcp` コマンドでMCPサーバーの接続状態を確認
 
 | 症状 | 原因 | 対処 |
 |---|---|---|
-| `MODULE_NOT_FOUND` エラー | npm依存パッケージ未インストール | `npm install` を実行 |
+| `gkill_server` が見つからない / `--kind is required` | PATH に無い、または種別未指定 | `npm run install_server` を実行して `$HOME/go/bin` を PATH に通す。`--kind read\|write\|readwrite` を付ける |
+| 設定ファイルのエラーで起動しない | `$GKILL_HOME/configs/gkill_mcp.json` が壊れている（黙って既定へは落ちない） | ファイルを直すか消す（消せば次回起動で既定値が再生成される） |
 | `ECONNREFUSED` エラー | gkill_server が起動していない | gkill_server を起動してから再試行 |
 | `ERR000002` / 認証エラー | ユーザー名またはパスワードが間違っている | `GKILL_USER` / `GKILL_PASSWORD_SHA256` を確認 |
 | `ERR000004`（パスワードリセット中） | gkill を新しいバージョンへ上げた直後で、全アカウントのパスワードが無効化されている | gkill 側でパスワードを設定しなおす（[operations-guide.md](operations-guide.md) の「スキーマ 1.1.0 への移行」を参照）。ワイヤ形式は変わっていないので、同じパスワードを設定すれば `GKILL_PASSWORD_SHA256` はそのまま使える |
@@ -518,8 +507,8 @@ Claude Code では `/mcp` コマンドでMCPサーバーの接続状態を確認
 ### Claude Desktop でツールが表示されない
 
 1. `claude_desktop_config.json` のJSON構文エラーがないか確認（末尾カンマ等）
-2. `command` のNode.jsパスが正しいか確認
-3. `args` のMCPサーバースクリプトのパスが正しいか確認
+2. `command` の gkill_server のパスが正しいか確認（PATH に無ければフルパス）
+3. `args` が `["mcp", "--kind", "readwrite"]` の形か確認
 4. Claude Desktop を完全に終了してから再起動
 
 ### Claude.ai Connectors でOAuth認証が失敗する
@@ -534,8 +523,8 @@ Claude Code では `/mcp` コマンドでMCPサーバーの接続状態を確認
 
 | 症状 | 原因 | 対処 |
 |---|---|---|
-| `UNABLE_TO_VERIFY_LEAF_SIGNATURE` | 自己署名証明書 | `GKILL_INSECURE=true` と `NODE_TLS_REJECT_UNAUTHORIZED=0` を設定 |
-| `CERT_HAS_EXPIRED` | 証明書の期限切れ | 証明書を再発行するか、上記の設定で一時的に回避 |
+| `x509: certificate signed by unknown authority` | 自己署名証明書 | `GKILL_INSECURE=true` を設定 |
+| `x509: certificate has expired` | 証明書の期限切れ | 証明書を再発行するか、上記の設定で一時的に回避 |
 
 ### Claude Code で `/mcp` に表示されるがツールが使えない
 
@@ -558,15 +547,32 @@ Claude Code では `/mcp` コマンドでMCPサーバーの接続状態を確認
 | `GKILL_LOCALE` | いいえ | `ja` | ロケール（ja, en, zh, ko, es, fr, de） |
 | `GKILL_INSECURE` | いいえ | `false` | `true` でTLS証明書検証をスキップ |
 | `GKILL_FETCH_TIMEOUT_MS` | いいえ | `120000` | gkill_serverへのHTTPリクエストのタイムアウト（ミリ秒） |
+| `GKILL_HOME` | いいえ | `$HOME/gkill` | ログ・設定・トークン永続化ファイルの置き場所（`--gkill_home_dir` が明示されていないときだけ効く） |
 
-※ `GKILL_PASSWORD_SHA256` と `GKILL_PASSWORD` はどちらか一方を指定。SHA256版を推奨。
+※ `GKILL_PASSWORD_SHA256` と `GKILL_PASSWORD` はどちらか一方を指定。SHA256版を推奨。平文の `GKILL_PASSWORD` は環境変数からだけ受け、設定ファイルには置かない。
+
+### 設定ファイル
+
+環境変数の代わりに `$GKILL_HOME/configs/gkill_mcp.json` にも書ける（初回起動時に既定値で自動生成。既存のファイルは書き換えない）。優先順位はフラグ（`--transport`、親の `--log`）> 環境変数 > ファイル > 既定値。`--config <path>` で場所を変えられる。
+
+```jsonc
+{
+  "gkill": { "base_url": "http://127.0.0.1:9999", "insecure": false, "locale": "ja",
+             "fetch_timeout_ms": 120000, "user": "", "password_sha256": "", "session_id": "" },
+  "log_level": "access", "max_file_bytes": 8388608, "file_link_ttl_ms": 3600000,
+  "transport": "stdio", "bind_addr": "0.0.0.0",
+  "servers": { "read": { "port": 8808, "oauth_issuer": "" },
+               "write": { "port": 8809, "oauth_issuer": "" },
+               "readwrite": { "port": 8810, "oauth_issuer": "" } }
+}
+```
 
 ### ファイルアクセス
 
 | 変数名 | 必須 | デフォルト | 説明 |
 |---|---|---|---|
-| `GKILL_MCP_MAX_FILE_BYTES` | いいえ | `8388608`（8MB） | `get_idf_file` がbase64で返すファイルサイズの上限（`lib/constants.mjs`） |
-| `GKILL_MCP_FILE_LINK_TTL_MS` | いいえ | `3600000`（1時間） | HTTPモードで発行するファイルURLトークンの有効期限（`lib/file-link-store.mjs`） |
+| `GKILL_MCP_MAX_FILE_BYTES` | いいえ | `8388608`（8MB） | `get_idf_file` がbase64で返すファイルサイズの上限（`constants.go`） |
+| `GKILL_MCP_FILE_LINK_TTL_MS` | いいえ | `3600000`（1時間） | HTTPモードで発行するファイルURLトークンの有効期限（`file_link_store.go`） |
 
 ### トランスポート（HTTP モード用）
 
@@ -575,12 +581,15 @@ Claude Code では `/mcp` コマンドでMCPサーバーの接続状態を確認
 | `MCP_TRANSPORT` | いいえ | `stdio` | `stdio` または `http` |
 | `MCP_PORT` | いいえ | サーバーごとに異なる（Read `8808` / Write `8809` / ReadWrite `8810`） | HTTPサーバーのポート番号 |
 | `MCP_OAUTH_ISSUER` | HTTP時はい | `http://localhost:<port>` | OAuthメタデータのissuer URL。リモート接続時はクライアントがアクセス可能な公開URLを指定 |
+| `MCP_BIND_ADDR` | いいえ | `0.0.0.0` | 待ち受けアドレス。トンネル・リバースプロキシの背後では `127.0.0.1` |
 
-### アクセスログ
+### ログ
 
 | 変数名 | デフォルト | 説明 |
 |---|---|---|
-| `MCP_LOG` | `info` | アクセスログレベル（`none`, `error`, `warn`, `info`, `debug`, `trace`） |
+| `MCP_LOG` | `access` | ログレベル（`none`, `error`, `warn`, `info`, `access`, `debug`, `trace`, `trace_sql`。gkill_server の `--log` と同じ語彙で、`--log` を明示するとそちらが優先。未知の値は起動を止める） |
+
+ログは `$GKILL_HOME/logs/gkill_mcp_<kind>.log`（全レベル統合）と `gkill_mcp_<kind>_{error,warn,info,access,debug,trace,trace_sql}.log`（レベル別）に出る。stdio モードでは stdout が JSON-RPC の専用チャネルなので、ログが stdout に出ることは無い。
 
 ---
 
@@ -588,13 +597,13 @@ Claude Code では `/mcp` コマンドでMCPサーバーの接続状態を確認
 
 gkillは3種類のMCPサーバーを提供しています。用途に応じて選んでください。
 
-| サーバー | ファイル | ツール数 | npm スクリプト | 用途 |
+| サーバー | 起動コマンド | ツール数 | npm スクリプト（別名） | 用途 |
 |---|---|---|---|---|
-| **Read専用** | `gkill-read-server.mjs` | 12 | `mcp:gkill-read` / `mcp:gkill-read-http` | 閲覧のみ。データを変更したくない場合 |
-| **Write専用** | `gkill-write-server.mjs` | 29 | `mcp:gkill-write` / `mcp:gkill-write-http` | 書き込み中心。Read便利ツール7つ付属 |
-| **Read/Write統合** | `gkill-readwrite-server.mjs` | 33 | `mcp:gkill-readwrite` / `mcp:gkill-readwrite-http` | 全機能。迷ったらこれ |
+| **Read専用** | `gkill_server mcp --kind read` | 12 | `mcp:gkill-read` / `mcp:gkill-read-http` | 閲覧のみ。データを変更したくない場合 |
+| **Write専用** | `gkill_server mcp --kind write` | 29 | `mcp:gkill-write` / `mcp:gkill-write-http` | 書き込み中心。Read便利ツール7つ付属 |
+| **Read/Write統合** | `gkill_server mcp --kind readwrite` | 33 | `mcp:gkill-readwrite` / `mcp:gkill-readwrite-http` | 全機能。迷ったらこれ |
 
-プラグイン一覧を返す `gkill_get_plugin_list` はどのサーバーにも入っています（読み取り専用）。プラグインが入れてくれた記録（Claude Code / Claude.ai / ChatGPT の会話ログ等）の本文は、`gkill_get_kyous` に `include_plugin_content:true` を渡すと検索結果にそのまま埋め込まれます（Write専用サーバーには `gkill_get_kyous` が無いので本文は読めません）。詳細は [`src/mcp/README.md`](../../src/mcp/README.md) を参照。
+プラグイン一覧を返す `gkill_get_plugin_list` はどのサーバーにも入っています（読み取り専用）。プラグインが入れてくれた記録（Claude Code / Claude.ai / ChatGPT の会話ログ等）の本文は、`gkill_get_kyous` に `include_plugin_content:true` を渡すと検索結果にそのまま埋め込まれます（Write専用サーバーには `gkill_get_kyous` が無いので本文は読めません）。詳細は [`src/server/gkill/mcp/README.md`](../../src/server/gkill/mcp/README.md) を参照。
 
 ### デフォルトポート
 
@@ -620,8 +629,8 @@ gkillは3種類のMCPサーバーを提供しています。用途に応じて�
 {
   "mcpServers": {
     "gkill-readwrite": {
-      "command": "node",
-      "args": ["/path/to/gkill/src/mcp/gkill-readwrite-server.mjs"],
+      "command": "gkill_server",
+      "args": ["mcp", "--kind", "readwrite"],
       "env": {
         "GKILL_BASE_URL": "http://127.0.0.1:9999",
         "GKILL_USER": "admin",
@@ -638,15 +647,14 @@ gkillは3種類のMCPサーバーを提供しています。用途に応じて�
 {
   "mcpServers": {
     "gkill-readwrite": {
-      "command": "node",
-      "args": ["/path/to/gkill/src/mcp/gkill-readwrite-server.mjs"],
+      "command": "gkill_server",
+      "args": ["mcp", "--kind", "readwrite"],
       "env": {
         "GKILL_BASE_URL": "https://192.168.x.x:9999",
         "GKILL_USER": "admin",
         "GKILL_PASSWORD_SHA256": "<SHA256ハッシュ>",
         "GKILL_LOCALE": "ja",
         "GKILL_INSECURE": "true",
-        "NODE_TLS_REJECT_UNAUTHORIZED": "0",
         "NO_PROXY": "192.168.x.x,localhost,127.0.0.1",
         "HTTP_PROXY": "",
         "HTTPS_PROXY": "",
@@ -663,8 +671,7 @@ gkillは3種類のMCPサーバーを提供しています。用途に応じて�
 GKILL_BASE_URL="http://127.0.0.1:9999" \
 GKILL_USER="admin" \
 GKILL_PASSWORD_SHA256="<SHA256ハッシュ>" \
-MCP_TRANSPORT="http" \
 MCP_PORT="8810" \
 MCP_OAUTH_ISSUER="https://mcp.example.com" \
-node src/mcp/gkill-readwrite-server.mjs
+gkill_server mcp --kind readwrite --transport http
 ```

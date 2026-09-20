@@ -33,9 +33,9 @@ $HOME/gkill/
 │   ├── gkill_trace_sql.log
 │   ├── gkill.log                   # 全レベル統合
 │   ├── gkill.log.1 ... .5          # サイズ上限で回転した統合ログ（レベル別ログも同様）
-│   ├── gkill_mcp_read_access.log      # Read MCPサーバアクセスログ（MCP_LOG環境変数で制御）
-│   ├── gkill_mcp_write_access.log     # Write MCPサーバアクセスログ
-│   └── gkill_mcp_readwrite_access.log # Read/Write MCPサーバアクセスログ
+│   ├── gkill_mcp_read.log             # Read MCPサーバの統合ログ（レベル別の gkill_mcp_read_<level>.log も同じ接頭辞。回転も本体と同じ）
+│   ├── gkill_mcp_write.log            # Write MCPサーバ（同上）
+│   └── gkill_mcp_readwrite.log        # Read/Write MCPサーバ（同上）
 ├── lib/base_directory/              # ライブラリファイル
 └── tls/                             # TLS証明書（オプション）
     ├── cert.cer
@@ -148,10 +148,10 @@ npm run release
 > `npm run release` を経由せずビルドスクリプトを直接呼ぶため**このゲートを通らない**。そちらからも
 > 先頭で `npm run verify_release_gate` を呼ぶこと。
 
-> MCP のツール説明を変えたら `node src/tools/mcp_schema_budget.mjs` で tools/list のバイト量が予算内かを見る。
-> 意図した変更なら `npm run mcp:schema-budget -- --update` で予算ファイル（`src/mcp/tool-schema-budget.json`）を
-> 書き直してから同じコミットに入れる（`test_mcp` の予算テストが照合する）。MCP の NSSM サービスは作業ツリーを
-> 直接実行しているので、コミット後に再起動しないと古い説明のまま配り続ける。
+> MCP のツール説明を変えたら `gkill_server mcp schema-budget` で tools/list のバイト量が予算内かを見る。
+> 意図した変更なら `gkill_server mcp schema-budget --update` で予算ファイル（`src/server/gkill/mcp/tool_schema_budget.json`）を
+> 書き直してから同じコミットに入れる（`test_mcp` の予算テストが照合する）。応答の形を変えたら `golden_test.go` の
+> ゴールデンも当該行を更新する。MCP は gkill_server の一部なので、本番へは本体と同じ exe を配り直す（停止窓が要る）。
 >
 > APK 3本はリリース署名でビルドされる。署名鍵の受け渡しと未設定時の挙動は
 > `.claude/skills/gkill-build-test/SKILL.md` の「APK リリース署名」を参照。
@@ -674,12 +674,14 @@ gkill MCP サーバーは3種類提供されている。いずれもOAuth 2.1認
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| Read専用 | `gkill-read-server.mjs` | 12 (11 read + 1 plugin) | 8808 | 読み取りのみ |
-| Write専用 | `gkill-write-server.mjs` | 29 (21 write + 7 read convenience + 1 plugin) | 8809 | 書き込み中心 |
-| Read/Write統合 | `gkill-readwrite-server.mjs` | 33 (11 read + 21 write + 1 plugin) | 8810 | 全機能 |
+| Read専用 | `gkill_server mcp --kind read` | 12 (11 read + 1 plugin) | 8808 | 読み取りのみ |
+| Write専用 | `gkill_server mcp --kind write` | 29 (21 write + 7 read convenience + 1 plugin) | 8809 | 書き込み中心 |
+| Read/Write統合 | `gkill_server mcp --kind readwrite` | 33 (11 read + 21 write + 1 plugin) | 8810 | 全機能 |
 
-プラグインツール `gkill_get_plugin_list` は `src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を
-各サーバの `TOOLS` に展開したもので、3サーバ共通・読み取り専用（`post_plugin_config` は公開しない）。
+プラグインツール `gkill_get_plugin_list` は `src/server/gkill/mcp/plugin_tools.go` の `PluginTools` を
+各サーバの `composeTools(...)` に連結したもので、3サーバ共通・読み取り専用（`post_plugin_config` は公開しない）。
+MCP は `gkill_server mcp` サブコマンド（stdio / http）で、起動中の gkill_server への HTTP クライアント。設定は
+`$GKILL_HOME/configs/gkill_mcp.json`（初回起動時に生成）と環境変数（フラグ > 環境変数 > ファイル > 既定値）。
 プラグインKyouの本文は `gkill_get_kyous` に `include_plugin_content:true` を渡すと
 レスポンスへ直接埋め込まれる（Write専用サーバには `gkill_get_kyous` が無いため本文は読めない）。
 
@@ -688,15 +690,15 @@ gkill MCP サーバーは3種類提供されている。いずれもOAuth 2.1認
 ```bash
 # Read専用
 MCP_TRANSPORT=http MCP_PORT=8808 MCP_OAUTH_ISSUER="https://<公開ホスト名>" \
-  node src/mcp/gkill-read-server.mjs
+  gkill_server mcp --kind read
 
 # Write専用
 MCP_TRANSPORT=http MCP_PORT=8809 MCP_OAUTH_ISSUER="https://<公開ホスト名>" \
-  node src/mcp/gkill-write-server.mjs
+  gkill_server mcp --kind write
 
 # Read/Write統合
 MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER="https://<公開ホスト名>" \
-  node src/mcp/gkill-readwrite-server.mjs
+  gkill_server mcp --kind readwrite
 ```
 
 共通の環境変数 `GKILL_BASE_URL`, `GKILL_USER`, `GKILL_PASSWORD_SHA256` も必要。
@@ -712,32 +714,40 @@ MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER="https://<公開ホスト名>"
 | `MCP_PORT` | `8808`/`8809`/`8810` | HTTPサーバーポート（サーバーごとにデフォルト異なる） |
 | `MCP_OAUTH_ISSUER` | `http://localhost:<port>` | OAuthメタデータのissuer URL。**リモートアクセス時は必須**（公開URL）|
 | `GKILL_INSECURE` | `false` | `true` でgkillバックエンドへのTLS証明書検証をスキップ |
-| `GKILL_HOME` | `$HOME/gkill` | MCPサーバがログ（`logs/`）とトークン永続化ファイル（`configs/`）を置く場所の解決に使う |
-| `MCP_LOG` | `info` | MCPアクセスログレベル（`none`/`error`/`warn`/`info`/`debug`/`trace`） |
+| `MCP_BIND_ADDR` | `0.0.0.0` | 待ち受けアドレス。トンネル・リバースプロキシの背後では `127.0.0.1` |
+| `GKILL_HOME` | `$HOME/gkill` | MCPサーバがログ（`logs/`）・設定（`configs/gkill_mcp.json`）・トークン永続化ファイル（`configs/`）を置く場所の解決に使う（`--gkill_home_dir` が明示されていないときだけ） |
+| `MCP_LOG` | `access` | MCP のログレベル（`none`/`error`/`warn`/`info`/`access`/`debug`/`trace`/`trace_sql`。gkill_server の `--log` と同じ語彙。未知の値は起動を止める） |
 
-#### アクセスログファイル
+#### ログファイルとトークン永続化ファイル
 
-| サーバー | ログファイル | トークン永続化ファイル |
+ログは gkill_log の別名ファイル群（`logs/gkill_mcp_<kind>.log` = 全レベル統合、`gkill_mcp_<kind>_{error,warn,info,access,debug,trace,trace_sql}.log` = レベル別。形式・回転は本体と同じで、静的フィールドは `app=gkill_mcp` と `kind`）。
+
+| サーバー | 統合ログ | トークン永続化ファイル |
 |---|---|---|
-| Read | `gkill_mcp_read_access.log` | `mcp_oauth_read_state.json` |
-| Write | `gkill_mcp_write_access.log` | `mcp_oauth_write_state.json` |
-| ReadWrite | `gkill_mcp_readwrite_access.log` | `mcp_oauth_readwrite_state.json` |
+| Read | `gkill_mcp_read.log` | `mcp_oauth_read_state.json` |
+| Write | `gkill_mcp_write.log` | `mcp_oauth_write_state.json` |
+| ReadWrite | `gkill_mcp_readwrite.log` | `mcp_oauth_readwrite_state.json` |
 
-#### MCPアクセスログのイベント一覧
+#### MCPログのイベント一覧
 
 全サーバー共通で以下のイベントが記録される:
 
 | msg | レベル | 記録内容 | 発生タイミング |
 |---|---|---|---|
-| `http_request` | INFO/WARN | remote_addr, method, path, status, reason, response_bytes | 全HTTPリクエスト（400以上はWARN） |
-| `tool_call` | INFO | tool, user_id, remote_addr, duration | MCP ツールコール成功 |
-| `tool_call_error` | ERROR | tool, user_id, remote_addr, duration, error | MCP ツールコール失敗 |
+| `http_request` | ACCESS/WARN | remote_addr, method, path（クエリは落とす）, status, reason, response_bytes | 全HTTPリクエスト（400以上はWARN） |
+| `tool_call` | ACCESS | tool, user_id, remote_addr, duration | MCP ツールコール成功 |
+| `tool_call_error` | WARN/ERROR | tool, user_id, remote_addr, duration, error | MCP ツールコール失敗（引数の誤り = 呼び出し側の問題は WARN、内部エラーは ERROR） |
 | `auth_success` | INFO | user_id | OAuth 認証成功 |
-| `auth_failure` | WARN | user_id | OAuth 認証失敗 |
+| `auth_failure` | WARN | user_id, reason | OAuth 認証失敗 |
 | `token_rejected` | WARN | remote_addr, method, path | Bearer トークン検証失敗 |
-| `server_start` | INFO | transport, log_level, port | サーバ起動 |
+| `token_scope_rejected` | WARN | remote_addr, method, path, token_scope, required_scope | scope の不一致（403） |
+| `server_start` | INFO | transport, log_level, port, pid, schema_revision, tool_count | サーバ起動 |
+| `http_listening` | INFO | port, issuer | HTTP の待ち受け開始 |
+| `config_created` | INFO | path | 設定ファイルの初回生成 |
+| `status_gkill_unreachable` | WARN | error | `gkill_status` が gkill へ届かなかった |
+| `file_fetch_error` / `http_handler_error` / `oauth_state_save_error` | ERROR | error ほか | 内部障害 |
 
-ログの `source` フィールドでどのサーバーからの出力か識別可能（`gkill-read-server.mjs` / `gkill-write-server.mjs` / `gkill-readwrite-server.mjs`）。
+どのサーバーからの出力かはファイル名（接頭辞 `gkill_mcp_<kind>`）と静的フィールド `kind` で識別できる。
 
 > **注:** `POST /mcp` でツールが呼ばれた場合、`http_request`（HTTPレベル）と `tool_call`（ツールレベル）の2行が出力されます。
 

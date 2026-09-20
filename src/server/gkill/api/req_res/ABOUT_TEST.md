@@ -4,7 +4,7 @@
 
 API リクエスト / レスポンス構造体の **ワイヤ契約** テスト。
 これらの構造体は TypeScript クライアント（`src/client/classes/api/`）と
-MCP サーバ（`src/mcp/`）が直接依存している JSON の形そのものなので、
+MCP サーバ（`src/server/gkill/mcp/`）が直接依存している JSON の形そのものなので、
 「JSONのフィールド名」と「omitempty の効き方」を固定する。
 
 ## テストフレームワーク

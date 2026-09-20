@@ -7,7 +7,7 @@
 | Sources | 2026-08-24 の実利用レビュー3本（読み取り一巡・読み書き一巡・書き込み破壊試験）。本番 read サーバでの実測 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/server/gkill/api/find_filter.go`（`isMiData` の gate）/ `src/server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go`（`miProjectionWarning` / `PROJECTION_TO_ENTITY_DATA_TYPE` 相当は `src/mcp/lib/constants.mjs`） |
+| Anchors | `src/server/gkill/api/find_filter.go`（`isMiData` の gate）/ `src/server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go`（`miProjectionWarning` / `PROJECTION_TO_ENTITY_DATA_TYPE` 相当は `src/server/gkill/mcp/constants.go`） |
 
 ## Context
 
@@ -54,7 +54,7 @@ isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi") && findCtx.ParsedFi
 - **`for_mi` を自動で立てない**（MCP 側でも Go 側でも）
 - 説明文を実測へ揃える: `for_mi` は Mi **と MiReKyou** を返すこと、射影が `mi_sort_type` に
   従うのは `for_mi` を立てたときだけであること、素の検索では `mi_check` / `mi_start` が出ること
-- **射影名を delete / restore / history が受理する。** `src/mcp/lib/constants.mjs` に
+- **射影名を delete / restore / history が受理する。** `src/server/gkill/mcp/constants.go` に
   射影名→エンティティ種別の対応を1箇所置き、3ツールの入口で通す。既存のエンティティ種別は
   そのまま有効で、受理値が増えるだけ
 
@@ -80,7 +80,7 @@ isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi") && findCtx.ParsedFi
 
 - 既存の検索結果・件数・ページングは1件も変わらない（警告と説明文だけが増える）
 - `gkill_add_mi` → `gkill_delete_kyou` のように、応答をそのまま次のツールへ渡せるようになった
-- 「2つの語彙がある」ことが3ツールの説明文に入った。対応表は1箇所（`constants.mjs`）
+- 「2つの語彙がある」ことが3ツールの説明文に入った。対応表は1箇所（`constants.go`）
 - `for_mi` を立てずに Mi を数えたい場合の答えは依然として無い。
   そこは `for_mi` を立てた別のクエリで数えるしかない（警告がそう案内する）
 
@@ -104,5 +104,5 @@ isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi") && findCtx.ParsedFi
   - `TestHandleGetKyousMCP_MiProjectionWithoutForMiWarns`
   - `TestHandleGetKyousMCP_MiProjectionWithForMiDoesNotWarn`（誤警告を出さない）
   - `TestHandleGetKyousMCP_NonMiDataTypeDoesNotWarnAboutForMi`
-- `src/mcp/__tests__/write-normalization.test.mjs`（`projection data_type is accepted by delete / restore`）
-- `src/mcp/__tests__/normalization.test.mjs`（`normalizeKyouHistoryArgs — projection data_type`）
+- `src/server/gkill/mcp/write_normalization_test.go`（`projection data_type is accepted by delete / restore`）
+- `src/server/gkill/mcp/normalization_test.go`（`normalizeKyouHistoryArgs — projection data_type`）

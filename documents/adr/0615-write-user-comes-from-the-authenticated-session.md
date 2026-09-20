@@ -7,7 +7,7 @@
 | Sources | 2026-08-25 の実利用レビュー（別のクライアントから書いたのに `create_user` が想定と違う／読み取りサーバのアカウント名とレコードの `create_user` が食い違う）と、本番アカウントでの実測 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/mcp-server-base.mjs`（`handleToolCall` の userId 決定） |
+| Anchors | `src/server/gkill/mcp/server_base.go`（`handleToolCall` の userId 決定） |
 
 ## Context
 
@@ -17,7 +17,7 @@
 2. 読み取りサーバの接続アカウント名と、レコードの `create_user` が一致しない
 
 どちらも「特定クライアント専用時代の固定値が残っている」と診断されたが、**そのアカウント名を
-ハードコードした箇所は `src/mcp` にも `src/server` にも1つも無い**。1 は接続に使ったアカウントが
+ハードコードした箇所は `src/server/gkill/mcp` にも `src/server` にも1つも無い**。1 は接続に使ったアカウントが
 実際にその名前だっただけで、正しい値だった。2 も、そのレコードを別端末の別アカウントが書き、
 集約アカウント側が読んでいるだけで、正しい。
 
@@ -71,13 +71,13 @@ const userId = (ctx ? ctx.userId : this.currentUserId) || this.client.userId;
 
 ## Evidence
 
-- provenance に関わるクライアント名のハードコード: 全文検索（`src/mcp` + `src/server`）で **0件**
+- provenance に関わるクライアント名のハードコード: 全文検索（`src/server/gkill/mcp` + `src/server`）で **0件**
 - 本番の履歴で確認したレコード: `create_app` は `gkill_kftl`、`create_device` は書いた端末名、
   `create_user` はその端末のアカウント ―― 集約アカウントから読んでも、書き手は元のアカウントのまま
-- `create_device` は MCP では `"mcp"` 固定（`write-handlers.mjs`）。KFTL 経由だけはサーバ側が
+- `create_device` は MCP では `"mcp"` 固定（`write_handlers.go`）。KFTL 経由だけはサーバ側が
   決めるので、`create_app` が `gkill_kftl`、`create_device` はサーバのデバイス名になる
 
 ## Related tests
 
-- `src/mcp/__tests__/write-handlers.test.mjs`（`create_app` は `ctx.appName` から来る＝サーバ種別ごとに違う）
-- `src/mcp/__tests__/http-transport.test.mjs`（並行リクエストで user / session が混ざらないこと）
+- `src/server/gkill/mcp/write_handlers_test.go`（`create_app` は `ctx.appName` から来る＝サーバ種別ごとに違う）
+- `src/server/gkill/mcp/http_transport_test.go`（並行リクエストで user / session が混ざらないこと）

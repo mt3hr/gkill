@@ -630,20 +630,6 @@
       "rule": "js/clear-text-storage-of-sensitive-data",
       "file": "src/client/classes/api/gkill-api.ts",
       "message": "This stores sensitive data returned by [an access to map_latitude](1) as clear text."
-    },
-    {
-      "fingerprint": "js/insufficient-password-hash|src/mcp/lib/gkill-client.mjs|7b229080e6bf1af4:1",
-      "lang": "javascript-typescript",
-      "rule": "js/insufficient-password-hash",
-      "file": "src/mcp/lib/gkill-client.mjs",
-      "message": "Password from [an access to password](1) is hashed insecurely."
-    },
-    {
-      "fingerprint": "js/user-controlled-bypass|src/mcp/lib/oauth-server.mjs|50f081722d28ec30:1",
-      "lang": "javascript-typescript",
-      "rule": "js/user-controlled-bypass",
-      "file": "src/mcp/lib/oauth-server.mjs",
-      "message": "This condition guards a sensitive [action](1), but a [user-provided value](2) controls it."
     }
   ]
 }

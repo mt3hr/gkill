@@ -7,7 +7,7 @@
 | Sources | 2026-09-18 の MCP 実利用報告（`map_latitude` だけ指定しても通常検索と同じ 275 件が警告なしで返る）。`.claude/skills/gkill-find-query/SKILL.md` の `HasMapFilter`（3値すべて非 nil）。`.claude/skills/gkill-mcp/SKILL.md` |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/normalization.mjs`（`assertMapFilterComplete`）/ `src/server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go`（`partialMapFilterWarning`） |
+| Anchors | `src/server/gkill/mcp/normalization.go`（`assertMapFilterComplete`）/ `src/server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go`（`partialMapFilterWarning`） |
 
 ## Context
 
@@ -47,5 +47,5 @@ Go 側の `collectMCPUnknownValueWarnings` にも `partialMapFilterWarning` を�
 
 ## Related tests
 
-- `src/mcp/__tests__/normalization.test.mjs`（「rejects a partial map filter」「rejects out-of-range map values」）
+- `src/server/gkill/mcp/normalization_test.go`（「rejects a partial map filter」「rejects out-of-range map values」）
 - `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp_v2_test.go`（`TestPartialMapFilterWarning`）

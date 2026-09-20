@@ -32,7 +32,7 @@
 
 - **TypeScript 側で `undefined` を「未使用」に使う** — **禁止。** `JSON.stringify` でキーが落ち、localStorage 往復でコンストラクタ既定値が復活し、`deep_equals` のキー数比較が壊れてサイドバーの機械的 re-emit ガードが死ぬ。未使用は必ず `null` で表現する。
 
-- **旧形式JSONの移行を実装1つに任せる** — 移行は Go・client・MCP の**3実装が同じ16キー**を扱う必要がある（`find_query_legacy_json.go` / `normalize-legacy-find-kyou-query-json.ts` / `constants.mjs` の `LEGACY_USE_FLAG_KEYS`）。どれかが欠けると、そのフラグを送る古いクライアントの保存クエリが移行されない（MCP では未知キー扱いで throw する）。
+- **旧形式JSONの移行を実装1つに任せる** — 移行は Go・client・MCP の**3実装が同じ16キー**を扱う必要がある（`find_query_legacy_json.go` / `normalize-legacy-find-kyou-query-json.ts` / `constants.go` の `LEGACY_USE_FLAG_KEYS`）。どれかが欠けると、そのフラグを送る古いクライアントの保存クエリが移行されない（MCP では未知キー扱いで throw する）。
 
 ## Consequences
 

@@ -43,7 +43,7 @@ stateDiagram-v2
 
 **「終了済み → 実行中」の差し戻しは正規の遷移。** 編集ダイアログで終了日時を空欄にして
 保存するか、MCP の `gkill_update_timeis` に `end_time: null` を渡すと、END_TIME=null の版が
-最新になり進行中へ戻る（`src/mcp/lib/write-normalization.mjs` — `end_time` だけは
+最新になり進行中へ戻る（`src/server/gkill/mcp/write_normalization.go` — `end_time` だけは
 「未指定=触らない / null=消す / 値=その時刻」の3値。Go 側 `TimeIs.EndTime` は `*time.Time`）。
 
 ### KFTL での TimeIs 状態遷移

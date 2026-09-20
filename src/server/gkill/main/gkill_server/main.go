@@ -45,6 +45,7 @@ func init() {
 	ServerCmd.AddCommand(common.GeneratePluginCacheCmd)
 	ServerCmd.AddCommand(common.ResetPasswordCmd)
 	ServerCmd.AddCommand(common.AddTagCmd)
+	ServerCmd.AddCommand(common.MCPCmd)
 }
 
 var (

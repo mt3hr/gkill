@@ -7,7 +7,7 @@
 | Sources | 2026-08-25 の「同名APIを完成度の高いほうへ一本化してほしい」という依頼と、その前提となった実利用レビュー3本 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/write-handlers.mjs`（`UPDATE_TARGETS` / `runUpdate`）/ `src/mcp/lib/payload.mjs`（`entityNotFoundMessage`）/ `src/mcp/lib/mcp-server-base.mjs`（`makeOAuthAuthenticateUser`）/ `src/server/gkill/api/gkill_server_api/utils.go`（`resolveSelfAuthContext`） |
+| Anchors | `src/server/gkill/mcp/write_handlers.go`（`UPDATE_TARGETS` / `runUpdate`）/ `src/server/gkill/mcp/payload.go`（`entityNotFoundMessage`）/ `src/server/gkill/mcp/server_base.go`（`makeOAuthAuthenticateUser`）/ `src/server/gkill/api/gkill_server_api/utils.go`（`resolveSelfAuthContext`） |
 
 ## Context
 
@@ -36,10 +36,10 @@
 
 - 9本の update は `UPDATE_TARGETS`（正規化関数と patch 欄だけの表）＋ `runUpdate` へ集約し、
   取得先・更新先・応答キーは既存の `ENTITY_TARGETS` から引く
-- 「見つからない」は `entityNotFoundMessage`（`lib/payload.mjs`）1本。read / write / update が同じものを使う。
+- 「見つからない」は `entityNotFoundMessage`（`payload.go`）1本。read / write / update が同じものを使う。
   **型を取り違えたのか ID が無いのかは型別エンドポイントの応答から区別できない**ので、
   区別できないことを言う（「ID が存在しない」と断定しない）
-- `authenticateUser` は `makeOAuthAuthenticateUser`（`lib/mcp-server-base.mjs`）1本
+- `authenticateUser` は `makeOAuthAuthenticateUser`（`server_base.go`）1本
 - `wrapNoAuth` の自前認証は `resolveSelfAuthContext`（`utils.go`）1本
 
 **方向は「READ 側へ」ではなく「完成度の高いほうへ」で決める。**
@@ -51,7 +51,7 @@
   次に欄を1つ足すとき9箇所を触ることになり、1つ落としても**テストは緑のまま**
   （各ツールのテストは自分の欄しか見ない）
 - **`ENTITY_TARGETS` に正規化関数と patch 欄も持たせて表を1つにする** —
-  `constants.mjs` は「定数」の置き場で、関数参照を入れると
+  `constants.go` は「定数」の置き場で、関数参照を入れると
   write 専用の関心事が read からも見える。表は用途ごとに分け、
   **エンドポイントの対応だけを共有**する形にした
 - **`/api/get_kyous` を廃して `get_kyous_mcp` へ一本化** — 依頼の文字どおりだが、
@@ -67,7 +67,7 @@
 
 ## Consequences
 
-- `write-handlers.mjs` が 297行 → 194行。欄を足すときに触るのは表1箇所
+- `write_handlers.go` が 297行 → 194行。欄を足すときに触るのは表1箇所
 - 「見つからない」が1文になり、**どのアカウントに繋がっているか確認せよ**という案内も同時に入った
   （別アカウントに書いた記録を探して詰まる、が実際に起きていた）
 - `wrapNoAuth` の MCP 2本のボディ上限は、最終的に `wrapNoAuthCapped`（2026-08-30、
@@ -82,7 +82,7 @@
 
 ## Related tests
 
-- `src/mcp/__tests__/write-handlers.test.mjs`
+- `src/server/gkill/mcp/write_handlers_test.go`
   - `update tools are table-driven`（9型すべてが `ENTITY_TARGETS` の口を使う）
   - `not-found says the lookup is per-type instead of blaming the id`
   - `handleWriteToolCall — stale tool schema warning`

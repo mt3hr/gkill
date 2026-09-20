@@ -58,4 +58,4 @@ MCP から使うと次の3つが同時に困る。
 - `src/server/gkill/api/gkill_server_api/kftl_idempotency_test.go`（台帳: 指紋と結果の保持・共有しない・TTL・GC・指紋の入力）
 - `src/server/gkill/api/gkill_server_api/handle_submit_kftl_text_test.go`（`TestHandleSubmitKFTLText_IdempotencyKey` / `TestHandleSubmitKFTLText_CreatedRecords` / `TestHandleSubmitKFTLText_CreatedIsEmptyArrayOnFailure`）
 - `src/server/gkill/api/message/http_status_test.go`（`ERR000423` = 409）
-- `src/mcp/__tests__/write-handlers.test.mjs`（`replayed` の受け渡しと要約）
+- `src/server/gkill/mcp/write_handlers_test.go`（`replayed` の受け渡しと要約）

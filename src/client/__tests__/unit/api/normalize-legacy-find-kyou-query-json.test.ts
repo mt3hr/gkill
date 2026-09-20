@@ -26,7 +26,7 @@ type ConversionCase = {
 }
 
 // 16フラグ×true/false の変換表。Go(find/find_query_legacy_json.go) と
-// MCP(mcp/lib/constants.mjs) も同じ16キーを扱う（どれかが欠けると、そのフラグを送る
+// MCP(mcp/constants.go) も同じ16キーを扱う（どれかが欠けると、そのフラグを送る
 // 旧クライアントの保存クエリが移行されずに残る）。
 // 配列系グループ: true=値維持 / false=null。nullable系グループ: true=値維持 / false=null。
 // use_update_time は update_time ごと削除、use_mi_sort_type / use_mi_check_state /

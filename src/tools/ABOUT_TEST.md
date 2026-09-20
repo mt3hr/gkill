@@ -2,7 +2,7 @@
 
 ## 概要
 
-`src/tools/` のうち、リリースゲート（テスト済み attestation）を構成する 6 ファイル（`attestation.mjs` / `run_test_suite.mjs` / `verify_release_gate.mjs` / `verify_release_artifacts.mjs` / `put_version_info.mjs` / `mcp_schema_budget.mjs` を除く判定関数）のテスト。
+`src/tools/` のうち、リリースゲート（テスト済み attestation）を構成する 6 ファイル（`attestation.mjs` / `run_test_suite.mjs` / `verify_release_gate.mjs` / `verify_release_artifacts.mjs` / `put_version_info.mjs` / `mcp.go（schema-budget サブコマンド）` を除く判定関数）のテスト。
 壊れると「テスト未実施のコミットが配布される」（2026-08-30 監査 F-006 の再来）に戻るので、
 ローカル `npm test` と CI（`ci.yml` の `frontend` ジョブ）の両方で回す。
 

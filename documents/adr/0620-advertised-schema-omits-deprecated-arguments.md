@@ -7,7 +7,7 @@
 | Sources | 2026-09-14 の MCP レビュー P1（`include_id` / `include_rep_name` / `only_latest_data` が deprecated な入力引数として tools/list に残っている指摘）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「廃止済み引数は公開スキーマに載せず、受理と古さの検出だけ残す。」 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/read-tools.mjs`（`gkill_get_kyous` の `inputSchema.properties`）/ `src/mcp/lib/find-query-schema.mjs`（`FIND_QUERY_SCHEMA.properties`）/ `src/mcp/lib/constants.mjs`（`KYOUS_TOP_LEVEL_FIELDS` / `LEGACY_USE_FLAG_KEYS`）/ `src/mcp/lib/normalization.mjs`（`DEPRECATED_TOP_LEVEL_ARGS` / `DEPRECATED_QUERY_FIELDS` / `detectStaleSchemaSignals`） |
+| Anchors | `src/server/gkill/mcp/read_tools.go`（`gkill_get_kyous` の `inputSchema.properties`）/ `src/server/gkill/mcp/find_query_schema.go`（`FIND_QUERY_SCHEMA.properties`）/ `src/server/gkill/mcp/constants.go`（`KYOUS_TOP_LEVEL_FIELDS` / `LEGACY_USE_FLAG_KEYS`）/ `src/server/gkill/mcp/normalization.go`（`DEPRECATED_TOP_LEVEL_ARGS` / `DEPRECATED_QUERY_FIELDS` / `detectStaleSchemaSignals`） |
 
 ## Context
 
@@ -32,7 +32,7 @@ true へ強制する `query.only_latest_data`（[ADR-0605](0605-mcp-version-hist
   受理規則を消す
 - 受理集合（`KYOUS_TOP_LEVEL_FIELDS` / `KYOUS_QUERY_ALL_FIELDS` / `LEGACY_USE_FLAG_KEYS`）は
   **変えない**。届いたら今までどおり `detectStaleSchemaSignals` が古さの証拠として警告する
-- 「公開スキーマのキー集合 = 受理集合 − 廃止済み」を `schema-contract.test.mjs` が固定する。
+- 「公開スキーマのキー集合 = 受理集合 − 廃止済み」を `schema_contract_test.go` が固定する。
   廃止済みの表（`DEPRECATED_TOP_LEVEL_ARGS` / `DEPRECATED_QUERY_FIELDS`）はそのために export した
 
 ## Rejected alternatives
@@ -52,9 +52,9 @@ true へ強制する `query.only_latest_data`（[ADR-0605](0605-mcp-version-hist
   送り続けられ、その呼び出しには古さの警告が付く
 - 廃止済み引数を「もう受理しなくてよい」と判断する日が来ても、受理集合から消す前に
   この ADR と `detectStaleSchemaSignals` の証拠表を一緒に見直すこと。片方だけ消すと
-  `schema-contract.test.mjs` が落ちる（それが狙い）
+  `schema_contract_test.go` が落ちる（それが狙い）
 - 今後、引数を廃止するときの手順は「公開スキーマから外す → 受理集合に残す →
-  `DEPRECATED_*` へ足す」の3点で、`schema-contract.test.mjs` が3点の整合を検査する
+  `DEPRECATED_*` へ足す」の3点で、`schema_contract_test.go` が3点の整合を検査する
 
 ## Evidence
 
@@ -66,9 +66,9 @@ true へ強制する `query.only_latest_data`（[ADR-0605](0605-mcp-version-hist
 
 ## Related tests
 
-- `src/mcp/__tests__/schema-contract.test.mjs`（`advertised keys and accepted keys agree`）
+- `src/server/gkill/mcp/schema_contract_test.go`（`advertised keys and accepted keys agree`）
   - スキーマのキー集合 = 受理集合 − 廃止済み。廃止済みは受理側にだけある
-- `src/mcp/__tests__/normalization.test.mjs`（`deprecated arguments are accepted at runtime but absent from the advertised schema`）
+- `src/server/gkill/mcp/normalization_test.go`（`deprecated arguments are accepted at runtime but absent from the advertised schema`）
   - 公開スキーマに無い・説明文に `use_X` が無い・届いても受理され古さの警告が付く
-- `src/mcp/__tests__/readme-examples.test.mjs`
+- `src/server/gkill/mcp/readme_examples_test.go`
   - README の例が実物の正規化器を通る（廃止済み引数を例に残していない）

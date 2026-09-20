@@ -7,7 +7,7 @@
 | Sources | `98afedb7` / `483c3139` |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/read-handlers.mjs`（`gkill_get_kyou_history`）/ `src/mcp/lib/write-handlers.mjs`（`gkill_restore_kyou`） |
+| Anchors | `src/server/gkill/mcp/read_handlers.go`（`gkill_get_kyou_history`）/ `src/server/gkill/mcp/write_handlers.go`（`gkill_restore_kyou`） |
 
 ## Context
 
@@ -76,6 +76,6 @@ gkill は追記型で、update は新しい版の追加、delete は `is_deleted
 
 ## Related tests
 
-- `src/mcp/__tests__/read-handlers.test.mjs`
-- `src/mcp/__tests__/write-handlers.test.mjs`
-- `src/mcp/__tests__/write-tool-handlers.test.mjs`
+- `src/server/gkill/mcp/read_handlers_test.go`
+- `src/server/gkill/mcp/write_handlers_test.go`
+- `src/server/gkill/mcp/write_tool_handlers_test.go`

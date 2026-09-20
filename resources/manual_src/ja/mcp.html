@@ -15,11 +15,12 @@
 
   <h2>連携の種類</h2>
   <table>
-    <tr><th>種類</th><th>できること</th><th>実行するファイル</th><th>ツール数</th><th>HTTP時のポート</th></tr>
-    <tr><td>読み取り専用</td><td>記録の閲覧・検索のみ。追加・変更はできない</td><td>gkill-read-server.mjs</td><td>12</td><td>8808</td></tr>
-    <tr><td>書き込み専用</td><td>記録の追加・更新・削除。あわせて記録保管場所名・タグ名・板名の取得もできる</td><td>gkill-write-server.mjs</td><td>29</td><td>8809</td></tr>
-    <tr><td>読み書き両用</td><td>閲覧・追加・更新・削除のすべて</td><td>gkill-readwrite-server.mjs</td><td>33</td><td>8810</td></tr>
+    <tr><th>種類</th><th>できること</th><th>起動コマンド</th><th>ツール数</th><th>HTTP時のポート</th></tr>
+    <tr><td>読み取り専用</td><td>記録の閲覧・検索のみ。追加・変更はできない</td><td>gkill_server mcp --kind read</td><td>12</td><td>8808</td></tr>
+    <tr><td>書き込み専用</td><td>記録の追加・更新・削除。あわせて記録保管場所名・タグ名・板名の取得もできる</td><td>gkill_server mcp --kind write</td><td>29</td><td>8809</td></tr>
+    <tr><td>読み書き両用</td><td>閲覧・追加・更新・削除のすべて</td><td>gkill_server mcp --kind readwrite</td><td>33</td><td>8810</td></tr>
   </table>
+  <p>MCP サーバは gkill_server の一部で、<code>gkill_server mcp --kind &lt;種類&gt;</code> で起動します（gkill_server 本体が起動している必要があります）。接続先や資格情報は環境変数のほか、初回起動時に自動生成される設定ファイル <code>configs/gkill_mcp.json</code> でも指定できます。ログは <code>logs/gkill_mcp_&lt;種類&gt;.log</code>（レベル別ファイルも同じ接頭辞）に出ます。</p>
   <p>どの種類でも、プラグインの一覧を取得するツールが1つ含まれます。プラグインで取り込んだ記録の本文は、検索結果にそのまま含めて受け取れます。</p>
 
   <h2>ファイルの受け渡し</h2>
@@ -40,8 +41,8 @@
   <pre><code>{
   "mcpServers": {
     "gkill": {
-      "command": "node",
-      "args": ["C:/path/to/gkill/src/mcp/gkill-read-server.mjs"],
+      "command": "gkill_server",
+      "args": ["mcp", "--kind", "read"],
       "env": {
         "GKILL_BASE_URL": "http://localhost:9999",
         "GKILL_USER": "あなたのユーザーID",
@@ -62,20 +63,20 @@ claude mcp add gkill \
   --env GKILL_BASE_URL=http://localhost:9999 \
   --env GKILL_USER=ユーザーID \
   --env GKILL_PASSWORD_SHA256=ハッシュ値 \
-  -- node /path/to/gkill/src/mcp/gkill-read-server.mjs</code></pre>
+  -- gkill_server mcp --kind read</code></pre>
   <div class="tip">
-    <strong>ヒント:</strong> 上のパスは、gkillのソースを置いた場所に合わせて書き換えてください。種類を変えたいときは、ファイル名を <code>gkill-write-server.mjs</code> か <code>gkill-readwrite-server.mjs</code> に差し替えます。
+    <strong>ヒント:</strong> <code>gkill_server</code> は PATH に通っている前提です（通っていなければフルパスを書きます）。種類を変えたいときは <code>--kind</code> を <code>write</code> か <code>readwrite</code> に変えます。
   </div>
 
   <h2>リモートから使う（HTTP接続）</h2>
   <p>AIが同じPCにいない場合は、MCPサーバ自体をHTTPで待ち受けさせ、インターネット経由のAIから接続できます。この方式では接続時にOAuthによる認可が行われるため、gkill本体をインターネットに公開する必要はありません。</p>
   <p>認可は接続の種類（読み取り専用・書き込み用・読み書き両用）ごとに行われます。読み取り専用として認可した接続をそのまま書き込みに使うことはできません。種類を変えたときや、それまで使えていた接続が「権限が足りない」という理由で失敗するようになったときは、AI側でいったん接続を解除し、認可をやり直してください。</p>
   <pre><code># 読み書き両用をHTTPで待ち受ける例
-MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
+MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
 GKILL_BASE_URL=http://localhost:9999 \
 GKILL_USER=ユーザーID \
 GKILL_PASSWORD_SHA256=ハッシュ値 \
-node /path/to/gkill/src/mcp/gkill-readwrite-server.mjs</code></pre>
+gkill_server mcp --kind readwrite --transport http</code></pre>
   <div class="tip">
     <strong>ヒント:</strong> gkillサーバ自体をインターネットに公開して使うこともできます。その場合は <code>GKILL_BASE_URL</code> に公開アドレスを指定し、<a href="server-config.html">サーバ設定</a>でTLS（HTTPS）を有効にしてください。
   </div>

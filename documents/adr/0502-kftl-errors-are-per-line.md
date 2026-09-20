@@ -106,4 +106,4 @@ TS 側には最初から `get_invalid_line_indexs()` と細かいエラーコー
   - `TestGenerateAndExecuteRequests_LineIndexMatchesSourceLine`
   - `TestCollectKFTLInputErrors_FlattensJoinedErrors` / `TestCollectKFTLInputErrors_ReturnsNilForServerFailure`
 - `src/server/gkill/api/message/http_status_test.go`（新しいコードがステータス表に載っていること）
-- `src/mcp/__tests__/write-tool-handlers.test.mjs`（要約が作られたものを報告すること）
+- `src/server/gkill/mcp/write_tool_handlers_test.go`（要約が作られたものを報告すること）

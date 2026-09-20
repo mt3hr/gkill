@@ -25,6 +25,7 @@ func TestSubcommandsUseRunE(t *testing.T) {
 		"update_cache":          UpdateCacheCmd,
 		"reset_password":        ResetPasswordCmd,
 		"add_tag":               AddTagCmd,
+		"mcp":                   MCPCmd,
 	}
 	for name, cmd := range cmds {
 		if cmd == nil {

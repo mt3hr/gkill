@@ -1,6 +1,6 @@
 # gkill 利用シナリオ
 
-コードのハンドラ実装（`gkill_server_api/handle_*.go`）、フロントエンド composable（`src/client/classes/`）、MCP サーバ実装（`src/mcp/`）、プラグイン実装（`plugin_repository_impl.go`）、モバイル実装（`src/wear_os/`, `src/android/`）から抽出した、**チャネル横断の end-to-end 利用シナリオ集**。
+コードのハンドラ実装（`gkill_server_api/handle_*.go`）、フロントエンド composable（`src/client/classes/`）、MCP サーバ実装（`src/server/gkill/mcp/`）、プラグイン実装（`plugin_repository_impl.go`）、モバイル実装（`src/wear_os/`, `src/android/`）から抽出した、**チャネル横断の end-to-end 利用シナリオ集**。
 
 ## この資料の位置づけ
 
@@ -34,7 +34,7 @@ graph LR
         VIEWER[公開共有ビューア<br/>ログイン不要]
     end
 
-    subgraph MCP["MCP サーバ (src/mcp)"]
+    subgraph MCP["MCP サーバ (src/server/gkill/mcp)"]
         MCPS[read / write / readwrite<br/>stdio・HTTP OAuth2.1]
     end
 
@@ -669,7 +669,7 @@ MCP サーバは stdio（同一マシン・ローカル）と HTTP（OAuth 2.1 �
 sequenceDiagram
     actor User as ユーザ
     participant AI as AI クライアント
-    participant MCP as MCP サーバ<br>(gkill-read-server.mjs)
+    participant MCP as MCP サーバ<br>(gkill_server mcp --kind read)
     participant Client as GkillReadClient
     participant API as gkill_server
     participant Handler as HandleGetKyousMCP

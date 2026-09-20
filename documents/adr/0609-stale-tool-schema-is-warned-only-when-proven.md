@@ -7,7 +7,7 @@
 | Sources | 2026-08-24 の実利用フィードバック（指摘9件のうち4件が「既に直っているのに見えていなかった」）。[ADR-0111](0111-drop-never-implemented-query-fields.md) の Consequences「旧スキーマはセッション寿命で固定される」 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/normalization.mjs`（`detectStaleSchemaSignals` / `staleSchemaWarning` / `appendStaleSchemaWarning`）/ `src/mcp/lib/read-handlers.mjs`（`handleReadToolCall`）/ `src/mcp/lib/write-handlers.mjs`（`handleWriteToolCall`）/ `src/mcp/lib/write-normalization.mjs`（`revivesStaleBoolean` / `DELETE_STALE_SCHEMA_ARG_KINDS`） |
+| Anchors | `src/server/gkill/mcp/normalization.go`（`detectStaleSchemaSignals` / `staleSchemaWarning` / `appendStaleSchemaWarning`）/ `src/server/gkill/mcp/read_handlers.go`（`handleReadToolCall`）/ `src/server/gkill/mcp/write_handlers.go`（`handleWriteToolCall`）/ `src/server/gkill/mcp/write_normalization.go`（`revivesStaleBoolean` / `DELETE_STALE_SCHEMA_ARG_KINDS`） |
 
 ## Context
 
@@ -73,7 +73,7 @@ MCP のツール一覧はクライアントがセッション初期化時に1回
 - 救済表は4→6になり、その後 delete/restore・urlog・mi の書き込みツールも加わった。
   **引数を足したら表と `STALE_SCHEMA_ARG_KINDS_BY_TOOL` の両方へ載せる**
   （書き込みの後付け boolean は `ENTITY_FIELD_SPECS` の `revivesStaleBoolean` も立てる。
-  この3点セットは `write-tool-handlers.test.mjs` の表駆動メタテストが機械強制する）
+  この3点セットは `write_tool_handlers_test.go` の表駆動メタテストが機械強制する）
 
 ## Evidence
 
@@ -85,14 +85,14 @@ MCP のツール一覧はクライアントがセッション初期化時に1回
 
 ## Related tests
 
-- `src/mcp/__tests__/normalization.test.mjs`
+- `src/server/gkill/mcp/normalization_test.go`
   - `detectStaleSchemaSignals`（証拠2種の検出、現行スキーマでは null、string型は証拠にしない）
   - `normalizeKyouHistoryArgs — stale-schema revival`
-- `src/mcp/__tests__/read-handlers.test.mjs`
+- `src/server/gkill/mcp/read_handlers_test.go`
   - `handleReadToolCall — stale tool schema warning`（gkill 由来の warnings に足すこと、誤警告を出さないこと）
-- `src/mcp/__tests__/write-normalization.test.mjs`
+- `src/server/gkill/mcp/write_normalization_test.go`
   - 後付けフラグの正規化（正規JSON文字列からの復元、trim 込みで検出器と同じ受理範囲）
-- `src/mcp/__tests__/write-handlers.test.mjs`
+- `src/server/gkill/mcp/write_handlers_test.go`
   - urlog / mi の文字列フラグが復元され、成功応答に古さの警告が付くこと（end-to-end）
-- `src/mcp/__tests__/write-tool-handlers.test.mjs`
+- `src/server/gkill/mcp/write_tool_handlers_test.go`
   - 後付け boolean 引数は救済表・型復元の両方に載る（表駆動メタテスト）
