@@ -986,6 +986,5 @@
     "ERROR_ALERT_COPY_TITLE": "상세 복사",
     "ERROR_ALERT_COPIED_MESSAGE": "오류 상세를 복사했습니다",
     "DESCRIPTION_TITLE": "설명",
-    "STRUCT_DESCRIPTION_HINT": "AI 연동(MCP)에 전달하는 운용 메모. 이 항목의 용도와 사용 방법을 적습니다",
     "EDIT_MI_BOARD_STRUCT_ELEMENT_TITLE": "보드 편집"
 }

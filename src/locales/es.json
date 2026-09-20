@@ -986,6 +986,5 @@
     "ERROR_ALERT_COPY_TITLE": "Copiar detalles",
     "ERROR_ALERT_COPIED_MESSAGE": "Detalles del error copiados",
     "DESCRIPTION_TITLE": "Descripción",
-    "STRUCT_DESCRIPTION_HINT": "Notas de uso para la integración con IA (MCP): para qué sirve este elemento y cómo lo usa",
     "EDIT_MI_BOARD_STRUCT_ELEMENT_TITLE": "Editar tablero"
 }

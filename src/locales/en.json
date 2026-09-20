@@ -986,6 +986,5 @@
     "ERROR_ALERT_COPY_TITLE": "Copy details",
     "ERROR_ALERT_COPIED_MESSAGE": "Error details copied",
     "DESCRIPTION_TITLE": "Description",
-    "STRUCT_DESCRIPTION_HINT": "Operating notes passed to AI integration (MCP): what this item is for and how you use it",
     "EDIT_MI_BOARD_STRUCT_ELEMENT_TITLE": "Edit Board"
 }
