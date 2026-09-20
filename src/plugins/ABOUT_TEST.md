@@ -55,6 +55,9 @@ cd src/plugins/gkill_plugin_archived_git_commit_log && go test ./...
 SDK 自体のテストは `src/server/gkill/plugin/sdk/` にあり、`src/server` のテストなので
 `npm run test_server` で走る。詳細は [server/gkill/plugin/sdk/ABOUT_TEST.md](../server/gkill/plugin/sdk/ABOUT_TEST.md) を参照。
 
+- `plugin_log_test.go`（6テスト）— `Run()` が開く `$GKILL_HOME/logs/gkill_plugin_<name>*.log`。`sdk.LogWarn` / `LogError` は
+  stderr の接頭辞行（`last_error` 向け）とファイルの両方へ、`LogInfo` / `LogDebug` はファイルだけへ。home が分からなければ
+  stderr だけで続行し、stdout には1バイトも書かない（ADR-0313）。
 - `config_test.go`（4テスト）— `EnsureConfig`（config.json の自動生成）。生成される／既存ファイルを
   上書きしない／`DefaultConfig` が nil なら作らない／`pluginDir` が空ならカレントディレクトリを汚さない。
 - `sdk_test.go`（18テスト）— `Run()` の stdin/stdout ループ本体（`TestRunLoop_*`）。コマンド分岐、

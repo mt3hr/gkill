@@ -78,11 +78,15 @@ func (b *builder) loop(pluginDir string, configOf func() pluginConfig) {
 // runOnce は走査→取り込み→畳み直しを1周する。
 //
 // os.Stdout には絶対に書かない。あれはプロトコルのチャネルで、
-// 1行でも混ざるとJSONストリームが壊れる。ログはstderrに出す。
+// 1行でも混ざるとJSONストリームが壊れる。ログは sdk.LogXxx（stderr + $GKILL_HOME/logs の gkill_log）に出す。
 func (b *builder) runOnce(pluginDir string, config pluginConfig) {
+	started := time.Now()
 	if err := globalCache.build(pluginDir, config); err != nil {
 		sdk.LogError("gkill_plugin_fitbit: build error: %v", err)
+		return
 	}
+	// 構築完了は節目（ADR-1001 の Info）。ログファイルにだけ残り、stderr の last_error は汚さない。
+	sdk.LogInfo("gkill_plugin_fitbit: build done in %s", time.Since(started).Round(time.Millisecond))
 }
 
 // build はキャッシュを最新にする。

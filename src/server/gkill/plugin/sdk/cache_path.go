@@ -34,10 +34,7 @@ func CacheDBPath(pluginDir string) string {
 // PluginCacheDir は $GKILL_HOME/caches/plugin_cache/{userID}/{pluginName} を返す。
 //
 // pluginDir は $GKILL_HOME/plugins/{userID}/{pluginName} の形をしているので、
-// 末尾2要素からユーザIDとプラグイン名を取り出す。
-// gkillの本体は起動時に環境変数 GKILL_HOME を設定し、プラグインのプロセスは
-// その環境を引き継ぐので、キャッシュルートは環境変数から取れる。
-// 環境変数が無いときだけ pluginDir から遡って推定する。
+// 末尾2要素からユーザIDとプラグイン名を取り出す。gkill の home は gkillHomeDir で解決する。
 // 想定と違う構成なら "" を返す(呼び出し側がフォールバックする)。
 func PluginCacheDir(pluginDir string) string {
 	if pluginDir == "" {
@@ -48,18 +45,32 @@ func PluginCacheDir(pluginDir string) string {
 	userDir := filepath.Dir(cleaned)
 	userID := filepath.Base(userDir)
 
-	home := os.Getenv("GKILL_HOME")
-	if home == "" {
-		pluginsDir := filepath.Dir(userDir)
-		if filepath.Base(pluginsDir) != "plugins" {
-			return ""
-		}
-		home = filepath.Dir(pluginsDir)
-	}
+	home := gkillHomeDir(pluginDir)
 	if home == "" || !IsSafePathElement(userID) || !IsSafePathElement(pluginName) {
 		return ""
 	}
-	return filepath.Join(filepath.Clean(home), "caches", "plugin_cache", userID, pluginName)
+	return filepath.Join(home, "caches", "plugin_cache", userID, pluginName)
+}
+
+// gkillHomeDir は gkill の home（$GKILL_HOME。キャッシュとログの親）を返す。
+//
+// gkillの本体は起動時に環境変数 GKILL_HOME を設定し、プラグインのプロセスは
+// その環境を引き継ぐので、まず環境変数から取る。
+// 環境変数が無いときだけ pluginDir（$GKILL_HOME/plugins/{userID}/{pluginName}）から遡って推定する。
+// 推定できなければ ""。キャッシュ（PluginCacheDir）とログ（initLogging）が同じ解決を使う。
+func gkillHomeDir(pluginDir string) string {
+	if home := os.Getenv("GKILL_HOME"); home != "" {
+		return filepath.Clean(home)
+	}
+	if pluginDir == "" {
+		return ""
+	}
+	userDir := filepath.Dir(filepath.Clean(pluginDir))
+	pluginsDir := filepath.Dir(userDir)
+	if filepath.Base(pluginsDir) != "plugins" {
+		return ""
+	}
+	return filepath.Dir(pluginsDir)
 }
 
 // IsSafePathElement は値を単一のパス要素として使ってよいか検証する。
@@ -67,7 +78,9 @@ func PluginCacheDir(pluginDir string) string {
 //
 // gkill本体側にも同じ判定が dao/plugin_manager.go の isSingleSafePathElement としてある。
 // あちらは別モジュール(src/server)からプラグインの置き場所を組み立てるためのもので、
-// SDKへの依存を本体に持ち込みたくないので意図的に分けてある。直すときは両方。
+// SDK が import する本体のパッケージは標準ライブラリだけで閉じた葉
+// （api/find_word・main/common/gkill_log・main/common/gkill_options）に限っているため、
+// 意図的に分けてある。直すときは両方。
 func IsSafePathElement(element string) bool {
 	if element == "" || element == "." || element == ".." {
 		return false
