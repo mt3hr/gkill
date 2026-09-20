@@ -11,6 +11,14 @@ package mcp
 // 時刻と乱数を固定したプリロード付きで 3 つの stdio サーバへ NDJSON を流し、応答と偽 gkill の記録を保存した。
 // http モードはサーバモジュールを直接 import して handlePayload(message, requestContext) を呼んだ。
 // 唯一マスクするのは JSON でない応答本文のパーサ文言（detail.cause。V8 と Go で違う）だけ。
+//
+// 更新の手順（Node 実装はもう無い）: ツールの説明・引数・応答を意図して変えたときは
+//
+//	GKILL_MCP_UPDATE_GOLDEN=1 go test ./gkill/mcp/ -run Golden
+//
+// でゴールデンを Go の出力で書き直し、`git diff testdata/golden` を読んで意図した差分だけであることを
+// 確かめてからコミットする（そのあと環境変数なしで走らせて緑を確認する）。以後のゴールデンは
+// 「旧 Node との一致」ではなく「前回コミットした Go の出力との一致」を固定する回帰検査になる。
 
 import (
 	"bufio"
@@ -53,6 +61,19 @@ func readGoldenFile(t *testing.T, name string) string {
 		t.Fatalf("read golden %s: %v", name, err)
 	}
 	return string(data)
+}
+
+// updateGolden は GKILL_MCP_UPDATE_GOLDEN=1 のとき真。ゴールデンを Go の出力で書き直す。
+func updateGolden() bool {
+	return os.Getenv("GKILL_MCP_UPDATE_GOLDEN") == "1"
+}
+
+func writeGoldenFile(t *testing.T, name string, content string) {
+	t.Helper()
+	if err := os.WriteFile(goldenPath(t, name), []byte(content), 0o644); err != nil {
+		t.Fatalf("write golden %s: %v", name, err)
+	}
+	t.Logf("golden updated: %s", name)
 }
 
 func loadGoldenCases(t *testing.T) []goldenCase {
@@ -267,8 +288,12 @@ func TestGoldenToolsListMatchesTheNodeImplementationByteForByte(t *testing.T) {
 	for _, kind := range ServerKinds {
 		t.Run(kind, func(t *testing.T) {
 			server := NewServerForKind(kind, &mockClient{}, nil)
-			expected := strings.TrimRight(readGoldenFile(t, "tools_list_"+kind+".json"), "\r\n")
 			got := jsonobj.MarshalString(toolsToAny(server.Tools))
+			if updateGolden() {
+				writeGoldenFile(t, "tools_list_"+kind+".json", got+"\n")
+				writeGoldenFile(t, "schema_revision_"+kind+".txt", server.SchemaRevision+"\n")
+			}
+			expected := strings.TrimRight(readGoldenFile(t, "tools_list_"+kind+".json"), "\r\n")
 			if got != expected {
 				t.Fatalf("tools/list differs from the Node golden (kind=%s): got %d bytes, want %d bytes; first difference at %d", kind, len(got), len(expected), firstDifference(got, expected))
 			}
@@ -292,9 +317,15 @@ func firstDifference(a, b string) int {
 func replayGolden(t *testing.T, kind string, mode string, clock *goldenClock, fake *fakegkill.Server, baseURL string) {
 	t.Helper()
 	cases := loadGoldenCases(t)
+	update := updateGolden()
 	expectedResponses := loadGoldenLines(t, "responses_"+kind+"_"+mode+".jsonl")
 	expectedUpstream := loadGoldenLines(t, "upstream_"+kind+"_"+mode+".jsonl")
-	expectEqual(t, len(expectedResponses), len(cases))
+	if !update {
+		expectEqual(t, len(expectedResponses), len(cases))
+	}
+	// 更新モードで書き出す行（採取ハーネスと同じ {name, raw} / {name, requests} の JSONL）
+	newResponses := make([]string, 0, len(cases))
+	newUpstream := make([]string, 0, len(cases))
 
 	originalVersion := ServerVersion
 	ServerVersion = strings.TrimSpace(readGoldenFile(t, "package_version.txt"))
@@ -319,10 +350,18 @@ func replayGolden(t *testing.T, kind string, mode string, clock *goldenClock, fa
 		message := buildGoldenMessage(c, index, previous)
 		response := server.HandlePayload(t.Context(), message, requestContext)
 		raw := "null"
+		var rawValue any
 		if response != nil {
 			raw = jsonobj.MarshalString(response)
+			rawValue = raw
 		}
 		previous[c.Name] = response
+		gotUpstream := recordsToAny(fake.Drain())
+		newResponses = append(newResponses, jsonobj.MarshalString(jsonobj.Obj("name", c.Name, "raw", rawValue)))
+		newUpstream = append(newUpstream, jsonobj.MarshalString(jsonobj.Obj("name", c.Name, "requests", gotUpstream)))
+		if update {
+			continue
+		}
 
 		expectedLine := expectedResponses[c.Name]
 		expectedRaw := "null"
@@ -342,7 +381,6 @@ func replayGolden(t *testing.T, kind string, mode string, clock *goldenClock, fa
 			}
 		}
 
-		gotUpstream := recordsToAny(fake.Drain())
 		wantUpstream := []any{}
 		if line := expectedUpstream[c.Name]; line != nil {
 			wantUpstream = arrayOrEmpty(line.Value("requests"))
@@ -358,6 +396,10 @@ func replayGolden(t *testing.T, kind string, mode string, clock *goldenClock, fa
 	}
 	if failures > 5 {
 		t.Errorf("[%s/%s] %d cases differ in total (first 5 shown)", kind, mode, failures)
+	}
+	if update {
+		writeGoldenFile(t, "responses_"+kind+"_"+mode+".jsonl", strings.Join(newResponses, "\n")+"\n")
+		writeGoldenFile(t, "upstream_"+kind+"_"+mode+".jsonl", strings.Join(newUpstream, "\n")+"\n")
 	}
 }
 
