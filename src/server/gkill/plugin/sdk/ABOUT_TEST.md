@@ -2,7 +2,7 @@
 
 ## 概要
 
-プラグイン作者向け Go SDK のテスト。**56テスト（6ファイル）**。
+プラグイン作者向け Go SDK のテスト。**62テスト（7ファイル）**。
 
 `sdk.Run()` の stdin/stdout ループ、`--gkill-build-cache` の単独モード、`sdk.EnsureConfig()` の `config.json` 自動生成、
 `sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置、`sdk.Query.MatchText()` のワード判定を検証する。
@@ -18,6 +18,7 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 | `config_test.go` | 4 | `EnsureConfig()`（`TestEnsureConfig_*`） |
 | `source_test.go` | 18 | `OpenSources()` の ZIP 走査（`TestOpenSources_*` ほか） |
 | `cache_path_test.go` | 5 | `CacheDBPath()` / `IsSafePathElement()`（`TestCacheDBPath_*`） |
+| `plugin_log_test.go` | 6 | `Run()` が開く `$GKILL_HOME/logs/gkill_plugin_<name>*.log`（`initLogging` / `LogWarn` / `LogInfo` / `runLoop` の Access 行） |
 | `match_words_test.go` | 2 | `Query.MatchText()` / `Query.Matcher()`（`TestQueryMatchText` / `TestQueryMatcherDoesNotMutateQuery`）。gkill 本体と同じ規則（大小無視の部分一致、ID は前方一致、除外語は ID を見ない、空語は無視）で、元の Query を書き換えないこと |
 
 ## sdk_test.go — stdio ループ
@@ -61,8 +62,24 @@ gkill 側（`gkill_server generate_plugin_cache`）は stdout の結果行だけ
 | `TestRunBuildCache_NilHandlerPrintsNoCache` | `BuildCache` が nil なら `no_cache` を出して成功扱い（`all` 指定でキャッシュ無しプラグインを赤くしない） |
 | `TestRunBuildCache_SuccessPrintsBuilt` | 1回だけ呼ばれ、`EnsureConfig` の結果と `newCtx` の user id がそのまま渡り、`built` を出す |
 | `TestRunBuildCache_ErrorGoesToStderrAndReturnsFalse` | 失敗は stderr（`ERROR: build cache: …`）に出て false。stdout には何も書かない（書くと gkill が成功と読む） |
-| `TestRunBuildCache_WritesOnlyResultLineToStdout` | `LogWarn` を呼んでも stdout は結果行1行だけ（gkill 側は完全一致で判定する） |
+| `TestRunBuildCache_WritesOnlyResultLineToStdout` | `LogWarn` を呼んでも stdout は結果行1行だけ（gkill 側は完全一致で判定する）。stderr の `WARN: ` 行の形は gkill_log 導入後も変えない（`last_error` が読む） |
 | `TestBundledPluginsWireBuildCache` | `src/plugins/gkill_plugin_*/main.go` を走査し、全部 `BuildCache:` を配線していること。欠けると `generate_plugin_cache all` でそのプラグインだけ `no_cache` になりエラーも出ない |
+
+## plugin_log_test.go — gkill_log へのログ
+
+`Run()` は flag の解析直後に `$GKILL_HOME/logs/gkill_plugin_<name>*.log` を開く（`initLogging`）。レベルと回転は本体が
+環境変数 `GKILL_LOG_LEVEL` / `GKILL_LOG_ROTATE_MAX_BYTES` / `GKILL_LOG_ROTATE_KEEP` で継ぐ。
+**ログの都合でプラグインを止めない**（home が分からない・dir を作れない・壊れた値 → stderr だけで続行）ことと、
+**stdout に1バイトも書かない**ことを固定している（[ADR-0313](../../../../../documents/adr/0313-plugin-logs-through-gkill-log.md)）。
+
+| テスト | 検証内容 |
+|-------|---------|
+| `TestInitLoggingWritesUnderGkillHome` | 統合 + レベル別ファイルが `logs/` に開き、静的フィールド `app=gkill_plugin` / `plugin` / `user_id` / `pid` が付く。`LogWarn` は stderr（`WARN: ` 行）とファイルの両方、`LogInfo` はファイルだけ。`source` は log.go ではなく呼び出し元 |
+| `TestInitLoggingPrefixDoesNotDouble` | 名前が `gkill_plugin_` で始まるなら接頭辞を二重にしない（`gkill_plugin_uguisu*.log`）、そうでなければ付ける（`gkill_plugin_gkill_example*.log`） |
+| `TestInitLoggingWithoutHomeIsStderrOnly` | `GKILL_HOME` が無く `plugins/{user}/{name}` の形でもなければファイルを作らず、stderr に1行断って続行する |
+| `TestInitLoggingInfersHomeFromPluginDir` | `GKILL_HOME` が無くても `plugins/{user}/{name}` から home を推定する（`PluginCacheDir` と同じ解決） |
+| `TestInitLoggingBadLevelFallsBackToError` | `GKILL_LOG_LEVEL=bogus` で止まらず、stderr に警告して error レベルで続行する |
+| `TestRunLoopWritesAccessLineAndKeepsStdoutClean` | access レベルで1コマンド1行（command / count / error）が `_access.log` に残り、`plugin stop` が Info に残り、stdout は JSON 応答だけ |
 
 ## config_test.go — EnsureConfig
 

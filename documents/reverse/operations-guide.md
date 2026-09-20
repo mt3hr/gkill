@@ -35,7 +35,8 @@ $HOME/gkill/
 │   ├── gkill.log.1 ... .5          # サイズ上限で回転した統合ログ（レベル別ログも同様）
 │   ├── gkill_mcp_read.log             # Read MCPサーバの統合ログ（レベル別の gkill_mcp_read_<level>.log も同じ接頭辞。回転も本体と同じ）
 │   ├── gkill_mcp_write.log            # Write MCPサーバ（同上）
-│   └── gkill_mcp_readwrite.log        # Read/Write MCPサーバ（同上）
+│   ├── gkill_mcp_readwrite.log        # Read/Write MCPサーバ（同上）
+│   └── gkill_plugin_<name>.log        # プラグイン <name> の統合ログ（レベル別の gkill_plugin_<name>_<level>.log も同じ接頭辞。プラグイン1本につき8ファイル）
 ├── lib/base_directory/              # ライブラリファイル
 └── tls/                             # TLS証明書（オプション）
     ├── cert.cer
@@ -419,6 +420,15 @@ gkill_server --log trace_sql # SQL文も含め全出力
 要点は「呼び出し元へ返らないエラーは Debug に置かない」「利用者の入力・認証・認可の失敗は Warn 以下」の2つです。
 失敗したリクエストは応答を書く1箇所（`writeErrorStatus`）が、ステータスから決まるレベルで1行残します
 （5xx は Error、401・403・429 は Warn、その他の4xx は Debug）。エラーコード・メソッド・パス・ユーザIDが載ります。
+
+**プラグインのログ**は、プラグインの子プロセス自身が同じ基盤で `logs/gkill_plugin_<name>.log`（統合）と
+`gkill_plugin_<name>_{error,warn,info,access,debug,trace,trace_sql}.log` へ書きます（`<name>` は manifest の `name`。
+静的フィールドは `app=gkill_plugin` / `plugin` / `user_id` / `pid`）。レベルと回転は本体の `--log` / `--log_rotate_*` を
+環境変数 `GKILL_LOG_LEVEL` / `GKILL_LOG_ROTATE_MAX_BYTES` / `GKILL_LOG_ROTATE_KEEP` で継ぎます（本体が起動時に書き出し、
+子プロセスは環境継承で受ける。`GKILL_HOME` と同じ経路）。`WARN:` / `ERROR:` の行は従来どおり stderr にも出るので、
+`get_plugin_list` の `last_error`（stderr 末尾 4KB）はこれまでどおり読めます。`--log access` にすると1コマンド1行
+（コマンド名・所要ミリ秒・件数・エラー）が `gkill_plugin_<name>_access.log` に残り、「プロセスが殺され続ける」（期限超過）の
+調査に使えます（[ADR-0313](../adr/0313-plugin-logs-through-gkill-log.md)）。
 
 ### 6.2 ログフォーマット
 
