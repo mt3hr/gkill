@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
 | Go バックエンド (`server/`) | 1361 | 204 | Go `testing` |
-| フロントエンド ユニット (`client/`) | 2019 | 178 | Vitest |
+| フロントエンド ユニット (`client/`) | 2025 | 179 | Vitest |
 | フロントエンド E2E (`client/`) | 253 | 46 | Playwright |
-| MCP サーバ (`server/gkill/mcp/`) | 1121 | 36 | Go `testing` |
+| MCP サーバ (`server/gkill/mcp/`) | 1127 | 36 | Go `testing` |
 | ツール (`tools/`) | 55 | 2 | Vitest |
 | Android (`android/`) | 15 | 2 | JUnit 4 |
 | Wear OS (`wear_os/`) | 228 | 18 | JUnit 4 + MockK |
-| **合計** | **5,052** | **486** | |
+| **合計** | **5,064** | **487** | |
 
 `src/plugins/` の Go テスト 196件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
@@ -71,7 +71,7 @@ npm run verify_docs -- --list
 
 | ディレクトリ | テスト仕様 | 概要 |
 |-------------|-----------|------|
-| `client/` | [client/ABOUT_TEST.md](client/ABOUT_TEST.md) | フロントエンド全体（unit 2019 + E2E 253） |
+| `client/` | [client/ABOUT_TEST.md](client/ABOUT_TEST.md) | フロントエンド全体（unit 2025 + E2E 253） |
 | `client/classes/` | [client/classes/ABOUT_TEST.md](client/classes/ABOUT_TEST.md) | ユーティリティクラス |
 | `client/classes/api/` | [client/classes/api/ABOUT_TEST.md](client/classes/api/ABOUT_TEST.md) | GkillAPI クライアント |
 | `client/classes/datas/` | [client/classes/datas/ABOUT_TEST.md](client/classes/datas/ABOUT_TEST.md) | 35ファイル（データモデル + 横断検証） |
@@ -89,7 +89,7 @@ npm run verify_docs -- --list
 | `server/gkill/usecase/` | [server/gkill/usecase/ABOUT_TEST.md](server/gkill/usecase/ABOUT_TEST.md) | ビジネスロジック層（ハンドラ経由で33〜50%到達） |
 | `server/gkill/dvnf/` | [server/gkill/dvnf/ABOUT_TEST.md](server/gkill/dvnf/ABOUT_TEST.md) | DVNF ファイル管理 |
 | `server/gkill/main/` | [server/gkill/main/ABOUT_TEST.md](server/gkill/main/ABOUT_TEST.md) | CLI エントリポイント |
-| `server/gkill/mcp/` | [server/gkill/mcp/ABOUT_TEST.md](server/gkill/mcp/ABOUT_TEST.md) | MCP サーバ（1121テスト）。旧 Node 実装とのゴールデン一致を含む |
+| `server/gkill/mcp/` | [server/gkill/mcp/ABOUT_TEST.md](server/gkill/mcp/ABOUT_TEST.md) | MCP サーバ（1127テスト）。旧 Node 実装とのゴールデン一致を含む |
 | `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) | Android APK テスト |
 | `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) | Wear OS テスト（226テスト） |
 | `server/gkill/plugin/sdk/` | [server/gkill/plugin/sdk/ABOUT_TEST.md](server/gkill/plugin/sdk/ABOUT_TEST.md) | プラグイン SDK（stdio ループ + 単独モード --gkill-build-cache + EnsureConfig + ZIP走査 + キャッシュDBパス + ワード判定 + rep_names + gkill_log へのログ、62テスト） |

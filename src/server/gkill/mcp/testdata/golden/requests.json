@@ -350,5 +350,8 @@
   {"name": "update kc: same num_value", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_update_kc", "arguments": {"id": "kc-1", "num_value": 62.5}}}},
   {"name": "update tag: tag", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_update_tag", "arguments": {"id": "tag-1", "tag": "日記2"}}}},
   {"name": "update text: text", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_update_text", "arguments": {"id": "text-1", "text": "補足2"}}}},
-  {"name": "update text: unknown key", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_update_text", "arguments": {"id": "text-1", "text": "x", "target_id": "y"}}}}
+  {"name": "update text: unknown key", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_update_text", "arguments": {"id": "text-1", "text": "x", "target_id": "y"}}}},
+  {"name": "app config: fields descriptions", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_application_config", "arguments": {"fields": ["descriptions"]}}}},
+  {"name": "app config: descriptions with contains", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_application_config", "arguments": {"fields": ["descriptions", "user_id"], "contains": "メモ"}}}},
+  {"name": "help: config", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_mcp_help", "arguments": {"topic": "config"}}}}
 ]

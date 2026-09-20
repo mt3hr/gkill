@@ -215,7 +215,7 @@ gkill_log を使い、`$GKILL_HOME/logs/` に `gkill_mcp_<kind>.log`（全レベ
 | ツール名 | 説明 |
 |---|---|
 | `gkill_status` | このサーバが何者かを返す（引数なし。3サーバ共通）: `server_kind`（read / write / readwrite）、接続先の `account.user_id` / `account.device`、gkill のビルド（`gkill.version` / `commit_hash` / `build_time`）、`transport`、`started_at` / `uptime_seconds`、`tool_count`、`schema_revision`。**`schema_revision` はツール一覧の世代**で、同じ値が `gkill_status` の説明文末尾にも焼き込まれている。応答と説明文の値が違えば、クライアントが握っている一覧が古い（一覧は接続時に1回しか取られない。サーバを再起動しても直らず、接続し直しが要る）。gkill へ届かないときも失敗にせず `gkill_reachable:false` + `gkill_error`（HTTP ステータスのみ）で返す |
-| `gkill_get_mcp_help` | ツール説明の本文を topic ごとに返す（引数 `topic`: `search` / `pagination` / `mi` / `data_types` / `plugin` / `idf` / `deleted` / `rep` / `kftl`。省略で index。3サーバ共通、gkill へは往復しない）。**ツール一覧の説明文は要約**で、応答フィールドの一覧・Mi の射影・KFTL の文法全文などはここにある（正本は `help_topics.go`。ADR-0622） |
+| `gkill_get_mcp_help` | ツール説明の本文を topic ごとに返す（引数 `topic`: `search` / `pagination` / `mi` / `data_types` / `plugin` / `idf` / `deleted` / `rep` / `kftl` / `config`。省略で index。3サーバ共通、gkill へは往復しない）。**ツール一覧の説明文は要約**で、応答フィールドの一覧・Mi の射影・KFTL の文法全文などはここにある（正本は `help_topics.go`。ADR-0622） |
 | `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却）。`data_types` はエンティティ名 `timeis` / `mi` / `mirekyou` も受理して全射影へ展開する（ADR-0623）。`count_only` と `group_by` は cursor と同じく併用不可（エラー）。`query.ids` の不一致・`num_min` / `num_max` の種別混在は `warnings[]` に出る |
 | `gkill_get_mi_board_list` | Miボード名一覧を取得 |
 | `gkill_get_all_tag_names` | 全タグ名を取得 |
@@ -503,24 +503,29 @@ Mi抽出（**`for_mi` は `include_*_mi` を最低1つ要求する**。全て無
 | パラメータ | 型 | 説明 |
 |---|---|---|
 | `locale_name` | string | ロケール（例: ja, en） |
-| `fields` | array | 返すトップレベルフィールドの許可リスト（射影）。接続先の確認だけなら `["user_id", "device"]` で足りる（全量取得は実測94KB、この射影なら42バイト） |
+| `fields` | array | 返すトップレベルフィールドの許可リスト（射影）。接続先の確認だけなら `["user_id", "device"]` で足りる（全量取得は実測94KB、この射影なら42バイト）。`"descriptions"` は仮想欄で、6 ツリーから利用者が説明を書いたノードだけを `{struct, name, path, is_dir, description}` の平坦な一覧にして返す（fields で明示したときだけ。既定の全量には載らない。ADR-0632） |
 | `include_ui_state` | boolean | ツリーエディタのUI一時状態キーを含めるか（default: false。既定で剥がされる） |
+| `compact` | boolean | 既定 true。ノードの既定値の欄（`children` の null / 空、`is_dir:false`、`ignore_check_rep_rykv:false`、空の `description`、識別欄と同じ `name`）を落とす。`check_when_inited` / `is_force_hide` は落とさない（ADR-0629） |
+| `contains` | string | 葉の名前（識別欄 `tag_name` / `rep_name` / `rep_type_name` / `device_name` / `board_name` / `title` と表示名 `name`）の大小無視の部分一致で刈る。葉が残らないフォルダは落ちる。`descriptions` 一覧には name / path / description で掛かる |
+| `max_size_mb` | number | 応答の上限（既定 0.25）。超えたら大きいツリーから `{omitted_bytes}` に置き換え、`warnings[]` で知らせる |
 
 **レスポンスフィールド:**
 | フィールド | 説明 |
 |---|---|
 | `user_id` | 接続アカウントのユーザーID。read / write / readwrite が別アカウントを向いていることがあるため、**書き込み前の接続先確認に使う** |
 | `device` | 接続アカウントのデバイス名 |
-| `tag_struct` | タグの親子階層構造。各要素は `tag_name`, `check_when_inited`（デフォルトチェック状態）, `is_force_hide`（非表示設定）, `children`（子タグ配列）を持つ |
-| `mi_board_struct` | タスクボードの構造 |
-| `rep_struct` | リポジトリの組織構造 |
-| `rep_type_struct` | リポジトリの種別構造 |
-| `device_struct` | デバイスの組織構造 |
-| `kftl_template_struct` | KFTLテンプレート構造 |
+| `tag_struct` | タグの親子階層構造。ルート 1 オブジェクト（`{name:"__root__", children:[...], is_dir:true}`）で、各要素は `tag_name`, `check_when_inited`（デフォルトチェック状態）, `is_force_hide`（非表示設定）, `children`（子タグ配列）, `description`（利用者が書いた運用メモ。非空のときだけ）を持つ |
+| `mi_board_struct` | タスクボードの構造（識別欄 `board_name`。フラット） |
+| `rep_struct` | リポジトリの組織構造（識別欄 `rep_name`） |
+| `rep_type_struct` | リポジトリの種別構造（識別欄 `rep_type_name`） |
+| `device_struct` | デバイスの組織構造（識別欄 `device_name`） |
+| `kftl_template_struct` | KFTLテンプレート構造（識別欄 `title`、本文 `template`） |
+| `descriptions` | `fields:["descriptions"]` のときだけ。6 ツリーから `description` が非空のノードを `{struct, name, path, is_dir, description}` で平坦に並べた一覧（`path` はルートを除く祖先の表示名を `/` で連結） |
 | `mi_default_board` | デフォルトのタスクボード名（例: "Inbox"） |
 | `show_tags_in_list` | タグ表示がオンかオフか |
 
 **推奨運用:**
+- まず `fields:["descriptions"]` で利用者の運用メモ（何のためのタグ / 記録保管場所 / 板 / テンプレートで、どう使っているか）を読む。説明が無いノードは「書いていない」だけなので推測しない（本文は `gkill_get_mcp_help topic:config`）
 - クエリ前にタグ構造を確認し、`is_force_hide: true` のタグを `hide_tags` に含める
 - `check_when_inited: true` のタグはデフォルトで選択されるタグ（ユーザーが頻繁に使うタグ）
 - `children` でタグの親子関係を辿り、関連タグをまとめて検索に利用する

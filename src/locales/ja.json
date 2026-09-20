@@ -984,5 +984,8 @@
     "UNEXPECTED_CLIENT_ERROR_MESSAGE": "画面の処理で予期しないエラーが起きました",
     "ERROR_HINT_UNEXPECTED_CLIENT_ERROR": "ページを再読込してください。直らなければ「詳細をコピー」で内容を控えて報告してください",
     "ERROR_ALERT_COPY_TITLE": "詳細をコピー",
-    "ERROR_ALERT_COPIED_MESSAGE": "エラーの詳細をコピーしました"
+    "ERROR_ALERT_COPIED_MESSAGE": "エラーの詳細をコピーしました",
+    "DESCRIPTION_TITLE": "説明",
+    "STRUCT_DESCRIPTION_HINT": "AI連携（MCP）に伝える運用メモ。何のための項目か、どう使っているかを書きます",
+    "EDIT_MI_BOARD_STRUCT_ELEMENT_TITLE": "板編集"
 }

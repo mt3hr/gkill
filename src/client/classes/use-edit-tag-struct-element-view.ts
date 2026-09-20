@@ -11,12 +11,15 @@ export function useEditTagStructElementView(options: {
 
     const check_when_inited: Ref<boolean> = ref(props.struct_obj.check_when_inited)
     const is_force_hide: Ref<boolean> = ref(props.struct_obj.is_force_hide)
+    // 説明（運用メモ）。古い保存データには欄が無いので undefined を空文字に倒す
+    const description: Ref<string> = ref(props.struct_obj.description ?? "")
 
     async function apply(): Promise<void> {
         const tag_struct = new TagStructElementData()
         tag_struct.id = props.struct_obj.id
         tag_struct.check_when_inited = check_when_inited.value
         tag_struct.is_force_hide = is_force_hide.value
+        tag_struct.description = description.value
         tag_struct.children = props.struct_obj.children
         tag_struct.indeterminate = false
         tag_struct.is_dir = props.struct_obj.is_dir
@@ -31,6 +34,7 @@ export function useEditTagStructElementView(options: {
     return {
         check_when_inited,
         is_force_hide,
+        description,
         apply,
     }
 }

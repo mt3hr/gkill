@@ -54,7 +54,8 @@ const searchTopic = "gkill_get_kyous searches life-log entries (kyou) and return
 	"Hidden tags can still be searched intentionally by passing them directly in query.tags or query.timeis_tags. " +
 	"rep_types values are backend-specific and case-sensitive: ApplicationConfig display labels do not map 1:1 to " +
 	"accepted values (files/images live under \"directory\", not \"idf\"), so take them from gkill_get_rep_infos " +
-	"canonical_rep_types[] instead of guessing (see topic rep).\n\n" +
+	"canonical_rep_types[] instead of guessing (see topic rep). The trees also carry the user's own description " +
+	"notes on tags, repositories, boards and templates — read them first (see topic config).\n\n" +
 	"If a query fails, first retry with fewer query fields, a smaller limit and is_include_timeis=false; then add " +
 	"rep_types or TimeIs expansion back step by step. is_include_timeis is expensive in a way limit does not bound: " +
 	"every call reads the whole TimeIs history and the attachment ignores query.reps / rep_types / the calendar " +
@@ -342,6 +343,37 @@ const kftlTopic = "KFTL is gkill's line-based text format that creates multiple 
 	"writes) and create_device set to the SERVER's device name, not \"mcp\". MCP-submitted KFTL is therefore " +
 	"indistinguishable from hand-typed notepad KFTL and create_apps:[\"gkill_mcp_readwrite\"] does NOT find them."
 
+const configTopic = "gkill_get_application_config returns the settings trees the user maintains in the web settings screen, " +
+	"plus user_id / device (which account this server is connected to), mi_default_board and show_tags_in_list. There are " +
+	"six trees, each a single root object {name, children[], is_dir:true} whose nodes are folders (is_dir:true, name only) " +
+	"or leaves with one identity field: tag_struct -> tag_name, rep_struct -> rep_name, rep_type_struct -> rep_type_name, " +
+	"device_struct -> device_name, mi_board_struct -> board_name (flat, no folders), kftl_template_struct -> title plus " +
+	"template (the KFTL text itself). name is the display label and usually equals the identity field; with compact:true " +
+	"(default) it is omitted when equal, as are children:null / [], is_dir:false, ignore_check_rep_rykv:false and an empty " +
+	"description. check_when_inited (checked by default in the web sidebar, i.e. part of the user's everyday view) and " +
+	"is_force_hide (tag hidden from lists) are never omitted: a tag is visible when is_force_hide=false AND " +
+	"check_when_inited=true.\n\n" +
+	"description: every node, folder or leaf, may carry a free-text note the user wrote in that tree's edit dialog: what " +
+	"the tag / repository / repository type / device (profile) / board / template is for and how they actually use it — " +
+	"naming conventions, which board holds what, which template to use when, which repository is the phone's memo store. " +
+	"It is the user's operating manual for their own data. Read it BEFORE composing queries and prefer it over guesses " +
+	"from names. A node without a description simply has none written; do not infer one. Descriptions are written only in " +
+	"the web settings screen — there is no MCP tool that writes them.\n\n" +
+	"Reading them cheaply: fields:[\"descriptions\"] returns ONLY the nodes that have a description, as a flat list " +
+	"{struct, name, path, is_dir (true for folders only), description} in tree order, without the trees themselves " +
+	"(rep_struct alone can exceed 25,000 tokens). path is the folder path from the tree root such as \"生活/日記\" " +
+	"(root excluded). contains filters that list by name / path / description. descriptions is a virtual field: it is " +
+	"included only when named in fields, never in the default full response. The trees themselves show the same " +
+	"description on each node, so fields:[\"tag_struct\"] with contains narrows to one family with its notes.\n\n" +
+	"Mapping trees to queries: tag_struct leaves are query.tags / hide_tags / timeis_tags values (folders are not tags); " +
+	"rep_struct leaves are query.reps values (rep_name) — this tree is null until the user pressed Apply in the settings " +
+	"screen, use gkill_get_rep_infos for the actual inventory; rep_type_struct labels are NOT query.rep_types values " +
+	"(take those from gkill_get_rep_infos canonical_rep_types[]); device_struct names are the device part of repository " +
+	"names such as Kmemo_<device> and of create_device; mi_board_struct leaves are query.mi_board_name values and the " +
+	"board_name for gkill_add_mi / gkill_update_mi; kftl_template_struct leaves are ready-made KFTL texts the user " +
+	"submits from the notepad — their description says when the user uses each one, and the template body can be " +
+	"passed to gkill_submit_kftl as-is (see topic kftl)."
+
 // HelpTopic は topic 名と本文。
 type HelpTopic struct {
 	Name  string
@@ -360,6 +392,7 @@ var HelpTopics = []HelpTopic{
 	{Name: "deleted", Title: "Deleted entries and version history: include_deleted_data, gkill_get_kyou_history, restore", Text: deletedTopic},
 	{Name: "rep", Title: "rep_types vs rep names, gkill_get_rep_infos, attached_data_reps, use_to_write", Text: repTopic},
 	{Name: "kftl", Title: "KFTL text format for gkill_submit_kftl: every prefix, ~~ and ?? blocks, failures, provenance", Text: kftlTopic},
+	{Name: "config", Title: "Settings trees (tag / rep / rep_type / device / board / template), the user's description notes, fields:[\"descriptions\"]", Text: configTopic},
 }
 
 // HelpIndexTopic は topic を省略したときの応答。topic 名は inputSchema の enum にもなる。

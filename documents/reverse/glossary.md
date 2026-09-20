@@ -153,12 +153,12 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | **SavedFindQueryConfig** | 検索条件 | 保存済み検索条件クラス（`src/client/classes/datas/config/saved-find-query-config.ts`）。`saved_rykv_find_kyou_querys`（ライフログ用）と `saved_mi_find_kyou_querys`（タスク用）の2つの名前付き検索条件リストを保持する。各アイテムは `{id, title, find_kyou_query}`（Ryuu の関連情報クエリと同形式）。設定画面の「検索条件」ボタン → ハブダイアログ（`edit-saved-find-query-dialog.vue`）→ 種別別の一覧管理ダイアログ（`edit-saved-find-query-list-dialog.vue`、1コンポーネント2インスタンス）で登録・更新・削除・並べ替えする。rykv/mi サイドバーの呼び出しFAB（0件時非表示）から選択すると `apply_saved_query()` がサイドバーへ適用する（query_id は列側を維持。ホットリロードONなら自動検索、OFFなら検索ボタンで実行） |
 | **saved_find_query_json_data** | — | `APPLICATION_CONFIG` テーブルの KEY（`SAVED_FIND_QUERY_JSON_DATA`）として使用されるキー名。`DEVICE='ALL'`（デバイス非依存）で保存され、SavedFindQueryConfig の JSON 文字列を VALUE に格納する。`ignoreDeviceNameConfigKey` リストに含まれる |
 | **ServerConfig** | サーバ設定 | サーバ全体の設定。TLS・ポート番号・データディレクトリ・コマンドパス等 |
-| **TagStruct** | タグ構造 | タグの階層構造定義。フォルダでグルーピングし、初期化時チェック・非表示優先等のオプションを持つ |
+| **TagStruct** | タグ構造 | タグの階層構造定義。フォルダでグルーピングし、初期化時チェック・非表示優先等のオプションを持つ。各ノード（フォルダ・葉）は利用者が書く説明（`description`。MCP へ渡す運用メモ）を持てる（ADR-0632。6構造ツリー共通） |
 | **RepStruct** | 記録保管場所構造 | リポジトリの構造定義 |
 | **RepTypeStruct** | 記録タイプ構造 | リポジトリ型の分類定義 |
 | **KFTLTemplate** | テンプレート | KFTL 入力のテンプレート定義。テンプレート名と内容を持ち、Wear OS タイルからの入力にも使用される |
 | **DeviceStruct** | プロファイル構造 | デバイスプロファイルの定義 |
-| **MiBoardStruct** | — | タスクボードの構造定義。設定画面の「板構造」から並び順の変更と削除ができる（板名は実データ由来なので編集不可。フォルダ分けや表示名の変更もしない）。ApplicationConfig の `MI_BOARD_STRUCT` として全端末で共有される |
+| **MiBoardStruct** | — | タスクボードの構造定義。設定画面の「板構造」から並び順の変更と削除ができる（板名は実データ由来なので編集不可。フォルダ分けや表示名の変更もしない。板ごとの説明だけは編集できる）。ApplicationConfig の `MI_BOARD_STRUCT` として全端末で共有される |
 
 ## 7. Dnote 集計システム用語
 
@@ -290,7 +290,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（986キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（989キー/言語） |
 
 ### その他
 

@@ -984,5 +984,8 @@
     "UNEXPECTED_CLIENT_ERROR_MESSAGE": "An unexpected error occurred in the app",
     "ERROR_HINT_UNEXPECTED_CLIENT_ERROR": "Reload the page. If it persists, use \"Copy details\" to save the information and report it.",
     "ERROR_ALERT_COPY_TITLE": "Copy details",
-    "ERROR_ALERT_COPIED_MESSAGE": "Error details copied"
+    "ERROR_ALERT_COPIED_MESSAGE": "Error details copied",
+    "DESCRIPTION_TITLE": "Description",
+    "STRUCT_DESCRIPTION_HINT": "Operating notes passed to AI integration (MCP): what this item is for and how you use it",
+    "EDIT_MI_BOARD_STRUCT_ELEMENT_TITLE": "Edit Board"
 }

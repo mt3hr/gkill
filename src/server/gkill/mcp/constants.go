@@ -122,6 +122,9 @@ var AppConfigFields = NewStringSet(
 	"kftl_template_struct",
 	"mi_default_board",
 	"show_tags_in_list",
+	// 6 ツリーの description（利用者が設定画面で書く運用メモ）だけを平坦な一覧で返す仮想欄。
+	// 応答には fields で明示したときだけ載る（既定の全量には含めない。ツリー側に同じ文が載るため）。
+	"descriptions",
 )
 
 // MaxDeleteTargets は gkill_delete_kyou / gkill_restore_kyou の一括指定の上限。

@@ -11,6 +11,8 @@ export function useEditRepStructElementView(options: {
 
     const check_when_inited: Ref<boolean> = ref(props.struct_obj.check_when_inited)
     const ignore_check_rep_rykv: Ref<boolean> = ref(props.struct_obj.ignore_check_rep_rykv)
+    // 説明（運用メモ）。古い保存データには欄が無いので undefined を空文字に倒す
+    const description: Ref<string> = ref(props.struct_obj.description ?? "")
 
     async function apply(): Promise<void> {
         const rep_struct = new RepStructElementData()
@@ -20,6 +22,7 @@ export function useEditRepStructElementView(options: {
         rep_struct.name = props.struct_obj.rep_name
         rep_struct.check_when_inited = check_when_inited.value
         rep_struct.ignore_check_rep_rykv = ignore_check_rep_rykv.value
+        rep_struct.description = description.value
         rep_struct.children = props.struct_obj.children
         rep_struct.indeterminate = false
         rep_struct.is_dir = props.struct_obj.is_dir
@@ -30,6 +33,7 @@ export function useEditRepStructElementView(options: {
     return {
         check_when_inited,
         ignore_check_rep_rykv,
+        description,
         apply,
     }
 }

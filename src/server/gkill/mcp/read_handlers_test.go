@@ -1286,55 +1286,124 @@ func TestHandleReadToolCallGetKyouHistoryOffsetAndDataType(t *testing.T) {
 }
 
 func TestHandleReadToolCallGetApplicationConfigCompactContainsMaxSize(t *testing.T) {
+	// 実データと同じ形: 各ツリーはルート 1 オブジェクト（{name:"__root__", children:[...], is_dir:true}）で、
+	// 葉の識別欄は rep_name / tag_name（ADR-0632）。
 	config := func() *jsonobj.Object {
 		return jsonobj.MustUnmarshal(`{
 			"user_id": "u",
 			"device": "d",
-			"tag_struct": [],
-			"rep_struct": [
+			"tag_struct": {"name": "__root__", "tag_name": "", "is_dir": true, "children": [
+				{"name": "life", "tag_name": "life", "is_dir": true, "description": "folder note", "children": [
+					{"name": "diary", "tag_name": "diary", "is_dir": false, "children": null, "check_when_inited": true, "is_force_hide": false, "description": "written at night"},
+					{"name": "morning", "tag_name": "morning", "is_dir": false, "children": null, "check_when_inited": false, "is_force_hide": true, "description": ""}
+				]}
+			]},
+			"rep_struct": {"name": "__root__", "rep_name": "", "is_dir": true, "children": [
 				{
 					"name": "dir",
+					"rep_name": "dir",
 					"is_dir": true,
 					"children": [
 						{"name": "Kmemo_A", "rep_name": "Kmemo_A", "is_dir": false, "children": null, "ignore_check_rep_rykv": false, "check_when_inited": true},
-						{"name": "別名", "rep_name": "Kmemo_B", "is_dir": false, "children": null, "ignore_check_rep_rykv": true, "check_when_inited": false}
+						{"name": "別名", "rep_name": "Kmemo_B", "is_dir": false, "children": null, "ignore_check_rep_rykv": true, "check_when_inited": false, "description": "phone memos"}
 					]
 				}
-			]
+			]},
+			"mi_board_struct": null
 		}`).(*jsonobj.Object)
 	}
 	withConfig := func() *CallContext {
 		return makeCtx(resolving(func() *jsonobj.Object { return obj("application_config", config()) }))
 	}
+	repChildren := func(t *testing.T, payload *jsonobj.Object) []any {
+		t.Helper()
+		return arrAt(t, objAt(t, payload, "rep_struct"), "children")
+	}
 
 	t.Run("compact drops default-valued node fields and keeps the visibility flags", func(t *testing.T) {
 		payload, err := HandleReadToolCall(withConfig(), "gkill_get_application_config", obj("fields", strs("rep_struct")))
 		expectNoError(t, err)
-		dir := objAt(t, arrAt(t, payload, "rep_struct")[0])
+		dir := objAt(t, repChildren(t, payload)[0])
 		children := arrAt(t, dir, "children")
 		expectEqual(t, dir.Value("is_dir"), true)
+		expectTrue(t, !dir.Has("name"), "folder name equal to rep_name should be dropped")
 		expectEqual(t, children[0], obj("rep_name", "Kmemo_A", "check_when_inited", true))
-		expectEqual(t, children[1], obj("name", "別名", "rep_name", "Kmemo_B", "ignore_check_rep_rykv", true, "check_when_inited", false))
+		expectEqual(t, children[1], obj("name", "別名", "rep_name", "Kmemo_B", "ignore_check_rep_rykv", true, "check_when_inited", false, "description", "phone memos"))
+	})
+
+	t.Run("compact drops only an EMPTY description and keeps the tag identity field", func(t *testing.T) {
+		payload, err := HandleReadToolCall(withConfig(), "gkill_get_application_config", obj("fields", strs("tag_struct")))
+		expectNoError(t, err)
+		life := objAt(t, arrAt(t, objAt(t, payload, "tag_struct"), "children")[0])
+		expectEqual(t, life.Value("description"), "folder note")
+		expectTrue(t, !life.Has("name"), "folder name equal to tag_name should be dropped")
+		leaves := arrAt(t, life, "children")
+		expectEqual(t, leaves[0], obj("tag_name", "diary", "check_when_inited", true, "is_force_hide", false, "description", "written at night"))
+		expectEqual(t, leaves[1], obj("tag_name", "morning", "check_when_inited", false, "is_force_hide", true))
 	})
 
 	t.Run("compact:false returns the raw tree", func(t *testing.T) {
 		payload, err := HandleReadToolCall(withConfig(), "gkill_get_application_config", obj("fields", strs("rep_struct"), "compact", false))
 		expectNoError(t, err)
-		a := objAt(t, arrAt(t, objAt(t, arrAt(t, payload, "rep_struct")[0]), "children")[0])
+		a := objAt(t, arrAt(t, objAt(t, repChildren(t, payload)[0]), "children")[0])
 		expectTrue(t, a.Has("children") && a.Value("children") == nil, "children is not null")
 		expectEqual(t, a.Value("is_dir"), false)
 		expectEqual(t, a.Value("name"), "Kmemo_A")
 	})
 
-	t.Run("contains keeps matching leaves and drops folders left empty", func(t *testing.T) {
+	t.Run("contains keeps matching leaves under a root object and drops folders left empty", func(t *testing.T) {
 		hit, err := HandleReadToolCall(withConfig(), "gkill_get_application_config", obj("fields", strs("rep_struct"), "contains", "kmemo_b"))
 		expectNoError(t, err)
-		expectEqual(t, len(arrAt(t, hit, "rep_struct")), 1)
-		expectEqual(t, repNamesOf(t, objAt(t, arrAt(t, hit, "rep_struct")[0]), "children"), []string{"Kmemo_B"})
+		expectEqual(t, len(repChildren(t, hit)), 1)
+		expectEqual(t, repNamesOf(t, objAt(t, repChildren(t, hit)[0]), "children"), []string{"Kmemo_B"})
 
 		miss, err := HandleReadToolCall(withConfig(), "gkill_get_application_config", obj("fields", strs("rep_struct"), "contains", "zzz"))
 		expectNoError(t, err)
-		expectEqual(t, miss.Value("rep_struct"), arr())
+		// 残らなければルートは children:[] で返す（compact が空配列を落とすので children 自体が消える）
+		root := objAt(t, miss, "rep_struct")
+		expectTrue(t, !root.Has("children"), "children should be dropped when nothing matched")
+		expectEqual(t, root.Value("is_dir"), true)
+	})
+
+	t.Run("contains matches the identity field of tag leaves, not only name", func(t *testing.T) {
+		hit, err := HandleReadToolCall(withConfig(), "gkill_get_application_config", obj("fields", strs("tag_struct"), "contains", "DIARY", "compact", false))
+		expectNoError(t, err)
+		life := objAt(t, arrAt(t, objAt(t, hit, "tag_struct"), "children")[0])
+		leaves := arrAt(t, life, "children")
+		expectEqual(t, len(leaves), 1)
+		expectEqual(t, objAt(t, leaves[0]).Value("tag_name"), "diary")
+	})
+
+	t.Run("fields descriptions lists only nodes that have a note, with struct / name / path", func(t *testing.T) {
+		payload, err := HandleReadToolCall(withConfig(), "gkill_get_application_config", obj("fields", strs("descriptions")))
+		expectNoError(t, err)
+		expectTrue(t, !payload.Has("tag_struct") && !payload.Has("rep_struct"), "trees must not be returned")
+		expectEqual(t, payload.Value("descriptions"), arr(
+			obj("struct", "tag_struct", "name", "life", "path", "life", "is_dir", true, "description", "folder note"),
+			obj("struct", "tag_struct", "name", "diary", "path", "life/diary", "description", "written at night"),
+			obj("struct", "rep_struct", "name", "Kmemo_B", "path", "dir/Kmemo_B", "description", "phone memos"),
+		))
+	})
+
+	t.Run("contains filters the descriptions list by name / path / description", func(t *testing.T) {
+		payload, err := HandleReadToolCall(withConfig(), "gkill_get_application_config", obj("fields", strs("descriptions"), "contains", "phone"))
+		expectNoError(t, err)
+		expectEqual(t, payload.Value("descriptions"), arr(
+			obj("struct", "rep_struct", "name", "Kmemo_B", "path", "dir/Kmemo_B", "description", "phone memos"),
+		))
+	})
+
+	t.Run("descriptions is not part of the default full response", func(t *testing.T) {
+		payload, err := HandleReadToolCall(withConfig(), "gkill_get_application_config", obj())
+		expectNoError(t, err)
+		expectTrue(t, !payload.Has("descriptions"), "descriptions must be opt-in")
+	})
+
+	t.Run("descriptions is [] when no tree is configured", func(t *testing.T) {
+		ctx := makeCtx(resolving(func() *jsonobj.Object { return obj("application_config", obj("user_id", "u", "device", "d")) }))
+		payload, err := HandleReadToolCall(ctx, "gkill_get_application_config", obj("fields", strs("descriptions")))
+		expectNoError(t, err)
+		expectEqual(t, payload.Value("descriptions"), arr())
 	})
 
 	t.Run("max_size_mb replaces the largest struct with omitted_bytes and warns", func(t *testing.T) {
@@ -1344,7 +1413,7 @@ func TestHandleReadToolCallGetApplicationConfigCompactContainsMaxSize(t *testing
 		))
 		expectNoError(t, err)
 		expectTrue(t, floatOf(t, objAt(t, payload, "rep_struct").Value("omitted_bytes")) > 0, "omitted_bytes not positive")
-		expectEqual(t, payload.Value("tag_struct"), arr())
+		expectTrue(t, floatOf(t, objAt(t, payload, "tag_struct").Value("omitted_bytes")) > 0, "tag_struct omitted_bytes not positive")
 		mustContain(t, jsString(arrAt(t, payload, "warnings")), "rep_struct")
 	})
 }

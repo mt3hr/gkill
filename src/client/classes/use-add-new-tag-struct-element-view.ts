@@ -16,6 +16,7 @@ export function useAddNewTagStructElementView(options: {
     const tag_name: Ref<string> = ref("")
     const check_when_inited: Ref<boolean> = ref(true)
     const is_force_hide: Ref<boolean> = ref(false)
+    const description: Ref<string> = ref("")
 
     // ── Business logic ──
     function emits_tag_name(): void {
@@ -32,6 +33,7 @@ export function useAddNewTagStructElementView(options: {
         tag_struct_element.is_dir = false
         tag_struct_element.check_when_inited = check_when_inited.value
         tag_struct_element.is_force_hide = is_force_hide.value
+        tag_struct_element.description = description.value
         tag_struct_element.children = null
         tag_struct_element.indeterminate = false
         tag_struct_element.key = tag_name.value
@@ -45,6 +47,7 @@ export function useAddNewTagStructElementView(options: {
         tag_name.value = ""
         check_when_inited.value = true
         is_force_hide.value = false
+        description.value = ""
     }
 
     // ── Return ──
@@ -53,6 +56,7 @@ export function useAddNewTagStructElementView(options: {
         tag_name,
         check_when_inited,
         is_force_hide,
+        description,
 
         // Business logic
         emits_tag_name,

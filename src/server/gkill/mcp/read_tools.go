@@ -63,7 +63,8 @@ var ReadTools = []*jsonobj.Object{
 		"Return the detailed guide for one topic of this MCP server. The tool descriptions in this list are summaries; "+
 			"read the relevant topic before a first search (search / pagination / mi / data_types), before reading files (idf) "+
 			"or plugin bodies (plugin), before writing KFTL text (kftl), when looking for deleted entries (deleted) or repository "+
-			"names (rep), and whenever a response carries warnings you do not understand. Omit topic (or pass \"index\") for "+
+			"names (rep), before interpreting the settings trees and the user's description notes on them (config), and "+
+			"whenever a response carries warnings you do not understand. Omit topic (or pass \"index\") for "+
 			"the list of topics. Static text — no round trip to gkill.",
 		schema(jsonobj.Obj(
 			"topic", jsonobj.Obj(
@@ -204,6 +205,10 @@ var ReadTools = []*jsonobj.Object{
 			"written through one may be invisible to another — check user_id before concluding that a search or an id lookup is broken. "+
 			"fields:[\"user_id\",\"device\"] is the cheap way to ask. "+
 			"Recommended first call: use this before gkill_get_kyous to understand the data organization, visible tags, and board names. "+
+			"Every tree node (folder or leaf) may carry description: a note the user wrote in the settings screen saying what that "+
+			"tag / repository / board / template / device is for and how they actually use it. Read those notes BEFORE composing "+
+			"queries: fields:[\"descriptions\"] returns only the nodes that have one, as a small flat list {struct, name, path, "+
+			"description}, without the trees. Details: gkill_get_mcp_help topic:config. "+
 			"Response fields: tag_struct (tag parent-child hierarchy with check_when_inited, is_force_hide, children), mi_board_struct (task board hierarchy), rep_struct (repository hierarchy — this is the tree the web settings screen saves, so it is null until someone has pressed Apply there at least once; an account used only through MCP or the CLI will always see null, and that is not an error. For the actual list of repositories, call gkill_get_rep_infos instead), rep_type_struct (repository type hierarchy), device_struct (device hierarchy), kftl_template_struct (KFTL templates), mi_default_board (default board name, e.g. \"Inbox\"), show_tags_in_list (boolean). "+
 			"Note that display labels in this config may not map 1:1 to accepted rep_types query values — canonical query values come from gkill_get_rep_infos. "+
 			"The full config is large; narrow with fields (e.g. fields:[\"tag_struct\"]) and contains, keep compact on (default: default-valued node fields are omitted), and the response is capped by max_size_mb (over-sized struct fields are replaced by {omitted_bytes} with a warning).",
@@ -216,9 +221,9 @@ var ReadTools = []*jsonobj.Object{
 				"type", "array",
 				"items", jsonobj.Obj(
 					"type", "string",
-					"enum", jsonobj.Strings("user_id", "device", "tag_struct", "mi_board_struct", "rep_struct", "rep_type_struct", "device_struct", "kftl_template_struct", "mi_default_board", "show_tags_in_list"),
+					"enum", jsonobj.Strings(AppConfigFields.Values()...),
 				),
-				"description", "Return only these fields. Default: all.",
+				"description", "Return only these fields. Default: all, except descriptions (the flat list of user-written notes), which is included only when named here.",
 			),
 			"include_ui_state", jsonobj.Obj(
 				"type", "boolean",
@@ -232,15 +237,17 @@ var ReadTools = []*jsonobj.Object{
 				"default", true,
 				"description",
 				"When true (default), struct nodes omit their default-valued fields: an absent children means no children, "+
-					"an absent is_dir means false (a leaf), an absent ignore_check_rep_rykv means false, and an absent name means "+
-					"the name equals the node's identity field (rep_name / tag / device / rep_type / board_name). "+
+					"an absent is_dir means false (a leaf), an absent ignore_check_rep_rykv means false, an absent description means "+
+					"the user wrote none, and an absent name means the name equals the node's identity field "+
+					"(tag_name / rep_name / rep_type_name / device_name / board_name / title). "+
 					"check_when_inited and is_force_hide are never omitted. Pass false for the raw tree.",
 			),
 			"contains", jsonobj.Obj(
 				"type", "string",
 				"description",
-				"Keep only tree leaves whose name / rep_name / tag / device / rep_type / board_name contains this text "+
-					"(case-insensitive); folders left without a matching leaf are dropped. Omit for the whole tree.",
+				"Keep only tree leaves whose name / tag_name / rep_name / rep_type_name / device_name / board_name / title contains "+
+					"this text (case-insensitive); folders left without a matching leaf are dropped. With fields:[\"descriptions\"] it "+
+					"filters that list by name / path / description instead. Omit for the whole tree.",
 			),
 			"max_size_mb", jsonobj.Obj(
 				"type", "number",

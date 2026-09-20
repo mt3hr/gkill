@@ -51,7 +51,7 @@ Node のバージョン・`undici` の依存・vitest の設定が本体のリ�
    「未知レベルは info へ落ちる」は「起動を止める」へ、`Object.isFrozen(TTL)` は Go の const なので不成立）。
 6. **新旧の結果一致はゴールデンで機械証明する。** Node 実装が消える前に、偽 gkill（`internal/fakegkill`。
    固定応答 + 受信要求の記録）を別プロセスで立て、時刻と乱数を固定したプリロード付きで 3 つの stdio サーバへ
-   要求コーパス（`testdata/golden/requests.json`、328 件: プロトコル・33 ツール・未知キー・古スキーマ文字列・
+   要求コーパス（`testdata/golden/requests.json`、331 件: プロトコル・33 ツール・未知キー・古スキーマ文字列・
    廃止済み引数・enum 違反・地図 3 値欠け・集計と cursor の併用・IDF base64・`include_plugin_content`・
    履歴 offset・更新 no-op・delete→restore・KFTL replayed など）を流し、応答と偽 gkill が受けた要求を採った。
    http モードはサーバモジュールを直接 import して `handlePayload(message, requestContext)` を呼んだ。
@@ -89,7 +89,7 @@ Node のバージョン・`undici` の依存・vitest の設定が本体のリ�
 ## Consequences
 
 - 結果一致の実測: tools/list は 3 サーバともバイト一致（`schema_revision` は read / write / readwrite とも旧値のまま。
-  `tool_schema_budget.json` の 3 値 40,033 / 59,278 / 83,760 も据え置き）。要求コーパス 328 件 × 3 サーバ × 2 モードの
+  `tool_schema_budget.json` の 3 値 40,033 / 59,278 / 83,760 も据え置き）。要求コーパス 331 件 × 3 サーバ × 2 モードの
   応答と上流要求がバイト一致（`detail.cause` の 2 件だけマスク。rep をまたいで並列に投げるプラグイン本文取得の
   着順は Node でも Go でも決まっていないので、その並びだけ本文順に揃えて比べる）。
 - **応答の形・文言・キー順を変えたらゴールデンが落ちる。** 意図した変更なら、Node 実装はもう動かせないので

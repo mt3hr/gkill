@@ -13,6 +13,9 @@ export class TagStructElementData implements FoldableStructModel {
 
     is_force_hide: boolean
 
+    // 利用者が設定画面で書く運用メモ。MCP（AI連携）が読む。空文字は未記入
+    description: string
+
     children: Array<TagStructElementData> | null
 
     key: string
@@ -29,6 +32,7 @@ export class TagStructElementData implements FoldableStructModel {
         this.tag_name = ""
         this.check_when_inited = false
         this.is_force_hide = false
+        this.description = ""
         this.children = null
         this.key = ""
         this.is_checked = false

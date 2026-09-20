@@ -3,7 +3,7 @@ package mcp
 // 旧 Node 実装から採ったゴールデン（testdata/golden/）との一致検査。新旧の結果一致の機械証明。
 //
 //   - tools/list の JSON（3サーバ）と schema_revision がバイト単位で一致する
-//   - 要求コーパス（requests.json、328 件）に対する tools/call の応答が、stdio / http の両モードで
+//   - 要求コーパス（requests.json、331 件）に対する tools/call の応答が、stdio / http の両モードで
 //     バイト単位で一致する（時刻・UUID・トークンは採取時と同じ固定列）
 //   - 同じコーパスで gkill へ送った要求（パス・クエリ・Cookie・本文）がバイト単位で一致する
 //

@@ -66,7 +66,7 @@ func TestReadToolDefinitions(t *testing.T) {
 	// 説明文は要約で、本文は gkill_get_mcp_help（ADR-0622）。要約が本文の在処を案内していなければ、
 	// 移した知識は誰にも読まれない。
 	t.Run("summarized descriptions point at gkill_get_mcp_help", func(t *testing.T) {
-		for _, name := range []string{"gkill_get_kyous", "gkill_get_rep_infos", "gkill_get_idf_file"} {
+		for _, name := range []string{"gkill_get_kyous", "gkill_get_rep_infos", "gkill_get_idf_file", "gkill_get_application_config"} {
 			mustContain(t, strAt(t, findTool(ReadTools, name), "description"), "gkill_get_mcp_help")
 		}
 		kftl := strAt(t, findTool(WriteTools, "gkill_submit_kftl"), "description")

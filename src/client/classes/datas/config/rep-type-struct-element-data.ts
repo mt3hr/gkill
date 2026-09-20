@@ -11,6 +11,9 @@ export class RepTypeStructElementData implements FoldableStructModel {
 
     check_when_inited: boolean
 
+    // 利用者が設定画面で書く運用メモ。MCP（AI連携）が読む。空文字は未記入
+    description: string
+
     children: Array<RepTypeStructElementData> | null
 
     key: string
@@ -26,6 +29,7 @@ export class RepTypeStructElementData implements FoldableStructModel {
         this.id = ""
         this.rep_type_name = ""
         this.check_when_inited = false
+        this.description = ""
         this.children = null
         this.key = ""
         this.is_checked = false

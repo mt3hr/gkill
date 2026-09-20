@@ -11,6 +11,7 @@
                 :folder_name="i18n.global.t('BOARD_TITLE')" :is_open="true"
                 :struct_obj="cloned_application_config.mi_board_struct" :is_editable="true" :is_root="true"
                 :is_show_checkbox="false"
+                @dblclicked_item="onDblclickedItem"
                 @contextmenu_item="show_mi_board_contextmenu" ref="foldable_struct" />
         </div>
         <v-card-action>
@@ -25,9 +26,13 @@
                 </v-col>
             </v-row>
         </v-card-action>
+        <EditMiBoardStructElementDialog :application_config="application_config" :gkill_api="gkill_api"
+            v-on="errorMessageRelayHandlers"
+            @requested_update_mi_board_struct="update_mi_board_struct" ref="edit_mi_board_struct_element_dialog" />
         <MiBoardStructContextMenu :application_config="application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             ref="mi_board_struct_context_menu"
+            @requested_edit_mi_board="(id: string) => show_edit_mi_board_struct_dialog(id)"
             @requested_move_up_mi_board="(id: string) => move_mi_board_struct_up(id)"
             @requested_move_down_mi_board="(id: string) => move_mi_board_struct_down(id)"
             @requested_delete_mi_board="(id: string) => show_confirm_delete_mi_board_struct_dialog(id)" />
@@ -42,6 +47,7 @@ import { i18n } from '@/i18n'
 import type { EditMiBoardStructViewEmits } from './edit-mi-board-struct-view-emits'
 import type { EditMiBoardStructViewProps } from './edit-mi-board-struct-view-props'
 import FoldableStruct from './foldable-struct.vue'
+import EditMiBoardStructElementDialog from '../dialogs/edit-mi-board-struct-element-dialog.vue'
 import MiBoardStructContextMenu from './mi-board-struct-context-menu.vue'
 import ConfirmDeleteMiBoardStructDialog from '../dialogs/confirm-delete-mi-board-struct-dialog.vue'
 import { useEditMiBoardStructView } from '@/classes/use-edit-mi-board-struct-view'
@@ -52,6 +58,7 @@ const emits = defineEmits<EditMiBoardStructViewEmits>()
 const {
     // Template refs
     foldable_struct,
+    edit_mi_board_struct_element_dialog,
     mi_board_struct_context_menu,
     confirm_delete_mi_board_struct_dialog,
 
@@ -61,6 +68,8 @@ const {
     // Business logic
     reload_cloned_application_config,
     show_mi_board_contextmenu,
+    show_edit_mi_board_struct_dialog,
+    update_mi_board_struct,
     apply,
     show_confirm_delete_mi_board_struct_dialog,
     delete_mi_board_struct,
@@ -68,6 +77,7 @@ const {
     move_mi_board_struct_down,
 
     // Template event handlers
+    onDblclickedItem,
     onRequestedCloseDialog,
 
     // Event relay objects

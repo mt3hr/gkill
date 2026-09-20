@@ -15,6 +15,7 @@ export function useAddNewRepStructElementView(options: {
     const rep_name: Ref<string> = ref("")
     const check_when_inited: Ref<boolean> = ref(true)
     const ignore_check_rep_rykv: Ref<boolean> = ref(false)
+    const description: Ref<string> = ref("")
 
     function emits_rep_name(): void {
         if (rep_name.value === "") {
@@ -30,6 +31,7 @@ export function useAddNewRepStructElementView(options: {
         rep_struct_element.is_dir = false
         rep_struct_element.check_when_inited = check_when_inited.value
         rep_struct_element.ignore_check_rep_rykv = ignore_check_rep_rykv.value
+        rep_struct_element.description = description.value
         rep_struct_element.children = null
         rep_struct_element.indeterminate = false
         rep_struct_element.key = rep_name.value
@@ -43,12 +45,14 @@ export function useAddNewRepStructElementView(options: {
         rep_name.value = ""
         check_when_inited.value = true
         ignore_check_rep_rykv.value = false
+        description.value = ""
     }
 
     return {
         rep_name,
         check_when_inited,
         ignore_check_rep_rykv,
+        description,
         emits_rep_name,
         reset_rep_name,
     }
