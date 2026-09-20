@@ -986,6 +986,5 @@
     "ERROR_ALERT_COPY_TITLE": "詳細をコピー",
     "ERROR_ALERT_COPIED_MESSAGE": "エラーの詳細をコピーしました",
     "DESCRIPTION_TITLE": "説明",
-    "STRUCT_DESCRIPTION_HINT": "AI連携（MCP）に伝える運用メモ。何のための項目か、どう使っているかを書きます",
     "EDIT_MI_BOARD_STRUCT_ELEMENT_TITLE": "板編集"
 }

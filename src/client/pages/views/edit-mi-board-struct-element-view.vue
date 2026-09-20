@@ -4,8 +4,7 @@
             {{ i18n.global.t("EDIT_MI_BOARD_STRUCT_ELEMENT_TITLE") }}
         </v-card-title>
         <p>{{ struct_obj.board_name }}</p>
-        <v-textarea v-model="description" :label="i18n.global.t('DESCRIPTION_TITLE')"
-            :hint="i18n.global.t('STRUCT_DESCRIPTION_HINT')" persistent-hint auto-grow rows="2" />
+        <v-textarea v-model="description" :label="i18n.global.t('DESCRIPTION_TITLE')" auto-grow rows="2" />
         <v-card-action>
             <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
                 <v-col cols="auto" class="pa-0 ma-0">
