@@ -756,7 +756,7 @@ var miProjectionDataTypes = slices.Concat(
 //
 // data_type には語彙が2つある。検索結果と add_* / update_* の応答が返すのは射影名
 // （mi_create / timeis_start …）、delete / restore / history が受理するのはエンティティ名（mi / timeis …。
-// MCP 側の対応表は lib/constants.mjs の PROJECTION_TO_ENTITY_DATA_TYPE で、射影名→エンティティ名の向き）。
+// MCP 側の対応表は constants.go の PROJECTION_TO_ENTITY_DATA_TYPE で、射影名→エンティティ名の向き）。
 // data_types は検索結果の射影名に対する完全一致なので、エンティティ名をそのまま渡すと
 // 「既知の値なのに必ず0件」になっていた —— knownMCPDataTypes が素の mi / timeis / mirekyou を
 // 既知として通す一方、Kyou の DataType にその値は SQL が射影名を焼き込むため決して入らない

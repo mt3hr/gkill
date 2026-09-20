@@ -46,4 +46,4 @@
 ## Related tests
 
 - `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp_test.go`
-- `src/mcp/__tests__/normalization.test.mjs`
+- `src/server/gkill/mcp/normalization_test.go`

@@ -15,11 +15,12 @@
 
   <h2>Tipos de integración</h2>
   <table>
-    <tr><th>Tipo</th><th>Qué puede hacer</th><th>Archivo a ejecutar</th><th>Herramientas</th><th>Puerto (HTTP)</th></tr>
-    <tr><td>Solo lectura</td><td>Solo ver y buscar registros. No puede agregar ni modificar</td><td>gkill-read-server.mjs</td><td>12</td><td>8808</td></tr>
-    <tr><td>Solo escritura</td><td>Agregar, actualizar y eliminar registros. También puede obtener nombres de repositorios, etiquetas y tableros</td><td>gkill-write-server.mjs</td><td>29</td><td>8809</td></tr>
-    <tr><td>Lectura y escritura</td><td>Ver, agregar, actualizar y eliminar registros</td><td>gkill-readwrite-server.mjs</td><td>33</td><td>8810</td></tr>
+    <tr><th>Tipo</th><th>Qué puede hacer</th><th>Comando</th><th>Herramientas</th><th>Puerto (HTTP)</th></tr>
+    <tr><td>Solo lectura</td><td>Solo ver y buscar registros. No puede agregar ni modificar</td><td>gkill_server mcp --kind read</td><td>12</td><td>8808</td></tr>
+    <tr><td>Solo escritura</td><td>Agregar, actualizar y eliminar registros. También puede obtener nombres de repositorios, etiquetas y tableros</td><td>gkill_server mcp --kind write</td><td>29</td><td>8809</td></tr>
+    <tr><td>Lectura y escritura</td><td>Ver, agregar, actualizar y eliminar registros</td><td>gkill_server mcp --kind readwrite</td><td>33</td><td>8810</td></tr>
   </table>
+  <p>El servidor MCP forma parte de gkill_server y se inicia con <code>gkill_server mcp --kind &lt;tipo&gt;</code> (gkill_server debe estar en ejecución). La conexión y las credenciales se indican con variables de entorno o con el archivo de configuración <code>configs/gkill_mcp.json</code>, que se genera en el primer inicio. Los registros se escriben en <code>logs/gkill_mcp_&lt;tipo&gt;.log</code> (los archivos por nivel comparten el prefijo).</p>
   <p>Todos los tipos incluyen una herramienta para listar los complementos en uso. El contenido de los registros importados por complementos puede recibirse junto con los resultados de b&uacute;squeda.</p>
 
   <h2>Entrega de archivos</h2>
@@ -40,8 +41,8 @@
   <pre><code>{
   "mcpServers": {
     "gkill": {
-      "command": "node",
-      "args": ["C:/path/to/gkill/src/mcp/gkill-read-server.mjs"],
+      "command": "gkill_server",
+      "args": ["mcp", "--kind", "read"],
       "env": {
         "GKILL_BASE_URL": "http://localhost:9999",
         "GKILL_USER": "su-id-de-usuario",
@@ -60,20 +61,20 @@
   --env GKILL_BASE_URL=http://localhost:9999 \
   --env GKILL_USER=su-id-de-usuario \
   --env GKILL_PASSWORD_SHA256=su-hash \
-  -- node /path/to/gkill/src/mcp/gkill-read-server.mjs</code></pre>
+  -- gkill_server mcp --kind read</code></pre>
   <div class="tip">
-    <strong>Consejo:</strong> Ajuste la ruta anterior al lugar donde colocó el código fuente de gkill. Para cambiar el tipo, sustituya el nombre del archivo por <code>gkill-write-server.mjs</code> o <code>gkill-readwrite-server.mjs</code>.
+    <strong>Consejo:</strong> Se asume que <code>gkill_server</code> está en el PATH (si no, escriba la ruta completa). Para cambiar el tipo, cambie <code>--kind</code> a <code>write</code> o <code>readwrite</code>.
   </div>
 
   <h2>Uso remoto (conexión HTTP)</h2>
   <p>Si la IA no está en el mismo PC, puede hacer que el propio servidor MCP escuche por HTTP para que una IA en internet se conecte. Este modo autoriza la conexión mediante OAuth, por lo que no necesita exponer gkill a internet.</p>
   <p>La autorización se concede por tipo de conexión (solo lectura, escritura o lectura y escritura). Una conexión autorizada como solo lectura no puede usarse para escribir. Si cambia de tipo, o una conexión que funcionaba empieza a fallar por falta de permisos, desconéctela en el lado de la IA y vuelva a autorizarla.</p>
   <pre><code># Ejemplo: servir lectura y escritura por HTTP
-MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
+MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
 GKILL_BASE_URL=http://localhost:9999 \
 GKILL_USER=su-id-de-usuario \
 GKILL_PASSWORD_SHA256=su-hash \
-node /path/to/gkill/src/mcp/gkill-readwrite-server.mjs</code></pre>
+gkill_server mcp --kind readwrite --transport http</code></pre>
   <div class="tip">
     <strong>Consejo:</strong> También puede publicar el propio servidor gkill en internet. En ese caso, configure <code>GKILL_BASE_URL</code> con su dirección pública y habilite TLS (HTTPS) desde <a href="server-config.html">Configuración del servidor</a>.
   </div>

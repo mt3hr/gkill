@@ -149,9 +149,9 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 | `gkill_trace.log` | TRACEレベル |
 | `gkill_trace_sql.log` | SQL文トレース |
 | `gkill.log` | 全レベル統合 |
-| `gkill_mcp_read_access.log` | Read MCPサーバのアクセスログ（`MCP_LOG`環境変数で制御） |
-| `gkill_mcp_write_access.log` | Write MCPサーバのアクセスログ |
-| `gkill_mcp_readwrite_access.log` | Read/Write統合MCPサーバのアクセスログ |
+| `gkill_mcp_read.log` | Read MCPサーバの統合ログ（レベル別の `gkill_mcp_read_<level>.log` も同じ接頭辞。`MCP_LOG` / 設定 / `--log` で制御） |
+| `gkill_mcp_write.log` | Write MCPサーバ（同上） |
+| `gkill_mcp_readwrite.log` | Read/Write統合MCPサーバ（同上） |
 
 **ログフォーマット:** JSON形式、ソース位置追跡有効、静的フィールド `{"app": "gkill"}`
 
@@ -372,7 +372,7 @@ rep名だけで分けると「同名rep × 同一相対パス × 同一ファイ
 - 同一オリジン（`http://localhost:9999`）からのアクセスは問題なし
 - クロスオリジンアクセスはブラウザにブロックされる
 - デスクトップアプリ（go-astilectron）は同一オリジンで動作
-- MCP HTTPサーバー（`src/mcp/gkill-read-server.mjs`）は別プロセスで動作するため、gkill_server APIへのアクセスはサーバー間通信（fetch）であり、ブラウザのCORS制約は適用されない。ただし、MCP HTTPサーバー自体がOAuth 2.1の認可エンドポイントを提供する際、Claude.ai/ChatGPT等のクライアントからのリダイレクトはブラウザ経由で行われるため、CORS設定は不要（リダイレクトベースのフローのため）
+- MCP HTTPサーバー（`src/server/gkill/mcp/server_read.go`）は別プロセスで動作するため、gkill_server APIへのアクセスはサーバー間通信（fetch）であり、ブラウザのCORS制約は適用されない。ただし、MCP HTTPサーバー自体がOAuth 2.1の認可エンドポイントを提供する際、Claude.ai/ChatGPT等のクライアントからのリダイレクトはブラウザ経由で行われるため、CORS設定は不要（リダイレクトベースのフローのため）
 
 ### 2.7.1 CSRF と2系統の認証
 

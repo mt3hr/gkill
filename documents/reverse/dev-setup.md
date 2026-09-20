@@ -179,16 +179,16 @@ GitHub の Code scanning アラートをローカルで再現するためのコ�
 | コマンド | 説明 |
 |---|---|
 | `npm run setup_gkill_develop_env` | Ubuntu/WSL用の開発環境一括セットアップ |
-| `npm run mcp:gkill-read` | Read MCPサーバー起動 |
-| `npm run mcp:gkill-read-http` | 同上（HTTPモード。`MCP_TRANSPORT=http MCP_PORT=8808`） |
-| `npm run mcp:gkill-write` | Write MCPサーバー起動 |
-| `npm run mcp:gkill-write-http` | 同上（HTTPモード。`MCP_TRANSPORT=http MCP_PORT=8809`） |
-| `npm run mcp:gkill-readwrite` | Read/Write統合MCPサーバー起動 |
-| `npm run mcp:gkill-readwrite-http` | 同上（HTTPモード。`MCP_TRANSPORT=http MCP_PORT=8810`） |
+| `gkill_server mcp --kind read` | Read MCPサーバー起動 |
+| `gkill_server mcp --kind read --transport http` | 同上（HTTPモード。`MCP_TRANSPORT=http MCP_PORT=8808`） |
+| `gkill_server mcp --kind write` | Write MCPサーバー起動 |
+| `gkill_server mcp --kind write --transport http` | 同上（HTTPモード。`MCP_TRANSPORT=http MCP_PORT=8809`） |
+| `gkill_server mcp --kind readwrite` | Read/Write統合MCPサーバー起動 |
+| `gkill_server mcp --kind readwrite --transport http` | 同上（HTTPモード。`MCP_TRANSPORT=http MCP_PORT=8810`） |
 
-> `-http` 付きスクリプトは `cross-env` で `MCP_TRANSPORT=http` と `MCP_PORT`
-> （Read 8808 / Write 8809 / ReadWrite 8810）を設定してから起動する。
-> 接続先や OAuth 発行者は下記の環境変数で指定する。
+> `npm run mcp:gkill-*` は `gkill_server mcp --kind …` の別名（`gkill_server` が PATH に要る）。`-http` 付きは
+> `--transport http` で起動し、ポートは種別の既定（Read 8808 / Write 8809 / ReadWrite 8810）か `MCP_PORT`。
+> 接続先や OAuth 発行者は下記の環境変数か `$GKILL_HOME/configs/gkill_mcp.json`（初回起動時に生成）で指定する。
 
 ### MCP HTTPモード開発用環境変数
 
@@ -199,7 +199,7 @@ export GKILL_PASSWORD_SHA256="<sha256 hex>"  # or GKILL_PASSWORD
 export MCP_TRANSPORT=http
 export MCP_PORT=8808   # Read: 8808, Write: 8809, ReadWrite: 8810
 export MCP_OAUTH_ISSUER=http://localhost:8808  # リモート時は公開URL
-# export MCP_LOG=info          # MCPアクセスログレベル（デフォルト: info）
+# export MCP_LOG=access        # MCP のログレベル（デフォルト: access。gkill_server と同じ語彙）
 # export GKILL_INSECURE=true  # 自己署名証明書使用時
 ```
 

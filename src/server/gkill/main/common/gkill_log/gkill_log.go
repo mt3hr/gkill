@@ -26,7 +26,17 @@ var LogLevelFromCmd = "error"
 
 var router *Router
 
+// Init は gkill 本体のログ（logs/gkill*.log、app=gkill）を開く。
 func Init() {
+	InitNamed("gkill", "gkill")
+}
+
+// InitNamed は接頭辞 prefix のファイル群（logs/<prefix>.log と <prefix>_<level>.log）を開き、
+// 静的フィールド app と extraStatic を全行に付ける。gkill 本体は Init()（prefix "gkill"）、
+// MCP サブコマンドは InitNamed("gkill_mcp_<kind>", "gkill_mcp", "kind", kind) で、
+// 同じ回転設定・同じレベル語彙のまま別名のファイルへ出す。
+// レベルは LogLevelFromCmd（--log）から決める。未知の値は起動を止める。
+func InitNamed(prefix, app string, extraStatic ...any) {
 	var logLevel slog.Level
 	switch strings.ToLower(LogLevelFromCmd) {
 	case "trace_sql":
@@ -56,6 +66,7 @@ func Init() {
 		panic(err)
 	}
 
+	staticFields := append([]any{"app", app}, extraStatic...)
 	router = NewRouter(Options{
 		JSON:      true,
 		AddSource: true,
@@ -65,45 +76,43 @@ func Init() {
 		// 「全レベル統合」と資料に書いてあるファイルが常に空だった。
 		Mode:           MergedAndSplit,
 		StdoutMirror:   false, //stdoutにも出す
-		StaticFields:   []any{"app", "gkill"},
+		StaticFields:   staticFields,
 		RotateMaxBytes: gkill_options.LogRotateMaxBytes,
 		RotateKeep:     gkill_options.LogRotateKeep,
 	})
 
-	err = router.SetSplitFile(TraceSQL, filepath.Join(logRootDir, "gkill_trace_sql.log"))
-	if err != nil {
-		panic(err)
+	splitFiles := []struct {
+		level  slog.Level
+		suffix string
+	}{
+		{TraceSQL, "_trace_sql.log"},
+		{Trace, "_trace.log"},
+		{Debug, "_debug.log"},
+		{Access, "_access.log"},
+		{Info, "_info.log"},
+		{Warn, "_warn.log"},
+		{Error, "_error.log"},
 	}
-	err = router.SetSplitFile(Trace, filepath.Join(logRootDir, "gkill_trace.log"))
-	if err != nil {
-		panic(err)
+	for _, split := range splitFiles {
+		err = router.SetSplitFile(split.level, filepath.Join(logRootDir, prefix+split.suffix))
+		if err != nil {
+			panic(err)
+		}
 	}
-	err = router.SetSplitFile(Debug, filepath.Join(logRootDir, "gkill_debug.log"))
-	if err != nil {
-		panic(err)
-	}
-	err = router.SetSplitFile(Access, filepath.Join(logRootDir, "gkill_access.log"))
-	if err != nil {
-		panic(err)
-	}
-	err = router.SetSplitFile(Info, filepath.Join(logRootDir, "gkill_info.log"))
-	if err != nil {
-		panic(err)
-	}
-	err = router.SetSplitFile(Warn, filepath.Join(logRootDir, "gkill_warn.log"))
-	if err != nil {
-		panic(err)
-	}
-	err = router.SetSplitFile(Error, filepath.Join(logRootDir, "gkill_error.log"))
-	if err != nil {
-		panic(err)
-	}
-	err = router.SetMergedFile(filepath.Join(logRootDir, "gkill.log"))
+	err = router.SetMergedFile(filepath.Join(logRootDir, prefix+".log"))
 	if err != nil {
 		panic(err)
 	}
 
 	slog.SetDefault(router.Logger())
+}
+
+// Close は Init / InitNamed が開いたファイルを閉じる（テストと、ログを閉じてから終了したい経路のため）。
+func Close() error {
+	if router == nil {
+		return nil
+	}
+	return router.Close()
 }
 
 func SetMinLevel(level slog.Level) {

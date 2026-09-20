@@ -98,7 +98,7 @@ ERR000002 でログアウトさせるので、**存在しないユーザIDにパ
   `gkill-api.test.ts` が `status: 500` / `status: 403` でも JSON をパースすることを
   積極的にテストしている。
 - **本文をステータスより先に読む消費者**は直した ——
-  MCP（`gkill-client.mjs` の `post()`。直さないと `callApi` の自動再ログインに到達せず、
+  MCP（`gkill_client.go` の `post()`。直さないと `callApi` の自動再ログインに到達せず、
   長寿命プロセスなのでセッション期限以降ずっと復旧できなくなる）、
   `add_tag` CLI（当時の名前は auto_tag）、Wear OS companion、E2E ヘルパ。
   衛星リポジトリ（`gkill_autolog` / `gkill_autocomplete`）も同じ理由で直した。
@@ -139,7 +139,7 @@ gzip として読むと最初の空メンバで EOF になるため丸ごと失�
 （84本の API がすべて無条件に `res.json()` してから `error_code` で分岐）。
 よってボディを変えなければクライアントは無改修で通る。
 一方で**本文より先にステータスで打ち切る**実装は
-MCP（`gkill-client.mjs:108`）、`add_tag` CLI（当時の名前は auto_tag。現 `add_tag.go` の `post`）、
+MCP（`gkill_client.go:108`）、`add_tag` CLI（当時の名前は auto_tag。現 `add_tag.go` の `post`）、
 Wear OS companion（`GkillApiClient.kt` の7箇所）、
 衛星の `gkill_autolog` / `gkill_autocomplete` にあり、いずれも直した。
 
@@ -150,4 +150,4 @@ Wear OS companion（`GkillApiClient.kt` の7箇所）、
 - `src/server/gkill/api/gkill_server_api/response_status_guard_test.go`
 - `src/server/gkill/api/gkill_server_api/gkill_server_api_test.go`（`TestAuthMiddleware_RejectsInvalidSession`）
 - `src/server/gkill/api/safefetch/safefetch_test.go`
-- `src/mcp/__tests__/client.test.mjs` / `src/mcp/__tests__/write-client.test.mjs`
+- `src/server/gkill/mcp/client_test.go` / `src/server/gkill/mcp/write_client_test.go`

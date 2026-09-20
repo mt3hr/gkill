@@ -114,9 +114,6 @@ jobs:
       - name: Unit test
         run: npm run test_client_unit
 
-      - name: MCP test
-        run: npm run test_mcp
-
       # src/tools/ のリリースゲート・attestation ランナーのテスト（vitest.config.tools.ts）。
       # ゲートが壊れると「テスト未実施のコミットが配布される」に戻るので CI でも回す。
       - name: Tools test

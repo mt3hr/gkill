@@ -9,7 +9,7 @@
 version: 2
 updates:
   # ルートのpackage.json / package-lock.json。
-  # src/mcp配下のサーバもここのnode_modulesから解決するので、npmはこれ1つでよい。
+  # npm の依存はルートの1つだけ（MCP サーバは Go 実装で node_modules を使わない）。
   - package-ecosystem: npm
     directory: /
     schedule:
