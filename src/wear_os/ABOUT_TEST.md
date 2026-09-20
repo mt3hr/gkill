@@ -2,7 +2,7 @@
 
 ## 概要
 
-Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（10ファイル、140テスト）とウォッチ側アプリ（8ファイル、88テスト）の合計228テスト（17ファイル）で構成される。
+Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（10ファイル、142テスト）とウォッチ側アプリ（8ファイル、88テスト）の合計230テスト（18ファイル）で構成される。
 
 ## テストフレームワーク
 
@@ -10,7 +10,7 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 
 ## テストファイル一覧
 
-### phone_companion（スマホ側コンパニオン）— 140テスト
+### phone_companion（スマホ側コンパニオン）— 142テスト
 
 | ファイル | テスト数 | テスト内容 |
 |---------|---------|-----------|
@@ -21,7 +21,7 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 | `phone_companion/src/test/java/.../GkillServerUrlPolicyTest.kt` | 4 | サーバーURLの受け入れ境界（平文HTTPはループバックのみ。LAN/公開ホスト・偽装ホスト名・不正形式の拒否、HTTPSの許可） |
 | `phone_companion/src/test/java/.../GkillWearableListenerServiceTest.kt` | 19 | ウォッチ→スマホ間メッセージパスのハンドリング |
 | `phone_companion/src/test/java/.../WearRequestHandlerTest.kt` | 17 | 時計要求ハンドラ（MockWebServer 使用、4ハンドラの成功/失敗/`ERROR:`プレフィックス契約と重複送信の `DUPLICATE`/force 上書き） |
-| `phone_companion/src/test/java/.../WearSubmitLedgerTest.kt` | 7 | KFTL 送信の重複台帳（成功時のみ記録・TTL・上限・永続化・破損時の空扱い） |
+| `phone_companion/src/test/java/.../WearSubmitLedgerTest.kt` | 9 | KFTL 送信の重複台帳（成功時のみ記録・TTL・既定の窓が30分であること・「それでも送信」で窓が最後の保存時刻から数え直されること・上限・永続化・破損時の空扱い） |
 | `phone_companion/src/test/java/.../GkillErrorTextTest.kt` | 12 | エラーコード→文言の照合。`WIRE_ERROR_CODES` 全件に訳があること（コードを足して訳を忘れると落ちる）、未知文字列・`HTTP 500` の素通し、`ERROR:` 付き応答だけ訳して `OK`/`DUPLICATE`/JSON はバイト列のまま |
 | `phone_companion/src/test/java/.../StringsParityTest.kt` | 7 | `res/values` と `values-{en,zh,ko,es,fr,de}` の `strings.xml` の整合（ロケール集合・キー集合の一致・`translatable="false"` の非重複・空値なし・`%1$s` プレースホルダの一致・未エスケープの `'` `"` と孤立 `%` の検出・`server_locale_name` がディレクトリ名と一致） |
 
