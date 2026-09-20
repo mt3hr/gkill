@@ -6,8 +6,7 @@
         <p>{{ struct_obj.rep_name }}</p>
         <v-checkbox v-model="check_when_inited" hide-detail :label="i18n.global.t('CHECK_WHEN_INITED_TITLE')" />
         <v-checkbox v-model="ignore_check_rep_rykv" hide-detail :label="i18n.global.t('IGNORE_CHECK_REP_RYKV_TITLE')" />
-        <v-textarea v-model="description" :label="i18n.global.t('DESCRIPTION_TITLE')"
-            :hint="i18n.global.t('STRUCT_DESCRIPTION_HINT')" persistent-hint auto-grow rows="2" />
+        <v-textarea v-model="description" :label="i18n.global.t('DESCRIPTION_TITLE')" auto-grow rows="2" />
         <v-card-action>
             <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
                 <v-col cols="auto" class="pa-0 ma-0">
