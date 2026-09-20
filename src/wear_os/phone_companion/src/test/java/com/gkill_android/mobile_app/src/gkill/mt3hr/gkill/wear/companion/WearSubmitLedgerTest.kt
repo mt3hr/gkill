@@ -57,6 +57,35 @@ class WearSubmitLedgerTest {
     }
 
     @Test
+    fun defaultTtl_is30Minutes() {
+        // Production (WearRequestWorker) relies on the default TTL: the same text is a
+        // duplicate for 30 minutes after its last successful save, then no longer.
+        var now = 1_000_000L
+        val ledger = WearSubmitLedger(storage = MemoryStorage(), clock = { now })
+        ledger.recordSuccess("/m memo")
+        now += 30L * 60 * 1000 - 1000L
+        assertTrue(ledger.isDuplicate("/m memo"))
+        now += 2000L
+        assertFalse(ledger.isDuplicate("/m memo"))
+    }
+
+    @Test
+    fun forcedResend_restartsWindowFromLatestSave() {
+        // "Send anyway" re-records the same text, so the window is measured from the
+        // latest save, not the first one.
+        var now = 1_000_000L
+        val ledger = WearSubmitLedger(storage = MemoryStorage(), clock = { now })
+        ledger.recordSuccess("/m memo")
+        now += 20L * 60 * 1000
+        ledger.recordSuccess("/m memo")
+        now += 20L * 60 * 1000
+        // 40 min after the first save but only 20 min after the second: still a duplicate
+        assertTrue(ledger.isDuplicate("/m memo"))
+        now += 11L * 60 * 1000
+        assertFalse(ledger.isDuplicate("/m memo"))
+    }
+
+    @Test
     fun maxEntries_evictsOldest() {
         val ledger = WearSubmitLedger(storage = MemoryStorage(), maxEntries = 2)
         ledger.recordSuccess("a")

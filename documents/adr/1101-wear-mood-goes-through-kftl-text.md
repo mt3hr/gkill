@@ -21,9 +21,12 @@
 1. **サーバ側の冪等キー** — `GkillWearableListenerService` がメッセージ1件ごとに UUID を採番し、
    WorkRequest の不変入力に載せる。ワーカーの再送では同じキーになり、
    `handle_submit_kftl_text.go` の `kftlIdempotencyStore` が二重登録を畳む。
-2. **`WearSubmitLedger`** — 直近成功した KFTL テキストを覚えておき、完全一致・TTL24時間で
+2. **`WearSubmitLedger`** — 直近成功した KFTL テキストを覚えておき、完全一致・TTL30分で
    重複を検出して「それでも送信しますか」の確認へ回す。結果だけ届かなかった場合の
    二重登録を、利用者に見える形で止める最後の砦。
+   （2026-09-21 追記: 本 ADR の時点では TTL 24時間。同じ打刻テンプレートを半日後に押し直すだけで
+   毎回確認が出るので 30分へ縮めた。WorkManager の再送が 30分を跨ぐことは実用上なく、砦の目的は保つ。
+   台帳は同一テキストを差し替えて時刻を更新するので、窓は最後に保存した時刻から数える。）
 
 新しい記録種別を足すたびにメッセージパスを増やすと、この2つを毎回配線し直すことになる。
 配線を1本落としても**ビルドは通り、vet も素通りし、目の前では正常に見える**。
@@ -102,8 +105,8 @@ KFTL テキストを組み立てて既存の `/gkill/submit` へ流す。
 
 ## Evidence
 
-- `WearSubmitLedger` の重複判定は「テキスト完全一致・上限100件・TTL 24時間」
-  （`WearSubmitLedger.kt`。`isDuplicate` は `it.at >= threshold && it.text == kftlText`）。
+- `WearSubmitLedger` の重複判定は「テキスト完全一致・上限100件・TTL 30分」（2026-09-21 まで 24時間。
+  `WearSubmitLedger.kt` の `DEFAULT_TTL_MILLIS`。`isDuplicate` は `it.at >= threshold && it.text == kftlText`）。
   気分値の語彙は10通りなので、時刻を含めない場合の衝突は日常的に起きる。
 - `dateFormats` は12個の書式を順に試すが、いずれもタイムゾーンオフセットを持たない
   （`kftl_related_time_statement_line.go`）。

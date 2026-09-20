@@ -18,8 +18,8 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | MCP サーバ | 1127 | 36 | Go `testing` |
 | ツール | 55 | 2 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
-| Wear OS | 228 | 18 | JUnit 4 + MockK |
-| **合計** | **5,064** | **487** | |
+| Wear OS | 230 | 18 | JUnit 4 + MockK |
+| **合計** | **5,066** | **487** | |
 
 数え直すコマンド:
 
@@ -447,8 +447,8 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 - インストルメンテーションテスト: Android フレームワーク統合
 
 **Wear OS** (`src/wear_os/`): JUnit 4 + MockK
-- phone_companion（10ファイル / 140テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer、playing検索クエリの形状検証・全 API への `locale_name` 送信含む）、メッセージハンドリング、サーバ証明書の信頼（フィンガープリント計算とピン照合）、二重送信防止台帳、エラーコード→文言の照合（`GkillErrorText`）、`strings.xml` の7言語セットの整合
-- watch_app（7ファイル / 86テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル、気分記録の KFTL 組み立て、`strings.xml` の7言語セットの整合
+- phone_companion（10ファイル / 142テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer、playing検索クエリの形状検証・全 API への `locale_name` 送信含む）、メッセージハンドリング、サーバ証明書の信頼（フィンガープリント計算とピン照合）、二重送信防止台帳、エラーコード→文言の照合（`GkillErrorText`）、`strings.xml` の7言語セットの整合
+- watch_app（8ファイル / 88テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル、気分記録の KFTL 組み立て、`strings.xml` の7言語セットの整合
 
 ## 4. テスト設定ファイル
 

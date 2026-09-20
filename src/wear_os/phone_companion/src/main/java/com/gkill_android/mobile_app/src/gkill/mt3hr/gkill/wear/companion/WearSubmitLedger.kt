@@ -10,7 +10,9 @@ import kotlinx.serialization.json.Json
  * Web Share Target の share-target-dedup 契約を電話側へ写したもの:
  * - 台帳へ載せるのは保存が成功したときだけ（[recordSuccess] は成功後にだけ呼ぶ）。
  * - 再配送と意図的な再送は内容から区別できないので、内容の完全一致でしか判定できない。
- * - 直近100件・24時間のみ保持する。
+ * - 直近100件・30分のみ保持する（Web 側は24時間）。同じ打刻テンプレートを半日後に押し直しただけで
+ *   毎回確認が出るのを避けつつ、WorkManager の再送が跨ぐことのない幅。
+ *   台帳は同一テキストを差し替えて時刻を更新するので、「それでも送信」した時刻から改めて30分数える。
  *
  * プロセス死やサービス破棄を跨いで効かせるため、[storage] 経由で永続化する（本番は SharedPreferences）。
  * ロジックはここに集約し、[storage] と [clock] を差し替えて JVM 単体テストできるようにしてある。
@@ -18,7 +20,7 @@ import kotlinx.serialization.json.Json
 class WearSubmitLedger(
     private val storage: Storage,
     private val maxEntries: Int = 100,
-    private val ttlMillis: Long = 24L * 60 * 60 * 1000,
+    private val ttlMillis: Long = DEFAULT_TTL_MILLIS,
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
 
@@ -56,5 +58,10 @@ class WearSubmitLedger(
         }
     } catch (_: Exception) {
         emptyList()
+    }
+
+    companion object {
+        /** 既定の重複判定窓。前回の同じ記録からこれだけ経てば確認を出さない。 */
+        const val DEFAULT_TTL_MILLIS: Long = 30L * 60 * 1000
     }
 }
