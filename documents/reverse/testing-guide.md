@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1350 | 202 | Go `testing` |
+| Go バックエンド | 1361 | 204 | Go `testing` |
 | フロントエンド ユニット | 2019 | 178 | Vitest |
 | フロントエンド E2E | 253 | 46（+auth.setup.ts） | Playwright |
 | MCP サーバ | 1121 | 36 | Go `testing` |
 | ツール | 55 | 2 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 228 | 18 | JUnit 4 + MockK |
-| **合計** | **5,041** | **484** | |
+| **合計** | **5,052** | **486** | |
 
 数え直すコマンド:
 
@@ -261,7 +261,7 @@ src/server/gkill/
 │   ├── cached_rep_insert_alignment_test.go ← INSERT の列並びと引数の並びの一致
 │   └── source_conventions_scan_test.go ← 規約9件のソース走査（下記）
 ├── dvnf/                              ← DVNF ファイル管理（3ファイル。copyFile の実ファイル操作を含む）
-└── main/                              ← CLI・エントリポイント（14ファイル）
+└── main/                              ← CLI・エントリポイント（15ファイル）
 ```
 
 **テスト戦略:**

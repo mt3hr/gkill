@@ -407,7 +407,7 @@ $HOME/gkill/
 │   └── gkill_notification_target.db  # プッシュ通知ターゲット
 ├── datas/                  # ユーザーデータ（デフォルトデータディレクトリ）
 ├── caches/                 # キャッシュファイル（thumb_cache/, video_cache/, zip_cache/, local_rep_cache/, git_commit_log_cache/, plugin_cache/ 等）
-├── logs/                   # ログファイル（JSON形式、レベル別分割）
+├── logs/                   # ログファイル（JSON形式、レベル別分割。gkill_mcp_<kind>*.log と gkill_plugin_<name>*.log も同じ置き場）
 │   ├── gkill_error.log
 │   ├── gkill_warn.log
 │   ├── gkill_info.log

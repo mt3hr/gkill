@@ -67,7 +67,7 @@ func (b *builder) loop(pluginDir string, configOf func() pluginConfig) {
 // runOnce は走査→取り込みを1周する。
 //
 // os.Stdout には絶対に書かない。あれはプロトコルのチャネルで、
-// 1行でも混ざるとJSONストリームが壊れる。ログはstderrに出す。
+// 1行でも混ざるとJSONストリームが壊れる。ログは sdk.LogXxx（stderr + $GKILL_HOME/logs の gkill_log）に出す。
 func (b *builder) runOnce(pluginDir string, config pluginConfig) {
 	_ = buildOnce(context.Background(), pluginDir, config)
 }
@@ -76,12 +76,15 @@ func (b *builder) runOnce(pluginDir string, config pluginConfig) {
 // 常駐ビルダ（runOnce）と単独モード（Handler.BuildCache。gkill_server generate_plugin_cache）の
 // 両方がここを通るので、どちらで失敗しても設定画面の build_state は同じ見え方になる。
 func buildOnce(ctx context.Context, pluginDir string, config pluginConfig) error {
+	started := time.Now()
 	if err := globalCache.build(ctx, pluginDir, config); err != nil {
 		globalCache.setMeta("build_state", "error")
 		globalCache.setMeta("build_error", err.Error())
 		sdk.LogError("%s: build error: %v", appName, err)
 		return err
 	}
+	// 構築完了は節目（ADR-1001 の Info）。ログファイルにだけ残り、stderr の last_error は汚さない。
+	sdk.LogInfo("%s: build done in %s", appName, time.Since(started).Round(time.Millisecond))
 	return nil
 }
 

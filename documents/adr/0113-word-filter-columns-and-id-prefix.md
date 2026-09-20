@@ -59,6 +59,7 @@ Lantana は「ID 列だけを部分一致」という実装になっていた。
   「ID が除外語で始まる記録」まで除外され、`-a` で 1/16 の記録が消える。
 - **Go 側の判定を `api/find` に置く** — `find` は `gkill_log` → `gkill_options` を引く。プラグイン SDK は gkill のパッケージを
   1つも import しない方針（`cache_path.go` の「SDK と本体の依存を混ぜない」）なので、標準ライブラリだけの葉 `api/find_word` に分けた。
+  （追記 2026-09-20: 同じ「標準ライブラリだけの葉」として `gkill_log` / `gkill_options` も SDK から import するようになった。[ADR-0313](0313-plugin-logs-through-gkill-log.md)）
 - **SDK 内に判定を複製して「直すときは両方」コメントにする（`cache_path.go` 方式）** — 判定規則は今回まさに変わった。
   複製は必ずずれ、rep 種別によって結果が食い違う静かな壊れ方になる。
 - **型別索引にプラグインの照合テキストを持たせるプロトコル拡張** — 索引が本文サイズぶん膨らむ。型別アダプタは native と

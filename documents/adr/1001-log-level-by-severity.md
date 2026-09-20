@@ -123,6 +123,9 @@ Error（`gkill_error.log`）へ出していた。未ログインの初回アク�
 **Go 以外はレベル機構がまちまちのまま。** MCP は `MCP_LOG` の6レベル、プラグインは
 `WARN:` / `ERROR:` の接頭辞だけ、クライアントは `console` の3段、Android は `Log.d/i/w/e`。
 統一はせず、それぞれの流儀の中で「重さと合っているか」だけを揃えた。
+（追記 2026-09-20: MCP は Go へ移って gkill_log の別名ファイルに [ADR-0631](0631-mcp-lives-in-gkill-server.md)、
+プラグインも SDK 経由で同じ基盤に載り、stderr の接頭辞行は `last_error` 向けに残した [ADR-0313](0313-plugin-logs-through-gkill-log.md)。
+レベルの語彙と既定 `error` はどちらも本体と同じ。）
 
 ## Evidence
 

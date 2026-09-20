@@ -113,7 +113,7 @@ cmd := exec.CommandContext(context.Background(),
 `gkill_server generate_plugin_cache <plugin_name|all> <user_id...>`（`main/common/generate_plugin_cache.go`）は
 稼働中サーバに頼らず、上と同じ引数に `--gkill-build-cache` を足してプラグインを直接起動し、終わるまで待つ。
 `sdk.Run` はこのフラグを見ると stdio ループに入らず `Handler.BuildCache(ctx, cfg)` を同期で1回呼び、
-stdout に結果行（`built`、`BuildCache` が nil なら `no_cache`）を1行だけ書いて exit 0、エラーなら stderr に出して exit 1 で終わる。
+stdout に結果行（`built`、`BuildCache` が nil なら `no_cache`）を1行だけ書いて exit 0、エラーなら stderr（と `logs/gkill_plugin_<name>_error.log`）に出して exit 1 で終わる。
 同梱7本は既存の同期構築関数（`build` / `refresh`）を `BuildCache` から呼ぶだけで、常駐ビルダは起こさない
 （`plugin/sdk/build_cache_test.go` の `TestBundledPluginsWireBuildCache` が配線をソース走査で固定する）。
 
@@ -858,7 +858,7 @@ Kmemo→KC→URLog→Nlog→Lantana→TimeIs→Mi→GitCommitLog の順で最初
 直しようが無かった（2026-08-24 の再監査で分離）。`last_build_error` は直近の構築失敗の
 理由（タイムアウト・`ErrPluginBusy`・JSON不正など gkill 側で起きるもの）で、
 **プラグインプロセスの stderr 末尾である `last_error` とは別物** —— 索引構築の失敗要因は
-stderr には出ない。`last_attempt_at` は直近に構築を試みた時刻で、再構築はバックオフ中だと
+stderr には出ない（プラグイン側の全文は `$GKILL_HOME/logs/gkill_plugin_<name>*.log`。[ADR-0313](../adr/0313-plugin-logs-through-gkill-log.md)）。`last_attempt_at` は直近に構築を試みた時刻で、再構築はバックオフ中だと
 エラーすら発生しないため、これが無いと「なぜ何も起きていないのか」が分からない
 （`PluginTypedIndex.Stats()`）。
 

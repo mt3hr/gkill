@@ -334,12 +334,32 @@ gkill_server はプラグインをサブプロセスとして起動し、stdin/s
 
 SDK 共通のフラグ。通常の起動引数に足すと `sdk.Run` は stdio ループに入らず、`Handler.BuildCache` を同期で1回呼んで終了する。
 `gkill_server generate_plugin_cache <plugin_name|all> <user_id...>` がこれを使い、稼働中サーバ無しでキャッシュを作る。
-結果は stdout に1行だけ（`built`、`BuildCache` が nil なら `no_cache`）、診断は stderr、失敗は exit 1。
+結果は stdout に1行だけ（`built`、`BuildCache` が nil なら `no_cache`）、診断は stderr とログファイル（下の「ログ」）、失敗は exit 1。
 `BuildCache` の中では常駐ビルダを起こさず、ビルダが呼ぶのと同じ構築関数をそのまま呼ぶ。
 
 ```bash
 ./gkill_plugin_xxx --gkill-plugin-dir {pluginDir} --gkill-user-id {userID} --gkill-protocol-version 1 --gkill-build-cache
 ```
+
+### ログ
+
+プラグインのログは `sdk.LogWarn` / `sdk.LogError` / `sdk.LogInfo` / `sdk.LogDebug` を通す（`log` / `slog` / `os.Stderr` を直接使わない）。
+`sdk.Run` が起動時に `$GKILL_HOME/logs/gkill_plugin_<name>.log`（統合）と `gkill_plugin_<name>_{error,warn,info,access,debug,trace,trace_sql}.log` を開く
+（`<name>` は `--gkill-plugin-dir` の末尾＝manifest の `name`。gkill 本体の `gkill*.log`、MCP の `gkill_mcp_*.log` と同じ置き場・同じ JSON 形式・同じ回転。
+静的フィールドは `app=gkill_plugin` / `plugin` / `user_id` / `pid`）。
+
+| 関数 | stderr（`last_error`） | ログファイル | 用途 |
+|---|---|---|---|
+| `LogError` | `ERROR: …` | Error | その処理が失敗した（取り込み全体の失敗など） |
+| `LogWarn` | `WARN: …` | Warn | 続行できるが結果が痩せる（1ファイルのスキップなど） |
+| `LogInfo` | 出ない | Info | 節目（構築完了など。1事象1行で流れ続けないもの） |
+| `LogDebug` | 出ない | Debug | 開発時の詳細。エラーの置き場ではない |
+
+レベルと回転は gkill 本体の `--log` / `--log_rotate_max_bytes` / `--log_rotate_keep` が環境変数
+`GKILL_LOG_LEVEL` / `GKILL_LOG_ROTATE_MAX_BYTES` / `GKILL_LOG_ROTATE_KEEP` で子プロセスへ継がれる（既定 `error` / 32MiB / 5世代）。
+SDK 自身は `plugin start` / `plugin stop` / `build cache` を Info で、1コマンド1行（command / id / duration_ms / count / error）を Access で残す。
+`GKILL_HOME` が無く手起動したときはファイルを開かず stderr だけで続行する（ログの都合でプラグインは止まらない）。
+**stdout はプロトコルのチャネルなので、何があっても書かない。** 経緯は [ADR-0313](../../documents/adr/0313-plugin-logs-through-gkill-log.md)。
 
 ### コマンド一覧
 

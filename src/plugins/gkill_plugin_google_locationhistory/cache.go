@@ -164,7 +164,7 @@ func (c *cache) kickRefresh(pluginDir string, config pluginConfig) {
 	c.refreshWG.Go(func() {
 		defer c.refreshing.Store(false)
 		if err := c.refresh(pluginDir, config); err != nil {
-			fmt.Fprintln(stderrWriter, appName+": refresh: "+err.Error())
+			sdk.LogError("%s: refresh: %v", appName, err)
 		}
 	})
 }
