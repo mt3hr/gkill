@@ -159,8 +159,8 @@ class LantanaKftlTest {
 
     @Test
     fun `two records a second apart differ so the submit ledger does not fold them`() {
-        // WearSubmitLedger はテキスト完全一致・TTL24時間で重複判定する。
-        // 関連時刻が入っていないと「今日2回目の同じ気分値」が毎回 DUPLICATE になる
+        // WearSubmitLedger はテキスト完全一致・TTL30分で重複判定する。
+        // 関連時刻が入っていないと「30分内の2回目の同じ気分値」が DUPLICATE になる
         val first = buildLantanaKftlText(7, LocalDateTime.of(2026, 9, 10, 14, 32, 5))
         val second = buildLantanaKftlText(7, LocalDateTime.of(2026, 9, 10, 14, 32, 6))
         org.junit.Assert.assertNotEquals(first, second)
