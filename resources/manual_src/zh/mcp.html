@@ -15,11 +15,12 @@
 
   <h2>集成类型</h2>
   <table>
-    <tr><th>类型</th><th>可以做什么</th><th>要执行的文件</th><th>工具数</th><th>HTTP 时的端口</th></tr>
-    <tr><td>只读</td><td>仅查看和搜索记录，不能添加或修改</td><td>gkill-read-server.mjs</td><td>12</td><td>8808</td></tr>
-    <tr><td>只写</td><td>添加、更新和删除记录。同时也可以获取存储库名称、标签名和板名</td><td>gkill-write-server.mjs</td><td>29</td><td>8809</td></tr>
-    <tr><td>读写</td><td>查看、添加、更新和删除记录</td><td>gkill-readwrite-server.mjs</td><td>33</td><td>8810</td></tr>
+    <tr><th>类型</th><th>可以做什么</th><th>启动命令</th><th>工具数</th><th>HTTP 时的端口</th></tr>
+    <tr><td>只读</td><td>仅查看和搜索记录，不能添加或修改</td><td>gkill_server mcp --kind read</td><td>12</td><td>8808</td></tr>
+    <tr><td>只写</td><td>添加、更新和删除记录。同时也可以获取存储库名称、标签名和板名</td><td>gkill_server mcp --kind write</td><td>29</td><td>8809</td></tr>
+    <tr><td>读写</td><td>查看、添加、更新和删除记录</td><td>gkill_server mcp --kind readwrite</td><td>33</td><td>8810</td></tr>
   </table>
+  <p>MCP 服务器是 gkill_server 的一部分，通过 <code>gkill_server mcp --kind &lt;类型&gt;</code> 启动（gkill_server 本身必须处于运行状态）。连接目标和凭据可通过环境变量指定，也可通过首次启动时自动生成的配置文件 <code>configs/gkill_mcp.json</code> 指定。日志输出到 <code>logs/gkill_mcp_&lt;类型&gt;.log</code>（按级别拆分的文件使用相同前缀）。</p>
   <p>无论哪种类型，都包含 1 个用于获取插件列表的工具。插件导入的记录正文可以直接包含在搜索结果中接收。</p>
 
   <h2>文件的传递</h2>
@@ -40,8 +41,8 @@
   <pre><code>{
   "mcpServers": {
     "gkill": {
-      "command": "node",
-      "args": ["C:/path/to/gkill/src/mcp/gkill-read-server.mjs"],
+      "command": "gkill_server",
+      "args": ["mcp", "--kind", "read"],
       "env": {
         "GKILL_BASE_URL": "http://localhost:9999",
         "GKILL_USER": "您的用户ID",
@@ -60,20 +61,20 @@
   --env GKILL_BASE_URL=http://localhost:9999 \
   --env GKILL_USER=您的用户ID \
   --env GKILL_PASSWORD_SHA256=哈希值 \
-  -- node /path/to/gkill/src/mcp/gkill-read-server.mjs</code></pre>
+  -- gkill_server mcp --kind read</code></pre>
   <div class="tip">
-    <strong>提示:</strong> 请将上面的路径改为您放置 gkill 源代码的位置。要更改类型时，把文件名换成 <code>gkill-write-server.mjs</code> 或 <code>gkill-readwrite-server.mjs</code>。
+    <strong>提示:</strong> 假定 <code>gkill_server</code> 已在 PATH 中（否则请写完整路径）。要更改类型时，把 <code>--kind</code> 改为 <code>write</code> 或 <code>readwrite</code>。
   </div>
 
   <h2>远程使用（HTTP 连接）</h2>
   <p>如果 AI 不在同一台电脑上，可以让 MCP 服务器自身通过 HTTP 监听，供互联网上的 AI 连接。此方式在连接时会进行 OAuth 授权，因此无需把 gkill 本体公开到互联网上。</p>
   <p>授权按连接种类（只读、写入、读写）分别进行。以只读方式授权的连接不能直接用于写入。更换种类后，或者原本可用的连接开始因权限不足而失败时，请在 AI 侧断开该连接并重新授权。</p>
   <pre><code># 以 HTTP 方式监听读写服务器的示例
-MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
+MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
 GKILL_BASE_URL=http://localhost:9999 \
 GKILL_USER=您的用户ID \
 GKILL_PASSWORD_SHA256=哈希值 \
-node /path/to/gkill/src/mcp/gkill-readwrite-server.mjs</code></pre>
+gkill_server mcp --kind readwrite --transport http</code></pre>
   <div class="tip">
     <strong>提示：</strong> 也可以把 gkill 服务器本身公开到互联网上使用。此时请将 <code>GKILL_BASE_URL</code> 设为公开地址，并在<a href="server-config.html">服务器设置</a>中启用 TLS（HTTPS）。
   </div>

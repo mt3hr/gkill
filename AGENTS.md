@@ -18,7 +18,7 @@ gkill の不変条件の多くは「例外もエラーも出さずに静かに�
 | 触るファイル | 先に読む | 読み落とすと |
 |---|---|---|
 | `src/server/gkill/api/**`・`src/server/gkill/dao/**`・`src/server/gkill/usecase/**`・`req_res/**` | [gkill-go-backend](.claude/skills/gkill-go-backend/SKILL.md) | rep名絞り込みがキャッシュを丸ごとバイパスし検索が11rep→約940rep・20.7秒になる／`FindQuery.IDs` が6553件でエラーも立てず0件になる／追加したタグが最大1分消え PWA に焼き付く |
-| `src/server/gkill/api/find/**`・`find_word/**`・`find_filter.go`・`src/client/classes/api/find_query/**`・`src/mcp/lib/constants.mjs` | [gkill-find-query](.claude/skills/gkill-find-query/SKILL.md) | null と `[]` の意味を取り違えて例外もエラーも出ずに全件 or 0件になる／TS 側の `undefined` が localStorage 往復で既定値を復活させる／ワード照合を SQL と Go の片方だけ変えて rep 種別ごとに結果が食い違う |
+| `src/server/gkill/api/find/**`・`find_word/**`・`find_filter.go`・`src/client/classes/api/find_query/**`・`src/server/gkill/mcp/constants.go` | [gkill-find-query](.claude/skills/gkill-find-query/SKILL.md) | null と `[]` の意味を取り違えて例外もエラーも出ずに全件 or 0件になる／TS 側の `undefined` が localStorage 往復で既定値を復活させる／ワード照合を SQL と Go の片方だけ変えて rep 種別ごとに結果が食い違う |
 | `src/server/gkill/main/**`・`gkill_options/**`・`local_rep_cache_path.go` | [gkill-cli-ops](.claude/skills/gkill-cli-ops/SKILL.md) | update_cache / add_tag をオフライン操作と誤解する（実体は起動中サーバの HTTP クライアント）／派生キャッシュの削除で他ユーザーの分を巻き込む |
 | `package.json`・`src/tools/**`・`vite.config.ts`・`playwright.config.ts`・`src/client/__tests__/e2e/**` | [gkill-build-test](.claude/skills/gkill-build-test/SKILL.md) | embed 無しの裸 `go build` が「コンパイルは通るのに起動即死する」バイナリを作る／E2E がポート固定で本番サーバと衝突する／リリースゲートを外してテスト未実施のコミットが配布される |
 | `src/plugins/**`・`src/server/gkill/plugin/**`・`api/gkill_plugin/**`・`dao/reps/plugin_*.go`・`plugin-html-view.vue` | [gkill-plugin](.claude/skills/gkill-plugin/SKILL.md) | 1件ずつプラグインへ聞きに行き、一覧の行数ぶんの直列 stdio でプロセスが殺され続ける／Takeout の歩数が2倍になる |
@@ -27,7 +27,7 @@ gkill の不変条件の多くは「例外もエラーも出さずに静かに�
 | `src/client/classes/kftl/**`・`kftl-tabs.ts`・`use-kftl-*.ts`・`kftl-view.vue`・`mkfl-view.vue`・`kftl-dialog.vue`・`src/server/gkill/api/kftl/**` | [gkill-client-kftl](.claude/skills/gkill-client-kftl/SKILL.md) | メモ帳が二重登録される／別のタブへ誤配送される／行ラベルが NaN で丸ごと消える |
 | `edit-kyou-tags-view.vue`・`kyou-tags.ts`・`use-add-*.ts`・`use-edit-*.ts` | [gkill-client-tags](.claude/skills/gkill-client-tags/SKILL.md) | `add_tag` 完了前に `registered_kyou` を emit すると、タグ付きで追加した記録がエラーも警告も出ないまま一覧に現れない（順序が唯一の防御線） |
 | `rudbeckia-page.vue`・`use-rudbeckia-page.ts`・ホストされる `rykv-view.vue` / `mi-view.vue` / `dashboard-view.vue` / `playing-time-is-view.vue` | [gkill-client-rudbeckia](.claude/skills/gkill-client-rudbeckia/SKILL.md) | バーが画面最上部へ飛ぶ／4枚のウィンドウが完全に重なって1枚に見える／2枚目が1枚目の保存条件を上書きする |
-| `src/mcp/**` | [gkill-mcp](.claude/skills/gkill-mcp/SKILL.md) | 並行リクエストで別ユーザーの session/user が混線し、他人のセッションに紐づく file-link URL を発行する |
+| `src/server/gkill/mcp/**` | [gkill-mcp](.claude/skills/gkill-mcp/SKILL.md) | 並行リクエストで別ユーザーの session/user が混線し、他人のセッションに紐づく file-link URL を発行する |
 | `src/android/**`・`src/wear_os/**`・`handle_submit_kftl_text.go` | [gkill-mobile](.claude/skills/gkill-mobile/SKILL.md) | 同梱サーバが全インターフェース待受になり LAN の第三者が無認証で全記録を読み書きできる／打刻が二重登録される |
 | `AGENTS.md`・`CLAUDE.md`・`.claude/skills/**`・`documents/**`・`resources/manual_src/**`・各 `ABOUT_TEST.md` | [gkill-docs](.claude/skills/gkill-docs/SKILL.md) | 件数・リンク・生成鮮度の機械検査（verify_docs）が落ちる／マニュアルの7言語セットが崩れる |
 
@@ -76,7 +76,7 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 | `npm run test_server` | Go tests (`go test ./...` in `src/server`) |
 | `npm run test_client_unit` | Vitest unit tests |
 | `npm run test_client_e2e` | Playwright E2E tests (gkill_server + Vite を空きポートで自動起動・停止、`$HOME/gkill_test`使用) |
-| `npm run test_mcp` | MCP server tests (Vitest) |
+| `npm run test_mcp` | MCP server tests (Go, `go test ./gkill/mcp/...` in `src/server`。`test_server` にも含まれる) |
 | `npm run test_tools` | `src/tools/` のリリースゲート・attestation ランナーのテスト (Vitest) |
 | `npm run verify_release_gate` | リリースゲート。作業ツリーがクリーン・全スイートの attestation が HEAD の tree と一致・GitHub の CI / Nightly が緑でなければ止める（抜け道なし） |
 | `npm run release` | `verify_release_gate` → Cross-compile release for all platforms |
@@ -92,8 +92,7 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 ```
 src/
   client/     # Vue 3 + TypeScript frontend (App.vue, main.ts, classes/, pages/)
-  server/     # Go backend (go.mod at src/server/, packages under gkill/)
-  mcp/        # MCP server (read/write/readwrite, stdio + HTTP OAuth 2.1)
+  server/     # Go backend (go.mod at src/server/, packages under gkill/)。gkill/mcp/ が MCP server (read/write/readwrite, stdio + HTTP OAuth 2.1。`gkill_server mcp` サブコマンド)
   android/    # Android APK wrapper (WebView + bundled gkill_server binary)
   wear_os/    # Wear OS project (phone_companion/ + watch_app/)
   locales/    # i18n JSON files (ja, en, zh, ko, es, fr, de) — shared by frontend & backend
@@ -111,7 +110,7 @@ src/
 
 **Frozen spellings:** **現在、凍結している綴りは無い。** かつて `plaing` / `Plaing` を「永続データと外部契約に乗っているから直さない」として凍結していたが（[ADR-0802](documents/adr/0802-freeze-plaing-spelling.md)）、2026-09-08 に `playing` へ全面改名し、**互換は一切残していない**（ルート `/playing`、`FindQuery` の `playing_time`、MCP ツールスキーマ、Wear OS データレイヤーパス、マニュアルのページ名、`default_page` の保存値）。旧綴りが追跡ファイルに再び現れると `npm run verify_docs` が落ちる。綴り誤りを見つけたら互換を気にせず直してよく、永続データに乗っていた場合は旧綴りのデータを一度きりの変換で直すこと。経緯と却下案は [ADR-0806](documents/adr/0806-fix-spellings-instead-of-freezing.md)。詳細は `documents/reverse/glossary.md` の「凍結された綴り」節。
 
-**Naming convention (identifiers):** データクラスのプロパティ/メソッド・ローカル変数・通常関数は snake_case（Go 側 JSON タグとの写像）。コンポーザブルは `useXxx`、イベントコールバックは `onXxx`、CRUD リレーハンドラ束は `xxxHandlers`（束の生成は `kyou-view-relay.ts` に一元化。いずれも camelCase）。型は PascalCase、enum メンバーは snake_case。`@typescript-eslint/naming-convention` で機械検査される（`eslint.config.js` の `app/naming-convention` ブロック。対象は `src/client` 本体のみで、`__tests__`・`src/mcp`・`src/tools`・`*.d.ts` は別流儀として対象外）。
+**Naming convention (identifiers):** データクラスのプロパティ/メソッド・ローカル変数・通常関数は snake_case（Go 側 JSON タグとの写像）。コンポーザブルは `useXxx`、イベントコールバックは `onXxx`、CRUD リレーハンドラ束は `xxxHandlers`（束の生成は `kyou-view-relay.ts` に一元化。いずれも camelCase）。型は PascalCase、enum メンバーは snake_case。`@typescript-eslint/naming-convention` で機械検査される（`eslint.config.js` の `app/naming-convention` ブロック。対象は `src/client` 本体のみで、`__tests__`・`src/server/gkill/mcp`・`src/tools`・`*.d.ts` は別流儀として対象外）。
 
 **i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 986 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
 
@@ -133,7 +132,7 @@ Go: `slices.SortFunc` (not `sort.Slice`), `for range n` (not `for i := 0; i < n;
 
 The codebase (variable names, comments, commit messages) is primarily in Japanese. README and documentation are in Japanese.
 
-**Comment language policy** (現状追認、2026-08 明文化): Go 本体（`src/server/gkill/`、kftl を除く）と `src/plugins/` は日本語。`src/client/` は「構造バナーコメント（`// ── Template refs ──` 等）は英語、処理説明は日本語」の複合。`src/mcp/`・`src/wear_os/`・`src/server/gkill/api/kftl/`（TS 版からの移植、`// Mirrors:` 注記付き）は英語容認。新規コメントは各領域の既存スタイルに合わせること。
+**Comment language policy** (現状追認、2026-08 明文化): Go 本体（`src/server/gkill/`、kftl を除く）と `src/plugins/` は日本語。`src/client/` は「構造バナーコメント（`// ── Template refs ──` 等）は英語、処理説明は日本語」の複合。`src/wear_os/`・`src/server/gkill/api/kftl/`（TS 版からの移植、`// Mirrors:` 注記付き）は英語容認（`src/server/gkill/mcp/` は 2026-09-20 の Go 移植で日本語）。新規コメントは各領域の既存スタイルに合わせること。
 
 ## Documentation
 

@@ -224,7 +224,7 @@ iframe は `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）
 `gkill-api.ts` の `get_plugin_list()` は今も MCP 専用で、フロントエンドに呼び出し元が無い。
 
 `/api/get_plugin_list` の唯一の実利用者は MCP サーバの `gkill_get_plugin_list` ツール
-（`src/mcp/lib/plugin-tools.mjs`）。`/api/get_plugin_content_html` は画面（`plugin-html-view.vue`）と
+（`src/server/gkill/mcp/plugin_tools.go`）。`/api/get_plugin_content_html` は画面（`plugin-html-view.vue`）と
 MCP の本文インライン埋め込み（`inlinePluginContents`）の両方が使う。
 
 ---
@@ -728,7 +728,7 @@ AIクライアント（MCP）からもプラグインの記録を読める。プ
 |---|---|---|
 | `gkill_get_plugin_list` | `/api/get_plugin_list` | プラグイン一覧（name / version / description / data_type / rep_name / rep_names（複数の rep 名を申告するプラグインだけ）/ emits_kyou / provides / is_alive / process_running / has_last_error / typed_index / gps_index。診断用は has_last_error 以降 — 実装は `req_res/get_plugin_list_response.go`） |
 
-APIの `last_error` と `typed_index.last_build_error` は、**MCP では中身を返さない**。どちらもプラグインが動いている端末のディレクトリ構成を含み、AIの文脈へ入れば資料やコミットメッセージへ引き写される経路ができるため、`plugin-tools.mjs` の `handlePluginToolCall` が落として `has_last_error` / `has_last_build_error` だけを立てる（落としたときだけ `warnings` に1行）。Go 側も出口で端末固有の情報を伏せる（[ADR-0707](../adr/0707-redact-environment-specific-strings.md)）。
+APIの `last_error` と `typed_index.last_build_error` は、**MCP では中身を返さない**。どちらもプラグインが動いている端末のディレクトリ構成を含み、AIの文脈へ入れば資料やコミットメッセージへ引き写される経路ができるため、`plugin_tools.go` の `handlePluginToolCall` が落として `has_last_error` / `has_last_build_error` だけを立てる（落としたときだけ `warnings` に1行）。Go 側も出口で端末固有の情報を伏せる（[ADR-0707](../adr/0707-redact-environment-specific-strings.md)）。
 
 読み取り専用。設定書き換え（`/api/post_plugin_config`）はMCPに公開していない。
 
@@ -749,7 +749,7 @@ gkill_get_kyous              … include_plugin_content:true を付けて検索�
                                  + content_status / content_text）
 ```
 
-インライン化は MCP 層（`src/mcp/lib/plugin-tools.mjs` の `inlinePluginContents`）が担当する。`/api/get_kyous_mcp` のレスポンスから `kind:"plugin"` のペイロードを集め、`rep_name` ごとにグループ化して `/api/get_plugin_content_html` を叩き、HTML→テキスト変換した結果をペイロードに書き戻す。gkill側には一括取得エンドポイントもプラグインプロトコルの一括コマンドも無く、追加していない。
+インライン化は MCP 層（`src/server/gkill/mcp/plugin_tools.go` の `inlinePluginContents`）が担当する。`/api/get_kyous_mcp` のレスポンスから `kind:"plugin"` のペイロードを集め、`rep_name` ごとにグループ化して `/api/get_plugin_content_html` を叩き、HTML→テキスト変換した結果をペイロードに書き戻す。gkill側には一括取得エンドポイントもプラグインプロトコルの一括コマンドも無く、追加していない。
 
 ### 並列度と安全弁
 
@@ -765,7 +765,7 @@ gkill_get_kyous              … include_plugin_content:true を付けて検索�
 
 ### HTML → テキスト変換
 
-`plugin_content_format` は既定 `text`。プラグインのコンテンツHTMLは `<style>` と `<script>` を含む完結したHTML文書で、バイト数の大半が表示用のボイラープレートになるため、そのまま返すとAIのトークンを浪費するだけになる。MCPサーバ側（`src/mcp/lib/html-text.mjs`）で正規表現ベースの軽量変換をかける:
+`plugin_content_format` は既定 `text`。プラグインのコンテンツHTMLは `<style>` と `<script>` を含む完結したHTML文書で、バイト数の大半が表示用のボイラープレートになるため、そのまま返すとAIのトークンを浪費するだけになる。MCPサーバ側（`src/server/gkill/mcp/html_text.go`）で正規表現ベースの軽量変換をかける:
 
 - `<script>` / `<style>` / コメントは中身ごと破棄
 - `<br>` とブロック要素の境界を改行に変換（タグ隣接だけで空行ができないよう、内部マーカー経由で連続をまとめる）
@@ -1036,5 +1036,5 @@ fitbit 側は `export` 表に順位を持ち、日が重なったときは rank 
 - [api-endpoints.md](api-endpoints.md) — `get_plugin_content_html` エンドポイント
 - [frontend-architecture.md](frontend-architecture.md) — `plugin-html-view.vue` コンポーネント・PWAキャッシュ
 - [sequence-diagrams.md](sequence-diagrams.md) — プラグインコンテンツHTML取得シーケンス
-- [`src/mcp/README.md`](../../src/mcp/README.md) — MCPのプラグインツール（`gkill_get_plugin_list`）と本文のインライン埋め込み
+- [`src/server/gkill/mcp/README.md`](../../src/server/gkill/mcp/README.md) — MCPのプラグインツール（`gkill_get_plugin_list`）と本文のインライン埋め込み
 - [glossary.md](glossary.md) — PluginKyou, PluginRepository 用語定義

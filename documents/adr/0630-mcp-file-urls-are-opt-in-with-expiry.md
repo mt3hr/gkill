@@ -7,7 +7,7 @@
 | Sources | 2026-09-18 の MCP 実利用報告（「頼まれなくても idf ごとに公開URLを2本発行、期限が応答にない」）。ADR-0606（IDF ファイルの3経路）。利用者の判断: オプトイン化＋期限を載せる |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/payload.mjs`（`MINT_FILE_LINKS` / `applyFileLinks`）/ `src/mcp/lib/mcp-server-base.mjs`（`buildToolResult`）/ `src/mcp/lib/file-link-store.mjs`（`mintLink`） |
+| Anchors | `src/server/gkill/mcp/payload.go`（`MINT_FILE_LINKS` / `applyFileLinks`）/ `src/server/gkill/mcp/server_base.go`（`buildToolResult`）/ `src/server/gkill/mcp/file_link_store.go`（`mintLink`） |
 
 ## Context
 
@@ -42,5 +42,5 @@ HTTP トランスポートでは `buildToolResult` が全応答に `applyFileLin
 
 ## Related tests
 
-- `src/mcp/__tests__/file-link.test.mjs`（`buildToolResult file_url injection` の describe）
-- `src/mcp/__tests__/read-handlers.test.mjs`（「forwards include_attached_ids and marks file-link minting only when asked」）
+- `src/server/gkill/mcp/file_link_test.go`（`buildToolResult file_url injection` の describe）
+- `src/server/gkill/mcp/read_handlers_test.go`（「forwards include_attached_ids and marks file-link minting only when asked」）

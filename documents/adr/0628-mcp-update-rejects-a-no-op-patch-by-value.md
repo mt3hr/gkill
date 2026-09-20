@@ -7,7 +7,7 @@
 | Sources | 2026-09-18 の MCP 実利用報告（「`update_*` は同一内容でも新バージョンを積む（履歴4版で確認）。delete の already deleted ガード相当が欲しい」「`update_mi` で `limit_time` 等を消す手段がない」）。ADR-0616（空のパッチは断る） |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/write-handlers.mjs`（`runUpdate` / `valuesEquivalent`）/ `src/mcp/lib/write-normalization.mjs`（`mi` の `nullClears`） |
+| Anchors | `src/server/gkill/mcp/write_handlers.go`（`runUpdate` / `valuesEquivalent`）/ `src/server/gkill/mcp/write_normalization.go`（`mi` の `nullClears`） |
 
 ## Context
 
@@ -45,4 +45,4 @@ Mi の `limit_time` / `estimate_start_time` / `estimate_end_time` は `timeis.en
 
 ## Related tests
 
-- `src/mcp/__tests__/write-handlers.test.mjs`（「2026-09-19 additions」の describe）
+- `src/server/gkill/mcp/write_handlers_test.go`（「2026-09-19 additions」の describe）

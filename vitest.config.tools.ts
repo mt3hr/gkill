@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config'
 
 // src/tools/ の .mjs は先頭に shebang を持つものがあるので、import できるよう剥がす
-// （vitest.config.mcp.ts と同じ手当て）。
+// （旧 vitest.config.mcp.ts と同じ手当て。MCP は Go へ移った）。
 function stripShebangPlugin() {
   return {
     name: 'strip-shebang',

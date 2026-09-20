@@ -7,7 +7,7 @@
 | Sources | 2026-09-18 の MCP 実利用報告（「最大の構造的課題はツール説明が巨大」。`gkill_get_kyous` と `gkill_submit_kftl` が百科事典化し、read と readwrite で同じ長文が重複する）。`.claude/skills/gkill-mcp/SKILL.md`「ツール一覧の説明文は要約にとどめ、本文は `gkill_get_mcp_help` の topic に置く。」 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/help-topics.mjs`（本文の正本）/ `src/mcp/lib/read-tools.mjs`（`gkill_get_mcp_help` の定義と要約化した説明文）/ `src/mcp/lib/write-tools.mjs`（`gkill_submit_kftl` の要約）/ `src/mcp/lib/find-query-schema.mjs` |
+| Anchors | `src/server/gkill/mcp/help_topics.go`（本文の正本）/ `src/server/gkill/mcp/read_tools.go`（`gkill_get_mcp_help` の定義と要約化した説明文）/ `src/server/gkill/mcp/write_tools.go`（`gkill_submit_kftl` の要約）/ `src/server/gkill/mcp/find_query_schema.go` |
 
 ## Context
 
@@ -21,7 +21,7 @@ ADR-0619 の予算ファイルは**増加を止める**が、**減らす**手段
 ## Decision
 
 ツール一覧の説明文は「何をするか・まず使う引数・必ず確認すること・詳細の在処」の要約にとどめる。
-本文は `lib/help-topics.mjs` の topic（search / pagination / mi / data_types / plugin / idf / deleted / rep / kftl）へ
+本文は `help_topics.go` の topic（search / pagination / mi / data_types / plugin / idf / deleted / rep / kftl）へ
 **要約せずに移し**、3サーバ共通の `gkill_get_mcp_help(topic)` で取り出す（引数を省けば topic の一覧。gkill へは往復しない）。
 要約化した説明文は「詳細は gkill_get_mcp_help の topic:xxx」と在処を案内する。
 
@@ -41,25 +41,25 @@ ADR-0619 の予算ファイルは**増加を止める**が、**減らす**手段
 ## Consequences
 
 - **説明文へ事故対策を足したくなったら、まず help topic へ足す。** 要約側に足すのは「必ず確認すること」に
-  昇格する場合だけ。予算テスト（`tool-schema-budget.test.mjs`）が増加を止め、`help-topics.test.mjs` が
+  昇格する場合だけ。予算テスト（`tool_schema_budget_test.go`）が増加を止め、`help_topics_test.go` が
   移した知識（KFTL の `~~` / `??` / `/endt?`、Mi の射影、warnings の規則 …）の実在を固定する。
-- 説明文が名指しするツール名の走査（`tool-handlers.test.mjs`）は本文には掛からないので、本文が名指しする
-  ツール名の実在は `help-topics.test.mjs` が別に検査する。
+- 説明文が名指しするツール名の走査（`tool_handlers_test.go`）は本文には掛からないので、本文が名指しする
+  ツール名の実在は `help_topics_test.go` が別に検査する。
 - 本文を読まない AI は事故対策を知らないまま呼べる。要約側の「在処」の案内と、`gkill_get_mcp_help` の説明文
-  「最初の検索・最初の KFTL・理解できない warnings の前に読め」がその防御線で、`tool-handlers.test.mjs` が
+  「最初の検索・最初の KFTL・理解できない warnings の前に読め」がその防御線で、`tool_handlers_test.go` が
   要約化した説明文に案内があることを固定する。
 - ツール数は read 12 / write 29 / readwrite 33。3サーバの `schema_revision` が変わるので、配布後は各クライアントの
   接続し直しが要る（ADR-0619）。
 
 ## Evidence
 
-- tools/list の実測（`npm run mcp:schema-budget`）: read 47,187 → 36,109 バイト、write 60,256 → 55,381、
+- tools/list の実測（`gkill_server mcp schema-budget`）: read 47,187 → 36,109 バイト、write 60,256 → 55,381、
   readwrite 94,325 → 77,529（`gkill_get_mcp_help` を足したうえで）
 - 残りの大半は `gkill_get_kyous` の inputSchema（`FIND_QUERY_SCHEMA` の 37 プロパティ）。次に削るならそこ
 
 ## Related tests
 
-- `src/mcp/__tests__/help-topics.test.mjs`
-- `src/mcp/__tests__/tool-handlers.test.mjs`
-- `src/mcp/__tests__/tool-schema-budget.test.mjs`
-- `src/mcp/__tests__/schema-contract.test.mjs`
+- `src/server/gkill/mcp/help_topics_test.go`
+- `src/server/gkill/mcp/tool_handlers_test.go`
+- `src/server/gkill/mcp/tool_schema_budget_test.go`
+- `src/server/gkill/mcp/schema_contract_test.go`

@@ -1,6 +1,6 @@
 # gkill シーケンス図
 
-コードの API ハンドラ実装（`gkill/api/gkill_server_api/` パッケージ、`handle_*.go`）およびMCPサーバ実装（`gkill-read-server.mjs`）から抽出した主要フローのシーケンス図。
+コードの API ハンドラ実装（`gkill/api/gkill_server_api/` パッケージ、`handle_*.go`）およびMCPサーバ実装（`gkill_server mcp --kind read`）から抽出した主要フローのシーケンス図。
 
 ## 1. ログイン
 
@@ -565,7 +565,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant MCP as MCP Client (AI)
-    participant MCPServer as gkill-read-server.mjs
+    participant MCPServer as gkill_server mcp --kind read
     participant Server as gkill_server
 
     MCP->>MCPServer: gkill_get_kyous(query, session_id)
@@ -583,7 +583,7 @@ sequenceDiagram
 sequenceDiagram
     actor User as ユーザ（ブラウザ）
     participant Client as MCP クライアント<br>(Claude.ai等)
-    participant MCP as gkill-read-server.mjs<br>(MCP HTTPサーバ)
+    participant MCP as gkill_server mcp --kind read<br>(MCP HTTPサーバ)
     participant Server as gkill_server
 
     Note over Client,MCP: 1. ディスカバリ（RFC 9728 + RFC 8414）
@@ -900,7 +900,7 @@ sequenceDiagram
     actor Client as MCPクライアント（Claude等）
     participant MCP as MCPサーバ<br>gkill_get_kyous
     participant IN as inlinePluginContents
-    participant HT as lib/html-text.mjs
+    participant HT as html_text.go
     participant API as GkillServerAPI
     participant PluginRepo as pluginRepositoryImpl
 

@@ -7,7 +7,7 @@
 | Sources | ADR-0110 の却下案を1つ覆す |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/server/gkill/api/find/find_query.go` / `src/mcp/lib/constants.mjs`（`KYOUS_QUERY_*_FIELDS`） |
+| Anchors | `src/server/gkill/api/find/find_query.go` / `src/server/gkill/mcp/constants.go`（`KYOUS_QUERY_*_FIELDS`） |
 
 ## Context
 
@@ -31,7 +31,7 @@ ADR-0110 で削除済みの列挙は `IncludeDeletedData` に一本化したが�
 
 `FindQuery` から `IsDeleted` と `HideTimeIsTags` を削除する（41→39 フィールド）。
 MCP の語彙（`KYOUS_QUERY_BOOLEAN_FIELDS` / `KYOUS_QUERY_STRING_ARRAY_FIELDS` /
-`find-query-schema.mjs`）からも外す。送られたら `normalizeKyouQuery` が未知キーとして throw し、
+`find_query_schema.go`）からも外す。送られたら `normalizeKyouQuery` が未知キーとして throw し、
 `detail.allowed` に正しい候補（`include_deleted_data` を含む）を添えて返す。
 
 `git_commit_log_repository_local_dir_impl.go` の逆意味の分岐は削除する。
@@ -88,5 +88,5 @@ MCP の語彙（`KYOUS_QUERY_BOOLEAN_FIELDS` / `KYOUS_QUERY_STRING_ARRAY_FIELDS`
 
 - `src/server/gkill/api/find/find_query_test.go`
 - `src/server/gkill/dao/reps/git_commit_log_repository_local_dir_impl_test.go`
-- `src/mcp/__tests__/normalization.test.mjs`
-- `src/mcp/__tests__/constants.test.mjs`
+- `src/server/gkill/mcp/normalization_test.go`
+- `src/server/gkill/mcp/constants_test.go`

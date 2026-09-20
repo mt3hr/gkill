@@ -7,7 +7,7 @@
 | Sources | `2e478be5` |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/mcp-server-base.mjs`（`buildToolResult`）/ `src/mcp/lib/payload.mjs`（`applyFileLinks`）/ `src/mcp/lib/http-transport.mjs`（`GET /files/{token}`） |
+| Anchors | `src/server/gkill/mcp/server_base.go`（`buildToolResult`）/ `src/server/gkill/mcp/payload.go`（`applyFileLinks`）/ `src/server/gkill/mcp/http_transport.go`（`GET /files/{token}`） |
 
 ## Context
 
@@ -98,7 +98,7 @@ README は「AIはこのURLを **Bearer無しでGET** すればバイトを取�
 - ツール数は Read 11→10 / ReadWrite 32→31。Write は元から非搭載で 26 のまま。
   `resources/manual_src/` の7言語のうち `verify_docs` が見るのは ja だけなので、
   残り6言語のハードコード値は手で直す（`checkManualParity` は h2/h3/table の個数しか比べない）
-- **削除しても `lib/payload.mjs` の関数は1つも減らない。** `file_url` 経路が使い続けるため
+- **削除しても `payload.go` の関数は1つも減らない。** `file_url` 経路が使い続けるため
 
 ## Evidence
 
@@ -106,7 +106,7 @@ README は「AIはこのURLを **Bearer無しでGET** すればバイトを取�
 
 **到達不能ツールの削除（`gkill_get_idf_file_path`）:**
 
-- `lib/http-transport.mjs` は `isLocalTransport = false` を**無条件**で立てる。
+- `http_transport.go` は `isLocalTransport = false` を**無条件**で立てる。
   つまり claude.ai コネクタや ChatGPT のような HTTP クライアントからは、
   このツールは gkill へ問い合わせる前に必ず throw していた
 - `$GKILL_HOME/logs/gkill_mcp_read_access.log`（812行、2026-08-22〜24）で
@@ -137,8 +137,8 @@ PNG を image ブロックとして取得 → **その3枚を会話内の参照�
 
 ## Related tests
 
-- `src/mcp/__tests__/tool-handlers.test.mjs`
-- `src/mcp/__tests__/server.test.mjs`
-- `src/mcp/__tests__/file-link.test.mjs`
+- `src/server/gkill/mcp/tool_handlers_test.go`
+- `src/server/gkill/mcp/server_test.go`
+- `src/server/gkill/mcp/file_link_test.go`
 - `src/server/gkill/api/gkill_server_api/filter_local_only_test.go`
 - `src/client/__tests__/unit/api/gkill-api.test.ts`

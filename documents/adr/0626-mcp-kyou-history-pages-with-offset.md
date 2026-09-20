@@ -7,7 +7,7 @@
 | Sources | 2026-09-18 の MCP 実利用報告（3版あるメモに `limit:1` で `has_more:true` だが `next_cursor` も継続用の引数も無い。公開上限 200 版を超えた履歴へ進む経路が定義上無い）。ADR-0605（版履歴は専用ツール） |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/normalization.mjs`（`normalizeKyouHistoryArgs`）/ `src/mcp/lib/read-handlers.mjs`（`gkill_get_kyou_history` の case） |
+| Anchors | `src/server/gkill/mcp/normalization.go`（`normalizeKyouHistoryArgs`）/ `src/server/gkill/mcp/read_handlers.go`（`gkill_get_kyou_history` の case） |
 
 ## Context
 
@@ -41,5 +41,5 @@
 
 ## Related tests
 
-- `src/mcp/__tests__/read-handlers.test.mjs`（「gkill_get_kyou_history offset and data_type」）
-- `src/mcp/__tests__/normalization.test.mjs`（`normalizeKyouHistoryArgs` の offset）
+- `src/server/gkill/mcp/read_handlers_test.go`（「gkill_get_kyou_history offset and data_type」）
+- `src/server/gkill/mcp/normalization_test.go`（`normalizeKyouHistoryArgs` の offset）

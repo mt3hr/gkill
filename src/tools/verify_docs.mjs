@@ -200,13 +200,18 @@ function computeDirMetrics() {
 const GO_TEST_RE = /^func Test/gm
 const VITEST_RE = /^\s*(it|test)(\.each)?\(/gm
 const PW_TEST_RE = /^\s*test\(/gm
+// MCP サーバ（Go）は旧 vitest の describe / test の階層を TestXxx → t.Run に 1:1 で移してあるので、
+// 静的計数は t.Run（サブテスト宣言）を数える。Go バックエンドの表とは別枠（二重計上しない）。
+const MCP_TEST_RE = /^\s*t\.Run\(/gm
+const MCP_DIR = 'src/server/gkill/mcp'
 
 function computeTestMetrics() {
-  const goTestFiles = listFilesRec('src/server', (f) => f.endsWith('_test.go'))
+  const isMcp = (f) => f.split(path.sep).join('/').includes('/' + MCP_DIR + '/')
+  const goTestFiles = listFilesRec('src/server', (f) => f.endsWith('_test.go')).filter((f) => !isMcp(f))
   const goPkgs = new Set(goTestFiles.map((f) => path.dirname(f)))
   const unitFiles = listFilesRec('src/client/__tests__/unit', (f) => f.endsWith('.test.ts'))
   const e2eFiles = listFilesRec('src/client/__tests__/e2e', (f) => f.endsWith('.spec.ts'))
-  const mcpFiles = listFilesRec('src/mcp/__tests__', (f) => /\.test\.(mjs|js|ts)$/.test(f))
+  const mcpFiles = listFilesRec(MCP_DIR, (f) => f.endsWith('_test.go'))
   // src/tools/ のリリースゲート・attestation ランナーのテスト（vitest.config.tools.ts）
   const toolsFiles = listFilesRec('src/tools/__tests__', (f) => /\.test\.(mjs|js|ts)$/.test(f))
   const kt = (dir) => countMatches(listFilesRec(dir, (f) => f.endsWith('.kt')), /@Test/g)
@@ -226,7 +231,7 @@ function computeTestMetrics() {
     unitTestFiles: unitFiles.length,
     e2eTests: countMatches(e2eFiles, PW_TEST_RE),
     e2eTestFiles: e2eFiles.length,
-    mcpTests: countMatches(mcpFiles, VITEST_RE),
+    mcpTests: countMatches(mcpFiles, MCP_TEST_RE),
     mcpTestFiles: mcpFiles.length,
     toolsTests: countMatches(toolsFiles, VITEST_RE),
     toolsTestFiles: toolsFiles.length,
@@ -250,6 +255,10 @@ function computeTestMetrics() {
     serverApiTestFiles: listFiles('src/server/gkill/api/gkill_server_api',
       (f) => f.endsWith('_test.go')).length,
     serverMainTestFiles: listFilesRec('src/server/gkill/main', (f) => f.endsWith('_test.go')).length,
+    // 旧 Node 実装から採ったゴールデンの要求コーパス件数（golden_test.go が再生する）
+    mcpGoldenCases: exists(`${MCP_DIR}/testdata/golden/requests.json`)
+      ? JSON.parse(readText(`${MCP_DIR}/testdata/golden/requests.json`)).length
+      : 0,
   }
 
   // ABOUT_TEST.md の「合計」行。手計算で合わないまま放置されやすいので実測から出す。
@@ -265,29 +274,32 @@ function computeTestMetrics() {
 // 1-d. その他（MCPツール数 / KFTLステートメント型数 / 用語集件数）
 // ─────────────────────────────────────────────────────────────
 function computeMiscMetrics() {
-  // MCPサーバの TOOLS は lib/*-tools.mjs のスプレッドで組み立てるので、
-  // サーバ本体のファイルだけを見ても数えられない。スプレッドを辿って数える。
-  // 書き込みサーバは読み取りツールの一部だけを載せるので、絞り込みの名前集合も見る。
+  // MCP サーバのツール一覧は Go の read_tools.go / write_tools.go / plugin_tools.go の
+  // `tool("gkill_…"` 定義を、server_*.go の composeTools(...) が連結して組み立てる。
+  // 書き込みサーバは読み取りツールの一部だけを載せる（newNameSet(...) の名前集合で絞る）ので、
+  // 連結の並びと絞り込みの集合を辿って数える。
   const TOOL_MODULES = {
-    READ_TOOLS: 'src/mcp/lib/read-tools.mjs',
-    WRITE_TOOLS: 'src/mcp/lib/write-tools.mjs',
-    PLUGIN_TOOLS: 'src/mcp/lib/plugin-tools.mjs',
+    ReadTools: `${MCP_DIR}/read_tools.go`,
+    WriteTools: `${MCP_DIR}/write_tools.go`,
+    PluginTools: `${MCP_DIR}/plugin_tools.go`,
   }
   const namesIn = (rel) => (exists(rel)
-    ? [...readText(rel).matchAll(/name: *"(gkill_[a-z_0-9]+)"/g)].map((m) => m[1])
+    ? [...readText(rel).matchAll(/(?:\btool\(|"name",)\s*"(gkill_[a-z_0-9]+)"/g)].map((m) => m[1])
     : [])
   const toolNames = (rel) => {
     if (!exists(rel)) return 0
     const src = readText(rel)
-    const names = new Set(namesIn(rel))
-    const toolsBlock = src.match(/const TOOLS = \[[\s\S]*?\n\];/)
-    if (!toolsBlock) return names.size
-    for (const spread of toolsBlock[0].matchAll(/\.\.\.(\w+)(?:\.filter\([^\n]*?(\w+)\.has)?/g)) {
-      const mod = TOOL_MODULES[spread[1]]
+    const names = new Set()
+    // 定義 `func composeTools(lists ...)` ではなく、サーバごとの `return composeTools(...)` 1行を読む
+    const compose = src.match(/return composeTools\(([^\n]*)\)\s*$/m)
+    if (!compose) return names.size
+    for (const item of compose[1].matchAll(/filterTools\((\w+),\s*(\w+)\)|(\w+)/g)) {
+      const modName = item[1] || item[3]
+      const mod = TOOL_MODULES[modName]
       if (!mod) continue
       let modNames = namesIn(mod)
-      if (spread[2]) {
-        const setBlock = src.match(new RegExp(`const ${spread[2]} = new Set\\(\\[([\\s\\S]*?)\\]\\)`))
+      if (item[2]) {
+        const setBlock = src.match(new RegExp(`${item[2]} = newNameSet\\(([\\s\\S]*?)\\n\\)`))
         if (setBlock) {
           const allow = new Set([...setBlock[1].matchAll(/"(gkill_[a-z_0-9]+)"/g)].map((x) => x[1]))
           modNames = modNames.filter((n) => allow.has(n))
@@ -431,10 +443,10 @@ function computeMiscMetrics() {
     routeComponents,
     routeRedirects,
     goModModules,
-    mcpReadTools: toolNames('src/mcp/gkill-read-server.mjs'),
-    mcpWriteTools: toolNames('src/mcp/gkill-write-server.mjs'),
-    mcpReadWriteTools: toolNames('src/mcp/gkill-readwrite-server.mjs'),
-    mcpPluginTools: toolNames('src/mcp/lib/plugin-tools.mjs'),
+    mcpReadTools: toolNames(`${MCP_DIR}/server_read.go`),
+    mcpWriteTools: toolNames(`${MCP_DIR}/server_write.go`),
+    mcpReadWriteTools: toolNames(`${MCP_DIR}/server_readwrite.go`),
+    mcpPluginTools: namesIn(`${MCP_DIR}/plugin_tools.go`).length,
     kftlStatementTs: kftlTs.size,
     kftlStatementGo: kftlGo.size,
     glossaryTerms,
@@ -548,7 +560,7 @@ function buildCountAssertions(m) {
     `| Go バックエンド (\`server/\`) | ${m.goTests} | ${m.goTestFiles} |`,
     `| フロントエンド ユニット (\`client/\`) | ${m.unitTests} | ${m.unitTestFiles} |`,
     `| フロントエンド E2E (\`client/\`) | ${m.e2eTests} | ${m.e2eTestFiles} |`,
-    `| MCP サーバ (\`mcp/\`) | ${m.mcpTests} | ${m.mcpTestFiles} |`,
+    `| MCP サーバ (\`server/gkill/mcp/\`) | ${m.mcpTests} | ${m.mcpTestFiles} |`,
     `| ツール (\`tools/\`) | ${m.toolsTests} | ${m.toolsTestFiles} |`,
     `| Android (\`android/\`) | ${m.androidTests} | ${m.androidTestFiles} |`,
     `| Wear OS (\`wear_os/\`) | ${m.wearCompanionTests + m.wearWatchTests} | ${m.wearTestFiles} |`,
@@ -565,10 +577,12 @@ function buildCountAssertions(m) {
   add('documents/reverse/testing-guide.md', `| Wear OS | ${m.wearCompanionTests + m.wearWatchTests} | ${m.wearTestFiles} |`)
   add('src/server/ABOUT_TEST.md', `${m.goTests}テスト関数、${m.goTestFiles}テストファイル、${m.goTestPkgs}パッケージ`)
   add('src/server/gkill/plugin/sdk/ABOUT_TEST.md', `**${m.sdkTests}テスト（${m.sdkTestFiles}ファイル）**`)
-  add('src/mcp/ABOUT_TEST.md', `${m.mcpTests}テスト（${m.mcpTestFiles}ファイル）`)
+  add('src/server/gkill/mcp/ABOUT_TEST.md', `${m.mcpTests}テスト（${m.mcpTestFiles}ファイル）`)
+  add('src/server/gkill/mcp/ABOUT_TEST.md', `要求コーパス ${m.mcpGoldenCases} 件`)
+  add('documents/adr/0631-mcp-lives-in-gkill-server.md', `${m.mcpGoldenCases} 件`)
   add('src/wear_os/ABOUT_TEST.md', `合計${m.wearCompanionTests + m.wearWatchTests}テスト`)
 
-  // ── MCP ツール数。toolNames がスプレッド (lib/*-tools.mjs) を辿るので、
+  // ── MCP ツール数。toolNames が composeTools の連結（*_tools.go）を辿るので、
   //    プラグインツールもそこに含まれる（別途足さない）
   const mcpRead = m.mcpReadTools
   const mcpWrite = m.mcpWriteTools
@@ -576,9 +590,9 @@ function buildCountAssertions(m) {
   add('.claude/skills/gkill-mcp/SKILL.md', `| Read | ${mcpRead} (`)
   add('.claude/skills/gkill-mcp/SKILL.md', `| Write | ${mcpWrite} (`)
   add('.claude/skills/gkill-mcp/SKILL.md', `| ReadWrite | ${mcpRW} (`)
-  add('resources/manual_src/ja/mcp.html', `<td>gkill-read-server.mjs</td><td>${mcpRead}</td>`)
-  add('resources/manual_src/ja/mcp.html', `<td>gkill-write-server.mjs</td><td>${mcpWrite}</td>`)
-  add('resources/manual_src/ja/mcp.html', `<td>gkill-readwrite-server.mjs</td><td>${mcpRW}</td>`)
+  add('resources/manual_src/ja/mcp.html', `<td>gkill_server mcp --kind read</td><td>${mcpRead}</td>`)
+  add('resources/manual_src/ja/mcp.html', `<td>gkill_server mcp --kind write</td><td>${mcpWrite}</td>`)
+  add('resources/manual_src/ja/mcp.html', `<td>gkill_server mcp --kind readwrite</td><td>${mcpRW}</td>`)
 
   // README / ABOUT_TEST は本数を「プラグイン1本を除いた内訳」でも書いている。
   // そこが検査から漏れていたため 11/26/32・10/24/30・Read 9/Write 24/ReadWrite 29 と
@@ -586,19 +600,19 @@ function buildCountAssertions(m) {
   const mcpReadOnly = mcpRead - 1
   const mcpWriteOnly = mcpRW - mcpRead
   const mcpWriteConvenience = mcpWrite - mcpWriteOnly - 1
-  add('src/mcp/README.md', `\`gkill-read-server.mjs\` | ${mcpRead} (${mcpReadOnly} read + 1 plugin)`)
-  add('src/mcp/README.md', `\`gkill-write-server.mjs\` | ${mcpWrite} (${mcpWriteOnly} write + ${mcpWriteConvenience} read convenience + 1 plugin)`)
-  add('src/mcp/README.md', `\`gkill-readwrite-server.mjs\` | ${mcpRW} (${mcpReadOnly} read + ${mcpWriteOnly} write + 1 plugin)`)
-  add('src/mcp/README.md', `ツール数（上の表の ${mcpRead} / ${mcpWrite} / ${mcpRW}）`)
-  add('src/mcp/ABOUT_TEST.md', `ツール数（Read ${mcpRead} / Write ${mcpWrite} / ReadWrite ${mcpRW}）`)
-  add('src/mcp/ABOUT_TEST.md', `Read サーバ ${mcpReadOnly} + プラグイン1 = ${mcpRead}ツール`)
-  add('src/mcp/ABOUT_TEST.md', `Write サーバ ${mcpWrite - 1}（書き込み${mcpWriteOnly} + Read便利${mcpWriteConvenience}）+ プラグイン1 = ${mcpWrite}ツール`)
-  add('src/mcp/ABOUT_TEST.md', `統合サーバ ${mcpRW - 1} + プラグイン1 = ${mcpRW}ツール`)
-  add('src/mcp/ABOUT_TEST.md', `Read ${mcpReadOnly}ツール分のハンドラ実行ロジック`)
-  add('src/mcp/ABOUT_TEST.md', `${mcpWrite}ツールディスパッチ`)
-  add('src/mcp/ABOUT_TEST.md', `Write ${mcpWriteOnly}ツール定義（実物 import）`)
-  add('src/mcp/ABOUT_TEST.md', `${mcpRW}ツール全ディスパッチ`)
-  add('src/mcp/ABOUT_TEST.md', `Read ${mcpReadOnly}ツール + Write ${mcpWriteOnly}ツール`)
+  add('src/server/gkill/mcp/README.md', `\`gkill_server mcp --kind read\` | ${mcpRead} (${mcpReadOnly} read + 1 plugin)`)
+  add('src/server/gkill/mcp/README.md', `\`gkill_server mcp --kind write\` | ${mcpWrite} (${mcpWriteOnly} write + ${mcpWriteConvenience} read convenience + 1 plugin)`)
+  add('src/server/gkill/mcp/README.md', `\`gkill_server mcp --kind readwrite\` | ${mcpRW} (${mcpReadOnly} read + ${mcpWriteOnly} write + 1 plugin)`)
+  add('src/server/gkill/mcp/README.md', `ツール数（上の表の ${mcpRead} / ${mcpWrite} / ${mcpRW}）`)
+  add('src/server/gkill/mcp/ABOUT_TEST.md', `ツール数（Read ${mcpRead} / Write ${mcpWrite} / ReadWrite ${mcpRW}）`)
+  add('src/server/gkill/mcp/ABOUT_TEST.md', `Read サーバ ${mcpReadOnly} + プラグイン1 = ${mcpRead}ツール`)
+  add('src/server/gkill/mcp/ABOUT_TEST.md', `Write サーバ ${mcpWrite - 1}（書き込み${mcpWriteOnly} + Read便利${mcpWriteConvenience}）+ プラグイン1 = ${mcpWrite}ツール`)
+  add('src/server/gkill/mcp/ABOUT_TEST.md', `統合サーバ ${mcpRW - 1} + プラグイン1 = ${mcpRW}ツール`)
+  add('src/server/gkill/mcp/ABOUT_TEST.md', `Read ${mcpReadOnly}ツール分のハンドラ実行ロジック`)
+  add('src/server/gkill/mcp/ABOUT_TEST.md', `${mcpWrite}ツールディスパッチ`)
+  add('src/server/gkill/mcp/ABOUT_TEST.md', `Write ${mcpWriteOnly}ツール定義（実物 import）`)
+  add('src/server/gkill/mcp/ABOUT_TEST.md', `${mcpRW}ツール全ディスパッチ`)
+  add('src/server/gkill/mcp/ABOUT_TEST.md', `Read ${mcpReadOnly}ツール + Write ${mcpWriteOnly}ツール`)
 
   // documents/reverse 側の MCP ツール数。2026-08-24 の監査で、検査対象が src/mcp と
   // スキル・マニュアルの4ファイルに限られていたため reverse 資料に3〜4世代前の数が
@@ -609,9 +623,9 @@ function buildCountAssertions(m) {
   add('documents/reverse/glossary.md', `${mcpRead}ツール = 固有${mcpReadOnly} + プラグイン1、stdio/HTTP`)
   add('documents/reverse/glossary.md', `${mcpWrite}ツール = 書き込み${mcpWriteOnly} + Read便利${mcpWriteConvenience} + プラグイン1、stdio/HTTP`)
   add('documents/reverse/glossary.md', `${mcpRW}ツール = 固有${mcpRW - 1} + プラグイン1、stdio/HTTP`)
-  add('documents/reverse/mcp-setup-guide.md', `\`gkill-read-server.mjs\` | ${mcpRead} |`)
-  add('documents/reverse/mcp-setup-guide.md', `\`gkill-write-server.mjs\` | ${mcpWrite} |`)
-  add('documents/reverse/mcp-setup-guide.md', `\`gkill-readwrite-server.mjs\` | ${mcpRW} |`)
+  add('documents/reverse/mcp-setup-guide.md', `\`gkill_server mcp --kind read\` | ${mcpRead} |`)
+  add('documents/reverse/mcp-setup-guide.md', `\`gkill_server mcp --kind write\` | ${mcpWrite} |`)
+  add('documents/reverse/mcp-setup-guide.md', `\`gkill_server mcp --kind readwrite\` | ${mcpRW} |`)
   add('documents/reverse/design-philosophy.md', `Read（${mcpRead}ツール、読み取りのみ）`)
   add('documents/reverse/design-philosophy.md', `Write（${mcpWrite}ツール）と ReadWrite（${mcpRW}ツール）`)
   add('documents/reverse/usecase.md', `Read サーバー（${mcpRead}ツール）は読み取りのみ、Write（${mcpWrite}ツール）/ ReadWrite（${mcpRW}ツール）`)
@@ -623,13 +637,13 @@ function buildCountAssertions(m) {
   // 2026-09-14 に検査から漏れていた言及（operations-guide の表は2世代前の 24/30、
   // glossary の用語行は 26、「Read便利ツール4つ」は3ファイルで実体5より1少なかった）。
   add('documents/reverse/api-endpoints.md', `MCPサーバは${mcpRead}個のReadツールを提供する。内訳は固有の${mcpReadOnly}`)
-  add('documents/reverse/operations-guide.md', `\`gkill-read-server.mjs\` | ${mcpRead} (${mcpReadOnly} read + 1 plugin)`)
-  add('documents/reverse/operations-guide.md', `\`gkill-write-server.mjs\` | ${mcpWrite} (${mcpWriteOnly} write + ${mcpWriteConvenience} read convenience + 1 plugin)`)
-  add('documents/reverse/operations-guide.md', `\`gkill-readwrite-server.mjs\` | ${mcpRW} (${mcpReadOnly} read + ${mcpWriteOnly} write + 1 plugin)`)
-  add('documents/reverse/glossary.md', `**Read専用**（\`gkill-read-server.mjs\`、${mcpRead}ツール）・**Write専用**（\`gkill-write-server.mjs\`、${mcpWrite}ツール）・**ReadWrite統合**（\`gkill-readwrite-server.mjs\`、${mcpRW}ツール）`)
+  add('documents/reverse/operations-guide.md', `\`gkill_server mcp --kind read\` | ${mcpRead} (${mcpReadOnly} read + 1 plugin)`)
+  add('documents/reverse/operations-guide.md', `\`gkill_server mcp --kind write\` | ${mcpWrite} (${mcpWriteOnly} write + ${mcpWriteConvenience} read convenience + 1 plugin)`)
+  add('documents/reverse/operations-guide.md', `\`gkill_server mcp --kind readwrite\` | ${mcpRW} (${mcpReadOnly} read + ${mcpWriteOnly} write + 1 plugin)`)
+  add('documents/reverse/glossary.md', `**Read専用**（\`gkill_server mcp --kind read\`、${mcpRead}ツール）・**Write専用**（\`gkill_server mcp --kind write\`、${mcpWrite}ツール）・**ReadWrite統合**（\`gkill_server mcp --kind readwrite\`、${mcpRW}ツール）`)
   add('documents/reverse/mcp-setup-guide.md', `Read便利ツール${mcpWriteConvenience}つ付属`)
-  add('src/mcp/README.md', `Read便利ツール${mcpWriteConvenience}つ（`)
-  add('src/mcp/ABOUT_TEST.md', `Read便利${mcpWriteConvenience}ツール`)
+  add('src/server/gkill/mcp/README.md', `Read便利ツール${mcpWriteConvenience}つ（`)
+  add('src/server/gkill/mcp/ABOUT_TEST.md', `Read便利${mcpWriteConvenience}ツール`)
 
   // ── KFTL ステートメント型数 / glossary 用語数
   add('.claude/skills/gkill-client-kftl/SKILL.md', `行ラベルのための行分類器 (${m.kftlStatementTs} statement types; the Go side has ${m.kftlStatementGo})`)

@@ -78,5 +78,5 @@ ADR-0603 は時刻のみのカーソル（RFC3339Nano）を採り、その帰結
 
 - `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp_test.go`
 - `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp_v2_test.go`
-- `src/mcp/__tests__/read-handlers.test.mjs`
-- `src/mcp/__tests__/normalization.test.mjs`
+- `src/server/gkill/mcp/read_handlers_test.go`
+- `src/server/gkill/mcp/normalization_test.go`

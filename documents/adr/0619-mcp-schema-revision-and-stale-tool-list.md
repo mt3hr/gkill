@@ -7,7 +7,7 @@
 | Sources | 2026-09-14 の MCP レビュー（ChatGPT からの実呼び出しで「tools/list どおりに呼ぶと未知の引数で拒否される」を再現。P0 の2件）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「ツール一覧の世代は `gkill_status` の `schema_revision` で見せる。」「未知の引数名には「古い一覧の可能性」を必ず添える。」「tools/list のバイト量は予算ファイルで固定する。」 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/status-tool.mjs`（`computeSchemaRevision` / `stampSchemaRevision`）/ `src/mcp/lib/mcp-server-base.mjs`（コンストラクタの焼き込み・`describeServer`・`initialize` の version）/ `src/mcp/lib/read-tools.mjs`（`gkill_status` の定義）/ `src/mcp/lib/read-handlers.mjs`（`buildStatusPayload`）/ `src/mcp/lib/validation.mjs`（`unknownKeyMessage`）/ `src/mcp/lib/mcp-server-bootstrap.mjs`（`server_start` ログ）/ `src/mcp/tool-schema-budget.mjs` と `src/mcp/tool-schema-budget.json` / `src/tools/mcp_schema_budget.mjs` |
+| Anchors | `src/server/gkill/mcp/status_tool.go`（`computeSchemaRevision` / `stampSchemaRevision`）/ `src/server/gkill/mcp/server_base.go`（コンストラクタの焼き込み・`describeServer`・`initialize` の version）/ `src/server/gkill/mcp/read_tools.go`（`gkill_status` の定義）/ `src/server/gkill/mcp/read_handlers.go`（`buildStatusPayload`）/ `src/server/gkill/mcp/validation.go`（`unknownKeyMessage`）/ `src/server/gkill/mcp/bootstrap.go`（`server_start` ログ）/ `src/server/gkill/mcp/tool_schema_budget.go` と `src/server/gkill/mcp/tool_schema_budget.json` / `src/server/gkill/main/common/mcp.go` |
 
 ## Context
 
@@ -18,7 +18,7 @@
 掲げる MCP にとって一番たちの悪い形で、しかもエラー文には再接続の案内が一切無かった。
 
 原因を切り分けると、**サーバのプロセスは古くなかった**。NSSM の `GkillReadMCPServer` /
-`GkillReadWriteMCPServer`（node が `src/mcp/*.mjs` を作業ツリーから直接実行する）は
+`GkillReadWriteMCPServer`（当時は node が旧 `src/mcp` の作業ツリーを直接実行していた。2026-09-20 からは `gkill_server.exe mcp` で本体と同じ exe を配る。ADR-0631）は
 2026-09-10 03:41 起動で、改名コミット `5310b1c5`（2026-09-08 18:57）より後。
 古かったのは ChatGPT のコネクタが接続時に取った tools/list で、これはサーバを
 何度再起動しても更新されない（[ADR-0609](0609-stale-tool-schema-is-warned-only-when-proven.md) が
@@ -49,12 +49,12 @@ claude.ai コネクタで実測した「セッション寿命で固定」の Cha
 - **未知の引数名のエラー文は1本（`unknownKeyMessage`）にし、「書き間違いか古い一覧かは
   区別できない」と言って再接続と `gkill_status` の照合を案内する**。トップレベル
   （`assertKnownKeys`）と `query` の中（`normalizeKyouQuery`）の両方がこれを使う
-- **「tools/list どおりに呼ぶと失敗しない」を機械検査する**（`schema-contract.test.mjs`）:
+- **「tools/list どおりに呼ぶと失敗しない」を機械検査する**（`schema_contract_test.go`）:
   スキーマのキー集合 = 受理集合 − 廃止済み、各ツールを全プロパティ指定で呼んで未知キーで
   落ちない、3サーバの同名ツールが同じ JSON（`gkill_status` の印だけ剥がして比較）
-- **tools/list のバイト量を予算ファイル `src/mcp/tool-schema-budget.json` で固定する**。
+- **tools/list のバイト量を予算ファイル `src/server/gkill/mcp/tool_schema_budget.json` で固定する**。
   値は現状の実測。超えたら失敗、1024 バイト以上下回っても失敗（予算を追随させる）。
-  更新は `npm run mcp:schema-budget -- --update` で明示的に行う
+  更新は `gkill_server mcp schema-budget --update` で明示的に行う
 
 ## Rejected alternatives
 
@@ -87,7 +87,7 @@ claude.ai コネクタで実測した「セッション寿命で固定」の Cha
 
 - ツール数は read 11 / write 28 / readwrite 32。資料・テストの固定値を更新した
 - `gkill_status` の description は3サーバで末尾12桁だけ違う。「read と readwrite の同名
-  ツールは同一定義」の唯一の例外で、`schema-contract.test.mjs` は印を剥がしてから比べる。
+  ツールは同一定義」の唯一の例外で、`schema_contract_test.go` は印を剥がしてから比べる。
   静的な `READ_TOOLS` は書き換えない（`McpServerBase` が自分用の配列を持つ）
 - 説明文を1文直すだけで `schema_revision` は変わる。それが正しい —— クライアントから見れば
   別の一覧で、古い一覧を握ったセッションはその1文を知らない
@@ -108,19 +108,19 @@ claude.ai コネクタで実測した「セッション寿命で固定」の Cha
   readwrite 93,980 B。追加前は read 43,237 B / readwrite 93,740 B で、`gkill_get_kyous`
   単体 27,061 B（inputSchema 21,874 B）、`gkill_submit_kftl` 8,472 B
 - 変異テスト: `FIND_QUERY_SCHEMA.properties` に架空のキーを1つ足すと
-  `schema-contract.test.mjs` の2テスト（キー集合一致・全プロパティ指定スモーク）が落ちる
+  `schema_contract_test.go` の2テスト（キー集合一致・全プロパティ指定スモーク）が落ちる
 
 ## Related tests
 
-- `src/mcp/__tests__/status-tool.test.mjs`
+- `src/server/gkill/mcp/status_tool_test.go`
   - 決定性・自己参照除外・焼き込みの冪等・3サーバで値が違うこと・`gkill_status` は引数なし
-- `src/mcp/__tests__/schema-contract.test.mjs`
+- `src/server/gkill/mcp/schema_contract_test.go`
   - キー集合の一致・全プロパティ指定スモーク（全ツール）・3サーバの同名ツール同一・世代の一致
-- `src/mcp/__tests__/tool-schema-budget.test.mjs`
+- `src/server/gkill/mcp/tool_schema_budget_test.go`
   - 予算内・計測の決定性・over / under / missing の判定と文言
-- `src/mcp/__tests__/read-handlers.test.mjs`（`handleReadToolCall — gkill_status`）
+- `src/server/gkill/mcp/read_handlers_test.go`（`handleReadToolCall — gkill_status`）
   - 応答の形・gkill 不達時の `gkill_error` と本文非掲載・引数拒否・1行要約
-- `src/mcp/__tests__/server.test.mjs`
+- `src/server/gkill/mcp/server_test.go`
   - `initialize` の version・description の印・応答の `schema_revision` が一致
-- `src/mcp/__tests__/normalization.test.mjs`（`unknown argument names point at a possibly stale tool list`）
+- `src/server/gkill/mcp/normalization_test.go`（`unknown argument names point at a possibly stale tool list`）
   - トップレベルと `query` の未知キーが同じ文言で再接続と `gkill_status` を案内

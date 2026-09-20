@@ -100,4 +100,4 @@ GPS は普通に取れているのに「索引が壊れている＝位置情報�
   - `TestHandleGetRepInfosMCPExcludesNonKyouPluginsFromPlugins`
 - `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp_v2_test.go`
   - `TestHandleGetKyousMCP_NonKyouPluginValuesGetNamedWarning`
-- `src/mcp/__tests__/plugin-tools.test.mjs`
+- `src/server/gkill/mcp/plugin_tools_test.go`

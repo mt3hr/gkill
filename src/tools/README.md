@@ -19,7 +19,6 @@ gkill プロジェクト用のユーティリティスクリプト。
 | `run_test_suite.mjs` | `npm run test_*` / `npm run verify_docs` の実体。スイートを 1 本走らせ、成功時に `test_attestation.local.json` へ作業ツリーの tree hash を記録する |
 | `attestation.mjs` | 上 2 つと `put_version_info.mjs` / `verify_release_artifacts.mjs` の共有ライブラリ（git ヘルパ・記録の読み書き・評価関数・GitHub API） |
 | `put_version_info.mjs` | `npm run put_version_info_embed` の実体。`embed/version.json`（commit / build_time / version / tree_hash）を書く |
-| `mcp_schema_budget.mjs` | `npm run mcp:schema-budget` の実体。MCP の tools/list のバイト量を予算ファイル `src/mcp/tool-schema-budget.json` と突き合わせる（`--update` で実測を予算へ書く）。判定は `src/mcp/tool-schema-budget.mjs` が正本 |
 | `__tests__/attestation.test.mjs` | 上記のうち attestation / run_test_suite（引数許可リスト）/ verify_release_gate のテスト（`npm run test_tools`、`vitest.config.tools.ts`） |
 | `__tests__/release_scripts.test.mjs` | run_test_suite の記録条件・put_version_info・verify_release_artifacts の判定関数のテスト |
 | `test_plugins.mjs` | `npm run test_plugins` / `npm run vet_plugins` の実体。`src/plugins/` 配下の各 Go モジュールに `go test` / `go vet` を回す |
@@ -194,7 +193,7 @@ CodeQL の JS/TS 解析はビルドを伴わず**そこにあるファイルを�
 | `src/wear_os/**/build/`, `src/android/build/` | 2812 | Gradle の configuration-cache レポート HTML（インライン JS） |
 | `playwright-report/index.html` | 81 | Playwright のレポート |
 | `dist/assets/*.js`, `embed/html/assets/*.js` | 22 | Vite の minified バンドル（mermaid 等） |
-| **本物** | **5** | `src/client/classes/api/gkill-api.ts` / `src/mcp/lib/*.mjs` |
+| **本物** | **5** | `src/client/classes/api/gkill-api.ts` / 旧 Node 実装の MCP ライブラリ（2026-09-20 に Go へ移行済み） |
 
 2919件中2914件がノイズで、しかも `js/use-before-declaration` のような minified コードなら必ず出る規則が
 上位を占めるため、本物が埋もれて見えなくなる。

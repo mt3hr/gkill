@@ -7,7 +7,7 @@
 | Sources | `2d10492c` / `d577bba7` / `.claude/skills/gkill-mcp/SKILL.md`「Plugin tools」節 / `documents/reverse/plugin-system.md`「13. MCP からのプラグイン内容取得」 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/plugin-tools.mjs` |
+| Anchors | `src/server/gkill/mcp/plugin_tools.go` |
 
 ## Context
 
@@ -19,7 +19,7 @@
 
 `gkill_get_kyous` に `include_plugin_content:true` を渡すと、**同じレスポンスに本文を埋め込む**。1件ずつ取るツールは廃止する。
 
-インライン化は `plugin-tools.mjs` の `inlinePluginContents` が担当し、`/api/get_plugin_content_html` を **rep ごとに直列・rep 間は並列（既定4）**で叩く。
+インライン化は `plugin_tools.go` の `inlinePluginContents` が担当し、`/api/get_plugin_content_html` を **rep ごとに直列・rep 間は並列（既定4）**で叩く。
 
 ## Rejected alternatives
 
@@ -37,7 +37,7 @@
 
 各ペイロードに **`content_status`**（`ok` / `truncated` / `skipped` / `error`）が付く。**`ok` 以外なら本文は不完全**なので、AI 側はこれを見て判断する必要がある。
 
-`plugin_content_format` で `text`（既定）/ `html` / `both` を選べる。HTML→テキスト変換は `lib/html-text.mjs`。
+`plugin_content_format` で `text`（既定）/ `html` / `both` を選べる。HTML→テキスト変換は `html_text.go`。
 
 **Write 専用サーバには `gkill_get_kyous` が無い**ため、プラグイン本文を読むには ReadWrite サーバを使う。
 
@@ -51,5 +51,5 @@
 
 ## Related tests
 
-- `src/mcp/__tests__/plugin-tools.test.mjs`
-- `src/mcp/__tests__/html-text.test.mjs`
+- `src/server/gkill/mcp/plugin_tools_test.go`
+- `src/server/gkill/mcp/html_text_test.go`

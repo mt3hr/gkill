@@ -12,14 +12,17 @@ main/
 ├── common/                    # 共有初期化ロジック → common/README.md 参照
 │   ├── common.go              # サーバ初期化・共通 cobra コマンド登録
 │   ├── common_test.go         # common.go のテスト
-│   ├── gkill_log/             # ログシステム（7ファイル: 実装6 + テスト1）
-│   │   ├── gkill_log.go       # ログ初期化
+│   ├── mcp.go                 # mcp サブコマンド（gkill_server mcp --kind …。実装は gkill/mcp パッケージ）
+│   ├── mcp_test.go            # mcp.go のテスト
+│   ├── gkill_log/             # ログシステム（実装7 + テスト4）
+│   │   ├── gkill_log.go       # ログ初期化（Init / InitNamed）
 │   │   ├── level.go           # ログレベル定義（8レベル）
 │   │   ├── router.go          # ログルーティング
 │   │   ├── routing_handler.go # ルーティングハンドラ
 │   │   ├── sinks.go           # ログ出力先
 │   │   ├── switch_writer.go   # 出力先切り替え
-│   │   └── gkill_log_test.go  # ログシステムテスト
+│   │   ├── gkill_log_test.go  # ログシステムテスト
+│   │   └── gkill_log_named_test.go # InitNamed（MCP の別名ファイル群）のテスト
 │   ├── gkill_options/         # CLI オプション（2ファイル）
 │   │   ├── option.go          # 全 CLI フラグ定義（70+ パラメータ）
 │   │   └── option_test.go     # オプションテスト
@@ -62,6 +65,7 @@ go-astilectron を使用して Electron ライクなデスクトップウィン�
 | `generate_plugin_cache` | プラグインのキャッシュを稼働中サーバ無しで同期構築（`common/generate_plugin_cache.go`。プラグインバイナリを `--gkill-build-cache` で単独起動） |
 | `reset_password` | パスワードを無効化してリセットURLを再発行（`common/password_admin.go`） |
 | `add_tag` | 検索条件 JSON（FindKyouQuery）に一致する Kyou へタグを付与（`common/add_tag.go`。稼働中サーバの HTTP クライアント） |
+| `mcp` | MCP サーバ（`mcp --kind read\|write\|readwrite [--transport stdio\|http] [--config <path>]`、`mcp schema-budget [--update]`）。稼働中サーバの HTTP クライアントで、実装は `gkill/mcp` パッケージ（`common/mcp.go` は配線だけ。gkill_server のみ） |
 
 ## common/ 配下
 
@@ -75,7 +79,7 @@ go-astilectron を使用して Electron ライクなデスクトップウィン�
 - GkillDAOManager の初期化
 - HTTP サーバの起動
 
-### `gkill_log/`（7ファイル）— ログシステム
+### `gkill_log/`（11ファイル）— ログシステム
 
 `log/slog` ベースのカスタムマルチレベルログ（TraceSQL, Trace, Debug, Access, Info, Warn, Error, None の8レベル）。
 レベル別ファイル分割、統合ログ、stdout ミラーリング、ホットスワップ、サイズ上限による世代回転に対応。

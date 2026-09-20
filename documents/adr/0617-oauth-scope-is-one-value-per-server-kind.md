@@ -7,7 +7,7 @@
 | Sources | 2026-08-30 の MCP レビュー P0（scope の矛盾広告と非照合受理）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「OAuth の scope はサーバ種別ごとに1値で、正本は各エントリスクリプトの `START_SPEC` 1箇所。」 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/gkill-read-server.mjs` / `src/mcp/gkill-write-server.mjs` / `src/mcp/gkill-readwrite-server.mjs`（`START_SPEC`）/ `src/mcp/lib/mcp-server-bootstrap.mjs`（`startMcpServer`）/ `src/mcp/lib/oauth-server.mjs`（`_validateAuthorizeParams` / `_handleAuthorizationCodeGrant` / `_handleRefreshTokenGrant`）/ `src/mcp/lib/http-transport.mjs`（Bearer 受理の scope 照合） |
+| Anchors | `src/server/gkill/mcp/server_read.go` / `src/server/gkill/mcp/server_write.go` / `src/server/gkill/mcp/server_readwrite.go`（`START_SPEC`）/ `src/server/gkill/mcp/bootstrap.go`（`startMcpServer`）/ `src/server/gkill/mcp/oauth_server.go`（`_validateAuthorizeParams` / `_handleAuthorizationCodeGrant` / `_handleRefreshTokenGrant`）/ `src/server/gkill/mcp/http_transport.go`（Bearer 受理の scope 照合） |
 
 ## Context
 
@@ -74,13 +74,13 @@ metadata の `scopes_supported`・authorize の既定値と不一致拒否（400
 
 ## Related tests
 
-- `src/mcp/__tests__/start-spec.test.mjs`
+- `src/server/gkill/mcp/start_spec_test.go`
   - 3サーバの `START_SPEC` 宣言値（scope / 既定ポート / file-link 可否）と相互の重複禁止、
     bootstrap が `spec.scope` を OAuthServer へ渡す配線
-- `src/mcp/__tests__/oauth-server.test.mjs`
+- `src/server/gkill/mcp/oauth_server_test.go`
   - `OAuthServer — scope enforcement (P0)`（authorize GET / POST の不一致 400 と code 非発行、
     旧 scope の code / refresh token の `invalid_scope` 拒否と失効、省略時の既定）
   - `OAuthServer — consent display on the login page`（3 scope の表示・書き込み強調・エスケープ）
-- `src/mcp/__tests__/http-transport.test.mjs`
+- `src/server/gkill/mcp/http_transport_test.go`
   - `OAuth scope boundary (P0)`（両 metadata の一致広告、不一致トークンの 403 と
     `token_scope_rejected` ログ、一致トークンの通過、生成時の不一致 throw / scope 欠落 throw）

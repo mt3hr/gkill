@@ -7,7 +7,7 @@
 | Sources | 2026-08-30 の MCP レビュー（AI からのブックマーク登録が無断の外向き通信になる指摘）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「書き込みの後付けフラグはリクエストの修飾子であって、エンティティの列ではない。」 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/write-tools.mjs`（`gkill_add_urlog` の `fetch_metadata` / `fetch_favicon`）/ `src/mcp/lib/write-handlers.mjs`（`skip_fetch_*` への反転）/ `src/server/gkill/api/gkill_server_api/handle_add_urlog.go` / `src/server/gkill/api/req_res/add_ur_log_request.go`（`skip_fetch_metadata` / `skip_fetch_favicon`）/ `src/server/gkill/dao/reps/ur_log.go`（`FillURLogFieldSkipping`） |
+| Anchors | `src/server/gkill/mcp/write_tools.go`（`gkill_add_urlog` の `fetch_metadata` / `fetch_favicon`）/ `src/server/gkill/mcp/write_handlers.go`（`skip_fetch_*` への反転）/ `src/server/gkill/api/gkill_server_api/handle_add_urlog.go` / `src/server/gkill/api/req_res/add_ur_log_request.go`（`skip_fetch_metadata` / `skip_fetch_favicon`）/ `src/server/gkill/dao/reps/ur_log.go`（`FillURLogFieldSkipping`） |
 
 ## Context
 
@@ -77,7 +77,7 @@ URL が社内システムやワンタイムリンクだと、取得自体が副�
   - ハンドラが `request.SkipFetchMetadata, request.SkipFetchFavicon` の順で渡すこと（ソース走査）
 - `src/server/gkill/api/req_res/req_res_test.go`
   - `AddURLogRequest` のワイヤ契約（`skip_fetch_metadata` / `skip_fetch_favicon` のタグ名固定）
-- `src/mcp/__tests__/write-handlers.test.mjs`
+- `src/server/gkill/mcp/write_handlers_test.go`
   - `skip_fetch_*` への反転・フラグ独立・実体へ漏れないこと・update が `re_get_urlog_content` を送らないこと
-- `src/mcp/__tests__/write-normalization.test.mjs`
+- `src/server/gkill/mcp/write_normalization_test.go`
   - 既定値 true・addOnly・古スキーマ文字列の復元（trim 込み）

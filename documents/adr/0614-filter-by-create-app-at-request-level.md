@@ -69,4 +69,4 @@
 
 - `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp_v2_test.go`
   - `TestApplyMCPCreateAppsFilter` / `TestApplyMCPUpdateAppsFilter`
-- `src/mcp/__tests__/normalization.test.mjs`（null 意味論と旧スキーマ救済）
+- `src/server/gkill/mcp/normalization_test.go`（null 意味論と旧スキーマ救済）

@@ -4,10 +4,10 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-21 |
-| Sources | `bb364253`（監査 C-02） / `.claude/skills/gkill-mcp/SKILL.md`「HTTPモードの1リクエスト文脈は server.current* 共有フィールドに書かず」節 |
+| Sources | `bb364253`（監査 C-02） / `.claude/skills/gkill-mcp/SKILL.md`「HTTPモードの1リクエスト文脈は `Server.Current*` 共有フィールドに書かず」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/mcp-server-base.mjs` |
+| Anchors | `src/server/gkill/mcp/server_base.go` |
 
 ## Context
 
@@ -24,7 +24,7 @@ stdio モードは1リクエストずつなので露見しない。**HTTPモー�
 
 不変の `requestContext = {sessionId, userId, remoteAddr}` を作り、`handlePayload` → `handleMessage` → `handleToolCall` / `buildToolResult` へ**引数で流す**。
 
-`mcp-server-base.mjs` の入口で `requestContext ?? Object.freeze({...this.current*})` にフォールバックするので、stdio と既存の直接呼び出しテストは無改修。
+`server_base.go` の入口で `requestContext ?? Object.freeze({...this.current*})` にフォールバックするので、stdio と既存の直接呼び出しテストは無改修。
 
 ## Rejected alternatives
 
@@ -38,7 +38,7 @@ stdio モードは1リクエストずつなので露見しない。**HTTPモー�
 
 **`http-transport` 側から `server.current*` への書き込みを復活させないこと。** フォールバックが残っているので、書き戻しても動いてしまう。
 
-同じ監査で OAuth も固めた: S256 必須・未登録 `client_id` は認可拒否（`oauth-server.mjs` の `_validateAuthorizeParams`）、公開ファイル配信は nosniff ＋ CSP sandbox（Go 側 `withUserContentSecurityHeaders` のミラー）、`oauth-store.mjs` の保存は temp+rename の 0600。
+同じ監査で OAuth も固めた: S256 必須・未登録 `client_id` は認可拒否（`oauth_server.go` の `_validateAuthorizeParams`）、公開ファイル配信は nosniff ＋ CSP sandbox（Go 側 `withUserContentSecurityHeaders` のミラー）、`oauth_store.go` の保存は temp+rename の 0600。
 
 ## Evidence
 
@@ -46,6 +46,6 @@ stdio モードは1リクエストずつなので露見しない。**HTTPモー�
 
 ## Related tests
 
-- `src/mcp/__tests__/http-transport.test.mjs`（Bearer 401 ＝ C-01 回帰 / **並行分離 ＝ C-02 回帰** / M-06）
-- `src/mcp/__tests__/oauth-server.test.mjs`
-- `src/mcp/__tests__/oauth-store.test.mjs`
+- `src/server/gkill/mcp/http_transport_test.go`（Bearer 401 ＝ C-01 回帰 / **並行分離 ＝ C-02 回帰** / M-06）
+- `src/server/gkill/mcp/oauth_server_test.go`
+- `src/server/gkill/mcp/oauth_store_test.go`

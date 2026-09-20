@@ -7,7 +7,7 @@
 | Sources | 2026-09-18 の MCP 実利用報告（`max_size_mb:0.002`・`limit:2`・`include_plugin_content:true` で Kyou 配列だけで 3,596 バイトが警告なしに2件返る）。`.claude/skills/gkill-mcp/SKILL.md`「`max_size_mb` はプラグイン本文を埋め込んだ後に Node が守り直す」 |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/read-handlers.mjs`（`enforceKyousSizeBudget` / `recountInlinePluginContent`） |
+| Anchors | `src/server/gkill/mcp/read_handlers.go`（`enforceKyousSizeBudget` / `recountInlinePluginContent`） |
 
 ## Context
 
@@ -51,4 +51,4 @@
 
 ## Related tests
 
-- `src/mcp/__tests__/read-handlers.test.mjs`（`enforceKyousSizeBudget` の describe）
+- `src/server/gkill/mcp/read_handlers_test.go`（`enforceKyousSizeBudget` の describe）

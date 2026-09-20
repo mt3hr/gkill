@@ -7,7 +7,7 @@
 | Sources | 2026-09-18 の MCP 実利用報告（「`for_mi` で `include_*_mi` 未指定 → 0件。警告は親切だが MCP 層で `include_create_mi` を既定 ON にする方が安全」）。ADR-0610（射影は `for_mi` に依存する） |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/normalization.mjs`（`normalizeKyouArgs` の for_mi 補完・`FOR_MI_DEFAULT_PROJECTION_NOTE`） |
+| Anchors | `src/server/gkill/mcp/normalization.go`（`normalizeKyouArgs` の for_mi 補完・`FOR_MI_DEFAULT_PROJECTION_NOTE`） |
 
 ## Context
 
@@ -42,5 +42,5 @@
 
 ## Related tests
 
-- `src/mcp/__tests__/normalization.test.mjs`（「normalizeKyouArgs assumes include_create_mi」）
-- `src/mcp/__tests__/read-handlers.test.mjs`（「for_mi without a projection flag」）
+- `src/server/gkill/mcp/normalization_test.go`（「normalizeKyouArgs assumes include_create_mi」）
+- `src/server/gkill/mcp/read_handlers_test.go`（「for_mi without a projection flag」）

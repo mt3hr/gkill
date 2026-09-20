@@ -7,7 +7,7 @@
 | Sources | 2026-08-25 の実利用レビュー（`gkill_update_kmemo({id})` が no-op の版を追記した） |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/mcp/lib/write-handlers.mjs`（`runUpdate` の空パッチ判定と `nextUpdateTime`） |
+| Anchors | `src/server/gkill/mcp/write_handlers.go`（`runUpdate` の空パッチ判定と `nextUpdateTime`） |
 
 ## Context
 
@@ -66,4 +66,4 @@ gkill は追記型なので、更新は「新しい版の追加」であり、�
 
 ## Related tests
 
-- `src/mcp/__tests__/write-handlers.test.mjs`（空パッチの拒否、「見つからない」が先に出ること、同じ秒の更新でも `update_time` が前へ進むこと）
+- `src/server/gkill/mcp/write_handlers_test.go`（空パッチの拒否、「見つからない」が先に出ること、同じ秒の更新でも `update_time` が前へ進むこと）

@@ -7,7 +7,7 @@
 | Sources | `.claude/skills/gkill-mcp/SKILL.md`「プラグインの診断文はAIへ返さない」節 / `.claude/skills/gkill-go-backend/SKILL.md`「レスポンスへ載る自由文は端末固有の情報を伏せてから出す」節 / `src/tools/verify_docs.mjs` の `checkPersonalInfo` |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/server/gkill/api/message/redact.go` / `src/mcp/lib/plugin-tools.mjs` |
+| Anchors | `src/server/gkill/api/message/redact.go` / `src/server/gkill/mcp/plugin_tools.go` |
 
 ## Context
 
@@ -23,9 +23,9 @@
 |---|---|---|
 | 収集 | `plugin_repository_impl.go` の `cmd.Stderr = io.MultiWriter(os.Stderr, p.stderrRing)` | 生バイト列を末尾4KB保持 |
 | API | `handle_get_plugin_list.go` の `LastError: pluginRepo.LastStderr()` | なし |
-| MCP | `plugin-tools.mjs` の `plugins: Array.isArray(response.plugins) ? response.plugins : []` | なし（素通し） |
+| MCP | `plugin_tools.go` の `plugins: Array.isArray(response.plugins) ? response.plugins : []` | なし（素通し） |
 
-`mcp-server-base.mjs` は payload 全体を `JSON.stringify` してテキストブロックに載せるので、
+`server_base.go` は payload 全体を `JSON.stringify` してテキストブロックに載せるので、
 **4KB の生 stderr は必ず AI の目に入る**。AIがそれを資料やコミットメッセージへ引き写せば、
 `verify_docs.mjs` の `checkPersonalInfo` が防いでいる混入がそのまま成立する。あの検査は
 「リポジトリへ書き込まれたテキスト」の静的検査で、実行時にAIへ渡る文字列は原理的に対象外である。
@@ -115,4 +115,4 @@
 - `src/server/gkill/api/message/redact_test.go`
 - `src/server/gkill/api/message/gkill_error_test.go`
 - `src/server/gkill/api/gkill_server_api/handle_get_plugin_list_test.go`
-- `src/mcp/__tests__/plugin-tools.test.mjs`
+- `src/server/gkill/mcp/plugin_tools_test.go`

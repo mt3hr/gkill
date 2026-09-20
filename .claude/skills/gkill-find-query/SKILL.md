@@ -1,11 +1,11 @@
 ---
 name: gkill-find-query
-description: "検索条件 FindQuery の null 判定セマンティクスとワード検索の照合規則。null=フィルタ未使用・非nullの空配列=0件指定、use_* フラグ全廃、ゲートヘルパ経由の判定、TypeScript 側の undefined 禁止、旧形式JSONの移行3実装（Go の find_query_legacy_json.go / client の normalize-legacy-find-kyou-query-json.ts / MCP の constants.mjs）、ワード検索の型別の対象列・ID は前方一致・除外語は ID を見ない・SQL と Go（find_word）とプラグイン SDK の3実装を揃えることを扱う。src/server/gkill/api/find/・find_word/・find_filter.go・src/client/classes/api/find_query/・src/mcp/lib/constants.mjs を触るとき、「条件を足したら0件になった」「フィルタが効かない」「無関係な記録がランダムに出る」を調べるとき必読。"
+description: "検索条件 FindQuery の null 判定セマンティクスとワード検索の照合規則。null=フィルタ未使用・非nullの空配列=0件指定、use_* フラグ全廃、ゲートヘルパ経由の判定、TypeScript 側の undefined 禁止、旧形式JSONの移行3実装（Go の find_query_legacy_json.go / client の normalize-legacy-find-kyou-query-json.ts / MCP の constants.go）、ワード検索の型別の対象列・ID は前方一致・除外語は ID を見ない・SQL と Go（find_word）とプラグイン SDK の3実装を揃えることを扱う。src/server/gkill/api/find/・find_word/・find_filter.go・src/client/classes/api/find_query/・src/server/gkill/mcp/constants.go を触るとき、「条件を足したら0件になった」「フィルタが効かない」「無関係な記録がランダムに出る」を調べるとき必読。"
 ---
 
 # FindQuery の null 判定セマンティクス（Go / TypeScript / MCP 共通）
 
-対象: `src/server/gkill/api/find/**` / `src/server/gkill/api/find_word/**` / `src/server/gkill/api/find_filter.go` / `src/client/classes/api/find_query/**` / `src/mcp/lib/constants.mjs`
+対象: `src/server/gkill/api/find/**` / `src/server/gkill/api/find_word/**` / `src/server/gkill/api/find_filter.go` / `src/client/classes/api/find_query/**` / `src/server/gkill/mcp/constants.go`
 
 **このファイルは全文が、実際に起きた事故の再発防止である。該当作業では飛ばさずに読むこと。**
 多くは「例外もエラーも出さずに静かに壊れる」種類で、破っても目の前ではエラーにならない。
@@ -19,7 +19,7 @@ description: "検索条件 FindQuery の null 判定セマンティクスとワ�
 - ただし `FindKyouQuery` のコンストラクタ既定は `tags` / `reps` だけ **`null` ではなく `[]`**（旧 `use_tags=true` + 空配列と厳密等価にするため）
 - Mi の板名は `mi_board_name: null` が「すべて」。番兵は `classes/mi-board-names.ts` の **`MI_ALL_BOARD_KEY`（= ハードコードの `"すべて"`。ロケール非依存）** でサイドバー専用、null への変換は `use-mi-query-editor-sidebar.ts` の1点に集約されている。**i18n の訳語（`MI_ALL_BOARD_NAME_TITLE`）と比較してはいけない** ―― ツリーが emit するのはノードの `key` で、それは `append_all_mi_board()` が入れた `"すべて"` 固定なので、訳語と比べると日本語以外のロケールで「すべて」が全件に戻らず 0 件になる（表示名だけが `ALL_MI_BOARD_NAME` / `MI_ALL_TITLE`）
 - **削除済みを含めたいときは `IncludeDeletedData`（JSON `include_deleted_data`）を使う。** Kyou 検索の削除除外は `find_filter.go` の1箇所で、既定（false）は従来どおり最新版が削除済みのIDを丸ごと落とす。かつて紛らわしい `IsDeleted` と `HideTimeIsTags` が定義だけ存在し（前者は git の実装が「削除済みのみ」という逆の意味で読んでいた）、どちらも Kyou 検索では一度も参照されなかったが、送っているクライアントが実在しなかったので 2026-08-24 に削除した。MCP の語彙からも外してあるので、送ると未知キーとしてエラーになる。なお rekyou / mirekyou は rep の内部で削除済みを弾いており、この旗の対象外。**プラグインプロトコルの `sdk.Query.IsDeleted` だけは公開 API として残っており、gkill 本体からは常に false が渡る**
-- 旧形式JSONの移行は3実装が**同じ16キー**を扱う: Go `api/find/find_query_legacy_json.go`、client `classes/api/find_query/normalize-legacy-find-kyou-query-json.ts`、MCP `mcp/lib/constants.mjs` の `LEGACY_USE_FLAG_KEYS`。どれかが欠けると、そのフラグを送る古いクライアントの保存クエリが移行されない（MCP では未知キー扱いで throw する）。共有URL用の `share_kyou_info.db` は起動時にスキーマ 1.0.0→1.1.0 で**保存済みJSONそのものを書き換える**（共有URLは配布済みで再発行できないため） 却下案（フラグを残す／値が空ならフラグを無視する）は [ADR-0106](../../../documents/adr/0106-find-query-null-semantics.md)。
+- 旧形式JSONの移行は3実装が**同じ16キー**を扱う: Go `api/find/find_query_legacy_json.go`、client `classes/api/find_query/normalize-legacy-find-kyou-query-json.ts`、MCP `mcp/constants.go` の `LEGACY_USE_FLAG_KEYS`。どれかが欠けると、そのフラグを送る古いクライアントの保存クエリが移行されない（MCP では未知キー扱いで throw する）。共有URL用の `share_kyou_info.db` は起動時にスキーマ 1.0.0→1.1.0 で**保存済みJSONそのものを書き換える**（共有URLは配布済みで再発行できないため） 却下案（フラグを残す／値が空ならフラグを無視する）は [ADR-0106](../../../documents/adr/0106-find-query-null-semantics.md)。
 
 **ワード検索の照合規則は SQL（`GenerateFindSQLCommon`）と Go（`find_word.MatchLoweredWords`。プラグイン SDK も同じ関数）で揃える:** 片方だけを変えるとリポジトリ種別によって検索結果が食い違い、エラーにならない。規則は次のとおりで、変えるときは `dao/sqlite3impl/sqlite3impl_util_test.go` の実 SQLite 検査と `api/find_word/match_words_test.go` を同時に直すこと。
 - 型別の対象列: kmemo=CONTENT / urlog=URL,TITLE,DESCRIPTION / nlog=TITLE,SHOP,**AMOUNT** / timeis=TITLE / kc=TITLE,**NUM_VALUE** / mi=TITLE,**BOARD_NAME** / lantana=**MOOD**（気分値を文字列として。テキスト列が無いからといって0件や素通しにしない）/ idf=ファイル名＋rep内相対パス＋`.md/.txt` 本文 / git=コミットメッセージ / rekyou・mirekyou=参照先へ委譲。数値列は SQLite の暗黙変換で文字列として LIKE する（CAST 不要）
