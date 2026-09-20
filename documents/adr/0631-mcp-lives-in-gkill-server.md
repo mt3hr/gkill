@@ -93,7 +93,8 @@ Node のバージョン・`undici` の依存・vitest の設定が本体のリ�
   応答と上流要求がバイト一致（`detail.cause` の 2 件だけマスク。rep をまたいで並列に投げるプラグイン本文取得の
   着順は Node でも Go でも決まっていないので、その並びだけ本文順に揃えて比べる）。
 - **応答の形・文言・キー順を変えたらゴールデンが落ちる。** 意図した変更なら、Node 実装はもう動かせないので
-  ゴールデンの当該行を手で更新し、理由をコミットメッセージに書く。
+  `GKILL_MCP_UPDATE_GOLDEN=1 go test ./gkill/mcp/ -run Golden` で Go の出力へ書き直し、`git diff testdata/golden` を読んで
+  意図した差分だけであることを確かめてからコミットする（以後は前回コミットした Go の出力との回帰検査になる）。
 - ログの形式が変わる: `source` が文字列から `{function, file, line}` へ、`http_request` / `tool_call` は ACCESS、
   ファイルは統合 + レベル別の 8 本（`gkill_mcp_<kind>_access.log` は旧実装と同じ名前だが中身の形式が違う）。
 - MCP を直したら本体と同じ exe を配り直す（`npm run install_server` は本番サービスの実体を上書きするので停止窓が要る）。
