@@ -142,6 +142,10 @@ The codebase (variable names, comments, commit messages) is primarily in Japanes
 - テスト仕様の目次: `src/ABOUT_TEST.md`。利用者向けマニュアル原稿: `resources/manual_src/`（7言語セット、`npm run build_manuals` で生成）
 - 資料の件数・リンク・ファイル名実在・スキル索引は `npm run verify_docs` が機械検査する。
   資料層の保守手順は [gkill-docs](.claude/skills/gkill-docs/SKILL.md) スキルにある
+- **ローカル専用の資料（あれば）**: リポジトリ直下に `local/`（gitignore 済みの独立リポジトリ）があれば、作業を始める前に
+  `local/CLAUDE.md` とそこから案内されるスキル（`local/.claude/skills/*/SKILL.md`）も読むこと。実環境固有の事実
+  （検証用 dev 環境の使い方、本番運用スクリプトへの参照、本番環境へ接続しない約束）はそこにあり、この追跡ファイル群には書かない。
+  Claude Code は `CLAUDE.local.md`（同じく gitignore 済み）経由で自動的に読む。`local/` が無い環境ではこの項は無視してよい
 
 ## AI エージェントへの約束
 
