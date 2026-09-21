@@ -7,13 +7,19 @@ package common
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"errors"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 // buildPackedTzdata は AOSP の packed tzdata と同じ形（ヘッダ 24 バイト・40 バイト名の索引・データ）を作る。
@@ -240,5 +246,158 @@ func TestApplyLibcTimezoneIsAndroidOnly(t *testing.T) {
 	}
 	if got := os.Getenv("TZ"); got != "keep-me" {
 		t.Fatalf("TZ を書き換えた: %q", got)
+	}
+}
+
+// InitGkillOptions が libc へ渡すホームは、環境変数を展開した絶対パスであること（933bb66a の回帰点）。
+// 未展開の "$HOME/gkill" を渡すと TZ=:$HOME/gkill/tz/localtime のリテラルになり、musl は相対名を
+// zoneinfo ディレクトリで探して無ければエラーなしで UTC にする（Termux の既定起動で実際にそうなった）。
+func TestInitGkillOptionsPassesExpandedAbsoluteHomeToLibcTimezone(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("GKILL_TEST_INIT_HOME", home)
+	t.Setenv("GKILL_HOME", os.Getenv("GKILL_HOME")) // 終了時に元へ戻す
+
+	originalHomeDir := gkill_options.GkillHomeDir
+	originalFn := applyLibcTimezoneFn
+	t.Cleanup(func() {
+		applyLibcTimezoneFn = originalFn
+		gkill_options.GkillHomeDir = originalHomeDir
+		InitGkillOptions() // 派生オプション（LibDir 等）を元の値へ戻す
+	})
+
+	captured := ""
+	applyLibcTimezoneFn = func(gkillHomeDir string) string {
+		captured = gkillHomeDir
+		return ""
+	}
+	gkill_options.GkillHomeDir = "$GKILL_TEST_INIT_HOME/gkill"
+	InitGkillOptions()
+
+	want := filepath.Clean(filepath.Join(home, "gkill"))
+	if captured != want {
+		t.Fatalf("applyLibcTimezone に渡したホーム = %q, want %q（展開済み・絶対パス）", captured, want)
+	}
+	if strings.Contains(captured, "$") || !filepath.IsAbs(captured) {
+		t.Fatalf("未展開または相対のまま渡している: %q", captured)
+	}
+	if got := os.Getenv("GKILL_HOME"); got != want {
+		t.Fatalf("GKILL_HOME = %q, want %q（プラグインへ継ぐ値も同じ展開済みパス）", got, want)
+	}
+}
+
+// loadAndroidTZif は候補パスを順に試し、最初に読めた packed tzdata から切り出す。
+// 全部だめなら候補ごとの理由を errors.Join で1つにして返す（どのパスが無かったかが1行で分かる）。
+func TestLoadAndroidTZifTriesCandidatesInOrderAndJoinsErrors(t *testing.T) {
+	originalPaths := androidPackedTzdataPaths
+	t.Cleanup(func() { androidPackedTzdataPaths = originalPaths })
+
+	dir := t.TempDir()
+	missing := filepath.Join(dir, "missing", "tzdata")
+	older := filepath.Join(dir, "older", "tzdata")
+	if err := os.MkdirAll(filepath.Dir(older), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	tokyo := fakeTZif("tokyo-from-older")
+	if err := os.WriteFile(older, buildPackedTzdata(t, map[string][]byte{"Asia/Tokyo": tokyo}), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1つ目が無くても2つ目から取れる
+	androidPackedTzdataPaths = []string{missing, older}
+	got, err := loadAndroidTZif("Asia/Tokyo")
+	if err != nil {
+		t.Fatalf("2つ目の候補から読めるはず: %v", err)
+	}
+	if !bytes.Equal(got, tokyo) {
+		t.Fatalf("切り出した TZif が違う: %q", got)
+	}
+
+	// 読めても名前が無ければ次へ。全部だめなら理由が全部入る
+	androidPackedTzdataPaths = []string{missing, older}
+	_, err = loadAndroidTZif("Europe/Paris")
+	if err == nil {
+		t.Fatal("無い名前でエラーにならない")
+	}
+	for _, want := range []string{missing, older, "Europe/Paris"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("エラーに %q が入っていない: %v", want, err)
+		}
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("無いパスの os.ErrNotExist が errors.Join で残っていない: %v", err)
+	}
+}
+
+// recordingHandler は流れてきたレコードを控える slog.Handler（レベルの絞り込みはしない）。
+type recordingHandler struct {
+	records []slog.Record
+}
+
+func (h *recordingHandler) Enabled(context.Context, slog.Level) bool { return true }
+func (h *recordingHandler) Handle(_ context.Context, r slog.Record) error {
+	h.records = append(h.records, r)
+	return nil
+}
+func (h *recordingHandler) WithAttrs([]slog.Attr) slog.Handler { return h }
+func (h *recordingHandler) WithGroup(string) slog.Handler      { return h }
+
+func attrsOf(r slog.Record) map[string]string {
+	out := map[string]string{}
+	r.Attrs(func(a slog.Attr) bool {
+		out[a.Key] = a.Value.String()
+		return true
+	})
+	return out
+}
+
+// checkSQLiteLocaltime は不一致のとき Error を1行出す（ここが「黙って0件」の唯一の痕跡）。
+// 一致なら Debug、問い合わせ自体の失敗は Warn。どれも起動は止めない。
+func TestCheckSQLiteLocaltimeLogsErrorWithBothClocksAndHintOnMismatch(t *testing.T) {
+	original := checkLocaltimeAgreesWithGo
+	t.Cleanup(func() { checkLocaltimeAgreesWithGo = original })
+	handler := &recordingHandler{}
+	originalLogger := slog.Default()
+	slog.SetDefault(slog.New(handler))
+	t.Cleanup(func() { slog.SetDefault(originalLogger) })
+
+	checkLocaltimeAgreesWithGo = func(context.Context) (sqlite3impl.LocaltimeAgreement, error) {
+		return sqlite3impl.LocaltimeAgreement{GoLocal: "12:09:04", GoWeekday: 3, SQLiteLocal: "03:09:04", SQLiteWeekday: 3}, nil
+	}
+	checkSQLiteLocaltime(context.Background())
+	if len(handler.records) != 1 || handler.records[0].Level != gkill_log.Error {
+		t.Fatalf("不一致で Error が1行出るはず: %+v", handler.records)
+	}
+	r := handler.records[0]
+	if !strings.Contains(r.Message, "period-of-time search returns nothing") {
+		t.Errorf("症状（時間帯検索が0件）がメッセージに無い: %q", r.Message)
+	}
+	attrs := attrsOf(r)
+	for key, want := range map[string]string{"go_local": `"12:09:04"`, "sqlite_local": `"03:09:04"`} {
+		if attrs[key] != want {
+			t.Errorf("%s = %q, want %q", key, attrs[key], want)
+		}
+	}
+	if !strings.Contains(attrs["hint"], "TZ=:/absolute/path") {
+		t.Errorf("hint に直し方（絶対パスの TZ）が無い: %q", attrs["hint"])
+	}
+
+	// 一致なら Debug 1行
+	handler.records = nil
+	checkLocaltimeAgreesWithGo = func(context.Context) (sqlite3impl.LocaltimeAgreement, error) {
+		return sqlite3impl.LocaltimeAgreement{GoLocal: "12:09:04", GoWeekday: 3, SQLiteLocal: "12:09:04", SQLiteWeekday: 3}, nil
+	}
+	checkSQLiteLocaltime(context.Background())
+	if len(handler.records) != 1 || handler.records[0].Level != gkill_log.Debug {
+		t.Fatalf("一致なら Debug が1行のはず: %+v", handler.records)
+	}
+
+	// 問い合わせが失敗したら Warn 1行（Error にしない: 環境の問題ではなく検査の失敗）
+	handler.records = nil
+	checkLocaltimeAgreesWithGo = func(context.Context) (sqlite3impl.LocaltimeAgreement, error) {
+		return sqlite3impl.LocaltimeAgreement{}, errors.New("no sqlite")
+	}
+	checkSQLiteLocaltime(context.Background())
+	if len(handler.records) != 1 || handler.records[0].Level != gkill_log.Warn {
+		t.Fatalf("検査失敗なら Warn が1行のはず: %+v", handler.records)
 	}
 }

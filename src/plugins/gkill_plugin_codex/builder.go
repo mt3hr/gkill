@@ -18,7 +18,7 @@ import (
 //   - 一覧は find_kyous 1回のあとに行数ぶんの get_content_html が
 //     1本のスロットに並ぶので、3秒かかるハンドラでも4件目から順番待ちが破綻する
 //
-// 実データ(52ファイル・245MB)の初回構築は数十秒かかる。同期でやると必ず殺される。
+// 実データ(数十ファイル・数百MB)の初回構築は数十秒かかる。同期でやると必ず殺される。
 // 参考にした gkill_plugin_claudecode は同期で走査しているが、あれは真似しないこと。
 
 // builderIdleInterval は何も無くても様子を見に行く間隔。
@@ -74,9 +74,12 @@ func (b *builder) runOnce(pluginDir string, config pluginConfig) {
 // buildOnce は走査→取り込み→畳み直しを1周し、失敗を cache_meta に残してから返す。
 // 常駐ビルダ（runOnce）と単独モード（Handler.BuildCache。gkill_server generate_plugin_cache）の
 // 両方がここを通るので、どちらで失敗しても設定画面の build_state は同じ見え方になる。
+// buildCacheFn は buildOnce が呼ぶ本体。テストが差し替えて失敗経路（cache_meta への記録と ERROR 行）を見る。
+var buildCacheFn = func(pluginDir string, config pluginConfig) error { return globalCache.build(pluginDir, config) }
+
 func buildOnce(pluginDir string, config pluginConfig) error {
 	started := time.Now()
-	if err := globalCache.build(pluginDir, config); err != nil {
+	if err := buildCacheFn(pluginDir, config); err != nil {
 		globalCache.setMeta("build_state", "error")
 		globalCache.setMeta("build_error", err.Error())
 		sdk.LogError("%s: build error: %v", appName, err)

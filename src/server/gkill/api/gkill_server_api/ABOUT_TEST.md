@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装92ファイル）に対する統合テストを含む。テストファイルは全45本（うち handle_*_test.go は20本）。
+`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装92ファイル）に対する統合テストを含む。テストファイルは全46本（うち handle_*_test.go は20本）。
 
 ## テストフレームワーク
 
@@ -32,7 +32,8 @@ Go `testing` パッケージ
 | `get_kyous_rep_filter_test.go` | rep名での絞り込みを**キャッシュ有無の両方**で。`UpdateCache` の**前後で2回**見るのが要点で、追加直後はキャッシュ表の `REP_NAME` が空のため「空の行は残す」分岐で全部素通りし、そこだけでは許可リスト側の分岐を一度も検証できない |
 | `handle_commit_tx_atomic_test.go` | `/api/commit_tx` が「全部書くか、何も書かないか」であること（キャッシュON/OFF）。kc と本文が空の kmemo を同じ tx に積んで commit すると ERR000419 で返り kc も残らないこと、成功時に `committed[]` が全件を返し temp を消費すること（同じ tx_id の再 commit で版が増えない）、既存 TimeIs を tx で更新して discard しても検索に出続けること（tx 中に最新版アドレス表を進めると消えていた） |
 | `get_kyous_tx_rep_filter_test.go` | `commit_tx` で確定した記録が rep絞り込みを通ること（キャッシュON/OFF）。一時リポジトリの合成rep名がキャッシュへ入ると、メモ帳構文で書いた記録だけが一覧から丸ごと消える |
-| `handle_get_kyous_mcp_test.go` | MCP用の記録取得（大量IDでの分割、応答形状） |
+| `handle_get_kyous_mcp_test.go` | MCP用の記録取得（大量IDでの分割、応答形状、日付のみのカーソルがその日の 00:00 として効くこと） |
+| `get_kyous_mcp_revalidate_test.go` | cursor 頁の Mi 再検証（ADR-0621）が失敗したとき、頁を落とさず warnings を1行足して batch をそのまま返すこと。窓に依存する種別（Mi / MiReKyou）が無い頁は検索しないこと |
 | `handle_get_kyous_mcp_v2_test.go` | get_kyous_mcp v2 の回帰（複合カーソルのラウンドトリップと受理・拒否、count_only / group_by、データ型・数値・作成/更新アプリのリクエストレベルフィルタ、未知値の警告、残件数の意味論）。プラグインIDは任意文字列なので「ID側に `::` が含まれる」ケースを必ず含める。付随 TimeIs から削除済みを落とすこと（`livePlayingTimeIsCandidates`）と、「その瞬間に走っていたか」の判定が `playing_time` の SQL と同じ意味であること（`timeIsCoversMoment`）、tag / text / notification が実体IDを運ぶこと |
 | `handle_get_rep_infos_mcp_test.go` | `/api/get_rep_infos_mcp` の回帰。rep_types の正準語彙が API から取れること、付随データ rep の列挙、索引の鮮度 `indexed_at` が載ること、セッション必須であること |
 | `get_kyous_period_of_time_test.go` | 時間帯フィルタの狭い窓（09:00〜10:00）。秒オブデイ表現（MCP契約）と epoch 表現（Web契約）が同じ結果になること、SQL 経路と Go 経路（`--cache_in_memory` の ON/OFF）で結果が一致すること |

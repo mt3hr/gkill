@@ -226,14 +226,21 @@ func TestLoggerNoneLevel(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestLoggerNil(t *testing.T) {
-	t.Run("a nil Logger accepts every level without panicking", func(t *testing.T) {
-		var logger *Logger
-		logger.Error("e")
-		logger.Warn("w")
-		logger.Info("i")
-		logger.Access("a")
-		logger.Debug("d")
-		logger.Trace("t")
+	t.Run("a nil Logger and a Logger without a slog.Logger accept every level without panicking", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Fatalf("nil-safe Logger panicked: %v", r)
+			}
+		}()
+		var nilLogger *Logger
+		for _, logger := range []*Logger{nilLogger, NewLogger(nil), {}} {
+			logger.Error("e")
+			logger.Warn("w")
+			logger.Info("i")
+			logger.Access("a")
+			logger.Debug("d")
+			logger.Trace("t")
+		}
 	})
 }
 

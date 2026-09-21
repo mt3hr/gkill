@@ -67,7 +67,7 @@ func TestClassifyFileName(t *testing.T) {
 
 func TestThreadIDFromFileName(t *testing.T) {
 	// スレッドIDはファイル名のuuid。session_meta.session_id は使えない
-	// (実データ52ファイル中23ファイルに存在せず、サブエージェントでは親を指す)。
+	// (実データでは半数近くのファイルに存在せず、サブエージェントでは親を指す)。
 	if got := threadIDFromFileName(parentFixture()); got != parentThreadID {
 		t.Errorf("got %q, want %q", got, parentThreadID)
 	}
@@ -125,7 +125,7 @@ func TestParseRolloutOldFormatWithoutSessionID(t *testing.T) {
 }
 
 func TestParseRolloutSkipsToolResults(t *testing.T) {
-	// 実データではバイトの94.7%がツールの実行結果。1バイトも保持しない。
+	// 実データではバイトの9割超がツールの実行結果。1バイトも保持しない。
 	parsed := mustParse(t, parentFixture())
 	for _, item := range parsed.Items {
 		for _, forbidden := range []string{
@@ -454,7 +454,7 @@ func TestReadSessionIndex(t *testing.T) {
 	if titles[oldThreadID] != "古い版のスレッド" {
 		t.Errorf("古い版のスレッド名 = %q", titles[oldThreadID])
 	}
-	// 実データでも52セッション中33件しか載っていない。存在しないIDが混ざっても落ちないこと
+	// 実データでも6割ほどのセッションしか載っていない。存在しないIDが混ざっても落ちないこと
 	if len(titles) != 3 {
 		t.Errorf("件数 = %d, want 3", len(titles))
 	}

@@ -27,6 +27,16 @@ describe('i18n locale completeness', () => {
     }
   })
 
+  // 逆方向。ja から消したキーが他の言語に残ると、verify_docs のキー数一致でしか気付けない
+  // （47f0a921 のヒント文削除のように、7言語から1つずつ消す作業で1言語だけ抜け落ちる）。
+  test.each(['en', 'zh', 'ko', 'es', 'fr', 'de'])('%s has no extra keys beyond ja', (locale) => {
+    const jaKeySet = new Set(jaKeys)
+    const extra = Object.keys(locales[locale]).filter(k => !jaKeySet.has(k))
+    if (extra.length > 0) {
+      throw new Error(`Locale '${locale}' has ${extra.length} key(s) that ja does not: ${extra.slice(0, 10).join(', ')}`)
+    }
+  })
+
   test('no duplicate keys within ja locale', () => {
     // JSON parse automatically deduplicates, so we read as text
     // For this test, just verify key count matches

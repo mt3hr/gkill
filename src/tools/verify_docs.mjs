@@ -202,8 +202,32 @@ const VITEST_RE = /^\s*(it|test)(\.each)?\(/gm
 const PW_TEST_RE = /^\s*test\(/gm
 // MCP サーバ（Go）は旧 vitest の describe / test の階層を TestXxx → t.Run に 1:1 で移してあるので、
 // 静的計数は t.Run（サブテスト宣言）を数える。Go バックエンドの表とは別枠（二重計上しない）。
-const MCP_TEST_RE = /^\s*t\.Run\(/gm
+export const MCP_TEST_RE = /^\s*t\.Run\(/gm
 const MCP_DIR = 'src/server/gkill/mcp'
+
+// composeTools(...) の1行を読んで、そのサーバが載せるツール名の個数を返す。
+// namesInModule(modName) はモジュール（ReadTools / WriteTools / PluginTools）の定義名一覧、
+// 知らないモジュール名なら null。filterTools(Mod, set) は同じソース内の `set = newNameSet(...)` の
+// 名前集合で絞る。定義 `func composeTools(lists ...)` ではなく `return composeTools(...)` を読む。
+export function countComposedToolNames(src, namesInModule) {
+  const names = new Set()
+  const compose = src.match(/return composeTools\(([^\n]*)\)\s*$/m)
+  if (!compose) return names.size
+  for (const item of compose[1].matchAll(/filterTools\((\w+),\s*(\w+)\)|(\w+)/g)) {
+    const modName = item[1] || item[3]
+    let modNames = namesInModule(modName)
+    if (modNames === null || modNames === undefined) continue
+    if (item[2]) {
+      const setBlock = src.match(new RegExp(`${item[2]} = newNameSet\\(([\\s\\S]*?)\\n\\)`))
+      if (setBlock) {
+        const allow = new Set([...setBlock[1].matchAll(/"(gkill_[a-z_0-9]+)"/g)].map((x) => x[1]))
+        modNames = modNames.filter((n) => allow.has(n))
+      }
+    }
+    for (const n of modNames) names.add(n)
+  }
+  return names.size
+}
 
 function computeTestMetrics() {
   const isMcp = (f) => f.split(path.sep).join('/').includes('/' + MCP_DIR + '/')
@@ -286,29 +310,9 @@ function computeMiscMetrics() {
   const namesIn = (rel) => (exists(rel)
     ? [...readText(rel).matchAll(/(?:\btool\(|"name",)\s*"(gkill_[a-z_0-9]+)"/g)].map((m) => m[1])
     : [])
-  const toolNames = (rel) => {
-    if (!exists(rel)) return 0
-    const src = readText(rel)
-    const names = new Set()
-    // 定義 `func composeTools(lists ...)` ではなく、サーバごとの `return composeTools(...)` 1行を読む
-    const compose = src.match(/return composeTools\(([^\n]*)\)\s*$/m)
-    if (!compose) return names.size
-    for (const item of compose[1].matchAll(/filterTools\((\w+),\s*(\w+)\)|(\w+)/g)) {
-      const modName = item[1] || item[3]
-      const mod = TOOL_MODULES[modName]
-      if (!mod) continue
-      let modNames = namesIn(mod)
-      if (item[2]) {
-        const setBlock = src.match(new RegExp(`${item[2]} = newNameSet\\(([\\s\\S]*?)\\n\\)`))
-        if (setBlock) {
-          const allow = new Set([...setBlock[1].matchAll(/"(gkill_[a-z_0-9]+)"/g)].map((x) => x[1]))
-          modNames = modNames.filter((n) => allow.has(n))
-        }
-      }
-      for (const n of modNames) names.add(n)
-    }
-    return names.size
-  }
+  const toolNames = (rel) => (exists(rel)
+    ? countComposedToolNames(readText(rel), (modName) => (TOOL_MODULES[modName] ? namesIn(TOOL_MODULES[modName]) : null))
+    : 0)
   // ステートメント型 = 名前が StatementLine で終わる型のうち、基底の KFTLStatementLine を除いたもの。
   const BASE = 'KFTLStatementLine'
   const kftlTs = new Set(listFilesRec('src/client/classes/kftl', (f) => f.endsWith('.ts'))
@@ -596,7 +600,7 @@ function buildCountAssertions(m) {
 
   // README / ABOUT_TEST は本数を「プラグイン1本を除いた内訳」でも書いている。
   // そこが検査から漏れていたため 11/26/32・10/24/30・Read 9/Write 24/ReadWrite 29 と
-  // 3世代ぶんのドリフトが同時に残っていた（2026-08-24 の再監査で発見）。内訳まで検査する。
+  // 3世代ぶんのドリフトが同時に残っていた（2巡目の指摘で発見）。内訳まで検査する。
   const mcpReadOnly = mcpRead - 1
   const mcpWriteOnly = mcpRW - mcpRead
   const mcpWriteConvenience = mcpWrite - mcpWriteOnly - 1
@@ -614,7 +618,7 @@ function buildCountAssertions(m) {
   add('src/server/gkill/mcp/ABOUT_TEST.md', `${mcpRW}ツール全ディスパッチ`)
   add('src/server/gkill/mcp/ABOUT_TEST.md', `Read ${mcpReadOnly}ツール + Write ${mcpWriteOnly}ツール`)
 
-  // documents/reverse 側の MCP ツール数。2026-08-24 の監査で、検査対象が src/mcp と
+  // documents/reverse 側の MCP ツール数。点検で、検査対象が src/mcp と
   // スキル・マニュアルの4ファイルに限られていたため reverse 資料に3〜4世代前の数が
   // 14箇所残っていた（同一ファイル内で新旧が同居する自己矛盾も2件）。言及箇所を全て検査に載せる。
   add('documents/reverse/folder-structure.md', `${mcpRead}ツール = 固有${mcpReadOnly} + プラグイン1、port 8808`)
@@ -649,7 +653,7 @@ function buildCountAssertions(m) {
   add('.claude/skills/gkill-client-kftl/SKILL.md', `行ラベルのための行分類器 (${m.kftlStatementTs} statement types; the Go side has ${m.kftlStatementGo})`)
   add('documents/reverse/folder-structure.md', `KFTLパーサー（${m.kftlStatementTs}ステートメント型）`)
   // frontend-architecture / glossary にも同じ数がある。folder-structure だけ検査していたため
-  // 48/50 の割れが残っていた（2026-08-24 監査）。
+  // 48/50 の割れが残っていた（点検）。
   add('documents/reverse/frontend-architecture.md', `KFTLパーサー (${m.kftlStatementTs} ステートメント型`)
   add('documents/reverse/glossary.md', `（${m.kftlStatementTs}ステートメント型。\`kftl_*/\` 配下の具象クラス数）`)
   add('documents/reverse/folder-structure.md', `バックエンド側、${m.kftlStatementGo}ステートメント型`)
@@ -1615,7 +1619,7 @@ function checkADRSources() {
 // パターンで表せない固有の NG 語（実在の名前など）は、それ自体をコミットすると本末転倒なので、
 // gitignore 済みの verify_docs_personal_ngwords.local.txt（1行1語）に置くとその環境でだけ検査に加わる。
 // 個人情報検査の対象ファイル列挙（資料 Markdown に加えて src/ のコード・テストと
-// resources/manual_src/ の原稿）。2026-08-24 の監査で、資料層だけの検査では
+// resources/manual_src/ の原稿）。点検で、資料層だけの検査では
 // ソースコメントへの混入（実ハンドルを使った例示など）を原理的に検出できないと分かったため広げた。
 // gitignore 済みのビルド生成物（.gradle / build 等）は DOC_FILENAME_SKIP_DIRS で外れる。
 // 依存 OSS のライセンス原文（ルート直下の LICENSES_DEPENDENCE）は原著者のメールを含むが、
@@ -1635,7 +1639,7 @@ function personalInfoScanFiles() {
 }
 
 // ZIP コンテナ文書（xlsx / docx / zip）の列挙。Office 文書は ZIP+deflate なので、
-// 生バイトの UTF-8 走査では内部 XML の文字列が原理的に見えない（2026-08-30 の監査で、
+// 生バイトの UTF-8 走査では内部 XML の文字列が原理的に見えない（点検で、
 // 公開 xlsx の内部 XML に環境固有語が残っていたのに checkPersonalInfo が素通りしていた）。
 // そのため ZIP は展開してテキスト系エントリだけを同じ検査に通す。
 const PERSONAL_INFO_ZIP_EXEMPT = new Set([
@@ -1904,4 +1908,8 @@ function main() {
   console.log(`✅ docs 検証OK（handlers=${m.handlers} reqRes=${m.reqRes} views=${m.views} dialogs=${m.dialogs} pages=${m.pages} endpoints=${m.endpoints} i18nKeys=${m.i18nKeys} total=${m.componentTotal}${warnings.length ? `, 警告${warnings.length}件` : ''}）`)
 }
 
-main()
+// スクリプトとして起動されたときだけ検証を走らせる。解析の純粋関数（countComposedToolNames 等）を
+// テストが import できるようにするため（import しただけで検証が走って exit すると vitest が落ちる）。
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main()
+}

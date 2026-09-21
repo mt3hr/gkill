@@ -212,3 +212,50 @@ func TestRunLoopWritesAccessLineAndKeepsStdoutClean(t *testing.T) {
 		t.Errorf("_info.log に plugin stop が無い: %s", info)
 	}
 }
+
+// LogDebug はログファイルにだけ出る（--log debug 以上で残る）。stderr には出さない
+// （stderr の接頭辞行は gkill 本体の last_error リングが読む。Debug で押し出さない）。
+func TestLogDebugGoesToFileOnly(t *testing.T) {
+	home, stderr := setupPluginLogTest(t)
+	t.Setenv(gkill_log.EnvLogLevel, "debug")
+	initLogging(filepath.Join(home, "plugins", "testuser", "gkill_plugin_y"), "testuser")
+	if fileLogger == nil {
+		t.Fatalf("ファイルが開いていない。stderr: %s", stderr.String())
+	}
+	LogDebug("detail %d", 7)
+	closeLogging()
+
+	merged := readLog(t, home, "gkill_plugin_y.log")
+	if !strings.Contains(merged, `"msg":"detail 7"`) {
+		t.Errorf("debug レベルなのに Debug がファイルに無い: %s", merged)
+	}
+	if !strings.Contains(merged, "plugin_log_test.go") {
+		t.Errorf("source が呼び出し元を指していない: %s", merged)
+	}
+	if strings.Contains(stderr.String(), "detail 7") {
+		t.Errorf("Debug が stderr に漏れている: %q", stderr.String())
+	}
+}
+
+// closeLogging は何度呼んでも安全で、閉じたあとの LogWarn / LogInfo も落ちない（stderr 側だけに出る）。
+// sdk.Run の終了処理と、テストの後始末（setupPluginLogTest）の両方から呼ばれる。
+func TestCloseLoggingIsIdempotent(t *testing.T) {
+	home, stderr := setupPluginLogTest(t)
+	initLogging(filepath.Join(home, "plugins", "testuser", "gkill_plugin_z"), "testuser")
+	if fileLogger == nil {
+		t.Fatalf("ファイルが開いていない。stderr: %s", stderr.String())
+	}
+	closeLogging()
+	closeLogging()
+	if fileLogger != nil {
+		t.Fatal("閉じたあとも fileLogger が残っている")
+	}
+	LogWarn("after close %d", 1)
+	LogInfo("after close info")
+	if !strings.Contains(stderr.String(), "WARN: after close 1") {
+		t.Errorf("閉じたあとの WARN が stderr に出ていない: %q", stderr.String())
+	}
+	if strings.Contains(stderr.String(), "after close info") {
+		t.Errorf("Info が stderr に漏れている: %q", stderr.String())
+	}
+}

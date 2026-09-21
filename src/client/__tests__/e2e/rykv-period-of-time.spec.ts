@@ -76,8 +76,9 @@ test.describe('rykv 時間帯の曜日', () => {
     await expect(buttons.nth(other)).toHaveAttribute('aria-pressed', 'true')
     await expect(buttons.nth(other), '選択した曜日は塗り潰しで描く').toHaveClass(/v-btn--variant-flat/)
     await expect(sidebar.locator('.period_of_time_week_of_day_button[aria-pressed="true"]')).toHaveCount(1)
-    await expect(page.locator('.kyou_list_view_card_wrap').first(), '別の曜日だけの検索に今日の記録が残っている')
-      .not.toContainText(label, { timeout: 30000 })
+    // 「消えたこと」は件数で見る。first() の本文を見る形だと、0件で要素が無いときに何も検査していない
+    await expect(page.locator('.kyou_list_view_card_wrap', { hasText: label }), '別の曜日だけの検索に今日の記録が残っている')
+      .toHaveCount(0, { timeout: 30000 })
 
     // 外せばまた全曜日で、記録が戻る
     const cleared_query = await nextGetKyousQuery(page, () => buttons.nth(other).click())

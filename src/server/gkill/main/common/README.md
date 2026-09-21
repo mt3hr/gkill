@@ -19,7 +19,9 @@ common/
 ├── generate_plugin_cache_test.go # generate_plugin_cache のテスト（偽プラグインをヘルパープロセスで起動）
 ├── password_admin.go      # reset_password サブコマンド／ローカル管理者セッションの発行
 ├── password_admin_test.go # password_admin.go のテスト
-├── gkill_log/             # ログシステム（11ファイル）
+├── fix_timezone.go        # Android で libc（SQLite の localtime）へ端末のゾーンを教える（ADR-0220）
+├── fix_timezone_test.go   # fix_timezone.go のテスト（合成 tzdata・TZ の組み立て・不一致時の Error 1行）
+├── gkill_log/             # ログシステム（13ファイル）
 │   ├── gkill_log.go       # ロガー初期化・レベルルーティング
 │   ├── level.go           # カスタム slog.Level 定義（8レベル）
 │   ├── router.go          # ログルーター（分割/統合ファイル）
@@ -27,8 +29,10 @@ common/
 │   ├── sinks.go           # FileSink（ファイル出力・サイズ上限での世代回転）
 │   ├── switch_writer.go   # スレッドセーフなライター切り替え
 │   ├── sql_log.go         # TRACE_SQL の唯一の入口（引数の先行評価を避ける）
+│   ├── child_env.go       # 子プロセス（プラグイン）へ継ぐログ設定の環境変数（ADR-0313）
 │   ├── gkill_log_test.go  # ログシステムのテスト
 │   ├── gkill_log_named_test.go # InitNamed（別名ファイル群）のテスト
+│   ├── child_env_test.go  # 環境変数の往復・ParseLevel・panic しない InitNamedWith
 │   ├── no_eager_sql_format_test.go     # TRACE_SQL の引数を先行評価していないか
 │   └── log_level_source_scan_test.go   # ログレベルが内容と合っているか
 ├── gkill_options/         # グローバル設定オプション（2ファイル）
@@ -39,7 +43,7 @@ common/
     └── threads_test.go    # スレッド管理のテスト
 ```
 
-**合計: 22ファイル**（実装13 + テスト9）
+**合計: 29ファイル**（実装16 + テスト13）
 
 ## サブパッケージ
 
@@ -56,7 +60,7 @@ common/
 | `Debug` | | 開発時の詳細。**エラーの置き場ではない**（呼び出し元へ返り、境界が1行出すものだけ） |
 | `Access` | | HTTP アクセスログ |
 | `Info` | | 起動・終了・構築完了などの節目。1事象1行で流れ続けない |
-| `Warn` | | 動き続けるが結果が痩せる。監査に要る利用者由来の事象（認証失敗・認可拒否・レート制限） |
+| `Warn` | | 動き続けるが結果が痩せる。記録に残すべき利用者由来の事象（認証失敗・認可拒否・レート制限） |
 | `Error` | | 運用者がいま知るべきサーバ側の障害。利用者の操作では起こらない |
 | `None` | 最高 | ログ無効化 |
 

@@ -262,6 +262,18 @@ describe('SUITES', () => {
     const rec = Object.entries(SUITES).filter(([, v]) => v.recordsServerTree).map(([k]) => k)
     expect(rec).toEqual(['test_client_e2e'])
   })
+
+  // MCP は 2026-09-20 に Node から Go へ移った（7090a3c6）。スイート名は attestation の互換で残し、
+  // 中身は src/server での go test。旧 vitest.config.mcp.ts を指したままだと「存在しない設定で
+  // 0 件実行」になり、ゲートは緑のまま MCP を1本も検査しない。
+  test('test_mcp は src/server で Go の MCP パッケージを go test する', () => {
+    const mcp = SUITES.test_mcp
+    expect(mcp.command.slice(1)).toEqual(['test', './gkill/mcp/...'])
+    expect(mcp.command[0]).toMatch(/go(\.exe)?$/)
+    expect(mcp.cwd.split(/[\\/]/).slice(-2)).toEqual(['src', 'server'])
+    expect(mcp.allowed, 'Go のフラグ許可リストを test_server と共有する').toEqual(SUITES.test_server.allowed)
+    expect(JSON.stringify(mcp), '旧 Node 実装の設定を指している').not.toMatch(/vitest\.config\.mcp/)
+  })
 })
 
 // ---------------------------------------------------------------------------

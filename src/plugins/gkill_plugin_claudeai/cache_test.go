@@ -470,3 +470,43 @@ func TestClaudeAIPluginDirDefaultDoesNotWarn(t *testing.T) {
 		t.Errorf("want 1 msg, got %d", got)
 	}
 }
+
+// 分割形式（conversations-NNN.json）と旧形式（conversations.json）の優先は**アーカイブ単位**。
+// 同じ ZIP に両方あれば旧形式は読まず、別の ZIP の旧形式はそのまま読む（chatgpt と同じ規則。
+// 実装は同じなのに claudeai 側にだけテストが無く、片方だけ壊れても気付けなかった）。
+func TestClaudeAINumberedPreferredWithinArchive(t *testing.T) {
+	c, pluginDir := newTestCache(t)
+	dir := t.TempDir()
+	writeZip(t, dir, "a-both.zip", map[string][]byte{
+		"conversations.json": conversationsJSON(t, []testConv{
+			{uuid: "c-old", name: "old", createdAt: "2021-01-01T00:00:00Z", msgs: []testMsg{{id: "m-old", sender: "human", text: "old", createdAt: "2021-01-01T00:00:00Z"}}},
+		}),
+		"conversations-000.json": conversationsJSON(t, []testConv{
+			{uuid: "c-new", name: "new", createdAt: "2021-02-01T00:00:00Z", msgs: []testMsg{{id: "m-new", sender: "human", text: "new", createdAt: "2021-02-01T00:00:00Z"}}},
+		}),
+		"conversations-001.json": conversationsJSON(t, []testConv{
+			{uuid: "c-new2", name: "new2", createdAt: "2021-03-01T00:00:00Z", msgs: []testMsg{{id: "m-new2", sender: "human", text: "new2", createdAt: "2021-03-01T00:00:00Z"}}},
+		}),
+	}, testZipModified)
+	writeZip(t, dir, "b-legacy.zip", map[string][]byte{
+		"conversations.json": conversationsJSON(t, []testConv{
+			{uuid: "c-legacy", name: "legacy", createdAt: "2021-04-01T00:00:00Z", msgs: []testMsg{{id: "m-legacy", sender: "human", text: "legacy", createdAt: "2021-04-01T00:00:00Z"}}},
+		}),
+	}, testZipModified)
+
+	if err := c.build(pluginDir, []string{dir}); err != nil {
+		t.Fatalf("build: %v", err)
+	}
+	ids := messageIDs(t, c, pluginDir)
+	for _, want := range []string{"m-new", "m-new2", "m-legacy"} {
+		if !ids[want] {
+			t.Errorf("%s should be present", want)
+		}
+	}
+	if ids["m-old"] {
+		t.Error("conversations.json next to numbered files in the same zip must be skipped")
+	}
+	if got := c.getMeta("file_count"); got != "3" {
+		t.Errorf("file_count = %s, want 3", got)
+	}
+}

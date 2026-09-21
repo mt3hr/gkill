@@ -213,7 +213,7 @@ func TestHandleGetKyousMCP_DataTypesFilterAndUnknownWarns(t *testing.T) {
 	}
 }
 
-// 未知のフィルタ値(rep_types / tags)の警告。綴り違いが黙って0件になる監査S7への防御。
+// 未知のフィルタ値(rep_types / tags)の警告。綴り違いが黙って0件になる指摘S7への防御。
 func TestHandleGetKyousMCP_UnknownFilterValueWarns(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -459,7 +459,7 @@ func TestHandleGetKyousMCP_RemainingCountSemantics(t *testing.T) {
 	}
 }
 
-// 2026-08-24 の再監査 事象7: 「MCP で書いた記録」だけを絞る手段が無かった。
+// 2巡目の指摘 事象7: 「MCP で書いた記録」だけを絞る手段が無かった。
 // create_app は全レコードに入っているのに、引く口だけが無かった。
 func TestApplyMCPCreateAppsFilter(t *testing.T) {
 	kyous := []reps.Kyou{
@@ -556,7 +556,7 @@ func TestHandleGetKyousMCP_NonKyouPluginValuesGetNamedWarning(t *testing.T) {
 // _start 優先→DataType辞書昇順なので mi_check が勝つ。MI.IS_CHECKED は NOT NULL で
 // mi_check 行は全 Mi に必ず存在するため、**mi_create は構造的にほぼ絶対に生き残れない**。
 // data_types は検索後の後段フィルタで、値としては既知なので、
-// 「警告ゼロで必ず0件」という一番たちの悪い形になっていた（2026-08-24 の実利用レビュー）。
+// 「警告ゼロで必ず0件」という一番たちの悪い形になっていた（実利用レビュー）。
 func TestHandleGetKyousMCP_MiProjectionWithoutForMiWarns(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -625,7 +625,7 @@ func TestHandleGetKyousMCP_NonMiDataTypeDoesNotWarnAboutForMi(t *testing.T) {
 // 既知集合に載っているので警告の対象外になり、「該当なし」と
 // 「プラグインが取り込めていない」が区別できなかった。実際 Claude.ai プラグインが
 // データソース欠如で失敗している最中に、data_types:["claude_conversation"] が
-// 0件・警告なしで返っていた（2026-08-24 の実利用レビュー）。
+// 0件・警告なしで返っていた（実利用レビュー）。
 //
 // HTTP 経由ではなくヘルパを直接見る。実行ファイルの無いプラグインを登録すると
 // 検索そのものが内部エラーになり、警告の検査まで到達できないため。
@@ -745,9 +745,9 @@ func TestHandleGetKyousMCP_WithoutForMiDoesNotWarnAboutProjectionFlags(t *testin
 // 付随 TimeIs は ID と時刻を持つ。
 //
 // 以前は Title と Tags だけで、同じ題名の打刻が1つの応答に何度並んでも
-// 区別も特定もできなかった（実測で lantana 3件に対し付随 TimeIs 90件、
+// 区別も特定もできなかった（実測で lantana 数件に対し付随 TimeIs が数十件、
 // うち同題名が4回）。「記録時に何が走っていたか」を知る機能なのに時刻が無く、
-// 実質「その日に存在した打刻の題名一覧」だった（2026-08-25 の実利用レビュー）。
+// 実質「その日に存在した打刻の題名一覧」だった（実利用レビュー）。
 //
 // 組み立て地点（handle_get_kyous_mcp.go）には ti.ID / ti.StartTime / ti.EndTime が
 // その場にあり、DTO へ載せていないだけだった。落としてもコンパイルは通るので固定する。
@@ -802,7 +802,7 @@ func TestTimeIsMCPDTO_OmitsEndTimeWhileRunning(t *testing.T) {
 //
 // FindTimeIs は rep の直叩きで IS_DELETED を見ないため、落とさないと
 // 「終了記録ごと消した未終了の打刻」が開始時刻以降のあらゆる記録へ永久に付く。
-// 本番実測(2026-08-25): ある kmemo に付いた付随 TimeIs 16件のうち14件が削除済みで、
+// 本番実測(2026-08-25): ある kmemo に付いた付随 TimeIs 十数件の大半が削除済みで、
 // 最古は1年前(2025-08-14)の開始。同じ瞬間を playing_time で引くと2件しか返らなかった。
 //
 // livePlayingTimeIsCandidates の中身を「そのまま返す」に戻すとこのテストが落ちる。
@@ -885,7 +885,7 @@ func TestTimeIsCoversMoment(t *testing.T) {
 //
 // gkill_update_text と gkill_delete_kyou(data_type:"text") は text 自身の ID を要求するのに、
 // 検索結果は文字列配列しか返しておらず、add_text の応答を持っていない限り
-// 後から直すことも消すこともできなかった（2026-08-25 の実利用レビュー）。
+// 後から直すことも消すこともできなかった（実利用レビュー）。
 // 既存の tags / texts は Web の列と Wear OS が []string を前提にしているので残す。
 func TestKyouMCPDTO_CarriesAttachedEntityIDs(t *testing.T) {
 	dto := req_res.KyouMCPDTO{
@@ -950,7 +950,7 @@ func TestNotificationMCPDTO_CarriesID(t *testing.T) {
 
 // mi_sort_type は「並び順」の名前をしているが、カレンダー範囲・時間帯・曜日を
 // 照合する時刻軸も決める。対応する include_*_mi を立てていないと黙って無視され、
-// 並び順ではなく **件数** が変わる（実測で同じ1週間が 15件 と 9件 に割れた）。
+// 並び順ではなく **件数** が変わる（実測で同じ1週間の件数が割れた）。
 // 警告を消すとこのテストが落ちる。
 func TestMiSortTypeIgnoredWarning(t *testing.T) {
 	cases := []struct {
@@ -1248,7 +1248,7 @@ func TestHandleGetKyousMCP_DataTypesAcceptsEntityNames(t *testing.T) {
 }
 
 // num_min / num_max の結果に kc / nlog / lantana が混ざったら警告する（単位の無い1本の軸で比べているため）。
-// 1種類だけなら黙る。2026-09-18 の実利用報告: num_min:7 だけで気分・歩数・円が混ざって 20,624 件。
+// 1種類だけなら黙る。2026-09-18 の実利用報告: num_min:7 だけで気分・歩数・円が混ざって数万件。
 func TestHandleGetKyousMCP_NumFilterWarnsWhenKindsMix(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()

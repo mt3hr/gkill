@@ -77,6 +77,7 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `latest_data_address_rep_name_scan_test.go` | キャッシュrepの `GetLatestDataRepositoryAddress` が行ごとの `REP_NAME` 列を最新版アドレスへ射影すること。集約の `GetRepName()` をバインドすると実在しない名前（`KmemoReps` 等）が焼かれ、`GetKyou` の突き合わせが永遠に外れて「エラーも立たず nil」になる |
 | `get_typed_latest_version_test.go` | 型別の単体取得 `GetXxx(id, nil)` が最新版を返すこと（`get_kyou_latest_version_test.go` の型別 GetXxx への水平展開。kmemo/kc/lantana/nlog/urlog/timeis/mi の raw・cached と idf の raw をカバー） |
 | `git_commit_log_cached_unique_test.go` | git キャッシュの重複行。開き直しでの自己修復と、並行 `UpdateCache`（TOCTOU）で重複が入らないこと |
+| `git_commit_log_cached_miss_test.go` | 構築済みの git キャッシュで外れた ID を引いても下層の生リポジトリへ落ちないこと（構築前・バックグラウンド構築中だけ落ちる。ADR-0221）、同期・バックグラウンドの構築が失敗した回は `cacheBuilt` を立てず従来のフォールバックを保つこと |
 | `gkill_repositories_get_kyou_test.go` | `GkillRepositories.GetKyou` が最新版アドレス表に載っていないID（プラグインKyou・追加直後〜次回UpdateCacheまでのネイティブ記録）を updateTime 付きで取得しても panic せず解決すること |
 | `gps_log_repositories_test.go` | GPSLog 集約の rep 横断の重複排除 |
 | `plugin_diagnostics_test.go` | プラグイン診断情報。stderr リングバッファ（末尾保持・一周時の行境界・過大書き込み）と型別索引の統計。「is_alive=true なのに0件」の理由が診断できなかった件の回帰 |

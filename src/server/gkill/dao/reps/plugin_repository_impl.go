@@ -313,7 +313,7 @@ func (p *pluginRepositoryImpl) ensureStarted() error {
 		return fmt.Errorf("error at get stdout pipe for plugin %s: %w", p.manifest.Name, err)
 	}
 	// stderr は本体のstderrへ流しつつ、末尾をリングにも写す。
-	// 以前は直結で、プラグインのビルドエラーがAPIから一切診断できなかった（外部監査 D2）
+	// 以前は直結で、プラグインのビルドエラーがAPIから一切診断できなかった（指摘 D2）
 	cmd.Stderr = io.MultiWriter(os.Stderr, p.stderrRing)
 
 	if err := cmd.Start(); err != nil {
@@ -828,7 +828,13 @@ func (p *pluginRepositoryImpl) UnWrap() ([]Repository, error) {
 // 常駐起動（ensureStarted）と単独起動（main/common の generate_plugin_cache）が同じ規則で
 // 解決するためにここに置く。CLI 側でインラインに再実装すると Windows でだけ静かにずれる。
 func PluginExecutablePath(pluginDir string, executable string) string {
-	if runtime.GOOS == "windows" {
+	return pluginExecutablePathFor(runtime.GOOS, pluginDir, executable)
+}
+
+// pluginExecutablePathFor は PluginExecutablePath の本体。OS 名を引数に取るのは、
+// Windows の .exe 規則と Linux の無拡張子規則を、どちらの開発機でもテストで固定するため。
+func pluginExecutablePathFor(goos string, pluginDir string, executable string) string {
+	if goos == "windows" {
 		executable += ".exe"
 	}
 	return filepath.Join(pluginDir, executable)

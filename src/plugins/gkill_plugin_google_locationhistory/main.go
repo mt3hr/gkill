@@ -45,7 +45,12 @@ func main() {
 
 	pluginDir := extractPluginDir(os.Args)
 
-	sdk.Run(sdk.Handler{
+	sdk.Run(newHandler(pluginDir))
+}
+
+// newHandler はハンドラ束を組む。main と、単独モード（BuildCache）や PostConfig を直接呼ぶテストが共有する。
+func newHandler(pluginDir string) sdk.Handler {
+	return sdk.Handler{
 		RepName:       repName,
 		DefaultConfig: defaultConfig(),
 
@@ -70,7 +75,7 @@ func main() {
 		GetConfigHTML: func(_ context.Context, cfg sdk.Config) (string, error) {
 			config := configOf(pluginDir, cfg)
 			// ここで走査を待たない。ハンドラは数十ミリ秒で返す必要があり、
-			// 3.7GBぶんの中央ディレクトリを読むと死活確認の期限(5秒)を割る。
+			// 数GBぶんの中央ディレクトリを読むと死活確認の期限(5秒)を割る。
 			globalCache.kickRefresh(pluginDir, config)
 			return renderConfigHTML(pluginDir, config, globalCache.Stats(pluginDir, config)), nil
 		},
@@ -110,7 +115,7 @@ func main() {
 			}
 			return cfg, nil
 		},
-	})
+	}
 }
 
 // defaultConfig は config.json が無いときに書き出す既定設定。

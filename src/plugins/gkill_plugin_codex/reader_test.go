@@ -112,7 +112,7 @@ func TestClassifyHeadUnknownPayloadIsKept(t *testing.T) {
 }
 
 // giantSkippedLine は「捨てる種別の巨大な1行」を作る。
-// 実データには19,912,604バイトの custom_tool_call_output が実在する。
+// 実データには数十MB級の custom_tool_call_output が実在する。
 func giantSkippedLine(size int) string {
 	return `{"timestamp":"2026-01-02T01:00:07.000Z","type":"response_item","payload":{"type":"custom_tool_call_output","call_id":"call_1","output":[{"type":"input_text","text":"` +
 		strings.Repeat("x", size) + `"}]}}`
@@ -159,7 +159,7 @@ func TestLineReaderDrainsGiantSkippedLine(t *testing.T) {
 }
 
 func TestLineReaderDropsOversizeKeptLine(t *testing.T) {
-	// 保持対象なのに上限を超える行。実データの保持対象最大は260,614バイトなので
+	// 保持対象なのに上限を超える行。実データの保持対象最大は数百KBなので
 	// 通常は起きないが、起きたら数えて設定画面に出す。
 	huge := `{"timestamp":"2026-01-02T01:00:02.000Z","type":"event_msg","payload":{"type":"user_message","message":"` +
 		strings.Repeat("あ", maxRecordBytes) + `"}}`

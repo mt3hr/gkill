@@ -140,7 +140,7 @@ func testConfig(sourceDir string) pluginConfig {
 // TestCache_DedupesAcrossDuplicatedRows は重複除去を確認する。
 //
 // ワークアウトのトラックは全行が Fitbit App と Pixel Watch 2 の2重に書き出される。
-// 実データでは 12,748行 が 6,483点 になる。
+// 実データでは行数の約半分の点数になる。
 func TestCache_DedupesAcrossDuplicatedRows(t *testing.T) {
 	sourceDir := copyTestData(t, "gps_location_2024-04-18.csv")
 	pluginDir := t.TempDir()

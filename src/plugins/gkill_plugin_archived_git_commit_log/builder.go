@@ -18,7 +18,7 @@ import (
 //   - IsAlive の期限は5秒で、超えるとプロセスが殺される
 //   - 一覧は find_kyous 1回のあとに行数ぶんの呼び出しが1本のスロットに並ぶ
 //
-// 実データ（88 zip・3,447 コミット）の初回構築は go-git の行数集計を含めて約 60 秒かかり、
+// 実データ（数十 zip・数千コミット）の初回構築は go-git の行数集計を含めて約 1 分かかり、
 // 同期でやると必ず殺される。codex / fitbit と同じ常駐ビルダにする。
 
 // builderIdleInterval は何も無くても様子を見に行く間隔。
@@ -75,9 +75,14 @@ func (b *builder) runOnce(pluginDir string, config pluginConfig) {
 // buildOnce は走査→取り込みを1周し、失敗を cache_meta に残してから返す。
 // 常駐ビルダ（runOnce）と単独モード（Handler.BuildCache。gkill_server generate_plugin_cache）の
 // 両方がここを通るので、どちらで失敗しても設定画面の build_state は同じ見え方になる。
+// buildCacheFn は buildOnce が呼ぶ本体。テストが差し替えて失敗経路（cache_meta への記録と ERROR 行）を見る。
+var buildCacheFn = func(ctx context.Context, pluginDir string, config pluginConfig) error {
+	return globalCache.build(ctx, pluginDir, config)
+}
+
 func buildOnce(ctx context.Context, pluginDir string, config pluginConfig) error {
 	started := time.Now()
-	if err := globalCache.build(ctx, pluginDir, config); err != nil {
+	if err := buildCacheFn(ctx, pluginDir, config); err != nil {
 		globalCache.setMeta("build_state", "error")
 		globalCache.setMeta("build_error", err.Error())
 		sdk.LogError("%s: build error: %v", appName, err)

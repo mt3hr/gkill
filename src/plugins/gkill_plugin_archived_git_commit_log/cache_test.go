@@ -150,7 +150,7 @@ func initTestRepoAppend(t *testing.T, dir string, commit testCommit) string {
 }
 
 // git init 直後（コミット0件）の .git は 0 件で正常終了し、エラーも問題も出ないこと。
-// 実データでは 12 個ある。
+// 実データでは十数個ある。
 func TestEmptyRepositoryYieldsNothing(t *testing.T) {
 	c, pluginDir := newTestCache(t)
 	work := filepath.Join(t.TempDir(), "ndsg")

@@ -137,7 +137,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/dialog-autofocus.spec.ts` | ダイアログを開いたら最初のテキスト入力欄にカーソルが載ること（選び方の判定そのものは `unit/classes/dialog-autofocus.test.ts`） |
 | `src/client/__tests__/e2e/sample-data-smoke.spec.ts` | 配布サンプルデータの起動スモーク。run-e2e.mjs がサンプルデータのコピーを home にした gkill_server を別ポートで起動し（URL は `GKILL_E2E_SAMPLE_URL`）、embed 配信のフロントエンドへ README 記載の資格情報でログインして rykv に記録が出ること。ログインはレート制限を消費するので1回だけ |
 
-### Composable ユニットテスト（62ファイル）
+### Composable ユニットテスト（63ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -149,6 +149,8 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/page-composables.test.ts` | ページレベル Composable |
 | `src/client/__tests__/unit/composables/query-composables.test.ts` | クエリ操作 Composable パターン |
 | `src/client/__tests__/unit/composables/save-clipboard-to-file-dialog.test.ts` | クリップボード保存ダイアログ Composable（初期状態、MIME判定、ファイルサイズ表示、load_clipboard エラーパス、save_or_confirm、useScopedCtrlVForClipboard キー処理） |
+| `src/client/__tests__/unit/composables/struct-element-description.test.ts` | 設定ツリー6本（タグ / 記録保管場所 / 記録種別 / プロファイル / 板 / メモ帳テンプレート）の要素追加・編集 Composable。表駆動で `apply()` が「説明」を詰め直すこと、板の要素編集が説明以外の欄（key / name / children / is_dir / check_when_inited）を保つこと、板の編集ダイアログはルート行では開かないこと |
+| `src/client/__tests__/unit/composables/edit-mi-board-struct-element-dialog.test.ts` | 板の要素編集ダイアログ Composable。`show(struct)` が編集対象を載せて開き、`hide()` と Escape が history 駆動の閉じ方（`close_dialog_via_history`）に流れること |
 | `src/client/__tests__/unit/composables/idf-kyou-view.test.ts` | IDFKyou ビュー Composable（Markdown リッチ表示、拡張子判定、相対リンクの対象記録解決） |
 | `src/client/__tests__/unit/composables/re-kyou-view.test.ts` | ReKyou ビュー Composable（元の記録の解決、リポスト自身のメニュー表示） |
 | `src/client/__tests__/unit/composables/mi-re-kyou-view.test.ts` | MiReKyou ビュー Composable（既存記録のタスク化。タイトルを持たず target_id 先の内容を表示する） |

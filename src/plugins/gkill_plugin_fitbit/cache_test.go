@@ -505,7 +505,7 @@ func TestCache_QueryFiltersByPeriod(t *testing.T) {
 // 時計の行だけが日次の値になることを確認する。
 //
 // 実データでは 2025-12-15 から歩数 CSV にスマホ（Phone Health Connect）の行が時計の行と
-// 同じ日に並び、両方を足すと歩数がほぼ2倍になっていた（2026-09-12: 時計 11,284 に対し 22,788）。
+// 同じ日に並び、両方を足すと歩数がほぼ2倍になっていた。
 // Fitbit アプリ自身の日計は時計の値と一致する。
 func TestCache_TrackerWinsOverPhoneWithinADay(t *testing.T) {
 	sourceDir := stepsSourceDir(t, stepsCSV(
@@ -582,5 +582,100 @@ func TestCache_SecondaryDataSourcesChangeRefolds(t *testing.T) {
 	phone := buildAndRead(t, c, pluginDir, preferPhone)["steps_daily|2025-12-15"]
 	if phone.NumValue != "400" || phone.Devices != "Phone Health Connect" {
 		t.Errorf("時計を補助にした = %s (%q), want 400 (\"Phone Health Connect\")", phone.NumValue, phone.Devices)
+	}
+}
+
+// 畳み直しの規則が前回と同じなら dirty_day を積まない（設定画面を保存し直すたびに全日を畳み直さない）。
+// 違えば sample_daily にある全 (指標, 日) を積む。
+func TestCache_RefoldOnlyWhenFoldRuleChanges(t *testing.T) {
+	sourceDir := stepsSourceDir(t, stepsCSV(
+		[3]string{"2025-12-15T02:00:00Z", "100", "Pixel Watch 2"},
+		[3]string{"2025-12-16T02:00:00Z", "50", "Phone Health Connect"},
+	))
+	pluginDir := t.TempDir()
+	c := newTestCache(t, pluginDir)
+	config := testConfig(t, sourceDir)
+	buildAndRead(t, c, pluginDir, config)
+
+	countDirty := func() int {
+		t.Helper()
+		n := 0
+		if err := c.db.QueryRow(`SELECT COUNT(*) FROM dirty_day`).Scan(&n); err != nil {
+			t.Fatalf("count dirty_day: %v", err)
+		}
+		return n
+	}
+	if got := countDirty(); got != 0 {
+		t.Fatalf("構築直後の dirty_day = %d, want 0", got)
+	}
+
+	// 同じ規則（大小・空白違いも同じ）なら積まない
+	same := config
+	same.SecondaryDataSources = []string{" phone health connect ", "GOOGLE HEALTH APP"}
+	if err := c.refoldAllIfFoldRuleChanged(same.foldRule()); err != nil {
+		t.Fatal(err)
+	}
+	if got := countDirty(); got != 0 {
+		t.Errorf("同じ規則なのに dirty_day = %d, want 0", got)
+	}
+
+	// 違う規則なら sample_daily の全 (指標, 日) を積む（ここでは歩数の2日）
+	changed := config
+	changed.SecondaryDataSources = []string{}
+	if err := c.refoldAllIfFoldRuleChanged(changed.foldRule()); err != nil {
+		t.Fatal(err)
+	}
+	if got := countDirty(); got != 2 {
+		t.Errorf("規則を変えたのに dirty_day = %d, want 2", got)
+	}
+	if c.meta("fold_rule") != changed.foldRule() {
+		t.Errorf("fold_rule = %q, want %q", c.meta("fold_rule"), changed.foldRule())
+	}
+}
+
+// スキーマ版が上がったら（旧版の sample_daily は data_source 列が無い）表を作り直す。
+// 旧キャッシュのまま読むと data_source 列が無くて畳み直しが落ち、記録が全部消えたように見える。
+func TestCache_OldSchemaVersionIsRebuilt(t *testing.T) {
+	pluginDir := t.TempDir()
+
+	// 旧版（"2"）のキャッシュを手で作る: data_source の無い sample_daily と、残っているべきでない行
+	{
+		old := newTestCache(t, pluginDir)
+		if _, err := old.db.Exec(`DROP TABLE sample_daily;
+CREATE TABLE sample_daily (file_path TEXT NOT NULL, metric_key TEXT NOT NULL, date_local TEXT NOT NULL, sum REAL NOT NULL, PRIMARY KEY (file_path, metric_key, date_local));
+INSERT INTO sample_daily VALUES ('old.csv', 'steps_daily', '2020-01-01', 1);
+INSERT OR REPLACE INTO cache_meta(key, value) VALUES ('schema_version', '2');`); err != nil {
+			t.Fatalf("prepare old schema: %v", err)
+		}
+		_ = old.db.Close()
+		old.db = nil
+	}
+
+	c := newTestCache(t, pluginDir) // openDB → initSchema が版の違いを見て作り直す
+	if got := c.meta("schema_version"); got != cacheSchemaVersion {
+		t.Fatalf("schema_version = %q, want %q", got, cacheSchemaVersion)
+	}
+	columns := map[string]bool{}
+	rows, err := c.db.Query(`PRAGMA table_info(sample_daily)`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notNull, pk int
+		var dflt any
+		if err := rows.Scan(&cid, &name, &ctype, &notNull, &dflt, &pk); err != nil {
+			t.Fatal(err)
+		}
+		columns[name] = true
+	}
+	if !columns["data_source"] {
+		t.Errorf("作り直した sample_daily に data_source 列が無い: %v", columns)
+	}
+	n := 0
+	if err := c.db.QueryRow(`SELECT COUNT(*) FROM sample_daily`).Scan(&n); err != nil || n != 0 {
+		t.Errorf("旧版の行が残っている: %d 件, err=%v", n, err)
 	}
 }

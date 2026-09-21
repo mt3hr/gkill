@@ -9,6 +9,7 @@ package reps
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 )
@@ -432,6 +434,25 @@ func TestGitCommitLogLocalDirMissingHashReturnsNil(t *testing.T) {
 		}
 		if len(histories) != 0 {
 			t.Errorf("GetKyouHistories(%q) len = %d, want 0", id, len(histories))
+		}
+	}
+}
+
+// hasCommit が「無い」と断定するのは ErrObjectNotFound（包んであっても）だけ。
+// 読めない・壊れているなど別種のエラーでは断定せず、従来の Log の経路に任せる（黙って 0 件にしない）。
+func TestCommitLookupMayExistOnlyTrustsObjectNotFound(t *testing.T) {
+	cases := map[string]struct {
+		err  error
+		want bool
+	}{
+		"nil (found)":          {err: nil, want: true},
+		"ErrObjectNotFound":    {err: plumbing.ErrObjectNotFound, want: false},
+		"wrapped not found":    {err: fmt.Errorf("lookup: %w", plumbing.ErrObjectNotFound), want: false},
+		"other error (unsure)": {err: errors.New("packfile corrupted"), want: true},
+	}
+	for name, c := range cases {
+		if got := commitLookupMayExist(c.err); got != c.want {
+			t.Errorf("%s: commitLookupMayExist = %v, want %v", name, got, c.want)
 		}
 	}
 }

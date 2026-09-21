@@ -7445,11 +7445,38 @@ func TestHandleSubmitKFTLText_TimeIsEnd(t *testing.T) {
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
-	// First start a TimeIs, then end it
+	// 打刻を始めて、題名で終える。送信が通るだけでなく、終了時刻の入った版が実際に書かれたことを見る
+	// （終了処理が黙って何もしなくても submit は成功で返るので、応答だけでは検出できない）。
 	marker := fmt.Sprintf("kftl_timeis_end_test_%d", time.Now().UnixNano())
-	helperSubmitKFTLAndVerify(t, tsURL, sessionID, "ーた\n"+marker)
-	// Now end it by title
-	helperSubmitKFTLAndVerify(t, tsURL, sessionID, "ーえ\n"+marker)
+	started := submitKFTL(t, tsURL, sessionID, "ーた\n"+marker, "")
+	if len(started.Errors) != 0 || len(started.Created) != 1 {
+		t.Fatalf("打刻開始: errors=%+v created=%+v", started.Errors, started.Created)
+	}
+	// 開始と同じ秒に終えると UPDATE_TIME が並んで最新版が一意に定まらない（リポジトリは秒精度で保存する）。
+	time.Sleep(time.Until(time.Now().Truncate(time.Second).Add(time.Second)))
+	ended := submitKFTL(t, tsURL, sessionID, "ーえ\n"+marker, "")
+	if len(ended.Errors) != 0 {
+		t.Fatalf("ーえ でエラー: %+v", ended.Errors)
+	}
+	if len(ended.Created) != 1 || ended.Created[0].ID != started.Created[0].ID || !ended.Created[0].Updated {
+		t.Fatalf("created = %+v, want 開始した打刻 %s の updated=true 1件", ended.Created, started.Created[0].ID)
+	}
+
+	resp := postJSON(t, tsURL+"/api/get_timeis", &req_res.GetTimeisRequest{SessionID: sessionID, LocaleName: "ja", ID: started.Created[0].ID})
+	defer resp.Body.Close()
+	var res req_res.GetTimeisResponse
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		t.Fatalf("decode get timeis response: %v", err)
+	}
+	endedVersions := 0
+	for _, history := range res.TimeisHistories {
+		if history.EndTime != nil {
+			endedVersions++
+		}
+	}
+	if endedVersions == 0 {
+		t.Errorf("ーえ の後も終了時刻の入った版が無い: %+v", res.TimeisHistories)
+	}
 }
 
 // ─── Phase 8: Bug regression tests ──────────────────────────────────────────

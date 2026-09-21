@@ -997,13 +997,20 @@ func TestPluginRepository_FindKyousKeepsDeclaredRepNames(t *testing.T) {
 // TestPluginExecutablePath_AppendsExeOnWindows は実行ファイルの解決規則を固定する。
 // 常駐起動（ensureStarted）と単独起動（generate_plugin_cache）がここを共有するので、
 // 片方だけ .exe の付け忘れで Windows だけ起動できない、が起きない。
+// OS 名は引数で渡し、Windows の規則も Linux の規則も、どの開発機・CI でも両方検査する
+// （実装と同じ runtime.GOOS 分岐をテストに写すと、走っている OS の規則しか見ない鏡テストになる）。
 func TestPluginExecutablePath_AppendsExeOnWindows(t *testing.T) {
 	dir := filepath.Join("plugins", "testuser", "gkill_plugin_x")
-	want := filepath.Join(dir, "gkill_plugin_x")
-	if runtime.GOOS == "windows" {
-		want += ".exe"
+	if got, want := pluginExecutablePathFor("windows", dir, "gkill_plugin_x"), filepath.Join(dir, "gkill_plugin_x.exe"); got != want {
+		t.Errorf("windows: pluginExecutablePathFor = %q, want %q", got, want)
 	}
-	if got := PluginExecutablePath(dir, "gkill_plugin_x"); got != want {
+	for _, goos := range []string{"linux", "android", "darwin"} {
+		if got, want := pluginExecutablePathFor(goos, dir, "gkill_plugin_x"), filepath.Join(dir, "gkill_plugin_x"); got != want {
+			t.Errorf("%s: pluginExecutablePathFor = %q, want %q", goos, got, want)
+		}
+	}
+	// 公開関数は走っている OS の規則を使う
+	if got, want := PluginExecutablePath(dir, "gkill_plugin_x"), pluginExecutablePathFor(runtime.GOOS, dir, "gkill_plugin_x"); got != want {
 		t.Errorf("PluginExecutablePath = %q, want %q", got, want)
 	}
 }

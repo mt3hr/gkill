@@ -541,12 +541,19 @@ func TestHandleGetKyousMCP_DateOnlyCursorIsAccepted(t *testing.T) {
 	defer cleanup()
 
 	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
-	addTestKmemoWithRelatedTime(t, tsURL, sessionID, "日付カーソルの手前のメモ", time.Now().Add(-48*time.Hour))
+	olderID := addTestKmemoWithRelatedTime(t, tsURL, sessionID, "日付カーソルの手前のメモ", time.Now().Add(-48*time.Hour))
+	addTestKmemoWithRelatedTime(t, tsURL, sessionID, "日付カーソルより後のメモ", time.Now().Add(time.Hour))
 
-	// エラーが返るとgetKyousMCPが落とすので、通ること自体が検査になる
-	getKyousMCP(t, tsURL, sessionID, map[string]any{}, map[string]any{
+	// 日付のみのカーソルはその日の 00:00（ローカル）として解釈され、それより前の記録だけが続きになる
+	res := getKyousMCP(t, tsURL, sessionID, map[string]any{}, map[string]any{
 		"cursor": time.Now().Format(time.DateOnly),
 	})
+	if res.ReturnedCount != 1 || len(res.Kyous) != 1 || res.Kyous[0].ID != olderID {
+		t.Fatalf("日付カーソルの続き = %d件 %+v, want 2日前のメモ %s の1件だけ", res.ReturnedCount, res.Kyous, olderID)
+	}
+	if res.TotalCount != nil {
+		t.Errorf("カーソル付きの応答に total_count が載っている: %d（2ページ目以降は全件数を知らない契約）", *res.TotalCount)
+	}
 }
 
 // TestHandleGetKyousMCP_ManyIDs は query.ids を大量に渡しても検索が成立することを固定する。
@@ -596,7 +603,7 @@ func TestHandleGetKyousMCP_ManyIDs(t *testing.T) {
 //
 // gkill は追記型で、削除は is_deleted=true の版を積むだけ。
 // FindFilter は最新版が削除済みのIDを無条件に落としており、
-// 「消したものを検索で数える」手段がまったく無かった（監査2026-08-23のS判定）。
+// 「消したものを検索で数える」手段がまったく無かった（指摘S判定）。
 // IncludeDeletedData を立てたときだけ残すようにしたので、
 //   - 既定では従来どおり出ないこと
 //   - 旗を立てると出て、is_deleted で見分けられること

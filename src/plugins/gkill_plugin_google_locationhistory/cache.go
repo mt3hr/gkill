@@ -19,7 +19,7 @@ const cacheSchemaVersion = "2"
 
 // cache はSQLite3のキャッシュ。
 //
-// この Takeout の点数（約15,000点）ならメモリに持つだけで足りるが、
+// この Takeout の点数（1万点余り）ならメモリに持つだけで足りるが、
 // 旧形式の Records.json は数百MB〜1GBで数百万点になる。
 // プロセスが起動するたびに全部読み直すと、1回の呼び出しに許された時間に収まらない。
 // ファイル単位（path, mtime, size）の差分更新にしておけば、
@@ -370,7 +370,7 @@ func (c *cache) loadFileCache() (map[string]scannedFile, error) {
 // 重複除去がファイル横断なので書き込み時にはできない
 // （ファイル単位の差分更新が、他のファイルにもある点を消してしまう）。
 // 実データでは、ワークアウトのトラックが Fitbit App と Pixel Watch 2 の
-// 2重に書き出されており、12,748行が6,483点になる。
+// 2重に書き出されており、行数の約半分の点数になる。
 func (c *cache) GetGPSLogs(pluginDir string, config pluginConfig, q sdk.GPSLogQuery) (sdk.GPSLogPage, error) {
 	// 走査はバックグラウンドに投げて、ここでは待たない。
 	//

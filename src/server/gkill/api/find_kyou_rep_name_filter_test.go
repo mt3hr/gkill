@@ -37,7 +37,7 @@ func kyouInRep(id string, repName string, updateTime time.Time) reps.Kyou {
 // rep名での絞り込みは**検索対象repではなく検索結果**(Kyou.RepName)で行う。
 // 検索対象repのほうで絞ろうとするとキャッシュrepを UnWrap() することになり、
 // 生のディスクrepへ戻ってキャッシュを丸ごとバイパスする
-// (理由は selectMatchRepsFromQuery のコメント。実データでgitだけで20.7秒/窓)。
+// (理由は selectMatchRepsFromQuery のコメント。実データでgitだけで十数秒/窓)。
 //
 // 落とし穴が3つあるので全部固定する。
 //   - textヒット由来の2本目の検索(matchTextFindByIDQuery)にも同じ絞り込みが要る

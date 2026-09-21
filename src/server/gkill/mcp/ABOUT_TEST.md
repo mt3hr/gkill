@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。1127テスト（36ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 11 + プラグイン1 = 12ツール、Write サーバ 28（書き込み21 + Read便利7）+ プラグイン1 = 29ツール、統合サーバ 32 + プラグイン1 = 33ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、ログ、設定ファイル、旧 Node 実装とのゴールデン一致をカバーする（テスト数は `t.Run` のサブテスト宣言の静的計数）。
+MCP (Model Context Protocol) サーバのテスト。1144テスト（41ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 11 + プラグイン1 = 12ツール、Write サーバ 28（書き込み21 + Read便利7）+ プラグイン1 = 29ツール、統合サーバ 32 + プラグイン1 = 33ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、ログ、設定ファイル、旧 Node 実装とのゴールデン一致をカバーする（テスト数は `t.Run` のサブテスト宣言の静的計数）。
 
 2026-09-20 に Node.js 実装（旧 `src/mcp`、vitest 28 ファイル）を Go へ移した。旧テストの `describe` → `TestXxx`、`test` → `t.Run("<原文のタイトル>")` で 1:1 に対応し、タイトル集合の照合で未移植 0 を確認してある（意図した例外は [ADR-0631](../../../../documents/adr/0631-mcp-lives-in-gkill-server.md)）。
 
@@ -28,7 +28,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 | `oauth_store_test.go` | OAuthストア（認可コード、アクセストークン、リフレッシュトークン、クライアント登録、TTL期限切れ、定期クリーンアップ、JSONファイル永続化。旧 Node 実装が書いた状態ファイルをそのまま読めること） |
 | `oauth_server_test.go` | OAuth 2.1サーバ（メタデータ、認可フロー、トークン交換、PKCE検証、リフレッシュトークンローテーション、動的クライアント登録、E2Eフロー）。scope の1値強制、同意画面の3 scope 表示と DCR 由来 `client_name` の HTML エスケープ |
 | `file_link_test.go` | FileLinkStore（HTTPモード用の期限付きファイルリンクトークンの発行・解決・失効、`GET /files/{token}` 配信） |
-| `http_transport_test.go` | HttpTransport の `/mcp` 経路の統合・回帰（実ポートで OAuth→Bearer→tools を通す。Bearer 401、並行リクエストの user/session 分離、公開ファイル配信の nosniff / CSP sandbox、ボディ上限 413・明示タイムアウト・アクセスログのクエリ除去、scope 境界と `token_scope_rejected` 監査ログ） |
+| `http_transport_test.go` | HttpTransport の `/mcp` 経路の統合・回帰（実ポートで OAuth→Bearer→tools を通す。Bearer 401、並行リクエストの user/session 分離、公開ファイル配信の nosniff / CSP sandbox、ボディ上限 413・明示タイムアウト・アクセスログのクエリ除去、scope 境界と `token_scope_rejected` のログ） |
 | `readme_examples_test.go` | README の ```json 例を実物の正規化器（`NormalizeKyouArgs`）へ通す同期検査 |
 | `status_tool_test.go` | ツール一覧の世代 `schema_revision`（`status_tool.go`）の計算と `gkill_status` への焼き込み |
 | `help_topics_test.go` | `gkill_get_mcp_help`（`help_topics.go`）: 全 topic に本文があること、名指しするツール名の実在、3サーバ搭載、未知の topic の拒否 |
@@ -37,6 +37,12 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 | `start_spec_test.go` | 3サーバの `StartSpec` の宣言値固定。scope / 既定ポート / file-link 可否・3サーバ間の重複禁止・bootstrap が `spec.Scope` を OAuthServer へ渡す配線。`server_start` ログの世代情報 `startInfo` と、stdio・http の両トランスポートがそれを出すこと |
 | `config_test.go` | 設定ファイル `gkill_mcp.json` の生成（既定値・0600・既存は書き換えない・壊れていれば起動を止める）と、フラグ > 環境変数 > ファイル > 既定値の優先順位（`ResolveSettings`） |
 | `import_graph_test.go` | package `mcp` が `gkill/api` / `dao` / `usecase` / `main/common` を import しないこと（MCP は起動中サーバの HTTP クライアント） |
+| `payload_test.go` | `StripFilePaths`（応答から `file_path` を再帰的に落とす。リモートクライアントへ絶対パスを渡さない出口）と `NormalizeMimeType`（Content-Type のパラメータと空白を落とす） |
+| `errors_test.go` | `InvalidArgument` の detail（`actualType` / `actualValue` の形。長い文字列は 120 文字で切り、配列は `array(n)`・オブジェクトは `object` に要約。ゴールデンは `detail.cause` をマスクするのでここで直接固定する） |
+| `gps_cursor_test.go` | GPS ログのカーソルの往復（発行側 `EncodeGpsCursor` と検証側 `IsValidGpsCursor` が同じ実装）、パディング有無の受理、壊れたカーソルの拒否 |
+| `find_query_schema_test.go` | `query` スキーマの全プロパティに type（か enum）と description があり配列は items を持つこと、廃止済みキーを載せないこと（キー集合そのものは `schema_contract_test.go`） |
+| `oauth_html_test.go` | 認可成功ページの redirect_uri が script 文脈でエスケープされること（`</script>` / U+2028 で script 要素から抜け出せない）、ログインページの利用者由来の値の HTML エスケープ |
+| `jsonobj/jsonobj_test.go` | 順序つき JSON（`JSON.stringify` 互換の直列化・undefined の番兵・キー順・`\b` `\f` の短形式）。`func Test` 10本で `t.Run` を使わないので、上の件数には入らない |
 | `stdio_e2e_test.go` | stdio の端から端まで。テストバイナリ自身を子プロセスにして NDJSON と Content-Length の両枠組みで initialize → tools/call → ping を通し、stdout に JSON-RPC 以外の行が無いこと・壊れた行が stderr に警告されることを固定する |
 | `golden_test.go` | 旧 Node 実装から採ったゴールデン（`testdata/golden/`。要求コーパス 331 件）との**バイト一致**: tools/list（3サーバ）と `schema_revision`、tools/call の応答（stdio / http × 3サーバ）、gkill へ送った要求（パス・クエリ・Cookie・本文）。時刻・UUID・トークンは採取時と同じ固定列。ゴールデン自身が `jsonobj` で往復してもバイト単位で変わらないことも固定。ツールを意図して変えたときは `GKILL_MCP_UPDATE_GOLDEN=1 go test ./gkill/mcp/ -run Golden` で Go の出力へ書き直し、`git diff testdata/golden` を読んでからコミットする（Node 実装はもう無いので、以後は前回コミットした Go の出力との回帰検査になる） |
 
@@ -80,7 +86,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 - **Plugin Tools**: `gkill_get_plugin_list` と `include_plugin_content` によるプラグイン本文のインライン埋め込み（並列度・予算・デッドライン・失敗隔離）、コンテンツHTMLのテキスト変換
 - **Client / Server / Transport**: gkill への往復（認証、エラーハンドリング、レスポンスパース）、3サーバのディスパッチ、JSON-RPC、stdio の枠組み、HTTP の OAuth 2.1 と file-link 配信
 - **Config / Log**: 設定ファイルの生成と優先順位、gkill_log 上のロガーのレベル
-- **Golden**: 旧 Node 実装とのバイト一致（tools/list・応答・上流要求）
+- **Golden**: コミット済みのゴールデンとのバイト一致（tools/list・応答・上流要求。採取時は旧 Node 実装の出力、以後は前回コミットした Go の出力との回帰検査。`GKILL_MCP_UPDATE_GOLDEN=1` の更新経路の自己検査を含む）
 
 ## 実装の置き場所
 

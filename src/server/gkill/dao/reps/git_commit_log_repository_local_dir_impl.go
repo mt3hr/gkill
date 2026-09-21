@@ -191,6 +191,13 @@ loop:
 // 経緯と実測: documents/adr/0221-git-cache-miss-does-not-fall-back-to-raw-walk.md
 func (g *gitCommitLogRepositoryLocalImpl) hasCommit(id string) bool {
 	_, err := g.gitrep.CommitObject(plumbing.NewHash(id))
+	return commitLookupMayExist(err)
+}
+
+// commitLookupMayExist は CommitObject の結果から「このリポジトリに無い」と断定してよいかを返す。
+// 断定できるのは ErrObjectNotFound だけ。それ以外のエラー（オブジェクトが読めない・壊れている）は
+// 断定できないので true を返し、従来どおり Log の経路に任せる（黙って 0 件にしない）。
+func commitLookupMayExist(err error) bool {
 	return !errors.Is(err, plumbing.ErrObjectNotFound)
 }
 

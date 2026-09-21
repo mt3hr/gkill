@@ -13,8 +13,13 @@
 | `src/plugins/gkill_plugin_claudecode/loader_test.go` | ターン分割・ファイル種別判定・サブエージェント紐付け・ツール要約・HTML生成のユニットテスト（`testdata/` の合成トランスクリプトを使用） |
 | `src/plugins/gkill_plugin_codex/{reader,loader,fold,cache,render,config}_test.go` | 巨大行リーダ・`session_meta` の identity/environment 分離・IDE前置きの剥がし・Kyou ID の安定性・差分再構築・構築中の並行読み取りのユニットテスト（`testdata/` の合成ロールアウトを使用） |
 | `src/plugins/gkill_plugin_archived_git_commit_log/{cache,scan,find_kyous,config,render}_test.go` | zip の中の Git リポジトリの取り込み。testdata に `.git` は置けないので、テストのたびに go-git でリポジトリを作って `archive/zip` で固める（`testutil_test.go`）。native の git rep と同じ列（ID=ハッシュ・rep 名=ディレクトリ名・コミッタ日時とゾーン・author・行数）で入ること、同じリポジトリを2つの zip に入れても1件で zip を外すと他に無いコミットだけ消えること、コミット0件の `git init` 直後は0件で正常、`.git` の無い zip は素通り、1 zip に複数（入れ子・ルート直下）、packfile、指紋による増分、`.git` の上限超過は理由を残して飛ばす、構築中の並行読み取り |
+| `src/plugins/gkill_plugin_{chatgpt,claudeai,claudecode,codex,archived_git_commit_log}/builder_test.go` | `buildOnce`（常駐ビルダと単独モードの共通経路）が構築の失敗を `cache_meta` の `build_state=error` / `build_error` に残し、stderr に `ERROR:` 行を出してエラーを返すこと。成功時は `build_state` を触らない。fitbit は `runOnce`（`gkill_plugin_fitbit/builder_test.go`）で ERROR 行と完了 Info の出し分けを見る |
+| `src/plugins/gkill_plugin_{chatgpt,claudeai}/loader_test.go` | 要素ごとに読む `decodeConversationArray` が、配列でない JSON・途中で切れた JSON・配列の後ろに続きがある JSON をエラーにすること（黙って0件や途中までにしない） |
+| `src/plugins/gkill_plugin_{chatgpt,claudeai}/source_test.go` | 設定画面に出す走査の問題の絞り込み `relevantProblems`（ZIP の中の ZIP・混在・マッチしない指定は出さず、展開済みフォルダはプラグイン自身のフォルダなら出さず他は文言差し替え）と、取り込み元の署名 `sourceSignature` が列挙順に依存せず CRC32 / Size の変化で変わること |
 | `src/plugins/gkill_plugin_{chatgpt,claudeai}/cache_test.go` | エクスポート ZIP の直読み。テストのたびに `archive/zip` で ZIP を組む（バイナリは commit しない）。ZIP を作り直しても中身が同じなら作り直さない（署名は Path:CRC32:Size で更新時刻を見ない。Claude.ai の実物は 1980 年固定）、展開済みの `conversations.json` を直置き・直接指定しても読まず既存キャッシュを残して `source_problems` に出る、会話ファイルを含まない ZIP（`projects-000.zip` 等）は素通り、同じ ZIP に分割形式と旧形式があれば分割形式だけ（優先はアーカイブ単位）、同じ会話 ID が2つの ZIP にあれば update_time が新しい版だけ、プラグインフォルダ自身の `manifest.json` / `config.json` は「展開済みフォルダ」と警告しない、バッチ commit の永続性、読み取りが `buildMu` を取らないこと、gen 掃除 |
-| `src/plugins/gkill_plugin_fitbit/{loader,cache,data_source}_test.go` | Takeout の CSV の日別集計。部分集計は (ファイル, 日, データソース) 単位で、同じ日に時計（Pixel Watch 2）とスマホ（Phone Health Connect）の行が並んでも足さないこと（時計があれば時計だけ、無い日は `secondary_data_sources` の順で1つ、時計を替えた日は時計どうしを足す。`TestCache_TrackerWinsOverPhoneWithinADay` / `TestChooseDataSources`）、設定を変えると取り込み直さずに全日を畳み直すこと（`TestCache_SecondaryDataSourcesChangeRefolds`）、心拍が UTC の2ファイルにまたがる1日を畳めること、差分判定が CRC32 で mtime に頼らないこと、分割 ZIP は合算し別の書き出しは新しいほうだけを採ること（ADR-0303 / ADR-0312） |
+| `src/plugins/gkill_plugin_fitbit/{loader,cache,data_source,metrics,timeparse}_test.go` | Takeout の CSV の日別集計。部分集計は (ファイル, 日, データソース) 単位で、同じ日に時計（Pixel Watch 2）とスマホ（Phone Health Connect）の行が並んでも足さないこと（時計があれば時計だけ、無い日は `secondary_data_sources` の順で1つ、時計を替えた日は時計どうしを足す、補助に同じ名前を重ねて書いても先頭の順位が効く。`TestCache_TrackerWinsOverPhoneWithinADay` / `TestChooseDataSources`）、設定を変えると取り込み直さずに全日を畳み直し、同じ規則なら `dirty_day` を積まないこと（`TestCache_SecondaryDataSourcesChangeRefolds` / `TestCache_RefoldOnlyWhenFoldRuleChanges`）、旧スキーマ版のキャッシュを作り直すこと、心拍が UTC の2ファイルにまたがる1日を畳めること、差分判定が CRC32 で mtime に頼らないこと、分割 ZIP は合算し別の書き出しは新しいほうだけを採ること（ADR-0303 / ADR-0312）、指標の登録表と時刻の解釈 |
+| `src/plugins/gkill_plugin_fitbit/{config,main,html}_test.go` | `configOf` が `secondary_data_sources` の「キー無し＝既定」と「空配列＝全部合算」を区別すること、`foldRule` が大小・空白の違いで変わらず並びの違いで変わること、`PostConfig` が空欄を空配列（全部合算の明示）で保存すること、単独モードの `BuildCache` が同期で1周して戻った時点で日次の値が引けること、設定画面が現在値を出し保存スクリプトが同じキーで postMessage に載せること |
+| `src/plugins/gkill_plugin_google_locationhistory/{cache,parsers,manifest,main}_test.go` | Takeout の位置情報の履歴（タイムライン JSON と GPS CSV）の点の重複除去・精度フィルタ・訪問点の除外・並びとページング・期間の両端・増分の走査・読めない形式の報告・上限、manifest の宣言、単独モードの `BuildCache` が同期で1周すること、走査の失敗が `ERROR:` 行に残ること |
 | `src/plugins/gkill_plugin_{chatgpt,claudeai,claudecode,codex,fitbit,archived_git_commit_log}/find_kyous_test.go` | FindKyous のワード判定。SDK の `Query.MatchText`（gkill 本体と同じ規則）で肯定語・除外語・AND/OR・ID 前方一致が効くこと、chatgpt / claudeai は会話タイトル、codex はスレッド名、archived_git_commit_log はリポジトリ名と author 名にも当たること、fitbit は数値でも当たり空文字の語で全件が消えないこと、LIMIT が絞った後に掛かること。gkill 本体はプラグインが返した Kyou のワードを再判定しないので、ここが唯一の判定 |
 | `src/server/gkill/plugin/sdk/match_words_test.go` | `sdk.Query.MatchText` / `Matcher` の判定規則と、元の Query を書き換えないこと |
 | `src/server/gkill/plugin/sdk/cache_path_test.go` | キャッシュDBの置き場所の解決（`sdk.CacheDBPath`）。`GKILL_HOME` あり／なし（pluginDirから推定）／想定外の構成（プラグインフォルダにフォールバック）／pluginDirが空、の4パターンとパス要素の検証。6プラグインが1文字違わず同じものを持っていたのでSDKへ移した |
@@ -36,6 +41,8 @@ cd src/plugins/gkill_plugin_claudecode && go test ./...
 cd src/plugins/gkill_plugin_codex      && go test ./...
 cd src/plugins/gkill_plugin_chatgpt    && go test ./...
 cd src/plugins/gkill_plugin_claudeai   && go test ./...
+cd src/plugins/gkill_plugin_fitbit     && go test ./...
+cd src/plugins/gkill_plugin_google_locationhistory && go test ./...
 cd src/plugins/gkill_plugin_archived_git_commit_log && go test ./...
 ```
 
@@ -55,14 +62,19 @@ cd src/plugins/gkill_plugin_archived_git_commit_log && go test ./...
 SDK 自体のテストは `src/server/gkill/plugin/sdk/` にあり、`src/server` のテストなので
 `npm run test_server` で走る。詳細は [server/gkill/plugin/sdk/ABOUT_TEST.md](../server/gkill/plugin/sdk/ABOUT_TEST.md) を参照。
 
-- `plugin_log_test.go`（6テスト）— `Run()` が開く `$GKILL_HOME/logs/gkill_plugin_<name>*.log`。`sdk.LogWarn` / `LogError` は
-  stderr の接頭辞行（`last_error` 向け）とファイルの両方へ、`LogInfo` / `LogDebug` はファイルだけへ。home が分からなければ
-  stderr だけで続行し、stdout には1バイトも書かない（ADR-0313）。
+- `plugin_log_test.go`（8テスト）— `Run()` が開く `$GKILL_HOME/logs/gkill_plugin_<name>*.log`。`sdk.LogWarn` / `LogError` は
+  stderr の接頭辞行（`last_error` 向け）とファイルの両方へ、`LogInfo` / `LogDebug` はファイルだけへ、`closeLogging` は何度呼んでも安全。
+  home が分からなければ stderr だけで続行し、stdout には1バイトも書かない（ADR-0313）。
+- `build_cache_test.go`（5テスト）— `--gkill-build-cache` の単独モード。結果行 `built` / `no_cache` 以外を stdout に書かないこと、
+  失敗は stderr だけに出して結果行を出さないこと、同梱プラグインが全部 `Handler.BuildCache` を配線していることのソース走査。
+- `source_test.go`（18テスト）— ZIP の走査 `OpenSources`（フォルダ・ZIP 直指定・glob、分割 ZIP の束ね、世代の判定、
+  展開済みフォルダ・入れ子 ZIP・壊れた ZIP の問題報告、CRC32 / Size の取り出し）。
 - `config_test.go`（4テスト）— `EnsureConfig`（config.json の自動生成）。生成される／既存ファイルを
   上書きしない／`DefaultConfig` が nil なら作らない／`pluginDir` が空ならカレントディレクトリを汚さない。
-- `sdk_test.go`（18テスト）— `Run()` の stdin/stdout ループ本体（`TestRunLoop_*`）。コマンド分岐、
+- `sdk_test.go`（22テスト）— `Run()` の stdin/stdout ループ本体（`TestRunLoop_*`）。コマンド分岐、
   未実装時のフォールバック、壊れた JSON でも止まらないこと、`close` / stdin クローズでの終了、
   `get_rep_name` の `rep_names`（未実装なら欄なし・実装済みで0個なら `[]`・エラーは `errors`）を固定している。
+- `cache_path_test.go`（5テスト）・`match_words_test.go`（2テスト）— 下の表のとおり。
 
 ## 新しいプラグインのテスト方針
 

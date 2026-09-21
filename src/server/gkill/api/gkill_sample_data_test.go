@@ -36,7 +36,7 @@ func TestGkillSampleData(t *testing.T) {
 	}
 	// 削除は defer ではなく最初に登録する t.Cleanup で行う。t.Cleanup は LIFO なので、
 	// 後で登録する DAO クローズより後に走り、SQLite のハンドル解放後に消せる
-	// （defer だと DAO クローズ前に走り、Windows ではロック中で36MBが丸ごと残る）。
+	// （defer だと DAO クローズ前に走り、Windows ではロック中で数十MBが丸ごと残る）。
 	// それでも caches/ の git_commit_log キャッシュDBだけはプロセス終了まで
 	// ハンドルが残るため best-effort（残っても数百KB）。
 	t.Cleanup(func() { os.RemoveAll(tmpHome) })

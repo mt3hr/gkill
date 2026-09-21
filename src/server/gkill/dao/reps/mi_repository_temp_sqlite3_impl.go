@@ -3,6 +3,7 @@ package reps
 import (
 	"context"
 	sqllib "database/sql"
+	"errors"
 	"fmt"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"log/slog"
@@ -287,132 +288,15 @@ func (m *miTempRepositorySQLite3Impl) GetBoardNames(ctx context.Context) ([]stri
 	return impl.GetBoardNames(ctx)
 }
 
-// GetKyousByTXID は未使用（commit_tx.go は GetMisByTXID だけを使う）。
-// MI 表に無い TARGET_REP_NAME / RELATED_TIME を SELECT しているので、呼べば必ず失敗する。
-// 直すか消すかは別件（2026-09-19 に気付いた印だけ残す）。
+// ErrMiTempGetKyousByTXIDUnsupported は Mi の一時 rep が GetKyousByTXID を実装しないことを表す。
+var ErrMiTempGetKyousByTXIDUnsupported = errors.New("mi temp repository does not implement GetKyousByTXID (Mi has no single related time): use GetMisByTXID")
+
+// GetKyousByTXID は一時データを Kyou として返す想定のメソッドだが、Mi の一時表には Kyou に要る
+// TARGET_REP_NAME / RELATED_TIME が無い（Mi の関連時刻は射影ごとに違う）ので実装しない。
+// commit_tx は GetMisByTXID だけを使う。呼ばれたら SQL を発行せず明示的にエラーを返す
+// （2026-09-19 まで存在しない列を SELECT して SQLite のエラーになっていた。意図した非対応であることを名前で表す）。
 func (m *miTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error) {
-	m.m.RLock()
-	defer m.m.RUnlock()
-	var err error
-	sql := `
-SELECT
-  IS_DELETED,
-  ID,
-  TARGET_REP_NAME,
-  RELATED_TIME,
-  CREATE_TIME,
-  CREATE_APP,
-  CREATE_DEVICE,
-  CREATE_USER,
-  UPDATE_TIME,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  ? AS REP_NAME,
-  ? AS DATA_TYPE
-FROM MI
-WHERE TX_ID = ?
-AND USER_ID = ?
-AND DEVICE = ?
-`
-
-	repName, err := m.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at mi temp: %w", err)
-		return nil, err
-	}
-
-	dataType := "mi"
-	queryArgs := []any{
-		repName,
-		dataType,
-		txID,
-		userID,
-		device,
-	}
-
-	gkill_log.LogSQL(ctx, sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at get kyous by TXID sql: %w", err)
-		return nil, err
-	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close statement", "error", fmt.Sprintf("%q", err))
-		}
-	}()
-
-	gkill_log.LogSQLQuery(ctx, sql, queryArgs)
-	rows, err := stmt.QueryContext(ctx, queryArgs...)
-	if err != nil {
-		err = fmt.Errorf("error at select from mi temp: %w", err)
-		return nil, err
-	}
-	defer func() {
-		err := rows.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close rows", "error", fmt.Sprintf("%q", err))
-		}
-	}()
-
-	kyous := []Kyou{}
-	for rows.Next() {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-			kyou := Kyou{}
-			kyou.RepName = repName
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			targetRepName := ""
-
-			err = rows.Scan(
-				&kyou.IsDeleted,
-				&kyou.ID,
-				&targetRepName,
-				&relatedTimeStr,
-				&createTimeStr,
-				&kyou.CreateApp,
-				&kyou.CreateDevice,
-				&kyou.CreateUser,
-				&updateTimeStr,
-				&kyou.UpdateApp,
-				&kyou.UpdateDevice,
-				&kyou.UpdateUser,
-				&kyou.RepName,
-				&kyou.DataType,
-			)
-			if err != nil {
-				err = fmt.Errorf("error at scan from mi temp: %w", err)
-				return nil, err
-			}
-
-			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in mi temp: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in mi temp: %w", createTimeStr, err)
-				return nil, err
-			}
-			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in mi temp: %w", updateTimeStr, err)
-				return nil, err
-			}
-
-			kyous = append(kyous, kyou)
-		}
-	}
-	if err := rows.Err(); err != nil {
-		err = fmt.Errorf("error at iterate rows: %w", err)
-		return nil, err
-	}
-	return kyous, nil
+	return nil, ErrMiTempGetKyousByTXIDUnsupported
 }
 
 func (m *miTempRepositorySQLite3Impl) GetMisByTXID(ctx context.Context, txID string, userID string, device string) ([]Mi, error) {

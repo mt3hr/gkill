@@ -97,8 +97,8 @@ func TestSelectMatchRepsFromQuery_ImageOnlyKeepsCachedRep(t *testing.T) {
 // MatchReps に入れるのはキャッシュrepそのもの。
 // 生repに差し替えると、rep名を送ってくる通常のGUI検索（rykv/miは常に送る）が
 // **全てキャッシュをバイパスし**、端末別重複repぶんディスクを舐める。
-// 実データでは11個のキャッシュrepが約940個の生repに化け、gitだけで
-// プロファイル1窓あたり20.7秒を使っていた（2026-08-19 実測）。
+// 実データでは十数個のキャッシュrepが数百個の生repに化け、gitだけで
+// プロファイル1窓あたり十数秒を使っていた（2026-08-19 実測）。
 //
 // rep名での絞り込みは findKyous の結果側（Kyou.RepName）で行う。
 func TestSelectMatchRepsFromQuery_RepsSpecifiedKeepsCachedRep(t *testing.T) {

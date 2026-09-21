@@ -77,6 +77,10 @@ func fixTimezone() {
 // 必ず最初の SQLite 接続より前に呼ぶこと。modernc の libc は最初の接続を開くときに
 // os.Environ() を一度だけ写し取り、以後 os.Setenv しても getenv には映らない。
 // 戻り値は起動ログ用の説明（適用しなかったときは空）。
+//
+// applyLibcTimezoneFn は InitGkillOptions が呼ぶ入口。テストが差し替えて「展開済みの絶対パスが渡ること」を見る。
+var applyLibcTimezoneFn = applyLibcTimezone
+
 func applyLibcTimezone(gkillHomeDir string) string {
 	if runtime.GOOS != "android" || androidZoneName == "" {
 		return ""
@@ -129,8 +133,11 @@ func localtimeTZifPath(gkillHomeDir string) (string, error) {
 // checkSQLiteLocaltime は SQLite の 'localtime' と Go の time.Local を突き合わせ、食い違っていれば
 // gkill_error.log へ両方の値を出す。呼び出し元へは返さない（ここが唯一の記録なので Debug にしない）。
 // 起動は止めない: 時間帯フィルタ以外は正しく動くので、止めるより原因を1行残すほうが役に立つ。
+// checkLocaltimeAgreesWithGo は SQLite への問い合わせ。テストが差し替えて不一致時の記録を見る。
+var checkLocaltimeAgreesWithGo = sqlite3impl.CheckLocaltimeAgreesWithGo
+
 func checkSQLiteLocaltime(ctx context.Context) {
-	result, err := sqlite3impl.CheckLocaltimeAgreesWithGo(ctx)
+	result, err := checkLocaltimeAgreesWithGo(ctx)
 	if err != nil {
 		slog.Log(ctx, gkill_log.Warn, "sqlite localtime check failed", "error", fmt.Sprintf("%q", err))
 		return

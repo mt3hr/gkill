@@ -58,7 +58,7 @@ var (
 
 			// 存在しない/gkillリポジトリでないディレクトリの skip は失敗ではないが、
 			// IDF 処理そのものの失敗（idfKyouRep.IDF / glob の失敗）は握り潰さず、
-			// stderr へ出したうえで exit code に反映する（監査 M-16）。
+			// stderr へ出したうえで exit code に反映する（指摘 M-16）。
 			var errs []error
 			for _, filenamePattern := range targetDirs {
 				filenamePattern = os.ExpandEnv(filenamePattern)
@@ -488,7 +488,7 @@ func InitGkillOptions() {
 	// 渡すのは展開済みの絶対パス。未展開の "$HOME/gkill" を渡すと TZ=:$HOME/... のリテラルになり、
 	// musl は相対名を zoneinfo ディレクトリで探して無ければエラーなしで UTC にする
 	// （2026-09-16、Termux の既定起動で実際にそうなった。APK は絶対パスを渡すので再現しない）。
-	libcTimezoneApplied = applyLibcTimezone(gkillHomeDir)
+	libcTimezoneApplied = applyLibcTimezoneFn(gkillHomeDir)
 }
 
 func InitGkillServerAPI() error {
