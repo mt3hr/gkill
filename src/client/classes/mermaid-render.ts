@@ -19,8 +19,10 @@ async function setup_mermaid(): Promise<MermaidModule> {
 
     const theme = GkillAPI.get_gkill_api().get_use_dark_theme() ? 'dark' : 'default'
     if (initialized_theme !== theme) {
-        // securityLevel: 'strict' でmermaid内部のサニタイズも有効にする
-        mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme })
+        // securityLevel: 'strict' でmermaid内部のサニタイズも有効にする。
+        // layout: 'dagre' と look: 'classic' は mermaid 12 の既定が変わったことへの追随で、
+        // 付けないと既存のフローチャート・状態図・クラス図が配置も配色も変わる（本体の移行案内どおり）。
+        mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme, layout: 'dagre', look: 'classic' })
         initialized_theme = theme
     }
     return mermaid
