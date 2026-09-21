@@ -164,8 +164,27 @@ export async function waitForColumnViewReady(page: Page): Promise<void> {
   ).toBeAttached({ timeout: 60000 })
 }
 
+/**
+ * 開いているダイアログが閉じ切るまで待つ（遷移の直前に使う）。
+ *
+ * **ダイアログは履歴で閉じる**（`closeDialogViaHistory` が `history.back()` を呼ぶ）。
+ * 保存ボタンの処理は API の応答を見た時点で返るので、そのあと履歴遷移がまだ飛んでいる。
+ * そこへ `page.goto` を重ねるとブラウザが先の遷移を打ち切り、
+ * `net::ERR_ABORTED` になる（再試行しても同じ順序をたどるので決定的に落ちる）。
+ *
+ * ここは「閉じていること」を要求するアサーションではない。閉じないまま遷移する使い方も
+ * あるので、待ちは時間で打ち切って先へ進む。
+ */
+async function waitForDialogCloseNavigation(page: Page): Promise<void> {
+  const dialogs = page.locator('.gkill-floating-dialog, .v-dialog--active')
+  await dialogs.first().waitFor({ state: 'detached', timeout: 3000 }).catch(() => {
+    // 開いたまま遷移するテストもある。待てなければそのまま進む
+  })
+}
+
 /** ページ遷移してアプリの読み込み完了を待つ共通処理。 */
 async function navigateTo(page: Page, path: string, wait_column_view = false): Promise<void> {
+  await waitForDialogCloseNavigation(page)
   await page.goto(path, { waitUntil: 'domcontentloaded' })
   await page.waitForSelector('#app', { timeout: 15000 })
   await waitForLoadingOverlayToFinish(page)
