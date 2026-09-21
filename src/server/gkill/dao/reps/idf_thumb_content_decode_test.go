@@ -141,14 +141,14 @@ func TestGenerateThumbCacheFallsBackToFFmpeg(t *testing.T) {
 //
 // 出力が無いときに ffmpeg 自身が非ゼロで終わるかはビルドと素材で変わるので、
 // 終了コードではなく出力の有無で判定する側を直接固定する。
-func TestFinalizeFFmpegThumbOutputDetectsEmptyOutput(t *testing.T) {
+func TestFinalizeExternalThumbOutputDetectsEmptyOutput(t *testing.T) {
 	base := t.TempDir()
 	src := filepath.Join(base, "source.mov")
 	dst := filepath.Join(base, "thumb.jpg")
 	tmp := dst + ".tmp"
 
 	// tmp がそもそも作られていない（exit 0 で何も書かなかった場合）
-	err := finalizeFFmpegThumbOutput(src, tmp, dst, "ffmpeg said nothing")
+	err := finalizeExternalThumbOutput("ffmpeg", src, tmp, dst, "ffmpeg said nothing")
 	if err == nil {
 		t.Fatal("出力が無いのに成功している")
 	}
@@ -163,7 +163,7 @@ func TestFinalizeFFmpegThumbOutputDetectsEmptyOutput(t *testing.T) {
 	if err := os.WriteFile(tmp, nil, os.ModePerm); err != nil {
 		t.Fatalf("WriteFile failed: %v", err)
 	}
-	if err := finalizeFFmpegThumbOutput(src, tmp, dst, ""); err == nil {
+	if err := finalizeExternalThumbOutput("ffmpeg", src, tmp, dst, ""); err == nil {
 		t.Error("0バイトの出力を成功として扱っている")
 	}
 	if _, statErr := os.Stat(tmp); statErr == nil {
@@ -174,7 +174,7 @@ func TestFinalizeFFmpegThumbOutputDetectsEmptyOutput(t *testing.T) {
 	if err := os.WriteFile(tmp, []byte{0xFF, 0xD8, 0xFF, 0x00}, os.ModePerm); err != nil {
 		t.Fatalf("WriteFile failed: %v", err)
 	}
-	if err := finalizeFFmpegThumbOutput(src, tmp, dst, ""); err != nil {
+	if err := finalizeExternalThumbOutput("ffmpeg", src, tmp, dst, ""); err != nil {
 		t.Fatalf("中身があるのに失敗している: %v", err)
 	}
 	got, err := os.ReadFile(dst)
@@ -380,7 +380,7 @@ func TestIsVideoCoversMpegAndDropsTypo(t *testing.T) {
 }
 
 // 失敗の印を「生成済みサムネイル」として数えないこと。
-// 混ぜると一括生成側が件数を取り違える。
+// 混ぜると一括生成側が件数を取り違える。印は接尾辞を剥いだ名前で failed 側の集合に入る。
 func TestCachedThumbNamesExcludesFailedMarkers(t *testing.T) {
 	repo, contentDir, thumbCacheDir := newIDFRepForThumbBatchTest(t)
 
@@ -388,22 +388,33 @@ func TestCachedThumbNamesExcludesFailedMarkers(t *testing.T) {
 		t.Fatalf("MkdirAll failed: %v", err)
 	}
 	writeTestImage(t, filepath.Join(contentDir, "ok.png"), 0)
+	writeTestImage(t, filepath.Join(contentDir, "broken.png"), 16)
 	name := thumbCacheNameForTest(t, repo, contentDir, "ok.png")
+	brokenName := thumbCacheNameForTest(t, repo, contentDir, "broken.png")
 	if err := os.WriteFile(filepath.Join(thumbCacheDir, name), []byte("thumb"), os.ModePerm); err != nil {
 		t.Fatalf("WriteFile failed: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(thumbCacheDir, name+thumbFailedMarkerSuffix), []byte("failed"), os.ModePerm); err != nil {
+	if err := os.WriteFile(filepath.Join(thumbCacheDir, brokenName+thumbFailedMarkerSuffix), []byte("failed"), os.ModePerm); err != nil {
 		t.Fatalf("WriteFile failed: %v", err)
 	}
 
-	names, err := repo.thumbGenerator.CachedThumbNames()
+	generated, failed, err := repo.thumbGenerator.CachedThumbNames()
 	if err != nil {
 		t.Fatalf("CachedThumbNames failed: %v", err)
 	}
-	if _, ok := names[name]; !ok {
+	if _, ok := generated[name]; !ok {
 		t.Error("生成済みのサムネイルが集合に入っていない")
 	}
-	if _, ok := names[name+thumbFailedMarkerSuffix]; ok {
+	if _, ok := generated[brokenName]; ok {
+		t.Error("失敗の印だけのファイルが生成済みとして数えられている")
+	}
+	if _, ok := generated[brokenName+thumbFailedMarkerSuffix]; ok {
 		t.Error("失敗の印が生成済みとして数えられている")
+	}
+	if _, ok := failed[brokenName]; !ok {
+		t.Error("失敗の印が接尾辞を剥いだ名前で failed に入っていない")
+	}
+	if _, ok := failed[name]; ok {
+		t.Error("生成済みのサムネイルが failed に入っている")
 	}
 }

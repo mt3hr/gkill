@@ -228,12 +228,12 @@ func TestGenerateThumbCacheHandlesSubDirectories(t *testing.T) {
 func TestCachedThumbNamesOnMissingDirectory(t *testing.T) {
 	repo, _, _ := newIDFRepForThumbBatchTest(t)
 
-	names, err := repo.thumbGenerator.CachedThumbNames()
+	generated, failed, err := repo.thumbGenerator.CachedThumbNames()
 	if err != nil {
 		t.Fatalf("キャッシュディレクトリが無いだけでエラーになっている: %v", err)
 	}
-	if len(names) != 0 {
-		t.Errorf("空のはず: got %d件", len(names))
+	if len(generated) != 0 || len(failed) != 0 {
+		t.Errorf("空のはず: generated %d件, failed %d件", len(generated), len(failed))
 	}
 }
 

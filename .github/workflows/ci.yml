@@ -44,6 +44,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # サムネイル生成の外部ツール経路（ffmpeg / libvips の CLI）を CI でも実際に走らせる。
+      # 無ければ該当テストは Skip で緑になり、外部ツールの引数や出力の扱いが壊れても
+      # 一度も走らないまま通ってしまう（2026-09-22 まで ffmpeg 系は全部 Skip だった）。
+      - name: Install ffmpeg and libvips (thumbnail backends)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg libvips-tools
+          ffmpeg -version | head -1
+          vips --version
+
       # api パッケージが必要とする埋め込み資産を用意する。
       #   locales     : init() が読む。無いと panic する
       #   version.json: GetVersion() が読む。/api/get_application_config が使う
