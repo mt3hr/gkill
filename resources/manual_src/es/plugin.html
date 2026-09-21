@@ -107,6 +107,9 @@
     <strong>Consejo:</strong> No hace falta borrar las descargas antiguas. Aunque las fechas se solapen, valores como el número de pasos nunca se cuentan dos veces.
   </div>
   <div class="tip">
+    <strong>Cómo se cuentan los pasos:</strong> Cuando un día tiene pasos tanto del reloj como del teléfono, solo se usan los valores del reloj. Los del teléfono se usan únicamente en los días sin registros del reloj. Qué fuentes cuentan como respaldo para los días sin reloj se puede cambiar en la pantalla de configuración del complemento, en «Fuentes de datos usadas solo en días sin registros del reloj» (déjelo vacío para sumar todo).
+  </div>
+  <div class="tip">
     <strong>Consejo:</strong> Las claves de <code>config.json</code> que empiezan por <code>_</code> (guion bajo) solo están ahí para explicar el formato. Puede borrarlas.
   </div>
   <div class="tip">
@@ -186,7 +189,12 @@
       <td>Aparece «Error al obtener el contenido del complemento»</td>
       <td>Puede que el ejecutable del complemento no se esté iniciando. Compruebe que no está dañado y que tiene permiso para ejecutarlo.</td>
     </tr>
+    <tr>
+      <td>Aparece «El complemento no respondió» o el estado sigue en «error»</td>
+      <td>El motivo queda en <code>gkill_plugin_&lt;nombre&gt;_error.log</code> dentro de la carpeta <code>logs</code> de la carpeta principal de gkill. Compruebe la configuración del origen y que el ejecutable pueda iniciarse.</td>
+    </tr>
   </table>
+  <p>El registro de actividad de un complemento se guarda como <code>gkill_plugin_&lt;nombre&gt;.log</code> en la carpeta <code>logs</code> de la carpeta principal de gkill (también hay archivos por nivel, como <code>_error.log</code>). Su nivel de detalle sigue la configuración de registro del propio gkill.</p>
   <div class="tip">
     <strong>Consejo:</strong> Mantenga pulsado (móvil) o haga clic derecho (escritorio) sobre un registro y elija «Configuración del complemento» para abrir su pantalla de configuración. Ahí puede cambiar y guardar las carpetas de origen. También puede seguir editando directamente el <code>config.json</code> de la carpeta del complemento.
   </div>

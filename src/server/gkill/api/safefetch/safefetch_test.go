@@ -122,7 +122,7 @@ func TestCheckImageDimensions(t *testing.T) {
 // GetCapped は2xx以外の本文を返してはいけない。
 //
 // ここを見ていなかったせいで、404ページのHTMLがそのまま favicon として
-// base64 で保存されていた(監査でGoogleの "Error 404 (Not Found)!!1" を実測)。
+// base64 で保存されていた(指摘でGoogleの "Error 404 (Not Found)!!1" を実測)。
 // 404ページの <title> がブックマークのタイトルとして保存される経路も同じ原因。
 func TestGetCapped_RejectsNon2xx(t *testing.T) {
 	for _, status := range []int{http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound, http.StatusInternalServerError} {

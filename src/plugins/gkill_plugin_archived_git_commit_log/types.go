@@ -32,7 +32,7 @@ const (
 )
 
 // defaultMaxGitDirMB は1リポジトリの .git の合計サイズの上限（MB）。
-// 実データの最大は 6.2MB（zip 全体）で、.git だけならもっと小さい。
+// 実データの最大は数MB（zip 全体）で、.git だけならもっと小さい。
 // 上限を超えるリポジトリはメモリに載せずに飛ばし、設定画面に理由を出す。
 const defaultMaxGitDirMB = 256
 

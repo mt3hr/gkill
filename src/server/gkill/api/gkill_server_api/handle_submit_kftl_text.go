@@ -193,7 +193,7 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 
 	// 成功したときだけ、本文の指紋と created[] ごと記録する。以降この利用者の同じキーの再送は
 	// 再実行されずに畳まれ、同じ本文なら元の created[] が返る。
-	// 意図的な再送は別メッセージ＝別キーなので畳まれない（監査 S3-wear）。
+	// 意図的な再送は別メッセージ＝別キーなので畳まれない（指摘 S3-wear）。
 	if idempotencyKey != "" {
 		kftlIdempotencyStore.markDone(idempotencyKey, fingerprint, response.Created)
 	}

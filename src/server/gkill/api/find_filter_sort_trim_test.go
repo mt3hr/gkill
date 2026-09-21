@@ -168,7 +168,7 @@ func BenchmarkSortAndTrimKyousMap_PeriodOfTime(b *testing.B) {
 // **素のID重複排除にしてはいけない** ―― TimeIs は同じIDから timeis_start /
 // timeis_end の2行が正当に出る（DataTypeが違う）。複合キーならこの2行は残り、
 // 完全重複（同一コミットが2経路から合流した等）だけが畳まれる。
-// 経路の合流で残る完全重複の最終防衛線（外部監査 C2 の一部）。
+// 経路の合流で残る完全重複の最終防衛線（指摘 C2 の一部）。
 func TestSortResultKyous_DedupKeepsTimeIsProjections(t *testing.T) {
 	ctx := context.Background()
 	commitTime := time.Date(2026, 8, 1, 12, 0, 0, 0, time.Local)

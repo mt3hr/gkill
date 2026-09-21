@@ -825,7 +825,7 @@ func TestEscapeLikePattern(t *testing.T) {
 // バインド値は find.SecondOfDayToHHMMSS の "HH:MM:SS" 文字列で、列側の
 // strftime('%H:%M:%S', ...) と文字列比較される。以前はバインド側が
 // 「epoch秒をそのままdatetime()に食わせる」形で、秒オブデイを渡すと
-// 1970-01-01の時刻として+9時間ずれていた（外部監査で発覚）。
+// 1970-01-01の時刻として+9時間ずれていた（指摘で発覚）。
 // 解釈の正本: find.NormalizeSecondOfDay / documents/adr/0108-period-of-time-second-of-day.md
 func TestGenerateFindSQLCommon_PeriodOfTimeNarrowWindow(t *testing.T) {
 	day := time.Date(2026, 8, 19, 0, 0, 0, 0, time.Local)

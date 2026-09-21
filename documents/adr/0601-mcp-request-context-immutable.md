@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-21 |
-| Sources | `bb364253`（監査 C-02） / `.claude/skills/gkill-mcp/SKILL.md`「HTTPモードの1リクエスト文脈は `Server.Current*` 共有フィールドに書かず」節 |
+| Sources | `bb364253`（指摘 C-02） / `.claude/skills/gkill-mcp/SKILL.md`「HTTPモードの1リクエスト文脈は `Server.Current*` 共有フィールドに書かず」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/mcp/server_base.go` |
@@ -38,11 +38,11 @@ stdio モードは1リクエストずつなので露見しない。**HTTPモー�
 
 **`http-transport` 側から `server.current*` への書き込みを復活させないこと。** フォールバックが残っているので、書き戻しても動いてしまう。
 
-同じ監査で OAuth も固めた: S256 必須・未登録 `client_id` は認可拒否（`oauth_server.go` の `_validateAuthorizeParams`）、公開ファイル配信は nosniff ＋ CSP sandbox（Go 側 `withUserContentSecurityHeaders` のミラー）、`oauth_store.go` の保存は temp+rename の 0600。
+同じ指摘で OAuth も固めた: S256 必須・未登録 `client_id` は認可拒否（`oauth_server.go` の `_validateAuthorizeParams`）、公開ファイル配信は nosniff ＋ CSP sandbox（Go 側 `withUserContentSecurityHeaders` のミラー）、`oauth_store.go` の保存は temp+rename の 0600。
 
 ## Evidence
 
-実測なし — 脅威モデルからの判断（外部監査 C-02 の指摘）。
+実測なし — 脅威モデルからの判断（指摘 C-02）。
 
 ## Related tests
 

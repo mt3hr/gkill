@@ -16,7 +16,7 @@ type GetKyousMCPResponse struct {
 	ReturnedCount int `json:"returned_count"`
 	// RemainingCount はこの応答の続き（カーソル以降）に残っている件数。全データ応答に入る。
 	// 旧 v1 は TotalCount がカーソルの有無で「全件数/残件数」と意味を変えており、
-	// 進捗率の分母に使うと静かに壊れていた（外部監査 S3）。
+	// 進捗率の分母に使うと静かに壊れていた（指摘 S3）。
 	RemainingCount int    `json:"remaining_count"`
 	HasMore        bool   `json:"has_more"`
 	NextCursor     string `json:"next_cursor,omitempty"`
@@ -33,7 +33,7 @@ type GetKyousMCPResponse struct {
 	// 未知のフィルタ値(rep_types/tags/reps/data_types の綴り違い等)や、読み込めなかった
 	// rep の欠落も指摘する。rep の欠落だけなら Partial は false のままなので、呼び出し側は
 	// Partial の値にかかわらず Warnings を確認すること。
-	// （黙って0件を返すと「該当なし」と区別が付かない。外部監査 S7）。
+	// （黙って0件を返すと「該当なし」と区別が付かない。指摘 S7）。
 	Warnings []string `json:"warnings,omitempty"`
 }
 

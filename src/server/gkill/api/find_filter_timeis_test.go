@@ -5,7 +5,7 @@ package api
 // 修正対象のバグ:
 //   - TimeIsの非表示タグが TimeIsTags!=nil のとき適用されていなかった(計算条件が適用側と逆)。
 //     タグ絞りなし(TimeIsTags==nil)では Kyou 側と対称に適用しない(旧コードの nil 分岐 delete は
-//     集合が常に空で発火しない死にコードだった＝監査 M-5(d))
+//     集合が常に空で発火しない死にコードだった＝指摘 M-5(d))
 //   - use_timeis_tags=true + timeis_tags=nil でどの分岐にも入らず検索全体が0件になっていた
 //   - AND分岐で存在しないタグ名が黙って無視され、タグ名照合が大小を区別していた
 //   - findTimeIs のクエリに OnlyLatestData が無く、編集前タイトルの旧版がヒットしていた

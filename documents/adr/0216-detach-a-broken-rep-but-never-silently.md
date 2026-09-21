@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-30 |
-| Sources | `27fe2a02` / `a6914b6d` / `src/server/gkill/dao/gkill_dao_manager.go` |
+| Sources | `9ae607be` / `3f22c954` / `src/server/gkill/dao/gkill_dao_manager.go` |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/dao/gkill_dao_manager_broken_rep_test.go` |
@@ -118,7 +118,7 @@ rep によっては、生成に成功して `repositories` へ足したあとの
 
 切り出しの安全性: `loadRepIntoRepositories` へ移した607行は、
 git の判定1箇所を除いて元コードと1文字も違わないことを、元コードを機械変換した結果との
-差分で確認した（コミット `265aa709`）。
+差分で確認した（コミット `c1706862`）。
 
 ## Related tests
 

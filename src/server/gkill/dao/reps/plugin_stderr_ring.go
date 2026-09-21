@@ -14,7 +14,7 @@ const pluginStderrRingSize = 4 * 1024
 // 以前は cmd.Stderr = os.Stderr の直結で、プラグインのビルドエラー
 // （"build error: conversations.json が見つかりません" 等）はサーバのコンソールにしか
 // 出ず、get_plugin_list からは「is_alive=true なのに0件」の理由が一切診断できなかった
-// （外部監査 D2）。io.MultiWriter でここへも写し、PluginInfo.last_error として返す。
+// （指摘 D2）。io.MultiWriter でここへも写し、PluginInfo.last_error として返す。
 //
 // io.Writer として cmd.Stderr に渡されるため、書き込みはプラグインプロセスの
 // 出力goroutineから並行に来る。mutexで守る。

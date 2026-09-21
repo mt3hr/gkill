@@ -55,7 +55,7 @@ func defaultSourcePatterns() []string {
 
 // classifyFileName はファイル名だけで種別を決める。
 //
-// 中身を読んで判定しないのは、ロールアウトが最大45MBあり、
+// 中身を読んで判定しないのは、ロールアウトが数十MBに達することがあり、
 // 変わっていないファイルまで開くと走査だけで時間を使い切るため。
 // ロールアウトの実体判定(session_meta があるか)は取り込み時に行う。
 //
@@ -75,7 +75,7 @@ func classifyFileName(filePath string) string {
 // threadIDFromFileName はロールアウトのファイル名からスレッドIDを取り出す。
 //
 // これがKyouIDの土台になる。session_meta.session_id は使えない ――
-// 実データ数十ファイル中半数近くに存在せず、存在してもサブエージェントでは
+// 実データでは半数近くのファイルに存在せず、存在してもサブエージェントでは
 // 親のIDが入っているため、親子のKyouIDが衝突する。
 // session_meta.id とファイル名のuuidは52/52で一致することを確認済み。
 func threadIDFromFileName(filePath string) string {
@@ -157,7 +157,7 @@ type sessionIndexEntry struct {
 
 // readSessionIndex は スレッドID -> スレッド名 を読む。
 //
-// 実データでは52セッション中33件しか載っていないので、あくまで補助。
+// 実データでは6割ほどのセッションしか載っていないので、あくまで補助。
 // 読めなくても取り込みは続ける。
 func readSessionIndex(filePath string) (map[string]string, error) {
 	file, err := os.Open(filePath)

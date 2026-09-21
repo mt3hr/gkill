@@ -324,8 +324,8 @@ func (r *runBuilder) addNotice(text string) {
 // attachAgent はサブエージェントを、それを起こしたツール呼び出しにぶら下げる。
 //
 // 突き合わせは call_id。見つからなければ独立したブロックとして置く ――
-// 実データでは sub_agent_activity(started) が61件あるのに対しロールアウトファイルは
-// 13件しかなく、親だけ残っている子が普通にあるので、この経路は必ず要る。
+// 実データでは sub_agent_activity(started) の数に対しロールアウトファイルは
+// その2割ほどしかなく、親だけ残っている子が普通にあるので、この経路は必ず要る。
 func (r *runBuilder) attachAgent(callID string, agent *subAgent) {
 	if callID != "" {
 		for blockIndex := range r.blocks {
@@ -410,7 +410,7 @@ func buildSubAgent(threadID string, group threadGroup, depth int) *subAgent {
 
 // maxSearchTextBytes は1Kyouぶんの検索用テキストの上限。
 //
-// 実データでは1件だけ数 MBに達するKyouがあり(サブエージェント9本を畳み込んだ回)、
+// 実データでは1件だけ数MBに達するKyouがあり(サブエージェントを何本も畳み込んだ回)、
 // 上限が無いと単語検索のたびにその1行を読むことになる。
 // 打ち切っても50万文字ぶんは引けるので実用上は困らない。
 const maxSearchTextBytes = 512 * 1024

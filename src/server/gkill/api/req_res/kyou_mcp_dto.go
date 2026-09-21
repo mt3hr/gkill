@@ -9,7 +9,7 @@ import (
 //
 // ID / RepName は v2 から常時付与する。AIクライアントの追撃クエリ
 // (query.ids / query.reps / プラグイン本文取得 / 更新系ツール) は両方を前提とし、
-// 旧 v1 の「要求フラグを立てないと載らない」既定が往復を1回増やしていた（外部監査 C1 ほか）。
+// 旧 v1 の「要求フラグを立てないと載らない」既定が往復を1回増やしていた（指摘 C1 ほか）。
 // サイズ増(1件あたり数十バイト)は v2 で max_size_mb が厳密上限になったので上限自体が吸収する。
 type KyouMCPDTO struct {
 	ID       string `json:"id"`
@@ -26,7 +26,7 @@ type KyouMCPDTO struct {
 	// IsDeleted は削除済みのときだけ載る（omitempty）。query.include_deleted_data で削除済みを
 	// 混ぜたときに「どれが削除済みか」を見分けるための欄で、既定の検索では全件 false なので
 	// 毎件 `"is_deleted":false` が定常のオーバーヘッドになっていた（実利用報告）。
-	// 「無ければ生きている」と読ませる（外部監査 C4 の判断を is_deleted に限って覆す。ADR-0629。
+	// 「無ければ生きている」と読ませる（指摘 C4 の判断を is_deleted に限って覆す。ADR-0629。
 	// IsZip / Addition / Deletion は据え置き —— あちらは false / 0 に「値が取れなかった」と紛れる意味がある）。
 	// UpdateTime は「どちらが新しいか」の判別に要るので omitempty を付けない。
 	IsDeleted     bool                 `json:"is_deleted,omitempty"`
@@ -173,7 +173,7 @@ type IDFPayloadMCPDTO struct {
 	// IsZip は .zip / .cbz のように中身を一覧できるアーカイブかどうか。
 	// omitempty を付けてはいけない: false で消えると、スキーマに載っているのに
 	// 実レスポンスに一度も現れないフィールドになり、呼び出し側は
-	// 「false なのか未実装なのか」を判別できない（外部監査 C4）。
+	// 「false なのか未実装なのか」を判別できない（指摘 C4）。
 	IsZip    bool   `json:"is_zip"`
 	RepName  string `json:"rep_name"`
 	MimeType string `json:"mime_type,omitempty"`
@@ -208,14 +208,14 @@ type PluginDescriptionMCPDTO struct {
 
 // GitPayloadMCPDTO はコミットのペイロード。コミットハッシュは Kyou の id そのもの
 // （git_commit_log_repository_local_dir_impl.go の kyou.ID = commit.Hash.String()）なので、
-// ここには持たない（外部監査 C2 で足した commit_hash は id と常に同値で、毎件 40 桁が二重に並ぶだけだった。
+// ここには持たない（指摘 C2 で足した commit_hash は id と常に同値で、毎件 40 桁が二重に並ぶだけだった。
 // 実利用報告。ADR-0629）。
 type GitPayloadMCPDTO struct {
 	Kind          string `json:"kind"` // "git_commit_log"
 	CommitMessage string `json:"commit_message"`
 	// Addition / Deletion に omitempty を付けてはいけない:
 	// int の 0 はキーごと消え、「差分0行のコミット」と「値が取れなかった」を
-	// 呼び出し側が区別できなくなる（外部監査 C5）。
+	// 呼び出し側が区別できなくなる（指摘 C5）。
 	Addition int `json:"addition"`
 	Deletion int `json:"deletion"`
 }

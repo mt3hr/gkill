@@ -68,7 +68,7 @@ type columnPlan struct {
 // 1エントリにつき1回しか読まない。
 //
 // ZIPのエントリを丸ごとメモリに載せないこと。csv.Reader を伸長ストリームに
-// 直接かぶせて流し読みする（心拍だけで展開後853MBある）。
+// 直接かぶせて流し読みする（心拍だけで展開後に数百MBある）。
 func ingestEntry(entry sdk.SourceEntry, defs []metricDef, loc *time.Location) ([]partialDaily, error) {
 	source, err := entry.Open()
 	if err != nil {

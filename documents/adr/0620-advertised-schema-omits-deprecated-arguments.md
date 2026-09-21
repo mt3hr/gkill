@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-09-14 |
-| Sources |  MCP レビュー P1（`include_id` / `include_rep_name` / `only_latest_data` が deprecated な入力引数として tools/list に残っている指摘）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「廃止済み引数は公開スキーマに載せず、受理と古さの検出だけ残す。」 |
+| Sources | MCP レビュー P1（`include_id` / `include_rep_name` / `only_latest_data` が deprecated な入力引数として tools/list に残っている指摘）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「廃止済み引数は公開スキーマに載せず、受理と古さの検出だけ残す。」 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/mcp/read_tools.go`（`gkill_get_kyous` の `inputSchema.properties`）/ `src/server/gkill/mcp/find_query_schema.go`（`FIND_QUERY_SCHEMA.properties`）/ `src/server/gkill/mcp/constants.go`（`KYOUS_TOP_LEVEL_FIELDS` / `LEGACY_USE_FLAG_KEYS`）/ `src/server/gkill/mcp/normalization.go`（`DEPRECATED_TOP_LEVEL_ARGS` / `DEPRECATED_QUERY_FIELDS` / `detectStaleSchemaSignals`） |

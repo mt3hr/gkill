@@ -6,7 +6,7 @@ type SubmitKFTLTextRequest struct {
 	LocaleName string `json:"locale_name"`
 	// IdempotencyKey は同じ送信の再配送を1回の登録に畳むための任意キー。
 	// 空なら冪等判定をしない（従来どおり毎回登録）。Wear のワーカー再送で
-	// 結果だけ届かなかったとき、同じキーで再送しても二重登録にならない（監査 S3-wear）。
+	// 結果だけ届かなかったとき、同じキーで再送しても二重登録にならない（指摘 S3-wear）。
 	IdempotencyKey string `json:"idempotency_key,omitempty"`
 	// CreateApp は生成される Kyou の create_app / update_app に載せるアプリ名。
 	// 空なら "gkill_kftl"（メモ帳と同じ）。Wear companion が "gkill_wear" を名乗るために使う。

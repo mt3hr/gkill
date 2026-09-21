@@ -29,7 +29,7 @@ const (
 const (
 	// defaultAccuracyMaxMeters は既定の精度フィルタ。
 	//
-	// 実データの accuracyMm は最大2.6kmまである（CELL測位）。
+	// 実データの accuracyMm は km 級まである（CELL測位）。
 	// 100mで97%が残り、街を跨ぐような粗い測位だけが落ちる。
 	// これを緩めると、地図フィルタが別の街のKyouに当たるようになる。
 	defaultAccuracyMaxMeters = 100

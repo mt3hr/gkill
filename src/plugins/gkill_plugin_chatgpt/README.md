@@ -46,10 +46,10 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_chatgpt/cache.db
 ```json
 {
   "_comment": "書式の説明（読み飛ばされるので消してよい）",
-  "_example_source_dirs": ["~/Kyou/ChatGPT_*", "D:/Dropbox/chatgpt_export/*.zip"],
+  "_example_source_dirs": ["~/Kyou/ChatGPT_*", "~/Downloads/chatgpt_export/*.zip"],
   "source_dirs": [
     "~/Kyou/ChatGPT_*",
-    "D:/Dropbox/export"
+    "~/Downloads/export"
   ]
 }
 ```

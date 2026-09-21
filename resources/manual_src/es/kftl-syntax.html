@@ -134,7 +134,7 @@ Inicio de trabajo</pre>
 Inicio de trabajo</pre>
 
 <h3>13. Fin de registro de tiempo: <code>/end</code></h3>
-<p>Siguiente línea: titulo. Busca un registro de tiempo iniciado coincidente y lo finaliza.</p>
+<p>Siguiente línea: titulo. Busca un registro de tiempo iniciado coincidente y lo finaliza. Si hay varios registros de tiempo con el mismo título en curso, solo se finaliza el que empezó más recientemente (los registros eliminados no se tienen en cuenta).</p>
 <pre>/end
 Inicio de trabajo</pre>
 
@@ -144,7 +144,7 @@ Inicio de trabajo</pre>
 Inicio de trabajo</pre>
 
 <h3>15. Finalizar registro por etiqueta: <code>/endt</code></h3>
-<p>Siguiente línea: nombre de la etiqueta. Busca y finaliza un registro de tiempo por su etiqueta.</p>
+<p>Siguiente línea: nombre de la etiqueta. Busca y finaliza un registro de tiempo por su etiqueta. Si hay varios registros de tiempo con esa etiqueta en curso, solo se finaliza el que empezó más recientemente (los registros eliminados no se tienen en cuenta).</p>
 <pre>/endt
 trabajo</pre>
 

@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1361 | 204 | Go `testing` |
-| フロントエンド ユニット | 2025 | 179 | Vitest |
+| Go バックエンド | 1372 | 205 | Go `testing` |
+| フロントエンド ユニット | 2034 | 181 | Vitest |
 | フロントエンド E2E | 253 | 46（+auth.setup.ts） | Playwright |
-| MCP サーバ | 1127 | 36 | Go `testing` |
-| ツール | 55 | 2 | Vitest |
+| MCP サーバ | 1144 | 41 | Go `testing` |
+| ツール | 60 | 3 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 230 | 18 | JUnit 4 + MockK |
-| **合計** | **5,066** | **487** | |
+| **合計** | **5,108** | **496** | |
 
 数え直すコマンド:
 
@@ -218,7 +218,7 @@ src/server/gkill/
 │   ├── req_res/                       ← ワイヤ契約（JSONタグ名 / omitempty）と応答型の Errors / Messages の型（ソース走査）
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（45ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（46ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── response_status_guard_test.go         ← 全ハンドラが writeErrorStatus を呼ぶこと（ソース走査）
@@ -298,7 +298,7 @@ src/client/__tests__/
 │   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
 │   │   ├── find-kyou-query.test.ts   ← 検索クエリビルダー
 │   │   └── hydrate.test.ts           ← hydrate() / hydrate_all()（JSON→クラス詰め替え）
-│   ├── classes/                       ← ユーティリティ（53ファイル）
+│   ├── classes/                       ← ユーティリティ（54ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
@@ -326,7 +326,7 @@ src/client/__tests__/
 │   ├── datas/                         ← データモデル（35ファイル）
 │   ├── dnote/                         ← D-note モジュール（9ファイル、trend-aggregator / correlation-graph-editor-view 含む）
 │   ├── kftl/                          ← KFTL 行分類器（8ファイル。kftl-line-labels 含む）
-│   ├── composables/                   ← Vue Composable（62ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（63ファイル。add-views / edit-views /
 │   │                                     tx-bundle-views / shared-mi-view-dialog / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /
@@ -411,10 +411,15 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 | `help_topics_test.go` | `gkill_get_mcp_help` の topic 本文（全 topic に本文・index の列挙・説明文から移した知識の実在・名指しするツール名の実在・3サーバ搭載・gkill へ往復しない） |
 | `schema_contract_test.go` | tools/list どおりに呼べる契約（スキーマのキー集合 = 受理集合 − 廃止済み、全プロパティ指定スモーク、3サーバの同名ツール同一、世代の一致） |
 | `tool_schema_budget_test.go` | tools/list のバイト量が予算ファイル `src/server/gkill/mcp/tool_schema_budget.json` 内であること（超過・過小の両方で失敗）。説明文を意図して変えたときは `gkill_server mcp schema-budget --update` で予算を書き直す |
-| `golden_test.go` | 旧 Node 実装から採ったゴールデン（`testdata/golden/`。要求コーパス 328 件）との**バイト一致**（tools/list・`schema_revision`・tools/call の応答（stdio / http × 3サーバ）・gkill へ送った要求） |
-| `config_test.go` | 設定ファイル `gkill_mcp.json` の生成と、フラグ > 環境変数 > ファイル > 既定値の優先順位 |
+| `golden_test.go` | コミット済みのゴールデン（`testdata/golden/`。採取時は旧 Node 実装の出力、以後は前回コミットした Go の出力。要求コーパス 331 件）との**バイト一致**（tools/list・`schema_revision`・tools/call の応答（stdio / http × 3サーバ）・gkill へ送った要求）。`GKILL_MCP_UPDATE_GOLDEN=1` の更新経路が「書き直したものと比較が通り、コミット済みと同じバイト列」であることの自己検査を含む |
+| `config_test.go` | 設定ファイル `gkill_mcp.json` の生成と、フラグ > 環境変数 > ファイル > 既定値の優先順位、壊れた数値の環境変数（`GKILL_FETCH_TIMEOUT_MS` / `MCP_PORT`）で起動を止めること |
 | `import_graph_test.go` | package `mcp` が本体の `api` / `dao` / `usecase` を import しないこと |
 | `stdio_e2e_test.go` | テストバイナリを子プロセスにした stdio の端から端まで（NDJSON / Content-Length、stdout に JSON-RPC 以外が出ない） |
+| `payload_test.go` | 応答から `file_path` を再帰的に落とす `StripFilePaths`（リモートクライアントへ絶対パスを渡さない）と Content-Type の正規化 |
+| `errors_test.go` | `InvalidArgument` の detail（`actualType` / `actualValue` の形。長い文字列は 120 文字で切る、配列・オブジェクトは要約） |
+| `gps_cursor_test.go` | GPS ログのカーソルの往復（発行側と検証側が同じ実装）と、壊れたカーソルの拒否 |
+| `find_query_schema_test.go` | `query` スキーマの全プロパティに type と description があること（キー集合は `schema_contract_test.go`） |
+| `oauth_html_test.go` | 認可成功ページの redirect_uri が script 文脈でエスケープされること（`</script>` / U+2028 で抜け出せない）、ログインページの利用者由来の値の HTML エスケープ |
 
 **プラグインツール（3サーバ共通）:**
 
@@ -629,7 +634,7 @@ cd src/wear_os && ./gradlew test
 ### MCP サーバ テスト
 
 - テストファイルは `src/server/gkill/mcp/` 配下に `{module}_test.go` 形式で配置（旧 vitest の `describe` → `TestXxx`、`test` → `t.Run`）
-- gkill への往復は `mockClient`（`mock_client_test.go`）か偽 gkill（`internal/fakegkill`）で代替する。応答の形を変えたら `golden_test.go` が落ちるので、意図した変更なら `testdata/golden/` の当該行を更新して理由をコミットメッセージに書く
+- gkill への往復は `mockClient`（`mock_client_test.go`）か偽 gkill（`internal/fakegkill`）で代替する。応答の形を変えたら `golden_test.go` が落ちるので、意図した変更なら `GKILL_MCP_UPDATE_GOLDEN=1 go test ./gkill/mcp/ -run Golden` でゴールデンを Go の出力で書き直し、`git diff testdata/golden` が意図した差分だけであることを確かめてから、環境変数なしで走らせて緑を確認する（手で当該行を直さない）。理由はコミットメッセージに書く
 
 ### 新しいデータ型を追加した場合のテスト
 

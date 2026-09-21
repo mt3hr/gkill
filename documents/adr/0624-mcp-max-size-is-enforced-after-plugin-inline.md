@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-09-19 |
-| Sources |  MCP 実利用報告（`max_size_mb:0.002`・`limit:2`・`include_plugin_content:true` で Kyou 配列だけで 約3千 バイトが警告なしに2件返る）。`.claude/skills/gkill-mcp/SKILL.md`「`max_size_mb` はプラグイン本文を埋め込んだ後に Node が守り直す」 |
+| Sources | MCP 実利用報告（`max_size_mb:0.002`・`limit:2`・`include_plugin_content:true` で Kyou 配列だけで上限の数倍のバイト数が警告なしに2件返る）。`.claude/skills/gkill-mcp/SKILL.md`「`max_size_mb` はプラグイン本文を埋め込んだ後に Node が守り直す」 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/mcp/read_handlers.go`（`enforceKyousSizeBudget` / `recountInlinePluginContent`） |
