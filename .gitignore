@@ -54,6 +54,10 @@ coverage
 !/.claude/skills/
 # 個人情報検査のローカル NG 語リスト（コミットしない。checkPersonalInfo が読む）
 verify_docs_personal_ngwords.local.txt
+# ローカル専用の資料と道具（独立した git リポジトリ。実環境固有の事実を置く。AGENTS.md の Documentation 節）と、
+# それを Claude Code に読ませる個人設定。*.local は「.local で終わる名前」にしか当たらないので明示する
+/local/
+/CLAUDE.local.md
 # テスト済み attestation（run_test_suite.mjs が書き、verify_release_gate.mjs が読む。環境固有・コミットしない）
 # *.local は「.local で終わる名前」にしか当たらないので明示する
 test_attestation.local.json
