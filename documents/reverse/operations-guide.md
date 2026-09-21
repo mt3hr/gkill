@@ -597,6 +597,18 @@ gkill_server generate_video_cache ユーザーID
 
 どちらも生成済みのものは作り直さない。判定は、生成対象の親ディレクトリとキャッシュディレクトリをそれぞれ1回ずつ列挙して行う（1件ずつ `os.Stat` はしない。[ADR-0212](../adr/0212-derived-cache-scan-lists-directories.md)）。
 
+**任意の外部ツール（PATH にあれば使う）:**
+
+| ツール | 使われ方 | 無いとき |
+|---|---|---|
+| `ffmpeg` / `ffprobe` | 動画のサムネイル・互換動画の変換、Go で読めない静止画（HEIC / BMP / TIFF …）のサムネイル | 動画のサムネイルと互換動画は作られない（失敗の印は残らず、入れれば作られる）。静止画は Go で読める形式（JPEG / PNG / GIF / WebP）だけ |
+| `vips`（libvips 8.5 以降の CLI） | 静止画のサムネイル。12MP 級の JPEG と HEIC で Go より数倍速い（JPEG / HEIC は縮小しながら復号する）。Go で読めて小さい画像（スクリーンショット級）は vips があっても Go で作る | Go → ffmpeg の経路で作られる（遅くなるだけ） |
+
+どちらも**サービスから見える PATH** に入れること。Windows で LocalSystem 起動のサービスは利用者の PATH を見ない（システム環境変数の Path に入れる）。
+見えているかどうかは最初のサムネイル生成時に `gkill_info.log` へ1行出る `thumbnail backends detected`（`vips=true ffmpeg=true ffprobe=true`）で確かめる。
+Windows の libvips は公式の配布物（`vips-dev-x64-all-<版>.zip`）を展開して `bin` を Path に入れる。Ubuntu は `apt-get install libvips-tools`。
+経緯と実測は [ADR-0222](../adr/0222-thumbnail-prefers-vips-cli-then-native-then-ffmpeg.md)。
+
 互換動画は全件を変換するわけではない。ffprobe でコンテナ・映像コーデック・画素形式・プロファイル・音声コーデックを見て、**原本のままブラウザで再生できると言い切れるものは変換せずそのまま配信する**（[ADR-0213](../adr/0213-transcode-only-what-the-browser-cannot-play.md)）。変換に失敗した動画には `<キャッシュ名>.failed` という印が残り、次回以降はやり直さずに原本へフォールバックする。印を消すには `gkill_server clear_cache video ユーザーID` でキャッシュごと削除する。
 
 ### 9.4 キャッシュアーキテクチャ詳細
