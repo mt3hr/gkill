@@ -22,10 +22,10 @@ type LocaltimeAgreement struct {
 	// Probe は検査に使った瞬間（固定値。実行時刻に依存させない）。
 	Probe time.Time
 	// GoLocal は Go の time.Local で写した "15:04:05" と曜日（0=日曜）。
-	GoLocal string
+	GoLocal   string
 	GoWeekday int
 	// SQLiteLocal は SQLite の datetime(?, 'unixepoch', 'localtime') で写した "HH:MM:SS" と strftime('%w')。
-	SQLiteLocal string
+	SQLiteLocal   string
 	SQLiteWeekday int
 }
 

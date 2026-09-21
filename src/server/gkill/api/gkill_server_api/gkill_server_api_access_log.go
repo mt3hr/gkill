@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
@@ -82,13 +83,19 @@ func (g *GkillServerAPI) accessLogMiddleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(rec, r.WithContext(ctx))
 
+		// 利用者由来の値（接続元・メソッド・利用者ID）は改行を落としてから載せる（ログ注入対策）。
+		// path は %q で引用する。どちらも「この関数の中で」行うこと: ヘルパ関数に包むと
+		// 静的解析（CodeQL go/log-injection）がサニタイザと認識せず、同じ指摘が再発する。
+		remoteAddr := strings.ReplaceAll(strings.ReplaceAll(extractIP(r.RemoteAddr), "\r", ""), "\n", "")
+		method := strings.ReplaceAll(strings.ReplaceAll(r.Method, "\r", ""), "\n", "")
+		userID := strings.ReplaceAll(strings.ReplaceAll(info.UserID, "\r", ""), "\n", "")
 		slog.Log(ctx, gkill_log.Access, "access",
-			"remote_addr", extractIP(r.RemoteAddr),
-			"method", r.Method,
+			"remote_addr", remoteAddr,
+			"method", method,
 			"path", fmt.Sprintf("%q", r.URL.Path),
 			"status", rec.statusCode,
 			"duration", time.Since(start).String(),
-			"user_id", info.UserID,
+			"user_id", userID,
 		)
 	})
 }

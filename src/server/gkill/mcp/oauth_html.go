@@ -193,6 +193,23 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
 </html>`
 }
 
+// jsStringLiteral は <script> の中へ埋め込んでよい JS 文字列リテラルを返す。
+// JSON 文字列にしたうえで、HTML 側が解釈しうる < > と JS の行区切り U+2028 / U+2029 を \uXXXX へ逃がす。
+// redirect_uri は動的登録したクライアントが名乗る値なので、"</script>" を含めても script 要素が
+// 早期に閉じない形にしておく（CodeQL go/reflected-xss の指摘箇所）。URL の & はそのまま（script 内では無害）。
+func jsStringLiteral(s string) string {
+	// 置換先は "バックスラッシュ + u + 4桁" の6文字。ソース上の \u エスケープは編集ツールが1文字へ
+	// 畳むことがあるので、バックスラッシュは文字コードから組み立てる。
+	backslash := string(rune(92))
+	replacer := strings.NewReplacer(
+		"<", backslash+"u003c",
+		">", backslash+"u003e",
+		string(rune(0x2028)), backslash+"u2028",
+		string(rune(0x2029)), backslash+"u2029",
+	)
+	return replacer.Replace(jsonobj.MarshalString(s))
+}
+
 // RenderSuccessPage は自動リダイレクト付きの認可成功ページを描画する。
 func RenderSuccessPage(redirectURL string) string {
 	return `<!DOCTYPE html>
@@ -238,7 +255,7 @@ func RenderSuccessPage(redirectURL string) string {
 </div>
 <script>
 setTimeout(function() {
-  window.location.href = ` + jsonobj.MarshalString(redirectURL) + `;
+  window.location.href = ` + jsStringLiteral(redirectURL) + `;
 }, 1500);
 </script>
 </body>
