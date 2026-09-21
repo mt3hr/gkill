@@ -46,7 +46,7 @@ func TestRenderMessageHTMLEscapes(t *testing.T) {
 
 func TestRenderHumanHidesIDEContextBehindDetails(t *testing.T) {
 	// rykv は一覧の行にこのHTMLをそのまま描く。
-	// 実データでは178件中108件に前置きが付いているので、
+	// 実データでは6割ほどに前置きが付いているので、
 	// 本文の前に出すとどの行も「開いているタブ一覧」で埋まって読めなくなる。
 	built := message{
 		Role: roleHuman,

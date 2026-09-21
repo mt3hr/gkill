@@ -49,9 +49,13 @@ type goldenCase struct {
 	Message     any
 }
 
+// goldenDir はゴールデンの置き場所。更新経路の自己検査（TestGoldenUpdatePathRewritesAndThenMatches）が
+// 一時ディレクトリへ差し替える。
+var goldenDir = filepath.Join("testdata", "golden")
+
 func goldenPath(t *testing.T, name string) string {
 	t.Helper()
-	return filepath.Join("testdata", "golden", name)
+	return filepath.Join(goldenDir, name)
 }
 
 func readGoldenFile(t *testing.T, name string) string {
@@ -284,21 +288,56 @@ func recordsToAny(records []fakegkill.Record) []any {
 // causeMaskedCases は detail.cause の文言差だけを許すケース（HTML の 502 を読んだもの）。
 var causeMaskedCases = NewStringSet("status: gkill returns HTML 502", "kyous: gkill HTML 502")
 
-func TestGoldenToolsListMatchesTheNodeImplementationByteForByte(t *testing.T) {
+// tools/list と schema_revision がコミット済みのゴールデン（採取時は旧 Node 実装の出力、以後は前回コミットした
+// Go の出力）とバイト単位で一致すること。GKILL_MCP_UPDATE_GOLDEN=1 のときは先に書き直してから比べる。
+func TestGoldenToolsListMatchesTheCommittedGoldenByteForByte(t *testing.T) {
 	for _, kind := range ServerKinds {
 		t.Run(kind, func(t *testing.T) {
-			server := NewServerForKind(kind, &mockClient{}, nil)
-			got := jsonobj.MarshalString(toolsToAny(server.Tools))
-			if updateGolden() {
-				writeGoldenFile(t, "tools_list_"+kind+".json", got+"\n")
-				writeGoldenFile(t, "schema_revision_"+kind+".txt", server.SchemaRevision+"\n")
-			}
-			expected := strings.TrimRight(readGoldenFile(t, "tools_list_"+kind+".json"), "\r\n")
-			if got != expected {
-				t.Fatalf("tools/list differs from the Node golden (kind=%s): got %d bytes, want %d bytes; first difference at %d", kind, len(got), len(expected), firstDifference(got, expected))
-			}
-			expectEqual(t, server.SchemaRevision, strings.TrimSpace(readGoldenFile(t, "schema_revision_"+kind+".txt")))
+			checkGoldenToolsList(t, kind)
 		})
+	}
+}
+
+func checkGoldenToolsList(t *testing.T, kind string) {
+	t.Helper()
+	server := NewServerForKind(kind, &mockClient{}, nil)
+	got := jsonobj.MarshalString(toolsToAny(server.Tools))
+	if updateGolden() {
+		writeGoldenFile(t, "tools_list_"+kind+".json", got+"\n")
+		writeGoldenFile(t, "schema_revision_"+kind+".txt", server.SchemaRevision+"\n")
+	}
+	expected := strings.TrimRight(readGoldenFile(t, "tools_list_"+kind+".json"), "\r\n")
+	if got != expected {
+		t.Fatalf("tools/list differs from the committed golden (kind=%s): got %d bytes, want %d bytes; first difference at %d", kind, len(got), len(expected), firstDifference(got, expected))
+	}
+	expectEqual(t, server.SchemaRevision, strings.TrimSpace(readGoldenFile(t, "schema_revision_"+kind+".txt")))
+}
+
+// 更新経路の自己検査。GKILL_MCP_UPDATE_GOLDEN=1 で一時ディレクトリへ書き直したゴールデンが、
+// 環境変数なしの比較で通り、かつコミット済みのゴールデンと同じバイト列であること
+// （＝ 更新経路と比較経路が同じ出力を扱っている。壊れていると「更新したのに赤い」か
+// 「更新で黙ってコミット済みと違う内容になる」のどちらかが起きる）。
+func TestGoldenUpdatePathRewritesAndThenMatches(t *testing.T) {
+	committedDir := goldenDir
+	goldenDir = t.TempDir()
+	t.Cleanup(func() { goldenDir = committedDir })
+
+	t.Setenv("GKILL_MCP_UPDATE_GOLDEN", "1")
+	for _, kind := range ServerKinds {
+		checkGoldenToolsList(t, kind) // 書き直してから比べる
+	}
+	t.Setenv("GKILL_MCP_UPDATE_GOLDEN", "")
+	for _, kind := range ServerKinds {
+		checkGoldenToolsList(t, kind) // 書き直したものと比べるだけ
+		for _, name := range []string{"tools_list_" + kind + ".json", "schema_revision_" + kind + ".txt"} {
+			rewritten, err := os.ReadFile(filepath.Join(goldenDir, name))
+			expectNoError(t, err)
+			committed, err := os.ReadFile(filepath.Join(committedDir, name))
+			expectNoError(t, err)
+			if string(rewritten) != string(committed) {
+				t.Fatalf("%s: 更新経路の出力がコミット済みのゴールデンと違う（first difference at %d）", name, firstDifference(string(rewritten), string(committed)))
+			}
+		}
 	}
 }
 

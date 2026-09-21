@@ -210,3 +210,31 @@ describe('reload_cloned_application_config', () => {
         ).toEqual(['folder', 'top_x', 'top_target', 'top_y'])
     })
 })
+
+// 8cafc11c で足した編集ダイアログへの入口。ダブルクリックと、存在しない id の扱い。
+describe('show_edit_mi_board_struct_dialog / onDblclickedItem', () => {
+    test('ダブルクリックは id があるときだけ編集ダイアログを開く', () => {
+        const { view } = create_view(make_tree())
+        const show = vi.fn()
+        view.edit_mi_board_struct_element_dialog.value = { show } as never
+
+        view.onDblclickedItem(new MouseEvent('dblclick'), null)
+        expect(show, 'id 無し（空白部分のダブルクリック）で開いている').not.toHaveBeenCalled()
+
+        view.onDblclickedItem(new MouseEvent('dblclick'), 'deep_target')
+        expect(show).toHaveBeenCalledTimes(1)
+        expect((show.mock.calls[0][0] as MiBoardStructElementData).id).toBe('deep_target')
+    })
+
+    test('ツリーに無い id では開かない（ダイアログの参照が無くても落ちない）', () => {
+        const { view } = create_view(make_tree())
+        const show = vi.fn()
+        view.edit_mi_board_struct_element_dialog.value = { show } as never
+
+        view.show_edit_mi_board_struct_dialog('no-such-board')
+        expect(show).not.toHaveBeenCalled()
+
+        view.edit_mi_board_struct_element_dialog.value = null as never
+        expect(() => view.show_edit_mi_board_struct_dialog('top_x')).not.toThrow()
+    })
+})

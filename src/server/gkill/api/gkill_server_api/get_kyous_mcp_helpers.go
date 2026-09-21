@@ -172,7 +172,7 @@ func (g *GkillServerAPI) revalidateMiEntriesAgainstOriginalWindow(ctx context.Co
 // applyMCPDataTypesFilter は DTO の data_type 文字列（mi_create / claude_conversation 等）の
 // 許可リストで結果を絞る。nil=未使用、非nil空=0件（FindQuery の null 意味論に揃える）。
 // FindQuery に足さずリクエストレベルなのは、和集合仕様の rep_types（Web の Mi 画面が依存）を
-// 触らずに Mi/MiReKyou/プラグインを直接絞る口を作るため（外部監査 S5/A2）。
+// 触らずに Mi/MiReKyou/プラグインを直接絞る口を作るため（指摘 S5/A2）。
 func applyMCPDataTypesFilter(kyous []reps.Kyou, dataTypes []string) []reps.Kyou {
 	if dataTypes == nil {
 		return kyous
@@ -194,13 +194,13 @@ func applyMCPDataTypesFilter(kyous []reps.Kyou, dataTypes []string) []reps.Kyou 
 // nil=未使用、非nil空=0件（FindQuery の null 意味論に揃える）。
 //
 // gkill_kftl / gkill_wear / gkill_mcp_readwrite / gkill_mcp_write / urlog_bookmarklet / git などの値が
-// 全レコードに入っているのに、引く手段だけが無かった（再監査）。
+// 全レコードに入っているのに、引く手段だけが無かった（2巡目の指摘）。
 //
 // **FindQuery に足していないのは意図的**。ReKyou / MiReKyou のワード委譲は
 // 利用者のクエリをそのまま下位検索へ流すので、この条件が SQL まで降りると
 // 「MCPで作ったリポストだが、リポスト先の記録はブラウザで作った」が
 // エラーも警告も無しに消える。rep名をSQLへ降ろすのを否決したのと同じ失敗クラス。
-// data_types が同じ理由でリクエストレベルに居る（外部監査 S5/A2）。
+// data_types が同じ理由でリクエストレベルに居る（指摘 S5/A2）。
 func applyMCPCreateAppsFilter(kyous []reps.Kyou, createApps []string) []reps.Kyou {
 	if createApps == nil {
 		return kyous
@@ -331,7 +331,7 @@ func applyMCPNumFilter(ctx context.Context, repositories *reps.GkillRepositories
 //
 // 3種の値は単位を無視して1本の数直線で比べられる（歩数の kc、円の nlog、0〜10 の lantana）。
 // スキーマの説明文には書いてあるが実行時には何も言わず、「気分が7以上の日」を数えたつもりで
-// 歩数7歩以上まで数えていた（実利用報告: num_min:7 だけで 数万件）。
+// 歩数7歩以上まで数えていた（実利用報告: num_min:7 だけで数万件）。
 // 結果が1種類だけなら曖昧さは無いので黙る（data_types で絞った呼び出しを毎回うるさくしない）。
 func mixedNumKindsWarning(matchedByKind map[string]int) string {
 	parts := make([]string, 0, 3)
@@ -719,8 +719,8 @@ func forMiWithoutProjectionWarning(query *find.FindQuery) string {
 // mi_sort_type は並び順の名前をしているが、実際は **カレンダー範囲・時間帯・曜日を
 // 照合する時刻軸** も決める(find_filter.go の refilterOverriddenKyousForMi)。
 // 対応する include_*_mi が立っていないとその軸には切り替わらず、指定は黙って無視され、
-// **件数だけが変わる**。実測では同じ1週間が limit_time 指定で15件、
-// estimate_start_time 指定で9件になった(レビュー)。
+// **件数だけが変わる**。実測では同じ1週間が limit_time 指定と
+// estimate_start_time 指定で別の件数になった(実利用のレビュー)。
 // 週次の集計をこれで作ると、間違いに気づく手がかりが一つも無い。
 func miSortTypeIgnoredWarning(query *find.FindQuery) string {
 	if !query.ForMi || query.MiSortType == "" {
@@ -903,7 +903,7 @@ func miProjectionWarning(query *find.FindQuery, dataTypes []string) string {
 		strings.Join(projections, ", "))
 }
 
-// collectMCPUnknownValueWarnings は「綴り違いのフィルタ値が黙って0件になる」問題（外部監査 S7）への
+// collectMCPUnknownValueWarnings は「綴り違いのフィルタ値が黙って0件になる」問題（指摘 S7）への
 // 防御。rep_types / tags / hide_tags / timeis_tags / reps / data_types の各値を既知集合と照合し、
 // 見つからなかった値を警告として列挙する。エラーにはしない（実在するが期間内に該当が無い、
 // という正当な0件と同じ経路を壊さないため）。照合用一覧の取得に失敗したときも

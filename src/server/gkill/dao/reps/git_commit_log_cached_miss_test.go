@@ -3,6 +3,7 @@ package reps
 import (
 	"context"
 	sqllib "database/sql"
+	"errors"
 	"path/filepath"
 	"sync/atomic"
 	"testing"
@@ -143,5 +144,61 @@ func TestGitCommitLogCachedBuiltCacheDoesNotFallBackOnMiss(t *testing.T) {
 	}
 	if got := stub.getGitCommitLogCalls.Load(); got != 2 {
 		t.Errorf("構築中は下層へフォールバックするはず: GetGitCommitLog calls = %d, want 2", got)
+	}
+}
+
+// failingBuildGitRep は下層の変更を報告するが、コミット本体の取り出しで失敗する stub。
+type failingBuildGitRep struct {
+	dupGitRep
+}
+
+func (f *failingBuildGitRep) LastUpdateCacheChanged() bool { return true }
+
+func (f *failingBuildGitRep) FindGitCommitLogByIDs(ctx context.Context, ids []string) ([]GitCommitLog, error) {
+	return nil, errors.New("simulated build failure")
+}
+
+// バックグラウンド構築が失敗した回は cacheBuilt を立てない。
+// キャッシュが部分的なまま「構築済み」になると、外れた ID が「無い」で即返り（フォールバックしない）、
+// 実在するコミットが黙って消える。失敗後は従来どおり下層へ落ちる形を保つ。
+func TestGitCommitLogCachedBackgroundBuildFailureKeepsFallback(t *testing.T) {
+	ctx := context.Background()
+	stub := &failingBuildGitRep{dupGitRep: dupGitRep{commits: []GitCommitLog{newTestGitCommit("commit-01")}}}
+	db, err := sqllib.Open("sqlite", filepath.Join(t.TempDir(), "git_bg_fail.db")+"?_txlock=immediate&_pragma=busy_timeout(6000)")
+	if err != nil {
+		t.Fatalf("open db: %v", err)
+	}
+	t.Cleanup(func() { db.Close() })
+	cachedRep, err := NewGitRepCachedSQLite3Impl(ctx, GitCommitLogRepositories{stub}, db, nil, "GIT_COMMIT_LOG_BG_FAIL_TEST")
+	if err != nil {
+		t.Fatalf("NewGitRepCachedSQLite3Impl() error: %v", err)
+	}
+	impl := cachedRep.(*gitCommitLogRepositoryCachedSQLite3Impl)
+
+	// 同期の構築が失敗したら UpdateCache はエラーで返り、cacheBuilt は立たない
+	if err := impl.UpdateCache(ctx); err == nil {
+		t.Fatal("同期の構築失敗が UpdateCache のエラーになっていない")
+	}
+	if !impl.shouldFallbackOnMiss() {
+		t.Fatal("同期の構築が失敗したのに cacheBuilt が立っている")
+	}
+
+	// 初回フルリビルドをバックグラウンドへ回す設定（本番の persistent 版と同じ）でも同じ
+	impl.backgroundUpdate = true
+	if err := impl.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache() error: %v", err)
+	}
+	deadline := time.Now().Add(10 * time.Second)
+	for impl.isCacheBuilding.Load() && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if impl.isCacheBuilding.Load() {
+		t.Fatal("バックグラウンド構築が終わらない")
+	}
+	if !impl.shouldFallbackOnMiss() {
+		t.Fatal("構築が失敗したのに cacheBuilt が立っている（外れた ID が「無い」で即返り、実在のコミットが消える）")
+	}
+	if got := impl.lastUpdateCacheChanged.Load(); !got {
+		t.Errorf("lastUpdateCacheChanged = %v, want true（構築を始めたことは報告する）", got)
 	}
 }

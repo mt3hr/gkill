@@ -176,6 +176,13 @@ func runMCP(cmd *cobra.Command, _ []string) error {
 		Port:           settings.Port,
 		BindAddr:       settings.BindAddr,
 		OAuthIssuer:    settings.OAuthIssuer,
-		OAuthStatePath: filepath.Join(os.ExpandEnv(gkill_options.ConfigDir), spec.OAuthStateFileName),
+		OAuthStatePath: mcpOAuthStatePath(spec),
 	})
+}
+
+// mcpOAuthStatePath は OAuth の状態ファイル（DCR クライアント・refresh token）の置き場所。
+// $GKILL_HOME/configs/ 配下、名前は種別ごと（spec.OAuthStateFileName）。ConfigDir は未展開の
+// "$HOME/gkill/configs" なので、ここで環境変数を展開する。
+func mcpOAuthStatePath(spec mcp.StartSpec) string {
+	return filepath.Join(os.ExpandEnv(gkill_options.ConfigDir), spec.OAuthStateFileName)
 }

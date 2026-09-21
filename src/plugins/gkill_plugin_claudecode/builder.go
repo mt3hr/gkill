@@ -15,7 +15,7 @@ import (
 //   - 一覧は find_kyous 1回のあとに行数ぶんの get_content_html が
 //     1本のスロットに並ぶので、3秒かかるハンドラでも4件目から順番待ちが破綻する
 //
-// 実データ(146MB規模)の初回構築は数十秒かかる。同期でやると必ず殺される。
+// 実データ(百MB超)の初回構築は数十秒かかる。同期でやると必ず殺される。
 // 以前の cache.go は GetMessages が単一 mutex 下で refresh を同期実行しており、
 // デッドラインで kill→ロールバック→進捗ゼロ→次の find_kyous でまた最初から、の
 // 無限ループに陥っていた。同梱の gkill_plugin_codex の常駐ビルダ方式へ揃える。
@@ -73,9 +73,12 @@ func (b *builder) runOnce(pluginDir string, src expandedSource) {
 // buildOnce は走査→取り込み→畳み直しを1周し、失敗を cache_meta に残してから返す。
 // 常駐ビルダ（runOnce）と単独モード（Handler.BuildCache。gkill_server generate_plugin_cache）の
 // 両方がここを通るので、どちらで失敗しても設定画面の build_state は同じ見え方になる。
+// buildCacheFn は buildOnce が呼ぶ本体。テストが差し替えて失敗経路（cache_meta への記録と ERROR 行）を見る。
+var buildCacheFn = func(pluginDir string, src expandedSource) error { return globalCache.build(pluginDir, src) }
+
 func buildOnce(pluginDir string, src expandedSource) error {
 	started := time.Now()
-	if err := globalCache.build(pluginDir, src); err != nil {
+	if err := buildCacheFn(pluginDir, src); err != nil {
 		globalCache.setMeta("build_state", "error")
 		globalCache.setMeta("build_error", err.Error())
 		sdk.LogError("%s: build error: %v", appName, err)

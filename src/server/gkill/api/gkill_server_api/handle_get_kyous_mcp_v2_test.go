@@ -213,7 +213,7 @@ func TestHandleGetKyousMCP_DataTypesFilterAndUnknownWarns(t *testing.T) {
 	}
 }
 
-// 未知のフィルタ値(rep_types / tags)の警告。綴り違いが黙って0件になる監査S7への防御。
+// 未知のフィルタ値(rep_types / tags)の警告。綴り違いが黙って0件になる指摘S7への防御。
 func TestHandleGetKyousMCP_UnknownFilterValueWarns(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -459,7 +459,7 @@ func TestHandleGetKyousMCP_RemainingCountSemantics(t *testing.T) {
 	}
 }
 
-// 再監査 事象7: 「MCP で書いた記録」だけを絞る手段が無かった。
+// 2巡目の指摘 事象7: 「MCP で書いた記録」だけを絞る手段が無かった。
 // create_app は全レコードに入っているのに、引く口だけが無かった。
 func TestApplyMCPCreateAppsFilter(t *testing.T) {
 	kyous := []reps.Kyou{
@@ -745,7 +745,7 @@ func TestHandleGetKyousMCP_WithoutForMiDoesNotWarnAboutProjectionFlags(t *testin
 // 付随 TimeIs は ID と時刻を持つ。
 //
 // 以前は Title と Tags だけで、同じ題名の打刻が1つの応答に何度並んでも
-// 区別も特定もできなかった（実測で lantana 3件に対し付随 TimeIs 90件、
+// 区別も特定もできなかった（実測で lantana 数件に対し付随 TimeIs が数十件、
 // 同じ題名が何度も並んだ）。「記録時に何が走っていたか」を知る機能なのに時刻が無く、
 // 実質「その日に存在した打刻の題名一覧」だった（実利用レビュー）。
 //
@@ -802,7 +802,7 @@ func TestTimeIsMCPDTO_OmitsEndTimeWhileRunning(t *testing.T) {
 //
 // FindTimeIs は rep の直叩きで IS_DELETED を見ないため、落とさないと
 // 「終了記録ごと消した未終了の打刻」が開始時刻以降のあらゆる記録へ永久に付く。
-// 本番実測: ある kmemo に付いた付随 TimeIs 大半が削除済みで、
+// ある日の本番の実測: ある kmemo に付いた付随 TimeIs 十数件の大半が削除済みで、
 // 最古は年単位で前の開始。同じ瞬間を playing_time で引くと数件しか返らなかった。
 //
 // livePlayingTimeIsCandidates の中身を「そのまま返す」に戻すとこのテストが落ちる。
@@ -950,7 +950,7 @@ func TestNotificationMCPDTO_CarriesID(t *testing.T) {
 
 // mi_sort_type は「並び順」の名前をしているが、カレンダー範囲・時間帯・曜日を
 // 照合する時刻軸も決める。対応する include_*_mi を立てていないと黙って無視され、
-// 並び順ではなく **件数** が変わる（実測で同じ1週間が 15件 と 9件 に割れた）。
+// 並び順ではなく **件数** が変わる（実測で同じ1週間の件数が割れた）。
 // 警告を消すとこのテストが落ちる。
 func TestMiSortTypeIgnoredWarning(t *testing.T) {
 	cases := []struct {
@@ -1248,7 +1248,7 @@ func TestHandleGetKyousMCP_DataTypesAcceptsEntityNames(t *testing.T) {
 }
 
 // num_min / num_max の結果に kc / nlog / lantana が混ざったら警告する（単位の無い1本の軸で比べているため）。
-// 1種類だけなら黙る。実利用報告: num_min:7 だけで気分・歩数・円が混ざって 数万件。
+// 1種類だけなら黙る。実利用報告: num_min:7 だけで気分・歩数・円が混ざって数万件。
 func TestHandleGetKyousMCP_NumFilterWarnsWhenKindsMix(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()

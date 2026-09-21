@@ -67,12 +67,32 @@ func runFakeBuildPlugin(mode string) {
 	os.Exit(0)
 }
 
-func TestGeneratePluginCacheCmdNotNil(t *testing.T) {
-	if GeneratePluginCacheCmd == nil {
-		t.Fatal("GeneratePluginCacheCmd should not be nil")
-	}
+// TestGeneratePluginCacheCmdRequiresPluginAndUser は引数が2つ未満なら usage を出して終わり、
+// サーバ側の初期化（InitGkillServerAPI = 利用者の configs DB を開く）へ進まないことを固定する。
+// 引数の並びは clear_cache <mode> <user_id...> と同じ「<plugin_name|all> <user_id...>」。
+func TestGeneratePluginCacheCmdRequiresPluginAndUser(t *testing.T) {
 	if GeneratePluginCacheCmd.Use != "generate_plugin_cache" {
-		t.Errorf("Use = %q, want generate_plugin_cache", GeneratePluginCacheCmd.Use)
+		t.Fatalf("Use = %q, want generate_plugin_cache", GeneratePluginCacheCmd.Use)
+	}
+	for _, args := range [][]string{{}, {"all"}} {
+		var out bytes.Buffer
+		GeneratePluginCacheCmd.SetOut(&out)
+		GeneratePluginCacheCmd.SetErr(&out)
+		t.Cleanup(func() {
+			GeneratePluginCacheCmd.SetOut(nil)
+			GeneratePluginCacheCmd.SetErr(nil)
+		})
+		before := gkillServerAPI
+		err := GeneratePluginCacheCmd.RunE(GeneratePluginCacheCmd, args)
+		if err != nil {
+			t.Errorf("args=%v: usage を出すだけのはずがエラー: %v", args, err)
+		}
+		if !strings.Contains(out.String(), "generate_plugin_cache") {
+			t.Errorf("args=%v: usage が出ていない: %q", args, out.String())
+		}
+		if gkillServerAPI != before {
+			t.Errorf("args=%v: 引数不足なのに InitGkillServerAPI まで進んだ", args)
+		}
 	}
 }
 

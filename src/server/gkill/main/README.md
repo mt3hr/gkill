@@ -14,7 +14,7 @@ main/
 │   ├── common_test.go         # common.go のテスト
 │   ├── mcp.go                 # mcp サブコマンド（gkill_server mcp --kind …。実装は gkill/mcp パッケージ）
 │   ├── mcp_test.go            # mcp.go のテスト
-│   ├── gkill_log/             # ログシステム（実装7 + テスト4）
+│   ├── gkill_log/             # ログシステム（実装8 + テスト5）
 │   │   ├── gkill_log.go       # ログ初期化（Init / InitNamed）
 │   │   ├── level.go           # ログレベル定義（8レベル）
 │   │   ├── router.go          # ログルーティング
@@ -79,7 +79,7 @@ go-astilectron を使用して Electron ライクなデスクトップウィン�
 - GkillDAOManager の初期化
 - HTTP サーバの起動
 
-### `gkill_log/`（11ファイル）— ログシステム
+### `gkill_log/`（13ファイル）— ログシステム
 
 `log/slog` ベースのカスタムマルチレベルログ（TraceSQL, Trace, Debug, Access, Info, Warn, Error, None の8レベル）。
 レベル別ファイル分割、統合ログ、stdout ミラーリング、ホットスワップ、サイズ上限による世代回転に対応。

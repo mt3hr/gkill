@@ -77,3 +77,12 @@ func TestMergeFoldedSources(t *testing.T) {
 		t.Errorf("連結 = %q / %q / %q", merged.hourSums, merged.hourCounts, merged.sourcePaths)
 	}
 }
+
+// secondary に同じ名前を重ねて書いても、先に書いたほうの順位が効く（後ろの重複で順位が下がらない）。
+func TestChooseDataSourcesDuplicateSecondaryKeepsFirstRank(t *testing.T) {
+	secondary := []string{"Phone Health Connect", "Google Health App", "phone health connect"}
+	got := sourceNames(chooseDataSources(namedSources("Google Health App", "Phone Health Connect"), secondary))
+	if !reflect.DeepEqual(got, []string{"Phone Health Connect"}) {
+		t.Errorf("chooseDataSources = %v, want [Phone Health Connect]（先頭の順位が効く）", got)
+	}
+}

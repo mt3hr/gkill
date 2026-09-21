@@ -36,7 +36,12 @@ func main() {
 
 	pluginDir := extractPluginDir(os.Args)
 
-	sdk.Run(sdk.Handler{
+	sdk.Run(newHandler(pluginDir))
+}
+
+// newHandler はハンドラ束を組む。main と、単独モード（BuildCache）や PostConfig を直接呼ぶテストが共有する。
+func newHandler(pluginDir string) sdk.Handler {
+	return sdk.Handler{
 		RepName:       repName,
 		DefaultConfig: defaultConfig(),
 
@@ -104,7 +109,7 @@ func main() {
 			config := configOf(pluginDir, cfg)
 			startBuilder(pluginDir, cfg)
 			// ここでZIPを開き直さない。ハンドラは数十ミリ秒で返す必要があり、
-			// 3.7GBぶんの中央ディレクトリを読むと死活確認の期限(5秒)を割る。
+			// 数GBぶんの中央ディレクトリを読むと死活確認の期限(5秒)を割る。
 			// 走査結果はビルダが cache_meta に書き残したものを読む。
 			return renderConfigHTML(pluginDir, config, globalCache.Stats(pluginDir, config)), nil
 		},
@@ -152,7 +157,7 @@ func main() {
 			globalBuilder.Kick()
 			return cfg, nil
 		},
-	})
+	}
 }
 
 // startBuilder はバックグラウンドのビルダを起動し、作り直しを促す。
