@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-25 |
-| Sources | 2026-08-25 の実利用レビュー（`is_include_timeis` が削除済みの打刻を添付する）と、本番アカウントでの実測 |
+| Sources | 実利用レビュー（`is_include_timeis` が削除済みの打刻を添付する）と、本番アカウントでの実測 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go`（`livePlayingTimeIsCandidates` / `timeIsCoversMoment`）/ `src/server/gkill/api/gkill_server_api/handle_get_kyous_mcp.go`（付随 TimeIs の取得と添付） |
@@ -64,7 +64,7 @@ gkill で削除済みを落としているのは `find_filter.go` の Kyou 集�
 - **付随打刻も `FindFilter.FindKyous` を通す（Web と同じ経路に寄せる）** — 1ページの Kyou それぞれの
   `related_time` について検索を投げることになり、20件のページで20回の全文検索になる。
   現在の「一度だけ引いて Go 側で照合」のほうが桁で速い。**寄せるのは規則であって経路ではない**
-- **取得時に期間で絞って全件走査をやめる** — 走査対象は本番で28,435件あり、
+- **取得時に期間で絞って全件走査をやめる** — 走査対象は本番で数万件あり、
   `Kyou数 × 28,435` 回の比較になる。しかし絞るには「ページの時間範囲を覆う打刻」を SQL で表す必要があり、
   `FindQuery` にあるのは点の `PlayingTime` だけで範囲版が無い。期間で素直に絞ると
   **窓より前に始まった打刻が落ちる**（それこそが「走っている」打刻）。SQL の新設が要るので今回は見送り、
@@ -92,7 +92,7 @@ gkill で削除済みを落としているのは `find_filter.go` の Kyou 集�
 - `is_include_timeis:true` で1件の kmemo に付いた打刻が16件。`playing_time` に同じ瞬間を渡すと2件
 - 混ざっていた打刻のひとつを `gkill_get_kyou_history` で引くと `latest_is_deleted: true`、
   `end_time: null`、開始は2025-08-14（1年前）
-- 生存する `timeis_start` の全期間件数は28,435件。`is_include_timeis:true` は毎回この全行を読む
+- 生存する `timeis_start` の全期間件数は数万件。`is_include_timeis:true` は毎回この全行を読む
 
 修正の検証: `livePlayingTimeIsCandidates` の `IsDeleted` スキップを外すと
 `TestLivePlayingTimeIsCandidates_DropsDeleted` と `..._AllDeleted` が落ちる（実施済み）。

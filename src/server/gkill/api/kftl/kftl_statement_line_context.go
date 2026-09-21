@@ -28,7 +28,7 @@ type KFTLStatementLineContext struct {
 
 	// LineIndex は元テキストでの0始まりの行位置。エラーへ「何行目か」を添えるためだけに持つ。
 	// TS 側には不正行の位置を返す get_invalid_line_indexs があるのに Go 側には無く、
-	// 失敗の原因行が呼び出し側へ一切伝わっていなかった（2026-08-24 の再監査）。
+	// 失敗の原因行が呼び出し側へ一切伝わっていなかった（2巡目の指摘）。
 	LineIndex int
 
 	NextStatementLineText     string

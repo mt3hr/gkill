@@ -43,7 +43,7 @@ type PluginRepository interface {
 
 	// LastStderr はプラグインプロセスの stderr 末尾（直近約4KB）を返す。
 	// ビルドエラー等の診断用で、何も出ていなければ空文字。
-	// 「is_alive=true なのに0件」の理由をAPIから読めるようにする（外部監査 D2）。
+	// 「is_alive=true なのに0件」の理由をAPIから読めるようにする（指摘 D2）。
 	LastStderr() string
 
 	// ProcessRunning はプロセスが起動済みかを副作用なしで返す。

@@ -13,13 +13,13 @@
 
 `npm run release` はテストを実行しない（成果物の存在・SHA-256・APK 署名の検証だけ）。
 「直近の Nightly が green で、ローカルの `npm test` も green のコミットだけリリースする」という規約は
-2026-08-30 監査 F-009 の対応で `documents/reverse/operations-guide.md` に**文章として**書かれたが、
+指摘 F-009 の対応で `documents/reverse/operations-guide.md` に**文章として**書かれたが、
 守られているかを確かめる仕組みが無く、リリースする人の記憶に依存していた。
 
-同じ監査の F-006 は、それまで正式配布していた APK 3 本が `assembleDebug` の成果物を配布名へ rename した
+同じ指摘の F-006 は、それまで正式配布していた APK 3 本が `assembleDebug` の成果物を配布名へ rename した
 もの（debug 鍵署名・minify 無し）だったことを見つけている。リリース工程の検証ギャップは仮定ではなく実在した。
 
-2026-09 の外部フィードバック #10「リリース工程に人間の記憶を要求している。守るべき条件なら機械で強制すべき。
+外部フィードバック「リリース工程に人間の記憶を要求している。守るべき条件なら機械で強制すべき。
 テスト済み commit SHA の attestation が無ければ release 不可、くらいまでやっていい」を受けて設計した。
 
 前提となる実測:
@@ -70,7 +70,7 @@ attestation は commit SHA ではなく**作業ツリーの tree hash**に束縛
 - **クリーン判定に `git status --porcelain` を使う** — WSL では CRLF のサイズ差だけで偽 dirty になる
   （上記の実測）。`git diff --name-only HEAD` + `ls-files --others --exclude-standard` にした
 - **GitHub Actions でリリース成果物を作る（provenance attestation を使う）** — NDK・署名鍵・7za・WSL 前提を
-  丸ごと CI へ移す大改修で、2026-08-30 監査の F-012（SBOM / provenance）でも見送っている
+  丸ごと CI へ移す大改修で、指摘の F-012（SBOM / provenance）でも見送っている
 - **リポジトリ外の配置スクリプトにもゲートを入れる** — 別リポジトリなので本 ADR の
   範囲外（ユーザー決定）。資料で「呼ぶ側で `npm run verify_release_gate` を先に実行する」と案内するに留める
 
@@ -101,7 +101,7 @@ attestation は commit SHA ではなく**作業ツリーの tree hash**に束縛
 - 導入直後のゲート実行（2026-09-14）: HEAD の CI は success だったが、直近 Nightly（`ec4892e`）以後に
   `src/plugins/gkill_plugin_archived_git_commit_log/go.mod` が追加されていたため Nightly の NG で止まった。
   「依存の宣言が変わっているのに Nightly を通していない」を機械が初めて指摘した実例
-- 同日、導入前の HEAD `6f7b98cf` は Linux の Go テスト 1 件で CI が赤だった。旧規約のままなら人が気付かない限り
+- 同日、導入前の HEAD `c3ebe02f` は Linux の Go テスト 1 件で CI が赤だった。旧規約のままなら人が気付かない限り
   リリースできていた
 
 ## Related tests

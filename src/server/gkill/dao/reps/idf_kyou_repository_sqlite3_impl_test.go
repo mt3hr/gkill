@@ -493,7 +493,7 @@ func TestIDFKyouFindIDFKyou_DoesNotSearchAbsolutePath(t *testing.T) {
 //
 // rep ディレクトリへ置いただけのファイルは IDF() が走るまで検索に出ず、
 // 定期実行も監視も警告も無いので、「0件」が取り込み待ちなのか本当に無いのかを
-// get_rep_infos の indexed_at で呼び出し側に判断させる（2026-08-24 の再監査）。
+// get_rep_infos の indexed_at で呼び出し側に判断させる（2巡目の指摘）。
 // 検索のたびにディレクトリを全走査して未採番を数える実装にしないこと（実データは数十万行規模）。
 func TestIDFKyouIndexUpdatedAt(t *testing.T) {
 	repo, contentDir := newIDFRepForBatchTest(t)

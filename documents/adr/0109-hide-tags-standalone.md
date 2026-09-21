@@ -18,8 +18,8 @@
 Webクライアントは `hide_tags` を ApplicationConfig の強制非表示タグ（`is_force_hide`）から
 組み立てて**常に `tags` と同時に送る**ため、このゲートは一度も露呈しなかった。
 一方MCPスキーマは `hide_tags` を "Explicit tag exclusion list" と単独で使える体で宣言しており、
-1年分の外部監査で「`tags` 未指定 + `hide_tags` 指定が、エラーも警告も出さずに
-1件も除外しない」ことが実測で確定した（total_count 2,289 が hide_tags を足しても不変、
+1年分の指摘で「`tags` 未指定 + `hide_tags` 指定が、エラーも警告も出さずに
+1件も除外しない」ことが実測で確定した（数千件の total_count が hide_tags を足しても不変、
 先頭行が除外対象タグ持ちのまま）。
 
 ## Decision
@@ -55,8 +55,8 @@ Webクライアントは `hide_tags` を ApplicationConfig の強制非表示タ
 
 ## Evidence
 
-- 監査実測: `{calendar 8/13-8/22, rep_types:["timeis"]}` の total_count 2,289 に
-  `hide_tags:["autolog_device"]` を足しても 2,289 のまま、kyous[0] は
+- 点検での実測: `{calendar 8/13-8/22, rep_types:["timeis"]}` の total_count（数千件）に
+  `hide_tags:["autolog_device"]` を足しても同じ値のまま、kyous[0] は
   `tags:["autolog_device"]` だった（エラー・メッセージ無し）
 - 改修後: tags 無し × SQL経路/Go照合経路（名前33個で閾値超え）の両方で除外が効くことを
   E2E で固定

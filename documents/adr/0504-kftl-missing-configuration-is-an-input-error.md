@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-25 |
-| Sources | 2026-08-25 の実利用レビュー（「KFTL の `~~` が MCP 経由で常に失敗する」）と、`user_config.db` / アクセスログ / 実データによる原因特定 |
+| Sources | 実利用レビュー（「KFTL の `~~` が MCP 経由で常に失敗する」）と、`user_config.db` / アクセスログ / 実データによる原因特定 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/kftl/kftl_mirekyou.go`（`DoRequest` の事前検査）/ `src/server/gkill/api/kftl/kftl_statement.go`（実行ループの `errors.As`） |

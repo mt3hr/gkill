@@ -164,6 +164,15 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 正常時には集約行を出さない。書き込み先の失敗など処理を続けられない場合は、認証ミドルウェアから
 `ERR000018` と HTTP 500 を返し、同じ原因を Error レベルで記録する。
 
+**タイムゾーンの不一致:** 起動時に SQLite の `'localtime'` と Go の `time.Local` を同じ瞬間で突き合わせ、
+食い違っていれば `gkill_error.log` へ両方の壁時計の値と直し方（`hint`）を1行だけ残す（起動は止めない）。
+食い違う環境では時間帯フィルタだけがエラーも警告も出さずに常に0件になるので、ここが唯一の痕跡
+（[運用ガイド 7.7](operations-guide.md#77-時間帯で絞ると常に0件になるandroid--termux)、ADR-0220）。
+
+**プラグインのログ:** プラグインは SDK 経由で `logs/gkill_plugin_<プラグイン名>*.log`（統合 + レベル別）へ書く。
+レベルと回転は本体の `--log` / `--log_rotate_*` を環境変数（`GKILL_LOG_LEVEL` ほか）で継ぐ。
+stderr の `WARN:` / `ERROR:` 行は本体の `last_error`（設定画面の「状態」）向けにそのまま残る（ADR-0313）。
+
 **機密値のマスク:** TraceSQL ログ（`gkill_trace_sql.log`）に出力される SQL バインド値のうち、機密値（Google Map 等の APIキー、TLS 秘密鍵、パスワードハッシュ、パスワードリセットトークン、セッションID）はマスクされて記録される（`account_dao_sqlite3_impl.go`・`server_config_dao_sqlite3_impl.go`・`sqlite3impl_util.go`）。
 
 ---

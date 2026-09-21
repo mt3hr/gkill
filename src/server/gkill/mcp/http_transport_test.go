@@ -246,7 +246,7 @@ func TestOAuthScopeBoundary(t *testing.T) {
 	t.Run("a legacy token with a foreign scope gets 403 insufficient_scope", func(t *testing.T) {
 		oauth := makeOAuth(t, "gkill:readwrite")
 		server := NewReadWriteServer(createTransportMockClient(), nil)
-		// 403 の監査イベントは運用者が scope 拒否を知る唯一の窓なので、応答と一緒に固定する。
+		// 403 の記録は運用者が scope 拒否を知る唯一の窓なので、応答と一緒に固定する。
 		logger, recorder := newRecordingLogger()
 		server.Log = logger
 		transport := mustTransport(t, server, 0, oauth, HttpTransportOptions{})
@@ -405,7 +405,7 @@ func TestHandleFileServeSecurityHeaders(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// 2026-08-30 監査 F-003 / F-004: ボディ上限・明示タイムアウト・ログのクエリ除去
+// 指摘 F-003 / F-004: ボディ上限・明示タイムアウト・ログのクエリ除去
 // ---------------------------------------------------------------------------
 func TestBodyCapsExplicitTimeoutsAndLogQueryRedaction(t *testing.T) {
 	t.Run("collectBody cuts an over-limit body with 413 and resolves null", func(t *testing.T) {

@@ -47,7 +47,7 @@ ADR-0605 で1件ずつ読み返す手段（`gkill_get_kyou_history`）は用意�
   **この却下は [ADR-0111](0111-drop-never-implemented-query-fields.md) が覆した** ―― 前提にしていた
   「送っているクライアントがいるかもしれない」を確かめておらず、実測すると送信元は
   全 git 履歴・出荷バンドル・稼働中DBのいずれにも存在しなかった。
-  黙って無視するのは監査が問題にした静かな失敗そのもので、弾くほうが正しい
+  黙って無視するのは指摘が問題にした静かな失敗そのもので、弾くほうが正しい
 
 ## Consequences
 
@@ -66,7 +66,7 @@ ADR-0605 で1件ずつ読み返す手段（`gkill_get_kyou_history`）は用意�
 
 ## Evidence
 
-2026-08-23 の readwrite MCP 監査（実測）:
+readwrite MCP の点検（実測）:
 
 - D-1 の件数が、通常検索でも `is_deleted:true` を付けても **どちらも20件**（増えない）
 - 削除した mi をボード検索 + `mi_check_state:"all"` + `is_deleted:true` で引いても出ない

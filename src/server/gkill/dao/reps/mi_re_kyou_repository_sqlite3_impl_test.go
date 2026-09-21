@@ -308,7 +308,7 @@ func TestMiReKyouGetHistories(t *testing.T) {
 	}
 }
 
-// GetKyou(id, nil) が「最新版」を返すことを固定する（外部監査 H-07 の水平展開）。
+// GetKyou(id, nil) が「最新版」を返すことを固定する（指摘 H-07 の水平展開）。
 // ここは「単体取得は &kyous[0] を返さず slices.MaxFunc(UpdateTime) で選ぶ」規則から
 // 外れた最後の2箇所のうちの1つだった（もう1箇所は mi の cached。そちらは
 // get_typed_latest_version_test.go / mi_projection_preference_test.go が守る）。

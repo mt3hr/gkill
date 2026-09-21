@@ -47,8 +47,8 @@ delete / restore / history が受理するのはエンティティ名（`timeis`
 
 ## Evidence
 
-- 報告値（2026-09-11〜17 の実データ）: `["timeis"]` 0件・警告なし / `["timeis_start"]` 1,389件 /
-  `["mi"]` 0件・警告なし / `["zzz_bogus"]` 0件・警告あり / `["timeis","mi","idf"]` 1,740件 = idf 単体と同じ
+- 報告値（2026-09-11〜17 の実データ）: `["timeis"]` 0件・警告なし / `["timeis_start"]` 千数百件 /
+  `["mi"]` 0件・警告なし / `["zzz_bogus"]` 0件・警告あり / `["timeis","mi","idf"]` 千数百件 = idf 単体と同じ
 - 修正後の回帰テスト: `["timeis"]` = `["timeis_start","timeis_end"]` の件数、`["mi"]` = タスク数、
   `["timeis","mi","kmemo"]` = 3種の合計、`["zzz_bogus"]` の警告は維持
 

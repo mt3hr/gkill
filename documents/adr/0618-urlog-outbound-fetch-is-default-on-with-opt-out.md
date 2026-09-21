@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-30 |
-| Sources | 2026-08-30 の MCP レビュー（AI からのブックマーク登録が無断の外向き通信になる指摘）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「書き込みの後付けフラグはリクエストの修飾子であって、エンティティの列ではない。」 |
+| Sources | MCP レビュー（AI からのブックマーク登録が無断の外向き通信になる指摘）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「書き込みの後付けフラグはリクエストの修飾子であって、エンティティの列ではない。」 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/mcp/write_tools.go`（`gkill_add_urlog` の `fetch_metadata` / `fetch_favicon`）/ `src/server/gkill/mcp/write_handlers.go`（`skip_fetch_*` への反転）/ `src/server/gkill/api/gkill_server_api/handle_add_urlog.go` / `src/server/gkill/api/req_res/add_ur_log_request.go`（`skip_fetch_metadata` / `skip_fetch_favicon`）/ `src/server/gkill/dao/reps/ur_log.go`（`FillURLogFieldSkipping`） |
@@ -67,7 +67,7 @@ URL が社内システムやワンタイムリンクだと、取得自体が副�
 
 - 2026-08-30 レビュー: 「ブックマーク保存 = 対象サイトへの通信」が AI クライアントから
   制御できず、説明文にも書かれていなかった
-- 実装コミット 65c58bce（Go 側 `FillURLogFieldSkipping` + MCP フラグ + reps 層テスト）
+- 実装コミット 3568e192（Go 側 `FillURLogFieldSkipping` + MCP フラグ + reps 層テスト）
 
 ## Related tests
 

@@ -12,17 +12,17 @@
 ## Context
 
 「`generate_plugin_cache all <user>` は本当にキャッシュを作れているのか。archived_git が怪しい。画面からの読み込みがめっちゃ遅い」
-という報告から調べた。プラグインのキャッシュは正常だった（`result = built`、cache.db は repo 97 / commit 3,447 /
-`build_state idle`、サーバの `typed_index` も ok / 3,447 件）。遅さの正体は native 側にあった。
+という報告から調べた。プラグインのキャッシュは正常だった（`result = built`、cache.db は repo 数十 / commit 数千 /
+`build_state idle`、サーバの `typed_index` も ok / 同じ件数）。遅さの正体は native 側にあった。
 
-rykv を「記録分類 = Git」だけで開くと 5,547 行（うち archived プラグイン由来 3,447 行）で、実測は
-`get_kyous` 19 秒、行ごとの `get_git_commit_log` が平均 6.7 秒・最大 20 秒、`get_tags_by_id` すら 3〜6 秒。
-サーバは 2〜5 コアを 45 分間使い続け（約 7 秒周期の鋸波）、接続が 0 本になると同時に止まった。
-再起動直後の事前ロードは CPU 累計 149 秒・約 2.5 分で終わるので、起動時の内部処理ではない。
+rykv を「記録分類 = Git」だけで開くと数千行（過半が archived プラグイン由来）で、実測は
+`get_kyous` 十数秒、行ごとの `get_git_commit_log` が平均数秒・最大 20 秒程度、`get_tags_by_id` すら数秒。
+サーバは複数コアを数十分使い続け（数秒周期の鋸波）、接続が 0 本になると同時に止まった。
+再起動直後の事前ロードは数分で終わるので、起動時の内部処理ではない。
 
-待機中のサーバで 1 要求ずつ測ると、`/api/get_git_commit_log` は native のハッシュで 9〜16 ms、
-**archived プラグインのハッシュで 1,055〜1,127 ms、存在しないハッシュで 1,018 ms**。Git 限定の `get_kyous` は
-5,547 件で 87〜99 ms、`get_tags_by_id` は 10 ms。つまり「キャッシュに無い ID」のときだけ約 1 秒の実処理が走る。
+待機中のサーバで 1 要求ずつ測ると、`/api/get_git_commit_log` は native のハッシュで十数 ms、
+**archived プラグインのハッシュで約 1 秒、存在しないハッシュでも約 1 秒**。Git 限定の `get_kyous` は
+数千件で 100 ms 弱、`get_tags_by_id` は十数 ms 以下。つまり「キャッシュに無い ID」のときだけ約 1 秒の実処理が走る。
 
 原因は2段。
 
@@ -30,7 +30,7 @@ rykv を「記録分類 = Git」だけで開くと 5,547 行（うち archived �
    SQL の結果が 0 件だと「キャッシュ未構築など」のつもりで下層の集約 `GitCommitLogRepositories` へ逐次
    フォールバックしていた。`isCacheBuilding` とは別に、**構築済みでも**無条件に落ちる。
 2. 下層の `gitCommitLogRepositoryLocalImpl` は `Log(From: hash)` が失敗（そのリポジトリにそのハッシュが無い）すると
-   `Log(All: true)` で**全履歴を走査**して切り分けていた。外れた ID 1 件につき 18 リポジトリ×約 4,260 コミットを復号する。
+   `Log(All: true)` で**全履歴を走査**して切り分けていた。外れた ID 1 件につき十数リポジトリ×数千コミットを復号する。
 
 `GitCommitLogReps` は [キャッシュ包装, プラグインアダプタ] の集約で（ADR-0309）、プラグインのコミットは
 アダプタが即答する一方、キャッシュ包装側は必ず外れて毎回この走査を踏む。`provides: ["git_commit_log"]` を持つ
@@ -67,8 +67,8 @@ rykv を「記録分類 = Git」だけで開くと 5,547 行（うち archived �
 
 ## Consequences
 
-- 待機中サーバの `/api/get_git_commit_log`（archived プラグインのハッシュ）は約 1.1 秒 → SQL 1 回＋索引 1 回。
-  存在しないハッシュも同じ。native のハッシュは変わらず 9〜16 ms。
+- 待機中サーバの `/api/get_git_commit_log`（archived プラグインのハッシュ）は約 1 秒 → SQL 1 回＋索引 1 回。
+  存在しないハッシュも同じ。native のハッシュは変わらず十数 ms。
 - 構築済みのキャッシュにまだ載っていない新しいコミット（次の `UpdateCache` まで）は `GetGitCommitLog` で nil になる。
   検索（`FindKyous`）も同じキャッシュから返すので、一覧に出ない行を引かれることはない。
 - 守るテスト: `git_commit_log_cached_miss_test.go`（構築前は落ちる・構築済みは落ちない・構築中は落ちる、を下層の呼び出し回数で固定）、
@@ -76,21 +76,21 @@ rykv を「記録分類 = Git」だけで開くと 5,547 行（うち archived �
 
 ## Evidence
 
-- 実環境（2026-09-16、修正前のバイナリ `7a324e95`）: native の Git rep は `$HOME/Git/*` と外付け SSD の `Git/*` で
-  18 リポジトリ（ユニーク 2,130 コミット、走査対象は複製込みで約 4,260）、archived プラグインは 88 zip / 97 `.git` /
-  3,447 コミット / 78 rep 名。`threads` のプールは `NumCPU()` = 8
-- 画面（同一プロファイルの別タブで `performance.getEntriesByType('resource')` を集計。rykv「記録分類 = Git」5,547 行）:
-  `get_kyous` 19,113 ms、`get_git_commit_log` 16 回で平均 6,732 ms・最大 20,303 ms、`get_tags_by_id` 12 回で平均 3,195 ms・最大 6,427 ms
-- サーバの CPU（`Win32_Process` の Kernel+User 時間の 1 秒差分）: 22:11 の起動から 2〜5 コアが 45 分続き、約 7 秒周期の鋸波。
-  同時記録した `:9999` の確立済み接続が 0 本になると同時に 0 へ。再起動後の事前ロードは CPU 累計 149 秒・約 2.5 分で終わり、
+- 実環境（2026-09-16、修正前のバイナリ `2dd8b307`）: native の Git rep は内蔵と外付けの2か所で
+  十数リポジトリ（ユニーク数千コミット、走査対象は複製込みでその倍）、archived プラグインは数十 zip /
+  数千コミット / 数十 rep 名。`threads` のプールは `NumCPU()`
+- 画面（同一プロファイルの別タブで `performance.getEntriesByType('resource')` を集計。rykv「記録分類 = Git」数千行）:
+  `get_kyous` 十数秒、`get_git_commit_log` 十数回で平均数秒・最大 20 秒程度、`get_tags_by_id` 十数回で平均数秒
+- サーバの CPU（`Win32_Process` の Kernel+User 時間の 1 秒差分）: 起動から複数コアが数十分続き、数秒周期の鋸波。
+  同時記録した確立済み接続が 0 本になると同時に 0 へ。再起動後の事前ロードは数分で終わり、
   以後は接続があっても 0.0/秒
 - 待機中サーバで `document.cookie` の `gkill_session_id` を付けて `fetch` を直接計測（`/api/get_git_commit_log`）:
-  native のハッシュ 16 ms / 9 ms、archived プラグインのハッシュ 1,055 ms / 1,127 ms、存在しないハッシュ 1,018 ms（HTTP 500・ERR000118）。
-  同じ場で `get_tags_by_id` 10 ms、Git 限定の `get_kyous`（5,547 件・2.27 MB）87 ms / 99 ms
-- 混雑中の同じ計測: native 9,090 ms → 2 回目 22 ms、プラグイン 4,165 ms → 2,765 ms、存在しない 9,555 ms。
-  ばらつきの大きさは「実処理 + プール待ち」の形で、MCP の `count_only`（7 日間 4,624 件）も 15,031 ms だった
-- プラグイン側は無実: `generate_plugin_cache gkill_plugin_archived_git_commit_log <user>` は `result = built`・200 ms、
-  cache.db は repo 97 / commit 3,447 / `build_state idle`、サーバの `typed_index` は ok / 3,447 件、プラグインプロセスの CPU は 33 分で 9 秒
+  native のハッシュは十数 ms、archived プラグインのハッシュは約 1 秒、存在しないハッシュも約 1 秒（HTTP 500・ERR000118）。
+  同じ場で `get_tags_by_id` 十数 ms 以下、Git 限定の `get_kyous`（数千件・数 MB）100 ms 弱
+- 混雑中の同じ計測: native は数秒 → 2 回目は数十 ms、プラグインは数秒のまま、存在しないハッシュも数秒。
+  ばらつきの大きさは「実処理 + プール待ち」の形で、MCP の `count_only`（7 日間・数千件）も十数秒だった
+- プラグイン側は無実: `generate_plugin_cache gkill_plugin_archived_git_commit_log <user>` は `result = built`・1 秒未満、
+  cache.db は repo 数十 / commit 数千 / `build_state idle`、サーバの `typed_index` は ok / 同じ件数、プラグインプロセスの CPU は数十分で十秒足らず
 - 修正後の所要時間は本番へ配布してから同じ操作で再測定する（この ADR を書いた時点では未測定）
 
 ## Related tests

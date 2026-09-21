@@ -123,7 +123,7 @@ func TestDeleteKyouDataTypeVocabulary(t *testing.T) {
 		// ただし入口は ToEntityDataType を通すので、スキーマ側は射影名も許さないと
 		// 「応答の data_type をそのまま次のツールへ渡せる」という説明と食い違う
 		// （enum を畳んだ後の語彙だけにすると、送信前に検証するクライアントが
-		// mi_start をサーバへ届く前に弾く。2026-08-25 の実利用レビュー）。
+		// mi_start をサーバへ届く前に弾く。実利用レビュー）。
 		deleteTool := findTool(WriteTools, "gkill_delete_kyou")
 		canonical := []string{}
 		for _, target := range EntityTargets {

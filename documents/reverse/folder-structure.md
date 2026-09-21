@@ -133,7 +133,7 @@ src/server/
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（156ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（157ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
     │       ├── gkill_server_api_address.go  # ルート表（91エンドポイント: 90 POST + 1 GET。パス・メソッド・認証区分・ハンドラの正本）
@@ -255,6 +255,10 @@ src/server/gkill/mcp/
     ├── find_query_schema.go  # gkill_get_kyous の検索条件スキーマ
     ├── access_log.go         # gkill_log 上のロガー（レベルは MCP_LOG / 設定 / --log で制御）
     ├── plugin_tools.go       # 3サーバ共通のプラグインツール（gkill_get_plugin_list）とプラグイン本文のインライン埋め込み
+    ├── help_topics.go        # gkill_get_mcp_help の topic 本文（search / pagination / mi / data_types / plugin / idf / deleted / rep / kftl / config の10件）
+    ├── status_tool.go        # gkill_status とツール一覧の世代 schema_revision
+    ├── gps_cursor.go         # GPS ログのページングカーソル（発行側と検証側の唯一の正本）
+    ├── js_date.go / js_util.go # JS の Date・文字列変換と同じ結果を出す互換ヘルパ（応答のバイト一致のため）
     ├── html_text.go          # プラグインコンテンツHTML→プレーンテキスト変換
     ├── file_link_store.go    # HTTPモード用ファイルリンクストア（期限付きトークンで /files/{token} 配信）
     ├── normalization.go      # Read入力正規化
@@ -268,7 +272,8 @@ src/server/gkill/mcp/
     └── pkce.go               # PKCE検証
 ```
 
-3つのサーバファイルは**ツールの取捨選択とディスパッチだけ**を持ち、実装は `lib/` にあります。
+3つのサーバファイルは**ツールの取捨選択とディスパッチだけ**を持ち、実装は同じパッケージ直下の
+`read_handlers.go` / `write_handlers.go` / `server_base.go`（旧 Node 実装の `lib/` に相当）にあります。
 以前は3ファイルが同じ処理を丸ごと持っていて（合計4,000行超）、片方だけ直す事故が起きやすい形でした。
 
 トランスポート: stdio（デフォルト）またはHTTP（OAuth 2.1認証付き）。

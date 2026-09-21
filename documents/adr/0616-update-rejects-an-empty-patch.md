@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-25 |
-| Sources | 2026-08-25 の実利用レビュー（`gkill_update_kmemo({id})` が no-op の版を追記した） |
+| Sources | 実利用レビュー（`gkill_update_kmemo({id})` が no-op の版を追記した） |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/mcp/write_handlers.go`（`runUpdate` の空パッチ判定と `nextUpdateTime`） |

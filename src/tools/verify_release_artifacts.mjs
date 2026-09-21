@@ -63,7 +63,7 @@ export function missingSampleEntries(paths, required = REQUIRED_SAMPLE_ENTRIES) 
 
 // APK が Android の debug 証明書で署名されているか（apksigner verify --print-certs の出力から）。
 // 以前は assembleDebug の成果物を配布名へ rename しており、debug 鍵署名の APK が正式版として
-// 公開されていた (2026-08-30 監査 F-006)
+// 公開されていた (指摘 F-006)
 export function isDebugSigned(certsOut) {
     return String(certsOut).includes('CN=Android Debug')
 }

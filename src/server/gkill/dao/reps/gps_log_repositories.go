@@ -22,7 +22,7 @@ type GPSLogRepositories []GPSLogRepository
 // GPSLog は ID を持たないため値の完全一致でしか同定できない。
 // タイブレークに Latitude/Longitude を足すのは、隣接圧縮が成立するための全順序化で、
 // 同時刻・異座標の点はもちろん両方残る。
-// 経緯: 1年分の外部監査 C3「古い期間のGPSログは同一点が最大3重に返る」
+// 経緯: 1年分の指摘 C3「古い期間のGPSログは同一点が最大3重に返る」
 // （素直に数えると2025-09月実測で40.0%が重複だった）。
 func sortAndDedupGPSLogs(gpsLogs []GPSLog) []GPSLog {
 	slices.SortFunc(gpsLogs, func(a, b GPSLog) int {

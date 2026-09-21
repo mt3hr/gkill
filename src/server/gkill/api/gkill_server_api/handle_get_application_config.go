@@ -166,7 +166,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	response.ApplicationConfig.CacheClearCountLimit = gkill_options.CacheClearCountLimit
 	// GlobalIP は空のまま返す。以前は設定取得のたびに外部サービスへ公開IPを問い合わせていたが、
 	// 取得値を読む画面が1つも無く、README の外部通信の説明にも載らない暗黙の外向き通信
-	// だったため廃止した（2026-08-30 監査 F-005）。互換のためフィールド自体は残す。
+	// だったため廃止した（指摘 F-005）。互換のためフィールド自体は残す。
 	response.ApplicationConfig.GlobalIP = ""
 	response.ApplicationConfig.PrivateIP = privateIPStr
 

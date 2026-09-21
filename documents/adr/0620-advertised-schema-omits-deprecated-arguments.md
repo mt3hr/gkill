@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-09-14 |
-| Sources | 2026-09-14 の MCP レビュー P1（`include_id` / `include_rep_name` / `only_latest_data` が deprecated な入力引数として tools/list に残っている指摘）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「廃止済み引数は公開スキーマに載せず、受理と古さの検出だけ残す。」 |
+| Sources | MCP レビュー P1（`include_id` / `include_rep_name` / `only_latest_data` が deprecated な入力引数として tools/list に残っている指摘）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「廃止済み引数は公開スキーマに載せず、受理と古さの検出だけ残す。」 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/mcp/read_tools.go`（`gkill_get_kyous` の `inputSchema.properties`）/ `src/server/gkill/mcp/find_query_schema.go`（`FIND_QUERY_SCHEMA.properties`）/ `src/server/gkill/mcp/constants.go`（`KYOUS_TOP_LEVEL_FIELDS` / `LEGACY_USE_FLAG_KEYS`）/ `src/server/gkill/mcp/normalization.go`（`DEPRECATED_TOP_LEVEL_ARGS` / `DEPRECATED_QUERY_FIELDS` / `detectStaleSchemaSignals`） |
@@ -60,7 +60,7 @@ true へ強制する `query.only_latest_data`（[ADR-0605](0605-mcp-version-hist
 
 - tools/list の実測: `gkill_get_kyous` の廃止済み3引数と `use_X` の説明文で約 1.0KB。
   `gkill_status` 追加（+1.2KB × 3サーバ）と相殺して readwrite は 93,740 B → 93,980 B
-- 2026-08-24 の実利用レビュー（ADR-0609 の Sources）では、`include_id` の既定値をめぐる
+- 実利用レビュー（ADR-0609 の Sources）では、`include_id` の既定値をめぐる
   指摘が「既に直っているのに見えていなかった」4件のうちの1件だった。載せ続けても
   古い一覧には届かないし、新しい一覧には要らない
 

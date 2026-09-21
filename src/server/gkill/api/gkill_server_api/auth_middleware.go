@@ -20,7 +20,7 @@ import (
 // maxAuthBodyBytes は認証系ミドルウェアが認証前に読むボディの上限。
 // 未認証の攻撃者に無制限のメモリを確保させないための上限。大容量が正規に必要な
 // アップロード系（/api/upload_files 等）は wrapNoAuth 登録でこの経路を通らないため、
-// 別枠の maxUploadBodyBytes を wrapNoAuthCapped で掛ける（2026-08-30 監査 F-002）。
+// 別枠の maxUploadBodyBytes を wrapNoAuthCapped で掛ける（指摘 F-002）。
 const maxAuthBodyBytes = 32 * 1024 * 1024 // 32MB
 
 // maxUploadBodyBytes はアップロード2経路（/api/upload_files, /api/upload_gps_log_files）の
@@ -97,7 +97,7 @@ func (g *GkillServerAPI) wrapNoAuth(h http.HandlerFunc) http.HandlerFunc {
 
 // wrapNoAuthCapped は wrapNoAuth にボディ上限とリクエスト単位の読み取り期限を付けた版。
 // wrapNoAuth のボディ付き経路は認証ミドルウェアを通らず 32MB 上限が効かないため、
-// ここで経路別の上限を掛ける（2026-08-30 監査 F-002）。上限超過は 413 の JSON、
+// ここで経路別の上限を掛ける（指摘 F-002）。上限超過は 413 の JSON、
 // 期限超過は読み取りエラーとして打ち切られる。期限はこのリクエストの読み取りに
 // だけ効き、次のリクエストでは net/http がヘッダ読み取り時に張り直す。
 func (g *GkillServerAPI) wrapNoAuthCapped(h http.HandlerFunc, limitBytes int64, readTimeout time.Duration) http.HandlerFunc {

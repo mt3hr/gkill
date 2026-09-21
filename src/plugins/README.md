@@ -20,8 +20,10 @@ plugins/
 │   ├── loader.go
 │   ├── source.go
 │   ├── cache.go
+│   ├── builder.go              # 常駐バックグラウンドビルダ
 │   ├── types.go
 │   ├── html.go
+│   ├── *_test.go               # テストのたびに archive/zip で ZIP を組む
 │   ├── go.mod / go.sum
 │   ├── manifest.json
 │   └── README.md
@@ -30,8 +32,10 @@ plugins/
 │   ├── loader.go
 │   ├── source.go
 │   ├── cache.go
+│   ├── builder.go              # 常駐バックグラウンドビルダ
 │   ├── types.go
 │   ├── html.go
+│   ├── *_test.go               # テストのたびに archive/zip で ZIP を組む
 │   ├── go.mod / go.sum
 │   ├── manifest.json
 │   └── README.md
@@ -43,11 +47,13 @@ plugins/
 │   ├── timeparse.go
 │   ├── builder.go
 │   ├── cache.go
+│   ├── data_source.go          # 同じ日に並ぶデータソース（時計 / スマホ）の採り方
 │   ├── query.go
 │   ├── render.go
 │   ├── html.go
 │   ├── uuid.go
 │   ├── types.go
+│   ├── *_test.go
 │   ├── testdata/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
@@ -60,6 +66,7 @@ plugins/
 │   ├── cache.go
 │   ├── html.go
 │   ├── types.go
+│   ├── *_test.go
 │   ├── testdata/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
@@ -79,7 +86,7 @@ plugins/
 ├── gkill_plugin_codex/          # Codex CLI セッションログプラグイン
 │   ├── main.go
 │   ├── types.go
-│   ├── reader.go               # 巨大行(実データ最大19.9MB)に耐えるレコードリーダ
+│   ├── reader.go               # 巨大行(実データで数十MB級)に耐えるレコードリーダ
 │   ├── scan.go
 │   ├── loader.go               # ファイル → 正規化した要素列
 │   ├── fold.go                 # 要素列 → Kyou、サブエージェントの畳み込み
@@ -175,7 +182,7 @@ $GKILL_HOME/plugins/{userID}/{プラグイン名}/
 2. 自動生成される `config.json` の `source_dirs` は既定で `~/.codex/sessions` と
    `~/.codex/session_index.jsonl`。他の場所を読ませたい場合は書き換える
 3. 取り込みはバックグラウンドで進むので、**置いた直後の1回目の検索は空が返る**。
-   進捗は設定画面に出る（実測でフル構築4.5秒 / 245MB / 52ファイル）
+   進捗は設定画面に出る（実測でフル構築 数秒 / 数百MB / 数十ファイル）
 
 `session_index.jsonl` はセッションuuid → スレッド名の対応表で、指定すると詳細画面に
 スレッド名が出る。無くても取り込みはできる。
@@ -231,7 +238,7 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
 ```json
 {
   "_comment": "書式の説明（読み飛ばされるので消してよい）",
-  "_example_source_dirs": ["~/Kyou/ClaudeAI_*", "D:/Dropbox/claude_export/conversations-*.zip"],
+  "_example_source_dirs": ["~/Kyou/ClaudeAI_*", "~/Downloads/claude_export/conversations-*.zip"],
   "source_dirs": []
 }
 ```
@@ -285,16 +292,11 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
 | `min_gkill_version` | 動作に必要な最低 gkill バージョン |
 
 **名前は `gkill_plugin_<名前>` にすること。** ディレクトリ名・`name`・`executable`・
-配置先のフォルダ名がすべて同じ文字列である必要がある（配布スクリプトがこの1つの名前から
-ソース・ビルド出力・配置先を組み立てるため）。
+配置先のフォルダ名がすべて同じ文字列である必要がある（1つの名前からソース・ビルド出力・配置先を
+機械的に組み立てられるようにするため）。
 
-接頭辞まで規約なのは、Termux 側の配布スクリプトが更新前に
-
-```bash
-pkill -KILL -f gkill_plugin_
-```
-
-で起動中のプラグインを落としているから。この接頭辞を持たない名前だとプロセスが落ちず、
+接頭辞まで規約なのは、運用でプロセス名からプラグインをまとめて見分けられるようにするため
+（更新前に起動中のプラグインをまとめて止める、など）。この接頭辞を持たない名前だと更新時にプロセスが落ちず、
 古いバイナリを掴んだまま生き残る。かつて `gkill_google_locationhistory_plugin` という
 名前で作ってしまい、あとから改名した。
 

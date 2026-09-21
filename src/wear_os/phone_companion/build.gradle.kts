@@ -27,7 +27,7 @@ android {
     }
 
     // リリース署名。鍵の受け渡しと未設定時の止まり方は src/android/app/build.gradle.kts の
-    // 同名ブロックと同じ (2026-08-30 監査 F-006)。
+    // 同名ブロックと同じ (指摘 F-006)。
     val gkillSigningProp = { name: String -> (findProperty(name) as? String) ?: System.getenv(name) }
     val gkillReleaseKeystore = gkillSigningProp("GKILL_RELEASE_KEYSTORE")
     if (gkillReleaseKeystore != null) {

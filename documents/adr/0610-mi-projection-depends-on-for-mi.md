@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-24 |
-| Sources | 2026-08-24 の実利用レビュー3本（読み取り一巡・読み書き一巡・書き込み破壊試験）。本番 read サーバでの実測 |
+| Sources | 実利用レビュー3本（読み取り一巡・読み書き一巡・書き込み破壊試験）。本番 read サーバでの実測 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/find_filter.go`（`isMiData` の gate）/ `src/server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go`（`miProjectionWarning` / `PROJECTION_TO_ENTITY_DATA_TYPE` 相当は `src/server/gkill/mcp/constants.go`） |
@@ -93,7 +93,7 @@ isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi") && findCtx.ParsedFi
 - **同じ検索を別の期間（2026-08-11〜17）でやると `mi_create` は1件出る**
   （`mirekyou_create` は5件）。`data_types:["mi_create"]` 単独でも 1件。
   最初の実測だけを見て説明文へ「matches nothing」「essentially never」と書いたのは誤りで、
-  2026-08-25 の実利用レビューがこの記述の嘘を指摘した。**片方の期間の実測から
+  実利用レビューがこの記述の嘘を指摘した。**片方の期間の実測から
   「常にこうなる」と書かない**というのが、この ADR がいちばん高くついた教訓
 - `MI` テーブルの `IS_CHECKED` は `NOT NULL`（`mi_repository_sqlite3_impl.go`）で、
   `mi_check` 射影の条件は `IS_CHECKED IS NOT NULL`。全 Mi に必ず1行ある

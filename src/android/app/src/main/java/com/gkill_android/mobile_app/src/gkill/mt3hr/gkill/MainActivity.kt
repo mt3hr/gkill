@@ -140,7 +140,7 @@ class MainActivity : AppCompatActivity() {
 
                 // 起動診断は値の要らないものだけ残す。絶対パス(バイナリ・HOME・GKILL_HOME・
                 // nativeLibraryDir)は logcat へ出さない — Log.d でも release 実行時に出力され、
-                // 端末ログ・クラッシュ収集・adb 越しに環境情報が漏れる(2026-08-30 監査 F-008)。
+                // 端末ログ・クラッシュ収集・adb 越しに環境情報が漏れる(指摘 F-008)。
                 Log.d(
                     "gkill",
                     "バイナリ診断: size=${gkillBinary.length()} bytes, " +
@@ -167,7 +167,7 @@ class MainActivity : AppCompatActivity() {
                 // stdoutを別スレッドで読み続ける（バッファフルによるハング防止）
                 // サーバーURLを "Access your record space at : " 行から検出する。
                 // 全行を logcat へ中継しない — サーバ出力には環境情報が混ざりうるうえ、
-                // Log.d でも release 実行時に出力される(2026-08-30 監査 F-008)。
+                // Log.d でも release 実行時に出力される(指摘 F-008)。
                 // 異常終了の診断用に直近の行だけメモリに保持し、exitCode != 0 のときに出す。
                 val recentServerLines = ArrayDeque<String>()
                 Thread {
@@ -251,7 +251,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 } catch (e: Exception) {
                     // URL と例外本体は載せない(ActivityNotFoundException の文言に URL が入る。
-                    // 利用者が開いたブックマーク先が端末ログへ残る。2026-08-30 監査 F-008)
+                    // 利用者が開いたブックマーク先が端末ログへ残る。指摘 F-008)
                     Log.w("gkill", "外部URLを開けませんでした (${e.javaClass.simpleName})")
                     true
                 }

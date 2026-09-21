@@ -475,8 +475,8 @@ graph LR
 > **`UnWrap()` するとキャッシュ層を丸ごと飛び越える。**
 > キャッシュrepの `UnWrap()` は配下の生ディスクrepを返します。返ってきたrepをそのまま検索に使うと、
 > インメモリキャッシュも `--cache_reps_local` のローカルコピー層も外れ、元のDBファイルを直接舐めることになります。
-> 実データの一例では11個のキャッシュrepが約940個の生rep（312rep中263個が端末別の重複登録）に展開され、
-> git リポジトリだけで1窓あたり20.7秒（実質CPUの60%）を使っていました。
+> 実データの一例では十数個のキャッシュrepが数百個の生rep（大半が端末別の重複登録）に展開され、
+> git リポジトリだけで1窓あたり十数秒（実質CPUの過半）を使っていました。
 >
 > `UnWrap()` を使ってよいのは「そのラッパに該当する実repが1つでもあるか」を判定する**枝刈り**と、
 > rep名の一覧（`GetAllRepNames`）だけです。検索対象には**ラッパのまま**入れ、
@@ -638,10 +638,12 @@ Vuetifyで2つのテーマを定義しています。
 | `generate_plugin_cache` | プラグインのキャッシュを稼働中サーバ無しで同期構築（`<plugin_name\|all> <user_id...>`。各プラグインバイナリを `--gkill-build-cache` で単独起動して終わるまで待つ。stdout の結果行 `built` / `no_cache` 以外は失敗。`main/common/generate_plugin_cache.go`） |
 | `add_tag` | 検索条件 JSON（FindKyouQuery）に一致する Kyou へタグを付与（`<user_id...> --rules_file <path>`。稼働中サーバの HTTP クライアント。`main/common/add_tag.go`） |
 | `reset_password` | 指定アカウントのパスワードを無効化し、リセットトークンを再発行してURLを表示（`ユーザーID...`）。account.db を直接開く。管理者がパスワードを忘れたときの唯一の復帰経路 |
+| `mcp` | MCP サーバを起動（`--kind read\|write\|readwrite`、`--transport stdio\|http`、`--config <path>`。起動中の gkill_server への HTTP クライアント。`main/common/mcp.go`）。**`gkill_server` にのみ登録**されており、デスクトップアプリ `gkill` からは使えない |
+| `mcp schema-budget` | tools/list のバイト量を予算ファイルと突き合わせる（`--update` で書き直す）。`mcp` のサブコマンド |
 
 ### パーシステントフラグ
 
-`gkill_server` / `gkill` の両方に定義されるフラグです（`main/gkill_server/main.go:27-36`、`main/gkill/main.go`）。
+`gkill_server` / `gkill` の両方に定義されるフラグです（`main/gkill_server/main.go:25-36`、`main/gkill/main.go`）。
 
 | フラグ | 既定値 | 説明 |
 |---|---|---|
@@ -655,6 +657,8 @@ Vuetifyで2つのテーマを定義しています。
 | `--cache_update_duration` | `1m` | キャッシュ更新間隔 |
 | `--pre_load_users` | （なし） | 起動時にリポジトリを先読みするユーザ（複数指定可）。`PreLoadRepositories` が処理する |
 | `--log` | `none` | ログレベル: `none`, `error`, `warn`, `info`, `access`, `debug`, `trace`, `trace_sql` |
+| `--log_rotate_max_bytes` | `33554432`（32 MiB） | ログファイル1本の上限。超える直前に回転する。0以下で回転を無効化 |
+| `--log_rotate_keep` | `5` | 回転した旧ファイルの保持世代数（`.1`〜`.5`）。0以下で旧ファイルを保持しない |
 
 ## 11. プラグインリポジトリシステム
 

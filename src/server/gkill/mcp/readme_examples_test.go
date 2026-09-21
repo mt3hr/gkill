@@ -1,6 +1,6 @@
 package mcp
 
-// README の実行可能な例と現行スキーマの同期検査 (2026-08-30 MCPレビュー P1)。
+// README の実行可能な例と現行スキーマの同期検査 (MCPレビュー P1)。
 //
 // verify_docs はツール数などの件数しか守れず、README の JSON 例が
 // スキーマとずれても検出できない。実際に Mi の例が include_*_mi を欠いたまま

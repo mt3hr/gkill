@@ -27,14 +27,14 @@ import (
 )
 
 // リクエストボディの経路別上限。上限なしの読み込みは、無認証で到達できる
-// OAuth 経路からプロセスのメモリを枯渇させられる (2026-08-30 監査 F-004)。
+// OAuth 経路からプロセスのメモリを枯渇させられる (指摘 F-004)。
 // MCP POST は Bearer 必須だが、有効な資格情報を持つクライアントにも上限は掛ける。
 const maxMcpBodyBytes = 10 * 1024 * 1024 // 10MB
 const maxOAuthBodyBytes = 64 * 1024      // 64KB (フォーム/JSON の認可・トークン・登録)
 
 // ログへ書くパスはクエリを落とす。/oauth/authorize は client_id / redirect_uri /
 // state / code_challenge をクエリで受けるため、生の URL を記録すると
-// 認可フローの秘匿値がアクセスログへ残る (2026-08-30 監査 F-003)。
+// 認可フローの秘匿値がアクセスログへ残る (指摘 F-003)。
 func pathWithoutQuery(rawURL string) string {
 	return strings.SplitN(rawURL, "?", 2)[0]
 }
@@ -140,7 +140,7 @@ func (t *HttpTransport) Start() error {
 	}
 	t.listener = listener
 	// ヘッダとリクエスト全体の期限を明示する。スローなヘッダ送信と
-	// 終わらないリクエストをここで打ち切る (2026-08-30 監査 F-004)。
+	// 終わらないリクエストをここで打ち切る (指摘 F-004)。
 	t.httpServer = &http.Server{
 		Handler:           t,
 		ReadHeaderTimeout: 20 * time.Second,

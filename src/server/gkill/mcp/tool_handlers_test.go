@@ -179,7 +179,7 @@ func TestSummarizeReadToolPayload(t *testing.T) {
 	})
 
 	// fields で rep_infos を外した呼び出しに「Fetched 0 repositories」と言うと、
-	// 自分で外しただけなのに「リポジトリが0件」と読める（2026-08-25 の実利用レビュー）。
+	// 自分で外しただけなのに「リポジトリが0件」と読める（実利用レビュー）。
 	t.Run("gkill_get_rep_infos — says a field was omitted rather than reporting zero", func(t *testing.T) {
 		result := summarize(t, "gkill_get_rep_infos", obj(
 			"canonical_rep_types", strs("kmemo", "kc"),

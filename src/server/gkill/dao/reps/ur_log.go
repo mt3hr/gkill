@@ -82,7 +82,7 @@ var fetchPageBody = getBody
 // skipFetchFavicon=true で favicon の取得を行わない。
 // ID・RelatedTime の補完は抑止と無関係に必ず行う（IDが無いと登録できない）。
 // MCP の gkill_add_urlog が fetch_metadata:false / fetch_favicon:false をこの2つへ写す
-// （2026-08-30 MCPレビュー）。既定は両方 false = 従来どおり全部取得。
+// （MCPレビュー）。既定は両方 false = 従来どおり全部取得。
 func (u *URLog) FillURLogFieldSkipping(serverConfig *server_config.ServerConfig, applicationConfig *user_config.ApplicationConfig, skipFetchMetadata bool, skipFetchFavicon bool) error {
 	ctx := context.Background()
 	if u.URL == "" {

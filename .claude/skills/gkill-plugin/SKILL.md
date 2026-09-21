@@ -31,7 +31,7 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              whose newest commit is latest (renames follow the new
               #                              name; recomputed every build); fingerprint per repo
               #                              is sha256 of (entry name, CRC32, size). Real data:
-              #                              88 zips (97 .git) → 3,447 commits / 78 rep names in ~60s
+              #                              tens of zips → thousands of commits / dozens of rep names in about a minute
               #   gkill_plugin_chatgpt/    — ChatGPT conversation history plugin. Reads the export
               #                              ZIP as-is via sdk.OpenSources, never the extracted JSON
               #                              (a loose conversations*.json folder/file is reported as
@@ -43,7 +43,7 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              other version's messages are dropped (ADR-0310)
               #   gkill_plugin_claudeai/   — Claude.ai conversation history plugin. Same zip rules as
               #                              chatgpt: `conversations-000.zip` holds one
-              #                              `conversations.json` (203MB real) whose entry mtime is
+              #                              `conversations.json` (hundreds of MB in a real export) whose entry mtime is
               #                              fixed at 1980-01-01, so only CRC32/Size can detect change
               #   gkill_plugin_claudecode/ — Claude Code chat log plugin (one Kyou per human
               #                              message + one per its whole response run,
@@ -61,13 +61,13 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              are never stored — they are 94.7% of the bytes. Kyou IDs
               #                              are UUIDv5 of (thread id, role, ordinal) since event_msg
               #                              records have no id; append-only logs keep them stable.
-              #                              One real line is 19.9MB, so `reader.go` classifies from
+              #                              A single real line can be tens of MB, so `reader.go` classifies from
               #                              the first 512 bytes and drains unwanted lines without
-              #                              buffering. Background builder + WAL (4.5s first build /
-              #                              <1s incremental on 245MB, 52 files → 301 Kyou)
+              #                              buffering. Background builder + WAL (a few seconds first build /
+              #                              <1s incremental on hundreds of MB, dozens of files → hundreds of Kyou)
               #   gkill_plugin_fitbit/     — Google Takeout Fitbit/Google Health, aggregated to
               #                              one KC per (day, metric). 34 metrics, background
-              #                              build (~155s first / <1s incremental on a 271MB zip).
+              #                              build (a few minutes first / <1s incremental on a zip of hundreds of MB).
               #                              Partials are per (file, day, data source): since
               #                              2025-12 the steps CSV carries the phone's
               #                              `Phone Health Connect` rows beside the watch's on
@@ -117,7 +117,7 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 
 `plugin_repository_impl.go` manages plugin subprocess lifecycle (start, slot-guarded stdio, one persistent reader goroutine per process, response-ID matching, auto-restart on crash). **呼び出し元のキャンセル（HTTPクライアントの切断）ではプロセスを回収しない**（フロントは全リクエストに `AbortController` を張っているため）。回収するのは gkill 自身のデッドライン超過時だけ。直列化は mutex ではなく容量1のチャネル（`callSlot`）で行い、**期限はスロットを取ってから張る**。順番待ちの上限は別枠（`maxPluginQueueWait` 既定10秒）で、待ちきれなければ `ErrPluginBusy` を返すだけでプロセスには手を出さない。プラグイン rep は `Repositories` の fan-out でスレッドプールのスロットを取らない（`goForRep`）ので、プラグインのロック待ちで検索全体が止まることはない
 
-**プラグインの重い構築は常駐ビルダ + WAL + バッチcommit**（2026-08-21、監査 M-6）。claudecode も codex/fitbit と同じく `builder.go`（`EnsureStarted`/`Kick`/`loop`、mu(DB初期化)/buildMu(構築)分離で読み取り無待機、WAL 自前DSN、`cache_meta` に進捗）へ移行済み。`GetMessages`/`GetMessage`/`GetStats` は refresh を呼ばず現キャッシュ即答+Kick。同期・単一tx構築（デッドラインkill→進捗ゼロループ）を新規に書かないこと。 却下案（同期構築／ロック共有／デッドライン延長）と実測は [ADR-0305](../../../documents/adr/0305-plugin-background-builder-wal.md)。**同期構築を書いてよい唯一の場所は `Handler.BuildCache`**（`--gkill-build-cache` の単独モードで、stdio ループの外。ハンドラ期限が無い）。同梱7本は常駐ビルダが呼ぶのと同じ構築関数（`buildOnce` / `build` / `refresh`）をそこから呼ぶだけで、`EnsureStarted` / `Kick` は起こさない。配線の欠落は `plugin/sdk/build_cache_test.go` のソース走査が落とす（欠けると `generate_plugin_cache all` でそのプラグインだけ `no_cache` になり、エラーも出ない）。
+**プラグインの重い構築は常駐ビルダ + WAL + バッチcommit**（指摘 M-6）。claudecode も codex/fitbit と同じく `builder.go`（`EnsureStarted`/`Kick`/`loop`、mu(DB初期化)/buildMu(構築)分離で読み取り無待機、WAL 自前DSN、`cache_meta` に進捗）へ移行済み。`GetMessages`/`GetMessage`/`GetStats` は refresh を呼ばず現キャッシュ即答+Kick。同期・単一tx構築（デッドラインkill→進捗ゼロループ）を新規に書かないこと。 却下案（同期構築／ロック共有／デッドライン延長）と実測は [ADR-0305](../../../documents/adr/0305-plugin-background-builder-wal.md)。**同期構築を書いてよい唯一の場所は `Handler.BuildCache`**（`--gkill-build-cache` の単独モードで、stdio ループの外。ハンドラ期限が無い）。同梱7本は常駐ビルダが呼ぶのと同じ構築関数（`buildOnce` / `build` / `refresh`）をそこから呼ぶだけで、`EnsureStarted` / `Kick` は起こさない。配線の欠落は `plugin/sdk/build_cache_test.go` のソース走査が落とす（欠けると `generate_plugin_cache all` でそのプラグインだけ `no_cache` になり、エラーも出ない）。
 
 **プラグインのログは `sdk.LogXxx` を通す。** `sdk.Run` が起動時（flag 解析の直後）に `$GKILL_HOME/logs/gkill_plugin_<name>.log`（統合）と `gkill_plugin_<name>_{error,warn,info,access,debug,trace,trace_sql}.log` を開く（`<name>` は `--gkill-plugin-dir` の末尾＝manifest の `name`。既に `gkill_plugin_` で始まる名前は二重にしない。静的フィールドは `app=gkill_plugin` / `plugin` / `user_id` / `pid`。`plugin/sdk/plugin_log.go`）。レベルと回転は本体の `--log` / `--log_rotate_*` を **環境変数 `GKILL_LOG_LEVEL` / `GKILL_LOG_ROTATE_MAX_BYTES` / `GKILL_LOG_ROTATE_KEEP`** で継ぐ（`gkill_log.Init()` が書き出し、子は環境継承で受ける。`GKILL_HOME` と同じ経路なので起動側の `cmd.Env` は nil のまま。フラグにしないのは、SDK を使わない第三者バイナリが未知フラグで exit 2 になるため）。`LogWarn` / `LogError` は **stderr の `WARN: ` / `ERROR: ` 行をこれまでどおり出した上で**ファイルにも書き、`LogInfo` / `LogDebug` はファイルにだけ書く（stderr のリングは 4KB しか無いので節目で肝心のエラーを押し出さない）。SDK 自身は `plugin start` / `plugin stop` / `build cache` を Info、**1コマンド1行**（command / id / duration_ms / count / error）を Access で残す——「プロセスが殺され続ける」の調査で、どのコマンドが何ミリ秒かかったかはここにしか出ない。壊れた環境変数は既定（error / 32MiB / 5）へ倒して stderr に1行、ログ dir が作れない・home が分からない手起動は stderr だけで続行し、**ログの都合でプラグインを止めない**（panic も exit もしない）。同じプラグインを2プロセス（別利用者、常駐 + `generate_plugin_cache`）が同じファイルへ書きうるので、32MiB の回転は Windows では他方が閉じるまで失敗してファイルが育つ（承知の上。`pid` で出所は分かる）。`LogDebug` の定義は1行関数のままにする（`log_level_source_scan_test` の握り潰し検査が複数行の定義を誤検知する）。設計と却下案は [ADR-0313](../../../documents/adr/0313-plugin-logs-through-gkill-log.md)。
 

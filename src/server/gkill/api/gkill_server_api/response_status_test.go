@@ -155,7 +155,7 @@ func TestResponseStatus_Unauthorized(t *testing.T) {
 // TestResponseStatus_LoginFailureIsUnauthorized はログイン失敗が401になることを確認する。
 //
 // 存在しないユーザとパスワード誤りは、利用者列挙を防ぐために同じコード・同じ文言に
-// 統一されている(監査 S3-login)。ステータスも当然同じでなければならない。
+// 統一されている(指摘 S3-login)。ステータスも当然同じでなければならない。
 func TestResponseStatus_LoginFailureIsUnauthorized(t *testing.T) {
 	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()

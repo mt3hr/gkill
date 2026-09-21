@@ -5,7 +5,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * GkillServerUrlPolicy の境界テスト(2026-08-30 監査 F-007)。
+ * GkillServerUrlPolicy の境界テスト(指摘 F-007)。
  * 平文HTTPはループバックだけ許可し、LAN・公開ホストへの平文は保存前に拒否する。
  */
 class GkillServerUrlPolicyTest {

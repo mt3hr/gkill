@@ -11,7 +11,7 @@
 
 ## Context
 
-本番プロファイル（2026-08-19）で、rykv の検索に残っていた最大の項目が **git rep の 20.7秒＝実質CPUの60%** だった。go-git の `Repository.Log()` が全コミットをディスクから読み直していた。
+本番プロファイル（2026-08-19）で、rykv の検索に残っていた最大の項目が **git rep の十数秒＝実質CPUの過半** だった。go-git の `Repository.Log()` が全コミットをディスクから読み直していた。
 
 「キャッシュ構築中だけ」「repの配線ミス」の2説は一時ログと info ログでどちらも否定された（`Reps` に入っているのはキャッシュrep、`isCacheBuilding` は偽）。
 
@@ -51,7 +51,7 @@ rep名の絞り込みを「**どのrepを検索するか**」から「**どの�
 
 ## Evidence
 
-- 改修前: git rep 20.7秒／プロファイル1窓（実質CPUの60%）、11キャッシュrep → 約940生rep（312rep 中 263個が端末別の重複登録）、キャッシュ版でない `idfKyouRepositorySQLite3Impl.FindKyous` が 3.96秒
+- 改修前: git rep 十数秒／プロファイル1窓（実質CPUの過半）、十数キャッシュrep → 数百生rep（大半が端末別の重複登録）、キャッシュ版でない `idfKyouRepositorySQLite3Impl.FindKyous` が数秒
 - 実データ（2026-08-19 実測、本番プロファイル）
 
 ## Related tests

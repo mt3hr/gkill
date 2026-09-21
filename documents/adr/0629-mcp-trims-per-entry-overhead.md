@@ -11,7 +11,7 @@
 
 ## Context
 
-2026-08 の外部監査（C1 / C2 / C4 / C5）で、AI の追撃クエリに要る欄を「要求フラグ無しで常時載せる」方向に
+2026-08 の指摘（C1 / C2 / C4 / C5）で、AI の追撃クエリに要る欄を「要求フラグ無しで常時載せる」方向に
 揃えた。実利用が進むと逆側が見えた —— 読むだけの呼び出しが大半で、毎件の `is_deleted:false`、`tags[]` と同じ
 内容の `tag_entities[]`、Kyou 側と同値の plugin payload 3欄、`id` と同値の `commit_hash`、
 そして設定ツリーの葉が毎回持つ `name==rep_name` / `children:null` / `is_dir:false` / `ignore_check_rep_rykv:false`
@@ -33,7 +33,7 @@
 
 - **`tags[]` を落として `tag_entities[]` だけにする** — Web の列と Wear OS が `[]string` を前提にしている
   （ワイヤ互換。DTO のコメント）。
-- **`is_deleted` を据え置く（監査 C4 のまま）** — 利用者が「true のときだけ」を選んだ。`include_deleted_data` を
+- **`is_deleted` を据え置く（指摘 C4 のまま）** — 利用者が「true のときだけ」を選んだ。`include_deleted_data` を
   使うときの判別は true が載ることで足りる。
 - **plugin payload に `rep_name` / `kyou_id` を残して Node の読み取り先を変えない** — 毎件3欄の重複がそのまま残る。
   Node の読み取り先を Kyou 側へ寄せるのは1箇所（`collectPluginPayloads`）で済む。

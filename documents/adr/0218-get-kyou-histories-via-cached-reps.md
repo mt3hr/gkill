@@ -19,12 +19,12 @@ KyouDialog で Mi にチェックを入れると、親の一覧の該当行が�
 サーバは `Repositories.GetKyouHistoriesByRepName(ctx, id, nil)` に入る。この関数は冒頭で **`UnWrap()`** を呼び、
 インメモリキャッシュ rep と `--cache_reps_local` のローカルコピー層を**両方剥がして生の leaf rep** へ戻していた。
 
-実データでは leaf が約850本（IDF の `gkill_id.db` 531 / SQLite 系 約230 / git 84 リポジトリ / プラグイン 6）。
+実データでは leaf が数百本（IDF の `gkill_id.db` が過半 / SQLite 系が数百 / git 数十リポジトリ / プラグイン数本）。
 `/api/get_kyou` 1回ごとに、USB 接続 SSD 上の SQLite を約760本 `sql.Open` → 1 SQL → `Close`
 （`fullConnect=false` の leaf は接続を持たない）、git 84本は ID がコミットハッシュに当たらず `Log(All:true)` で
 約1万コミットを全走査、プラグイン6本へ IPC。これを `threads.Go` の 8 スロットで消化していた。
 ADR-0101 が `selectMatchRepsFromQuery` について「`UnWrap()` の戻り値で検索しない」と決めた壊れ方そのものが、
-`get_kyou` 経路に残っていた（ADR-0605 の却下案にも「11rep → 約940rep・20.7秒になった経路そのもの」と書かれていた）。
+`get_kyou` 経路に残っていた（ADR-0605 の却下案にも「十数rep → 数百rep・十数秒になった経路そのもの」と書かれていた）。
 
 `UnWrap()` が入ったのは `e568c8b8`（ReKyou が画面に表示されない不具合の修正）。`rep_name` 指定時に
 leaf の名前で照合するために必要だった変更で、`rep_name` 無しの経路には元から不要だった。
@@ -33,7 +33,7 @@ leaf の名前で照合するために必要だった変更で、`rep_name` 無�
 同時に走る `get_mi` / `get_tags_by_id` の fan-out が待ち、飽和を見ると inline 逐次実行に倒れる（`threads.go`）。
 プラグインへの `get_kyou` IPC は1プラグイン直列キューで、連続操作で待ち行列が伸び、上限の10秒を超えると
 1 leaf の失敗として **`/api/get_kyou` 全体が ERR000101** になる。`gkill_error.log` には `/api/get_kyou` の
-ERR000101 が 109 行、1〜2秒に36件のバーストで残っていた。クライアントは失敗時に1回リトライするので、更に倍になる。
+ERR000101 が百行余り、1〜2秒に数十件のバーストで残っていた。クライアントは失敗時に1回リトライするので、更に倍になる。
 
 クライアント側にも2つの取りこぼしがあった。列ごとの引き直しを直列 `await` で回していたため、
 対象が2列に載っていると2列目が先発の決着後に始まり、`kyou-reload.ts` の合流（飛行中の表）に乗れずフルの往復を
@@ -86,17 +86,13 @@ ERR000101 が 109 行、1〜2秒に36件のバーストで残っていた。ク�
 
 ## Evidence
 
-- 実環境（2026-09-14）: ローカルコピー済み rep 856 ファイル（IDF 531 / Kmemo 79 / URLog 59 / Tag 59 / Text 32 /
-  TimeIs 24 / Nlog 18 / Mi 15 / Lantana 14 / KC 9 / Notification 12 / ReKyou 6 / MiReKyou 4）、git 84 リポジトリ
-  約10,165 コミット、Kyou を出すプラグイン 6。`threads` のプールは `NumCPU()` = 8
-- `gkill_error.log`（2026-08-30〜09-14）: `/api/get_kyou` の ERR000101 が 109 行。2026-09-12T19:53:51 に 36 件、
-  09-13T22:44:23 に 5 件のバースト。`/api/get_mi` / `get_tags_by_id` にはバーストが無い
+- 実環境（2026-09-14）: ローカルコピー済み rep 数百ファイル（IDF が過半、他は型ごとに数本〜数十本）、git 数十リポジトリ・約1万コミット、Kyou を出すプラグイン数本。`threads` のプールは `NumCPU()`
+- `gkill_error.log`（2026-08-30〜09-14）: `/api/get_kyou` の ERR000101 が百行余り。数十件と数件のバーストが2回。`/api/get_mi` / `get_tags_by_id` にはバーストが無い
 - 修正前の本番（2026-09-14、`performance.getEntriesByType('resource')` で計測）: mi 画面で行をダブルクリックして
-  ダイアログを開いただけで、`open_rykv_dialog` の引き直しが出す `/api/get_kyou` が **16,755 ms**。
-  同じ引き直しの他の往復は `/api/get_kyous`（実行中 TimeIs 検索）309 ms、`get_texts_by_id` 225 ms、
-  `get_gkill_notifications_by_id` 226 ms、`get_tags_by_id` 60 ms。SW キャッシュ命中は 3〜10 ms。
+  ダイアログを開いただけで、`open_rykv_dialog` の引き直しが出す `/api/get_kyou` が **十数秒**。
+  同じ引き直しの他の往復（`/api/get_kyous` の実行中 TimeIs 検索・`get_texts_by_id`・`get_gkill_notifications_by_id`・`get_tags_by_id`）はどれも数百 ms 以下。SW キャッシュ命中は数 ms。
   `get_kyou` が終わるまで後続の `get_mirekyou` 等が始まらないので、スピナーの長さ ≒ `get_kyou` の時間
-- 同じ経路の過去の実測は ADR-0101（git rep だけでプロファイル1窓あたり 20.7 秒）
+- 同じ経路の過去の実測は ADR-0101（git rep だけでプロファイル1窓あたり十数秒）
 - 修正後の所要時間は本番へ配布してから同じ操作で再測定する（この ADR を書いた時点では未測定）
 
 ## Related tests

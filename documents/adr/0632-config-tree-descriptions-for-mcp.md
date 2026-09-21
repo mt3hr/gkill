@@ -27,7 +27,7 @@ Go 本体で型付きに読むのは KFTL の `forceHideTagNames`（読み取り
 
 作業中に MCP 側の既存の穴も見つかった。偽 gkill（`internal/fakegkill/fixtures.go`）が設定ツリーを **配列ルート + 別語彙
 （`tag` / `device` / `rep_type`）** で書いていたため、実データ（ルート 1 オブジェクト `{name:"__root__", children:[…]}` +
-`tag_name` / `device_name` / `rep_type_name`）では、`contains` が 1 件も刈らず（本セッションの実測: タグの葉 347 件が
+`tag_name` / `device_name` / `rep_type_name`）では、`contains` が 1 件も刈らず（本セッションの実測: タグの葉数百件が
 そのまま返る）、compact の `name` 落としも tag / device / rep_type の 3 ツリーで効いていなかった。テストは全部通っていた。
 
 ## Decision
@@ -56,7 +56,7 @@ Go 本体で型付きに読むのは KFTL の `forceHideTagNames`（読み取り
   （管理者の rep 管理）へ出る。利用者は「ApplicationConfig の各構造から編集」を求めており、rep の運用メモは RepStruct の葉に置けば足りる。
 - **説明専用の MCP ツールを足す** — ツール数が 3 サーバで動き、資料の表・予算・ゴールデンが増える割に、`gkill_get_application_config`
   の `fields` 射影で同じことができる。
-- **ツリーの全量読みで足りるとする（一覧射影を作らない）** — 実環境の `rep_struct` だけで 25,000 トークン超。運用メモを読むためだけに
+- **ツリーの全量読みで足りるとする（一覧射影を作らない）** — 実環境の `rep_struct` だけで数万トークン。運用メモを読むためだけに
   毎回それを読ませるのは、この機能の目的（効率よく引き出す）と逆になる。
 - **`descriptions` を既定の全量応答にも載せる** — ツリー側にも同じ文が載るので二重になる。`fields` を省いた読み取りは「全部」の意味で
   使われており、そこに仮想欄を増やすとコンテキストを常時食う。
@@ -79,7 +79,7 @@ Go 本体で型付きに読むのは KFTL の `forceHideTagNames`（読み取り
 
 ## Evidence
 
-- 本セッションの実測（2026-09-20、実環境の read サーバ）: `fields:["tag_struct"]` + `contains` で葉 347 件が 1 件も減らず、
+- 本セッションの実測（2026-09-20、実環境の read サーバ）: `fields:["tag_struct"]` + `contains` で数百件の葉が 1 件も減らず、
   `compact:false` の出力で識別欄が `tag_name` / `device_name` / `rep_type_name` であることを確認。
 - 偽 gkill を実データの形に直した後の `contains` のゴールデン: `app config: contains` が「生活/日記」の 1 枝だけを返し、
   `app config: contains no match` は各ツリーのルートだけ（`children` 無し）になった。

@@ -75,10 +75,10 @@ gkill の Kyou は2層に書かれる。実体は leaf rep（`XxxRepositorySQLit
 
 ## Evidence
 
-2026-08-23 の readwrite MCP 監査（実測）:
+readwrite MCP の点検（実測）:
 
 - 8月の全記録で `group_by:"rep_name"` を撃つと `[{"(unknown)":40},{"Files":2},{"Mi":1}]`。
-  43件中40件が `(unknown)`。rep_name が入っていた唯一の Mi は、その監査中に update を通した1件だけ
+  43件中40件が `(unknown)`。rep_name が入っていた唯一の Mi は、その点検中に update を通した1件だけ
 - `gkill_get_kyous` の結果で kmemo / nlog / kc / lantana / urlog / timeis のすべてが `rep_name: ""`
 - 同じ id を update 経由で読み直すと `rep_name: "Mi"` になる（Update 側には正規化があるため）
 

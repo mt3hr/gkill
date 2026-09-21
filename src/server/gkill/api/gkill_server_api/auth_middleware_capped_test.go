@@ -3,7 +3,7 @@ package gkill_server_api
 // wrapNoAuthCapped の境界動作（上限±1バイト・413 の JSON 本文・読み取り期限）と、
 // ルート表（apiRoutes）のボディ付き無認証経路がすべて上限つきで登録されていることの検査。
 //
-// 2026-08-30 監査 F-002: wrapNoAuth の経路は認証ミドルウェアを通らないため
+// 指摘 F-002: wrapNoAuth の経路は認証ミドルウェアを通らないため
 // readAuthBody の 32MB 上限が効かず、未認証の無制限ボディがそのままヒープへ載っていた。
 
 import (
@@ -185,7 +185,7 @@ func TestAPIRoutesNoAuthBodyRoutesAreCapped(t *testing.T) {
 			}
 		default:
 			if rt.Body != bodyAuth {
-				t.Errorf("%s が素の wrapNoAuth 相当で登録されている。ボディを読む無認証経路は bodyAuth を使うこと（2026-08-30 監査 F-002）", rt.Path)
+				t.Errorf("%s が素の wrapNoAuth 相当で登録されている。ボディを読む無認証経路は bodyAuth を使うこと（指摘 F-002）", rt.Path)
 			}
 		}
 	}

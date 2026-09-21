@@ -15,7 +15,7 @@ import (
 
 // 保持するレコードの種別。ここに無いものは行ごと読み捨てる。
 //
-// 実データではバイトの94.7%がツールの実行結果で、それは1バイトも要らない。
+// 実データではバイトの9割超がツールの実行結果で、それは1バイトも要らない。
 // 保持するのは会話・思考・ツールの「呼び出し」・変更ファイル・計画だけ。
 var keepPayloadKinds = map[string]struct{}{
 	outerEventMsg + "/user_message":       {},
@@ -482,7 +482,7 @@ const (
 
 // stripIDEContext は VSCode拡張が付ける前置きを本文から剥がす。
 //
-// 実データでは178件中108件にこれが付いている。
+// 実データでは6割ほどにこれが付いている。
 // rykv は一覧の行に詳細HTMLをそのまま描くので、前置きを本文の先頭に残すと
 // どの行も「開いているタブ一覧」で埋まって読めなくなる。
 //
@@ -611,7 +611,7 @@ func pickSummaryField(object map[string]any) string {
 
 // patchFilesOf は patch_apply_end の changes を「変更したファイル一覧」に潰す。
 //
-// unified diff は保存しない。実データでは changes のJSONが中央値11.5KB・最大87KBあり、
+// unified diff は保存しない。実データでは changes のJSONが中央値で十数KB・最大で数十KBあり、
 // 日記として要るのは「どのファイルを触ったか」だけ。
 func patchFilesOf(payload patchApplyEndPayload, cwd string) []patchFile {
 	if len(payload.Changes) == 0 {

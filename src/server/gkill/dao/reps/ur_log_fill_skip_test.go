@@ -4,7 +4,7 @@ package reps
 //
 // MCP の gkill_add_urlog は fetch_metadata:false / fetch_favicon:false を
 // SkipFetchMetadata / SkipFetchFavicon へ写して「外向き通信なしのブックマーク登録」を
-// 約束する（2026-08-30 MCPレビュー）。配線が外れても目の前ではエラーにならず、
+// 約束する（MCPレビュー）。配線が外れても目の前ではエラーにならず、
 // 「抑止したはずなのに対象サイトと favicon サービスへ通信が飛ぶ」という
 // 静かな約束破りになるので、取得口ごと差し替えて「呼ばれないこと」を固定する。
 //

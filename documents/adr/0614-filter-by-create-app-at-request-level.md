@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-24 |
-| Sources | 2026-08-24 の MCP 再監査（P-39）。ADR-0101 / ADR-0102 が否決した「rep名を SQL へ降ろす」と同じ失敗クラス |
+| Sources | MCP の2巡目の指摘（P-39）。ADR-0101 / ADR-0102 が否決した「rep名を SQL へ降ろす」と同じ失敗クラス |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go`（`applyMCPCreateAppsFilter`） / `src/server/gkill/api/req_res/get_kyous_mcp_request.go` |
@@ -14,7 +14,7 @@
 `create_app` は**全13テーブルに列があり、全 rep が値を埋めている**。
 `gkill` / `gkill_kftl` / `gkill_mcp_readwrite` / `gkill_mcp_write` / `urlog_bookmarklet` / `git` /
 プラグインの自称名が実際に入っている。にもかかわらず**引く手段が1つも無かった** ——
-検索条件38キーに作成アプリ系が存在しない（2026-08-24 の再監査 P-39）。
+検索条件38キーに作成アプリ系が存在しない（2巡目の指摘 P-39）。
 
 「MCP で入れた記録だけ見直したい」「メモ帳から入れたぶんを数えたい」が、
 データはあるのにできない状態だった。
@@ -53,7 +53,7 @@
 - ポストフィルタなので、`limit` や `max_size_mb` の適用より前に絞られる位置に置く必要がある
   （`applyMCPDataTypesFilter` の直後に並べてある）
 - `KyouMCPDTO` に2フィールド増えるが `omitempty` は付けない
-  （空と「フィールドが無い」が区別できなくなる。外部監査 C4 / C5 と同じ理由）
+  （空と「フィールドが無い」が区別できなくなる。指摘 C4 / C5 と同じ理由）
 
 ## Evidence
 
@@ -63,7 +63,7 @@
   KFTL は `"gkill_kftl"`、MCP は `"gkill_mcp_write"` / `"gkill_mcp_readwrite"`）
 - 先例と明文の理由: `get_kyous_mcp_helpers.go` の `applyMCPDataTypesFilter` に
   「FindQuery に足さずリクエストレベルなのは、和集合仕様の rep_types（Web の Mi 画面が依存）を
-  触らずに Mi/MiReKyou/プラグインを直接絞る口を作るため（外部監査 S5/A2）」とある
+  触らずに Mi/MiReKyou/プラグインを直接絞る口を作るため（指摘 S5/A2）」とある
 
 ## Related tests
 

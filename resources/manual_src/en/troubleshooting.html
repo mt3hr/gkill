@@ -55,7 +55,7 @@
     </tr>
     <tr>
       <td>The plugin did not respond. Wait a moment and try again, or check its status in Settings → Plugin Settings.</td>
-      <td>Wait a moment and retry, or check the status in Settings → Plugin Settings</td>
+      <td>Wait a moment and retry, or check the status in Settings → Plugin Settings. If that does not help, the reason is kept in <code>gkill_plugin_&lt;plugin name&gt;_error.log</code> in the <code>logs</code> folder of the gkill home folder</td>
     </tr>
     <tr>
       <td>The target record was not found. It may have been deleted or updated from another device. Reload the list.</td>
@@ -85,6 +85,14 @@
 
   <h2>When nothing appears</h2>
   <p>If pressing a button does nothing, reload the page. Unexpected errors inside the app are now also shown at the top right. If the problem persists, the server's <code>gkill_error.log</code> keeps a line for the time of the failure.</p>
+
+  <h2>When filtering by time of day always gives 0 results</h2>
+  <p>On a smartphone (Android) or a server you started yourself, a search can return 0 results only when a time-of-day filter is set. This happens when the server cannot read the device's time zone; your records are not gone.</p>
+  <ul>
+    <li>In the smartphone app, quit the app and start it again.</li>
+    <li>If you start the server yourself, set the <code>TZ</code> environment variable (for example <code>TZ=JST-9</code>) before starting it.</li>
+    <li>If the server's <code>gkill_error.log</code> has a line starting with "sqlite localtime differs", this is the cause.</li>
+  </ul>
 
   <h2>Related documents</h2>
   <ul>

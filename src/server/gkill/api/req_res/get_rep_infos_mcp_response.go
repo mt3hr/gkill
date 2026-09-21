@@ -34,7 +34,7 @@ type RepInfoMCPDTO struct {
 //
 // これらの rep は Kyou を1件も生まないので Reps（＝利用者が選べる記録保管場所）
 // には入っておらず、GetAllRepNames にも RepInfos にも出てこなかった。
-// 書き込み応答の rep_name で事後に分かるだけだった（2026-08-24 の再監査）。
+// 書き込み応答の rep_name で事後に分かるだけだった（2巡目の指摘）。
 type AttachedDataRepInfoMCPDTO struct {
 	RepName string `json:"rep_name"`
 	// DataKind は tag / text / notification / gpslog のいずれか。
@@ -60,7 +60,7 @@ type PluginRepInfoMCPDTO struct {
 // GetRepInfosMCPResponse は /api/get_rep_infos_mcp のレスポンス。
 //
 // rep_types の正準語彙（find.KyouRepTypes）は長らくどのAPIからも取得できず、
-// MCPクライアントは総当たりでしか発見できなかった（外部監査 A1。「画像repの正準値が
+// MCPクライアントは総当たりでしか発見できなかった（指摘 A1。「画像repの正準値が
 // 表示ラベルと無関係な directory である」ことは総当たりでしか判明しなかった）。
 // このエンドポイントが語彙とrep一覧の突き合わせ先になる。
 type GetRepInfosMCPResponse struct {

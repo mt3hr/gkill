@@ -421,7 +421,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
      * KFTL テキストをスマホ経由でサーバーへ送る。テンプレート記録と気分記録の共通経路。
      */
     private suspend fun submitKftl(kftlText: String, force: Boolean = false) {
-        // KFTL テキストは利用者の記録内容そのものなので logcat へ出さない(2026-08-30 監査 F-008)
+        // KFTL テキストは利用者の記録内容そのものなので logcat へ出さない(指摘 F-008)
         Log.d(TAG, "submitKftl: (force=$force)")
         val sent = wearClient.sendSubmitRequest(kftlText, force)
         if (sent == null) {
@@ -501,7 +501,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     }
 
     private suspend fun endTimeis(node: PlayingTimeIsNode) {
-        // Kyou ID は記録と突き合わせられる識別子なので logcat へ出さない(2026-08-30 監査 F-008)
+        // Kyou ID は記録と突き合わせられる識別子なので logcat へ出さない(指摘 F-008)
         Log.d(TAG, "endTimeis")
         // Send "id\nrep_name" format
         val payload = "${node.id}\n${node.rep_name}"

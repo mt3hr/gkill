@@ -83,7 +83,7 @@ var PluginTools = []*jsonobj.Object{
 // エラー文で、どちらも「利用者の端末のどこに何が置いてあるか」を含む。gkill 側で
 // ユーザー名は伏せているが、AI の文脈へ入れば資料やコミットメッセージへ引き写される経路が
 // できてしまう。「何か書かれている」ことだけ has_* で伝えれば、
-// 「is_alive=true なのに0件」の診断（外部監査 D2）は成立する。
+// 「is_alive=true なのに0件」の診断（指摘 D2）は成立する。
 // 経緯: documents/adr/0707-redact-environment-specific-strings.md
 const PluginDiagnosticsWithheldWarning = "plugin diagnostics are withheld from this response: last_error (raw plugin stderr) and " +
 	"typed_index.last_build_error describe the directory layout of the user's own machine, so only " +

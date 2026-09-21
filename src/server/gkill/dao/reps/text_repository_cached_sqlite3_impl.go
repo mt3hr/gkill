@@ -916,7 +916,7 @@ func (m *textRepositoryCachedSQLite3Impl) UnWrapTyped() ([]TextRepository, error
 	// その GetRepName() は "TagReps" / "TextReps" という**実在しない名前**を返すので、
 	// rep名を列挙する呼び出し側（get_rep_infos_mcp の attached_data_reps）へ
 	// 渡せない値が漏れる。ADR-0210 の注意は GetLatestDataRepositoryAddress 側にだけ
-	// 書かれていて、ここが守れていなかった（2026-08-24 の実利用レビュー）。
+	// 書かれていて、ここが守れていなかった（実利用レビュー）。
 	// notification 側は元から再帰しており、そちらが正しい形。
 	unWraped, err := m.textRep.UnWrapTyped()
 	if err != nil {

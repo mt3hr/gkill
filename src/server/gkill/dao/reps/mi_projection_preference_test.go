@@ -1,6 +1,6 @@
 package reps
 
-// リポジトリ経由の射影正準化の回帰テスト（2026-08-24 再監査 事象10）。
+// リポジトリ経由の射影正準化の回帰テスト（2巡目の指摘 事象10）。
 //
 // Mi の5射影（mi_create / mi_check / mi_limit / mi_start / mi_end）は同じ1行から
 // SQL が合成するラベルで、MI テーブルに DATA_TYPE 列は無い。5つとも UPDATE_TIME が
@@ -56,7 +56,7 @@ func TestMiGetKyouAndGetMiReturnCanonicalProjection(t *testing.T) {
 				t.Fatal("GetMi returned nil")
 			}
 			// ここが mi_check に戻ると、updated_mi と updated_kyou の種別名が
-			// 1つの応答の中で食い違う（再監査で実測した壊れ方）
+			// 1つの応答の中で食い違う（2巡目の指摘で実測した壊れ方）
 			if gotMi.DataType != "mi_create" {
 				t.Errorf("GetMi の DataType = %q, want %q（GetKyou と食い違うと応答の中で種別名がずれる）", gotMi.DataType, "mi_create")
 			}

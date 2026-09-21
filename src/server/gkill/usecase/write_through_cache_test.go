@@ -294,7 +294,7 @@ func newWriteThroughTagTempRep(t *testing.T) reps.TagTempRepository {
 //
 // 以前は成功が返り、どこにも付いていない宙吊りのタグができていた。
 // そのタグ名は get_all_tag_names の語彙に載るので、
-// 0件しかヒットしない候補が検索の選択肢に混ざり続ける（監査2026-08-23で実測）。
+// 0件しかヒットしない候補が検索の選択肢に混ざり続ける（指摘で実測）。
 // IDの取り違えはAIが最も起こしやすい事故で、そのとき静かに失敗していた。
 func TestAddTagRejectsMissingTarget(t *testing.T) {
 	ctx := context.Background()

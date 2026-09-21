@@ -35,8 +35,8 @@
 
 ## Evidence
 
-- 実測（TAG 7,047行、1か月範囲）: **2.44ms → 0.39ms**。`SCAN + TEMP B-TREE` から `SEARCH` のみへ
-- オフセット混在の実データ: TAG の `RELATED_TIME` は `+00:00` が6,194行 / `+09:00` が853行
+- 実測（TAG 数千行、1か月範囲）: **数ms → 1ms未満**。`SCAN + TEMP B-TREE` から `SEARCH` のみへ
+- オフセット混在の実データ: TAG の `RELATED_TIME` は `+00:00` と `+09:00` が混在（前者が大半）
 
 ## Related tests
 

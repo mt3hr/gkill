@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 # ビルド・テストだけのワークフローに書き込み権限は不要。
-# 既定の広い GITHUB_TOKEN を checkout に必要な最小権限へ絞る (2026-08-30 監査 F-012)。
+# 既定の広い GITHUB_TOKEN を checkout に必要な最小権限へ絞る (指摘 F-012)。
 permissions:
   contents: read
 

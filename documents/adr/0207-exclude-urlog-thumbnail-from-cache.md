@@ -11,7 +11,7 @@
 
 ## Context
 
-URLog の `THUMBNAIL_IMAGE` は base64 で **1行あたり平均406KB・最大10MB**あり、実データ227行の合計が **90MB** ある。これがキャッシュ表に入っていたため、`--cache_in_memory`（既定 true）でそのままメモリに常駐していた。
+URLog の `THUMBNAIL_IMAGE` は base64 で **1行あたり平均数百KB・最大10MB**あり、実データ数百行の合計が **数十MB** ある。これがキャッシュ表に入っていたため、`--cache_in_memory`（既定 true）でそのままメモリに常駐していた。
 
 ## Decision
 
@@ -25,7 +25,7 @@ URLog の `THUMBNAIL_IMAGE` は base64 で **1行あたり平均406KB・最大10
 
 ## Rejected alternatives
 
-- **集約（`u.urlogRep`）へ丸ごと委譲する** — 配下rep数ぶんのクエリが飛ぶ。実データ17repで**カード1枚あたり約13.8ms**。持ち主repだけなら約0.6〜1.0ms。
+- **集約（`u.urlogRep`）へ丸ごと委譲する** — 配下rep数ぶんのクエリが飛ぶ。実データ十数repで**カード1枚あたり十数ms**。持ち主repだけなら1ms前後。
 
 - **丸ごと委譲する（もう1つの理由）** — cached の `AddURLogInfo` は**キャッシュにしか書かない**（本番では `handle_commit_tx` がディスクとキャッシュの両方に書いて辻褄を合わせている）。委譲すると**キャッシュにしか無い行が引けなくなる**。
 
@@ -41,9 +41,9 @@ URLog の `THUMBNAIL_IMAGE` は base64 で **1行あたり平均406KB・最大10
 
 ## Evidence
 
-- 本番相当（227行×406KB）で実測: キャッシュDB **90MB相当 → 0.17MB**
-- 集約への丸投げ: 実データ17repでカード1枚あたり約13.8ms / 持ち主だけなら約0.6〜1.0ms
-- `FAVICON_IMAGE` は合計0.10MB・平均0.5KB
+- 本番相当（数百行×数百KB）で実測: キャッシュDB **数十MB相当 → 1MB未満**
+- 集約への丸投げ: 実データ十数repでカード1枚あたり十数ms / 持ち主だけなら1ms前後
+- `FAVICON_IMAGE` は合計1MB未満・平均1KB未満
 
 ## Related tests
 

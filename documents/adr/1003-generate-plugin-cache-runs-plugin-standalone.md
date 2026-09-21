@@ -18,7 +18,7 @@ SQLite キャッシュ（`caches/plugin_cache/{user}/{plugin}/cache.db`）は、
 常駐ビルダが非同期に作る（[ADR-0305](0305-plugin-background-builder-wal.md)）。新しいデータ
 （Google Takeout の zip・ChatGPT のエクスポート等）が同期スクリプトで降りてきても、誰かが画面を開いて検索するまで
 取り込みは始まらず、`update_cache` が作るサーバ側の型別索引（fitbit の KC 等）も古い cache.db を読む。
-fitbit の初回構築は実測 155 秒なので、最初に開いた画面は数分のあいだ結果が痩せる。
+fitbit の初回構築は実測で数分なので、最初に開いた画面は数分のあいだ結果が痩せる。
 
 サムネイル（`generate_thumb_cache`）と互換動画（`generate_video_cache`）には「同期の後に CLI で作っておく」
 道具があり、運用スクリプトはそれを `update_cache` と並べて回している。
@@ -54,9 +54,9 @@ fitbit の初回構築は実測 155 秒なので、最初に開いた画面は�
 - **gkill 本体が cache.db を直接作る** — スキーマはプラグインごとに別物で、SDK を使わない
   第三者プラグイン（`gkill_plugin_uguisu`）には手が届かない。取り込みの知識をプラグインの外へ出さない。
 - **プラグインを並列に起動する** — stderr の進捗が混ざって読めなくなり、fitbit の並列パーサ（`ScanWorkers`）が
-  数 GB の Takeout zip を同時に開く。実測でも fitbit の 155 秒が支配的で、他は数秒〜数十秒なので並列化の
+  数 GB の Takeout zip を同時に開く。実測でも fitbit の数分が支配的で、他は数秒〜数十秒なので並列化の
   利得は小さい。
-- **子プロセスにタイムアウトを張る** — fitbit の初回は実測 155 秒だが、環境（Termux / HDD）で数倍ぶれる。
+- **子プロセスにタイムアウトを張る** — fitbit の初回は実測で数分だが、環境（Termux / HDD）で数倍ぶれる。
   切ると「途中まで取り込んだ状態で exit 1」になり、完了を待つという目的に反する。
   Ctrl+C（ctx のキャンセル）で殺せれば十分。
 - **exit 0 で結果行が無いバイナリを成功扱いにする** — SDK を使わない独自実装や旧 SDK のバイナリは
@@ -93,8 +93,8 @@ fitbit の初回構築は実測 155 秒なので、最初に開いた画面は�
 
 ## Evidence
 
-- fitbit の初回構築は実データ（271MB zip）で約 155 秒、差分は 1 秒未満（[ADR-0305](0305-plugin-background-builder-wal.md) の実測）。
-  archived_git_commit_log は 88 zip / 3,447 コミットで約 60 秒。他は数秒。
+- fitbit の初回構築は実データ（数百MB の zip）で 2〜3 分、差分は 1 秒未満（[ADR-0305](0305-plugin-background-builder-wal.md) の実測）。
+  archived_git_commit_log は数十 zip / 数千コミットで約 1 分。他は数秒。
 - 旧 SDK のバイナリに `--gkill-build-cache` を渡すと Go の `flag`（`ExitOnError`）が usage を stderr に出して exit 2 する。
   stdin を繋がずに起動した SDK バイナリは `runLoop` が `scanner.Scan()` の EOF で false を返し、`Run` は何も出さず exit 0 する
   （`plugin/sdk/sdk_test.go` の `TestRunLoop_StdinCloseReturnsFalse`）。

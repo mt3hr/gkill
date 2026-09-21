@@ -4,14 +4,14 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-09-20 |
-| Sources | 利用者の要求「MCP サーバを Go へ厳密にリプレイス。テストを先に移行し、自己チェックしてから実装。新旧の結果一致を最重視」。途中の判断「gkill_server に一本化」「ログは gkill_log を改変して別名で出す」。旧 Node 実装の最終コミットは `02634f8e`（`src/mcp`、約 9,100 行 + テスト 12,500 行・28 ファイル） |
+| Sources | 利用者の要求「MCP サーバを Go へ厳密にリプレイス。テストを先に移行し、自己チェックしてから実装。新旧の結果一致を最重視」。途中の判断「gkill_server に一本化」「ログは gkill_log を改変して別名で出す」。旧 Node 実装の最終コミットは `e9a54cd9`（`src/mcp`、約 9,100 行 + テスト 12,500 行・28 ファイル） |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/mcp/`（package `mcp`。旧 `src/mcp/lib/*.mjs` と 1:1）/ `src/server/gkill/mcp/jsonobj/`（JSON.stringify 互換の順序つき JSON）/ `src/server/gkill/mcp/internal/fakegkill/`（偽 gkill）/ `src/server/gkill/mcp/testdata/golden/`（ゴールデン）/ `src/server/gkill/main/common/mcp.go`（`gkill_server mcp`）/ `src/server/gkill/main/common/gkill_log/gkill_log.go`（`InitNamed`） |
 
 ## Context
 
-MCP サーバは Node.js（`src/mcp`）で書かれ、NSSM のサービス 3 本が `node` で**作業ツリーを直接実行**していた。
+MCP サーバは Node.js（`src/mcp`）で書かれ、常駐させた Windows サービス 3 本が `node` で**作業ツリーを直接実行**していた。
 Go の本体と 2 言語・2 配布形態に分かれていて、コミットしても再起動しないと配られない（ADR-0619）、
 Node のバージョン・`undici` の依存・vitest の設定が本体のリリースゲートとは別に要る、
 ログが Node 独自の JSON 行で本体の `gkill_log` と形式が違い、error ログは経路だけあって書かれていなかった、
@@ -36,7 +36,7 @@ Node のバージョン・`undici` の依存・vitest の設定が本体のリ�
    `undefined` の番兵・キー順・`\b` / `\f` の短形式・U+2028 非エスケープ）で持ち回る。
 2. **gkill_server のサブコマンド `gkill_server mcp --kind read|write|readwrite [--transport stdio|http] [--config <path>]`。**
    別バイナリは作らない。MCP は引き続き**起動中の gkill_server への HTTP クライアント**で、DB は直接読まない
-   （`update_cache` / `add_tag` と同じ型）。NSSM の MCP サービス 3 本は `gkill_server.exe mcp --kind <kind>` を
+   （`update_cache` / `add_tag` と同じ型）。常駐させる MCP のサービス 3 本は `gkill_server.exe mcp --kind <kind>` を
    実行する別プロセスのまま（本体サービスとプロセス寿命を分ける）。
 3. **設定は 1 ファイル `$GKILL_HOME/configs/gkill_mcp.json`**（無ければ初回起動時に既定値で生成）と、
    旧実装と同名の環境変数。優先順位はフラグ > 環境変数 > ファイル > 既定値。壊れたファイルは起動を止める。

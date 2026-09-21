@@ -428,7 +428,7 @@ func playingTimeIsQueryFromConfig(applicationConfig *user_config.ApplicationConf
 // `TimeIsReps.FindTimeIs` は順序を保証せず（map 由来で毎回変わる）、削除済みも落とさない。
 // 2026-09-15 の Go 寄せ（ADR-0507）まで Web は `get_kyous` の並び（RelatedTime 降順・削除済み除外）に乗っていて
 // 常に最新の1件を終えていたが、Go は不定順の先頭を取っていたので、同じタグの終え忘れが N 件あると
-// いま走っている1件に当たる確率が 1/N になり、削除済みの打刻に終了を書くこともあった（2026-09-16 の利用者報告。ADR-0509）。
+// いま走っている1件に当たる確率が 1/N になり、削除済みの打刻に終了を書くこともあった（利用者報告。ADR-0509）。
 func findPlayingTimeIsEntries(ctx context.Context, base *KFTLRequestBase) ([]reps.TimeIs, error) {
 	query := playingTimeIsQueryFromConfig(configOf(base), time.Now())
 	playingEntries, err := base.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)

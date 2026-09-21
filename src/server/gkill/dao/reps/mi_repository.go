@@ -19,7 +19,7 @@ const miCanonicalProjectionDataType = "mi_create"
 // 5つとも UPDATE_TIME が同着なので、素の MaxFunc は「SQLite の UNION が返した先頭」を返す。
 // SELECT の列の並びが違うだけで勝つ射影が変わり、実際 GetMi は mi_check・
 // GetKyou は mi_create を返して、1つの応答の中で種別名が食い違っていた
-// （2026-08-24 の再監査）。**どれを名乗るかを実装の都合に決めさせない。**
+// （2巡目の指摘）。**どれを名乗るかを実装の都合に決めさせない。**
 func compareMiProjectionPreference(a, b string) int {
 	switch {
 	case a == b:

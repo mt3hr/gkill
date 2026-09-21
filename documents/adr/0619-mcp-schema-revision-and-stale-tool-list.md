@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-09-14 |
-| Sources | 2026-09-14 の MCP レビュー（ChatGPT からの実呼び出しで「tools/list どおりに呼ぶと未知の引数で拒否される」を再現。P0 の2件）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「ツール一覧の世代は `gkill_status` の `schema_revision` で見せる。」「未知の引数名には「古い一覧の可能性」を必ず添える。」「tools/list のバイト量は予算ファイルで固定する。」 |
+| Sources | MCP レビュー（ChatGPT からの実呼び出しで「tools/list どおりに呼ぶと未知の引数で拒否される」を再現。P0 の2件）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「ツール一覧の世代は `gkill_status` の `schema_revision` で見せる。」「未知の引数名には「古い一覧の可能性」を必ず添える。」「tools/list のバイト量は予算ファイルで固定する。」 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/mcp/status_tool.go`（`computeSchemaRevision` / `stampSchemaRevision`）/ `src/server/gkill/mcp/server_base.go`（コンストラクタの焼き込み・`describeServer`・`initialize` の version）/ `src/server/gkill/mcp/read_tools.go`（`gkill_status` の定義）/ `src/server/gkill/mcp/read_handlers.go`（`buildStatusPayload`）/ `src/server/gkill/mcp/validation.go`（`unknownKeyMessage`）/ `src/server/gkill/mcp/bootstrap.go`（`server_start` ログ）/ `src/server/gkill/mcp/tool_schema_budget.go` と `src/server/gkill/mcp/tool_schema_budget.json` / `src/server/gkill/main/common/mcp.go` |
@@ -17,9 +17,9 @@
 正しいスキーマに従った AI が失敗する、というのは「AI が間違った使い方をしない」を
 掲げる MCP にとって一番たちの悪い形で、しかもエラー文には再接続の案内が一切無かった。
 
-原因を切り分けると、**サーバのプロセスは古くなかった**。NSSM の `GkillReadMCPServer` /
-`GkillReadWriteMCPServer`（当時は node が旧 `src/mcp` の作業ツリーを直接実行していた。2026-09-20 からは `gkill_server.exe mcp` で本体と同じ exe を配る。ADR-0631）は
-2026-09-10 03:41 起動で、改名コミット `5310b1c5`（2026-09-08 18:57）より後。
+原因を切り分けると、**サーバのプロセスは古くなかった**。常駐させていた MCP サービス 2 本
+（read / readwrite。当時は node が旧 `src/mcp` の作業ツリーを直接実行していた。2026-09-20 からは `gkill_server.exe mcp` で本体と同じ exe を配る。ADR-0631）は
+2026-09-10 03:41 起動で、改名コミット `51752fe7`（2026-09-08 18:57）より後。
 古かったのは ChatGPT のコネクタが接続時に取った tools/list で、これはサーバを
 何度再起動しても更新されない（[ADR-0609](0609-stale-tool-schema-is-warned-only-when-proven.md) が
 claude.ai コネクタで実測した「セッション寿命で固定」の ChatGPT 版）。
@@ -96,13 +96,13 @@ claude.ai コネクタで実測した「セッション寿命で固定」の Cha
   クライアント側の接続し直し（ChatGPT のコネクタはサーバ再起動では直らない）
 - 予算ファイルは説明文を直すたびに `--update` が要る。手間だが、それが「合計を見る」こと
   そのもの。増やしたときは理由をコミットメッセージに書く
-- MCP の NSSM サービスは作業ツリーを直接実行するので、この変更はコミットだけでは本番へ
+- MCP のサービス（当時は node が作業ツリーを直接実行）には、この変更はコミットしただけでは
   届かず、サービスの再起動と、各クライアントの接続し直しが要る
 
 ## Evidence
 
 - 2026-09-14 実測: node の MCP サービス2プロセスは 2026-09-10 03:41:54 起動
-  （`Win32_Process.CreationDate`）。改名コミット `5310b1c5` は 2026-09-08 18:57:04 +0900。
+  （`Win32_Process.CreationDate`）。改名コミット `51752fe7` は 2026-09-08 18:57:04 +0900。
   ChatGPT から `query.<旧名>` で呼ぶと `is not supported`、`playing_time` なら成功
 - tools/list の実測（gkill_status 追加・廃止引数除去の後）: read 47,187 B / write 59,911 B /
   readwrite 93,980 B。追加前は read 43,237 B / readwrite 93,740 B で、`gkill_get_kyous`

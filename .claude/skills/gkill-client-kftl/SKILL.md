@@ -16,7 +16,7 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 ## 解釈と書き込みはサーバの1実装（2026-09-15、[ADR-0507](../../../documents/adr/0507-kftl-single-implementation-on-server.md)）
 
 2026-09-15 まで KFTL は TS（Web: 解析して `add_*` を tx で fan-out）と Go（Wear / MCP: `/api/submit_kftl_text`）の2実装だった。
-ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り、**Web は3週間、気分0を書き続けた**（2026-09-14 に実測）。
+ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り、**Web は数週間、気分0を書き続けた**（2026-09-14 に実測）。
 2083 年の打刻・支出の関連時刻がタグに乗らない事故も「片方だけ直した／片方だけ壊れた」型。守ること:
 
 - **TS `classes/kftl/` は行ラベルの分類器だけ。** 検証ルール・リクエスト組み立て・`add_*` 呼び出し・繰り返しの展開を**戻さない**。
@@ -44,7 +44,7 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
   （`sortPlayingTimeIsEntries`。閉包の有無に関わらず通す）。呼び出し側は先頭一致の**最新の1件だけ**を終える。
   `TimeIsReps.FindTimeIs` は順序を保証せず（map 由来で毎回変わる）削除済みも落とさないので、並べずに先頭を取ると
   同じタグの終え忘れが N 件あるとき走っている1件に当たる確率が 1/N になり、削除済みの打刻に終了を書くこともある
-  （2026-09-16 の利用者報告。実データでは検索タグ1つに終え忘れ 3〜4 件＋削除済み実行中 4〜6 件。[ADR-0509](../../../documents/adr/0509-kftl-timeis-end-targets-the-latest-running-record.md)）。
+  （利用者報告。実データでは検索タグ1つに終え忘れが数件＋削除済み実行中が数件。[ADR-0509](../../../documents/adr/0509-kftl-timeis-end-targets-the-latest-running-record.md)）。
   一致する全件を終えない（数か月前の開始に「今」の終了時刻が入る）
 - **検索タグ（`ーたえ` / `ーいたえ` の次の行）は `addSearchTag` で `searchTags` だけに積む。本体 `Tags`（`KFTLRequestBase.AddTag`）に混ぜない。**
   混ぜると `doBaseRequest` が Kyou の無い `r.RequestID` へ Tag 行を書いて終了のたびに宙に浮いた Tag が増え、
@@ -93,7 +93,7 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
 プレフィックスの判定は**完全一致**（`kftl_factory.go` の `generateDefaultConstructor`）で、値は次の行に書く。外したときは**書き込みの前に**行別エラーへ倒すこと（[ADR-0503](../../../documents/adr/0503-kftl-prefix-misuse-is-an-input-error.md)）。
 
 - **単独プレフィックス**（次に値の行が無い）は `requireNextLineText` で弾く。放置すると `/mood` 単独が**気分値 0（最低）の記録を黙って1件書き**、`/num` 単独が空の数値記録を書く。他は無言で0件になる
-- **保存マーカー「！」の行は「次の行」に数えない。** `generateKFTLLines` は `strings.Split` の直後に最初のマーカー行（1行目は除く）で本文を切り詰めてから `NextStatementLineText` を組み立てる。ループ末尾の break に戻すと、Web の「！」で保存する経路だけ `ーち`+「！」が `requireNextLineText` を素通りしてタイトル空のまま `DoRequest` に届く（2026-09-15 の利用者報告。`ーら`+「！」は気分値0を書き、`ーか`+「！」は 500 だった。[ADR-0508](../../../documents/adr/0508-kftl-blank-records-are-input-errors.md)）
+- **保存マーカー「！」の行は「次の行」に数えない。** `generateKFTLLines` は `strings.Split` の直後に最初のマーカー行（1行目は除く）で本文を切り詰めてから `NextStatementLineText` を組み立てる。ループ末尾の break に戻すと、Web の「！」で保存する経路だけ `ーち`+「！」が `requireNextLineText` を素通りしてタイトル空のまま `DoRequest` に届く（利用者報告。`ーら`+「！」は気分値0を書き、`ーか`+「！」は 500 だった。[ADR-0508](../../../documents/adr/0508-kftl-blank-records-are-input-errors.md)）
 - **内容の無い記録と付け先の無いメタ情報は、書く前に `validateRequestContents` が行別エラーにする。** `KFTLRequest.ValidateContent()` は基底に既定実装を置かない（型を足したら「何を空とみなすか」を書かないとコンパイルが通らない）。`prepareRequests` が全行を適用した後・`expandRepeats` の前に呼ぶので Analyze（ピンク）と送信で同じ結果になる。`DoRequest` の `title == "" → return nil` に戻さない —— 空のメモ・打刻・タスク・ブックマークは旧 Web の `ERR9000xx` と同じ文言で**送信全体が止まる**（`メモ`,`、`,空行 は先頭のメモも書かれない）。kmemo の空は「全行が空白」（`joinLines` は `["",""]` を改行1文字にする）。残ったプロトタイプ（`。タグ` だけ・`？時刻` だけ・`ーー` だけ）は `KFTL_META_INFO_NO_TARGET_MESSAGE_TITLE`。例外は `？時刻` の直後の `ーん` で、関連時刻を取り込んだあと `KFTLRequestMap.Delete` で外す（残すと誤爆する）
 - **予定日時欄（Mi / MiReKyou の見積開始・見積終了・期限）の、空でないのに読めない行は入力エラー**（`parseScheduleFieldTime`。ADR-0505 が据え置いた部分を ADR-0508 で改めた）。空行だけが「未設定」。`、` で6行を埋めずに次の記録へ移ると、以前は `、` が見積開始に食われ後ろの本文も残りの欄に黙って消えていた
 - Web は本文が空白だけなら `parse_kftl_text` を投げずピンクを消す（`fetch_invalid_lines`）。投げると**新しい空のタブの1行目が常にピンク**になる。送信はサーバに聞くので空のタブで保存を押せばエラーが出る
@@ -104,7 +104,7 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
 - **Mi / MiReKyou の予定日時欄（見積開始・見積終了・期限）で行頭の `？`/`?` を剥がさない。入力エラーにする。** 剥がすと、残りがパースに失敗しても未設定として握り潰されるので、`？18:00` の打ち間違いも `？？`（繰り返しブロック）の書き損じも**エラーも警告も出ないまま日付だけが入らない**。Mi 本体は作られるので保存が成功したように見える。判定は Go `parseScheduleFieldTime` / TS `parse_schedule_field_time` の**1箇所ずつに集約**する（6欄が同じ形で壊れていた）。TimeIs（`ーち`）の時刻行は `？` を剥がすままだが、そちらはパース失敗が既に行エラーなので黙って壊れない。却下案は [ADR-0505](../../../documents/adr/0505-schedule-time-field-rejects-related-time-prefix.md)
 - **`api/kftl/` に .go を足したら、`api/README.md` の件数と `kftl/README.md` の表を同じコミットで直す。** `verify_docs.mjs` がファイル数を数えて突き合わせる（**テストファイルも数に入る**）
 
-**KFTL の実行フェーズの失敗でも、原因が「利用者が直せる状態」なら `newKFTLInputError` に載せる。** `fmt.Errorf` のままだと `kftl_statement.go` の `errors.As` に引っかからず、`ERR000351`（HTTP 500）の「メモ帳のテキストの記録に失敗しました」だけが返って**行番号も理由も出ない**。2026-08-25 の実利用レビューは `~~`（リポストタスク）がこれで3回とも同じ文言で落ち、原因を MCP 経路の不具合と誤診した（実際は繋いだアカウントに `mirekyou` 型の rep が1件も無く、Web UI からでも同じく失敗する状態だった）。**`MessageID` を空にしないこと** —— 空だと `formatKFTLInputErrorMessage` が `Cause` の英文をそのまま応答へ載せ、利用者IDと端末名が漏れる（[ADR-0707](../../../documents/adr/0707-redact-environment-specific-strings.md)）。境界と却下案は [ADR-0504](../../../documents/adr/0504-kftl-missing-configuration-is-an-input-error.md)。
+**KFTL の実行フェーズの失敗でも、原因が「利用者が直せる状態」なら `newKFTLInputError` に載せる。** `fmt.Errorf` のままだと `kftl_statement.go` の `errors.As` に引っかからず、`ERR000351`（HTTP 500）の「メモ帳のテキストの記録に失敗しました」だけが返って**行番号も理由も出ない**。実利用レビューは `~~`（リポストタスク）がこれで3回とも同じ文言で落ち、原因を MCP 経路の不具合と誤診した（実際は繋いだアカウントに `mirekyou` 型の rep が1件も無く、Web UI からでも同じく失敗する状態だった）。**`MessageID` を空にしないこと** —— 空だと `formatKFTLInputErrorMessage` が `Cause` の英文をそのまま応答へ載せ、利用者IDと端末名が漏れる（[ADR-0707](../../../documents/adr/0707-redact-environment-specific-strings.md)）。境界と却下案は [ADR-0504](../../../documents/adr/0504-kftl-missing-configuration-is-an-input-error.md)。
 
 **`~~` は既存レコードをタスク化できない。** 対象IDは `ctx.ThisStatementLineTargetID` ＝**同じ送信テキストの直前の行が採番したUUID**で、gkill に既にある記録を指す構文は無い。ツール説明にそう書き戻さないこと。
 
@@ -149,7 +149,7 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
   `start_time`（`do_request` まで空）を基準にしていて、1970 からの日数ぶん（約 20,700 日）ずらされ、
   **Web から送った打刻 5 件が 2083-05-17〜 で登録された**（エラーも警告も出ない。Go は起きなかった）。
   TS の展開は消えたが、**アンカーの欄・ずらす欄・DoRequest が書く欄は同じ欄を指す**という約束は Go でも同じ。
-  8 型を監査した結果（2026-09-10）: kmemo / lantana / kc / urlog は related_time、支出はブロックの related_time、
+  8 型を点検した結果: kmemo / lantana / kc / urlog は related_time、支出はブロックの related_time、
   タスク / リポストタスクは予定3欄、打刻は related_time（→ start_time）+ end_time で一致。`ーた` と終了4種は繰り返し自体を断るので起きない。
   新しい型を足すときは **DoRequest が実際に書く値**を `handle_submit_kftl_text_test.go`
   `TestHandleSubmitKFTLText_RepeatWritesShiftedTimes` の表へ足すこと（request オブジェクトの欄だけ見る表では捕まらない）。

@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-24 |
-| Sources | 2026-08-24 の MCP 再監査（Q-07）。gkill-go-backend スキルの「タグ絞り込みの取得は2経路」節 |
+| Sources | MCP の2巡目の指摘（Q-07）。gkill-go-backend スキルの「タグ絞り込みの取得は2経路」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/dao/reps/gkill_repositories.go`（`GetAllTagNames` / `GetAllTagNamesIncludingDeletedTargets`） |
@@ -16,12 +16,12 @@
 `gkill_restore_kyou` で復活させたときにタグが失われる。
 
 しかし語彙の列挙（`get_all_tag_names`）はタグ自身の `is_deleted` しか見ていなかったので、
-**対象がもう見えないタグが候補に残り続けた**。2026-08-24 の再監査での実測:
+**対象がもう見えないタグが候補に残り続けた**。2巡目の指摘での実測:
 
 | 検索 | 件数 |
 |---|---|
-| `tags:["再監査タグ"]` | **0** |
-| `tags:["再監査タグ"]` + `include_deleted_data:true` | 1 |
+| `tags:["点検タグ"]` | **0** |
+| `tags:["点検タグ"]` + `include_deleted_data:true` | 1 |
 | `get_all_tag_names` | **載っている** |
 
 削除は日常操作なので、使うほど「選んでも0件しか返らない候補」が溜まっていく。
@@ -77,8 +77,8 @@ Kyou rep への参照を持たないため、そちらへ入れると値コピ�
 
 ## Evidence
 
-- 再監査の実測（2026-08-24、本番 gkill へ stdio 接続、サンドボックス垢 `claude`）:
-  `tags:["再監査タグ"]` が 0件 / `include_deleted_data:true` を足すと 1件 /
+- 2巡目の指摘での実測（本番 gkill へ stdio 接続、サンドボックス垢 `claude`）:
+  `tags:["点検タグ"]` が 0件 / `include_deleted_data:true` を足すと 1件 /
   それでも `get_all_tag_names` には載る
 - 最新版アドレス表の `IsDeleted` は素の `bool` 列で、`UpdateCache` の Phase 2 が
   各 rep の `IS_DELETED` 列を最新版の行から読み直して埋める（同じ表の

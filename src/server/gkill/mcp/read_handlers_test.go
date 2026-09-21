@@ -310,7 +310,7 @@ func TestHandleReadToolCallGetApplicationConfig(t *testing.T) {
 	// どのアカウントに繋がっているかを答えられること。
 	// read サーバと readwrite サーバが別アカウントを向いていても AI から区別できず、
 	// 「同じ API なのに件数が違う」「query.ids が壊れている」と誤診されていた
-	// （2026-08-24 の実利用レビュー）。gkill は元から返しており、射影が捨てていただけ。
+	// （実利用レビュー）。gkill は元から返しており、射影が捨てていただけ。
 	t.Run("exposes user_id / device so the caller can tell which account it is on", func(t *testing.T) {
 		ctx := makeCtx(resolving(func() *jsonobj.Object {
 			return obj("application_config", appConfigFixture().Merge(obj("user_id", "testuser", "device", "testdevice")))
@@ -669,7 +669,7 @@ func rowFilterResponse() *jsonobj.Object {
 
 func TestHandleReadToolCallGetRepInfos(t *testing.T) {
 	// 本番では rep_infos[] だけで数百件になるのに、
-	// 「正準値と対応表だけ欲しい」呼び出しが一番多かった（2026-08-24 の実利用レビュー）。
+	// 「正準値と対応表だけ欲しい」呼び出しが一番多かった（実利用レビュー）。
 	t.Run("fields projection can skip the large rep_infos list", func(t *testing.T) {
 		ctx := makeCtx(resolvingJSON(`{
 			"rep_infos": [{"rep_name": "Kmemo", "rep_type": "kmemo"}],

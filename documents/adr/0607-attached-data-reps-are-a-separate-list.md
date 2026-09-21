@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-24 |
-| Sources | 2026-08-24 の MCP 再監査（P-01）。gkill-go-backend スキルの「rep名の絞り込みは『検索するrep』ではなく『検索結果』でやる」節 |
+| Sources | MCP の2巡目の指摘（P-01）。gkill-go-backend スキルの「rep名の絞り込みは『検索するrep』ではなく『検索結果』でやる」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/gkill_server_api/handle_get_rep_infos_mcp.go` / `src/server/gkill/api/req_res/get_rep_infos_mcp_response.go`（`AttachedDataRepInfoMCPDTO`） |
@@ -19,7 +19,7 @@
 - `ApplicationConfig.rep_struct` は null（設定画面で「適用」を押すまで書かれない）
 
 書き込み応答の `rep_name` に `"Tag"` が入るので**事後には分かる**が、
-「これから書くとどこへ行くのか」は書いてみるまで分からなかった（2026-08-24 の再監査 P-01）。
+「これから書くとどこへ行くのか」は書いてみるまで分からなかった（2巡目の指摘 P-01）。
 
 `Reps` は「Kyou 検索の対象 ＝ 利用者が選べる記録保管場所」という一本の意味に固定されている。
 `gkill_dao_manager.go` に明示のコメントがあり、**Kyou を1件も返さないプラグインを

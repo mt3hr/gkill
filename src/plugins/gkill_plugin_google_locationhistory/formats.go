@@ -12,7 +12,7 @@ const sniffBytes = 64 * 1024
 
 // maxInMemoryEntryBytes は丸ごとメモリに載せるパーサが受け入れる上限。
 //
-// 実データの Timeline Edits.json は展開後 46MB。
+// 実データの Timeline Edits.json は展開後 数十MB。
 // 桁違いに大きいものはZIP爆弾か別物なので、読まずに落とす。
 const maxInMemoryEntryBytes = 1 << 30
 

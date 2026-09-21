@@ -40,7 +40,7 @@ Android では、Go の `time.Local` を直すのと同じ `fixTimezone` の経�
 
 - **SQL から時間帯・曜日の条件を外し、Go 段だけで判定する（`'localtime'` に依存しなくなる）** — SQL 段は行を Go へ渡す前に
   落とす前置フィルタで、全履歴走査のときに効く。外すと 74 万行規模のアカウントでは全行を Go の構造体へ実体化してから
-  捨てることになり、いまでも全 rep で 65 秒かかる検索が数分〜メモリ枯渇へ向かう。
+  捨てることになり、いまでも全 rep で1分以上かかる検索が数分〜メモリ枯渇へ向かう。
 - **`'localtime'` をやめ、Go で計算したオフセット秒を `datetime(列 + ?, 'unixepoch')` にバインドする** — オフセットは
   行ごとに違う（夏時間のある地域では半年ごとに変わる）。クエリ時点のオフセット1つで代用すると、DST の反対側にある行は
   SQL 段で1時間ずれて判定され、窓の端の1時間ぶんが黙って落ちる。gkill は7言語で配布しており日本だけの前提を置けない。
@@ -81,7 +81,7 @@ Android では、Go の `time.Local` を直すのと同じ `fixTimezone` の経�
   （`TZ=:/nonexistent`）では `datetime(…,'localtime')` が `03:09:04`（UTC）、`TZ=JST-9` では `12:09:04`、`TZ=:/usr/share/zoneinfo/Asia/Tokyo`
   でも `12:09:04`。Go の `time.Local` は `TZ=JST-9` を解釈できず UTC のまま（POSIX 文字列は libc 専用）。
 - Go 本体 `time/zoneinfo_android.go`: `initLocal() { localLoc = *UTC }`（`// TODO: getprop persist.sys.timezone`）。
-- 全 rep で日付範囲なしの時間帯検索は 65 秒（7,247件）。SQL 段を外す案を採らない根拠。
+- 全 rep で日付範囲なしの時間帯検索は1分以上（数千件）。SQL 段を外す案を採らない根拠。
 - musl 転写（modernc libc v1.74.3 の `_do_tzset`）: `TZ=:$HOME/gkill/tz/localtime` は `posix_form` 0 → 先頭が `/` でも `.` でもない →
   `search` の3ディレクトリで `__map_file` → 全て失敗 → `s = __utc`。WSL の子プロセスで、CWD に文字どおり `$HOME/gkill/tz/localtime`
   として本物の TZif を置いても `datetime(…,'localtime')` は `03:09:04`（UTC）、同じファイルを絶対パスで渡すと `12:09:04`

@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-09-15 |
-| Sources | 2026-09-15 の利用者報告（「`ーち` で内容を入力しなくてもエラーにならない」）と、旧 TS（`99998673^`）と新 Go に同じ 104 入力を流した実測。[ADR-0503](0503-kftl-prefix-misuse-is-an-input-error.md) / [ADR-0505](0505-schedule-time-field-rejects-related-time-prefix.md) / [ADR-0507](0507-kftl-single-implementation-on-server.md) |
+| Sources | 利用者報告（「`ーち` で内容を入力しなくてもエラーにならない」）と、旧 TS（`533645ee^`）と新 Go に同じ 104 入力を流した実測。[ADR-0503](0503-kftl-prefix-misuse-is-an-input-error.md) / [ADR-0505](0505-schedule-time-field-rejects-related-time-prefix.md) / [ADR-0507](0507-kftl-single-implementation-on-server.md) |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/kftl/kftl_statement.go`（`generateKFTLLines` のマーカー切り詰め / `validateRequestContents`）/ `src/server/gkill/api/kftl/kftl_request.go`（`ValidateContent`）/ `src/server/gkill/api/kftl/kftl_prototype_request.go` / `src/server/gkill/api/kftl/kftl_related_time_statement_line.go`（`parseScheduleFieldTime`）/ `src/client/classes/use-kftl-view.ts`（空白だけの本文は解析に投げない） |

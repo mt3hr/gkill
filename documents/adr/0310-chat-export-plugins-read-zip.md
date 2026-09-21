@@ -13,8 +13,8 @@
 
 ChatGPT と Claude.ai のエクスポートはどちらも ZIP で届く。
 
-- ChatGPT: `<sha256>-<書き出し日時>-<uuid>.zip`。実物は 510 エントリで、会話は ZIP 直下の `conversations-000.json` … `conversations-005.json`（旧エクスポートは `conversations.json` 1本）。残りは `chat.html`（85MB）・`user.json`・添付ファイル（`file-*.dat`・画像・音声）
-- Claude.ai: `conversations-000.zip` の中に `conversations.json` が1本（203MB）。**エントリの更新時刻は 1980-01-01（ZIP の元期）で固定**
+- ChatGPT: `<sha256>-<書き出し日時>-<uuid>.zip`。実物は数百エントリで、会話は ZIP 直下の `conversations-000.json` … `conversations-005.json`（旧エクスポートは `conversations.json` 1本）。残りは `chat.html`（数十MB）・`user.json`・添付ファイル（`file-*.dat`・画像・音声）
+- Claude.ai: `conversations-000.zip` の中に `conversations.json` が1本（数百MB）。**エントリの更新時刻は 1980-01-01（ZIP の元期）で固定**
 
 2026-09-18 まで両プラグインは展開済みの `conversations*.json` を `filepath.WalkDir` で探して `os.ReadFile` していた。各プラグインが SDK 以前の走査コードを約 200 行ずつ写しで持ち、差分判定は `path:mtime:size` の連結署名だった。利用者は毎回 ZIP を解凍して JSON だけを置き直す必要があり、ChatGPT の ZIP を丸ごと展開すると添付ファイルまで二重に置くことになる。fitbit / 位置情報 / archived_git_commit_log の3本は既に `sdk.OpenSources` で ZIP を展開せず中央ディレクトリだけを読んでいた（ADR-0303 / ADR-0309）。
 
@@ -45,8 +45,8 @@ ChatGPT と Claude.ai のエクスポートはどちらも ZIP で届く。
 
 ## Evidence
 
-- 実物の ChatGPT ZIP: 510 エントリ、会話ファイル 6 本（4.6〜27.6MB）、`chat.html` 85MB。ZIP 内の `conversations-*.json` は展開済みファイルと byte 一致
-- 実物の Claude.ai ZIP: 1 エントリ（`conversations.json` 203MB）、エントリの更新時刻 1980-01-01
+- 実物の ChatGPT ZIP: 数百エントリ、会話ファイル数本（数MB〜数十MB）、`chat.html` 数十MB。ZIP 内の `conversations-*.json` は展開済みファイルと byte 一致
+- 実物の Claude.ai ZIP: 1 エントリ（`conversations.json` 数百MB）、エントリの更新時刻 1980-01-01
 - 実データで ZIP 直読みと旧配置（展開済み JSON）のキャッシュを突き合わせ、`conv_cache` / `msg_cache` の件数が一致（2026-09-18。ChatGPT・Claude.ai とも）
 
 ## Related tests

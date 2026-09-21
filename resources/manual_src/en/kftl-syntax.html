@@ -133,7 +133,7 @@ Start work</pre>
 Start work</pre>
 
 <h3>13. Time Log End: <code>/end</code></h3>
-<p>Next line: title. Finds a matching started time log and ends it.</p>
+<p>Next line: title. Finds a matching started time log and ends it. If several time logs with the same title are running, only the one that started most recently is ended (deleted time logs are not considered).</p>
 <pre>/end
 Start work</pre>
 
@@ -143,7 +143,7 @@ Start work</pre>
 Start work</pre>
 
 <h3>15. End Time Log by Tag: <code>/endt</code></h3>
-<p>Next line: tag name. Finds and ends a time log by its tag.</p>
+<p>Next line: tag name. Finds and ends a time log by its tag. If several time logs with that tag are running, only the one that started most recently is ended (deleted time logs are not considered).</p>
 <pre>/endt
 work</pre>
 

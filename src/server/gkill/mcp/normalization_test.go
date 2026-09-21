@@ -1272,7 +1272,7 @@ func TestNormalizeKyouHistoryArgsProjectionDataType(t *testing.T) {
 //
 // gkill 側では0件になるだけで警告も出ず、「その期間に記録が無い」と読めてしまう。
 // GPS 側 (NormalizeGpsArgs) は元から入口で弾いていたので、そちらと揃える
-// （2026-08-25 の実利用レビュー）。
+// （実利用レビュー）。
 // ---------------------------------------------------------------------------
 
 func TestNormalizeKyouQueryInvertedCalendarRange(t *testing.T) {

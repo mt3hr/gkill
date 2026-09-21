@@ -484,7 +484,7 @@ func TestResponseCarriesTheServerSavedVersion(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// gkill_update_timeis — end_time の3値 (2026-08-24 再監査 P-41)
+// gkill_update_timeis — end_time の3値 (2巡目の指摘 P-41)
 // ---------------------------------------------------------------------------
 func TestUpdateTimeIsEndTimeThreeStatePatch(t *testing.T) {
 	timeisHistory := func() *jsonobj.Object {

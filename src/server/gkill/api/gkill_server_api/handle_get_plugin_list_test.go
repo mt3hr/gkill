@@ -2,9 +2,9 @@ package gkill_server_api
 
 // /api/get_plugin_list の回帰テスト。
 //
-// 外部監査 D1「is_alive=true なのに0件、の理由がAPIから診断できない」への対応で、
+// 指摘 D1「is_alive=true なのに0件、の理由がAPIから診断できない」への対応で、
 // provides 宣言のあるプラグインには型別索引の統計（typed_index）を返すようになった。
-// さらに 2026-08-24 の再監査で、OK=false だけでは「一度も構築していない」と
+// さらに 2巡目の指摘で、OK=false だけでは「一度も構築していない」と
 // 「構築に失敗した」が潰れて直しようが無かったため State / LastBuildError /
 // LastAttemptAt が足された。この写し替えは handle_get_plugin_list.go にあり、
 // 落としても（LastAttemptAt のゼロ値スキップを消しても）コンパイルは通るので、

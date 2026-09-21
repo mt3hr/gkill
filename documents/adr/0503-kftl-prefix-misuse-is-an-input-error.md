@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-24 |
-| Sources | 2026-08-24 の実利用レビュー（書き込み破壊試験）。[ADR-0502](0502-kftl-errors-are-per-line.md) |
+| Sources | 実利用レビュー（書き込み破壊試験）。[ADR-0502](0502-kftl-errors-are-per-line.md) |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/kftl/kftl_factory.go`（`prefixWrittenWithArgument`）/ `src/server/gkill/api/kftl/kftl_statement.go`（`requireNextLineText`）/ `src/server/gkill/api/kftl/kftl_kmemo.go` |

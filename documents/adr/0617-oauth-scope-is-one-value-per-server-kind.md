@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-30 |
-| Sources | 2026-08-30 の MCP レビュー P0（scope の矛盾広告と非照合受理）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「OAuth の scope はサーバ種別ごとに1値で、正本は各エントリスクリプトの `START_SPEC` 1箇所。」 |
+| Sources | MCP レビュー P0（scope の矛盾広告と非照合受理）。[gkill-mcp](../../.claude/skills/gkill-mcp/SKILL.md) の節「OAuth の scope はサーバ種別ごとに1値で、正本は各エントリスクリプトの `START_SPEC` 1箇所。」 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/mcp/server_read.go` / `src/server/gkill/mcp/server_write.go` / `src/server/gkill/mcp/server_readwrite.go`（`START_SPEC`）/ `src/server/gkill/mcp/bootstrap.go`（`startMcpServer`）/ `src/server/gkill/mcp/oauth_server.go`（`_validateAuthorizeParams` / `_handleAuthorizationCodeGrant` / `_handleRefreshTokenGrant`）/ `src/server/gkill/mcp/http_transport.go`（Bearer 受理の scope 照合） |
@@ -69,7 +69,7 @@ metadata の `scopes_supported`・authorize の既定値と不一致拒否（400
 - 2026-08-30 レビュー実測: ReadWrite サーバの protected-resource metadata が
   `gkill:readwrite`、authorization-server metadata が `gkill:read` を返す矛盾広告。
   Bearer 受理は scope 非照合で、`gkill:read` トークンから書き込みツールが呼べた
-- 修正コミット 5b8da91b（認可と受理の両方で不一致拒否）、65c58bce 後の
+- 修正コミット e46cc6e9（認可と受理の両方で不一致拒否）、3568e192 後の
   テスト補強で「3サーバの宣言値が1本も検証されていない」ことが判明し `START_SPEC` を導入
 
 ## Related tests

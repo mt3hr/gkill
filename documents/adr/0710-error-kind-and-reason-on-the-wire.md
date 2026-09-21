@@ -15,7 +15,7 @@
 「エラーが起きたことを知らせるだけ」。外部レビュー（2026-09-13、#8）は「成功時の `errors: null` は API 設計ミス。
 クライアント180箇所で守るより境界で `[]` にすればいい」と指摘した。
 
-実測（HEAD 9b67a5d7）:
+実測（HEAD 12f086f2）:
 
 - `GkillError` を組み立てる箇所は **633**（`api/gkill_server_api` 94ファイル・`usecase` 16ファイル）。
   利用者向け文言の i18n ID は 130 種で、`INTERNAL_SERVER_ERROR_MESSAGE`「内部エラー」が 26 回、

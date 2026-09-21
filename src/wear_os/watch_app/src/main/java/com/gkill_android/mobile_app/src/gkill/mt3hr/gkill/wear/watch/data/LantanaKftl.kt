@@ -64,7 +64,7 @@ private val RELATED_TIME_FORMAT: DateTimeFormatter =
  * 対の検査: `kftl_statement_test.go` の `TestStatement_LantanaFromWearOS`
  */
 fun buildLantanaKftlText(mood: Int, at: LocalDateTime): String {
-    // 値そのものは例外メッセージにも載せない（記録内容が logcat へ出るのを避ける。2026-08-30 監査 F-008）
+    // 値そのものは例外メッセージにも載せない（記録内容が logcat へ出るのを避ける。指摘 F-008）
     require(mood in 1..LANTANA_MOOD_MAX) { "lantana mood must be 1..$LANTANA_MOOD_MAX" }
     return "?" + at.format(RELATED_TIME_FORMAT) + "\n/mood\n" + mood
 }

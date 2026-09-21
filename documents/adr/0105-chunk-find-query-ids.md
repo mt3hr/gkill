@@ -17,7 +17,7 @@ IDリストは各repのSQLへ `ID IN (?, ?, ...)` として展開される。と
 
 （2026-08 追記: [ADR-0706](0706-http-status-from-error-code.md) でステータスをエラーコードから決めるようにしたので、`ERR000410` が立つ今の実装では **HTTP 500** で返る。ただしそれは `message.EnsureNotEmpty` で `GkillError` を必ず立てているからで、**「失敗したのに `GkillError` が空」で return する分岐を作れば、やはり 200 ＋ 0件に戻る。** 防御線は今も EnsureNotEmpty 側にある。）
 
-実データでは確認待ちの記録7,122件のIDを一度に渡して踏んだ。
+実データでは確認待ちの記録数千件のIDを一度に渡して踏んだ。
 
 ## Decision
 
@@ -45,7 +45,7 @@ IDリストは各repのSQLへ `ID IN (?, ?, ...)` として展開される。と
 ## Evidence
 
 - 実測: 6552件は成功、6553件で `too many SQL variables`（Mi の 5N+5 = 32771 > 32766）
-- 実データで確認待ち7,122件のIDを渡して再現
+- 実データで確認待ち数千件のIDを渡して再現
 
 ## Related tests
 

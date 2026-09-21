@@ -40,7 +40,7 @@ func defaultConfig() sdk.Config {
 			"_ で始まるキーは説明用なので消して構いません。",
 		configKeyExampleSourceDirs: []string{
 			"~/Kyou/ChatGPT_*",
-			"D:/Dropbox/chatgpt_export/*.zip",
+			"~/Downloads/chatgpt_export/*.zip",
 		},
 		configKeySourceDirs: []string{},
 	}

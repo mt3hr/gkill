@@ -222,7 +222,7 @@ func (c *cache) resetIfGenerationChanged(timezone string) error {
 
 // refoldAllIfFoldRuleChanged は畳み直しの規則（secondary_data_sources）が前回と違えば
 // 全日を dirty に積む。部分集計はデータソース単位で持っているので、取り込み直しは要らない
-// （実データ 19,709 日で数秒）。
+// （実データの約2万件で数秒）。
 func (c *cache) refoldAllIfFoldRuleChanged(rule string) error {
 	if c.meta("fold_rule") == rule {
 		return nil

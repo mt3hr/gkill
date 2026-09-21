@@ -42,7 +42,7 @@ func writeErrorStatus(ctx context.Context, w http.ResponseWriter, errs []*messag
 //
 // レベルの根拠はステータスです。
 //   - 5xx はサーバ側の障害。運用者がいま知るべきなので Error（gkill_error.log）。
-//   - 401 / 403 / 429 は利用者・攻撃者由来だが監査に要るので Warn。
+//   - 401 / 403 / 429 は利用者・攻撃者由来だが記録に残すので Warn。
 //   - それ以外の 4xx は入力の誤りで、直す先が利用者側にあるので Debug。
 //
 // エラーコードを載せるのは、これが「どのAPIがどの理由で落ちたか」を1行で示す唯一の行に

@@ -1,7 +1,7 @@
 package gkill_server_api
 
 // /api/get_rep_infos_mcp の回帰テスト。
-// rep_types の正準語彙がAPIから取得できること（外部監査 A1/A3）を固定する。
+// rep_types の正準語彙がAPIから取得できること（指摘 A1/A3）を固定する。
 
 import (
 	"encoding/json"
@@ -102,7 +102,7 @@ func TestHandleGetRepInfosMCPRequiresSession(t *testing.T) {
 	}
 }
 
-// 2026-08-24 の再監査: タグ・テキストの書き込み先が
+// 2巡目の指摘: タグ・テキストの書き込み先が
 // get_all_rep_names にも rep_infos にも出ず、書く前には分からなかった。
 // これらは Kyou を1件も生まないので Reps に居らず、原理的に rep_infos へは出てこない。
 func TestHandleGetRepInfosMCPListsAttachedDataReps(t *testing.T) {
@@ -194,7 +194,7 @@ func TestHandleGetRepInfosMCPListsAttachedDataReps(t *testing.T) {
 	}
 }
 
-// 2026-08-24 の再監査: rep ディレクトリへ置いただけのファイルは UpdateCache が
+// 2巡目の指摘: rep ディレクトリへ置いただけのファイルは UpdateCache が
 // IDF() を走らせるまで検索に出ないのに、定期実行も監視も警告も無く、
 // 「0件」が取り込み待ちなのか本当に無いのか区別できなかった。
 // その判断材料が rep_infos[].indexed_at で、実装は「任意インタフェース
@@ -350,7 +350,7 @@ func TestHandleGetRepInfosMCPExcludesNonKyouPluginsFromPlugins(t *testing.T) {
 // キャッシュ有効時（既定）、tag / text の cached 実装の UnWrapTyped が1段しか剥がさず、
 // 集約自身が leaf として返っていた。その GetRepName() は "TagReps" / "TextReps" という
 // リテラルなので、**実在しない名前が「タグはどこへ書かれるか」の答えとして返っていた**
-// （2026-08-24 の実利用レビュー。実際の書き込み先は "Tag" / "Text"）。
+// （実利用レビュー。実際の書き込み先は "Tag" / "Text"）。
 //
 // 同じ注意は GetLatestDataRepositoryAddress のコメント（ADR-0210）に書かれていたのに、
 // UnWrapTyped 側では守られていなかった。notification は元から再帰していて正しい。

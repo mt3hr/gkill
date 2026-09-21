@@ -105,7 +105,7 @@
   - `TestApply_RepeatRejectsForbiddenTypes` / `TestExpand_SkipsOccurrencesThatAlreadyExist`
   - `TestExpand_TimeIsRepeatShiftsStartAndEndTogether`（打刻の開始・終了が同じ日数だけずれ、年が変わらない。
     TS 側で `start_time` をアンカーにして 2083 年に登録された事故の再発防止。TS と対）
-  - `TestExpand_RelatedTimeTypesShiftTogether`（気分値・数値・ブックマーク。2083 年の事故のあとの全型監査で
+  - `TestExpand_RelatedTimeTypesShiftTogether`（気分値・数値・ブックマーク。2083 年の事故のあとの全型の点検で
     この3型には繰り返しのテストが無かった）/ `TestExpand_NlogRepeatKeepsBlockTimeForTags`（支出の `？`行の時刻が
     複製のタグ・テキストに使う関連時刻にも乗る）
 - `src/server/gkill/api/gkill_server_api/handle_submit_kftl_text_test.go`

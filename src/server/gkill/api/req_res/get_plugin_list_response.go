@@ -37,13 +37,13 @@ type PluginInfo struct {
 	// **索引構築の失敗はここには出ない**（タイムアウトやJSON不正はgkill側で起きるため）。
 	// そちらは typed_index.last_build_error を見ること。
 	// 「is_alive=true なのに0件」の理由（ビルドエラー等）をAPIから診断できるようにする
-	// （外部監査 D2。以前はサーバのコンソールにしか出なかった）。
+	// （指摘 D2。以前はサーバのコンソールにしか出なかった）。
 	LastError string `json:"last_error,omitempty"`
 	// TypedIndex は型別/付随データを提供するプラグインの索引統計（鮮度・件数・時刻範囲）。
 	// **これはKyouの索引**で、record_countはプラグインが返したKyouのユニーク数。
 	// provides の無いプラグインと、provides が gpslog だけのプラグインでは省略
 	// （後者は索引の材料が1件も無く、出すと never_built / 0 に固定されて
-	// 「索引が壊れている」と誤読される。外部監査 D1 と 2026-08-24 の実利用報告）。
+	// 「索引が壊れている」と誤読される。指摘 D1 と 2026-08-24 の実利用報告）。
 	TypedIndex *PluginTypedIndexStatsMCPDTO `json:"typed_index,omitempty"`
 	// GPSIndex は provides に gpslog を含むプラグインのGPSスナップショット統計。
 	// TypedIndex とは別物（GPSログはKyouではない）。一度も取得していなければ省略。

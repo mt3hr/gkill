@@ -322,7 +322,7 @@ func TestAssertKnownKeysDefaultFieldName(t *testing.T) {
 }
 
 func TestAssertIntegerSafeIntegerRange(t *testing.T) {
-	// assertInteger — 安全整数の範囲 (2026-08-24 再監査 P-37)
+	// assertInteger — 安全整数の範囲 (2巡目の指摘 P-37)
 	t.Run("rejects integers beyond the safe range instead of storing a value that cannot round-trip", func(t *testing.T) {
 		// 2^53。JSON を往復するだけで別の値になるので、保存できたように見えて読み戻すと違う
 		_, err := AssertInteger(float64(9007199254740992), "amount", IntRange{})

@@ -29,7 +29,7 @@ cached rep の `UpdateCache` は `DELETE FROM` ＋ 全行再INSERT である。�
 
 - **ReKyou / MiReKyou も変更検知に載せる** — **載せてはいけない。** この2つはターゲット解決のため**アドレス確定後にもう一度更新される**仕様で、mtime判定を入れると2回目が飛んで**ターゲット未解決の中身が残る**。コピーの省略だけなら可。
 
-- **内容ハッシュで判定する** — repは実データで1.3GB規模。毎周期ハッシュを取ると抑止の意味がない。mtime ＋ サイズで実用上足りている（Takeout の ZIP のように mtime が動かないケースは別問題で、そちらは CRC32 を使う → ADR-0303）。
+- **内容ハッシュで判定する** — repは実データでGB級。毎周期ハッシュを取ると抑止の意味がない。mtime ＋ サイズで実用上足りている（Takeout の ZIP のように mtime が動かないケースは別問題で、そちらは CRC32 を使う → ADR-0303）。
 
 ## Consequences
 
@@ -39,7 +39,7 @@ cached rep の `UpdateCache` は `DELETE FROM` ＋ 全行再INSERT である。�
 
 ## Evidence
 
-- `--cache_reps_local=true` の本番構成で phase1 が **0.2秒 → 1〜2分**（毎回1.3GBのコピー ＋ 抑止の無効化）。2026-08-12 に修正して 0.2秒へ戻した
+- `--cache_reps_local=true` の本番構成で phase1 が **1秒未満 → 数分**（毎回GB級のコピー ＋ 抑止の無効化）。2026-08-12 に修正して1秒未満へ戻した
 
 ## Related tests
 

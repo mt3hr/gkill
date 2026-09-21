@@ -107,6 +107,9 @@
     <strong>Tipp:</strong> Alte Downloads müssen Sie nicht löschen. Auch bei überlappenden Daten werden Werte wie Schrittzahlen niemals doppelt gezählt.
   </div>
   <div class="tip">
+    <strong>So werden Schritte gezählt:</strong> Liegen an einem Tag Schrittzahlen sowohl von der Uhr als auch vom Telefon vor, werden nur die Werte der Uhr verwendet. Telefonwerte zählen nur an Tagen ohne Uhr-Einträge. Welche Quellen als Ersatz für Tage ohne Uhr gelten, lässt sich im Einstellungsbildschirm des Plugins unter „Datenquellen, die nur an Tagen ohne Uhr-Einträge verwendet werden" ändern (leer lassen, um alles zu addieren).
+  </div>
+  <div class="tip">
     <strong>Tipp:</strong> Einträge in <code>config.json</code>, die mit <code>_</code> (Unterstrich) beginnen, dienen nur der Erläuterung des Formats. Sie können sie löschen.
   </div>
   <div class="tip">
@@ -186,7 +189,12 @@
       <td>„Abrufen des Plugin-Inhalts fehlgeschlagen" wird angezeigt</td>
       <td>Möglicherweise startet die ausführbare Datei des Plugins nicht. Prüfen Sie, ob sie unbeschädigt ist und ob Sie die Berechtigung zum Ausführen haben.</td>
     </tr>
+    <tr>
+      <td>„Das Plugin hat nicht geantwortet" wird angezeigt oder der Status bleibt auf „Fehler"</td>
+      <td>Der Grund steht in <code>gkill_plugin_&lt;Name&gt;_error.log</code> im Ordner <code>logs</code> des gkill-Hauptordners. Prüfen Sie die Quelleneinstellung und ob die ausführbare Datei startet.</td>
+    </tr>
   </table>
+  <p>Das Aktivitätsprotokoll eines Plugins wird als <code>gkill_plugin_&lt;Name&gt;.log</code> im Ordner <code>logs</code> des gkill-Hauptordners geschrieben (es gibt auch Dateien je Stufe, etwa <code>_error.log</code>). Wie ausführlich es ist, folgt der Protokolleinstellung von gkill selbst.</p>
   <div class="tip">
     <strong>Tipp:</strong> Drücken Sie lange (mobil) oder klicken Sie mit der rechten Maustaste (Desktop) auf einen Eintrag und wählen Sie &bdquo;Erweiterungseinstellungen&ldquo;, um den Einstellungsbildschirm zu öffnen. Dort können Sie die Quellordner ändern und speichern. Das direkte Bearbeiten der <code>config.json</code> im Erweiterungsordner funktioniert weiterhin.
   </div>

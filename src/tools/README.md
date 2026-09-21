@@ -28,7 +28,7 @@ gkill プロジェクト用のユーティリティスクリプト。
 ## リリースゲート（run_test_suite.mjs / attestation.mjs / verify_release_gate.mjs）
 
 「Nightly green + ローカル `npm test` green のコミットだけリリースする」を人の記憶ではなく機械で強制する
-（2026-09-14、フィードバック #10。2026-08-30 監査 F-006 はリリース工程に検証ギャップがあった実例）。
+（指摘 F-006 はリリース工程に検証ギャップがあった実例）。
 規約の正本は `.claude/skills/gkill-build-test/SKILL.md`「リリースゲート（テスト済み attestation）」、経緯と却下案は
 `documents/adr/0901-release-requires-tested-attestation.md`。
 

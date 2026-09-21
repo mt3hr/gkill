@@ -116,7 +116,7 @@ $HOME/gkill/
 npm run release
 ```
 
-> **リリースゲート（2026-09-14。2026-08-30 監査 F-009 の運用規約を機械強制に置き換え）**:
+> **リリースゲート（指摘 F-009 の運用規約を機械強制に置き換え）**:
 > `npm run release` は先頭で `npm run verify_release_gate`（`src/tools/verify_release_gate.mjs`）を
 > 通し、次が全部そろわないと止まる。**抜け道のフラグは無い。**
 >
@@ -151,8 +151,9 @@ npm run release
 
 > MCP のツール説明を変えたら `gkill_server mcp schema-budget` で tools/list のバイト量が予算内かを見る。
 > 意図した変更なら `gkill_server mcp schema-budget --update` で予算ファイル（`src/server/gkill/mcp/tool_schema_budget.json`）を
-> 書き直してから同じコミットに入れる（`test_mcp` の予算テストが照合する）。応答の形を変えたら `golden_test.go` の
-> ゴールデンも当該行を更新する。MCP は gkill_server の一部なので、本番へは本体と同じ exe を配り直す（停止窓が要る）。
+> 書き直してから同じコミットに入れる（`test_mcp` の予算テストが照合する）。応答の形を変えたら
+> `GKILL_MCP_UPDATE_GOLDEN=1 go test ./gkill/mcp/ -run Golden` でゴールデンを書き直し、差分を読んでからコミットする
+> （手で当該行を直さない）。MCP は gkill_server の一部なので、配置先へは本体と同じ exe を配り直す（停止窓が要る）。
 >
 > APK 3本はリリース署名でビルドされる。署名鍵の受け渡しと未設定時の挙動は
 > `.claude/skills/gkill-build-test/SKILL.md` の「APK リリース署名」を参照。
@@ -533,6 +534,19 @@ JSON形式。各行に以下のフィールド:
 
 ---
 
+### 7.7 時間帯で絞ると常に0件になる（Android / Termux）
+
+SQLite の `'localtime'` は libc（Android の同梱サーバと Termux では musl）が `TZ` 環境変数 → `/etc/localtime` の順で決め、
+どちらも無ければ UTC になる。Go の `time.Local` はそれとは別に決まるので、両者が食い違う環境では
+SQL 側と Go 側が別の壁時計で判定し、時間帯フィルタ（9時間より狭い窓）だけがエラーも警告も出ずに常に0件になる
+（[ADR-0220](../adr/0220-sqlite-localtime-follows-libc-zone.md)）。
+
+- **見分け方:** 起動直後の `gkill_error.log` に `sqlite localtime differs from go time.Local: period-of-time search returns nothing` の1行が出る
+  （両方の壁時計の値と `hint` を載せる）。一致していれば `gkill_debug.log` に `agrees` の行が出る
+- **Android の APK:** 同梱サーバが端末のゾーンを libc にも教える（`TZ=:<絶対パス>` の TZif）ので通常は起きない。`--gkill_home_dir` を未展開の
+  `$HOME/...` のまま渡すと相対名になり、musl が zoneinfo ディレクトリで探して無ければ黙って UTC にする（2026-09-16 に Termux で発生）
+- **Termux などで手起動するとき:** 起動前に `TZ=:/絶対パス/の/TZif` か POSIX 文字列（例: `TZ=JST-9`）を環境変数で渡す。`$HOME/gkill` を指定するなら展開してから渡す
+
 ## 8. Web Push通知設定
 
 ### 8.1 自動セットアップ
@@ -609,13 +623,13 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 - 変更のないrepまで毎回まるごとコピーし直す
 - `LastUpdateCacheChanged()`が常に`true`になり、上位のキャッシュrep（`CachedSQLite3Impl`）のフルリビルド抑止が丸ごと効かなくなる
 
-の2つが同時に起きる。実データ（rep約940・約83万行・外付けUSB上のDB 818本 1.3GB）では、これで`update_cache`1回のphase1が **0.2秒から1〜2分** へ悪化していた。回帰は`local_rep_cache_granular_test.go`が検出する。
+の2つが同時に起きる。実データ（rep 数百・数十万行・外付けディスク上の DB 数百本・GB 級）では、これで`update_cache`1回のphase1が **1秒未満から数分** へ悪化していた。回帰は`local_rep_cache_granular_test.go`が検出する。
 
 再構築成功の通知（`CommitCacheRebuild`）を受けるまで基準を進めない点も他repと同じ。途中で失敗した回のぶんは次回も再構築される。
 
 ただし**ReKyou / MiReKyouのローカルキャッシュrepは常に「変更あり」を返す**。この2つのキャッシュ内容は自分のDBファイルだけでなく他repのターゲット解決結果にも依存し、`GkillRepositories.UpdateCache`がアドレス確定後にもう一度更新するため、mtimeで判定するとその2回目が飛んでターゲット未解決の中身が残る（`db_file_change_detector.go`の説明と同じ理由）。コピーの省略だけは行う。
 
-**上の判定が効いていれば、この層の定常コストはほぼゼロ**（実データの反復`update_cache`で、有効26.8秒 / 無効30.3秒。むしろ有効なほうが速い。再構築の読み出し元が外付けUSBではなくC:になるため）。逆に**元ファイルのmtimeがまとめて動く運用（同期直後など）では毎回1.3GBのコピーが上乗せされる**ので、その場合だけは`--cache_reps_local`を外したほうが速くなる。効かせたいなら同期側でmtimeを保存させるのが本筋。
+**上の判定が効いていれば、この層の定常コストはほぼゼロ**（実データの反復`update_cache`で、有効・無効の差は1割程度で、むしろ有効なほうが速い。再構築の読み出し元が外付けディスクではなく内蔵ディスクになるため）。逆に**元ファイルのmtimeがまとめて動く運用（同期直後など）では毎回GB級のコピーが上乗せされる**ので、その場合だけは`--cache_reps_local`を外したほうが速くなる。効かせたいなら同期側でmtimeを保存させるのが本筋。
 
 #### サムネイル・動画キャッシュ（ファイルキャッシュ）
 
@@ -677,6 +691,8 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 | `gkill_server generate_plugin_cache <plugin_name\|all> ユーザーID...` | プラグインのキャッシュ（`caches/plugin_cache/`）を同期構築する。稼働中サーバは不要で、各プラグインバイナリを `--gkill-build-cache` 付きで単独起動して終わるまで待つ（逐次・タイムアウト無し）。`plugin_name` は manifest.json の `name`（＝フォルダ名）。同期スクリプトでは新しいデータを置いた直後・`update_cache` の前に置く |
 | `gkill_server add_tag ユーザーID... --rules_file <path>` | 検索条件 JSON に一致する記録へタグを付ける（稼働中サーバの HTTP クライアント。`main/common/add_tag.go`） |
 | `gkill_server reset_password ユーザーID...` | 指定アカウントのパスワードを無効化し、リセットトークンを再発行してURLを表示する。account.db を直接開くのでサーバー稼働中でも実行できる。パスワードはArgon2idで保存されておりDBから復元できないため、**管理者がパスワードを忘れたときやトークンが期限切れになったときの唯一の復帰経路**（`main/common/password_admin.go`） |
+| `gkill_server mcp --kind <read\|write\|readwrite> [--transport stdio\|http] [--config <path>]` | MCP サーバを起動する（起動中の gkill_server への HTTP クライアント。**`gkill_server` にのみ登録**）。設定は `$HOME/gkill/configs/gkill_mcp.json`、ログは `logs/gkill_mcp_<kind>*.log`。詳細は §11 |
+| `gkill_server mcp schema-budget [--update]` | tools/list のバイト量を予算ファイル `src/server/gkill/mcp/tool_schema_budget.json` と突き合わせる。`--update` で予算を書き直す（ソースツリー上でだけ意味を持つ） |
 
 ## 11. MCP HTTPサーバーのデプロイ
 

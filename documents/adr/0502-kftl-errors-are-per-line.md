@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-24 |
-| Sources | 2026-08-24 の MCP 再監査（P-20 / P-22 / P-40）。gkill-go-backend スキルの「HTTP ステータス」節 |
+| Sources | MCP の2巡目の指摘（P-20 / P-22 / P-40）。gkill-go-backend スキルの「HTTP ステータス」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/kftl/kftl_statement.go`（`KFTLInputError` / `CollectKFTLInputErrors`） / `src/server/gkill/api/gkill_server_api/handle_submit_kftl_text.go` |
@@ -14,7 +14,7 @@
 メモ帳（KFTL）は1つのテキストから複数の Kyou を作る。にもかかわらず応答は
 **成功なら1文、失敗なら1文**しか返していなかった。
 
-再監査の実測（2026-08-24）で、**まったく違う2つの失敗が完全に同じ応答になった**:
+2巡目の指摘での実測で、**まったく違う2つの失敗が完全に同じ応答になった**:
 
 | 入力 | 実際の原因 | 応答 |
 |---|---|---|
@@ -88,7 +88,7 @@ TS 側には最初から `get_invalid_line_indexs()` と細かいエラーコー
 
 ## Evidence
 
-- 再監査の実測（2026-08-24、本番 gkill へ stdio 接続）: `/end` と `/mood`+`99` が
+- 2巡目の指摘での実測（本番 gkill へ stdio 接続）: `/end` と `/mood`+`99` が
   同一の `ERR000351` を返した。成功時は `MSG000076` の1行のみ
 - 原因の文字列は既に存在していた: `kftl_statement.go` が
   `error applying line %q` と失敗行のテキストを埋めており、

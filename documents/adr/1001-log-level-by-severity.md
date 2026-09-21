@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-30 |
-| Sources | `7252746a` / `1de20236` / `c7757e98` / `c5f1b208` / `src/server/gkill/main/common/gkill_log/` |
+| Sources | `41bae7ef` / `725fe24e` / `d2675b3d` / `0e60bc9c` / `src/server/gkill/main/common/gkill_log/` |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/main/common/gkill_log/log_level_source_scan_test.go` |
@@ -14,8 +14,8 @@
 **本番では1行もログが出ていなかった。**
 
 `gkill_log.LogLevelFromCmd` の既定は `none` で、`--log` を付けなければ全レベルが停止する。
-本番の NSSM サービス `GkillServer` の起動引数は `--pre_load_users ... --cache_reps_local=true` だけで
-`--log` が無く、`$HOME/gkill/logs/` の10ファイルはすべて **0バイト**だった。
+利用者環境の常駐サーバ（Windows サービス）の起動引数に `--log` が無く、
+`$HOME/gkill/logs/` の10ファイルはすべて **0バイト**だった。
 
 同時に、**エラーの記録がほぼ全部 Debug に置かれていた**。非テストの `slog.Log` 1998件のうち
 Debug が 1798件（90%）で、その内訳は `"error at defer close"` 941 /
@@ -30,7 +30,7 @@ Debug が 1798件（90%）で、その内訳は `"error at defer close"` 941 /
 逆方向の誤用もあった。`handle_file_serve.go` は Cookie が無いだけの403・404・共有範囲外の403 まで
 Error（`gkill_error.log`）へ出していた。未ログインの初回アクセスやボットで、運用者向けのファイルが埋まる。
 
-そして直近3コミット（`ea3a7a60` Debug→Warn、`a6914b6d` Warn→Error）は
+そして直近3コミット（`c4179e9b` Debug→Warn、`3f22c954` Warn→Error）は
 「`--log warn` 運用のときに他の警告へ埋もれさせないため」を前提にレベルを上げていたが、
 その前提は成立していなかった。
 
@@ -41,7 +41,7 @@ Error（`gkill_error.log`）へ出していた。未ログインの初回アク�
 | レベル | 意味 |
 |---|---|
 | `Error` | 運用者が**いま**知るべきサーバ側の障害。放置するとデータが壊れる／機能が使えない。利用者の操作では起こらない |
-| `Warn` | 動き続けるが結果が痩せる・劣化する。または監査上残す利用者由来の事象（認証失敗・認可拒否・レート制限） |
+| `Warn` | 動き続けるが結果が痩せる・劣化する。または記録として残す利用者由来の事象（認証失敗・認可拒否・レート制限） |
 | `Info` | 起動・終了・rep 構築完了・プラグイン起動といった節目。**1事象1行**で流れ続けない |
 | `Access` | HTTP アクセスログ1行 |
 | `Debug` | 開発時の詳細。**エラーの置き場ではない** |
@@ -54,7 +54,7 @@ Error（`gkill_error.log`）へ出していた。未ログインの初回アク�
    `writeErrorStatus` が境界で1行出すので深部は `Debug` でよい。**同じ失敗を2回 Error で書かない。**
    返らない（ログして継続・`defer` 内・goroutine 内）→ **握り潰し。そのログが唯一の記録なので `Debug` 禁止。**
 2. **原因が利用者側か、サーバ側か。**
-   入力・認証・認可・レート制限 → `Warn`（監査に要る）または `Debug`。
+   入力・認証・認可・レート制限 → `Warn`（記録に残す）または `Debug`。
    ディスク・DB・プロセス・設定 → `Error`。
 
 **既定のログレベルは `error`。** 「`gkill_error.log` に出ていなければ起きていない」と
@@ -108,7 +108,7 @@ Error（`gkill_error.log`）へ出していた。未ログインの初回アク�
 **既定でログファイルが育つ。** 回転を同時に入れたのはこのため。Error は稀なので既定の
 32MiB・5世代で当面足りるが、`--log debug` 以下で長期運用するときは世代数を見直すこと。
 
-**Warn の使い分けが2種類ある。** 「サーバ側の劣化」と「監査に残す利用者由来の事象」で、
+**Warn の使い分けが2種類ある。** 「サーバ側の劣化」と「記録として残す利用者由来の事象」で、
 どちらも `gkill_warn.log` に混ざる。分けたければファイルを増やすことになるが、
 いまは `--log warn` にしたときの視界が汚れない範囲に収まっている。
 

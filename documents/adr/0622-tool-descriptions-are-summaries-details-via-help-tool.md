@@ -21,7 +21,8 @@ ADR-0619 の予算ファイルは**増加を止める**が、**減らす**手段
 ## Decision
 
 ツール一覧の説明文は「何をするか・まず使う引数・必ず確認すること・詳細の在処」の要約にとどめる。
-本文は `help_topics.go` の topic（search / pagination / mi / data_types / plugin / idf / deleted / rep / kftl）へ
+本文は `help_topics.go` の topic（search / pagination / mi / data_types / plugin / idf / deleted / rep / kftl。
+2026-09-20 に [ADR-0632](0632-config-tree-descriptions-for-mcp.md) が config を足して 10 件）へ
 **要約せずに移し**、3サーバ共通の `gkill_get_mcp_help(topic)` で取り出す（引数を省けば topic の一覧。gkill へは往復しない）。
 要約化した説明文は「詳細は gkill_get_mcp_help の topic:xxx」と在処を案内する。
 

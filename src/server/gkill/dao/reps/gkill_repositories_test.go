@@ -229,7 +229,7 @@ func TestGkillRepositoriesFindTexts_EmptyIDsIsExplicitZeroHit(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// 2026-08-24 の再監査: 記録を削除してもタグは語彙に残り続け、
+// 2巡目の指摘: 記録を削除してもタグは語彙に残り続け、
 // 検索候補に0件しか返さない項目が溜まっていた。
 //
 // フィルタは GkillRepositories（rep の集約）の層にあるので、
@@ -324,7 +324,7 @@ func TestGkillRepositoriesGetAllTagNamesIncludingDeletedTargets_KeepsEverything(
 	}
 }
 
-// 2026-08-24 の再監査 事象10: 1つの応答の中で種別名が食い違っていた
+// 2巡目の指摘 事象10: 1つの応答の中で種別名が食い違っていた
 // （updated_mi は mi_check、updated_kyou は mi_create）。
 // Mi の5射影は同じ1行から SQL が合成するラベルで、MI テーブルに DATA_TYPE 列は無い。
 // 5つとも UPDATE_TIME が同着なので、素の MaxFunc は SQLite の UNION 出力順に従っていた。

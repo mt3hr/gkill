@@ -212,7 +212,7 @@ func AppendWarningsToSummary(summary string, payload *jsonobj.Object) string {
 //
 // **read / write の両方から使う。** 以前は3種類に割れていて
 // （read の `Entity not found: {id}`、write の親切版、update 9本の `Kmemo not found: {id}`）、
-// 同じ状況で受け取る説明が呼んだツールによって違った（2026-08-25 の実利用レビュー）。
+// 同じ状況で受け取る説明が呼んだツールによって違った（実利用レビュー）。
 //
 // 取得は型別エンドポイントなので、ID が無いのか型を取り違えたのかは
 // サーバの応答からは区別できない。**区別できないことを言う**のが唯一正しい案内で、

@@ -123,7 +123,7 @@ class GkillApiClient(
         val kftl_text: String,
         val locale_name: String,
         // 空文字はサーバーの omitempty と Json の encodeDefaults=false で送信時に落ちる。
-        // ワーカー再送で同じキーを送ると二重登録にならない（監査 S3-wear）。
+        // ワーカー再送で同じキーを送ると二重登録にならない（指摘 S3-wear）。
         val idempotency_key: String = "",
         // 記録の create_app / update_app に載る。既定値を置かない: encodeDefaults=false で
         // キーごと落ちると、サーバーはエラーを出さずに "gkill_kftl"（メモ帳と同じ値）へ戻す。
@@ -253,7 +253,7 @@ class GkillApiClient(
             val kyousJson = json.parseToJsonElement(kyousRespBody).jsonObject
             val errors = kyousJson["errors"]?.let { if (it is JsonNull) null else it.jsonArray }
             if (errors != null && errors.isNotEmpty()) {
-                // errors の本文には環境依存の文言が入りうるので error_code だけを残す(2026-08-30 監査 F-008)
+                // errors の本文には環境依存の文言が入りうるので error_code だけを残す(指摘 F-008)
                 val codes = errors.mapNotNull { it.jsonObject["error_code"]?.jsonPrimitive?.content }
                 Log.e(tag, "get_kyous errors: ${codes.joinToString(",")}")
                 return null
@@ -284,7 +284,7 @@ class GkillApiClient(
                         resp.body.string().ifEmpty { null }
                     }
                 } catch (e: Exception) {
-                    // Kyou ID は記録と突き合わせられる識別子なので logcat へ出さない(2026-08-30 監査 F-008)
+                    // Kyou ID は記録と突き合わせられる識別子なので logcat へ出さない(指摘 F-008)
                     Log.e(tag, "get_timeis failed", e)
                     null
                 }

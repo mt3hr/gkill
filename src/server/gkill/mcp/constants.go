@@ -110,7 +110,7 @@ var AppConfigFields = NewStringSet(
 	// 接続先の識別。gkill が返す user_id / device をそのまま通す。
 	// read サーバと readwrite サーバが別アカウントを向いていても、AI からは
 	// 区別する手段が無く「同じAPIなのに件数が違う」と誤診されていた
-	// （2026-08-24 の実利用レビュー）。環境変数の値（GKILL_BASE_URL 等）は
+	// （実利用レビュー）。環境変数の値（GKILL_BASE_URL 等）は
 	// 端末の情報なので出さない（ADR-0707）。出すのは gkill 由来のこの2つだけ。
 	"user_id",
 	"device",
@@ -134,7 +134,7 @@ const MaxDeleteTargets = 100
 // RepInfosFields は gkill_get_rep_infos の fields 射影の許可値。
 // 本番では rep_infos[] だけで数百件になる（rep は rep_type ごとに重複して載るので
 // rep 数より膨らむ）。一方「正準値と対応表だけ欲しい」呼び出しが多く、
-// 一番よく使う形が一番大きい応答になっていた（2026-08-24 の実利用レビュー）。
+// 一番よく使う形が一番大きい応答になっていた（実利用レビュー）。
 var RepInfosFields = NewStringSet(
 	"rep_infos",
 	"canonical_rep_types",
@@ -144,7 +144,7 @@ var RepInfosFields = NewStringSet(
 
 // AttachedDataKinds は attached_data_reps の data_kind。歴代端末ぶんの Tag_ / Text_ / Notification_ / GPSLogs_ が
 // 並ぶので本番では約120件になり、fields で丸ごと落とすか丸ごと取るかの2択だった
-// （2026-08-25 の実利用レビュー）。生成側は handle_get_rep_infos_mcp.go の
+// （実利用レビュー）。生成側は handle_get_rep_infos_mcp.go の
 // appendAttachedDataRep が渡す4値。
 var AttachedDataKinds = NewStringSet("tag", "text", "notification", "gpslog")
 
@@ -431,7 +431,7 @@ var EntityDataTypeValues = func() []string {
 // （mi / timeis …）。この違いはどこにも書かれておらず、
 // **gkill_add_mi の応答 data_type:"mi_create" をそのまま gkill_delete_kyou へ渡すと落ちる**
 // （KFTL の created[] だけはエンティティ語彙なので通る、という三者三様だった。
-// 2026-08-24 の実利用レビュー）。
+// 実利用レビュー）。
 // 応答をそのまま次のツールへ渡せるよう、射影名も受理して正規化する。
 var ProjectionToEntityDataType = []struct{ Projection, Entity string }{
 	{"mi_create", "mi"},
@@ -484,7 +484,7 @@ var CrossServerToolMentions = NewStringSet(
 // 入口は ToEntityDataType を通すので射影名(mi_start / timeis_start …)でも動くのに、
 // enum を畳んだ後の語彙だけにしていると、JSON Schema を送信前に検証する
 // クライアントが mi_start をサーバへ届く前に弾く。説明文が「応答の data_type を
-// そのまま渡せる」と約束しているので正面から食い違っていた(2026-08-25 の実利用レビュー)。
+// そのまま渡せる」と約束しているので正面から食い違っていた(実利用レビュー)。
 // 畳んだ後の語彙(EntityDataTypeValues)は検証側で使うので、両方を残す。
 var EntityAndProjectionDataTypeValues = func() []string {
 	out := make([]string, 0, len(EntityDataTypeValues)+len(ProjectionDataTypeNames))
@@ -505,7 +505,7 @@ func ToEntityDataType(dataType string) string {
 }
 
 // removedToolHints は消したツールの案内。MCP のツール一覧は**クライアントのセッション寿命で固定**されるので、
-// サーバから消しても既存セッションは呼び続ける (2026-08-24 の再監査で live コネクタから再現)。
+// サーバから消しても既存セッションは呼び続ける (2巡目の指摘で live コネクタから再現)。
 // しかもそのクライアントが握っている古い説明文は「パスを優先しろ」と、
 // まさにこの消えたツールへ誘導している。名前だけ返すと行き止まりになる。
 var removedToolHints = map[string]string{

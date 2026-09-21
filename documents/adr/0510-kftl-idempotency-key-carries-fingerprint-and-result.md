@@ -11,7 +11,7 @@
 
 ## Context
 
-`/api/submit_kftl_text` の `idempotency_key` は Wear のワーカー再送のために入れたもので（監査 S3-wear）、
+`/api/submit_kftl_text` の `idempotency_key` は Wear のワーカー再送のために入れたもので（指摘 S3-wear）、
 台帳は「利用者:キー → 成功した時刻」しか持たなかった。2回目以降は本文を見ずに「成功」だけを返し、
 `created` は代入されないまま `null` で返っていた。
 

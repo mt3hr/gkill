@@ -36,7 +36,7 @@ func (s *stubGPSLogRepository) UnWrapTyped() ([]GPSLogRepository, error) {
 }
 
 // GPS集約の重複排除: 複数repが同一点を返しても1点に畳まれ、
-// 同時刻・異座標の点は両方残る（外部監査 C3。GPXの±24hマージン読みで
+// 同時刻・異座標の点は両方残る（指摘 C3。GPXの±24hマージン読みで
 // 同一点が最大3重に返り、素直に数えると期間比較が壊れていた）。
 func TestGPSLogRepositoriesDedupAcrossReps(t *testing.T) {
 	ctx := context.Background()

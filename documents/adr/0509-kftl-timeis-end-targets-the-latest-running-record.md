@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-09-16 |
-| Sources | 2026-09-16 の利用者報告（「`ーいたえ` などが機能しない。画面で処理していたときは動いていた」）と、利用者の同期済み打刻 DB・タグ DB の件数集計、旧 TS（`99998673^` のタグ指定・題名指定の終了リクエスト）の読み合わせ。[ADR-0507](0507-kftl-single-implementation-on-server.md) / [ADR-0508](0508-kftl-blank-records-are-input-errors.md) |
+| Sources | 利用者報告（「`ーいたえ` などが機能しない。画面で処理していたときは動いていた」）と、利用者の同期済み打刻 DB・タグ DB の件数集計、旧 TS（`533645ee^` のタグ指定・題名指定の終了リクエスト）の読み合わせ。[ADR-0507](0507-kftl-single-implementation-on-server.md) / [ADR-0508](0508-kftl-blank-records-are-input-errors.md) |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/kftl/kftl_timeis.go`（`findPlayingTimeIsEntries` / `sortPlayingTimeIsEntries` / `addSearchTag` / `endTargetIDInheritingPrototype`） |

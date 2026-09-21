@@ -81,7 +81,7 @@ func requireNextLineText(ctx *KFTLStatementLineContext) error {
 // 入力ミスではないので KFTLInputError とは別物で、ハンドラは 500 のまま扱う。
 // それでも行番号だけは載せる —— 「メモ帳のテキストの記録に失敗しました」の1文では、
 // 何行目で止まったのか(＝ created[] のどこまでが書けたのか)が応答から分からず、
-// 後始末の手がかりが無かった(2026-08-25 の実利用レビュー)。
+// 後始末の手がかりが無かった(実利用レビュー)。
 type KFTLExecutionError struct {
 	// LineNumber は1始まりの行番号。0 は「行が分からない」。
 	LineNumber int

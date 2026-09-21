@@ -469,7 +469,7 @@ func TestReopenFinishedTimeIs(t *testing.T) {
 // 締切と見積終了は「その日じゅう」の意味なので、その日の終わりへ展開する。
 // 00:00:00 に丸めると「8/25締切」が25日の開始時点で期限切れになる。
 // 読み取り側は calendar_end_date を 23:59:59 へ展開すると明記しており、
-// 書き込み側だけが一律 00:00:00 のままだった（2026-08-24 の実利用レビュー）。
+// 書き込み側だけが一律 00:00:00 のままだった（実利用レビュー）。
 // ---------------------------------------------------------------------------
 
 func TestDateOnlyExpansionOnWrite(t *testing.T) {
@@ -674,7 +674,7 @@ func TestAddAndUpdateShareTheFieldTable(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// 後付けフラグ (2026-08-30 MCPレビュー): urlog の fetch_metadata / fetch_favicon、
+// 後付けフラグ (MCPレビュー): urlog の fetch_metadata / fetch_favicon、
 // mi の allow_create_board。既定値・addOnly・古いスキーマからの文字列復元を固定する。
 // ---------------------------------------------------------------------------
 func TestLateFlagNormalization(t *testing.T) {

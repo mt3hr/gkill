@@ -124,7 +124,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	// カーソルをクエリの期間上限へ押し下げる。
 	//
 	// ★これが無いと、ページ1枚(最大1000件)を返すためだけに毎回全期間を検索し直す。
-	//   実データ(30年・56万件・376リポジトリ)では1リクエストあたり +1.8GB のメモリと
+	//   実データ(数十年・数十万件・数百リポジトリ)では1リクエストあたり GB 級のメモリと
 	//   数十分を要し、それがページ数(約568回)ぶん繰り返されてサーバが膨れ続ける
 	//   (2026-08-16 実測)。ページングがサーバ側の仕事をまったく軽くしていなかった。
 	//
@@ -263,7 +263,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		allKyous = filtered
 	}
 
-	// 未知のフィルタ値の警告（綴り違いが黙って0件になるのを防ぐ。外部監査 S7）。
+	// 未知のフィルタ値の警告（綴り違いが黙って0件になるのを防ぐ。指摘 S7）。
 	// count_only でも実施する — 件数確認こそタイポ検索の入口のため。
 	for _, pluginName := range reps.PluginFindWarnings(findCtx) {
 		response.Warnings = append(response.Warnings,
@@ -293,7 +293,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 
 	// count_only: DTO構築・typed取得・付随データ3N・TimeIs全ロードを全て飛ばして件数だけ返す。
 	// 旧v1は「limit:1で総数だけ読む」が最安の裏技だったが、それでも1件ぶんのフルDTOと
-	// 使われないファイルURLトークンが毎回付いてきた（外部監査 B1）。
+	// 使われないファイルURLトークンが毎回付いてきた（指摘 B1）。
 	if request.CountOnly {
 		response.TotalCount = &totalCount
 		appendGetKyousMCPSuccess(response, request.LocaleName)
@@ -443,7 +443,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		lantanaMap[l.ID] = l
 	}
 
-	// URLogのサムネイルはbase64画像で、実データでは227行で90MBある(1行最大10MB)。
+	// URLogのサムネイルはbase64画像で、実データでは数百行で数十MBある(1行最大10MB)。
 	// MCPの利用者はAIクライアントで画像本体を使えないため、DBから読む段階で外す。
 	findQueryForURLog := *findQueryForBatch
 	findQueryForURLog.ExcludeURLogThumbnailImage = true
@@ -533,7 +533,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 
 	// 付随データの取得失敗を種別ごとに数える。1件でも失敗したら response.Partial を立て、
 	// AIクライアントに「返した Kyou の付随データが不完全」と伝える(以前は _ で握り潰し、
-	// 欠落を完全な結果に見せていた＝監査 M-05)。エラー内容は Debug ログにだけ残す(本文・IDは載せない)。
+	// 欠落を完全な結果に見せていた＝指摘 M-05)。エラー内容は Debug ログにだけ残す(本文・IDは載せない)。
 	detailFailures := map[string]int{}
 	noteDetailFailure := func(kind string, err error) {
 		if err == nil {
@@ -545,7 +545,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 
 	// attached TimeIs を一括取得。削除済みの除外と「その瞬間に走っていたか」の判定は
 	// どちらも get_kyous_mcp_helpers.go の関数が正本（理由と実測はそちらのコメント）。
-	// 実測(2026-08-25 本番): 落とさないと付随16件のうち14件が削除済みで、最古は1年前の開始。
+	// 実測(2026-08-25 本番): 落とさないと付随十数件の大半が削除済みで、最古は1年前の開始。
 	// 同じ瞬間を playing_time で引くと2件しか返らない。
 	var allTimeIs []reps.TimeIs
 	if request.ShouldIncludeTimeIs() {
@@ -849,7 +849,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 
 	response.Kyous = resultDTOs
 	// TotalCount は cursor 無しの応答のみ（カーソル押し下げ後のハンドラは全件数を知らない）。
-	// 全応答に RemainingCount。旧v1のTotalCountはカーソルの有無で意味が変わっていた（外部監査 S3）。
+	// 全応答に RemainingCount。旧v1のTotalCountはカーソルの有無で意味が変わっていた（指摘 S3）。
 	if !hasCursor {
 		response.TotalCount = &totalCount
 	}

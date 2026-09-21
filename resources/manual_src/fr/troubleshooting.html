@@ -55,7 +55,7 @@
     </tr>
     <tr>
       <td>L'extension n'a pas répondu. Patientez puis réessayez, ou vérifiez son état dans Paramètres → Paramètres de l’extension.</td>
-      <td>Patientez puis réessayez, ou vérifiez l'état dans Paramètres → Paramètres de l’extension</td>
+      <td>Patientez puis réessayez, ou vérifiez l'état dans Paramètres → Paramètres de l’extension. Si cela ne suffit pas, la raison est conservée dans <code>gkill_plugin_&lt;nom&gt;_error.log</code>, dans le dossier <code>logs</code> du dossier principal de gkill</td>
     </tr>
     <tr>
       <td>L'enregistrement cible est introuvable. Il a peut-être été supprimé ou modifié depuis un autre appareil. Rechargez la liste.</td>
@@ -85,6 +85,14 @@
 
   <h2>Quand rien ne s'affiche</h2>
   <p>Si un bouton ne fait rien, rechargez la page. Les erreurs inattendues dans l'application s'affichent désormais aussi en haut à droite. Si le problème persiste, le fichier <code>gkill_error.log</code> du serveur conserve une ligne à l'heure de l'échec.</p>
+
+  <h2>Quand le filtre par plage horaire donne toujours 0 résultat</h2>
+  <p>Sur un smartphone (Android) ou un serveur que vous avez démarré vous-même, une recherche peut ne renvoyer aucun résultat uniquement lorsqu'une plage horaire est indiquée. Cela se produit lorsque le serveur ne peut pas lire le fuseau horaire de l'appareil ; vos enregistrements ne sont pas perdus.</p>
+  <ul>
+    <li>Dans l'application du smartphone, quittez l'application puis relancez-la.</li>
+    <li>Si vous démarrez le serveur vous-même, définissez la variable d'environnement <code>TZ</code> (par exemple <code>TZ=JST-9</code>) avant de le lancer.</li>
+    <li>Si le fichier <code>gkill_error.log</code> du serveur contient une ligne commençant par « sqlite localtime differs », c'est la cause.</li>
+  </ul>
 
   <h2>Documents associés</h2>
   <ul>

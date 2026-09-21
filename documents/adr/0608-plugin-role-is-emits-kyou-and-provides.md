@@ -87,7 +87,7 @@ GPS は普通に取れているのに「索引が壊れている＝位置情報�
 ## Evidence
 
 - 実利用の報告: `reps:["GoogleLocation"]` が `unknown rep` になり、
-  `gkill_get_all_rep_names` にも存在しない。一方 `gkill_get_gps_log` は 2,509件を返した
+  `gkill_get_all_rep_names` にも存在しない。一方 `gkill_get_gps_log` は数千件を返した
 - `typed_index: {state:"never_built", record_count:0}` を見て
   「位置情報は使えないのか」と解釈された
 - `src/plugins/gkill_plugin_google_locationhistory/main.go` の `FindKyous` は常に空を返す

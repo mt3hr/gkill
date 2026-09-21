@@ -24,7 +24,7 @@ type pluginConfig struct {
 //
 // Takeout の CSV では 2025-12 からスマホの歩数計（Phone Health Connect）の行が時計の行と
 // 同じ日に並ぶ。Fitbit アプリ自身の日計は時計の値だけを採り、スマホの行は足さない
-// （実データ 273 日で毎日一致）。アプリ本体（Google Health App）の行も、時計と同じ日に
+// （実データの混在する全日で一致）。アプリ本体（Google Health App）の行も、時計と同じ日に
 // あるときは端数（距離で数 m）で、アプリの日計には入っていない。
 func defaultSecondaryDataSources() []string {
 	return []string{"Phone Health Connect", "Google Health App"}

@@ -39,7 +39,7 @@ const (
 )
 
 // apiBodyCap は無認証経路（authNone）のボディ上限。認証ミドルウェアを通らないため
-// readAuthBody の32MB上限が効かず、ここで経路別に掛ける（2026-08-30 監査 F-002）。
+// readAuthBody の32MB上限が効かず、ここで経路別に掛ける（指摘 F-002）。
 // authNone 以外の経路では無視される（認証ミドルウェアが maxAuthBodyBytes で切る）。
 type apiBodyCap int
 
@@ -221,7 +221,7 @@ func validateAPIRoutes(routes []apiRoute) error {
 			return fmt.Errorf("api route %q: handler is nil", key)
 		}
 		// 無認証で POST を受ける経路は認証ミドルウェアの32MB上限を通らない。
-		// 上限なしで登録すると未認証の無制限ボディがそのままヒープへ載る（監査 F-002）。
+		// 上限なしで登録すると未認証の無制限ボディがそのままヒープへ載る（指摘 F-002）。
 		if rt.Auth == authNone && rt.Method == http.MethodPost && rt.Body == bodyNone {
 			return fmt.Errorf("api route %q: no-auth POST route must set a body cap", key)
 		}

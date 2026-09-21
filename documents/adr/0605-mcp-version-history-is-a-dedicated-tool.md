@@ -32,7 +32,7 @@ gkill は追記型で、update は新しい版の追加、delete は `is_deleted
 ## Rejected alternatives
 
 - **`only_latest_data: false` を利用者指定に開放する** — 旧版を落としているゲートは
-  監査が最初に見つけた2箇所ではなく**最低6箇所**あり、うち3つは静かに0件を返す。実測で確認した内訳:
+  指摘が最初に見つけた2箇所ではなく**最低6箇所**あり、うち3つは静かに0件を返す。実測で確認した内訳:
   - `handle_get_kyous_mcp.go:114` の無条件上書きと `:341` の `findQueryForBatch` 固定（既知の2つ）
   - `find_filter.go` の `replaceLatestKyouInfos` が `OnlyLatestData` で分岐せず、
     最新 `UpdateTime` 以外の entry を無条件に落とす。**この1つだけで、既知の2箇所を外しても件数は1件も変わらない**
@@ -44,7 +44,7 @@ gkill は追記型で、update は新しい版の追加、delete は `is_deleted
     ページングが飛ぶかループする
 - **型非依存の `/api/get_kyou` へフォールバックして `data_type` を省略可能にする** —
   `Repositories.GetKyouHistoriesByRepName` は冒頭で `UnWrap()` を呼び、キャッシュ rep を丸ごと
-  バイパスする。これは実データで 11rep → 約940rep・20.7秒になった経路そのもの。
+  バイパスする。これは実データで十数rep → 数百rep・十数秒になった経路そのもの。
   型別の `XxxRepositories.GetXxxHistoriesByRepName` はキャッシュ rep を直接回るので安全
 - **`gkill_delete_kyou` に `restore: true` フラグを足す** — delete という名のツールが un-delete するのは
   悪い affordance で、要約行も「Deleted (soft)」と報告してしまう。
@@ -67,7 +67,7 @@ gkill は追記型で、update は新しい版の追加、delete は `is_deleted
 
 ## Evidence
 
-2026-08-23 の readwrite MCP 監査（実測）:
+readwrite MCP の点検（実測）:
 
 - D-1 の件数が、`only_latest_data` 省略（=true）でも `false` でも **22件で変わらない**。
   その日には update を通した記録が5件あり、旧版が存在するはずだった

@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-25 |
-| Sources | 2026-08-25 の実利用レビュー（別のクライアントから書いたのに `create_user` が想定と違う／読み取りサーバのアカウント名とレコードの `create_user` が食い違う）と、本番アカウントでの実測 |
+| Sources | 実利用レビュー（別のクライアントから書いたのに `create_user` が想定と違う／読み取りサーバのアカウント名とレコードの `create_user` が食い違う）と、本番アカウントでの実測 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/mcp/server_base.go`（`handleToolCall` の userId 決定） |

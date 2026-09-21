@@ -26,7 +26,7 @@ android {
     //   GKILL_RELEASE_KEY_ALIAS / GKILL_RELEASE_KEY_PASSWORD
     // 未設定の assembleRelease は未署名 APK (app-release-unsigned.apk) になり、配布名への
     // rename が見つからず release パイプラインが止まる (黙って debug 鍵の配布物を作らない。
-    // 2026-08-30 監査 F-006)。
+    // 指摘 F-006)。
     val gkillSigningProp = { name: String -> (findProperty(name) as? String) ?: System.getenv(name) }
     val gkillReleaseKeystore = gkillSigningProp("GKILL_RELEASE_KEYSTORE")
     if (gkillReleaseKeystore != null) {

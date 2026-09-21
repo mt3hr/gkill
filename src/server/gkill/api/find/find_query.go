@@ -62,8 +62,8 @@ type FindQuery struct {
 
 	// ExcludeURLogThumbnailImage は URLog の THUMBNAIL_IMAGE を取得しないことを指示します。
 	//
-	// THUMBNAIL_IMAGE は base64 で埋め込まれており、実データでは1行あたり平均406KB・
-	// 最大10MBで、227行の合計が90MBに達します。
+	// THUMBNAIL_IMAGE は base64 で埋め込まれており、実データでは1行あたり平均数百KB・
+	// 最大10MBで、数百行の合計が数十MBに達します。
 	// サムネイルを使わない呼び出し（AIクライアント向けのMCP経路、
 	// キャッシュ再構築など）では、DBから読む段階で外すために使います。
 	//

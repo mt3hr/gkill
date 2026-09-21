@@ -218,7 +218,7 @@ func (i *PluginTypedIndex) Snapshot() *pluginIndexSnapshot {
 // PluginTypedIndexState は索引が今どの状態にあるか。
 //
 // OK=false だけでは「一度も構築していない」と「構築に失敗した」が潰れており、
-// 呼び出し側は直しようが無かった（2026-08-24 の再監査）。
+// 呼び出し側は直しようが無かった（2巡目の指摘）。
 const (
 	PluginTypedIndexStateNeverBuilt = "never_built"
 	PluginTypedIndexStateFailed     = "failed"
@@ -254,7 +254,7 @@ type PluginTypedIndexStats struct {
 // Stats は現在のスナップショットの統計を返します。決してブロックしません
 // （Snapshot と同じ非ブロッキング契約。未構築なら OK=false）。
 // レコード走査は O(件数) ですが上限 pluginIndexMaxRecords で有界です。
-// 「プラグインがどの期間まで取り込み済みか」をAPIから読めるようにする（外部監査 D1）。
+// 「プラグインがどの期間まで取り込み済みか」をAPIから読めるようにする（指摘 D1）。
 func (i *PluginTypedIndex) Stats() PluginTypedIndexStats {
 	snapshot := i.Snapshot()
 	stats := PluginTypedIndexStats{

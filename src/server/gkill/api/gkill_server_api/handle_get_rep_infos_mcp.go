@@ -30,7 +30,7 @@ import (
 // UnWrap（ADR-0101 の許容用途。MatchReps へ入れる用途とは別物）です。
 // ファイルパスは返しません。プラグインは rep_types で絞れないため対応表(plugins)を
 // 別枠で返し、canonical_rep_types には find.KyouRepTypes の11値をそのまま載せます。
-// 経緯: 外部監査 A1/A3「rep_types の語彙がどのAPIからも取得できず総当たりでしか判明しない」。
+// 経緯: 指摘 A1/A3「rep_types の語彙がどのAPIからも取得できず総当たりでしか判明しない」。
 func (g *GkillServerAPI) HandleGetRepInfosMCP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetRepInfosMCPRequest{}

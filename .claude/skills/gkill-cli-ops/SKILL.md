@@ -49,7 +49,7 @@ Both use cobra for CLI with shared subcommands: `version`, `dvnf`, `generate_thu
 - `gkill/main/common/` — Shared CLI commands, server initialization, logging
 - `gkill/main/common/gkill_options/` — CLI flag definitions and directory structure
 
-**CLIサブコマンドは `RunE` + `SilenceUsage/SilenceErrors`**（2026-08-21、監査 M-8）。失敗で exit 1（main の `log.Fatal` が唯一のエラー出力）。ユーザごとのループは `errors.Join` で集約し、途中失敗でも成功分の結果（reset_password の URL 等）はその場で即出力してから続行する（`os.Exit` を足すと defer のセッション後始末が飛ぶので RunE 経由で返す）。**互換注意**: `SyncDatas` 等が update_cache の失敗を初めて exit code で観測する。`add_tag` は長時間実行向けに `issueLocalSession` の `refresh` でセッション期限を延長する（ルールごとの収集前と、付与の500件ごと。TTL は5分）。ルールの書式誤りは RunE のエラーに加えて stderr にも出す——`log.Fatal` はログファイルにしか書かず、端末には usage と exit 1 しか見えないため。
+**CLIサブコマンドは `RunE` + `SilenceUsage/SilenceErrors`**（指摘 M-8）。失敗で exit 1（main の `log.Fatal` が唯一のエラー出力）。ユーザごとのループは `errors.Join` で集約し、途中失敗でも成功分の結果（reset_password の URL 等）はその場で即出力してから続行する（`os.Exit` を足すと defer のセッション後始末が飛ぶので RunE 経由で返す）。**互換注意**: リポジトリ外の運用スクリプト（同期・配置）が update_cache の失敗を初めて exit code で観測する。`add_tag` は長時間実行向けに `issueLocalSession` の `refresh` でセッション期限を延長する（ルールごとの収集前と、付与の500件ごと。TTL は5分）。ルールの書式誤りは RunE のエラーに加えて stderr にも出す——`log.Fatal` はログファイルにしか書かず、端末には usage と exit 1 しか見えないため。
 
 **ログは統合ファイルとレベル別ファイルへ同時に出し、両方へ同じ回転設定を適用する。**
 既定は32 MiB・5世代で、現在のファイルを `.1`、古いものを `.2` 以降へ送る。

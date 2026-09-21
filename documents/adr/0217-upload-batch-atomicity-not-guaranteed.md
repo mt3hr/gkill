@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-30 |
-| Sources | `src/server/gkill/api/gkill_server_api/handle_upload_files.go` / `handle_upload_gps_log_files.go` / 2026-08-30 外部監査 F-010 |
+| Sources | `src/server/gkill/api/gkill_server_api/handle_upload_files.go` / `handle_upload_gps_log_files.go` / 2026-08-30 の指摘 F-010 |
 | Supersedes | なし |
 | Superseded-by | なし |
 
@@ -13,10 +13,10 @@
 `/api/upload_files` は複数ファイルを並列で書き出し、1件でも失敗したらエラーだけを返して
 IDFKyou の登録を行わない。**このとき書き出し済みのファイルはディスクに残る**。
 GPS 版（`/api/upload_gps_log_files`）も同型で、どちらも doc コメントに明記された既知挙動である。
-1ファイル単位では temp+rename の原子性が確保されており（外部監査 M-03 対応）、
+1ファイル単位では temp+rename の原子性が確保されており（指摘 M-03 対応）、
 `io.Copy` が途中で失敗しても Override 対象の原本は壊れない。
 
-2026-08-30 の外部監査（F-010）が、この挙動を「SQLite から参照されない孤児ファイル・
+2026-08-30 の指摘（F-010）が、この挙動を「SQLite から参照されない孤児ファイル・
 容量消費・retry 時の衝突・GPS 日次ファイルの部分更新」として P2 指摘し、
 staging + 全件成功後の一括 rename + 失敗時 cleanup + 起動時 orphan recovery / manifest の
 導入を提案した。対応要否を判断した記録が doc コメントしか無かったため、ここに残す。
@@ -44,8 +44,8 @@ staging + 全件成功後の一括 rename + 失敗時 cleanup + 起動時 orphan
 - **起動時 orphan recovery / manifest** — rep ディレクトリは同期ツール・USB・手動コピーで
   持ち回る運用があり、manifest に無いファイル＝孤児とは言えない（外から置かれた正当な
   ファイルを誤判定する）。IDF の走査取り込みという既存の回収経路と競合する。
-- **何も記録しない（doc コメントのまま）** — 監査・レビューのたびに「これはバグか仕様か」を
-  再検討することになる。今回の監査がまさにそれだった。
+- **何も記録しない（doc コメントのまま）** — 点検やレビューのたびに「これはバグか仕様か」を
+  再検討することになる。今回の点検がまさにそれだった。
 
 ## Consequences
 
@@ -59,7 +59,7 @@ staging + 全件成功後の一括 rename + 失敗時 cleanup + 起動時 orphan
 
 ## Evidence
 
-実測なし — 部分失敗の fault injection（disk full・権限失敗・プロセス断）は監査側も安全境界で
+実測なし — 部分失敗の fault injection（disk full・権限失敗・プロセス断）は運用側も安全境界で
 未実施であり、本決定でも新たに実施していない。挙動の根拠は
 `handle_upload_files.go:196-291`（並列書き出し・エラー集約・登録スキップ）と
 `handle_upload_files.go:205-207` の temp+rename コメント。
