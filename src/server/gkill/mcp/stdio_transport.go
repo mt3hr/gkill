@@ -113,13 +113,49 @@ func (t *StdioTransport) dispatchSafely(message any) (response any) {
 	return t.server.HandlePayload(context.Background(), message, nil)
 }
 
+// onData は届いたぶんをバッファへ足し、取り出せるメッセージを順に処理する。
+//
+// **枠組みはバッファの先頭1行で決めること。** 先に "\r\n\r\n" を探す書き方だと、
+// NDJSON の行のうしろに Content-Length 枠が続き、両方が1回の Read にまとまって届いたときに、
+// 行の中身ごと1つのヘッダ塊と見なしてしまう。ヘッダ名を切り出す ":" が JSON の中の
+// `"jsonrpc":` に当たるので content-length が見つからず、「invalid content-length header」で
+// バッファを丸ごと捨てる。行と枠が別々の Read で届けば通るので、**届き方で結果が変わる**。
 func (t *StdioTransport) onData(chunk []byte) {
 	t.buffer = append(t.buffer, chunk...)
 
 	for {
+		t.trimLeadingBlanks()
+		if len(t.buffer) == 0 {
+			return
+		}
+		lf := bytes.IndexByte(t.buffer, '\n')
+
+		// NDJSON-style framing: one JSON-RPC message per line.
+		if t.startsWithJSON() {
+			if lf == -1 {
+				return
+			}
+			line := strings.TrimSpace(string(t.buffer[:lf]))
+			t.buffer = append([]byte{}, t.buffer[lf+1:]...)
+			if line == "" {
+				continue
+			}
+			message, err := jsonobj.Unmarshal([]byte(line))
+			if err != nil {
+				// 不正な行を黙って捨てると、クライアント側の枠組みの不具合を追えない
+				t.logWarn("invalid json line", err)
+				continue
+			}
+			t.dispatch(message)
+			continue
+		}
+
 		// LSP-style framing: "Content-Length: N\r\n\r\n{...}"
-		headerEnd := bytes.Index(t.buffer, []byte("\r\n\r\n"))
-		if headerEnd != -1 {
+		if t.startsWithHeaderLine(lf) {
+			headerEnd := bytes.Index(t.buffer, []byte("\r\n\r\n"))
+			if headerEnd == -1 {
+				return // ヘッダの終わりがまだ届いていない
+			}
 			headerText := string(t.buffer[:headerEnd])
 			contentLength := -1
 			for _, line := range strings.Split(headerText, "\r\n") {
@@ -158,22 +194,57 @@ func (t *StdioTransport) onData(chunk []byte) {
 			continue
 		}
 
-		// NDJSON-style framing: one JSON-RPC message per line.
-		lf := bytes.IndexByte(t.buffer, '\n')
+		// JSON でもヘッダでもない行。捨てて警告する（枠組みの不具合を追えるように）。
 		if lf == -1 {
 			return
 		}
-		line := strings.TrimSpace(string(t.buffer[:lf]))
+		junk := strings.TrimSpace(string(t.buffer[:lf]))
 		t.buffer = append([]byte{}, t.buffer[lf+1:]...)
-		if line == "" {
-			continue
+		if junk != "" {
+			t.logWarn("invalid json line", fmt.Errorf("JSON-RPC のメッセージでも Content-Length ヘッダでもない行: %q", junk))
 		}
-		message, err := jsonobj.Unmarshal([]byte(line))
-		if err != nil {
-			// 不正な行を黙って捨てると、クライアント側の枠組みの不具合を追えない
-			t.logWarn("invalid json line", err)
-			continue
-		}
-		t.dispatch(message)
 	}
+}
+
+// trimLeadingBlanks はバッファ先頭の空白・空行を落とす（枠組みの判定を先頭1バイトで行うため）。
+func (t *StdioTransport) trimLeadingBlanks() {
+	i := 0
+	for i < len(t.buffer) {
+		c := t.buffer[i]
+		if c == ' ' || c == '\t' || c == '\r' || c == '\n' {
+			i++
+			continue
+		}
+		break
+	}
+	if i > 0 {
+		t.buffer = append([]byte{}, t.buffer[i:]...)
+	}
+}
+
+// startsWithJSON はバッファの先頭が JSON-RPC メッセージ（NDJSON の1行）かを見る。
+func (t *StdioTransport) startsWithJSON() bool {
+	return len(t.buffer) > 0 && (t.buffer[0] == '{' || t.buffer[0] == '[')
+}
+
+// startsWithHeaderLine は先頭行が "Name: value" 形のヘッダかを見る。
+// lf は先頭の改行位置で、-1 は「行がまだ完結していない」。
+func (t *StdioTransport) startsWithHeaderLine(lf int) bool {
+	end := lf
+	if end == -1 {
+		end = len(t.buffer)
+	}
+	line := string(t.buffer[:end])
+	idx := strings.Index(line, ":")
+	if idx <= 0 {
+		// 行が未完なら、続きがヘッダになりうるものとして待つ
+		return lf == -1
+	}
+	for _, c := range line[:idx] {
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '-' || c == '_' {
+			continue
+		}
+		return false
+	}
+	return true
 }
