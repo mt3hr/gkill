@@ -26,6 +26,22 @@ import (
 // 「全件が残る」を確かめる検索が他の記録に引きずられないよう、期間で切れる時刻にしてある。
 var wordFilterTestNow = time.Date(2026, 9, 1, 12, 0, 0, 0, time.UTC)
 
+// wordFilterTestID は本ファイル用の記録 ID を作る。
+//
+// **数字で始まる ID を使わないこと。** ワード検索の肯定語は「本文に含む OR ID が語で始まる」で
+// （find_word パッケージの規則。SQL 側も ID LIKE 'word%' を足す）、ID は UUID v4 なので
+// 先頭1文字が `7` になる確率が 1/16 ある。`7`（気分値）や `3` のような1文字の語で検索する
+// テストで素の GenerateNewID を使うと、値が違う記録が ID 経由で当たり、
+// **16回に1回だけ落ちるテスト**になる（実測: 30回中3回）。先頭が英字の UUID だけを使う。
+func wordFilterTestID() string {
+	for {
+		id := GenerateNewID()
+		if len(id) != 0 && id[0] >= 'a' && id[0] <= 'f' {
+			return id
+		}
+	}
+}
+
 // wordFilterQuery は本ファイルの記録だけを期間で囲んだ検索条件を組む。
 func wordFilterQuery(words []string, notWords []string) *find.FindQuery {
 	start := wordFilterTestNow.Add(-time.Hour)
@@ -74,7 +90,7 @@ func addTestTextTo(t *testing.T, tsURL string, sessionID string, targetID string
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Text: reps.Text{
-			ID:          GenerateNewID(),
+			ID:          wordFilterTestID(),
 			TargetID:    targetID,
 			Text:        text,
 			RelatedTime: wordFilterTestNow,
@@ -99,7 +115,7 @@ func addTestTextTo(t *testing.T, tsURL string, sessionID string, targetID string
 
 func addTestLantana(t *testing.T, tsURL string, sessionID string, mood int) string {
 	t.Helper()
-	id := GenerateNewID()
+	id := wordFilterTestID()
 	addReq := &req_res.AddLantanaRequest{
 		SessionID:  sessionID,
 		LocaleName: "en",
@@ -130,7 +146,7 @@ func addTestLantana(t *testing.T, tsURL string, sessionID string, mood int) stri
 
 func addTestNlog(t *testing.T, tsURL string, sessionID string, title string, shop string, amount string) string {
 	t.Helper()
-	id := GenerateNewID()
+	id := wordFilterTestID()
 	addReq := &req_res.AddNlogRequest{
 		SessionID:  sessionID,
 		LocaleName: "en",
@@ -163,7 +179,7 @@ func addTestNlog(t *testing.T, tsURL string, sessionID string, title string, sho
 
 func addTestKC(t *testing.T, tsURL string, sessionID string, title string, numValue string) string {
 	t.Helper()
-	id := GenerateNewID()
+	id := wordFilterTestID()
 	addReq := &req_res.AddKCRequest{
 		SessionID:  sessionID,
 		LocaleName: "en",
@@ -195,7 +211,7 @@ func addTestKC(t *testing.T, tsURL string, sessionID string, title string, numVa
 
 func addTestMi(t *testing.T, tsURL string, sessionID string, title string, boardName string) string {
 	t.Helper()
-	id := GenerateNewID()
+	id := wordFilterTestID()
 	addReq := &req_res.AddMiRequest{
 		SessionID:  sessionID,
 		LocaleName: "en",
@@ -226,7 +242,7 @@ func addTestMi(t *testing.T, tsURL string, sessionID string, title string, board
 
 func addTestReKyou(t *testing.T, tsURL string, sessionID string, targetID string) string {
 	t.Helper()
-	id := GenerateNewID()
+	id := wordFilterTestID()
 	addReq := &req_res.AddReKyouRequest{
 		SessionID:  sessionID,
 		LocaleName: "en",
@@ -316,8 +332,8 @@ func TestHandleGetKyous_WordFilterIDPrefix(t *testing.T) {
 	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
 
 	// ID の中身を固定して、語との位置関係を作る
-	prefixID := addTestKmemoWithID(t, tsURL, sessionID, "zzprefix-"+GenerateNewID(), "本文には語が無い")
-	middleID := addTestKmemoWithID(t, tsURL, sessionID, "mid-zzprefix-"+GenerateNewID(), "本文には語が無い")
+	prefixID := addTestKmemoWithID(t, tsURL, sessionID, "zzprefix-"+wordFilterTestID(), "本文には語が無い")
+	middleID := addTestKmemoWithID(t, tsURL, sessionID, "mid-zzprefix-"+wordFilterTestID(), "本文には語が無い")
 
 	t.Run("ID が語で始まる記録は当たる", func(t *testing.T) {
 		ids := searchWordIDs(t, tsURL, sessionID, wordFilterQuery([]string{"zzprefix"}, []string{}))
@@ -385,9 +401,9 @@ func TestHandleGetKyous_WordFilterNotWordsOnlySubtractsFromAll(t *testing.T) {
 	defer cleanup()
 	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
 
-	keep := addTestKmemoWithID(t, tsURL, sessionID, GenerateNewID(), "残る本文")
-	bodyHasNotWord := addTestKmemoWithID(t, tsURL, sessionID, GenerateNewID(), "bar を含む本文")
-	textHasNotWord := addTestKmemoWithID(t, tsURL, sessionID, GenerateNewID(), "残る本文だが付随テキストに除外語")
+	keep := addTestKmemoWithID(t, tsURL, sessionID, wordFilterTestID(), "残る本文")
+	bodyHasNotWord := addTestKmemoWithID(t, tsURL, sessionID, wordFilterTestID(), "bar を含む本文")
+	textHasNotWord := addTestKmemoWithID(t, tsURL, sessionID, wordFilterTestID(), "残る本文だが付随テキストに除外語")
 	addTestTextTo(t, tsURL, sessionID, textHasNotWord, "bar の付随テキスト")
 	rekyouOfKeep := addTestReKyou(t, tsURL, sessionID, keep)
 	rekyouOfNotWord := addTestReKyou(t, tsURL, sessionID, bodyHasNotWord)
@@ -421,7 +437,7 @@ func TestHandleGetKyous_WordFilterBlankWordsAreDropped(t *testing.T) {
 	defer cleanup()
 	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
 
-	kmemo := addTestKmemoWithID(t, tsURL, sessionID, GenerateNewID(), "なにか")
+	kmemo := addTestKmemoWithID(t, tsURL, sessionID, wordFilterTestID(), "なにか")
 	mood := addTestLantana(t, tsURL, sessionID, 5)
 
 	for _, c := range []struct {
