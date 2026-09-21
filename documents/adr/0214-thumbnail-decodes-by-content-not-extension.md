@@ -77,6 +77,14 @@ ffmpeg の成功は終了コードではなく**出力ファイルの有無**で
 
 拡張子と中身の全数照合では、`.CR2` / `.NEF` を名乗る本物の JPEG が最大の塊だった。これらは `isImage` の対象外なので画像として表示されてすらいない。データ側の問題なのでこの ADR の範囲外。
 
+## 追記（2026-09-22）
+
+静止画の経路の前段に vips（libvips の CLI）が入った（[ADR-0222](0222-thumbnail-prefers-vips-cli-then-native-then-ffmpeg.md)）。
+この ADR の「`image.Decode` が失敗したら ffmpeg へ落とす」「2段目は原寸で書き出して Go で縮小」「失敗は印に焼く」は
+そのまま生きていて、vips が無い環境と vips が読めなかったファイルの経路になっている。ffmpeg の呼び出しには
+`-nostdin` と、静止画では `-threads 1` / `-filter_threads 1` が付く（動画のサムネイルは復号スレッドを絞らない）。
+印の中身には、3段とも失敗したときは vips のエラーも包まれる。
+
 ## Related tests
 
 - `src/server/gkill/dao/reps/idf_thumb_content_decode_test.go`

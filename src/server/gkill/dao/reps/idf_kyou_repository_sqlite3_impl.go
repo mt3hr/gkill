@@ -2667,11 +2667,12 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) e
 		return nil
 	}
 
-	cachedNames, err := i.thumbGenerator.CachedThumbNames()
+	cachedNames, failedNames, err := i.thumbGenerator.CachedThumbNames()
 	if err != nil {
 		err = fmt.Errorf("error at list thumb cache at %s: %w", repName, err)
 		slog.Log(ctx, gkill_log.Error, "error at list thumb cache", "rep_name", fmt.Sprintf("%q", repName), "error", fmt.Sprintf("%q", err))
 		cachedNames = map[string]struct{}{}
+		failedNames = map[string]struct{}{}
 	}
 
 	// 1ファイルの失敗は Warn。ffmpeg が壊れていると対象ファイル数ぶん積むので、
@@ -2682,6 +2683,11 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) e
 	i.eachExistingTargetFile(ctx, targets, func(target derivedCacheTarget, st os.FileInfo) {
 		name := i.thumbGenerator.ThumbCacheName(target.rel, st.Size(), batchThumbWidth, batchThumbHeight)
 		if _, cached := cachedNames[name]; cached {
+			return
+		}
+		// 失敗の印のある対象も投入しない。GenerateThumbCacheFor の入口でも印を見るが、
+		// そこまで進むと goroutine 1本と os.Stat 2回を印の数だけ払う
+		if _, isFailed := failedNames[name]; isFailed {
 			return
 		}
 		goForDerivedCacheBatch(wg, func() {

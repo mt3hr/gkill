@@ -22,6 +22,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -38,7 +39,16 @@ import (
 var (
 	existFFMPEG  = false
 	existFFPROBE = false
+
+	// existVIPS は libvips の CLI（vips）が PATH にあるか。
+	// 静止画のサムネイルは、あればまず vips で作る（generateThumbJpeg。Go で読めて小さい画像は除く）。
+	// 無いのは失敗ではない（Go → ffmpeg の経路で作る）ので、印にも積まない。
+	existVIPS = false
 )
+
+// vipsBin は起動する libvips CLI の名前。
+// テストが存在しない名前へ差し替えて「vips が失敗したら Go → ffmpeg へ落ちる」経路を通す。
+var vipsBin = "vips"
 
 // errFFToolsNotAvailable は ffmpeg / ffprobe が PATH に無くて動画サムネイルを作れないこと。
 //
@@ -55,6 +65,21 @@ var errFFToolsNotAvailable = errors.New("ffmpeg/ffprobe not available")
 func init() {
 	_, existFFMPEG = findInPath("ffmpeg")
 	_, existFFPROBE = findInPath("ffprobe")
+	_, existVIPS = findInPath(vipsBin)
+}
+
+// logThumbBackendsOnce は、最初のサムネイル生成のときに使える外部ツールを Info で1行残す。
+//
+// init() の時点では gkill_log がまだ開いていないので、ここまで遅らせる。
+// 本番サービスは LocalSystem 起動でシステムの PATH しか見えず、利用者の PATH に入れた
+// ffmpeg / vips は見えない（2026-09-06 に ffmpeg で実際にそうなった）。
+// 「見えていない」ことが失敗ではなく速度の差としてしか現れないので、ログで分かるようにする。
+var logThumbBackendsOnce sync.Once
+
+func logThumbBackends(ctx context.Context) {
+	logThumbBackendsOnce.Do(func() {
+		slog.Log(ctx, gkill_log.Info, "thumbnail backends detected", "vips", existVIPS, "ffmpeg", existFFMPEG, "ffprobe", existFFPROBE)
+	})
 }
 
 func findInPath(name string) (string, bool) {
@@ -100,12 +125,15 @@ type ThumbGenerator interface {
 	// CachedThumbNames が返す集合と突き合わせるために使います。
 	ThumbCacheName(rel string, size int64, w int, h int) string
 
-	// CachedThumbNames は生成済みサムネイルのファイル名の集合を、ディレクトリ1回の列挙で返します。
-	// キャッシュディレクトリがまだ無いときは空の集合を返します（エラーにしません）。
+	// CachedThumbNames は生成済みサムネイルのファイル名の集合と、生成に失敗した印の
+	// ついているファイル名の集合を、ディレクトリ1回の列挙で返します。
+	// failed の名前は印の接尾辞（.failed）を剥いだもので、generated と同じ形です。
+	// キャッシュディレクトリがまだ無いときはどちらも空の集合を返します（エラーにしません）。
 	//
 	// 1件ずつ os.Stat すると数万件のリポジトリで数十秒かかるものが、
-	// 1回の列挙なら数十ミリ秒で済みます。
-	CachedThumbNames() (map[string]struct{}, error)
+	// 1回の列挙なら数十ミリ秒で済みます。失敗の印も同じ列挙から取れるので、
+	// 一括生成は印のある対象を goroutine へ投入せずに済みます。
+	CachedThumbNames() (generated map[string]struct{}, failed map[string]struct{}, err error)
 }
 
 // NewThumbFileServer は dir 配下をサーブしつつ、?thumb=200x200 のときだけサムネを返す。
@@ -222,6 +250,7 @@ func (t *thumbFileServer) GenerateThumbCacheFor(ctx context.Context, rel string,
 		if err := os.MkdirAll(filepath.Dir(thumbPath), 0o755); err != nil {
 			return nil, err
 		}
+		logThumbBackends(ctx)
 		if isVideo {
 			if !existFFMPEG || !existFFPROBE {
 				return nil, errFFToolsNotAvailable
@@ -238,31 +267,34 @@ func (t *thumbFileServer) GenerateThumbCacheFor(ctx context.Context, rel string,
 	return nil
 }
 
-// CachedThumbNames は生成済みサムネイルのファイル名の集合を返します。
+// CachedThumbNames は生成済みサムネイルのファイル名の集合と、失敗の印のある名前の集合を返します。
 // 契約は ThumbGenerator.CachedThumbNames を参照。
-func (t *thumbFileServer) CachedThumbNames() (map[string]struct{}, error) {
-	names := map[string]struct{}{}
+func (t *thumbFileServer) CachedThumbNames() (map[string]struct{}, map[string]struct{}, error) {
+	generated := map[string]struct{}{}
+	failed := map[string]struct{}{}
 	entries, err := os.ReadDir(t.cacheDir)
 	if err != nil {
 		// まだ1件も生成していないだけ。呼び出し元は「全部未生成」として進めればよい
 		if os.IsNotExist(err) {
-			return names, nil
+			return generated, failed, nil
 		}
-		return nil, err
+		return nil, nil, err
 	}
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
-		// 失敗の印は「生成済み」ではない。ここへ混ぜると、
+		// 失敗の印は「生成済み」ではない。generated へ混ぜると、
 		// 一括生成側が「サムネイルがある」と誤認して数を取り違える。
-		// 印そのものは GenerateThumbCacheFor が入口で見て早く戻る。
-		if strings.HasSuffix(entry.Name(), thumbFailedMarkerSuffix) {
+		// 別の集合で返し、一括生成側が印のある対象を投入前に外せるようにする。
+		// HTTP 経路は GenerateThumbCacheFor / ServeHTTP の入口で印を見る。
+		if name, ok := strings.CutSuffix(entry.Name(), thumbFailedMarkerSuffix); ok {
+			failed[name] = struct{}{}
 			continue
 		}
-		names[entry.Name()] = struct{}{}
+		generated[entry.Name()] = struct{}{}
 	}
-	return names, nil
+	return generated, failed, nil
 }
 
 func (t *thumbFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -344,6 +376,7 @@ func (t *thumbFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err := os.MkdirAll(filepath.Dir(thumbPath), 0o755); err != nil {
 			return nil, err
 		}
+		logThumbBackends(r.Context())
 		if isVideo {
 			if !existFFMPEG || !existFFPROBE {
 				return nil, errFFToolsNotAvailable
@@ -522,7 +555,16 @@ func thumbTmpPath(dstPath string) string {
 	return fmt.Sprintf("%s.%d.%d.tmp", dstPath, os.Getpid(), thumbTmpSeq.Add(1))
 }
 
-// finalizeFFmpegThumbOutput は ffmpeg が書いたはずの tmp を dstPath へ atomic に移します。
+// thumbTmpPathExt は thumbTmpPath に拡張子を足した一時ファイルのパスを返します。
+//
+// vips は出力ファイルの拡張子でセーバを選ぶので、`.tmp` で終わる名前を渡すと
+// 「unsupported」で何も書かずに失敗する。`.tmp.jpg` のように JPEG の拡張子で終える。
+// 列挙（CachedThumbNames）にはキャッシュ名と一致しない名前として現れるだけで害は無い。
+func thumbTmpPathExt(dstPath string, ext string) string {
+	return thumbTmpPath(dstPath) + ext
+}
+
+// finalizeExternalThumbOutput は外部ツール（ffmpeg / vips）が書いたはずの tmp を dstPath へ atomic に移します。
 //
 // ffmpeg は exit 0 でも出力を書かないことがある。-ss が素材の末尾を越えたときがそれで、
 // ffprobe が duration を返すのに、その1割の位置ではフレームが取れない古い .MOV が実在する。
@@ -530,11 +572,11 @@ func thumbTmpPath(dstPath string) string {
 // ffmpeg が何もしなかったことを隠したエラーになる。
 //
 // 出力が無いときに ffmpeg 自身が非ゼロで終わるかどうかは、ビルドと素材で変わる。
-// 終了コードを当てにせず、出力の有無だけで判定すること。
-func finalizeFFmpegThumbOutput(srcPath, tmp, dstPath, ffmpegOutput string) error {
+// 終了コードを当てにせず、出力の有無だけで判定すること。vips も同じ判定に通す。
+func finalizeExternalThumbOutput(tool, srcPath, tmp, dstPath, toolOutput string) error {
 	if st, err := os.Stat(tmp); err != nil || st.Size() == 0 {
 		_ = os.Remove(tmp)
-		return fmt.Errorf("ffmpeg thumb wrote no output for %s: %s", filepath.Base(srcPath), ffmpegOutput)
+		return fmt.Errorf("%s thumb wrote no output for %s: %s", tool, filepath.Base(srcPath), toolOutput)
 	}
 
 	_ = os.Remove(dstPath)
@@ -545,28 +587,72 @@ func finalizeFFmpegThumbOutput(srcPath, tmp, dstPath, ffmpegOutput string) error
 	return nil
 }
 
-// runFFmpegThumb は ffmpeg で1フレーム抜き出し、dstPath へ atomic に書きます。
-// seekSec が正のときだけ -ss を付けます（静止画には付けない）。
-func runFFmpegThumb(ctx context.Context, srcPath, dstPath string, w, h int, seekSec float64) error {
-	tmp := thumbTmpPath(dstPath)
-	_ = os.Remove(tmp)
+// ffmpegBaseArgs は ffmpeg を非対話で起こすときに毎回付ける先頭の引数です。
+//
+// -nostdin は「標準入力から対話コマンドを読む」動きを止める。exec.Command の stdin は
+// nil（/dev/null）なので実害は出ていないが、サービス起動や将来の配線の違いで
+// 入力が繋がったときに ffmpeg が黙って待ちに入るのを避ける。
+var ffmpegBaseArgs = []string{"-hide_banner", "-loglevel", "error", "-nostdin", "-y"}
 
-	args := []string{"-hide_banner", "-loglevel", "error", "-y"}
+// ffmpegThumbArgs は ffmpeg で1フレーム抜き出して縮小・中央切り抜きする引数列を組み立てます。
+//
+// singleThread のとき、復号（-i の前の -threads）・フィルタ（-filter_threads）・
+// 符号化（出力側の -threads）をすべて1スレッドにする。静止画は1フレームなので
+// フレーム並列は効かず、thumbSem が NumCPU 個のプロセスを同時に走らせる以上、
+// 中で NumCPU 本ずつスレッドを立てると NumCPU² のコンテキストスイッチになるだけ。
+// 動画のサムネイルは -ss の先読みで数十〜数百フレームを復号するので、
+// HTTP 経路の待ち時間を優先して復号スレッドは ffmpeg の既定に任せる（フィルタは1で足りる）。
+func ffmpegThumbArgs(srcPath, tmpPath string, w, h int, seekSec float64, singleThread bool) []string {
+	args := append([]string{}, ffmpegBaseArgs...)
 	if seekSec > 0 {
 		args = append(args, "-ss", fmt.Sprintf("%.3f", seekSec))
+	}
+	if singleThread {
+		args = append(args, "-threads", "1")
 	}
 	// scale while preserving aspect ratio, then crop center
 	// force_original_aspect_ratio=increase ensures both dimensions cover the target, then crop.
 	args = append(args,
 		"-i", srcPath,
 		"-frames:v", "1",
+		"-filter_threads", "1",
 		"-vf", fmt.Sprintf("scale=%d:%d:force_original_aspect_ratio=increase,crop=%d:%d", w, h, w, h),
+	)
+	if singleThread {
+		args = append(args, "-threads", "1")
+	}
+	return append(args,
 		"-q:v", "2",
 		"-f", "image2",
-		tmp,
+		tmpPath,
 	)
+}
 
-	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
+// ffmpegDecodeFullArgs は ffmpeg で1フレームを原寸のまま JPEG へ書き出す引数列を組み立てます。
+// 常に1スレッド。タイル分割された HEIF は ffmpeg がタイルを貼り合わせる filtergraph を
+// 内部で組むので、-filter_threads がここで効く。
+func ffmpegDecodeFullArgs(srcPath, tmpPath string) []string {
+	args := append([]string{}, ffmpegBaseArgs...)
+	return append(args,
+		"-threads", "1",
+		"-i", srcPath,
+		"-frames:v", "1",
+		"-filter_threads", "1",
+		"-threads", "1",
+		"-q:v", "2",
+		"-f", "image2",
+		tmpPath,
+	)
+}
+
+// runFFmpegThumb は ffmpeg で1フレーム抜き出し、dstPath へ atomic に書きます。
+// seekSec が正のときだけ -ss を付けます（静止画には付けない）。
+// singleThread の意味は ffmpegThumbArgs を参照。
+func runFFmpegThumb(ctx context.Context, srcPath, dstPath string, w, h int, seekSec float64, singleThread bool) error {
+	tmp := thumbTmpPath(dstPath)
+	_ = os.Remove(tmp)
+
+	cmd := exec.CommandContext(ctx, "ffmpeg", ffmpegThumbArgs(srcPath, tmp, w, h, seekSec, singleThread)...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &out
@@ -575,7 +661,7 @@ func runFFmpegThumb(ctx context.Context, srcPath, dstPath string, w, h int, seek
 		return fmt.Errorf("ffmpeg thumb failed: %w: %s", err, out.String())
 	}
 
-	return finalizeFFmpegThumbOutput(srcPath, tmp, dstPath, out.String())
+	return finalizeExternalThumbOutput("ffmpeg", srcPath, tmp, dstPath, out.String())
 }
 
 // runFFmpegDecodeFull は ffmpeg で1フレームを原寸のまま JPEG へ書き出します。
@@ -584,16 +670,7 @@ func runFFmpegDecodeFull(ctx context.Context, srcPath, dstPath string) error {
 	tmp := thumbTmpPath(dstPath)
 	_ = os.Remove(tmp)
 
-	cmd := exec.CommandContext(ctx, "ffmpeg",
-		"-hide_banner",
-		"-loglevel", "error",
-		"-y",
-		"-i", srcPath,
-		"-frames:v", "1",
-		"-q:v", "2",
-		"-f", "image2",
-		tmp,
-	)
+	cmd := exec.CommandContext(ctx, "ffmpeg", ffmpegDecodeFullArgs(srcPath, tmp)...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &out
@@ -602,7 +679,52 @@ func runFFmpegDecodeFull(ctx context.Context, srcPath, dstPath string) error {
 		return fmt.Errorf("ffmpeg decode failed: %w: %s", err, out.String())
 	}
 
-	return finalizeFFmpegThumbOutput(srcPath, tmp, dstPath, out.String())
+	return finalizeExternalThumbOutput("ffmpeg", srcPath, tmp, dstPath, out.String())
+}
+
+// vipsThumbArgs は `vips thumbnail` の引数列を組み立てます。
+//
+//   - 操作は vipsthumbnail ではなく `vips thumbnail`（libvips 8.5 以降）。EXIF Orientation で
+//     起こすのが既定で、--crop centre は「埋まるまで縮小してから中央を切り抜く」。
+//     vipsthumbnail は版によって回転の既定（--rotate / --no-rotate）が変わった。
+//   - 出力の `[Q=<quality>,strip]` は JPEG 品質と、メタデータを落とす指定。
+//     回転済みの画素に Orientation タグが残るとブラウザがもう一度回してしまう。
+//   - 出力は絶対パスで渡すこと。相対パスだと vips は入力ファイルの隣（= rep の中身）へ書く。
+func vipsThumbArgs(srcPath, tmpPath string, w, h int, quality int) []string {
+	return []string{
+		"thumbnail",
+		srcPath,
+		fmt.Sprintf("%s[Q=%d,strip]", tmpPath, quality),
+		strconv.Itoa(w),
+		"--height", strconv.Itoa(h),
+		"--crop", "centre",
+	}
+}
+
+// runVipsThumb は libvips の CLI で静止画のサムネイルを作り、dstPath へ atomic に書きます。
+//
+// JPEG / HEIC は shrink-on-load（JPEG なら DCT の段階で 1/2・1/4・1/8 に縮めて復号）が
+// 効くので、Go の image.Decode で原寸を起こしてから縮小するより数倍速い（12MP の JPEG で 3 倍）。
+// PNG / WebP には無く、プロセス起動のぶん Go より遅い（generateThumbJpeg が振り分ける）。
+// タイル分割された HEIF も libheif が直接読むので、ffmpeg 経由の原寸 JPEG 書き出しが要らない。
+//
+// 内部の並列度は VIPS_CONCURRENCY=1 で止める。thumbSem が NumCPU 個のプロセスを同時に
+// 走らせるので、各プロセスが NumCPU 本のワーカーを立てると NumCPU² に膨らむ。
+func runVipsThumb(ctx context.Context, srcPath, dstPath string, w, h int, quality int) error {
+	tmp := thumbTmpPathExt(dstPath, ".jpg")
+	_ = os.Remove(tmp)
+
+	cmd := exec.CommandContext(ctx, vipsBin, vipsThumbArgs(srcPath, tmp, w, h, quality)...)
+	cmd.Env = append(os.Environ(), "VIPS_CONCURRENCY=1")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := cmd.Run(); err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("vips thumb failed: %w: %s", err, out.String())
+	}
+
+	return finalizeExternalThumbOutput("vips", srcPath, tmp, dstPath, out.String())
 }
 
 // generateVideoThumbJpeg creates a JPEG thumbnail for a video using ffmpeg.
@@ -620,7 +742,7 @@ func generateVideoThumbJpeg(ctx context.Context, srcPath, dstPath string, w, h i
 		}
 	}
 
-	err := runFFmpegThumb(ctx, srcPath, dstPath, w, h, sec)
+	err := runFFmpegThumb(ctx, srcPath, dstPath, w, h, sec, false)
 	if err == nil || sec <= 0 {
 		return err
 	}
@@ -628,7 +750,7 @@ func generateVideoThumbJpeg(ctx context.Context, srcPath, dstPath string, w, h i
 	// -ss が素材の末尾を越えていると1フレームも取れない。
 	// duration を返さない古い .MOV と、動画の名前が付いた静止画がここへ来る。
 	// 先頭から取り直せば通るので、1回だけやり直す。
-	if retryErr := runFFmpegThumb(ctx, srcPath, dstPath, w, h, 0); retryErr != nil {
+	if retryErr := runFFmpegThumb(ctx, srcPath, dstPath, w, h, 0, false); retryErr != nil {
 		return err
 	}
 	return nil
@@ -661,13 +783,86 @@ func ffprobeDurationSeconds(ctx context.Context, srcPath string) (float64, error
 	return d, nil
 }
 
-// generateThumbJpeg: center-crop → resize → jpeg保存（atomic write）
+// thumbNativeMaxPixels / thumbNativeMaxPixelsJPEG は、Go で読める形式のうち
+// 「プロセスを起こさず Go で作ったほうが速い」画素数の上限（形式別）。
+//
+// vips は起動だけで数十〜百数十ms かかる（DLL の読み込み。Windows の実測では 12MP の JPEG が
+// 145ms で、そのうち復号は 50ms）。Go の復号 + 縮小は画素数に比例する（JPEG で約 40ms/MP、
+// WebP で約 45ms/MP）。JPEG は vips が DCT 段階で 1/8 に縮めて復号する（shrink-on-load）ので
+// vips 側がほぼ定数で、3MP 前後で並ぶ。PNG / WebP / GIF は vips も原寸復号なので
+// プロセス起動ぶん vips が不利で、4MP のスクリーンショットでも Go のほうが 1〜2 割速い。
+// gkill の主な入力は自動取得の画面のスクリーンショット（WebP、1〜4MP）とスマホの写真（12MP 級）。
+// テストが差し替えられるよう変数にしている。
+var (
+	thumbNativeMaxPixels     = int64(6_000_000)
+	thumbNativeMaxPixelsJPEG = int64(3_000_000)
+)
+
+func thumbNativeMaxPixelsFor(format string) int64 {
+	if format == "jpeg" {
+		return thumbNativeMaxPixelsJPEG
+	}
+	return thumbNativeMaxPixels
+}
+
+// preferNativeThumbDecode は、そのファイルを vips より先に Go で読むべきかを返します。
+//
+// ヘッダだけ読んで（image.DecodeConfig。画素は復号しない）、Go にデコーダがあり
+// 画素数が形式別の上限以下なら true。Go で読めない形式（HEIC / BMP / TIFF …）や
+// ヘッダが壊れているものは false で、vips → Go → ffmpeg の順になる。
+func preferNativeThumbDecode(srcPath string) bool {
+	f, err := os.Open(srcPath)
+	if err != nil {
+		return false
+	}
+	defer func() { _ = f.Close() }()
+	cfg, format, err := image.DecodeConfig(f)
+	if err != nil {
+		return false
+	}
+	return int64(cfg.Width)*int64(cfg.Height) <= thumbNativeMaxPixelsFor(format)
+}
+
+// generateThumbJpeg は静止画のサムネイルを作ります。経路は3段で、前の段が失敗したら次へ落ちる。
+//
+//  1. vips が PATH にあれば `vips thumbnail`（JPEG / HEIC の shrink-on-load で速い。HEIC も直接読む）
+//  2. Go の image.Decode → 中央切り抜き → 縮小 → EXIF 回転 → JPEG（jpeg/png/gif/webp）
+//  3. ffmpeg（generateThumbViaFFmpeg）
+//
+// ただし Go で読めて小さいもの（preferNativeThumbDecode）は 1 を飛ばして 2 から始める。
+// vips はプロセス起動が要るので、スクリーンショット級の画像では Go のほうが速い。
+//
+// vips が無いのは失敗ではない（logThumbBackends が1行残すだけ）。vips が読めなかった
+// ファイルは Go → ffmpeg で拾い、3段とも失敗したときだけ呼び出し元が印を焼く。
+// そのとき vips のエラー文も包んで返す（印の中身から原因を追えるように）。
+func generateThumbJpeg(ctx context.Context, srcPath, dstPath string, w, h int, quality int) error {
+	var vipsErr error
+	if existVIPS && !preferNativeThumbDecode(srcPath) {
+		vipsErr = runVipsThumb(ctx, srcPath, dstPath, w, h, quality)
+		if vipsErr == nil {
+			return nil
+		}
+		// ブラウザが待ちきれずに切った ctx で Go 側の復号まで進めない
+		if ctx.Err() != nil {
+			return vipsErr
+		}
+		slog.Log(ctx, gkill_log.Debug, "error at generate thumb by vips, falling back to native decode", "file", fmt.Sprintf("%q", filepath.Base(srcPath)), "error", fmt.Sprintf("%q", vipsErr))
+	}
+
+	err := generateThumbJpegNative(ctx, srcPath, dstPath, w, h, quality)
+	if err != nil && vipsErr != nil {
+		return fmt.Errorf("%w (vips: %v)", err, vipsErr)
+	}
+	return err
+}
+
+// generateThumbJpegNative: center-crop → resize → EXIF回転 → jpeg保存（atomic write）
 //
 // image.Decode で読めなかったものは ffmpeg へ落とす。isImage が通す37拡張子のうち
 // Go にデコーダがあるのは jpeg/png/gif/webp の4形式だけで、
 // heic/avif/bmp/ico/tiff は必ずそこで失敗する。ffmpeg は拡張子ではなく中身で
 // 形式を決めるので、拡張子が実体と食い違っているファイルもここで拾える。
-func generateThumbJpeg(ctx context.Context, srcPath, dstPath string, w, h int, quality int) error {
+func generateThumbJpegNative(ctx context.Context, srcPath, dstPath string, w, h int, quality int) error {
 	f, err := os.Open(srcPath)
 	if err != nil {
 		return err
@@ -704,19 +899,19 @@ func generateThumbJpeg(ctx context.Context, srcPath, dstPath string, w, h int, q
 		return generateThumbViaFFmpeg(ctx, srcPath, dstPath, w, h, quality, err)
 	}
 
-	// 3) JPEG のときだけ Orientation を適用
-	if format == "jpeg" && orient != 1 {
-		img = applyExifOrientation(img, orient)
+	// 3) JPEG のときだけ Orientation を適用（縮小の後ろで。writeThumbFromImage を参照）
+	if format != "jpeg" {
+		orient = 1
 	}
 
-	return writeThumbFromImage(img, dstPath, w, h, quality)
+	return writeThumbFromImage(img, dstPath, w, h, quality, orient)
 }
 
 // generateThumbViaFFmpeg は image.Decode で読めなかった画像を ffmpeg で起こします。
 // decodeErr は Go 側のデコード失敗で、ffmpeg でも作れなかったときに包んで返します。
 func generateThumbViaFFmpeg(ctx context.Context, srcPath, dstPath string, w, h int, quality int, decodeErr error) error {
 	// まずは縮小まで ffmpeg の中で済ませる。プロセス1回で終わるので速い
-	fastErr := runFFmpegThumb(ctx, srcPath, dstPath, w, h, 0)
+	fastErr := runFFmpegThumb(ctx, srcPath, dstPath, w, h, 0, true)
 	if fastErr == nil {
 		return nil
 	}
@@ -743,14 +938,45 @@ func generateThumbViaFFmpeg(ctx context.Context, srcPath, dstPath string, w, h i
 	if err != nil {
 		return fmt.Errorf("%w (ffmpeg fallback: %v)", decodeErr, err)
 	}
-	return writeThumbFromImage(img, dstPath, w, h, quality)
+	return writeThumbFromImage(img, dstPath, w, h, quality, 1)
 }
 
-// writeThumbFromImage は中央切り抜き → 縮小 → JPEG保存（atomic write）を行います。
-func writeThumbFromImage(img image.Image, dstPath string, w, h int, quality int) error {
-	cropped := cropCenterToAspect(img, float64(w)/float64(h))
-	dst := image.NewRGBA(image.Rect(0, 0, w, h))
-	xdraw.CatmullRom.Scale(dst, dst.Bounds(), cropped, cropped.Bounds(), stdDraw.Over, nil)
+// scaleThumbImage は中央切り抜き → 縮小 → EXIF 回転で、w×h のサムネイル画像を作ります。
+// orient は EXIF Orientation（1〜8。1 は回転なし）。
+//
+// 回転は縮小の**後ろ**で掛ける。原寸で回すと 12MP の写真1枚につき
+// NRGBA への変換（汎用経路で画素ごとに RGBA64At / SetRGBA64）と回転コピーで 48MB を2回確保し、
+// 縦向きのスマホ写真ではそれだけで縮小より時間がかかっていた。縮小後なら 400×400 で無視できる。
+// 回転で軸が入れ替わる向き（5〜8）は、切り抜きのアスペクトを源座標で h/w にし、
+// (h,w) に縮小してから回すと最終的に (w,h) になる。
+//
+// 縮小は BiLinear（tent）カーネル。x/image/draw の Kernel.Scale は縮小のとき
+// カーネルの支持幅を縮小率ぶん広げる（面積平均に近くなる）ので、7倍縮小でも縞が出ない。
+// ApproxBiLinear は近傍4画素しか見ない（支持幅を広げない）ので、大きな縮小では
+// エイリアシングが出る。速いからといって置き換えないこと。CatmullRom は同じ品質を
+// 保ったまま約2倍の計算量なので、一覧の 400×400 には過剰。
+// 合成は Src。dst は新規確保で透明なので Over と結果は同じで、読み戻しの分だけ無駄。
+func scaleThumbImage(img image.Image, w, h int, orient int) image.Image {
+	swap := 5 <= orient && orient <= 8
+	sw, sh := w, h
+	if swap {
+		sw, sh = h, w
+	}
+
+	cropped := cropCenterToAspect(img, float64(sw)/float64(sh))
+	dst := image.NewRGBA(image.Rect(0, 0, sw, sh))
+	xdraw.BiLinear.Scale(dst, dst.Bounds(), cropped, cropped.Bounds(), stdDraw.Src, nil)
+
+	if orient != 1 {
+		return applyExifOrientation(dst, orient)
+	}
+	return dst
+}
+
+// writeThumbFromImage は中央切り抜き → 縮小 → EXIF 回転 → JPEG保存（atomic write）を行います。
+// orient の意味は scaleThumbImage を参照。
+func writeThumbFromImage(img image.Image, dstPath string, w, h int, quality int, orient int) error {
+	dst := scaleThumbImage(img, w, h, orient)
 
 	tmp := thumbTmpPath(dstPath)
 	tf, err := os.Create(tmp)

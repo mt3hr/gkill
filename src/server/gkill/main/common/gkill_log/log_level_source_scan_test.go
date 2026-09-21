@@ -149,21 +149,22 @@ func TestDeferCloseLogLevel(t *testing.T) {
 // **ここへ足すときは理由を書くこと。** 足せば検査を素通りできてしまうので、
 // 「返らないエラーは Debug 禁止」の防御線がここの運用だけになる。
 var swallowedDebugAllowlist = map[string]string{
-	"error at defer close statement":            "解放失敗に実害なし(deferCloseLevelByMessage が別に見ている)",
-	"error at defer close rows":                 "同上",
-	"error at defer close request body":         "同上",
-	"error at defer close file opened for read": "同上",
-	"error at close ffmpeg output":              "読み取り用の一時ファイル",
-	"error at close response body":              "HTTPレスポンスボディ",
-	"error at fetch attached data for mcp":      "件数を数えて別途まとめて返している",
-	"error at get private ipv4 addresses":       "画面表示用の best effort。取れなくても動く",
-	"error at write thumb failed marker":        "次回の生成で取り直せる",
-	"error at write video compat failed marker": "同上",
-	"failed to fill favicon":                    "外部サイトの取得。落ちるのが常態",
-	"failed to fill title to urlog":             "同上",
-	"failed to fill description to urlog":       "同上",
-	"failed to fill image to urlog":             "同上",
-	"plugin exited with error":                  "正常な停止でも出る",
+	"error at defer close statement":                                 "解放失敗に実害なし(deferCloseLevelByMessage が別に見ている)",
+	"error at defer close rows":                                      "同上",
+	"error at defer close request body":                              "同上",
+	"error at defer close file opened for read":                      "同上",
+	"error at close ffmpeg output":                                   "読み取り用の一時ファイル",
+	"error at close response body":                                   "HTTPレスポンスボディ",
+	"error at fetch attached data for mcp":                           "件数を数えて別途まとめて返している",
+	"error at get private ipv4 addresses":                            "画面表示用の best effort。取れなくても動く",
+	"error at write thumb failed marker":                             "次回の生成で取り直せる",
+	"error at generate thumb by vips, falling back to native decode": "vips が読めない形式は常態。Go → ffmpeg で取り直し、3経路とも失敗したときは vips のエラーも包んで返す（印と応答に載る）",
+	"error at write video compat failed marker":                      "同上",
+	"failed to fill favicon":                                         "外部サイトの取得。落ちるのが常態",
+	"failed to fill title to urlog":                                  "同上",
+	"failed to fill description to urlog":                            "同上",
+	"failed to fill image to urlog":                                  "同上",
+	"plugin exited with error":                                       "正常な停止でも出る",
 }
 
 // TestSwallowedErrorsAreNotDebug は、握り潰すエラーが Debug のまま増えていないことを見る。
