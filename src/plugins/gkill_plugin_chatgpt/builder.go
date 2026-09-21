@@ -77,9 +77,12 @@ func (b *builder) runOnce(pluginDir string, patterns []string) {
 // buildOnce は走査→取り込み→掃除を1周し、失敗を cache_meta に残してから返す。
 // 常駐ビルダ（runOnce）と単独モード（Handler.BuildCache。gkill_server generate_plugin_cache）の
 // 両方がここを通るので、どちらで失敗しても設定画面の build_state は同じ見え方になる。
+// buildCacheFn は buildOnce が呼ぶ本体。テストが差し替えて失敗経路（cache_meta への記録と ERROR 行）を見る。
+var buildCacheFn = func(pluginDir string, patterns []string) error { return globalCache.build(pluginDir, patterns) }
+
 func buildOnce(pluginDir string, patterns []string) error {
 	started := time.Now()
-	if err := globalCache.build(pluginDir, patterns); err != nil {
+	if err := buildCacheFn(pluginDir, patterns); err != nil {
 		globalCache.setMeta("build_state", "error")
 		globalCache.setMeta("build_error", err.Error())
 		sdk.LogError("%s: build error: %v", appName, err)

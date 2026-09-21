@@ -6,7 +6,12 @@ package mcp
 // `gkill_server mcp schema-budget --update`（npm run mcp:schema-budget -- --update）で明示的に更新する。
 // 減ったときも追随させる。判定と文言の正本は tool_schema_budget.go（サブコマンドと共用）。
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"strconv"
+	"testing"
+)
 
 func TestToolsListByteBudget(t *testing.T) {
 	current := MeasureToolSchemaBytes()
@@ -56,4 +61,39 @@ func budgetToObj(budget map[string]int) any {
 		out.Set(kind, budget[kind])
 	}
 	return out
+}
+
+// `mcp schema-budget --update` の書き戻し経路。WriteToolSchemaBudget が書いたファイルを
+// ReadToolSchemaBudgetFile が同じ値で読み戻し、Compare が全行 ok になること。
+// 書式（2スペース・行は ServerKinds の順・末尾改行）も固定する: 旧 tool-schema-budget.json と同じ形にして
+// `git diff` で増減だけが見えるようにするため。
+func TestWriteToolSchemaBudgetRoundTrips(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "tool_schema_budget.json")
+	current := MeasureToolSchemaBytes()
+
+	expectNoError(t, WriteToolSchemaBudget(current, path))
+	written, err := os.ReadFile(path)
+	expectNoError(t, err)
+	want := "{\n  \"read\": " + strconv.Itoa(current["read"]) +
+		",\n  \"write\": " + strconv.Itoa(current["write"]) +
+		",\n  \"readwrite\": " + strconv.Itoa(current["readwrite"]) + "\n}\n"
+	expectEqual(t, string(written), want)
+
+	readBack, err := ReadToolSchemaBudgetFile(path)
+	expectNoError(t, err)
+	for _, row := range CompareToolSchemaBudget(current, readBack) {
+		expectEqual(t, row.Verdict, "ok")
+		expectEqual(t, *row.Delta, 0)
+	}
+
+	// 書き戻し先はソースツリー上の tool_schema_budget.json（埋め込み元）
+	expectEqual(t, filepath.Base(ToolSchemaBudgetPath()), "tool_schema_budget.json")
+	if _, err := os.Stat(ToolSchemaBudgetPath()); err != nil {
+		t.Fatalf("ToolSchemaBudgetPath() がソースツリーの予算ファイルを指していない: %v", err)
+	}
+
+	// 壊れたファイルはエラー（黙って空の予算にしない）
+	expectNoError(t, os.WriteFile(path, []byte("{broken"), 0o644))
+	_, err = ReadToolSchemaBudgetFile(path)
+	expectErrorContains(t, err, "tool_schema_budget.json")
 }

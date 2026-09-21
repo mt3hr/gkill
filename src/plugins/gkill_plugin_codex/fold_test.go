@@ -196,7 +196,7 @@ func TestFoldFoldsSubAgentIntoParent(t *testing.T) {
 
 func TestFoldSubAgentWithoutMatchingCallID(t *testing.T) {
 	// 実データでは sub_agent_activity(started) の数に対しロールアウトファイルは
-	// 13件しかない。突き合わせに失敗しても記録を落とさないこと。
+	// その2割ほどしかない。突き合わせに失敗しても記録を落とさないこと。
 	group := buildGroupFromFiles(t, nil, parentFixture(), subAgentFixture())
 	for threadID, items := range group.Items {
 		if threadID != parentThreadID {
@@ -379,7 +379,7 @@ func TestSearchTextIncludesEverything(t *testing.T) {
 }
 
 func TestSearchTextIsBounded(t *testing.T) {
-	// 実データでは1件だけ数 MBに達するKyouがある(サブエージェントを何本も畳み込んだ回)。
+	// 実データではまれに数MBに達するKyouがある(サブエージェントを何本も畳み込んだ回)。
 	// 上限が無いと単語検索のたびにその1行を読むことになる。
 	huge := message{Role: roleAssistant}
 	for range 5000 {

@@ -162,3 +162,25 @@ func TestApplyGkillHomeEnv(t *testing.T) {
 		}
 	})
 }
+
+// OAuth の状態ファイルは $GKILL_HOME/configs/ 配下に種別ごとの名前で置く（旧 Node 実装と同じ場所・同じ名前。
+// 引き継ぎのため）。ConfigDir の環境変数は展開してから使う。
+func TestMCPOAuthStatePathIsUnderExpandedConfigDir(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("GKILL_TEST_MCP_HOME", home)
+	original := gkill_options.ConfigDir
+	gkill_options.ConfigDir = "$GKILL_TEST_MCP_HOME/gkill/configs"
+	t.Cleanup(func() { gkill_options.ConfigDir = original })
+
+	for _, kind := range []string{"read", "write", "readwrite"} {
+		spec := mcp.StartSpecFor(kind)
+		got := mcpOAuthStatePath(spec)
+		want := filepath.Join(home, "gkill", "configs", "mcp_oauth_"+kind+"_state.json")
+		if got != want {
+			t.Errorf("kind=%s: path = %q, want %q", kind, got, want)
+		}
+		if strings.Contains(got, "$") {
+			t.Errorf("kind=%s: 環境変数が未展開: %q", kind, got)
+		}
+	}
+}

@@ -3,6 +3,7 @@ package reps
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"reflect"
 	"sync"
 	"testing"
@@ -25,13 +26,13 @@ func openMemoryDB(t *testing.T) *sql.DB {
 	return db
 }
 
-// auditFields は監査欄6つ（作成/更新のアプリ・端末・利用者）。
+// auditFields は作成・更新の欄6つ（作成/更新のアプリ・端末・利用者）。
 type auditFields struct {
 	CreateApp, CreateDevice, CreateUser string
 	UpdateApp, UpdateDevice, UpdateUser string
 }
 
-// auditFieldsOf は任意のエンティティから監査欄6つを reflect で抜く（型ごとに書かないため）。
+// auditFieldsOf は任意のエンティティから作成・更新の欄6つを reflect で抜く（型ごとに書かないため）。
 func auditFieldsOf(entity any) auditFields {
 	v := reflect.Indirect(reflect.ValueOf(entity))
 	get := func(name string) string { return v.FieldByName(name).String() }
@@ -41,7 +42,7 @@ func auditFieldsOf(entity any) auditFields {
 	}
 }
 
-// assertAuditFieldsRoundTrip は temp rep の Add → GetXxxByTXID で監査欄6つが同じ向きで戻ることを固定する。
+// assertAuditFieldsRoundTrip は temp rep の Add → GetXxxByTXID で作成・更新の欄6つが同じ向きで戻ることを固定する。
 //
 // SELECT の列順と rows.Scan の順がずれても SQLite はエラーを出さない。Mi の temp rep は
 // 2026-03-05〜2026-09-19 の間 CREATE_DEVICE と CREATE_USER が入れ替わって実 rep へ確定していた
@@ -49,7 +50,7 @@ func auditFieldsOf(entity any) auditFields {
 func assertAuditFieldsRoundTrip(t *testing.T, want, got auditFields) {
 	t.Helper()
 	if want != got {
-		t.Errorf("監査欄が往復で変わった（SELECT の列順と Scan の順がずれていないか）: got %+v want %+v", got, want)
+		t.Errorf("作成・更新の欄が往復で変わった（SELECT の列順と Scan の順がずれていないか）: got %+v want %+v", got, want)
 	}
 }
 
@@ -1710,5 +1711,27 @@ func TestCachedNotification_UpdateCacheRebuildsFromUnderlyingRep(t *testing.T) {
 	// REP_NAME が欠けたまま通っていないこと
 	if got.RepName == "" {
 		t.Error("RepName がキャッシュに保存されていない")
+	}
+}
+
+// Mi の一時 rep は GetKyousByTXID を実装しない（Mi には Kyou に要る単一の関連時刻が無い）。
+// 呼ばれたら SQL を発行せず名前付きのエラーで返す。commit_tx が使うのは GetMisByTXID だけ。
+func TestTempMi_GetKyousByTXIDIsUnsupported(t *testing.T) {
+	repo := newMiTempRepo(t)
+	ctx := context.Background()
+	if err := repo.AddMiInfo(ctx, makeMi("temp-mi-kyou", "一時タスク"), "tx-mi-kyou", "user-001", "device-001"); err != nil {
+		t.Fatalf("AddMiInfo failed: %v", err)
+	}
+	kyous, err := repo.GetKyousByTXID(ctx, "tx-mi-kyou", "user-001", "device-001")
+	if !errors.Is(err, ErrMiTempGetKyousByTXIDUnsupported) {
+		t.Fatalf("GetKyousByTXID error = %v, want ErrMiTempGetKyousByTXIDUnsupported", err)
+	}
+	if kyous != nil {
+		t.Errorf("GetKyousByTXID kyous = %v, want nil", kyous)
+	}
+	// 本来の経路はそのまま動く
+	mis, err := repo.GetMisByTXID(ctx, "tx-mi-kyou", "user-001", "device-001")
+	if err != nil || len(mis) != 1 {
+		t.Fatalf("GetMisByTXID = %v, %v; want 1 mi", mis, err)
 	}
 }

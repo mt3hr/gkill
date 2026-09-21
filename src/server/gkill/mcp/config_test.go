@@ -157,3 +157,49 @@ func TestApplySettings(t *testing.T) {
 	expectEqual(t, int64(FileLinkTTL), int64(7*time.Second))
 	expectEqual(t, int64(NewFileLinkStore(0).TTL()), int64(7*time.Second))
 }
+
+// 数値の環境変数が壊れていたら起動を止める（既定へ黙って落とすと「設定したつもり」で運用が続く）。
+// GKILL_MCP_MAX_FILE_BYTES / GKILL_MCP_FILE_LINK_TTL_MS は単位付きの文字列を受けるので、
+// 読めない値は既定へ落ちる（ParseByteLimit / ParseFileLinkTTL の契約）ことも同時に固定する。
+func TestResolveSettingsRejectsBrokenNumericEnv(t *testing.T) {
+	t.Run("GKILL_FETCH_TIMEOUT_MS must be a positive integer", func(t *testing.T) {
+		for _, v := range []string{"abc", "0", "-5", "1.5"} {
+			_, err := ResolveSettings(DefaultConfig(), "read", FlagOverrides{}, envMap(map[string]string{"GKILL_FETCH_TIMEOUT_MS": v}))
+			expectErrorContains(t, err, "GKILL_FETCH_TIMEOUT_MS")
+		}
+		settings, err := ResolveSettings(DefaultConfig(), "read", FlagOverrides{}, envMap(map[string]string{"GKILL_FETCH_TIMEOUT_MS": " 250 "}))
+		expectNoError(t, err)
+		expectEqual(t, int64(settings.Client.FetchTimeout), int64(250*time.Millisecond))
+	})
+
+	t.Run("MCP_PORT must be within 1..65535", func(t *testing.T) {
+		for _, v := range []string{"0", "65536", "-1", "8080x"} {
+			_, err := ResolveSettings(DefaultConfig(), "read", FlagOverrides{}, envMap(map[string]string{"MCP_PORT": v}))
+			expectErrorContains(t, err, "MCP_PORT")
+		}
+	})
+
+	t.Run("unreadable byte limits and TTLs fall back to the defaults instead of zero", func(t *testing.T) {
+		settings, err := ResolveSettings(DefaultConfig(), "read", FlagOverrides{}, envMap(map[string]string{
+			"GKILL_MCP_MAX_FILE_BYTES":   "lots",
+			"GKILL_MCP_FILE_LINK_TTL_MS": "soon",
+		}))
+		expectNoError(t, err)
+		expectEqual(t, settings.MaxFileBytes, int64(8*1024*1024))
+		expectEqual(t, int64(settings.FileLinkTTL), int64(time.Hour))
+	})
+
+	t.Run("GKILL_INSECURE accepts true / 1 and anything else means false", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.Gkill.Insecure = true
+		for v, want := range map[string]bool{"true": true, "1": true, "false": false, "0": false, "yes": false} {
+			settings, err := ResolveSettings(cfg, "read", FlagOverrides{}, envMap(map[string]string{"GKILL_INSECURE": v}))
+			expectNoError(t, err)
+			expectEqual(t, settings.Client.Insecure, want)
+		}
+		// 空なら（未設定なら）ファイルの値
+		settings, err := ResolveSettings(cfg, "read", FlagOverrides{}, envMap(nil))
+		expectNoError(t, err)
+		expectTrue(t, settings.Client.Insecure, "file value not used when env is unset")
+	})
+}

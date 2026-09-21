@@ -79,9 +79,12 @@ func (b *builder) loop(pluginDir string, configOf func() pluginConfig) {
 //
 // os.Stdout には絶対に書かない。あれはプロトコルのチャネルで、
 // 1行でも混ざるとJSONストリームが壊れる。ログは sdk.LogXxx（stderr + $GKILL_HOME/logs の gkill_log）に出す。
+// buildCacheFn は runOnce が呼ぶ本体。テストが差し替えて失敗経路（ERROR 行・完了の Info を出さない）を見る。
+var buildCacheFn = func(pluginDir string, config pluginConfig) error { return globalCache.build(pluginDir, config) }
+
 func (b *builder) runOnce(pluginDir string, config pluginConfig) {
 	started := time.Now()
-	if err := globalCache.build(pluginDir, config); err != nil {
+	if err := buildCacheFn(pluginDir, config); err != nil {
 		sdk.LogError("gkill_plugin_fitbit: build error: %v", err)
 		return
 	}

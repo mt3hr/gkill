@@ -274,3 +274,33 @@ describe('板構造の編集ダイアログ', () => {
         expect((show.mock.calls[0][0] as MiBoardStructElementData).id).toBe('Inbox')
     })
 })
+
+// 板の要素編集は説明だけを変え、他の欄（識別子・子・フォルダ判定・初期化時チェック）は元のまま写す。
+// key と name は board_name から詰め直す（落とすとツリーの行ラベルと選択キーが壊れるが、
+// 説明の往復だけ見ていると緑のまま）。
+describe('板の要素編集: apply() は説明以外の欄を保つ', () => {
+    test('key / name は board_name、children / is_dir / check_when_inited は元の値、indeterminate は false', async () => {
+        const child = Object.assign(new MiBoardStructElementData(), { id: 'id-child', board_name: 'Sub', name: 'Sub' })
+        const struct_obj = Object.assign(new MiBoardStructElementData(), {
+            id: 'id-board', board_name: 'Work', name: 'stale-name', key: 'stale-key',
+            check_when_inited: true, is_dir: true, indeterminate: true, description: '', children: [child],
+        })
+        const emitted: Emitted = []
+        const view = useEditMiBoardStructElementView({ props: { struct_obj } as never, emits: make_emits(emitted) as never })
+        expect(view.description.value, '古い保存データの undefined は空文字に倒す').toBe('')
+
+        view.description.value = '仕事のタスク'
+        await view.apply()
+
+        const updated = emitted_payload(emitted, 'requested_update_mi_board_struct') as unknown as MiBoardStructElementData
+        expect(updated.key).toBe('Work')
+        expect(updated.name).toBe('Work')
+        expect(updated.board_name).toBe('Work')
+        expect(updated.children, '子を落としている').toEqual([child])
+        expect(updated.is_dir).toBe(true)
+        expect(updated.check_when_inited).toBe(true)
+        expect(updated.indeterminate).toBe(false)
+        expect(updated.description).toBe('仕事のタスク')
+        expect(emitted.map(e => e.event), '適用後に閉じる').toContain('requested_close_dialog')
+    })
+})

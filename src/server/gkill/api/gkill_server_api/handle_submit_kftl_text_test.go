@@ -58,7 +58,7 @@ func countKmemosByContent(t *testing.T, tsURL, sessionID, word string) int {
 	return len(res.Kyous)
 }
 
-// KFTL送信のサーバ側冪等キー(監査 S3-wear)の end-to-end テスト。
+// KFTL送信のサーバ側冪等キー(指摘 S3-wear)の end-to-end テスト。
 //
 // ストア単体(kftl_idempotency_test.go)は markDone を直接呼ぶので通ってしまうが、
 // ハンドラが成功後に markDone を配線し忘れると冪等が no-op になる。この壊れ方は
@@ -247,32 +247,8 @@ func TestHandleSubmitKFTLText_CreatedRecords(t *testing.T) {
 		}
 	})
 
-	// 冪等キーで畳んだ再送は再実行していないが、created には元の送信の控えが replayed:true で載る。
-	// 2026-09-19 まで空だったので、1回目の応答を受け取り損ねると作成 ID を内容検索で探すしかなかった。
-	t.Run("冪等キーで畳んだ再送は元の created を replayed:true で返す", func(t *testing.T) {
-		const word = "createdIdemResendWord"
-		res1 := submitKFTL(t, tsURL, sessionID, word, "created-resend-key-1")
-		if len(res1.Errors) > 0 {
-			t.Fatalf("1回目でエラー: %+v", res1.Errors)
-		}
-		if len(res1.Created) != 1 {
-			t.Fatalf("1回目の created の件数 = %d, want 1: %+v", len(res1.Created), res1.Created)
-		}
-
-		res2 := submitKFTL(t, tsURL, sessionID, word, "created-resend-key-1")
-		if len(res2.Errors) > 0 {
-			t.Fatalf("2回目でエラー: %+v", res2.Errors)
-		}
-		if len(res2.Messages) == 0 {
-			t.Fatal("畳まれた再送も成功で返すべき")
-		}
-		if !res2.Replayed {
-			t.Error("畳んだ再送が replayed=true でない")
-		}
-		if len(res2.Created) != 1 || res2.Created[0].ID != res1.Created[0].ID {
-			t.Errorf("畳んだ再送の created = %+v, want 1回目と同じ %+v", res2.Created, res1.Created)
-		}
-	})
+	// 冪等キーで畳んだ再送が元の created を replayed:true で返すことは
+	// TestHandleSubmitKFTLText_IdempotencyKey の1つ目のサブテストが固定している（ここには重ねない）。
 
 	// related_time は保存層と同じ秒精度。丸めないと Windows の時計解像度で 7 桁の小数秒が
 	// 応答にだけ載り、保存値と一致しない（MCP 実利用報告）。
@@ -377,7 +353,7 @@ func TestHandleSubmitKFTLText_MiAuditFieldsAreNotSwapped(t *testing.T) {
 	}
 }
 
-// 入力ミス行を含む本文の応答のハンドラ層テスト(再監査対応の固定)。
+// 入力ミス行を含む本文の応答のハンドラ層テスト(2巡目の指摘への対応の固定)。
 //
 // 2026-08-24 までは気分値の打ち間違いもDB障害も同じ ERR000351(500) + 定型文1本に
 // 畳まれていた。kftl パッケージ側は行番号つきで全行ぶん集めることを固定済みだが、

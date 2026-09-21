@@ -17,7 +17,7 @@ api/
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
 ├── *_test.go                    # 検索フィルタ・rep名絞り込みなどのテスト（14ファイル）
-├── gkill_server_api/            # HTTP ハンドラ（156ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（157ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・全90ルート登録

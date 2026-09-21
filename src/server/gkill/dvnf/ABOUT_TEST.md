@@ -14,7 +14,7 @@ Go `testing` パッケージ
 |---------|-----------|
 | `dvnf_test.go` | DVNF コアロジック（ファイル管理・バージョニング） |
 | `cmd/dvnf_cmd_test.go` | DVNF CLI コマンドの引数解析（設定・パス分解・無視パターン・サブコマンド登録） |
-| `cmd/copy_file_test.go` | copy / move 共用 `copyFile` の実ファイル操作。コピー後の内容一致と、`copyLastMod` 有効時に mtime が保存されること（Close の**後に** Chtimes する順序がこの関数の存在理由。二重クローズ修正 d3e6ff5f の対象） |
+| `cmd/copy_file_test.go` | copy / move 共用 `copyFile` の実ファイル操作。コピー後の内容一致と、`copyLastMod` 有効時に mtime が保存されること（Close の**後に** Chtimes する順序がこの関数の存在理由。二重クローズ修正 6b49723e の対象） |
 
 ## テスト内容
 

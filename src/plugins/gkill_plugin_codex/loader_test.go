@@ -67,7 +67,7 @@ func TestClassifyFileName(t *testing.T) {
 
 func TestThreadIDFromFileName(t *testing.T) {
 	// スレッドIDはファイル名のuuid。session_meta.session_id は使えない
-	// (実データ数十ファイル中半数近くに存在せず、サブエージェントでは親を指す)。
+	// (実データでは半数近くのファイルに存在せず、サブエージェントでは親を指す)。
 	if got := threadIDFromFileName(parentFixture()); got != parentThreadID {
 		t.Errorf("got %q, want %q", got, parentThreadID)
 	}

@@ -36,7 +36,12 @@ func main() {
 
 	pluginDir := extractPluginDir(os.Args)
 
-	sdk.Run(sdk.Handler{
+	sdk.Run(newHandler(pluginDir))
+}
+
+// newHandler はハンドラ束を組む。main と、単独モード（BuildCache）や PostConfig を直接呼ぶテストが共有する。
+func newHandler(pluginDir string) sdk.Handler {
+	return sdk.Handler{
 		RepName:       repName,
 		DefaultConfig: defaultConfig(),
 
@@ -152,7 +157,7 @@ func main() {
 			globalBuilder.Kick()
 			return cfg, nil
 		},
-	})
+	}
 }
 
 // startBuilder はバックグラウンドのビルダを起動し、作り直しを促す。

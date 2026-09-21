@@ -369,9 +369,12 @@ func TestExpandedPatternIsScannable(t *testing.T) {
 }
 
 func TestExpandHome(t *testing.T) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		t.Skip("ホームディレクトリが取れない環境")
+	// ホームは環境変数で固定する（取れない環境で黙って skip しない）。Windows は USERPROFILE、それ以外は HOME。
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	if got, err := os.UserHomeDir(); err != nil || got != home {
+		t.Fatalf("UserHomeDir = %q, %v; want %q", got, err, home)
 	}
 	if got := parseSourcePatterns("~/.claude/projects"); len(got) != 1 ||
 		got[0] != filepath.Join(home, ".claude/projects") {
