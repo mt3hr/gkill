@@ -487,6 +487,8 @@ Claude Code では `/mcp` コマンドでMCPサーバーの接続状態を確認
 | タスク作成 | 「gkillに『資料作成』というタスクを追加して」 |
 | プラグイン一覧 | 「gkillに入っているプラグインを教えて」 |
 | プラグインの内容取得 | 「gkillのClaude Codeの記録を検索して、内容を読んで要約して」 |
+| ヘルプの参照 | 「gkillの検索の使い方をヘルプで調べてから、今週のタスクを一覧して」（AI が `gkill_get_mcp_help` で topic の本文を読む。gkill へは往復しない） |
+| 接続先の確認 | 「gkillのステータスを見せて」（`gkill_status` が接続先アカウント・版・ツール一覧の世代を返す） |
 
 ---
 
@@ -603,7 +605,9 @@ gkillは3種類のMCPサーバーを提供しています。用途に応じて�
 | **Write専用** | `gkill_server mcp --kind write` | 29 | `mcp:gkill-write` / `mcp:gkill-write-http` | 書き込み中心。Read便利ツール7つ付属 |
 | **Read/Write統合** | `gkill_server mcp --kind readwrite` | 33 | `mcp:gkill-readwrite` / `mcp:gkill-readwrite-http` | 全機能。迷ったらこれ |
 
-プラグイン一覧を返す `gkill_get_plugin_list` はどのサーバーにも入っています（読み取り専用）。プラグインが入れてくれた記録（Claude Code / Claude.ai / ChatGPT の会話ログ等）の本文は、`gkill_get_kyous` に `include_plugin_content:true` を渡すと検索結果にそのまま埋め込まれます（Write専用サーバーには `gkill_get_kyous` が無いので本文は読めません）。詳細は [`src/server/gkill/mcp/README.md`](../../src/server/gkill/mcp/README.md) を参照。
+使い方の詳細（検索条件の意味・ページング・タスクの射影・ファイルの読み方・設定ツリーの説明欄など）は
+どのサーバーにもある `gkill_get_mcp_help` が topic ごとに返します。ツール一覧の説明文は要約なので、
+AI が迷ったらまずこれを読ませてください。プラグイン一覧を返す `gkill_get_plugin_list` はどのサーバーにも入っています（読み取り専用）。プラグインが入れてくれた記録（Claude Code / Claude.ai / ChatGPT の会話ログ等）の本文は、`gkill_get_kyous` に `include_plugin_content:true` を渡すと検索結果にそのまま埋め込まれます（Write専用サーバーには `gkill_get_kyous` が無いので本文は読めません）。詳細は [`src/server/gkill/mcp/README.md`](../../src/server/gkill/mcp/README.md) を参照。
 
 ### デフォルトポート
 

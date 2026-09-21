@@ -59,7 +59,7 @@ func newTestGitCommit(id string) GitCommitLog {
 // **掃除→UNIQUE索引の順が生命線**: 索引を先に作ると重複入りDBで
 // CREATE UNIQUE INDEX が失敗し、コンストラクタごと失敗して
 // GetRepositories 全体が死に、そのユーザーはログイン不能になる。
-// 経緯: 1年分の外部監査 C2「git 同一コミットが2レコード返る」。
+// 経緯: 1年分の指摘 C2「git 同一コミットが2レコード返る」。
 func TestGitCachedRepDuplicateRowsHealedOnOpen(t *testing.T) {
 	ctx := context.Background()
 	dbPath := filepath.Join(t.TempDir(), "git_cache.db")

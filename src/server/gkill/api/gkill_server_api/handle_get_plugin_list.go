@@ -74,7 +74,7 @@ func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Requ
 			IsAlive:   pluginRepo.IsAlive(r.Context()),
 			// 受動情報。IsAlive(ping)と違い副作用なし
 			ProcessRunning: pluginRepo.ProcessRunning(),
-			// stderr末尾。「is_alive=trueなのに0件」の診断用（外部監査 D2）。
+			// stderr末尾。「is_alive=trueなのに0件」の診断用（指摘 D2）。
 			// プラグインは別リポジトリの成果物で、診断のためにホームディレクトリや
 			// 読み取り元の絶対パスを書く（書いてよい）。出口で伏せるのはこちらの責務。
 			LastError: message.RedactEnvironmentSpecific(pluginRepo.LastStderr()),
@@ -89,7 +89,7 @@ func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Requ
 				info.RepNames = append([]string{}, repNames...)
 			}
 		}
-		// provides宣言のあるプラグインは索引統計（鮮度・件数・時刻範囲）も返す（外部監査 D1）
+		// provides宣言のあるプラグインは索引統計（鮮度・件数・時刻範囲）も返す（指摘 D1）
 		if typedIndex := pluginRepo.TypedIndex(); typedIndex != nil {
 			stats := typedIndex.Stats()
 			statsDTO := &req_res.PluginTypedIndexStatsMCPDTO{

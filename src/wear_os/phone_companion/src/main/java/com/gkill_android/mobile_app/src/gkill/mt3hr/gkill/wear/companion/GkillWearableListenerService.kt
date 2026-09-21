@@ -38,7 +38,7 @@ class GkillWearableListenerService : WearableListenerService() {
                     WearRequestWorker.KEY_DATA to event.data,
                     // メッセージ1件ごとに採番。WorkRequest の入力は不変なので、この同じ要求の
                     // ワーカー再送では同じキーになり、サーバーが二重登録を畳む。意図的な再送は
-                    // 別メッセージ＝別キーなので畳まれない（監査 S3-wear）。
+                    // 別メッセージ＝別キーなので畳まれない（指摘 S3-wear）。
                     WearRequestWorker.KEY_IDEMPOTENCY to UUID.randomUUID().toString(),
                 )
             )

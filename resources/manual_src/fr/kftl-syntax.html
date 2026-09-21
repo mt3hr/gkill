@@ -134,7 +134,7 @@ Debut du travail</pre>
 Debut du travail</pre>
 
 <h3>13. Fin du journal de temps : <code>/end</code></h3>
-<p>Ligne suivante : titre. Trouve un journal de temps démarre correspondant et le termine.</p>
+<p>Ligne suivante : titre. Trouve un journal de temps démarre correspondant et le termine. Si plusieurs journaux de temps portant le même titre sont en cours, seul celui qui a démarré le plus récemment est terminé (les journaux supprimés ne sont pas pris en compte).</p>
 <pre>/end
 Debut du travail</pre>
 
@@ -144,7 +144,7 @@ Debut du travail</pre>
 Debut du travail</pre>
 
 <h3>15. Terminer journal par étiquette : <code>/endt</code></h3>
-<p>Ligne suivante : nom de l'étiquette. Trouve et termine un journal de temps par son étiquette.</p>
+<p>Ligne suivante : nom de l'étiquette. Trouve et termine un journal de temps par son étiquette. Si plusieurs journaux de temps portant cette étiquette sont en cours, seul celui qui a démarré le plus récemment est terminé (les journaux supprimés ne sont pas pris en compte).</p>
 <pre>/endt
 travail</pre>
 

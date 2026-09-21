@@ -16,7 +16,7 @@ description: "KFTL（メモ帳）の約束。タブ（kftl-tabs.ts / use-kftl-ta
 ## 解釈と書き込みはサーバの1実装（2026-09-15、[ADR-0507](../../../documents/adr/0507-kftl-single-implementation-on-server.md)）
 
 2026-09-15 まで KFTL は TS（Web: 解析して `add_*` を tx で fan-out）と Go（Wear / MCP: `/api/submit_kftl_text`）の2実装だった。
-ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り、**Web はしばらく、気分0を書き続けた**（に実測）。
+ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り、**Web は数週間、気分0を書き続けた**（本番で実測）。
 2083 年の打刻・支出の関連時刻がタグに乗らない事故も「片方だけ直した／片方だけ壊れた」型。守ること:
 
 - **TS `classes/kftl/` は行ラベルの分類器だけ。** 検証ルール・リクエスト組み立て・`add_*` 呼び出し・繰り返しの展開を**戻さない**。
@@ -149,7 +149,7 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
   `start_time`（`do_request` まで空）を基準にしていて、1970 からの日数ぶん（約 20,700 日）ずらされ、
   **Web から送った打刻が数件、2083 年の日付で登録された**（エラーも警告も出ない。Go は起きなかった）。
   TS の展開は消えたが、**アンカーの欄・ずらす欄・DoRequest が書く欄は同じ欄を指す**という約束は Go でも同じ。
-  8 型を監査した結果: kmemo / lantana / kc / urlog は related_time、支出はブロックの related_time、
+  8 型を点検した結果: kmemo / lantana / kc / urlog は related_time、支出はブロックの related_time、
   タスク / リポストタスクは予定3欄、打刻は related_time（→ start_time）+ end_time で一致。`ーた` と終了4種は繰り返し自体を断るので起きない。
   新しい型を足すときは **DoRequest が実際に書く値**を `handle_submit_kftl_text_test.go`
   `TestHandleSubmitKFTLText_RepeatWritesShiftedTimes` の表へ足すこと（request オブジェクトの欄だけ見る表では捕まらない）。

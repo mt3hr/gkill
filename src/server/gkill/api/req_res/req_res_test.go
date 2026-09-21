@@ -229,7 +229,7 @@ func TestMCPPayloadDTO_OmitsEmptyOptionalFields(t *testing.T) {
 		wantOmitted []string
 	}{
 		{
-			// is_zip は v2 から常時出力（falseで消えると「未実装」と区別できない。ADR-0604/監査C4）
+			// is_zip は v2 から常時出力（falseで消えると「未実装」と区別できない。ADR-0604/指摘C4）
 			"IDFPayloadMCPDTO",
 			IDFPayloadMCPDTO{Kind: "idf", FileName: "data.bin", RepName: "files_repo"},
 			[]string{"mime_type", "file_size"},

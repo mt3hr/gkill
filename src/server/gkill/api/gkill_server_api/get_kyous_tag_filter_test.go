@@ -177,7 +177,7 @@ func TestHandleGetKyous_HideTagsBothPaths(t *testing.T) {
 	})
 
 	// hide_tags の単独有効化(ADR-0109): tags を指定しなくても非表示は効く。
-	// 以前は「タグ絞り込みを使うときだけ」で、単独指定が黙って無視されていた（外部監査 S4）。
+	// 以前は「タグ絞り込みを使うときだけ」で、単独指定が黙って無視されていた（指摘 S4）。
 	// SQL経路(名前1個)とGo照合経路(33個で閾値超え)の両方で固定する。
 	manyHideNames := []string{"非表示"}
 	for i := range 32 {

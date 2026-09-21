@@ -149,7 +149,7 @@ func TestSortResultKyous_MiCreateTimeTieBreaksByID(t *testing.T) {
 // overrideKyous は sortAndTrimKyousMap(期間判定)の**後**に RelatedTime を
 // 射影時刻(期限・見積開始など)へ上書きするため、refilterOverriddenKyousForMi で
 // 上書き後の時刻をもう一度判定しないと「期限で並べているのに作成日時で絞られ、
-// 窓の外の時刻を持つ行が返る」（外部監査 S1'）。両側（残る/消える）と、
+// 窓の外の時刻を持つ行が返る」（指摘 S1'）。両側（残る/消える）と、
 // 期間フィルタ無しのときは何もしないこと（対照）を固定する。
 func TestForMi_PeriodFilterAppliesToProjectedTime(t *testing.T) {
 	ctx := context.Background()

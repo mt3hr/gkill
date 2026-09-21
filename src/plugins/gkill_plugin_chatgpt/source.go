@@ -22,7 +22,7 @@ func parseSourcePatterns(value any, pluginDir string) []string {
 
 // isConversationEntry は ZIP 内のパスが会話ファイルかどうかを判定する。
 // ベース名が conversations-NNN.json（分割形式）か conversations.json（旧形式）。
-// ChatGPT の ZIP には chat.html（85MB）や添付ファイルが数百件入っているので、
+// ChatGPT の ZIP には chat.html（数十MB）や添付ファイルが数百件入っているので、
 // ここで絞らないと持つ構造体が無駄に増える。
 func isConversationEntry(entryName string) bool {
 	name := pathBase(entryName)

@@ -55,7 +55,7 @@
     </tr>
     <tr>
       <td>El complemento no respondió. Espere un momento e inténtelo de nuevo, o revise su estado en Configuración → Configuración del complemento.</td>
-      <td>Espere un momento y reintente, o revise el estado en Configuración → Configuración del complemento</td>
+      <td>Espere un momento y reintente, o revise el estado en Configuración → Configuración del complemento. Si no se resuelve, el motivo queda en <code>gkill_plugin_&lt;nombre&gt;_error.log</code> dentro de la carpeta <code>logs</code> de la carpeta principal de gkill</td>
     </tr>
     <tr>
       <td>No se encontró el registro. Puede haber sido eliminado o actualizado desde otro dispositivo. Recargue la lista.</td>
@@ -85,6 +85,14 @@
 
   <h2>Cuando no aparece nada</h2>
   <p>Si al pulsar un botón no ocurre nada, recargue la página. Los errores inesperados dentro de la aplicación también se muestran ahora arriba a la derecha. Si el problema persiste, el archivo <code>gkill_error.log</code> del servidor conserva una línea con la hora del fallo.</p>
+
+  <h2>Cuando filtrar por franja horaria siempre da 0 resultados</h2>
+  <p>En un teléfono (Android) o en un servidor iniciado por usted mismo, una búsqueda puede devolver siempre 0 resultados solo cuando se indica una franja horaria. Ocurre cuando el servidor no puede leer la zona horaria del dispositivo; sus registros no se han perdido.</p>
+  <ul>
+    <li>En la aplicación del teléfono, cierre la aplicación y vuelva a abrirla.</li>
+    <li>Si inicia el servidor usted mismo, defina la variable de entorno <code>TZ</code> (por ejemplo <code>TZ=JST-9</code>) antes de iniciarlo.</li>
+    <li>Si el <code>gkill_error.log</code> del servidor tiene una línea que empieza por «sqlite localtime differs», esta es la causa.</li>
+  </ul>
 
   <h2>Documentos relacionados</h2>
   <ul>

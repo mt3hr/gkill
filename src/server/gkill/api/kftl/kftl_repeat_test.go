@@ -567,7 +567,7 @@ func TestExpand_RepeatClonesTagsAndTextsWithFreshTextIDs(t *testing.T) {
 }
 
 // related_time が主軸の残り3型（気分値・数値・ブックマーク）。
-// 2083 年の事故（打刻）のあとの全型監査で、この3型には繰り返しのテストが1本も無かった。
+// 2083 年の事故（打刻）のあとの全型の点検で、この3型には繰り返しのテストが1本も無かった。
 // 本体の関連時刻と、タグ・テキストに使う基底の関連時刻（doBaseRequest へ渡す値）の両方を年まで見る。
 // TS 側の対: kftl-repeat-statement.test.ts「繰り返しで書き込まれる時刻」
 func TestExpand_RelatedTimeTypesShiftTogether(t *testing.T) {

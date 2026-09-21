@@ -131,7 +131,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	needRelatedTagIDs := containsNoTags(findQuery.Tags) || (findQuery.HasTimeIsFilter() && containsNoTags(findQuery.TimeIsTags))
 	// hide_tags はタグ絞り込み(tags/timeis_tags)の有無と独立に効く。
 	// 以前は「タグ絞り込みを使うときだけ」収集しており、hide_tags 単独指定が
-	// エラーも警告も出さずに無視されていた（外部監査 S4）。
+	// エラーも警告も出さずに無視されていた（指摘 S4）。
 	// 経緯と却下案: documents/adr/0109-hide-tags-standalone.md
 	needHideTags := len(findQuery.HideTags) != 0
 	if needMatchTags || needRelatedTagIDs || needHideTags {
@@ -331,7 +331,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	slog.Log(ctx, gkill_log.Trace, "finish refilterOverriddenKyousForMi", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 
 	// 先に総数を数えてから確保する。事前確保しないと数十万件で二十回近い再確保が起き、
-	// そのたびに確保済みぶん(最終的に130MB級)をコピーし直すことになる。
+	// そのたびに確保済みぶん(最終的に百MB級)をコピーし直すことになる。
 	// マップをもう1周するほうが遥かに安い。
 	totalResultKyouCount := 0
 	for _, kyous := range findKyouContext.MatchKyousCurrent {
@@ -507,7 +507,7 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 	// **キャッシュを丸ごとバイパスして**重複rep（同一ファイルの端末別登録）ぶんディスクを舐める。
 	// --cache_reps_local のローカルコピー層も同時に剥がれ、外付けの元DBへ戻る。
 	// 実データでは十数個のキャッシュrepが数百個の生repに化け、
-	// gitだけでプロファイル1窓あたり十数秒を使っていた（実測）。
+	// gitだけでプロファイル1窓あたり十数秒を使っていた（ある日の本番での実測）。
 	//
 	// rep名での絞り込みは**検索対象repではなく検索結果**で行う（findKyous の filterKyousByRepName）。
 	// キャッシュ表は行ごとに実rep名の REP_NAME を持ち、それが Kyou.RepName に入るので絞れる。
@@ -1875,7 +1875,7 @@ func (f *FindFilter) overrideKyous(_ context.Context, findCtx *FindKyouContext) 
 //
 // sortAndTrimKyousMap の判定は上書き前の時刻に対して行われるため、ここで再判定
 // しないと「判定した時刻」と「表示される時刻」が別物になり、for_mi + 期間/時間帯
-// 指定の検索で窓の外の時刻を持つ行が返る（外部監査 S1'）。
+// 指定の検索で窓の外の時刻を持つ行が返る（指摘 S1'）。
 // 「for_mi の期間・時間帯・曜日フィルタは mi_sort_type の射影時刻に対して掛かる」が仕様。
 //
 // 落ちた ID はキーごと削除する（空スライスを残すと後段の kyous[0] 参照が panic する）。
@@ -2036,7 +2036,7 @@ func sortResultKyousByKey(kyous []reps.Kyou) {
 //
 // 上流の kyouEntryKey(sortAndTrimKyousMap) は (UpdateTime, DataType, RelatedTime) で
 // IDバケツ内の重複を畳むが、経路の合流(本文ヒットの2本目検索など)でIDバケツを
-// またいだ完全重複が残ることがあり、ここが最終防衛線になる（外部監査 C2 の一部）。
+// またいだ完全重複が残ることがあり、ここが最終防衛線になる（指摘 C2 の一部）。
 func dedupAdjacentResultKyous(kyous []reps.Kyou) []reps.Kyou {
 	if len(kyous) < 2 {
 		return kyous

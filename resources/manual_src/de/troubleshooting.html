@@ -55,7 +55,7 @@
     </tr>
     <tr>
       <td>Die Erweiterung hat nicht geantwortet. Warten Sie kurz und versuchen Sie es erneut, oder prüfen Sie den Status unter Einstellungen → Erweiterungseinstellungen.</td>
-      <td>Warten Sie kurz und versuchen Sie es erneut, oder prüfen Sie den Status unter Einstellungen → Erweiterungseinstellungen</td>
+      <td>Warten Sie kurz und versuchen Sie es erneut, oder prüfen Sie den Status unter Einstellungen → Erweiterungseinstellungen. Hilft das nicht, steht der Grund in <code>gkill_plugin_&lt;Name&gt;_error.log</code> im Ordner <code>logs</code> des gkill-Hauptordners</td>
     </tr>
     <tr>
       <td>Der Zieldatensatz wurde nicht gefunden. Er wurde möglicherweise auf einem anderen Gerät gelöscht oder geändert. Laden Sie die Liste neu.</td>
@@ -85,6 +85,14 @@
 
   <h2>Wenn nichts erscheint</h2>
   <p>Passiert beim Drücken einer Schaltfläche nichts, laden Sie die Seite neu. Unerwartete Fehler in der App werden jetzt ebenfalls oben rechts angezeigt. Bleibt das Problem bestehen, enthält die <code>gkill_error.log</code> des Servers eine Zeile zum Zeitpunkt des Fehlers.</p>
+
+  <h2>Wenn der Tageszeit-Filter immer 0 Treffer liefert</h2>
+  <p>Auf einem Smartphone (Android) oder einem selbst gestarteten Server kann eine Suche nur dann immer 0 Treffer liefern, wenn ein Tageszeit-Filter gesetzt ist. Das passiert, wenn der Server die Zeitzone des Geräts nicht lesen kann; Ihre Einträge sind nicht verloren.</p>
+  <ul>
+    <li>In der Smartphone-App beenden Sie die App und starten sie erneut.</li>
+    <li>Wenn Sie den Server selbst starten, setzen Sie vor dem Start die Umgebungsvariable <code>TZ</code> (zum Beispiel <code>TZ=JST-9</code>).</li>
+    <li>Steht in der <code>gkill_error.log</code> des Servers eine Zeile, die mit „sqlite localtime differs" beginnt, ist das die Ursache.</li>
+  </ul>
 
   <h2>Verwandte Dokumente</h2>
   <ul>

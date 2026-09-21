@@ -110,6 +110,9 @@
     <strong>Astuce :</strong> Les entrées de <code>config.json</code> commençant par <code>_</code> (tiret bas) ne sont là que pour expliquer le format. Vous pouvez les supprimer.
   </div>
   <div class="tip">
+    <strong>Comment les pas sont comptés :</strong> Lorsqu'une journée contient des pas provenant à la fois de la montre et du téléphone, seules les valeurs de la montre sont utilisées. Celles du téléphone ne servent que les jours sans enregistrement de la montre. Les sources considérées comme secours pour les jours sans montre se modifient dans l'écran de configuration de l'extension, sous « Sources de données utilisées uniquement les jours sans enregistrement de la montre » (laissez vide pour tout additionner).
+  </div>
+  <div class="tip">
     <strong>Astuce :</strong> Il n'est pas nécessaire de redémarrer gkill après avoir modifié <code>config.json</code>. Les nouveaux réglages s'appliquent dès la recherche suivante.
   </div>
 
@@ -186,7 +189,12 @@
       <td>« Échec de la récupération du contenu de l'extension » s'affiche</td>
       <td>L'exécutable de l'extension ne démarre peut-être pas. Vérifiez qu'il n'est pas endommagé et que vous avez le droit de l'exécuter.</td>
     </tr>
+    <tr>
+      <td>« L'extension n'a pas répondu » s'affiche, ou l'état reste sur « erreur »</td>
+      <td>La raison est conservée dans <code>gkill_plugin_&lt;nom&gt;_error.log</code>, dans le dossier <code>logs</code> du dossier principal de gkill. Vérifiez le réglage de la source et que l'exécutable peut démarrer.</td>
+    </tr>
   </table>
+  <p>Le journal d'activité d'une extension est écrit dans <code>gkill_plugin_&lt;nom&gt;.log</code>, dans le dossier <code>logs</code> du dossier principal de gkill (il existe aussi des fichiers par niveau, comme <code>_error.log</code>). Son niveau de détail suit le réglage de journalisation de gkill lui-même.</p>
   <div class="tip">
     <strong>Conseil :</strong> Appuyez longuement (mobile) ou faites un clic droit (bureau) sur un enregistrement puis choisissez « Paramètres de l’extension » pour ouvrir son écran de réglages. Vous pouvez y modifier et enregistrer les dossiers source. Modifier directement le <code>config.json</code> du dossier de l’extension reste possible.
   </div>

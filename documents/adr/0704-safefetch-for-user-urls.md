@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-21 |
-| Sources | `bb364253`（監査 H-04） / `.claude/skills/gkill-go-backend/SKILL.md`「利用者入力URL・そのページが指す og:image / #landingImage の取得は必ず api/safefetch を通す」節 |
+| Sources | `bb364253`（指摘 H-04） / `.claude/skills/gkill-go-backend/SKILL.md`「利用者入力URL・そのページが指す og:image / #landingImage の取得は必ず api/safefetch を通す」節 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/api/safefetch/safefetch.go` |
@@ -44,7 +44,7 @@ private 拒否が既定なので、**LAN内のページはブックマークし�
 
 ## Evidence
 
-実測なし — 脅威モデルからの判断（外部監査 H-04 の指摘）。
+実測なし — 脅威モデルからの判断（指摘 H-04）。
 
 ## Related tests
 

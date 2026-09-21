@@ -66,7 +66,7 @@ nlog / notification / tag / text / time_is / ur_log、および既に正しか�
 - **安全網（全 rep へのフォールバック）だけを入れて本筋を直さない** ―― 名前が全行で食い違っている
   現状では毎回フォールバックが発火し、ID 1件の取得のために leaf rep 全走査が常態になる。
   実測した利用者設定では directory rep のグロブが百行余りあり leaf は数百 rep になる（ADR-0101 の実測は
-  十数rep → 数百rep・十数秒）。安全網は「戻ってきたことに気付くための網」であって常用路ではない
+  十数 rep → 数百 rep・十数秒）。安全網は「戻ってきたことに気付くための網」であって常用路ではない
 - **MiReKyou も同じ形へ揃える** ―― `miReKyouRepositoryCachedSQLite3Impl` は
   `UnWrap()` が**自分自身**を返す。突き合わせの両辺が同じ `GetRepName()` なので現状で自己一貫しており、
   `REP_NAME` 列へ変えるとむしろ一致しなくなる。SQL も leaf 実装と共有ヘルパ

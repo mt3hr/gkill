@@ -34,7 +34,7 @@ class WearRequestWorker(
         val nodeId = inputData.getString(KEY_SOURCE_NODE_ID) ?: return Result.failure()
         val data = inputData.getByteArray(KEY_DATA) ?: ByteArray(0)
         // WorkRequest の入力は不変なので、同じ要求のワーカー再送では同じ値になる。
-        // サーバーはこのキーで KFTL 送信の再送を1回の登録に畳む（監査 S3-wear）。
+        // サーバーはこのキーで KFTL 送信の再送を1回の登録に畳む（指摘 S3-wear）。
         val idempotencyKey = inputData.getString(KEY_IDEMPOTENCY)
         Log.d(TAG, "doWork path=$path nodeId=$nodeId")
 

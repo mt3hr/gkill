@@ -111,7 +111,7 @@ func GetCapped(urlString string, timeout time.Duration, userAgent string, allowP
 
 	// **2xx 以外の本文は「そのURLの中身」ではない。**
 	// ここを見ていなかったので、404ページのHTMLがそのまま favicon として
-	// base64 で保存されていた(監査でGoogleの "Error 404 (Not Found)!!1" を実測)。
+	// base64 で保存されていた(指摘でGoogleの "Error 404 (Not Found)!!1" を実測)。
 	// 同じ理由で、404ページの <title> がブックマークのタイトルとして
 	// 保存される経路も開いていた。
 	//

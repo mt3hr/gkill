@@ -39,7 +39,7 @@ func defaultConfig() sdk.Config {
 			"_ で始まるキーは説明用なので消して構いません。",
 		configKeyExampleSourceDirs: []string{
 			"~/Kyou/ClaudeAI_*",
-			"D:/Dropbox/claude_export/conversations-*.zip",
+			"~/Downloads/claude_export/conversations-*.zip",
 		},
 		configKeySourceDirs: []string{},
 	}

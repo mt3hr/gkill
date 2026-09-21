@@ -651,7 +651,7 @@ gkillの検索機能は複数のクエリコンポーネントを組み合わせ
 |---|---|
 | `keyword-query.vue` | キーワード全文検索 |
 | `calendar-query.vue` | 日付範囲指定 |
-| `period-of-time-query.vue` | 時間範囲指定 |
+| `period-of-time-query.vue` | 時間帯（1日のうちの時刻範囲）と曜日の指定。曜日はチェック直後は未選択＝全曜日（制限なし）で、1つ押すとその曜日だけになる。選択は塗り潰し、未選択は枠線 |
 | `tag-query.vue` | タグフィルタ |
 | `time-is-query.vue` | 打刻期間フィルタ |
 | `rep-query.vue` | リポジトリフィルタ |
@@ -711,6 +711,17 @@ gkillの検索機能は複数のクエリコンポーネントを組み合わせ
 | `kftl-template-view.vue` | テンプレート表示 |
 | `edit-kftl-template-struct-view.vue` | テンプレート構造編集 |
 | `edit-kftl-template-struct-element-view.vue` | テンプレート要素編集 |
+
+### 板構造管理
+
+| コンポーネント | 説明 |
+|---|---|
+| `edit-mi-board-struct-view.vue` | 板の並び順と一覧の編集。行のダブルクリックとコンテキストメニューの「編集」で要素編集を開く |
+| `edit-mi-board-struct-element-view.vue` / `edit-mi-board-struct-element-dialog.vue` | 板要素の編集。板名は実データ由来なので読み取り表示で、編集できるのは説明だけ。ルート行は開かない |
+
+**構造要素の「説明」欄:** タグ / 記録保管場所 / 記録種別 / プロファイル / 板 / メモ帳テンプレートの各要素追加・編集画面には
+利用者の運用メモを書く「説明」欄がある。設定ツリーの JSON（`ApplicationConfig`）に `description` として保存され、
+MCP の `gkill_get_application_config` が `fields:["descriptions"]` で先に読む（ADR-0632）。
 
 ## 6. ダイアログシステム
 
@@ -984,6 +995,7 @@ CRUDリレーイベント（ビュー層 18件）:
 | `dnote-item-list-context-menu.vue` | Dnote項目リスト |
 | `dnote-list-query-context-menu.vue` | Dnoteクエリ |
 | `kftl-template-struct-context-menu.vue` | KFTLテンプレート構造（設定画面） |
+| `mi-board-struct-context-menu.vue` | 板構造（設定画面）。編集（説明のみ）・上へ・下へ・削除の4項目 |
 | `rep-struct-context-menu.vue` | リポジトリ構造（設定画面） |
 | `rep-type-struct-context-menu.vue` | RepType構造（設定画面） |
 | `ryuu-item-context-menu.vue` | Ryuu項目 |

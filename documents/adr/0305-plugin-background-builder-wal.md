@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-21 |
-| Sources | `3c3bfade` / `bb364253`（監査 M-6） / `documents/reverse/plugin-system.md`「6. SQLite3 キャッシュ」 |
+| Sources | `3c3bfade` / `bb364253`（指摘 M-6） / `documents/reverse/plugin-system.md`「6. SQLite3 キャッシュ」 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/plugins/gkill_plugin_codex/builder.go` |
@@ -13,7 +13,7 @@
 
 プラグインのハンドラは**数十msで返す必要がある**。gkill 側の実行デッドラインは30秒、`IsAlive` は5秒（→ ADR-0301）。
 
-ところが取り込みは重い。実データで Fitbit の Takeout（数百 MB）が初回数分、Codex のロールアウトログ（数百MB / 数十ファイル）が数秒。同期でフル構築すると**デッドラインで殺され、次回また最初からやり直す進捗ゼロループ**に入る。プラグインは永久に使えるようにならない。
+ところが取り込みは重い。実データで Fitbit の Takeout（数百MB）が初回 2〜3 分、Codex のロールアウトログ（数百MB / 数十ファイル）が数秒。同期でフル構築すると**デッドラインで殺され、次回また最初からやり直す進捗ゼロループ**に入る。プラグインは永久に使えるようにならない。
 
 さらに、構築と読み取りを**同じ mutex** で直列化していたため、初回構築のあいだ `find_kyous` が全部詰まっていた。
 
@@ -50,7 +50,7 @@
 
 ## Evidence
 
-- Fitbit（Takeout 数百 MB）: 初回 約数分 / 増分 1秒未満
+- Fitbit（Takeout 数百MB）: 初回 2〜3分 / 増分 1秒未満
 - Codex（数百MB / 数十ファイル → 数百 Kyou）: 初回 数秒 / 増分 1秒未満
 - gkill 側のデッドライン: 実行30秒 / `IsAlive` 5秒 / 順番待ち10秒
 

@@ -48,7 +48,7 @@ type gitCommitLogRepositoryCachedSQLite3Impl struct {
 // INSERT OR IGNORE + UNIQUE(ID) が再発を防ぎ、この掃除が既存DBを自己修復する
 // (derived cache なので DELETE は安全。最悪 UpdateCache が拾い直す)。
 // 同一コミットが複数 rep にある場合は先に入った行の REP_NAME が残る。
-// 経緯: 1年分の外部監査 C2「git 同一コミットが2レコード返る」。
+// 経緯: 1年分の指摘 C2「git 同一コミットが2レコード返る」。
 func ensureGitCommitLogCacheUnique(ctx context.Context, db *sqllib.DB, dbName string) error {
 	cleanupSQL := `DELETE FROM ` + sqlite3impl.QuoteIdent(dbName) + ` WHERE rowid NOT IN (SELECT MIN(rowid) FROM ` + sqlite3impl.QuoteIdent(dbName) + ` GROUP BY ID)`
 	gkill_log.LogSQL(ctx, cleanupSQL)

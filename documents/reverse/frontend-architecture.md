@@ -151,6 +151,23 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 
 **iframe セキュリティ:** `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）でセッションCookieを隔離する。
 
+### 設定ツリー（構造要素）の編集画面
+
+設定画面の6本のツリー（タグ `tag_struct` / 記録保管場所 `rep_struct` / 記録種別 `rep_type_struct` /
+プロファイル `device_struct` / 板 `mi_board_struct` / メモ帳テンプレート `kftl_template_struct`）は、
+`edit-*-struct-view.vue`（ツリー全体の並び替え・削除）と `add-new-*-struct-element-view.vue` /
+`edit-*-struct-element-view.vue`（要素の追加・編集）の対で編集する。要素編集の `apply()` は
+既知の欄を新しいノードへ詰め直して `requested_update_*_struct` で親へ渡し、親が id 一致で `splice` 差し替える
+（`struct-element-description.test.ts` が6本を表駆動で固定）。
+
+- **説明（`description`）:** 全ノードが持つ利用者の運用メモ。ツリーは `ApplicationConfig` の JSON に丸ごと入り、
+  サーバは素通しなので DB・API は無変更。MCP の `gkill_get_application_config` が `fields:["descriptions"]` で
+  先に読む（ADR-0632）
+- **板（`mi_board_struct`）だけの違い:** 板名は実データ由来なので変えられず、要素編集で触れるのは説明だけ。
+  編集は行のダブルクリックかコンテキストメニュー（`mi-board-struct-context-menu.vue`）の「編集」から開き、
+  ルート行は `update_mi_board_struct` の walk が子しか差し替えないので開かない
+  （`use-edit-mi-board-struct-element-dialog.ts` / `use-edit-mi-board-struct-view.ts`）
+
 ### ダイアログ アクセシビリティ
 
 117ダイアログ中90件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:

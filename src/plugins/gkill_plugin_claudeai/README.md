@@ -46,10 +46,10 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_claudeai/cache.db
 ```json
 {
   "_comment": "書式の説明（読み飛ばされるので消してよい）",
-  "_example_source_dirs": ["~/Kyou/ClaudeAI_*", "D:/Dropbox/claude_export/conversations-*.zip"],
+  "_example_source_dirs": ["~/Kyou/ClaudeAI_*", "~/Downloads/claude_export/conversations-*.zip"],
   "source_dirs": [
     "~/Kyou/ClaudeAI_*",
-    "D:/Dropbox/export"
+    "~/Downloads/export"
   ]
 }
 ```

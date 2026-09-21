@@ -1,7 +1,7 @@
 package reps
 
 // プラグイン診断情報（stderrリング / 型別索引の統計）のテスト。
-// 「is_alive=true なのに0件」がAPIから診断できなかった問題（外部監査 D1/D2）への回帰。
+// 「is_alive=true なのに0件」がAPIから診断できなかった問題（指摘 D1/D2）への回帰。
 
 import (
 	"context"

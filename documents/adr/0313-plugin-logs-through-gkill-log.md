@@ -16,7 +16,7 @@
 gkill_server は子プロセスの stderr を自分の stderr へ素通しし、末尾 4KB をリングに持って
 `get_plugin_list` の `last_error` に載せる（`plugin_stderr_ring.go`）。
 
-本番は NSSM サービスなので、**素通しした stderr は誰も見ておらず、残るのは最後の 4KB だけ**。
+利用者環境ではプラグインは常駐サーバ（Windows サービス）の子プロセスなので、**素通しした stderr は誰も見ておらず、残るのは最後の 4KB だけ**。
 起動・構築完了・1コマンドの所要時間といった節目は、どこにも残らない。
 「プロセスが殺され続ける」（ハンドラ期限超過）の調査で、どのコマンドが何ミリ秒かかったかを
 知る手段が無かった。ADR-1001 も Consequences で「プラグインは `WARN:` / `ERROR:` の接頭辞だけ」と
@@ -61,7 +61,7 @@ gkill_server は子プロセスの stderr を自分の stderr へ素通しし、
   プラグインは親から渡される側で、親は検証済みの値しか渡さない。手起動の打ち間違いで
   「rep は候補に出るのに0件」にする理由がない。
 - **stderr への出力をやめてファイルだけにする** — `last_error` が空になり、`get_plugin_list` から
-  「is_alive=true なのに0件」の理由が読めなくなる（外部監査 D2 の再発）。
+  「is_alive=true なのに0件」の理由が読めなくなる（指摘 D2 の再発）。
 
 ## Consequences
 
@@ -83,7 +83,7 @@ gkill_server は子プロセスの stderr を自分の stderr へ素通しし、
 
 ## Evidence
 
-実測なし — 構造上の判断（本番は NSSM サービスで stderr の読み手が無く、リングは 4KB の固定長。
+実測なし — 構造上の判断（常駐サーバの子プロセスとして動く利用者環境では stderr の読み手が無く、リングは 4KB の固定長。
 素通し先が無い以上、ファイルに残す以外に節目と所要時間を後から読む手段が無い）。
 依存の大きさは `go list -deps ./gkill/main/common/gkill_log` で確認: gkill 本体のパッケージは `gkill_options` 1つだけで、
 その import は `net` / `runtime` / `time` の標準ライブラリだけ。SDK を使うプラグインの go.mod に新しい外部依存は増えない。

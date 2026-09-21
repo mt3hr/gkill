@@ -301,6 +301,8 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | MCP サーバー（ReadWrite） | `src/server/gkill/mcp/server_readwrite.go` | 読み書き統合MCPサーバー（33ツール = 固有32 + プラグイン1、stdio/HTTP） |
 | MCP プラグインツール | `src/server/gkill/mcp/plugin_tools.go` | 3サーバ共通の `gkill_get_plugin_list` と、`gkill_get_kyous` へプラグイン本文を埋める `inlinePluginContents`（読み取りのみ。`post_plugin_config` は公開しない） |
 | MCP ログ | `src/server/gkill/mcp/access_log.go` | gkill_log 上の MCP のロガー。`logs/gkill_mcp_<kind>*.log` へ出し、レベルは `MCP_LOG` / 設定 / `--log` で制御 |
+| MCP ヘルプ | `src/server/gkill/mcp/help_topics.go` | `gkill_get_mcp_help` の topic 本文（10件）。ツール説明は要約にとどめ、詳細はここから取り出す（ADR-0622 / 0632） |
+| MCP 設定 | `src/server/gkill/mcp/config.go` | `$HOME/gkill/configs/gkill_mcp.json` の生成・読み込みと、フラグ > 環境変数 > ファイル > 既定値の優先順位 |
 | Android APK | `src/android/` | WebView ラッパー + gkill_server バイナリ同梱 |
 | Wear OS | `src/wear_os/` | phone_companion + watch_app（Gradle マルチモジュール） |
 | ビルド設定 | `package.json` | npm scripts、依存関係、バージョン |

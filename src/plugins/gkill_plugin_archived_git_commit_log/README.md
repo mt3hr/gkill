@@ -39,8 +39,8 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_archived_git_commit_log/
 ```
 
 ディレクトリ名・`manifest.json` の `name`・`executable` は**すべて `gkill_plugin_archived_git_commit_log`** で一致させること。
-`gkill_plugin_` の接頭辞も必須（Termux 側の配布スクリプトが `pkill -KILL -f gkill_plugin_` で
-更新前にプロセスを落としているため、接頭辞が無いと古いバイナリを掴んだまま生き残る）。
+`gkill_plugin_` の接頭辞も必須（運用でプロセス名からプラグインをまとめて見分けて更新前に止めるため。
+接頭辞が無いと古いバイナリを掴んだまま生き残る）。
 
 `manifest.json` と既定の `config.json` はバイナリ自身から出せる。
 

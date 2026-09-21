@@ -107,6 +107,9 @@
     <strong>提示：</strong>不需要删除旧的下载内容。即使日期重叠，步数等也不会被重复计算。
   </div>
   <div class="tip">
+    <strong>步数的计算方式：</strong>同一天既有手表又有手机的步数时，只使用手表的数值。只有在没有手表记录的日子才使用手机的数值。哪些来源作为「没有手表记录的日子的补充」，可以在插件设置界面的「仅在没有手表记录的日子使用的数据来源」中修改（留空则全部相加）。
+  </div>
+  <div class="tip">
     <strong>提示：</strong><code>config.json</code> 中以 <code>_</code>（下划线）开头的项目，只是为了说明写法而放在那里的。删掉也没关系。
   </div>
   <div class="tip">
@@ -186,7 +189,12 @@
       <td>显示「插件内容获取失败」</td>
       <td>插件的可执行文件可能没能启动。请确认可执行文件是否损坏，以及是否有执行权限。</td>
     </tr>
+    <tr>
+      <td>显示「插件未响应」，或状态一直是「错误」</td>
+      <td>原因会保留在 gkill 主文件夹的 <code>logs</code> 中的 <code>gkill_plugin_插件名_error.log</code> 里。请确认导入来源的设置，以及可执行文件能否启动。</td>
+    </tr>
   </table>
+  <p>插件的运行记录会保存在 gkill 主文件夹的 <code>logs</code> 中，文件名为 <code>gkill_plugin_插件名.log</code>（也有只收集错误的 <code>_error.log</code> 等）。记录的详细程度与 gkill 本体的日志设置相同。</p>
   <div class="tip">
     <strong>提示：</strong>长按（移动端）或右键点击（桌面端）记录并选择“插件设置”，即可打开该插件的设置画面。可以在此更改并保存导入来源的文件夹。也可以直接编辑插件文件夹中的 <code>config.json</code>。
   </div>

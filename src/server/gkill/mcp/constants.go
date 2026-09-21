@@ -505,7 +505,7 @@ func ToEntityDataType(dataType string) string {
 }
 
 // removedToolHints は消したツールの案内。MCP のツール一覧は**クライアントのセッション寿命で固定**されるので、
-// サーバから消しても既存セッションは呼び続ける (再監査で live コネクタから再現)。
+// サーバから消しても既存セッションは呼び続ける (2巡目の指摘で live コネクタから再現)。
 // しかもそのクライアントが握っている古い説明文は「パスを優先しろ」と、
 // まさにこの消えたツールへ誘導している。名前だけ返すと行き止まりになる。
 var removedToolHints = map[string]string{

@@ -33,8 +33,8 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_codex/
 ```
 
 ディレクトリ名・`manifest.json` の `name`・`executable` は**すべて `gkill_plugin_codex`** で一致させること。
-`gkill_plugin_` の接頭辞も必須（Termux 側の配布スクリプトが `pkill -KILL -f gkill_plugin_` で
-更新前にプロセスを落としているため、接頭辞が無いと古いバイナリを掴んだまま生き残る）。
+`gkill_plugin_` の接頭辞も必須（運用でプロセス名からプラグインをまとめて見分けて更新前に止めるため。
+接頭辞が無いと古いバイナリを掴んだまま生き残る）。
 
 `manifest.json` と既定の `config.json` はバイナリ自身から出せる。
 
@@ -136,11 +136,11 @@ rykv は一覧の行に詳細HTMLをそのまま描くので、前置きを残�
 
 ### スレッドIDはファイル名の uuid
 
-`session_meta.session_id` は使えない。実データ数十ファイルのうち**半数近くに存在せず**、
-存在しても**サブエージェントでは親のIDが入っている**（数十ファイルに対し `session_id` は数十種しかない）。
+`session_meta.session_id` は使えない。実データでは**半数近くのファイルに存在せず**、
+存在しても**サブエージェントでは親のIDが入っている**（ファイル数より少ない種類しかない）。
 これをキーにすると親子の Kyou ID が衝突する。
 
-`session_meta.id` はファイル名の uuid と**52/52で一致**するので、そちらを正とする。
+`session_meta.id` はファイル名の uuid と**全ファイルで一致**するので、そちらを正とする。
 
 ### `session_meta` は identity と environment で扱いを分ける
 
@@ -166,8 +166,8 @@ rykv は一覧の行に詳細HTMLをそのまま描くので、前置きを残�
 
 ### 巨大な1行
 
-実データの最大は**1行 数千万 バイト**（ツールの出力）で、1MBを超える行が数十行ある。
-`bufio.Scanner` はもちろん、`ReadString('\n')` でも捨てるだけの数十 MBを文字列に起こしてしまう。
+実データの最大は**1行 数十MB**（ツールの出力）で、1MBを超える行が数十行ある。
+`bufio.Scanner` はもちろん、`ReadString('\n')` でも捨てるだけの数十MBを文字列に起こしてしまう。
 
 `reader.go` は行の先頭512バイトだけを覗いて種別を決め、要らない行は改行まで**溜めずに読み捨てる**。
 保持する行だけを2MiBまで積む。判定できなかった行は「捨てる」ではなく「拾う」――
@@ -200,10 +200,10 @@ kyou_cache   : Kyou 1件。body_json に詳細ビュー用の本体が入る
 - スレッド名は `search_text` に焼き込まない。`session_index.jsonl` は名前が付くたび書き換わるので、
   焼き込むと毎回すべてのスレッドを畳み直すことになる
 - 子が新しく現れたときも、親が消えたときも、**両方のルートを畳み直し対象にする**
-- 検索用テキストは1件512KBで打ち切る（実データには畳み込みで数 MBに達する Kyou が1件ある）
+- 検索用テキストは1件512KBで打ち切る（実データには畳み込みで数MBに達する Kyou がある）
 
 実測（数十ファイル / 数百MB）: **フル構築 数秒**、差分は1秒未満、
-`cache.db` は約19MB、Kyou 301件。
+`cache.db` は数十MB、Kyou 数百件。
 
 キャッシュは `$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db` に置かれ、
 `gkill_server clear_cache plugin <all|user_id...>` で消せる。

@@ -107,6 +107,9 @@
     <strong>Tip:</strong> You do not need to delete older downloads. Even when the dates overlap, values such as step counts are never counted twice.
   </div>
   <div class="tip">
+    <strong>How steps are counted:</strong> When a day has step counts from both a watch and a phone, only the watch values are used. Phone values are used only on days that have no watch records. Which sources count as the fallback for days without a watch can be changed in the plugin settings screen under "Data sources used only on days without watch records" (leave it empty to add everything up).
+  </div>
+  <div class="tip">
     <strong>Tip:</strong> Entries in <code>config.json</code> that start with <code>_</code> (an underscore) are only there to explain the format. You may delete them.
   </div>
   <div class="tip">
@@ -186,7 +189,12 @@
       <td>"Failed to fetch plugin content" is displayed</td>
       <td>The plugin executable may not be starting. Check that it is not damaged and that you have permission to run it.</td>
     </tr>
+    <tr>
+      <td>"The plugin did not respond" is displayed, or the status stays at "error"</td>
+      <td>The reason is kept in <code>gkill_plugin_&lt;plugin name&gt;_error.log</code> in the <code>logs</code> folder of the gkill home folder. Check the source setting and that the executable can start.</td>
+    </tr>
   </table>
+  <p>A plugin's activity log is written to <code>gkill_plugin_&lt;plugin name&gt;.log</code> in the <code>logs</code> folder of the gkill home folder (there are also per-level files such as <code>_error.log</code>). How detailed it is follows the log setting of gkill itself.</p>
   <div class="tip">
     <strong>Tip:</strong> Long-press (mobile) or right-click (desktop) a record and choose "Plugin Settings" to open that plugin&#39;s settings screen. You can change and save the source folders there. Editing <code>config.json</code> in the plugin folder directly still works too.
   </div>
