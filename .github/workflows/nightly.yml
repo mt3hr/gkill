@@ -93,7 +93,7 @@ jobs:
       # AGP を動かすため JDK 17 を使う。Gradleキャッシュもここで有効化する
       # (codeql.yml の Android / Kotlin 環境と同じ構成)。
       - name: Set up JDK 17
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: "17"

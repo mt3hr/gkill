@@ -153,6 +153,15 @@ export default defineConfig(({ command }) => {
       }),
     ],
     server: {
+      // **E2E の成果物を監視対象から外すこと。** Playwright は実行中に test-results/ と
+      // playwright-report/ へトレース・スクリーンショット・HTML レポートを書く。
+      // dev サーバの監視はこれらを拾って開いているページを再読み込みさせるので、
+      // 別のワーカーが遷移中だと page.goto が net::ERR_ABORTED で落ちる。
+      // しかも失敗が成果物を増やす → 再読み込みが増える → さらに失敗、と連鎖する。
+      // .gitignore には入っているが、dev サーバの監視は .gitignore を見ない。
+      watch: {
+        ignored: ['**/test-results/**', '**/playwright-report/**', '**/release/**'],
+      },
       // gkill_serverが配信する非SPAパスをまとめてproxyする。
       // SPAルート (/rykv, /kftl, /mi など) はvue-routerが処理するのでproxyしない
       proxy: {
@@ -161,6 +170,14 @@ export default defineConfig(({ command }) => {
         '/zip_cache': api_proxy, // ZIP展開キャッシュ
         '/resources/manual': api_proxy, // ヘルプHTML
       },
+    },
+    // **動的 import するものはここに挙げること。** mermaid と dompurify は
+    // 図を含む Markdown を開いたときだけ読む（mermaid-render.ts の await import）。
+    // 事前バンドルから漏れると、最初にその画面を開いた瞬間に dev サーバが
+    // 依存を検出し直して再バンドルし、開いている全ページを強制再読み込みする。
+    // E2E だと遷移中のワーカーが巻き添えで落ちる。
+    optimizeDeps: {
+      include: ['mermaid', 'dompurify'],
     },
     resolve: {
       alias: {
