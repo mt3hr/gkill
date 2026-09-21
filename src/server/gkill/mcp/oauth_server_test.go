@@ -878,3 +878,54 @@ func TestOAuthServerConsentDisplayOnTheLoginPage(t *testing.T) {
 		mustContain(t, result.HTML, "&lt;script&gt;alert(1)&lt;/script&gt;&quot;")
 	})
 }
+
+// redirect_uri に「移動でスクリプトが走る」scheme を許すと、認可成功ページの自動遷移
+// （window.location.href）で gkill の生成元に任意のスクリプトが入る。動的登録は
+// 認証を要求しないので、登録と認可の両方で弾けていることを固定する。
+func TestOAuthRejectsScriptCapableRedirectURI(t *testing.T) {
+	hostile := []string{
+		"javascript:alert(1)",
+		"JavaScript:alert(1)",
+		"data:text/html,<script>alert(1)</script>",
+		"vbscript:msgbox(1)",
+		"blob:http://localhost/abc",
+		"about:blank",
+	}
+
+	t.Run("動的登録が拒む", func(t *testing.T) {
+		server := createOAuthServer(t, oauthOverrides{})
+		for _, uri := range hostile {
+			result := server.HandleRegister(obj("redirect_uris", strs(uri)))
+			if result.Status != 400 {
+				t.Errorf("%s の登録は 400 で拒むべき: status=%d", uri, result.Status)
+			}
+		}
+	})
+
+	t.Run("認可要求が拒む（登録をすり抜けた場合の砦）", func(t *testing.T) {
+		for _, uri := range hostile {
+			server := createOAuthServer(t, oauthOverrides{})
+			server.Store.PutClient("test-client", obj("redirect_uris", strs(uri)))
+			result := server.HandleAuthorizeGet(authorizeParams(map[string]string{"redirect_uri": uri}))
+			if result.Status != 400 {
+				t.Errorf("%s の認可要求は 400 で拒むべき: status=%d", uri, result.Status)
+			}
+		}
+	})
+
+	t.Run("http / https とネイティブアプリのカスタム scheme は通る", func(t *testing.T) {
+		for _, uri := range []string{
+			"http://localhost/callback",
+			"http://127.0.0.1:8080/cb",
+			"https://client.example/callback",
+			"myapp://callback",
+			"com.example.app:/oauth2redirect",
+		} {
+			server := createOAuthServer(t, oauthOverrides{})
+			result := server.HandleRegister(obj("redirect_uris", strs(uri)))
+			if result.Status != 201 && result.Status != 200 {
+				t.Errorf("%s の登録は通るべき: status=%d", uri, result.Status)
+			}
+		}
+	})
+}

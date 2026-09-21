@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。1144テスト（41ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 11 + プラグイン1 = 12ツール、Write サーバ 28（書き込み21 + Read便利7）+ プラグイン1 = 29ツール、統合サーバ 32 + プラグイン1 = 33ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、ログ、設定ファイル、旧 Node 実装とのゴールデン一致をカバーする（テスト数は `t.Run` のサブテスト宣言の静的計数）。
+MCP (Model Context Protocol) サーバのテスト。1147テスト（42ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 11 + プラグイン1 = 12ツール、Write サーバ 28（書き込み21 + Read便利7）+ プラグイン1 = 29ツール、統合サーバ 32 + プラグイン1 = 33ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、ログ、設定ファイル、旧 Node 実装とのゴールデン一致をカバーする（テスト数は `t.Run` のサブテスト宣言の静的計数）。
 
 2026-09-20 に Node.js 実装（旧 `src/mcp`、vitest 28 ファイル）を Go へ移した。旧テストの `describe` → `TestXxx`、`test` → `t.Run("<原文のタイトル>")` で 1:1 に対応し、タイトル集合の照合で未移植 0 を確認してある（意図した例外は [ADR-0631](../../../../documents/adr/0631-mcp-lives-in-gkill-server.md)）。
 
@@ -26,7 +26,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 | `access_log_test.go` | Logger（レベルフィルタリング・JSON形式・source。未知レベルは拒否・nil Logger は無害） |
 | `pkce_test.go` | PKCE (S256/plain) のコード検証、バリデーション |
 | `oauth_store_test.go` | OAuthストア（認可コード、アクセストークン、リフレッシュトークン、クライアント登録、TTL期限切れ、定期クリーンアップ、JSONファイル永続化。旧 Node 実装が書いた状態ファイルをそのまま読めること） |
-| `oauth_server_test.go` | OAuth 2.1サーバ（メタデータ、認可フロー、トークン交換、PKCE検証、リフレッシュトークンローテーション、動的クライアント登録、E2Eフロー）。scope の1値強制、同意画面の3 scope 表示と DCR 由来 `client_name` の HTML エスケープ |
+| `oauth_server_test.go` | OAuth 2.1サーバ（メタデータ、認可フロー、トークン交換、PKCE検証、リフレッシュトークンローテーション、動的クライアント登録、E2Eフロー）。scope の1値強制、同意画面の3 scope 表示と DCR 由来 `client_name` の HTML エスケープ、redirect_uri の scheme 制限（`javascript:` などを登録でも認可でも拒み、http / https とカスタム scheme は通す） |
 | `file_link_test.go` | FileLinkStore（HTTPモード用の期限付きファイルリンクトークンの発行・解決・失効、`GET /files/{token}` 配信） |
 | `http_transport_test.go` | HttpTransport の `/mcp` 経路の統合・回帰（実ポートで OAuth→Bearer→tools を通す。Bearer 401、並行リクエストの user/session 分離、公開ファイル配信の nosniff / CSP sandbox、ボディ上限 413・明示タイムアウト・アクセスログのクエリ除去、scope 境界と `token_scope_rejected` のログ） |
 | `readme_examples_test.go` | README の ```json 例を実物の正規化器（`NormalizeKyouArgs`）へ通す同期検査 |
@@ -43,6 +43,9 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 | `find_query_schema_test.go` | `query` スキーマの全プロパティに type（か enum）と description があり配列は items を持つこと、廃止済みキーを載せないこと（キー集合そのものは `schema_contract_test.go`） |
 | `oauth_html_test.go` | 認可成功ページの redirect_uri が script 文脈でエスケープされること（`</script>` / U+2028 で script 要素から抜け出せない）、ログインページの利用者由来の値の HTML エスケープ |
 | `jsonobj/jsonobj_test.go` | 順序つき JSON（`JSON.stringify` 互換の直列化・undefined の番兵・キー順・`\b` `\f` の短形式）。`func Test` 10本で `t.Run` を使わないので、上の件数には入らない |
+| `stdio_transport_test.go` | stdio の枠組みの取り出し方を、届き方を固定して確かめる。NDJSON の行のうしろに Content-Length 枠が続き**同じチャンクで届いた**ときに両方処理されること（先に `
+
+` を探す実装だと行ごと1つのヘッダと見なして両方落とす）、枠の混在、JSON でもヘッダでもない行を捨てて警告すること、壊れた Content-Length の警告 |
 | `stdio_e2e_test.go` | stdio の端から端まで。テストバイナリ自身を子プロセスにして NDJSON と Content-Length の両枠組みで initialize → tools/call → ping を通し、stdout に JSON-RPC 以外の行が無いこと・壊れた行が stderr に警告されることを固定する |
 | `golden_test.go` | 旧 Node 実装から採ったゴールデン（`testdata/golden/`。要求コーパス 331 件）との**バイト一致**: tools/list（3サーバ）と `schema_revision`、tools/call の応答（stdio / http × 3サーバ）、gkill へ送った要求（パス・クエリ・Cookie・本文）。時刻・UUID・トークンは採取時と同じ固定列。ゴールデン自身が `jsonobj` で往復してもバイト単位で変わらないことも固定。ツールを意図して変えたときは `GKILL_MCP_UPDATE_GOLDEN=1 go test ./gkill/mcp/ -run Golden` で Go の出力へ書き直し、`git diff testdata/golden` を読んでからコミットする（Node 実装はもう無いので、以後は前回コミットした Go の出力との回帰検査になる） |
 

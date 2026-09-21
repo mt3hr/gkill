@@ -240,6 +240,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0630](0630-mcp-file-urls-are-opt-in-with-expiry.md) | 公開ファイルURLは include_file_urls で頼まれたときだけ発行し、期限を添える | Accepted |
 | [0631](0631-mcp-lives-in-gkill-server.md) | MCP サーバは gkill_server のサブコマンドとして Go で手書きし、旧 Node 実装とはゴールデンでバイト一致させる | Accepted |
 | [0632](0632-config-tree-descriptions-for-mcp.md) | 設定ツリーの全ノードに利用者が書く description を持たせ、MCP は fields:["descriptions"] の平坦な一覧で先に読ませる | Accepted |
+| [0633](0633-oauth-redirect-uri-rejects-script-capable-schemes.md) | OAuth の redirect_uri は javascript: などの「移動でスクリプトが走る」scheme を登録でも認可でも拒む | Accepted |
 | [0701](0701-argon2id-password-storage.md) | パスワードは Argon2id で保存し、ワイヤ形式（password_sha256）は変えない | Accepted |
 | [0702](0702-share-owner-from-session.md) | 共有情報の所有者はリクエスト本文ではなくセッションから決める | Accepted |
 | [0703](0703-shared-file-authz-by-query.md) | 共有ページのファイル配信は共有クエリを再評価した許可パス集合にだけ許す | Accepted |

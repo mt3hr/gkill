@@ -186,7 +186,12 @@ func (s *OAuthServer) HandleAuthorizePost(ctx context.Context, form map[string]s
 	))
 
 	// Build redirect URL with code
-	redirectURL, _ := url.Parse(form["redirect_uri"])
+	// validateAuthorizeParams を通っているので解析できるはずだが、戻り値を捨てると
+	// 解析に失敗したときに nil 参照で落ちる（プロセスごと落ちる panic になる）。
+	redirectURL, err := url.Parse(form["redirect_uri"])
+	if err != nil || redirectURL == nil {
+		return OAuthResult{Status: 400, ContentType: "text/html", HTML: s.errorHTML("redirect_uri must be a valid URL")}
+	}
 	params := redirectURL.Query()
 	params.Set("code", code)
 	if form["state"] != "" {
@@ -336,10 +341,35 @@ func (s *OAuthServer) handleRefreshTokenGrant(body map[string]string) OAuthResul
 // Dynamic Client Registration: POST /oauth/register
 // ---------------------------------------------------------------------------
 
-// isAbsoluteURL は JS の new URL(s) が通るか（スキームのある絶対 URL）。
-func isAbsoluteURL(s string) bool {
+// scriptCapableSchemes は「移動しただけで、移動元のページの生成元でスクリプトが走りうる」scheme。
+var scriptCapableSchemes = map[string]bool{
+	"javascript": true,
+	"data":       true,
+	"vbscript":   true,
+	"blob":       true,
+	"about":      true,
+	"filesystem": true,
+}
+
+// isSafeRedirectURI は redirect_uri として受け付けてよい絶対 URL かを見る。
+//
+// **絶対 URL であることだけで通さないこと。** 認可成功ページは redirect_uri を
+// `window.location.href` に入れて自動遷移する（oauth_html.go の RenderSuccessPage）。
+// 動的登録（RFC 7591）は認証を要求しない設計なので、`javascript:` を redirect_uri に
+// 登録できてしまうと、「登録する → 被害者に認可 URL を踏ませてログインさせる」の2手で
+// gkill の生成元で任意のスクリプトが走り、認可コードごと持ち去られる。
+//
+// ネイティブアプリのカスタム scheme（`myapp://callback` など）は正当な使い方なので通す。
+// 拒むのは上の「移動でスクリプトが走る」scheme だけ。
+func isSafeRedirectURI(s string) bool {
 	parsed, err := url.Parse(s)
-	return err == nil && parsed.Scheme != "" && (parsed.Host != "" || parsed.Opaque != "" || parsed.Path != "")
+	if err != nil {
+		return false
+	}
+	if parsed.Scheme == "" || scriptCapableSchemes[strings.ToLower(parsed.Scheme)] {
+		return false
+	}
+	return parsed.Host != "" || parsed.Opaque != "" || parsed.Path != ""
 }
 
 // HandleRegister は DCR（RFC 7591）。
@@ -356,7 +386,7 @@ func (s *OAuthServer) HandleRegister(body any) OAuthResult {
 	// Validate each redirect_uri is a valid URL
 	for _, uri := range redirectURIs {
 		text, isString := uri.(string)
-		if !isString || !isAbsoluteURL(text) {
+		if !isString || !isSafeRedirectURI(text) {
 			return OAuthResult{Status: 400, JSON: jsonobj.Obj("error", "invalid_client_metadata", "error_description", "Invalid redirect_uri: "+jsString(uri))}
 		}
 	}
@@ -417,7 +447,9 @@ func (s *OAuthServer) validateAuthorizeParams(params map[string]string) string {
 	if params["redirect_uri"] == "" {
 		return "redirect_uri is required"
 	}
-	if !isAbsoluteURL(params["redirect_uri"]) {
+	// 登録時にも同じ判定をするが、ここでも掛ける。古い登録が残っている場合と、
+	// 登録を経ない経路が将来増えた場合に、成功ページの自動遷移を守る最後の砦になる。
+	if !isSafeRedirectURI(params["redirect_uri"]) {
 		return "redirect_uri must be a valid URL"
 	}
 	if params["code_challenge"] == "" {
