@@ -9,6 +9,13 @@
       "message": "InsecureSkipVerify should not be used in production code."
     },
     {
+      "fingerprint": "go/log-injection|src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go|d8cd7a779f84cb4f:1",
+      "lang": "go",
+      "rule": "go/log-injection",
+      "file": "src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go",
+      "message": "This log entry depends on a [user-provided value](1)."
+    },
+    {
       "fingerprint": "go/path-injection|src/server/gkill/api/gkill_server_api/handle_update_server_configs.go|d15c00a8f4fa2dd8:1",
       "lang": "go",
       "rule": "go/path-injection",
@@ -42,6 +49,13 @@
       "rule": "go/path-injection",
       "file": "src/server/gkill/dao/plugin_manager.go",
       "message": "This path depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/reflected-xss|src/server/gkill/mcp/http_transport.go|9666f999db56f0da:1",
+      "lang": "go",
+      "rule": "go/reflected-xss",
+      "file": "src/server/gkill/mcp/http_transport.go",
+      "message": "Cross-site scripting vulnerability due to [user-provided value](1)."
     },
     {
       "fingerprint": "go/request-forgery|src/server/gkill/api/safefetch/safefetch.go|30b724f1cf0039e2:1",
@@ -79,7 +93,21 @@
       "message": "This query depends on a [user-provided value](1)."
     },
     {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go|8ac629cc4c619e48:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
       "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go|8cc75df9ae43c90d:1",
+      "lang": "go",
+      "rule": "go/sql-injection",
+      "file": "src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go",
+      "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/sql-injection|src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go|a46489e1d6b455d:1",
       "lang": "go",
       "rule": "go/sql-injection",
       "file": "src/server/gkill/dao/reps/git_commit_log_repository_cached_sqlite3_impl.go",
@@ -560,6 +588,13 @@
       "rule": "go/sql-injection",
       "file": "src/server/gkill/dao/sqlite3impl/sqlite3impl_util.go",
       "message": "This query depends on a [user-provided value](1)."
+    },
+    {
+      "fingerprint": "go/weak-sensitive-data-hashing|src/server/gkill/mcp/gkill_client.go|6536a53f6c50ddb6:1",
+      "lang": "go",
+      "rule": "go/weak-sensitive-data-hashing",
+      "file": "src/server/gkill/mcp/gkill_client.go",
+      "message": "[Sensitive data (password)](1) is used in a hashing algorithm (SHA256) that is insecure for password hashing, since it is not a computationally expensive hash function."
     },
     {
       "fingerprint": "java/android/missing-certificate-pinning|src/wear_os/phone_companion/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/wear/companion/GkillApiClient.kt|31a6956c7e3ed32b:1",
