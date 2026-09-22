@@ -55,7 +55,7 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
   "data_type": "claude_conversation",
   "rep_name": "Claude.ai",
   "executable": "gkill_plugin_claudeai",
-  "min_gkill_version": "1.1.8"
+  "min_gkill_version": "1.1.9"
 }
 ```
 

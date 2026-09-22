@@ -6,5 +6,5 @@
   "data_type": "chatgpt_conversation",
   "rep_name": "ChatGPT",
   "executable": "gkill_plugin_chatgpt",
-  "min_gkill_version": "1.1.8"
+  "min_gkill_version": "1.1.9"
 }

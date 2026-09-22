@@ -84,7 +84,7 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_claudeai/cache.db
 | `rep_name` | `Claude.ai` |
 | `data_type` | `claude_conversation` |
 | プロトコルバージョン | `1` |
-| 最小 gkill バージョン | `1.1.8` |
+| 最小 gkill バージョン | `1.1.9` |
 
 ## ファイル構成
 

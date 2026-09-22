@@ -1,11 +1,11 @@
 {
   "protocol_version": "1",
   "name": "gkill_plugin_archived_git_commit_log",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "zip に固めて保管した Git リポジトリのコミットログを gkill のタイムラインに表示する。zip は展開せず、中の .git だけを読む。コミット1件を1件の記録として、稼働中の Git リポジトリと同じ形（rep 名はリポジトリ名・ID はコミットハッシュ）で返す。設定画面で zip の場所を指定して使用。",
   "data_type": "git_commit_log",
   "rep_name": "ArchivedGit",
   "executable": "gkill_plugin_archived_git_commit_log",
-  "min_gkill_version": "1.1.8",
+  "min_gkill_version": "1.1.9",
   "provides": ["git_commit_log"]
 }
