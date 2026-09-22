@@ -278,7 +278,7 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
   "data_type": "xxx_data_type",
   "rep_name": "表示名",
   "executable": "gkill_plugin_xxx",
-  "min_gkill_version": "1.1.8"
+  "min_gkill_version": "1.1.9"
 }
 ```
 

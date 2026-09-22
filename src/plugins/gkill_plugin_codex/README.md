@@ -218,7 +218,7 @@ kyou_cache   : Kyou 1件。body_json に詳細ビュー用の本体が入る
 | `rep_name` | `Codex` |
 | `data_type` | `codex_turn` |
 | `protocol_version` | `1` |
-| `min_gkill_version` | `1.1.8` |
+| `min_gkill_version` | `1.1.9` |
 | `provides` | 宣言しない（タグ・型別データは出さない） |
 
 タグは付けない。gkill 1.1.7 以降は `manifest.json` に `"provides": ["tag"]` を書けば
