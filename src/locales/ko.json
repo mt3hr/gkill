@@ -456,6 +456,8 @@
     "EDIT_DNOTE_TITLE": "집계 뷰",
     "DELETE_DNOTE_LIST_ITEM_TITLE": "집계 항목 삭제",
     "DELETE_DNOTE_LIST_QUERY_TITLE": "집계 리스트 삭제",
+    "ADD_DNOTE_ITEM_COLUMN_TITLE": "열 추가",
+    "DELETE_DNOTE_ITEM_COLUMN_TITLE": "열 삭제",
     "RESET_SET_ADMIN_PASSWORD_MESSAGE": "관리자 계정 비밀번호를 설정해 주세요",
     "NOTIFICATION_TIME_IS_BLANK_MESSAGE": "알림 일시가 입력되지 않았습니다",
     "DNOTE_GETTING_DATA": "데이터 가져오는 중",

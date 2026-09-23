@@ -456,6 +456,8 @@
     "EDIT_DNOTE_TITLE": "Aggregation View",
     "DELETE_DNOTE_LIST_ITEM_TITLE": "Delete Aggregation Item",
     "DELETE_DNOTE_LIST_QUERY_TITLE": "Delete Aggregation List",
+    "ADD_DNOTE_ITEM_COLUMN_TITLE": "Add column",
+    "DELETE_DNOTE_ITEM_COLUMN_TITLE": "Delete column",
     "RESET_SET_ADMIN_PASSWORD_MESSAGE": "Please set the admin account password",
     "NOTIFICATION_TIME_IS_BLANK_MESSAGE": "Notification date/time is not entered",
     "DNOTE_GETTING_DATA": "Fetching data",

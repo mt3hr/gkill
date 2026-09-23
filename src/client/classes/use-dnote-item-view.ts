@@ -128,7 +128,13 @@ export function useDnoteItemView(options: {
         }
     }
 
+    // 閲覧画面では集計に使った記録の一覧を開く。編集画面（集計ビューの設定）は記録を0件で読み込むので
+    // 一覧は常に空になる。代わりに項目の編集ダイアログを開く（相関グラフ・関連情報の編集画面と同じ）
     function onDblclick(): void {
+        if (props.editable) {
+            onRequestedEditDnoteItemList()
+            return
+        }
         kyou_list_view_dialog.value?.show()
     }
 

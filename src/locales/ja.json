@@ -456,6 +456,8 @@
     "EDIT_DNOTE_TITLE": "集計ビュー",
     "DELETE_DNOTE_LIST_ITEM_TITLE": "集計項目削除",
     "DELETE_DNOTE_LIST_QUERY_TITLE": "集計リスト削除",
+    "ADD_DNOTE_ITEM_COLUMN_TITLE": "列を追加",
+    "DELETE_DNOTE_ITEM_COLUMN_TITLE": "列を削除",
     "RESET_SET_ADMIN_PASSWORD_MESSAGE": "管理アカウントのパスワードを設定してください",
     "NOTIFICATION_TIME_IS_BLANK_MESSAGE": "通知日時が入力されていません",
     "DNOTE_GETTING_DATA": "データ取得中",

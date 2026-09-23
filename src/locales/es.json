@@ -456,6 +456,8 @@
     "EDIT_DNOTE_TITLE": "Vista de agregación",
     "DELETE_DNOTE_LIST_ITEM_TITLE": "Eliminar elemento de agregación",
     "DELETE_DNOTE_LIST_QUERY_TITLE": "Eliminar lista de agregación",
+    "ADD_DNOTE_ITEM_COLUMN_TITLE": "Añadir columna",
+    "DELETE_DNOTE_ITEM_COLUMN_TITLE": "Eliminar columna",
     "RESET_SET_ADMIN_PASSWORD_MESSAGE": "Por favor, establezca la contraseña de la cuenta de administrador",
     "NOTIFICATION_TIME_IS_BLANK_MESSAGE": "La fecha/hora de notificación no ha sido ingresada",
     "DNOTE_GETTING_DATA": "Obteniendo datos",

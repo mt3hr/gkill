@@ -1,4 +1,5 @@
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import type { ComponentRef } from '@/classes/component-ref'
 import type { Kyou } from '@/classes/datas/kyou'
 import type AggregatedListItemProps from '@/pages/views/aggregated-list-item-props'
 import type AggregatedListItemViewEmits from '@/pages/views/aggregated-list-item-view-emits'
@@ -9,6 +10,9 @@ export function useAggregatedListItem(options: {
     emits: AggregatedListItemViewEmits,
 }) {
     const { props, emits } = options
+
+    // ── Template refs ──
+    const kyou_list_view_dialog = ref<ComponentRef | null>(null)
 
     // ── Computed ──
     const list_height = computed(() => window.screen.height * 7 / 10)
@@ -43,6 +47,15 @@ export function useAggregatedListItem(options: {
     })
     const mood_value = computed(() => Number(props.aggregated_item.value).valueOf())
 
+    // ── Template event handlers ──
+    // 閲覧画面では集計に使った記録の一覧を開く。編集画面では記録が0件なので開かない
+    function onDblclick(): void {
+        if (props.editable) {
+            return
+        }
+        kyou_list_view_dialog.value?.show()
+    }
+
     // ── CRUD relay handlers ──
     const crudRelayHandlers = build_kyou_dialog_relay(emits, {
         // クリックはフォーカス移動も伴う
@@ -51,11 +64,17 @@ export function useAggregatedListItem(options: {
 
     // ── Return ──
     return {
+        // Template refs
+        kyou_list_view_dialog,
+
         // State
         list_height,
         is_lantana_type,
         value_class,
         mood_value,
+
+        // Template event handlers
+        onDblclick,
 
         // Event relay objects
         crudRelayHandlers,

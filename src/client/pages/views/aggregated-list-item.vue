@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-0 ma-0 aggregated_list_item" @dblclick="kyou_list_view_dialog?.show()">
+    <v-card class="pa-0 ma-0 aggregated_list_item" @dblclick="onDblclick">
         <div>
             {{ aggregated_item.title }}
         </div>
@@ -38,23 +38,22 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue'
 import type AggregatedListItemProps from './aggregated-list-item-props'
 import type AggregatedListItemViewEmits from './aggregated-list-item-view-emits'
 import KyouListViewDialog from '../dialogs/kyou-list-view-dialog.vue'
 import LantanaFlowersView from './lantana-flowers-view.vue'
 import { useAggregatedListItem } from '@/classes/use-aggregated-list-item'
 
-const kyou_list_view_dialog = ref<InstanceType<typeof KyouListViewDialog> | null>(null)
-
 const props = defineProps<AggregatedListItemProps>()
 const emits = defineEmits<AggregatedListItemViewEmits>()
 
 const {
+    kyou_list_view_dialog,
     list_height,
     is_lantana_type,
     value_class,
     mood_value,
+    onDblclick,
     crudRelayHandlers,
 } = useAggregatedListItem({ props, emits })
 </script>

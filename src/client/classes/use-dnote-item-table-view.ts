@@ -1,4 +1,4 @@
-import { nextTick, ref, type Ref } from 'vue'
+import { computed, nextTick, ref, type Ref } from 'vue'
 import type DnoteItem from '@/classes/dnote/dnote-item'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { Kyou } from '@/classes/datas/kyou'
@@ -18,7 +18,26 @@ export function useDnoteItemTableView(options: {
     // ── Template refs ──
     const dnote_item_list_views = ref<ComponentRef | null>(null)
 
+    // ── Computed ──
+    // 最後の1列は消せない（項目の追加先が無くなる。「項目を追加」は常に先頭の列へ入れる）
+    const can_delete_column = computed(() => model_value.value.length > 1)
+
     // ── Methods ──
+    // 列（集計項目を縦に並べる箱）の追加・削除。編集画面のときだけ。
+    // model_value は定義の items そのものなので、その場で書き換えれば「適用」でそのまま保存される
+    // （項目の D&D の handle_move_dnote_item と同じ流儀。新しい emit は要らない）
+    function add_column(): void {
+        if (!props.editable) return
+        model_value.value.push([])
+    }
+
+    // 中の項目ごと消す（項目の削除と同じく確認は出さない。ダイアログのキャンセルで戻せる）
+    function delete_column(index: number): void {
+        if (!props.editable || !can_delete_column.value) return
+        if (index < 0 || model_value.value.length <= index) return
+        model_value.value.splice(index, 1)
+    }
+
     async function load_aggregated_value(
         abort_controller: AbortController,
         kyous: Array<Kyou>,
@@ -114,10 +133,15 @@ export function useDnoteItemTableView(options: {
         // Template refs
         dnote_item_list_views,
 
+        // Computed
+        can_delete_column,
+
         // Methods used in template
         handle_move_dnote_item,
         onCellDragover,
         onCellDrop,
+        add_column,
+        delete_column,
 
         // Exposed methods
         load_aggregated_value,
