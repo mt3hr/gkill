@@ -16,9 +16,10 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-if="cloned_kyou.typed_nlog" v-model="nlog_title_value" :label="i18n.global.t('NLOG_TITLE_TITLE')"
-            :readonly="is_busy" />
+        <!-- 追加画面（とメモ帳の支出）と同じく店名を先に置く -->
         <v-text-field v-if="cloned_kyou.typed_nlog" v-model="nlog_shop_value" :label="i18n.global.t('NLOG_SHOP_NAME_TITLE')"
+            :readonly="is_busy" />
+        <v-text-field v-if="cloned_kyou.typed_nlog" v-model="nlog_title_value" :label="i18n.global.t('NLOG_TITLE_TITLE')"
             :readonly="is_busy" />
         <v-text-field v-if="cloned_kyou.typed_nlog" v-model="nlog_amount_value" type="number"
             :label="i18n.global.t('NLOG_AMOUNT_TITLE')" :readonly="is_busy" />

@@ -7,12 +7,31 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-if="nlog" v-model="nlog_title_value" :label="i18n.global.t('NLOG_TITLE_TITLE')"
-            :readonly="is_requested_submit" :rules="[(v: string) => !!v || i18n.global.t('REQUIRED_FIELD_MESSAGE')]" />
+        <!-- メモ帳（KFTL）の支出と同じ並び: 店名を1つ書き、品名と金額の組を行で増やす。1行が1件の支出になる -->
         <v-text-field v-if="nlog" v-model="nlog_shop_value" :label="i18n.global.t('NLOG_SHOP_NAME_TITLE')"
             :readonly="is_requested_submit" />
-        <v-text-field v-if="nlog" v-model="nlog_amount_value" type="number" :label="i18n.global.t('NLOG_AMOUNT_TITLE')"
-            :readonly="is_requested_submit" />
+        <v-row v-for="(row, index) in nlog_rows" :key="row.row_key" class="pa-0 ma-0 add_nlog_row">
+            <v-col class="pa-0 ma-0">
+                <v-text-field v-model="row.title" :label="i18n.global.t('NLOG_TITLE_TITLE')"
+                    :readonly="is_requested_submit"
+                    :rules="[(v: string) => !!v || i18n.global.t('REQUIRED_FIELD_MESSAGE')]" />
+            </v-col>
+            <v-col cols="4" class="pa-0 ma-0 pl-2">
+                <v-text-field v-model="row.amount" type="number" :label="i18n.global.t('NLOG_AMOUNT_TITLE')"
+                    :readonly="is_requested_submit" />
+            </v-col>
+            <v-col cols="auto" class="pa-0 ma-0 gkill-field-side-buttons">
+                <v-btn icon="mdi-delete" size="small" variant="text" color="secondary"
+                    :title="i18n.global.t('DELETE_TITLE')" :disabled="!can_delete_row || is_requested_submit"
+                    @click="delete_row(index)" />
+            </v-col>
+        </v-row>
+        <v-row class="pa-0 ma-0">
+            <v-col cols="auto" class="pa-0 ma-0">
+                <v-btn color="primary" variant="text" prepend-icon="mdi-plus" :disabled="is_requested_submit"
+                    @click="add_row()">{{ i18n.global.t('ADD_TITLE') }}</v-btn>
+            </v-col>
+        </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <table>
@@ -111,8 +130,7 @@ const {
     // State
     is_requested_submit,
     nlog,
-    nlog_title_value,
-    nlog_amount_value,
+    nlog_rows,
     nlog_shop_value,
     related_date_typed,
     related_date_string,
@@ -120,8 +138,13 @@ const {
     show_related_date_menu,
     show_related_time_menu,
 
+    // Computed
+    can_delete_row,
+
     // Business logic / template handlers
     save,
+    add_row,
+    delete_row,
     reset_related_date_time,
     now_to_related_date_time,
     reset,
