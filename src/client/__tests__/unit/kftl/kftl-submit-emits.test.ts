@@ -30,18 +30,27 @@ interface CallLog {
     calls: Array<string>
 }
 
-/** 偽サーバの解析: 「、」だけの行で記録を区切り、「。」で始まる行をタグとして数える */
+/** 偽サーバの解析: 「、」だけの行で記録を区切り、「。」で始まる行をタグとして数える（記録ごとの組も作る） */
 function fake_parse(kftl_text: string) {
     const lines = kftl_text.split('\n')
     const tags = new Array<string>()
+    const tag_groups = new Array<Array<string>>()
+    let group = new Array<string>()
     let record_count = 0
     let has_body = false
+    const close_record = () => {
+        if (has_body) {
+            record_count++
+        }
+        if (group.length !== 0) {
+            tag_groups.push(group)
+        }
+        group = new Array<string>()
+        has_body = false
+    }
     for (const line of lines) {
         if (line === '、') {
-            if (has_body) {
-                record_count++
-            }
-            has_body = false
+            close_record()
             continue
         }
         if (line.startsWith('。')) {
@@ -49,16 +58,17 @@ function fake_parse(kftl_text: string) {
             if (tag !== '' && !tags.includes(tag)) {
                 tags.push(tag)
             }
+            if (tag !== '' && !group.includes(tag)) {
+                group.push(tag)
+            }
             continue
         }
         if (line !== '' && line !== '！') {
             has_body = true
         }
     }
-    if (has_body) {
-        record_count++
-    }
-    return { tags, record_count }
+    close_record()
+    return { tags, tag_groups, record_count }
 }
 
 function make_api(log: CallLog, overrides: Record<string, unknown> = {}) {
@@ -67,7 +77,7 @@ function make_api(log: CallLog, overrides: Record<string, unknown> = {}) {
         parse_kftl_text: vi.fn(async (req: { kftl_text: string }) => {
             log.calls.push('parse_kftl_text')
             const parsed = fake_parse(req.kftl_text)
-            return { messages: null, errors: null, invalid_lines: [], tags: parsed.tags, mi_board_names: [], record_count: parsed.record_count }
+            return { messages: null, errors: null, invalid_lines: [], tags: parsed.tags, tag_groups: parsed.tag_groups, mi_board_names: [], record_count: parsed.record_count }
         }),
         submit_kftl_text: vi.fn(async (req: { kftl_text: string }) => {
             log.calls.push('submit_kftl_text')
@@ -81,6 +91,11 @@ function make_api(log: CallLog, overrides: Record<string, unknown> = {}) {
         get_kyou: vi.fn(async (req: { id: string }) => {
             log.calls.push(`get_kyou:${req.id}`)
             return { kyou_histories: [{ id: req.id }], messages: null, errors: null }
+        }),
+        // タグ履歴（record_added_tag_history が呼ぶ）
+        set_saved_last_added_tag: vi.fn(),
+        push_tag_to_history: vi.fn((value: string) => {
+            log.calls.push(`push_tag_to_history:${value}`)
         }),
         ...overrides,
     }
@@ -236,6 +251,32 @@ describe('KFTL送信後のイベント', () => {
         expect(emitted(emits, 'updated_kyou').length).toBe(0)
         expect(emitted(emits, 'requested_reload_list').length).toBe(0)
         expect(emitted(emits, 'saved_kyou_by_kftl').length).toBe(0)
+    })
+
+    // 追加画面のタグ欄の候補（タグ履歴）に、メモ帳で付けたタグも載せる。単位は記録ごと
+    // （追加画面の「1回の保存で付けたタグの組」と同じ意味にそろえる。混ぜると使えない候補になる）
+    test('付けたタグを記録ごとにタグ履歴へ積む（最後の記録が先頭になる順）', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_api(log))
+
+        await submit_text(view, '一件目\n。a\n。b\n。a\n、\n二件目\n、\n三件目\n。c')
+
+        expect(log.calls.filter(call => call.startsWith('push_tag_to_history:'))).toEqual([
+            'push_tag_to_history:a、b',
+            'push_tag_to_history:c',
+        ])
+        // 履歴は保存が確定してから積む
+        expect(log.calls.indexOf('push_tag_to_history:a、b')).toBeGreaterThan(log.calls.indexOf('submit_kftl_text'))
+    })
+
+    test('送信に失敗したらタグ履歴に積まない', async () => {
+        const log: CallLog = { calls: [] }
+        const { view } = mount_view(make_failing_api(log))
+
+        await submit_text(view, '一件目\n。a')
+
+        expect(log.calls).toContain('submit_kftl_text')
+        expect(log.calls.filter(call => call.startsWith('push_tag_to_history:'))).toEqual([])
     })
 
     test('打刻の終了（updated）は registered_kyou ではなく updated_kyou で上げる', async () => {

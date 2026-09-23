@@ -15,6 +15,9 @@ type ParseKFTLTextResponse struct {
 	InvalidLines []*ParseKFTLTextInvalidLine `json:"invalid_lines"`
 	// Tags は送信すると付くタグ名（重複なし・出現順）。未知タグの確認に使う。
 	Tags []string `json:"tags"`
+	// TagGroups は記録ごとのタグの組（組の中は重複なし・出現順、記録の登録順。タグの無い記録は入れない）。
+	// Web のメモ帳が保存に成功したあと、組ごとにタグ履歴へ積む。1件も無ければ空配列。
+	TagGroups [][]string `json:"tag_groups"`
 	// MiBoardNames は Mi / MiReKyou に書かれた板名（空欄は含めない・重複なし・出現順）。
 	// 既定板への解決はしない —— 確認ダイアログは利用者が書いたとおりの名前で聞く。
 	MiBoardNames []string `json:"mi_board_names"`
