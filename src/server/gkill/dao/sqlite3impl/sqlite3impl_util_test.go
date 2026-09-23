@@ -190,7 +190,7 @@ func assertValidWhereClause(t *testing.T, whereSQL string, args []any) error {
 
 func TestGenerateFindSQLCommon_WordsSpecified(t *testing.T) {
 	query := &find.FindQuery{
-		Words:    []string{"hello"},
+		Words:    []string{"hello world"},
 		WordsAnd: true,
 	}
 	whereCounter := 0
@@ -208,13 +208,13 @@ func TestGenerateFindSQLCommon_WordsSpecified(t *testing.T) {
 	if !strings.Contains(sql, "LIKE") {
 		t.Errorf("expected LIKE in sql for word search, got %q", sql)
 	}
-	// Should have args for word search (TITLE LIKE and ID LIKE)
+	// Should have args for word search (TITLE LIKE and ID LIKE — ID は7文字以上の語だけ)
 	if len(queryArgs) < 2 {
 		t.Errorf("expected at least 2 queryArgs for word search, got %d", len(queryArgs))
 	}
 	// First arg should be the word wrapped with %
-	if queryArgs[0] != "%hello%" {
-		t.Errorf("queryArgs[0] = %v, want %%hello%%", queryArgs[0])
+	if queryArgs[0] != "%hello world%" {
+		t.Errorf("queryArgs[0] = %v, want %%hello world%%", queryArgs[0])
 	}
 }
 
@@ -238,9 +238,25 @@ func TestGenerateFindSQLCommon_WordsOrSpecified(t *testing.T) {
 	if !strings.Contains(sql, "LIKE") {
 		t.Errorf("expected LIKE in sql for OR word search, got %q", sql)
 	}
-	// Each word produces 2 args (column LIKE + ID LIKE), 2 words = 4 args
+	// 7文字未満の語は ID を見ない（ADR-0114）ので、列 LIKE だけ 1語1つ = 2 args
+	if len(queryArgs) != 2 {
+		t.Errorf("expected 2 queryArgs for 2 short-word OR search, got %d", len(queryArgs))
+	}
+
+	// 7文字以上の語は 1語につき列 LIKE + ID LIKE の2つ、2語で4つ
+	query.Words = []string{"foobarbaz", "barbazqux"}
+	whereCounter = 0
+	queryArgs = []any{}
+	if _, err := GenerateFindSQLCommon(
+		query, "MY_TABLE", "T", &whereCounter,
+		false, "RELATED_TIME",
+		[]string{"TITLE"}, true, false,
+		false, false, &queryArgs,
+	); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(queryArgs) != 4 {
-		t.Errorf("expected 4 queryArgs for 2-word OR search, got %d", len(queryArgs))
+		t.Errorf("expected 4 queryArgs for 2 long-word OR search, got %d", len(queryArgs))
 	}
 }
 
@@ -533,13 +549,13 @@ func TestGenerateFindSQLCommon_IgnoreFindWordSkipsWordSQL(t *testing.T) {
 }
 
 // 検索対象列を持たない呼び出し（ID指定で1件を引く内部クエリ）は、他のrepと同じくID列だけを
-// キーワードの対象にします（前方一致）。ignoreFindWord の値によらないこと。
+// キーワードの対象にします（前方一致。語は7文字以上）。ignoreFindWord の値によらないこと。
 // 以前は無条件で '1 = 0' を出力しており、ID検索が効かないうえ、
 // 除外語(NotWords)だけの検索でも全件が消えていました。
 func TestGenerateFindSQLCommon_NoFindWordTargetColumnsMatchesIDOnly(t *testing.T) {
 	for _, ignoreFindWord := range []bool{true, false} {
 		query := &find.FindQuery{
-			Words:    []string{"hello"},
+			Words:    []string{"hello-world"},
 			WordsAnd: true,
 		}
 		whereCounter := 0
@@ -557,7 +573,7 @@ func TestGenerateFindSQLCommon_NoFindWordTargetColumnsMatchesIDOnly(t *testing.T
 		if !strings.Contains(sql, "(ID) LIKE") {
 			t.Errorf("検索対象列が無いときはID列だけを対象にするはず (ignoreFindWord=%v), got %q", ignoreFindWord, sql)
 		}
-		if len(queryArgs) != 1 || queryArgs[0] != "hello%" {
+		if len(queryArgs) != 1 || queryArgs[0] != "hello-world%" {
 			t.Errorf("バインド値はIDの前方一致パターン1個のはず (ignoreFindWord=%v), got %v", ignoreFindWord, queryArgs)
 		}
 		if err := assertValidWhereClause(t, sql, queryArgs); err != nil {
@@ -1008,9 +1024,10 @@ func TestGenerateFindSQLCommon_PeriodOfTimeOvernightWindow(t *testing.T) {
 // 肯定語の ID 照合は前方一致だけ。
 // 部分一致だったころは `1` / `a` のような hex だけの短い語が UUID に偶然含まれ、
 // 本文と無関係な記録が「ランダムに」出ていた。UUID 丸ごとの貼り付けと git の短縮ハッシュは前方一致で引ける。
+// 語は7文字以上（ADR-0114。短い語は下の TestGenerateFindSQLCommon_ShortWordDoesNotMatchID）。
 func TestGenerateFindSQLCommon_IDMatchesByPrefixOnly(t *testing.T) {
 	query := &find.FindQuery{
-		Words:    []string{"abc"},
+		Words:    []string{"abc1234"},
 		WordsAnd: false,
 	}
 	whereCounter := 0
@@ -1027,10 +1044,10 @@ func TestGenerateFindSQLCommon_IDMatchesByPrefixOnly(t *testing.T) {
 	}
 
 	matchedIDs := matchedIDsOfTwoColumnTable(t, sql, queryArgs, [][3]string{
-		{"abc12345-0000", "no", "no"},        // ID が語で始まる → 当たる
-		{"12345abc-0000", "no", "no"},        // ID の途中に語 → 当たらない
-		{"ffff-0000", "title has ABC", "no"}, // 列に含む（大小無視）→ 当たる
-		{"eeee-0000", "no", "no"},            // どこにも無い → 当たらない
+		{"abc12345-0000", "no", "no"},            // ID が語で始まる → 当たる
+		{"12abc1234-0000", "no", "no"},           // ID の途中に語 → 当たらない
+		{"ffff-0000", "title has ABC1234", "no"}, // 列に含む（大小無視）→ 当たる
+		{"eeee-0000", "no", "no"},                // どこにも無い → 当たらない
 	})
 
 	want := map[string]bool{"abc12345-0000": true, "ffff-0000": true}
@@ -1041,6 +1058,76 @@ func TestGenerateFindSQLCommon_IDMatchesByPrefixOnly(t *testing.T) {
 		if !want[id] {
 			t.Errorf("一致してはいけない行が一致した: %q (matched=%v)", id, matchedIDs)
 		}
+	}
+}
+
+// 7文字未満の語は ID の前方一致を見ない（ADR-0114）。気分の `8` で git のコミット
+// （ハッシュが 8 で始まる）が出ていた利用者報告の再発防止。find_word.IsIDPrefixMatchWord と対。
+func TestGenerateFindSQLCommon_ShortWordDoesNotMatchID(t *testing.T) {
+	query := &find.FindQuery{
+		Words:    []string{"8"},
+		WordsAnd: false,
+	}
+	whereCounter := 0
+	queryArgs := []any{}
+
+	sql, err := GenerateFindSQLCommon(
+		query, "MY_TABLE", "T", &whereCounter,
+		false, "RELATED_TIME",
+		[]string{"TITLE", "SHOP"}, true, false,
+		false, true, &queryArgs,
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.Contains(sql, "(ID) LIKE") {
+		t.Errorf("7文字未満の語で ID 列を見てはいけない, got %q", sql)
+	}
+	if len(queryArgs) != 2 {
+		t.Errorf("バインド値は対象列2つぶんのはず（プレースホルダとずれると黙って0件になる）, got %v", queryArgs)
+	}
+
+	matchedIDs := matchedIDsOfTwoColumnTable(t, sql, queryArgs, [][3]string{
+		{"8f3a9c1d2e4b", "commit message", "no"}, // ID が語で始まるだけ → 当たらない
+		{"1111-0000", "mood 8", "no"},            // 列に含む → 当たる
+	})
+	if len(matchedIDs) != 1 || matchedIDs[0] != "1111-0000" {
+		t.Errorf("短い語は列だけで判定するはず: got %v", matchedIDs)
+	}
+
+	// 見る列が無い内部クエリでも、短い語は ID を見ずに「何にも一致しない」になる
+	whereCounter = 0
+	queryArgs = []any{}
+	sql, err = GenerateFindSQLCommon(
+		query, "MY_TABLE", "T", &whereCounter,
+		false, "RELATED_TIME",
+		[]string{}, true, false,
+		false, true, &queryArgs,
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(sql, "0 = 1") || len(queryArgs) != 0 {
+		t.Errorf("列も ID も見ないなら一致しえないはず, got %q args=%v", sql, queryArgs)
+	}
+	if err := assertValidWhereClause(t, sql, queryArgs); err != nil {
+		t.Errorf("生成されたWHERE句がSQLiteで実行できない: %v (sql=%q)", err, sql)
+	}
+
+	// 完全一致（findWordUseLike=false）は偶然には当たらないので、短い語でも ID を見る
+	whereCounter = 0
+	queryArgs = []any{}
+	sql, err = GenerateFindSQLCommon(
+		query, "MY_TABLE", "T", &whereCounter,
+		false, "RELATED_TIME",
+		[]string{}, false, false,
+		false, true, &queryArgs,
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(sql, "(ID) = ") {
+		t.Errorf("完全一致の経路は語の長さを問わず ID を見るはず, got %q", sql)
 	}
 }
 

@@ -64,8 +64,12 @@ func TestFindWordTextOfGitCommit(t *testing.T) {
 		t.Errorf("コミットIDをテキストに含めてはいけない: got %q", got)
 	}
 	id := findWordIDOf(&find.FindQuery{}, "ABCDEF0123")
-	if !find_word.MatchLoweredWords(got, id, []string{"abcdef"}, nil, true) {
-		t.Errorf("コミットIDの前方一致で当たるべき")
+	if !find_word.MatchLoweredWords(got, id, []string{"abcdef0"}, nil, true) {
+		t.Errorf("コミットIDの前方一致（短縮ハッシュの7文字）で当たるべき")
+	}
+	// 7文字未満の語は ID を見ない（ADR-0114。気分の `8` で git のコミットが出ていた）
+	if find_word.MatchLoweredWords(got, id, []string{"abcdef"}, nil, true) {
+		t.Errorf("7文字未満の語でコミットIDに当たってはいけない")
 	}
 	if find_word.MatchLoweredWords(got, id, []string{"def0123"}, nil, true) {
 		t.Errorf("コミットIDの途中の部分一致で当たってはいけない")
