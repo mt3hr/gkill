@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	"github.com/mt3hr/gkill/src/server/gkill/api/find_word"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 
 	"database/sql"
@@ -205,7 +206,10 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	//   - 肯定語は「対象列のどれかに含む OR ID が語で始まる」。ID は前方一致だけ。
 	//     部分一致だったころは `1` / `a` / `cafe` のような hex だけの短い語が UUID に偶然含まれ、
 	//     本文と無関係な記録が「ランダムに」出ていた（1文字なら ~86% の UUID が当たる）。
-	//     前方一致なら UUID 丸ごとの貼り付けと git の短縮ハッシュはそのまま引ける。
+	//     前方一致でも短い語は先頭に当たる（気分の `8` で git のコミットが出た）ので、
+	//     ID の前方一致は find_word.IsIDPrefixMatchWord（7文字以上）の語だけ（ADR-0114）。
+	//     UUID 丸ごとの貼り付けと git の短縮ハッシュ（既定7文字）はそのまま引ける。
+	//     完全一致（findWordUseLike=false）は偶然には当たらないので長さを問わない。
 	//   - and検索は「語ごとにAND、列どうしはOR」。外側を列にしてANDで連結すると「全列に含む」に
 	//     なってしまい、URLog(URL/TITLE/DESCRIPTION)やNlog(TITLE/SHOP)のように複数列を持つrepで、
 	//     片方の列にしか無い語が落ちる。
@@ -228,7 +232,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 					*queryArgs = append(*queryArgs, word)
 				}
 			}
-			if !query.WordsSkipIDMatch {
+			if !query.WordsSkipIDMatch && (!findWordUseLike || find_word.IsIDPrefixMatchWord(word)) {
 				if len(findWordTargetColumns) != 0 {
 					sqlBuilder.WriteString(" OR ")
 				}
@@ -240,7 +244,8 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 					*queryArgs = append(*queryArgs, word)
 				}
 			} else if len(findWordTargetColumns) == 0 {
-				// 見る列が無く ID も見ないなら、語に一致しうる文字列が無い
+				// 見る列が無く ID も見ない（内部クエリ、または ID の前方一致には短すぎる語）なら、
+				// 語に一致しうる文字列が無い
 				sqlBuilder.WriteString(" 0 = 1 ")
 			}
 			sqlBuilder.WriteString(" ) ")

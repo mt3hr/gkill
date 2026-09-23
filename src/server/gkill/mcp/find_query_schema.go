@@ -52,7 +52,7 @@ func buildFindQuerySchema() *jsonobj.Object {
 	props.Set("words", jsonobj.Obj(
 		"type", "array",
 		"description",
-		"Keywords to match (case-insensitive substring). Matched against each type's text fields (kmemo content; urlog url/title/description; nlog title/shop/amount; timeis title; kc title/value; mi title/board name; lantana mood value as text; idf file path and .md/.txt body; git commit message; plugin-defined text) and against attached texts; an entry whose ID starts with the keyword also matches. Omit or pass null for no keyword filter. [] applies NO keyword condition — everything passes, the result is NOT narrowed (unlike tags / reps / ids, where [] matches nothing); pass at least one keyword to filter.",
+		"Keywords to match (case-insensitive substring). Matched against each type's text fields (kmemo content; urlog url/title/description; nlog title/shop/amount; timeis title; kc title/value; mi title/board name; lantana mood value as text; idf file path and .md/.txt body; git commit message; plugin-defined text) and against attached texts; an entry whose ID starts with the keyword also matches (keywords of 7+ characters only, e.g. a pasted UUID or a short git hash). Omit or pass null for no keyword filter. [] applies NO keyword condition — everything passes, the result is NOT narrowed (unlike tags / reps / ids, where [] matches nothing); pass at least one keyword to filter.",
 		"items", jsonobj.Obj("type", "string"),
 	))
 	props.Set("words_and", jsonobj.Obj("type", "boolean", "description", "AND logic for words (true=all must match, false=any). No effect when words is omitted or empty."))

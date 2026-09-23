@@ -10,9 +10,9 @@ import (
 // 対象は search_text。gkill 本体は再判定しないので、ここが唯一の判定。
 func TestKyousOfMessages_WordFilter(t *testing.T) {
 	messages := []messageSummary{
-		{MessageID: "m-1", SearchText: "本文に Go の話 project=gkill", RelatedTimeUnix: 1000},
-		{MessageID: "m-2", SearchText: "関係ない話", RelatedTimeUnix: 2000},
-		{MessageID: "m-3", SearchText: "go と rust", RelatedTimeUnix: 3000},
+		{MessageID: "msg-0001", SearchText: "本文に Go の話 project=gkill", RelatedTimeUnix: 1000},
+		{MessageID: "msg-0002", SearchText: "関係ない話", RelatedTimeUnix: 2000},
+		{MessageID: "msg-0003", SearchText: "go と rust", RelatedTimeUnix: 3000},
 	}
 	ids := func(kyous []sdk.Kyou) map[string]bool {
 		m := map[string]bool{}
@@ -22,19 +22,19 @@ func TestKyousOfMessages_WordFilter(t *testing.T) {
 		return m
 	}
 
-	if got := ids(kyousOfMessages(messages, sdk.Query{Words: []string{"GO"}})); !got["m-1"] || !got["m-3"] || got["m-2"] {
+	if got := ids(kyousOfMessages(messages, sdk.Query{Words: []string{"GO"}})); !got["msg-0001"] || !got["msg-0003"] || got["msg-0002"] {
 		t.Errorf("肯定語（大小無視）: got %v", got)
 	}
-	if got := ids(kyousOfMessages(messages, sdk.Query{NotWords: []string{"go"}})); got["m-1"] || got["m-3"] || !got["m-2"] {
+	if got := ids(kyousOfMessages(messages, sdk.Query{NotWords: []string{"go"}})); got["msg-0001"] || got["msg-0003"] || !got["msg-0002"] {
 		t.Errorf("除外語: got %v", got)
 	}
-	if got := ids(kyousOfMessages(messages, sdk.Query{Words: []string{"go", "rust"}, WordsAnd: true})); len(got) != 1 || !got["m-3"] {
+	if got := ids(kyousOfMessages(messages, sdk.Query{Words: []string{"go", "rust"}, WordsAnd: true})); len(got) != 1 || !got["msg-0003"] {
 		t.Errorf("AND: got %v", got)
 	}
-	if got := ids(kyousOfMessages(messages, sdk.Query{Words: []string{"m-2"}})); len(got) != 1 || !got["m-2"] {
+	if got := ids(kyousOfMessages(messages, sdk.Query{Words: []string{"msg-0002"}})); len(got) != 1 || !got["msg-0002"] {
 		t.Errorf("ID 前方一致: got %v", got)
 	}
-	if got := ids(kyousOfMessages(messages, sdk.Query{Words: []string{"-2"}})); len(got) != 0 {
+	if got := ids(kyousOfMessages(messages, sdk.Query{Words: []string{"sg-0002"}})); len(got) != 0 {
 		t.Errorf("ID の途中の部分一致で当たってはいけない: got %v", got)
 	}
 	if got := kyousOfMessages(messages, sdk.Query{}); len(got) != 3 {
