@@ -10,8 +10,8 @@
                 <v-col class="pa-0 ma-0 kftl_tab_col">
                     <v-tabs v-model="active_tab_id_model" :height="tab_bar_height" density="compact" show-arrows
                         :center-active="false">
-                        <v-tab v-for="(tab, index) in tabs" :key="tab.id" :value="tab.id" class="kftl_tab">
-                            <span class="kftl_tab_label">{{ tab_label(tab, index) }}</span>
+                        <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.id" class="kftl_tab">
+                            <span class="kftl_tab_label">{{ tab_label(tab) }}</span>
                             <!-- v-tab は button を描画するので、閉じるは v-btn ではなく v-icon にする（button のネストを避ける）。
                                  .stop が無いとタブのアクティブ化も一緒に起きる -->
                             <v-icon size="x-small" icon="mdi-close" class="ml-1 kftl_tab_close" role="button"

@@ -180,15 +180,15 @@ export function useKftlView(options: {
         if (tab_id === null) {
             return ""
         }
-        const index = tabs.value.findIndex(tab => tab.id === tab_id)
-        if (index === -1) {
+        const tab = tabs.value.find(tab => tab.id === tab_id)
+        if (tab === undefined) {
             return ""
         }
-        return derive_kftl_tab_label(tabs.value[index], index)
+        return derive_kftl_tab_label(tab)
     })
 
-    function tab_label(tab: KFTLTabState, index: number): string {
-        return derive_kftl_tab_label(tab, index)
+    function tab_label(tab: KFTLTabState): string {
+        return derive_kftl_tab_label(tab)
     }
 
     // ── Watchers ──
