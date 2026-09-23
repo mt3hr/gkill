@@ -3,6 +3,7 @@ package kftl
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -103,6 +104,10 @@ func TestAnalyze_ListsTagsBoardsAndCount(t *testing.T) {
 	if got, want := strings.Join(analysis.Tags, ","), "tagA,tagB"; got != want {
 		t.Errorf("Tags = %q, want %q（重複なし・出現順）", got, want)
 	}
+	// 記録ごとの組。タグの無い Mi（3件目）は入らない
+	if got, want := fmt.Sprint(analysis.TagGroups), "[[tagA tagB] [tagA]]"; got != want {
+		t.Errorf("TagGroups = %s, want %s（記録ごと・タグの無い記録は入れない）", got, want)
+	}
 	// 板名は書いたとおり。書かなかった Mi は既定板へ解決せず、列挙もしない
 	if got, want := strings.Join(analysis.MiBoardNames, ","), "boardX"; got != want {
 		t.Errorf("MiBoardNames = %q, want %q", got, want)
@@ -138,6 +143,10 @@ func TestAnalyze_ListsTagsAndBoardsInsideBlocks(t *testing.T) {
 		}
 		if got, want := strings.Join(analysis.Tags, ","), "食費,飲み物"; got != want {
 			t.Errorf("Tags = %q, want %q", got, want)
+		}
+		// 支払いごとに別の記録なので、組も支払いごと
+		if got, want := fmt.Sprint(analysis.TagGroups), "[[食費] [飲み物]]"; got != want {
+			t.Errorf("TagGroups = %s, want %s", got, want)
 		}
 		if analysis.RecordCount != 2 {
 			t.Errorf("RecordCount = %d, want 2（支払いごとに1件）", analysis.RecordCount)
@@ -489,4 +498,36 @@ func TestFindPlayingTimeIsEntries_NewestFirstAndSkipsDeleted(t *testing.T) {
 	if got, want := strings.Join(ids, ","), "newest,third,second-oldest,oldest"; got != want {
 		t.Errorf("候補の並び = %q, want %q（開始時刻の新しい順・削除済み除外）", got, want)
 	}
+}
+
+// タグの組は記録ごと（Web がタグ履歴へ積む単位）。1記録の中の重複は落とし、
+// タグの無い記録は入れず、繰り返しの展開で同じ組が続いても1つにまとめる。
+func TestAnalyze_TagGroupsPerRecord(t *testing.T) {
+	t.Run("記録ごと・組の中は重複なし", func(t *testing.T) {
+		analysis := helperAnalyze(t, "memo1\n。a、b\n。a\n、\nmemo2\n、\nmemo3\n。c")
+		if len(analysis.InputErrors) != 0 {
+			t.Fatalf("InputErrors = %+v", analysis.InputErrors)
+		}
+		if got, want := fmt.Sprint(analysis.TagGroups), "[[a b] [c]]"; got != want {
+			t.Errorf("TagGroups = %s, want %s", got, want)
+		}
+	})
+	t.Run("繰り返しの複製は1つの組にまとめる", func(t *testing.T) {
+		analysis := helperAnalyze(t, "repeat memo\n。r\n？？\n毎日\n3\n？？")
+		if len(analysis.InputErrors) != 0 {
+			t.Fatalf("InputErrors = %+v", analysis.InputErrors)
+		}
+		if analysis.RecordCount != 3 {
+			t.Fatalf("RecordCount = %d, want 3", analysis.RecordCount)
+		}
+		if got, want := fmt.Sprint(analysis.TagGroups), "[[r]]"; got != want {
+			t.Errorf("TagGroups = %s, want %s", got, want)
+		}
+	})
+	t.Run("タグが1つも無ければ空", func(t *testing.T) {
+		analysis := helperAnalyze(t, "plain memo")
+		if len(analysis.TagGroups) != 0 {
+			t.Errorf("TagGroups = %v, want 空", analysis.TagGroups)
+		}
+	})
 }

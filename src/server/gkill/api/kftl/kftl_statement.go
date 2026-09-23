@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
 	"time"
 
@@ -154,6 +155,10 @@ type KFTLAnalysis struct {
 	InputErrors []*KFTLInputError
 	// Tags は送信すると付くタグ名（重複なし・出現順）。未知タグの確認に使う。
 	Tags []string
+	// TagGroups は記録（リクエスト）ごとのタグの組（組の中は重複なし・出現順、記録の登録順）。
+	// Web のメモ帳が保存に成功したあと、組ごとにタグ履歴（追加画面のタグ欄の候補）へ積む。
+	// タグの無い記録は入れない。繰り返し（？？）の展開で同じ組が続くときは1つにまとめる。
+	TagGroups [][]string
 	// MiBoardNames は Mi / MiReKyou に書かれた板名（空欄は含めない・重複なし・出現順）。
 	// 既定板への解決はしない —— 確認ダイアログは利用者が書いたとおりの名前で聞く。
 	MiBoardNames []string
@@ -193,12 +198,21 @@ func (s *KFTLStatement) Analyze(
 	seenBoards := map[string]struct{}{}
 	for _, req := range requestMap.All() {
 		analysis.RecordCount++
+		group := []string{}
+		seenInGroup := map[string]struct{}{}
 		for _, tag := range req.GetTags() {
+			if _, ok := seenInGroup[tag]; !ok {
+				seenInGroup[tag] = struct{}{}
+				group = append(group, tag)
+			}
 			if _, ok := seenTags[tag]; ok {
 				continue
 			}
 			seenTags[tag] = struct{}{}
 			analysis.Tags = append(analysis.Tags, tag)
+		}
+		if len(group) != 0 && (len(analysis.TagGroups) == 0 || !slices.Equal(analysis.TagGroups[len(analysis.TagGroups)-1], group)) {
+			analysis.TagGroups = append(analysis.TagGroups, group)
 		}
 		if provider, ok := req.(miBoardNameProvider); ok {
 			boardName := provider.MiBoardName()
