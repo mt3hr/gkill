@@ -97,6 +97,8 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 
 **D&D の挿入位置は線で見せ、線と実際の挿入位置を同じ関数で決める:** 並べ替え（構造ツリー6種・集計ビュー・関連情報の編集画面）は `classes/drag-drop-indicator.ts` の `decide_drop_position()` で dragover の線と drop の挿入先を決める。drop だけに別の判定を書かない（構造ツリーは drop だけが `offsetY` と固定の行の高さ 24px で測っていて、見た目の位置と入る位置がずれていた）。線の状態は「いま出している要素1つ」をモジュールで持ってクラスを直接付け外しする（数百ノードに reactive 状態を配らない）。守るテスト: `drag-drop-indicator.test.ts` / `foldable-struct-drop-position.test.ts`。
 
+**ダイアログのヘッダのタイトル欄は空:** `.gkill-floating-dialog__title` は全ダイアログで空にそろえる（利用者の指定）。見せたい名前は本文の先頭に置く。`convention-source-scan.test.ts` が走査で守る。
+
 **ダイアログの自動フォーカス:** ダイアログを開いたら本文の最初のテキスト入力欄にカーソルが載る。実装は `useFloatingDialog` の `autofocus` オプション（既定 true）1箇所で、候補選びは `classes/dialog-autofocus.ts` の純関数 `find_autofocus_target()`。**view 側に `autofocus` を撒いてはいけない** ―― 入力欄を持つ view はサイドバーやページ直下でも使われるので、ページ読込時にフォーカスを奪う。探索は `.gkill-floating-dialog__body` の中だけ（ヘッダには透過トグルの `v-checkbox` と×が必ず先頭にあり、ルートから探すと必ずそれを掴む）。既に `autofocus` を書いた要素があるダイアログでは何もせず Vuetify に任せる。`readonly`（日付ピッカーの見せかけ入力）・`disabled`・非表示・`.v-selection-control` 配下・`inputmode="none"` の `v-select` は候補から外す（`v-autocomplete` / `v-combobox` は打ち込めるので対象）。入力欄が内側の `v-if` で遅れて生えるダイアログのために `MutationObserver` で2秒だけ見張り、一度当てたら切る。自前でフォーカス先を決めているダイアログ（`save-clipboard-to-file-dialog` は保存ボタン）は `autofocus: false` で切る。
 
 **行判定の高さにパーセントを渡さない:** `classes/kyou-row-height.ts` の `is_row_height()` は高さを `Number.parseFloat` して 120 未満なら一覧の行とみなす。`parseFloat('80%')` は **80** なので、詳細ペインやダイアログでパーセントを渡すと行扱いになり、`mi-re-kyou-view.vue` の参照先ブロック（`v-if="!is_compact"`）が丸ごと消える。行ではない場所は `'unset'` か `'auto'` を渡すこと。例外は画像一覧（`kyou-list-view.vue` の `is_image_only`）だけで、200pxのセルに詰めるため意図的に `'100%'` を渡している。`__tests__/unit/classes/kyou-view-height-source-scan.test.ts` がソース走査で守る。
