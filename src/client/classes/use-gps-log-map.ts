@@ -31,12 +31,22 @@ export function useGpsLogMap(options: {
     const slider_model = ref(0) // スライダーの値のモデル
     const marker_options: Ref<{ position: { lat: number, lng: number }, timestamp: number } | null> = ref(null)
     const google_map_api_key: Ref<string> = ref(props.gkill_api.get_google_map_api_key())
+    const is_show_date_picker = ref(false)
 
     // ── Computed ──
     const start_date_str = computed(() => moment(props.start_date).format("YYYY-MM-DD"))
     const end_date_str = computed(() => moment(props.end_date).format("YYYY-MM-DD"))
     const date_time_str = computed(() => {
         return moment(start_date_str.value).add(slider_model.value, 'seconds').format("MM-DD HH:mm:ss")
+    })
+    // 日付表示をクリックして開く日付ピッカー。映す日は親の props なので、選んだ日を親へ返すだけ
+    // （rykv は地図だけを切り替えて検索条件・一覧は動かさない。ダッシュボードは表示日ごと移る）
+    const date_picker_model = computed<Date>({
+        get: () => props.start_date,
+        set: (picked: Date) => {
+            is_show_date_picker.value = false
+            emits('requested_change_map_date', moment(picked).startOf('day').toDate())
+        },
     })
 
     // ── Watchers ──
@@ -196,11 +206,13 @@ export function useGpsLogMap(options: {
         slider_model,
         marker_options,
         google_map_api_key,
+        is_show_date_picker,
 
         // Computed
         start_date_str,
         end_date_str,
         date_time_str,
+        date_picker_model,
 
         // Methods
         centering,

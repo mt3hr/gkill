@@ -987,6 +987,13 @@ export function useRykvView(options: {
         focused_time.value = time
     }
 
+    // 地図の日付ピッカーで選んだ日を地図に映す。検索条件と一覧は動かさない（地図だけ別の日を見たいときのため）
+    function onGpsLogMapRequestedChangeDate(date: Date): void {
+        gps_log_map_start_time.value = date
+        gps_log_map_end_time.value = date
+        gps_log_map_marker_time.value = date
+    }
+
     function onAddColumnClick(): void {
         // add_list_viewはfocused_queryを差し替えるので抑止で包む
         run_with_sidebar_search_suppressed(() => {
@@ -1235,6 +1242,7 @@ export function useRykvView(options: {
         onColumnRequestedReloadList,
         onRequestedFocusTime,
         onGpsLogMapRequestedFocusTime,
+        onGpsLogMapRequestedChangeDate,
         onAddColumnClick,
         onFocusedKyouFromSubView,
         close_list_view,

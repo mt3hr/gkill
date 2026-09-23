@@ -171,7 +171,8 @@
                                 :marker_time="gps_log_map_marker_time" :app_content_height="app_content_height"
                                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
                                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
-                                @requested_focus_time="(date: Date) => onGpsLogMapRequestedFocusTime(date)" />
+                                @requested_focus_time="(date: Date) => onGpsLogMapRequestedFocusTime(date)"
+                                @requested_change_map_date="(date: Date) => onGpsLogMapRequestedChangeDate(date)" />
                         </td>
                         <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                             <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
@@ -384,6 +385,7 @@ const {
     onColumnRequestedReloadList,
     onRequestedFocusTime,
     onGpsLogMapRequestedFocusTime,
+    onGpsLogMapRequestedChangeDate,
     onAddColumnClick,
     close_list_view,
     open_rykv_dialog,

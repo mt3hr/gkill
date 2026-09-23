@@ -5,9 +5,15 @@
             <v-btn icon @click="date = add_months(date, -1)">
                 <VIcon icon="mdi-chevron-left" />
             </v-btn>
-            <span class="calendar_date text-subtitle-1 font-weight-medium">
-                {{ date.getFullYear().toString() + "/" + ("0" + (date.getMonth() + 1).toString()).slice(-2) }}
-            </span>
+            <v-menu v-model="is_show_date_picker" :close-on-content-click="false" location="bottom"
+                :z-index="3000">
+                <template v-slot:activator="{ props: dateMenuProps }">
+                    <v-btn variant="text" class="calendar_date calendar_date_button text-none" v-bind="dateMenuProps">
+                        {{ date.getFullYear().toString() + "/" + ("0" + (date.getMonth() + 1).toString()).slice(-2) }}
+                    </v-btn>
+                </template>
+                <v-date-picker v-model="date_picker_model" />
+            </v-menu>
             <v-btn icon @click="date = add_months(date, 1)">
                 <VIcon icon="mdi-chevron-right" />
             </v-btn>
@@ -43,6 +49,8 @@ const {
     slider_model,
     events,
     time,
+    is_show_date_picker,
+    date_picker_model,
 
     // Business logic
     add_months,
@@ -69,5 +77,12 @@ const {
 
 .calendar_date {
     font-size: 26px;
+}
+
+/* 年月表示は日付ピッカーを開くボタン。v-btn の既定の文字サイズ・高さに負けないよう2クラスで指定する */
+.v-btn.calendar_date_button {
+    font-size: 26px;
+    height: auto;
+    letter-spacing: normal;
 }
 </style>
