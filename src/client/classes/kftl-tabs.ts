@@ -52,13 +52,14 @@ export function create_kftl_tab(id: string, content: string = "", template_name:
 }
 
 /**
- * タブ見出し。テンプレート名 → 本文の最初の非空行 → 通し番号 の順で決める。
+ * タブ見出し。テンプレート名 → 本文の最初の非空行 の順で決め、どちらも無ければ空文字。
  *
  * テンプレート名は本文を書き換えても持ち続ける。テンプレートの1行目は
  * 「ーみ」のようなプレフィックス行のことが多く、本文から取ると見分けがつかないため。
- * 番号が出るのは中身が空のタブだけで、打ち始めた時点で1行目に置き換わる。
+ * 中身が空のタブは見出しも空（利用者の指定。以前は通し番号を出していたが、並びの添字なので
+ * 前のタブを閉じると振り直され、名前として役に立たなかった）。潰れないのは .kftl_tab の min-width による。
  */
-export function derive_kftl_tab_label(tab: KFTLTabState, index: number): string {
+export function derive_kftl_tab_label(tab: KFTLTabState): string {
     if (tab.template_name !== null) {
         const template_name = tab.template_name.trim()
         if (template_name !== "") {
@@ -74,7 +75,7 @@ export function derive_kftl_tab_label(tab: KFTLTabState, index: number): string 
         }
     }
 
-    return String(index + 1)
+    return ""
 }
 
 function truncate_kftl_tab_label(label: string): string {
