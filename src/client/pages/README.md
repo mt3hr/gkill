@@ -11,7 +11,7 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 pages/
 ├── (ルートページ 16 .vue + 2 .ts)  # Vue Router ルートページ
 ├── views/                          # View コンポーネント（207 .vue）
-└── dialogs/                        # Dialog コンポーネント（121 .vue）
+└── dialogs/                        # Dialog コンポーネント（119 .vue）
 ```
 
 ## 設計パターン
@@ -254,13 +254,13 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
 | `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（121 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（119 .vue）
 
 ### データ追加ダイアログ（22コンポーネント）
 
 `add-kc-dialog.vue`, `add-lantana-dialog.vue`, `add-mi-dialog.vue`, `add-mi-re-kyou-dialog.vue`, `add-nlog-dialog.vue`, `add-time-is-dialog.vue`, `add-ur-log-dialog.vue`, `add-tag-dialog.vue`, `add-text-dialog.vue`, `add-notification-dialog.vue`, `add-rep-dialog.vue`, `add-ryuu-item-dialog.vue`, `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `add-new-device-struct-element-dialog.vue`, `add-new-folder-dialog.vue`, `add-new-kftl-template-struct-element-dialog.vue`, `add-new-rep-struct-element-dialog.vue`, `add-new-rep-type-struct-element-dialog.vue`, `add-new-tag-struct-element-dialog.vue`
 
-### データ編集ダイアログ（36コンポーネント）
+### データ編集ダイアログ（34コンポーネント）
 
 `edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-mi-re-kyou-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`, `edit-mi-board-struct-dialog.vue`, `edit-mi-board-struct-element-dialog.vue`
 
