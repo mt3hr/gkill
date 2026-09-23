@@ -4,6 +4,20 @@ import type { FoldableStructProps } from '@/pages/views/foldable-struct-props'
 import { CheckState } from '@/pages/views/check-state'
 import { is_struct_container_node, type FoldableStructModel } from '@/pages/views/foldable-struct-model'
 import { DropTypeFoldableStruct } from '@/classes/api/drop-type-foldable-struct'
+import {
+    begin_drag_source,
+    decide_drop_position,
+    end_drag,
+    has_drag_type,
+    hide_drop_indicator,
+    is_inside_drag_source,
+    is_leaving_element,
+    show_drop_indicator,
+    type DropPosition,
+} from '@/classes/drag-drop-indicator'
+
+// dataTransfer に積む種類。dragover では中身を読めないので、線を出すかはこの種類で見分ける
+const STRUCT_DRAG_TYPE = "gkill_struct_obj_json"
 import { useDeviceKind } from '@/classes/use-device-kind'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
@@ -22,7 +36,6 @@ export function useFoldableStruct(options: {
     const check: Ref<boolean> = ref(false)
     const struct_list: Ref<Array<FoldableStructModel>> = ref(new Array<FoldableStructModel>())
     const indeterminate_group: Ref<boolean> = ref(false)
-    const tr_size: Ref<number> = ref(24)
     const font_size: Ref<number> = ref(16)
 
     // ── Computed ──
@@ -261,8 +274,40 @@ export function useFoldableStruct(options: {
         }
 
         // struct_objをJSONにしてdataTransferにセット
-        e.dataTransfer?.setData("gkill_struct_obj_json", JSON.stringify(props.struct_obj))
+        e.dataTransfer?.setData(STRUCT_DRAG_TYPE, JSON.stringify(props.struct_obj))
+        begin_drag_source(e.currentTarget instanceof HTMLElement ? e.currentTarget : null)
         e.stopPropagation()
+    }
+
+    // 入る位置は行の見出し（自分の名前の行。.foldable_struct_header）の矩形とポインタの縦位置で決める。
+    // 開いたフォルダの tr は子孫の行まで含んだ高さなので、tr 全体で測ると3分割の境界が下へずれる。
+    // 以前は offsetY（ポインタの下にある一番内側の要素からの距離）と固定の行の高さ 24px で測っていて、
+    // どの要素の上にいるかで判定が変わっていた。dragover の線と drop の判定は必ずこの関数を通す
+    function resolve_drop_position(e: DragEvent, el: HTMLElement): DropPosition {
+        const header = el.querySelector<HTMLElement>('.foldable_struct_header') ?? el
+        return decide_drop_position(header.getBoundingClientRect(), e.clientY, !!props.struct_obj.children)
+    }
+
+    function drop_type_of(position: DropPosition): DropTypeFoldableStruct {
+        switch (position) {
+            case 'before':
+                return DropTypeFoldableStruct.up_element
+            case 'inside':
+                return DropTypeFoldableStruct.in_folder_bottom
+            case 'after':
+                return DropTypeFoldableStruct.down_element
+        }
+    }
+
+    function dragleave(e: DragEvent): void {
+        if (!is_leaving_element(e)) {
+            return
+        }
+        hide_drop_indicator(e.currentTarget instanceof HTMLElement ? e.currentTarget : null)
+    }
+
+    function dragend(): void {
+        end_drag()
     }
 
     function drop(e: DragEvent): void {
@@ -270,9 +315,11 @@ export function useFoldableStruct(options: {
         if (!effective_draggable.value) {
             return
         }
+        // 線と掴んでいる元の表示は、ドロップの成否にかかわらず消す
+        end_drag()
 
         // struct_objをJSONから復元
-        const struct_obj_json = e.dataTransfer?.getData("gkill_struct_obj_json")
+        const struct_obj_json = e.dataTransfer?.getData(STRUCT_DRAG_TYPE)
         if (!struct_obj_json) {
             return
         }
@@ -285,23 +332,12 @@ export function useFoldableStruct(options: {
         }
 
         // ドロップされたものを移動。
-        // 移動する場所の決定
-        let drop_type: DropTypeFoldableStruct
-        if (props.struct_obj.children) { // フォルダの場合
-            if (e.offsetY <= tr_size.value.valueOf() * (1 / 3)) {
-                drop_type = DropTypeFoldableStruct.up_element
-            } else if (e.offsetY <= tr_size.value.valueOf() * (2 / 3)) {
-                drop_type = DropTypeFoldableStruct.in_folder_bottom
-            } else {
-                drop_type = DropTypeFoldableStruct.down_element
-            }
-        } else { // フォルダではない要素の場合
-            if (e.offsetY <= tr_size.value.valueOf() * (1 / 2)) {
-                drop_type = DropTypeFoldableStruct.up_element
-            } else {
-                drop_type = DropTypeFoldableStruct.down_element
-            }
+        // 移動する場所は dragover で出した線と同じ関数で決める（フォルダは前/中/後、それ以外は前/後）
+        const el = e.currentTarget instanceof HTMLElement ? e.currentTarget : null
+        if (el === null) {
+            return
         }
+        const drop_type = drop_type_of(resolve_drop_position(e, el))
         emits('requested_move_struct_obj', struct_obj, props.struct_obj, drop_type)
         // e.preventDefault()
         e.stopPropagation()
@@ -430,6 +466,14 @@ export function useFoldableStruct(options: {
         }
         e.preventDefault()
         e.stopPropagation()
+
+        // 挿入位置の線。ルートの行（受け手が無くドロップしても何も起きない）、
+        // 掴んでいる元そのものとその中（フォルダを自分の子孫へは入れられない）には出さない
+        const el = e.currentTarget
+        if (!(el instanceof HTMLElement) || props.is_root || !has_drag_type(e, STRUCT_DRAG_TYPE) || is_inside_drag_source(el)) {
+            return
+        }
+        show_drop_indicator(el, resolve_drop_position(e, el))
     }
 
     function update_struct_obj(struct_obj: FoldableStructModel): void {
@@ -546,6 +590,8 @@ export function useFoldableStruct(options: {
         drag_start,
         drop,
         dragover,
+        dragleave,
+        dragend,
         update_check_item_by_user,
         click_item_by_user,
         dblclick_item_by_user,

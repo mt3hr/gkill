@@ -133,3 +133,60 @@ describe('集計リストの行のダブルクリック', () => {
     })
 })
 
+// 編集画面の並べ替え。線（挿入位置の表示）と実際に入る位置は同じ判定で決まる
+describe('集計項目の並べ替えの挿入位置', () => {
+    function make_element(): HTMLElement {
+        const el = document.createElement('div')
+        el.getBoundingClientRect = () => ({ top: 0, height: 40 }) as DOMRect
+        document.body.appendChild(el)
+        return el
+    }
+    function make_event(target: HTMLElement, client_y: number): DragEvent {
+        return {
+            currentTarget: target,
+            clientY: client_y,
+            dataTransfer: {
+                types: ['gkill_dnote_item_id', 'gkill_dnote_item_src_list_index'],
+                dropEffect: 'none',
+                getData: (type: string) => (type === 'gkill_dnote_item_id' ? 'b' : type === 'gkill_dnote_item_src_list_index' ? '0' : ''),
+            },
+            preventDefault: vi.fn(),
+            stopPropagation: vi.fn(),
+        } as unknown as DragEvent
+    }
+
+    test.each([
+        { y: 10, css: 'gkill-drop-before', want: 'up' },
+        { y: 30, css: 'gkill-drop-after', want: 'down' },
+    ])('項目の上 clientY=$y → 線 $css・移動 $want', ({ y, css, want }) => {
+        const emits = vi.fn()
+        const view = useDnoteItemView({
+            props: { editable: true, dnd_list_index: 1 } as unknown as DnoteItemProps,
+            emits: emits as unknown as DnoteItemViewEmits,
+            model_value: ref(item('a')),
+        })
+        const el = make_element()
+
+        view.dragover(make_event(el, y))
+        expect(el.classList.contains(css)).toBe(true)
+
+        view.drop(make_event(el, y))
+        const moved = emits.mock.calls.filter(call => call[0] === 'requested_move_dnote_item')
+        expect(moved.map(call => call[5])).toEqual([want])
+        expect(el.className).toBe('')
+        el.remove()
+    })
+
+    test('列の空き（td）に落とすと上半分は先頭・下半分は末尾へ入る', () => {
+        const { view, model_value } = make_table(true, [[item('b')], [item('x'), item('y')]])
+        const el = make_element()
+
+        view.onCellDragover(make_event(el, 30))
+        expect(el.classList.contains('gkill-drop-after')).toBe(true)
+        view.onCellDrop(make_event(el, 30), 1)
+
+        expect(model_value.value.map(column => column.map(x => x.id))).toEqual([[], ['x', 'y', 'b']])
+        expect(el.className).toBe('')
+        el.remove()
+    })
+})

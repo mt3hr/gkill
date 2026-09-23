@@ -1,6 +1,6 @@
 <template>
   <div class="dnote_item_root" :draggable="effective_draggable" :class="{ draggable: effective_draggable }" @dragstart="drag_start"
-    @dragover="dragover" @drop="drop"
+    @dragover="dragover" @dragleave="dragleave" @dragend="dragend" @drop="drop"
     @contextmenu.prevent.stop="onContextmenu"
     @dblclick="onDblclick">
     <table>
@@ -86,6 +86,8 @@ const {
   // DnD
   drag_start,
   dragover,
+  dragleave,
+  dragend,
   drop,
 
   // Template event handlers

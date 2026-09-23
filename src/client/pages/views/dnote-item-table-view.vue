@@ -14,7 +14,7 @@
                 </tr>
                 <tr>
                     <td v-for="(list, listIndex) in model_value" :key="listIndex" class="dnote_item_table_td"
-                        @dragover="onCellDragover" @drop="(e) => onCellDrop(e, listIndex)">
+                        @dragover="onCellDragover" @dragleave="onCellDragleave" @drop="(e) => onCellDrop(e, listIndex)">
                         <DnoteItemListView v-model="model_value[listIndex]" :dnd_list_index="listIndex" :editable="editable"
                             :application_config="application_config" :gkill_api="gkill_api"
                             v-on="crudRelayHandlers"
@@ -55,6 +55,7 @@ const {
     // Methods used in template
     handle_move_dnote_item,
     onCellDragover,
+    onCellDragleave,
     onCellDrop,
     add_column,
     delete_column,
