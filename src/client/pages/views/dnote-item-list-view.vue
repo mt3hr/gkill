@@ -1,5 +1,5 @@
 <template>
-    <div class="dnote_item_list_root" @dragover="onListDragover" @drop="onListDrop">
+    <div class="dnote_item_list_root" @dragover="onListDragover" @dragleave="onListDragleave" @drop="onListDrop">
         <DnoteItemView v-for="(dnote_item, index) in model_value" :key="dnote_item.id" v-model="model_value[index]"
             :editable="editable" :dnd_list_index="dnd_list_index" :application_config="application_config"
             :gkill_api="gkill_api"
@@ -31,6 +31,7 @@ const {
     update_dnote_item,
     reset,
     onListDragover,
+    onListDragleave,
     onListDrop,
     crudRelayHandlers,
 } = useDnoteItemListView({ props, emits, model_value })

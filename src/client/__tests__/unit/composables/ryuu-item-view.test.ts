@@ -74,7 +74,7 @@ function make_model_value(): RelatedKyouQuery {
     return query
 }
 
-function create_view(options: { target_kyou?: Kyou | null } = {}) {
+function create_view(options: { target_kyou?: Kyou | null, editable?: boolean } = {}) {
     const emitted = new Array<EmittedEvent>()
     const emits = ((event: string, ...args: Array<unknown>) => {
         emitted.push({ event: event, args: args })
@@ -92,7 +92,7 @@ function create_view(options: { target_kyou?: Kyou | null } = {}) {
         enable_context_menu: true,
         enable_dialog: true,
         abort_controller: new AbortController(),
-        editable: false,
+        editable: options.editable ?? false,
     } as unknown as RyuuItemViewProps
     const model_value = ref<RelatedKyouQuery | undefined>(make_model_value())
     const view = useRyuuItemView({ props: props, emits: emits, model_value: model_value })
@@ -286,5 +286,53 @@ describe('該当なしの扱い', () => {
 
         expect(view.match_kyou.value).toBeNull()
         expect(view.is_no_data.value).toBe(true)
+    })
+})
+
+// 編集画面の並べ替え。線（挿入位置の表示）と実際に入る位置は同じ判定で決まる
+describe('並べ替えの挿入位置', () => {
+    function make_card(): HTMLElement {
+        const card = document.createElement('div')
+        card.getBoundingClientRect = () => ({ top: 0, height: 40 }) as DOMRect
+        document.body.appendChild(card)
+        return card
+    }
+    function make_event(target: HTMLElement, client_y: number): DragEvent {
+        return {
+            currentTarget: target,
+            clientY: client_y,
+            dataTransfer: {
+                types: ['gkill_ryuu_query_id'],
+                dropEffect: 'none',
+                getData: (type: string) => (type === 'gkill_ryuu_query_id' ? 'other-query' : ''),
+            },
+            preventDefault: vi.fn(),
+            stopPropagation: vi.fn(),
+        } as unknown as DragEvent
+    }
+
+    test.each([
+        { y: 10, css: 'gkill-drop-before', want: 'up' },
+        { y: 30, css: 'gkill-drop-after', want: 'down' },
+    ])('clientY=$y → 線 $css・移動 $want', ({ y, css, want }) => {
+        const { view, emitted } = create_view({ editable: true })
+        const card = make_card()
+
+        view.dragover(make_event(card, y))
+        expect(card.classList.contains(css)).toBe(true)
+
+        view.drop(make_event(card, y))
+        const moved = emitted.filter(e => e.event === 'requested_move_related_kyou_query')
+        expect(moved.map(e => e.args[2])).toEqual([want])
+        expect(card.className).toBe('')
+        card.remove()
+    })
+
+    test('閲覧画面では線を出さない', () => {
+        const { view } = create_view({ editable: false })
+        const card = make_card()
+        view.dragover(make_event(card, 10))
+        expect(card.className).toBe('')
+        card.remove()
     })
 })

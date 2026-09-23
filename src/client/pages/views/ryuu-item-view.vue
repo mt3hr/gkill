@@ -1,6 +1,6 @@
 <template>
     <v-card class="pa-0 ma-0 related_kyou_list_item" :draggable="effective_draggable" :class="{ draggable: effective_draggable }"
-        @dragstart="drag_start" @dragover="dragover" @drop="drop"
+        @dragstart="drag_start" @dragover="dragover" @dragleave="dragleave" @dragend="dragend" @drop="drop"
         @contextmenu.prevent.stop="(e: PointerEvent) => { if (editable) { show_context_menu(e) } }"
         @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } else { show_kyou_dialog() } }">
         <table>
@@ -106,6 +106,8 @@ const {
     // Methods
     drag_start,
     dragover,
+    dragleave,
+    dragend,
     drop,
     load_related_kyou,
     show_kyou_dialog,

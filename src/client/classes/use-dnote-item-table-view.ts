@@ -7,6 +7,7 @@ import type DnoteItemTableViewProps from '@/pages/views/dnote-item-table-view-pr
 import type { ComponentRef } from '@/classes/component-ref'
 import type { GkillError } from '@/classes/api/gkill-error'
 import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
+import { decide_drop_position, end_drag, has_drag_type, hide_drop_indicator, is_leaving_element, show_drop_indicator } from '@/classes/drag-drop-indicator'
 
 export function useDnoteItemTableView(options: {
     props: DnoteItemTableViewProps,
@@ -98,10 +99,20 @@ export function useDnoteItemTableView(options: {
         if (!props.editable) return
         e.preventDefault()
         if (e.dataTransfer) e.dataTransfer.dropEffect = "move"
+        // 挿入位置の線: 上半分なら列の先頭、下半分なら末尾（drop と同じ判定）
+        const el = e.currentTarget
+        if (!(el instanceof HTMLElement) || !has_drag_type(e, "gkill_dnote_item_id")) return
+        show_drop_indicator(el, decide_drop_position(el.getBoundingClientRect(), e.clientY, false))
+    }
+
+    function onCellDragleave(e: DragEvent): void {
+        if (!is_leaving_element(e)) return
+        hide_drop_indicator(e.currentTarget instanceof HTMLElement ? e.currentTarget : null)
     }
 
     function onCellDrop(e: DragEvent, target_list_index: number): void {
         if (!props.editable) return
+        end_drag()
 
         const src_id = e.dataTransfer?.getData("gkill_dnote_item_id")
         const src_list_index_str = e.dataTransfer?.getData("gkill_dnote_item_src_list_index")
@@ -110,9 +121,7 @@ export function useDnoteItemTableView(options: {
         const src_list_index = Number(src_list_index_str)
         const el = e.currentTarget as HTMLElement | null
         if (!el) return
-        const rect = el.getBoundingClientRect()
-        const y = e.clientY - rect.top
-        const drop_type: "up" | "down" = y <= rect.height * 0.5 ? "up" : "down"
+        const drop_type: "up" | "down" = decide_drop_position(el.getBoundingClientRect(), e.clientY, false) === "before" ? "up" : "down"
 
         handle_move_dnote_item(src_id, src_list_index, null, target_list_index, drop_type)
         e.preventDefault()
@@ -139,6 +148,7 @@ export function useDnoteItemTableView(options: {
         // Methods used in template
         handle_move_dnote_item,
         onCellDragover,
+        onCellDragleave,
         onCellDrop,
         add_column,
         delete_column,
