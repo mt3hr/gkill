@@ -9,7 +9,8 @@
       @contextmenu.prevent.stop="onContextmenu" ref="list_view">
       <template v-slot:default="{ item }">
         <AggregatedListItem :application_config="application_config" :gkill_api="gkill_api"
-          :dnote_list_query="model_value!" :aggregated_item="item" v-on="aggregatedListItemHandlers" />
+          :dnote_list_query="model_value!" :aggregated_item="item" :editable="editable"
+          v-on="aggregatedListItemHandlers" />
       </template>
     </v-virtual-scroll>
     <v-col v-if="aggregated_items && aggregated_items.length === 0" cols="12" class="text-center text-grey py-3"

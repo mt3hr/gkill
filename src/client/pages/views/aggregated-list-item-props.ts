@@ -8,4 +8,6 @@ export default interface AggregatedListItemProps {
     application_config: ApplicationConfig
     aggregated_item: AggregatedItem
     dnote_list_query: DnoteListQuery
+    // 集計ビューの編集画面で描かれているか。編集画面は記録を0件で読み込むので、一覧を開いても空になる
+    editable: boolean
 }
