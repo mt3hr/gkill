@@ -151,22 +151,44 @@ test.describe('GUI Add Dialog Flows', () => {
     await expectPageToContainText(page, label)
   })
 
-  // Nlog は 品目 / 店名 / 金額 の3項目が必須。
-  // add-nlog-view.vue の並び順は 品目(0) → 店名(1) → 金額(2)。
+  // Nlog は 店名 / 品目 / 金額 の3項目が必須。
+  // add-nlog-view.vue の並び順はメモ帳の支出と同じく 店名(0) → 行ごとの 品目(1) → 金額(2)。
   // 金額を空のままにすると保存が通らない。
-  test('Nlogを品目・店名・金額つきで追加すると一覧に出る', async ({ page }) => {
+  test('Nlogを店名・品目・金額つきで追加すると一覧に出る', async ({ page }) => {
     const label = makeUniqueLabel('nlog_add')
     const shop = makeUniqueLabel('nlog_shop')
 
     const dialog = await openAddDialog(page, MENU.addNlog)
-    await fillDialogField(dialog, 0, label)
-    await fillDialogField(dialog, 1, shop)
+    await fillDialogField(dialog, 0, shop)
+    await fillDialogField(dialog, 1, label)
     await fillDialogField(dialog, 2, '1234')
     await clickDialogButton(page, SAVE_BUTTON)
 
     await navigateToRykv(page)
     await expectPageToContainText(page, label)
     await expectPageToContainText(page, shop)
+  })
+
+  // 「追加」で品目と金額の行を増やすと、1回の保存で行の数だけ支出ができる（店名と日時は共有）。
+  // 足した行の入力欄は1行目の後ろ（日時より前）に並ぶので、2行目は 品目(3) → 金額(4)
+  test('Nlogは行を足すと1回の保存で行の数だけ記録できる', async ({ page }) => {
+    const first_label = makeUniqueLabel('nlog_row1')
+    const second_label = makeUniqueLabel('nlog_row2')
+    const shop = makeUniqueLabel('nlog_shop')
+
+    const dialog = await openAddDialog(page, MENU.addNlog)
+    await fillDialogField(dialog, 0, shop)
+    await fillDialogField(dialog, 1, first_label)
+    await fillDialogField(dialog, 2, '100')
+    await dialog.getByRole('button', { name: '追加', exact: true }).click()
+    await fillDialogField(dialog, 3, second_label)
+    await fillDialogField(dialog, 4, '200')
+    await clickDialogButton(page, SAVE_BUTTON)
+    await expect(dialog, '保存してもダイアログが閉じない').toBeHidden({ timeout: 15000 })
+
+    await navigateToRykv(page)
+    await expectPageToContainText(page, first_label)
+    await expectPageToContainText(page, second_label)
   })
 
   // Lantana は気分値だけの記録で、一覧上の見た目からラベルで特定できない。
