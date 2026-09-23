@@ -22,6 +22,7 @@ export function useKyouCountCalendar(options: {
     const date = ref(new Date(Date.now()))
     const slider_model: Ref<number> = ref(props.for_mi ? 0 : 86399)
     const events: Ref<Array<Record<string, unknown>>> = ref(new Array<Record<string, unknown>>())
+    const is_show_date_picker = ref(false)
     // 非表示中にkyousが変わったら立てて、表示時にupdate_eventsで追いつくためのフラグ
     let is_events_stale = false
 
@@ -30,6 +31,18 @@ export function useKyouCountCalendar(options: {
         return ('00' + Math.floor(slider_model.value / 3600).toString()).slice(-2) + ":" +
             ('00' + (Math.floor(slider_model.value / 60) % 60).toString()).slice(-2) + ":" +
             ('00' + Math.floor(slider_model.value % 60).toString()).slice(-2)
+    })
+
+    // 年月表示をクリックして開く日付ピッカー。‹ › とホイールは1回で1か月しか動かないので、
+    // 10年前へ行くのに120回押す必要があった。v-date-picker は年・月の一覧へ切り替えられる。
+    // 選んだ日は日付セルをクリックしたのと同じ扱いにする（その月へ移り、requested_focus_time を出す）
+    const date_picker_model = computed<Date>({
+        get: () => date.value,
+        set: (picked: Date) => {
+            is_show_date_picker.value = false
+            date.value = new Date(picked)
+            clicked_date(new Date(picked))
+        },
     })
 
     // ── Watchers ──
@@ -178,6 +191,8 @@ export function useKyouCountCalendar(options: {
         slider_model,
         events,
         time,
+        is_show_date_picker,
+        date_picker_model,
 
         // Business logic
         add_months,

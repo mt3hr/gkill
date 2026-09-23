@@ -1,8 +1,16 @@
 <template>
     <div class="gps_log_map_wrap">
         <v-sheet tile height="35" class="d-flex">
-            <div class="map_date"><span>{{ start_date_str }}</span><span v-if="start_date_str !== end_date_str">～ {{
-                end_date_str }}</span></div>
+            <v-menu v-model="is_show_date_picker" :close-on-content-click="false" location="bottom start"
+                :z-index="3000">
+                <template v-slot:activator="{ props: dateMenuProps }">
+                    <v-btn variant="text" class="map_date map_date_button text-none" v-bind="dateMenuProps">
+                        <span>{{ start_date_str }}</span><span v-if="start_date_str !== end_date_str">～ {{
+                            end_date_str }}</span>
+                    </v-btn>
+                </template>
+                <v-date-picker v-model="date_picker_model" />
+            </v-menu>
         </v-sheet>
         <div class="map_container">
             <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key"
@@ -40,11 +48,13 @@ const {
     slider_model,
     marker_options,
     google_map_api_key,
+    is_show_date_picker,
 
     // Computed
     start_date_str,
     end_date_str,
     date_time_str,
+    date_picker_model,
 
     centering,
 } = useGpsLogMap({ props, emits })
@@ -72,5 +82,13 @@ defineExpose({ centering })
 
 .map_date {
     font-size: 26px;
+}
+
+/* 日付表示は日付ピッカーを開くボタン。v-btn の既定の文字サイズ・高さに負けないよう2クラスで指定する */
+.v-btn.map_date_button {
+    font-size: 26px;
+    height: 35px;
+    letter-spacing: normal;
+    padding: 0 8px;
 }
 </style>
