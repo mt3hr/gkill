@@ -32,6 +32,7 @@ func (g *GkillServerAPI) HandleParseKFTLText(w http.ResponseWriter, r *http.Requ
 	response := &req_res.ParseKFTLTextResponse{
 		InvalidLines: []*req_res.ParseKFTLTextInvalidLine{},
 		Tags:         []string{},
+		TagGroups:    [][]string{},
 		MiBoardNames: []string{},
 	}
 
@@ -125,6 +126,9 @@ func (g *GkillServerAPI) HandleParseKFTLText(w http.ResponseWriter, r *http.Requ
 	}
 	if analysis.Tags != nil {
 		response.Tags = analysis.Tags
+	}
+	if analysis.TagGroups != nil {
+		response.TagGroups = analysis.TagGroups
 	}
 	if analysis.MiBoardNames != nil {
 		response.MiBoardNames = analysis.MiBoardNames

@@ -2,6 +2,7 @@ package gkill_server_api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -95,6 +96,10 @@ func TestHandleParseKFTLText(t *testing.T) {
 		if want := []string{"parseTagA", "parseTagB"}; strings.Join(res.Tags, ",") != strings.Join(want, ",") {
 			t.Errorf("tags = %v, want %v（重複なし・出現順）", res.Tags, want)
 		}
+		// 記録ごとの組（タグ履歴に積む単位）。タグの無い2つ目の Mi は入らない
+		if got, want := fmt.Sprint(res.TagGroups), "[[parseTagA parseTagB] [parseTagA]]"; got != want {
+			t.Errorf("tag_groups = %s, want %s", got, want)
+		}
 		// 板名は利用者が書いたとおり。2つ目の Mi は板名を書いていないので既定板へ解決せず、列挙もしない
 		if want := []string{"parseBoardX"}; strings.Join(res.MiBoardNames, ",") != strings.Join(want, ",") {
 			t.Errorf("mi_board_names = %v, want %v", res.MiBoardNames, want)
@@ -116,7 +121,7 @@ func TestHandleParseKFTLText(t *testing.T) {
 		if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
 			t.Fatalf("decode: %v", err)
 		}
-		for _, key := range []string{"invalid_lines", "tags", "mi_board_names"} {
+		for _, key := range []string{"invalid_lines", "tags", "tag_groups", "mi_board_names"} {
 			if got := strings.TrimSpace(string(raw[key])); got != "[]" {
 				t.Errorf("%s = %s, want [] （クライアントは「空 = 送信してよい」で判定する）", key, got)
 			}

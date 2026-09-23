@@ -19,6 +19,10 @@ export class ParseKFTLTextResponse extends GkillAPIResponse {
     // 送信すると付くタグ名（重複なし・出現順）
     tags: Array<string> = []
 
+    // 記録ごとのタグの組（組の中は重複なし・出現順、記録の登録順。タグの無い記録は入れない）。
+    // 保存に成功したら組ごとにタグ履歴へ積む
+    tag_groups: Array<Array<string>> = []
+
     // Mi / MiReKyou に書かれた板名（空欄は含めない・既定板へは解決しない）
     mi_board_names: Array<string> = []
 

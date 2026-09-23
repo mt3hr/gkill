@@ -16,6 +16,7 @@ import { useConfirmUnknownTag } from '@/classes/use-confirm-unknown-tag'
 import type { KFTLProps } from '@/pages/views/kftl-props'
 import type { KFTLViewEmits } from '@/pages/views/kftl-view-emits'
 import { fetch_committed_kyou } from '@/classes/gkill-tx'
+import { record_added_tag_history } from '@/classes/kyou-tags'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { ComponentRef } from '@/classes/component-ref'
 import { useConfirmUnknownMiBoard } from '@/classes/use-confirm-unknown-mi-board'
@@ -815,6 +816,12 @@ export function useKftlView(options: {
             // 「、、」でずれた関連時刻を実行中画面へ渡す。板・タグツリーの取り直しもこの合図で走るので、
             // 引き直し（下）を待たずに出す。値は応答の created[].related_time から取る
             emits('saved_kyou_by_kftl', last_added_request_time_of(saved_records))
+            // 付けたタグを記録ごとにタグ履歴（追加画面のタグ欄の候補）へ積む。追加画面と同じく
+            // 保存が確定してから（積んでから失敗すると履歴だけが動く）。組は記録の登録順なので、
+            // 最後に書いた記録の組が履歴の先頭になる
+            for (const tag_group of parsed.tag_groups ?? []) {
+                record_added_tag_history(props.gkill_api, tag_group)
+            }
             // 保存はサーバで完了している。この先は一覧へ知らせるための引き直しだけなので、
             // 入力欄と各ボタンをreadonly/disabledのまま待たせない
             // （引き直しはKyouの件数ぶん往復するので、待たせると体感で数秒固まる）
