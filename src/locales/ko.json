@@ -946,6 +946,7 @@
     "SAVED_RYKV_FIND_KYOU_QUERY_TITLE": "라이프로그 검색 조건",
     "SAVED_MI_FIND_KYOU_QUERY_TITLE": "작업 검색 조건",
     "ADD_SAVED_FIND_QUERY_TITLE": "검색 조건 추가",
+    "SAVED_FIND_QUERY_SHORTCUT_TITLE": "검색 바로가기",
     "DELETE_SAVED_FIND_QUERY_TITLE": "검색 조건 삭제",
     "EDIT_SAVED_FIND_QUERY_QUERY_TITLE": "검색 조건 편집",
     "SAVED_FIND_QUERY_NAME_LABEL": "이름",

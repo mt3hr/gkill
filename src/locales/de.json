@@ -946,6 +946,7 @@
     "SAVED_RYKV_FIND_KYOU_QUERY_TITLE": "Lebenslog-Suchbedingungen",
     "SAVED_MI_FIND_KYOU_QUERY_TITLE": "Aufgaben-Suchbedingungen",
     "ADD_SAVED_FIND_QUERY_TITLE": "Suchbedingung hinzufügen",
+    "SAVED_FIND_QUERY_SHORTCUT_TITLE": "Suchverknüpfungen",
     "DELETE_SAVED_FIND_QUERY_TITLE": "Suchbedingung löschen",
     "EDIT_SAVED_FIND_QUERY_QUERY_TITLE": "Suchbedingung bearbeiten",
     "SAVED_FIND_QUERY_NAME_LABEL": "Name",

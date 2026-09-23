@@ -98,3 +98,24 @@ const {
 
 defineExpose({ generate_query, get_default_query })
 </script>
+<style lang="css" scoped>
+/* find-query-editor-view.vue と同じ。最小高さが無いと、読み込み中は中身が隠れてボタン行も消え、
+   ヘッダーとスピナーだけの薄いダイアログになる（「タスク検索条件」を開くと中身がめり込んで見えた） */
+.overlay_target {
+    z-index: -10000;
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 40vh;
+}
+
+.mi_find_query_editor_view.dummy {
+    position: relative;
+    min-height: 40vh;
+}
+
+.loading_mi_find_query_editor_view {
+    overflow-y: hidden !important;
+}
+</style>

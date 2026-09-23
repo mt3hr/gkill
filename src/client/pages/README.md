@@ -276,10 +276,8 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `confirm-logout-dialog.vue` | ログアウト確認 |
 | `confirm-re-kyou-dialog.vue` | ReKyou 確認 |
 | `confirm-reset-password-dialog.vue` | パスワードリセット確認 |
-| `edit-dashboard-dialog.vue` | ダッシュボード設定（MI検索条件・Dnote検索条件の編集） |
 | `add-dnote-correlation-graph-dialog.vue` / `edit-dnote-correlation-graph-dialog.vue` / `confirm-delete-dnote-correlation-graph-dialog.vue` | DNote 相関グラフの追加・編集・削除（トレンドグラフと同じ3点セットに揃えてある） |
-| `edit-playing-time-is-dialog.vue` | 実行中検索条件設定（「検索条件をカスタマイズする」チェックボックス＋条件編集ボタン） |
-| `edit-saved-find-query-dialog.vue` | 保存済み検索条件のハブ（ライフログ検索条件・タスク検索条件の2ボタン） |
+| `edit-saved-find-query-dialog.vue` | 設定の「検索条件」ダイアログ。検索ショートカット（ライフログ検索条件・タスク検索条件）・実行中（「検索条件をカスタマイズする」チェックボックス＋条件編集ボタン。チェックOFFで未設定＝デフォルト動作に戻る）・ダッシュボード（集計検索条件・タスク検索条件）の3セクション。適用では触ったセクションだけを設定画面へ渡す |
 | `edit-saved-find-query-list-dialog.vue` | 保存済み検索条件の一覧管理（名前・条件編集・並べ替え・削除。追加は右下FAB。`query_type` prop で rykv/mi の2インスタンス） |
 | `end-time-is-playing-dialog.vue` | TimeIs 終了 |
 | `find-query-editor-dialog.vue` | 検索クエリエディタ |

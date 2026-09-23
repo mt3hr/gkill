@@ -203,7 +203,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 | 日付表示 | 表示 | 現在表示中の日付（クリックでカレンダーピッカーを表示） |
 | 翌日ボタン（`>`） | 操作 | 表示日を1日後に移動 |
 | カレンダーピッカー | 操作 | 任意の日付にジャンプ |
-| 設定ボタン（歯車） | 操作 | EditDashboardDialog を開き、MI検索条件・Dnote検索条件を設定 |
+| 設定ボタン（歯車） | 操作 | 設定画面を開く。ダッシュボードのMI検索条件・Dnote検索条件は、設定画面の「検索条件」ダイアログの「ダッシュボード」セクションで設定する |
 | ヘルプボタン | 操作 | ヘルプ情報の表示 |
 
 #### 表示エリア構成
@@ -811,9 +811,7 @@ Teleport to body
 | `server-config-dialog.vue` | サーバー設定 |
 | `manage-account-dialog.vue` | アカウント管理 |
 | `create-account-dialog.vue` | アカウント作成 |
-| `edit-dashboard-dialog.vue` | ダッシュボード設定（MI検索条件・Dnote検索条件の編集） |
-| `edit-playing-time-is-dialog.vue` | 実行中検索条件設定（「検索条件をカスタマイズする」チェックボックス＋条件編集ボタン。チェックOFFで未設定＝デフォルト動作に戻る） |
-| `edit-saved-find-query-dialog.vue` | 保存済み検索条件のハブ（ライフログ検索条件・タスク検索条件の2ボタン） |
+| `edit-saved-find-query-dialog.vue` | 設定の「検索条件」ダイアログ。検索ショートカット（ライフログ検索条件・タスク検索条件）・実行中（「検索条件をカスタマイズする」チェックボックス＋条件編集ボタン。チェックOFFで未設定＝デフォルト動作に戻る）・ダッシュボード（集計検索条件・タスク検索条件）の3セクション。適用では触ったセクションだけを設定画面へ渡す |
 | `edit-saved-find-query-list-dialog.vue` | 保存済み検索条件の一覧管理（名前・条件編集・並べ替え・削除。追加は右下FAB。`query_type` prop で rykv/mi の2インスタンス） |
 | `edit-dnote-dialog.vue` | Dnote（集計ビュー）設定 |
 | `edit-ryuu-dialog.vue` | Ryuu（関連情報ビュー）設定 |
