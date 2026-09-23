@@ -225,16 +225,27 @@ describe('useAddNlogView', () => {
     emits = vi.fn()
   })
 
-  test('initializes with empty title and zero amount', () => {
+  // 連番の uuid（tx_id と行ごとの id を見分けるため。mock-api の既定は固定値）と、
+  // 受け取った id をそのまま返す get_kyou にする
+  function use_distinct_ids(): void {
+    let n = 0
+    props.gkill_api.generate_uuid.mockImplementation(() => `uuid-${++n}`)
+    props.gkill_api.get_kyou.mockImplementation((req: { id: string }) =>
+      Promise.resolve({ kyou_histories: [{ id: req.id }], messages: [], errors: [] }))
+  }
+
+  test('店名は空、品名と金額の行は1行・空で始まる', () => {
     const view = useAddNlogView({ props, emits })
-    expect(view.nlog_title_value.value).toBe('')
-    expect(view.nlog_amount_value.value).toBe(0)
     expect(view.nlog_shop_value.value).toBe('')
+    expect(view.nlog_rows.value.length).toBe(1)
+    expect(view.nlog_rows.value[0].title).toBe('')
+    expect(view.nlog_rows.value[0].amount).toBe(0)
+    expect(view.can_delete_row.value).toBe(false)
   })
 
   test('save() emits received_errors when title is blank', async () => {
     const view = useAddNlogView({ props, emits })
-    view.nlog_title_value.value = ''
+    view.nlog_rows.value[0].title = ''
     await view.save()
     const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
     expect(errorCalls.length).toBeGreaterThan(0)
@@ -246,17 +257,143 @@ describe('useAddNlogView', () => {
       errors: [],
     })
     const view = useAddNlogView({ props, emits })
-    view.nlog_title_value.value = 'テスト支出'
+    view.nlog_rows.value[0].title = 'テスト支出'
     view.nlog_shop_value.value = 'テスト店'
-    view.nlog_amount_value.value = 500
+    view.nlog_rows.value[0].amount = 500
     await view.save()
     expect(props.gkill_api.add_nlog).toHaveBeenCalled()
+  })
+
+  test('行を足して消せる。最後の1行は消えず、reset で1行に戻る', () => {
+    const view = useAddNlogView({ props, emits })
+    view.add_row()
+    view.add_row()
+    expect(view.nlog_rows.value.length).toBe(3)
+    expect(new Set(view.nlog_rows.value.map(row => row.row_key)).size).toBe(3)
+    expect(view.can_delete_row.value).toBe(true)
+    view.nlog_rows.value[1].title = '2行目'
+    view.delete_row(0)
+    expect(view.nlog_rows.value.map(row => row.title)).toEqual(['2行目', ''])
+    view.delete_row(5)
+    expect(view.nlog_rows.value.length).toBe(2)
+    view.delete_row(0)
+    view.delete_row(0)
+    expect(view.nlog_rows.value.length).toBe(1)
+    view.add_row()
+    view.reset()
+    expect(view.nlog_rows.value.length).toBe(1)
+  })
+
+  // メモ帳の支出と同じく、店名と関連時刻は全行で共有し、1行が1件になる。
+  // 全行を1つの tx に積むので、1件でも失敗したら何も残らない
+  test('2行なら同じ tx で add_nlog を2回呼び、店名と関連時刻は共通・id は別', async () => {
+    use_distinct_ids()
+    const view = useAddNlogView({ props, emits })
+    view.nlog_shop_value.value = 'コンビニ'
+    view.nlog_rows.value[0].title = 'おにぎり'
+    view.nlog_rows.value[0].amount = '150'
+    view.add_row()
+    view.nlog_rows.value[1].title = 'お茶'
+    view.nlog_rows.value[1].amount = 120
+
+    await view.save()
+
+    const reqs = props.gkill_api.add_nlog.mock.calls.map((call: unknown[]) => call[0] as {
+      nlog: { id: string, shop: string, title: string, amount: number, related_time: Date }, tx_id: string
+    })
+    expect(reqs.length).toBe(2)
+    expect(reqs[0].tx_id).toBe(reqs[1].tx_id)
+    expect(reqs[0].nlog.id).not.toBe(reqs[1].nlog.id)
+    expect(reqs.map(req => req.nlog.shop)).toEqual(['コンビニ', 'コンビニ'])
+    expect(reqs.map(req => req.nlog.title)).toEqual(['おにぎり', 'お茶'])
+    // 入力欄が返す文字列の金額は数値にして送る
+    expect(reqs.map(req => req.nlog.amount)).toEqual([150, 120])
+    expect(reqs[0].nlog.related_time.getTime()).toBe(reqs[1].nlog.related_time.getTime())
+    expect(props.gkill_api.commit_tx).toHaveBeenCalledTimes(1)
+    const registered = emits.mock.calls.filter((c: unknown[]) => c[0] === 'registered_kyou').map((c: unknown[]) => (c[1] as { id: string }).id)
+    expect(registered).toEqual(reqs.map(req => req.nlog.id))
+  })
+
+  test('タグは全行に付け、registered_tag はタグ名ごとに1回、順序は add_nlog→add_tag→…→commit_tx→registered_kyou', async () => {
+    use_distinct_ids()
+    const call_order: string[] = []
+    props.gkill_api.add_nlog.mockImplementation(() => {
+      call_order.push('add_nlog')
+      return Promise.resolve({ added_kyou: null, messages: [], errors: [] })
+    })
+    props.gkill_api.add_tag.mockImplementation(() => {
+      call_order.push('add_tag')
+      return Promise.resolve({ added_tag: null, messages: [], errors: [] })
+    })
+    props.gkill_api.commit_tx.mockImplementation(() => {
+      call_order.push('commit_tx')
+      return Promise.resolve({ committed: [], messages: [], errors: [] })
+    })
+    const ordered_emits = vi.fn((event: string) => {
+      if (event === 'registered_kyou' || event === 'registered_tag') {
+        call_order.push(event)
+      }
+    })
+    const view = useAddNlogView({ props, emits: ordered_emits })
+    view.nlog_shop_value.value = 'コンビニ'
+    view.nlog_rows.value[0].title = 'おにぎり'
+    view.nlog_rows.value[0].amount = 150
+    view.add_row()
+    view.nlog_rows.value[1].title = 'お茶'
+    view.nlog_rows.value[1].amount = 120
+    view.kyou_tags_view.value = { get_tag_names: () => ['食費'], reset: () => { } }
+    props.application_config.tag_struct = { children: [{ tag_name: '食費', children: [] }] }
+
+    await view.save()
+
+    expect(call_order).toEqual([
+      'add_nlog', 'add_tag', 'add_nlog', 'add_tag', 'commit_tx',
+      'registered_tag', 'registered_kyou', 'registered_kyou',
+    ])
+  })
+
+  test('2行目が不正なら何も書かない', async () => {
+    const view = useAddNlogView({ props, emits })
+    view.nlog_shop_value.value = 'コンビニ'
+    view.nlog_rows.value[0].title = 'おにぎり'
+    view.nlog_rows.value[0].amount = 150
+    view.add_row()
+    view.nlog_rows.value[1].title = ''
+
+    await view.save()
+
+    expect(props.gkill_api.add_nlog).not.toHaveBeenCalled()
+    expect(emits.mock.calls.map((c: unknown[]) => c[0])).toContain('received_errors')
+  })
+
+  test('2行目の add_nlog が失敗したら discard_tx して registered_kyou を出さない（1行目も残らない）', async () => {
+    use_distinct_ids()
+    props.gkill_api.add_nlog
+      .mockResolvedValueOnce({ added_kyou: null, messages: [], errors: [] })
+      .mockResolvedValueOnce({ added_kyou: null, messages: [], errors: [{ error_code: 'ERR_TEST', error_message: 'ng' }] })
+    const view = useAddNlogView({ props, emits })
+    view.nlog_shop_value.value = 'コンビニ'
+    view.nlog_rows.value[0].title = 'おにぎり'
+    view.nlog_rows.value[0].amount = 150
+    view.add_row()
+    view.nlog_rows.value[1].title = 'お茶'
+    view.nlog_rows.value[1].amount = 120
+
+    await view.save()
+
+    expect(props.gkill_api.commit_tx).not.toHaveBeenCalled()
+    expect(props.gkill_api.discard_tx).toHaveBeenCalledTimes(1)
+    const events = emits.mock.calls.map((c: unknown[]) => c[0])
+    expect(events).toContain('received_errors')
+    expect(events).not.toContain('registered_kyou')
   })
 
   test('returns expected interface', () => {
     const view = useAddNlogView({ props, emits })
     expect(typeof view.save).toBe('function')
     expect(typeof view.reset).toBe('function')
+    expect(typeof view.add_row).toBe('function')
+    expect(typeof view.delete_row).toBe('function')
   })
 })
 
