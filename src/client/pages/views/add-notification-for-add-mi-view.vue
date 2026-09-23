@@ -31,7 +31,7 @@
                                         @update:minute="show_notification_time_menu = false" />
                                 </v-menu>
                             </td>
-                            <td>
+                            <td class="gkill-field-side-buttons">
                                 <!-- 日時の横のリセットは通知日時だけを戻す -->
                                 <v-btn dark color="secondary" @click="reset_notification_date_time()"
                                     :disabled="is_readonly">{{
