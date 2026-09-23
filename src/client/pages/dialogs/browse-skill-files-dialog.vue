@@ -6,7 +6,7 @@
             :class="ui.isTransparent.value ? 'is-transparent' : ''">
             <div class="gkill-floating-dialog__header pa-0 ma-0" @mousedown="ui.onHeaderPointerDown"
                 @touchstart="ui.onHeaderPointerDown">
-                <div class="gkill-floating-dialog__title">{{ skill?.name ?? "" }}</div>
+                <div class="gkill-floating-dialog__title"></div>
                 <div class="gkill-floating-dialog__spacer"></div>
                 <v-checkbox v-model="ui.isTransparent.value" color="white" size="small" variant="flat"
                     :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
@@ -19,6 +19,7 @@
             <div class="gkill-floating-dialog__body">
                 <v-card variant="flat" class="pa-2">
                     <v-progress-linear v-if="is_loading" indeterminate color="primary" />
+                    <div v-if="skill !== null" class="pa-2 browse-skill-name">{{ skill.name }}</div>
                     <div v-if="skill !== null && skill.invalid_reason !== ''" class="pa-2 browse-skill-invalid">
                         {{ i18n.global.t("SKILL_INVALID_TITLE") }}: {{ skill.invalid_reason }}
                     </div>
@@ -85,6 +86,10 @@ defineExpose({ show, hide })
     white-space: pre-wrap;
     word-break: break-all;
     margin: 0;
+}
+
+.browse-skill-name {
+    font-weight: 500;
 }
 
 .browse-skill-invalid {
