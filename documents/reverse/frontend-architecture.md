@@ -525,7 +525,7 @@ multipart POST がもう一度届く。届く内容が同一なので、再配�
 
 **主要機能:**
 - 表示日の切替（前日・翌日・カレンダーピッカー）
-- EditDashboardDialog 経由でMI検索条件・Dnote検索条件を設定
+- MI検索条件・Dnote検索条件は設定画面の「検索条件」ダイアログ（`edit-saved-find-query-dialog.vue`）の「ダッシュボード」セクションで設定
 - FABメニューから全データ型の記録追加が可能
 - Enter → KFTLダイアログ、Ctrl+V → クリップボード保存ダイアログ
 
@@ -537,7 +537,7 @@ multipart POST がもう一度届く。届く内容が同一なので、再配�
 - `src/client/classes/use-mi-find-query-editor-view.ts`
 - `src/client/classes/use-mi-find-query-editor-dialog.ts`
 
-既存の `find-query-editor-view.vue` が汎用Kyou向けであるのに対し、`mi-find-query-editor-view.vue` はMI（タスク）専用の検索条件エディタ。ダッシュボードのEditDashboardDialogから呼び出される。
+既存の `find-query-editor-view.vue` が汎用Kyou向けであるのに対し、`mi-find-query-editor-view.vue` はMI（タスク）専用の検索条件エディタ。設定画面の「検索条件」ダイアログ（ダッシュボードのタスク検索条件）と保存済み検索条件の一覧管理ダイアログ（タスク検索条件）から呼び出される。
 
 **対応フィルタ条件:**
 
@@ -552,23 +552,30 @@ multipart POST がもう一度届く。届く内容が同一なので、再配�
 
 **クエリ反映タイミング:** 「保存」ボタン押下時のみ `emits('requested_apply', query)` を発行し、クエリを親コンポーネントに反映する（リアルタイム反映なし）。
 
-### EditDashboardDialog
+### 設定の「検索条件」ダイアログ（EditSavedFindQueryDialog）
 
-定義: `src/client/pages/dialogs/edit-dashboard-dialog.vue` / `edit-dashboard-dialog-props.ts` / `edit-dashboard-dialog-emits.ts` / `src/client/classes/use-edit-dashboard-dialog.ts`
+定義: `src/client/pages/dialogs/edit-saved-find-query-dialog.vue` / `edit-saved-find-query-dialog-props.ts` / `edit-saved-find-query-dialog-emits.ts` / `src/client/classes/use-edit-saved-find-query-dialog.ts`
 
-ダッシュボードの表示設定を編集するダイアログ。`DashboardConfig` の各フィールドを編集し、保存時に `UpdateApplicationConfig` API を呼び出して永続化する。
+検索条件にかかわる設定を1か所に集めたダイアログ（2026-09 までは「検索条件」「実行中」「ダッシュボード」の3つの別々のダイアログだった）。
+見出し付きの3セクションを縦に並べ、適用・キャンセルは1組。見出しは h タグにしない（`useFloatingDialog` が本文の最初の見出しをダイアログの名前にするため）。
 
-| 設定項目 | 内容 |
-|---|---|
-| MI検索条件 | `MiFindQueryEditorView` でMI一覧の絞り込み条件を設定 |
-| Dnote検索条件 | `FindQueryEditorView` でDnoteビューの条件を設定 |
+| セクション | 設定項目 | 編集先 |
+|---|---|---|
+| 検索ショートカット | ライフログ検索条件・タスク検索条件（保存済みの検索条件の一覧） | `saved_find_query_json_data`（下の SavedFindQueryConfig） |
+| 実行中 | 「検索条件をカスタマイズする」チェック＋条件編集 | `playing_timeis_json_data`（下の PlayingTimeIsConfig） |
+| ダッシュボード | 集計検索条件（`FindQueryEditorView`）・タスク検索条件（`MiFindQueryEditorView`） | `dashboard_json_data`（`DashboardConfig`） |
+
+適用は他の設定の子ダイアログと同じく `cloned_application_config` へ組み立てるだけで、API は設定画面の「適用」が呼ぶ。
+**渡すのは、このダイアログで触ったセクションだけ**（セクションごとの「編集した」印）。旧ダッシュボードダイアログは開いて適用しただけで
+未設定（null）の条件を空の `FindKyouQuery` で書き潰し、ダッシュボードの既定の条件が効かなくなっていた。ダッシュボードの2つの条件も、
+片方だけ触ったときはもう片方を元の値（null を含む）のまま渡す。
 
 ### PlayingTimeIsConfig クラスと実行中検索条件（ダッシュボード設定と同型）
 
 定義:
 - `src/client/classes/datas/config/playing-time-is-config.ts`（設定クラス。`playing_timeis_find_kyou_query: FindKyouQuery | null` を1本保持し、`parse()` / `to_json()` を持つ。null は「未設定＝従来どおり全リポジトリ対象」）
 - `src/client/classes/api/find_query/generate-playing-timeis-query.ts`（適用の実体 `generate_playing_timeis_query()`。GkillAPI 非依存の同期純関数）
-- `src/client/pages/dialogs/edit-playing-time-is-dialog.vue` + `src/client/classes/use-edit-playing-time-is-dialog.ts`（中間ダイアログ。Ryuu の関連情報アイテムと同じ「☑検索条件をカスタマイズする ＋ [検索条件]」形式で、チェックを外すと null＝未設定に戻る。`is_use_custom_find_kyou_query` は `current_query !== null` の computed get/set。dashboard版と違い emit は Save 時のみでキャンセルで破棄される）
+- 設定の「検索条件」ダイアログの「実行中」セクション（`use-edit-saved-find-query-dialog.ts`。Ryuu の関連情報アイテムと同じ「☑検索条件をカスタマイズする ＋ [検索条件]」形式で、チェックを外すと null＝未設定に戻る。`is_use_custom_find_kyou_query` は `current_playing_timeis_query !== null` の computed get/set。emit はダイアログの適用時のみでキャンセルで破棄される）
 - `src/client/pages/views/find-time-is-query-editor-view.vue` + `src/client/pages/dialogs/find-time-is-query-editor-dialog.vue`（+ 各 props/emits / use-*。Mi 版と同型の専用エディタ。編集面はキーワード・タグ絞り込みトグル・タグの3ブロック。記録保管場所と記録タイプは選ばせず、`generate_query()` が `rep_types=["timeis"]` を立てる）
 
 playing検索（Kyou付随の実行中表示 `info-base.ts` の `load_attached_timeis()`・実行中画面・KFTLの/end系終了候補検索 `generate-get-playing-timeis-kyous-query.ts`）の検索条件を `ApplicationConfig.playing_timeis_json_data`（EAVキー `PLAYING_TIMEIS_JSON_DATA`、DEVICE='ALL'）でカスタマイズできる。3経路すべてが `generate_playing_timeis_query()` を通る。
@@ -579,12 +586,12 @@ playing検索（Kyou付随の実行中表示 `info-base.ts` の `load_attached_t
 
 定義:
 - `src/client/classes/datas/config/saved-find-query-config.ts`（設定クラス。`saved_rykv_find_kyou_querys` / `saved_mi_find_kyou_querys` の2リストを保持し、`parse()` / `to_json()` / `clone()` / `clone_items()` を持つ。各アイテムは `SavedFindQueryItem { id, title, find_kyou_query }`（Ryuu の関連情報クエリと同形式）。`parse()` は null・非オブジェクト・不正アイテムを空/除外にフォールバックする＝初回起動考慮）
-- `src/client/pages/dialogs/edit-saved-find-query-dialog.vue` + `src/client/classes/use-edit-saved-find-query-dialog.ts`（ハブダイアログ。「ライフログ検索条件」「タスク検索条件」の2ボタン。edit-dashboard-dialog と同型）
+- 設定の「検索条件」ダイアログの「検索ショートカット」セクション（`edit-saved-find-query-dialog.vue` + `use-edit-saved-find-query-dialog.ts`。「ライフログ検索条件」「タスク検索条件」の2ボタン）
 - `src/client/pages/dialogs/edit-saved-find-query-list-dialog.vue` + `src/client/classes/use-edit-saved-find-query-list-dialog.ts`（一覧管理ダイアログ。**1コンポーネントを `query_type: 'rykv' | 'mi'` prop で2インスタンス化**。`useFloatingDialog` の storage_key に query_type を含めて位置/サイズ保存を分離。行UIは名前 text-field＋「検索条件を編集」＋上へ/下へ/削除、追加は他画面と揃えた右下FAB（`.position-fixed-saved-find-query`＝`position: absolute`。内側に positioned な祖先を作らないので包含ブロックがスクロール箱の外側 `.gkill-floating-dialog` になり、一覧をスクロールしても右下に固定される）で既定クエリ `generate_default_query_for_rykv/for_mi` ＋既定名の行を足す。クエリ編集は既存 `find-query-editor-dialog.vue`（rykv用）/ `mi-find-query-editor-dialog.vue`（mi用）を再利用）
 
 ユーザ定義の検索条件に名前を付けて何個でも保存し、rykv/mi のサイドバーから呼び出せる機能。`ApplicationConfig.saved_find_query_json_data`（EAVキー `SAVED_FIND_QUERY_JSON_DATA`、DEVICE='ALL'＝全端末共有）に保存される。
 
-**適用の入れ子（キャンセルが全階層で効く）:** クエリエディタの適用→一覧ダイアログのローカル行→一覧の適用→ハブのローカル `current_config`→ハブの適用→`requested_apply_saved_find_query_struct` で `use-application-config-view.ts` の `cloned_application_config` へ→設定画面全体の「適用」で `update_application_config()` が一括送信（`location.reload()` で確定）。各段階で `clone()` を挟み、どの段階のキャンセルでも下位の編集が破棄される。
+**適用の入れ子（キャンセルが全階層で効く）:** クエリエディタの適用→一覧ダイアログのローカル行→一覧の適用→「検索条件」ダイアログのローカル `current_saved_find_query_config`→「検索条件」ダイアログの適用→`requested_apply_saved_find_query_struct` で `use-application-config-view.ts` の `cloned_application_config` へ→設定画面全体の「適用」で `update_application_config()` が一括送信（`location.reload()` で確定）。各段階で `clone()` を挟み、どの段階のキャンセルでも下位の編集が破棄される。
 
 **サイドバーからの呼び出し:** `use-rykv-query-editor-side-bar.ts` / `use-mi-query-editor-sidebar.ts` の computed `saved_find_querys`（0件なら FAB ごと v-if 非表示）と `apply_saved_query(item)`。適用は `emits_default_query()` と同経路で、`item.find_kyou_query.clone()` に**列側の `query_id` を差し込んで** `query.value` を差し替え、`updated_query` を emit する（＝手編集と同じ扱い。ホットリロードONなら親が自動検索、OFFなら検索ボタンで実行）。保存条件由来の query_id を列へ持ち込むと「列×検索」不変条件が崩れるため、必ず列側を維持する。mi 側は全クリアと違い**板名も保存された条件が勝つ**。FAB はサイドバー下端の sticky 検索バー（`.sidebar_header_wrap`、`overflow: visible` 化）に絶対配置で載せている（position:fixed ではないのでドロワー閉時に一緒に隠れる）。
 

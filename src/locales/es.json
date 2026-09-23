@@ -946,6 +946,7 @@
     "SAVED_RYKV_FIND_KYOU_QUERY_TITLE": "Condiciones de búsqueda del registro de vida",
     "SAVED_MI_FIND_KYOU_QUERY_TITLE": "Condiciones de búsqueda de tareas",
     "ADD_SAVED_FIND_QUERY_TITLE": "Agregar condición de búsqueda",
+    "SAVED_FIND_QUERY_SHORTCUT_TITLE": "Accesos directos de búsqueda",
     "DELETE_SAVED_FIND_QUERY_TITLE": "Eliminar condición de búsqueda",
     "EDIT_SAVED_FIND_QUERY_QUERY_TITLE": "Editar condición de búsqueda",
     "SAVED_FIND_QUERY_NAME_LABEL": "Nombre",

@@ -946,6 +946,7 @@
     "SAVED_RYKV_FIND_KYOU_QUERY_TITLE": "Life Log Search Conditions",
     "SAVED_MI_FIND_KYOU_QUERY_TITLE": "Task Search Conditions",
     "ADD_SAVED_FIND_QUERY_TITLE": "Add Search Condition",
+    "SAVED_FIND_QUERY_SHORTCUT_TITLE": "Search shortcuts",
     "DELETE_SAVED_FIND_QUERY_TITLE": "Delete Search Condition",
     "EDIT_SAVED_FIND_QUERY_QUERY_TITLE": "Edit Search Condition",
     "SAVED_FIND_QUERY_NAME_LABEL": "Name",

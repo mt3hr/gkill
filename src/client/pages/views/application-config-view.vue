@@ -170,10 +170,6 @@
                                 i18n.global.t("EDIT_DNOTE_TITLE") }}</v-btn>
                             <v-btn dark color="primary" @click="show_edit_ryuu_dialog">{{
                                 i18n.global.t("EDIT_RYUU_TITLE") }}</v-btn>
-                            <v-btn dark color="primary" @click="show_edit_dashboard_dialog">{{
-                                i18n.global.t("EDIT_DASHBOARD_TITLE") }}</v-btn>
-                            <v-btn dark color="primary" @click="show_edit_playing_time_is_dialog">{{
-                                i18n.global.t("EDIT_PLAYING_TIMEIS_TITLE") }}</v-btn>
                             <v-btn dark color="primary" @click="show_edit_saved_find_query_dialog">{{
                                 i18n.global.t("EDIT_SAVED_FIND_QUERY_TITLE") }}</v-btn>
                             <v-btn dark color="primary" @click="show_manage_skill_list_dialog">{{
@@ -248,20 +244,12 @@
             v-on="errorMessageRelayHandlers"
             @requested_apply_ryuu_struct="(data: RyuuData) => onRequestedApplyRyuuStruct(data)"
             @requested_reload_application_config="() => { }" ref="edit_ryuu_dialog" />
-        <EditDashboardDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="cloned_application_config" :gkill_api="gkill_api"
-            v-on="errorMessageRelayHandlers"
-            @requested_apply_dashboard_struct="(data: DashboardData) => onRequestedApplyDashboardStruct(data)"
-            @requested_reload_application_config="() => { }" ref="edit_dashboard_dialog" />
-        <EditPlayingTimeIsDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="cloned_application_config" :gkill_api="gkill_api"
-            v-on="errorMessageRelayHandlers"
-            @requested_apply_playing_timeis="(data: PlayingTimeIsData) => onRequestedApplyPlayingTimeIs(data)"
-            @requested_reload_application_config="() => { }" ref="edit_playing_time_is_dialog" />
         <EditSavedFindQueryDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             @requested_apply_saved_find_query_struct="(data: SavedFindQueryData) => onRequestedApplySavedFindQueryStruct(data)"
+            @requested_apply_dashboard_struct="(data: DashboardData) => onRequestedApplyDashboardStruct(data)"
+            @requested_apply_playing_timeis="(data: PlayingTimeIsData) => onRequestedApplyPlayingTimeIs(data)"
             @requested_reload_application_config="() => { }" ref="edit_saved_find_query_dialog" />
         <NewBoardNameDialog :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
@@ -289,8 +277,6 @@ import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
 import ServerConfigDialog from '../dialogs/server-config-dialog.vue'
 import ManageSkillListDialog from '../dialogs/manage-skill-list-dialog.vue'
 import EditRyuuDialog from '../dialogs/edit-ryuu-dialog.vue'
-import EditDashboardDialog from '../dialogs/edit-dashboard-dialog.vue'
-import EditPlayingTimeIsDialog from '../dialogs/edit-playing-time-is-dialog.vue'
 import EditSavedFindQueryDialog from '../dialogs/edit-saved-find-query-dialog.vue'
 
 import type { ApplicationConfigViewEmits } from './application-config-view-emits'
@@ -322,8 +308,6 @@ const {
     edit_kftl_template_dialog,
     edit_dnote_dialog,
     edit_ryuu_dialog,
-    edit_dashboard_dialog,
-    edit_playing_time_is_dialog,
     edit_saved_find_query_dialog,
     server_config_dialog,
     manage_skill_list_dialog,
@@ -364,8 +348,6 @@ const {
     show_edit_kftl_template_dialog,
     show_edit_dnote_dialog,
     show_edit_ryuu_dialog,
-    show_edit_dashboard_dialog,
-    show_edit_playing_time_is_dialog,
     show_edit_saved_find_query_dialog,
     show_new_board_name_dialog,
     show_server_config_dialog,

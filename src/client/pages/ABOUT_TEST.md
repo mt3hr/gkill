@@ -178,7 +178,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/dnote-relay-chain.test.ts` | Dnote の中継チェーンが `requested_reload_kyou` を親まで通すこと（タグ/テキスト/通知の変更はこれしか信号を出さない） |
 | `src/client/__tests__/unit/composables/edit-kyou-tags-view.test.ts` | 追加/編集画面に埋め込むタグ欄。値を集めるだけで登録は親の `save()` が行う |
 | `src/client/__tests__/unit/composables/edit-mi-board-struct-view.test.ts` | Mi の板構造の編集（削除の walk が「子で true が返ったら親が splice」の形になっていること） |
-| `src/client/__tests__/unit/composables/edit-playing-time-is-dialog.test.ts` | 実行中検索のカスタム条件ダイアログ（「カスタマイズする」チェックの3状態の意味論） |
+| `src/client/__tests__/unit/composables/edit-saved-find-query-dialog.test.ts` | 設定の「検索条件」ダイアログ（実行中の「カスタマイズする」チェックの3状態の意味論、適用で触ったセクションだけを渡すこと） |
 | `src/client/__tests__/unit/composables/edit-saved-find-query-list-dialog.test.ts` | 保存済み検索条件の一覧編集。受け取ったリストのクローンを編集し、適用まで元を書き換えないこと |
 | `src/client/__tests__/unit/composables/find-query-editor-view.test.ts` | 検索条件エディタ（Dnote/Ryuu が使う）。TimeIsのタグツリーへ流すのは `timeis_tags` であって `tags` ではないこと |
 | `src/client/__tests__/unit/composables/find-query-editor-dialog-default-signal.test.ts` | 検索条件エディタダイアログの初期値規則（`query_id` が空＝未セットの印を潰さないこと） |

@@ -946,6 +946,7 @@
     "SAVED_RYKV_FIND_KYOU_QUERY_TITLE": "Conditions de recherche du journal de vie",
     "SAVED_MI_FIND_KYOU_QUERY_TITLE": "Conditions de recherche de tâches",
     "ADD_SAVED_FIND_QUERY_TITLE": "Ajouter une condition de recherche",
+    "SAVED_FIND_QUERY_SHORTCUT_TITLE": "Raccourcis de recherche",
     "DELETE_SAVED_FIND_QUERY_TITLE": "Supprimer la condition de recherche",
     "EDIT_SAVED_FIND_QUERY_QUERY_TITLE": "Modifier la condition de recherche",
     "SAVED_FIND_QUERY_NAME_LABEL": "Nom",
