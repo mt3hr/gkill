@@ -24,6 +24,16 @@ import type RyuuItemViewEmits from '@/pages/views/ryuu-item-view-emits'
 import type RyuuItemViewProps from '@/pages/views/ryuu-item-view-props'
 import type { ComponentRef } from '@/classes/component-ref'
 import { useDeviceKind } from '@/classes/use-device-kind'
+import {
+    begin_drag_source,
+    decide_drop_position,
+    end_drag,
+    has_drag_type,
+    hide_drop_indicator,
+    is_inside_drag_source,
+    is_leaving_element,
+    show_drop_indicator,
+} from '@/classes/drag-drop-indicator'
 
 export function useRyuuItemView(options: {
     props: RyuuItemViewProps,
@@ -65,6 +75,7 @@ export function useRyuuItemView(options: {
         // Firefox対策で何かしら setData が必要なことがある
         e.dataTransfer?.setData('gkill_ryuu_query_id', id)
         if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
+        begin_drag_source(e.currentTarget instanceof HTMLElement ? e.currentTarget : null)
         e.stopPropagation()
     }
 
@@ -73,10 +84,24 @@ export function useRyuuItemView(options: {
         if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
         e.preventDefault()      // dropを許可する
         e.stopPropagation()
+        // 挿入位置の線（drop と同じ判定。掴んでいる項目そのものには出さない）
+        const el = e.currentTarget
+        if (!(el instanceof HTMLElement) || !has_drag_type(e, 'gkill_ryuu_query_id') || is_inside_drag_source(el)) return
+        show_drop_indicator(el, decide_drop_position(el.getBoundingClientRect(), e.clientY, false))
+    }
+
+    function dragleave(e: DragEvent): void {
+        if (!is_leaving_element(e)) return
+        hide_drop_indicator(e.currentTarget instanceof HTMLElement ? e.currentTarget : null)
+    }
+
+    function dragend(): void {
+        end_drag()
     }
 
     function drop(e: DragEvent): void {
         if (!effective_draggable.value) return
+        end_drag()
 
         const src_id = e.dataTransfer?.getData('gkill_ryuu_query_id')
         const target_id = model_value.value?.id ?? ''
@@ -86,9 +111,7 @@ export function useRyuuItemView(options: {
         // currentTarget基準で上/下を判定（子要素に落ちても安定）
         const el = e.currentTarget as HTMLElement | null
         if (!el) return
-        const rect = el.getBoundingClientRect()
-        const y = e.clientY - rect.top
-        const drop_type: DropTypeRyuu = (y <= rect.height * 0.5) ? 'up' : 'down'
+        const drop_type: DropTypeRyuu = decide_drop_position(el.getBoundingClientRect(), e.clientY, false) === 'before' ? 'up' : 'down'
 
         emits('requested_move_related_kyou_query', src_id, target_id, drop_type)
 
@@ -360,6 +383,8 @@ export function useRyuuItemView(options: {
         // Methods
         drag_start,
         dragover,
+        dragleave,
+        dragend,
         drop,
         load_related_kyou,
         show_kyou_dialog,

@@ -1,10 +1,10 @@
 <template>
     <tr v-if="is_item()" :draggable="effective_draggable" @dragstart="drag_start" @drop="drop"
-        :key="props.struct_obj.key" @dragover="dragover"
+        :key="props.struct_obj.key" @dragover="dragover" @dragleave="dragleave" @dragend="dragend"
         :class="effective_draggable ? 'foldable_struct_item foldable_struct_draggable' : 'foldable_struct_item'"
         @contextmenu.prevent.stop="onContextmenuItem" v-long-press="onLongPressItem">
         <td>
-            <table>
+            <table class="foldable_struct_header">
                 <tbody>
                     <tr>
                         <td v-if="is_show_checkbox">
@@ -19,11 +19,12 @@
         </td>
     </tr>
     <tr v-if="!is_item()" :draggable="effective_draggable" @dragstart="drag_start" @drop="drop"
-        :key="props.struct_obj.key" @dragover="dragover"
+        :key="props.struct_obj.key" @dragover="dragover" @dragleave="dragleave" @dragend="dragend"
         :class="effective_draggable ? 'foldable_struct_item foldable_struct_draggable' : 'foldable_struct_item'"
         @contextmenu.prevent.stop="onContextmenuItem" v-long-press="onLongPressItem">
         <td>
-            <table>
+            <!-- 見出しの行（自分の名前）。ドロップ位置はこの矩形で測る（子孫の行は含めない） -->
+            <table class="foldable_struct_header">
                 <tbody>
                     <tr>
                         <td v-if="is_show_checkbox">
@@ -86,6 +87,8 @@ const {
     drag_start,
     drop,
     dragover,
+    dragleave,
+    dragend,
     update_check_item_by_user,
     click_item_by_user,
     dblclick_item_by_user,

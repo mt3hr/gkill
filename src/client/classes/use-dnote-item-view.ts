@@ -11,6 +11,16 @@ import type { ComponentRef } from '@/classes/component-ref'
 import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 import { to_single_line } from '@/classes/format-date-time'
 import { useDeviceKind } from '@/classes/use-device-kind'
+import {
+    begin_drag_source,
+    decide_drop_position,
+    end_drag,
+    has_drag_type,
+    hide_drop_indicator,
+    is_inside_drag_source,
+    is_leaving_element,
+    show_drop_indicator,
+} from '@/classes/drag-drop-indicator'
 
 export function useDnoteItemView(options: {
     props: DnoteItemProps,
@@ -87,6 +97,7 @@ export function useDnoteItemView(options: {
             e.dataTransfer.setData("gkill_dnote_item_id", id)
             e.dataTransfer.setData("gkill_dnote_item_src_list_index", String(props.dnd_list_index))
         }
+        begin_drag_source(e.currentTarget instanceof HTMLElement ? e.currentTarget : null)
         e.stopPropagation()
     }
 
@@ -95,10 +106,24 @@ export function useDnoteItemView(options: {
         if (e.dataTransfer) e.dataTransfer.dropEffect = "move"
         e.preventDefault()
         e.stopPropagation()
+        // 挿入位置の線（drop と同じ判定。掴んでいる項目そのものには出さない）
+        const el = e.currentTarget
+        if (!(el instanceof HTMLElement) || !has_drag_type(e, "gkill_dnote_item_id") || is_inside_drag_source(el)) return
+        show_drop_indicator(el, decide_drop_position(el.getBoundingClientRect(), e.clientY, false))
+    }
+
+    function dragleave(e: DragEvent): void {
+        if (!is_leaving_element(e)) return
+        hide_drop_indicator(e.currentTarget instanceof HTMLElement ? e.currentTarget : null)
+    }
+
+    function dragend(): void {
+        end_drag()
     }
 
     function drop(e: DragEvent): void {
         if (!effective_draggable.value) return
+        end_drag()
 
         const src_id = e.dataTransfer?.getData("gkill_dnote_item_id")
         const src_list_index_str = e.dataTransfer?.getData("gkill_dnote_item_src_list_index")
@@ -112,9 +137,7 @@ export function useDnoteItemView(options: {
 
         const el = e.currentTarget as HTMLElement | null
         if (!el) return
-        const rect = el.getBoundingClientRect()
-        const y = e.clientY - rect.top
-        const drop_type: "up" | "down" = y <= rect.height * 0.5 ? "up" : "down"
+        const drop_type: "up" | "down" = decide_drop_position(el.getBoundingClientRect(), e.clientY, false) === "before" ? "up" : "down"
 
         emits("requested_move_dnote_item", src_id, src_list_index, target_id, target_list_index, drop_type)
         e.preventDefault()
@@ -201,6 +224,8 @@ export function useDnoteItemView(options: {
         // DnD
         drag_start,
         dragover,
+        dragleave,
+        dragend,
         drop,
 
         // Template event handlers

@@ -183,6 +183,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/find-query-editor-view.test.ts` | 検索条件エディタ（Dnote/Ryuu が使う）。TimeIsのタグツリーへ流すのは `timeis_tags` であって `tags` ではないこと |
 | `src/client/__tests__/unit/composables/find-query-editor-dialog-default-signal.test.ts` | 検索条件エディタダイアログの初期値規則（`query_id` が空＝未セットの印を潰さないこと） |
 | `src/client/__tests__/unit/composables/find-time-is-query-editor.test.ts` | 実行中検索のカスタム条件エディタが書き込むフィールドの対応 |
+| `src/client/__tests__/unit/composables/foldable-struct-drop-position.test.ts` | ツリーのドロップ位置。挿入位置の線と drop の判定が同じ（見出しの行の矩形で測り、offsetY には頼らない）。ルート行・掴んだ行には線を出さない |
 | `src/client/__tests__/unit/composables/foldable-struct-device-gates.test.ts` | ツリーの端末種別ゲート（D&Dの可否は `is_pc`、ロングプレス補完は `has_touch`。兼用するとタッチ対応PCでD&Dが死ぬ） |
 | `src/client/__tests__/unit/composables/foldable-struct-selected-items.test.ts` | `get_selected_items()` が「入れ物」（フォルダ・ルート）を返さないこと。返すとAND検索が必ず0件になる |
 | `src/client/__tests__/unit/composables/foldable-struct-update-check.test.ts` | フォルダ行のチェック表示を葉からだけ導出すること。入れ物の `is_checked` を数えると、子が全部チェック済みでも親が indeterminate になる |

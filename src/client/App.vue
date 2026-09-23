@@ -284,6 +284,34 @@ body::-webkit-scrollbar {
   z-index: 3;
 }
 
+/* ドラッグ＆ドロップの挿入位置の表示（classes/drag-drop-indicator.ts がクラスを付け外しする）。
+   before=対象の上辺・after=下辺に線、inside=フォルダの中へ入れる（見出しを塗って枠で囲む）。
+   線は inset の box-shadow で描き、行の高さを動かさない。
+   tr の box-shadow / opacity は描かないブラウザがあるので、tr に付いたときは直下の td に描く。
+   関連情報の v-card は elevation の box-shadow を持つので !important で上書きする */
+.gkill-drop-before:not(tr),
+tr.gkill-drop-before>td {
+  box-shadow: inset 0 3px 0 0 rgb(var(--v-theme-primary)) !important;
+}
+
+.gkill-drop-after:not(tr),
+tr.gkill-drop-after>td {
+  box-shadow: inset 0 -3px 0 0 rgb(var(--v-theme-primary)) !important;
+}
+
+.gkill-drop-inside:not(tr),
+tr.gkill-drop-inside>td>.foldable_struct_header {
+  background-color: rgba(var(--v-theme-primary), 0.16) !important;
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: -2px;
+}
+
+/* 掴んでいる元は薄くする（どれを動かしているかが分かるように） */
+.gkill-drag-source:not(tr),
+tr.gkill-drag-source>td {
+  opacity: 0.45;
+}
+
 
 /* =========================================================
    Scrollbar style (dedup)
