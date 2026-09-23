@@ -28,7 +28,7 @@ gkill の不変条件の多くは「例外もエラーも出さずに静かに�
 | `edit-kyou-tags-view.vue`・`kyou-tags.ts`・`use-add-*.ts`・`use-edit-*.ts` | [gkill-client-tags](.claude/skills/gkill-client-tags/SKILL.md) | `add_tag` 完了前に `registered_kyou` を emit すると、タグ付きで追加した記録がエラーも警告も出ないまま一覧に現れない（順序が唯一の防御線） |
 | `rudbeckia-page.vue`・`use-rudbeckia-page.ts`・ホストされる `rykv-view.vue` / `mi-view.vue` / `dashboard-view.vue` / `playing-time-is-view.vue` | [gkill-client-rudbeckia](.claude/skills/gkill-client-rudbeckia/SKILL.md) | バーが画面最上部へ飛ぶ／4枚のウィンドウが完全に重なって1枚に見える／2枚目が1枚目の保存条件を上書きする |
 | `src/server/gkill/mcp/**` | [gkill-mcp](.claude/skills/gkill-mcp/SKILL.md) | 並行リクエストで別ユーザーの session/user が混線し、他人のセッションに紐づく file-link URL を発行する |
-| `src/android/**`・`src/wear_os/**`・`handle_submit_kftl_text.go` | [gkill-mobile](.claude/skills/gkill-mobile/SKILL.md) | 同梱サーバが全インターフェース待受になり LAN の第三者が無認証で全記録を読み書きできる／打刻が二重登録される |
+| `src/android/**`・`src/wear_os/**`・`handle_submit_kftl_text.go` | [gkill-mobile](.claude/skills/gkill-mobile/SKILL.md) | 起動引数や Kotlin に待受アドレスを書き戻すと、設定画面の待受アドレス・TLS が Android でだけ黙って効かなくなる／打刻が二重登録される |
 | `AGENTS.md`・`CLAUDE.md`・`.claude/skills/**`・`documents/**`・`resources/manual_src/**`・各 `ABOUT_TEST.md` | [gkill-docs](.claude/skills/gkill-docs/SKILL.md) | 件数・リンク・生成鮮度の機械検査（verify_docs）が落ちる／マニュアルの7言語セットが崩れる |
 
 <!-- ROUTING-TABLE:END -->
@@ -53,7 +53,7 @@ gkill の不変条件の多くは「例外もエラーも出さずに静かに�
 | Android 共有が2件保存される／ログイン失敗でエラー表示が消える | gkill-client-foundation |
 | プラグインの本文がときどき空白／プロセスが殺され続ける／歩数が2倍 | gkill-plugin |
 | MCP で他人のセッションの URL が発行される／`ErrPluginBusy` | gkill-mcp |
-| LAN の第三者が無認証で読める／打刻が二重登録される | gkill-mobile |
+| 設定画面の待受アドレスや TLS が Android だけ効かない／打刻が二重登録される | gkill-mobile |
 | `npm run verify_docs` が落ちた | gkill-docs |
 
 ## Build & Development Commands

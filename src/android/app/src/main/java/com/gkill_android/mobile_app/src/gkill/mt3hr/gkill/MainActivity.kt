@@ -5,12 +5,14 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.net.http.SslError
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
 import android.view.View
+import android.webkit.SslErrorHandler
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -19,6 +21,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import java.io.File
@@ -35,8 +38,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
 
     private var gkillServerProcess: Process? = null
-    private var serverUrlLatch = CountDownLatch(1)
-    private var detectedServerUrl = DEFAULT_SERVER_URL
 
     companion object {
         private const val STORAGE_PERMISSION_REQUEST = 1001
@@ -60,20 +61,20 @@ class MainActivity : AppCompatActivity() {
         /** アプリ専用領域から [GKILL_HOME] へ複製するときの一時ディレクトリの接尾辞。 */
         const val MIGRATION_STAGING_SUFFIX = ".migrating"
 
-        /** 既定のサーバ待受ポート。 */
-        const val DEFAULT_SERVER_PORT = 9999
-
-        /** WebView が最初に読み込む既定URL。stdout からURLを検出するまでのフォールバックでもある。 */
-        const val DEFAULT_SERVER_URL = "http://localhost:9999"
-
         /**
-         * gkill_server をループバックに限定して待ち受けさせるアドレス。
+         * gkill_server が起動するたびに標準出力へ出す、WebView で開くURLの行の接頭辞。
          *
-         * これは実行時オーバーライド（--address）であって設定DBは書き換えない。
-         * 全インターフェース待受をやめ、同一LANの別端末から :9999 へ到達できないようにする。
-         * stdout からのURL検出（http://localhost:9999）はポートが同じなので無傷。
+         * URL はサーバが ServerConfig（ENABLE_THIS_DEVICE の行の ADDRESS / ENABLE_TLS）から
+         * `<http|https>://localhost:<ポート>` の形で組み立てる（close.go の PrintStartedMessage。
+         * デスクトップ版のウィンドウも同じ組み立て方）。ここで拾った URL が画面のアドレスの唯一の出所で、
+         * Kotlin 側にポートやスキームを持たない。サーバ設定を保存するとサーバは内部で作り直され、
+         * この行をもう一度出す。
          */
-        const val SERVER_LISTEN_ADDRESS = "127.0.0.1:9999"
+        const val SERVER_URL_LINE_PREFIX = "Access your record space at : "
+
+        /** 前回拾ったサーバURLを保存する SharedPreferences の名前とキー。 */
+        private const val PREFS_NAME = "gkill_server"
+        private const val PREF_LAST_SERVER_URL = "last_server_url"
 
         /** 既存サーバの応答を確かめる先行プローブの接続タイムアウト(ms)。 */
         const val PROBE_TIMEOUT_MS = 300
@@ -84,20 +85,88 @@ class MainActivity : AppCompatActivity() {
         /** 起動待ちループのリトライ間隔(ms)。 */
         const val RETRY_INTERVAL_MS = 500L
 
+        /** 起動待ちループの試行回数（500ms × 60 = 最大30秒）。 */
+        const val SERVER_CONNECT_ATTEMPTS = 60
+
+        /** プロセスを起動してから URL の行が出るまで待つ上限(ms)。超えたら知らせる。 */
+        const val SERVER_URL_WAIT_MS = 60_000L
+
         /**
          * gkill_server の起動引数を組み立てる。
          *
-         * companion に切り出しているのはユニットテストから引数（--address 127.0.0.1:9999 を
-         * 含むこと）を検証できるようにするため。
+         * --address と --disable_tls は渡さない。どちらも設定DBを書き換えない実行時上書きで、
+         * 渡すと設定画面の待受アドレスと TLS が Android でだけ効かなくなる（2026-09-24 まで渡していた）。
+         * companion に切り出しているのはユニットテストから引数を検証できるようにするため。
          */
         fun buildGkillServerArgs(binaryPath: String, gkillHomePath: String): List<String> =
             listOf(
                 binaryPath,
                 "--gkill_home_dir", gkillHomePath,
-                "--address", SERVER_LISTEN_ADDRESS,
-                "--disable_tls",
                 "--log", "debug"
             )
+
+        /**
+         * 標準出力の1行がサーバURLの行なら、その URL を返す。
+         * http / https でループバックのホストを指す URL だけを受け付ける。サーバは常に localhost で
+         * 知らせるので、それ以外は壊れた行として捨てる（例: ADDRESS をポートだけの "9999" にすると
+         * サーバは "http://localhost9999" を出す。これを開くと名前解決に失敗するだけで原因が見えない）。
+         */
+        fun parseServerUrlLine(line: String): String? {
+            if (!line.startsWith(SERVER_URL_LINE_PREFIX)) return null
+            val url = line.removePrefix(SERVER_URL_LINE_PREFIX).trim()
+            val uri = try {
+                URI(url)
+            } catch (_: Exception) {
+                return null
+            }
+            val scheme = uri.scheme?.lowercase()
+            if (scheme != "http" && scheme != "https") return null
+            if (!isLoopbackHost(uri.host)) return null
+            return url
+        }
+
+        /** URL のポート。明示が無ければスキームの既定（http=80 / https=443）。解析できなければ null。 */
+        fun serverPortOf(url: String): Int? {
+            val uri = try {
+                URI(url)
+            } catch (_: Exception) {
+                return null
+            }
+            if (uri.port != -1) return uri.port
+            return when (uri.scheme?.lowercase()) {
+                "http" -> 80
+                "https" -> 443
+                else -> null
+            }
+        }
+
+        /**
+         * 2つの URL が同じオリジン（スキーム・ホスト・ポート）か。パスは見ない。
+         * WebView が開いているページを、同じサーバのURLが再通知されただけで開き直さないために使う。
+         */
+        fun isSameServerOrigin(current: String?, target: String): Boolean {
+            if (current == null) return false
+            val a = try {
+                URI(current)
+            } catch (_: Exception) {
+                return false
+            }
+            val b = try {
+                URI(target)
+            } catch (_: Exception) {
+                return false
+            }
+            return a.scheme.equals(b.scheme, ignoreCase = true) &&
+                a.host.equals(b.host, ignoreCase = true) &&
+                serverPortOf(current) == serverPortOf(target)
+        }
+
+        /** 同梱サーバとみなすループバックのホスト名か。 */
+        fun isLoopbackHost(host: String?): Boolean =
+            when (host?.lowercase()) {
+                "localhost", "127.0.0.1", "::1", "[::1]" -> true
+                else -> false
+            }
 
         /** [copyAppPrivateHomeIfNeeded] の結果。 */
         enum class HomeMigrationResult {
@@ -187,6 +256,90 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * サーバが URL の行を出したときに呼ばれる。起動時のほか、画面の設定からサーバ設定を保存して
+     * サーバが内部で作り直されたときにも出るので、待受アドレスや TLS を変えればここで新しい URL が届く。
+     *
+     * 呼ばれるのは標準出力の読み取りスレッドで、そこは出力を吸い続けなければならない
+     * （止めるとバッファが詰まってサーバが止まる）ので、待受の確認は別スレッドで行う。
+     */
+    private fun onServerUrlAnnounced(url: String, process: Process) {
+        Log.i("gkill", "サーバーURL検出: $url")
+        saveLastServerUrl(url)
+        Thread { openWhenReachable(url, process) }.start()
+    }
+
+    /**
+     * [url] のポートが応答するまで待ってから WebView で開く。
+     *
+     * URL の行は待ち受けを始める前に出るので、行を拾っただけでは開けるとは限らない。
+     * [process] が終了したら待つのをやめる（待受に失敗して落ちたのに、同じポートの別物を開かないため）。
+     * 既に動いているサーバを使い回すときは起動したプロセスが無いので null。
+     */
+    private fun openWhenReachable(url: String, process: Process?) {
+        val port = serverPortOf(url)
+        if (port == null) {
+            Log.w("gkill", "サーバーURLからポートを取り出せない: $url")
+            return
+        }
+        for (i in 1..SERVER_CONNECT_ATTEMPTS) {
+            if (process != null && !process.isAlive) return
+            if (isPortOpen(port, SERVER_CONNECT_TIMEOUT_MS)) {
+                runOnUiThread { showServerPage(url) }
+                return
+            }
+            Thread.sleep(RETRY_INTERVAL_MS)
+        }
+        runOnUiThread {
+            Toast.makeText(this, "gkill_server 起動に失敗", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /**
+     * WebView でサーバの画面を出す。今開いているページと同じオリジンなら開き直さない
+     * （サーバ設定を保存しただけで同じ URL がもう一度届くため）。
+     * オリジンが変わったとき（ポートや http/https を変えたとき）は新しい URL へ移る。
+     * オリジンごとに保存領域が分かれるので、その場合はログインし直しになる。
+     */
+    private fun showServerPage(url: String) {
+        if (isFinishing || isDestroyed) return
+        findViewById<View>(R.id.loading_layout).visibility = View.GONE
+        // onCreateで設定済みだが、読み込み直前にも明示しておく。
+        // 読み込むのは自前サーバだけなので content:// と file:// は塞ぐ。
+        // applyでまとめるとレシーバがラムダ経由になり静的解析が追えないため、
+        // onCreate側と同じくwebViewを明示的に書く
+        webView.settings.allowContentAccess = false
+        webView.settings.allowFileAccess = false
+        webView.visibility = View.VISIBLE
+        if (!isSameServerOrigin(webView.url, url)) {
+            webView.loadUrl(url)
+        }
+    }
+
+    /**
+     * プロセスを起動してもしばらく URL の行が出ないときに知らせる。
+     * 黙っていると画面が読み込み中のまま止まって見える。プロセスが先に終了したときは
+     * 終了コードの Toast が出るので、ここでは何もしない。
+     */
+    private fun warnIfServerUrlNotAnnounced(process: Process, announced: CountDownLatch) {
+        Thread {
+            if (!announced.await(SERVER_URL_WAIT_MS, TimeUnit.MILLISECONDS) && process.isAlive) {
+                Log.w("gkill", "gkill_server を起動してから URL の行が出ないまま ${SERVER_URL_WAIT_MS / 1000} 秒たった")
+                runOnUiThread {
+                    Toast.makeText(this, "gkill_server の起動を確認できません", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
+    }
+
+    /** 前回サーバが出した URL。次の起動で、既に動いているサーバを確かめる先に使う。 */
+    private fun loadLastServerUrl(): String? =
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getString(PREF_LAST_SERVER_URL, null)
+
+    private fun saveLastServerUrl(url: String) {
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit { putString(PREF_LAST_SERVER_URL, url) }
+    }
+
+    /**
      * gkill_server は jniLibs に libgkill_server.so として同梱し、
      * nativeLibraryDir から直接実行する。
      * targetSdk 29以降、アプリのデータディレクトリ配下のファイルは
@@ -225,8 +378,7 @@ class MainActivity : AppCompatActivity() {
                 gkillHomeDir.mkdirs()
 
                 // 起動引数は companion の buildGkillServerArgs に切り出してある（テストから検証するため）。
-                // --address 127.0.0.1:9999 はループバック限定の実行時オーバーライドで、
-                // 設定DBは書き換えず、stdout からのURL検出(http://localhost:9999)も無傷。
+                // 待受アドレスと TLS は ServerConfig に従わせるので、上書きのフラグは渡さない。
                 val pb = ProcessBuilder(
                     buildGkillServerArgs(gkillBinary.absolutePath, gkillHomeDir.absolutePath)
                 )
@@ -234,9 +386,11 @@ class MainActivity : AppCompatActivity() {
                 pb.redirectErrorStream(true)
                 val process = pb.start()
                 gkillServerProcess = process
+                val urlAnnounced = CountDownLatch(1)
+                warnIfServerUrlNotAnnounced(process, urlAnnounced)
 
                 // stdoutを別スレッドで読み続ける（バッファフルによるハング防止）
-                // サーバーURLを "Access your record space at : " 行から検出する。
+                // サーバーURLを SERVER_URL_LINE_PREFIX の行から検出する。
                 // 全行を logcat へ中継しない — サーバ出力には環境情報が混ざりうるうえ、
                 // Log.d でも release 実行時に出力される(指摘 F-008)。
                 // 異常終了の診断用に直近の行だけメモリに保持し、exitCode != 0 のときに出す。
@@ -248,11 +402,9 @@ class MainActivity : AppCompatActivity() {
                                 recentServerLines.addLast(line)
                                 if (recentServerLines.size > 20) recentServerLines.removeFirst()
                             }
-                            val prefix = "Access your record space at : "
-                            if (line.startsWith(prefix)) {
-                                detectedServerUrl = line.removePrefix(prefix).trim()
-                                Log.i("gkill", "サーバーURL検出: $detectedServerUrl")
-                                serverUrlLatch.countDown()
+                            parseServerUrlLine(line)?.let { url ->
+                                urlAnnounced.countDown()
+                                onServerUrlAnnounced(url, process)
                             }
                         }
                     } catch (e: Exception) {
@@ -325,6 +477,18 @@ class MainActivity : AppCompatActivity() {
                     // 利用者が開いたブックマーク先が端末ログへ残る。指摘 F-008)
                     Log.w("gkill", "外部URLを開けませんでした (${e.javaClass.simpleName})")
                     true
+                }
+            }
+
+            override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
+                // ServerConfig で TLS を有効にすると、同梱サーバは自己署名の証明書で https を返す。
+                // ループバックの同梱サーバに限って通す。ループバックへの http はサーバを認証せずに
+                // 受け入れているので、ここで証明書を検証しなくても守りは弱くならない。
+                // それ以外（外部のサイト）は既定どおり止める。
+                if (isLoopbackHost(Uri.parse(error.url).host)) {
+                    handler.proceed()
+                } else {
+                    handler.cancel()
                 }
             }
         }
@@ -451,33 +615,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startServerAndOpen() {
-        serverUrlLatch = CountDownLatch(1)
-        detectedServerUrl = DEFAULT_SERVER_URL
-        // ポート先行プローブ: 既に応答する gkill_server があれば kill/start を丸ごと飛ばす。
-        // 画面回転などで Activity が作り直されても、生きているサーバを殺して立て直さないため。
+        // 先行プローブ: 前回サーバが出した URL のポートが応答すれば kill/start を丸ごと飛ばす。
+        // Activity が作り直されても、生きているサーバを殺して立て直さないため。
+        // ポートは ServerConfig で変わるので、固定値ではなく前回拾った URL から取る。
         // ソケット接続はメインスレッドで行えないので別スレッドに逃がす。
         Thread {
-            if (isPortOpen(DEFAULT_SERVER_PORT, PROBE_TIMEOUT_MS)) {
+            val lastUrl = loadLastServerUrl()
+            val lastPort = lastUrl?.let { serverPortOf(it) }
+            if (lastUrl != null && lastPort != null && isPortOpen(lastPort, PROBE_TIMEOUT_MS)) {
                 Log.i("gkill", "既存の gkill_server が応答したので起動処理を省略する")
-                // waitUntilServerStarts が 10 秒待たずに進めるよう、URL検出ラッチを即座に開ける
-                serverUrlLatch.countDown()
+                openWhenReachable(lastUrl, null)
             } else {
                 // 応答が無いときだけ従来経路。死にかけプロセスの回収も兼ねる。
+                // URL はサーバが起動行で知らせてくる（onServerUrlAnnounced）。
                 killExistingGkillServer()
                 startGkillServer()
             }
         }.start()
-        waitUntilServerStarts { url ->
-            findViewById<View>(R.id.loading_layout).visibility = View.GONE
-            // onCreateで設定済みだが、読み込み直前にも明示しておく。
-            // 読み込むのは自前サーバだけなので content:// と file:// は塞ぐ。
-            // applyでまとめるとレシーバがラムダ経由になり静的解析が追えないため、
-            // onCreate側と同じくwebViewを明示的に書く
-            webView.settings.allowContentAccess = false
-            webView.settings.allowFileAccess = false
-            webView.visibility = View.VISIBLE
-            webView.loadUrl(url)
-        }
     }
 
     override fun onDestroy() {
@@ -495,10 +649,7 @@ class MainActivity : AppCompatActivity() {
         if (scheme != "http" && scheme != "https") {
             return false
         }
-        return when (url.host?.lowercase()) {
-            "localhost", "127.0.0.1", "::1", "[::1]" -> true
-            else -> false
-        }
+        return isLoopbackHost(url.host)
     }
 
     private fun killExistingGkillServer() {
@@ -538,36 +689,5 @@ class MainActivity : AppCompatActivity() {
         } catch (_: Exception) {
             false
         }
-    }
-
-    private fun waitUntilServerStarts(onReady: (String) -> Unit) {
-        Thread {
-            // stdoutからURLを受け取るまで最大10秒待つ
-            serverUrlLatch.await(10, TimeUnit.SECONDS)
-
-            // URLからポートを取得 (例: "http://localhost:9999" → 9999)
-            val port = try {
-                URI(detectedServerUrl).port.let { if (it == -1) DEFAULT_SERVER_PORT else it }
-            } catch (_: Exception) {
-                DEFAULT_SERVER_PORT
-            }
-
-            var connected = false
-            for (i in 1..60) { // 最大30秒待つ（500ms × 60）
-                if (isPortOpen(port, SERVER_CONNECT_TIMEOUT_MS)) {
-                    connected = true
-                    break
-                }
-                Thread.sleep(RETRY_INTERVAL_MS)
-            }
-
-            if (connected) {
-                runOnUiThread { onReady(detectedServerUrl) }
-            } else {
-                runOnUiThread {
-                    Toast.makeText(this, "gkill_server 起動に失敗", Toast.LENGTH_LONG).show()
-                }
-            }
-        }.start()
     }
 }

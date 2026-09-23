@@ -2,11 +2,12 @@
 <!--
   平文(HTTP)通信の許可範囲を絞る設定。
 
-  同梱の gkill_server は TLS 無効(disable_tls)でループバックに平文配信し、
-  WebView が読むのはそのループバック(http://localhost:9999 / 127.0.0.1)だけ。
-  よって既定では平文を全面禁止し、localhost / 127.0.0.1 のドメインに限って許可する。
+  同梱の gkill_server の待受アドレスと TLS は ServerConfig に従い（既定は TLS 無効の平文）、
+  WebView が読むのはサーバが知らせる localhost の URL（http / https、ポートは設定次第）だけ。
+  よって既定では平文を全面禁止し、localhost / 127.0.0.1 のドメインに限って許可する（ポートは問わない）。
   外部ホストへの平文接続は不可になるので、以前の usesCleartextTraffic="true" と違い
-  意図しない平文送信を防げる（ループバック限定配信なので互換影響は無い）。
+  意図しない平文送信を防げる。TLS 有効時の自己署名証明書は MainActivity の
+  onReceivedSslError がループバックに限って通す。
 -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="false" />

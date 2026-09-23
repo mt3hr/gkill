@@ -129,58 +129,86 @@ class MainActivityUnitTest {
     }
 
     /**
-     * The gkill server URL used by the WebView should be localhost:9999.
+     * 待受アドレスと TLS は ServerConfig に従わせるので、実行時上書きの --address と
+     * --disable_tls を起動引数に入れない（入れると設定画面の値が Android でだけ効かなくなる）。
      */
     @Test
-    fun serverUrl_isLocalhostPort9999() {
-        // Reference the real companion constant so an accidental change is caught.
-        assertEquals("http://localhost:9999", MainActivity.DEFAULT_SERVER_URL)
-    }
-
-    /**
-     * The server port should be 9999 (default gkill port).
-     */
-    @Test
-    fun serverPort_is9999() {
-        assertEquals(9999, MainActivity.DEFAULT_SERVER_PORT)
-    }
-
-    /**
-     * The server must listen on the loopback interface only (127.0.0.1:9999),
-     * so a different device on the same LAN cannot reach it.
-     */
-    @Test
-    fun serverListenAddress_isLoopbackOnly() {
-        assertEquals("127.0.0.1:9999", MainActivity.SERVER_LISTEN_ADDRESS)
-    }
-
-    /**
-     * The launch arguments must pin the listen address to the loopback interface.
-     * The arg list is factored into the companion so it can be verified here.
-     */
-    @Test
-    fun serverArgs_containLoopbackAddress() {
+    fun serverArgs_doNotOverrideServerConfig() {
         val args = MainActivity.buildGkillServerArgs(
             "/data/app/lib/arm64/libgkill_server.so",
             MainActivity.GKILL_HOME
         )
-        val addressIndex = args.indexOf("--address")
-        assertTrue("--address フラグが起動引数に含まれること", addressIndex >= 0)
-        assertTrue("--address の値が続くこと", addressIndex + 1 < args.size)
-        assertEquals("127.0.0.1:9999", args[addressIndex + 1])
+        assertFalse("--address を渡さないこと", args.contains("--address"))
+        assertFalse("--disable_tls を渡さないこと", args.contains("--disable_tls"))
     }
 
     /**
-     * The launch arguments must keep the existing flags (home dir / disable TLS / log).
+     * The launch arguments must keep the home dir and log flags.
      */
     @Test
-    fun serverArgs_keepExistingFlags() {
+    fun serverArgs_keepHomeAndLogFlags() {
         val args = MainActivity.buildGkillServerArgs(
             "/lib/libgkill_server.so",
             "/home/gkill"
         )
         assertEquals("/lib/libgkill_server.so", args[0])
-        assertTrue(args.containsAll(listOf("--gkill_home_dir", "/home/gkill", "--disable_tls", "--log", "debug")))
+        assertEquals(listOf("/lib/libgkill_server.so", "--gkill_home_dir", "/home/gkill", "--log", "debug"), args)
+    }
+
+    /**
+     * サーバが ServerConfig から組み立てた起動行の URL を、http でも https でもそのまま拾う。
+     */
+    @Test
+    fun serverUrlLine_isParsedForHttpAndHttps() {
+        assertEquals(
+            "http://localhost:9999",
+            MainActivity.parseServerUrlLine("Access your record space at : http://localhost:9999")
+        )
+        assertEquals(
+            "https://localhost:8443",
+            MainActivity.parseServerUrlLine("Access your record space at : https://localhost:8443\r")
+        )
+    }
+
+    /** 起動行でない行や、URL として使えない起動行は拾わない。 */
+    @Test
+    fun serverUrlLine_rejectsOtherLines() {
+        assertNull(MainActivity.parseServerUrlLine("gkill server started."))
+        assertNull(MainActivity.parseServerUrlLine("Access your record space at : "))
+        assertNull(MainActivity.parseServerUrlLine("Access your record space at : http://localhost9999"))
+        assertNull(MainActivity.parseServerUrlLine("Access your record space at : ftp://localhost:9999"))
+    }
+
+    /** URL のポートは明示があればそれ、無ければスキームの既定。解析できなければ null。 */
+    @Test
+    fun serverPortOf_usesExplicitOrSchemeDefault() {
+        assertEquals(9998, MainActivity.serverPortOf("http://localhost:9998"))
+        assertEquals(80, MainActivity.serverPortOf("http://localhost"))
+        assertEquals(443, MainActivity.serverPortOf("https://localhost"))
+        assertNull(MainActivity.serverPortOf("not a url"))
+    }
+
+    /**
+     * 同じオリジンの URL が再通知されても開き直さず、ポートやスキームが変わったときだけ開き直す。
+     */
+    @Test
+    fun sameServerOrigin_comparesSchemeHostAndPort() {
+        assertTrue(MainActivity.isSameServerOrigin("http://localhost:9999/rykv?x=1", "http://localhost:9999"))
+        assertTrue(MainActivity.isSameServerOrigin("https://localhost/", "https://localhost:443"))
+        assertFalse(MainActivity.isSameServerOrigin("http://localhost:9999/", "http://localhost:9998"))
+        assertFalse(MainActivity.isSameServerOrigin("http://localhost:9999/", "https://localhost:9999"))
+        assertFalse(MainActivity.isSameServerOrigin(null, "http://localhost:9999"))
+    }
+
+    /** 自己署名証明書を通してよいのはループバックのホストだけ。 */
+    @Test
+    fun loopbackHost_acceptsOnlyLoopback() {
+        listOf("localhost", "LOCALHOST", "127.0.0.1", "::1", "[::1]").forEach {
+            assertTrue(it, MainActivity.isLoopbackHost(it))
+        }
+        listOf("192.168.0.10", "example.com", "127.0.0.2", "", null).forEach {
+            assertFalse(it.toString(), MainActivity.isLoopbackHost(it))
+        }
     }
 
     /**

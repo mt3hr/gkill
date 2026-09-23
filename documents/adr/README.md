@@ -277,6 +277,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [1101](1101-wear-mood-goes-through-kftl-text.md) | ウォッチの気分記録は専用メッセージパスを足さず、KFTL テキストを既存の送信経路へ流す | Accepted |
 | [1102](1102-wear-ui-strings-in-android-resources-with-ja-default.md) | Wear OS の UI 文字列は Android リソースの7言語セット（既定 ja）で持ち、時計へ渡すエラー文言はスマホ側で訳す | Accepted |
 | [1103](1103-wear-app-chips-match-tile.md) | ウォッチアプリのチップはタイルと同じ見た目にし、確認画面は ScalingLazyColumn で収める | Accepted |
+| [1104](1104-android-server-follows-server-config.md) | Android 同梱サーバの待受・TLS・画面のアドレスは上書きせず ServerConfig に従わせる | Accepted |
 
 ## 旧→新 対応表
 
