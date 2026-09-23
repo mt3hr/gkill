@@ -44,8 +44,6 @@ export function useApplicationConfigView(options: {
     const edit_kftl_template_dialog = ref<ComponentRef | null>(null)
     const edit_dnote_dialog = ref<ComponentRef | null>(null)
     const edit_ryuu_dialog = ref<ComponentRef | null>(null)
-    const edit_dashboard_dialog = ref<ComponentRef | null>(null)
-    const edit_playing_time_is_dialog = ref<ComponentRef | null>(null)
     const edit_saved_find_query_dialog = ref<ComponentRef | null>(null)
     const server_config_dialog = ref<ComponentRef | null>(null)
     const manage_skill_list_dialog = ref<ComponentRef | null>(null)
@@ -401,27 +399,17 @@ javascript: (function () {
     function show_edit_ryuu_dialog() {
         edit_ryuu_dialog.value?.show()
     }
-    function show_edit_dashboard_dialog() {
-        let dnote_query = undefined
-        let mi_query = undefined
-        if (cloned_application_config.value.dashboard_json_data) {
-            const config = DashboardConfig.parse(cloned_application_config.value.dashboard_json_data)
-            dnote_query = config.dashboard_dnote_find_kyou_query ?? undefined
-            mi_query = config.dashboard_mi_find_kyou_query ?? undefined
-        }
-        edit_dashboard_dialog.value?.show(dnote_query, mi_query)
-    }
-    function show_edit_playing_time_is_dialog() {
-        let playing_timeis_query = undefined
-        if (cloned_application_config.value.playing_timeis_json_data) {
-            const config = PlayingTimeIsConfig.parse(cloned_application_config.value.playing_timeis_json_data)
-            playing_timeis_query = config.playing_timeis_find_kyou_query ?? undefined
-        }
-        edit_playing_time_is_dialog.value?.show(playing_timeis_query)
-    }
+    // 「検索条件」ダイアログは検索ショートカット・実行中・ダッシュボードの3セクションを持つ
+    // （以前は3つの別々のダイアログだった）。parse は null を受けて未設定（null の欄）を返す
     function show_edit_saved_find_query_dialog() {
-        const config = SavedFindQueryConfig.parse(cloned_application_config.value.saved_find_query_json_data)
-        edit_saved_find_query_dialog.value?.show(config)
+        const config = cloned_application_config.value
+        const dashboard_config = DashboardConfig.parse(config.dashboard_json_data)
+        edit_saved_find_query_dialog.value?.show({
+            saved_find_query_config: SavedFindQueryConfig.parse(config.saved_find_query_json_data),
+            playing_timeis_find_kyou_query: PlayingTimeIsConfig.parse(config.playing_timeis_json_data).playing_timeis_find_kyou_query,
+            dashboard_dnote_find_kyou_query: dashboard_config.dashboard_dnote_find_kyou_query,
+            dashboard_mi_find_kyou_query: dashboard_config.dashboard_mi_find_kyou_query,
+        })
     }
     function show_new_board_name_dialog(): void {
         new_board_name_dialog.value?.show()
@@ -523,8 +511,6 @@ javascript: (function () {
         edit_kftl_template_dialog,
         edit_dnote_dialog,
         edit_ryuu_dialog,
-        edit_dashboard_dialog,
-        edit_playing_time_is_dialog,
         edit_saved_find_query_dialog,
         server_config_dialog,
         manage_skill_list_dialog,
@@ -567,8 +553,6 @@ javascript: (function () {
         show_edit_kftl_template_dialog,
         show_edit_dnote_dialog,
         show_edit_ryuu_dialog,
-        show_edit_dashboard_dialog,
-        show_edit_playing_time_is_dialog,
         show_edit_saved_find_query_dialog,
         show_new_board_name_dialog,
         show_server_config_dialog,

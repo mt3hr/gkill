@@ -39,9 +39,10 @@ test.describe('Saved Find Query', () => {
   test('設定画面で登録した検索条件をサイドバーFABから呼び出せる', async ({ page }) => {
     await navigateToRykv(page)
 
-    // 設定 → 検索条件 → ライフログ検索条件
+    // 設定 → 検索条件（検索ショートカットのセクション）→ ライフログ検索条件
     await page.locator('button:has(.mdi-cog)').first().click()
-    await page.getByRole('button', { name: '検索条件', exact: true }).click({ timeout: 15000 })
+    await page.locator('.gkill-floating-dialog').filter({ has: page.locator('.gkill_version_info') })
+      .getByRole('button', { name: '検索条件', exact: true }).click({ timeout: 15000 })
     await expect(topDialog(page).getByRole('button', { name: 'ライフログ検索条件', exact: true }))
       .toBeVisible({ timeout: 15000 })
     await topDialog(page).getByRole('button', { name: 'ライフログ検索条件', exact: true }).click()

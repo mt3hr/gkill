@@ -20,7 +20,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card variant="flat" class="pa-2">
+        <v-card variant="flat" class="pa-2 saved_find_query_list_card">
           <v-row class="pa-0 ma-0" align="center">
             <v-col class="pa-1 ma-0">
               <span>{{ title }}</span>
@@ -49,6 +49,8 @@
                 :title="i18n.global.t('DELETE_SAVED_FIND_QUERY_TITLE')" />
             </v-col>
           </v-row>
+          <!-- 右下の＋ボタンの逃げ（最後の行が＋ボタンの下に潜らないように） -->
+          <div class="saved_find_query_list_fab_clearance" :style="fab_clearance_style()" aria-hidden="true" />
           <v-row class="pa-0 ma-0 pt-2 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
               <v-btn color="primary" @click="onSave">{{ i18n.global.t('APPLY_TITLE') }}</v-btn>
@@ -97,7 +99,17 @@ import { useEditSavedFindQueryListDialog } from '@/classes/use-edit-saved-find-q
 
 const props = defineProps<EditSavedFindQueryListDialogProps>()
 const emits = defineEmits<EditSavedFindQueryListDialogEmits>()
-const { is_show_dialog, ui, editing_items, current_editing_query, title, show, hide, add_item, delete_item, move_item, floating_action_button_style, onSave, onCancel, help_dialog, find_query_editor_dialog, mi_find_query_editor_dialog, open_query_editor, onAppliedQuery } = useEditSavedFindQueryListDialog({ props, emits })
+const { is_show_dialog, ui, editing_items, current_editing_query, title, show, hide, add_item, delete_item, move_item, floating_action_button_style, fab_clearance_style, onSave, onCancel, help_dialog, find_query_editor_dialog, mi_find_query_editor_dialog, open_query_editor, onAppliedQuery } = useEditSavedFindQueryListDialog({ props, emits })
 
 defineExpose({ show, hide })
 </script>
+<style lang="css" scoped>
+/* 行が0〜1件でも、見出しと行が右下の＋ボタンに重ならない高さを持たせる */
+.saved_find_query_list_card {
+    min-height: 200px;
+}
+
+.saved_find_query_list_fab_clearance {
+    flex: 0 0 auto;
+}
+</style>

@@ -277,3 +277,41 @@ describe('reload_cloned_application_config', () => {
         expect(theme_stub.global.name.value).toBe('gkill_dark_theme')
     })
 })
+
+// 検索ショートカット・実行中・ダッシュボードの3つは「検索条件」ダイアログ1つにまとめた。
+// 開くときは3つの設定を clone から解いて渡す（未設定は null のまま。空の条件を作らない）
+describe('「検索条件」ダイアログを開く', () => {
+    test('clone の3つの設定を解いて渡す', () => {
+        const props = createProps((config) => {
+            config.saved_find_query_json_data = { saved_rykv_find_kyou_querys: [], saved_mi_find_kyou_querys: [] }
+            config.playing_timeis_json_data = { playing_timeis_find_kyou_query: { query_id: 'playing', keywords: '作業' } }
+            config.dashboard_json_data = { dashboard_dnote_find_kyou_query: { query_id: 'dnote', keywords: '集計' }, dashboard_mi_find_kyou_query: null }
+        })
+        const view = useApplicationConfigView({ props, emits: noop_emits })
+        const show = vi.fn()
+        view.edit_saved_find_query_dialog.value = { show }
+
+        view.show_edit_saved_find_query_dialog()
+
+        expect(show).toHaveBeenCalledTimes(1)
+        const initial = show.mock.calls[0][0]
+        expect(initial.saved_find_query_config.saved_rykv_find_kyou_querys).toEqual([])
+        expect(initial.playing_timeis_find_kyou_query.keywords).toBe('作業')
+        expect(initial.dashboard_dnote_find_kyou_query.keywords).toBe('集計')
+        expect(initial.dashboard_mi_find_kyou_query, '未設定を空の条件にしてはいけない').toBeNull()
+    })
+
+    test('どれも未設定なら null で開く', () => {
+        const props = createProps()
+        const view = useApplicationConfigView({ props, emits: noop_emits })
+        const show = vi.fn()
+        view.edit_saved_find_query_dialog.value = { show }
+
+        view.show_edit_saved_find_query_dialog()
+
+        const initial = show.mock.calls[0][0]
+        expect(initial.playing_timeis_find_kyou_query).toBeNull()
+        expect(initial.dashboard_dnote_find_kyou_query).toBeNull()
+        expect(initial.dashboard_mi_find_kyou_query).toBeNull()
+    })
+})

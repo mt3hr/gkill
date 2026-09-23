@@ -74,22 +74,33 @@ test.describe('Settings Page CRUD', () => {
     expect(content!.length).toBeGreaterThan(0)
   })
 
-  test('playing timeis search condition dialog opens from settings', async ({ page }) => {
+  // 検索条件にかかわる設定は「検索条件」ダイアログ1つに集めた（検索ショートカット・実行中・ダッシュボードの3セクション）。
+  // 設定画面の「検索条件」ボタンと、実行中セクションの「検索条件」ボタンは同じ名前なので、
+  // どちらのダイアログかを中身（設定画面は版数の表示、検索条件ダイアログは実行中セクション）で固定して掴む
+  test('playing timeis search condition section is in the search condition dialog', async ({ page }) => {
     // 設定画面は独立ページではなく、各ページのアプリバー歯車から開くダイアログ
     await navigateToRykv(page)
     await page.locator('button:has(.mdi-cog)').first().click()
+    const settings = page.locator('.gkill-floating-dialog').filter({ has: page.locator('.gkill_version_info') })
+    await expect(settings, '設定画面が開かない').toBeVisible({ timeout: 15000 })
 
-    // 「実行中」ボタン → 実行中検索条件の中間ダイアログが開く
-    await page.getByRole('button', { name: '実行中', exact: true }).click({ timeout: 15000 })
-    const dialog = page.locator('.gkill-floating-dialog').last()
+    // 「実行中」「ダッシュボード」は単独のボタンではなくなった
+    await expect(settings.getByRole('button', { name: '実行中', exact: true })).toHaveCount(0)
+    await expect(settings.getByRole('button', { name: 'ダッシュボード', exact: true })).toHaveCount(0)
+    await settings.getByRole('button', { name: '検索条件', exact: true }).click({ timeout: 15000 })
+
+    const dialog = page.locator('.gkill-floating-dialog').filter({ has: page.locator('.playing_timeis_query_section') })
+    await expect(dialog.locator('.search_condition_section_title'), 'セクションの並びが違う')
+      .toHaveText(['検索ショートカット', '実行中', 'ダッシュボード'], { timeout: 15000 })
 
     // 未設定（チェックOFF）では条件編集ボタンは出ない。
     // チェックを入れて初めてカスタム条件を編集できる（Ryuuの関連情報アイテムと同じ形）
-    const customize = dialog.locator('.v-checkbox').filter({ hasText: '検索条件をカスタマイズする' }).locator('input')
+    const playing = dialog.locator('.playing_timeis_query_section')
+    const customize = playing.locator('.v-checkbox').filter({ hasText: '検索条件をカスタマイズする' }).locator('input')
     await expect(customize, 'カスタマイズのチェックボックスが出ない').toBeVisible({ timeout: 15000 })
-    await expect(dialog.getByRole('button', { name: '検索条件', exact: true })).toHaveCount(0)
+    await expect(playing.getByRole('button', { name: '検索条件', exact: true })).toHaveCount(0)
     await customize.click()
-    await expect(dialog.getByRole('button', { name: '検索条件', exact: true }), 'チェックしても条件編集ボタンが出ない')
+    await expect(playing.getByRole('button', { name: '検索条件', exact: true }), 'チェックしても条件編集ボタンが出ない')
       .toBeVisible({ timeout: 15000 })
 
     // 設定から開くダイアログの確定ボタンは「適用」で統一する（以前ここだけ「保存」だった）

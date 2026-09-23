@@ -153,7 +153,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 |---------|------|
 | `use-find-query-editor-view.ts` / `use-find-query-editor-dialog.ts` | 検索クエリエディタ |
 | `use-find-time-is-query-editor-view.ts` / `use-find-time-is-query-editor-dialog.ts` | 実行中検索条件エディタ（playing検索カスタム条件用。編集面はキーワードとタグのみで、記録タイプはTimeIs固定） |
-| `use-edit-playing-time-is-dialog.ts` | 実行中検索条件設定の中間ダイアログ（`is_use_custom_find_kyou_query` のON/OFFで未設定へ戻せる） |
+| `use-edit-saved-find-query-dialog.ts` | 設定の「検索条件」ダイアログ（検索ショートカット・実行中・ダッシュボードの3セクション。実行中は `is_use_custom_find_kyou_query` のON/OFFで未設定へ戻せる。適用は触ったセクションだけ） |
 | `use-keyword-query.ts` | キーワードクエリ |
 | `use-period-of-time-query.ts` | 期間クエリ |
 | `use-tag-query.ts` | タグクエリ |

@@ -150,7 +150,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | **dashboard_json_data** | — | `APPLICATION_CONFIG` テーブルの KEY として使用されるキー名。`DEVICE='ALL'`（デバイス非依存）で保存され、DashboardConfig の JSON 文字列を VALUE に格納する。`ignoreDeviceNameConfigKey` リストに含まれるため、デバイス固有設定の上書きを受けない |
 | **PlayingTimeIsConfig** | 実行中検索条件 | playing検索（Kyou付随の実行中表示・実行中画面・KFTLの/end系終了候補検索）のカスタム検索条件クラス（`src/client/classes/datas/config/playing-time-is-config.ts`）。`playing_timeis_find_kyou_query`（`FindKyouQuery \| null`）を1本保持し、null は「未設定＝従来どおり全リポジトリ対象」を表す。適用の実体は `generate_playing_timeis_query()`（`src/client/classes/api/find_query/generate-playing-timeis-query.ts`）。Wear OS の `buildPlayingFindQuery`（`GkillApiClient.kt`）とサーバ内 KFTL（`kftl_timeis.go`）の playing 検索は別系統のため、この設定は Web クライアントにのみ効く |
 | **playing_timeis_json_data** | — | `APPLICATION_CONFIG` テーブルの KEY（`PLAYING_TIMEIS_JSON_DATA`）として使用されるキー名。`DEVICE='ALL'`（デバイス非依存）で保存され、PlayingTimeIsConfig の JSON 文字列を VALUE に格納する。`ignoreDeviceNameConfigKey` リストに含まれる |
-| **SavedFindQueryConfig** | 検索条件 | 保存済み検索条件クラス（`src/client/classes/datas/config/saved-find-query-config.ts`）。`saved_rykv_find_kyou_querys`（ライフログ用）と `saved_mi_find_kyou_querys`（タスク用）の2つの名前付き検索条件リストを保持する。各アイテムは `{id, title, find_kyou_query}`（Ryuu の関連情報クエリと同形式）。設定画面の「検索条件」ボタン → ハブダイアログ（`edit-saved-find-query-dialog.vue`）→ 種別別の一覧管理ダイアログ（`edit-saved-find-query-list-dialog.vue`、1コンポーネント2インスタンス）で登録・更新・削除・並べ替えする。rykv/mi サイドバーの呼び出しFAB（0件時非表示）から選択すると `apply_saved_query()` がサイドバーへ適用する（query_id は列側を維持。ホットリロードONなら自動検索、OFFなら検索ボタンで実行） |
+| **SavedFindQueryConfig** | 検索条件 | 保存済み検索条件クラス（`src/client/classes/datas/config/saved-find-query-config.ts`）。`saved_rykv_find_kyou_querys`（ライフログ用）と `saved_mi_find_kyou_querys`（タスク用）の2つの名前付き検索条件リストを保持する。各アイテムは `{id, title, find_kyou_query}`（Ryuu の関連情報クエリと同形式）。設定画面の「検索条件」ボタン → 「検索条件」ダイアログ（`edit-saved-find-query-dialog.vue`）の「検索ショートカット」セクション → 種別別の一覧管理ダイアログ（`edit-saved-find-query-list-dialog.vue`、1コンポーネント2インスタンス）で登録・更新・削除・並べ替えする。rykv/mi サイドバーの呼び出しFAB（0件時非表示）から選択すると `apply_saved_query()` がサイドバーへ適用する（query_id は列側を維持。ホットリロードONなら自動検索、OFFなら検索ボタンで実行） |
 | **saved_find_query_json_data** | — | `APPLICATION_CONFIG` テーブルの KEY（`SAVED_FIND_QUERY_JSON_DATA`）として使用されるキー名。`DEVICE='ALL'`（デバイス非依存）で保存され、SavedFindQueryConfig の JSON 文字列を VALUE に格納する。`ignoreDeviceNameConfigKey` リストに含まれる |
 | **ServerConfig** | サーバ設定 | サーバ全体の設定。TLS・ポート番号・データディレクトリ・コマンドパス等 |
 | **TagStruct** | タグ構造 | タグの階層構造定義。フォルダでグルーピングし、初期化時チェック・非表示優先等のオプションを持つ。各ノード（フォルダ・葉）は利用者が書く説明（`description`。MCP へ渡す運用メモ）を持てる（ADR-0632。6構造ツリー共通） |
@@ -280,8 +280,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | SavedFindQueryConfig | `src/client/classes/datas/config/saved-find-query-config.ts` | 保存済み検索条件クラス（ライフログ用・タスク用の名前付き検索条件リスト） |
 | ダッシュボードページ | `src/client/pages/dashboard-page.vue` | `/dashboard` ルートのページコンポーネント |
 | ダッシュボードComposable | `src/client/classes/use-dashboard-page.ts` | ダッシュボードページのComposable |
-| EditDashboardDialog | `src/client/pages/dialogs/edit-dashboard-dialog.vue` | ダッシュボード設定編集ダイアログ |
-| EditSavedFindQueryDialog | `src/client/pages/dialogs/edit-saved-find-query-dialog.vue` | 保存済み検索条件のハブダイアログ（ライフログ/タスクの2ボタン） |
+| EditSavedFindQueryDialog | `src/client/pages/dialogs/edit-saved-find-query-dialog.vue` | 設定の「検索条件」ダイアログ（検索ショートカット・実行中・ダッシュボードの3セクション） |
 | EditSavedFindQueryListDialog | `src/client/pages/dialogs/edit-saved-find-query-list-dialog.vue` | 保存済み検索条件の一覧管理ダイアログ（`query_type` prop で rykv/mi の2インスタンス） |
 | MiFindQueryEditorView | `src/client/pages/views/mi-find-query-editor-view.vue` | MI専用検索条件エディタビュー |
 | MiFindQueryEditorDialog | `src/client/pages/dialogs/mi-find-query-editor-dialog.vue` | MI専用検索条件エディタダイアログ |

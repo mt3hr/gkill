@@ -54,12 +54,27 @@ export function useEditSavedFindQueryListDialog(options: {
         })
     }
 
+    // 右下の＋ボタン（FAB）の位置。ダイアログの下端から fab_bottom_px〜fab_bottom_px+fab_size_px の範囲を占める
+    const fab_bottom_px = 60
+    const fab_size_px = 50
+    // 下部のアクション行（gkill-dialog-actions、sticky）の高さ
+    const actions_row_height_px = 44
+
     function floating_action_button_style() {
         return {
-            bottom: '60px',
+            bottom: `${fab_bottom_px}px`,
             right: '10px',
-            height: '50px',
-            width: '50px',
+            height: `${fab_size_px}px`,
+            width: `${fab_size_px}px`,
+        }
+    }
+
+    // FAB は中身の上に重なる（position: absolute）。一覧の最後の行（削除ボタンの列）と、
+    // 行が少ないときの見出しが FAB の下に潜って押せなかった（「めり込む」）。
+    // アクション行の直前に FAB の上端までの逃げを置く。FAB の位置と同じ定数から出すので、片方だけ直してずれることがない
+    function fab_clearance_style() {
+        return {
+            height: `${fab_bottom_px + fab_size_px - actions_row_height_px + 8}px`,
         }
     }
 
@@ -133,6 +148,7 @@ export function useEditSavedFindQueryListDialog(options: {
         move_item,
         apply_edited_query,
         floating_action_button_style,
+        fab_clearance_style,
         onSave,
         onCancel,
     }
