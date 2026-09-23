@@ -34,38 +34,39 @@ beforeEach(() => {
 describe('derive_kftl_tab_label', () => {
     test('テンプレート由来ならテンプレート名を出す', () => {
         const tab = create_kftl_tab('a', 'ーみ\n買い物', '買い物テンプレ')
-        expect(derive_kftl_tab_label(tab, 0)).toBe('買い物テンプレ')
+        expect(derive_kftl_tab_label(tab)).toBe('買い物テンプレ')
     })
 
     test('本文を書き換えてもテンプレート名は残る', () => {
         const tab = create_kftl_tab('a', 'まったく別の内容', '買い物テンプレ')
-        expect(derive_kftl_tab_label(tab, 0)).toBe('買い物テンプレ')
+        expect(derive_kftl_tab_label(tab)).toBe('買い物テンプレ')
     })
 
     test('テンプレート名が空白だけなら本文から取る', () => {
         const tab = create_kftl_tab('a', '本文の1行目', '   ')
-        expect(derive_kftl_tab_label(tab, 0)).toBe('本文の1行目')
+        expect(derive_kftl_tab_label(tab)).toBe('本文の1行目')
     })
 
     test('本文は最初の非空行を使う。前の空行は飛ばす', () => {
         const tab = create_kftl_tab('a', '\n\n  \n買い物メモ\n続き')
-        expect(derive_kftl_tab_label(tab, 0)).toBe('買い物メモ')
+        expect(derive_kftl_tab_label(tab)).toBe('買い物メモ')
     })
 
     test('長い行は切って省略記号を足す', () => {
         const long_line = 'あ'.repeat(KFTL_TAB_LABEL_MAX_LENGTH + 5)
         const tab = create_kftl_tab('a', long_line)
-        expect(derive_kftl_tab_label(tab, 0)).toBe('あ'.repeat(KFTL_TAB_LABEL_MAX_LENGTH) + '…')
+        expect(derive_kftl_tab_label(tab)).toBe('あ'.repeat(KFTL_TAB_LABEL_MAX_LENGTH) + '…')
     })
 
     test('ちょうど上限の行は切らない', () => {
         const line = 'あ'.repeat(KFTL_TAB_LABEL_MAX_LENGTH)
-        expect(derive_kftl_tab_label(create_kftl_tab('a', line), 0)).toBe(line)
+        expect(derive_kftl_tab_label(create_kftl_tab('a', line))).toBe(line)
     })
 
-    test('中身が空なら通し番号', () => {
-        expect(derive_kftl_tab_label(create_kftl_tab('a', ''), 0)).toBe('1')
-        expect(derive_kftl_tab_label(create_kftl_tab('b', '  \n\n'), 2)).toBe('3')
+    test('中身が空なら見出しも空（通し番号を出さない）', () => {
+        expect(derive_kftl_tab_label(create_kftl_tab('a', ''))).toBe('')
+        expect(derive_kftl_tab_label(create_kftl_tab('b', '  \n\n'))).toBe('')
+        expect(derive_kftl_tab_label(create_kftl_tab('c', '', '   '))).toBe('')
     })
 })
 

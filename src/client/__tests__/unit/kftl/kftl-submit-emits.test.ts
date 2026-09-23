@@ -703,7 +703,7 @@ describe('KFTLのタブ', () => {
         expect(tabs.tabs.value.length).toBe(2)
         expect(tabs.get_tab_content(first_tab_id), '書きかけが上書きされている').toBe('書きかけ')
         expect(view.text_area_content.value).toBe('ーみ\n買い物')
-        expect(view.tab_label(tabs.tabs.value[1], 1)).toBe('買い物')
+        expect(view.tab_label(tabs.tabs.value[1])).toBe('買い物')
     })
 
     // テンプレートは textarea の @input を起こさないので、保存マーカーの自動送信を
