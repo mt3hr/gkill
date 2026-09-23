@@ -381,6 +381,32 @@ type HelpTopic struct {
 	Text  string
 }
 
+// skillsTopic はスキル（ADR-0634）。削除ツールは公開していないので、その名前はここに書かない（help_topics_test）。
+const skillsTopic = "A skill is a procedure the user wrote for AI assistants — how to build their weekly summary, how to tag a kind " +
+	"of record, which boards mean what — stored per gkill account as a folder named after the skill: SKILL.md plus any " +
+	"reference documents, scripts and assets. It is the same shape as an Agent Skill, so the user can move skills between " +
+	"assistants. gkill_status and gkill_get_skill_list list name and description; when a description matches the task, " +
+	"read that skill with gkill_get_skill BEFORE acting and follow it, then read the files it points to with path.\n\n" +
+	"SKILL.md starts with a YAML header between two \"---\" lines holding name (the folder name: lowercase letters, digits " +
+	"and hyphens, 1-64 characters, starting and ending with a letter or digit) and description (what the skill does and " +
+	"when to use it — this is what the list shows), followed by the instructions in markdown. invalid_reason in the list " +
+	"is non-empty when SKILL.md is missing or its header is broken; tell the user rather than guessing.\n\n" +
+	"Files: paths are '/'-separated and each part starts with a letter or digit and uses only letters, digits, '.', '_' " +
+	"and '-' (no spaces, no non-ASCII, no leading dot). Folders exist only as parts of file paths. Text (valid UTF-8 " +
+	"without NUL bytes, judged by content, not extension) comes back as content; anything else as file_content_base64, " +
+	"images also as an image block. A file larger than this server's max_file_bytes (default 8 MiB) is listed but its " +
+	"content is not returned (content_omitted:true); the user can download the whole skill as a zip from gkill's " +
+	"settings screen. gkill never executes scripts: run them in your own sandbox if you have one, and remember that a " +
+	"sandbox cannot reach gkill — fetch data with the gkill tools and hand it to the script.\n\n" +
+	"Writing (write / readwrite servers): gkill_add_skill creates a skill (fails if the name exists). gkill_update_skill " +
+	"writes one text file: omit path for SKILL.md (write the whole file, header included, name unchanged). To overwrite " +
+	"pass the revision gkill_get_skill returned for that file; omit revision only to create a new file. A revision that " +
+	"no longer matches is rejected (409) with the current revision in the message: somebody (the user, or another " +
+	"assistant) changed the file after you read it — read it again, merge, retry. Changes take effect immediately and " +
+	"gkill keeps NO history of skills, so agree on every change with the user before writing. Deleting files or whole " +
+	"skills and adding binary files are done by the user from gkill's settings screen (upload of a zip that replaces " +
+	"the skill, or the delete button); no tool here deletes anything."
+
 // HelpTopics は topic の順序つき一覧（index は BuildHelpIndexText が組み立てる）。
 var HelpTopics = []HelpTopic{
 	{Name: "search", Title: "gkill_get_kyous: query semantics, response fields, warnings, payload shapes", Text: searchTopic},
@@ -393,6 +419,7 @@ var HelpTopics = []HelpTopic{
 	{Name: "rep", Title: "rep_types vs rep names, gkill_get_rep_infos, attached_data_reps, use_to_write", Text: repTopic},
 	{Name: "kftl", Title: "KFTL text format for gkill_submit_kftl: every prefix, ~~ and ?? blocks, failures, provenance", Text: kftlTopic},
 	{Name: "config", Title: "Settings trees (tag / rep / rep_type / device / board / template), the user's description notes, fields:[\"descriptions\"]", Text: configTopic},
+	{Name: "skills", Title: "The user's skills: SKILL.md format, files and revisions, what gkill does and does not do", Text: skillsTopic},
 }
 
 // HelpIndexTopic は topic を省略したときの応答。topic 名は inputSchema の enum にもなる。

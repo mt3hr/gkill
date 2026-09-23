@@ -61,7 +61,7 @@ api/
 | `gkill_message.ts` | メッセージコード定義 |
 | `error-hints.ts` | サーバの `error_kind` / `reason`（機械語トークン）→ ヒント文（何をすれば直るか）の i18n キー。reason 優先。語彙は Go 側 `error_kind.go` / `error_reason.go` が正本 |
 
-### `req_res/`（173ファイル）— Request/Response 型
+### `req_res/`（183ファイル）— Request/Response 型
 
 サーバ側 `api/req_res/` と1対1で対応する TypeScript 型定義。
 各エンドポイントに `*-request.ts` + `*-response.ts` のペアが存在。
@@ -155,6 +155,15 @@ api/
 - `reload-repositories-request.ts` / `reload-repositories-response.ts`
 - `upload-files-request.ts` / `upload-files-response.ts`
 - `upload-gps-log-files-request.ts` / `upload-gps-log-files-response.ts`
+
+#### スキル（ADR-0634）
+
+- `get-skill-list-request.ts` / `get-skill-list-response.ts`（`SkillInfo`）
+- `get-skill-request.ts` / `get-skill-response.ts`（`SkillDetail` / `SkillFileInfo` / `SkillFileContent`）
+- `download-skill-request.ts` / `download-skill-response.ts`
+- `upload-skill-request.ts` / `upload-skill-response.ts`（`SkillReplacePlan`。`dry_run` で確認の1段目）
+- `delete-skill-request.ts` / `delete-skill-response.ts`
+- `/api/write_skill_file` は MCP 専用なので TS 側の型を持たない
 
 > `update_cache` / `get_kyous_mcp` / `urlog_bookmarklet` は専用の req_res 型を持たない（サーバ側の構造体を直接JSONで扱うか、汎用型で送る）。
 

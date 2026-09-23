@@ -133,7 +133,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | **Repository 4層パターン** | 各データ型のデータアクセスを4層で実装するパターン: (1) `*_repository.go`（インタフェース定義） → (2) `*_repository_sqlite3_impl.go`（SQLite3 直接アクセス） → (3) `*_repository_cached_sqlite3_impl.go`（キャッシュ付きラッパー） → (4) `*_repository_temp_sqlite3_impl.go`（トランザクション用一時リポジトリ） |
 | **GkillRepositories** | ユーザ別の全リポジトリ集約構造体。読み取り用（`XxxReps` = 複数リポジトリの集約）と書き込み用（`WriteXxxRep` = 単一リポジトリ）を保持する |
 | **GkillDAOManager** | 全 DAO の中央管理。`GetRepositories()` でユーザ別リポジトリを取得し、`GetTempReps()` でトランザクション用一時リポジトリを管理する |
-| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（91件）を提供する。`gkill_server_api/` パッケージ（handle_*.go 112ファイル）に分割実装 |
+| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（97件）を提供する。`gkill_server_api/` パッケージ（handle_*.go 119ファイル）に分割実装 |
 | **TempReps** | KFTL パース時のトランザクション用一時リポジトリ。`CommitTX` で本リポジトリに反映、`DiscardTX` で破棄する |
 | **Rep / 記録保管場所** | データ保存先の SQLite3 ファイル。ユーザ・デバイス・データ型ごとに割り当てられる |
 | **RepType / 記録タイプ** | リポジトリの分類。メモ帳、打刻帳、支出、数値記録、タスク、気分、ブックマーク、リポスト等 |
@@ -221,7 +221,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **Argon2id** | パスワードの保存に使うメモリハードな鍵導出関数。gkill は `m=65536 KiB, t=3, p=4`、ソルト16バイト、鍵長32バイトで用いる。総当たりに必要な計算資源を引き上げ、`account.db` が流出しても資格情報にならないようにするのが目的 |
 | **PHC文字列** | Argon2id の保存形式。`$argon2id$v=19$m=65536,t=3,p=4$<ソルト>$<ハッシュ>` のようにアルゴリズム・パラメータ・ソルトを値自身に含む。パラメータが保存値側にあるので、後からコストを変えても既存の値をそのまま照合できる |
 | **パスワードリセットトークン** | パスワードを設定しなおすための単回使用の秘密（UUIDv4）。有効期限は72時間で `ACCOUNT.PASSWORD_RESET_TOKEN_EXPIRATION` に持つ。照合は constant-time。管理者の `/api/reset_password` か CLI の `reset_password` で発行する |
-| **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill_server mcp --kind read`、12ツール）・**Write専用**（`gkill_server mcp --kind write`、29ツール）・**ReadWrite統合**（`gkill_server mcp --kind readwrite`、33ツール）。いずれも共通のプラグインツール1つ（`plugin_tools.go` の `PLUGIN_TOOLS`）を含む。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
+| **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill_server mcp --kind read`、14ツール）・**Write専用**（`gkill_server mcp --kind write`、33ツール）・**ReadWrite統合**（`gkill_server mcp --kind readwrite`、37ツール）。いずれも共通のプラグインツール1つ（`plugin_tools.go` の `PLUGIN_TOOLS`）を含む。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
 
 ### 凍結された綴り
 
@@ -244,11 +244,11 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
-| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全91エンドポイントのパス・メソッド・認証区分・ハンドラを1行1ルートで持つルート表（89 POST + 1 GET）。`serve.go` とテストハーネスがそのまま登録する正本 |
-| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 112ファイル、1ハンドラ1ファイル） |
+| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全97エンドポイントのパス・メソッド・認証区分・ハンドラを1行1ルートで持つルート表（89 POST + 1 GET）。`serve.go` とテストハーネスがそのまま登録する正本 |
+| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 119ファイル、1ハンドラ1ファイル） |
 | アクセスログミドルウェア | `src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go` | gorilla/mux ミドルウェア。全HTTPリクエストのアクセスログを `ACCESS` レベルで記録 |
-| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（189ファイル） |
-| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000423 の定数定義（計382件。欠番41、うち37は存在しないエンドポイントのコードを削除した跡） |
+| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（202ファイル） |
+| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000444 の定数定義（計403件。欠番41、うち37は存在しないエンドポイントのコードを削除した跡） |
 | GkillError / GkillMessage | `src/server/gkill/api/message/` | エラー・メッセージ構造体 |
 | KFTLパーサー | `src/server/gkill/api/kftl/` | KFTL テキストパース・リクエスト生成 |
 | Embed（SPA埋め込み） | `src/server/gkill/api/embed.go` | `//go:embed embed` ディレクティブ |
@@ -272,8 +272,8 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | エントリポイント | `src/client/main.ts` | アプリ初期化（Vuetify, Router, i18n, v-long-press） |
 | ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
 | ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
-| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約3,500行） |
-| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（173ファイル） |
+| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約3,600行） |
+| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（183ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
 | DashboardConfig | `src/client/classes/datas/config/dashboard-config.ts` | ダッシュボード設定クラス（MI検索条件・Dnote検索条件） |
 | PlayingTimeIsConfig | `src/client/classes/datas/config/playing-time-is-config.ts` | 実行中検索条件クラス（playing検索のカスタム条件） |
@@ -290,15 +290,15 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（988キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（1025キー/言語） |
 
 ### その他
 
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
-| MCP サーバー（Read） | `src/server/gkill/mcp/server_read.go` | 読み取り専用MCPサーバー（12ツール = 固有11 + プラグイン1、stdio/HTTP） |
-| MCP サーバー（Write） | `src/server/gkill/mcp/server_write.go` | 書き込み専用MCPサーバー（29ツール = 書き込み21 + Read便利7 + プラグイン1、stdio/HTTP） |
-| MCP サーバー（ReadWrite） | `src/server/gkill/mcp/server_readwrite.go` | 読み書き統合MCPサーバー（33ツール = 固有32 + プラグイン1、stdio/HTTP） |
+| MCP サーバー（Read） | `src/server/gkill/mcp/server_read.go` | 読み取り専用MCPサーバー（14ツール = 固有13 + プラグイン1、stdio/HTTP） |
+| MCP サーバー（Write） | `src/server/gkill/mcp/server_write.go` | 書き込み専用MCPサーバー（33ツール = 書き込み23 + Read便利9 + プラグイン1、stdio/HTTP） |
+| MCP サーバー（ReadWrite） | `src/server/gkill/mcp/server_readwrite.go` | 読み書き統合MCPサーバー（37ツール = 固有36 + プラグイン1、stdio/HTTP） |
 | MCP プラグインツール | `src/server/gkill/mcp/plugin_tools.go` | 3サーバ共通の `gkill_get_plugin_list` と、`gkill_get_kyous` へプラグイン本文を埋める `inlinePluginContents`（読み取りのみ。`post_plugin_config` は公開しない） |
 | MCP ログ | `src/server/gkill/mcp/access_log.go` | gkill_log 上の MCP のロガー。`logs/gkill_mcp_<kind>*.log` へ出し、レベルは `MCP_LOG` / 設定 / `--log` で制御 |
 | MCP ヘルプ | `src/server/gkill/mcp/help_topics.go` | `gkill_get_mcp_help` の topic 本文（10件）。ツール説明は要約にとどめ、詳細はここから取り出す（ADR-0622 / 0632） |

@@ -51,7 +51,7 @@ Node のバージョン・`undici` の依存・vitest の設定が本体のリ�
    「未知レベルは info へ落ちる」は「起動を止める」へ、`Object.isFrozen(TTL)` は Go の const なので不成立）。
 6. **新旧の結果一致はゴールデンで機械証明する。** Node 実装が消える前に、偽 gkill（`internal/fakegkill`。
    固定応答 + 受信要求の記録）を別プロセスで立て、時刻と乱数を固定したプリロード付きで 3 つの stdio サーバへ
-   要求コーパス（`testdata/golden/requests.json`、331 件: プロトコル・33 ツール・未知キー・古スキーマ文字列・
+   要求コーパス（`testdata/golden/requests.json`、345 件: プロトコル・33 ツール・未知キー・古スキーマ文字列・
    廃止済み引数・enum 違反・地図 3 値欠け・集計と cursor の併用・IDF base64・`include_plugin_content`・
    履歴 offset・更新 no-op・delete→restore・KFTL replayed など）を流し、応答と偽 gkill が受けた要求を採った。
    http モードはサーバモジュールを直接 import して `handlePayload(message, requestContext)` を呼んだ。

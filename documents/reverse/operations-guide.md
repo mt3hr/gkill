@@ -712,9 +712,9 @@ gkill MCP サーバーは3種類提供されている。いずれもOAuth 2.1認
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| Read専用 | `gkill_server mcp --kind read` | 12 (11 read + 1 plugin) | 8808 | 読み取りのみ |
-| Write専用 | `gkill_server mcp --kind write` | 29 (21 write + 7 read convenience + 1 plugin) | 8809 | 書き込み中心 |
-| Read/Write統合 | `gkill_server mcp --kind readwrite` | 33 (11 read + 21 write + 1 plugin) | 8810 | 全機能 |
+| Read専用 | `gkill_server mcp --kind read` | 14 (13 read + 1 plugin) | 8808 | 読み取りのみ |
+| Write専用 | `gkill_server mcp --kind write` | 33 (23 write + 9 read convenience + 1 plugin) | 8809 | 書き込み中心 |
+| Read/Write統合 | `gkill_server mcp --kind readwrite` | 37 (13 read + 23 write + 1 plugin) | 8810 | 全機能 |
 
 プラグインツール `gkill_get_plugin_list` は `src/server/gkill/mcp/plugin_tools.go` の `PluginTools` を
 各サーバの `composeTools(...)` に連結したもので、3サーバ共通・読み取り専用（`post_plugin_config` は公開しない）。

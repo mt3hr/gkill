@@ -13,17 +13,38 @@
     <tr><td>Check settings</td><td>"List my templates"</td></tr>
     <tr><td>Read your notes</td><td>Reads the descriptions you wrote on tags, storage locations, boards and templates in the settings screen first, and searches records the way you actually use them</td></tr>
     <tr><td>Learn how to use it</td><td>The AI looks up the rules for search conditions and paging by itself through a built-in help feature. If it cannot find something, ask it to "check the gkill help"</td></tr>
+    <tr><td>Using skills</td><td>The AI reads the procedures (skills) you registered in the settings screen and works as they say. You can also have the AI create or fix skills</td></tr>
   </table>
 
   <h2>Integration Types</h2>
   <table>
     <tr><th>Type</th><th>What it can do</th><th>Command</th><th>Tools</th><th>Port (HTTP)</th></tr>
-    <tr><td>Read-only</td><td>View and search records only. Adding or modifying is not allowed</td><td>gkill_server mcp --kind read</td><td>12</td><td>8808</td></tr>
-    <tr><td>Write-only</td><td>Add, update and delete records. It can also read storage names, tag names and board names</td><td>gkill_server mcp --kind write</td><td>29</td><td>8809</td></tr>
-    <tr><td>Read &amp; Write</td><td>View, add, update and delete records</td><td>gkill_server mcp --kind readwrite</td><td>33</td><td>8810</td></tr>
+    <tr><td>Read-only</td><td>View and search records only. Adding or modifying is not allowed</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
+    <tr><td>Write-only</td><td>Add, update and delete records. It can also read storage names, tag names and board names</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
+    <tr><td>Read &amp; Write</td><td>View, add, update and delete records</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
   </table>
   <p>The MCP server is part of gkill_server and starts with <code>gkill_server mcp --kind &lt;type&gt;</code> (gkill_server itself must be running). The connection and credentials come from environment variables or from the config file <code>configs/gkill_mcp.json</code>, which is generated on first start. Logs go to <code>logs/gkill_mcp_&lt;type&gt;.log</code> (per-level files share the prefix).</p>
   <p>Every type includes one tool for listing the plugins in use. The contents of records imported by plugins can be received inline with the search results.</p>
+
+  <h2>Skills</h2>
+  <p>A skill is a procedure you leave for AI assistants (for example, how to build the weekly summary, or which tags to put on a kind of record). Skills are stored per user, and every AI assistant you connect uses the same skills. Before working, the AI checks the list of skills and reads the one that matches the task.</p>
+  <p>A skill is one folder with <code>SKILL.md</code> at its top. Start <code>SKILL.md</code> with the name and description in the form below, then write the steps. The folder can also hold reference documents, scripts and other files.</p>
+  <pre><code>---
+name: weekly-summary
+description: Steps for building the weekly summary
+---
+# Steps
+1. ...</code></pre>
+  <table>
+    <tr><th>Operation</th><th>How</th></tr>
+    <tr><td>Add or replace</td><td>In "Skills" on the settings screen, upload the folder as a zip. Check which files will be added, deleted or changed, then press "Apply" to replace the whole skill with the same name.</td></tr>
+    <tr><td>View and take out</td><td>"View" shows the contents of each file. "Download" saves the skill as a zip that you can edit locally and upload again as it is.</td></tr>
+    <tr><td>Delete</td><td>"Delete" in "Skills" on the settings screen removes the whole skill.</td></tr>
+    <tr><td>Created or fixed by the AI</td><td>With an integration that can write, the AI can create skills and rewrite their files. The AI cannot delete skills.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Tip:</strong> Changes to skills take effect immediately and no history is kept. Before letting the AI change a skill, keep a copy with "Download" if you need one. Names use lowercase letters, digits and hyphens (up to 64 characters), and file names use only letters, digits and <code>._-</code>. gkill never runs scripts.
+  </div>
 
   <h2>File Delivery</h2>
   <p>How file records (images, videos, documents) are shown to the AI switches automatically depending on the connection type.</p>

@@ -48,6 +48,7 @@ export function useApplicationConfigView(options: {
     const edit_playing_time_is_dialog = ref<ComponentRef | null>(null)
     const edit_saved_find_query_dialog = ref<ComponentRef | null>(null)
     const server_config_dialog = ref<ComponentRef | null>(null)
+    const manage_skill_list_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const pages = ref([
@@ -428,6 +429,11 @@ javascript: (function () {
     function show_server_config_dialog(): void {
         server_config_dialog.value?.show()
     }
+    // スキルは設定の「適用」とは別のエンティティ（$GKILL_HOME/skills のファイル）なので、
+    // ServerConfigDialog と同じく子ダイアログが自分で API を呼ぶ（ADR-0634）
+    function show_manage_skill_list_dialog(): void {
+        manage_skill_list_dialog.value?.show()
+    }
 
     // ── Event handlers ──
     function update_board_name(board_name: string): void {
@@ -521,6 +527,7 @@ javascript: (function () {
         edit_playing_time_is_dialog,
         edit_saved_find_query_dialog,
         server_config_dialog,
+        manage_skill_list_dialog,
 
         // State
         is_loading,
@@ -565,6 +572,7 @@ javascript: (function () {
         show_edit_saved_find_query_dialog,
         show_new_board_name_dialog,
         show_server_config_dialog,
+        show_manage_skill_list_dialog,
 
         // Event handlers
         update_board_name,

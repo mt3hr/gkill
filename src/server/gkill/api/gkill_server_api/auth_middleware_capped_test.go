@@ -152,7 +152,7 @@ func TestResponseWriterWrappersUnwrapForResponseController(t *testing.T) {
 // 素の wrapNoAuth（bodyNone）に残ってよいのはボディを読まない経路だけ。
 // ボディ付きの経路を bodyNone で足すと、未認証の無制限ボディがそのままヒープへ載る
 // （目の前ではエラーにならない）。validateAPIRoutes が起動時にも同じ検査をするが、
-// アップロード2本が大容量側の上限であること・それ以外が 32MB 側であることは表の意図なので
+// アップロード3本が大容量側の上限であること・それ以外が 32MB 側であることは表の意図なので
 // ここで名指しで固定する。
 func TestAPIRoutesNoAuthBodyRoutesAreCapped(t *testing.T) {
 	gkillAPI := &GkillServerAPI{}
@@ -162,10 +162,11 @@ func TestAPIRoutesNoAuthBodyRoutesAreCapped(t *testing.T) {
 	allowedBareNoAuth := map[string]bool{
 		"/api/urlog_bookmarklet_page": true,
 	}
-	// アップロード2経路は大容量側の上限・期限で登録する
+	// アップロード3経路は大容量側の上限・期限で登録する
 	uploadPaths := map[string]bool{
 		"/api/upload_files":        true,
 		"/api/upload_gpslog_files": true,
+		"/api/upload_skill":        true,
 	}
 
 	seen := map[string]bool{}

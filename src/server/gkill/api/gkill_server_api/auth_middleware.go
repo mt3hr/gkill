@@ -23,7 +23,7 @@ import (
 // 別枠の maxUploadBodyBytes を wrapNoAuthCapped で掛ける（指摘 F-002）。
 const maxAuthBodyBytes = 32 * 1024 * 1024 // 32MB
 
-// maxUploadBodyBytes はアップロード2経路（/api/upload_files, /api/upload_gps_log_files）の
+// maxUploadBodyBytes はアップロード3経路（/api/upload_files, /api/upload_gps_log_files, /api/upload_skill）の
 // ボディ上限。ファイル本体が base64 のデータURIとしてJSONへ入るため、実ファイル合計の
 // 約1.33倍を見込んでも実容量で700MB級まで1リクエストで送れる値にしてある。
 // これを超えるファイルは rep ディレクトリへの直置き + UpdateCache の取り込みで入れる。

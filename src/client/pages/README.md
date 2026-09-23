@@ -10,8 +10,8 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 16 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（204 .vue）
-└── dialogs/                        # Dialog コンポーネント（117 .vue）
+├── views/                          # View コンポーネント（207 .vue）
+└── dialogs/                        # Dialog コンポーネント（121 .vue）
 ```
 
 ## 設計パターン
@@ -69,7 +69,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（204 .vue）
+## views/ — 全 View コンポーネント一覧（207 .vue）
 
 ### データ追加系（23コンポーネント）
 
@@ -144,7 +144,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `gps-log-map.vue` | GPS ログ地図表示 |
 | `kyou-count-calendar.vue` | Kyou カウントカレンダー |
 
-### 削除確認系（21コンポーネント）
+### 削除確認系（23コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -161,6 +161,8 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `confirm-delete-dnote-item-list-view.vue` / `confirm-delete-dnote-list-query-view.vue` | DNote 削除確認 |
 | `confirm-delete-dnote-trend-graph-view.vue` | DNote トレンドグラフ削除確認 |
 | `confirm-delete-related-kyou-query-view.vue` | 関連 Kyou クエリ削除確認 |
+| `confirm-delete-skill-view.vue` | スキル削除確認（丸ごと。ADR-0634） |
+| `confirm-upload-skill-view.vue` | スキルの zip アップロード確認（追加・削除・変更・無視されるファイル） |
 
 ### 確認・操作系
 
@@ -177,6 +179,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 |--------------|------|
 | `application-config-view.vue` | アプリケーション設定 |
 | `server-config-view.vue` | サーバ設定 |
+| `manage-skill-list-view.vue` | スキル一覧（表示・ダウンロード・削除・zip アップロード。ロジックは親ダイアログ） |
 | `allocate-rep-view.vue` | リポジトリ割り当て |
 | `login-view.vue` / `create-account-view.vue` / `manage-account-view.vue` | 認証・アカウント管理 |
 | `set-new-password-view.vue` / `show-password-reset-link-view.vue` | パスワード管理 |
@@ -251,7 +254,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
 | `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（117 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（121 .vue）
 
 ### データ追加ダイアログ（22コンポーネント）
 
@@ -261,9 +264,9 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 
 `edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-mi-re-kyou-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`, `edit-mi-board-struct-dialog.vue`, `edit-mi-board-struct-element-dialog.vue`
 
-### 削除確認ダイアログ（25コンポーネント）
+### 削除確認ダイアログ（27コンポーネント）
 
-`confirm-delete-idf-kyou-dialog.vue`, `confirm-delete-tag-dialog.vue`, `confirm-delete-text-dialog.vue`, `confirm-delete-notification-dialog.vue`, `confirm-delete-share-kyou-list-dialog.vue`, `confirm-delete-device-struct-dialog.vue`, `confirm-delete-kftl-template-struct-dialog.vue`, `confirm-delete-rep-dialog.vue`, `confirm-delete-rep-struct-dialog.vue`, `confirm-delete-rep-type-struct-dialog.vue`, `confirm-delete-tag-struct-dialog.vue`, `confirm-delete-mi-board-struct-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `confirm-delete-dnote-trend-graph-dialog.vue`, `confirm-delete-ryuu-item-dialog.vue`（+ `select-move-target-folder-dialog.vue` は移動先フォルダ選択、+ `confirm-unknown-mi-board-dialog.vue` は「まだ実在しない板名で保存してよいか」の確認、+ `confirm-close-kftl-tab-dialog.vue` は「内容が残っているメモ帳のタブを閉じてよいか」の確認、+ `confirm-save-duplicated-shared-data-dialog.vue` は「同じ内容の共有をもう一度受け取ったときに保存し直すか」の確認）
+`confirm-delete-idf-kyou-dialog.vue`, `confirm-delete-tag-dialog.vue`, `confirm-delete-text-dialog.vue`, `confirm-delete-notification-dialog.vue`, `confirm-delete-share-kyou-list-dialog.vue`, `confirm-delete-device-struct-dialog.vue`, `confirm-delete-kftl-template-struct-dialog.vue`, `confirm-delete-rep-dialog.vue`, `confirm-delete-rep-struct-dialog.vue`, `confirm-delete-rep-type-struct-dialog.vue`, `confirm-delete-tag-struct-dialog.vue`, `confirm-delete-mi-board-struct-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `confirm-delete-dnote-trend-graph-dialog.vue`, `confirm-delete-ryuu-item-dialog.vue`, `confirm-delete-skill-dialog.vue`（+ `confirm-upload-skill-dialog.vue` はスキルの zip で丸ごと置き換える前の確認、+ `select-move-target-folder-dialog.vue` は移動先フォルダ選択、+ `confirm-unknown-mi-board-dialog.vue` は「まだ実在しない板名で保存してよいか」の確認、+ `confirm-close-kftl-tab-dialog.vue` は「内容が残っているメモ帳のタブを閉じてよいか」の確認、+ `confirm-save-duplicated-shared-data-dialog.vue` は「同じ内容の共有をもう一度受け取ったときに保存し直すか」の確認）
 
 ### その他ダイアログ
 
@@ -298,6 +301,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `share-kyou-list-dialog.vue` / `share-kyou-list-link-dialog.vue` | 共有リスト |
 | `upload-file-dialog.vue` | ファイルアップロード |
 | `browse-zip-contents-dialog.vue` | ZIP コンテンツブラウザ |
+| `manage-skill-list-dialog.vue` / `browse-skill-files-dialog.vue` | スキルの管理（設定画面の「スキル」）/ スキルの中身の表示（素のテキスト。ADR-0634） |
 | `help-dialog.vue` | ヘルプダイアログ |
 | `plugin-config-dialog.vue` | プラグイン設定 |
 | `save-clipboard-to-file-dialog.vue` | クリップボード内容ファイル保存 |

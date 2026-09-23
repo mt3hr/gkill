@@ -86,4 +86,10 @@ const (
 	// FindKyousRepLoadWarningMessage は「読み込めなかったrepがある」ことの警告。
 	// errorsではなくmessagesへ載せる。errorsに載せるとクライアントが検索結果ごと捨てる
 	FindKyousRepLoadWarningMessage = "MSG000090"
+	// UploadSkillSuccessMessage はスキルを zip で置き換えた（新規に作った）ときのものです。
+	UploadSkillSuccessMessage = "MSG000091"
+	// WriteSkillFileSuccessMessage はスキル内ファイルを書いたときのものです（MCP の書き込み）。
+	WriteSkillFileSuccessMessage = "MSG000092"
+	// DeleteSkillSuccessMessage はスキル（またはスキル内ファイル）を消したときのものです。
+	DeleteSkillSuccessMessage = "MSG000093"
 )

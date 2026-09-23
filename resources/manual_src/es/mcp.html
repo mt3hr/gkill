@@ -13,17 +13,38 @@
     <tr><td>Verificar configuración</td><td>"Lista mis plantillas"</td></tr>
     <tr><td>Consultar sus notas</td><td>Lee primero las descripciones que escribió en etiquetas, ubicaciones de almacenamiento, tableros y plantillas en la pantalla de configuración, y busca registros según su forma de usarlos</td></tr>
     <tr><td>Aprender a usarlo</td><td>La IA consulta por sí misma las reglas de las condiciones de búsqueda y la paginación mediante una función de ayuda integrada. Si no encuentra algo, pídale «consulta la ayuda de gkill»</td></tr>
+    <tr><td>Usar habilidades</td><td>La IA lee los procedimientos (habilidades) que registró en la pantalla de configuración y trabaja según indican. También puede pedir a la IA que cree o corrija habilidades</td></tr>
   </table>
 
   <h2>Tipos de integración</h2>
   <table>
     <tr><th>Tipo</th><th>Qué puede hacer</th><th>Comando</th><th>Herramientas</th><th>Puerto (HTTP)</th></tr>
-    <tr><td>Solo lectura</td><td>Solo ver y buscar registros. No puede agregar ni modificar</td><td>gkill_server mcp --kind read</td><td>12</td><td>8808</td></tr>
-    <tr><td>Solo escritura</td><td>Agregar, actualizar y eliminar registros. También puede obtener nombres de repositorios, etiquetas y tableros</td><td>gkill_server mcp --kind write</td><td>29</td><td>8809</td></tr>
-    <tr><td>Lectura y escritura</td><td>Ver, agregar, actualizar y eliminar registros</td><td>gkill_server mcp --kind readwrite</td><td>33</td><td>8810</td></tr>
+    <tr><td>Solo lectura</td><td>Solo ver y buscar registros. No puede agregar ni modificar</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
+    <tr><td>Solo escritura</td><td>Agregar, actualizar y eliminar registros. También puede obtener nombres de repositorios, etiquetas y tableros</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
+    <tr><td>Lectura y escritura</td><td>Ver, agregar, actualizar y eliminar registros</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
   </table>
   <p>El servidor MCP forma parte de gkill_server y se inicia con <code>gkill_server mcp --kind &lt;tipo&gt;</code> (gkill_server debe estar en ejecución). La conexión y las credenciales se indican con variables de entorno o con el archivo de configuración <code>configs/gkill_mcp.json</code>, que se genera en el primer inicio. Los registros se escriben en <code>logs/gkill_mcp_&lt;tipo&gt;.log</code> (los archivos por nivel comparten el prefijo).</p>
   <p>Todos los tipos incluyen una herramienta para listar los complementos en uso. El contenido de los registros importados por complementos puede recibirse junto con los resultados de b&uacute;squeda.</p>
+
+  <h2>Habilidades</h2>
+  <p>Una habilidad es un procedimiento que deja preparado para los asistentes de IA (por ejemplo, cómo hacer el resumen semanal o qué etiquetas poner a un tipo de registro). Se guardan por usuario, y cualquier asistente de IA que conecte usa las mismas habilidades. Antes de trabajar, la IA revisa la lista de habilidades y lee la que corresponde a la tarea.</p>
+  <p>Una habilidad es una carpeta con <code>SKILL.md</code> en su nivel superior. Empiece <code>SKILL.md</code> con el nombre y la descripción en el formato siguiente y después escriba los pasos. La carpeta también puede contener documentos de referencia, scripts y otros archivos.</p>
+  <pre><code>---
+name: weekly-summary
+description: Pasos para hacer el resumen semanal
+---
+# Pasos
+1. ...</code></pre>
+  <table>
+    <tr><th>Operación</th><th>Cómo</th></tr>
+    <tr><td>Añadir o reemplazar</td><td>En «Habilidades» de la pantalla de configuración, suba la carpeta como zip. Compruebe qué archivos se añadirán, eliminarán o cambiarán y pulse «Aplicar» para reemplazar por completo la habilidad con el mismo nombre.</td></tr>
+    <tr><td>Ver y sacar</td><td>«Ver» muestra el contenido de cada archivo. «Descargar» guarda la habilidad como zip, que puede editar en su equipo y volver a subir tal cual.</td></tr>
+    <tr><td>Eliminar</td><td>«Eliminar» en «Habilidades» de la pantalla de configuración borra la habilidad completa.</td></tr>
+    <tr><td>Creada o corregida por la IA</td><td>Con una integración que puede escribir, la IA puede crear habilidades y reescribir sus archivos. La IA no puede eliminar habilidades.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Consejo:</strong> Los cambios en las habilidades se aplican de inmediato y no se guarda historial. Antes de dejar que la IA cambie una habilidad, guarde una copia con «Descargar» si la necesita. Los nombres usan minúsculas, dígitos y guiones (hasta 64 caracteres), y los nombres de archivo solo letras, dígitos y <code>._-</code>. gkill nunca ejecuta scripts.
+  </div>
 
   <h2>Entrega de archivos</h2>
   <p>La forma de mostrar los registros de archivos (imágenes, vídeos, documentos) a la IA cambia automáticamente según el tipo de conexión.</p>

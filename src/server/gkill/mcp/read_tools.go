@@ -34,7 +34,7 @@ func schema(properties *jsonobj.Object, required []string) *jsonobj.Object {
 
 const localeNameDesc = "Locale for server messages, e.g. ja/en. Defaults to server default (ja)."
 
-// ReadTools は読み取りツール 11 本（順序は固定。gkill_status が先頭、gkill_get_mcp_help がその次）。
+// ReadTools は読み取りツール 13 本（順序は固定。gkill_status が先頭、gkill_get_mcp_help がその次）。
 var ReadTools = []*jsonobj.Object{
 	// gkill_status は3サーバ全部に載る（write 専用サーバは WriteServerReadToolNames で選ぶ）。
 	// description の末尾には Server が起動時に「そのサーバの」schema_revision を
@@ -51,6 +51,7 @@ var ReadTools = []*jsonobj.Object{
 			"changed them (tool lists are fetched once per client session) — reconnect the MCP client before trusting any argument "+
 			"name or description in this list. "+
 			"Call it first when a search or write behaves unexpectedly: a different account or a stale tool list explains most of them. "+
+			"skills[] lists the user's skills; read a matching one with gkill_get_skill before acting. "+
 			"Takes no arguments.",
 		schema(jsonobj.New(), nil),
 	),
@@ -63,8 +64,9 @@ var ReadTools = []*jsonobj.Object{
 		"Return the detailed guide for one topic of this MCP server. The tool descriptions in this list are summaries; "+
 			"read the relevant topic before a first search (search / pagination / mi / data_types), before reading files (idf) "+
 			"or plugin bodies (plugin), before writing KFTL text (kftl), when looking for deleted entries (deleted) or repository "+
-			"names (rep), before interpreting the settings trees and the user's description notes on them (config), and "+
-			"whenever a response carries warnings you do not understand. Omit topic (or pass \"index\") for "+
+			"names (rep), before interpreting the settings trees and the user's description notes on them (config), "+
+			"before reading or writing the user's skills (skills), and whenever a response carries warnings you do not understand. "+
+			"Omit topic (or pass \"index\") for "+
 			"the list of topics. Static text — no round trip to gkill.",
 		schema(jsonobj.Obj(
 			"topic", jsonobj.Obj(
@@ -408,6 +410,30 @@ var ReadTools = []*jsonobj.Object{
 			),
 			"locale_name", jsonobj.Obj("type", "string", "description", "Locale, e.g. ja/en."),
 		), []string{"id", "data_type"}),
+	),
+	// スキル（利用者が AI 向けに書いた手順書。$GKILL_HOME/skills/<user_id>/<name>/。ADR-0634）。
+	// 3サーバ全部に載る（write 専用サーバは WriteServerReadToolNames で選ぶ）。
+	// 書き込み側のツール名はここに書かない（read サーバに無いツールを案内しない。tool_handlers_test）。
+	tool(
+		"gkill_get_skill_list",
+		"List the procedures the user wrote for AI assistants (skills): name, description, updated_time, file_count and "+
+			"invalid_reason (non-empty = unusable: SKILL.md missing or its header broken). When a description matches the task, "+
+			"read that skill with gkill_get_skill and follow it. Details: gkill_get_mcp_help topic:skills.",
+		schema(jsonobj.Obj(
+			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
+		), nil),
+	),
+	tool(
+		"gkill_get_skill",
+		"Read one skill. Without path: content (the whole SKILL.md), revision and files[] (path, size, is_text, revision). "+
+			"With path: that file as content (text) or file_content_base64 (binary); a file over max_file_bytes comes back "+
+			"without content (content_omitted). gkill never runs scripts. Keep the revision: changing a file needs it. "+
+			"Details: gkill_get_mcp_help topic:skills.",
+		schema(jsonobj.Obj(
+			"name", jsonobj.Obj("type", "string", "description", "Skill name from gkill_get_skill_list."),
+			"path", jsonobj.Obj("type", "string", "description", "File in the skill, '/'-separated. Omit for SKILL.md and the file list."),
+			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
+		), []string{"name"}),
 	),
 }
 

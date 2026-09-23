@@ -16,6 +16,9 @@ var (
 	TLSCertFileDefault   = "$HOME/gkill/tls/cert.cer"
 	TLSKeyFileDefault    = "$HOME/gkill/tls/key.pem"
 	DataDirectoryDefault = "$HOME/gkill/datas"
+	// SkillsDir は利用者が AI 向けに書くスキル（SKILL.md とその付属ファイル）の置き場。
+	// skills/<user_id>/<skill-name>/ の形で、gkill_server だけが読み書きする（ADR-0634）。
+	SkillsDir = "$HOME/gkill/skills"
 
 	PreLoadUserNames = []string{}
 

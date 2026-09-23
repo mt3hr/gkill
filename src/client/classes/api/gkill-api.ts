@@ -197,6 +197,16 @@ import type { GetPluginConfigHTMLRequest } from "./req_res/get-plugin-config-htm
 import { GetPluginConfigHTMLResponse } from "./req_res/get-plugin-config-html-response"
 import type { PostPluginConfigRequest } from "./req_res/post-plugin-config-request"
 import { PostPluginConfigResponse } from "./req_res/post-plugin-config-response"
+import type { GetSkillListRequest } from "./req_res/get-skill-list-request"
+import { GetSkillListResponse } from "./req_res/get-skill-list-response"
+import type { GetSkillRequest } from "./req_res/get-skill-request"
+import { GetSkillResponse } from "./req_res/get-skill-response"
+import type { DownloadSkillRequest } from "./req_res/download-skill-request"
+import { DownloadSkillResponse } from "./req_res/download-skill-response"
+import type { UploadSkillRequest } from "./req_res/upload-skill-request"
+import { UploadSkillResponse } from "./req_res/upload-skill-response"
+import type { DeleteSkillRequest } from "./req_res/delete-skill-request"
+import { DeleteSkillResponse } from "./req_res/delete-skill-response"
 import { i18n, set_locale } from "@/i18n"
 import { GkillErrorCodes } from "./message/gkill_error"
 import { TagStructElementData } from "../datas/config/tag-struct-element-data"
@@ -327,6 +337,11 @@ export class GkillAPI {
         get_plugin_content_html_address: string
         get_plugin_config_html_address: string
         post_plugin_config_address: string
+        get_skill_list_address: string
+        get_skill_address: string
+        download_skill_address: string
+        upload_skill_address: string
+        delete_skill_address: string
 
         login_method: string
         logout_method: string
@@ -417,6 +432,11 @@ export class GkillAPI {
         get_plugin_content_html_method: string
         get_plugin_config_html_method: string
         post_plugin_config_method: string
+        get_skill_list_method: string
+        get_skill_method: string
+        download_skill_method: string
+        upload_skill_method: string
+        delete_skill_method: string
 
         protected constructor() {
                 this.saved_application_config = null
@@ -509,6 +529,11 @@ export class GkillAPI {
                 this.get_plugin_content_html_address = "/api/get_plugin_content_html"
                 this.get_plugin_config_html_address = "/api/get_plugin_config_html"
                 this.post_plugin_config_address = "/api/post_plugin_config"
+                this.get_skill_list_address = "/api/get_skill_list"
+                this.get_skill_address = "/api/get_skill"
+                this.download_skill_address = "/api/download_skill"
+                this.upload_skill_address = "/api/upload_skill"
+                this.delete_skill_address = "/api/delete_skill"
                 this.login_method = "POST"
                 this.logout_method = "POST"
                 this.reset_password_method = "POST"
@@ -597,6 +622,11 @@ export class GkillAPI {
                 this.get_plugin_content_html_method = "POST"
                 this.get_plugin_config_html_method = "POST"
                 this.post_plugin_config_method = "POST"
+                this.get_skill_list_method = "POST"
+                this.get_skill_method = "POST"
+                this.download_skill_method = "POST"
+                this.upload_skill_method = "POST"
+                this.delete_skill_method = "POST"
         }
 
         async login(req: LoginRequest): Promise<LoginResponse> {
@@ -2355,6 +2385,75 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: PostPluginConfigResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        // ── スキル（$GKILL_HOME/skills/<user_id>/<name>/。ADR-0634） ──
+        // 画面は一覧・表示・zip のダウンロード・zip のアップロード（丸ごと置き換え）・スキル丸ごとの削除だけ。
+        // ファイル単位の書き込み（/api/write_skill_file）は MCP だけが使うので、ここには置かない。
+
+        async get_skill_list(req: GetSkillListRequest): Promise<GetSkillListResponse> {
+                const res = await this.gkill_fetch(this.get_skill_list_address, {
+                        'method': this.get_skill_list_method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: GetSkillListResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async get_skill(req: GetSkillRequest): Promise<GetSkillResponse> {
+                const res = await this.gkill_fetch(this.get_skill_address, {
+                        'method': this.get_skill_method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: GetSkillResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async download_skill(req: DownloadSkillRequest): Promise<DownloadSkillResponse> {
+                const res = await this.gkill_fetch(this.download_skill_address, {
+                        'method': this.download_skill_method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: DownloadSkillResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async upload_skill(req: UploadSkillRequest): Promise<UploadSkillResponse> {
+                const res = await this.gkill_fetch(this.upload_skill_address, {
+                        'method': this.upload_skill_method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: UploadSkillResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async delete_skill(req: DeleteSkillRequest): Promise<DeleteSkillResponse> {
+                const res = await this.gkill_fetch(this.delete_skill_address, {
+                        'method': this.delete_skill_method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: DeleteSkillResponse = json
                 this.check_auth(response)
                 return response
         }

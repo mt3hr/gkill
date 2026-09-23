@@ -33,6 +33,12 @@ func TestDefaultLogDir(t *testing.T) {
 	}
 }
 
+func TestDefaultSkillsDir(t *testing.T) {
+	if SkillsDir != "$HOME/gkill/skills" {
+		t.Errorf("SkillsDir = %q, want $HOME/gkill/skills", SkillsDir)
+	}
+}
+
 func TestDefaultIsCacheInMemory(t *testing.T) {
 	if !IsCacheInMemory {
 		t.Error("IsCacheInMemory should default to true")

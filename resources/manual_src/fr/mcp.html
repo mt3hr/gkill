@@ -13,17 +13,38 @@
     <tr><td>Vérifier la configuration</td><td>« Liste mes modèles »</td></tr>
     <tr><td>Consulter vos notes</td><td>Lit d'abord les descriptions que vous avez écrites sur les tags, emplacements de stockage, tableaux et modèles dans l'écran de configuration, puis recherche les enregistrements selon votre usage réel</td></tr>
     <tr><td>Apprendre à s'en servir</td><td>L'IA consulte elle-même les règles des conditions de recherche et de la pagination grâce à une fonction d'aide intégrée. Si elle ne trouve pas, demandez-lui de « consulter l'aide de gkill »</td></tr>
+    <tr><td>Utiliser les compétences</td><td>L'IA lit les procédures (compétences) enregistrées dans l'écran des paramètres et travaille comme elles l'indiquent. Vous pouvez aussi demander à l'IA de créer ou corriger des compétences</td></tr>
   </table>
 
   <h2>Types d'intégration</h2>
   <table>
     <tr><th>Type</th><th>Ce qu’il peut faire</th><th>Commande</th><th>Outils</th><th>Port (HTTP)</th></tr>
-    <tr><td>Lecture seule</td><td>Afficher et rechercher des enregistrements uniquement. L’ajout ou la modification est impossible</td><td>gkill_server mcp --kind read</td><td>12</td><td>8808</td></tr>
-    <tr><td>Écriture seule</td><td>Ajouter, mettre à jour et supprimer des enregistrements. Peut aussi lire les noms de dépôts, de tags et de tableaux</td><td>gkill_server mcp --kind write</td><td>29</td><td>8809</td></tr>
-    <tr><td>Lecture et écriture</td><td>Afficher, ajouter, mettre à jour et supprimer des enregistrements</td><td>gkill_server mcp --kind readwrite</td><td>33</td><td>8810</td></tr>
+    <tr><td>Lecture seule</td><td>Afficher et rechercher des enregistrements uniquement. L’ajout ou la modification est impossible</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
+    <tr><td>Écriture seule</td><td>Ajouter, mettre à jour et supprimer des enregistrements. Peut aussi lire les noms de dépôts, de tags et de tableaux</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
+    <tr><td>Lecture et écriture</td><td>Afficher, ajouter, mettre à jour et supprimer des enregistrements</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
   </table>
   <p>Le serveur MCP fait partie de gkill_server et se lance avec <code>gkill_server mcp --kind &lt;type&gt;</code> (gkill_server doit être en cours d’exécution). La connexion et les identifiants se définissent par variables d’environnement ou dans le fichier de configuration <code>configs/gkill_mcp.json</code>, généré au premier démarrage. Les journaux vont dans <code>logs/gkill_mcp_&lt;type&gt;.log</code> (les fichiers par niveau partagent le préfixe).</p>
   <p>Chaque type inclut un outil permettant de lister les extensions install&eacute;es. Le contenu des enregistrements import&eacute;s par les extensions peut &ecirc;tre re&ccedil;u directement avec les r&eacute;sultats de recherche.</p>
+
+  <h2>Compétences</h2>
+  <p>Une compétence est une procédure que vous confiez aux assistants IA (par exemple, comment faire le résumé hebdomadaire ou quelles étiquettes mettre sur un type d'enregistrement). Les compétences sont enregistrées par utilisateur, et tout assistant IA que vous connectez utilise les mêmes. Avant de travailler, l'IA consulte la liste des compétences et lit celle qui correspond à la tâche.</p>
+  <p>Une compétence est un dossier avec <code>SKILL.md</code> à sa racine. Commencez <code>SKILL.md</code> par le nom et la description sous la forme ci-dessous, puis écrivez les étapes. Le dossier peut aussi contenir des documents de référence, des scripts et d'autres fichiers.</p>
+  <pre><code>---
+name: weekly-summary
+description: Étapes pour faire le résumé hebdomadaire
+---
+# Étapes
+1. ...</code></pre>
+  <table>
+    <tr><th>Opération</th><th>Comment</th></tr>
+    <tr><td>Ajouter ou remplacer</td><td>Dans « Compétences » de l'écran des paramètres, téléversez le dossier en zip. Vérifiez les fichiers qui seront ajoutés, supprimés ou modifiés, puis appuyez sur « Appliquer » pour remplacer entièrement la compétence de même nom.</td></tr>
+    <tr><td>Consulter et exporter</td><td>« Afficher » montre le contenu de chaque fichier. « Télécharger » enregistre la compétence en zip, que vous pouvez modifier localement et téléverser à nouveau tel quel.</td></tr>
+    <tr><td>Supprimer</td><td>« Supprimer » dans « Compétences » de l'écran des paramètres efface toute la compétence.</td></tr>
+    <tr><td>Créée ou corrigée par l'IA</td><td>Avec une intégration qui peut écrire, l'IA peut créer des compétences et réécrire leurs fichiers. L'IA ne peut pas supprimer de compétences.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Astuce :</strong> Les modifications des compétences s'appliquent immédiatement et aucun historique n'est conservé. Avant de laisser l'IA modifier une compétence, gardez-en une copie avec « Télécharger » si besoin. Les noms utilisent des minuscules, des chiffres et des tirets (64 caractères au maximum), et les noms de fichiers uniquement des lettres, des chiffres et <code>._-</code>. gkill n'exécute jamais les scripts.
+  </div>
 
   <h2>Transmission des fichiers</h2>
   <p>La manière de présenter les enregistrements de fichiers (images, vidéos, documents) à l'IA change automatiquement selon le type de connexion.</p>

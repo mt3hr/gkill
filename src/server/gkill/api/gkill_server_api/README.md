@@ -29,11 +29,11 @@ gkill_server_api/
 ├── gkill_server_api_access_log.go   # アクセスログ
 ├── gkill_server_api_rate_limit.go   # ログインレートリミット
 ├── plugin_content_html_cache.go     # プラグイン本文HTMLのキャッシュ（TTL・件数上限・singleflight）
-├── handle_*.go                      # 各エンドポイントのハンドラ（実装92ファイル + テスト20ファイル）
+├── handle_*.go                      # 各エンドポイントのハンドラ（実装98ファイル + テスト21ファイル）
 └── *_test.go                        # テスト全31ファイル（handle_*_test.go 14本を含む。一覧は ABOUT_TEST.md）
 ```
 
-**合計: 143ファイル**（基盤19 + ハンドラ実装92 + テスト31 + README.md 1 + ABOUT_TEST.md 1）
+**合計: 143ファイル**（基盤19 + ハンドラ実装98 + テスト31 + README.md 1 + ABOUT_TEST.md 1）
 `.go` だけなら141ファイル。`handle_*.go` という名前のファイルは105あるが、うち14はテスト。
 
 ## GkillServerAPI 構造体
