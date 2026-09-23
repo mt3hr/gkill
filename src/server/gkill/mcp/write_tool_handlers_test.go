@@ -23,8 +23,8 @@ import (
 // Tool definitions
 // ---------------------------------------------------------------------------
 func TestWriteToolDefinitions(t *testing.T) {
-	t.Run("write server exposes 21 write tools", func(t *testing.T) {
-		expectEqual(t, len(WriteTools), 21)
+	t.Run("write server exposes 23 write tools", func(t *testing.T) {
+		expectEqual(t, len(WriteTools), 23)
 	})
 
 	t.Run("write tool names are the current set", func(t *testing.T) {
@@ -50,6 +50,9 @@ func TestWriteToolDefinitions(t *testing.T) {
 			"gkill_update_tag",
 			"gkill_update_text",
 			"gkill_restore_kyou",
+			// スキル（ADR-0634）。gkill_delete_skill は実装だけで公開しない（skill_delete_tool.go）
+			"gkill_add_skill",
+			"gkill_update_skill",
 		})
 	})
 
@@ -75,8 +78,11 @@ func TestWriteToolDefinitions(t *testing.T) {
 		// title などを強制していた。スキーマに忠実な AI は
 		// (a) title を取りに1往復増やすか (b) 推測して送って既存値を静かに上書きする。
 		// update_mi の説明文の例 {id, is_checked:true} も自分の required に違反していた
+		// 対象は記録（id で指す）の更新だけ。gkill_update_skill はスキル名とファイルで指し、中身は全体を書く
+		// （patch ではない）ので name / content が必須になる。
 		for _, tool := range WriteTools {
-			if !strings.HasPrefix(strAt(t, tool, "name"), "gkill_update_") {
+			name := strAt(t, tool, "name")
+			if !strings.HasPrefix(name, "gkill_update_") || name == "gkill_update_skill" {
 				continue
 			}
 			expectEqual(t, objAt(t, tool, "inputSchema").Value("required"), strs("id"))

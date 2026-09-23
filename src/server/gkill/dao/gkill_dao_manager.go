@@ -24,6 +24,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps/rep_cache_updater"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/share_kyou_info"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/skills"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
@@ -45,6 +46,10 @@ type GkillDAOManager struct {
 	pluginManagers map[string]*PluginManager
 
 	ConfigDAOs *ConfigDAOs
+
+	// SkillStore は利用者が AI 向けに書くスキル（$GKILL_HOME/skills/<user_id>/<name>/）のストア。
+	// ファイルを触るのは gkill_server だけで、MCP も画面も HTTP API 経由で使う（ADR-0634）。
+	SkillStore *skills.Store
 
 	router    *mux.Router
 	IDFIgnore []string
@@ -72,6 +77,7 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		IDFIgnore:                gkill_options.IDFIgnore,
 		fileRepWatchCacheUpdater: fileRepWatchCacheUpdater,
 		skipUpdateCache:          skipUpdateCache,
+		SkillStore:               skills.NewStore(filepath.Clean(os.ExpandEnv(gkill_options.SkillsDir))),
 	}
 
 	configDBRootDir := os.ExpandEnv(gkill_options.ConfigDir)

@@ -130,6 +130,12 @@ func dispatchReadToolCall(ctx *CallContext, name string, args any) (*jsonobj.Obj
 
 	case "gkill_get_kyou_history":
 		return handleGetKyouHistory(ctx, args)
+
+	case "gkill_get_skill_list":
+		return handleGetSkillList(ctx, args)
+
+	case "gkill_get_skill":
+		return handleGetSkill(ctx, args)
 	}
 	return nil, Errorf("Unknown read tool: %s", name)
 }
@@ -649,6 +655,23 @@ func buildStatusPayload(ctx *CallContext) *jsonobj.Object {
 		"commit_hash", nullish(config.Value("commit_hash"), nil),
 		"build_time", nullish(config.Value("build_time"), nil),
 	))
+	// 利用者が AI 向けに書いたスキルの名前と説明（ADR-0634）。AI が作業の最初に呼ぶのはこのツールなので、
+	// ここに載せておくと gkill_get_skill_list を知らなくても気づける。取れなくても status は失敗にしない。
+	skills, err := fetchSkillList(ctx, jsonobj.New())
+	if err != nil {
+		payload.Set("skills_error", classifyGkillFailure(err))
+		ctx.Log.Warn("status_skill_list_failed", "error", err.Error())
+		return payload
+	}
+	brief := []any{}
+	for _, item := range skills {
+		skill, ok := item.(*jsonobj.Object)
+		if !ok || skill == nil {
+			continue
+		}
+		brief = append(brief, jsonobj.Obj("name", skill.Value("name"), "description", skill.Value("description")))
+	}
+	payload.Set("skills", brief)
 	return payload
 }
 
@@ -708,6 +731,9 @@ func summarizeReadToolPayloadBody(name string, payload *jsonobj.Object) (string,
 	if payload == nil {
 		payload = jsonobj.New()
 	}
+	if summary, ok := summarizeSkillPayload(name, payload); ok {
+		return summary, true
+	}
 	switch name {
 	case "gkill_status":
 		kind := jsString(nullish(payload.Value("server_kind"), "unknown"))
@@ -719,7 +745,11 @@ func summarizeReadToolPayloadBody(name string, payload *jsonobj.Object) (string,
 		account, _ := payload.Object("account")
 		userID := jsString(nullish(account.Value("user_id"), "unknown"))
 		device := jsString(nullish(account.Value("device"), "unknown"))
-		return "Connected to " + userID + "@" + device + " via " + kind + " server (schema_revision " + revision + ", up " + uptime + "s).", true
+		summary := "Connected to " + userID + "@" + device + " via " + kind + " server (schema_revision " + revision + ", up " + uptime + "s)."
+		if count := lengthOfArray(payload.Value("skills")); count > 0 {
+			summary += " " + itoa(count) + " skill(s) stored — read the one matching the task with gkill_get_skill."
+		}
+		return summary, true
 	case "gkill_get_mcp_help":
 		length := 0
 		if text, ok := payload.Value("text").(string); ok {

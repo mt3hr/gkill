@@ -482,6 +482,7 @@ func InitGkillOptions() {
 	gkill_options.TLSCertFileDefault = fmt.Sprintf("%s/tls/cert.cer", gkill_options.GkillHomeDir)
 	gkill_options.TLSKeyFileDefault = fmt.Sprintf("%s/tls/key.pem", gkill_options.GkillHomeDir)
 	gkill_options.DataDirectoryDefault = fmt.Sprintf("%s/datas", gkill_options.GkillHomeDir)
+	gkill_options.SkillsDir = fmt.Sprintf("%s/skills", gkill_options.GkillHomeDir)
 
 	// Android では libc（SQLite の 'localtime'）にも端末のゾーンを教える。
 	// 最初の SQLite 接続（InitGkillServerAPI）より前でなければ効かない（fix_timezone.go）。

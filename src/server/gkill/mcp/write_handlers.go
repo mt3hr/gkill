@@ -735,6 +735,17 @@ func dispatchWriteToolCall(ctx *CallContext, name string, args any) (*jsonobj.Ob
 	case "gkill_update_kmemo", "gkill_update_urlog", "gkill_update_nlog", "gkill_update_lantana",
 		"gkill_update_timeis", "gkill_update_mi", "gkill_update_kc", "gkill_update_tag", "gkill_update_text":
 		return runUpdate(ctx, strings.TrimPrefix(name, "gkill_update_"), args)
+
+	case "gkill_add_skill":
+		return handleAddSkill(ctx, args)
+
+	case "gkill_update_skill":
+		return handleUpdateSkill(ctx, args)
+
+		// gkill_delete_skill は公開しない（skill_delete_tool.go の冒頭）。一覧から外しても case があると
+		// 呼べてしまうので case もコメントアウトしてある。公開するときは WriteTools の登録行と一緒に戻す。
+		// case "gkill_delete_skill":
+		// 	return handleDeleteSkill(ctx, args)
 	}
 	return nil, NewGkillApiError(UnknownToolMessage(name), nil)
 }
@@ -799,6 +810,9 @@ func SummarizeWriteToolPayload(name string, payload *jsonobj.Object) (string, bo
 }
 
 func summarizeWriteToolPayloadBody(name string, payload *jsonobj.Object) (string, bool) {
+	if summary, ok := summarizeSkillPayload(name, payload); ok {
+		return summary, true
+	}
 	switch name {
 	case "gkill_submit_kftl":
 		created := arrayOrEmpty(payload.Value("created"))

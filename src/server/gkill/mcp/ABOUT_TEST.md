@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。1147テスト（42ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 11 + プラグイン1 = 12ツール、Write サーバ 28（書き込み21 + Read便利7）+ プラグイン1 = 29ツール、統合サーバ 32 + プラグイン1 = 33ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、ログ、設定ファイル、旧 Node 実装とのゴールデン一致をカバーする（テスト数は `t.Run` のサブテスト宣言の静的計数）。
+MCP (Model Context Protocol) サーバのテスト。1162テスト（43ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 13 + プラグイン1 = 14ツール、Write サーバ 32（書き込み23 + Read便利9）+ プラグイン1 = 33ツール、統合サーバ 36 + プラグイン1 = 37ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、ログ、設定ファイル、旧 Node 実装とのゴールデン一致をカバーする（テスト数は `t.Run` のサブテスト宣言の静的計数）。
 
 2026-09-20 に Node.js 実装（旧 `src/mcp`、vitest 28 ファイル）を Go へ移した。旧テストの `describe` → `TestXxx`、`test` → `t.Run("<原文のタイトル>")` で 1:1 に対応し、タイトル集合の照合で未移植 0 を確認してある（意図した例外は [ADR-0631](../../../../documents/adr/0631-mcp-lives-in-gkill-server.md)）。
 
@@ -19,7 +19,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 | `validation_test.go` | MCP ツール入力のバリデーション |
 | `normalization_test.go` | クエリデータの正規化処理。`count_only` / `group_by` と `cursor` の併用、および `count_only` と `group_by` の併用をMCP層で弾くこと（GPS と同じ文言であることも含む）、`gkill_get_rep_infos` の `data_kinds` 絞り込みと行絞り込み（`writable_only` / `rep_types` / `rep_names` / `contains`。古スキーマ経由の文字列復元も）、古スキーマ救済表 `StaleSchemaArgKindsByTool` の全エントリを表駆動で回す検出網羅 |
 | `constants_test.go` | 定数定義の検証 |
-| `tool_handlers_test.go` | Read 11ツール分のハンドラ実行ロジック（`read_tools.go` のツール名一覧・エンドポイント対応表・summarize）。`gkill_get_kyous` の Description が `partial=false` と独立に `warnings` を確認し、読み込めない保管場所を `query.reps` へ指定し直さないようAIへ伝えることも固定する |
+| `tool_handlers_test.go` | Read 13ツール分のハンドラ実行ロジック（`read_tools.go` のツール名一覧・エンドポイント対応表・summarize）。`gkill_get_kyous` の Description が `partial=false` と独立に `warnings` を確認し、読み込めない保管場所を `query.reps` へ指定し直さないようAIへ伝えることも固定する |
 | `read_handlers_test.go` | 読み取りディスパッチの正本 `read_handlers.go`（get_kyous v2 パラメータの転送と応答の素通し、トップレベル `plugins[]` の条件付きコピー、application_config の fields 射影 + UI状態キー strip、GPS の MCP 側ページング（複合カーソル・count_only・日別バケット・count_only×group_by の拒否）、rep_infos の行絞り込み、idf_file の `/files/` クエリ組み立て・thumb エコー・サイズ上限超過の案内） |
 | `client_test.go` | GkillClient（httptest のスタブ、ログイン・認証リトライ等） |
 | `server_test.go` | Server のセットアップとトランスポート管理、セッションオーバーライド、プラグインツール振り分け、IDF base64 の text/structuredContent 分離と `image_content_attached`、`warnings` / `partial` の1行要約への昇格 |
@@ -47,7 +47,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 
 ` を探す実装だと行ごと1つのヘッダと見なして両方落とす）、枠の混在、JSON でもヘッダでもない行を捨てて警告すること、壊れた Content-Length の警告 |
 | `stdio_e2e_test.go` | stdio の端から端まで。テストバイナリ自身を子プロセスにして NDJSON と Content-Length の両枠組みで initialize → tools/call → ping を通し、stdout に JSON-RPC 以外の行が無いこと・壊れた行が stderr に警告されることを固定する |
-| `golden_test.go` | 旧 Node 実装から採ったゴールデン（`testdata/golden/`。要求コーパス 331 件）との**バイト一致**: tools/list（3サーバ）と `schema_revision`、tools/call の応答（stdio / http × 3サーバ）、gkill へ送った要求（パス・クエリ・Cookie・本文）。時刻・UUID・トークンは採取時と同じ固定列。ゴールデン自身が `jsonobj` で往復してもバイト単位で変わらないことも固定。ツールを意図して変えたときは `GKILL_MCP_UPDATE_GOLDEN=1 go test ./gkill/mcp/ -run Golden` で Go の出力へ書き直し、`git diff testdata/golden` を読んでからコミットする（Node 実装はもう無いので、以後は前回コミットした Go の出力との回帰検査になる） |
+| `golden_test.go` | 旧 Node 実装から採ったゴールデン（`testdata/golden/`。要求コーパス 345 件）との**バイト一致**: tools/list（3サーバ）と `schema_revision`、tools/call の応答（stdio / http × 3サーバ）、gkill へ送った要求（パス・クエリ・Cookie・本文）。時刻・UUID・トークンは採取時と同じ固定列。ゴールデン自身が `jsonobj` で往復してもバイト単位で変わらないことも固定。ツールを意図して変えたときは `GKILL_MCP_UPDATE_GOLDEN=1 go test ./gkill/mcp/ -run Golden` で Go の出力へ書き直し、`git diff testdata/golden` を読んでからコミットする（Node 実装はもう無いので、以後は前回コミットした Go の出力との回帰検査になる） |
 
 ### プラグインツール（3サーバ共通）
 
@@ -62,15 +62,15 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 |---------|-----------|
 | `write_normalization_test.go` | Write入力の正規化（11 normalizer関数、mood範囲検証、data_type検証等）。追加と更新が同じ `entityFieldSpecs` から作られること、`idempotency_key` の受理、後付けフラグの既定値・addOnly・古スキーマ文字列の復元、delete / restore の対象無指定を verb 入り文言で拒否すること |
 | `write_client_test.go` | GkillClient の書き込み側（環境変数、login、callApi、認証リトライ） |
-| `write_server_test.go` | Write サーバ（JSON-RPC、29ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造、warnings の1行要約昇格） |
-| `write_tool_handlers_test.go` | Write 21ツール定義（実物 import）・削除の語彙が enum / `DeleteDataTypes` / 対応表2つで一致すること・`SummarizeWriteToolPayload`・後付け boolean 引数が検出表と型復元の両方に載ることの表駆動メタ検査 |
+| `write_server_test.go` | Write サーバ（JSON-RPC、33ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造、warnings の1行要約昇格） |
+| `write_tool_handlers_test.go` | Write 23ツール定義（実物 import）・削除の語彙が enum / `DeleteDataTypes` / 対応表2つで一致すること・`SummarizeWriteToolPayload`・後付け boolean 引数が検出表と型復元の両方に載ることの表駆動メタ検査 |
 
 ### Read/Write統合サーバ
 
 | ファイル | テスト内容 |
 |---------|-----------|
 | `readwrite_client_test.go` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
-| `readwrite_server_test.go` | 統合サーバ（33ツール全ディスパッチ、プラグインツール振り分け、IDF画像ブロック、エンティティデフォルト値） |
+| `readwrite_server_test.go` | 統合サーバ（37ツール全ディスパッチ、プラグインツール振り分け、IDF画像ブロック、エンティティデフォルト値） |
 | `write_handlers_test.go` | 書き込みディスパッチの正本（add/update/delete/restore のエンドポイント、update の patch セマンティクス、create_app がサーバ種別で埋まること、既削除の delete / 未削除の restore を拒む冪等ガード、update_time が同一秒でも必ず進むこと、応答がサーバ保存版を返すこと、`end_time: null` の3値パッチ、`allow_create_board:false` の板名照合） |
 
 ### テスト補助（テスト件数には数えない）
@@ -85,7 +85,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 ## テスト内容
 
 - **Validation / Normalization / Write Normalization / Constants**: 各ツールの入力パラメータ検証、日付フォーマット、デフォルト値補完、data_type 列挙値、unknown keys 拒否
-- **Tool Handlers**: Read 11ツール + Write 21ツール（add系9 + update系9 + submit_kftl + delete_kyou + restore_kyou）+ Read便利7ツール + プラグイン1ツール（3サーバ共通）
+- **Tool Handlers**: Read 13ツール + Write 23ツール（add系9 + update系9 + submit_kftl + delete_kyou + restore_kyou）+ Read便利9ツール + プラグイン1ツール（3サーバ共通）
 - **Plugin Tools**: `gkill_get_plugin_list` と `include_plugin_content` によるプラグイン本文のインライン埋め込み（並列度・予算・デッドライン・失敗隔離）、コンテンツHTMLのテキスト変換
 - **Client / Server / Transport**: gkill への往復（認証、エラーハンドリング、レスポンスパース）、3サーバのディスパッチ、JSON-RPC、stdio の枠組み、HTTP の OAuth 2.1 と file-link 配信
 - **Config / Log**: 設定ファイルの生成と優先順位、gkill_log 上のロガーのレベル
@@ -102,7 +102,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 - gkill 本体との通信: `gkill_client.go`
 - サブコマンドの配線: `src/server/gkill/main/common/mcp.go`（テストは `main/common/mcp_test.go`）
 
-ツール数（Read 12 / Write 29 / ReadWrite 33）は `verify_docs` が `composeTools(...)` の連結を辿って実測と突き合わせる。
+ツール数（Read 14 / Write 33 / ReadWrite 37）は `verify_docs` が `composeTools(...)` の連結を辿って実測と突き合わせる。
 
 ## 実行方法
 

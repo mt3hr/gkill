@@ -11,6 +11,7 @@ import { GetRepositoriesRequest } from '@/classes/api/req_res/get-repositories-r
 import type DecideRelatedTimeUploadedFileDialog from '@/pages/dialogs/decide-related-time-uploaded-file-dialog.vue'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
+import { read_file_as_data_url } from '@/classes/file-base64'
 
 export function useUploadFileView(options: {
     props: UploadFileViewProps,
@@ -99,7 +100,7 @@ export function useUploadFileView(options: {
         for (let i = 0; i < files_value.length; i++) {
             const file = files_value[i]
             const filedata = new FileData()
-            filedata.data_base64 = await to_base64(file)
+            filedata.data_base64 = await read_file_as_data_url(file)
             filedata.file_name = file.name
             filedata.last_modified = new Date(file.lastModified)
             req.files.push(filedata)
@@ -154,7 +155,7 @@ export function useUploadFileView(options: {
         for (let i = 0; i < gps_log_files_value.length; i++) {
             const gps_log_file = gps_log_files_value[i]
             const filedata = new FileData()
-            filedata.data_base64 = await to_base64(gps_log_file)
+            filedata.data_base64 = await read_file_as_data_url(gps_log_file)
             filedata.file_name = gps_log_file.name
             req.gps_log_files.push(filedata)
         }
@@ -168,15 +169,6 @@ export function useUploadFileView(options: {
             emits('received_messages', res.messages)
         }
         gps_log_files.value = null
-    }
-
-    async function to_base64(file: File): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = (error) => reject(error);
-        })
     }
 
     function onDragenterFile(e: DragEvent): void {

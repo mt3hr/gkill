@@ -11,7 +11,7 @@
 {"name":"invalid request: wrong jsonrpc version","requests":[]}
 {"name":"invalid request: scalar payload","requests":[]}
 {"name":"invalid request: string payload","requests":[]}
-{"name":"batch: ping + status + notification","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"batch: ping + status + notification","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_skill_list","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
 {"name":"batch: empty array","requests":[]}
 {"name":"batch: only notifications","requests":[]}
 {"name":"batch: contains invalid element","requests":[]}
@@ -24,9 +24,9 @@
 {"name":"tools/call: removed tool gkill_get_plugin_content","requests":[]}
 {"name":"tools/call: arguments is a string","requests":[]}
 {"name":"tools/call: arguments is an array","requests":[]}
-{"name":"tools/call: arguments null","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
-{"name":"tools/call: arguments omitted","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
-{"name":"status: default","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"tools/call: arguments null","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_skill_list","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"tools/call: arguments omitted","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_skill_list","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"status: default","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"},{"method":"POST","path":"/api/get_skill_list","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
 {"name":"status: locale ja","requests":[]}
 {"name":"status: unknown key","requests":[]}
 {"name":"status: gkill returns a business error","requests":[]}
@@ -329,3 +329,17 @@
 {"name":"app config: fields descriptions","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
 {"name":"app config: descriptions with contains","requests":[{"method":"POST","path":"/api/get_application_config","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
 {"name":"help: config","requests":[]}
+{"name":"skill list","requests":[{"method":"POST","path":"/api/get_skill_list","body":"{\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"skill get: manifest and files","requests":[{"method":"POST","path":"/api/get_skill","body":"{\"name\":\"weekly-dashboard\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"skill get: text file","requests":[{"method":"POST","path":"/api/get_skill","body":"{\"name\":\"weekly-dashboard\",\"path\":\"references/tags.md\",\"max_bytes\":8388608,\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"skill get: image file","requests":[{"method":"POST","path":"/api/get_skill","body":"{\"name\":\"weekly-dashboard\",\"path\":\"assets/logo.png\",\"max_bytes\":8388608,\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"skill get: file over max_file_bytes","requests":[{"method":"POST","path":"/api/get_skill","body":"{\"name\":\"weekly-dashboard\",\"path\":\"assets/big.bin\",\"max_bytes\":8388608,\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"skill get: unknown skill","requests":[{"method":"POST","path":"/api/get_skill","body":"{\"name\":\"no-such-skill\",\"locale_name\":\"ja\",\"session_id\":\"sess-http\"}"}]}
+{"name":"skill get: name missing","requests":[]}
+{"name":"skill add: new","requests":[]}
+{"name":"skill add: already exists","requests":[]}
+{"name":"skill update: SKILL.md with revision","requests":[]}
+{"name":"skill update: stale revision","requests":[]}
+{"name":"skill update: new file","requests":[]}
+{"name":"skill delete: not published","requests":[]}
+{"name":"help: skills","requests":[]}

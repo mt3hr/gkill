@@ -370,9 +370,9 @@ func TestReadWriteJSONRPCProtocol(t *testing.T) {
 		expectEqual(t, response.Value("result"), obj())
 	})
 
-	t.Run("tools/list returns 33 tools", func(t *testing.T) {
+	t.Run("tools/list returns 37 tools", func(t *testing.T) {
 		response := serverMessage(t, setup(), obj("jsonrpc", "2.0", "id", 3, "method", "tools/list"))
-		expectEqual(t, len(arrAt(t, response, "result", "tools")), 33)
+		expectEqual(t, len(arrAt(t, response, "result", "tools")), 37)
 	})
 
 	t.Run("tools/list includes all expected tool names", func(t *testing.T) {
@@ -391,12 +391,16 @@ func TestReadWriteJSONRPCProtocol(t *testing.T) {
 			// Update tools
 			"gkill_update_kmemo", "gkill_update_urlog", "gkill_update_nlog", "gkill_update_lantana", "gkill_update_timeis",
 			"gkill_update_mi", "gkill_update_kc", "gkill_update_tag", "gkill_update_text",
+			// Skill tools
+			"gkill_get_skill_list", "gkill_get_skill", "gkill_add_skill", "gkill_update_skill",
 			// Plugin tools
 			"gkill_get_plugin_list",
 		} {
 			expectTrue(t, names.Has(name), "%s missing", name)
 		}
 		expectTrue(t, !names.Has("gkill_get_plugin_content"), "gkill_get_plugin_content present")
+		// 実装はあるが公開しない（skill_delete_tool.go）
+		expectTrue(t, !names.Has("gkill_delete_skill"), "gkill_delete_skill present")
 	})
 
 	t.Run("unknown method returns error", func(t *testing.T) {

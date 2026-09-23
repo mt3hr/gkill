@@ -30,6 +30,9 @@ var WriteServerReadToolNames = newNameSet(
 	"gkill_get_mi_board_list",
 	"gkill_get_all_tag_names",
 	"gkill_get_kyou_history",
+	// スキル（ADR-0634）。書き換える前に読んで revision を得る手段なので、書き込み専用サーバにも載せる。
+	"gkill_get_skill_list",
+	"gkill_get_skill",
 )
 
 // writeServerTools は書き込みツール + 選抜した読み取りツール + プラグインツール。

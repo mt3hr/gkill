@@ -17,8 +17,8 @@ import (
 // Tool definition presence
 // ---------------------------------------------------------------------------
 func TestReadToolDefinitions(t *testing.T) {
-	t.Run("read server exposes 12 tools (11 read + 1 plugin)", func(t *testing.T) {
-		expectEqual(t, len(ReadTools), 11)
+	t.Run("read server exposes 14 tools (13 read + 1 plugin)", func(t *testing.T) {
+		expectEqual(t, len(ReadTools), 13)
 		expectEqual(t, len(PluginTools), 1)
 	})
 
@@ -37,6 +37,9 @@ func TestReadToolDefinitions(t *testing.T) {
 			"gkill_get_rep_infos",
 			"gkill_get_idf_file",
 			"gkill_get_kyou_history",
+			// スキル（ADR-0634）
+			"gkill_get_skill_list",
+			"gkill_get_skill",
 		})
 	})
 

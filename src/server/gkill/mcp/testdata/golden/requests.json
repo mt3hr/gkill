@@ -353,5 +353,19 @@
   {"name": "update text: unknown key", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_update_text", "arguments": {"id": "text-1", "text": "x", "target_id": "y"}}}},
   {"name": "app config: fields descriptions", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_application_config", "arguments": {"fields": ["descriptions"]}}}},
   {"name": "app config: descriptions with contains", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_application_config", "arguments": {"fields": ["descriptions", "user_id"], "contains": "メモ"}}}},
-  {"name": "help: config", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_mcp_help", "arguments": {"topic": "config"}}}}
+  {"name": "help: config", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_mcp_help", "arguments": {"topic": "config"}}}},
+  {"name": "skill list", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_skill_list", "arguments": {}}}},
+  {"name": "skill get: manifest and files", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_skill", "arguments": {"name": "weekly-dashboard"}}}},
+  {"name": "skill get: text file", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_skill", "arguments": {"name": "weekly-dashboard", "path": "references/tags.md"}}}},
+  {"name": "skill get: image file", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_skill", "arguments": {"name": "weekly-dashboard", "path": "assets/logo.png"}}}},
+  {"name": "skill get: file over max_file_bytes", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_skill", "arguments": {"name": "weekly-dashboard", "path": "assets/big.bin"}}}},
+  {"name": "skill get: unknown skill", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_skill", "arguments": {"name": "no-such-skill"}}}},
+  {"name": "skill get: name missing", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_skill", "arguments": {"path": "SKILL.md"}}}},
+  {"name": "skill add: new", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_add_skill", "arguments": {"name": "morning-routine", "description": "朝の記録: 気分と体重", "body": "# 手順\n1. 気分を記録する"}}}},
+  {"name": "skill add: already exists", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_add_skill", "arguments": {"name": "weekly-dashboard", "description": "d", "body": "b"}}}},
+  {"name": "skill update: SKILL.md with revision", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_update_skill", "arguments": {"name": "weekly-dashboard", "content": "---\nname: weekly-dashboard\ndescription: 週次ダッシュボードの作り方\n---\n# 手順（改）\n", "revision": "a1b2c3d4e5f60718"}}}},
+  {"name": "skill update: stale revision", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_update_skill", "arguments": {"name": "weekly-dashboard", "content": "x", "revision": "stale"}}}},
+  {"name": "skill update: new file", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_update_skill", "arguments": {"name": "weekly-dashboard", "path": "scripts/build.py", "content": "print('ok')\n"}}}},
+  {"name": "skill delete: not published", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_delete_skill", "arguments": {"name": "weekly-dashboard", "path": "references/tags.md", "revision": "1234567890abcdef"}}}},
+  {"name": "help: skills", "message": {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "gkill_get_mcp_help", "arguments": {"topic": "skills"}}}}
 ]

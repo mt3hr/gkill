@@ -38,7 +38,7 @@ func targetsProperty(verb string) *jsonobj.Object {
 
 const projectionVocabularyDesc = "Two vocabularies exist: search results and add_* / update_* responses carry PROJECTION names (mi_create / mi_check / mi_limit / mi_start / mi_end, mirekyou_*, timeis_start / timeis_end), while this parameter is the ENTITY type (mi / mirekyou / timeis). Projection names are accepted here and folded to their entity type, so a data_type copied straight out of a response works."
 
-// WriteTools は書き込みツール 21 本（順序固定）。
+// WriteTools は書き込みツール 23 本（順序固定）。
 var WriteTools = []*jsonobj.Object{
 	tool(
 		"gkill_add_kmemo",
@@ -436,4 +436,35 @@ var WriteTools = []*jsonobj.Object{
 			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
 		), nil),
 	),
+	// スキル（ADR-0634）。反映はすぐで履歴は残らない。削除ツールは実装だけして公開していない
+	// （skill_delete_tool.go の冒頭に理由。登録行は下のコメントアウト）。
+	tool(
+		"gkill_add_skill",
+		"Create a skill (a procedure for AI assistants) from name, description and body; gkill writes SKILL.md. "+
+			"Fails if the name exists — use gkill_update_skill. Takes effect at once with no history: agree on the content "+
+			"with the user first. Details: gkill_get_mcp_help topic:skills.",
+		schema(jsonobj.Obj(
+			"name", jsonobj.Obj("type", "string", "description", "Lowercase letters, digits and hyphens, 1-64 chars (e.g. weekly-dashboard)."),
+			"description", jsonobj.Obj("type", "string", "description", "What the skill does and when to use it."),
+			"body", jsonobj.Obj("type", "string", "description", "Instructions (markdown)."),
+			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
+		), []string{"name", "description", "body"}),
+	),
+	tool(
+		"gkill_update_skill",
+		"Write one text file of a skill (path omitted = SKILL.md, header included). Pass the revision from gkill_get_skill "+
+			"to overwrite; omit it only to create a new file. A stale revision is rejected with the current one — re-read, "+
+			"merge, retry. Takes effect at once with no history: agree on the change with the user first. Deleting files and "+
+			"binary files are left to the user (gkill's settings screen). Details: gkill_get_mcp_help topic:skills.",
+		schema(jsonobj.Obj(
+			"name", jsonobj.Obj("type", "string", "description", "Skill name from gkill_get_skill_list."),
+			"path", jsonobj.Obj("type", "string", "description", "File in the skill, '/'-separated. Default: SKILL.md."),
+			"content", jsonobj.Obj("type", "string", "description", "The whole new content (text)."),
+			"revision", jsonobj.Obj("type", "string", "description", "Revision you read; required to overwrite."),
+			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
+		), []string{"name", "content"}),
+	),
+	// gkill_delete_skill は公開しない（skill_delete_tool.go の冒頭）。公開するときはこの行を戻し、
+	// write_handlers.go の dispatchWriteToolCall の case も戻す。
+	// deleteSkillTool,
 }

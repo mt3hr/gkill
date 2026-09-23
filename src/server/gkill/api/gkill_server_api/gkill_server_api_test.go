@@ -72,6 +72,7 @@ func setupTestGkillServerAPI(t *testing.T) (*GkillServerAPI, func()) {
 	origLog := gkill_options.LogDir
 	origConfig := gkill_options.ConfigDir
 	origData := gkill_options.DataDirectoryDefault
+	origSkills := gkill_options.SkillsDir
 	origTLSCert := gkill_options.TLSCertFileDefault
 	origTLSKey := gkill_options.TLSKeyFileDefault
 	origCacheInMemory := gkill_options.IsCacheInMemory
@@ -83,6 +84,7 @@ func setupTestGkillServerAPI(t *testing.T) (*GkillServerAPI, func()) {
 	gkill_options.LogDir = tmpDir + "/logs"
 	gkill_options.ConfigDir = tmpDir + "/configs"
 	gkill_options.DataDirectoryDefault = tmpDir + "/datas"
+	gkill_options.SkillsDir = tmpDir + "/skills"
 	gkill_options.TLSCertFileDefault = tmpDir + "/tls/cert.cer"
 	gkill_options.TLSKeyFileDefault = tmpDir + "/tls/key.pem"
 	gkill_options.IsCacheInMemory = cacheInMemoryForTest
@@ -103,6 +105,7 @@ func setupTestGkillServerAPI(t *testing.T) (*GkillServerAPI, func()) {
 		gkill_options.LogDir = origLog
 		gkill_options.ConfigDir = origConfig
 		gkill_options.DataDirectoryDefault = origData
+		gkill_options.SkillsDir = origSkills
 		gkill_options.TLSCertFileDefault = origTLSCert
 		gkill_options.TLSKeyFileDefault = origTLSKey
 		gkill_options.IsCacheInMemory = origCacheInMemory
@@ -148,6 +151,7 @@ func setupTestGkillServerAPI(t *testing.T) (*GkillServerAPI, func()) {
 		gkill_options.LogDir = origLog
 		gkill_options.ConfigDir = origConfig
 		gkill_options.DataDirectoryDefault = origData
+		gkill_options.SkillsDir = origSkills
 		gkill_options.TLSCertFileDefault = origTLSCert
 		gkill_options.TLSKeyFileDefault = origTLSKey
 		gkill_options.IsCacheInMemory = origCacheInMemory
@@ -651,6 +655,7 @@ func TestAuthMiddleware_RejectsInvalidSession(t *testing.T) {
 		"/api/get_idf_kyou_by_relative_path": true,
 		"/api/get_kyous_mcp":                 true,
 		"/api/get_rep_infos_mcp":             true,
+		"/api/upload_skill":                  true,
 	}
 
 	// ルート表（apiRoutes）から機械的に組む。wrapAuth / wrapAuthRepos の経路は

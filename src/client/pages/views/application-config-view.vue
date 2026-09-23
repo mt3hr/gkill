@@ -176,6 +176,8 @@
                                 i18n.global.t("EDIT_PLAYING_TIMEIS_TITLE") }}</v-btn>
                             <v-btn dark color="primary" @click="show_edit_saved_find_query_dialog">{{
                                 i18n.global.t("EDIT_SAVED_FIND_QUERY_TITLE") }}</v-btn>
+                            <v-btn dark color="primary" @click="show_manage_skill_list_dialog">{{
+                                i18n.global.t("SKILL_LIST_TITLE") }}</v-btn>
                         </td>
                     </tr>
                 </tbody>
@@ -268,6 +270,9 @@
         <ServerConfigDialog :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             ref="server_config_dialog" />
+        <ManageSkillListDialog :application_config="cloned_application_config" :gkill_api="gkill_api"
+            v-on="errorMessageRelayHandlers"
+            ref="manage_skill_list_dialog" />
     </v-card>
 </template>
 <script setup lang="ts">
@@ -282,6 +287,7 @@ import EditMiBoardStructDialog from '../dialogs/edit-mi-board-struct-dialog.vue'
 import EditDnoteDialog from '../dialogs/edit-dnote-dialog.vue'
 import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
 import ServerConfigDialog from '../dialogs/server-config-dialog.vue'
+import ManageSkillListDialog from '../dialogs/manage-skill-list-dialog.vue'
 import EditRyuuDialog from '../dialogs/edit-ryuu-dialog.vue'
 import EditDashboardDialog from '../dialogs/edit-dashboard-dialog.vue'
 import EditPlayingTimeIsDialog from '../dialogs/edit-playing-time-is-dialog.vue'
@@ -320,6 +326,7 @@ const {
     edit_playing_time_is_dialog,
     edit_saved_find_query_dialog,
     server_config_dialog,
+    manage_skill_list_dialog,
 
     // State
     is_loading,
@@ -362,6 +369,7 @@ const {
     show_edit_saved_find_query_dialog,
     show_new_board_name_dialog,
     show_server_config_dialog,
+    show_manage_skill_list_dialog,
 
     // Event handlers
     update_board_name,

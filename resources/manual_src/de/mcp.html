@@ -13,17 +13,38 @@
     <tr><td>Einstellungen prüfen</td><td>„Liste meine Vorlagen auf"</td></tr>
     <tr><td>Ihre Notizen lesen</td><td>Liest zuerst die Beschreibungen, die Sie in den Einstellungen zu Tags, Speicherorten, Boards und Vorlagen geschrieben haben, und sucht Einträge so, wie Sie sie tatsächlich nutzen</td></tr>
     <tr><td>Die Nutzung selbst nachschlagen</td><td>Die KI schlägt die Regeln für Suchbedingungen und Seitenwechsel über eine eingebaute Hilfefunktion selbst nach. Findet sie etwas nicht, bitten Sie sie: „Schau in der gkill-Hilfe nach"</td></tr>
+    <tr><td>Skills nutzen</td><td>Die KI liest die Anleitungen (Skills), die Sie in den Einstellungen hinterlegt haben, und arbeitet danach. Sie können die KI auch Skills erstellen oder korrigieren lassen</td></tr>
   </table>
 
   <h2>Integrationstypen</h2>
   <table>
     <tr><th>Typ</th><th>Was er kann</th><th>Startbefehl</th><th>Werkzeuge</th><th>Port (HTTP)</th></tr>
-    <tr><td>Nur-Lesen</td><td>Eintr&auml;ge nur anzeigen und suchen. Hinzuf&uuml;gen oder &Auml;ndern ist nicht m&ouml;glich</td><td>gkill_server mcp --kind read</td><td>12</td><td>8808</td></tr>
-    <tr><td>Nur-Schreiben</td><td>Eintr&auml;ge hinzuf&uuml;gen, aktualisieren und l&ouml;schen. Kann zudem Ablage-, Tag- und Board-Namen lesen</td><td>gkill_server mcp --kind write</td><td>29</td><td>8809</td></tr>
-    <tr><td>Lesen &amp; Schreiben</td><td>Eintr&auml;ge anzeigen, hinzuf&uuml;gen, aktualisieren und l&ouml;schen</td><td>gkill_server mcp --kind readwrite</td><td>33</td><td>8810</td></tr>
+    <tr><td>Nur-Lesen</td><td>Eintr&auml;ge nur anzeigen und suchen. Hinzuf&uuml;gen oder &Auml;ndern ist nicht m&ouml;glich</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
+    <tr><td>Nur-Schreiben</td><td>Eintr&auml;ge hinzuf&uuml;gen, aktualisieren und l&ouml;schen. Kann zudem Ablage-, Tag- und Board-Namen lesen</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
+    <tr><td>Lesen &amp; Schreiben</td><td>Eintr&auml;ge anzeigen, hinzuf&uuml;gen, aktualisieren und l&ouml;schen</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
   </table>
   <p>Der MCP-Server ist Teil von gkill_server und wird mit <code>gkill_server mcp --kind &lt;Typ&gt;</code> gestartet (gkill_server selbst muss laufen). Verbindung und Zugangsdaten kommen aus Umgebungsvariablen oder aus der Konfigurationsdatei <code>configs/gkill_mcp.json</code>, die beim ersten Start erzeugt wird. Protokolle landen in <code>logs/gkill_mcp_&lt;Typ&gt;.log</code> (die Dateien je Stufe teilen sich das Pr&auml;fix).</p>
   <p>Jeder Typ enth&auml;lt ein Werkzeug zum Auflisten der verwendeten Erweiterungen. Die Inhalte der &uuml;ber Erweiterungen importierten Eintr&auml;ge k&ouml;nnen direkt zusammen mit den Suchergebnissen empfangen werden.</p>
+
+  <h2>Skills</h2>
+  <p>Ein Skill ist eine Anleitung, die Sie für KI-Assistenten hinterlegen (zum Beispiel, wie die Wochenzusammenfassung erstellt wird oder welche Tags eine Art von Eintrag bekommt). Skills werden pro Benutzer gespeichert, und jeder verbundene KI-Assistent nutzt dieselben Skills. Vor der Arbeit prüft die KI die Liste der Skills und liest den passenden.</p>
+  <p>Ein Skill ist ein Ordner mit <code>SKILL.md</code> auf oberster Ebene. Beginnen Sie <code>SKILL.md</code> mit Name und Beschreibung in der folgenden Form und schreiben Sie danach die Schritte. Der Ordner kann außerdem Referenzdokumente, Skripte und andere Dateien enthalten.</p>
+  <pre><code>---
+name: weekly-summary
+description: Schritte für die Wochenzusammenfassung
+---
+# Schritte
+1. ...</code></pre>
+  <table>
+    <tr><th>Vorgang</th><th>Vorgehen</th></tr>
+    <tr><td>Hinzufügen oder ersetzen</td><td>Laden Sie unter „Skills“ in den Einstellungen den Ordner als Zip hoch. Prüfen Sie, welche Dateien hinzugefügt, gelöscht oder geändert werden, und drücken Sie „Anwenden“, um den gleichnamigen Skill vollständig zu ersetzen.</td></tr>
+    <tr><td>Ansehen und mitnehmen</td><td>„Anzeigen“ zeigt den Inhalt jeder Datei. „Herunterladen“ speichert den Skill als Zip, das Sie lokal bearbeiten und unverändert wieder hochladen können.</td></tr>
+    <tr><td>Löschen</td><td>„Löschen“ unter „Skills“ in den Einstellungen entfernt den ganzen Skill.</td></tr>
+    <tr><td>Von der KI erstellt oder korrigiert</td><td>Mit einer Integration, die schreiben darf, kann die KI Skills erstellen und ihre Dateien neu schreiben. Die KI kann keine Skills löschen.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Tipp:</strong> Änderungen an Skills gelten sofort, und es wird kein Verlauf gespeichert. Bevor die KI einen Skill ändert, sichern Sie bei Bedarf eine Kopie mit „Herunterladen“. Namen bestehen aus Kleinbuchstaben, Ziffern und Bindestrichen (bis zu 64 Zeichen), Dateinamen nur aus Buchstaben, Ziffern und <code>._-</code>. gkill führt keine Skripte aus.
+  </div>
 
   <h2>Dateiübergabe</h2>
   <p>Wie Dateieinträge (Bilder, Videos, Dokumente) der KI gezeigt werden, wechselt automatisch je nach Verbindungsart.</p>
