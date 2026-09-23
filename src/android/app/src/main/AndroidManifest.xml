@@ -10,11 +10,16 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29" />
-    <!-- Go サーバは SAF の content:// を扱えず実パスでしか読めないため、
-         共有ストレージ上のファイルリポジトリには全ファイルアクセスが要る。 -->
+    <!-- Go サーバは SAF の content:// を扱えず実パスでしか読み書きできない。データ置き場
+         /sdcard/gkill と共有ストレージ上のファイルリポジトリのために全ファイルアクセスが要る。
+         許可されるまでサーバは起動しない（MainActivity.startServerWhenStorageAccessible）。 -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <!-- requestLegacyExternalStorage は Android 10 の端末でだけ効く（11+ では無視される）。
+         10 は Scoped Storage のため、これが無いと WRITE_EXTERNAL_STORAGE を許可されても
+         /sdcard/gkill へ実パスで書けない。 -->
     <application
         android:allowBackup="false"
+        android:requestLegacyExternalStorage="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
