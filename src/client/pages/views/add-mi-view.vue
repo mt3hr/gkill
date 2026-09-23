@@ -188,28 +188,24 @@
                 </table>
             </v-col>
         </v-row>
+        <!-- 通知1件ぶん。見出し行と通知内容は画面幅いっぱいに使う（cols="auto" だと中身の幅に縮んでいた）。
+             行を消すボタンは他の画面の「行を消す」（相関グラフの指標・定義の削除）と同じ形にそろえる -->
         <v-row v-for="notification, index in notifications" :key="notification.id" class="pa-0 ma-0">
-            <v-col cols="auto" class="pa-0 ma-0">
-                <v-row class="pa-0 ma-0">
-                    <v-col cols="auto" class="pa-0 ma-0">
+            <v-col cols="12" class="pa-0 ma-0">
+                <v-row class="pa-0 ma-0" align="center">
+                    <v-col class="pa-0 ma-0">
                         <div>{{ i18n.global.t("NOTIFICATION_TITLE") }}</div>
                     </v-col>
-                    <v-spacer />
                     <v-col cols="auto" class="pa-0 ma-0">
-                        <v-btn class="rounded-sm mx-auto" icon @click.prevent="delete_notification(index)"
-                            :disabled="is_requested_submit">
-                            <v-icon>mdi-close</v-icon>
-                        </v-btn>
+                        <v-btn icon="mdi-delete" size="small" variant="text" color="secondary"
+                            :title="i18n.global.t('DELETE_NOTIFICATION_TITLE')"
+                            @click.prevent="delete_notification(index)" :disabled="is_requested_submit" />
                     </v-col>
                 </v-row>
-                <v-row class="pa-0 ma-0">
-                    <v-col cols="auto" class="pa-0 ma-0">
-                        <AddNotificationForAddMiView :application_config="application_config" :gkill_api="gkill_api"
-                            :enable_context_menu="false" :enable_dialog="true" :highlight_targets="[]" :kyou="kyou"
-                            :default_notification="notification" :is_readonly="is_requested_submit"
-                            ref="add_notification_views" v-on="crudRelayHandlers" />
-                    </v-col>
-                </v-row>
+                <AddNotificationForAddMiView :application_config="application_config" :gkill_api="gkill_api"
+                    :enable_context_menu="false" :enable_dialog="true" :highlight_targets="[]" :kyou="kyou"
+                    :default_notification="notification" :is_readonly="is_requested_submit"
+                    ref="add_notification_views" v-on="crudRelayHandlers" />
             </v-col>
         </v-row>
         <EditKyouTagsView :application_config="application_config" :gkill_api="gkill_api" :kyou="null"
