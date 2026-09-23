@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1400 | 211 | Go `testing` |
-| フロントエンド ユニット | 2043 | 182 | Vitest |
-| フロントエンド E2E | 254 | 47（+auth.setup.ts） | Playwright |
+| Go バックエンド | 1403 | 211 | Go `testing` |
+| フロントエンド ユニット | 2088 | 185 | Vitest |
+| フロントエンド E2E | 255 | 47（+auth.setup.ts） | Playwright |
 | MCP サーバ | 1162 | 43 | Go `testing` |
 | ツール | 60 | 3 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 230 | 18 | JUnit 4 + MockK |
-| **合計** | **5,164** | **506** | |
+| **合計** | **5,213** | **509** | |
 
 数え直すコマンド:
 
@@ -298,7 +298,7 @@ src/client/__tests__/
 │   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
 │   │   ├── find-kyou-query.test.ts   ← 検索クエリビルダー
 │   │   └── hydrate.test.ts           ← hydrate() / hydrate_all()（JSON→クラス詰め替え）
-│   ├── classes/                       ← ユーティリティ（54ファイル）
+│   ├── classes/                       ← ユーティリティ（55ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
@@ -316,7 +316,8 @@ src/client/__tests__/
 │   │   ├── kyou-view-relay.test.ts        ← 中継束の網羅性（ビュー18件 / ダイアログ20件、overrides の差し替え）
 │   │   ├── confirm-dialog-close.test.ts   ← 確認ダイアログが例外時も finally で閉じること
 │   │   ├── edit-view-no-update-check.test.ts ← 「更新がありません」判定に related_time を含めること
-│   │   ├── convention-source-scan.test.ts ← 棚卸し全体の安全網（規約9件のソース走査）
+│   │   ├── convention-source-scan.test.ts ← 棚卸し全体の安全網（規約10件のソース走査。ダイアログのタイトル欄は空、を含む）
+│   │   ├── drag-drop-indicator.test.ts    ← D&D の挿入位置の判定（線と挿入先は同じ関数）と線の付け外し
 │   │   ├── check-auth-login-page.test.ts  ← ログイン画面ではセッション無効の飛ばしを止めること
 │   │   ├── abort-error.test.ts            ← 中断判定（20箇所の手書きを集約した先）
 │   │   ├── web-push-key.test.ts           ← VAPID公開鍵のバイト列化（6ページ分を集約した先）
@@ -324,9 +325,9 @@ src/client/__tests__/
 │   │   ├── global-exception-feed.test.ts  ← main.ts の例外配線（中断と ResizeObserver の通知は出さない）
 │   │   └── tx-bundle-source-scan.test.ts  ← 複数書き込みの保存経路が run_in_tx / tx_id を通ること（ソース走査）
 │   ├── datas/                         ← データモデル（35ファイル）
-│   ├── dnote/                         ← D-note モジュール（9ファイル、trend-aggregator / correlation-graph-editor-view 含む）
+│   ├── dnote/                         ← D-note モジュール（10ファイル、trend-aggregator / correlation-graph-editor-view / dnote-item-table-columns 含む）
 │   ├── kftl/                          ← KFTL 行分類器（8ファイル。kftl-line-labels 含む）
-│   ├── composables/                   ← Vue Composable（64ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（65ファイル。add-views / edit-views /
 │   │                                     tx-bundle-views / shared-mi-view-dialog / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /
@@ -338,7 +339,8 @@ src/client/__tests__/
 │   │                                     sidebar-child-query-sync-emission / kyou-list-view-scroll-to /
 │   │                                     rep-query-summary-detail / find-query-editor-dialog-default-signal /
 │   │                                     registered-tag-column-filter / new-tag-column-search /
-│   │                                     browse-zip-contents-dialog / plugin-config-dialog）
+│   │                                     browse-zip-contents-dialog / plugin-config-dialog /
+│   │                                     edit-saved-find-query-dialog / foldable-struct-drop-position）
 │   ├── router.test.ts                 ← ルーター（コンポーネント13 + リダイレクト専用2）
 │   ├── i18n-completeness.test.ts      ← i18n 完全性（7ロケール）
 │   └── service-worker.test.ts         ← Service Worker
@@ -359,7 +361,7 @@ src/client/__tests__/
 ### 3.3 フロントエンド E2E（`src/client/__tests__/e2e/`）
 
 コンポーネントを持つ13ルートすべてを Playwright で検証し、CRUD 操作フローもカバーします
-（47 specファイル + auth.setup.ts、254テスト宣言）。各テストでは以下を共通チェックします：
+（47 specファイル + auth.setup.ts、255テスト宣言）。各テストでは以下を共通チェックします：
 
 - **JS エラー検出**: ページ遷移時にコンソールエラーがないことを検証
 - **インタラクティブ操作**: ボタンクリック、フォーム入力、ダイアログ開閉
