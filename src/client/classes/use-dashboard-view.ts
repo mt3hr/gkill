@@ -554,6 +554,10 @@ export function useDashboardView(options: {
     function go_today(): void {
         selected_date.value = moment().startOf('day').toDate()
     }
+    // 地図の日付ピッカーで選んだ日。地図は表示日に従っているので、表示日ごと移す
+    function go_date(date: Date): void {
+        selected_date.value = moment(date).startOf('day').toDate()
+    }
 
     // ── 画面間の変更通知 ──
     function publish_kyou_change(change: KyouChange, requested_at: number): void {
@@ -627,6 +631,7 @@ export function useDashboardView(options: {
         go_prev_day,
         go_next_day,
         go_today,
+        go_date,
         floating_action_button_style,
         show_kftl_dialog,
         show_add_kc_dialog,

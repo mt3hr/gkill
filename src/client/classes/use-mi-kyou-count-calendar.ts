@@ -21,6 +21,7 @@ export function useMiKyouCountCalendar(options: {
 
     // ── State refs ──
     const date = ref(new Date(Date.now()))
+    const is_show_date_picker = ref(false)
     const events: Ref<Array<Record<string, unknown>>> = ref(new Array<Record<string, unknown>>())
     // 非表示中にkyousが変わったら立てて、表示時にupdate_eventsで追いつくためのフラグ
     let is_events_stale = false
@@ -155,6 +156,18 @@ export function useMiKyouCountCalendar(options: {
     }
 
     // ── Computed ──
+    // 年月表示をクリックして開く日付ピッカー。‹ › とホイールは1回で1か月しか動かないので、
+    // 10年前へ行くのに120回押す必要があった。v-date-picker は年・月の一覧へ切り替えられる。
+    // 選んだ日は日付セルをクリックしたのと同じ扱いにする（その月へ移り、requested_focus_time を出す。rykv 版と対称）
+    const date_picker_model = computed<Date>({
+        get: () => date.value,
+        set: (picked: Date) => {
+            is_show_date_picker.value = false
+            date.value = new Date(picked)
+            clicked_date(new Date(picked))
+        },
+    })
+
     const calendar_year_month = computed(() => {
         return date.value.getFullYear().toString() + "/" + ("0" + (date.value.getMonth() + 1).toString()).slice(-2)
     })
@@ -183,9 +196,11 @@ export function useMiKyouCountCalendar(options: {
         // State
         date,
         events,
+        is_show_date_picker,
 
         // Computed
         calendar_year_month,
+        date_picker_model,
 
         // Business logic
         add_months,

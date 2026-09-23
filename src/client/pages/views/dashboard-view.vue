@@ -74,6 +74,7 @@
                                     :gkill_api="gkill_api" :app_content_height="panel_height"
                                     @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
                                     @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                                    @requested_change_map_date="(date: Date) => go_date(date)"
                                     ref="gps_log_map" />
                             </div>
                         </v-col>
@@ -264,6 +265,7 @@ const {
     go_prev_day,
     go_next_day,
     go_today: _go_today,
+    go_date,
     floating_action_button_style,
     show_kftl_dialog,
     show_add_kc_dialog,
