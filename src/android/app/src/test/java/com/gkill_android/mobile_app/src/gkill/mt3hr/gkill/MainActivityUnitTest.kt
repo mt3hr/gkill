@@ -1,13 +1,132 @@
 package com.gkill_android.mobile_app.src.gkill.mt3hr.gkill
 
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.MainActivity.Companion.HomeMigrationResult
+import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
+import org.junit.rules.TemporaryFolder
+import java.io.File
+import java.io.IOException
 
 /**
  * Unit tests for MainActivity constants and pure logic.
  * These run on the host JVM without the Android framework.
  */
 class MainActivityUnitTest {
+
+    @get:Rule
+    val tmp = TemporaryFolder()
+
+    /**
+     * The data home passed to gkill_server as --gkill_home_dir is /sdcard/gkill.
+     */
+    @Test
+    fun gkillHome_isSdcardGkill() {
+        assertEquals("/sdcard/gkill", MainActivity.GKILL_HOME)
+    }
+
+    /** 以前の版のアプリ専用領域を模した、中身のあるディレクトリを作る。 */
+    private fun appPrivateHomeWithData(): File {
+        val source = tmp.newFolder("files", "gkill")
+        File(source, "configs").mkdirs()
+        File(source, "configs/account.db").writeText("account")
+        File(source, "datas/user/kmemo.db").apply { parentFile!!.mkdirs() }.writeText("kmemo")
+        return source
+    }
+
+    /**
+     * データ置き場が無ければ、アプリ専用領域の中身がそのまま複製される。
+     * 複製元は残り、一時ディレクトリは残らない。
+     */
+    @Test
+    fun migration_copiesWhenTargetAbsent() {
+        val source = appPrivateHomeWithData()
+        val target = File(tmp.root, "sdcard/gkill")
+
+        val result = MainActivity.copyAppPrivateHomeIfNeeded(source, target)
+
+        assertEquals(HomeMigrationResult.COPIED, result)
+        assertEquals("account", File(target, "configs/account.db").readText())
+        assertEquals("kmemo", File(target, "datas/user/kmemo.db").readText())
+        assertTrue("複製元は消さないこと", File(source, "configs/account.db").isFile)
+        assertFalse(
+            "一時ディレクトリが残らないこと",
+            File(target.path + MainActivity.MIGRATION_STAGING_SUFFIX).exists()
+        )
+    }
+
+    /** データ置き場が空のディレクトリなら、無いときと同じく複製する。 */
+    @Test
+    fun migration_copiesWhenTargetIsEmptyDirectory() {
+        val source = appPrivateHomeWithData()
+        val target = tmp.newFolder("sdcard", "gkill")
+
+        val result = MainActivity.copyAppPrivateHomeIfNeeded(source, target)
+
+        assertEquals(HomeMigrationResult.COPIED, result)
+        assertEquals("kmemo", File(target, "datas/user/kmemo.db").readText())
+    }
+
+    /**
+     * データ置き場に中身があれば、そちらを正として何も書かない。アプリ専用領域も消さない。
+     */
+    @Test
+    fun migration_leavesBothAloneWhenTargetHasData() {
+        val source = appPrivateHomeWithData()
+        val target = tmp.newFolder("sdcard", "gkill")
+        File(target, "configs").mkdirs()
+        File(target, "configs/account.db").writeText("sdcard")
+
+        val result = MainActivity.copyAppPrivateHomeIfNeeded(source, target)
+
+        assertEquals(HomeMigrationResult.TARGET_IN_USE, result)
+        assertEquals("sdcard", File(target, "configs/account.db").readText())
+        assertFalse("アプリ専用領域の中身を混ぜないこと", File(target, "datas").exists())
+        assertEquals("account", File(source, "configs/account.db").readText())
+    }
+
+    /** アプリ専用領域に中身が無ければ何もせず、データ置き場も作らない（作るのは起動処理の mkdirs）。 */
+    @Test
+    fun migration_doesNothingWithoutSource() {
+        val source = File(tmp.root, "files/gkill")
+        val target = File(tmp.root, "sdcard/gkill")
+
+        val result = MainActivity.copyAppPrivateHomeIfNeeded(source, target)
+
+        assertEquals(HomeMigrationResult.NO_SOURCE, result)
+        assertFalse(target.exists())
+    }
+
+    /**
+     * 前回の複製が途中で止まって一時ディレクトリが残っていても、続きから埋めて改名まで終える。
+     */
+    @Test
+    fun migration_completesAfterInterruptedAttempt() {
+        val source = appPrivateHomeWithData()
+        val target = File(tmp.root, "sdcard/gkill")
+        val staging = File(target.path + MainActivity.MIGRATION_STAGING_SUFFIX)
+        File(staging, "configs").mkdirs()
+        File(staging, "configs/account.db").writeText("途中")
+
+        val result = MainActivity.copyAppPrivateHomeIfNeeded(source, target)
+
+        assertEquals(HomeMigrationResult.COPIED, result)
+        assertEquals("account", File(target, "configs/account.db").readText())
+        assertEquals("kmemo", File(target, "datas/user/kmemo.db").readText())
+        assertFalse(staging.exists())
+    }
+
+    /** データ置き場と同名のファイルがあれば、消さずに例外で止める（呼び出し側はサーバを起動しない）。 */
+    @Test
+    fun migration_refusesWhenTargetIsAFile() {
+        val source = appPrivateHomeWithData()
+        val target = File(tmp.newFolder("sdcard"), "gkill").apply { writeText("利用者のファイル") }
+
+        assertThrows(IOException::class.java) {
+            MainActivity.copyAppPrivateHomeIfNeeded(source, target)
+        }
+        assertEquals("利用者のファイル", target.readText())
+    }
 
     /**
      * The gkill server URL used by the WebView should be localhost:9999.
@@ -43,7 +162,7 @@ class MainActivityUnitTest {
     fun serverArgs_containLoopbackAddress() {
         val args = MainActivity.buildGkillServerArgs(
             "/data/app/lib/arm64/libgkill_server.so",
-            "/data/user/0/pkg/files/gkill"
+            MainActivity.GKILL_HOME
         )
         val addressIndex = args.indexOf("--address")
         assertTrue("--address フラグが起動引数に含まれること", addressIndex >= 0)
