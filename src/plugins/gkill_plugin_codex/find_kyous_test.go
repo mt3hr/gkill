@@ -10,9 +10,9 @@ import (
 // 対象は search_text とスレッド名。gkill 本体は再判定しないので、ここが唯一の判定。
 func TestKyousOfRows_WordFilter(t *testing.T) {
 	rows := []kyouRow{
-		{ID: "r-1", Title: "雑談", SearchText: "本文に Go の話", RelatedUnix: 1000},
-		{ID: "r-2", Title: "Go の質問", SearchText: "本文には無い", RelatedUnix: 2000},
-		{ID: "r-3", Title: "料理", SearchText: "関係ない話", RelatedUnix: 3000},
+		{ID: "row-0001", Title: "雑談", SearchText: "本文に Go の話", RelatedUnix: 1000},
+		{ID: "row-0002", Title: "Go の質問", SearchText: "本文には無い", RelatedUnix: 2000},
+		{ID: "row-0003", Title: "料理", SearchText: "関係ない話", RelatedUnix: 3000},
 	}
 	ids := func(kyous []sdk.Kyou) map[string]bool {
 		m := map[string]bool{}
@@ -22,16 +22,16 @@ func TestKyousOfRows_WordFilter(t *testing.T) {
 		return m
 	}
 
-	if got := ids(kyousOfRows(rows, sdk.Query{Words: []string{"go"}})); !got["r-1"] || !got["r-2"] || got["r-3"] {
+	if got := ids(kyousOfRows(rows, sdk.Query{Words: []string{"go"}})); !got["row-0001"] || !got["row-0002"] || got["row-0003"] {
 		t.Errorf("肯定語は本文とスレッド名の両方に当たる: got %v", got)
 	}
-	if got := ids(kyousOfRows(rows, sdk.Query{NotWords: []string{"go"}})); got["r-1"] || got["r-2"] || !got["r-3"] {
+	if got := ids(kyousOfRows(rows, sdk.Query{NotWords: []string{"go"}})); got["row-0001"] || got["row-0002"] || !got["row-0003"] {
 		t.Errorf("除外語は本文とスレッド名の両方で消す: got %v", got)
 	}
-	if got := ids(kyousOfRows(rows, sdk.Query{Words: []string{"r-3"}})); len(got) != 1 || !got["r-3"] {
+	if got := ids(kyousOfRows(rows, sdk.Query{Words: []string{"row-0003"}})); len(got) != 1 || !got["row-0003"] {
 		t.Errorf("ID 前方一致: got %v", got)
 	}
-	if got := ids(kyousOfRows(rows, sdk.Query{Words: []string{"-3"}})); len(got) != 0 {
+	if got := ids(kyousOfRows(rows, sdk.Query{Words: []string{"ow-0003"}})); len(got) != 0 {
 		t.Errorf("ID の途中の部分一致で当たってはいけない: got %v", got)
 	}
 	if got := kyousOfRows(rows, sdk.Query{Words: []string{"go"}, Limit: 1}); len(got) != 1 {

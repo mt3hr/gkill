@@ -129,6 +129,39 @@ func TestMatchLoweredWords(t *testing.T) {
 			wordsAnd: true,
 			want:     true,
 		},
+		// ID の前方一致は7文字以上の語だけ（ADR-0114）。気分の `8` が git のコミットに当たっていた。
+		{
+			name:     "id_7文字の語は前方一致する",
+			text:     "something else",
+			id:       "abcdef01-2345-6789-abcd-ef0123456789",
+			words:    []string{"abcdef0"},
+			wordsAnd: true,
+			want:     true,
+		},
+		{
+			name:     "id_6文字の語は前方一致しない",
+			text:     "something else",
+			id:       "abcdef01-2345-6789-abcd-ef0123456789",
+			words:    []string{"abcdef"},
+			wordsAnd: true,
+			want:     false,
+		},
+		{
+			name:     "id_1文字の語は前方一致しない",
+			text:     "commit message",
+			id:       "8f3a9c1d2e4b6a7c8d9e0f1a2b3c4d5e6f7a8b9c",
+			words:    []string{"8"},
+			wordsAnd: false,
+			want:     false,
+		},
+		{
+			name:     "id_短い語でも本文には当たる",
+			text:     "mood 8",
+			id:       "8f3a9c1d2e4b6a7c8d9e0f1a2b3c4d5e6f7a8b9c",
+			words:    []string{"8"},
+			wordsAnd: false,
+			want:     true,
+		},
 		{
 			name:     "id_途中の部分一致では一致しない",
 			text:     "something else",
@@ -141,7 +174,7 @@ func TestMatchLoweredWords(t *testing.T) {
 			name:     "id_and検索でも語ごとにtextかidのどちらかで足りる",
 			text:     "github only",
 			id:       "abcdef01-2345",
-			words:    []string{"github", "abcd"},
+			words:    []string{"github", "abcdef0"},
 			wordsAnd: true,
 			want:     true,
 		},
@@ -159,7 +192,7 @@ func TestMatchLoweredWords(t *testing.T) {
 			name:     "id空_id照合なし",
 			text:     "note.png",
 			id:       "",
-			words:    []string{"abc"},
+			words:    []string{"abcdef01"},
 			wordsAnd: false,
 			want:     false,
 		},
@@ -226,5 +259,31 @@ func TestNormalizeWordsDoesNotMutateSource(t *testing.T) {
 	_ = NormalizeWords(source)
 	if source[0] != " foo " || source[1] != "" {
 		t.Errorf("元のスライスを書き換えてはいけない: got %q", source)
+	}
+}
+
+// ID の前方一致を見るかは語の文字数（rune 数）で決める。バイト数で数えると
+// マルチバイトの語が短くても対象になり、空白込みで数えると `abcdef ` が対象になる。
+func TestIsIDPrefixMatchWord(t *testing.T) {
+	cases := []struct {
+		word string
+		want bool
+	}{
+		{"", false},
+		{"8", false},
+		{"abcdef", false},
+		{" abcdef ", false},
+		{"abcdef0", true},
+		{"8f3a9c1d2e4b6a7c8d9e0f1a2b3c4d5e6f7a8b9c", true},
+		{"あいうえおか", false},
+		{"あいうえおかき", true},
+	}
+	for _, c := range cases {
+		if got := IsIDPrefixMatchWord(c.word); got != c.want {
+			t.Errorf("IsIDPrefixMatchWord(%q) = %v, want %v", c.word, got, c.want)
+		}
+	}
+	if MinIDPrefixMatchLength != 7 {
+		t.Fatalf("MinIDPrefixMatchLength = %d（git の短縮ハッシュの既定長7に合わせる）", MinIDPrefixMatchLength)
 	}
 }

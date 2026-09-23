@@ -13,10 +13,13 @@
 //
 // 規則:
 //   - 部分一致・大小無視（呼び出し側で text / id / 語を小文字化してから渡す。LowerWords を使う）
-//   - 肯定語は「text に含む OR id が語で始まる」。ID は前方一致だけ。
+//   - 肯定語は「text に含む OR id が語で始まる」。ID は前方一致だけ、しかも語が
+//     MinIDPrefixMatchLength（7）文字以上のときだけ（ADR-0114）。
 //     部分一致にすると `1` / `a` / `cafe` のような hex だけの短い語が UUID に偶然含まれ、
 //     無関係な記録が「ランダムに」出る（1文字なら ~86%、3文字なら ~0.7% の UUID が当たる）。
-//     前方一致なら UUID 丸ごとの貼り付けと git の短縮ハッシュはそのまま引ける。
+//     前方一致にしても短い語は先頭に当たる（1文字なら 1/16）。気分の `8` で git のコミットが
+//     出てくる、という利用者報告があり、7文字未満の語では ID を見ないことにした。
+//     UUID 丸ごとの貼り付けと git の短縮ハッシュ（既定7文字）はそのまま引ける。
 //   - 除外語は「text に含まない」だけ。ID は見ない（同じ理由で `-1` が無関係な記録を消していた）。
 //   - id が空文字なら ID 照合をしない（find.FindQuery.WordsSkipIDMatch と対。除外語を肯定語として
 //     再検索する内部クエリ用）。
@@ -24,7 +27,22 @@
 //     除外語はいずれか1語でも含まれていれば不一致。
 package find_word
 
-import "strings"
+import (
+	"strings"
+	"unicode/utf8"
+)
+
+// MinIDPrefixMatchLength は ID の前方一致を見る語の最短の文字数（rune 数）。
+//
+// git の短縮ハッシュの既定長（7）に合わせてある。これより短い語は本文にしか当たらない。
+// SQL 側（dao/sqlite3impl.GenerateFindSQLCommon）も IsIDPrefixMatchWord で同じ判定をするので、
+// 値を変えるときはここだけを変えればよい。
+const MinIDPrefixMatchLength = 7
+
+// IsIDPrefixMatchWord は、語が ID の前方一致の対象になる長さかを返します（前後の空白は数えない）。
+func IsIDPrefixMatchWord(word string) bool {
+	return utf8.RuneCountInString(strings.TrimSpace(word)) >= MinIDPrefixMatchLength
+}
 
 // MatchLoweredWords は検索対象テキストがキーワード条件を満たすか判定します。
 //
@@ -65,12 +83,12 @@ func MatchLoweredWords(loweredText string, loweredID string, loweredWords []stri
 	return true
 }
 
-// matchLoweredWord は肯定語1語の判定。text に含むか、id が語で始まるか。
+// matchLoweredWord は肯定語1語の判定。text に含むか、（7文字以上の語なら）id が語で始まるか。
 func matchLoweredWord(loweredText string, loweredID string, loweredWord string) bool {
 	if strings.Contains(loweredText, loweredWord) {
 		return true
 	}
-	return loweredID != "" && strings.HasPrefix(loweredID, loweredWord)
+	return loweredID != "" && IsIDPrefixMatchWord(loweredWord) && strings.HasPrefix(loweredID, loweredWord)
 }
 
 // LowerWords は検索語を小文字化した新しいスライスを返します。空なら nil。

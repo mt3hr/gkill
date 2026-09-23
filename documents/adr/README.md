@@ -153,6 +153,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0111](0111-drop-never-implemented-query-fields.md) | 実装されなかった検索条件は消す — 受理して無視するより未知キーとして弾く | Accepted |
 | [0112](0112-tag-vocabulary-drops-dead-targets.md) | タグ語彙は「生存する対象を持つタグ」だけを返す — カスケード削除はしない | Accepted |
 | [0113](0113-word-filter-columns-and-id-prefix.md) | ワード検索は型別の対象列を決め、ID は前方一致だけ、除外語は付随テキストにも効かせ、判定は SQL / Go / プラグイン SDK で1つに揃える | Accepted |
+| [0114](0114-word-filter-id-prefix-needs-seven-chars.md) | ワード検索の ID 前方一致は7文字以上の語だけにする | Accepted |
 | [0201](0201-append-only-dao.md) | Append-Only DAO — ID 列に主キー制約を置かず、更新も削除も INSERT で表現する | Accepted |
 | [0202](0202-rebuild-cache-only-on-db-change.md) | キャッシュのフルリビルドは実DBが変わったときだけ | Accepted |
 | [0203](0203-write-through-cache-not-reps-count.md) | 書き込み後のキャッシュ反映は要素数ではなく構築時に控えた CachedReps で判定する | Accepted |
