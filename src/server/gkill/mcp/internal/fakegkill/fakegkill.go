@@ -310,6 +310,18 @@ func (s *Server) serveAPI(w http.ResponseWriter, path string, body *jsonobj.Obje
 		writeJSON(w, 200, envelope("application_config", mustObj(applicationConfig)))
 	case "/api/submit_kftl_text":
 		s.serveKftl(w, body)
+	case "/api/get_skill_list":
+		writeJSON(w, 200, envelope("skills", mustArr(skillList)))
+	case "/api/get_skill":
+		serveGetSkill(w, body)
+	case "/api/write_skill_file":
+		serveWriteSkillFile(w, body)
+	case "/api/delete_skill":
+		if stringOf(body, "name") != fakeSkillName {
+			writeJSON(w, 404, errorEnvelope("ERR000430", "スキルが見つかりません ("+stringOf(body, "name")+")", "not_found", ""))
+			return
+		}
+		writeJSON(w, 200, envelope())
 	default:
 		if strings.HasPrefix(path, "/api/get_") {
 			s.serveHistory(w, path, body)
@@ -530,4 +542,57 @@ func (s *Server) serveUpdate(w http.ResponseWriter, path string, body *jsonobj.O
 	res := envelope("updated_"+kind, stored)
 	res.Set("updated_kyou", responseKyou(stored, stringOf(stored, "data_type")))
 	writeJSON(w, 200, res)
+}
+
+// serveGetSkill は /api/get_skill の固定応答。path を省くと SKILL.md とファイル一覧、指定するとそのファイル。
+func serveGetSkill(w http.ResponseWriter, body *jsonobj.Object) {
+	name := stringOf(body, "name")
+	if name != fakeSkillName {
+		writeJSON(w, 404, errorEnvelope("ERR000430", "スキルが見つかりません ("+name+")", "not_found", ""))
+		return
+	}
+	filePath := stringOf(body, "path")
+	file := func(size int64, isText bool, revision string) *jsonobj.Object {
+		return jsonobj.Obj("path", filePath, "size", size, "is_text", isText, "revision", revision, "updated_time", "2026-09-20T10:00:00+09:00")
+	}
+	switch filePath {
+	case "":
+		writeJSON(w, 200, envelope("skill", mustObj(skillDetail), "file", nil))
+	case "references/tags.md":
+		f := file(22, true, "1234567890abcdef")
+		f.Set("content", "# タグの意味\n- 日記\n")
+		f.Set("content_base64", "")
+		f.Set("content_omitted", false)
+		writeJSON(w, 200, envelope("skill", nil, "file", f))
+	case "assets/logo.png":
+		f := file(8, false, "0f0f0f0f0f0f0f0f")
+		f.Set("content", "")
+		f.Set("content_base64", "iVBORw0KGgo=")
+		f.Set("content_omitted", false)
+		writeJSON(w, 200, envelope("skill", nil, "file", f))
+	case "assets/big.bin":
+		f := file(20000000, false, "ffffffffffffffff")
+		f.Set("content", "")
+		f.Set("content_base64", "")
+		f.Set("content_omitted", true)
+		writeJSON(w, 200, envelope("skill", nil, "file", f))
+	default:
+		writeJSON(w, 404, errorEnvelope("ERR000431", "スキルの中にそのファイルがありません ("+filePath+")", "not_found", ""))
+	}
+}
+
+// serveWriteSkillFile は /api/write_skill_file の固定応答。revision "stale" は食い違い、
+// 既にあるスキルの SKILL.md を revision なしで書くのは「既にある」。
+func serveWriteSkillFile(w http.ResponseWriter, body *jsonobj.Object) {
+	revision := stringOf(body, "revision")
+	path := stringOf(body, "path")
+	if revision == "stale" {
+		writeJSON(w, 409, errorEnvelope("ERR000437", "ファイルが読んだ後に書き換えられています。読み直してから書いてください ("+path+": the current revision is a1b2c3d4e5f60718 (re-read the file before writing))", "conflict", ""))
+		return
+	}
+	if revision == "" && path == "SKILL.md" && stringOf(body, "name") == fakeSkillName {
+		writeJSON(w, 409, errorEnvelope("ERR000436", "そのファイルは既にあります（上書きするには revision を渡してください） (SKILL.md)", "conflict", ""))
+		return
+	}
+	writeJSON(w, 200, envelope("path", path, "revision", "0123456789abcdef"))
 }

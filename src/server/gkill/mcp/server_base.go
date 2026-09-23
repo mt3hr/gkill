@@ -190,6 +190,12 @@ func (s *Server) HandleToolCall(goCtx context.Context, name string, args any, ct
 	if s.WriteAppName == "" {
 		return nil, NewGkillApiError(UnknownToolMessage(name), nil)
 	}
+	// 書き込みツールは一覧（WriteTools）に載っているものだけを通す。実装はあっても公開していない
+	// ツール（gkill_delete_skill。skill_delete_tool.go）が、振り分けの case を戻しただけで
+	// 一覧に無いまま呼べるようになるのを防ぐ。
+	if !IsWriteToolName(name) {
+		return nil, NewGkillApiError(UnknownToolMessage(name), nil)
+	}
 
 	// 書き込みに刻む user は、その要求を認証したアカウントでなければならない。
 	// sid（どのアカウントの DB へ書くか）と userId（レコードに刻む名前）は
@@ -261,7 +267,7 @@ func (s *Server) BuildToolResult(name string, payload *jsonobj.Object, isError b
 		summary = summarizeToolPayload(name, payload)
 	}
 
-	hasBase64 := name == "gkill_get_idf_file" && !isError && payload != nil && jsTruthy(payload.Value("file_content_base64"))
+	hasBase64 := (name == "gkill_get_idf_file" || name == "gkill_get_skill") && !isError && payload != nil && jsTruthy(payload.Value("file_content_base64"))
 	// 画像は image ブロックでバイト列を届ける
 	hasImageBlock := hasBase64 && jsTruthy(payload.Value("is_image"))
 

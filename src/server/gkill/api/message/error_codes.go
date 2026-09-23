@@ -433,4 +433,52 @@ const (
 	// 409 を返します。2026-09-19 までは本文を見ずに「成功・created は空」で返しており、保存されていない
 	// 本文にも成功メッセージが返っていました（ADR-0510）。
 	SubmitKFTLTextIdempotencyKeyConflictError = "ERR000423"
+
+	// 以下はスキル（$GKILL_HOME/skills/<user_id>/<name>/ の SKILL.md と付属ファイル。ADR-0634）の API のものです。
+	// 画面と MCP の両方が使います。応答の文言には dao/skills が返す補足（どのパスが悪いか等）を括弧で添えます。
+
+	// InvalidGetSkillListRequestDataError は /api/get_skill_list のリクエスト JSON が読めないときのものです。400 です。
+	InvalidGetSkillListRequestDataError = "ERR000424"
+	// InvalidGetSkillRequestDataError は /api/get_skill のリクエスト JSON が読めないときのものです。400 です。
+	InvalidGetSkillRequestDataError = "ERR000425"
+	// InvalidDownloadSkillRequestDataError は /api/download_skill のリクエスト JSON が読めないときのものです。400 です。
+	InvalidDownloadSkillRequestDataError = "ERR000426"
+	// InvalidUploadSkillRequestDataError は /api/upload_skill のリクエスト JSON（または zip の base64）が読めないときのものです。400 です。
+	InvalidUploadSkillRequestDataError = "ERR000427"
+	// InvalidWriteSkillFileRequestDataError は /api/write_skill_file のリクエスト JSON が読めないときのものです。400 です。
+	InvalidWriteSkillFileRequestDataError = "ERR000428"
+	// InvalidDeleteSkillRequestDataError は /api/delete_skill のリクエスト JSON が読めないときのものです。400 です。
+	InvalidDeleteSkillRequestDataError = "ERR000429"
+	// SkillNotFoundError は指定の名前のスキルが無いときのものです。404 です。
+	SkillNotFoundError = "ERR000430"
+	// SkillFileNotFoundError はスキルの中に指定のファイルが無いときのものです。404 です。
+	SkillFileNotFoundError = "ERR000431"
+	// InvalidSkillNameError はスキル名が規則（英小文字・数字・ハイフン、1〜64文字）に合わないときのものです。400 です。
+	InvalidSkillNameError = "ERR000432"
+	// InvalidSkillFilePathError はスキル内のパスが規則に合わない・既存のファイルと大文字小文字だけ違う等のときのものです。400 です。
+	InvalidSkillFilePathError = "ERR000433"
+	// InvalidSkillManifestError は SKILL.md の frontmatter（name と description）が読めない・不正なときのものです。400 です。
+	InvalidSkillManifestError = "ERR000434"
+	// InvalidSkillZipError はアップロードされた zip がスキルとして取り込めない（SKILL.md が無い、
+	// 使えない名前・".."・シンボリックリンクがある等）ときのものです。400 です。
+	InvalidSkillZipError = "ERR000435"
+	// SkillFileAlreadyExistsError は revision を渡さずに（新規作成のつもりで）既にあるファイルへ書こうとしたときのものです。409 です。
+	SkillFileAlreadyExistsError = "ERR000436"
+	// SkillRevisionConflictError は渡された revision が今の中身と食い違う（読んだ後に書き換えられた）ときのものです。409 です。
+	SkillRevisionConflictError = "ERR000437"
+	// SkillManifestDeleteError は SKILL.md だけを消そうとしたときのものです。消すならスキルごと消します。400 です。
+	SkillManifestDeleteError = "ERR000438"
+	// GetSkillListError はスキル一覧の取得がサーバ側の理由（ディスク等）で失敗したときのものです。500 です。
+	GetSkillListError = "ERR000439"
+	// GetSkillError はスキル・スキル内ファイルの取得がサーバ側の理由で失敗したときのものです。500 です。
+	GetSkillError = "ERR000440"
+	// DownloadSkillError はスキルの zip の作成がサーバ側の理由で失敗したときのものです。500 です。
+	DownloadSkillError = "ERR000441"
+	// UploadSkillError はスキルの zip での置き換えがサーバ側の理由（ファイルを開いている等）で失敗したときのものです。
+	// 既存のスキルは元のまま残ります。500 です。
+	UploadSkillError = "ERR000442"
+	// WriteSkillFileError はスキル内ファイルの書き込みがサーバ側の理由で失敗したときのものです。500 です。
+	WriteSkillFileError = "ERR000443"
+	// DeleteSkillError はスキル・スキル内ファイルの削除がサーバ側の理由で失敗したときのものです。500 です。
+	DeleteSkillError = "ERR000444"
 )

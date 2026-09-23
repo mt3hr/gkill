@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1383 | 209 | Go `testing` |
-| フロントエンド ユニット | 2034 | 181 | Vitest |
-| フロントエンド E2E | 253 | 46（+auth.setup.ts） | Playwright |
-| MCP サーバ | 1147 | 42 | Go `testing` |
+| Go バックエンド | 1400 | 211 | Go `testing` |
+| フロントエンド ユニット | 2043 | 182 | Vitest |
+| フロントエンド E2E | 254 | 47（+auth.setup.ts） | Playwright |
+| MCP サーバ | 1162 | 43 | Go `testing` |
 | ツール | 60 | 3 | Vitest |
 | Android | 15 | 2 | JUnit 4 |
 | Wear OS | 230 | 18 | JUnit 4 + MockK |
-| **合計** | **5,122** | **501** | |
+| **合計** | **5,164** | **506** | |
 
 数え直すコマンド:
 
@@ -218,7 +218,7 @@ src/server/gkill/
 │   ├── req_res/                       ← ワイヤ契約（JSONタグ名 / omitempty）と応答型の Errors / Messages の型（ソース走査）
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（46ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（47ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── response_status_guard_test.go         ← 全ハンドラが writeErrorStatus を呼ぶこと（ソース走査）
@@ -326,7 +326,7 @@ src/client/__tests__/
 │   ├── datas/                         ← データモデル（35ファイル）
 │   ├── dnote/                         ← D-note モジュール（9ファイル、trend-aggregator / correlation-graph-editor-view 含む）
 │   ├── kftl/                          ← KFTL 行分類器（8ファイル。kftl-line-labels 含む）
-│   ├── composables/                   ← Vue Composable（63ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（64ファイル。add-views / edit-views /
 │   │                                     tx-bundle-views / shared-mi-view-dialog / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /
@@ -359,7 +359,7 @@ src/client/__tests__/
 ### 3.3 フロントエンド E2E（`src/client/__tests__/e2e/`）
 
 コンポーネントを持つ13ルートすべてを Playwright で検証し、CRUD 操作フローもカバーします
-（46 specファイル + auth.setup.ts、253テスト宣言）。各テストでは以下を共通チェックします：
+（47 specファイル + auth.setup.ts、254テスト宣言）。各テストでは以下を共通チェックします：
 
 - **JS エラー検出**: ページ遷移時にコンソールエラーがないことを検証
 - **インタラクティブ操作**: ボタンクリック、フォーム入力、ダイアログ開閉
@@ -399,7 +399,7 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 | `validation_test.go` | Read入力パラメータ検証（必須/型/範囲） |
 | `normalization_test.go` | 日付・文字列・デフォルト値の正規化 |
 | `constants_test.go` | ツール名、エラーコード、デフォルト設定値 |
-| `tool_handlers_test.go` | Read 11ツール分のハンドラ実行ロジック（`read_tools.go` を実物 import したツール名一覧・エンドポイント対応表・summarize） |
+| `tool_handlers_test.go` | Read 13ツール分のハンドラ実行ロジック（`read_tools.go` を実物 import したツール名一覧・エンドポイント対応表・summarize） |
 | `file_link_test.go` | FileLinkStore（HTTPモード用の期限付きファイルリンクトークンの発行・解決・失効、`GET /files/{token}` 配信） |
 | `client_test.go` | GkillReadClient（fetch モック、認証、レスポンスパース） |
 | `server_test.go` | McpServer ライフサイクル、トランスポート管理、gkill_get_idf_file ツール |
@@ -434,8 +434,8 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 |-------------|-----------|
 | `write_normalization_test.go` | Write入力の正規化（11 normalizer関数、mood範囲、data_type列挙値） |
 | `write_client_test.go` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
-| `write_server_test.go` | McpWriteServer（29ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
-| `write_tool_handlers_test.go` | Write 21ツール定義（実物 import）・削除の語彙が3箇所で一致すること・summarizeWriteToolPayload |
+| `write_server_test.go` | McpWriteServer（33ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
+| `write_tool_handlers_test.go` | Write 23ツール定義（実物 import）・削除の語彙が3箇所で一致すること・summarizeWriteToolPayload |
 | `write_handlers_test.go` | 書き込みディスパッチ（add/update/delete のエンドポイント、patch セマンティクス、create_app のサーバ種別） |
 
 **Read/Write統合サーバ:**
@@ -443,7 +443,7 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 | テストファイル | テスト内容 |
 |-------------|-----------|
 | `readwrite_client_test.go` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
-| `readwrite_server_test.go` | McpServer統合（全33ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
+| `readwrite_server_test.go` | McpServer統合（全37ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
 
 ### 3.5 Android / Wear OS
 

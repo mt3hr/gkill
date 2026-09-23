@@ -34,10 +34,10 @@ src/client/
 ├── env.d.ts                         # TypeScript環境型定義
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,500行)
+│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,600行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
-│   │   └── req_res/                # リクエスト/レスポンス型 (173ファイル、サーバー側は189ファイル)
+│   │   └── req_res/                # リクエスト/レスポンス型 (183ファイル、サーバー側は202ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
 │   ├── kftl/                        # KFTLパーサー (53 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)。行ラベルの分類器だけで、解釈と書き込みはサーバ（ADR-0507）
@@ -52,7 +52,7 @@ src/client/
 │   ├── tag-struct.ts                # タグ階層構造ユーティリティ
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
-│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、333ファイル）
+│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、337ファイル）
 ├── assets/                          # 画像等の静的アセット
 ├── __tests__/                       # Vitest ユニットテスト + Playwright E2E
 │   ├── e2e/                        # E2E spec（run-e2e.mjs / free-port.mjs / auth.setup.ts 等を含む）
@@ -170,7 +170,7 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 
 ### ダイアログ アクセシビリティ
 
-117ダイアログ中90件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
+121ダイアログ中90件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
 
 | 機能 | 説明 |
 |------|------|
@@ -242,7 +242,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 | `GkillAPI` シングルトン | バックエンド通信（`GkillAPI.get_instance()`） |
 | Vuetify `useTheme()` | テーマ状態（ライト/ダーク切替） |
 | vue-i18n | ロケール状態 |
-| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（333ファイル） |
+| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（337ファイル） |
 
 ### ComponentRef 型
 
@@ -271,7 +271,7 @@ Props/Emit のみで状態を持ち回すため、Kyou の CRUD イベントは 
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts` に定義。約3,500行。
+`src/client/classes/api/gkill-api.ts` に定義。約3,600行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
 - Web クライアントが叩く88エンドポイントに対応するメソッドを持つ（`gkill-api.ts` が保持する `/api/` アドレスは88件。MCP / CLI 専用の3件を除いた全ルートで、Go のルート表との突き合わせは `gkill-api.test.ts`。`submit_kftl_text` は 2026-09-15 から Web も叩く）

@@ -88,6 +88,7 @@ func (g *GkillServerAPI) apiRoutes() []apiRoute {
 		{Path: "/api/get_rep_infos_mcp", Method: "POST", Auth: authNone, Body: bodyAuth, Handler: g.HandleGetRepInfosMCP},
 		{Path: "/api/upload_files", Method: "POST", Auth: authNone, Body: bodyUpload, Handler: g.HandleUploadFiles},
 		{Path: "/api/upload_gpslog_files", Method: "POST", Auth: authNone, Body: bodyUpload, Handler: g.HandleUploadGPSLogFiles},
+		{Path: "/api/upload_skill", Method: "POST", Auth: authNone, Body: bodyUpload, Handler: g.HandleUploadSkill},
 		{Path: "/api/browse_zip_contents", Method: "POST", Auth: authNone, Body: bodyAuth, Handler: g.HandleBrowseZipContents},
 		{Path: "/api/get_idf_kyou_by_relative_path", Method: "POST", Auth: authNone, Body: bodyAuth, Handler: g.HandleGetIDFKyouByRelativePath},
 
@@ -114,6 +115,13 @@ func (g *GkillServerAPI) apiRoutes() []apiRoute {
 		{Path: "/api/parse_kftl_text", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandleParseKFTLText},
 		{Path: "/api/get_plugin_config_html", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandleGetPluginConfigHTML},
 		{Path: "/api/post_plugin_config", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandlePostPluginConfig},
+		// スキル（$GKILL_HOME/skills/<user_id>/<name>/。ADR-0634）。ファイルなので repositories は要らない。
+		// write_skill_file は MCP だけが使う（画面は upload_skill の丸ごと置き換えだけ）
+		{Path: "/api/get_skill_list", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandleGetSkillList},
+		{Path: "/api/get_skill", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandleGetSkill},
+		{Path: "/api/download_skill", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandleDownloadSkill},
+		{Path: "/api/write_skill_file", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandleWriteSkillFile},
+		{Path: "/api/delete_skill", Method: "POST", Auth: authSession, Body: bodyNone, Handler: g.HandleDeleteSkill},
 
 		// --- authSessionRepos（wrapAuthRepos。セッション認証＋リポジトリ） ---
 		// 追加

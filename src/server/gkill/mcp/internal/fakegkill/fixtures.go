@@ -172,3 +172,23 @@ var histories = map[string]string{
 }
 
 const kftlCreated = `[{"id":"kftl-1","data_type":"kmemo","updated":false,"related_time":"2026-09-20T10:00:00+09:00"},{"id":"kftl-2","data_type":"mi","updated":false,"related_time":"2026-09-20T10:00:00+09:00"},{"id":"kftl-3","data_type":"timeis","updated":true,"related_time":"2026-09-20T10:00:00+09:00"}]`
+
+// スキル（ADR-0634）。/api/get_skill_list・/api/get_skill・/api/write_skill_file・/api/delete_skill の固定応答。
+const fakeSkillName = "weekly-dashboard"
+
+const skillList = `[
+{"name":"weekly-dashboard","description":"週次ダッシュボードの作り方","updated_time":"2026-09-20T10:00:00+09:00","file_count":4,"invalid_reason":""},
+{"name":"broken-skill","description":"","updated_time":"2026-09-19T09:00:00+09:00","file_count":1,"invalid_reason":"invalid SKILL.md frontmatter: description is empty"}
+]`
+
+const skillDetail = `{
+"name":"weekly-dashboard","description":"週次ダッシュボードの作り方","invalid_reason":"","updated_time":"2026-09-20T10:00:00+09:00",
+"content":"---\nname: weekly-dashboard\ndescription: 週次ダッシュボードの作り方\n---\n# 手順\n1. references/tags.md を読む\n",
+"revision":"a1b2c3d4e5f60718",
+"files":[
+{"path":"SKILL.md","size":120,"is_text":true,"revision":"a1b2c3d4e5f60718","updated_time":"2026-09-20T10:00:00+09:00"},
+{"path":"assets/big.bin","size":20000000,"is_text":false,"revision":"ffffffffffffffff","updated_time":"2026-09-20T10:00:00+09:00"},
+{"path":"assets/logo.png","size":8,"is_text":false,"revision":"0f0f0f0f0f0f0f0f","updated_time":"2026-09-20T10:00:00+09:00"},
+{"path":"references/tags.md","size":22,"is_text":true,"revision":"1234567890abcdef","updated_time":"2026-09-20T10:00:00+09:00"}
+]
+}`

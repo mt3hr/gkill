@@ -78,16 +78,16 @@ src/client/
 │   ├── shared-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── views/              # ビューコンポーネント（204ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（117ファイル、browse-zip-contents-dialog.vue 含む）
+│   ├── views/              # ビューコンポーネント（207ファイル）
+│   └── dialogs/            # ダイアログコンポーネント（121ファイル、browse-zip-contents-dialog.vue 含む）
 ├── i18n.ts                 # i18n設定（ja のみ静的、他6言語は動的import）
 ├── assets/                 # 画像等の静的アセット
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,500行、全API呼び出しを集約）
+│   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,600行、全API呼び出しを集約）
 │   │   ├── hydrate.ts      # JSON→クラスインスタンスの詰め替え（any を使わない共通ヘルパー）
 │   │   ├── find_query/     # 検索クエリビルダー
-│   │   └── req_res/        # リクエスト/レスポンス型（173ファイル）
+│   │   └── req_res/        # リクエスト/レスポンス型（183ファイル）
 │   ├── datas/              # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dnote/              # Dnote集計ユーティリティ（dnote-trend-aggregator.ts, dnote-predicate/ 等）
 │   ├── dto/                # データ転送オブジェクト
@@ -95,7 +95,7 @@ src/client/
 │   ├── kftl/               # KFTLパーサー（53ステートメント型）。行ラベル専用の分類器、解釈と書き込みはサーバ（ADR-0507）
 │   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
-│   └── use-*.ts            # Composition関数群（333ファイル）
+│   └── use-*.ts            # Composition関数群（337ファイル）
 ├── __tests__/              # テスト
 │   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
 │   ├── helpers/            # テストヘルパー
@@ -126,17 +126,17 @@ src/server/
     │   ├── find_kyou_context.go    # 検索コンテキスト
     │   ├── find/                   # 検索クエリ構造体
     │   ├── message/                # メッセージ/エラー構造体
-    │   ├── req_res/                # リクエスト/レスポンス構造体（189ファイル）
+    │   ├── req_res/                # リクエスト/レスポンス構造体（202ファイル）
     │   ├── kftl/                   # KFTLパーサー（バックエンド側、50ステートメント型）
     │   │   ├── kftl_factory.go     # ファクトリ（ステートメント生成、日本語/ASCII両プレフィックス）
     │   │   └── *.go                # 各ステートメント型実装
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（157ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（165ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
-    │       ├── gkill_server_api_address.go  # ルート表（91エンドポイント: 90 POST + 1 GET。パス・メソッド・認証区分・ハンドラの正本）
+    │       ├── gkill_server_api_address.go  # ルート表（97エンドポイント: 96 POST + 1 GET。パス・メソッド・認証区分・ハンドラの正本）
     │       ├── auth.go             # セッション認証ヘルパー
     │       ├── auth_context.go     # AuthContext構造体（認証済みコンテキスト）
     │       ├── auth_middleware.go  # authMiddleware / authWithReposMiddleware
@@ -144,7 +144,7 @@ src/server/
     │       ├── utils.go            # ユーティリティ関数
     │       ├── web_push.go         # WebPush通知
     │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
-    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、112ファイル）
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、119ファイル）
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     ├── dao/                        # データアクセス層
@@ -232,9 +232,9 @@ AI連携用のMCP（Model Context Protocol）サーバーです。`gkill_server 
 
 ```
 src/server/gkill/mcp/
-├── server_read.go             # Read専用MCPサーバー（12ツール = 固有11 + プラグイン1、port 8808）
-├── server_write.go            # Write専用MCPサーバー（29ツール = 固有28 + プラグイン1、port 8809）
-├── server_readwrite.go        # Read/Write統合MCPサーバー（33ツール = 固有32 + プラグイン1、port 8810）
+├── server_read.go             # Read専用MCPサーバー（14ツール = 固有13 + プラグイン1、port 8808）
+├── server_write.go            # Write専用MCPサーバー（33ツール = 固有32 + プラグイン1、port 8809）
+├── server_readwrite.go        # Read/Write統合MCPサーバー（37ツール = 固有36 + プラグイン1、port 8810）
 ├── bootstrap.go               # 起動ブロック（Start。stdio / http の選択、server_start ログ）
 ├── config.go                  # 設定ファイル gkill_mcp.json の生成・読み込み・優先順位
 ├── jsonobj/                   # 順序つき JSON（JSON.stringify 互換の直列化。応答のバイト一致のため）
@@ -322,7 +322,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-988キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+1025キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 
@@ -369,7 +369,7 @@ documents/
 │   ├── screen-transition.md          # 画面遷移図
 │   ├── screen-specs.md               # 画面仕様（項目定義）
 │   ├── frontend-architecture.md      # フロントエンド設計ガイド
-│   ├── api-endpoints.md              # APIエンドポイント一覧（91件）
+│   ├── api-endpoints.md              # APIエンドポイント一覧（97件）
 │   ├── error-handling-and-security.md # エラー処理・セキュリティ
 │   ├── operations-guide.md           # 運用ガイド
 │   ├── dvnf-rep-type-spec.md         # DVNF/RepType仕様

@@ -18,9 +18,9 @@ description: "gkill の MCP サーバ（src/server/gkill/mcp/ と main/common/mc
 
 | Server | Tools | stdio | HTTP | Port |
 |---|---|---|---|---|
-| Read | 12 (status, get_mcp_help, get_kyous, get_mi_board_list, get_all_tag_names, get_all_rep_names, get_gps_log, get_application_config, get_rep_infos, get_idf_file, get_kyou_history + plugin 1) | `gkill_server mcp --kind read` | `gkill_server mcp --kind read --transport http` | 8808 |
-| Write | 29 (9 add + 1 submit_kftl + 1 delete + 1 restore + 9 update + 7 read convenience + plugin 1) | `gkill_server mcp --kind write` | `gkill_server mcp --kind write --transport http` | 8809 |
-| ReadWrite | 33 (read 11 + write 21 + plugin 1) | `gkill_server mcp --kind readwrite` | `gkill_server mcp --kind readwrite --transport http` | 8810 |
+| Read | 14 (status, get_mcp_help, get_kyous, get_mi_board_list, get_all_tag_names, get_all_rep_names, get_gps_log, get_application_config, get_rep_infos, get_idf_file, get_kyou_history, get_skill_list, get_skill + plugin 1) | `gkill_server mcp --kind read` | `gkill_server mcp --kind read --transport http` | 8808 |
+| Write | 33 (9 add + 1 submit_kftl + 1 delete + 1 restore + 9 update + 2 skill + 9 read convenience + plugin 1) | `gkill_server mcp --kind write` | `gkill_server mcp --kind write --transport http` | 8809 |
+| ReadWrite | 37 (read 13 + write 23 + plugin 1) | `gkill_server mcp --kind readwrite` | `gkill_server mcp --kind readwrite --transport http` | 8810 |
 
 **GPS専用プラグインの `rep_name` / `data_type` は検索値ではない。** manifest の必須項目なので値は入っているが、`emits_kyou:false` のプラグインは Kyou を1件も出さないので `query.reps` にも `data_types` にも一致しない。`get_plugin_list` は `emits_kyou` / `provides` をそのまま返す（`capabilities` のような3つ目の語彙を作らないこと。正本は manifest の語彙）。`get_rep_infos` の `plugins[]` は「渡せる値」の表なので `emits_kyou:false` は載せず、`attached_data_reps[]` の `data_kind:"gpslog"` にだけ残す（ADR-0607 / ADR-0608）。Go 側の未知値警告も、一致したときは汎用文ではなく「そのプラグインは Kyou を出さない。`get_gps_log` で読め」と名指しする。**`typed_index` は Kyou の索引**なので `provides` が `gpslog` だけのプラグインには付けない（付けると材料が無く `never_built`/0 で固定され「索引が壊れている」と誤読される）。GPS の取り込み状況は別枠の `gps_index`。
 
@@ -152,6 +152,8 @@ write 専用サーバにも載せた）。write 専用サーバは read を数�
 
 **未知の `mi_board_name` と、プラグインの名札を `query.reps` に渡したときは Go が警告する。** `unknownMiBoardNameWarnings`（`GetBoardNames` との完全一致）と `pluginManifestRepNameHint`（値が emits_kyou なプラグインの manifest `rep_name` に一致したら「名札であって検索値ではない。`rep_names[]` を使え」）。`gkill_get_plugin_list` の `rep_names` は Kyou を出すプラグインでは**常に**「`query.reps` に渡せる値」（申告値。索引未構築なら `[]`。申告しなければ `[manifest の rep_name]`）で、`omitempty` に戻さない（[ADR-0311](../../../documents/adr/0311-plugin-list-rep-names-are-always-the-query-values.md)）。`group_by` の `week_of_day`（`sunday`..`saturday`）と `hour`（`00`..`23`）は 0 件のバケットも並べる（定義域が有限）。
 
+**スキルのファイルは gkill_server だけが触り、AI の削除ツールは公開しない。** スキル（`$GKILL_HOME/skills/<user_id>/<name>/` の SKILL.md と付属ファイル）の4ツールは `/api/get_skill_list`・`/api/get_skill`・`/api/write_skill_file` を呼ぶだけで、MCP がファイルを直接読まない（`skill_handlers.go`）。`gkill_delete_skill` は `skill_delete_tool.go` に実装だけあり、`WriteTools` の登録行と `dispatchWriteToolCall` の `case` をコメントアウトしてある —— スキルは履歴を持たないので、AI が消したものは戻せない。**一覧に載せないまま `case` だけ戻しても呼べない**（`Server.HandleToolCall` が `IsWriteToolName` で弾く）。定義を `read_tools.go` / `write_tools.go` に書かないこと（verify_docs が `tool("gkill_…"` をコメントの中でも数える）、help topic や説明文で名前を出さないこと（`help_topics_test` が落ちるうえ、見えないツールを案内する）。AI へ返すときだけ `max_file_bytes` を超えるファイルは中身を省き（`content_omitted`）、バイナリは `gkill_get_idf_file` と同じキー（`file_content_base64` / `mime_type` / `is_image`）で返して `BuildToolResult` の base64 処理を共用する。mime は拡張子の固定表で決める（`mime.TypeByExtension` は Windows でレジストリを読むので golden が揺れる）。`gkill_add_skill` は frontmatter の値を JSON の文字列（YAML の二重引用符スカラー）で書く。公開の条件と却下案は [ADR-0634](../../../documents/adr/0634-per-user-skills-for-mcp.md)。守るテスト: `skill_handlers_test.go` / golden の `skill *`。
+
 ## 関連スキル
 
 - [gkill-plugin](../gkill-plugin/SKILL.md) — プラグインの stdio 直列化（並列に投げても速くならない理由）
@@ -190,3 +192,4 @@ write 専用サーバにも載せた）。write 専用サーバは read を数�
 - [ADR-0630 公開ファイルURLは include_file_urls で頼まれたときだけ発行し、期限を添える](../../../documents/adr/0630-mcp-file-urls-are-opt-in-with-expiry.md)
 - [ADR-0510 メモ帳の再送キーは本文の指紋と結果を控える](../../../documents/adr/0510-kftl-idempotency-key-carries-fingerprint-and-result.md)
 - [ADR-0311 プラグイン一覧の rep_names は常に「query.reps に渡せる値」](../../../documents/adr/0311-plugin-list-rep-names-are-always-the-query-values.md)
+- [ADR-0634 利用者ごとのスキルは gkill_server が読み書きし、MCP の削除ツールは公開しない](../../../documents/adr/0634-per-user-skills-for-mcp.md)

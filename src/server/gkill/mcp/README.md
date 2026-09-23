@@ -8,9 +8,9 @@ gkill の API を MCP サーバとして公開します。MCP サーバは **`gk
 
 | サーバー | 起動コマンド | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| **Read専用** | `gkill_server mcp --kind read` | 12 (11 read + 1 plugin) | 8808 | 読み取りのみ |
-| **Write専用** | `gkill_server mcp --kind write` | 29 (21 write + 7 read convenience + 1 plugin) | 8809 | 書き込み中心 |
-| **Read/Write統合** | `gkill_server mcp --kind readwrite` | 33 (11 read + 21 write + 1 plugin) | 8810 | 全機能 |
+| **Read専用** | `gkill_server mcp --kind read` | 14 (13 read + 1 plugin) | 8808 | 読み取りのみ |
+| **Write専用** | `gkill_server mcp --kind write` | 33 (23 write + 9 read convenience + 1 plugin) | 8809 | 書き込み中心 |
+| **Read/Write統合** | `gkill_server mcp --kind readwrite` | 37 (13 read + 23 write + 1 plugin) | 8810 | 全機能 |
 
 プラグインツール `gkill_get_plugin_list` は3サーバ共通で提供します（読み取り専用）。プラグインKyouの本文は `gkill_get_kyous` の `include_plugin_content` でレスポンスに埋め込みます。
 
@@ -47,7 +47,7 @@ package `mcp`（`src/server/gkill/mcp/`）は旧実装の `lib/*.mjs` と 1:1 �
 | `bootstrap.go` / `config.go` | 3サーバ | 起動ブロック（`Start`）と設定ファイルの解決 |
 | `jsonobj/` | — | 順序つき JSON（JavaScript の `JSON.stringify` 互換の直列化。応答のバイト一致のため） |
 
-> ツール数（上の表の 12 / 29 / 33）は `verify_docs` が `*_tools.go` の定義を辿って
+> ツール数（上の表の 14 / 33 / 37）は `verify_docs` が `*_tools.go` の定義を辿って
 > 実測と突き合わせます。サーバ本体だけを見ても数えられないので、ツールを増やすときは
 > 必ず `read_tools.go` / `write_tools.go` / `plugin_tools.go` の配列へ足してください。
 
@@ -295,7 +295,7 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 | `gkill_delete_kyou` | エントリのソフト削除。`gkill_submit_kftl` の `created[]` は `updated` / `related_time` を持つのでそのまま `targets` に渡せない —— `created.filter(c => !c.updated).map(({id, data_type}) => ({id, data_type}))` を渡す（`updated:true` は既存記録の更新で、消すと元から在った打刻が消える） |
 | `gkill_restore_kyou` | ソフト削除の取り消し（`is_deleted` を戻す） |
 
-Write専用サーバにはRead便利ツール7つ（`gkill_status`, `gkill_get_mcp_help`, `gkill_get_application_config`, `gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_kyou_history`）も含まれます。`gkill_status` / `gkill_get_application_config` は「どのアカウントへ書くのか」を書く前に確かめるためのものです。`gkill_get_kyou_history` を載せているのは、`gkill_delete_kyou` / `gkill_restore_kyou` と同じサーバから「いま何を消したのか」を確かめられないと、取り消しが当てずっぽうになるためです。
+Write専用サーバにはRead便利ツール9つ（`gkill_status`, `gkill_get_mcp_help`, `gkill_get_application_config`, `gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_kyou_history`）も含まれます。`gkill_status` / `gkill_get_application_config` は「どのアカウントへ書くのか」を書く前に確かめるためのものです。`gkill_get_kyou_history` を載せているのは、`gkill_delete_kyou` / `gkill_restore_kyou` と同じサーバから「いま何を消したのか」を確かめられないと、取り消しが当てずっぽうになるためです。
 
 ##### 更新系の引数
 

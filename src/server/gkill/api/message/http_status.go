@@ -174,6 +174,17 @@ var errorCodeHTTPStatus = map[string]int{
 	InvalidGetMiReKyousByTargetIDRequestDataError:                   http.StatusBadRequest, // ERR000405
 	ExpiredPasswordResetTokenError:                                  http.StatusBadRequest, // ERR000408
 	InvalidGetRepInfosMCPRequestDataError:                           http.StatusBadRequest, // ERR000411
+	InvalidGetSkillListRequestDataError:                             http.StatusBadRequest, // ERR000424
+	InvalidGetSkillRequestDataError:                                 http.StatusBadRequest, // ERR000425
+	InvalidDownloadSkillRequestDataError:                            http.StatusBadRequest, // ERR000426
+	InvalidUploadSkillRequestDataError:                              http.StatusBadRequest, // ERR000427
+	InvalidWriteSkillFileRequestDataError:                           http.StatusBadRequest, // ERR000428
+	InvalidDeleteSkillRequestDataError:                              http.StatusBadRequest, // ERR000429
+	InvalidSkillNameError:                                           http.StatusBadRequest, // ERR000432
+	InvalidSkillFilePathError:                                       http.StatusBadRequest, // ERR000433
+	InvalidSkillManifestError:                                       http.StatusBadRequest, // ERR000434
+	InvalidSkillZipError:                                            http.StatusBadRequest, // ERR000435
+	SkillManifestDeleteError:                                        http.StatusBadRequest, // ERR000438
 
 	// ---- 401 Unauthorized — 誰なのか確認できない ----
 	// クライアントの check_auth と MCP の再ログインがこの4つを契機にしている。
@@ -211,6 +222,8 @@ var errorCodeHTTPStatus = map[string]int{
 	NotFoundKCError:                http.StatusNotFound, // ERR000310
 	NotFoundMiReKyouError:          http.StatusNotFound, // ERR000397
 	TargetAccountNotFoundError:     http.StatusNotFound, // ERR000413
+	SkillNotFoundError:             http.StatusNotFound, // ERR000430
+	SkillFileNotFoundError:         http.StatusNotFound, // ERR000431
 
 	// ---- 409 Conflict — 今の状態と衝突する ----
 	// 同じIDが既にある、リセット中のアカウントにログインしようとした、など。
@@ -232,6 +245,8 @@ var errorCodeHTTPStatus = map[string]int{
 	AlreadyExistMiReKyouError:              http.StatusConflict, // ERR000393
 	// 再送キーの使い回し（同じ idempotency_key で別の本文）。「今の状態（控えてある元の送信）と衝突する」ので 409。
 	SubmitKFTLTextIdempotencyKeyConflictError: http.StatusConflict, // ERR000423
+	SkillFileAlreadyExistsError:               http.StatusConflict, // ERR000436
+	SkillRevisionConflictError:                http.StatusConflict, // ERR000437
 
 	// ---- 413 Request Entity Too Large — リクエスト本文が大きすぎる ----
 	// 認証系ミドルウェアの先読み上限（maxAuthBodyBytes）超過。
@@ -482,4 +497,10 @@ var errorCodeHTTPStatus = map[string]int{
 	CommitTxRolledBackError:                                          http.StatusInternalServerError, // ERR000419
 	ParseKFTLTextError:                                               http.StatusInternalServerError, // ERR000421
 	WriteRepMissingError:                                             http.StatusInternalServerError, // ERR000422
+	GetSkillListError:                                                http.StatusInternalServerError, // ERR000439
+	GetSkillError:                                                    http.StatusInternalServerError, // ERR000440
+	DownloadSkillError:                                               http.StatusInternalServerError, // ERR000441
+	UploadSkillError:                                                 http.StatusInternalServerError, // ERR000442
+	WriteSkillFileError:                                              http.StatusInternalServerError, // ERR000443
+	DeleteSkillError:                                                 http.StatusInternalServerError, // ERR000444
 }

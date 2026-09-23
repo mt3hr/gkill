@@ -5,9 +5,9 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、112ファイル。テスト15ファイルを含み、実装は91ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、119ファイル。テスト21ファイルを含み、実装は98ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（189ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（202ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、17ファイル）
 
 ## 共通仕様
@@ -473,14 +473,14 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 |---|---|
 | `/api/get_gps_log` | GPSログ取得（日付範囲指定） |
 
-## MCP連携（2件 + MCPツール12個）
+## MCP連携（2件 + MCPツール14個）
 
 | パス | 説明 |
 |---|---|
 | `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得（IDFペイロードに`rep_name`/`is_image`等含む）。リクエストの `create_apps` / `update_apps` は「どのアプリが書いたか / 最後に更新したか」の許可リスト（`gkill_kftl` / `gkill_wear` / `gkill_mcp_readwrite` / `urlog_bookmarklet` など。null=フィルタ未使用、非nullの空配列=0件）。応答の各 `kyous[]` には `create_app` / `update_app` が常時載り、絞り込みの結果を応答から検証できる |
 | `/api/get_rep_infos_mcp` | rep名・rep種別・canonical_rep_types・プラグイン一覧の取得。`rep_infos[].indexed_at` はその rep の索引の最終更新時刻（RFC3339。索引を持つ rep のみ＝現状は IDF）で、**索引が止まっていることを検知できる**（rep に置いただけのファイルは update_cache を通すまで検索に出ず、警告も出ないため）。`attached_data_reps[]`（`{rep_name, data_kind}`。data_kind は tag / text / notification / gpslog）はタグ・テキスト・通知・GPSログの書き込み先 rep の一覧で、「add_tag / add_text がどこへ書かれるか」を書く前に知るためのもの。**`rep_infos` と混ぜてはいけない別リスト** —— `query.reps` へ渡すと Kyou の `rep_name` と一致せず静かに0件になる |
 
-MCPサーバは12個のReadツールを提供する。内訳は固有の11（`gkill_status`, `gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_rep_infos`, `gkill_get_idf_file`, `gkill_get_kyou_history`）と、3サーバ共通のプラグインツール1つ（`gkill_get_plugin_list`。`src/server/gkill/mcp/plugin_tools.go` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_kyou_history` は型別の `/api/get_*`（`/api/get_kmemo` 等）が返す histories をそのまま返す ―― 削除済みの版も含むので、`gkill_get_kyous` からは見えなくなった記録を読み返す唯一の経路になる。`gkill_status` はバックエンドを叩かずに答えられる部分（サーバ種別・ツール一覧の世代 `schema_revision`・起動時刻）と、`/api/get_application_config` から取る接続先アカウントとビルド情報を返す（届かないときは `gkill_reachable:false`）。
+MCPサーバは14個のReadツールを提供する。内訳は固有の13（`gkill_status`, `gkill_get_mcp_help`, `gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_rep_infos`, `gkill_get_idf_file`, `gkill_get_kyou_history`, `gkill_get_skill_list`, `gkill_get_skill`）と、3サーバ共通のプラグインツール1つ（`gkill_get_plugin_list`。`src/server/gkill/mcp/plugin_tools.go` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_kyou_history` は型別の `/api/get_*`（`/api/get_kmemo` 等）が返す histories をそのまま返す ―― 削除済みの版も含むので、`gkill_get_kyous` からは見えなくなった記録を読み返す唯一の経路になる。`gkill_status` はバックエンドを叩かずに答えられる部分（サーバ種別・ツール一覧の世代 `schema_revision`・起動時刻）と、`/api/get_application_config` から取る接続先アカウントとビルド情報を返す（届かないときは `gkill_reachable:false`）。スキルの2本（と write / readwrite の `gkill_add_skill` / `gkill_update_skill`）は `/api/get_skill_list`・`/api/get_skill`・`/api/write_skill_file` を呼ぶ（ADR-0634。削除ツールは実装だけで公開していない）。
 
 ## TLS・セキュリティ（1件）
 
@@ -539,6 +539,21 @@ MCPサーバは12個のReadツールを提供する。内訳は固有の11（`gk
 | レスポンス型 | `PostPluginConfigResponse` |
 | 備考 | `plugin-config-dialog.vue` の iframe srcdoc 内フォームの送信データを受け取り、プラグインプロセスの `post_config` コマンドへ転送する |
 
+## スキル（6件）
+
+利用者が AI 向けに書く手順書（`$GKILL_HOME/skills/<user_id>/<name>/` の `SKILL.md` と付属ファイル）。
+ファイルを読み書きするのは gkill_server だけで、MCP と設定画面はこの API を使う（[ADR-0634](../adr/0634-per-user-skills-for-mcp.md)）。
+保存量の上限は無く、履歴も持たない。
+
+| パス | 説明 |
+|---|---|
+| `/api/get_skill_list` | スキル一覧（`name` / `description` / `updated_time` / `file_count` / `invalid_reason`）。SKILL.md が無い・frontmatter が壊れているスキルも理由つきで返す |
+| `/api/get_skill` | `path` を省くと SKILL.md の全文とファイル一覧（`path` / `size` / `is_text` / `revision`）、指定するとそのファイル（テキストは `content`、バイナリは `content_base64`。`max_bytes` を超えたら `content_omitted`） |
+| `/api/download_skill` | スキルを zip にして `zip_base64` で返す（スキル名のフォルダ1段で包む。そのまま上げ直せる） |
+| `/api/upload_skill` | zip でスキルを丸ごと置き換える（新規なら作る）。`dry_run:true` は書かずに追加・削除・変更・無視されるファイルだけを返す（画面の確認の1段目）。`wrapNoAuth` + アップロード用の本文上限で、ハンドラ内でセッションを検証する |
+| `/api/write_skill_file` | スキル内の1ファイル（テキスト）を書く。`revision` を省くと新規作成だけ、渡すと一致したときだけ上書き（食い違いは 409）。MCP 専用（画面からは呼ばない） |
+| `/api/delete_skill` | `path` を省くとスキルを丸ごと削除（画面）、指定するとそのファイルだけ（SKILL.md 単独は不可） |
+
 ---
 
 ## 非APIルート
@@ -564,9 +579,9 @@ MCPサーバは12個のReadツールを提供する。内訳は固有の11（`gk
 
 ## 補足
 
-- **合計:** `/api/` エンドポイント 91件（90 POST + 1 GET）+ 非APIルート 19件（PathPrefix 18 + Path 1）
+- **合計:** `/api/` エンドポイント 97件（96 POST + 1 GET）+ 非APIルート 19件（PathPrefix 18 + Path 1）
 - **ルート表（正本）:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` の `apiRoutes()`。パス・HTTPメソッド・認証区分・無認証ボディ上限・ハンドラを1行1ルートで持ち、本番（`serve.go`）とテストハーネスがそのまま登録する。表に載っている = 実行時に応答する（「定義はあるが未登録」は構造的に起きない。[ADR-0709](../adr/0709-api-route-table-single-source.md)）
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（189ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（202ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（17ファイル）
 - かつて `get_kftl_template` と `get_gkill_info` はアドレス定義だけがあり（ハンドラ未登録で実行時404）、Web クライアントにも同じ残骸が揃っていた。2026-09-14 にルート表を正本化した際に削除した。Web クライアント（`gkill-api.ts`）の `xxx_address` / `xxx_method` は `gkill-api.test.ts` が表と突き合わせる

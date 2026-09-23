@@ -177,7 +177,10 @@ func sampleObject(t *testing.T, schema *jsonobj.Object) *jsonobj.Object {
 func smokeApiResponse(deleted bool) *jsonobj.Object {
 	response := obj("errors", nil, "messages", nil, "kyous", arr(), "boards", strs("Inbox"), "tag_names", arr(), "rep_names", arr(), "gps_logs", arr(),
 		"rep_infos", arr(), "canonical_rep_types", arr(), "plugins", arr(), "attached_data_reps", arr(),
-		"application_config", obj("user_id", "testuser", "device", "testdevice"), "created", arr())
+		"application_config", obj("user_id", "testuser", "device", "testdevice"), "created", arr(),
+		// スキル（ADR-0634）: get_skill_list / get_skill（path の有無で skill / file）/ write_skill_file
+		"skills", arr(), "skill", obj("name", "sample", "content", "---\nname: sample\n---\n", "revision", "0123456789abcdef", "files", arr()),
+		"file", obj("path", "sample", "size", 1, "is_text", true, "revision", "0123456789abcdef", "content", "x"), "revision", "0123456789abcdef")
 	for _, target := range EntityTargets {
 		response.Set(target.HistoriesKey, arr(
 			obj("id", sampleID, "data_type", target.DataType, "is_deleted", deleted, "update_time", "2020-01-01T00:00:00+09:00", "tag", "t", "text", "x", "content", "c", "title", "t", "url", "https://example.com/", "amount", 1, "mood", 1, "num_value", 1, "is_checked", false, "board_name", "Inbox"),

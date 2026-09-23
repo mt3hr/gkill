@@ -58,6 +58,7 @@ describe('GkillAPI', () => {
       '/api/get_kyous_mcp', // MCPサーバ専用
       '/api/get_rep_infos_mcp', // MCPサーバ専用
       '/api/update_cache', // 保守用。現状どのクライアントからも呼んでいない
+      '/api/write_skill_file', // MCPサーバ専用（画面は upload_skill の丸ごと置き換えだけ。ADR-0634）
     ]
 
     // Go の表の1行 `{Path: "/api/login", Method: "POST", Auth: ..., Body: ..., Handler: g.HandleLogin},`

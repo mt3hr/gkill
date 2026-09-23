@@ -19,8 +19,8 @@ gkill API のエラーコードとメッセージコードの定数定義、お�
 | `redact.go` | `RedactEnvironmentSpecific` — レスポンスへ載る自由文からホームのユーザー名・メールアドレスを伏せる（[ADR-0707](../../../../../documents/adr/0707-redact-environment-specific-strings.md)） |
 | `redact_test.go` | 伏せ方の表駆動テスト（形は残す・二重適用しない・`@example.` は残す） |
 | `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` + `Level`（`info` 既定 / `warning`）。`GkillMessages`（nil を `[]` で出す） |
-| `error_codes.go` | エラーコード定数（382 定数: `ERR000001` 〜 `ERR000423`、欠番 41。うち 37 は存在しないエンドポイント（`get_gkill_info` / `get_kftl_template` / `update_*_struct` 等）のコードを 2026-09-14 に削除した跡。ADR-0709） |
-| `message_codes.go` | メッセージコード定数（83 定数: `MSG000001` 〜 `MSG000090`、欠番 7） |
+| `error_codes.go` | エラーコード定数（403 定数: `ERR000001` 〜 `ERR000444`、欠番 41。うち 37 は存在しないエンドポイント（`get_gkill_info` / `get_kftl_template` / `update_*_struct` 等）のコードを 2026-09-14 に削除した跡。ADR-0709） |
+| `message_codes.go` | メッセージコード定数（86 定数: `MSG000001` 〜 `MSG000093`、欠番 7） |
 | `http_status.go` | エラーコード → HTTP ステータス対応表（`errorCodeHTTPStatus`、`HTTPStatusOf` / `HTTPStatusForErrors`） |
 | `http_status_test.go` | 全エラーコードが対応表に載っていることを `error_codes.go` のソース走査で固定するテスト |
 | `message_test.go` | コード形式・空文字チェックのテスト |
@@ -80,7 +80,7 @@ type GkillMessage struct {
 
 語彙の一覧は `reasonTokens` / `errorKinds` の1スライスに固定してあり、Web 側の表（`src/client/classes/api/message/error-hints.ts`）と `error-hints.test.ts` が突き合わせる。
 
-## エラーコード体系（382 コード）
+## エラーコード体系（403 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|
@@ -98,6 +98,7 @@ type GkillMessage struct {
 | `ERR000419` 〜 `ERR000421` | commit_tx の ROLLBACK（何も書かれていない）、`parse_kftl_text` のリクエスト不正 / サーバ側失敗 |
 | `ERR000422` | 書き込み先 rep 未設定（500 だが kind `config` / reason `write_rep_missing`。以前は nil ポインタ panic） |
 | `ERR000423` | メモ帳（KFTL）の再送キー `idempotency_key` を別の本文で使い回した（409）。同じ本文なら元の `created[]` を `replayed:true` で返す |
+| `ERR000424` 〜 `ERR000444` | スキル（`$GKILL_HOME/skills/<user_id>/<name>/`。ADR-0634）の API。リクエスト不正（400）・スキルやファイルが無い（404）・名前 / パス / SKILL.md / zip の不正（400）・既にある / revision の食い違い（409）・SKILL.md 単独の削除（400）・操作ごとのサーバ側失敗（500） |
 
 `ERR9000xx` 帯はフロントエンドだけで採番するコードで、Go 側の `error_codes.go` には存在しない（定義元は `src/client/classes/api/message/gkill_error.ts`、現在101定数）。番号が衝突しないよう帯を分けてあるので、Go 側でこの帯を使ってはならない。
 
@@ -110,6 +111,7 @@ type GkillMessage struct {
 | `MSG000025` 〜 `MSG000040` | Get 操作成功 |
 | `MSG000041` 〜 `MSG000074` | 設定・アップロード・KC・トランザクション |
 | `MSG000075` 〜 `MSG000090` | KFTL、MCP、キャッシュ、通知、ZIP ブラウズ、ReKyou/MiReKyou の対象ID逆引き、プラグイン検索失敗の警告、MCP向けrep一覧、rep読み込み失敗の警告 |
+| `MSG000091` 〜 `MSG000093` | スキルのアップロード（置き換え）・ファイルの書き込み・削除の成功（ADR-0634） |
 
 `MSG000088`（プラグイン検索失敗）と `MSG000090`（rep 読み込み失敗）は `Level: warning` で返す。成功はしたが対処が要る知らせで、Web は閉じるまで残す（info は 2.5 秒で消える）。
 

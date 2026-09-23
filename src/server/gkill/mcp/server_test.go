@@ -416,7 +416,7 @@ func TestHandleMessage(t *testing.T) {
 		expectEqual(t, response.Value("jsonrpc"), "2.0")
 		expectEqual(t, response.Value("id"), 2)
 		tools := arrAt(t, response, "result", "tools")
-		expectEqual(t, len(tools), 12)
+		expectEqual(t, len(tools), 14)
 
 		names := NewStringSet()
 		for _, tool := range tools {
