@@ -456,6 +456,8 @@
     "EDIT_DNOTE_TITLE": "Vue d'agrégation",
     "DELETE_DNOTE_LIST_ITEM_TITLE": "Supprimer l'élément d'agrégation",
     "DELETE_DNOTE_LIST_QUERY_TITLE": "Supprimer la liste d'agrégation",
+    "ADD_DNOTE_ITEM_COLUMN_TITLE": "Ajouter une colonne",
+    "DELETE_DNOTE_ITEM_COLUMN_TITLE": "Supprimer la colonne",
     "RESET_SET_ADMIN_PASSWORD_MESSAGE": "Veuillez définir le mot de passe du compte administrateur",
     "NOTIFICATION_TIME_IS_BLANK_MESSAGE": "La date/heure de notification n'est pas saisie",
     "DNOTE_GETTING_DATA": "Récupération des données",
