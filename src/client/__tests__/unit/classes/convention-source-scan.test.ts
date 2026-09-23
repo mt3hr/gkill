@@ -9,6 +9,7 @@
  *   - 中継束を `@evt="xxxHandlers['evt']"` と展開して並べる（畳み忘れが増殖する）
  *   - 表示文字列に HTML タグのリテラルを埋める（`format_duration` の `<br>` が
  *     剥がしていない画面でタグのまま見えていた）
+ *   - ダイアログのヘッダのタイトル欄に中身を入れる（全ダイアログ空にそろえる約束。1本だけ名前を出していた）
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
@@ -233,6 +234,27 @@ describe('クライアントの規約のソース走査', () => {
         expect(violations).toEqual([])
     })
 
+    // フローティングダイアログのヘッダのタイトル欄は全ダイアログで空にそろえる（利用者の指定）。
+    // 新しいダイアログは既存のものを書き写して作るので、1本に中身を入れると以後の写しに広がる
+    // （スキル閲覧ダイアログだけがスキル名を出していた）。見せたい名前は本文の先頭に置くこと。
+    const floating_dialog_title = /class="gkill-floating-dialog__title"[^>]*>([\s\S]*?)<\/div>/g
+    it('ダイアログのヘッダのタイトル欄を空にしている', () => {
+        const titles = new Array<string>()
+        const violations = new Array<string>()
+        for (const path of vue_files.filter(path => path.includes(`${sep}dialogs${sep}`))) {
+            const source = strip_comments(readFileSync(path, 'utf8'))
+            for (const match of source.matchAll(floating_dialog_title)) {
+                titles.push(to_repo_path(path))
+                if (match[1].trim() !== '') {
+                    violations.push(`${to_repo_path(path)}: タイトル欄に「${match[1].trim()}」がある（空にして、名前は本文に出すこと）`)
+                }
+            }
+        }
+        // 1本も拾えないと「違反なし」で緑になるので、拾えていることを確かめる
+        expect(titles.length).toBeGreaterThan(100)
+        expect(violations).toEqual([])
+    })
+
     // 中断（AbortController）の判定は classes/abort-error.ts に1つだけ。
     // 20箇所へ手書きで複製されていて、片方のブラウザの文言しか見ていない写しも混ざっていた。
     it('中断の判定を手書きしていない', () => {
@@ -292,6 +314,9 @@ describe('クライアントの規約のソース走査', () => {
         const dom_element = draggable_elements[0]
         expect([...dom_element.text.matchAll(/:draggable=["']?([^"'\s>]+)["']?/g)].map(m => m[1])).toEqual(['editable'])
         expect(allowed_draggable_expressions.has('editable')).toBe(false)
+
+        expect([...'<div class="gkill-floating-dialog__title">{{ name }}</div>'.matchAll(floating_dialog_title)].map(m => m[1])).toEqual(['{{ name }}'])
+        expect([...'<div class="gkill-floating-dialog__title"></div>'.matchAll(floating_dialog_title)].map(m => m[1].trim())).toEqual([''])
 
         expect(/\.reload\(\s*true/.test('await kyou.reload(true)')).toBe(true)
         expect([...'@received_errors="fooHandlers[\'received_errors\']"'.matchAll(/@([\w.]+)="(\w*Handlers)\['/g)].length).toBe(1)
