@@ -2,5 +2,6 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- gkill のテーマ色。Web の primary（src/client/plugins/vuetify.ts）と同じ値にする（MainActivityUnitTest が突き合わせる）。 -->
     <color name="gkill_indigo">#2672ED</color>
 </resources>
