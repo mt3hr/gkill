@@ -17,8 +17,9 @@
                     </span>
                     <v-menu v-if="!is_shared_rykv_view" activator="parent">
                         <v-list>
-                            <v-list-item :key="index" :value="index" v-for="page, index in page_list">
-                                <v-list-item-title @click="navigate_to_page(page.page_name)">
+                            <v-list-item :key="index" :value="index" v-for="page, index in page_list"
+                                @click="navigate_to_page(page.page_name)">
+                                <v-list-item-title>
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
