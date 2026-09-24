@@ -13,13 +13,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
 | Go バックエンド | 1403 | 211 | Go `testing` |
-| フロントエンド ユニット | 2088 | 185 | Vitest |
+| フロントエンド ユニット | 2089 | 185 | Vitest |
 | フロントエンド E2E | 255 | 47（+auth.setup.ts） | Playwright |
 | MCP サーバ | 1162 | 43 | Go `testing` |
 | ツール | 60 | 3 | Vitest |
 | Android | 24 | 2 | JUnit 4 |
 | Wear OS | 230 | 18 | JUnit 4 + MockK |
-| **合計** | **5,222** | **509** | |
+| **合計** | **5,223** | **509** | |
 
 数え直すコマンド:
 
@@ -316,7 +316,7 @@ src/client/__tests__/
 │   │   ├── kyou-view-relay.test.ts        ← 中継束の網羅性（ビュー18件 / ダイアログ20件、overrides の差し替え）
 │   │   ├── confirm-dialog-close.test.ts   ← 確認ダイアログが例外時も finally で閉じること
 │   │   ├── edit-view-no-update-check.test.ts ← 「更新がありません」判定に related_time を含めること
-│   │   ├── convention-source-scan.test.ts ← 棚卸し全体の安全網（規約10件のソース走査。ダイアログのタイトル欄は空、を含む）
+│   │   ├── convention-source-scan.test.ts ← 棚卸し全体の安全網（規約11件のソース走査。ダイアログのタイトル欄は空、一覧の行のクリックは v-list-item に付ける、を含む）
 │   │   ├── drag-drop-indicator.test.ts    ← D&D の挿入位置の判定（線と挿入先は同じ関数）と線の付け外し
 │   │   ├── check-auth-login-page.test.ts  ← ログイン画面ではセッション無効の飛ばしを止めること
 │   │   ├── abort-error.test.ts            ← 中断判定（20箇所の手書きを集約した先）

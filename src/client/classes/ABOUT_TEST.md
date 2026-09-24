@@ -79,7 +79,7 @@ Vitest
 | `src/client/__tests__/unit/classes/relay-bundle-source-scan.test.ts` | イベント中継束を `v-on` で渡した要素に同じイベントの `@` を併記していないこと（両方登録されて二重に発火する） |
 | `src/client/__tests__/unit/classes/kyou-view-height-source-scan.test.ts` | 記録ビューの高さにパーセント指定を渡していないこと |
 | `src/client/__tests__/unit/classes/application-config-update-fields-scan.test.ts` | 設定保存の詰め替え漏れ（書き忘れたフィールドが保存のたびに初期値へ巻き戻る）。永続化フィールド一覧がサーバ実装のキーと一致することも検査する |
-| `src/client/__tests__/unit/classes/convention-source-scan.test.ts` | **保守棚卸し全体の安全網。** `autofocus` を view に撒いていない／`:draggable` が `is_pc` 由来である／`.reload(true)` を手書きしていない／中継束を `@` で展開していない／ダイアログの `<script setup>` にロジックを残していない／中断判定を手書きしていない、をソース走査で検出する。検出用の正規表現自体をインラインの見本で突いてあるので、走査が空振りしたまま緑になることがない |
+| `src/client/__tests__/unit/classes/convention-source-scan.test.ts` | **保守棚卸し全体の安全網。** `autofocus` を view に撒いていない／`:draggable` が `is_pc` 由来である／`.reload(true)` を手書きしていない／中継束を `@` で展開していない／ダイアログの `<script setup>` にロジックを残していない／中断判定を手書きしていない／`v-list-item-title` に `@click` を付けていない（行の余白を押すとメニューが閉じるだけで何も起きない）、をソース走査で検出する。検出用の正規表現自体をインラインの見本で突いてあるので、走査が空振りしたまま緑になることがない |
 | `src/client/__tests__/unit/classes/column-view-init-source-scan.test.ts` | 列ビュー（rykv / mi）の初期化順序と、新しいタグの既知判定を `emit` より前に行っていることをソース走査で固定する |
 | `src/client/__tests__/unit/classes/settings-views-source-scan.test.ts` | 設定画面の `.vue` テンプレートの配線をソース走査で固定する。板のコンテキストメニューの「編集」が `requested_edit_mi_board` を emit し編集ビューの受け口とダブルクリックが編集ダイアログへ繋がっていること、時間帯の曜日ボタンが選択＝塗り潰し・未選択＝枠線で `aria-pressed` を持つこと、記録保管場所の追加・編集画面の「初期化時チェック」のラベルが `CHECK_WHEN_INITED_TITLE` であること（i18n キーが実在する取り違えは型検査も lint も通る） |
 | `src/client/__tests__/unit/classes/check-auth-login-page.test.ts` | ログイン画面ではセッション無効の飛ばしを止めること。ログイン失敗も `check_auth` と同じエラーコード帯を通るので、飛ばすと出したばかりのエラー表示がページごと作り直されて消える。ガードが `location.replace` より手前にあることもソース走査で見る |
