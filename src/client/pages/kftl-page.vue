@@ -10,9 +10,9 @@
                     <v-menu activator="parent">
                         <v-list>
                             <!-- 画面切替メニューの一覧は classes/gkill-page-list.ts に1つだけ置いてある -->
-                            <v-list-item :key="index" :value="index" v-for="page, index in gkill_page_list">
-                                <v-list-item-title
-                                    @click="async () => { await reset_dialog_history(); router.replace('/' + page.page_name + '?loaded=true') }">
+                            <v-list-item :key="index" :value="index" v-for="page, index in gkill_page_list"
+                                @click="async () => { await reset_dialog_history(); router.replace('/' + page.page_name + '?loaded=true') }">
+                                <v-list-item-title>
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>

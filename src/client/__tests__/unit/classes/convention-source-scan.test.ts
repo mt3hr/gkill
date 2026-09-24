@@ -10,6 +10,8 @@
  *   - 表示文字列に HTML タグのリテラルを埋める（`format_duration` の `<br>` が
  *     剥がしていない画面でタグのまま見えていた）
  *   - ダイアログのヘッダのタイトル欄に中身を入れる（全ダイアログ空にそろえる約束。1本だけ名前を出していた）
+ *   - 一覧の行のクリックを文字（v-list-item-title）にだけ付ける（画面切替メニュー8画面ぶんが全部この形で、
+ *     行の余白を押すとメニューが閉じるだけで遷移しなかった）
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
@@ -255,6 +257,22 @@ describe('クライアントの規約のソース走査', () => {
         expect(violations).toEqual([])
     })
 
+    // 一覧の行のクリックは行（v-list-item）に付け、文字（v-list-item-title）に付けない。
+    // v-list-item-title は行の中の文字1行ぶん（高さ48pxの行に24px。面積で4割）しか無く、
+    // 上下12pxと左右16pxの余白を押すとリップルが出てメニューは閉じるのに何も起きない。
+    // 指で押すスマホで外しやすく、画面切替メニューが「押しても遷移しない」ように見えていた。
+    const list_item_title_with_click = /<v-list-item-title\b[^>]*@click/
+    it('v-list-item-title に @click を付けていない', () => {
+        const violations = new Array<string>()
+        for (const path of vue_files) {
+            const source = strip_comments(readFileSync(path, 'utf8'))
+            if (list_item_title_with_click.test(source)) {
+                violations.push(`${to_repo_path(path)}: v-list-item-title に @click がある（行の v-list-item に付けること）`)
+            }
+        }
+        expect(violations).toEqual([])
+    })
+
     // 中断（AbortController）の判定は classes/abort-error.ts に1つだけ。
     // 20箇所へ手書きで複製されていて、片方のブラウザの文言しか見ていない写しも混ざっていた。
     it('中断の判定を手書きしていない', () => {
@@ -317,6 +335,10 @@ describe('クライアントの規約のソース走査', () => {
 
         expect([...'<div class="gkill-floating-dialog__title">{{ name }}</div>'.matchAll(floating_dialog_title)].map(m => m[1])).toEqual(['{{ name }}'])
         expect([...'<div class="gkill-floating-dialog__title"></div>'.matchAll(floating_dialog_title)].map(m => m[1].trim())).toEqual([''])
+
+        expect(list_item_title_with_click.test('<v-list-item-title @click="go()">')).toBe(true)
+        expect(list_item_title_with_click.test('<v-list-item-title\n    @click="go()">')).toBe(true)
+        expect(list_item_title_with_click.test('<v-list-item @click="go()">\n    <v-list-item-title>')).toBe(false)
 
         expect(/\.reload\(\s*true/.test('await kyou.reload(true)')).toBe(true)
         expect([...'@received_errors="fooHandlers[\'received_errors\']"'.matchAll(/@([\w.]+)="(\w*Handlers)\['/g)].length).toBe(1)

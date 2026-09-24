@@ -17,6 +17,10 @@ export interface GkillPageListItem {
  *
  * ロケール切り替えに追随させるため computed。i18n.global.t を評価済みの
  * 配列にしてしまうと、言語を変えてもメニューが古い訳のまま残る。
+ *
+ * メニューの @click は行（v-list-item）に付ける。文字（v-list-item-title）に付けると
+ * 行の上下と左右の余白を押したときにメニューだけ閉じて遷移せず、指で押すスマホで外しやすい
+ * （convention-source-scan.test.ts が見張る）。
  */
 export const gkill_page_list: ComputedRef<Array<GkillPageListItem>> = computed(() => [
     { app_name: i18n.global.t('RYKV_APP_NAME'), page_name: 'rykv' },
