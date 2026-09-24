@@ -265,4 +265,55 @@ class MainActivityUnitTest {
         assertEquals(1, gkillLines.size)
         assertTrue(gkillLines[0].contains("gkill_server"))
     }
+
+    /**
+     * モジュール（src/android/app）からの相対パスでファイルを読む。
+     * Gradle のユニットテストは作業ディレクトリがモジュールのディレクトリになる。
+     */
+    private fun moduleFile(path: String): File {
+        val file = File(path)
+        assertTrue("見つからない: ${file.absolutePath}", file.isFile)
+        return file
+    }
+
+    /**
+     * ステータスバーの色 gkill_indigo は Web のテーマ色 primary（ライト・ダークとも）と同じ。
+     * 片方だけ変えると、アプリバーとステータスバーの色が黙ってずれる。
+     */
+    @Test
+    fun statusBarColor_matchesWebPrimary() {
+        val colors = moduleFile("src/main/res/values/colors.xml").readText()
+        val indigo = Regex("""<color name="gkill_indigo">#([0-9A-Fa-f]{6})</color>""")
+            .find(colors)?.groupValues?.get(1)?.lowercase()
+        assertNotNull("colors.xml に gkill_indigo が無い", indigo)
+
+        val vuetify = moduleFile("../../client/plugins/vuetify.ts").readText()
+        val primaries = Regex("""\bprimary: '#([0-9A-Fa-f]{6})'""").findAll(vuetify)
+            .map { it.groupValues[1].lowercase() }.toList()
+        // ライトとダークの2テーマぶん拾えていること（0件で素通りしないように）
+        assertEquals(2, primaries.size)
+        primaries.forEach { assertEquals(indigo, it) }
+    }
+
+    /**
+     * ステータスバーを gkill_indigo で塗る設定が、昼夜のテーマと2つのレイアウトにそろっている。
+     * API 34 以下はテーマの android:statusBarColor、API 35 以上はレイアウトの帯 status_bar_background が塗る。
+     * 夜間用のテーマは丸ごと差し替わり、タブレット用のレイアウトは別ファイルなので、片方だけ直すと黙って外れる。
+     */
+    @Test
+    fun statusBar_isPaintedWithGkillIndigoInAllThemesAndLayouts() {
+        for (path in listOf("src/main/res/values/themes.xml", "src/main/res/values-night/themes.xml")) {
+            val theme = moduleFile(path).readText()
+            assertTrue(path, theme.contains("""<item name="android:statusBarColor">@color/gkill_indigo</item>"""))
+            assertTrue(path, theme.contains("""<item name="android:windowLightStatusBar">false</item>"""))
+        }
+        for (path in listOf("src/main/res/layout/activity_main.xml", "src/main/res/layout-sw600dp/activity_main.xml")) {
+            val layout = moduleFile(path).readText()
+            val band = Regex("""<View\s[^>]*android:id="@\+id/status_bar_background"[^>]*/>""").find(layout)?.value
+            assertNotNull("$path に status_bar_background が無い", band)
+            assertTrue(path, band!!.contains("""android:background="@color/gkill_indigo""""))
+            assertTrue(path, layout.contains("""android:id="@+id/root_layout""""))
+            assertTrue(path, layout.contains("""android:id="@+id/content_container""""))
+        }
+    }
 }

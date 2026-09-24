@@ -1,52 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <WebView
-        android:id="@+id/webview"
+    <!-- ステータスバーの裏に敷く gkill のテーマ色の帯。高さは MainActivity がステータスバーの高さに合わせる
+         （API 35 以上は edge-to-edge が強制されて android:statusBarColor が効かないため、自前で塗る）。 -->
+    <View
+        android:id="@+id/status_bar_background"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone" />
+        android:layout_height="0dp"
+        android:layout_gravity="top"
+        android:background="@color/gkill_indigo" />
 
-    <LinearLayout
-        android:id="@+id/loading_layout"
+    <!-- システムバーぶんの余白は MainActivity がこの枠のマージンで取る。 -->
+    <FrameLayout
+        android:id="@+id/content_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center">
+        android:layout_height="match_parent">
 
-        <ProgressBar
-            android:id="@+id/loading_progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/loading_message"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="gkill 起動中..." />
-
-        <!-- 共有ストレージ（/sdcard/gkill）へ書く権限が無いあいだだけ出す。
-             表示の切り替えは MainActivity.showStorageAccessMissing。 -->
-        <TextView
-            android:id="@+id/storage_access_message"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="32dp"
-            android:gravity="center"
-            android:text="gkill のデータは /sdcard/gkill に保存します。\nファイルへのアクセスを許可すると起動します。"
+        <WebView
+            android:id="@+id/webview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:visibility="gone" />
 
-        <Button
-            android:id="@+id/grant_storage_access_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="許可する"
-            android:visibility="gone" />
+        <LinearLayout
+            android:id="@+id/loading_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
 
-    </LinearLayout>
+            <ProgressBar
+                android:id="@+id/loading_progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/loading_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="gkill 起動中..." />
+
+            <!-- 共有ストレージ（/sdcard/gkill）へ書く権限が無いあいだだけ出す。
+                 表示の切り替えは MainActivity.showStorageAccessMissing。 -->
+            <TextView
+                android:id="@+id/storage_access_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="32dp"
+                android:gravity="center"
+                android:text="gkill のデータは /sdcard/gkill に保存します。\nファイルへのアクセスを許可すると起動します。"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/grant_storage_access_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="許可する"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </FrameLayout>
 
 </FrameLayout>

@@ -1,8 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.Gkill" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- ステータスバーは gkill のテーマ色（Web の primary と同じ）にし、アイコンは白にする。
+             android:statusBarColor が効くのは API 34 以下だけ。API 35 以上は edge-to-edge が強制されて
+             この色は無視されるので、MainActivity がステータスバーの裏に同じ色の帯（status_bar_background）を敷く。
+             values-night/themes.xml にも同じ値を書くこと（夜間用のスタイルは丸ごと差し替わり、ここを継がない）。 -->
+        <item name="android:statusBarColor">@color/gkill_indigo</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
     <style name="Theme.Gkill" parent="Base.Theme.Gkill" />

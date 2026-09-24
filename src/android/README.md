@@ -50,7 +50,7 @@ android/
 
 | ファイル | 説明 |
 |---------|------|
-| `layout/activity_main.xml` | メインレイアウト（WebView） |
+| `layout/activity_main.xml` | メインレイアウト（WebView・起動待ち画面・ステータスバーの裏に敷くテーマ色の帯） |
 | `layout-sw600dp/activity_main.xml` | タブレット用レイアウト |
 
 ### アイコン

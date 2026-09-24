@@ -12,6 +12,7 @@ import android.os.Environment
 import android.provider.Settings
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.webkit.SslErrorHandler
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -24,6 +25,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import java.io.File
 import java.io.IOException
 import java.net.InetSocketAddress
@@ -445,10 +447,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         // targetSdk 35以降は edge-to-edge が強制されるため、
-        // システムバーぶんの余白を自前で確保して従来の見た目を維持する
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { v, insets ->
+        // システムバーぶんの余白を自前で確保して従来の見た目を維持する。
+        // その環境ではテーマの android:statusBarColor が効かず、ステータスバーには裏の画面が透けるので、
+        // ステータスバーの高さぶんの帯（gkill のテーマ色）を敷く。
+        // edge-to-edge でない API 34 以下では、ステータスバーの色はテーマの android:statusBarColor が付ける。
+        val statusBarBackground = findViewById<View>(R.id.status_bar_background)
+        val contentContainer = findViewById<View>(R.id.content_container)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root_layout)) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            statusBarBackground.updateLayoutParams { height = bars.top }
+            contentContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                setMargins(bars.left, bars.top, bars.right, bars.bottom)
+            }
             insets
         }
 
