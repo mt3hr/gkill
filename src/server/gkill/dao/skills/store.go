@@ -517,7 +517,7 @@ func writeFileAtomic(ctx context.Context, target string, content []byte) error {
 // removeQuietly は後始末の削除。失敗しても本来のエラーを優先して返すので、ログだけ残す。
 func removeQuietly(ctx context.Context, path string) {
 	if err := os.RemoveAll(path); err != nil {
-		slog.Log(ctx, gkill_log.Warn, "error at remove leftover skill path", "path", path, "error", fmt.Sprintf("%q", err))
+		slog.Log(ctx, gkill_log.Warn, "error at remove leftover skill path", "path", fmt.Sprintf("%q", path), "error", fmt.Sprintf("%q", err))
 	}
 }
 

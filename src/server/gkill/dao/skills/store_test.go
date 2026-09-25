@@ -133,6 +133,26 @@ func TestNormalizeFilePath(t *testing.T) {
 	}
 }
 
+func TestJoinWithin(t *testing.T) {
+	root := t.TempDir()
+	// ".." を含む正しい名前は、そのままの名前で繋がる（".." を取り除いて別名にしない）
+	for _, rel := range []string{ManifestFileName, "a..b.txt", "dir/a..b.md"} {
+		joined, err := joinWithin(root, rel)
+		if err != nil {
+			t.Errorf("joinWithin(%q) = %v", rel, err)
+			continue
+		}
+		if expected := filepath.Join(root, filepath.FromSlash(rel)); joined != expected {
+			t.Errorf("joinWithin(%q) = %q, want %q", rel, joined, expected)
+		}
+	}
+	for _, rel := range []string{"", ".", "../evil", "a/../../evil", filepath.ToSlash(filepath.Join(root, "abs"))} {
+		if _, err := joinWithin(root, rel); !errors.Is(err, ErrInvalidPath) {
+			t.Errorf("joinWithin(%q) = %v, want ErrInvalidPath", rel, err)
+		}
+	}
+}
+
 func TestParseManifest(t *testing.T) {
 	cases := []struct {
 		label    string
@@ -378,6 +398,33 @@ func TestReadFile(t *testing.T) {
 	}
 	if _, err := store.ReadFile(testUser, "weekly", "../weekly/SKILL.md", 0); !errors.Is(err, ErrInvalidPath) {
 		t.Errorf("traversal: %v", err)
+	}
+}
+
+// ".." を含む正しいファイル名が、書き込みでも zip の置き換えでも同じ名前のまま保存されること。
+func TestFileNameWithDoubleDotKeepsItsName(t *testing.T) {
+	store := newTestStore(t)
+	ctx := context.Background()
+	mustWrite(t, store, testUser, "weekly", ManifestFileName, manifest("weekly", "d"), "")
+	mustWrite(t, store, testUser, "weekly", "notes/v1..2.md", []byte("written"), "")
+	content, err := store.ReadFile(testUser, "weekly", "notes/v1..2.md", 0)
+	if err != nil || string(content.Content) != "written" {
+		t.Fatalf("read after write = %+v, %v", content, err)
+	}
+
+	data := makeZip(t,
+		zipItem{name: "weekly/" + ManifestFileName, content: string(manifest("weekly", "d"))},
+		zipItem{name: "weekly/a..b.txt", content: "uploaded"},
+	)
+	if _, err := store.Replace(ctx, testUser, data); err != nil {
+		t.Fatalf("Replace: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(store.Root(), testUser, "weekly", "a..b.txt")); err != nil {
+		t.Errorf("a..b.txt is not on disk under its own name: %v", err)
+	}
+	content, err = store.ReadFile(testUser, "weekly", "a..b.txt", 0)
+	if err != nil || string(content.Content) != "uploaded" {
+		t.Fatalf("read after replace = %+v, %v", content, err)
 	}
 }
 

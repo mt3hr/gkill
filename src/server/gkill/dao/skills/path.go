@@ -83,7 +83,14 @@ func isSingleSafePathElement(element string) bool {
 
 // joinWithin は root の下へ rel（"/" 区切り）を繋げ、root の外へ出ないことを確かめて返す。
 func joinWithin(root string, rel string) (string, error) {
-	joined := filepath.Join(root, filepath.FromSlash(rel))
+	native := filepath.FromSlash(rel)
+	// CodeQL の path-injection / zipslip は filepath.IsLocal の真分岐をバリアとして認識する（Rel の結果の検査は認識しない）。
+	// NormalizeFilePath と zip の検証を通ったパスは常にここを通るので、実行時の防御は下の Rel 検査が担う。
+	// ".." を ReplaceAll で除く形（dao/reps/local_rep_cache_path.go）はここでは使えない。"a..b.txt" は正しいファイル名で、黙って別名に書かれる。
+	if !filepath.IsLocal(native) {
+		return "", detailError(ErrInvalidPath, "path escapes the skill directory", rel)
+	}
+	joined := filepath.Join(root, native)
 	relFromRoot, err := filepath.Rel(root, joined)
 	if err != nil || relFromRoot == "." || relFromRoot == ".." || strings.HasPrefix(relFromRoot, ".."+string(filepath.Separator)) || filepath.IsAbs(relFromRoot) {
 		return "", detailError(ErrInvalidPath, "path escapes the skill directory", rel)
