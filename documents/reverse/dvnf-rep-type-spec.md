@@ -278,7 +278,7 @@ type FindKyouContext struct {
 
 ### フロントエンドでの利用
 
-フロントエンドの`GkillAPI.getApplicationConfig()`で取得される`ApplicationConfig`オブジェクト内に、`rep_type_struct`として各RepTypeの表示設定が含まれます。
+フロントエンドの`GkillAPI.get_application_config()`で取得される`ApplicationConfig`オブジェクト内に、`rep_type_struct`として各RepTypeの表示設定が含まれます。
 
 ## 8. ファイル監視とキャッシュ更新
 
