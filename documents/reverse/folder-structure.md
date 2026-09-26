@@ -370,6 +370,7 @@ documents/
 │   ├── screen-specs.md               # 画面仕様（項目定義）
 │   ├── frontend-architecture.md      # フロントエンド設計ガイド
 │   ├── api-endpoints.md              # APIエンドポイント一覧（97件）
+│   ├── cross-boundary-map.md         # 言語・プロセス境界の対応表（verify_docs が突き合わせる）
 │   ├── error-handling-and-security.md # エラー処理・セキュリティ
 │   ├── operations-guide.md           # 運用ガイド
 │   ├── dvnf-rep-type-spec.md         # DVNF/RepType仕様
@@ -395,7 +396,7 @@ documents/
 └── gkill_develop_document.xlsx       # 開発者向け起点要件書・設計書
 ```
 
-`documents/reverse/` は全24ファイル（README.md 含む）。
+`documents/reverse/` は全25ファイル（README.md 含む）。
 
 ## ランタイムディレクトリ
 

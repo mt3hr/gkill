@@ -36,6 +36,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 13. **[screen-specs.md](screen-specs.md)** — 画面仕様。各画面の項目定義・コンポーネント構成の詳細です。
 14. **[frontend-architecture.md](frontend-architecture.md)** — フロントエンド設計ガイド。Vue 3 + TypeScript実装の詳細です。
 15. **[api-endpoints.md](api-endpoints.md)** — APIエンドポイント一覧。全97エンドポイントのリファレンスです。
+15.1. **[cross-boundary-map.md](cross-boundary-map.md)** — 言語・プロセス境界の対応表。TS のメソッド → `/api` のパス → Go のハンドラ → usecase のように、文字列だけでつながっていて CodeGraph / Graphify では辿れない呼び出し（MCP・Android・Wear OS・CLI・プラグイン・iframe を含む）を網羅します。表は verify_docs がコードと突き合わせます。
 16. **[error-handling-and-security.md](error-handling-and-security.md)** — エラーハンドリング・セキュリティ設計。エラーコード体系とセキュリティポリシーです。
 17. **[operations-guide.md](operations-guide.md)** — 運用ガイド。デプロイ、バックアップ、トラブルシューティング手順です。
 18. **[dev-setup.md](dev-setup.md)** — 環境構築資料。開発環境のセットアップ手順です。
@@ -67,6 +68,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 | [screen-specs.md](screen-specs.md) | 画面仕様・項目定義（341コンポーネント） | UI実装・改修時の参照 |
 | [frontend-architecture.md](frontend-architecture.md) | Vue 3フロントエンド設計ガイド | フロントエンド開発者向け |
 | [api-endpoints.md](api-endpoints.md) | 全APIエンドポイントのリファレンス（97件） | API利用・実装時の参照 |
+| [cross-boundary-map.md](cross-boundary-map.md) | 言語・プロセス境界の対応表（TS ↔ /api ↔ Go ハンドラ ↔ usecase、MCP・モバイル・CLI・プラグイン・iframe） | 言語をまたいで呼び出しを追うとき、境界を足すとき |
 | [error-handling-and-security.md](error-handling-and-security.md) | エラー処理方針・セキュリティ設計 | エラー処理実装、セキュリティレビュー |
 | [operations-guide.md](operations-guide.md) | デプロイ・バックアップ・保守手順 | 運用担当者、環境構築時 |
 | [dev-setup.md](dev-setup.md) | 開発環境構築手順（ビルド、クロスコンパイル） | 新規開発者のオンボーディング |
@@ -138,6 +140,11 @@ graph TD
     W --> F
     W --> U
 
+    K --> X[cross-boundary-map.md<br/>境界対応表]
+    J --> X
+    R --> X
+    W --> X
+
     M --> S[user-guide.md<br/>ユーザガイド]
     I --> S
 
@@ -152,6 +159,7 @@ graph TD
     style U fill:#dfd,stroke:#333,stroke-width:2px
     style V fill:#dfd,stroke:#333,stroke-width:2px
     style W fill:#dfd,stroke:#333,stroke-width:2px
+    style X fill:#dfd,stroke:#333,stroke-width:2px
     style S fill:#ffd,stroke:#333,stroke-width:2px
 ```
 
@@ -166,6 +174,7 @@ graph TD
 - **screen-transition.md** → **screen-specs.md** → **frontend-architecture.md** は、画面遷移から画面仕様、フロントエンド実装の詳細へ進みます。
 - **api-endpoints.md** → **error-handling-and-security.md** は、APIの仕様からエラー処理方針へ進みます。
 - **program-spec.md** → **plugin-system.md** → **sequence-diagrams.md** / **mcp-setup-guide.md** は、本体の構造からプラグイン拡張の仕組み、その処理フローとMCPからの利用へ進みます。
+- **api-endpoints.md** / **frontend-architecture.md** / **program-spec.md** / **plugin-system.md** → **cross-boundary-map.md** は、それぞれの言語の中の構造を知ったうえで、言語・プロセスの境目でどこへつながるかを引く対応表です。
 - **user-guide.md** は、operations-guide.mdとscreen-transition.mdの知識をユーザ向けにまとめたものです。
 
 ## Mermaid図の閲覧方法
