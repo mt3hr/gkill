@@ -223,7 +223,7 @@ class GkillApiClient(
      * Steps:
      * 1. get_application_config → extract all rep_names from rep_struct tree
      * 2. get_kyous with a non-null playing_time → get Kyou IDs of playing items
-     * 3. For each Kyou, get_timeis → get the latest TimeIs object
+     * 3. For each Kyou, get_timeis → get the latest TimeIs object (first element; histories are newest-first)
      * 4. Return as JSON array
      */
     fun getPlayingTimeis(sessionId: String): String? {
@@ -294,8 +294,9 @@ class GkillApiClient(
                 val histories = timeisJson["timeis_histories"]?.let { if (it is JsonNull) null else it.jsonArray }
                 if (histories.isNullOrEmpty()) continue
 
-                // Get the latest history entry (last element)
-                val latest = histories.last().jsonObject
+                // 最新版は先頭。サーバは update_time の新しい順で返す（Web / MCP も [0] を使う）。
+                // 末尾は最古の版なので、作成後にタイトルを直した打刻が元のタイトルで出てしまう
+                val latest = histories.first().jsonObject
                 val title = latest["title"]?.jsonPrimitive?.content ?: ""
                 val startTime = latest["start_time"]?.jsonPrimitive?.content ?: ""
                 val dataType = latest["data_type"]?.jsonPrimitive?.content ?: ""
@@ -323,7 +324,7 @@ class GkillApiClient(
      * Returns null on success, or error message on failure.
      *
      * Steps:
-     * 1. get_timeis to get the full latest TimeIs object
+     * 1. get_timeis to get the full latest TimeIs object (first element; histories are newest-first)
      * 2. Set end_time to now, update_time to now, update_app to "gkill_wear"
      * 3. update_timeis to save
      */
@@ -354,8 +355,9 @@ class GkillApiClient(
             val histories = timeisJson["timeis_histories"]?.let { if (it is JsonNull) null else it.jsonArray }
             if (histories.isNullOrEmpty()) return WIRE_ERR_TIMEIS_NOT_FOUND
 
-            // Get the latest history entry and modify it
-            val latest = histories.last().jsonObject.toMutableMap()
+            // 最新版（先頭。サーバは update_time の新しい順で返す）に end_time を付けて書き戻す。
+            // 末尾の最古版を書き戻すと、作成後に入れた編集がエラーも警告も出ないまま巻き戻る
+            val latest = histories.first().jsonObject.toMutableMap()
             val now = java.time.OffsetDateTime.now().format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME)
             latest["end_time"] = JsonPrimitive(now)
             latest["update_time"] = JsonPrimitive(now)
