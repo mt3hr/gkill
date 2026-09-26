@@ -2,7 +2,7 @@
 
 ## 概要
 
-Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（10ファイル、142テスト）とウォッチ側アプリ（8ファイル、88テスト）の合計230テスト（18ファイル）で構成される。
+Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（10ファイル、144テスト）とウォッチ側アプリ（8ファイル、88テスト）の合計232テスト（18ファイル）で構成される。
 
 ## テストフレームワーク
 
@@ -10,13 +10,13 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 
 ## テストファイル一覧
 
-### phone_companion（スマホ側コンパニオン）— 142テスト
+### phone_companion（スマホ側コンパニオン）— 144テスト
 
 | ファイル | テスト数 | テスト内容 |
 |---------|---------|-----------|
 | `phone_companion/src/test/java/.../GkillCredentialStoreTest.kt` | 24 | 認証情報ストアの保存・取得・削除。`GkillSecretCipher`（Android Keystore による暗号化）経由の保存と、ホスト別のピン留め証明書フィンガープリント保存も含む（MockK使用） |
 | `phone_companion/src/test/java/.../MainActivityTest.kt` | 8 | コンパニオンアプリの Activity ライフサイクル |
-| `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 29 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得・playing検索クエリの形状検証。okhttp-tls の自己署名証明書での TLS ピン留め一致/不一致/未保存/既定モード/SAN欠落フォールバック検証を含む。`locale_name` が login を含む6種類の API 本文すべてに載ること、自前エラーが ASCII コードで返ること） |
+| `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 31 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得・playing検索クエリの形状検証。okhttp-tls の自己署名証明書での TLS ピン留め一致/不一致/未保存/既定モード/SAN欠落フォールバック検証を含む。`locale_name` が login を含む6種類の API 本文すべてに載ること、自前エラーが ASCII コードで返ること。`timeis_histories` が複数版のとき、実行中一覧と終了の書き戻しがサーバの並び（新しい順）の先頭＝最新版を使うこと） |
 | `phone_companion/src/test/java/.../GkillServerTrustTest.kt` | 13 | TOFU+ピン留めの TrustManager。フィンガープリント計算・整形・照合、ピン一致/不一致/未保存の可否、ホストキー導出（okhttp-tls の HeldCertificate 使用） |
 | `phone_companion/src/test/java/.../GkillServerUrlPolicyTest.kt` | 4 | サーバーURLの受け入れ境界（平文HTTPはループバックのみ。LAN/公開ホスト・偽装ホスト名・不正形式の拒否、HTTPSの許可） |
 | `phone_companion/src/test/java/.../GkillWearableListenerServiceTest.kt` | 19 | ウォッチ→スマホ間メッセージパスのハンドリング |

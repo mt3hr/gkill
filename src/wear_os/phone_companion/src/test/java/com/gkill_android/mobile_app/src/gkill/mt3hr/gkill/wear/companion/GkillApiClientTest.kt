@@ -389,7 +389,52 @@ class GkillApiClientTest {
         assertEquals("/api/get_timeis", mockServer.takeRequest().path)
     }
 
+    // get_timeis の timeis_histories はサーバが update_time の新しい順で返す（Web / MCP も先頭を最新版として使う）。
+    // 末尾を取ると、作成後にタイトルを直した打刻が時計の実行中一覧に元のタイトルで出る。
+    // 履歴1件の fixture では先頭と末尾が同じなので、2版の fixture で固定する
+    @Test
+    fun getPlayingTimeis_multipleHistories_usesNewestFirstEntry() {
+        val kyousJson = """{"kyous":[{"id":"timeis-1","rep_name":"TimeIs"}],"errors":null}"""
+        mockServer.enqueue(MockResponse().setBody(kyousJson).setResponseCode(200))
+        val timeisJson = """{"timeis_histories":[""" +
+            """{"id":"timeis-1","title":"renamed","start_time":"2026-01-01T10:00:00+09:00","update_time":"2026-01-01T12:00:00+09:00","data_type":"timeis_start","is_deleted":false},""" +
+            """{"id":"timeis-1","title":"original","start_time":"2026-01-01T10:00:00+09:00","update_time":"2026-01-01T10:00:00+09:00","data_type":"timeis_start","is_deleted":false}""" +
+            """],"errors":null}"""
+        mockServer.enqueue(MockResponse().setBody(timeisJson).setResponseCode(200))
+
+        val result = client.getPlayingTimeis("session-123")
+
+        assertNotNull(result)
+        val playing = kotlinx.serialization.json.Json.parseToJsonElement(result!!) as kotlinx.serialization.json.JsonArray
+        assertEquals(1, playing.size)
+        val title = (playing[0].jsonObject["title"] as kotlinx.serialization.json.JsonPrimitive).content
+        assertEquals("renamed", title)
+    }
+
     // ─── endTimeis ─────────────────────────────────────────────────────────
+
+    // 終了は get_timeis で取った最新版に end_time を付けて update_timeis で書き戻す。
+    // 最古の版を書き戻すと、作成後に入れた編集（タイトル変更など）がエラーも警告も出ないまま巻き戻る
+    @Test
+    fun endTimeis_multipleHistories_writesBackNewestVersion() {
+        val getTimeisJson = """{"timeis_histories":[""" +
+            """{"id":"timeis-1","title":"renamed","start_time":"2026-01-01T10:00:00+09:00","update_time":"2026-01-01T12:00:00+09:00","data_type":"timeis_start","is_deleted":false},""" +
+            """{"id":"timeis-1","title":"original","start_time":"2026-01-01T10:00:00+09:00","update_time":"2026-01-01T10:00:00+09:00","data_type":"timeis_start","is_deleted":false}""" +
+            """],"errors":null}"""
+        mockServer.enqueue(MockResponse().setBody(getTimeisJson).setResponseCode(200))
+        mockServer.enqueue(MockResponse().setBody("""{"errors":null}""").setResponseCode(200))
+
+        val error = client.endTimeis("session-123", "timeis-1", "TimeIs")
+
+        assertNull(error)
+        assertEquals("/api/get_timeis", mockServer.takeRequest().path)
+        val updateRequest = mockServer.takeRequest()
+        assertEquals("/api/update_timeis", updateRequest.path)
+        val timeis = kotlinx.serialization.json.Json.parseToJsonElement(updateRequest.body.readUtf8())
+            .jsonObject["timeis"]!!.jsonObject
+        assertEquals("renamed", (timeis["title"] as kotlinx.serialization.json.JsonPrimitive).content)
+        assertNotNull(timeis["end_time"])
+    }
 
     // Non-2xx update_timeis with an errors body: the body's error_message is
     // returned instead of "HTTP 409" (the status-only fallback applies only when
