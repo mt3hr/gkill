@@ -188,7 +188,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 <!-- BOUNDARY-TABLE:service-worker:BEGIN -->
 | パス | Service Worker の扱い | 備考 |
 |---|---|---|
-| `/api/get_kyou` `/api/get_kmemo` `/api/get_kc` `/api/get_urlog` `/api/get_nlog` `/api/get_timeis` `/api/get_mi` `/api/get_lantana` `/api/get_rekyou` `/api/get_mirekyou` `/api/get_git_commit_log` `/api/get_idf_kyou` `/api/get_tags_by_id` `/api/get_texts_by_id` `/api/get_gkill_notifications_by_id` | キャッシュ `gkill-post-kyou-cache`、キー `/cache/api/<型>/<id>`。`force_reget` なら素通し | 増やしたら delete-gkill-cache.ts の種類の一覧にも足す |
+| `/api/get_kyou` `/api/get_kmemo` `/api/get_kc` `/api/get_urlog` `/api/get_nlog` `/api/get_timeis` `/api/get_mi` `/api/get_lantana` `/api/get_rekyou` `/api/get_mirekyou` `/api/get_git_commit_log` `/api/get_idf_kyou` `/api/get_tags_by_id` `/api/get_texts_by_id` `/api/get_gkill_notifications_by_id` | キャッシュ `gkill-post-kyou-cache`、キー `/cache/api/<型>/<id>`。`force_reget` ならキャッシュを見ずに取り直して入れ替える | 増やしたら delete-gkill-cache.ts の種類の一覧にも足す |
 | `/api/get_plugin_content_html` | 同じキャッシュ、キー `/cache/api/plugin_content_html/<kyou_id>` | |
 | `/api/get_all_rep_names` `/api/get_all_tag_names` `/api/get_mi_board_list` `/api/get_application_config` | キャッシュ `gkill-post-config-cache` | `/api/get_application_config` は share-target の保存でも自分で叩く |
 | `/api/add_urlog` `/api/add_kmemo` | share-target（`/share-target` への POST）を受けて自分で `fetch` する。セッションは Cookie `gkill_session_id` | 保存後に `/saihate?...` へ 303。二重保存は share-target-dedup.ts の台帳で確認へ回す |
@@ -205,7 +205,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 | `/zip_cache/` | `HandleZipCacheFileServe`（handle_browse_zip_contents.go） | URL は `/api/browse_zip_contents` の応答に入る。browse-zip-contents-dialog.vue が使う |
 | `/resources/manual/` | 埋め込んだマニュアル（`embed/manual`） | use-help-dialog.ts / use-tutorial-dialog.ts の iframe |
 | `/serviceWorker.js` | 定数 `serviceWorkerJSPath` | 登録は main.ts の `registerSW`（vite-plugin-pwa） |
-| `/rykv` `/kftl` `/mi` `/kyou` `/dashboard` `/rudbeckia` `/saihate` `/playing` `/mkfl` `/shared_page` `/shared_mi` | 埋め込んだ画面（`embed/html`）。管理者が未設定なら初回登録へ回す | vue-router の同名の path |
+| `/rykv` `/kftl` `/mi` `/kyou` `/dashboard` `/rudbeckia` `/saihate` `/playing` `/mkfl` `/shared_page` `/shared_mi` | 埋め込んだ画面（`embed/html`）。admin のパスワードが未設定（初回起動直後）なら、同じマシンからの画面遷移に限り初回登録（`/register_first_account`）へ回す | vue-router の同名の path |
 | `/shared_rykv` | 同上 | vue-router に無い古い入口（開くと画面側のルートが無い） |
 | `/set_new_password` `/register_first_account` `/regist_first_account` | 埋め込んだ画面（初回登録へ回す検査なし） | vue-router の同名の path |
 | `/` | 残り全部（`/manifest.webmanifest`、`/assets/*` を含む） | vue-router の `/` |
@@ -470,7 +470,7 @@ KFTL 送信にはメッセージ1件ごとに冪等キー（UUID）が付く。
 | — | KFTL テンプレートの木。Go は中身を解釈せず保存し、形の正本は TS | application_config.go / kftl-template-element-data.ts / TemplateNode.kt | — |
 | — | パスワードを SHA-256 の 64 桁 hex にする処理（3実装） | use-login-view.ts / companion の MainActivity.kt / oauth_html.go | — |
 | — | Web Push の中身（通知と更新通知の2つの形） | gkill_notificater.go・web_push.go / serviceWorker.ts の `push` | — |
-| — | サーバ設定の JSON のキー | server_config の Go の構造体 / gkill-api.ts | gkill-api.test.ts |
+| — | サーバ設定の JSON のキー | server_config.go / server-config.ts | gkill-api.test.ts |
 | — | デスクトップ版の `open_in_default_browser:`（注入スクリプトと受け手が同じ main.go にある） | main.go | — |
 <!-- BOUNDARY-TABLE:contracts:END -->
 
