@@ -126,7 +126,7 @@ sequenceDiagram
     participant KmemoRep as KmemoRepository
 
     User->>UI: Kmemo内容入力・保存ボタン
-    UI->>GkillAPI: addKmemo(session_id, kmemo)
+    UI->>GkillAPI: add_kmemo(req)
     GkillAPI->>API: POST /api/add_kmemo<br>{session_id, kmemo, want_response_kyou}
     API->>API: wrapAuthRepos ミドルウェアで認証済み（AuthFromContext）
     API->>DAOMgr: GetRepositories(user_id, device)
@@ -532,13 +532,13 @@ sequenceDiagram
     participant Server as gkill_server
 
     User->>Watch: テンプレート一覧を表示
-    Watch->>WearClient: requestTemplates()
+    Watch->>WearClient: sendGetTemplatesRequest()
     WearClient->>DataLayer: sendMessage(/gkill/get_templates)
     DataLayer->>Companion: onMessageReceived(/gkill/get_templates)
-    Companion->>ApiClient: login(user_id, password)
+    Companion->>ApiClient: loginWithError(userId, passwordSha256)
     ApiClient->>Server: POST /api/login
     Server-->>ApiClient: {session_id}
-    Companion->>ApiClient: getApplicationConfig(session_id)
+    Companion->>ApiClient: getKftlTemplateStructJson(sessionId)
     ApiClient->>Server: POST /api/get_application_config
     Server-->>ApiClient: {application_config}
     Companion->>Companion: テンプレート抽出<br>(kftl_template_struct)
@@ -548,10 +548,10 @@ sequenceDiagram
     Watch-->>User: テンプレート選択画面表示
 
     User->>Watch: テンプレート選択・確認
-    Watch->>WearClient: submitKFTL(kftl_text)
+    Watch->>WearClient: sendSubmitRequest(kftlText, force)
     WearClient->>DataLayer: sendMessage(/gkill/submit, kftl_text)
     DataLayer->>Companion: onMessageReceived(/gkill/submit)
-    Companion->>ApiClient: submitKFTLText(session_id, kftl_text)
+    Companion->>ApiClient: submitKFTLText(sessionId, kftlText, idempotencyKey)
     ApiClient->>Server: POST /api/submit_kftl_text
     Server-->>ApiClient: {messages}
     Companion->>DataLayer: sendMessage(/gkill/submit_result, "OK")
@@ -658,7 +658,7 @@ sequenceDiagram
 
     User->>UI: IDFKyou コンテキストメニュー<br>「ZIP内容を閲覧」選択
     Note right of UI: is_zip=true の<br>IDFKyouのみ表示
-    UI->>GkillAPI: browseZipContents(session_id, idf_kyou_id)
+    UI->>GkillAPI: browse_zip_contents(req)
     GkillAPI->>API: POST /api/browse_zip_contents<br>{session_id, idf_kyou_id}
     API->>API: getAccountFromSessionID(session_id)
     API->>IDFRep: GetIDFKyou(idf_kyou_id)
