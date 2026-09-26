@@ -670,14 +670,14 @@ sequenceDiagram
     actor User as ユーザ
     participant AI as AI クライアント
     participant MCP as MCP サーバ<br>(gkill_server mcp --kind read)
-    participant Client as GkillReadClient
+    participant Client as GkillClient
     participant API as gkill_server
     participant Handler as HandleGetKyousMCP
 
     User->>AI: 「先月の外食の傾向は?」
     AI->>MCP: gkill_get_kyous（ツール呼び出し）
-    MCP->>MCP: normalizeKyouArgs
-    MCP->>Client: callRead("/api/get_kyous_mcp", body, session)
+    MCP->>MCP: NormalizeKyouArgs
+    MCP->>Client: CallContext.callApi("/api/get_kyous_mcp", body)<br>→ GkillClient.CallApi
     Client->>API: POST /api/get_kyous_mcp（wrapNoAuth+body session）
     API->>Handler: 検索（cursor ページング, limit/max_size 制限）
     Handler-->>Client: {kyous, total_count, has_more, next_cursor}
@@ -779,7 +779,7 @@ sequenceDiagram
     User->>Menu: 記録を長押し / 右クリック
     Menu-->>User: 「タスクにする」を表示
     User->>Dlg: 板名・期限・開始予定・終了予定を入力
-    Dlg->>GkillAPI: add_mi_re_kyou(req)
+    Dlg->>GkillAPI: add_mirekyou(req)
     GkillAPI->>API: POST /api/add_mirekyou
     API->>API: AuthFromContext (wrapAuthRepos)
     API->>UC: AddMiReKyou(userID, device, mirekyou)
