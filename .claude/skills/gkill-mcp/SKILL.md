@@ -154,6 +154,8 @@ write 専用サーバにも載せた）。write 専用サーバは read を数�
 
 **スキルのファイルは gkill_server だけが触り、AI の削除ツールは公開しない。** スキル（`$GKILL_HOME/skills/<user_id>/<name>/` の SKILL.md と付属ファイル）の4ツールは `/api/get_skill_list`・`/api/get_skill`・`/api/write_skill_file` を呼ぶだけで、MCP がファイルを直接読まない（`skill_handlers.go`）。`gkill_delete_skill` は `skill_delete_tool.go` に実装だけあり、`WriteTools` の登録行と `dispatchWriteToolCall` の `case` をコメントアウトしてある —— スキルは履歴を持たないので、AI が消したものは戻せない。**一覧に載せないまま `case` だけ戻しても呼べない**（`Server.HandleToolCall` が `IsWriteToolName` で弾く）。定義を `read_tools.go` / `write_tools.go` に書かないこと（verify_docs が `tool("gkill_…"` をコメントの中でも数える）、help topic や説明文で名前を出さないこと（`help_topics_test` が落ちるうえ、見えないツールを案内する）。AI へ返すときだけ `max_file_bytes` を超えるファイルは中身を省き（`content_omitted`）、バイナリは `gkill_get_idf_file` と同じキー（`file_content_base64` / `mime_type` / `is_image`）で返して `BuildToolResult` の base64 処理を共用する。mime は拡張子の固定表で決める（`mime.TypeByExtension` は Windows でレジストリを読むので golden が揺れる）。`gkill_add_skill` は frontmatter の値を JSON の文字列（YAML の二重引用符スカラー）で書く。公開の条件と却下案は [ADR-0634](../../../documents/adr/0634-per-user-skills-for-mcp.md)。守るテスト: `skill_handlers_test.go` / golden の `skill *`。
 
+**ツール・叩く `/api`・HTTP の経路を足したら境界対応表にも載せる。** MCP は `gkill/api` を import しないので、ツールと `/api` のつながりは文字列だけで、呼び出しグラフの道具には見えない。[cross-boundary-map.md](../../../documents/reverse/cross-boundary-map.md) の §4（ツール・`EntityTargets`・HTTP の経路）を `npm run verify_docs` がコードと突き合わせ、MCP が叩くパスがルート表にあることも見る。
+
 ## 関連スキル
 
 - [gkill-plugin](../gkill-plugin/SKILL.md) — プラグインの stdio 直列化（並列に投げても速くならない理由）

@@ -129,6 +129,8 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 
 **`get_plugin_list` の `rep_names` は Kyou を出すプラグインでは常に載せ、値は「`query.reps` に渡せる rep 名」にする。** 申告があればその値（索引未構築なら `[]`）、申告しない・取得に失敗したプラグインは `[manifest の rep_name]`、`emits_kyou:false` は `null`。2026-09-19 まで申告があるときだけ載せる `omitempty` で、zip の Git リポジトリを束ねるプラグインの索引が未構築だとキーごと消え、応答には検索に使えない名札 `"ArchivedGit"` しか見えなかった（2026-09-18 の実利用報告）。manifest の `rep_name` を `query.reps` に渡すと Go の `pluginManifestRepNameHint` が「名札であって検索値ではない。`rep_names[]` を使え」と名指しする（[ADR-0311](../../../documents/adr/0311-plugin-list-rep-names-are-always-the-query-values.md)）。**manifest の `description` は実装の粒度と合わせること** —— `gkill_plugin_claudecode` は「1ターン=1Kyou」と書いたまま実装は「1発言=1Kyou（人間の発言と応答で2件）」になっていた（2026-09-19 に文言を直した。`data_type` の `claude_code_turn` は改名しない）。
 
+**stdio のコマンド・起動フラグ・postMessage のキーを足したら境界対応表にも載せる。** SDK は本体の型を import しないので、両側は JSON のキーと文字列だけでつながる。[cross-boundary-map.md](../../../documents/reverse/cross-boundary-map.md) の §8・§9 を `npm run verify_docs` が本体・SDK・画面のコードと3者で突き合わせる。
+
 ## 関連スキル
 
 - [gkill-go-backend](../gkill-go-backend/SKILL.md) — `len(XxxReps) == 1` 判定禁止（provides プラグイン1つで長さが2になる）と検索フィルタ

@@ -158,6 +158,7 @@ ERR000002 でログアウトさせるので、**存在しないユーザIDにパ
 1. **エンドポイントを足したら、ハンドラ・表の1行・`api_routes_test.go` の golden の1行・Web から叩くなら
    `gkill-api.ts` の `xxx_address` / `xxx_method` の対、を揃える。** 表へ足し忘れるとハンドラがあっても 404
    だが、`TestAPIRoutes_EveryHandlerIsRouted` が `HandleXxx` の反射列挙と表を双方向に突き合わせて落とす。
+   境界対応表（`documents/reverse/cross-boundary-map.md` の Web → Go の表）にも同じ位置へ1行要る（`npm run verify_docs` が貼れる期待行を出す）。
 2. **認証区分（`Auth`）は表と golden の2箇所を意図して直す。** `TestAPIRoutes_AuthKindGolden` が名指しで
    固定しているので、`wrapAuthRepos → wrapNoAuth` のような退行はテストを落とさずには通らない。
    無認証で POST を受ける経路は `Body` に `bodyAuth` / `bodyUpload` を付ける（`validateAPIRoutes` が起動時に拒否、

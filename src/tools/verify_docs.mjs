@@ -210,9 +210,14 @@ const MCP_DIR = 'src/server/gkill/mcp'
 // 知らないモジュール名なら null。filterTools(Mod, set) は同じソース内の `set = newNameSet(...)` の
 // 名前集合で絞る。定義 `func composeTools(lists ...)` ではなく `return composeTools(...)` を読む。
 export function countComposedToolNames(src, namesInModule) {
+  return composedToolNames(src, namesInModule).size
+}
+
+// countComposedToolNames の集合版。境界対応表（どのツールがどのサーバに載るか）も同じ読み方を使う。
+export function composedToolNames(src, namesInModule) {
   const names = new Set()
   const compose = src.match(/return composeTools\(([^\n]*)\)\s*$/m)
-  if (!compose) return names.size
+  if (!compose) return names
   for (const item of compose[1].matchAll(/filterTools\((\w+),\s*(\w+)\)|(\w+)/g)) {
     const modName = item[1] || item[3]
     let modNames = namesInModule(modName)
@@ -226,7 +231,26 @@ export function countComposedToolNames(src, namesInModule) {
     }
     for (const n of modNames) names.add(n)
   }
-  return names.size
+  return names
+}
+
+// MCP のツール定義モジュール（composeTools の引数名 → 定義ファイル）
+const MCP_TOOL_MODULES = {
+  ReadTools: `${MCP_DIR}/read_tools.go`,
+  WriteTools: `${MCP_DIR}/write_tools.go`,
+  PluginTools: `${MCP_DIR}/plugin_tools.go`,
+}
+// 定義ファイルに書かれたツール名（`tool("gkill_…"` / `"name", "gkill_…"`）
+function mcpToolNamesIn(rel) {
+  return exists(rel)
+    ? [...readText(rel).matchAll(/(?:\btool\(|"name",)\s*"(gkill_[a-z_0-9]+)"/g)].map((m) => m[1])
+    : []
+}
+// server_*.go が載せるツール名の集合
+function mcpServerToolNames(rel) {
+  return exists(rel)
+    ? composedToolNames(readText(rel), (modName) => (MCP_TOOL_MODULES[modName] ? mcpToolNamesIn(MCP_TOOL_MODULES[modName]) : null))
+    : new Set()
 }
 
 function computeTestMetrics() {
@@ -302,17 +326,7 @@ function computeMiscMetrics() {
   // `tool("gkill_…"` 定義を、server_*.go の composeTools(...) が連結して組み立てる。
   // 書き込みサーバは読み取りツールの一部だけを載せる（newNameSet(...) の名前集合で絞る）ので、
   // 連結の並びと絞り込みの集合を辿って数える。
-  const TOOL_MODULES = {
-    ReadTools: `${MCP_DIR}/read_tools.go`,
-    WriteTools: `${MCP_DIR}/write_tools.go`,
-    PluginTools: `${MCP_DIR}/plugin_tools.go`,
-  }
-  const namesIn = (rel) => (exists(rel)
-    ? [...readText(rel).matchAll(/(?:\btool\(|"name",)\s*"(gkill_[a-z_0-9]+)"/g)].map((m) => m[1])
-    : [])
-  const toolNames = (rel) => (exists(rel)
-    ? countComposedToolNames(readText(rel), (modName) => (TOOL_MODULES[modName] ? namesIn(TOOL_MODULES[modName]) : null))
-    : 0)
+  const toolNames = (rel) => mcpServerToolNames(rel).size
   // ステートメント型 = 名前が StatementLine で終わる型のうち、基底の KFTLStatementLine を除いたもの。
   const BASE = 'KFTLStatementLine'
   const kftlTs = new Set(listFilesRec('src/client/classes/kftl', (f) => f.endsWith('.ts'))
@@ -441,7 +455,14 @@ function computeMiscMetrics() {
   // 依存を上げるときは全モジュールで tidy が要るので、資料の数が古いと取りこぼす。
   const goModModules = listFilesRec('src', (f) => f === 'go.mod').length
 
+  // Web クライアント（GkillAPI）が持つ /api アドレス数と、それを gkill_fetch で叩くメソッド数。
+  // 差はアドレスだけ持ってメソッドの無いもの（ブックマークレットの2本）。境界対応表と同じ読み方。
+  const gkillApi = exists(GKILL_API_TS) ? parseGkillApi(readText(GKILL_API_TS)) : null
+
   return {
+    reverseDocs: listFiles('documents/reverse', (f) => f.endsWith('.md')).length,
+    tsApiAddresses: gkillApi ? gkillApi.addressByPath.size : 0,
+    tsApiMethods: gkillApi ? gkillApi.methodByField.size : 0,
     writeThroughCalls,
     manualPages,
     routeComponents,
@@ -450,7 +471,7 @@ function computeMiscMetrics() {
     mcpReadTools: toolNames(`${MCP_DIR}/server_read.go`),
     mcpWriteTools: toolNames(`${MCP_DIR}/server_write.go`),
     mcpReadWriteTools: toolNames(`${MCP_DIR}/server_readwrite.go`),
-    mcpPluginTools: namesIn(`${MCP_DIR}/plugin_tools.go`).length,
+    mcpPluginTools: mcpToolNamesIn(`${MCP_DIR}/plugin_tools.go`).length,
     kftlStatementTs: kftlTs.size,
     kftlStatementGo: kftlGo.size,
     glossaryTerms,
@@ -877,6 +898,20 @@ function buildCountAssertions(m) {
   add('src/client/ABOUT_TEST.md', `| ユーティリティ | ${m.unitClassesFiles}ファイル |`)
   add('src/client/ABOUT_TEST.md', `| Composable | ${m.unitComposablesFiles}ファイル |`)
   add('src/client/pages/ABOUT_TEST.md', `${m.e2eTests}テスト宣言`)
+
+  // reverse 資料の本数（資料を足したら3箇所の数も動く。索引への載せ忘れは checkReverseDocIndex が別に見る）
+  add('.claude/skills/gkill-docs/SKILL.md', `Reverse-engineered design documents (${m.reverseDocs} files)`)
+  add('.claude/skills/gkill-docs/SKILL.md', `api-endpoints.md (${m.endpoints} endpoints)`)
+  add('documents/reverse/folder-structure.md', `\`documents/reverse/\` は全${m.reverseDocs}ファイル（README.md 含む）`)
+  add('documents/adr/README.md', `\`documents/reverse/\` に${m.reverseDocs}本ある`)
+  // Web クライアントの /api アドレス数とメソッド数（差はブックマークレットの2本、ルート表との差は MCP / CLI 専用）
+  add('documents/reverse/frontend-architecture.md',
+    `Web クライアントが叩く${m.tsApiAddresses}エンドポイントのアドレスを持ち、そのうち${m.tsApiMethods}本にメソッドがある`)
+  add('documents/reverse/frontend-architecture.md',
+    `\`/api/\` アドレスは${m.tsApiAddresses}件。MCP / CLI 専用の${m.endpoints - m.tsApiAddresses}件`)
+  // 境界対応表の見出しの件数（表の行そのものは checkCrossBoundaryDoc が突き合わせる）
+  add(BOUNDARY_DOC, `（HTTP /api、全${m.endpoints}ルート）`)
+  add(BOUNDARY_DOC, `公開ツール${m.mcpReadWriteTools}本`)
 
   return A
 }
@@ -1858,6 +1893,516 @@ function checkSkillAnchors() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// 4-f. 境界対応表（documents/reverse/cross-boundary-map.md）
+//
+//   言語・プロセスをまたぐ呼び出し（TS → HTTP → Go、MCP / Kotlin / CLI → /api、時計 ↔ スマホの
+//   Data Layer、Go 本体 ↔ プラグインの stdio、iframe の postMessage）は**文字列だけ**でつながっていて、
+//   CodeGraph / Graphify のような呼び出しグラフには見えない。その対応を手書きの表で持ち、ここでコードと
+//   突き合わせる。表を生成しないのは ADR-0709（ルート情報の生成は却下し、ソース走査の突き合わせを採った）と同じ理由。
+//
+//   表は `<!-- BOUNDARY-TABLE:<id>:BEGIN -->` 〜 `<!-- BOUNDARY-TABLE:<id>:END -->` で囲む。
+//   範囲内の最初の `|` 行が見出し、2行目が区切り、以降がデータ行（`|` で始まらない行は注記）。
+//   1列目のバッククォート内の字面がキー。セルの中に `|` を書かない。
+//
+//   解析は純粋関数（export して src/tools/__tests__/verify_docs.test.mjs で固定する）、
+//   ファイルを読むのは gatherBoundaryFacts / checkCrossBoundaryDoc だけ。
+//   コードから読んだ件数が最小値を下回ったら落とす（書式が変わって正規表現が空振りしたとき、
+//   資料側を0件に直して通してしまう事故を防ぐ）。
+// ─────────────────────────────────────────────────────────────
+export const BOUNDARY_DOC = 'documents/reverse/cross-boundary-map.md'
+export const BOUNDARY_TABLE_IDS = [
+  'web-routes', 'service-worker', 'server-prefix', 'mcp-tools', 'mcp-entities', 'mcp-http',
+  'wear-datalayer', 'wear-api', 'cli-api', 'plugin-commands', 'plugin-flags', 'post-message',
+  'contracts', 'req-res-files',
+]
+// web-routes の「他経路」列に書く呼び出し元（この順で空白区切り）
+export const OTHER_CALLERS = ['SW', 'MCP', 'CLI', 'Wear', '配信HTML']
+export const WEB_ROUTE_COLUMNS = ['パス', 'M', '認証', 'TS（GkillAPI）', '他経路', 'Go ハンドラ', '実装ファイル', '委譲先', 'Go 型', 'TS 型']
+// 命名規則（/api/xxx ↔ handle_xxx.go ↔ HandleXxx ↔ xxx() ↔ UsecaseCtx.Xxx ↔ XxxRequest/Response）から外れる印
+const IRREGULAR_MARK = ' ※'
+const TS_NON_WEB = '— 非Web'
+const TS_ADDRESS_ONLY = '— アドレスのみ'
+const DELEGATE_DIRECT = '直接'
+export const ROUTE_ROW_RE = /\{Path:\s*"([^"]+)",\s*Method:\s*"(GET|POST)",\s*Auth:\s*(\w+),\s*Body:\s*(\w+),\s*Handler:\s*g\.(\w+)\}/g
+const GKILL_API_TS = 'src/client/classes/api/gkill-api.ts'
+const GKILL_SERVER_API_DIR = 'src/server/gkill/api/gkill_server_api'
+
+// ルート表（apiRoutes）の行。並びは表のまま
+export function parseRouteTable(src) {
+  return [...normalizeLF(src).matchAll(ROUTE_ROW_RE)]
+    .map((m) => ({ path: m[1], method: m[2], auth: m[3], body: m[4], handler: m[5] }))
+}
+
+// gkill_server_api/*.go の HandleXxx ごとに、定義ファイル・呼ぶ usecase・要求/応答の型を読む。
+// 本体の範囲は「行頭の func から次の行頭の func の手前まで」（クロージャは字下げされているので切れない）。
+export function parseGoHandlers(files) {
+  const out = new Map()
+  for (const { name, src } of files) {
+    const text = normalizeLF(src)
+    const starts = [...text.matchAll(/^func /gm)].map((m) => m.index)
+    starts.forEach((start, i) => {
+      const body = text.slice(start, i + 1 < starts.length ? starts[i + 1] : text.length)
+      const head = body.match(/^func \(g \*GkillServerAPI\) (Handle\w+)\(/)
+      if (!head) return
+      const usecases = [...new Set([...body.matchAll(/\bg\.UsecaseCtx\.(\w+)\(/g)].map((m) => m[1]))]
+      const req = body.match(/\brequest\s*:?=\s*&req_res\.(\w+)\{/)
+      const res = body.match(/\bresponse\s*:?=\s*&req_res\.(\w+)\{/)
+      out.set(head[1], { file: name, usecases, req: req ? req[1] : null, res: res ? res[1] : null, body })
+    })
+  }
+  return out
+}
+
+// gkill-api.ts の GkillAPI クラス（共有ページ用の子クラス GkillAPIForSharedKyou は含めない）から、
+// /api アドレスのフィールドと、それを gkill_fetch で叩くメソッドを読む。
+//   addressByPath: '/api/xxx' → フィールド名の接頭辞（`xxx_address` の xxx）
+//   methodByField: フィールド名の接頭辞 → { name, req, res }
+// メンバーの見出しはクラス直下の字下げ（空白8つ）で探す。メソッド本体の中は12以上なので混ざらない。
+export function parseGkillApi(src) {
+  const text = normalizeLF(src)
+  const start = text.indexOf('export class GkillAPI {')
+  const end = text.indexOf('export class GkillAPIForSharedKyou')
+  const cls = start < 0 ? '' : text.slice(start, end > start ? end : text.length)
+  const addressByPath = new Map()
+  for (const m of cls.matchAll(/this\.(\w+)_address\s*=\s*"(\/api\/[a-z0-9_]+)"/g)) addressByPath.set(m[2], m[1])
+  const methodByField = new Map()
+  const headers = [...cls.matchAll(/^ {8}(?:(?:public|private|protected|static|override|async)\s+)*(\w+)\s*\(([^\n]*)$/gm)]
+  headers.forEach((h, i) => {
+    const body = cls.slice(h.index, i + 1 < headers.length ? headers[i + 1].index : cls.length)
+    const fetch = body.match(/gkill_fetch\(this\.(\w+)_address/)
+    if (!fetch) return
+    const req = h[2].match(/^\s*_?req\s*:\s*(\w+)/)
+    const res = h[2].match(/Promise<(\w+)>/)
+    methodByField.set(fetch[1], { name: h[1], req: req ? req[1] : null, res: res ? res[1] : null })
+  })
+  return { addressByPath, methodByField }
+}
+
+// 資料から表を1つ切り出す。rows の line は資料の行番号（1始まり）
+export function extractBoundaryBlock(doc, id) {
+  const text = normalizeLF(doc)
+  const beginMarker = `<!-- BOUNDARY-TABLE:${id}:BEGIN -->`
+  const endMarker = `<!-- BOUNDARY-TABLE:${id}:END -->`
+  const begin = text.indexOf(beginMarker)
+  const end = text.indexOf(endMarker)
+  if (begin < 0 || end < 0 || end < begin) return null
+  const firstLine = text.slice(0, begin).split('\n').length
+  const blockText = text.slice(begin, end)
+  const rows = []
+  let tableLines = 0
+  blockText.split('\n').forEach((line, i) => {
+    if (!line.startsWith('|')) return
+    tableLines++
+    if (tableLines <= 2) return // 見出しと区切り
+    const cells = line.replace(/^\|/, '').replace(/\|\s*$/, '').split('|').map((c) => c.trim())
+    rows.push({ cells, line: firstLine + i })
+  })
+  return { text: blockText, rows }
+}
+
+// セルのバッククォート内の字面（キー・識別子）
+export function cellKeys(cell) {
+  return [...(cell ?? '').matchAll(/`([^`]+)`/g)].map((m) => m[1])
+}
+
+// 表や注記に出てくる /api パス（バッククォートで囲んだもの）
+function apiPathMentions(text) {
+  return [...new Set([...text.matchAll(/`(\/api\/[a-z0-9_]+)`/g)].map((m) => m[1]))]
+}
+
+// web-routes の1行に書くべきセル（コードから一意に決まる正規形）。委譲先（index 7）は
+// usecase を呼ぶハンドラなら正規形、呼ばないなら null（「直接: …」の自由記述を別規則で見る）
+export function expectedWebRouteCells(route, facts) {
+  const name = route.path.replace(/^\/api\//, '')
+  const base = route.handler.replace(/^Handle/, '')
+  const handler = facts.handlers.get(route.handler)
+
+  const field = facts.api.addressByPath.get(route.path)
+  const method = field === undefined ? undefined : facts.api.methodByField.get(field)
+  let ts
+  if (field === undefined) ts = TS_NON_WEB
+  else if (!method) ts = TS_ADDRESS_ONLY
+  else {
+    const irregular = method.name !== name || field !== method.name
+    ts = `\`${method.name}()\`${irregular ? IRREGULAR_MARK : ''}${field !== method.name ? ` \`${field}_address\`` : ''}`
+  }
+
+  const others = OTHER_CALLERS.filter((c) => facts.otherCallers[c]?.has(route.path)).join(' ') || '—'
+  const file = handler ? handler.file : '（ハンドラ未検出）'
+  const fileCell = file + (file === `handle_${name}.go` ? '' : IRREGULAR_MARK)
+
+  let delegate = null
+  if (handler && handler.usecases.length) {
+    delegate = handler.usecases.map((u) => `\`UsecaseCtx.${u}\``).join(', ') +
+      (handler.usecases.includes(base) ? '' : IRREGULAR_MARK)
+  }
+
+  const req = handler ? handler.req : null
+  const res = handler ? handler.res : null
+  const goTypes = `${req ?? '—'} / ${res ?? '—'}` +
+    (req === `${base}Request` && res === `${base}Response` ? '' : IRREGULAR_MARK)
+  let tsTypes = '—'
+  if (method) tsTypes = method.req === req && method.res === res ? '=' : `${method.req ?? '—'} / ${method.res ?? '—'}`
+
+  return [`\`${route.path}\``, route.method, route.auth, ts, others, `\`${route.handler}\``, fileCell, delegate, goTypes, tsTypes]
+}
+
+// 行が欠けているときにエラー文へ載せる、そのまま貼れる1行
+function expectedWebRouteRowText(route, facts) {
+  const cells = expectedWebRouteCells(route, facts)
+  if (cells[3] === TS_ADDRESS_ONLY) cells[3] = `${TS_ADDRESS_ONLY}（使い道を書く）`
+  if (cells[7] === null) cells[7] = `${DELEGATE_DIRECT}: （委譲先を書く）`
+  return `| ${cells.join(' | ')} |`
+}
+
+export function checkWebRouteRows(rows, facts) {
+  const out = []
+  const at = (row) => `${BOUNDARY_DOC}:${row.line}`
+  const routeByPath = new Map(facts.routes.map((r) => [r.path, r]))
+  const seen = new Map()
+  const docOrder = []
+  for (const row of rows) {
+    if (row.cells.length !== WEB_ROUTE_COLUMNS.length) {
+      out.push(`境界対応表: ${at(row)} web-routes の列数が${row.cells.length}（${WEB_ROUTE_COLUMNS.length}列で書く）`)
+      continue
+    }
+    const path = cellKeys(row.cells[0])[0]
+    if (!path) { out.push(`境界対応表: ${at(row)} web-routes の1列目にパスが無い`); continue }
+    if (seen.has(path)) { out.push(`境界対応表: ${at(row)} web-routes に ${path} が重複（${seen.get(path)}行目にもある）`); continue }
+    seen.set(path, row.line)
+    const route = routeByPath.get(path)
+    if (!route) { out.push(`境界対応表: ${at(row)} の ${path} はルート表に無い（ルートが消えたか改名された）`); continue }
+    docOrder.push(path)
+
+    const expected = expectedWebRouteCells(route, facts)
+    const handler = facts.handlers.get(route.handler)
+    WEB_ROUTE_COLUMNS.forEach((column, i) => {
+      const actual = row.cells[i]
+      const mismatch = (want) => out.push(`境界対応表: ${at(row)} ${path} の${column}列 → 資料「${actual}」／期待「${want}」`)
+      if (i === 7) {
+        if (expected[7] !== null) {
+          if (actual !== expected[7]) mismatch(expected[7])
+          return
+        }
+        if (!actual.startsWith(DELEGATE_DIRECT) || actual.includes('UsecaseCtx.')) {
+          mismatch(`${DELEGATE_DIRECT}: （${route.handler} が直接使うものをバッククォートで書く）`)
+          return
+        }
+        const keys = cellKeys(actual)
+        if (keys.length === 0) {
+          out.push(`境界対応表: ${at(row)} ${path} の委譲先「${actual}」にバッククォートの字面が無い（${route.handler} が直接使う DAO や関数を書く）`)
+        }
+        for (const key of keys) {
+          if (!handler || !handler.body.includes(key)) {
+            out.push(`境界対応表: ${at(row)} ${path} の委譲先の字面「${key}」が ${route.handler} の本体に無い`)
+          }
+        }
+        return
+      }
+      if (i === 3 && expected[3] === TS_ADDRESS_ONLY) {
+        if (!actual.startsWith(TS_ADDRESS_ONLY)) mismatch(`${TS_ADDRESS_ONLY}（使い道）`)
+        return
+      }
+      if (actual !== expected[i]) mismatch(expected[i])
+    })
+  }
+  for (const route of facts.routes) {
+    if (seen.has(route.path)) continue
+    out.push(`境界対応表: ${BOUNDARY_DOC} に ${route.path} の行が無い（ルート表 gkill_server_api_address.go と同じ位置へ1行足すこと）→「${expectedWebRouteRowText(route, facts)}」`)
+  }
+  const expectedOrder = facts.routes.map((r) => r.path).filter((p) => seen.has(p))
+  const firstDiff = docOrder.findIndex((p, i) => p !== expectedOrder[i])
+  if (firstDiff >= 0) {
+    out.push(`境界対応表: web-routes の並びがルート表と違う（最初のずれ: 資料 ${docOrder[firstDiff]}／ルート表 ${expectedOrder[firstDiff]}）`)
+  }
+  return out
+}
+
+// 資料のキー集合とコードの集合の双方向照合（資料側の重複も落とす）
+export function compareKeySets(label, docKeys, codeKeys, codeWhere) {
+  const out = []
+  const docSet = new Set()
+  for (const k of docKeys) {
+    if (docSet.has(k)) out.push(`境界対応表: ${label}: ${k} が重複`)
+    docSet.add(k)
+  }
+  const code = new Set(codeKeys)
+  for (const k of [...docSet].sort()) {
+    if (!code.has(k)) out.push(`境界対応表: ${label}: 資料にだけある ${k}（${codeWhere} に無い。消えたか改名された）`)
+  }
+  for (const k of [...code].sort()) {
+    if (!docSet.has(k)) out.push(`境界対応表: ${label}: 資料に無い ${k}（${codeWhere} にある。表へ1行足すこと）`)
+  }
+  return out
+}
+
+// contracts: 1列目に字面（バッククォート。複数可）がある行は、置き場所（3列目。パスの末尾）の
+// 全ファイルにその字面があること。字面の無い契約（—）は飛ばす。
+export function checkContractRows(rows, resolveSuffix, readFile) {
+  const out = []
+  for (const row of rows) {
+    const literals = cellKeys(row.cells[0])
+    if (literals.length === 0) continue
+    const places = cellKeys(row.cells[2])
+    if (places.length < 2) {
+      out.push(`境界対応表: ${BOUNDARY_DOC}:${row.line} 契約「${literals[0]}」の置き場所が${places.length}件（字面で検査する契約は境界の両側を書く）`)
+    }
+    for (const place of places) {
+      const hits = resolveSuffix(place)
+      if (hits.length !== 1) {
+        out.push(`境界対応表: ${BOUNDARY_DOC}:${row.line} 置き場所「${place}」が${hits.length}件のファイルに当たる（一意になるまでパスの末尾を伸ばすこと）`)
+        continue
+      }
+      const text = readFile(hits[0])
+      for (const literal of literals) {
+        if (!text.includes(literal)) {
+          out.push(`境界対応表: ${BOUNDARY_DOC}:${row.line} 契約の字面「${literal}」が ${hits[0]} に無い（片側だけ直すと境界の向こうが黙って壊れる）`)
+        }
+      }
+    }
+  }
+  return out
+}
+
+// 資料全体の検査（14の表）。facts は gatherBoundaryFacts が組み立てる
+export function checkBoundaryDoc(doc, facts) {
+  const out = []
+  const blocks = {}
+  for (const id of BOUNDARY_TABLE_IDS) {
+    const block = extractBoundaryBlock(doc, id)
+    if (!block) out.push(`境界対応表: ${BOUNDARY_DOC} に <!-- BOUNDARY-TABLE:${id}:BEGIN --> 〜 END の表が無い`)
+    else blocks[id] = block
+  }
+  const col0 = (id) => (blocks[id] ? blocks[id].rows.flatMap((r) => cellKeys(r.cells[0])) : [])
+  const routePaths = new Set(facts.routes.map((r) => r.path))
+
+  // /api を叩く他の呼び出し元のパスは、どれもルート表にあること（資料と無関係にコード同士で見る）
+  for (const caller of OTHER_CALLERS) {
+    for (const p of [...(facts.otherCallers[caller] ?? [])].sort()) {
+      if (!routePaths.has(p)) out.push(`境界対応表: ${caller} が叩く ${p} はルート表に無い（叩く側だけ残っている）`)
+    }
+  }
+
+  if (blocks['web-routes']) out.push(...checkWebRouteRows(blocks['web-routes'].rows, facts))
+  if (blocks['service-worker']) {
+    out.push(...compareKeySets('service-worker', col0('service-worker').filter((k) => k.startsWith('/api/')),
+      facts.otherCallers.SW, 'serviceWorker.ts'))
+  }
+  if (blocks['server-prefix']) {
+    const keys = col0('server-prefix')
+    out.push(...compareKeySets('server-prefix', keys, facts.servePrefixes, 'serve.go の PathPrefix / Path'))
+    const docSet = new Set(keys)
+    for (const p of [...facts.routerPaths].sort()) {
+      if (!docSet.has(p)) out.push(`境界対応表: server-prefix: vue-router の ${p} が表に無い（サーバが配信していない画面パスになっていないか確かめること）`)
+    }
+  }
+  if (blocks['mcp-tools']) {
+    out.push(...compareKeySets('mcp-tools', col0('mcp-tools'), facts.mcpTools.keys(), 'MCP の server_*.go が載せるツール'))
+    for (const row of blocks['mcp-tools'].rows) {
+      const tool = cellKeys(row.cells[0])[0]
+      const servers = facts.mcpTools.get(tool)
+      if (!servers) continue
+      const want = ['read', 'write', 'readwrite'].filter((s) => servers.has(s)).join(' ')
+      if ((row.cells[1] ?? '') !== want) {
+        out.push(`境界対応表: ${BOUNDARY_DOC}:${row.line} ${tool} の載るサーバ → 資料「${row.cells[1] ?? ''}」／期待「${want}」`)
+      }
+    }
+  }
+  if (blocks['mcp-tools'] && blocks['mcp-entities'] && blocks['mcp-http']) {
+    const mentioned = apiPathMentions(blocks['mcp-tools'].text + blocks['mcp-entities'].text + blocks['mcp-http'].text)
+    out.push(...compareKeySets('MCP が叩く /api（mcp-tools・mcp-entities・mcp-http の表と注記）', mentioned,
+      facts.otherCallers.MCP, 'src/server/gkill/mcp/*.go'))
+  }
+  if (blocks['mcp-entities']) {
+    const docTriples = blocks['mcp-entities'].rows.map((r) => r.cells.slice(0, 3).map((c) => cellKeys(c)[0] ?? '').join(' '))
+    out.push(...compareKeySets('mcp-entities', docTriples,
+      facts.mcpEntities.map((e) => `${e.dataType} ${e.get} ${e.update}`), 'mcp/constants.go の EntityTargets'))
+  }
+  if (blocks['mcp-http']) out.push(...compareKeySets('mcp-http', col0('mcp-http'), facts.mcpHttpRoutes, 'mcp/http_transport.go の parseRoute'))
+  if (blocks['wear-datalayer']) {
+    const keys = col0('wear-datalayer')
+    out.push(...compareKeySets('wear-datalayer（時計）', keys, facts.wearWatchPaths, 'watch_app の GkillWearClient.kt'))
+    out.push(...compareKeySets('wear-datalayer（スマホ）', keys, facts.wearCompanionPaths, 'phone_companion の WearRequestHandler.kt'))
+  }
+  if (blocks['wear-api']) {
+    out.push(...compareKeySets('wear-api', col0('wear-api'), facts.otherCallers.Wear, 'phone_companion の GkillApiClient.kt'))
+    for (const row of blocks['wear-api'].rows) {
+      for (const fn of cellKeys(row.cells[1]).map((k) => k.replace(/\(\)$/, ''))) {
+        if (!facts.wearApiFunctions.has(fn)) out.push(`境界対応表: ${BOUNDARY_DOC}:${row.line} ${fn} は GkillApiClient.kt に無い`)
+      }
+    }
+  }
+  if (blocks['cli-api']) out.push(...compareKeySets('cli-api', col0('cli-api'), facts.otherCallers.CLI, 'src/server/gkill/main/**/*.go'))
+  if (blocks['plugin-commands']) {
+    const keys = col0('plugin-commands')
+    out.push(...compareKeySets('plugin-commands（本体）', keys, facts.pluginHostCommands, 'plugin_repository_impl.go'))
+    out.push(...compareKeySets('plugin-commands（SDK）', keys, facts.pluginSdkCommands, 'plugin/sdk/sdk.go の dispatch'))
+  }
+  if (blocks['plugin-flags']) {
+    const keys = col0('plugin-flags').map((k) => k.replace(/^--/, ''))
+    out.push(...compareKeySets('plugin-flags（本体）', keys, facts.pluginHostFlags, 'plugin_repository_impl.go / generate_plugin_cache.go'))
+    out.push(...compareKeySets('plugin-flags（SDK）', keys, facts.pluginSdkFlags, 'plugin/sdk/sdk.go の flag 定義'))
+  }
+  if (blocks['post-message']) {
+    out.push(...compareKeySets('post-message', col0('post-message'), facts.postMessageKeys,
+      'plugin-html-view.vue / plugin-config-dialog.vue / use-plugin-config-dialog.ts'))
+  }
+  if (blocks.contracts) out.push(...checkContractRows(blocks.contracts.rows, facts.resolveSuffix, facts.readFile))
+  if (blocks['req-res-files']) {
+    out.push(...compareKeySets('req-res-files', col0('req-res-files'), facts.reqResUnpaired, 'req_res/*.go と classes/api/req_res/*.ts の名前の対'))
+  }
+  return out
+}
+
+// コードから境界の事実を読む。errors は抽出件数が最小値を下回ったもの
+export function gatherBoundaryFacts() {
+  const errors = []
+  const atLeast = (label, n, min, where) => {
+    if (n < min) errors.push(`境界対応表: ${where} から${label}を${n}件しか読み取れない（最小${min}。書式が変わったなら verify_docs の正規表現も直すこと）`)
+  }
+  const goFiles = (dir) => listFiles(dir, (f) => f.endsWith('.go') && !f.endsWith('_test.go'))
+    .map((f) => ({ name: f, src: readText(`${dir}/${f}`) }))
+  const setOf = (texts, re) => new Set(texts.flatMap((t) => [...normalizeLF(t).matchAll(re)].map((m) => m[1])))
+
+  const routes = parseRouteTable(readText(`${GKILL_SERVER_API_DIR}/gkill_server_api_address.go`))
+  atLeast('ルート', routes.length, 80, 'gkill_server_api_address.go')
+  const serverApiFiles = goFiles(GKILL_SERVER_API_DIR)
+  const handlers = parseGoHandlers(serverApiFiles)
+  atLeast('ハンドラ', handlers.size, 80, GKILL_SERVER_API_DIR)
+  const api = parseGkillApi(readText(GKILL_API_TS))
+  atLeast('/api アドレス', api.addressByPath.size, 80, 'gkill-api.ts')
+
+  const quotedApi = /"(\/api\/[a-z0-9_]+)"/g
+  const otherCallers = {
+    SW: setOf([readText('src/client/serviceWorker.ts')], /['"](\/api\/[a-z0-9_]*[a-z0-9])['"]/g),
+    MCP: setOf(goFiles(MCP_DIR).map((f) => f.src), quotedApi),
+    CLI: setOf(listFilesRec('src/server/gkill/main', (f) => f.endsWith('.go') && !f.endsWith('_test.go'))
+      .map((f) => fs.readFileSync(f, 'utf8')), quotedApi),
+    Wear: setOf(listFilesRec('src/wear_os/phone_companion/src/main', (f) => f.endsWith('.kt'))
+      .map((f) => fs.readFileSync(f, 'utf8')), /\$serverUrl(\/api\/[a-z0-9_]+)/g),
+    配信HTML: setOf(serverApiFiles.map((f) => f.src), /fetch\(\s*['"](\/api\/[a-z0-9_]+)['"]/g),
+  }
+  atLeast('SW の /api パス', otherCallers.SW.size, 10, 'serviceWorker.ts')
+  atLeast('MCP の /api パス', otherCallers.MCP.size, 20, MCP_DIR)
+  atLeast('CLI の /api パス', otherCallers.CLI.size, 2, 'src/server/gkill/main')
+  atLeast('companion の /api パス', otherCallers.Wear.size, 3, 'phone_companion')
+  atLeast('Go が配る HTML の /api パス', otherCallers.配信HTML.size, 1, GKILL_SERVER_API_DIR)
+
+  const addressGo = normalizeLF(readText(`${GKILL_SERVER_API_DIR}/gkill_server_api_address.go`))
+  const swConst = (addressGo.match(/const serviceWorkerJSPath\s*=\s*"([^"]+)"/) || [])[1]
+  const serveGo = normalizeLF(readText(`${GKILL_SERVER_API_DIR}/serve.go`))
+  const servePrefixes = new Set([...serveGo.matchAll(/router\.(?:PathPrefix|Path)\((?:"([^"]+)"|(serviceWorkerJSPath))\)/g)]
+    .map((m) => m[1] ?? swConst).filter(Boolean))
+  atLeast('配信の接頭辞', servePrefixes.size, 10, 'serve.go')
+  const routerPaths = setOf([readText('src/client/router/index.ts')], /\bpath:\s*'(\/[^']*)'/g)
+  atLeast('vue-router の path', routerPaths.size, 5, 'router/index.ts')
+
+  const mcpTools = new Map()
+  for (const kind of ['read', 'write', 'readwrite']) {
+    for (const tool of mcpServerToolNames(`${MCP_DIR}/server_${kind}.go`)) {
+      if (!mcpTools.has(tool)) mcpTools.set(tool, new Set())
+      mcpTools.get(tool).add(kind)
+    }
+  }
+  atLeast('MCP ツール', mcpTools.size, 30, `${MCP_DIR}/server_*.go`)
+  const mcpEntities = [...normalizeLF(readText(`${MCP_DIR}/constants.go`))
+    .matchAll(/\{DataType:\s*"(\w+)",\s*GetEndpoint:\s*"([^"]+)",[^}]*?UpdateEndpoint:\s*"([^"]+)"/g)]
+    .map((m) => ({ dataType: m[1], get: m[2], update: m[3] }))
+  atLeast('EntityTargets', mcpEntities.length, 10, 'mcp/constants.go')
+  const httpTransport = readText(`${MCP_DIR}/http_transport.go`)
+  const mcpHttpRoutes = new Set([
+    ...setOf([httpTransport], /pathname == "([^"]+)"/g),
+    ...setOf([httpTransport], /HasPrefix\(pathname, "([^"]+)"\)/g),
+  ])
+  atLeast('MCP HTTP の経路', mcpHttpRoutes.size, 5, 'mcp/http_transport.go')
+
+  // 同名ファイルのテスト側（src/test）とビルド生成物は読まない
+  const kt = (basename) => listFilesRec('src/wear_os', (f, p) => f === basename &&
+    !p.split(path.sep).some((seg) => seg === 'test' || seg === 'build'))
+    .map((p) => fs.readFileSync(p, 'utf8'))
+  const wearPathRe = /^\s*(?:private |internal )?const val PATH_\w+\s*=\s*"([^"]+)"/gm
+  const wearWatchPaths = setOf(kt('GkillWearClient.kt'), wearPathRe)
+  const wearCompanionPaths = setOf(kt('WearRequestHandler.kt'), wearPathRe)
+  atLeast('時計側の Data Layer パス', wearWatchPaths.size, 5, 'GkillWearClient.kt')
+  atLeast('スマホ側の Data Layer パス', wearCompanionPaths.size, 5, 'WearRequestHandler.kt')
+  const wearApiFunctions = setOf(kt('GkillApiClient.kt'), /\bfun (\w+)\(/g)
+
+  const pluginImpl = readText('src/server/gkill/dao/reps/plugin_repository_impl.go')
+  const sdk = normalizeLF(readText('src/server/gkill/plugin/sdk/sdk.go'))
+  const dispatchStart = sdk.indexOf('func dispatch(')
+  const dispatchEnd = dispatchStart < 0 ? -1 : sdk.indexOf('\nfunc ', dispatchStart + 1)
+  const dispatchBody = dispatchStart < 0 ? '' : sdk.slice(dispatchStart, dispatchEnd < 0 ? sdk.length : dispatchEnd)
+  const pluginHostCommands = setOf([pluginImpl], /Command:\s*"(\w+)"/g)
+  const pluginSdkCommands = setOf([dispatchBody], /case "(\w+)":/g)
+  atLeast('本体が送るプラグインコマンド', pluginHostCommands.size, 5, 'plugin_repository_impl.go')
+  atLeast('SDK が受けるプラグインコマンド', pluginSdkCommands.size, 5, 'sdk.go の dispatch')
+  const pluginHostFlags = setOf([pluginImpl, readText('src/server/gkill/main/common/generate_plugin_cache.go')], /"--(gkill-[a-z-]+)"/g)
+  const pluginSdkFlags = setOf([sdk], /flag\.\w+\("(gkill-[a-z-]+)"/g)
+  atLeast('本体が渡すプラグインのフラグ', pluginHostFlags.size, 3, 'plugin_repository_impl.go / generate_plugin_cache.go')
+  atLeast('SDK が受けるフラグ', pluginSdkFlags.size, 3, 'sdk.go')
+
+  const postMessageKeys = setOf([
+    'src/client/pages/views/plugin-html-view.vue',
+    'src/client/pages/dialogs/plugin-config-dialog.vue',
+    'src/client/classes/use-plugin-config-dialog.ts',
+  ].map(readText), /\b(gkill_(?:plugin|iframe)_[a-z_]+|gkill_theme)\b/g)
+  atLeast('postMessage のキー', postMessageKeys.size, 5, 'plugin-html-view.vue ほか')
+
+  const goReqRes = listFiles('src/server/gkill/api/req_res', (f) => f.endsWith('.go') && !f.endsWith('_test.go'))
+  const tsReqRes = listFiles('src/client/classes/api/req_res', (f) => f.endsWith('.ts'))
+  const tsSet = new Set(tsReqRes)
+  const goSet = new Set(goReqRes)
+  const reqResUnpaired = new Set([
+    ...goReqRes.filter((f) => !tsSet.has(f.replace(/\.go$/, '.ts').replace(/_/g, '-'))),
+    ...tsReqRes.filter((f) => !goSet.has(f.replace(/\.ts$/, '.go').replace(/-/g, '_'))),
+  ])
+
+  const trackedFiles = execSync('git ls-files -z --cached --others --exclude-standard', { cwd: ROOT })
+    .toString('utf8').split('\0').filter(Boolean)
+  const resolveSuffix = (suffix) => trackedFiles.filter((rel) => rel === suffix || rel.endsWith('/' + suffix))
+  const readFile = (rel) => readText(rel)
+
+  return {
+    errors,
+    facts: {
+      routes, handlers, api, otherCallers, servePrefixes, routerPaths, mcpTools, mcpEntities, mcpHttpRoutes,
+      wearWatchPaths, wearCompanionPaths, wearApiFunctions, pluginHostCommands, pluginSdkCommands,
+      pluginHostFlags, pluginSdkFlags, postMessageKeys, reqResUnpaired, resolveSuffix, readFile,
+    },
+  }
+}
+
+function checkCrossBoundaryDoc() {
+  if (!exists(BOUNDARY_DOC)) { err(`境界対応表: ${BOUNDARY_DOC} が無い`); return }
+  const { errors: factErrors, facts } = gatherBoundaryFacts()
+  for (const e of factErrors) err(e)
+  for (const e of checkBoundaryDoc(readText(BOUNDARY_DOC), facts)) err(e)
+}
+
+// ─────────────────────────────────────────────────────────────
+// 4-g. reverse 資料の索引網羅
+//   documents/reverse/ に資料を足したのに README.md（読む順・要約表・依存図）と
+//   folder-structure.md のツリーへ載せ忘れると、索引から辿れない資料になる（ADR は checkADR が見ている）。
+// ─────────────────────────────────────────────────────────────
+export function checkReverseDocIndex(docNames, readme, folderStructure) {
+  const out = []
+  for (const f of docNames) {
+    if (f === 'README.md') continue
+    const links = readme.split(`](${f})`).length - 1
+    if (links < 2) out.push(`reverse 資料の索引: documents/reverse/README.md の読む順と要約表に ${f} へのリンクが${links}件（2件要る）`)
+    if (!readme.includes(`${f}<br/>`)) out.push(`reverse 資料の索引: documents/reverse/README.md の依存図（Mermaid）に ${f} のノードが無い`)
+    if (!folderStructure.includes(`── ${f}`)) out.push(`reverse 資料の索引: documents/reverse/folder-structure.md のツリーに ${f} が無い`)
+  }
+  return out
+}
+
+function checkReverseDocIndexFiles() {
+  const names = listFiles('documents/reverse', (f) => f.endsWith('.md'))
+  for (const e of checkReverseDocIndex(names, normalizeLF(readText('documents/reverse/README.md')),
+    normalizeLF(readText('documents/reverse/folder-structure.md')))) err(e)
+}
+
+// ─────────────────────────────────────────────────────────────
 // メイン
 // ─────────────────────────────────────────────────────────────
 function main() {
@@ -1879,6 +2424,8 @@ function main() {
   checkLinks()
   checkPaths()
   checkDocFilenames()
+  checkReverseDocIndexFiles()
+  checkCrossBoundaryDoc()
   checkADR()
   checkADRBands()
   checkSkills()

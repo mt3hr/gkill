@@ -138,7 +138,9 @@ The codebase (variable names, comments, commit messages) is primarily in Japanes
 
 - 領域別の禁止文・不変条件の正本: `.claude/skills/gkill-*/SKILL.md`（上のルーティング表から引く）
 - なぜそうなっているか（却下案・実測値・事件譚）: `documents/adr/`（索引: [documents/adr/README.md](documents/adr/README.md)）
-- 現在どうなっているか（リバース資料）: `documents/reverse/`（索引: [documents/reverse/README.md](documents/reverse/README.md)）
+- 現在どうなっているか（リバース資料）: `documents/reverse/`（索引: [documents/reverse/README.md](documents/reverse/README.md)）。
+  言語・プロセスをまたぐつながり（TS → `/api` → Go、MCP・Android・Wear OS・CLI・プラグイン）は呼び出しグラフ系の道具では辿れないので、
+  [cross-boundary-map.md](documents/reverse/cross-boundary-map.md) の対応表を引く
 - テスト仕様の目次: `src/ABOUT_TEST.md`。利用者向けマニュアル原稿: `resources/manual_src/`（7言語セット、`npm run build_manuals` で生成）
 - 資料の件数・リンク・ファイル名実在・スキル索引は `npm run verify_docs` が機械検査する。
   資料層の保守手順は [gkill-docs](.claude/skills/gkill-docs/SKILL.md) スキルにある
