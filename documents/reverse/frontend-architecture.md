@@ -274,7 +274,7 @@ Props/Emit のみで状態を持ち回すため、Kyou の CRUD イベントは 
 `src/client/classes/api/gkill-api.ts` に定義。約3,600行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
-- Web クライアントが叩く88エンドポイントに対応するメソッドを持つ（`gkill-api.ts` が保持する `/api/` アドレスは88件。MCP / CLI 専用の3件を除いた全ルートで、Go のルート表との突き合わせは `gkill-api.test.ts`。`submit_kftl_text` は 2026-09-15 から Web も叩く）
+- Web クライアントが叩く93エンドポイントのアドレスを持ち、そのうち91本にメソッドがある（`gkill-api.ts` が保持する `/api/` アドレスは93件。MCP / CLI 専用の4件を除いた全ルートで、Go のルート表との突き合わせは `gkill-api.test.ts`。メソッドの無い2本はブックマークレット用で、Go が配る HTML とブックマークレットの URL が使う。`submit_kftl_text` は 2026-09-15 から Web も叩く）。どのメソッドがどのパス・Go ハンドラにつながるかは [cross-boundary-map.md](cross-boundary-map.md)
 - `GkillAPIForSharedKyou` サブクラス（共有データ用）
 - 各メソッドは `fetch()` → JSONパース → エラーチェック → データ返却
 

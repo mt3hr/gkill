@@ -57,7 +57,7 @@ describe('GkillAPI', () => {
     const NON_WEB_CLIENT_ADDRESSES = [
       '/api/get_kyous_mcp', // MCPサーバ専用
       '/api/get_rep_infos_mcp', // MCPサーバ専用
-      '/api/update_cache', // 保守用。現状どのクライアントからも呼んでいない
+      '/api/update_cache', // CLI の update_cache サブコマンド専用（main/common/common.go）
       '/api/write_skill_file', // MCPサーバ専用（画面は upload_skill の丸ごと置き換えだけ。ADR-0634）
     ]
 

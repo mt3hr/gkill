@@ -2,7 +2,7 @@
 
 ## この資料集の位置づけ
 
-gkill には「現在どうなっているか（What）」の資料が `documents/reverse/` に24本ある。
+gkill には「現在どうなっているか（What）」の資料が `documents/reverse/` に25本ある。
 ここに置くのは「**なぜそうなっているか（Why）**」——とくに **採らなかった案とその理由** である。
 
 > Reverse docs = What ／ ADR = Why

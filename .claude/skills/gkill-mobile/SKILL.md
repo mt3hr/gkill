@@ -85,6 +85,8 @@ JVM テストが実行機の OS 言語で変わる）で、`LoginRequest` を含
 `initialCenterItemIndex = 0` / `AutoCenteringParams(itemIndex = 0)` で本文を最初に中央へ置く（既定の item 1 中央だと
 本文の1行目が上端で欠ける）。却下案は [ADR-1103](../../../documents/adr/1103-wear-app-chips-match-tile.md)。
 
+**Data Layer のパス・companion が叩く `/api`・起動行の字面を足したり変えたりしたら境界対応表も直す。** 時計とスマホは同じパスの定数を別々に持ち、companion と Android はサーバと文字列だけでつながる。[cross-boundary-map.md](../../../documents/reverse/cross-boundary-map.md) の §5・§6・§11 を `npm run verify_docs` が時計・スマホ・サーバのコードと突き合わせる。
+
 ## 関連スキル
 
 - [gkill-go-backend](../gkill-go-backend/SKILL.md) — サーバ側の冪等ストアと HTTP セキュリティ、SQLite の 'localtime' と Go の time.Local の関係
