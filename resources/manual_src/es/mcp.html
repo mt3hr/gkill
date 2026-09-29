@@ -19,9 +19,9 @@
   <h2>Tipos de integración</h2>
   <table>
     <tr><th>Tipo</th><th>Qué puede hacer</th><th>Comando</th><th>Herramientas</th><th>Puerto (HTTP)</th></tr>
-    <tr><td>Solo lectura</td><td>Solo ver y buscar registros. No puede agregar ni modificar</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
-    <tr><td>Solo escritura</td><td>Agregar, actualizar y eliminar registros. También puede obtener nombres de repositorios, etiquetas y tableros</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
-    <tr><td>Lectura y escritura</td><td>Ver, agregar, actualizar y eliminar registros</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
+    <tr><td>Solo lectura</td><td>Solo ver y buscar registros. No puede agregar ni modificar. Puede leer las habilidades</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
+    <tr><td>Solo escritura</td><td>Agregar, actualizar y eliminar registros. También puede obtener nombres de repositorios, etiquetas y tableros. Puede leer las habilidades y también crearlas y reescribirlas</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
+    <tr><td>Lectura y escritura</td><td>Ver, agregar, actualizar y eliminar registros. Puede leer las habilidades y también crearlas y reescribirlas</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
   </table>
   <p>El servidor MCP forma parte de gkill_server y se inicia con <code>gkill_server mcp --kind &lt;tipo&gt;</code> (gkill_server debe estar en ejecución). La conexión y las credenciales se indican con variables de entorno o con el archivo de configuración <code>configs/gkill_mcp.json</code>, que se genera en el primer inicio. Los registros se escriben en <code>logs/gkill_mcp_&lt;tipo&gt;.log</code> (los archivos por nivel comparten el prefijo).</p>
   <p>Todos los tipos incluyen una herramienta para listar los complementos en uso. El contenido de los registros importados por complementos puede recibirse junto con los resultados de b&uacute;squeda.</p>
@@ -42,8 +42,16 @@ description: Pasos para hacer el resumen semanal
     <tr><td>Eliminar</td><td>«Eliminar» en «Habilidades» de la pantalla de configuración borra la habilidad completa.</td></tr>
     <tr><td>Creada o corregida por la IA</td><td>Con una integración que puede escribir, la IA puede crear habilidades y reescribir sus archivos. La IA no puede eliminar habilidades.</td></tr>
   </table>
+  <p>El contenido del zip se importa con las reglas siguientes.</p>
+  <ul>
+    <li>El nombre de la habilidad es el <code>name</code> escrito en el <code>SKILL.md</code> del zip (no el nombre del archivo zip ni el de la carpeta).</li>
+    <li>Si el contenido está envuelto en una carpeta (por ejemplo, un zip obtenido con «Descargar» que vuelve a subir tal cual), se quita ese nivel.</li>
+    <li>Los archivos y carpetas cuyo nombre empieza por punto, <code>__MACOSX</code>, <code>Thumbs.db</code> y <code>desktop.ini</code> no se importan (la confirmación previa a la subida los muestra en «Archivos ignorados»).</li>
+    <li>Los nombres usan minúsculas, dígitos y guiones (hasta 64 caracteres) y deben empezar y terminar con una letra o un dígito.</li>
+    <li>Los nombres de archivo (y de carpeta) usan solo letras, dígitos y <code>._-</code>, deben empezar con una letra o un dígito y no pueden terminar en punto. No se pueden usar los nombres reservados de Windows <code>CON</code>, <code>PRN</code>, <code>AUX</code>, <code>NUL</code>, <code>COM1</code>–<code>COM9</code> y <code>LPT1</code>–<code>LPT9</code>, sin importar mayúsculas ni extensión (<code>con.txt</code> tampoco). Dos nombres que solo difieren en mayúsculas y minúsculas, o un archivo y una carpeta con el mismo nombre (por ejemplo, un archivo <code>a</code> y <code>a/b</code> dentro de una carpeta <code>a</code>), no pueden existir a la vez. Si algún archivo no cumple estas reglas, la subida se detiene con «El zip no se puede leer como habilidad».</li>
+  </ul>
   <div class="tip">
-    <strong>Consejo:</strong> Los cambios en las habilidades se aplican de inmediato y no se guarda historial. Antes de dejar que la IA cambie una habilidad, guarde una copia con «Descargar» si la necesita. Los nombres usan minúsculas, dígitos y guiones (hasta 64 caracteres), y los nombres de archivo solo letras, dígitos y <code>._-</code>. gkill nunca ejecuta scripts.
+    <strong>Consejo:</strong> Los cambios en las habilidades se aplican de inmediato y no se guarda historial. Antes de dejar que la IA cambie una habilidad, guarde una copia con «Descargar» si la necesita. gkill nunca ejecuta scripts.
   </div>
 
   <h2>Entrega de archivos</h2>
@@ -54,7 +62,7 @@ description: Pasos para hacer el resumen semanal
     <tr><td>Conexión remota (IA a través de internet)</td><td>Se emite una URL exclusiva con caducidad y la IA obtiene el archivo desde esa URL. Para las imágenes se proporcionan tanto la miniatura como el tamaño original. No es necesario exponer gkill.</td></tr>
   </table>
   <div class="tip">
-    <strong>Consejo:</strong> El límite de tamaño de la transferencia incrustada (8MB por defecto) se ajusta con la variable de entorno <code>GKILL_MCP_MAX_FILE_BYTES</code>, y la caducidad de la URL (1 hora por defecto) con <code>GKILL_MCP_FILE_LINK_TTL_MS</code>.
+    <strong>Consejo:</strong> El límite de tamaño de la transferencia incrustada (8MB por defecto) se ajusta con la variable de entorno <code>GKILL_MCP_MAX_FILE_BYTES</code>, y la caducidad de la URL (1 hora por defecto) con <code>GKILL_MCP_FILE_LINK_TTL_MS</code>. El límite de tamaño de la transferencia incrustada también se aplica cuando la IA lee los archivos de una habilidad: un archivo distinto de <code>SKILL.md</code> que supera el límite aparece en la lista, pero su contenido no se entrega (use «Descargar» para obtener el zip si lo necesita). Cuando la IA lee una habilidad sin indicar ningún archivo (la forma habitual), <code>SKILL.md</code> se entrega completo, sea cual sea su tamaño (si la IA indica <code>SKILL.md</code> como el archivo que quiere leer, se aplica el mismo límite que a los demás archivos).
   </div>
 
   <h2>Configuración (Claude Desktop)</h2>

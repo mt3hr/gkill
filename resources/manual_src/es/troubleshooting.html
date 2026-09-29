@@ -94,6 +94,18 @@
     <li>Si el <code>gkill_error.log</code> del servidor tiene una línea que empieza por «sqlite localtime differs», esta es la causa.</li>
   </ul>
 
+  <h2>Cuando la aplicación del teléfono (Android) no se inicia / se queda en la pantalla de «Permitir»</h2>
+  <p>La aplicación del teléfono (Android) guarda sus registros en el almacenamiento compartido, en <code>/sdcard/gkill</code>. Por eso el servidor no se inicia hasta que conceda el permiso «Acceso a todos los archivos» (en Android 10 o anterior, el acceso al almacenamiento). Si vuelve sin concederlo, la pantalla sigue mostrando el aviso de que gkill se inicia al permitir el acceso a los archivos, junto con el botón «許可する» (Permitir). Sus registros no se han perdido.</p>
+  <ul>
+    <li>En Android 11 o posterior, al pulsar «許可する» (Permitir) se abre la pantalla de permisos de Android. Active «Acceso a todos los archivos» para gkill y vuelva a la aplicación; se iniciará automáticamente.</li>
+    <li>En Android 10 o anterior, al pulsar «許可する» (Permitir) aparece una confirmación que solicita el permiso. Elija «Permitir» y la aplicación se iniciará automáticamente.</li>
+    <li>En Android 10 o anterior, si lo rechazó marcando «No volver a preguntar» en esa confirmación, al pulsar «許可する» (Permitir) no aparece nada. Permita el acceso al almacenamiento (archivos) en Ajustes de Android → Aplicaciones → gkill → Permisos y vuelva a la aplicación.</li>
+    <li>La pantalla de permisos (en Android 10 o anterior, la confirmación) aparece sola una única vez, al iniciar la aplicación. Si vuelve a la pantalla de inicio y abre de nuevo la aplicación, no vuelve a aparecer sola. Si la cerró, vuelva a abrirla con el botón «許可する» (Permitir) de la pantalla.</li>
+    <li>Si aun con el permiso concedido no se inicia, cierre la aplicación y vuelva a abrirla.</li>
+    <li>Si aparece el mensaje «以前の版のデータを /sdcard/gkill へ複製できなかったため、起動を止めました» (se detuvo el inicio porque no se pudieron copiar los datos de la versión anterior a /sdcard/gkill), sus registros anteriores siguen dentro de la aplicación. Este mensaje solo aparece al actualizar desde una versión que guardaba los datos dentro de la aplicación (de la 1.1.7 a la 1.1.9). Compruebe el espacio libre del dispositivo y que en <code>/sdcard</code> no haya un archivo (no una carpeta) llamado <code>gkill</code>, y vuelva a iniciar la aplicación.</li>
+    <li>Si actualiza desde alguna de las versiones 1.1.7 a 1.1.9 y <code>/sdcard/gkill</code> ya tiene contenido (por ejemplo, datos antiguos de la versión 1.1.6 o anterior), la aplicación se inicia con esos datos en lugar de los registros que guardaba dentro de la aplicación. Esos registros no se han borrado: cierre la aplicación, cambie el nombre de <code>/sdcard/gkill</code> (para apartarlo) y vuelva a iniciarla; los registros de dentro de la aplicación se copiarán a <code>/sdcard/gkill</code> y se usarán.</li>
+  </ul>
+
   <h2>Documentos relacionados</h2>
   <ul>
     <li><a href="getting-started.html">Primeros pasos (guía de configuración inicial)</a></li>

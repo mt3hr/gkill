@@ -19,9 +19,9 @@
   <h2>集成类型</h2>
   <table>
     <tr><th>类型</th><th>可以做什么</th><th>启动命令</th><th>工具数</th><th>HTTP 时的端口</th></tr>
-    <tr><td>只读</td><td>仅查看和搜索记录，不能添加或修改</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
-    <tr><td>只写</td><td>添加、更新和删除记录。同时也可以获取存储库名称、标签名和板名</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
-    <tr><td>读写</td><td>查看、添加、更新和删除记录</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
+    <tr><td>只读</td><td>仅查看和搜索记录，不能添加或修改。可以读取技能</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
+    <tr><td>只写</td><td>添加、更新和删除记录。同时也可以获取存储库名称、标签名和板名。除了读取技能，还可以创建和改写技能</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
+    <tr><td>读写</td><td>查看、添加、更新和删除记录。除了读取技能，还可以创建和改写技能</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
   </table>
   <p>MCP 服务器是 gkill_server 的一部分，通过 <code>gkill_server mcp --kind &lt;类型&gt;</code> 启动（gkill_server 本身必须处于运行状态）。连接目标和凭据可通过环境变量指定，也可通过首次启动时自动生成的配置文件 <code>configs/gkill_mcp.json</code> 指定。日志输出到 <code>logs/gkill_mcp_&lt;类型&gt;.log</code>（按级别拆分的文件使用相同前缀）。</p>
   <p>无论哪种类型，都包含 1 个用于获取插件列表的工具。插件导入的记录正文可以直接包含在搜索结果中接收。</p>
@@ -42,8 +42,16 @@ description: 制作每周总结的步骤
     <tr><td>删除</td><td>在设置画面“技能”中按“删除”，整体删除该技能。</td></tr>
     <tr><td>由 AI 创建・修改</td><td>在可以写入的集成中，AI 可以创建技能或改写其中的文件。AI 不能删除技能。</td></tr>
   </table>
+  <p>zip 的内容按以下规则取入。</p>
+  <ul>
+    <li>技能的名称由 zip 中 <code>SKILL.md</code> 里写的 <code>name</code> 决定（不是 zip 的文件名或文件夹名）。</li>
+    <li>如果内容被一层文件夹包着（例如把“下载”得到的 zip 原样重新上传），会去掉这一层再取入。</li>
+    <li>以点开头的文件和文件夹、<code>__MACOSX</code>、<code>Thumbs.db</code>、<code>desktop.ini</code> 不会取入（上传前的确认中会列在“将忽略的文件”）。</li>
+    <li>名称只能使用小写英文字母、数字和连字符（最多 64 个字符），且开头和结尾必须是字母或数字。</li>
+    <li>文件名（文件夹名同样）只能使用英文字母、数字和 <code>._-</code>，必须以字母或数字开头，且不能以点结尾。不能使用 Windows 的保留名 <code>CON</code>、<code>PRN</code>、<code>AUX</code>、<code>NUL</code>、<code>COM1</code>～<code>COM9</code>、<code>LPT1</code>～<code>LPT9</code>（不区分大小写，带扩展名也一样，例如 <code>con.txt</code>）。仅大小写不同的名称，以及同名的文件和文件夹（例如文件 <code>a</code> 与文件夹 <code>a</code> 中的 <code>a/b</code>）不能同时存在。只要有文件不符合这些规则，上传就会以“无法将 zip 作为技能读取”停止。</li>
+  </ul>
   <div class="tip">
-    <strong>提示:</strong> 对技能的更改会立即生效，且不保留更改历史。让 AI 修改之前，如有需要请先用“下载”保存一份。名称只能使用小写英文字母、数字和连字符（最多 64 个字符），文件名只能使用英文字母、数字和 <code>._-</code>。gkill 不会执行脚本。
+    <strong>提示:</strong> 对技能的更改会立即生效，且不保留更改历史。让 AI 修改之前，如有需要请先用“下载”保存一份。gkill 不会执行脚本。
   </div>
 
   <h2>文件的传递</h2>
@@ -54,7 +62,7 @@ description: 制作每周总结的步骤
     <tr><td>远程连接（通过互联网的AI）</td><td>将签发带有效期的专用URL，AI从该URL获取文件。图片会同时提供缩略图和原尺寸版本。无需公开gkill本体。</td></tr>
   </table>
   <div class="tip">
-    <strong>提示：</strong> 嵌入传输的大小上限（默认8MB）可通过环境变量 <code>GKILL_MCP_MAX_FILE_BYTES</code> 调整，URL的有效期（默认1小时）可通过 <code>GKILL_MCP_FILE_LINK_TTL_MS</code> 调整。
+    <strong>提示：</strong> 嵌入传输的大小上限（默认8MB）可通过环境变量 <code>GKILL_MCP_MAX_FILE_BYTES</code> 调整，URL的有效期（默认1小时）可通过 <code>GKILL_MCP_FILE_LINK_TTL_MS</code> 调整。嵌入传输的大小上限在 AI 读取技能文件时同样生效：<code>SKILL.md</code> 以外超过上限的文件会出现在列表中，但内容不会传给 AI（如有需要，请用“下载”取得 zip）。AI 不指定文件读取技能时（通常的读法），<code>SKILL.md</code> 无论大小都会完整传给 AI（若将 <code>SKILL.md</code> 作为文件指定读取，则适用与其他文件相同的上限）。
   </div>
 
   <h2>设置方法（Claude Desktop）</h2>

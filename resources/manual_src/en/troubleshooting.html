@@ -94,6 +94,18 @@
     <li>If the server's <code>gkill_error.log</code> has a line starting with "sqlite localtime differs", this is the cause.</li>
   </ul>
 
+  <h2>When the smartphone (Android) app does not start / stays on the "Allow" screen</h2>
+  <p>The smartphone (Android) app stores your records in shared storage at <code>/sdcard/gkill</code>. For that reason the server does not start until you grant "All files access" (on Android 10 and earlier, storage access). If you come back without granting it, the screen keeps showing the message that gkill starts once file access is allowed, together with the "許可する" (Allow) button. Your records are not gone.</p>
+  <ul>
+    <li>On Android 11 and later, pressing "許可する" (Allow) opens the Android permission screen. Turn on "All files access" for gkill and return to the app; it then starts automatically.</li>
+    <li>On Android 10 and earlier, pressing "許可する" (Allow) shows a confirmation asking for the permission. Choose "Allow" and the app starts automatically.</li>
+    <li>On Android 10 and earlier, if you refused with "Don't ask again" selected in that confirmation, pressing "許可する" (Allow) shows nothing. Allow access to storage (files) under Android Settings → Apps → gkill → Permissions, then return to the app.</li>
+    <li>The permission screen (on Android 10 and earlier, the confirmation) appears by itself only once, when the app starts. Going back to the home screen and reopening the app does not show it again by itself. If you closed it, open it again from the "許可する" (Allow) button on the screen.</li>
+    <li>If the app still does not start after granting access, quit the app and start it again.</li>
+    <li>If the message "以前の版のデータを /sdcard/gkill へ複製できなかったため、起動を止めました" (startup was stopped because the data from the previous version could not be copied to /sdcard/gkill) appears, your earlier records are still inside the app. This message appears only after updating from a version that kept its data inside the app (1.1.7 to 1.1.9). Check the device's free space and that there is no file (as opposed to a folder) named <code>gkill</code> in <code>/sdcard</code>, then start the app again.</li>
+    <li>When you update from one of versions 1.1.7 to 1.1.9 and <code>/sdcard/gkill</code> already has contents (for example, old data left by version 1.1.6 or earlier), the app starts with that data instead of the records it kept inside the app. The records inside the app are not deleted: quit the app, rename <code>/sdcard/gkill</code> (to set it aside) and start the app again; the records inside the app are then copied to <code>/sdcard/gkill</code> and used.</li>
+  </ul>
+
   <h2>Related documents</h2>
   <ul>
     <li><a href="getting-started.html">Getting Started (initial setup guide)</a></li>
