@@ -101,7 +101,7 @@ attestation は commit SHA ではなく**作業ツリーの tree hash**に束縛
 - 導入直後のゲート実行: HEAD の CI は success だったが、直近 Nightly（`ec4892e`）以後に
   `src/plugins/gkill_plugin_archived_git_commit_log/go.mod` が追加されていたため Nightly の NG で止まった。
   「依存の宣言が変わっているのに Nightly を通していない」を機械が初めて指摘した実例
-- 同日、導入前の HEAD `c3ebe02f` は Linux の Go テスト 1 件で CI が赤だった。旧規約のままなら人が気付かない限り
+- 同日、導入前の HEAD `18e430a7` は Linux の Go テスト 1 件で CI が赤だった。旧規約のままなら人が気付かない限り
   リリースできていた
 
 ## Related tests
