@@ -802,6 +802,42 @@ func TestPluginRepository_QueueTimeoutDoesNotReapProcess(t *testing.T) {
 	}
 }
 
+// TestAcquireCallSlot_DeadlineWhileQueuedIsBusy は、スロット待ちが呼び出し元の期限で
+// 終わったときも ErrPluginBusy になり、キャンセルで終わったときは context.Canceled のままであることを確認する。
+//
+// callCommand は待ちの上限を呼び出し元の残り時間にそろえるので、上限タイマーと ctx の期限は
+// ほぼ同時に切れる。両方が届いた select はどちらを選ぶか決まらず、負荷が高いときだけ
+// 素の期限切れが返っていた（TestPluginRepository_QueueTimeoutDoesNotReapProcess が
+// フルスイートの中でだけ落ちた）。ここでは期限を先に切らせて、期限の側の結果を毎回確かめる。
+func TestAcquireCallSlot_DeadlineWhileQueuedIsBusy(t *testing.T) {
+	p := &pluginRepositoryImpl{}
+	p.manifest.Name = "fake_plugin"
+	holdRelease, err := p.acquireCallSlot(context.Background(), time.Second)
+	if err != nil {
+		t.Fatalf("1本目のスロット取得に失敗した: %v", err)
+	}
+	defer holdRelease()
+
+	t.Run("期限切れはビジー", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Nanosecond)
+		defer cancel()
+		<-ctx.Done()
+		_, err := p.acquireCallSlot(ctx, time.Hour)
+		if !errors.Is(err, ErrPluginBusy) {
+			t.Fatalf("err = %v, want ErrPluginBusy", err)
+		}
+	})
+
+	t.Run("キャンセルはそのまま", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		_, err := p.acquireCallSlot(ctx, time.Hour)
+		if !errors.Is(err, context.Canceled) || errors.Is(err, ErrPluginBusy) {
+			t.Fatalf("err = %v, want context.Canceled（ビジーにしない）", err)
+		}
+	})
+}
+
 // TestPluginRepository_FindKyousFailureIsWarningNotError は、プラグイン検索が
 // 失敗しても検索全体をエラーにせず、警告コレクタへプラグイン名だけを残すことを確認する。
 //
