@@ -274,6 +274,15 @@ func (p *pluginRepositoryImpl) acquireCallSlot(ctx context.Context, wait time.Du
 	case slot <- struct{}{}:
 		return func() { <-slot }, nil
 	case <-ctx.Done():
+		// 呼び出し元に期限があると wait はその残り時間になるので（callCommand）、
+		// 待ちの上限タイマーと ctx の期限はほぼ同時に切れる。両方が届いた select は
+		// どちらを選ぶか決まらず、負荷が高いと期限切れのほうが選ばれて、
+		// 「スロットが空かなかった」が素の期限切れに化けていた。
+		// 期限で待ちが終わったのはスロットが空かなかったからなので、上限タイマーと同じく
+		// ErrPluginBusy にそろえる。キャンセル（結果が要らなくなった）はそのまま返す。
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return nil, fmt.Errorf("plugin %s: %w", p.manifest.Name, ErrPluginBusy)
+		}
 		return nil, ctx.Err()
 	case <-timer.C:
 		return nil, fmt.Errorf("plugin %s: %w", p.manifest.Name, ErrPluginBusy)
