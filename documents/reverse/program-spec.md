@@ -33,7 +33,7 @@ sequenceDiagram
 
     Main->>Common: InitGkillOptions()
     Common->>Options: 各ディレクトリパス設定
-    Note over Options: LibDir, CacheDir, LogDir,<br/>ConfigDir, TLSファイルパス,<br/>DataDirectoryDefault
+    Note over Options: LibDir, CacheDir, LogDir,<br/>ConfigDir, TLSファイルパス,<br/>DataDirectoryDefault, SkillsDir
 
     Main->>Log: gkill_log.Init()
     Note over Log: slogハンドラ設定<br/>レベル別ファイル出力
@@ -41,7 +41,7 @@ sequenceDiagram
     Main->>Common: InitGkillServerAPI()
     Common->>API: api.NewGkillServerAPI()
     API->>DAO: dao.NewGkillDAOManager()
-    Note over DAO: ConfigDAOs初期化<br/>（8つの設定DAO）
+    Note over DAO: ConfigDAOs初期化<br/>（8つの設定DAO）<br/>SkillStore生成<br/>（SkillsDir 配下）
 
     Main->>Common: LaunchGkillServerAPI()
     Common->>API: Serve(ctx)
@@ -62,8 +62,13 @@ func InitGkillOptions() {
     gkill_options.TLSCertFileDefault = "$GKILL_HOME/tls/cert.cer"
     gkill_options.TLSKeyFileDefault  = "$GKILL_HOME/tls/key.pem"
     gkill_options.DataDirectoryDefault = "$GKILL_HOME/datas"
+    gkill_options.SkillsDir   = "$GKILL_HOME/skills"   // 利用者ごとのスキル置き場（ADR-0634）
 }
 ```
+
+`SkillsDir` は `GkillDAOManager.SkillStore`（`dao/gkill_dao_manager.go`。`skills.NewStore` に展開済みパスを渡す）が
+読み書きする唯一のディレクトリで、配下は `<user_id>/<name>/` に分かれます。ファイルを触るのは gkill_server だけで、
+MCP も設定画面も HTTP API 経由で使います（[ADR-0634](../adr/0634-per-user-skills-for-mcp.md)）。
 
 ### サーバー再起動メカニズム
 
@@ -90,17 +95,25 @@ func LaunchGkillServerAPI(ctx context.Context) error {
 
 ```go
 type GkillDAOManager struct {
+    stateMutex               sync.Mutex                           // 下の4マップ自体の読み書きを保護（構築中は保持しない）
     initializingMutex        map[string]map[string]*sync.RWMutex  // ユーザー×デバイス別初期化ロック
     gkillRepositories        map[string]map[string]*reps.GkillRepositories  // ユーザー×デバイス別リポジトリ
     gkillNotificators        map[string]map[string]*GkillNotificator        // 通知マネージャ
     fileRepWatchCacheUpdater rep_cache_updater.FileRepCacheUpdater           // ファイル監視キャッシュ更新
+    pluginManagers           map[string]*PluginManager                      // ユーザーID別 PluginManager（GetRepositories 時に遅延初期化）
 
     ConfigDAOs    *ConfigDAOs        // 設定データベース群
+    SkillStore    *skills.Store      // 利用者ごとのスキル（$GKILL_HOME/skills/<user_id>/<name>/）のストア
     router        *mux.Router        // HTTPルーター
     IDFIgnore     []string           // IDF無視パターン
-    skipUpdateCache *bool            // キャッシュ更新スキップフラグ
+    skipUpdateCache *atomic.Int64    // キャッシュ更新を止めている数（参照カウンタ）
 }
 ```
+
+`SkillStore` は `NewGkillDAOManager` が `ConfigDAOs` と同時に生成します（`skills.NewStore(filepath.Clean(os.ExpandEnv(gkill_options.SkillsDir)))`、
+`dao/skills/` パッケージ）。設定 DAO 群とは違って SQLite ではなくディレクトリ直下のファイルを扱い、
+スキル系ハンドラ6本（`get_skill_list` / `get_skill` / `download_skill` / `upload_skill` / `write_skill_file` / `delete_skill`）が
+`g.GkillDAOManager.SkillStore` を通して読み書きします。
 
 ### ConfigDAOs（8つの設定DAO、6つのSQLite3ファイル）
 
@@ -231,9 +244,10 @@ graph LR
 > （ルート表では `Auth: authNone`）。セッションの検証はハンドラ内で行います。
 >
 > また `wrapNoAuth` は「認証を一切しない」という意味ではありません。ルータ上は未認証ですが、
-> `upload_files` / `upload_gpslog_files` / `browse_zip_contents` /
-> `get_idf_kyou_by_relative_path` / `get_kyous_mcp` / `get_rep_infos_mcp` の6本は
-> **ハンドラ内部の `getAccountFromSessionID` でセッションを検証**します。
+> `upload_files` / `upload_gpslog_files` / `upload_skill` / `browse_zip_contents` /
+> `get_idf_kyou_by_relative_path` / `get_kyous_mcp` / `get_rep_infos_mcp` の7本は
+> **ハンドラ内部の `getAccountFromSessionID` でセッションを検証**します
+> （MCP 向けの2本は `resolveSelfAuthContext` 経由。中で同じ関数を呼びます）。
 > `/files/` と `/zip_cache/` はボディではなく **cookie**（`gkill_session_id`）で認証します。
 
 #### AuthContext構造体
@@ -268,7 +282,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 
 ### usecaseレイヤー
 
-`gkill/usecase/`パッケージ（17ファイル）は、ハンドラから抽出されたHTTP非依存のビジネスロジックを提供します。
+`gkill/usecase/`パッケージ（18ファイル）は、ハンドラから抽出されたHTTP非依存のビジネスロジックを提供します。
 
 - DAO/リポジトリ型を直接操作する関数群
 - HTTPリクエスト/レスポンスに依存しない
@@ -317,8 +331,8 @@ type GkillError struct {
 }
 ```
 
-- HTTP 200: 正常応答（`errors` は `null`）
-- HTTP 400/401/403/404/409/429/500: 失敗。`error_code` から決まる
+- HTTP 200: 正常応答（`errors` は `[]`。2026-09-15 までは `null` だったので、クライアントの `?? []` ガードは残す）
+- HTTP 400/401/403/404/409/413/429/500: 失敗。`error_code` から決まる
   （正本は `src/server/gkill/api/message/http_status.go`、経緯は ADR-0706）
 - ボディの形はステータスによらず同じで、`error_code` は本文にしか入っていない
 

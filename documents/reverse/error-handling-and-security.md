@@ -91,8 +91,20 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 | `ERR000414` | LocalOnlyAccessDeniedError | ローカル限定サーバ（`IsLocalOnlyAccess`）へローカル以外から来たリクエストの拒否（`filterLocalOnly`、403） |
 | `ERR000415` | InternalServerPanicError | `recoverMiddleware` が panic を回収したときの内部エラー（500）。リクエストを読み直せないため、これだけは i18n を通さず固定文言で返す |
 | `ERR000416` | SubmitKFTLTextInvalidInputError | KFTLテキスト自体の書き間違い（気分値が範囲外、終了する打刻が無い等。行ごとに1件）。サーバ側失敗の ERR000351 が 500 なのに対し、こちらは利用者の誤りなので 400 |
-| `ERR000417` | RequestBodyTooLargeError | 認証系ミドルウェアの先読み（`readAuthBody`）でリクエストボディが上限 32MB を超過（413） |
+| `ERR000417` | RequestBodyTooLargeError | 認証系ミドルウェアの先読み（`readAuthBody`）でリクエストボディが上限 32MB を超過（413）。アップロード3本（`/api/upload_files` / `/api/upload_gpslog_files` / `/api/upload_skill`）は同じ仕組みで 1GB 枠（`maxUploadBodyBytes`）を掛けており、超過時のコードも同じ |
 | `ERR000418` | ReadRequestBodyError | 認証系ミドルウェアの先読みでのリクエストボディ読み取り失敗（上限超過以外、500） |
+| `ERR000419` | CommitTxRolledBackError | `/api/commit_tx` の確定（temp rep → 実 rep の1つの SQLite トランザクション）が失敗して ROLLBACK した（500）。**実 rep には何も書かれておらず**、temp rep の行は残るので再 commit / discard できる（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)） |
+| `ERR000420`〜`ERR000421` | InvalidParseKFTLTextRequestDataError / ParseKFTLTextError | `/api/parse_kftl_text` のリクエスト JSON が読めない（400）/ 解析がサーバ側の理由で失敗した（500）。利用者の書き間違いはエラーではなく応答の `invalid_lines` に載る |
+| `ERR000422` | WriteRepMissingError | その種別の書き込み先 rep が未設定のまま追加・更新した。500 だが `error_kind` は `config`、`reason` は `write_rep_missing`（設定→保存先で直せる）。2026-09-15 まで tx を使わない `add_*` は nil ポインタ参照で panic し「内部エラーが発生しました」だけが出ていた |
+| `ERR000423` | SubmitKFTLTextIdempotencyKeyConflictError | `/api/submit_kftl_text` の再送キー（`idempotency_key`）を別の本文で使い回した（409）。同じキー・同じ本文なら元の `created[]` を `replayed:true` で返し、本文の指紋が違えば何も書かずにこのコードで返す |
+| `ERR000424`〜`ERR000429` | InvalidGetSkillListRequestDataError 〜 InvalidDeleteSkillRequestDataError | スキル API 6本（`get_skill_list` / `get_skill` / `download_skill` / `upload_skill` / `write_skill_file` / `delete_skill`）のリクエスト JSON が読めない（400）。`upload_skill` は zip の base64 が復号できない場合もこれ |
+| `ERR000430`〜`ERR000431` | SkillNotFoundError / SkillFileNotFoundError | 指定の名前のスキルが無い / スキルの中に指定のファイルが無い（404）。保存層は `fs.ErrNotExist` を包まず番兵（`skills.ErrSkillNotFound` / `skills.ErrFileNotFound`）で返す —— 包むと `reason` が `storage_unavailable` になり、404 に誤った理由が付く |
+| `ERR000432`〜`ERR000435` | InvalidSkillNameError / InvalidSkillFilePathError / InvalidSkillManifestError / InvalidSkillZipError | スキル名が規則（英小文字・数字・ハイフン、1〜64文字）に合わない / スキル内のパスが規則に合わない・既存のファイルと大文字小文字だけ違う / `SKILL.md` の frontmatter（`name`・`description`）が読めない・不正 / zip がスキルとして取り込めない（`SKILL.md` が無い、`..`・絶対パス・シンボリックリンクがある等）。いずれも 400 で、文言に保存層の補足（どのパスが悪いか）を括弧で添える |
+| `ERR000436`〜`ERR000437` | SkillFileAlreadyExistsError / SkillRevisionConflictError | `revision` を渡さず（新規作成のつもりで）既にあるファイルへ書いた / 渡した `revision` が今の中身と食い違う（読んだ後に他で書き換えられた）。どちらも 409（楽観ロック）。後者は文言に今の revision と「読み直してから書く」旨を添える |
+| `ERR000438` | SkillManifestDeleteError | `SKILL.md` だけを消そうとした（400）。消すならスキルごと消す |
+| `ERR000439`〜`ERR000444` | GetSkillListError / GetSkillError / DownloadSkillError / UploadSkillError / WriteSkillFileError / DeleteSkillError | スキル API がサーバ側の理由（ディスクの失敗、利用者IDがパス要素に使えない等）で失敗した（500）。補足は添えない。`UploadSkillError` でも既存のスキルは元のまま残る（一時ディレクトリへ展開してから入れ替えるため） |
+
+スキル系（`ERR000430`〜`ERR000438`）への写像は `gkill_server_api/skill_errors.go` の `skillStoreGkillError` 1つで、`dao/skills/errors.go` の番兵を `errors.Is` で見分ける（`DetailError` が番兵に「どこが悪いか」を添え、4xx のときだけ文言へ写す）。番兵に当たらない失敗は操作ごとの 500（`ERR000439`〜`ERR000444`）に落ちる。
 
 ### 1.3 HTTPステータスコードの使い分け
 
@@ -102,9 +114,9 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 | 400 | リクエストJSONのパース失敗・入力値のバリデーション失敗 |
 | 401 | セッションが無い・不正・期限切れ、ログイン失敗 |
 | 403 | 管理者権限が無い・アカウントが無効・ローカル限定アクセス違反 |
-| 404 | 指定されたIDやrep名が存在しない |
-| 409 | 同じIDが既にある（重複追加）。メモ帳の再送キーを別の本文で使い回した（`ERR000423`） |
-| 413 | 認証前のリクエストボディが 32MB を超えた（`ERR000417`。他と同じく JSON の `errors` 本文つきで返る） |
+| 404 | 指定されたIDやrep名が存在しない。スキル／スキル内のファイルが無い（`ERR000430` / `ERR000431`） |
+| 409 | 同じIDが既にある（重複追加）。メモ帳の再送キーを別の本文で使い回した（`ERR000423`）。スキル内のファイルを新規作成のつもりで書いたが既にある（`ERR000436`）、渡した `revision` が今の中身と食い違う（`ERR000437`） |
+| 413 | 認証前のリクエストボディが 32MB を超えた（`ERR000417`。他と同じく JSON の `errors` 本文つきで返る）。アップロード3本は 1GB 枠 |
 | 429 | ログインのレート制限（IP毎15分10回） |
 | 500 | サーバ内部の失敗（取得・追加・更新・削除の失敗、panic）。書き込み rep 未設定（`ERR000422`）も 500 だが `error_kind` は `config` |
 
@@ -317,13 +329,16 @@ LAN の他端末から使うのはサーバ設定画面で両方を開く明示�
 
 | エンドポイント群 | 認証 | ローカル制限 |
 |---|---|---|
-| `/api/login` | 不要 | なし |
-| `/api/get_shared_kyous` | 不要（共有リンク） | なし |
-| `/api/urlog_bookmarklet` | 独自セッション | なし |
-| `/api/logout` | ルーティング上は不要だがハンドラ内でセッションを解決し、解決できなければ何も削除しない | なし |
-| `/api/set_new_password` | 不要（リセットトークンで認可）。IP単位のレート制限あり | なし |
+| `/api/login` | 不要 | ServerConfig依存 |
+| `/api/get_shared_kyous` | 不要（共有リンク） | ServerConfig依存 |
+| `/api/urlog_bookmarklet` | 独自セッション | ServerConfig依存 |
+| `/api/logout` | ルーティング上は不要だがハンドラ内でセッションを解決し、解決できなければ何も削除しない | ServerConfig依存 |
+| `/api/upload_files`, `/api/upload_gpslog_files`, `/api/upload_skill` | ルーティング上は `wrapNoAuth`（`Body: bodyUpload`。本文の上限を認証付き経路の 32MB ではなくアップロード用の 1GB 枠に載せるため）だが、ハンドラ内で `getAccountFromSessionID` によりセッションを解決し、解決できなければ何も書かない（2.13） | ServerConfig依存 |
+| `/api/set_new_password` | 不要（リセットトークンで認可）。IP単位のレート制限あり | ServerConfig依存 |
 | その他全エンドポイント | `session_id` 必須 | ServerConfig依存 |
-| `/api/open_directory`, `/api/open_file` | `session_id` 必須 | filterLocalOnly適用 |
+| `/api/open_directory`, `/api/open_file` | `session_id` 必須。加えてセッションがループバックから発行されたもの（`IsLocalAppUser`）でなければ拒否 | ServerConfig依存 |
+
+「ServerConfig依存」は `IsLocalOnlyAccess` が有効なときだけ `filterLocalOnly` が効くという意味で、`wrapNoAuth` / `wrapNoAuthCapped` / `wrapAuth` / `wrapAuthRepos` の全ラッパと `/files/` 等の静的配信が同じ検査を通る（`auth_middleware.go` / `serve.go`）。認証の有無とは独立。
 
 #### 派生キャッシュの配信
 
@@ -363,6 +378,8 @@ rep名だけで分けると「同名rep × 同一相対パス × 同一ファイ
 | 自動生成 | `/api/generate_tls_file` で自己署名証明書生成可能 |
 | CLI無効化 | `--disable_tls` フラグ |
 | 非TLSで外部bind | 起動時に標準出力へ警告を出す（起動は妨げない）。`close.go` の `printInsecureBindWarning` |
+
+Android 版は `$GKILL_HOME` が共有ストレージの `/sdcard/gkill` なので、証明書と秘密鍵も他のアプリや USB 接続から読める場所に置かれる（2.14）。
 
 ### 2.6 Web Push通知 (VAPID)
 
@@ -439,13 +456,44 @@ JSON API 側がボディで `session_id` を運ぶ設計になっているため
 
 外向き取得そのものの抑止は経路ごとに異なる: `/api/add_urlog` は `skip_fetch_metadata` / `skip_fetch_favicon` で項目別に抑止できる（既定は取得する。MCP の `gkill_add_urlog` の `fetch_metadata:false` / `fetch_favicon:false` がここへ写る）。`/api/update_urlog` はリクエストで `re_get_urlog_content:true` を明示したときだけ再取得し（MCP は送らない）、`/api/urlog_bookmarklet` は常に取得する（URLしか送られてこないため）。KFTL 経由の URL 記録は元から一切取得しない。
 
-### 2.11 パストラバーサル対策の集約（SecureJoin）
+### 2.11 パストラバーサル対策の集約（SecureJoin）と、スキル保存層の独自防御
 
-ユーザ入力由来のパス結合は `reps.SecureJoin` に統一されている。結合結果がベースディレクトリ配下に収まることを検証し、`../` 等による脱出を拒否する。ZIP展開（`handle_browse_zip_contents.go`）、サムネイル/動画キャッシュ配信（`idf_thumb_file_server.go`・`idf_video_file_server.go`）等で使用される。また `plugin_manager.go` は userID をパス要素として使用する前に検証する。
+ユーザ入力由来のパス結合は `reps.SecureJoin` に統一されている。結合結果がベースディレクトリ配下に収まることを検証し、`../` 等による脱出を拒否する。ZIP展開（`handle_browse_zip_contents.go`）、サムネイル/動画キャッシュ配信（`idf_thumb_file_server.go`・`idf_video_file_server.go`）、`--cache_reps_local` のローカルコピー（`local_rep_cache_path.go`）等で使用される。また `plugin_manager.go` は userID をパス要素として使用する前に検証する。
+
+**例外はスキルの保存層 `dao/skills`**（`$GKILL_HOME/skills/<user_id>/<name>/`。[ADR-0634](../adr/0634-per-user-skills-for-mcp.md)）で、`SecureJoin` を使わず独自の防御を持つ。パスが利用者だけでなく AI（MCP）と zip からも来るので、「脱出しない」だけでなく「どの OS でも同じファイルを指す」まで規則で縛る。
+
+| 層 | 検査 | 実装 |
+|---|---|---|
+| スキル名 | 英小文字・数字・ハイフン、1〜64文字、先頭と末尾は英数字。先頭が英数字なので、予約名（`_global`、作業用の `_tmp-*` / `_old-*`）やドットで始まるディレクトリ（利用者が置く `.git` 等）と構造的に衝突しない | `path.go` の `ValidateSkillName` |
+| スキル内のパス | 区切りは `/` だけ（`\` を含めば拒否）。各要素は英数字で始まり英数字と `._-` だけ（ASCII 限定。先頭が英数字なので `..`・ドットファイル・空要素は構造的に作れない）。要素の末尾の `.` は拒否。Windows の予約名（`CON` / `PRN` / `AUX` / `NUL` / `COM1`〜`COM9` / `LPT1`〜`LPT9`。拡張子の有無を問わない）は拒否。ルートの `SKILL.md` は大文字小文字まで綴りを固定する（小文字の綴りを許すと Windows で同じファイルになる） | `path.go` の `NormalizeFilePath` |
+| 実パスへの結合 | 先に `filepath.IsLocal`（CodeQL の path-injection / zipslip が認識するバリア）、次に `filepath.Join` の結果を `filepath.Rel` で root 配下か確かめる。`..` を `ReplaceAll` で除く形（`local_rep_cache_path.go` の流儀）は使わない —— `a..b.txt` は正しいファイル名で、黙って別名に書かれる | `path.go` の `joinWithin` |
+| 利用者ID | 空・`.`・`..`、`/` `\` `:` NUL を含むもの、`filepath.Clean` で変わるものを拒否。利用者IDはアカウント作成時にしか形式を検査していないので、パス要素にする前に毎回ここを通す。Windows では大文字小文字だけ違うIDが同じディレクトリを指すので、親を列挙して完全一致で照合し、大小だけ違う既存ディレクトリがあれば拒否する（`os.Stat` は Windows で大小違いでも通ってしまう）。検証の直後に `..` を `ReplaceAll` で除く行が残っているが、これは CodeQL が値サニタイザとして認識する形を残すためで、実行時は常に no-op | `path.go` の `isSingleSafePathElement`、`store.go` の `resolveUserDir` / `exactChildDir` |
+| アップロードされた zip | `..`・絶対パス（`/` 始まり）・ドライブ文字（2文字目が `:`）・シンボリックリンクの項目が1つでもあれば zip ごと拒否（`ERR000435`）。ドットで始まる要素・`__MACOSX`・`Thumbs.db`・`desktop.ini` は取り込まず「無視」として応答に載せる。同じスキルの中で大文字小文字だけ違う重複（`findCaseConflict`）と、ファイル／フォルダの衝突（`findFileDirConflict`。`a` がファイルなのに `a/b` もある）は拒否。フォルダ1段で包まれていれば剥がす（ルートに `SKILL.md` があれば剥がさない）。展開後のサイズに上限は設けない | `zip.go` の `parseUploadedZip` |
+| 書き込み | ファイルは同じディレクトリの一時ファイル（`.tmp-*`。ドット始まりなので走査に出ない）へ書いてから rename。zip での置き換えは利用者ごとの RWMutex の下で `_tmp-*` へ展開してから既存を `_old-*` へ退避して入れ替え、失敗したら戻す（既存のスキルは元のまま残る）。前回の中断で残った `_tmp-*` / `_old-*` は次の置き換えの冒頭で掃除する。走査（一覧・zip 作成）はドット始まりとシンボリックリンクを飛ばすので、書き込み途中の一時ファイルや利用者が置いた `.git` は外へ出ない | `store.go` の `writeFileAtomic` / `Replace` / `cleanupLeftovers` / `walkSkill` |
 
 ### 2.12 Wear OS 通信の証明書検証
 
 Wear OS companion アプリの gkill サーバー接続は、デフォルトで標準の証明書検証を行う。自己署名証明書の信頼は opt-in 設定でのみ有効化できる。
+
+### 2.13 スキル（SKILL.md）の表示とアップロード経路
+
+スキルは利用者だけでなく AI（MCP の `gkill_add_skill` / `gkill_update_skill`）も書くので、中身は信用できない入力として扱う（脅威モデルは [ADR-0634](../adr/0634-per-user-skills-for-mcp.md)）。
+
+- **画面の表示は素のテキスト。** 設定画面のスキル閲覧（`browse-skill-files-dialog.vue` / `use-browse-skill-files-dialog.ts`）はテキストを `<pre>` に `{{ text }}` で出し、Markdown や HTML として描画しない（`v-html` を使わない）。描画すると AI が書いた HTML の中のスクリプトが、ログイン中のセッションで gkill のオリジンで動く（保存型 XSS）。スクリプトはサーバでも実行せず、本文を返すだけ。
+- **`/api/upload_skill` はルーティング上 `wrapNoAuth` + `bodyUpload`。** 保存量に上限を設けない方針なので、認証付き経路の 32MB 枠（`maxAuthBodyBytes`）ではなく `/api/upload_files` と同じ 1GB 枠（`maxUploadBodyBytes`、読み取り期限 30 分）に載せている。認証ミドルウェアを通らないぶん、ハンドラ（`handle_upload_skill.go`）が `getAccountFromSessionID` で `session_id` からアカウントを解決し、解決できなければそのエラー（`ERR000013` 等）で返して何も書かない。利用者IDはリクエストではなくセッションから決まるので、他人のスキルは指名できない。無認証で POST を受ける経路に `bodyAuth` / `bodyUpload` の上限が付いていることは `validateAPIRoutes` が起動時に検査する。
+- **AI にスキルの削除を公開しない。** スキルは履歴を持たないので、AI が消したファイルは戻せない —— AI の誤操作だけでなく、読み込んだ記録や Web ページに紛れ込んだ指示（プロンプトインジェクション）に従った削除を、利用者が後から戻す手段が無い。`/api/delete_skill` は `path` を省くとスキル丸ごと（画面だけが使う）、指定するとそのファイルだけを消す（`SKILL.md` 単独は `ERR000438`）。MCP 側の `gkill_delete_skill`（`skill_delete_tool.go`。`path` と `revision` を必須にして丸ごと削除を送れない形）は実装だけで、ツール一覧にも `dispatchWriteToolCall` にも載せていない（`readwrite_server_test.go` が「公開ツールに無い」ことを固定）。公開するなら履歴か削除前の利用者確認とセットにし、ADR-0634 を見直す。
+
+### 2.14 Android 版のデータ置き場（共有ストレージ）
+
+Android APK 同梱の gkill_server はデータ置き場（`--gkill_home_dir`）を共有ストレージの `/sdcard/gkill` に置く（`MainActivity.kt` の `GKILL_HOME`。2026-08-03 にアプリ専用領域 `filesDir/gkill` へ移したが、2026-09-24 に戻した）。ここには全記録のデータベースに加えて、パスワードハッシュとリセットトークンを持つアカウント DB、ログ、TLS の証明書と秘密鍵（`/sdcard/gkill/tls/`）が入る。**共有ストレージなので、全ファイルアクセス権を持つ他のアプリ・USB/MTP 接続・ファイラーアプリのいずれからも中身が読める。** マニフェスト（`AndroidManifest.xml`）の `allowBackup="false"` はこの置き場には効かない。
+
+承知のうえで戻しており、そのときに受け入れた条件は次のとおり（却下案と経緯は [ADR-1105](../adr/1105-android-home-back-to-sdcard-and-gate-on-storage-access.md)）。
+
+- Go サーバは SAF の `content://` を扱えず、実パスでしか読み書きできない。写真などを取り込むファイルリポジトリが共有ストレージ上のフォルダを参照するのにも同じ権限（Android 11+ は `MANAGE_EXTERNAL_STORAGE`＝全ファイルアクセス、10 以下は `WRITE_EXTERNAL_STORAGE`）が要る。Android 10 は Scoped Storage のため、マニフェストの `requestLegacyExternalStorage="true"` が無いと許可されても `/sdcard/gkill` へ実パスで書けない（11+ では無視される）
+- **権限が許可されるまでサーバを起動しない**（起動ゲート）。権限なしで起動すると gkill_server がデータ置き場を作れずに落ちる。権限の要求画面を自動で出すのは Activity ごとに1回だけで、以後は起動画面の「許可する」ボタンから出す（毎回出すと、許可せずに戻るたびに設定画面へ送り返されて抜けられない）
+- 専用領域にデータを置いていた版からの更新では、`/sdcard/gkill` が無いか空のときだけ専用領域の中身を複製する（中身があれば `/sdcard/gkill` を正とし、専用領域はどの場合も消さない）。一時ディレクトリへ複製してから改名し、**複製に失敗したらサーバを起動しない** —— 起動すると空の置き場が作られ、次回から「中身あり」と見なされて専用領域のデータへ二度と戻れない
+
+利用者向けの説明は [user-guide.md](user-guide.md) の Android 節、Kotlin 側の不変条件は `.claude/skills/gkill-mobile/SKILL.md` にある。
 
 ---
 

@@ -129,6 +129,17 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-edit-mi-board-struct-view.ts` / `use-mi-board-struct-context-menu.ts` / `use-edit-mi-board-struct-element-dialog.ts` / `use-edit-mi-board-struct-element-view.ts` | 板構造編集（Mi の板の並び順の変更と削除、板ごとの説明の編集） |
 | `use-manage-account-view.ts` | アカウント管理 |
 
+### スキル系 Composable（ADR-0634）
+
+設定画面の「スキル」（`$GKILL_HOME/skills/<user_id>/<name>/` の `SKILL.md` と付属ファイル。MCP が読む）を扱う4本。画面でできるのは一覧・中身の表示・zip のダウンロード・zip のアップロード（丸ごと置き換え）・スキル丸ごとの削除だけで、ファイル単位の編集は持たない。設定の「適用」とは独立したエンティティなので、`ServerConfigDialog` と同じく自分で API を呼ぶ。
+
+| ファイル | 説明 |
+|---------|------|
+| `use-manage-skill-list-dialog.ts` | 一覧・ダウンロード・アップロード・削除の API 呼び出しを1箇所で持つ親。アップロードは2段階 ―― zip を `file-base64.ts` で data URI にして `dry_run` で送り、返った計画を確認ダイアログに出してから、「適用」で同じ zip を本番で送る。削除は `path` を空にしてスキル丸ごと |
+| `use-browse-skill-files-dialog.ts` | スキルの中身の表示（編集はしない。直すなら zip を下ろして上げ直す）。テキストは素の文字として `<pre>` に出し、Markdown / HTML として描かない（AI が書いた HTML の中のスクリプトがログイン中のセッションで動く穴になる）。ファイルを続けて押したときの応答の追い越しは連番で捨てる |
+| `use-confirm-upload-skill-dialog.ts` | アップロードの2段目の確認。1段目の `dry_run` が返した計画（新規か置き換えか、追加・削除・変更・無視されるファイル）を見せ、「適用」を親へ返す。API 呼び出しも zip の中身も親が持つ |
+| `use-confirm-delete-skill-dialog.ts` | スキルを丸ごと消す確認。削除の API は親が呼ぶ。スキルは履歴を持たないので消したら戻せない |
+
 ### コンテキストメニュー系 Composable
 
 | ファイル | 対象 |
@@ -202,11 +213,13 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `kyou-view-relay.ts` | Kyou 系イベントの中継ハンドラ束（`build_kyou_view_relay` / `build_kyou_dialog_relay` / ページ最上位の `RykvDialogHost` 用 `build_kyou_dialog_host_handlers`）。`v-on="crudRelayHandlers"` にそのまま渡す |
 | `kyou-reload.ts` | Kyou を最新化する唯一の手順（`refresh_kyou` / `refresh_kyou_in_list` / `build_mi_reload_query`）。同じ更新から派生した引き直しは `new_reload_batch()` の値を共有して合流させる。引き直し中は `is_kyou_reloading(id)` が真 |
 | `cascade-delete-kyou.ts` | Kyou 削除時の連鎖削除。付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou も論理削除する |
+| `drag-drop-indicator.ts` | ドラッグ&ドロップの並べ替えで「どこに入るか」を見せる挿入線。**dragover の線と drop の挿入先を同じ `decide_drop_position()` で決める**（横断規約。drop だけに別の判定を書くと「線は下なのに上に入る」）。線の状態は「いま出している要素1つ」をモジュールで持ってクラスを直接付け外しする（数百ノードの構造ツリーに reactive 状態を配らない）。構造ツリー（`use-foldable-struct.ts`）・集計ビュー（`use-dnote-item-view.ts` / `use-dnote-item-list-view.ts` / `use-dnote-item-table-view.ts`）・関連情報の編集（`use-ryuu-item-view.ts`）が共用。守るテスト: `drag-drop-indicator.test.ts` / `drag-drop-source-scan.test.ts` |
+| `file-base64.ts` | ファイルと base64 の相互変換（`read_file_as_data_url` / `base64_to_blob`）。サーバとのファイルのやりとりは JSON の中の base64 で行う（`gkill_fetch` が JSON 以外の応答を受け付けず、セッションも本文の JSON で渡すため）。ファイルアップロード（`use-upload-file-view.ts`）とスキルの zip の往復で共用 |
 | `cookie-store.d.ts` | Cookie Store API 型定義 |
 
 `KyouViewEmits` の21イベントのうち、ビュー層は18件を中継する。`requested_close_dialog` はダイアログが自分で `hide()` に繋ぐため中継しない。`focused_kyou` / `clicked_kyou` はビュー層が発火源で、入れ子の KyouView で二重発火するためダイアログ層（`build_kyou_dialog_relay`、18+2＝20件）だけが中継する。イベント名はマップ型 + `satisfies` + `Exclude` で網羅を機械検査しており、型に足して配列に足し忘れるとビルドが落ちる。
 
-連鎖削除は Kyou 自身を最後に消す。先に消すとサーバの `FindKyous` が参照元を結果から外してしまい、ReKyou / MiReKyou を辿れなくなるため。TXID / commit_tx は使っていないので途中で失敗すると部分的に確定した状態が残る。その場合は `ERR900094 cascade_delete_failed`（i18n: `FAILED_CASCADE_DELETE_KYOU_MESSAGE`）を返す。参照の連鎖を辿る深さは32段で打ち切り（`ERR900093 cascade_delete_depth_exceeded`）。
+連鎖削除は Kyou 自身を最後に消す。先に消すとサーバの `FindKyous` が参照元を結果から外してしまい、ReKyou / MiReKyou を辿れなくなるため。更新は全件を1つの `tx_id` で一時リポジトリに積み、`commit_tx` で確定する（`gkill-tx.ts` の `run_in_tx`。ADR-0410）。`commit_tx` は1つの SQLite トランザクションなので全部消えるか何も消えないかのどちらかで、途中で失敗しても部分的に確定した状態は残らない。失敗時は `ERR900094 cascade_delete_failed`（i18n: `FAILED_DELETE_KYOU_NOTHING_DELETED_MESSAGE`）を返す。参照の連鎖を辿る深さは32段で打ち切り（`ERR900093 cascade_delete_depth_exceeded`）。
 
 ## `dto/` サブディレクトリ（2ファイル）
 

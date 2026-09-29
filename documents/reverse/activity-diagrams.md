@@ -58,7 +58,7 @@ flowchart TD
 
     LoopEnd --> Expand[繰り返し「？？」の展開<br>prepareRequests の最後]
     Expand --> Entry{入口}
-    Entry -->|parse_kftl_text| Analyze([invalid_lines / tags / mi_board_names を返す<br>何も書かない])
+    Entry -->|parse_kftl_text| Analyze([invalid_lines / tags / tag_groups /<br>mi_board_names / record_count を返す<br>何も書かない])
     Entry -->|submit_kftl_text| ExecStart{次の未実行<br>リクエストがある?}
     ExecStart -->|Yes| ExecReq[リクエストの DoRequest 実行<br>Repository へ保存]
     ExecReq --> ExecCheck{エラー発生?}

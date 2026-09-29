@@ -489,6 +489,9 @@ Claude Code では `/mcp` コマンドでMCPサーバーの接続状態を確認
 | プラグインの内容取得 | 「gkillのClaude Codeの記録を検索して、内容を読んで要約して」 |
 | ヘルプの参照 | 「gkillの検索の使い方をヘルプで調べてから、今週のタスクを一覧して」（AI が `gkill_get_mcp_help` で topic の本文を読む。gkill へは往復しない） |
 | 接続先の確認 | 「gkillのステータスを見せて」（`gkill_status` が接続先アカウント・版・ツール一覧の世代を返す） |
+| スキルの一覧 | 「gkillに保存したスキルの一覧を見せて」（`gkill_get_skill_list` が name / description / file_count / invalid_reason を返す。`gkill_status` の `skills[]` にも name / description だけ載る） |
+| スキルに従った作業 | 「gkillの『週次まとめ』のスキルを読んで作業して」（AI が `gkill_get_skill` で SKILL.md を読み、そこが指す付属ファイルを `path` で読んでから作業する。手順は `gkill_get_mcp_help` の `skills` topic） |
+| スキルの作成 | 「gkillに『週次まとめ』というスキルを作って」（`gkill_add_skill`。Write / ReadWrite サーバーのみ。反映はすぐで履歴は残らないので、AI は内容を利用者と合意してから書く） |
 
 ---
 
@@ -573,7 +576,7 @@ Claude Code では `/mcp` コマンドでMCPサーバーの接続状態を確認
 
 | 変数名 | 必須 | デフォルト | 説明 |
 |---|---|---|---|
-| `GKILL_MCP_MAX_FILE_BYTES` | いいえ | `8388608`（8MB） | `get_idf_file` がbase64で返すファイルサイズの上限（`constants.go`） |
+| `GKILL_MCP_MAX_FILE_BYTES` | いいえ | `8388608`（8MB） | `get_idf_file` がbase64で返すファイルサイズの上限（`constants.go`）。`gkill_get_skill` に `path` を渡してスキルのファイルを読むときも同じ上限が効き、超えたファイルは中身を省いて返す（`content_omitted:true`。`skill_handlers.go`） |
 | `GKILL_MCP_FILE_LINK_TTL_MS` | いいえ | `3600000`（1時間） | HTTPモードで発行するファイルURLトークンの有効期限（`file_link_store.go`） |
 
 ### トランスポート（HTTP モード用）
@@ -605,9 +608,9 @@ gkillは3種類のMCPサーバーを提供しています。用途に応じて�
 | **Write専用** | `gkill_server mcp --kind write` | 33 | `mcp:gkill-write` / `mcp:gkill-write-http` | 書き込み中心。Read便利ツール9つ付属 |
 | **Read/Write統合** | `gkill_server mcp --kind readwrite` | 37 | `mcp:gkill-readwrite` / `mcp:gkill-readwrite-http` | 全機能。迷ったらこれ |
 
-使い方の詳細（検索条件の意味・ページング・タスクの射影・ファイルの読み方・設定ツリーの説明欄など）は
-どのサーバーにもある `gkill_get_mcp_help` が topic ごとに返します。ツール一覧の説明文は要約なので、
-AI が迷ったらまずこれを読ませてください。プラグイン一覧を返す `gkill_get_plugin_list` はどのサーバーにも入っています（読み取り専用）。プラグインが入れてくれた記録（Claude Code / Claude.ai / ChatGPT の会話ログ等）の本文は、`gkill_get_kyous` に `include_plugin_content:true` を渡すと検索結果にそのまま埋め込まれます（Write専用サーバーには `gkill_get_kyous` が無いので本文は読めません）。詳細は [`src/server/gkill/mcp/README.md`](../../src/server/gkill/mcp/README.md) を参照。
+使い方の詳細（検索条件の意味・ページング・タスクの射影・ファイルの読み方・設定ツリーの説明欄・スキルの書式と書き方など）は
+どのサーバーにもある `gkill_get_mcp_help` が topic ごとに返します（スキルは `skills` topic）。ツール一覧の説明文は要約なので、
+AI が迷ったらまずこれを読ませてください。利用者が AI 向けに書いたスキル（手順書。`$GKILL_HOME/skills/<user_id>/<name>/` の SKILL.md と付属ファイル）は、一覧と読み取り（`gkill_get_skill_list` / `gkill_get_skill`）がどのサーバーにも入っており、作成と更新（`gkill_add_skill` / `gkill_update_skill`）は Write専用と Read/Write統合にあります。スキルの削除とバイナリファイルの追加は利用者が設定画面から行います（AI から消す手段は無く、反映はすぐで履歴も残らないので、AI には内容を合意してから書かせてください）。プラグイン一覧を返す `gkill_get_plugin_list` はどのサーバーにも入っています（読み取り専用）。プラグインが入れてくれた記録（Claude Code / Claude.ai / ChatGPT の会話ログ等）の本文は、`gkill_get_kyous` に `include_plugin_content:true` を渡すと検索結果にそのまま埋め込まれます（Write専用サーバーには `gkill_get_kyous` が無いので本文は読めません）。詳細は [`src/server/gkill/mcp/README.md`](../../src/server/gkill/mcp/README.md) を参照。
 
 ### デフォルトポート
 

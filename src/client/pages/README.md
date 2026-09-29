@@ -9,7 +9,7 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 
 ```
 pages/
-├── (ルートページ 16 .vue + 2 .ts)  # Vue Router ルートページ
+├── (ルートページ 15 .vue + 2 .ts)  # Vue Router ルートページ
 ├── views/                          # View コンポーネント（207 .vue）
 └── dialogs/                        # Dialog コンポーネント（119 .vue）
 ```
@@ -47,7 +47,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 
 の1行で張る。挙動を変えたいイベントだけ第2引数の `overrides` で差し替える。ビュー層は18件、ダイアログ層はそれにフォーカス系2件（`focused_kyou` / `clicked_kyou`）を足した20件を中継する。
 
-## ルートページ（16 .vue + 2 .ts）
+## ルートページ（15 .vue + 2 .ts）
 
 | ファイル | ルートパス | 説明 |
 |---------|----------|------|

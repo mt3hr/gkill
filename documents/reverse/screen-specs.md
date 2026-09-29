@@ -105,6 +105,17 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 は設定の読み込みが終わるまで真なので鍵に使えず、板名確認は閉じ方によっては
 `unknown_mi_boards` が空にならないのでロック条件に入れていない。
 
+**タブの見出し:** `derive_kftl_tab_label()`（`classes/kftl-tabs.ts`）が、テンプレート名 → 本文の最初の非空行 → 空文字
+の順で決める。テンプレートから開いたタブはテンプレート名を本文を書き換えても持ち続ける（テンプレートの1行目は
+プレフィックス行のことが多く、本文から取ると見分けがつかない）。中身が空のタブは見出しも空で、
+以前の通し番号は廃止した（並びの添字なので前のタブを閉じると振り直され、名前として役に立たなかった。
+潰れないのは `.kftl_tab` の `min-width` による）。見出しは `KFTL_TAB_LABEL_MAX_LENGTH`（12文字）で切って「…」を付ける。
+
+**保存後のタグ履歴:** 保存に成功すると、`/api/parse_kftl_text` の応答にある `tag_groups`（記録ごとのタグの組）を
+1組ずつ `record_added_tag_history()`（`classes/kyou-tags.ts`）でタグ履歴（追加画面のタグ欄の候補）へ積む
+（`classes/use-kftl-view.ts`）。追加画面と同じく保存が確定してから積む（先に積んで失敗すると履歴だけが動く）。
+組は記録の登録順なので、最後に書いた記録の組が履歴の先頭になる。
+
 ### 2.3 タスクボード画面（`/mi`）
 
 **コンポーネント:** `mi-page.vue` → `mi-view.vue`
@@ -122,6 +133,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 | 保存済み検索条件FAB | 操作 | サイドバー右下の呼び出しボタン。設定画面で登録したタスク検索条件を選択してサイドバーへ適用（0件時は非表示） |
 | アラート通知 | 表示 | 期限アラート等の通知表示 |
 | クリップボードを保存 | 操作 | クリップボード内容をファイルとして保存するダイアログ（`save-clipboard-to-file-dialog.vue`） |
+| 記録件数カレンダー | 表示/操作 | 表示中の列のタスクを日ごとの件数で見るカレンダー（`mi-kyou-count-calendar.vue`）。日付セルのクリックで一覧をその日へ寄せる（`requested_focus_time`）。年月表示のクリックで日付ピッカーが開き、選んだ日は日付セルをクリックしたのと同じ扱い（‹ › は1回で1か月しか動かず、遠い年月へ行くのに何十回も押していたため。rykv 版と対称） |
 
 ### 2.4 履歴閲覧画面（`/rykv`）
 
@@ -142,6 +154,8 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 | クリップボードを保存 | 操作 | クリップボード内容をファイルとして保存するダイアログ（`save-clipboard-to-file-dialog.vue`） |
 | クエリエディタサイドバー | 操作 | 高度な検索条件設定 |
 | 保存済み検索条件FAB | 操作 | サイドバー右下の呼び出しボタン。設定画面で登録したライフログ検索条件を選択してサイドバーへ適用（0件時は非表示） |
+| 記録件数カレンダー | 表示/操作 | 表示中の列の記録を日ごとの件数で見るカレンダー（`kyou-count-calendar.vue`）。日付セルのクリックで一覧をその日へ寄せる（`requested_focus_time`）。年月表示のクリックで日付ピッカーが開き、選んだ日は日付セルをクリックしたのと同じ扱い（‹ › は1回で1か月しか動かず、遠い年月へ行くのに何十回も押していたため） |
+| GPS地図 | 表示/操作 | 表示日のGPS移動軌跡（`gps-log-map.vue`）。日付表示のクリックで日付ピッカーが開き、選んだ日は**地図だけ**に映す（`onGpsLogMapRequestedChangeDate`。検索条件と一覧は動かさない。地図だけ別の日を見たいときのため） |
 
 ### 2.5 記録詳細画面（`/kyou`）
 
@@ -211,7 +225,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 | エリア | コンポーネント | 配置 | 説明 |
 |---|---|---|---|
 | 上半分左 | `dnote-view.vue` | 左半分（30vh高さ） | 表示日のDnote集計ノート一覧 |
-| 上半分右 | `gps-log-map.vue` | 右半分（30vh高さ） | 表示日のGPS移動軌跡地図 |
+| 上半分右 | `gps-log-map.vue` | 右半分（30vh高さ） | 表示日のGPS移動軌跡地図。地図の日付表示のクリックでも日付ピッカーが開き、選んだ日へ**表示日ごと**移る（`requested_change_map_date` → `go_date()`。rykv の地図が地図だけを切り替えるのと違う） |
 | 下部 | `kyou-list-view.vue` | 全幅 | MI一覧（DashboardConfigのdashboard_mi_find_kyou_queryで絞り込み） |
 
 #### DnoteView（集計ビュー）の構成要素
@@ -236,6 +250,16 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
 > 追加ダイアログは `dnote-view.vue` が直接持ち、編集・削除ダイアログとコンテキストメニューは
 > 各グラフのビューが持つ。以前は1つのダイアログでモードを切り替え、表ビューが抱えていたため、
 > 「＋」メニューから2段のテンプレート ref を辿る必要があり、途中が null だと無言で失敗していた。
+
+**集計項目の表の列:** `dnote-item-table-view.vue` は集計項目を縦に並べる箱（列）を横に並べる。編集画面
+（`edit-dnote-dialog.vue`、`editable`）だけ、各列の上に「列を削除」ボタンの行と右端に「列を追加」ボタンが出る
+（`classes/use-dnote-item-table-view.ts`）。最後の1列は消せない（`can_delete_column` = 列が2つ以上。
+項目の追加先が無くなるため。「項目を追加」は常に先頭の列へ入れる）。
+
+**ダブルクリック:** 閲覧中（ダッシュボード・rykv）は集計項目（`dnote-item-view.vue`）も集計リストの行
+（`aggregated-list-item.vue`）も、集計に使った記録の一覧ダイアログを開く。編集画面は記録を0件で読み込むので一覧は
+常に空になり、代わりに集計項目は項目の編集ダイアログを開き（相関グラフ・関連情報の編集画面と同じ）、
+集計リストの行は何もしない。
 
 集計は全てクライアント側で行われ、専用のバックエンドAPIは存在しない
 （`classes/dnote/dnote-trend-aggregator.ts` + `classes/dnote/dnote-trend/`、
@@ -412,7 +436,7 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
 |---|---|---|
 | タスク名 | 入力 | タスクのタイトル |
 | ボード | 入力 | 所属ボードの選択 |
-| 通知設定 | 入力 | 期限通知の追加（add-notification-for-add-mi-view） |
+| 通知設定 | 入力 | 期限通知の追加（add-notification-for-add-mi-view）。通知1件ぶんの行は見出しと内容を画面幅いっぱいに使い（`cols="auto"` だと中身の幅に縮んでいた）、行を消すボタンは他画面の「行を消す」（相関グラフの指標・定義の削除）と同じ形（`mdi-delete`、`size="small"`、`variant="text"`）にそろえてある |
 
 **表示:** `mi-kyou-view.vue`
 
@@ -729,6 +753,21 @@ gkillの検索機能は複数のクエリコンポーネントを組み合わせ
 利用者の運用メモを書く「説明」欄がある。設定ツリーの JSON（`ApplicationConfig`）に `description` として保存され、
 MCP の `gkill_get_application_config` が `fields:["descriptions"]` で先に読む（ADR-0632）。
 
+### スキル管理
+
+設定画面の「スキル」ボタン（`application-config-view.vue`）から開く。スキルは `$GKILL_HOME/skills/<user_id>/<name>/` の
+`SKILL.md` と付属ファイル（ADR-0634）で、画面でできるのは一覧・中身の表示・zip のダウンロード・zip のアップロード
+（丸ごと置き換え）・スキル丸ごとの削除だけ。ファイル単位の編集は持たない（記録アプリの本質ではないので gkill に
+責務を持たせない。直すなら zip をダウンロードして上げ直す）。設定の「適用」とは独立したエンティティなので、
+`server-config-dialog.vue` と同じく自分で API を呼ぶ（`classes/use-manage-skill-list-dialog.ts`）。
+
+| コンポーネント | 説明 |
+|---|---|
+| `manage-skill-list-view.vue` / `manage-skill-list-dialog.vue` | 一覧（名前・説明・更新日時・ファイル数。`SKILL.md` が壊れているスキルは説明欄に理由）。行ごとに「表示」「ダウンロード」「削除」、上に「zipをアップロード」（`label` で包んだ隠し `input[type=file]`。同じファイルを選び直しても `change` が起きるよう選択は毎回空に戻す） |
+| `browse-skill-files-dialog.vue` | 閲覧。左にファイル一覧（初期選択は `SKILL.md`）、右に中身を**素のテキスト**（`<pre>`）で出す。Markdown / HTML として描かない（AI が書いた HTML のスクリプトがログイン中のセッションで動く穴になるため）。ヘッダのタイトル欄は空で、スキル名は本文の先頭に出す。ファイルを続けて押したときの応答の追い越しは `load_seq` で捨てる |
+| `confirm-upload-skill-view.vue` / `confirm-upload-skill-dialog.vue` | アップロードの確認。**2段階**: 1段目は選んだ zip を `dry_run: true` で送り、応答の `plan`（新規か置き換えか・追加/変更/削除/無視されるファイル）を出す。2段目は「適用」で同じ zip を `dry_run: false` で送って丸ごと置き換える（確認を通した zip は `pending_zip_base64` に持ち、適用で空に戻す） |
+| `confirm-delete-skill-view.vue` / `confirm-delete-skill-dialog.vue` | 削除確認。`path` を空にして送り、スキルを丸ごと消す（ファイル単位の削除は API にはあるが画面は使わない） |
+
 ## 6. ダイアログシステム
 
 ### ダイアログ共通構造
@@ -752,7 +791,7 @@ Teleport to body
 
 ### ダイアログ一覧（カテゴリ別）
 
-> ダイアログは全部で111件ある。以下は主要なものをカテゴリ別に整理したもので、網羅的な一覧ではない。
+> ダイアログは全部で119件ある。以下は主要なものをカテゴリ別に整理したもので、網羅的な一覧ではない。
 > 実体は `src/client/pages/dialogs/*.vue` を参照。
 
 #### データ追加ダイアログ
@@ -827,6 +866,10 @@ Teleport to body
 | `confirm-generate-tls-files-dialog.vue` | TLS証明書生成確認 |
 | `confirm-reset-password-dialog.vue` / `show-password-reset-link-dialog.vue` | パスワードリセット |
 | `plugin-config-dialog.vue` | プラグイン設定（プラグイン Kyou のコンテキストメニュー「プラグイン設定」から開く） |
+| `manage-skill-list-dialog.vue` | スキル管理（一覧・zip のアップロード。設定画面の「スキル」ボタンから開く。§5「スキル管理」） |
+| `browse-skill-files-dialog.vue` | スキルの中身の閲覧（素のテキスト表示） |
+| `confirm-upload-skill-dialog.vue` | スキルの zip アップロードの確認（dry_run の結果を見せて「適用」で置き換える） |
+| `confirm-delete-skill-dialog.vue` | スキルの削除確認（スキル丸ごと） |
 
 構造編集系（タグ構造・リポジトリ構造・RepType構造・KFTLテンプレート構造・デバイス）は
 `add-new-*-struct-element-dialog.vue` / `edit-*-struct[-element]-dialog.vue` /

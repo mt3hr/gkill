@@ -39,7 +39,7 @@ gkill の不変条件の多くは「例外もエラーも出さずに静かに�
 |---|---|
 | 検索が黙って0件になる／HTTP 200 で `errors` が null なのに結果が空 | gkill-go-backend, gkill-find-query |
 | タグの個数で検索結果が変わる | gkill-go-backend |
-| `1` や `a` のような短い語で無関係な記録が出る／除外語で消える／気分記録が検索に出ない | gkill-find-query |
+| `8` のような7文字未満の語で ID や git のハッシュが先頭一致し無関係な記録が出る／7文字以上の語で UUID・短縮ハッシュが引けない／除外語で消える／気分記録が検索に出ない | gkill-find-query |
 | 実在する記録にタグ/テキストを付けると ERR000092（対象が見つからない） | gkill-go-backend |
 | 追加したタグ・記録が最大1分見えない／PWA が古いまま焼き付く | gkill-go-backend |
 | 全種類の検索が数分止まる | gkill-go-backend |
@@ -53,6 +53,7 @@ gkill の不変条件の多くは「例外もエラーも出さずに静かに�
 | Android 共有が2件保存される／ログイン失敗でエラー表示が消える | gkill-client-foundation |
 | プラグインの本文がときどき空白／プロセスが殺され続ける／歩数が2倍 | gkill-plugin |
 | MCP で他人のセッションの URL が発行される／`ErrPluginBusy` | gkill-mcp |
+| 利用者のスキル（`$GKILL_HOME/skills`）が読めない・一覧に `invalid_reason` が付く／スキルの更新が 409（ERR000437、`revision` が古い） | gkill-mcp, gkill-go-backend |
 | 設定画面の待受アドレスや TLS が Android だけ効かない／打刻が二重登録される | gkill-mobile |
 | `npm run verify_docs` が落ちた | gkill-docs |
 

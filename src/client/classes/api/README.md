@@ -3,14 +3,14 @@
 ## 概要
 
 gkill サーバの全 HTTP API を呼び出す TypeScript クライアント層。
-`GkillAPI` シングルトンクラス（約171KB）が全エンドポイントのラッパーメソッドを提供する。
+`GkillAPI` シングルトンクラス（約180KB・約3,600行）が全エンドポイントのラッパーメソッドを提供する。
 サーバ側の対応実装: `src/server/gkill/api/`
 
 ## ディレクトリ構造
 
 ```
 api/
-├── gkill-api.ts                          # メイン API クラス（シングルトン、~171KB）
+├── gkill-api.ts                          # メイン API クラス（シングルトン、~180KB）
 ├── gkill-api-request.ts                  # 基底リクエスト型
 ├── gkill-api-response.ts                 # 基底レスポンス型
 ├── gkill-error.ts                        # エラー型
@@ -19,6 +19,7 @@ api/
 ├── drop-type-foldable-struct.ts          # ドロップ型折り畳み構造体
 ├── file-data.ts                          # ファイルデータ型
 ├── generate-get-playing-timeis-kyous-query.ts  # Playing TimeIs クエリ生成
+├── yield-to-main.ts                      # 大きな応答の詰め替え中にメインスレッドへ制御を返す
 ├── find_query/                           # 検索クエリ型
 ├── message/                              # エラー/メッセージ型
 └── req_res/                              # 全 Request/Response 型
@@ -28,7 +29,7 @@ api/
 
 | ファイル | 役割 |
 |---------|------|
-| `gkill-api.ts` | **GkillAPI シングルトン**。全エンドポイントの呼び出しメソッドを集約（~171KB） |
+| `gkill-api.ts` | **GkillAPI シングルトン**。全エンドポイントの呼び出しメソッドを集約（~180KB） |
 | `gkill-api-request.ts` | 基底リクエスト型（session_id 等の共通フィールド） |
 | `gkill-api-response.ts` | 基底レスポンス型（errors, messages 等の共通フィールド） |
 | `gkill-error.ts` | `GkillError` 型定義 |
@@ -41,7 +42,7 @@ api/
 
 ## サブディレクトリ
 
-### `find_query/`（6ファイル）— 検索クエリ型
+### `find_query/`（7ファイル）— 検索クエリ型
 
 サーバ側 `api/find/` と対応。
 
@@ -52,6 +53,8 @@ api/
 | `mi-check-state.ts` | Mi チェック状態 enum |
 | `mi-sort-type.ts` | Mi ソート順 enum |
 | `week-of-days.ts` | 曜日フィルタ enum |
+| `collect-inited-tag-names.ts` | `collect_inited_tag_names()` — タグツリーから「初期チェックあり」のタグ名を集める（フォルダは除く。フォルダ名は実在するタグではなく、混ぜると AND 検索が必ず0件になる）。既定クエリの生成と TimeIs タグツリーの null フォールバックが共用 |
+| `normalize-legacy-find-kyou-query-json.ts` | 旧形式（`use_*` フラグ入り）の `FindKyouQuery` JSON を null 判定の新形式へ正規化。localStorage の保存クエリと Service Worker に残った古い `application_config` 応答はクライアント側にしか無いので、parse 境界で必ず通す。Go の `find_query_legacy_json.go`・MCP の `constants.go` と3実装で揃える（gkill-find-query スキル） |
 
 ### `message/`（3ファイル）— エラー/メッセージ型
 
@@ -164,6 +167,7 @@ api/
 - `upload-skill-request.ts` / `upload-skill-response.ts`（`SkillReplacePlan`。`dry_run` で確認の1段目）
 - `delete-skill-request.ts` / `delete-skill-response.ts`
 - `/api/write_skill_file` は MCP 専用なので TS 側の型を持たない
+- `GkillAPI` 側のメソッドは `get_skill_list` / `get_skill` / `download_skill` / `upload_skill` / `delete_skill` の5つ。呼び出し元は `classes/use-manage-skill-list-dialog.ts`（一覧・ダウンロード・アップロード・削除）と `classes/use-browse-skill-files-dialog.ts`（中身の表示）。zip は `classes/file-base64.ts` で data URI にして JSON に載せ、ダウンロードは `zip_base64` を Blob に戻して保存する
 
 > `update_cache` / `get_kyous_mcp` / `urlog_bookmarklet` は専用の req_res 型を持たない（サーバ側の構造体を直接JSONで扱うか、汎用型で送る）。
 

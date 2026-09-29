@@ -336,6 +336,7 @@ classDiagram
         +IDFKyouRepository WriteIDFKyouRep
         +ReKyouRepository WriteReKyouRep
         +MiReKyouRepository WriteMiReKyouRep
+        +*TempReps TempReps
     }
 
     class TempReps {
@@ -355,28 +356,47 @@ classDiagram
     }
 
     class GkillDAOManager {
+        +*ConfigDAOs ConfigDAOs
+        +*skills.Store SkillStore
         +GetRepositories(userID, device) *GkillRepositories
-        +GetTempReps(txID) *TempReps
-        +CloseUserRepositories(userID) error
+        +GetPluginManager(userID) *PluginManager
+        +GetNotificator(userID, device) *GkillNotificator
+        +CloseUserRepositories(userID, device) bool
+    }
+
+    class SkillStore {
+        -string root
+        +Root() string
+        +List(userID) []*SkillSummary
+        +Get(userID, name) *Skill
+        +ReadFile(userID, name, path, maxBytes) *FileContent
+        +WriteFile(ctx, userID, name, path, content, revision) string
+        +DeleteFile(ctx, userID, name, path, revision) error
+        +DeleteSkill(ctx, userID, name) error
+        +BuildZip(userID, name) fileName, []byte
+        +PlanReplace(userID, zipBytes) *ReplacePlan
+        +Replace(ctx, userID, zipBytes) *ReplacePlan
     }
 
     class GkillServerAPI {
-        +GkillDAOManager daoManager
+        +*GkillDAOManager GkillDAOManager
         +HandleLogin(w, r)
         +HandleAddKmemo(w, r)
         +HandleUpdateKmemo(w, r)
         +HandleGetKyous(w, r)
-        %% 残り86エンドポイント省略（合計90登録）
+        %% 残り93エンドポイント省略（合計97登録）
     }
 
     GkillServerAPI --> GkillDAOManager : uses
     GkillDAOManager --> GkillRepositories : creates/manages
-    GkillDAOManager --> TempReps : creates/manages
+    GkillDAOManager *-- SkillStore : holds (dao/skills.Store)
+    GkillRepositories *-- TempReps : NewGkillRepositories で生成
     GkillRepositories *-- KmemoRepositories : Read用
     GkillRepositories *-- KmemoRepository : Write用 (WriteKmemoRep)
 
     note for GkillRepositories "XxxReps: 読み取り用（複数リポジトリ集約）\nWriteXxxRep: 書き込み用（単一リポジトリ）\nPluginReps: プラグイン（Reps にも含まれる）"
     note for TempReps "KFTL パース時のトランザクション用\nCommitTX で本リポジトリに反映"
+    note for SkillStore "利用者が AI 向けに書くスキルの置き場\n$GKILL_HOME/skills/〈ユーザID〉/〈スキル名〉/\nファイルを触るのは gkill_server だけ（ADR-0634）"
 ```
 
 ## 4. KFTL パーサ クラス構造

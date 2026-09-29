@@ -14,6 +14,7 @@ $HOME/gkill/
 │   ├── share_kyou_info.db          # 共有設定
 │   └── gkill_notification_target.db # プッシュ通知ターゲット
 ├── datas/                           # ユーザーデータ（デフォルトデータディレクトリ）
+├── skills/{user_id}/{name}/         # 利用者ごとの AI 向けスキル（SKILL.md と付属ファイル。gkill_server だけが読み書きし、履歴を持たない。ADR-0634）
 ├── caches/                          # キャッシュファイル
 │   ├── thumb_cache/{user_id}/{rep_name}/ # サムネイル画像キャッシュ（利用者＋リポジトリ単位）
 │   ├── video_cache/{user_id}/{rep_name}/ # 互換動画キャッシュ（利用者＋リポジトリ単位）
@@ -177,7 +178,20 @@ npm run release
    cd src/android
    ./gradlew assembleDebug
    ```
-4. APKをインストール。WebView が `http://localhost:9999` で内蔵サーバーにアクセス
+4. APKをインストール。起動時の流れは次のとおり（`MainActivity.kt`）
+   - **権限の起動ゲート:** データ置き場が共有ストレージなので、共有ストレージへ書ける権限（Android 11 以上は
+     「すべてのファイルへのアクセス」、10 以下は `WRITE_EXTERNAL_STORAGE`）が許可されるまで同梱サーバを起動しない
+     （`decideStorageGate`）。権限の要求画面を自動で出すのは Activity ごとに1回だけで、以後は権限待ち画面のボタンから出し直す
+     （onResume のたびに出すと設定画面から抜けられなくなる。[ADR-1105](../adr/1105-android-home-back-to-sdcard-and-gate-on-storage-access.md)）
+   - **データ置き場（`--gkill_home_dir`）は `/sdcard/gkill`。** アプリ専用領域にデータを置いていた版から更新した端末では、
+     `/sdcard/gkill` が無いか空のときだけ `copyAppPrivateHomeIfNeeded` が専用領域の中身を一時ディレクトリへ複製してから改名する
+     （中身があれば `/sdcard/gkill` を正とし、専用領域は消さない）。複製に失敗したらサーバを起動しない
+     （[ADR-1105](../adr/1105-android-home-back-to-sdcard-and-gate-on-storage-access.md)）
+   - **WebView が開く URL は、同梱サーバが標準出力に出す起動行から取る。** 行は `close.go` の `PrintStartedMessage` が
+     ServerConfig（ENABLE_THIS_DEVICE の行の ADDRESS / ENABLE_TLS）から `Access your record space at : <http|https>://localhost:<ポート>`
+     の形で組み立てる（既定は `127.0.0.1:9999`・TLS なしなので `http://localhost:9999`）。Kotlin 側にポートもスキームも持たず、
+     `--address` / `--disable_tls` も渡さない。サーバ設定を保存すると行が出直し、オリジンが変わったときだけ開き直す
+     （[ADR-1104](../adr/1104-android-server-follows-server-config.md)）
 
 ### 3.5 Wear OS
 
@@ -306,6 +320,7 @@ gkill のデータは全て **ファイルベース**（SQLite3 + 通常ファ�
 |---|---|---|
 | 設定データベース群 | `$HOME/gkill/configs/*.db` | 必須 |
 | ユーザーデータ | `$HOME/gkill/datas/` | 必須 |
+| スキル（AI 向け手順書） | `$HOME/gkill/skills/` | 必須（履歴を持たないので、AI や画面から消した・上書きしたものはバックアップからしか戻せない） |
 | ユーザー登録リポジトリ | ユーザー設定で指定したディレクトリ群（`$HOME/gkill/` の外に置ける） | 必須 |
 | TLS証明書 | `$HOME/gkill/tls/` | TLS使用時のみ |
 | キャッシュ | `$HOME/gkill/caches/`（`zip_cache/` 含む） | 任意（再生成可能） |
@@ -325,6 +340,7 @@ gkill のデータは全て **ファイルベース**（SQLite3 + 通常ファ�
 # 2. 設定・データ・TLS をコピー
 cp -r $HOME/gkill/configs/ /backup/gkill_configs_$(date +%Y%m%d)/
 cp -r $HOME/gkill/datas/   /backup/gkill_datas_$(date +%Y%m%d)/
+cp -r $HOME/gkill/skills/  /backup/gkill_skills_$(date +%Y%m%d)/  # スキルを使っていれば
 cp -r $HOME/gkill/tls/     /backup/gkill_tls_$(date +%Y%m%d)/   # TLS使用時のみ
 ```
 
@@ -336,7 +352,7 @@ cp -r $HOME/gkill/tls/     /backup/gkill_tls_$(date +%Y%m%d)/   # TLS使用時�
 
 #### 外部リポジトリを取りこぼさないこと
 
-上記の `configs/` `datas/` `tls/` コピーだけでは**完全バックアップにならない**。ユーザーがリポジトリ設定で `$HOME/gkill/` の外（任意の外部ディレクトリ）を指定している場合、そのデータは含まれない。まず登録済みリポジトリのパス一覧を確認し、外部ディレクトリも**本体と同じ時点で**コピーする（停止中、または同一スナップショット内で）。
+上記の `configs/` `datas/` `skills/` `tls/` コピーだけでは**完全バックアップにならない**。ユーザーがリポジトリ設定で `$HOME/gkill/` の外（任意の外部ディレクトリ）を指定している場合、そのデータは含まれない。まず登録済みリポジトリのパス一覧を確認し、外部ディレクトリも**本体と同じ時点で**コピーする（停止中、または同一スナップショット内で）。
 
 ```bash
 # 1. 登録済みリポジトリのパス一覧を設定DBから確認

@@ -16,11 +16,11 @@ api/
 ├── find_kyou_context.go         # Kyou 検索コンテキスト
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
-├── *_test.go                    # 検索フィルタ・rep名絞り込みなどのテスト（14ファイル）
-├── gkill_server_api/            # HTTP ハンドラ（165ファイル）
+├── *_test.go                    # 検索フィルタ・rep名絞り込みなどのテスト（15ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（166ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
-│   ├── serve.go                 # gorilla/mux ルーター設定・全90ルート登録
+│   ├── serve.go                 # gorilla/mux ルーター設定・ルート表 apiRoutes() の全97ルートを登録
 │   ├── close.go                 # サーバ終了処理
 │   ├── auth.go                  # 認証処理
 │   ├── auth_context.go          # 認証コンテキスト
@@ -30,7 +30,7 @@ api/
 │   ├── web_push.go              # Web Push 通知
 │   ├── gkill_server_api_access_log.go # アクセスログ
 │   ├── gkill_server_api_rate_limit.go # レートリミット
-│   └── handle_*.go              # 各エンドポイントのハンドラ（106ファイル。うちテスト15）
+│   └── handle_*.go              # 各エンドポイントのハンドラ（119ファイル。うちテスト21）
 ├── find/                        # 検索クエリ型定義
 ├── find_word/                   # ワード検索の Go 側判定（本体とプラグイン SDK が共用。標準ライブラリのみ）
 ├── gkill_plugin/                # プラグイン通信プロトコル型
@@ -42,7 +42,7 @@ api/
 └── embed/                       # ビルド生成物（.gitignore 対象）
 ```
 
-## api/ ルートレベルファイル（20ファイル）
+## api/ ルートレベルファイル（21ファイル）
 
 | ファイル | 役割 |
 |---------|------|
@@ -52,11 +52,11 @@ api/
 | `find_kyou_context.go` | Kyou 検索時のコンテキスト構造体 |
 | `gkill_version_data.go` | バージョンデータ構造体定義 |
 | `version.go` | ビルド時に埋め込まれるバージョン情報 |
-| `*_test.go`（14ファイル） | 検索フィルタ（タグ・位置・Mi・TimeIs・ソート等）・rep名絞り込み・rep選択キャッシュ・rep種別網羅・サンプルデータのテスト |
+| `*_test.go`（15ファイル） | 検索フィルタ（タグ・位置・Mi・TimeIs・ソート等）・rep名絞り込み・rep選択キャッシュ・rep種別網羅・サンプルデータのテスト |
 
 ## サブディレクトリ
 
-### `gkill_server_api/`（141ファイル）— HTTP ハンドラ
+### `gkill_server_api/`（166ファイル）— HTTP ハンドラ
 
 詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
 
@@ -85,8 +85,8 @@ handle_*.go は119ファイル（実装98 + テスト21）で、1ハンドラ1�
 
 | ファイル | 説明 |
 |---------|------|
-| `match_words.go` | `MatchLoweredWords`（肯定語は「対象テキストに含む OR ID が語で始まる」、除外語は対象テキストだけ）/ `LowerWords` / `NormalizeWords`。SQL 側の `sqlite3impl.GenerateFindSQLCommon` と同じ規則で、本体（IDF / git / プラグイン型別アダプタ）とプラグイン SDK（`sdk.Query.MatchText`）が共用する。SDK が引き込めるよう標準ライブラリ以外に依存しない |
-| `match_words_test.go` | 判定規則（AND/OR・除外語・ID 前方一致・ID 照合なし）と正規化のテスト |
+| `match_words.go` | `MatchLoweredWords`（肯定語は「対象テキストに含む OR ID が語で始まる」。ID を見るのは7文字以上の語だけで、それより短い語は本文にしか当たらない（`MinIDPrefixMatchLength`。ADR-0114）。除外語は対象テキストだけ）/ `LowerWords` / `NormalizeWords`。SQL 側の `sqlite3impl.GenerateFindSQLCommon` と同じ規則で、本体（IDF / git / プラグイン型別アダプタ）とプラグイン SDK（`sdk.Query.MatchText`）が共用する。SDK が引き込めるよう標準ライブラリ以外に依存しない |
+| `match_words_test.go` | 判定規則（AND/OR・除外語・ID 前方一致は7文字以上の語だけで6文字以下は当たらない・ID 照合なし）、`IsIDPrefixMatchWord` が rune 数で数えること、正規化のテスト |
 
 ### `gkill_plugin/`（3ファイル）— プラグイン通信プロトコル型
 
@@ -103,7 +103,7 @@ handle_*.go は119ファイル（実装98 + テスト21）で、1ハンドラ1�
 | `google_location_history_data.go` | Google Location History の JSON/GPX データ構造体 |
 | `gpslogs_test.go` | GPS データパーステスト |
 
-### `message/`（8ファイル）— エラー/メッセージコード
+### `message/`（14ファイル）— エラー/メッセージコード
 
 詳細は [message/README.md](message/README.md) を参照。
 
@@ -113,10 +113,16 @@ handle_*.go は119ファイル（実装98 + テスト21）で、1ハンドラ1�
 | `gkill_error_test.go` | `EnsureNotEmpty` のテスト |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
 | `error_codes.go` | エラーコード定数（403定数、ERR000001〜ERR000444・欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの。ADR-0709） |
-| `message_codes.go` | メッセージコード定数（86定数、MSG000001〜MSG000090・欠番7） |
+| `message_codes.go` | メッセージコード定数（86定数、MSG000001〜MSG000093・欠番7） |
 | `http_status.go` | エラーコード → HTTP ステータス対応表（`HTTPStatusOf` / `HTTPStatusForErrors`） |
 | `http_status_test.go` | 全エラーコードが対応表に載っていることのソース走査テスト |
 | `message_test.go` | コード形式テスト |
+| `error_kind.go` | `KindOf(code)` — エラーコード → `error_kind`（誰の問題か。9種）。既定は HTTP ステータスから決め、設定不備の 500 だけ `config` に上書き |
+| `error_kind_test.go` | 全コードに kind が決まること、上書き表の実在、名指しの割り当てのテスト |
+| `error_reason.go` | `ReasonOf(err)` — Go の error → `reason`（何が起きたか。14種）。SQLite 結果コード・context・OS・net の分類と、Cause 無しでコードから決まる理由 |
+| `error_reason_test.go` | 分類の表駆動テスト（実際の SQLite エラーで起こす）、コードからの既定、語彙の一覧 |
+| `redact.go` | `RedactEnvironmentSpecific` — 応答へ載る自由文からホームのユーザー名・メールアドレスを伏せる（ADR-0707） |
+| `redact_test.go` | 伏せ方の表駆動テスト（形は残す・二重適用しない） |
 
 ### `kftl/`（32ファイル）— KFTL パーサ
 
@@ -262,7 +268,20 @@ handle_*.go は119ファイル（実装98 + テスト21）で、1ハンドラ1�
 | `GetPluginConfigHTML` | プラグイン設定画面 HTML 取得 |
 | `PostPluginConfig` | プラグイン設定フォームのデータ保存 |
 
-### 通知・TLS・トランザクション・その他（10エンドポイント）
+### スキル系（6エンドポイント）
+
+`$GKILL_HOME/skills/<user_id>/<name>/` に置く利用者ごとのスキル（ADR-0634）。ファイルなので rep は要らず `wrapAuth`。`UploadSkill` だけ `wrapNoAuth` + `bodyUpload`（アップロードの枠）で登録し、ハンドラ内でセッションを検証する。失敗は `skill_errors.go` で dao/skills の番兵から 4xx / 500 のコードへ写す。
+
+| エンドポイント | 説明 |
+|---------------|------|
+| `GetSkillList` | スキル一覧（名前・説明・更新時刻・ファイル数・壊れている理由） |
+| `GetSkill` | 1つのスキルの中身（`path` 省略で SKILL.md 全文とファイル一覧、指定でそのファイル。テキストは `content`、バイナリは `content_base64`、`max_bytes` 超えは省く） |
+| `DownloadSkill` | zip を base64 で返す |
+| `UploadSkill` | zip で丸ごと置き換え（新規なら作成）。`dry_run` なら書かずに追加・削除・変更・無視の計画だけ返す。画面のアップロード |
+| `WriteSkillFile` | ファイル1つの書き込み（`revision` で上書きを守る）。MCP 専用（画面は `UploadSkill` の丸ごと置き換えだけ） |
+| `DeleteSkill` | ファイル1つ（`path` + `revision`）またはスキル丸ごとの削除。SKILL.md 単独は消せない |
+
+### 通知・TLS・トランザクション・その他（11エンドポイント）
 
 | エンドポイント | 説明 |
 |---------------|------|
@@ -274,6 +293,7 @@ handle_*.go は119ファイル（実装98 + テスト21）で、1ハンドラ1�
 | `URLogBookmarklet` | URLog ブックマークレットアドレス取得 |
 | `URLogBookmarkletPage` | URLog ブックマークレット導入ページ配信（GET） |
 | `SubmitKFTLText` | KFTL テキスト送信・実行 |
+| `ParseKFTLText` | KFTL テキストの解析だけ（書かない）。おかしな行・付くタグ（記録ごとの組 `tag_groups` も）・板名・件数を返す。Web のメモ帳のピンク表示と未知タグ・板名の確認が使う |
 | `GetKyousMCP` | MCP 用 Kyou 取得 |
 | `GetRepInfosMCP` | MCP 用 rep 一覧取得（Kyou を供給する rep の rep_name と rep_type、rep_types の正準値一覧。ファイルパスは返さない） |
 
