@@ -33,9 +33,16 @@ package `mcp`（`src/server/gkill/mcp/`）は旧実装の `lib/*.mjs` と 1:1 �
 | `http_transport.go` | 3サーバ | Streamable HTTP トランスポート（OAuth 2.1 の配線を含む） |
 | `gkill_client.go` | 3サーバ | gkill 本体を叩く HTTP クライアント（ログイン・認証リトライ・ファイル取得） |
 | `payload.go` | 3サーバ | レスポンスのペイロード加工 |
+| `server_read.go` / `server_write.go` / `server_readwrite.go` | read / write / readwrite | 各サーバが「どのツールを載せ、どの名前とポートで名乗るか」の表1行だけ（`composeTools` / `newNameSet`。書き込みサーバに載せる読み取りツールの選抜 `WriteServerReadToolNames` は `server_write.go`）。ディスパッチと起動処理はここに書かない |
+| `read_handlers.go` | 3サーバ | 読み取りツールのディスパッチと1行要約の正本（サーバファイルに case を書き足さない） |
+| `write_handlers.go` | write / readwrite | 書き込みツールのディスパッチと1行要約の正本（同上） |
 | `read_tools.go` | read / readwrite | 読み取りツールの定義。**書き込み専用サーバも rep名 / 板名 / タグ名などの便利ツールをここから取る** |
 | `write_tools.go` | write / readwrite | 書き込みツールの定義 |
 | `plugin_tools.go` | 3サーバ | プラグインツールと、本文のインライン埋め込み |
+| `help_topics.go` | 3サーバ | `gkill_get_mcp_help` の topic 本文（ツール説明文から移した詳細。ADR-0622） |
+| `skill_handlers.go` | 3サーバ | スキル（`gkill_get_skill_list` / `gkill_get_skill` / `gkill_add_skill` / `gkill_update_skill`）。`/api/get_skill_list` / `/api/get_skill` / `/api/write_skill_file` を呼ぶだけでファイルは触らない（ADR-0634） |
+| `skill_delete_tool.go` | — | `gkill_delete_skill` の実装。**公開していない**（一覧に載せず、ディスパッチの case も戻していない。理由は冒頭のコメント） |
+| `gps_cursor.go` | read / readwrite | `gkill_get_gps_log` のカーソル（base64url の JSON）。発行側と受理側の両方がここを使う |
 | `find_query_schema.go` | read / readwrite | `gkill_get_kyous` の検索条件スキーマ |
 | `normalization.go` / `write_normalization.go` / `validation.go` | — | 入力の正規化と検証 |
 | `oauth_server.go` / `oauth_store.go` / `oauth_html.go` / `pkce.go` | HTTPモード | OAuth 2.1 |
@@ -45,7 +52,10 @@ package `mcp`（`src/server/gkill/mcp/`）は旧実装の `lib/*.mjs` と 1:1 �
 | `status_tool.go` | 3サーバ | ツール一覧の世代 `schema_revision` の計算と `gkill_status` への焼き込み |
 | `tool_schema_budget.go` / `tool_schema_budget.json` | 3サーバ | tools/list のバイト量の計測と予算（`gkill_server mcp schema-budget --update` で更新） |
 | `bootstrap.go` / `config.go` | 3サーバ | 起動ブロック（`Start`）と設定ファイルの解決 |
+| `js_date.go` / `js_util.go` | 3サーバ | JavaScript 互換の小道具（`js_date.go` は `Date.parse` 相当の日時の解釈と `padStart` / `padEnd`、`js_util.go` は `String(v)`・`Number#toString`・truthiness。`Date#toISOString` 相当は `payload.go` の `jsISOString`）。旧実装と応答をバイト一致させるため |
 | `jsonobj/` | — | 順序つき JSON（JavaScript の `JSON.stringify` 互換の直列化。応答のバイト一致のため） |
+| `internal/fakegkill/` | — | ゴールデンの採取・再生に使う偽 gkill（固定応答と受信要求の記録）。`fakegkillcmd/` は単独プロセスで立てる入口 |
+| `testdata/golden/` | — | ゴールデン（要求コーパス・tools/list・応答・gkill へ送った要求）。`golden_test.go` がバイト単位で照合する |
 
 > ツール数（上の表の 14 / 33 / 37）は `verify_docs` が `*_tools.go` の定義を辿って
 > 実測と突き合わせます。サーバ本体だけを見ても数えられないので、ツールを増やすときは
@@ -192,7 +202,7 @@ curl -v -X POST http://localhost:8808/mcp \
 - `GKILL_LOCALE` (default: `ja`)
 - `GKILL_INSECURE` — `true` or `1` でgkill_serverへの接続時にTLS証明書検証をスキップ（自己署名証明書用）
 - `GKILL_FETCH_TIMEOUT_MS` (default: `120000`)
-- `GKILL_MCP_MAX_FILE_BYTES` (default: `8388608` = 8MB) — `gkill_get_idf_file`（base64）で返せる最大バイト数
+- `GKILL_MCP_MAX_FILE_BYTES` (default: `8388608` = 8MB) — `gkill_get_idf_file`（base64）で返せる最大バイト数。`gkill_get_skill` に `path` を渡してスキルのファイルを読むときも同じ上限が効き、超えたファイルは中身なし（`content_omitted:true`）で返る
 - `GKILL_MCP_FILE_LINK_TTL_MS` (default: `3600000` = 1時間) — HTTPモードで発行するファイルURLトークンの有効期限
 
 #### トランスポート
@@ -211,11 +221,11 @@ gkill_log を使い、`$GKILL_HOME/logs/` に `gkill_mcp_<kind>.log`（全レベ
 
 ### 提供ツール
 
-#### Readツール（11 — Read専用/ReadWrite統合サーバで使用可能）
+#### Readツール（13 — Read専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
-| `gkill_status` | このサーバが何者かを返す（引数なし。3サーバ共通）: `server_kind`（read / write / readwrite）、接続先の `account.user_id` / `account.device`、gkill のビルド（`gkill.version` / `commit_hash` / `build_time`）、`transport`、`started_at` / `uptime_seconds`、`tool_count`、`schema_revision`。**`schema_revision` はツール一覧の世代**で、同じ値が `gkill_status` の説明文末尾にも焼き込まれている。応答と説明文の値が違えば、クライアントが握っている一覧が古い（一覧は接続時に1回しか取られない。サーバを再起動しても直らず、接続し直しが要る）。gkill へ届かないときも失敗にせず `gkill_reachable:false` + `gkill_error`（HTTP ステータスのみ）で返す |
-| `gkill_get_mcp_help` | ツール説明の本文を topic ごとに返す（引数 `topic`: `search` / `pagination` / `mi` / `data_types` / `plugin` / `idf` / `deleted` / `rep` / `kftl` / `config`。省略で index。3サーバ共通、gkill へは往復しない）。**ツール一覧の説明文は要約**で、応答フィールドの一覧・Mi の射影・KFTL の文法全文などはここにある（正本は `help_topics.go`。ADR-0622） |
+| `gkill_status` | このサーバが何者かを返す（引数なし。3サーバ共通）: `server_kind`（read / write / readwrite）、接続先の `account.user_id` / `account.device`、gkill のビルド（`gkill.version` / `commit_hash` / `build_time`）、`transport`、`started_at` / `uptime_seconds`、`tool_count`、`schema_revision`。**`schema_revision` はツール一覧の世代**で、同じ値が `gkill_status` の説明文末尾にも焼き込まれている。応答と説明文の値が違えば、クライアントが握っている一覧が古い（一覧は接続時に1回しか取られない。サーバを再起動しても直らず、接続し直しが要る）。gkill へ届かないときも失敗にせず `gkill_reachable:false` + `gkill_error`（HTTP ステータスのみ）で返す。利用者が AI 向けに書いたスキルの `skills[]`（`name` / `description` だけ）も載せ、一覧が取れなかったときは status を失敗にせず `skills[]` の代わりに `skills_error` を載せる。`gkill_reachable:false` のときは一覧を取りに行かないので `skills[]` も `skills_error` も無い（スキルが無いのではなく不明。ADR-0634） |
+| `gkill_get_mcp_help` | ツール説明の本文を topic ごとに返す（引数 `topic`: `search` / `pagination` / `mi` / `data_types` / `plugin` / `idf` / `deleted` / `rep` / `kftl` / `config` / `skills`。省略で index。3サーバ共通、gkill へは往復しない）。**ツール一覧の説明文は要約**で、応答フィールドの一覧・Mi の射影・KFTL の文法全文などはここにある（正本は `help_topics.go`。ADR-0622） |
 | `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却）。`data_types` はエンティティ名 `timeis` / `mi` / `mirekyou` も受理して全射影へ展開する（ADR-0623）。`count_only` と `group_by` は cursor と同じく併用不可（エラー）。`query.ids` の不一致・`num_min` / `num_max` の種別混在は `warnings[]` に出る |
 | `gkill_get_mi_board_list` | Miボード名一覧を取得 |
 | `gkill_get_all_tag_names` | 全タグ名を取得 |
@@ -225,6 +235,8 @@ gkill_log を使い、`$GKILL_HOME/logs/` に `gkill_mcp_<kind>.log`（全レベ
 | `gkill_get_rep_infos` | リポジトリ一覧を構造化メタデータ付きで取得。`query.rep_types` が受理する正準値 `canonical_rep_types[]`（表示ラベルと1:1でない）、索引付きrepの最終更新 `indexed_at`（古いと「追加したはずのファイルが検索に出ない」の原因）、タグ・テキスト・通知・GPSログの格納先 `attached_data_reps[]`（`query.reps` には渡せない。`use_to_write` 付き）を返す。列は `fields`、行は `writable_only` / `rep_types` / `rep_names` / `contains` / `data_kinds` で絞る（「`gkill_add_tag` はどこへ書くか」は `writable_only:true, data_kinds:["tag"]` で1行） |
 | `gkill_get_idf_file` | IDFファイルの実データを取得（画像はMCP image blockで返却）。`thumb=WxH`（一辺最大1024、動画は `is_video: true` 併用）で縮小取得できる。上限は `GKILL_MCP_MAX_FILE_BYTES`（既定8MB） |
 | `gkill_get_kyou_history` | 1件の全版を取得（削除済みの版も含む）。`gkill_get_kyous` から見えなくなった記録を読み返す唯一の経路。`limit`（既定20・上限200）と `offset` で頁を送り、`has_more` のとき `next_offset` が続きの位置（ADR-0626）。版の `data_type` はエンティティ名 |
+| `gkill_get_skill_list` | 利用者が AI 向けに書いたスキル（手順書）の一覧（`name` / `description` / `file_count` / `updated_time` / `invalid_reason`）。`invalid_reason` が非空なら SKILL.md が無いかヘッダが壊れている |
+| `gkill_get_skill` | スキル1件。`path` を省くと SKILL.md の中身と `revision`、スキル内の全ファイル（SKILL.md を含む）の一覧（`files[]`。各ファイルの `revision` 付き）。`path` を渡すとそのファイル（テキストは `content`、バイナリは `gkill_get_idf_file` と同じ `file_content_base64` / `mime_type` / `is_image` で、画像は image ブロックでも届く）。`GKILL_MCP_MAX_FILE_BYTES` を超えるファイルは `content_omitted:true` で中身を返さない。詳細は `gkill_get_mcp_help` の `skills` |
 
 ##### ファイル実パス導線
 
@@ -270,7 +282,7 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 
 実測: ChatGPTで「キーワード検索 → ヒットしたイラスト数枚を参照して新規イラストを生成」を実行したところ、`gkill_get_kyous` に続いて `gkill_get_idf_file` が枚数ぶん呼ばれ、`/files/` へのアクセスは無かった。経緯と却下案は [ADR-0606](../../../../documents/adr/0606-idf-file-reaches-ai-through-payload.md)。
 
-#### Writeツール（21 — Write専用/ReadWrite統合サーバで使用可能）
+#### Writeツール（23 — Write専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_add_kmemo` | テキストメモ作成 |
@@ -294,8 +306,10 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 | `gkill_submit_kftl` | KFTLテキスト一括処理。応答の `created[]`（`{id, data_type, updated, related_time}`。失敗時は `[]`、`related_time` は秒精度）に実際に書かれた記録が書かれた順で並ぶ。`replayed: true` は同じ `idempotency_key`・同じ本文の再送で、`created[]` は元の送信の控え（同じキーで別の本文は 409 `ERR000423`。ADR-0510）。`created[].id` を `gkill_add_tag` / `gkill_add_text` の `target_id` に使えば、KFTLで作った記録へ後からタグ・注釈を付けられる |
 | `gkill_delete_kyou` | エントリのソフト削除。`gkill_submit_kftl` の `created[]` は `updated` / `related_time` を持つのでそのまま `targets` に渡せない —— `created.filter(c => !c.updated).map(({id, data_type}) => ({id, data_type}))` を渡す（`updated:true` は既存記録の更新で、消すと元から在った打刻が消える） |
 | `gkill_restore_kyou` | ソフト削除の取り消し（`is_deleted` を戻す） |
+| `gkill_add_skill` | スキルを新規作成（`name` / `description` / `body` から gkill が SKILL.md を書く。同じ名前の SKILL.md が既にあれば 409 `ERR000436`。SKILL.md の無いフォルダなら、そこへ SKILL.md を書いて作成される）。反映はすぐで履歴は残らないので、内容を利用者と合意してから呼ぶ |
+| `gkill_update_skill` | スキルのテキストファイルを1つ書く（`path` 省略で SKILL.md をヘッダごと丸ごと）。上書きは `gkill_get_skill` が返した `revision` が必須で、食い違えば 409 `ERR000437` に今の revision が載る。`revision` を省くと新規ファイルの作成だけ。削除・バイナリの追加は利用者が設定画面から行う（AI の削除ツールは公開していない。ADR-0634） |
 
-Write専用サーバにはRead便利ツール9つ（`gkill_status`, `gkill_get_mcp_help`, `gkill_get_application_config`, `gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_kyou_history`）も含まれます。`gkill_status` / `gkill_get_application_config` は「どのアカウントへ書くのか」を書く前に確かめるためのものです。`gkill_get_kyou_history` を載せているのは、`gkill_delete_kyou` / `gkill_restore_kyou` と同じサーバから「いま何を消したのか」を確かめられないと、取り消しが当てずっぽうになるためです。
+Write専用サーバにはRead便利ツール9つ（`gkill_status`, `gkill_get_mcp_help`, `gkill_get_application_config`, `gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_kyou_history`, `gkill_get_skill_list`, `gkill_get_skill`）も含まれます。`gkill_get_skill_list` / `gkill_get_skill` を載せているのは、`gkill_update_skill` が書き換える前に読んで `revision` を得る手段だからです。`gkill_status` / `gkill_get_application_config` は「どのアカウントへ書くのか」を書く前に確かめるためのものです。`gkill_get_kyou_history` を載せているのは、`gkill_delete_kyou` / `gkill_restore_kyou` と同じサーバから「いま何を消したのか」を確かめられないと、取り消しが当てずっぽうになるためです。
 
 ##### 更新系の引数
 
@@ -371,13 +385,14 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 
 #### 2) ツール選択フロー（推奨）
 1. まず `gkill_status`（引数なし）を呼び、**どのアカウントに接続しているか**（`account.user_id` / `account.device`）と、**握っているツール一覧が古くないか**（応答の `schema_revision` と `gkill_status` の説明文末尾の値が一致するか）を確かめる（read / write / readwrite が別アカウントを向いていることがある。`gkill_get_application_config` を `fields: ["user_id", "device"]` で呼んでも接続先は分かる）。タグ階層・ボード構造が要るときだけ `fields: ["tag_struct"]` 等を追加で取る（無指定の全量は大きい）
-2. 必要に応じて `gkill_get_all_tag_names` / `gkill_get_all_rep_names` / `gkill_get_mi_board_list` でメタ情報を補完
-3. `query.rep_types` で絞るときは `gkill_get_rep_infos` で正準値（`canonical_rep_types`）を引く（ApplicationConfig の表示ラベルと受理値は1:1でない）。「追加したはずのファイルが検索に出ない」ときも `indexed_at` で索引の鮮度を確かめる
-4. `gkill_get_kyous` でKyou一覧を取得（タグ・テキスト・型データはレスポンスにインライン）
-5. 件数が多い場合は `cursor` / `next_cursor` でページングして追加取得
-6. 地図系は `gkill_get_gps_log` を使う
-7. プラグイン由来のKyou（`payload.kind === "plugin"`）の本文が要るときは `gkill_get_kyous` に `include_plugin_content: true` を付ける。どのプラグインが入っているかは `gkill_get_plugin_list` で分かる
-8. 検索から消えた記録・過去版・削除済みの中身を読み返すときは `gkill_get_kyou_history`（`id` と `data_type` の両方が必須）。削除の取り消しは Write系サーバの `gkill_restore_kyou`
+2. `gkill_status` の `skills[]` に作業に合う説明のスキル（利用者が AI 向けに書いた手順書）があれば、`gkill_get_skill` で SKILL.md を読み、指している付属ファイルを `path` で読んでから作業する（`skills_error` が載っていれば一覧が取れなかっただけで、スキルが無いとは限らない。`gkill_get_skill_list` で確かめる）
+3. 必要に応じて `gkill_get_all_tag_names` / `gkill_get_all_rep_names` / `gkill_get_mi_board_list` でメタ情報を補完
+4. `query.rep_types` で絞るときは `gkill_get_rep_infos` で正準値（`canonical_rep_types`）を引く（ApplicationConfig の表示ラベルと受理値は1:1でない）。「追加したはずのファイルが検索に出ない」ときも `indexed_at` で索引の鮮度を確かめる
+5. `gkill_get_kyous` でKyou一覧を取得（タグ・テキスト・型データはレスポンスにインライン）
+6. 件数が多い場合は `cursor` / `next_cursor` でページングして追加取得
+7. 地図系は `gkill_get_gps_log` を使う
+8. プラグイン由来のKyou（`payload.kind === "plugin"`）の本文が要るときは `gkill_get_kyous` に `include_plugin_content: true` を付ける。どのプラグインが入っているかは `gkill_get_plugin_list` で分かる
+9. 検索から消えた記録・過去版・削除済みの中身を読み返すときは `gkill_get_kyou_history`（`id` と `data_type` の両方が必須）。削除の取り消しは Write系サーバの `gkill_restore_kyou`
 
 #### 3) `gkill_get_kyous` のパラメータ
 | パラメータ | 型 | 説明 |

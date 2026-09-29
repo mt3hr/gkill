@@ -225,3 +225,117 @@ func TestStatusCarriesSkills(t *testing.T) {
 		expectTrue(t, !strings.Contains(summary, "skill"), "summary mentions skills: %q", summary)
 	})
 }
+
+// バイナリの mime_type / is_image は拡張子の固定表（skillMimeType）で決める。mime.TypeByExtension は Windows で
+// レジストリを読むので端末ごとに結果が変わる。表の引き方（大小無視・.pdf・未知の拡張子）を固定する。
+func TestSkillMimeTypeTable(t *testing.T) {
+	cases := []struct {
+		path     string
+		mimeType string
+		isImage  bool
+	}{
+		{"assets/LOGO.PNG", "image/png", true},
+		{"assets/photo.jpeg", "image/jpeg", true},
+		{"references/spec.pdf", "application/pdf", false},
+		{"assets/blob.bin", "application/octet-stream", false},
+	}
+	for _, c := range cases {
+		t.Run(c.path+" は "+c.mimeType, func(t *testing.T) {
+			client := createReadWriteMockClient()
+			client.mockResolvedValue(skillFileResponse(obj("path", c.path, "size", 4, "is_text", false, "revision", "r", "content", "", "content_base64", "AAAA", "content_omitted", false)))
+			payload, err := serverToolCall(t, NewReadServer(client, nil), "gkill_get_skill", obj("name", "weekly", "path", c.path))
+			expectNoError(t, err)
+			expectEqual(t, payload.Value("mime_type"), c.mimeType)
+			expectEqual(t, payload.Value("is_image"), c.isImage)
+			expectEqual(t, payload.Value("file_content_base64"), "AAAA")
+			expectTrue(t, !payload.Defined("content"), "binary file carries text content: %s", jsonobj.MarshalString(payload))
+		})
+	}
+}
+
+// 画像でないバイナリ（PDF 等）は image ブロックを作れないので、structuredContent の file_content_base64 が唯一の
+// バイト列の渡し口になる。画像と同じ扱いで落とすと、エラーも出ないまま中身の無い応答になる。
+func TestSkillNonImageBinaryKeepsBase64InStructuredContent(t *testing.T) {
+	t.Run("PDF は image ブロックを作らず、structuredContent に file_content_base64 を残す", func(t *testing.T) {
+		client := createReadWriteMockClient()
+		client.mockResolvedValue(skillFileResponse(obj("path", "references/spec.pdf", "size", 4, "is_text", false, "revision", "r5", "content", "", "content_base64", "JVBERi0=", "content_omitted", false)))
+		server := NewReadServer(client, nil)
+		payload, err := serverToolCall(t, server, "gkill_get_skill", obj("name", "weekly", "path", "references/spec.pdf"))
+		expectNoError(t, err)
+		result := server.BuildToolResult("gkill_get_skill", payload, false, nil)
+		content := arrAt(t, result, "content")
+		expectEqual(t, len(content), 1)
+		expectEqual(t, objAt(t, content[0]).Value("type"), "text")
+		expectTrue(t, !strings.Contains(firstText(t, result), "JVBERi0="), "base64 leaked into the text part")
+		structured := objAt(t, result, "structuredContent")
+		expectEqual(t, structured.Value("file_content_base64"), "JVBERi0=")
+		expectEqual(t, structured.Value("mime_type"), "application/pdf")
+		expectTrue(t, !structured.Defined("image_content_attached"), "non-image must not claim an image block: %s", jsonobj.MarshalString(structured))
+	})
+
+	t.Run("画像は structuredContent からも base64 を落とし、image_content_attached の印を残す", func(t *testing.T) {
+		client := createReadWriteMockClient()
+		client.mockResolvedValue(skillFileResponse(obj("path", "assets/logo.png", "size", 8, "is_text", false, "revision", "r3", "content", "", "content_base64", "iVBORw0KGgo=", "content_omitted", false)))
+		server := NewReadServer(client, nil)
+		payload, err := serverToolCall(t, server, "gkill_get_skill", obj("name", "weekly", "path", "assets/logo.png"))
+		expectNoError(t, err)
+		result := server.BuildToolResult("gkill_get_skill", payload, false, nil)
+		structured := objAt(t, result, "structuredContent")
+		expectTrue(t, !structured.Defined("file_content_base64"), "image duplicates base64 in structuredContent")
+		expectEqual(t, structured.Value("image_content_attached"), true)
+	})
+}
+
+// 一覧が空のときの要約。名前を並べる経路と同じ関数なので、空の分岐を消しても "0 skill(s): ." が黙って返るだけになる。
+func TestSkillListEmptySummary(t *testing.T) {
+	t.Run("skills が [] なら「無い」と言う", func(t *testing.T) {
+		client := createReadWriteMockClient()
+		client.mockResolvedValue(obj("skills", arr()))
+		result, err := serverToolCall(t, NewReadServer(client, nil), "gkill_get_skill_list", obj())
+		expectNoError(t, err)
+		expectEqual(t, len(arrAt(t, result, "skills")), 0)
+		summary, ok := summarizeSkillPayload("gkill_get_skill_list", result)
+		expectTrue(t, ok, "summary not produced")
+		expectEqual(t, summary, "No skills are stored for this account.")
+	})
+
+	t.Run("skills が無い応答でも [] に揃えて同じ要約", func(t *testing.T) {
+		client := createReadWriteMockClient()
+		client.mockResolvedValue(obj("errors", arr(), "messages", arr()))
+		result, err := serverToolCall(t, NewReadServer(client, nil), "gkill_get_skill_list", obj())
+		expectNoError(t, err)
+		expectEqual(t, len(arrAt(t, result, "skills")), 0)
+		summary, _ := summarizeSkillPayload("gkill_get_skill_list", result)
+		expectEqual(t, summary, "No skills are stored for this account.")
+	})
+}
+
+// gkill_add_skill の引数の trim の規則。body は Markdown の中身なので trim しない（先頭の空白・インデントも内容。
+// normalizeSkillArgs の raw 指定）。raw から外すと AssertTrimmedString が黙って先頭と末尾の空白を落とし、
+// 空の body は「必須」として拒まれる。name / description は trim し、trim して空の description は送る前に拒む。
+func TestAddSkillArgumentTrimming(t *testing.T) {
+	t.Run("先頭の空白と末尾の改行を残し、name / description だけ trim する", func(t *testing.T) {
+		client := createReadWriteMockClient()
+		client.mockResolvedValue(obj("path", "SKILL.md", "revision", "newrev", "errors", arr(), "messages", arr()))
+		_, err := serverToolCall(t, NewReadWriteServer(client, nil), "gkill_add_skill", obj("name", " weekly ", "description", " d ", "body", "   indented first line\n\n"))
+		expectNoError(t, err)
+		body := client.calls[0].Body
+		expectEqual(t, body.Value("name"), "weekly")
+		expectEqual(t, body.Value("content"), "---\nname: \"weekly\"\ndescription: \"d\"\n---\n   indented first line\n\n")
+	})
+
+	t.Run("空の body は通り、ヘッダだけの SKILL.md になる", func(t *testing.T) {
+		client := createReadWriteMockClient()
+		client.mockResolvedValue(obj("path", "SKILL.md", "revision", "newrev", "errors", arr(), "messages", arr()))
+		_, err := serverToolCall(t, NewReadWriteServer(client, nil), "gkill_add_skill", obj("name", "weekly", "description", "d", "body", ""))
+		expectNoError(t, err)
+		expectEqual(t, client.calls[0].Body.Value("content"), "---\nname: \"weekly\"\ndescription: \"d\"\n---\n")
+	})
+
+	t.Run("description は空を拒む（gkill へ送らない）", func(t *testing.T) {
+		client := createReadWriteMockClient()
+		_, err := serverToolCall(t, NewReadWriteServer(client, nil), "gkill_add_skill", obj("name", "weekly", "description", "  ", "body", "x"))
+		expectThrowsField(t, nil, err, "description")
+		expectEqual(t, len(client.calls), 0)
+	})
+}

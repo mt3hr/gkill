@@ -444,7 +444,7 @@ var WriteTools = []*jsonobj.Object{
 			"Fails if the name exists — use gkill_update_skill. Takes effect at once with no history: agree on the content "+
 			"with the user first. Details: gkill_get_mcp_help topic:skills.",
 		schema(jsonobj.Obj(
-			"name", jsonobj.Obj("type", "string", "description", "Lowercase letters, digits and hyphens, 1-64 chars (e.g. weekly-dashboard)."),
+			"name", jsonobj.Obj("type", "string", "description", "Lowercase letters, digits and hyphens, 1-64 chars, starting and ending with a letter or digit: ^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$ (e.g. weekly-dashboard)."),
 			"description", jsonobj.Obj("type", "string", "description", "What the skill does and when to use it."),
 			"body", jsonobj.Obj("type", "string", "description", "Instructions (markdown)."),
 			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),

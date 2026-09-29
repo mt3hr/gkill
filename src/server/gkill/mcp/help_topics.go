@@ -398,14 +398,31 @@ const skillsTopic = "A skill is a procedure the user wrote for AI assistants —
 	"content is not returned (content_omitted:true); the user can download the whole skill as a zip from gkill's " +
 	"settings screen. gkill never executes scripts: run them in your own sandbox if you have one, and remember that a " +
 	"sandbox cannot reach gkill — fetch data with the gkill tools and hand it to the script.\n\n" +
-	"Writing (write / readwrite servers): gkill_add_skill creates a skill (fails if the name exists). gkill_update_skill " +
+	"Writing (write / readwrite servers): gkill_add_skill creates a skill (fails if the skill's SKILL.md already exists). gkill_update_skill " +
 	"writes one text file: omit path for SKILL.md (write the whole file, header included, name unchanged). To overwrite " +
 	"pass the revision gkill_get_skill returned for that file; omit revision only to create a new file. A revision that " +
-	"no longer matches is rejected (409) with the current revision in the message: somebody (the user, or another " +
+	"no longer matches is rejected (ERR000437, kind=conflict) with the current revision in the message: somebody (the user, or another " +
 	"assistant) changed the file after you read it — read it again, merge, retry. Changes take effect immediately and " +
 	"gkill keeps NO history of skills, so agree on every change with the user before writing. Deleting files or whole " +
 	"skills and adding binary files are done by the user from gkill's settings screen (upload of a zip that replaces " +
-	"the skill, or the delete button); no tool here deletes anything."
+	"the skill, or the delete button); no tool here deletes anything.\n\n" +
+	"What gkill rejects (the error message carries the error code and its kind, as in \"ERR000432: ... [kind=input]\"; " +
+	"there is no HTTP status in it): name not matching " +
+	"^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$ (ERR000432, kind=input). A path whose part ends with '.', or whose part is a " +
+	"Windows reserved name with or without extension (CON, PRN, AUX, NUL, COM1-COM9, LPT1-LPT9), or that differs only " +
+	"in case from an existing file of the skill, or that clashes file-vs-folder with an existing path (a/b when a is " +
+	"a file, or a when a/b exists) (ERR000433, kind=input); the manifest is spelled exactly SKILL.md — skill.md is rejected " +
+	"(ERR000433, kind=input). SKILL.md whose header is not YAML between two \"---\" lines, has no name, a name different from " +
+	"the folder, or an empty description (ERR000434, kind=input); gkill_add_skill rejects an empty description before sending " +
+	"anything. Writing any file other than SKILL.md, or passing a revision, to a skill that does not exist (ERR000430, " +
+	"kind=not_found). A revision for a path that does not exist in the skill (ERR000431, kind=not_found). gkill_add_skill when the " +
+	"skill's SKILL.md already exists, or gkill_update_skill without revision for a file that already exists (ERR000436, " +
+	"kind=conflict) — read the file with gkill_get_skill and pass its revision instead. A folder without SKILL.md (listed " +
+	"with invalid_reason \"SKILL.md is missing\") does not block gkill_add_skill: it writes SKILL.md into that folder. Note that " +
+	"gkill_status carries skills[] (name and description only); when the list could not be fetched, gkill_status still " +
+	"succeeds and carries skills_error instead of skills[] — call gkill_get_skill_list to see the reason, do not conclude " +
+	"there are no skills. When gkill itself could not be reached (the reachable flag of gkill_status is false), neither " +
+	"skills[] nor skills_error is present: the skills are unknown, not absent."
 
 // HelpTopics は topic の順序つき一覧（index は BuildHelpIndexText が組み立てる）。
 var HelpTopics = []HelpTopic{

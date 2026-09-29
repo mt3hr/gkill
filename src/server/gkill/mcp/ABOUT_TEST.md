@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。1162テスト（43ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 13 + プラグイン1 = 14ツール、Write サーバ 32（書き込み23 + Read便利9）+ プラグイン1 = 33ツール、統合サーバ 36 + プラグイン1 = 37ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、ログ、設定ファイル、旧 Node 実装とのゴールデン一致をカバーする（テスト数は `t.Run` のサブテスト宣言の静的計数）。
+MCP (Model Context Protocol) サーバのテスト。1170テスト（43ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 13 + プラグイン1 = 14ツール、Write サーバ 32（書き込み23 + Read便利9）+ プラグイン1 = 33ツール、統合サーバ 36 + プラグイン1 = 37ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、ログ、設定ファイル、旧 Node 実装とのゴールデン一致をカバーする（テスト数は `t.Run` のサブテスト宣言の静的計数）。
 
 2026-09-20 に Node.js 実装（旧 `src/mcp`、vitest 28 ファイル）を Go へ移した。旧テストの `describe` → `TestXxx`、`test` → `t.Run("<原文のタイトル>")` で 1:1 に対応し、タイトル集合の照合で未移植 0 を確認してある（意図した例外は [ADR-0631](../../../../documents/adr/0631-mcp-lives-in-gkill-server.md)）。
 
@@ -32,6 +32,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 | `readme_examples_test.go` | README の ```json 例を実物の正規化器（`NormalizeKyouArgs`）へ通す同期検査 |
 | `status_tool_test.go` | ツール一覧の世代 `schema_revision`（`status_tool.go`）の計算と `gkill_status` への焼き込み |
 | `help_topics_test.go` | `gkill_get_mcp_help`（`help_topics.go`）: 全 topic に本文があること、名指しするツール名の実在、3サーバ搭載、未知の topic の拒否 |
+| `skill_handlers_test.go` | スキルの4ツール（`skill_handlers.go`。ADR-0634）: gkill の `/api/get_skill_list` / `/api/get_skill` / `/api/write_skill_file` へ送る要求の形（`path` 指定時だけ `max_bytes`、add は `revision` を送らない、SKILL.md の frontmatter は JSON 文字列で書く、`body` / `content` は trim しない、add の `description` は trim して空なら gkill へ送らずに拒む）、画像は `gkill_get_idf_file` と同じ image ブロックで届きテキスト表現に base64 を載せないこと、PDF 等の非画像バイナリは image ブロックを作らず `structuredContent` の `file_content_base64` を残すこと、`mime_type` / `is_image` の拡張子表（大小無視・`.pdf`・未知は `application/octet-stream`）、上限超過で中身を省いたときの `warnings`、一覧が空のときの要約、409（revision の食い違い）がそのまま AI へ返ること、read サーバでは書けないこと、削除ツール `gkill_delete_skill` がどのサーバの一覧にも載らず呼んでも `Unknown tool` になること、`gkill_status` の `skills[]` と取得失敗時の `skills_error` |
 | `schema_contract_test.go` | 「tools/list どおりに呼ぶと失敗しない」の契約: スキーマのキー集合 = 正規化器の受理集合 − 廃止済み、全ツールをスキーマの全プロパティ指定で呼んで未知キーで拒否されないこと、3サーバの同名ツールが同じ JSON、`initialize` の version・説明文の印・応答の `schema_revision` の一致 |
 | `tool_schema_budget_test.go` | tools/list のバイト量が予算ファイル `tool_schema_budget.json` の範囲内であること（超過で失敗、1024 バイト以上の減少でも予算の追随を要求）、計測の決定性、over / under / missing の判定と文言 |
 | `start_spec_test.go` | 3サーバの `StartSpec` の宣言値固定。scope / 既定ポート / file-link 可否・3サーバ間の重複禁止・bootstrap が `spec.Scope` を OAuthServer へ渡す配線。`server_start` ログの世代情報 `startInfo` と、stdio・http の両トランスポートがそれを出すこと |
@@ -85,7 +86,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 ## テスト内容
 
 - **Validation / Normalization / Write Normalization / Constants**: 各ツールの入力パラメータ検証、日付フォーマット、デフォルト値補完、data_type 列挙値、unknown keys 拒否
-- **Tool Handlers**: Read 13ツール + Write 23ツール（add系9 + update系9 + submit_kftl + delete_kyou + restore_kyou）+ Read便利9ツール + プラグイン1ツール（3サーバ共通）
+- **Tool Handlers**: Read 13ツール + Write 23ツール（add系9 + update系9 + submit_kftl + delete_kyou + restore_kyou + スキル 2）+ Read便利9ツール + プラグイン1ツール（3サーバ共通）
 - **Plugin Tools**: `gkill_get_plugin_list` と `include_plugin_content` によるプラグイン本文のインライン埋め込み（並列度・予算・デッドライン・失敗隔離）、コンテンツHTMLのテキスト変換
 - **Client / Server / Transport**: gkill への往復（認証、エラーハンドリング、レスポンスパース）、3サーバのディスパッチ、JSON-RPC、stdio の枠組み、HTTP の OAuth 2.1 と file-link 配信
 - **Config / Log**: 設定ファイルの生成と優先順位、gkill_log 上のロガーのレベル
