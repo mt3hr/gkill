@@ -94,6 +94,18 @@
     <li>Steht in der <code>gkill_error.log</code> des Servers eine Zeile, die mit „sqlite localtime differs" beginnt, ist das die Ursache.</li>
   </ul>
 
+  <h2>Wenn die Smartphone-App (Android) nicht startet / auf dem Bildschirm „Erlauben“ stehen bleibt</h2>
+  <p>Die Smartphone-App (Android) speichert Ihre Einträge im gemeinsamen Speicher unter <code>/sdcard/gkill</code>. Deshalb startet der Server erst, wenn Sie die Berechtigung „Zugriff auf alle Dateien“ erteilt haben (unter Android 10 und älter: Zugriff auf den Speicher). Kehren Sie zurück, ohne sie zu erteilen, bleibt der Hinweis, dass gkill nach dem Erlauben des Dateizugriffs startet, zusammen mit der Schaltfläche „許可する“ (Erlauben) stehen. Ihre Einträge sind nicht verloren.</p>
+  <ul>
+    <li>Unter Android 11 und neuer öffnet ein Tippen auf „許可する“ (Erlauben) den Berechtigungsbildschirm von Android. Schalten Sie „Zugriff auf alle Dateien“ für gkill ein und kehren Sie zur App zurück; sie startet dann automatisch.</li>
+    <li>Unter Android 10 und älter erscheint nach einem Tippen auf „許可する“ (Erlauben) eine Rückfrage, die um die Berechtigung bittet. Wählen Sie „Zulassen“; die App startet dann automatisch.</li>
+    <li>Haben Sie unter Android 10 und älter in dieser Rückfrage mit „Nicht mehr fragen“ abgelehnt, erscheint beim Tippen auf „許可する“ (Erlauben) nichts mehr. Erlauben Sie den Zugriff auf den Speicher (Dateien) unter Android-Einstellungen → Apps → gkill → Berechtigungen und kehren Sie dann zur App zurück.</li>
+    <li>Der Berechtigungsbildschirm (unter Android 10 und älter die Rückfrage) erscheint nur einmal von selbst, beim Start der App. Wechseln Sie zum Startbildschirm und öffnen die App erneut, erscheint er nicht wieder von selbst. Haben Sie ihn geschlossen, öffnen Sie ihn über die Schaltfläche „許可する“ (Erlauben) auf dem Bildschirm erneut.</li>
+    <li>Startet die App auch nach erteilter Berechtigung nicht, beenden Sie die App und starten Sie sie erneut.</li>
+    <li>Erscheint die Meldung „以前の版のデータを /sdcard/gkill へ複製できなかったため、起動を止めました“ (der Start wurde angehalten, weil die Daten der vorherigen Version nicht nach /sdcard/gkill kopiert werden konnten), befinden sich Ihre bisherigen Einträge noch in der App. Diese Meldung erscheint nur nach einem Update von einer Version, die ihre Daten in der App ablegte (1.1.7 bis 1.1.9). Prüfen Sie den freien Speicherplatz des Geräts und ob es in <code>/sdcard</code> eine Datei namens <code>gkill</code> gibt (eine Datei, kein Ordner), und starten Sie die App dann erneut.</li>
+    <li>Aktualisieren Sie von einer der Versionen 1.1.7 bis 1.1.9 und enthält <code>/sdcard/gkill</code> bereits Daten (etwa alte Daten aus Version 1.1.6 oder älter), startet die App mit diesen Daten statt mit den Einträgen, die sie in der App abgelegt hatte. Diese Einträge sind nicht gelöscht: Beenden Sie die App, benennen Sie <code>/sdcard/gkill</code> um (um es beiseitezulegen) und starten Sie die App erneut; die Einträge aus der App werden dann nach <code>/sdcard/gkill</code> kopiert und verwendet.</li>
+  </ul>
+
   <h2>Verwandte Dokumente</h2>
   <ul>
     <li><a href="getting-started.html">Erste Schritte (Anleitung zur Ersteinrichtung)</a></li>

@@ -37,6 +37,7 @@
     <li>Desactive <strong>Solo acceso local</strong>.</li>
     <li>Pulse <strong>Aplicar</strong>. El servidor se reinicia y los dem&aacute;s dispositivos pueden abrir <code>http://(direcci&oacute;n IP de este dispositivo):9999</code>.</li>
   </ol>
+  <div class="tip"><strong>Aplicaci&oacute;n para tel&eacute;fono (Android):</strong> El servidor que se ejecuta dentro de la aplicaci&oacute;n tambi&eacute;n sigue los ajustes de esta pantalla. Si en Direcci&oacute;n escribe solo la direcci&oacute;n IP de este dispositivo en la red local (ej.: <code>192.168.0.10:9999</code>), la propia pantalla de la aplicaci&oacute;n dejar&aacute; de poder conectarse al servidor. Para dar servicio tambi&eacute;n a otros dispositivos, use <code>0.0.0.0:9999</code> o deje vac&iacute;a la parte del host, como en <code>:9999</code> (si escribe solo <code>9999</code>, sin los dos puntos, la pantalla de la aplicaci&oacute;n tampoco podr&aacute; abrirse). Adem&aacute;s, si cambia el puerto de escucha o Habilitar TLS y aplica, la aplicaci&oacute;n vuelve a abrir su pantalla en la nueva direcci&oacute;n y tendr&aacute; que iniciar sesi&oacute;n de nuevo.</div>
   <div class="tip"><strong>Consejo:</strong> Al dar servicio a otros dispositivos, se recomienda activar <strong>Habilitar TLS</strong> (puede crear un certificado con "Generar archivos TLS autofirmados"). Con TLS desactivado, las contrase&ntilde;as viajan por la red sin cifrar.</div>
 
 

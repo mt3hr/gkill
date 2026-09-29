@@ -94,6 +94,18 @@
     <li>Si le fichier <code>gkill_error.log</code> du serveur contient une ligne commençant par « sqlite localtime differs », c'est la cause.</li>
   </ul>
 
+  <h2>Quand l'application du smartphone (Android) ne démarre pas / reste sur l'écran « Autoriser »</h2>
+  <p>L'application du smartphone (Android) enregistre vos données dans le stockage partagé, dans <code>/sdcard/gkill</code>. C'est pourquoi le serveur ne démarre pas tant que vous n'avez pas accordé l'autorisation « Accès à tous les fichiers » (sur Android 10 ou antérieur, l'accès au stockage). Si vous revenez sans l'accorder, l'écran continue d'afficher le message indiquant que gkill démarre une fois l'accès aux fichiers autorisé, ainsi que le bouton « 許可する » (Autoriser). Vos enregistrements ne sont pas perdus.</p>
+  <ul>
+    <li>Sous Android 11 ou ultérieur, appuyer sur « 許可する » (Autoriser) ouvre l'écran des autorisations d'Android. Activez « Accès à tous les fichiers » pour gkill puis revenez dans l'application : elle démarre automatiquement.</li>
+    <li>Sous Android 10 ou antérieur, appuyer sur « 許可する » (Autoriser) affiche une confirmation demandant l'autorisation. Choisissez « Autoriser » : l'application démarre automatiquement.</li>
+    <li>Sous Android 10 ou antérieur, si vous avez refusé en cochant « Ne plus demander » dans cette confirmation, appuyer sur « 許可する » (Autoriser) n'affiche plus rien. Autorisez l'accès au stockage (fichiers) dans Paramètres d'Android → Applications → gkill → Autorisations, puis revenez dans l'application.</li>
+    <li>L'écran des autorisations (sous Android 10 ou antérieur, la confirmation) ne s'affiche de lui-même qu'une seule fois, au démarrage de l'application. Revenir à l'écran d'accueil puis rouvrir l'application ne l'affiche pas de nouveau. Si vous l'avez fermé, rouvrez-le avec le bouton « 許可する » (Autoriser) de l'écran.</li>
+    <li>Si l'application ne démarre toujours pas après l'autorisation, quittez-la puis relancez-la.</li>
+    <li>Si le message « 以前の版のデータを /sdcard/gkill へ複製できなかったため、起動を止めました » (le démarrage a été arrêté car les données de la version précédente n'ont pas pu être copiées vers /sdcard/gkill) s'affiche, vos enregistrements précédents se trouvent toujours dans l'application. Ce message n'apparaît qu'après une mise à jour depuis une version qui conservait ses données dans l'application (1.1.7 à 1.1.9). Vérifiez l'espace libre de l'appareil et l'absence, dans <code>/sdcard</code>, d'un fichier (et non d'un dossier) nommé <code>gkill</code>, puis relancez l'application.</li>
+    <li>Si vous mettez à jour depuis l'une des versions 1.1.7 à 1.1.9 alors que <code>/sdcard/gkill</code> contient déjà des données (par exemple d'anciennes données de la version 1.1.6 ou antérieure), l'application démarre avec ces données au lieu des enregistrements qu'elle conservait en interne. Ces enregistrements ne sont pas supprimés : quittez l'application, renommez <code>/sdcard/gkill</code> (pour le mettre de côté) puis relancez-la ; les enregistrements internes sont alors copiés vers <code>/sdcard/gkill</code> et utilisés.</li>
+  </ul>
+
   <h2>Documents associés</h2>
   <ul>
     <li><a href="getting-started.html">Premiers pas (guide de configuration initiale)</a></li>

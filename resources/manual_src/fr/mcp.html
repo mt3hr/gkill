@@ -19,9 +19,9 @@
   <h2>Types d'intégration</h2>
   <table>
     <tr><th>Type</th><th>Ce qu’il peut faire</th><th>Commande</th><th>Outils</th><th>Port (HTTP)</th></tr>
-    <tr><td>Lecture seule</td><td>Afficher et rechercher des enregistrements uniquement. L’ajout ou la modification est impossible</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
-    <tr><td>Écriture seule</td><td>Ajouter, mettre à jour et supprimer des enregistrements. Peut aussi lire les noms de dépôts, de tags et de tableaux</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
-    <tr><td>Lecture et écriture</td><td>Afficher, ajouter, mettre à jour et supprimer des enregistrements</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
+    <tr><td>Lecture seule</td><td>Afficher et rechercher des enregistrements uniquement. L’ajout ou la modification est impossible. Peut lire les compétences</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
+    <tr><td>Écriture seule</td><td>Ajouter, mettre à jour et supprimer des enregistrements. Peut aussi lire les noms de dépôts, de tags et de tableaux. Peut lire les compétences, et aussi les créer et les réécrire</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
+    <tr><td>Lecture et écriture</td><td>Afficher, ajouter, mettre à jour et supprimer des enregistrements. Peut lire les compétences, et aussi les créer et les réécrire</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
   </table>
   <p>Le serveur MCP fait partie de gkill_server et se lance avec <code>gkill_server mcp --kind &lt;type&gt;</code> (gkill_server doit être en cours d’exécution). La connexion et les identifiants se définissent par variables d’environnement ou dans le fichier de configuration <code>configs/gkill_mcp.json</code>, généré au premier démarrage. Les journaux vont dans <code>logs/gkill_mcp_&lt;type&gt;.log</code> (les fichiers par niveau partagent le préfixe).</p>
   <p>Chaque type inclut un outil permettant de lister les extensions install&eacute;es. Le contenu des enregistrements import&eacute;s par les extensions peut &ecirc;tre re&ccedil;u directement avec les r&eacute;sultats de recherche.</p>
@@ -42,8 +42,16 @@ description: Étapes pour faire le résumé hebdomadaire
     <tr><td>Supprimer</td><td>« Supprimer » dans « Compétences » de l'écran des paramètres efface toute la compétence.</td></tr>
     <tr><td>Créée ou corrigée par l'IA</td><td>Avec une intégration qui peut écrire, l'IA peut créer des compétences et réécrire leurs fichiers. L'IA ne peut pas supprimer de compétences.</td></tr>
   </table>
+  <p>Le contenu du zip est importé selon les règles suivantes.</p>
+  <ul>
+    <li>Le nom de la compétence est le <code>name</code> écrit dans le <code>SKILL.md</code> du zip (pas le nom du fichier zip ni celui du dossier).</li>
+    <li>Si le contenu est enveloppé dans un dossier (par exemple un zip obtenu avec « Télécharger » et téléversé à nouveau tel quel), ce niveau est retiré.</li>
+    <li>Les fichiers et dossiers dont le nom commence par un point, <code>__MACOSX</code>, <code>Thumbs.db</code> et <code>desktop.ini</code> ne sont pas importés (la confirmation avant le téléversement les affiche sous « Fichiers ignorés »).</li>
+    <li>Les noms utilisent des minuscules, des chiffres et des tirets (64 caractères au maximum) et doivent commencer et finir par une lettre ou un chiffre.</li>
+    <li>Les noms de fichiers (et de dossiers) utilisent uniquement des lettres, des chiffres et <code>._-</code>, doivent commencer par une lettre ou un chiffre et ne peuvent pas se terminer par un point. Les noms réservés de Windows <code>CON</code>, <code>PRN</code>, <code>AUX</code>, <code>NUL</code>, <code>COM1</code>–<code>COM9</code> et <code>LPT1</code>–<code>LPT9</code> sont interdits, quelle que soit la casse et même avec une extension (<code>con.txt</code> aussi). Deux noms qui ne diffèrent que par la casse, ou un fichier et un dossier de même nom (par exemple un fichier <code>a</code> et <code>a/b</code> dans un dossier <code>a</code>), ne peuvent pas coexister. Si un fichier enfreint ces règles, le téléversement s'arrête avec « Le zip ne peut pas être lu comme une compétence ».</li>
+  </ul>
   <div class="tip">
-    <strong>Astuce :</strong> Les modifications des compétences s'appliquent immédiatement et aucun historique n'est conservé. Avant de laisser l'IA modifier une compétence, gardez-en une copie avec « Télécharger » si besoin. Les noms utilisent des minuscules, des chiffres et des tirets (64 caractères au maximum), et les noms de fichiers uniquement des lettres, des chiffres et <code>._-</code>. gkill n'exécute jamais les scripts.
+    <strong>Astuce :</strong> Les modifications des compétences s'appliquent immédiatement et aucun historique n'est conservé. Avant de laisser l'IA modifier une compétence, gardez-en une copie avec « Télécharger » si besoin. gkill n'exécute jamais les scripts.
   </div>
 
   <h2>Transmission des fichiers</h2>
@@ -54,7 +62,7 @@ description: Étapes pour faire le résumé hebdomadaire
     <tr><td>Connexion distante (IA via internet)</td><td>Une URL dédiée à durée limitée est émise et l'IA récupère le fichier depuis cette URL. Pour les images, la miniature et la taille originale sont toutes deux fournies. Il n'est pas nécessaire d'exposer gkill.</td></tr>
   </table>
   <div class="tip">
-    <strong>Astuce :</strong> La limite de taille du transfert intégré (8 Mo par défaut) se règle avec la variable d'environnement <code>GKILL_MCP_MAX_FILE_BYTES</code>, et la durée de validité de l'URL (1 heure par défaut) avec <code>GKILL_MCP_FILE_LINK_TTL_MS</code>.
+    <strong>Astuce :</strong> La limite de taille du transfert intégré (8 Mo par défaut) se règle avec la variable d'environnement <code>GKILL_MCP_MAX_FILE_BYTES</code>, et la durée de validité de l'URL (1 heure par défaut) avec <code>GKILL_MCP_FILE_LINK_TTL_MS</code>. La limite de taille du transfert intégré s'applique aussi quand l'IA lit les fichiers d'une compétence : un fichier autre que <code>SKILL.md</code> qui dépasse la limite apparaît dans la liste, mais son contenu n'est pas transmis (utilisez « Télécharger » pour récupérer le zip si besoin). Quand l'IA lit une compétence sans désigner de fichier (la façon habituelle), <code>SKILL.md</code> est transmis en entier, quelle que soit sa taille (si l'IA désigne <code>SKILL.md</code> comme fichier à lire, la même limite que pour les autres fichiers s'applique).
   </div>
 
   <h2>Configuration (Claude Desktop)</h2>

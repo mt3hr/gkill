@@ -19,9 +19,9 @@
   <h2>Integrationstypen</h2>
   <table>
     <tr><th>Typ</th><th>Was er kann</th><th>Startbefehl</th><th>Werkzeuge</th><th>Port (HTTP)</th></tr>
-    <tr><td>Nur-Lesen</td><td>Eintr&auml;ge nur anzeigen und suchen. Hinzuf&uuml;gen oder &Auml;ndern ist nicht m&ouml;glich</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
-    <tr><td>Nur-Schreiben</td><td>Eintr&auml;ge hinzuf&uuml;gen, aktualisieren und l&ouml;schen. Kann zudem Ablage-, Tag- und Board-Namen lesen</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
-    <tr><td>Lesen &amp; Schreiben</td><td>Eintr&auml;ge anzeigen, hinzuf&uuml;gen, aktualisieren und l&ouml;schen</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
+    <tr><td>Nur-Lesen</td><td>Eintr&auml;ge nur anzeigen und suchen. Hinzuf&uuml;gen oder &Auml;ndern ist nicht m&ouml;glich. Skills k&ouml;nnen gelesen werden</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
+    <tr><td>Nur-Schreiben</td><td>Eintr&auml;ge hinzuf&uuml;gen, aktualisieren und l&ouml;schen. Kann zudem Ablage-, Tag- und Board-Namen lesen. Skills k&ouml;nnen gelesen und au&szlig;erdem erstellt und umgeschrieben werden</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
+    <tr><td>Lesen &amp; Schreiben</td><td>Eintr&auml;ge anzeigen, hinzuf&uuml;gen, aktualisieren und l&ouml;schen. Skills k&ouml;nnen gelesen, erstellt und umgeschrieben werden</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
   </table>
   <p>Der MCP-Server ist Teil von gkill_server und wird mit <code>gkill_server mcp --kind &lt;Typ&gt;</code> gestartet (gkill_server selbst muss laufen). Verbindung und Zugangsdaten kommen aus Umgebungsvariablen oder aus der Konfigurationsdatei <code>configs/gkill_mcp.json</code>, die beim ersten Start erzeugt wird. Protokolle landen in <code>logs/gkill_mcp_&lt;Typ&gt;.log</code> (die Dateien je Stufe teilen sich das Pr&auml;fix).</p>
   <p>Jeder Typ enth&auml;lt ein Werkzeug zum Auflisten der verwendeten Erweiterungen. Die Inhalte der &uuml;ber Erweiterungen importierten Eintr&auml;ge k&ouml;nnen direkt zusammen mit den Suchergebnissen empfangen werden.</p>
@@ -42,8 +42,16 @@ description: Schritte für die Wochenzusammenfassung
     <tr><td>Löschen</td><td>„Löschen“ unter „Skills“ in den Einstellungen entfernt den ganzen Skill.</td></tr>
     <tr><td>Von der KI erstellt oder korrigiert</td><td>Mit einer Integration, die schreiben darf, kann die KI Skills erstellen und ihre Dateien neu schreiben. Die KI kann keine Skills löschen.</td></tr>
   </table>
+  <p>Der Inhalt des Zips wird nach folgenden Regeln übernommen.</p>
+  <ul>
+    <li>Der Name des Skills ist der <code>name</code>, der in der <code>SKILL.md</code> im Zip steht (nicht der Dateiname des Zips oder der Ordnername).</li>
+    <li>Ist der Inhalt in einen Ordner eingepackt (zum Beispiel ein mit „Herunterladen“ geholtes Zip, das unverändert wieder hochgeladen wird), wird diese eine Ebene entfernt.</li>
+    <li>Dateien und Ordner, deren Name mit einem Punkt beginnt, sowie <code>__MACOSX</code>, <code>Thumbs.db</code> und <code>desktop.ini</code> werden nicht übernommen (die Bestätigung vor dem Hochladen führt sie unter „Ignorierte Dateien“ auf).</li>
+    <li>Namen bestehen aus Kleinbuchstaben, Ziffern und Bindestrichen (bis zu 64 Zeichen) und müssen mit einem Buchstaben oder einer Ziffer beginnen und enden.</li>
+    <li>Dateinamen (und Ordnernamen) bestehen nur aus Buchstaben, Ziffern und <code>._-</code>, müssen mit einem Buchstaben oder einer Ziffer beginnen und dürfen nicht auf einen Punkt enden. Die unter Windows reservierten Namen <code>CON</code>, <code>PRN</code>, <code>AUX</code>, <code>NUL</code>, <code>COM1</code>–<code>COM9</code> und <code>LPT1</code>–<code>LPT9</code> sind unabhängig von Groß-/Kleinschreibung und Erweiterung nicht erlaubt (auch <code>con.txt</code> nicht). Zwei Namen, die sich nur in der Groß-/Kleinschreibung unterscheiden, oder eine Datei und ein Ordner mit demselben Namen (etwa eine Datei <code>a</code> und <code>a/b</code> in einem Ordner <code>a</code>) können nicht gleichzeitig existieren. Verstößt eine Datei gegen diese Regeln, bricht das Hochladen mit „Das Zip kann nicht als Skill gelesen werden“ ab.</li>
+  </ul>
   <div class="tip">
-    <strong>Tipp:</strong> Änderungen an Skills gelten sofort, und es wird kein Verlauf gespeichert. Bevor die KI einen Skill ändert, sichern Sie bei Bedarf eine Kopie mit „Herunterladen“. Namen bestehen aus Kleinbuchstaben, Ziffern und Bindestrichen (bis zu 64 Zeichen), Dateinamen nur aus Buchstaben, Ziffern und <code>._-</code>. gkill führt keine Skripte aus.
+    <strong>Tipp:</strong> Änderungen an Skills gelten sofort, und es wird kein Verlauf gespeichert. Bevor die KI einen Skill ändert, sichern Sie bei Bedarf eine Kopie mit „Herunterladen“. gkill führt keine Skripte aus.
   </div>
 
   <h2>Dateiübergabe</h2>
@@ -54,7 +62,7 @@ description: Schritte für die Wochenzusammenfassung
     <tr><td>Remote-Verbindung (KI über das Internet)</td><td>Eine zeitlich begrenzte dedizierte URL wird ausgestellt, und die KI ruft die Datei über diese URL ab. Bei Bildern werden sowohl Miniaturansicht als auch Originalgröße bereitgestellt. gkill selbst muss nicht öffentlich zugänglich sein.</td></tr>
   </table>
   <div class="tip">
-    <strong>Tipp:</strong> Die Größenbeschränkung für die eingebettete Übertragung (Standard 8 MB) kann mit der Umgebungsvariable <code>GKILL_MCP_MAX_FILE_BYTES</code> angepasst werden, die URL-Gültigkeitsdauer (Standard 1 Stunde) mit <code>GKILL_MCP_FILE_LINK_TTL_MS</code>.
+    <strong>Tipp:</strong> Die Größenbeschränkung für die eingebettete Übertragung (Standard 8 MB) kann mit der Umgebungsvariable <code>GKILL_MCP_MAX_FILE_BYTES</code> angepasst werden, die URL-Gültigkeitsdauer (Standard 1 Stunde) mit <code>GKILL_MCP_FILE_LINK_TTL_MS</code>. Die Größenbeschränkung für die eingebettete Übertragung gilt auch, wenn die KI die Dateien eines Skills liest: Eine Datei außer <code>SKILL.md</code>, die über der Grenze liegt, wird aufgelistet, ihr Inhalt aber nicht übergeben (holen Sie sich bei Bedarf das Zip mit „Herunterladen“). Liest die KI einen Skill, ohne eine Datei anzugeben (der übliche Weg), wird <code>SKILL.md</code> unabhängig von der Größe vollständig übergeben (gibt die KI <code>SKILL.md</code> als zu lesende Datei an, gilt dieselbe Grenze wie für andere Dateien).
   </div>
 
   <h2>Einrichtung (Claude Desktop)</h2>

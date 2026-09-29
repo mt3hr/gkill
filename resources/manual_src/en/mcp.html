@@ -19,9 +19,9 @@
   <h2>Integration Types</h2>
   <table>
     <tr><th>Type</th><th>What it can do</th><th>Command</th><th>Tools</th><th>Port (HTTP)</th></tr>
-    <tr><td>Read-only</td><td>View and search records only. Adding or modifying is not allowed</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
-    <tr><td>Write-only</td><td>Add, update and delete records. It can also read storage names, tag names and board names</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
-    <tr><td>Read &amp; Write</td><td>View, add, update and delete records</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
+    <tr><td>Read-only</td><td>View and search records only. Adding or modifying is not allowed. Skills can be read</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
+    <tr><td>Write-only</td><td>Add, update and delete records. It can also read storage names, tag names and board names. Skills can be read, and also created and rewritten</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
+    <tr><td>Read &amp; Write</td><td>View, add, update and delete records. Skills can be read, created and rewritten</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
   </table>
   <p>The MCP server is part of gkill_server and starts with <code>gkill_server mcp --kind &lt;type&gt;</code> (gkill_server itself must be running). The connection and credentials come from environment variables or from the config file <code>configs/gkill_mcp.json</code>, which is generated on first start. Logs go to <code>logs/gkill_mcp_&lt;type&gt;.log</code> (per-level files share the prefix).</p>
   <p>Every type includes one tool for listing the plugins in use. The contents of records imported by plugins can be received inline with the search results.</p>
@@ -42,8 +42,16 @@ description: Steps for building the weekly summary
     <tr><td>Delete</td><td>"Delete" in "Skills" on the settings screen removes the whole skill.</td></tr>
     <tr><td>Created or fixed by the AI</td><td>With an integration that can write, the AI can create skills and rewrite their files. The AI cannot delete skills.</td></tr>
   </table>
+  <p>The contents of the zip are imported by the following rules.</p>
+  <ul>
+    <li>The skill's name is the <code>name</code> written in <code>SKILL.md</code> inside the zip (not the zip's file name or folder name).</li>
+    <li>If the contents are wrapped in one folder (for example, a zip you got with "Download" and upload again as it is), that one level is stripped.</li>
+    <li>Files and folders whose names start with a dot, <code>__MACOSX</code>, <code>Thumbs.db</code> and <code>desktop.ini</code> are not imported (the confirmation before upload lists them under "Ignored files").</li>
+    <li>Names use lowercase letters, digits and hyphens (up to 64 characters) and must start and end with a letter or digit.</li>
+    <li>File names (and folder names) use only letters, digits and <code>._-</code>, must start with a letter or digit and cannot end with a dot. The Windows reserved names <code>CON</code>, <code>PRN</code>, <code>AUX</code>, <code>NUL</code>, <code>COM1</code>–<code>COM9</code> and <code>LPT1</code>–<code>LPT9</code> cannot be used, regardless of case or extension (<code>con.txt</code> is rejected too). Two names that differ only in case, or a file and a folder with the same name (for example, a file <code>a</code> and <code>a/b</code> inside a folder <code>a</code>), cannot exist at the same time. If any file breaks these rules, the upload stops with "The zip cannot be read as a skill".</li>
+  </ul>
   <div class="tip">
-    <strong>Tip:</strong> Changes to skills take effect immediately and no history is kept. Before letting the AI change a skill, keep a copy with "Download" if you need one. Names use lowercase letters, digits and hyphens (up to 64 characters), and file names use only letters, digits and <code>._-</code>. gkill never runs scripts.
+    <strong>Tip:</strong> Changes to skills take effect immediately and no history is kept. Before letting the AI change a skill, keep a copy with "Download" if you need one. gkill never runs scripts.
   </div>
 
   <h2>File Delivery</h2>
@@ -54,7 +62,7 @@ description: Steps for building the weekly summary
     <tr><td>Remote connection (AI over the internet)</td><td>An expiring dedicated URL is issued, and the AI fetches the file from that URL. For images, both a thumbnail and the full-size version are provided. There is no need to expose gkill itself.</td></tr>
   </table>
   <div class="tip">
-    <strong>Tip:</strong> The size limit for embedded transfer (default 8MB) can be adjusted with the <code>GKILL_MCP_MAX_FILE_BYTES</code> environment variable, and the URL expiration (default 1 hour) with <code>GKILL_MCP_FILE_LINK_TTL_MS</code>.
+    <strong>Tip:</strong> The size limit for embedded transfer (default 8MB) can be adjusted with the <code>GKILL_MCP_MAX_FILE_BYTES</code> environment variable, and the URL expiration (default 1 hour) with <code>GKILL_MCP_FILE_LINK_TTL_MS</code>. The size limit for embedded transfer also applies when the AI reads a skill's files: a file other than <code>SKILL.md</code> that is over the limit is listed, but its contents are not passed on (use "Download" to get the zip if you need it). When the AI reads a skill without naming a file (the usual way), <code>SKILL.md</code> is passed in full, whatever its size (if the AI names <code>SKILL.md</code> as the file to read, the same limit as for other files applies).
   </div>
 
   <h2>Setup (Claude Desktop)</h2>

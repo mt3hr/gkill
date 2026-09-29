@@ -19,9 +19,9 @@
   <h2>連携の種類</h2>
   <table>
     <tr><th>種類</th><th>できること</th><th>起動コマンド</th><th>ツール数</th><th>HTTP時のポート</th></tr>
-    <tr><td>読み取り専用</td><td>記録の閲覧・検索のみ。追加・変更はできない</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
-    <tr><td>書き込み専用</td><td>記録の追加・更新・削除。あわせて記録保管場所名・タグ名・板名の取得もできる</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
-    <tr><td>読み書き両用</td><td>閲覧・追加・更新・削除のすべて</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
+    <tr><td>読み取り専用</td><td>記録の閲覧・検索のみ。追加・変更はできない。スキルは読める</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
+    <tr><td>書き込み専用</td><td>記録の追加・更新・削除。あわせて記録保管場所名・タグ名・板名の取得もできる。スキルは読めるほか、作成と書き換えもできる</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
+    <tr><td>読み書き両用</td><td>閲覧・追加・更新・削除のすべて。スキルは読めるほか、作成と書き換えもできる</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
   </table>
   <p>MCP サーバは gkill_server の一部で、<code>gkill_server mcp --kind &lt;種類&gt;</code> で起動します（gkill_server 本体が起動している必要があります）。接続先や資格情報は環境変数のほか、初回起動時に自動生成される設定ファイル <code>configs/gkill_mcp.json</code> でも指定できます。ログは <code>logs/gkill_mcp_&lt;種類&gt;.log</code>（レベル別ファイルも同じ接頭辞）に出ます。</p>
   <p>どの種類でも、プラグインの一覧を取得するツールが1つ含まれます。プラグインで取り込んだ記録の本文は、検索結果にそのまま含めて受け取れます。</p>
@@ -42,8 +42,16 @@ description: 週次のまとめを作るときの手順
     <tr><td>削除</td><td>設定画面の「スキル」の「削除」で、スキルを丸ごと消します。</td></tr>
     <tr><td>AI による作成・修正</td><td>書き込みできる連携では、AI がスキルを作ったり、ファイルを書き換えたりできます。AI はスキルを削除できません。</td></tr>
   </table>
+  <p>zip の中身は次の決まりで取り込まれます。</p>
+  <ul>
+    <li>スキルの名前は、zip の中の <code>SKILL.md</code> に書いた <code>name</code> で決まります（zip のファイル名やフォルダ名ではありません）。</li>
+    <li>中身がフォルダ1段で包まれていれば（「ダウンロード」した zip をそのまま上げ直したときなど）、その1段は剥がして取り込みます。</li>
+    <li>ドットで始まるファイルやフォルダ、<code>__MACOSX</code>、<code>Thumbs.db</code>、<code>desktop.ini</code> は取り込みません（アップロード前の確認に「取り込まないファイル」として出ます）。</li>
+    <li>名前に使えるのは英小文字・数字・ハイフン（64文字まで）で、先頭と末尾は英数字にします。</li>
+    <li>ファイル名（フォルダ名も同じ）に使えるのは英数字と <code>._-</code> で、先頭は英数字にします。末尾をドットにはできません。<code>CON</code>・<code>PRN</code>・<code>AUX</code>・<code>NUL</code>・<code>COM1</code>〜<code>COM9</code>・<code>LPT1</code>〜<code>LPT9</code>（Windows の予約名）は、大文字小文字や拡張子の有無を問わず使えません（<code>con.txt</code> も使えません）。大文字小文字だけが違う名前や、同じ名前のファイルとフォルダ（例: ファイル <code>a</code> と、フォルダ <code>a</code> の中の <code>a/b</code>）は同時に置けません。決まりに合わないファイルがあると、アップロードは「zip の中身がスキルとして読み込めません」で止まります。</li>
+  </ul>
   <div class="tip">
-    <strong>ヒント:</strong> スキルの変更はすぐに反映され、変更の履歴は残りません。AI に直させる前に、必要なら「ダウンロード」で控えを取ってください。名前に使えるのは英小文字・数字・ハイフン（64文字まで）、ファイル名に使えるのは英数字と <code>._-</code> だけです。スクリプトは gkill では実行されません。
+    <strong>ヒント:</strong> スキルの変更はすぐに反映され、変更の履歴は残りません。AI に直させる前に、必要なら「ダウンロード」で控えを取ってください。スクリプトは gkill では実行されません。
   </div>
 
   <h2>ファイルの受け渡し</h2>
@@ -54,7 +62,7 @@ description: 週次のまとめを作るときの手順
     <tr><td>リモート接続（インターネット経由のAI）</td><td>有効期限付きの専用URLが発行され、AIはそのURLからファイルを取得します。画像はサムネイルと原寸の両方が渡されます。gkill本体を公開する必要はありません。</td></tr>
   </table>
   <div class="tip">
-    <strong>ヒント:</strong> 埋め込み転送のサイズ上限（既定8MB）は環境変数 <code>GKILL_MCP_MAX_FILE_BYTES</code>、URLの有効期限（既定1時間）は <code>GKILL_MCP_FILE_LINK_TTL_MS</code> で調整できます。
+    <strong>ヒント:</strong> 埋め込み転送のサイズ上限（既定8MB）は環境変数 <code>GKILL_MCP_MAX_FILE_BYTES</code>、URLの有効期限（既定1時間）は <code>GKILL_MCP_FILE_LINK_TTL_MS</code> で調整できます。埋め込み転送のサイズ上限は AI がスキルのファイルを読むときにも効き、<code>SKILL.md</code> 以外のファイルで上限を超えるものは、一覧には出ますが中身は渡されません（必要なら「ダウンロード」の zip で手元に取り出してください）。<code>SKILL.md</code> は、AI がファイルを指定せずにスキルを読んだとき（通常の読み方）は大きさに関係なく全文が渡されます（<code>SKILL.md</code> をファイルとして指定して読んだときは、ほかのファイルと同じ上限が効きます）。
   </div>
 
   <h2>設定方法（Claude Desktop）</h2>

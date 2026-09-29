@@ -37,6 +37,7 @@
     <li>Turn off <strong>Local Access Only</strong>.</li>
     <li>Press <strong>Apply</strong>. The server restarts and other devices can open <code>http://(this device's IP address):9999</code>.</li>
   </ol>
+  <div class="tip"><strong>Smartphone (Android) app:</strong> The server running inside the app also follows the settings on this screen. If you set Address to only this device's LAN IP address (e.g., <code>192.168.0.10:9999</code>), the app's own screen can no longer reach the server. To serve other devices as well, use <code>0.0.0.0:9999</code>, or leave the host part empty as in <code>:9999</code> (writing only <code>9999</code> without the colon also leaves the app unable to open its screen). Also, when you change the listen port or Enable TLS and apply, the app reopens its screen at the new address and you have to log in again.</div>
   <div class="tip"><strong>Tip:</strong> When serving other devices, we recommend turning on <strong>Enable TLS</strong> (you can create a certificate with "Generate Self-Signed TLS Files"). With TLS off, passwords travel over the network unencrypted.</div>
 
 
