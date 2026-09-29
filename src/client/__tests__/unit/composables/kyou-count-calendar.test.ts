@@ -178,3 +178,86 @@ describe('useKyouCountCalendar の日付セルハンドラ', () => {
         app.unmount()
     })
 })
+
+// 年月表示をクリックして開く日付ピッカー（v-model は date_picker_model）。
+// 選んだ日は日付セルをクリックしたのと同じ扱い ―― その月へ移り、requested_focus_time を
+// スライダーの時刻付きで1回だけ出す。setter の中身を1行消しても型検査は通り、
+// 「ピッカーが閉じない」「月が移らない」「一覧が動かない」がエラー無しで起きる
+describe('useKyouCountCalendar の日付ピッカー', () => {
+    beforeEach(() => {
+        document.body.innerHTML = ''
+    })
+    afterEach(() => {
+        document.body.innerHTML = ''
+    })
+
+    function collect_emits() {
+        const emitted: Array<{ event: string, args: unknown[] }> = []
+        const emits = ((event: string, ...args: unknown[]) => {
+            emitted.push({ event, args })
+        }) as unknown as KyouCountCalendarEmits
+        return { emitted, emits }
+    }
+
+    it('日を選ぶとピッカーが閉じ、表示月がその日へ移る', async () => {
+        const { emits } = collect_emits()
+        const root = makeCalendarDom()
+        const { app, api } = mountCalendar(emits, root)
+        api.date.value = new Date(2026, 8, 1)
+        api.is_show_date_picker.value = true
+        await nextTick()
+
+        // ピッカーの表示値は現在の表示月（getter）
+        expect(api.date_picker_model.value.getTime()).toBe(api.date.value.getTime())
+
+        api.date_picker_model.value = new Date(2016, 4, 15)
+        await nextTick()
+
+        expect(api.is_show_date_picker.value, '選んだあともピッカーが開いたまま').toBe(false)
+        expect(api.date.value.getFullYear(), '表示年が移っていない').toBe(2016)
+        expect(api.date.value.getMonth(), '表示月が移っていない').toBe(4)
+        expect(api.date.value.getDate()).toBe(15)
+        app.unmount()
+    })
+
+    it('requested_focus_time はスライダーの時刻付きで1回だけ出る（既定は 23:59:59）', async () => {
+        const { emitted, emits } = collect_emits()
+        const root = makeCalendarDom()
+        const { app, api } = mountCalendar(emits, root)
+        api.date.value = new Date(2026, 8, 1)
+        await nextTick()
+        await nextTick()
+        emitted.length = 0
+
+        api.date_picker_model.value = new Date(2016, 4, 15)
+        await nextTick()
+        await nextTick()
+
+        expect(emitted.map((e) => e.event), '一覧を動かす requested_focus_time が1回ちょうどではない').toEqual(['requested_focus_time'])
+        // for_mi=false の既定スライダーは 86399 秒 = 23:59:59（一覧はその日の末尾へ寄る）
+        const time = emitted[0].args[0] as Date
+        expect(time.getTime()).toBe(new Date(2016, 4, 15, 23, 59, 59).getTime())
+        app.unmount()
+    })
+
+    it('スライダーを動かしていれば、選んだ日のその時刻で出る', async () => {
+        const { emitted, emits } = collect_emits()
+        const root = makeCalendarDom()
+        const { app, api } = mountCalendar(emits, root)
+        api.date.value = new Date(2026, 8, 1)
+        api.slider_model.value = 3661 // 01:01:01
+        await nextTick()
+        await nextTick()
+        // スライダーの watch が出した分は数えない
+        emitted.length = 0
+
+        api.date_picker_model.value = new Date(2016, 4, 15)
+        await nextTick()
+        await nextTick()
+
+        expect(emitted.map((e) => e.event)).toEqual(['requested_focus_time'])
+        const time = emitted[0].args[0] as Date
+        expect(time.getTime(), 'スライダーの時刻が乗っていない').toBe(new Date(2016, 4, 15, 1, 1, 1).getTime())
+        app.unmount()
+    })
+})

@@ -56,21 +56,3 @@ func ParseManifest(content []byte, expectedName string) (*Manifest, error) {
 	}
 	return manifest, nil
 }
-
-// BuildManifest は name / description / 本文から SKILL.md の中身を組み立てる。
-// description は YAML の文字列として安全に書くため、yaml ライブラリに直列化させる。
-func BuildManifest(name string, description string, body string) ([]byte, error) {
-	header, err := yaml.Marshal(&Manifest{Name: name, Description: description})
-	if err != nil {
-		return nil, fmt.Errorf("error at marshal skill manifest: %w", err)
-	}
-	var buf bytes.Buffer
-	buf.WriteString("---\n")
-	buf.Write(header)
-	buf.WriteString("---\n")
-	buf.WriteString(body)
-	if body != "" && !strings.HasSuffix(body, "\n") {
-		buf.WriteString("\n")
-	}
-	return buf.Bytes(), nil
-}

@@ -71,6 +71,7 @@ Vitest
 | `src/client/__tests__/unit/classes/use-gkill-message-feed-view.test.ts` | フィード表示（`gkill-message-feed-view.vue`）のロジック。`role="alert"` はエラーだけ（warning / info に付けると「検索完了」のたびに読み上げが割り込む）、閉じると `has_items` が追随すること、「詳細をコピー」がクリップボード不可の環境（http の LAN アクセス等）で `prompt` へ落ち「コピーしました」を出さないこと |
 | `src/client/__tests__/unit/classes/error-hints.test.ts` | `error_kind` / `reason` → ヒントの i18n キー。語彙が Go 側の `error_kind.go` / `error_reason.go` と一致し、全キーが ja / en に実在すること |
 | `src/client/__tests__/unit/classes/global-exception-feed.test.ts` | `main.ts` が window / Vue に登録する例外の配線（`global-exception-feed.ts`）。中断（`classes/abort-error.ts` の1実装で判定）は既定の出力ごと握りつぶし、リソース読込失敗と ResizeObserver の通知は出さず、それ以外はフィードへ流すこと。Vue の errorHandler は console に出し直してからフィードへ |
+| `src/client/__tests__/unit/classes/drag-drop-indicator.test.ts` | ドラッグ＆ドロップの挿入位置の表示（`drag-drop-indicator.ts`）。`decide_drop_position` の境界を表で固定（高さ0でも決まる）、線は常に1本で別の要素へ出すと前の線が消えること、子へ移ったあとの親の `dragleave` では消さないこと、掴んだ元の半透明化と `end_drag` / window の `dragend` / `drop` で線ごと戻ること、`is_leaving_element` / `has_drag_type` の判定 |
 
 ### 走査型テスト（型では検出できない書き間違いをソース走査で検出する）
 
@@ -96,6 +97,7 @@ Vitest
 | `src/client/__tests__/unit/classes/kyou-detail-pane-attached-source-scan.test.ts` | 詳細ペインが付随データを出す配線をソース走査で固定 |
 | `src/client/__tests__/unit/classes/service-worker-webmanifest-route-source-scan.test.ts` | PWA の manifest 専用ルートが `precacheAndRoute` より先に登録され、ネットワークを先に見る戦略になっていること。後ろにあると precache の古い manifest が返り続け、theme_color やアイコンを変えても端末へ永久に届かない |
 | `src/client/__tests__/unit/classes/tx-bundle-source-scan.test.ts` | 複数書き込みの保存経路（`use-add-*-view` / `use-edit-*-view` / リポスト作成 / 連鎖削除）が `run_in_tx` を通し、Kyou の add_*/update_* ごとに `tx_id` を積んでいること（ADR-0410）。tx を通さず Kyou を書くのはチェック切り替え・打刻終了の単発書き込み4本の許可リストに限る。外れても型検査も既存テストも通ったまま「本体だけ書けてタグが無い記録」が静かに残るので走査で見張る |
+| `src/client/__tests__/unit/classes/drag-drop-source-scan.test.ts` | 並べ替えの D&D（`drag-drop-indicator.ts`）が前提にするテンプレートの形をソース走査で固定。`dnote-item-table-view.vue` の列を並べる2つの v-for が `:key="listIndex"`（添字）のままであること（安定 id にすると、列を消したあとに落とした項目が隣の列へ入る）、`foldable-struct.vue` のドラッグを受ける2つの tr が見出しの `foldable_struct_header` を持ち `@dragleave` / `@dragend` を配線していること（無いと tr 全体で測って3分割の境界が黙ってずれる）。検出ロジックの自己検査を含む |
 
 ## テスト内容
 

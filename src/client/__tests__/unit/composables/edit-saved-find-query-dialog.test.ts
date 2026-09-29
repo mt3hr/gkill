@@ -12,6 +12,15 @@
  * 2. 適用で渡すのは触ったセクションだけ。全部を渡すと、ショートカットだけ直したときにも
  *    ダッシュボードの未設定（null）の条件が空の条件で書き潰され、既定の条件が効かなくなる
  *    （旧ダッシュボードダイアログは開いて適用しただけでそうなっていた）。
+ * 3. 子ダイアログ（一覧・エディタ）の適用を受ける onApplied* は、値の取り込みと「触った」印の
+ *    両方を行う。印を落とすと、エディタで「適用」を押したのに保存が黙って渡らない
+ *    （利用者にはエラーも警告も出ず、設定画面の「適用」のあとで開き直すと元のまま）。
+ *    取り込みを落とすと、印だけ立って開いたときの値が渡る。
+ * 4. show() は受け取った SavedFindQueryConfig を書き換えない（clone してから編集する）。
+ *    今の呼び出し元（use-application-config-view.ts の show_edit_saved_find_query_dialog）は
+ *    開くたびに parse した新しい実体を渡すので、clone を外しても書き換わるのはその使い捨ての
+ *    実体だけで、今は実害が出ない。呼び出し元が設定画面の clone の実体をそのまま渡す形に
+ *    変わると、このダイアログのキャンセルが効かなくなるので、約束として固定しておく。
  */
 import { describe, expect, test, vi } from 'vitest'
 
@@ -29,7 +38,7 @@ import '@/classes/api/gkill-api'
 
 import { toRaw } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { SavedFindQueryConfig } from '@/classes/datas/config/saved-find-query-config'
+import { SavedFindQueryConfig, type SavedFindQueryItem } from '@/classes/datas/config/saved-find-query-config'
 import { useEditSavedFindQueryDialog, type EditSavedFindQueryDialogInitialValues } from '@/classes/use-edit-saved-find-query-dialog'
 import type { EditSavedFindQueryDialogProps } from '@/pages/dialogs/edit-saved-find-query-dialog-props'
 import type { EditSavedFindQueryDialogEmits } from '@/pages/dialogs/edit-saved-find-query-dialog-emits'
@@ -80,6 +89,12 @@ function query_with_keywords(keywords: string): FindKyouQuery {
     query.keywords = keywords
     return query
 }
+
+function shortcut_item(title: string): SavedFindQueryItem {
+    return { id: `item-${title}`, title, find_kyou_query: query_with_keywords(title) }
+}
+
+type EmittedShortcuts = Record<'saved_rykv_find_kyou_querys' | 'saved_mi_find_kyou_querys', Array<{ title: string }>>
 
 describe('show()', () => {
     test('引数なしなら実行中は未設定（null）から始まり、チェックはOFF', async () => {
@@ -193,6 +208,32 @@ describe('適用で渡すのは触ったセクションだけ', () => {
         expect((emitted[0].args[0] as Record<string, unknown>).playing_timeis_find_kyou_query).toBeNull()
     })
 
+    test('実行中のエディタで適用した条件は、チェックを触らなくても実行中の設定として渡る', async () => {
+        const { view, emitted } = create_dialog()
+        // チェックは開いた時点で ON（保存済みの条件がある）。ここでは触らず、エディタの適用だけで印が立つことを見る
+        await view.show(initial_values({ playing_timeis_find_kyou_query: query_with_keywords('保存済みの条件') }))
+
+        view.onAppliedPlayingTimeIsQuery(query_with_keywords('エディタで直した条件'))
+        view.onSave()
+
+        expect(emitted.map(e => e.event), 'エディタで適用したのに実行中の設定が渡らない').toEqual(['requested_apply_playing_timeis'])
+        const playing = emitted[0].args[0] as Record<string, Record<string, unknown> | null>
+        expect(playing.playing_timeis_find_kyou_query?.keywords, 'エディタで適用した条件ではなく開いたときの条件が渡っている').toBe('エディタで直した条件')
+    })
+
+    test('タスクのショートカットだけ触ったら、保存済みの検索条件のタスク側にその一覧が入る', async () => {
+        const { view, emitted } = create_dialog()
+        await view.show()
+
+        view.onAppliedMiItems([shortcut_item('今日のタスク')])
+        view.onSave()
+
+        expect(emitted.map(e => e.event), 'タスクの一覧で適用したのに保存済みの検索条件が渡らない').toEqual(['requested_apply_saved_find_query_struct'])
+        const shortcuts = emitted[0].args[0] as EmittedShortcuts
+        expect(shortcuts.saved_mi_find_kyou_querys.map(item => item.title), '一覧で適用したタスクのショートカットが入っていない').toEqual(['今日のタスク'])
+        expect(shortcuts.saved_rykv_find_kyou_querys, 'タスクの一覧を触ったのに記録側へ入っている').toEqual([])
+    })
+
     test('ダッシュボードの片方だけ触ったら、もう片方は元の値（未設定なら null）のまま渡す', async () => {
         const { view, emitted } = create_dialog()
         await view.show()
@@ -204,6 +245,32 @@ describe('適用で渡すのは触ったセクションだけ', () => {
         const dashboard = emitted[0].args[0] as Record<string, Record<string, unknown> | null>
         expect(dashboard.dashboard_dnote_find_kyou_query?.keywords).toBe('集計')
         expect(dashboard.dashboard_mi_find_kyou_query, '触っていないタスク検索条件を空の条件で書き潰している').toBeNull()
+    })
+
+    test('ダッシュボードのタスク側だけ触ったら、集計側は初期値（未設定なら null）のまま渡す', async () => {
+        const { view, emitted } = create_dialog()
+        await view.show()
+
+        view.onAppliedMiQuery(query_with_keywords('タスク'))
+        view.onSave()
+
+        expect(emitted.map(e => e.event), 'タスク側のエディタで適用したのにダッシュボードの設定が渡らない').toEqual(['requested_apply_dashboard_struct'])
+        const dashboard = emitted[0].args[0] as Record<string, Record<string, unknown> | null>
+        expect(dashboard.dashboard_mi_find_kyou_query?.keywords, 'エディタで適用した条件ではなく開いたときの条件が渡っている').toBe('タスク')
+        expect(dashboard.dashboard_dnote_find_kyou_query, '触っていない集計検索条件を空の条件で書き潰している').toBeNull()
+    })
+
+    test('ダッシュボードのタスク側だけ触ったら、集計側に保存済みの条件があればそれをそのまま渡す', async () => {
+        const { view, emitted } = create_dialog()
+        await view.show(initial_values({ dashboard_dnote_find_kyou_query: query_with_keywords('保存済みの集計条件') }))
+
+        view.onAppliedMiQuery(query_with_keywords('タスク'))
+        view.onSave()
+
+        expect(emitted.map(e => e.event)).toEqual(['requested_apply_dashboard_struct'])
+        const dashboard = emitted[0].args[0] as Record<string, Record<string, unknown> | null>
+        expect(dashboard.dashboard_mi_find_kyou_query?.keywords).toBe('タスク')
+        expect(dashboard.dashboard_dnote_find_kyou_query?.keywords, '触っていない集計側の保存済み条件が消えている').toBe('保存済みの集計条件')
     })
 
     test('キャンセルでは何も渡さない', async () => {
@@ -227,5 +294,23 @@ describe('適用で渡すのは触ったセクションだけ', () => {
         view.onSave()
 
         expect(emitted).toEqual([])
+    })
+})
+
+describe('show() に渡した設定は編集しても書き換わらない', () => {
+    test('一覧の適用も編集中の項目の書き換えも、渡した SavedFindQueryConfig には及ばない', async () => {
+        const { view } = create_dialog()
+        const given = new SavedFindQueryConfig()
+        given.saved_rykv_find_kyou_querys = [shortcut_item('記録の条件')]
+        given.saved_mi_find_kyou_querys = [shortcut_item('タスクの条件')]
+        await view.show(initial_values({ saved_find_query_config: given }))
+
+        // 一覧ダイアログの適用（配列の差し替え）と、編集中の項目そのものの書き換えの両方を試す
+        view.onAppliedMiItems([])
+        view.current_saved_find_query_config.value.saved_rykv_find_kyou_querys[0].title = '書き換え後'
+        view.onCancel()
+
+        expect(given.saved_mi_find_kyou_querys.map(item => item.title), '一覧の適用が渡した設定を直接書き換えている').toEqual(['タスクの条件'])
+        expect(given.saved_rykv_find_kyou_querys[0].title, '編集中の項目が渡した設定の項目と同じ実体になっている').toBe('記録の条件')
     })
 })

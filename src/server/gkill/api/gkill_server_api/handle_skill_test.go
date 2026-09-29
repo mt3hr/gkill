@@ -109,6 +109,38 @@ func TestSkillAPI_Flow(t *testing.T) {
 		}
 	})
 
+	// decodeUploadedBase64（handle_upload_skill.go）の境界。画面は data URI をそのまま送るが、
+	// MCP や CLI は接頭辞なしの base64 を送るので、"," の有無で結果が変わってはいけない。
+	// 空文字（と接頭辞だけ）は zip の検証（ERR000435）まで進めず、リクエスト不正（ERR000427）で止める。
+	// どちらも 400 なので、状態コードではなくエラーコードの違いで確かめる。
+	t.Run("zip_base64 は data URI の接頭辞が無くてもよく、空は 400", func(t *testing.T) {
+		rawBase64 := firstZip[strings.Index(firstZip, ",")+1:]
+		if strings.HasPrefix(rawBase64, "data:") {
+			t.Fatalf("test setup: prefix not stripped: %q", rawBase64[:16])
+		}
+		res := &req_res.UploadSkillResponse{}
+		status := postSkillAPI(t, tsURL+"/api/upload_skill", &req_res.UploadSkillRequest{SessionID: sessionID, LocaleName: "en", ZipBase64: rawBase64, DryRun: true}, res)
+		if status != http.StatusOK || len(res.Errors) != 0 {
+			t.Fatalf("without data URI prefix: status=%d errors=%+v", status, res.Errors)
+		}
+		if res.Plan == nil || res.Plan.Name != "weekly" || len(res.Plan.Added) != 4 {
+			t.Errorf("without data URI prefix: plan = %+v", res.Plan)
+		}
+		for _, empty := range []string{"", "   ", "data:application/zip;base64,"} {
+			res := &req_res.UploadSkillResponse{}
+			status := postSkillAPI(t, tsURL+"/api/upload_skill", &req_res.UploadSkillRequest{SessionID: sessionID, LocaleName: "en", ZipBase64: empty}, res)
+			if status != http.StatusBadRequest || !slices.Equal(errorCodesOf(res.Errors), []string{message.InvalidUploadSkillRequestDataError}) {
+				t.Errorf("zip_base64=%q: status=%d errors=%+v", empty, status, res.Errors)
+			}
+			if res.Applied || res.Plan != nil {
+				t.Errorf("zip_base64=%q: applied=%v plan=%+v", empty, res.Applied, res.Plan)
+			}
+		}
+		if got := listSkills(); len(got) != 0 {
+			t.Fatalf("empty upload wrote something: %+v", got)
+		}
+	})
+
 	t.Run("本番のアップロードでスキルができる", func(t *testing.T) {
 		res := &req_res.UploadSkillResponse{}
 		status := postSkillAPI(t, tsURL+"/api/upload_skill", &req_res.UploadSkillRequest{SessionID: sessionID, LocaleName: "en", ZipBase64: firstZip}, res)
@@ -160,6 +192,45 @@ func TestSkillAPI_Flow(t *testing.T) {
 		postSkillAPI(t, tsURL+"/api/get_skill", &req_res.GetSkillRequest{SessionID: sessionID, LocaleName: "en", Name: "weekly", Path: "references/tags.md", MaxBytes: 3}, omitted)
 		if !omitted.File.ContentOmitted || omitted.File.Content != "" || omitted.File.Size != 7 {
 			t.Errorf("omitted file = %+v", omitted.File)
+		}
+	})
+
+	// skills.ErrFileNotFound → ERR000431（404）の写し。スキルはあるがファイルだけ無いときは、get_skill・
+	// パス指定の delete_skill・revision 付きの write_skill_file のどれもこの番兵を返す（store.go は revision の
+	// 照合より先にファイルの有無を見る）。既存の流れはどれもこの写しを通っていなかったので、3つの入口をここで固定する。
+	t.Run("無いファイルの get_skill / delete_skill / revision 付き write_skill_file は 404 / ERR000431", func(t *testing.T) {
+		res := &req_res.GetSkillResponse{}
+		status := postSkillAPI(t, tsURL+"/api/get_skill", &req_res.GetSkillRequest{SessionID: sessionID, LocaleName: "en", Name: "weekly", Path: "references/missing.md"}, res)
+		if status != http.StatusNotFound || !slices.Equal(errorCodesOf(res.Errors), []string{message.SkillFileNotFoundError}) {
+			t.Fatalf("status=%d errors=%+v", status, res.Errors)
+		}
+		if res.File != nil || res.Skill != nil {
+			t.Errorf("missing file returned content: file=%+v skill=%+v", res.File, res.Skill)
+		}
+		// どのパスが無いかを文言に添える（AI が読み直さずに済むように）
+		if !strings.Contains(res.Errors[0].ErrorMessage, "references/missing.md") {
+			t.Errorf("message does not name the missing path: %q", res.Errors[0].ErrorMessage)
+		}
+		// 大文字小文字だけ違うパスも「無い」（辿らない）
+		caseOnly := &req_res.GetSkillResponse{}
+		status = postSkillAPI(t, tsURL+"/api/get_skill", &req_res.GetSkillRequest{SessionID: sessionID, LocaleName: "en", Name: "weekly", Path: "References/tags.md"}, caseOnly)
+		if status != http.StatusNotFound || !slices.Equal(errorCodesOf(caseOnly.Errors), []string{message.SkillFileNotFoundError}) {
+			t.Errorf("case-only mismatch: status=%d errors=%+v", status, caseOnly.Errors)
+		}
+		// 無いファイルの削除は成功扱いにしない（黙って 200 を返すと、消したつもりのパスの打ち間違いに気付けない）
+		deleted := &req_res.DeleteSkillResponse{}
+		status = postSkillAPI(t, tsURL+"/api/delete_skill", &req_res.DeleteSkillRequest{SessionID: sessionID, LocaleName: "en", Name: "weekly", Path: "references/missing.md"}, deleted)
+		if status != http.StatusNotFound || !slices.Equal(errorCodesOf(deleted.Errors), []string{message.SkillFileNotFoundError}) {
+			t.Errorf("delete missing file: status=%d errors=%+v", status, deleted.Errors)
+		}
+		// revision 付きの書き込みは「既存ファイルの更新」なので、無いファイルを新しく作らない
+		written := &req_res.WriteSkillFileResponse{}
+		status = postSkillAPI(t, tsURL+"/api/write_skill_file", &req_res.WriteSkillFileRequest{SessionID: sessionID, LocaleName: "en", Name: "weekly", Path: "references/missing.md", Content: "x\n", Revision: "0000000000000000"}, written)
+		if status != http.StatusNotFound || !slices.Equal(errorCodesOf(written.Errors), []string{message.SkillFileNotFoundError}) {
+			t.Errorf("update missing file: status=%d errors=%+v", status, written.Errors)
+		}
+		if got := listSkills(); len(got) != 1 || got[0].FileCount != 4 {
+			t.Errorf("list after missing-file operations = %+v", got)
 		}
 	})
 

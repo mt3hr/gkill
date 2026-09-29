@@ -1131,6 +1131,74 @@ func TestGenerateFindSQLCommon_ShortWordDoesNotMatchID(t *testing.T) {
 	}
 }
 
+// ID の前方一致を見る語長の境界（find_word.MinIDPrefixMatchLength = 7）を SQL 側で固定する。
+// 6文字の語では ID の LIKE を出さず、バインド値は対象列の数だけ。7文字ちょうどで ID の LIKE が出る。
+// 判定に語そのものではなく LIKE パターン（EscapeLikePattern(word)+"%"）を渡す誤りをすると、
+// 末尾の % やエスケープの \ のぶん長く数えられて 6文字の語でも ID を見てしまい、
+// Go 側（find_word.IsIDPrefixMatchWord）と rep 種別で結果が割れる。
+func TestGenerateFindSQLCommon_IDPrefixMatchWordLengthBoundary(t *testing.T) {
+	cases := []struct {
+		name      string
+		word      string
+		wantIDSQL bool
+		wantArgs  int
+	}{
+		{name: "6文字はIDを見ない", word: "abcdef", wantIDSQL: false, wantArgs: 2},
+		{name: "7文字ちょうどでIDを見る", word: "abcdef0", wantIDSQL: true, wantArgs: 3},
+		{name: "6文字はエスケープで伸びても数えない", word: "ab%cde", wantIDSQL: false, wantArgs: 2},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			query := &find.FindQuery{
+				Words:    []string{c.word},
+				WordsAnd: false,
+			}
+			whereCounter := 0
+			queryArgs := []any{}
+
+			sql, err := GenerateFindSQLCommon(
+				query, "MY_TABLE", "T", &whereCounter,
+				false, "RELATED_TIME",
+				[]string{"TITLE", "SHOP"}, true, false,
+				false, true, &queryArgs,
+			)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got := strings.Contains(sql, "(ID) LIKE"); got != c.wantIDSQL {
+				t.Errorf("ID の LIKE の有無 = %v, want %v (sql=%q)", got, c.wantIDSQL, sql)
+			}
+			if len(queryArgs) != c.wantArgs {
+				t.Fatalf("バインド値の数 = %d, want %d（プレースホルダとずれると黙って0件になる）: %v", len(queryArgs), c.wantArgs, queryArgs)
+			}
+			if c.wantIDSQL {
+				if last := queryArgs[len(queryArgs)-1]; last != EscapeLikePattern(c.word)+"%" {
+					t.Errorf("ID のバインド値は前方一致パターンのはず: got %v", last)
+				}
+			}
+
+			idStartsWithWord := c.word + "1-0000"
+			matchedIDs := matchedIDsOfTwoColumnTable(t, sql, queryArgs, [][3]string{
+				{idStartsWithWord, "no", "no"},             // ID が語で始まるだけ → 7文字以上のときだけ当たる
+				{"ffff-0000", "title has " + c.word, "no"}, // 列に含む → 語長によらず当たる
+				{"eeee-0000", "no", "no"},                  // どこにも無い → 当たらない
+			})
+			want := map[string]bool{"ffff-0000": true}
+			if c.wantIDSQL {
+				want[idStartsWithWord] = true
+			}
+			if len(matchedIDs) != len(want) {
+				t.Fatalf("一致した行 = %v, want %v (sql=%q args=%v)", matchedIDs, want, sql, queryArgs)
+			}
+			for _, id := range matchedIDs {
+				if !want[id] {
+					t.Errorf("一致してはいけない行が一致した: %q (matched=%v)", id, matchedIDs)
+				}
+			}
+		})
+	}
+}
+
 // 除外語は ID を見ない。`-1` で UUID に 1 を含む記録が消えていた事故の再発防止。
 func TestGenerateFindSQLCommon_NotWordsDoNotLookAtID(t *testing.T) {
 	query := &find.FindQuery{

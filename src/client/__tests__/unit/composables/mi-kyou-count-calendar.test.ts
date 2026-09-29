@@ -119,3 +119,59 @@ describe('useMiKyouCountCalendar', () => {
         app.unmount()
     })
 })
+
+// 年月表示をクリックして開く日付ピッカー（rykv 版 kyou-count-calendar.test.ts と対称）。
+// mi 版はスライダーを持たないので requested_focus_time はその日の 00:00:00 で1回だけ出る
+describe('useMiKyouCountCalendar の日付ピッカー', () => {
+    beforeEach(() => {
+        document.body.innerHTML = ''
+    })
+    afterEach(() => {
+        document.body.innerHTML = ''
+    })
+
+    function collect_emits() {
+        const emitted: Array<{ event: string, args: unknown[] }> = []
+        const emits = ((event: string, ...args: unknown[]) => {
+            emitted.push({ event, args })
+        }) as unknown as MiKyouCountCalendarEmits
+        return { emitted, emits }
+    }
+
+    it('日を選ぶとピッカーが閉じ、表示月がその日へ移る', async () => {
+        const { emits } = collect_emits()
+        const { app, api } = mountCalendar(emits)
+        api.date.value = new Date(2026, 8, 1)
+        api.is_show_date_picker.value = true
+        await nextTick()
+
+        expect(api.date_picker_model.value.getTime()).toBe(api.date.value.getTime())
+
+        api.date_picker_model.value = new Date(2016, 4, 15, 13, 45, 30)
+        await nextTick()
+
+        expect(api.is_show_date_picker.value, '選んだあともピッカーが開いたまま').toBe(false)
+        expect(api.calendar_year_month.value, '表示月が移っていない').toBe('2016/05')
+        expect(api.date.value.getDate()).toBe(15)
+        app.unmount()
+    })
+
+    it('requested_focus_time はその日の 00:00:00 で1回だけ出る', async () => {
+        const { emitted, emits } = collect_emits()
+        const { app, api } = mountCalendar(emits)
+        api.date.value = new Date(2026, 8, 1)
+        await nextTick()
+        await nextTick()
+        emitted.length = 0
+
+        // 時刻付きで選んでも、出る時刻は 0 時（rykv 版のようにスライダーの時刻は乗らない）
+        api.date_picker_model.value = new Date(2016, 4, 15, 13, 45, 30)
+        await nextTick()
+        await nextTick()
+
+        expect(emitted.map((e) => e.event), '一覧を動かす requested_focus_time が1回ちょうどではない').toEqual(['requested_focus_time'])
+        const time = emitted[0].args[0] as Date
+        expect(time.getTime()).toBe(new Date(2016, 4, 15, 0, 0, 0).getTime())
+        app.unmount()
+    })
+})

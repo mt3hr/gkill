@@ -13,7 +13,7 @@
 // ファイル名の実在まで検査する理由と、除外を2種類に絞った理由:
 // documents/adr/0803-verify-docs-checks-filenames.md
 
-import { execSync } from 'node:child_process'
+import { execFileSync, execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -144,10 +144,47 @@ function computeMetrics() {
 //   README.md 群が「（N ファイル）」と書いている数値の実測。
 //   テストを含むか否かは doc 側の書き方に合わせて両方を出す。
 // ─────────────────────────────────────────────────────────────
+// useFloatingDialog() を使うダイアログ（src/client/pages/dialogs/*.vue）の本数。
+// ダイアログの大半は .vue 本体では呼ばず、`@/classes/use-xxx-dialog` のコンポーザブルが呼ぶので、
+// .vue から `@/classes/` の import を（コンポーザブル同士の import も含めて）辿って到達するかを見る。
+// 定義ファイル use-floating-dialog.ts 自体は辿らない（型だけ import しても「使っている」にしないため）。
+function countFloatingDialogs() {
+  const DIALOGS = 'src/client/pages/dialogs'
+  const CLASSES = 'src/client/classes'
+  const DEFINITION = `${CLASSES}/use-floating-dialog.ts`
+  const memo = new Map()
+  const reaches = (rel, visiting) => {
+    if (memo.has(rel)) return memo.get(rel)
+    if (rel === DEFINITION || visiting.has(rel) || !exists(rel)) return false
+    visiting.add(rel)
+    const src = readText(rel)
+    let found = /\buseFloatingDialog\(/.test(src)
+    for (const m of found ? [] : src.matchAll(/from\s+['"]@\/classes\/([\w\-/]+)['"]/g)) {
+      if (reaches(`${CLASSES}/${m[1]}.ts`, visiting)) { found = true; break }
+    }
+    memo.set(rel, found)
+    return found
+  }
+  return listFiles(DIALOGS, (f) => f.endsWith('.vue')).filter((f) => reaches(`${DIALOGS}/${f}`, new Set())).length
+}
+
 function computeDirMetrics() {
   const SA = 'src/server/gkill/api/gkill_server_api'
+  const API = 'src/server/gkill/api'
   const DN = 'src/client/classes/dnote'
   return {
+    // api/ 直下と小さなサブパッケージ（api/README.md の「（N ファイル）」。テストを含めて数えている）
+    apiRootGo: countIn(API, '.go'),
+    apiRootTestGo: listFiles(API, (f) => f.endsWith('_test.go')).length,
+    apiFindGo: countIn(`${API}/find`, '.go'),
+    apiFindWordGo: countIn(`${API}/find_word`, '.go'),
+    apiGkillPluginGo: countIn(`${API}/gkill_plugin`, '.go'),
+    apiGpslogsGo: countIn(`${API}/gpslogs`, '.go'),
+    apiSafefetchGo: countIn(`${API}/safefetch`, '.go'),
+    // gkill_server_api/ の全ファイル数（.go に README.md / ABOUT_TEST.md を足した数。README の「合計」行）。
+    // 数える対象を名前で限る。readdirSync は testdata/ などのサブディレクトリも返すので、
+    // 全エントリを数えると README の内訳（基盤 + 実装 + テスト + README 1 + ABOUT_TEST 1）と合わなくなる
+    serverApiAllFiles: listFiles(SA, (f) => f.endsWith('.go') || f === 'README.md' || f === 'ABOUT_TEST.md').length,
     // サーバ
     serverApiGo: countIn(SA, '.go'),
     serverApiTest: listFiles(SA, (f) => f.endsWith('_test.go')).length,
@@ -189,6 +226,8 @@ function computeDirMetrics() {
     dialogsAdd: countIn('src/client/pages/dialogs', '.vue', { prefix: 'add-' }),
     dialogsEdit: countIn('src/client/pages/dialogs', '.vue', { prefix: 'edit-' }),
     dialogsConfirm: countIn('src/client/pages/dialogs', '.vue', { prefix: 'confirm-' }),
+    // useFloatingDialog() を共有するダイアログの本数（frontend-architecture.md の「N ダイアログ中 M 件」）
+    dialogsFloating: countFloatingDialogs(),
   }
 }
 
@@ -253,19 +292,31 @@ function mcpServerToolNames(rel) {
     : new Set()
 }
 
-function computeTestMetrics() {
+// テストファイルの列挙（フルパス）。件数（computeTestMetrics）と ABOUT_TEST.md への索引網羅
+// （checkTestFileCoverageFiles）が同じ集合を見るよう、ここ1箇所で列挙する。
+// プラグイン（src/plugins/）の _test.go は独立モジュールで plugins/ABOUT_TEST.md がモジュール単位に
+// 書くので、ここには含めない（件数は pluginGoTests が別に数える）。
+function listTestFiles() {
   const isMcp = (f) => f.split(path.sep).join('/').includes('/' + MCP_DIR + '/')
-  const goTestFiles = listFilesRec('src/server', (f) => f.endsWith('_test.go')).filter((f) => !isMcp(f))
+  // @Test を1つでも含む .kt（＝テストファイル）
+  const ktTestFiles = (dir) => listFilesRec(dir, (f) => f.endsWith('.kt'))
+    .filter((f) => /@Test/.test(fs.readFileSync(f, 'utf8')))
+  return {
+    goTestFiles: listFilesRec('src/server', (f) => f.endsWith('_test.go')).filter((f) => !isMcp(f)),
+    unitFiles: listFilesRec('src/client/__tests__/unit', (f) => f.endsWith('.test.ts')),
+    e2eFiles: listFilesRec('src/client/__tests__/e2e', (f) => f.endsWith('.spec.ts')),
+    mcpFiles: listFilesRec(MCP_DIR, (f) => f.endsWith('_test.go')),
+    // src/tools/ のリリースゲート・attestation ランナーのテスト（vitest.config.tools.ts）
+    toolsFiles: listFilesRec('src/tools/__tests__', (f) => /\.test\.(mjs|js|ts)$/.test(f)),
+    androidKtFiles: ktTestFiles('src/android'),
+    wearKtFiles: [...ktTestFiles('src/wear_os/phone_companion'), ...ktTestFiles('src/wear_os/watch_app')],
+  }
+}
+
+function computeTestMetrics() {
+  const { goTestFiles, unitFiles, e2eFiles, mcpFiles, toolsFiles, androidKtFiles, wearKtFiles } = listTestFiles()
   const goPkgs = new Set(goTestFiles.map((f) => path.dirname(f)))
-  const unitFiles = listFilesRec('src/client/__tests__/unit', (f) => f.endsWith('.test.ts'))
-  const e2eFiles = listFilesRec('src/client/__tests__/e2e', (f) => f.endsWith('.spec.ts'))
-  const mcpFiles = listFilesRec(MCP_DIR, (f) => f.endsWith('_test.go'))
-  // src/tools/ のリリースゲート・attestation ランナーのテスト（vitest.config.tools.ts）
-  const toolsFiles = listFilesRec('src/tools/__tests__', (f) => /\.test\.(mjs|js|ts)$/.test(f))
   const kt = (dir) => countMatches(listFilesRec(dir, (f) => f.endsWith('.kt')), /@Test/g)
-  // @Test を1つでも含む .kt の本数（＝テストファイル数）
-  const ktFiles = (dir) => listFilesRec(dir, (f) => f.endsWith('.kt'))
-    .filter((f) => /@Test/.test(fs.readFileSync(f, 'utf8'))).length
 
   // ABOUT_TEST.md 群がディレクトリ単位で「（Nファイル）」と書いている数の実測。
   const unitDirFiles = (sub) =>
@@ -292,8 +343,8 @@ function computeTestMetrics() {
     wearCompanionTests: kt('src/wear_os/phone_companion'),
     wearWatchTests: kt('src/wear_os/watch_app'),
     androidTests: kt('src/android'),
-    androidTestFiles: ktFiles('src/android'),
-    wearTestFiles: ktFiles('src/wear_os/phone_companion') + ktFiles('src/wear_os/watch_app'),
+    androidTestFiles: androidKtFiles.length,
+    wearTestFiles: wearKtFiles.length,
     unitClassesFiles: unitDirFiles('classes'),
     unitComposablesFiles: unitDirFiles('composables'),
     unitApiFiles: unitDirFiles('api'),
@@ -459,7 +510,17 @@ function computeMiscMetrics() {
   // 差はアドレスだけ持ってメソッドの無いもの（ブックマークレットの2本）。境界対応表と同じ読み方。
   const gkillApi = exists(GKILL_API_TS) ? parseGkillApi(readText(GKILL_API_TS)) : null
 
+  // gkill_get_mcp_help の topic 名（help_topics.go の `var HelpTopics = []HelpTopic{ ... }` の並び）。
+  // folder-structure.md が名前の列挙と件数を書いている（topic を足したのに資料が古いままになりやすい）
+  const helpTopicsBlock = exists(`${MCP_DIR}/help_topics.go`)
+    ? readText(`${MCP_DIR}/help_topics.go`).match(/^var HelpTopics = \[\]HelpTopic\{([\s\S]*?)^\}/m)
+    : null
+  const mcpHelpTopics = helpTopicsBlock
+    ? [...helpTopicsBlock[1].matchAll(/\{Name: "([a-z_]+)"/g)].map((x) => x[1])
+    : []
+
   return {
+    mcpHelpTopics,
     reverseDocs: listFiles('documents/reverse', (f) => f.endsWith('.md')).length,
     tsApiAddresses: gkillApi ? gkillApi.addressByPath.size : 0,
     tsApiMethods: gkillApi ? gkillApi.methodByField.size : 0,
@@ -913,6 +974,73 @@ function buildCountAssertions(m) {
   add(BOUNDARY_DOC, `（HTTP /api、全${m.endpoints}ルート）`)
   add(BOUNDARY_DOC, `公開ツール${m.mcpReadWriteTools}本`)
 
+  // ── 2026-09-27 追加分。
+  //   点検で検査から漏れていた数字。実例:
+  //     - api-endpoints.md の認証区分の表（program-spec.md の同じ表だけ検査していた）
+  //     - screen-specs.md の「ダイアログは全部で N 件」と frontend-architecture.md の
+  //       「N ダイアログ中 M 件が useFloatingDialog()」（M は実測が無かった → dialogsFloating）
+  //     - 要求コーパスの件数が testing-guide.md（331）と gkill-mcp スキル（345）で割れていた
+  //     - mcp/README.md の見出し「Readツール（N」「Writeツール（N」（表の行だけ検査していた）
+  //     - api/README.md と gkill_server_api/README.md のディレクトリ別ファイル数
+  //     - src/ABOUT_TEST.md の索引行（handle_*.go 実装数・Wear OS・tools）
+  add('documents/reverse/api-endpoints.md', `| \`wrapNoAuth\` | ${m.wrapNoAuth} |`)
+  add('documents/reverse/api-endpoints.md', `| \`wrapAuth\` | ${m.wrapAuth} |`)
+  add('documents/reverse/api-endpoints.md', `| \`wrapAuthRepos\` | ${m.wrapAuthRepos} |`)
+  add('documents/reverse/screen-specs.md', `ダイアログは全部で${m.dialogs}件ある`)
+  add('documents/reverse/frontend-architecture.md',
+    `${m.dialogs}ダイアログ中${m.dialogsFloating}件が \`useFloatingDialog()\``)
+  add('documents/reverse/testing-guide.md', `要求コーパス ${m.mcpGoldenCases} 件`)
+  add('.claude/skills/gkill-mcp/SKILL.md', `要求コーパス（\`requests.json\`、${m.mcpGoldenCases} 件）`)
+  add('src/server/gkill/mcp/README.md', `#### Readツール（${mcpReadOnly} — `)
+  add('src/server/gkill/mcp/README.md', `#### Writeツール（${mcpWriteOnly} — `)
+  add('src/server/gkill/api/README.md', `などのテスト（${m.apiRootTestGo}ファイル）`)
+  add('src/server/gkill/api/README.md', `各エンドポイントのハンドラ（${m.handlers}ファイル。うちテスト${handlerTests}）`)
+  add('src/server/gkill/api/README.md', `## api/ ルートレベルファイル（${m.apiRootGo}ファイル）`)
+  add('src/server/gkill/api/README.md', `| \`*_test.go\`（${m.apiRootTestGo}ファイル） |`)
+  add('src/server/gkill/api/README.md', `### \`find/\`（${m.apiFindGo}ファイル）`)
+  add('src/server/gkill/api/README.md', `### \`find_word/\`（${m.apiFindWordGo}ファイル）`)
+  add('src/server/gkill/api/README.md', `### \`gkill_plugin/\`（${m.apiGkillPluginGo}ファイル）`)
+  add('src/server/gkill/api/README.md', `### \`gpslogs/\`（${m.apiGpslogsGo}ファイル）`)
+  add('src/server/gkill/api/README.md', `### \`message/\`（${m.messageGo}ファイル）`)
+  add('src/server/gkill/api/README.md', `### \`safefetch/\`（${m.apiSafefetchGo}ファイル）`)
+  add('src/server/gkill/api/gkill_server_api/README.md',
+    `テスト全${m.serverApiTest}ファイル（handle_*_test.go ${handlerTests}本を含む`)
+  add('src/server/gkill/api/gkill_server_api/README.md',
+    `**合計: ${m.serverApiAllFiles}ファイル**（基盤${m.serverApiBase} + ハンドラ実装${m.handlersImpl} + テスト${m.serverApiTest} +`)
+  add('src/server/gkill/api/gkill_server_api/README.md',
+    `\`.go\` だけなら${m.serverApiGo}ファイル。\`handle_*.go\` という名前のファイルは${m.handlers}あるが、うち${handlerTests}はテスト`)
+  add('src/ABOUT_TEST.md', `handle_*.go 実装${m.handlersImpl}ファイル`)
+  add('src/ABOUT_TEST.md', `Wear OS テスト（${m.wearCompanionTests + m.wearWatchTests}テスト）`)
+  add('src/ABOUT_TEST.md', `${m.toolsTests}テスト、${m.toolsTestFiles}ファイル）`)
+
+  //   続き（同じ点検の2周目で見つかった、件数ずれが実際に起きていた箇所）:
+  //     - usecase/ のファイル数（17→18 が資料ごとにばらばらに直っていた。照合は usecase/README.md だけだった）
+  //     - api/README.md の gkill_server_api/ の見出し（ツリー行の「HTTP ハンドラ（N」だけ照合していた）
+  //     - gkill_server_api/README.md の HandleXxx の本数（ルート表 + PathPrefix 配信の2本）
+  //     - glossary.md のルート表の内訳、class-diagrams.md の「残り N エンドポイント省略」
+  //     - folder-structure.md の help topic の列挙と件数
+  add('documents/reverse/api-endpoints.md', `（HTTP非依存のユースケース関数、${m.usecaseGo}ファイル）`)
+  add('documents/reverse/api-endpoints.md', `HTTP非依存のユースケース関数（${m.usecaseGo}ファイル）`)
+  add('documents/reverse/folder-structure.md', `# ビジネスロジック層（${m.usecaseGo}ファイル）`)
+  add('documents/reverse/program-spec.md', `\`gkill/usecase/\`パッケージ（${m.usecaseGo}ファイル）`)
+  add('src/server/gkill/usecase/ABOUT_TEST.md', `HTTP 非依存のビジネスロジック層（${m.usecaseGo}ファイル）`)
+  add('src/server/gkill/api/README.md', `### \`gkill_server_api/\`（${m.serverApiGo}ファイル）`)
+  add('src/server/gkill/api/gkill_server_api/README.md',
+    `\`HandleXxx\` は${m.handlerMethods}本（ルート表の${m.endpoints} + PathPrefix 配信の`)
+  add('src/server/gkill/api/gkill_server_api/README.md',
+    `\`HandleXxx\` は **${m.handlerDocumented}/${m.handlerMethods} で doc コメント`)
+  add('documents/reverse/glossary.md', `ルート表（${m.endpointsPost} POST + ${m.endpointsGet} GET）`)
+  // class 図に書き出した HandleXxx の行数を資料側から数え、「残り」はルート表の行数との差で出す
+  // （図の行を足し引きしたときも、ルートが増えたときも、どちらでも数がずれたら落ちる）
+  const classDiagrams = 'documents/reverse/class-diagrams.md'
+  const apiClassBlock = exists(classDiagrams)
+    ? readText(classDiagrams).match(/class GkillServerAPI \{([\s\S]*?)\}/)
+    : null
+  const shownHandlers = apiClassBlock ? (apiClassBlock[1].match(/^\s*\+Handle\w+\(/gm) || []).length : 0
+  add(classDiagrams, `残り${m.endpoints - shownHandlers}エンドポイント省略（合計${m.endpoints}登録）`)
+  add('documents/reverse/folder-structure.md',
+    `topic 本文（${m.mcpHelpTopics.join(' / ')} の${m.mcpHelpTopics.length}件）`)
+
   return A
 }
 
@@ -1211,16 +1339,48 @@ const USER_DOC_FORBIDDEN_TERMS = [
   // 利用者に見せる呼び名は「ポート」だけ。現状マニュアル本文に漏れは無く、
   // 止め金がこれしか無いので入れておく
   'Rudbeckia', 'rudbeckia',
+  // 小文字形。URL・保存キー・ファイル名・KFTL の型指定（`/timeis`）に出る形で、
+  // `<code>` / `<pre>` の外に出ていれば利用者に内部名を見せている。
+  // 'playing' は英単語と衝突するので入れない（大文字の 'Playing' は上にある）。
+  'idfkyou', 'idf', 'mirekyou', 'rekyou', 'kyou', 'kftl', 'rykv', 'mkfl', 'dnote', 'ryuu',
+  'lantana', 'nlog', 'urlog', 'timeis', 'kmemo', 'dvnf', 'reptype',
 ]
+// 内部識別子（語の区切りを問わず部分文字列で見る）。API の生パス・エラーコード・環境変数・型名・引数名で、
+// 利用者向けには UI 上の名前（画面名・ボタン名・エラーの文言）で書く
+const USER_DOC_FORBIDDEN_IDENTIFIERS = ['/api/', 'ERR000', 'GKILL_HOME', 'FindQuery', 'tx_id']
 // 例外: Saihate は ja 以外の SAIHATE_APP_NAME がそのまま "Saihate" なので UI ラベル。
-// `<code>` の中（server-config.html の rep type 一覧など、UI が生値を表示する箇所）は対象外。
+// `<code>` / `<pre>` の中（server-config.html の rep type 一覧、kftl-syntax.html の入力例など、
+// 利用者が生値をそのまま読む・打つ箇所）は対象外。
+
+// body に現れた禁止語（USER_DOC_FORBIDDEN_TERMS → USER_DOC_FORBIDDEN_IDENTIFIERS の並び）
+export function userDocTermHits(body) {
+  return [
+    ...USER_DOC_FORBIDDEN_TERMS.filter((term) => new RegExp(`(^|[^A-Za-z])${term}([^A-Za-z]|$)`).test(body)),
+    ...USER_DOC_FORBIDDEN_IDENTIFIERS.filter((id) => body.includes(id)),
+  ]
+}
+
+// マニュアル原稿（HTML）から、利用者の目に入る文字だけを残す。
+// `<code>` / `<pre>` は属性付き（`<code class="...">`）も剥がす。`<code>` 完全一致で書いていると、
+// 属性を1つ足しただけで**遮蔽が外れて用語が露出する**のに検査は素通りする。
+// タグは属性ごと落とし、`alt` / `title` / `aria-label` の値だけを残す（読み上げやツールチップとして見える）。
+// `href` / `src` を落とすのは、ページのファイル名は開発コード名のままでよく（`rudbeckia.html`）、
+// 利用者の目に入るのはリンクの**文字**のほうだから。`class` / `id` も見えないので落とす
+// （小文字形を禁止語に入れたので、`class="kftl-box"` のような名前で落ちないようにする）。
+export function manualProseForTermCheck(html) {
+  return html
+    .replace(/<(code|pre|script|style)(?:\s[^>]*)?>[\s\S]*?<\/\1>/g, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<[A-Za-z][^>]*>/g, (tag) => ' ' +
+      [...tag.matchAll(/\s(?:alt|title|aria-label)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)]
+        .map((x) => x[1] ?? x[2]).join(' ') + ' ')
+    .replace(/<\/[A-Za-z][^>]*>/g, ' ')
+}
 
 function checkUserDocTerms(body, rel) {
-  for (const term of USER_DOC_FORBIDDEN_TERMS) {
-    if (new RegExp(`(^|[^A-Za-z])${term}([^A-Za-z]|$)`).test(body)) {
-      err(`ユーザー向け資料用語NG: ${rel} に開発コード名「${term}」`
-        + '（i18n の UI 用語に置き換えること）')
-    }
+  for (const term of userDocTermHits(body)) {
+    err(`ユーザー向け資料用語NG: ${rel} に開発コード名・内部識別子「${term}」`
+      + '（i18n の UI 用語に置き換えること。生値を見せる必要があるなら <code> / <pre> で包む）')
   }
 }
 
@@ -1231,17 +1391,7 @@ function checkManualTerminology() {
   for (const lang of langs) {
     const langDir = path.join(SRC_DIR, lang)
     for (const page of fs.readdirSync(langDir).filter((f) => f.endsWith('.html'))) {
-      // 属性付き（`<code class="...">`）も剥がす。`<code>` 完全一致で書いていると、
-      // 属性を1つ足しただけで**遮蔽が外れて用語が露出する**のに検査は素通りする。
-      //
-      // `href` / `src` の値も落とす。ページのファイル名は開発コード名のままでよく
-      // （`rudbeckia.html`）、利用者の目に入るのはリンクの**文字**のほうだから。
-      // `alt` / `title` は読み上げやツールチップとして見えるので残す。
-      const body = fs.readFileSync(path.join(langDir, page), 'utf8')
-        .replace(/<code(?:\s[^>]*)?>[\s\S]*?<\/code>/g, '')
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(/\s(?:href|src)\s*=\s*"[^"]*"/g, '')
-        .replace(/\s(?:href|src)\s*=\s*'[^']*'/g, '')
+      const body = manualProseForTermCheck(fs.readFileSync(path.join(langDir, page), 'utf8'))
       checkUserDocTerms(body, `resources/manual_src/${lang}/${page}`)
     }
   }
@@ -1659,18 +1809,30 @@ function checkADRSources() {
 // gitignore 済みのビルド生成物（.gradle / build 等）は DOC_FILENAME_SKIP_DIRS で外れる。
 // 依存 OSS のライセンス原文（ルート直下の LICENSES_DEPENDENCE）は原著者のメールを含むが、
 // 対象パスに入っていないので誤検出しない。
-function personalInfoScanFiles() {
+// index には残っているが作業ツリーから消したファイル（git rm でステージしていない削除・改名の旧パス）も
+// 列挙に残す。コミットに載るのは index の版なので、飛ばすと「消したつもりの実データ入りファイルが
+// ステージ漏れのままコミットされる」のを検査が素通りする。中身は readPersonalInfoTarget が index から読む。
+export function personalInfoScanFiles(root = ROOT) {
   const exts = /\.(go|ts|vue|mjs|js|kt|java|json|html|md|css|ps1|sh|kts|gradle|ya?ml|xml|properties|txt|csv|svg|db)$/
   // 「追跡済み + 未追跡だが ignore されていない」= リポジトリに入り得るファイルだけを見る。
   // ファイルシステム走査だと gitignore 済みのローカル設定（Android の local.properties や
   // ビルド生成物）まで拾って偽陽性になるし、逆に ignore されていない置き忘れは拾いたい。
-  const out = execSync('git ls-files -z --cached --others --exclude-standard', { cwd: ROOT })
-  return out.toString('utf8').split('\0').filter(Boolean)
+  const out = execSync('git ls-files -z --cached --others --exclude-standard', { cwd: root })
+  return [...new Set(out.toString('utf8').split('\0').filter(Boolean))]
     .filter((rel) => exts.test(rel) && /^(src|resources|documents|\.github)\//.test(rel))
     // サンプルデータは実データ由来を許容する運用（2026-08-24 の判断）。検査対象外。
     // 3文字級の短い NG 語は DB 内の base64 や複合語の一部に偶発一致するため、
     // ここを対象に戻すなら語側を前後にアンダースコア等の区切りを付けた形へ寄せること。
     .filter((rel) => !rel.startsWith('resources/gkill_sample_data/'))
+}
+
+// 個人情報検査で読む中身。作業ツリーにあればそれを、無ければ index の版（`git show :<path>`）を返す。
+// where は指摘に出す場所の名前で、index の版なら「git rm でステージすれば消える」ことが分かる書き方にする。
+export function readPersonalInfoTarget(rel, root = ROOT) {
+  const full = path.join(root, rel)
+  if (fs.existsSync(full)) return { buf: fs.readFileSync(full), where: rel }
+  const buf = execFileSync('git', ['show', `:${rel}`], { cwd: root, maxBuffer: 1024 * 1024 * 1024 })
+  return { buf, where: `${rel}（作業ツリーでは削除済みだが index に残っている版。git rm でステージしないとこの中身がコミットされる）` }
 }
 
 // ZIP コンテナ文書（xlsx / docx / zip）の列挙。Office 文書は ZIP+deflate なので、
@@ -1691,14 +1853,16 @@ function personalInfoZipFiles() {
     .filter((rel) => /\.(xlsx|docx|pptx|zip)$/.test(rel) && /^(src|resources|documents|\.github)\//.test(rel))
     .filter((rel) => !rel.startsWith('resources/gkill_sample_data/'))
     .filter((rel) => !PERSONAL_INFO_ZIP_EXEMPT.has(rel))
+  // 作業ツリーから消したが index に残っているものも列挙に残す（personalInfoScanFiles と同じ理由。
+  // 中身は readPersonalInfoTarget が index から読む）
 }
 
 // ZIP の central directory を直接読み、テキスト系エントリを { name, text } で返す。
 // 依存を増やさないための最小実装（deflate は zlib、無圧縮はそのまま）。
 // ZIP64・未知の圧縮方式・壊れたヘッダは「読めないので検査できない」を err にする
 // （黙って素通りすると、この検査を足した理由がそのまま再発する）。
-function readZipTextEntries(rel) {
-  const buf = fs.readFileSync(abs(rel))
+// rel は指摘に出す場所の名前、buf は ZIP の中身（作業ツリーか index の版）。
+function readZipTextEntries(rel, buf) {
   // End of Central Directory (0x06054b50) を末尾から探す（ZIP コメントは最大 64KB）
   let eocd = -1
   const scanEnd = Math.max(0, buf.length - 65557)
@@ -1822,20 +1986,32 @@ function checkPersonalInfo() {
     ? normalizeLF(readText('verify_docs_personal_ngwords.local.txt')).split('\n')
       .map((w) => w.trim().toLowerCase()).filter(Boolean)
     : []
+  // 作業ツリーにも index にも無い（列挙と読み取りの間に消えた等）ものは、黙って飛ばさず読めなかったと言う
+  const readTarget = (rel) => {
+    try {
+      return readPersonalInfoTarget(rel)
+    } catch (e) {
+      err(`個人情報検査で読めない: ${rel}（作業ツリーにも index にも無い: ${String(e.message).split('\n')[0]}）`)
+      return null
+    }
+  }
   const targets = [...new Set([...docMarkdownFiles(), ...personalInfoScanFiles()])]
   for (const rel of targets) {
-    const text = normalizeLF(readText(rel))
+    const target = readTarget(rel)
+    if (!target) continue
+    const { where } = target
+    const text = normalizeLF(target.buf.toString('utf8'))
     for (const [re, label] of patterns) {
       const mt = text.match(re)
       if (mt) {
-        err(`個人情報の疑い（${label}）: ${rel} → 「${mt[0].slice(0, 40)}」` +
+        err(`個人情報の疑い（${label}）: ${where} → 「${mt[0].slice(0, 40)}」` +
           '（$HOME や 〈ユーザー名〉 のプレースホルダに置き換えること）')
       }
     }
     if (ngWords.length !== 0) {
       const lowered = text.toLowerCase()
       for (const w of ngWords) {
-        if (lowered.includes(w)) err(`個人情報の疑い（ローカル NG 語）: ${rel} に「${w}」`)
+        if (lowered.includes(w)) err(`個人情報の疑い（ローカル NG 語）: ${where} に「${w}」`)
       }
     }
   }
@@ -1844,9 +2020,11 @@ function checkPersonalInfo() {
   // 信号にならない（gkill_sample_data を対象外にしたのと同じ判断）。
   const zipNgWords = ngWords.filter((w) => w.length >= 4)
   for (const rel of personalInfoZipFiles()) {
-    for (const entry of readZipTextEntries(rel)) {
+    const target = readTarget(rel)
+    if (!target) continue
+    for (const entry of readZipTextEntries(target.where, target.buf)) {
       const text = normalizeLF(entry.text)
-      const where = `${rel} 内 ${entry.name}`
+      const where = `${target.where} 内 ${entry.name}`
       for (const [re, label] of patterns) {
         const mt = text.match(re)
         if (mt) {
@@ -2359,6 +2537,10 @@ export function gatherBoundaryFacts() {
 
   const trackedFiles = execSync('git ls-files -z --cached --others --exclude-standard', { cwd: ROOT })
     .toString('utf8').split('\0').filter(Boolean)
+    // index には残っているが作業ツリーから消したファイル（git rm 前の改名・削除）は置き場所に数えない。
+    // 数えると、その1件に当たった契約の readFile が ENOENT で検査全体を止める。境界対応表は作業ツリーの
+    // コードとの突き合わせなので、index の版まで読む個人情報検査（readPersonalInfoTarget）とは扱いを分ける。
+    .filter((rel) => exists(rel))
   const resolveSuffix = (suffix) => trackedFiles.filter((rel) => rel === suffix || rel.endsWith('/' + suffix))
   const readFile = (rel) => readText(rel)
 
@@ -2403,6 +2585,133 @@ function checkReverseDocIndexFiles() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// 4-h. テストファイルの索引網羅
+//   テストを足したのに ABOUT_TEST.md のどこにも名前が無いと、仕様書から辿れないテストになる。
+//   listTestFiles() が数える種類（Go の _test.go、vitest の .test.ts / .test.mjs、Playwright の .spec.ts、
+//   Android / Wear OS の @Test を含む .kt。src/plugins/ の独立モジュールは含まない）の1本ずつについて、
+//   それを指す記述がいずれかの ABOUT_TEST.md にあることを見る（どの ABOUT_TEST.md に書くかは問わない）。
+//
+//   「指す記述」は次の条件で数える。素の部分文字列で照合していたときは、2つの載せ漏れを見逃した:
+//   - 名前の前後が区切られていること。前が英数字・`_`・`.`・`-`、後ろが英数字・`_` なら名前の一部。
+//     （`oauth_store_test.go` の中の `store_test.go` を「載っている」としていた）
+//   - パス付きの記述（`api/find_word/x_test.go`、`phone_companion/.../X.kt`）はそのファイルに当たること。
+//     リポジトリ相対パスの末尾一致で見る。`...`（`…`）は途中のディレクトリの省略、`{a,b}` は候補、
+//     `*` は1段の中の任意の文字列。`./` / `../` で始まる記述（Markdown リンクの宛先）は
+//     ABOUT_TEST.md の場所から解決する。
+//   - 同じ名前のテストが別の場所にもあるときは、どれを指すか区別できること。区別できるのは、
+//     パス付きの記述が同名のうち1本だけに当たる場合と、名前だけの記述が、同名のうち1本だけを配下に持つ
+//     ABOUT_TEST.md にある場合。（basename で重複を除いて照合していたので、同名の1本が載っていれば
+//     残りも全部「載っている」になっていた。main_test.go・config_test.go・match_words_test.go・
+//     Wear OS の MainActivityTest.kt / StringsParityTest.kt が該当）
+//   名前が一意なテストは、名前だけの記述ならどこにあっても数える。
+// ─────────────────────────────────────────────────────────────
+const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+// パス付きの記述として後ろ向きに読み進める文字（ディレクトリ名・区切り・省略・候補・ワイルドカード）
+const TEST_REF_PATH_CHAR = /[A-Za-z0-9_.\-/{},*…]/
+
+// text の中で name を指す記述を列挙する。パスが前に付いていれば `dir/.../name` の形で、無ければ name だけを返す
+function testFileRefsIn(text, name) {
+  const refs = []
+  if (!text.includes(name)) return refs
+  for (const m of text.matchAll(new RegExp(`${escapeRegExp(name)}(?![A-Za-z0-9_])`, 'g'))) {
+    if (m.index > 0 && /[A-Za-z0-9_.-]/.test(text[m.index - 1])) continue
+    let start = m.index
+    while (start > 0 && TEST_REF_PATH_CHAR.test(text[start - 1])) start--
+    const prefix = text.slice(start, m.index)
+    refs.push(prefix.endsWith('/') ? prefix + name : name)
+  }
+  return refs
+}
+
+// パス付きの記述を「リポジトリ相対パスの末尾に当たる」正規表現にする。組み立てられなければ null
+function testFileRefPattern(ref) {
+  const segs = ref.replace(/^\/+/, '').split('/')
+  let re = ''
+  segs.forEach((seg, i) => {
+    if (seg === '...' || seg === '…' || seg === '**') { re += '(?:[^/]+/)*'; return }
+    re += seg.replace(/[.+?^$()|[\]\\]/g, '\\$&')
+      .replace(/\{([^{}]*)\}/g, (_, alts) => `(?:${alts.split(',').join('|')})`)
+      .replace(/\*/g, '[^/]*')
+    if (i < segs.length - 1) re += '/'
+  })
+  try { return new RegExp(`(?:^|/)${re}$`) } catch { return null }
+}
+
+// testFiles: リポジトリ相対パス（`/` 区切り）。aboutTests: [{ path: ABOUT_TEST.md のリポジトリ相対パス, text }]
+export function checkTestFileCoverage(testFiles, aboutTests) {
+  const out = []
+  const byName = new Map()
+  for (const f of [...new Set(testFiles)].sort()) {
+    const name = path.posix.basename(f)
+    if (!byName.has(name)) byName.set(name, [])
+    byName.get(name).push(f)
+  }
+  for (const [name, same] of byName) {
+    const covered = new Set()
+    for (const about of aboutTests) {
+      const aboutDir = path.posix.dirname(about.path)
+      for (const ref of testFileRefsIn(about.text, name)) {
+        let hits
+        if (ref === name) {
+          hits = same.length === 1 ? same : same.filter((f) => aboutDir === '.' || f.startsWith(aboutDir + '/'))
+        } else {
+          const resolved = /^\.\.?\//.test(ref) ? path.posix.normalize(path.posix.join(aboutDir, ref)) : ref
+          const re = testFileRefPattern(resolved)
+          hits = re ? same.filter((f) => re.test(f)) : []
+        }
+        if (hits.length === 1) covered.add(hits[0])
+      }
+    }
+    for (const f of same) {
+      if (covered.has(f)) continue
+      out.push(same.length === 1
+        ? `テストの索引: ${f} がどの ABOUT_TEST.md にも載っていない`
+        : `テストの索引: ${f} を指す記述がどの ABOUT_TEST.md にも無い（同名のテストが${same.length}本ある。` +
+          `\`親ディレクトリ/${name}\` のようにパスで書くか、このファイルだけを配下に持つ ABOUT_TEST.md に書く）`)
+    }
+  }
+  return out.sort()
+}
+
+function checkTestFileCoverageFiles() {
+  const rel = (p) => path.relative(ROOT, p).split(path.sep).join('/')
+  const testFiles = Object.values(listTestFiles()).flat().map(rel)
+  const aboutTests = listFilesRec('src', (f) => f === 'ABOUT_TEST.md')
+    .map((p) => ({ path: rel(p), text: fs.readFileSync(p, 'utf8') }))
+  if (aboutTests.length === 0) { err('テストの索引: src/ 配下に ABOUT_TEST.md が1つも無い'); return }
+  for (const e of checkTestFileCoverage(testFiles, aboutTests)) err(e)
+}
+
+// ─────────────────────────────────────────────────────────────
+// 4-i. src/server/ABOUT_TEST.md の分類表の和
+//   「| カテゴリ | テストファイル数 | 内容 |」の表の N を足した数が「**合計 N ファイル**」と一致すること。
+//   合計行は件数検査（goTestFiles）が見ているが、行の側は誰も足していなかったので
+//   「1行だけ古いまま合計だけ直す」が通ってしまっていた。
+//   表の範囲はヘッダ行から合計行の手前まで（後ろの表に数字の列があっても混ぜない）。
+// ─────────────────────────────────────────────────────────────
+export function checkServerAboutTestCategorySum(text) {
+  const out = []
+  const start = text.search(/^\|\s*カテゴリ\s*\|/m)
+  const total = text.match(/^\*\*合計 (\d+) ファイル\*\*/m)
+  if (start < 0) out.push('src/server/ABOUT_TEST.md: 分類表のヘッダ行「| カテゴリ | … |」が無い')
+  if (!total) out.push('src/server/ABOUT_TEST.md: 「**合計 N ファイル**」の行が無い')
+  if (out.length) return out
+  const rows = [...text.slice(start, total.index).matchAll(/^\|\s*([^|]+?)\s*\|\s*(\d+)\s*\|/gm)]
+  if (rows.length === 0) { out.push('src/server/ABOUT_TEST.md: 分類表の行「| 名前 | N | … |」が1行も読めない'); return out }
+  const sum = rows.reduce((s, r) => s + Number(r[2]), 0)
+  if (sum !== Number(total[1])) {
+    out.push(`src/server/ABOUT_TEST.md: 分類表の和 ${sum}（${rows.length}行）が「**合計 ${total[1]} ファイル**」と合わない`)
+  }
+  return out
+}
+
+function checkServerAboutTestCategorySumFiles() {
+  const rel = 'src/server/ABOUT_TEST.md'
+  if (!exists(rel)) { err(`${rel} が無い`); return }
+  for (const e of checkServerAboutTestCategorySum(readText(rel))) err(e)
+}
+
+// ─────────────────────────────────────────────────────────────
 // メイン
 // ─────────────────────────────────────────────────────────────
 function main() {
@@ -2425,6 +2734,8 @@ function main() {
   checkPaths()
   checkDocFilenames()
   checkReverseDocIndexFiles()
+  checkTestFileCoverageFiles()
+  checkServerAboutTestCategorySumFiles()
   checkCrossBoundaryDoc()
   checkADR()
   checkADRBands()

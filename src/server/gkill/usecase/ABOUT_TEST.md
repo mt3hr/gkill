@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/usecase/` パッケージのテスト仕様。HTTP 非依存のビジネスロジック層（17ファイル）。
+`gkill/usecase/` パッケージのテスト仕様。HTTP 非依存のビジネスロジック層（18ファイル）。
 
 ## テストファイル
 
@@ -36,7 +36,7 @@
 | `TestCommitTxSetsRealRepNameBeforeWriteThrough` | `dao/reps/commit_tx.go` の共通関数 `commitTxAfterRows` が `setRepName` を `writeThrough` より前に呼び、13型すべてが `WriteThroughXxxCache` を渡してそこを通る | 一時リポジトリの合成名（`"KmemoTemp"` 等）がキャッシュへ入り、確定した記録が rep絞り込みから漏れて**一覧から丸ごと消える** |
 | `TestCommitTxRestoresIDFTargetRepNameBeforeRealWrite` | IDF だけは `TargetRepName` を**実DBへ書く前に**（`writeStagedTxAtomically` より前で）戻す | leaf の `AddIDFKyouInfo` が `TARGET_REP_NAME` として永続化するので、合成名が入るとファイルの所在が実データごと壊れる。キャッシュではないので `UpdateCache` でも直らない |
 
-> 13型・457メソッドのようにコピペで増える形は、**1つだけ抜けても他が緑のまま通る**。
+> 13型・461メソッドのようにコピペで増える形は、**1つだけ抜けても他が緑のまま通る**。
 > 型ごとに振る舞いのテストを書くより、書き方をソースで見張るほうが確実で速い。
 
 ## `cached_rep_insert_alignment_test.go`

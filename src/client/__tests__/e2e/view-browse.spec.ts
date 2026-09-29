@@ -3,7 +3,7 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToMi, navigateToPlaying,
-  makeUniqueLabel, expectPageToContainText, findKyouByText, clickContextMenuItem,
+  makeUniqueLabel, expectPageToContainText, findKyouByText, clickContextMenuItem, searchByKeyword,
 } from './crud-helpers'
 
 let apiReachable = false
@@ -39,8 +39,11 @@ test.describe('View/Browse Flows', () => {
   })
 
   test('rykv page shows mixed data types after creation', async ({ page }) => {
-    const kmemoLabel = makeUniqueLabel('mixed_kmemo')
-    const miLabel = makeUniqueLabel('mixed_mi')
+    // 2件に共通の一意な語で絞ってから見る。一覧は仮想スクロールなので、並列に走る他のテストの記録に
+    // 押し出されると、先に作った記録が描画範囲から外れる（フルランでときどき落ちていた原因）
+    const token = makeUniqueLabel('mixed')
+    const kmemoLabel = `${token}_kmemo`
+    const miLabel = `${token}_mi`
 
     // Create kmemo and mi
     await submitKftlText(page, kmemoLabel)
@@ -48,7 +51,9 @@ test.describe('View/Browse Flows', () => {
 
     // Navigate to rykv and verify both appear
     await navigateToRykv(page)
+    await searchByKeyword(page, token)
     await expectPageToContainText(page, kmemoLabel)
+    await expectPageToContainText(page, miLabel)
   })
 
   test('mi board shows task records', async ({ page }) => {

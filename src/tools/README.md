@@ -8,7 +8,7 @@ gkill プロジェクト用のユーティリティスクリプト。
 |---|---|
 | `dev.mjs` | `npm run dev` の実体。`--api=<url>` で接続先gkill_serverを指定してViteを起動する |
 | `license_getter.mjs` | `npm run license_getter` の実体。依存ライブラリのライセンス一覧を `LICENSES_DEPENDENCE` に出力する |
-| `verify_docs.mjs` | `npm run verify_docs` の実体。資料の件数・リンク・Mermaid・マニュアル鮮度等の機械検査 |
+| `verify_docs.mjs` | `npm run verify_docs` の実体。資料の件数・リンク・Mermaid・マニュアル鮮度・境界対応表（`documents/reverse/cross-boundary-map.md` の表とコードの突き合わせ）・ADR の番号帯・reverse 資料の索引網羅・個人情報パターン・ユーザー向け資料の用語（開発コード名の大文字形・小文字形と内部識別子。`<code>` / `<pre>` の中は除く）・テストファイルの索引網羅（`src/plugins/` の独立モジュールを除く全テストファイルについて、それを指す記述がいずれかの `ABOUT_TEST.md` にあること。名前は前後の区切り付きで照合し、同名のテストが複数あるときはパス付きの記述か、そのファイルだけを配下に持つ `ABOUT_TEST.md` の記述だけを数える）・`src/server/ABOUT_TEST.md` の分類表の和と合計行の一致 等の機械検査 |
 | `build_manuals.mjs` | `resources/manual_src/` から `resources/manual/` を生成する |
 | `manual_build.mjs` | マニュアル生成の共通ロジック（`build_manuals.mjs` / `verify_docs.mjs` から利用） |
 | `manual_a11y.mjs` | マニュアルのアクセシビリティ検査ヘルパー |

@@ -58,11 +58,12 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | ダイアログは保存しても閉じるとは限らない（タグ追加など） | 完了の合図は「書き込みAPIの応答」。`clickDialogButton` が待ち、errors が空かも見る |
 | 記録に付いたテキストと通知は**一覧に出ない**（`kyou-list-view.vue` が `:show_attached_texts="false"` `:show_attached_notifications="false"` を渡している）。タグだけは出る | `openKyouDetailPane` で Kyou詳細ペインを開き、その配下で確認する |
 | 板名は `v-select` で自由入力できない。新しい板は隣の ＋ ボタンが開く「板名追加」ダイアログで作る | `createAndSelectMiBoard` |
-| リポストは元の記録と同じ本文で表示されるので、本文だけで掴むと元記録のほうを消してしまう | `waitForKyouRowByRepName(page, 'ReKyou', label)` でリポジトリ名と併せて特定する |
+| リポストは元の記録と同じ本文で表示されるので、本文だけで掴むと元記録のほうを消してしまう | `searchByKeyword` で本文を絞ってから `waitForKyouRowByRepName(page, 'ReKyou')` でリポジトリ名で特定する |
 | `.v-card` の `.first()` は外側のコンテナに当たる | 最も内側を取る `.last()` を使う |
 | 一覧は仮想スクロールで数件しか描画しない。並列に走る他テストの記録に押し出されて、作ったはずの記録が見つからなくなる | `searchByKeyword` で本文を絞ってから件数や有無を見る。キーワード入力欄は「キーワード」チェックボックスがONのときだけ `v-show` される |
 | E2E は **PATH 上の `gkill_server`** を起動する。サーバ側（Go）を直しても、ビルドし直さないと古いバイナリで走る | ビルド先を PATH の先頭に置いて実行する。`npm run install_server` は本番サービスの実体（`go/bin/gkill_server.exe`）を上書きするので、検証だけなら別ディレクトリへ `go build -o` する |
 | リポストは元の記録を**入れ子で**描画する（`re-kyou-view.vue` が `<KyouView :show_rep_name="true">` で元Kyouを中に出す）。`.kyou_rep_name` の総数は 元1 + リポスト1 + リポスト内の元1 = 3 になる | 総数で数えずリポジトリ名で絞って数える |
+| 一覧の行はリポジトリ名などの見出しを種類別のデータの読み込み前から出すが、右クリックでメニューを開く子ビュー（`re-kyou-view.vue` など）は読み込み後に描画される。読み込み中の右クリックはエラーも出さずに捨てられ、メニューが開かない | `clickContextMenuItemOn` がメニューの項目が出るまで右クリックをやり直す。読み込み中の表示（`.kyou_loading`）は遅れて出るので、消えるのを待っても目印にならない |
 | タグ名を変更すると、rykv のタグ絞り込みに**未チェック**で入り、その記録が一覧から消える（チェック状態は `application_config.tag_struct` に保存される。新規追加したタグは自動でチェックされるので非対称） | 絞り込みの影響を受けない Kyou詳細ペインで確認する |
 | **ログインは IP ごと15分に10回まで**（`gkill_server_api_rate_limit.go`。判定は資格情報を見る**前**なので失敗も成功も1回と数える）。スイート全体のログインは現在5回で、増やすと上限に当たって「ログインしても画面が変わらない」が**別のテストで**出る | 実際にフォームからログインするテストを増やさない。共有 storageState（`auth.setup.ts`）を使う。`--repeat-each` でログイン系 spec を回すのも同じ理由で不可 |
 | ログイン失敗も `check_auth` のセッション無効判定と**同じエラーコード**（存在しないユーザIDは ERR000002）を通る。素直に飛ばすと `location.replace("/")` でページごと作り直され、出したばかりのエラー表示が消える | 製品側でログイン画面（`pathname === '/'`）のときは飛ばさないようにしてある（`is_on_login_page`）。`check-auth-login-page.test.ts` が配線を固定する |
@@ -109,7 +110,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴 |
 | `src/client/__tests__/e2e/mi-re-kyou.spec.ts` | MiReKyou（既存Kyouのタスク化）: rykvのコンテキストメニュー「タスクにする」→Mi画面に出る。API面はGo側の TestHandleAddMiReKyou_* 系へ移管 |
 
-#### 認証・ユースケース・設定系（22ファイル）
+#### 認証・ユースケース・設定系（24ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -136,8 +137,9 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/kftl-multi-dialog.spec.ts` | メモ帳ウィンドウを複数枚開く。タブの一覧と中身は共有シングルトン、「いま映しているタブ」だけがウィンドウごと |
 | `src/client/__tests__/e2e/dialog-autofocus.spec.ts` | ダイアログを開いたら最初のテキスト入力欄にカーソルが載ること（選び方の判定そのものは `unit/classes/dialog-autofocus.test.ts`） |
 | `src/client/__tests__/e2e/sample-data-smoke.spec.ts` | 配布サンプルデータの起動スモーク。run-e2e.mjs がサンプルデータのコピーを home にした gkill_server を別ポートで起動し（URL は `GKILL_E2E_SAMPLE_URL`）、embed 配信のフロントエンドへ README 記載の資格情報でログインして rykv に記録が出ること。ログインはレート制限を消費するので1回だけ |
+| `src/client/__tests__/e2e/skills.spec.ts` | スキル（ADR-0634）の画面の一巡: 設定 → スキル → zip をアップロード（確認 → 適用）→ 一覧 → 表示 → ダウンロード → 同じ名前で上げ直すと「変わる・消える」が確認に出る → 削除。zip はテストの中で組み立てる（バイナリのフィクスチャをコミットしない） |
 
-### Composable ユニットテスト（65ファイル）
+### Composable ユニットテスト（67ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -205,6 +207,9 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/server-config-view.test.ts` | サーバ設定画面（props の ServerConfig を複製してから編集する） |
 | `src/client/__tests__/unit/composables/sidebar-child-query-sync-emission.test.ts` | サイドバー子クエリビューの「props同期では emit しない」原則（TimeIs / Map / Calendar） |
 | `src/client/__tests__/unit/composables/tutorial-on-startup.test.ts` | 起動時チュートリアルは起動時に1回だけ（`application_config` の ref 差し替えで再発火しないこと） |
+| `src/client/__tests__/unit/composables/manage-skill-list-dialog.test.ts` | スキル管理ダイアログ（`use-manage-skill-list-dialog` / `use-browse-skill-files-dialog`。ADR-0634）。アップロードは1段目が `dry_run` だけを送って計画を確認ダイアログへ出し、2段目の「適用」は**同じ zip** を `dry_run=false` で送って一覧を読み直す（二度目は何もしない）。サーバが断った zip は確認に進まない、削除はスキル丸ごと（path を空）、ダウンロードは base64 の zip を Blob にして保存、ファイル閲覧は SKILL.md から始めバイナリは読みに行かず、応答が追い越しても最後に選んだファイルを出す |
+| `src/client/__tests__/unit/composables/dashboard-view-date-navigation.test.ts` | useDashboardView の表示日の移動。地図の日付ピッカー（`requested_change_map_date`）で選んだ日を `go_date` が表示日ごとその日の 0 時へ移し、Dnote・Mi リスト・地図が従う両端と日付表示がそろうこと、`go_today` で今日へ戻れること、`dashboard-view.vue` の配線（ソース走査）。`go_date` の中身を消しても型検査は通り「ピッカーで日を選んでも何も起きない」がエラー無しで起きる |
+| `src/client/__tests__/unit/composables/rykv-view-map-date-picker.test.ts` | useRykvView の地図の日付ピッカーの受け口（`onGpsLogMapRequestedChangeDate`）。地図に映す日（開始・終了・マーカー）だけを切り替え、`focused_time` も検索条件も一覧も動かさないこと。対照として `requested_focus_time` の受け口はフォーカス列をスクロールし地図の日を動かさないこと、`rykv-view.vue` で2つの受け口を取り違えていないこと（ソース走査） |
 
 ### ルーターテスト
 
