@@ -19,7 +19,7 @@
 
 原因を切り分けると、**サーバのプロセスは古くなかった**。常駐させていた MCP サービス 2 本
 （read / readwrite。当時は node が旧 `src/mcp` の作業ツリーを直接実行していた。2026-09-20 からは `gkill_server.exe mcp` で本体と同じ exe を配る。ADR-0631）は
-改名コミット `51752fe7`（2026-09-08 18:57）より後に起動していた。
+改名コミット `17618708`（2026-09-08 18:57）より後に起動していた。
 古かったのは ChatGPT のコネクタが接続時に取った tools/list で、これはサーバを
 何度再起動しても更新されない（[ADR-0609](0609-stale-tool-schema-is-warned-only-when-proven.md) が
 claude.ai コネクタで実測した「セッション寿命で固定」の ChatGPT 版）。
@@ -101,7 +101,7 @@ claude.ai コネクタで実測した「セッション寿命で固定」の Cha
 
 ## Evidence
 
-- 実測: node の MCP サービス2プロセスは改名コミット `51752fe7`（2026-09-08 18:57:04 +0900）
+- 実測: node の MCP サービス2プロセスは改名コミット `17618708`（2026-09-08 18:57:04 +0900）
   より後に起動していた（`Win32_Process.CreationDate` で確認）。
   ChatGPT から `query.<旧名>` で呼ぶと `is not supported`、`playing_time` なら成功
 - tools/list の実測（gkill_status 追加・廃止引数除去の後）: read 47,187 B / write 59,911 B /

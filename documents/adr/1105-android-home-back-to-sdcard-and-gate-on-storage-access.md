@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-09-24 |
-| Sources | `c1200a3b` / `b971b0a3`（2026-08-03 にアプリ専用領域へ移した側） / `.claude/skills/gkill-mobile/SKILL.md`「Android同梱サーバの待受・TLS・画面のアドレスは ServerConfig に従う」 |
+| Sources | `feacf674` / `ee9d2736`（2026-08-03 にアプリ専用領域へ移した側） / `.claude/skills/gkill-mobile/SKILL.md`「Android同梱サーバの待受・TLS・画面のアドレスは ServerConfig に従う」 |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/android/app/src/main/java/com/gkill_android/mobile_app/src/gkill/mt3hr/gkill/MainActivity.kt` の `GKILL_HOME` / `decideStorageGate` / `copyAppPrivateHomeIfNeeded` の KDoc |
@@ -19,7 +19,7 @@ APK の `MainActivity` は同梱の gkill_server に `--gkill_home_dir` で `/sd
 
 2026-08-03（v1.1.7）にこれを理由に置き場をアプリ専用領域（`filesDir` 配下の `gkill`）へ移し、
 初回起動時に `/sdcard/gkill` を専用領域へ複製する移行を入れた（複製元は残した。この移行の決定には ADR が無く、
-経緯は `b971b0a3` の本文だけにある）。さらに 2026-08-21 の
+経緯は `ee9d2736` の本文だけにある）。さらに 2026-08-21 の
 指摘対応（M-15）で、データが専用領域にあることを前提に起動ゲートを非ブロッキングにした
 （共有ストレージの権限は、写真などを指すファイルリポジトリのためにだけ要るものになっていた）。
 

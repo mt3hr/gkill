@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-09-23 |
-| Sources | `756ad897` / `.claude/skills/gkill-client-foundation/SKILL.md`「設定は「適用」を押すまでサーバへ送らない」節 / [ADR-0106](0106-find-query-null-semantics.md)（空配列＝0件指定） |
+| Sources | `97d11970` / `.claude/skills/gkill-client-foundation/SKILL.md`「設定は「適用」を押すまでサーバへ送らない」節 / [ADR-0106](0106-find-query-null-semantics.md)（空配列＝0件指定） |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/client/classes/use-edit-saved-find-query-dialog.ts` の `useEditSavedFindQueryDialog` の doc コメント |
@@ -29,7 +29,7 @@
 1つ足しただけ」の利用者にも起きるようになる。
 
 ```
-756ad897 で削除した旧ダイアログ（ロジックは use-edit-saved-find-query-dialog.ts へ移した）:
+97d11970 で削除した旧ダイアログ（ロジックは use-edit-saved-find-query-dialog.ts へ移した）:
   src/client/classes/use-edit-dashboard-dialog.ts
   src/client/classes/use-edit-playing-time-is-dialog.ts
   src/client/pages/dialogs/edit-dashboard-dialog.vue
@@ -69,7 +69,7 @@
 ## Evidence
 
 実測なし — 旧ダッシュボードダイアログの適用が2欄を無条件に渡し、開くときに未設定を `new FindKyouQuery()` で埋めていたコード
-（756ad897 で削除）と、空の `FindKyouQuery` の `tags` / `reps` が `[]`＝0件指定であることからの判断。
+（97d11970 で削除）と、空の `FindKyouQuery` の `tags` / `reps` が `[]`＝0件指定であることからの判断。
 「触ったセクションだけ渡す」はユニットテストで固定した。
 
 ## Related tests

@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-09-14 |
-| Sources | `e568c8b8`（`UnWrap()` を入れた ReKyou 修正）/ `.claude/skills/gkill-go-backend/SKILL.md`「rep名の絞り込みは」/ `.claude/skills/gkill-client-foundation/SKILL.md`「Kyou の再読込」/ [ADR-0101](0101-filter-rep-after-cache.md) / [ADR-0605](0605-mcp-version-history-is-a-dedicated-tool.md) |
+| Sources | `a7a90039`（`UnWrap()` を入れた ReKyou 修正）/ `.claude/skills/gkill-go-backend/SKILL.md`「rep名の絞り込みは」/ `.claude/skills/gkill-client-foundation/SKILL.md`「Kyou の再読込」/ [ADR-0101](0101-filter-rep-after-cache.md) / [ADR-0605](0605-mcp-version-history-is-a-dedicated-tool.md) |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/dao/reps/repositories.go`（`GetKyouHistoriesByRepName`）・`src/server/gkill/dao/reps/gkill_repositories.go`（`GetKyouHistoriesByRepName`）・`src/client/classes/kyou-reload.ts`（`fetch_refreshed_kyou`） |
@@ -26,7 +26,7 @@ KyouDialog で Mi にチェックを入れると、親の一覧の該当行が�
 ADR-0101 が `selectMatchRepsFromQuery` について「`UnWrap()` の戻り値で検索しない」と決めた壊れ方そのものが、
 `get_kyou` 経路に残っていた（ADR-0605 の却下案にも「十数rep → 数百rep・十数秒になった経路そのもの」と書かれていた）。
 
-`UnWrap()` が入ったのは `e568c8b8`（ReKyou が画面に表示されない不具合の修正）。`rep_name` 指定時に
+`UnWrap()` が入ったのは `a7a90039`（ReKyou が画面に表示されない不具合の修正）。`rep_name` 指定時に
 leaf の名前で照合するために必要だった変更で、`rep_name` 無しの経路には元から不要だった。
 
 「だんだん重くなる」の正体は蓄積ではなく負荷依存の劣化だった。数百本の fan-out がプールのスロットを長く占有すると、
@@ -58,7 +58,7 @@ ERR000101 が百行余り、1〜2秒に数十件のバーストで残ってい�
   最新版の rep だけを引くと古い版が履歴から欠ける。キャッシュ rep は種別ごとに全 leaf の全版を1表に持っているので、
   そちらを回せば1 SQL で全版が揃う
 - **rep 名指定の経路も `UnWrap()` をやめ、行の `RepName` で後絞りする（ADR-0101 と同じ形）** — できるが、
-  `e568c8b8` が固定した `re_kyou_granular_cache_test.go` の意味論（leaf 名で1件に絞る）を触ることになり、
+  `a7a90039` が固定した `re_kyou_granular_cache_test.go` の意味論（leaf 名で1件に絞る）を触ることになり、
   今回の症状には無関係。rep 名指定の経路は dispatch 前に leaf を1本に絞るので、元から走査は1本程度で済んでいる
 - **アドレス表に無い ID でもプラグインを外す** — プラグイン Kyou の ID は表に載らないので、外すとプラグイン Kyou の
   `get_kyou` が黙って空になる。表に無いのはほかに「別プロセスが実 DB へ直接書いた、次回 `UpdateCache` 前の記録」だが、

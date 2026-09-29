@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-30 |
-| Sources | `0f25b19a` / `src/server/gkill/dao/sqlite3impl/` |
+| Sources | `f3298d4c` / `src/server/gkill/dao/sqlite3impl/` |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/dao/sqlite3impl/sqlite_connection_test.go` |

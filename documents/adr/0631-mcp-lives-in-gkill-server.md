@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-09-20 |
-| Sources | 利用者の要求「MCP サーバを Go へ厳密にリプレイス。テストを先に移行し、自己チェックしてから実装。新旧の結果一致を最重視」。途中の判断「gkill_server に一本化」「ログは gkill_log を改変して別名で出す」。旧 Node 実装の最終コミットは `e9a54cd9`（`src/mcp`、約 9,100 行 + テスト 12,500 行・28 ファイル） |
+| Sources | 利用者の要求「MCP サーバを Go へ厳密にリプレイス。テストを先に移行し、自己チェックしてから実装。新旧の結果一致を最重視」。途中の判断「gkill_server に一本化」「ログは gkill_log を改変して別名で出す」。旧 Node 実装の最終コミットは `e486672b`（`src/mcp`、約 9,100 行 + テスト 12,500 行・28 ファイル） |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/mcp/`（package `mcp`。旧 `src/mcp/lib/*.mjs` と 1:1）/ `src/server/gkill/mcp/jsonobj/`（JSON.stringify 互換の順序つき JSON）/ `src/server/gkill/mcp/internal/fakegkill/`（偽 gkill）/ `src/server/gkill/mcp/testdata/golden/`（ゴールデン）/ `src/server/gkill/main/common/mcp.go`（`gkill_server mcp`）/ `src/server/gkill/main/common/gkill_log/gkill_log.go`（`InitNamed`） |
