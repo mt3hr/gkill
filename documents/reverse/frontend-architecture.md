@@ -73,8 +73,8 @@ src/client/
 │   ├── shared-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── views/                       # Viewコンポーネント (197)
-│   └── dialogs/                     # ダイアログコンポーネント (111, Esc閉じ対応)
+│   ├── views/                       # Viewコンポーネント (207)
+│   └── dialogs/                     # ダイアログコンポーネント (119, Esc閉じ対応)
 ├── plugins/
 │   └── vuetify.ts                   # Vuetify設定・テーマ定義
 └── router/
@@ -94,8 +94,8 @@ Page（ルートページ）
 | 層 | 配置 | 件数 | 責務 |
 |---|---|---|---|
 | **Page** | `pages/*.vue` | 15 | ルーティング先。ページ全体のレイアウト（13ルート＋共有用2ページ） |
-| **View** | `pages/views/*.vue` | 197 | データ型ごとの追加/編集/一覧表示 |
-| **Dialog** | `pages/dialogs/*.vue` | 111 | モーダル操作（確認、詳細編集等） |
+| **View** | `pages/views/*.vue` | 207 | データ型ごとの追加/編集/一覧表示 |
+| **Dialog** | `pages/dialogs/*.vue` | 119 | モーダル操作（確認、詳細編集等） |
 
 ### 命名規則
 
@@ -168,17 +168,46 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
   ルート行は `update_mi_board_struct` の walk が子しか差し替えないので開かない
   （`use-edit-mi-board-struct-element-dialog.ts` / `use-edit-mi-board-struct-view.ts`）
 
+### スキル管理ダイアログ群
+
+MCP 向けの利用者ごとのスキル（`SKILL.md` と付属ファイル。[ADR-0634](../adr/0634-per-user-skills-for-mcp.md)）を Web から扱う4本のダイアログ。設定画面の「スキル」ボタンから `manage-skill-list-dialog.vue` を開く。画面でできるのは一覧・中身の表示・zip のダウンロード・zip のアップロード（丸ごと置き換え）・スキル丸ごとの削除だけで、ファイル単位の編集は持たない（記録アプリの本質ではないので gkill に責務を持たせない）。設定の「適用」とは独立したエンティティなので、`server-config-dialog.vue` と同じくダイアログ自身が API を呼ぶ（`use-manage-skill-list-dialog.ts`）。画面仕様は [screen-specs.md](screen-specs.md) §5「スキル管理」。
+
+| コンポーネント | Composable | 役割 |
+|---|---|---|
+| `manage-skill-list-dialog.vue` / `manage-skill-list-view.vue` | `use-manage-skill-list-dialog.ts` | 一覧（名前・説明・更新日時・ファイル数。`SKILL.md` が壊れているスキルは説明欄に理由）。行に「表示」「ダウンロード」「削除」、上に「zipをアップロード」。一覧の取得（`get_skill_list`）と書き込み系の API（`download_skill` / `upload_skill` / `delete_skill`）を呼ぶのはこの1本だけ。確認ダイアログ2本は結果を親へ emit で返す |
+| `browse-skill-files-dialog.vue` | `use-browse-skill-files-dialog.ts` | 閲覧。左にファイル一覧（初期選択は `SKILL.md`）、右に中身。スキルを開いたとき（`path` 無し。`SKILL.md` の中身とファイル一覧）と、`SKILL.md` 以外のテキストファイルを選んだとき（`path` 付き）に、`get_skill` を自分で呼ぶ |
+| `confirm-upload-skill-dialog.vue` / `confirm-upload-skill-view.vue` | `use-confirm-upload-skill-dialog.ts` | アップロードの確認（2段階の2段目）。計画を見せて「適用」を親へ返す。zip も API も持たない |
+| `confirm-delete-skill-dialog.vue` / `confirm-delete-skill-view.vue` | `use-confirm-delete-skill-dialog.ts` | 削除の確認。スキルは履歴を持たないので消したら戻せない（削除は `path` を空にしてスキル丸ごと） |
+| — | `file-base64.ts` | ファイル ⇔ base64 の相互変換（下記） |
+
+**2段階アップロード（`dry_run` → 適用）:** サーバの `/api/upload_skill`（`handle_upload_skill.go`）は `dry_run=true` だと置き換えずに計画 `SkillReplacePlan`（`upload-skill-response.ts`: `name` / `is_new` / `added` / `removed` / `changed` / `ignored`。名前は zip の中の `SKILL.md` の frontmatter で決まる）だけを返す。
+
+1. 1段目 `onSelectedUploadFile`: 選んだ zip を `read_file_as_data_url` で読み、`dry_run=true` で送る。返った計画を確認ダイアログに出し、zip は `pending_zip_base64` に持つ。サーバが断った zip（`errors` あり、または `plan` が null）は確認へ進まず、適用もできない
+2. 2段目 `apply_upload_skill`: 「適用」で**1段目と同じ zip** を `dry_run=false` で送り（既存のスキルは丸ごと置き換え）、一覧を読み直す。送る前に `pending_zip_base64` を空にするので、二度目の「適用」は何もしない
+
+「zipをアップロード」は `label` で包んだ隠し `input[type=file]` で、同じファイルを選び直しても `change` が起きるよう選択は毎回空に戻す。守るテスト: `manage-skill-list-dialog.test.ts`（1段目は書き込まない・2段目は同じ zip・断られた zip は適用できない）。
+
+**中身は素のテキストで出す（`v-html` を使わない）:** 閲覧ダイアログはファイルの中身を `<pre>{{ text }}</pre>` に補間で出す。Markdown / HTML として描かない（`markdown-to-html.ts` も通さない）―― スキルは AI が書くので、本文に紛れた HTML のスクリプトがログイン中のセッションで gkill のオリジンで動く（保存型 XSS。ADR-0634 の却下案）。バイナリのファイルは読みに行かず「表示できません」を出す。
+
+**base64 の往復（`file-base64.ts`）:** サーバとのファイルのやりとりは JSON の中の base64 で行う（`gkill_fetch` が JSON 以外の応答を受け付けず、セッションも本文の JSON で渡すため）。`read_file_as_data_url(file)` は `FileReader.readAsDataURL` の data URI をそのまま送る（サーバは `,` より前を捨てて復号する。`/api/upload_files` と同じ）。`base64_to_blob(base64, type)` はダウンロードした zip の base64 を `Blob` に戻して `save-as.ts` の `save_as` に渡す（0x80 以上のバイトも化けない）。
+
+**閲覧の応答の追い越し対策（`load_seq`）:** ファイルを続けて押すと、先に投げた要求の応答が後から来て表示を上書きしうる。`load_skill` / `select_file` は呼ばれるたびに `load_seq` を進め、`await` のあとに自分の番号と違えば応答を捨てる（`is_loading` も最新の要求だけが消す）。`hide()` も進めるので、閉じたあとに届いた応答が空にした状態へ書き戻らない。守るテスト: `manage-skill-list-dialog.test.ts` の「応答が追い越しても最後に選んだファイルを出す」。
+
+ヘッダのタイトル欄は空で、スキル名は本文の先頭に出す（次の「ダイアログ アクセシビリティ」）。
+
 ### ダイアログ アクセシビリティ
 
-119ダイアログ中90件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
+119ダイアログ中118件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。唯一の例外は `plugin-config-dialog.vue` で、Vuetify の `v-dialog`（`defineModel` の `show`）に `useDialogHistoryStack(show)` を登録するだけにしてある。iframe の中でプラグイン製のフォームがナビゲーションして履歴エントリを作りうるので、`close_dialog_via_history` は使わずプログラム的に閉じる（unmount で iframe の履歴ごと消えてから巻き戻される。`use-plugin-config-dialog.ts`）:
 
 | 機能 | 説明 |
 |------|------|
 | **Escape キー閉じ** | Escape キーで `onEscape` コールバックを呼び出しダイアログを閉じる |
-| **ARIA属性** | `role="dialog"`, `aria-modal="true"`, `aria-labelledby`（`.gkill-floating-dialog__title` 要素を参照、見つからない場合は `aria-label` にフォールバック） |
+| **ARIA属性** | `role="dialog"`, `aria-modal="true"`, `aria-labelledby`。参照先は**ダイアログ内の最初の見出し（`h1`～`h6`）**、見出し要素が1つも無ければ `.gkill-floating-dialog__title`（見出しがあれば、その中身が空でもタイトル欄へは戻らない）。選ばれた要素に文字が無ければ `aria-label`（保存キーのハイフンを空白にしたもの）にフォールバックする。タイトル欄は全ダイアログで空（下記）なので、実質「本文の最初の見出し」がダイアログの名前になる |
 | **自動フォーカス** | 開いたときに本文の最初のテキスト入力欄へフォーカスする（`opts.autofocus`、既定 true） |
 
 **自動フォーカスの選び方**（`src/client/classes/dialog-autofocus.ts`）: 探索は `.gkill-floating-dialog__body` の中だけ。ヘッダには透過トグルの `v-checkbox` と×ボタンが常に先頭にあるため、ルートから探すと必ずそれを掴む。既に `autofocus` を書いた要素があるダイアログでは何もせず Vuetify に任せる。`readonly`（日付ピッカーの見せかけ入力）・`disabled`・非表示・`v-selection-control` 配下のチェックボックス・`inputmode="none"` の `v-select` は候補から外す。入力欄は内側の `v-if` でデータ待ちのことが多いので、`MutationObserver` で生えてくるのを2秒だけ見張って一度だけ当てる。自前でフォーカス先を決めているダイアログ（`save-clipboard-to-file-dialog.vue` は保存ボタン）は `autofocus: false` で切る。
+
+**ヘッダのタイトル欄は空、名前は本文の先頭に**（利用者の指定）: `.gkill-floating-dialog__title` は全ダイアログで空にそろえ、見せたい名前（スキル名・記録の種別など）は本文（`.gkill-floating-dialog__body`）の先頭に置く。新しいダイアログは既存のものを書き写して作るので、1本に中身を入れると以後の写しに広がる（スキル閲覧ダイアログ `browse-skill-files-dialog.vue` だけがスキル名を出していた）。`convention-source-scan.test.ts` の「ダイアログのヘッダのタイトル欄を空にしている」が `pages/dialogs/*.vue` を走査して守る（タイトル欄を100本以上拾えたことも確かめる。1本も拾えないと「違反なし」で緑になるため）。上の `aria-labelledby` が本文の最初の見出しをダイアログの名前にするので、**ダイアログの中の節見出しを h タグにしない**（設定の「検索条件」ダイアログの3セクションは `div.text-subtitle-1`。§11）。
 
 ※ フォーカストラップ（Tab循環）とフォーカス復帰は v1.1.0 で削除されたまま。自動フォーカスのみ復活させた。
 
@@ -687,6 +716,26 @@ KFTL テキストエリアに内容がある状態でページ離脱しようと
 以前は各 composable が `left: min(innerWidth - 130, x)` / `top: min(max(50, innerHeight - (8 + 48 * 項目数)), y)` を25箇所にコピペしていた。幅130px は実際のリスト幅（実測79px）と無関係で、高さの項目数はテンプレートと手で同期する不文律だったため、構成ツリー系（`*-struct-context-menu`）は実項目5個に対して `48 * 2` のまま下端ではみ出していた。またこのスタイル文字列は `{ }` で囲まれていたため Vue の `parseStringStyle` が `position: absolute` を捨てており、`.v-overlay`（`position: fixed`）の `left` / `top` だけが効いている状態だった。
 
 `.gkill_context_menu_list { max-height: 70vh; overflow-y: scroll }`（`App.vue`）は残す。極端に項目が多いメニューの高さ上限として機能し、Vuetify はその上限込みの実高さに対して配置する。
+
+### 並べ替え D&D の挿入線（`drag-drop-indicator.ts`）
+
+並べ替えのドラッグ＆ドロップ（設定の構造ツリー6種 `use-foldable-struct.ts`、集計ビューの項目 `use-dnote-item-view.ts` / `use-dnote-item-list-view.ts` / `use-dnote-item-table-view.ts`、関連情報の編集画面 `use-ryuu-item-view.ts`）は、`classes/drag-drop-indicator.ts` で「どこに入るか」の線を出す。以前はドラッグ中の見た目がブラウザ標準の半透明の像だけで、どこに入るのか分からなかった（利用者報告）。
+
+| 関数 | 役割 |
+|---|---|
+| `decide_drop_position(rect, client_y, accepts_inside)` | 対象の矩形とポインタの縦位置から `before` / `inside` / `after` を決める純関数。フォルダ（`accepts_inside`）は上1/3・中1/3・下1/3、それ以外は上下半分。境界は上側に含め、矩形の外は近いほうへ寄せる |
+| `show_drop_indicator(el, position)` / `hide_drop_indicator(el?)` | 線の付け外し。`el` を渡した `hide` はその要素の線だけを消す（子の行へ移ったあとに親の `dragleave` が届いても子の線を消さない） |
+| `begin_drag_source(el)` / `end_drag()` | 掴んだ元を覚えて半透明にする／線と半透明を両方消す |
+| `is_inside_drag_source(el)` | 自分自身とその子孫には線を出さない（フォルダを自分の子孫へは入れられない） |
+| `is_leaving_element(e)` / `has_drag_type(e, type)` | `dragleave` が本当に外へ出たか／ドラッグ中の物がこの並べ替えのものか（`dragover` では `dataTransfer` の中身を読めないので種類 `gkill_struct_obj_json` / `gkill_dnote_item_id` / `gkill_ryuu_query_id` だけを見る） |
+
+- **`dragover` の線と `drop` の挿入先を同じ判定で決める。** 両方が `decide_drop_position` を通る。構造ツリーは `resolve_drop_position` が行の見出し `.foldable_struct_header` の矩形で測る（開いたフォルダの `tr` は子孫の行まで含んだ高さなので、`tr` 全体で測ると3分割の境界が下へずれる）。以前は `drop` だけが `offsetY`（ポインタの下の一番内側の要素からの距離）と固定の行の高さ 24px で判定していて、線は下なのに上に入ることがあった
+- **線は常に1本。** 「いま線を出している要素1つ」をモジュール変数に持ち、`show_drop_indicator` は前の線を消してからクラスを付ける。構造ツリーは数百ノードを再帰で描くので、リアクティブな状態を全ノードへ配らない。見た目は `App.vue` の `.gkill-drop-before` / `.gkill-drop-after`（inset の `box-shadow` で上辺・下辺に線。行の高さを動かさない）と `.gkill-drop-inside`（見出しを塗って枠で囲む）。`tr` の `box-shadow` / `opacity` を描かないブラウザがあるので、`tr` に付いたときは直下の `td` に描く
+- **掴んだ元は次のタスクで半透明にする。** `begin_drag_source` は `gkill-drag-source`（`opacity: 0.45`）を `setTimeout(…, 0)` で付ける。ドラッグ中の像は `dragstart` の時点の見た目から作られるので、同期で付けると像まで薄くなる
+- **後始末は window の capture で。** 初回に `window` の `drop` / `dragend` を capture で1回だけ登録し、`end_drag()` で線と半透明を消す。ドロップ先がこの仕組みの外でも、Escape やウィンドウの外で取り消しても線が残らない。各行の `@dragleave` / `@dragend` の配線も要る（無いと行の外へ出ても線が残る／取り消しで半透明が残る）
+- D&D は `useDeviceKind().is_pc` のときだけ有効（`effective_draggable`）。タッチ端末はコンテキストメニューの「上へ / 下へ / フォルダへ移動」（`foldable-struct-move.ts`）で代替する
+
+守るテスト: `drag-drop-indicator.test.ts`（判定・線の付け外し・イベントの判定）、`foldable-struct-drop-position.test.ts`（構造ツリーのフォルダ / 項目へのドロップ位置と、線を出さない場所）、`drag-drop-source-scan.test.ts`（テンプレートの形: 集計ビューの列を並べる `v-for` は `:key="listIndex"` のまま、構造ツリーの行は `.foldable_struct_header` と `@dragleave` / `@dragend` を持つ。どれも型でもビルドでも落ちない）。
 
 ### 列の検索条件と新しいタグ（`use-registered-tag-column-filter.ts`）
 

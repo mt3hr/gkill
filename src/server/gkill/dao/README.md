@@ -19,6 +19,7 @@ dao/
 ├── reps/                        # メインリポジトリ → reps/README.md 参照
 ├── server_config/               # サーバ設定
 ├── share_kyou_info/             # Kyou 共有情報
+├── skills/                      # AI 向けスキル（SKILL.md と付属ファイル）のファイルストア。rep ではない
 ├── sqlite3impl/                 # SQLite3 ユーティリティ
 └── user_config/                 # ユーザ設定（アプリ設定、リポジトリ）
 ```
@@ -58,7 +59,12 @@ dao/
 設定の `IsEnable` は変更しない。切り離した各リポジトリと構築全体の集約を Error レベルで記録し、
 呼び出し側が利用者向け警告へ変換できるよう `BrokenReps` を保持する。書き込み先の失敗は切り離さず全体を失敗させる。
 
-## ルートファイル（10ファイル、資料を除く）
+`SkillStore`（`skills.Store`）も `GkillDAOManager` が持つ。利用者が AI 向けに書くスキル（`SKILL.md` と付属ファイル）を
+`$GKILL_HOME/skills/<user_id>/<skill-name>/` に置く素のファイルストアで、記録（rep）ではないので 4 層構成にも `GkillRepositories` にも乗らない。
+`NewGkillDAOManager` が `gkill_options.SkillsDir` を環境変数展開して `skills.NewStore` へ渡す。ファイルを触るのは gkill_server だけで、
+MCP も画面も HTTP API 経由で使う（[ADR-0634](../../../../documents/adr/0634-per-user-skills-for-mcp.md)）。
+
+## ルートファイル（11ファイル、資料を除く）
 
 | ファイル | 役割 |
 |---------|------|
@@ -70,6 +76,7 @@ dao/
 | `gkill_dao_manager_load_idf_rep_only_test.go` | IDFだけを必要とする経路で不要なリポジトリを組み立てないことのテスト |
 | `gkill_notificater.go` | Web Push 通知の送信ロジック。VAPID 鍵を使用したブラウザ通知 |
 | `plugin_manager.go` | プラグインバイナリの検出・起動管理。userID をパス要素として使用する前に検証する |
+| `plugin_manager_rep_names_test.go` | `PluginManager.GetPluginByRepName` が manifest の `rep_name` でも `get_rep_name` で申告した `rep_names` でも引けることのテスト |
 | `rep_file_glob.go` | リポジトリ定義のファイルパターンを、不要なツリー走査を避けて展開する |
 | `rep_file_glob_test.go` | パターン展開の互換性とルート走査防止のテスト |
 
@@ -127,11 +134,29 @@ dao/
 | `share_kyou_info_dao.go` | `ShareKyouInfoDAO` インタフェース |
 | `share_kyou_info_dao_sqlite3_impl.go` | SQLite3 実装 |
 
-### `sqlite3impl/`（1ファイル）— SQLite3 ユーティリティ
+### `skills/`（7ファイル）— AI 向けスキルのファイルストア
+
+利用者が AI 向けに書くスキル（`SKILL.md` と付属ファイル）を `$GKILL_HOME/skills/<user_id>/<skill-name>/` に置く。
+記録（rep）ではないので、下の「エンティティ / DAO インタフェース / SQLite3 実装」の 3 ファイル構成にも `reps/` の 4 層にも乗らず、履歴も持たない
+（[ADR-0634](../../../../documents/adr/0634-per-user-skills-for-mcp.md)）。フォルダは実体として扱わず、ファイルのパスの一部とみなす
+（書けばできて、中身が無くなれば消える）。
 
 | ファイル | 説明 |
 |---------|------|
-| `sqlite3impl_util.go` | SQLite3 共通ユーティリティ関数（DB 接続、テーブル作成等） |
+| `store.go` | `Store` 本体（一覧・取得・読み出し・書き込み・削除・zip の組み立てと置き換え）。書き込みは一時ファイルへ書いてから rename で置く。置き換えは `_tmp-*` へ展開 → 既存を `_old-*` へ退避 → rename の順で、途中で失敗したら元へ戻して既存のスキルに手を付けない（前回の中断で残った `_tmp-*` / `_old-*` は次の置き換えで掃除する）。利用者ごとの `RWMutex` で書き込み・置き換えと読み取りを直列化する。利用者ディレクトリは大文字小文字まで一致で引き、大小だけ違う利用者 ID は `ErrInvalidName` で拒否する（Windows では別の大小の名前が同じディレクトリ = 他人のスキルへ届くため） |
+| `path.go` | スキル名（英小文字・数字・ハイフン、先頭と末尾は英数字）とスキル内パス（ASCII のみ、各要素の先頭は英数字、Windows の予約名は拒否）の規則、`joinWithin`（根の下だけを許す結合。`..` を含む正しい名前は別名にしない）、大小衝突とファイル/フォルダ衝突の検出 |
+| `frontmatter.go` | `SKILL.md` の frontmatter（`name` / `description`）の解釈。両方必須で、`name` はディレクトリ名と一致していること |
+| `zip.go` | アップロードされた zip の検査（1 段の包みフォルダの除去、OS の管理ファイルとドット始まりの無視、規則外の名前・絶対パス・`..`・シンボリックリンクの拒否、CRC の食い違いの拒否）と、ダウンロード用 zip の組み立て |
+| `inspect.go` | ファイルの revision（内容のハッシュ）とテキスト判定。チャンク境界で UTF-8 の多バイト文字を割らない |
+| `errors.go` | 種別エラー（`ErrSkillNotFound` / `ErrInvalidUserID` / `ErrInvalidName` / `ErrInvalidPath` / `ErrInvalidZip` / `ErrRevisionConflict` 等）と、詳細を添える `DetailError` |
+| `store_test.go` | テスト。内容は [ABOUT_TEST.md](ABOUT_TEST.md) の「スキルのファイルストア」 |
+
+### `sqlite3impl/`（2ファイル）— SQLite3 ユーティリティ
+
+| ファイル | 説明 |
+|---------|------|
+| `localtime_check.go` | SQLite の `'localtime'` と Go の `time.Local` が同じ壁時計かの自己検査（`LocaltimeAgreement`）。食い違うと時間帯フィルタの SQL 段と Go 段が別の壁時計で判定し、検索が黙って0件になる |
+| `sqlite3impl_util.go` | SQLite3 共通ユーティリティ関数（DB 接続、テーブル作成、検索 SQL の組み立て等） |
 
 ### `user_config/`（6ファイル）— ユーザ設定
 

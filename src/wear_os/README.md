@@ -48,7 +48,7 @@ wear_os/
 | `WearRequestWorker.kt` | ウォッチからのリクエストを実際に処理する CoroutineWorker（資格情報ロード→API 呼び出し→結果送信。Service 破棄・プロセス死を跨ぐ） |
 | `WearRequestHandler.kt` | テンプレート取得・KFTL 送信・実行中取得・終了の4処理の本体（Service から抽出し MockWebServer で単体テスト可能に）。時計へ返す `OK` / `DUPLICATE` / `ERROR:<code>` の語彙（`WIRE_*` 定数）もここに置く |
 | `WearSubmitLedger.kt` | 直近成功した KFTL 送信の台帳。同一内容の再配送を重複登録せず確認へ回す（share-target-dedup 契約） |
-| `GkillApiClient.kt` | gkill_server の HTTP API を呼び出すクライアント（login, get_application_config, submit_kftl_text, get_kyous, get_timeis, update_timeis）。全リクエストに `locale_name` を載せ、自前のエラーは ASCII コードで返す |
+| `GkillApiClient.kt` | gkill_server の HTTP API を呼び出すクライアント（login, get_application_config, submit_kftl_text, get_kyous, get_timeis, update_timeis）。全リクエストに `locale_name` を載せ、自前のエラーは ASCII コードで返す。`get_timeis` の `timeis_histories` は新しい順で**先頭が最新版**（Web / MCP と同じ）。実行中一覧の表示も打刻終了の書き戻しも先頭を使う。末尾（最古の版）を使うと、作成後に入れた編集がエラーも警告も出ないまま巻き戻る |
 | `GkillServerUrlPolicy.kt` | サーバー URL の受け入れ判定（平文 HTTP はループバックのみ）。Android 非依存 |
 | `GkillLocale.kt` | サーバーへ送る `locale_name` の決め方。`R.string.server_locale_name`（UI が解決したロケール）から引く |
 | `GkillErrorText.kt` | エラーコード → 文言の照合。時計へ送る直前と設定画面の表示で使う唯一の翻訳箇所 |

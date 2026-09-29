@@ -303,7 +303,7 @@ sequenceDiagram
     Note over UI: 行ラベルは TS の分類器で即時。<br>打鍵が止まって300ms後に parse_kftl_text で<br>おかしな行をピンクに（書かない解析）
     User->>UI: 保存ボタン or 「！」入力
     UI->>API: POST /api/parse_kftl_text<br>{session_id, kftl_text}（送信対象タブの本文）
-    API-->>UI: {invalid_lines, tags, mi_board_names}
+    API-->>UI: {invalid_lines, tags, tag_groups, mi_board_names, record_count}
     alt invalid_lines がある
         UI-->>User: 行番号つきのエラー（送らない）
     end
@@ -336,6 +336,7 @@ sequenceDiagram
     Stmt-->>Handler: created[]
     Handler-->>API: OK
     API-->>UI: {messages, created: [{id, data_type, updated}]}
+    UI->>UI: parse_kftl_text の tag_groups を組ごとにタグ履歴へ積む<br>（保存が確定してから。record_added_tag_history）
     loop created[]
         UI->>API: POST /api/get_kyou（引き直し）
         UI->>UI: registered_kyou / updated_kyou を emit
@@ -351,6 +352,9 @@ sequenceDiagram
 > **新規タグ・板名の確認ゲート**はクライアント側の処理。`do_submit(skip_unknown_tag_check, skip_unknown_mi_board_check)`
 > （`use-kftl-view.ts` の `do_submit()`）が `parse_kftl_text` の `tags` / `mi_board_names` を既存の構造と突き合わせ、
 > 打ち間違いで似たタグが増えるのを防ぐ。サーバ側は確認の有無を関知しない。
+> 同じ応答の `tag_groups`（記録ごとのタグの組。タグの無い記録は入れない）は、保存が確定してから組ごとに
+> タグ履歴（追加画面のタグ欄の候補）へ積む。`record_count` は繰り返しを展開したあとの書き込み候補数
+> （応答の正本は `req_res/parse_kftl_text_response.go`）。
 > なお `do_submit()` の先頭には `is_requested_submit` の二重送信ガードがある
 > （同 `do_submit()` の先頭）。サーバが1回の送信で全部書くため、二重送信すると Kyou が丸ごと重複登録される。
 >

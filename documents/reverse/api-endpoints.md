@@ -8,7 +8,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、119ファイル。テスト21ファイルを含み、実装は98ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（202ファイル）
-- **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、17ファイル）
+- **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、18ファイル）
 
 ## 共通仕様
 
@@ -18,16 +18,19 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 | ラッパー | 件数 | ミドルウェアが行うこと | 対象 |
 |---|---|---|---|
-| `wrapNoAuth` | 13 | `filterLocalOnly` のみ | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet`, `urlog_bookmarklet_page`, `get_kyous_mcp`, `get_rep_infos_mcp`, `upload_files`, `upload_gpslog_files`, `browse_zip_contents`, `get_idf_kyou_by_relative_path` |
-| `wrapAuth` | 19 | セッション検証 → Account / UserID / Device を `AuthContext` に設定 | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, プラグイン4本 等 |
+| `wrapNoAuth` | 14 | `filterLocalOnly` のみ | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet`, `urlog_bookmarklet_page`, `get_kyous_mcp`, `get_rep_infos_mcp`, `upload_files`, `upload_gpslog_files`, `upload_skill`, `browse_zip_contents`, `get_idf_kyou_by_relative_path` |
+| `wrapAuth` | 25 | セッション検証 → Account / UserID / Device を `AuthContext` に設定 | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, `parse_kftl_text`, プラグイン4本, スキル5本（`upload_skill` 以外） 等 |
 | `wrapAuthRepos` | 58 | 上記に加えて `GkillRepositories` を解決 | データCRUD系（追加12 + 更新13 + 取得25 + 共有4 + リポジトリ/TX 4） |
 
 > **`wrapNoAuth` = 認証なし、ではない。** 上表の `wrapNoAuth` のうち
-> `upload_files` / `upload_gpslog_files` / `browse_zip_contents` /
-> `get_idf_kyou_by_relative_path` / `get_kyous_mcp` / `get_rep_infos_mcp` の6本は、
-> **ハンドラ内部で `getAccountFromSessionID` を呼んでセッションを検証**する。
+> `upload_files` / `upload_gpslog_files` / `upload_skill` / `browse_zip_contents` /
+> `get_idf_kyou_by_relative_path` / `get_kyous_mcp` / `get_rep_infos_mcp` の7本は、
+> **ハンドラ内部で `getAccountFromSessionID` を呼んでセッションを検証**する
+> （MCP 用の2本は、アカウント→端末→リポジトリの3段をまとめた `resolveSelfAuthContext` 経由）。
 > ミドルウェアを通さないのは、これらがマルチパート相当の大きなボディや
-> 独自のリクエスト形式を扱うため。
+> 独自のリクエスト形式を扱うため。無認証経路の本文上限はルート表の `Body` 列で経路別に掛ける
+> （`bodyAuth` = 認証付き経路と同じ 32MB・読み取り5分、`bodyUpload` = 1GB・読み取り30分。
+> `bodyUpload` は `upload_files` / `upload_gpslog_files` / `upload_skill` の3本だけ）。
 >
 > `logout` / `reset_password` / `set_new_password` も `wrapNoAuth` に含まれる。
 > `update_cache` は `wrapAuth` + ハンドラ内 `IsAdmin` チェックの組み合わせ。
@@ -161,7 +164,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
   "messages": [
     { "message_code": "MSG000025", "message": "検索完了" }
   ],
-  "errors": null
+  "errors": []
 }
 ```
 
@@ -208,7 +211,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
   "messages": [
     { "message_code": "MSG000076", "message": "メモ帳のテキストを記録しました" }
   ],
-  "errors": null,
+  "errors": [],
   "created": [
     { "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "data_type": "kmemo", "updated": false, "related_time": "2026-09-15T08:00:00+09:00" },
     { "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "data_type": "lantana", "updated": false, "related_time": "2026-09-15T08:00:00+09:00" },
@@ -233,23 +236,33 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 Web のメモ帳が打鍵のたび（止まって300ms後）に投げて「おかしな行」をピンクにし、保存の直前にも投げて未知タグ・未知板名の確認に使う（`documents/adr/0507-kftl-single-implementation-on-server.md`）。解析は `submit_kftl_text` と同じ `kftl.KFTLStatement.prepareRequests`（行の解釈 → 全行の適用 → 繰り返しの展開）を通るので、ここで通った入力が送信で弾かれることは無い。内容の無い記録（種別だけ・空の本文・店名だけの支出）、付け先の無いタグ・関連時刻、読めない予定日時も `invalid_lines` に載る（[ADR-0508](../adr/0508-kftl-blank-records-are-input-errors.md)。保存マーカー「！」の行は値の行に数えない）。DB を読まないので `wrapAuth`（repositories 不要）。
 
 ```json
-// リクエスト例
+// リクエスト例（\n は改行）
 {
   "session_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-  "kftl_text": "今日の朝食
-#食事
-/mood 8",
+  "kftl_text": "今日の朝食\n#食事\n#朝",
   "locale_name": "ja"
 }
 
-// レスポンス例（書き間違いは errors ではなく invalid_lines。HTTP 200）
+// レスポンス例（書き間違いが無いとき。HTTP 200。messages / errors は成功時 []）
 {
-  "messages": null,
-  "errors": null,
+  "messages": [],
+  "errors": [],
+  "invalid_lines": [],
+  "tags": ["食事", "朝"],
+  "tag_groups": [["食事", "朝"]],
+  "mi_board_names": [],
+  "record_count": 1
+}
+
+// レスポンス例（3行目に "/mood 8" と書いたとき。書き間違いは errors ではなく invalid_lines。HTTP 200 のまま）
+{
+  "messages": [],
+  "errors": [],
   "invalid_lines": [
-    { "line_number": 3, "line_text": "/mood 8", "message": "不正な行があります (line 3: \"/mood 8\"): プレフィックスは1行に単独で書き、値は次の行に書いてください" }
+    { "line_number": 3, "line_text": "/mood 8", "message": "おかしな行があります (line 3: \"/mood 8\"): 記号は行に単独で書き、値は次の行に書いてください" }
   ],
-  "tags": ["食事"],
+  "tags": [],
+  "tag_groups": [],
   "mi_board_names": [],
   "record_count": 0
 }
@@ -259,8 +272,11 @@ Web のメモ帳が打鍵のたび（止まって300ms後）に投げて「お�
 |---|---|
 | `invalid_lines[]` | `{line_number（1始まり。0は行不明）, line_text, message（ローカライズ済。submit の `errors[].error_message` と同じ文面）}`。空なら送信してよい（null ではなく `[]`） |
 | `tags[]` | 送信すると付くタグ名（重複なし・出現順）。ブロックの中のタグも含む |
+| `tag_groups[]` | 記録ごとのタグの組（`[["食事", "朝"], ["昼"]]` の形の二重配列。組の中は重複なし・出現順、組は記録の登録順。タグの無い記録は入れず、繰り返し（`？？`）の展開で同じ組が続くときは1つにまとめる）。Web のメモ帳が**保存に成功したあと**に組ごとにタグ履歴（追加画面のタグ欄の候補）へ積む。1件も無ければ `[]` |
 | `mi_board_names[]` | Mi / MiReKyou に書かれた板名（空欄は含めない。既定板へは解決しない） |
 | `record_count` | 繰り返しを展開したあとの、書き込みの候補になる件数 |
+
+書き間違いが1行でもあると `tags` / `tag_groups` / `mi_board_names` は `[]`、`record_count` は 0 になる（行の適用で止まり、候補が確定しないため）。
 
 `errors` に載るのはリクエスト JSON の不正（`ERR000420`、400）と設定の取得失敗・解析のサーバ側失敗（`ERR000421`、500）だけ。
 
@@ -306,7 +322,7 @@ Web のメモ帳が打鍵のたび（止まって300ms後）に投げて「お�
   "messages": [
     { "message_code": "MSG000043", "message": "ファイルアップロードが完了しました" }
   ],
-  "errors": null
+  "errors": []
 }
 ```
 
@@ -440,7 +456,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 
 | パス | 説明 |
 |---|---|
-| `/api/parse_kftl_text` | KFTLテキストの解析だけ。書き間違いを `invalid_lines`（行番号つき）で、付くタグを `tags`、板名を `mi_board_names` で返す。何も書かない（`wrapAuth`）。Web のメモ帳のピンク表示と未知タグ・板名の確認が使う |
+| `/api/parse_kftl_text` | KFTLテキストの解析だけ。書き間違いを `invalid_lines`（行番号つき）で、付くタグを `tags`（記録ごとの組は `tag_groups`。保存成功後にタグ履歴へ積む単位）、板名を `mi_board_names` で返す。何も書かない（`wrapAuth`）。Web のメモ帳のピンク表示と未知タグ・板名の確認が使う |
 | `/api/submit_kftl_text` | KFTLテキスト送信・パース・保存。応答の `created[]` に確定した記録が載る（失敗時は何も残らず空）。入力ミスは行ごとの `ERR000416`（HTTP 400）、サーバ障害は `ERR000351`（500）で返る。詳細は上の代表例と `documents/adr/0502-kftl-errors-are-per-line.md` |
 
 ## トランザクション（2件）
@@ -548,11 +564,29 @@ MCPサーバは14個のReadツールを提供する。内訳は固有の13（`gk
 | パス | 説明 |
 |---|---|
 | `/api/get_skill_list` | スキル一覧（`name` / `description` / `updated_time` / `file_count` / `invalid_reason`）。SKILL.md が無い・frontmatter が壊れているスキルも理由つきで返す |
-| `/api/get_skill` | `path` を省くと SKILL.md の全文とファイル一覧（`path` / `size` / `is_text` / `revision`）、指定するとそのファイル（テキストは `content`、バイナリは `content_base64`。`max_bytes` を超えたら `content_omitted`） |
+| `/api/get_skill` | `path` を省くと SKILL.md の全文とファイル一覧（`path` / `size` / `is_text` / `revision` / `updated_time`）、指定するとそのファイル（テキストは `content`、バイナリは `content_base64`。`max_bytes` を超えたら `content_omitted`） |
 | `/api/download_skill` | スキルを zip にして `zip_base64` で返す（スキル名のフォルダ1段で包む。そのまま上げ直せる） |
 | `/api/upload_skill` | zip でスキルを丸ごと置き換える（新規なら作る）。`dry_run:true` は書かずに追加・削除・変更・無視されるファイルだけを返す（画面の確認の1段目）。`wrapNoAuth` + アップロード用の本文上限で、ハンドラ内でセッションを検証する |
 | `/api/write_skill_file` | スキル内の1ファイル（テキスト）を書く。`revision` を省くと新規作成だけ、渡すと一致したときだけ上書き（食い違いは 409）。MCP 専用（画面からは呼ばない） |
-| `/api/delete_skill` | `path` を省くとスキルを丸ごと削除（画面）、指定するとそのファイルだけ（SKILL.md 単独は不可） |
+| `/api/delete_skill` | `path` を省くとスキルを丸ごと削除（画面）、指定するとそのファイルだけ（`revision` を渡せば一致したときだけ。SKILL.md 単独は不可） |
+
+### スキル API の詳細
+
+| 項目 | 内容 |
+|---|---|
+| 認証 | `get_skill_list` / `get_skill` / `download_skill` / `write_skill_file` / `delete_skill` は `wrapAuth`（ファイルなので repositories は要らない。本文上限は認証付き経路の 32MB）。`upload_skill` だけ `wrapNoAuth` + `bodyUpload`（1GB・読み取り30分。`upload_files` と同じ枠）で、ハンドラ内で `getAccountFromSessionID` を呼ぶ |
+| 対象 | 常にログイン中の利用者自身の `$GKILL_HOME/skills/<user_id>/` 配下。利用者IDはセッションから決まり、リクエストで他の利用者を指名する項目は無い |
+| リクエスト型 | `GetSkillListRequest`（`session_id`, `locale_name`）/ `GetSkillRequest`（+ `name`, `path`, `max_bytes`）/ `DownloadSkillRequest`（+ `name`）/ `UploadSkillRequest`（+ `zip_base64`（data URI の接頭辞付きでもよい）, `dry_run`）/ `WriteSkillFileRequest`（+ `name`, `path`, `content`, `revision`）/ `DeleteSkillRequest`（+ `name`, `path`, `revision`）。「+」は `GetSkillListRequest` の2項目（`session_id`, `locale_name`）に足す項目 |
+| レスポンス型 | `GetSkillListResponse`（`skills[]: SkillInfo`）/ `GetSkillResponse`（`path` 省略時は `skill: SkillDetail`、指定時は `file: SkillFileContent`）/ `DownloadSkillResponse`（`file_name`, `zip_base64`）/ `UploadSkillResponse`（`plan: SkillReplacePlan` = `name`, `is_new`, `added[]`, `removed[]`, `changed[]`, `ignored[]`、`applied`（`dry_run` なら false））/ `WriteSkillFileResponse`（`path`, `revision`）/ `DeleteSkillResponse`（messages / errors のみ） |
+| `revision` | ファイル中身の SHA-256 の hex 先頭16桁。`get_skill` の `skill.revision`（SKILL.md）・`files[].revision`・`file.revision` で受け取り、`write_skill_file` / `delete_skill` の楽観ロックに渡す |
+| `is_text` | 拡張子ではなく中身（UTF-8 で NUL を含まない）で判定。`get_skill` はテキストを `content`、バイナリを `content_base64` に入れ、`max_bytes` を超えたらどちらも空で `content_omitted: true` |
+| 400 | `ERR000424`〜`ERR000429`（リクエスト JSON の不正。list / get / download / upload / write / delete の順）、`ERR000432`（スキル名が不正）、`ERR000433`（パスが不正。区切りは `/`、各要素は英数字で始まり `.` `_` `-` のみ、スキル外へ出る・既存ファイルと大文字小文字だけ違う等）、`ERR000434`（SKILL.md の frontmatter が不正。`name` がスキル名と不一致・`description` が空）、`ERR000435`（zip が不正）、`ERR000438`（SKILL.md を単独で削除しようとした） |
+| 404 | `ERR000430`（スキルが無い）、`ERR000431`（ファイルが無い） |
+| 409 | `ERR000436`（`revision` を省いた新規作成だが既にある）、`ERR000437`（`revision` が今の中身と食い違う。文言に今の `revision` を添える） |
+| 500 | `ERR000439`〜`ERR000444`（ディスクの失敗など。list / get / download / upload / write / delete の順。補足文は添えない） |
+| 備考 | 4xx の文言には `dao/skills` の補足（どのパスが悪いか・今の revision 等）が括弧で付く。写像は `skill_errors.go` の `skillStoreGkillError` に一元化されている |
+| 備考 | `upload_skill` の置き換えは一時ディレクトリへ展開してから入れ替えるので、途中で失敗しても既存のスキルは元のまま残る。スキル名は zip の中の SKILL.md の frontmatter の `name` で決まり、中身がフォルダ1段で包まれていれば剥がす。別の書き手の変更を上書きする衝突は検出しない（利用者単位で管理しているため） |
+| 備考 | MCP の `gkill_get_skill_list` / `gkill_get_skill` は `get_skill_list` / `get_skill` を、write / readwrite の `gkill_add_skill` / `gkill_update_skill` は `write_skill_file` を呼ぶ。削除ツールは実装だけで公開していない（`src/server/gkill/mcp/skill_delete_tool.go`。履歴を持たず戻せないため） |
 
 ---
 
@@ -579,9 +613,9 @@ MCPサーバは14個のReadツールを提供する。内訳は固有の13（`gk
 
 ## 補足
 
-- **合計:** `/api/` エンドポイント 97件（96 POST + 1 GET）+ 非APIルート 19件（PathPrefix 18 + Path 1）
+- **合計:** `/api/` エンドポイント 97件（96 POST + 1 GET）+ 非APIルート 21件（PathPrefix 20 + Path 1）
 - **ルート表（正本）:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` の `apiRoutes()`。パス・HTTPメソッド・認証区分・無認証ボディ上限・ハンドラを1行1ルートで持ち、本番（`serve.go`）とテストハーネスがそのまま登録する。表に載っている = 実行時に応答する（「定義はあるが未登録」は構造的に起きない。[ADR-0709](../adr/0709-api-route-table-single-source.md)）
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル）
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（202ファイル）
-- **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（17ファイル）
+- **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（18ファイル）
 - かつて `get_kftl_template` と `get_gkill_info` はアドレス定義だけがあり（ハンドラ未登録で実行時404）、Web クライアントにも同じ残骸が揃っていた。2026-09-14 にルート表を正本化した際に削除した。Web クライアント（`gkill-api.ts`）の `xxx_address` / `xxx_method` は `gkill-api.test.ts` が表と突き合わせる

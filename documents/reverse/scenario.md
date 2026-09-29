@@ -6,7 +6,7 @@
 
 既存の設計資料は「1 操作・1 観点」に分解されています。
 
-- [usecase.md](usecase.md) — ユースケースの**カタログ**（86件、1操作ずつ静的に列挙）
+- [usecase.md](usecase.md) — ユースケースの**カタログ**（94件、1操作ずつ静的に列挙）
 - [sequence-diagrams.md](sequence-diagrams.md) — **1操作単位**のシーケンス図（ログイン、データ登録、検索…）
 - [activity-diagrams.md](activity-diagrams.md) — 実装レベルの内部処理フローチャート
 - [screen-transition.md](screen-transition.md) — 画面遷移
@@ -203,7 +203,7 @@ sequenceDiagram
     View->>GkillAPI: parse_kftl_text（打鍵が止まって300ms後）
     GkillAPI->>API: POST /api/parse_kftl_text (wrapAuth)
     API->>KFTL: Analyze（prepareRequests。書かない）
-    API-->>View: {invalid_lines, tags, mi_board_names}
+    API-->>View: {invalid_lines, tags, tag_groups, mi_board_names, record_count}
     View-->>User: おかしな行をピンクに
     User->>View: 保存<br>(末尾保存文字で自動発火も)
     View->>GkillAPI: parse_kftl_text（送信対象タブの本文で改めて）
@@ -213,6 +213,7 @@ sequenceDiagram
     API->>KFTL: GenerateAndExecuteRequests（同じ prepareRequests）
     KFTL->>Reps: 各 DoRequest は temp rep へ → CommitTx（1トランザクション）
     API-->>View: {created: [{id, data_type, updated}]}
+    View->>View: parse_kftl_text の tag_groups を組ごとにタグ履歴へ積む（保存が確定してから）
     loop created[]
         View->>GkillAPI: get_kyou(id)
         View-->>View: registered_kyou / updated_kyou を emit
@@ -243,7 +244,7 @@ flowchart TD
     Nlog --> Apply
     TimeIs --> Apply
     Urlog --> Apply
-    Apply -->|parse_kftl_text| Analyze([invalid_lines / tags / mi_board_names を返す])
+    Apply -->|parse_kftl_text| Analyze([invalid_lines / tags / tag_groups /<br/>mi_board_names / record_count を返す])
     Apply -->|submit_kftl_text| Exec([temp rep へ DoRequest → CommitTx])
 ```
 
@@ -535,7 +536,7 @@ sequenceDiagram
 
 **補足（気分記録）：** 星5個の気分（Lantana）も専用のメッセージパスや API を持たず、`?<yyyy-MM-dd HH:mm:ss>` / `/mood` / `<0-10 の値>` の3行の KFTL テキストへ組み立てて同じ `/gkill/submit` へ流します（`LantanaKftl.kt` の `buildLantanaKftlText`）。こうすると送信経路が1本に保たれ、サーバ側の冪等キーとスマホ側の重複台帳（`WearSubmitLedger`）がそのまま効きます。関連時刻の行を必ず添えるのは、台帳がテキストの完全一致で重複を見るためと、圏外からの遅延送信でもタップした時刻が残るようにするためです。理由と却下案は[ADR-1101](../adr/1101-wear-mood-goes-through-kftl-text.md)。
 
-**補足（playing TimeIs）：** 進行中の TimeIs（作業中タイマー）は `/gkill/get_playing_timeis`（→ `POST /api/get_kyous` + `POST /api/get_timeis`）で取得、終了は `/gkill/end_timeis`（→ `POST /api/get_timeis` + `POST /api/update_timeis`）で行います。Android APK 版は WebView + 内蔵 `libgkill_server.so` を exec して、同じ HTTP API をローカルで利用します。
+**補足（playing TimeIs）：** 進行中の TimeIs（作業中タイマー）は `/gkill/get_playing_timeis`（→ `POST /api/get_kyous` + `POST /api/get_timeis`）で取得、終了は `/gkill/end_timeis`（→ `POST /api/get_timeis` + `POST /api/update_timeis`）で行います。Android APK 版は WebView + 内蔵 `libgkill_server.so` を exec して、同じ HTTP API をローカルで利用します。`POST /api/get_timeis` の `timeis_histories` は `update_time` の新しい順で返り（`time_is_repositories.go` の `SortFunc`）、**先頭が最新版**です。スマホ側 companion の `GkillApiClient.kt` は、実行中一覧のタイトルも `/gkill/end_timeis` の書き戻しも先頭を使います（Web の `gkill-api.ts`・MCP の `write_handlers.go` も同じ）。末尾は最古の版なので、そちらに `end_time` を付けて `update_timeis` すると、作成後に入れたタイトル変更などがエラーも警告も出ないまま巻き戻ります。
 
 **関連：** モバイル構成は [folder-structure.md](folder-structure.md)、KFTL 文法は [glossary.md](glossary.md)。
 

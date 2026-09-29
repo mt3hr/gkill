@@ -22,6 +22,7 @@ gkill_server_api/
 ├── filter_local_only.go             # ローカルアクセス制限
 ├── write_response_status.go         # errors 配列から HTTP ステータスを決めて書く（エンコードより前に呼ぶ）
 ├── shared_file_authz.go             # 共有経路のファイル配信の認可（共有クエリ結果の許可集合と突き合わせ）
+├── skill_errors.go                  # スキル API の番兵エラー（dao/skills）→ エラーコード・HTTP ステータスへの変換（6ハンドラ共通）
 ├── kftl_idempotency.go              # KFTL 送信の冪等キー台帳（TTL 付きインメモリ）
 ├── get_kyous_mcp_helpers.go         # get_kyous_mcp v2 の補助（複合カーソル・フィルタ・group_by）
 ├── utils.go                         # ユーティリティ関数（540+行）
@@ -30,11 +31,11 @@ gkill_server_api/
 ├── gkill_server_api_rate_limit.go   # ログインレートリミット
 ├── plugin_content_html_cache.go     # プラグイン本文HTMLのキャッシュ（TTL・件数上限・singleflight）
 ├── handle_*.go                      # 各エンドポイントのハンドラ（実装98ファイル + テスト21ファイル）
-└── *_test.go                        # テスト全31ファイル（handle_*_test.go 14本を含む。一覧は ABOUT_TEST.md）
+└── *_test.go                        # テスト全48ファイル（handle_*_test.go 21本を含む。一覧は ABOUT_TEST.md）
 ```
 
-**合計: 143ファイル**（基盤19 + ハンドラ実装98 + テスト31 + README.md 1 + ABOUT_TEST.md 1）
-`.go` だけなら141ファイル。`handle_*.go` という名前のファイルは105あるが、うち14はテスト。
+**合計: 168ファイル**（基盤20 + ハンドラ実装98 + テスト48 + README.md 1 + ABOUT_TEST.md 1）
+`.go` だけなら166ファイル。`handle_*.go` という名前のファイルは119あるが、うち21はテスト。
 
 ## GkillServerAPI 構造体
 
@@ -72,7 +73,7 @@ VAPID 鍵を含むサーバ設定とアプリケーション設定を初期化�
 
 | ラッパー関数 | 認証 | リポジトリ | 用途 |
 |-------------|------|-----------|------|
-| `wrapNoAuth` | なし | なし | ログイン、ログアウト、パスワードリセット、共有ページ等 |
+| `wrapNoAuth` | なし | なし | ログイン、ログアウト、パスワードリセット、共有ページ、アップロード系（ハンドラ内で自己認証）等 |
 | `wrapAuth` | セッション必須 | なし | 設定取得・更新、アカウント管理、通知登録等 |
 | `wrapAuthRepos` | セッション必須 | 読み込み | 全 CRUD 操作（データ追加・更新・取得・削除） |
 
@@ -116,7 +117,7 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 
 ## ハンドラパターン
 
-全92ハンドラは共通のパターンに従う。`handle_add_kmemo.go` を例に:
+`HandleXxx` は99本（ルート表の97 + PathPrefix 配信の `HandleFileServe` / `HandleZipCacheFileServe`）。JSON を返すハンドラは共通のパターンに従う。`handle_add_kmemo.go` を例に:
 
 ```
 1. Content-Type: application/json 設定
@@ -137,6 +138,7 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 | `handle_get_kyous_mcp.go` | MCP サーバ向け専用 Kyou 取得エンドポイント |
 | `handle_submit_kftl_text.go` | KFTL テキストのパース・実行（Web / Wear OS / MCP 共通の入口） |
 | `handle_parse_kftl_text.go` | KFTL テキストの解析だけ（書かない）。おかしな行・付くタグ・板名を返す。Web のメモ帳のピンク表示と未知タグ・板名の確認が使う |
+| `handle_upload_skill.go` | zip でスキルを丸ごと置き換える（新規なら作る）。ルート表では `wrapNoAuth` + `bodyUpload`（`/api/upload_files` と同じ枠。認証付き経路の 32MB 枠に載せない）で登録し、ハンドラ内で `getAccountFromSessionID` がセッションを検証する。`dry_run` なら書かずに追加・削除・変更・無視の計画だけ返し、本番は一時ディレクトリへ展開してから入れ替える（途中で失敗しても既存は残る）。失敗は `skill_errors.go` で 4xx / 500 へ写す |
 
 ## フロントエンドルーティング
 
@@ -167,7 +169,7 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 
 ### doc コメントの方針
 
-`HandleXxx` は **92/92 で doc コメント 100% を維持**する（`verify_docs` が網羅率を機械検査する）。
+`HandleXxx` は **99/99 で doc コメント 100% を維持**する（`verify_docs` が網羅率を機械検査する）。
 書式は「1行説明 / 空行 / パス・HTTPメソッド・認証区分 / req_res 型」。
 ハンドラを追加したら doc コメントも必ず書くこと（書かないと `npm test` が落ちる）。
 

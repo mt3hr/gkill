@@ -179,7 +179,7 @@ exit 2（Go の `flag` が未知フラグで落ちた旧 SDK）は失敗とし�
 
 | コマンド（`PluginRequest.Command`） | 説明 |
 |---|---|
-| `find_kyous` | 検索クエリに合致する Kyou 一覧を返す。**ワード条件（`words` / `not_words` / `words_and`）の判定はプラグインの責任** — gkill 側は本文を持たないので再判定しない（`plugin_repository_impl.go` の `pluginKyouMatchesQuery` は Calendar と IDs だけ）。判定は SDK の `sdk.Query.MatchText`（本体と同じ規則: 大小無視の部分一致、ID は前方一致、除外語は ID を見ない）を使う。型別リポジトリ経由（`rep_types` 指定・Mi 画面）では索引の型別データを本体と同じ列で判定するので、プラグインが独自に照合対象へ足した語はそこでは当たらない |
+| `find_kyous` | 検索クエリに合致する Kyou 一覧を返す。**ワード条件（`words` / `not_words` / `words_and`）の判定はプラグインの責任** — gkill 側は本文を持たないので再判定しない（`plugin_repository_impl.go` の `pluginKyouMatchesQuery` は Calendar と IDs だけ）。判定は SDK の `sdk.Query.MatchText`（本体と同じ規則: 大小無視の部分一致、ID は前方一致、しかも 7 文字以上の語だけ、除外語は ID を見ない）を使う。型別リポジトリ経由（`rep_types` 指定・Mi 画面）では索引の型別データを本体と同じ列で判定するので、プラグインが独自に照合対象へ足した語はそこでは当たらない |
 | `get_kyou` | 指定 ID の Kyou 1 件を返す |
 | `get_rep_name` | gkill 上のリポジトリ表示名を返す。応答の `rep_name` は manifest と同じ代表名。**`rep_names[]` を載せると、1本のプラグインが複数の rep 名（zip に固めた Git リポジトリごとの名前など）を名乗れる**（SDK は `Handler.RepNames`）。gkill はその名前を `get_all_rep_names`・`query.reps` の絞り込み・本文取得の引き当て・MCP の `get_rep_infos.plugins[]` / `get_plugin_list.rep_names` に使い、**TTL 60 秒**でキャッシュする（rep 名の列挙のたびに送る）。null（欄なし）は「未対応 → manifest の1つ」、`[]` は「いまは0個」で意味が違う。失敗しても前回値か manifest 名にフォールバックしてエラーにしない（[ADR-0308](../adr/0308-plugin-multiple-rep-names.md)） |
 | `get_content_html` | 指定 ID の Kyou のコンテンツ HTML を返す |

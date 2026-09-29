@@ -133,7 +133,7 @@ src/server/
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（165ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（166ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
     │       ├── gkill_server_api_address.go  # ルート表（97エンドポイント: 96 POST + 1 GET。パス・メソッド・認証区分・ハンドラの正本）
@@ -161,6 +161,15 @@ src/server/
     │   │   ├── plugin_repository_impl.go   # サブプロセス管理・stdio JSON通信
     │   │   ├── cache/              # LatestDataRepositoryAddress 等のキャッシュDAO
     │   │   └── rep_cache_updater/  # キャッシュ更新ロジック
+    │   ├── skills/                 # スキル（利用者が AI 向けに書く SKILL.md と付属ファイル）のファイルストア（7ファイル。$HOME/gkill/skills/<user_id>/<name>/ を読み書きするのは gkill_server だけ。rep ではないので reps/ の4層に乗せない。ADR-0634）
+    │   │   ├── store.go            # Store（スキルの一覧・読み取り・ファイル書き込み・zip での置き換え・削除）
+    │   │   ├── path.go             # スキル名とスキル内パスの規則（先頭は英数字、Windows の予約名を拒否、ルートの外へ出ない joinWithin）
+    │   │   ├── frontmatter.go      # SKILL.md の frontmatter（name / description）の解釈
+    │   │   ├── inspect.go          # ファイルの revision（内容の SHA-256 の先頭16桁。楽観ロックの照合用）と UTF-8 判定
+    │   │   ├── zip.go              # zip 取り込み（Thumbs.db 等 OS の管理ファイルは取り込まず ignored として返す）
+    │   │   ├── errors.go           # 保存層の番兵エラー（ハンドラが errors.Is でエラーコードへ写す）
+    │   │   └── store_test.go
+    │   ├── sqlite3impl/            # SQLite3 接続と SQL 組み立ての共通ユーティリティ（sqlite3impl_util.go）と、SQLite の 'localtime' と Go の time.Local が一致するかの検査（localtime_check.go）
     │   ├── account/                # アカウントDAO
     │   ├── account_state/          # ログインセッション・アップロード履歴DAO
     │   ├── server_config/          # サーバー設定DAO
@@ -168,7 +177,7 @@ src/server/
     │   ├── share_kyou_info/        # 共有設定DAO
     │   ├── gkill_notification/     # 通知ターゲットDAO
     │   └── hide_files/             # ファイル隠蔽ユーティリティ
-    ├── usecase/                    # ビジネスロジック層（17ファイル）
+    ├── usecase/                    # ビジネスロジック層（18ファイル）
     │   └── *.go                    # HTTP非依存のユースケース関数群
     ├── dvnf/                       # DVNF（DeVice Name Folder Naming Framework）
     │   ├── dvnf.go                 # DVNFコア（タイムスタンプベース命名）
@@ -248,14 +257,16 @@ src/server/gkill/mcp/
     ├── http_transport.go     # Streamable HTTP トランスポート
     ├── gkill_client.go       # gkill 本体を叩く HTTP クライアント（ログイン・認証リトライ・ファイル取得）
     ├── payload.go            # レスポンスのペイロード加工
-    ├── read_tools.go         # 読み取りツール定義（read / readwrite が共有。write も4つだけ取る）
+    ├── read_tools.go         # 読み取りツール定義（read / readwrite が共有。write も選抜した9つだけ取る。選抜集合は server_write.go の WriteServerReadToolNames）
     ├── read_handlers.go      # 読み取りツールのディスパッチと要約（3サーバ共有の正本）
     ├── write_tools.go        # 書き込みツール定義（write / readwrite が共有）
     ├── write_handlers.go     # 書き込みツールのディスパッチと要約（write / readwrite 共有の正本）
+    ├── skill_handlers.go     # スキルのツール（gkill_get_skill_list / gkill_get_skill / gkill_add_skill / gkill_update_skill）。/api/get_skill_list・/api/get_skill・/api/write_skill_file を呼ぶ HTTP クライアントで、定義は read_tools.go / write_tools.go 側（ADR-0634）
+    ├── skill_delete_tool.go  # gkill_delete_skill（スキル内のファイルを1つ消す）。実装だけして公開していない — スキルは履歴を持たず AI の削除を利用者が戻せないため。公開手順はファイル先頭のコメント
     ├── find_query_schema.go  # gkill_get_kyous の検索条件スキーマ
     ├── access_log.go         # gkill_log 上のロガー（レベルは MCP_LOG / 設定 / --log で制御）
     ├── plugin_tools.go       # 3サーバ共通のプラグインツール（gkill_get_plugin_list）とプラグイン本文のインライン埋め込み
-    ├── help_topics.go        # gkill_get_mcp_help の topic 本文（search / pagination / mi / data_types / plugin / idf / deleted / rep / kftl / config の10件）
+    ├── help_topics.go        # gkill_get_mcp_help の topic 本文（search / pagination / mi / data_types / plugin / idf / deleted / rep / kftl / config / skills の11件）
     ├── status_tool.go        # gkill_status とツール一覧の世代 schema_revision
     ├── gps_cursor.go         # GPS ログのページングカーソル（発行側と検証側の唯一の正本）
     ├── js_date.go / js_util.go # JS の Date・文字列変換と同じ結果を出す互換ヘルパ（応答のバイト一致のため）
@@ -358,9 +369,9 @@ src/tools/
 documents/
 ├── reverse/                          # リバースエンジニアリング設計資料集
 │   ├── README.md                     # 資料集の目次・推奨読み順
-│   ├── glossary.md                   # 用語集（96項目）
+│   ├── glossary.md                   # 用語集（98項目）
 │   ├── design-philosophy.md          # 設計思想
-│   ├── usecase.md                    # ユースケース一覧（86件）
+│   ├── usecase.md                    # ユースケース一覧（94件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
 │   ├── sequence-diagrams.md          # シーケンス図（29本: 正常系24 + 異常系5）
@@ -413,6 +424,9 @@ $HOME/gkill/
 │   └── gkill_notification_target.db  # プッシュ通知ターゲット
 ├── datas/                  # ユーザーデータ（デフォルトデータディレクトリ）
 ├── caches/                 # キャッシュファイル（thumb_cache/, video_cache/, zip_cache/, local_rep_cache/, git_commit_log_cache/, plugin_cache/ 等）
+├── skills/                 # スキル（利用者が AI 向けに書く手順書。ADR-0634）
+│   └── <user_id>/          # 利用者ごと
+│       └── <name>/         # スキル1つ = ディレクトリ1つ（SKILL.md と付属ファイル。読み書きは gkill_server だけで、MCP と設定画面は HTTP API 経由）
 ├── logs/                   # ログファイル（JSON形式、レベル別分割。gkill_mcp_<kind>*.log と gkill_plugin_<name>*.log も同じ置き場）
 │   ├── gkill_error.log
 │   ├── gkill_warn.log

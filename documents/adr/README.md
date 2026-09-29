@@ -200,6 +200,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0409](0409-context-menu-position-by-vuetify.md) | コンテキストメニューの位置は手計算せず Vuetify の実測配置に任せる | Accepted |
 | [0410](0410-bundle-multi-write-operations-in-tx.md) | 複数書き込みになる画面の操作は tx_id で束ねて commit_tx で確定する | Accepted |
 | [0411](0411-error-feed-stays-until-closed.md) | エラー表示は1つのフィードに集約し、閉じるまで残す・コピーできる・握られなかった例外も同じ場所へ出す | Accepted |
+| [0412](0412-apply-only-touched-sections-in-find-query-settings-dialog.md) | 設定の「検索条件」ダイアログは、適用で触ったセクションだけを渡す（旧ダッシュボードダイアログが未設定を空の条件で書き潰していた） | Accepted |
 | [0501](0501-save-marker-beforeinput-input-pair.md) | KFTL保存マーカーの判定は beforeinput→input の対で行う | Accepted |
 | [0502](0502-kftl-errors-are-per-line.md) | メモ帳（KFTL）の失敗は行ごとに返し、入力ミスとサーバ障害を分ける | Accepted |
 | [0503](0503-kftl-prefix-misuse-is-an-input-error.md) | 引数の無い／引数を同じ行に書いたメモ帳のプレフィックスは、ゼロ値を書かずに行別エラーにする | Accepted |
@@ -278,6 +279,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [1102](1102-wear-ui-strings-in-android-resources-with-ja-default.md) | Wear OS の UI 文字列は Android リソースの7言語セット（既定 ja）で持ち、時計へ渡すエラー文言はスマホ側で訳す | Accepted |
 | [1103](1103-wear-app-chips-match-tile.md) | ウォッチアプリのチップはタイルと同じ見た目にし、確認画面は ScalingLazyColumn で収める | Accepted |
 | [1104](1104-android-server-follows-server-config.md) | Android 同梱サーバの待受・TLS・画面のアドレスは上書きせず ServerConfig に従わせる | Accepted |
+| [1105](1105-android-home-back-to-sdcard-and-gate-on-storage-access.md) | Android の $GKILL_HOME を /sdcard/gkill に戻し、共有ストレージの権限が許可されるまでサーバを起動しない | Accepted |
 
 ## 旧→新 対応表
 

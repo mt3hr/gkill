@@ -239,7 +239,7 @@ stateDiagram-v2
 
 ### 集計ビュー（DnoteView）のダイアログ遷移
 
-Rykv 画面・ダッシュボード画面に埋め込まれる集計ビューのダイアログ遷移。フローティング「＋」メニューから集計項目・集計リスト・トレンドグラフ・相関グラフの4種類の集計要素を追加できる。
+Rykv 画面・ダッシュボード画面に埋め込まれる集計ビューと、設定画面の集計ビュー設定（`edit-dnote-dialog.vue`。同じ `dnote-view.vue` を `editable` で開く）のダイアログ遷移。編集画面ではフローティング「＋」メニューから集計項目・集計リスト・トレンドグラフ・相関グラフの4種類の集計要素を追加できる。閲覧中は「＋」もコンテキストメニューも出ず、ダブルクリックで集計に使った記録の一覧を開くだけ。
 
 ```mermaid
 stateDiagram-v2
@@ -247,26 +247,49 @@ stateDiagram-v2
     AddMenu --> AddDnoteItem: 集計項目追加
     AddMenu --> AddDnoteList: 集計リスト追加
     AddMenu --> AddDnoteTrendGraph: トレンドグラフ追加
-    AddMenu --> CorrelationGraphDialog: 相関グラフ追加
+    AddMenu --> AddDnoteCorrelationGraph: 相関グラフ追加
 
-    DnoteView --> EditDnoteItem: 集計項目ダブルクリック
-    DnoteView --> EditDnoteList: 集計リストダブルクリック
-    DnoteView --> EditDnoteTrendGraph: トレンドグラフダブルクリック
-    DnoteView --> CorrelationGraphDialog: 相関グラフ右クリックから編集
+    DnoteView --> KyouListViewDialog: 集計項目ダブルクリック（閲覧中、集計に使った記録の一覧）
+    DnoteView --> EditDnoteItem: 集計項目ダブルクリック（編集画面）
+    DnoteView --> ItemCtx: 集計項目右クリック（編集画面のみ）
+    ItemCtx --> EditDnoteItem: 編集選択
+    ItemCtx --> ConfirmDeleteDnoteItemList: 削除選択
 
-    DnoteView --> TrendGraphCtx: トレンドグラフ右クリック
+    DnoteView --> KyouListViewDialog: 集計リストの行ダブルクリック（閲覧中、編集画面では何もしない）
+    DnoteView --> ListCtx: 集計リスト右クリック（編集画面のみ）
+    ListCtx --> EditDnoteList: 編集選択
+    ListCtx --> ConfirmDeleteDnoteListQuery: 削除選択
+
+    DnoteView --> TrendGraphCtx: トレンドグラフ右クリック（編集画面のみ）
     TrendGraphCtx --> EditDnoteTrendGraph: 編集選択
     TrendGraphCtx --> ConfirmDeleteDnoteTrendGraph: 削除選択
-    DnoteView --> CorrelationGraphDialog: 相関グラフ右クリックから削除確認
+
+    DnoteView --> EditDnoteCorrelationGraph: 相関グラフのタイトルをダブルクリック（編集画面のみ）
+    DnoteView --> CorrelationGraphCtx: 相関グラフ右クリック（編集画面のみ）
+    CorrelationGraphCtx --> EditDnoteCorrelationGraph: 編集選択
+    CorrelationGraphCtx --> ConfirmDeleteDnoteCorrelationGraph: 削除選択
 ```
 
 **追加ダイアログ:** AddDnoteItem（`add-dnote-item-dialog.vue`）, AddDnoteList（`add-dnote-list-dialog.vue`）, AddDnoteTrendGraph（`add-dnote-trend-graph-dialog.vue`）, AddDnoteCorrelationGraph（`add-dnote-correlation-graph-dialog.vue`）
 
-**編集ダイアログ:** EditDnoteItem, EditDnoteList, EditDnoteTrendGraph（`edit-dnote-trend-graph-dialog.vue`）
+**編集ダイアログ:** EditDnoteItem（`edit-dnote-item-dialog.vue`）, EditDnoteList（`edit-dnote-list-dialog.vue`）, EditDnoteTrendGraph（`edit-dnote-trend-graph-dialog.vue`）, EditDnoteCorrelationGraph（`edit-dnote-correlation-graph-dialog.vue`）
 
-**削除確認ダイアログ:** ConfirmDeleteDnoteItemList, ConfirmDeleteDnoteListQuery, ConfirmDeleteDnoteTrendGraph（`confirm-delete-dnote-trend-graph-dialog.vue`）
+**削除確認ダイアログ:** ConfirmDeleteDnoteItemList（`confirm-delete-dnote-item-list-dialog.vue`）, ConfirmDeleteDnoteListQuery（`confirm-delete-dnote-list-query-dialog.vue`）, ConfirmDeleteDnoteTrendGraph（`confirm-delete-dnote-trend-graph-dialog.vue`）, ConfirmDeleteDnoteCorrelationGraph（`confirm-delete-dnote-correlation-graph-dialog.vue`）
 
-トレンドグラフと相関グラフはドラッグ&ドロップで並べ替え可能（ダイアログ遷移なし）。相関グラフは小さなダイアログファイルを増やさないため、追加・編集・削除確認を1つのダイアログのモードで処理する。
+**コンテキストメニュー（編集画面のみ）:** ItemCtx（`dnote-item-list-context-menu.vue`）, ListCtx（`dnote-list-query-context-menu.vue`）, TrendGraphCtx（`dnote-trend-graph-context-menu.vue`）, CorrelationGraphCtx（`dnote-correlation-graph-context-menu.vue`）。いずれも「編集」「削除」の2項目で、`editable` でないときは右クリックしても開かない
+
+**記録一覧ダイアログ:** KyouListViewDialog（`kyou-list-view-dialog.vue`）。閲覧中に集計項目や集計リストの行をダブルクリックすると、その集計に使った記録の一覧を開く
+
+ダブルクリックの割り当ては要素ごとに違う（`use-dnote-item-view.ts` / `use-aggregated-list-item.ts` / `use-dnote-correlation-graph-view.ts`）。
+
+| 要素 | 閲覧中（ライフログビュー・ダッシュボード） | 編集画面（設定の集計ビュー設定） |
+|---|---|---|
+| 集計項目 | 集計に使った記録の一覧（KyouListViewDialog） | 項目の編集ダイアログ（EditDnoteItem）。編集画面は記録を0件で読み込むので一覧が常に空になるため |
+| 集計リストの行 | その行の集計に使った記録の一覧（KyouListViewDialog） | 何もしない（リストの編集・削除は右クリックから） |
+| トレンドグラフ | 何もしない（クリックはツールチップの再表示） | 何もしない（編集・削除は右クリックから） |
+| 相関グラフ | 何もしない | タイトルのダブルクリックで編集ダイアログ（EditDnoteCorrelationGraph） |
+
+トレンドグラフと相関グラフはドラッグ&ドロップで並べ替え可能（ダイアログ遷移なし）。相関グラフも他の集計要素と同じ3点セット（追加・編集・削除確認）のダイアログで、追加ダイアログは `dnote-view.vue` が、編集・削除確認ダイアログとコンテキストメニューは `dnote-correlation-graph-view.vue` が持つ。かつての「1つのダイアログのモード切替」は廃止済み（経緯は [screen-specs.md](screen-specs.md) の集計ビュー節）。
 
 ## 4. Mi 画面のダイアログ遷移
 
@@ -305,7 +328,7 @@ rykv / mi / playing / dashboard で有効。`classes/use-scoped-ctrl-v-for-clipb
 
 ## 5. 設定画面のダイアログ遷移
 
-**典型的な呼び出しシナリオ：** AppConfigはナビゲーションバーの「設定」アイコンからアクセスする。KFTLテンプレートの追加・整理、タグの階層構造設定、リポジトリ（記録保管場所）の追加、RepType表示名のカスタマイズなど、アプリケーション初期設定や運用変更時に使用する。ServerConfigは管理者がアカウント管理・TLS設定・リポジトリ割当を行う際に使用し、ユーザーは通常アクセスしない。
+**典型的な呼び出しシナリオ：** AppConfigはナビゲーションバーの「設定」アイコンからアクセスする。KFTLテンプレートの追加・整理、タグの階層構造設定、リポジトリ（記録保管場所）の追加、RepType表示名のカスタマイズなど、アプリケーション初期設定や運用変更時に使用する。ServerConfigは管理者がアカウント管理・TLS設定・リポジトリ割当を行う際に使用し、ユーザーは通常アクセスしない。MCP 向けスキルの管理（一覧・閲覧・zip の出し入れ・削除）も AppConfig の「スキル」ボタンから開く。
 
 ```mermaid
 stateDiagram-v2
@@ -326,10 +349,21 @@ stateDiagram-v2
     AppConfig --> EditSavedFindQuery: 検索条件（検索ショートカット・実行中・ダッシュボード）
     EditSavedFindQuery --> EditSavedFindQueryList: ライフログ/タスク別一覧管理
     AppConfig --> NewBoardName: ボード名新規作成
+    AppConfig --> ManageSkillList: スキル一覧
+    ManageSkillList --> BrowseSkillFiles: 表示（スキルの本文と付属ファイルの閲覧）
+    ManageSkillList --> ConfirmUploadSkill: zip を選ぶ → 変更計画の確認
+    ManageSkillList --> ConfirmDeleteSkill: 削除
     AppConfig --> ServerConfig: サーバ設定へ
 ```
 
 **アプリケーション設定（AppConfig）:** TagStruct, RepStruct, KFTLTemplate, DeviceStruct, RepTypeStruct の各構造を編集
+
+**スキル一覧（ManageSkillList、`manage-skill-list-dialog.vue`）:** MCP 向けスキル（サーバ側のユーザー別スキル置き場にある本文 Markdown と付属ファイル）の一覧・閲覧・zip ダウンロード・zip アップロード（丸ごと置き換え）・削除。ファイル単位の編集は持たない。設定の「適用」とは独立したエンティティで、ServerConfig と同じくダイアログ自身が API を呼ぶ（`use-manage-skill-list-dialog.ts`）
+
+- BrowseSkillFiles（`browse-skill-files-dialog.vue`）: 一覧の「表示」から。ファイル一覧と選んだファイルの中身を素のテキストで出す（Markdown / HTML として描画しない）
+- ConfirmUploadSkill（`confirm-upload-skill-dialog.vue`）: 「zipをアップロード」でファイルを選ぶと、まず `dry_run` でサーバへ送り、返ってきた計画（新規か置き換えか、追加・変更・削除・無視されるファイル）をこのダイアログに出す。「適用」で同じ zip をもう一度送って置き換える。エラーが無ければ必ずこの確認を挟む
+- ConfirmDeleteSkill（`confirm-delete-skill-dialog.vue`）: 一覧の「削除」から。スキルを丸ごと消す
+- zip ダウンロードはダイアログを開かず、その場で保存する
 
 ```mermaid
 stateDiagram-v2

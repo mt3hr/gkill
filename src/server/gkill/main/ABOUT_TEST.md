@@ -2,7 +2,7 @@
 
 ## 概要
 
-CLI エントリポイントとユーティリティのテスト。共有 CLI ロジック、オプションフラグ、ログルーティング、ゴルーチンプール、各バイナリのエントリポイント、バッチ処理を検証する。
+CLI エントリポイントとユーティリティのテスト。共有 CLI ロジック、オプションフラグ、スキルの置き場の派生、Android が拾う起動行、ログルーティング、ゴルーチンプール、各バイナリのエントリポイント、バッチ処理を検証する。
 
 ## テストフレームワーク
 
@@ -15,12 +15,14 @@ Go `testing` パッケージ
 | ファイル | テスト内容 |
 |---------|-----------|
 | `common/common_test.go` | 共有 CLI ロジック（15テスト）。サブコマンド登録（idf / dvnf / version / generate_thumb_cache / generate_video_cache / clear_cache / generate_plugin_cache / optimize / update_cache / reset_password / add_tag / mcp が全部 RunE + SilenceUsage/SilenceErrors であること）の確認と、`clear_cache` の挙動固定 — `all` で全キャッシュディレクトリを消す / 単一モードで他を残す / `plugin` モードは plugin_cache だけ消す / `ClearPluginCache` が対象ユーザ以外を消さない / 危険な user_id を弾く |
-| `common/generate_plugin_cache_test.go` | `generate_plugin_cache` サブコマンド（11テスト + 偽プラグイン用の `TestMain`）。引数が2つ未満なら usage を出すだけで `InitGkillServerAPI`（利用者の configs DB を開く）へ進まないこと、子プロセスの結果分類（stdout 全体が `built` / `no_cache` に完全一致するときだけ成功。exit 0 で空 stdout・余計な出力・exit 2・exit 1 は失敗）、テストバイナリ自身を偽プラグインとして起動して `--gkill-build-cache` の受け渡し・stdout の捕捉・stdin nil（フラグを無視する旧バイナリでもハングしない）・終了コードの分類が繋がること、対象の選択（`all` は発見順に全部・名前指定は完全一致1本・無い名前は利用可能名を列挙してエラー・0本は成功）、存在しない user_id と危険な user_id をプラグインの走査より前に弾くこと（`plugins/<typo>/` を作らない）、1本失敗しても残りを続けて `errors.Join` で返すこと |
+| `common/generate_plugin_cache_test.go` | `generate_plugin_cache` サブコマンド（10テスト + 偽プラグイン用の `TestMain`）。引数が2つ未満なら usage を出すだけで `InitGkillServerAPI`（利用者の configs DB を開く）へ進まないこと、子プロセスの結果分類（stdout 全体が `built` / `no_cache` に完全一致するときだけ成功。exit 0 で空 stdout・余計な出力・exit 2・exit 1 は失敗）、テストバイナリ自身を偽プラグインとして起動して `--gkill-build-cache` の受け渡し・stdout の捕捉・stdin nil（フラグを無視する旧バイナリでもハングしない）・終了コードの分類が繋がること、対象の選択（`all` は発見順に全部・名前指定は完全一致1本・無い名前は利用可能名を列挙してエラー・0本は成功）、存在しない user_id と危険な user_id をプラグインの走査より前に弾くこと（`plugins/<typo>/` を作らない）、1本失敗しても残りを続けて `errors.Join` で返すこと |
 | `common/add_tag_test.go` | `add_tag` サブコマンド（33テスト）。ルール JSON の厳格復号（BOM・旧 `use_*` 形式・未知キー・末尾の余分な内容）、拒否する指定（絞り込み無し / 常に0件の空配列 / `keywords` / `update_cache` / 揃っていない地図3値 など）と通す指定の網羅表、クライアントの `FindKyouQuery` の全キーを受けること（TS ソース走査）、`rep_types_in_sidebar` の展開（dvnf 名の3分割・端末絞り・重複除去）、付与予定の重複排除、タグ行が呼ぶたびに違うランダム UUID で出所が `gkill_add_tag` であること（決定的 ID へ戻すと消したタグが付け直されない）、付与済み照会のクエリが `tags_and` を立ててタグ以外の条件を残すこと、httptest モックでの HTTP 応答判定（本文優先・409+ERR000056 も失敗・上限超過・警告メッセージの印字） |
 | `common/fix_timezone_test.go` | Android で libc（SQLite の `'localtime'`）へ端末のゾーンを教える経路（8テスト）。`InitGkillOptions` が libc へ渡すホームが環境変数展開済みの絶対パスであること（5ececfa7 の回帰点。`GKILL_HOME` にも同じ値が入る）、`loadAndroidTZif` が候補パスを順に試し全部だめなら理由を `errors.Join` で1つにすること、`checkSQLiteLocaltime` が不一致のとき両方の壁時計と `hint` を Error 1行で残し（一致は Debug・検査失敗は Warn）起動を止めないこと、packed tzdata（AOSP の索引形式）から名前完全一致で TZif を切り出し、壊れたヘッダ・範囲外・TZif でない中身を拒むこと、TZif が取れたら `$GKILL_HOME/tz/localtime` に置いて `TZ=:<パス>` を入れ同じ中身なら書き直さないこと、取れなければ POSIX 固定オフセット（`JST-9` / `IST-5:30` / `UTC0` / `<-05>+5`）へ落ちること、未展開の `$VAR/gkill`（既定の `--gkill_home_dir` の形）や相対パスを渡しても展開済みの絶対パスが `TZ` に入り CWD に文字どおり `$VAR` というディレクトリを掘らないこと（空に展開されるなら POSIX へ落ちる。Termux で0件が続いた穴）、Android 以外では `TZ` を触らないこと。Android そのものは CI に無いので合成データで固定する |
-| `common/gkill_options/option_test.go` | CLI フラグのデフォルト値（`--gkill_home_dir`, `--cache_in_memory`, `--goroutine_pool` 等） |
+| `common/gkill_options/option_test.go` | CLI フラグのデフォルト値（`--gkill_home_dir`, `--cache_in_memory`, `--goroutine_pool` 等）。`TestDefaultSkillsDir` は `SkillsDir` の既定 `$HOME/gkill/skills` を固定する（未展開の文字列だけ。`GkillHomeDir` からの派生は `common/skills_dir_test.go`） |
 | `common/mcp_test.go` | `mcp` サブコマンドの配線（4テスト）。`--kind` / `--transport` / `--config` と `schema-budget --update` の存在、`--kind` の必須と検証、設定ファイルが初回に生成されること、親の `--log` は**明示されたときだけ** `MCP_LOG` / 設定より優先すること、`--gkill_home_dir` 未指定時だけ `GKILL_HOME` を採ること、OAuth の状態ファイルが環境変数展開済みの `$GKILL_HOME/configs/mcp_oauth_<kind>_state.json` に置かれること。サーバ本体の振る舞いは `gkill/mcp` のテストが持つ |
 | `common/password_admin_test.go` | `reset_password`（3テスト）。複数ユーザの途中で失敗しても成功したぶんの URL はその場で出すこと、全部失敗なら見出しを出さないこと、`issueLocalSession` が最小権限の短命セッションを発行し `refresh` で期限を延ばせること |
+| `common/skills_dir_test.go` | `InitGkillOptions` が `SkillsDir` を `GkillHomeDir` から `<GkillHomeDir>/skills` へ派生させること。`--gkill_home_dir` で別の場所へ向けたとき・環境変数を含むホームのとき・`--gkill_home_dir` 無しで `GKILL_HOME` を採る MCP の経路の 3 つとも、`NewGkillDAOManager` が `skills.NewStore` へ渡すのと同じ式（`filepath.Clean(os.ExpandEnv(...))`）で展開した先が `<home>/skills` になり、既定の `$HOME/gkill/skills` に落ちないこと（プラグインへ継ぐ `GKILL_HOME` とも同じ場所を指す）。**派生の 1 行を消してもビルドも vet も通り、`--gkill_home_dir` を別の場所へ向けた起動（Android の APK は必ず渡す）でスキルだけがエラーも警告も出さずに `$HOME/gkill/skills` へ置かれる** |
+| `common/print_started_message_test.go` | `PrintStartedMessage` が標準出力へ出す起動行 `Access your record space at : <URL>`。Android の `MainActivity`（`SERVER_URL_LINE_PREFIX`）が同梱 gkill_server の標準出力から拾って WebView で開く URL なので、その行が 1 行だけ出ること、TLS 無効なら `http`・有効なら `https`（ホスト部は落としてポートだけ使う）・設定で有効でも `--disable_tls` なら実際の待ち受けと同じ `http` になること、`--address` の上書きは設定 DB ではなく実際に bind するポートを出すこと、Android の `parseServerUrlLine` と同じ受け付け方（`http` / `https` で `localhost:<port>`）で読めること。**プロトコルが実際の待ち受けと食い違っても Go 側にはエラーが出ず、Android だけが繋がらない画面になる** |
 | `common/gkill_log/log_level_source_scan_test.go` | ログレベルの規約のソース走査（4テスト。ADR-1001）。メッセージが `"error"` だけの `slog.Log` が無いこと、`defer` の `Close` のレベルが対象別に振り分けられていること、握り潰し（if ブロック末尾のログ）が Debug でないこと、その許可リストが実際に使われていること |
 | `common/gkill_log/no_eager_sql_format_test.go` | TRACE_SQL の引数を先行評価していないこと（`gkill_log.LogSQL` / `LogSQLQuery` 以外で SQL を整形して渡すと、レベルが低くても毎回文字列を組み立てる） |
 | `common/gkill_log/child_env_test.go` | プラグインの子プロセスへ継ぐログ設定（5テスト）。レベル語彙 `ParseLevel`、ディレクトリを作れないときに panic せず error を返し既定ロガーも router も差し替えない `InitNamedWith`、`ExportEnvForChildProcesses` → `ChildSettingsFromEnv` の往復、未設定は既定・壊れた値は Warnings で既定へ倒す、`Init()` が3変数を書き出すこと（ADR-0313） |
@@ -44,6 +46,8 @@ Go `testing` パッケージ
 - **タイムゾーン**: Android で libc へ端末のゾーンを教える経路。展開済み絶対パスを渡すこと、tzdata の候補順、SQLite と Go の壁時計が食い違ったときの Error 1行（時間帯検索が黙って0件になる唯一の痕跡）
 - **タグ付け**: `add_tag` のルール JSON の復号と検証・`rep_types_in_sidebar` の展開・差分計算・タグ行の組み立て（ランダム UUID）。稼働中サーバへの HTTP 部分は httptest のモックで応答判定（本文の `errors` 優先・非2xx の扱い・上限超過）を固定する
 - **プラグインキャッシュ構築**: `generate_plugin_cache` の対象選択・利用者の実在確認の順序・子プロセスの結果分類。プラグインバイナリの代わりにテストバイナリ自身を再exec して（`dao/reps` のプラグインテストと同じ方式）、フラグの受け渡しと stdout / 終了コードの扱いを実プロセスで固定する
+- **スキルの置き場**: `SkillsDir` の既定値（`$HOME/gkill/skills`）と、`--gkill_home_dir` / `GKILL_HOME` から `<home>/skills` へ派生すること（消えても何も言わずに既定へ落ちる 1 行の回帰点）
+- **起動行**: Android が標準出力から拾う `Access your record space at : <URL>` の 1 行。プロトコルとポートは設定 DB ではなく実際の待ち受け（`--disable_tls` / `--address` 込み）に従う
 
 ## 実行方法
 

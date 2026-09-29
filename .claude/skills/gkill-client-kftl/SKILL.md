@@ -30,6 +30,12 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
   （アクティブタブのもので、しかも遅れて着地する）。**`saved_kyou_by_kftl` は `created[].related_time` の最大値で、引き直し（`get_kyou`）の前に出す**
   —— 板・タグツリーの取り直しがこの合図で走るので、引き直しの後ろへ回すと保存直後に一覧へ移ったとき新しいタグが
   ツリーに無いまま絞られ、記録が見えない（`kftl-submit-emits.test.ts`「引き直しより前に」が固定する）
+- **保存が成功したあと、`parse_kftl_text` の応答 `tag_groups`（記録ごとのタグの組。タグの無い記録は入れず、繰り返しの複製は1つにまとめる）を
+  組ごとに `record_added_tag_history`（追加画面のタグ欄の候補になるタグ履歴）へ積む。失敗したら積まない**（2026-09-23。`do_submit` の
+  `submit_kftl_text` が成功した直後、`saved_kyou_by_kftl` の後ろ・引き直しの前）。追加画面と同じく保存が確定してから積む —— 積んでから
+  失敗すると履歴だけが動く。組は記録の登録順なので、最後に書いた記録の組が履歴の先頭になる。2026-09-23 までタグ履歴はメモ帳で付けた
+  タグを知らなかった。守るテスト: `kftl-submit-emits.test.ts`「付けたタグを記録ごとにタグ履歴へ積む」「送信に失敗したらタグ履歴に積まない」/
+  Go `kftl_analyze_test.go` の `TagGroups`
 - **Go の `Analyze`（parse）と `GenerateAndExecuteRequests`（submit）は同じ `prepareRequests` を通す。** 片方の入口にだけ検査を足さない
   （`TestAnalyze_ReportsTheSameInvalidLinesAsExecute` が固定する）。`Analyze` は repos=nil で `expandRepeats` まで回す
   （既存判定は `repositoriesOf` が nil を「既存なし」と扱う）ので、件数の上限も解析で分かる
@@ -75,6 +81,11 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
 - タブのストアは**独立した `effectScope(true)` の中で作る**。setup の中で素に `watch` を張ると最初に呼んだコンポーネントのスコープに属し、そのコンポーネントが unmount された時点で**永続化ごと止まる**（メモ帳ダイアログを閉じる／画面を移るで再現する）
 - DOM は id 引きではなく**テンプレート ref** で掴む（`TextAreaInfo.text_area_element`）。textarea の `id` は複数枚で重複しないよう `useId()` で採番するので、**E2E はクラス `.kftl_text_area` で掴む**
 - タブ列の `×` は `v-btn` ではなく `v-icon` にする（`v-tab` は `<button>` を描画するので `<button>` が入れ子になる）。`@click.stop` が無いと閉じると同時にそのタブがアクティブ化される
+- **タブ名の既定は空（テンプレート名 → 本文の最初の非空行 → 空。`derive_kftl_tab_label`）。通し番号に戻さない**（2026-09-23。番号は並びの
+  添字なので前のタブを閉じると振り直され、名前として役に立たなかった）。見出しが空でもタブは × アイコンと `min-width`
+  （`kftl-view.vue` の `.kftl_tab` の 88px。レイヤー外なので Vuetify 既定の `.v-tab` の 90px より優先される。外しても 90px が効く）で
+  押せる幅を保つので、見出しで幅を稼ぐ必要は無い。守るテスト: `kftl-tabs.test.ts`「中身が空なら見出しも空（通し番号を出さない）」
+  （見出しの文字列だけを見る。タブの幅を見るテストは無い）
 - **タブ列はタイトル行に同居させる**（別の行にするとテキストエリアの縦が40px削られる）。`resize()` が引くのは `title_height` だけで、`tab_bar_height` は `v-tabs` の `:height` に渡すためだけの定数。`title_height` の実寸は `.kftl_title` の CSS で固定する（`v-card-title` に `height` prop は無いので、渡すだけでは効かない）。測った値をフィードバックすると `kftl-dialog.vue` の ResizeObserver が縮小ループに入る
 - 守るテスト: `kftl-tabs.test.ts` / `kftl-tab-store.test.ts` / `kftl-submit-emits.test.ts` の「KFTLのタブ」「KFTLを複数のウィンドウで開く」/ `e2e/kftl-tabs.spec.ts`
 

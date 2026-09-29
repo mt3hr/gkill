@@ -15,7 +15,7 @@
 <操作>_<対象>_response.go  — レスポンス構造体
 ```
 
-操作: `add_`, `update_`, `get_`, `delete_`, `login_`, `logout_`, `upload_`, `commit_`, `discard_`, `submit_`, `open_`, `generate_`, `register_`, `reload_`, `reset_`, `set_new_`
+操作: `add_`, `update_`, `get_`, `delete_`, `login_`, `logout_`, `upload_`, `download_`, `write_`, `commit_`, `discard_`, `submit_`, `parse_`, `open_`, `browse_`, `post_`, `generate_`, `register_`, `reload_`, `reset_`, `set_new_`, `urlog_`
 
 ### 共通フィールド
 
@@ -143,7 +143,7 @@
 | `update_user_reps_request.go` / `update_user_reps_response.go` | ユーザリポジトリ更新 |
 | `update_cache_request.go` / `update_cache_response.go` | キャッシュ更新 |
 
-### ファイル操作系（14ファイル）
+### ファイル操作系（12ファイル）
 
 | ファイル | 説明 |
 |---------|------|
@@ -163,6 +163,20 @@
 | `get_plugin_config_html_request.go` / `get_plugin_config_html_response.go` | プラグイン設定画面 HTML 取得 |
 | `post_plugin_config_request.go` / `post_plugin_config_response.go` | プラグイン設定保存 |
 
+### スキル系（13ファイル）
+
+`$GKILL_HOME/skills/<user_id>/<name>/` に置く利用者ごとのスキル（ADR-0634）。`write_skill_file_*` は **MCP 専用**（画面は `upload_skill` の丸ごと置き換えだけ）。
+
+| ファイル | 説明 |
+|---------|------|
+| `skill_types.go` | 応答で共用する型。`SkillInfo`（一覧の1行）/ `SkillFileInfo`（`revision` = 中身の SHA-256 の hex 先頭16桁。楽観ロックに渡す）/ `SkillDetail`（SKILL.md 全文とファイル一覧）/ `SkillFileContent`（テキストは `content`、バイナリは `content_base64`、`max_bytes` 超えは `content_omitted`）/ `SkillReplacePlan`（置き換えで何が起きるか） |
+| `get_skill_list_request.go` / `get_skill_list_response.go` | スキル一覧 |
+| `get_skill_request.go` / `get_skill_response.go` | 1つのスキルの中身（`path` を省くと SKILL.md とファイル一覧、指定すればそのファイル。`max_bytes` で本文の上限） |
+| `download_skill_request.go` / `download_skill_response.go` | zip を base64 で返す（クライアントは JSON 以外の応答を受け付けない） |
+| `upload_skill_request.go` / `upload_skill_response.go` | zip（`zip_base64`。data URI の接頭辞付きでもよい）で丸ごと置き換え。`dry_run` なら `plan` だけ返し `applied` は false |
+| `write_skill_file_request.go` / `write_skill_file_response.go` | ファイル1つの書き込み（`revision` で上書きを守る）。MCP 専用 |
+| `delete_skill_request.go` / `delete_skill_response.go` | ファイル1つ（`path` + `revision`）またはスキル丸ごとの削除 |
+
 ### トランザクション系（4ファイル）
 
 | ファイル | 説明 |
@@ -176,7 +190,7 @@
 |---------|------|
 | `delete_share_kyou_list_info_request.go` / `delete_share_kyou_list_infos_response.go` | 共有リスト情報削除 |
 
-### その他操作系（13ファイル）
+### その他操作系（15ファイル）
 
 | ファイル | 説明 |
 |---------|------|
@@ -184,7 +198,7 @@
 | `register_gkill_notification_request.go` / `register_gkill_notification_response.go` | Web Push 通知登録 |
 | `reload_repositoriers_request.go` / `reload_repositories_response.go` | リポジトリ再読み込み |
 | `submit_kftl_text_request.go` / `submit_kftl_text_response.go` | KFTL テキスト送信 |
-| `parse_kftl_text_request.go` / `parse_kftl_text_response.go` | KFTL テキストの解析だけ（`invalid_lines` / `tags` / `mi_board_names` / `record_count`。空は `[]`） |
+| `parse_kftl_text_request.go` / `parse_kftl_text_response.go` | KFTL テキストの解析だけ（`invalid_lines` / `tags` / `tag_groups`（記録ごとのタグの組）/ `mi_board_names` / `record_count`。空は `[]`） |
 | `urlog_bookmarklet_request.go` | URLog ブックマークレットアドレス |
 | `get_kyous_mcp_request.go` / `get_kyous_mcp_response.go` | MCP 用 Kyou 取得 |
 | `get_rep_infos_mcp_request.go` / `get_rep_infos_mcp_response.go` | MCP 用の rep 情報（rep_types の正準語彙・付随データ rep・索引の鮮度） |
