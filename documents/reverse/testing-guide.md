@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1405 | 211 | Go `testing` |
-| フロントエンド ユニット | 2089 | 185 | Vitest |
+| Go バックエンド | 1414 | 214 | Go `testing` |
+| フロントエンド ユニット | 2130 | 188 | Vitest |
 | フロントエンド E2E | 255 | 47（+auth.setup.ts） | Playwright |
-| MCP サーバ | 1162 | 43 | Go `testing` |
-| ツール | 83 | 3 | Vitest |
-| Android | 26 | 2 | JUnit 4 |
+| MCP サーバ | 1170 | 43 | Go `testing` |
+| ツール | 90 | 3 | Vitest |
+| Android | 31 | 2 | JUnit 4 |
 | Wear OS | 232 | 18 | JUnit 4 + MockK |
-| **合計** | **5,252** | **509** | |
+| **合計** | **5,322** | **515** | |
 
 数え直すコマンド:
 
@@ -214,11 +214,11 @@ src/server/gkill/
 │   │   ├── message_test.go
 │   │   ├── gkill_error_test.go
 │   │   └── http_status_test.go        ← ステータス表の網羅・分布・名指し固定（下記）
-│   ├── kftl/                          ← KFTL パーサ（6ファイル）
+│   ├── kftl/                          ← KFTL パーサ（9ファイル）
 │   ├── req_res/                       ← ワイヤ契約（JSONタグ名 / omitempty）と応答型の Errors / Messages の型（ソース走査）
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（47ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（48ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── response_status_guard_test.go         ← 全ハンドラが writeErrorStatus を呼ぶこと（ソース走査）
@@ -239,9 +239,11 @@ src/server/gkill/
 │       ├── handle_commit_tx_error_code_test.go   ← commit_tx の失敗コード写し（13種別・Cause）
 │       ├── handle_discard_tx_test.go             ← discard_tx の失敗コード写し
 │       ├── handle_add_without_write_rep_test.go  ← 書き込み先 rep 無しは panic ではなく config エラー
+│       ├── handle_skill_test.go                  ← スキル API 6本の一連の流れ（zip の dry_run → 適用 → 表示 → ダウンロード → revision 付きの上書き → 削除。ステータスとエラーコードまで固定）
+│       ├── skill_errors_test.go                  ← dao/skills の番兵 → 4xx の専用コードへの写し（素・DetailError・fmt.Errorf の3形。case を1行消しても静かに 500 へ落ちる）
 │       └── security_headers_middleware_test.go   ← セキュリティヘッダ3つと経路側の Set が勝つこと
 ├── plugin/
-│   └── sdk/                           ← プラグインSDK（4ファイル: sdk / config / source / cache_path）
+│   └── sdk/                           ← プラグインSDK（7ファイル: sdk / config / source / cache_path / build_cache / match_words / plugin_log）
 ├── dao/
 │   ├── gkill_dao_manager_test.go      ← DAO マネージャ
 │   ├── account/                       ← アカウント CRUD、Argon2id、スキーマ移行（3ファイル）
@@ -251,9 +253,10 @@ src/server/gkill/
 │   ├── share_kyou_info/               ← 共有設定
 │   ├── gkill_notification/            ← 通知ターゲット
 │   ├── hide_files/                    ← ファイル非表示
+│   ├── skills/                        ← スキルのファイルストア（store_test.go。スキル名・パスの規則、SKILL.md の frontmatter、revision の衝突、利用者間の分離、zip の展開・置き換えと失敗時の巻き戻し。ADR-0634）
 │   ├── sqlite3impl/                   ← SQLite3 ユーティリティ
 │   └── reps/                          ← リポジトリ実装（67ファイル。idf_thumb_vips_test.go, repositories_get_kyou_histories_cache_test.go, git_commit_log_cached_miss_test.go, plugin_repository_impl_test.go, plugin_git_commit_log_adapter_test.go, git_commit_log_cached_unique_test.go, ur_log_fill_skip_test.go 等）
-│       ├── *_repository_sqlite3_impl_test.go  ← 11データ型
+│       ├── *_repository_sqlite3_impl_test.go  ← 13データ型
 │       ├── cached_and_temp_test.go    ← キャッシュ層・一時層
 │       └── cache/                     ← キャッシュ更新
 ├── usecase/                           ← 規約のソース走査 + キャッシュ反映（3ファイル）
@@ -261,7 +264,9 @@ src/server/gkill/
 │   ├── cached_rep_insert_alignment_test.go ← INSERT の列並びと引数の並びの一致
 │   └── source_conventions_scan_test.go ← 規約9件のソース走査（下記）
 ├── dvnf/                              ← DVNF ファイル管理（3ファイル。copyFile の実ファイル操作を含む）
-└── main/                              ← CLI・エントリポイント（15ファイル）
+└── main/                              ← CLI・エントリポイント（17ファイル）
+    ├── common/print_started_message_test.go ← 起動行 `Access your record space at : <URL>` が1行だけ・実際の待受と同じプロトコルで出ること（Android が標準出力から拾う。食い違っても Go 側にエラーは出ない）
+    └── common/skills_dir_test.go      ← SkillsDir が --gkill_home_dir / GKILL_HOME から派生すること（付け替えの1行を消しても build も vet も通る）
 ```
 
 **テスト戦略:**
@@ -272,8 +277,8 @@ src/server/gkill/
 - **`usecase/` には関数ごとの専用テストを置かない**: ビジネスロジックはハンドラ統合テストが
   HTTPレイヤ込みで通す。このパッケージに置いてあるのは、そのやり方では捕まえられない3本だけ。
   理由は [`src/server/gkill/usecase/ABOUT_TEST.md`](../../src/server/gkill/usecase/ABOUT_TEST.md) を参照
-- **規約のソース走査**: 13型・457メソッドのようにコピペで増える形は、**1つだけ抜けても他が緑のまま通る**。
-  `usecase/source_conventions_scan_test.go` が製品コードを実行せずソースの書き方だけを見張る（8件）。
+- **規約のソース走査**: 13型・461メソッドのようにコピペで増える形は、**1つだけ抜けても他が緑のまま通る**。
+  `usecase/source_conventions_scan_test.go` が製品コードを実行せずソースの書き方だけを見張る（9件）。
   どれも「`go build` も `go vet` も通り、実行時にエラーも出ずに静かに間違った結果を返す」種類のズレ
 - **HTTPステータス化のガード3本**: エラーコード→ステータスの表（`api/message/http_status.go`）は
   「コードを足したのに分類し忘れる」「ハンドラのコピペで `writeErrorStatus` の1行が抜ける」で静かに壊れる
@@ -287,6 +292,11 @@ src/server/gkill/
     クライアントの `res.json()` が例外になる）
   - `gkill_server_api/response_status_test.go` — **実挙動**。表が正しくてもハンドラが呼んでいなければ
     意味がないので、実際にHTTPを叩いて 401/400/403/409/413 と「成功は今も200」を確認する
+- **スキル API のエラー写し**: `dao/skills` の番兵（存在しない・不正な名前 / パス / frontmatter / zip・
+  revision の食い違い・SKILL.md 単独の削除 等）は `gkill_server_api/skill_errors.go` の `switch` が
+  4xx の専用コードへ写す。case を1行消しても build も vet も通り、その番兵だけが操作ごとの 500 へ落ちて
+  「無いファイル」が 404 ではなく 500 で返る。`skill_errors_test.go` が番兵ごとに
+  素・`DetailError` で包んだもの・`fmt.Errorf("%w")` でさらに包んだもの（ハンドラが実際に渡す形）の3形を固定する
 - **テストヘルパー**: `reps/testhelper_test.go` が共通のテストデータ生成・DB セットアップを提供
 
 ### 3.2 フロントエンド ユニット（`src/client/__tests__/unit/`）
@@ -294,11 +304,11 @@ src/server/gkill/
 ```
 src/client/__tests__/
 ├── unit/
-│   ├── api/                           ← API クライアント（8ファイル）
+│   ├── api/                           ← API クライアント（9ファイル）
 │   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
 │   │   ├── find-kyou-query.test.ts   ← 検索クエリビルダー
 │   │   └── hydrate.test.ts           ← hydrate() / hydrate_all()（JSON→クラス詰め替え）
-│   ├── classes/                       ← ユーティリティ（55ファイル）
+│   ├── classes/                       ← ユーティリティ（56ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
@@ -317,7 +327,8 @@ src/client/__tests__/
 │   │   ├── confirm-dialog-close.test.ts   ← 確認ダイアログが例外時も finally で閉じること
 │   │   ├── edit-view-no-update-check.test.ts ← 「更新がありません」判定に related_time を含めること
 │   │   ├── convention-source-scan.test.ts ← 棚卸し全体の安全網（規約11件のソース走査。ダイアログのタイトル欄は空、一覧の行のクリックは v-list-item に付ける、を含む）
-│   │   ├── drag-drop-indicator.test.ts    ← D&D の挿入位置の判定（線と挿入先は同じ関数）と線の付け外し
+│   │   ├── drag-drop-indicator.test.ts    ← D&D の挿入位置の判定（線と挿入先は同じ関数）、線の付け外し、掴んだ元の半透明化と素早いドロップでの取り消し、dragleave / dataTransfer.types の判定
+│   │   ├── drag-drop-source-scan.test.ts  ← 集計ビューの列の key と foldable-struct の受け側の配線（ソース走査。自己検査つき）
 │   │   ├── check-auth-login-page.test.ts  ← ログイン画面ではセッション無効の飛ばしを止めること
 │   │   ├── abort-error.test.ts            ← 中断判定（20箇所の手書きを集約した先）
 │   │   ├── web-push-key.test.ts           ← VAPID公開鍵のバイト列化（6ページ分を集約した先）
@@ -325,9 +336,9 @@ src/client/__tests__/
 │   │   ├── global-exception-feed.test.ts  ← main.ts の例外配線（中断と ResizeObserver の通知は出さない）
 │   │   └── tx-bundle-source-scan.test.ts  ← 複数書き込みの保存経路が run_in_tx / tx_id を通ること（ソース走査）
 │   ├── datas/                         ← データモデル（35ファイル）
-│   ├── dnote/                         ← D-note モジュール（10ファイル、trend-aggregator / correlation-graph-editor-view / dnote-item-table-columns 含む）
+│   ├── dnote/                         ← D-note モジュール（10ファイル、trend-aggregator / correlation-graph-editor-view / dnote-item-table-columns（列の追加・削除、ダブルクリックの閲覧 / 編集の分岐、並べ替えの挿入位置）含む）
 │   ├── kftl/                          ← KFTL 行分類器（8ファイル。kftl-line-labels 含む）
-│   ├── composables/                   ← Vue Composable（65ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（67ファイル。add-views / edit-views /
 │   │                                     tx-bundle-views / shared-mi-view-dialog / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /
@@ -340,7 +351,9 @@ src/client/__tests__/
 │   │                                     rep-query-summary-detail / find-query-editor-dialog-default-signal /
 │   │                                     registered-tag-column-filter / new-tag-column-search /
 │   │                                     browse-zip-contents-dialog / plugin-config-dialog /
-│   │                                     edit-saved-find-query-dialog / foldable-struct-drop-position）
+│   │                                     edit-saved-find-query-dialog / foldable-struct-drop-position /
+│   │                                     manage-skill-list-dialog / dashboard-view-date-navigation /
+│   │                                     rykv-view-map-date-picker）
 │   ├── router.test.ts                 ← ルーター（コンポーネント13 + リダイレクト専用2）
 │   ├── i18n-completeness.test.ts      ← i18n 完全性（7ロケール）
 │   └── service-worker.test.ts         ← Service Worker
@@ -367,10 +380,11 @@ src/client/__tests__/
 - **インタラクティブ操作**: ボタンクリック、フォーム入力、ダイアログ開閉
 - **CRUD フロー**: メモ帳構文で記録 → 画面追加 → 編集 → 削除 → 閲覧の一連操作
 - **レスポンシブ対応**: 一部テスト（`rykv.spec.ts` / `mi-board.spec.ts`）でモバイルビューポートの表示確認
+- **設定画面のスキル管理**: `skills.spec.ts` が zip をテストの中で組み立て（バイナリのフィクスチャをコミットしない）、アップロード（確認 → 適用）→ 一覧 → 表示 → ダウンロード → 同じ名前で上げ直すと差分が確認に出る → 削除の一巡を通す
 
 > **spec ファイルごとの内容は [`src/client/pages/ABOUT_TEST.md`](../../src/client/pages/ABOUT_TEST.md) が持ちます。**
 > 以前はここにも同じ一覧を置いていましたが、spec が増えるたびに二重管理になり、
-> 実際に「40ファイル/215宣言」で取り残されていました。件数（44 / 250）は `verify_docs` が
+> 実際に「40ファイル/215宣言」で取り残されていました。件数（47 / 255）は `verify_docs` が
 > 実測と突き合わせますが、ファイル名の一覧までは検査できないため、置き場所を1つに寄せています。
 >
 > 同じ資料には **E2E の書き方の規約**（条件で本体を包まない / 固定 sleep を使わない）と、
@@ -413,7 +427,7 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 | `help_topics_test.go` | `gkill_get_mcp_help` の topic 本文（全 topic に本文・index の列挙・説明文から移した知識の実在・名指しするツール名の実在・3サーバ搭載・gkill へ往復しない） |
 | `schema_contract_test.go` | tools/list どおりに呼べる契約（スキーマのキー集合 = 受理集合 − 廃止済み、全プロパティ指定スモーク、3サーバの同名ツール同一、世代の一致） |
 | `tool_schema_budget_test.go` | tools/list のバイト量が予算ファイル `src/server/gkill/mcp/tool_schema_budget.json` 内であること（超過・過小の両方で失敗）。説明文を意図して変えたときは `gkill_server mcp schema-budget --update` で予算を書き直す |
-| `golden_test.go` | コミット済みのゴールデン（`testdata/golden/`。採取時は旧 Node 実装の出力、以後は前回コミットした Go の出力。要求コーパス 331 件）との**バイト一致**（tools/list・`schema_revision`・tools/call の応答（stdio / http × 3サーバ）・gkill へ送った要求）。`GKILL_MCP_UPDATE_GOLDEN=1` の更新経路が「書き直したものと比較が通り、コミット済みと同じバイト列」であることの自己検査を含む |
+| `golden_test.go` | コミット済みのゴールデン（`testdata/golden/`。採取時は旧 Node 実装の出力、以後は前回コミットした Go の出力。要求コーパス 345 件）との**バイト一致**（tools/list・`schema_revision`・tools/call の応答（stdio / http × 3サーバ）・gkill へ送った要求）。`GKILL_MCP_UPDATE_GOLDEN=1` の更新経路が「書き直したものと比較が通り、コミット済みと同じバイト列」であることの自己検査を含む |
 | `config_test.go` | 設定ファイル `gkill_mcp.json` の生成と、フラグ > 環境変数 > ファイル > 既定値の優先順位、壊れた数値の環境変数（`GKILL_FETCH_TIMEOUT_MS` / `MCP_PORT`）で起動を止めること |
 | `import_graph_test.go` | package `mcp` が本体の `api` / `dao` / `usecase` を import しないこと |
 | `stdio_e2e_test.go` | テストバイナリを子プロセスにした stdio の端から端まで（NDJSON / Content-Length、stdout に JSON-RPC 以外が出ない） |
@@ -422,6 +436,7 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 | `gps_cursor_test.go` | GPS ログのカーソルの往復（発行側と検証側が同じ実装）と、壊れたカーソルの拒否 |
 | `find_query_schema_test.go` | `query` スキーマの全プロパティに type と description があること（キー集合は `schema_contract_test.go`） |
 | `oauth_html_test.go` | 認可成功ページの redirect_uri が script 文脈でエスケープされること（`</script>` / U+2028 で抜け出せない）、ログインページの利用者由来の値の HTML エスケープ |
+| `skill_handlers_test.go` | スキルの4ツール（`skill_handlers.go`。ADR-0634。`gkill_get_skill_list` / `gkill_get_skill` は3サーバ、`gkill_add_skill` / `gkill_update_skill` は Write 系）: gkill へ送る要求の形（`path` 指定時だけ `max_bytes`、add は `revision` を送らない、`body` / `content` は trim しない）、画像は `gkill_get_idf_file` と同じ image ブロックで届きテキスト表現に base64 を載せないこと、PDF 等の非画像バイナリは `structuredContent` に `file_content_base64` を残すこと、拡張子 → MIME の表、上限超過で中身を省いたときの `warnings`、一覧が空のときの要約、409（revision の食い違い）がそのまま AI へ返ること、read サーバでは書けないこと、削除ツール `gkill_delete_skill` がどのサーバの一覧にも載らず呼んでも `Unknown tool` になること、`gkill_status` の `skills[]` と取得失敗時の `skills_error` |
 
 **プラグインツール（3サーバ共通）:**
 
@@ -450,11 +465,11 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 ### 3.5 Android / Wear OS
 
 **Android** (`src/android/`): JUnit 4 + Kotlin
-- ユニットテスト（JVM）: 定数検証（サーバURL、ポート、バイナリ名）
-- インストルメンテーションテスト: Android フレームワーク統合
+- ユニットテスト（JVM。`MainActivityUnitTest.kt`）: データ置き場が `/sdcard/gkill` であること、アプリ専用領域からの複製（`copyAppPrivateHomeIfNeeded`。データ置き場が無いか空のときだけ複製し、中身があれば触らない・中断した複製の再開・同名のファイルがあれば消さずに止める）、共有ストレージの権限が許可されるまで起動しないゲート（`decideStorageGate`。許可を1回だけ求める・二重に起動しない）、起動引数に `--address` / `--disable_tls` を入れない、起動行の URL 解析とオリジン比較、ループバックだけ自己署名証明書を通す、起動待ちの接続タイムアウトと再試行間隔、`ps` の行の解析（PID の列・gkill_server の行だけを拾う）、マニフェストの共有ストレージ権限、レイアウトの ID 網羅、ステータスバーの色
+- インストルメンテーションテスト（`MainActivityInstrumentedTest.kt`）: パッケージ名と、Context・ファイル置き場・assets・キャッシュ置き場が取れること
 
 **Wear OS** (`src/wear_os/`): JUnit 4 + MockK
-- phone_companion（10ファイル / 142テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer、playing検索クエリの形状検証・全 API への `locale_name` 送信含む）、メッセージハンドリング、サーバ証明書の信頼（フィンガープリント計算とピン照合）、二重送信防止台帳、エラーコード→文言の照合（`GkillErrorText`）、`strings.xml` の7言語セットの整合
+- phone_companion（10ファイル / 144テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer、playing検索クエリの形状検証・全 API への `locale_name` 送信含む）、メッセージハンドリング、サーバ証明書の信頼（フィンガープリント計算とピン照合）、二重送信防止台帳、エラーコード→文言の照合（`GkillErrorText`）、`strings.xml` の7言語セットの整合
 - watch_app（8ファイル / 88テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル、気分記録の KFTL 組み立て、`strings.xml` の7言語セットの整合
 
 ## 4. テスト設定ファイル
@@ -471,7 +486,7 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 
 ## 5. テストカバレッジの範囲
 
-### Go バックエンド（30ディレクトリにテスト有）
+### Go バックエンド（33ディレクトリにテスト有）
 
 ```mermaid
 graph LR
@@ -485,7 +500,7 @@ graph LR
     end
 
     subgraph "DAO 層"
-        D1[11 リポジトリ<br/>SQLite3 実装]
+        D1[13 リポジトリ<br/>SQLite3 実装]
         D2[キャッシュ/一時<br/>リポジトリ]
         D3[アカウント<br/>セッション]
         D4[設定 DAO<br/>サーバ/ユーザ]

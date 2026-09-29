@@ -3,6 +3,10 @@
 // 件数の突き合わせは実ツリーを読むので、ここでは「正規表現と composeTools の読み方」だけを
 // 合成のソースで固定する。ここが空振りしても verify_docs は「件数 0 が資料と合わない」でしか
 // 落ちず、資料側を 0 に直されると気付けない。
+import { execFileSync } from 'node:child_process'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { describe, expect, test } from 'vitest'
 import {
   BOUNDARY_TABLE_IDS,
@@ -11,15 +15,21 @@ import {
   checkBoundaryDoc,
   checkContractRows,
   checkReverseDocIndex,
+  checkServerAboutTestCategorySum,
+  checkTestFileCoverage,
   checkWebRouteRows,
   compareKeySets,
   composedToolNames,
   countComposedToolNames,
   expectedWebRouteCells,
   extractBoundaryBlock,
+  manualProseForTermCheck,
   parseGkillApi,
   parseGoHandlers,
   parseRouteTable,
+  personalInfoScanFiles,
+  readPersonalInfoTarget,
+  userDocTermHits,
 } from '../verify_docs.mjs'
 
 describe('MCP_TEST_RE', () => {
@@ -371,6 +381,151 @@ describe('compareKeySets / checkContractRows / checkReverseDocIndex', () => {
       'reverse 資料の索引: documents/reverse/README.md の読む順と要約表に b.md へのリンクが1件（2件要る）',
       'reverse 資料の索引: documents/reverse/folder-structure.md のツリーに b.md が無い',
     ])
+  })
+})
+
+// ─── テストファイルの索引網羅 / server ABOUT_TEST の分類表の和 ───────────────
+// どちらも合成の文字列で固定する。実ツリーの列挙は verify_docs 本体（listTestFiles）が担う。
+
+describe('checkTestFileCoverage', () => {
+  const about = (p, ...lines) => ({ path: p, text: lines.join('\r\n') })
+  const missing = (f) => `テストの索引: ${f} がどの ABOUT_TEST.md にも載っていない`
+  const ambiguous = (f, n) => `テストの索引: ${f} を指す記述がどの ABOUT_TEST.md にも無い（同名のテストが${n}本ある。` +
+    `\`親ディレクトリ/${f.split('/').pop()}\` のようにパスで書くか、このファイルだけを配下に持つ ABOUT_TEST.md に書く）`
+
+  test('区切り付きで指していれば0件（名前だけ・パス付き・`...` の省略・Markdown リンクの相対パス。同名はパスか配下の ABOUT_TEST.md で区別）', () => {
+    const aboutTests = [
+      about('src/server/gkill/mcp/ABOUT_TEST.md', '| `golden_test.go` | ゴールデン |', '| `config_test.go` | 設定ファイル |'),
+      about('src/server/gkill/plugin/sdk/ABOUT_TEST.md', '| `config_test.go` | 4 |', '| `match_words_test.go` | 3 |'),
+      about('src/server/gkill/dao/reps/ABOUT_TEST.md', '| `find_word_match_test.go` | 判定本体は `api/find_word/match_words_test.go` |'),
+      about('src/server/gkill/main/ABOUT_TEST.md', '| `gkill/main_test.go` | デスクトップ版 |', '| `gkill_server/main_test.go` | サーバ版 |'),
+      about('src/wear_os/ABOUT_TEST.md',
+        '| `phone_companion/src/test/java/.../MainActivityTest.kt` | 8 |',
+        '| [MainActivityTest.kt](./watch_app/src/test/java/w/MainActivityTest.kt) | 21 |'),
+      about('src/client/ABOUT_TEST.md', '- kyou-count-calendar.test.ts と login.spec.ts、release_scripts.test.mjs'),
+    ]
+    expect(checkTestFileCoverage([
+      'src/server/gkill/mcp/golden_test.go',
+      'src/client/__tests__/unit/classes/kyou-count-calendar.test.ts',
+      'src/client/__tests__/e2e/login.spec.ts',
+      'src/tools/__tests__/release_scripts.test.mjs',
+      'src/server/gkill/mcp/config_test.go',
+      'src/server/gkill/plugin/sdk/config_test.go',
+      'src/server/gkill/api/find_word/match_words_test.go',
+      'src/server/gkill/plugin/sdk/match_words_test.go',
+      'src/server/gkill/main/gkill/main_test.go',
+      'src/server/gkill/main/gkill_server/main_test.go',
+      'src/wear_os/phone_companion/src/test/java/c/MainActivityTest.kt',
+      'src/wear_os/watch_app/src/test/java/w/MainActivityTest.kt',
+    ], aboutTests)).toEqual([])
+  })
+
+  test('指していない記述は数えない（長い名前の一部・拡張子抜け・別の場所を指すパス・同名を区別できない名前だけの記述）。重複は1回、並びはパス順', () => {
+    const aboutTests = [
+      about('src/server/gkill/mcp/ABOUT_TEST.md', '| `oauth_store_test.go` | OAuth の状態ファイル |', 'golden_test を参照'),
+      about('src/server/gkill/dao/ABOUT_TEST.md', '| `old_dir/moved_test.go` | 移動前のパス |'),
+      about('src/plugins/ABOUT_TEST.md', '| `src/plugins/gkill_plugin_fitbit/main_test.go` | x |', '- `main_test.go`（2テスト）'),
+      about('src/wear_os/ABOUT_TEST.md', '| `MainActivityTest.kt`（コンパニオン） | 8 |', '| `MainActivityTest.kt`（ウォッチ） | 21 |'),
+    ]
+    expect(checkTestFileCoverage([
+      'src/server/gkill/mcp/golden_test.go',
+      'src/server/gkill/dao/skills/store_test.go',
+      'src/server/gkill/dao/new_dir/moved_test.go',
+      'src/server/gkill/main/gkill_server/main_test.go',
+      'src/server/gkill/main/gkill/main_test.go',
+      'src/wear_os/watch_app/src/test/java/w/MainActivityTest.kt',
+      'src/wear_os/phone_companion/src/test/java/c/MainActivityTest.kt',
+      'src/server/gkill/mcp/golden_test.go',
+    ], aboutTests)).toEqual([
+      missing('src/server/gkill/dao/new_dir/moved_test.go'),
+      missing('src/server/gkill/dao/skills/store_test.go'),
+      ambiguous('src/server/gkill/main/gkill/main_test.go', 2),
+      ambiguous('src/server/gkill/main/gkill_server/main_test.go', 2),
+      missing('src/server/gkill/mcp/golden_test.go'),
+      ambiguous('src/wear_os/phone_companion/src/test/java/c/MainActivityTest.kt', 2),
+      ambiguous('src/wear_os/watch_app/src/test/java/w/MainActivityTest.kt', 2),
+    ])
+  })
+})
+
+describe('checkServerAboutTestCategorySum', () => {
+  // 合計行の後ろに数字の列を持つ別の表を置き、分類表の範囲（ヘッダ行〜合計行の手前）だけを足すことも見る
+  const doc = (total) => [
+    '## テスト内容',
+    '',
+    '| カテゴリ | テストファイル数 | 内容 |',
+    '|---|---|---|',
+    '| API 統合 | 47 | 全データ型 CRUD |',
+    '| KFTL パーサ | 9 | Factory、Statement |',
+    '| リポジトリ | 69 | `reps/` 直下67 + `reps/cache/` の2 |',
+    '',
+    `**合計 ${total} ファイル**（上表の合計。\`goTestFiles\` と一致する）`,
+    '',
+    '| テスト | 見張っている規約 |',
+    '|---|---|',
+    '| `TestX` | 10 |',
+  ].join('\r\n')
+
+  test('分類表の和が合計行と一致すれば0件', () => {
+    expect(checkServerAboutTestCategorySum(doc(125))).toEqual([])
+  })
+
+  test('和が合計行と違えば両方の数を報告する（後ろの表の数字は混ぜない）', () => {
+    expect(checkServerAboutTestCategorySum(doc(126))).toEqual([
+      'src/server/ABOUT_TEST.md: 分類表の和 125（3行）が「**合計 126 ファイル**」と合わない',
+    ])
+  })
+
+  test('ヘッダ行や合計行が無ければその旨を報告する', () => {
+    expect(checkServerAboutTestCategorySum('| API 統合 | 47 | x |\n**合計 47 ファイル**')).toEqual([
+      'src/server/ABOUT_TEST.md: 分類表のヘッダ行「| カテゴリ | … |」が無い',
+    ])
+    expect(checkServerAboutTestCategorySum('| カテゴリ | N | 内容 |\n| API 統合 | 47 | x |')).toEqual([
+      'src/server/ABOUT_TEST.md: 「**合計 N ファイル**」の行が無い',
+    ])
+  })
+})
+
+// ─── ユーザー向け資料の用語検査 ───────────────
+describe('userDocTermHits / manualProseForTermCheck', () => {
+  test('小文字の開発コード名と内部識別子も拾い、<code>・<pre>・コメント・タグの属性（alt / title / aria-label 以外）は見ない', () => {
+    expect(userDocTermHits(manualProseForTermCheck([
+      '<p class="kftl-box">メモ帳で <code class="x">/timeis</code> と書く</p>',
+      '<pre>/timeis\n開始</pre><!-- rykv -->',
+      '<a href="rudbeckia.html">ポート</a><img src="kyou.png" alt="dnote の画面">',
+    ].join('\r\n')))).toEqual(['dnote'])
+    // 'playing' は英単語なので禁止しない（'Playing' は禁止）。識別子は語の区切りを問わない
+    expect(userDocTermHits('Playing と playing、kyou_id を /api/get_kyous に tx_id 付きで渡す（ERR000123）'))
+      .toEqual(['Playing', 'kyou', '/api/', 'ERR000', 'tx_id'])
+  })
+})
+
+// ─── 個人情報検査の対象 ───────────────
+describe('personalInfoScanFiles / readPersonalInfoTarget', () => {
+  // 作業ツリーから消しただけで git rm していないファイルは、index の版がそのままコミットに載る。
+  // 列挙から外すと、消したつもりの実データ入りファイルが検査を素通りしてコミットされる。
+  test('作業ツリーから消したが index に残っているファイルも列挙し、中身は index の版を読む', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-docs-index-'))
+    try {
+      const git = (...args) => execFileSync('git', args, { cwd: root, stdio: 'pipe' })
+      git('init', '-q')
+      fs.mkdirSync(path.join(root, 'src', 'testdata'), { recursive: true })
+      fs.writeFileSync(path.join(root, 'src', 'testdata', 'old.csv'), 'index-version\n')
+      git('add', 'src/testdata/old.csv')
+      fs.rmSync(path.join(root, 'src', 'testdata', 'old.csv'))
+      fs.writeFileSync(path.join(root, 'src', 'testdata', 'new.csv'), 'worktree-version\n')
+
+      expect(personalInfoScanFiles(root).sort()).toEqual(['src/testdata/new.csv', 'src/testdata/old.csv'])
+
+      const removed = readPersonalInfoTarget('src/testdata/old.csv', root)
+      expect(removed.buf.toString('utf8')).toBe('index-version\n')
+      expect(removed.where).toContain('index に残っている版')
+      const present = readPersonalInfoTarget('src/testdata/new.csv', root)
+      expect(present.buf.toString('utf8')).toBe('worktree-version\n')
+      expect(present.where).toBe('src/testdata/new.csv')
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
   })
 })
 

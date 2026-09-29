@@ -42,6 +42,37 @@ func TestQueryMatchText(t *testing.T) {
 	}
 }
 
+// ID の前方一致を見るのは 7 文字以上の語だけ（find_word.MinIDPrefixMatchLength。ADR-0114）で、
+// 長さは rune 数で数える。SDK は本体の判定を呼ぶだけだが、プラグインが返す Kyou はこの判定だけで
+// 絞られる（gkill 本体は再判定しない）ので、境界を SDK 側でも固定する。
+// バイト数で数える誤りをすると、かな 6 文字（18 バイト）の語が ID の前方一致の対象になる。
+func TestQueryMatchTextIDPrefixLengthBoundary(t *testing.T) {
+	cases := []struct {
+		name string
+		word string
+		id   string
+		want bool
+	}{
+		{name: "6文字はIDを見ない", word: "abcdef", id: "abcdef01-2345", want: false},
+		{name: "7文字ちょうどでIDを見る", word: "abcdef0", id: "abcdef01-2345", want: true},
+		{name: "かな7文字はrune数で数えて対象", word: "あいうえおかき", id: "あいうえおかきく-0001", want: true},
+		{name: "かな6文字は18バイトでも対象外", word: "あいうえおか", id: "あいうえおかきく-0001", want: false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			q := Query{Words: []string{c.word}}
+			// text には語を含めず、ID だけで当たるかを見る
+			if got := q.MatchText("no", c.id); got != c.want {
+				t.Errorf("MatchText(%q, %q) with word %q = %v, want %v", "no", c.id, c.word, got, c.want)
+			}
+			// 語長によらず text に含めば当たる（短い語が消えるわけではない）
+			if got := q.MatchText("has "+c.word, c.id); !got {
+				t.Errorf("text に語 %q を含むのに不一致", c.word)
+			}
+		})
+	}
+}
+
 // Matcher は元の Query のスライスを書き換えない（query は呼び出しの間で共有されうる）。
 func TestQueryMatcherDoesNotMutateQuery(t *testing.T) {
 	q := Query{Words: []string{" HELLO "}, NotWords: []string{"BYE"}}

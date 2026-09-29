@@ -3,7 +3,7 @@ import { checkGkillServer } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv,
-  makeUniqueLabel, waitForKyouByText,
+  makeUniqueLabel, waitForKyouByText, searchByKeyword,
 } from './crud-helpers'
 
 /**
@@ -140,11 +140,15 @@ test.describe('Dialog History Invariants', () => {
   // 複数ダイアログを開いたまま APP_BAR プルダウンで別ページへ遷移できること
   // (reset_dialog_history の popstate 会計バグ回帰テスト: go(-N) は popstate 1回)
   test('app bar pulldown navigates away while multiple dialogs are open', async ({ page }) => {
-    const label1 = makeUniqueLabel('dlg_nav_1')
-    const label2 = makeUniqueLabel('dlg_nav_2')
+    // 2件に共通の一意な語で絞ってから開く。一覧は仮想スクロールなので、並列に走る他のテストの記録に
+    // 押し出されると、先に作った記録が描画範囲から外れる（2026-09-28 のフルランで1回落ちた）
+    const token = makeUniqueLabel('dlg_nav')
+    const label1 = `${token}_1`
+    const label2 = `${token}_2`
     await submitKftlText(page, label1)
     await submitKftlText(page, label2)
     await navigateToRykv(page)
+    await searchByKeyword(page, token)
 
     // ダイアログを1枚ずつ確実に開く (2枚目を1枚目の上に開く競合を避けるため、
     // 各段階で枚数の確定を待ってから次へ進める)

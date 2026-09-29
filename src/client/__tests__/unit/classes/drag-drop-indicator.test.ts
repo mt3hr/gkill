@@ -102,6 +102,28 @@ describe('線の付け外し', () => {
         expect(target.className).toBe('')
     })
 
+    // 半透明にするのは次のタスクなので、その前にドラッグが終わっていたら付けてはいけない。
+    // 付けると、素早いドロップのあとに元の行が薄いまま残る（end_drag は既に走ったあとなので誰も外さない）
+    test('掴んですぐ end_drag すると、タイマーが走っても半透明にならない（素早いドロップ）', () => {
+        vi.useFakeTimers()
+        const source = make_element()
+        begin_drag_source(source)
+        end_drag()
+        vi.runAllTimers()
+        expect(source.classList.contains(DRAG_SOURCE_CLASS)).toBe(false)
+    })
+
+    test('タイマーが走る前に別の要素を掴み直すと、前の要素は半透明にならない', () => {
+        vi.useFakeTimers()
+        const first = make_element()
+        const second = make_element()
+        begin_drag_source(first)
+        begin_drag_source(second)
+        vi.runAllTimers()
+        expect(first.classList.contains(DRAG_SOURCE_CLASS)).toBe(false)
+        expect(second.classList.contains(DRAG_SOURCE_CLASS)).toBe(true)
+    })
+
     test('掴んだ元とその中には線を出さない判定', () => {
         const source = make_element()
         const inner = document.createElement('div')

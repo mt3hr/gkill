@@ -2,7 +2,7 @@
 
 ## 概要
 
-プラグイン作者向け Go SDK のテスト。**64テスト（7ファイル）**。
+プラグイン作者向け Go SDK のテスト。**65テスト（7ファイル）**。
 
 `sdk.Run()` の stdin/stdout ループ、`--gkill-build-cache` の単独モード、`sdk.EnsureConfig()` の `config.json` 自動生成、
 `sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置、`sdk.Query.MatchText()` のワード判定を検証する。
@@ -19,7 +19,7 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 | `source_test.go` | 18 | `OpenSources()` の ZIP 走査（`TestOpenSources_*` ほか） |
 | `cache_path_test.go` | 5 | `CacheDBPath()` / `IsSafePathElement()`（`TestCacheDBPath_*`） |
 | `plugin_log_test.go` | 8 | `Run()` が開く `$GKILL_HOME/logs/gkill_plugin_<name>*.log`（`initLogging` / `LogWarn` / `LogInfo` / `LogDebug` がファイルだけへ / `closeLogging` の冪等 / `runLoop` の Access 行） |
-| `match_words_test.go` | 2 | `Query.MatchText()` / `Query.Matcher()`（`TestQueryMatchText` / `TestQueryMatcherDoesNotMutateQuery`）。gkill 本体と同じ規則（大小無視の部分一致、ID は前方一致、除外語は ID を見ない、空語は無視）で、元の Query を書き換えないこと |
+| `match_words_test.go` | 3 | `Query.MatchText()` / `Query.Matcher()`（`TestQueryMatchText` / `TestQueryMatchTextIDPrefixLengthBoundary` / `TestQueryMatcherDoesNotMutateQuery`）。gkill 本体と同じ規則（大小無視の部分一致、ID は 7 文字以上の語だけ前方一致（`find_word.MinIDPrefixMatchLength`。長さは rune 数で数え、かな 6 文字は 18 バイトでも対象外。[ADR-0114](../../../../../documents/adr/0114-word-filter-id-prefix-needs-seven-chars.md)）、除外語は ID を見ない、空語は無視）で、元の Query を書き換えないこと。プラグインが返す Kyou はこの判定だけで絞られる（本体は再判定しない）ので、境界を SDK 側でも固定する |
 
 ## sdk_test.go — stdio ループ
 

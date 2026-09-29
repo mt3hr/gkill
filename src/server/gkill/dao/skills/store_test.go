@@ -6,12 +6,16 @@ import (
 	"context"
 	"errors"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
 const testUser = "testuser"
@@ -190,24 +194,6 @@ func TestParseManifest(t *testing.T) {
 	}
 }
 
-func TestBuildManifestRoundTrip(t *testing.T) {
-	description := "週次ダッシュボード: \"引用\" と # 記号、改行なし"
-	content, err := BuildManifest("weekly", description, "# 手順\n1. 取る")
-	if err != nil {
-		t.Fatalf("BuildManifest: %v", err)
-	}
-	parsed, err := ParseManifest(content, "weekly")
-	if err != nil {
-		t.Fatalf("ParseManifest: %v\n%s", err, content)
-	}
-	if parsed.Description != description {
-		t.Errorf("description = %q, want %q", parsed.Description, description)
-	}
-	if !strings.HasSuffix(string(content), "# 手順\n1. 取る\n") {
-		t.Errorf("body not preserved: %q", content)
-	}
-}
-
 func TestInspectReaderKeepsUTF8AcrossChunks(t *testing.T) {
 	// 64KiB のチャンク境界で「あ」（3バイト）が割れる位置に置く
 	content := append(bytes.Repeat([]byte("a"), 64*1024-1), []byte("あいう")...)
@@ -247,6 +233,14 @@ func TestWriteFileCreateUpdateAndConflicts(t *testing.T) {
 	// スキルが無いときは SKILL.md 以外は書けない
 	if _, err := store.WriteFile(ctx, testUser, "weekly", "notes.md", []byte("x"), ""); !errors.Is(err, ErrSkillNotFound) {
 		t.Fatalf("write to missing skill: %v", err)
+	}
+	// スキルが無いときは SKILL.md でも revision 付き（上書きのつもり）なら作らない
+	// （ErrFileNotFound や ErrRevisionConflict ではなく、スキルそのものが無いと伝える）
+	if _, err := store.WriteFile(ctx, testUser, "weekly", ManifestFileName, manifest("weekly", "d"), "0000000000000000"); !errors.Is(err, ErrSkillNotFound) {
+		t.Fatalf("update manifest of missing skill: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(store.Root(), testUser, "weekly")); !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("rejected write created the skill directory: %v", err)
 	}
 	// name がディレクトリと違う SKILL.md は拒否
 	if _, err := store.WriteFile(ctx, testUser, "weekly", ManifestFileName, manifest("other", "d"), ""); !errors.Is(err, ErrInvalidFrontmatter) {
@@ -389,6 +383,11 @@ func TestReadFile(t *testing.T) {
 	if err != nil || !omitted.Omitted || omitted.Content != nil || omitted.Size != 100 || omitted.Revision != content.Revision {
 		t.Fatalf("omitted = %+v, %v", omitted, err)
 	}
+	// 上限ちょうどのサイズは省かない（「超える」だけが省く条件。>= にすると上限と同じ大きさのファイルが読めなくなる）
+	exact, err := store.ReadFile(testUser, "weekly", "references/big.md", 100)
+	if err != nil || exact.Omitted || len(exact.Content) != 100 || exact.Size != 100 || exact.Revision != content.Revision {
+		t.Fatalf("maxBytes == size = %+v, %v", exact, err)
+	}
 	if _, err := store.ReadFile(testUser, "weekly", "references/missing.md", 0); !errors.Is(err, ErrFileNotFound) {
 		t.Errorf("missing file: %v", err)
 	}
@@ -485,12 +484,140 @@ func TestUsersAreIsolated(t *testing.T) {
 	}
 }
 
+// 大文字小文字だけ違う利用者IDは、既にある別の利用者のディレクトリを読みも書きもしない。
+//
+// Windows のファイルシステムは大小を区別しないので、exactChildDir が列挙して名前を突き合わせる
+// （EqualFold の衝突検出）を外すと resolveUserDir が「無い」と判定し、その先の os.ReadDir / MkdirAll /
+// rename は別の大小のディレクトリ（= 他人のスキル）へそのまま届く。resolveSkillDir を通る操作（Get /
+// ReadFile / BuildZip / DeleteFile / DeleteSkill）は ErrSkillNotFound、List は空の一覧で止まるが、
+// 利用者ディレクトリの有無を見ない WriteFile と Replace は他人のスキルを書き換え、PlanReplace は
+// 他人のファイル名を計画に載せる。
+// どの操作も ErrInvalidName で止まり、元の利用者のスキルは 1 バイトも変わらないことを固定する。
 func TestUserDirCaseConflictIsRejected(t *testing.T) {
 	store := newTestStore(t)
-	mustWrite(t, store, "TestUser", "weekly", ManifestFileName, manifest("weekly", "d"), "")
-	// 大文字小文字だけ違う利用者は、別の利用者のディレクトリを読まない
-	if _, err := store.Get("testuser", "weekly"); err == nil {
-		t.Errorf("case-different user could read the skill")
+	ctx := context.Background()
+	const owner = "TestUser"
+	const impostor = "testuser"
+	ownerManifest := manifest("weekly", "owner's description")
+	ownerNotes := []byte("owner's notes\n")
+	manifestRevision := mustWrite(t, store, owner, "weekly", ManifestFileName, ownerManifest, "")
+	mustWrite(t, store, owner, "weekly", "references/notes.md", ownerNotes, "")
+
+	// 読み取り系はどれも ErrInvalidName（ErrSkillNotFound や空の一覧で済ませない）
+	if _, err := store.Get(impostor, "weekly"); !errors.Is(err, ErrInvalidName) {
+		t.Errorf("Get = %v, want ErrInvalidName", err)
+	}
+	if list, err := store.List(impostor); !errors.Is(err, ErrInvalidName) {
+		t.Errorf("List = %v, %v, want ErrInvalidName", list, err)
+	}
+	if _, err := store.ReadFile(impostor, "weekly", ManifestFileName, 0); !errors.Is(err, ErrInvalidName) {
+		t.Errorf("ReadFile = %v, want ErrInvalidName", err)
+	}
+	if _, _, err := store.BuildZip(impostor, "weekly"); !errors.Is(err, ErrInvalidName) {
+		t.Errorf("BuildZip = %v, want ErrInvalidName", err)
+	}
+
+	// 書き込み系。新規ファイルの追加、正しい revision を添えた SKILL.md の上書き、zip での置き換え、削除。
+	// 衝突検出が無いと、Windows では WriteFile と Replace が TestUser/weekly へそのまま届き（PlanReplace は
+	// その中身を計画に載せる）、DeleteFile と DeleteSkill は ErrSkillNotFound で止まる。止まる操作も ErrInvalidName に揃える。
+	if _, err := store.WriteFile(ctx, impostor, "weekly", "injected.md", []byte("injected"), ""); !errors.Is(err, ErrInvalidName) {
+		t.Errorf("WriteFile(new file) = %v, want ErrInvalidName", err)
+	}
+	if _, err := store.WriteFile(ctx, impostor, "weekly", ManifestFileName, manifest("weekly", "hijacked"), manifestRevision); !errors.Is(err, ErrInvalidName) {
+		t.Errorf("WriteFile(manifest with the owner's revision) = %v, want ErrInvalidName", err)
+	}
+	if _, err := store.WriteFile(ctx, impostor, "brand-new", ManifestFileName, manifest("brand-new", "d"), ""); !errors.Is(err, ErrInvalidName) {
+		t.Errorf("WriteFile(new skill) = %v, want ErrInvalidName", err)
+	}
+	replacement := makeZip(t,
+		zipItem{name: "weekly/" + ManifestFileName, content: string(manifest("weekly", "replaced"))},
+		zipItem{name: "weekly/references/notes.md", content: "replaced notes\n"},
+	)
+	if _, err := store.PlanReplace(impostor, replacement); !errors.Is(err, ErrInvalidName) {
+		t.Errorf("PlanReplace = %v, want ErrInvalidName", err)
+	}
+	if _, err := store.Replace(ctx, impostor, replacement); !errors.Is(err, ErrInvalidName) {
+		t.Errorf("Replace = %v, want ErrInvalidName", err)
+	}
+	if err := store.DeleteFile(ctx, impostor, "weekly", "references/notes.md", ""); !errors.Is(err, ErrInvalidName) {
+		t.Errorf("DeleteFile = %v, want ErrInvalidName", err)
+	}
+	if err := store.DeleteSkill(ctx, impostor, "weekly"); !errors.Is(err, ErrInvalidName) {
+		t.Errorf("DeleteSkill = %v, want ErrInvalidName", err)
+	}
+
+	// 元の利用者のスキルは中身もファイル構成も変わっていない
+	skill, err := store.Get(owner, "weekly")
+	if err != nil {
+		t.Fatalf("owner's Get: %v", err)
+	}
+	if !bytes.Equal(skill.Manifest, ownerManifest) || skill.ManifestRevision != manifestRevision {
+		t.Errorf("owner's manifest changed: %q", skill.Manifest)
+	}
+	paths := []string{}
+	for _, file := range skill.Files {
+		paths = append(paths, file.Path)
+	}
+	if !slices.Equal(paths, []string{ManifestFileName, "references/notes.md"}) {
+		t.Errorf("owner's files changed: %v", paths)
+	}
+	notes, err := store.ReadFile(owner, "weekly", "references/notes.md", 0)
+	if err != nil || !bytes.Equal(notes.Content, ownerNotes) {
+		t.Errorf("owner's attached file changed: %+v, %v", notes, err)
+	}
+	// 元の利用者の一覧に、なりすましが作ろうとしたスキルが混ざっていない
+	ownerList, err := store.List(owner)
+	if err != nil || len(ownerList) != 1 || ownerList[0].Name != "weekly" || ownerList[0].Description != "owner's description" {
+		t.Errorf("owner's list = %+v, %v", ownerList, err)
+	}
+	// 根の直下にも別名のディレクトリや作業用の残骸ができていない
+	entries, err := os.ReadDir(store.Root())
+	if err != nil {
+		t.Fatal(err)
+	}
+	names := []string{}
+	for _, entry := range entries {
+		names = append(names, entry.Name())
+	}
+	if !slices.Equal(names, []string{owner}) {
+		t.Errorf("root entries = %v, want only %q", names, owner)
+	}
+}
+
+// 一覧は、frontmatter の name がディレクトリ名と食い違うスキルを消さずに InvalidReason 付きで出す。
+// 手で置いた・別名でコピーしたスキルは Get でも同じ理由を返し、description は空になる。
+func TestListMarksManifestNameMismatchAsInvalid(t *testing.T) {
+	store := newTestStore(t)
+	mustWrite(t, store, testUser, "weekly", ManifestFileName, manifest("weekly", "d"), "")
+	// ストア経由では書けない（WriteFile は name を検査する）ので、ディレクトリを直接作る
+	copied := filepath.Join(store.Root(), testUser, "weekly-copy")
+	if err := os.MkdirAll(copied, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(copied, ManifestFileName), manifest("weekly", "copied"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	list, err := store.List(testUser)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 2 || list[0].Name != "weekly" || list[1].Name != "weekly-copy" {
+		t.Fatalf("list = %+v", list)
+	}
+	if list[0].InvalidReason != "" {
+		t.Errorf("weekly should be valid: %+v", list[0])
+	}
+	mismatch := list[1]
+	if !strings.Contains(mismatch.InvalidReason, "does not match") || mismatch.Description != "" || mismatch.FileCount != 1 {
+		t.Errorf("weekly-copy should carry the name mismatch: %+v", mismatch)
+	}
+	skill, err := store.Get(testUser, "weekly-copy")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if skill.InvalidReason != mismatch.InvalidReason || skill.Description != "" || skill.Manifest == nil {
+		t.Errorf("Get of the mismatched skill = %+v", skill)
 	}
 }
 
@@ -532,6 +659,37 @@ func TestParseUploadedZip(t *testing.T) {
 		}
 		if uploaded.files[1].path != "docs/a.md" {
 			t.Errorf("paths = %v", uploaded.files)
+		}
+	})
+	t.Run("two top-level folders are not stripped", func(t *testing.T) {
+		// 包みは「全項目が同じ1つのフォルダの下」のときだけ剥がす。トップに2つあれば剥がさず、
+		// ルートに SKILL.md が無いとして拒否する（片方の SKILL.md を勝手に選ばない）
+		for label, items := range map[string][]zipItem{
+			"manifest in one of them": {{name: "a/SKILL.md", content: string(good)}, {name: "b/README.md", content: "x"}},
+			"manifest in both":        {{name: "a/SKILL.md", content: string(good)}, {name: "b/SKILL.md", content: string(good)}},
+		} {
+			_, err := parseUploadedZip(makeZip(t, items...))
+			if !errors.Is(err, ErrInvalidZip) || !strings.Contains(DescribeError(err), "missing at the top level") {
+				t.Errorf("%s: err = %v, want ErrInvalidZip (SKILL.md missing at the top level)", label, err)
+			}
+		}
+	})
+	t.Run("entries starting with ./ are ignored as dot-prefixed (current behavior)", func(t *testing.T) {
+		// "./SKILL.md" は要素 "." がドット始まりとして無視される。"./" を剥がす仕様ではなく、
+		// 全項目がそうなら「the zip has no files」、一部なら残りだけで判定される。現状の挙動の固定
+		cases := []struct {
+			label  string
+			items  []zipItem
+			detail string
+		}{
+			{"all entries", []zipItem{{name: "./SKILL.md", content: string(good)}, {name: "./docs/a.md", content: "x"}}, "the zip has no files"},
+			{"manifest only", []zipItem{{name: "./SKILL.md", content: string(good)}, {name: "docs/a.md", content: "x"}}, "missing at the top level"},
+		}
+		for _, c := range cases {
+			_, err := parseUploadedZip(makeZip(t, c.items...))
+			if !errors.Is(err, ErrInvalidZip) || !strings.Contains(DescribeError(err), c.detail) {
+				t.Errorf("%s: err = %v, want ErrInvalidZip containing %q", c.label, err, c.detail)
+			}
 		}
 	})
 
@@ -701,5 +859,127 @@ func TestReplaceKeepsExistingSkillWhenSwapFails(t *testing.T) {
 	entries, _ := os.ReadDir(filepath.Join(store.Root(), testUser))
 	if len(entries) != 1 {
 		t.Errorf("leftovers after failed replace: %v", entries)
+	}
+}
+
+// makeTamperedZip は無圧縮の zip を作り、tamperName の項目の中身だけを同じ長さの別のバイト列へ
+// 差し替える（ローカルヘッダ・セントラルディレクトリの CRC とサイズは元のまま）。
+// zip としては開けるが、その項目を読み切ると archive/zip が CRC の食い違いを返す。
+// tamperName が空なら差し替えない（同じ作り方の zip が正常に通ることの対照用）。
+func makeTamperedZip(t *testing.T, tamperName string, items ...zipItem) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	writer := zip.NewWriter(&buf)
+	var original []byte
+	for _, item := range items {
+		w, err := writer.CreateHeader(&zip.FileHeader{Name: item.name, Method: zip.Store})
+		if err != nil {
+			t.Fatalf("CreateHeader(%s): %v", item.name, err)
+		}
+		if _, err := w.Write([]byte(item.content)); err != nil {
+			t.Fatalf("Write(%s): %v", item.name, err)
+		}
+		if item.name == tamperName {
+			original = []byte(item.content)
+		}
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	data := buf.Bytes()
+	if tamperName == "" {
+		return data
+	}
+	if len(original) == 0 {
+		t.Fatalf("no entry named %q with content to tamper", tamperName)
+	}
+	at := bytes.Index(data, original)
+	if at < 0 {
+		t.Fatalf("stored content of %q not found in the archive", tamperName)
+	}
+	for i := range original {
+		data[at+i] = original[i] ^ 0x55
+	}
+	return data
+}
+
+// 項目の中身がヘッダの CRC と食い違う zip は、SKILL.md（全文を読む経路）でも
+// 付属ファイル（revision のために流し読みする経路）でも ErrInvalidZip で拒否する。
+// archive/zip は開くときには気づかず読み切ったときに ErrChecksum を返すので、
+// 読み出しの戻り値を見落とすと壊れた中身がそのまま revision を持って取り込まれる。
+func TestParseUploadedZipRejectsEntryWithMismatchedCRC(t *testing.T) {
+	items := []zipItem{
+		{name: "SKILL.md", content: string(manifest("weekly", "d"))},
+		{name: "references/notes.md", content: "notes body that will be tampered with\n"},
+	}
+	if _, err := parseUploadedZip(makeTamperedZip(t, "", items...)); err != nil {
+		t.Fatalf("untampered stored zip should parse: %v", err)
+	}
+	for label, tamperName := range map[string]string{
+		"manifest (read in full)":  "SKILL.md",
+		"attached file (streamed)": "references/notes.md",
+	} {
+		_, err := parseUploadedZip(makeTamperedZip(t, tamperName, items...))
+		if !errors.Is(err, ErrInvalidZip) {
+			t.Errorf("%s: err = %v, want ErrInvalidZip", label, err)
+			continue
+		}
+		if detail := DescribeError(err); !strings.Contains(detail, "could not be read") || !strings.Contains(detail, tamperName) {
+			t.Errorf("%s: detail = %q, want the read failure and the path", label, detail)
+		}
+	}
+}
+
+// recordCapturingHandler は流れてきたレコードを控えるだけの slog.Handler。
+// 出力の整形（TextHandler は改行を含む値を自分で引用する）に頼らず、渡された値そのものを見る。
+type recordCapturingHandler struct {
+	records []slog.Record
+}
+
+func (h *recordCapturingHandler) Enabled(_ context.Context, _ slog.Level) bool { return true }
+func (h *recordCapturingHandler) Handle(_ context.Context, r slog.Record) error {
+	h.records = append(h.records, r.Clone())
+	return nil
+}
+func (h *recordCapturingHandler) WithAttrs(_ []slog.Attr) slog.Handler { return h }
+func (h *recordCapturingHandler) WithGroup(_ string) slog.Handler      { return h }
+
+// removeQuietly の後始末ログは、改行を含むパスでも1行に収まる値（%q で包んだもの）を渡す。
+// 素の値を渡すと、行単位で読む・集計するログの仕組みが改行で行を切り、後半が別の行として混ざる。
+func TestRemoveQuietlyQuotesPathInLog(t *testing.T) {
+	captured := &recordCapturingHandler{}
+	original := slog.Default()
+	slog.SetDefault(slog.New(captured))
+	t.Cleanup(func() { slog.SetDefault(original) })
+
+	// 末尾の要素が "." のパスは os.RemoveAll がファイルシステムに触らずに EINVAL を返す
+	// （rmdir(".") と同じ扱い。Windows / Unix 共通）ので、存在しないパスでも確実に「削除に失敗した」経路へ入る
+	path := "first line\nsecond line" + string(filepath.Separator) + "."
+	removeQuietly(context.Background(), path)
+
+	var record *slog.Record
+	for i := range captured.records {
+		if captured.records[i].Message == "error at remove leftover skill path" {
+			record = &captured.records[i]
+		}
+	}
+	if record == nil {
+		t.Fatalf("removeQuietly did not log the failure: %d records", len(captured.records))
+	}
+	if record.Level != gkill_log.Warn {
+		t.Errorf("level = %v, want Warn", record.Level)
+	}
+	values := map[string]string{}
+	record.Attrs(func(attr slog.Attr) bool {
+		values[attr.Key] = attr.Value.String()
+		return true
+	})
+	if values["path"] != strconv.Quote(path) {
+		t.Errorf("path attr = %q, want %q", values["path"], strconv.Quote(path))
+	}
+	for _, key := range []string{"path", "error"} {
+		if value, ok := values[key]; !ok || strings.Contains(value, "\n") {
+			t.Errorf("%s attr = %q (present=%v), must be one line", key, value, ok)
+		}
 	}
 }

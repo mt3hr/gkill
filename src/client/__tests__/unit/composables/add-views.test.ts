@@ -34,6 +34,7 @@ import { useAddURLogView } from '@/classes/use-add-ur-log-view'
 import { useAddLantanaView } from '@/classes/use-add-lantana-view'
 import { useAddTimeIsView } from '@/classes/use-add-time-is-view'
 import { useAddKCView } from '@/classes/use-add-kc-view'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 function createBaseProps() {
   return {
@@ -243,12 +244,41 @@ describe('useAddNlogView', () => {
     expect(view.can_delete_row.value).toBe(false)
   })
 
-  test('save() emits received_errors when title is blank', async () => {
+  // 検査の順は 金額 → 店名 → 品名。店名と金額を入れて品名だけ空にしないと、店名のエラーで通ってしまい
+  // 品名の検査が消えても気づけない
+  test('店名と金額を入れて品名だけ空なら nlog_title_is_blank で止め、add_nlog を呼ばない', async () => {
     const view = useAddNlogView({ props, emits })
+    view.nlog_shop_value.value = 'テスト店'
+    view.nlog_rows.value[0].amount = 100
     view.nlog_rows.value[0].title = ''
     await view.save()
     const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
-    expect(errorCalls.length).toBeGreaterThan(0)
+    expect(errorCalls.length).toBe(1)
+    const errors = errorCalls[0][1] as Array<{ error_code: string }>
+    expect(errors.map(error => error.error_code)).toEqual([GkillErrorCodes.nlog_title_is_blank])
+    expect(props.gkill_api.add_nlog).not.toHaveBeenCalled()
+  })
+
+  // v-text-field（type="number"）は空欄を '' で返す。実装は防御として null も空として扱うので、null の行はその防御を試す。
+  // どちらも Number() は 0 にするので、空の判定が消えると金額 0 の支出がエラーも出ずに保存される
+  test.each([
+    ['空文字', ''],
+    ['null', null],
+  ])('金額が %s の行があれば nlog_amount_is_blank で止め、add_nlog を1回も呼ばない', async (_label, blank_amount) => {
+    const view = useAddNlogView({ props, emits })
+    view.nlog_shop_value.value = 'テスト店'
+    view.nlog_rows.value[0].title = 'おにぎり'
+    view.nlog_rows.value[0].amount = 150
+    view.add_row()
+    view.nlog_rows.value[1].title = 'お茶'
+    view.nlog_rows.value[1].amount = blank_amount as never
+    await view.save()
+    const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
+    expect(errorCalls.length).toBe(1)
+    const errors = errorCalls[0][1] as Array<{ error_code: string }>
+    expect(errors.map(error => error.error_code)).toEqual([GkillErrorCodes.nlog_amount_is_blank])
+    expect(props.gkill_api.add_nlog).not.toHaveBeenCalled()
+    expect(props.gkill_api.commit_tx).not.toHaveBeenCalled()
   })
 
   test('save() calls add_nlog API on valid input', async () => {
@@ -282,6 +312,18 @@ describe('useAddNlogView', () => {
     view.add_row()
     view.reset()
     expect(view.nlog_rows.value.length).toBe(1)
+  })
+
+  // 負の添字を通すと splice(-1, 1) が末尾の行を消す
+  test('delete_row(-1) は何も消さない', () => {
+    const view = useAddNlogView({ props, emits })
+    view.add_row()
+    view.add_row()
+    view.nlog_rows.value[0].title = '1行目'
+    view.nlog_rows.value[1].title = '2行目'
+    view.nlog_rows.value[2].title = '3行目'
+    view.delete_row(-1)
+    expect(view.nlog_rows.value.map(row => row.title)).toEqual(['1行目', '2行目', '3行目'])
   })
 
   // メモ帳の支出と同じく、店名と関連時刻は全行で共有し、1行が1件になる。
@@ -386,6 +428,55 @@ describe('useAddNlogView', () => {
     const events = emits.mock.calls.map((c: unknown[]) => c[0])
     expect(events).toContain('received_errors')
     expect(events).not.toContain('registered_kyou')
+  })
+
+  // commit 後の引き直しは行ごと。引けた行は局所挿入へ、引けなかった行は黙って落とし、
+  // 一覧全体の引き直し（requested_reload_list）は1件も引けなかったときだけの受け皿
+  test('一部の行だけ Kyou が引けなくても requested_reload_list は出さず、引けた行だけ registered_kyou を出す', async () => {
+    use_distinct_ids()
+    props.gkill_api.get_kyou.mockImplementation((req: { id: string }) => {
+      // 2行目の id だけ引けない（add_nlog に渡した id から取る。連番の何番かには依らない）
+      const second_id = (props.gkill_api.add_nlog.mock.calls[1][0] as { nlog: { id: string } }).nlog.id
+      if (req.id === second_id) {
+        return Promise.resolve({ kyou_histories: [], messages: [], errors: [{ error_code: 'ERR_TEST', error_message: 'ng' }] })
+      }
+      return Promise.resolve({ kyou_histories: [{ id: req.id }], messages: [], errors: [] })
+    })
+    const view = useAddNlogView({ props, emits })
+    view.nlog_shop_value.value = 'コンビニ'
+    view.nlog_rows.value[0].title = 'おにぎり'
+    view.nlog_rows.value[0].amount = 150
+    view.add_row()
+    view.nlog_rows.value[1].title = 'お茶'
+    view.nlog_rows.value[1].amount = 120
+
+    await view.save()
+
+    expect(props.gkill_api.commit_tx).toHaveBeenCalledTimes(1)
+    const first_id = (props.gkill_api.add_nlog.mock.calls[0][0] as { nlog: { id: string } }).nlog.id
+    const registered = emits.mock.calls.filter((c: unknown[]) => c[0] === 'registered_kyou').map((c: unknown[]) => (c[1] as { id: string }).id)
+    expect(registered).toEqual([first_id])
+    const events = emits.mock.calls.map((c: unknown[]) => c[0])
+    expect(events).not.toContain('requested_reload_list')
+    expect(events).toContain('requested_close_dialog')
+  })
+
+  test('全行の Kyou が引けなければ registered_kyou を出さず requested_reload_list に落とす', async () => {
+    // mock-api の get_kyou は既定で kyou_histories が空（= 引けない）
+    const view = useAddNlogView({ props, emits })
+    view.nlog_shop_value.value = 'コンビニ'
+    view.nlog_rows.value[0].title = 'おにぎり'
+    view.nlog_rows.value[0].amount = 150
+    view.add_row()
+    view.nlog_rows.value[1].title = 'お茶'
+    view.nlog_rows.value[1].amount = 120
+
+    await view.save()
+
+    expect(props.gkill_api.commit_tx).toHaveBeenCalledTimes(1)
+    const events = emits.mock.calls.map((c: unknown[]) => c[0])
+    expect(events).not.toContain('registered_kyou')
+    expect(events.filter(event => event === 'requested_reload_list').length).toBe(1)
   })
 
   test('returns expected interface', () => {

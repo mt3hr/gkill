@@ -376,6 +376,25 @@ export async function clickContextMenuItem(page: Page, label: RegExp | string): 
 }
 
 /**
+ * 行を右クリックし、指定の項目がメニューに出るまで右クリックをやり直してから押す。
+ *
+ * 一覧の行は、リポジトリ名などの見出しを種類別のデータ（typed_rekyou など）の読み込み前から描画するが、
+ * 右クリックを受けてメニューを開くのは種類別の子ビュー（re-kyou-view.vue など）で、
+ * 子ビューは読み込みが終わってから描画される（kyou-view.vue の `v-if="cloned_kyou.typed_*"`）。
+ * 読み込み中の右クリックはエラーも出さずに捨てられ、メニューは開かない
+ * （2026-09-28 のフルランで、検索で絞った直後のリポストの行でそうなって落ちた）。
+ * 読み込み中の表示（.kyou_loading）は遅れて出るので、それが消えるのを待っても確実ではない。
+ */
+export async function clickContextMenuItemOn(page: Page, target: Locator, label: RegExp | string): Promise<void> {
+  const menuItem = page.locator(CONTEXT_MENU_ITEM).filter({ hasText: label }).first()
+  await expect(async () => {
+    await target.click({ button: 'right', force: true })
+    await expect(menuItem).toBeVisible({ timeout: 3000 })
+  }, 'コンテキストメニューが開かない').toPass({ timeout: 30000 })
+  await menuItem.click()
+}
+
+/**
  * Click a button in a dialog (e.g., save or delete confirm).
  *
  * クリックしただけで次へ進むと、保存リクエストが飛ぶ前に画面遷移して

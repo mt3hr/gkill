@@ -170,6 +170,79 @@ class MainActivity : AppCompatActivity() {
                 else -> false
             }
 
+        /**
+         * 証明書のエラーが出た [url] を、検証せずに通してよいか。
+         *
+         * ServerConfig で TLS を有効にすると、同梱サーバは自己署名の証明書で https を返す。
+         * ループバックの同梱サーバに限って通す。ループバックへの http はサーバを認証せずに
+         * 受け入れているので、ここで証明書を検証しなくても守りは弱くならない。
+         * それ以外（外部のサイト）と、ホストを取り出せない URL は止める。
+         *
+         * ホストの判定に要るのは scheme://authority だけなので、そこだけ切り出してから解析する
+         * （パスやクエリに URI が受け付けない文字が混ざっていても、ホストで判定できるようにするため）。
+         * companion に置いているのは android.* に触れずユニットテストから検証するため
+         * （WebViewClient の onReceivedSslError はこれを呼ぶだけ）。
+         */
+        fun shouldProceedOnSslError(url: String?): Boolean {
+            if (url.isNullOrEmpty()) return false
+            val origin = Regex("""^[^:/?#]+://[^/?#]*""").find(url)?.value ?: return false
+            val host = try {
+                URI(origin).host
+            } catch (_: Exception) {
+                return false
+            }
+            return isLoopbackHost(host)
+        }
+
+        /** `ps -A` の1行が gkill_server のプロセスか（同梱の実体は libgkill_server.so なので名前で拾える）。 */
+        fun isGkillServerProcessLine(line: String): Boolean = line.contains("gkill_server")
+
+        /**
+         * `ps -A` の1行から PID を取り出す。列は空白区切りで、1列目が USER・2列目が PID。
+         * 列が足りなければ null。
+         */
+        fun parsePsLinePid(line: String): String? {
+            val parts = line.trim().split(Regex("\\s+"))
+            return if (parts.size >= 2) parts[1] else null
+        }
+
+        /** [decideStorageGate] の結果。[startServerWhenStorageAccessible] がこれに従って動く。 */
+        enum class StorageGateDecision {
+            /** 起動を始めている。何もしない。 */
+            ALREADY_STARTED,
+
+            /** 共有ストレージへ書ける。サーバを起動する。 */
+            START_SERVER,
+
+            /** 権限が無く、要求画面はまだ自動で出していない。権限待ちの画面にして要求画面を出す。 */
+            REQUEST_ACCESS,
+
+            /** 権限が無く、要求画面は自動で出した後。権限待ちの画面にするだけで、要求画面は出さない。 */
+            WAIT_FOR_ACCESS
+        }
+
+        /**
+         * 共有ストレージの権限を見て、サーバを起動するか・権限を求めるかを決める。
+         *
+         * 権限なしで起動すると gkill_server がデータ置き場を作れずに落ちる。
+         * 権限の要求画面は最初の1回だけ自動で出し、以後は画面のボタンから出し直す
+         * （[accessRequested] が true なら [StorageGateDecision.WAIT_FOR_ACCESS]）。
+         * onResume のたびに出すと、設定画面から許可せずに戻るたびに設定画面へ送り返され、
+         * アプリから抜けられなくなる。
+         * companion に置いているのは、Activity の状態を持たずにこの判断をユニットテストから検証するため。
+         */
+        fun decideStorageGate(
+            serverStartRequested: Boolean,
+            hasStorageAccess: Boolean,
+            accessRequested: Boolean
+        ): StorageGateDecision =
+            when {
+                serverStartRequested -> StorageGateDecision.ALREADY_STARTED
+                hasStorageAccess -> StorageGateDecision.START_SERVER
+                !accessRequested -> StorageGateDecision.REQUEST_ACCESS
+                else -> StorageGateDecision.WAIT_FOR_ACCESS
+            }
+
         /** [copyAppPrivateHomeIfNeeded] の結果。 */
         enum class HomeMigrationResult {
             /** アプリ専用領域に中身が無い。何もしていない。 */
@@ -491,11 +564,11 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
-                // ServerConfig で TLS を有効にすると、同梱サーバは自己署名の証明書で https を返す。
-                // ループバックの同梱サーバに限って通す。ループバックへの http はサーバを認証せずに
-                // 受け入れているので、ここで証明書を検証しなくても守りは弱くならない。
-                // それ以外（外部のサイト）は既定どおり止める。
-                if (isLoopbackHost(Uri.parse(error.url).host)) {
+                // 通すのはループバックの同梱サーバの自己署名証明書だけ。判定は companion の
+                // shouldProceedOnSslError に切り出してある（テストから検証するため）。
+                // この本文の形（判定が true なら proceed、それ以外は cancel）も MainActivityUnitTest が
+                // 文字列で検査している。無条件の proceed() にするとテストが落ちる。
+                if (shouldProceedOnSslError(error.url)) {
                     handler.proceed()
                 } else {
                     handler.cancel()
@@ -534,23 +607,32 @@ class MainActivity : AppCompatActivity() {
     /**
      * [GKILL_HOME]（共有ストレージ）へ書ける権限があればサーバを起動する。無ければ起動しない。
      *
-     * 権限なしで起動すると gkill_server がデータ置き場を作れずに落ちる。
-     * 権限の要求画面は最初の1回だけ自動で出し、以後は画面のボタンから出し直す。
-     * onResume のたびに出すと、設定画面から許可せずに戻るたびに設定画面へ送り返され、
-     * アプリから抜けられなくなる。
+     * 判断は companion の [decideStorageGate] に切り出してあり（理由もそちら）、ここは決まった
+     * 動きに沿って Activity の状態と画面を変えるだけ。起動済みでも [hasSharedStorageAccess] を毎回
+     * 呼ぶが、副作用の無い照会なので構わない。
+     *
+     * 要求したこと・起動したことをフラグに残す代入は、判断表のテストからは見えないので
+     * MainActivityUnitTest が本文の文字列で検査している（消すと onResume のたびに設定画面へ送り返す）。
      */
     private fun startServerWhenStorageAccessible() {
-        if (serverStartRequested) return
-        if (hasSharedStorageAccess()) {
-            serverStartRequested = true
-            showStorageAccessMissing(false)
-            startServerAndOpen()
-            return
-        }
-        showStorageAccessMissing(true)
-        if (!storageAccessRequested) {
-            storageAccessRequested = true
-            requestSharedStorageAccess()
+        val decision = decideStorageGate(
+            serverStartRequested = serverStartRequested,
+            hasStorageAccess = hasSharedStorageAccess(),
+            accessRequested = storageAccessRequested
+        )
+        when (decision) {
+            StorageGateDecision.ALREADY_STARTED -> Unit
+            StorageGateDecision.START_SERVER -> {
+                serverStartRequested = true
+                showStorageAccessMissing(false)
+                startServerAndOpen()
+            }
+            StorageGateDecision.WAIT_FOR_ACCESS -> showStorageAccessMissing(true)
+            StorageGateDecision.REQUEST_ACCESS -> {
+                showStorageAccessMissing(true)
+                storageAccessRequested = true
+                requestSharedStorageAccess()
+            }
         }
     }
 
@@ -673,10 +755,10 @@ class MainActivity : AppCompatActivity() {
             // PATHを差し替えられても別バイナリが動かないよう絶対パスで叩く
             val ps = Runtime.getRuntime().exec(arrayOf("/system/bin/ps", "-A"))
             ps.inputStream.bufferedReader().useLines { lines ->
-                lines.filter { it.contains("gkill_server") }.forEach { line ->
-                    val parts = line.trim().split(Regex("\\s+"))
-                    if (parts.size >= 2) {
-                        val pid = parts[1]
+                // 行の判定と PID の取り出しは companion に切り出してある（テストから検証するため）。
+                // ここで手書きの条件に替えないこと（このアプリ自身を kill -9 しうる。テストが文字列で検査している）
+                lines.filter { isGkillServerProcessLine(it) }.forEach { line ->
+                    parsePsLinePid(line)?.let { pid ->
                         Runtime.getRuntime().exec(arrayOf("/system/bin/kill", "-9", pid)).waitFor()
                         Log.d("gkill", "Killed gkill_server pid=$pid")
                     }

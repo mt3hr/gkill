@@ -5,7 +5,7 @@ import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToMi,
   makeUniqueLabel, confirmDelete, clickDialogButton,
-  clickContextMenuItem, waitForKyouByText, waitForAttachedTag, waitForAttachedText, openKyouDetailPane, waitForKyouRowByRepName, searchByKeyword,
+  clickContextMenuItem, clickContextMenuItemOn, waitForKyouByText, waitForAttachedTag, waitForAttachedText, openKyouDetailPane, waitForKyouRowByRepName, searchByKeyword,
   expectPageToContainText, expectPageNotToContainText,
   MENU, SAVE_BUTTON,
 } from './crud-helpers'
@@ -168,9 +168,9 @@ test.describe('GUI Delete Flows', () => {
 
     // リポストだけを削除する
     // 検索でこの本文だけに絞ってあるので、ReKyou の行はこの1件だけ
+    // 行はリポストの中身を読み終える前から見えるので、メニューが出るまで右クリックをやり直す
     const rekyouRow = await waitForKyouRowByRepName(page, 'ReKyou')
-    await rekyouRow.click({ button: 'right', force: true })
-    await clickContextMenuItem(page, MENU.delete)
+    await clickContextMenuItemOn(page, rekyouRow, MENU.delete)
     await confirmDelete(page)
 
     // 元の記録（Kmemo）だけが残る

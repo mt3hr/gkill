@@ -450,7 +450,7 @@ KFTL 送信にはメッセージ1件ごとに冪等キー（UUID）が付く。
 <!-- BOUNDARY-TABLE:contracts:BEGIN -->
 | 字面 | 契約 | 置き場所 | 守るもの |
 |---|---|---|---|
-| `Access your record space at :` | Android が WebView で開く URL を拾う起動行 | `gkill_server_api/close.go` `mt3hr/gkill/MainActivity.kt` | MainActivityUnitTest.kt（Kotlin 側だけ） |
+| `Access your record space at :` | Android が WebView で開く URL を拾う起動行 | `gkill_server_api/close.go` `mt3hr/gkill/MainActivity.kt` | MainActivityUnitTest.kt（Kotlin 側）・print_started_message_test.go（Go 側） |
 | `ERR000002` `ERR000013` `ERR000238` `ERR000373` | 認証切れのエラーコード（再ログインの合図） | `message/error_codes.go` `api/gkill-api.ts` `mcp/gkill_client.go` | — |
 | `gkill_session_id` | `/files/` の認証に使う Cookie 名 | `gkill_server_api/handle_file_serve.go` `api/gkill-api.ts` `client/serviceWorker.ts` `mcp/gkill_client.go` | — |
 | `password_sha256` | ログイン要求のキー（パスワードの SHA-256、64 桁 hex） | `req_res/login_request.go` `req_res/login-request.ts` `companion/GkillApiClient.kt` `mcp/gkill_client.go` | — |

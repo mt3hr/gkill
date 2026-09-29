@@ -2,7 +2,7 @@
 
 ## 概要
 
-Go バックエンドのテスト。1405テスト関数、211テストファイル、33パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
+Go バックエンドのテスト。1414テスト関数、214テストファイル、33パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
 
 ## テストフレームワーク
 
@@ -13,7 +13,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 ```
 src/server/gkill/
 ├── api/                     # API ハンドラ層
-│   ├── gkill_server_api/         # 統合テスト（全エンドポイント。46ファイル）
+│   ├── gkill_server_api/         # 統合テスト（全エンドポイント。48ファイル）
 │   ├── find_filter_test.go       # 検索フィルタ
 │   ├── gkill_sample_data_test.go # 配布サンプルデータの現行コード互換性
 │   ├── find/                     # クエリビルダー
@@ -23,9 +23,9 @@ src/server/gkill/
 │   ├── req_res/                  # ワイヤ契約（JSONタグ名 / omitempty）
 │   └── safefetch/                # SSRF 対策の共有フェッチ
 ├── usecase/                 # ユースケース層 (3ファイル。write-through 反映・INSERT列ずれ・規約のソース走査)
-├── mcp/                     # MCP サーバ（gkill_server mcp。41ファイル / 1144 の t.Run。別枠で数える → mcp/ABOUT_TEST.md）
+├── mcp/                     # MCP サーバ（gkill_server mcp。43ファイル / 1170 の t.Run。別枠で数える → mcp/ABOUT_TEST.md）
 ├── plugin/                  # プラグイン作者向け SDK
-│   └── sdk/                      # Run() の stdio ループ + 単独モード + EnsureConfig + ZIP走査 + キャッシュDBパス + ワード判定 + ログ (7ファイル / 64テスト)
+│   └── sdk/                      # Run() の stdio ループ + 単独モード + EnsureConfig + ZIP走査 + キャッシュDBパス + ワード判定 + ログ (7ファイル / 65テスト)
 ├── dao/                     # データアクセス層
 │   ├── gkill_dao_manager_test.go # DAO マネージャ
 │   ├── account/                  # アカウント管理
@@ -35,10 +35,11 @@ src/server/gkill/
 │   ├── share_kyou_info/          # 共有設定
 │   ├── gkill_notification/       # 通知ターゲット
 │   ├── hide_files/               # ファイル非表示
+│   ├── skills/                   # スキルのファイルストア（rep ではない素の置き場。ADR-0634）
 │   ├── sqlite3impl/              # SQLite3 ユーティリティ
 │   └── reps/                     # リポジトリ実装 (67ファイル)
 ├── dvnf/                    # DVNF ファイル管理 (3ファイル)
-└── main/                    # CLI エントリポイント (15ファイル)
+└── main/                    # CLI エントリポイント (17ファイル)
     ├── common/                   # 共有ロジック・オプション・ログ・スレッド
     ├── gkill/                    # デスクトップアプリ
     ├── gkill_server/             # HTTP サーバ
@@ -48,7 +49,7 @@ src/server/gkill/
 
 | カテゴリ | テストファイル数 | 内容 |
 |---------|----------------|------|
-| API 統合 | 47 | 全データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント、SSRF・レート制限、デバイス名キャッシュ、プラグイン本文HTMLキャッシュ、rep名絞り込み（キャッシュON/OFF・tx確定後）、タグ絞り込み、時間帯フィルタ、MCP用取得（cursor 頁の Mi 再検証が失敗しても頁を落とさず warnings を足すこと）、壊れたrepのWeb/MCP警告、認証時rep取得失敗のHTTP 500とErrorログ、無認証経路のボディ上限・読み取り期限（wrapNoAuthCapped）、ルート表（apiRoutes）とハンドラ・doc コメント・認証区分の突き合わせ、URLog登録の取得抑止フラグ配線のソース走査、`if err != nil` の中の `GkillError` に `Cause` が付いていることのソース走査（usecase も対象。reason とログの cause の源）、失敗応答の1行に `reasons` / `causes` が載り中断だけの 5xx は Debug になること |
+| API 統合 | 48 | 全データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント、SSRF・レート制限、デバイス名キャッシュ、プラグイン本文HTMLキャッシュ、rep名絞り込み（キャッシュON/OFF・tx確定後）、タグ絞り込み、時間帯フィルタ、MCP用取得（cursor 頁の Mi 再検証が失敗しても頁を落とさず warnings を足すこと）、壊れたrepのWeb/MCP警告、認証時rep取得失敗のHTTP 500とErrorログ、無認証経路のボディ上限・読み取り期限（wrapNoAuthCapped）、ルート表（apiRoutes）とハンドラ・doc コメント・認証区分の突き合わせ、URLog登録の取得抑止フラグ配線のソース走査、`if err != nil` の中の `GkillError` に `Cause` が付いていることのソース走査（usecase も対象。reason とログの cause の源）、失敗応答の1行に `reasons` / `causes` が載り中断だけの 5xx は Debug になること |
 | 検索フィルタ・クエリ | 17 | `api/` 直下の検索フィルタ・タグ絞り込み・対象リポジトリ選択キャッシュ・rep名での結果絞り込み・並び替え・rep種別語彙の網羅 + `api/find/` のクエリビルダー・時間帯の秒解釈・検索語の正規化 + `api/find_word/` のワード判定（SQL とプラグイン SDK と揃える規則） |
 | 埋め込み配信 | 1 | `embed.go` の `init()` が登録する `.webmanifest` のMIME型（登録を落とすと `http.FileServer` が中身を見て `text/plain` で配ってしまい、PWAのmanifestが仕様どおりのMIMEでなくなる。ビルドもvetも通るのでここでしか気付けない） |
 | サンプルデータ | 1 | 配布サンプル `resources/gkill_sample_data` の現行コード互換性（アカウント認証・rep定義14件のパス実在と種別・全件検索で主要repから記録が返る・秘密鍵が空で配布されている） |
@@ -62,13 +63,14 @@ src/server/gkill/
 | アカウント | 5 | アカウント CRUD、セッション、アップロード履歴 |
 | 設定 | 3 | サーバ設定、アプリ設定、リポジトリ定義 |
 | 共有・通知 | 3 | 共有情報 CRUD、通知ターゲット |
+| スキル | 1 | 利用者が AI 向けに書くスキルのファイルストア `skills.Store`（rep ではない素の置き場。ADR-0634）。名前の検証、パスの正規化、`joinWithin` の根の外への脱出防止、zip の取り込みと dry_run の計画、削除 |
 | ユーティリティ | 10 | SQLite3 ユーティリティ、ファイル非表示 |
 | リポジトリ | 69 | `reps/` 直下67（13データ型の SQLite3 実装 + キャッシュ + 一時 + プラグイン + プラグイン診断 + プラグインの GitCommitLog 型別アダプタ + デッドロック/ネスト並列回帰 + gitキャッシュUNIQUE + gitキャッシュが構築済みなら外れた ID で下層へ落ちないこと + GPS集約dedup + 最新版アドレスのrep名走査 + URLog取得抑止フラグ + get_kyou の版履歴がキャッシュrepを回ること + サムネイルの vips 経路・EXIF 回転・外部ツール引数・ベンチ）+ `reps/cache/`・`reps/rep_cache_updater/` の2 |
 | DVNF | 3 | ファイル管理、CLI コマンドの引数解析、copy/move 共用 `copyFile` の実ファイル操作（内容一致・copyLastMod の mtime 保存） |
-| CLI/Main | 15 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ（子プロセスへ継ぐ環境変数と panic しない `InitNamedWith`、ログレベルの規約のソース走査を含む）、スレッド、エントリポイント（登録するサブコマンドの集合。`mcp` / `idf` はサーバ版だけ）、パスワード管理、add_tag バッチ（ルール JSON の検証・HTTP投稿と応答判定を含む）、generate_plugin_cache（偽プラグインをテストバイナリ自身で起動し、結果行の分類・stdin nil・利用者確認の順序・引数不足で usage だけを返すことを固定）、Android のタイムゾーン適用（展開済み絶対パスを渡すこと・packed tzdata の候補順・SQLite と Go の壁時計が食い違ったときの Error 1行）、MCP サブコマンドの配線（OAuth 状態ファイルの置き場所を含む） |
-| プラグイン SDK | 7 | `Run()` の stdio ループ（22本）+ `--gkill-build-cache` の単独モードと同梱プラグインの配線走査（5本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本）+ ワード判定 `Query.MatchText`（2本）+ gkill_log へのログ（8本。`LogDebug` がファイルだけへ出ること・`closeLogging` が何度呼んでも安全なことを含む） |
+| CLI/Main | 17 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ（子プロセスへ継ぐ環境変数と panic しない `InitNamedWith`、ログレベルの規約のソース走査を含む）、スレッド、エントリポイント（登録するサブコマンドの集合。`mcp` / `idf` はサーバ版だけ）、パスワード管理、add_tag バッチ（ルール JSON の検証・HTTP投稿と応答判定を含む）、generate_plugin_cache（偽プラグインをテストバイナリ自身で起動し、結果行の分類・stdin nil・利用者確認の順序・引数不足で usage だけを返すことを固定）、Android のタイムゾーン適用（展開済み絶対パスを渡すこと・packed tzdata の候補順・SQLite と Go の壁時計が食い違ったときの Error 1行）、MCP サブコマンドの配線（OAuth 状態ファイルの置き場所を含む） |
+| プラグイン SDK | 7 | `Run()` の stdio ループ（22本）+ `--gkill-build-cache` の単独モードと同梱プラグインの配線走査（5本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本）+ ワード判定 `Query.MatchText`（3本）+ gkill_log へのログ（8本。`LogDebug` がファイルだけへ出ること・`closeLogging` が何度呼んでも安全なことを含む） |
 
-**合計 211 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
+**合計 214 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
 ずれたら `checkCounts` が落とす）。
 
 ## 規約のソース走査（`usecase/source_conventions_scan_test.go`）
@@ -87,6 +89,7 @@ src/server/gkill/
 | `TestCommitTxSetsRealRepNameBeforeWriteThrough` | `commit_tx` の13型すべてが、キャッシュへ書き戻す直前に実rep名を入れる（一時リポジトリの合成名が入ると、確定した記録が rep絞り込みから漏れる） |
 | `TestCommitTxRestoresIDFTargetRepNameBeforeRealWrite` | IDF だけは `TargetRepName` を**実DBへ書く前に**戻す（合成名が入るとファイルの所在が実データごと壊れ、`UpdateCache` でも直らない） |
 | `TestWriteThroughSetsWriteRepName` | write-through の13型すべてが、キャッシュへ INSERT する直前に書き込み先repの実名を入れる（IDFKyou はリクエストが書き込み先を選ぶため除外。漏れた型は追加直後だけ rep絞り込みから消える） |
+| `TestUsecaseAddUpdateGuardsWriteRepMissing` | `UsecaseContext` の `Add*` / `Update*` が本体で `writeRepMissingError(` を呼ぶ（書き込み先 rep が nil のまま `AddXxxInfo` を呼ぶと nil ポインタ参照で panic し、利用者には「内部エラー」しか出ない。新しい種別を足すときに忘れてもコンパイルもハンドラ経由のテストも通る） |
 
 ## 実行方法
 

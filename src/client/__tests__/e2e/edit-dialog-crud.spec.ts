@@ -180,6 +180,9 @@ test.describe('GUI Edit Dialog Flows', () => {
     // 記録を作ってから、コンテキストメニューでテキストを付ける。
     await submitKftlText(page, recordLabel)
     await navigateToRykv(page)
+    // 一覧は仮想スクロールなので、並列に走る他のテストの記録に押し出されると
+    // 対象の記録が描画範囲から外れる（2026-09-28 のフルランで2回とも落ちた）。本文で絞ってから見る
+    await searchByKeyword(page, recordLabel)
 
     const record = await waitForKyouByText(page, recordLabel)
     await record.click({ button: 'right', force: true })
@@ -193,6 +196,7 @@ test.describe('GUI Edit Dialog Flows', () => {
     await clickDialogButton(page, SAVE_BUTTON)
 
     await navigateToRykv(page)
+    await searchByKeyword(page, recordLabel)
     let pane = await openKyouDetailPane(page, await waitForKyouByText(page, recordLabel))
 
     const textElement = await waitForAttachedText(pane, originalText)
@@ -201,6 +205,7 @@ test.describe('GUI Edit Dialog Flows', () => {
     await clickDialogButton(page, SAVE_BUTTON)
 
     await navigateToRykv(page)
+    await searchByKeyword(page, recordLabel)
     pane = await openKyouDetailPane(page, await waitForKyouByText(page, recordLabel))
     await waitForAttachedText(pane, editedText)
     await expect(pane.locator('.text_content').filter({ hasText: originalText }), '編集前のテキストが残っている')

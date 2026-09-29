@@ -55,6 +55,13 @@ Go `testing` パッケージ
 | `find/period_of_time_test.go` | 時間帯フィルタの秒の二重解釈の境界（0..86399 は秒オブデイ、86400以上は絶対epoch秒としてローカル時分秒へ変換） |
 | `gpslogs/gpslogs_test.go` | GPS ログファイル解析 |
 | `message/message_test.go` | GkillMessage / GkillError フォーマット |
+| `message/gkill_error_test.go` | `EnsureNotEmpty`（失敗したのに GkillError が1つも無い応答を潰す。内部 error だけで返すと HTTP 200 + 0件になり「成功・該当0件」と見分けが付かない）と、ワイヤの形: 成功時の `errors` / `messages` が `null` でなく `[]`、`error_kind` / `reason` の付与（分類できないときは `reason` を省く）、`Cause` の端末固有情報が `MarshalJSON` で伏せられること、`warning` レベルが残ること |
+| `message/error_kind_test.go` | エラーコード→`error_kind`（クライアントがヒント文を引く鍵）。全コードに kind が決まり語彙が `errorKinds` に閉じていること、上書き表のコードが実在すること、既知の割り当てと分布 |
+| `message/error_reason_test.go` | Go の error→`reason` の分類（`ReasonOf`）。modernc.org/sqlite が実際に返す CANTOPEN / NOTADB / READONLY / BUSY で確認、分類できないときのエラーコードからの既定、語彙 `reasonTokens` |
+| `message/http_status_test.go` | エラーコード→HTTP ステータスの対応表。全コードが分類されていること（漏れると `HTTPStatusOf` が 0 を返して 500 扱いになるだけで、目の前ではエラーにならない）、既知の割り当てと分布、`HTTPStatusForErrors`（errors 配列からの決定） |
+| `message/redact_test.go` | `RedactEnvironmentSpecific` が端末のローカル絶対パス・メールアドレスを伏せること、何度かけても同じ結果になること（伏せ損なうとプラグインの診断文に載ったパスが API 経由で AI へ届き、資料へ引き写される。ADR-0707） |
+| `safefetch/safefetch_test.go` | SSRF 対策の共有フェッチ。接続直前の実 IP 検査（ループバック・私有アドレスは既定で拒否、許可フラグで通す）、スキームとサイズ上限、2xx 以外の拒否、画像の寸法と種別の判定 |
+| `gkill_plugin/plugin_manifest_test.go` | manifest の `emits_kyou` の既定。書いていない既存プラグインは従来どおり Kyou を返す扱いであること（false 側に倒れると manifest を書き換えていない全プラグインが記録保管場所の一覧から消える）、未設定なら JSON に出さないこと |
 | `kftl/*_test.go` | メモ帳構文のパーサ。詳細は [kftl/ABOUT_TEST.md](kftl/ABOUT_TEST.md) |
 | `req_res/req_res_test.go` | 入出力構造体。詳細は [req_res/ABOUT_TEST.md](req_res/ABOUT_TEST.md) |
 

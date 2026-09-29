@@ -21,6 +21,7 @@ Vitest
 | `src/client/__tests__/unit/dnote/correlation-aggregator.test.ts` | Pearson／Spearman、p値、信頼区間、lag、欠損除外と `missing_as_zero`（未来のバケットは 0 にしない・件数／合計でだけ効く）、設定往復（指標オプションの既定値） |
 | `src/client/__tests__/unit/dnote/kyou-loader.test.ts` | Dnote 用 Kyou ローダ（対象 Kyou の読み込み） |
 | `src/client/__tests__/unit/dnote/correlation-graph-editor-view.test.ts` | 相関グラフの編集画面（`use-dnote-correlation-graph-editor-view.ts`）。`missing_as_zero` は件数・合計の集計対象でだけ選べ、平均のまま残ったチェックは保存時に落とすこと、指標2〜10本・名前の空/重複・lag の非整数の入力検査、`initial_query` の差し替えで読み直すこと |
+| `src/client/__tests__/unit/dnote/dnote-item-table-columns.test.ts` | 集計ビューの編集画面の「列」（集計項目を縦に並べる箱）の追加・削除（末尾に空の列を足す、中の項目ごと消す、最後の1列は消えない、閲覧画面では何もしない）、ダブルクリックが閲覧画面では集計に使った記録の一覧を開き、編集画面では一覧を開かず項目の編集ダイアログを開くこと、集計項目の並べ替えの挿入位置（列の空きに落とすと上半分は先頭・下半分は末尾） |
 
 ## テスト内容
 
