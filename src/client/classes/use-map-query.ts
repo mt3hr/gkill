@@ -33,7 +33,7 @@ export function useMapQuery(options: {
     const zoom = ref(11) // mapのズーム
     const is_enable_circle = ref(query.value.is_enable_map_circle_in_sidebar)
 
-    const center = ref({ lat: 35.6586295, lng: 139.7449018 })
+    const center = ref({ lat: 35.6586295, lng: 139.7449018 }) // 東京タワー。shape-ok（公開の地点）
     const circle = computed(() => {
         return {
             visible: is_enable_circle.value,

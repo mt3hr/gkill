@@ -16,7 +16,7 @@ export function useGpsLogMap(options: {
     const gmap = ref<InstanceType<typeof GoogleMap> | null>(null)
 
     // ── State refs ──
-    const center = ref({ lat: 35.6586295, lng: 139.7449018, timestamp: moment().unix() }) // mapの中心点
+    const center = ref({ lat: 35.6586295, lng: 139.7449018, timestamp: moment().unix() }) // mapの中心点（東京タワー。shape-ok（公開の地点））
     const zoom = ref(11) // mapのズーム
     const time_slider_max = ref(86399)
     const gps_logs: Ref<Array<GPSLog>> = ref([])

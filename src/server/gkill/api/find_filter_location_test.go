@@ -52,7 +52,7 @@ func (s *stubGPSLogRepository) UnWrapTyped() ([]reps.GPSLogRepository, error) {
 
 // 同一座標の距離は0(NaNではない)であること
 func TestCalcDistanceKm_SamePointIsZeroNotNaN(t *testing.T) {
-	got := calcDistanceKm(35.681236, 139.767125, 35.681236, 139.767125)
+	got := calcDistanceKm(35.681236, 139.767125, 35.681236, 139.767125) // 東京駅。shape-ok（公開の地点）
 	if math.IsNaN(got) {
 		t.Fatal("同一座標の距離がNaNになっている(Acosの定義域超過)")
 	}
