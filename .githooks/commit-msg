@@ -1,0 +1,16 @@
+#!/bin/sh
+# コミットメッセージの必須検査。何があっても飛ばさないこと（--no-verify の使用は禁止）。
+#
+# メッセージ全文に、個人情報パターン・NG 語と、実データ由来に見える値の形（座標・端末 ID・観測日・
+# 精密な件数や容量や所要時間・切りの悪い時刻など）を当てる。出所の目印（テスト件数・ベンチ など）は
+# 同じ行にしか効かない。# で始まる行（git のコメント）は見ない。
+# 検査の実体はこの PC の利用者設定側（$HOME/.claude/hooks/check_personal_info.mjs）にあり、
+# 無い環境（CI・別の PC）では省略する。Claude Code からのコミットは guard_commit.mjs も同じ検査をする。
+shapes="$HOME/.claude/hooks/check_personal_info.mjs"
+[ -f "$shapes" ] || exit 0
+node "$shapes" --shapes --message-file "$1" || {
+  echo ""
+  echo "コミットメッセージに実データ由来に見える値・個人情報があるため中止しました（--no-verify で回避しない）。"
+  echo "概数に置き換えるか、コード・テスト・ベンチ由来なら同じ行に出所を書くこと。"
+  exit 1
+}

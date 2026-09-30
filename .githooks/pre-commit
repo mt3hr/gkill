@@ -1,14 +1,30 @@
 #!/bin/sh
 # コミット前の必須検査。何があっても飛ばさないこと（--no-verify の使用は禁止）。
 #
-# verify_docs は資料の件数・リンク検査に加えて、個人情報・実環境情報の混入検査
-# （checkPersonalInfo）を全ソース・資料・マニュアル原稿に対して行う。
-# リポジトリ直下に verify_docs_personal_ngwords.local.txt（gitignore 済み・1行1語・
-# 大小無視の部分一致）があれば、その環境固有の NG 語も検査に加わる。
-# 検査の実体は src/tools/verify_docs.mjs。
+# 1. verify_docs: 資料の件数・リンク検査に加えて、個人情報・実環境情報の混入検査（checkPersonalInfo）を
+#    src・resources・documents・.github 配下とルート直下の設定・資料、.githooks に対して行う。
+#    リポジトリ直下に verify_docs_personal_ngwords.local.txt（gitignore 済み・1行1語・大小無視の部分一致）が
+#    あれば、その環境固有の NG 語も検査に加わる。検査の実体は src/tools/verify_docs.mjs。
+# 2. 実データの形: staged の「追加行」だけに、実データ由来に見える値の形（座標・端末 ID・観測日・
+#    精密な件数や容量や所要時間・切りの悪い時刻など）を当てる。コード由来の件数は
+#    verify_docs.mjs --count-phrases の字句で免除する。検査の実体はこの PC の利用者設定側
+#    （$HOME/.claude/hooks/check_personal_info.mjs）にあり、無い環境（CI・別の PC）では省略する。
+#    線引きと直し方は AGENTS.md「AI エージェントへの約束」と .claude/skills/gkill-docs/SKILL.md。
 npm run verify_docs || {
   echo ""
   echo "verify_docs が失敗したためコミットを中止しました。"
   echo "個人情報の疑いが出た場合は、該当箇所をプレースホルダへ置換してから再コミットすること。"
   exit 1
 }
+
+shapes="$HOME/.claude/hooks/check_personal_info.mjs"
+if [ -f "$shapes" ]; then
+  node "$shapes" --shapes --count-phrases-from src/tools/verify_docs.mjs || {
+    echo ""
+    echo "実データ由来に見える値があるためコミットを中止しました（--no-verify で回避しない）。"
+    echo "概数・合成値に置き換えるか、コード・テスト・ベンチ・サンプル由来なら同じ行に出所を書くこと。"
+    exit 1
+  }
+else
+  echo "（この環境には実データの形の検査が無いので省略: $shapes）"
+fi

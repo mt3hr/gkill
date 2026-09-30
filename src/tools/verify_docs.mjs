@@ -7,6 +7,10 @@
 // 使い方:
 //   node src/tools/verify_docs.mjs         検証（不整合があれば exit 1）
 //   node src/tools/verify_docs.mjs --list  実測メトリクスを表示して終了
+//   node src/tools/verify_docs.mjs --count-phrases
+//       件数検査（buildCountAssertions）が資料に要求する字句を {"phrases":[…]} で出して終了。
+//       コミット時の「実データの形」の検査（この PC の利用者設定側 check_personal_info.mjs --shapes）が、
+//       コード由来の件数を免除するために呼ぶ。npm script を経由しない直接起動なので attestation は記録されない。
 //
 // 依存なし（Node 標準のみ）。リポジトリルートからでも任意の CWD からでも動作する。
 //
@@ -1813,13 +1817,19 @@ function checkADRSources() {
 // 列挙に残す。コミットに載るのは index の版なので、飛ばすと「消したつもりの実データ入りファイルが
 // ステージ漏れのままコミットされる」のを検査が素通りする。中身は readPersonalInfoTarget が index から読む。
 export function personalInfoScanFiles(root = ROOT) {
-  const exts = /\.(go|ts|vue|mjs|js|kt|java|json|html|md|css|ps1|sh|kts|gradle|ya?ml|xml|properties|txt|csv|svg|db)$/
+  const exts = /\.(go|ts|vue|mjs|js|kt|java|json|html|md|mdc|css|ps1|sh|kts|gradle|ya?ml|xml|properties|txt|csv|svg|db)$/
+  // 対象: src・resources・documents・.github 配下、ルート直下の設定と資料（package.json・vite.config.ts・README.md など）、
+  // エージェント設定と git フック（.githooks・.cursor・.gemini・.vscode）。.githooks の中は拡張子が無いので名前で拾う。
+  // 第三者の文字列（依存の lock・ライセンス一覧）は利用者の情報ではなく、NG 語が偶発一致するので見ない。
+  const inScope = (rel) =>
+    /^(src|resources|documents|\.github)\//.test(rel) || !rel.includes('/') || /^\.(githooks|cursor|gemini|vscode)\//.test(rel)
+  const thirdParty = /^(package-lock\.json|LICENSE[^/]*|LICENSES_DEPENDENCE[^/]*|DEPENDENCE_LICENSES[^/]*)$/
   // 「追跡済み + 未追跡だが ignore されていない」= リポジトリに入り得るファイルだけを見る。
   // ファイルシステム走査だと gitignore 済みのローカル設定（Android の local.properties や
   // ビルド生成物）まで拾って偽陽性になるし、逆に ignore されていない置き忘れは拾いたい。
   const out = execSync('git ls-files -z --cached --others --exclude-standard', { cwd: root })
   return [...new Set(out.toString('utf8').split('\0').filter(Boolean))]
-    .filter((rel) => exts.test(rel) && /^(src|resources|documents|\.github)\//.test(rel))
+    .filter((rel) => (exts.test(rel) || /^\.githooks\/[^/]+$/.test(rel)) && inScope(rel) && !thirdParty.test(rel))
     // サンプルデータは実データ由来を許容する運用（2026-08-24 の判断）。検査対象外。
     // 3文字級の短い NG 語は DB 内の base64 や複合語の一部に偶発一致するため、
     // ここを対象に戻すなら語側を前後にアンダースコア等の区切りを付けた形へ寄せること。
@@ -1976,8 +1986,8 @@ function checkRetiredSpellings() {
 
 function checkPersonalInfo() {
   const patterns = [
-    [/[A-Za-z]:\\+Users\\+(?![〈<]|user(?:name)?\b)[A-Za-z0-9]/, 'Windows のユーザープロファイル実パス'],
-    [/\/(?:home|Users)\/(?!user\/|〈|<)[a-z0-9_-]{3,}\//, 'ホームディレクトリの実パス'],
+    [/[A-Za-z]:\\+Users\\+(?![〈<]|(?:user(?:name)?|me|testuser|someone)\b)[A-Za-z0-9]/, 'Windows のユーザープロファイル実パス'],
+    [/\/(?:home|Users)\/(?!(?:user|me|testuser|someone)\/|〈|<)[a-z0-9_-]{2,}\//, 'ホームディレクトリの実パス'],
     [/[A-Za-z0-9._%+-]+@(?!example\.)[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/, 'メールアドレス'],
   ]
   // NG 語の照合は大文字小文字を無視する（小文字で書いた1行が大文字混じりの出現も拾う）。
@@ -2714,12 +2724,22 @@ function checkServerAboutTestCategorySumFiles() {
 // ─────────────────────────────────────────────────────────────
 // メイン
 // ─────────────────────────────────────────────────────────────
+// 件数検査が資料に要求する字句（重複除去）。コミット時の形の検査が「コード由来の件数」を免除するのに使う
+export function countPhrases(m) {
+  return [...new Set(buildCountAssertions(m).map((a) => a.phrase))]
+}
+
 function main() {
   const m = computeMetrics()
 
   if (process.argv.includes('--list')) {
     console.log('実測メトリクス:')
     console.log(JSON.stringify(m, null, 2))
+    return
+  }
+
+  if (process.argv.includes('--count-phrases')) {
+    console.log(JSON.stringify({ phrases: countPhrases(m) }))
     return
   }
 

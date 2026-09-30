@@ -527,6 +527,37 @@ describe('personalInfoScanFiles / readPersonalInfoTarget', () => {
       fs.rmSync(root, { recursive: true, force: true })
     }
   })
+
+  // ルート直下の設定・資料と git フックにも実パスや NG 語は書かれうる（以前は src 等の配下だけを見ていた）。
+  // 依存の lock とライセンス一覧は第三者の文字列で、NG 語が偶発一致するので見ない。
+  test('ルート直下の設定と .githooks の拡張子なしファイルを列挙し、lock とライセンス一覧は除く', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-docs-root-'))
+    try {
+      execFileSync('git', ['init', '-q'], { cwd: root, stdio: 'pipe' })
+      for (const rel of ['package.json', 'vite.config.ts', 'README.md', '.githooks/pre-commit', 'package-lock.json', 'LICENSES_DEPENDENCE', 'LICENSE', 'public/favicon.png', 'misc/notes.md']) {
+        fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true })
+        fs.writeFileSync(path.join(root, rel), 'x\n')
+      }
+      expect(personalInfoScanFiles(root).sort()).toEqual(['.githooks/pre-commit', 'README.md', 'package.json', 'vite.config.ts'])
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
+  })
+})
+
+// ─── 件数字句の出力（コミット時の「実データの形」の検査が、コード由来の件数を免除するのに使う） ───
+describe('verify_docs --count-phrases', () => {
+  test('件数検査が資料に要求する字句を JSON で出し、検査は走らせない', () => {
+    const script = path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '..', 'verify_docs.mjs')
+    const out = execFileSync(process.execPath, [script, '--count-phrases'], { encoding: 'utf8' })
+    const json = JSON.parse(out)
+    expect(Array.isArray(json.phrases)).toBe(true)
+    expect(json.phrases.length).toBeGreaterThan(100)
+    expect(new Set(json.phrases).size).toBe(json.phrases.length)
+    // src/ABOUT_TEST.md の合計行（テスト件数の桁区切りを含む）が入っている
+    expect(json.phrases.some((p) => /^\| \*\*合計\*\* \| \*\*[\d,]+\*\* \|/.test(p))).toBe(true)
+    expect(out).not.toMatch(/docs 検証OK/)
+  })
 })
 
 describe('checkBoundaryDoc', () => {

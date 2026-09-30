@@ -13,7 +13,7 @@ git を実際に呼ぶので、`git` が PATH に要る。リポジトリ本体�
 
 ## テストファイル
 
-90テスト（3ファイル）。静的計数、`test.each` は 1 と数える。
+92テスト（3ファイル）。静的計数、`test.each` は 1 と数える。
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -29,6 +29,7 @@ git を実際に呼ぶので、`git` が PATH に要る。リポジトリ本体�
 - **`evaluateNightly`**: success・48 時間以内・祖先・依存未変更で ok。run 無し／failure／古い／祖先でない／依存変更のそれぞれで NG
 - **`firstDisallowedArg`（ランナーの引数許可リスト）**: `=` 区切りと空白区切りの等価性、値の欠落・形の違い、値を取らないフラグへの値、絞り込み引数（`-run` / `--grep` / ファイル名）、許可リストが空のスイート（`verify_docs` / `test_plugins` / `test_android` / `test_wear_os`）
 - **`SUITES` 表**: `REQUIRED_SUITES` と 1:1、引数が検査内容を置き換えるスイートは許可リストが空、`server_tree` を記録するのは E2E だけ、`test_mcp` は `src/server` で Go の MCP パッケージを `go test` する（旧 Node 実装の vitest 設定を指したままだと 0 件実行で緑になる）
+- **`verify_docs.mjs` の個人情報検査の対象と件数字句**: 使い捨てリポジトリで、ルート直下の設定・資料と `.githooks/` の拡張子なしファイルを列挙し、依存の lock とライセンス一覧は除くこと。`--count-phrases` が件数検査の字句を重複なしの JSON で出し、検査は走らせないこと
 - **`verify_docs.mjs` の解析部**: `MCP_TEST_RE` と `countComposedToolNames` / `composedToolNames`、境界対応表の `parseRouteTable` / `parseGoHandlers` / `parseGkillApi` / `extractBoundaryBlock` / `checkWebRouteRows` / `compareKeySets` / `checkContractRows` / `checkBoundaryDoc` / `checkReverseDocIndex`、テストファイルの索引網羅 `checkTestFileCoverage`（拡張子まで含める・同名は1回・名前順）、`src/server/ABOUT_TEST.md` の分類表の和と合計行を突き合わせる `checkServerAboutTestCategorySum`（後ろの表の数字を混ぜない・ヘッダ行や合計行が無いときの報告）、個人情報検査の対象の列挙と読み取り `personalInfoScanFiles` / `readPersonalInfoTarget`（`git rm` でステージしていない削除は index の版を検査する。飛ばすと消したつもりの実データ入りファイルがそのままコミットされる）（`verify_docs.test.mjs`。合成のソースと資料で固定し、CRLF も通す）
 - **git（使い捨てリポジトリ）**: クリーンなら `workingTree()` = `HEAD^{tree}`、編集・untracked で変わる、実 index に stage されない、そのままコミットすれば一致する、**CRLF で書き換えても tree は変わらない**（WSL の偽 dirty を吸収する根拠）、attestation ファイルが ignore されていなければ止まる、`isAncestor` / `pathsChangedBetween`（exit 1 と 128 の区別）
 - **記録ファイル**: 無ければ空、追記で別スイートが残る、temp ファイルが残らない、壊れた JSON・違うスキーマは「記録なし」扱い
