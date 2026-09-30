@@ -131,6 +131,8 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 
 **stdio のコマンド・起動フラグ・postMessage のキーを足したら境界対応表にも載せる。** SDK は本体の型を import しないので、両側は JSON のキーと文字列だけでつながる。[cross-boundary-map.md](../../../documents/reverse/cross-boundary-map.md) の §8・§9 を `npm run verify_docs` が本体・SDK・画面のコードと3者で突き合わせる。
 
+**testdata・テストの固定値は合成値で書く。** 座標は `351234000`（E7）や `35.1234`、端末 ID は `1000000001`、歩数は `10000`、書き出し名は `takeout-20240101T000000Z`、時刻は秒 00。実データの書き出しから切り出した値を置かない（書く瞬間とコミットの検査が座標・端末 ID・時刻付きの名前を止める。線引きは gkill-docs「実データ由来の値の線引き」）。
+
 ## 関連スキル
 
 - [gkill-go-backend](../gkill-go-backend/SKILL.md) — `len(XxxReps) == 1` 判定禁止（provides プラグイン1つで長さが2になる）と検索フィルタ

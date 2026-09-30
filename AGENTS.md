@@ -158,6 +158,9 @@ The codebase (variable names, comments, commit messages) is primarily in Japanes
   `〈ユーザー名〉` のプレースホルダで書く。`npm run verify_docs` が混入をパターン検査し、
   リポジトリ直下の `verify_docs_personal_ngwords.local.txt`（gitignore 済み・1行1語・大小無視の部分一致）が
   あればその環境固有の NG 語検査も加わるが、検査は網でしかない — 書く前に止めることがすべて。
+- **実データ由来の値は代わりの形で書く。** 件数・容量・所要時間・割合は概数（数万件・数百 MB・十数秒）、日付は変更日だけ（観測した日は書かない）、
+  testdata の座標・端末 ID・時刻は切りのよい合成値、実在のリポジトリ名・rep 名・タグ名は一般名。コード・テスト・ベンチ由来の具体値は同じ行に出所を書く。
+  線引き表と検査の仕組みは [gkill-docs](.claude/skills/gkill-docs/SKILL.md)、理由は [ADR-0807](documents/adr/0807-stop-real-data-values-at-write-and-commit.md)。
 - **コミット前に必ず `npm run verify_docs` を通す（例外なし）。** pre-commit フック
   （`.githooks/pre-commit`。`npm i` の postinstall が `core.hooksPath` を設定する）が機械強制する。
   `--no-verify` でフックを飛ばすことは何があっても禁止。

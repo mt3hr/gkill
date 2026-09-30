@@ -219,6 +219,8 @@ Web クライアント側は生成せず、`gkill-api.test.ts`「endpoint addres
 守るテスト: `main/common/gkill_log/log_level_source_scan_test.go`（無情報メッセージ・defer Close の
 対象別レベル・握り潰しの検出）/ `gkill_server_api/response_status_log_test.go`（ステータス→レベル）。
 
+**テストの rep 名・タグ名・時刻は架空の値で書く。** rep 名は `Box_TestPC_20240101` のような Test 系の名前と切りのよい日付、タグは `TagA`、利用者 ID は `testuser`、`time.Date(...)` は秒 0。実環境の rep 名や実データの時刻を写さない（線引きは gkill-docs「実データ由来の値の線引き」）。
+
 ## 関連スキル
 
 - [gkill-find-query](../gkill-find-query/SKILL.md) — `FindQuery` の null 意味論（Go/TS/MCP の3実装共通）

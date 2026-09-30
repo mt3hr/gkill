@@ -55,7 +55,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | Decision | 何を決めたか。断定形で1〜3文 |
 | Rejected alternatives | **この資料の存在理由。** 採らなかった案と理由。空にできない |
 | Consequences | 受け入れる制約。守らないと何が起きるか。**静かな壊れ方は必ず書く** |
-| Evidence | 実測値。無いなら「実測なし — 脅威モデルからの判断」のように理由を書く |
+| Evidence | 実測の結果。実環境で測った値は**概数**（十数秒・数百 MB・9 割超）で書き、測った日付は書かない。具体値はコード・テスト・サンプルデータ由来とベンチの比率だけ（同じ行に出所を書く。[ADR-0807](0807-stop-real-data-values-at-write-and-commit.md)）。実測が無いなら「実測なし — 脅威モデルからの判断」のように理由を書く |
 | Related tests | 守っているテスト。**実在するパスのみ**（verify_docs が検査する） |
 
 ### 検査されること
@@ -66,6 +66,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 - メタ表の `Status`（`Accepted` / `Superseded` / `Deprecated`）・`Date`・`Sources` があるか
 - ファイル名の番号と本文 `# ADR-NNNN` が一致し、番号が重複していないか
 - `Rejected alternatives` が実質空でないか
+- `Evidence` が空でないか（実測が無いなら「実測なし — 理由」）
 - `Related tests` のパスが実在するか（`Status: Superseded` は免除）
 - `Superseded-by` の指し先が実在し、相手の `Supersedes` も自分を指しているか
 - 下の索引表に全 ADR が1行ずつ載っているか
@@ -261,6 +262,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0804](0804-split-claude-md-into-skills.md) | AI向け規約は AGENTS.md（核）と規約スキルへ分割し、入口の肥大化を機械検査で防ぐ | Accepted |
 | [0805](0805-adr-numbering-by-subsystem-hundreds.md) | ADR の採番はサブシステム別100番幅にし、帯の空きを機械検査する | Accepted |
 | [0806](0806-fix-spellings-instead-of-freezing.md) | 綴りは凍結せず直す — 互換を残さず、旧綴りのデータは一度きりで復旧する | Accepted |
+| [0807](0807-stop-real-data-values-at-write-and-commit.md) | 実データ由来の値は、書く瞬間とコミットの瞬間に「形」で止める | Accepted |
 
 ### 0900番台 ビルド・テスト・CI
 
