@@ -67,7 +67,7 @@ URL が社内システムやワンタイムリンクだと、取得自体が副�
 
 - レビュー: 「ブックマーク保存 = 対象サイトへの通信」が AI クライアントから
   制御できず、説明文にも書かれていなかった
-- 実装コミット 855d6aaf（Go 側 `FillURLogFieldSkipping` + MCP フラグ + reps 層テスト）
+- 実装コミット d8c052c8（Go 側 `FillURLogFieldSkipping` + MCP フラグ + reps 層テスト）
 
 ## Related tests
 

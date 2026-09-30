@@ -76,7 +76,7 @@ rykv を「記録分類 = Git」だけで開くと数千行（過半が archived
 
 ## Evidence
 
-- 実環境（修正前のバイナリ `fc1831f1`）: native の Git rep は内蔵と外付けの2か所で
+- 実環境（修正前のバイナリ `5b0b0135`）: native の Git rep は内蔵と外付けの2か所で
   十数リポジトリ（ユニーク数千コミット、走査対象は複製込みでその倍）、archived プラグインは数十 zip /
   数千コミット / 数十 rep 名。`threads` のプールは `NumCPU()`
 - 画面（同一プロファイルの別タブで `performance.getEntriesByType('resource')` を集計。rykv「記録分類 = Git」数千行）:

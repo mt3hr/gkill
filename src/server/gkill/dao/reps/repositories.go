@@ -497,7 +497,7 @@ loop:
 //
 // rep名の指定があるときだけ `UnWrap()` する。キャッシュrepの `GetRepName()` は
 // "MiReps" のような集約名を返すので、leaf の名前で照合するには剥がすしかない
-// （ReKyou の表示不具合を直した a7a90039 の意図。`re_kyou_granular_cache_test.go` が守る）。
+// （ReKyou の表示不具合を直した ce16c294 の意図。`re_kyou_granular_cache_test.go` が守る）。
 // 一致する leaf だけを dispatch するので、この経路の走査は常に1本程度で済む。
 func (r Repositories) GetKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]Kyou, error) {
 	var err error

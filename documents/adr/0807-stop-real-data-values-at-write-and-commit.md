@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-09-30 |
-| Sources | `AGENTS.md`「AI エージェントへの約束」 / `.claude/skills/gkill-docs/SKILL.md`「規約スキル（.claude/skills/）の保守手順」 / `documents/releasenote/v1.1.10_20260930_9e2d9587.md` |
+| Sources | `AGENTS.md`「AI エージェントへの約束」 / `.claude/skills/gkill-docs/SKILL.md`「規約スキル（.claude/skills/）の保守手順」 / `documents/releasenote/v1.1.10_20260930_e275efff.md` |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `.githooks/pre-commit`・`.githooks/commit-msg`（検査の呼び出し口）、`src/tools/verify_docs.mjs`（`--count-phrases`） |

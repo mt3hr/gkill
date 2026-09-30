@@ -18,11 +18,11 @@ ADR は「壊れたときに同じ場所を読み直すことになる範囲」�
 満杯になったときに何が起きたかが、git 履歴にそのまま残っている。
 
 1. `0059`（MCP）で 0050-0059 帯が満杯になる
-2. 次のコミット `2b1411b4` で、**中身が MCP の ADR 3本（旧 0063 / 0064 / 0065）が、
+2. 次のコミット `81d1309e` で、**中身が MCP の ADR 3本（旧 0063 / 0064 / 0065）が、
    空いていた「開発規約と資料」帯へ置かれた**。アンカーは `src/server/gkill/mcp/write_normalization.go`、
    `src/server/gkill/mcp/write_handlers.go`、`src/server/gkill/api/gkill_server_api/get_kyous_mcp_helpers.go` で、
    `.claude/skills/gkill-mcp/SKILL.md` が MCP の関連 ADR として引いている
-3. さらに次のコミット `ecb105cf` で、ようやく継続帯「0090-0099 MCP（続）」が新設された
+3. さらに次のコミット `118278c4` で、ようやく継続帯「0090-0099 MCP（続）」が新設された
 
 3本は、正規の継続帯ができたあとも「番号は採番後不変」の規約により動かせず、
 **別のサブシステムの帯に居座ったまま**になった。同じ経緯で旧 0074（`Sources` が MCP 2巡目の指摘、

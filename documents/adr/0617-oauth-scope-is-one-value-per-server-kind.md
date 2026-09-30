@@ -69,7 +69,7 @@ metadata の `scopes_supported`・authorize の既定値と不一致拒否（400
 - レビュー実測: ReadWrite サーバの protected-resource metadata が
   `gkill:readwrite`、authorization-server metadata が `gkill:read` を返す矛盾広告。
   Bearer 受理は scope 非照合で、`gkill:read` トークンから書き込みツールが呼べた
-- 修正コミット 584cb6e6（認可と受理の両方で不一致拒否）、855d6aaf 後の
+- 修正コミット 63bf8c2b（認可と受理の両方で不一致拒否）、d8c052c8 後の
   テスト補強で「3サーバの宣言値が1本も検証されていない」ことが判明し `START_SPEC` を導入
 
 ## Related tests

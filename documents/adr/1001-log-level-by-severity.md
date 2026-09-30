@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-08-30 |
-| Sources | `b023b2e3` / `9d687d75` / `b93bbcdc` / `3ab972e7` / `src/server/gkill/main/common/gkill_log/` |
+| Sources | `6fc6abb3` / `fa6273f5` / `531690bf` / `d76e8895` / `src/server/gkill/main/common/gkill_log/` |
 | Supersedes | なし |
 | Superseded-by | なし |
 | Anchors | `src/server/gkill/main/common/gkill_log/log_level_source_scan_test.go` |
@@ -30,7 +30,7 @@ Debug が 1798件（90%）で、その内訳は `"error at defer close"` 941 /
 逆方向の誤用もあった。`handle_file_serve.go` は Cookie が無いだけの403・404・共有範囲外の403 まで
 Error（`gkill_error.log`）へ出していた。未ログインの初回アクセスやボットで、運用者向けのファイルが埋まる。
 
-そして直近3コミット（`20feaf58` Debug→Warn、`313dba7c` Warn→Error）は
+そして直近3コミット（`08425fa4` Debug→Warn、`48e853e9` Warn→Error）は
 「`--log warn` 運用のときに他の警告へ埋もれさせないため」を前提にレベルを上げていたが、
 その前提は成立していなかった。
 
