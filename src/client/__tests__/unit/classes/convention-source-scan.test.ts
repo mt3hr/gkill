@@ -12,6 +12,8 @@
  *   - ダイアログのヘッダのタイトル欄に中身を入れる（全ダイアログ空にそろえる約束。1本だけ名前を出していた）
  *   - 一覧の行のクリックを文字（v-list-item-title）にだけ付ける（画面切替メニュー8画面ぶんが全部この形で、
  *     行の余白を押すとメニューが閉じるだけで遷移しなかった）
+ *   - 参照先を埋め込むビュー（ReKyou / MiReKyou）が参照先へ「一覧ではない」を固定で渡す
+ *     （一覧の行の中なのに、参照先の画像を原寸で読み、動画のメタデータも読みに行っていた）
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
@@ -314,6 +316,17 @@ describe('クライアントの規約のソース走査', () => {
         const source = readFileSync(join(client_root, 'pages', 'views', 'aggregated-list-item.vue'), 'utf8')
         expect(source).toContain('aggregated_list_item_value')
         expect(source).toContain('white-space: pre-line')
+    })
+
+    // 参照先を埋め込むビューは、自分が一覧の行かどうかを参照先の KyouView へそのまま引き継ぐ。
+    // false を固定で渡すと、一覧の行の中でも参照先の画像は原寸で読まれ、
+    // 動画は preload="metadata" になって行の数だけリクエストと互換変換が走る。
+    it('参照先を埋め込むビューが is_image_request_to_thumb_size を引き継いでいる', () => {
+        for (const file_name of ['re-kyou-view.vue', 'mi-re-kyou-view.vue']) {
+            const source = strip_comments(readFileSync(join(client_root, 'pages', 'views', file_name), 'utf8'))
+            expect(source, file_name).toContain(':is_image_request_to_thumb_size="is_image_request_to_thumb_size"')
+            expect(source, file_name).not.toMatch(/:is_image_request_to_thumb_size="(true|false)"/)
+        }
     })
 
     // 走査が「何も見つけられないだけ」で緑になっていないことを確かめる

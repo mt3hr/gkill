@@ -100,13 +100,13 @@
                 <ReKyouView v-if="cloned_kyou.typed_rekyou" :rekyou="cloned_kyou.typed_rekyou" :draggable=draggable
                     :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                     :kyou="cloned_kyou" :height="height" :width="width"
-                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_image_request_to_thumb_size="is_image_request_to_thumb_size"
                     v-on="crudRelayHandlers"
                     ref="rekyou_view" />
                 <MiReKyouView v-if="cloned_kyou.typed_mirekyou" :mirekyou="cloned_kyou.typed_mirekyou" :draggable=draggable
                     :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                     :kyou="cloned_kyou" :height="height" :width="width" :is_readonly_mi_check="is_readonly_mi_check"
-                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_image_request_to_thumb_size="is_image_request_to_thumb_size"
                     v-on="crudRelayHandlers"
                     ref="mirekyou_view" />
                 <GitCommitLogView v-if="cloned_kyou.typed_git_commit_log" :git_commit_log="cloned_kyou.typed_git_commit_log"

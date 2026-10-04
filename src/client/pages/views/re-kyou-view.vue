@@ -9,7 +9,7 @@
         <div v-if="is_target_not_found" class="rekyou_not_found">
             {{ i18n.global.t('NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE') }}
         </div>
-        <KyouView v-else :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets" :is_image_request_to_thumb_size="false"
+        <KyouView v-else :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets" :is_image_request_to_thumb_size="is_image_request_to_thumb_size"
             :is_image_view="false" :kyou="target_kyou" :show_checkbox="false"
             :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
             :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_elapsed_time="true"

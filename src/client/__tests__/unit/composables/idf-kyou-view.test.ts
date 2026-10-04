@@ -3,6 +3,7 @@
  * ファイル種別の判定と、Markdown/テキストのインライン表示のロードを検証する。
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { mount } from '@vue/test-utils'
 // use-idf-kyou-viewはreq_res経由でGkillAPIRequestに依存する。
 // GkillAPIRequest→GkillAPI→ApplicationConfig→req_res の循環importがあるため、
 // 本番同様に gkill-api を先に評価させないと class extends が undefined になる。
@@ -10,6 +11,14 @@ import '@/classes/api/gkill-api'
 import { useIDFKyouView } from '@/classes/use-idf-kyou-view'
 import type { IDFKyouProps } from '@/pages/views/idf-kyou-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
+
+// コンテキストメニューは Vuetify を引き込む（vitest は node_modules の .css を解決できない）。
+// スタブは描画時にしか効かず import は走ってしまうので、モジュールごと差し替える
+vi.mock('@/pages/views/idf-kyou-context-menu.vue', () => ({
+    default: { name: 'idf-kyou-context-menu', template: '<div />' },
+}))
+
+import IDFKyouView from '@/pages/views/idf-kyou-view.vue'
 
 function createProps(file_name: string, file_url: string, is_list = false): IDFKyouProps {
     const idf_kyou = {
@@ -127,6 +136,44 @@ describe('useIDFKyouView', () => {
 
         const { is_markdown } = useIDFKyouView({ props, emits: noop_emits })
         expect(is_markdown.value).toBe(false)
+    })
+})
+
+describe('useIDFKyouView 動画の preload', () => {
+    function createVideoProps(is_list: boolean): IDFKyouProps {
+        const props = createProps('movie.mp4', '/files/rep1/movie.mp4', is_list)
+        const idf = props.kyou.typed_idf_kyou
+        if (idf) {
+            idf.is_video = true
+        }
+        return props
+    }
+
+    // none のままだと再生するまで duration が NaN で、コントロールに全体の長さが出ない
+    it('詳細ペイン・ダイアログでは metadata にして再生前から長さを出す', () => {
+        const { video_preload } = useIDFKyouView({ props: createVideoProps(false), emits: noop_emits })
+        expect(video_preload.value).toBe('metadata')
+    })
+
+    // 一覧の行は 200px 幅で時間表示がそもそも隠れるうえ、行の数だけリクエストと互換変換が走る
+    it('一覧では none のまま読みに行かない', () => {
+        const { video_preload } = useIDFKyouView({ props: createVideoProps(true), emits: noop_emits })
+        expect(video_preload.value).toBe('none')
+    })
+
+    // テンプレートに preload を直書きし直すと上の値は効かなくなるので、描画された属性で見る
+    it.each([
+        [false, 'metadata'],
+        [true, 'none'],
+    ])('描画した video の preload 属性に反映される（一覧=%s → %s）', (is_list, expected) => {
+        const wrapper = mount(IDFKyouView, {
+            props: createVideoProps(is_list),
+            global: { stubs: { 'v-card': { template: '<div><slot /></div>' } } },
+        })
+        const video = wrapper.find('video')
+        expect(video.exists(), 'video が描画されていない').toBe(true)
+        expect(video.attributes('preload')).toBe(expected)
+        wrapper.unmount()
     })
 })
 

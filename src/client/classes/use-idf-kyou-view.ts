@@ -200,6 +200,13 @@ export function useIDFKyouView(options: {
         return file_url
     }
 
+    // 動画の preload。詳細ペイン・ダイアログでは metadata にして、再生前から全体の長さを出す。
+    // none のままだと再生するまで duration が NaN で、コントロールに「0:00」しか出ない。
+    // 一覧では none のまま: 行は 200px 幅で Chromium のコントロールが時間表示ごと隠すので
+    // 読んでも見えないうえ、行の数だけリクエストが飛び、互換変換が要る動画では
+    // 最初のリクエストで ffmpeg の変換が走る（スクロールで行が外れると切られてやり直しになる）。
+    const video_preload = computed((): 'none' | 'metadata' => props.is_image_request_to_thumb_size ? 'none' : 'metadata')
+
     // ── Event relay objects ──
     const crudRelayHandlers = build_kyou_view_relay(emits)
 
@@ -222,6 +229,7 @@ export function useIDFKyouView(options: {
         onMarkdownContentClick,
         onMarkdownContentDblclick,
         build_media_url,
+        video_preload,
 
         // Event relay objects
         crudRelayHandlers,
