@@ -21,6 +21,13 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # vue-tsc 3.3.12 は、テンプレート内のアロー関数で import した値（i18n・router）を
+      # 参照すると誤って .value を付けて型エラーにする退行がある（vuejs/language-tools#6237）。
+      # まとめPRに混ざるとPR全体の型検査が落ちるので、この版だけ外す。3.3.13 以降は通常どおり来る。
+      - dependency-name: vue-tsc
+        versions:
+          - "3.3.12"
 
   # Goは本体とプラグインを「1つのPRにまとめて」上げる。
   #
@@ -42,8 +49,16 @@ updates:
           - "*"
 
   # ワークフローで使うActions。現状すでに全部最新メジャーなのでmonthlyで十分。
+  #
+  # codeql-action の init と analyze は版が揃っていないと、analyze が
+  # 「Loaded a configuration file for version X, but running version Y」で落ちる。
+  # 別々のPRで来ると両方とも必ず赤くなるので、Actionsは1本のPRにまとめて上げる。
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
     open-pull-requests-limit: 3
+    groups:
+      actions-all:
+        patterns:
+          - "*"
