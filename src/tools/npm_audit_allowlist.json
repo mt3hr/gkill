@@ -1,0 +1,11 @@
+{
+  "exceptions": [
+    {
+      "id": "GHSA-vfj7-8cjw-p6xm",
+      "package": "braces",
+      "range": "<=3.0.3",
+      "reason": "修正版が無い（公開中の最新 3.0.3 が対象範囲で、上流の fast-glob・micromatch・@vue/eslint-config-typescript・shx の最新版も同じ版を引く）。@vue/eslint-config-typescript と shx（→ shelljs）から fast-glob → micromatch 経由で入る開発用依存で、配布物には入らない。ブレース展開に渡るパターンは @vue/eslint-config-typescript の `**/*.vue` と ESLint 設定の ignore、package.json のスクリプトの固定文字列だけで、外から与えられる経路が無い",
+      "review_by": "2027-01-16"
+    }
+  ]
+}

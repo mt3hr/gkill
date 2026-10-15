@@ -269,6 +269,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | 番号 | 決定 | Status |
 |---|---|---|
 | [0901](0901-release-requires-tested-attestation.md) | リリースはテスト済み attestation と CI / Nightly の緑を機械で要求する（人の記憶に頼らない） | Accepted |
+| [0902](0902-npm-audit-allowlist-for-unfixed-dev-dependencies.md) | Nightly の npm audit は、修正版の無い開発用依存の advisory だけを名指しの例外リストで条件付きに通す | Accepted |
 
 ### 1000番台 運用CLI・配布
 

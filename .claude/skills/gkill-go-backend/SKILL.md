@@ -12,7 +12,7 @@ description: "gkill の Go バックエンド（src/server/gkill/）の禁止事
 
 ### Backend (Go) — `src/server/`
 
-Module: `github.com/mt3hr/gkill/src/server` (Go 1.26.6)
+Module: `github.com/mt3hr/gkill/src/server` (Go 1.26.9)
 
 Key packages:
 

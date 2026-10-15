@@ -21,6 +21,9 @@ gkill プロジェクト用のユーティリティスクリプト。
 | `put_version_info.mjs` | `npm run put_version_info_embed` の実体。`embed/version.json`（commit / build_time / version / tree_hash）を書く |
 | `__tests__/attestation.test.mjs` | 上記のうち attestation / run_test_suite（引数許可リスト）/ verify_release_gate のテスト（`npm run test_tools`、`vitest.config.tools.ts`） |
 | `__tests__/release_scripts.test.mjs` | run_test_suite の記録条件・put_version_info・verify_release_artifacts の判定関数のテスト |
+| `npm_audit_gate.mjs` | Nightly の npm audit の判定。high 以上を落とし、`npm_audit_allowlist.json` に名指しした開発用依存の advisory だけ条件付きで通す |
+| `npm_audit_allowlist.json` | 上の例外リスト（修正版の無い開発用依存の advisory だけ。GHSA ID・パッケージ名・対象範囲・理由・見直し期限） |
+| `__tests__/npm_audit_gate.test.mjs` | npm_audit_gate の出力の読み方・例外リストの検証・判定条件のテスト |
 | `test_plugins.mjs` | `npm run test_plugins` / `npm run vet_plugins` の実体。`src/plugins/` 配下の各 Go モジュールに `go test` / `go vet` を回す |
 | `gradle_test.mjs` | `npm run test_android` / `npm run test_wear_os` の実体。Windows では `cmd /c <絶対パス>gradlew.bat`、それ以外は `./gradlew`（絶対パス）を使う |
 | `codeql.mjs` | `npm run codeql` の実体。CI と同じ設定で CodeQL をローカル実行し、ベースラインに無い指摘が出たら失敗する。CodeQL CLI が無ければスキップして正常終了する |
@@ -87,6 +90,44 @@ Windows で `gradlew.bat` と**裸の名前**を cmd へ渡してはいけない
 `shell: true` も使わない。引数がエスケープされずに連結されるだけで（Node が DEP0190 で警告する）、
 `.\gradlew.bat` のようなパスはバックスラッシュが落ちて `.gradlew.bat` に化ける。
 `cmd.exe /d /s /c <絶対パス> <タスク>` を `shell: false` で起動するのが一番素直で、エスケープの余地も無い。
+
+## npm_audit_gate.mjs
+
+Nightly の `npm_audit` ジョブの実体（`node src/tools/npm_audit_gate.mjs`）。`npm audit --json` を全依存と `--omit=dev` の
+2回回し、`npm audit --audit-level=high` と同じく high 以上の advisory があれば非 0 で終わる。
+例外は `npm_audit_allowlist.json` に GHSA ID で名指しした advisory だけで、次をすべて満たす間に限って通す。
+
+| 条件 | 外れたら |
+|---|---|
+| 本番依存（`--omit=dev`）の監査に出てこない | 例外リストに関係なく NG（本番依存は例外にできない） |
+| `package` と `range` が advisory の今の内容と一致する | NG。対象範囲の変化は修正版が出た合図なので、上げられるか確かめる |
+| `review_by`（UTC の日付）を過ぎていない | NG。修正版の有無を確かめ、例外を消すか期限を延ばす |
+
+例外の書き方（`range` は `npm audit --json` の `via[].range` の字面を写す。GitHub の advisory ページの表記とは空白が違う）:
+
+```json
+{
+  "exceptions": [
+    {
+      "id": "GHSA-xxxx-xxxx-xxxx",
+      "package": "〈パッケージ名〉",
+      "range": "<=1.2.3",
+      "reason": "修正版が無い理由・開発用依存である経路・攻撃の入口が無い理由",
+      "review_by": "YYYY-MM-DD"
+    }
+  ]
+}
+```
+
+- **例外に入れてよいのは「修正版が公開されていない・開発用依存だけ」の advisory に限る。** 修正版があるなら依存を上げるか
+  `package.json` の `overrides` で下限を張る
+- どの advisory にも当たらない例外は警告だけ出す（落とさない）。不要になったら消す
+- `npm audit` の出力が読めない・例外リストの形が違うときも NG（fail-closed）
+- 例外リストは `attestation.mjs` の `DEPENDENCY_MANIFESTS` に入っているので、触ったら Nightly を回し直すまでリリースゲートは通らない
+- `npm run` 経由でなく直接叩いたときは、Windows では `cmd.exe /d /s /c npm` で npm を呼ぶ（`npm.cmd` を `shell: true` 無しで解決するため。
+  `gradle_test.mjs` と同じ理由）
+
+経緯と却下案は `documents/adr/0902-npm-audit-allowlist-for-unfixed-dev-dependencies.md`。
 
 ## dev.mjs
 

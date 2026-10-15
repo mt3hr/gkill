@@ -1,6 +1,6 @@
 module github.com/mt3hr/gkill_example
 
-go 1.26.6
+go 1.26.9
 
 require github.com/mt3hr/gkill/src/server v0.0.0
 

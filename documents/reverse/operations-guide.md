@@ -128,7 +128,7 @@ npm run release
 >    `src/tools/run_test_suite.mjs` が成功時にだけ書く（`npm test` 一発でも、段階ごとに回しても同じ）
 > 3. E2E は PATH 上の `gkill_server` も同じ tree から作られている（`gkill_server version` の `tree:`）
 > 4. GitHub Actions の CI がこの HEAD で success、直近の Nightly が success かつ 48 時間以内・HEAD の祖先・
->    以後に依存の宣言（`package.json` / `package-lock.json` / `go.mod` / `go.sum`）が変わっていない
+>    以後に依存の宣言（`package.json` / `package-lock.json` / `go.mod` / `go.sum` / npm audit の例外リスト）が変わっていない
 >
 > 通ると `release/RELEASE_ATTESTATION_<version>.json` が書かれ、`verify_release_artifacts` が SHA256SUMS に
 > 載せて、ビルド後にも HEAD が動いていないことを再検査する。
@@ -145,6 +145,11 @@ npm run release
 >
 > Nightly の run 単位の success が保証するのは govulncheck / npm audit（E2E と Android/Wear は
 > continue-on-error）。E2E・Android/Wear の実証はローカルの attestation（2.）が担う。
+>
+> Nightly の npm audit は high 以上で落ちる。修正版の無い開発用依存の advisory だけは
+> `src/tools/npm_audit_allowlist.json` に名指しして通せるが、本番依存に入った・対象範囲が変わった・見直し期限を
+> 過ぎたときは赤くなる。そのときは修正版の有無を確かめ、依存を上げるか例外を消す・期限を延ばす
+> （条件の詳細は `src/tools/README.md`「npm_audit_gate.mjs」）。
 >
 > リポジトリ外の配置スクリプトは
 > `npm run release` を経由せずビルドスクリプトを直接呼ぶため**このゲートを通らない**。そちらからも

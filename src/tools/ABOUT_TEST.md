@@ -2,7 +2,7 @@
 
 ## 概要
 
-`src/tools/` のうち、リリースゲート（テスト済み attestation）を構成する 5 ファイル（`attestation.mjs` / `run_test_suite.mjs` / `verify_release_gate.mjs` / `verify_release_artifacts.mjs` / `put_version_info.mjs`）の判定関数と、`verify_docs.mjs` の解析部（正規表現と composeTools の読み方、境界対応表の突き合わせ、テストファイルの索引網羅、`src/server/ABOUT_TEST.md` の分類表の和）のテスト。MCP の tools/list 予算は Go 側（`gkill_server mcp schema-budget`、`src/server/gkill/mcp/tool_schema_budget_test.go`）が持つ。
+`src/tools/` のうち、リリースゲート（テスト済み attestation）を構成する 5 ファイル（`attestation.mjs` / `run_test_suite.mjs` / `verify_release_gate.mjs` / `verify_release_artifacts.mjs` / `put_version_info.mjs`）の判定関数と、`npm_audit_gate.mjs`（Nightly の npm audit の判定と例外リスト）、`verify_docs.mjs` の解析部（正規表現と composeTools の読み方、境界対応表の突き合わせ、テストファイルの索引網羅、`src/server/ABOUT_TEST.md` の分類表の和）のテスト。MCP の tools/list 予算は Go 側（`gkill_server mcp schema-budget`、`src/server/gkill/mcp/tool_schema_budget_test.go`）が持つ。
 壊れると「テスト未実施のコミットが配布される」（指摘 F-006 の再来）に戻るので、
 ローカル `npm test` と CI（`ci.yml` の `frontend` ジョブ）の両方で回す。
 
@@ -13,13 +13,14 @@ git を実際に呼ぶので、`git` が PATH に要る。リポジトリ本体�
 
 ## テストファイル
 
-92テスト（3ファイル）。静的計数、`test.each` は 1 と数える。
+115テスト（4ファイル）。静的計数、`test.each` は 1 と数える。
 
 | ファイル | テスト内容 |
 |---------|-----------|
 | `src/tools/__tests__/attestation.test.mjs` | `attestation.mjs` / `run_test_suite.mjs`（引数許可リスト・`SUITES` 表）/ `verify_release_gate.mjs` の単体・結合テスト（読む側） |
 | `src/tools/__tests__/verify_docs.test.mjs` | `verify_docs.mjs` の解析部。MCP のテスト件数を数える `MCP_TEST_RE`（`t.Run(` の行だけ。コメント・別名は数えない）と、`return composeTools(...)` の1行と `newNameSet(...)` の絞り込みからサーバごとのツール数を出す `countComposedToolNames`（連結・重複・知らないモジュール名・定義行を読まないこと）。境界対応表（`documents/reverse/cross-boundary-map.md`）の読み方と突き合わせ（ルート表・ハンドラ・GkillAPI の解析、表の切り出し、※ の付け忘れと付けすぎ、欠けた行に貼れる期待行を出すこと、並び、委譲先の字面、集合の双方向照合、契約の字面、reverse 資料の索引網羅）。全テストファイルの basename がいずれかの `ABOUT_TEST.md` に載っているかの照合（`checkTestFileCoverage`: 拡張子まで含めて照合する・同名は1回だけ報告・並びは名前順）と、`src/server/ABOUT_TEST.md` の分類表の和と合計行の突き合わせ（`checkServerAboutTestCategorySum`: 合計行より後ろの表の数字は足さない・ヘッダ行や合計行が無いときはその旨を報告する）。個人情報検査の対象（`personalInfoScanFiles` / `readPersonalInfoTarget`: 作業ツリーから消したが index に残っているファイルも列挙し、中身は index の版を読む。使い捨ての git リポジトリで確かめる）。ここが空振りしても verify_docs は「件数 0 が資料と合わない」でしか落ちず、資料側を 0 に直されると気付けない |
 | `src/tools/__tests__/release_scripts.test.mjs` | 書く側。`run_test_suite.mjs` の記録条件（`decideRecording`: 失敗・シグナル中断・CI・絞り込み引数では記録しない）と `gkill_server version` からの tree 読み取り、`put_version_info.mjs` の `version.json`（tree_hash・git が無いときは環境変数の SHA か unknown で止めない）、`verify_release_artifacts.mjs` の成果物一覧（12件）・7za 一覧の読み方・必須エントリ・debug 署名判定・apksigner の探索 |
+| `src/tools/__tests__/npm_audit_gate.test.mjs` | `npm_audit_gate.mjs`。`npm audit --json` の読み方（via のオブジェクトだけを advisory として拾い連鎖は数えない・重複をまとめる・JSON でない／エラー／形の違い／high 以上のエントリがあるのに advisory を拾えないときは投げる）、例外リストの検証（5項目の欠け・実在しない日付・ID の重複）、判定（例外の条件を満たせば通す・リストに無い high 以上・本番依存に出た・対象範囲の変化・パッケージ名の違い・見直し期限の翌日で落とす・moderate 以下は落とさない・当たらない例外は警告だけ）、npm の呼び方（`npm_execpath`・Windows の cmd 経由）。条件が1つ緩むと本番依存の脆弱性や修正版の出た advisory が Nightly とリリースゲートを素通りする |
 
 ## テスト内容
 
@@ -38,6 +39,7 @@ git を実際に呼ぶので、`git` が PATH に要る。リポジトリ本体�
 - **記録の条件（`decideRecording`）**: 成功・非 CI・許可された引数だけなら記録し、exit 非 0・シグナル中断・CI・絞り込み引数・引数が検査内容を置き換えるスイートの引数ありでは記録しない。「失敗したのに記録する」変更は attestation の前提を壊す
 - **`version.json`**: `build_time` はローカル時刻＋タイムゾーン、`commit_hash` / `tree_hash` は git から、git が無ければ `GITHUB_SHA` / `COMMIT_SHA` か unknown でビルドを止めない
 - **成果物の検証**: 成果物はゲートの記録 + Go 7種 + APK 3本 + サンプルデータの 12 件、`7za l -slt` の `Path = ` 行だけを拾い区切りを `/` に揃える、必須エントリの欠けの列挙、`CN=Android Debug` の検出、`build-tools` の最新版から `apksigner` を探す
+- **npm audit の判定（`npm_audit_gate.mjs`）**: high 以上の advisory は例外リストに名指しされ、本番依存（`--omit=dev`）に出ず、パッケージ名と対象範囲が一致し、見直し期限（UTC の日付、当日まで有効）を過ぎていないときだけ通す。npm audit の出力・例外リストが読めないときは投げる（fail-closed）
 
 ## 実行方法
 

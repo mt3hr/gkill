@@ -82,7 +82,7 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 | `npm run verify_release_gate` | リリースゲート。作業ツリーがクリーン・全スイートの attestation が HEAD の tree と一致・GitHub の CI / Nightly が緑でなければ止める（抜け道なし） |
 | `npm run release` | `verify_release_gate` → Cross-compile release for all platforms |
 
-**Prerequisites:** Go 1.26.6+ (`src/server/go.mod` declares `go 1.26.6`), Node.js 20.19+ (24.x recommended — `package.json` has no `engines` field, so this is not enforced), `npm i`
+**Prerequisites:** Go 1.26.9+ (`src/server/go.mod` declares `go 1.26.9`), Node.js 20.19+ (24.x recommended — `package.json` has no `engines` field, so this is not enforced), `npm i`
 
 ビルドパイプラインの内訳・`go build` の罠・dev プロキシ・E2E 環境・リリースゲートの詳細は [gkill-build-test](.claude/skills/gkill-build-test/SKILL.md)。
 

@@ -45,6 +45,7 @@ export const REQUIRED_SUITES = [
 
 // Nightly（govulncheck / npm audit）の結果が「この HEAD にも当てはまる」と言える条件:
 // Nightly が見た SHA から HEAD までの間に依存の宣言が変わっていないこと。
+// npm audit の例外リストも Nightly の結果を左右する（例外を消すと Nightly が赤くなりうる）ので同じ扱いにする。
 export const DEPENDENCY_MANIFESTS = [
   'package.json',
   'package-lock.json',
@@ -52,6 +53,7 @@ export const DEPENDENCY_MANIFESTS = [
   'src/server/go.sum',
   'src/plugins/*/go.mod',
   'src/plugins/*/go.sum',
+  'src/tools/npm_audit_allowlist.json',
 ]
 
 export const NIGHTLY_MAX_AGE_HOURS = 48

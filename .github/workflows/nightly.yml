@@ -11,6 +11,8 @@ name: Nightly
 # 安定したら外していく。govulncheck / npm_audit にはフレーク要因が無いので
 # fail-closed (指摘 F-009)。外部 advisory の増減で赤くなるのは
 # 「新しい既知脆弱性が届いた」という本物の信号で、握りつぶすと次の配布物へ入る。
+# 例外は npm audit の「修正版の無い開発用依存」だけで、src/tools/npm_audit_allowlist.json に
+# advisory を名指しして書く（本番依存・対象範囲の変化・見直し期限切れは落とす。ADR-0902）。
 #
 # すべて ubuntu-latest で回す。Windows は並列プロセス過多で 0xC0000142 の
 # 偽失敗が出るため、夜間の自動実行には向かない。
@@ -45,7 +47,7 @@ jobs:
           cache-dependency-path: src/server/go.sum
 
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
           cache: npm
@@ -108,7 +110,7 @@ jobs:
 
       # test_android / test_wear_os は node 製ラッパー (gradle_test.mjs) 経由で走る
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
           cache: npm
@@ -138,7 +140,7 @@ jobs:
           cache-dependency-path: src/server/go.sum
 
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
           cache: npm
@@ -168,7 +170,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
           cache: npm
@@ -176,6 +178,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # high 以上の脆弱性がある依存を検出する。閾値未満は落とさない
+      # high 以上の脆弱性がある依存を検出する。閾値未満は落とさない。
+      # 判定は npm audit --audit-level=high と同じで、例外リストに名指しした開発用依存の advisory だけ
+      # 条件付きで通す（src/tools/npm_audit_gate.mjs。全依存と --omit=dev の2回 npm audit を回す）
       - name: npm audit
-        run: npm audit --audit-level=high
+        run: node src/tools/npm_audit_gate.mjs

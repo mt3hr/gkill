@@ -8,7 +8,7 @@ gkill の Go バックエンドサーバ。HTTP API、データアクセス層�
 ## モジュール情報
 
 - **Go モジュール**: `github.com/mt3hr/gkill/src/server`
-- **Go バージョン**: 1.26.6
+- **Go バージョン**: 1.26.9
 - **go.mod の場所**: `src/server/go.mod`（このディレクトリがモジュールルート）
 
 ## ディレクトリ構造
@@ -108,7 +108,7 @@ go build ./...
 ```
 
 **前提条件:**
-- Go 1.26.6+（`src/server/go.mod` が `go 1.26.6` を宣言）
+- Go 1.26.9+（`src/server/go.mod` が `go 1.26.9` を宣言）
 - フロントエンドビルド済み（`npm run build` → `embed/html/` にコピー済み）
 
 ## コード規約
