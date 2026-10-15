@@ -6,7 +6,7 @@ require github.com/mt3hr/gkill/src/server v0.0.0
 
 require (
 	github.com/mattn/go-zglob v0.0.8 // indirect
-	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 )
 
 replace github.com/mt3hr/gkill/src/server => ../../../server
