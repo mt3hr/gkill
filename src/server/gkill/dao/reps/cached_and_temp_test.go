@@ -43,7 +43,8 @@ func auditFieldsOf(entity any) auditFields {
 }
 
 // assertAuditFieldsRoundTrip は temp rep の Add → GetXxxByTXID で作成・更新の欄6つが同じ向きで戻ることを固定する
-// （通知は実 rep・キャッシュ版の読み取り口も assertNotificationAuditFieldsRoundTripOnAllReads から使う）。
+// （通知とリポストは実 rep・キャッシュ版の読み取り口も assertNotificationAuditFieldsRoundTripOnAllReads /
+// assertReKyouAuditFieldsRoundTripOnAllReads から使う）。
 //
 // SELECT の列順と rows.Scan の順がずれても SQLite はエラーを出さない。Mi の temp rep は
 // 2026-03-05〜2026-09-19 の間 CREATE_DEVICE と CREATE_USER が入れ替わって実 rep へ確定していた
@@ -841,6 +842,41 @@ func TestCachedReKyou_AddAndGet(t *testing.T) {
 	if got.RepName != "rekyou" {
 		t.Errorf("RepName = %q, want %q", got.RepName, "rekyou")
 	}
+}
+
+// キャッシュ版の読み取り口7つでも作成・更新の欄6つが入れ替わらない（実 rep と同じ入れ替わりがあった）。
+func TestCachedReKyou_AuditFieldsRoundTrip(t *testing.T) {
+	assertReKyouAuditFieldsRoundTripOnAllReads(t, newCachedReKyouRepo(t))
+}
+
+// 再構築（UpdateCache が実 rep から全件を読んでキャッシュへ入れ直す）経路でも作成・更新の欄が入れ替わらない。
+// 実 rep とキャッシュ版の読み取りが両方入れ替わっていた間は、この経路だけ入れ替わりが打ち消し合って正しく見えていた。
+// 片方だけ直す・再構築側の INSERT の列順を崩すと、ここで入れ替わる。
+func TestCachedReKyou_AuditFieldsRoundTripThroughRebuild(t *testing.T) {
+	ctx := context.Background()
+	baseRepo := newTempReKyouRepo(t, nil)
+	repo, err := NewReKyouRepositoryCachedSQLite3Impl(ctx, baseRepo, nil, openMemoryDB(t), &sync.RWMutex{}, "REKYOU_CACHE")
+	if err != nil {
+		t.Fatalf("failed to create cached rekyou repo: %v", err)
+	}
+	t.Cleanup(func() { repo.Close(ctx) })
+
+	rk := makeReKyouWithDistinctAuditFields("cached-rekyou-rebuild", "target-rebuild")
+	if err := baseRepo.AddReKyouInfo(ctx, rk); err != nil {
+		t.Fatalf("AddReKyouInfo (base) failed: %v", err)
+	}
+	if err := repo.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache failed: %v", err)
+	}
+
+	got, err := repo.GetReKyou(ctx, rk.ID, nil)
+	if err != nil {
+		t.Fatalf("GetReKyou failed: %v", err)
+	}
+	if got == nil {
+		t.Fatal("GetReKyou returned nil（再構築でキャッシュへ入っていない）")
+	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(rk), auditFieldsOf(got))
 }
 
 // ===========================================================================

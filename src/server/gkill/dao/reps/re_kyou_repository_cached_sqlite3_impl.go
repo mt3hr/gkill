@@ -780,6 +780,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyou(ctx context.Context, id st
 	defer r.m.RUnlock()
 	var err error
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに作成者と作成端末が入れ替わって返る（assertReKyouAuditFieldsRoundTripOnAllReads が固定する）。
 	sql := `
 SELECT 
   IS_DELETED,
@@ -788,8 +790,8 @@ SELECT
   RELATED_TIME_UNIX,
   CREATE_TIME_UNIX,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -911,6 +913,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyouHistories(ctx context.Conte
 	defer r.m.RUnlock()
 	var err error
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに作成者と作成端末が入れ替わって返る（assertReKyouAuditFieldsRoundTripOnAllReads が固定する）。
 	sql := `
 SELECT 
   IS_DELETED,
@@ -919,8 +923,8 @@ SELECT
   RELATED_TIME_UNIX,
   CREATE_TIME_UNIX,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -1075,6 +1079,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyousAllLatest(ctx context.Cont
 	defer r.m.RUnlock()
 	var err error
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに作成者と作成端末が入れ替わって返る（assertReKyouAuditFieldsRoundTripOnAllReads が固定する）。
 	sql := `
 SELECT 
   IS_DELETED,
@@ -1083,8 +1089,8 @@ SELECT
   RELATED_TIME_UNIX,
   CREATE_TIME_UNIX,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,

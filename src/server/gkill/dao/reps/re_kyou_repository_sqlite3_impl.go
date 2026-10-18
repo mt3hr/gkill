@@ -669,6 +669,8 @@ func (r *reKyouRepositorySQLite3Impl) GetReKyou(ctx context.Context, id string, 
 		}()
 	}
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに作成者と作成端末が入れ替わって返る（assertReKyouAuditFieldsRoundTripOnAllReads が固定する）。
 	sql := `
 SELECT 
   IS_DELETED,
@@ -677,8 +679,8 @@ SELECT
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -834,6 +836,8 @@ func (r *reKyouRepositorySQLite3Impl) GetReKyouHistories(ctx context.Context, id
 		}()
 	}
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに作成者と作成端末が入れ替わって返る（assertReKyouAuditFieldsRoundTripOnAllReads が固定する）。
 	sql := `
 SELECT 
   IS_DELETED,
@@ -842,8 +846,8 @@ SELECT
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -1081,6 +1085,8 @@ func (r *reKyouRepositorySQLite3Impl) GetReKyousAllLatest(ctx context.Context) (
 		}()
 	}
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに作成者と作成端末が入れ替わって返る（assertReKyouAuditFieldsRoundTripOnAllReads が固定する）。
 	sql := `
 SELECT 
   IS_DELETED,
@@ -1089,8 +1095,8 @@ SELECT
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
