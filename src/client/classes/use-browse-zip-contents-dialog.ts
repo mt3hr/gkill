@@ -268,7 +268,8 @@ export function useBrowseZipContentsDialog(options: {
                 all_bytes.set(chunk, offset)
                 offset += chunk.byteLength
             }
-            const decoded = detect_and_decode_text(all_bytes)
+            // 途中で止めたときは末尾に切れた多バイト文字が残るので、判定を崩さないよう truncated を渡す
+            const decoded = detect_and_decode_text(all_bytes, { truncated })
             text_viewer_content.value = decoded + (truncated ? '\n\n' + i18n.global.t('ZIP_TEXT_TRUNCATED_MESSAGE') : '')
         } catch (e) {
             emit_text_error(String(e))

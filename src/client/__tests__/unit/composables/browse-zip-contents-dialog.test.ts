@@ -273,3 +273,85 @@ describe('サイズ表示', () => {
         expect(dialog.format_size(bytes)).toBe(want)
     })
 })
+
+// テキストビューワーは 512KiB（use-browse-zip-contents-dialog.ts の TEXT_VIEWER_MAX_BYTES）で読むのを止める。
+// 止めた位置は文字の境目とは限らないので、末尾に切れた多バイト文字が残る。
+// これをそのまま文字コード判定に渡すと、UTF-8 の厳密デコードが末尾の切れ端で失敗して
+// Shift_JIS / EUC-JP の試行へ落ち、全体が文字化けする（または置換文字だらけになる）。
+// 応答に Content-Length があると読む前に「大きすぎる」で止めるので、ここを通るのは Content-Length が無いときだけ。
+describe('テキストビューワーの切り詰め', () => {
+    const TEXT_VIEWER_MAX_BYTES = 512 * 1024
+    const TRUNCATED_SUFFIX = '\n\nZIP_TEXT_TRUNCATED_MESSAGE' // i18n はキーをそのまま返すようモックしてある
+
+    /** Content-Length を返さず、本文をチャンクに分けて返す応答 */
+    function stub_streaming_fetch(bytes: Uint8Array, chunk_size = 64 * 1024): void {
+        vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => {
+            let offset = 0
+            return {
+                ok: true,
+                status: 200,
+                headers: { get: (): string | null => null },
+                body: {
+                    getReader: () => ({
+                        read: async (): Promise<{ done: boolean, value?: Uint8Array }> => {
+                            if (offset >= bytes.length) {
+                                return { done: true }
+                            }
+                            const value = bytes.slice(offset, offset + chunk_size)
+                            offset += chunk_size
+                            return { done: false, value }
+                        },
+                        cancel: async (): Promise<void> => { },
+                    }),
+                },
+            }
+        }))
+    }
+
+    async function open_text(bytes: Uint8Array): Promise<string> {
+        stub_streaming_fetch(bytes)
+        const text_entry = entry('log.txt', { is_text: true })
+        const dialog = mount_dialog([text_entry])
+        await dialog.open_text_viewer(text_entry)
+        return dialog.text_viewer_content.value
+    }
+
+    afterEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    test('UTF-8 で切れ目が文字の途中でも、切れ端だけ捨てて UTF-8 として読む', async () => {
+        // 「あ」は3バイト。524288 = 3 × 174762 + 2 なので、最後の1文字が2バイトで切れる
+        const text = await open_text(new TextEncoder().encode('あ'.repeat(200000)))
+
+        expect(text.endsWith(TRUNCATED_SUFFIX)).toBe(true)
+        const body = text.slice(0, -TRUNCATED_SUFFIX.length)
+        expect(body.includes('�'), '置換文字が混じった（UTF-8 として読めていない）').toBe(false)
+        expect(/^あ+$/.test(body), '「あ」以外の文字が混じった（別の文字コードとして読まれた）').toBe(true)
+        expect(body.length).toBe(Math.floor(TEXT_VIEWER_MAX_BYTES / 3))
+    })
+
+    test('Shift_JIS で切れ目が2バイト文字の先行バイトの直後でも、Shift_JIS として読む', async () => {
+        // 「日」は Shift_JIS で 0x93 0xFA。先頭の ASCII 1バイトで1つずらし、
+        // 512KiB 目が次の「日」の先行バイト 0x93 になるようにする
+        const char_count = 300000
+        const bytes = new Uint8Array(1 + char_count * 2)
+        bytes[0] = 0x61 // 'a'
+        for (let i = 0; i < char_count; i++) {
+            bytes[1 + i * 2] = 0x93
+            bytes[2 + i * 2] = 0xFA
+        }
+        const text = await open_text(bytes)
+
+        expect(text.endsWith(TRUNCATED_SUFFIX)).toBe(true)
+        const body = text.slice(0, -TRUNCATED_SUFFIX.length)
+        expect(body.includes('�'), '置換文字が混じった（Shift_JIS として読めていない）').toBe(false)
+        expect(/^a日+$/.test(body), '「日」以外の文字が混じった').toBe(true)
+        expect(body.length).toBe(1 + (TEXT_VIEWER_MAX_BYTES - 1 - 1) / 2)
+    })
+
+    test('上限に届かないファイルは従来どおり全文をそのまま出す', async () => {
+        const text = await open_text(new TextEncoder().encode('1行目\n2行目\nあいう'))
+        expect(text).toBe('1行目\n2行目\nあいう')
+    })
+})

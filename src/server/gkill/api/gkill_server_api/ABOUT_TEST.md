@@ -51,7 +51,7 @@ Go `testing` パッケージ
 | `kftl_idempotency_test.go` | 冪等キー台帳（`markDone` 後の達成済み判定、TTL 失効で再実行対象へ戻ること、`markDone` 時の GC） |
 | `shared_file_authz_test.go` | 共有経路のファイル配信の認可。共有クエリの結果に含まれるファイルだけを許可し、同一 rep 内の兄弟ファイルは 403 にすること（許可集合の突き合わせと URL パスの正規化） |
 | `web_push_test.go` | WebPush 送信失敗（`webpush.SendNotification` が nil resp を返す）で panic しないこと |
-| `handle_file_serve_test.go` | `/files/` 配信で `GetRepositories` 失敗が 500 になること。req_res を使わずファイル本体を返す経路で `response_status_guard_test.go` の免除対象のため、ここで直に固定する（かつては 403 で、認可の失敗とサーバ障害がステータスから区別できなかった） |
+| `handle_file_serve_test.go` | `/files/` 配信で `GetRepositories` 失敗が 500 になること。req_res を使わずファイル本体を返す経路で `response_status_guard_test.go` の免除対象のため、ここで直に固定する（かつては 403 で、認可の失敗とサーバ障害がステータスから区別できなかった）。加えて `/files/` の利用者ファイル配信のセキュリティヘッダ（`TestFileServeSetsSecurityHeaders`、後述） |
 | `handle_get_plugin_list_test.go` | `/api/get_plugin_list` が provides 宣言のあるプラグインに型別索引の統計（typed_index）と State / LastBuildError / LastAttemptAt を返すこと（「is_alive=true なのに0件」の理由を API から診断できるようにするため） |
 | `handle_update_user_reps_test.go` | 存在しないユーザIDへのリポジトリ一覧更新が `TargetAccountNotFoundError`（ERR000413）+ HTTP 404 になること。認証経路の `AccountNotFoundError`（ERR000002）を混ぜるとクライアントの check_auth が操作した管理者をログアウトさせるため、コードを分けている |
 | `gkill_error_cause_scan_test.go` | ソース走査ガード。`if err != nil` の中で組み立てる `message.GkillError` に `Cause` が付いていること（このパッケージと usecase）。`err != nil` を OR / AND で他の条件と繋いだ複合条件も対象（2026-09-16 まで単体の `err != nil` しか見ておらず、OR で繋いだ 28 箇所が Cause 無しのまま残っていた）。Cause が無いとそのエラーだけ reason が出ず、`gkill_error.log` の1行に cause が載らない |
@@ -149,19 +149,23 @@ Kyou だけが返る」ことが唯一の防壁になる。ここが崩れると
 `HttpOnly` を付けられないため、同一オリジンでスクリプトが動くと読み出せてしまう。
 
 `withUserContentSecurityHeaders`（`utils.go`）がルート側で
-`X-Content-Type-Options: nosniff` と `Content-Security-Policy: sandbox` を付ける。
-`sandbox` に `allow-scripts` を付けていないので中のスクリプトは実行されない。
-`sandbox` はドキュメントとして読み込まれたときにだけ効くため、
+`X-Content-Type-Options: nosniff` を全部に付け、`Content-Security-Policy` を拡張子で3通りに付ける
+（判定は `userContentSecurityPolicy`）。`sandbox` はドキュメントとして読み込まれたときにだけ効くため、
 `<img>` や `<video>` のサブリソースとしての表示には影響しない。
 
-例外として `.pdf`（大小無視）には `sandbox` を付けない。付けると opaque origin に
-なり Chrome の内蔵PDFビューワが無効化されて、新しいタブでの表示がダウンロードに
-落ちるため。`nosniff` は `.pdf` にも付き Content-Type は `application/pdf` に
-固定されるので、HTMLを `.pdf` にリネームして持ち込んでもHTMLとしては解釈されない。
+- `.html` / `.htm` / `.xhtml`: `sandbox allow-scripts allow-downloads allow-modals`。スクリプトは動くが、
+  `allow-same-origin` が無いので文書は opaque origin になり、gkill のクッキーにも localStorage にも触れない（ADR-0711）
+- それ以外（`.svg` を含む）: `sandbox`。中のスクリプトは実行されない
+- `.pdf`: 付けない。付けると opaque origin になり Chrome の内蔵PDFビューワが無効化されて、
+  新しいタブでの表示がダウンロードに落ちるため。`nosniff` は `.pdf` にも付き Content-Type は `application/pdf` に
+  固定されるので、HTMLを `.pdf` にリネームして持ち込んでもHTMLとしては解釈されない
 
-`TestZipCacheFileServeSetsSecurityHeaders` がこれを固定する
-（HTMLは `sandbox` + `nosniff`、PDFは `sandbox` 無し + `nosniff` +
-`application/pdf`、拡張子の大小無視、の3サブテスト）。
+`TestZipCacheFileServeSetsSecurityHeaders`（`/zip_cache/`）と `TestFileServeSetsSecurityHeaders`（`/files/`、
+`handle_file_serve_test.go`）が同じ表（`userContentHeaderCases`）でこれを固定する。HTML の CSP は文字列の完全一致で、
+`allow-same-origin` を含まないことは別に見る。期待値は `utils.go` の定数を参照せず文字列で書く（定数を書き換えると期待値も動き、
+緩めたことに気付けないため）。拡張子の大小（`upper.HTML` / `upper.PDF`）と `%2E` の表記（`encoded%2Ehtml`）も同じ判定になること。
+実ブラウザで「スクリプトは動き、`document.cookie` と `localStorage` は例外になる」ことは
+`src/client/__tests__/e2e/user-content-sandbox.spec.ts` が見る。
 **ルート登録を `serve.go` と同じ形（ラッパー経由）にしないと素通りする**ので注意。
 また `index.html` という名前は `http.FileServer` がディレクトリへ
 リダイレクトしてしまうため、テストでは別名を使っている。

@@ -4,8 +4,51 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
+
+// TestFileServeSetsSecurityHeaders は、/files/ の応答にも /zip_cache/ と同じ
+// セキュリティヘッダが付くことを確認する（表は handle_zip_cache_file_serve_test.go と共有）。
+//
+// 取り込んだ HTML は allow-scripts 付きの sandbox で開き、allow-same-origin は付けない。
+// 文書は opaque origin になるので、スクリプトは動くが gkill のクッキーにも
+// localStorage にも触れない（ADR-0711）。SVG やその他は従来どおりスクリプトの動かない
+// sandbox、PDF は内蔵ビューワのために CSP を付けない。
+//
+// ルートは serve.go と同じ形（withUserContentSecurityHeaders → wrapNoAuth → HandleFileServe）で
+// 登録する。setupTestRouter は /api/* しか登録しないので、ここで足さないとラッパーを通らない。
+func TestFileServeSetsSecurityHeaders(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	router := gkillAPI.GkillDAOManager.GetRouter()
+	router.PathPrefix("/files/").HandlerFunc(
+		withUserContentSecurityHeaders(gkillAPI.wrapNoAuth(gkillAPI.HandleFileServe)))
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
+
+	// addTestRepositories が作る directory 型 rep。rep 名はディレクトリ名（filepath.Base）になる
+	const repName = "directory_dir"
+	repDir := filepath.Join(gkill_options.GkillHomeDir, "datas", repName)
+	cases := userContentHeaderCases()
+	for _, c := range cases {
+		if err := os.WriteFile(filepath.Join(repDir, c.fileName), []byte(c.content), 0o600); err != nil {
+			t.Fatalf("failed to write %s: %v", c.fileName, err)
+		}
+	}
+
+	for _, c := range cases {
+		t.Run(c.requestName(), func(t *testing.T) {
+			resp := getWithSessionCookie(t, tsURL+"/files/"+repName+"/"+c.requestName(), sessionID)
+			defer resp.Body.Close()
+			assertUserContentSecurityHeaders(t, resp, c)
+		})
+	}
+}
 
 // GetRepositories 失敗時のステータスの回帰テスト。
 //

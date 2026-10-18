@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -494,25 +495,56 @@ func isPrivateIPv4(ip net.IP) bool {
 // HttpOnly を付けられないため、同一オリジンでスクリプトが動くと
 // そのまま読み出せてしまう。
 //
-//   - nosniff: 拡張子から決めた Content-Type をブラウザが推測で上書きしないようにする
-//   - CSP sandbox: allow-scripts を付けていないので、これらの経路から返った
-//     HTML/SVG の中のスクリプトは実行されない。
+//   - nosniff: 拡張子から決めた Content-Type をブラウザが推測で上書きしないようにする（全拡張子）
+//   - CSP sandbox: 拡張子で3通りに分ける（userContentSecurityPolicy）。
 //     sandbox はドキュメントとして読み込まれたときにだけ効くので、
 //     <img> や <video> のサブリソースとしての表示には影響しない。
 //
-// 例外として .pdf には sandbox を付けない。sandbox 下のドキュメントは
-// opaque origin になり、Chrome が内蔵PDFビューワを無効化して表示ではなく
-// ダウンロードに落ちるため。.pdf は nosniff と組み合わせて Content-Type が
-// application/pdf に固定されるので、HTML/SVG と違い同一オリジンで
-// スクリプトが動く経路にはならない（中身がHTMLでもPDFのパース失敗になるだけ）。
+// 判定は r.URL.Path の拡張子で行う。r.URL.Path はデコード済みなので
+// %2Ehtml / %2Epdf のような表記もここで .html / .pdf に揃う。
 func withUserContentSecurityHeaders(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-		// r.URL.Path はデコード済みなので %2Epdf のような表記もここで .pdf に揃う
-		if !strings.HasSuffix(strings.ToLower(r.URL.Path), ".pdf") {
-			w.Header().Set("Content-Security-Policy", "sandbox")
+		if policy := userContentSecurityPolicy(r.URL.Path); policy != "" {
+			w.Header().Set("Content-Security-Policy", policy)
 		}
 		next(w, r)
+	}
+}
+
+// userContentHTMLSandboxPolicy は利用者の HTML に付ける CSP。
+//
+// allow-scripts で中のスクリプトを動かす（取り込んだ単一ファイルの 3D ビューアなどが
+// sandbox だけだと真っ白になる）。allow-same-origin は**絶対に付けない** —— 付けないことで
+// 文書は opaque origin になり、document.cookie・localStorage・IndexedDB は例外になる。
+// Cookie は SameSite=Lax なので opaque origin からの fetch や POST にも付かない。
+// 付けると gkill のオリジンでスクリプトが動き、セッションIDがそのまま読める（この sandbox を
+// 張った理由そのもの）。allow-top-navigation / allow-popups-to-escape-sandbox / allow-forms も付けない。
+//   - allow-downloads: ビューアの画像保存（<a download>）のため
+//   - allow-modals: prompt() / alert() のため
+//
+// 却下案（別ポート・別ホストでの配信、常にダウンロード、SPA 内の iframe）は ADR-0711。
+const userContentHTMLSandboxPolicy = "sandbox allow-scripts allow-downloads allow-modals"
+
+// userContentSecurityPolicy は利用者ファイルの URL パスから付ける CSP を決める。空文字は付けない。
+//
+//   - .html / .htm / .xhtml: userContentHTMLSandboxPolicy（opaque origin でスクリプトだけ許す）
+//   - .pdf: 付けない。sandbox 下のドキュメントは opaque origin になり、Chrome が内蔵PDFビューワを
+//     無効化して表示ではなくダウンロードに落ちるため。.pdf は nosniff と組み合わせて Content-Type が
+//     application/pdf に固定されるので、同一オリジンでスクリプトが動く経路にはならない
+//     （中身がHTMLでもPDFのパース失敗になるだけ）
+//   - それ以外（.svg を含む）: allow-scripts の無い sandbox。SVG は <img> で表示する画像でもあり、
+//     文書として開いたときにスクリプトを動かす理由が無い
+//
+// MCP の file-link 配信（mcp/http_transport.go）は HTML も sandbox のままで、ここと意図して違う。
+func userContentSecurityPolicy(urlPath string) string {
+	switch path.Ext(strings.ToLower(urlPath)) {
+	case ".pdf":
+		return ""
+	case ".html", ".htm", ".xhtml":
+		return userContentHTMLSandboxPolicy
+	default:
+		return "sandbox"
 	}
 }
 

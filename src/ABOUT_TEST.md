@@ -11,14 +11,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド (`server/`) | 1431 | 215 | Go `testing` |
-| フロントエンド ユニット (`client/`) | 2122 | 188 | Vitest |
-| フロントエンド E2E (`client/`) | 256 | 47 | Playwright |
+| Go バックエンド (`server/`) | 1432 | 215 | Go `testing` |
+| フロントエンド ユニット (`client/`) | 2125 | 188 | Vitest |
+| フロントエンド E2E (`client/`) | 257 | 48 | Playwright |
 | MCP サーバ (`server/gkill/mcp/`) | 1185 | 44 | Go `testing` |
 | ツール (`tools/`) | 115 | 4 | Vitest |
 | Android (`android/`) | 31 | 2 | JUnit 4 |
 | Wear OS (`wear_os/`) | 232 | 18 | JUnit 4 + MockK |
-| **合計** | **5,372** | **518** | |
+| **合計** | **5,377** | **519** | |
 
 `src/plugins/` の Go テスト 219件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
@@ -71,7 +71,7 @@ npm run verify_docs -- --list
 
 | ディレクトリ | テスト仕様 | 概要 |
 |-------------|-----------|------|
-| `client/` | [client/ABOUT_TEST.md](client/ABOUT_TEST.md) | フロントエンド全体（unit 2122 + E2E 256） |
+| `client/` | [client/ABOUT_TEST.md](client/ABOUT_TEST.md) | フロントエンド全体（unit 2125 + E2E 257） |
 | `client/classes/` | [client/classes/ABOUT_TEST.md](client/classes/ABOUT_TEST.md) | ユーティリティクラス |
 | `client/classes/api/` | [client/classes/api/ABOUT_TEST.md](client/classes/api/ABOUT_TEST.md) | GkillAPI クライアント |
 | `client/classes/datas/` | [client/classes/datas/ABOUT_TEST.md](client/classes/datas/ABOUT_TEST.md) | 35ファイル（データモデル + 横断検証） |
@@ -79,7 +79,7 @@ npm run verify_docs -- --list
 | `client/classes/kftl/` | [client/classes/kftl/ABOUT_TEST.md](client/classes/kftl/ABOUT_TEST.md) | KFTL 行分類器 (TypeScript。行ラベル専用) と送信経路 |
 | `client/pages/` | [client/pages/ABOUT_TEST.md](client/pages/ABOUT_TEST.md) | E2E + Composable + Router |
 | `locales/` | [locales/ABOUT_TEST.md](locales/ABOUT_TEST.md) | i18n 完全性検証（7言語） |
-| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（1431テスト / 33パッケージ） |
+| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（1432テスト / 33パッケージ） |
 | `server/gkill/api/` | [server/gkill/api/ABOUT_TEST.md](server/gkill/api/ABOUT_TEST.md) | API 共通基盤（FindFilter等） |
 | `server/gkill/api/gkill_server_api/` | [server/gkill/api/gkill_server_api/ABOUT_TEST.md](server/gkill/api/gkill_server_api/ABOUT_TEST.md) | API ハンドラ統合テスト（handle_*.go 実装99ファイル） |
 | `server/gkill/api/kftl/` | [server/gkill/api/kftl/ABOUT_TEST.md](server/gkill/api/kftl/ABOUT_TEST.md) | KFTL パーサ (Go) |

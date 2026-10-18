@@ -356,6 +356,8 @@ func (t *HttpTransport) HandleFileServe(w http.ResponseWriter, r *http.Request, 
 	// CSP sandbox は .pdf 以外に付ける (.pdf は sandbox の opaque origin で
 	// Chrome 内蔵 PDF ビューワが動かなくなるため除外)。sandbox は文書読み込み時のみ効き
 	// <img>/<video> のサブリソース表示には影響しないので、画像取得の本来用途は壊れない。
+	// 本体は .html/.htm/.xhtml に allow-scripts を足しているが、ここは意図して入れない
+	// （AI がファイルを取るための経路で、人が開いてスクリプトを動かす用途が無い。ADR-0711）。
 	isPdf := strings.HasSuffix(strings.ToLower(link.FileName), ".pdf")
 	contentType := NormalizeMimeType(file.ContentType)
 	if contentType == "" {
