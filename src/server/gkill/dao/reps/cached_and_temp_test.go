@@ -42,7 +42,8 @@ func auditFieldsOf(entity any) auditFields {
 	}
 }
 
-// assertAuditFieldsRoundTrip は temp rep の Add → GetXxxByTXID で作成・更新の欄6つが同じ向きで戻ることを固定する。
+// assertAuditFieldsRoundTrip は temp rep の Add → GetXxxByTXID で作成・更新の欄6つが同じ向きで戻ることを固定する
+// （通知は実 rep・キャッシュ版の読み取り口も assertNotificationAuditFieldsRoundTripOnAllReads から使う）。
 //
 // SELECT の列順と rows.Scan の順がずれても SQLite はエラーを出さない。Mi の temp rep は
 // 2026-03-05〜2026-09-19 の間 CREATE_DEVICE と CREATE_USER が入れ替わって実 rep へ確定していた
@@ -777,6 +778,41 @@ func TestCachedNotification_UpdateReturnsLatest(t *testing.T) {
 	if len(histories) != 2 {
 		t.Errorf("履歴の件数 = %d, want 2: %+v", len(histories), histories)
 	}
+}
+
+// キャッシュ版の読み取り口5つでも作成・更新の欄6つが入れ替わらない（実 rep と同じ入れ替わりがあった）。
+func TestCachedNotification_AuditFieldsRoundTrip(t *testing.T) {
+	assertNotificationAuditFieldsRoundTripOnAllReads(t, newCachedNotificationRepo(t))
+}
+
+// 再構築（UpdateCache が実 rep から全版を読んでキャッシュへ入れ直す）経路でも作成・更新の欄が入れ替わらない。
+// 実 rep とキャッシュ版の読み取りが両方入れ替わっていた間は、この経路だけ入れ替わりが打ち消し合って正しく見えていた。
+// 片方だけ直す・再構築側の INSERT の列順を崩すと、ここで入れ替わる。
+func TestCachedNotification_AuditFieldsRoundTripThroughRebuild(t *testing.T) {
+	ctx := context.Background()
+	baseRepo := newTempNotificationRepo(t)
+	repo, err := NewNotificationRepositoryCachedSQLite3Impl(ctx, baseRepo, openMemoryDB(t), &sync.RWMutex{}, "NOTIFICATION_CACHE")
+	if err != nil {
+		t.Fatalf("failed to create cached notification repo: %v", err)
+	}
+	t.Cleanup(func() { repo.Close(ctx) })
+
+	n := makeNotificationWithDistinctAuditFields("cached-notif-rebuild", "target-rebuild", "再構築経由")
+	if err := baseRepo.AddNotificationInfo(ctx, n); err != nil {
+		t.Fatalf("AddNotificationInfo (base) failed: %v", err)
+	}
+	if err := repo.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache failed: %v", err)
+	}
+
+	got, err := repo.GetNotification(ctx, n.ID, nil)
+	if err != nil {
+		t.Fatalf("GetNotification failed: %v", err)
+	}
+	if got == nil {
+		t.Fatal("GetNotification returned nil（再構築でキャッシュへ入っていない）")
+	}
+	assertAuditFieldsRoundTrip(t, auditFieldsOf(n), auditFieldsOf(got))
 }
 
 // ===========================================================================

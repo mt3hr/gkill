@@ -172,6 +172,8 @@ func (n *notificationRepositoryCachedSQLite3Impl) FindNotifications(ctx context.
 	n.m.RLock()
 	defer n.m.RUnlock()
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに作成者と作成端末が入れ替わって返る（assertNotificationAuditFieldsRoundTripOnAllReads が固定する）。
 	sql := `
 SELECT 
   IS_DELETED,
@@ -182,8 +184,8 @@ SELECT
   IS_NOTIFICATED,
   CREATE_TIME_UNIX,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -319,6 +321,8 @@ func (n *notificationRepositoryCachedSQLite3Impl) GetNotification(ctx context.Co
 	defer n.m.RUnlock()
 	var err error
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに作成者と作成端末が入れ替わって返る（assertNotificationAuditFieldsRoundTripOnAllReads が固定する）。
 	sql := `
 SELECT 
   IS_DELETED,
@@ -329,8 +333,8 @@ SELECT
   IS_NOTIFICATED,
   CREATE_TIME_UNIX,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -459,6 +463,8 @@ func (n *notificationRepositoryCachedSQLite3Impl) GetNotificationsByTargetID(ctx
 	defer n.m.RUnlock()
 	var err error
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに作成者と作成端末が入れ替わって返る（assertNotificationAuditFieldsRoundTripOnAllReads が固定する）。
 	sql := `
 SELECT 
   IS_DELETED,
@@ -469,8 +475,8 @@ SELECT
   IS_NOTIFICATED,
   CREATE_TIME_UNIX,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -587,6 +593,8 @@ func (n *notificationRepositoryCachedSQLite3Impl) GetNotificationsBetweenNotific
 	defer n.m.RUnlock()
 	var err error
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに作成者と作成端末が入れ替わって返る（assertNotificationAuditFieldsRoundTripOnAllReads が固定する）。
 	sql := `
 SELECT 
   IS_DELETED,
@@ -597,8 +605,8 @@ SELECT
   IS_NOTIFICATED,
   CREATE_TIME_UNIX,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -885,6 +893,8 @@ func (n *notificationRepositoryCachedSQLite3Impl) GetNotificationHistories(ctx c
 	defer n.m.RUnlock()
 	var err error
 
+	// SELECT の列順は下の rows.Scan の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに作成者と作成端末が入れ替わって返る（assertNotificationAuditFieldsRoundTripOnAllReads が固定する）。
 	sql := `
 SELECT 
   IS_DELETED,
@@ -895,8 +905,8 @@ SELECT
   IS_NOTIFICATED,
   CREATE_TIME_UNIX,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,

@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 )
 
 func makeNotification(id, targetID, content string) Notification {
@@ -12,6 +14,74 @@ func makeNotification(id, targetID, content string) Notification {
 		IsNotificated: false, NotificationTime: now,
 		CreateTime: now, CreateApp: "test_app", CreateDevice: "test_device", CreateUser: "test_user",
 		UpdateTime: now, UpdateApp: "test_app", UpdateUser: "test_user", UpdateDevice: "test_device"}
+}
+
+// makeNotificationWithDistinctAuditFields は作成・更新の欄6つを全部違う値にした通知を作る。
+// makeNotification は作成と更新で同じ値を使うので、作成と更新の取り違えまでは検出できない。
+func makeNotificationWithDistinctAuditFields(id, targetID, content string) Notification {
+	n := makeNotification(id, targetID, content)
+	n.CreateApp, n.CreateDevice, n.CreateUser = "create_app", "create_device", "create_user"
+	n.UpdateApp, n.UpdateDevice, n.UpdateUser = "update_app", "update_device", "update_user"
+	return n
+}
+
+// assertNotificationAuditFieldsRoundTripOnAllReads は通知を1件足し、読み取り口5つすべてで
+// 作成・更新の欄6つが入れ替わらずに戻ることを確かめる（assertAuditFieldsRoundTrip の通知版）。
+//
+// 通知の実 rep とキャッシュ版は SELECT が CREATE_USER, CREATE_DEVICE の順なのに rows.Scan が
+// (CreateDevice, CreateUser) の順で、読むたびに作成者と作成端末が入れ替わっていた。読んだ値を
+// そのまま新しい版として書き戻す経路（通知の編集・連鎖削除・MCP の更新/削除/復元）では入れ替わりが保存される。
+func assertNotificationAuditFieldsRoundTripOnAllReads(t *testing.T, repo NotificationRepository) {
+	t.Helper()
+	ctx := context.Background()
+
+	n := makeNotificationWithDistinctAuditFields("notif-audit", "target-audit", "作成・更新の欄の往復")
+	if err := repo.AddNotificationInfo(ctx, n); err != nil {
+		t.Fatalf("AddNotificationInfo failed: %v", err)
+	}
+	want := auditFieldsOf(n)
+
+	assertOne := func(t *testing.T, notifications []Notification, err error) {
+		t.Helper()
+		if err != nil {
+			t.Fatalf("read failed: %v", err)
+		}
+		if len(notifications) != 1 {
+			t.Fatalf("expected 1 notification, got %d", len(notifications))
+		}
+		assertAuditFieldsRoundTrip(t, want, auditFieldsOf(notifications[0]))
+	}
+
+	t.Run("FindNotifications", func(t *testing.T) {
+		got, err := repo.FindNotifications(ctx, &find.FindQuery{OnlyLatestData: true})
+		assertOne(t, got, err)
+	})
+	t.Run("GetNotification", func(t *testing.T) {
+		got, err := repo.GetNotification(ctx, n.ID, nil)
+		if err != nil {
+			t.Fatalf("GetNotification failed: %v", err)
+		}
+		if got == nil {
+			t.Fatal("GetNotification returned nil")
+		}
+		assertAuditFieldsRoundTrip(t, want, auditFieldsOf(got))
+	})
+	t.Run("GetNotificationsByTargetID", func(t *testing.T) {
+		got, err := repo.GetNotificationsByTargetID(ctx, n.TargetID)
+		assertOne(t, got, err)
+	})
+	t.Run("GetNotificationsBetweenNotificationTime", func(t *testing.T) {
+		got, err := repo.GetNotificationsBetweenNotificationTime(ctx, n.NotificationTime.Add(-time.Hour), n.NotificationTime.Add(time.Hour))
+		assertOne(t, got, err)
+	})
+	t.Run("GetNotificationHistories", func(t *testing.T) {
+		got, err := repo.GetNotificationHistories(ctx, n.ID)
+		assertOne(t, got, err)
+	})
+}
+
+func TestNotificationAuditFieldsRoundTrip(t *testing.T) {
+	assertNotificationAuditFieldsRoundTripOnAllReads(t, newTempNotificationRepo(t))
 }
 
 func TestNotificationAddAndGet(t *testing.T) {
