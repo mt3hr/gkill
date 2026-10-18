@@ -736,6 +736,9 @@ func dispatchWriteToolCall(ctx *CallContext, name string, args any) (*jsonobj.Ob
 		"gkill_update_timeis", "gkill_update_mi", "gkill_update_kc", "gkill_update_tag", "gkill_update_text":
 		return runUpdate(ctx, strings.TrimPrefix(name, "gkill_update_"), args)
 
+	case "gkill_upload_files":
+		return handleUploadFiles(ctx, args)
+
 	case "gkill_add_skill":
 		return handleAddSkill(ctx, args)
 
@@ -858,6 +861,8 @@ func summarizeWriteToolPayloadBody(name string, payload *jsonobj.Object) (string
 			return batchSoftDeleteSummary("Deleted (soft)", payload), true
 		}
 		return "Deleted (soft): " + describeSingleSoftDelete(payload, "updated_"), true
+	case "gkill_upload_files":
+		return summarizeUploadFilesPayload(payload), true
 	}
 	return "", false
 }

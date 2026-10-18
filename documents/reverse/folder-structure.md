@@ -242,8 +242,8 @@ AI連携用のMCP（Model Context Protocol）サーバーです。`gkill_server 
 ```
 src/server/gkill/mcp/
 ├── server_read.go             # Read専用MCPサーバー（14ツール = 固有13 + プラグイン1、port 8808）
-├── server_write.go            # Write専用MCPサーバー（33ツール = 固有32 + プラグイン1、port 8809）
-├── server_readwrite.go        # Read/Write統合MCPサーバー（37ツール = 固有36 + プラグイン1、port 8810）
+├── server_write.go            # Write専用MCPサーバー（34ツール = 固有33 + プラグイン1、port 8809）
+├── server_readwrite.go        # Read/Write統合MCPサーバー（38ツール = 固有37 + プラグイン1、port 8810）
 ├── bootstrap.go               # 起動ブロック（Start。stdio / http の選択、server_start ログ）
 ├── config.go                  # 設定ファイル gkill_mcp.json の生成・読み込み・優先順位
 ├── jsonobj/                   # 順序つき JSON（JSON.stringify 互換の直列化。応答のバイト一致のため）

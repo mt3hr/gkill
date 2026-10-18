@@ -290,6 +290,7 @@ Web のメモ帳が打鍵のたび（止まって300ms後）に投げて「お�
 | `target_rep_name` | string | アップロード先リポジトリ名 |
 | `conflict_behavior` | string | 衝突時の挙動: `"override"` / `"rename"` / `"merge"` |
 | `files` | FileData[] | アップロードファイル（複数可） |
+| `create_app` | string | 登録する記録の create_app / update_app。省略（空）なら `"gkill"`。Web は送らず、MCP の `gkill_upload_files` が自分のアプリ名を送る（ADR-0635） |
 | `locale_name` | string | ロケール名 |
 
 `FileData`: `file_name` / `data_base64` / `last_modified`(RFC3339)。

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -104,6 +105,8 @@ func sampleString(key string, schema *jsonobj.Object) string {
 		return "Inbox"
 	case "kftl_text":
 		return "sample"
+	case "data_base64":
+		return "c2FtcGxl" // "sample" の標準 base64（gkill_upload_files が Strict で復号して検査する）
 	}
 	return "sample"
 }
@@ -216,11 +219,20 @@ func isUnknownKeyError(err error) bool {
 	return ok && regexp.MustCompile(`is not supported`).MatchString(apiErr.Message)
 }
 
+// arrayIndexSegment は "files[0]" のような配列要素の指定（gkill_upload_files の files[i].x）。
+var arrayIndexSegment = regexp.MustCompile(`^(.+)\[(\d+)\]$`)
+
 func dropField(args *jsonobj.Object, field string) *jsonobj.Object {
 	path := strings.Split(strings.TrimPrefix(field, "arguments."), ".")
 	next := jsonobj.DeepClone(args).(*jsonobj.Object)
 	cursor := next
 	for _, segment := range path[:len(path)-1] {
+		if m := arrayIndexSegment.FindStringSubmatch(segment); m != nil {
+			items, _ := jsonobj.AsArray(cursor.Value(m[1]))
+			index, _ := strconv.Atoi(m[2])
+			cursor, _ = items[index].(*jsonobj.Object)
+			continue
+		}
 		child, _ := cursor.Object(segment)
 		cursor = child
 	}

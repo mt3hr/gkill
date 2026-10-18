@@ -222,6 +222,8 @@ func (s *Server) HandleToolCall(goCtx context.Context, name string, args any, ct
 		SID:     sid,
 		UserID:  userID,
 		AppName: s.WriteAppName,
+		// gkill_upload_files の file_path は stdio だけ受ける（ADR-0635）。読み取り側と同じくサーバの値を渡す。
+		IsLocalTransport: s.IsLocalTransport,
 	}, name, args)
 }
 

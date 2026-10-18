@@ -316,6 +316,8 @@ func (s *Server) serveAPI(w http.ResponseWriter, path string, body *jsonobj.Obje
 		serveGetSkill(w, body)
 	case "/api/write_skill_file":
 		serveWriteSkillFile(w, body)
+	case "/api/upload_files":
+		serveUploadFiles(w, body)
 	case "/api/delete_skill":
 		if stringOf(body, "name") != fakeSkillName {
 			writeJSON(w, 404, errorEnvelope("ERR000430", "スキルが見つかりません ("+stringOf(body, "name")+")", "not_found", ""))
@@ -579,6 +581,47 @@ func serveGetSkill(w http.ResponseWriter, body *jsonobj.Object) {
 	default:
 		writeJSON(w, 404, errorEnvelope("ERR000431", "スキルの中にそのファイルがありません ("+filePath+")", "not_found", ""))
 	}
+}
+
+// serveUploadFiles は /api/upload_files の固定応答。file rep は "Files" だけで、それ以外の名前は
+// 本物と同じ ERR000151（アップロード先が見つからない）。登録した記録の id は送られた順の固定値。
+func serveUploadFiles(w http.ResponseWriter, body *jsonobj.Object) {
+	if stringOf(body, "target_rep_name") != "Files" {
+		writeJSON(w, 404, errorEnvelope("ERR000151", "ファイルのアップロードに失敗しました", "not_found", ""))
+		return
+	}
+	createApp := stringOf(body, "create_app")
+	if createApp == "" {
+		createApp = "gkill"
+	}
+	files, _ := jsonobj.AsArray(body.Value("files"))
+	kyous := make([]any, 0, len(files))
+	for index, item := range files {
+		file, _ := item.(*jsonobj.Object)
+		lower := strings.ToLower(stringOf(file, "file_name"))
+		suffix := strconv.Itoa(index)
+		if len(suffix) < 2 {
+			suffix = "0" + suffix
+		}
+		kyous = append(kyous, jsonobj.Obj(
+			"is_deleted", false,
+			"id", "00000000-0000-4000-8000-0000000015"+suffix,
+			"rep_name", "Files",
+			"related_time", stringOf(file, "last_modified"),
+			"data_type", "idf",
+			"create_time", "2026-09-21T03:30:45+09:00",
+			"create_app", createApp,
+			"create_device", "fakepc",
+			"create_user", "testuser",
+			"update_time", "2026-09-21T03:30:45+09:00",
+			"update_app", createApp,
+			"update_user", "testuser",
+			"update_device", "fakepc",
+			"is_image", strings.HasSuffix(lower, ".png") || strings.HasSuffix(lower, ".jpg"),
+			"is_video", strings.HasSuffix(lower, ".mp4"),
+		))
+	}
+	writeJSON(w, 200, envelope("uploaded_kyous", kyous))
 }
 
 // serveWriteSkillFile は /api/write_skill_file の固定応答。revision "stale" は食い違い、

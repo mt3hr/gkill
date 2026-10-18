@@ -38,7 +38,7 @@ func targetsProperty(verb string) *jsonobj.Object {
 
 const projectionVocabularyDesc = "Two vocabularies exist: search results and add_* / update_* responses carry PROJECTION names (mi_create / mi_check / mi_limit / mi_start / mi_end, mirekyou_*, timeis_start / timeis_end), while this parameter is the ENTITY type (mi / mirekyou / timeis). Projection names are accepted here and folded to their entity type, so a data_type copied straight out of a response works."
 
-// WriteTools は書き込みツール 23 本（順序固定）。
+// WriteTools は書き込みツール 24 本（順序固定）。
 var WriteTools = []*jsonobj.Object{
 	tool(
 		"gkill_add_kmemo",
@@ -435,6 +435,41 @@ var WriteTools = []*jsonobj.Object{
 			),
 			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
 		), nil),
+	),
+	// ファイルのアップロード（ADR-0635）。画面の「アップロード」の「ファイル」タブと同じ引数。実装は upload_files.go。
+	tool(
+		"gkill_upload_files",
+		"Upload files into a gkill file repository; each becomes an idf entry (same as the Upload screen's File tab). "+
+			"Give each file as file_name + data_base64, or as file_path (stdio connections only — the MCP server reads it). "+
+			"Defaults match the screen: the account's writable file repository, conflict_behavior rename, and related_time = "+
+			"the file's modification time (file_path) or now (data_base64). Not a transaction: if it fails, nothing is "+
+			"registered but files already written stay on disk — check before retrying with rename. "+
+			"Response: uploaded_kyous[] (id, data_type idf, related_time ...); pass an id to gkill_add_tag / gkill_add_text. "+
+			"Details: gkill_get_mcp_help topic:idf.",
+		schema(jsonobj.Obj(
+			"files", jsonobj.Obj(
+				"type", "array",
+				"items", jsonobj.Obj(
+					"type", "object",
+					"properties", jsonobj.Obj(
+						"file_name", jsonobj.Obj("type", "string", "description", "Name to store the file under (no '/' or '\\'). Required with data_base64; defaults to the base name of file_path."),
+						"data_base64", jsonobj.Obj("type", "string", "description", "File content, standard base64 (a data: URL prefix is accepted)."),
+						"file_path", jsonobj.Obj("type", "string", "description", "Absolute local path. stdio connections only; rejected over HTTP."),
+						"related_time", jsonobj.Obj("type", "string", "description", "When the file relates to. "+ISODateTimeDesc+" or "+DateOnlyDesc+"."),
+					),
+					"additionalProperties", false,
+				),
+				"description", "1-"+itoa(MaxUploadFiles)+" files; exactly one of data_base64 / file_path each. Names must be unique within a call.",
+			),
+			"target_rep_name", jsonobj.Obj("type", "string", "description", "File repository (rep_type directory) to upload to. Default: the account's writable one."),
+			"conflict_behavior", jsonobj.Obj(
+				"type", "string",
+				"description", "When a file with the same name exists: rename (default; stores \"name (1).ext\") or override (replaces the file on disk).",
+				"enum", stringsToAny(UploadConflictBehaviors),
+				"default", "rename",
+			),
+			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
+		), []string{"files"}),
 	),
 	// スキル（ADR-0634）。反映はすぐで履歴は残らない。削除ツールは実装だけして公開していない
 	// （skill_delete_tool.go の冒頭に理由。登録行は下のコメントアウト）。

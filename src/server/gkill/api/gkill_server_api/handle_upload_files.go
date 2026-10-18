@@ -162,6 +162,12 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// 作成アプリ名。画面は送らないので "gkill"、MCP は自分のアプリ名を送る。
+	createApp := request.CreateApp
+	if createApp == "" {
+		createApp = "gkill"
+	}
+
 	// ファイルを保存/IDFを追加する
 	savedIDFKyouIDs := []string{}
 	gkillErrors := []*message.GkillError{}
@@ -263,18 +269,22 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 				ID:           GenerateNewID(),
 				RelatedTime:  fileInfo.LastModified,
 				CreateTime:   time.Now(),
-				CreateApp:    "gkill",
+				CreateApp:    createApp,
 				CreateDevice: device,
 				CreateUser:   userID,
 				UpdateTime:   time.Now(),
-				UpdateApp:    "gkill",
+				UpdateApp:    createApp,
 				UpdateUser:   userID,
 				UpdateDevice: device,
 				TargetFile:   filepath.Base(filename),
-				RepName:      request.TargetRepName, // 無視される
-				DataType:     "idf",                 // 無視される
-				FileURL:      "",                    // 無視される
-				IsImage:      false,                 //無視される
+				// 実 rep は書かない（読むときに contentDir と TargetFile から組み立てる）が、キャッシュ rep には
+				// この値のまま入る。キャッシュの検索は CONTENT_PATH が空の行を「繋がっていない rep の ID」として
+				// 読み飛ばすので、空のまま書き戻すと上げたファイルが次の UpdateCache まで検索に出ない。
+				ContentPath: filename,
+				RepName:     request.TargetRepName, // 無視される
+				DataType:    "idf",                 // 無視される
+				FileURL:     "",                    // 無視される
+				IsImage:     false,                 //無視される
 			}
 			idfKyouCh <- idfKyou
 		}(estimateCreateFileName, fileInfo.DataBase64)

@@ -23,8 +23,8 @@ import (
 // Tool definitions
 // ---------------------------------------------------------------------------
 func TestWriteToolDefinitions(t *testing.T) {
-	t.Run("write server exposes 23 write tools", func(t *testing.T) {
-		expectEqual(t, len(WriteTools), 23)
+	t.Run("write server exposes 24 write tools", func(t *testing.T) {
+		expectEqual(t, len(WriteTools), 24)
 	})
 
 	t.Run("write tool names are the current set", func(t *testing.T) {
@@ -50,6 +50,8 @@ func TestWriteToolDefinitions(t *testing.T) {
 			"gkill_update_tag",
 			"gkill_update_text",
 			"gkill_restore_kyou",
+			// ファイルのアップロード（ADR-0635）
+			"gkill_upload_files",
 			// スキル（ADR-0634）。gkill_delete_skill は実装だけで公開しない（skill_delete_tool.go）
 			"gkill_add_skill",
 			"gkill_update_skill",

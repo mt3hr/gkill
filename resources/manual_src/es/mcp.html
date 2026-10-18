@@ -10,6 +10,7 @@
     <tr><td>Agregar registros</td><td>"Agrega una nota para hoy" / "Crea una tarea"</td></tr>
     <tr><td>Actualizar / eliminar registros</td><td>"Marca esta tarea como completada"</td></tr>
     <tr><td>Obtener GPS / archivos</td><td>"Muéstrame mi ruta de hoy"</td></tr>
+    <tr><td>Subir archivos</td><td>"Guarda esta imagen en gkill". Como en la pantalla de subida, puedes elegir el destino, qué hacer si ya existe un archivo con el mismo nombre (renombrar / sobrescribir) y la fecha y hora</td></tr>
     <tr><td>Verificar configuración</td><td>"Lista mis plantillas"</td></tr>
     <tr><td>Consultar sus notas</td><td>Lee primero las descripciones que escribió en etiquetas, ubicaciones de almacenamiento, tableros y plantillas en la pantalla de configuración, y busca registros según su forma de usarlos</td></tr>
     <tr><td>Aprender a usarlo</td><td>La IA consulta por sí misma las reglas de las condiciones de búsqueda y la paginación mediante una función de ayuda integrada. Si no encuentra algo, pídale «consulta la ayuda de gkill»</td></tr>
@@ -20,8 +21,8 @@
   <table>
     <tr><th>Tipo</th><th>Qué puede hacer</th><th>Comando</th><th>Herramientas</th><th>Puerto (HTTP)</th></tr>
     <tr><td>Solo lectura</td><td>Solo ver y buscar registros. No puede agregar ni modificar. Puede leer las habilidades</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
-    <tr><td>Solo escritura</td><td>Agregar, actualizar y eliminar registros. También puede obtener nombres de repositorios, etiquetas y tableros. Puede leer las habilidades y también crearlas y reescribirlas</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
-    <tr><td>Lectura y escritura</td><td>Ver, agregar, actualizar y eliminar registros. Puede leer las habilidades y también crearlas y reescribirlas</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
+    <tr><td>Solo escritura</td><td>Agregar, actualizar y eliminar registros. También puede obtener nombres de repositorios, etiquetas y tableros. Puede leer las habilidades y también crearlas y reescribirlas</td><td>gkill_server mcp --kind write</td><td>34</td><td>8809</td></tr>
+    <tr><td>Lectura y escritura</td><td>Ver, agregar, actualizar y eliminar registros. Puede leer las habilidades y también crearlas y reescribirlas</td><td>gkill_server mcp --kind readwrite</td><td>38</td><td>8810</td></tr>
   </table>
   <p>El servidor MCP forma parte de gkill_server y se inicia con <code>gkill_server mcp --kind &lt;tipo&gt;</code> (gkill_server debe estar en ejecución). La conexión y las credenciales se indican con variables de entorno o con el archivo de configuración <code>configs/gkill_mcp.json</code>, que se genera en el primer inicio. Los registros se escriben en <code>logs/gkill_mcp_&lt;tipo&gt;.log</code> (los archivos por nivel comparten el prefijo).</p>
   <p>Todos los tipos incluyen una herramienta para listar los complementos en uso. El contenido de los registros importados por complementos puede recibirse junto con los resultados de b&uacute;squeda.</p>

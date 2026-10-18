@@ -68,7 +68,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 | `/api/urlog_bookmarklet_page` | GET | authNone | — アドレスのみ（`use-application-config-view.ts` がブックマークレットの URL に使う） | — | `HandleURLogBookmarkletPage` | handle_urlog_bookmarklet_page.go | 直接: `urlogBookmarkletPageHTML`（HTML を返すだけ） | — / — ※ | — |
 | `/api/get_kyous_mcp` | POST | authNone | — 非Web | MCP | `HandleGetKyousMCP` | handle_get_kyous_mcp.go | 直接: `g.FindFilter.FindKyous`（usecase の GetKyous は通らない） | GetKyousMCPRequest / GetKyousMCPResponse | — |
 | `/api/get_rep_infos_mcp` | POST | authNone | — 非Web | MCP | `HandleGetRepInfosMCP` | handle_get_rep_infos_mcp.go | 直接: `repositories.WriteTargetRepNames` と各 rep 群 | GetRepInfosMCPRequest / GetRepInfosMCPResponse | — |
-| `/api/upload_files` | POST | authNone | `upload_files()` | — | `HandleUploadFiles` | handle_upload_files.go | 直接: `repositories.WriteIDFKyouRep` / `repositories.WriteThroughIDFKyouCache` | UploadFilesRequest / UploadFilesResponse | = |
+| `/api/upload_files` | POST | authNone | `upload_files()` | MCP | `HandleUploadFiles` | handle_upload_files.go | 直接: `repositories.WriteIDFKyouRep` / `repositories.WriteThroughIDFKyouCache` | UploadFilesRequest / UploadFilesResponse | = |
 | `/api/upload_gpslog_files` | POST | authNone | `upload_gpslog_files()` | — | `HandleUploadGPSLogFiles` | handle_upload_gps_log_files.go ※ | 直接: `repositories.GPSLogReps` / `g.generateGPXFileContent` | UploadGPSLogFilesRequest / UploadGPSLogFilesResponse | = |
 | `/api/upload_skill` | POST | authNone | `upload_skill()` | — | `HandleUploadSkill` | handle_upload_skill.go | 直接: `GkillDAOManager.SkillStore` | UploadSkillRequest / UploadSkillResponse | = |
 | `/api/browse_zip_contents` | POST | authNone | `browse_zip_contents()` | — | `HandleBrowseZipContents` | handle_browse_zip_contents.go | 直接: `GkillDAOManager.GetRepositories`（ZIP を zip_cache へ展開） | BrowseZipContentsRequest / BrowseZipContentsResponse | = |
@@ -228,7 +228,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 
 ### 4.1 ツール
 
-公開ツール37本。「載るサーバ」は `server_read.go` / `server_write.go` / `server_readwrite.go` の `composeTools(...)` から決まる。
+公開ツール38本。「載るサーバ」は `server_read.go` / `server_write.go` / `server_readwrite.go` の `composeTools(...)` から決まる。
 
 <!-- BOUNDARY-TABLE:mcp-tools:BEGIN -->
 | ツール | 載るサーバ | 叩く /api | 入口 |
@@ -268,6 +268,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 | `gkill_update_tag` | write readwrite | §4.2 の取得 → 更新 | write_handlers.go の `runUpdate` |
 | `gkill_update_text` | write readwrite | §4.2 の取得 → 更新 | write_handlers.go の `runUpdate` |
 | `gkill_restore_kyou` | write readwrite | §4.2 の取得 → 更新（`is_deleted` を戻す） | write_handlers.go |
+| `gkill_upload_files` | write readwrite | `/api/upload_files`（`target_rep_name` を省くと先に `/api/get_rep_infos_mcp` で書き込み先の file rep を選ぶ） | upload_files.go |
 | `gkill_add_skill` | write readwrite | `/api/write_skill_file` | skill_handlers.go |
 | `gkill_update_skill` | write readwrite | `/api/write_skill_file` | skill_handlers.go |
 非公開の `gkill_delete_skill`（skill_delete_tool.go）は `/api/delete_skill` を叩く実装があるが、どのサーバにも載っていない（write_handlers.go でコメントアウト）。

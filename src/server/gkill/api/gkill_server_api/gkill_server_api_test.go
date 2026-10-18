@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
@@ -8458,6 +8459,147 @@ func TestHandleLogout_SessionInvalidatedAfterLogout(t *testing.T) {
 // --- Phase 2: BrowseZipContents handler tests ---
 
 // --- Phase 2: UploadFiles handler tests ---
+
+// writableDirectoryRepName は書き込み先の file（directory）rep の名前を /api/get_rep_infos_mcp から引く。
+func writableDirectoryRepName(t *testing.T, tsURL, sessionID string) string {
+	t.Helper()
+	resp := postJSON(t, tsURL+"/api/get_rep_infos_mcp", map[string]any{
+		"session_id":  sessionID,
+		"locale_name": "en",
+	})
+	defer resp.Body.Close()
+	var infoResp req_res.GetRepInfosMCPResponse
+	if err := json.NewDecoder(resp.Body).Decode(&infoResp); err != nil {
+		t.Fatalf("decode get rep infos mcp response: %v", err)
+	}
+	if len(infoResp.Errors) > 0 {
+		t.Fatalf("get rep infos mcp errors: %+v", infoResp.Errors)
+	}
+	for _, info := range infoResp.RepInfos {
+		if info.RepType == "directory" && info.UseToWrite {
+			return info.RepName
+		}
+	}
+	t.Fatalf("no writable directory rep in %+v", infoResp.RepInfos)
+	return ""
+}
+
+// TestHandleUploadFiles_CreateApp は、create_app を送ればそのアプリ名が、送らなければ
+// 従来どおり "gkill" が IDFKyou の create_app / update_app に刻まれることを固定する。
+// MCP の gkill_upload_files が画面からのアップロードと区別できるようにするための欄。
+func TestHandleUploadFiles_CreateApp(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+	repName := writableDirectoryRepName(t, tsURL, sessionID)
+
+	// テストの固定時刻（切りのよい値）。
+	lastModified := time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local)
+
+	cases := []struct {
+		name      string
+		fileName  string
+		createApp string
+		wantApp   string
+	}{
+		{name: "未指定なら gkill", fileName: "upload_default_app.txt", createApp: "", wantApp: "gkill"},
+		{name: "指定したアプリ名", fileName: "upload_mcp_app.txt", createApp: "gkill_mcp_write", wantApp: "gkill_mcp_write"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := &req_res.UploadFilesRequest{
+				SessionID: sessionID,
+				Files: []*req_res.FileData{{
+					FileName:     tc.fileName,
+					DataBase64:   base64.StdEncoding.EncodeToString([]byte("hello")),
+					LastModified: lastModified,
+				}},
+				TargetRepName:    repName,
+				ConflictBehavior: req_res.Rename,
+				CreateApp:        tc.createApp,
+				LocaleName:       "en",
+			}
+			resp := postJSON(t, tsURL+"/api/upload_files", req)
+			defer resp.Body.Close()
+			var result req_res.UploadFilesResponse
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("decode upload files response: %v", err)
+			}
+			if len(result.Errors) > 0 {
+				t.Fatalf("unexpected errors: %+v", result.Errors)
+			}
+			if len(result.UploadedKyous) != 1 {
+				t.Fatalf("uploaded_kyous = %d, want 1", len(result.UploadedKyous))
+			}
+			kyou := result.UploadedKyous[0]
+			if kyou.CreateApp != tc.wantApp || kyou.UpdateApp != tc.wantApp {
+				t.Errorf("create_app / update_app = %q / %q, want %q", kyou.CreateApp, kyou.UpdateApp, tc.wantApp)
+			}
+			if !kyou.RelatedTime.Equal(lastModified) {
+				t.Errorf("related_time = %v, want %v", kyou.RelatedTime, lastModified)
+			}
+		})
+	}
+}
+
+// TestHandleUploadFiles_UploadedEntryIsSearchableRightAway は、上げたファイルの記録が次の UpdateCache を
+// 待たずに検索（/api/get_kyous）に出ることを固定する。キャッシュ rep の検索は CONTENT_PATH が空の行を
+// 読み飛ばすので、書き戻しで ContentPath を落とすとキャッシュ ON のときだけ黙って出なくなる（OFF では再現しない）。
+func TestHandleUploadFiles_UploadedEntryIsSearchableRightAway(t *testing.T) {
+	for _, cacheInMemory := range []bool{false, true} {
+		t.Run(fmt.Sprintf("cache_in_memory=%v", cacheInMemory), func(t *testing.T) {
+			if cacheInMemory {
+				useCacheInMemory(t)
+			}
+			tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+			defer cleanup()
+
+			passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+			sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+			repName := writableDirectoryRepName(t, tsURL, sessionID)
+
+			uploadResp := postJSON(t, tsURL+"/api/upload_files", &req_res.UploadFilesRequest{
+				SessionID: sessionID,
+				Files: []*req_res.FileData{{
+					FileName:     "searchable_upload.txt",
+					DataBase64:   base64.StdEncoding.EncodeToString([]byte("hello")),
+					LastModified: time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local), // テストの固定時刻
+				}},
+				TargetRepName:    repName,
+				ConflictBehavior: req_res.Rename,
+				LocaleName:       "en",
+			})
+			defer uploadResp.Body.Close()
+			var uploaded req_res.UploadFilesResponse
+			if err := json.NewDecoder(uploadResp.Body).Decode(&uploaded); err != nil {
+				t.Fatalf("decode upload files response: %v", err)
+			}
+			if len(uploaded.Errors) > 0 || len(uploaded.UploadedKyous) != 1 {
+				t.Fatalf("upload failed: errors=%+v kyous=%d", uploaded.Errors, len(uploaded.UploadedKyous))
+			}
+			id := uploaded.UploadedKyous[0].ID
+
+			findResp := postJSON(t, tsURL+"/api/get_kyous", map[string]any{
+				"session_id":  sessionID,
+				"locale_name": "en",
+				"query":       map[string]any{"ids": []string{id}},
+			})
+			defer findResp.Body.Close()
+			var found req_res.GetKyousResponse
+			if err := json.NewDecoder(findResp.Body).Decode(&found); err != nil {
+				t.Fatalf("decode get kyous response: %v", err)
+			}
+			if len(found.Errors) > 0 {
+				t.Fatalf("get kyous errors: %+v", found.Errors)
+			}
+			if len(found.Kyous) != 1 || found.Kyous[0].ID != id {
+				t.Fatalf("uploaded entry %s is not searchable right after the upload: got %d kyous", id, len(found.Kyous))
+			}
+		})
+	}
+}
 
 // --- Phase 2: UploadGPSLogFiles handler tests ---
 

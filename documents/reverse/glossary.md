@@ -221,7 +221,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **Argon2id** | パスワードの保存に使うメモリハードな鍵導出関数。gkill は `m=65536 KiB, t=3, p=4`、ソルト16バイト、鍵長32バイトで用いる。総当たりに必要な計算資源を引き上げ、`account.db` が流出しても資格情報にならないようにするのが目的 |
 | **PHC文字列** | Argon2id の保存形式。`$argon2id$v=19$m=65536,t=3,p=4$<ソルト>$<ハッシュ>` のようにアルゴリズム・パラメータ・ソルトを値自身に含む。パラメータが保存値側にあるので、後からコストを変えても既存の値をそのまま照合できる |
 | **パスワードリセットトークン** | パスワードを設定しなおすための単回使用の秘密（UUIDv4）。有効期限は72時間で `ACCOUNT.PASSWORD_RESET_TOKEN_EXPIRATION` に持つ。照合は constant-time。管理者の `/api/reset_password` か CLI の `reset_password` で発行する |
-| **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill_server mcp --kind read`、14ツール）・**Write専用**（`gkill_server mcp --kind write`、33ツール）・**ReadWrite統合**（`gkill_server mcp --kind readwrite`、37ツール）。いずれも共通のプラグインツール1つ（`plugin_tools.go` の `PLUGIN_TOOLS`）を含む。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
+| **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill_server mcp --kind read`、14ツール）・**Write専用**（`gkill_server mcp --kind write`、34ツール）・**ReadWrite統合**（`gkill_server mcp --kind readwrite`、38ツール）。いずれも共通のプラグインツール1つ（`plugin_tools.go` の `PLUGIN_TOOLS`）を含む。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
 | **スキル（Skill）** | 利用者ごとに AI へ渡す手順書。Agent Skills と同じ形（フォルダ1つ = スキル1つ。frontmatter に `name` / `description` を持つ `SKILL.md` と、参考資料・スクリプト等の付属ファイル）で、`$GKILL_HOME/skills/<user_id>/<name>/` に置かれる。読み書きするのは gkill_server だけ（`dao/skills/`。API 6本）で、MCP は `gkill_get_skill_list` / `gkill_get_skill`（3サーバ）と `gkill_add_skill` / `gkill_update_skill`（write / readwrite）から、設定画面は一覧・表示・zip のダウンロード / アップロード（丸ごと置き換え）・スキル丸ごとの削除から使う。履歴は持たず、スクリプトはサーバで実行しない（ADR-0634） |
 | **revision** | スキル内ファイルの版。中身の SHA-256 の先頭16桁で、`gkill_get_skill` がファイルごとに返す。`gkill_update_skill`（`/api/write_skill_file`）で既存のファイルを書き換えるときに必須で、省くと新規作成の意味になり、既にあるファイルなら 409（`ERR000436`）で断られる。渡した revision が今の中身と食い違う（読んだ後に誰かが書き換えた）ときも 409（`ERR000437`）で、応答に今の revision を添える。読み直して差分を取り込んでから出し直す楽観ロック |
 
@@ -298,8 +298,8 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
 | MCP サーバー（Read） | `src/server/gkill/mcp/server_read.go` | 読み取り専用MCPサーバー（14ツール = 固有13 + プラグイン1、stdio/HTTP） |
-| MCP サーバー（Write） | `src/server/gkill/mcp/server_write.go` | 書き込み専用MCPサーバー（33ツール = 書き込み23 + Read便利9 + プラグイン1、stdio/HTTP） |
-| MCP サーバー（ReadWrite） | `src/server/gkill/mcp/server_readwrite.go` | 読み書き統合MCPサーバー（37ツール = 固有36 + プラグイン1、stdio/HTTP） |
+| MCP サーバー（Write） | `src/server/gkill/mcp/server_write.go` | 書き込み専用MCPサーバー（34ツール = 書き込み24 + Read便利9 + プラグイン1、stdio/HTTP） |
+| MCP サーバー（ReadWrite） | `src/server/gkill/mcp/server_readwrite.go` | 読み書き統合MCPサーバー（38ツール = 固有37 + プラグイン1、stdio/HTTP） |
 | MCP プラグインツール | `src/server/gkill/mcp/plugin_tools.go` | 3サーバ共通の `gkill_get_plugin_list` と、`gkill_get_kyous` へプラグイン本文を埋める `inlinePluginContents`（読み取りのみ。`post_plugin_config` は公開しない） |
 | MCP ログ | `src/server/gkill/mcp/access_log.go` | gkill_log 上の MCP のロガー。`logs/gkill_mcp_<kind>*.log` へ出し、レベルは `MCP_LOG` / 設定 / `--log` で制御 |
 | MCP ヘルプ | `src/server/gkill/mcp/help_topics.go` | `gkill_get_mcp_help` の topic 本文（10件）。ツール説明は要約にとどめ、詳細はここから取り出す（ADR-0622 / 0632） |

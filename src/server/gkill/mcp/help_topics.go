@@ -154,9 +154,9 @@ const dataTypesTopic = "data_type has TWO vocabularies. Search results and add_*
 	"whenever the number means something specific.\n\n" +
 	"idf_kinds:[\"image\"|\"video\"|\"audio\"|\"zip\"|\"other\"] narrows idf (file) entries by kind and excludes " +
 	"non-idf entries; include_file_size:true adds file_size (bytes) to idf payloads. create_apps / update_apps " +
-	"filter on the app that wrote / last updated an entry: known values are \"gkill\" (web UI and uploads), " +
+	"filter on the app that wrote / last updated an entry: known values are \"gkill\" (web UI, including its Upload screen), " +
 	"\"gkill_kftl\" (the notepad AND gkill_submit_kftl, which the server stamps with the same value), " +
-	"\"gkill_wear\", \"gkill_mcp_readwrite\" / \"gkill_mcp_write\" (the MCP servers), \"urlog_bookmarklet\", " +
+	"\"gkill_wear\", \"gkill_mcp_readwrite\" / \"gkill_mcp_write\" (the MCP servers, gkill_upload_files included), \"urlog_bookmarklet\", " +
 	"\"git\", \"idf\" (files indexed from the filesystem), \"gkill_autolog\" (the automatic activity logger) and " +
 	"whatever a plugin sets; the values actually present in your data are listed by group_by:\"create_app\". " +
 	"Records written through gkill_submit_kftl carry \"gkill_kftl\" and are " +
@@ -210,7 +210,33 @@ const idfTopic = "IDF entries (data_type 'idf') are files: images, videos, audio
 	"Files dropped into a repository directory do not appear in searches until the index is refreshed, and nothing " +
 	"warns you: gkill_get_rep_infos rep_infos[].indexed_at tells you when that last happened; pass " +
 	"query.update_cache:true (an operational side effect, not free) or run the update_cache CLI to refresh. Narrow " +
-	"file searches with idf_kinds and add file_size with include_file_size (see topic data_types)."
+	"file searches with idf_kinds and add file_size with include_file_size (see topic data_types).\n\n" +
+	"Uploading (write / readwrite servers): gkill_upload_files does what gkill's Upload screen (File tab) does — it " +
+	"stores files in a file repository (rep_type directory) and registers each as an idf entry right away, no index " +
+	"refresh needed. Each file is one of two shapes, chosen by transport like the reading paths above:\n" +
+	"- {file_name, data_base64}: any transport. Standard base64 with padding; a data: URL prefix and line breaks " +
+	"are accepted. Over HTTP the whole request is capped by the MCP server's body limit (10MB, so roughly 7MB of " +
+	"file), and a bigger request is refused with HTTP 413 before the tool runs.\n" +
+	"- {file_path}: stdio connections only. An absolute path on the machine the MCP server runs on; the server reads " +
+	"the file itself, so nothing goes through the conversation. file_name defaults to the path's base name and " +
+	"related_time to the file's modification time (the screen does the same with the browser's lastModified). Over " +
+	"HTTP the path would name a file on the MCP server's machine rather than yours, so it is refused.\n" +
+	"target_rep_name defaults to the account's writable file repository (the one the screen preselects); a name " +
+	"that is not a file repository is refused with the names you can pass. conflict_behavior is the screen's " +
+	"\"file name collision\" choice: rename (default) stores \"name (1).ext\" next to the existing file, override " +
+	"replaces the file on disk and adds a new entry while the existing entry stays and now shows the new bytes " +
+	"(the screen does the same; delete the old entry if one is enough). merge is a GPS-log option and is not offered. Names must be unique within one call " +
+	"(gkill decides collisions per call, so two same-named files in one call would land on the same path); " +
+	"related_time defaults to now for data_base64. gkill's own per-request limit is about 1GB of base64 — split " +
+	"bigger batches across calls; a single file beyond that has to be placed in the repository directory by the " +
+	"user and picked up by an index refresh. A large file can also outlast the MCP server's request timeout to " +
+	"gkill (GKILL_FETCH_TIMEOUT_MS, default 120 seconds).\n" +
+	"It is NOT a transaction, exactly like the screen: if any file fails, gkill returns only the error and " +
+	"registers nothing, but files already written stay in the directory and turn up as idf entries after the next " +
+	"index refresh. Check with gkill_get_kyous before retrying, because retrying with rename stores second copies. " +
+	"The response's uploaded_kyous[] carries each new entry's id: pass it to gkill_add_tag / gkill_add_text (the " +
+	"screen does not tag uploads either). Uploaded entries carry create_app \"gkill_mcp_write\" or " +
+	"\"gkill_mcp_readwrite\", so create_apps finds them."
 
 const deletedTopic = "gkill is append-only: an update adds a new version of an entry and a delete adds a version with " +
 	"is_deleted=true. Ordinary searches (gkill_get_kyous) only ever return the LATEST version of each entry, and by " +
@@ -431,7 +457,7 @@ var HelpTopics = []HelpTopic{
 	{Name: "mi", Title: "Mi tasks: the five projections, for_mi, include_*_mi, mi_sort_type", Text: miTopic},
 	{Name: "data_types", Title: "data_type vocabularies, the data_types filter, num_min / num_max, idf_kinds, create_apps", Text: dataTypesTopic},
 	{Name: "plugin", Title: "Plugin entries and include_plugin_content (budget, format, content_status)", Text: pluginTopic},
-	{Name: "idf", Title: "Files and images: file_path / gkill_get_idf_file / file_url, thumbnails, index freshness", Text: idfTopic},
+	{Name: "idf", Title: "Files and images: file_path / gkill_get_idf_file / file_url, thumbnails, index freshness, uploading with gkill_upload_files", Text: idfTopic},
 	{Name: "deleted", Title: "Deleted entries and version history: include_deleted_data, gkill_get_kyou_history, restore", Text: deletedTopic},
 	{Name: "rep", Title: "rep_types vs rep names, gkill_get_rep_infos, attached_data_reps, use_to_write", Text: repTopic},
 	{Name: "kftl", Title: "KFTL text format for gkill_submit_kftl: every prefix, ~~ and ?? blocks, failures, provenance", Text: kftlTopic},

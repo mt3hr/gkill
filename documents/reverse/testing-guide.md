@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1414 | 214 | Go `testing` |
+| Go バックエンド | 1416 | 214 | Go `testing` |
 | フロントエンド ユニット | 2134 | 188 | Vitest |
 | フロントエンド E2E | 255 | 47（+auth.setup.ts） | Playwright |
-| MCP サーバ | 1170 | 43 | Go `testing` |
+| MCP サーバ | 1172 | 44 | Go `testing` |
 | ツール | 115 | 4 | Vitest |
 | Android | 31 | 2 | JUnit 4 |
 | Wear OS | 232 | 18 | JUnit 4 + MockK |
-| **合計** | **5,351** | **516** | |
+| **合計** | **5,355** | **517** | |
 
 数え直すコマンド:
 
@@ -427,7 +427,7 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 | `help_topics_test.go` | `gkill_get_mcp_help` の topic 本文（全 topic に本文・index の列挙・説明文から移した知識の実在・名指しするツール名の実在・3サーバ搭載・gkill へ往復しない） |
 | `schema_contract_test.go` | tools/list どおりに呼べる契約（スキーマのキー集合 = 受理集合 − 廃止済み、全プロパティ指定スモーク、3サーバの同名ツール同一、世代の一致） |
 | `tool_schema_budget_test.go` | tools/list のバイト量が予算ファイル `src/server/gkill/mcp/tool_schema_budget.json` 内であること（超過・過小の両方で失敗）。説明文を意図して変えたときは `gkill_server mcp schema-budget --update` で予算を書き直す |
-| `golden_test.go` | コミット済みのゴールデン（`testdata/golden/`。採取時は旧 Node 実装の出力、以後は前回コミットした Go の出力。要求コーパス 345 件）との**バイト一致**（tools/list・`schema_revision`・tools/call の応答（stdio / http × 3サーバ）・gkill へ送った要求）。`GKILL_MCP_UPDATE_GOLDEN=1` の更新経路が「書き直したものと比較が通り、コミット済みと同じバイト列」であることの自己検査を含む |
+| `golden_test.go` | コミット済みのゴールデン（`testdata/golden/`。採取時は旧 Node 実装の出力、以後は前回コミットした Go の出力。要求コーパス 354 件）との**バイト一致**（tools/list・`schema_revision`・tools/call の応答（stdio / http × 3サーバ）・gkill へ送った要求）。`GKILL_MCP_UPDATE_GOLDEN=1` の更新経路が「書き直したものと比較が通り、コミット済みと同じバイト列」であることの自己検査を含む |
 | `config_test.go` | 設定ファイル `gkill_mcp.json` の生成と、フラグ > 環境変数 > ファイル > 既定値の優先順位、壊れた数値の環境変数（`GKILL_FETCH_TIMEOUT_MS` / `MCP_PORT`）で起動を止めること |
 | `import_graph_test.go` | package `mcp` が本体の `api` / `dao` / `usecase` を import しないこと |
 | `stdio_e2e_test.go` | テストバイナリを子プロセスにした stdio の端から端まで（NDJSON / Content-Length、stdout に JSON-RPC 以外が出ない） |
@@ -451,8 +451,9 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 |-------------|-----------|
 | `write_normalization_test.go` | Write入力の正規化（11 normalizer関数、mood範囲、data_type列挙値） |
 | `write_client_test.go` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
-| `write_server_test.go` | McpWriteServer（33ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
-| `write_tool_handlers_test.go` | Write 23ツール定義（実物 import）・削除の語彙が3箇所で一致すること・summarizeWriteToolPayload |
+| `write_server_test.go` | McpWriteServer（34ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
+| `write_tool_handlers_test.go` | Write 24ツール定義（実物 import）・削除の語彙が3箇所で一致すること・summarizeWriteToolPayload |
+| `upload_files_test.go` | ファイルのアップロード（`upload_files.go`。ADR-0635）: 書き込み先 file rep の既定解決、ERR000151 の包み直し、`create_app`、Strict base64、`file_path` は stdio だけ（HTTP では gkill へ何も送らない）、更新日時を関連時刻の既定にすること、合計の上限 |
 | `write_handlers_test.go` | 書き込みディスパッチ（add/update/delete のエンドポイント、patch セマンティクス、create_app のサーバ種別） |
 
 **Read/Write統合サーバ:**
@@ -460,7 +461,7 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 | テストファイル | テスト内容 |
 |-------------|-----------|
 | `readwrite_client_test.go` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
-| `readwrite_server_test.go` | McpServer統合（全37ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
+| `readwrite_server_test.go` | McpServer統合（全38ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
 
 ### 3.5 Android / Wear OS
 

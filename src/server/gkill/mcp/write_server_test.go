@@ -334,9 +334,9 @@ func TestWriteJSONRPCProtocol(t *testing.T) {
 		expectEqual(t, response.Value("result"), obj())
 	})
 
-	t.Run("tools/list returns 33 tools", func(t *testing.T) {
+	t.Run("tools/list returns 34 tools", func(t *testing.T) {
 		response := serverMessage(t, setup(), obj("jsonrpc", "2.0", "id", 3, "method", "tools/list"))
-		expectEqual(t, len(arrAt(t, response, "result", "tools")), 33)
+		expectEqual(t, len(arrAt(t, response, "result", "tools")), 34)
 	})
 
 	t.Run("tools/list includes all expected tool names", func(t *testing.T) {
@@ -354,6 +354,8 @@ func TestWriteJSONRPCProtocol(t *testing.T) {
 			// Read convenience tools
 			"gkill_status", "gkill_get_all_rep_names", "gkill_get_mi_board_list", "gkill_get_all_tag_names",
 			"gkill_get_skill_list", "gkill_get_skill",
+			// File upload (ADR-0635)
+			"gkill_upload_files",
 			// Skill tools
 			"gkill_add_skill", "gkill_update_skill",
 			// Plugin tools

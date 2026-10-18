@@ -10,6 +10,7 @@
     <tr><td>Einträge hinzufügen</td><td>„Füge eine Notiz für heute hinzu" / „Erstelle eine Aufgabe"</td></tr>
     <tr><td>Einträge aktualisieren / löschen</td><td>„Markiere diese Aufgabe als erledigt"</td></tr>
     <tr><td>GPS / Dateien abrufen</td><td>„Zeige meine heutige Route"</td></tr>
+    <tr><td>Dateien hochladen</td><td>„Speichere dieses Bild in gkill" – wie im Upload-Bildschirm lassen sich Ziel, Verhalten bei einer gleichnamigen Datei (umbenennen / überschreiben) sowie Datum und Uhrzeit festlegen</td></tr>
     <tr><td>Einstellungen prüfen</td><td>„Liste meine Vorlagen auf"</td></tr>
     <tr><td>Ihre Notizen lesen</td><td>Liest zuerst die Beschreibungen, die Sie in den Einstellungen zu Tags, Speicherorten, Boards und Vorlagen geschrieben haben, und sucht Einträge so, wie Sie sie tatsächlich nutzen</td></tr>
     <tr><td>Die Nutzung selbst nachschlagen</td><td>Die KI schlägt die Regeln für Suchbedingungen und Seitenwechsel über eine eingebaute Hilfefunktion selbst nach. Findet sie etwas nicht, bitten Sie sie: „Schau in der gkill-Hilfe nach"</td></tr>
@@ -20,8 +21,8 @@
   <table>
     <tr><th>Typ</th><th>Was er kann</th><th>Startbefehl</th><th>Werkzeuge</th><th>Port (HTTP)</th></tr>
     <tr><td>Nur-Lesen</td><td>Eintr&auml;ge nur anzeigen und suchen. Hinzuf&uuml;gen oder &Auml;ndern ist nicht m&ouml;glich. Skills k&ouml;nnen gelesen werden</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
-    <tr><td>Nur-Schreiben</td><td>Eintr&auml;ge hinzuf&uuml;gen, aktualisieren und l&ouml;schen. Kann zudem Ablage-, Tag- und Board-Namen lesen. Skills k&ouml;nnen gelesen und au&szlig;erdem erstellt und umgeschrieben werden</td><td>gkill_server mcp --kind write</td><td>33</td><td>8809</td></tr>
-    <tr><td>Lesen &amp; Schreiben</td><td>Eintr&auml;ge anzeigen, hinzuf&uuml;gen, aktualisieren und l&ouml;schen. Skills k&ouml;nnen gelesen, erstellt und umgeschrieben werden</td><td>gkill_server mcp --kind readwrite</td><td>37</td><td>8810</td></tr>
+    <tr><td>Nur-Schreiben</td><td>Eintr&auml;ge hinzuf&uuml;gen, aktualisieren und l&ouml;schen. Kann zudem Ablage-, Tag- und Board-Namen lesen. Skills k&ouml;nnen gelesen und au&szlig;erdem erstellt und umgeschrieben werden</td><td>gkill_server mcp --kind write</td><td>34</td><td>8809</td></tr>
+    <tr><td>Lesen &amp; Schreiben</td><td>Eintr&auml;ge anzeigen, hinzuf&uuml;gen, aktualisieren und l&ouml;schen. Skills k&ouml;nnen gelesen, erstellt und umgeschrieben werden</td><td>gkill_server mcp --kind readwrite</td><td>38</td><td>8810</td></tr>
   </table>
   <p>Der MCP-Server ist Teil von gkill_server und wird mit <code>gkill_server mcp --kind &lt;Typ&gt;</code> gestartet (gkill_server selbst muss laufen). Verbindung und Zugangsdaten kommen aus Umgebungsvariablen oder aus der Konfigurationsdatei <code>configs/gkill_mcp.json</code>, die beim ersten Start erzeugt wird. Protokolle landen in <code>logs/gkill_mcp_&lt;Typ&gt;.log</code> (die Dateien je Stufe teilen sich das Pr&auml;fix).</p>
   <p>Jeder Typ enth&auml;lt ein Werkzeug zum Auflisten der verwendeten Erweiterungen. Die Inhalte der &uuml;ber Erweiterungen importierten Eintr&auml;ge k&ouml;nnen direkt zusammen mit den Suchergebnissen empfangen werden.</p>
