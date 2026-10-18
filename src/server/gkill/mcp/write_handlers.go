@@ -156,10 +156,25 @@ var updateTargets = map[string]updateTarget{
 	"kc":   {Normalize: NormalizeUpdateKcArgs, PatchFields: []string{"title", "num_value", "related_time"}},
 	"tag":  {Normalize: NormalizeUpdateTagArgs, PatchFields: []string{"tag"}},
 	"text": {Normalize: NormalizeUpdateTextArgs, PatchFields: []string{"text"}},
+	// 以下は ADR-0636 で足した。欄は画面の編集で変えられるものと同じ。
+	"rekyou": {Normalize: NormalizeUpdateReKyouArgs, PatchFields: []string{"related_time"}},
+	"mirekyou": {
+		Normalize:   NormalizeUpdateMiReKyouArgs,
+		PatchFields: []string{"board_name", "is_checked", "limit_time", "estimate_start_time", "estimate_end_time"},
+		// 板名の照合は mi と同じ（allow_create_board:false のときだけ）。
+		PreUpdate: func(ctx *CallContext, normalized *jsonobj.Object) error {
+			if normalized.Value("allow_create_board") == false && normalized.Defined("board_name") {
+				return assertBoardExists(ctx, jsString(normalized.Value("board_name")), normalized.Value("locale_name"))
+			}
+			return nil
+		},
+	},
+	"notification": {Normalize: NormalizeUpdateNotificationArgs, PatchFields: []string{"content", "notification_time"}},
+	"idf":          {Normalize: NormalizeUpdateIDFArgs, PatchFields: []string{"related_time"}},
 }
 
 // updateTargetOrder は要約器の表を旧実装と同じ順で組むためのキー順。
-var updateTargetOrder = []string{"kmemo", "urlog", "nlog", "lantana", "timeis", "mi", "kc", "tag", "text"}
+var updateTargetOrder = []string{"kmemo", "urlog", "nlog", "lantana", "timeis", "mi", "kc", "tag", "text", "rekyou", "mirekyou", "notification", "idf"}
 
 // runUpdate は gkill_update_* 1件を処理する。
 // gkill に部分更新の API は無いので、現在値を取って渡された欄だけ上書きし、同じ型の更新 API へ送り直す（patch）。
@@ -231,7 +246,7 @@ func runUpdate(ctx *CallContext, dataType string, args any) (*jsonobj.Object, er
 		return nil, err
 	}
 	return jsonobj.Obj(
-		target.ResponseKey, withEntityDataType(mergeStored(current, response.Value(target.ResponseKey)), dataType),
+		target.PayloadKey(), withEntityDataType(mergeStored(current, response.Value(target.ResponseKey)), dataType),
 		"updated_kyou", nullValue(response.Value("updated_kyou")),
 	), nil
 }
@@ -328,6 +343,29 @@ func withEntityDataType(entity any, dataType string) any {
 	return out
 }
 
+// assertTargetKyouExists は target_id が実在する（削除されていない）記録かを確かめる。
+// gkill の add_rekyou / add_mirekyou / add_gkill_notification は対象の実在を確かめない（画面は実在する記録からしか
+// 呼ばないため）ので、MCP の入口で確かめないと、どこにも繋がらないリポスト・タスク・通知が黙ってできる。
+func assertTargetKyouExists(ctx *CallContext, targetID string, kind string, localeName any) error {
+	body := jsonobj.Obj("query", jsonobj.Obj("ids", jsonobj.Strings(targetID)), "count_only", true)
+	if !jsonobj.IsUndefined(localeName) {
+		body.Set("locale_name", localeName)
+	}
+	response, err := ctx.callApi("/api/get_kyous_mcp", body)
+	if err != nil {
+		return err
+	}
+	if count, ok := jsonobj.ToFloat(response.Value("total_count")); ok && count >= 1 {
+		return nil
+	}
+	return InvalidArgument(
+		"target_id",
+		"matched no entry, so the "+kind+" was not added. target_id must be the id of an existing, not-deleted entry "+
+			"(kmemo / mi / timeis / urlog / idf ...), not a tag or text id",
+		targetID,
+	)
+}
+
 // describeTargetNotFound は add_tag / add_text の「対象の記録が無い」（error_kind not_found）を、
 // target_id を名指しした文言で包み直す。それ以外はそのまま返す。
 func describeTargetNotFound(err error, targetID string, kind string) error {
@@ -409,7 +447,7 @@ func softDeleteOne(ctx *CallContext, entry *jsonobj.Object, deleting bool, local
 	// 復活はキー名だけ restored_ に付け替える（サーバ側の応答キーは updated_ のまま）
 	responseKey := "restored_" + dataType
 	if deleting {
-		responseKey = target.ResponseKey
+		responseKey = target.PayloadKey()
 	}
 	result.Set(responseKey, withEntityDataType(mergeStored(current, response.Value(target.ResponseKey)), dataType))
 	if jsTruthy(response.Value("updated_kyou")) {
@@ -418,24 +456,90 @@ func softDeleteOne(ctx *CallContext, entry *jsonobj.Object, deleting bool, local
 	return result, nil
 }
 
+// CascadeDeleteDataTypes は連鎖削除の起点にできる種別（gkill の usecase.CascadeDeleteEntityOf と同じ集合）。
+// 付随データ（tag / text / notification）は連鎖の意味が無いので、cascade の既定のまま1件だけ消す。
+var CascadeDeleteDataTypes = NewStringSet("kmemo", "urlog", "nlog", "lantana", "timeis", "mi", "kc", "idf", "rekyou", "mirekyou")
+
+// cascadeDeleteOne は記録1件を、付いているタグ・テキスト・通知と、参照しているリポスト・タスク化ごと消す。
+// 処理は gkill の /api/delete_kyou_cascade（画面の削除と同じ1実装。1つのトランザクション）で、MCP は呼ぶだけ（ADR-0636）。
+func cascadeDeleteOne(ctx *CallContext, entry *jsonobj.Object, localeName any) (*jsonobj.Object, error) {
+	id := jsString(entry.Value("id"))
+	dataType := jsString(entry.Value("data_type"))
+	response, err := ctx.callApi("/api/delete_kyou_cascade", jsonobj.Obj(
+		"target_id", id,
+		"data_type", dataType,
+		"update_app", ctx.AppName,
+		"locale_name", localeName,
+	))
+	if err != nil {
+		return nil, describeCascadeDeleteError(err, id, dataType)
+	}
+	deleted := arrayOrEmpty(response.Value("deleted"))
+	return jsonobj.Obj("cascade", true, "deleted", deleted, "deleted_count", int64(len(deleted))), nil
+}
+
+// describeCascadeDeleteError は連鎖削除の失敗を、従来の1件削除と同じ言い方へ包み直す（元の detail は保持）。
+func describeCascadeDeleteError(err error, id string, dataType string) error {
+	apiErr, ok := AsGkillApiError(err)
+	if !ok || apiErr.Detail == nil {
+		return err
+	}
+	for _, item := range arrayOrEmpty(apiErr.Detail.Value("errors")) {
+		o, isObject := item.(*jsonobj.Object)
+		if !isObject || o == nil {
+			continue
+		}
+		switch o.Value("error_code") {
+		case "ERR000449":
+			return NewGkillApiError("Entity is already deleted: "+id+" (nothing changed; read it with gkill_get_kyou_history or undo with gkill_restore_kyou)", apiErr.Detail)
+		case "ERR000448":
+			return NewGkillApiError(EntityNotFoundMessage(id, dataType), apiErr.Detail)
+		}
+	}
+	return NewGkillApiError(apiErr.Message+" Nothing was deleted: the cascade is one transaction, so either everything goes or nothing does.", apiErr.Detail)
+}
+
 // runSoftDeleteTargets は単件と一括の両方を捌く。一括は直列に回し、途中で失敗しても止めない。
+// 削除は既定で連鎖する（cascade）。一括の中で、先の連鎖が既に消した id は消し直さず ok と deleted_by_cascade_of で返す。
 func runSoftDeleteTargets(ctx *CallContext, normalized *jsonobj.Object, deleting bool) (*jsonobj.Object, error) {
 	targets := arrayOrEmpty(normalized.Value("targets"))
 	localeName := normalized.Value("locale_name")
+	cascade := deleting && normalized.Value("cascade") == true
+	deleteOne := func(entry *jsonobj.Object) (*jsonobj.Object, error) {
+		if cascade && CascadeDeleteDataTypes.Has(jsString(entry.Value("data_type"))) {
+			return cascadeDeleteOne(ctx, entry, localeName)
+		}
+		return softDeleteOne(ctx, entry, deleting, localeName)
+	}
 	if !jsTruthy(normalized.Value("batch")) {
 		entry, _ := targets[0].(*jsonobj.Object)
-		return softDeleteOne(ctx, entry, deleting, localeName)
+		return deleteOne(entry)
 	}
 	results := []any{}
 	succeeded := 0
+	deletedByCascadeOf := map[string]any{}
 	for _, item := range targets {
 		entry, _ := item.(*jsonobj.Object)
-		_, err := softDeleteOne(ctx, entry, deleting, localeName)
+		if root, already := deletedByCascadeOf[jsString(entry.Value("id"))]; already {
+			results = append(results, jsonobj.Obj("id", entry.Value("id"), "data_type", entry.Value("data_type"), "ok", true, "deleted_by_cascade_of", root))
+			succeeded++
+			continue
+		}
+		payload, err := deleteOne(entry)
 		if err != nil {
 			results = append(results, jsonobj.Obj("id", entry.Value("id"), "data_type", entry.Value("data_type"), "ok", false, "error", err.Error()))
 			continue
 		}
-		results = append(results, jsonobj.Obj("id", entry.Value("id"), "data_type", entry.Value("data_type"), "ok", true))
+		result := jsonobj.Obj("id", entry.Value("id"), "data_type", entry.Value("data_type"), "ok", true)
+		if deleted, isArray := jsonobj.AsArray(payload.Value("deleted")); isArray {
+			result.Set("deleted", deleted)
+			for _, record := range deleted {
+				if o, isObject := record.(*jsonobj.Object); isObject && o != nil && jsString(o.Value("id")) != jsString(entry.Value("id")) {
+					deletedByCascadeOf[jsString(o.Value("id"))] = entry.Value("id")
+				}
+			}
+		}
+		results = append(results, result)
 		succeeded++
 	}
 	return jsonobj.Obj(
@@ -733,8 +837,94 @@ func dispatchWriteToolCall(ctx *CallContext, name string, args any) (*jsonobj.Ob
 		return runSoftDeleteTargets(ctx, normalized, false)
 
 	case "gkill_update_kmemo", "gkill_update_urlog", "gkill_update_nlog", "gkill_update_lantana",
-		"gkill_update_timeis", "gkill_update_mi", "gkill_update_kc", "gkill_update_tag", "gkill_update_text":
+		"gkill_update_timeis", "gkill_update_mi", "gkill_update_kc", "gkill_update_tag", "gkill_update_text",
+		"gkill_update_rekyou", "gkill_update_mirekyou", "gkill_update_notification", "gkill_update_idf":
 		return runUpdate(ctx, strings.TrimPrefix(name, "gkill_update_"), args)
+
+	case "gkill_add_rekyou":
+		normalized, err := NormalizeReKyouArgs(args)
+		if err != nil {
+			return nil, err
+		}
+		if err := assertTargetKyouExists(ctx, jsString(normalized.Value("target_id")), "rekyou", normalized.Value("locale_name")); err != nil {
+			return nil, err
+		}
+		now := jsISOString(timeNow())
+		rekyou := auditFields(jsonobj.Obj(
+			"id", newUUID(),
+			"rep_name", "",
+			"related_time", orNow(normalized.Value("related_time"), now),
+			"data_type", "rekyou",
+			"target_id", normalized.Value("target_id"),
+		), ctx, now)
+		response, err := ctx.callApi("/api/add_rekyou", jsonobj.Obj("rekyou", rekyou, "want_response_kyou", true, "locale_name", normalized.Value("locale_name")))
+		if err != nil {
+			return nil, err
+		}
+		// gkill の応答のキーは added_re_kyou（更新は updated_rekyou）なので、この口の語彙（added_<data_type>）に揃える
+		return jsonobj.Obj("added_rekyou", nullValue(response.Value("added_re_kyou")), "added_kyou", nullValue(response.Value("added_kyou"))), nil
+
+	case "gkill_add_mirekyou":
+		normalized, err := NormalizeMiReKyouArgs(args)
+		if err != nil {
+			return nil, err
+		}
+		if err := assertTargetKyouExists(ctx, jsString(normalized.Value("target_id")), "mirekyou", normalized.Value("locale_name")); err != nil {
+			return nil, err
+		}
+		// 板の扱いは gkill_add_mi と同じ（allow_create_board:false のときだけ照合、未指定なら既定板）
+		if normalized.Value("allow_create_board") == false && normalized.Defined("board_name") {
+			if err := assertBoardExists(ctx, jsString(normalized.Value("board_name")), normalized.Value("locale_name")); err != nil {
+				return nil, err
+			}
+		}
+		var boardName any
+		if normalized.Defined("board_name") {
+			boardName = normalized.Value("board_name")
+		} else {
+			boardName = resolveDefaultBoardName(ctx, normalized.Value("locale_name"))
+		}
+		now := jsISOString(timeNow())
+		mirekyou := auditFields(jsonobj.Obj(
+			"id", newUUID(),
+			"rep_name", "",
+			"data_type", "mirekyou",
+			"target_id", normalized.Value("target_id"),
+			"is_checked", jsTruthy(normalized.Value("is_checked")),
+			"board_name", boardName,
+			"limit_time", orNull(normalized.Value("limit_time")),
+			"estimate_start_time", orNull(normalized.Value("estimate_start_time")),
+			"estimate_end_time", orNull(normalized.Value("estimate_end_time")),
+		), ctx, now)
+		response, err := ctx.callApi("/api/add_mirekyou", jsonobj.Obj("mirekyou", mirekyou, "want_response_kyou", true, "locale_name", normalized.Value("locale_name")))
+		if err != nil {
+			return nil, err
+		}
+		return addResult(response, "added_mirekyou"), nil
+
+	case "gkill_add_notification":
+		normalized, err := NormalizeNotificationArgs(args)
+		if err != nil {
+			return nil, err
+		}
+		if err := assertTargetKyouExists(ctx, jsString(normalized.Value("target_id")), "notification", normalized.Value("locale_name")); err != nil {
+			return nil, err
+		}
+		now := jsISOString(timeNow())
+		notification := auditFields(jsonobj.Obj(
+			"id", newUUID(),
+			"rep_name", "",
+			"target_id", normalized.Value("target_id"),
+			"content", normalized.Value("content"),
+			"notification_time", normalized.Value("notification_time"),
+			"is_notificated", false,
+		), ctx, now)
+		response, err := ctx.callApi("/api/add_gkill_notification", jsonobj.Obj("notification", notification, "locale_name", normalized.Value("locale_name")))
+		if err != nil {
+			return nil, err
+		}
+		// 通知は付随データで Kyou を持たない（added_kyou は無い）
+		return jsonobj.Obj("added_notification", nullValue(response.Value("added_notification"))), nil
 
 	case "gkill_upload_files":
 		return handleUploadFiles(ctx, args)
@@ -764,8 +954,8 @@ func batchSoftDeleteSummary(verb string, payload *jsonobj.Object) string {
 	return verb + ": " + jsNumberString(succeeded) + "/" + jsNumberString(total) + " entries — " + jsNumberString(failed) + " FAILED (see results[] for the reason of each)."
 }
 
-// addSummaryVerbs: 動詞が "Added" なのは tag / text だけ。付随データは既存の記録へ「付ける」。
-var addSummaryVerbs = map[string]string{"tag": "Added", "text": "Added"}
+// addSummaryVerbs: 動詞が "Added" なのは付随データ（tag / text / notification）だけ。既存の記録へ「付ける」。
+var addSummaryVerbs = map[string]string{"tag": "Added", "text": "Added", "notification": "Added"}
 
 func idOrUnknown(payload *jsonobj.Object, key string) string {
 	if entity, ok := payload.Object(key); ok && entity != nil {
@@ -860,11 +1050,47 @@ func summarizeWriteToolPayloadBody(name string, payload *jsonobj.Object) (string
 		if _, isArray := jsonobj.AsArray(payload.Value("results")); isArray {
 			return batchSoftDeleteSummary("Deleted (soft)", payload), true
 		}
+		if deleted, isArray := jsonobj.AsArray(payload.Value("deleted")); isArray {
+			return "Deleted (soft, cascade): " + describeCascadeDeleted(deleted), true
+		}
 		return "Deleted (soft): " + describeSingleSoftDelete(payload, "updated_"), true
 	case "gkill_upload_files":
 		return summarizeUploadFilesPayload(payload), true
 	}
 	return "", false
+}
+
+// describeCascadeDeleted は連鎖削除の要約。先頭が起点（gkill がそう並べる）、残りは種別ごとの件数。
+func describeCascadeDeleted(deleted []any) string {
+	if len(deleted) == 0 {
+		return "nothing"
+	}
+	root, _ := deleted[0].(*jsonobj.Object)
+	if root == nil {
+		root = jsonobj.New()
+	}
+	summary := jsString(root.Value("data_type")) + " " + jsString(root.Value("id"))
+	if len(deleted) == 1 {
+		return summary + " (nothing else was attached or referencing it)."
+	}
+	counts := map[string]int{}
+	order := []string{}
+	for _, item := range deleted[1:] {
+		record, _ := item.(*jsonobj.Object)
+		if record == nil {
+			continue
+		}
+		kind := jsString(record.Value("data_type"))
+		if _, seen := counts[kind]; !seen {
+			order = append(order, kind)
+		}
+		counts[kind]++
+	}
+	parts := []string{}
+	for _, kind := range order {
+		parts = append(parts, kind+" x"+itoa(counts[kind]))
+	}
+	return summary + " + " + itoa(len(deleted)-1) + " attached / referencing (" + strings.Join(parts, ", ") + "). deleted[] lists them all; pass it to gkill_restore_kyou targets[] to undo."
 }
 
 // describeSingleSoftDelete は単件の削除・復活の要約に「型 id」を出す。

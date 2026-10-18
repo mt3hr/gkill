@@ -218,12 +218,12 @@ graph LR
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api/`パッケージ（handle_*.go 119ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約3,500行）から分割・移動されました。
+`gkill/api/gkill_server_api/`パッケージ（handle_*.go 121ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約3,500行）から分割・移動されました。
 
 #### 主な責務
 
 - HTTPサーバーの起動・停止（`serve.go`, `close.go`）
-- 全97エンドポイント（96 POST + 1 GET）のハンドリング（`handle_*.go`）。GETは `urlog_bookmarklet_page` のみ。ルート表（`gkill_server_api_address.go` の `apiRoutes()`）が正本で、`serve.go` とテストハーネスがそのまま登録する
+- 全98エンドポイント（97 POST + 1 GET）のハンドリング（`handle_*.go`）。GETは `urlog_bookmarklet_page` のみ。ルート表（`gkill_server_api_address.go` の `apiRoutes()`）が正本で、`serve.go` とテストハーネスがそのまま登録する
 - GkillDAOManagerの保持・提供
 - 認証ミドルウェアによるセッション検証（`auth_middleware.go`）
 - レスポンス構築
@@ -238,7 +238,7 @@ graph LR
 |---|---|---|---|---|
 | `wrapNoAuth` | 14 | ミドルウェアでの認証なし（`filterLocalOnly` は通る）。ボディを読む13本は `wrapNoAuthCapped` で経路別のボディ上限つき | — | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet` 等 |
 | `wrapAuth` | 25 | セッション認証 | Account, UserID, Device | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, プラグイン4本 等 |
-| `wrapAuthRepos` | 58 | セッション＋リポジトリ | Account, UserID, Device, Repositories | データCRUD系ハンドラ |
+| `wrapAuthRepos` | 59 | セッション＋リポジトリ | Account, UserID, Device, Repositories | データCRUD系ハンドラ |
 
 > **`logout` / `reset_password` / `set_new_password` は `wrapAuth` ではなく `wrapNoAuth`** です
 > （ルート表では `Auth: authNone`）。セッションの検証はハンドラ内で行います。
@@ -282,13 +282,13 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 
 ### usecaseレイヤー
 
-`gkill/usecase/`パッケージ（18ファイル）は、ハンドラから抽出されたHTTP非依存のビジネスロジックを提供します。
+`gkill/usecase/`パッケージ（19ファイル）は、ハンドラから抽出されたHTTP非依存のビジネスロジックを提供します。
 
 - DAO/リポジトリ型を直接操作する関数群
 - HTTPリクエスト/レスポンスに依存しない
 - ハンドラとMCPサーバーの両方から再利用可能
 
-### エンドポイント分類（97件 = 96 POST + 1 GET。カテゴリは排他で、合計がルート表の行数と一致する）
+### エンドポイント分類（98件 = 97 POST + 1 GET。カテゴリは排他で、合計がルート表の行数と一致する）
 
 | カテゴリ | エンドポイント数 | 内訳 |
 |---|---|---|
@@ -309,7 +309,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 
 ### ルーティング定義
 
-`gkill/api/gkill_server_api/gkill_server_api_address.go` の `apiRoutes()` が返すルート表で定義されます（97件。パス・HTTPメソッド・認証区分・無認証ボディ上限・ハンドラを1行1ルート）。大半は`POST /api/{endpoint}`形式ですが、`urlog_bookmarklet_page` のみ `GET` です。`serve.go` の `registerAPIRoutes` が表の認証区分（`authNone` / `authSession` / `authSessionRepos`）から `wrapNoAuth`（capped 含む）/ `wrapAuth` / `wrapAuthRepos` を選んで登録し、テストハーネス（`gkill_server_api_test.go` の `setupTestRouter`）も同じ関数を呼びます。表・ハンドラ・doc コメント・認証区分の整合は `api_routes_test.go` が、Web クライアント（`gkill-api.ts`）との整合は `gkill-api.test.ts` が機械検査します（[ADR-0709](../adr/0709-api-route-table-single-source.md)）。
+`gkill/api/gkill_server_api/gkill_server_api_address.go` の `apiRoutes()` が返すルート表で定義されます（98件。パス・HTTPメソッド・認証区分・無認証ボディ上限・ハンドラを1行1ルート）。大半は`POST /api/{endpoint}`形式ですが、`urlog_bookmarklet_page` のみ `GET` です。`serve.go` の `registerAPIRoutes` が表の認証区分（`authNone` / `authSession` / `authSessionRepos`）から `wrapNoAuth`（capped 含む）/ `wrapAuth` / `wrapAuthRepos` を選んで登録し、テストハーネス（`gkill_server_api_test.go` の `setupTestRouter`）も同じ関数を呼びます。表・ハンドラ・doc コメント・認証区分の整合は `api_routes_test.go` が、Web クライアント（`gkill-api.ts`）との整合は `gkill-api.test.ts` が機械検査します（[ADR-0709](../adr/0709-api-route-table-single-source.md)）。
 
 API 以外のルートは19件（`PathPrefix` 18 + `Path` 1）で、SPA 配信・`/files/`・`/zip_cache/`・
 `/resources/manual/` 等がここに含まれます。
@@ -603,14 +603,14 @@ gkillはPiniaやVuexを使用せず、**Props/Emit**パターンのみで状態�
 
 ### Kyou削除の連鎖削除
 
-Kyou の削除は Kyou 単体の論理削除ではなく、`src/client/classes/cascade-delete-kyou.ts` による連鎖削除として実装されています。
+Kyou の削除は Kyou 単体の論理削除ではなく連鎖削除です。処理はサーバの1実装（`/api/delete_kyou_cascade` → `usecase.DeleteKyouCascade`）で、`src/client/classes/cascade-delete-kyou.ts` はそれを1回呼ぶだけです。MCP の `gkill_delete_kyou`（既定で連鎖）も同じ実装を使います（[ADR-0636](../adr/0636-cascade-delete-on-the-server.md)。以前はこのファイルが探索と tx の組み立てを持っていて、MCP は対象1件だけを消していた）。
 
-1. **探索（readのみ）** — `discover_cascade_delete_targets()` が幅優先で辿ります。1件のidにつき `get_tags_by_target_id` / `get_texts_by_target_id` / `get_notifications_by_target_id` / `get_rekyous_by_target_id` / `get_mirekyous_by_target_id` の5本を並列に投げ、見つかった ReKyou / MiReKyou をさらに辿ります。訪問済みid集合で循環参照を止め、深さ上限は32（`max_cascade_depth`）、1階層あたり16件ずつ（`request_chunk_size`）にファンアウトを絞ります。Tag/Text/Notification は Service Worker が `target_id` 単位でキャッシュしているので `force_reget` を立てます。
-2. **削除（write）** — `mutate_cascade_delete_targets()` が Tag/Text/Notification → ReKyou（深い方から）→ MiReKyou → **最後に Kyou 自身**の順で `update_*` に `is_deleted=true` を投げます。Kyou を先に消すとサーバの `FindKyous` が参照元を結果から外し、途中で失敗したときに残骸を再発見できなくなるためです。
-3. **全件を1つの `tx_id` で積み、`commit_tx` で確定します**（2026-09-15、[ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）。`commit_tx` は1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、全部消えるか何も消えないかのどちらかです。1本でも積めなければ `discard_tx` してエラーを `received_errors` で返し、行はすべて画面に残します。
+1. **探索（readのみ）** — 幅優先で辿ります。1件のidにつき付随する Tag / Text / Notification と、そのidを参照する ReKyou / MiReKyou を逆引きし、見つかった ReKyou / MiReKyou をさらに辿ります。訪問済みid集合で循環参照を止め、深さ上限は32（`usecase.MaxCascadeDeleteDepth`）。探索が1つでも失敗したら何も書きません。
+2. **削除（write）** — Tag/Text/Notification → ReKyou（深い方から）→ MiReKyou → **最後に Kyou 自身**の順で、全件に同じ `update_time`（現在の版と同じ秒なら1秒進める）と `is_deleted=true` を付けて積みます。
+3. **全件を1つの tx で積み、`CommitTx` で確定します**（[ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）。1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、全部消えるか何も消えないかのどちらかです。応答の `deleted` に消した全件の `{id, data_type}` が返り、画面はそのぶんの Service Worker キャッシュを落として、行になる種別のぶんだけ一覧から取り除きます。
 4. 共有画面（`application_config.for_share_kyou`）では削除自体を行いません。
 
-エラーコードは `ERR900093`（`cascade_delete_depth_exceeded`）/ `ERR900094`（`cascade_delete_failed`）、文言は `CASCADE_DELETE_DEPTH_EXCEEDED_MESSAGE` / `FAILED_CASCADE_DELETE_KYOU_MESSAGE` です。呼び出し元の `use-confirm-delete-kyou-view.ts` はダイアログのクローズを `finally` に置き、例外が出ても「消えているのに閉じない」状態にならないようにしています。
+サーバのエラーコードは `ERR000445`〜`ERR000451`（起点が無い 448・削除済み 449・起点にできない種別 450・深さ超過 451・積み込みや確定の失敗 447）、画面側の想定外の失敗は `ERR900094`（`cascade_delete_failed`）です。文言は `FAILED_DELETE_KYOU_NOTHING_DELETED_MESSAGE` / `CASCADE_DELETE_DEPTH_EXCEEDED_MESSAGE` です。呼び出し元の `use-confirm-delete-kyou-view.ts` はダイアログのクローズを `finally` に置き、例外が出ても「消えているのに閉じない」状態にならないようにしています。
 
 ### コンポーネント構成
 

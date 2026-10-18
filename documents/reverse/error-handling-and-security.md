@@ -43,7 +43,7 @@ type GkillMessage struct {
 
 ### 1.2 エラーコード体系
 
-エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **403件** のエラーコードが存在する（ERR000001〜ERR000444、欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの — [ADR-0709](../adr/0709-api-route-table-single-source.md)）。クライアントだけで発生するエラーには別系統の `ERR9xxxxx` を割り当てている（3.6 参照）。
+エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **410件** のエラーコードが存在する（ERR000001〜ERR000451、欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの — [ADR-0709](../adr/0709-api-route-table-single-source.md)）。クライアントだけで発生するエラーには別系統の `ERR9xxxxx` を割り当てている（3.6 参照）。
 
 ```bash
 # 数え直すとき
@@ -563,7 +563,7 @@ Android APK 同梱の gkill_server はデータ置き場（`--gkill_home_dir`）
 | `ERR900088` | network_error | `gkill_fetch()` がオフライン/fetch 失敗を検出したときに合成する |
 | `ERR900100` | bad_response | `gkill_fetch()` が JSON 以外の応答（プロキシの HTML エラーページ等）を受けたときに合成する。本文に HTTP ステータスを含む |
 | `ERR900101` | unexpected_client_error | 握られなかった例外（`unhandledrejection` / `window.onerror` / `app.config.errorHandler`）をフィードへ出すときのコード |
-| `ERR900093` | cascade_delete_depth_exceeded | 連鎖削除の参照の深さが上限（32、`max_cascade_depth`）を超えたので途中で打ち切った |
+| `ERR900093` | （欠番） | 連鎖削除の深さ超過。連鎖削除をサーバへ移した（ADR-0636）ので、今はサーバの `ERR000451` が返る |
 | `ERR900094` | cascade_delete_failed | 連鎖削除が想定外の例外で失敗した |
 | `ERR900095` | failed_delete_tag | タグ削除の確認ダイアログが例外で落ちた |
 | `ERR900096` | failed_delete_text | テキスト削除の確認ダイアログが例外で落ちた |

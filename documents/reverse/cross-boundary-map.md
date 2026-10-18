@@ -48,7 +48,7 @@ flowchart LR
   API -- "§10 子プロセス" --> FF["ffmpeg / ffprobe / vips"]
 ```
 
-## 2. Web クライアント → Go（HTTP /api、全97ルート）
+## 2. Web クライアント → Go（HTTP /api、全98ルート）
 
 ### 2.1 対応表
 
@@ -100,7 +100,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 | `/api/delete_skill` | POST | authSession | `delete_skill()` | MCP | `HandleDeleteSkill` | handle_delete_skill.go | 直接: `GkillDAOManager.SkillStore` | DeleteSkillRequest / DeleteSkillResponse | = |
 | `/api/add_tag` | POST | authSessionRepos | `add_tag()` | MCP CLI | `HandleAddTag` | handle_add_tag.go | `UsecaseCtx.AddTag` | AddTagRequest / AddTagResponse | = |
 | `/api/add_text` | POST | authSessionRepos | `add_text()` | MCP | `HandleAddText` | handle_add_text.go | `UsecaseCtx.AddText` | AddTextRequest / AddTextResponse | = |
-| `/api/add_gkill_notification` | POST | authSessionRepos | `add_notification()` ※ | — | `HandleAddNotification` | handle_add_notification.go ※ | `UsecaseCtx.AddNotification` | AddNotificationRequest / AddNotificationResponse | = |
+| `/api/add_gkill_notification` | POST | authSessionRepos | `add_notification()` ※ | MCP | `HandleAddNotification` | handle_add_notification.go ※ | `UsecaseCtx.AddNotification` | AddNotificationRequest / AddNotificationResponse | = |
 | `/api/add_kmemo` | POST | authSessionRepos | `add_kmemo()` | SW MCP | `HandleAddKmemo` | handle_add_kmemo.go | `UsecaseCtx.AddKmemo` | AddKmemoRequest / AddKmemoResponse | = |
 | `/api/add_kc` | POST | authSessionRepos | `add_kc()` | MCP | `HandleAddKC` | handle_add_kc.go | `UsecaseCtx.AddKC` | AddKCRequest / AddKCResponse | = |
 | `/api/add_urlog` | POST | authSessionRepos | `add_urlog()` | SW MCP | `HandleAddURLog` | handle_add_urlog.go | `UsecaseCtx.AddURLog` | AddURLogRequest / AddURLogResponse | = |
@@ -108,8 +108,8 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 | `/api/add_timeis` | POST | authSessionRepos | `add_timeis()` | MCP | `HandleAddTimeis` | handle_add_timeis.go | `UsecaseCtx.AddTimeIs` ※ | AddTimeIsRequest / AddTimeIsResponse ※ | AddTimeisRequest / AddTimeisResponse |
 | `/api/add_mi` | POST | authSessionRepos | `add_mi()` | MCP | `HandleAddMi` | handle_add_mi.go | `UsecaseCtx.AddMi` | AddMiRequest / AddMiResponse | = |
 | `/api/add_lantana` | POST | authSessionRepos | `add_lantana()` | MCP | `HandleAddLantana` | handle_add_lantana.go | `UsecaseCtx.AddLantana` | AddLantanaRequest / AddLantanaResponse | = |
-| `/api/add_rekyou` | POST | authSessionRepos | `add_rekyou()` | — | `HandleAddRekyou` | handle_add_rekyou.go | `UsecaseCtx.AddReKyou` ※ | AddReKyouRequest / AddReKyouResponse ※ | = |
-| `/api/add_mirekyou` | POST | authSessionRepos | `add_mirekyou()` | — | `HandleAddMiReKyou` | handle_add_mirekyou.go | `UsecaseCtx.AddMiReKyou` | AddMiReKyouRequest / AddMiReKyouResponse | = |
+| `/api/add_rekyou` | POST | authSessionRepos | `add_rekyou()` | MCP | `HandleAddRekyou` | handle_add_rekyou.go | `UsecaseCtx.AddReKyou` ※ | AddReKyouRequest / AddReKyouResponse ※ | = |
+| `/api/add_mirekyou` | POST | authSessionRepos | `add_mirekyou()` | MCP | `HandleAddMiReKyou` | handle_add_mirekyou.go | `UsecaseCtx.AddMiReKyou` | AddMiReKyouRequest / AddMiReKyouResponse | = |
 | `/api/update_tag` | POST | authSessionRepos | `update_tag()` | MCP | `HandleUpdateTag` | handle_update_tag.go | `UsecaseCtx.UpdateTag` | UpdateTagRequest / UpdateTagResponse | = |
 | `/api/update_text` | POST | authSessionRepos | `update_text()` | MCP | `HandleUpdateText` | handle_update_text.go | `UsecaseCtx.UpdateText` | UpdateTextRequest / UpdateTextResponse | = |
 | `/api/update_gkill_notification` | POST | authSessionRepos | `update_notification()` ※ | MCP | `HandleUpdateNotification` | handle_update_notification.go ※ | `UsecaseCtx.UpdateNotification` | UpdateNotificationRequest / UpdateNotificationResponse | = |
@@ -119,7 +119,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 | `/api/update_nlog` | POST | authSessionRepos | `update_nlog()` | MCP | `HandleUpdateNlog` | handle_update_nlog.go | `UsecaseCtx.UpdateNlog` | UpdateNlogRequest / UpdateNlogResponse | = |
 | `/api/update_timeis` | POST | authSessionRepos | `update_timeis()` | MCP Wear | `HandleUpdateTimeis` | handle_update_timeis.go | `UsecaseCtx.UpdateTimeIs` ※ | UpdateTimeisRequest / UpdateTimeisResponse | = |
 | `/api/update_lantana` | POST | authSessionRepos | `update_lantana()` | MCP | `HandleUpdateLantana` | handle_update_lantana.go | `UsecaseCtx.UpdateLantana` | UpdateLantanaRequest / UpdateLantanaResponse | = |
-| `/api/update_idf_kyou` | POST | authSessionRepos | `update_idf_kyou()` | — | `HandleUpdateIDFKyou` | handle_update_idf_kyou.go | `UsecaseCtx.UpdateIDFKyou` | UpdateIDFKyouRequest / UpdateIDFKyouResponse | = |
+| `/api/update_idf_kyou` | POST | authSessionRepos | `update_idf_kyou()` | MCP | `HandleUpdateIDFKyou` | handle_update_idf_kyou.go | `UsecaseCtx.UpdateIDFKyou` | UpdateIDFKyouRequest / UpdateIDFKyouResponse | = |
 | `/api/update_mi` | POST | authSessionRepos | `update_mi()` | MCP | `HandleUpdateMi` | handle_update_mi.go | `UsecaseCtx.UpdateMi` | UpdateMiRequest / UpdateMiResponse | = |
 | `/api/update_rekyou` | POST | authSessionRepos | `update_rekyou()` | MCP | `HandleUpdateRekyou` | handle_update_rekyou.go | `UsecaseCtx.UpdateReKyou` ※ | UpdateReKyouRequest / UpdateReKyouResponse ※ | = |
 | `/api/update_mirekyou` | POST | authSessionRepos | `update_mirekyou()` | MCP | `HandleUpdateMiReKyou` | handle_update_mirekyou.go | `UsecaseCtx.UpdateMiReKyou` | UpdateMiReKyouRequest / UpdateMiReKyouResponse | = |
@@ -137,7 +137,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 | `/api/get_rekyous_by_target_id` | POST | authSessionRepos | `get_rekyous_by_target_id()` | — | `HandleGetReKyousByTargetID` | handle_get_re_kyous_by_target_id.go ※ | `UsecaseCtx.GetReKyousByTargetID` | GetReKyousByTargetIDRequest / GetReKyousByTargetIDResponse | = |
 | `/api/get_mirekyous_by_target_id` | POST | authSessionRepos | `get_mirekyous_by_target_id()` | — | `HandleGetMiReKyousByTargetID` | handle_get_mi_re_kyous_by_target_id.go ※ | `UsecaseCtx.GetMiReKyousByTargetID` | GetMiReKyousByTargetIDRequest / GetMiReKyousByTargetIDResponse | = |
 | `/api/get_git_commit_log` | POST | authSessionRepos | `get_git_commit_log()` | SW | `HandleGetGitCommitLog` | handle_get_git_commit_log.go | `UsecaseCtx.GetGitCommitLog` | GetGitCommitLogRequest / GetGitCommitLogResponse | = |
-| `/api/get_idf_kyou` | POST | authSessionRepos | `get_idf_kyou()` | SW | `HandleGetIDFKyou` | handle_get_idf_kyou.go | `UsecaseCtx.GetIDFKyouHistories` ※ | GetIDFKyouRequest / GetIDFKyouResponse | = |
+| `/api/get_idf_kyou` | POST | authSessionRepos | `get_idf_kyou()` | SW MCP | `HandleGetIDFKyou` | handle_get_idf_kyou.go | `UsecaseCtx.GetIDFKyouHistories` ※ | GetIDFKyouRequest / GetIDFKyouResponse | = |
 | `/api/get_mi_board_list` | POST | authSessionRepos | `get_mi_board_list()` | SW MCP | `HandleGetMiBoardList` | handle_get_mi_board_list.go | `UsecaseCtx.GetMiBoardList` | GetMiBoardRequest / GetMiBoardResponse ※ | = |
 | `/api/get_all_tag_names` | POST | authSessionRepos | `get_all_tag_names()` | SW MCP | `HandleGetAllTagNames` | handle_get_all_tag_names.go | `UsecaseCtx.GetAllTagNames` | GetAllTagNamesRequest / GetAllTagNamesResponse | = |
 | `/api/get_all_rep_names` | POST | authSessionRepos | `get_all_rep_names()` | SW MCP CLI | `HandleGetAllRepNames` | handle_get_all_rep_names.go | `UsecaseCtx.GetAllRepNames` | GetAllRepNamesRequest / GetAllRepNamesResponse | = |
@@ -155,6 +155,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 | `/api/get_repositories` | POST | authSessionRepos | `get_repositories()` | — | `HandleGetRepositories` | handle_get_repositories.go | 直接: `ConfigDAOs.RepositoryDAO` | GetRepositoriesRequest / GetRepositoriesResponse | = |
 | `/api/commit_tx` | POST | authSessionRepos | `commit_tx()` | — | `HandleCommitTx` | handle_commit_tx.go | 直接: `repositories.CommitTx`（1つの SQLite トランザクション） | CommitTxRequest / CommitTxResponse | CommitTXRequest / CommitTXResponse |
 | `/api/discard_tx` | POST | authSessionRepos | `discard_tx()` | — | `HandleDiscardTX` | handle_discard_tx.go | 直接: `repositories.DiscardTx` | DiscardTxRequest / DiscardTxResponse ※ | DiscardTXRequest / DiscardTXResponse |
+| `/api/delete_kyou_cascade` | POST | authSessionRepos | `delete_kyou_cascade()` | MCP | `HandleDeleteKyouCascade` | handle_delete_kyou_cascade.go | `UsecaseCtx.DeleteKyouCascade` | DeleteKyouCascadeRequest / DeleteKyouCascadeResponse | = |
 | `/api/submit_kftl_text` | POST | authSessionRepos | `submit_kftl_text()` | MCP Wear | `HandleSubmitKFTLText` | handle_submit_kftl_text.go | 直接: `kftl.KFTLStatement` / `kftlIdempotencyStore`（冪等キー） | SubmitKFTLTextRequest / SubmitKFTLTextResponse | = |
 <!-- BOUNDARY-TABLE:web-routes:END -->
 
@@ -228,7 +229,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 
 ### 4.1 ツール
 
-公開ツール38本。「載るサーバ」は `server_read.go` / `server_write.go` / `server_readwrite.go` の `composeTools(...)` から決まる。
+公開ツール45本。「載るサーバ」は `server_read.go` / `server_write.go` / `server_readwrite.go` の `composeTools(...)` から決まる。
 
 <!-- BOUNDARY-TABLE:mcp-tools:BEGIN -->
 | ツール | 載るサーバ | 叩く /api | 入口 |
@@ -257,7 +258,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 | `gkill_add_tag` | write readwrite | `/api/add_tag` | write_handlers.go |
 | `gkill_add_text` | write readwrite | `/api/add_text` | write_handlers.go |
 | `gkill_submit_kftl` | write readwrite | `/api/submit_kftl_text`（冪等キー付き） | write_handlers.go |
-| `gkill_delete_kyou` | write readwrite | §4.2 の取得 → 更新（`is_deleted` を立てる） | write_handlers.go |
+| `gkill_delete_kyou` | write readwrite | 記録は `/api/delete_kyou_cascade`（既定の連鎖削除。画面と同じ1実装）。`cascade:false` と付随データ（tag / text / notification）は §4.2 の取得 → 更新（`is_deleted` を立てる） | write_handlers.go |
 | `gkill_update_kmemo` | write readwrite | §4.2 の取得 → 更新 | write_handlers.go の `runUpdate` |
 | `gkill_update_urlog` | write readwrite | §4.2 の取得 → 更新 | write_handlers.go の `runUpdate` |
 | `gkill_update_nlog` | write readwrite | §4.2 の取得 → 更新 | write_handlers.go の `runUpdate` |
@@ -269,6 +270,13 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 | `gkill_update_text` | write readwrite | §4.2 の取得 → 更新 | write_handlers.go の `runUpdate` |
 | `gkill_restore_kyou` | write readwrite | §4.2 の取得 → 更新（`is_deleted` を戻す） | write_handlers.go |
 | `gkill_upload_files` | write readwrite | `/api/upload_files`（`target_rep_name` を省くと先に `/api/get_rep_infos_mcp` で書き込み先の file rep を選ぶ） | upload_files.go |
+| `gkill_add_rekyou` | write readwrite | `/api/get_kyous_mcp`（`target_id` の実在を `count_only` で確かめる）→ `/api/add_rekyou` | write_handlers.go |
+| `gkill_update_rekyou` | write readwrite | §4.2 の取得 → 更新 | write_handlers.go の `runUpdate` |
+| `gkill_add_mirekyou` | write readwrite | `/api/get_kyous_mcp`（`target_id` の実在）→ `/api/add_mirekyou`（板は `gkill_add_mi` と同じく `/api/get_mi_board_list` か `/api/get_application_config`） | write_handlers.go |
+| `gkill_update_mirekyou` | write readwrite | §4.2 の取得 → 更新（先に `/api/get_mi_board_list`） | write_handlers.go の `runUpdate` |
+| `gkill_add_notification` | write readwrite | `/api/get_kyous_mcp`（`target_id` の実在）→ `/api/add_gkill_notification` | write_handlers.go |
+| `gkill_update_notification` | write readwrite | §4.2 の取得 → 更新 | write_handlers.go の `runUpdate` |
+| `gkill_update_idf` | write readwrite | §4.2 の取得 → 更新 | write_handlers.go の `runUpdate` |
 | `gkill_add_skill` | write readwrite | `/api/write_skill_file` | skill_handlers.go |
 | `gkill_update_skill` | write readwrite | `/api/write_skill_file` | skill_handlers.go |
 非公開の `gkill_delete_skill`（skill_delete_tool.go）は `/api/delete_skill` を叩く実装があるが、どのサーバにも載っていない（write_handlers.go でコメントアウト）。
@@ -293,6 +301,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 | `rekyou` | `/api/get_rekyou` | `/api/update_rekyou` |
 | `mirekyou` | `/api/get_mirekyou` | `/api/update_mirekyou` |
 | `notification` | `/api/get_gkill_notification_histories_by_notification_id` | `/api/update_gkill_notification` |
+| `idf` | `/api/get_idf_kyou` | `/api/update_idf_kyou` |
 <!-- BOUNDARY-TABLE:mcp-entities:END -->
 
 ### 4.3 HTTP トランスポートの経路

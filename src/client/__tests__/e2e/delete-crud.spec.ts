@@ -181,4 +181,36 @@ test.describe('GUI Delete Flows', () => {
     await expect(page.locator('.kyou_rep_name').filter({ hasText: /^\s*Kmemo\s*$/ }), '元の記録まで消えている')
       .toHaveCount(1, { timeout: 30000 })
   })
+
+  // 記録を消すと、それを参照しているリポストも一緒に消える（連鎖削除。サーバの /api/delete_kyou_cascade が
+  // 1つのトランザクションで消す。MCP の gkill_delete_kyou も同じ実装。ADR-0636）。
+  // 元の記録が消えたのにリポストだけが残ると、参照先の無いリポストになる。
+  test('リポストされた記録を削除するとリポストも一緒に消える', async ({ page }) => {
+    const label = makeUniqueLabel('rekyou_cascade')
+    await submitKftlText(page, label)
+    await navigateToRykv(page)
+
+    const record = await waitForKyouByText(page, label)
+    await record.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, MENU.rekyou)
+    await clickDialogButton(page, MENU.rekyou)
+
+    await navigateToRykv(page)
+    await searchByKeyword(page, label)
+    await expect(page.locator('.kyou_rep_name').filter({ hasText: /^\s*ReKyou\s*$/ }), 'リポストが作られていない')
+      .toHaveCount(1, { timeout: 30000 })
+
+    // 元の記録（Kmemo）を削除する。リポジトリ名で掴むとリポストの中に入れ子で描画された元の記録に当たり、
+    // そのメニューはリポスト側のものなのでリポストだけが消える。本文で掴むと元の記録の行に当たる
+    // （上の「リポストを作って削除しても元の記録は残る」と同じ前提）
+    await deleteViaContextMenu(page, label)
+
+    // 元の記録もリポストも残らない
+    await navigateToRykv(page)
+    await searchByKeyword(page, label)
+    await expect(page.locator('.kyou_rep_name').filter({ hasText: /^\s*ReKyou\s*$/ }), 'リポストが残っている（連鎖していない）')
+      .toHaveCount(0, { timeout: 30000 })
+    await expect(page.locator('.kyou_rep_name').filter({ hasText: /^\s*Kmemo\s*$/ }), '元の記録が消えていない')
+      .toHaveCount(0, { timeout: 30000 })
+  })
 })

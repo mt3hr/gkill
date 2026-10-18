@@ -91,7 +91,7 @@ export enum GkillErrorCodes {
     not_found_mi_rekyou_target = "ERR900090",
     client_mi_rekyou_is_null = "ERR900091",
     mi_rekyou_is_no_update = "ERR900092",
-    cascade_delete_depth_exceeded = "ERR900093",
+    // ERR900093（cascade_delete_depth_exceeded）は欠番。連鎖削除をサーバへ移し、深さ超過はサーバの ERR000451 になった（ADR-0636）
     cascade_delete_failed = "ERR900094",
     // 確認ダイアログの処理が想定外の例外で落ちたとき用。
     // 文言は既存の FAILED_UPDATE_*_MESSAGE を流用する（論理削除は実際にはupdateなので嘘にならない）

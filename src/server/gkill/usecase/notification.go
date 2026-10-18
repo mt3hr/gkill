@@ -276,7 +276,10 @@ func (uc *UsecaseContext) GetNotificationHistoriesByNotificationID(ctx context.C
 			notifications = []reps.Notification{*notification}
 		}
 	} else {
-		notifications, err = repositories.GetNotificationHistories(ctx, id)
+		// 履歴は削除済みの版も返す（タグ・テキストの履歴と同じ。TagReps / TextReps の集約を通す）。
+		// 以前は GkillRepositories.GetNotificationHistories を通していて削除済みの版が落ち、
+		// 「消したのに履歴の先頭は消えていない版」になって MCP の削除・復元の判定が狂っていた（ADR-0636）。
+		notifications, err = repositories.NotificationReps.GetNotificationHistories(ctx, id)
 	}
 
 	if err != nil {

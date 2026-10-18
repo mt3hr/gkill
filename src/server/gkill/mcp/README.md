@@ -9,8 +9,8 @@ gkill の API を MCP サーバとして公開します。MCP サーバは **`gk
 | サーバー | 起動コマンド | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
 | **Read専用** | `gkill_server mcp --kind read` | 14 (13 read + 1 plugin) | 8808 | 読み取りのみ |
-| **Write専用** | `gkill_server mcp --kind write` | 34 (24 write + 9 read convenience + 1 plugin) | 8809 | 書き込み中心 |
-| **Read/Write統合** | `gkill_server mcp --kind readwrite` | 38 (13 read + 24 write + 1 plugin) | 8810 | 全機能 |
+| **Write専用** | `gkill_server mcp --kind write` | 41 (31 write + 9 read convenience + 1 plugin) | 8809 | 書き込み中心 |
+| **Read/Write統合** | `gkill_server mcp --kind readwrite` | 45 (13 read + 31 write + 1 plugin) | 8810 | 全機能 |
 
 プラグインツール `gkill_get_plugin_list` は3サーバ共通で提供します（読み取り専用）。プラグインKyouの本文は `gkill_get_kyous` の `include_plugin_content` でレスポンスに埋め込みます。
 
@@ -58,7 +58,7 @@ package `mcp`（`src/server/gkill/mcp/`）は旧実装の `lib/*.mjs` と 1:1 �
 | `internal/fakegkill/` | — | ゴールデンの採取・再生に使う偽 gkill（固定応答と受信要求の記録）。`fakegkillcmd/` は単独プロセスで立てる入口 |
 | `testdata/golden/` | — | ゴールデン（要求コーパス・tools/list・応答・gkill へ送った要求）。`golden_test.go` がバイト単位で照合する |
 
-> ツール数（上の表の 14 / 34 / 38）は `verify_docs` が `*_tools.go` の定義を辿って
+> ツール数（上の表の 14 / 41 / 45）は `verify_docs` が `*_tools.go` の定義を辿って
 > 実測と突き合わせます。サーバ本体だけを見ても数えられないので、ツールを増やすときは
 > 必ず `read_tools.go` / `write_tools.go` / `plugin_tools.go` の配列へ足してください。
 
@@ -283,7 +283,7 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 
 実測: ChatGPTで「キーワード検索 → ヒットしたイラスト数枚を参照して新規イラストを生成」を実行したところ、`gkill_get_kyous` に続いて `gkill_get_idf_file` が枚数ぶん呼ばれ、`/files/` へのアクセスは無かった。経緯と却下案は [ADR-0606](../../../../documents/adr/0606-idf-file-reaches-ai-through-payload.md)。
 
-#### Writeツール（24 — Write専用/ReadWrite統合サーバで使用可能）
+#### Writeツール（31 — Write専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_add_kmemo` | テキストメモ作成 |
@@ -305,9 +305,13 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 | `gkill_update_tag` | タグ更新 |
 | `gkill_update_text` | テキスト注釈更新 |
 | `gkill_submit_kftl` | KFTLテキスト一括処理。応答の `created[]`（`{id, data_type, updated, related_time}`。失敗時は `[]`、`related_time` は秒精度）に実際に書かれた記録が書かれた順で並ぶ。`replayed: true` は同じ `idempotency_key`・同じ本文の再送で、`created[]` は元の送信の控え（同じキーで別の本文は 409 `ERR000423`。ADR-0510）。`created[].id` を `gkill_add_tag` / `gkill_add_text` の `target_id` に使えば、KFTLで作った記録へ後からタグ・注釈を付けられる |
-| `gkill_delete_kyou` | エントリのソフト削除。`gkill_submit_kftl` の `created[]` は `updated` / `related_time` を持つのでそのまま `targets` に渡せない —— `created.filter(c => !c.updated).map(({id, data_type}) => ({id, data_type}))` を渡す（`updated:true` は既存記録の更新で、消すと元から在った打刻が消える） |
+| `gkill_delete_kyou` | エントリのソフト削除。**既定で連鎖する**（画面の削除と同じ `/api/delete_kyou_cascade`。付いているタグ・テキスト・通知と、参照するリポスト・タスク化も1つのトランザクションで消え、`deleted[]` に全部返る。`gkill_restore_kyou` の `targets[]` にそのまま渡せる）。`cascade:false` で対象1件だけ。idf（ファイルの記録）も消せる（ファイルそのものは残る）。`gkill_submit_kftl` の `created[]` は `updated` / `related_time` を持つのでそのまま `targets` に渡せない —— `created.filter(c => !c.updated).map(({id, data_type}) => ({id, data_type}))` を渡す（`updated:true` は既存記録の更新で、消すと元から在った打刻が消える） |
 | `gkill_restore_kyou` | ソフト削除の取り消し（`is_deleted` を戻す） |
 | `gkill_upload_files` | ファイルをファイルの記録保管場所（rep_type `directory`）へ置き、それぞれを idf の記録として登録する（画面の「アップロード」の「ファイル」タブと同じ）。各ファイルは `file_name` + `data_base64`（どのトランスポートでも）か `file_path`（stdio だけ。MCP サーバが読む）。既定は書き込み先の file rep・`conflict_behavior: rename`・関連時刻はファイルの更新日時（`file_path`）か現在時刻。トランザクションではない（ADR-0217）。登録した記録の `create_app` は MCP のアプリ名 |
+| `gkill_add_rekyou` / `gkill_update_rekyou` | リポストの作成と関連時刻の変更。作成は `target_id` の実在を確かめてから（ADR-0636） |
+| `gkill_add_mirekyou` / `gkill_update_mirekyou` | 記録のタスク化（題名は持たず対象の記録が中身）。板・完了・締切・見積の扱いは `gkill_add_mi` / `gkill_update_mi` と同じ |
+| `gkill_add_notification` / `gkill_update_notification` | 記録に付ける通知（本文と通知時刻）。付随データなので Kyou を持たない |
+| `gkill_update_idf` | ファイルの記録の関連時刻の変更（画面のアップロード後の「関連時刻を決める」と同じ）。ファイルそのものは触らない |
 | `gkill_add_skill` | スキルを新規作成（`name` / `description` / `body` から gkill が SKILL.md を書く。同じ名前の SKILL.md が既にあれば 409 `ERR000436`。SKILL.md の無いフォルダなら、そこへ SKILL.md を書いて作成される）。反映はすぐで履歴は残らないので、内容を利用者と合意してから呼ぶ |
 | `gkill_update_skill` | スキルのテキストファイルを1つ書く（`path` 省略で SKILL.md をヘッダごと丸ごと）。上書きは `gkill_get_skill` が返した `revision` が必須で、食い違えば 409 `ERR000437` に今の revision が載る。`revision` を省くと新規ファイルの作成だけ。削除・バイナリの追加は利用者が設定画面から行う（AI の削除ツールは公開していない。ADR-0634） |
 

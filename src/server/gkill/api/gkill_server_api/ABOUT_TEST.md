@@ -31,6 +31,7 @@ Go `testing` パッケージ
 | `get_kyous_tag_filter_test.go` | タグ絞り込み（AND / 「タグ無し」仮想タグ、強制非表示タグを2経路のどちらで取っても同じ結果になること） |
 | `get_kyous_rep_filter_test.go` | rep名での絞り込みを**キャッシュ有無の両方**で。`UpdateCache` の**前後で2回**見るのが要点で、追加直後はキャッシュ表の `REP_NAME` が空のため「空の行は残す」分岐で全部素通りし、そこだけでは許可リスト側の分岐を一度も検証できない |
 | `handle_commit_tx_atomic_test.go` | `/api/commit_tx` が「全部書くか、何も書かないか」であること（キャッシュON/OFF）。kc と本文が空の kmemo を同じ tx に積んで commit すると ERR000419 で返り kc も残らないこと、成功時に `committed[]` が全件を返し temp を消費すること（同じ tx_id の再 commit で版が増えない）、既存 TimeIs を tx で更新して discard しても検索に出続けること（tx 中に最新版アドレス表を進めると消えていた） |
+| `handle_delete_kyou_cascade_test.go` | `/api/delete_kyou_cascade`（ADR-0636。画面と MCP の連鎖削除の1実装）。付随するタグ・テキスト・通知と、参照するリポスト・タスク化（とそれに付いたタグ）をまとめて消し `deleted[]` に全部返すこと、追加と同じ秒に消しても新しい版が最新になること、多段の参照を辿り削除済みのリポストは辿らないこと、循環参照・自己参照で止まること、深さの上限を超えたら何も消さずに ERR000451、起点にできない種別・無い記録・削除済みをそれぞれ ERR000450 / ERR000448 / ERR000449 で断ること、射影名（`mirekyou_create`）で起点を取り違えないこと、通知の履歴に削除済みの版が出ること。キャッシュ ON / OFF の両方 |
 | `get_kyous_tx_rep_filter_test.go` | `commit_tx` で確定した記録が rep絞り込みを通ること（キャッシュON/OFF）。一時リポジトリの合成rep名がキャッシュへ入ると、メモ帳構文で書いた記録だけが一覧から丸ごと消える |
 | `handle_get_kyous_mcp_test.go` | MCP用の記録取得（大量IDでの分割、応答形状、日付のみのカーソルがその日の 00:00 として効くこと） |
 | `get_kyous_mcp_revalidate_test.go` | cursor 頁の Mi 再検証（ADR-0621）が失敗したとき、頁を落とさず warnings を1行足して batch をそのまま返すこと。窓に依存する種別（Mi / MiReKyou）が無い頁は検索しないこと |

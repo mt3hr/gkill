@@ -133,7 +133,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | **Repository 4層パターン** | 各データ型のデータアクセスを4層で実装するパターン: (1) `*_repository.go`（インタフェース定義） → (2) `*_repository_sqlite3_impl.go`（SQLite3 直接アクセス） → (3) `*_repository_cached_sqlite3_impl.go`（キャッシュ付きラッパー） → (4) `*_repository_temp_sqlite3_impl.go`（トランザクション用一時リポジトリ） |
 | **GkillRepositories** | ユーザ別の全リポジトリ集約構造体。読み取り用（`XxxReps` = 複数リポジトリの集約）と書き込み用（`WriteXxxRep` = 単一リポジトリ）を保持する |
 | **GkillDAOManager** | 全 DAO の中央管理。`GetRepositories()` でユーザ別リポジトリを取得し、`GetTempReps()` でトランザクション用一時リポジトリを管理する |
-| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（97件）を提供する。`gkill_server_api/` パッケージ（handle_*.go 119ファイル）に分割実装 |
+| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（98件）を提供する。`gkill_server_api/` パッケージ（handle_*.go 121ファイル）に分割実装 |
 | **TempReps** | KFTL パース時のトランザクション用一時リポジトリ。`CommitTX` で本リポジトリに反映、`DiscardTX` で破棄する |
 | **Rep / 記録保管場所** | データ保存先の SQLite3 ファイル。ユーザ・デバイス・データ型ごとに割り当てられる |
 | **RepType / 記録タイプ** | リポジトリの分類。メモ帳、打刻帳、支出、数値記録、タスク、気分、ブックマーク、リポスト等 |
@@ -216,12 +216,12 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **ZIPキャッシュ** | IDFKyouのZIPファイルを展開したキャッシュ。`$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/` に保存される。利用者ID・リポジトリ名・**ZIPファイルの絶対パス文字列**のSHA1をキーとし、同一ファイルの再展開を回避する。配信時は利用者のディレクトリを起点に固定するので、他人のキャッシュは読めない |
 | **ZipEntry** | ZIP内のファイルエントリ情報。ファイル名・サイズ・パス等を含む。`/api/browse_zip_contents` のレスポンスとして返却される |
 | **OnlyLatestData** | 検索フィルタ。同一 ID のレコードのうち `UpdateTime` が最新のもののみを返す。Kyou 本体だけでなく**付随するタグ・テキストにも同じ規則が適用される**ため、タグ名を書き換えたあとに旧タグ名で検索してもヒットしない（`find_filter.go` 各所と `find_kyou_context.go` の `isLatestData`） |
-| **連鎖削除 (cascade delete)** | Kyou を削除したとき、付随する Tag / Text / Notification と、その Kyou を `TargetID` で参照している ReKyou / MiReKyou を幅優先で辿って一緒に論理削除する処理（`src/client/classes/cascade-delete-kyou.ts`）。探索（read）と削除（write）を完全に分け、Kyou 自身は**最後**に消す（先に消すとサーバの FindKyous が参照元を結果から外し、途中失敗時に残骸を再発見できなくなるため）。全件を1つの tx_id で積み commit_tx で確定するので、全部消えるか何も消えないかのどちらか（ADR-0410）。深さ上限32（超過時 `ERR900093 cascade_delete_depth_exceeded`）、失敗時は `ERR900094 cascade_delete_failed` |
+| **連鎖削除 (cascade delete)** | Kyou を削除したとき、付随する Tag / Text / Notification と、その Kyou を `TargetID` で参照している ReKyou / MiReKyou を幅優先で辿って一緒に論理削除する処理。サーバの1実装（`/api/delete_kyou_cascade` → `usecase.DeleteKyouCascade`）で、画面（`src/client/classes/cascade-delete-kyou.ts`）と MCP の `gkill_delete_kyou`（既定で連鎖）が使う（ADR-0636）。探索（read）と削除（write）を完全に分け、Kyou 自身は**最後**に積む。全件を1つの tx で積み CommitTx で確定するので、全部消えるか何も消えないかのどちらか（ADR-0410）。深さ上限32（超過時 `ERR000451`）、応答の `deleted` に消した全件が返る |
 | **セッション** | UUID ベースの認証トークン。有効期限は30日。Cookie に `session_id` を保持する。期限以外に、**パスワードを設定しなおすとそのユーザの全セッションが失効する**（他端末のログインも落ちる） |
 | **Argon2id** | パスワードの保存に使うメモリハードな鍵導出関数。gkill は `m=65536 KiB, t=3, p=4`、ソルト16バイト、鍵長32バイトで用いる。総当たりに必要な計算資源を引き上げ、`account.db` が流出しても資格情報にならないようにするのが目的 |
 | **PHC文字列** | Argon2id の保存形式。`$argon2id$v=19$m=65536,t=3,p=4$<ソルト>$<ハッシュ>` のようにアルゴリズム・パラメータ・ソルトを値自身に含む。パラメータが保存値側にあるので、後からコストを変えても既存の値をそのまま照合できる |
 | **パスワードリセットトークン** | パスワードを設定しなおすための単回使用の秘密（UUIDv4）。有効期限は72時間で `ACCOUNT.PASSWORD_RESET_TOKEN_EXPIRATION` に持つ。照合は constant-time。管理者の `/api/reset_password` か CLI の `reset_password` で発行する |
-| **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill_server mcp --kind read`、14ツール）・**Write専用**（`gkill_server mcp --kind write`、34ツール）・**ReadWrite統合**（`gkill_server mcp --kind readwrite`、38ツール）。いずれも共通のプラグインツール1つ（`plugin_tools.go` の `PLUGIN_TOOLS`）を含む。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
+| **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill_server mcp --kind read`、14ツール）・**Write専用**（`gkill_server mcp --kind write`、41ツール）・**ReadWrite統合**（`gkill_server mcp --kind readwrite`、45ツール）。いずれも共通のプラグインツール1つ（`plugin_tools.go` の `PLUGIN_TOOLS`）を含む。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
 | **スキル（Skill）** | 利用者ごとに AI へ渡す手順書。Agent Skills と同じ形（フォルダ1つ = スキル1つ。frontmatter に `name` / `description` を持つ `SKILL.md` と、参考資料・スクリプト等の付属ファイル）で、`$GKILL_HOME/skills/<user_id>/<name>/` に置かれる。読み書きするのは gkill_server だけ（`dao/skills/`。API 6本）で、MCP は `gkill_get_skill_list` / `gkill_get_skill`（3サーバ）と `gkill_add_skill` / `gkill_update_skill`（write / readwrite）から、設定画面は一覧・表示・zip のダウンロード / アップロード（丸ごと置き換え）・スキル丸ごとの削除から使う。履歴は持たず、スクリプトはサーバで実行しない（ADR-0634） |
 | **revision** | スキル内ファイルの版。中身の SHA-256 の先頭16桁で、`gkill_get_skill` がファイルごとに返す。`gkill_update_skill`（`/api/write_skill_file`）で既存のファイルを書き換えるときに必須で、省くと新規作成の意味になり、既にあるファイルなら 409（`ERR000436`）で断られる。渡した revision が今の中身と食い違う（読んだ後に誰かが書き換えた）ときも 409（`ERR000437`）で、応答に今の revision を添える。読み直して差分を取り込んでから出し直す楽観ロック |
 
@@ -246,11 +246,11 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
-| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全97エンドポイントのパス・メソッド・認証区分・ハンドラを1行1ルートで持つルート表（96 POST + 1 GET）。`serve.go` とテストハーネスがそのまま登録する正本 |
+| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全98エンドポイントのパス・メソッド・認証区分・ハンドラを1行1ルートで持つルート表（97 POST + 1 GET）。`serve.go` とテストハーネスがそのまま登録する正本 |
 | APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 119ファイル、1ハンドラ1ファイル） |
 | アクセスログミドルウェア | `src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go` | gorilla/mux ミドルウェア。全HTTPリクエストのアクセスログを `ACCESS` レベルで記録 |
-| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（202ファイル） |
-| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000444 の定数定義（計403件。欠番41、うち37は存在しないエンドポイントのコードを削除した跡） |
+| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（204ファイル） |
+| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000451 の定数定義（計410件。欠番41、うち37は存在しないエンドポイントのコードを削除した跡） |
 | GkillError / GkillMessage | `src/server/gkill/api/message/` | エラー・メッセージ構造体 |
 | KFTLパーサー | `src/server/gkill/api/kftl/` | KFTL テキストパース・リクエスト生成 |
 | Embed（SPA埋め込み） | `src/server/gkill/api/embed.go` | `//go:embed embed` ディレクティブ |
@@ -275,7 +275,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
 | ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
 | GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約3,600行） |
-| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（183ファイル） |
+| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（185ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
 | DashboardConfig | `src/client/classes/datas/config/dashboard-config.ts` | ダッシュボード設定クラス（MI検索条件・Dnote検索条件） |
 | PlayingTimeIsConfig | `src/client/classes/datas/config/playing-time-is-config.ts` | 実行中検索条件クラス（playing検索のカスタム条件） |
@@ -291,15 +291,15 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（1028キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（1029キー/言語） |
 
 ### その他
 
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
 | MCP サーバー（Read） | `src/server/gkill/mcp/server_read.go` | 読み取り専用MCPサーバー（14ツール = 固有13 + プラグイン1、stdio/HTTP） |
-| MCP サーバー（Write） | `src/server/gkill/mcp/server_write.go` | 書き込み専用MCPサーバー（34ツール = 書き込み24 + Read便利9 + プラグイン1、stdio/HTTP） |
-| MCP サーバー（ReadWrite） | `src/server/gkill/mcp/server_readwrite.go` | 読み書き統合MCPサーバー（38ツール = 固有37 + プラグイン1、stdio/HTTP） |
+| MCP サーバー（Write） | `src/server/gkill/mcp/server_write.go` | 書き込み専用MCPサーバー（41ツール = 書き込み31 + Read便利9 + プラグイン1、stdio/HTTP） |
+| MCP サーバー（ReadWrite） | `src/server/gkill/mcp/server_readwrite.go` | 読み書き統合MCPサーバー（45ツール = 固有44 + プラグイン1、stdio/HTTP） |
 | MCP プラグインツール | `src/server/gkill/mcp/plugin_tools.go` | 3サーバ共通の `gkill_get_plugin_list` と、`gkill_get_kyous` へプラグイン本文を埋める `inlinePluginContents`（読み取りのみ。`post_plugin_config` は公開しない） |
 | MCP ログ | `src/server/gkill/mcp/access_log.go` | gkill_log 上の MCP のロガー。`logs/gkill_mcp_<kind>*.log` へ出し、レベルは `MCP_LOG` / 設定 / `--log` で制御 |
 | MCP ヘルプ | `src/server/gkill/mcp/help_topics.go` | `gkill_get_mcp_help` の topic 本文（10件）。ツール説明は要約にとどめ、詳細はここから取り出す（ADR-0622 / 0632） |

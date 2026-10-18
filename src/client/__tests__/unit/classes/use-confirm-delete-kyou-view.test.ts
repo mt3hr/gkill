@@ -52,20 +52,17 @@ function make_mirekyou_kyou(id: string) {
   return kyou
 }
 
-/** 逆引きも更新も成功し、errorsはサーバ実物と同じく null で返るAPI */
+/**
+ * 連鎖削除が成功し、messages / errors は null で返る API（古い SW キャッシュや古いサーバの組み合わせ）。
+ * 探索と1つのトランザクションでの削除はサーバの /api/delete_kyou_cascade が行う（cascade-delete-kyou.ts。ADR-0636）
+ */
 function create_api() {
-  const empty = { messages: null, errors: null }
   return {
-    get_tags_by_target_id: vi.fn(async () => ({ tags: [], ...empty })),
-    get_texts_by_target_id: vi.fn(async () => ({ texts: [], ...empty })),
-    get_notifications_by_target_id: vi.fn(async () => ({ notifications: [], ...empty })),
-    get_rekyous_by_target_id: vi.fn(async () => ({ rekyous: [], ...empty })),
-    get_mirekyous_by_target_id: vi.fn(async () => ({ mirekyous: [], ...empty })),
-    update_mirekyou: vi.fn(async () => empty),
-    // 削除は tx で束ねて commit_tx で確定する（cascade-delete-kyou.ts）
-    generate_uuid: vi.fn(() => 'tx-1'),
-    commit_tx: vi.fn(async () => empty),
-    discard_tx: vi.fn(async () => empty),
+    delete_kyou_cascade: vi.fn(async (_req: { target_id: string, data_type: string }) => ({
+      messages: null,
+      errors: null,
+      deleted: [{ id: 'mirekyou-1', data_type: 'mirekyou' }],
+    })),
   }
 }
 
@@ -100,7 +97,8 @@ describe('useConfirmDeleteKyouView', () => {
 
     await view.delete_kyou()
 
-    expect(api.update_mirekyou).toHaveBeenCalledTimes(1)
+    expect(api.delete_kyou_cascade).toHaveBeenCalledTimes(1)
+    expect(api.delete_kyou_cascade.mock.calls[0][0].data_type).toBe('mirekyou_create')
     expect(emitted(emits, 'received_errors')).toHaveLength(0)
     expect(emitted(emits, 'deleted_kyou')).toHaveLength(1)
     expect(emitted(emits, 'requested_close_dialog')).toHaveLength(1)
@@ -110,7 +108,7 @@ describe('useConfirmDeleteKyouView', () => {
   // 「消えているのにダイアログが閉じない」に見える
   it('途中で例外が飛んでもエラーを出したうえでrequested_close_dialogをemitする', async () => {
     const api = create_api()
-    api.update_mirekyou.mockRejectedValueOnce(new Error('boom'))
+    api.delete_kyou_cascade.mockRejectedValueOnce(new Error('boom'))
     const { view, emits } = build_view(api, make_mirekyou_kyou('mirekyou-1'))
 
     await expect(view.delete_kyou()).resolves.toBeUndefined()
@@ -123,9 +121,9 @@ describe('useConfirmDeleteKyouView', () => {
     const api = create_api()
     let release: () => void = () => { }
     const blocker = new Promise<void>(resolve => { release = resolve })
-    api.update_mirekyou.mockImplementationOnce(async () => {
+    api.delete_kyou_cascade.mockImplementationOnce(async () => {
       await blocker
-      return { messages: null, errors: null }
+      return { messages: null, errors: null, deleted: [{ id: 'mirekyou-1', data_type: 'mirekyou' }] }
     })
     const { view, emits } = build_view(api, make_mirekyou_kyou('mirekyou-1'))
 
@@ -134,7 +132,7 @@ describe('useConfirmDeleteKyouView', () => {
     release()
     await Promise.all([first, second])
 
-    expect(api.update_mirekyou).toHaveBeenCalledTimes(1)
+    expect(api.delete_kyou_cascade).toHaveBeenCalledTimes(1)
     expect(emitted(emits, 'requested_close_dialog')).toHaveLength(1)
     expect(view.is_requested_submit.value).toBe(false)
   })

@@ -272,7 +272,7 @@ func TestHandleWriteToolCallDelete(t *testing.T) {
 			mockResolvedValueOnce(obj("kmemo_histories", arr(obj("id", "k1", "content", "bye", "is_deleted", false)))).
 			mockResolvedValueOnce(obj("updated_kmemo", obj("id", "k1"), "updated_kyou", obj("id", "k1")))
 
-		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "k1", "data_type", "kmemo"))
+		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("cascade", false, "id", "k1", "data_type", "kmemo"))
 		expectNoError(t, err)
 
 		expectEqual(t, clientOf(ctx).calls[0].Pathname, "/api/get_kmemo")
@@ -283,7 +283,7 @@ func TestHandleWriteToolCallDelete(t *testing.T) {
 
 	t.Run("throws Entity not found when the id has no history", func(t *testing.T) {
 		ctx := makeWriteCtx(resolving(func() *jsonobj.Object { return obj("kmemo_histories", arr()) }))
-		_, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "nope", "data_type", "kmemo"))
+		_, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("cascade", false, "id", "nope", "data_type", "kmemo"))
 		expectErrorMatches(t, err, `Entity not found`)
 	})
 }
@@ -380,7 +380,7 @@ func TestUpdateTimeAlwaysMovesForward(t *testing.T) {
 			mockResolvedValueOnce(obj("kmemo_histories", arr(obj("id", "k1", "is_deleted", false, "update_time", sameSecond)))).
 			mockResolvedValueOnce(obj("updated_kyou", obj("id", "k1")))
 
-		_, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "k1", "data_type", "kmemo"))
+		_, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("cascade", false, "id", "k1", "data_type", "kmemo"))
 		expectNoError(t, err)
 
 		sent := strAt(t, objAt(t, clientOf(ctx).calls[1].Body, "kmemo"), "update_time")
@@ -393,7 +393,7 @@ func TestDeleteIdempotencyAndErrorQuality(t *testing.T) {
 		// 2回目も成功を返していたので「消えたのか、元から無かったのか、既に消えていたのか」が
 		// 区別できず、しかも履歴に無意味な版が積まれていた
 		ctx := makeWriteCtx(resolving(func() *jsonobj.Object { return obj("kmemo_histories", arr(obj("id", "k1", "is_deleted", true))) }))
-		_, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "k1", "data_type", "kmemo"))
+		_, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("cascade", false, "id", "k1", "data_type", "kmemo"))
 		expectErrorMatches(t, err, `already deleted`)
 		// 更新は投げていない (GET だけで止まる)
 		expectEqual(t, len(clientOf(ctx).calls), 1)
@@ -403,14 +403,14 @@ func TestDeleteIdempotencyAndErrorQuality(t *testing.T) {
 		ctx := makeWriteCtx(byPath("/api/get_kmemo",
 			obj("kmemo_histories", arr(obj("id", "k1", "is_deleted", false, "update_time", "2026-08-24T03:00:00+09:00"))),
 			obj("updated_kyou", obj("id", "k1"))))
-		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "k1", "data_type", "kmemo"))
+		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("cascade", false, "id", "k1", "data_type", "kmemo"))
 		expectNoError(t, err)
 		expectEqual(t, objAt(t, result, "updated_kmemo").Value("is_deleted"), true)
 	})
 
 	t.Run("entity-not-found names the data_type it looked under, because a wrong type looks identical", func(t *testing.T) {
 		ctx := makeWriteCtx(resolving(func() *jsonobj.Object { return obj("urlog_histories", arr()) }))
-		_, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "k1", "data_type", "urlog"))
+		_, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("cascade", false, "id", "k1", "data_type", "urlog"))
 		expectErrorMatches(t, err, `data_type "urlog"`)
 	})
 
@@ -459,7 +459,7 @@ func TestResponseCarriesTheServerSavedVersion(t *testing.T) {
 		deleteCtx := makeWriteCtx(byPath("/api/get_kmemo",
 			obj("kmemo_histories", arr(obj("id", "k1", "content", "x", "is_deleted", false, "update_time", "2024-03-10T09:00:00+09:00"))),
 			obj("updated_kmemo", obj("id", "k1", "is_deleted", true, "update_time", "2024-03-10T09:20:00+09:00"))))
-		deleted, err := HandleWriteToolCall(deleteCtx, "gkill_delete_kyou", obj("id", "k1", "data_type", "kmemo"))
+		deleted, err := HandleWriteToolCall(deleteCtx, "gkill_delete_kyou", obj("cascade", false, "id", "k1", "data_type", "kmemo"))
 		expectNoError(t, err)
 		expectEqual(t, objAt(t, deleted, "updated_kmemo").Value("update_time"), "2024-03-10T09:20:00+09:00")
 
@@ -476,7 +476,7 @@ func TestResponseCarriesTheServerSavedVersion(t *testing.T) {
 		ctx := makeWriteCtx(byPath("/api/get_kmemo",
 			obj("kmemo_histories", arr(obj("id", "k1", "content", "keepme", "is_deleted", false))),
 			obj("updated_kmemo", obj("id", "k1", "is_deleted", true))))
-		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "k1", "data_type", "kmemo"))
+		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("cascade", false, "id", "k1", "data_type", "kmemo"))
 		expectNoError(t, err)
 		expectEqual(t, objAt(t, result, "updated_kmemo").Value("content"), "keepme")
 		expectEqual(t, objAt(t, result, "updated_kmemo").Value("is_deleted"), true)
@@ -542,6 +542,7 @@ func TestHandleWriteToolCallBatchDeleteRestore(t *testing.T) {
 			mockResolvedValueOnce(obj("updated_lantana", obj("id", "l1")))
 
 		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj(
+			"cascade", false,
 			"targets", arr(obj("id", "k1", "data_type", "kmemo"), obj("id", "l1", "data_type", "lantana")),
 		))
 		expectNoError(t, err)
@@ -564,6 +565,7 @@ func TestHandleWriteToolCallBatchDeleteRestore(t *testing.T) {
 			mockResolvedValueOnce(obj("updated_lantana", obj("id", "l1")))
 
 		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj(
+			"cascade", false,
 			"targets", arr(obj("id", "missing", "data_type", "kmemo"), obj("id", "l1", "data_type", "lantana")),
 		))
 		expectNoError(t, err)
@@ -583,7 +585,7 @@ func TestHandleWriteToolCallBatchDeleteRestore(t *testing.T) {
 			mockResolvedValueOnce(obj("kmemo_histories", arr(obj("id", "k1", "is_deleted", false)))).
 			mockResolvedValueOnce(obj("updated_kmemo", obj("id", "k1")))
 
-		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "k1", "data_type", "kmemo"))
+		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("cascade", false, "id", "k1", "data_type", "kmemo"))
 		expectNoError(t, err)
 		expectEqual(t, objAt(t, result, "updated_kmemo").Value("is_deleted"), true)
 		expectTrue(t, !result.Has("results"), "results present on the single form")
@@ -727,7 +729,7 @@ func TestHandleWriteToolCallStaleToolSchemaWarning(t *testing.T) {
 			mockResolvedValueOnce(obj("kmemo_histories", arr(obj("id", "k1", "is_deleted", false)))).
 			mockResolvedValueOnce(obj("updated_kmemo", obj("id", "k1")))
 
-		payload, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("targets", `[{"id":"k1","data_type":"kmemo"}]`))
+		payload, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("cascade", false, "targets", `[{"id":"k1","data_type":"kmemo"}]`))
 		expectNoError(t, err)
 
 		warnings := arrAt(t, payload, "warnings")
@@ -742,7 +744,7 @@ func TestHandleWriteToolCallStaleToolSchemaWarning(t *testing.T) {
 			mockResolvedValueOnce(obj("kmemo_histories", arr(obj("id", "k1", "is_deleted", false)))).
 			mockResolvedValueOnce(obj("updated_kmemo", obj("id", "k1")))
 
-		payload, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("targets", arr(obj("id", "k1", "data_type", "kmemo"))))
+		payload, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("cascade", false, "targets", arr(obj("id", "k1", "data_type", "kmemo"))))
 		expectNoError(t, err)
 		expectTrue(t, !payload.Defined("warnings"), "warnings set")
 	})
@@ -1073,7 +1075,7 @@ func TestHandleWriteToolCallUsageReportAdditions(t *testing.T) {
 		clientOf(ctx).
 			mockResolvedValueOnce(obj("mi_histories", arr(obj("id", "m1", "is_deleted", false, "data_type", "mi_check")))).
 			mockResolvedValueOnce(obj("updated_mi", obj("id", "m1", "data_type", "mi_create"), "updated_kyou", obj("id", "m1")))
-		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "m1", "data_type", "mi_start"))
+		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("cascade", false, "id", "m1", "data_type", "mi_start"))
 		expectNoError(t, err)
 
 		expectEqual(t, objAt(t, result, "updated_mi").Value("data_type"), "mi")
@@ -1092,5 +1094,200 @@ func TestHandleWriteToolCallUsageReportAdditions(t *testing.T) {
 		ctx := makeWriteCtx(rejecting(NewGkillApiError("ERR000057: dup [kind=conflict]", obj("errors", arr(obj("error_kind", "conflict"))))))
 		_, err := HandleWriteToolCall(ctx, "gkill_add_text", obj("text", "t", "target_id", "k1"))
 		expectErrorMatches(t, err, `ERR000057`)
+	})
+}
+
+// 削除の連鎖（ADR-0636）。gkill の /api/delete_kyou_cascade（画面の削除と同じ1実装）を呼ぶだけで、MCP は探索も tx も持たない。
+func TestHandleWriteToolCallCascadeDelete(t *testing.T) {
+	cascadeResponse := func(deleted ...*jsonobj.Object) *jsonobj.Object {
+		items := []any{}
+		for _, d := range deleted {
+			items = append(items, d)
+		}
+		return obj("errors", arr(), "messages", arr(), "deleted", items)
+	}
+
+	t.Run("既定は連鎖: delete_kyou_cascade を1回だけ呼び、エンティティ名とアプリ名を送り、deleted[] を返す", func(t *testing.T) {
+		ctx := makeWriteCtx(resolving(func() *jsonobj.Object {
+			return cascadeResponse(obj("id", "m1", "data_type", "mi"), obj("id", "t1", "data_type", "tag"), obj("id", "t2", "data_type", "tag"), obj("id", "r1", "data_type", "rekyou"))
+		}))
+		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "m1", "data_type", "mi_start"))
+		expectNoError(t, err)
+
+		expectEqual(t, clientOf(ctx).pathsCalled(), []string{"/api/delete_kyou_cascade"})
+		body := clientOf(ctx).calls[0].Body
+		expectEqual(t, body.Value("target_id"), "m1")
+		expectEqual(t, body.Value("data_type"), "mi") // 射影名はエンティティ名へ畳んで送る
+		expectEqual(t, body.Value("update_app"), "gkill_mcp_readwrite")
+		expectEqual(t, len(arrAt(t, result, "deleted")), 4)
+		expectEqual(t, result.Value("deleted_count"), int64(4))
+		expectEqual(t, writeSummary(t, "gkill_delete_kyou", result),
+			"Deleted (soft, cascade): mi m1 + 3 attached / referencing (tag x2, rekyou x1). deleted[] lists them all; pass it to gkill_restore_kyou targets[] to undo.")
+	})
+
+	t.Run("idf も連鎖の起点にできる", func(t *testing.T) {
+		ctx := makeWriteCtx(resolving(func() *jsonobj.Object { return cascadeResponse(obj("id", "f1", "data_type", "idf")) }))
+		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "f1", "data_type", "idf"))
+		expectNoError(t, err)
+		expectEqual(t, clientOf(ctx).pathsCalled(), []string{"/api/delete_kyou_cascade"})
+		expectEqual(t, writeSummary(t, "gkill_delete_kyou", result), "Deleted (soft, cascade): idf f1 (nothing else was attached or referencing it).")
+	})
+
+	t.Run("タグ・テキスト・通知は既定のままでも1件だけ消す（連鎖の意味が無い）", func(t *testing.T) {
+		ctx := makeWriteCtx(byPath("/api/get_tag_histories_by_tag_id",
+			obj("tag_histories", arr(obj("id", "t1", "tag", "TagA", "is_deleted", false))),
+			obj("updated_tag", obj("id", "t1"))))
+		_, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "t1", "data_type", "tag"))
+		expectNoError(t, err)
+		expectEqual(t, clientOf(ctx).pathsCalled(), []string{"/api/get_tag_histories_by_tag_id", "/api/update_tag"})
+	})
+
+	t.Run("cascade:false は従来どおり1件だけ（idf も型別の取得・更新で消せる）", func(t *testing.T) {
+		ctx := makeWriteCtx(byPath("/api/get_idf_kyou",
+			obj("idf_kyou_histories", arr(obj("id", "f1", "file_name", "a.png", "is_deleted", false))),
+			obj("updated_idf_kyou", obj("id", "f1"))))
+		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("id", "f1", "data_type", "idf", "cascade", false))
+		expectNoError(t, err)
+		expectEqual(t, clientOf(ctx).pathsCalled(), []string{"/api/get_idf_kyou", "/api/update_idf_kyou"})
+		expectEqual(t, objAt(t, clientOf(ctx).calls[1].Body, "idf_kyou").Value("is_deleted"), true)
+		expectEqual(t, objAt(t, result, "updated_idf").Value("is_deleted"), true)
+	})
+
+	t.Run("既に消えている・無いは従来と同じ言い方で返す", func(t *testing.T) {
+		gkillError := func(code string) callApiImpl {
+			return rejecting(NewGkillApiError("API error at /api/delete_kyou_cascade: "+code+": failed",
+				obj("errors", arr(obj("error_code", code, "error_kind", "conflict")))))
+		}
+		_, err := HandleWriteToolCall(makeWriteCtx(gkillError("ERR000449")), "gkill_delete_kyou", obj("id", "k1", "data_type", "kmemo"))
+		expectErrorMatches(t, err, `Entity is already deleted: k1`)
+		_, err = HandleWriteToolCall(makeWriteCtx(gkillError("ERR000448")), "gkill_delete_kyou", obj("id", "k1", "data_type", "kmemo"))
+		expectErrorMatches(t, err, `data_type "kmemo"`)
+		_, err = HandleWriteToolCall(makeWriteCtx(gkillError("ERR000451")), "gkill_delete_kyou", obj("id", "k1", "data_type", "kmemo"))
+		expectErrorMatches(t, err, `Nothing was deleted`)
+	})
+
+	t.Run("一括では、先の連鎖が既に消した id を消し直さない", func(t *testing.T) {
+		ctx := makeWriteCtx(resolving(func() *jsonobj.Object {
+			return cascadeResponse(obj("id", "k1", "data_type", "kmemo"), obj("id", "r1", "data_type", "rekyou"))
+		}))
+		result, err := HandleWriteToolCall(ctx, "gkill_delete_kyou", obj("targets", arr(
+			obj("id", "k1", "data_type", "kmemo"), obj("id", "r1", "data_type", "rekyou"))))
+		expectNoError(t, err)
+		expectEqual(t, clientOf(ctx).pathsCalled(), []string{"/api/delete_kyou_cascade"})
+		results := arrAt(t, result, "results")
+		expectEqual(t, objAt(t, results[1]).Value("deleted_by_cascade_of"), "k1")
+		expectEqual(t, result.Value("succeeded_count"), 2)
+	})
+
+	t.Run("復元に cascade は無い（1件ずつ。deleted[] を targets[] に渡して戻す）", func(t *testing.T) {
+		_, err := NormalizeRestoreArgs(obj("id", "k1", "data_type", "kmemo", "cascade", true))
+		expectErrorMatches(t, err, `is not supported`)
+	})
+}
+
+// リポスト・タスク化・通知・ファイルの記録のツール（ADR-0636）。
+func TestHandleWriteToolCallReferenceTypes(t *testing.T) {
+	// targetExists は get_kyous_mcp（count_only）で target_id を数え、それ以外の呼び出しには応答 others を返す
+	targetExists := func(count int, others *jsonobj.Object) callApiImpl {
+		return func(pathname string, _ *jsonobj.Object) (*jsonobj.Object, error) {
+			if pathname == "/api/get_kyous_mcp" {
+				return obj("errors", arr(), "messages", arr(), "total_count", count), nil
+			}
+			return others, nil
+		}
+	}
+
+	t.Run("gkill_add_rekyou は対象を確かめてから足し、added_re_kyou を added_rekyou へ揃える", func(t *testing.T) {
+		ctx := makeWriteCtx(targetExists(1, obj("added_re_kyou", obj("id", "r1", "target_id", "k1"), "added_kyou", obj("id", "r1"))))
+		result, err := HandleWriteToolCall(ctx, "gkill_add_rekyou", obj("target_id", "k1"))
+		expectNoError(t, err)
+		expectEqual(t, clientOf(ctx).pathsCalled(), []string{"/api/get_kyous_mcp", "/api/add_rekyou"})
+		check := clientOf(ctx).calls[0].Body
+		expectEqual(t, check.Value("count_only"), true)
+		expectEqual(t, objAt(t, check, "query").Value("ids"), strs("k1"))
+		sent := objAt(t, clientOf(ctx).calls[1].Body, "rekyou")
+		expectEqual(t, sent.Value("target_id"), "k1")
+		expectEqual(t, sent.Value("data_type"), "rekyou")
+		expectEqual(t, sent.Value("create_app"), "gkill_mcp_readwrite")
+		expectEqual(t, objAt(t, result, "added_rekyou").Value("id"), "r1")
+		expectEqual(t, writeSummary(t, "gkill_add_rekyou", result), "Created rekyou: r1")
+	})
+
+	t.Run("対象が無ければ（削除済みも含めて）書かずに断る", func(t *testing.T) {
+		argsByTool := map[string]*jsonobj.Object{
+			"gkill_add_rekyou":       obj("target_id", "gone"),
+			"gkill_add_mirekyou":     obj("target_id", "gone"),
+			"gkill_add_notification": obj("target_id", "gone", "content", "x", "notification_time", "2026-01-01T00:00:00+09:00"),
+		}
+		for _, tool := range []string{"gkill_add_rekyou", "gkill_add_mirekyou", "gkill_add_notification"} {
+			ctx := makeWriteCtx(targetExists(0, obj()))
+			_, err := HandleWriteToolCall(ctx, tool, argsByTool[tool])
+			expectErrorMatches(t, err, `target_id`)
+			expectEqual(t, clientOf(ctx).pathsCalled(), []string{"/api/get_kyous_mcp"})
+		}
+	})
+
+	t.Run("gkill_add_mirekyou は板を省くと既定板へ入れ、未完了で作る", func(t *testing.T) {
+		ctx := makeWriteCtx(func(pathname string, _ *jsonobj.Object) (*jsonobj.Object, error) {
+			switch pathname {
+			case "/api/get_kyous_mcp":
+				return obj("total_count", 1), nil
+			case "/api/get_application_config":
+				return obj("application_config", obj("mi_default_board", "Inbox")), nil
+			}
+			return obj("added_mirekyou", obj("id", "mr1"), "added_kyou", obj("id", "mr1")), nil
+		})
+		result, err := HandleWriteToolCall(ctx, "gkill_add_mirekyou", obj("target_id", "k1", "limit_time", "2026-01-02"))
+		expectNoError(t, err)
+		sent := objAt(t, clientOf(ctx).calls[len(clientOf(ctx).calls)-1].Body, "mirekyou")
+		expectEqual(t, sent.Value("board_name"), "Inbox")
+		expectEqual(t, sent.Value("is_checked"), false)
+		expectEqual(t, sent.Value("data_type"), "mirekyou")
+		mustMatch(t, strAt(t, sent, "limit_time"), `^2026-01-02T23:59:59`) // 日付だけの締切はその日の終わり
+		expectEqual(t, writeSummary(t, "gkill_add_mirekyou", result), "Created mirekyou: mr1")
+	})
+
+	t.Run("gkill_add_notification は notification_time が必須", func(t *testing.T) {
+		_, err := NormalizeNotificationArgs(obj("target_id", "k1", "content", "x"))
+		expectErrorMatches(t, err, `notification_time`)
+		ctx := makeWriteCtx(targetExists(1, obj("added_notification", obj("id", "n1"))))
+		result, err := HandleWriteToolCall(ctx, "gkill_add_notification", obj("target_id", "k1", "content", "remind", "notification_time", "2026-01-01T09:00:00+09:00"))
+		expectNoError(t, err)
+		expectEqual(t, clientOf(ctx).calls[1].Pathname, "/api/add_gkill_notification")
+		sent := objAt(t, clientOf(ctx).calls[1].Body, "notification")
+		expectEqual(t, sent.Value("is_notificated"), false)
+		expectTrue(t, !result.Has("added_kyou"), "a notification has no Kyou of its own")
+		expectEqual(t, writeSummary(t, "gkill_add_notification", result), "Added notification: n1")
+	})
+
+	t.Run("gkill_update_idf は関連時刻だけを patch で送り、updated_idf で返す", func(t *testing.T) {
+		ctx := makeWriteCtx(byPath("/api/get_idf_kyou",
+			obj("idf_kyou_histories", arr(obj("id", "f1", "file_name", "a.png", "related_time", "2026-01-01T00:00:00+09:00", "update_time", "2026-01-01T00:00:00+09:00"))),
+			obj("updated_idf_kyou", obj("id", "f1"), "updated_kyou", obj("id", "f1"))))
+		result, err := HandleWriteToolCall(ctx, "gkill_update_idf", obj("id", "f1", "related_time", "2026-01-02T00:00:00+09:00"))
+		expectNoError(t, err)
+		expectEqual(t, clientOf(ctx).pathsCalled(), []string{"/api/get_idf_kyou", "/api/update_idf_kyou"})
+		sent := objAt(t, clientOf(ctx).calls[1].Body, "idf_kyou")
+		expectEqual(t, sent.Value("related_time"), "2026-01-02T00:00:00+09:00")
+		expectEqual(t, sent.Value("file_name"), "a.png") // 他の欄は落とさない
+		expectEqual(t, writeSummary(t, "gkill_update_idf", result), "Updated idf: f1")
+	})
+
+	t.Run("gkill_update_mirekyou は null で予定を消せ、allow_create_board:false で板を照合する", func(t *testing.T) {
+		ctx := makeWriteCtx(func(pathname string, _ *jsonobj.Object) (*jsonobj.Object, error) {
+			switch pathname {
+			case "/api/get_mi_board_list":
+				return obj("boards", strs("Inbox")), nil
+			case "/api/get_mirekyou":
+				return obj("mirekyou_histories", arr(obj("id", "mr1", "board_name", "Inbox", "limit_time", "2026-01-01T00:00:00+09:00"))), nil
+			}
+			return obj("updated_mirekyou", obj("id", "mr1")), nil
+		})
+		_, err := HandleWriteToolCall(ctx, "gkill_update_mirekyou", obj("id", "mr1", "board_name", "Typo", "allow_create_board", false))
+		expectErrorMatches(t, err, `unknown board`)
+		_, err = HandleWriteToolCall(ctx, "gkill_update_mirekyou", obj("id", "mr1", "limit_time", nil))
+		expectNoError(t, err)
+		sent := objAt(t, clientOf(ctx).calls[len(clientOf(ctx).calls)-1].Body, "mirekyou")
+		expectEqual(t, sent.Value("limit_time"), nil)
 	})
 }

@@ -481,4 +481,23 @@ const (
 	WriteSkillFileError = "ERR000443"
 	// DeleteSkillError はスキル・スキル内ファイルの削除がサーバ側の理由で失敗したときのものです。500 です。
 	DeleteSkillError = "ERR000444"
+
+	// 連鎖削除（/api/delete_kyou_cascade。ADR-0636）。どれも「何も消えていない」状態で返ります。
+	// InvalidDeleteKyouCascadeRequestDataError は要求の JSON が読めないときのものです。400 です。
+	InvalidDeleteKyouCascadeRequestDataError = "ERR000445"
+	// InvalidDeleteKyouCascadeResponseDataError は応答の JSON 化に失敗したときのものです。500 です。
+	InvalidDeleteKyouCascadeResponseDataError = "ERR000446"
+	// DeleteKyouCascadeError は起点の取得・逆引き・temp rep への積み込み・commit_tx のどれかがサーバ側の理由で
+	// 失敗したときのものです。1つのトランザクションなので何も消えていません。500 です。
+	DeleteKyouCascadeError = "ERR000447"
+	// DeleteKyouCascadeTargetNotFoundError は起点の記録が無いときのものです（id か data_type の取り違え）。404 です。
+	DeleteKyouCascadeTargetNotFoundError = "ERR000448"
+	// DeleteKyouCascadeAlreadyDeletedError は起点の記録が既に削除済みのときのものです。409 です。
+	DeleteKyouCascadeAlreadyDeletedError = "ERR000449"
+	// DeleteKyouCascadeUnsupportedDataTypeError は起点にできない data_type（git_commit_log・プラグイン・
+	// 付随データの tag / text / notification）のときのものです。400 です。
+	DeleteKyouCascadeUnsupportedDataTypeError = "ERR000450"
+	// DeleteKyouCascadeDepthExceededError は参照の連鎖が深さの上限（usecase.MaxCascadeDeleteDepth）を超えたときのものです。
+	// サーバの逆引きが壊れていない限り届かない保険です。500 です。
+	DeleteKyouCascadeDepthExceededError = "ERR000451"
 )

@@ -9,7 +9,7 @@ astah モデル（`gkill_model.asta`）のユースケース記述 + コード�
 | **ユーザ** | gkill にログインしてライフログの記録・閲覧・管理を行う利用者。全認証済みユースケースの主アクター |
 | **管理者 (admin)** | アカウント作成・サーバー設定変更の権限を持つユーザ。初回起動時に自動作成される `admin` アカウント |
 | **共有閲覧者** | 認証不要で共有リンク経由でKyouやタスクを閲覧する外部利用者 |
-| **MCP クライアント** | MCP サーバー経由で gkill のデータを読み書きするAIアシスタント等の外部システム。Read サーバー（14ツール）は読み取りのみ、Write（34ツール）/ ReadWrite（38ツール）は追加・更新・削除も行える |
+| **MCP クライアント** | MCP サーバー経由で gkill のデータを読み書きするAIアシスタント等の外部システム。Read サーバー（14ツール）は読み取りのみ、Write（41ツール）/ ReadWrite（45ツール）は追加・更新・削除も行える |
 | **Wear OS ウォッチ** | Wearable Data Layer 経由でテンプレート取得・KFTL テキスト送信を行うウォッチアプリ |
 | **ブックマークレット** | ブラウザ上で動作し、URLog（ブックマーク）を直接追加するJavaScript |
 
@@ -184,7 +184,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 削除は編集エンドポイントで `IS_DELETED=true` を設定することで実現。
 専用の Delete エンドポイントは存在しない（Append-Only 方式）。
 
-ただし Kyou の削除は**単独の update 1本では終わらない**。画面から Kyou を削除すると、付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou も同じ操作で連鎖して論理削除される（`classes/cascade-delete-kyou.ts`）。消す順序は「付随データ → 参照元（深い方から）→ Kyou 自身」で、**Kyou 自身が最後**。サーバの `FindKyous` は参照先が削除済みの ReKyou を検索結果から外すため、先に Kyou を消すと参照元を辿れなくなるためである。全件を1つの tx_id で積み commit_tx で確定する（1つの SQLite トランザクション。[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md) / [ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）ので、全部消えるか何も消えないかのどちらか。関連エラーコードは `ERR900093 cascade_delete_depth_exceeded`（参照の連鎖が32段を超えた）と `ERR900094 cascade_delete_failed`。
+ただし Kyou の削除は**単独の update 1本では終わらない**。画面から Kyou を削除すると、付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou も同じ操作で連鎖して論理削除される。処理はサーバの1実装（`/api/delete_kyou_cascade` → `usecase.DeleteKyouCascade`）で、画面（`classes/cascade-delete-kyou.ts`）と MCP の `gkill_delete_kyou`（既定で連鎖）が同じものを使う（[ADR-0636](../adr/0636-cascade-delete-on-the-server.md)）。消す順序は「付随データ → 参照元（深い方から）→ Kyou 自身」で、**Kyou 自身が最後**。検索は参照先が削除済みの ReKyou を結果から外すため、探索を全部終えてから書く。全件を1つの tx で積み CommitTx で確定する（1つの SQLite トランザクション。[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md) / [ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）ので、全部消えるか何も消えないかのどちらか。関連エラーコードはサーバの `ERR000445`〜`ERR000451`（深さ超過は `ERR000451`）と、画面側の想定外の失敗 `ERR900094 cascade_delete_failed`。
 
 詳細は [sequence-diagrams.md](sequence-diagrams.md) の「Kyou データ削除（論理削除・連鎖削除）」と [activity-diagrams.md](activity-diagrams.md) の「Kyou 連鎖削除フロー」を参照。
 
@@ -375,7 +375,7 @@ MCP にスキルを削除するツールは公開していない（`gkill_delete
   2. アプリケーションは削除確認ダイアログを閉じる
 
 **例外フロー:**
-- A【削除失敗】: アプリケーションはエラーメッセージを表示する（`ERR900094 cascade_delete_failed` / 深さ超過は `ERR900093`）。**エラーの有無にかかわらずダイアログは閉じる**（クローズ処理は `finally` にあり、「サーバには届いているのに閉じない」状態を作らないため）
+- A【削除失敗】: アプリケーションはエラーメッセージを表示する（サーバの `ERR000447` など / 深さ超過は `ERR000451` / 画面側の想定外の失敗は `ERR900094 cascade_delete_failed`）。**エラーの有無にかかわらずダイアログは閉じる**（クローズ処理は `finally` にあり、「サーバには届いているのに閉じない」状態を作らないため）
 
 **備考:** 削除成功時に成功メッセージは表示しない（画面からその行が消えることが結果の提示になる）。
 

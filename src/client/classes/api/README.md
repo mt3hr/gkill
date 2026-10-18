@@ -64,7 +64,7 @@ api/
 | `gkill_message.ts` | メッセージコード定義 |
 | `error-hints.ts` | サーバの `error_kind` / `reason`（機械語トークン）→ ヒント文（何をすれば直るか）の i18n キー。reason 優先。語彙は Go 側 `error_kind.go` / `error_reason.go` が正本 |
 
-### `req_res/`（183ファイル）— Request/Response 型
+### `req_res/`（185ファイル）— Request/Response 型
 
 サーバ側 `api/req_res/` と1対1で対応する TypeScript 型定義。
 各エンドポイントに `*-request.ts` + `*-response.ts` のペアが存在。

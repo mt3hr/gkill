@@ -9,6 +9,7 @@
     <tr><td>기록 검색</td><td>"지난주 점심 메모 보여줘" / "이번 달 지출 정리해줘"</td></tr>
     <tr><td>기록 추가</td><td>"오늘 메모 추가해줘" / "할 일 만들어줘"</td></tr>
     <tr><td>기록 수정 / 삭제</td><td>"이 할 일 완료로 표시해줘"</td></tr>
+    <tr><td>리포스트·리포스트 작업·알림</td><td>"이 메모를 리포스트해줘", "이 메모를 리포스트 작업으로 만들어줘", "내일 9시에 알려줘". 기록을 삭제하면 앱과 마찬가지로 붙어 있는 태그·텍스트·알림과 그 기록의 리포스트도 함께 삭제됩니다</td></tr>
     <tr><td>GPS / 파일 가져오기</td><td>"오늘 이동 경로 보여줘"</td></tr>
     <tr><td>파일 업로드</td><td>"이 이미지를 gkill에 저장해줘". 업로드 화면과 마찬가지로 저장 위치, 같은 이름의 파일이 있을 때의 처리(이름 변경 / 덮어쓰기), 날짜와 시간을 지정할 수 있습니다</td></tr>
     <tr><td>설정 확인</td><td>"템플릿 목록 보여줘"</td></tr>
@@ -21,8 +22,8 @@
   <table>
     <tr><th>유형</th><th>할 수 있는 일</th><th>실행 명령</th><th>도구 수</th><th>HTTP 시 포트</th></tr>
     <tr><td>읽기 전용</td><td>기록 조회·검색만 가능. 추가·변경은 불가. 스킬은 읽을 수 있음</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
-    <tr><td>쓰기 전용</td><td>기록 추가·수정·삭제. 아울러 저장소 이름·태그 이름·보드 이름 조회도 가능. 스킬은 읽기 외에 작성·고쳐 쓰기도 가능</td><td>gkill_server mcp --kind write</td><td>34</td><td>8809</td></tr>
-    <tr><td>읽기 및 쓰기</td><td>조회·추가·수정·삭제 모두 가능. 스킬은 읽기 외에 작성·고쳐 쓰기도 가능</td><td>gkill_server mcp --kind readwrite</td><td>38</td><td>8810</td></tr>
+    <tr><td>쓰기 전용</td><td>기록 추가·수정·삭제. 아울러 저장소 이름·태그 이름·보드 이름 조회도 가능. 스킬은 읽기 외에 작성·고쳐 쓰기도 가능</td><td>gkill_server mcp --kind write</td><td>41</td><td>8809</td></tr>
+    <tr><td>읽기 및 쓰기</td><td>조회·추가·수정·삭제 모두 가능. 스킬은 읽기 외에 작성·고쳐 쓰기도 가능</td><td>gkill_server mcp --kind readwrite</td><td>45</td><td>8810</td></tr>
   </table>
   <p>MCP 서버는 gkill_server 의 일부이며 <code>gkill_server mcp --kind &lt;유형&gt;</code> 으로 실행합니다(gkill_server 본체가 실행 중이어야 합니다). 접속 대상과 자격 증명은 환경 변수 외에, 처음 실행할 때 자동 생성되는 설정 파일 <code>configs/gkill_mcp.json</code> 으로도 지정할 수 있습니다. 로그는 <code>logs/gkill_mcp_&lt;유형&gt;.log</code>(레벨별 파일도 같은 접두사)에 기록됩니다.</p>
   <p>어떤 유형이든 플러그인 목록을 가져오는 도구 1개가 포함됩니다. 플러그인으로 가져온 기록의 본문은 검색 결과에 그대로 포함해서 받을 수 있습니다.</p>

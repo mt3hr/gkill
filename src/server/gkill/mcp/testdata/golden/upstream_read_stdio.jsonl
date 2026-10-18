@@ -96,7 +96,7 @@
 {"name":"kyous: include_attached_ids","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":true,\"session_id\":\"sess-login\"}"}]}
 {"name":"kyous: include_plugin_content text","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-login\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginErrRep\",\"kyou_id\":\"plug-err\",\"locale_name\":\"ja\",\"session_id\":\"sess-login\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginRep\",\"kyou_id\":\"plug-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-login\"}"}]}
 {"name":"kyous: include_plugin_content html","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-login\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginRep\",\"kyou_id\":\"plug-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-login\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginErrRep\",\"kyou_id\":\"plug-err\",\"locale_name\":\"ja\",\"session_id\":\"sess-login\"}"}]}
-{"name":"kyous: include_plugin_content both with short max","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-login\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginErrRep\",\"kyou_id\":\"plug-err\",\"locale_name\":\"ja\",\"session_id\":\"sess-login\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginRep\",\"kyou_id\":\"plug-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-login\"}"}]}
+{"name":"kyous: include_plugin_content both with short max","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":20,\"max_size_mb\":0.25,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-login\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginRep\",\"kyou_id\":\"plug-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-login\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginErrRep\",\"kyou_id\":\"plug-err\",\"locale_name\":\"ja\",\"session_id\":\"sess-login\"}"}]}
 {"name":"kyous: include_plugin_content invalid format","requests":[]}
 {"name":"kyous: plugin_content_max_text_length 0","requests":[]}
 {"name":"kyous: plugin content pushes the page over max_size_mb","requests":[{"method":"POST","path":"/api/get_kyous_mcp","body":"{\"query\":{\"only_latest_data\":true},\"locale_name\":\"ja\",\"limit\":2,\"max_size_mb\":0.0005,\"is_include_timeis\":false,\"count_only\":false,\"include_file_size\":false,\"include_attached_ids\":false,\"session_id\":\"sess-login\"}"},{"method":"POST","path":"/api/get_plugin_content_html","body":"{\"rep_name\":\"PluginRep\",\"kyou_id\":\"plug-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-login\"}"}]}
@@ -352,3 +352,22 @@
 {"name":"upload files: duplicate names","requests":[]}
 {"name":"upload files: merge is not offered","requests":[]}
 {"name":"upload files: file_name missing with data_base64","requests":[]}
+{"name":"delete: cascade lists everything that went","requests":[]}
+{"name":"delete: cascade false deletes the entry alone","requests":[]}
+{"name":"delete: stale cascade string","requests":[]}
+{"name":"delete: idf cascade","requests":[]}
+{"name":"delete: idf alone","requests":[]}
+{"name":"delete: batch skips what an earlier cascade deleted","requests":[]}
+{"name":"restore: cascade is not an argument","requests":[]}
+{"name":"history: idf","requests":[{"method":"POST","path":"/api/get_idf_kyou","body":"{\"id\":\"idf-1\",\"locale_name\":\"ja\",\"session_id\":\"sess-login\"}"}]}
+{"name":"add rekyou: ok","requests":[]}
+{"name":"add rekyou: missing target","requests":[]}
+{"name":"add mirekyou: default board, date-only deadline","requests":[]}
+{"name":"add mirekyou: unknown board refused","requests":[]}
+{"name":"add notification: ok","requests":[]}
+{"name":"add notification: time missing","requests":[]}
+{"name":"update rekyou: related_time","requests":[]}
+{"name":"update mirekyou: check and clear deadline","requests":[]}
+{"name":"update notification: content","requests":[]}
+{"name":"update idf: related_time","requests":[]}
+{"name":"help: reference_types","requests":[]}

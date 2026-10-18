@@ -439,16 +439,18 @@ flowchart TD
 
 MiReKyou はタイトルを持たないため、対象 Kyou が削除されると表示できるものが無くなる。
 ただし**画面から対象 Kyou を削除した場合は、その MiReKyou も連鎖して論理削除される**ので、
-この状態は通常見えない（`classes/cascade-delete-kyou.ts`。→ 本資料「Kyou 連鎖削除フロー」）。
-見えるのは MCP・他クライアントから対象 Kyou だけを消した場合（画面の連鎖削除は1つのトランザクションなので途中で失敗しても部分確定しない）。
+この状態は通常見えない（サーバの `usecase.DeleteKyouCascade`。→ 本資料「Kyou 連鎖削除フロー」）。
+見えるのは MCP の `gkill_delete_kyou` に `cascade:false` を渡して対象 Kyou だけを消した場合（連鎖削除は1つのトランザクションなので途中で失敗しても部分確定しない）。
 また `DATA_TYPE` は `mirekyou_create` / `_check` / `_limit` / `_start` / `_end` の5種に射影され、
 いずれも `mi` で始まるので前方一致判定では `mirekyou` を先に評価する必要がある。
 
 ## 13. Kyou 連鎖削除フロー
 
 Kyou を削除すると、付随する Tag / Text / Notification と、それを参照している ReKyou / MiReKyou も
-まとめて論理削除する（`classes/cascade-delete-kyou.ts`）。**探索（read）と削除（write）を完全に分ける**のが要点で、
-サーバの `FindKyous` は参照先が削除済みの ReKyou を検索結果から外すため、先に消してしまうと参照元を辿れなくなる。
+まとめて論理削除する。処理はサーバの1実装（`/api/delete_kyou_cascade` → `usecase.DeleteKyouCascade`）で、画面の削除確認ダイアログ
+（`classes/cascade-delete-kyou.ts` は API を1回呼ぶだけ）と MCP の `gkill_delete_kyou`（既定で連鎖）が同じものを使う
+（[ADR-0636](../adr/0636-cascade-delete-on-the-server.md)。以前は画面の TypeScript だけが連鎖させ、MCP は対象1件だけを消していた）。
+**探索（read）と削除（write）を完全に分ける**のが要点で、検索は参照先が削除済みの ReKyou を結果から外すため、先に消してしまうと参照元を辿れなくなる。
 
 ```mermaid
 flowchart TD
@@ -456,31 +458,35 @@ flowchart TD
     Guard -->|true| Ignore([何もしない・二重送信を弾く])
     Guard -->|false| Share{for_share_kyou?}
     Share -->|Yes| NoOp([共有画面では削除しない])
-    Share -->|No| Load[kyou.load_typed_datas]
-    Load --> Discover[探索フェーズ開始<br>frontier = 削除対象Kyouのid]
+    Share -->|No| API[POST /api/delete_kyou_cascade<br>target_id / data_type / update_app]
+    API --> Root{起点の最新版は?}
+    Root -->|無い| NotFound([ERR000448])
+    Root -->|削除済み| Already([ERR000449])
+    Root -->|ある| Discover[探索フェーズ開始<br>frontier = 削除対象Kyouのid]
 
     Discover --> DepthCheck{深さ > 32?}
-    DepthCheck -->|Yes| DepthErr[ERR900093<br>cascade_delete_depth_exceeded<br>を積んで探索を打ち切る]
-    DepthCheck -->|No| Fetch[16件ずつ並列で逆引き<br>Tag / Text / Notification<br>ReKyou / MiReKyou]
+    DepthCheck -->|Yes| DepthErr([ERR000451<br>何も消さずに返す])
+    DepthCheck -->|No| Fetch[1件ずつ逆引き<br>Tag / Text / Notification<br>ReKyou / MiReKyou]
     Fetch --> Dedupe[idごとにupdate_time最新だけ残す<br>is_deleted と訪問済みは除外]
     Dedupe --> More{次のfrontierが空?}
     More -->|No| DepthCheck
-    More -->|Yes| Mutate[削除フェーズ開始]
-    DepthErr --> Mutate
+    More -->|Yes| Mutate[削除フェーズ開始<br>update_time は全件同じ値<br>現在の版と同じ秒なら1秒進める]
 
-    Mutate --> Attached[Tag / Text / Notification を<br>並列で IS_DELETED=true に更新]
+    Mutate --> Attached[Tag / Text / Notification を<br>1つの tx_id で IS_DELETED=true に積む]
     Attached --> ReKyou[ReKyou を深い方から逆順に更新]
     ReKyou --> MiReKyou[MiReKyou を深い方から逆順に更新]
-    MiReKyou --> Body[Kyou自身のtyped dataを最後に更新<br>data_typeごとにエンドポイントを選ぶ<br>mirekyou を mi より先に判定]
-    Body --> Cache[visited_ids ぶんの<br>Service Workerキャッシュを削除]
-    Cache --> Emit[deleted_ids のぶん deleted_kyou を emit]
+    MiReKyou --> Body[Kyou自身を最後に積む<br>data_typeごとに更新のユースケースを選ぶ<br>mirekyou を mi より先に判定]
+    Body --> Commit[CommitTx<br>1つの SQLite トランザクション]
+    Commit --> Deleted[deleted: 消した全件の id / data_type]
+    Deleted --> Cache[画面: deleted ぶんの<br>Service Workerキャッシュを削除]
+    Cache --> Emit[画面: 行になる種別のぶん deleted_kyou を emit]
     Emit --> Close([finally でダイアログを閉じる])
 ```
 
-**Tag / Text / Notification の逆引きだけ `force_reget=true`。** Service Worker が `target_id` 単位で
-キャッシュしているため、古い一覧のまま消すと取りこぼす（ReKyou / MiReKyou の逆引きには付けていない）。
+**逆引きはサーバの中で行う**ので、以前の TypeScript 実装が気にしていた Service Worker のキャッシュ（`force_reget`）は関係しない。
+画面は成功後に `deleted` の全 id のキャッシュを落とす。
 
 **全件を1つの tx_id で積み、commit_tx で確定する**（2026-09-15、[ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）。
 commit_tx は1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、
-全部消えるか何も消えないかのどちらか。1本でも積めなければ discard_tx して
-`ERR900094 cascade_delete_failed` を返し、行はすべて画面に残す。探索に失敗したときも1本も積まない。
+全部消えるか何も消えないかのどちらか。1本でも積めなければ DiscardTx して `ERR000447` を返し、画面は行をすべて残す
+（想定外の失敗は画面側で `ERR900094 cascade_delete_failed`）。探索に失敗したときも1本も積まない。

@@ -381,6 +381,12 @@ type EntityTarget struct {
 	ResponseKey    string
 }
 
+// PayloadKey は MCP の応答で実体を載せるキー（updated_<data_type>）。gkill の応答のキー（ResponseKey）は
+// 型によって名前が違う（idf は updated_idf_kyou）ので、AI へ返す側だけはこの口の語彙に揃える。
+func (t EntityTarget) PayloadKey() string {
+	return "updated_" + t.DataType
+}
+
 // EntityTargets は data_type の順に並ぶ（Object.keys の順序が「must be one of」の文言に出る）。
 var EntityTargets = []EntityTarget{
 	{DataType: "kmemo", GetEndpoint: "/api/get_kmemo", HistoriesKey: "kmemo_histories", UpdateEndpoint: "/api/update_kmemo", RequestKey: "kmemo", ResponseKey: "updated_kmemo"},
@@ -393,11 +399,12 @@ var EntityTargets = []EntityTarget{
 	{DataType: "tag", GetEndpoint: "/api/get_tag_histories_by_tag_id", HistoriesKey: "tag_histories", UpdateEndpoint: "/api/update_tag", RequestKey: "tag", ResponseKey: "updated_tag"},
 	{DataType: "text", GetEndpoint: "/api/get_text_histories_by_text_id", HistoriesKey: "text_histories", UpdateEndpoint: "/api/update_text", RequestKey: "text", ResponseKey: "updated_text"},
 	// rekyou / mirekyou / notification は rep が実在するのに MCP から作成も削除もできなかった。
-	// 作成(add)は依然として無いが、Web クライアントや他端末が作ったものを
-	// 消す・履歴を見る・戻すことはできるべきなので対応表へ入れる。
+	// 消す・履歴を見る・戻すために対応表へ入れ、ADR-0636 で作成と更新のツールも足した。
 	{DataType: "rekyou", GetEndpoint: "/api/get_rekyou", HistoriesKey: "rekyou_histories", UpdateEndpoint: "/api/update_rekyou", RequestKey: "rekyou", ResponseKey: "updated_rekyou"},
 	{DataType: "mirekyou", GetEndpoint: "/api/get_mirekyou", HistoriesKey: "mirekyou_histories", UpdateEndpoint: "/api/update_mirekyou", RequestKey: "mirekyou", ResponseKey: "updated_mirekyou"},
 	{DataType: "notification", GetEndpoint: "/api/get_gkill_notification_histories_by_notification_id", HistoriesKey: "notification_histories", UpdateEndpoint: "/api/update_gkill_notification", RequestKey: "notification", ResponseKey: "updated_notification"},
+	// idf（ファイル）は記録の論理削除・復元・履歴・関連時刻の変更だけ（ファイルそのものは消さない）。ADR-0636 で追加。
+	{DataType: "idf", GetEndpoint: "/api/get_idf_kyou", HistoriesKey: "idf_kyou_histories", UpdateEndpoint: "/api/update_idf_kyou", RequestKey: "idf_kyou", ResponseKey: "updated_idf_kyou"},
 }
 
 // EntityTargetOf は data_type の対応表の行を返す。

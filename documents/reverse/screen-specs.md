@@ -401,13 +401,13 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
 
 ### Kyou削除時の連鎖削除
 
-`confirm-delete-kyou-view`（`classes/use-confirm-delete-kyou-view.ts`）の削除は `classes/cascade-delete-kyou.ts` の `cascade_delete_kyou()` に委譲され、対象 Kyou 単体では終わらない。
+`confirm-delete-kyou-view`（`classes/use-confirm-delete-kyou-view.ts`）の削除は `classes/cascade-delete-kyou.ts` の `cascade_delete_kyou()` に委譲され、対象 Kyou 単体では終わらない。探索と削除はサーバの1実装（`/api/delete_kyou_cascade`）が行い、MCP の `gkill_delete_kyou` も同じものを使う（[ADR-0636](../adr/0636-cascade-delete-on-the-server.md)）。
 
-1. 探索（read のみ）: 対象 Kyou に付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou を幅優先で収集する。参照元をさらに辿るため入れ子のリポストも対象になる。循環参照は訪問済みIDで止め、深さ上限は32（超過時 `ERR900093 cascade_delete_depth_exceeded`）。
-2. 削除（write）: 集めたものを全件 `is_deleted=true` で論理削除する。Kyou 自身は**最後**に消す（先に消すとサーバの FindKyous が参照元を結果から外し、途中で失敗したときに残骸を再発見できなくなるため）。
-3. 画面からは消したID分だけ `deleted_kyou` を発行して取り除く（全件再検索はしない）。
+1. 探索（read のみ）: 対象 Kyou に付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou を幅優先で収集する。参照元をさらに辿るため入れ子のリポストも対象になる。循環参照は訪問済みIDで止め、深さ上限は32（超過時はサーバが `ERR000451` を返し、何も消さない）。
+2. 削除（write）: 集めたものを全件 `is_deleted=true` で論理削除する。Kyou 自身は**最後**に積む。
+3. 画面からは応答の `deleted` のうち行になる種別（起点・ReKyou・MiReKyou）だけ `deleted_kyou` を発行して取り除く（全件再検索はしない）。
 
-全件を1つの tx_id で積み commit_tx で確定するので、全部消えるか何も消えないかのどちらか（[ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）。失敗時は `ERR900094 cascade_delete_failed`（i18n キー `FAILED_DELETE_KYOU_NOTHING_DELETED_MESSAGE`）で、行はすべて画面に残る。共有画面では削除自体を行わない。
+全件を1つのトランザクションで確定するので、全部消えるか何も消えないかのどちら（[ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）。失敗時はサーバのエラー（`ERR000447` など。i18n キー `FAILED_DELETE_KYOU_NOTHING_DELETED_MESSAGE`）で、行はすべて画面に残る。共有画面では削除自体を行わない。
 
 ### 3.1 kmemo（テキストメモ）画面仕様
 

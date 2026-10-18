@@ -38,7 +38,7 @@ func targetsProperty(verb string) *jsonobj.Object {
 
 const projectionVocabularyDesc = "Two vocabularies exist: search results and add_* / update_* responses carry PROJECTION names (mi_create / mi_check / mi_limit / mi_start / mi_end, mirekyou_*, timeis_start / timeis_end), while this parameter is the ENTITY type (mi / mirekyou / timeis). Projection names are accepted here and folded to their entity type, so a data_type copied straight out of a response works."
 
-// WriteTools は書き込みツール 24 本（順序固定）。
+// WriteTools は書き込みツール 31 本（順序固定）。
 var WriteTools = []*jsonobj.Object{
 	tool(
 		"gkill_add_kmemo",
@@ -249,12 +249,14 @@ var WriteTools = []*jsonobj.Object{
 		"gkill_delete_kyou",
 		"Soft-delete an existing entry by setting is_deleted=true. The entry is not physically removed — it is marked as deleted and hidden from normal queries. "+
 			"Requires the entry's ID (from a previous gkill_add_* response, or from gkill_get_kyous on the read / readwrite servers) and its data_type. "+
-			"Valid data_type values: kmemo (text memo), urlog (bookmark), nlog (expense), lantana (mood), timeis (time interval), mi (task), kc (numeric), tag, text, rekyou (repost), mirekyou (an entry turned into a task), notification. "+
-			"The appropriate update endpoint is selected automatically based on data_type. "+
-			"Response fields: updated_{data_type} (the entity with is_deleted=true), and updated_kyou (parent Kyou wrapper) only for types that have one — tag and text are attached data with no Kyou of their own, so their responses carry updated_tag / updated_text alone. "+
+			"Valid data_type values: kmemo (text memo), urlog (bookmark), nlog (expense), lantana (mood), timeis (time interval), mi (task), kc (numeric), idf (file entry — the file itself stays on disk), tag, text, rekyou (repost), mirekyou (an entry turned into a task), notification. "+
+			"CASCADE (default, same as deleting in gkill's UI): deleting an entry also deletes the tags, texts and notifications attached to it and the reposts / task-ifications that reference it, recursively, in one transaction (all or nothing). "+
+			"The response then carries deleted[] — every {id, data_type} that went — which you can pass straight to gkill_restore_kyou targets[] to undo. "+
+			"Pass cascade:false to delete only the entry itself (its attached data and references stay). Tags, texts and notifications are always deleted alone. "+
+			"Without cascade the response carries updated_{data_type} (the entity with is_deleted=true) and updated_kyou for types that have one. "+
 			"Fails with 'Entity is already deleted' when the entry is already deleted, instead of stacking another pointless version — the counterpart of gkill_restore_kyou's 'already active' guard — so it is safe to retry after an uncertain response (a timeout, say). It is NOT safe to call speculatively: an active entry WILL be deleted. "+
 			"Note: this is a soft-delete. The entry stays in the database — read it back with gkill_get_kyou_history, list deleted entries with query.include_deleted_data on gkill_get_kyous, and undo with gkill_restore_kyou. "+
-			"Note: idf (file) and git_commit_log entries cannot be deleted via this tool — they are managed by the file system and git repositories respectively. "+
+			"Note: git_commit_log entries cannot be deleted — they come from git repositories. Details: gkill_get_mcp_help topic:deleted. "+
 			"Addressing: exactly one form is REQUIRED — either id + data_type (single entry) or targets[] (batch). The schema marks none of them required because it cannot express this either/or; a call with neither (or both) is rejected at runtime.",
 		schema(jsonobj.Obj(
 			"id", jsonobj.Obj("type", "string", "description", "ID of the entry to soft-delete. Obtain from gkill_add_* responses, or from gkill_get_kyous on the read / readwrite servers."),
@@ -264,6 +266,11 @@ var WriteTools = []*jsonobj.Object{
 				"description",
 				"Data type of the entry to delete. Must match the actual type of the entry. "+projectionVocabularyDesc,
 				"enum", stringsToAny(EntityAndProjectionDataTypeValues),
+			),
+			"cascade", jsonobj.Obj(
+				"type", "boolean",
+				"description", "Default: true — also delete attached tags / texts / notifications and referencing reposts / task-ifications (same as gkill's UI). false deletes the entry alone.",
+				"default", true,
 			),
 			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
 		), nil),
@@ -470,6 +477,91 @@ var WriteTools = []*jsonobj.Object{
 			),
 			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
 		), []string{"files"}),
+	),
+	// リポスト・タスク化・通知・ファイルの記録（ADR-0636）。引数は画面の入力欄と同じ。
+	tool(
+		"gkill_add_rekyou",
+		"Repost an existing entry (rekyou): it shows up again in timelines at related_time, pointing at the original. "+
+			"target_id must be an existing, not-deleted entry — checked before writing. "+
+			"Response: added_rekyou (id, target_id, related_time ...), added_kyou. Details: gkill_get_mcp_help topic:reference_types.",
+		schema(jsonobj.Obj(
+			"target_id", jsonobj.Obj("type", "string", "description", "ID of the entry to repost."),
+			"related_time", jsonobj.Obj("type", "string", "description", "When the repost appears. "+ISODateTimeDesc+" or "+DateOnlyDesc+". Defaults to now."),
+			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
+		), []string{"target_id"}),
+	),
+	tool(
+		"gkill_update_rekyou",
+		"Change when a repost appears (related_time), with patch semantics. Response: updated_rekyou, updated_kyou.",
+		schema(jsonobj.Obj(
+			"id", jsonobj.Obj("type", "string", "description", "ID of the repost (added_rekyou.id)."),
+			"related_time", jsonobj.Obj("type", "string", "description", "New related time. "+ISODateTimeDesc+" or "+DateOnlyDesc+"."),
+			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
+		), []string{"id"}),
+	),
+	tool(
+		"gkill_add_mirekyou",
+		"Turn an existing entry into a task (mirekyou): it appears on a Mi board with the entry as its content (no title of its own). "+
+			"Board handling is the same as gkill_add_mi (default board when omitted; allow_create_board:false rejects unknown names). "+
+			"target_id must be an existing, not-deleted entry — checked before writing. "+
+			"Response: added_mirekyou, added_kyou. Details: gkill_get_mcp_help topic:reference_types.",
+		schema(jsonobj.Obj(
+			"target_id", jsonobj.Obj("type", "string", "description", "ID of the entry to turn into a task."),
+			"board_name", jsonobj.Obj("type", "string", "description", "Board to place the task on. Defaults to the account's default board."),
+			"allow_create_board", jsonobj.Obj("type", "boolean", "description", "Default: true (an unknown board_name creates a new board). false rejects board names that do not exist yet.", "default", true),
+			"is_checked", jsonobj.Obj("type", "boolean", "description", "Whether the task is already done. Default: false."),
+			"limit_time", jsonobj.Obj("type", "string", "description", "Deadline. "+ISODateTimeDesc+" or "+DateOnlyDesc+" (date-only = end of that day)."),
+			"estimate_start_time", jsonobj.Obj("type", "string", "description", "Estimated start. "+ISODateTimeDesc+" or "+DateOnlyDesc+" (date-only = start of that day)."),
+			"estimate_end_time", jsonobj.Obj("type", "string", "description", "Estimated end. "+ISODateTimeDesc+" or "+DateOnlyDesc+" (date-only = end of that day)."),
+			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
+		), []string{"target_id"}),
+	),
+	tool(
+		"gkill_update_mirekyou",
+		"Update a task made from an entry (mirekyou) with patch semantics: board, done state, deadline and estimated times "+
+			"(null clears a time). Response: updated_mirekyou, updated_kyou.",
+		schema(jsonobj.Obj(
+			"id", jsonobj.Obj("type", "string", "description", "ID of the mirekyou (added_mirekyou.id)."),
+			"board_name", jsonobj.Obj("type", "string", "description", "Move the task to this board."),
+			"allow_create_board", jsonobj.Obj("type", "boolean", "description", "Default: true. false rejects board names that do not exist yet.", "default", true),
+			"is_checked", jsonobj.Obj("type", "boolean", "description", "true marks the task done, false reopens it."),
+			"limit_time", jsonobj.Obj("type", jsonobj.Strings("string", "null"), "description", "New deadline, or null to clear it. "+ISODateTimeDesc+" or "+DateOnlyDesc+"."),
+			"estimate_start_time", jsonobj.Obj("type", jsonobj.Strings("string", "null"), "description", "New estimated start, or null to clear it."),
+			"estimate_end_time", jsonobj.Obj("type", jsonobj.Strings("string", "null"), "description", "New estimated end, or null to clear it."),
+			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
+		), []string{"id"}),
+	),
+	tool(
+		"gkill_add_notification",
+		"Attach a notification to an existing entry: gkill pushes content to the user's browsers at notification_time. "+
+			"target_id must be an existing, not-deleted entry — checked before writing. Response: added_notification. "+
+			"Details: gkill_get_mcp_help topic:reference_types.",
+		schema(jsonobj.Obj(
+			"target_id", jsonobj.Obj("type", "string", "description", "ID of the entry the notification belongs to."),
+			"content", jsonobj.Obj("type", "string", "description", "Text shown in the notification."),
+			"notification_time", jsonobj.Obj("type", "string", "description", "When to notify. "+ISODateTimeDesc+" or "+DateOnlyDesc+"."),
+			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
+		), []string{"target_id", "content", "notification_time"}),
+	),
+	tool(
+		"gkill_update_notification",
+		"Change a notification's text or time with patch semantics. Response: updated_notification.",
+		schema(jsonobj.Obj(
+			"id", jsonobj.Obj("type", "string", "description", "ID of the notification (added_notification.id)."),
+			"content", jsonobj.Obj("type", "string", "description", "New text."),
+			"notification_time", jsonobj.Obj("type", "string", "description", "New time. "+ISODateTimeDesc+" or "+DateOnlyDesc+"."),
+			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
+		), []string{"id"}),
+	),
+	tool(
+		"gkill_update_idf",
+		"Change when a file entry (idf) relates to (related_time) — the same as the \"decide related time\" step after an upload in gkill's UI. "+
+			"The file itself is not touched. Response: updated_idf, updated_kyou.",
+		schema(jsonobj.Obj(
+			"id", jsonobj.Obj("type", "string", "description", "ID of the file entry (from gkill_upload_files uploaded_kyous[].id or a search)."),
+			"related_time", jsonobj.Obj("type", "string", "description", "New related time. "+ISODateTimeDesc+" or "+DateOnlyDesc+"."),
+			"locale_name", jsonobj.Obj("type", "string", "description", localeNameDesc),
+		), []string{"id"}),
 	),
 	// スキル（ADR-0634）。反映はすぐで履歴は残らない。削除ツールは実装だけして公開していない
 	// （skill_delete_tool.go の冒頭に理由。登録行は下のコメントアウト）。

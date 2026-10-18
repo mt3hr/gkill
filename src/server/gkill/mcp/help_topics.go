@@ -225,7 +225,7 @@ const idfTopic = "IDF entries (data_type 'idf') are files: images, videos, audio
 	"that is not a file repository is refused with the names you can pass. conflict_behavior is the screen's " +
 	"\"file name collision\" choice: rename (default) stores \"name (1).ext\" next to the existing file, override " +
 	"replaces the file on disk and adds a new entry while the existing entry stays and now shows the new bytes " +
-	"(the screen does the same; delete the old entry if one is enough). merge is a GPS-log option and is not offered. Names must be unique within one call " +
+	"(the screen does the same; delete the old entry with gkill_delete_kyou data_type idf if one is enough). merge is a GPS-log option and is not offered. Names must be unique within one call " +
 	"(gkill decides collisions per call, so two same-named files in one call would land on the same path); " +
 	"related_time defaults to now for data_base64. gkill's own per-request limit is about 1GB of base64 — split " +
 	"bigger batches across calls; a single file beyond that has to be placed in the repository directory by the " +
@@ -237,6 +237,21 @@ const idfTopic = "IDF entries (data_type 'idf') are files: images, videos, audio
 	"The response's uploaded_kyous[] carries each new entry's id: pass it to gkill_add_tag / gkill_add_text (the " +
 	"screen does not tag uploads either). Uploaded entries carry create_app \"gkill_mcp_write\" or " +
 	"\"gkill_mcp_readwrite\", so create_apps finds them."
+
+const referenceTypesTopic = "Three kinds of data point at another entry through target_id (write / readwrite servers):\n\n" +
+	"- rekyou (repost): the target shows up again in timelines at the repost's related_time. gkill_add_rekyou / " +
+	"gkill_update_rekyou (only related_time can change). A repost of a repost is allowed.\n" +
+	"- mirekyou (an entry turned into a task): the target appears on a Mi board as a task with no title of its own — " +
+	"the target IS the content. It carries the Mi scheduling fields (board_name, is_checked, limit_time, " +
+	"estimate_start_time, estimate_end_time) with the same board handling as gkill_add_mi. Its data_type in search " +
+	"results is one of the mirekyou_* projections (see topic mi); pass mirekyou to the delete / restore / history tools.\n" +
+	"- notification: gkill pushes content to the user's browsers at notification_time. It is attached data like tags " +
+	"and texts (no Kyou of its own, so no added_kyou). gkill's UI attaches notifications to tasks; any entry works.\n\n" +
+	"All three creating tools check that target_id is an existing, not-deleted entry before writing (gkill itself does " +
+	"not check, so without it a repost / task / notification pointing nowhere would be stored silently). " +
+	"Deleting the target with the default cascade deletes these too (topic deleted).\n\n" +
+	"gkill_update_idf changes a file entry's related_time — what gkill's UI asks right after an upload. The file is " +
+	"not touched; to replace the bytes upload again with conflict_behavior override (topic idf)."
 
 const deletedTopic = "gkill is append-only: an update adds a new version of an entry and a delete adds a version with " +
 	"is_deleted=true. Ordinary searches (gkill_get_kyous) only ever return the LATEST version of each entry, and by " +
@@ -257,8 +272,18 @@ const deletedTopic = "gkill is append-only: an update adds a new version of an e
 	"gkill_delete_kyou soft-deletes (it refuses an already-deleted entry instead of stacking another version, so a " +
 	"retry after an uncertain response is safe; a speculative call on an active entry WILL delete it); " +
 	"gkill_restore_kyou undoes a soft delete (and refuses an already-active entry). Both live on servers that " +
-	"expose write tools. idf (file) and git_commit_log entries cannot be deleted this way — they are managed by the " +
-	"filesystem and git repositories. To undo a gkill_submit_kftl submission, delete only what it CREATED: " +
+	"expose write tools. idf (file) entries can be deleted and restored like any other entry — only the entry; the " +
+	"file itself stays in the repository directory. git_commit_log entries cannot be deleted (they come from git).\n\n" +
+	"Deleting an entry CASCADES by default, exactly like deleting it in gkill's UI (gkill runs one implementation for " +
+	"both): the tags, texts and notifications attached to it and the reposts (rekyou) and task-ifications (mirekyou) " +
+	"that reference it — recursively, including what is attached to those — are deleted together in ONE transaction, " +
+	"so either everything goes or nothing does. The response's deleted[] lists every {id, data_type} that went (the " +
+	"entry itself first); pass it unchanged as gkill_restore_kyou targets[] to bring everything back — restore itself " +
+	"does not cascade. cascade:false deletes the entry alone and leaves its tags, texts, notifications and references " +
+	"in place (they keep pointing at a deleted entry). Tags, texts and notifications are attached data and are always " +
+	"deleted alone. In a batch (targets[]), an id an earlier cascade in the same call already deleted is reported as " +
+	"ok with deleted_by_cascade_of instead of being deleted twice.\n\n" +
+	"To undo a gkill_submit_kftl submission, delete only what it CREATED: " +
 	"created.filter(c => !c.updated).map(({id, data_type}) => ({id, data_type})) — entries with updated:true are " +
 	"pre-existing records it merely updated."
 
@@ -458,7 +483,8 @@ var HelpTopics = []HelpTopic{
 	{Name: "data_types", Title: "data_type vocabularies, the data_types filter, num_min / num_max, idf_kinds, create_apps", Text: dataTypesTopic},
 	{Name: "plugin", Title: "Plugin entries and include_plugin_content (budget, format, content_status)", Text: pluginTopic},
 	{Name: "idf", Title: "Files and images: file_path / gkill_get_idf_file / file_url, thumbnails, index freshness, uploading with gkill_upload_files", Text: idfTopic},
-	{Name: "deleted", Title: "Deleted entries and version history: include_deleted_data, gkill_get_kyou_history, restore", Text: deletedTopic},
+	{Name: "deleted", Title: "Deleted entries and version history: include_deleted_data, gkill_get_kyou_history, cascade delete, restore", Text: deletedTopic},
+	{Name: "reference_types", Title: "Reposts (rekyou), entries turned into tasks (mirekyou), notifications, file entry times", Text: referenceTypesTopic},
 	{Name: "rep", Title: "rep_types vs rep names, gkill_get_rep_infos, attached_data_reps, use_to_write", Text: repTopic},
 	{Name: "kftl", Title: "KFTL text format for gkill_submit_kftl: every prefix, ~~ and ?? blocks, failures, provenance", Text: kftlTopic},
 	{Name: "config", Title: "Settings trees (tag / rep / rep_type / device / board / template), the user's description notes, fields:[\"descriptions\"]", Text: configTopic},

@@ -384,7 +384,7 @@ classDiagram
         +HandleAddKmemo(w, r)
         +HandleUpdateKmemo(w, r)
         +HandleGetKyous(w, r)
-        %% 残り93エンドポイント省略（合計97登録）
+        %% 残り94エンドポイント省略（合計98登録）
     }
 
     GkillServerAPI --> GkillDAOManager : uses

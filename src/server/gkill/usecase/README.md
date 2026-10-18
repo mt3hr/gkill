@@ -65,7 +65,7 @@ type UsecaseContext struct {
 - `txID == nil`: 通常書き込み（WriteXxxRep に直接追加）
 - `txID != nil`: トランザクション書き込み（TempReps に追加、後で CommitTX でコミット）
 
-## ファイル一覧（18ファイル）
+## ファイル一覧（19ファイル）
 
 | ファイル | 説明 | 関数数 |
 |---------|------|--------|
@@ -88,7 +88,7 @@ type UsecaseContext struct {
 | `git_commit_log.go` | GitCommitLog の取得 | 1 |
 | `rep_names.go` | 全タグ名一覧・全リポジトリ名一覧の取得 | 2 |
 
-**合計: 52 関数**（コンストラクタ 1 + Add 系 12 + Update 系 13 + Get 系 24 + 非公開ヘルパ 2）
+**合計: 64 関数**（コンストラクタ 1 + Add 系 12 + Update 系 13 + Get 系 24 + 非公開ヘルパ 2）
 
 ## エクスポート関数一覧
 

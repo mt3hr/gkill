@@ -212,14 +212,14 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `kftl-tabs.ts` | KFTL のタブの純関数（`derive_kftl_tab_label` / `add_kftl_tab` / `close_kftl_tab` / `load_kftl_tabs` / `save_kftl_tabs`）。タブは常に1枚以上。旧形式の単一キー `kftl_content` からの移行もここ。`parse_kftl_tabs` は壊れたJSONでも throw しない |
 | `kyou-view-relay.ts` | Kyou 系イベントの中継ハンドラ束（`build_kyou_view_relay` / `build_kyou_dialog_relay` / ページ最上位の `RykvDialogHost` 用 `build_kyou_dialog_host_handlers`）。`v-on="crudRelayHandlers"` にそのまま渡す |
 | `kyou-reload.ts` | Kyou を最新化する唯一の手順（`refresh_kyou` / `refresh_kyou_in_list` / `build_mi_reload_query`）。同じ更新から派生した引き直しは `new_reload_batch()` の値を共有して合流させる。引き直し中は `is_kyou_reloading(id)` が真 |
-| `cascade-delete-kyou.ts` | Kyou 削除時の連鎖削除。付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou も論理削除する |
+| `cascade-delete-kyou.ts` | Kyou 削除時の連鎖削除。付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou も論理削除する。処理はサーバの `/api/delete_kyou_cascade`（MCP と同じ1実装）で、ここは呼んで結果を画面へ写すだけ |
 | `drag-drop-indicator.ts` | ドラッグ&ドロップの並べ替えで「どこに入るか」を見せる挿入線。**dragover の線と drop の挿入先を同じ `decide_drop_position()` で決める**（横断規約。drop だけに別の判定を書くと「線は下なのに上に入る」）。線の状態は「いま出している要素1つ」をモジュールで持ってクラスを直接付け外しする（数百ノードの構造ツリーに reactive 状態を配らない）。構造ツリー（`use-foldable-struct.ts`）・集計ビュー（`use-dnote-item-view.ts` / `use-dnote-item-list-view.ts` / `use-dnote-item-table-view.ts`）・関連情報の編集（`use-ryuu-item-view.ts`）が共用。守るテスト: `drag-drop-indicator.test.ts` / `drag-drop-source-scan.test.ts` |
 | `file-base64.ts` | ファイルと base64 の相互変換（`read_file_as_data_url` / `base64_to_blob`）。サーバとのファイルのやりとりは JSON の中の base64 で行う（`gkill_fetch` が JSON 以外の応答を受け付けず、セッションも本文の JSON で渡すため）。ファイルアップロード（`use-upload-file-view.ts`）とスキルの zip の往復で共用 |
 | `cookie-store.d.ts` | Cookie Store API 型定義 |
 
 `KyouViewEmits` の21イベントのうち、ビュー層は18件を中継する。`requested_close_dialog` はダイアログが自分で `hide()` に繋ぐため中継しない。`focused_kyou` / `clicked_kyou` はビュー層が発火源で、入れ子の KyouView で二重発火するためダイアログ層（`build_kyou_dialog_relay`、18+2＝20件）だけが中継する。イベント名はマップ型 + `satisfies` + `Exclude` で網羅を機械検査しており、型に足して配列に足し忘れるとビルドが落ちる。
 
-連鎖削除は Kyou 自身を最後に消す。先に消すとサーバの `FindKyous` が参照元を結果から外してしまい、ReKyou / MiReKyou を辿れなくなるため。更新は全件を1つの `tx_id` で一時リポジトリに積み、`commit_tx` で確定する（`gkill-tx.ts` の `run_in_tx`。ADR-0410）。`commit_tx` は1つの SQLite トランザクションなので全部消えるか何も消えないかのどちらかで、途中で失敗しても部分的に確定した状態は残らない。失敗時は `ERR900094 cascade_delete_failed`（i18n: `FAILED_DELETE_KYOU_NOTHING_DELETED_MESSAGE`）を返す。参照の連鎖を辿る深さは32段で打ち切り（`ERR900093 cascade_delete_depth_exceeded`）。
+連鎖削除の探索と書き込みはサーバの `usecase.DeleteKyouCascade`（`/api/delete_kyou_cascade`）が1つのトランザクションで行う（ADR-0636。以前はこのディレクトリの TypeScript が探索と tx の組み立てを持ち、MCP は対象1件だけを消していた）。全部消えるか何も消えないかのどちらかで、応答の `deleted` に消した全件の `{id, data_type}` が返る。`cascade_delete_kyou` は成功時にその全 id の Service Worker キャッシュを落とし、行になる種別（起点・ReKyou・MiReKyou）の id だけを `deleted_ids` で返す。失敗時はサーバのエラー（深さ超過は `ERR000451`）をそのまま返し、想定外の例外は呼び出し元が `ERR900094 cascade_delete_failed`（i18n: `FAILED_DELETE_KYOU_NOTHING_DELETED_MESSAGE`）にする。
 
 ## `dto/` サブディレクトリ（2ファイル）
 

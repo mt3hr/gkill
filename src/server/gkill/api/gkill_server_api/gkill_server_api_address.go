@@ -186,6 +186,8 @@ func (g *GkillServerAPI) apiRoutes() []apiRoute {
 		{Path: "/api/get_repositories", Method: "POST", Auth: authSessionRepos, Body: bodyNone, Handler: g.HandleGetRepositories},
 		{Path: "/api/commit_tx", Method: "POST", Auth: authSessionRepos, Body: bodyNone, Handler: g.HandleCommitTx},
 		{Path: "/api/discard_tx", Method: "POST", Auth: authSessionRepos, Body: bodyNone, Handler: g.HandleDiscardTX},
+		// 連鎖削除（画面と MCP の1実装。ADR-0636）
+		{Path: "/api/delete_kyou_cascade", Method: "POST", Auth: authSessionRepos, Body: bodyNone, Handler: g.HandleDeleteKyouCascade},
 		{Path: "/api/submit_kftl_text", Method: "POST", Auth: authSessionRepos, Body: bodyNone, Handler: g.HandleSubmitKFTLText},
 	}
 }

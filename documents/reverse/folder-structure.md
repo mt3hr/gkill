@@ -87,7 +87,7 @@ src/client/
 │   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,600行、全API呼び出しを集約）
 │   │   ├── hydrate.ts      # JSON→クラスインスタンスの詰め替え（any を使わない共通ヘルパー）
 │   │   ├── find_query/     # 検索クエリビルダー
-│   │   └── req_res/        # リクエスト/レスポンス型（183ファイル）
+│   │   └── req_res/        # リクエスト/レスポンス型（185ファイル）
 │   ├── datas/              # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dnote/              # Dnote集計ユーティリティ（dnote-trend-aggregator.ts, dnote-predicate/ 等）
 │   ├── dto/                # データ転送オブジェクト
@@ -126,17 +126,17 @@ src/server/
     │   ├── find_kyou_context.go    # 検索コンテキスト
     │   ├── find/                   # 検索クエリ構造体
     │   ├── message/                # メッセージ/エラー構造体
-    │   ├── req_res/                # リクエスト/レスポンス構造体（202ファイル）
+    │   ├── req_res/                # リクエスト/レスポンス構造体（204ファイル）
     │   ├── kftl/                   # KFTLパーサー（バックエンド側、50ステートメント型）
     │   │   ├── kftl_factory.go     # ファクトリ（ステートメント生成、日本語/ASCII両プレフィックス）
     │   │   └── *.go                # 各ステートメント型実装
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（166ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（168ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
-    │       ├── gkill_server_api_address.go  # ルート表（97エンドポイント: 96 POST + 1 GET。パス・メソッド・認証区分・ハンドラの正本）
+    │       ├── gkill_server_api_address.go  # ルート表（98エンドポイント: 97 POST + 1 GET。パス・メソッド・認証区分・ハンドラの正本）
     │       ├── auth.go             # セッション認証ヘルパー
     │       ├── auth_context.go     # AuthContext構造体（認証済みコンテキスト）
     │       ├── auth_middleware.go  # authMiddleware / authWithReposMiddleware
@@ -144,7 +144,7 @@ src/server/
     │       ├── utils.go            # ユーティリティ関数
     │       ├── web_push.go         # WebPush通知
     │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
-    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、119ファイル）
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、121ファイル）
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     ├── dao/                        # データアクセス層
@@ -177,7 +177,7 @@ src/server/
     │   ├── share_kyou_info/        # 共有設定DAO
     │   ├── gkill_notification/     # 通知ターゲットDAO
     │   └── hide_files/             # ファイル隠蔽ユーティリティ
-    ├── usecase/                    # ビジネスロジック層（18ファイル）
+    ├── usecase/                    # ビジネスロジック層（19ファイル）
     │   └── *.go                    # HTTP非依存のユースケース関数群
     ├── dvnf/                       # DVNF（DeVice Name Folder Naming Framework）
     │   ├── dvnf.go                 # DVNFコア（タイムスタンプベース命名）
@@ -242,8 +242,8 @@ AI連携用のMCP（Model Context Protocol）サーバーです。`gkill_server 
 ```
 src/server/gkill/mcp/
 ├── server_read.go             # Read専用MCPサーバー（14ツール = 固有13 + プラグイン1、port 8808）
-├── server_write.go            # Write専用MCPサーバー（34ツール = 固有33 + プラグイン1、port 8809）
-├── server_readwrite.go        # Read/Write統合MCPサーバー（38ツール = 固有37 + プラグイン1、port 8810）
+├── server_write.go            # Write専用MCPサーバー（41ツール = 固有40 + プラグイン1、port 8809）
+├── server_readwrite.go        # Read/Write統合MCPサーバー（45ツール = 固有44 + プラグイン1、port 8810）
 ├── bootstrap.go               # 起動ブロック（Start。stdio / http の選択、server_start ログ）
 ├── config.go                  # 設定ファイル gkill_mcp.json の生成・読み込み・優先順位
 ├── jsonobj/                   # 順序つき JSON（JSON.stringify 互換の直列化。応答のバイト一致のため）
@@ -266,7 +266,7 @@ src/server/gkill/mcp/
     ├── find_query_schema.go  # gkill_get_kyous の検索条件スキーマ
     ├── access_log.go         # gkill_log 上のロガー（レベルは MCP_LOG / 設定 / --log で制御）
     ├── plugin_tools.go       # 3サーバ共通のプラグインツール（gkill_get_plugin_list）とプラグイン本文のインライン埋め込み
-    ├── help_topics.go        # gkill_get_mcp_help の topic 本文（search / pagination / mi / data_types / plugin / idf / deleted / rep / kftl / config / skills の11件）
+    ├── help_topics.go        # gkill_get_mcp_help の topic 本文（search / pagination / mi / data_types / plugin / idf / deleted / reference_types / rep / kftl / config / skills の12件）
     ├── status_tool.go        # gkill_status とツール一覧の世代 schema_revision
     ├── gps_cursor.go         # GPS ログのページングカーソル（発行側と検証側の唯一の正本）
     ├── js_date.go / js_util.go # JS の Date・文字列変換と同じ結果を出す互換ヘルパ（応答のバイト一致のため）
@@ -333,7 +333,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-1028キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+1029キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 
@@ -380,7 +380,7 @@ documents/
 │   ├── screen-transition.md          # 画面遷移図
 │   ├── screen-specs.md               # 画面仕様（項目定義）
 │   ├── frontend-architecture.md      # フロントエンド設計ガイド
-│   ├── api-endpoints.md              # APIエンドポイント一覧（97件）
+│   ├── api-endpoints.md              # APIエンドポイント一覧（98件）
 │   ├── cross-boundary-map.md         # 言語・プロセス境界の対応表（verify_docs が突き合わせる）
 │   ├── error-handling-and-security.md # エラー処理・セキュリティ
 │   ├── operations-guide.md           # 運用ガイド

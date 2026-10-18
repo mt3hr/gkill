@@ -30,12 +30,12 @@ gkill_server_api/
 ├── gkill_server_api_access_log.go   # アクセスログ
 ├── gkill_server_api_rate_limit.go   # ログインレートリミット
 ├── plugin_content_html_cache.go     # プラグイン本文HTMLのキャッシュ（TTL・件数上限・singleflight）
-├── handle_*.go                      # 各エンドポイントのハンドラ（実装98ファイル + テスト21ファイル）
-└── *_test.go                        # テスト全48ファイル（handle_*_test.go 21本を含む。一覧は ABOUT_TEST.md）
+├── handle_*.go                      # 各エンドポイントのハンドラ（実装99ファイル + テスト22ファイル）
+└── *_test.go                        # テスト全49ファイル（handle_*_test.go 22本を含む。一覧は ABOUT_TEST.md）
 ```
 
-**合計: 168ファイル**（基盤20 + ハンドラ実装98 + テスト48 + README.md 1 + ABOUT_TEST.md 1）
-`.go` だけなら166ファイル。`handle_*.go` という名前のファイルは119あるが、うち21はテスト。
+**合計: 170ファイル**（基盤20 + ハンドラ実装99 + テスト49 + README.md 1 + ABOUT_TEST.md 1）
+`.go` だけなら168ファイル。`handle_*.go` という名前のファイルは121あるが、うち22はテスト。
 
 ## GkillServerAPI 構造体
 
@@ -117,7 +117,7 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 
 ## ハンドラパターン
 
-`HandleXxx` は99本（ルート表の97 + PathPrefix 配信の `HandleFileServe` / `HandleZipCacheFileServe`）。JSON を返すハンドラは共通のパターンに従う。`handle_add_kmemo.go` を例に:
+`HandleXxx` は100本（ルート表の98 + PathPrefix 配信の `HandleFileServe` / `HandleZipCacheFileServe`）。JSON を返すハンドラは共通のパターンに従う。`handle_add_kmemo.go` を例に:
 
 ```
 1. Content-Type: application/json 設定
@@ -169,7 +169,7 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 
 ### doc コメントの方針
 
-`HandleXxx` は **99/99 で doc コメント 100% を維持**する（`verify_docs` が網羅率を機械検査する）。
+`HandleXxx` は **100/100 で doc コメント 100% を維持**する（`verify_docs` が網羅率を機械検査する）。
 書式は「1行説明 / 空行 / パス・HTTPメソッド・認証区分 / req_res 型」。
 ハンドラを追加したら doc コメントも必ず書くこと（書かないと `npm test` が落ちる）。
 

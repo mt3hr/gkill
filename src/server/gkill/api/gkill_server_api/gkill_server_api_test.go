@@ -8601,6 +8601,102 @@ func TestHandleUploadFiles_UploadedEntryIsSearchableRightAway(t *testing.T) {
 	}
 }
 
+// TestHandleUpdateIDFKyou_StaysSearchableAfterEditAndRestore は、ファイルの記録の関連時刻を直したあとも、
+// 消して戻したあとも、次の UpdateCache を待たずに検索に出ることを固定する。要求の IDFKyou は ContentPath
+// （json:"-"）が空なので、そのままキャッシュへ書き戻すとキャッシュ ON のときだけ黙って検索から消える。
+func TestHandleUpdateIDFKyou_StaysSearchableAfterEditAndRestore(t *testing.T) {
+	for _, cacheInMemory := range []bool{false, true} {
+		t.Run(fmt.Sprintf("cache_in_memory=%v", cacheInMemory), func(t *testing.T) {
+			if cacheInMemory {
+				useCacheInMemory(t)
+			}
+			tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+			defer cleanup()
+			passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+			sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+			repName := writableDirectoryRepName(t, tsURL, sessionID)
+
+			uploadResp := postJSON(t, tsURL+"/api/upload_files", &req_res.UploadFilesRequest{
+				SessionID: sessionID,
+				Files: []*req_res.FileData{{
+					FileName:     "editable_upload.txt",
+					DataBase64:   base64.StdEncoding.EncodeToString([]byte("hello")),
+					LastModified: time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local), // テストの固定時刻
+				}},
+				TargetRepName:    repName,
+				ConflictBehavior: req_res.Rename,
+				LocaleName:       "en",
+			})
+			var uploaded req_res.UploadFilesResponse
+			if err := json.NewDecoder(uploadResp.Body).Decode(&uploaded); err != nil || len(uploaded.UploadedKyous) != 1 {
+				t.Fatalf("upload: %v %+v", err, uploaded.Errors)
+			}
+			uploadResp.Body.Close()
+			id := uploaded.UploadedKyous[0].ID
+
+			// 画面・MCP と同じく、最新版を取って欄を書き換えて送り直す（JSON の往復で ContentPath は落ちる）
+			update := func(step string, edit func(*reps.IDFKyou), updateTime time.Time) {
+				t.Helper()
+				getResp := postJSON(t, tsURL+"/api/get_idf_kyou", map[string]any{"session_id": sessionID, "id": id, "locale_name": "en"})
+				var got req_res.GetIDFKyouResponse
+				if err := json.NewDecoder(getResp.Body).Decode(&got); err != nil || len(got.IDFKyouHistories) == 0 {
+					t.Fatalf("%s: get idf kyou: %v %+v", step, err, got.Errors)
+				}
+				getResp.Body.Close()
+				current := got.IDFKyouHistories[0]
+				edit(&current)
+				current.UpdateTime = updateTime
+				current.UpdateApp = "test"
+				updResp := postJSON(t, tsURL+"/api/update_idf_kyou", &req_res.UpdateIDFKyouRequest{SessionID: sessionID, IDFKyou: current, LocaleName: "en"})
+				var updated req_res.UpdateIDFKyouResponse
+				if err := json.NewDecoder(updResp.Body).Decode(&updated); err != nil || len(updated.Errors) > 0 {
+					t.Fatalf("%s: update idf kyou: %v %+v", step, err, updated.Errors)
+				}
+				updResp.Body.Close()
+			}
+			searchable := func() bool {
+				t.Helper()
+				findResp := postJSON(t, tsURL+"/api/get_kyous", map[string]any{"session_id": sessionID, "locale_name": "en", "query": map[string]any{"ids": []string{id}}})
+				defer findResp.Body.Close()
+				var found req_res.GetKyousResponse
+				if err := json.NewDecoder(findResp.Body).Decode(&found); err != nil || len(found.Errors) > 0 {
+					t.Fatalf("get kyous: %v %+v", err, found.Errors)
+				}
+				return len(found.Kyous) == 1
+			}
+
+			// 更新時刻は版ごとに秒を進める（1秒解像度なので同じ秒だと新しい版が最新にならない）
+			base := time.Now().Truncate(time.Second)
+			update("関連時刻の変更", func(x *reps.IDFKyou) { x.RelatedTime = time.Date(2026, 1, 2, 0, 0, 0, 0, time.Local) }, base.Add(1*time.Second))
+			if !searchable() {
+				t.Fatal("the entry vanished from search after its related time was edited")
+			}
+			update("削除", func(x *reps.IDFKyou) { x.IsDeleted = true }, base.Add(2*time.Second))
+			if searchable() {
+				t.Fatal("a deleted entry is still searchable")
+			}
+			update("復元", func(x *reps.IDFKyou) { x.IsDeleted = false }, base.Add(3*time.Second))
+			if !searchable() {
+				t.Fatal("the entry did not come back to search after it was restored")
+			}
+
+			// 連鎖削除（commit_tx を通る）で消した版は、キャッシュ上の ContentPath が空になる。
+			// そこから戻しても検索に出ること（最新版からは拾えないので古い版から拾う）
+			if result := postDeleteKyouCascade(t, tsURL, sessionID, id, "idf", ""); len(result.Errors) > 0 {
+				t.Fatalf("cascade delete: %+v", result.Errors)
+			}
+			if searchable() {
+				t.Fatal("a cascade-deleted entry is still searchable")
+			}
+			// 連鎖削除の版は直前の版（base+3秒）の次の秒に刻まれるので、それより後にする
+			update("連鎖削除のあとの復元", func(x *reps.IDFKyou) { x.IsDeleted = false }, base.Add(10*time.Second))
+			if !searchable() {
+				t.Fatal("the entry did not come back to search after a cascade delete and a restore")
+			}
+		})
+	}
+}
+
 // --- Phase 2: UploadGPSLogFiles handler tests ---
 
 // --- Phase 2: GetGitCommitLog handler tests ---

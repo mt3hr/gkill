@@ -39,6 +39,29 @@ func (uc *UsecaseContext) UpdateIDFKyou(ctx context.Context, repositories *reps.
 		return gkillErrors, nil
 	}
 
+	// ContentPath は json:"-" なので、要求から来た idfKyou では空になっている。実 rep は書かない（読むときに
+	// contentDir と file_name から組み立てる）が、キャッシュ rep にはこの値のまま入り、キャッシュの検索は
+	// CONTENT_PATH が空の行を読み飛ばす。空のまま書き戻すと、関連時刻を直した・復元したファイルの記録が
+	// 次の UpdateCache まで検索から消える（アップロードで直したのと同じ穴。ADR-0635 / ADR-0636）。
+	if idfKyou.ContentPath == "" {
+		idfKyou.ContentPath = existIDFKyou.ContentPath
+	}
+	// commit_tx（連鎖削除）で確定した版は temp rep を通るので、キャッシュ上の ContentPath が空になっている。
+	// その版を消したあとに戻すと、最新版からは拾えないので、古い版から拾う（どの版も同じファイルを指す）。
+	if idfKyou.ContentPath == "" {
+		histories, err := repositories.IDFKyouReps.GetIDFKyouHistories(ctx, idfKyou.ID)
+		if err != nil {
+			// 拾えなくても更新そのものは続ける（検索に戻るのが次の UpdateCache になるだけ）
+			slog.Log(ctx, gkill_log.Warn, "error at get idf kyou histories for content path", "error", fmt.Sprintf("%q", fmt.Errorf("id = %s: %w", idfKyou.ID, err)))
+		}
+		for _, history := range histories {
+			if history.ContentPath != "" {
+				idfKyou.ContentPath = history.ContentPath
+				break
+			}
+		}
+	}
+
 	// 書き込み先 rep が未設定なら nil ポインタ参照で落ちる前に、設定不備として返す（reason: write_rep_missing）。
 	if txID == nil && repositories.WriteIDFKyouRep == nil {
 		gkillErrors = append(gkillErrors, writeRepMissingError(localeName, "FAILED_UPDATE_IDFKYOU_MESSAGE", "idfkyou"))

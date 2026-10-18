@@ -467,6 +467,9 @@ var repInfosStaleSchemaArgKinds = kinds(
 
 var deleteTargetsStaleSchemaArgKinds = kinds("targets", "object_array")
 
+// deleteKyouStaleSchemaArgKinds は gkill_delete_kyou の救済表。cascade は ADR-0636 で後から足した boolean。
+var deleteKyouStaleSchemaArgKinds = kinds("targets", "object_array", "cascade", "boolean")
+
 var kyouHistoryStaleSchemaArgKinds = kinds("limit", "number", "offset", "number")
 
 var addUrlogStaleSchemaArgKinds = kinds("fetch_metadata", "boolean", "fetch_favicon", "boolean")
@@ -484,7 +487,7 @@ var StaleSchemaArgKindsByTool = []StaleSchemaToolKinds{
 	{Tool: "gkill_get_all_tag_names", Kinds: tagNamesStaleSchemaArgKinds},
 	{Tool: "gkill_get_rep_infos", Kinds: repInfosStaleSchemaArgKinds},
 	{Tool: "gkill_get_kyou_history", Kinds: kyouHistoryStaleSchemaArgKinds},
-	{Tool: "gkill_delete_kyou", Kinds: deleteTargetsStaleSchemaArgKinds},
+	{Tool: "gkill_delete_kyou", Kinds: deleteKyouStaleSchemaArgKinds},
 	{Tool: "gkill_restore_kyou", Kinds: deleteTargetsStaleSchemaArgKinds},
 	{Tool: "gkill_add_urlog", Kinds: addUrlogStaleSchemaArgKinds},
 	{Tool: "gkill_add_mi", Kinds: miBoardGuardStaleSchemaArgKinds},

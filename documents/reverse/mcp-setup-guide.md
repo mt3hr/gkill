@@ -605,8 +605,8 @@ gkillは3種類のMCPサーバーを提供しています。用途に応じて�
 | サーバー | 起動コマンド | ツール数 | npm スクリプト（別名） | 用途 |
 |---|---|---|---|---|
 | **Read専用** | `gkill_server mcp --kind read` | 14 | `mcp:gkill-read` / `mcp:gkill-read-http` | 閲覧のみ。データを変更したくない場合 |
-| **Write専用** | `gkill_server mcp --kind write` | 34 | `mcp:gkill-write` / `mcp:gkill-write-http` | 書き込み中心。Read便利ツール9つ付属 |
-| **Read/Write統合** | `gkill_server mcp --kind readwrite` | 38 | `mcp:gkill-readwrite` / `mcp:gkill-readwrite-http` | 全機能。迷ったらこれ |
+| **Write専用** | `gkill_server mcp --kind write` | 41 | `mcp:gkill-write` / `mcp:gkill-write-http` | 書き込み中心。Read便利ツール9つ付属 |
+| **Read/Write統合** | `gkill_server mcp --kind readwrite` | 45 | `mcp:gkill-readwrite` / `mcp:gkill-readwrite-http` | 全機能。迷ったらこれ |
 
 使い方の詳細（検索条件の意味・ページング・タスクの射影・ファイルの読み方・設定ツリーの説明欄・スキルの書式と書き方など）は
 どのサーバーにもある `gkill_get_mcp_help` が topic ごとに返します（スキルは `skills` topic）。ツール一覧の説明文は要約なので、

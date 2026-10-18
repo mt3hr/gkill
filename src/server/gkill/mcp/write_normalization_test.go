@@ -355,15 +355,15 @@ func TestNormalizeDeleteArgs(t *testing.T) {
 // DELETE_DATA_TYPES constant
 // ---------------------------------------------------------------------------
 func TestDeleteDataTypes(t *testing.T) {
-	t.Run("contains 12 data types", func(t *testing.T) {
-		expectEqual(t, DeleteDataTypes.Len(), 12)
+	t.Run("contains 13 data types", func(t *testing.T) {
+		expectEqual(t, DeleteDataTypes.Len(), 13)
 	})
 
 	t.Run("contains expected types", func(t *testing.T) {
 		// rekyou / mirekyou / notification は rep が実在するのに削除も履歴取得もできなかった。
-		// 作成(add)は今も無いが、他の経路が作ったものを消す・戻すことはできる
+		// idf（ファイルの記録）も ADR-0636 で消す・戻す・時刻を直すことができるようになった（ファイルそのものは消さない）
 		expected := []string{"kmemo", "urlog", "nlog", "lantana", "timeis", "mi", "kc", "tag", "text",
-			"rekyou", "mirekyou", "notification"}
+			"rekyou", "mirekyou", "notification", "idf"}
 		for _, dt := range expected {
 			expectTrue(t, DeleteDataTypes.Has(dt), "missing %s", dt)
 		}
@@ -537,8 +537,8 @@ func TestProjectionDataTypeIsAcceptedByDeleteRestore(t *testing.T) {
 	t.Run("unknown values are still rejected", func(t *testing.T) {
 		r, err := NormalizeDeleteArgs(obj("id", "abc", "data_type", "bogus"))
 		expectThrowsField(t, r, err, "data_type")
-		// idf は Kyou 側の data_type だが、エンティティとしての削除は未対応なので通さない
-		r, err = NormalizeDeleteArgs(obj("id", "abc", "data_type", "idf"))
+		// git_commit_log は Kyou 側の data_type だが、git から来るので消せない
+		r, err = NormalizeDeleteArgs(obj("id", "abc", "data_type", "git_commit_log"))
 		expectThrowsField(t, r, err, "data_type")
 	})
 }

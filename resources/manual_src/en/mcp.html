@@ -9,6 +9,7 @@
     <tr><td>Search records</td><td>"Show me last week's lunch notes" / "Summarize this month's expenses"</td></tr>
     <tr><td>Add records</td><td>"Add a memo for today" / "Create a task"</td></tr>
     <tr><td>Update / delete records</td><td>"Mark this task as done"</td></tr>
+    <tr><td>Reposts, repost tasks and notifications</td><td>"Repost this memo", "Make this memo a repost task", "Notify me at 9 tomorrow". Deleting a record also deletes its tags, texts and notifications and the reposts of it, just like in the app</td></tr>
     <tr><td>Retrieve GPS / files</td><td>"Show my route for today"</td></tr>
     <tr><td>Upload files</td><td>"Save this image to gkill" — like the Upload screen, you can choose the destination, what happens when a file with the same name exists (rename / overwrite), and the date and time</td></tr>
     <tr><td>Check settings</td><td>"List my templates"</td></tr>
@@ -21,8 +22,8 @@
   <table>
     <tr><th>Type</th><th>What it can do</th><th>Command</th><th>Tools</th><th>Port (HTTP)</th></tr>
     <tr><td>Read-only</td><td>View and search records only. Adding or modifying is not allowed. Skills can be read</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
-    <tr><td>Write-only</td><td>Add, update and delete records. It can also read storage names, tag names and board names. Skills can be read, and also created and rewritten</td><td>gkill_server mcp --kind write</td><td>34</td><td>8809</td></tr>
-    <tr><td>Read &amp; Write</td><td>View, add, update and delete records. Skills can be read, created and rewritten</td><td>gkill_server mcp --kind readwrite</td><td>38</td><td>8810</td></tr>
+    <tr><td>Write-only</td><td>Add, update and delete records. It can also read storage names, tag names and board names. Skills can be read, and also created and rewritten</td><td>gkill_server mcp --kind write</td><td>41</td><td>8809</td></tr>
+    <tr><td>Read &amp; Write</td><td>View, add, update and delete records. Skills can be read, created and rewritten</td><td>gkill_server mcp --kind readwrite</td><td>45</td><td>8810</td></tr>
   </table>
   <p>The MCP server is part of gkill_server and starts with <code>gkill_server mcp --kind &lt;type&gt;</code> (gkill_server itself must be running). The connection and credentials come from environment variables or from the config file <code>configs/gkill_mcp.json</code>, which is generated on first start. Logs go to <code>logs/gkill_mcp_&lt;type&gt;.log</code> (per-level files share the prefix).</p>
   <p>Every type includes one tool for listing the plugins in use. The contents of records imported by plugins can be received inline with the search results.</p>

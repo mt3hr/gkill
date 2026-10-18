@@ -318,6 +318,8 @@ func (s *Server) serveAPI(w http.ResponseWriter, path string, body *jsonobj.Obje
 		serveWriteSkillFile(w, body)
 	case "/api/upload_files":
 		serveUploadFiles(w, body)
+	case "/api/delete_kyou_cascade":
+		serveDeleteKyouCascade(w, body)
 	case "/api/delete_skill":
 		if stringOf(body, "name") != fakeSkillName {
 			writeJSON(w, 404, errorEnvelope("ERR000430", "スキルが見つかりません ("+stringOf(body, "name")+")", "not_found", ""))
@@ -366,6 +368,13 @@ func (s *Server) serveGetKyous(w http.ResponseWriter, body *jsonobj.Object) {
 	}
 	countOnly, _ := body.Bool("count_only")
 	groupBy := stringOf(body, "group_by")
+	// MCP の add_rekyou / mirekyou / notification は target_id の実在を ids + count_only で確かめる（ADR-0636）
+	for _, id := range queryArray(body, "ids") {
+		if id == "missing-target" {
+			writeJSON(w, 200, envelope("returned_count", 0, "remaining_count", 0, "has_more", false, "total_count", 0))
+			return
+		}
+	}
 	cursor := stringOf(body, "cursor")
 	if hasWord(body, "nothing") {
 		writeJSON(w, 200, envelope("returned_count", 0, "remaining_count", 0, "has_more", false, "total_count", 0))
@@ -452,6 +461,7 @@ var historyEndpoints = map[string][2]string{
 	"/api/get_rekyou":                    {"rekyou", "rekyou_histories"},
 	"/api/get_mirekyou":                  {"mirekyou", "mirekyou_histories"},
 	"/api/get_gkill_notification_histories_by_notification_id": {"notification", "notification_histories"},
+	"/api/get_idf_kyou": {"idf", "idf_kyou_histories"},
 }
 
 func (s *Server) serveHistory(w http.ResponseWriter, path string, body *jsonobj.Object) {
@@ -497,6 +507,18 @@ func responseKyou(entity *jsonobj.Object, dataType string) *jsonobj.Object {
 
 func (s *Server) serveAdd(w http.ResponseWriter, path string, body *jsonobj.Object) {
 	kind := strings.TrimPrefix(path, "/api/add_")
+	if kind == "gkill_notification" {
+		// 本物は本文のキーが notification、応答は added_notification だけ（通知は Kyou を持たない）
+		entity, ok := body.Object("notification")
+		if !ok || entity == nil {
+			writeJSON(w, 400, errorEnvelope("ERR000002", "request body lacks notification", "bad_request", ""))
+			return
+		}
+		stored := entity.Clone()
+		stored.Set("rep_name", "Notification_fakepc")
+		writeJSON(w, 200, envelope("added_notification", stored))
+		return
+	}
 	entity, ok := body.Object(kind)
 	if !ok || entity == nil {
 		writeJSON(w, 400, errorEnvelope("ERR000002", "request body lacks "+kind, "bad_request", ""))
@@ -519,7 +541,12 @@ func (s *Server) serveAdd(w http.ResponseWriter, path string, body *jsonobj.Obje
 		stored.Set("favicon_image", "data:image/png;base64,AAAA")
 		stored.Set("thumbnail_image", "data:image/png;base64,BBBB")
 	}
-	res := envelope("added_"+kind, stored)
+	responseKey := "added_" + kind
+	if kind == "rekyou" {
+		// 本物の AddReKyouResponse のキーは added_re_kyou（更新は updated_rekyou）
+		responseKey = "added_re_kyou"
+	}
+	res := envelope(responseKey, stored)
 	if kind != "tag" && kind != "text" {
 		res.Set("added_kyou", responseKyou(stored, stringOf(stored, "data_type")))
 	}
@@ -581,6 +608,26 @@ func serveGetSkill(w http.ResponseWriter, body *jsonobj.Object) {
 	default:
 		writeJSON(w, 404, errorEnvelope("ERR000431", "スキルの中にそのファイルがありません ("+filePath+")", "not_found", ""))
 	}
+}
+
+// serveDeleteKyouCascade は /api/delete_kyou_cascade の固定応答。km-del は削除済み（ERR000449）、
+// 履歴の表に無い id は無い（ERR000448）、km-1 にはタグとリポストが付いている体で返す。
+func serveDeleteKyouCascade(w http.ResponseWriter, body *jsonobj.Object) {
+	id := stringOf(body, "target_id")
+	dataType := stringOf(body, "data_type")
+	if id == "km-del" {
+		writeJSON(w, 409, errorEnvelope("ERR000449", "削除に失敗しました。何も削除されていません", "conflict", ""))
+		return
+	}
+	if _, found := histories[dataType+"/"+id]; !found {
+		writeJSON(w, 404, errorEnvelope("ERR000448", "削除に失敗しました。何も削除されていません", "not_found", ""))
+		return
+	}
+	deleted := jsonobj.Arr(jsonobj.Obj("id", id, "data_type", dataType))
+	if id == "km-1" {
+		deleted = append(deleted, jsonobj.Obj("id", "tag-1", "data_type", "tag"), jsonobj.Obj("id", "rk-1", "data_type", "rekyou"))
+	}
+	writeJSON(w, 200, envelope("deleted", deleted))
 }
 
 // serveUploadFiles は /api/upload_files の固定応答。file rep は "Files" だけで、それ以外の名前は

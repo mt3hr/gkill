@@ -5,10 +5,10 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、119ファイル。テスト21ファイルを含み、実装は98ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、121ファイル。テスト21ファイルを含み、実装は98ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（202ファイル）
-- **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、18ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（204ファイル）
+- **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、19ファイル）
 
 ## 共通仕様
 
@@ -20,7 +20,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 |---|---|---|---|
 | `wrapNoAuth` | 14 | `filterLocalOnly` のみ | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet`, `urlog_bookmarklet_page`, `get_kyous_mcp`, `get_rep_infos_mcp`, `upload_files`, `upload_gpslog_files`, `upload_skill`, `browse_zip_contents`, `get_idf_kyou_by_relative_path` |
 | `wrapAuth` | 25 | セッション検証 → Account / UserID / Device を `AuthContext` に設定 | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, `parse_kftl_text`, プラグイン4本, スキル5本（`upload_skill` 以外） 等 |
-| `wrapAuthRepos` | 58 | 上記に加えて `GkillRepositories` を解決 | データCRUD系（追加12 + 更新13 + 取得25 + 共有4 + リポジトリ/TX 4） |
+| `wrapAuthRepos` | 59 | 上記に加えて `GkillRepositories` を解決 | データCRUD系（追加12 + 更新13 + 取得25 + 共有4 + リポジトリ/TX 4） |
 
 > **`wrapNoAuth` = 認証なし、ではない。** 上表の `wrapNoAuth` のうち
 > `upload_files` / `upload_gpslog_files` / `upload_skill` / `browse_zip_contents` /
@@ -614,9 +614,9 @@ MCPサーバは14個のReadツールを提供する。内訳は固有の13（`gk
 
 ## 補足
 
-- **合計:** `/api/` エンドポイント 97件（96 POST + 1 GET）+ 非APIルート 21件（PathPrefix 20 + Path 1）
+- **合計:** `/api/` エンドポイント 98件（97 POST + 1 GET）+ 非APIルート 21件（PathPrefix 20 + Path 1）
 - **ルート表（正本）:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` の `apiRoutes()`。パス・HTTPメソッド・認証区分・無認証ボディ上限・ハンドラを1行1ルートで持ち、本番（`serve.go`）とテストハーネスがそのまま登録する。表に載っている = 実行時に応答する（「定義はあるが未登録」は構造的に起きない。[ADR-0709](../adr/0709-api-route-table-single-source.md)）
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（202ファイル）
-- **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（18ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（204ファイル）
+- **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（19ファイル）
 - かつて `get_kftl_template` と `get_gkill_info` はアドレス定義だけがあり（ハンドラ未登録で実行時404）、Web クライアントにも同じ残骸が揃っていた。2026-09-14 にルート表を正本化した際に削除した。Web クライアント（`gkill-api.ts`）の `xxx_address` / `xxx_method` は `gkill-api.test.ts` が表と突き合わせる

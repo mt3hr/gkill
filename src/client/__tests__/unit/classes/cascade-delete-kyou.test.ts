@@ -2,9 +2,10 @@
  * Cascade delete tests.
  *
  * Kyou削除時に、付随するTag/Text/Notificationと、それを参照しているReKyou/MiReKyouも
- * 連鎖して論理削除されることを確認する。
- * 削除は全件を1つの tx_id で一時リポジトリに積み commit_tx で確定する（2026-09-15）。
- * 1本でも失敗したら discard_tx して何も消さない。守るべき約束はそこ。
+ * 連鎖して論理削除する。探索と1つのトランザクションでの確定はサーバ（/api/delete_kyou_cascade →
+ * usecase.DeleteKyouCascade）の1実装が持ち、その挙動は Go 側の handle_delete_kyou_cascade_test.go が固定する（ADR-0636）。
+ * ここで守るのは画面側の約束: API を1回だけ呼ぶ・画面から取り除く行の id を返す・消した全 id の
+ * Service Worker キャッシュを落とす・失敗したら何も取り除かない・共有画面では何もしない・errors: null で落ちない。
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -30,141 +31,38 @@ vi.mock('@/classes/delete-gkill-cache', () => ({
   delete_gkill_config_cache: vi.fn().mockResolvedValue(undefined),
 }))
 
-import { build_deleted_kyou_stub, cascade_delete_kyou } from '@/classes/cascade-delete-kyou'
+import { build_cascade_delete_failed_error, build_deleted_kyou_stub, cascade_delete_kyou } from '@/classes/cascade-delete-kyou'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
-const base_time = new Date('2026-01-01T00:00:00Z')
-
-interface MetaStub {
+interface DeletedRecordStub {
   id: string
-  target_id: string
-  is_deleted: boolean
-  update_time: Date
-  clone: () => MetaStub
-}
-
-interface RefStub extends MetaStub {
   data_type: string
 }
 
-interface TargetIDRequestStub {
+interface CascadeRequestStub {
   target_id: string
-  force_reget: boolean
+  data_type: string
+  update_app: string
 }
 
-interface ErrorStub {
-  error_code: string
-  error_message: string
-  show_keep: boolean
-}
-
-function make_meta_stub(id: string, target_id: string, overrides: Partial<MetaStub> = {}): MetaStub {
-  const stub: MetaStub = {
-    id,
-    target_id,
-    is_deleted: false,
-    update_time: base_time,
-    clone: () => ({ ...stub, clone: stub.clone }),
-    ...overrides,
-  }
-  return stub
-}
-
-function make_ref_stub(id: string, target_id: string, overrides: Partial<RefStub> = {}): RefStub {
-  const stub: RefStub = {
-    id,
-    target_id,
-    data_type: 're_kyou',
-    is_deleted: false,
-    update_time: base_time,
-    clone: () => ({ ...stub, clone: stub.clone }),
-    ...overrides,
-  }
-  return stub
-}
-
-function make_kmemo_kyou(id: string) {
-  const typed_kmemo = make_meta_stub(id, '')
+function create_api(response: { deleted?: Array<DeletedRecordStub> | null, errors?: Array<{ error_code: string }> | null, messages?: Array<never> | null }) {
   return {
-    id,
-    data_type: 'kmemo',
-    typed_kmemo,
-    load_typed_datas: vi.fn().mockResolvedValue([]),
+    delete_kyou_cascade: vi.fn(async (_req: CascadeRequestStub) => ({
+      messages: response.messages === undefined ? [] : response.messages,
+      errors: response.errors === undefined ? [] : response.errors,
+      deleted: response.deleted === undefined ? [] : response.deleted,
+    })),
   }
 }
-
-/**
- * 隣接リストを引くAPIモック。graphのキーがtarget_id、値がそれを参照しているReKyou。
- * BFSと循環参照のテストがそのまま書ける。
- */
-function create_cascade_api(graph: {
-  rekyous?: Record<string, Array<RefStub>>
-  mirekyous?: Record<string, Array<RefStub>>
-  tags?: Record<string, Array<MetaStub>>
-  texts?: Record<string, Array<MetaStub>>
-  notifications?: Record<string, Array<MetaStub>>
-} = {}) {
-  const call_order = new Array<string>()
-  const ok = { messages: [] as Array<never>, errors: new Array<ErrorStub>() }
-
-  return {
-    call_order,
-    api: {
-      get_tags_by_target_id: vi.fn(async (req: TargetIDRequestStub) => {
-        call_order.push(`get_tags:${req.target_id}`)
-        return { tags: graph.tags?.[req.target_id] ?? [], ...ok }
-      }),
-      get_texts_by_target_id: vi.fn(async (req: TargetIDRequestStub) => {
-        call_order.push(`get_texts:${req.target_id}`)
-        return { texts: graph.texts?.[req.target_id] ?? [], ...ok }
-      }),
-      get_notifications_by_target_id: vi.fn(async (req: TargetIDRequestStub) => {
-        call_order.push(`get_notifications:${req.target_id}`)
-        return { notifications: graph.notifications?.[req.target_id] ?? [], ...ok }
-      }),
-      get_rekyous_by_target_id: vi.fn(async (req: TargetIDRequestStub) => {
-        call_order.push(`get_rekyous:${req.target_id}`)
-        return { rekyous: graph.rekyous?.[req.target_id] ?? [], ...ok }
-      }),
-      get_mirekyous_by_target_id: vi.fn(async (req: TargetIDRequestStub) => {
-        call_order.push(`get_mirekyous:${req.target_id}`)
-        return { mirekyous: graph.mirekyous?.[req.target_id] ?? [], ...ok }
-      }),
-      update_tag: vi.fn(async (req: { tag: MetaStub }) => { call_order.push(`update_tag:${req.tag.id}`); return ok }),
-      update_text: vi.fn(async (req: { text: MetaStub }) => { call_order.push(`update_text:${req.text.id}`); return ok }),
-      update_notification: vi.fn(async (req: { notification: MetaStub }) => { call_order.push(`update_notification:${req.notification.id}`); return ok }),
-      update_rekyou: vi.fn(async (req: { rekyou: RefStub }) => { call_order.push(`update_rekyou:${req.rekyou.id}`); return ok }),
-      update_mirekyou: vi.fn(async (req: { mirekyou: RefStub }) => { call_order.push(`update_mirekyou:${req.mirekyou.id}`); return ok }),
-      update_kmemo: vi.fn(async (req: { kmemo: MetaStub }) => { call_order.push(`update_kmemo:${req.kmemo.id}`); return ok }),
-      generate_uuid: vi.fn(() => 'tx-1'),
-      commit_tx: vi.fn(async (req: { tx_id: string }) => { call_order.push(`commit_tx:${req.tx_id}`); return ok }),
-      discard_tx: vi.fn(async (req: { tx_id: string }) => { call_order.push(`discard_tx:${req.tx_id}`); return ok }),
-    },
-  }
-}
-
-/** 投げた update 系リクエストの tx_id を全部集める */
-function collect_tx_ids(api: ReturnType<typeof create_cascade_api>['api']): Array<string | null> {
-  const ids = new Array<string | null>()
-  for (const call of api.update_tag.mock.calls) ids.push((call[0] as { tx_id?: string | null }).tx_id ?? null)
-  for (const call of api.update_text.mock.calls) ids.push((call[0] as { tx_id?: string | null }).tx_id ?? null)
-  for (const call of api.update_notification.mock.calls) ids.push((call[0] as { tx_id?: string | null }).tx_id ?? null)
-  for (const call of api.update_rekyou.mock.calls) ids.push((call[0] as { tx_id?: string | null }).tx_id ?? null)
-  for (const call of api.update_mirekyou.mock.calls) ids.push((call[0] as { tx_id?: string | null }).tx_id ?? null)
-  for (const call of api.update_kmemo.mock.calls) ids.push((call[0] as { tx_id?: string | null }).tx_id ?? null)
-  return ids
-}
-
-type CascadeAPIStub = ReturnType<typeof create_cascade_api>['api']
 
 const application_config = { device: 'test-device', user_id: 'admin', for_share_kyou: false }
 
-function run(kyou: ReturnType<typeof make_kmemo_kyou>, api: CascadeAPIStub) {
-    return cascade_delete_kyou({
-        kyou: kyou as never,
-        gkill_api: api as never,
-        application_config: application_config as never,
-    })
+function run(kyou: { id: string, data_type: string }, api: ReturnType<typeof create_api>, config: object = application_config) {
+  return cascade_delete_kyou({
+    kyou: kyou as never,
+    gkill_api: api as never,
+    application_config: config as never,
+  })
 }
 
 describe('cascade_delete_kyou', () => {
@@ -172,320 +70,80 @@ describe('cascade_delete_kyou', () => {
     vi.mocked(delete_gkill_kyou_cache).mockClear()
   })
 
-  it('付随するTag/Text/Notificationも論理削除する', async () => {
-    const { api } = create_cascade_api({
-      tags: { 'kmemo-1': [make_meta_stub('tag-1', 'kmemo-1')] },
-      texts: { 'kmemo-1': [make_meta_stub('text-1', 'kmemo-1')] },
-      notifications: { 'kmemo-1': [make_meta_stub('notification-1', 'kmemo-1')] },
-    })
+  it('サーバの連鎖削除を1回だけ呼び、起点の id と data_type（射影名のまま）を渡す', async () => {
+    const api = create_api({ deleted: [{ id: 'mi-1', data_type: 'mi' }] })
 
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
+    await run({ id: 'mi-1', data_type: 'mi_create' }, api)
 
-    expect(result.errors).toHaveLength(0)
-    expect(api.update_tag).toHaveBeenCalledTimes(1)
-    expect(api.update_text).toHaveBeenCalledTimes(1)
-    expect(api.update_notification).toHaveBeenCalledTimes(1)
-
-    const tag_req = api.update_tag.mock.calls[0][0]
-    expect(tag_req.tag.is_deleted).toBe(true)
-    expect(tag_req.tag.update_device).toBe('test-device')
-    expect(tag_req.tag.update_user).toBe('admin')
-    expect(tag_req.tag.update_app).toBe('gkill')
+    expect(api.delete_kyou_cascade).toHaveBeenCalledTimes(1)
+    const req = api.delete_kyou_cascade.mock.calls[0][0]
+    expect(req.target_id).toBe('mi-1')
+    expect(req.data_type).toBe('mi_create')
+    expect(req.update_app).toBe('gkill')
   })
 
-  it('参照しているReKyouとMiReKyouを論理削除する', async () => {
-    const { api } = create_cascade_api({
-      rekyous: { 'kmemo-1': [make_ref_stub('rekyou-1', 'kmemo-1')] },
-      mirekyous: { 'kmemo-1': [make_ref_stub('mirekyou-1', 'kmemo-1', { data_type: 'mirekyou_create' })] },
+  it('画面から取り除く行は起点と参照元（ReKyou / MiReKyou）だけで、付随データは含めない', async () => {
+    const api = create_api({
+      deleted: [
+        { id: 'kmemo-1', data_type: 'kmemo' },
+        { id: 'tag-1', data_type: 'tag' },
+        { id: 'text-1', data_type: 'text' },
+        { id: 'notification-1', data_type: 'notification' },
+        { id: 'rekyou-1', data_type: 'rekyou' },
+        { id: 'mirekyou-1', data_type: 'mirekyou' },
+      ],
     })
 
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
+    const result = await run({ id: 'kmemo-1', data_type: 'kmemo' }, api)
 
-    expect(api.update_rekyou).toHaveBeenCalledTimes(1)
-    expect(api.update_mirekyou).toHaveBeenCalledTimes(1)
-    expect(api.update_kmemo).toHaveBeenCalledTimes(1)
+    expect(result.errors).toEqual([])
     expect(result.deleted_ids.sort()).toEqual(['kmemo-1', 'mirekyou-1', 'rekyou-1'])
   })
 
-  it('全件を同じ tx_id で積み、commit_tx を1回だけ呼ぶ', async () => {
-    const { api, call_order } = create_cascade_api({
-      tags: { 'kmemo-1': [make_meta_stub('tag-1', 'kmemo-1')] },
-      rekyous: { 'kmemo-1': [make_ref_stub('rekyou-1', 'kmemo-1')] },
+  it('消した全idのキャッシュを落とす（付随データも含む）', async () => {
+    const api = create_api({
+      deleted: [
+        { id: 'kmemo-1', data_type: 'kmemo' },
+        { id: 'tag-1', data_type: 'tag' },
+        { id: 'rekyou-B', data_type: 'rekyou' },
+      ],
     })
 
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
-
-    expect(result.errors).toHaveLength(0)
-    // tag / rekyou / 本体の3本すべてに同じ tx_id
-    expect(collect_tx_ids(api)).toEqual(['tx-1', 'tx-1', 'tx-1'])
-    expect(api.commit_tx).toHaveBeenCalledTimes(1)
-    expect(api.commit_tx.mock.calls[0][0].tx_id).toBe('tx-1')
-    expect(api.discard_tx).not.toHaveBeenCalled()
-    // commit は全部積み終わった後
-    expect(call_order.indexOf('commit_tx:tx-1')).toBeGreaterThan(call_order.indexOf('update_kmemo:kmemo-1'))
-  })
-
-  it('commit_tx が失敗したら discard_tx して deleted_ids は空（何も消えていない）', async () => {
-    const { api } = create_cascade_api({
-      rekyous: { 'kmemo-1': [make_ref_stub('rekyou-1', 'kmemo-1')] },
-    })
-    const failure = { error_code: 'ERR000419', error_message: 'rolled back', show_keep: true }
-    api.commit_tx.mockImplementation(async () => ({ messages: [], errors: [failure] }))
-
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
-
-    expect(result.deleted_ids).toEqual([])
-    expect(result.errors.map(e => e.error_code)).toEqual(['ERR000419'])
-    expect(api.discard_tx).toHaveBeenCalledTimes(1)
-  })
-
-  it('多段の参照を再帰的に辿る', async () => {
-    const { api } = create_cascade_api({
-      rekyous: {
-        'kmemo-1': [make_ref_stub('rekyou-B', 'kmemo-1')],
-        'rekyou-B': [make_ref_stub('rekyou-C', 'rekyou-B')],
-        'rekyou-C': [make_ref_stub('rekyou-D', 'rekyou-C')],
-      },
-    })
-
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
-
-    expect(result.deleted_ids.sort()).toEqual(['kmemo-1', 'rekyou-B', 'rekyou-C', 'rekyou-D'])
-    expect(api.update_rekyou).toHaveBeenCalledTimes(3)
-  })
-
-  it('ReKyou の1本が積めなかったら discard_tx して何も消さない（deleted_ids は空）', async () => {
-    const { api } = create_cascade_api({
-      rekyous: {
-        'kmemo-1': [make_ref_stub('rekyou-ok', 'kmemo-1'), make_ref_stub('rekyou-ng', 'kmemo-1')],
-      },
-    })
-    const failure = { error_code: 'ERR_TEST', error_message: 'failed', show_keep: true }
-    api.update_rekyou.mockImplementation(async (req: { rekyou: { id: string } }) => {
-      if (req.rekyou.id === 'rekyou-ng') {
-        return { messages: [], errors: [failure] }
-      }
-      return { messages: [], errors: [] }
-    })
-
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
-
-    // 以前は「消せた行だけ deleted_ids に入れて失敗行を画面に残す」だったが、
-    // 今は1つのトランザクションなので部分成功が無い
-    expect(result.deleted_ids).toEqual([])
-    expect(result.errors.map(e => e.error_code)).toEqual(['ERR_TEST'])
-    expect(api.commit_tx).not.toHaveBeenCalled()
-    expect(api.discard_tx).toHaveBeenCalledTimes(1)
-  })
-
-  it('Kyou本体が積めなかったら discard_tx して何も消さない', async () => {
-    const { api } = create_cascade_api({
-      tags: { 'kmemo-1': [make_meta_stub('tag-1', 'kmemo-1')] },
-    })
-    const failure = { error_code: 'ERR_TEST', error_message: 'failed', show_keep: true }
-    api.update_kmemo.mockImplementation(async () => ({ messages: [], errors: [failure] }))
-
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
-
-    expect(result.deleted_ids).toEqual([])
-    expect(result.errors.length).toBeGreaterThan(0)
-    expect(api.commit_tx).not.toHaveBeenCalled()
-    expect(api.discard_tx).toHaveBeenCalledTimes(1)
-  })
-
-  it('循環参照でも止まる', async () => {
-    // A(kmemo-1) ← B、B ← A相当のReKyou。visited集合が無いと無限に回る
-    const { api } = create_cascade_api({
-      rekyous: {
-        'kmemo-1': [make_ref_stub('rekyou-B', 'kmemo-1')],
-        'rekyou-B': [make_ref_stub('rekyou-A2', 'rekyou-B')],
-        'rekyou-A2': [make_ref_stub('rekyou-B', 'rekyou-A2')],
-      },
-    })
-
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
-
-    expect(result.deleted_ids.sort()).toEqual(['kmemo-1', 'rekyou-A2', 'rekyou-B'])
-    expect(api.update_rekyou).toHaveBeenCalledTimes(2)
-  })
-
-  it('自己参照でも止まる', async () => {
-    const { api } = create_cascade_api({
-      rekyous: {
-        'kmemo-1': [make_ref_stub('rekyou-self', 'kmemo-1')],
-        'rekyou-self': [make_ref_stub('rekyou-self', 'rekyou-self')],
-      },
-    })
-
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
-
-    expect(result.deleted_ids.sort()).toEqual(['kmemo-1', 'rekyou-self'])
-  })
-
-  it('逆引きを全部終えてから削除し、Kyou自身は最後に消す', async () => {
-    const { api, call_order } = create_cascade_api({
-      rekyous: {
-        'kmemo-1': [make_ref_stub('rekyou-B', 'kmemo-1')],
-        'rekyou-B': [make_ref_stub('rekyou-C', 'rekyou-B')],
-      },
-    })
-
-    await run(make_kmemo_kyou('kmemo-1'), api)
-
-    const first_update_index = call_order.findIndex(c => c.startsWith('update_'))
-    const last_discovery_index = call_order.map((c, i) => c.startsWith('get_') ? i : -1)
-      .reduce((max, i) => Math.max(max, i), -1)
-    // 参照先を消すと逆引きできなくなりうるので、discoveryは1本もupdateを投げる前に終わっている
-    expect(last_discovery_index).toBeLessThan(first_update_index)
-
-    // Kyou自身(update_kmemo)は参照元(update_rekyou)より後
-    expect(call_order.indexOf('update_kmemo:kmemo-1')).toBeGreaterThan(call_order.indexOf('update_rekyou:rekyou-B'))
-    expect(call_order.indexOf('update_kmemo:kmemo-1')).toBeGreaterThan(call_order.indexOf('update_rekyou:rekyou-C'))
-  })
-
-  it('ReKyou自身に付いているTagも消す', async () => {
-    const { api } = create_cascade_api({
-      rekyous: { 'kmemo-1': [make_ref_stub('rekyou-B', 'kmemo-1')] },
-      tags: { 'rekyou-B': [make_meta_stub('tag-on-rekyou', 'rekyou-B')] },
-    })
-
-    await run(make_kmemo_kyou('kmemo-1'), api)
-
-    expect(api.update_tag).toHaveBeenCalledTimes(1)
-    expect(api.update_tag.mock.calls[0][0].tag.id).toBe('tag-on-rekyou')
-  })
-
-  it('付随データの1本が積めなかったら本体は積まず discard_tx する', async () => {
-    const { api } = create_cascade_api({
-      tags: {
-        'kmemo-1': [make_meta_stub('tag-1', 'kmemo-1'), make_meta_stub('tag-2', 'kmemo-1')],
-      },
-      texts: { 'kmemo-1': [make_meta_stub('text-1', 'kmemo-1')] },
-    })
-    const failure = { error_code: 'ERR_TEST', error_message: 'failed', show_keep: true }
-    api.update_tag.mockImplementationOnce(async () => ({ messages: [], errors: [failure] }))
-
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
-
-    expect(result.errors).toHaveLength(1)
-    expect(result.errors[0].error_code).toBe('ERR_TEST')
-    // 付随データは並列に積むので全部投げるが、本体には進まない
-    expect(api.update_tag).toHaveBeenCalledTimes(2)
-    expect(api.update_text).toHaveBeenCalledTimes(1)
-    expect(api.update_kmemo).not.toHaveBeenCalled()
-    expect(api.commit_tx).not.toHaveBeenCalled()
-    expect(api.discard_tx).toHaveBeenCalledTimes(1)
-    expect(result.deleted_ids).toEqual([])
-  })
-
-  it('付随データの逆引きはforce_regetを立てる', async () => {
-    // Service Workerがtarget_id単位でキャッシュしているので、立て忘れると古い一覧を読む
-    const { api } = create_cascade_api()
-
-    await run(make_kmemo_kyou('kmemo-1'), api)
-
-    expect(api.get_tags_by_target_id.mock.calls[0][0].force_reget).toBe(true)
-    expect(api.get_texts_by_target_id.mock.calls[0][0].force_reget).toBe(true)
-    expect(api.get_notifications_by_target_id.mock.calls[0][0].force_reget).toBe(true)
-  })
-
-  it('消した全idのキャッシュを落とす', async () => {
-    const { api } = create_cascade_api({
-      rekyous: { 'kmemo-1': [make_ref_stub('rekyou-B', 'kmemo-1')] },
-    })
-
-    await run(make_kmemo_kyou('kmemo-1'), api)
+    await run({ id: 'kmemo-1', data_type: 'kmemo' }, api)
 
     const cleared = vi.mocked(delete_gkill_kyou_cache).mock.calls.map(call => call[0]).sort()
-    expect(cleared).toEqual(['kmemo-1', 'rekyou-B'])
+    expect(cleared).toEqual(['kmemo-1', 'rekyou-B', 'tag-1'])
   })
 
-  it('削除済みのReKyouは辿らない', async () => {
-    const { api } = create_cascade_api({
-      rekyous: {
-        'kmemo-1': [make_ref_stub('rekyou-deleted', 'kmemo-1', { is_deleted: true })],
-      },
-    })
+  it('サーバがエラーを返したら何も取り除かず、キャッシュも落とさない（1つのトランザクションなので何も消えていない）', async () => {
+    const api = create_api({ deleted: [], errors: [{ error_code: 'ERR000451' }] })
 
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
+    const result = await run({ id: 'kmemo-1', data_type: 'kmemo' }, api)
 
-    expect(result.deleted_ids).toEqual(['kmemo-1'])
-    expect(api.update_rekyou).not.toHaveBeenCalled()
-  })
-
-  it('同じidの履歴が返ってもupdate_timeが最新の1件だけを消す', async () => {
-    const older = make_ref_stub('rekyou-B', 'kmemo-1', { update_time: base_time })
-    const newer = make_ref_stub('rekyou-B', 'kmemo-1', { update_time: new Date(base_time.getTime() + 3600_000) })
-    const { api } = create_cascade_api({ rekyous: { 'kmemo-1': [older, newer] } })
-
-    await run(make_kmemo_kyou('kmemo-1'), api)
-
-    expect(api.update_rekyou).toHaveBeenCalledTimes(1)
-    expect(api.update_rekyou.mock.calls[0][0].rekyou.update_time.getTime()).not.toBe(base_time.getTime())
-  })
-
-  it('参照が深すぎるときは打ち切ってエラーを返す', async () => {
-    // 上限32を超える長さの鎖を作る
-    const rekyous: Record<string, Array<RefStub>> = {}
-    let previous_id = 'kmemo-1'
-    for (let i = 0; i < 40; i++) {
-      const next_id = `rekyou-${i}`
-      rekyous[previous_id] = [make_ref_stub(next_id, previous_id)]
-      previous_id = next_id
-    }
-    const { api } = create_cascade_api({ rekyous })
-
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
-
-    expect(result.errors).toHaveLength(1)
-    expect(result.errors[0].error_code).toBe('ERR900093')
-    // 見えていない参照元を残したまま本体だけ消すと、参照先の無いリポストが残る。
-    // 探索に失敗したら1本も積まない
-    expect(api.update_rekyou).not.toHaveBeenCalled()
-    expect(api.update_kmemo).not.toHaveBeenCalled()
-    expect(api.commit_tx).not.toHaveBeenCalled()
     expect(result.deleted_ids).toEqual([])
+    expect(result.errors).toHaveLength(1)
+    expect(result.errors[0].error_code).toBe('ERR000451')
+    expect(delete_gkill_kyou_cache).not.toHaveBeenCalled()
   })
 
-  // サーバは成功時 Errors を nil のまま返す。json:"errors" に omitempty が無いので
-  // レスポンスは "errors": null になり、クライアントも正規化していない。
-  // spread で展開すると TypeError になって呼び出し元の close 処理まで巻き込んで落ちる
-  it('サーバが errors: null を返しても throw せず削除しきる', async () => {
-    const { api } = create_cascade_api({
-      tags: { 'kmemo-1': [make_meta_stub('tag-1', 'kmemo-1')] },
-      texts: { 'kmemo-1': [make_meta_stub('text-1', 'kmemo-1')] },
-      notifications: { 'kmemo-1': [make_meta_stub('notification-1', 'kmemo-1')] },
-      rekyous: { 'kmemo-1': [make_ref_stub('rekyou-1', 'kmemo-1')] },
-      mirekyous: { 'kmemo-1': [make_ref_stub('mirekyou-1', 'kmemo-1', { data_type: 'mirekyou_create' })] },
-    })
-    const null_response = { messages: null, errors: null } as unknown as { messages: Array<never>, errors: Array<ErrorStub> }
-    api.update_tag.mockImplementation(async () => null_response)
-    api.update_text.mockImplementation(async () => null_response)
-    api.update_notification.mockImplementation(async () => null_response)
-    api.update_rekyou.mockImplementation(async () => null_response)
-    api.update_mirekyou.mockImplementation(async () => null_response)
-    api.update_kmemo.mockImplementation(async () => null_response)
+  // SW キャッシュに残った古い応答や古いサーバとの組み合わせでは errors / deleted が null で来うる。
+  // spread や map で展開すると TypeError になり、呼び出し元のダイアログのクローズまで巻き込んで落ちる
+  it('errors / deleted が null でも throw しない', async () => {
+    const api = create_api({ deleted: null, errors: null, messages: null })
 
-    const result = await run(make_kmemo_kyou('kmemo-1'), api)
+    const result = await run({ id: 'kmemo-1', data_type: 'kmemo' }, api)
 
-    expect(result.errors).toHaveLength(0)
-    expect(result.deleted_ids.sort()).toEqual(['kmemo-1', 'mirekyou-1', 'rekyou-1'])
-    expect(api.update_kmemo).toHaveBeenCalledTimes(1)
+    expect(result.errors).toEqual([])
+    expect(result.deleted_ids).toEqual([])
   })
 
   it('共有画面では何もしない', async () => {
-    const { api } = create_cascade_api({
-      rekyous: { 'kmemo-1': [make_ref_stub('rekyou-B', 'kmemo-1')] },
-    })
+    const api = create_api({ deleted: [{ id: 'kmemo-1', data_type: 'kmemo' }] })
 
-    const result = await cascade_delete_kyou({
-      kyou: make_kmemo_kyou('kmemo-1') as never,
-      gkill_api: api as never,
-      application_config: { device: '', user_id: '', for_share_kyou: true } as never,
-    })
+    const result = await run({ id: 'kmemo-1', data_type: 'kmemo' }, api, { device: '', user_id: '', for_share_kyou: true })
 
     expect(result.deleted_ids).toEqual([])
-    expect(api.update_kmemo).not.toHaveBeenCalled()
+    expect(api.delete_kyou_cascade).not.toHaveBeenCalled()
   })
 })
 
@@ -494,5 +152,13 @@ describe('build_deleted_kyou_stub', () => {
     const stub = build_deleted_kyou_stub('kmemo-1')
     expect(stub.id).toBe('kmemo-1')
     expect(stub.is_deleted).toBe(true)
+  })
+})
+
+describe('build_cascade_delete_failed_error', () => {
+  it('「何も削除されていない」の文言を持つ', () => {
+    const error = build_cascade_delete_failed_error()
+    expect(error.error_code).toBe('ERR900094')
+    expect(error.error_message).toBe('FAILED_DELETE_KYOU_NOTHING_DELETED_MESSAGE')
   })
 })

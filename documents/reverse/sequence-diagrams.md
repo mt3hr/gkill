@@ -173,52 +173,56 @@ sequenceDiagram
 
 ## 6. Kyou データ削除（論理削除・連鎖削除）
 
+連鎖削除の探索と書き込みはサーバの1実装（`usecase.DeleteKyouCascade`）で、画面と MCP の `gkill_delete_kyou`（既定で連鎖）が
+同じ `/api/delete_kyou_cascade` を呼ぶ（[ADR-0636](../adr/0636-cascade-delete-on-the-server.md)）。
+
 ```mermaid
 sequenceDiagram
     actor User as ユーザ
     participant UI as confirm-delete-kyou-view
     participant CD as cascade_delete_kyou
-    participant API as GkillServerAPI
-    participant Rep as Repository
+    participant API as HandleDeleteKyouCascade
+    participant UC as usecase.DeleteKyouCascade
+    participant Rep as Repository / TempRep
 
     User->>UI: コンテキストメニュー → 削除
     UI->>UI: 削除確認ダイアログ表示
     User->>UI: 「削除」ボタン押下
     UI->>UI: is_requested_submit で二重送信を弾く
     UI->>CD: cascade_delete_kyou(kyou)
+    CD->>API: POST /api/delete_kyou_cascade<br>{target_id, data_type, update_app}
+    API->>UC: DeleteKyouCascade
+    UC->>Rep: 起点の最新版（型別 GetXxx）
+    Note over UC: 無ければ ERR000448、削除済みなら ERR000449
 
-    Note over CD: ① 探索フェーズ（updateは1本も投げない）
-    loop 幅優先・訪問済みidで循環を止める<br>最大深さ32 / 16件ずつ並列
-        CD->>API: get_tags_by_target_id<br>get_texts_by_target_id<br>get_notifications_by_target_id<br>（force_reget=true）
-        CD->>API: get_rekyous_by_target_id<br>get_mirekyous_by_target_id
-        API-->>CD: Tag / Text / Notification<br>ReKyou / MiReKyou
+    Note over UC: ① 探索フェーズ（書き込みは1本もしない）
+    loop 幅優先・訪問済みidで循環を止める・最大深さ32
+        UC->>Rep: GetTags / GetTexts / GetNotifications ByTargetID
+        UC->>Rep: GetReKyous / GetMiReKyous ByTargetID
+        Rep-->>UC: 付随データ / 参照元（id ごとに最新版、削除済みは辿らない）
     end
 
-    Note over CD: ② 削除フェーズ（Kyou自身は最後）
-    par 付随データ（親子関係が無いので順序不問）
-        CD->>API: POST /api/update_tag<br>{IS_DELETED: true}
-    and
-        CD->>API: POST /api/update_text<br>{IS_DELETED: true}
-    and
-        CD->>API: POST /api/update_notification<br>{IS_DELETED: true}
-    end
-    CD->>API: POST /api/update_rekyou（深い方から逆順）
-    CD->>API: POST /api/update_mirekyou（深い方から逆順）
-    CD->>API: POST /api/update_kmemo 等<br>{IS_DELETED: true}（Kyou自身・最後）
-    API->>Rep: AddXxxInfo(IS_DELETED=TRUE)
+    Note over UC: ② 削除フェーズ（1つの txID。update_time は全件同じ値）
+    UC->>Rep: UpdateTag / UpdateText / UpdateNotification（txID 付き）
+    UC->>Rep: UpdateReKyou（深い方から）→ UpdateMiReKyou
+    UC->>Rep: 起点の UpdateXxx（最後）
+    UC->>Rep: CommitTx（1つの SQLite トランザクション）
     Note right of Rep: 追記型なので各テーブルに<br>IS_DELETED=TRUE の新レコードがINSERT
-    Rep-->>API: OK
-    CD->>CD: visited_ids ぶんの<br>Service Workerキャッシュを削除
-    CD-->>UI: {deleted_ids, errors}
+    UC-->>API: deleted: [{id, data_type}...]
+    API-->>CD: {deleted, errors}
+    CD->>CD: deleted ぶんの<br>Service Workerキャッシュを削除
+    CD-->>UI: {deleted_ids（起点・ReKyou・MiReKyou）, errors}
     UI->>UI: deleted_ids のぶん deleted_kyou を emit
     UI-->>User: finally でダイアログを閉じる（例外時も閉じる）
 ```
 
-> **Kyou自身を最後に消す理由。** サーバの `FindKyous` は参照先が削除済みの ReKyou を検索結果から外すため、Kyou を先に消すと参照元を辿れなくなる。探索（read）と削除（write）を完全に分けてあるのも同じ理由で、削除が途中で失敗しても Kyou 自身が生きていれば同じダイアログをもう一度開くだけで残骸を再発見できる。追記型 DAO なので再実行で収束する。
+> **Kyou自身を最後に積む理由。** 検索は参照先が削除済みの ReKyou を結果から外すため、探索（read）と削除（write）を完全に分け、
+> 探索を全部終えてから書く。積む順も「付随データ → 参照元（深い方から）→ 起点」の並びを保つ。
 >
-> **全件を1つの tx_id で積み、commit_tx で確定する。** commit_tx は1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、全部消えるか何も消えないかのどちらかになる（[ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）。1本でも積めなければ discard_tx してエラーを返す（`ERR900094 cascade_delete_failed`、深さ超過は `ERR900093 cascade_delete_depth_exceeded`）。
+> **全件を1つの tx で積み、CommitTx で確定する。** 1つの SQLite トランザクション（[ADR-0219](../adr/0219-commit-tx-is-one-sqlite-transaction.md)）なので、
+> 全部消えるか何も消えないかのどちらかになる（[ADR-0410](../adr/0410-bundle-multi-write-operations-in-tx.md)）。1件でも積めなければ DiscardTx して `ERR000447`。
 >
-> **削除成功メッセージは出ない。** 画面からその行が消えることが結果の提示になる。
+> **削除成功メッセージは出ない。** 画面からその行が消えることが結果の提示になる。MCP は `deleted[]` を返し、そのまま `gkill_restore_kyou` の `targets[]` に渡せる。
 
 ## 7. Kyou 検索（GetKyous）
 

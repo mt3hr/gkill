@@ -166,6 +166,9 @@ var histories = map[string]string{
 	"mirekyou/mrk-1": `[
 {"id":"mrk-1","rep_name":"MiReKyou_fakepc","target_id":"km-1","is_checked":false,"board_name":"Inbox","limit_time":null,"estimate_start_time":null,"estimate_end_time":null,"data_type":"mirekyou_create","create_time":"2026-09-15T09:00:00+09:00","create_app":"gkill","create_device":"fakepc","create_user":"testuser","update_time":"2026-09-15T09:00:00+09:00","update_app":"gkill","update_device":"fakepc","update_user":"testuser","is_deleted":false}
 ]`,
+	"idf/idf-1": `[
+{"id":"idf-1","rep_name":"Files","related_time":"2026-09-15T09:00:00+09:00","file_name":"photo.png","file_url":"/files/Files/photo.png","is_image":true,"is_video":false,"is_audio":false,"is_zip":false,"data_type":"idf","create_time":"2026-09-15T09:00:00+09:00","create_app":"gkill","create_device":"fakepc","create_user":"testuser","update_time":"2026-09-15T09:00:00+09:00","update_app":"gkill","update_device":"fakepc","update_user":"testuser","is_deleted":false}
+]`,
 	"notification/nt-1": `[
 {"id":"nt-1","rep_name":"Notification_fakepc","target_id":"km-1","content":"通知","notification_time":"2026-09-20T09:00:00+09:00","is_notificated":false,"data_type":"notification","create_time":"2026-09-15T09:00:00+09:00","create_app":"gkill","create_device":"fakepc","create_user":"testuser","update_time":"2026-09-15T09:00:00+09:00","update_app":"gkill","update_device":"fakepc","update_user":"testuser","is_deleted":false}
 ]`,

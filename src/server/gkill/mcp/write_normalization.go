@@ -136,6 +136,32 @@ var entityFieldSpecs = map[string]entitySpec{
 		{Name: "text", Kind: "string", RequiredOnAdd: true},
 		{Name: "target_id", Kind: "string", RequiredOnAdd: true, AddOnly: true},
 	}},
+	// 以下4型は ADR-0636 で足した（画面の入力欄と同じ）。どれも初めから載る引数なので古いスキーマの救済は要らない。
+	// リポスト: 対象と、いつのリポストか（画面は作成時刻、編集で関連時刻を直せる）。
+	"rekyou": {Fields: []entityField{
+		{Name: "target_id", Kind: "string", RequiredOnAdd: true, AddOnly: true},
+		{Name: "related_time", Kind: "datetime"},
+	}},
+	// タスク化: Mi の予定欄（題名は無い。対象の記録が中身）。板の扱いは mi と同じ。
+	"mirekyou": {Fields: []entityField{
+		{Name: "target_id", Kind: "string", RequiredOnAdd: true, AddOnly: true},
+		{Name: "board_name", Kind: "string"},
+		{Name: "is_checked", Kind: "boolean", DefaultOnAdd: false},
+		{Name: "limit_time", Kind: "datetime", NullClears: true},
+		{Name: "estimate_start_time", Kind: "datetime", NullClears: true},
+		{Name: "estimate_end_time", Kind: "datetime", NullClears: true},
+		{Name: "allow_create_board", Kind: "boolean", DefaultOnAdd: true},
+	}},
+	// 通知: 対象・本文・通知する時刻。時刻は add で必須（NormalizeNotificationArgs が見る。datetime は表の必須判定を通らない）。
+	"notification": {Fields: []entityField{
+		{Name: "target_id", Kind: "string", RequiredOnAdd: true, AddOnly: true},
+		{Name: "content", Kind: "string", RequiredOnAdd: true},
+		{Name: "notification_time", Kind: "datetime"},
+	}},
+	// ファイルの記録: 関連時刻だけ（画面の「関連時刻を決める」と同じ）。作成は gkill_upload_files。
+	"idf": {Fields: []entityField{
+		{Name: "related_time", Kind: "datetime"},
+	}},
 }
 
 func assertFieldValue(field entityField, value any) (any, error) {
@@ -281,6 +307,25 @@ func NormalizeTextArgs(args any) (*jsonobj.Object, error) {
 	return normalizeEntityArgs("text", args, "add")
 }
 
+func NormalizeReKyouArgs(args any) (*jsonobj.Object, error) {
+	return normalizeEntityArgs("rekyou", args, "add")
+}
+func NormalizeMiReKyouArgs(args any) (*jsonobj.Object, error) {
+	return normalizeEntityArgs("mirekyou", args, "add")
+}
+
+// NormalizeNotificationArgs は gkill_add_notification の引数。notification_time は必須（いつ知らせるかが無い通知は作れない）。
+func NormalizeNotificationArgs(args any) (*jsonobj.Object, error) {
+	normalized, err := normalizeEntityArgs("notification", args, "add")
+	if err != nil {
+		return nil, err
+	}
+	if !normalized.Defined("notification_time") {
+		return nil, InvalidArgument("notification_time", "is required: when to notify ("+ISODateTimeDesc+")", jsonobj.Undefined)
+	}
+	return normalized, nil
+}
+
 func NormalizeUpdateKmemoArgs(args any) (*jsonobj.Object, error) {
 	return normalizeEntityArgs("kmemo", args, "update")
 }
@@ -307,6 +352,18 @@ func NormalizeUpdateTagArgs(args any) (*jsonobj.Object, error) {
 }
 func NormalizeUpdateTextArgs(args any) (*jsonobj.Object, error) {
 	return normalizeEntityArgs("text", args, "update")
+}
+func NormalizeUpdateReKyouArgs(args any) (*jsonobj.Object, error) {
+	return normalizeEntityArgs("rekyou", args, "update")
+}
+func NormalizeUpdateMiReKyouArgs(args any) (*jsonobj.Object, error) {
+	return normalizeEntityArgs("mirekyou", args, "update")
+}
+func NormalizeUpdateNotificationArgs(args any) (*jsonobj.Object, error) {
+	return normalizeEntityArgs("notification", args, "update")
+}
+func NormalizeUpdateIDFArgs(args any) (*jsonobj.Object, error) {
+	return normalizeEntityArgs("idf", args, "update")
 }
 
 // NormalizeKftlArgs は gkill_submit_kftl の引数。
@@ -419,8 +476,16 @@ func normalizeSoftDeleteArgs(args any, verb string) (*jsonobj.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	source := reviveStaleSchemaArgs(base, deleteTargetsStaleSchemaArgKinds)
-	if err := AssertKnownKeys(source, NewStringSet("id", "data_type", "targets", "locale_name"), "", noHiddenKeys); err != nil {
+	deleting := verb == "delete"
+	allowed := NewStringSet("id", "data_type", "targets", "locale_name")
+	staleKinds := deleteTargetsStaleSchemaArgKinds
+	if deleting {
+		// cascade は削除だけ（画面に復元が無く、復元は deleted[] を targets[] に渡して1件ずつ戻す。ADR-0636）
+		allowed.Add("cascade")
+		staleKinds = deleteKyouStaleSchemaArgKinds
+	}
+	source := reviveStaleSchemaArgs(base, staleKinds)
+	if err := AssertKnownKeys(source, allowed, "", noHiddenKeys); err != nil {
 		return nil, err
 	}
 	targets, err := normalizeDeleteTargets(source, verb)
@@ -434,7 +499,19 @@ func normalizeSoftDeleteArgs(args any, verb string) (*jsonobj.Object, error) {
 			return nil, err
 		}
 	}
-	return jsonobj.Obj("targets", targets, "batch", source.Defined("targets"), "locale_name", localeName), nil
+	normalized := jsonobj.Obj("targets", targets, "batch", source.Defined("targets"), "locale_name", localeName)
+	if deleting {
+		// 既定は連鎖する（画面の削除と同じ）。cascade:false のときだけ対象1件だけを消す。
+		cascade := true
+		if source.Defined("cascade") {
+			cascade, err = AssertBoolean(source.Value("cascade"), "cascade")
+			if err != nil {
+				return nil, err
+			}
+		}
+		normalized.Set("cascade", cascade)
+	}
+	return normalized, nil
 }
 
 // NormalizeRestoreArgs は gkill_restore_kyou の引数。

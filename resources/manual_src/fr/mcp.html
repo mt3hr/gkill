@@ -9,6 +9,7 @@
     <tr><td>Rechercher des enregistrements</td><td>« Montre-moi mes notes de déjeuner de la semaine dernière » / « Résume les dépenses de ce mois »</td></tr>
     <tr><td>Ajouter des enregistrements</td><td>« Ajoute une note pour aujourd'hui » / « Crée une tâche »</td></tr>
     <tr><td>Mettre à jour / supprimer</td><td>« Marque cette tâche comme terminée »</td></tr>
+    <tr><td>Reposts, tâches de repost et notifications</td><td>« Reposte ce mémo », « Fais de ce mémo une tâche de repost », « Préviens-moi demain à 9 h ». Supprimer un enregistrement supprime aussi ses étiquettes, textes et notifications ainsi que ses reposts, comme dans l'application</td></tr>
     <tr><td>Récupérer GPS / fichiers</td><td>« Montre mon itinéraire d'aujourd'hui »</td></tr>
     <tr><td>Téléverser des fichiers</td><td>« Enregistre cette image dans gkill » — comme dans l'écran de téléversement, vous pouvez choisir la destination, le comportement si un fichier du même nom existe (renommer / écraser) ainsi que la date et l'heure</td></tr>
     <tr><td>Vérifier la configuration</td><td>« Liste mes modèles »</td></tr>
@@ -21,8 +22,8 @@
   <table>
     <tr><th>Type</th><th>Ce qu’il peut faire</th><th>Commande</th><th>Outils</th><th>Port (HTTP)</th></tr>
     <tr><td>Lecture seule</td><td>Afficher et rechercher des enregistrements uniquement. L’ajout ou la modification est impossible. Peut lire les compétences</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
-    <tr><td>Écriture seule</td><td>Ajouter, mettre à jour et supprimer des enregistrements. Peut aussi lire les noms de dépôts, de tags et de tableaux. Peut lire les compétences, et aussi les créer et les réécrire</td><td>gkill_server mcp --kind write</td><td>34</td><td>8809</td></tr>
-    <tr><td>Lecture et écriture</td><td>Afficher, ajouter, mettre à jour et supprimer des enregistrements. Peut lire les compétences, et aussi les créer et les réécrire</td><td>gkill_server mcp --kind readwrite</td><td>38</td><td>8810</td></tr>
+    <tr><td>Écriture seule</td><td>Ajouter, mettre à jour et supprimer des enregistrements. Peut aussi lire les noms de dépôts, de tags et de tableaux. Peut lire les compétences, et aussi les créer et les réécrire</td><td>gkill_server mcp --kind write</td><td>41</td><td>8809</td></tr>
+    <tr><td>Lecture et écriture</td><td>Afficher, ajouter, mettre à jour et supprimer des enregistrements. Peut lire les compétences, et aussi les créer et les réécrire</td><td>gkill_server mcp --kind readwrite</td><td>45</td><td>8810</td></tr>
   </table>
   <p>Le serveur MCP fait partie de gkill_server et se lance avec <code>gkill_server mcp --kind &lt;type&gt;</code> (gkill_server doit être en cours d’exécution). La connexion et les identifiants se définissent par variables d’environnement ou dans le fichier de configuration <code>configs/gkill_mcp.json</code>, généré au premier démarrage. Les journaux vont dans <code>logs/gkill_mcp_&lt;type&gt;.log</code> (les fichiers par niveau partagent le préfixe).</p>
   <p>Chaque type inclut un outil permettant de lister les extensions install&eacute;es. Le contenu des enregistrements import&eacute;s par les extensions peut &ecirc;tre re&ccedil;u directement avec les r&eacute;sultats de recherche.</p>

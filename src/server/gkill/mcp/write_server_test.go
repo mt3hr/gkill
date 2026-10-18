@@ -190,7 +190,7 @@ func TestWriteHandleToolCallWriteTools(t *testing.T) {
 		// Second call: UPDATE with is_deleted=true
 		client.mockResolvedValueOnce(obj("updated_kmemo", obj("id", "k1", "is_deleted", true), "updated_kyou", obj("id", "k1"), "errors", arr()))
 
-		result, err := serverToolCall(t, server, "gkill_delete_kyou", obj("id", "k1", "data_type", "kmemo"))
+		result, err := serverToolCall(t, server, "gkill_delete_kyou", obj("cascade", false, "id", "k1", "data_type", "kmemo"))
 		expectNoError(t, err)
 
 		expectEqual(t, client.calls[0].Pathname, "/api/get_kmemo")
@@ -207,7 +207,7 @@ func TestWriteHandleToolCallWriteTools(t *testing.T) {
 		client.mockResolvedValueOnce(obj("mi_histories", arr(obj("id", "m1", "title", "task1", "is_deleted", false, "rep_name", "rep1")), "errors", arr()))
 		client.mockResolvedValueOnce(obj("updated_mi", obj("id", "m1", "is_deleted", true), "updated_kyou", obj("id", "m1"), "errors", arr()))
 
-		result, err := serverToolCall(t, server, "gkill_delete_kyou", obj("id", "m1", "data_type", "mi"))
+		result, err := serverToolCall(t, server, "gkill_delete_kyou", obj("cascade", false, "id", "m1", "data_type", "mi"))
 		expectNoError(t, err)
 
 		expectEqual(t, client.calls[0].Pathname, "/api/get_mi")
@@ -334,9 +334,9 @@ func TestWriteJSONRPCProtocol(t *testing.T) {
 		expectEqual(t, response.Value("result"), obj())
 	})
 
-	t.Run("tools/list returns 34 tools", func(t *testing.T) {
+	t.Run("tools/list returns 41 tools", func(t *testing.T) {
 		response := serverMessage(t, setup(), obj("jsonrpc", "2.0", "id", 3, "method", "tools/list"))
-		expectEqual(t, len(arrAt(t, response, "result", "tools")), 34)
+		expectEqual(t, len(arrAt(t, response, "result", "tools")), 41)
 	})
 
 	t.Run("tools/list includes all expected tool names", func(t *testing.T) {
@@ -356,6 +356,8 @@ func TestWriteJSONRPCProtocol(t *testing.T) {
 			"gkill_get_skill_list", "gkill_get_skill",
 			// File upload (ADR-0635)
 			"gkill_upload_files",
+			// Reposts, task-ifications, notifications, file entries (ADR-0636)
+			"gkill_add_rekyou", "gkill_update_rekyou", "gkill_add_mirekyou", "gkill_update_mirekyou", "gkill_add_notification", "gkill_update_notification", "gkill_update_idf",
 			// Skill tools
 			"gkill_add_skill", "gkill_update_skill",
 			// Plugin tools

@@ -179,6 +179,8 @@ import { GetUpdatedDatasByTimeResponse } from "./req_res/get-updated-datas-by-ti
 import delete_gkill_kyou_cache, { delete_gkill_all_tag_names_cache, delete_gkill_attached_datas_cache, delete_gkill_config_cache, delete_gkill_kyou_caches } from "../delete-gkill-cache"
 import type { CommitTXRequest } from "./req_res/commit-tx-request"
 import type { CommitTXResponse } from "./req_res/commit-tx-response"
+import type { DeleteKyouCascadeRequest } from "./req_res/delete-kyou-cascade-request"
+import type { DeleteKyouCascadeResponse } from "./req_res/delete-kyou-cascade-response"
 import type { DiscardTXRequest } from "./req_res/discard-tx-request"
 import type { DiscardTXResponse } from "./req_res/discard-tx-response"
 import type { SubmitKFTLTextRequest } from "./req_res/submit-kftl-text-request"
@@ -328,6 +330,7 @@ export class GkillAPI {
         get_updated_datas_by_time_address: string
         commit_tx_address: string
         discard_tx_address: string
+        delete_kyou_cascade_address: string
         submit_kftl_text_address: string
         parse_kftl_text_address: string
         browse_zip_contents_address: string
@@ -423,6 +426,7 @@ export class GkillAPI {
         get_updated_datas_by_time_method: string
         commit_tx_method: string
         discard_tx_method: string
+        delete_kyou_cascade_method: string
         submit_kftl_text_method: string
         parse_kftl_text_method: string
         browse_zip_contents_method: string
@@ -521,6 +525,7 @@ export class GkillAPI {
                 this.get_updated_datas_by_time_address = "/api/get_updated_datas_by_time"
                 this.commit_tx_address = "/api/commit_tx"
                 this.discard_tx_address = "/api/discard_tx"
+                this.delete_kyou_cascade_address = "/api/delete_kyou_cascade"
                 this.submit_kftl_text_address = "/api/submit_kftl_text"
                 this.parse_kftl_text_address = "/api/parse_kftl_text"
                 this.browse_zip_contents_address = "/api/browse_zip_contents"
@@ -614,6 +619,7 @@ export class GkillAPI {
                 this.get_updated_datas_by_time_method = "POST"
                 this.commit_tx_method = "POST"
                 this.discard_tx_method = "POST"
+                this.delete_kyou_cascade_method = "POST"
                 this.submit_kftl_text_method = "POST"
                 this.parse_kftl_text_method = "POST"
                 this.browse_zip_contents_method = "POST"
@@ -2254,6 +2260,22 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: CommitTXResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        // 記録を連鎖して論理削除する（付随データと参照元ごと。1つのトランザクション）
+        async delete_kyou_cascade(req: DeleteKyouCascadeRequest): Promise<DeleteKyouCascadeResponse> {
+                const res = await this.gkill_fetch(this.delete_kyou_cascade_address, {
+                        'method': this.delete_kyou_cascade_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: DeleteKyouCascadeResponse = json
                 this.check_auth(response)
                 return response
         }

@@ -15,6 +15,8 @@ Web の追加画面（kc / lantana / nlog / timeis / urlog / mi / mirekyou の7�
 「本体を `add_*` / `update_*` → タグを `add_tag` / `update_tag`（Mi は通知も）」と複数の API を順に投げていた。
 連鎖削除（`cascade-delete-kyou.ts`）はタグ・テキスト・通知・ReKyou・MiReKyou・本体を1件ずつ `update_*` で
 消していた。どれも途中で失敗すると一部だけが書かれる。
+（追記: 連鎖削除の探索と tx の組み立ては [ADR-0636](0636-cascade-delete-on-the-server.md) でサーバの1実装へ移した。
+1つのトランザクションで確定するという判断はそのまま。）
 
 `tx_id` で束ねる仕組み（temp rep + `commit_tx`）は KFTL のために最初からあったが、ADR-0403 は
 「TXID 指定時の `add_tag` は `added_tag` を返せず `registered_tag` を上げられない。しかも `commit_tx` は

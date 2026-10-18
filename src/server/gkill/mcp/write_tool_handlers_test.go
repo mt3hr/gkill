@@ -23,8 +23,8 @@ import (
 // Tool definitions
 // ---------------------------------------------------------------------------
 func TestWriteToolDefinitions(t *testing.T) {
-	t.Run("write server exposes 24 write tools", func(t *testing.T) {
-		expectEqual(t, len(WriteTools), 24)
+	t.Run("write server exposes 31 write tools", func(t *testing.T) {
+		expectEqual(t, len(WriteTools), 31)
 	})
 
 	t.Run("write tool names are the current set", func(t *testing.T) {
@@ -52,6 +52,14 @@ func TestWriteToolDefinitions(t *testing.T) {
 			"gkill_restore_kyou",
 			// ファイルのアップロード（ADR-0635）
 			"gkill_upload_files",
+			// リポスト・タスク化・通知・ファイルの記録（ADR-0636）
+			"gkill_add_rekyou",
+			"gkill_update_rekyou",
+			"gkill_add_mirekyou",
+			"gkill_update_mirekyou",
+			"gkill_add_notification",
+			"gkill_update_notification",
+			"gkill_update_idf",
 			// スキル（ADR-0634）。gkill_delete_skill は実装だけで公開しない（skill_delete_tool.go）
 			"gkill_add_skill",
 			"gkill_update_skill",
@@ -263,11 +271,17 @@ func TestLateBooleanArgsAreInBothTables(t *testing.T) {
 
 	// スキーマ導入時から boolean だった引数。最初のセッションから型付きで届くので
 	// 救済表には載せない (ここへ足す行為自体が「後付けではない」という意思表示になる)。
-	dayOneBooleans := NewStringSet("gkill_add_mi.is_checked", "gkill_update_mi.is_checked")
+	dayOneBooleans := NewStringSet("gkill_add_mi.is_checked", "gkill_update_mi.is_checked",
+		// ADR-0636 で足したツールは、初めから載る引数なので救済表に載せない
+		"gkill_add_mirekyou.allow_create_board", "gkill_add_mirekyou.is_checked",
+		"gkill_update_mirekyou.allow_create_board", "gkill_update_mirekyou.is_checked")
 
 	// 後付け boolean を持つツールの実物の正規化器と最小引数。
 	// 新しいツール名でこのテストが落ちたら、ここへ1行足す。
 	normalizerByTool := map[string]func(extra *jsonobj.Object) (*jsonobj.Object, error){
+		"gkill_delete_kyou": func(extra *jsonobj.Object) (*jsonobj.Object, error) {
+			return NormalizeDeleteArgs(obj("id", "k1", "data_type", "kmemo").Merge(extra))
+		},
 		"gkill_add_urlog": func(extra *jsonobj.Object) (*jsonobj.Object, error) {
 			return NormalizeUrlogArgs(obj("url", "https://example.com/").Merge(extra))
 		},

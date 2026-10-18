@@ -185,6 +185,9 @@ var errorCodeHTTPStatus = map[string]int{
 	InvalidSkillManifestError:                                       http.StatusBadRequest, // ERR000434
 	InvalidSkillZipError:                                            http.StatusBadRequest, // ERR000435
 	SkillManifestDeleteError:                                        http.StatusBadRequest, // ERR000438
+	InvalidDeleteKyouCascadeRequestDataError:                        http.StatusBadRequest, // ERR000445
+	// 連鎖削除の起点にできない data_type（git_commit_log・プラグイン・付随データ）。
+	DeleteKyouCascadeUnsupportedDataTypeError: http.StatusBadRequest, // ERR000450
 
 	// ---- 401 Unauthorized — 誰なのか確認できない ----
 	// クライアントの check_auth と MCP の再ログインがこの4つを契機にしている。
@@ -204,26 +207,27 @@ var errorCodeHTTPStatus = map[string]int{
 
 	// ---- 404 Not Found — 指定されたものが無い ----
 	// 「サーバの設定ファイルが無い」は利用者の指定ミスではないので 500 に置いてある。
-	NotFoundTagError:               http.StatusNotFound, // ERR000055
-	NotFoundTextError:              http.StatusNotFound, // ERR000067
-	NotFoundKmemoError:             http.StatusNotFound, // ERR000070
-	NotFoundURLogError:             http.StatusNotFound, // ERR000073
-	NotFoundNlogError:              http.StatusNotFound, // ERR000076
-	NotFoundTimeIsError:            http.StatusNotFound, // ERR000079
-	NotFoundLantanaError:           http.StatusNotFound, // ERR000082
-	NotFoundMiError:                http.StatusNotFound, // ERR000089
-	NotFoundKyouInfoError:          http.StatusNotFound, // ERR000092
-	NotFoundReKyouError:            http.StatusNotFound, // ERR000095
-	NotFoundTargetIDFRepError:      http.StatusNotFound, // ERR000151
-	NotFoundTargetGPSLogRepError:   http.StatusNotFound, // ERR000153
-	NotFoundIDFKyouError:           http.StatusNotFound, // ERR000254
-	NotExistShareKyouListInfoError: http.StatusNotFound, // ERR000259
-	NotFoundNotificationError:      http.StatusNotFound, // ERR000280
-	NotFoundKCError:                http.StatusNotFound, // ERR000310
-	NotFoundMiReKyouError:          http.StatusNotFound, // ERR000397
-	TargetAccountNotFoundError:     http.StatusNotFound, // ERR000413
-	SkillNotFoundError:             http.StatusNotFound, // ERR000430
-	SkillFileNotFoundError:         http.StatusNotFound, // ERR000431
+	NotFoundTagError:                     http.StatusNotFound, // ERR000055
+	NotFoundTextError:                    http.StatusNotFound, // ERR000067
+	NotFoundKmemoError:                   http.StatusNotFound, // ERR000070
+	NotFoundURLogError:                   http.StatusNotFound, // ERR000073
+	NotFoundNlogError:                    http.StatusNotFound, // ERR000076
+	NotFoundTimeIsError:                  http.StatusNotFound, // ERR000079
+	NotFoundLantanaError:                 http.StatusNotFound, // ERR000082
+	NotFoundMiError:                      http.StatusNotFound, // ERR000089
+	NotFoundKyouInfoError:                http.StatusNotFound, // ERR000092
+	NotFoundReKyouError:                  http.StatusNotFound, // ERR000095
+	NotFoundTargetIDFRepError:            http.StatusNotFound, // ERR000151
+	NotFoundTargetGPSLogRepError:         http.StatusNotFound, // ERR000153
+	NotFoundIDFKyouError:                 http.StatusNotFound, // ERR000254
+	NotExistShareKyouListInfoError:       http.StatusNotFound, // ERR000259
+	NotFoundNotificationError:            http.StatusNotFound, // ERR000280
+	NotFoundKCError:                      http.StatusNotFound, // ERR000310
+	NotFoundMiReKyouError:                http.StatusNotFound, // ERR000397
+	TargetAccountNotFoundError:           http.StatusNotFound, // ERR000413
+	SkillNotFoundError:                   http.StatusNotFound, // ERR000430
+	SkillFileNotFoundError:               http.StatusNotFound, // ERR000431
+	DeleteKyouCascadeTargetNotFoundError: http.StatusNotFound, // ERR000448
 
 	// ---- 409 Conflict — 今の状態と衝突する ----
 	// 同じIDが既にある、リセット中のアカウントにログインしようとした、など。
@@ -247,6 +251,8 @@ var errorCodeHTTPStatus = map[string]int{
 	SubmitKFTLTextIdempotencyKeyConflictError: http.StatusConflict, // ERR000423
 	SkillFileAlreadyExistsError:               http.StatusConflict, // ERR000436
 	SkillRevisionConflictError:                http.StatusConflict, // ERR000437
+	// 連鎖削除の起点が既に削除済み（同じ削除の二重送信など）。
+	DeleteKyouCascadeAlreadyDeletedError: http.StatusConflict, // ERR000449
 
 	// ---- 413 Request Entity Too Large — リクエスト本文が大きすぎる ----
 	// 認証系ミドルウェアの先読み上限（maxAuthBodyBytes）超過。
@@ -503,4 +509,7 @@ var errorCodeHTTPStatus = map[string]int{
 	UploadSkillError:                                                 http.StatusInternalServerError, // ERR000442
 	WriteSkillFileError:                                              http.StatusInternalServerError, // ERR000443
 	DeleteSkillError:                                                 http.StatusInternalServerError, // ERR000444
+	InvalidDeleteKyouCascadeResponseDataError:                        http.StatusInternalServerError, // ERR000446
+	DeleteKyouCascadeError:                                           http.StatusInternalServerError, // ERR000447
+	DeleteKyouCascadeDepthExceededError:                              http.StatusInternalServerError, // ERR000451
 }
