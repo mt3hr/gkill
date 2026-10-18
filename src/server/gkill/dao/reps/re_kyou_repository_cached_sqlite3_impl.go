@@ -540,12 +540,11 @@ func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 		return nil
 	}
 
-	query := &find.FindQuery{
-		UpdateCache:    false,
-		OnlyLatestData: false,
-	}
-
-	allReKyous, err := r.rekyouRep.FindReKyou(ctx, query)
+	// ターゲット解決前の生データ（削除の版も含む全版）をキャッシュする（MiReKyou と同じ）。
+	// 下層の FindReKyou で入れ直すと IsDeleted の版を版ごとに捨て、ターゲット解決できない ReKyou も捨てるので、
+	// 再構築のたびに削除したリポストが削除前の版に戻って見える。削除の除外とターゲット解決は
+	// 読み出し側（FindKyous / FindReKyou / GetReKyousByTargetID）が都度行う。
+	allReKyous, err := r.rekyouRep.GetReKyousAllLatest(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all rekyou at update cache: %w", err)
 		return err

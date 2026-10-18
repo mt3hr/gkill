@@ -127,10 +127,11 @@ func TestGkillRepositories_UpdateCacheBuildsReKyouOnFirstPass(t *testing.T) {
 	if err := repositories.UpdateCache(ctx); err != nil {
 		t.Fatalf("UpdateCache() error: %v", err)
 	}
-	// Phase1のReKyouターゲット解決で1回、永続化用スナップショットで1回。
-	// Phase2後とReKyou後に永続化処理が走っても、後者は1回だけであること。
-	if countingDAO.getAllCount != 2 {
-		t.Fatalf("GetAllLatestDataRepositoryAddresses() count = %d, want 2", countingDAO.getAllCount)
+	// 永続化用スナップショットで1回だけ。Phase2後とReKyou後に永続化処理が走っても1回であること。
+	// （キャッシュ版ReKyouの再構築はターゲット解決前の生データを入れるので、ここでは表を読まない。
+	// 以前は再構築のターゲット解決がリポジトリ群の複製へ全件を読み込み、もう1回数えていた）
+	if countingDAO.getAllCount != 1 {
+		t.Fatalf("GetAllLatestDataRepositoryAddresses() count = %d, want 1", countingDAO.getAllCount)
 	}
 	if countingDAO.addOrUpdateAddrSum == 0 {
 		t.Fatalf("初回のUpdateCacheで最新版アドレスが1件も書かれていない")
@@ -296,6 +297,83 @@ func TestReKyouGetReKyousByTargetIDReturnsEvenIfTargetDeleted(t *testing.T) {
 	}
 	if matchReKyous[0].ID != sharedID {
 		t.Fatalf("GetReKyousByTargetID() ID = %s, want %s", matchReKyous[0].ID, sharedID)
+	}
+}
+
+// 再構築（UpdateCache）のあとも、リポストの削除の版がキャッシュに残ること。
+//
+// キャッシュ版の UpdateCache が下層の FindReKyou で入れ直していた間は、IsDeleted の版を版ごとに捨てていたので、
+// 再構築のたびに削除したリポストが削除前の版に戻って見えていた（履歴から削除が消え、MCP の復元が
+// 「削除されていない」で効かず、連鎖削除の逆引きが削除済みのリポストを拾い直して削除の版を積み直す）。
+// MiReKyou と同じく、ターゲット解決前の生データ（GetReKyousAllLatest）を入れる。
+func TestGkillRepositories_UpdateCacheKeepsDeletedReKyouVersions(t *testing.T) {
+	ctx := context.Background()
+	old := gkill_options.CacheReKyouReps
+	enable := true
+	gkill_options.CacheReKyouReps = &enable
+	t.Cleanup(func() { gkill_options.CacheReKyouReps = old })
+
+	repositories, _, _, sharedID := newGranularReKyouFixture(t)
+	// newGranularReKyouFixture が作るKmemoのID
+	targetID := "shared-target"
+
+	// 2版（別rep）に続けて、削除の版を書き込み先repへ積む
+	deletedReKyou := makeReKyou(sharedID, targetID)
+	deletedReKyou.IsDeleted = true
+	deletedReKyou.UpdateTime = deletedReKyou.UpdateTime.Add(2 * time.Hour)
+	if err := repositories.WriteReKyouRep.AddReKyouInfo(ctx, deletedReKyou); err != nil {
+		t.Fatalf("AddReKyouInfo() error: %v", err)
+	}
+
+	if err := repositories.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache() error: %v", err)
+	}
+
+	got, err := repositories.ReKyouReps.GetReKyou(ctx, sharedID, nil)
+	if err != nil {
+		t.Fatalf("GetReKyou() error: %v", err)
+	}
+	if got == nil {
+		t.Fatal("GetReKyou() returned nil")
+	}
+	if !got.IsDeleted || !got.UpdateTime.Equal(deletedReKyou.UpdateTime) {
+		t.Fatalf("GetReKyou() = IsDeleted %v UpdateTime %v, want the deleted version (UpdateTime %v)", got.IsDeleted, got.UpdateTime, deletedReKyou.UpdateTime)
+	}
+
+	histories, err := repositories.ReKyouReps.GetReKyouHistoriesByRepName(ctx, sharedID, nil)
+	if err != nil {
+		t.Fatalf("GetReKyouHistoriesByRepName() error: %v", err)
+	}
+	if len(histories) != 3 {
+		t.Fatalf("GetReKyouHistoriesByRepName() len = %d, want 3 (the deleted version must stay in the cache)", len(histories))
+	}
+
+	// 連鎖削除の逆引きは、削除済みのリポストを拾わない
+	byTarget, err := repositories.GetReKyousByTargetID(ctx, targetID)
+	if err != nil {
+		t.Fatalf("GetReKyousByTargetID() error: %v", err)
+	}
+	if len(byTarget) != 0 {
+		t.Fatalf("GetReKyousByTargetID() len = %d, want 0 after deleting the rekyou", len(byTarget))
+	}
+
+	// キャッシュから計算する最新版アドレスも削除の版を指す
+	addrs, err := repositories.ReKyouReps.GetLatestDataRepositoryAddress(ctx, false)
+	if err != nil {
+		t.Fatalf("GetLatestDataRepositoryAddress() error: %v", err)
+	}
+	foundAddr := false
+	for _, addr := range addrs {
+		if addr.TargetID != sharedID {
+			continue
+		}
+		foundAddr = true
+		if !addr.IsDeleted || addr.DataUpdateTime.Unix() != deletedReKyou.UpdateTime.Unix() {
+			t.Fatalf("latest data address = IsDeleted %v DataUpdateTime %v, want the deleted version", addr.IsDeleted, addr.DataUpdateTime)
+		}
+	}
+	if !foundAddr {
+		t.Fatalf("latest data address for %s not found", sharedID)
 	}
 }
 
