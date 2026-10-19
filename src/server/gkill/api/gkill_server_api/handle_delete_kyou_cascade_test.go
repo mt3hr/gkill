@@ -409,3 +409,56 @@ func TestHandleDeleteKyouCascade_KeepsCreateFieldsAndStampsUpdateFields(t *testi
 		}
 	})
 }
+
+// 要求の update_device は、連鎖して書く削除の版すべての update_device にだけ載る（MCP は "mcp" を送る）。
+// temp rep のキーには使わないので確定も通り、作成の欄は元のまま。
+func TestHandleDeleteKyouCascade_UpdateDeviceStampsEveryDeletedVersion(t *testing.T) {
+	forEachCacheMode(t, func(t *testing.T, tsURL, sessionID string) {
+		kmemoID := addTestKmemo(t, tsURL, sessionID, "端末名を刻む連鎖削除の起点")
+		tagID := addCascadeTag(t, tsURL, sessionID, kmemoID)
+
+		resp := postJSON(t, tsURL+"/api/delete_kyou_cascade", &req_res.DeleteKyouCascadeRequest{
+			SessionID: sessionID, TargetID: kmemoID, DataType: "kmemo",
+			UpdateApp: "gkill_mcp_write", UpdateDevice: "mcp", LocaleName: "en",
+		})
+		var result req_res.DeleteKyouCascadeResponse
+		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil || len(result.Errors) > 0 {
+			t.Fatalf("cascade delete: %v %+v", err, result.Errors)
+		}
+		resp.Body.Close()
+
+		kmemoResp := postJSON(t, tsURL+"/api/get_kmemo", &req_res.GetKmemoRequest{SessionID: sessionID, ID: kmemoID, LocaleName: "en"})
+		var kmemos req_res.GetKmemoResponse
+		if err := json.NewDecoder(kmemoResp.Body).Decode(&kmemos); err != nil || len(kmemos.KmemoHistories) < 2 {
+			t.Fatalf("get kmemo: %v %+v", err, kmemos.Errors)
+		}
+		kmemoResp.Body.Close()
+		deleted, original := kmemos.KmemoHistories[0], kmemos.KmemoHistories[len(kmemos.KmemoHistories)-1]
+		if !deleted.IsDeleted || deleted.UpdateDevice != "mcp" || deleted.UpdateApp != "gkill_mcp_write" || deleted.UpdateUser != "admin" {
+			t.Errorf("kmemo の削除の版 = deleted=%v app=%q device=%q user=%q, want true / gkill_mcp_write / mcp / admin",
+				deleted.IsDeleted, deleted.UpdateApp, deleted.UpdateDevice, deleted.UpdateUser)
+		}
+		if deleted.CreateDevice != original.CreateDevice || deleted.CreateUser != original.CreateUser || deleted.CreateApp != original.CreateApp {
+			t.Errorf("kmemo の作成の欄が変わった: got %q/%q/%q want %q/%q/%q",
+				deleted.CreateApp, deleted.CreateDevice, deleted.CreateUser, original.CreateApp, original.CreateDevice, original.CreateUser)
+		}
+
+		tagResp := postJSON(t, tsURL+"/api/get_tag_histories_by_tag_id", map[string]any{"session_id": sessionID, "id": tagID, "locale_name": "en"})
+		var tags struct {
+			TagHistories []reps.Tag `json:"tag_histories"`
+		}
+		if err := json.NewDecoder(tagResp.Body).Decode(&tags); err != nil || len(tags.TagHistories) < 2 {
+			t.Fatalf("get tag histories: %v (%d versions)", err, len(tags.TagHistories))
+		}
+		tagResp.Body.Close()
+		latestTag := tags.TagHistories[0]
+		for _, tag := range tags.TagHistories {
+			if tag.UpdateTime.After(latestTag.UpdateTime) {
+				latestTag = tag
+			}
+		}
+		if !latestTag.IsDeleted || latestTag.UpdateDevice != "mcp" {
+			t.Errorf("tag の削除の版 = deleted=%v device=%q, want true / mcp", latestTag.IsDeleted, latestTag.UpdateDevice)
+		}
+	})
+}

@@ -82,3 +82,8 @@ MCP は起動中の gkill_server の HTTP クライアントで、データの�
 - `src/server/gkill/mcp/schema_contract_test.go`（全プロパティ指定のスモーク。`files[0].x` の形のフィールドも落として呼び直す）
 - `src/server/gkill/api/gkill_server_api/gkill_server_api_test.go` の `TestHandleUploadFiles_CreateApp`（`create_app` の有無と刻まれる値）と
   `TestHandleUploadFiles_UploadedEntryIsSearchableRightAway`（上げた直後に `/api/get_kyous` で引ける。キャッシュ ON / OFF の両方）
+
+## 追記（2026-10-19）
+
+登録する記録の `create_device` / `update_device` は、要求の `create_device` があればその値になった（空なら従来どおりサーバの端末名）。
+MCP の `gkill_upload_files` は "mcp" を送る（[ADR-0637](0637-mcp-writes-always-record-device-mcp.md)）。

@@ -154,11 +154,11 @@ func (r *kftlNlogRequest) DoRequest(ctx context.Context) error {
 		RelatedTime:  relatedTime,
 		CreateTime:   now,
 		CreateApp:    r.Ctx.ApplicationName,
-		CreateDevice: r.Ctx.Device,
+		CreateDevice: r.Ctx.RecordDevice,
 		CreateUser:   r.Ctx.UserID,
 		UpdateTime:   now,
 		UpdateApp:    r.Ctx.ApplicationName,
-		UpdateDevice: r.Ctx.Device,
+		UpdateDevice: r.Ctx.RecordDevice,
 		UpdateUser:   r.Ctx.UserID,
 	}
 	if err := r.Ctx.Repositories.TempReps.NlogTempRep.AddNlogInfo(ctx, nlog, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {

@@ -641,6 +641,11 @@ func serveUploadFiles(w http.ResponseWriter, body *jsonobj.Object) {
 	if createApp == "" {
 		createApp = "gkill"
 	}
+	// 本物と同じく、create_device が空ならサーバの端末名（偽 gkill では "fakepc"）
+	createDevice := stringOf(body, "create_device")
+	if createDevice == "" {
+		createDevice = "fakepc"
+	}
 	files, _ := jsonobj.AsArray(body.Value("files"))
 	kyous := make([]any, 0, len(files))
 	for index, item := range files {
@@ -658,12 +663,12 @@ func serveUploadFiles(w http.ResponseWriter, body *jsonobj.Object) {
 			"data_type", "idf",
 			"create_time", "2026-09-21T03:30:45+09:00",
 			"create_app", createApp,
-			"create_device", "fakepc",
+			"create_device", createDevice,
 			"create_user", "testuser",
 			"update_time", "2026-09-21T03:30:45+09:00",
 			"update_app", createApp,
 			"update_user", "testuser",
-			"update_device", "fakepc",
+			"update_device", createDevice,
 			"is_image", strings.HasSuffix(lower, ".png") || strings.HasSuffix(lower, ".jpg"),
 			"is_video", strings.HasSuffix(lower, ".mp4"),
 		))

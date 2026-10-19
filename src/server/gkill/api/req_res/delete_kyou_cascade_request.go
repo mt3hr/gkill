@@ -13,5 +13,9 @@ type DeleteKyouCascadeRequest struct {
 	// UpdateApp は削除の版に刻むアプリ名です。空なら "gkill"（Web の画面）。MCP は自分のアプリ名を送ります。
 	UpdateApp string `json:"update_app"`
 
+	// UpdateDevice は削除の版に刻む端末名です。空ならサーバの端末名（Web の画面）。MCP は "mcp" を送ります。
+	// temp rep のキーには使いません（削除の版の update_device に刻むだけ）。
+	UpdateDevice string `json:"update_device,omitempty"`
+
 	LocaleName string `json:"locale_name"`
 }

@@ -8544,6 +8544,52 @@ func TestHandleUploadFiles_CreateApp(t *testing.T) {
 	}
 }
 
+// TestHandleUploadFiles_CreateDevice は、create_device を送ればその端末名が、送らなければ従来どおり
+// サーバの端末名が IDFKyou の create_device / update_device に刻まれることを固定する。
+// MCP の gkill_upload_files は "mcp" を送る（MCP の書き込みの端末欄は経路によらず "mcp"）。
+func TestHandleUploadFiles_CreateDevice(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+	repName := writableDirectoryRepName(t, tsURL, sessionID)
+
+	upload := func(t *testing.T, fileName, createDevice string) reps.Kyou {
+		t.Helper()
+		resp := postJSON(t, tsURL+"/api/upload_files", &req_res.UploadFilesRequest{
+			SessionID: sessionID,
+			Files: []*req_res.FileData{{
+				FileName:     fileName,
+				DataBase64:   base64.StdEncoding.EncodeToString([]byte("hello")),
+				LastModified: time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local), // テストの固定時刻
+			}},
+			TargetRepName:    repName,
+			ConflictBehavior: req_res.Rename,
+			CreateDevice:     createDevice,
+			LocaleName:       "en",
+		})
+		defer resp.Body.Close()
+		var result req_res.UploadFilesResponse
+		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil || len(result.Errors) > 0 || len(result.UploadedKyous) != 1 {
+			t.Fatalf("upload: %v %+v", err, result.Errors)
+		}
+		return result.UploadedKyous[0]
+	}
+
+	defaultKyou := upload(t, "upload_default_device.txt", "")
+	if defaultKyou.CreateDevice == "" || defaultKyou.CreateDevice == "mcp" || defaultKyou.UpdateDevice != defaultKyou.CreateDevice {
+		t.Errorf("無指定の create_device / update_device = %q / %q, want サーバの端末名", defaultKyou.CreateDevice, defaultKyou.UpdateDevice)
+	}
+	mcpKyou := upload(t, "upload_mcp_device.txt", "mcp")
+	if mcpKyou.CreateDevice != "mcp" || mcpKyou.UpdateDevice != "mcp" {
+		t.Errorf("create_device / update_device = %q / %q, want mcp / mcp", mcpKyou.CreateDevice, mcpKyou.UpdateDevice)
+	}
+	if mcpKyou.CreateUser != "admin" || mcpKyou.UpdateUser != "admin" {
+		t.Errorf("create_user / update_user = %q / %q, want admin / admin", mcpKyou.CreateUser, mcpKyou.UpdateUser)
+	}
+}
+
 // TestHandleUploadFiles_UploadedEntryIsSearchableRightAway は、上げたファイルの記録が次の UpdateCache を
 // 待たずに検索（/api/get_kyous）に出ることを固定する。キャッシュ rep の検索は CONTENT_PATH が空の行を
 // 読み飛ばすので、書き戻しで ContentPath を落とすとキャッシュ ON のときだけ黙って出なくなる（OFF では再現しない）。

@@ -167,6 +167,12 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 	if createApp == "" {
 		createApp = "gkill"
 	}
+	// 記録の作成・更新の端末欄に刻む端末名。空ならサーバの端末名（MCP は "mcp" を送る）。
+	// 書き込み先の rep の引き当てなどには device をそのまま使う。
+	recordDevice := request.CreateDevice
+	if recordDevice == "" {
+		recordDevice = device
+	}
 
 	// ファイルを保存/IDFを追加する
 	savedIDFKyouIDs := []string{}
@@ -270,12 +276,12 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 				RelatedTime:  fileInfo.LastModified,
 				CreateTime:   time.Now(),
 				CreateApp:    createApp,
-				CreateDevice: device,
+				CreateDevice: recordDevice,
 				CreateUser:   userID,
 				UpdateTime:   time.Now(),
 				UpdateApp:    createApp,
 				UpdateUser:   userID,
-				UpdateDevice: device,
+				UpdateDevice: recordDevice,
 				TargetFile:   filepath.Base(filename),
 				// 実 rep は書かない（読むときに contentDir と TargetFile から組み立てる）が、キャッシュ rep には
 				// この値のまま入る。キャッシュの検索は CONTENT_PATH が空の行を「繋がっていない rep の ID」として

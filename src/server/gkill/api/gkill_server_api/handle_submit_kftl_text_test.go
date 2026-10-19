@@ -897,3 +897,48 @@ func TestHandleSubmitKFTLText_TimeIsEndTargetsLatestRunning(t *testing.T) {
 		})
 	}
 }
+
+// 要求の create_device は書き込まれた記録の create_device / update_device にだけ載る（MCP は "mcp" を送る）。
+// 無指定なら従来どおりサーバの端末名。temp rep のキーや冪等キーには使わないので、確定（CommitTx）も通る。
+func TestHandleSubmitKFTLText_CreateDevice(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", regressionTestPasswordHash)
+
+	submit := func(t *testing.T, kftlText, createDevice string) reps.Kmemo {
+		t.Helper()
+		resp := postJSON(t, tsURL+"/api/submit_kftl_text", &req_res.SubmitKFTLTextRequest{
+			SessionID: sessionID, LocaleName: "en", KFTLText: kftlText, CreateDevice: createDevice,
+		})
+		defer resp.Body.Close()
+		res := req_res.SubmitKFTLTextResponse{}
+		if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+			t.Fatalf("decode submit kftl text response: %v", err)
+		}
+		if len(res.Errors) > 0 || len(res.Created) != 1 {
+			t.Fatalf("submit kftl text: errors=%+v created=%+v", res.Errors, res.Created)
+		}
+		getResp := postJSON(t, tsURL+"/api/get_kmemo", &req_res.GetKmemoRequest{SessionID: sessionID, ID: res.Created[0].ID, LocaleName: "en"})
+		defer getResp.Body.Close()
+		var got req_res.GetKmemoResponse
+		if err := json.NewDecoder(getResp.Body).Decode(&got); err != nil || len(got.KmemoHistories) == 0 {
+			t.Fatalf("get kmemo: %v %+v", err, got.Errors)
+		}
+		return got.KmemoHistories[0]
+	}
+
+	serverDevice := submit(t, "createDeviceDefaultWord", "").CreateDevice
+	if serverDevice == "" || serverDevice == "mcp" {
+		t.Fatalf("無指定のときの create_device = %q, want サーバの端末名", serverDevice)
+	}
+
+	kmemo := submit(t, "createDeviceMcpWord", "mcp")
+	if kmemo.CreateDevice != "mcp" || kmemo.UpdateDevice != "mcp" {
+		t.Errorf("create_device / update_device = %q / %q, want mcp / mcp", kmemo.CreateDevice, kmemo.UpdateDevice)
+	}
+	if kmemo.CreateUser != "admin" || kmemo.UpdateUser != "admin" || kmemo.CreateApp != "gkill_kftl" {
+		t.Errorf("create_user / update_user / create_app = %q / %q / %q, want admin / admin / gkill_kftl",
+			kmemo.CreateUser, kmemo.UpdateUser, kmemo.CreateApp)
+	}
+}

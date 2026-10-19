@@ -13,4 +13,8 @@ type SubmitKFTLTextRequest struct {
 	// MCP は送らないので従来どおり "gkill_kftl" になる。add_kmemo 等と同じくクライアント申告で、
 	// サーバ側の許可リストは無い。
 	CreateApp string `json:"create_app,omitempty"`
+	// CreateDevice は生成される Kyou の create_device / update_device に載せる端末名。
+	// 空ならサーバの端末名（Web・Wear と同じ）。MCP は "mcp" を送る（MCP の書き込みの端末欄は経路によらず "mcp"）。
+	// temp rep のキーや冪等キーの名前空間には使わない（記録の欄に刻むだけ）。
+	CreateDevice string `json:"create_device,omitempty"`
 }

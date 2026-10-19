@@ -65,16 +65,19 @@ func TestIdempotencyStore_GCOnMarkDone(t *testing.T) {
 	}
 }
 
-// 指紋は本文と create_app の両方を見る（同じ本文でも create_app が違えば別の送信）。
+// 指紋は本文・create_app・create_device を見る（同じ本文でも名乗るアプリや端末が違えば別の送信）。
 func TestKFTLSubmissionFingerprint(t *testing.T) {
-	a := kftlSubmissionFingerprint("memo", "gkill_kftl")
-	if a != kftlSubmissionFingerprint("memo", "gkill_kftl") {
+	a := kftlSubmissionFingerprint("memo", "gkill_kftl", "")
+	if a != kftlSubmissionFingerprint("memo", "gkill_kftl", "") {
 		t.Fatal("同じ入力で指紋が変わる")
 	}
-	if a == kftlSubmissionFingerprint("memo2", "gkill_kftl") {
+	if a == kftlSubmissionFingerprint("memo2", "gkill_kftl", "") {
 		t.Error("本文が違うのに指紋が同じ")
 	}
-	if a == kftlSubmissionFingerprint("memo", "gkill_wear") {
+	if a == kftlSubmissionFingerprint("memo", "gkill_wear", "") {
 		t.Error("create_app が違うのに指紋が同じ")
+	}
+	if a == kftlSubmissionFingerprint("memo", "gkill_kftl", "mcp") {
+		t.Error("create_device が違うのに指紋が同じ")
 	}
 }

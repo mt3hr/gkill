@@ -73,3 +73,12 @@ MCP の `gkill_delete_kyou` は対象1件だけを消すので、付属データ
 - `src/client/__tests__/unit/classes/cascade-delete-kyou.test.ts`（API を1回呼ぶ・行の id・キャッシュ・失敗時・共有画面・`errors: null`）
 - `src/server/gkill/mcp/write_handlers_test.go` の `TestHandleWriteToolCallCascadeDelete` / `TestHandleWriteToolCallReferenceTypes`
 - `src/server/gkill/mcp/golden_test.go`（`delete: *` / `add rekyou: *` / `add mirekyou: *` / `add notification: *` / `update *` / `help: reference_types`）
+
+## 追記（2026-10-19）
+
+削除の版の `update_device` は、要求の `update_device` があればその値になった（空なら従来どおりセッションの端末名）。
+MCP は "mcp" を送り、MCP の書き込みの端末欄が経路によらず "mcp" に揃った（[ADR-0637](0637-mcp-writes-always-record-device-mcp.md)）。
+temp rep のキーには従来どおりセッションの端末名を使う。`update_user` はセッションから決めるまま。
+
+あわせて、ファイルの記録の temp rep が INSERT で作成者と作成端末を入れ替えていて、ファイルの記録を連鎖削除するたびに
+削除の版の作成欄が入れ替わって確定していたのを直した（`idf_kyou_temp_repository_sqlite3_impl.go` の列の並び）。

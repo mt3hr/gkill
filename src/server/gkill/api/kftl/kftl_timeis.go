@@ -65,11 +65,11 @@ func (r *kftlTimeIsRequest) DoRequest(ctx context.Context) error {
 		EndTime:      r.endTime,
 		CreateTime:   now,
 		CreateApp:    r.Ctx.ApplicationName,
-		CreateDevice: r.Ctx.Device,
+		CreateDevice: r.Ctx.RecordDevice,
 		CreateUser:   r.Ctx.UserID,
 		UpdateTime:   now,
 		UpdateApp:    r.Ctx.ApplicationName,
-		UpdateDevice: r.Ctx.Device,
+		UpdateDevice: r.Ctx.RecordDevice,
 		UpdateUser:   r.Ctx.UserID,
 	}
 	if err := r.Ctx.Repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, timeis, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
@@ -260,11 +260,11 @@ func (r *kftlTimeIsStartRequest) DoRequest(ctx context.Context) error {
 		EndTime:      nil,
 		CreateTime:   now,
 		CreateApp:    r.Ctx.ApplicationName,
-		CreateDevice: r.Ctx.Device,
+		CreateDevice: r.Ctx.RecordDevice,
 		CreateUser:   r.Ctx.UserID,
 		UpdateTime:   now,
 		UpdateApp:    r.Ctx.ApplicationName,
-		UpdateDevice: r.Ctx.Device,
+		UpdateDevice: r.Ctx.RecordDevice,
 		UpdateUser:   r.Ctx.UserID,
 	}
 	if err := r.Ctx.Repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, timeis, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
@@ -568,7 +568,7 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 	updated.EndTime = &endTime
 	updated.UpdateTime = now
 	updated.UpdateApp = r.Ctx.ApplicationName
-	updated.UpdateDevice = r.Ctx.Device
+	updated.UpdateDevice = r.Ctx.RecordDevice
 	updated.UpdateUser = r.Ctx.UserID
 	if err := r.Ctx.Repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, updated, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return err
@@ -764,7 +764,7 @@ outer:
 	updated.EndTime = &endTime
 	updated.UpdateTime = now
 	updated.UpdateApp = r.Ctx.ApplicationName
-	updated.UpdateDevice = r.Ctx.Device
+	updated.UpdateDevice = r.Ctx.RecordDevice
 	updated.UpdateUser = r.Ctx.UserID
 	if err := r.Ctx.Repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, updated, r.Ctx.TXID, r.Ctx.UserID, r.Ctx.Device); err != nil {
 		return err

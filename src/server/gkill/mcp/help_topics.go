@@ -391,8 +391,8 @@ const kftlTopic = "KFTL is gkill's line-based text format that creates multiple 
 	"rejected with 409 (ERR000423) and writes nothing — a key is not a session, use a fresh one for new content. Keys " +
 	"are remembered for 10 minutes; a failed submission is never remembered, so retrying it always writes afresh.\n\n" +
 	"Provenance: records written through this tool carry create_app=\"gkill_kftl\" (the same value the web notepad " +
-	"writes) and create_device set to the SERVER's device name, not \"mcp\". MCP-submitted KFTL is therefore " +
-	"indistinguishable from hand-typed notepad KFTL and create_apps:[\"gkill_mcp_readwrite\"] does NOT find them."
+	"writes) and create_device=\"mcp\" (the same device every MCP write records). create_apps:[\"gkill_mcp_readwrite\"] " +
+	"does NOT find them; the create_device value is what tells them apart from hand-typed notepad KFTL."
 
 const configTopic = "gkill_get_application_config returns the settings trees the user maintains in the web settings screen, " +
 	"plus user_id / device (which account this server is connected to), mi_default_board and show_tags_in_list. There are " +

@@ -72,8 +72,10 @@ type cascadeDeleteStamp struct {
 // CommitTx は1つの SQLite トランザクションなので、**全部消えるか、何も消えないか**のどちらかです（ADR-0219 / ADR-0410）。
 //
 // dataType は起点の記録の種別で、射影名（mi_create / timeis_start / mirekyou_create …）でもかまいません。
+// updateApp / updateDevice は削除の版の update_app / update_device に刻む値で、空ならそれぞれ "gkill" とサーバの端末名
+// （device）です。MCP は自分のアプリ名と "mcp" を渡します。update_user は常に userID です。
 // 戻り値は消したもの全部（起点・付随データ・参照元）です。
-func (uc *UsecaseContext) DeleteKyouCascade(ctx context.Context, repositories *reps.GkillRepositories, userID, device, localeName string, targetID string, dataType string, updateApp string) ([]CascadeDeletedRecord, []*message.GkillError, error) {
+func (uc *UsecaseContext) DeleteKyouCascade(ctx context.Context, repositories *reps.GkillRepositories, userID, device, localeName string, targetID string, dataType string, updateApp string, updateDevice string) ([]CascadeDeletedRecord, []*message.GkillError, error) {
 	entity, ok := CascadeDeleteEntityOf(dataType)
 	if !ok {
 		err := fmt.Errorf("data type %q cannot be the root of a cascade delete", dataType)
@@ -117,11 +119,17 @@ func (uc *UsecaseContext) DeleteKyouCascade(ctx context.Context, repositories *r
 		return nil, gkillErrors, nil
 	}
 
+	// 削除の版に刻む端末名。空ならサーバの端末名（Web の画面）。MCP は "mcp" を送る。
+	// temp rep のキー（txID / userID / device）には device をそのまま使う。
+	stampDevice := updateDevice
+	if stampDevice == "" {
+		stampDevice = device
+	}
 	stamp := cascadeDeleteStamp{
 		updateTime: cascadeDeleteUpdateTime(time.Now(), rootUpdateTime, targets),
 		updateApp:  updateApp,
 		updateUser: userID,
-		device:     device,
+		device:     stampDevice,
 	}
 	txID := uuid.NewString()
 	gkillErrors = uc.stageCascadeDelete(ctx, repositories, userID, device, localeName, entity, root, targets, stamp, txID)

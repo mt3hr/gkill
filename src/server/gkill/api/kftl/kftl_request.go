@@ -230,11 +230,11 @@ func (b *KFTLRequestBase) doBaseRequest(ctx context.Context, targetID string, re
 			RelatedTime:  relatedTime,
 			CreateTime:   now,
 			CreateApp:    b.Ctx.ApplicationName,
-			CreateDevice: b.Ctx.Device,
+			CreateDevice: b.Ctx.RecordDevice,
 			CreateUser:   b.Ctx.UserID,
 			UpdateTime:   now,
 			UpdateApp:    b.Ctx.ApplicationName,
-			UpdateDevice: b.Ctx.Device,
+			UpdateDevice: b.Ctx.RecordDevice,
 			UpdateUser:   b.Ctx.UserID,
 		}
 		err := b.Ctx.Repositories.TempReps.TagTempRep.AddTagInfo(ctx, tagObj, b.Ctx.TXID, b.Ctx.UserID, b.Ctx.Device)
@@ -255,11 +255,11 @@ func (b *KFTLRequestBase) doBaseRequest(ctx context.Context, targetID string, re
 			RelatedTime:  relatedTime,
 			CreateTime:   now,
 			CreateApp:    b.Ctx.ApplicationName,
-			CreateDevice: b.Ctx.Device,
+			CreateDevice: b.Ctx.RecordDevice,
 			CreateUser:   b.Ctx.UserID,
 			UpdateTime:   now,
 			UpdateApp:    b.Ctx.ApplicationName,
-			UpdateDevice: b.Ctx.Device,
+			UpdateDevice: b.Ctx.RecordDevice,
 			UpdateUser:   b.Ctx.UserID,
 		}
 		err := b.Ctx.Repositories.TempReps.TextTempRep.AddTextInfo(ctx, textObj, b.Ctx.TXID, b.Ctx.UserID, b.Ctx.Device)

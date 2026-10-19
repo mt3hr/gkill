@@ -49,9 +49,13 @@ type KFTLStatementLineContext struct {
 	BaseTime time.Time
 
 	// Go-side: repositories and config (TS version has GkillAPI)
-	Repositories      *reps.GkillRepositories
-	UserID            string
-	Device            string
+	Repositories *reps.GkillRepositories
+	UserID       string
+	// Device は temp rep のキー（txID / userID / device）に使う端末名（サーバの端末名）。
+	Device string
+	// RecordDevice は記録の create_device / update_device に刻む端末名。普段は Device と同じで、
+	// MCP からの送信だけ "mcp" になる（KFTLStatement.RecordDevice）。
+	RecordDevice      string
 	ApplicationName   string
 	LocaleName        string
 	ApplicationConfig *user_config.ApplicationConfig

@@ -355,8 +355,9 @@ func handleUploadFiles(ctx *CallContext, args any) (*jsonobj.Object, error) {
 		"files", fileData,
 		"target_rep_name", targetRepName,
 		"conflict_behavior", normalized.Value("conflict_behavior"),
-		// 画面からのアップロード（"gkill"）と区別できるよう、MCP のアプリ名を刻ませる。
+		// 画面からのアップロード（"gkill"）と区別できるよう、MCP のアプリ名を刻ませる。端末欄は他の MCP の書き込みと同じ "mcp"。
 		"create_app", ctx.AppName,
+		"create_device", WriteDevice,
 	))
 	if err != nil {
 		if normalized.Defined("target_rep_name") {

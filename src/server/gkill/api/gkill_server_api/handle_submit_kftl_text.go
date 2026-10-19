@@ -99,7 +99,7 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 	fingerprint := ""
 	if request.IdempotencyKey != "" {
 		idempotencyKey = userID + ":" + request.IdempotencyKey
-		fingerprint = kftlSubmissionFingerprint(request.KFTLText, createApp)
+		fingerprint = kftlSubmissionFingerprint(request.KFTLText, createApp, request.CreateDevice)
 		if entry, ok := kftlIdempotencyStore.lookup(idempotencyKey); ok {
 			if entry.fingerprint != fingerprint {
 				err := fmt.Errorf("error at submit kftl text: idempotency key reused with a different body user id = %s device = %s", userID, device)
@@ -149,6 +149,8 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 	statement := &kftl.KFTLStatement{
 		StatementText: request.KFTLText,
 		FindKyous:     g.kftlFindKyousFunc(userID, device),
+		// 記録の作成・更新の端末欄だけに効く。空ならサーバの端末名（MCP は "mcp" を送る）
+		RecordDevice: strings.TrimSpace(request.CreateDevice),
 	}
 	createdRecords, err := statement.GenerateAndExecuteRequests(
 		r.Context(),
@@ -258,11 +260,15 @@ func toSubmitKFTLTextCreated(records []kftl.KFTLCreatedRecord) []*req_res.Submit
 
 // kftlSubmissionFingerprint は冪等キーの衝突判定に使う本文の指紋。
 //
-// 本文（kftl_text）と create_app を SHA-256 で畳む。create_app も入れるのは、同じ本文でも
-// 名乗るアプリが違えば別の記録になるため。本文そのものは台帳に置かない（メモリに利用者の本文を
-// 10分間残さない）。
-func kftlSubmissionFingerprint(kftlText, createApp string) string {
-	sum := sha256.Sum256([]byte(kftlText + "\x00" + createApp))
+// 本文（kftl_text）と create_app（と、送られていれば create_device）を SHA-256 で畳む。create_app / create_device も
+// 入れるのは、同じ本文でも名乗るアプリや端末が違えば別の記録になるため。create_device が空のときは従来と同じ値になる。
+// 本文そのものは台帳に置かない（メモリに利用者の本文を10分間残さない）。
+func kftlSubmissionFingerprint(kftlText, createApp, createDevice string) string {
+	data := kftlText + "\x00" + createApp
+	if createDevice != "" {
+		data += "\x00" + createDevice
+	}
+	sum := sha256.Sum256([]byte(data))
 	return hex.EncodeToString(sum[:])
 }
 

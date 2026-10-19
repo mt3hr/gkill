@@ -16,7 +16,10 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/mcp/jsonobj"
 )
 
-// WriteDevice は書き込み時に記録する端末名。サーバ種別によらず共通。
+// WriteDevice は書き込み時に記録する端末名。サーバ種別によらず共通で、経路（追加・更新・削除・復元・
+// 連鎖削除・ファイルのアップロード・KFTL 送信）によらず記録の作成・更新の端末欄はこの値になる。
+// 連鎖削除・アップロード・KFTL 送信は gkill 側で版を作るので、要求の update_device / create_device で渡す
+// （渡さないと gkill がサーバの端末名を入れる）。
 // アプリ名 (create_app / update_app) はサーバごとに違うので ctx.AppName で受け取る。
 const WriteDevice = "mcp"
 
@@ -469,6 +472,7 @@ func cascadeDeleteOne(ctx *CallContext, entry *jsonobj.Object, localeName any) (
 		"target_id", id,
 		"data_type", dataType,
 		"update_app", ctx.AppName,
+		"update_device", WriteDevice,
 		"locale_name", localeName,
 	))
 	if err != nil {
@@ -807,6 +811,8 @@ func dispatchWriteToolCall(ctx *CallContext, name string, args any) (*jsonobj.Ob
 			"kftl_text", normalized.Value("kftl_text"),
 			"locale_name", normalized.Value("locale_name"),
 			"idempotency_key", normalized.Value("idempotency_key"),
+			// create_app は送らない（gkill の既定 gkill_kftl = 手打ちのメモ帳と同じ）。端末欄だけ MCP の値にする。
+			"create_device", WriteDevice,
 		))
 		if err != nil {
 			return nil, err

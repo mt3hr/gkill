@@ -50,6 +50,13 @@ DBへ書くか）と `userId`（レコードに刻む名前）は**出どころ�
 （環境変数 `GKILL_USER`）へのフォールバックを無条件に残すと、**別アカウントのセッションへ書いた
 レコードに手元の名前が焼かれる**。エラーは出ず、書き込みは成功する。`server_base.go` は
 sid がある（＝認証済み）ときだけ userId を必須にし、sid を持たない stdio だけ環境変数を使う。
+
+**MCP の書き込みの端末欄は、経路によらず `"mcp"`（`write_handlers.go` の `WriteDevice`）。** 追加・更新・連鎖しない削除・復元は MCP が本文に載せ、
+gkill 側で版を作る3経路（記録の連鎖削除・`gkill_upload_files`・`gkill_submit_kftl`）は要求の `update_device` / `create_device` で渡す。
+渡さないと gkill はサーバの端末名を入れる（Web の画面の既定）—— 2026-10-19 まではこの3経路だけサーバの端末名になっていた。
+gkill 側はこの値を記録の作成・更新の端末欄にだけ使い、temp rep のキー（`txID` / `userID` / `device`）や KFTL の冪等キーの名前空間には使わない
+（KFTL の指紋には本文・`create_app` と並べて入る）。KFTL のアプリ欄は今もメモ帳と同じ `gkill_kftl` で、MCP 由来かは端末欄で分かる。
+守るのはゴールデンの上流要求と、`handle_submit_kftl_text_test.go` / `gkill_server_api_test.go` / `handle_delete_kyou_cascade_test.go` の `*CreateDevice` / `*UpdateDevice*` のテスト（[ADR-0637](../../../documents/adr/0637-mcp-writes-always-record-device-mcp.md)）。
 **特定のクライアント名をコードから探さないこと** —— 「あのクライアント専用の残骸では」という指摘は
 毎回ここへ戻ってくるが、ハードコードは1箇所も無く、実体は接続に使ったアカウント名がそのまま
 出ているだけ（[ADR-0615](../../../documents/adr/0615-write-user-comes-from-the-authenticated-session.md)）。
@@ -201,3 +208,4 @@ write 専用サーバにも載せた）。write 専用サーバは read を数�
 - [ADR-0634 利用者ごとのスキルは gkill_server が読み書きし、MCP の削除ツールは公開しない](../../../documents/adr/0634-per-user-skills-for-mcp.md)
 - [ADR-0635 MCP からのファイルのアップロードは画面の「ファイル」タブの写しで、file_path は stdio だけ受ける](../../../documents/adr/0635-mcp-upload-files.md)
 - [ADR-0636 連鎖削除をサーバの1実装にし、MCP は既定で連鎖させる。リポスト・タスク化・通知・ファイルの記録の作成と編集](../../../documents/adr/0636-cascade-delete-on-the-server.md)
+- [ADR-0637 MCP の書き込みの端末欄は、経路によらず "mcp" にする](../../../documents/adr/0637-mcp-writes-always-record-device-mcp.md)

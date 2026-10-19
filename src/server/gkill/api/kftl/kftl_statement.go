@@ -23,6 +23,18 @@ type KFTLStatement struct {
 	// 設定の playing 検索条件のタグ・非表示タグは Kyou 検索の層（find_filter.go）でしか効かないので、
 	// これが無いと `/end` は語の条件だけで対象を探す。
 	FindKyous FindKyousFunc
+	// RecordDevice は生成する記録の create_device / update_device に刻む端末名（任意）。
+	// 空なら GenerateAndExecuteRequests に渡した device（サーバの端末名）。MCP からの送信は "mcp" になる。
+	// temp rep のキー（txID / userID / device）には使わない。
+	RecordDevice string
+}
+
+// recordDevice は記録に刻む端末名を返す（RecordDevice が空なら device）。
+func (s *KFTLStatement) recordDevice(device string) string {
+	if s.RecordDevice != "" {
+		return s.RecordDevice
+	}
+	return device
 }
 
 // KFTLInputError は「利用者の書いたテキストが悪い」失敗を表す。
@@ -435,6 +447,7 @@ func (s *KFTLStatement) generateKFTLLines(
 			Repositories:              repos,
 			UserID:                    userID,
 			Device:                    device,
+			RecordDevice:              s.recordDevice(device),
 			ApplicationName:           appName,
 			LocaleName:                localeName,
 			ApplicationConfig:         applicationConfig,

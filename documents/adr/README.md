@@ -248,6 +248,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0634](0634-per-user-skills-for-mcp.md) | 利用者ごとのスキル（SKILL.md と付属ファイル）を $GKILL_HOME/skills に置き、gkill_server が読み書きし、MCP と設定画面はその API を使う | Accepted |
 | [0635](0635-mcp-upload-files.md) | MCP からのファイルのアップロードは画面の「ファイル」タブの写しで、file_path は stdio だけ受ける | Accepted |
 | [0636](0636-cascade-delete-on-the-server.md) | 連鎖削除をサーバの1実装にし、MCP は既定で連鎖させる。MCP にリポスト・タスク化・通知・ファイルの記録の作成と編集を足す | Accepted |
+| [0637](0637-mcp-writes-always-record-device-mcp.md) | MCP の書き込みの端末欄は、経路によらず "mcp" にする | Accepted |
 | [0701](0701-argon2id-password-storage.md) | パスワードは Argon2id で保存し、ワイヤ形式（password_sha256）は変えない | Accepted |
 | [0702](0702-share-owner-from-session.md) | 共有情報の所有者はリクエスト本文ではなくセッションから決める | Accepted |
 | [0703](0703-shared-file-authz-by-query.md) | 共有ページのファイル配信は共有クエリを再評価した許可パス集合にだけ許す | Accepted |

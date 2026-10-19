@@ -70,7 +70,7 @@ func (g *GkillServerAPI) HandleDeleteKyouCascade(w http.ResponseWriter, r *http.
 	device := auth.Device
 	repositories := auth.Repositories
 
-	deleted, gkillErrors, err := g.UsecaseCtx.DeleteKyouCascade(r.Context(), repositories, userID, device, request.LocaleName, request.TargetID, request.DataType, request.UpdateApp)
+	deleted, gkillErrors, err := g.UsecaseCtx.DeleteKyouCascade(r.Context(), repositories, userID, device, request.LocaleName, request.TargetID, request.DataType, request.UpdateApp, request.UpdateDevice)
 	if err != nil {
 		slog.Log(r.Context(), gkill_log.Debug, "error at delete kyou cascade", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
