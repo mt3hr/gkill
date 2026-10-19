@@ -169,7 +169,7 @@ MCP も画面も HTTP API 経由で使う（[ADR-0634](../../../../documents/adr
 | `repository_dao.go` | `RepositoryDAO` インタフェース |
 | `repository_dao_sqlite3_impl.go` | SQLite3 実装 |
 
-### `reps/`（139ファイル。テストを含めると206）— メインリポジトリ
+### `reps/`（139ファイル。テストを含めると208）— メインリポジトリ
 
 全 Kyou データ型のリポジトリ。詳細は [reps/README.md](reps/README.md) を参照。
 

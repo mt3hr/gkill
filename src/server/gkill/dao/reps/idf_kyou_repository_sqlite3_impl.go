@@ -1899,40 +1899,9 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 				err = fmt.Errorf("error at parseDUID %s:%w", trimedFileName, err)
 				return err
 			}
-
-			idf := IDFKyou{}
-			idf.IsDeleted = false
-			idf.ID = id.String()
-			idf.RepName = repName
-			idf.RelatedTime = time
-			idf.DataType = "idf"
-			idf.CreateTime = now
-			idf.CreateApp = "idf"
-			idf.CreateDevice = ""
-			idf.CreateUser = "idf"
-			idf.UpdateTime = now
-			idf.UpdateApp = "idf"
-			idf.UpdateUser = ""
-			idf.UpdateDevice = "idf"
-			idf.TargetFile = trimedFileName
-			idfKyous = append(idfKyous, idf)
+			idfKyous = append(idfKyous, newAutoImportedIDFKyou(id.String(), repName, trimedFileName, time, now))
 		} else {
-			idf := IDFKyou{}
-			idf.IsDeleted = false
-			idf.ID = sqlite3impl.GenerateNewID()
-			idf.RepName = repName
-			idf.RelatedTime = lastMod
-			idf.DataType = "idf"
-			idf.CreateTime = now
-			idf.CreateApp = "idf"
-			idf.CreateDevice = ""
-			idf.CreateUser = "idf"
-			idf.UpdateTime = now
-			idf.UpdateApp = "idf"
-			idf.UpdateUser = ""
-			idf.UpdateDevice = "idf"
-			idf.TargetFile = trimedFileName
-			idfKyous = append(idfKyous, idf)
+			idfKyous = append(idfKyous, newAutoImportedIDFKyou(sqlite3impl.GenerateNewID(), repName, trimedFileName, lastMod, now))
 		}
 	}
 
@@ -1942,6 +1911,28 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+// newAutoImportedIDFKyou は IDF（ファイルの自動取り込み）が見つけたファイル1つぶんの記録を作る。
+// 作成・更新の欄は「アプリ・利用者とも "idf"、端末は空」で両方を揃える。
+// 以前は更新の側だけ利用者と端末が逆（利用者が空・端末が "idf"）になっていた。
+func newAutoImportedIDFKyou(id string, repName string, targetFile string, relatedTime time.Time, now time.Time) IDFKyou {
+	return IDFKyou{
+		IsDeleted:    false,
+		ID:           id,
+		RepName:      repName,
+		RelatedTime:  relatedTime,
+		DataType:     "idf",
+		CreateTime:   now,
+		CreateApp:    "idf",
+		CreateDevice: "",
+		CreateUser:   "idf",
+		UpdateTime:   now,
+		UpdateApp:    "idf",
+		UpdateDevice: "",
+		UpdateUser:   "idf",
+		TargetFile:   targetFile,
+	}
 }
 
 // idfBatchChunkSize は addIDFKyouInfos が1トランザクションにまとめる件数。

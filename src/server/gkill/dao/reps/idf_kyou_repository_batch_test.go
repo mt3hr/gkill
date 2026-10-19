@@ -187,3 +187,34 @@ func TestIDFIsIdempotent(t *testing.T) {
 		t.Errorf("2回目のIDFで件数が %d に増えた。want %d", got, first)
 	}
 }
+
+// IDF（ファイルの自動取り込み）で登録した記録の作成・更新の欄は、アプリ・利用者とも "idf"、端末は空で揃う。
+// 以前は更新の側だけ利用者と端末が逆（利用者が空・端末が "idf"）になっていた。
+func TestIDFAutoImportMetaFieldsAreSymmetric(t *testing.T) {
+	repo, contentDir := newIDFRepForBatchTest(t)
+	ctx := context.Background()
+
+	if err := os.WriteFile(filepath.Join(contentDir, "a.jpg"), []byte("x"), os.ModePerm); err != nil {
+		t.Fatalf("write a.jpg: %v", err)
+	}
+	if err := repo.IDF(ctx); err != nil {
+		t.Fatalf("IDF failed: %v", err)
+	}
+	idfs, err := repo.FindIDFKyou(ctx, &find.FindQuery{})
+	if err != nil {
+		t.Fatalf("FindIDFKyou failed: %v", err)
+	}
+	if len(idfs) != 1 {
+		t.Fatalf("登録件数 = %d, want 1", len(idfs))
+	}
+	want := auditFields{
+		CreateApp: "idf", CreateDevice: "", CreateUser: "idf",
+		UpdateApp: "idf", UpdateDevice: "", UpdateUser: "idf",
+	}
+	if got := auditFieldsOf(idfs[0]); got != want {
+		t.Errorf("取り込んだ記録の作成・更新の欄 = %+v, want %+v", got, want)
+	}
+	if !idfs[0].CreateTime.Equal(idfs[0].UpdateTime) {
+		t.Errorf("取り込んだ記録の作成時刻と更新時刻が違う: create=%v update=%v", idfs[0].CreateTime, idfs[0].UpdateTime)
+	}
+}

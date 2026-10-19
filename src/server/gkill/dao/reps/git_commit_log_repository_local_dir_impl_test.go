@@ -456,3 +456,42 @@ func TestCommitLookupMayExistOnlyTrustsObjectNotFound(t *testing.T) {
 		}
 	}
 }
+
+// コミットログの作成者・更新者はどの読み取り口でも author の名前だけ。
+// GetKyou（と、それを呼ぶ GetKyouHistories）だけ fmt.Sprintf("%s", commit.Author) で、Signature.String() が
+// ポインタレシーバのため呼ばれず「{名前 メール 時刻}」の構造体表記が入っていた（キャッシュ構築中・未構築で通る）。
+func TestGitCommitLogLocalDirAuthorIsNameOnlyOnAllReads(t *testing.T) {
+	rep, firstHash, _ := newTempGitCommitLogRepo(t)
+	ctx := context.Background()
+
+	assertAuthor := func(t *testing.T, readName string, createUser, updateUser string) {
+		t.Helper()
+		if createUser != "test_user" || updateUser != "test_user" {
+			t.Errorf("%s の create_user / update_user = %q / %q, want test_user / test_user", readName, createUser, updateUser)
+		}
+	}
+
+	kyou, err := rep.GetKyou(ctx, firstHash, nil)
+	if err != nil || kyou == nil {
+		t.Fatalf("GetKyou failed: kyou=%v err=%v", kyou, err)
+	}
+	assertAuthor(t, "GetKyou", kyou.CreateUser, kyou.UpdateUser)
+
+	histories, err := rep.GetKyouHistories(ctx, firstHash)
+	if err != nil || len(histories) != 1 {
+		t.Fatalf("GetKyouHistories failed: histories=%v err=%v", histories, err)
+	}
+	assertAuthor(t, "GetKyouHistories", histories[0].CreateUser, histories[0].UpdateUser)
+
+	kyous, err := rep.FindKyous(ctx, &find.FindQuery{IDs: []string{firstHash}})
+	if err != nil || len(kyous[firstHash]) != 1 {
+		t.Fatalf("FindKyous failed: kyous=%v err=%v", kyous, err)
+	}
+	assertAuthor(t, "FindKyous", kyous[firstHash][0].CreateUser, kyous[firstHash][0].UpdateUser)
+
+	gitCommitLog, err := rep.GetGitCommitLog(ctx, firstHash, nil)
+	if err != nil || gitCommitLog == nil {
+		t.Fatalf("GetGitCommitLog failed: log=%v err=%v", gitCommitLog, err)
+	}
+	assertAuthor(t, "GetGitCommitLog", gitCommitLog.CreateUser, gitCommitLog.UpdateUser)
+}

@@ -179,6 +179,9 @@ func (i *idfKyouRepositoryTempSQLite3Impl) IDF(ctx context.Context) error {
 func (i *idfKyouRepositoryTempSQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou IDFKyou, txID string, userID string, device string) error {
 	i.m.Lock()
 	defer i.m.Unlock()
+	// INSERT の列順は下の queryArgs の順（CREATE_DEVICE, CREATE_USER）と揃える。表の列順（CREATE_USER, CREATE_DEVICE）に
+	// 合わせて書くと、エラーも警告も出ずに作成者と作成端末が入れ替わって実 rep へ確定する（連鎖削除は必ずここを通る）。
+	// sql_column_order_scan_test.go と audit_fields_all_layers_test.go が固定する。
 	sql := `
 INSERT INTO IDF (
   IS_DELETED,
@@ -188,8 +191,8 @@ INSERT INTO IDF (
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,

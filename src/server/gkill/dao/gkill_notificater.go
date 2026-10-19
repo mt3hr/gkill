@@ -34,6 +34,36 @@ func newNotificator(ctx context.Context, gkillDAOManager *GkillDAOManager, gkill
 	return newNotificator
 }
 
+// notifiedVersion は配信を済ませた通知の新しい版を作る。作成の欄は元の版のまま、更新の欄は
+// 「アプリ gkill_notificator・利用者と端末はこのサーバの値・時刻 now」を刻む。
+// 以前は更新者の欄に gkill_notificator（アプリ名）を入れ、更新アプリ・更新端末は前の版のまま残していた。
+func notifiedVersion(notification reps.Notification, now time.Time, userID string, device string) reps.Notification {
+	notification.IsNotificated = true
+	notification.UpdateTime = now
+	notification.UpdateApp = "gkill_notificator"
+	notification.UpdateDevice = device
+	notification.UpdateUser = userID
+	return notification
+}
+
+// getCurrentServerConfig は有効なサーバ設定（EnableThisDevice）を返す。無ければエラー。
+func (n *notificator) getCurrentServerConfig(ctx context.Context) (*server_config.ServerConfig, error) {
+	serverConfigs, err := n.gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error at get all server configs: %w", err)
+	}
+	var currentServerConfig *server_config.ServerConfig
+	for _, serverConfig := range serverConfigs {
+		if serverConfig.EnableThisDevice {
+			currentServerConfig = serverConfig
+		}
+	}
+	if currentServerConfig == nil {
+		return nil, fmt.Errorf("current server config is not found. in gkill notificator")
+	}
+	return currentServerConfig, nil
+}
+
 func (n *notificator) waitAndNotify() {
 	// 時間が来たときの通知ハンドラ。
 	// まだ通知対象に残っていれば通知する。
@@ -51,11 +81,17 @@ func (n *notificator) waitAndNotify() {
 
 	notificationCtx := context.Background()
 
+	// 配信済みの版に刻む利用者と端末。送信先の引き当てにも使うので、書き込みより前に取る。
+	// 取れなくても配信済みにはする（未配信のまま残すと配信をやり直し続ける）。送信は従来どおり止める。
+	currentServerConfig, serverConfigErr := n.getCurrentServerConfig(notificationCtx)
+	userID, userIDErr := n.gkillReps.GetUserID(notificationCtx)
+	device := ""
+	if currentServerConfig != nil {
+		device = currentServerConfig.Device
+	}
+
 	// Notificationデータを更新する
-	updatedNotification := *n.notification
-	updatedNotification.IsNotificated = true
-	updatedNotification.UpdateTime = time.Now()
-	updatedNotification.UpdateUser = "gkill_notificator"
+	updatedNotification := notifiedVersion(*n.notification, time.Now(), userID, device)
 	err := n.gkillReps.WriteNotificationRep.AddNotificationInfo(notificationCtx, updatedNotification)
 	if err != nil {
 		slog.Log(n.ctx, gkill_log.Error, "error at add notification info", "error", fmt.Sprintf("%q", err))
@@ -106,28 +142,15 @@ func (n *notificator) waitAndNotify() {
 
 	// 通知対象を取得して送信する
 
-	// 現在のServerConfigを取得する
-	var currentServerConfig *server_config.ServerConfig
-	serverConfigs, err := n.gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(notificationCtx)
-	if err != nil {
-		slog.Log(n.ctx, gkill_log.Error, "error at get all server configs", "error", fmt.Sprintf("%q", err))
-		return
-	}
-	for _, serverConfig := range serverConfigs {
-		if serverConfig.EnableThisDevice {
-			currentServerConfig = serverConfig
-		}
-	}
-	if currentServerConfig == nil {
-		err = fmt.Errorf("current server config is not found. in gkill notificator")
-		slog.Log(n.ctx, gkill_log.Error, "current server config is not found. in gkill notificator", "error", fmt.Sprintf("%q", err))
+	// 現在のServerConfig（書き込みの前に取ったもの）
+	if serverConfigErr != nil {
+		slog.Log(n.ctx, gkill_log.Error, "error at get current server config in gkill notificator", "error", fmt.Sprintf("%q", serverConfigErr))
 		return
 	}
 
 	// 送信対象を取得する
-	userID, err := n.gkillReps.GetUserID(notificationCtx)
-	if err != nil {
-		err = fmt.Errorf("error at get user id from gkill reps in gkill notificator: %w", err)
+	if userIDErr != nil {
+		err = fmt.Errorf("error at get user id from gkill reps in gkill notificator: %w", userIDErr)
 		slog.Log(n.ctx, gkill_log.Error, "error at get user id from gkill reps in gkill notificator", "error", fmt.Sprintf("%q", err))
 		return
 	}

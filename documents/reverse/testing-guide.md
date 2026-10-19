@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1432 | 215 | Go `testing` |
+| Go バックエンド | 1440 | 218 | Go `testing` |
 | フロントエンド ユニット | 2125 | 188 | Vitest |
 | フロントエンド E2E | 257 | 48（+auth.setup.ts） | Playwright |
 | MCP サーバ | 1185 | 44 | Go `testing` |
 | ツール | 115 | 4 | Vitest |
 | Android | 31 | 2 | JUnit 4 |
 | Wear OS | 232 | 18 | JUnit 4 + MockK |
-| **合計** | **5,377** | **519** | |
+| **合計** | **5,385** | **522** | |
 
 数え直すコマンド:
 
@@ -255,7 +255,7 @@ src/server/gkill/
 │   ├── hide_files/                    ← ファイル非表示
 │   ├── skills/                        ← スキルのファイルストア（store_test.go。スキル名・パスの規則、SKILL.md の frontmatter、revision の衝突、利用者間の分離、zip の展開・置き換えと失敗時の巻き戻し。ADR-0634）
 │   ├── sqlite3impl/                   ← SQLite3 ユーティリティ
-│   └── reps/                          ← リポジトリ実装（67ファイル。idf_thumb_vips_test.go, repositories_get_kyou_histories_cache_test.go, git_commit_log_cached_miss_test.go, plugin_repository_impl_test.go, plugin_git_commit_log_adapter_test.go, git_commit_log_cached_unique_test.go, ur_log_fill_skip_test.go 等）
+│   └── reps/                          ← リポジトリ実装（69ファイル。audit_fields_all_layers_test.go, sql_column_order_scan_test.go, idf_thumb_vips_test.go, repositories_get_kyou_histories_cache_test.go, git_commit_log_cached_miss_test.go, plugin_repository_impl_test.go, plugin_git_commit_log_adapter_test.go, git_commit_log_cached_unique_test.go, ur_log_fill_skip_test.go 等）
 │       ├── *_repository_sqlite3_impl_test.go  ← 13データ型
 │       ├── cached_and_temp_test.go    ← キャッシュ層・一時層
 │       └── cache/                     ← キャッシュ更新

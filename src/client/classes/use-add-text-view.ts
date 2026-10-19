@@ -47,7 +47,6 @@ export function useAddTextView(options: {
             new_text.create_time = new Date(Date.now())
             new_text.create_user = props.application_config.user_id
             new_text.update_app = "gkill"
-            new_text.update_app = "gkill"
             new_text.update_device = props.application_config.device
             new_text.update_time = new Date(Date.now())
             new_text.update_user = props.application_config.user_id

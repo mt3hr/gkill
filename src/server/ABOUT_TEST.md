@@ -2,7 +2,7 @@
 
 ## 概要
 
-Go バックエンドのテスト。1432テスト関数、215テストファイル、33パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
+Go バックエンドのテスト。1440テスト関数、218テストファイル、33パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
 
 ## テストフレームワーク
 
@@ -37,7 +37,7 @@ src/server/gkill/
 │   ├── hide_files/               # ファイル非表示
 │   ├── skills/                   # スキルのファイルストア（rep ではない素の置き場。ADR-0634）
 │   ├── sqlite3impl/              # SQLite3 ユーティリティ
-│   └── reps/                     # リポジトリ実装 (67ファイル)
+│   └── reps/                     # リポジトリ実装 (69ファイル)
 ├── dvnf/                    # DVNF ファイル管理 (3ファイル)
 └── main/                    # CLI エントリポイント (17ファイル)
     ├── common/                   # 共有ロジック・オプション・ログ・スレッド
@@ -59,18 +59,18 @@ src/server/gkill/
 | メッセージ・GPS | 7 | メッセージコード体系、`EnsureNotEmpty`、ワイヤの形（成功時 `[]`・`error_kind`・`reason`・`Cause` が漏れない）、エラーコード→HTTPステータス対応表、エラーコード→`error_kind`（全コード網羅・上書き表の実在・件数）、Go の error→`reason` の分類（modernc.org/sqlite が実際に返す CANTOPEN / NOTADB / READONLY / BUSY で確認・コードからの既定・語彙）、端末固有情報の伏せ処理、GPS ログ解析 |
 | プラグインプロトコル | 1 | `gkill_plugin` の stdio メッセージ型 |
 | ユースケース | 3 | write-through のキャッシュ反映、キャッシュ実装の INSERT 列と引数の対応、規約のソース走査（下記） |
-| DAO 管理 | 6 | GkillDAOManager ライフサイクル、壊れた索引DBを持つrepの扱い（切り離し、書き込み先のfail-closed、`IsEnable`不変、失敗時のClose、rep名予測、個別/集約Errorログ、正常時の集約ログ抑止）、Git rep のディレクトリ限定 glob（非リポジトリの混入で全体を殺さない）、IDF rep だけの読み込み経路（ADR-0307）、リポジトリ定義のパターン展開（rep_file_glob） |
+| DAO 管理 | 7 | 通知配信が配信済みの版に刻む更新の欄、GkillDAOManager ライフサイクル、壊れた索引DBを持つrepの扱い（切り離し、書き込み先のfail-closed、`IsEnable`不変、失敗時のClose、rep名予測、個別/集約Errorログ、正常時の集約ログ抑止）、Git rep のディレクトリ限定 glob（非リポジトリの混入で全体を殺さない）、IDF rep だけの読み込み経路（ADR-0307）、リポジトリ定義のパターン展開（rep_file_glob） |
 | アカウント | 5 | アカウント CRUD、セッション、アップロード履歴 |
 | 設定 | 3 | サーバ設定、アプリ設定、リポジトリ定義 |
 | 共有・通知 | 3 | 共有情報 CRUD、通知ターゲット |
 | スキル | 1 | 利用者が AI 向けに書くスキルのファイルストア `skills.Store`（rep ではない素の置き場。ADR-0634）。名前の検証、パスの正規化、`joinWithin` の根の外への脱出防止、zip の取り込みと dry_run の計画、削除 |
 | ユーティリティ | 10 | SQLite3 ユーティリティ、ファイル非表示 |
-| リポジトリ | 69 | `reps/` 直下67（13データ型の SQLite3 実装 + キャッシュ + 一時 + プラグイン + プラグイン診断 + プラグインの GitCommitLog 型別アダプタ + デッドロック/ネスト並列回帰 + gitキャッシュUNIQUE + gitキャッシュが構築済みなら外れた ID で下層へ落ちないこと + GPS集約dedup + 最新版アドレスのrep名走査 + URLog取得抑止フラグ + get_kyou の版履歴がキャッシュrepを回ること + サムネイルの vips 経路・EXIF 回転・外部ツール引数・ベンチ）+ `reps/cache/`・`reps/rep_cache_updater/` の2 |
+| リポジトリ | 71 | `reps/` 直下69（13データ型の SQLite3 実装 + キャッシュ + 一時 + 作成・更新の欄の全層往復と SQL 列順のソース走査 + プラグイン + プラグイン診断 + プラグインの GitCommitLog 型別アダプタ + デッドロック/ネスト並列回帰 + gitキャッシュUNIQUE + gitキャッシュが構築済みなら外れた ID で下層へ落ちないこと + GPS集約dedup + 最新版アドレスのrep名走査 + URLog取得抑止フラグ + get_kyou の版履歴がキャッシュrepを回ること + サムネイルの vips 経路・EXIF 回転・外部ツール引数・ベンチ）+ `reps/cache/`・`reps/rep_cache_updater/` の2 |
 | DVNF | 3 | ファイル管理、CLI コマンドの引数解析、copy/move 共用 `copyFile` の実ファイル操作（内容一致・copyLastMod の mtime 保存） |
 | CLI/Main | 17 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ（子プロセスへ継ぐ環境変数と panic しない `InitNamedWith`、ログレベルの規約のソース走査を含む）、スレッド、エントリポイント（登録するサブコマンドの集合。`mcp` / `idf` はサーバ版だけ）、パスワード管理、add_tag バッチ（ルール JSON の検証・HTTP投稿と応答判定を含む）、generate_plugin_cache（偽プラグインをテストバイナリ自身で起動し、結果行の分類・stdin nil・利用者確認の順序・引数不足で usage だけを返すことを固定）、Android のタイムゾーン適用（展開済み絶対パスを渡すこと・packed tzdata の候補順・SQLite と Go の壁時計が食い違ったときの Error 1行）、MCP サブコマンドの配線（OAuth 状態ファイルの置き場所を含む） |
 | プラグイン SDK | 7 | `Run()` の stdio ループ（22本）+ `--gkill-build-cache` の単独モードと同梱プラグインの配線走査（5本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本）+ ワード判定 `Query.MatchText`（3本）+ gkill_log へのログ（8本。`LogDebug` がファイルだけへ出ること・`closeLogging` が何度呼んでも安全なことを含む） |
 
-**合計 215 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
+**合計 218 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
 ずれたら `checkCounts` が落とす）。
 
 ## 規約のソース走査（`usecase/source_conventions_scan_test.go`）

@@ -253,11 +253,13 @@ loop:
 			kyou.CreateTime = commit.Committer.When
 			kyou.CreateApp = "git"
 			kyou.CreateDevice = ""
-			kyou.CreateUser = fmt.Sprintf("%s", commit.Author)
+			// FindKyous / GetGitCommitLog と同じく名前だけを入れる。fmt.Sprintf("%s", commit.Author) は
+			// Signature.String() がポインタレシーバなので呼ばれず、「{名前 メール 時刻}」の構造体表記が入っていた。
+			kyou.CreateUser = commit.Author.Name
 			kyou.UpdateTime = commit.Committer.When
 			kyou.UpdateApp = "git"
 			kyou.UpdateDevice = ""
-			kyou.UpdateUser = fmt.Sprintf("%s", commit.Author)
+			kyou.UpdateUser = commit.Author.Name
 
 			matchKyou = &kyou
 			break loop

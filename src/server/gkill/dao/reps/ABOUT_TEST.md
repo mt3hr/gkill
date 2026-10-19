@@ -42,6 +42,7 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | ファイル | テスト内容 |
 |---------|-----------|
 | `commit_tx_test.go` | `CommitTx` / `DiscardTx`（ADR-0219）。書き込み rep のファイルを ATTACH した1接続のトランザクションで確定し、1行でも失敗したら前に書いた種別も含めて何も残らないこと・temp が失敗時は残り成功時は消えること・既存 ID の新しい版は `Updated=true`・書き込み rep 未設定は書く前に返すこと・13 型の leaf テーブル名が重複しないこと（非修飾名の解決の前提。ソース走査） |
+| `audit_fields_all_layers_test.go` | 作成・更新の欄8つ（アプリ・端末・利用者・時刻 × 作成/更新）を全部違う値で書き、11型（Kmemo・KC・Lantana・Mi・MiReKyou・Nlog・TimeIs・URLog・IDF・Tag・Text）の実 rep・キャッシュ版（ライトスルー直後と UpdateCache の再構築後）・temp rep（GetXxxByTXID と CommitTx 後の実 rep）の読み取り口すべてで同じ向きに戻ること。**SELECT と Scan、INSERT の列と引数の順がずれても SQLite は何も言わない**ので、ファイルの記録の temp rep が作成者と作成端末を入れ替えて確定していたのをここで固定する（通知・リポストは各 `*_repository_sqlite3_impl_test.go`） |
 | `cached_and_temp_test.go` | キャッシュ層 / 一時リポジトリ層の動作検証（MiReKyou のキャッシュ再構築・TX分離を含む）。各 `TestCached*_AddAndGet` は **Add した直後に Get で取り直せること**を確認する（後述） |
 | `re_kyou_granular_cache_test.go` | ReKyou のグラニュラーキャッシュ動作検証 |
 | `idf_granular_cache_test.go` | IDFKyou のグラニュラーキャッシュ動作検証（`re_kyou_granular_cache_test.go` の IDFKyou 版） |
@@ -88,6 +89,7 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `ur_log_favicon_test.go` | favicon 取得の ur_log 側の配線。取れたバイト列が画像であることを確かめてから保存すること（エラーページを200で返すサイトのHTMLが混入した件の回帰）、復号前の寸法検査、空ホスト名では取得に行かないこと |
 | `ur_log_fill_skip_test.go` | `FillURLogFieldSkipping` の抑止フラグ。両方 skip なら外向き取得が1回も走らず ID・RelatedTime だけ補完されること、favicon だけ skip してもメタデータ補完は動くこと（引数順の非対称呼び出しで入れ替わりを検出）、互換ラッパ `FillURLogField` は従来どおり両方取得すること |
 | `attached_cached_unwrap_test.go` | 付随データ（タグ・テキスト）のキャッシュrepの `UnWrapTyped` が leaf まで降りること。1段しか剥がさないと集約自身が leaf として返り、`GetRepName()` が実在しない "TagReps" / "TextReps" を返して `get_rep_infos_mcp` の書き込み先案内が実際の書き込み先と食い違う（実利用レビューの回帰） |
+| `sql_column_order_scan_test.go` | ソース走査ガード。`reps/` と `reps/cache/` の SQL を go/ast で畳み、SELECT の射影と `rows.Scan`、INSERT の列と引数（構築関数でプリペアして別の関数で実行する文も欄名で辿る）の順が作成・更新の欄や ID などの位置で食い違えば落とす。照合件数の下限と、入れ替えた合成ソースを見つけることも固定する |
 | `rows_err_check_test.go` | ソース走査ガード。`rows.Next()` ループの後に `rows.Err()` を確認しない関数が復活したら落とす（見ないと反復途中のエラーで「部分的な結果」を成功として返す） |
 | `secure_join_test.go` | `SecureJoin` が rootDir の真下だけを許可すること。rootDir 自身を返すと、呼び出し元（アップロード保存先・サムネ/動画配信元・ZIP展開先）がディレクトリをファイルとして扱うことになる |
 | `testhelper_test.go` | テストヘルパーユーティリティ |

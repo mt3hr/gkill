@@ -4,6 +4,7 @@ package gkill_server_api
 // サーバへ移った挙動をここで固定する。キャッシュ ON / OFF の両方で回す（書き戻しの穴はキャッシュ ON でしか出ない）。
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -345,6 +346,66 @@ func TestHandleGetNotificationHistories_IncludesDeletedVersion(t *testing.T) {
 		}
 		if !latestIsDeleted(t, tsURL, sessionID, "notification", notificationID) {
 			t.Fatal("the notification history does not show the deleted version")
+		}
+	})
+}
+
+// 連鎖削除で書いた削除の版は、作成の欄を元の版のまま持ち、更新の欄に要求者（セッションの利用者・
+// サーバの端末名・要求のアプリ名）を刻む。ファイルの記録は temp rep の INSERT で作成者と作成端末が
+// 入れ替わり、消すたびにその向きで実 rep へ確定していた（アップロードした記録は作成者=利用者・
+// 作成端末=サーバの端末名で値が違うので、入れ替わりが見える）。
+func TestHandleDeleteKyouCascade_KeepsCreateFieldsAndStampsUpdateFields(t *testing.T) {
+	forEachCacheMode(t, func(t *testing.T, tsURL, sessionID string) {
+		uploadResp := postJSON(t, tsURL+"/api/upload_files", &req_res.UploadFilesRequest{
+			SessionID: sessionID,
+			Files: []*req_res.FileData{{
+				FileName:     "cascade_meta.txt",
+				DataBase64:   base64.StdEncoding.EncodeToString([]byte("hello")),
+				LastModified: time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local), // テストの固定時刻
+			}},
+			TargetRepName:    writableDirectoryRepName(t, tsURL, sessionID),
+			ConflictBehavior: req_res.Rename,
+			LocaleName:       "en",
+		})
+		var uploaded req_res.UploadFilesResponse
+		if err := json.NewDecoder(uploadResp.Body).Decode(&uploaded); err != nil || len(uploaded.UploadedKyous) != 1 {
+			t.Fatalf("upload: %v %+v", err, uploaded.Errors)
+		}
+		uploadResp.Body.Close()
+		id := uploaded.UploadedKyous[0].ID
+
+		histories := func() []reps.IDFKyou {
+			t.Helper()
+			resp := postJSON(t, tsURL+"/api/get_idf_kyou", map[string]any{"session_id": sessionID, "id": id, "locale_name": "en"})
+			defer resp.Body.Close()
+			var got req_res.GetIDFKyouResponse
+			if err := json.NewDecoder(resp.Body).Decode(&got); err != nil || len(got.IDFKyouHistories) == 0 {
+				t.Fatalf("get idf kyou: %v %+v", err, got.Errors)
+			}
+			return got.IDFKyouHistories
+		}
+		original := histories()[0]
+		if original.CreateUser != "admin" || original.CreateDevice == "" || original.CreateDevice == original.CreateUser {
+			t.Fatalf("前提: アップロードした記録の作成者と作成端末が区別できない: user=%q device=%q", original.CreateUser, original.CreateDevice)
+		}
+		serverDevice := original.CreateDevice
+
+		if result := postDeleteKyouCascade(t, tsURL, sessionID, id, "idf", "gkill_cascade_test"); len(result.Errors) > 0 {
+			t.Fatalf("cascade delete: %+v", result.Errors)
+		}
+		deleted := histories()[0]
+		if !deleted.IsDeleted {
+			t.Fatalf("履歴の先頭が削除の版ではない: %+v", deleted)
+		}
+		if deleted.CreateApp != original.CreateApp || deleted.CreateDevice != original.CreateDevice || deleted.CreateUser != original.CreateUser ||
+			!deleted.CreateTime.Equal(original.CreateTime) {
+			t.Errorf("削除の版の作成の欄が変わった: got app=%q device=%q user=%q time=%v, want app=%q device=%q user=%q time=%v",
+				deleted.CreateApp, deleted.CreateDevice, deleted.CreateUser, deleted.CreateTime,
+				original.CreateApp, original.CreateDevice, original.CreateUser, original.CreateTime)
+		}
+		if deleted.UpdateApp != "gkill_cascade_test" || deleted.UpdateDevice != serverDevice || deleted.UpdateUser != "admin" {
+			t.Errorf("削除の版の更新の欄 = app=%q device=%q user=%q, want gkill_cascade_test / %q / admin",
+				deleted.UpdateApp, deleted.UpdateDevice, deleted.UpdateUser, serverDevice)
 		}
 	})
 }
