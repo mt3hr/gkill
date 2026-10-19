@@ -211,12 +211,26 @@ class WearRequestHandlerTest {
     @Test
     fun handleEndTimeis_success_returnsOk() {
         mockServer.enqueue(response("""{"timeis_histories":[{"id":"t1","title":"x"}],"errors":null}"""))
+        // 更新者・更新端末に刻む利用者 ID と端末名（テストの合成値）
+        mockServer.enqueue(response("""{"application_config":{"user_id":"writeruser","device":"writer_device"},"errors":null}"""))
         mockServer.enqueue(response("""{"errors":null}"""))
 
         val resp = handler().handleEndTimeis("t1\nmy_rep".toByteArray(Charsets.UTF_8))
 
         assertEquals(PATH_END_TIMEIS_RESULT, resp.path)
         assertEquals("OK", String(resp.data, Charsets.UTF_8))
+    }
+
+    // 更新者・更新端末に刻む値が取れなければ書かずに get_config_failed を返す（時計には訳した文言が出る）。
+    @Test
+    fun handleEndTimeis_applicationConfigFails_returnsGetConfigFailed() {
+        mockServer.enqueue(response("""{"timeis_histories":[{"id":"t1","title":"x"}],"errors":null}"""))
+        mockServer.enqueue(response("""{"application_config":null,"errors":[{"error_code":"NO_SESSION","error_message":"expired"}]}"""))
+
+        val resp = handler().handleEndTimeis("t1\nmy_rep".toByteArray(Charsets.UTF_8))
+
+        assertEquals("ERROR:get_config_failed", String(resp.data, Charsets.UTF_8))
+        assertEquals(2, mockServer.requestCount)
     }
 
     @Test

@@ -247,10 +247,11 @@ class GkillApiClientTest {
         // get_kyous (getPlayingTimeis の1段目)
         mockServer.enqueue(MockResponse().setBody("""{"kyous":[],"errors":null}""").setResponseCode(200))
         de.getPlayingTimeis("s")
-        // get_timeis + update_timeis (endTimeis)
+        // get_timeis + get_application_config + update_timeis (endTimeis)
         mockServer.enqueue(MockResponse().setBody(
             """{"timeis_histories":[{"id":"t1","title":"x","start_time":"2026-01-01T00:00:00+09:00"}],"errors":null}"""
         ).setResponseCode(200))
+        mockServer.enqueue(MockResponse().setBody(writerConfigJson).setResponseCode(200))
         mockServer.enqueue(MockResponse().setBody("""{"errors":null}""").setResponseCode(200))
         de.endTimeis("s", "t1", "rep")
 
@@ -260,6 +261,7 @@ class GkillApiClientTest {
             "/api/submit_kftl_text",
             "/api/get_kyous",
             "/api/get_timeis",
+            "/api/get_application_config",
             "/api/update_timeis",
         )
         for (expected in expectedPaths) {
@@ -413,6 +415,10 @@ class GkillApiClientTest {
 
     // ─── endTimeis ─────────────────────────────────────────────────────────
 
+    // 打刻終了が更新者・更新端末として刻む値を返す get_application_config の応答（テストの合成値）。
+    private val writerConfigJson =
+        """{"application_config":{"user_id":"writeruser","device":"writer_device"},"errors":null}"""
+
     // 終了は get_timeis で取った最新版に end_time を付けて update_timeis で書き戻す。
     // 最古の版を書き戻すと、作成後に入れた編集（タイトル変更など）がエラーも警告も出ないまま巻き戻る
     @Test
@@ -422,12 +428,14 @@ class GkillApiClientTest {
             """{"id":"timeis-1","title":"original","start_time":"2026-01-01T10:00:00+09:00","update_time":"2026-01-01T10:00:00+09:00","data_type":"timeis_start","is_deleted":false}""" +
             """],"errors":null}"""
         mockServer.enqueue(MockResponse().setBody(getTimeisJson).setResponseCode(200))
+        mockServer.enqueue(MockResponse().setBody(writerConfigJson).setResponseCode(200))
         mockServer.enqueue(MockResponse().setBody("""{"errors":null}""").setResponseCode(200))
 
         val error = client.endTimeis("session-123", "timeis-1", "TimeIs")
 
         assertNull(error)
         assertEquals("/api/get_timeis", mockServer.takeRequest().path)
+        assertEquals("/api/get_application_config", mockServer.takeRequest().path)
         val updateRequest = mockServer.takeRequest()
         assertEquals("/api/update_timeis", updateRequest.path)
         val timeis = kotlinx.serialization.json.Json.parseToJsonElement(updateRequest.body.readUtf8())
@@ -443,6 +451,7 @@ class GkillApiClientTest {
     fun endTimeis_non2xxUpdateWithErrorsBody_returnsBodyErrorMessage() {
         val getTimeisJson = """{"timeis_histories":[{"id":"timeis-1","title":"work","start_time":"2026-01-01T10:00:00+09:00","data_type":"timeis_start","is_deleted":false}],"errors":null}"""
         mockServer.enqueue(MockResponse().setBody(getTimeisJson).setResponseCode(200))
+        mockServer.enqueue(MockResponse().setBody(writerConfigJson).setResponseCode(200))
         val updateJson = """{"errors":[{"error_code":"CONFLICT","error_message":"update conflict"}]}"""
         mockServer.enqueue(MockResponse().setBody(updateJson).setResponseCode(409))
 
@@ -451,7 +460,57 @@ class GkillApiClientTest {
         assertEquals("update conflict", error)
 
         assertEquals("/api/get_timeis", mockServer.takeRequest().path)
+        assertEquals("/api/get_application_config", mockServer.takeRequest().path)
         assertEquals("/api/update_timeis", mockServer.takeRequest().path)
+    }
+
+    // 終了の版は、作成の欄を元の版のまま持ち、更新の欄4つ（時刻・アプリ・利用者・端末）を今の値にする。
+    // 以前は update_user / update_device を書き換えず、前の版を書いた利用者・端末（MCP の "mcp" など）が
+    // 「時計で終了した版」の更新者・更新端末として残っていた（サーバは更新の欄を送られた値のまま保存する）。
+    @Test
+    fun endTimeis_stampsUpdateUserAndDeviceFromApplicationConfig() {
+        val getTimeisJson = """{"timeis_histories":[{"id":"timeis-1","title":"work","start_time":"2026-01-01T10:00:00+09:00",""" +
+            """"create_app":"gkill","create_user":"testuser","create_device":"pc_device",""" +
+            """"update_time":"2026-01-01T10:00:00+09:00","update_app":"gkill_mcp_readwrite","update_user":"otheruser","update_device":"mcp",""" +
+            """"data_type":"timeis_start","is_deleted":false}],"errors":null}"""
+        mockServer.enqueue(MockResponse().setBody(getTimeisJson).setResponseCode(200))
+        mockServer.enqueue(MockResponse().setBody(writerConfigJson).setResponseCode(200))
+        mockServer.enqueue(MockResponse().setBody("""{"errors":null}""").setResponseCode(200))
+
+        val error = client.endTimeis("session-123", "timeis-1", "TimeIs")
+
+        assertNull(error)
+        mockServer.takeRequest() // get_timeis
+        val configRequest = mockServer.takeRequest()
+        assertEquals("/api/get_application_config", configRequest.path)
+        assertTrue(configRequest.body.readUtf8().contains("\"session_id\":\"session-123\""))
+        val timeis = kotlinx.serialization.json.Json.parseToJsonElement(mockServer.takeRequest().body.readUtf8())
+            .jsonObject["timeis"]!!.jsonObject
+        fun field(name: String) = (timeis[name] as kotlinx.serialization.json.JsonPrimitive).content
+        assertEquals("gkill", field("create_app"))
+        assertEquals("testuser", field("create_user"))
+        assertEquals("pc_device", field("create_device"))
+        assertEquals(GkillApiClient.APP_NAME, field("update_app"))
+        assertEquals("writeruser", field("update_user"))
+        assertEquals("writer_device", field("update_device"))
+        assertTrue("update_time must be refreshed", field("update_time") != "2026-01-01T10:00:00+09:00")
+    }
+
+    // 利用者 ID と端末名が取れなければ、前の版の値のまま書かずに失敗として返す（update_timeis を呼ばない）。
+    @Test
+    fun endTimeis_applicationConfigFails_doesNotWrite() {
+        val getTimeisJson = """{"timeis_histories":[{"id":"timeis-1","title":"work","start_time":"2026-01-01T10:00:00+09:00","data_type":"timeis_start","is_deleted":false}],"errors":null}"""
+        mockServer.enqueue(MockResponse().setBody(getTimeisJson).setResponseCode(200))
+        mockServer.enqueue(MockResponse().setBody(
+            """{"application_config":null,"errors":[{"error_code":"NO_SESSION","error_message":"session expired"}]}"""
+        ).setResponseCode(401))
+
+        val error = client.endTimeis("session-123", "timeis-1", "TimeIs")
+
+        assertEquals(WIRE_ERR_GET_CONFIG_FAILED, error)
+        assertEquals("/api/get_timeis", mockServer.takeRequest().path)
+        assertEquals("/api/get_application_config", mockServer.takeRequest().path)
+        assertEquals(2, mockServer.requestCount)
     }
 
     // ─── TLS pinning (H-05) ──────────────────────────────────────────────────

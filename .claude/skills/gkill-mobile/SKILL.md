@@ -59,6 +59,14 @@ Web 版 `use-lantana-flowers-view.ts` と同じ式にする。画面状態を足
 `getPlayingTimeis_multipleHistories_usesNewestFirstEntry` / `endTimeis_multipleHistories_writesBackNewestVersion`
 （新しい順で2版ある fixture で、実行中一覧のタイトルと終了の書き戻し本文を見る）。
 
+**打刻終了の書き戻しでは更新の欄4つ（`update_time` / `update_app` / `update_user` / `update_device`）を全部今の値にし、作成の欄には触らない。**
+サーバの `update_timeis` は更新の欄を送られた値のまま保存するので、写した最新版の `update_user` / `update_device` を残すと、
+前の版を書いた利用者・端末（MCP の `mcp` や別の画面）が「時計で終了した版」の更新者・更新端末になる（2026-10-19 まで実際にそうなっていた）。
+利用者 ID と端末名は Web の画面と同じく `/api/get_application_config` の `user_id` / `device`（サーバがセッションから入れる値）から取り、
+**取れなければ書かずに `get_config_failed` を返す**（前の版の値で黙って書かない）。守るテストは `GkillApiClientTest.kt` の
+`endTimeis_stampsUpdateUserAndDeviceFromApplicationConfig` / `endTimeis_applicationConfigFails_doesNotWrite` と
+`WearRequestHandlerTest.kt` の `handleEndTimeis_applicationConfigFails_returnsGetConfigFailed`。
+
 **Wear OS の UI 文字列は `strings.xml` の7言語セットで持ち、ワイヤコードと KFTL テキストは訳さない**（2026-09-10）。
 両モジュールの `res/values/strings.xml`（既定 = 日本語。Web の `fallbackLocale: 'ja'` とサーバの `GetLocalizer` の
 フォールバックと同じ）と `values-{en,zh,ko,es,fr,de}/strings.xml` が正本で、Kotlin に文言を直書きしない

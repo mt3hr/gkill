@@ -2,7 +2,7 @@
 
 ## 概要
 
-Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（10ファイル、144テスト）とウォッチ側アプリ（8ファイル、88テスト）の合計232テスト（18ファイル）で構成される。
+Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（10ファイル、147テスト）とウォッチ側アプリ（8ファイル、88テスト）の合計235テスト（18ファイル）で構成される。
 
 ## テストフレームワーク
 
@@ -16,11 +16,11 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 |---------|---------|-----------|
 | `phone_companion/src/test/java/.../GkillCredentialStoreTest.kt` | 24 | 認証情報ストアの保存・取得・削除。`GkillSecretCipher`（Android Keystore による暗号化）経由の保存と、ホスト別のピン留め証明書フィンガープリント保存も含む（MockK使用） |
 | `phone_companion/src/test/java/.../MainActivityTest.kt` | 8 | コンパニオンアプリの Activity ライフサイクル |
-| `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 31 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得・playing検索クエリの形状検証。okhttp-tls の自己署名証明書での TLS ピン留め一致/不一致/未保存/既定モード/SAN欠落フォールバック検証を含む。`locale_name` が login を含む6種類の API 本文すべてに載ること、自前エラーが ASCII コードで返ること。`timeis_histories` が複数版のとき、実行中一覧と終了の書き戻しがサーバの並び（新しい順）の先頭＝最新版を使うこと） |
+| `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 33 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得・playing検索クエリの形状検証。okhttp-tls の自己署名証明書での TLS ピン留め一致/不一致/未保存/既定モード/SAN欠落フォールバック検証を含む。`locale_name` が login を含む6種類の API 本文すべてに載ること、自前エラーが ASCII コードで返ること。`timeis_histories` が複数版のとき、実行中一覧と終了の書き戻しがサーバの並び（新しい順）の先頭＝最新版を使うこと。終了の版は作成の欄を元のまま、更新の欄4つ（時刻・アプリ・利用者・端末）を今の値にし、利用者と端末は `get_application_config` から取ること。取れなければ書かずに `get_config_failed` を返すこと） |
 | `phone_companion/src/test/java/.../GkillServerTrustTest.kt` | 13 | TOFU+ピン留めの TrustManager。フィンガープリント計算・整形・照合、ピン一致/不一致/未保存の可否、ホストキー導出（okhttp-tls の HeldCertificate 使用） |
 | `phone_companion/src/test/java/.../GkillServerUrlPolicyTest.kt` | 4 | サーバーURLの受け入れ境界（平文HTTPはループバックのみ。LAN/公開ホスト・偽装ホスト名・不正形式の拒否、HTTPSの許可） |
 | `phone_companion/src/test/java/.../GkillWearableListenerServiceTest.kt` | 19 | ウォッチ→スマホ間メッセージパスのハンドリング |
-| `phone_companion/src/test/java/.../WearRequestHandlerTest.kt` | 17 | 時計要求ハンドラ（MockWebServer 使用、4ハンドラの成功/失敗/`ERROR:`プレフィックス契約と重複送信の `DUPLICATE`/force 上書き） |
+| `phone_companion/src/test/java/.../WearRequestHandlerTest.kt` | 18 | 時計要求ハンドラ（MockWebServer 使用、4ハンドラの成功/失敗/`ERROR:`プレフィックス契約と重複送信の `DUPLICATE`/force 上書き。打刻終了で更新者・更新端末が取れないときの `get_config_failed`） |
 | `phone_companion/src/test/java/.../WearSubmitLedgerTest.kt` | 9 | KFTL 送信の重複台帳（成功時のみ記録・TTL・既定の窓が30分であること・「それでも送信」で窓が最後の保存時刻から数え直されること・上限・永続化・破損時の空扱い） |
 | `phone_companion/src/test/java/.../GkillErrorTextTest.kt` | 12 | エラーコード→文言の照合。`WIRE_ERROR_CODES` 全件に訳があること（コードを足して訳を忘れると落ちる）、未知文字列・`HTTP 500` の素通し、`ERROR:` 付き応答だけ訳して `OK`/`DUPLICATE`/JSON はバイト列のまま |
 | `phone_companion/src/test/java/.../StringsParityTest.kt` | 7 | `res/values` と `values-{en,zh,ko,es,fr,de}` の `strings.xml` の整合（ロケール集合・キー集合の一致・`translatable="false"` の非重複・空値なし・`%1$s` プレースホルダの一致・未エスケープの `'` `"` と孤立 `%` の検出・`server_locale_name` がディレクトリ名と一致） |

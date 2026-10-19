@@ -114,8 +114,15 @@ class GkillApiClient(
     @Serializable
     data class ApplicationConfigPartial(
         val kftl_template_struct: JsonElement? = null,
-        val rep_struct: JsonElement? = null
+        val rep_struct: JsonElement? = null,
+        // サーバがセッションから入れる、この接続の利用者 ID と端末名。打刻終了の update_user / update_device に使う
+        // （Web の画面が記録の作成・更新の欄に入れる値と同じ出どころ）。
+        val user_id: String = "",
+        val device: String = ""
     )
+
+    /** 記録の更新者・更新端末に刻む値。 */
+    data class WriterIdentity(val userId: String, val device: String)
 
     @Serializable
     data class SubmitKFTLTextRequest(
@@ -210,6 +217,34 @@ class GkillApiClient(
                 val configResp = json.decodeFromString(GetApplicationConfigResponse.serializer(), respJson)
                 if (!configResp.errors.isNullOrEmpty()) return null
                 configResp.application_config?.kftl_template_struct?.toString()
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /**
+     * get_application_config から、記録の更新者・更新端末に刻む利用者 ID と端末名を取る。
+     * 取れない（エラー・空の応答・どちらかが空）ときは null。
+     */
+    private fun getWriterIdentity(sessionId: String): WriterIdentity? {
+        val reqJson = json.encodeToString(
+            GetApplicationConfigRequest.serializer(),
+            GetApplicationConfigRequest(sessionId, localeName)
+        )
+        val req = Request.Builder()
+            .url("$serverUrl/api/get_application_config")
+            .post(reqJson.toRequestBody(jsonMediaType))
+            .build()
+        return try {
+            client.newCall(req).execute().use { resp ->
+                // ステータスで打ち切らず本文を読む(gkillのerrorsは本文にしかない)。
+                val respJson = resp.body.string().ifEmpty { return null }
+                val configResp = json.decodeFromString(GetApplicationConfigResponse.serializer(), respJson)
+                if (!configResp.errors.isNullOrEmpty()) return null
+                val config = configResp.application_config ?: return null
+                if (config.user_id.isEmpty() || config.device.isEmpty()) return null
+                WriterIdentity(config.user_id, config.device)
             }
         } catch (_: Exception) {
             null
@@ -325,8 +360,9 @@ class GkillApiClient(
      *
      * Steps:
      * 1. get_timeis to get the full latest TimeIs object (first element; histories are newest-first)
-     * 2. Set end_time to now, update_time to now, update_app to "gkill_wear"
-     * 3. update_timeis to save
+     * 2. get_application_config to get the user_id / device to stamp as update_user / update_device
+     * 3. Set end_time to now, update_time to now, update_app to "gkill_wear", update_user / update_device
+     * 4. update_timeis to save
      */
     fun endTimeis(sessionId: String, timeisId: String, repName: String): String? {
         val tag = "GkillApiClient"
@@ -358,12 +394,20 @@ class GkillApiClient(
             // 最新版（先頭。サーバは update_time の新しい順で返す）に end_time を付けて書き戻す。
             // 末尾の最古版を書き戻すと、作成後に入れた編集がエラーも警告も出ないまま巻き戻る
             val latest = histories.first().jsonObject.toMutableMap()
+
+            // 更新者・更新端末も今の値にする。写した最新版の値のまま送ると、サーバはそのまま保存するので、
+            // 前の版を書いた利用者・端末（MCP や別の画面）が「時計で終了した版」の更新者・更新端末として残る。
+            // 取れなければ書かない（前の版の値で黙って書くより、失敗として時計へ返す）。
+            val writer = getWriterIdentity(sessionId) ?: return WIRE_ERR_GET_CONFIG_FAILED
+
             val now = java.time.OffsetDateTime.now().format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME)
             latest["end_time"] = JsonPrimitive(now)
             latest["update_time"] = JsonPrimitive(now)
             latest["update_app"] = JsonPrimitive(APP_NAME)
+            latest["update_user"] = JsonPrimitive(writer.userId)
+            latest["update_device"] = JsonPrimitive(writer.device)
 
-            // Step 2: update_timeis
+            // Step 4: update_timeis
             val updateBody = JsonObject(mapOf(
                 "session_id" to JsonPrimitive(sessionId),
                 "timeis" to JsonObject(latest),
