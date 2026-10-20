@@ -1371,21 +1371,23 @@ func (g *GkillDAOManager) GetNotificator(userID string, device string) (*GkillNo
 	}
 
 	g.stateMutex.Lock()
-	defer g.stateMutex.Unlock()
 	if g.gkillNotificators == nil {
 		g.gkillNotificators = map[string]map[string]*GkillNotificator{}
 	}
 	if _, exist := g.gkillNotificators[userID]; !exist {
 		g.gkillNotificators[userID] = map[string]*GkillNotificator{}
 	}
-	// 並行して先に作られていたらそちらを使い、自分が作ったほうは閉じる
+	// 並行して先に作られていたらそちらを使い、自分が作ったほうは閉じる。
+	// Close は定期更新の goroutine が抜けるまで待つので、stateMutex を放してから閉じる
 	if existing, exist := g.gkillNotificators[userID][device]; exist {
+		g.stateMutex.Unlock()
 		if closeErr := gkillNotificator.Close(context.Background()); closeErr != nil {
 			slog.Log(context.Background(), gkill_log.Warn, "error at close duplicated notificator", "error", fmt.Sprintf("%q", closeErr))
 		}
 		return existing, nil
 	}
 	g.gkillNotificators[userID][device] = gkillNotificator
+	g.stateMutex.Unlock()
 	return gkillNotificator, nil
 }
 

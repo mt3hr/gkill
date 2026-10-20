@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/SherClockHolmes/webpush-go"
@@ -217,33 +218,42 @@ func (n *notificator) waitAndNotify() {
 type GkillNotificator struct {
 	gkillDAOManager        *GkillDAOManager
 	gkillReps              *reps.GkillRepositories
-	notificators           map[string]*notificator
 	notificationServiceCtx context.Context
-	notificationCtx        context.Context
-	cancelFunc             context.CancelFunc
+	cancelService          context.CancelFunc
+	updateLoopDone         chan struct{}
+
+	// targetsMutex は通知対象の作り直し（1時間ごとの定期更新と、通知を追加・更新したハンドラからの呼び出し）と
+	// Close を直列にする。並走すると cancelFunc を上書きし合い、取り消されない通知が残って二重に送る。
+	targetsMutex    sync.Mutex
+	notificators    map[string]*notificator
+	notificationCtx context.Context
+	cancelFunc      context.CancelFunc
 }
 
 func NewGkillNotificator(ctx context.Context, gkillDAOManager *GkillDAOManager, gkillReps *reps.GkillRepositories) (*GkillNotificator, error) {
+	serviceCtx, cancelService := context.WithCancel(ctx)
 	gkillNotificator := &GkillNotificator{
 		gkillDAOManager:        gkillDAOManager,
 		gkillReps:              gkillReps,
 		notificators:           map[string]*notificator{},
-		notificationServiceCtx: ctx,
+		notificationServiceCtx: serviceCtx,
+		cancelService:          cancelService,
+		updateLoopDone:         make(chan struct{}),
 	}
 	go gkillNotificator.updateLoopWhenTick()
 	return gkillNotificator, nil
 }
 
 func (g *GkillNotificator) updateLoopWhenTick() {
+	defer close(g.updateLoopDone)
 	for {
-		err := g.UpdateNotificationTargets(context.Background())
-		if err != nil {
+		err := g.UpdateNotificationTargets(g.notificationServiceCtx)
+		if err != nil && g.notificationServiceCtx.Err() == nil {
 			slog.Log(g.notificationServiceCtx, gkill_log.Error, "error at update notification targets", "error", fmt.Sprintf("%q", err))
 		}
 
 		select {
 		case <-g.notificationServiceCtx.Done():
-			g.cancelFunc()
 			return
 		case <-time.After(1 * time.Hour):
 		}
@@ -251,6 +261,13 @@ func (g *GkillNotificator) updateLoopWhenTick() {
 }
 
 func (g *GkillNotificator) UpdateNotificationTargets(ctx context.Context) error {
+	g.targetsMutex.Lock()
+	defer g.targetsMutex.Unlock()
+	// 閉じたあとは設定 DAO を触らない（GkillDAOManager.Close が通知を閉じたあとで nil にする）
+	if err := g.notificationServiceCtx.Err(); err != nil {
+		return fmt.Errorf("gkill notificator is closed: %w", err)
+	}
+
 	// 現在のServerConfigを取得する
 	var currentServerConfig *server_config.ServerConfig
 	serverConfigs, err := g.gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(ctx)
@@ -300,7 +317,20 @@ func (g *GkillNotificator) UpdateNotificationTargets(ctx context.Context) error 
 	return nil
 }
 
+// Close は定期更新を止め、その goroutine が抜けるまで待ってから返る。
+// 待たずに返ると、GkillDAOManager.Close が設定 DAO を nil にしたあとで定期更新が
+// それを参照して nil ポインタ参照で落ちる（goroutine 内なので recover できずプロセスごと落ちる）。
+// 配信待ちの通知は ctx の取り消しで止まるが、配信を始めたものは待たない。
 func (g *GkillNotificator) Close(ctx context.Context) error {
+	g.cancelService()
+	select {
+	case <-g.updateLoopDone:
+	case <-ctx.Done():
+		return fmt.Errorf("error at wait for notification update loop: %w", ctx.Err())
+	}
+
+	g.targetsMutex.Lock()
+	defer g.targetsMutex.Unlock()
 	if g.cancelFunc != nil {
 		g.cancelFunc()
 	}
