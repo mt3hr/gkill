@@ -137,7 +137,7 @@ npm run go_install
 8. `go install`
 
 **前提条件:**
-- Go 1.26.9+（`src/server/go.mod` が `go 1.26.9`）、Node.js 20.19+（24.x推奨）
+- Go 1.26.10+（`src/server/go.mod` が `go 1.26.10`）、Node.js 20.19+（24.x推奨）
 - `package.json` に `engines` フィールドは無いため、Node のバージョンは強制されない
 
 ## `tools/` ディレクトリ

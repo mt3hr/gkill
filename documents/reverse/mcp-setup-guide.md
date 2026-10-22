@@ -26,7 +26,7 @@
 | ソフトウェア | バージョン | 用途 |
 |---|---|---|
 | gkill_server | 最新ビルド（MCP サーバは `gkill_server mcp` サブコマンドとして同梱） | バックエンドAPI と MCP サーバー |
-| Go / Node.js / npm | Go 1.26.9+、Node.js 20.19+（24.x 推奨） | 自分でビルドする場合のみ（`npm run install_server`） |
+| Go / Node.js / npm | Go 1.26.10+、Node.js 20.19+（24.x 推奨） | 自分でビルドする場合のみ（`npm run install_server`） |
 
 ### 事前準備
 

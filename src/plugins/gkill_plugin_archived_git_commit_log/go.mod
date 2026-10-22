@@ -1,6 +1,6 @@
 module github.com/mt3hr/gkill_plugin_archived_git_commit_log
 
-go 1.26.9
+go 1.26.10
 
 require (
 	github.com/go-git/go-billy/v5 v5.9.2
