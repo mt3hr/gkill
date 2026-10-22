@@ -200,10 +200,19 @@ test.describe('GUI Delete Flows', () => {
     await expect(page.locator('.kyou_rep_name').filter({ hasText: /^\s*ReKyou\s*$/ }), 'リポストが作られていない')
       .toHaveCount(1, { timeout: 30000 })
 
-    // 元の記録（Kmemo）を削除する。リポジトリ名で掴むとリポストの中に入れ子で描画された元の記録に当たり、
-    // そのメニューはリポスト側のものなのでリポストだけが消える。本文で掴むと元の記録の行に当たる
-    // （上の「リポストを作って削除しても元の記録は残る」と同じ前提）
-    await deleteViaContextMenu(page, label)
+    // 元の記録（Kmemo）を削除する。リポストは新しいので一覧の上に出て、中に元の記録を入れ子で描画する。
+    // 入れ子の側のメニューはリポストのものなので、そこを右クリックするとリポストだけが消える。
+    // 本文でもリポジトリ名でも、先頭一致は入れ子を読み終えたかどうかで入れ子の側に当たったり当たらなかったりする。
+    // そこで一覧の行（kyou-list-view.vue の .kyou_in_list）のうち、Kmemo を持ち ReKyou を持たない行で掴む。
+    // リポストの行は入れ子を読む前は ReKyou だけ、読んだ後は両方を持つので、どちらの時点でも外れる
+    const originalRow = page.locator('.kyou_in_list')
+      .filter({ has: page.locator('.kyou_rep_name', { hasText: /^\s*Kmemo\s*$/ }) })
+      .filter({ hasNot: page.locator('.kyou_rep_name', { hasText: /^\s*ReKyou\s*$/ }) })
+      .first()
+    const originalRepName = originalRow.locator('.kyou_rep_name')
+    await expect(originalRepName, '元の記録の行が見つからない').toBeVisible({ timeout: 30000 })
+    await clickContextMenuItemOn(page, originalRepName, MENU.delete)
+    await confirmDelete(page)
 
     // 元の記録もリポストも残らない
     await navigateToRykv(page)

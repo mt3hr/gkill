@@ -34,7 +34,9 @@ jobs:
     runs-on: ubuntu-latest
     # 既知フレークがあるので、E2Eの flake で夜間全体を赤にしない
     continue-on-error: true
-    timeout-minutes: 45
+    # テスト本体だけで35分前後かかり、準備を含めたジョブ全体は40分前後になる。
+    # 45分だと、playwright install --with-deps の apt 取得が遅い回に上限を超えて結果ごと失われた
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repository
