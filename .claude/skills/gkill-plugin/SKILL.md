@@ -55,8 +55,14 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              repeats once to a dozen-plus times per file: take identity from the FIRST
               #                              occurrence only (a sub-agent file carries the parent's
               #                              meta as its second) but merge cwd/git/originator across
-              #                              all. Conversation comes from the `event_msg` lane only
-              #                              (`response_item/message` mixes in injected preambles);
+              #                              all. Conversation comes from `event_msg` only: before
+              #                              0.151 `user_message`/`agent_message`, from 0.151 on ONLY
+              #                              `item_completed` (`UserMessage`/`AgentMessage`/`Reasoning`;
+              #                              reading just the old lane silently folds a whole session
+              #                              into one tool-only reply). A turn holding the old lane
+              #                              drops the item lane (no doubles). Never
+              #                              `response_item/message` (injected preambles). The reply
+              #                              Kyou shows the final answer, folds the rest (ADR-0314);
               #                              tool *calls* come from `response_item`, tool *results*
               #                              are never stored — they are over 90% of the bytes. Kyou IDs
               #                              are UUIDv5 of (thread id, role, ordinal) since event_msg
@@ -148,6 +154,7 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 - [ADR-0304 GPSLog 専用プラグインは Rep に出さない](../../../documents/adr/0304-plugin-emits-kyou-false.md)
 - [ADR-0305 常駐ビルダと WAL](../../../documents/adr/0305-plugin-background-builder-wal.md)
 - [ADR-0306 Codex のスレッドIDはファイル名から](../../../documents/adr/0306-codex-thread-id-from-filename.md)
+- [ADR-0314 Codex 0.151 以降の会話は item_completed から読み、返事は最終回答を本文にする](../../../documents/adr/0314-codex-conversation-from-item-completed.md)
 - [ADR-0308 プラグインが複数の rep 名を名乗る](../../../documents/adr/0308-plugin-multiple-rep-names.md)
 - [ADR-0309 provides に git_commit_log](../../../documents/adr/0309-plugin-provides-git-commit-log.md)
 - [ADR-0310 ChatGPT / Claude.ai はエクスポート ZIP のまま読み、展開済み JSON は読まない](../../../documents/adr/0310-chat-export-plugins-read-zip.md)

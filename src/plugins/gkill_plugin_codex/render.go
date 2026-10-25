@@ -90,6 +90,11 @@ details[open] > summary::before { content: "\25BE "; }
 .ide-list { margin: 4px 0 2px 0; padding: 0; list-style: none; }
 .ide-list li { font-size: 0.78em; margin: 2px 0; word-break: break-all;
   font-family: ui-monospace, Consolas, monospace; color: var(--code-color); }
+.answer { margin: 2px 0 6px 0; }
+.commentary { font-size: 0.85em; white-space: pre-wrap; word-break: break-word;
+  line-height: 1.45; margin: 4px 0; }
+.question { border-left: 3px solid var(--sender-color); padding-left: 8px; margin: 6px 0; }
+.question-label { font-size: 0.75em; color: var(--sender-color); margin-bottom: 2px; }
 .truncated { font-size: 0.75em; color: var(--ts-color); }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
@@ -125,6 +130,11 @@ details[open] > summary::before { content: "\25BE "; }
 </head><body>`
 
 // renderMessageHTML は1Kyouの詳細HTMLを組み立てる。
+//
+// Claude.ai プラグインと同じく、1件は人間の発言1つか Codex の返事1つの吹き出しにする。
+// 返事は最終回答と質問を本文にし、途中報告・思考・ツール・変更ファイルなどは
+// 「作業の経過」1つに畳む。rykv は一覧の行にこのHTMLをそのまま描くので、
+// 経過を開いたまま並べると会話が読めなくなる。
 func renderMessageHTML(m message) string {
 	var sb strings.Builder
 	sb.WriteString(turnHTMLHead)
@@ -139,6 +149,9 @@ func renderMessageHTML(m message) string {
 	class, sender := "assistant", "Codex"
 	if m.Role == roleHuman {
 		class, sender = "human", "あなた"
+		if m.QuestionReply {
+			sender = "あなた（質問への回答）"
+		}
 	}
 	sb.WriteString(`<div class="msg `)
 	sb.WriteString(class)
@@ -147,23 +160,21 @@ func renderMessageHTML(m message) string {
 	sb.WriteString(`</div>`)
 	sb.WriteString(html.EscapeString(m.Text))
 
-	// IDEの前置きは本文の「後ろ」に畳んで置く。
+	// 前置きは本文の「後ろ」に畳んで置く。
 	// rykv は一覧の行にこのHTMLをそのまま描くので、
 	// 前に出すとどの行も「開いているタブ一覧」で埋まって読めなくなる。
 	renderIDEContext(&sb, m.IDEContext)
+	renderBrowserContext(&sb, m.IDEContext)
 
-	if summary := renderSummaryLine(m.Items); summary != "" {
-		sb.WriteString(`<div class="summary-line">`)
-		sb.WriteString(summary)
-		sb.WriteString(`</div>`)
-	}
-	for _, item := range m.Items {
+	body, process := splitRunBlocks(m.Items)
+	for _, item := range body {
 		if sb.Len() > maxHTMLBytes {
 			sb.WriteString(`<div class="truncated">(以降は長いため省略しました)</div>`)
 			break
 		}
-		renderItem(&sb, item)
+		renderBodyItem(&sb, item)
 	}
+	renderProcess(&sb, process)
 
 	ts := ""
 	if !m.RelatedTime.IsZero() {
@@ -207,9 +218,132 @@ func formatDuration(ms int64) string {
 	return fmt.Sprintf("所要 %d分%d秒", seconds/60, seconds%60)
 }
 
+// splitRunBlocks は返事のブロックを「本文」と「作業の経過」に分ける。
+//
+// 本文は最終回答(phase=final_answer)と Codex からの質問。どちらも無い区切り
+// (作業中に人間が割り込んだ、phase を持たない古い版)では、最後の発言を本文にする。
+// 残りは時系列のまま作業の経過へ入れる。人間の発言は Items を持たないので両方空になる。
+//
+// Codex は質問ツールを呼ぶとき、たいてい同じ文面を最終回答にも書く。
+// 最終回答が設問の書き出しを含むなら、質問は経過の側へ回して本文に二度出さない。
+func splitRunBlocks(blocks []turnItem) (body []turnItem, process []turnItem) {
+	var finals []string
+	for _, block := range blocks {
+		if block.Kind == blockText && isFinalPhase(block.Phase) {
+			finals = append(finals, block.Text)
+		}
+	}
+	restated := func(question turnItem) bool {
+		lead := questionLead(question.Text)
+		return lead != "" && slices.ContainsFunc(finals, func(final string) bool {
+			return strings.Contains(final, lead)
+		})
+	}
+	isBody := func(block turnItem) bool {
+		if block.Kind == blockQuestion {
+			return !restated(block)
+		}
+		return block.Kind == blockText && isFinalPhase(block.Phase)
+	}
+	fallback := -1
+	if !slices.ContainsFunc(blocks, isBody) {
+		for i := len(blocks) - 1; i >= 0; i-- {
+			if blocks[i].Kind == blockText {
+				fallback = i
+				break
+			}
+		}
+	}
+	for i, block := range blocks {
+		if isBody(block) || i == fallback {
+			body = append(body, block)
+		} else {
+			process = append(process, block)
+		}
+	}
+	return body, process
+}
+
+// questionLeadRunes は、最終回答が質問を言い直しているかを見るときに比べる設問の書き出しの長さ。
+// 最終回答はマークダウンで書き直されることがあるので、設問の全文ではなく書き出しだけを比べる。
+const questionLeadRunes = 30
+
+// questionLead は質問ブロックの最初の設問の書き出しを返す。
+func questionLead(text string) string {
+	first, _, _ := strings.Cut(strings.TrimSpace(text), "\n")
+	runes := []rune(strings.TrimSpace(first))
+	if len(runes) > questionLeadRunes {
+		runes = runes[:questionLeadRunes]
+	}
+	return string(runes)
+}
+
+// renderBodyItem は本文のブロック(最終回答・質問)を描く。
+func renderBodyItem(sb *strings.Builder, item turnItem) {
+	switch item.Kind {
+	case blockQuestion:
+		sb.WriteString(`<div class="question"><div class="question-label">❓ Codex からの質問</div>`)
+		sb.WriteString(html.EscapeString(item.Text))
+		sb.WriteString(`</div>`)
+	default:
+		sb.WriteString(`<div class="answer">`)
+		sb.WriteString(html.EscapeString(item.Text))
+		sb.WriteString(`</div>`)
+	}
+}
+
+// renderProcess は作業の経過を1つの折りたたみに描く。中は時系列のまま。
+func renderProcess(sb *strings.Builder, process []turnItem) {
+	if len(process) == 0 {
+		return
+	}
+	sb.WriteString(`<details class="process"><summary>🛠 作業の経過`)
+	if summary := processSummary(process); summary != "" {
+		sb.WriteString(` — `)
+		sb.WriteString(summary)
+	}
+	sb.WriteString(`</summary>`)
+	for _, item := range process {
+		if sb.Len() > maxHTMLBytes {
+			sb.WriteString(`<div class="truncated">(以降は長いため省略しました)</div>`)
+			break
+		}
+		renderItem(sb, item)
+	}
+	sb.WriteString(`</details>`)
+}
+
+// processSummary は作業の経過の1行サマリ(エスケープ済み)。途中報告の数を先頭に足す。
+func processSummary(process []turnItem) string {
+	commentary := 0
+	for _, item := range process {
+		if item.Kind == blockText {
+			commentary++
+		}
+	}
+	var parts []string
+	if commentary > 0 {
+		parts = append(parts, fmt.Sprintf("途中報告 ×%d", commentary))
+	}
+	if summary := renderSummaryLine(process); summary != "" {
+		parts = append(parts, summary)
+	}
+	return strings.Join(parts, " · ")
+}
+
+// renderBrowserContext はアプリ内ブラウザの前置きを折りたたみで描く。
+func renderBrowserContext(sb *strings.Builder, preamble *ideContext) {
+	if preamble == nil || preamble.BrowserContext == "" {
+		return
+	}
+	sb.WriteString(`<details><summary>🌐 ブラウザのコンテキスト</summary><div class="plan-body">`)
+	sb.WriteString(html.EscapeString(preamble.BrowserContext))
+	sb.WriteString(`</div></details>`)
+}
+
 // renderIDEContext はIDEの前置きを折りたたみで描く。
 func renderIDEContext(sb *strings.Builder, ideCtx *ideContext) {
-	if ideCtx == nil {
+	if ideCtx == nil || ideCtx.ActiveFile == "" && len(ideCtx.OpenTabs) == 0 {
 		return
 	}
 	label := "🖥 IDEのコンテキスト"
@@ -284,13 +418,16 @@ func renderSummaryLine(items []turnItem) string {
 	return strings.Join(parts, " · ")
 }
 
-// renderItem は応答本文の要素1つを描画する。
+// renderItem は作業の経過の要素1つを描画する。
 func renderItem(sb *strings.Builder, item turnItem) {
 	switch item.Kind {
 	case blockText:
-		sb.WriteString(`<div>`)
+		sb.WriteString(`<div class="commentary">`)
 		sb.WriteString(html.EscapeString(item.Text))
 		sb.WriteString(`</div>`)
+
+	case blockQuestion:
+		renderBodyItem(sb, item)
 
 	case blockNotice:
 		sb.WriteString(`<div class="notice">`)
@@ -436,7 +573,7 @@ func renderSubAgent(sb *strings.Builder, agent *subAgent) {
 			break
 		}
 		switch item.Kind {
-		case blockText, blockPlan:
+		case blockText, blockPlan, blockQuestion:
 			sb.WriteString(`<div class="agent-body">`)
 			sb.WriteString(html.EscapeString(item.Text))
 			sb.WriteString(`</div>`)

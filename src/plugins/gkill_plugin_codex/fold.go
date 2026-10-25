@@ -19,7 +19,7 @@ func decodePatchFiles(extra string) []patchFile {
 	return files
 }
 
-// decodeIDEContext は thread_item.extra に入れたIDEの前置きを戻す。
+// decodeIDEContext は thread_item.extra に入れた発言の前置き(IDE・アプリ内ブラウザ)を戻す。
 func decodeIDEContext(extra string) *ideContext {
 	if extra == "" {
 		return nil
@@ -28,7 +28,7 @@ func decodeIDEContext(extra string) *ideContext {
 	if json.Unmarshal([]byte(extra), &decoded) != nil {
 		return nil
 	}
-	if decoded.ActiveFile == "" && len(decoded.OpenTabs) == 0 {
+	if decoded.ActiveFile == "" && len(decoded.OpenTabs) == 0 && decoded.BrowserContext == "" {
 		return nil
 	}
 	return &decoded
@@ -43,6 +43,8 @@ const (
 	blockPlan     = "plan"
 	blockNotice   = "notice"
 	blockSpawn    = "spawn"
+	// blockQuestion は Codex から人間への質問。最終回答と並べて本文に出す。
+	blockQuestion = "question"
 )
 
 // サブエージェントの扱い。
@@ -191,7 +193,9 @@ func foldThread(threadID string, file scannedFile, group threadGroup, subAgents 
 			continue
 
 		case itemAssistant:
-			ensureRun(item).addText(item.Text)
+			ensureRun(item).addText(item.Text, item.Name)
+		case itemQuestion:
+			ensureRun(item).addQuestion(item.Text)
 		case itemThinking:
 			ensureRun(item).addThinking(item.Text)
 		case itemTool:
@@ -224,6 +228,7 @@ func buildHumanMessage(header message, threadID string, ordinal int64, model str
 	built.Model = model
 	built.Text = item.Text
 	built.IDEContext = decodeIDEContext(item.Extra)
+	built.QuestionReply = item.Name == userKindQuestionReply
 	built.RelatedTime = item.TS
 	built.UpdateTime = item.TS
 	return built
@@ -270,11 +275,19 @@ func (r *runBuilder) last(kind string) *turnItem {
 	return tail
 }
 
-func (r *runBuilder) addText(text string) {
+// addText は Codex の発言を足す。phase は最終回答(final_answer)か途中報告(commentary)か。
+func (r *runBuilder) addText(text, phase string) {
 	if text == "" {
 		return
 	}
-	r.blocks = append(r.blocks, turnItem{Kind: blockText, Text: text})
+	r.blocks = append(r.blocks, turnItem{Kind: blockText, Text: text, Phase: phase})
+}
+
+func (r *runBuilder) addQuestion(text string) {
+	if text == "" {
+		return
+	}
+	r.blocks = append(r.blocks, turnItem{Kind: blockQuestion, Text: text})
 }
 
 func (r *runBuilder) addThinking(text string) {
@@ -382,9 +395,11 @@ func buildSubAgent(threadID string, group threadGroup, depth int) *subAgent {
 				promptTaken = true
 				continue
 			}
-			runner.addText(item.Text)
+			runner.addText(item.Text, "")
 		case itemAssistant:
-			runner.addText(item.Text)
+			runner.addText(item.Text, item.Name)
+		case itemQuestion:
+			runner.addQuestion(item.Text)
 		case itemThinking:
 			runner.addThinking(item.Text)
 		case itemTool:

@@ -45,6 +45,12 @@ type recordHead struct {
 	// Payload は payload.type。その種別が payload.type を持たないとき、
 	// および先頭 headScanBytes 内に見つからなかったときは空。
 	Payload string
+	// Item は payload.item.type(event_msg/item_completed の項目の種類)。
+	// 0.151 以降は会話もツールの実行結果もこの1種別に載るので、ここまで見ないと捨てる行を選べない。
+	// 実データでは item.type は必ず先頭 headScanBytes 内にある。見つからなければ空。
+	Item string
+	// ItemKind は payload.item.kind(Extension の下位種別)。無ければ空。
+	ItemKind string
 }
 
 // Kind は "外側/payload" の形にした種別。判定に使う。
@@ -136,7 +142,9 @@ func (lr *lineReader) bufferCap() int { return cap(lr.buf) }
 
 var (
 	keyType    = []byte(`"type":"`)
+	keyKind    = []byte(`"kind":"`)
 	keyPayload = []byte(`"payload":`)
+	keyItem    = []byte(`"item":{`)
 )
 
 // classifyHead は行の先頭チャンクから (外側type, payload.type) を取り出す。
@@ -173,7 +181,25 @@ func classifyHead(chunk []byte) recordHead {
 	if innerType := bytes.Index(inner, keyType); innerType >= 0 {
 		result.Payload = jsonStringAt(inner, innerType+len(keyType))
 	}
+
+	if itemAt := bytes.Index(inner, keyItem); itemAt >= 0 {
+		item := inner[itemAt+len(keyItem):]
+		result.Item = topLevelStringOf(item, keyType)
+		result.ItemKind = topLevelStringOf(item, keyKind)
+	}
 	return result
+}
+
+// topLevelStringOf はオブジェクトの直下にある文字列キーの値を返す。
+//
+// 入れ子の中の同名キー(content[].type など)を拾わないよう、
+// キーより前に { か [ が現れたら直下ではないとみなして空を返す。
+func topLevelStringOf(object []byte, key []byte) string {
+	at := bytes.Index(object, key)
+	if at < 0 || bytes.ContainsAny(object[:at], "{[") {
+		return ""
+	}
+	return jsonStringAt(object, at+len(key))
 }
 
 // jsonStringAt は開始位置から閉じ引用符までを返す。

@@ -47,6 +47,9 @@ OpenAI Codex CLI のロールアウトログ（JSONL）を Kyou 化するにあ�
 
 序数ベースのIDは**追記専用であることに依存する**。過去のレコードが書き換えられたり挿入されたりすると、以降のIDが全部ずれる。
 
+「会話は `event_msg` レーンのみ」は、Codex 0.151 以降に会話が `event_msg/item_completed` へ移ったことに合わせて
+[ADR-0314](0314-codex-conversation-from-item-completed.md) で広げた（`response_item/message` を使わない理由はこの ADR のまま）。
+
 ## Evidence
 
 - 実データ数十ファイル / 数百MB

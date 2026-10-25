@@ -11,7 +11,7 @@
 | `src/server/gkill/api/gkill_server_api/` | プラグインのロード・subprocess起動・stdio通信・クラッシュ後自動再起動の統合テスト |
 | `src/server/gkill/dao/reps/` | `plugin_repository_impl.go` のリポジトリ層テスト |
 | `src/plugins/gkill_plugin_claudecode/loader_test.go` | ターン分割・ファイル種別判定・サブエージェント紐付け・ツール要約・HTML生成のユニットテスト（`testdata/` の合成トランスクリプトを使用） |
-| `src/plugins/gkill_plugin_codex/{reader,loader,fold,cache,render,config}_test.go` | 巨大行リーダ・`session_meta` の identity/environment 分離・IDE前置きの剥がし・Kyou ID の安定性・差分再構築・構築中の並行読み取りのユニットテスト（`testdata/` の合成ロールアウトを使用） |
+| `src/plugins/gkill_plugin_codex/{reader,loader,fold,cache,render,config}_test.go` | 巨大行リーダ・`session_meta` の identity/environment 分離・IDE とアプリ内ブラウザの前置きの剥がし・0.151 以降の新レーン（`item_completed`）の読み取りと旧レーンとの重複防止・質問と回答・最終回答を本文にして経過を畳む描画・Kyou ID の安定性・差分再構築・構築中の並行読み取りのユニットテスト（`testdata/` の合成ロールアウトを使用。新レーンは `testdata/item_lane/`） |
 | `src/plugins/gkill_plugin_archived_git_commit_log/{cache,scan,find_kyous,config,render}_test.go` | zip の中の Git リポジトリの取り込み。testdata に `.git` は置けないので、テストのたびに go-git でリポジトリを作って `archive/zip` で固める（`testutil_test.go`）。native の git rep と同じ列（ID=ハッシュ・rep 名=ディレクトリ名・コミッタ日時とゾーン・author・行数）で入ること、同じリポジトリを2つの zip に入れても1件で zip を外すと他に無いコミットだけ消えること、コミット0件の `git init` 直後は0件で正常、`.git` の無い zip は素通り、1 zip に複数（入れ子・ルート直下）、packfile、指紋による増分、`.git` の上限超過は理由を残して飛ばす、構築中の並行読み取り |
 | `src/plugins/gkill_plugin_{chatgpt,claudeai,claudecode,codex,archived_git_commit_log}/builder_test.go` | `buildOnce`（常駐ビルダと単独モードの共通経路）が構築の失敗を `cache_meta` の `build_state=error` / `build_error` に残し、stderr に `ERROR:` 行を出してエラーを返すこと。成功時は `build_state` を触らない。fitbit は `runOnce`（`gkill_plugin_fitbit/builder_test.go`）で ERROR 行と完了 Info の出し分けを見る |
 | `src/plugins/gkill_plugin_{chatgpt,claudeai}/loader_test.go` | 要素ごとに読む `decodeConversationArray` が、配列でない JSON・途中で切れた JSON・配列の後ろに続きがある JSON をエラーにすること（黙って0件や途中までにしない） |
@@ -56,6 +56,9 @@ cd src/plugins/gkill_plugin_archived_git_commit_log && go test ./...
 - `TestClassifyHeadUnknownPayloadIsKept` — 判定できない行を捨てないこと
   （捨てるとログの形式が変わった日に会話が静かに消える）
 - `TestConcurrentReadDuringBuild` — 構築中に検索が詰まらないこと（WAL + ロック分割の回帰）
+- `TestParseRolloutReadsItemCompletedLane` — 0.151 以降の形（会話が `item_completed` にだけ載る）を読めること
+  （読めないと人間の発言が見つからず、セッション全体がツール呼び出しだけの応答1件に溜まる。エラーは出ない）
+- `TestParseRolloutDropsItemLaneInLegacyTurns` — 両方のレーンが同じターンに並んでも会話が二重にならないこと
 
 ## プラグイン SDK
 

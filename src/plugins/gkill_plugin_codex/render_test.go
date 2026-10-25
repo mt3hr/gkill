@@ -141,6 +141,110 @@ func TestRenderAssistantFoldsToolsAndSubAgent(t *testing.T) {
 	}
 }
 
+func TestRenderAssistantShowsFinalAnswerAndFoldsProcess(t *testing.T) {
+	// 返事は最終回答と質問を本文にし、途中報告・思考・ツールは「作業の経過」1つに畳む。
+	// rykv は一覧の行にこのHTMLをそのまま描くので、経過を開いたままだと会話が読めない。
+	built := message{
+		Role: roleAssistant,
+		Items: []turnItem{
+			{Kind: blockThinking, Thinking: []string{"考え"}},
+			{Kind: blockText, Text: "途中の報告です", Phase: "commentary"},
+			{Kind: blockTools, Tools: []toolCall{{Name: "exec", Summary: "go test"}}},
+			{Kind: blockQuestion, Text: "どちらにしますか？\n・A"},
+			{Kind: blockText, Text: "完成しました", Phase: phaseFinalAnswer},
+		},
+	}
+	html := renderMessageHTML(built)
+
+	processAt := strings.Index(html, `<details class="process">`)
+	questionAt := strings.Index(html, "どちらにしますか？")
+	answerAt := strings.Index(html, "完成しました")
+	commentaryAt := strings.Index(html, "途中の報告です")
+	if processAt < 0 || questionAt < 0 || answerAt < 0 || commentaryAt < 0 {
+		t.Fatalf("process=%d question=%d answer=%d commentary=%d", processAt, questionAt, answerAt, commentaryAt)
+	}
+	if questionAt > answerAt || answerAt > processAt {
+		t.Error("本文(質問→最終回答の時系列)が作業の経過より前に出ていない")
+	}
+	if commentaryAt < processAt {
+		t.Error("途中報告が作業の経過の外に出ている")
+	}
+	for _, want := range []string{"❓ Codex からの質問", "🛠 作業の経過", "途中報告 ×1", "exec ×1", "thinking ×1"} {
+		if !strings.Contains(html, want) {
+			t.Errorf("%q が出ていない", want)
+		}
+	}
+}
+
+func TestRenderQuestionRestatedByFinalAnswerIsShownOnce(t *testing.T) {
+	// Codex は質問ツールを呼ぶとき、たいてい同じ文面を最終回答にも書く。本文に同じ質問を二度出さない
+	built := message{
+		Role: roleAssistant,
+		Items: []turnItem{
+			{Kind: blockQuestion, Text: "どちらの配色にしますか？\n・明るい配色\n・暗い配色"},
+			{Kind: blockText, Text: "どちらの配色にしますか？\n- 明るい配色\n- 暗い配色", Phase: phaseFinalAnswer},
+		},
+	}
+	html := renderMessageHTML(built)
+	processAt := strings.Index(html, `<details class="process">`)
+	if processAt < 0 {
+		t.Fatal("言い直された質問が作業の経過に回っていない")
+	}
+	if labelAt := strings.Index(html, "Codex からの質問"); labelAt < processAt {
+		t.Error("言い直された質問が本文に出ている")
+	}
+	if answerAt := strings.Index(html, "- 明るい配色"); answerAt < 0 || answerAt > processAt {
+		t.Error("最終回答が本文に出ていない")
+	}
+}
+
+func TestRenderAssistantWithoutFinalAnswerUsesLastMessage(t *testing.T) {
+	// 作業中に人間が割り込んだ区切りや、phase を持たない古い版には最終回答が無い。最後の発言を本文にする
+	built := message{
+		Role: roleAssistant,
+		Items: []turnItem{
+			{Kind: blockText, Text: "最初の報告", Phase: "commentary"},
+			{Kind: blockTools, Tools: []toolCall{{Name: "exec"}}},
+			{Kind: blockText, Text: "最後の報告", Phase: "commentary"},
+		},
+	}
+	html := renderMessageHTML(built)
+	processAt := strings.Index(html, `<details class="process">`)
+	if lastAt := strings.Index(html, "最後の報告"); lastAt < 0 || lastAt > processAt {
+		t.Error("最後の発言が本文に出ていない")
+	}
+	if firstAt := strings.Index(html, "最初の報告"); firstAt < processAt {
+		t.Error("それより前の発言は作業の経過に入れる")
+	}
+}
+
+func TestRenderHumanQuestionReplyAndBrowserContext(t *testing.T) {
+	built := message{
+		Role:          roleHuman,
+		Text:          "暗い配色で",
+		QuestionReply: true,
+		IDEContext:    &ideContext{BrowserContext: "URL: <x>"},
+	}
+	html := renderMessageHTML(built)
+	if !strings.Contains(html, "あなた（質問への回答）") {
+		t.Error("質問への回答のラベルが無い")
+	}
+	bodyAt := strings.Index(html, "暗い配色で")
+	browserAt := strings.Index(html, "🌐 ブラウザのコンテキスト")
+	if browserAt < 0 || browserAt < bodyAt {
+		t.Error("ブラウザの前置きが本文の後ろに畳まれていない")
+	}
+	if strings.Contains(html, "IDEのコンテキスト") {
+		t.Error("IDEの前置きが無いのに IDE の折りたたみを出している")
+	}
+	if strings.Contains(html, `class="process"`) {
+		t.Error("人間の発言に作業の経過を出している")
+	}
+	if strings.Contains(html, "URL: <x>") {
+		t.Error("ブラウザの前置きがエスケープされていない")
+	}
+}
+
 func TestRenderRespectsSizeCap(t *testing.T) {
 	built := message{Role: roleAssistant}
 	for range 20000 {

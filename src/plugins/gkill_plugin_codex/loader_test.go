@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -9,10 +10,27 @@ import (
 )
 
 const (
-	parentThreadID = "00000000-0000-7000-8000-000000000001"
-	subThreadID    = "00000000-0000-7000-8000-000000000002"
-	oldThreadID    = "00000000-0000-7000-8000-000000000003"
+	parentThreadID   = "00000000-0000-7000-8000-000000000001"
+	subThreadID      = "00000000-0000-7000-8000-000000000002"
+	oldThreadID      = "00000000-0000-7000-8000-000000000003"
+	itemLaneThreadID = "00000000-0000-7000-8000-000000000004"
 )
+
+// itemLaneFixture は 0.151 以降の形(会話が item_completed にだけ載る)のロールアウト。
+func itemLaneFixture() string {
+	return filepath.Join("testdata", "item_lane", "2026", "01", "03",
+		"rollout-2026-01-03T10-00-00-"+itemLaneThreadID+".jsonl")
+}
+
+// writeRollout はテスト用のロールアウトを一時ディレクトリに書き、そのパスを返す。
+func writeRollout(t *testing.T, threadID string, lines ...string) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "rollout-2026-01-04T10-00-00-"+threadID+".jsonl")
+	if err := os.WriteFile(path, []byte(strings.Join(lines, "\n")+"\n"), 0o600); err != nil {
+		t.Fatalf("write rollout: %v", err)
+	}
+	return path
+}
 
 func parentFixture() string {
 	return filepath.Join("testdata", "sessions", "2026", "01", "02",
@@ -424,8 +442,8 @@ func TestScanSources(t *testing.T) {
 	for _, file := range files {
 		byKind[file.Kind]++
 	}
-	if byKind[kindRollout] != 3 {
-		t.Errorf("rollout = %d, want 3", byKind[kindRollout])
+	if byKind[kindRollout] != 4 {
+		t.Errorf("rollout = %d, want 4 (旧形式3 + 新形式1)", byKind[kindRollout])
 	}
 	if byKind[kindIndex] != 1 {
 		t.Errorf("index = %d, want 1", byKind[kindIndex])
@@ -440,6 +458,200 @@ func TestScanSources(t *testing.T) {
 			t.Errorf("並び順が降順でない: %s のあとに %s", files[i-1].Path, files[i].Path)
 			break
 		}
+	}
+}
+
+func TestParseRolloutReadsItemCompletedLane(t *testing.T) {
+	// 0.151 以降の Codex は会話を item_completed(UserMessage / AgentMessage / Reasoning)にしか書かず、
+	// 旧レーンの user_message は1行も出ない。ここを読まないと人間の発言が見つからず、
+	// セッション全体がツール呼び出しだけの1件の応答に溜まる。
+	parsed := mustParse(t, itemLaneFixture())
+
+	want := map[string]int{
+		itemUser:      3,
+		itemAssistant: 5,
+		itemThinking:  1,
+		itemTool:      2, // exec / web_search
+		itemPatch:     1,
+		itemQuestion:  1,
+		itemNotice:    1, // ContextCompaction
+		itemTaskDone:  2,
+		itemTurn:      1,
+	}
+	got := map[string]int{}
+	for _, item := range parsed.Items {
+		got[item.Kind]++
+	}
+	for kind, count := range want {
+		if got[kind] != count {
+			t.Errorf("%s = %d, want %d", kind, got[kind], count)
+		}
+	}
+	for kind, count := range got {
+		if _, ok := want[kind]; !ok {
+			t.Errorf("知らない種別 %s が %d 件出ている(task_started の印は保存しない)", kind, count)
+		}
+	}
+	if parsed.Dropped != 0 || len(parsed.UnknownKinds) != 0 {
+		t.Errorf("Dropped=%d UnknownKinds=%v", parsed.Dropped, parsed.UnknownKinds)
+	}
+
+	users := itemsOfKind(parsed.Items, itemUser)
+	if users[0].Text != "画面を直してください。" {
+		t.Errorf("1つ目 = %q (IDEの前置きは剥がす)", users[0].Text)
+	}
+	if ide := decodeIDEContext(users[0].Extra); ide == nil || ide.ActiveFile != "app.go" {
+		t.Errorf("IDEの前置きが取れていない: %+v", ide)
+	}
+	if users[1].Text != "暗い配色でお願いします。" || users[1].Name != userKindQuestionReply {
+		t.Errorf("質問への回答 = %q / %q (包みと JSON を外して回答だけにし、印を付ける)", users[1].Text, users[1].Name)
+	}
+	if users[2].Text != "この画面を見てください。\n"+imageMarker {
+		t.Errorf("3つ目 = %q (ブラウザの前置きを剥がし、画像は印だけ残す)", users[2].Text)
+	}
+	if preamble := decodeIDEContext(users[2].Extra); preamble == nil || !strings.Contains(preamble.BrowserContext, "URL:") {
+		t.Errorf("ブラウザの前置きが取れていない: %+v", preamble)
+	}
+
+	var phases []string
+	for _, assistant := range itemsOfKind(parsed.Items, itemAssistant) {
+		phases = append(phases, assistant.Name)
+	}
+	if strings.Join(phases, ",") != "commentary,final_answer,commentary,final_answer,final_answer" {
+		t.Errorf("phase = %v", phases)
+	}
+
+	questions := itemsOfKind(parsed.Items, itemQuestion)
+	if questions[0].Text != "どちらの配色にしますか？\n・明るい配色\n・暗い配色" {
+		t.Errorf("質問 = %q", questions[0].Text)
+	}
+
+	tools := itemsOfKind(parsed.Items, itemTool)
+	if tools[0].Name != "exec" || tools[1].Name != "web_search" || tools[1].Text != "vue transition" {
+		t.Errorf("ツール = %+v", tools)
+	}
+
+	files := decodePatchFiles(itemsOfKind(parsed.Items, itemPatch)[0].Extra)
+	byPath := map[string]patchFile{}
+	for _, file := range files {
+		byPath[file.Path] = file
+	}
+	if app := byPath["app.go"]; app.Type != "update" || app.Added != 2 || app.Removed != 1 {
+		t.Errorf("app.go = %+v, want update +2 -1", app)
+	}
+	if added := byPath["added.go"]; added.Type != "add" || added.Added != 3 {
+		t.Errorf("added.go = %+v, want add +3 (unified diff が無いので本文の行数)", added)
+	}
+
+	for _, item := range parsed.Items {
+		for _, forbidden := range []string{"保存されてはいけない", "人間が打った入力ではない"} {
+			if strings.Contains(item.Text, forbidden) || strings.Contains(item.Extra, forbidden) {
+				t.Errorf("捨てるべき内容が %s に残っている: %q", item.Kind, item.Text)
+			}
+		}
+	}
+}
+
+func TestParseRolloutDropsItemLaneInLegacyTurns(t *testing.T) {
+	// 旧レーンと新レーンが同じターンに並ぶと会話が二重になる。旧レーンが出たターンでは新レーンを捨てる。
+	// ファイル単位で選ぶと、旧版のセッションを新版で resume した後半(新レーンだけ)が消えるので、ターン単位で選ぶ。
+	const threadID = "00000000-0000-7000-8000-000000000005"
+	item := func(turn, body string) string {
+		return `{"timestamp":"2026-01-04T01:00:00.000Z","type":"event_msg","payload":{"type":"item_completed","thread_id":"` +
+			threadID + `","turn_id":"` + turn + `","item":` + body + `}}`
+	}
+	path := writeRollout(t, threadID,
+		`{"timestamp":"2026-01-04T01:00:00.000Z","type":"session_meta","payload":{"id":"`+threadID+`","cwd":"c:\\work\\p"}}`,
+		`{"timestamp":"2026-01-04T01:00:00.000Z","type":"event_msg","payload":{"type":"task_started","turn_id":"turn-x"}}`,
+		`{"timestamp":"2026-01-04T01:00:00.000Z","type":"event_msg","payload":{"type":"user_message","message":"両方のレーンにある発言"}}`,
+		item("turn-x", `{"type":"UserMessage","id":"u-1","content":[{"type":"text","text":"両方のレーンにある発言"}]}`),
+		`{"timestamp":"2026-01-04T01:00:00.000Z","type":"event_msg","payload":{"type":"agent_message","message":"両方のレーンにある返事","phase":"final_answer"}}`,
+		item("turn-x", `{"type":"AgentMessage","id":"a-1","content":[{"type":"Text","text":"両方のレーンにある返事"}],"phase":"final_answer"}`),
+		item("turn-x", `{"type":"Plan","id":"p-1","text":"## 計画"}`),
+		`{"timestamp":"2026-01-04T01:00:00.000Z","type":"event_msg","payload":{"type":"task_started","turn_id":"turn-y"}}`,
+		item("turn-y", `{"type":"UserMessage","id":"u-2","content":[{"type":"text","text":"新レーンだけの発言"}]}`),
+		item("turn-y", `{"type":"AgentMessage","id":"a-2","content":[{"type":"Text","text":"新レーンだけの返事"}],"phase":"final_answer"}`),
+	)
+	parsed := mustParse(t, path)
+
+	var users []string
+	for _, user := range itemsOfKind(parsed.Items, itemUser) {
+		users = append(users, user.Text)
+	}
+	if strings.Join(users, "|") != "両方のレーンにある発言|新レーンだけの発言" {
+		t.Errorf("人間の発言 = %v", users)
+	}
+	if got := len(itemsOfKind(parsed.Items, itemAssistant)); got != 2 {
+		t.Errorf("返事が %d 件, want 2", got)
+	}
+	// 計画は旧版のころから新レーンにしか無いので、重複判定で捨てない
+	if got := len(itemsOfKind(parsed.Items, itemPlan)); got != 1 {
+		t.Errorf("計画が %d 件, want 1", got)
+	}
+}
+
+func TestParseRolloutKeepsPlaceOfOversizeItemUserMessage(t *testing.T) {
+	// 上限を超えて落とした人間の発言は、新レーンでも場所だけは残す。
+	// 抜けると応答の境目がずれて ordinal が動き、KyouIDが変わってしまう。
+	const threadID = "00000000-0000-7000-8000-000000000006"
+	path := writeRollout(t, threadID,
+		`{"timestamp":"2026-01-04T01:00:00.000Z","type":"session_meta","payload":{"id":"`+threadID+`"}}`,
+		`{"timestamp":"2026-01-04T01:01:00.000Z","type":"event_msg","payload":{"type":"item_completed","turn_id":"t","item":{"type":"UserMessage","id":"u-1","content":[{"type":"text","text":"`+
+			strings.Repeat("x", maxRecordBytes)+`"}]}}}`,
+		`{"timestamp":"2026-01-04T01:02:00.000Z","type":"event_msg","payload":{"type":"item_completed","turn_id":"t","item":{"type":"AgentMessage","id":"a-1","content":[{"type":"Text","text":"返事"}],"phase":"final_answer"}}}`,
+	)
+	parsed := mustParse(t, path)
+	if parsed.Dropped != 1 {
+		t.Errorf("Dropped = %d, want 1", parsed.Dropped)
+	}
+	users := itemsOfKind(parsed.Items, itemUser)
+	if len(users) != 1 || !strings.Contains(users[0].Text, "大きすぎる") {
+		t.Errorf("落とした発言の置き場所が無い: %+v", users)
+	}
+}
+
+func TestNormalizeUserTextLeavesUnknownShapes(t *testing.T) {
+	// 閉じタグが無い・似た名前の別タグは剥がさない(知らない形で本文を消さない)
+	for _, input := range []string{
+		"<send_user_message_question_reply>\n閉じていない回答",
+		"<in-app-browser-context-extra>\n別のタグ\n</in-app-browser-context-extra>\n本文",
+		"ふつうの発言です。",
+	} {
+		body, preamble, isReply := normalizeUserText(input)
+		if body != input || preamble != nil || isReply {
+			t.Errorf("normalizeUserText(%q) = %q / %+v / %v", input, body, preamble, isReply)
+		}
+	}
+}
+
+func TestAnswersOfQuestionReply(t *testing.T) {
+	cases := []struct {
+		name  string
+		inner string
+		want  string
+	}{
+		{"設問1つなら回答だけ", `[{"questionItemId":"q","question":"色は？","answer":"青"}]`, "青"},
+		{"複数なら設問と回答を並べる", `[{"question":"色は？","answer":"青"},{"question":"形は？","answer":["丸","四角"]}]`,
+			"色は？\n→ 青\n\n形は？\n→ 丸、四角"},
+		{"JSONでなければそのまま", "ふつうの回答", "ふつうの回答"},
+		{"回答が空ならそのまま", `[{"question":"色は？","answer":""}]`, `[{"question":"色は？","answer":""}]`},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := answersOfQuestionReply(c.inner); got != c.want {
+				t.Errorf("got %q, want %q", got, c.want)
+			}
+		})
+	}
+}
+
+func TestFormatQuestionsAcceptsObjectOptions(t *testing.T) {
+	got := formatQuestions(`{"questions":[{"question":"どれにしますか？","options":[{"label":"A案"},{"title":"B案"}]},{"title":"次の質問"}]}`)
+	if got != "どれにしますか？\n・A案\n・B案\n\n次の質問" {
+		t.Errorf("got %q", got)
+	}
+	if got := formatQuestions(`not json`); got != "" {
+		t.Errorf("形が分からないものは空を返す: %q", got)
 	}
 }
 

@@ -264,6 +264,73 @@ func TestFoldSubagentModeOwnKyou(t *testing.T) {
 	}
 }
 
+func TestFoldItemLaneSplitsEachMessage(t *testing.T) {
+	// 0.151 以降の形でも、人間の発言1つと次の発言までの返事一式をそれぞれ1件にする
+	// (Claude.ai プラグインと同じ1メッセージ1件)。新レーンを読めないと全体が返事1件に溜まる。
+	group := buildGroupFromFiles(t, map[string]string{itemLaneThreadID: "画面の修正"}, itemLaneFixture())
+	messages := foldGroup(group, subagentModeFold)
+
+	wantRoles := []string{roleHuman, roleAssistant, roleHuman, roleAssistant, roleHuman, roleAssistant}
+	wantOrdinals := []int64{0, 1, 1, 2, 2, 3}
+	if len(messages) != len(wantRoles) {
+		t.Fatalf("Kyou が %d 件, want %d", len(messages), len(wantRoles))
+	}
+	for i, m := range messages {
+		if m.Role != wantRoles[i] || m.Ordinal != wantOrdinals[i] {
+			t.Errorf("[%d] %s/%d, want %s/%d", i, m.Role, m.Ordinal, wantRoles[i], wantOrdinals[i])
+		}
+		if m.ID != kyouIDOf(itemLaneThreadID, m.Role, m.Ordinal) {
+			t.Errorf("[%d] ID が (スレッド, ロール, 連番) から作られていない", i)
+		}
+		if m.Project != "newproj" || m.Branch != "main" || m.Model != "gpt-5.5-codex" || m.Title != "画面の修正" {
+			t.Errorf("[%d] Project=%q Branch=%q Model=%q Title=%q", i, m.Project, m.Branch, m.Model, m.Title)
+		}
+	}
+
+	if messages[0].Text != "画面を直してください。" || messages[0].QuestionReply {
+		t.Errorf("1つ目の発言 = %q reply=%v", messages[0].Text, messages[0].QuestionReply)
+	}
+	if !messages[2].QuestionReply || messages[2].Text != "暗い配色でお願いします。" {
+		t.Errorf("質問への回答 = %q reply=%v", messages[2].Text, messages[2].QuestionReply)
+	}
+	if messages[4].IDEContext == nil || messages[4].IDEContext.BrowserContext == "" {
+		t.Errorf("ブラウザの前置きが無い: %+v", messages[4].IDEContext)
+	}
+
+	blockKinds := func(m message) string {
+		var kinds []string
+		for _, block := range m.Items {
+			kinds = append(kinds, block.Kind+":"+block.Phase)
+		}
+		return strings.Join(kinds, ",")
+	}
+	if got := blockKinds(messages[1]); got != "thinking:,text:commentary,tools:,patch:,tools:,question:,text:final_answer" {
+		t.Errorf("1つ目の返事 = %s", got)
+	}
+	if got := blockKinds(messages[3]); got != "text:commentary,text:final_answer" {
+		t.Errorf("2つ目の返事 = %s", got)
+	}
+	if got := blockKinds(messages[5]); got != "notice:,text:final_answer" {
+		t.Errorf("3つ目の返事 = %s", got)
+	}
+
+	// 所要時間はその区切りの task_complete だけ。セッション全体を足し込まない
+	if messages[1].DurationMs != 0 || messages[3].DurationMs != 61000 || messages[5].DurationMs != 5000 {
+		t.Errorf("DurationMs = %d / %d / %d", messages[1].DurationMs, messages[3].DurationMs, messages[5].DurationMs)
+	}
+
+	// 途中報告と質問も検索で引ける。ブラウザの前置き(自動で付く定型文)は入れない
+	assistant := searchTextOf(messages[1])
+	for _, want := range []string{"まずファイルを読みます。", "どちらの配色にしますか？", "vue transition", "added.go", "画面の崩れを調べる"} {
+		if !strings.Contains(assistant, want) {
+			t.Errorf("返事の検索テキストに %q が無い", want)
+		}
+	}
+	if strings.Contains(searchTextOf(messages[4]), "automatically supplied") {
+		t.Error("ブラウザの前置きが検索テキストに入っている")
+	}
+}
+
 func TestKyouIDIsDeterministic(t *testing.T) {
 	// 名前空間を固定する。値を変えると全KyouのIDが変わり、
 	// ユーザが付けたタグやテキストが全部迷子になる。

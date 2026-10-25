@@ -98,7 +98,7 @@ func TestClassifyHeadUnknownPayloadIsKept(t *testing.T) {
 	}
 
 	// 明示的に捨ててよいものだけ捨てる
-	for _, kind := range []string{"compacted", "world_state", "inter_agent_communication_metadata"} {
+	for _, kind := range []string{"compacted", "world_state", "inter_agent_communication_metadata", "token_usage_record"} {
 		if keepForBuild(recordHead{Outer: kind}) {
 			t.Errorf("%s は捨てるべき", kind)
 		}
@@ -108,6 +108,111 @@ func TestClassifyHeadUnknownPayloadIsKept(t *testing.T) {
 	}
 	if keepForBuild(recordHead{Outer: outerEventMsg, Payload: "mcp_tool_call_end"}) {
 		t.Error("mcp_tool_call_end は捨てるべき")
+	}
+}
+
+func TestClassifyHeadReadsCompletedItem(t *testing.T) {
+	// 0.151 以降は会話もツールの実行結果も event_msg/item_completed に載るので、
+	// item.type まで見ないと捨てる行を選べない
+	cases := []struct {
+		name     string
+		line     string
+		item     string
+		itemKind string
+	}{
+		{
+			name:     "Extensionはkindも取る",
+			line:     `{"timestamp":"2026-01-03T01:00:00.000Z","type":"event_msg","payload":{"type":"item_completed","thread_id":"t","turn_id":"x","item":{"type":"Extension","kind":"web.search","id":"e"}}}`,
+			item:     completedExtension,
+			itemKind: extensionKindWebSearch,
+		},
+		{
+			name: "typeが先頭でなくても直下なら取る",
+			line: `{"timestamp":"2026-01-03T01:00:00.000Z","type":"event_msg","payload":{"type":"item_completed","item":{"id":"u","type":"UserMessage","content":[{"type":"text","text":"x"}]}}}`,
+			item: completedUserMessage,
+		},
+		{
+			name: "入れ子の中のtypeは取らない",
+			line: `{"timestamp":"2026-01-03T01:00:00.000Z","type":"event_msg","payload":{"type":"item_completed","item":{"id":"u","content":[{"type":"text","text":"x"}]}}}`,
+			item: "",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			head := classifyHead([]byte(c.line))
+			if head.Kind() != outerEventMsg+"/item_completed" {
+				t.Errorf("Kind = %q", head.Kind())
+			}
+			if head.Item != c.item || head.ItemKind != c.itemKind {
+				t.Errorf("Item=%q ItemKind=%q, want %q / %q", head.Item, head.ItemKind, c.item, c.itemKind)
+			}
+		})
+	}
+}
+
+func TestKeepForBuildSelectsCompletedItems(t *testing.T) {
+	completed := func(item, kind string) recordHead {
+		return recordHead{Outer: outerEventMsg, Payload: "item_completed", Item: item, ItemKind: kind}
+	}
+	// ツールの実行結果(ツールの呼び出しは response_item から拾っている)と、Web 検索以外の Extension は捨てる
+	for _, head := range []recordHead{
+		completed("CommandExecution", ""),
+		completed("McpToolCall", ""),
+		completed("ImageView", ""),
+		completed(completedExtension, "image_gen.generation"),
+	} {
+		if keepForBuild(head) {
+			t.Errorf("%s/%s は捨てるべき", head.Item, head.ItemKind)
+		}
+	}
+	// 会話・変更ファイル・計画、それに判定できなかったものは拾う
+	for _, head := range []recordHead{
+		completed(completedUserMessage, ""),
+		completed(completedAgentMessage, ""),
+		completed(completedReasoning, ""),
+		completed(completedFileChange, ""),
+		completed(completedContextCompaction, ""),
+		completed("Plan", ""),
+		completed(completedExtension, extensionKindWebSearch),
+		completed(completedExtension, ""),
+		completed("BrandNewItem", ""),
+		completed("", ""),
+		{Outer: outerEventMsg, Payload: "task_started"},
+	} {
+		if !keepForBuild(head) {
+			t.Errorf("%s/%s/%s は拾うべき", head.Payload, head.Item, head.ItemKind)
+		}
+	}
+}
+
+func TestLineReaderDrainsGiantCompletedCommand(t *testing.T) {
+	// CommandExecution は aggregated_output にコマンドの出力を丸ごと持つ。溜めずに捨てること
+	const giant = 3 * 1024 * 1024
+	input := `{"timestamp":"2026-01-03T01:00:00.000Z","type":"event_msg","payload":{"type":"item_completed","thread_id":"t","turn_id":"x","item":{"type":"CommandExecution","id":"c","aggregated_output":"` +
+		strings.Repeat("x", giant) + `"}}}` + "\n" +
+		`{"timestamp":"2026-01-03T01:01:00.000Z","type":"event_msg","payload":{"type":"item_completed","turn_id":"x","item":{"type":"AgentMessage","content":[{"type":"Text","text":"後続は普通に読める"}]}}}` + "\n"
+
+	reader := newLineReader(strings.NewReader(input))
+	head, data, dropped, err := reader.next(keepForBuild)
+	if err != nil {
+		t.Fatalf("1行目 err = %v", err)
+	}
+	if data != nil || dropped {
+		t.Errorf("捨てる行なのに data=%d バイト dropped=%v", len(data), dropped)
+	}
+	if head.Item != "CommandExecution" {
+		t.Errorf("Item = %q", head.Item)
+	}
+	if got := reader.bufferCap(); got > readBufBytes {
+		t.Errorf("捨てる行のためにバッファを %d バイト確保している(上限 %d)", got, readBufBytes)
+	}
+
+	_, data, _, err = reader.next(keepForBuild)
+	if err != nil {
+		t.Fatalf("2行目 err = %v", err)
+	}
+	if !strings.Contains(string(data), "後続は普通に読める") {
+		t.Errorf("2行目が読めていない: %q", string(data))
 	}
 }
 

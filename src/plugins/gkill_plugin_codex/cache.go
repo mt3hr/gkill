@@ -14,8 +14,11 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// cacheSchemaVersion はDDLの世代。上げると次回の起動で作り直す。
-const cacheSchemaVersion = "1"
+// cacheSchemaVersion はDDLとパーサの世代。上げると次回の起動で作り直す。
+//
+// 差分更新は変わっていないファイルを二度と読まないので、パーサを直したときも上げること。
+// 2: 0.151 以降の新レーン(item_completed の UserMessage・AgentMessage など)を読むようにした。
+const cacheSchemaVersion = "2"
 
 // cache はキャッシュDBを持つ。プロセス内に1つ。
 //

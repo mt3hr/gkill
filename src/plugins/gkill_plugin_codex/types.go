@@ -51,14 +51,63 @@ const (
 	itemPlan      = "plan"      // 計画
 	itemNotice    = "notice"    // 中断・コンテキスト圧縮などの短い通知
 	itemSpawn     = "spawn"     // サブエージェントの起動
+	itemQuestion  = "question"  // Codex から人間への質問(request_user_input)
 	itemTurn      = "turn"      // モデルが切り替わった印(描画はしない)
 	itemTaskDone  = "task_done" // ターンの所要時間(描画はしない)
+
+	// itemTurnStart はターンの始まり(task_started)。保存しない。
+	// 旧レーンと新レーンの会話が同じターンに並んだときに、片方を捨てる判定にだけ使う。
+	itemTurnStart = "turn_start"
 )
+
+// 会話の出どころ。threadItem.lane の値。
+//
+// 0.151 より前の Codex は会話を event_msg/user_message・agent_message などの「旧レーン」に書き、
+// 0.151 以降は event_msg/item_completed の UserMessage・AgentMessage などの「新レーン」にだけ書く。
+// 同じターンに両方が並ぶと会話が二重になるので、旧レーンが出たターンでは新レーンを捨てる。
+const (
+	laneLegacy = "legacy"
+	laneItem   = "item"
+)
+
+// threadItem.Name に入れる、人間の発言の種類。
+const (
+	// userKindQuestionReply は Codex の質問(request_user_input)への回答。
+	userKindQuestionReply = "question_reply"
+)
+
+// AgentMessage の phase。最終回答だけを詳細ビューの本文にする。
+const (
+	phaseFinalAnswer = "final_answer"
+	// phaseFinalLegacy は旧レーンの合成フィクスチャが使ってきた値。同じく最終回答として扱う。
+	phaseFinalLegacy = "final"
+)
+
+// isFinalPhase は phase が最終回答を表すかを返す。
+func isFinalPhase(phase string) bool {
+	return phase == phaseFinalAnswer || phase == phaseFinalLegacy
+}
+
+// item_completed の item.type。
+const (
+	completedUserMessage       = "UserMessage"
+	completedAgentMessage      = "AgentMessage"
+	completedReasoning         = "Reasoning"
+	completedFileChange        = "FileChange"
+	completedContextCompaction = "ContextCompaction"
+	completedExtension         = "Extension"
+	completedPlan              = "plan" // 大小を無視して比べる
+)
+
+// extensionKindWebSearch は Extension のうち、ツール呼び出しとして拾う kind。
+// 0.151 以降は response_item/web_search_call が出ず、Web 検索はここにしか無い。
+const extensionKindWebSearch = "web.search"
 
 const (
 	maxToolSummaryRunes = 200
 	maxNoticeRunes      = 200
 	maxPlanRunes        = 4000
+	maxPreambleRunes    = 4000
 	maxTextRunes        = 100000
 	maxSubAgentItems    = 200
 	maxPatchFiles       = 200
@@ -162,9 +211,13 @@ type patchApplyEndPayload struct {
 	Changes map[string]patchChange `json:"changes"`
 }
 
+// patchChange は変更1ファイルぶん。
+// 旧レーン(patch_apply_end)は unified_diff だけを持つ。
+// 新レーン(item_completed の FileChange)は add / delete だと content、update だと unified_diff を持つ。
 type patchChange struct {
 	Type        string `json:"type"`
 	UnifiedDiff string `json:"unified_diff"`
+	Content     string `json:"content"`
 }
 
 type subAgentActivityPayload struct {
@@ -175,13 +228,48 @@ type subAgentActivityPayload struct {
 	Kind          string `json:"kind"` // started / interacted / interrupted
 }
 
+// itemCompletedPayload は event_msg/item_completed の中身。
+//
+// item の形は type ごとに違う(CommandExecution の command は配列、McpToolCall の arguments は
+// オブジェクト)ので、まとめて1つの構造体にデコードしない。type を見てから種類ごとに読み直す。
 type itemCompletedPayload struct {
-	TurnID string `json:"turn_id"`
-	Item   struct {
-		Type string `json:"type"`
-		ID   string `json:"id"`
-		Text string `json:"text"`
-	} `json:"item"`
+	TurnID string          `json:"turn_id"`
+	Item   json.RawMessage `json:"item"`
+}
+
+type completedItemHead struct {
+	Type string `json:"type"`
+}
+
+type completedPlanItem struct {
+	Text string `json:"text"`
+}
+
+// completedMessageItem は UserMessage / AgentMessage。
+type completedMessageItem struct {
+	Content []completedContentPart `json:"content"`
+	Phase   string                 `json:"phase"` // AgentMessage だけ。commentary / final_answer
+}
+
+// completedContentPart は本文の1片。
+// type は UserMessage では text / image / local_image、AgentMessage では Text。
+type completedContentPart struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+type completedReasoningItem struct {
+	SummaryText []string `json:"summary_text"`
+}
+
+type completedFileChangeItem struct {
+	Changes map[string]patchChange `json:"changes"`
+}
+
+type completedExtensionItem struct {
+	Kind   string          `json:"kind"`
+	Query  string          `json:"query"`
+	Action json.RawMessage `json:"action"`
 }
 
 type turnAbortedPayload struct {
@@ -198,12 +286,20 @@ type threadItem struct {
 	Text  string // 本文、または要約
 	RefID string // call_id / turn_id / agent_thread_id
 	Extra string // 種別ごとの付加情報のJSON
+
+	// lane は会話の出どころ(laneLegacy / laneItem)。保存しない。
+	// 同じターンに旧レーンと新レーンの会話が並んだときに、新レーンを捨てる判定にだけ使う。
+	lane string
 }
 
-// ideContext は user_message に混ざるIDEの前置き。
+// ideContext は人間の発言に付く前置き。本文から剥がして詳細ビューの折りたたみへ入れる。
+//
+// VSCode 拡張は開いているタブの一覧を、アプリ内ブラウザは表示中のページの情報を前置きにする。
 type ideContext struct {
 	ActiveFile string   `json:"active_file,omitempty"`
 	OpenTabs   []ideTab `json:"open_tabs,omitempty"`
+	// BrowserContext は <in-app-browser-context> の中身。検索テキストには入れない(自動で付く定型文)。
+	BrowserContext string `json:"browser_context,omitempty"`
 }
 
 type ideTab struct {
@@ -240,6 +336,7 @@ type subAgent struct {
 type turnItem struct {
 	Kind     string      `json:"kind"`
 	Text     string      `json:"text,omitempty"`
+	Phase    string      `json:"phase,omitempty"` // blockText だけ。最終回答かどうか
 	Thinking []string    `json:"thinking,omitempty"`
 	Tools    []toolCall  `json:"tools,omitempty"`
 	Files    []patchFile `json:"files,omitempty"`
@@ -261,8 +358,10 @@ type message struct {
 	Cwd          string      `json:"cwd"`
 	Text         string      `json:"text"`
 	IDEContext   *ideContext `json:"ide_context,omitempty"`
-	RelatedTime  time.Time   `json:"related_time"`
-	UpdateTime   time.Time   `json:"update_time"`
-	DurationMs   int64       `json:"duration_ms,omitempty"`
-	Items        []turnItem  `json:"items"`
+	// QuestionReply は人間の発言が Codex の質問への回答であること。
+	QuestionReply bool       `json:"question_reply,omitempty"`
+	RelatedTime   time.Time  `json:"related_time"`
+	UpdateTime    time.Time  `json:"update_time"`
+	DurationMs    int64      `json:"duration_ms,omitempty"`
+	Items         []turnItem `json:"items"`
 }
