@@ -82,6 +82,12 @@ GHSA ID で名指しした advisory だけを、①本番依存（`--omit=dev`�
 - 同じ期間の Nightly は govulncheck も Go 標準ライブラリの脆弱性で赤かった（`go` 指令を 1.26.9 へ上げて解消）。
   2つの失敗が重なり、どちらが原因で赤いのかが run の見た目からは分からなかった
 
+## 追記（2026-10-31）
+
+braces の advisory（GHSA-vfj7-8cjw-p6xm）は上流で取り下げられ（Withdrawn Advisory）、`npm audit` に出なくなった。
+`npm_audit_gate.mjs` が「どの advisory にも当たらない例外」の警告を出したので、例外リストから消して `exceptions` は空になった。
+判定の仕組みと条件はこの ADR のまま残す。次に修正版の無い開発用依存の advisory が届いたら、同じ条件で名指しして足す。
+
 ## Related tests
 
 - `src/tools/__tests__/npm_audit_gate.test.mjs`

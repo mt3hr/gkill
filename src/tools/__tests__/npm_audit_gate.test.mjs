@@ -131,8 +131,9 @@ describe('npm_audit_gate: 例外リストを読む', () => {
   })
 
   test('リポジトリの例外リストそのものが読める', () => {
+    // 例外は無いのが平常（空の exceptions も正しい形）。形が崩れていれば parseAllowlist が投げる
     const allowlist = parseAllowlist(fs.readFileSync(ALLOWLIST_PATH, 'utf8'))
-    expect(allowlist.length).toBeGreaterThan(0)
+    expect(Array.isArray(allowlist)).toBe(true)
     const here = path.dirname(fileURLToPath(import.meta.url))
     expect(path.resolve(ALLOWLIST_PATH)).toBe(path.resolve(here, '..', 'npm_audit_allowlist.json'))
   })
