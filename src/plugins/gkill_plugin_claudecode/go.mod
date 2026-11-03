@@ -5,7 +5,7 @@ go 1.26.10
 require (
 	github.com/mattn/go-zglob v0.0.8
 	github.com/mt3hr/gkill/src/server v0.0.0
-	modernc.org/sqlite v1.61.0
+	modernc.org/sqlite v1.61.1
 )
 
 require (
