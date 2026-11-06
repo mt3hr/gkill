@@ -125,13 +125,20 @@ func renderMessageHTML(t message) string {
 	}
 	if t.Project != "" || t.Branch != "" {
 		sb.WriteString(`<div class="chips">`)
+		written := 0
 		for _, c := range []string{t.Project, t.Branch} {
 			if c == "" {
 				continue
 			}
+			// チップの間には空白を置く。MCP の HTML→テキスト変換はブロック要素だけを改行にするので、
+			// <span> を詰めて並べるとプロジェクト名とブランチ名が1語に連結される("gkillmain")
+			if written > 0 {
+				sb.WriteString(` `)
+			}
 			sb.WriteString(`<span class="chip">`)
 			sb.WriteString(html.EscapeString(c))
 			sb.WriteString(`</span>`)
+			written++
 		}
 		sb.WriteString(`</div>`)
 	}

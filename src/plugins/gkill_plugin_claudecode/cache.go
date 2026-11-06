@@ -101,7 +101,11 @@ func (c *pluginCache) conn() *sql.DB {
 
 // cacheSchemaVersion はキャッシュのスキーマ版。
 // 構造やジャーナルモードを変えたら上げること。古いDBは作り直される(キャッシュなので捨ててよい)。
-const cacheSchemaVersion = "3"
+// 解析規則(Kyou の切り出し方)を変えたときも上げる。差分更新はファイルの mtime/サイズしか見ないので、
+// 版を上げないと触っていないセッションが旧規則の結果のまま残る。
+//
+//	4: デスクトップ / SDK 経由のセッション(promptSource=sdk)の人間の発言を分けるようにした
+const cacheSchemaVersion = "4"
 
 // initSchema はテーブルを作成する。
 // 記録している版が違えば、作り直しのため既存のテーブルを落とす。

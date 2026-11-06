@@ -119,6 +119,8 @@ Kyou になるのは次の2種類。
 - thinking（折りたたみ）
 - サブエージェントの会話（折りたたみ）
 - `task-notification` などシステム発の入力（1行の注記）
+- `AskUserQuestion` への回答（「あなたの回答: 質問: 回答」の1行の注記。回答は JSONL では人間の発言レコードではなく
+  `tool_result` の `toolUseResult.answers` に入るので、「あなた」の Kyou には分けない）
 
 応答の**開始時刻**でタイムラインに並び、`UpdateTime` には最後のレコードの時刻が入る。
 
@@ -126,6 +128,17 @@ Kyou になるのは次の2種類。
 
 - **Kyou の ID** は、自分の発言ならそのレコードの `uuid`、応答なら最初のレコードの `uuid`。
   同じセッションが複数フォルダにあっても重複しない
+- **人間の発言の判定**は `promptSource` で行う。CLI は `typed`（打った）/ `queued`（待ち行列から配送）。
+  デスクトップアプリと Agent SDK 経由（`entrypoint` が `claude-desktop` / `sdk-cli`）は人間の発言も自動入力も
+  `sdk` で届くので、`origin.kind` が `human` のものだけを「あなた」にする。`origin` の無い `sdk`
+  （他セッションからのメッセージ、定型文の自動実行）と `system`（`task-notification`）は応答の注記に畳む。
+  `sdk` を見ていなかった間、デスクトップのセッションは人間の発言が1件も出ず、セッション全体が「Claude」1件に
+  まとまっていた。判定規則を変えたときは `cacheSchemaVersion` を上げて全セッションを作り直させる
+  （差分更新はファイルの mtime/サイズしか見ないので、触っていないセッションが旧規則のまま残る）
+- **タイトル**は `ai-title` の最後の値。デスクトップアプリのセッションには `ai-title` が無いので、
+  無ければ `custom-title`（`customTitle`）の最後の値を使う
+- **作業中に送ってターン途中で吸収された発言**（`queue-operation` の `remove`、`reason: absorbed_mid_turn`）は
+  新形式では user レコードにならず `queue-operation` の `content` にしか残らないため、Kyou にしていない（旧形式でも同様）
 - **タグは付けない**。gkill のタグ一覧（`get_all_tag_names`）にはプラグインが返したタグが載らず、
   タグを付けると rykv の既定の絞り込み「no tags」から漏れて何も表示されなくなるため。
   プロジェクト名とブランチ名は詳細HTMLのチップで表示し、ワード検索の対象にも含めている
@@ -160,7 +173,7 @@ Kyou になるのは次の2種類。
 | `html.go` | 設定画面の HTML 生成 |
 | `types.go` | JSONL レコードと Kyou の型定義 |
 | `loader_test.go` | Kyou の切り出し・種別判定・要約のユニットテスト |
-| `testdata/` | テスト用の合成トランスクリプト |
+| `testdata/` | テスト用の合成トランスクリプト（`session-main.jsonl` が CLI 形式、`session-desktop.jsonl` がデスクトップアプリ形式） |
 | `manifest.json` | プラグインメタ情報 |
 | `go.mod` | 独立 Go モジュール |
 

@@ -8,11 +8,22 @@ import (
 )
 
 const (
-	mainFixture  = "testdata/session-main.jsonl"
-	agentFixture = "testdata/agent-abc123def456.jsonl"
-	metaFixture  = "testdata/agent-abc123def456.meta.json"
-	histFixture  = "testdata/history.jsonl"
+	mainFixture    = "testdata/session-main.jsonl"
+	desktopFixture = "testdata/session-desktop.jsonl" // デスクトップアプリ / SDK 経由の形式(promptSource=sdk)
+	agentFixture   = "testdata/agent-abc123def456.jsonl"
+	metaFixture    = "testdata/agent-abc123def456.meta.json"
+	histFixture    = "testdata/history.jsonl"
 )
+
+// loadDesktopMessages はデスクトップ形式のフィクスチャから発言を組み立てる。サブエージェントは無い。
+func loadDesktopMessages(t *testing.T) []message {
+	t.Helper()
+	records, err := readRecords(desktopFixture)
+	if err != nil {
+		t.Fatalf("error at read desktop fixture: %v", err)
+	}
+	return buildMessages(records, map[string]*subAgent{}, map[string]*subAgent{})
+}
 
 // loadFixtureMessages はフィクスチャから発言を組み立てる。
 func loadFixtureMessages(t *testing.T) []message {
@@ -172,6 +183,158 @@ func TestBuildMessagesAbsorbsSystemPrompt(t *testing.T) {
 	}
 }
 
+// デスクトップアプリ / SDK 経由のセッションでは人間の発言が promptSource=sdk で届く。
+// デスクトップアプリへ移って以降はこの形式になり、typed/queued しか見ていなかったパーサは人間の発言を1件も認識せず、
+// セッション全体を最初の応答1件に畳み込んでいた。
+func TestBuildMessagesSplitsDesktopSession(t *testing.T) {
+	messages := loadDesktopMessages(t)
+
+	want := []struct {
+		id   string
+		role string
+	}{
+		{"D1", roleHuman},     // promptSource=sdk, origin.kind=human
+		{"E1", roleAssistant}, // 「確認します」〜「案Aで進めました」までを1件にまとめる
+		{"D6", roleHuman},     // 2つめの発言(待ち行列から配送されたもの)
+		{"E4", roleAssistant},
+	}
+	if len(messages) != len(want) {
+		var got []string
+		for _, m := range messages {
+			got = append(got, m.ID+"/"+m.Role)
+		}
+		t.Fatalf("messages = %v (%d件), want %d件", got, len(messages), len(want))
+	}
+	for i, w := range want {
+		if messages[i].ID != w.id || messages[i].Role != w.role {
+			t.Errorf("messages[%d] = %s/%s, want %s/%s",
+				i, messages[i].ID, messages[i].Role, w.id, w.role)
+		}
+	}
+
+	// system-reminder のブロックも本文に含まれる(contentがブロック配列でも落とさない)
+	if !strings.Contains(messages[0].Text, "最初の質問") {
+		t.Errorf("人間の発言 = %q, want 最初の質問 を含む", messages[0].Text)
+	}
+	if messages[2].Text != "2つめの質問" {
+		t.Errorf("2つめの発言 = %q, want 2つめの質問", messages[2].Text)
+	}
+
+	// タイトルは ai-title が無いので custom-title から取る
+	for _, m := range messages {
+		if m.SessionTitle != "デスクトップのセッション" || m.Project != "myproj" || m.Branch != "main" {
+			t.Errorf("%s: セッション情報が欠けている (%q/%q/%q)", m.ID, m.SessionTitle, m.Project, m.Branch)
+		}
+	}
+}
+
+// origin の無い promptSource=sdk(他セッションからのメッセージ等)、task-notification、
+// AskUserQuestion の回答は Kyou にせず、応答の注記として畳む。isMeta の入力と compact 要約は捨てる。
+func TestBuildMessagesFoldsDesktopSystemInputs(t *testing.T) {
+	messages := loadDesktopMessages(t)
+	res := messages[1]
+	if res.ID != "E1" {
+		t.Fatalf("messages[1].ID = %s, want E1", res.ID)
+	}
+
+	var kinds, notices []string
+	for _, item := range res.Items {
+		kinds = append(kinds, item.Kind)
+		if item.Kind == "notice" {
+			notices = append(notices, item.Text)
+		}
+	}
+	wantKinds := []string{"text", "tools", "notice", "notice", "notice", "text"}
+	if strings.Join(kinds, ",") != strings.Join(wantKinds, ",") {
+		t.Fatalf("応答の要素 = %v, want %v", kinds, wantKinds)
+	}
+	if len(notices) != 3 {
+		t.Fatalf("notices = %v, want 3件", notices)
+	}
+	// AskUserQuestion の回答(toolUseResult.answers)は「質問: 回答」の注記になる
+	if !strings.HasPrefix(notices[0], "あなたの回答: ") || !strings.Contains(notices[0], "どちらにしますか？: 案A") {
+		t.Errorf("回答の注記 = %q", notices[0])
+	}
+	if !strings.Contains(notices[1], "バックグラウンドの作業が完了しました") {
+		t.Errorf("task-notification の注記 = %q", notices[1])
+	}
+	if !strings.Contains(notices[2], "別のセッションからの連絡") {
+		t.Errorf("origin 無しの sdk 入力の注記 = %q", notices[2])
+	}
+
+	// isMeta の入力・compact 要約・tool_result の本文はどこにも出ない
+	for _, m := range messages {
+		all := m.Text + searchTextOf(m)
+		for _, ng := range []string{"[Image #1]", "ここまでの要約", "User has answered your questions"} {
+			if strings.Contains(all, ng) {
+				t.Errorf("%s: %q が出力されている", m.ID, ng)
+			}
+		}
+	}
+
+	// 注記を取り込んだぶん更新時刻は進む(最後の応答 E3 まで)
+	if got := res.UpdateTime.UTC().Format("15:04:05"); got != "01:01:00" {
+		t.Errorf("UpdateTime = %s, want 01:01:00", got)
+	}
+}
+
+func TestIsHumanPrompt(t *testing.T) {
+	human := &promptOrigin{Kind: "human"}
+	cases := []struct {
+		name string
+		rec  logRecord
+		want bool
+	}{
+		{"typed", logRecord{Type: "user", PromptSource: "typed", Origin: human}, true},
+		{"queued", logRecord{Type: "user", PromptSource: "queued", Origin: human}, true},
+		{"sdk+human", logRecord{Type: "user", PromptSource: "sdk", Origin: human}, true},
+		{"sdk+origin無し", logRecord{Type: "user", PromptSource: "sdk"}, false},
+		{"sdk+task-notification", logRecord{Type: "user", PromptSource: "sdk", Origin: &promptOrigin{Kind: "task-notification"}}, false},
+		{"system", logRecord{Type: "user", PromptSource: "system", Origin: &promptOrigin{Kind: "task-notification"}}, false},
+		{"promptSource無し(compact要約など)", logRecord{Type: "user", Origin: human}, false},
+		{"assistant", logRecord{Type: "assistant", PromptSource: "sdk", Origin: human}, false},
+	}
+	for _, c := range cases {
+		if got := isHumanPrompt(c.rec); got != c.want {
+			t.Errorf("isHumanPrompt(%s) = %v, want %v", c.name, got, c.want)
+		}
+	}
+	// origin の無い sdk と system だけがシステム入力。typed や promptSource 無しは違う
+	if !isSystemPrompt(logRecord{Type: "user", PromptSource: "sdk"}) || !isSystemPrompt(logRecord{Type: "user", PromptSource: "system"}) {
+		t.Error("origin 無しの sdk / system がシステム入力と判定されない")
+	}
+	if isSystemPrompt(logRecord{Type: "user", PromptSource: "sdk", Origin: human}) || isSystemPrompt(logRecord{Type: "user"}) {
+		t.Error("人間の発言や promptSource 無しがシステム入力と判定された")
+	}
+}
+
+func TestExtractQuestionAnswers(t *testing.T) {
+	got := extractQuestionAnswers([]byte(`{"questions":[],"answers":{"B の質問":"いいえ","A の質問":"はい\nそうです"},"annotations":{}}`))
+	// 質問名の順で並び、改行は潰れる
+	if got != "あなたの回答: A の質問: はい そうです / B の質問: いいえ" {
+		t.Errorf("extractQuestionAnswers = %q", got)
+	}
+	for _, raw := range []string{"", "null", `{"answers":{}}`, `{"answers":"not a map"}`} {
+		if got := extractQuestionAnswers([]byte(raw)); got != "" {
+			t.Errorf("extractQuestionAnswers(%q) = %q, want 空", raw, got)
+		}
+	}
+}
+
+func TestScanSessionMetaPrefersAITitle(t *testing.T) {
+	records := []logRecord{
+		{Type: "custom-title", CustomTitle: "手で付けた題"},
+		{Type: "ai-title", AITitle: "AIの題"},
+		{Type: "custom-title", CustomTitle: "手で付けた題2"},
+	}
+	if title, _, _ := scanSessionMeta(records); title != "AIの題" {
+		t.Errorf("title = %q, want AIの題 (ai-title が custom-title より優先)", title)
+	}
+	if title, _, _ := scanSessionMeta(records[:1]); title != "手で付けた題" {
+		t.Errorf("title = %q, want 手で付けた題", title)
+	}
+}
+
 func TestBuildMessagesLinksSubAgent(t *testing.T) {
 	messages := loadFixtureMessages(t)
 
@@ -210,8 +373,9 @@ func TestScanSources(t *testing.T) {
 	for _, f := range files {
 		kinds[f.Kind]++
 	}
-	if kinds[kindMain] != 1 {
-		t.Errorf("main files = %d, want 1", kinds[kindMain])
+	// メインのトランスクリプトは CLI 形式とデスクトップ形式の2本
+	if kinds[kindMain] != 2 {
+		t.Errorf("main files = %d, want 2", kinds[kindMain])
 	}
 	if kinds[kindSubAgent] != 1 {
 		t.Errorf("subagent files = %d, want 1", kinds[kindSubAgent])
@@ -359,8 +523,8 @@ func TestExpandedPatternIsScannable(t *testing.T) {
 	for _, f := range files {
 		kinds[f.Kind]++
 	}
-	if kinds[kindMain] != 1 || kinds[kindSubAgent] != 1 || kinds[kindOther] != 1 {
-		t.Errorf("種別 = %v, want main1/subagent1/other1", kinds)
+	if kinds[kindMain] != 2 || kinds[kindSubAgent] != 1 || kinds[kindOther] != 1 {
+		t.Errorf("種別 = %v, want main2/subagent1/other1", kinds)
 	}
 	// *.jsonl なので meta.json は拾わない
 	if kinds[kindMeta] != 0 {
@@ -436,9 +600,9 @@ func TestRenderMessageHTMLEscapesAndFolds(t *testing.T) {
 	if strings.Contains(assistantHTML, "ツールの結果は保持しない") {
 		t.Error("tool_result の内容が出力されている")
 	}
-	// チップは残す
-	if !strings.Contains(assistantHTML, `class="chip"`) {
-		t.Error("プロジェクト/ブランチのチップが出ていない")
+	// チップは残す。間に空白を置く(MCP の HTML→テキスト変換で "myprojmain" に連結されないため)
+	if !strings.Contains(assistantHTML, `<span class="chip">myproj</span> <span class="chip">main</span>`) {
+		t.Error("プロジェクト/ブランチのチップが空白区切りで出ていない")
 	}
 
 	// HTMLエスケープの確認

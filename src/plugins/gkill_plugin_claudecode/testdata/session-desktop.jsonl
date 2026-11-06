@@ -1,0 +1,18 @@
+{"type":"queue-operation","operation":"enqueue","content":"最初の質問","sessionId":"S2","timestamp":"2026-01-02T00:58:00Z"}
+{"type":"queue-operation","operation":"dequeue","sessionId":"S2","timestamp":"2026-01-02T00:59:00Z"}
+{"type":"user","uuid":"D1","promptSource":"sdk","origin":{"kind":"human"},"turnOrigin":"human","clientPlatform":"desktop_app","entrypoint":"claude-desktop","version":"2.1.300","timestamp":"2026-01-02T01:00:00Z","sessionId":"S2","cwd":"C:\\work\\myproj","gitBranch":"main","isSidechain":false,"message":{"role":"user","content":[{"type":"text","text":"<system-reminder>環境の説明</system-reminder>"},{"type":"text","text":"最初の質問"}]}}
+{"type":"custom-title","customTitle":"デスクトップのセッション","sessionId":"S2"}
+{"type":"agent-name","agentName":"agent-x","sessionId":"S2"}
+{"type":"api-request","id":"req1","sessionId":"S2","timestamp":"2026-01-02T01:00:05Z","version":"2.1.300"}
+{"type":"assistant","uuid":"E1","timestamp":"2026-01-02T01:00:10Z","sessionId":"S2","entrypoint":"claude-desktop","message":{"role":"assistant","content":[{"type":"text","text":"確認します"}]}}
+{"type":"assistant","uuid":"E2","timestamp":"2026-01-02T01:00:20Z","sessionId":"S2","entrypoint":"claude-desktop","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_q1","name":"AskUserQuestion","input":{"questions":[{"question":"どちらにしますか？","header":"方針"}]}}]}}
+{"type":"user","uuid":"D2","timestamp":"2026-01-02T01:00:30Z","sessionId":"S2","entrypoint":"claude-desktop","sourceToolAssistantUUID":"E2","toolUseResult":{"questions":[{"question":"どちらにしますか？"}],"answers":{"どちらにしますか？":"案A"},"annotations":{}},"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_q1","content":"User has answered your questions"}]}}
+{"type":"user","uuid":"D3","promptSource":"system","origin":{"kind":"task-notification"},"turnOrigin":"task_notification","entrypoint":"claude-desktop","timestamp":"2026-01-02T01:00:40Z","sessionId":"S2","message":{"role":"user","content":"<task-notification>バックグラウンドの作業が完了しました</task-notification>"}}
+{"type":"user","uuid":"D4","promptSource":"sdk","turnOrigin":"sdk","entrypoint":"claude-desktop","timestamp":"2026-01-02T01:00:50Z","sessionId":"S2","message":{"role":"user","content":"<cross-session-message>別のセッションからの連絡</cross-session-message>"}}
+{"type":"user","uuid":"D5","isMeta":true,"entrypoint":"claude-desktop","timestamp":"2026-01-02T01:00:55Z","sessionId":"S2","message":{"role":"user","content":"[Image #1]"}}
+{"type":"assistant","uuid":"E3","timestamp":"2026-01-02T01:01:00Z","sessionId":"S2","entrypoint":"claude-desktop","message":{"role":"assistant","content":[{"type":"text","text":"案Aで進めました"}]}}
+{"type":"queue-operation","operation":"enqueue","content":"2つめの質問","sessionId":"S2","timestamp":"2026-01-02T01:58:00Z"}
+{"type":"queue-operation","operation":"dequeue","sessionId":"S2","timestamp":"2026-01-02T01:59:00Z"}
+{"type":"user","uuid":"D6","promptSource":"sdk","origin":{"kind":"human"},"turnOrigin":"human","clientPlatform":"desktop_app","entrypoint":"claude-desktop","timestamp":"2026-01-02T02:00:00Z","sessionId":"S2","message":{"role":"user","content":"2つめの質問"}}
+{"type":"user","uuid":"D7","isCompactSummary":true,"isVisibleInTranscriptOnly":true,"turnOrigin":"human","entrypoint":"claude-desktop","timestamp":"2026-01-02T02:00:05Z","sessionId":"S2","message":{"role":"user","content":"ここまでの要約"}}
+{"type":"assistant","uuid":"E4","timestamp":"2026-01-02T02:00:10Z","sessionId":"S2","entrypoint":"claude-desktop","message":{"role":"assistant","content":[{"type":"text","text":"はい"}]}}

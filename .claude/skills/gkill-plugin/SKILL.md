@@ -47,7 +47,13 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              fixed at 1980-01-01, so only CRC32/Size can detect change
               #   gkill_plugin_claudecode/ — Claude Code chat log plugin (one Kyou per human
               #                              message + one per its whole response run,
-              #                              source folder configurable, SQLite differential cache)
+              #                              source folder configurable, SQLite differential cache).
+              #                              A human message is `promptSource` typed / queued (CLI), or
+              #                              `sdk` WITH `origin.kind: "human"` (desktop app / Agent SDK,
+              #                              where automated inputs are also `sdk` but carry no origin).
+              #                              `sdk` without origin, `system` and AskUserQuestion answers
+              #                              (`toolUseResult.answers`) fold into the reply as notices.
+              #                              Changing the split rule means bumping cacheSchemaVersion
               #   gkill_plugin_codex/      — OpenAI Codex CLI rollout logs, same Kyou granularity as
               #                              claudecode. Thread id is the FILENAME uuid, never
               #                              `session_meta.session_id` (absent in nearly half of real files and,

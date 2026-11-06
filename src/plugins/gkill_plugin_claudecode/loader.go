@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -354,6 +355,13 @@ func agentIDFromFileName(path string) string {
 
 // isHumanPrompt は人間が入力したプロンプトのレコードかどうかを判定する。
 // task-notification などシステム発の入力はここではfalseになり、直前のターンに吸収される。
+//
+// CLI では人間の発言は promptSource が typed(打った) / queued(待ち行列から配送) で届く。
+// デスクトップアプリと Agent SDK 経由のセッション(entrypoint が claude-desktop / sdk-cli)では
+// 人間の発言も自動入力も promptSource が "sdk" で届くので、origin.kind が "human" のものだけを
+// 人間の発言とする。origin の無い "sdk"(他セッションからのメッセージ、定型文の自動実行など)は
+// isSystemPrompt 側で注記として応答に畳む。ここに "sdk" が無かった間、デスクトップのセッションは
+// 人間の発言が1件も認識されず、セッション全体が最初の応答1件に畳み込まれていた。
 func isHumanPrompt(rec logRecord) bool {
 	if rec.Type != "user" {
 		return false
@@ -361,8 +369,51 @@ func isHumanPrompt(rec logRecord) bool {
 	switch rec.PromptSource {
 	case "typed", "queued", "text":
 		return true
+	case "sdk":
+		return rec.Origin != nil && rec.Origin.Kind == "human"
 	}
 	return false
+}
+
+// isSystemPrompt はシステム発の入力(task-notification、他セッションからのメッセージ、
+// 定型文の自動実行など)のレコードかどうかを判定する。Kyou にはせず、組み立て中の応答の注記に入れる。
+func isSystemPrompt(rec logRecord) bool {
+	if rec.Type != "user" {
+		return false
+	}
+	switch rec.PromptSource {
+	case "system":
+		return true
+	case "sdk":
+		return !isHumanPrompt(rec)
+	}
+	return false
+}
+
+// askUserQuestionToolName は利用者への質問ツール。回答は人間の発言レコードではなく
+// tool_result の toolUseResult.answers に入るので、注記として応答に入れる。
+const askUserQuestionToolName = "AskUserQuestion"
+
+// extractQuestionAnswers は AskUserQuestion の tool_result から「質問: 回答」の1行を組み立てる。
+// 回答が取れなければ空文字列。
+func extractQuestionAnswers(toolUseResult json.RawMessage) string {
+	if len(toolUseResult) == 0 {
+		return ""
+	}
+	var r toolUseResultAnswers
+	if json.Unmarshal(toolUseResult, &r) != nil || len(r.Answers) == 0 {
+		return ""
+	}
+	questions := make([]string, 0, len(r.Answers))
+	for q := range r.Answers {
+		questions = append(questions, q)
+	}
+	slices.Sort(questions) // map の順序に依らず同じ注記にする
+	parts := make([]string, 0, len(questions))
+	for _, q := range questions {
+		parts = append(parts, oneLine(q)+": "+oneLine(r.Answers[q]))
+	}
+	return "あなたの回答: " + strings.Join(parts, " / ")
 }
 
 // extractBlocks は message.content をブロック配列として取り出す。
@@ -513,6 +564,7 @@ func (a *itemAppender) addNotice(text string) {
 func buildMessages(records []logRecord, agentsByToolUseID, agentsByID map[string]*subAgent) []message {
 	sessionTitle, project, branch := scanSessionMeta(records)
 	toolUseIDToAgentID := scanAgentIDsFromResults(records)
+	toolNamesByID := map[string]string{} // tool_use.id → ツール名。tool_result がどのツールの結果かを引く
 
 	var messages []message
 	var cur *message // 組み立て中の応答
@@ -577,11 +629,24 @@ func buildMessages(records []logRecord, agentsByToolUseID, agentsByID map[string
 		switch rec.Type {
 		case "user":
 			// task-notification などシステム発の入力。応答の一部として注記に入れる
-			if rec.PromptSource == "system" && app != nil {
+			if isSystemPrompt(rec) && app != nil {
 				app.addNotice(extractText(rec.Message.contentOrEmpty()))
 				touch(rec)
+				continue
 			}
-			// tool_result は表示しない
+			// tool_result は表示しない。ただし AskUserQuestion への回答は利用者の入力なので注記に残す。
+			// 人間の発言 Kyou には分けない(旧形式のセッションの分け方と ID を変えないため)
+			if app != nil && len(rec.ToolUseResult) != 0 {
+				for _, b := range extractBlocks(rec.Message.contentOrEmpty()) {
+					if b.Type == "tool_result" && toolNamesByID[b.ToolUseID] == askUserQuestionToolName {
+						if answers := extractQuestionAnswers(rec.ToolUseResult); answers != "" {
+							app.addNotice(answers)
+							touch(rec)
+						}
+						break
+					}
+				}
+			}
 		case "assistant":
 			blocks := extractBlocks(rec.Message.contentOrEmpty())
 			if len(blocks) == 0 {
@@ -598,6 +663,9 @@ func buildMessages(records []logRecord, agentsByToolUseID, agentsByID map[string
 				case "thinking":
 					app.addThinking(b.Thinking)
 				case "tool_use":
+					if b.ID != "" {
+						toolNamesByID[b.ID] = b.Name
+					}
 					tc := toolCall{
 						Name:    b.Name,
 						Summary: summarizeToolInput(b.Name, b.Input),
@@ -635,10 +703,16 @@ func lookupSubAgent(toolUseID string, byToolUseID, byID map[string]*subAgent, to
 
 // scanSessionMeta はセッションタイトル・プロジェクト名・ブランチ名を取り出す。
 // タイトルは ai-title レコードの最後のものを採用する。
+// デスクトップアプリのセッションには ai-title が無く custom-title(customTitle)だけが書かれるので、
+// ai-title が1件も無いときはその最後のものにフォールバックする。
 func scanSessionMeta(records []logRecord) (title, project, branch string) {
+	customTitle := ""
 	for _, rec := range records {
 		if rec.Type == "ai-title" && rec.AITitle != "" {
 			title = rec.AITitle
+		}
+		if rec.Type == "custom-title" && rec.CustomTitle != "" {
+			customTitle = rec.CustomTitle
 		}
 		if project == "" && rec.Cwd != "" {
 			project = lastPathElement(rec.Cwd)
@@ -646,6 +720,9 @@ func scanSessionMeta(records []logRecord) (title, project, branch string) {
 		if branch == "" && rec.GitBranch != "" {
 			branch = rec.GitBranch
 		}
+	}
+	if title == "" {
+		title = customTitle
 	}
 	return title, project, branch
 }

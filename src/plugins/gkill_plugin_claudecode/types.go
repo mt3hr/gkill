@@ -33,9 +33,29 @@ type logRecord struct {
 	IsSidechain   bool            `json:"isSidechain"`
 	AgentID       string          `json:"agentId"`
 	PromptSource  string          `json:"promptSource"`
+	Origin        *promptOrigin   `json:"origin"`
 	AITitle       string          `json:"aiTitle"`
+	CustomTitle   string          `json:"customTitle"`
 	Message       *logMessage     `json:"message"`
 	ToolUseResult json.RawMessage `json:"toolUseResult"`
+}
+
+// promptOrigin は user レコードの origin。入力が誰から来たかを表す。
+//
+//	kind: "human"             人間が打った・待ち行列から配送された発言
+//	kind: "task-notification" バックグラウンドタスクの完了通知などシステム発
+//
+// デスクトップアプリ / Agent SDK 経由のセッションでは人間の発言も自動入力も
+// promptSource が "sdk" で届くため、人間かどうかはこの kind で見分ける。
+// 自動入力(他セッションからのメッセージ、定型文の自動実行など)は origin 自体が無い。
+type promptOrigin struct {
+	Kind string `json:"kind"`
+}
+
+// toolUseResultAnswers は AskUserQuestion の結果から回答を取り出すための構造体。
+// 回答は user レコードの toolUseResult.answers(質問→回答)に入り、人間の発言レコードにはならない。
+type toolUseResultAnswers struct {
+	Answers map[string]string `json:"answers"`
 }
 
 // logMessage は user/assistant レコードのmessage部。
