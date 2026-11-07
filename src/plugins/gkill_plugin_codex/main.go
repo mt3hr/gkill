@@ -9,6 +9,7 @@ import (
 	"time"
 
 	sdk "github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk/chatview"
 )
 
 // manifest.json をバイナリに埋め込み、--gkill-print-manifest で出力できるようにする。
@@ -118,7 +119,7 @@ func main() {
 
 			built, err := globalCache.QueryBody(pluginDir, kyouID)
 			if err != nil {
-				return renderNotFoundHTML(), nil
+				return chatview.RenderNotFound(), nil
 			}
 			return renderMessageHTML(built), nil
 		},

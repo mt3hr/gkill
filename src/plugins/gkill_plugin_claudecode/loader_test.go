@@ -565,51 +565,17 @@ func TestHasGlobMeta(t *testing.T) {
 	}
 }
 
-func TestRenderMessageHTMLEscapesAndFolds(t *testing.T) {
+func TestBuildMessagesCarriesModel(t *testing.T) {
+	// モデル名は assistant レコードの message.model から拾い、返事の Kyou に載せる。人間の発言には無い
 	messages := loadFixtureMessages(t)
-
-	// 人間の発言
-	humanHTML := renderMessageHTML(messages[1])
-	if !strings.Contains(humanHTML, "最初の質問") {
-		t.Error("人間の発言本文が出力されていない")
+	if messages[1].Role != roleHuman || messages[1].Model != "" {
+		t.Errorf("人間の発言にモデル名が付いている: %+v", messages[1].Model)
 	}
-	if !strings.Contains(humanHTML, `class="msg human"`) || !strings.Contains(humanHTML, "あなた") {
-		t.Error("人間の発言が human として描画されていない")
+	if messages[2].Role != roleAssistant || messages[2].Model != "claude-test-model" {
+		t.Errorf("返事のモデル名が取れていない: %q", messages[2].Model)
 	}
-
-	// Claude の応答
-	assistantHTML := renderMessageHTML(messages[2])
-	for _, want := range []string{"調べます", "できました"} {
-		if !strings.Contains(assistantHTML, want) {
-			t.Errorf("応答本文に %q が出力されていない", want)
-		}
-	}
-	if !strings.Contains(assistantHTML, `class="msg assistant"`) || !strings.Contains(assistantHTML, "Claude") {
-		t.Error("Claudeの発言が assistant として描画されていない")
-	}
-	if !strings.Contains(assistantHTML, "<details>") {
-		t.Error("折りたたみが出力されていない")
-	}
-	if !strings.Contains(assistantHTML, "🤖") {
-		t.Error("サブエージェントの折りたたみが出力されていない")
-	}
-	if !strings.Contains(assistantHTML, "Bash ×1") {
-		t.Error("ツール集計が出力されていない")
-	}
-	// ツールの実行結果は保持しない
-	if strings.Contains(assistantHTML, "ツールの結果は保持しない") {
-		t.Error("tool_result の内容が出力されている")
-	}
-	// チップは残す。間に空白を置く(MCP の HTML→テキスト変換で "myprojmain" に連結されないため)
-	if !strings.Contains(assistantHTML, `<span class="chip">myproj</span> <span class="chip">main</span>`) {
-		t.Error("プロジェクト/ブランチのチップが空白区切りで出ていない")
-	}
-
-	// HTMLエスケープの確認
-	escaped := messages[1]
-	escaped.Text = `<script>alert("x")</script>`
-	if strings.Contains(renderMessageHTML(escaped), "<script>alert") {
-		t.Error("発言本文がエスケープされていない")
+	if !strings.Contains(searchTextOf(messages[2]), "claude-test-model") {
+		t.Error("モデル名が検索テキストに入っていない")
 	}
 }
 

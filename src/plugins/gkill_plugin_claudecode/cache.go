@@ -105,7 +105,8 @@ func (c *pluginCache) conn() *sql.DB {
 // 版を上げないと触っていないセッションが旧規則の結果のまま残る。
 //
 //	4: デスクトップ / SDK 経由のセッション(promptSource=sdk)の人間の発言を分けるようにした
-const cacheSchemaVersion = "4"
+//	5: assistant レコードの message.model を拾い、返事の Kyou のチップと検索テキストに載せるようにした
+const cacheSchemaVersion = "5"
 
 // initSchema はテーブルを作成する。
 // 記録している版が違えば、作り直しのため既存のテーブルを落とす。

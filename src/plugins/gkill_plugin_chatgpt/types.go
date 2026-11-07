@@ -10,6 +10,8 @@ type chatGPTConversation struct {
 	// (Claude.ai の書き出しはメッセージ単位で updated_at を持つので、あちらはそれを使う)
 	UpdateTime float64                 `json:"update_time"`
 	Mapping    map[string]*chatGPTNode `json:"mapping"`
+	// DefaultModelSlug は会話の既定モデル。メッセージ側に model_slug が無い返事の予備。
+	DefaultModelSlug string `json:"default_model_slug"`
 }
 
 // chatGPTNode はマッピング内の1ノード。
@@ -26,6 +28,13 @@ type chatGPTMessage struct {
 	Content    chatGPTContent `json:"content"`
 	CreateTime *float64       `json:"create_time"`
 	Status     string         `json:"status"`
+	// Metadata のうちこのプラグインが使うのは model_slug（返事を書いたモデル名）だけ。
+	Metadata chatGPTMetadata `json:"metadata"`
+}
+
+// chatGPTMetadata はメッセージのメタデータ。
+type chatGPTMetadata struct {
+	ModelSlug string `json:"model_slug"`
 }
 
 // chatGPTAuthor はメッセージ送信者。

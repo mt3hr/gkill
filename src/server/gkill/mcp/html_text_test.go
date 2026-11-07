@@ -100,6 +100,16 @@ func TestHtmlToText(t *testing.T) {
 		mustContain(t, got, "Read foo.go")
 	})
 
+	t.Run("pre is a block: code keeps its own newlines and is set off from prose", func(t *testing.T) {
+		// AI チャット系プラグインの本文（sdk/chatview）はコードフェンスを <pre><code> にする。
+		// 行頭のインデントは whitespaceRunRe で潰れる（既存の挙動。コードの行は残る）
+		expectEqual(t, text("<div>a</div><pre><code>x &lt; y\n  z</code></pre><div>b</div>"), "a\nx < y\nz\nb")
+	})
+
+	t.Run("inline code stays inline", func(t *testing.T) {
+		expectEqual(t, text("<p>run <code>go test</code> now</p>"), "run go test now")
+	})
+
 	t.Run("collapses runs of blank lines into one", func(t *testing.T) {
 		expectEqual(t, text("<div>a</div><div></div><div></div><div>b</div>"), "a\nb")
 	})

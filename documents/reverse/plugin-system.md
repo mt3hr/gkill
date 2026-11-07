@@ -431,30 +431,35 @@ Claude Code のメソッドは第2引数に展開済みソース（`expandedSour
 
 ### 処理フロー
 
-ChatGPT / Claude.ai:
+AI チャット系の4本（ChatGPT / Claude.ai / Claude Code / Codex）は同じ形。描画は SDK の `plugin/sdk/chatview` が1か所で行い、
+各プラグインの `render.go` は自分のログの形を `chatview.Message` へ写すだけ
+（[ADR-0315](../adr/0315-chat-plugins-render-through-sdk-chatview.md)）。
 
 ```
 GetContentHTML(kyouID)
-  → globalCache.GetMsgByID(pluginDir, src, kyouID)  // 1件のみ取得
-  → renderSingleMsgHTML(convTitle, msg)             // 単一メッセージHTML生成
-```
-
-Claude Code:
-
-```
-GetContentHTML(kyouID)
-  → globalCache.GetMessage(pluginDir, src, messageID)
-  → renderMessageHTML(t)        // 見つかった場合
-  → renderNotFoundHTML()        // 見つからない場合
+  → キャッシュから1件取得（GetMsgByID / GetMessage / QueryBody）
+  → renderMessageHTML(...)        // render.go: 共通モデルへ写す → chatview.Render
+  → chatview.RenderNotFound()     // 見つからない場合（head を共有するのでテーマにも追従する）
 ```
 
 ### HTML 構造
 
-- 会話タイトル（`convTitle`）をヘッダに表示
-- 送信者ラベル:
-  - ChatGPT: `user` → 「あなた」 / その他 → 「ChatGPT」
-  - Claude.ai: `human` → 「あなた」 / その他 → 「Claude」
-- CSS カスタムプロパティでテーマを切り替え
+上から順に。
+
+- `.conv-title` — 会話 / セッション名（無ければ出さない）
+- `.chips` — project・branch・model・所要時間のうち持っているもの。空白1つで区切る（MCP の HTML→テキスト変換は `<span>` を改行にしないので、詰めると1語に連結される）
+  - ChatGPT: model（`message.metadata.model_slug`、無ければ会話の `default_model_slug`）。Claude.ai: 無し。
+    Claude Code: project・branch・model（`message.model`）・所要時間（返事の最初から最後のレコードまで）。Codex: project・branch・model・所要時間（`task_complete`）
+- `.msg.human` / `.msg.assistant` — 吹き出し。`.sender` のラベルは人間側が4本とも「あなた」、応答側は製品名 ChatGPT / Claude / Claude Code / Codex
+  （Codex の質問への回答は「あなた（質問への回答）」）
+  - 本文は `chatview.RenderText`: コードフェンス（三連のバッククォートか `~~~`）を `<pre><code>`、インラインの `` `code` `` を `<code>` にし、
+    それ以外はエスケープしたプレーンテキスト（`white-space: pre-wrap`）
+  - 前置き（Codex の IDE / ブラウザのコンテキスト）は本文の直後に折りたたみで置く
+  - 返事は最終回答（Codex は `phase=final_answer`、Claude Code は最後のテキスト）と質問を本文に、途中報告・thinking・ツール・変更ファイル・計画・通知・
+    サブエージェントは `<details class="process">`「🛠 作業の経過 — 途中報告 ×n · ツール名 ×n · thinking ×n · 変更 nファイル」1つに時系列で畳む
+    （[ADR-0314](../adr/0314-codex-conversation-from-item-completed.md)）
+  - `.ts` — 関連時刻（`2006-01-02 15:04`、ローカル時刻）
+- 1件の HTML は 4MiB（`chatview.MaxHTMLBytes`）で打ち切り、「(以降は長いため省略しました)」を出す
 
 ### CSS 変数（Light / Dark）
 
@@ -462,16 +467,18 @@ GetContentHTML(kyouID)
 |---|---|---|---|
 | `--bg` | `#ffffff` | `#212121` | 背景色 |
 | `--text` | `#333333` | `#e0e0e0` | テキスト色 |
-| `--msg-user-bg` | `#dbeafe` | `#1a3557` | ユーザメッセージ背景（**ChatGPT**。Claude.ai は `--msg-human-bg`） |
-| `--msg-assistant-bg` | `#f3f4f6` | `#2d2d2d` | アシスタントメッセージ背景 |
+| `--msg-human-bg` | `#dbeafe` | `#1a3557` | 人間の発言の背景（4本とも同じ変数名。ChatGPT の `user` も `human` クラスへ写す） |
+| `--msg-assistant-bg` | `#f3f4f6` | `#2d2d2d` | 応答の背景 |
+| `--chip-bg` / `--chip-color` | `#e5e7eb` / `#4b5563` | `#3a3a3a` / `#cccccc` | チップ |
+| `--details-bg` / `--details-color` | `#e9eaec` / `#4b5563` | `#383838` / `#cccccc` | 折りたたみ |
+| `--code-bg` / `--code-color` | `#e9eaec` / `#1f2937` | `#1e1e1e` / `#d4d4d4` | コードブロック・インラインコード・ツール一覧の等幅部分 |
 | `--scrollbar-thumb` | `#2672ed` | `#2672ed` | スクロールバー（gkill primary色） |
-| `--scrollbar-track` | — | — | スクロールバーの溝 |
-| `--sender-color` | — | — | 送信者ラベルの文字色 |
-| `--ts-color` | — | — | タイムスタンプの文字色 |
-| `--title-color` | — | — | 会話タイトルの文字色 |
+| `--scrollbar-track` | `#e5e7eb` | `#424242` | スクロールバーの溝 |
+| `--sender-color` | `#6b7280` | `#aaaaaa` | 送信者ラベルの文字色 |
+| `--ts-color` | `#9ca3af` | `#888888` | タイムスタンプの文字色 |
+| `--title-color` | `#9ca3af` | `#888888` | 会話タイトルの文字色 |
 
-> ユーザ側メッセージの背景変数名はプラグインで異なる（ChatGPT は `--msg-user-bg`、
-> Claude.ai は `--msg-human-bg`）。送信者ラベルの語彙（`user` / `human`）に合わせてある。
+> 変数も CSS もスクリプトも `plugin/sdk/chatview/head.go` の1か所にある。プラグインごとに head を複製しない。
 
 ### 本文を iframe へ渡す2つの経路
 

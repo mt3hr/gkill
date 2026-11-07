@@ -2,7 +2,7 @@
 
 ## 概要
 
-Go バックエンドのテスト。1444テスト関数、218テストファイル、33パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
+Go バックエンドのテスト。1459テスト関数、220テストファイル、34パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
 
 ## テストフレームワーク
 
@@ -68,9 +68,9 @@ src/server/gkill/
 | リポジトリ | 71 | `reps/` 直下69（13データ型の SQLite3 実装 + キャッシュ + 一時 + 作成・更新の欄の全層往復と SQL 列順のソース走査 + プラグイン + プラグイン診断 + プラグインの GitCommitLog 型別アダプタ + デッドロック/ネスト並列回帰 + gitキャッシュUNIQUE + gitキャッシュが構築済みなら外れた ID で下層へ落ちないこと + GPS集約dedup + 最新版アドレスのrep名走査 + URLog取得抑止フラグ + get_kyou の版履歴がキャッシュrepを回ること + サムネイルの vips 経路・EXIF 回転・外部ツール引数・ベンチ）+ `reps/cache/`・`reps/rep_cache_updater/` の2 |
 | DVNF | 3 | ファイル管理、CLI コマンドの引数解析、copy/move 共用 `copyFile` の実ファイル操作（内容一致・copyLastMod の mtime 保存） |
 | CLI/Main | 17 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ（子プロセスへ継ぐ環境変数と panic しない `InitNamedWith`、ログレベルの規約のソース走査を含む）、スレッド、エントリポイント（登録するサブコマンドの集合。`mcp` / `idf` はサーバ版だけ）、パスワード管理、add_tag バッチ（ルール JSON の検証・HTTP投稿と応答判定を含む）、generate_plugin_cache（偽プラグインをテストバイナリ自身で起動し、結果行の分類・stdin nil・利用者確認の順序・引数不足で usage だけを返すことを固定）、Android のタイムゾーン適用（展開済み絶対パスを渡すこと・packed tzdata の候補順・SQLite と Go の壁時計が食い違ったときの Error 1行）、MCP サブコマンドの配線（OAuth 状態ファイルの置き場所を含む） |
-| プラグイン SDK | 7 | `Run()` の stdio ループ（22本）+ `--gkill-build-cache` の単独モードと同梱プラグインの配線走査（5本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本）+ ワード判定 `Query.MatchText`（3本）+ gkill_log へのログ（8本。`LogDebug` がファイルだけへ出ること・`closeLogging` が何度呼んでも安全なことを含む） |
+| プラグイン SDK | 9 | `Run()` の stdio ループ（22本）+ `--gkill-build-cache` の単独モードと同梱プラグインの配線走査（5本）+ `EnsureConfig`（4本）+ ZIP走査（18本）+ キャッシュDBパス（5本）+ ワード判定 `Query.MatchText`（3本）+ gkill_log へのログ（8本。`LogDebug` がファイルだけへ出ること・`closeLogging` が何度呼んでも安全なことを含む）+ `chatview/` の本文 HTML（15本。head の契約と postMessage キー集合・エスケープ・チップ・作業の経過・コードフェンス） |
 
-**合計 218 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
+**合計 220 ファイル**（上表の合計。`node src/tools/verify_docs.mjs --list` が出す `goTestFiles` と一致する。
 ずれたら `checkCounts` が落とす）。
 
 ## 規約のソース走査（`usecase/source_conventions_scan_test.go`）

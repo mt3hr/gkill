@@ -41,6 +41,9 @@ type cachedMessage struct {
 	Text            string
 	RelatedTimeUnix int64
 	CreateTimeUnix  int64
+	// Model は返事を書いたモデル名（message.metadata.model_slug。無ければ会話の default_model_slug）。
+	// 人間の発言では空。詳細 HTML のチップに載せる。
+	Model string
 	// ConvTitle は会話タイトル。GetMessages が conv_cache から JOIN で載せる（ワード検索の対象にするため）。
 	ConvTitle string
 }
@@ -63,7 +66,8 @@ type cacheStats struct {
 // cacheSchemaVersion はキャッシュのスキーマ版。
 // 構造やジャーナルモードを変えたら上げること。古いDBは作り直される(キャッシュなので捨ててよい)。
 // v2: 自前WAL化 + gen 列導入(バッチcommitの世代管理)で作り直し。
-const cacheSchemaVersion = "2"
+// v3: msg_cache に model 列（message.metadata.model_slug）を足した。詳細 HTML のチップに載せる。
+const cacheSchemaVersion = "3"
 
 // openDB はキャッシュDBを開く。何度呼んでも1回しか開かない。
 func (c *pluginCache) openDB(pluginDir string) error {
@@ -141,6 +145,7 @@ func initSchema(db *sql.DB) error {
   text              TEXT NOT NULL,
   related_time_unix INTEGER NOT NULL,
   create_time_unix  INTEGER NOT NULL,
+  model             TEXT NOT NULL DEFAULT '',
   gen               INTEGER NOT NULL DEFAULT 0
 )`,
 		`CREATE INDEX IF NOT EXISTS idx_msg_conv ON msg_cache(conv_id)`,
@@ -226,7 +231,7 @@ func (c *pluginCache) GetMessages(pluginDir string) ([]cachedMessage, error) {
 	}
 	// 会話タイトルはワード検索の対象にするので LEFT JOIN で一緒に取る（msg_cache には焼かない。
 	// 焼くと既存キャッシュの作り直しが要る）。
-	rows, err := db.Query(`SELECT m.msg_id, m.conv_id, m.sender, m.text, m.related_time_unix, m.create_time_unix,
+	rows, err := db.Query(`SELECT m.msg_id, m.conv_id, m.sender, m.text, m.related_time_unix, m.create_time_unix, m.model,
 		       COALESCE(c.title, '')
 		FROM msg_cache m
 		LEFT JOIN conv_cache c ON m.conv_id = c.conv_id
@@ -238,7 +243,7 @@ func (c *pluginCache) GetMessages(pluginDir string) ([]cachedMessage, error) {
 	var msgs []cachedMessage
 	for rows.Next() {
 		var m cachedMessage
-		if err := rows.Scan(&m.MsgID, &m.ConvID, &m.Sender, &m.Text, &m.RelatedTimeUnix, &m.CreateTimeUnix, &m.ConvTitle); err != nil {
+		if err := rows.Scan(&m.MsgID, &m.ConvID, &m.Sender, &m.Text, &m.RelatedTimeUnix, &m.CreateTimeUnix, &m.Model, &m.ConvTitle); err != nil {
 			continue
 		}
 		msgs = append(msgs, m)
@@ -258,13 +263,13 @@ func (c *pluginCache) GetMsgByID(pluginDir string, msgID string) (convTitle stri
 	}
 	row := db.QueryRow(`
 		SELECT m.msg_id, m.conv_id, m.sender, m.text,
-		       m.related_time_unix, m.create_time_unix,
+		       m.related_time_unix, m.create_time_unix, m.model,
 		       COALESCE(c.title, '')
 		FROM msg_cache m
 		LEFT JOIN conv_cache c ON m.conv_id = c.conv_id
 		WHERE m.msg_id = ?`, msgID)
 	if e := row.Scan(&msg.MsgID, &msg.ConvID, &msg.Sender, &msg.Text,
-		&msg.RelatedTimeUnix, &msg.CreateTimeUnix, &convTitle); e != nil {
+		&msg.RelatedTimeUnix, &msg.CreateTimeUnix, &msg.Model, &convTitle); e != nil {
 		err = fmt.Errorf("msg not found: %s", msgID)
 	}
 	return
@@ -288,7 +293,7 @@ func (c *pluginCache) GetConvForMsg(pluginDir string, msgID string) (convTitle s
 	if e := db.QueryRow(`SELECT title FROM conv_cache WHERE conv_id = ?`, convID).Scan(&convTitle); e != nil {
 		convTitle = ""
 	}
-	rows, e := db.Query(`SELECT msg_id, conv_id, sender, text, related_time_unix, create_time_unix
+	rows, e := db.Query(`SELECT msg_id, conv_id, sender, text, related_time_unix, create_time_unix, model
 		FROM msg_cache WHERE conv_id = ? ORDER BY related_time_unix ASC`, convID)
 	if e != nil {
 		err = fmt.Errorf("error at query conv messages: %w", e)
@@ -297,7 +302,7 @@ func (c *pluginCache) GetConvForMsg(pluginDir string, msgID string) (convTitle s
 	defer func() { _ = rows.Close() }()
 	for rows.Next() {
 		var m cachedMessage
-		if e := rows.Scan(&m.MsgID, &m.ConvID, &m.Sender, &m.Text, &m.RelatedTimeUnix, &m.CreateTimeUnix); e != nil {
+		if e := rows.Scan(&m.MsgID, &m.ConvID, &m.Sender, &m.Text, &m.RelatedTimeUnix, &m.CreateTimeUnix, &m.Model); e != nil {
 			continue
 		}
 		msgs = append(msgs, m)
@@ -476,9 +481,14 @@ func (c *pluginCache) ingestConvs(convs []chatGPTConversation, gen int) error {
 			if msg.CreateTime != nil {
 				createTimeUnix = int64(*msg.CreateTime)
 			}
+			// モデル名はメッセージ側の model_slug。返事に無ければ会話の既定モデルで補う（人間の発言には付けない）
+			model := msg.Metadata.ModelSlug
+			if model == "" && msg.Author.Role == "assistant" {
+				model = conv.DefaultModelSlug
+			}
 			if _, err := tx.Exec(
-				`INSERT OR REPLACE INTO msg_cache(msg_id, conv_id, sender, text, related_time_unix, create_time_unix, gen) VALUES(?,?,?,?,?,?,?)`,
-				msg.ID, conv.ID, msg.Author.Role, text, createTimeUnix, createTimeUnix, gen); err != nil {
+				`INSERT OR REPLACE INTO msg_cache(msg_id, conv_id, sender, text, related_time_unix, create_time_unix, model, gen) VALUES(?,?,?,?,?,?,?,?)`,
+				msg.ID, conv.ID, msg.Author.Role, text, createTimeUnix, createTimeUnix, model, gen); err != nil {
 				return fmt.Errorf("error at insert msg %s: %w", msg.ID, err)
 			}
 		}

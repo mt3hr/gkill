@@ -133,6 +133,11 @@ func TestRenderAssistantFoldsToolsAndSubAgent(t *testing.T) {
 		}
 	}
 
+	// チップは空白で区切る(MCP の HTML→テキスト変換で "myprojmain" に連結されないため)
+	if !strings.Contains(html, `<span class="chip">myproj</span> <span class="chip">main</span>`) {
+		t.Error("チップが空白区切りで出ていない")
+	}
+
 	// テーマ追従とiframe自動リサイズの仕掛けが入っていること
 	for _, want := range []string{"gkill_iframe_size", "gkill_theme", "data-theme", "ResizeObserver"} {
 		if !strings.Contains(html, want) {
@@ -245,48 +250,5 @@ func TestRenderHumanQuestionReplyAndBrowserContext(t *testing.T) {
 	}
 }
 
-func TestRenderRespectsSizeCap(t *testing.T) {
-	built := message{Role: roleAssistant}
-	for range 20000 {
-		built.Items = append(built.Items, turnItem{Kind: blockText, Text: strings.Repeat("あ", 500)})
-	}
-	html := renderMessageHTML(built)
-	if len(html) > maxHTMLBytes+1024*1024 {
-		t.Errorf("HTMLが %d バイト。上限 %d を大きく超えている", len(html), maxHTMLBytes)
-	}
-	if !strings.Contains(html, "以降は長いため省略しました") {
-		t.Error("打ち切りの断りが無い")
-	}
-}
-
-func TestRenderNotFoundHTML(t *testing.T) {
-	html := renderNotFoundHTML()
-	if !strings.Contains(html, "見つかりません") {
-		t.Error("本文が無い")
-	}
-	if !strings.HasSuffix(html, "</body></html>") {
-		t.Error("HTMLが閉じていない")
-	}
-}
-
-func TestFormatDuration(t *testing.T) {
-	cases := map[int64]string{
-		0:      "",
-		999:    "",
-		1000:   "所要 1秒",
-		59000:  "所要 59秒",
-		60000:  "所要 1分0秒",
-		192000: "所要 3分12秒",
-	}
-	for ms, want := range cases {
-		if got := formatDuration(ms); got != want {
-			t.Errorf("formatDuration(%d) = %q, want %q", ms, got, want)
-		}
-	}
-}
-
-func TestRenderSummaryLineEmptyWhenNothingToCount(t *testing.T) {
-	if got := renderSummaryLine([]turnItem{{Kind: blockText, Text: "x"}}); got != "" {
-		t.Errorf("本文だけの応答に要約行を出している: %q", got)
-	}
-}
+// 上限での打ち切り・見つからないページ・所要時間の整形・要約行のテストは
+// SDK の chatview（src/server/gkill/plugin/sdk/chatview/chatview_test.go）へ移した。

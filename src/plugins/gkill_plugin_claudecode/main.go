@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 
 	sdk "github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk/chatview"
 )
 
 // configKeySourceDirs は config.json に保存するデータソースフォルダのキー。
@@ -210,7 +211,7 @@ func main() {
 
 			t, err := globalCache.GetMessage(pluginDir, kyouID)
 			if err != nil {
-				return renderNotFoundHTML(), nil
+				return chatview.RenderNotFound(), nil
 			}
 			return renderMessageHTML(t), nil
 		},

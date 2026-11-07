@@ -2,10 +2,11 @@
 
 ## 概要
 
-プラグイン作者向け Go SDK のテスト。**65テスト（7ファイル）**。
+プラグイン作者向け Go SDK のテスト。**80テスト（9ファイル）**（サブパッケージ `chatview/` の2ファイルを含む）。
 
 `sdk.Run()` の stdin/stdout ループ、`--gkill-build-cache` の単独モード、`sdk.EnsureConfig()` の `config.json` 自動生成、
-`sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置、`sdk.Query.MatchText()` のワード判定を検証する。
+`sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置、`sdk.Query.MatchText()` のワード判定、
+`chatview` の本文 HTML（AI チャット系4本が共有する描画）を検証する。
 SDK は gkill 本体と別プロセスで動くプラグイン側のライブラリなので、ここでの回帰は
 全プラグイン（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / locationhistory / example）に同時に波及する。
 
@@ -20,6 +21,8 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 | `cache_path_test.go` | 5 | `CacheDBPath()` / `IsSafePathElement()`（`TestCacheDBPath_*`） |
 | `plugin_log_test.go` | 8 | `Run()` が開く `$GKILL_HOME/logs/gkill_plugin_<name>*.log`（`initLogging` / `LogWarn` / `LogInfo` / `LogDebug` がファイルだけへ / `closeLogging` の冪等 / `runLoop` の Access 行） |
 | `match_words_test.go` | 3 | `Query.MatchText()` / `Query.Matcher()`（`TestQueryMatchText` / `TestQueryMatchTextIDPrefixLengthBoundary` / `TestQueryMatcherDoesNotMutateQuery`）。gkill 本体と同じ規則（大小無視の部分一致、ID は 7 文字以上の語だけ前方一致（`find_word.MinIDPrefixMatchLength`。長さは rune 数で数え、かな 6 文字は 18 バイトでも対象外。[ADR-0114](../../../../../documents/adr/0114-word-filter-id-prefix-needs-seven-chars.md)）、除外語は ID を見ない、空語は無視）で、元の Query を書き換えないこと。プラグインが返す Kyou はこの判定だけで絞られる（本体は再判定しない）ので、境界を SDK 側でも固定する |
+| `chatview/chatview_test.go` | 12 | AI チャット系4本が共有する本文 HTML `chatview.Render`（下の「chatview/」節） |
+| `chatview/text_test.go` | 3 | `chatview.RenderText` — コードフェンスとインラインコードだけを描き、それ以外は `html.EscapeString` と一致 |
 
 ## sdk_test.go — stdio ループ
 
@@ -118,6 +121,30 @@ Google Takeout の ZIP を展開せずに読むための走査。fitbit / 位置
 | `TestSplitZipEntryPath` | `<ZIP>!/<エントリ>` を分解する |
 | `TestExpandSourcePatterns` | ワイルドカード・`~`・環境変数を展開する |
 | `TestParseSourcePatterns` | 配列でも改行区切りでも読める。空なら既定値 |
+
+## chatview/ — AI チャット系プラグインの本文 HTML
+
+chatgpt / claudeai / claudecode / codex の `GetContentHTML` は、自分のログの形を `chatview.Message` へ写し、
+描画はここが1か所で行う（[ADR-0315](../../../../../documents/adr/0315-chat-plugins-render-through-sdk-chatview.md)）。
+ここでの回帰は4本の表示に同時に出る。plugin-html-view.vue との契約（テーマ追従・サイズ通知・dblclick はクライアントが足す）も固定している。
+
+| テスト | 検証内容 |
+|-------|---------|
+| `TestRenderHeadContract` | `<!DOCTYPE html>`・`[data-theme="dark"]`・`gkill_iframe_size`・`gkill_theme`・`ResizeObserver`・`toggle` が入り、`</body></html>` で閉じる。出力中の `gkill_*` キーの集合がちょうど `{gkill_iframe_size, gkill_theme}`（キーを足すとクライアントと cross-boundary-map §9 も要る）。`dblclick` を書かない |
+| `TestRenderEscapesEveryField` | 題・チップ・ラベル・本文・前置き・質問・ツール名と要約・サブエージェント・パス・計画・注記・thinking の全欄がエスケープされる |
+| `TestRenderChipsSpaceSeparatedDedupedSkipEmpty` | チップは空白1つで区切り、重複を落とし、空を飛ばす。1つも無ければ枠を出さない |
+| `TestRenderRoleClassAndSender` | `class="msg human"` / `class="msg assistant"` と `.sender` のラベル |
+| `TestRenderTimestampLocalOrEmpty` | `.ts` はローカル時刻 `2006-01-02 15:04`、ゼロなら空 |
+| `TestRenderOrderTitleChipsTextContextBodyProcessTimestamp` | 題 → チップ → 本文 → 前置き → Body → `<details class="process">`（見出しに「途中報告 ×n · ツール ×n · thinking ×n · 変更 nファイル」）→ 時刻の順。Process が空なら折りたたみを出さない |
+| `TestRenderProcessKinds` | thinking / tools（ツール名空は `(不明)`）/ サブエージェント（中のツール・変更ファイル・入れ子は1行の注記、thinking は出さない）/ 変更ファイル（`patch-add` / `patch-del`）/ 計画 / 注記 / 質問（`❓ {Sender} からの質問`）/ 汎用の折りたたみの markup。要約はこの階層だけを数え、同数は名前順 |
+| `TestRenderCodeOnlyInProse` | `RenderText` は本文にだけ掛かり、ツールの要約のバッククォートは文字のまま |
+| `TestRenderRespectsSizeCap` | 4MiB（`MaxHTMLBytes`）で打ち切り、断りを出し、HTML は閉じる |
+| `TestRenderNotFound` | 「見つかりません」のページも head を共有してテーマに追従する |
+| `TestFormatDuration` | 1秒未満は空、`所要 59秒`、`所要 1分0秒`、`所要 3分12秒` |
+| `TestSummaryLine` | 数えるものが無ければ空。回数の多い順→名前順、thinking と変更ファイルは後ろ |
+| `TestRenderTextCodeFences` | 三連以上のバッククォート / `~~~` のフェンス、言語名の `class="lang-…"`（不正な info は class 無し）、長い閉じ、中の短い列は本文、未終端は末尾まで、先頭空白は3つまで、CRLF、エスケープ、前後の改行を1つずつ落とす、行の途中の列はフェンスでない、連続するフェンス |
+| `TestRenderTextInlineCode` | N 個のバッククォートで開き同じ行の「ちょうど N 個」で閉じる、対が無ければ文字のまま、行をまたがない、前後1つずつの空白を落とす、エスケープ |
+| `TestRenderTextPlainEqualsEscapeString` | バッククォートもチルダも無い文字列では `html.EscapeString` とバイト一致 |
 
 ## 実行方法
 

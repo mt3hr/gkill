@@ -656,6 +656,10 @@ func buildMessages(records []logRecord, agentsByToolUseID, agentsByID map[string
 			if app == nil {
 				continue
 			}
+			// モデル名は返事のまとまりの中で最初に見えた assistant レコードのものを使う
+			if cur.Model == "" {
+				cur.Model = rec.Message.modelOrEmpty()
+			}
 			for _, b := range blocks {
 				switch b.Type {
 				case "text":
@@ -825,6 +829,8 @@ func searchTextOf(t message) string {
 	sb.WriteString(t.Project)
 	sb.WriteString(" ")
 	sb.WriteString(t.Branch)
+	sb.WriteString(" ")
+	sb.WriteString(t.Model)
 	sb.WriteString("\n")
 	for _, item := range t.Items {
 		switch item.Kind {

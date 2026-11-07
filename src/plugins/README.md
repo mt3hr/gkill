@@ -22,7 +22,8 @@ plugins/
 │   ├── cache.go
 │   ├── builder.go              # 常駐バックグラウンドビルダ
 │   ├── types.go
-│   ├── html.go
+│   ├── render.go               # 本文 HTML（SDK の chatview へ写す）
+│   ├── html.go                 # 設定画面の HTML
 │   ├── *_test.go               # テストのたびに archive/zip で ZIP を組む
 │   ├── go.mod / go.sum
 │   ├── manifest.json
@@ -34,7 +35,8 @@ plugins/
 │   ├── cache.go
 │   ├── builder.go              # 常駐バックグラウンドビルダ
 │   ├── types.go
-│   ├── html.go
+│   ├── render.go               # 本文 HTML（SDK の chatview へ写す）
+│   ├── html.go                 # 設定画面の HTML
 │   ├── *_test.go               # テストのたびに archive/zip で ZIP を組む
 │   ├── go.mod / go.sum
 │   ├── manifest.json
@@ -76,9 +78,10 @@ plugins/
 │   ├── loader.go
 │   ├── cache.go
 │   ├── types.go
-│   ├── render.go
-│   ├── html.go
+│   ├── render.go               # 本文 HTML（SDK の chatview へ写す）
+│   ├── html.go                 # 設定画面の HTML
 │   ├── loader_test.go
+│   ├── render_test.go
 │   ├── testdata/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
@@ -498,6 +501,40 @@ sdk.Run(sdk.Handler{
     // ...
 })
 ```
+
+### 本文 HTML（`gkill/plugin/sdk/chatview`）
+
+会話形式の記録（AI チャットのログなど）の `GetContentHTML` は、HTML を自分で組まずに `chatview` へ写す。
+head（CSS 変数・テーマ追従・iframe のサイズ通知）・吹き出し・チップ・折りたたみ・「見つかりません」ページ・
+コードフェンスの描画・4MiB の打ち切りが1か所に揃う。同梱の chatgpt / claudeai / claudecode / codex が使う
+（[ADR-0315](../../documents/adr/0315-chat-plugins-render-through-sdk-chatview.md)）。
+
+```go
+import "github.com/mt3hr/gkill/src/server/gkill/plugin/sdk/chatview"
+
+GetContentHTML: func(ctx context.Context, kyouID string, cfg sdk.Config) (string, error) {
+    m, ok := lookup(kyouID)
+    if !ok {
+        return chatview.RenderNotFound(), nil
+    }
+    return chatview.Render(chatview.Message{
+        Title:  m.ConversationTitle,          // .conv-title（空なら出さない）
+        Chips:  []string{m.Project, m.Branch, m.Model, chatview.FormatDuration(m.Duration)}, // 空は飛ばす
+        Role:   chatview.RoleAssistant,       // 人間の発言は RoleHuman
+        Sender: "MyBot",                      // 人間側は「あなた」
+        Text:   m.Text,                       // コードフェンスとインラインコードだけ描き、他はエスケープ
+        Body:   []chatview.Block{{Kind: chatview.KindText, Text: m.FinalAnswer}},
+        Process: []chatview.Block{            // 「🛠 作業の経過」1つに時系列で畳む
+            {Kind: chatview.KindThinking, Thinking: m.Thoughts},
+            {Kind: chatview.KindTools, Tools: []chatview.ToolCall{{Name: "exec", Summary: "go test"}}},
+        },
+        RelatedTime: m.Time,
+    }), nil
+},
+```
+
+postMessage のキーは `gkill_iframe_size` / `gkill_theme` の2つだけ（足すならクライアントと cross-boundary-map §9 も）。
+dblclick の転送はクライアントが本文の末尾に足すので書かない。
 
 ---
 

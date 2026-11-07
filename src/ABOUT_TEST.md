@@ -11,16 +11,16 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド (`server/`) | 1444 | 218 | Go `testing` |
+| Go バックエンド (`server/`) | 1459 | 220 | Go `testing` |
 | フロントエンド ユニット (`client/`) | 2125 | 188 | Vitest |
 | フロントエンド E2E (`client/`) | 257 | 48 | Playwright |
-| MCP サーバ (`server/gkill/mcp/`) | 1185 | 44 | Go `testing` |
+| MCP サーバ (`server/gkill/mcp/`) | 1187 | 44 | Go `testing` |
 | ツール (`tools/`) | 115 | 4 | Vitest |
 | Android (`android/`) | 31 | 2 | JUnit 4 |
 | Wear OS (`wear_os/`) | 235 | 18 | JUnit 4 + MockK |
-| **合計** | **5,392** | **522** | |
+| **合計** | **5,409** | **524** | |
 
-`src/plugins/` の Go テスト 238件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
+`src/plugins/` の Go テスト 239件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
 ### テストの書き方の方針
 
@@ -79,7 +79,7 @@ npm run verify_docs -- --list
 | `client/classes/kftl/` | [client/classes/kftl/ABOUT_TEST.md](client/classes/kftl/ABOUT_TEST.md) | KFTL 行分類器 (TypeScript。行ラベル専用) と送信経路 |
 | `client/pages/` | [client/pages/ABOUT_TEST.md](client/pages/ABOUT_TEST.md) | E2E + Composable + Router |
 | `locales/` | [locales/ABOUT_TEST.md](locales/ABOUT_TEST.md) | i18n 完全性検証（7言語） |
-| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（1444テスト / 33パッケージ） |
+| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（1459テスト / 34パッケージ） |
 | `server/gkill/api/` | [server/gkill/api/ABOUT_TEST.md](server/gkill/api/ABOUT_TEST.md) | API 共通基盤（FindFilter等） |
 | `server/gkill/api/gkill_server_api/` | [server/gkill/api/gkill_server_api/ABOUT_TEST.md](server/gkill/api/gkill_server_api/ABOUT_TEST.md) | API ハンドラ統合テスト（handle_*.go 実装99ファイル） |
 | `server/gkill/api/kftl/` | [server/gkill/api/kftl/ABOUT_TEST.md](server/gkill/api/kftl/ABOUT_TEST.md) | KFTL パーサ (Go) |
@@ -89,9 +89,9 @@ npm run verify_docs -- --list
 | `server/gkill/usecase/` | [server/gkill/usecase/ABOUT_TEST.md](server/gkill/usecase/ABOUT_TEST.md) | ビジネスロジック層（ハンドラ経由で33〜50%到達） |
 | `server/gkill/dvnf/` | [server/gkill/dvnf/ABOUT_TEST.md](server/gkill/dvnf/ABOUT_TEST.md) | DVNF ファイル管理 |
 | `server/gkill/main/` | [server/gkill/main/ABOUT_TEST.md](server/gkill/main/ABOUT_TEST.md) | CLI エントリポイント |
-| `server/gkill/mcp/` | [server/gkill/mcp/ABOUT_TEST.md](server/gkill/mcp/ABOUT_TEST.md) | MCP サーバ（1185テスト）。コミット済みゴールデンとのバイト一致（採取時は旧 Node 実装の出力）を含む |
+| `server/gkill/mcp/` | [server/gkill/mcp/ABOUT_TEST.md](server/gkill/mcp/ABOUT_TEST.md) | MCP サーバ（1187テスト）。コミット済みゴールデンとのバイト一致（採取時は旧 Node 実装の出力）を含む |
 | `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) | Android APK テスト |
 | `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) | Wear OS テスト（235テスト） |
-| `server/gkill/plugin/sdk/` | [server/gkill/plugin/sdk/ABOUT_TEST.md](server/gkill/plugin/sdk/ABOUT_TEST.md) | プラグイン SDK（stdio ループ + 単独モード --gkill-build-cache + EnsureConfig + ZIP走査 + キャッシュDBパス + ワード判定 + rep_names + gkill_log へのログ、65テスト） |
+| `server/gkill/plugin/sdk/` | [server/gkill/plugin/sdk/ABOUT_TEST.md](server/gkill/plugin/sdk/ABOUT_TEST.md) | プラグイン SDK（stdio ループ + 単独モード --gkill-build-cache + EnsureConfig + ZIP走査 + キャッシュDBパス + ワード判定 + rep_names + gkill_log へのログ + chatview の本文 HTML、80テスト） |
 | `plugins/` | [plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) | 同梱プラグイン（独立モジュール。`npm run test_plugins` で実行） |
 | `tools/` | [tools/ABOUT_TEST.md](tools/ABOUT_TEST.md) | リリースゲート・attestation ランナーとリリース工程の書く側・Nightly の npm audit の判定（115テスト、4ファイル） |

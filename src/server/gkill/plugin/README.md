@@ -18,7 +18,13 @@ plugin/
     ├── build_cache_test.go # 単独モード（runBuildCache）と同梱プラグインの BuildCache 配線の走査
     ├── match_words_test.go # Query.MatchText のテスト
     ├── plugin_log_test.go # gkill_log へのログ（置き場・静的フィールド・stderr だけへの退避・stdout の清浄）
-    └── config_test.go  # EnsureConfig のテスト（4本）
+    ├── config_test.go  # EnsureConfig のテスト（4本）
+    └── chatview/       # 会話形式の Kyou 本文 HTML（AI チャット系4本が使う。ADR-0315）
+        ├── chatview.go # Message / Block の共通モデルと Render / RenderNotFound / FormatDuration / SummaryLine
+        ├── head.go     # head（CSS 変数・テーマ追従・gkill_iframe_size のサイズ通知）の唯一の写し
+        ├── text.go     # RenderText — コードフェンスとインラインコードだけを描き、他はエスケープ
+        ├── chatview_test.go
+        └── text_test.go
 ```
 
 ## プラグイン SDK の使い方

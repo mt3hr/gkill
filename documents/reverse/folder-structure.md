@@ -147,6 +147,7 @@ src/server/
     │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、121ファイル）
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
+    │       └── chatview/           # AI チャット系プラグインの本文 HTML（chatview.Message → HTML。head・チップ・折りたたみを1か所に。ADR-0315）
     ├── dao/                        # データアクセス層
     │   ├── gkill_dao_manager.go    # DAOマネージャ（ConfigDAOs + GkillRepositories管理）
     │   ├── plugin_manager.go       # プラグインディレクトリを走査してPluginRepositoryを登録

@@ -40,11 +40,16 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              `conversations.json`. Signature = Path:CRC32:Size of the
               #                              entries → whole rebuild on change; the same conversation
               #                              id across zips → the newest update_time wins and the
-              #                              other version's messages are dropped (ADR-0310)
+              #                              other version's messages are dropped (ADR-0310).
+              #                              Body HTML comes from sdk/chatview (ADR-0315); the reply's
+              #                              message.metadata.model_slug is cached for the chip
+              #                              (cacheSchemaVersion 3)
               #   gkill_plugin_claudeai/   — Claude.ai conversation history plugin. Same zip rules as
               #                              chatgpt: `conversations-000.zip` holds one
               #                              `conversations.json` (hundreds of MB in a real export) whose entry mtime is
-              #                              fixed at 1980-01-01, so only CRC32/Size can detect change
+              #                              fixed at 1980-01-01, so only CRC32/Size can detect change.
+              #                              Body HTML comes from sdk/chatview (ADR-0315); the export
+              #                              carries no model name, so no chip
               #   gkill_plugin_claudecode/ — Claude Code chat log plugin (one Kyou per human
               #                              message + one per its whole response run,
               #                              source folder configurable, SQLite differential cache).
@@ -53,7 +58,12 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              where automated inputs are also `sdk` but carry no origin).
               #                              `sdk` without origin, `system` and AskUserQuestion answers
               #                              (`toolUseResult.answers`) fold into the reply as notices.
-              #                              Changing the split rule means bumping cacheSchemaVersion
+              #                              Changing the split rule means bumping cacheSchemaVersion.
+              #                              Body HTML comes from sdk/chatview (ADR-0315): the LAST text
+              #                              of a reply is the body and earlier texts / thinking / tools /
+              #                              notices fold into 作業の経過 (same shape as codex); sender
+              #                              label 「Claude Code」; chips project / branch / model
+              #                              (message.model, cacheSchemaVersion 5) / duration first→last record
               #   gkill_plugin_codex/      — OpenAI Codex CLI rollout logs, same Kyou granularity as
               #                              claudecode. Thread id is the FILENAME uuid, never
               #                              `session_meta.session_id` (absent in nearly half of real files and,
@@ -76,7 +86,9 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              A single real line can be tens of MB, so `reader.go` classifies from
               #                              the first 512 bytes and drains unwanted lines without
               #                              buffering. Background builder + WAL (a few seconds first build /
-              #                              <1s incremental on hundreds of MB, dozens of files → hundreds of Kyou)
+              #                              <1s incremental on hundreds of MB, dozens of files → hundreds of Kyou).
+              #                              Body HTML comes from sdk/chatview (ADR-0315); the body / 経過
+              #                              split and the question dedupe stay in render.go
               #   gkill_plugin_fitbit/     — Google Takeout Fitbit/Google Health, aggregated to
               #                              one KC per (day, metric). 34 metrics, background
               #                              build (a few minutes first / <1s incremental on a zip of hundreds of MB).
@@ -118,6 +130,7 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 
 - `gkill/api/gkill_plugin/` — Plugin protocol types: `PluginManifest`, `PluginRequest`, `PluginResponse`, `PluginKyou`, `PluginTypedData`, `PluginGPSLog` (stdio newline-delimited JSON)
 - `gkill/plugin/sdk/` — Plugin author SDK. `sdk.Run(sdk.Handler{...})` starts the stdio JSON message loop. Logging goes through `sdk.LogWarn` / `LogError`（stderr + file）and `sdk.LogInfo` / `LogDebug`（file only）— never `os.Stdout`. `Handler` has 10 fields: `FindKyous` (required), `GetKyou`, `GetContentHTML`, `GetConfigHTML`, `PostConfig`, `GetGPSLogs`, `RepName`, `RepNames`, `DefaultConfig`, `BuildCache` (called once, synchronously, outside the stdio loop when the binary is started with `--gkill-build-cache`; nil = "no cache", reported as `no_cache`). Plugins are standalone binaries in `src/plugins/`
+- `gkill/plugin/sdk/chatview/` — Kyou body HTML for conversation-shaped plugins (the four AI-chat plugins use it): `chatview.Message` → `chatview.Render` / `RenderNotFound`; head, chips, folds, size cap and code fences live here once (ADR-0315)
 
 **1本のプラグインが複数の rep 名を名乗れる（`rep_names`）。** `get_rep_name` の応答に `rep_names[]` を載せると（SDK は `Handler.RepNames`）、gkill はその名前を `get_all_rep_names`・rep 名の絞り込み（`find_filter.go` Step4）・本文取得の引き当て（`PluginManager.GetPluginByRepName`）・MCP の `get_rep_infos.plugins[]` / `get_plugin_list.rep_names` に使う。**null（欄なし）と `[]` は別**: null は「未対応」で manifest の `rep_name` 1つ、`[]` は「いまは0個」。名前を列挙する側は `GetRepName` を直接見ず **`reps.RepNamesOf`** を通すこと（`GetRepName` は代表名で、MatchReps のキーとログ用）。本体側は `pluginRepositoryImpl.GetRepNames` が **TTL 60秒**でキャッシュし、失敗しても前回値か manifest 名にフォールバックしてエラーにしない（Step4 は fan-out の外で逐次に走るので、失敗を返すと全検索が落ち、毎回取りに行くと全検索が期限ぶん止まる）。申告済みの名前は `warnPluginRepNameMismatchOnce` の対象外。zip の Git リポジトリを束ねる `gkill_plugin_archived_git_commit_log` が最初の利用者（[ADR-0308](../../../documents/adr/0308-plugin-multiple-rep-names.md)）。
 
@@ -143,6 +156,8 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 
 **stdio のコマンド・起動フラグ・postMessage のキーを足したら境界対応表にも載せる。** SDK は本体の型を import しないので、両側は JSON のキーと文字列だけでつながる。[cross-boundary-map.md](../../../documents/reverse/cross-boundary-map.md) の §8・§9 を `npm run verify_docs` が本体・SDK・画面のコードと3者で突き合わせる。
 
+**AI チャット系プラグイン4本（chatgpt / claudeai / claudecode / codex）の本文 HTML は SDK の `plugin/sdk/chatview` が描く。** プラグイン側の `render.go` は自分のログの形を `chatview.Message` へ写すだけで、head（CSS 変数・テーマ追従・`gkill_iframe_size` のサイズ通知）・吹き出し・チップ・折りたたみ・「見つかりません」ページ・4MiB の打ち切りをプラグインごとに複製しない。返事は最終回答（Codex は `phase=final_answer`、Claude Code は印が無いので最後のテキスト）と質問を `Body`、残りを `Process` に入れて「🛠 作業の経過」1つに時系列で畳む（ADR-0314 の組み方を4本に広げた。一覧の行で会話が途中報告に埋もれないため）。応答側のラベルは製品名（ChatGPT / Claude / Claude Code / Codex）、人間側は「あなた」。Markdown はコードフェンスとインラインコードだけ（`chatview.RenderText`）。チップは空白1つで区切る（MCP の HTML→テキスト変換は `<span>` を改行にしないので、詰めると project 名と branch 名が1語に連結される。直す前は codex だけが詰めていた）。postMessage のキーは `gkill_iframe_size` / `gkill_theme` の2つだけで、`chatview_test.go` が出力中のキー集合を固定している —— 足すならクライアント（`plugin-html-view.vue`）と cross-boundary-map §9 も同時に。dblclick の転送はクライアントが本文の末尾に足すので書かない。解析を変えてモデル名などを拾い始めたら `cacheSchemaVersion` を上げる（差分更新は変わっていないファイルを二度と読まない。claudecode は 5、chatgpt は 3）。SDK の変更は4本のバイナリを作り直して配り直すまで効かない（[ADR-0315](../../../documents/adr/0315-chat-plugins-render-through-sdk-chatview.md)）。
+
 **testdata・テストの固定値は合成値で書く。** 座標は `351234000`（E7）や `35.1234`、端末 ID は `1000000001`、歩数は `10000`、書き出し名は `takeout-20240101T000000Z`、時刻は秒 00。実データの書き出しから切り出した値を置かない（書く瞬間とコミットの検査が座標・端末 ID・時刻付きの名前を止める。線引きは gkill-docs「実データ由来の値の線引き」）。
 
 ## 関連スキル
@@ -161,6 +176,7 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 - [ADR-0305 常駐ビルダと WAL](../../../documents/adr/0305-plugin-background-builder-wal.md)
 - [ADR-0306 Codex のスレッドIDはファイル名から](../../../documents/adr/0306-codex-thread-id-from-filename.md)
 - [ADR-0314 Codex 0.151 以降の会話は item_completed から読み、返事は最終回答を本文にする](../../../documents/adr/0314-codex-conversation-from-item-completed.md)
+- [ADR-0315 AI チャット系プラグインの本文 HTML は SDK の chatview が1か所で描く](../../../documents/adr/0315-chat-plugins-render-through-sdk-chatview.md)
 - [ADR-0308 プラグインが複数の rep 名を名乗る](../../../documents/adr/0308-plugin-multiple-rep-names.md)
 - [ADR-0309 provides に git_commit_log](../../../documents/adr/0309-plugin-provides-git-commit-log.md)
 - [ADR-0310 ChatGPT / Claude.ai はエクスポート ZIP のまま読み、展開済み JSON は読まない](../../../documents/adr/0310-chat-export-plugins-read-zip.md)

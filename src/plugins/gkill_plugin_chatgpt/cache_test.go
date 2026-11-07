@@ -22,6 +22,8 @@ type testMsg struct {
 	role  string
 	text  string
 	ctime float64
+	// model は metadata.model_slug。空なら metadata を出さない（古い書き出しの形）。
+	model string
 }
 type testConv struct {
 	id    string
@@ -30,6 +32,8 @@ type testConv struct {
 	// utime は update_time。0 なら ctime と同じにする。
 	utime float64
 	msgs  []testMsg
+	// defaultModel は会話の default_model_slug。空なら出さない。
+	defaultModel string
 }
 
 // conversationsJSON は ChatGPT の書き出しと同じ形の JSON 配列を作る。
@@ -40,27 +44,35 @@ func conversationsJSON(t *testing.T, convs []testConv) []byte {
 		mapping := map[string]any{}
 		for i, m := range cv.msgs {
 			nodeID := fmt.Sprintf("%s-node-%d", cv.id, i)
+			message := map[string]any{
+				"id":          m.id,
+				"author":      map[string]any{"role": m.role},
+				"content":     map[string]any{"content_type": "text", "parts": []any{m.text}},
+				"create_time": m.ctime,
+			}
+			if m.model != "" {
+				message["metadata"] = map[string]any{"model_slug": m.model}
+			}
 			mapping[nodeID] = map[string]any{
-				"id": nodeID,
-				"message": map[string]any{
-					"id":          m.id,
-					"author":      map[string]any{"role": m.role},
-					"content":     map[string]any{"content_type": "text", "parts": []any{m.text}},
-					"create_time": m.ctime,
-				},
+				"id":      nodeID,
+				"message": message,
 			}
 		}
 		utime := cv.utime
 		if utime == 0 {
 			utime = cv.ctime
 		}
-		arr = append(arr, map[string]any{
+		conv := map[string]any{
 			"id":          cv.id,
 			"title":       cv.title,
 			"create_time": cv.ctime,
 			"update_time": utime,
 			"mapping":     mapping,
-		})
+		}
+		if cv.defaultModel != "" {
+			conv["default_model_slug"] = cv.defaultModel
+		}
+		arr = append(arr, conv)
 	}
 	data, err := json.MarshalIndent(arr, "", " ")
 	if err != nil {
@@ -472,6 +484,39 @@ func TestChatGPTNewestUpdateTimeWinsAcrossZips(t *testing.T) {
 	}
 	if title != "newer" {
 		t.Errorf("conversation title = %q, want the newer version's", title)
+	}
+}
+
+// モデル名は message.metadata.model_slug からキャッシュに載せる。
+// 返事に無ければ会話の default_model_slug で補い、人間の発言には付けない（詳細 HTML のチップに出る）。
+func TestChatGPTModelSlugIsCached(t *testing.T) {
+	c, pluginDir := newTestCache(t)
+	dir := t.TempDir()
+	writeConversations(t, dir, []testConv{
+		{id: "c1", title: "t", ctime: 1000, defaultModel: "conv-default-model", msgs: []testMsg{
+			{id: "u1", role: "user", text: "質問", ctime: 1000},
+			{id: "a1", role: "assistant", text: "返事", ctime: 1001, model: "test-model-slug"},
+			{id: "a2", role: "assistant", text: "モデル無しの返事", ctime: 1002},
+		}},
+	})
+	if err := c.build(pluginDir, []string{dir}); err != nil {
+		t.Fatalf("build: %v", err)
+	}
+	for id, want := range map[string]string{"u1": "", "a1": "test-model-slug", "a2": "conv-default-model"} {
+		_, msg, err := c.GetMsgByID(pluginDir, id)
+		if err != nil {
+			t.Fatalf("GetMsgByID(%s): %v", id, err)
+		}
+		if msg.Model != want {
+			t.Errorf("%s の model = %q, want %q", id, msg.Model, want)
+		}
+	}
+	msgs, err := c.GetMessages(pluginDir)
+	if err != nil {
+		t.Fatalf("GetMessages: %v", err)
+	}
+	if !slices.ContainsFunc(msgs, func(m cachedMessage) bool { return m.MsgID == "a1" && m.Model == "test-model-slug" }) {
+		t.Error("GetMessages の行にもモデル名が載るはず")
 	}
 }
 

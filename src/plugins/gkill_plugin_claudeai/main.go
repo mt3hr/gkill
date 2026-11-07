@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 
 	sdk "github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk/chatview"
 )
 
 const repName = "Claude.ai"
@@ -160,9 +161,9 @@ func main() {
 
 			convTitle, msg, err := globalCache.GetMsgByID(pluginDir, kyouID)
 			if err != nil {
-				return "<html><body><p>メッセージが見つかりません</p></body></html>", nil
+				return chatview.RenderNotFound(), nil
 			}
-			return renderSingleMsgHTML(convTitle, msg), nil
+			return renderMessageHTML(convTitle, msg), nil
 		},
 
 		// ここでファイルを走査してはいけない。IsAlive(5秒)と同じスロットに並ぶ。
@@ -240,116 +241,6 @@ func kyousOfMessages(msgs []cachedMessage, q sdk.Query) []sdk.Kyou {
 		kyous = kyous[:q.Limit]
 	}
 	return kyous
-}
-
-// renderSingleMsgHTML は1メッセージのみのHTMLを生成する。
-// テーマはpostMessage経由で親ページから受け取り動的に切り替える。
-func renderSingleMsgHTML(convTitle string, msg cachedMessage) string {
-	var sb strings.Builder
-	sb.WriteString(`<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<style>
-:root {
-  --bg: #ffffff;
-  --text: #333333;
-  --msg-human-bg: #dbeafe;
-  --msg-assistant-bg: #f3f4f6;
-  --sender-color: #6b7280;
-  --ts-color: #9ca3af;
-  --title-color: #9ca3af;
-  --scrollbar-thumb: #2672ed;
-  --scrollbar-track: #e5e7eb;
-}
-[data-theme="dark"] {
-  --bg: #212121;
-  --text: #e0e0e0;
-  --msg-human-bg: #1a3557;
-  --msg-assistant-bg: #2d2d2d;
-  --sender-color: #aaaaaa;
-  --ts-color: #888888;
-  --title-color: #888888;
-  --scrollbar-thumb: #2672ed;
-  --scrollbar-track: #424242;
-}
-html, body { height: auto; margin: 0; overflow: visible; }
-body { font-family: sans-serif; padding: 12px; font-size: 14px;
-  background: var(--bg); color: var(--text); }
-.conv-title { font-size: 0.85em; color: var(--title-color); margin-bottom: 8px; }
-.msg { padding: 8px 12px; border-radius: 8px; white-space: pre-wrap;
-  word-break: break-word; line-height: 1.5; }
-.human { background: var(--msg-human-bg); }
-.assistant { background: var(--msg-assistant-bg); }
-.sender { font-size: 0.75em; color: var(--sender-color); margin-bottom: 4px; }
-.ts { font-size: 0.7em; color: var(--ts-color); margin-top: 4px; }
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--scrollbar-track); }
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
-</style>
-<script>
-(function() {
-  function notifySize() {
-    window.parent.postMessage({
-      gkill_iframe_size: {
-        width: document.documentElement.scrollWidth,
-        height: document.documentElement.scrollHeight
-      }
-    }, '*');
-  }
-  window.addEventListener('message', function(e) {
-    if (e.data && e.data.gkill_theme) {
-      document.documentElement.setAttribute('data-theme', e.data.gkill_theme);
-      setTimeout(notifySize, 10);
-    }
-  });
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', notifySize);
-  } else {
-    notifySize();
-  }
-  if (window.ResizeObserver) {
-    new ResizeObserver(notifySize).observe(document.documentElement);
-  }
-})();
-</script>
-</head><body>`)
-
-	if convTitle != "" {
-		sb.WriteString(`<div class="conv-title">`)
-		sb.WriteString(htmlEscape(convTitle))
-		sb.WriteString(`</div>`)
-	}
-
-	text := strings.TrimSpace(msg.Text)
-	class := "assistant"
-	senderLabel := "Claude"
-	if msg.Sender == "human" {
-		class = "human"
-		senderLabel = "あなた"
-	}
-	ts := ""
-	if msg.RelatedTimeUnix != 0 {
-		ts = unixToTimeFromCache(msg.RelatedTimeUnix).Format("2006-01-02 15:04")
-	}
-	sb.WriteString(`<div class="msg `)
-	sb.WriteString(class)
-	sb.WriteString(`"><div class="sender">`)
-	sb.WriteString(htmlEscape(senderLabel))
-	sb.WriteString(`</div>`)
-	sb.WriteString(htmlEscape(text))
-	sb.WriteString(`<div class="ts">`)
-	sb.WriteString(ts)
-	sb.WriteString(`</div></div>`)
-
-	sb.WriteString(`</body></html>`)
-	return sb.String()
-}
-
-func htmlEscape(s string) string {
-	s = strings.ReplaceAll(s, "&", "&amp;")
-	s = strings.ReplaceAll(s, "<", "&lt;")
-	s = strings.ReplaceAll(s, ">", "&gt;")
-	s = strings.ReplaceAll(s, `"`, "&#34;")
-	return s
 }
 
 // splitSourceDirsForm は設定画面のテキストエリア(1行1指定)を config.json 用の配列にする。

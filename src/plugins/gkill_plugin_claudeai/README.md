@@ -93,7 +93,8 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_claudeai/cache.db
 | `main.go` | エントリポイント、SDK ハンドラ登録 |
 | `loader.go` | ZIP 内の `conversations.json` の選別・要素ごとの流し読み・同じ会話 UUID の畳み込み |
 | `cache.go` | SQLite3 キャッシュ（テーブル定義・差分判定） |
-| `html.go` | 会話詳細の HTML 生成 |
+| `render.go` | 会話詳細の HTML（SDK の `chatview` へ写す。ラベルは「あなた」/「Claude」。書き出しにモデル名は無いのでチップは無し。[ADR-0315](../../../documents/adr/0315-chat-plugins-render-through-sdk-chatview.md)） |
+| `html.go` | 設定画面の HTML 生成 |
 | `types.go` | Claude.ai エクスポート形式の型定義 |
 | `manifest.json` | プラグインメタ情報 |
 | `go.mod` | 独立 Go モジュール |

@@ -63,6 +63,16 @@ type toolUseResultAnswers struct {
 type logMessage struct {
 	Role    string          `json:"role"`
 	Content json.RawMessage `json:"content"`
+	// Model は assistant レコードが付けるモデル名。返事の Kyou のチップに載せる。user レコードには無い。
+	Model string `json:"model"`
+}
+
+// modelOrEmpty は message が無いレコードでも安全にモデル名を返す。
+func (m *logMessage) modelOrEmpty() string {
+	if m == nil {
+		return ""
+	}
+	return m.Model
 }
 
 // contentBlock は message.content が配列だったときの1要素。
@@ -105,16 +115,18 @@ const (
 //
 // Claude の応答はツール実行を挟んで何度も分かれるが、まとめて1件として扱う。
 type message struct {
-	ID           string     `json:"id"`
-	Role         string     `json:"role"`
-	SessionID    string     `json:"session_id"`
-	SessionTitle string     `json:"session_title"`
-	Project      string     `json:"project"`
-	Branch       string     `json:"branch"`
-	Text         string     `json:"text"`
-	RelatedTime  time.Time  `json:"related_time"`
-	UpdateTime   time.Time  `json:"update_time"`
-	Items        []turnItem `json:"items"`
+	ID           string `json:"id"`
+	Role         string `json:"role"`
+	SessionID    string `json:"session_id"`
+	SessionTitle string `json:"session_title"`
+	Project      string `json:"project"`
+	Branch       string `json:"branch"`
+	Text         string `json:"text"`
+	// Model は返事を書いたモデル名（assistant レコードの message.model）。人間の発言では空。
+	Model       string     `json:"model,omitempty"`
+	RelatedTime time.Time  `json:"related_time"`
+	UpdateTime  time.Time  `json:"update_time"`
+	Items       []turnItem `json:"items"`
 }
 
 // turnItem は発言に付随する時系列要素。連続する同種の要素はまとめられている。

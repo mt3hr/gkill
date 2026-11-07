@@ -278,7 +278,7 @@ kyou_cache   : Kyou 1件。body_json に詳細ビュー用の本体が入る
 | `query.go` | 読み取り（ロックを取らない） |
 | `builder.go` | 常駐バックグラウンドビルダ |
 | `config.go` | 設定の解釈と既定値 |
-| `render.go` | 詳細ビューのHTML（最終回答を本文にし、経過を畳む） |
+| `render.go` | 詳細ビューのHTML。本文と経過の分け方・質問の重複判定・前置きの見出しはここで決め、描画は SDK の `chatview`（[ADR-0315](../../../documents/adr/0315-chat-plugins-render-through-sdk-chatview.md)） |
 | `html.go` | 設定画面のHTML |
 | `uuid.go` | UUIDv5 |
 
