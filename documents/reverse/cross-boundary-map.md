@@ -431,7 +431,7 @@ KFTL 送信にはメッセージ1件ごとに冪等キー（UUID）が付く。
 ## 9. iframe と postMessage
 
 プラグインの本文と設定画面は iframe（`sandbox="allow-scripts allow-forms"`）に入れる。親の画面とのやりとりは postMessage のキーだけでつながる。
-親側は plugin-html-view.vue・plugin-config-dialog.vue・use-plugin-config-dialog.ts、プラグイン側は SDK の `plugin/sdk/chatview`（AI チャット系4本の本文。head とスクリプトは `head.go` の1か所）と各プラグインの render.go / html.go が書く HTML。
+親側は plugin-html-view.vue・plugin-config-dialog.vue・use-plugin-config-dialog.ts、プラグイン側は SDK の `plugin/sdk/chatview`（AI チャット系4本の本文。head とスクリプトは `head.go` の1か所）と `plugin/sdk/configview`（同梱7本の設定画面。head は `head.go`、保存スクリプトは `form.go` の1か所）、および各プラグインの render.go / html.go がそこへ渡すモデル。
 
 <!-- BOUNDARY-TABLE:post-message:BEGIN -->
 | キー | 向き | 送る側 → 受ける側 |

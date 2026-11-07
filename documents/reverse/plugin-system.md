@@ -221,6 +221,23 @@ iframe は `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）
 親は受け取ったフォームを `post_plugin_config` に送り、成功したら設定 HTML を取り直して
 読み込み件数などの表示を更新する。生成された `config.json` を手で編集する経路も従来どおり使える。
 
+**同梱プラグイン7本の設定画面 HTML は SDK の `plugin/sdk/configview` が1か所で描く**（[ADR-0316](../adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
+各プラグインの `html.go` は自分の文言と統計を `configview.Page` へ写すだけで、次の体裁は SDK 側にある。
+
+| 欄 | 描くもの |
+|---|---|
+| head | CSS 変数（明暗の2組）と規則。明暗は OS の配色（`prefers-color-scheme`）に追従し、親からの `gkill_theme` が届けば `data-theme` が勝つ |
+| `Status` | 読み込み状況の帯（読み込み済みなら緑に ✓、未読み込みなら橙に手順の番号付き一覧） |
+| `Progress` | 取り込みの進捗。状態（scanning / ingesting / folding）ごとの文言と、件数があれば割合と棒 |
+| `Stats` | 統計表（ラベル・値）。件数は3桁区切り（`Count`）、時刻は `FormatUnix` / `FormatTime`、未実行は `-`、空は `—` |
+| `Notices` | 警告の帯。`MissingPatterns` / `ErrorNotice` が条件付きの警告を空で返し、空は飛ばす |
+| `Patterns` / `Expanded` | 「設定されている指定」（ワイルドカードに「パターン」の札）と「展開結果」（既定 20 件で「ほか N 件」） |
+| `Sections` | 追加の節（箇条書きか表。折りたたみ可） |
+| `Form` | 編集フォーム。`Field{Key, Kind, Label, Value}` から要素 id `gkill_<Key>`・postMessage のキー・保存スクリプトを生成する。チェックボックスは `'1'` / `''` |
+| `ConfigFile` | config.json を直接編集する案内（折りたたみ）。source_dirs の説明文は `SourceDirsNote` が組む |
+
+文言の欄は全部 `configview.Prose` を通し、描くのは `` `code` `` と `**強調**` だけ（他はエスケープ）。HTML を直接受け取る欄は無い。
+
 `gkill-api.ts` の `get_plugin_list()` は今も MCP 専用で、フロントエンドに呼び出し元が無い。
 
 `/api/get_plugin_list` の唯一の実利用者は MCP サーバの `gkill_get_plugin_list` ツール

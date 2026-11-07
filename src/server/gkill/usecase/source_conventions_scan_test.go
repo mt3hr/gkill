@@ -118,8 +118,9 @@ var (
 	// 外部モジュール（src/plugins/ 配下の各プラグイン）から import されるので、
 	// 本体から到達できなくても正当なパッケージ。
 	reachabilityAllowedPackages = map[string]bool{
-		sourceScanModulePath + "/gkill/plugin/sdk":          true,
-		sourceScanModulePath + "/gkill/plugin/sdk/chatview": true,
+		sourceScanModulePath + "/gkill/plugin/sdk":            true,
+		sourceScanModulePath + "/gkill/plugin/sdk/chatview":   true,
+		sourceScanModulePath + "/gkill/plugin/sdk/configview": true,
 	}
 	moduleImportPattern = regexp.MustCompile(`"` + regexp.QuoteMeta(sourceScanModulePath) + `[^"]*"`)
 )

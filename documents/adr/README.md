@@ -192,6 +192,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0313](0313-plugin-logs-through-gkill-log.md) | プラグインのログは gkill_log の別名ファイル（logs/gkill_plugin_<name>*.log）へ出し、stderr には WARN / ERROR の接頭辞行だけを残す | Accepted |
 | [0314](0314-codex-conversation-from-item-completed.md) | Codex 0.151 以降の会話は item_completed から読み、返事は最終回答を本文にして経過を畳む | Accepted |
 | [0315](0315-chat-plugins-render-through-sdk-chatview.md) | AI チャット系プラグイン4本の本文 HTML は SDK の chatview が1か所で描き、プラグインは共通モデルへ写すだけにする | Accepted |
+| [0316](0316-plugin-config-screens-render-through-sdk-configview.md) | 同梱プラグイン7本の設定画面 HTML は SDK の configview が1か所で描き、プラグインは文言と統計を渡すだけにする | Accepted |
 | [0401](0401-do-not-split-search-window-in-client.md) | クライアント側で検索を期間の窓へ刻んで複数回 get_kyous を投げない | Accepted |
 | [0402](0402-insert-registered-kyou-locally.md) | 記録の追加は列を再検索せず、その1件をクライアントで判定して差し込む | Accepted |
 | [0403](0403-add-tag-before-registered-kyou.md) | タグ欄付きの追加/編集画面は add_tag が完了してから registered_kyou を emit する | Accepted |

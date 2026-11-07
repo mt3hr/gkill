@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk/chatview"
 )
 
@@ -105,12 +103,4 @@ func toSubAgent(sa *subAgent) *chatview.SubAgent {
 		label += "「" + sa.Description + "」"
 	}
 	return &chatview.SubAgent{Label: label, Prompt: sa.Prompt, Items: toBlocks(sa.Items)}
-}
-
-// formatUnix は設定画面表示用に時刻を整形する。
-func formatUnix(unix int64) string {
-	if unix == 0 {
-		return "-"
-	}
-	return time.Unix(unix, 0).Local().Format("2006-01-02 15:04:05")
 }

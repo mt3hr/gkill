@@ -205,11 +205,3 @@ func questionLead(text string) string {
 	}
 	return string(runes)
 }
-
-// formatTime は設定画面表示用に時刻を整形する。
-func formatTime(t time.Time) string {
-	if t.IsZero() {
-		return "-"
-	}
-	return t.Local().Format("2006-01-02 15:04:05")
-}

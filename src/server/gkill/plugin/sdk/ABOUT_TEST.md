@@ -2,11 +2,11 @@
 
 ## 概要
 
-プラグイン作者向け Go SDK のテスト。**80テスト（9ファイル）**（サブパッケージ `chatview/` の2ファイルを含む）。
+プラグイン作者向け Go SDK のテスト。**104テスト（12ファイル）**（サブパッケージ `chatview/` の2ファイルと `configview/` の3ファイルを含む）。
 
 `sdk.Run()` の stdin/stdout ループ、`--gkill-build-cache` の単独モード、`sdk.EnsureConfig()` の `config.json` 自動生成、
 `sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置、`sdk.Query.MatchText()` のワード判定、
-`chatview` の本文 HTML（AI チャット系4本が共有する描画）を検証する。
+`chatview` の本文 HTML（AI チャット系4本が共有する描画）、`configview` の設定画面 HTML（同梱7本が共有する描画）を検証する。
 SDK は gkill 本体と別プロセスで動くプラグイン側のライブラリなので、ここでの回帰は
 全プラグイン（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / locationhistory / example）に同時に波及する。
 
@@ -23,6 +23,9 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 | `match_words_test.go` | 3 | `Query.MatchText()` / `Query.Matcher()`（`TestQueryMatchText` / `TestQueryMatchTextIDPrefixLengthBoundary` / `TestQueryMatcherDoesNotMutateQuery`）。gkill 本体と同じ規則（大小無視の部分一致、ID は 7 文字以上の語だけ前方一致（`find_word.MinIDPrefixMatchLength`。長さは rune 数で数え、かな 6 文字は 18 バイトでも対象外。[ADR-0114](../../../../../documents/adr/0114-word-filter-id-prefix-needs-seven-chars.md)）、除外語は ID を見ない、空語は無視）で、元の Query を書き換えないこと。プラグインが返す Kyou はこの判定だけで絞られる（本体は再判定しない）ので、境界を SDK 側でも固定する |
 | `chatview/chatview_test.go` | 12 | AI チャット系4本が共有する本文 HTML `chatview.Render`（下の「chatview/」節） |
 | `chatview/text_test.go` | 3 | `chatview.RenderText` — コードフェンスとインラインコードだけを描き、それ以外は `html.EscapeString` と一致 |
+| `configview/configview_test.go` | 13 | 同梱プラグイン7本が共有する設定画面 HTML `configview.Render`（下の「configview/」節） |
+| `configview/form_test.go` | 5 | 編集フォームと保存スクリプト（欄の id・postMessage のキー・var 名を同じ Key から生成する） |
+| `configview/text_test.go` | 6 | `configview.Prose`（`code` と **強調** だけ描く）/ `Count` / `FormatUnix` / `FormatTime` / `SampleJSON` / `SourceDirsNote` |
 
 ## sdk_test.go — stdio ループ
 
@@ -145,6 +148,38 @@ chatgpt / claudeai / claudecode / codex の `GetContentHTML` は、自分のロ�
 | `TestRenderTextCodeFences` | 三連以上のバッククォート / `~~~` のフェンス、言語名の `class="lang-…"`（不正な info は class 無し）、長い閉じ、中の短い列は本文、未終端は末尾まで、先頭空白は3つまで、CRLF、エスケープ、前後の改行を1つずつ落とす、行の途中の列はフェンスでない、連続するフェンス |
 | `TestRenderTextInlineCode` | N 個のバッククォートで開き同じ行の「ちょうど N 個」で閉じる、対が無ければ文字のまま、行をまたがない、前後1つずつの空白を落とす、エスケープ |
 | `TestRenderTextPlainEqualsEscapeString` | バッククォートもチルダも無い文字列では `html.EscapeString` とバイト一致 |
+
+## configview/ — 同梱プラグインの設定画面 HTML
+
+7本の `GetConfigHTML` は、自分の文言と統計を `configview.Page` へ写し、描画はここが1か所で行う（[ADR-0316](../../../../../documents/adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
+ここでの回帰は7本の設定画面に同時に出る。use-plugin-config-dialog.ts との契約（`gkill_theme` の受信・`gkill_plugin_config` の送信・`gkill_plugin_config_result` の受信）も固定している。
+
+| テスト | 検証内容 |
+|-------|---------|
+| `TestRenderHeadContract` | `<!DOCTYPE html>`・`prefers-color-scheme`・`:root:not([data-theme="light"])`・`:root[data-theme="dark"]`・`gkill_theme` の受信・textarea / button の規則が入り、`</body></html>` で閉じる。`gkill_iframe_size` と `dblclick` を書かない |
+| `TestRenderEveryCSSVariableIsDefined` | 参照している `var(--x)` が全部定義され、明暗で定義している変数の集合が一致する（Claude.ai 版の未定義変数の再発防止） |
+| `TestRenderPostMessageKeys` | 出力中の postMessage のキーがちょうど `{gkill_theme, gkill_plugin_config, gkill_plugin_config_result}`（キーを足すとクライアントと cross-boundary-map §9 も要る） |
+| `TestRenderEscapesEveryField` | 題・補足・帯・進捗・統計・警告・指定・展開結果・節・表・フォームの値とラベル・config.json のパスと記入例の全欄がエスケープされる |
+| `TestRenderStatusLoadedOrNot` | 読み込み済みは `.ok` に ✓、未読み込みは `.warn` に太字の見出しと `<ol>` の手順。nil なら出さない |
+| `TestRenderProgressStates` | `""` / idle / error は出さない。scanning / ingesting（件数・割合・棒）/ folding / 未知の状態の文言。Done が Total を超えても 100% |
+| `TestRenderStatsRows` | 空の値は `—`、`Code` は `<code>`。行が無ければ表を出さない |
+| `TestRenderNoticesSkipEmpty` | 欄が全部空の Notice（`MissingPatterns(nil)` / `ErrorNotice(_, "")`）を飛ばし、残りの形 |
+| `TestRenderPatternsTagOnlyForGlob` | ワイルドカードを含む指定だけに「パターン」の札。指定が無ければ節を出さない |
+| `TestRenderExpandedCapsAtDefault` | フォルダは「(再帰的に走査)」付き、合計 20 件で「ほか N 件」 |
+| `TestRenderSections` | 箇条書き（名前 → パス → 説明の順）/ 表（見出し行・Max で打ち切り・補足）/ 折りたたみ / `Empty` の文 / 0件で `Empty` も無ければ節ごと出さない |
+| `TestRenderConfigFileCollapsed` | 折りたたみに共通の案内・編集するファイル・記入例・補足。nil なら出さない |
+| `TestRenderOrder` | 題 → 補足 → 帯 → 進捗 → 統計 → 警告 → 指定 → 展開結果 → 節 → フォーム → config.json の順 |
+| `TestRenderFormFieldsAndSaveScript` | textarea / text / checkbox の markup、`gkill_<Key>` の id、保存スクリプトの var 名（`secondary_data_sources` → `secondaryDataSources`。fitbit の `html_test.go` が見る形）、チェックボックスは `'1'` / `''`、末尾カンマ無し |
+| `TestRenderFormNilOrEmptyIsSkipped` | 欄が無ければフォームも保存スクリプトも出さない |
+| `TestRenderFormInvalidKeyIsReportedNotDropped` | Key の形が外れた欄は画面に警告を出して落とし、正しい欄は残す。出せる欄が無ければ保存ボタンも出さない |
+| `TestJSVar` | camelCase と、JS の予約語・スクリプト内の名前（`btn` / `out` / `e` / `r` …）との衝突回避（衝突するとスクリプト全体が構文エラーで死ぬ） |
+| `TestFieldKindZeroIsTextarea` | `FieldKind` のゼロ値は Textarea |
+| `TestProse` | `code` と **強調** だけを描き、コードの中の `**` は強調にしない。対が無い記号と空の ```` `` ```` は文字のまま |
+| `TestProsePlainEqualsEscapeString` | 記号を含まない文字列では `html.EscapeString` とバイト一致 |
+| `TestCount` | 3桁区切り（負数も） |
+| `TestFormatUnixAndTime` | 0 以下・ゼロ値は `-`、それ以外は `2006-01-02 15:04:05` |
+| `TestSampleJSON` | 2スペースの整形、整形できなければ `{}` |
+| `TestSourceDirsNote` | 共通の説明文に matched と extra が差し込まれ、ワイルドカード `**` が Prose でコードとして描かれる |
 
 ## 実行方法
 

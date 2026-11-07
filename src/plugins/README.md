@@ -23,7 +23,7 @@ plugins/
 │   ├── builder.go              # 常駐バックグラウンドビルダ
 │   ├── types.go
 │   ├── render.go               # 本文 HTML（SDK の chatview へ写す）
-│   ├── html.go                 # 設定画面の HTML
+│   ├── html.go                 # 設定画面（SDK の configview へ写す）
 │   ├── *_test.go               # テストのたびに archive/zip で ZIP を組む
 │   ├── go.mod / go.sum
 │   ├── manifest.json
@@ -36,7 +36,7 @@ plugins/
 │   ├── builder.go              # 常駐バックグラウンドビルダ
 │   ├── types.go
 │   ├── render.go               # 本文 HTML（SDK の chatview へ写す）
-│   ├── html.go                 # 設定画面の HTML
+│   ├── html.go                 # 設定画面（SDK の configview へ写す）
 │   ├── *_test.go               # テストのたびに archive/zip で ZIP を組む
 │   ├── go.mod / go.sum
 │   ├── manifest.json
@@ -79,7 +79,7 @@ plugins/
 │   ├── cache.go
 │   ├── types.go
 │   ├── render.go               # 本文 HTML（SDK の chatview へ写す）
-│   ├── html.go                 # 設定画面の HTML
+│   ├── html.go                 # 設定画面（SDK の configview へ写す）
 │   ├── loader_test.go
 │   ├── render_test.go
 │   ├── testdata/

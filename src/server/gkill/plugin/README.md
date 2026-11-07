@@ -19,11 +19,19 @@ plugin/
     ├── match_words_test.go # Query.MatchText のテスト
     ├── plugin_log_test.go # gkill_log へのログ（置き場・静的フィールド・stderr だけへの退避・stdout の清浄）
     ├── config_test.go  # EnsureConfig のテスト（4本）
-    └── chatview/       # 会話形式の Kyou 本文 HTML（AI チャット系4本が使う。ADR-0315）
-        ├── chatview.go # Message / Block の共通モデルと Render / RenderNotFound / FormatDuration / SummaryLine
-        ├── head.go     # head（CSS 変数・テーマ追従・gkill_iframe_size のサイズ通知）の唯一の写し
-        ├── text.go     # RenderText — コードフェンスとインラインコードだけを描き、他はエスケープ
-        ├── chatview_test.go
+    ├── chatview/       # 会話形式の Kyou 本文 HTML（AI チャット系4本が使う。ADR-0315）
+    │   ├── chatview.go # Message / Block の共通モデルと Render / RenderNotFound / FormatDuration / SummaryLine
+    │   ├── head.go     # head（CSS 変数・テーマ追従・gkill_iframe_size のサイズ通知）の唯一の写し
+    │   ├── text.go     # RenderText — コードフェンスとインラインコードだけを描き、他はエスケープ
+    │   ├── chatview_test.go
+    │   └── text_test.go
+    └── configview/     # 設定画面 HTML（同梱プラグイン7本が使う。ADR-0316）
+        ├── configview.go # Page / Status / Progress / Row / Notice / Item / Section / Table / ConfigFile のモデルと Render / MissingPatterns / ErrorNotice
+        ├── head.go     # head（CSS 変数の明暗2組・OS 配色への追従・gkill_theme の受信）の唯一の写し
+        ├── form.go     # Form / Field と保存スクリプト（gkill_plugin_config / gkill_plugin_config_result）の生成
+        ├── text.go     # Prose（`code` と **強調** だけ描く）/ Count / FormatUnix / FormatTime / SampleJSON / SourceDirsNote
+        ├── configview_test.go
+        ├── form_test.go
         └── text_test.go
 ```
 

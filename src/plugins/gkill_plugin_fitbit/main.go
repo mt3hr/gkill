@@ -241,12 +241,3 @@ func printDefaultConfig() error {
 	_, err = os.Stdout.Write(append(encoded, '\n'))
 	return err
 }
-
-// sampleConfigJSON は設定画面に載せる既定の config.json。
-func sampleConfigJSON() string {
-	encoded, err := json.MarshalIndent(defaultConfig(), "", "    ")
-	if err != nil {
-		return "{}"
-	}
-	return string(encoded)
-}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // dailyMetricColumns は daily_metric から読む列。Scan の順序と一致させること。
@@ -131,12 +130,4 @@ func (c *cache) Stats(pluginDir string, config pluginConfig) cacheStats {
 	stats.BuildTotalFiles, _ = strconv.Atoi(c.meta("build_total_files"))
 	stats.LastScanUnix, _ = strconv.ParseInt(c.meta("last_scan_unix"), 10, 64)
 	return stats
-}
-
-// formatUnix は表示用に時刻を整える。0なら空。
-func formatUnix(unix int64) string {
-	if unix == 0 {
-		return ""
-	}
-	return time.Unix(unix, 0).Local().Format("2006-01-02 15:04:05")
 }
