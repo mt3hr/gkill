@@ -1,6 +1,6 @@
 module github.com/mt3hr/gkill_plugin_claudecode
 
-go 1.26.10
+go 1.26.11
 
 require (
 	github.com/mattn/go-zglob v0.0.8
