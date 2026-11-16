@@ -25,7 +25,7 @@ plugin/
     │   ├── text.go     # RenderText — コードフェンスとインラインコードだけを描き、他はエスケープ
     │   ├── chatview_test.go
     │   └── text_test.go
-    └── configview/     # 設定画面 HTML（同梱プラグイン7本が使う。ADR-0316）
+    └── configview/     # 設定画面 HTML（同梱プラグイン8本が使う。ADR-0316）
         ├── configview.go # Page / Status / Progress / Row / Notice / Item / Section / Table / ConfigFile のモデルと Render / MissingPatterns / ErrorNotice
         ├── head.go     # head（CSS 変数の明暗2組・OS 配色への追従・gkill_theme の受信）の唯一の写し
         ├── form.go     # Form / Field と保存スクリプト（gkill_plugin_config / gkill_plugin_config_result）の生成

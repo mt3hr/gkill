@@ -218,16 +218,26 @@ func (pm *PluginManager) loadManifest(pluginDir string) (*gkill_plugin.PluginMan
 	manifest.Provides = validatedKinds
 
 	// data_typeとprovidesの食い違いを警告する。
-	// クライアントはdata_typeの接頭辞で型別ビューを出し分けるので、
-	// providesにkcを書いてもdata_typeが"kc"で始まらなければ
-	// 型別データを取りに行く経路が一度も走らない。
+	// クライアントはKyouごとのdata_typeの接頭辞で型別ビューを出し分けるので、
+	// providesにkcだけを書いてdata_typeが"kc"で始まらなければ、たいてい
+	// プラグインがKyouに付けるdata_typeも食い違っていて、型別データを取りに行く経路が一度も走らない。
+	//
+	// 1本のプラグインが複数の型別の種類を返してよい（ADR-0317）。そのとき manifest の
+	// data_type は代表の1種類なので、種類ごとに見ると代表以外が必ず食い違う。
+	// 走査のたびに警告し続けないよう、「どの種類の接頭辞とも合わない」ときだけ1回警告する。
+	typedKinds := []string{}
+	matchesAnyTypedKind := false
 	for _, kind := range validatedKinds {
 		if !kind.IsTyped() {
 			continue
 		}
-		if !strings.HasPrefix(manifest.DataType, string(kind)) {
-			slog.Log(context.Background(), gkill_log.Warn, "manifest.json declares provides but data_type does not match; the client will never request the typed view", "plugin_dir", fmt.Sprintf("%q", pluginDir), "provides", fmt.Sprintf("%q", kind), "data_type", fmt.Sprintf("%q", manifest.DataType))
+		typedKinds = append(typedKinds, string(kind))
+		if strings.HasPrefix(manifest.DataType, string(kind)) {
+			matchesAnyTypedKind = true
 		}
+	}
+	if len(typedKinds) != 0 && !matchesAnyTypedKind {
+		slog.Log(context.Background(), gkill_log.Warn, "manifest.json declares provides but data_type does not match any of them; the client will never request the typed view", "plugin_dir", fmt.Sprintf("%q", pluginDir), "provides", fmt.Sprintf("%q", strings.Join(typedKinds, ",")), "data_type", fmt.Sprintf("%q", manifest.DataType))
 	}
 
 	return &manifest, nil

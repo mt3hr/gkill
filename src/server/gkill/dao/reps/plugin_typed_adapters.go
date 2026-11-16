@@ -126,6 +126,13 @@ func (b *pluginAdapterBase) findKyous(ctx context.Context, query *find.FindQuery
 		if !pluginMatchWords(pluginTypedFindWordTextForKinds(record, kinds), record.ID, query) {
 			continue
 		}
+		// 「その時刻に実行中の TimeIs」の検索（playing_time）は、native では SQL の
+		// START_TIME <= t AND (t <= END_TIME OR END_TIME IS NULL) で絞っている。
+		// ここで絞らないと、プラグインの TimeIs が全件「実行中」として返り、
+		// どの Kyou にもその時刻の TimeIs として付いてしまう（ADR-0317）。
+		if query != nil && query.PlayingTime != nil && !pluginTimeIsPlayingAt(record.TimeIs, *query.PlayingTime) {
+			continue
+		}
 		for _, kyou := range record.Kyous {
 			if pluginKyouMatchesQuery(kyou, query) {
 				kyous = append(kyous, kyou)
@@ -133,6 +140,19 @@ func (b *pluginAdapterBase) findKyous(ctx context.Context, query *find.FindQuery
 		}
 	}
 	return map[string][]Kyou{b.repName(): kyous}, nil
+}
+
+// pluginTimeIsPlayingAt は TimeIs が時刻 at に実行中かを返す。
+// native の playing_time と同じく両端を含み、終了が無いものは開始以降ずっと実行中とみなす。
+// TimeIs を持たないレコードは実行中ではない。
+func pluginTimeIsPlayingAt(timeis *TimeIs, at time.Time) bool {
+	if timeis == nil {
+		return false
+	}
+	if at.Before(timeis.StartTime) {
+		return false
+	}
+	return timeis.EndTime == nil || !at.After(*timeis.EndTime)
 }
 
 // getKyou は索引から Kyou を1件返す。無ければ (nil, nil)。

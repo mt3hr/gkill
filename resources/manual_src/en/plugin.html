@@ -4,7 +4,7 @@
   <p>With a plugin installed, records left in services other than gkill appear in the same list as your gkill records. It is meant to let you look back on "what was I doing that day" in one place.</p>
 
   <h2>Available plugins</h2>
-  <p>Seven plugins are provided as standard.</p>
+  <p>Eight plugins are provided as standard.</p>
   <table>
     <tr>
       <th>Plugin</th>
@@ -37,6 +37,10 @@
     <tr>
       <td>ArchivedGit</td>
       <td>Commit history of Git repositories archived as zip files. The zip is read without extracting it, and the records take the same shape as those of a working Git repository (the storage name is the name of the repository inside the zip)</td>
+    </tr>
+    <tr>
+      <td>VRChat</td>
+      <td>VRChat logs. They become the worlds you were in and for how long (timestamps and bookmarks), the people in the same room and for how long (timestamps), and your own avatar changes and the URLs of videos played (memos). VRChat deletes old logs after a few days, so copy them somewhere else before they disappear and add that location to the sources as well</td>
     </tr>
   </table>
   <div class="tip">
@@ -80,7 +84,7 @@
     </tr>
     <tr>
       <td>When you leave it empty</td>
-      <td>ChatGPT and Claude.ai look in the plugin folder; ClaudeCode and Codex each look where their CLI stores its logs by default</td>
+      <td>ChatGPT and Claude.ai look in the plugin folder; ClaudeCode and Codex each look where their CLI stores its logs by default; VRChat looks where VRChat writes its logs by default</td>
     </tr>
   </table>
   <h3>When you import data from ChatGPT or Claude.ai</h3>

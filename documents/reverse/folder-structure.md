@@ -46,7 +46,7 @@ src/
 ├── server/       # バックエンド（Go）
 ├── android/      # Android APKラッパー
 ├── wear_os/      # Wear OSアプリ（phone_companion + watch_app）
-├── plugins/      # スタンドアロンプラグインバイナリ（examples/gkill_example, gkill_plugin_archived_git_commit_log, gkill_plugin_chatgpt, gkill_plugin_claudeai, gkill_plugin_claudecode, gkill_plugin_codex, gkill_plugin_fitbit, gkill_plugin_google_locationhistory）
+├── plugins/      # スタンドアロンプラグインバイナリ（examples/gkill_example, gkill_plugin_archived_git_commit_log, gkill_plugin_chatgpt, gkill_plugin_claudeai, gkill_plugin_claudecode, gkill_plugin_codex, gkill_plugin_fitbit, gkill_plugin_google_locationhistory, gkill_plugin_vrchat）
 ├── locales/      # i18nリソース（7言語対応）
 ├── tools/        # ユーティリティスクリプト
 └── README.md     # 実装資料への導線
@@ -148,7 +148,7 @@ src/server/
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     │       ├── chatview/           # AI チャット系プラグインの本文 HTML（chatview.Message → HTML。head・チップ・折りたたみを1か所に。ADR-0315）
-    │       └── configview/         # 同梱プラグイン7本の設定画面 HTML（configview.Page → HTML。head・保存スクリプト・進捗・フォームを1か所に。ADR-0316）
+    │       └── configview/         # 同梱プラグイン8本の設定画面 HTML（configview.Page → HTML。head・保存スクリプト・進捗・フォームを1か所に。ADR-0316）
     ├── dao/                        # データアクセス層
     │   ├── gkill_dao_manager.go    # DAOマネージャ（ConfigDAOs + GkillRepositories管理）
     │   ├── plugin_manager.go       # プラグインディレクトリを走査してPluginRepositoryを登録
@@ -306,15 +306,16 @@ src/plugins/
 ├── gkill_plugin_codex/                 # Codex CLI セッションログプラグイン
 ├── gkill_plugin_fitbit/                # Google Takeout の Fitbit / Google Health を KC 化
 ├── gkill_plugin_google_locationhistory/ # Google Takeout のロケーション履歴を GPSLog 化（Kyouは出さない）
+├── gkill_plugin_vrchat/                # VRChat の出力ログを TimeIs・URLog・Kmemo 化（1本で複数の型別の種類を返す。ADR-0317）
 ├── ABOUT_TEST.md
 └── README.md
 ```
 
-各プラグインは独立した `go.mod` を持つ別モジュール。同梱プラグイン7本（archived_git_commit_log / chatgpt / claudeai /
-claudecode / codex / fitbit / google_locationhistory）は
+各プラグインは独立した `go.mod` を持つ別モジュール。同梱プラグイン8本（archived_git_commit_log / chatgpt / claudeai /
+claudecode / codex / fitbit / google_locationhistory / vrchat）は
 `manifest.json` をバイナリに `//go:embed` しており、`--gkill-print-manifest` / `--gkill-print-config` で
 内容を標準出力に書き出せる（`gkill_example` は埋め込みもフラグも `DefaultConfig` も持たない）。
-この7本は `config.json` の `source_dirs` で取り込み元（フォルダ・glob・zip の実パス）を指定し、
+この8本は `config.json` の `source_dirs` で取り込み元（フォルダ・glob・zip の実パス）を指定し、
 SQLite3 キャッシュを `$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db` に置く
 （解決は SDK の `sdk.CacheDBPath`。先行の6本が同じ実装を持っていたので集約した）。
 

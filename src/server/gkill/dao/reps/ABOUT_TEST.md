@@ -72,7 +72,7 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `get_kyou_latest_version_test.go` | 単体取得が最新版を返すこと |
 | `repositories_id_chunk_test.go` | IDリストの分割（`findChunkedByIDs`）。SQLite のバインド変数上限を超えると**エラーが立たないまま0件**になるので、上限またぎを実データ寸法で固定する |
 | `local_rep_cache_granular_test.go` | ローカルキャッシュのコピー省略判定。**「コピーが要るか」の判定を `os.Remove` より後に置くと常に「要コピー」になり**、毎回 GB 級の DB をコピーし直したうえで変更検知が丸ごと無効化される |
-| `plugin_typed_adapters_test.go` | プラグインの型別/付随データのアダプタ。読み取りが索引から即答し、**プラグインへ往復しない**こと（1件ずつ聞きに行くと一覧の行数ぶんの直列 stdio 呼び出しになる） |
+| `plugin_typed_adapters_test.go` | プラグインの型別/付随データのアダプタ。読み取りが索引から即答し、**プラグインへ往復しない**こと（1件ずつ聞きに行くと一覧の行数ぶんの直列 stdio 呼び出しになる）。1本のプラグインが TimeIs・URLog・Kmemo を混ぜて返しても Kyou ごとの `data_type` で各アダプタへ振り分けられること（`TestPluginTypedAdapters_MixedKindsAreRoutedPerKyou`）、プラグインの TimeIs も `playing_time` で「その時刻に実行中」だけに絞ること（`TestPluginTimeIsAdapter_FindKyousFiltersByPlayingTime`。絞らないと全件が実行中に見え、どの Kyou にもその時刻の TimeIs として付く。[ADR-0317](../../../../../documents/adr/0317-plugin-mixed-typed-kinds-and-playing-time.md)） |
 | `plugin_git_commit_log_adapter_test.go` | `provides: ["git_commit_log"]` の型別アダプタ。native の `GitCommitLog` と同じ列（Kyou ごとの rep 名を保つ）で `GetGitCommitLog` / `FindGitCommitLog` / `FindGitCommitLogByIDs` が引け、ワードの対象列はコミットメッセージだけ、`RepNamesOf` が申告名を返すこと。採用順の末尾が GitCommitLog であること |
 | `plugin_kyou_rep_name_test.go` | プラグイン Kyou の `RepName`。空なら manifest の `rep_name` で埋め、空でない不一致は上書きせず**組み合わせごとに1回だけ**警告すること。`get_rep_name` で申告済みの名前は警告しないこと |
 | `gps_log_repository_plugin_impl_test.go` | GPSLog 専用プラグイン（`emits_kyou: false`）のリポジトリ実装 |

@@ -1,0 +1,11 @@
+{
+  "protocol_version": "1",
+  "name": "gkill_plugin_vrchat",
+  "version": "1.1.12",
+  "description": "VRChat の出力ログ(output_log_*.txt)から、ワールドの滞在(TimeIs と URLog)・同じ部屋にいた人(TimeIs)・自分のアバターの切り替えと動画プレイヤーの URL(Kmemo)を gkill の記録として表示する。タグ VRChat_world / VRChat_同部屋 / VRChat_event を付ける。VRChat が終了したとき(落ちたときはログの最後の行)に開いている TimeIs を全部閉じる。設定画面でデータソースのフォルダを指定して使用。",
+  "data_type": "timeis_start",
+  "rep_name": "VRChat",
+  "executable": "gkill_plugin_vrchat",
+  "min_gkill_version": "1.1.12",
+  "provides": ["timeis", "urlog", "kmemo", "tag"]
+}

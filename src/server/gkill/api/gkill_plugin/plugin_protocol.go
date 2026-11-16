@@ -164,7 +164,9 @@ type PluginKyou struct {
 	// RelatedTime はこの記録が示す日時（ツイート投稿時刻等）。
 	RelatedTime time.Time `json:"related_time"`
 
-	// DataType はデータ種別（manifest.jsonのdata_typeと一致させること）。
+	// DataType はデータ種別。型別データを返さないKyouはmanifest.jsonのdata_typeと一致させること。
+	// 型別データを返すKyouは、その種別の値にすること（PluginTypedData の各欄の説明を参照）。
+	// 1本のプラグインが種類の違うKyouを混ぜて返すときは、Kyouごとに値が変わってよい。
 	DataType string `json:"data_type"`
 
 	// CreateTime はgkill上でのレコード作成時刻。

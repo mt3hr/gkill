@@ -51,6 +51,9 @@ const (
 	// 呼ばれた回数を state ファイルに追記し、statePath+".rep_names_fail" があれば
 	// errors を返す。find_kyous はリポジトリ名を rep_name に持つ Kyou を返す。
 	behaviorMultiRep = "multi_rep"
+	// behaviorTypedMixed は1本のプラグインが TimeIs / URLog / Kmemo を混ぜて返す。
+	// 種類ごとの振り分けと、プラグインの TimeIs の playing_time 絞り込みを検査する。
+	behaviorTypedMixed = "typed_mixed"
 )
 
 // fakeMultiRepNames は behaviorMultiRep の偽プラグインが申告する rep 名（重複と空を含む生の値）。
@@ -175,6 +178,11 @@ func runFakePlugin() {
 				continue
 			}
 		}
+		if behavior == behaviorTypedMixed && req.Command == "find_kyous" {
+			resp.Kyous = fakeMixedPluginKyous()
+			_ = encoder.Encode(resp)
+			continue
+		}
 		if behavior == behaviorMultiRep {
 			statePath := os.Getenv(envPluginStateFile)
 			switch req.Command {
@@ -268,6 +276,43 @@ func fakeTypedPluginKyous() []gkill_plugin.PluginKyou {
 		kyous = append(kyous, kyou)
 	}
 	return kyous
+}
+
+// fakeMixedBaseTime は behaviorTypedMixed の記録の基準時刻（テストの固定値）。
+var fakeMixedBaseTime = time.Date(2026, 8, 9, 10, 0, 0, 0, time.UTC)
+
+// fakeMixedPluginKyous は TimeIs（終了あり・終了なし）・URLog・Kmemo を1件ずつ混ぜて返す。
+// data_type は種類ごとの正確な値（timeis_start / urlog / kmemo）にしてある。
+//
+//	mixed-timeis-closed: 10:00〜11:00
+//	mixed-timeis-open:   12:00〜（終了なし）
+func fakeMixedPluginKyous() []gkill_plugin.PluginKyou {
+	base := fakeMixedBaseTime
+	closedEnd := base.Add(time.Hour)
+	mk := func(id, dataType string, related time.Time, typed *gkill_plugin.PluginTypedData) gkill_plugin.PluginKyou {
+		kyou := fakePluginKyou(id)
+		kyou.DataType = dataType
+		kyou.RelatedTime = related
+		kyou.CreateTime = related
+		kyou.UpdateTime = related
+		kyou.Typed = typed
+		kyou.Tags = []string{"TagA"}
+		return kyou
+	}
+	return []gkill_plugin.PluginKyou{
+		mk("mixed-timeis-closed", "timeis_start", base, &gkill_plugin.PluginTypedData{
+			TimeIs: &gkill_plugin.PluginTimeIs{Title: "区間あり", StartTime: base, EndTime: &closedEnd},
+		}),
+		mk("mixed-timeis-open", "timeis_start", base.Add(2*time.Hour), &gkill_plugin.PluginTypedData{
+			TimeIs: &gkill_plugin.PluginTimeIs{Title: "終了なし", StartTime: base.Add(2 * time.Hour)},
+		}),
+		mk("mixed-urlog", "urlog", base, &gkill_plugin.PluginTypedData{
+			URLog: &gkill_plugin.PluginURLog{URL: "https://example.com/", Title: "例"},
+		}),
+		mk("mixed-kmemo", "kmemo", base, &gkill_plugin.PluginTypedData{
+			Kmemo: &gkill_plugin.PluginKmemo{Content: "メモ"},
+		}),
+	}
 }
 
 func fakePluginKyou(id string) gkill_plugin.PluginKyou {

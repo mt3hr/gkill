@@ -67,7 +67,7 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 | `name` | プラグインの識別名。**ディレクトリ名と一致させること**（`rep_name` とは別物） |
 | `version` | プラグインのバージョン（例: `"1.0.0"`） |
 | `description` | プラグインの説明文 |
-| `data_type` | このプラグインが生成する Kyou の `data_type` 値。`provides` を使わないなら既存の `data_type`（kmemo, kc 等）と衝突しない一意な名前にする。**`provides` に型別データを書く場合は逆に、その種別と同じ値（`kc` 等）にしなければならない**（クライアントは `data_type` の接頭辞で型別ビューを出し分けるため） |
+| `data_type` | このプラグインが生成する Kyou の `data_type` 値。`provides` を使わないなら既存の `data_type`（kmemo, kc 等）と衝突しない一意な名前にする。**`provides` に型別データを書く場合は逆に、その種別と同じ値（`kc` 等）にしなければならない**（クライアントは `data_type` の接頭辞で型別ビューを出し分けるため）。振り分けは Kyou ごとの `data_type` で行われるので、1本で複数の種類を返すプラグインは各 Kyou にその種類の値を付け、manifest には代表の1つを書く（[ADR-0317](../adr/0317-plugin-mixed-typed-kinds-and-playing-time.md)） |
 | `rep_name` | タイムライン上でのリポジトリ表示名。`GetRepName()` が返す値。`get_rep_name` で `rep_names` を申告するプラグインでは、記録が名乗るのは申告した名前で、こちらは設定画面の引き当てに使う識別子になる |
 | `executable` | 実行ファイル名（拡張子なし、OS に応じて `.exe` 等を自動付与） |
 | `min_gkill_version` | このプラグインが動作する最低 gkill バージョン |
@@ -75,7 +75,7 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 
 ### manifest.json / config.json の自動生成
 
-同梱プラグイン7本（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / google_locationhistory）は manifest.json を `//go:embed` でバイナリに埋め込んでおり、
+同梱プラグイン8本（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / google_locationhistory / vrchat）は manifest.json を `//go:embed` でバイナリに埋め込んでおり、
 次のフラグで標準出力に書き出せる。サンプルの `gkill_example` は埋め込みもフラグも持たない。
 
 | フラグ | 出力 |
@@ -114,7 +114,7 @@ cmd := exec.CommandContext(context.Background(),
 稼働中サーバに頼らず、上と同じ引数に `--gkill-build-cache` を足してプラグインを直接起動し、終わるまで待つ。
 `sdk.Run` はこのフラグを見ると stdio ループに入らず `Handler.BuildCache(ctx, cfg)` を同期で1回呼び、
 stdout に結果行（`built`、`BuildCache` が nil なら `no_cache`）を1行だけ書いて exit 0、エラーなら stderr（と `logs/gkill_plugin_<name>_error.log`）に出して exit 1 で終わる。
-同梱7本は既存の同期構築関数（`build` / `refresh`）を `BuildCache` から呼ぶだけで、常駐ビルダは起こさない
+同梱8本は既存の同期構築関数（`build` / `refresh`）を `BuildCache` から呼ぶだけで、常駐ビルダは起こさない
 （`plugin/sdk/build_cache_test.go` の `TestBundledPluginsWireBuildCache` が配線をソース走査で固定する）。
 
 gkill 側は子プロセスの stdin を繋がず（フラグを知らない旧バイナリが stdio ループへ入っても EOF で終わる）、
@@ -221,7 +221,7 @@ iframe は `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）
 親は受け取ったフォームを `post_plugin_config` に送り、成功したら設定 HTML を取り直して
 読み込み件数などの表示を更新する。生成された `config.json` を手で編集する経路も従来どおり使える。
 
-**同梱プラグイン7本の設定画面 HTML は SDK の `plugin/sdk/configview` が1か所で描く**（[ADR-0316](../adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
+**同梱プラグイン8本の設定画面 HTML は SDK の `plugin/sdk/configview` が1か所で描く**（[ADR-0316](../adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
 各プラグインの `html.go` は自分の文言と統計を `configview.Page` へ写すだけで、次の体裁は SDK 側にある。
 
 | 欄 | 描くもの |
@@ -405,9 +405,20 @@ Claude Code と似ているが**2段構成**になっている点が違う。
 半数近くに `session_id` が無く、あってもサブエージェントでは親のIDが入っているため
 （ファイル数より少ない種類しかない）、これをキーにすると親子の Kyou ID が衝突する。
 
+#### VRChat（`gkill_plugin_vrchat/cache.go`）
+
+| テーブル | 役割 |
+|---|---|
+| `file_cache` | 走査結果。差分判定は `(mtime_unix, size)`。`session_key`（起動キー）と、長すぎて読み捨てた行の数もここ |
+| `record` | 記録1件（`kind` は world_timeis / world_urlog / player / event）。TimeIs の開始・終了、URLog の URL と説明、Kmemo の本文、タグ、照合テキストを持つ |
+
+**起動キーはファイルの最初の時刻付きの行の時刻。** ファイル名や置き場所が変わっても同じ起動なら同じ値になるので、
+元のログと同期で運んだコピーが両方あっても1回の起動として数える。記録は起動キーごとに、その起動のファイルのうち
+**一番大きいもの**から作る（ログは追記しかされないので大きいほうが新しい）。
+
 ### キャッシュ無効化
 
-プラグインによって3方式ある。
+プラグインによって4方式ある。
 
 - **ChatGPT / Claude.ai（全体再構築）** — `build(pluginDir, patterns)` が `sdk.OpenSources` でエクスポート ZIP を開き、会話エントリの `Path:CRC32:Size` を並べた**署名**を `cache_meta` の前回値と
   突き合わせ、変化していれば全会話を読み直して gen 付きでバッチ upsert し、`finalizeBuild` が古い gen を掃除する（**キャッシュ全体を作り直す**）。同じ会話 ID が複数の ZIP にあれば update_time が新しい版だけを採る（ADR-0310）。
@@ -419,6 +430,8 @@ Claude Code と似ているが**2段構成**になっている点が違う。
   セッション単位にしないのは、サブエージェントを含むグループでは1行の追記のために
   十数ファイル・百MB超を読み直すことになるため。子が新しく現れたときも親が消えたときも
   **両方のルート**を畳み直し対象にする。スレッド名の更新はロールアウトを1バイトも読み直さない。
+- **VRChat（ファイル単位の取り込み + 起動単位の作り直し）** — 変わったファイルとそれが属する起動キーだけ
+  `record` を作り直す。一番大きいファイルが消えたら、残ったファイルから作り直す。
 
 ### 主要メソッド
 
@@ -707,11 +720,12 @@ GitCommitLogContextMenu と同じ項目に加えて、プラグイン固有の�
 | gkill_plugin_codex | Codex | `codex_turn` | `src/plugins/gkill_plugin_codex/` |
 | gkill_plugin_fitbit | Fitbit | `kc` | `src/plugins/gkill_plugin_fitbit/` |
 | gkill_plugin_google_locationhistory | GoogleLocation | `google_location_visit` | `src/plugins/gkill_plugin_google_locationhistory/` |
+| gkill_plugin_vrchat | VRChat | `timeis_start`（代表。各 Kyou は `timeis_start` / `urlog` / `kmemo`。`provides: ["timeis","urlog","kmemo","tag"]`） | `src/plugins/gkill_plugin_vrchat/` |
 | gkill_plugin_archived_git_commit_log | ArchivedGit（manifest）。記録はリポジトリ名を名乗る（`rep_names`） | `git_commit_log`（`provides: ["git_commit_log"]`） | `src/plugins/gkill_plugin_archived_git_commit_log/` |
 | gkill_example | （サンプル） | `example_kyou` | `src/plugins/examples/gkill_example/` |
 
 `gkill_example` は固定の Kyou を返すだけのサンプル実装で、`DefaultConfig` を持たない
-（＝ `config.json` を生成しない）。それ以外の7つは `source_dirs` 設定と SQLite3 キャッシュを持つ。
+（＝ `config.json` を生成しない）。それ以外の8つは `source_dirs` 設定と SQLite3 キャッシュを持つ。
 
 ### ビルド手順
 
@@ -736,6 +750,9 @@ GOOS=windows GOARCH=amd64 go build -o gkill_plugin_google_locationhistory.exe .
 
 cd src/plugins/gkill_plugin_archived_git_commit_log
 GOOS=windows GOARCH=amd64 go build -o gkill_plugin_archived_git_commit_log.exe .
+
+cd src/plugins/gkill_plugin_vrchat
+GOOS=windows GOARCH=amd64 go build -o gkill_plugin_vrchat.exe .
 ```
 
 デプロイ先: `$GKILL_HOME/plugins/{userID}/{pluginName}/`
@@ -935,6 +952,20 @@ GPSが一度も要求されていなければキーごと省略される —— 
 また `findCtx.MatchReps` は rep 名がキーなので、1つのプラグインが2種類以上を提供すると
 アダプタが片方しか入らない。そのため rep 種別が指定されているときは
 「自分の種別」ではなく「`provides` ∩ 指定された種別」を返す。
+
+**1本のプラグインが複数の型別の種類を返してよい**（[ADR-0317](../adr/0317-plugin-mixed-typed-kinds-and-playing-time.md)）。
+振り分けは Kyou ごとの `data_type` と `typed.*` で行われ（索引の `applyTypedData`・クライアントの `kyou.ts`・MCP の payload）、
+manifest の `data_type` は見ない。各 Kyou にはその種類の値（`timeis_start` / `urlog` / `kmemo` 等）を付け、manifest には代表の1つを書く。
+読み込み時の警告は「manifest の `data_type` が provides のどの種類の接頭辞とも合わない」ときだけ1回出る（`plugin_manager.go`）。
+**種類をまたいで ID を重ねてはいけない**（索引は同じ ID の Kyou を1レコードにまとめるので、両方の型別データが1レコードに入る）。
+同梱では `gkill_plugin_vrchat` が TimeIs・URLog・Kmemo を返し、ID の材料に記録の種類を混ぜている。
+
+**プラグインの TimeIs も `playing_time` で絞る。** `query.PlayingTime` があるとき、型別アダプタの `findKyous` は
+TimeIs を持ち、その時刻に実行中（両端を含む・終了なしは開始以降ずっと）のレコードだけを返す（`pluginTimeIsPlayingAt`）。
+native が SQL で掛ける `START_TIME <= t AND (t <= END_TIME OR END_TIME IS NULL)` と同じ条件。
+絞らないとプラグインの TimeIs が全件「実行中」として返り、どの Kyou にもその時刻の TimeIs として付く（例外もエラーも出ない）。
+守るテストは `dao/reps/plugin_typed_adapters_test.go` の `TestPluginTypedAdapters_MixedKindsAreRoutedPerKyou` と
+`TestPluginTimeIsAdapter_FindKyousFiltersByPlayingTime`。
 
 ### 登録
 

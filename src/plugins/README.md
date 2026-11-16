@@ -105,18 +105,35 @@ plugins/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
 │   └── README.md
-└── gkill_plugin_archived_git_commit_log/  # zip に固めた Git リポジトリのコミットログ
-    ├── main.go
+├── gkill_plugin_archived_git_commit_log/  # zip に固めた Git リポジトリのコミットログ
+│   ├── main.go
+│   ├── types.go
+│   ├── scan.go                 # zip 内のパスから .git の場所と rep 名を決める・束の指紋
+│   ├── gitread.go              # .git のエントリを memfs へ流し込み go-git で読む
+│   ├── cache.go
+│   ├── query.go                # 読み取り(ロックを取らない)
+│   ├── builder.go              # 常駐バックグラウンドビルダ
+│   ├── config.go
+│   ├── render.go
+│   ├── html.go
+│   ├── *_test.go               # テストのたびに go-git でリポジトリを作って zip にする
+│   ├── go.mod / go.sum
+│   ├── manifest.json
+│   └── README.md
+└── gkill_plugin_vrchat/         # VRChat の出力ログ（TimeIs・URLog・Kmemo を1本で返す）
+    ├── main.go                 # sdk.Handler の配線、行 → Kyou と型別データ
     ├── types.go
-    ├── scan.go                 # zip 内のパスから .git の場所と rep 名を決める・束の指紋
-    ├── gitread.go              # .git のエントリを memfs へ流し込み go-git で読む
-    ├── cache.go
-    ├── query.go                # 読み取り(ロックを取らない)
+    ├── parse.go                # 出力ログ1つ → 出来事の列
+    ├── records.go              # 出来事の列 → 記録（滞在・同部屋・出来事、ID の導出）
+    ├── scan.go
+    ├── cache.go                # 起動キーごとの作り直し
+    ├── query.go                # 読み取り(ファイルを開かない)
     ├── builder.go              # 常駐バックグラウンドビルダ
     ├── config.go
-    ├── render.go
-    ├── html.go
-    ├── *_test.go               # テストのたびに go-git でリポジトリを作って zip にする
+    ├── html.go                 # 設定画面（本文 HTML は持たない。型別ビューが描く）
+    ├── uuid.go
+    ├── *_test.go
+    ├── testdata/               # 合成のログ
     ├── go.mod / go.sum
     ├── manifest.json
     └── README.md
@@ -134,6 +151,7 @@ plugins/
 | [`gkill_plugin_fitbit`](gkill_plugin_fitbit/README.md) | `kc` | Google Takeout の Fitbit / Google Health を日別集計し、数値記録として返す（推移グラフで集計できる） |
 | [`gkill_plugin_google_locationhistory`](gkill_plugin_google_locationhistory/README.md) | `google_location_visit` | Google Takeout のロケーション履歴を位置情報ログとして読み込む（記録は作らない） |
 | [`gkill_plugin_archived_git_commit_log`](gkill_plugin_archived_git_commit_log/README.md) | `git_commit_log` | zip に固めて保管した Git リポジトリのコミットログを、稼働中の Git リポジトリと同じ形（rep 名はリポジトリ名・ID はコミットハッシュ）で返す。zip は展開しない |
+| [`gkill_plugin_vrchat`](gkill_plugin_vrchat/README.md) | `timeis_start`（代表。各記録は `timeis_start` / `urlog` / `kmemo`） | VRChat の出力ログから、ワールドの滞在（TimeIs と URLog）・同じ部屋にいた人（TimeIs）・自分のアバターの切り替えと動画の URL（Kmemo）を返す。1本で複数の型別の種類を返す最初のプラグイン（gkill 1.1.12 以降） |
 
 ---
 
@@ -231,6 +249,21 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
 ルート直下に `.git/` がある zip は zip のファイル名が rep 名になる。
 `.git` がファイル（worktree / submodule の `gitdir:` ポインタ）のものと、分割 zip は読めない。
 
+### gkill_plugin_vrchat
+
+データファイルの配置は不要。読み込むフォルダは `config.json` で指定する。
+
+1. 配置先ディレクトリに `manifest.json`・実行ファイルを置き、gkill_server を再起動する
+2. 自動生成される `config.json` の `source_dirs` は既定で `~/AppData/LocalLow/VRChat/VRChat`（VRChat の書き出し先）。
+   フォルダを指定すると配下の `output_log_*.txt` を再帰で拾う。設定画面からも書ける
+3. 取り込みはバックグラウンドで進むので、**置いた直後の1回目の検索は空が返る**。進捗は設定画面に出る
+
+**VRChat は古いログを数日で消す。** 消える前に同期スクリプトなどで別の場所へ運び、その場所も `source_dirs` に書いておく。
+同じ起動のログが複数の場所にあっても1回の起動として数える（起動キーはファイルの最初の時刻付きの行の時刻）。
+返す記録は TimeIs（ワールドの滞在・同じ部屋にいた人）・URLog（滞在ごとのワールドの起動用ページ）・Kmemo（アバターの切り替え・動画の URL）で、
+本文 HTML は持たず native と同じ型別ビューで描かれる。gkill 1.1.12 より前ではプラグインの TimeIs が「その時刻に実行中か」で絞られず、
+全件が実行中に見える（[ADR-0317](../../documents/adr/0317-plugin-mixed-typed-kinds-and-playing-time.md)）。
+
 ---
 
 ## config.json（データソース設定）
@@ -261,9 +294,9 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
   いる場合は**実行アカウントのホーム**になるため、絶対パスのほうが確実
 - 空にすると各プラグインの既定（claudeai / chatgpt はプラグインフォルダ自身、
   claudecode は `~/.claude/projects`、codex は `~/.codex/sessions` と
-  `~/.codex/session_index.jsonl`、fitbit / 位置情報は `~/Kyou/GoogleTakeout_*`）を使う
+  `~/.codex/session_index.jsonl`、fitbit / 位置情報は `~/Kyou/GoogleTakeout_*`、vrchat は `~/AppData/LocalLow/VRChat/VRChat`）を使う
 - 編集は**次の検索から反映される**（gkill_server の再起動は不要）
-- **claudecode / codex 以外の5本（chatgpt / claudeai / fitbit / 位置情報 / archived_git_commit_log）は ZIP しか読まない。** フォルダを指定するとその下の `*.zip` を
+- **claudecode / codex / vrchat 以外の5本（chatgpt / claudeai / fitbit / 位置情報 / archived_git_commit_log）は ZIP しか読まない。** フォルダを指定するとその下の `*.zip` を
   再帰的に探し、ZIP の中を走査する。ZIP を直接指定してもよい
 
 ---
@@ -574,6 +607,10 @@ go build -o gkill_plugin_google_locationhistory .
 # gkill_plugin_archived_git_commit_log
 cd src/plugins/gkill_plugin_archived_git_commit_log
 go build -o gkill_plugin_archived_git_commit_log .
+
+# gkill_plugin_vrchat
+cd src/plugins/gkill_plugin_vrchat
+go build -o gkill_plugin_vrchat .
 ```
 
 ---

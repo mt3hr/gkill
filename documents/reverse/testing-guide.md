@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1483 | 223 | Go `testing` |
+| Go バックエンド | 1485 | 223 | Go `testing` |
 | フロントエンド ユニット | 2125 | 188 | Vitest |
 | フロントエンド E2E | 257 | 48（+auth.setup.ts） | Playwright |
 | MCP サーバ | 1187 | 44 | Go `testing` |
 | ツール | 115 | 4 | Vitest |
 | Android | 31 | 2 | JUnit 4 |
 | Wear OS | 235 | 18 | JUnit 4 + MockK |
-| **合計** | **5,433** | **527** | |
+| **合計** | **5,435** | **527** | |
 
 数え直すコマンド:
 
@@ -67,7 +67,7 @@ npm test
 | `npm run test_e2e_server` | E2E 用 gkill_server 単体起動 (`$HOME/gkill_test`) | — |
 | `npm run test_mcp` | MCP サーバ（`src/server` で `go test ./gkill/mcp/...`） | 数秒 |
 | `npm run test_tools` | `src/tools/` のリリースゲート・attestation ランナーとリリース工程の書く側（記録条件・`version.json`・成果物検証。`vitest.config.tools.ts`。使い捨て git リポジトリを作るので git が要る） | 30秒前後 |
-| `npm run test_plugins` | 同梱プラグイン（独立 Go モジュール7つ） | 数秒 |
+| `npm run test_plugins` | 同梱プラグイン（独立 Go モジュール9つ。サンプルの gkill_example を含む） | 数秒 |
 | `npm run vet_plugins` | 同梱プラグインへ `go vet`（CI の `plugins` ジョブが `test_plugins` の前に回す。`npm test` には入っていない） | 数秒 |
 | `npm run test_android` | Android | Gradle 依存 |
 | `npm run test_wear_os` | Wear OS | Gradle 依存 |

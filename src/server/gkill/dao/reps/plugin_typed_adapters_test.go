@@ -435,6 +435,98 @@ func TestPluginTypedAdapter_FindKyousFiltersByWord(t *testing.T) {
 	}
 }
 
+// mixedProvides は TimeIs / URLog / Kmemo とタグを宣言した provides。
+var mixedProvides = []gkill_plugin.PluginProvidedKind{
+	gkill_plugin.PluginProvidesTimeIs,
+	gkill_plugin.PluginProvidesURLog,
+	gkill_plugin.PluginProvidesKmemo,
+	gkill_plugin.PluginProvidesTag,
+}
+
+// adapterKyouIDs はアダプタの FindKyous が返した ID の集合を返す。
+func adapterKyouIDs(t *testing.T, find func(context.Context, *find.FindQuery) (map[string][]Kyou, error), query *find.FindQuery) map[string]bool {
+	t.Helper()
+	got, err := find(context.Background(), query)
+	if err != nil {
+		t.Fatalf("FindKyous: %v", err)
+	}
+	ids := map[string]bool{}
+	for _, kyous := range got {
+		for _, kyou := range kyous {
+			ids[kyou.ID] = true
+		}
+	}
+	return ids
+}
+
+// 1本のプラグインが TimeIs / URLog / Kmemo を混ぜて返しても、
+// 種類ごとのアダプタが自分の種類の記録だけを返す（ADR-0317）。
+func TestPluginTypedAdapters_MixedKindsAreRoutedPerKyou(t *testing.T) {
+	fake := newFakePluginRepositoryWithProvides(t, behaviorTypedMixed, mixedProvides)
+	ctx := context.Background()
+	adapters := NewPluginTypedRepositories(fake.rep)
+	if adapters.TimeIs == nil || adapters.URLog == nil || adapters.Kmemo == nil || adapters.Tag == nil {
+		t.Fatalf("providesに書いた種別のアダプタが作られていない: %+v", adapters)
+	}
+	if err := fake.rep.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache: %v", err)
+	}
+
+	if ids := adapterKyouIDs(t, adapters.TimeIs.FindKyous, nil); len(ids) != 2 || !ids["mixed-timeis-closed"] || !ids["mixed-timeis-open"] {
+		t.Errorf("TimeIs.FindKyous = %v, want TimeIs の2件だけ", ids)
+	}
+	if ids := adapterKyouIDs(t, adapters.URLog.FindKyous, nil); len(ids) != 1 || !ids["mixed-urlog"] {
+		t.Errorf("URLog.FindKyous = %v, want mixed-urlog だけ", ids)
+	}
+	if ids := adapterKyouIDs(t, adapters.Kmemo.FindKyous, nil); len(ids) != 1 || !ids["mixed-kmemo"] {
+		t.Errorf("Kmemo.FindKyous = %v, want mixed-kmemo だけ", ids)
+	}
+	kmemo, err := adapters.Kmemo.GetKyou(ctx, "mixed-kmemo", nil)
+	if err != nil || kmemo == nil || kmemo.DataType != "kmemo" {
+		t.Errorf("Kmemo.GetKyou = %+v, %v, want data_type kmemo", kmemo, err)
+	}
+	if got, err := adapters.TimeIs.GetKyou(ctx, "mixed-kmemo", nil); err != nil || got != nil {
+		t.Errorf("TimeIs.GetKyou(Kmemo の ID) = %+v, %v, want nil", got, err)
+	}
+}
+
+// プラグインの TimeIs も playing_time（その時刻に実行中か）で絞る。
+// 以前は絞っておらず、プラグインの TimeIs が全件「実行中」として返っていた（ADR-0317）。
+func TestPluginTimeIsAdapter_FindKyousFiltersByPlayingTime(t *testing.T) {
+	fake := newFakePluginRepositoryWithProvides(t, behaviorTypedMixed, mixedProvides)
+	ctx := context.Background()
+	adapters := NewPluginTypedRepositories(fake.rep)
+	if err := fake.rep.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache: %v", err)
+	}
+	base := fakeMixedBaseTime
+	cases := []struct {
+		name string
+		at   time.Time
+		want []string
+	}{
+		{"開始より前", base.Add(-time.Minute), nil},
+		{"開始ちょうど", base, []string{"mixed-timeis-closed"}},
+		{"区間の中", base.Add(30 * time.Minute), []string{"mixed-timeis-closed"}},
+		{"終了ちょうど", base.Add(time.Hour), []string{"mixed-timeis-closed"}},
+		{"区間のあと・終了なしの開始前", base.Add(90 * time.Minute), nil},
+		{"終了なしは開始以降ずっと", base.Add(5 * time.Hour), []string{"mixed-timeis-open"}},
+	}
+	for _, c := range cases {
+		at := c.at
+		ids := adapterKyouIDs(t, adapters.TimeIs.FindKyous, &find.FindQuery{PlayingTime: &at})
+		if len(ids) != len(c.want) {
+			t.Errorf("%s: FindKyous(playing %v) = %v, want %v", c.name, at, ids, c.want)
+			continue
+		}
+		for _, id := range c.want {
+			if !ids[id] {
+				t.Errorf("%s: FindKyous(playing %v) = %v, want %v", c.name, at, ids, c.want)
+			}
+		}
+	}
+}
+
 // Lantana は native と同じく気分値（MOOD）を文字列として照合する。
 // 以前は「ワード条件が有効なら0件」で、除外語だけの検索でも消えていた（native は残る）。
 func TestPluginTypedFindWordText_Lantana(t *testing.T) {

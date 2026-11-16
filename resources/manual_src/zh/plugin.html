@@ -4,7 +4,7 @@
   <p>装上插件后，保存在gkill以外服务中的记录也能和gkill的记录并排显示在同一个列表里。这个功能是为了让您能在一个地方回顾「那一天做了什么」。</p>
 
   <h2>可用的插件</h2>
-  <p>标准提供以下7个。</p>
+  <p>标准提供以下8个。</p>
   <table>
     <tr>
       <th>插件</th>
@@ -37,6 +37,10 @@
     <tr>
       <td>ArchivedGit</td>
       <td>以zip归档保存的Git仓库的提交历史。不解压zip直接读取，记录的形式与正在使用的Git仓库相同（记录保管位置的名称为zip内仓库的名称）</td>
+    </tr>
+    <tr>
+      <td>VRChat</td>
+      <td>VRChat的日志。会变成你所在的世界及停留时间（打卡和书签）、同一房间里的人及其停留时间（打卡），以及自己的头像切换和播放过的视频URL（备忘录）。VRChat会在几天后删除旧日志，请在删除前复制到其他位置，并把该位置也写入读取来源</td>
     </tr>
   </table>
   <div class="tip">
@@ -80,7 +84,7 @@
     </tr>
     <tr>
       <td>留空时</td>
-      <td>ChatGPT和Claude.ai会查看插件所在的文件夹，ClaudeCode和Codex会分别查看各自 CLI 保存日志的标准位置</td>
+      <td>ChatGPT和Claude.ai会查看插件所在的文件夹，ClaudeCode和Codex会分别查看各自 CLI 保存日志的标准位置，VRChat会查看VRChat写出日志的标准位置</td>
     </tr>
   </table>
   <h3>导入ChatGPT、Claude.ai的数据时</h3>

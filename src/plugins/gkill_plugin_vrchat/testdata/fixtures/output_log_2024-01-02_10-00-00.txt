@@ -1,0 +1,8 @@
+2024.01.02 10:00:00 Debug      -  [Behaviour] Authenticated via vrchat
+2024.01.02 10:02:00 Debug      -  [Behaviour] Entering Room: WorldGamma
+2024.01.02 10:02:00 Debug      -  [Behaviour] Joining wrld_00000000-0000-4000-8000-000000000003:30000
+2024.01.02 10:02:00 Debug      -  [Behaviour] Joining or Creating Room: WorldGamma
+2024.01.02 10:02:00 Debug      -  [Behaviour] OnPlayerJoined testuser (usr_00000000-0000-4000-8000-000000000000)
+2024.01.02 10:02:00 Debug      -  [Behaviour] Initialized PlayerAPI "testuser" is local
+2024.01.02 10:03:00 Debug      -  [Behaviour] OnPlayerJoined UserB (usr_00000000-0000-4000-8000-00000000000b)
+2024.01.02 10:45:00 Debug      -  [Behaviour] Pickup object

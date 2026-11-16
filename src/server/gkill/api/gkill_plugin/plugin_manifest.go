@@ -76,7 +76,8 @@ type PluginManifest struct {
 	Description string `json:"description"`
 
 	// DataType はこのプラグインが生成するKyouのdata_type値（例: "twitter_kyou"）。
-	// 既存のdata_type（kmemo, kc等）と衝突しない一意な名前にすること。
+	// 型別データを返さないプラグインは、既存のdata_type（kmemo, kc等）と衝突しない一意な名前にすること。
+	// 型別データを返すプラグインは Provides の説明を参照（代表の種類のdata_typeにする）。
 	DataType string `json:"data_type"`
 
 	// RepName はタイムライン上でのリポジトリ表示名（例: "Twitter"）。
@@ -94,9 +95,16 @@ type PluginManifest struct {
 	// 既存プラグインはmanifest.jsonを書き換えなくても従来どおり動く。
 	// 書ける値は AllPluginProvidedKinds を参照。未知の値は警告して読み飛ばす。
 	//
-	// 型別データ（kc等）を宣言する場合、DataTypeはその種別で始めること。
-	// クライアントはdata_typeの接頭辞で型別ビューを出し分けるため、
+	// 型別データ（kc等）を宣言する場合、各Kyouのdata_typeはその種別の値にすること
+	// （kmemo / kc / urlog / timeis_start 等。PluginTypedData の各欄の説明を参照）。
+	// クライアントはKyouごとのdata_typeの接頭辞で型別ビューを出し分けるため、
 	// 食い違うと型別データが永久に読み込まれない。
+	//
+	// 1本のプラグインが複数の型別の種類を返してよい（例: timeis と urlog と kmemo。ADR-0317）。
+	// 型別の振り分けはKyouごとのdata_typeと型別データで行われ、このmanifestの
+	// DataTypeは使われない。その場合のDataTypeは、返す種類のうち代表の1つ
+	// （例: "timeis_start"）にする。一意な名前にすると、MCPの data_types に渡せる値として
+	// 載るのに1件も当たらない値になる。
 	Provides []PluginProvidedKind `json:"provides,omitempty"`
 
 	// EmitsKyou はこのプラグインがKyouを返すかを表す。省略時（null）はtrue。

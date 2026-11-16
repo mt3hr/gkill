@@ -6,9 +6,9 @@
 
 `sdk.Run()` の stdin/stdout ループ、`--gkill-build-cache` の単独モード、`sdk.EnsureConfig()` の `config.json` 自動生成、
 `sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置、`sdk.Query.MatchText()` のワード判定、
-`chatview` の本文 HTML（AI チャット系4本が共有する描画）、`configview` の設定画面 HTML（同梱7本が共有する描画）を検証する。
+`chatview` の本文 HTML（AI チャット系4本が共有する描画）、`configview` の設定画面 HTML（同梱8本が共有する描画）を検証する。
 SDK は gkill 本体と別プロセスで動くプラグイン側のライブラリなので、ここでの回帰は
-全プラグイン（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / locationhistory / example）に同時に波及する。
+全プラグイン（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / locationhistory / vrchat / example）に同時に波及する。
 
 ## テストファイル
 
@@ -23,7 +23,7 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 | `match_words_test.go` | 3 | `Query.MatchText()` / `Query.Matcher()`（`TestQueryMatchText` / `TestQueryMatchTextIDPrefixLengthBoundary` / `TestQueryMatcherDoesNotMutateQuery`）。gkill 本体と同じ規則（大小無視の部分一致、ID は 7 文字以上の語だけ前方一致（`find_word.MinIDPrefixMatchLength`。長さは rune 数で数え、かな 6 文字は 18 バイトでも対象外。[ADR-0114](../../../../../documents/adr/0114-word-filter-id-prefix-needs-seven-chars.md)）、除外語は ID を見ない、空語は無視）で、元の Query を書き換えないこと。プラグインが返す Kyou はこの判定だけで絞られる（本体は再判定しない）ので、境界を SDK 側でも固定する |
 | `chatview/chatview_test.go` | 12 | AI チャット系4本が共有する本文 HTML `chatview.Render`（下の「chatview/」節） |
 | `chatview/text_test.go` | 3 | `chatview.RenderText` — コードフェンスとインラインコードだけを描き、それ以外は `html.EscapeString` と一致 |
-| `configview/configview_test.go` | 13 | 同梱プラグイン7本が共有する設定画面 HTML `configview.Render`（下の「configview/」節） |
+| `configview/configview_test.go` | 13 | 同梱プラグイン8本が共有する設定画面 HTML `configview.Render`（下の「configview/」節） |
 | `configview/form_test.go` | 5 | 編集フォームと保存スクリプト（欄の id・postMessage のキー・var 名を同じ Key から生成する） |
 | `configview/text_test.go` | 6 | `configview.Prose`（`code` と **強調** だけ描く）/ `Count` / `FormatUnix` / `FormatTime` / `SampleJSON` / `SourceDirsNote` |
 
@@ -151,8 +151,8 @@ chatgpt / claudeai / claudecode / codex の `GetContentHTML` は、自分のロ�
 
 ## configview/ — 同梱プラグインの設定画面 HTML
 
-7本の `GetConfigHTML` は、自分の文言と統計を `configview.Page` へ写し、描画はここが1か所で行う（[ADR-0316](../../../../../documents/adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
-ここでの回帰は7本の設定画面に同時に出る。use-plugin-config-dialog.ts との契約（`gkill_theme` の受信・`gkill_plugin_config` の送信・`gkill_plugin_config_result` の受信）も固定している。
+8本の `GetConfigHTML` は、自分の文言と統計を `configview.Page` へ写し、描画はここが1か所で行う（[ADR-0316](../../../../../documents/adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
+ここでの回帰は8本の設定画面に同時に出る。use-plugin-config-dialog.ts との契約（`gkill_theme` の受信・`gkill_plugin_config` の送信・`gkill_plugin_config_result` の受信）も固定している。
 
 | テスト | 検証内容 |
 |-------|---------|

@@ -1,0 +1,27 @@
+2024.01.01 10:00:00 Debug      -  [Behaviour] Authenticated via vrchat
+2024.01.01 10:01:00 Debug      -  [Behaviour] Destination set: wrld_00000000-0000-4000-8000-000000000001:10000~region(jp)
+2024.01.01 10:02:00 Debug      -  [Behaviour] Entering Room: WorldAlpha
+2024.01.01 10:02:00 Debug      -  [Behaviour] Joining wrld_00000000-0000-4000-8000-000000000001:10000~region(jp)
+2024.01.01 10:02:00 Debug      -  [Behaviour] Joining or Creating Room: WorldAlpha
+2024.01.01 10:02:00 Debug      -  [Behaviour] OnPlayerJoined testuser (usr_00000000-0000-4000-8000-000000000000)
+2024.01.01 10:02:00 Debug      -  [Behaviour] Initialized PlayerAPI "testuser" is local
+2024.01.01 10:03:00 Debug      -  [Behaviour] OnPlayerJoined UserB (usr_00000000-0000-4000-8000-00000000000b)
+2024.01.01 10:03:00 Debug      -  [VisitorsInformationBoard] 1.00 / OnPlayerJoined UserB
+2024.01.01 10:04:00 Debug      -  [Behaviour] Switching testuser to avatar AvatarOne
+2024.01.01 10:05:00 Debug      -  [Behaviour] Switching UserB to avatar AvatarTwo
+2024.01.01 10:05:00 Debug      -  [Behaviour] Switching testuser (current state: ConnectedToMaster)
+2024.01.01 10:06:00 Debug      -  [Video Playback] Attempting to resolve URL 'https://example.com/video1'
+2024.01.01 10:06:00 Debug      -  [Video Playback] Attempting to resolve URL 'https://example.com/video1'
+  at SomeStackTrace.Continuation () [0x00000] in <00000000000000000000000000000000>:0
+2024.01.01 10:10:00 Debug      -  [Behaviour] OnPlayerLeft UserB (usr_00000000-0000-4000-8000-00000000000b)
+2024.01.01 10:11:00 Debug      -  [Behaviour] OnPlayerJoined UserB (usr_00000000-0000-4000-8000-00000000000b)
+2024.01.01 10:20:00 Debug      -  [Behaviour] OnPlayerJoined UserC (usr_00000000-0000-4000-8000-00000000000c)
+2024.01.01 10:30:00 Debug      -  [Behaviour] OnLeftRoom
+2024.01.01 10:30:00 Debug      -  [Behaviour] OnPlayerLeft testuser (usr_00000000-0000-4000-8000-000000000000)
+2024.01.01 10:30:00 Debug      -  [Behaviour] OnPlayerLeft UserC (usr_00000000-0000-4000-8000-00000000000c)
+2024.01.01 10:31:00 Debug      -  [Behaviour] Joining wrld_00000000-0000-4000-8000-000000000002:20000
+2024.01.01 10:32:00 Debug      -  [Behaviour] Entering Room: WorldBeta
+2024.01.01 10:32:00 Debug      -  [Behaviour] OnPlayerJoined testuser (usr_00000000-0000-4000-8000-000000000000)
+2024.01.01 10:33:00 Debug      -  [Behaviour] OnPlayerJoined UserC (usr_00000000-0000-4000-8000-00000000000c)
+2024.01.01 11:00:00 Debug      -  VRCApplication: HandleApplicationQuit at 3600.0000
+2024.01.01 11:05:00 Debug      -  [Behaviour] OnPlayerJoined UserD (usr_00000000-0000-4000-8000-00000000000d)
