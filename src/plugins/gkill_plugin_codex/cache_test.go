@@ -310,7 +310,7 @@ func TestQueryKyousLimitWithWordFilter(t *testing.T) {
 
 	// 単語で絞るときは LIMIT を SQL に押し込まない。
 	// 絞る前に切ると、後段のフィルタで落ちたぶん取りこぼす。
-	rows, err := c.QueryKyous(pluginDir, nil, nil, 1, true)
+	rows, err := c.QueryKyous(pluginDir, nil, nil, 1, true, nil)
 	if err != nil {
 		t.Fatalf("QueryKyous: %v", err)
 	}
@@ -323,7 +323,7 @@ func TestQueryKyousLimitWithWordFilter(t *testing.T) {
 
 	// 単語指定が無いときは LIMIT を押し込み、search_text は読まない
 	// (検索用テキストは1件で最大512KBある)
-	rows, err = c.QueryKyous(pluginDir, nil, nil, 2, false)
+	rows, err = c.QueryKyous(pluginDir, nil, nil, 2, false, nil)
 	if err != nil {
 		t.Fatalf("QueryKyous: %v", err)
 	}
@@ -338,7 +338,7 @@ func TestQueryKyousLimitWithWordFilter(t *testing.T) {
 
 	// 期間で絞れる
 	end := time.Date(2026, 1, 1, 23, 0, 0, 0, time.UTC)
-	rows, err = c.QueryKyous(pluginDir, nil, &end, 0, false)
+	rows, err = c.QueryKyous(pluginDir, nil, &end, 0, false, nil)
 	if err != nil {
 		t.Fatalf("QueryKyous: %v", err)
 	}
@@ -411,7 +411,7 @@ func TestConcurrentReadDuringBuild(t *testing.T) {
 					return
 				default:
 				}
-				if _, err := c.QueryKyous(pluginDir, nil, nil, 0, true); err != nil {
+				if _, err := c.QueryKyous(pluginDir, nil, nil, 0, true, nil); err != nil {
 					errs <- err
 					return
 				}

@@ -707,8 +707,8 @@ Vuetifyで2つのテーマを定義しています。
 scanner.Buffer(make([]byte, 32*1024*1024), 32*1024*1024)
 ```
 
-プラグイン SDK 側（`plugin/sdk/sdk.go:83-84`）は 1MB のままです。リクエスト JSON は
-そこまで大きくならないためで、拡張しているのは親側だけです。
+プラグイン SDK 側（`plugin/sdk/sdk.go` の `maxRequestLineBytes`）は 16MB です。リクエストの `find_query` に
+ID の指定（本体が4000件ずつに分けて送る）が入るので、それより十分大きくしてあります（1.1.11 までは 1MB）。
 
 詳細は [plugin-system.md](plugin-system.md) を参照。
 

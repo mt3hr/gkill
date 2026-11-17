@@ -16,7 +16,12 @@ const dailyMetricColumns = `kyou_id, metric_key, date_local, title, num_value, u
 //
 // 期間の絞り込みはSQLに押し込む。ここをGoでやると、
 // 期間指定なしの検索で全件（数万件）を毎回メモリに載せることになる。
-func (c *cache) QueryDailyMetrics(pluginDir string, config pluginConfig, startUnix *int64, endUnix *int64, limit int) ([]dailyMetric, error) {
+//
+// ids は gkill の FindQuery.IDs（ADR-0318）。nil は指定なし、[] は0件。
+func (c *cache) QueryDailyMetrics(pluginDir string, config pluginConfig, startUnix *int64, endUnix *int64, limit int, ids []string) ([]dailyMetric, error) {
+	if ids != nil && len(ids) == 0 {
+		return []dailyMetric{}, nil
+	}
 	// 構築を待たない。取り込めたぶんだけを返す
 	// （待つと初回構築のあいだ検索が全部詰まり、プロセスが殺される）。
 	if err := c.openDB(pluginDir); err != nil {
@@ -41,6 +46,12 @@ func (c *cache) QueryDailyMetrics(pluginDir string, config pluginConfig, startUn
 			args = append(args, key)
 		}
 		conditions = append(conditions, "metric_key IN ("+strings.Join(placeholders, ",")+")")
+	}
+	if ids != nil {
+		conditions = append(conditions, "kyou_id IN ("+inPlaceholders(len(ids))+")")
+		for _, id := range ids {
+			args = append(args, id)
+		}
 	}
 	if len(conditions) != 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
@@ -130,4 +141,9 @@ func (c *cache) Stats(pluginDir string, config pluginConfig) cacheStats {
 	stats.BuildTotalFiles, _ = strconv.Atoi(c.meta("build_total_files"))
 	stats.LastScanUnix, _ = strconv.ParseInt(c.meta("last_scan_unix"), 10, 64)
 	return stats
+}
+
+// inPlaceholders は SQL の IN 句の "?, ?, ?" を n 個ぶん作る。
+func inPlaceholders(n int) string {
+	return strings.TrimSuffix(strings.Repeat("?, ", n), ", ")
 }

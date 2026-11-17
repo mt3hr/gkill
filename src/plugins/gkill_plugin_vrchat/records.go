@@ -231,7 +231,7 @@ func (b *recordBuilder) closePlayer(current *stay, player *openPlayer, at time.T
 		Title:      player.Title,
 		Start:      player.Start,
 		End:        laterOf(player.Start, at),
-		Tags:       []string{tagPlayer},
+		Tags:       []string{tagRoom},
 		// ワールド名でも引けるように、どこで一緒だったかも入れておく
 		SearchText: joinSearchText(player.Title, current.Name, current.WorldID),
 	})

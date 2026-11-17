@@ -26,7 +26,13 @@ func scanCommitRow(scanner interface{ Scan(dest ...any) error }) (commitRow, err
 //
 // hasWordFilter が要点。偽なら LIMIT を SQL に押し込む。
 // 真なら押し込まない —— 単語で絞る前に切ると、後段のフィルタで落ちたぶん取りこぼす。
-func (c *cache) QueryCommits(pluginDir string, start, end *time.Time, limit int, hasWordFilter bool) ([]commitRow, error) {
+//
+// ids（コミットのハッシュ）と reps（リポジトリ名）は gkill の FindQuery.IDs / Reps（ADR-0318）。
+// nil は指定なし、[] は0件。
+func (c *cache) QueryCommits(pluginDir string, start, end *time.Time, limit int, hasWordFilter bool, ids []string, reps []string) ([]commitRow, error) {
+	if (ids != nil && len(ids) == 0) || (reps != nil && len(reps) == 0) {
+		return []commitRow{}, nil
+	}
 	if err := c.openDB(pluginDir); err != nil {
 		return nil, err
 	}
@@ -44,6 +50,18 @@ func (c *cache) QueryCommits(pluginDir string, start, end *time.Time, limit int,
 	if end != nil {
 		query += ` AND committer_unix <= ?`
 		args = append(args, end.Unix())
+	}
+	if ids != nil {
+		query += ` AND hash IN (` + inPlaceholders(len(ids)) + `)`
+		for _, id := range ids {
+			args = append(args, id)
+		}
+	}
+	if reps != nil {
+		query += ` AND rep_name IN (` + inPlaceholders(len(reps)) + `)`
+		for _, rep := range reps {
+			args = append(args, rep)
+		}
 	}
 	query += ` ORDER BY committer_unix DESC, hash`
 	if !hasWordFilter && limit > 0 {
@@ -225,4 +243,9 @@ func atoiOrZero(s string) int {
 		return 0
 	}
 	return value
+}
+
+// inPlaceholders は SQL の IN 句の "?, ?, ?" を n 個ぶん作る。
+func inPlaceholders(n int) string {
+	return strings.TrimSuffix(strings.Repeat("?, ", n), ", ")
 }

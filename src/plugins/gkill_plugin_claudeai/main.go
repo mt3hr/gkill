@@ -200,6 +200,8 @@ func main() {
 // 対象はメッセージ本文と会話タイトル。LIMIT は絞った後に掛ける。
 func kyousOfMessages(msgs []cachedMessage, q sdk.Query) []sdk.Kyou {
 	matcher := q.Matcher()
+	// ID の指定（gkill の FindQuery.IDs。ADR-0318）。本文の検索より先に落とす。
+	idMatcher := q.IDMatcher()
 
 	var kyous []sdk.Kyou
 	for _, msg := range msgs {
@@ -210,6 +212,10 @@ func kyousOfMessages(msgs []cachedMessage, q sdk.Query) []sdk.Kyou {
 			continue
 		}
 		if q.CalendarEndDate != nil && relatedTime.After(*q.CalendarEndDate) {
+			continue
+		}
+
+		if !idMatcher.Match(msg.MsgID) {
 			continue
 		}
 

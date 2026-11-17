@@ -97,6 +97,8 @@ func sourceProviderOf(pluginDir string) func() expandedSource {
 // 対象は search_text（発言本文＋セッション名＋project/branch＋ツール名/要約）。LIMIT は絞った後に掛ける。
 func kyousOfMessages(messages []messageSummary, q sdk.Query) []sdk.Kyou {
 	matcher := q.Matcher()
+	// ID の指定（gkill の FindQuery.IDs。ADR-0318）。本文の検索より先に落とす。
+	idMatcher := q.IDMatcher()
 
 	var kyous []sdk.Kyou
 	for _, t := range messages {
@@ -107,6 +109,10 @@ func kyousOfMessages(messages []messageSummary, q sdk.Query) []sdk.Kyou {
 			continue
 		}
 		if q.CalendarEndDate != nil && relatedTime.After(*q.CalendarEndDate) {
+			continue
+		}
+
+		if !idMatcher.Match(t.MessageID) {
 			continue
 		}
 

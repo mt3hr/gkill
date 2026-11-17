@@ -17,7 +17,7 @@ import (
 // cacheSchemaVersion はDDLとパーサの世代。上げると次回の起動で作り直す。
 //
 // 差分更新は変わっていないファイルを二度と読まないので、パーサや記録の作り方を直したときも上げること。
-const cacheSchemaVersion = "1"
+const cacheSchemaVersion = "2"
 
 // cache はキャッシュDBを持つ。プロセス内に1つ。
 //

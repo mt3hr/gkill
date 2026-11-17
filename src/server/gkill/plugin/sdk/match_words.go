@@ -16,6 +16,7 @@ import (
 //     find_word.MinIDPrefixMatchLength（7）文字以上のときだけ。UUID 丸ごとの貼り付けと git の短縮ハッシュが
 //     引ける。短い語は text にしか当たらない。ADR-0114）
 //   - 除外語は「text に含まない」だけ（ID は見ない）
+//   - Query.WordsSkipIDMatch が真なら、肯定語でも ID を見ない（gkill が除外語を肯定語として引き直すとき）
 //   - WordsAnd が真なら全語、偽ならいずれか1語。Words / NotWords とも空なら常に真
 //   - 前後の空白を落として空になった語は無視する（古い gkill は入口で捨てないので SDK 側でも捨てる）
 //
@@ -31,9 +32,10 @@ func (q Query) MatchText(text string, id string) bool {
 // Matcher は Query のワード条件を正規化・小文字化して保持し、複数の text を判定するのに使う。
 // 意味は Query.MatchText と同じ。
 type Matcher struct {
-	words    []string
-	notWords []string
-	wordsAnd bool
+	words       []string
+	notWords    []string
+	wordsAnd    bool
+	skipIDMatch bool
 }
 
 // Matcher はこの Query のワード条件から Matcher を作る。
@@ -42,6 +44,8 @@ func (q Query) Matcher() Matcher {
 		words:    find_word.LowerWords(find_word.NormalizeWords(q.Words)),
 		notWords: find_word.LowerWords(find_word.NormalizeWords(q.NotWords)),
 		wordsAnd: q.WordsAnd,
+		// 本体の findWordIDOf（dao/reps/find_word_match.go）と同じく、ID を空にして前方一致を効かせない。
+		skipIDMatch: q.WordsSkipIDMatch,
 	}
 }
 
@@ -56,5 +60,9 @@ func (m Matcher) MatchText(text string, id string) bool {
 	if !m.HasWords() {
 		return true
 	}
-	return find_word.MatchLoweredWords(strings.ToLower(text), strings.ToLower(id), m.words, m.notWords, m.wordsAnd)
+	loweredID := strings.ToLower(id)
+	if m.skipIDMatch {
+		loweredID = ""
+	}
+	return find_word.MatchLoweredWords(strings.ToLower(text), loweredID, m.words, m.notWords, m.wordsAnd)
 }

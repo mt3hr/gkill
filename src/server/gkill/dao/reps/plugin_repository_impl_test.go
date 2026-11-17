@@ -53,7 +53,12 @@ const (
 	behaviorMultiRep = "multi_rep"
 	// behaviorTypedMixed は1本のプラグインが TimeIs / URLog / Kmemo を混ぜて返す。
 	// 種類ごとの振り分けと、プラグインの TimeIs の playing_time 絞り込みを検査する。
+	// 終了した TimeIs の終了の Kyou（timeis_end）は、頼まれていなくても**常に**返す
+	// （行儀の悪いプラグインを模す。gkill 側が IncludeEndTimeIs で落とすことを検査する）。
 	behaviorTypedMixed = "typed_mixed"
+	// behaviorEchoFindQuery は find_kyous で受け取った find_query の中身を Kyou の ID に詰めて返す。
+	// gkill が FindQuery 全体と WordsSkipIDMatch を運べているかを見えるようにする（ADR-0318）。
+	behaviorEchoFindQuery = "echo_find_query"
 )
 
 // fakeMultiRepNames は behaviorMultiRep の偽プラグインが申告する rep 名（重複と空を含む生の値）。
@@ -183,6 +188,11 @@ func runFakePlugin() {
 			_ = encoder.Encode(resp)
 			continue
 		}
+		if behavior == behaviorEchoFindQuery && req.Command == "find_kyous" {
+			resp.Kyous = fakeEchoFindQueryKyous(req.Query)
+			_ = encoder.Encode(resp)
+			continue
+		}
 		if behavior == behaviorMultiRep {
 			statePath := os.Getenv(envPluginStateFile)
 			switch req.Command {
@@ -283,9 +293,10 @@ var fakeMixedBaseTime = time.Date(2026, 8, 9, 10, 0, 0, 0, time.UTC)
 
 // fakeMixedPluginKyous は TimeIs（終了あり・終了なし）・URLog・Kmemo を1件ずつ混ぜて返す。
 // data_type は種類ごとの正確な値（timeis_start / urlog / kmemo）にしてある。
+// 終了ありの TimeIs は、同じ ID で終了の Kyou（timeis_end、related_time は終了時刻）も返す。
 //
-//	mixed-timeis-closed: 10:00〜11:00
-//	mixed-timeis-open:   12:00〜（終了なし）
+//	mixed-timeis-closed: 10:00〜11:00（timeis_start と timeis_end の2件）
+//	mixed-timeis-open:   12:00〜（終了なし。timeis_start だけ）
 func fakeMixedPluginKyous() []gkill_plugin.PluginKyou {
 	base := fakeMixedBaseTime
 	closedEnd := base.Add(time.Hour)
@@ -299,10 +310,17 @@ func fakeMixedPluginKyous() []gkill_plugin.PluginKyou {
 		kyou.Tags = []string{"TagA"}
 		return kyou
 	}
+	// 終了の Kyou は開始と同じ版（UpdateTime）を持つ。版が違うと索引は新しいほうだけを残す。
+	closedEndKyou := mk("mixed-timeis-closed", "timeis_end", closedEnd, &gkill_plugin.PluginTypedData{
+		TimeIs: &gkill_plugin.PluginTimeIs{Title: "区間あり", StartTime: base, EndTime: &closedEnd},
+	})
+	closedEndKyou.CreateTime = base
+	closedEndKyou.UpdateTime = base
 	return []gkill_plugin.PluginKyou{
 		mk("mixed-timeis-closed", "timeis_start", base, &gkill_plugin.PluginTypedData{
 			TimeIs: &gkill_plugin.PluginTimeIs{Title: "区間あり", StartTime: base, EndTime: &closedEnd},
 		}),
+		closedEndKyou,
 		mk("mixed-timeis-open", "timeis_start", base.Add(2*time.Hour), &gkill_plugin.PluginTypedData{
 			TimeIs: &gkill_plugin.PluginTimeIs{Title: "終了なし", StartTime: base.Add(2 * time.Hour)},
 		}),
@@ -313,6 +331,37 @@ func fakeMixedPluginKyous() []gkill_plugin.PluginKyou {
 			Kmemo: &gkill_plugin.PluginKmemo{Content: "メモ"},
 		}),
 	}
+}
+
+// fakeEchoFindQueryKyous は受け取った問い合わせを、ID が "項目=値" の Kyou の並びにして返す。
+// find_query が無ければ "find_query=nil" を返す。IDs と Reps は nil と [] を区別して書く。
+func fakeEchoFindQueryKyous(query *gkill_plugin.PluginQuery) []gkill_plugin.PluginKyou {
+	listOf := func(values []string) string {
+		if values == nil {
+			return "nil"
+		}
+		return "[" + strings.Join(values, ",") + "]"
+	}
+	ids := []string{}
+	if query == nil || query.FindQuery == nil {
+		ids = append(ids, "find_query=nil")
+	} else {
+		findQuery := query.FindQuery
+		ids = append(ids,
+			fmt.Sprintf("include_end_timeis=%t", findQuery.IncludeEndTimeIs),
+			"ids="+listOf(findQuery.IDs),
+			"reps="+listOf(findQuery.Reps),
+			fmt.Sprintf("update_cache=%t", findQuery.UpdateCache),
+		)
+	}
+	if query != nil {
+		ids = append(ids, fmt.Sprintf("words_skip_id_match=%t", query.WordsSkipIDMatch))
+	}
+	kyous := []gkill_plugin.PluginKyou{}
+	for _, id := range ids {
+		kyous = append(kyous, fakePluginKyou(id))
+	}
+	return kyous
 }
 
 func fakePluginKyou(id string) gkill_plugin.PluginKyou {
@@ -567,8 +616,8 @@ func TestPluginRepository_ContentAndConfigCommands(t *testing.T) {
 
 // TestPluginRepository_FindKyousAppliesIDFilter は、プラグインが返した全件から
 // gkill側がIDs指定で絞り込むことを確認する。
-// findQueryToPluginQueryがIDsを渡さない設計なので、ここが抜けると
-// ID指定検索にプラグインの全件が混入する。
+// IDs は FindQuery ごとプラグインへ渡す（ADR-0318）が、尊重しないプラグインもある
+// （この偽プラグインも IDs を見ない）。ここが抜けると ID指定検索にプラグインの全件が混入する。
 func TestPluginRepository_FindKyousAppliesIDFilter(t *testing.T) {
 	fp := newFakePluginRepository(t, behaviorNormal)
 
@@ -1103,5 +1152,118 @@ func TestNewPluginRepository_GetPluginDir(t *testing.T) {
 	rep := NewPluginRepository("testuser", dir, gkill_plugin.PluginManifest{Name: "gkill_plugin_x", Executable: "gkill_plugin_x"})
 	if got := rep.GetPluginDir(); got != dir {
 		t.Errorf("GetPluginDir = %q, want %q", got, dir)
+	}
+}
+
+// pluginRepositoryImplOf はテストの偽プラグインから内部の実装を取り出す。
+func pluginRepositoryImplOf(t *testing.T, rep PluginRepository) *pluginRepositoryImpl {
+	t.Helper()
+	impl, ok := rep.(*pluginRepositoryImpl)
+	if !ok {
+		t.Fatalf("PluginRepository の実装が想定と違う: %T", rep)
+	}
+	return impl
+}
+
+// echoedIDs は behaviorEchoFindQuery の偽プラグインが返した Kyou の ID の集合を返す。
+func echoedIDs(kyous []gkill_plugin.PluginKyou) map[string]bool {
+	ids := map[string]bool{}
+	for _, kyou := range kyous {
+		ids[kyou.ID] = true
+	}
+	return ids
+}
+
+// FindQuery の全体（IDs・Reps・IncludeEndTimeIs）と WordsSkipIDMatch がプラグインに届く。
+// UpdateCache はプラグインに意味が無いので落とし、呼び出し元の FindQuery は書き換えない（ADR-0318）。
+func TestPluginRepository_FindQueryReachesPlugin(t *testing.T) {
+	fp := newFakePluginRepository(t, behaviorEchoFindQuery)
+	impl := pluginRepositoryImplOf(t, fp.rep)
+
+	query := &find.FindQuery{
+		IDs:              []string{"id-1", "id-2"},
+		Reps:             []string{},
+		IncludeEndTimeIs: true,
+		UpdateCache:      true,
+		WordsSkipIDMatch: true,
+	}
+	kyous, err := impl.findPluginKyous(context.Background(), findQueryToPluginQuery(query))
+	if err != nil {
+		t.Fatalf("findPluginKyous: %v", err)
+	}
+	got := echoedIDs(kyous)
+	for _, want := range []string{"include_end_timeis=true", "ids=[id-1,id-2]", "reps=[]", "update_cache=false", "words_skip_id_match=true"} {
+		if !got[want] {
+			t.Errorf("プラグインに届いた問い合わせ = %v, want %q を含む", got, want)
+		}
+	}
+	if !query.UpdateCache {
+		t.Errorf("呼び出し元の FindQuery.UpdateCache が書き換えられた")
+	}
+
+	// IDs・Reps が nil（指定なし）なら nil のまま届く（[] と取り違えない）。
+	kyous, err = impl.findPluginKyous(context.Background(), findQueryToPluginQuery(&find.FindQuery{}))
+	if err != nil {
+		t.Fatalf("findPluginKyous: %v", err)
+	}
+	got = echoedIDs(kyous)
+	for _, want := range []string{"include_end_timeis=false", "ids=nil", "reps=nil", "words_skip_id_match=false"} {
+		if !got[want] {
+			t.Errorf("プラグインに届いた問い合わせ = %v, want %q を含む", got, want)
+		}
+	}
+}
+
+// 型別索引を作る問い合わせは、IncludeEndTimeIs だけを立てた絞り込みなしの FindQuery を送る。
+// IDs や Reps を入れると、それを尊重するプラグインが部分集合しか返さず索引が欠ける。
+func TestPluginRepository_IndexFetchAllSendsUnfilteredFindQuery(t *testing.T) {
+	fp := newFakePluginRepository(t, behaviorEchoFindQuery)
+	impl := pluginRepositoryImplOf(t, fp.rep)
+
+	kyous, err := impl.indexFetchAll(context.Background())
+	if err != nil {
+		t.Fatalf("indexFetchAll: %v", err)
+	}
+	got := echoedIDs(kyous)
+	for _, want := range []string{"include_end_timeis=true", "ids=nil", "reps=nil"} {
+		if !got[want] {
+			t.Errorf("索引の問い合わせ = %v, want %q を含む", got, want)
+		}
+	}
+}
+
+// プラグインが頼まれていない終了の Kyou（timeis_end）を返しても、
+// IncludeEndTimeIs が false なら gkill 側で落とす。true なら返し、期間は終了時刻で判定する
+// （native の TimeIs と同じ。プラグイン本体の経路）。
+func TestPluginRepository_FindKyousFiltersTimeIsEndByIncludeEndTimeIs(t *testing.T) {
+	fp := newFakePluginRepositoryWithProvides(t, behaviorTypedMixed, mixedProvides)
+	ctx := context.Background()
+	closedEnd := fakeMixedBaseTime.Add(time.Hour)
+
+	countDataTypes := func(query *find.FindQuery) map[string]int {
+		t.Helper()
+		got, err := fp.rep.FindKyous(ctx, query)
+		if err != nil {
+			t.Fatalf("FindKyous: %v", err)
+		}
+		counts := map[string]int{}
+		for _, kyou := range got["fake_plugin_rep"] {
+			if kyou.ID == "mixed-timeis-closed" {
+				counts[kyou.DataType]++
+			}
+		}
+		return counts
+	}
+
+	if counts := countDataTypes(&find.FindQuery{}); counts["timeis_start"] != 1 || counts["timeis_end"] != 0 {
+		t.Errorf("IncludeEndTimeIs=false: %v, want timeis_start だけ", counts)
+	}
+	if counts := countDataTypes(&find.FindQuery{IncludeEndTimeIs: true}); counts["timeis_start"] != 1 || counts["timeis_end"] != 1 {
+		t.Errorf("IncludeEndTimeIs=true: %v, want timeis_start と timeis_end", counts)
+	}
+	// 期間が終了時刻だけに掛かるなら、終了の Kyou だけが返る。
+	start, end := closedEnd.Add(-time.Minute), closedEnd.Add(time.Minute)
+	if counts := countDataTypes(&find.FindQuery{IncludeEndTimeIs: true, CalendarStartDate: &start, CalendarEndDate: &end}); counts["timeis_start"] != 0 || counts["timeis_end"] != 1 {
+		t.Errorf("期間が終了時刻だけ: %v, want timeis_end だけ", counts)
 	}
 }

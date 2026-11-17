@@ -72,7 +72,7 @@ SQLite3 を持たず、ローカルの git リポジトリや GPX ファイル�
 | `get_kyou_latest_version_test.go` | 単体取得が最新版を返すこと |
 | `repositories_id_chunk_test.go` | IDリストの分割（`findChunkedByIDs`）。SQLite のバインド変数上限を超えると**エラーが立たないまま0件**になるので、上限またぎを実データ寸法で固定する |
 | `local_rep_cache_granular_test.go` | ローカルキャッシュのコピー省略判定。**「コピーが要るか」の判定を `os.Remove` より後に置くと常に「要コピー」になり**、毎回 GB 級の DB をコピーし直したうえで変更検知が丸ごと無効化される |
-| `plugin_typed_adapters_test.go` | プラグインの型別/付随データのアダプタ。読み取りが索引から即答し、**プラグインへ往復しない**こと（1件ずつ聞きに行くと一覧の行数ぶんの直列 stdio 呼び出しになる）。1本のプラグインが TimeIs・URLog・Kmemo を混ぜて返しても Kyou ごとの `data_type` で各アダプタへ振り分けられること（`TestPluginTypedAdapters_MixedKindsAreRoutedPerKyou`）、プラグインの TimeIs も `playing_time` で「その時刻に実行中」だけに絞ること（`TestPluginTimeIsAdapter_FindKyousFiltersByPlayingTime`。絞らないと全件が実行中に見え、どの Kyou にもその時刻の TimeIs として付く。[ADR-0317](../../../../../documents/adr/0317-plugin-mixed-typed-kinds-and-playing-time.md)） |
+| `plugin_typed_adapters_test.go` | プラグインの型別/付随データのアダプタ。読み取りが索引から即答し、**プラグインへ往復しない**こと（1件ずつ聞きに行くと一覧の行数ぶんの直列 stdio 呼び出しになる）。1本のプラグインが TimeIs・URLog・Kmemo を混ぜて返しても Kyou ごとの `data_type` で各アダプタへ振り分けられること（`TestPluginTypedAdapters_MixedKindsAreRoutedPerKyou`）、プラグインの TimeIs も `playing_time` で「その時刻に実行中」だけに絞ること（`TestPluginTimeIsAdapter_FindKyousFiltersByPlayingTime`。絞らないと全件が実行中に見え、どの Kyou にもその時刻の TimeIs として付く。[ADR-0317](../../../../../documents/adr/0317-plugin-mixed-typed-kinds-and-playing-time.md)）、終了の Kyou（`timeis_end`）は索引に持ちつつ IncludeEndTimeIs のときだけ返すこと（`TestPluginTimeIsAdapter_FindKyousIncludesEndOnlyWhenAsked`。[ADR-0318](../../../../../documents/adr/0318-pass-find-query-to-plugins.md)） |
 | `plugin_git_commit_log_adapter_test.go` | `provides: ["git_commit_log"]` の型別アダプタ。native の `GitCommitLog` と同じ列（Kyou ごとの rep 名を保つ）で `GetGitCommitLog` / `FindGitCommitLog` / `FindGitCommitLogByIDs` が引け、ワードの対象列はコミットメッセージだけ、`RepNamesOf` が申告名を返すこと。採用順の末尾が GitCommitLog であること |
 | `plugin_kyou_rep_name_test.go` | プラグイン Kyou の `RepName`。空なら manifest の `rep_name` で埋め、空でない不一致は上書きせず**組み合わせごとに1回だけ**警告すること。`get_rep_name` で申告済みの名前は警告しないこと |
 | `gps_log_repository_plugin_impl_test.go` | GPSLog 専用プラグイン（`emits_kyou: false`）のリポジトリ実装 |
@@ -138,8 +138,15 @@ stdio の改行区切りJSONで会話する。ここが壊れると
   `GetConfigHTML` / `PostConfig` / `IsAlive` が stdio 越しに往復する。
   偽プラグインはクエリの Words をそのまま Kyou のIDに詰めて返すので、
   `FindQuery` → `PluginQuery` の変換が効いているかも同時に見える
-- **IDフィルタ**: `findQueryToPluginQuery` は `IDs` をプラグインへ渡さない設計なので、
+- **検索条件の全体**: `find_query`（IDs・Reps・IncludeEndTimeIs。UpdateCache は落とす）と `words_skip_id_match` が
+  プラグインに届き、呼び出し元の FindQuery は書き換えないこと。型別索引の問い合わせ（`indexFetchAll`）は
+  IncludeEndTimeIs だけを立てた絞り込みなし（IDs・Reps は nil）であること。偽プラグイン `echo_find_query` が
+  受け取った中身を Kyou の ID に詰めて返す（`TestPluginRepository_FindQueryReachesPlugin` /
+  `TestPluginRepository_IndexFetchAllSendsUnfilteredFindQuery`。[ADR-0318](../../../../../documents/adr/0318-pass-find-query-to-plugins.md)）
+- **IDフィルタ**: `IDs` は `find_query` でプラグインへ渡すが、尊重しないプラグインもある（偽プラグインも見ない）ので、
   gkill側で補完しないとID指定検索にプラグインの全件が混入する
+- **終了の TimeIs**: 頼まれていない `timeis_end` をプラグインが返しても IncludeEndTimeIs が false なら落とし、
+  true なら返して期間は終了時刻で判定すること（`TestPluginRepository_FindKyousFiltersTimeIsEndByIncludeEndTimeIs`）
 - **自動再起動**: プラグインが落ちても次のリクエストで再起動され、呼び出し側にはエラーが見えない
 - **デッドライン**: 応答しないプラグインが Deadline で打ち切られ、かつリトライ対象外
   （起動は1回きり）であること。あわせて Deadline 超過ではプロセスが**回収**され、

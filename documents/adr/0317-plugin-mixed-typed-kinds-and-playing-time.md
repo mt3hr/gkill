@@ -49,7 +49,7 @@ TimeIs を provides に書いたプラグインがそれまで無かったので
 
 - 種類をまたいで同じ ID を使ってはいけない。索引は同じ ID の Kyou を1レコードにまとめるので、TimeIs と Kmemo が同じ ID だと両方の型別データが1レコードに入り、`get_kyou` がどちらを返すかが並び順で決まる。テストで守っていないので、プラグイン側で ID に種類を混ぜて作る。
 - `get_plugin_list` / `get_rep_infos` に出る `data_type` は代表の1種類だけ。1本のプラグインの記録だけを引くときは `query.reps` を使う（[ADR-0311](0311-plugin-list-rep-names-are-always-the-query-values.md)）。
-- プラグインの TimeIs の `timeis_end` 行は `IncludeEndTimeIs` を見ずに常に出る（この ADR では直していない）。終了行を出したいプラグインは、実行中の TimeIs に終了行を付けないこと。`gkill_plugin_vrchat` は終了行を出さない。
+- プラグインの TimeIs の `timeis_end` 行は、この ADR の時点では `IncludeEndTimeIs` を見ずに常に出ていた。プラグインには IncludeEndTimeIs が届いていなかった。[ADR-0318](0318-pass-find-query-to-plugins.md) で検索条件の全体を渡し、本体も IncludeEndTimeIs で絞るようにした。`gkill_plugin_vrchat` はそのとき終了の Kyou も返すようになった。
 - 画面の TimeIs の「終了」ボタンはプラグインの rep かどうかを見ていないので、終了なしのプラグインの TimeIs で押すと native の版が書かれる（この ADR では直していない）。`gkill_plugin_vrchat` は終了時刻を必ず埋める。
 
 ## Evidence

@@ -24,9 +24,19 @@ package sdk
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 )
 
 // Query はgkillからプラグインへの検索条件。
+//
+// Words〜Limit は昔からある欄。gkill が受けた検索条件の全体は FindQuery に入っており（ADR-0318）、
+// そのうちよく使うものを IDs / Reps / IncludeEndTimeIs に写してある。
+// 古い gkill（FindQuery を送らない版）からは FindQuery が nil で、写した欄もゼロ値（IDs・Reps は nil）になる。
+//
+// gkill は返ってきた Kyou を IDs・期間・IncludeEndTimeIs で必ず絞り直すので、
+// プラグインがこれらを見ずに多めに返しても結果は変わらない（読む量が増えるだけ）。
+// 見るなら、IDs は MatchID、Reps は MatchRep で判定すると nil（指定なし）と [] （0件）を取り違えない。
 type Query struct {
 	Words             []string
 	NotWords          []string
@@ -36,9 +46,81 @@ type Query struct {
 	TagsAnd           bool
 	CalendarStartDate *time.Time
 	CalendarEndDate   *time.Time
-	IsDeleted         bool
-	OnlyLatestData    bool
-	Limit             int
+	// IsDeleted は「削除済み**だけ**を対象にする」。gkill 本体からは常に false。
+	// FindQuery.IncludeDeletedData（削除済みも含める）とは意味が違うので混ぜないこと。
+	IsDeleted      bool
+	OnlyLatestData bool
+	Limit          int
+
+	// WordsSkipIDMatch は true のとき、肯定語（Words）で Kyou の ID の前方一致を見ない。
+	// gkill が除外語を肯定語として引き直すときに立つ。MatchText / Matcher が自動で効かせる。
+	WordsSkipIDMatch bool
+
+	// IDs は FindQuery.IDs の写し。nil は指定なし、[] は0件。
+	IDs []string
+	// Reps は FindQuery.Reps の写し（rep 名）。nil は指定なし、[] は0件。
+	// 複数の rep 名を返すプラグインが、読む rep を絞るのに使える。
+	Reps []string
+	// IncludeEndTimeIs は FindQuery.IncludeEndTimeIs の写し。true のとき、終了した TimeIs の
+	// 終了の Kyou（data_type "timeis_end"）も返す（TimeIs の説明を参照）。
+	IncludeEndTimeIs bool
+
+	// FindQuery は gkill が受けた検索条件の全体。読むだけにすること。古い gkill からは nil。
+	FindQuery *find.FindQuery
+}
+
+// MatchID は id が Query.IDs の指定に入るかを返す。IDs が nil（指定なし）なら常に真、[] なら常に偽。
+// IDs を毎回なめるので、一覧をループで判定するときは IDMatcher を使う。
+func (q Query) MatchID(id string) bool {
+	if q.IDs == nil {
+		return true
+	}
+	for _, want := range q.IDs {
+		if want == id {
+			return true
+		}
+	}
+	return false
+}
+
+// IDMatcher は Query.IDs を集合にして持ち、多くの ID を判定するのに使う。意味は Query.MatchID と同じ。
+type IDMatcher struct {
+	// ids が nil なら指定なし（常に真）。
+	ids map[string]struct{}
+}
+
+// IDMatcher はこの Query の IDs から IDMatcher を作る。
+func (q Query) IDMatcher() IDMatcher {
+	if q.IDs == nil {
+		return IDMatcher{}
+	}
+	ids := make(map[string]struct{}, len(q.IDs))
+	for _, id := range q.IDs {
+		ids[id] = struct{}{}
+	}
+	return IDMatcher{ids: ids}
+}
+
+// Match は id が IDs の指定に入るかを返す。
+func (m IDMatcher) Match(id string) bool {
+	if m.ids == nil {
+		return true
+	}
+	_, ok := m.ids[id]
+	return ok
+}
+
+// MatchRep は rep 名が Query.Reps の指定に入るかを返す。Reps が nil（指定なし）なら常に真、[] なら常に偽。
+func (q Query) MatchRep(repName string) bool {
+	if q.Reps == nil {
+		return true
+	}
+	for _, want := range q.Reps {
+		if want == repName {
+			return true
+		}
+	}
+	return false
 }
 
 // Kyou はプラグインが返す記録データ。
@@ -118,7 +200,8 @@ type Lantana struct {
 }
 
 // TimeIs は時間計測。EndTimeがnilなら計測中。
-// data_typeは"timeis_start"（終了行を出すなら"timeis_end"）にすること。
+// data_typeは"timeis_start"にすること。終了した TimeIs は、Query.IncludeEndTimeIs が true のときだけ、
+// 同じ ID・同じ TimeIs で data_type "timeis_end"・RelatedTime を終了時刻にした Kyou も返す（native と同じ）。
 type TimeIs struct {
 	Title     string     `json:"title"`
 	StartTime time.Time  `json:"start_time"`

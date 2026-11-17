@@ -527,6 +527,37 @@ func TestPluginTimeIsAdapter_FindKyousFiltersByPlayingTime(t *testing.T) {
 	}
 }
 
+// 型別アダプタ（索引）の経路でも、TimeIs の終了の Kyou は IncludeEndTimeIs のときだけ返す。
+// 索引は終了の行も持っている（indexFetchAll が IncludeEndTimeIs を立てて取る）。ADR-0318。
+func TestPluginTimeIsAdapter_FindKyousIncludesEndOnlyWhenAsked(t *testing.T) {
+	fake := newFakePluginRepositoryWithProvides(t, behaviorTypedMixed, mixedProvides)
+	ctx := context.Background()
+	adapters := NewPluginTypedRepositories(fake.rep)
+	if err := fake.rep.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache: %v", err)
+	}
+	countDataTypes := func(query *find.FindQuery) map[string]int {
+		t.Helper()
+		got, err := adapters.TimeIs.FindKyous(ctx, query)
+		if err != nil {
+			t.Fatalf("FindKyous: %v", err)
+		}
+		counts := map[string]int{}
+		for _, kyous := range got {
+			for _, kyou := range kyous {
+				counts[kyou.DataType]++
+			}
+		}
+		return counts
+	}
+	if counts := countDataTypes(&find.FindQuery{}); counts["timeis_start"] != 2 || counts["timeis_end"] != 0 {
+		t.Errorf("IncludeEndTimeIs=false: %v, want timeis_start 2件だけ", counts)
+	}
+	if counts := countDataTypes(&find.FindQuery{IncludeEndTimeIs: true}); counts["timeis_start"] != 2 || counts["timeis_end"] != 1 {
+		t.Errorf("IncludeEndTimeIs=true: %v, want timeis_start 2件と timeis_end 1件（終了なしは終了の Kyou を持たない）", counts)
+	}
+}
+
 // Lantana は native と同じく気分値（MOOD）を文字列として照合する。
 // 以前は「ワード条件が有効なら0件」で、除外語だけの検索でも消えていた（native は残る）。
 func TestPluginTypedFindWordText_Lantana(t *testing.T) {

@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
@@ -44,7 +45,15 @@ type pluginQuery struct {
 	IsDeleted         bool       `json:"is_deleted"`
 	OnlyLatestData    bool       `json:"only_latest_data"`
 	Limit             int        `json:"limit"`
+	// WordsSkipIDMatch と FindQuery は gkill 1.1.12 から届く（ADR-0318）。
+	WordsSkipIDMatch bool            `json:"words_skip_id_match,omitempty"`
+	FindQuery        *find.FindQuery `json:"find_query,omitempty"`
 }
+
+// maxRequestLineBytes は1リクエスト（1行）の上限。
+// find_query の IDs は gkill が4000件ずつに分けて送る（数百KB）ので、それより十分大きくしてある。
+// 超えるとメッセージループが終わってプロセスが落ちる。
+const maxRequestLineBytes = 16 * 1024 * 1024
 
 // pluginResponse はプラグインからgkillへのレスポンス。
 type pluginResponse struct {
@@ -168,9 +177,8 @@ func runBuildCache(ctx context.Context, h Handler, cfg Config, out io.Writer) bo
 func runLoop(h Handler, cfg Config, pluginDir, userID string, in io.Reader, out io.Writer) bool {
 	encoder := json.NewEncoder(out)
 	scanner := bufio.NewScanner(in)
-	// 大きなレスポンスに備えてバッファを拡張
-	buf := make([]byte, 1024*1024)
-	scanner.Buffer(buf, len(buf))
+	// 大きなリクエスト（find_query の IDs）に備えてバッファを拡張
+	scanner.Buffer(make([]byte, 64*1024), maxRequestLineBytes)
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -280,8 +288,9 @@ func dispatch(h Handler, cfg *Config, pluginDir, userID string, req pluginReques
 			return dispatchResult{count: 1}
 		}
 		if h.FindKyous != nil {
-			// フォールバック: FindKyousで代替
-			kyous, err := h.FindKyous(newCtx(userID), Query{}, *cfg)
+			// フォールバック: FindKyousで代替。IDs で1件に絞って頼む（IDs を見るプラグインは読む量が減る）。
+			// IDs を見ないプラグインは全件を返すので、下の線形探索は残す。
+			kyous, err := h.FindKyous(newCtx(userID), Query{IDs: []string{req.KyouID}}, *cfg)
 			if err != nil {
 				return fail(err.Error())
 			}
@@ -386,7 +395,7 @@ func pluginQueryToQuery(pq *pluginQuery) Query {
 	if pq == nil {
 		return Query{}
 	}
-	return Query{
+	q := Query{
 		Words:             pq.Words,
 		NotWords:          pq.NotWords,
 		WordsAnd:          pq.WordsAnd,
@@ -398,5 +407,13 @@ func pluginQueryToQuery(pq *pluginQuery) Query {
 		IsDeleted:         pq.IsDeleted,
 		OnlyLatestData:    pq.OnlyLatestData,
 		Limit:             pq.Limit,
+		WordsSkipIDMatch:  pq.WordsSkipIDMatch,
 	}
+	if pq.FindQuery != nil {
+		q.FindQuery = pq.FindQuery
+		q.IDs = pq.FindQuery.IDs
+		q.Reps = pq.FindQuery.Reps
+		q.IncludeEndTimeIs = pq.FindQuery.IncludeEndTimeIs
+	}
+	return q
 }

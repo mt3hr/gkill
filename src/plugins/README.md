@@ -429,10 +429,23 @@ SDK 自身は `plugin start` / `plugin stop` / `build cache` を Info で、1コ
     "calendar_end_date": "2026-06-01T00:00:00Z",
     "is_deleted": false,
     "only_latest_data": false,
-    "limit": 100
+    "limit": 100,
+    "words_skip_id_match": false,
+    "find_query": {
+      "words": ["Claude"],
+      "ids": null,
+      "reps": null,
+      "include_end_timeis": true,
+      "...": "gkill が受けた検索条件の全体（find.FindQuery）"
+    }
   }
 }
 ```
+
+`find_query` は gkill 1.1.12 から届く（古い gkill からは無い）。words〜limit は古い SDK で作ったプラグインのための欄で、
+同じ条件が `find_query` にも入っている。gkill は返ってきた Kyou を期間・`ids`・`include_end_timeis` で必ず絞り直すので、
+プラグインが `find_query` を見なくても結果は変わらない（[ADR-0318](../../documents/adr/0318-pass-find-query-to-plugins.md)）。
+型別索引を作る問い合わせだけは、`include_end_timeis` だけを立てた絞り込みなしの `find_query` が届く。
 
 ### レスポンス形式
 
@@ -495,6 +508,11 @@ func main() {
 | `IsDeleted` | `bool` | 削除済みのみ取得。**gkill 本体からは常に `false` が渡る**（`FindQuery` 側に対応するフィールドが無いため） |
 | `OnlyLatestData` | `bool` | 最新データのみ |
 | `Limit` | `int` | 最大件数（0 = 無制限） |
+| `WordsSkipIDMatch` | `bool` | 肯定語で ID の前方一致を見ない（gkill が除外語を肯定語として引き直すとき）。`q.MatchText` / `q.Matcher()` が自動で効かせる |
+| `IDs` | `[]string` | ID の指定（`FindQuery.IDs` の写し）。nil = 指定なし、`[]` = 0件。判定は `q.MatchID(id)`、一覧には `q.IDMatcher()`。見れば読む量が減る（gkill も絞り直す） |
+| `Reps` | `[]string` | rep 名の指定（`FindQuery.Reps` の写し）。nil = 指定なし、`[]` = 0件。複数の rep 名を返すプラグインが `q.MatchRep(name)` で使う |
+| `IncludeEndTimeIs` | `bool` | TimeIs を返すプラグインは、`true` のとき終了した TimeIs の終了の Kyou（`data_type` `timeis_end`、`RelatedTime` は終了時刻、ID・型別データ・版は開始と同じ）も返す（native と同じ） |
+| `FindQuery` | `*find.FindQuery` | gkill が受けた検索条件の全体。読むだけ。古い gkill からは nil（[ADR-0318](../../documents/adr/0318-pass-find-query-to-plugins.md)） |
 
 ### `sdk.Kyou` フィールド
 

@@ -356,7 +356,7 @@ func TestConcurrentReadDuringBuild(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for range 20 {
-				if _, err := c.QueryCommits(pluginDir, nil, nil, 10, false); err != nil {
+				if _, err := c.QueryCommits(pluginDir, nil, nil, 10, false, nil, nil); err != nil {
 					t.Errorf("QueryCommits during build: %v", err)
 					return
 				}

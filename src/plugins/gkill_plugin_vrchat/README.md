@@ -8,10 +8,14 @@ VRChat の出力ログ（`output_log_*.txt`）から、**どのワールドに�
 | --- | --- | --- |
 | ワールドへの滞在（入室〜退室） | TimeIs。タイトルはワールド名 | `VRChat_world` |
 | そのワールドの情報（滞在ごとに1件、入室の時刻） | URLog。URL は VRChat 公式サイトの起動用ページ（`worldId` と `instanceId` 付き）、説明にワールド ID とインスタンス | `VRChat_world` |
-| 同じ部屋にいた人（その人の入室〜退室） | TimeIs。タイトルは `名前（usr_…）` | `VRChat_同部屋` |
+| 同じ部屋にいた人（その人の入室〜退室） | TimeIs。タイトルは `名前（usr_…）` | `VRChat_room` |
 | 自分のアバターの切り替え・動画プレイヤーの URL | Kmemo。`アバター変更: …` / `動画: …` | `VRChat_event` |
 
 VRChat が終了したら（落ちたときはログの最後の行で）、その時点で開いている TimeIs を全部閉じる。
+
+TimeIs は native と同じく、開始の Kyou（`timeis_start`、時刻は開始）を返し、検索条件の `include_end_timeis` が
+true のときは終了の Kyou（`timeis_end`、時刻は終了）も返す。gkill の画面は既定で true なので、
+滞在や同じ部屋の人はタイムラインの開始と終了の2か所に出る（gkill 1.1.12 以降。[ADR-0318](../../../documents/adr/0318-pass-find-query-to-plugins.md)）。
 
 1本のプラグインが複数の型別の種類を返すのはこのプラグインが最初で、gkill 1.1.12 以降が要る
 （それより前の gkill はプラグインの TimeIs を「その時刻に実行中か」で絞らず、全件が実行中に見える。[ADR-0317](../../../documents/adr/0317-plugin-mixed-typed-kinds-and-playing-time.md)）。
@@ -90,6 +94,14 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_vrchat/
 1ファイル = 1回の起動で、記録はそのファイルの中で閉じる。終了の行が無いときは最後の時刻付きの行で閉じるので、
 プレイ中に運んだログは最後の行で仮に閉じ、次の同期で伸びる。TimeIs の更新時刻は終了時刻にしてある（伸びると更新時刻も動く）。
 実行中（終了なし）の TimeIs は出さない。画面の「終了」ボタンで native の版が書かれてしまうため。
+
+### 検索条件
+
+期間とワードのほか、gkill から届く検索条件の全体（`sdk.Query.FindQuery`。ADR-0318）のうち次を見る。
+
+- `include_end_timeis`: true なら TimeIs の終了の Kyou も返す。開始の Kyou は開始時刻、終了の Kyou は終了時刻で期間を判定する。
+  1件の TimeIs から Kyou が2つできうるので、LIMIT は新しい順に並べてから掛ける。終了の Kyou は ID・型別データ・タグ・版が開始と同じ。
+- `ids`: 指定の ID の行だけを読む（キャッシュの SQL に `IN` を足す）。
 
 ### Kyou の ID
 

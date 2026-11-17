@@ -38,11 +38,28 @@ func scanRecordRow(scan func(...any) error) (recordRow, error) {
 	return row, err
 }
 
-// QueryKyous は期間で絞った記録を新しい順に返す。
+// kyouQuery は QueryKyous の条件。
+type kyouQuery struct {
+	start, end *time.Time
+	limit      int
+	// hasWordFilter が真なら search_text を読み、LIMIT は SQL に押し込まない
+	// （単語で絞る前に切ると、後段のフィルタで落ちたぶん取りこぼす）。
+	hasWordFilter bool
+	// includeEndTimeIs が真なら、終了時刻が期間に入る TimeIs の行も拾う（終了の Kyou の材料）。
+	// 1行から Kyou が2つできうるので、LIMIT は SQL に押し込まない。
+	includeEndTimeIs bool
+	// ids は Kyou の ID の指定。nil は指定なし、[] は0件。
+	ids []string
+}
+
+// QueryKyous は期間で絞った記録を新しい順（related_unix）に返す。
 //
-// hasWordFilter が偽なら LIMIT を SQL に押し込み、search_text は読まない。
-// 真なら LIMIT を押し込まない（単語で絞る前に切ると、後段のフィルタで落ちたぶん取りこぼす）。
-func (c *cache) QueryKyous(pluginDir string, start, end *time.Time, limit int, hasWordFilter bool) ([]recordRow, error) {
+// LIMIT を SQL に押し込むのは、単語でも終了の Kyou でも絞り直さないときだけ。
+// そのときは search_text も読まない。
+func (c *cache) QueryKyous(pluginDir string, q kyouQuery) ([]recordRow, error) {
+	if q.ids != nil && len(q.ids) == 0 {
+		return nil, nil
+	}
 	if err := c.openDB(pluginDir); err != nil {
 		return nil, err
 	}
@@ -52,23 +69,34 @@ func (c *cache) QueryKyous(pluginDir string, start, end *time.Time, limit int, h
 	}
 
 	searchColumn := `''`
-	if hasWordFilter {
+	if q.hasWordFilter {
 		searchColumn = `search_text`
 	}
 	query := `SELECT ` + recordColumns + searchColumn + `, related_unix, update_unix FROM record WHERE 1 = 1`
 	args := []any{}
-	if start != nil {
-		query += ` AND related_unix >= ?`
-		args = append(args, start.Unix())
+	if q.start != nil || q.end != nil {
+		relatedCond, relatedArgs := unixRangeCondition("related_unix", q.start, q.end)
+		if q.includeEndTimeIs {
+			endCond, endArgs := unixRangeCondition("end_unix", q.start, q.end)
+			query += ` AND ((` + relatedCond + `) OR (kind IN (?, ?) AND ` + endCond + `))`
+			args = append(args, relatedArgs...)
+			args = append(args, kindWorldTimeIs, kindPlayer)
+			args = append(args, endArgs...)
+		} else {
+			query += ` AND ` + relatedCond
+			args = append(args, relatedArgs...)
+		}
 	}
-	if end != nil {
-		query += ` AND related_unix <= ?`
-		args = append(args, end.Unix())
+	if q.ids != nil {
+		query += ` AND kyou_id IN (` + strings.TrimSuffix(strings.Repeat("?, ", len(q.ids)), ", ") + `)`
+		for _, id := range q.ids {
+			args = append(args, id)
+		}
 	}
 	query += ` ORDER BY related_unix DESC, kyou_id`
-	if !hasWordFilter && limit > 0 {
+	if !q.hasWordFilter && !q.includeEndTimeIs && q.limit > 0 {
 		query += ` LIMIT ?`
-		args = append(args, limit)
+		args = append(args, q.limit)
 	}
 
 	rows, err := db.Query(query, args...)
@@ -86,6 +114,24 @@ func (c *cache) QueryKyous(pluginDir string, start, end *time.Time, limit int, h
 		result = append(result, row)
 	}
 	return result, rows.Err()
+}
+
+// unixRangeCondition は「列が期間に入る」の SQL 条件と引数を返す。両端を含み、nil の側は開いている。
+func unixRangeCondition(column string, start, end *time.Time) (string, []any) {
+	conds := []string{}
+	args := []any{}
+	if start != nil {
+		conds = append(conds, column+" >= ?")
+		args = append(args, start.Unix())
+	}
+	if end != nil {
+		conds = append(conds, column+" <= ?")
+		args = append(args, end.Unix())
+	}
+	if len(conds) == 0 {
+		return "1 = 1", args
+	}
+	return strings.Join(conds, " AND "), args
 }
 
 // QueryKyou はIDで1件返す。

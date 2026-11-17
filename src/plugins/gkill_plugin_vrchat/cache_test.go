@@ -223,7 +223,7 @@ func TestQueryKyousLimitAndPeriod(t *testing.T) {
 	stageLog(t, dir, crashFixture(), "")
 	mustBuild(t, c, pluginDir, dir)
 
-	rows, err := c.QueryKyous(pluginDir, nil, nil, 3, false)
+	rows, err := c.QueryKyous(pluginDir, kyouQuery{limit: 3})
 	if err != nil || len(rows) != 3 {
 		t.Fatalf("LIMIT 3 = %d件, %v", len(rows), err)
 	}
@@ -231,7 +231,7 @@ func TestQueryKyousLimitAndPeriod(t *testing.T) {
 		t.Error("単語が無いのに search_text を読んでいる")
 	}
 	start := testTime(t, "2024.01.02 00:00:00")
-	rows, err = c.QueryKyous(pluginDir, &start, nil, 0, true)
+	rows, err = c.QueryKyous(pluginDir, kyouQuery{start: &start, hasWordFilter: true})
 	if err != nil || len(rows) != 3 {
 		t.Fatalf("2日目以降 = %d件, %v, want 落ちた起動の3件", len(rows), err)
 	}
@@ -257,7 +257,7 @@ func TestConcurrentReadDuringBuild(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		defer wg.Done()
-		_, _ = c.QueryKyous(pluginDir, nil, nil, 0, false)
+		_, _ = c.QueryKyous(pluginDir, kyouQuery{})
 		_ = c.Stats(pluginDir)
 		close(done)
 	}()

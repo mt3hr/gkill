@@ -138,7 +138,7 @@ func buildAndRead(t *testing.T, c *cache, pluginDir string, config pluginConfig)
 	if err := c.build(pluginDir, config); err != nil {
 		t.Fatalf("build: %v", err)
 	}
-	metrics, err := c.QueryDailyMetrics(pluginDir, config, nil, nil, 0)
+	metrics, err := c.QueryDailyMetrics(pluginDir, config, nil, nil, 0, nil)
 	if err != nil {
 		t.Fatalf("QueryDailyMetrics: %v", err)
 	}
@@ -487,7 +487,7 @@ func TestCache_QueryFiltersByPeriod(t *testing.T) {
 	loc := testLocation(t)
 	start := noonUnixOf("2024-04-04", loc) - 3600
 	end := noonUnixOf("2024-04-04", loc) + 3600
-	metrics, err := c.QueryDailyMetrics(pluginDir, config, &start, &end, 0)
+	metrics, err := c.QueryDailyMetrics(pluginDir, config, &start, &end, 0, nil)
 	if err != nil {
 		t.Fatalf("QueryDailyMetrics: %v", err)
 	}

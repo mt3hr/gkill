@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"os"
 	"slices"
+	"sort"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -86,10 +87,17 @@ func main() {
 			rememberConfig(cfg)
 			startBuilder(pluginDir, provider)
 
-			// 単語で絞るなら LIMIT を SQL へ押し込まない。
+			// 単語で絞るときと終了の Kyou を作るときは LIMIT を SQL へ押し込まない。
 			// 絞る前に切ると、後段のフィルタで落ちたぶん取りこぼす。
 			matcher := q.Matcher()
-			rows, err := globalCache.QueryKyous(pluginDir, q.CalendarStartDate, q.CalendarEndDate, q.Limit, matcher.HasWords())
+			rows, err := globalCache.QueryKyous(pluginDir, kyouQuery{
+				start:            q.CalendarStartDate,
+				end:              q.CalendarEndDate,
+				limit:            q.Limit,
+				hasWordFilter:    matcher.HasWords(),
+				includeEndTimeIs: q.IncludeEndTimeIs,
+				ids:              q.IDs,
+			})
 			if err != nil {
 				sdk.LogError("%s: find kyous: %v", appName, err)
 				return []sdk.Kyou{}, nil
@@ -146,7 +154,11 @@ func main() {
 //
 // ワード判定は SDK に任せる（gkill 本体は再判定しないので、ここが唯一の判定）。
 // 対象は search_text（タイトル・ワールド名・ワールド ID・インスタンス・usr ID・本文）。
-// LIMIT は絞った後に掛ける。
+//
+// q.IncludeEndTimeIs のときは、TimeIs の行から終了の Kyou（timeis_end、時刻は終了時刻）も作る。
+// native の TimeIs と同じく、開始の Kyou は開始時刻、終了の Kyou は終了時刻で期間を判定する
+// （SQL は「どちらかが期間に入る行」を拾っているので、ここで Kyou ごとに判定し直す）。
+// 1行から2つできうるので、時刻の新しい順に並べ直してから LIMIT を掛ける。
 func kyousOfRows(rows []recordRow, q sdk.Query) []sdk.Kyou {
 	matcher := q.Matcher()
 	kyous := make([]sdk.Kyou, 0, len(rows))
@@ -154,12 +166,54 @@ func kyousOfRows(rows []recordRow, q sdk.Query) []sdk.Kyou {
 		if !matcher.MatchText(row.SearchText, row.ID) {
 			continue
 		}
-		kyous = append(kyous, kyouOf(row))
-		if q.Limit > 0 && len(kyous) >= q.Limit {
+		if inCalendar(row.RelatedUnix, q) {
+			kyous = append(kyous, kyouOf(row))
+		}
+		if q.IncludeEndTimeIs && isTimeIsKind(row.Kind) && row.EndUnix != 0 && inCalendar(row.EndUnix, q) {
+			kyous = append(kyous, endKyouOf(row))
+		}
+		if !q.IncludeEndTimeIs && q.Limit > 0 && len(kyous) >= q.Limit {
 			break
 		}
 	}
+	if q.IncludeEndTimeIs {
+		sort.SliceStable(kyous, func(i, j int) bool {
+			if !kyous[i].RelatedTime.Equal(kyous[j].RelatedTime) {
+				return kyous[i].RelatedTime.After(kyous[j].RelatedTime)
+			}
+			return kyous[i].ID < kyous[j].ID
+		})
+		if q.Limit > 0 && len(kyous) > q.Limit {
+			kyous = kyous[:q.Limit]
+		}
+	}
 	return kyous
+}
+
+// inCalendar は UNIX 秒の時刻が q の期間に入るかを返す（両端を含む）。
+func inCalendar(unix int64, q sdk.Query) bool {
+	if q.CalendarStartDate != nil && unix < q.CalendarStartDate.Unix() {
+		return false
+	}
+	if q.CalendarEndDate != nil && unix > q.CalendarEndDate.Unix() {
+		return false
+	}
+	return true
+}
+
+// isTimeIsKind は記録の種類が TimeIs（ワールドの滞在・同じ部屋の人）かを返す。
+func isTimeIsKind(kind string) bool {
+	return kind == kindWorldTimeIs || kind == kindPlayer
+}
+
+// endKyouOf は TimeIs の行から終了の Kyou を作る。
+// ID・型別データ・タグ・版（UpdateTime）は開始の Kyou と同じで、data_type と時刻だけが違う。
+// 版を揃えるのは、gkill の索引が同じ ID の Kyou を「同じ版の射影」として1件にまとめるため。
+func endKyouOf(row recordRow) sdk.Kyou {
+	kyou := kyouOf(row)
+	kyou.DataType = dataTypeTimeIsEnd
+	kyou.RelatedTime = unixToTime(row.EndUnix)
+	return kyou
 }
 
 // kyouOf はキャッシュの1行を gkill へ返す Kyou にする。

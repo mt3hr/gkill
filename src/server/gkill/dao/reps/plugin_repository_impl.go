@@ -241,8 +241,18 @@ func (p *pluginRepositoryImpl) indexProvidedKinds() map[gkill_plugin.PluginProvi
 }
 
 // indexFetchAll は索引の材料を1回のfind_kyousで取ってくる。
+//
+// FindQuery は IncludeEndTimeIs だけを立て、IDs・Reps・期間などの絞り込みは**入れないこと**。
+// 索引は全ての型別アダプタの材料で、問い合わせごとの絞り込みはアダプタ側（findKyous と
+// pluginKyouMatchesQuery）でやる。FindQuery の IDs や Reps を尊重するプラグインに
+// 絞り込みを渡すと、部分集合しか返らず索引が欠ける。
+// IncludeEndTimeIs を立てるのは、TimeIs の終了の Kyou（timeis_end）も索引に持たせるため
+// （返すかどうかは問い合わせの IncludeEndTimeIs で決める。ADR-0318）。
 func (p *pluginRepositoryImpl) indexFetchAll(ctx context.Context) ([]gkill_plugin.PluginKyou, error) {
-	return p.findPluginKyous(ctx, &gkill_plugin.PluginQuery{OnlyLatestData: true})
+	return p.findPluginKyous(ctx, &gkill_plugin.PluginQuery{
+		OnlyLatestData: true,
+		FindQuery:      &find.FindQuery{OnlyLatestData: true, IncludeEndTimeIs: true},
+	})
 }
 
 // slot は実行スロットのチャネルを返す。
@@ -1008,8 +1018,19 @@ func findQueryToPluginQuery(q *find.FindQuery) *gkill_plugin.PluginQuery {
 		pq.CalendarStartDate = q.CalendarStartDate
 		pq.CalendarEndDate = q.CalendarEndDate
 	}
+	// json:"-" の内部用の欄なので FindQuery の JSON には出ない。明示的に運ぶ。
+	pq.WordsSkipIDMatch = q.WordsSkipIDMatch
+
+	// 検索条件の全体も渡す（ADR-0318）。浅いコピーにして、呼び出し元の FindQuery は書き換えない。
+	// UpdateCache はプラグインに意味が無いので落とす。
+	findQuery := *q
+	findQuery.UpdateCache = false
+	pq.FindQuery = &findQuery
 	return pq
 }
+
+// pluginDataTypeTimeIsEnd は TimeIs の終了の Kyou の data_type。
+const pluginDataTypeTimeIsEnd = "timeis_end"
 
 // pluginKyouMatchesQuery はgkill側での追加フィルタリング（プラグイン側フィルタの補完）。
 func pluginKyouMatchesQuery(kyou Kyou, q *find.FindQuery) bool {
@@ -1022,10 +1043,15 @@ func pluginKyouMatchesQuery(kyou Kyou, q *find.FindQuery) bool {
 	if q.CalendarEndDate != nil && kyou.RelatedTime.After(*q.CalendarEndDate) {
 		return false
 	}
+	// TimeIs の終了の Kyou は、native と同じく IncludeEndTimeIs のときだけ返す
+	// （time_is_repository_sqlite3_impl.go の sqlWhereFilterEndTimeIs）。
+	// プラグイン本体の経路と型別アダプタの経路（索引は終了の行も持つ）の両方がここを通る。
+	if !q.IncludeEndTimeIs && kyou.DataType == pluginDataTypeTimeIsEnd {
+		return false
+	}
 	// IDフィルタ:
-	// findQueryToPluginQueryはIDsをPluginQueryに変換しないため、
-	// プラグインはID指定クエリを受けても全件返す。
-	// gkill側でIDフィルタを補完することで、
+	// IDs は FindQuery ごとプラグインへ渡す（ADR-0318）が、尊重しないプラグインもある
+	// （古い SDK で作ったもの・全件を返す作りのもの）。gkill側でも必ず絞り、
 	// textMatchFindByIDQueryでプラグイン全件が混入するのを防ぐ。
 	if q.IDs != nil {
 		idSet := make(map[string]struct{}, len(q.IDs))

@@ -210,7 +210,7 @@ func countRows(t *testing.T, c *cache, query string, args ...any) int {
 // commitsByHash は QueryCommits の結果をハッシュで引けるようにする。
 func commitsByHash(t *testing.T, c *cache, pluginDir string) map[string]commitRow {
 	t.Helper()
-	rows, err := c.QueryCommits(pluginDir, nil, nil, 0, false)
+	rows, err := c.QueryCommits(pluginDir, nil, nil, 0, false, nil, nil)
 	if err != nil {
 		t.Fatalf("QueryCommits: %v", err)
 	}

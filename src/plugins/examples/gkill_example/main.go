@@ -64,9 +64,19 @@ func main() {
 			// gkill 本体はプラグインが返した Kyou のワードを再判定しない（本文は本体に無い）ので、
 			// ワード判定はプラグインの責任。自前のループは書かず、SDK の q.Matcher() / q.MatchText を通す。
 			// 判定に掛ける文字列は「検索対象にしたいもの」を連結する（ここでは本文テキスト）。
+			//
+			// gkill が受けた検索条件の全体は q.FindQuery にある（古い gkill からは nil）。よく使うものは写してある:
+			//   - q.IDs: ID の指定（nil は指定なし、[] は0件）。q.IDMatcher() で判定すると読む量を減らせる
+			//   - q.Reps: rep 名の指定。複数の rep 名を返すプラグインが使う（q.MatchRep）
+			//   - q.IncludeEndTimeIs: TimeIs を返すプラグインは、true のとき終了の Kyou（data_type "timeis_end"）も返す
+			// gkill は返ってきた Kyou を ID・期間・IncludeEndTimeIs で絞り直すので、見なくても結果は変わらない。
 			matcher := q.Matcher()
+			idMatcher := q.IDMatcher()
 			filtered := make([]sdk.Kyou, 0, len(kyous))
 			for _, k := range kyous {
+				if !idMatcher.Match(k.ID) {
+					continue
+				}
 				if q.CalendarStartDate != nil && k.RelatedTime.Before(*q.CalendarStartDate) {
 					continue
 				}

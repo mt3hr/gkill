@@ -138,10 +138,11 @@ exit 2（Go の `flag` が未知フラグで落ちた旧 SDK）は失敗とし�
 | 側 | 上限 | 実装 |
 |---|---|---|
 | 親（gkill 本体） | **32MB** | `dao/reps/plugin_repository_impl.go:174` |
-| 子（プラグイン SDK） | **1MB** | `plugin/sdk/sdk.go:83-84` |
+| 子（プラグイン SDK） | **16MB** | `plugin/sdk/sdk.go`（`maxRequestLineBytes`） |
 
 親側が 32MB なのは大きな HTML レスポンスで `bufio.Scanner: token too long` を防ぐため。
-リクエスト JSON は 1MB を超えないため SDK 側は既定のままになっている。
+SDK 側はリクエストの上限で、`find_query` の `ids`（本体が4000件ずつに分けて送る。数百KB）より十分大きくしてある
+（1.1.11 までは 1MB。[ADR-0318](../adr/0318-pass-find-query-to-plugins.md)）。超えるとメッセージループが終わりプロセスが落ちる。
 
 ### タイムアウトと打ち切り
 
@@ -179,7 +180,7 @@ exit 2（Go の `flag` が未知フラグで落ちた旧 SDK）は失敗とし�
 
 | コマンド（`PluginRequest.Command`） | 説明 |
 |---|---|
-| `find_kyous` | 検索クエリに合致する Kyou 一覧を返す。**ワード条件（`words` / `not_words` / `words_and`）の判定はプラグインの責任** — gkill 側は本文を持たないので再判定しない（`plugin_repository_impl.go` の `pluginKyouMatchesQuery` は Calendar と IDs だけ）。判定は SDK の `sdk.Query.MatchText`（本体と同じ規則: 大小無視の部分一致、ID は前方一致、しかも 7 文字以上の語だけ、除外語は ID を見ない）を使う。型別リポジトリ経由（`rep_types` 指定・Mi 画面）では索引の型別データを本体と同じ列で判定するので、プラグインが独自に照合対象へ足した語はそこでは当たらない |
+| `find_kyous` | 検索クエリに合致する Kyou 一覧を返す。`query` には旧来の欄（words〜limit）に加えて、gkill が受けた検索条件の全体 `find_query` と `words_skip_id_match` が入る（1.1.12 から。[ADR-0318](../adr/0318-pass-find-query-to-plugins.md)）。型別索引を作る問い合わせ（`indexFetchAll`）だけは `include_end_timeis` だけを立てた絞り込みなしの `find_query` を送る。**ワード条件（`words` / `not_words` / `words_and`）の判定はプラグインの責任** — gkill 側は本文を持たないので再判定しない（`plugin_repository_impl.go` の `pluginKyouMatchesQuery` は Calendar・IDs・IncludeEndTimeIs だけ。`timeis_end` の Kyou は IncludeEndTimeIs のときだけ残す）。判定は SDK の `sdk.Query.MatchText`（本体と同じ規則: 大小無視の部分一致、ID は前方一致、しかも 7 文字以上の語だけ、除外語は ID を見ない）を使う。型別リポジトリ経由（`rep_types` 指定・Mi 画面）では索引の型別データを本体と同じ列で判定するので、プラグインが独自に照合対象へ足した語はそこでは当たらない |
 | `get_kyou` | 指定 ID の Kyou 1 件を返す |
 | `get_rep_name` | gkill 上のリポジトリ表示名を返す。応答の `rep_name` は manifest と同じ代表名。**`rep_names[]` を載せると、1本のプラグインが複数の rep 名（zip に固めた Git リポジトリごとの名前など）を名乗れる**（SDK は `Handler.RepNames`）。gkill はその名前を `get_all_rep_names`・`query.reps` の絞り込み・本文取得の引き当て・MCP の `get_rep_infos.plugins[]` / `get_plugin_list.rep_names` に使い、**TTL 60 秒**でキャッシュする（rep 名の列挙のたびに送る）。null（欄なし）は「未対応 → manifest の1つ」、`[]` は「いまは0個」で意味が違う。失敗しても前回値か manifest 名にフォールバックしてエラーにしない（[ADR-0308](../adr/0308-plugin-multiple-rep-names.md)） |
 | `get_content_html` | 指定 ID の Kyou のコンテンツ HTML を返す |
@@ -293,7 +294,7 @@ stdout の読み取りは**プロセスごとに常駐する1本の goroutine**�
 | レスポンスの突き合わせ | `resp.ID` と `req.ID` を照合し、不一致なら読み捨てる | 打ち切った呼び出しの応答が遅れて届いても、別の記録の中身を返さないようにする |
 | stdout の読み取り | プロセスごとに常駐リーダー1本 | `bufio.Scanner` を複数 goroutine で共有しない。打ち切りのたびに goroutine が増えない |
 | クラッシュ復旧 | 失敗時に回収 → `ensureStarted()` → 再送信を1回リトライ。ただし**打ち切り時はリトライしない** | プロセスが予期せず終了した場合の自動復旧。打ち切りの再試行で待ち時間が倍増するのを避ける |
-| Scanner バッファ | 親 32MB / SDK 1MB | 大きなHTMLレスポンスで `bufio.Scanner: token too long` を防ぐ（親側のみ拡張） |
+| Scanner バッファ | 親 32MB / SDK 16MB | 親は大きなHTMLレスポンスで `bufio.Scanner: token too long` を防ぐ。SDK は `find_query` の `ids` に備える |
 
 実装: `src/server/gkill/dao/reps/plugin_repository_impl.go`
 

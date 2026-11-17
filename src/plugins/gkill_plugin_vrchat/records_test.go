@@ -67,7 +67,7 @@ func TestBuildRecordsNormalSession(t *testing.T) {
 	got := []span{}
 	for _, p := range players {
 		got = append(got, span{p.Title, p.Start.Format(logTimeLayout), p.End.Format(logTimeLayout)})
-		if !slices.Equal(p.Tags, []string{tagPlayer}) {
+		if !slices.Equal(p.Tags, []string{tagRoom}) {
 			t.Errorf("人のタグ = %v", p.Tags)
 		}
 	}

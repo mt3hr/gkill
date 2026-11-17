@@ -71,7 +71,7 @@ func TestBuildCacheBuildsSynchronously(t *testing.T) {
 	if err := newHandler(pluginDir).BuildCache(context.Background(), cfg); err != nil {
 		t.Fatalf("BuildCache: %v", err)
 	}
-	metrics, err := c.QueryDailyMetrics(pluginDir, configOf(pluginDir, cfg), nil, nil, 0)
+	metrics, err := c.QueryDailyMetrics(pluginDir, configOf(pluginDir, cfg), nil, nil, 0, nil)
 	if err != nil {
 		t.Fatalf("QueryDailyMetrics: %v", err)
 	}

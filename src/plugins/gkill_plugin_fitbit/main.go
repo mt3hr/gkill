@@ -73,7 +73,7 @@ func newHandler(pluginDir string) sdk.Handler {
 			if matcher.HasWords() {
 				sqlLimit = 0
 			}
-			metrics, err := globalCache.QueryDailyMetrics(pluginDir, config, startUnix, endUnix, sqlLimit)
+			metrics, err := globalCache.QueryDailyMetrics(pluginDir, config, startUnix, endUnix, sqlLimit, q.IDs)
 			if err != nil {
 				// 構築中や読めないときは空を返す。検索全体を落とさない
 				sdk.LogError("gkill_plugin_fitbit: find_kyous: %v", err)

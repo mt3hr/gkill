@@ -18,15 +18,17 @@ const (
 // Kyou ごとの data_type。MCP は kmemo と urlog を完全一致で見るので、接頭辞ではなく正確な値にする。
 const (
 	dataTypeTimeIs = "timeis_start"
-	dataTypeURLog  = "urlog"
-	dataTypeKmemo  = "kmemo"
+	// dataTypeTimeIsEnd は TimeIs の終了の Kyou。Query.IncludeEndTimeIs のときだけ返す（native と同じ。ADR-0318）。
+	dataTypeTimeIsEnd = "timeis_end"
+	dataTypeURLog     = "urlog"
+	dataTypeKmemo     = "kmemo"
 )
 
 // 記録に付けるタグ。
 const (
-	tagWorld  = "VRChat_world"
-	tagPlayer = "VRChat_同部屋"
-	tagEvent  = "VRChat_event"
+	tagWorld = "VRChat_world"
+	tagRoom  = "VRChat_room"
+	tagEvent = "VRChat_event"
 )
 
 // 記録の種類。Kyou ID の材料にも使うので、値を変えると全 Kyou の ID が変わる。

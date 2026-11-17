@@ -3,6 +3,8 @@ package gkill_plugin
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 )
 
 // PluginRequest はgkill本体からプラグインプロセスに送るリクエスト（改行区切りJSON）。
@@ -48,11 +50,15 @@ type PluginGPSLogQuery struct {
 	Limit int `json:"limit"`
 }
 
-// PluginQuery はプラグインへの検索条件。FindQueryのサブセット。
+// PluginQuery はプラグインへの検索条件。
 //
-// ワード条件（Words / NotWords / WordsAnd）の判定はプラグインの責任。gkill 本体は本文を持たないので、
+// Words〜Limit の欄は FindQuery のサブセットで、古い SDK で作ったプラグインのために残してある。
+// gkill が受けた検索条件の全体は FindQuery で渡す（ADR-0318）。プラグインはそれを見て
+// IncludeEndTimeIs（TimeIs の終了の Kyou）や IDs・Reps（読む量を減らす）を判断してよい。
+//
+// ワード条件（Words / NotWords / WordsAnd / WordsSkipIDMatch）の判定はプラグインの責任。gkill 本体は本文を持たないので、
 // 返ってきた Kyou のワードを再判定しない（plugin_repository_impl.go の pluginKyouMatchesQuery は
-// Calendar と IDs しか見ない）。規則は本体の各リポジトリと同じで、SDK の sdk.Query.MatchText が
+// Calendar・IDs・IncludeEndTimeIs しか見ない）。規則は本体の各リポジトリと同じで、SDK の sdk.Query.MatchText が
 // 同じ実装（api/find_word）を提供する。プラグインはそれを使い、自前のループを書かないこと。
 type PluginQuery struct {
 	// Words は全文検索キーワード（AND/OR はWordsAndで制御）。
@@ -89,6 +95,21 @@ type PluginQuery struct {
 
 	// Limit は返す最大件数。0 は無制限。
 	Limit int `json:"limit"`
+
+	// WordsSkipIDMatch は true のとき、肯定語（Words）で Kyou の ID の前方一致を見ない。
+	// gkill が除外語を肯定語として引き直すとき（find_filter.go の excludeQuery）に立つ。
+	// FindQuery では json:"-" の内部用の欄なので、ここで明示的に運ぶ。
+	WordsSkipIDMatch bool `json:"words_skip_id_match,omitempty"`
+
+	// FindQuery は gkill が受けた検索条件の全体（ADR-0318）。読むだけにすること。
+	//
+	// 古い gkill からは来ない（nil）。上の欄と同じ条件も入っているが、プラグインは上の欄を正としてよい。
+	// IDs / Reps の「nil は指定なし・[] は0件」は JSON の null / [] でそのまま届く。
+	// gkill は IDs・期間・IncludeEndTimeIs を返ってきた Kyou に対しても必ず絞り直すので、
+	// プラグインがこれを見ないで全件返しても結果は変わらない（読む量が増えるだけ）。
+	// 型別索引を作る問い合わせ（plugin_repository_impl.go の indexFetchAll）は、
+	// IncludeEndTimeIs だけを立てた絞り込みなしの FindQuery を送る。
+	FindQuery *find.FindQuery `json:"find_query,omitempty"`
 }
 
 // PluginResponse はプラグインプロセスからgkill本体に返すレスポンス（改行区切りJSON）。
@@ -241,7 +262,10 @@ type PluginTypedData struct {
 	// Lantana は気分値。data_typeは"lantana"にすること。
 	Lantana *PluginLantana `json:"lantana,omitempty"`
 
-	// TimeIs は時間計測。data_typeは"timeis_start"（終了行を出すなら"timeis_end"）にすること。
+	// TimeIs は時間計測。data_typeは"timeis_start"にすること。
+	// 終了した TimeIs は、FindQuery.IncludeEndTimeIs が true のときだけ、同じ ID・同じ TimeIs で
+	// data_type "timeis_end"・related_time を終了時刻にした Kyou も返す（native の TimeIs と同じ。ADR-0318）。
+	// 頼まれていない timeis_end は gkill 側で落とす。
 	TimeIs *PluginTimeIs `json:"timeis,omitempty"`
 
 	// Mi はタスク。data_typeは"mi_create"/"mi_check"/"mi_limit"/"mi_start"/"mi_end"のいずれかにすること。

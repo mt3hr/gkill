@@ -30,7 +30,12 @@ type kyouRow struct {
 //     (検索用テキストは1件で最大512KBあるので、要らないときに読むと丸損)
 //   - 真なら LIMIT を押し込まない。単語で絞る前に切ると、
 //     後段のフィルタで落ちたぶん取りこぼす
-func (c *cache) QueryKyous(pluginDir string, start, end *time.Time, limit int, hasWordFilter bool) ([]kyouRow, error) {
+//
+// ids は gkill の FindQuery.IDs（ADR-0318）。nil は指定なし、[] は0件。
+func (c *cache) QueryKyous(pluginDir string, start, end *time.Time, limit int, hasWordFilter bool, ids []string) ([]kyouRow, error) {
+	if ids != nil && len(ids) == 0 {
+		return nil, nil
+	}
 	if err := c.openDB(pluginDir); err != nil {
 		return nil, err
 	}
@@ -53,6 +58,12 @@ FROM kyou_cache WHERE 1 = 1`
 	if end != nil {
 		query += ` AND related_unix <= ?`
 		args = append(args, end.Unix())
+	}
+	if ids != nil {
+		query += ` AND kyou_id IN (` + inPlaceholders(len(ids)) + `)`
+		for _, id := range ids {
+			args = append(args, id)
+		}
 	}
 	query += ` ORDER BY related_unix DESC`
 	if !hasWordFilter && limit > 0 {
@@ -194,4 +205,9 @@ func atoiOrZero(s string) int {
 		return 0
 	}
 	return value
+}
+
+// inPlaceholders は SQL の IN 句の "?, ?, ?" を n 個ぶん作る。
+func inPlaceholders(n int) string {
+	return strings.TrimSuffix(strings.Repeat("?, ", n), ", ")
 }

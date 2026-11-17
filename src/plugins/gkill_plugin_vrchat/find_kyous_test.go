@@ -47,7 +47,7 @@ func TestKyouOfSetsTypedDataPerKind(t *testing.T) {
 		dataType string
 	}{
 		{recordRow{ID: "a", Kind: kindWorldTimeIs, Title: "WorldAlpha", StartUnix: 1000, EndUnix: 2000, RelatedUnix: 1000, UpdateUnix: 2000, Tags: tagWorld}, dataTypeTimeIs},
-		{recordRow{ID: "b", Kind: kindPlayer, Title: "UserB", StartUnix: 1000, EndUnix: 2000, RelatedUnix: 1000, UpdateUnix: 2000, Tags: tagPlayer}, dataTypeTimeIs},
+		{recordRow{ID: "b", Kind: kindPlayer, Title: "UserB", StartUnix: 1000, EndUnix: 2000, RelatedUnix: 1000, UpdateUnix: 2000, Tags: tagRoom}, dataTypeTimeIs},
 		{recordRow{ID: "c", Kind: kindWorldURLog, Title: "WorldAlpha", URL: "https://example.com/", StartUnix: 1000, RelatedUnix: 1000, Tags: tagWorld}, dataTypeURLog},
 		{recordRow{ID: "d", Kind: kindEvent, Content: "動画: x", StartUnix: 1000, RelatedUnix: 1000, Tags: tagEvent}, dataTypeKmemo},
 	}
