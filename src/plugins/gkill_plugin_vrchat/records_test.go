@@ -91,12 +91,31 @@ func TestBuildRecordsNormalSession(t *testing.T) {
 			t.Errorf("出来事のタグ = %v", e.Tags)
 		}
 	}
-	wantContents := []string{"アバター変更: AvatarOne", "動画: https://example.com/video1"}
+	wantContents := []string{"アバター変更: AvatarOne"}
 	if !slices.Equal(contents, wantContents) {
-		t.Errorf("出来事 = %v, want %v（他人のアバターは入らず、続けて同じ動画は1件）", contents, wantContents)
+		t.Errorf("アバターの切り替え = %v, want %v（他人のアバターは入らない）", contents, wantContents)
 	}
 	if !strings.Contains(events[0].SearchText, "WorldAlpha") {
 		t.Errorf("出来事の検索用テキストにワールド名が無い: %q", events[0].SearchText)
+	}
+
+	// 動画は URLog。続けて同じ URL は1件、タイトルと説明に再生したワールド。
+	videos := recordsOfKind(records, kindVideo)
+	if len(videos) != 1 {
+		t.Fatalf("動画 = %d件, want 1（続けて同じ動画は1件）", len(videos))
+	}
+	video := videos[0]
+	if kindDataType(video.Kind) != dataTypeURLog || video.URL != "https://example.com/video1" {
+		t.Errorf("動画の型・URL = %s %q", kindDataType(video.Kind), video.URL)
+	}
+	if !strings.HasPrefix(video.Title, videoTitle+"（") || !strings.Contains(video.Description, "再生したワールド: ") {
+		t.Errorf("動画のタイトル・説明 = %q %q", video.Title, video.Description)
+	}
+	if !slices.Equal(video.Tags, []string{tagEvent}) || !strings.Contains(video.SearchText, video.URL) {
+		t.Errorf("動画のタグ・検索用テキスト = %v %q", video.Tags, video.SearchText)
+	}
+	if video.ID == events[0].ID {
+		t.Error("動画とアバターの切り替えの ID が重なった")
 	}
 }
 

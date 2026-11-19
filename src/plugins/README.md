@@ -151,7 +151,7 @@ plugins/
 | [`gkill_plugin_fitbit`](gkill_plugin_fitbit/README.md) | `kc` | Google Takeout の Fitbit / Google Health を日別集計し、数値記録として返す（推移グラフで集計できる） |
 | [`gkill_plugin_google_locationhistory`](gkill_plugin_google_locationhistory/README.md) | `google_location_visit` | Google Takeout のロケーション履歴を位置情報ログとして読み込む（記録は作らない） |
 | [`gkill_plugin_archived_git_commit_log`](gkill_plugin_archived_git_commit_log/README.md) | `git_commit_log` | zip に固めて保管した Git リポジトリのコミットログを、稼働中の Git リポジトリと同じ形（rep 名はリポジトリ名・ID はコミットハッシュ）で返す。zip は展開しない |
-| [`gkill_plugin_vrchat`](gkill_plugin_vrchat/README.md) | `timeis_start`（代表。各記録は `timeis_start` / `urlog` / `kmemo`） | VRChat の出力ログから、ワールドの滞在（TimeIs と URLog）・同じ部屋にいた人（TimeIs）・自分のアバターの切り替えと動画の URL（Kmemo）を返す。1本で複数の型別の種類を返す最初のプラグイン（gkill 1.1.12 以降） |
+| [`gkill_plugin_vrchat`](gkill_plugin_vrchat/README.md) | `timeis_start`（代表。各記録は `timeis_start` / `urlog` / `kmemo`） | VRChat の出力ログから、ワールドの滞在（TimeIs と URLog）・同じ部屋にいた人（TimeIs）・自分のアバターの切り替え（Kmemo）・動画の URL（URLog）を返す。1本で複数の型別の種類を返す最初のプラグイン（gkill 1.1.12 以降） |
 
 ---
 

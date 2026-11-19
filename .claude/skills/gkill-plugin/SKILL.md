@@ -107,7 +107,7 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              returns several typed kinds from one binary (ADR-0317, gkill
               #                              1.1.12+): world stays as TimeIs + one URLog per stay (launch page
               #                              `vrchat.com/home/launch?worldId=…`), people in the same room as
-              #                              TimeIs, own avatar switches / video-player URLs as Kmemo; tags
+              #                              TimeIs, own avatar switches as Kmemo, video-player URLs as URLog; tags
               #                              VRChat_world / VRChat_room / VRChat_event. No GetContentHTML —
               #                              typed views draw natively. One file = one launch; the launch key
               #                              is the time of the file's first timestamped line, so a synced copy

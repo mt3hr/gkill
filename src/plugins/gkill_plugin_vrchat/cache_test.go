@@ -60,7 +60,7 @@ func countRows(t *testing.T, c *cache, query string, args ...any) int {
 }
 
 // recordCountOf は2つのフィクスチャから作られる記録の数（テストデータ由来の期待値）。
-// 正常終了: ワールド2・URLog2・人4・出来事2 = 10 / 落ちた: ワールド1・URLog1・人1 = 3
+// 正常終了: ワールド2・URLog2・人4・アバター1・動画1 = 10 / 落ちた: ワールド1・URLog1・人1 = 3
 const recordCountOfFixtures = 13
 
 func TestBuildFromScratch(t *testing.T) {
@@ -79,7 +79,7 @@ func TestBuildFromScratch(t *testing.T) {
 		t.Errorf("record = %d, want %d", got, recordCountOfFixtures)
 	}
 	stats := c.Stats(pluginDir)
-	if stats.SessionCount != 2 || stats.WorldCount != 3 || stats.PlayerCount != 5 || stats.EventCount != 2 {
+	if stats.SessionCount != 2 || stats.WorldCount != 3 || stats.PlayerCount != 5 || stats.EventCount != 1 || stats.VideoCount != 1 {
 		t.Errorf("stats = %+v", stats)
 	}
 	if stats.BuildState != "idle" {

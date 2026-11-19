@@ -36,13 +36,16 @@ const (
 	kindWorldTimeIs = "world_timeis"
 	kindWorldURLog  = "world_urlog"
 	kindPlayer      = "player"
-	kindEvent       = "event"
+	// kindEvent は自分のアバターの切り替え（Kmemo）。
+	kindEvent = "event"
+	// kindVideo は動画プレイヤーが再生した URL（URLog）。
+	kindVideo = "video"
 )
 
 // kindDataType は記録の種類から Kyou の data_type を決める。
 func kindDataType(kind string) string {
 	switch kind {
-	case kindWorldURLog:
+	case kindWorldURLog, kindVideo:
 		return dataTypeURLog
 	case kindEvent:
 		return dataTypeKmemo

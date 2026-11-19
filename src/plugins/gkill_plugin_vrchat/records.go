@@ -10,6 +10,9 @@ import (
 // unknownWorldTitle は Entering Room の行にワールド名が無かったときのタイトル。
 const unknownWorldTitle = "（名前の分からないワールド）"
 
+// videoTitle は動画の URLog のタイトル。滞在中ならワールド名を添える。
+const videoTitle = "動画"
+
 // stay は開いているワールドの滞在。
 type stay struct {
 	Ordinal  int
@@ -94,7 +97,7 @@ func (b *recordBuilder) run() {
 				}
 				b.current.lastVideoURL = event.Value
 			}
-			b.addEvent(event.Time, "動画: "+event.Value)
+			b.addVideo(event.Time, event.Value)
 		case evQuit:
 			b.closeStay(event.Time)
 			return
@@ -251,6 +254,36 @@ func (b *recordBuilder) addEvent(at time.Time, content string) {
 		Content:    content,
 		Tags:       []string{tagEvent},
 		SearchText: joinSearchText(content, worldName),
+	})
+}
+
+// addVideo は動画プレイヤーが再生した URL を URLog にする。タイトルは再生したワールドの名前から作る
+// （ログには動画の題名が無い）。
+//
+// 出来事の通し番号はアバターの切り替えと分け合う。分けると、動画を URLog にしたときに
+// アバターの切り替えの Kyou ID がずれる。
+func (b *recordBuilder) addVideo(at time.Time, videoURL string) {
+	b.eventCount++
+	worldName := ""
+	if b.current != nil {
+		worldName = b.current.Name
+	}
+	title := videoTitle
+	description := ""
+	if worldName != "" {
+		title = videoTitle + "（" + worldName + "）"
+		description = "再生したワールド: " + worldName
+	}
+	b.records = append(b.records, record{
+		ID:          b.idOf(kindVideo, strconv.Itoa(b.eventCount)),
+		SessionKey:  b.parsed.SessionKey,
+		Kind:        kindVideo,
+		Title:       title,
+		Start:       at,
+		URL:         videoURL,
+		Description: description,
+		Tags:        []string{tagEvent},
+		SearchText:  joinSearchText(videoURL, worldName),
 	})
 }
 

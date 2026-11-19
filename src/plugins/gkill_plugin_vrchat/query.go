@@ -159,6 +159,7 @@ type cacheStats struct {
 	WorldCount      int
 	PlayerCount     int
 	EventCount      int
+	VideoCount      int
 	RecordCount     int
 	TargetFileCount int
 	BuildState      string
@@ -193,6 +194,7 @@ func (c *cache) Stats(pluginDir string) cacheStats {
 	_ = db.QueryRow(`SELECT COUNT(*) FROM record WHERE kind = ?`, kindWorldTimeIs).Scan(&stats.WorldCount)
 	_ = db.QueryRow(`SELECT COUNT(*) FROM record WHERE kind = ?`, kindPlayer).Scan(&stats.PlayerCount)
 	_ = db.QueryRow(`SELECT COUNT(*) FROM record WHERE kind = ?`, kindEvent).Scan(&stats.EventCount)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM record WHERE kind = ?`, kindVideo).Scan(&stats.VideoCount)
 	_ = db.QueryRow(`SELECT COUNT(*) FROM record`).Scan(&stats.RecordCount)
 	_ = db.QueryRow(`SELECT COALESCE(SUM(dropped_lines), 0) FROM file_cache`).Scan(&stats.DroppedLines)
 

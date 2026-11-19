@@ -49,7 +49,8 @@ func TestKyouOfSetsTypedDataPerKind(t *testing.T) {
 		{recordRow{ID: "a", Kind: kindWorldTimeIs, Title: "WorldAlpha", StartUnix: 1000, EndUnix: 2000, RelatedUnix: 1000, UpdateUnix: 2000, Tags: tagWorld}, dataTypeTimeIs},
 		{recordRow{ID: "b", Kind: kindPlayer, Title: "UserB", StartUnix: 1000, EndUnix: 2000, RelatedUnix: 1000, UpdateUnix: 2000, Tags: tagRoom}, dataTypeTimeIs},
 		{recordRow{ID: "c", Kind: kindWorldURLog, Title: "WorldAlpha", URL: "https://example.com/", StartUnix: 1000, RelatedUnix: 1000, Tags: tagWorld}, dataTypeURLog},
-		{recordRow{ID: "d", Kind: kindEvent, Content: "動画: x", StartUnix: 1000, RelatedUnix: 1000, Tags: tagEvent}, dataTypeKmemo},
+		{recordRow{ID: "d", Kind: kindEvent, Content: "アバター変更: x", StartUnix: 1000, RelatedUnix: 1000, Tags: tagEvent}, dataTypeKmemo},
+		{recordRow{ID: "e", Kind: kindVideo, Title: "動画（WorldAlpha）", URL: "https://example.com/", StartUnix: 1000, RelatedUnix: 1000, Tags: tagEvent}, dataTypeURLog},
 	}
 	for _, c := range cases {
 		kyou := kyouOf(c.row)
@@ -73,7 +74,7 @@ func TestKyouOfSetsTypedDataPerKind(t *testing.T) {
 				t.Errorf("%s: URLog = %+v", c.row.ID, typed)
 			}
 		case dataTypeKmemo:
-			if typed == nil || typed.Kmemo == nil || typed.Kmemo.Content != "動画: x" {
+			if typed == nil || typed.Kmemo == nil || typed.Kmemo.Content != "アバター変更: x" {
 				t.Errorf("%s: Kmemo = %+v", c.row.ID, typed)
 			}
 		}
