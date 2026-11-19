@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"regexp"
@@ -13,10 +14,30 @@ import (
 // logTimeLayout は出力ログの各行の先頭の時刻。タイムゾーンを持たないローカル時刻。
 const logTimeLayout = "2006.01.02 15:04:05"
 
+// logLocationOverride はテストが固定のゾーンへ差し替えるためのもの。nil なら time.Local。
+var logLocationOverride *time.Location
+
 // logLocation はログの時刻を読むときのタイムゾーン。
-// VRChat は動いている PC のローカル時刻で書くので、このプラグインが動く PC のローカル時刻で読む。
-// テストが固定のゾーンへ差し替える。
-var logLocation = time.Local
+// VRChat はゾーンの付かないローカル時刻で書くので、このプラグインが動く端末のゾーン（time.Local）で読む。
+// VRChat を遊ぶ PC と、運んだログを読む端末（Termux など）は同じゾーンにある前提。
+//
+// time.Local は**呼ぶたびに**読む。パッケージ変数に写すと、Android では SDK が端末のゾーンへ直す前の
+// UTC のまま残り、Termux で読んだ時刻が9時間（日本の場合）ずれる（ADR-0319）。
+func logLocation() *time.Location {
+	if logLocationOverride != nil {
+		return logLocationOverride
+	}
+	return time.Local
+}
+
+// logLocationKey はキャッシュを作ったときのゾーンを表す値。ゾーンが変わったらキャッシュを作り直す
+// （キャッシュは UNIX 秒で持つので、読んだゾーンが違うと全部の時刻がずれたまま残る）。
+// ゾーン名だけだと Windows では常に "Local" なので、2000年1月1日時点のオフセットも添える。
+func logLocationKey() string {
+	location := logLocation()
+	_, offset := time.Date(2000, 1, 1, 0, 0, 0, 0, location).Zone()
+	return fmt.Sprintf("%s@%d", location.String(), offset)
+}
 
 // maxLineBytes は1行として読む上限。VRChat のログには JSON を丸ごと出す長い行があるが、
 // 拾う行はどれも短いので、超えたぶんは読み捨てる（読み捨てた行の数は数えて設定画面に出す）。
@@ -142,7 +163,7 @@ func parseLine(parsed *parsedLog, line string) {
 	if matched == nil {
 		return
 	}
-	at, err := time.ParseInLocation(logTimeLayout, matched[1], logLocation)
+	at, err := time.ParseInLocation(logTimeLayout, matched[1], logLocation())
 	if err != nil {
 		return
 	}

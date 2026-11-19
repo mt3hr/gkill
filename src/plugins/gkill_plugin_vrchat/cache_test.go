@@ -216,6 +216,54 @@ func TestSchemaVersionBumpRebuilds(t *testing.T) {
 	}
 }
 
+// ログを読むゾーンが変わったら（Termux で UTC のまま作ったキャッシュ、端末のゾーンの変更）作り直し、
+// 新しいゾーンで読んだ時刻になる（ADR-0319）。
+func TestLogLocationChangeRebuilds(t *testing.T) {
+	c, pluginDir := newTestCache(t)
+	dir := t.TempDir()
+	stageLog(t, dir, normalFixture(), "")
+	mustBuild(t, c, pluginDir, dir)
+	startUTC := countRows(t, c, `SELECT MIN(start_unix) FROM record`)
+
+	tokyo, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		t.Skipf("Asia/Tokyo を読めない環境: %v", err)
+	}
+	logLocationOverride = tokyo
+	t.Cleanup(func() { logLocationOverride = time.UTC })
+
+	_ = c.db.Close()
+	c.db = nil
+	if err := c.openDB(pluginDir); err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	if got := countRows(t, c, `SELECT COUNT(*) FROM file_cache`); got != 0 {
+		t.Errorf("ゾーンが変わったのに file_cache が残っている: %d", got)
+	}
+	mustBuild(t, c, pluginDir, dir)
+	if got := countRows(t, c, `SELECT MIN(start_unix) FROM record`); got != startUTC-9*3600 {
+		t.Errorf("Asia/Tokyo で読んだ最初の時刻 = %d, want UTC で読んだ値の9時間前 %d", got, startUTC-9*3600)
+	}
+}
+
+// logLocation は time.Local を呼ぶたびに読む。SDK が Android で time.Local を差し替えたあとも追随する（ADR-0319）。
+func TestLogLocationFollowsTimeLocal(t *testing.T) {
+	originalLocal := time.Local
+	logLocationOverride = nil
+	t.Cleanup(func() {
+		time.Local = originalLocal
+		logLocationOverride = time.UTC
+	})
+	tokyo, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		t.Skipf("Asia/Tokyo を読めない環境: %v", err)
+	}
+	time.Local = tokyo
+	if got := logLocation(); got != tokyo {
+		t.Errorf("logLocation() = %v, want time.Local を差し替えたあとのゾーン", got)
+	}
+}
+
 func TestQueryKyousLimitAndPeriod(t *testing.T) {
 	c, pluginDir := newTestCache(t)
 	dir := t.TempDir()

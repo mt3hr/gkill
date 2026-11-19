@@ -195,6 +195,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0316](0316-plugin-config-screens-render-through-sdk-configview.md) | 同梱プラグイン7本の設定画面 HTML は SDK の configview が1か所で描き、プラグインは文言と統計を渡すだけにする | Accepted |
 | [0317](0317-plugin-mixed-typed-kinds-and-playing-time.md) | 1本のプラグインが複数の型別の種類を返してよく、プラグインの TimeIs も playing_time で絞る | Accepted |
 | [0318](0318-pass-find-query-to-plugins.md) | プラグインへ検索条件の全体（FindQuery）を find_query で渡し、旧来の欄も残す | Accepted |
+| [0319](0319-plugin-sdk-fixes-android-local-timezone.md) | プラグイン SDK が Android で time.Local を端末のゾーンへ直す | Accepted |
 | [0401](0401-do-not-split-search-window-in-client.md) | クライアント側で検索を期間の窓へ刻んで複数回 get_kyous を投げない | Accepted |
 | [0402](0402-insert-registered-kyou-locally.md) | 記録の追加は列を再検索せず、その1件をクライアントで判定して差し込む | Accepted |
 | [0403](0403-add-tag-before-registered-kyou.md) | タグ欄付きの追加/編集画面は add_tag が完了してから registered_kyou を emit する | Accepted |

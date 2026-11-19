@@ -9,7 +9,7 @@ import (
 // TestMain はログの時刻を UTC で読むようにしてから走らせる。
 // ログの時刻はタイムゾーンを持たないので、テストの期待値を PC のゾーンに依らせないため。
 func TestMain(m *testing.M) {
-	logLocation = time.UTC
+	logLocationOverride = time.UTC
 	os.Exit(m.Run())
 }
 

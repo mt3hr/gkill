@@ -6,7 +6,7 @@ gkill プラグインシステムのサーバー側実装。プラグインプ�
 
 ```
 plugin/
-└── sdk/                # プラグイン作者向け Go SDK（17ファイル。うちテスト8）
+└── sdk/                # プラグイン作者向け Go SDK（19ファイル。うちテスト9）
     ├── types.go        # 公開型定義（Query, Kyou, Config）。Query は gkill の検索条件の全体（FindQuery）と写し（IDs / Reps / IncludeEndTimeIs）も持つ。MatchID / IDMatcher / MatchRep
     ├── match_words.go  # Query.MatchText / Matcher — ワード判定（gkill 本体と同じ規則。本体は再判定しないので FindKyous で必ず通す）
     ├── handler.go      # Handler struct（プラグイン作者が実装するインターフェース）
@@ -18,6 +18,8 @@ plugin/
     ├── build_cache_test.go # 単独モード（runBuildCache）と同梱プラグインの BuildCache 配線の走査
     ├── match_words_test.go # Query.MatchText のテスト
     ├── find_query_test.go # find_query・words_skip_id_match の受け取りと MatchID / IDMatcher / MatchRep（ADR-0318）
+    ├── timezone.go     # Android で time.Local を端末のゾーンへ直す（Run の最初。ADR-0319）
+    ├── timezone_test.go # その差し替えと、直せないときに UTC のまま続けること
     ├── plugin_log_test.go # gkill_log へのログ（置き場・静的フィールド・stderr だけへの退避・stdout の清浄）
     ├── config_test.go  # EnsureConfig のテスト（4本）
     ├── chatview/       # 会話形式の Kyou 本文 HTML（AI チャット系4本が使う。ADR-0315）

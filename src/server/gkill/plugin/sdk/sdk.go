@@ -114,6 +114,9 @@ func Run(h Handler) {
 	flag.Parse()
 
 	initLogging(*pluginDir, *userID)
+	// Android（Termux）では time.Local が UTC のままなので、ハンドラを呼ぶ前に端末のゾーンへ直す（ADR-0319）。
+	// ログの初期化より後にしているのは、直せなかったときの警告をログに残すため。
+	fixAndroidTimezone()
 
 	// プロトコルバージョン確認（将来の互換性のため）
 	if *protocolVersion != "1" {

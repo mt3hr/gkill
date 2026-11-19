@@ -79,9 +79,11 @@ func initSchema(db *sql.DB) error {
 		return fmt.Errorf("error at create cache_meta: %w", err)
 	}
 
-	version := ""
+	version, location := "", ""
 	_ = db.QueryRow(`SELECT value FROM cache_meta WHERE key = 'schema_version'`).Scan(&version)
-	if version != cacheSchemaVersion {
+	_ = db.QueryRow(`SELECT value FROM cache_meta WHERE key = 'log_location'`).Scan(&location)
+	// 版が違うか、前回と違うゾーンでログを読んだキャッシュなら作り直す（ADR-0319）。
+	if version != cacheSchemaVersion || location != logLocationKey() {
 		for _, statement := range []string{
 			`DROP TABLE IF EXISTS record`,
 			`DROP TABLE IF EXISTS file_cache`,
@@ -128,8 +130,8 @@ func initSchema(db *sql.DB) error {
 	}
 
 	if _, err := db.Exec(
-		`INSERT OR REPLACE INTO cache_meta (key, value) VALUES ('schema_version', ?)`,
-		cacheSchemaVersion,
+		`INSERT OR REPLACE INTO cache_meta (key, value) VALUES ('schema_version', ?), ('log_location', ?)`,
+		cacheSchemaVersion, logLocationKey(),
 	); err != nil {
 		return fmt.Errorf("error at store schema_version: %w", err)
 	}

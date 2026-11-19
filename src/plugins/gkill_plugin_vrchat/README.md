@@ -104,6 +104,14 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_vrchat/
   1件の TimeIs から Kyou が2つできうるので、LIMIT は新しい順に並べてから掛ける。終了の Kyou は ID・型別データ・タグ・版が開始と同じ。
 - `ids`: 指定の ID の行だけを読む（キャッシュの SQL に `IN` を足す）。
 
+### 時刻のタイムゾーン
+
+ログの時刻はゾーンの無いローカル時刻なので、このプラグインが動く端末のゾーン（`time.Local`）で読む。
+VRChat を遊ぶ PC と、運んだログを読む端末（Termux など）は同じゾーンにある前提。
+Android では Go の `time.Local` が UTC のままなので、SDK が起動時に端末のゾーンへ直す（gkill 1.1.12 の SDK から。
+それより前は Termux で端末のゾーンの分だけ時刻がずれた）。キャッシュは読んだゾーンを覚えていて、ゾーンが変わったら作り直す
+（[ADR-0319](../../../documents/adr/0319-plugin-sdk-fixes-android-local-timezone.md)）。
+
 ### Kyou の ID
 
 `uuidV5(固定の名前空間, gkill_plugin_vrchat|<起動キー>|<種類>|<…>)`。起動キーはファイルの最初の時刻付きの行の時刻で、
