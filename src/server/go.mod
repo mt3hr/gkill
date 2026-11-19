@@ -3,7 +3,7 @@ module github.com/mt3hr/gkill/src/server
 go 1.26.11
 
 require (
-	github.com/PuerkitoBio/goquery v1.13.0
+	github.com/PuerkitoBio/goquery v1.14.0
 	github.com/SherClockHolmes/webpush-go v1.4.0
 	github.com/asticode/go-astikit v0.59.0
 	github.com/asticode/go-astilectron v0.30.0
