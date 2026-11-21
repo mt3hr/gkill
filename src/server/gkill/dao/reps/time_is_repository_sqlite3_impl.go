@@ -35,7 +35,7 @@ type timeIsRepositorySQLite3Impl struct {
 }
 
 func NewTimeIsRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (TimeIsRepository, error) {
-	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
+	db, err := sqlite3impl.OpenRepositoryDBConnection(ctx, filename, fullConnect)
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err

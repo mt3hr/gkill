@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
@@ -33,6 +34,16 @@ func localRepCacheNeedsCopy(originalDBFileName string, localCacheDBFileName stri
 		return true
 	}
 	return !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
+}
+
+// requireLocalRepCacheOriginal は元DBファイルがあることを確かめます。
+//
+// *_local_cached.go の UpdateCache は localRepCacheNeedsCopy が true のとき
+// 「閉じる → 消す → コピーし直す → 開き直す」へ進みますが、元ファイルが消えていると
+// コピーで失敗し、ローカルキャッシュを閉じて消したまま残ります。閉じて消す前にここで止めます。
+// documents/adr/0223-never-recreate-a-missing-rep-db.md
+func requireLocalRepCacheOriginal(originalDBFileName string) error {
+	return sqlite3impl.RequireDBFile(originalDBFileName)
 }
 
 // copyLocalRepCacheDB は元DBファイルをローカルキャッシュへコピーします。

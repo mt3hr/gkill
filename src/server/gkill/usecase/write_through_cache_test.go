@@ -78,7 +78,8 @@ func newWriteThroughTagRepositories(t *testing.T, withCache bool) (*reps.GkillRe
 // 検査を通すために実体を1件用意する。
 func newWriteThroughTargetKyou(t *testing.T, repositories *reps.GkillRepositories, targetID string) {
 	t.Helper()
-	kmemoRep, err := reps.NewKmemoRepositorySQLite3Impl(context.Background(), filepath.Join(t.TempDir(), "target_kmemo.db"), false)
+	// 新しいファイルに書くので書き込み rep として開く（読むだけの rep は無いファイルを作らない。ADR-0223）
+	kmemoRep, err := reps.NewKmemoRepositorySQLite3Impl(context.Background(), filepath.Join(t.TempDir(), "target_kmemo.db"), true)
 	if err != nil {
 		t.Fatalf("failed to create kmemo repo: %v", err)
 	}

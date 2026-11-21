@@ -308,7 +308,13 @@ func (g *GkillRepositories) writeStagedTxAtomically(ctx context.Context, txID st
 		schema := fmt.Sprintf("w%d", i+1)
 		// rep 自身が開くときと同じ "file:" + パスで ATTACH する（URI 処理は接続単位で有効になっているため、
 		// 素のパスで渡すと '?' や '#' を含むパスで意味が変わる）。
-		if _, err := conn.ExecContext(ctx, "ATTACH DATABASE ? AS "+schema, "file:"+target.path); err != nil {
+		// 書き込み rep のファイルは読み込み時に作ってあるので、ここでは作らない（mode=rw）。
+		// 起動後に消えていたら、空のDBを ATTACH して書いたことにせず、エラーで止める
+		// （documents/adr/0223-never-recreate-a-missing-rep-db.md）。
+		if err := sqlite3impl.RequireDBFile(target.path); err != nil {
+			return fmt.Errorf("commit tx: attach %s (%s): %w", target.dataType, schema, err)
+		}
+		if _, err := conn.ExecContext(ctx, "ATTACH DATABASE ? AS "+schema, "file:"+target.path+"?mode=rw"); err != nil {
 			return fmt.Errorf("commit tx: attach %s (%s): %w", target.dataType, schema, err)
 		}
 		// main は DSN の _pragma で DELETE + FULL になっているが、ATTACH した側には効かないので明示する。

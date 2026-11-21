@@ -34,7 +34,7 @@ type miRepositorySQLite3Impl struct {
 }
 
 func NewMiRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (MiRepository, error) {
-	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
+	db, err := sqlite3impl.OpenRepositoryDBConnection(ctx, filename, fullConnect)
 	if err != nil {
 		return nil, err
 	}

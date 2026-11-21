@@ -25,6 +25,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/share_kyou_info"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/skills"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
@@ -717,11 +718,17 @@ func repNameFromDefine(repType string, filename string) string {
 // 次に壊れた種別でまた同じ判断を書くことになる。
 // 経緯と却下案: documents/adr/0216-detach-a-broken-rep-but-never-silently.md
 func (g *GkillDAOManager) loadRepIntoRepositories(ctx context.Context, repositories *reps.GkillRepositories, userID string, device string, rep *user_config.Repository, filename string) error {
-	parentDir := filepath.Dir(filename)
-	err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
-	if err != nil {
-		err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
-		return err
+	var err error
+	// 親ディレクトリを作るのは書き込み rep だけ。読むだけの rep のファイルは端末同期で運ばれてくるもので、
+	// gkill が置き場を作ったり空のDBを作ったりしない（無ければコンストラクタがエラーにし、上で切り離される）。
+	// documents/adr/0223-never-recreate-a-missing-rep-db.md
+	if rep.UseToWrite {
+		parentDir := filepath.Dir(filename)
+		err = os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
+		if err != nil {
+			err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
+			return err
+		}
 	}
 
 	switch rep.Type {
@@ -1250,13 +1257,21 @@ func (g *GkillDAOManager) loadRepIntoRepositories(ctx context.Context, repositor
 	case "directory":
 		autoIDF := rep.IsExecuteIDFWhenReload
 		parentDir := filepath.Join(filename, ".gkill")
-		err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
-		if err != nil {
-			err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
-			return err
-		}
-		hide_files.HideFolder(parentDir)
 		idDBFilename := filepath.Join(parentDir, "gkill_id.db")
+		// 読むだけのディレクトリ rep は、対象ディレクトリも .gkill/gkill_id.db も作らない。
+		// 作ると、消えたディレクトリが空のID表つきで復活し、同期で全保存側のID表を上書きする
+		// （IDが振り直されると、そのファイルに付いたタグやテキストが宙に浮く）。
+		// documents/adr/0223-never-recreate-a-missing-rep-db.md
+		if rep.UseToWrite {
+			err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
+			if err != nil {
+				err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
+				return err
+			}
+			hide_files.HideFolder(parentDir)
+		} else if err := sqlite3impl.RequireDBFile(os.ExpandEnv(idDBFilename)); err != nil {
+			return fmt.Errorf("error at load directory rep %s: %w", filename, err)
+		}
 
 		var idfKyouRep reps.IDFKyouRepository
 		if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {

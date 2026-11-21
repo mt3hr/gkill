@@ -76,7 +76,7 @@ type fileinfo struct {
 func NewIDFDirRep(ctx context.Context, userID string, dir, dbFilename string, fullConnect bool, r *mux.Router, autoIDF bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
 	filename := dbFilename
 
-	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
+	db, err := sqlite3impl.OpenRepositoryDBConnection(ctx, filename, fullConnect)
 	if err != nil {
 		return nil, err
 	}

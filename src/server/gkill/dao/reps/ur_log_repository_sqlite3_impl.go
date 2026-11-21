@@ -34,7 +34,7 @@ type urlogRepositorySQLite3Impl struct {
 }
 
 func NewURLogRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (URLogRepository, error) {
-	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
+	db, err := sqlite3impl.OpenRepositoryDBConnection(ctx, filename, fullConnect)
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err

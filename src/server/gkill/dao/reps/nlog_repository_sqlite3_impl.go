@@ -36,7 +36,7 @@ type nlogRepositorySQLite3Impl struct {
 }
 
 func NewNlogRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (NlogRepository, error) {
-	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
+	db, err := sqlite3impl.OpenRepositoryDBConnection(ctx, filename, fullConnect)
 	if err != nil {
 		return nil, err
 	}

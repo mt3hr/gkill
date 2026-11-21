@@ -3,8 +3,10 @@ package sqlite3impl
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"runtime"
 	"strings"
 
@@ -111,8 +113,62 @@ type Preparer interface {
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
 }
 
+// openExistingMode と openOrCreateMode は SQLite の URI の mode。
+//
+// 既定（mode なし）は rwc で、ファイルが無ければ空のDBを作る。rep のファイルは端末同期で
+// 運ばれてくるもので、gkill が作ってよいのは書き込み rep を初めて置くときだけ。
+// 読むだけの rep のファイルが消えたあとで開き直して空のDBを作ると、その空のDBが
+// 「新しいファイル」として同期で全保存側の中身のある版を上書きする。
+// documents/adr/0223-never-recreate-a-missing-rep-db.md
+const (
+	openExistingMode = "&mode=rw"
+	openOrCreateMode = "&mode=rwc"
+)
+
+// RequireDBFile は filename が既にあることを確かめる。無ければ os.ErrNotExist を包んだエラーを返す。
+//
+// mode=rw だけでも SQLite は作らないが、エラーが「unable to open database file」になり、
+// 「ファイルが無い」のか「開けない」のかを呼び出し元が見分けられない。先に stat して
+// errors.Is(err, os.ErrNotExist) で判定できるようにする。
+func RequireDBFile(filename string) error {
+	if _, err := os.Stat(filename); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("database file %s does not exist. gkill does not recreate it: %w", filename, os.ErrNotExist)
+		}
+		return fmt.Errorf("error at stat database file %s: %w", filename, err)
+	}
+	return nil
+}
+
+// GetSQLiteDBConnection は既にある rep のDBファイルを開く。**ファイルが無ければ作らずにエラーを返す。**
+//
+// 読むだけの rep は呼ばれるたびにここで開き直すので、ここで作ると、利用者が消したファイルが
+// 次の検索やキャッシュ更新で空のDBとして復活する。新しく作ってよいのは
+// OpenRepositoryDBConnection(allowCreate=true) / CreateSQLiteDBConnection を通したときだけ。
 func GetSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", "file:"+filename+sqliteDataDSNParams)
+	if err := RequireDBFile(filename); err != nil {
+		return nil, err
+	}
+	return openSQLiteDBConnection(filename, openExistingMode)
+}
+
+// CreateSQLiteDBConnection は rep のDBファイルを開き、無ければ空のDBを作る。
+// 書き込み rep を初めて置くときと、gkill 自身が持つファイル（ローカルキャッシュ等）だけに使うこと。
+func CreateSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error) {
+	return openSQLiteDBConnection(filename, openOrCreateMode)
+}
+
+// OpenRepositoryDBConnection は rep のコンストラクタ用。allowCreate が true のときだけ無いファイルを作る。
+// rep のコンストラクタは fullConnect（= 書き込み rep）をそのまま渡す。
+func OpenRepositoryDBConnection(ctx context.Context, filename string, allowCreate bool) (*sql.DB, error) {
+	if allowCreate {
+		return CreateSQLiteDBConnection(ctx, filename)
+	}
+	return GetSQLiteDBConnection(ctx, filename)
+}
+
+func openSQLiteDBConnection(filename string, mode string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite", "file:"+filename+sqliteDataDSNParams+mode)
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -131,8 +187,14 @@ func GetSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error
 // ATTACH は接続単位の状態なので、プールから毎回違う接続が出てくる通常の *sql.DB では
 // 「ATTACH した接続」と「INSERT を打つ接続」がずれる。MaxOpenConns を 1 にしてそれを防ぐ。
 // 呼び出し側は使い終わったら Close すること（rep 自身の接続とは別物で、共有しない）。
+//
+// 書き込み rep のファイルは読み込み時に作ってあるので、ここでは作らない（GetSQLiteDBConnection と同じ）。
+// 起動後に消えていたら、空のDBへ書いて「書けたことにする」のではなくエラーにする。
 func OpenSQLiteDBConnectionForTx(ctx context.Context, filename string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", "file:"+filename+sqliteDataDSNParams+"&_txlock=immediate")
+	if err := RequireDBFile(filename); err != nil {
+		return nil, err
+	}
+	db, err := sql.Open("sqlite", "file:"+filename+sqliteDataDSNParams+openExistingMode+"&_txlock=immediate")
 	if err != nil {
 		err = fmt.Errorf("error at open database for tx %s: %w", filename, err)
 		return nil, err

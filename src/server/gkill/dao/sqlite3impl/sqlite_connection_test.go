@@ -24,16 +24,24 @@ import (
 
 func TestGetSQLiteDBConnection_AppliesExpectedPragmas(t *testing.T) {
 	ctx := context.Background()
-	db, err := GetSQLiteDBConnection(ctx, filepath.Join(t.TempDir(), "pragma.db"))
+	filename := filepath.Join(t.TempDir(), "pragma.db")
+
+	// GetSQLiteDBConnection は無いファイルを作らない（ADR-0223）ので、作る側で先に置く。
+	// PRAGMAはファイルが実在してから確定するものがあるので、表も1つ作っておく
+	created, err := CreateSQLiteDBConnection(ctx, filename)
+	if err != nil {
+		t.Fatalf("CreateSQLiteDBConnection: %v", err)
+	}
+	if _, err := created.ExecContext(ctx, `CREATE TABLE T(A)`); err != nil {
+		t.Fatalf("create table: %v", err)
+	}
+	_ = created.Close()
+
+	db, err := GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
 		t.Fatalf("GetSQLiteDBConnection: %v", err)
 	}
 	defer func() { _ = db.Close() }()
-
-	// PRAGMAはファイルが実在してから確定するものがあるので、先に1つ作る
-	if _, err := db.ExecContext(ctx, `CREATE TABLE T(A)`); err != nil {
-		t.Fatalf("create table: %v", err)
-	}
 
 	cases := []struct {
 		pragma string

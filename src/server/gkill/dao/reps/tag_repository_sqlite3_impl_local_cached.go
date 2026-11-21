@@ -171,6 +171,13 @@ func (t *tagRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) e
 		return nil
 	}
 
+	// 元DBが消えているなら、使えていたローカルキャッシュを閉じて消す前に止める。
+	// 先へ進むと、閉じて消したあとのコピーが失敗し、キャッシュのパスが空のDBとして開き直される
+	// （documents/adr/0223-never-recreate-a-missing-rep-db.md）。
+	if err := requireLocalRepCacheOriginal(t.originalDBFileName); err != nil {
+		return fmt.Errorf("error at update cache: %w", err)
+	}
+
 	err := t.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at update cache: %w", err)

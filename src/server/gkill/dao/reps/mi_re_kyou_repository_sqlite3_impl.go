@@ -34,7 +34,7 @@ type miReKyouRepositorySQLite3Impl struct {
 }
 
 func NewMiReKyouRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool, reps *GkillRepositories) (MiReKyouRepository, error) {
-	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
+	db, err := sqlite3impl.OpenRepositoryDBConnection(ctx, filename, fullConnect)
 	if err != nil {
 		return nil, err
 	}
