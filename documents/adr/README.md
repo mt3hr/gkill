@@ -272,6 +272,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0709](0709-api-route-table-single-source.md) | HTTP API のルート表は Go 側の1つの表を正本にし、OpenAPI からの生成は採らない | Accepted |
 | [0710](0710-error-kind-and-reason-on-the-wire.md) | `errors` / `messages` は成功時も `[]`、エラーには機械語の `error_kind` と `reason` を載せる | Accepted |
 | [0711](0711-user-html-runs-scripts-in-opaque-origin.md) | 利用者の HTML ファイルは opaque origin のままスクリプトだけ許す — `allow-same-origin` は付けず、別ポート配信もダウンロード強制も採らない | Accepted |
+| [0712](0712-export-delivery-is-base64-json.md) | 出力した HTML は JSON に載せて返し、ファイルそのものを body で返さない | Accepted |
 | [0801](0801-perf-judge-by-allocs-not-ns-op.md) | 性能判断は ns/op ではなく allocs/op・B/op・EXPLAIN QUERY PLAN で行う | Accepted |
 | [0802](0802-freeze-plaing-spelling.md) | 綴りは「永続に乗るか」で決める — plaing は凍結、agregate は改名して読み込み互換を残す | Superseded |
 | [0803](0803-verify-docs-checks-filenames.md) | 資料は件数だけでなく「資料に載っているファイル名の実在」も機械検査する | Accepted |

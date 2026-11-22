@@ -94,4 +94,6 @@ const (
 	DeleteSkillSuccessMessage = "MSG000093"
 	// DeleteKyouCascadeSuccessMessage は記録を連鎖して削除した（付随データと参照元を含めて全部消えた）ときのものです。
 	DeleteKyouCascadeSuccessMessage = "MSG000094"
+	// ExportRykvHTMLSuccessMessage は rykv の画面を HTML へ出力できたときのものです。
+	ExportRykvHTMLSuccessMessage = "MSG000095"
 )

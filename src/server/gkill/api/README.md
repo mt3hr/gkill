@@ -17,7 +17,7 @@ api/
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
 ├── *_test.go                    # 検索フィルタ・rep名絞り込みなどのテスト（15ファイル）
-├── gkill_server_api/            # HTTP ハンドラ（169ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（174ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・ルート表 apiRoutes() の全97ルートを登録
@@ -30,7 +30,7 @@ api/
 │   ├── web_push.go              # Web Push 通知
 │   ├── gkill_server_api_access_log.go # アクセスログ
 │   ├── gkill_server_api_rate_limit.go # レートリミット
-│   └── handle_*.go              # 各エンドポイントのハンドラ（121ファイル。うちテスト22）
+│   └── handle_*.go              # 各エンドポイントのハンドラ（123ファイル。うちテスト23）
 ├── find/                        # 検索クエリ型定義
 ├── find_word/                   # ワード検索の Go 側判定（本体とプラグイン SDK が共用。標準ライブラリのみ）
 ├── gkill_plugin/                # プラグイン通信プロトコル型
@@ -56,12 +56,12 @@ api/
 
 ## サブディレクトリ
 
-### `gkill_server_api/`（169ファイル）— HTTP ハンドラ
+### `gkill_server_api/`（174ファイル）— HTTP ハンドラ
 
 詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
 
-`GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全98エンドポイントを登録する。
-handle_*.go は121ファイル（実装99 + テスト22）で、1ハンドラ1ファイルとして分割されている。
+`GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全99エンドポイントを登録する。
+handle_*.go は123ファイル（実装100 + テスト23）で、1ハンドラ1ファイルとして分割されている。
 ビジネスロジックは `usecase/` 層に委譲し、ハンドラは HTTP リクエスト/レスポンスの変換に専念する。
 
 ### `find/`（10ファイル）— 検索クエリ型定義
@@ -112,8 +112,8 @@ handle_*.go は121ファイル（実装99 + テスト22）で、1ハンドラ1�
 | `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用。`EnsureNotEmpty`（エラー無し失敗の受け皿）もここ |
 | `gkill_error_test.go` | `EnsureNotEmpty` のテスト |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
-| `error_codes.go` | エラーコード定数（410定数、ERR000001〜ERR000451・欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの。ADR-0709） |
-| `message_codes.go` | メッセージコード定数（87定数、MSG000001〜MSG000093・欠番7） |
+| `error_codes.go` | エラーコード定数（415定数、ERR000001〜ERR000456・欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの。ADR-0709） |
+| `message_codes.go` | メッセージコード定数（88定数、MSG000001〜MSG000093・欠番7） |
 | `http_status.go` | エラーコード → HTTP ステータス対応表（`HTTPStatusOf` / `HTTPStatusForErrors`） |
 | `http_status_test.go` | 全エラーコードが対応表に載っていることのソース走査テスト |
 | `message_test.go` | コード形式テスト |
@@ -128,7 +128,7 @@ handle_*.go は121ファイル（実装99 + テスト22）で、1ハンドラ1�
 
 詳細は [kftl/README.md](kftl/README.md) を参照。
 
-### `req_res/`（204ファイル）— Request/Response 構造体
+### `req_res/`（206ファイル）— Request/Response 構造体
 
 詳細は [req_res/README.md](req_res/README.md) を参照。
 
@@ -139,7 +139,7 @@ handle_*.go は121ファイル（実装99 + テスト22）で、1ハンドラ1�
 | `safefetch.go` | `GetCapped`（scheme 検査・接続先 IP 検証・サイズ上限）、`LooksLikeSupportedImage` / `CheckImageDimensions`。利用者入力由来の URL 取得はここを通す |
 | `safefetch_test.go` | SSRF 防御・サイズ上限・画像判定のテスト |
 
-## 全エンドポイント一覧（98エンドポイント）
+## 全エンドポイント一覧（99エンドポイント）
 
 全エンドポイントは `/api/` 配下に配置（POST 中心、一部 GET）。正本は `gkill_server_api/gkill_server_api_address.go` のルート表 `apiRoutes()` で、`serve.go` の `registerAPIRoutes` が gorilla/mux へそのまま登録する（テストハーネスも同じ表を使う。ADR-0709）。Service Worker（`/serviceWorker.js`、GET）だけは API ではなく、`router.PathPrefix` で別途配信している。
 

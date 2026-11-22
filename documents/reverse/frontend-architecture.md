@@ -37,7 +37,7 @@ src/client/
 │   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,900行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
-│   │   └── req_res/                # リクエスト/レスポンス型 (185ファイル、サーバー側は204ファイル)
+│   │   └── req_res/                # リクエスト/レスポンス型 (187ファイル、サーバー側は206ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
 │   ├── kftl/                        # KFTLパーサー (53 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)。行ラベルの分類器だけで、解釈と書き込みはサーバ（ADR-0507）
@@ -303,7 +303,7 @@ Props/Emit のみで状態を持ち回すため、Kyou の CRUD イベントは 
 `src/client/classes/api/gkill-api.ts` に定義。約3,900行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
-- Web クライアントが叩く94エンドポイントのアドレスを持ち、そのうち92本にメソッドがある（`gkill-api.ts` が保持する `/api/` アドレスは94件。MCP / CLI 専用の4件を除いた全ルートで、Go のルート表との突き合わせは `gkill-api.test.ts`。メソッドの無い2本はブックマークレット用で、Go が配る HTML とブックマークレットの URL が使う。`submit_kftl_text` は 2026-09-15 から Web も叩く）。どのメソッドがどのパス・Go ハンドラにつながるかは [cross-boundary-map.md](cross-boundary-map.md)
+- Web クライアントが叩く95エンドポイントのアドレスを持ち、そのうち93本にメソッドがある（`gkill-api.ts` が保持する `/api/` アドレスは95件。MCP / CLI 専用の4件を除いた全ルートで、Go のルート表との突き合わせは `gkill-api.test.ts`。メソッドの無い2本はブックマークレット用で、Go が配る HTML とブックマークレットの URL が使う。`submit_kftl_text` は 2026-09-15 から Web も叩く）。どのメソッドがどのパス・Go ハンドラにつながるかは [cross-boundary-map.md](cross-boundary-map.md)
 - `GkillAPIForSharedKyou` サブクラス（共有データ用）
 - 各メソッドは `fetch()` → JSONパース → エラーチェック → データ返却
 

@@ -87,7 +87,7 @@ src/client/
 │   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,900行、全API呼び出しを集約）
 │   │   ├── hydrate.ts      # JSON→クラスインスタンスの詰め替え（any を使わない共通ヘルパー）
 │   │   ├── find_query/     # 検索クエリビルダー
-│   │   └── req_res/        # リクエスト/レスポンス型（185ファイル）
+│   │   └── req_res/        # リクエスト/レスポンス型（187ファイル）
 │   ├── datas/              # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dnote/              # Dnote集計ユーティリティ（dnote-trend-aggregator.ts, dnote-predicate/ 等）
 │   ├── dto/                # データ転送オブジェクト
@@ -126,17 +126,17 @@ src/server/
     │   ├── find_kyou_context.go    # 検索コンテキスト
     │   ├── find/                   # 検索クエリ構造体
     │   ├── message/                # メッセージ/エラー構造体
-    │   ├── req_res/                # リクエスト/レスポンス構造体（204ファイル）
+    │   ├── req_res/                # リクエスト/レスポンス構造体（206ファイル）
     │   ├── kftl/                   # KFTLパーサー（バックエンド側、50ステートメント型）
     │   │   ├── kftl_factory.go     # ファクトリ（ステートメント生成、日本語/ASCII両プレフィックス）
     │   │   └── *.go                # 各ステートメント型実装
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（169ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（174ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
-    │       ├── gkill_server_api_address.go  # ルート表（98エンドポイント: 97 POST + 1 GET。パス・メソッド・認証区分・ハンドラの正本）
+    │       ├── gkill_server_api_address.go  # ルート表（99エンドポイント: 98 POST + 1 GET。パス・メソッド・認証区分・ハンドラの正本）
     │       ├── auth.go             # セッション認証ヘルパー
     │       ├── auth_context.go     # AuthContext構造体（認証済みコンテキスト）
     │       ├── auth_middleware.go  # authMiddleware / authWithReposMiddleware
@@ -144,7 +144,7 @@ src/server/
     │       ├── utils.go            # ユーティリティ関数
     │       ├── web_push.go         # WebPush通知
     │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
-    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、121ファイル）
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、123ファイル）
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     │       ├── chatview/           # AI チャット系プラグインの本文 HTML（chatview.Message → HTML。head・チップ・折りたたみを1か所に。ADR-0315）
@@ -336,7 +336,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-1031キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+1033キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 
@@ -383,7 +383,7 @@ documents/
 │   ├── screen-transition.md          # 画面遷移図
 │   ├── screen-specs.md               # 画面仕様（項目定義）
 │   ├── frontend-architecture.md      # フロントエンド設計ガイド
-│   ├── api-endpoints.md              # APIエンドポイント一覧（98件）
+│   ├── api-endpoints.md              # APIエンドポイント一覧（99件）
 │   ├── cross-boundary-map.md         # 言語・プロセス境界の対応表（verify_docs が突き合わせる）
 │   ├── error-handling-and-security.md # エラー処理・セキュリティ
 │   ├── operations-guide.md           # 運用ガイド

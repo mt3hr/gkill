@@ -64,14 +64,14 @@ func TestHTTPStatusOf_CoversEveryErrorCode(t *testing.T) {
 // **コードを足して落ちたら、期待値と資料の両方を更新すること。**
 func TestErrorCodeHTTPStatus_Distribution(t *testing.T) {
 	want := map[int]int{
-		http.StatusBadRequest:            109,
+		http.StatusBadRequest:            111,
 		http.StatusUnauthorized:          4,
 		http.StatusForbidden:             6,
 		http.StatusNotFound:              21,
 		http.StatusConflict:              20,
 		http.StatusRequestEntityTooLarge: 1,
 		http.StatusTooManyRequests:       1,
-		http.StatusInternalServerError:   248,
+		http.StatusInternalServerError:   251,
 	}
 
 	got := map[int]int{}

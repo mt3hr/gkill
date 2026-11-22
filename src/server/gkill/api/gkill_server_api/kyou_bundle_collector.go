@@ -40,6 +40,8 @@ type kyouBundleOptions struct {
 	IncludeTags      bool
 	IncludeTexts     bool
 	IncludeTimeIss   bool
+	// IncludeNotifications は通知を含めるか。共有ページは使わない（常に偽）
+	IncludeNotifications bool
 }
 
 // kyouBundle は集めた結果。どのスライスも nil にはならない。
@@ -59,10 +61,11 @@ type kyouBundle struct {
 
 	GPSLogs []reps.GPSLog
 
-	AttachedTags        []reps.Tag
-	AttachedTexts       []reps.Text
-	AttachedTimeIss     []reps.TimeIs
-	AttachedTimeIsKyous []reps.Kyou
+	AttachedTags          []reps.Tag
+	AttachedTexts         []reps.Text
+	AttachedNotifications []reps.Notification
+	AttachedTimeIss       []reps.TimeIs
+	AttachedTimeIsKyous   []reps.Kyou
 }
 
 // bundleError はログを1行出して GkillError を作る。
@@ -105,22 +108,23 @@ func (g *GkillServerAPI) collectKyouBundle(ctx context.Context, opts *kyouBundle
 	findQuery.OnlyLatestData = true
 
 	bundle := &kyouBundle{
-		Kyous:               []reps.Kyou{},
-		Mis:                 []reps.Mi{},
-		Kmemos:              []reps.Kmemo{},
-		KCs:                 []reps.KC{},
-		TimeIss:             []reps.TimeIs{},
-		Nlogs:               []reps.Nlog{},
-		Lantanas:            []reps.Lantana{},
-		URLogs:              []reps.URLog{},
-		IDFKyous:            []reps.IDFKyou{},
-		ReKyous:             []reps.ReKyou{},
-		GitCommitLogs:       []reps.GitCommitLog{},
-		GPSLogs:             []reps.GPSLog{},
-		AttachedTags:        []reps.Tag{},
-		AttachedTexts:       []reps.Text{},
-		AttachedTimeIss:     []reps.TimeIs{},
-		AttachedTimeIsKyous: []reps.Kyou{},
+		Kyous:                 []reps.Kyou{},
+		Mis:                   []reps.Mi{},
+		Kmemos:                []reps.Kmemo{},
+		KCs:                   []reps.KC{},
+		TimeIss:               []reps.TimeIs{},
+		Nlogs:                 []reps.Nlog{},
+		Lantanas:              []reps.Lantana{},
+		URLogs:                []reps.URLog{},
+		IDFKyous:              []reps.IDFKyou{},
+		ReKyous:               []reps.ReKyou{},
+		GitCommitLogs:         []reps.GitCommitLog{},
+		GPSLogs:               []reps.GPSLog{},
+		AttachedTags:          []reps.Tag{},
+		AttachedTexts:         []reps.Text{},
+		AttachedNotifications: []reps.Notification{},
+		AttachedTimeIss:       []reps.TimeIs{},
+		AttachedTimeIsKyous:   []reps.Kyou{},
 	}
 
 	// Kyou
@@ -307,6 +311,25 @@ func (g *GkillServerAPI) collectAttachedDatas(ctx context.Context, opts *kyouBun
 		}
 		for _, text := range textSet {
 			bundle.AttachedTexts = append(bundle.AttachedTexts, text)
+		}
+	}
+
+	// AttachedNotification
+	if opts.IncludeNotifications {
+		notificationSet := map[string]reps.Notification{}
+		for _, kyou := range bundle.Kyous {
+			notificationsRelatedID, err := repositories.GetNotificationsByTargetID(ctx, kyou.ID)
+			if err != nil {
+				err = fmt.Errorf("error at find notifications user id = %s device = %s: %w", userID, device, err)
+				return bundleError(ctx, localeName, message.GetNotificationsByTargetIDError,
+					"FAILED_GET_NOTIFICATION_MESSAGE", "error at find notifications user id", err)
+			}
+			for _, notification := range notificationsRelatedID {
+				notificationSet[notification.ID] = notification
+			}
+		}
+		for _, notification := range notificationSet {
+			bundle.AttachedNotifications = append(bundle.AttachedNotifications, notification)
 		}
 	}
 

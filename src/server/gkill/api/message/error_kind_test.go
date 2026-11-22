@@ -95,7 +95,7 @@ func TestErrorKinds_Distribution(t *testing.T) {
 		got[KindOf(code)]++
 	}
 	want := map[string]int{
-		ErrorKindInput:      109,
+		ErrorKindInput:      111,
 		ErrorKindAuth:       4,
 		ErrorKindPermission: 6,
 		ErrorKindNotFound:   21,
@@ -103,7 +103,7 @@ func TestErrorKinds_Distribution(t *testing.T) {
 		ErrorKindTooLarge:   1,
 		ErrorKindRateLimit:  1,
 		ErrorKindConfig:     3,
-		ErrorKindServer:     245,
+		ErrorKindServer:     248,
 	}
 	for kind, wantCount := range want {
 		if got[kind] != wantCount {

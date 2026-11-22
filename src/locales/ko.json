@@ -832,6 +832,8 @@
     "START_EXPORT_KYOUS_MESSAGE": "다운로드를 시작합니다. 잠시 기다려 주세요.",
     "FINISH_EXPORT_KYOUS_MESSAGE": "다운로드 완료",
     "EXPORTED_RYKV_PAGE_NO_DATA_MESSAGE": "이 HTML 파일에는 기록이 없습니다.",
+    "FAILED_EXPORT_RYKV_HTML_MESSAGE": "HTML 내보내기에 실패했습니다",
+    "SUCCESS_EXPORT_RYKV_HTML_MESSAGE": "HTML을 내보냈습니다",
     "DNOTE_EQUAL_TITLE_TARGET_KYOU_PREDICATE": "제목이 대상과 같음",
     "DNOTE_EQUAL_TAGS_AND_TARGET_KYOU_PREDICATE": "모든 태그가 대상과 같음",
     "DNOTE_EQUAL_TAGS_OR_TARGET_KYOU_PREDICATE": "일부 태그가 대상과 같음",

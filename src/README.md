@@ -26,7 +26,7 @@ gkill はライフログアプリケーション。テキストメモ、ブッ�
 │  //go:embed  (1バイナリに埋め込み)         │
 ├─────────────────────────────────────────┤
 │  バックエンド (Go + gorilla/mux)         │  ← src/server/
-│  ・98 POST API エンドポイント             │
+│  ・99 POST API エンドポイント             │
 │  ・SQLite3 (pure Go)                      │
 │  ・cobra CLI                             │
 ├─────────────────────────────────────────┤
@@ -83,9 +83,9 @@ src/
 │       └── dialogs/ #     Dialog コンポーネント (119個)
 ├── server/          # Go バックエンド
 │   └── gkill/
-│       ├── api/     #   HTTP API (98エンドポイント)
+│       ├── api/     #   HTTP API (99エンドポイント)
 │       │   ├── kftl/    #   KFTL パーサ
-│       │   └── req_res/ #   Request/Response 構造体 (204ファイル)
+│       │   └── req_res/ #   Request/Response 構造体 (206ファイル)
 │       ├── dao/     #   データアクセス層 (SQLite3)
 │       │   └── reps/#   メインリポジトリ (4層実装)
 │       ├── plugin/  #   プラグイン作者向け Go SDK (sdk.Run / sdk.Handler)
