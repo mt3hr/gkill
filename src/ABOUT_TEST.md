@@ -17,8 +17,8 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | MCP サーバ (`server/gkill/mcp/`) | 1187 | 44 | Go `testing` |
 | ツール (`tools/`) | 115 | 4 | Vitest |
 | Android (`android/`) | 31 | 2 | JUnit 4 |
-| Wear OS (`wear_os/`) | 235 | 18 | JUnit 4 + MockK |
-| **合計** | **5,453** | **531** | |
+| Wear OS (`wear_os/`) | 244 | 20 | JUnit 4 + MockK |
+| **合計** | **5,462** | **533** | |
 
 `src/plugins/` の Go テスト 277件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
@@ -91,7 +91,7 @@ npm run verify_docs -- --list
 | `server/gkill/main/` | [server/gkill/main/ABOUT_TEST.md](server/gkill/main/ABOUT_TEST.md) | CLI エントリポイント |
 | `server/gkill/mcp/` | [server/gkill/mcp/ABOUT_TEST.md](server/gkill/mcp/ABOUT_TEST.md) | MCP サーバ（1187テスト）。コミット済みゴールデンとのバイト一致（採取時は旧 Node 実装の出力）を含む |
 | `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) | Android APK テスト |
-| `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) | Wear OS テスト（235テスト） |
+| `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) | Wear OS テスト（244テスト） |
 | `server/gkill/plugin/sdk/` | [server/gkill/plugin/sdk/ABOUT_TEST.md](server/gkill/plugin/sdk/ABOUT_TEST.md) | プラグイン SDK（stdio ループ + 単独モード --gkill-build-cache + EnsureConfig + ZIP走査 + キャッシュDBパス + ワード判定 + rep_names + gkill_log へのログ + chatview の本文 HTML + configview の設定画面 HTML + 検索条件の全体（find_query）の受け取り、111テスト） |
 | `plugins/` | [plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) | 同梱プラグイン（独立モジュール。`npm run test_plugins` で実行） |
 | `tools/` | [tools/ABOUT_TEST.md](tools/ABOUT_TEST.md) | リリースゲート・attestation ランナーとリリース工程の書く側・Nightly の npm audit の判定（115テスト、4ファイル） |

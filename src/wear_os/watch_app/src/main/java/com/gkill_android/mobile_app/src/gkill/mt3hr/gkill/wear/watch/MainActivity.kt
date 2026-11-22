@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.AutoCenteringParams
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.ScalingLazyListState
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
@@ -31,6 +33,8 @@ import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.buildL
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.PlayingTimeIsNode
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.TemplateNode
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.tile.TemplateCacheManager
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.TemplateScrollMemory
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.TemplateScrollPosition
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.components.MenuChip
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.ConfirmScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.LantanaConfirmScreen
@@ -102,6 +106,9 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     private lateinit var wearClient: GkillWearClient
 
     private var launchedFromTile = false
+
+    // テンプレート一覧のスクロール位置。子→親で戻ったときだけ復元し、それ以外は先頭から。
+    private val templateScroll = TemplateScrollMemory()
     private var screenState by mutableStateOf<Screen>(Screen.HomeMenu)
 
     // CompletableDeferred for awaiting phone responses with timeout
@@ -149,8 +156,16 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                     }
 
                     is Screen.TemplateList -> {
+                        // 階層が変わるたびに state を作り直す。初期位置は TemplateScrollMemory が決める
+                        // （子→親のときだけ親の位置が戻り、それ以外は先頭）。既定の state を使うと
+                        // この1つの呼び出し位置に remember され、どの移動でも位置を引き継いでしまう。
+                        val listState = remember(s.breadcrumb.size, s.title, s.nodes) {
+                            val position = templateScroll.takeInitialPosition()
+                            ScalingLazyListState(position.centerItemIndex, position.centerItemScrollOffset)
+                        }
                         BackHandler {
                             if (s.breadcrumb.isNotEmpty()) {
+                                templateScroll.backToParent()
                                 val (prevTitle, prevNodes) = s.breadcrumb.last()
                                 screenState = Screen.TemplateList(
                                     nodes = prevNodes,
@@ -164,8 +179,12 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                         TemplateListScreen(
                             nodes = s.nodes,
                             title = s.title,
+                            state = listState,
                             onNodeSelected = { node ->
                                 if (node.is_dir) {
+                                    templateScroll.enterFolder(
+                                        TemplateScrollPosition(listState.centerItemIndex, listState.centerItemScrollOffset)
+                                    )
                                     val label = if (node.title.isNotEmpty()) node.title else node.name
                                     val newBreadcrumb = s.breadcrumb + listOf(Pair(s.title, s.nodes))
                                     screenState = Screen.TemplateList(
@@ -323,6 +342,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
     }
 
     private fun navigateBackToTopOrFinish() {
+        templateScroll.reset()
         if (launchedFromTile) {
             finish()
         } else {
@@ -359,6 +379,8 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 
     private suspend fun requestTemplates(force_reload: Boolean = false) {
         Log.d(TAG, "requestTemplates: start (force_reload=$force_reload)")
+        // 一覧を作り直すので、積んだスクロール位置は捨てる（先頭から出す）
+        templateScroll.reset()
 
         // 「🔄 更新」で来たとき以外は、キャッシュがあればそれを使う
         val cached = TemplateCacheManager.loadTemplates(this)

@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.ScalingLazyListState
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material.CompactChip
 import androidx.wear.compose.material.Text
@@ -21,15 +22,21 @@ import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentatio
  * - Folders (is_dir=true) navigate deeper
  * - Leaves (is_dir=false) show a confirmation screen
  * - 末尾の「🔄 更新」（R.string.refresh）でスマホ経由のテンプレート再取得を要求する
+ *
+ * スクロール位置は呼び出し側（`MainActivity`）が `state` ごと持つ。**ここで state を作らないこと** ——
+ * `ScalingLazyColumn` の既定 `rememberScalingLazyListState()` は `is Screen.TemplateList ->` という
+ * 1つの呼び出し位置に remember されるので、掘っても戻っても前の階層の位置を引き継いでしまう。
+ * どの移動で位置を引き継ぐか（子→親のときだけ）は `TemplateScrollMemory` が決める。
  */
 @Composable
 fun TemplateListScreen(
     nodes: List<TemplateNode>,
     title: String = stringResource(R.string.template_list_title),
+    state: ScalingLazyListState,
     onNodeSelected: (TemplateNode) -> Unit,
     onRefresh: () -> Unit
 ) {
-    ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
+    ScalingLazyColumn(modifier = Modifier.fillMaxSize(), state = state) {
         item {
             Text(
                 text = title,

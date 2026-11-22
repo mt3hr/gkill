@@ -18,8 +18,8 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | MCP サーバ | 1187 | 44 | Go `testing` |
 | ツール | 115 | 4 | Vitest |
 | Android | 31 | 2 | JUnit 4 |
-| Wear OS | 235 | 18 | JUnit 4 + MockK |
-| **合計** | **5,453** | **531** | |
+| Wear OS | 244 | 20 | JUnit 4 + MockK |
+| **合計** | **5,462** | **533** | |
 
 数え直すコマンド:
 

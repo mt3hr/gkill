@@ -30,7 +30,7 @@ wear_os/
     ├── build.gradle.kts
     └── src/main/
         ├── AndroidManifest.xml
-        ├── java/.../wear/watch/        # Kotlin ソース（17ファイル）
+        ├── java/.../wear/watch/        # Kotlin ソース（18ファイル）
         └── res/
             ├── values/strings.xml      # 既定（日本語）
             └── values-{en,zh,ko,es,fr,de}/strings.xml

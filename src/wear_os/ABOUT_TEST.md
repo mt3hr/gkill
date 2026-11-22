@@ -2,7 +2,7 @@
 
 ## 概要
 
-Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（10ファイル、147テスト）とウォッチ側アプリ（8ファイル、88テスト）の合計235テスト（18ファイル）で構成される。
+Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（10ファイル、147テスト）とウォッチ側アプリ（10ファイル、97テスト）の合計244テスト（20ファイル）で構成される。
 
 ## テストフレームワーク
 
@@ -25,7 +25,7 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 | `phone_companion/src/test/java/.../GkillErrorTextTest.kt` | 12 | エラーコード→文言の照合。`WIRE_ERROR_CODES` 全件に訳があること（コードを足して訳を忘れると落ちる）、未知文字列・`HTTP 500` の素通し、`ERROR:` 付き応答だけ訳して `OK`/`DUPLICATE`/JSON はバイト列のまま |
 | `phone_companion/src/test/java/.../StringsParityTest.kt` | 7 | `res/values` と `values-{en,zh,ko,es,fr,de}` の `strings.xml` の整合（ロケール集合・キー集合の一致・`translatable="false"` の非重複・空値なし・`%1$s` プレースホルダの一致・未エスケープの `'` `"` と孤立 `%` の検出・`server_locale_name` がディレクトリ名と一致） |
 
-### watch_app（ウォッチ側アプリ）— 88テスト
+### watch_app（ウォッチ側アプリ）— 97テスト
 
 | ファイル | テスト数 | テスト内容 |
 |---------|---------|-----------|
@@ -37,6 +37,8 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 | `watch_app/src/test/java/.../data/model/TemplateNodeTest.kt` | 10 | テンプレートツリー構造のデータモデル |
 | `watch_app/src/test/java/.../data/model/PlayingTimeIsNodeTest.kt` | 13 | Playing（計画）UIノードモデル |
 | `watch_app/src/test/java/.../StringsParityTest.kt` | 6 | `res/values` と `values-{en,zh,ko,es,fr,de}` の `strings.xml` の整合（companion 側と同型。`server_locale_name` の検査だけ無い） |
+| `watch_app/src/test/java/.../presentation/TemplateScrollMemoryTest.kt` | 7 | テンプレート一覧の階層ごとのスクロール位置の記憶。親→子は先頭から、子→親は親で見ていた位置へ戻る、復元は1回きり、読み込み直し（reset）で全部忘れる |
+| `watch_app/src/test/java/.../presentation/screens/TemplateListScreenTest.kt` | 2 | その記憶が画面につながっていること（ソース走査）。`TemplateListScreen` が `state` を呼び出し側から受け取り自分で作らないこと、`MainActivity` が階層ごとに state を作り直し、掘るときに積み・戻るときに取り出し・読み込み直しで捨てること。配線が外れると、エラーも警告も出ないまま前の階層の位置が残る。watch_app には Compose UI テストの依存が無いので、ここは書かれている字面でしか守れない |
 
 ## テスト内容
 
@@ -46,6 +48,7 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 - **Watch-Phone 連携**: Wearable Data Layer メッセージパス（`/gkill/submit`, `/gkill/templates` 等）の送受信。受信は WorkManager ワーカーへ委譲し、処理本体は Android 非依存の `WearRequestHandler` に抽出
 - **重複送信対策**: 直近成功した KFTL テキストの完全一致台帳。一致時は `DUPLICATE` を返して時計側に確認（それでも送信）を出させる
 - **データモデル**: テンプレートノードと PlayingTimeIs ノードの構造検証
+- **テンプレート一覧のスクロール位置**: 子から親へ Back で戻ったときだけ親で見ていた位置へ戻り、フォルダを掘ったときやそれ以外（読み込み直し・確認画面からの復帰）は先頭から出ること
 - **気分記録**: 星の塗り分けと気分値の対応、送信する KFTL テキスト（`?<日時>` / `/mood` / 値の3行）の完全一致。サーバ側の対の検査は `src/server/gkill/api/kftl/kftl_statement_test.go` の `TestStatement_LantanaFromWearOS`
 - **多言語化**: 両モジュールの `strings.xml` 7言語セットの整合（Android のリソース解決はキーが欠けても例外を出さず既定言語へ静かに落ちるので、ここでしか守れない）。スマホ側のエラーコード→文言の照合と、サーバへ送る `locale_name` が UI と同じ言語になること
 

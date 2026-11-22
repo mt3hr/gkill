@@ -104,6 +104,24 @@ JVM テストが実行機の OS 言語で変わる）で、`LoginRequest` を含
 `initialCenterItemIndex = 0` / `AutoCenteringParams(itemIndex = 0)` で本文を最初に中央へ置く（既定の item 1 中央だと
 本文の1行目が上端で欠ける）。却下案は [ADR-1103](../../../documents/adr/1103-wear-app-chips-match-tile.md)。
 
+**テンプレート一覧のスクロール位置は、子→親で戻ったときだけ復元し、それ以外は先頭から出す**（2026-11-22）。
+`TemplateListScreen.kt` は `state` を引数で受け取るだけで、**自分で state を作らないこと** ——
+`ScalingLazyColumn` の `state` を省くと既定の `rememberScalingLazyListState()` が使われ、それは
+`MainActivity` の `is Screen.TemplateList ->` という**1つの呼び出し位置**に remember される。
+フォルダを掘るのも Back で親へ戻るのも `screenState` へ別の `Screen.TemplateList` を代入するだけで
+`when` のブランチは変わらないため、コンポジションのスロットが再利用され、`nodes` だけ入れ替わって
+**どの移動でもエラーも警告も出ないまま前の階層のスクロール位置が引き継がれる**（掘った先の一覧が
+途中から始まる）。どの移動で引き継ぐかを決めるのは `presentation/TemplateScrollMemory.kt` で、
+`MainActivity` が掘るときに `enterFolder`（親の位置を積む）・戻るときに `backToParent`（積んだ位置を
+1回だけ復元）・一覧を作り直すときに `reset`（`requestTemplates` と `navigateBackToTopOrFinish` の2箇所）を
+呼び、`remember(s.breadcrumb.size, s.title, s.nodes)` で階層ごとに state を作り直して
+`takeInitialPosition()` を初期位置にする。**この4つの呼び出しのどれを落としてもビルドは通る**ので、
+守るテストは `TemplateScrollMemoryTest.kt`（方針そのもの）と `TemplateListScreenTest.kt`
+（画面への配線。watch_app に Compose UI テストの依存が無いのでソースの字面で見る）。
+初期位置の既定 `TemplateScrollPosition.TOP` は index 1（`ScalingLazyColumn` の既定）で、
+**0 にしないこと** —— 重複確認画面が 0 なのは本文1行目が欠けるためで、一覧で 0 にすると
+タイトル行が中央へ来て見た目が変わる。
+
 **Data Layer のパス・companion が叩く `/api`・起動行の字面を足したり変えたりしたら境界対応表も直す。** 時計とスマホは同じパスの定数を別々に持ち、companion と Android はサーバと文字列だけでつながる。[cross-boundary-map.md](../../../documents/reverse/cross-boundary-map.md) の §5・§6・§11 を `npm run verify_docs` が時計・スマホ・サーバのコードと突き合わせる。
 
 ## 関連スキル
