@@ -210,6 +210,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0411](0411-error-feed-stays-until-closed.md) | エラー表示は1つのフィードに集約し、閉じるまで残す・コピーできる・握られなかった例外も同じ場所へ出す | Accepted |
 | [0412](0412-apply-only-touched-sections-in-find-query-settings-dialog.md) | 設定の「検索条件」ダイアログは、適用で触ったセクションだけを渡す（旧ダッシュボードダイアログが未設定を空の条件で書き潰していた） | Accepted |
 | [0413](0413-rename-calendar-date-to-time.md) | 期間フィルタのフィールドは CalendarStartTime / CalendarEndTime へ改名する（`Date` と名乗っていたが実体は時刻） | Accepted |
+| [0414](0414-period-filter-time-of-day-in-sidebar.md) | サイドバーの「期間」で開始時刻・終了時刻を指定する（ワイヤ形式は変えず、丸めを UI の中だけで解く） | Accepted |
 | [0501](0501-save-marker-beforeinput-input-pair.md) | KFTL保存マーカーの判定は beforeinput→input の対で行う | Accepted |
 | [0502](0502-kftl-errors-are-per-line.md) | メモ帳（KFTL）の失敗は行ごとに返し、入力ミスとサーバ障害を分ける | Accepted |
 | [0503](0503-kftl-prefix-misuse-is-an-input-error.md) | 引数の無い／引数を同じ行に書いたメモ帳のプレフィックスは、ゼロ値を書かずに行別エラーにする | Accepted |

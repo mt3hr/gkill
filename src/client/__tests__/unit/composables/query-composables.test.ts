@@ -231,8 +231,8 @@ describe('useCalendarQuery: calendar日付の null 判定とローカル保持',
     props.find_kyou_query = make_dated_query('q1')
     await flush_watchers()
     expect(view.get_use_calendar()).toBe(true)
-    expect(moment(view.get_start_date()).format('YYYY-MM-DD')).toBe('2026-07-01')
-    expect(moment(view.get_end_date()).format('YYYY-MM-DD')).toBe('2026-07-03')
+    expect(moment(view.get_start_time()).format('YYYY-MM-DD')).toBe('2026-07-01')
+    expect(moment(view.get_end_time()).format('YYYY-MM-DD')).toBe('2026-07-03')
   })
 
   test('同一query_idの両null着信では日付選択もチェック状態も触らず、query_idが変わればリセットする', async () => {
@@ -246,7 +246,7 @@ describe('useCalendarQuery: calendar日付の null 判定とローカル保持',
     props.find_kyou_query = q_off
     await flush_watchers()
     expect(view.get_use_calendar(), '着信クエリでチェックを外すと同じ日付の2回クリックでチェックが勝手に外れる').toBe(true)
-    expect(moment(view.get_start_date()).format('YYYY-MM-DD'), '同一query_id内の即時トグルで値が復活する').toBe('2026-07-01')
+    expect(moment(view.get_start_time()).format('YYYY-MM-DD'), '同一query_id内の即時トグルで値が復活する').toBe('2026-07-01')
 
     // 別列（query_id変化）へは着信値（null=選択なし）でリセット
     const q2 = new FindKyouQuery()
@@ -254,8 +254,8 @@ describe('useCalendarQuery: calendar日付の null 判定とローカル保持',
     props.find_kyou_query = q2
     await flush_watchers()
     expect(view.get_use_calendar()).toBe(false)
-    expect(view.get_start_date()).toBeNull()
-    expect(view.get_end_date()).toBeNull()
+    expect(view.get_start_time()).toBeNull()
+    expect(view.get_end_time()).toBeNull()
   })
 
   test('同じ日付の連続クリック（Vuetifyのレンジ解除）でチェックは外れない', async () => {
@@ -273,8 +273,8 @@ describe('useCalendarQuery: calendar日付の null 判定とローカル保持',
 
     // 同じ日付をもう一度クリックすると Vuetify が空配列を返す
     view.clicked_date([])
-    expect(view.get_start_date()).toBeNull()
-    expect(view.get_end_date()).toBeNull()
+    expect(view.get_start_time()).toBeNull()
+    expect(view.get_end_time()).toBeNull()
     expect(view.get_use_calendar(), '選択が空になってもカレンダー条件は有効なまま').toBe(true)
 
     // 列のクエリが null/null で返ってきてもチェックは外れない
@@ -283,7 +283,7 @@ describe('useCalendarQuery: calendar日付の null 判定とローカル保持',
     props.find_kyou_query = echo
     await flush_watchers()
     expect(view.get_use_calendar()).toBe(true)
-    expect(view.get_start_date()).toBeNull()
+    expect(view.get_start_time()).toBeNull()
   })
 
   test('クリアはローカルの日付選択を捨てる', async () => {
@@ -292,8 +292,129 @@ describe('useCalendarQuery: calendar日付の null 判定とローカル保持',
     await flush_watchers()
 
     view.clicked_clear_calendar_button()
-    expect(view.get_start_date(), '既定期間が未設定だと着信はnull/nullなので、ここで落とさないと古い選択が残る').toBeNull()
-    expect(view.get_end_date()).toBeNull()
+    expect(view.get_start_time(), '既定期間が未設定だと着信はnull/nullなので、ここで落とさないと古い選択が残る').toBeNull()
+    expect(view.get_end_time()).toBeNull()
+  })
+})
+
+describe('useCalendarQuery: 期間の開始時刻・終了時刻', () => {
+  function create_view(initial: FindKyouQuery) {
+    const emits = vi.fn()
+    const props = reactive({
+      application_config: make_fake_application_config(),
+      find_kyou_query: initial,
+      inited: true,
+    })
+    const view = useCalendarQuery({ props: props as never, emits: emits as never })
+    return { props, view, emits }
+  }
+
+  function make_dated_query(query_id: string): FindKyouQuery {
+    const query = new FindKyouQuery()
+    query.query_id = query_id
+    query.calendar_start_time = new Date(2026, 6, 1)
+    query.calendar_end_time = new Date(2026, 6, 3, 23, 59, 59, 999)
+    return query
+  }
+
+  // ここが後方互換の正本。既定が変わると、保存済みの全列の検索結果が黙ってずれる
+  test('時刻を指定しなければ従来どおり 00:00:00.000 / 23:59:59.999', async () => {
+    const { props, view } = create_view(new FindKyouQuery())
+    props.find_kyou_query = make_dated_query('q1')
+    await flush_watchers()
+
+    expect(view.start_time_string.value, '日の境界ちょうどは未指定なので欄は空のまま').toBeNull()
+    expect(view.end_time_string.value).toBeNull()
+    expect(moment(view.get_start_time()).format('YYYY-MM-DD HH:mm:ss.SSS')).toBe('2026-07-01 00:00:00.000')
+    expect(moment(view.get_end_time()).format('YYYY-MM-DD HH:mm:ss.SSS')).toBe('2026-07-03 23:59:59.999')
+  })
+
+  test('開始時刻を入れるとその時刻ちょうどになる', async () => {
+    const { props, view } = create_view(new FindKyouQuery())
+    props.find_kyou_query = make_dated_query('q1')
+    await flush_watchers()
+
+    view.start_time_string.value = '09:00'
+    await flush_watchers()
+    expect(moment(view.get_start_time()).format('YYYY-MM-DD HH:mm:ss.SSS')).toBe('2026-07-01 09:00:00.000')
+  })
+
+  // VTimePicker に秒の UI が無いので、HH:mm は「その分の末尾まで」と読む。
+  // 18:30:00.000 にすると、ちょうど 18:30 の記録1件しか入らない
+  test('終了時刻は指定された分の末尾まで', async () => {
+    const { props, view } = create_view(new FindKyouQuery())
+    props.find_kyou_query = make_dated_query('q1')
+    await flush_watchers()
+
+    view.end_time_string.value = '18:30'
+    await flush_watchers()
+    expect(moment(view.get_end_time()).format('YYYY-MM-DD HH:mm:ss.SSS')).toBe('2026-07-03 18:30:59.999')
+  })
+
+  test('時刻付きで着信した列を開き直すと時刻欄が埋まる', async () => {
+    const { props, view } = create_view(new FindKyouQuery())
+    const query = new FindKyouQuery()
+    query.query_id = 'q1'
+    query.calendar_start_time = new Date(2026, 6, 1, 9, 0, 0, 0)
+    query.calendar_end_time = new Date(2026, 6, 3, 18, 30, 59, 999)
+    props.find_kyou_query = query
+    await flush_watchers()
+
+    expect(view.start_time_string.value).toBe('09:00')
+    expect(view.end_time_string.value).toBe('18:30')
+  })
+
+  test('時刻だけ動かしても検索をやり直す', async () => {
+    const { props, view, emits } = create_view(new FindKyouQuery())
+    props.find_kyou_query = make_dated_query('q1')
+    await flush_watchers()
+    emits.mockClear()
+
+    view.start_time_string.value = '09:00'
+    await flush_watchers()
+    const call = emits.mock.calls.find((args) => args[0] === 'request_update_dates')
+    expect(call, '時刻だけの変更でも request_update_dates が出る').toBeTruthy()
+    expect(moment(call?.[1]).format('HH:mm:ss.SSS')).toBe('09:00:00.000')
+  })
+
+  test('日付が選ばれていなければ時刻を動かしても何も出さない', async () => {
+    const { view, emits } = create_view(new FindKyouQuery())
+    await flush_watchers()
+    emits.mockClear()
+
+    view.start_time_string.value = '09:00'
+    await flush_watchers()
+    expect(emits.mock.calls.filter((args) => args[0] === 'request_update_dates')).toHaveLength(0)
+  })
+
+  test('props からの逆同期では emit しない（往復が終わらなくなる）', async () => {
+    const { props, view, emits } = create_view(new FindKyouQuery())
+    props.find_kyou_query = make_dated_query('q1')
+    await flush_watchers()
+    emits.mockClear()
+
+    const query = new FindKyouQuery()
+    query.query_id = 'q2'
+    query.calendar_start_time = new Date(2026, 6, 1, 9, 0, 0, 0)
+    query.calendar_end_time = new Date(2026, 6, 3, 18, 30, 59, 999)
+    props.find_kyou_query = query
+    await flush_watchers()
+
+    expect(view.start_time_string.value).toBe('09:00')
+    expect(emits.mock.calls.filter((args) => args[0] === 'request_update_dates')).toHaveLength(0)
+  })
+
+  test('クリアは時刻欄も落とす', async () => {
+    const { props, view } = create_view(new FindKyouQuery())
+    props.find_kyou_query = make_dated_query('q1')
+    await flush_watchers()
+    view.start_time_string.value = '09:00'
+    view.end_time_string.value = '18:30'
+    await flush_watchers()
+
+    view.clicked_clear_calendar_button()
+    expect(view.start_time_string.value).toBeNull()
+    expect(view.end_time_string.value).toBeNull()
   })
 })
 

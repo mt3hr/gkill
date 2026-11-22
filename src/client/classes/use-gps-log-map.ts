@@ -34,15 +34,18 @@ export function useGpsLogMap(options: {
     const is_show_date_picker = ref(false)
 
     // ── Computed ──
-    const start_date_str = computed(() => moment(props.start_date).format("YYYY-MM-DD"))
-    const end_date_str = computed(() => moment(props.end_date).format("YYYY-MM-DD"))
+    // 日付文字列は「表示」専用（日付ボタンと日付ピッカー）。
+    // GPS の取得・スライダーの刻み・マーカーの位置は props の時刻をそのまま使う。
+    // ここへ依存させると、同じ日の中で時刻だけ動かしたときに何も起きない
+    const start_date_str = computed(() => moment(props.start_time).format("YYYY-MM-DD"))
+    const end_date_str = computed(() => moment(props.end_time).format("YYYY-MM-DD"))
     const date_time_str = computed(() => {
-        return moment(start_date_str.value).add(slider_model.value, 'seconds').format("MM-DD HH:mm:ss")
+        return moment(props.start_time).add(slider_model.value, 'seconds').format("MM-DD HH:mm:ss")
     })
     // 日付表示をクリックして開く日付ピッカー。映す日は親の props なので、選んだ日を親へ返すだけ
     // （rykv は地図だけを切り替えて検索条件・一覧は動かさない。ダッシュボードは表示日ごと移る）
     const date_picker_model = computed<Date>({
-        get: () => props.start_date,
+        get: () => props.start_time,
         set: (picked: Date) => {
             is_show_date_picker.value = false
             emits('requested_change_map_date', moment(picked).startOf('day').toDate())
@@ -59,18 +62,15 @@ export function useGpsLogMap(options: {
     })
 
     watch(() => props.marker_time, () => {
-        // start_date更新待ち
+        // start_time更新待ち
         nextTick(() => {
-            slider_model.value = Math.abs(moment.duration(moment(start_date_str.value).diff(moment(props.marker_time))).asSeconds())
+            slider_model.value = Math.max(0, Math.round(moment(props.marker_time).diff(moment(props.start_time), 'seconds', true)))
         })
     })
 
-    watch(() => start_date_str.value, async () => {
-        update_time_slider_max_value()
-        await update_gps_log_lines()
-        update_marker_by_time()
-    })
-    watch(() => end_date_str.value, async () => {
+    // 期間そのもの（時刻込み）で引き直す。日付文字列に張っていたころは、
+    // 同じ日の中で開始・終了の時刻だけ動かしても再取得が走らなかった
+    watch(() => [props.start_time?.getTime(), props.end_time?.getTime()], async () => {
         update_time_slider_max_value()
         await update_gps_log_lines()
         update_marker_by_time()
@@ -93,25 +93,27 @@ export function useGpsLogMap(options: {
         //   - 終了日が開始日より前 … 終了日に到達しない
         //   - 日付がパース不能 … format() が "Invalid date" を返し永久に一致しない
         //   - 継続条件の !end_date_str.value … 成立したら永久に回る（意図と真逆）
-        // 日数差から直接求める。意味は従来どおり (日数差 + 1) * 86400 - 1。
-        const start = moment(start_date_str.value, "YYYY-MM-DD", true)
-        const end = moment(end_date_str.value, "YYYY-MM-DD", true)
+        // 期間の秒数から直接求める。日数差から (日数差 + 1) * 86400 - 1 としていたころは、
+        // 09:00〜18:00 のような指定でもスライダーが1日ぶんを刻み、右半分が無効域になって
+        // 「動かしても最後の点に貼り付く」形で静かに壊れていた。
+        const start = moment(props.start_time)
+        const end = moment(props.end_time)
         if (!start.isValid() || !end.isValid() || end.isBefore(start)) {
             // 期間が取れないときは1日ぶんにしておく
             time_slider_max.value = 86400 - 1
             return
         }
-        time_slider_max.value = (end.diff(start, 'days') + 1) * 86400 - 1
+        time_slider_max.value = Math.max(0, Math.floor(end.diff(start, 'seconds', true)))
     }
 
     async function update_gps_log_lines(): Promise<void> {
         const req = new GetGPSLogRequest()
-        // 以前は replace("-", "/") していたが、String.replace は文字列パターンだと
-        // 1個目しか置換しないため "2026/08-03" という混在フォーマットになり、
-        // momentがネイティブDateパーサへフォールバックしてブラウザ依存になっていた。
-        // 書式を明示して日付文字列から直接組み立てる。
-        req.start_date = moment(start_date_str.value, "YYYY-MM-DD").startOf('day').toDate()
-        req.end_date = moment(end_date_str.value, "YYYY-MM-DD").endOf('day').toDate()
+        // props の時刻をそのまま渡す。/api/get_gps_log は秒精度の時刻範囲で効く
+        // （リクエストの欄名は StartDate / EndDate だが、日単位ではない）。
+        // かつてここで日付文字列へ丸めていたため、同じ日の中で時刻だけ動かしても
+        // 1日ぶんの GPS が返り、記録一覧は時刻で絞られているのに地図だけ丸一日になっていた。
+        req.start_date = props.start_time
+        req.end_date = props.end_time
         const res = await props.gkill_api.get_gps_log(req)
         // エラーチェック
         if (res.errors && res.errors.length !== 0) {
@@ -145,7 +147,7 @@ export function useGpsLogMap(options: {
     // timeに最も関連している地点にマーカーを立てる
     function update_marker_by_time() {
         marker_options.value = null
-        const datetime = moment(start_date_str.value, "YYYY-MM-DD").startOf('day').add(slider_model.value, 'seconds').toDate().getTime()
+        const datetime = moment(props.start_time).add(slider_model.value, 'seconds').toDate().getTime()
 
         let target_gps_log: GPSLog | null = null
         for (let i = 0; i < gps_logs.value.length; i++) {

@@ -154,8 +154,8 @@ export function useMiQueryEditorSidebar(options: {
 
         if (calendar_query.value) {
             const use_calendar = calendar_query.value.get_use_calendar()
-            find_query.calendar_start_time = use_calendar ? calendar_query.value.get_start_date() : null
-            find_query.calendar_end_time = use_calendar ? calendar_query.value.get_end_date() : null
+            find_query.calendar_start_time = use_calendar ? calendar_query.value.get_start_time() : null
+            find_query.calendar_end_time = use_calendar ? calendar_query.value.get_end_time() : null
         }
 
         // 状況(TimeIs)・時間帯・場所はこのサイドバーから外したので、

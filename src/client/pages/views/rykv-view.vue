@@ -168,7 +168,7 @@
                         </td>
                         <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                             <GPSLogMap v-show="is_show_gps_log_map" :application_config="application_config"
-                                :gkill_api="gkill_api" :start_date="gps_log_map_start_time" :end_date="gps_log_map_end_time"
+                                :gkill_api="gkill_api" :start_time="gps_log_map_start_time" :end_time="gps_log_map_end_time"
                                 :marker_time="gps_log_map_marker_time" :app_content_height="app_content_height"
                                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
                                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"

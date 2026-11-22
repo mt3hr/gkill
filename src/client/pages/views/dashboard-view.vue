@@ -70,7 +70,7 @@
                         </v-col>
                         <v-col cols="12" md="6" class="pa-0 ma-0">
                             <div class="gps-map-container">
-                                <GPSLogMap :start_date="target_date_start" :end_date="target_date_end"
+                                <GPSLogMap :start_time="target_date_start" :end_time="target_date_end"
                                     :marker_time="target_date_start" :application_config="application_config"
                                     :gkill_api="gkill_api" :app_content_height="panel_height"
                                     @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
