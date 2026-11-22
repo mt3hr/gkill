@@ -19,6 +19,8 @@ function reset(): GkillAPIForExportedKyou {
     api.kyous = []
     api.attached_notifications = []
     api.plugin_html = new Map()
+    api.media = new Map()
+    api.idf_text_bytes = new Map()
     api.exported_application_config = new ApplicationConfig()
     return api
 }
@@ -145,6 +147,45 @@ describe('build_exported_api', () => {
         expect(api.gps_logs[0].related_time).toBeInstanceOf(Date)
     })
 
+
+    it('メディアの対応表を辞書へ入れる（src が文字列のものだけ）', () => {
+        const api = build_exported_api({
+            schema_version: 1,
+            media: {
+                '/files/rep/a.jpg?thumb=400x400': { src: 'data:image/jpeg;base64,AAAA', kind: 'thumb' },
+                '/files/rep/b.jpg': { kind: 'full' },
+            },
+        })
+        expect(api.media.get('/files/rep/a.jpg?thumb=400x400')).toBe('data:image/jpeg;base64,AAAA')
+        expect(api.media.has('/files/rep/b.jpg'), 'src が無い項目を入れている').toBe(false)
+    })
+
+    // 文字コードの判定は detect_and_decode_text が唯一の判定者。
+    // サーバ側でデコードして文字列を焼くと2実装になって必ずずれるので、バイト列のまま持つ
+    it('IDF の本文はバイト列のまま持つ', () => {
+        // "abc" の base64
+        const api = build_exported_api({
+            schema_version: 1,
+            idf_text_contents: { k1: { bytes_base64: 'YWJj', truncated: false } },
+        })
+        const bytes = api.idf_text_bytes.get('k1')
+        expect(bytes).toBeInstanceOf(Uint8Array)
+        expect(Array.from(bytes ?? [])).toEqual([0x61, 0x62, 0x63])
+    })
+
+    it('壊れた base64 は飛ばす（その記録の本文が出ないだけで画面は出す）', () => {
+        const api = build_exported_api({
+            schema_version: 1,
+            idf_text_contents: {
+                ok: { bytes_base64: 'YWJj' },
+                broken: { bytes_base64: '!!! not base64 !!!' },
+                wrong_type: { bytes_base64: 42 },
+            },
+        })
+        expect(api.idf_text_bytes.has('ok')).toBe(true)
+        expect(api.idf_text_bytes.has('broken')).toBe(false)
+        expect(api.idf_text_bytes.has('wrong_type')).toBe(false)
+    })
     it('配列の欄が欠けていても空で埋める（古い出力でも落ちない）', () => {
         const api = build_exported_api({ schema_version: 1 })
         expect(api.kyous).toEqual([])
@@ -152,5 +193,7 @@ describe('build_exported_api', () => {
         expect(api.attached_tags).toEqual([])
         expect(api.gps_logs).toEqual([])
         expect(api.plugin_html.size).toBe(0)
+        expect(api.media.size).toBe(0)
+        expect(api.idf_text_bytes.size).toBe(0)
     })
 })

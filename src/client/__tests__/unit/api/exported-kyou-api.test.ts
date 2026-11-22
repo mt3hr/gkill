@@ -40,6 +40,8 @@ function reset(api: GkillAPIForExportedKyou): void {
     api.attached_notifications = []
     api.attached_timeis_kyous = []
     api.plugin_html = new Map()
+    api.media = new Map()
+    api.idf_text_bytes = new Map()
     api.exported_application_config = new ApplicationConfig()
 }
 
@@ -178,6 +180,49 @@ describe('GkillAPIForExportedKyou', () => {
         })
     })
 
+
+    describe('メディアの URL は焼き込みへ差し替える', () => {
+        it('焼き込んだ URL をそのまま引く（build_media_url が渡す形）', () => {
+            api.media.set('/files/rep/a.jpg?thumb=400x400', 'data:image/jpeg;base64,AAAA')
+            expect(api.resolve_media_url('/files/rep/a.jpg?thumb=400x400')).toBe('data:image/jpeg;base64,AAAA')
+        })
+
+        // markdown-to-html.ts は base_url で解決した**絶対 URL**を渡してくる。
+        // 前方一致だけで判定すると、ここを素通りして通信する
+        it('オリジン付きの絶対 URL でも、パス + クエリで引き直す', () => {
+            api.media.set('/files/rep/a.jpg', 'data:image/jpeg;base64,AAAA')
+            const absolute = new URL('/files/rep/a.jpg', document.baseURI).toString()
+            expect(api.resolve_media_url(absolute)).toBe('data:image/jpeg;base64,AAAA')
+        })
+
+        it('焼き込まれていない gkill の経路は about:blank にする', () => {
+            expect(api.resolve_media_url('/files/rep/missing.jpg')).toBe('about:blank')
+            expect(api.resolve_media_url('/zip_cache/rep/h/x.jpg')).toBe('about:blank')
+            expect(api.resolve_media_url(new URL('/files/rep/missing.jpg', document.baseURI).toString()))
+                .toBe('about:blank')
+        })
+
+        it('外部サイトの URL は残す（記録の中身を失わない）', () => {
+            expect(api.resolve_media_url('https://example.com/x.png')).toBe('https://example.com/x.png')
+        })
+
+        it('data: や mailto: はそのまま', () => {
+            expect(api.resolve_media_url('data:image/png;base64,AAAA')).toBe('data:image/png;base64,AAAA')
+            expect(api.resolve_media_url('mailto:someone@example.com')).toBe('mailto:someone@example.com')
+        })
+    })
+
+    describe('IDF のテキスト本文は焼き込みから返す', () => {
+        it('焼き込んだバイト列を返す（文字コードの判定は呼び出し側のまま）', () => {
+            const bytes = new Uint8Array([0x61, 0x62, 0x63])
+            api.idf_text_bytes.set('k1', bytes)
+            expect(api.get_exported_idf_text_bytes('k1')).toBe(bytes)
+        })
+
+        it('焼き込みが無ければ null（基底と同じ＝従来どおり fetch する側へ倒す）', () => {
+            expect(api.get_exported_idf_text_bytes('unknown')).toBeNull()
+        })
+    })
     describe('get_saved_rykv_find_kyou_querys は列の復元経路', () => {
         it('焼き込んだ列の検索条件を返す（共有版は既定クエリ1本）', () => {
             api.columns = [

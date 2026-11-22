@@ -14,12 +14,17 @@ export function read_file_as_data_url(file: File): Promise<string> {
     })
 }
 
-// base64_to_blob は base64（data URI の接頭辞は付けない）を Blob に戻す。
-export function base64_to_blob(base64: string, type: string): Blob {
+// base64_to_bytes は base64（data URI の接頭辞は付けない）をバイト列に戻す。
+export function base64_to_bytes(base64: string): Uint8Array<ArrayBuffer> {
     const binary = window.atob(base64)
     const bytes = new Uint8Array(binary.length)
     for (let i = 0; i < binary.length; i++) {
         bytes[i] = binary.charCodeAt(i)
     }
-    return new Blob([bytes], { type })
+    return bytes
+}
+
+// base64_to_blob は base64（data URI の接頭辞は付けない）を Blob に戻す。
+export function base64_to_blob(base64: string, type: string): Blob {
+    return new Blob([base64_to_bytes(base64)], { type })
 }

@@ -212,6 +212,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0413](0413-rename-calendar-date-to-time.md) | 期間フィルタのフィールドは CalendarStartTime / CalendarEndTime へ改名する（`Date` と名乗っていたが実体は時刻） | Accepted |
 | [0414](0414-period-filter-time-of-day-in-sidebar.md) | サイドバーの「期間」で開始時刻・終了時刻を指定する（ワイヤ形式は変えず、丸めを UI の中だけで解く） | Accepted |
 | [0415](0415-exported-view-is-a-separate-flag.md) | 出力モードは共有モードと別のフラグにし、通信は `gkill_fetch` の1点で止める | Accepted |
+| [0416](0416-idf-text-body-is-baked-as-bytes.md) | 出力 HTML の IDF 本文はバイト列のまま焼き込み、文字コードの判定はクライアントの1実装に残す | Accepted |
 | [0501](0501-save-marker-beforeinput-input-pair.md) | KFTL保存マーカーの判定は beforeinput→input の対で行う | Accepted |
 | [0502](0502-kftl-errors-are-per-line.md) | メモ帳（KFTL）の失敗は行ごとに返し、入力ミスとサーバ障害を分ける | Accepted |
 | [0503](0503-kftl-prefix-misuse-is-an-input-error.md) | 引数の無い／引数を同じ行に書いたメモ帳のプレフィックスは、ゼロ値を書かずに行別エラーにする | Accepted |

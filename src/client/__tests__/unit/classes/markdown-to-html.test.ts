@@ -179,3 +179,42 @@ describe('truncate_markdown', () => {
         expect(fence_count % 2).toBe(0)
     })
 })
+
+// 「HTML で出力」したファイルは通信をしないので、本文中の相対参照を
+// 焼き込んだ data: URI やサイドカーの相対パスへ差し替える口が要る。
+// 省略時は恒等で、本体の挙動は変わらない。
+describe('markdown_to_safe_html の resolve_asset', () => {
+    it('省略時は従来どおり base_url で解決するだけ', async () => {
+        const html = await markdown_to_safe_html('![x](img.png)', '/files/rep/dir/doc.md')
+        expect(html).toContain(`src="${new URL('/files/rep/dir/img.png', document.baseURI).toString()}"`)
+    })
+
+    it('画像の src を差し替える', async () => {
+        const html = await markdown_to_safe_html(
+            '![x](img.png)', '/files/rep/dir/doc.md',
+            (resolved) => resolved === new URL('/files/rep/dir/img.png', document.baseURI).toString()
+                ? 'data:image/png;base64,AAAA' : 'about:blank',
+        )
+        expect(html).toContain('src="data:image/png;base64,AAAA"')
+    })
+
+    it('リンクの href も同じ口を通る', async () => {
+        const html = await markdown_to_safe_html(
+            '[link](other.md)', '/files/rep/dir/doc.md',
+            () => 'about:blank',
+        )
+        expect(html).toContain('href="about:blank"')
+    })
+
+    it('解決関数には base_url で解決したあとの URL が渡る', async () => {
+        const seen: Array<string> = []
+        await markdown_to_safe_html(
+            '![x](sub/img.png)\n\n[l](../up.md)', '/files/rep/dir/doc.md',
+            (resolved) => { seen.push(resolved); return resolved },
+        )
+        // 渡ってくるのは base_url で解決した**絶対 URL**（オリジン付き）。
+        // 解決側が「/files/ で始まるか」だけで判定すると、ここを素通りして通信する
+        expect(seen).toContain(new URL('/files/rep/dir/sub/img.png', document.baseURI).toString())
+        expect(seen).toContain(new URL('/files/rep/up.md', document.baseURI).toString())
+    })
+})

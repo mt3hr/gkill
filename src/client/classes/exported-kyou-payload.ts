@@ -12,6 +12,7 @@
 
 import { GkillAPIForExportedKyou } from '@/classes/api/gkill-api'
 import { hydrate, hydrate_all } from '@/classes/api/hydrate'
+import { base64_to_bytes } from '@/classes/file-base64'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { Kyou } from '@/classes/datas/kyou'
@@ -134,6 +135,32 @@ export function build_exported_api(raw: unknown): GkillAPIForExportedKyou {
         const html = plugin_html[key]
         if (typeof html === 'string') {
             api.plugin_html.set(key, html)
+        }
+    }
+
+    // メディア。鍵は build_media_url が組み立てた URL（クエリ込み）
+    api.media = new Map()
+    const media = as_record(source.media)
+    for (const key in media) {
+        const entry = as_record(media[key])
+        if (typeof entry.src === 'string') {
+            api.media.set(key, entry.src)
+        }
+    }
+
+    // IDF のテキスト本文。**バイト列のまま**持つ（文字コードの判定は
+    // detect_and_decode_text が唯一の判定者で、サーバ側に書くと2実装になって必ずずれる）
+    api.idf_text_bytes = new Map()
+    const idf_text_contents = as_record(source.idf_text_contents)
+    for (const key in idf_text_contents) {
+        const entry = as_record(idf_text_contents[key])
+        if (typeof entry.bytes_base64 !== 'string') {
+            continue
+        }
+        try {
+            api.idf_text_bytes.set(key, base64_to_bytes(entry.bytes_base64))
+        } catch {
+            // 壊れた base64 は飛ばす。その記録の本文が出ないだけで、画面は出す
         }
     }
 

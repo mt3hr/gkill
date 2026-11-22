@@ -2647,6 +2647,29 @@ export class GkillAPI {
                 })
         }
 
+        /**
+         * メディア（画像・動画・添付ファイル）の URL を、その環境で読める形へ解決する。
+         *
+         * 基底は恒等関数（サーバの /files/ から配る）。「HTML で出力」したファイルだけが、
+         * 焼き込んだ data: URI やサイドカーの相対パスへ差し替える。
+         * 呼ぶのは use-idf-kyou-view.ts の build_media_url と markdown-to-html.ts。
+         */
+        resolve_media_url(url: string): string {
+                return url
+        }
+
+        /**
+         * IDF のテキスト / Markdown 本文の焼き込みを返す。
+         *
+         * 基底は null（従来どおり file_url を fetch する）。「HTML で出力」したファイルだけが
+         * 焼き込んだバイト列を返す。**文字コードの判定はここではしない** ——
+         * decode-text.ts の detect_and_decode_text が唯一の判定者で、
+         * サーバ側に同じ判定を書くと2実装になって必ずずれる。
+         */
+        get_exported_idf_text_bytes(_kyou_id: string): Uint8Array | null {
+                return null
+        }
+
         // 認証が通っていなかったらログイン画面に遷移する
         check_auth(res: GkillAPIResponse): void {
                 if (!res.errors || res.errors.length == 0) {
@@ -3661,6 +3684,13 @@ export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
         public attached_notifications: Array<Notification> = []
         /** `${rep_name}\u0000${kyou_id}` → プラグインが作った本文 HTML */
         public plugin_html: Map<string, string> = new Map()
+        /**
+         * メディアの URL（build_media_url が組み立てた形。クエリ込み）→ 出力の中で読める形。
+         * 単一 HTML なら data: URI、サイドカーなら `foo/<hash>.jpg` のような相対パス。
+         */
+        public media: Map<string, string> = new Map()
+        /** IDF の ID → 焼き込んだテキスト / Markdown 本文のバイト列 */
+        public idf_text_bytes: Map<string, Uint8Array> = new Map()
 
         // localStorage が使えないときの退避先。/files/ 経由で開かれると
         // allow-same-origin の無い sandbox（opaque origin）になり、localStorage は例外を投げる。
@@ -3731,6 +3761,58 @@ export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
                         }
                 }
                 return res
+        }
+
+        /**
+         * メディアの URL を、出力の中で読める形へ差し替える。
+         *
+         * 焼き込みにあればそれを返す。無いときは:
+         *   - gkill が配る経路（/files/ ・ /zip_cache/）… **about:blank にする**。
+         *     そのまま残すと file:// で無関係なローカルパスを読み、/files/ 経由では
+         *     Cookie が付かず 403 になる（どちらも壊れた画像として出る）
+         *   - それ以外（記録の本文に書かれた外部 URL など）… そのまま残す。
+         *     潰すと記録の中身を失う。読み込みが起きるのは閲覧者がその記録を開いたときだけ
+         */
+        resolve_media_url(url: string): string {
+                const baked = this.media.get(url)
+                if (baked !== undefined) {
+                        return baked
+                }
+
+                let parsed: URL | null = null
+                try {
+                        parsed = new URL(url, document.baseURI)
+                } catch {
+                        parsed = null
+                }
+                if (!parsed) {
+                        return url
+                }
+                // data: / mailto: / tel: などは本文に書かれた値そのもの。触らない
+                if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:' && parsed.protocol !== 'file:') {
+                        return url
+                }
+                // 外部サイトは残す。潰すと記録の中身を失うし、読み込みが起きるのは
+                // 閲覧者がその記録を開いたときだけ
+                if ((parsed.protocol === 'http:' || parsed.protocol === 'https:')
+                        && parsed.origin !== window.location.origin) {
+                        return url
+                }
+                // 同じオリジン（= gkill が配っていた経路）か、ローカルファイル参照。
+                // markdown-to-html.ts は base_url で解決した**絶対 URL**を渡してくるので、
+                // パス + クエリへ正規化してから焼き込みを引き直す
+                // （前方一致だけで判定すると、ここを素通りして通信してしまう）
+                const by_path = this.media.get(parsed.pathname + parsed.search)
+                if (by_path !== undefined) {
+                        return by_path
+                }
+                // 焼き込まれていない。そのまま残すと通信するか、無関係なローカルパスを読む
+                return 'about:blank'
+        }
+
+        /** IDF の本文は焼き込みから返す。文字コードの判定は呼び出し側（detect_and_decode_text）のまま */
+        get_exported_idf_text_bytes(kyou_id: string): Uint8Array | null {
+                return this.idf_text_bytes.get(kyou_id) ?? null
         }
 
         /**

@@ -69,15 +69,25 @@ export function useIDFKyouView(options: {
         text_content.value = null
         markdown_html.value = ''
         try {
-            const res = await fetch(url)
-            if (!res.ok) return
-            const bytes = new Uint8Array(await res.arrayBuffer())
+            // 焼き込みがあればそれを使う（「HTML で出力」したファイルは通信をしない）。
+            // 基底は null を返すので、本体では従来どおり fetch する
+            const baked = props.gkill_api.get_exported_idf_text_bytes(props.kyou.id)
+            let bytes: Uint8Array
+            if (baked) {
+                bytes = baked
+            } else {
+                const res = await fetch(url)
+                if (!res.ok) return
+                bytes = new Uint8Array(await res.arrayBuffer())
+            }
             // 文字コードを判定してデコードする (Shift_JIS等の文字化け対策)
             const raw = detect_and_decode_text(bytes)
 
             if (render_as_markdown) {
                 const max_length = props.is_image_request_to_thumb_size ? MAX_MARKDOWN_LENGTH_IN_LIST : MAX_TEXT_LENGTH
-                const html = await markdown_to_safe_html(truncate_markdown(raw, max_length), url)
+                const html = await markdown_to_safe_html(
+                    truncate_markdown(raw, max_length), url,
+                    (resolved) => props.gkill_api.resolve_media_url(resolved))
                 if (seq !== load_seq) return
                 markdown_html.value = html
 
@@ -190,14 +200,16 @@ export function useIDFKyouView(options: {
         }
     }
 
+    // 組み立てた URL は resolve_media_url を通す。基底は恒等関数なので本体の挙動は変わらず、
+    // 「HTML で出力」したファイルだけが焼き込んだ data: URI / サイドカーの相対パスへ差し替える
     function build_media_url(file_url: string, is_video_thumb: boolean): string {
         if (is_video_thumb) {
-            return file_url + "?is_video=true&thumb=400x400"
+            return props.gkill_api.resolve_media_url(file_url + "?is_video=true&thumb=400x400")
         }
         if (props.is_image_request_to_thumb_size) {
-            return file_url + "?thumb=400x400"
+            return props.gkill_api.resolve_media_url(file_url + "?thumb=400x400")
         }
-        return file_url
+        return props.gkill_api.resolve_media_url(file_url)
     }
 
     // 動画の preload。詳細ペイン・ダイアログでは metadata にして、再生前から全体の長さを出す。

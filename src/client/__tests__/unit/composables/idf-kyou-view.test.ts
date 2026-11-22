@@ -20,6 +20,15 @@ vi.mock('@/pages/views/idf-kyou-context-menu.vue', () => ({
 
 import IDFKyouView from '@/pages/views/idf-kyou-view.vue'
 
+// 本体の GkillAPI の既定と同じ口。resolve_media_url は恒等、焼き込みは無し。
+// 「HTML で出力」したファイルだけがこの2つを差し替える
+function default_api_stub(): Record<string, unknown> {
+    return {
+        resolve_media_url: (url: string) => url,
+        get_exported_idf_text_bytes: () => null,
+    }
+}
+
 function createProps(file_name: string, file_url: string, is_list = false): IDFKyouProps {
     const idf_kyou = {
         file_name,
@@ -32,6 +41,7 @@ function createProps(file_name: string, file_url: string, is_list = false): IDFK
     return {
         kyou: { id: 'kyou-1', typed_idf_kyou: idf_kyou },
         idf_kyou,
+        gkill_api: default_api_stub(),
         height: 180,
         width: 400,
         is_image_request_to_thumb_size: is_list,
@@ -209,7 +219,8 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
 
     function createPropsWithAPI(api: unknown, enable_dialog = true, enable_md_link_dialog?: boolean): IDFKyouProps {
         const props = createProps('note.md', '/files/rep1/note.md')
-        ;(props as unknown as { gkill_api: unknown }).gkill_api = api
+        // 既定の口を残したまま、テストが見たい API だけを差し替える
+        ;(props as unknown as { gkill_api: unknown }).gkill_api = { ...default_api_stub(), ...(api as object) }
         ;(props as unknown as { enable_dialog: boolean }).enable_dialog = enable_dialog
         ;(props as unknown as { enable_md_link_dialog?: boolean }).enable_md_link_dialog = enable_md_link_dialog
         return props
@@ -385,5 +396,60 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
         expect(e.preventDefault).not.toHaveBeenCalled()
         expect(e.stopPropagation).not.toHaveBeenCalled()
         expect(api.get_idf_kyou_by_relative_path).not.toHaveBeenCalled()
+    })
+})
+
+// 「HTML で出力」したファイルは通信をしない。本文は HTML へ焼き込まれたものを使う。
+//
+// ここが落ちると**テキスト記録だけが空で出る**。load_text_content は
+// watch(..., { immediate: true }) で自動的に走り、res.ok を見ているので
+// 例外も警告も出ない（「画像は出るのにテキストの中身だけ空」という形になる）。
+describe('useIDFKyouView の本文の焼き込み', () => {
+    beforeEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    afterEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    it('焼き込みがあれば fetch を呼ばずにそれを使う', async () => {
+        const fetch_spy = vi.fn()
+        vi.stubGlobal('fetch', fetch_spy)
+
+        const props = createProps('note.txt', '/files/rep1/note.txt')
+        ;(props as unknown as { gkill_api: Record<string, unknown> }).gkill_api = {
+            ...default_api_stub(),
+            get_exported_idf_text_bytes: () => new TextEncoder().encode('焼き込んだ本文'),
+        }
+        const { text_content } = useIDFKyouView({ props, emits: noop_emits })
+        await flush()
+
+        expect(fetch_spy, '焼き込みがあるのに通信している').not.toHaveBeenCalled()
+        expect(text_content.value).toBe('焼き込んだ本文')
+    })
+
+    it('焼き込みが無ければ従来どおり fetch する（本体の挙動は変わらない）', async () => {
+        mockFetchBytes(new TextEncoder().encode('サーバから取った本文'))
+
+        const props = createProps('note.txt', '/files/rep1/note.txt')
+        const { text_content } = useIDFKyouView({ props, emits: noop_emits })
+        await flush()
+
+        expect(globalThis.fetch).toHaveBeenCalled()
+        expect(text_content.value).toBe('サーバから取った本文')
+    })
+
+    it('メディアの URL は resolve_media_url を通る', () => {
+        const seen: Array<string> = []
+        const props = createProps('photo.jpg', '/files/rep1/photo.jpg', true)
+        ;(props as unknown as { gkill_api: Record<string, unknown> }).gkill_api = {
+            ...default_api_stub(),
+            resolve_media_url: (url: string) => { seen.push(url); return 'data:image/png;base64,AAAA' },
+        }
+        const { build_media_url } = useIDFKyouView({ props, emits: noop_emits })
+
+        expect(build_media_url('/files/rep1/photo.jpg', false)).toBe('data:image/png;base64,AAAA')
+        expect(seen, 'サムネの問い合わせ形のまま渡っていない').toEqual(['/files/rep1/photo.jpg?thumb=400x400'])
     })
 })

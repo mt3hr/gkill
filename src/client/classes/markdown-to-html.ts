@@ -88,7 +88,15 @@ function is_relative_markdown_file_link(href: string, base: URL): boolean {
 
 // MarkdownをHTMLに変換し、サニタイズしたうえで相対URLを解決して返す。
 // marked と dompurify は動的importする (初期バンドルに含めないため)。
-export async function markdown_to_safe_html(markdown: string, base_url: string): Promise<string> {
+//
+// resolve_asset は解決後のURLをさらに差し替える口。省略時は恒等で、本体の挙動は変わらない。
+// 「HTML で出力」したファイルだけが、焼き込んだ data: URI やサイドカーの相対パスへ差し替える
+// （出力 HTML は通信をしないので、/files/ のまま残すと画像が1枚も出ない）。
+export async function markdown_to_safe_html(
+    markdown: string,
+    base_url: string,
+    resolve_asset?: (resolved_url: string) => string,
+): Promise<string> {
     const [{ Marked }, { default: dom_purify }] = await Promise.all([
         import('marked'),
         import('dompurify'),
@@ -122,17 +130,19 @@ export async function markdown_to_safe_html(markdown: string, base_url: string):
         pre.replaceWith(placeholder)
     }
 
+    const resolve = (url: string): string => resolve_asset ? resolve_asset(resolve_url(url, base)) : resolve_url(url, base)
+
     for (const img of template.content.querySelectorAll('img')) {
         const src = img.getAttribute('src')
         if (src !== null) {
-            img.setAttribute('src', resolve_url(src, base))
+            img.setAttribute('src', resolve(src))
         }
     }
 
     for (const anchor of template.content.querySelectorAll('a')) {
         const href = anchor.getAttribute('href')
         if (href !== null) {
-            anchor.setAttribute('href', resolve_url(href, base))
+            anchor.setAttribute('href', resolve(href))
             if (is_relative_markdown_file_link(href, base)) {
                 anchor.setAttribute(MD_LINK_DATA_ATTRIBUTE, href)
             }
