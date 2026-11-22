@@ -19,6 +19,13 @@ import (
 // 取り消しテストで同じ内容をそのまま削除リクエストに渡せるようにしている。
 func addSharedKyouList(t *testing.T, tsURL, sessionID, device, findQueryJSON string) *req_res.ShareKyouListInfo {
 	t.Helper()
+	return addSharedKyouListWith(t, tsURL, sessionID, device, findQueryJSON, nil)
+}
+
+// addSharedKyouListWith は共有情報を1件登録する。customize で共有範囲のフラグや
+// ViewType を変えられる（nil なら addSharedKyouList と同じ既定）。
+func addSharedKyouListWith(t *testing.T, tsURL, sessionID, device, findQueryJSON string, customize func(*req_res.ShareKyouListInfo)) *req_res.ShareKyouListInfo {
+	t.Helper()
 
 	info := &req_res.ShareKyouListInfo{
 		ShareID:              GenerateNewID(),
@@ -32,6 +39,9 @@ func addSharedKyouList(t *testing.T, tsURL, sessionID, device, findQueryJSON str
 		IsShareWithTexts:     true,
 		IsShareWithTimeIss:   false,
 		IsShareWithLocations: false,
+	}
+	if customize != nil {
+		customize(info)
 	}
 	addReq := &req_res.AddShareKyouListInfoRequest{
 		SessionID:         sessionID,
@@ -486,5 +496,100 @@ func TestHandleDeleteShareKyouListInfos_OtherUsersShareIsRejected(t *testing.T) 
 	after := getSharedKyous(t, tsURL, shareInfo.ShareID)
 	if len(after.Errors) > 0 {
 		t.Errorf("第三者の削除要求で共有が消えている: %+v", after.Errors)
+	}
+}
+
+// ここから下は、共有の収集を kyou_bundle_collector.go へ切り出して
+// 「HTML で出力」と共用するための土台。切り出しで写し漏らすと静かに壊れるもの
+// （共有範囲のフラグ・ViewType の分岐）を、切り出す前に固定しておく。
+
+// TestHandleGetSharedKyous_AttachedDatasFollowShareFlags は、付随データが
+// 共有範囲のフラグに従うことを確認する。偽にしたのに返ると、共有していない
+// タグ名や本文がそのまま第三者へ出る。
+func TestHandleGetSharedKyous_AttachedDatasFollowShareFlags(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	device, err := gkillAPI.GetDevice()
+	if err != nil {
+		t.Fatalf("GetDevice failed: %v", err)
+	}
+
+	kyouID := addTestKmemo(t, tsURL, sessionID, "kyoyusuruwadai の記録")
+	addTestTagTo(t, tsURL, sessionID, kyouID, "TagA")
+	addTestTextTo(t, tsURL, sessionID, kyouID, "hunzuidenotekisuto")
+
+	const findQueryJSON = `{"words":["kyoyusuruwadai"],"words_and":true}`
+
+	shareOn := addSharedKyouListWith(t, tsURL, sessionID, device, findQueryJSON,
+		func(info *req_res.ShareKyouListInfo) {
+			info.IsShareWithTags = true
+			info.IsShareWithTexts = true
+		})
+	onResp := getSharedKyous(t, tsURL, shareOn.ShareID)
+	if len(onResp.Errors) > 0 {
+		t.Fatalf("get shared kyous errors: %+v", onResp.Errors)
+	}
+	if len(onResp.AttachedTags) == 0 {
+		t.Error("共有するはずのタグが返っていない")
+	}
+	if len(onResp.AttachedTexts) == 0 {
+		t.Error("共有するはずの付随テキストが返っていない")
+	}
+
+	shareOff := addSharedKyouListWith(t, tsURL, sessionID, device, findQueryJSON,
+		func(info *req_res.ShareKyouListInfo) {
+			info.IsShareWithTags = false
+			info.IsShareWithTexts = false
+		})
+	offResp := getSharedKyous(t, tsURL, shareOff.ShareID)
+	if len(offResp.Errors) > 0 {
+		t.Fatalf("get shared kyous errors: %+v", offResp.Errors)
+	}
+	if len(offResp.AttachedTags) != 0 {
+		t.Errorf("共有しない設定なのにタグが %d 件返っている", len(offResp.AttachedTags))
+	}
+	if len(offResp.AttachedTexts) != 0 {
+		t.Errorf("共有しない設定なのに付随テキストが %d 件返っている", len(offResp.AttachedTexts))
+	}
+	if len(offResp.Kyous) == 0 {
+		t.Error("付随データを共有しない設定で、記録まで消えている")
+	}
+}
+
+// TestHandleGetSharedKyous_MiViewDoesNotReturnOtherTypedDatas は、ViewType が "mi" の
+// 共有で Mi 以外の型別データを引かないことを確認する。
+func TestHandleGetSharedKyous_MiViewDoesNotReturnOtherTypedDatas(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	device, err := gkillAPI.GetDevice()
+	if err != nil {
+		t.Fatalf("GetDevice failed: %v", err)
+	}
+
+	addTestKmemo(t, tsURL, sessionID, "kyoyusuruwadai の記録")
+
+	shareInfo := addSharedKyouListWith(t, tsURL, sessionID, device,
+		`{"words":["kyoyusuruwadai"],"words_and":true}`,
+		func(info *req_res.ShareKyouListInfo) {
+			info.ViewType = "mi"
+		})
+
+	getResp := getSharedKyous(t, tsURL, shareInfo.ShareID)
+	if len(getResp.Errors) > 0 {
+		t.Fatalf("get shared kyous errors: %+v", getResp.Errors)
+	}
+	if getResp.ViewType != "mi" {
+		t.Errorf("ViewType = %q, want %q", getResp.ViewType, "mi")
+	}
+	if len(getResp.Kmemos) != 0 {
+		t.Errorf("mi の共有で Kmemo が %d 件返っている", len(getResp.Kmemos))
 	}
 }

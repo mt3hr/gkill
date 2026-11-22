@@ -14,7 +14,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
-	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
@@ -90,19 +89,6 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 	userID := sharedKyouInfo.UserID
 	device := sharedKyouInfo.Device
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at get repositories user id", "error", fmt.Sprintf("%q", err))
-		gkillError := &message.GkillError{
-			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-			Cause:        err,
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
 	findQuery := &find.FindQuery{}
 	err = json.Unmarshal([]byte(sharedKyouInfo.FindQueryJSON), findQuery)
 	if err != nil {
@@ -117,380 +103,40 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	findQuery.OnlyLatestData = true
-
-	// Kyou
-	findFilter := &api.FindFilter{}
-	kyous, _, err := findFilter.FindKyous(r.Context(), userID, device, g.GkillDAOManager, findQuery)
-	if err != nil {
-		err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
-		gkillError := &message.GkillError{
-			ErrorCode:    message.FindKyousShareKyouError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-			Cause:        err,
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	findQueryValueForKyouInstances := *findQuery
-	findQueryForKyouInstances := &findQueryValueForKyouInstances
-	findQueryForKyouInstances.IncludeCreateMi = true
-	findQueryForKyouInstances.IncludeStartMi = true
-	findQueryForKyouInstances.IncludeCheckMi = true
-	findQueryForKyouInstances.IncludeEndMi = true
-	findQueryForKyouInstances.IncludeLimitMi = true
-	findQueryForKyouInstances.IncludeEndTimeIs = true
-	if len(kyous) == 0 {
-		// 検索結果なし → 実体も1件も返さない。
-		// ここは「明示的に0件指定」である非nilの空スライスでなければならない。
-		// nil は「ID で絞らない」の意味なので、実体取得（FindKmemo 等）が
-		// タグ・打刻・実行中といった条件を解釈しないぶん素通しになり、
-		// 共有していない記録の本文まで返ってしまう。
-		// /api/get_shared_kyous は wrapNoAuth（共有IDを知っていれば誰でも叩ける）ため、
-		// これがそのまま第三者への漏洩になる。
-		findQueryForKyouInstances.IDs = []string{}
-	} else {
-		ids := make([]string, 0, len(kyous))
-		for _, kyou := range kyous {
-			ids = append(ids, kyou.ID)
-		}
-		findQueryForKyouInstances.IDs = ids
-	}
-	findQueryForKyouInstances.OnlyLatestData = false
-
-	// Mi
-	mis, err := repositories.MiReps.FindMi(r.Context(), findQueryForKyouInstances)
-	if err != nil {
-		err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
-		gkillError := &message.GkillError{
-			ErrorCode:    message.FindKyousShareKyouError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-			Cause:        err,
-		}
-		response.Errors = append(response.Errors, gkillError)
+	bundle, gkillErr := g.collectKyouBundle(r.Context(), &kyouBundleOptions{
+		UserID:           userID,
+		Device:           device,
+		LocaleName:       request.LocaleName,
+		FindQuery:        findQuery,
+		ViewType:         sharedKyouInfo.ViewType,
+		IncludeLocations: sharedKyouInfo.IsShareWithLocations,
+		IncludeTags:      sharedKyouInfo.IsShareWithTags,
+		IncludeTexts:     sharedKyouInfo.IsShareWithTexts,
+		IncludeTimeIss:   sharedKyouInfo.IsShareWithTimeIss,
+	})
+	if gkillErr != nil {
+		response.Errors = append(response.Errors, gkillErr)
 		return
 	}
 
-	// GPSLogs
-	gpsLogs := []reps.GPSLog{}
-	if sharedKyouInfo.IsShareWithLocations {
-		gpsLogs, err = repositories.GPSLogReps.GetGPSLogs(r.Context(), findQuery.CalendarStartTime, findQuery.CalendarEndTime)
-		if err != nil {
-			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
-			gkillError := &message.GkillError{
-				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-				Cause:        err,
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}
-
-	kmemos := []reps.Kmemo{}
-	kcs := []reps.KC{}
-	timeiss := []reps.TimeIs{}
-	nlogs := []reps.Nlog{}
-	lantanas := []reps.Lantana{}
-	urlogs := []reps.URLog{}
-	idfKyous := []reps.IDFKyou{}
-	rekyous := []reps.ReKyou{}
-	gitCommitLogs := []reps.GitCommitLog{}
-	if sharedKyouInfo.ViewType != "mi" {
-		// Kmemo
-		kmemos, err = repositories.KmemoReps.FindKmemo(r.Context(), findQueryForKyouInstances)
-		if err != nil {
-			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
-			gkillError := &message.GkillError{
-				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-				Cause:        err,
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-
-		// KC
-		kcs, err = repositories.KCReps.FindKC(r.Context(), findQueryForKyouInstances)
-		if err != nil {
-			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
-			gkillError := &message.GkillError{
-				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-				Cause:        err,
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-
-		// TimeIs
-		timeiss, err = repositories.TimeIsReps.FindTimeIs(r.Context(), findQueryForKyouInstances)
-		if err != nil {
-			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
-			gkillError := &message.GkillError{
-				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-				Cause:        err,
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-
-		// Nlog
-		nlogs, err = repositories.NlogReps.FindNlog(r.Context(), findQueryForKyouInstances)
-		if err != nil {
-			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
-			gkillError := &message.GkillError{
-				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-				Cause:        err,
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-
-		// Lantana
-		lantanas, err = repositories.LantanaReps.FindLantana(r.Context(), findQueryForKyouInstances)
-		if err != nil {
-			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
-			gkillError := &message.GkillError{
-				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-				Cause:        err,
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-
-		// URLogs
-		urlogs, err = repositories.URLogReps.FindURLog(r.Context(), findQueryForKyouInstances)
-		if err != nil {
-			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
-			gkillError := &message.GkillError{
-				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-				Cause:        err,
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-
-		// IDFKyou
-		idfKyous, err = repositories.IDFKyouReps.FindIDFKyou(r.Context(), findQueryForKyouInstances)
-		if err != nil {
-			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
-			gkillError := &message.GkillError{
-				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-				Cause:        err,
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-
-		// ReKyou
-		rekyous, err = repositories.ReKyouReps.FindReKyou(r.Context(), findQueryForKyouInstances)
-		if err != nil {
-			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
-			gkillError := &message.GkillError{
-				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-				Cause:        err,
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-
-		// GitCommitLog
-		gitCommitLogs, err = repositories.GitCommitLogReps.FindGitCommitLog(r.Context(), findQueryForKyouInstances)
-		if err != nil {
-			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
-			gkillError := &message.GkillError{
-				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
-				Cause:        err,
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}
-
-	// AttachedTag
-	tags := []reps.Tag{}
-	tagSet := map[string]reps.Tag{}
-	if sharedKyouInfo.IsShareWithTags {
-		for _, kyou := range kyous {
-			tagsRelatedID, err := repositories.GetTagsByTargetID(r.Context(), kyou.ID)
-			if err != nil {
-				err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error at find tags user id", "error", fmt.Sprintf("%q", err))
-				gkillError := &message.GkillError{
-					ErrorCode:    message.FindTagsShareKyouError,
-					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAGS_BY_TARGET_ID_MESSAGE"}),
-					Cause:        err,
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
-			}
-			for _, tag := range tagsRelatedID {
-				tagSet[tag.ID] = tag
-			}
-		}
-		for _, tag := range tagSet {
-			tags = append(tags, tag)
-		}
-	}
-
-	// AttachedText
-	texts := []reps.Text{}
-	textSet := map[string]reps.Text{}
-	if sharedKyouInfo.IsShareWithTexts {
-		for _, kyou := range kyous {
-			textsRelatedID, err := repositories.GetTextsByTargetID(r.Context(), kyou.ID)
-			if err != nil {
-				err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error at find tags user id", "error", fmt.Sprintf("%q", err))
-				gkillError := &message.GkillError{
-					ErrorCode:    message.FindTextsShareKyouError,
-					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
-					Cause:        err,
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
-			}
-			for _, text := range textsRelatedID {
-				textSet[text.ID] = text
-			}
-		}
-		for _, text := range textSet {
-			texts = append(texts, text)
-		}
-	}
-
-	// AttachedTimeIs
-	attachedTimeisKyous := []reps.Kyou{}
-	attachedTimeiss := []reps.TimeIs{}
-	if sharedKyouInfo.IsShareWithTimeIss {
-
-		attachedTimeIsKyousMap := map[string]reps.Kyou{}
-		attachedTimeIssMap := map[string]reps.TimeIs{}
-		queries := []find.FindQuery{}
-
-		timeisQueryValue := *findQuery
-		timeisQuery := timeisQueryValue
-		timeisQuery.RepTypes = []string{"timeis"}
-		timeisQuery.OnlyLatestData = true
-		queries = append(queries, timeisQuery)
-
-		if timeisQuery.CalendarStartTime != nil {
-			timeisPlayingHeadQuery := find.FindQuery{}
-			// 浅いコピー由来のポインタ共有を避けるため値コピーで新規に作る
-			playingHeadTime := *timeisQuery.CalendarStartTime
-			timeisPlayingHeadQuery.PlayingTime = &playingHeadTime
-			queries = append(queries, timeisPlayingHeadQuery)
-		}
-
-		if timeisQuery.CalendarEndTime != nil {
-			timeisPlayingHipQuery := find.FindQuery{}
-			playingHipTime := *timeisQuery.CalendarEndTime
-			timeisPlayingHipQuery.PlayingTime = &playingHipTime
-			queries = append(queries, timeisPlayingHipQuery)
-		}
-
-		for _, query := range queries {
-			findFilter := &api.FindFilter{}
-			matchPlayingKyous, _, err := findFilter.FindKyous(r.Context(), userID, device, g.GkillDAOManager, &query)
-			if err != nil {
-				err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error at find tags user id", "error", fmt.Sprintf("%q", err))
-				gkillError := &message.GkillError{
-					ErrorCode:    message.FindTextsShareKyouError,
-					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
-					Cause:        err,
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
-			}
-			for _, timeisKyou := range matchPlayingKyous {
-				if existKyou, exist := attachedTimeIsKyousMap[timeisKyou.ID]; exist {
-					if timeisKyou.UpdateTime.After(existKyou.UpdateTime) {
-						attachedTimeIsKyousMap[timeisKyou.ID] = timeisKyou
-					}
-				} else {
-					attachedTimeIsKyousMap[timeisKyou.ID] = timeisKyou
-				}
-			}
-
-			ids := []string{}
-			for id := range attachedTimeIsKyousMap {
-				ids = append(ids, id)
-			}
-			if len(ids) != 0 {
-				playingTimeIss, err := repositories.TimeIsReps.FindTimeIs(r.Context(), &query)
-				if err != nil {
-					err = fmt.Errorf("error at find playing timeis user id = %s device = %s: %w", userID, device, err)
-					slog.Log(r.Context(), gkill_log.Debug, "error at find playing timeis user id", "error", fmt.Sprintf("%q", err))
-					gkillError := &message.GkillError{
-						ErrorCode:    message.FindTextsShareKyouError,
-						ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TIMEIS_MESSAGE"}),
-						Cause:        err,
-					}
-					response.Errors = append(response.Errors, gkillError)
-					return
-				}
-				// 削除済みは Kyou 検索と同じ規則で落とす(ADR-0612)。ここは FindFilter を
-				// 通らない直叩きなので、落とさないと「終了していない削除済みの打刻」が
-				// 開始以降のすべての記録に *実行中* として永久に付き続ける。
-				for _, timeis := range livePlayingTimeIsCandidates(playingTimeIss) {
-					// 同じIDの版が複数来たら新しいほうを採る。
-					// 以前は先に無条件で代入していたため、直後の比較が必ず自分自身との
-					// 比較になり(else も到達不能で)、版の選択が働いていなかった。
-					existTimeIs, exist := attachedTimeIssMap[timeis.ID]
-					if !exist || timeis.UpdateTime.After(existTimeIs.UpdateTime) {
-						attachedTimeIssMap[timeis.ID] = timeis
-					}
-				}
-			}
-
-			for _, kyou := range attachedTimeIsKyousMap {
-				attachedTimeisKyous = append(attachedTimeisKyous, kyou)
-			}
-			for _, timeis := range attachedTimeIssMap {
-				attachedTimeiss = append(attachedTimeiss, timeis)
-			}
-		}
-	}
-
-	response.Kyous = kyous
-	response.Mis = mis
-	response.Kmemos = kmemos
-	response.KCs = kcs
-	response.TimeIss = timeiss
-	response.Nlogs = nlogs
-	response.Lantanas = lantanas
-	response.URLogs = urlogs
-	response.IDFKyous = idfKyous
-	response.ReKyous = rekyous
-	response.GitCommitLogs = gitCommitLogs
-	response.GPSLogs = gpsLogs
-	response.AttachedTags = tags
-	response.AttachedTexts = texts
+	response.Kyous = bundle.Kyous
+	response.Mis = bundle.Mis
+	response.Kmemos = bundle.Kmemos
+	response.KCs = bundle.KCs
+	response.TimeIss = bundle.TimeIss
+	response.Nlogs = bundle.Nlogs
+	response.Lantanas = bundle.Lantanas
+	response.URLogs = bundle.URLogs
+	response.IDFKyous = bundle.IDFKyous
+	response.ReKyous = bundle.ReKyous
+	response.GitCommitLogs = bundle.GitCommitLogs
+	response.GPSLogs = bundle.GPSLogs
+	response.AttachedTags = bundle.AttachedTags
+	response.AttachedTexts = bundle.AttachedTexts
+	response.AttachedTimeIss = bundle.AttachedTimeIss
+	response.AttachedTimeIsKyous = bundle.AttachedTimeIsKyous
 	response.Title = sharedKyouInfo.ShareTitle
 	response.ViewType = sharedKyouInfo.ViewType
-	response.AttachedTimeIss = attachedTimeiss
-	response.AttachedTimeIsKyous = attachedTimeisKyous
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetMiSharedTasksSuccessMessage,
 		Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KYOU_MESSAGE"}),

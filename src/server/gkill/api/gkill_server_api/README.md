@@ -34,8 +34,8 @@ gkill_server_api/
 └── *_test.go                        # テスト全49ファイル（handle_*_test.go 22本を含む。一覧は ABOUT_TEST.md）
 ```
 
-**合計: 170ファイル**（基盤20 + ハンドラ実装99 + テスト49 + README.md 1 + ABOUT_TEST.md 1）
-`.go` だけなら168ファイル。`handle_*.go` という名前のファイルは121あるが、うち22はテスト。
+**合計: 171ファイル**（基盤21 + ハンドラ実装99 + テスト49 + README.md 1 + ABOUT_TEST.md 1）
+`.go` だけなら169ファイル。`handle_*.go` という名前のファイルは121あるが、うち22はテスト。
 
 ## GkillServerAPI 構造体
 
