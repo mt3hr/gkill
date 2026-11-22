@@ -127,7 +127,8 @@ func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Req
 	response.FileName = exportFileNameBase(request.Title) + ".html"
 	response.HTML = rendered
 	response.Warnings = payload.Warnings
-	response.Partial = false
+	// 予算や読み込みの失敗で落としたものがあれば、そのぶん欠けている
+	response.Partial = len(payload.Warnings) != 0
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.ExportRykvHTMLSuccessMessage,
 		Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_EXPORT_RYKV_HTML_MESSAGE"}),
@@ -232,6 +233,21 @@ func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_re
 		merged.add(bundle)
 	}
 	merged.writeTo(payload)
+
+	// メディアと IDF の本文。記録を集め終えてから、焼いた記録のぶんだけ読む
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		return nil, bundleError(ctx, request.LocaleName, message.RepositoriesGetError,
+			"FAILED_EXPORT_RYKV_HTML_MESSAGE", "error at get repositories user id", err)
+	}
+	mediaWarnings, err := g.collectExportMedia(ctx, request, repositories, payload)
+	if err != nil {
+		err = fmt.Errorf("error at collect export media: %w", err)
+		return nil, bundleError(ctx, request.LocaleName, message.ExportRykvHTMLRenderError,
+			"FAILED_EXPORT_RYKV_HTML_MESSAGE", "error at collect export media", err)
+	}
+	payload.Warnings = append(payload.Warnings, mediaWarnings...)
 
 	return payload, nil
 }
