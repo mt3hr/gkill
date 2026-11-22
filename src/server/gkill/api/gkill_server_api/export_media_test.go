@@ -106,3 +106,20 @@ func TestExportMediaContentType(t *testing.T) {
 		})
 	}
 }
+
+// TestExportPluginHTMLKey_MatchesClient は、プラグイン本文の鍵がクライアントの
+// plugin_html_key と同じ形であることを確認する。
+// 外れても例外は出ず、本文が引けずに空で出る。
+func TestExportPluginHTMLKey_MatchesClient(t *testing.T) {
+	source, err := os.ReadFile(filepath.Join("..", "..", "..", "..", "client", "classes", "api", "gkill-api.ts"))
+	if err != nil {
+		t.Fatalf("クライアントのソースが読めない: %v", err)
+	}
+	// クライアント側は `${rep_name}\u0000${kyou_id}`
+	if !strings.Contains(string(source), `${rep_name}\u0000${kyou_id}`) {
+		t.Error("クライアントの plugin_html_key が変わっている（鍵が食い違うと本文が空で出る）")
+	}
+	if got := exportPluginHTMLKey("RepA", "k1"); got != "RepA\x00k1" {
+		t.Errorf("exportPluginHTMLKey = %q, want %q", got, "RepA\x00k1")
+	}
+}

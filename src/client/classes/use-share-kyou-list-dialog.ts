@@ -13,13 +13,25 @@ export function useShareKyouListDialog(options: {
     const { props: _props, emits: _emits } = options
 
     const is_show_dialog: Ref<boolean> = ref(false)
+    /**
+     * 入口（2つのボタン）か、共有の設定か。
+     *
+     * 開くたび入口へ戻す。前に開いたときの続きから始まると、
+     * 「共有」を押したつもりが設定画面だった、という出方になる
+     */
+    const mode: Ref<'menu' | 'share'> = ref('menu')
     useDialogHistoryStack(is_show_dialog)
     const ui = useFloatingDialog("share-kyou-list-dialog", {
         centerMode: "always",
         onEscape: () => hide(),
     })
     async function show(): Promise<void> {
+        mode.value = 'menu'
         is_show_dialog.value = true
+    }
+
+    function show_share_form(): void {
+        mode.value = 'share'
     }
     async function hide(): Promise<void> {
         close_dialog_via_history(is_show_dialog)
@@ -27,8 +39,10 @@ export function useShareKyouListDialog(options: {
 
     return {
         is_show_dialog,
+        mode,
         ui,
         show,
+        show_share_form,
         hide,
     }
 }

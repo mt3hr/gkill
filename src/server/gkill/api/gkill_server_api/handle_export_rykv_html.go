@@ -274,5 +274,10 @@ func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_re
 	}
 	payload.Warnings = append(payload.Warnings, mediaWarnings...)
 
+	// プラグインの本文（出力時に選んだときだけ）。
+	// 同じプラグインへの問い合わせは直列化されるので、ここは最後に回す
+	payload.Warnings = append(payload.Warnings,
+		g.collectExportPluginHTML(ctx, request, userID, payload)...)
+
 	return payload, nil
 }

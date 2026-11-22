@@ -8,9 +8,9 @@
         @touchstart="ui.onHeaderPointerDown">
         <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
-  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
+  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
@@ -18,7 +18,26 @@
       <div class="gkill-floating-dialog__body">
         <v-card variant="flat" class="pa-2">
 
-        <ShareKyousListView :application_config="application_config" :gkill_api="gkill_api"
+        <!--
+            入口。渡し方が2つあるので、どちらをするのかを先に選ばせる。
+            「HTML エクスポート」は gkill の要らない1ファイルを作る渡し方で、
+            「画面を共有」はこのサーバが生きている前提のリンクを作る渡し方
+        -->
+        <template v-if="mode === 'menu'">
+          <v-btn block color="primary" variant="flat" class="mb-2 export_rykv_html_button"
+            prepend-icon="mdi-file-export-outline" @click="() => {
+              hide()
+              emits('requested_export_rykv_html')
+            }">
+            {{ i18n.global.t('EXPORT_RYKV_HTML_TITLE') }}
+          </v-btn>
+          <v-btn block color="primary" variant="flat" class="share_screen_button"
+            prepend-icon="mdi-share-variant" @click="show_share_form()">
+            {{ i18n.global.t('SHARE_SCREEN_TITLE') }}
+          </v-btn>
+        </template>
+
+        <ShareKyousListView v-else :application_config="application_config" :gkill_api="gkill_api"
           :find_kyou_query="find_kyou_query"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
@@ -43,7 +62,6 @@ import { useShareKyouListDialog } from '@/classes/use-share-kyou-list-dialog'
 
 const props = defineProps<ShareKyousListDialogProps>()
 const emits = defineEmits<ShareKyousListDialogEmits>()
-const { is_show_dialog, ui, show, hide } = useShareKyouListDialog({ props, emits })
+const { is_show_dialog, mode, ui, show, show_share_form, hide } = useShareKyouListDialog({ props, emits })
 defineExpose({ show, hide })
 </script>
-

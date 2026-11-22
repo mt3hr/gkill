@@ -133,7 +133,7 @@ src/server/
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（178ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（179ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
     │       ├── gkill_server_api_address.go  # ルート表（99エンドポイント: 98 POST + 1 GET。パス・メソッド・認証区分・ハンドラの正本）
@@ -336,7 +336,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-1054キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+1055キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 

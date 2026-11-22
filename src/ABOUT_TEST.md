@@ -11,14 +11,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド (`server/`) | 1527 | 231 | Go `testing` |
+| Go バックエンド (`server/`) | 1528 | 231 | Go `testing` |
 | フロントエンド ユニット (`client/`) | 2215 | 192 | Vitest |
 | フロントエンド E2E (`client/`) | 259 | 49 | Playwright |
 | MCP サーバ (`server/gkill/mcp/`) | 1187 | 44 | Go `testing` |
 | ツール (`tools/`) | 115 | 4 | Vitest |
 | Android (`android/`) | 31 | 2 | JUnit 4 |
 | Wear OS (`wear_os/`) | 244 | 20 | JUnit 4 + MockK |
-| **合計** | **5,578** | **542** | |
+| **合計** | **5,579** | **542** | |
 
 `src/plugins/` の Go テスト 277件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
@@ -79,7 +79,7 @@ npm run verify_docs -- --list
 | `client/classes/kftl/` | [client/classes/kftl/ABOUT_TEST.md](client/classes/kftl/ABOUT_TEST.md) | KFTL 行分類器 (TypeScript。行ラベル専用) と送信経路 |
 | `client/pages/` | [client/pages/ABOUT_TEST.md](client/pages/ABOUT_TEST.md) | E2E + Composable + Router |
 | `locales/` | [locales/ABOUT_TEST.md](locales/ABOUT_TEST.md) | i18n 完全性検証（7言語） |
-| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（1527テスト / 35パッケージ） |
+| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（1528テスト / 35パッケージ） |
 | `server/gkill/api/` | [server/gkill/api/ABOUT_TEST.md](server/gkill/api/ABOUT_TEST.md) | API 共通基盤（FindFilter等） |
 | `server/gkill/api/gkill_server_api/` | [server/gkill/api/gkill_server_api/ABOUT_TEST.md](server/gkill/api/gkill_server_api/ABOUT_TEST.md) | API ハンドラ統合テスト（handle_*.go 実装100ファイル） |
 | `server/gkill/api/kftl/` | [server/gkill/api/kftl/ABOUT_TEST.md](server/gkill/api/kftl/ABOUT_TEST.md) | KFTL パーサ (Go) |

@@ -14,6 +14,10 @@
         <v-checkbox v-model="is_share_with_locations" :label="i18n.global.t('SHARE_KYOU_SHARE_WITH_LOCATIONS')" />
         <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
+            <v-col class="pa-0 ma-0 pr-2" cols="auto">
+                <v-btn color="secondary" variant="flat" class="share_kyou_cancel_button"
+                    @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE") }}</v-btn>
+            </v-col>
             <v-col class="pa-0 ma-0" cols="auto">
                 <v-btn dark color="primary" @click="share()">{{ i18n.global.t("OK_TITLE") }}</v-btn>
             </v-col>

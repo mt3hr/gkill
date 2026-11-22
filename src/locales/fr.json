@@ -833,6 +833,7 @@
     "FINISH_EXPORT_KYOUS_MESSAGE": "Téléchargement terminé",
     "EXPORTED_RYKV_PAGE_NO_DATA_MESSAGE": "Ce fichier HTML ne contient aucun enregistrement.",
     "EXPORT_RYKV_HTML_TITLE": "Exporter en HTML",
+    "SHARE_SCREEN_TITLE": "Partager cette vue",
     "EXPORT_TARGET_TITLE": "Cible",
     "EXPORT_TARGET_ALL_COLUMNS": "Toutes les colonnes affichées",
     "EXPORT_TARGET_FOCUSED_COLUMN": "Colonne sélectionnée",

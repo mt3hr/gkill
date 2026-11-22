@@ -7,6 +7,7 @@ import type { ShareKyousInfo } from "@/classes/datas/share-kyous-info"
 export interface ShareKyousListDialogEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
+    (e: 'requested_export_rykv_html'): void
     (e: 'regestered_share_kyou_list_info', share_kyou_list_info: ShareKyousInfo): void
     (e: 'requested_show_share_kyou_link_dialog', share_kyou_list_info: ShareKyousInfo): void
 }
