@@ -3,6 +3,11 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
+import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
+import { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct-element-data'
+import { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data'
+import { FOLDABLE_STRUCT_ROOT_KEY } from '@/pages/views/foldable-struct-model'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import { useGkillMessageFeed } from '@/classes/use-gkill-message-feed'
 import { apply_baked_locale } from '@/export-i18n'
@@ -118,6 +123,27 @@ export function useExportedRykvPage() {
         is_ready.value = true
     }
 
+    /** チェックツリーのルート1本を「入れ物」に整える（4本に同じことをする） */
+    function prepare_struct_root(
+        root: { id: string | null, name: string, key: string, is_dir: boolean, children: Array<unknown> | null },
+        root_name: string,
+    ): void {
+        // ルートは「入れ物」にしておく。`new ApplicationConfig()` の既定は
+        // is_dir = false で、そのままだと append_* が子を足しても
+        // 木が**葉として描かれて子が出ない**（名前の無いチェックボックスが1つ出るだけ）
+        root.is_dir = true
+        if (!root.children) {
+            root.children = []
+        }
+        // 名前と key が空のままだと foldable-struct がルートと見なせない
+        // （`is_dir || key === FOLDABLE_STRUCT_ROOT_KEY` で判定している）
+        if (!root.name) root.name = FOLDABLE_STRUCT_ROOT_KEY
+        if (!root.key) root.key = FOLDABLE_STRUCT_ROOT_KEY
+        // id は木ごとに別にしておく。空のままだと4本のルートが同じ id になり、
+        // id で突き合わせる経路（本体では編集系だけ）がどれを指すか決まらない
+        if (!root.id) root.id = FOLDABLE_STRUCT_ROOT_KEY + '-' + root_name
+    }
+
     /**
      * サイドバーのチェックツリー（タグ・記録先・端末・記録種別）を組む。
      *
@@ -132,15 +158,20 @@ export function useExportedRykvPage() {
      * 板（mi_board）は呼ばない —— `get_mi_board_list` は throw する（rykv では使わない）。
      */
     async function build_sidebar_structs(config: ApplicationConfig): Promise<void> {
-        // ルートは「入れ物」にしておく。`new ApplicationConfig()` の既定は
-        // is_dir = false で、そのままだと append_* が子を足しても
-        // 木が**葉として描かれて子が出ない**（名前の無いチェックボックスが1つ出るだけ）
-        for (const root of [config.tag_struct, config.rep_struct, config.device_struct, config.rep_type_struct]) {
-            root.is_dir = true
-            if (!root.children) {
-                root.children = []
-            }
-        }
+        // ルートが無いことがある。木は利用者が設定画面で並べて初めて作られるもので、
+        // 一度も触っていない利用者の設定には**入っていない**（サーバは null を返す）。
+        // 焼き込みの JSON にも null で乗り、`hydrate` は source の全キーを写すので
+        // `new ApplicationConfig()` の既定ごと null で潰れる。本体の
+        // `get_application_config` が同じ修復をしているのと同じ理由で、ここでも組み直す。
+        if (!config.tag_struct) config.tag_struct = new TagStructElementData()
+        if (!config.rep_struct) config.rep_struct = new RepStructElementData()
+        if (!config.rep_type_struct) config.rep_type_struct = new RepTypeStructElementData()
+        if (!config.device_struct) config.device_struct = new DeviceStructElementData()
+
+        prepare_struct_root(config.tag_struct, 'tag')
+        prepare_struct_root(config.rep_struct, 'rep')
+        prepare_struct_root(config.device_struct, 'device')
+        prepare_struct_root(config.rep_type_struct, 'rep_type')
         await config.append_not_found_reps()
         await config.append_not_found_devices()
         await config.append_not_found_rep_types()

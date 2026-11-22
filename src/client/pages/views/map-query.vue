@@ -10,7 +10,11 @@
             }}</v-btn>
         </v-col>
     </v-row>
-    <v-sheet v-show="use_map">
+    <!-- 出力 HTML では地図そのものを出さない。`v-show` はマウントしたままなので、
+         隠れていても GoogleMap が Maps の JS を取りに行き、「通信をしない」が破れる。
+         この節は検索条件の生成のために v-show で生かしてある（ref が要る）ので、
+         落とすのは地図だけ。公開している getter は useMapQuery が持っていて gmap を見ない -->
+    <v-sheet v-if="!application_config.for_export_kyou" v-show="use_map">
         <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key" @click="handle_map_click"
             style="width: 100%; height: 400px" class="googlemap search_google_map"
             :key="application_config.google_map_api_key + (application_config.use_dark_theme ? '_dark' : '_light')"

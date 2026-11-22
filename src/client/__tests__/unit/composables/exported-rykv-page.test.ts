@@ -156,6 +156,50 @@ describe('サイドバーのチェックツリーは焼いたデータから組�
         }
     })
 
+    // 木は利用者が設定画面で並べて初めて作られる。一度も触っていない利用者の設定には
+    // 入っておらず、サーバは null を返す。焼き込みの JSON にも null で乗り、
+    // `hydrate` は source の全キーを写すので `new ApplicationConfig()` の既定ごと潰れる。
+    // 直前まで実機では再現しなかった（設定を触っている利用者では木があるため）
+    it('木が null で焼かれていても組み直す（設定を一度も触っていない利用者）', async () => {
+        put_json_element('gkill-export-data', JSON.stringify({
+            schema_version: 1,
+            title: 'サンプル',
+            locale_name: 'ja',
+            with_sidebar: true,
+            application_config: {
+                tag_struct: null,
+                rep_struct: null,
+                device_struct: null,
+                rep_type_struct: null,
+            },
+            kyous: [
+                { id: 'a', rep_name: 'RepA', data_type: 'kmemo', related_time: '2026-07-01T09:00:00.000+09:00' },
+            ],
+            attached_tags: [
+                { id: 't1', target_id: 'a', tag: 'タグA', related_time: '2026-07-01T09:00:00.000+09:00' },
+            ],
+            columns: [{ query: { query_id: 'q1' }, kyou_ids: ['a'] }],
+        }))
+        const { is_ready, application_config } = useExportedRykvPage()
+        await wait_ready(is_ready)
+        expect(is_ready.value, '木を組む途中で例外になっている').toBe(true)
+        expect(tag_names(application_config.value)).toContain('タグA')
+        expect((application_config.value.rep_struct.children ?? []).map(child => child.rep_name)).toEqual(['RepA'])
+    })
+
+    it('ルートの id は木ごとに別（空のままだと4本が同じ id になる）', async () => {
+        put_payload()
+        const { is_ready, application_config } = useExportedRykvPage()
+        await wait_ready(is_ready)
+        const ids = [
+            application_config.value.tag_struct,
+            application_config.value.rep_struct,
+            application_config.value.device_struct,
+            application_config.value.rep_type_struct,
+        ].map(root => root.id)
+        expect(new Set(ids).size, 'ルートの id が重なっている').toBe(ids.length)
+    })
+
     it('記録保管場所の木は、焼いた記録に現れる rep だけになる', async () => {
         put_payload()
         const { is_ready, application_config } = useExportedRykvPage()
