@@ -10,8 +10,8 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 15 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（207 .vue）
-└── dialogs/                        # Dialog コンポーネント（119 .vue）
+├── views/                          # View コンポーネント（208 .vue）
+└── dialogs/                        # Dialog コンポーネント（120 .vue）
 ```
 
 ## 設計パターン
@@ -69,7 +69,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（207 .vue）
+## views/ — 全 View コンポーネント一覧（208 .vue）
 
 ### データ追加系（23コンポーネント）
 
@@ -254,7 +254,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
 | `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（119 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（120 .vue）
 
 ### データ追加ダイアログ（22コンポーネント）
 

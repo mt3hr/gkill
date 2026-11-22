@@ -617,8 +617,8 @@ Kyou の削除は Kyou 単体の論理削除ではなく連鎖削除です。処
 | 種別 | 数 | 配置 |
 |---|---|---|
 | ページ | 15 | `pages/*.vue` |
-| ビュー | 207 | `pages/views/*.vue` |
-| ダイアログ | 119 | `pages/dialogs/*.vue` |
+| ビュー | 208 | `pages/views/*.vue` |
+| ダイアログ | 120 | `pages/dialogs/*.vue` |
 
 ### テーマ
 

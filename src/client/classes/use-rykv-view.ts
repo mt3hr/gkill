@@ -36,6 +36,7 @@ export function useRykvView(options: {
     // ── Template refs ──
     const rykv_root = ref<HTMLElement | null>(null)
     const query_editor_sidebar = ref<ComponentRef | null>(null)
+    const export_rykv_html_dialog = ref<ComponentRef | null>(null)
     const add_mi_dialog = ref<ComponentRef | null>(null)
     const add_nlog_dialog = ref<ComponentRef | null>(null)
     const add_lantana_dialog = ref<ComponentRef | null>(null)
@@ -1086,6 +1087,10 @@ export function useRykvView(options: {
         save_clipboard_to_file_dialog.value?.show()
     }
 
+    function show_export_rykv_html_dialog(): void {
+        export_rykv_html_dialog.value?.show()
+    }
+
     function floating_action_button_style() {
         return {
             'bottom': '60px',
@@ -1208,6 +1213,7 @@ export function useRykvView(options: {
         mkfl_dialog,
         upload_file_dialog,
         save_clipboard_to_file_dialog,
+        export_rykv_html_dialog,
         dnote_view,
         kyou_list_views,
         kyou_detail_view_element,
@@ -1284,6 +1290,7 @@ export function useRykvView(options: {
         show_lantana_dialog,
         show_upload_file_dialog,
         show_save_clipboard_to_file_dialog,
+        show_export_rykv_html_dialog,
         floating_action_button_style,
 
         // Event relay objects

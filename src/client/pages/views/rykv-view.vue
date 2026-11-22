@@ -77,6 +77,7 @@
                 :app_content_width="app_content_width" :find_kyou_query="focused_query"
                 :inited="false /* これは見られないのでfalseのままでOK */"
                 @requested_search="onSidebarRequestedSearch"
+                @requested_export_rykv_html="show_export_rykv_html_dialog()"
                 @updated_query="onSidebarUpdatedQuery"
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
@@ -237,6 +238,16 @@
                 :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="save_clipboard_to_file_dialog" />
+            <!--
+                「HTML で出力」。読み取り専用（共有・出力先）では出さない。
+                列の条件はサイドバーが生成したまま渡す —— 削ると出力先のサイドバーが
+                初めに生成した条件と食い違い、その列が空になる
+            -->
+            <ExportRykvHTMLDialog v-if="!is_readonly" :application_config="application_config"
+                :gkill_api="gkill_api" :columns="querys" :focused_column_index="focused_column_index"
+                @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
+                ref="export_rykv_html_dialog" />
             <RykvDialogHost v-if="!is_readonly" :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" @closed="(id: string) => close_rykv_dialog(id)"
@@ -316,6 +327,7 @@ import RyuuView from './ryuu-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import RykvDialogHost from './rykv-dialog-host.vue'
+import ExportRykvHTMLDialog from '../dialogs/export-rykv-html-dialog.vue'
 import HelpDialog from '../dialogs/help-dialog.vue'
 import { useRykvView } from '@/classes/use-rykv-view'
 
@@ -338,6 +350,7 @@ const {
     mkfl_dialog,
     upload_file_dialog,
     save_clipboard_to_file_dialog,
+    export_rykv_html_dialog,
     dnote_view,
     kyou_list_views,
 
@@ -409,6 +422,7 @@ const {
     show_lantana_dialog,
     show_upload_file_dialog,
     show_save_clipboard_to_file_dialog,
+    show_export_rykv_html_dialog,
     floating_action_button_style,
 
     // Event relay objects

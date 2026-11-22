@@ -141,7 +141,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/skills.spec.ts` | スキル（ADR-0634）の画面の一巡: 設定 → スキル → zip をアップロード（確認 → 適用）→ 一覧 → 表示 → ダウンロード → 同じ名前で上げ直すと「変わる・消える」が確認に出る → 削除。zip はテストの中で組み立てる（バイナリのフィクスチャをコミットしない） |
 | `src/client/__tests__/e2e/user-content-sandbox.spec.ts` | 取り込んだ HTML ファイルを `/files/` で開くと、中のスクリプトは動くが `document.cookie` と `localStorage` は例外になること（ADR-0711。CSP は `sandbox allow-scripts allow-downloads allow-modals` で `allow-same-origin` 無し）。合成の HTML を `/api/upload_files` で `Files` rep へ上げて開く。拡張子ごとのヘッダの値は Go の `handle_file_serve_test.go` / `handle_zip_cache_file_serve_test.go` が固定する |
 
-### Composable ユニットテスト（68ファイル）
+### Composable ユニットテスト（69ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -156,6 +156,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/struct-element-description.test.ts` | 設定ツリー6本（タグ / 記録保管場所 / 記録種別 / プロファイル / 板 / メモ帳テンプレート）の要素追加・編集 Composable。表駆動で `apply()` が「説明」を詰め直すこと、板の要素編集が説明以外の欄（key / name / children / is_dir / check_when_inited）を保つこと、板の編集ダイアログはルート行では開かないこと |
 | `src/client/__tests__/unit/composables/edit-mi-board-struct-element-dialog.test.ts` | 板の要素編集ダイアログ Composable。`show(struct)` が編集対象を載せて開き、`hide()` と Escape が history 駆動の閉じ方（`close_dialog_via_history`）に流れること |
 | `src/client/__tests__/unit/composables/idf-kyou-view.test.ts` | IDFKyou ビュー Composable（Markdown リッチ表示、拡張子判定、相対リンクの対象記録解決、動画の preload: 詳細ペイン・ダイアログは `metadata` で再生前から全体の長さを出し、一覧は `none` のまま。描画した `<video>` の属性まで見る） |
+| `src/client/__tests__/unit/composables/export-rykv-html-view.test.ts` | 「HTML で出力」ダイアログの中身（既定値、**「埋め込まない」へ変えると選択済みの同名フォルダが単一 HTML へ戻ること**（disabled だけだと選択済みの値が送信まで残る）、フォーカス列だけの出力、列の条件を作り直さずそのまま渡すこと、単一 HTML と ZIP の保存、エラーのときは保存も close もしないこと、出力中に二重に投げないこと） |
 | `src/client/__tests__/unit/composables/re-kyou-view.test.ts` | ReKyou ビュー Composable（元の記録の解決、リポスト自身のメニュー表示） |
 | `src/client/__tests__/unit/composables/mi-re-kyou-view.test.ts` | MiReKyou ビュー Composable（既存記録のタスク化。タイトルを持たず target_id 先の内容を表示する） |
 | `src/client/__tests__/unit/composables/gps-log-map.test.ts` | GPSログ地図ビュー Composable |
