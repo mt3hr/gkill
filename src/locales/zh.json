@@ -292,6 +292,7 @@
     "MI_DEFAULT_BOARD_NAME_TITLE": "默认任务看板名称",
     "URLOG_BOOKMARKLET_ADDRESS_TITLE": "书签工具",
     "GOOGLE_MAP_API_KEY_TITLE": "Google Map API密钥",
+    "EXPORTED_GOOGLE_MAP_API_KEY_HINT_MESSAGE": "仅保存在此浏览器中，不会发送到任何地方。",
     "EDIT_TAG_STRUCT_TITLE": "标签结构",
     "ENABLE_TITLE": "启用",
     "WRITE_TITLE": "写入",

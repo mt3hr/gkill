@@ -2579,7 +2579,10 @@ export class GkillAPI {
                 return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
         }
 
-        private async gkill_fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+        // protected なのは、通信をしない派生（GkillAPIForExportedKyou）が
+        // **1箇所で全部の通信を止められるようにする**ため。メソッドを1本ずつ上書きして
+        // 塞ぐ形にすると、本体に API が増えたときに黙って漏れる
+        protected async gkill_fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
                 let res: Response
                 try {
                         res = await fetch(input, init)
@@ -3610,5 +3613,195 @@ export class GkillAPIForSharedKyou extends GkillAPI {
         async get_updated_datas_by_time(_: GetUpdatedDatasByTimeRequest): Promise<GetUpdatedDatasByTimeResponse> {
                 const response: GetUpdatedDatasByTimeResponse = new GetUpdatedDatasByTimeResponse()
                 return response
+        }
+}
+
+
+/**
+ * 「HTML で出力」したファイルの中で使う、通信をしない GkillAPI。
+ *
+ * 共有ページ用の GkillAPIForSharedKyou を継承し、**違うところだけ**を上書きする。
+ * GkillAPI から書き直すと80本以上のメソッドを写すことになり、本体の API が増えたときに
+ * 片方だけ古びる。代わりに、上書きした各点をユニットテストで1つずつ固定してある
+ * （__tests__/unit/api/exported-kyou-api.test.ts）。
+ *
+ * 共有版から変えたのは次の5点で、**どれも上書きを忘れると静かに壊れる**:
+ *   1. get_kyous … 共有版はクエリを見ずに this.kyous を丸ごと返す。出力は複数列なので、
+ *      query_id で列を引かないと**全列が同じ中身になる**（画面は動いているのに内容が違う）
+ *   2. get_application_config … 共有版は空の設定を返す。集計（Dnote）の定義が
+ *      dnote_json_data に入っているので、焼き込んだ設定を返さないと集計が空になる
+ *   3. get_notifications_by_target_id / get_notification_history_by_notification_id …
+ *      共有版は空を返すスタブ。出力は通知を含められる
+ *   4. get_plugin_content_html … 共有版は**上書きしていないので super の fetch に落ちる**。
+ *      つまりそのまま使うと通信する
+ *   5. get_google_map_api_key / set_google_map_api_key … 共有版は "" 固定と throw。
+ *      出力先では閲覧者が自分のキーを入れられる
+ *
+ * あわせて get_saved_rykv_find_kyou_querys が焼き込んだ列を返す（列の復元経路）。
+ */
+export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
+        private static gkill_api_for_exported_kyou: GkillAPIForExportedKyou = new GkillAPIForExportedKyou()
+        static get_instance_for_exported_kyou(): GkillAPIForExportedKyou {
+                return GkillAPIForExportedKyou.gkill_api_for_exported_kyou
+        }
+
+        /**
+         * 閲覧者が入れた Google Maps の API キーの保存先。
+         *
+         * **Cookie ではなく localStorage を使う。** 出力 HTML は file:// で開かれることが
+         * 想定され、file:// では document.cookie への書き込みが黙って捨てられる。
+         */
+        static readonly google_map_api_key_storage_key = 'gkill_exported_google_map_api_key'
+
+        /** 列ごとの検索条件と、その列に焼き込まれた記録 */
+        public columns: Array<{ query: FindKyouQuery, kyous: Array<Kyou> }> = []
+        /** 焼き込んだ設定。集計（Dnote）の定義 dnote_json_data もここに入っている */
+        public exported_application_config: ApplicationConfig = new ApplicationConfig()
+        /** 焼き込んだ通知。共有版は空を返すスタブなので、ここは自分で持つ */
+        public attached_notifications: Array<Notification> = []
+        /** `${rep_name}\u0000${kyou_id}` → プラグインが作った本文 HTML */
+        public plugin_html: Map<string, string> = new Map()
+
+        // localStorage が使えないときの退避先。/files/ 経由で開かれると
+        // allow-same-origin の無い sandbox（opaque origin）になり、localStorage は例外を投げる。
+        // その場合キーはこのページを閉じるまでしか残らない
+        private google_map_api_key_in_memory = ''
+
+        protected constructor() {
+                super()
+        }
+
+        /** `${rep_name}\u0000${kyou_id}` のキーを作る。プラグイン本文の辞書と対 */
+        static plugin_html_key(rep_name: string, kyou_id: string): string {
+                return `${rep_name}\u0000${kyou_id}`
+        }
+
+        /**
+         * 列ごとに焼き込まれた記録を返す。
+         *
+         * **共有版はクエリを見ずに this.kyous を丸ごと返す。** 出力は複数列あるので、
+         * そのまま使うと全列が同じ中身になる。列は query_id で引く
+         * （列の同一性は query_id。gkill-client-columns スキル）。
+         */
+        async get_kyous(req: GetKyousRequest): Promise<GetKyousResponse> {
+                // playing 検索（playing_time 非 null）は共有版の実装が正しいので委譲する
+                if (req.query.playing_time) {
+                        return super.get_kyous(req)
+                }
+                const res = new GetKyousResponse()
+                const column = this.columns.find(c => c.query.query_id === req.query.query_id)
+                if (!column) {
+                        // 焼き込まれていない列の問い合わせ。空で返す（サーバへは取りに行かない）
+                        return res
+                }
+                res.kyous = column.kyous
+                return res
+        }
+
+        /**
+         * 焼き込んだ設定を返す。
+         *
+         * google_map_api_key は**焼き込まない**（出力時にサーバが空へ潰す）。閲覧者が
+         * 入れたキーは get_google_map_api_key が localStorage から読む。
+         */
+        async get_application_config(_req: GetApplicationConfigRequest): Promise<GetApplicationConfigResponse> {
+                const res = new GetApplicationConfigResponse()
+                res.application_config = this.exported_application_config
+                res.application_config.for_export_kyou = true
+                return res
+        }
+
+        async get_notifications_by_target_id(req: GetNotificationsByTargetIDRequest): Promise<GetNotificationsByTargetIDResponse> {
+                const res = new GetNotificationsByTargetIDResponse()
+                for (let i = 0; i < this.attached_notifications.length; i++) {
+                        const notification = this.attached_notifications[i]
+                        if (req.target_id === notification.target_id) {
+                                res.notifications.push(notification)
+                        }
+                }
+                return res
+        }
+
+        async get_notification_history_by_notification_id(req: GetNotificationHistoryByNotificationIDRequest): Promise<GetNotificationHistoryByNotificationIDResponse> {
+                const res = new GetNotificationHistoryByNotificationIDResponse()
+                for (let i = 0; i < this.attached_notifications.length; i++) {
+                        const notification = this.attached_notifications[i]
+                        if (req.id === notification.id) {
+                                res.notification_histories.push(notification)
+                        }
+                }
+                return res
+        }
+
+        /**
+         * プラグインの本文は焼き込んだ辞書から引く。
+         *
+         * **共有版はこれを上書きしていないので super の fetch に落ちる。** 出力 HTML は
+         * 通信をしないので、焼き込みが無ければ空の HTML を返して終わる。
+         */
+        async get_plugin_content_html(req: GetPluginContentHTMLRequest): Promise<GetPluginContentHTMLResponse> {
+                const res = new GetPluginContentHTMLResponse()
+                res.html = this.plugin_html.get(GkillAPIForExportedKyou.plugin_html_key(req.rep_name, req.kyou_id)) ?? ''
+                return res
+        }
+
+        /**
+         * 閲覧者が入れた Google Maps の API キー。
+         *
+         * localStorage は private window・site data のブロック・opaque origin で例外を投げるので、
+         * 読み書きの両方を try/catch で囲む（ここが投げると地図ごと画面が落ちる）。
+         */
+        get_google_map_api_key(): string {
+                try {
+                        return window.localStorage.getItem(GkillAPIForExportedKyou.google_map_api_key_storage_key) ?? this.google_map_api_key_in_memory
+                } catch {
+                        return this.google_map_api_key_in_memory
+                }
+        }
+
+        set_google_map_api_key(google_map_api_key: string): void {
+                this.google_map_api_key_in_memory = google_map_api_key
+                try {
+                        window.localStorage.setItem(GkillAPIForExportedKyou.google_map_api_key_storage_key, google_map_api_key)
+                } catch {
+                        // 保存できない環境ではこのページを閉じるまでの一時値になる
+                }
+        }
+
+        /**
+         * 出力 HTML は通信をしない。ここへ来たら上書き漏れ。
+         *
+         * 共有版（GkillAPIForSharedKyou）が上書きしていないメソッドは本体の fetch に
+         * 落ちるので、**1本ずつ塞ぐ形にはしない**（本体に API が増えたときに黙って漏れる）。
+         * ここで落として、呼んだ経路を名前で分かるようにする。
+         * 例外は握られる経路もあるので、通信ゼロは E2E（全通信を abort して開く）でも見張る。
+         */
+        protected async gkill_fetch(input: RequestInfo | URL, _init?: RequestInit): Promise<Response> {
+                const target = typeof input === 'string' ? input : String(input)
+                throw new Error(`出力した HTML から通信しようとした（上書き漏れ）: ${target}`)
+        }
+
+        /**
+         * プラグインが提供する rep 名の一覧。
+         *
+         * 本来は「プラグイン由来の記録に編集メニューを出さない」ための判定に使うが、
+         * 出力 HTML は全部が読み取り専用なので区別が要らない。空で返す
+         * （上書きしないと init のたびに /api/get_plugin_list を取りに行く）。
+         */
+        async get_plugin_list(_req: GetPluginListRequest): Promise<GetPluginListResponse> {
+                return new GetPluginListResponse()
+        }
+
+        /**
+         * 焼き込んだ列の検索条件を返す。これが列の復元経路。
+         *
+         * 共有版は `[new FindKyouQuery()]`（1列の既定クエリ）を返すので、
+         * そのまま使うと出力した列構成が復元されない。
+         */
+        get_saved_rykv_find_kyou_querys(): Array<FindKyouQuery> {
+                if (this.columns.length === 0) {
+                        return super.get_saved_rykv_find_kyou_querys()
+                }
+                return this.columns.map(column => column.query)
         }
 }

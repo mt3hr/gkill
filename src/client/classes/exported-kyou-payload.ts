@@ -1,0 +1,162 @@
+'use strict'
+
+// 「HTML で出力」したファイルへ焼き込まれた JSON を、通信をしない GkillAPI へ流し込む。
+//
+// 焼き込みは `<script type="application/json" id="gkill-export-data">` に入っていて、
+// サーバ（export_html_render.go）が1行を丸ごと置き換えて作る。
+// JSON.parse の結果はただのオブジェクトでメソッドが生えていないので、
+// hydrate_all でデータクラスへ詰め替える（日時のキーは Date に戻る）。
+//
+// **サーバへ取りに行くフォールバックを足してはいけない。** 読めないものは落として、
+// 画面側は「記録が含まれていません」を出して終わる。
+
+import { GkillAPIForExportedKyou } from '@/classes/api/gkill-api'
+import { hydrate, hydrate_all } from '@/classes/api/hydrate'
+import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { Kyou } from '@/classes/datas/kyou'
+import { Kmemo } from '@/classes/datas/kmemo'
+import { KC } from '@/classes/datas/kc'
+import { TimeIs } from '@/classes/datas/time-is'
+import { Mi } from '@/classes/datas/mi'
+import { Nlog } from '@/classes/datas/nlog'
+import { Lantana } from '@/classes/datas/lantana'
+import { URLog } from '@/classes/datas/ur-log'
+import { IDFKyou } from '@/classes/datas/idf-kyou'
+import { ReKyou } from '@/classes/datas/re-kyou'
+import { MiReKyou } from '@/classes/datas/mi-re-kyou'
+import { GitCommitLog } from '@/classes/datas/git-commit-log'
+import { GPSLog } from '@/classes/datas/gps-log'
+import { Tag } from '@/classes/datas/tag'
+import { Text } from '@/classes/datas/text'
+import { Notification } from '@/classes/datas/notification'
+
+/** 焼き込み JSON の形。欠けているキーは空として扱う（古い出力でも落ちない） */
+export interface ExportedKyouPayload {
+    schema_version: number
+    title: string
+    locale_name: string
+    with_dnote: boolean
+    with_map: boolean
+    with_sidebar: boolean
+    warnings: Array<string>
+}
+
+/** いま読める焼き込みの世代。サーバ側（export_html_render.go）と対 */
+export const exported_payload_schema_version = 1
+
+function as_record(value: unknown): Record<string, unknown> {
+    if (!value || typeof value !== 'object') {
+        return {}
+    }
+    return value as Record<string, unknown>
+}
+
+function as_array(value: unknown): Array<unknown> {
+    return Array.isArray(value) ? value : []
+}
+
+function as_string(value: unknown, fallback: string): string {
+    return typeof value === 'string' ? value : fallback
+}
+
+/**
+ * 焼き込み JSON から「出力の説明」だけを読む。
+ *
+ * `schema_version` が数値でなければ null を返す。ガワだけの template.html を直接開くと
+ * 中身が `{}` なのでここに落ちる。
+ */
+export function parse_exported_payload(raw: unknown): ExportedKyouPayload | null {
+    if (!raw || typeof raw !== 'object') {
+        return null
+    }
+    const source = raw as Record<string, unknown>
+    if (typeof source.schema_version !== 'number') {
+        return null
+    }
+    return {
+        schema_version: source.schema_version,
+        title: as_string(source.title, ''),
+        locale_name: as_string(source.locale_name, 'ja'),
+        with_dnote: source.with_dnote === true,
+        with_map: source.with_map === true,
+        with_sidebar: source.with_sidebar === true,
+        warnings: as_array(source.warnings).filter((w): w is string => typeof w === 'string'),
+    }
+}
+
+/**
+ * 焼き込み JSON を GkillAPIForExportedKyou へ流し込み、そのインスタンスを返す。
+ *
+ * 列は `kyou_ids` の参照で持つ（列をまたいで同じ記録が出るのは普通で、
+ * 列ごとに本体を持つと素直に膨らむ）。ここで ID から本体へ解決する。
+ */
+export function build_exported_api(raw: unknown): GkillAPIForExportedKyou {
+    const source = as_record(raw)
+    const api = GkillAPIForExportedKyou.get_instance_for_exported_kyou()
+
+    api.kyous = hydrate_all(source.kyous, () => new Kyou())
+    api.kmemos = hydrate_all(source.kmemos, () => new Kmemo())
+    api.kcs = hydrate_all(source.kcs, () => new KC())
+    api.timeiss = hydrate_all(source.timeiss, () => new TimeIs())
+    api.mis = hydrate_all(source.mis, () => new Mi())
+    api.nlogs = hydrate_all(source.nlogs, () => new Nlog())
+    api.lantanas = hydrate_all(source.lantanas, () => new Lantana())
+    api.urlogs = hydrate_all(source.urlogs, () => new URLog())
+    api.idf_kyous = hydrate_all(source.idf_kyous, () => new IDFKyou())
+    api.rekyous = hydrate_all(source.rekyous, () => new ReKyou())
+    api.mirekyous = hydrate_all(source.mirekyous, () => new MiReKyou())
+    api.git_commit_logs = hydrate_all(source.git_commit_logs, () => new GitCommitLog())
+    api.gps_logs = hydrate_all(source.gps_logs, () => new GPSLog())
+    api.attached_tags = hydrate_all(source.attached_tags, () => new Tag())
+    api.attached_texts = hydrate_all(source.attached_texts, () => new Text())
+    api.attached_notifications = hydrate_all(source.attached_notifications, () => new Notification())
+    api.attached_timeiss = hydrate_all(source.attached_timeiss, () => new TimeIs())
+    api.attached_timeis_kyous = hydrate_all(source.attached_timeis_kyous, () => new Kyou())
+
+    // 設定（集計 Dnote の定義 dnote_json_data もここ）。
+    // google_map_api_key は焼き込まれていない（サーバが空へ潰す）
+    api.exported_application_config = hydrate(new ApplicationConfig(), source.application_config)
+    // 焼き込んだ設定は定義上「読み込み済み」。rykv の init() は
+    // application_config.is_loaded の watch で起動するので、false のままだと
+    // 列が1本も作られず**読み込み中オーバーレイが消えない**（焼き込み側の値には頼らない）
+    api.exported_application_config.is_loaded = true
+    api.exported_application_config.for_export_kyou = true
+    // 出力では列の「検索」は焼いた配列を読むだけなので、必ず初期検索を走らせる。
+    // 利用者の設定が false のまま焼かれると、init() が検索を1本も投げず
+    // **列の枠だけが出て中身が空のまま**になる（検索ボタンを押すまで気づけない）
+    api.exported_application_config.rykv_hot_reload = true
+
+    // プラグインの本文。鍵は rep 名と Kyou の ID の対
+    api.plugin_html = new Map()
+    const plugin_html = as_record(source.plugin_html)
+    for (const key in plugin_html) {
+        const html = plugin_html[key]
+        if (typeof html === 'string') {
+            api.plugin_html.set(key, html)
+        }
+    }
+
+    // 列。kyou_ids から本体へ解決する
+    const kyou_by_id = new Map<string, Kyou>()
+    for (let i = 0; i < api.kyous.length; i++) {
+        kyou_by_id.set(api.kyous[i].id, api.kyous[i])
+    }
+    api.columns = as_array(source.columns).map((raw_column) => {
+        const column = as_record(raw_column)
+        const query = FindKyouQuery.parse_find_kyou_query(column.query ?? {})
+        const kyous: Array<Kyou> = []
+        for (const id of as_array(column.kyou_ids)) {
+            if (typeof id !== 'string') {
+                continue
+            }
+            const kyou = kyou_by_id.get(id)
+            if (kyou) {
+                kyous.push(kyou)
+            }
+        }
+        return { query, kyous }
+    })
+
+    return api
+}

@@ -84,6 +84,20 @@ export function useRykvView(options: {
     const is_restoring_columns = ref(false) // 保存済み列の初期検索がまだ走っている。表示制御には使わない
     const running_search_count = ref(0) // 飛行中の検索の本数。準備完了信号にだけ使う
     const received_init_request = ref(false)
+
+    // ── 区画の可否 ──
+    // 編集系の導線とヘルプを落とすか。共有ページと HTML 出力で共通
+    const is_readonly = computed(() => props.is_shared_rykv_view || props.is_exported_rykv_view)
+    // 集計（Dnote）。共有ページは出さない。出力は選ばれたときだけ
+    const is_dnote_available = computed(() =>
+        !props.is_shared_rykv_view && (!props.is_exported_rykv_view || props.is_exported_with_dnote))
+    // マップ。共有ページは出す（GPSLog を共有できる）。出力は選ばれたときだけ
+    const is_map_available = computed(() =>
+        !props.is_exported_rykv_view || props.is_exported_with_map)
+    // 検索条件サイドバー。共有ページは出さない。出力は選ばれたときだけ
+    const is_sidebar_available = computed(() =>
+        !props.is_shared_rykv_view && (!props.is_exported_rykv_view || props.is_exported_with_sidebar))
+
     const skip_search_this_tick = ref(false)
     const abort_controllers = new Map<string, AbortController>() // 列ごとの検索中断用。キーは列のquery_id
     const search_seqs = new Map<string, number>() // 列ごとの検索の世代番号。キーは列のquery_id。最後の検索だけが結果を書き戻せるようにする
@@ -534,7 +548,9 @@ export function useRykvView(options: {
                 // 待つと検索が1本でも解決しないだけで画面全体が固まる。
                 // 進行は列ごとのスピナーとフッタの「取得中」で見せる
                 // (drawer_mode_is_mobile は app_content_width の computed。ここでは触らない)
-                drawer.value = props.app_content_width.valueOf() >= 760
+                // サイドバーを出さない出力では閉じたままにする。
+                // コンポーネント自体は mount しておく（init() が ref を要る）
+                drawer.value = is_sidebar_available.value && props.app_content_width.valueOf() >= 760
                 inited.value = true
                 is_loading.value = false
 
@@ -1226,6 +1242,10 @@ export function useRykvView(options: {
         kyou_list_view_height,
         page_list,
         is_view_ready,
+        is_readonly,
+        is_dnote_available,
+        is_map_available,
+        is_sidebar_available,
 
         // Template event handlers
         toggle_drawer,

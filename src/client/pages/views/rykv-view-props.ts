@@ -8,6 +8,15 @@ export interface RykvViewProps extends GkillPropsBase {
     app_content_height: number
     app_content_width: number
     is_shared_rykv_view: boolean
+    // HTML へ出力したファイルの中で描かれている。共有ページ（is_shared_rykv_view）と
+    // 同じく読み取り専用だが、**共有が落としている集計（Dnote）は残す**ので別フラグにする。
+    // 出力時に選ばれなかった区画は下の is_exported_with_* で落とす
+    is_exported_rykv_view: boolean
+    // 出力時に「含めるもの」で選ばれたか。is_exported_rykv_view が false のときは見ない
+    is_exported_with_dnote: boolean
+    is_exported_with_map: boolean
+    // 検索条件サイドバー。出力先では絞り込み専用（焼いた記録の外は出ない）
+    is_exported_with_sidebar: boolean
     share_title: string
     // ポート(rudbeckia)のフローティングダイアログの中で描かれている。
     // このビューは単独ページとしても使われるので、既定は false。

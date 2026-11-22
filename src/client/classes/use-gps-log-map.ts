@@ -32,6 +32,9 @@ export function useGpsLogMap(options: {
     const marker_options: Ref<{ position: { lat: number, lng: number }, timestamp: number } | null> = ref(null)
     const google_map_api_key: Ref<string> = ref(props.gkill_api.get_google_map_api_key())
     const is_show_date_picker = ref(false)
+    // 出力 HTML で閲覧者がキーを入れるときだけ使う（地図の下の ⚠ から開く）
+    const is_show_api_key_menu = ref(false)
+    const api_key_input: Ref<string> = ref('')
 
     // ── Computed ──
     // 日付文字列は「表示」専用（日付ボタンと日付ピッカー）。
@@ -166,6 +169,23 @@ export function useGpsLogMap(options: {
         marker_options.value = { position: { lat: target_gps_log.latitude.valueOf(), lng: target_gps_log.longitude.valueOf() }, timestamp: moment().unix() }
     }
 
+    /**
+     * 閲覧者が入れた Google Maps の API キーを当てる。
+     *
+     * 出力 HTML だけの経路。保存先は GkillAPIForExportedKyou（localStorage）で、
+     * ここを変えると GoogleMap の :key が変わって地図が作り直される
+     * （apiKey は作り直さないと効かない）。
+     */
+    function apply_google_map_api_key(): void {
+        const key = api_key_input.value.trim()
+        if (key === '') {
+            return
+        }
+        props.gkill_api.set_google_map_api_key(key)
+        google_map_api_key.value = key
+        is_show_api_key_menu.value = false
+    }
+
     async function centering(): Promise<void> {
         if (gps_logs.value.length === 0) {
             return
@@ -209,6 +229,8 @@ export function useGpsLogMap(options: {
         marker_options,
         google_map_api_key,
         is_show_date_picker,
+        is_show_api_key_menu,
+        api_key_input,
 
         // Computed
         start_date_str,
@@ -217,6 +239,7 @@ export function useGpsLogMap(options: {
         date_picker_model,
 
         // Methods
+        apply_google_map_api_key,
         centering,
     }
 }

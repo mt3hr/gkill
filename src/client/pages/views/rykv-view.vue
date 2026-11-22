@@ -3,19 +3,19 @@
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_SIDEBAR')">
                 <template v-slot:activator="{ props }">
-                    <v-app-bar-nav-icon v-bind="props" v-if="!is_shared_rykv_view" @click.stop="toggle_drawer"
+                    <v-app-bar-nav-icon v-bind="props" v-if="is_sidebar_available" @click.stop="toggle_drawer"
                         :disabled="!inited" />
                 </template>
             </v-tooltip>
             <v-toolbar-title>
                 <div>
-                    <span v-if="!is_shared_rykv_view">
+                    <span v-if="!is_readonly">
                         {{ i18n.global.t("RYKV_APP_TITLE") }}
                     </span>
-                    <span v-if="is_shared_rykv_view">
+                    <span v-if="is_readonly">
                         {{ share_title }}
                     </span>
-                    <v-menu v-if="!is_shared_rykv_view" activator="parent">
+                    <v-menu v-if="!is_readonly" activator="parent">
                         <v-list>
                             <v-list-item :key="index" :value="index" v-for="page, index in page_list"
                                 @click="navigate_to_page(page.page_name)">
@@ -36,7 +36,7 @@
             </v-tooltip>
             <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_DNOTE')">
                 <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" v-if="!is_shared_rykv_view" icon
+                    <v-btn v-bind="props" v-if="is_dnote_available" icon
                         @click="toggle_dnote">
                         <v-icon>mdi-file-chart-outline</v-icon>
                     </v-btn>
@@ -44,7 +44,7 @@
             </v-tooltip>
             <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_MAP')">
                 <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" icon @click="is_show_gps_log_map = !is_show_gps_log_map">
+                    <v-btn v-bind="props" v-if="is_map_available" icon @click="is_show_gps_log_map = !is_show_gps_log_map">
                         <v-icon>mdi-map</v-icon>
                     </v-btn>
                 </template>
@@ -59,12 +59,12 @@
             <v-divider vertical />
             <v-tooltip :text="i18n.global.t('TOOLTIP_HELP')">
                 <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" icon="mdi-help-circle-outline" v-if="!is_shared_rykv_view" @click="help_dialog?.show()" />
+                    <v-btn v-bind="props" icon="mdi-help-circle-outline" v-if="!is_readonly" @click="help_dialog?.show()" />
                 </template>
             </v-tooltip>
             <v-tooltip :text="i18n.global.t('TOOLTIP_SETTINGS')">
                 <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" v-if="!is_shared_rykv_view" icon="mdi-cog" :disabled="!application_config.is_loaded"
+                    <v-btn v-bind="props" v-if="!is_readonly" icon="mdi-cog" :disabled="!application_config.is_loaded"
                         @click="emits('requested_show_application_config_dialog')" />
                 </template>
             </v-tooltip>
@@ -105,10 +105,10 @@
                                 :application_config="application_config" :gkill_api="gkill_api"
                                 :matched_kyous="match_kyous_list[index]" :query="query"
                                 :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
-                                :enable_context_menu="!is_shared_rykv_view" :enable_dialog="!is_shared_rykv_view"
-                                :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="!is_shared_rykv_view"
+                                :enable_context_menu="!is_readonly" :enable_dialog="!is_readonly"
+                                :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="!is_readonly"
                                 :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true"
-                                :show_rep_name="!is_shared_rykv_view" :force_show_latest_kyou_info="true"
+                                :show_rep_name="!is_readonly" :force_show_latest_kyou_info="true"
                                 :show_content_only="false" :show_timeis_playing_end_button="false"
                                 v-on="crudRelayHandlers"
                                 @scroll_list="(position: number) => onColumnScrollList(index, position)"
@@ -124,7 +124,7 @@
                                 @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
                                 ref="kyou_list_views" />
                         </td>
-                        <td valign="top" v-if="!is_shared_rykv_view"
+                        <td valign="top" v-if="!is_readonly"
                             :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                             <v-btn class="rykv_add_column_button rounded-sm mx-auto" :height="app_content_height.valueOf()"
                                 :width="30" :color="'primary'" @click="onAddColumnClick" icon="mdi-plus" variant="text"
@@ -140,9 +140,9 @@
                                     :kyou="focused_kyou" :show_checkbox="false"
                                     :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
                                     :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                                    :show_timeis_elapsed_time="true" :show_timeis_playing_end_button="!is_shared_rykv_view"
-                                    :height="'auto'" :is_readonly_mi_check="is_shared_rykv_view" :width="'auto'"
-                                    :enable_context_menu="!is_shared_rykv_view" :enable_dialog="!is_shared_rykv_view"
+                                    :show_timeis_elapsed_time="true" :show_timeis_playing_end_button="!is_readonly"
+                                    :height="'auto'" :is_readonly_mi_check="is_readonly" :width="'auto'"
+                                    :enable_context_menu="!is_readonly" :enable_dialog="!is_readonly"
                                     :show_attached_timeis="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
                                     class="kyou_detail_view" :show_update_time="false" :show_related_time="true"
                                     :show_attached_tags="true" :show_attached_texts="true"
@@ -157,7 +157,7 @@
                                     v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogRelayHandlers }" />
                             </div>
                         </td>
-                        <td valign="top" v-if="is_show_dnote && !is_shared_rykv_view"
+                        <td valign="top" v-if="is_show_dnote && is_dnote_available"
                             :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                             <Dnote class="rykv_dnote_wrap" :app_content_height="app_content_height"
                                 :app_content_width="app_content_width" :application_config="application_config"
@@ -166,7 +166,8 @@
                                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogRelayHandlers }"
                                 ref="dnote_view" />
                         </td>
-                        <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
+                        <td valign="top" v-if="is_map_available"
+                            :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                             <GPSLogMap v-show="is_show_gps_log_map" :application_config="application_config"
                                 :gkill_api="gkill_api" :start_time="gps_log_map_start_time" :end_time="gps_log_map_end_time"
                                 :marker_time="gps_log_map_marker_time" :app_content_height="app_content_height"
@@ -184,66 +185,66 @@
                     </tr>
                 </tbody>
             </table>
-            <AddKCDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+            <AddKCDialog v-if="!is_readonly" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :kyou="new Kyou()"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_kc_dialog" />
-            <AddTimeIsDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+            <AddTimeIsDialog v-if="!is_readonly" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :kyou="new Kyou()"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_timeis_dialog" />
-            <AddLantanaDialog v-if="!is_shared_rykv_view" :application_config="application_config"
+            <AddLantanaDialog v-if="!is_readonly" :application_config="application_config"
                 :gkill_api="gkill_api" :highlight_targets="[]" :kyou="new Kyou()"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_lantana_dialog" />
-            <AddUrlogDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+            <AddUrlogDialog v-if="!is_readonly" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :kyou="new Kyou()"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_urlog_dialog" />
-            <AddMiDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+            <AddMiDialog v-if="!is_readonly" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :kyou="new Kyou()"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_mi_dialog" />
-            <AddNlogDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+            <AddNlogDialog v-if="!is_readonly" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :kyou="new Kyou()"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_nlog_dialog" />
-            <KFTLDialogHost v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+            <KFTLDialogHost v-if="!is_readonly" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :kyou="new Kyou()"
                 :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :app_content_width="app_content_width"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
                 ref="kftl_dialog" />
-            <mkflDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+            <mkflDialog v-if="!is_readonly" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :kyou="new Kyou()"
                 :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :app_content_width="app_content_width"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
                 ref="mkfl_dialog" />
-            <UploadFileDialog v-if="!is_shared_rykv_view" :app_content_height="app_content_height"
+            <UploadFileDialog v-if="!is_readonly" :app_content_height="app_content_height"
                 :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogRelayHandlers }"
                 ref="upload_file_dialog" />
-            <SaveClipboardToFileDialog v-if="!is_shared_rykv_view" :app_content_height="app_content_height"
+            <SaveClipboardToFileDialog v-if="!is_readonly" :app_content_height="app_content_height"
                 :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="save_clipboard_to_file_dialog" />
-            <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
+            <RykvDialogHost v-if="!is_readonly" :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" @closed="(id: string) => close_rykv_dialog(id)"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogRelayHandlers }" />
             <!-- ポート(rudbeckia)の中ではFABを出さない。.position-fixed は position: fixed なので
                  ダイアログを抜けて画面右下に居座り、ポート自身のFABと重なる。
                  記録の追加はポートのFABから行う（同じダイアログを開く） -->
-            <v-avatar v-if="!is_shared_rykv_view && !is_hosted_in_dialog" :style="floating_action_button_style()" color="primary"
+            <v-avatar v-if="!is_readonly && !is_hosted_in_dialog" :style="floating_action_button_style()" color="primary"
                 class="position-fixed">
                 <v-menu transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
@@ -284,7 +285,7 @@
                     </v-list>
                 </v-menu>
             </v-avatar>
-            <HelpDialog screen_name="rykv" ref="help_dialog" />
+            <HelpDialog v-if="!is_readonly" screen_name="rykv" ref="help_dialog" />
         </v-main>
     </div>
 </template>
@@ -370,6 +371,10 @@ const {
     kyou_list_view_height,
     page_list,
     is_view_ready,
+    is_readonly,
+    is_dnote_available,
+    is_map_available,
+    is_sidebar_available,
 
     // Template event handlers
     toggle_drawer,

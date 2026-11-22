@@ -82,6 +82,9 @@ export class ApplicationConfig {
     urlog_bookmarklet_session: string
 
     for_share_kyou: boolean
+    // 「HTML で出力」したファイルの中で動いている。深い子（gps-log-map.vue など）には
+    // 出力モードの props が届かないので、for_share_kyou と同じ流儀で設定へ載せる
+    for_export_kyou: boolean
 
     clone(): ApplicationConfig {
         const application_config = new ApplicationConfig()
@@ -112,6 +115,7 @@ export class ApplicationConfig {
         application_config.session_is_local = this.session_is_local
         application_config.urlog_bookmarklet_session = this.urlog_bookmarklet_session
         application_config.for_share_kyou = this.for_share_kyou
+        application_config.for_export_kyou = this.for_export_kyou
         application_config.rykv_default_period = this.rykv_default_period
         application_config.mi_default_period = this.mi_default_period
         application_config.is_show_share_footer = this.is_show_share_footer
@@ -530,6 +534,7 @@ export class ApplicationConfig {
         this.session_is_local = false
         this.urlog_bookmarklet_session = ""
         this.for_share_kyou = false
+        this.for_export_kyou = false
         this.is_show_share_footer = false
         this.show_tags_in_list = true
         this.default_page = "rykv"

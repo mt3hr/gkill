@@ -2,7 +2,10 @@
     <div>
         <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
-            :is_shared_rykv_view="true" :share_title="share_title"
+            :is_shared_rykv_view="true"
+            :is_exported_rykv_view="false /* HTML 出力したファイルの中だけ true */"
+            :is_exported_with_dnote="false" :is_exported_with_map="false"
+            :is_exported_with_sidebar="false" :share_title="share_title"
             :application_config_load_failed="false /* 共有画面は設定を待たずに初期化する */"
             :is_hosted_in_dialog="false"
             :kyou_change_channel="null /* 単独ページ。画面間の伝播はポートの中だけ */" :column_state_instance_key="''"

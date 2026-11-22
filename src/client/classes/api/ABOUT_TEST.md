@@ -14,6 +14,7 @@ Vitest
 |---------|------|
 | `src/client/__tests__/unit/api/gkill-api.test.ts` | GkillAPI の全メソッドテスト、Go とのエンドポイント整合 |
 | `src/client/__tests__/unit/api/find-kyou-query.test.ts` | `FindKyouQuery`（rykv / mi / playing の検索条件） |
+| `src/client/__tests__/unit/api/exported-kyou-api.test.ts` | `GkillAPIForExportedKyou`（「HTML で出力」したファイルの中で使う、通信をしない API）。共有版から変えた点を1つずつ固定する: `query_id` で列を引くこと（共有版はクエリを見ずに全件返すので、そのままだと全列が同じ中身になる）、焼き込んだ設定を返すこと（集計の定義が入っている）、通知を焼き込みから引くこと、プラグイン本文が `fetch` へ落ちないこと、API キーが localStorage と退避先を往復すること |
 | `src/client/__tests__/unit/api/generate-playing-timeis-query.test.ts` | `generate_playing_timeis_query()`（playing検索クエリの共通生成。カスタム条件の6フィールドコピー・未設定時の既定動作・共有ページでの不適用・rep名絞り込みを常に切ること・記録タイプのTimeIs固定） |
 | `src/client/__tests__/unit/api/hydrate.test.ts` | `hydrate()` / `hydrate_all()` — 生JSONからクラスインスタンスへの詰め替え（`gkill-api.ts` / `datas/kyou.ts` のファイル全体 eslint-disable を解消したヘルパー） |
 | `src/client/__tests__/unit/api/delete-updated-gkill-caches.test.ts` | `delete_updated_gkill_caches()` — 検索直前の差分キャッシュ削除。ウォーターマーク（`last_cache_update_time`）を進めてよい条件 |

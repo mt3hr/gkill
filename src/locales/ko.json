@@ -292,6 +292,7 @@
     "MI_DEFAULT_BOARD_NAME_TITLE": "기본 작업 보드 이름",
     "URLOG_BOOKMARKLET_ADDRESS_TITLE": "북마클릿",
     "GOOGLE_MAP_API_KEY_TITLE": "Google Map API 키",
+    "EXPORTED_GOOGLE_MAP_API_KEY_HINT_MESSAGE": "이 브라우저에만 저장되며 어디에도 전송되지 않습니다.",
     "EDIT_TAG_STRUCT_TITLE": "태그 구조",
     "ENABLE_TITLE": "활성화",
     "WRITE_TITLE": "쓰기",

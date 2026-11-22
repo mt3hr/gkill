@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref, type Ref } from 'vue'
+import { onMounted, onUnmounted, ref, shallowRef, type Ref, type ShallowRef } from 'vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillAPI } from '@/classes/api/gkill-api'
@@ -6,18 +6,14 @@ import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import { useGkillMessageFeed } from '@/classes/use-gkill-message-feed'
 import { apply_baked_locale } from '@/export-i18n'
+import {
+    build_exported_api, parse_exported_payload, type ExportedKyouPayload,
+} from '@/classes/exported-kyou-payload'
 
 /** HTML へ焼き込まれたデータの差し込み先の id（export.html と export_html_render.go で対） */
-const EXPORT_DATA_ELEMENT_ID = 'gkill-export-data'
+const export_data_element_id = 'gkill-export-data'
 /** 焼き込まれたロケールのメッセージの差し込み先の id（ja で出力したときは置かれない） */
-const EXPORT_I18N_ELEMENT_ID = 'gkill-export-i18n'
-
-/** 読めた焼き込みデータ。形が合わなければ null になる */
-interface ExportedPayload {
-    schema_version: number
-    title: string
-    locale_name: string
-}
+const export_i18n_element_id = 'gkill-export-i18n'
 
 /**
  * 焼き込まれた JSON を読む。
@@ -34,33 +30,16 @@ function read_json_element(element_id: string): unknown {
     try {
         return JSON.parse(element.textContent)
     } catch {
-        // 壊れた出力でも画面は出す（下の is_ready が false になり、その旨を表示する）
+        // 壊れた出力でも画面は出す（is_ready が false になり、その旨を表示する）
         return null
-    }
-}
-
-function parse_payload(raw: unknown): ExportedPayload | null {
-    if (!raw || typeof raw !== 'object') {
-        return null
-    }
-    const candidate = raw as Partial<ExportedPayload>
-    if (typeof candidate.schema_version !== 'number') {
-        // ガワだけの状態（差し込み前の template.html）はここに落ちる
-        return null
-    }
-    return {
-        schema_version: candidate.schema_version,
-        title: typeof candidate.title === 'string' ? candidate.title : '',
-        locale_name: typeof candidate.locale_name === 'string' ? candidate.locale_name : 'ja',
     }
 }
 
 /**
  * 「HTML で出力」した画面の入口。
  *
- * 画面の寸法の取り方は use-shared-rykv-page.ts と同じ（共有ページと同じく
- * 単独ページとして動く）。違うのは、データをサーバへ取りに行かず、
- * HTML 自身へ焼き込まれた JSON から読むこと。
+ * 画面の寸法の取り方は use-shared-rykv-page.ts と同じ（共有ページと同じく単独ページ）。
+ * 違うのは、データをサーバへ取りに行かず HTML 自身へ焼き込まれた JSON から読むこと。
  *
  * **出力 HTML は通信をしない。** 焼き込みが読めなければ、その旨を出して終わる
  * （サーバへ取りに行くフォールバックを足してはいけない）。
@@ -74,11 +53,18 @@ export function useExportedRykvPage() {
     const app_content_height: Ref<number> = ref(0)
     const app_content_width: Ref<number> = ref(0)
 
-    const payload: Ref<ExportedPayload | null> = ref(parse_payload(read_json_element(EXPORT_DATA_ELEMENT_ID)))
+    const raw_payload = read_json_element(export_data_element_id)
+    const payload: Ref<ExportedKyouPayload | null> = ref(parse_exported_payload(raw_payload))
     const is_ready: Ref<boolean> = ref(payload.value !== null)
     const share_title: Ref<string> = ref(payload.value ? payload.value.title : '')
+    const is_exported_with_dnote: Ref<boolean> = ref(payload.value ? payload.value.with_dnote : false)
+    const is_exported_with_map: Ref<boolean> = ref(payload.value ? payload.value.with_map : false)
+    const is_exported_with_sidebar: Ref<boolean> = ref(payload.value ? payload.value.with_sidebar : false)
     const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
-    const gkill_api: Ref<GkillAPI> = ref(GkillAPI.get_gkill_api())
+    // GkillAPI は private / protected メンバを持つので ref() には入れられない
+    // （Vue の UnwrapRef が非 public メンバを落とし、unwrap 後の型をクラスへ戻せなくなる）。
+    // 差し替えを検知できれば十分で、深い reactive は要らない
+    const gkill_api: ShallowRef<GkillAPI> = shallowRef(GkillAPI.get_gkill_api())
 
     const { push_errors, push_messages } = useGkillMessageFeed()
 
@@ -106,7 +92,25 @@ export function useExportedRykvPage() {
         if (!payload.value) {
             return
         }
-        apply_baked_locale(payload.value.locale_name, read_json_element(EXPORT_I18N_ELEMENT_ID))
+        apply_baked_locale(payload.value.locale_name, read_json_element(export_i18n_element_id))
+    }
+
+    /**
+     * 焼き込みを通信をしない API へ流し込み、画面が使う API を差し替える。
+     *
+     * `GkillAPI.set_gkill_api()` までやるのは共有ページと同じ（データクラスの
+     * `load_*` は `GkillAPI.get_gkill_api()` を自分で引くので、差し替えないと
+     * 本体の fetch に落ちる＝通信する）。
+     */
+    function apply_payload(): void {
+        if (!payload.value) {
+            return
+        }
+        const exported_api = build_exported_api(raw_payload)
+        GkillAPI.set_gkill_api(exported_api)
+        gkill_api.value = exported_api
+        application_config.value = exported_api.exported_application_config
+        application_config.value.for_export_kyou = true
     }
 
     // ── Lifecycle ──
@@ -123,6 +127,7 @@ export function useExportedRykvPage() {
 
     // ── Init ──
     apply_locale()
+    apply_payload()
     resize_content()
 
     return {
@@ -133,6 +138,9 @@ export function useExportedRykvPage() {
         app_content_width,
         is_ready,
         share_title,
+        is_exported_with_dnote,
+        is_exported_with_map,
+        is_exported_with_sidebar,
         application_config,
         gkill_api,
 

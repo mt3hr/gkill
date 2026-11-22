@@ -34,7 +34,7 @@ src/client/
 ├── env.d.ts                         # TypeScript環境型定義
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,600行)
+│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,800行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
 │   │   └── req_res/                # リクエスト/レスポンス型 (185ファイル、サーバー側は204ファイル)
@@ -300,7 +300,7 @@ Props/Emit のみで状態を持ち回すため、Kyou の CRUD イベントは 
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts` に定義。約3,600行。
+`src/client/classes/api/gkill-api.ts` に定義。約3,800行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
 - Web クライアントが叩く94エンドポイントのアドレスを持ち、そのうち92本にメソッドがある（`gkill-api.ts` が保持する `/api/` アドレスは94件。MCP / CLI 専用の4件を除いた全ルートで、Go のルート表との突き合わせは `gkill-api.test.ts`。メソッドの無い2本はブックマークレット用で、Go が配る HTML とブックマークレットの URL が使う。`submit_kftl_text` は 2026-09-15 から Web も叩く）。どのメソッドがどのパス・Go ハンドラにつながるかは [cross-boundary-map.md](cross-boundary-map.md)

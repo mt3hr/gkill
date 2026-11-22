@@ -1,0 +1,194 @@
+/**
+ * GkillAPIForExportedKyou の上書き。
+ *
+ * 共有ページ用の GkillAPIForSharedKyou を継承しているので、**上書きを忘れた点は
+ * 共有版の挙動のまま静かに通る**。とくに次の2つは画面が動いているのに内容が違う形で壊れる。
+ *   - get_kyous … 共有版はクエリを見ずに全件返す（出力では全列が同じ中身になる）
+ *   - get_plugin_content_html … 共有版は上書きしていないので super の fetch に落ちる（通信する）
+ *
+ * このテストは上書き1点ずつを固定するもので、退行すると「出力した HTML の中身が違う」
+ * または「出力した HTML が通信する」になる。
+ */
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { GkillAPIForExportedKyou } from '@/classes/api/gkill-api'
+import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { Kyou } from '@/classes/datas/kyou'
+import { Notification } from '@/classes/datas/notification'
+import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
+import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
+import { GetNotificationsByTargetIDRequest } from '@/classes/api/req_res/get-notifications-by-target-id-request'
+import { GetNotificationHistoryByNotificationIDRequest } from '@/classes/api/req_res/get-notification-history-by-notification-id-request'
+import { GetPluginContentHTMLRequest } from '@/classes/api/req_res/get-plugin-content-html-request'
+
+function make_kyou(id: string): Kyou {
+    const kyou = new Kyou()
+    kyou.id = id
+    return kyou
+}
+
+function make_query(query_id: string): FindKyouQuery {
+    const query = new FindKyouQuery()
+    query.query_id = query_id
+    return query
+}
+
+/** 焼き込み前の素の状態へ戻す（シングルトンなのでテスト間で持ち越す） */
+function reset(api: GkillAPIForExportedKyou): void {
+    api.columns = []
+    api.kyous = []
+    api.attached_notifications = []
+    api.attached_timeis_kyous = []
+    api.plugin_html = new Map()
+    api.exported_application_config = new ApplicationConfig()
+}
+
+describe('GkillAPIForExportedKyou', () => {
+    let api: GkillAPIForExportedKyou
+
+    beforeEach(() => {
+        api = GkillAPIForExportedKyou.get_instance_for_exported_kyou()
+        reset(api)
+        window.localStorage.clear()
+    })
+
+    describe('get_kyous は列ごとに違う結果を返す', () => {
+        it('query_id で列を引く（共有版のように全件返さない）', async () => {
+            const query1 = make_query('q1')
+            const query2 = make_query('q2')
+            api.kyous = [make_kyou('a'), make_kyou('b'), make_kyou('c')]
+            api.columns = [
+                { query: query1, kyous: [api.kyous[0]] },
+                { query: query2, kyous: [api.kyous[1], api.kyous[2]] },
+            ]
+
+            const req1 = new GetKyousRequest()
+            req1.query = query1
+            const res1 = await api.get_kyous(req1)
+            expect(res1.kyous.map(k => k.id), '列をまたいで同じ中身を返している').toEqual(['a'])
+
+            const req2 = new GetKyousRequest()
+            req2.query = query2
+            const res2 = await api.get_kyous(req2)
+            expect(res2.kyous.map(k => k.id)).toEqual(['b', 'c'])
+        })
+
+        it('焼き込まれていない列は空で返す（サーバへは取りに行かない）', async () => {
+            api.kyous = [make_kyou('a')]
+            api.columns = [{ query: make_query('q1'), kyous: api.kyous }]
+
+            const req = new GetKyousRequest()
+            req.query = make_query('q-unknown')
+            const res = await api.get_kyous(req)
+            expect(res.kyous).toEqual([])
+        })
+
+        it('playing 検索は共有版の実装へ委譲する', async () => {
+            api.attached_timeis_kyous = []
+            const req = new GetKyousRequest()
+            req.query = make_query('q1')
+            req.query.playing_time = new Date(2026, 0, 1, 12, 0, 0, 0)
+            const res = await api.get_kyous(req)
+            // 打刻が1件も無いので0件。列の引き当てには行かない
+            expect(res.kyous).toEqual([])
+        })
+    })
+
+    it('get_application_config は焼き込んだ設定を返す（集計の定義が入っている）', async () => {
+        api.exported_application_config.dnote_json_data = '[{"title":"定義A"}]'
+        const res = await api.get_application_config(new GetApplicationConfigRequest())
+        expect(res.application_config.dnote_json_data, '共有版の空の設定を返している（集計が空になる）')
+            .toBe('[{"title":"定義A"}]')
+        expect(res.application_config.for_export_kyou).toBe(true)
+    })
+
+    it('get_notifications_by_target_id は焼き込んだ通知から絞る（共有版は空のスタブ）', async () => {
+        const notification = new Notification()
+        notification.id = 'n1'
+        notification.target_id = 'a'
+        const other = new Notification()
+        other.id = 'n2'
+        other.target_id = 'b'
+        api.attached_notifications = [notification, other]
+
+        const req = new GetNotificationsByTargetIDRequest()
+        req.target_id = 'a'
+        const res = await api.get_notifications_by_target_id(req)
+        expect(res.notifications.map(n => n.id)).toEqual(['n1'])
+    })
+
+    it('get_notification_history_by_notification_id も焼き込みから引く', async () => {
+        const notification = new Notification()
+        notification.id = 'n1'
+        notification.target_id = 'a'
+        api.attached_notifications = [notification]
+
+        const req = new GetNotificationHistoryByNotificationIDRequest()
+        req.id = 'n1'
+        const res = await api.get_notification_history_by_notification_id(req)
+        expect(res.notification_histories.map(n => n.id)).toEqual(['n1'])
+    })
+
+    describe('get_plugin_content_html は焼き込みから引く（共有版は未上書きで通信する）', () => {
+        it('焼き込まれた本文を返す', async () => {
+            api.plugin_html.set(GkillAPIForExportedKyou.plugin_html_key('PluginRep', 'p1'), '<p>本文</p>')
+            const req = new GetPluginContentHTMLRequest()
+            req.rep_name = 'PluginRep'
+            req.kyou_id = 'p1'
+            const res = await api.get_plugin_content_html(req)
+            expect(res.html).toBe('<p>本文</p>')
+        })
+
+        it('焼き込みが無ければ空で返す（fetch へ落ちない）', async () => {
+            const fetch_spy = vi.spyOn(globalThis, 'fetch')
+            const req = new GetPluginContentHTMLRequest()
+            req.rep_name = 'PluginRep'
+            req.kyou_id = 'unknown'
+            const res = await api.get_plugin_content_html(req)
+            expect(res.html).toBe('')
+            expect(fetch_spy, '出力 HTML が通信している').not.toHaveBeenCalled()
+            fetch_spy.mockRestore()
+        })
+    })
+
+    describe('Google Maps の API キーは閲覧者が入れる', () => {
+        it('localStorage へ保存し、読み戻せる（Cookie は file:// で書けない）', () => {
+            expect(api.get_google_map_api_key(), '既定で空でない').toBe('')
+            api.set_google_map_api_key('viewer-key')
+            expect(api.get_google_map_api_key()).toBe('viewer-key')
+            expect(window.localStorage.getItem(GkillAPIForExportedKyou.google_map_api_key_storage_key))
+                .toBe('viewer-key')
+        })
+
+        // /files/ 経由で開かれると allow-same-origin の無い sandbox（opaque origin）になり、
+        // localStorage は例外を投げる。ここで投げると地図ごと画面が落ちる
+        it('localStorage が例外を投げてもメモリへ退避して落ちない', () => {
+            const set_spy = vi.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
+                throw new Error('opaque origin')
+            })
+            const get_spy = vi.spyOn(window.localStorage, 'getItem').mockImplementation(() => {
+                throw new Error('opaque origin')
+            })
+
+            expect(() => api.set_google_map_api_key('viewer-key')).not.toThrow()
+            expect(api.get_google_map_api_key(), '退避先から読めていない').toBe('viewer-key')
+
+            set_spy.mockRestore()
+            get_spy.mockRestore()
+        })
+    })
+
+    describe('get_saved_rykv_find_kyou_querys は列の復元経路', () => {
+        it('焼き込んだ列の検索条件を返す（共有版は既定クエリ1本）', () => {
+            api.columns = [
+                { query: make_query('q1'), kyous: [] },
+                { query: make_query('q2'), kyous: [] },
+            ]
+            expect(api.get_saved_rykv_find_kyou_querys().map(q => q.query_id)).toEqual(['q1', 'q2'])
+        })
+
+        it('列が無ければ共有版の既定（1本）に委譲する', () => {
+            expect(api.get_saved_rykv_find_kyou_querys()).toHaveLength(1)
+        })
+    })
+})

@@ -292,6 +292,7 @@
     "MI_DEFAULT_BOARD_NAME_TITLE": "Standard-Boardname für Aufgaben",
     "URLOG_BOOKMARKLET_ADDRESS_TITLE": "Bookmarklet",
     "GOOGLE_MAP_API_KEY_TITLE": "Google Map API-Schlüssel",
+    "EXPORTED_GOOGLE_MAP_API_KEY_HINT_MESSAGE": "Wird nur in diesem Browser gespeichert und nirgendwohin gesendet.",
     "EDIT_TAG_STRUCT_TITLE": "Tag-Struktur",
     "ENABLE_TITLE": "Aktiviert",
     "WRITE_TITLE": "Schreiben",

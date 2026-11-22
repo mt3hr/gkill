@@ -292,6 +292,7 @@
     "MI_DEFAULT_BOARD_NAME_TITLE": "Nombre de tablero de tareas por defecto",
     "URLOG_BOOKMARKLET_ADDRESS_TITLE": "Bookmarklet",
     "GOOGLE_MAP_API_KEY_TITLE": "Clave API de Google Map",
+    "EXPORTED_GOOGLE_MAP_API_KEY_HINT_MESSAGE": "Se guarda solo en este navegador y no se envía a ninguna parte.",
     "EDIT_TAG_STRUCT_TITLE": "Estructura de etiquetas",
     "ENABLE_TITLE": "Habilitado",
     "WRITE_TITLE": "Escritura",

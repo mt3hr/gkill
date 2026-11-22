@@ -230,3 +230,50 @@ describe('useGpsLogMap の再取得', () => {
         expect(api.time_slider_max.value).toBe(9 * 3600)
     })
 })
+
+// 出力 HTML では閲覧者が自分の Google Maps の API キーを入れる（地図の下の ⚠ から）。
+// キーを当てたら GoogleMap を作り直す必要があるので、google_map_api_key の ref を動かす
+// （apiKey は作り直さないと効かない。テンプレートの :key がこの ref を見ている）。
+describe('useGpsLogMap の API キー入力', () => {
+    function setup_with_api(set_google_map_api_key: (key: string) => void) {
+        const props = {
+            start_time: new Date(2026, 7, 3, 0, 0, 0, 0),
+            end_time: new Date(2026, 7, 3, 23, 59, 59, 999),
+            marker_time: new Date(2026, 7, 3, 0, 0, 0, 0),
+            app_content_height: 600,
+            gkill_api: {
+                get_google_map_api_key: () => '',
+                set_google_map_api_key,
+                get_gps_log: vi.fn().mockResolvedValue({ errors: [], gps_logs: [] }),
+            },
+        } as unknown as GPSLogMapProps
+        const emits = (() => { }) as unknown as GPSLogMapEmits
+        return useGpsLogMap({ props, emits })
+    }
+
+    it('入れたキーを保存し、ref へ反映してメニューを閉じる', () => {
+        const saved: Array<string> = []
+        const api = setup_with_api((key) => saved.push(key))
+        api.is_show_api_key_menu.value = true
+
+        api.api_key_input.value = '  viewer-key  '
+        api.apply_google_map_api_key()
+
+        expect(saved, '前後の空白を落としていない').toEqual(['viewer-key'])
+        expect(api.google_map_api_key.value, 'ref を動かさないと地図が作り直されない').toBe('viewer-key')
+        expect(api.is_show_api_key_menu.value).toBe(false)
+    })
+
+    it('空のまま適用しても何もしない（地図を無駄に作り直さない）', () => {
+        const saved: Array<string> = []
+        const api = setup_with_api((key) => saved.push(key))
+        api.is_show_api_key_menu.value = true
+
+        api.api_key_input.value = '   '
+        api.apply_google_map_api_key()
+
+        expect(saved).toEqual([])
+        expect(api.google_map_api_key.value).toBe('')
+        expect(api.is_show_api_key_menu.value, '何もしていないのにメニューを閉じている').toBe(true)
+    })
+})

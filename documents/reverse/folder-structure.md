@@ -84,7 +84,7 @@ src/client/
 ├── assets/                 # 画像等の静的アセット
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,600行、全API呼び出しを集約）
+│   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,800行、全API呼び出しを集約）
 │   │   ├── hydrate.ts      # JSON→クラスインスタンスの詰め替え（any を使わない共通ヘルパー）
 │   │   ├── find_query/     # 検索クエリビルダー
 │   │   └── req_res/        # リクエスト/レスポンス型（185ファイル）
@@ -336,7 +336,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-1030キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+1031キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 
