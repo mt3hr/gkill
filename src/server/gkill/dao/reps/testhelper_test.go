@@ -282,8 +282,8 @@ func makeDefaultFindQuery() *find.FindQuery {
 // makeCalendarFindQuery creates a FindQuery with calendar filter.
 func makeCalendarFindQuery(start, end time.Time) *find.FindQuery {
 	return &find.FindQuery{
-		CalendarStartDate: &start,
-		CalendarEndDate:   &end,
+		CalendarStartTime: &start,
+		CalendarEndTime:   &end,
 		OnlyLatestData:    true,
 	}
 }

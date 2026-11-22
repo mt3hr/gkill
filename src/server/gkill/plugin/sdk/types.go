@@ -44,8 +44,8 @@ type Query struct {
 	Tags              []string
 	NotTags           []string
 	TagsAnd           bool
-	CalendarStartDate *time.Time
-	CalendarEndDate   *time.Time
+	CalendarStartTime *time.Time
+	CalendarEndTime   *time.Time
 	// IsDeleted は「削除済み**だけ**を対象にする」。gkill 本体からは常に false。
 	// FindQuery.IncludeDeletedData（削除済みも含める）とは意味が違うので混ぜないこと。
 	IsDeleted      bool

@@ -1119,8 +1119,8 @@ func newKyouTimeFilter(query *find.FindQuery) func(kyou reps.Kyou) bool {
 	}
 
 	return func(kyou reps.Kyou) bool {
-		if (query.CalendarStartDate != nil && kyou.RelatedTime.Before(*query.CalendarStartDate)) ||
-			(query.CalendarEndDate != nil && kyou.RelatedTime.After(*query.CalendarEndDate)) {
+		if (query.CalendarStartTime != nil && kyou.RelatedTime.Before(*query.CalendarStartTime)) ||
+			(query.CalendarEndTime != nil && kyou.RelatedTime.After(*query.CalendarEndTime)) {
 			return false
 		}
 		if !filterPeriodOfTime {
@@ -1682,8 +1682,8 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 		Words:             findCtx.ParsedFindQuery.TimeIsWords,
 		NotWords:          findCtx.ParsedFindQuery.TimeIsNotWords,
 		WordsAnd:          findCtx.ParsedFindQuery.TimeIsWordsAnd,
-		CalendarStartDate: findCtx.ParsedFindQuery.CalendarStartDate,
-		CalendarEndDate:   findCtx.ParsedFindQuery.CalendarEndDate,
+		CalendarStartTime: findCtx.ParsedFindQuery.CalendarStartTime,
+		CalendarEndTime:   findCtx.ParsedFindQuery.CalendarEndTime,
 		IncludeEndTimeIs:  true,
 		// 編集前のタイトルでヒットしたり、旧版の期間で絞り込んだりしないよう、
 		// IDごとの最新版のみを対象にする(findTags/findTextsGenericと同じ考慮)
@@ -1749,8 +1749,8 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	matchKyous := map[string][]reps.Kyou{}
 
 	// 開始日を取得
-	startTime := findCtx.ParsedFindQuery.CalendarStartDate
-	endTime := findCtx.ParsedFindQuery.CalendarEndDate
+	startTime := findCtx.ParsedFindQuery.CalendarStartTime
+	endTime := findCtx.ParsedFindQuery.CalendarEndTime
 
 	// radius, latitude, longitudeを取得
 	// 半径が未指定(0以下)の場合は絞り込まずに素通しする。

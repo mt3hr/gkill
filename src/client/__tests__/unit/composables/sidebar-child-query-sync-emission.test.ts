@@ -219,8 +219,8 @@ describe('CalendarQuery の props同期エコー', () => {
 
         const column_query = new FindKyouQuery()
         column_query.query_id = 'column-1'
-        column_query.calendar_start_date = new Date(2025, 2, 10)
-        column_query.calendar_end_date = new Date(2025, 2, 12, 23, 59, 59, 999)
+        column_query.calendar_start_time = new Date(2025, 2, 10)
+        column_query.calendar_end_time = new Date(2025, 2, 12, 23, 59, 59, 999)
         props.find_kyou_query = column_query
         await flush()
         expect(view.dates.value).toHaveLength(2)
@@ -234,8 +234,8 @@ describe('CalendarQuery の props同期エコー', () => {
         const { view, props, emitted } = createView()
         const column_query = new FindKyouQuery()
         column_query.query_id = 'column-1'
-        column_query.calendar_start_date = new Date(2025, 2, 10)
-        column_query.calendar_end_date = new Date(2025, 2, 12, 23, 59, 59, 999)
+        column_query.calendar_start_time = new Date(2025, 2, 10)
+        column_query.calendar_end_time = new Date(2025, 2, 12, 23, 59, 59, 999)
         props.find_kyou_query = column_query
         await flush()
 

@@ -702,8 +702,8 @@ func buildPeriodOfTimeSeconds(query *find.FindQuery) (use bool, stOK bool, stSec
 // 同じインタフェースのキャッシュrep実装(GenerateFindSQLCommon を通す)と結果が食い違っていた。
 type commitTimeFilter struct {
 	useCalendar       bool
-	calendarStartDate *time.Time
-	calendarEndDate   *time.Time
+	calendarStartTime *time.Time
+	calendarEndTime   *time.Time
 	usePeriodOfTime   bool
 	startOK           bool
 	startSecond       int
@@ -718,8 +718,8 @@ type commitTimeFilter struct {
 func buildCommitTimeFilter(query *find.FindQuery) commitTimeFilter {
 	filter := commitTimeFilter{
 		useCalendar:       query.HasCalendarFilter(),
-		calendarStartDate: query.CalendarStartDate,
-		calendarEndDate:   query.CalendarEndDate,
+		calendarStartTime: query.CalendarStartTime,
+		calendarEndTime:   query.CalendarEndTime,
 	}
 	filter.usePeriodOfTime, filter.startOK, filter.startSecond, filter.endOK, filter.endSecond = buildPeriodOfTimeSeconds(query)
 	filter.filterWeekdays, filter.allowedWeekdays = buildAllowedWeekdays(query)
@@ -730,10 +730,10 @@ func buildCommitTimeFilter(query *find.FindQuery) commitTimeFilter {
 func (f commitTimeFilter) match(commitTime time.Time) bool {
 	// SQL側(unixepoch >= / <=)と同じく両端を含む(以前は排他で境界ちょうどのコミットが落ちていた)
 	if f.useCalendar {
-		if f.calendarStartDate != nil && commitTime.Before(*f.calendarStartDate) {
+		if f.calendarStartTime != nil && commitTime.Before(*f.calendarStartTime) {
 			return false
 		}
-		if f.calendarEndDate != nil && commitTime.After(*f.calendarEndDate) {
+		if f.calendarEndTime != nil && commitTime.After(*f.calendarEndTime) {
 			return false
 		}
 	}

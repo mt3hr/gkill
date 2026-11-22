@@ -108,8 +108,8 @@ func TestHandleGetKyous_BrokenRepIsWarningNotError(t *testing.T) {
 	calendarStart := now.Add(-time.Hour)
 	calendarEnd := now.Add(time.Hour)
 	getResp := getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{
-		CalendarStartDate: &calendarStart,
-		CalendarEndDate:   &calendarEnd,
+		CalendarStartTime: &calendarStart,
+		CalendarEndTime:   &calendarEnd,
 	})
 
 	if len(getResp.Errors) != 0 {

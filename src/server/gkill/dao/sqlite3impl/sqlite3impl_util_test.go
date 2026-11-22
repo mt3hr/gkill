@@ -264,8 +264,8 @@ func TestGenerateFindSQLCommon_CalendarSpecified(t *testing.T) {
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.Local)
 	end := time.Date(2024, 12, 31, 23, 59, 59, 0, time.Local)
 	query := &find.FindQuery{
-		CalendarStartDate: &start,
-		CalendarEndDate:   &end,
+		CalendarStartTime: &start,
+		CalendarEndTime:   &end,
 	}
 	whereCounter := 0
 	queryArgs := []any{}
@@ -667,7 +667,7 @@ func TestGenerateFindSQLCommon_UpdateTimeNilFallsBackToCalendar(t *testing.T) {
 	start := time.Date(2026, 8, 1, 0, 0, 0, 0, time.Local)
 	query := &find.FindQuery{
 		UpdateTime:        nil,
-		CalendarStartDate: &start,
+		CalendarStartTime: &start,
 	}
 	whereCounter := 0
 	queryArgs := []any{}

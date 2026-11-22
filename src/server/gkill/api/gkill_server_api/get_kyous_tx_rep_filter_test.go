@@ -99,8 +99,8 @@ func TestHandleGetKyous_TxAddedKyouSurvivesRepFilter(t *testing.T) {
 			endDate := now.Add(time.Hour)
 			contains := func(t *testing.T, query *find.FindQuery) bool {
 				t.Helper()
-				query.CalendarStartDate = &startDate
-				query.CalendarEndDate = &endDate
+				query.CalendarStartTime = &startDate
+				query.CalendarEndTime = &endDate
 				getReq := &req_res.GetKyousRequest{SessionID: sessionID, LocaleName: "en", Query: query}
 				resp := postJSON(t, tsURL+"/api/get_kyous", getReq)
 				defer resp.Body.Close()

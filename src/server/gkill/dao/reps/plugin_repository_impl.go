@@ -1015,8 +1015,8 @@ func findQueryToPluginQuery(q *find.FindQuery) *gkill_plugin.PluginQuery {
 		pq.TagsAnd = q.TagsAnd
 	}
 	if q.HasCalendarFilter() {
-		pq.CalendarStartDate = q.CalendarStartDate
-		pq.CalendarEndDate = q.CalendarEndDate
+		pq.CalendarStartTime = q.CalendarStartTime
+		pq.CalendarEndTime = q.CalendarEndTime
 	}
 	// json:"-" の内部用の欄なので FindQuery の JSON には出ない。明示的に運ぶ。
 	pq.WordsSkipIDMatch = q.WordsSkipIDMatch
@@ -1037,10 +1037,10 @@ func pluginKyouMatchesQuery(kyou Kyou, q *find.FindQuery) bool {
 	if q == nil {
 		return true
 	}
-	if q.CalendarStartDate != nil && kyou.RelatedTime.Before(*q.CalendarStartDate) {
+	if q.CalendarStartTime != nil && kyou.RelatedTime.Before(*q.CalendarStartTime) {
 		return false
 	}
-	if q.CalendarEndDate != nil && kyou.RelatedTime.After(*q.CalendarEndDate) {
+	if q.CalendarEndTime != nil && kyou.RelatedTime.After(*q.CalendarEndTime) {
 		return false
 	}
 	// TimeIs の終了の Kyou は、native と同じく IncludeEndTimeIs のときだけ返す

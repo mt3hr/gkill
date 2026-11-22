@@ -84,8 +84,8 @@ export class FindKyouQuery {
     map_radius: number | null
 
     // カレンダー
-    calendar_start_date: Date | null
-    calendar_end_date: Date | null
+    calendar_start_time: Date | null
+    calendar_end_time: Date | null
 
     // playing（非null=その時刻に実行中のTimeIsを検索）
     playing_time: Date | null
@@ -149,8 +149,8 @@ export class FindKyouQuery {
         // 文字列のまま持つと、サイドバーのgenerate_query(Dateを返す)との
         // deep_equals比較が恒久的に不一致になり、機械的なupdated_queryを
         // 値比較で吸収する安全網が復元列に対して一度も効かなくなる
-        cloned.calendar_start_date = date_from_json(n.calendar_start_date, cloned.calendar_start_date)
-        cloned.calendar_end_date = date_from_json(n.calendar_end_date, cloned.calendar_end_date)
+        cloned.calendar_start_time = date_from_json(n.calendar_start_time, cloned.calendar_start_time)
+        cloned.calendar_end_time = date_from_json(n.calendar_end_time, cloned.calendar_end_time)
         cloned.playing_time = date_from_json(n.playing_time, cloned.playing_time)
         cloned.period_of_time_start_time_second = nullable_number_from_json(n.period_of_time_start_time_second, cloned.period_of_time_start_time_second)
         cloned.period_of_time_end_time_second = nullable_number_from_json(n.period_of_time_end_time_second, cloned.period_of_time_end_time_second)
@@ -195,8 +195,8 @@ export class FindKyouQuery {
         cloned.map_latitude = this.map_latitude
         cloned.map_longitude = this.map_longitude
         cloned.map_radius = this.map_radius
-        cloned.calendar_start_date = this.calendar_start_date
-        cloned.calendar_end_date = this.calendar_end_date
+        cloned.calendar_start_time = this.calendar_start_time
+        cloned.calendar_end_time = this.calendar_end_time
         cloned.playing_time = this.playing_time
         cloned.period_of_time_start_time_second = this.period_of_time_start_time_second
         cloned.period_of_time_end_time_second = this.period_of_time_end_time_second
@@ -243,8 +243,8 @@ export class FindKyouQuery {
         this.map_latitude = null
         this.map_longitude = null
         this.map_radius = null
-        this.calendar_start_date = null
-        this.calendar_end_date = null
+        this.calendar_start_time = null
+        this.calendar_end_time = null
         this.playing_time = null
         this.period_of_time_start_time_second = null
         this.period_of_time_end_time_second = null
@@ -390,8 +390,8 @@ export class FindKyouQuery {
 
         // Calendar
         if (application_config.rykv_default_period !== -1) {
-            query.calendar_start_date = moment(moment().add(-application_config.rykv_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
-            query.calendar_end_date = moment(moment().format("YYYY-MM-DD 00:00:00 ZZ")).add(1, "days").add(-1, "milliseconds").toDate()
+            query.calendar_start_time = moment(moment().add(-application_config.rykv_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
+            query.calendar_end_time = moment(moment().format("YYYY-MM-DD 00:00:00 ZZ")).add(1, "days").add(-1, "milliseconds").toDate()
         }
 
         query.apply_hide_tags(application_config)

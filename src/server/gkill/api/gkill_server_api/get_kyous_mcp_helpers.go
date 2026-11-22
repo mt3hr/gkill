@@ -108,7 +108,7 @@ type mcpKyouEntryKey struct {
 // Mi rep の FindKyous は5射影を UNION し、各腕が自分の時刻列（mi_create=CREATE_TIME、
 // mi_check=UPDATE_TIME …）で期間フィルタされる。for_mi 無しの検索は replaceLatestKyouInfos が
 // newestKyouEntry で代表1件へ潰す（_start 優先 → DataType 辞書順なので mi_check < mi_create）。
-// カーソルを CalendarEndDate へ押し下げると mi_check の腕だけが窓外へ落ち、同じ Mi が
+// カーソルを CalendarEndTime へ押し下げると mi_check の腕だけが窓外へ落ち、同じ Mi が
 // mi_create として**カーソルより後ろに**再出現する。1頁目に返した記録の重複であり、
 // remaining_count もそのぶん膨らむ（カーソルが遡るほど該当 Mi が増えるので、減らない・微減する）。
 //

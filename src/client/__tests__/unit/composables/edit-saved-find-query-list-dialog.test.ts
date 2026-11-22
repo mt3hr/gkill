@@ -100,7 +100,7 @@ describe('add_item', () => {
         expect(added.id).toBe('generated-uuid-1')
         expect(added.title).toBe('SAVED_FIND_QUERY_DEFAULT_NAME')
         expect(added.find_kyou_query.for_mi, 'rykv用なのにMi向けの既定条件になっている').toBe(false)
-        expect(added.find_kyou_query.calendar_start_date, 'rykv既定期間がカレンダーへ反映されていない').not.toBeNull()
+        expect(added.find_kyou_query.calendar_start_time, 'rykv既定期間がカレンダーへ反映されていない').not.toBeNull()
         expect(added.find_kyou_query.tags).toEqual(['旅行'])
     })
 
@@ -112,7 +112,7 @@ describe('add_item', () => {
 
         const added = view.editing_items.value[0]
         expect(added.find_kyou_query.for_mi, 'mi用なのにMi向けの既定条件になっていない').toBe(true)
-        expect(added.find_kyou_query.calendar_start_date, 'mi既定にカレンダー期間は無い').toBeNull()
+        expect(added.find_kyou_query.calendar_start_time, 'mi既定にカレンダー期間は無い').toBeNull()
         expect(added.find_kyou_query.reps, 'Mi既定は全repを対象にする').toEqual(['kmemo_dev_202601'])
     })
 })

@@ -59,7 +59,7 @@ func main() {
 				},
 			}
 
-			// 日付フィルタ（CalendarStartDate / CalendarEndDate が指定されている場合）と
+			// 日付フィルタ（CalendarStartTime / CalendarEndTime が指定されている場合）と
 			// ワードフィルタ（Words / NotWords / WordsAnd）。
 			// gkill 本体はプラグインが返した Kyou のワードを再判定しない（本文は本体に無い）ので、
 			// ワード判定はプラグインの責任。自前のループは書かず、SDK の q.Matcher() / q.MatchText を通す。
@@ -77,10 +77,10 @@ func main() {
 				if !idMatcher.Match(k.ID) {
 					continue
 				}
-				if q.CalendarStartDate != nil && k.RelatedTime.Before(*q.CalendarStartDate) {
+				if q.CalendarStartTime != nil && k.RelatedTime.Before(*q.CalendarStartTime) {
 					continue
 				}
-				if q.CalendarEndDate != nil && k.RelatedTime.After(*q.CalendarEndDate) {
+				if q.CalendarEndTime != nil && k.RelatedTime.After(*q.CalendarEndTime) {
 					continue
 				}
 				if !matcher.MatchText(strings.Join(k.Texts, "\n"), k.ID) {

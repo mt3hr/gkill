@@ -147,8 +147,8 @@ func TestMigrateShareKyouInfoFrom100(t *testing.T) {
 	if !strings.Contains(disabled, `"tags":null`) {
 		t.Errorf("legacy-disabled tags should be null: %s", disabled)
 	}
-	if !strings.Contains(disabled, `"calendar_start_date":null`) {
-		t.Errorf("legacy-disabled calendar_start_date should be null: %s", disabled)
+	if !strings.Contains(disabled, `"calendar_start_time":null`) {
+		t.Errorf("legacy-disabled calendar_start_time should be null: %s", disabled)
 	}
 
 	// use_*=true の行は値が維持される

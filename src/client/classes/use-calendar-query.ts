@@ -17,10 +17,10 @@ export function useCalendarQuery(options: {
     const calendar_year = ref(now.getFullYear())
     const calendar_month = ref(now.getMonth())
     const dates: Ref<Array<Date>> = ref([])
-    // チェックボックスのUI状態。クエリ上は calendar_start_date / calendar_end_date の
+    // チェックボックスのUI状態。クエリ上は calendar_start_time / calendar_end_time の
     // null 判定が担うため、ローカルrefに分離してprops片方向同期する
     const use_calendar: Ref<boolean> = ref(props.find_kyou_query
-        ? (props.find_kyou_query.calendar_start_date !== null || props.find_kyou_query.calendar_end_date !== null)
+        ? (props.find_kyou_query.calendar_start_time !== null || props.find_kyou_query.calendar_end_time !== null)
         : false)
     // 同一query_id内の null 着信（チェックオフ）ではローカルの日付選択を保持し、
     // query_id が変わったときだけ着信値で再構築するための同期済みquery_id
@@ -39,20 +39,20 @@ export function useCalendarQuery(options: {
 
         const query_id_changed = last_synced_query_id.value !== query.value.query_id
         last_synced_query_id.value = query.value.query_id
-        const has_dates = query.value.calendar_start_date !== null || query.value.calendar_end_date !== null
+        const has_dates = query.value.calendar_start_time !== null || query.value.calendar_end_time !== null
 
         // チェック状態を動かすのは「別の列に切り替わったとき」と「日付が載って着信したとき」だけ。
         // 同一列でのnull着信でここを触ると、同じ日付の2回クリック(Vuetifyのレンジ解除で
         // 選択が空になる)のたびにチェックが勝手に外れ、ピッカーごと消えてしまう
         if (query_id_changed || has_dates) {
             use_calendar.value = has_dates
-            const start_date = moment(query.value.calendar_start_date)
+            const start_date = moment(query.value.calendar_start_time)
             const date_list = Array<Date>()
-            if (query.value.calendar_start_date && query.value.calendar_end_date) {
+            if (query.value.calendar_start_time && query.value.calendar_end_time) {
                 // Vuetify4のrange modeは[start, end]の2要素のみを受け付ける。
                 // 中間日付を全て詰めるとレンジではなく個別選択として解釈されてしまう。
                 date_list.push(start_date.toDate())
-                const end_day = moment(query.value.calendar_end_date).startOf('day')
+                const end_day = moment(query.value.calendar_end_time).startOf('day')
                 // startとendが同日の場合は1要素のみにする。
                 // 2要素にするとVDatePickerが「レンジ完了状態」と判断し、
                 // 次のクリックで新しいレンジが始まってしまうため。
@@ -60,11 +60,11 @@ export function useCalendarQuery(options: {
                     date_list.push(end_day.toDate())
                 }
             } else {
-                if (query.value.calendar_start_date) {
+                if (query.value.calendar_start_time) {
                     date_list.push(start_date.toDate())
                 }
-                if (query.value.calendar_end_date) {
-                    date_list.push(moment(query.value.calendar_end_date).startOf('day').toDate())
+                if (query.value.calendar_end_time) {
+                    date_list.push(moment(query.value.calendar_end_time).startOf('day').toDate())
                 }
             }
             dates.value = date_list
@@ -74,10 +74,10 @@ export function useCalendarQuery(options: {
 
         if (!props.inited) {
             nextTick(() => {
-                if (props.find_kyou_query.calendar_end_date) {
-                    const calendar_end_date = moment(props.find_kyou_query.calendar_end_date);
-                    calendar_year.value = calendar_end_date.toDate().getFullYear()
-                    calendar_month.value = calendar_end_date.toDate().getMonth()
+                if (props.find_kyou_query.calendar_end_time) {
+                    const calendar_end_time = moment(props.find_kyou_query.calendar_end_time);
+                    calendar_year.value = calendar_end_time.toDate().getFullYear()
+                    calendar_month.value = calendar_end_time.toDate().getMonth()
                 }
             })
         }

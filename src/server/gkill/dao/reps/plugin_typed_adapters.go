@@ -339,10 +339,10 @@ func pluginMatchCalendar(relatedTime time.Time, query *find.FindQuery) bool {
 	if query == nil {
 		return true
 	}
-	if query.CalendarStartDate != nil && relatedTime.Before(*query.CalendarStartDate) {
+	if query.CalendarStartTime != nil && relatedTime.Before(*query.CalendarStartTime) {
 		return false
 	}
-	if query.CalendarEndDate != nil && relatedTime.After(*query.CalendarEndDate) {
+	if query.CalendarEndTime != nil && relatedTime.After(*query.CalendarEndTime) {
 		return false
 	}
 	return true

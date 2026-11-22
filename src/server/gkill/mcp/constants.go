@@ -257,8 +257,8 @@ type DateTimeFieldSpec struct {
 }
 
 var KyousQueryDateTimeFields = []DateTimeFieldSpec{
-	{Name: "calendar_start_date", AllowDateOnly: true, EndOfDay: false},
-	{Name: "calendar_end_date", AllowDateOnly: true, EndOfDay: true},
+	{Name: "calendar_start_time", AllowDateOnly: true, EndOfDay: false},
+	{Name: "calendar_end_time", AllowDateOnly: true, EndOfDay: true},
 	{Name: "playing_time", AllowDateOnly: true, EndOfDay: false},
 	{Name: "update_time", AllowDateOnly: true, EndOfDay: false},
 }

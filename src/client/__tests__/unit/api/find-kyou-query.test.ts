@@ -396,18 +396,18 @@ describe('FindKyouQuery', () => {
     test('rykv_default_period が -1 ならカレンダー条件を付けない(null=未使用)', () => {
       const query = FindKyouQuery.generate_default_query_for_rykv(asConfig({ rykv_default_period: -1 }))
 
-      expect(query.calendar_start_date).toBeNull()
-      expect(query.calendar_end_date).toBeNull()
+      expect(query.calendar_start_time).toBeNull()
+      expect(query.calendar_end_time).toBeNull()
     })
 
     test('rykv_default_period が指定されていればその日数分のカレンダー条件を付ける', () => {
       const query = FindKyouQuery.generate_default_query_for_rykv(asConfig({ rykv_default_period: 7 }))
 
-      expect(query.calendar_start_date).toBeInstanceOf(Date)
-      expect(query.calendar_end_date).toBeInstanceOf(Date)
+      expect(query.calendar_start_time).toBeInstanceOf(Date)
+      expect(query.calendar_end_time).toBeInstanceOf(Date)
 
-      const start = query.calendar_start_date as Date
-      const end = query.calendar_end_date as Date
+      const start = query.calendar_start_time as Date
+      const end = query.calendar_end_time as Date
       expect(end.getTime()).toBeGreaterThan(start.getTime())
       // 開始は7日前の0時、終了は今日の終わりなので、差はおよそ8日
       const days = (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)
@@ -473,8 +473,8 @@ describe('FindKyouQuery', () => {
     test('カレンダー条件は付かない（rykv との差分）', () => {
       const query = FindKyouQuery.generate_default_query_for_mi(asConfig({ rykv_default_period: 7 }))
 
-      expect(query.calendar_start_date).toBeNull()
-      expect(query.calendar_end_date).toBeNull()
+      expect(query.calendar_start_time).toBeNull()
+      expect(query.calendar_end_time).toBeNull()
     })
 
     test('check_when_inited のタグだけが入る', () => {
@@ -591,8 +591,8 @@ describe('FindKyouQuery', () => {
       query.map_latitude = 35.1
       query.map_longitude = 139.2
       query.map_radius = 300
-      query.calendar_start_date = new Date('2026-01-01T00:00:00Z')
-      query.calendar_end_date = new Date('2026-01-31T23:59:59Z')
+      query.calendar_start_time = new Date('2026-01-01T00:00:00Z')
+      query.calendar_end_time = new Date('2026-01-31T23:59:59Z')
       query.playing_time = new Date('2026-01-15T12:00:00Z')
       query.period_of_time_start_time_second = 3600
       query.period_of_time_end_time_second = 7200
@@ -704,16 +704,16 @@ describe('FindKyouQuery', () => {
       // (JSON.stringify同士の比較ではDateと文字列の差が見えないので、ここで固定する)
       const query = new FindKyouQuery()
       query.query_id = 'saved-col'
-      query.calendar_start_date = new Date('2025-03-10T00:00:00+09:00')
-      query.calendar_end_date = new Date('2025-03-12T23:59:59.999+09:00')
+      query.calendar_start_time = new Date('2025-03-10T00:00:00+09:00')
+      query.calendar_end_time = new Date('2025-03-12T23:59:59.999+09:00')
       query.playing_time = new Date('2025-03-11T12:00:00+09:00')
       query.period_of_time_week_of_days = [1, 3]
 
       const json = JSON.parse(JSON.stringify(query))
       const restored = FindKyouQuery.parse_find_kyou_query(json)
 
-      expect(restored.calendar_start_date).toBeInstanceOf(Date)
-      expect(restored.calendar_end_date).toBeInstanceOf(Date)
+      expect(restored.calendar_start_time).toBeInstanceOf(Date)
+      expect(restored.calendar_end_time).toBeInstanceOf(Date)
       expect(restored.playing_time).toBeInstanceOf(Date)
       expect(deep_equals(restored, query)).toBe(true)
 
@@ -728,8 +728,8 @@ describe('FindKyouQuery', () => {
 
       const restored = FindKyouQuery.parse_find_kyou_query(JSON.parse(JSON.stringify(empty)))
 
-      expect(restored.calendar_start_date).toBeNull()
-      expect(restored.calendar_end_date).toBeNull()
+      expect(restored.calendar_start_time).toBeNull()
+      expect(restored.calendar_end_time).toBeNull()
       expect(restored.playing_time).toBeNull()
       expect(deep_equals(restored, empty)).toBe(true)
     })

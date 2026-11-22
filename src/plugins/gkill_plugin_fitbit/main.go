@@ -57,12 +57,12 @@ func newHandler(pluginDir string) sdk.Handler {
 			startBuilder(pluginDir, cfg)
 
 			var startUnix, endUnix *int64
-			if q.CalendarStartDate != nil {
-				unix := q.CalendarStartDate.Unix()
+			if q.CalendarStartTime != nil {
+				unix := q.CalendarStartTime.Unix()
 				startUnix = &unix
 			}
-			if q.CalendarEndDate != nil {
-				unix := q.CalendarEndDate.Unix()
+			if q.CalendarEndTime != nil {
+				unix := q.CalendarEndTime.Unix()
 				endUnix = &unix
 			}
 

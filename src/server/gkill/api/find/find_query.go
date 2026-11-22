@@ -36,8 +36,8 @@ type FindQuery struct {
 	TimeIsWordsAnd              bool         `json:"timeis_words_and"`
 	TimeIsTags                  []string     `json:"timeis_tags"`
 	TimeIsTagsAnd               bool         `json:"timeis_tags_and"`
-	CalendarStartDate           *time.Time   `json:"calendar_start_date"`
-	CalendarEndDate             *time.Time   `json:"calendar_end_date"`
+	CalendarStartTime           *time.Time   `json:"calendar_start_time"`
+	CalendarEndTime             *time.Time   `json:"calendar_end_time"`
 	MapRadius                   *float64     `json:"map_radius"`
 	MapLatitude                 *float64     `json:"map_latitude"`
 	MapLongitude                *float64     `json:"map_longitude"`
@@ -117,7 +117,7 @@ func (q *FindQuery) HasTimeIsFilter() bool {
 
 // HasCalendarFilter はカレンダー期間フィルタが有効かを返す。
 func (q *FindQuery) HasCalendarFilter() bool {
-	return q.CalendarStartDate != nil || q.CalendarEndDate != nil
+	return q.CalendarStartTime != nil || q.CalendarEndTime != nil
 }
 
 // HasMapFilter は地図範囲フィルタが有効かを返す。緯度・経度・半径の3つが揃って初めて有効。

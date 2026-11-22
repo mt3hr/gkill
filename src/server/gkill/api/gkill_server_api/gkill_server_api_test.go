@@ -2727,8 +2727,8 @@ func TestHandleGetKyous_EmptyResult(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			CalendarStartDate: &farPast,
-			CalendarEndDate:   &farPastEnd,
+			CalendarStartTime: &farPast,
+			CalendarEndTime:   &farPastEnd,
 		},
 	}
 
@@ -2788,8 +2788,8 @@ func TestHandleGetKyous_WithData(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 		},
 	}
 
@@ -2880,8 +2880,8 @@ func TestHandleGetKyous_CalendarFilter(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 		},
 	}
 
@@ -6292,8 +6292,8 @@ func TestHandleGetKyous_WordFilter(t *testing.T) {
 		LocaleName: "en",
 		Query: &find.FindQuery{
 			Words:             []string{"unique_keyword_xyz"},
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 		},
 	}
 
@@ -6374,8 +6374,8 @@ func TestHandleGetKyous_WordsAndFilter(t *testing.T) {
 		Query: &find.FindQuery{
 			Words:             []string{"wand_alpha_test", "wand_beta_test"},
 			WordsAnd:          true,
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 		},
 	}
 
@@ -6476,8 +6476,8 @@ func TestHandleGetKyous_TagFilter(t *testing.T) {
 		LocaleName: "en",
 		Query: &find.FindQuery{
 			Tags:              []string{"specific_tag_filter_test"},
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 		},
 	}
 
@@ -6609,8 +6609,8 @@ func TestHandleGetKyous_MiCheckStateFilter(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 			IncludeCreateMi:   true,
 			IncludeCheckMi:    true,
 		},
@@ -6692,8 +6692,8 @@ func TestHandleGetKyous_CalendarRange(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 		},
 	}
 
@@ -6785,8 +6785,8 @@ func TestHandleGetKyous_OnlyLatestData(t *testing.T) {
 		LocaleName: "en",
 		Query: &find.FindQuery{
 			OnlyLatestData:    true,
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 		},
 	}
 
@@ -6900,8 +6900,8 @@ func TestHandleGetKyous_CombinedFilters(t *testing.T) {
 		LocaleName: "en",
 		Query: &find.FindQuery{
 			Words:             []string{"combined_filter_word"},
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 		},
 	}
 
@@ -6979,8 +6979,8 @@ func TestHandleSubmitKFTLText_SimpleKmemo(t *testing.T) {
 		LocaleName: "en",
 		Query: &find.FindQuery{
 			Words:             []string{"kftl_simple_test_memo_content"},
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 		},
 	}
 	resp2 := postJSON(t, tsURL+"/api/get_kyous", getReq)
@@ -7081,8 +7081,8 @@ func TestHandleSubmitKFTLText_MultipleStatements(t *testing.T) {
 		LocaleName: "en",
 		Query: &find.FindQuery{
 			Words:             []string{"kftl_multi_statement_test_content"},
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 		},
 	}
 	resp2 := postJSON(t, tsURL+"/api/get_kyous", getReq)
@@ -7144,8 +7144,8 @@ func TestHandleGetKyousMCP_BasicQuery(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 		},
 		Limit: 50,
 	}
@@ -7256,8 +7256,8 @@ func helperGetKyousWithWord(t *testing.T, tsURL string, sessionID string, word s
 		LocaleName: "ja",
 		Query: &find.FindQuery{
 			Words:             []string{word},
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 			IncludeCreateMi:   true,
 			IncludeCheckMi:    true,
 			IncludeLimitMi:    true,
@@ -7291,8 +7291,8 @@ func helperGetKyousWithTag(t *testing.T, tsURL string, sessionID string, tag str
 		LocaleName: "ja",
 		Query: &find.FindQuery{
 			Tags:              []string{tag},
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 			IncludeCreateMi:   true,
 			IncludeCheckMi:    true,
 			IncludeLimitMi:    true,
@@ -8994,8 +8994,8 @@ func TestHandleGetKyous_WordFilter_ReKyouTargetingMiReKyou(t *testing.T) {
 	endDate := now.Add(time.Hour)
 	foundIDs := findKyouIDs(t, tsURL, sessionID, &find.FindQuery{
 		Words:             []string{"rekyou_over_mirekyou_word"},
-		CalendarStartDate: &startDate,
-		CalendarEndDate:   &endDate,
+		CalendarStartTime: &startDate,
+		CalendarEndTime:   &endDate,
 	})
 
 	// 検索そのものが機能していることをまず確かめる（空振りでpassしないように）
@@ -9048,8 +9048,8 @@ func TestHandleGetKyous_ReKyouWithDeletedTarget(t *testing.T) {
 	endDate := now.Add(time.Hour)
 	query := func() *find.FindQuery {
 		return &find.FindQuery{
-			CalendarStartDate: &startDate,
-			CalendarEndDate:   &endDate,
+			CalendarStartTime: &startDate,
+			CalendarEndTime:   &endDate,
 		}
 	}
 

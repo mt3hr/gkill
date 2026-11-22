@@ -480,8 +480,8 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 ```json
 {
   "query": {
-    "calendar_start_date": "2026-02-01T00:00:00+09:00",
-    "calendar_end_date": "2026-02-28T23:59:59+09:00"
+    "calendar_start_time": "2026-02-01T00:00:00+09:00",
+    "calendar_end_time": "2026-02-28T23:59:59+09:00"
   }
 }
 ```
@@ -564,5 +564,5 @@ Mi抽出（**`for_mi` は `include_*_mi` を最低1つ要求する**。全て無
 - `limit` と `max_size_mb` を適切に設定してレスポンスサイズを制御する
 - ChatGPTではまず `limit=20` 前後、`max_size_mb=0.25` 前後、`is_include_timeis=false` で試す
 - `has_more: true` の場合は `next_cursor` を使って続きを取得する
-- まず期間を絞り込んでから取得する（`calendar_start_date` / `calendar_end_date` 推奨）
+- まず期間を絞り込んでから取得する（`calendar_start_time` / `calendar_end_time` 推奨）
 - 同一条件の連打を避け、必要最小限のクエリにする

@@ -49,8 +49,8 @@ func wordFilterQuery(words []string, notWords []string) *find.FindQuery {
 	return &find.FindQuery{
 		Words:             words,
 		NotWords:          notWords,
-		CalendarStartDate: &start,
-		CalendarEndDate:   &end,
+		CalendarStartTime: &start,
+		CalendarEndTime:   &end,
 	}
 }
 

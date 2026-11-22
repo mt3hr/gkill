@@ -212,8 +212,8 @@ func TestBuildAddTagRule_EachFilterMakesQueryNonEmpty(t *testing.T) {
 		`{"words": []}`,
 		`{"timeis_words": []}`,
 		`{"timeis_words": ["foo"], "timeis_tags": ["t"]}`,
-		`{"calendar_start_date": "2026-09-01T00:00:00+09:00"}`,
-		`{"calendar_end_date": "2026-09-01T00:00:00+09:00"}`,
+		`{"calendar_start_time": "2026-09-01T00:00:00+09:00"}`,
+		`{"calendar_end_time": "2026-09-01T00:00:00+09:00"}`,
 		`{"map_latitude": 35.0, "map_longitude": 135.0, "map_radius": 1.5}`,
 		`{"playing_time": "2026-09-01T00:00:00+09:00"}`,
 		`{"update_time": "2026-09-01T00:00:00+09:00"}`,
@@ -408,7 +408,7 @@ func TestAddTagRuleEffectiveQueryOverridesReps(t *testing.T) {
 	allRepNames := []string{"AutoScreenshot_dev1_20260101", "Kmemo_dev1_202601"}
 	start := "2026-09-01T00:00:00+09:00"
 
-	rule, err := parseRuleJSON(t, `{"tag": "a", "query": {"rep_types_in_sidebar": ["AutoScreenshot"], "reps": ["手書き"], "calendar_start_date": "`+start+`"}}`)
+	rule, err := parseRuleJSON(t, `{"tag": "a", "query": {"rep_types_in_sidebar": ["AutoScreenshot"], "reps": ["手書き"], "calendar_start_time": "`+start+`"}}`)
 	if err != nil {
 		t.Fatalf("parse: %v", err)
 	}
@@ -416,7 +416,7 @@ func TestAddTagRuleEffectiveQueryOverridesReps(t *testing.T) {
 	if !slices.Equal(query.Reps, []string{"AutoScreenshot_dev1_20260101"}) {
 		t.Errorf("Reps should be replaced by the expansion: %#v", query.Reps)
 	}
-	if query.CalendarStartDate == nil {
+	if query.CalendarStartTime == nil {
 		t.Error("other filters should be kept")
 	}
 	// 元のルールは書き換えない(ユーザごとに使い回す)
@@ -450,7 +450,7 @@ func TestFormatEffectiveQueryShowsOnlySpecifiedFields(t *testing.T) {
 	if _, ok := fields["tags_and"]; !ok {
 		t.Errorf("true should be shown: %s", got)
 	}
-	for _, key := range []string{"words", "words_and", "calendar_start_date", "mi_board_name", "mi_check_state"} {
+	for _, key := range []string{"words", "words_and", "calendar_start_time", "mi_board_name", "mi_check_state"} {
 		if _, ok := fields[key]; ok {
 			t.Errorf("unspecified %s should be hidden: %s", key, got)
 		}
@@ -536,7 +536,7 @@ func TestFindTaggedKyouIDsQueryUsesTagsAnd(t *testing.T) {
 		RepTypes:          []string{"git_commit_log"},
 		Reps:              []string{"gkill"},
 		HideTags:          []string{"hidden"},
-		CalendarStartDate: &start,
+		CalendarStartTime: &start,
 	}
 	client := &addTagAPIClient{}
 	query := client.buildTaggedQuery(base, "gkill")
@@ -552,7 +552,7 @@ func TestFindTaggedKyouIDsQueryUsesTagsAnd(t *testing.T) {
 	}
 	// タグ以外の条件はそのまま残る。残らないと「条件そのまま」との差分が意味を失う
 	if !slices.Equal(query.RepTypes, []string{"git_commit_log"}) || !slices.Equal(query.Reps, []string{"gkill"}) ||
-		!slices.Equal(query.HideTags, []string{"hidden"}) || query.CalendarStartDate == nil {
+		!slices.Equal(query.HideTags, []string{"hidden"}) || query.CalendarStartTime == nil {
 		t.Errorf("base query should be kept: %s", formatEffectiveQuery(query))
 	}
 	// 呼び出し元のクエリを書き換えてはいけない（同じ条件を使い回すため）

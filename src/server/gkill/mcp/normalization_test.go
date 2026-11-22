@@ -279,7 +279,7 @@ func TestNormalizeKyouQuery(t *testing.T) {
 	})
 
 	t.Run("names the missing timezone offset instead of just saying ISO-8601", func(t *testing.T) {
-		thrown := mustFail(t)(NormalizeKyouQuery(obj("calendar_start_date", "2026-09-18T00:00:00")))
+		thrown := mustFail(t)(NormalizeKyouQuery(obj("calendar_start_time", "2026-09-18T00:00:00")))
 		mustContain(t, thrown.Message, "no timezone offset")
 		mustContain(t, thrown.Message, "2026-09-18T00:00:00+09:00")
 	})
@@ -295,13 +295,13 @@ func TestNormalizeKyouQuery(t *testing.T) {
 	})
 
 	t.Run("validates datetime fields", func(t *testing.T) {
-		result := mustNormalize(t)(NormalizeKyouQuery(obj("calendar_start_date", "2026-01-01")))
-		mustMatch(t, strAt(t, result, "calendar_start_date"), `^2026-01-01T00:00:00[+-]\d{2}:\d{2}$`)
+		result := mustNormalize(t)(NormalizeKyouQuery(obj("calendar_start_time", "2026-01-01")))
+		mustMatch(t, strAt(t, result, "calendar_start_time"), `^2026-01-01T00:00:00[+-]\d{2}:\d{2}$`)
 	})
 
-	t.Run("calendar_end_date uses endOfDay", func(t *testing.T) {
-		result := mustNormalize(t)(NormalizeKyouQuery(obj("calendar_end_date", "2026-12-31")))
-		mustMatch(t, strAt(t, result, "calendar_end_date"), `^2026-12-31T23:59:59[+-]\d{2}:\d{2}$`)
+	t.Run("calendar_end_time uses endOfDay", func(t *testing.T) {
+		result := mustNormalize(t)(NormalizeKyouQuery(obj("calendar_end_time", "2026-12-31")))
+		mustMatch(t, strAt(t, result, "calendar_end_time"), `^2026-12-31T23:59:59[+-]\d{2}:\d{2}$`)
 	})
 
 	t.Run("skips empty string datetime fields", func(t *testing.T) {
@@ -312,11 +312,11 @@ func TestNormalizeKyouQuery(t *testing.T) {
 
 	t.Run("skips empty string datetime alongside valid fields", func(t *testing.T) {
 		result := mustNormalize(t)(NormalizeKyouQuery(obj(
-			"calendar_start_date", "2026-03-18",
+			"calendar_start_time", "2026-03-18",
 			"playing_time", "",
 			"update_time", "",
 		)))
-		expectTrue(t, jsTruthy(result.Value("calendar_start_date")), "calendar_start_date missing")
+		expectTrue(t, jsTruthy(result.Value("calendar_start_time")), "calendar_start_time missing")
 		expectTrue(t, !result.Has("playing_time"), "playing_time kept")
 		expectTrue(t, !result.Has("update_time"), "update_time kept")
 	})
@@ -381,7 +381,7 @@ func TestNormalizeKyouQuery(t *testing.T) {
 			result := mustNormalize(t)(NormalizeKyouQuery(obj(
 				"tags", nil,
 				"words", nil,
-				"calendar_start_date", nil,
+				"calendar_start_time", nil,
 				"mi_board_name", nil,
 				"map_latitude", nil,
 				"playing_time", nil,
@@ -523,14 +523,14 @@ func TestNormalizeKyouQuery(t *testing.T) {
 			expectTrue(t, !result.Has("timeis_tags"), "timeis_tags kept")
 		})
 
-		t.Run("use_calendar:false removes calendar_start_date and calendar_end_date", func(t *testing.T) {
+		t.Run("use_calendar:false removes calendar_start_time and calendar_end_time", func(t *testing.T) {
 			result := mustNormalize(t)(NormalizeKyouQuery(obj(
 				"use_calendar", false,
-				"calendar_start_date", "2026-01-01",
-				"calendar_end_date", "2026-12-31",
+				"calendar_start_time", "2026-01-01",
+				"calendar_end_time", "2026-12-31",
 			)))
-			expectTrue(t, !result.Has("calendar_start_date"), "calendar_start_date kept")
-			expectTrue(t, !result.Has("calendar_end_date"), "calendar_end_date kept")
+			expectTrue(t, !result.Has("calendar_start_time"), "calendar_start_time kept")
+			expectTrue(t, !result.Has("calendar_end_time"), "calendar_end_time kept")
 		})
 
 		t.Run("use_map:false removes map_latitude, map_longitude and map_radius", func(t *testing.T) {
@@ -1277,22 +1277,22 @@ func TestNormalizeKyouHistoryArgsProjectionDataType(t *testing.T) {
 
 func TestNormalizeKyouQueryInvertedCalendarRange(t *testing.T) {
 	t.Run("rejects start after end", func(t *testing.T) {
-		mustFail(t)(NormalizeKyouQuery(obj("calendar_start_date", "2026-08-17", "calendar_end_date", "2026-08-11")))
+		mustFail(t)(NormalizeKyouQuery(obj("calendar_start_time", "2026-08-17", "calendar_end_time", "2026-08-11")))
 	})
 
 	t.Run("accepts the same day on both ends", func(t *testing.T) {
 		// 日付のみは start=00:00:00 / end=23:59:59 へ展開されるので、同日は逆さまではない
-		result := mustNormalize(t)(NormalizeKyouQuery(obj("calendar_start_date", "2026-08-11", "calendar_end_date", "2026-08-11")))
-		mustMatch(t, strAt(t, result, "calendar_start_date"), `^2026-08-11T00:00:00`)
-		mustMatch(t, strAt(t, result, "calendar_end_date"), `^2026-08-11T23:59:59`)
+		result := mustNormalize(t)(NormalizeKyouQuery(obj("calendar_start_time", "2026-08-11", "calendar_end_time", "2026-08-11")))
+		mustMatch(t, strAt(t, result, "calendar_start_time"), `^2026-08-11T00:00:00`)
+		mustMatch(t, strAt(t, result, "calendar_end_time"), `^2026-08-11T23:59:59`)
 	})
 
 	t.Run("accepts a normal range and one-sided ranges", func(t *testing.T) {
-		_, err := NormalizeKyouQuery(obj("calendar_start_date", "2026-08-11", "calendar_end_date", "2026-08-17"))
+		_, err := NormalizeKyouQuery(obj("calendar_start_time", "2026-08-11", "calendar_end_time", "2026-08-17"))
 		expectNoError(t, err)
-		_, err = NormalizeKyouQuery(obj("calendar_start_date", "2026-08-17"))
+		_, err = NormalizeKyouQuery(obj("calendar_start_time", "2026-08-17"))
 		expectNoError(t, err)
-		_, err = NormalizeKyouQuery(obj("calendar_end_date", "2026-08-11"))
+		_, err = NormalizeKyouQuery(obj("calendar_end_time", "2026-08-11"))
 		expectNoError(t, err)
 	})
 }

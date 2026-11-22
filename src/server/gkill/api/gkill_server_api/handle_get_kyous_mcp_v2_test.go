@@ -146,8 +146,8 @@ func TestHandleGetKyousMCP_GroupByDayAndDataType(t *testing.T) {
 	addTestKmemoWithRelatedTime(t, tsURL, sessionID, "8/11のメモ", day2)
 
 	query := map[string]any{
-		"calendar_start_date": "2026-08-10T00:00:00+09:00",
-		"calendar_end_date":   "2026-08-11T23:59:59+09:00",
+		"calendar_start_time": "2026-08-10T00:00:00+09:00",
+		"calendar_end_time":   "2026-08-11T23:59:59+09:00",
 	}
 
 	res := getKyousMCP(t, tsURL, sessionID, query, map[string]any{"group_by": "day"})

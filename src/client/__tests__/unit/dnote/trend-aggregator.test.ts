@@ -31,12 +31,12 @@ import { time_of_day_deviations } from '@/classes/dnote/dnote-trend/time-of-day-
 
 const controller = new AbortController()
 // カレンダー未使用（新形式では null が「フィルタ未使用」の正規値）
-const emptyQuery = { calendar_start_date: null, calendar_end_date: null } as never
+const emptyQuery = { calendar_start_time: null, calendar_end_time: null } as never
 
 function makeQuery(start: string, end: string) {
   return {
-    calendar_start_date: new Date(start),
-    calendar_end_date: new Date(end),
+    calendar_start_time: new Date(start),
+    calendar_end_time: new Date(end),
   } as never
 }
 
@@ -207,8 +207,8 @@ describe('DnoteTrendAggregator TimeIs 0:00区切り', () => {
   // 本番のFindKyouQueryと同様にclone可能なクエリ（バケットごとのTrim範囲が効く）
   function makeCloneableQuery(start: Date, end: Date) {
     return {
-      calendar_start_date: start,
-      calendar_end_date: end,
+      calendar_start_time: start,
+      calendar_end_time: end,
       clone(): unknown {
         return { ...this }
       },
@@ -392,8 +392,8 @@ describe('時刻平均の 0 時またぎ', () => {
       makeTimeisKyou(new Date(2026, 6, 18, 0, 30), 'early'),
     ]
     const query = {
-      calendar_start_date: new Date(2026, 6, 17, 0, 0),
-      calendar_end_date: new Date(2026, 6, 18, 23, 59, 59),
+      calendar_start_time: new Date(2026, 6, 17, 0, 0),
+      calendar_end_time: new Date(2026, 6, 18, 23, 59, 59),
       clone(): unknown { return { ...this } },
     } as never
     const points = await aggregator.aggregate_trend(controller, kyous, query, true)

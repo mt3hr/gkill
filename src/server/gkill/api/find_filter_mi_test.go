@@ -213,7 +213,7 @@ func TestForMi_PeriodFilterAppliesToProjectedTime(t *testing.T) {
 		windowEnd := time.Date(2026, 8, 3, 23, 59, 59, 0, time.Local)
 		findCtx := newFindCtx(&find.FindQuery{
 			ForMi: true, MiSortType: find.LimitTime,
-			CalendarStartDate: &windowStart, CalendarEndDate: &windowEnd,
+			CalendarStartTime: &windowStart, CalendarEndTime: &windowEnd,
 		})
 		runOverrideAndRefilter(t, findCtx)
 		if _, exist := findCtx.MatchKyousCurrent["mi-1"]; !exist {
@@ -225,7 +225,7 @@ func TestForMi_PeriodFilterAppliesToProjectedTime(t *testing.T) {
 		windowEnd2 := time.Date(2026, 8, 1, 23, 59, 59, 0, time.Local)
 		findCtx2 := newFindCtx(&find.FindQuery{
 			ForMi: true, MiSortType: find.LimitTime,
-			CalendarStartDate: &windowStart2, CalendarEndDate: &windowEnd2,
+			CalendarStartTime: &windowStart2, CalendarEndTime: &windowEnd2,
 		})
 		runOverrideAndRefilter(t, findCtx2)
 		if _, exist := findCtx2.MatchKyousCurrent["mi-1"]; exist {

@@ -133,8 +133,8 @@ describe('useRykvView 列×検索ルーティング', () => {
     const { pending_get_kyous, view } = createView()
     const query_a = makeColumnQuery('col-a')
     // 以前は分割対象だった期間(数年)
-    query_a.calendar_start_date = new Date('2020-01-01T00:00:00+09:00')
-    query_a.calendar_end_date = new Date('2026-08-18T00:00:00+09:00')
+    query_a.calendar_start_time = new Date('2020-01-01T00:00:00+09:00')
+    query_a.calendar_end_time = new Date('2026-08-18T00:00:00+09:00')
     setupColumns(view, [query_a], [[]])
 
     view.reload_list(0)
@@ -154,8 +154,8 @@ describe('useRykvView 列×検索ルーティング', () => {
     const { pending_get_kyous, view } = createView()
     const query_a = makeColumnQuery('col-a')
     query_a.for_mi = true
-    query_a.calendar_start_date = new Date('2020-01-01T00:00:00+09:00')
-    query_a.calendar_end_date = new Date('2026-08-18T00:00:00+09:00')
+    query_a.calendar_start_time = new Date('2020-01-01T00:00:00+09:00')
+    query_a.calendar_end_time = new Date('2026-08-18T00:00:00+09:00')
     setupColumns(view, [query_a], [[]])
 
     view.reload_list(0)

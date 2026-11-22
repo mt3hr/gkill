@@ -91,8 +91,8 @@ func main() {
 			// 絞る前に切ると、後段のフィルタで落ちたぶん取りこぼす。
 			matcher := q.Matcher()
 			rows, err := globalCache.QueryKyous(pluginDir, kyouQuery{
-				start:            q.CalendarStartDate,
-				end:              q.CalendarEndDate,
+				start:            q.CalendarStartTime,
+				end:              q.CalendarEndTime,
 				limit:            q.Limit,
 				hasWordFilter:    matcher.HasWords(),
 				includeEndTimeIs: q.IncludeEndTimeIs,
@@ -192,10 +192,10 @@ func kyousOfRows(rows []recordRow, q sdk.Query) []sdk.Kyou {
 
 // inCalendar は UNIX 秒の時刻が q の期間に入るかを返す（両端を含む）。
 func inCalendar(unix int64, q sdk.Query) bool {
-	if q.CalendarStartDate != nil && unix < q.CalendarStartDate.Unix() {
+	if q.CalendarStartTime != nil && unix < q.CalendarStartTime.Unix() {
 		return false
 	}
-	if q.CalendarEndDate != nil && unix > q.CalendarEndDate.Unix() {
+	if q.CalendarEndTime != nil && unix > q.CalendarEndTime.Unix() {
 		return false
 	}
 	return true

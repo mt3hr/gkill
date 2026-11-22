@@ -525,9 +525,9 @@ export function useRykvView(options: {
                     focused_column_index.value = 0
                     focused_query.value = querys.value[0]
                 })
-                if (querys.value[0].calendar_start_date && querys.value[0].calendar_end_date) {
-                    gps_log_map_start_time.value = querys.value[0].calendar_start_date!
-                    gps_log_map_end_time.value = querys.value[0].calendar_end_date!
+                if (querys.value[0].calendar_start_time && querys.value[0].calendar_end_time) {
+                    gps_log_map_start_time.value = querys.value[0].calendar_start_time!
+                    gps_log_map_end_time.value = querys.value[0].calendar_end_time!
                 }
 
                 // ここで画面を見せる。初期検索の完了は待たない。
@@ -876,9 +876,9 @@ export function useRykvView(options: {
         // hot reload OFFでは編集が列のクエリに保存されていないため、保存済みクエリではなく
         // サイドバーから現在値を組み立てる(query_idは列のものを引き継ぐ)
         const current_query = query_editor_sidebar.value?.generate_query(base_query.query_id) ?? base_query
-        if (current_query.calendar_start_date && current_query.calendar_end_date) {
-            gps_log_map_start_time.value = current_query.calendar_start_date
-            gps_log_map_end_time.value = current_query.calendar_end_date
+        if (current_query.calendar_start_time && current_query.calendar_end_time) {
+            gps_log_map_start_time.value = current_query.calendar_start_time
+            gps_log_map_end_time.value = current_query.calendar_end_time
         }
         nextTick(() => search(column_index, current_query, true, update_cache))
     }
@@ -901,9 +901,9 @@ export function useRykvView(options: {
             return
         }
         search(column_index, new_query)
-        if (new_query.calendar_start_date && new_query.calendar_end_date) {
-            gps_log_map_start_time.value = new_query.calendar_start_date
-            gps_log_map_end_time.value = new_query.calendar_end_date
+        if (new_query.calendar_start_time && new_query.calendar_end_time) {
+            gps_log_map_start_time.value = new_query.calendar_start_time
+            gps_log_map_end_time.value = new_query.calendar_end_time
         }
     }
 

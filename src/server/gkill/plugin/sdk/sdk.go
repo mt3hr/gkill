@@ -40,8 +40,8 @@ type pluginQuery struct {
 	Tags              []string   `json:"tags"`
 	NotTags           []string   `json:"not_tags"`
 	TagsAnd           bool       `json:"tags_and"`
-	CalendarStartDate *time.Time `json:"calendar_start_date,omitempty"`
-	CalendarEndDate   *time.Time `json:"calendar_end_date,omitempty"`
+	CalendarStartTime *time.Time `json:"calendar_start_time,omitempty"`
+	CalendarEndTime   *time.Time `json:"calendar_end_time,omitempty"`
 	IsDeleted         bool       `json:"is_deleted"`
 	OnlyLatestData    bool       `json:"only_latest_data"`
 	Limit             int        `json:"limit"`
@@ -405,8 +405,8 @@ func pluginQueryToQuery(pq *pluginQuery) Query {
 		Tags:              pq.Tags,
 		NotTags:           pq.NotTags,
 		TagsAnd:           pq.TagsAnd,
-		CalendarStartDate: pq.CalendarStartDate,
-		CalendarEndDate:   pq.CalendarEndDate,
+		CalendarStartTime: pq.CalendarStartTime,
+		CalendarEndTime:   pq.CalendarEndTime,
 		IsDeleted:         pq.IsDeleted,
 		OnlyLatestData:    pq.OnlyLatestData,
 		Limit:             pq.Limit,

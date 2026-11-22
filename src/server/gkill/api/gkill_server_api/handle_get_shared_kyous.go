@@ -176,7 +176,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 	// GPSLogs
 	gpsLogs := []reps.GPSLog{}
 	if sharedKyouInfo.IsShareWithLocations {
-		gpsLogs, err = repositories.GPSLogReps.GetGPSLogs(r.Context(), findQuery.CalendarStartDate, findQuery.CalendarEndDate)
+		gpsLogs, err = repositories.GPSLogReps.GetGPSLogs(r.Context(), findQuery.CalendarStartTime, findQuery.CalendarEndTime)
 		if err != nil {
 			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error at find Kyous user id", "error", fmt.Sprintf("%q", err))
@@ -394,17 +394,17 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		timeisQuery.OnlyLatestData = true
 		queries = append(queries, timeisQuery)
 
-		if timeisQuery.CalendarStartDate != nil {
+		if timeisQuery.CalendarStartTime != nil {
 			timeisPlayingHeadQuery := find.FindQuery{}
 			// 浅いコピー由来のポインタ共有を避けるため値コピーで新規に作る
-			playingHeadTime := *timeisQuery.CalendarStartDate
+			playingHeadTime := *timeisQuery.CalendarStartTime
 			timeisPlayingHeadQuery.PlayingTime = &playingHeadTime
 			queries = append(queries, timeisPlayingHeadQuery)
 		}
 
-		if timeisQuery.CalendarEndDate != nil {
+		if timeisQuery.CalendarEndTime != nil {
 			timeisPlayingHipQuery := find.FindQuery{}
-			playingHipTime := *timeisQuery.CalendarEndDate
+			playingHipTime := *timeisQuery.CalendarEndTime
 			timeisPlayingHipQuery.PlayingTime = &playingHipTime
 			queries = append(queries, timeisPlayingHipQuery)
 		}

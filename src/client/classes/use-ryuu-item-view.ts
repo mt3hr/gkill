@@ -145,18 +145,18 @@ export function useRyuuItemView(options: {
 
         switch (related_time_match_type) {
             case RelatedTimeMatchType.near_related_time: {
-                find_kyou_query.calendar_start_date = new Date(related_time.getTime() - (model_value.value!.find_duration_hour * 60 * 60 * 1000))
-                find_kyou_query.calendar_end_date = new Date(related_time.getTime() + (model_value.value!.find_duration_hour * 60 * 60 * 1000))
+                find_kyou_query.calendar_start_time = new Date(related_time.getTime() - (model_value.value!.find_duration_hour * 60 * 60 * 1000))
+                find_kyou_query.calendar_end_time = new Date(related_time.getTime() + (model_value.value!.find_duration_hour * 60 * 60 * 1000))
                 break
             }
             case RelatedTimeMatchType.near_related_time_before: {
-                find_kyou_query.calendar_start_date = new Date(related_time.getTime() - (model_value.value!.find_duration_hour * 60 * 60 * 1000))
-                find_kyou_query.calendar_end_date = props.target_kyou && props.target_kyou?.related_time ? props.target_kyou.related_time : null
+                find_kyou_query.calendar_start_time = new Date(related_time.getTime() - (model_value.value!.find_duration_hour * 60 * 60 * 1000))
+                find_kyou_query.calendar_end_time = props.target_kyou && props.target_kyou?.related_time ? props.target_kyou.related_time : null
                 break
             }
             case RelatedTimeMatchType.near_related_time_after: {
-                find_kyou_query.calendar_start_date = props.target_kyou && props.target_kyou?.related_time ? props.target_kyou.related_time : null
-                find_kyou_query.calendar_end_date = new Date(related_time.getTime() + (model_value.value!.find_duration_hour * 60 * 60 * 1000))
+                find_kyou_query.calendar_start_time = props.target_kyou && props.target_kyou?.related_time ? props.target_kyou.related_time : null
+                find_kyou_query.calendar_end_time = new Date(related_time.getTime() + (model_value.value!.find_duration_hour * 60 * 60 * 1000))
                 break
             }
         }
@@ -209,8 +209,8 @@ export function useRyuuItemView(options: {
         if (use_matched_kyous) {
             // find_kyou_queryのcalendar window（related_time範囲）でクライアント側フィルタし、
             // サーバ検索が返していた母集団と同等にする（null境界は無制限）。
-            const start = find_kyou_query.calendar_start_date
-            const end = find_kyou_query.calendar_end_date
+            const start = find_kyou_query.calendar_start_time
+            const end = find_kyou_query.calendar_end_time
             source_kyous = props.matched_kyous!.filter((kyou) => {
                 const related_time = kyou.related_time
                 if (start && related_time.getTime() < start.getTime()) return false

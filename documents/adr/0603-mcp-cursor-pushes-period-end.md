@@ -17,7 +17,7 @@
 
 ## Decision
 
-- カーソルを**クエリの期間上限（`CalendarEndDate`）へ押し下げる**
+- カーソルを**クエリの期間上限（`CalendarEndTime`）へ押し下げる**
 - **同一 `RelatedTime` のかたまりをページ境界で割らない**（`Limit` を少し超えてでも返しきる）
 - `NextCursor` は **RFC3339Nano** で返す
 - 解釈できないカーソルは**エラーにする**

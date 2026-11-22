@@ -119,8 +119,8 @@ export function useDashboardView(options: {
                 base_query.not_words = saved.not_words === null ? null : saved.not_words.concat()
             }
         }
-        base_query.calendar_start_date = target_date_start.value
-        base_query.calendar_end_date = target_date_end.value
+        base_query.calendar_start_time = target_date_start.value
+        base_query.calendar_end_time = target_date_end.value
         base_query.apply_hide_tags(application_config.value)
         return base_query
     })
@@ -148,8 +148,8 @@ export function useDashboardView(options: {
         query.for_mi = true
         query.include_limit_mi = true
         query.reps = null
-        query.calendar_start_date = target_date_start.value
-        query.calendar_end_date = target_date_end.value
+        query.calendar_start_time = target_date_start.value
+        query.calendar_end_time = target_date_end.value
         query.apply_hide_tags(application_config.value)
         return query
     })

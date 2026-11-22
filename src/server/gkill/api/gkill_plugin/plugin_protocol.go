@@ -80,11 +80,11 @@ type PluginQuery struct {
 	// TagsAnd は true のとき全Tags AND 検索、false のとき OR。
 	TagsAnd bool `json:"tags_and"`
 
-	// CalendarStartDate は期間フィルタの開始日時。
-	CalendarStartDate *time.Time `json:"calendar_start_date,omitempty"`
+	// CalendarStartTime は期間フィルタの開始日時。
+	CalendarStartTime *time.Time `json:"calendar_start_time,omitempty"`
 
-	// CalendarEndDate は期間フィルタの終了日時。
-	CalendarEndDate *time.Time `json:"calendar_end_date,omitempty"`
+	// CalendarEndTime は期間フィルタの終了日時。
+	CalendarEndTime *time.Time `json:"calendar_end_time,omitempty"`
 
 	// IsDeleted は true のとき削除済みデータを対象にする。
 	// gkill 本体からは常に false が渡る (FindQuery に対応するフィールドが無いため)。

@@ -204,8 +204,8 @@ func TestHandleGetKyous_PluginFindFailureIsWarningNotError(t *testing.T) {
 	calendarStart := now.Add(-time.Hour)
 	calendarEnd := now.Add(time.Hour)
 	getResp := getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{
-		CalendarStartDate: &calendarStart,
-		CalendarEndDate:   &calendarEnd,
+		CalendarStartTime: &calendarStart,
+		CalendarEndTime:   &calendarEnd,
 	})
 
 	if len(getResp.Errors) != 0 {
@@ -250,8 +250,8 @@ func TestHandleGetKyous_PlayingTimeNullMeansNoPlayingFilter(t *testing.T) {
 
 	// playing_time 未指定（null）→ 実行中フィルタは掛からず両方返る
 	withoutPlaying := getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{
-		CalendarStartDate: &calendarStart,
-		CalendarEndDate:   &calendarEnd,
+		CalendarStartTime: &calendarStart,
+		CalendarEndTime:   &calendarEnd,
 	})
 	if len(withoutPlaying.Errors) != 0 {
 		t.Fatalf("get kyous errors: %+v", withoutPlaying.Errors)
@@ -267,8 +267,8 @@ func TestHandleGetKyous_PlayingTimeNullMeansNoPlayingFilter(t *testing.T) {
 	// playing_time 指定（非nil）→ その時刻を跨いでいる計測だけ
 	playingTime := now.Add(-30 * time.Minute)
 	withPlaying := getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{
-		CalendarStartDate: &calendarStart,
-		CalendarEndDate:   &calendarEnd,
+		CalendarStartTime: &calendarStart,
+		CalendarEndTime:   &calendarEnd,
 		PlayingTime:       &playingTime,
 	})
 	if len(withPlaying.Errors) != 0 {
@@ -315,8 +315,8 @@ func TestHandleGetKyous_TimeIsTagsFilterWorksWithoutKyouTagFilter(t *testing.T) 
 	calendarStart := now.Add(-8 * time.Hour)
 	calendarEnd := now.Add(time.Hour)
 	getResp := getKyousWithQuery(t, tsURL, sessionID, &find.FindQuery{
-		CalendarStartDate: &calendarStart,
-		CalendarEndDate:   &calendarEnd,
+		CalendarStartTime: &calendarStart,
+		CalendarEndTime:   &calendarEnd,
 		// Kyouのタグでは絞らない（nil = 未使用）
 		Tags: nil,
 		// 非nilの空スライス = 「任意のTimeIsに覆われたKyou」

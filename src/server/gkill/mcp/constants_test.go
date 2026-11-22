@@ -281,20 +281,20 @@ func TestKyousQueryDateTimeFields(t *testing.T) {
 	})
 
 	t.Run("contains calendar and playing datetime fields", func(t *testing.T) {
-		for _, key := range []string{"calendar_start_date", "calendar_end_date", "playing_time", "update_time"} {
+		for _, key := range []string{"calendar_start_time", "calendar_end_time", "playing_time", "update_time"} {
 			_, ok := kyousQueryDateTimeField(key)
 			expectTrue(t, ok, "missing %s", key)
 		}
 	})
 
-	t.Run("calendar_end_date has endOfDay=true", func(t *testing.T) {
-		endDate, _ := kyousQueryDateTimeField("calendar_end_date")
+	t.Run("calendar_end_time has endOfDay=true", func(t *testing.T) {
+		endDate, _ := kyousQueryDateTimeField("calendar_end_time")
 		expectTrue(t, endDate.EndOfDay, "endOfDay is false")
 		expectTrue(t, endDate.AllowDateOnly, "allowDateOnly is false")
 	})
 
-	t.Run("calendar_start_date has endOfDay=false", func(t *testing.T) {
-		startDate, _ := kyousQueryDateTimeField("calendar_start_date")
+	t.Run("calendar_start_time has endOfDay=false", func(t *testing.T) {
+		startDate, _ := kyousQueryDateTimeField("calendar_start_time")
 		expectTrue(t, !startDate.EndOfDay, "endOfDay is true")
 		expectTrue(t, startDate.AllowDateOnly, "allowDateOnly is false")
 	})

@@ -77,8 +77,8 @@ const conversion_table: Array<ConversionCase> = [
     {
         flag: 'use_calendar',
         values: { calendar_start_date: '2026-01-01T00:00:00.000Z', calendar_end_date: '2026-01-31T00:00:00.000Z' },
-        when_true: { calendar_start_date: '2026-01-01T00:00:00.000Z', calendar_end_date: '2026-01-31T00:00:00.000Z' },
-        when_false: { calendar_start_date: null, calendar_end_date: null },
+        when_true: { calendar_start_time: '2026-01-01T00:00:00.000Z', calendar_end_time: '2026-01-31T00:00:00.000Z' },
+        when_false: { calendar_start_time: null, calendar_end_time: null },
     },
     {
         flag: 'use_playing',
@@ -249,8 +249,54 @@ describe('normalize_legacy_find_kyou_query_json', () => {
         test('nullable系グループ（use_map=true 等）は欠落値を物質化しない', () => {
             const { json } = normalize_legacy_find_kyou_query_json({ use_map: true, use_calendar: true, use_playing: true })
             expect(json).not.toHaveProperty('map_latitude')
-            expect(json).not.toHaveProperty('calendar_start_date')
+            expect(json).not.toHaveProperty('calendar_start_time')
             expect(json).not.toHaveProperty('playing_time')
+        })
+    })
+
+    describe('旧キー名の改名（calendar_start_date → calendar_start_time）', () => {
+        test('use_* を持たない JSON でも改名される（use_* 移行済みの保存クエリ）', () => {
+            const { json, was_legacy } = normalize_legacy_find_kyou_query_json({
+                calendar_start_date: '2026-01-01T00:00:00.000Z',
+                calendar_end_date: '2026-01-31T00:00:00.000Z',
+                tags: ['t1'],
+            })
+            expect(was_legacy).toBe(true)
+            expect(json).not.toHaveProperty('calendar_start_date')
+            expect(json).not.toHaveProperty('calendar_end_date')
+            expect(json.calendar_start_time).toBe('2026-01-01T00:00:00.000Z')
+            expect(json.calendar_end_time).toBe('2026-01-31T00:00:00.000Z')
+            expect(json.tags).toEqual(['t1'])
+        })
+
+        // 逆順にすると use_calendar=false が旧キー名の値を見つけられず、
+        // 「フィルタ未使用だったはずの期間が有効なまま復活する」形で静かに壊れる
+        test('改名は use_* 変換より先に走る', () => {
+            const { json } = normalize_legacy_find_kyou_query_json({
+                use_calendar: false,
+                calendar_start_date: '2026-01-01T00:00:00.000Z',
+                calendar_end_date: '2026-01-31T00:00:00.000Z',
+            })
+            expect(json).not.toHaveProperty('calendar_start_date')
+            expect(json).not.toHaveProperty('calendar_end_date')
+            expect(json.calendar_start_time).toBeNull()
+            expect(json.calendar_end_time).toBeNull()
+        })
+
+        test('新キーだけの JSON は旧形式として扱わない（冪等）', () => {
+            const already = { calendar_start_time: '2026-01-01T00:00:00.000Z', calendar_end_time: null }
+            const { json, was_legacy } = normalize_legacy_find_kyou_query_json({ ...already })
+            expect(was_legacy).toBe(false)
+            expect(json).toEqual(already)
+        })
+
+        test('旧キーと新キーが両方あれば新キーが勝つ', () => {
+            const { json } = normalize_legacy_find_kyou_query_json({
+                calendar_start_date: '2026-01-01T00:00:00.000Z',
+                calendar_start_time: '2026-02-01T00:00:00.000Z',
+            })
+            expect(json).not.toHaveProperty('calendar_start_date')
+            expect(json.calendar_start_time).toBe('2026-02-01T00:00:00.000Z')
         })
     })
 

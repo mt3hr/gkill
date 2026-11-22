@@ -248,10 +248,10 @@ function matches_tags(kyou: Kyou, query: FindKyouQuery): boolean {
 /** カレンダーは両端を含む。タイムゾーン変換はせず瞬間で比べる */
 function matches_calendar(time: Date, query: FindKyouQuery): boolean {
     const time_milli_seconds = time.getTime()
-    if (query.calendar_start_date !== null && time_milli_seconds < query.calendar_start_date.getTime()) {
+    if (query.calendar_start_time !== null && time_milli_seconds < query.calendar_start_time.getTime()) {
         return false
     }
-    if (query.calendar_end_date !== null && time_milli_seconds > query.calendar_end_date.getTime()) {
+    if (query.calendar_end_time !== null && time_milli_seconds > query.calendar_end_time.getTime()) {
         return false
     }
     return true

@@ -86,8 +86,8 @@ export function useMiQueryEditorSidebar(options: {
         const q = default_query.value.clone()
         q.query_id = props.gkill_api.generate_uuid()
         if (props.application_config.mi_default_period !== -1) {
-            q.calendar_start_date = moment(moment().add(-props.application_config.mi_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
-            q.calendar_end_date = moment(moment().format("YYYY-MM-DD 00:00:00 ZZ")).add(1, "days").add(-1, "milliseconds").toDate()
+            q.calendar_start_time = moment(moment().add(-props.application_config.mi_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
+            q.calendar_end_time = moment(moment().format("YYYY-MM-DD 00:00:00 ZZ")).add(1, "days").add(-1, "milliseconds").toDate()
         }
         return q
     }
@@ -154,8 +154,8 @@ export function useMiQueryEditorSidebar(options: {
 
         if (calendar_query.value) {
             const use_calendar = calendar_query.value.get_use_calendar()
-            find_query.calendar_start_date = use_calendar ? calendar_query.value.get_start_date() : null
-            find_query.calendar_end_date = use_calendar ? calendar_query.value.get_end_date() : null
+            find_query.calendar_start_time = use_calendar ? calendar_query.value.get_start_date() : null
+            find_query.calendar_end_time = use_calendar ? calendar_query.value.get_end_date() : null
         }
 
         // 状況(TimeIs)・時間帯・場所はこのサイドバーから外したので、
@@ -222,8 +222,8 @@ export function useMiQueryEditorSidebar(options: {
         const find_query = generate_query()
         find_query.query_id = query.value.query_id
         const d = get_default_query()
-        find_query.calendar_start_date = d.calendar_start_date
-        find_query.calendar_end_date = d.calendar_end_date
+        find_query.calendar_start_time = d.calendar_start_time
+        find_query.calendar_end_time = d.calendar_end_time
         query.value = find_query
         emits('updated_query', find_query)
     }

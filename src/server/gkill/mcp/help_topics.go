@@ -40,13 +40,13 @@ const searchTopic = "gkill_get_kyous searches life-log entries (kyou) and return
 	"timeis_tags / period_of_time_week_of_days. Two exceptions: words / not_words: [] apply NO keyword condition — " +
 	"everything passes and the result is NOT narrowed (so an empty keyword list returns the same count as no keyword " +
 	"at all; pass at least one word to filter) — and timeis_words: [] means 'only kyous covered by any TimeIs'. " +
-	"Most used fields: calendar_start_date / calendar_end_date (both INCLUSIVE; a date-only calendar_start_date " +
-	"expands to 00:00:00 local and a date-only calendar_end_date to 23:59:59 local), words, tags, for_mi. Advanced: " +
+	"Most used fields: calendar_start_time / calendar_end_time (both INCLUSIVE; a date-only calendar_start_time " +
+	"expands to 00:00:00 local and a date-only calendar_end_time to 23:59:59 local), words, tags, for_mi. Advanced: " +
 	"map_latitude / map_longitude / map_radius (all three required, radius in METERS; a partial set is rejected " +
 	"because gkill would otherwise silently drop the location condition), playing_time, period_of_time_*, update_time. " +
 	"The server always applies only_latest_data=true. Results come back newest first by related_time, ties by id " +
 	"ascending.\n\n" +
-	"Common query patterns: date range {calendar_start_date:\"2026-03-01\", calendar_end_date:\"2026-03-07\"}; " +
+	"Common query patterns: date range {calendar_start_time:\"2026-03-01\", calendar_end_time:\"2026-03-07\"}; " +
 	"keyword {words:[\"keyword\"]}; tag {tags:[\"tagname\"]}; tasks {for_mi:true, mi_check_state:\"uncheck\", " +
 	"include_create_mi:true} (for_mi needs at least one include_*_mi flag or it returns nothing — see topic mi).\n\n" +
 	"Recommended filtering strategy: fetch ApplicationConfig and all tag names first, then build a visible-tag " +
@@ -84,7 +84,7 @@ const paginationTopic = "Pagination: pass next_cursor from the previous response
 	"projection cannot come back under another.\n\n" +
 	"limit and max_size_mb are strict caps on what is RETURNED, not on what is SEARCHED: the backend still scans " +
 	"every matching repository, so on a large account a broad query with limit:3 takes about as long as one with " +
-	"limit:100. To make a query faster, narrow calendar_start_date / calendar_end_date, data_types or reps instead " +
+	"limit:100. To make a query faster, narrow calendar_start_time / calendar_end_time, data_types or reps instead " +
 	"of shrinking limit. The one exception to the cap: when the first entry of a page alone exceeds max_size_mb it " +
 	"is returned anyway (with a warning) so that paging keeps progressing. With include_plugin_content the cap is " +
 	"enforced again AFTER the plugin bodies are inlined (they are not stored in gkill, so the backend cannot measure " +
@@ -120,7 +120,7 @@ const miTopic = "Mi (task) entries surface under FIVE projections, one per times
 	"include_start_mi / include_end_mi explicitly to look at other timestamps. mi_check_state (\"all\" / " +
 	"\"checked\" / \"uncheck\") and mi_board_name narrow further; discover board names with gkill_get_mi_board_list " +
 	"(an unknown mi_board_name is reported in warnings[]).\n\n" +
-	"mi_sort_type is NOT only a sort order: it decides the timestamp that calendar_start_date / calendar_end_date, " +
+	"mi_sort_type is NOT only a sort order: it decides the timestamp that calendar_start_time / calendar_end_time, " +
 	"the time-of-day window and the weekday filter are matched against, and it sets the data_type of the results. " +
 	"It only takes effect through the matching include_*_mi projection (limit_time needs include_limit_mi, and so " +
 	"on) — otherwise the projection you did enable decides the axis and the value is ignored (the response says so " +

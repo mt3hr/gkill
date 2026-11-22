@@ -44,7 +44,7 @@ import (
 //     返さないと0件+has_more=trueの永久ループになるため）。
 //   - 旧形式カーソル（RFC3339単独・日付のみ）も受理します。解釈できないカーソルはエラーです
 //     （黙って1ページ目に戻すとページングが終わらないため）。
-//   - カーソルはクエリの期間上限(CalendarEndDate)へ押し下げるため、2ページ目以降のハンドラは
+//   - カーソルはクエリの期間上限(CalendarEndTime)へ押し下げるため、2ページ目以降のハンドラは
 //     全件数を知りません。TotalCount は cursor 無しの応答にのみ入り、全応答に RemainingCount が入ります。
 //   - CountOnly はDTO構築・付随データ取得を全て飛ばして件数だけを返します。
 //     GroupBy は buckets へのバケット集計を返します。どちらも cursor とは併用できません（エラー）。
@@ -118,7 +118,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 
 	// カーソル押し下げ**前**の検索条件を控える。cursor 頁で Mi / MiReKyou の代表射影を
 	// 「1頁目と同じ窓」で選び直すために使う（revalidateMiEntriesAgainstOriginalWindow）。
-	// 浅いコピーでよい —— 押し下げは CalendarEndDate のポインタを差し替えるだけで、指す先は書き換えない。
+	// 浅いコピーでよい —— 押し下げは CalendarEndTime のポインタを差し替えるだけで、指す先は書き換えない。
 	originalQuery := *request.Query
 
 	// カーソルをクエリの期間上限へ押し下げる。
@@ -128,7 +128,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	//   数十分を要し、それがページ数(数百回)ぶん繰り返されてサーバが膨れ続ける
 	//   (ある日の本番での実測)。ページングがサーバ側の仕事をまったく軽くしていなかった。
 	//
-	//   CalendarEndDate は RelatedTime の上限(境界を含む)としてSQLまで降りるので、
+	//   CalendarEndTime は RelatedTime の上限(境界を含む)としてSQLまで降りるので、
 	//   ここへ落とせば検索対象そのものが「カーソル以降」に縮む。
 	//   境界ちょうど(同一時刻)の件はこのあとのカーソル走査が従来どおり読み飛ばすため、
 	//   返る中身は押し下げの前後で変わらない。
@@ -153,8 +153,8 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		}
 		cursor = parsedCursor
 		hasCursor = true
-		if request.Query.CalendarEndDate == nil || request.Query.CalendarEndDate.After(cursor.time) {
-			request.Query.CalendarEndDate = &cursor.time
+		if request.Query.CalendarEndTime == nil || request.Query.CalendarEndTime.After(cursor.time) {
+			request.Query.CalendarEndTime = &cursor.time
 		}
 	}
 

@@ -85,8 +85,8 @@ export function useDnoteView(options: {
     const last_reload_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
     // ── Computed ──
-    const start_date_str: Ref<string> = computed(() => props.query.calendar_start_date !== null ? moment(props.query.calendar_start_date).format("YYYY-MM-DD") : first_kyou_date_str.value)
-    const end_date_str: Ref<string> = computed(() => props.query.calendar_end_date !== null ? moment(props.query.calendar_end_date).format("YYYY-MM-DD") : last_kyou_date_str.value)
+    const start_date_str: Ref<string> = computed(() => props.query.calendar_start_time !== null ? moment(props.query.calendar_start_time).format("YYYY-MM-DD") : first_kyou_date_str.value)
+    const end_date_str: Ref<string> = computed(() => props.query.calendar_end_time !== null ? moment(props.query.calendar_end_time).format("YYYY-MM-DD") : last_kyou_date_str.value)
 
     const dnote_item_table_view_data = computed({
         get: () => {

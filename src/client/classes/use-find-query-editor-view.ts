@@ -87,8 +87,8 @@ export function useFindQueryEditorView(options: {
         const q = FindKyouQuery.generate_default_query_for_rykv(props.application_config)
         q.query_id = props.gkill_api.generate_uuid()
         if (props.application_config.rykv_default_period !== -1) {
-            q.calendar_start_date = moment(moment().add(-props.application_config.rykv_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
-            q.calendar_end_date = moment(moment().format("YYYY-MM-DD 00:00:00 ZZ")).add(1, "days").add(-1, "milliseconds").toDate()
+            q.calendar_start_time = moment(moment().add(-props.application_config.rykv_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
+            q.calendar_end_time = moment(moment().format("YYYY-MM-DD 00:00:00 ZZ")).add(1, "days").add(-1, "milliseconds").toDate()
         }
         return q
     }

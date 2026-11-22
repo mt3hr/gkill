@@ -23,8 +23,8 @@ import (
 // newRepeatDuplicateQuery は related_time が主軸の型のための検索条件。
 func newRepeatDuplicateQuery(from, to time.Time) *find.FindQuery {
 	return &find.FindQuery{
-		CalendarStartDate: &from,
-		CalendarEndDate:   &to,
+		CalendarStartTime: &from,
+		CalendarEndTime:   &to,
 		OnlyLatestData:    true,
 	}
 }

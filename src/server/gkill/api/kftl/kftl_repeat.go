@@ -235,7 +235,7 @@ func jaWeekdaysOf(s string) ([]time.Weekday, bool) {
 // 整数が先。parseDateTime は裸の整数の書式を持たないので曖昧にならない。
 //
 // 終了日が日付のみ（時刻を含まない）なら、その日の 23:59:59 まで伸ばす
-// （FindQuery の calendar_end_date と同じ流儀。伸ばさないと当日の 18:00 が範囲外になる）。
+// （FindQuery の calendar_end_time と同じ流儀。伸ばさないと当日の 18:00 が範囲外になる）。
 func parseRepeatCountOrUntil(lineText string, base time.Time) (int, *time.Time, error) {
 	s := strings.TrimSpace(lineText)
 	if s == "" {

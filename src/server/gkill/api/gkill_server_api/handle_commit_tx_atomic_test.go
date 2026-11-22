@@ -35,7 +35,7 @@ func decodeCommitTx(t *testing.T, resp *http.Response) (int, req_res.CommitTxRes
 // kyouIDsInRange は期間検索で返る Kyou の id 集合を返す。
 func kyouIDsInRange(t *testing.T, tsURL, sessionID string, start, end time.Time) map[string]reps.Kyou {
 	t.Helper()
-	query := &find.FindQuery{CalendarStartDate: &start, CalendarEndDate: &end}
+	query := &find.FindQuery{CalendarStartTime: &start, CalendarEndTime: &end}
 	resp := postJSON(t, tsURL+"/api/get_kyous", &req_res.GetKyousRequest{SessionID: sessionID, LocaleName: "en", Query: query})
 	defer resp.Body.Close()
 	var res req_res.GetKyousResponse

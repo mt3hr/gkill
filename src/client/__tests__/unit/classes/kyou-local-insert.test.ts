@@ -206,7 +206,7 @@ describe('does_kyou_match_query - rep / カレンダー / 時間帯', () => {
     it('カレンダーは両端を含む', () => {
         const start = new Date('2026-08-01T00:00:00.000Z')
         const end = new Date('2026-08-31T23:59:59.000Z')
-        const query = make_query({ calendar_start_date: start, calendar_end_date: end })
+        const query = make_query({ calendar_start_time: start, calendar_end_time: end })
         expect(does_kyou_match_query(make_kyou({ related_time: start }), query)).toBe(true)
         expect(does_kyou_match_query(make_kyou({ related_time: end }), query)).toBe(true)
         expect(does_kyou_match_query(make_kyou({ related_time: new Date(start.getTime() - 1) }), query)).toBe(false)
@@ -317,8 +317,8 @@ describe('does_kyou_match_query - mi', () => {
         })
         // 9月の窓。create射影(8/1)だけを含めているので外れる
         const september = Object.assign(base_query(), {
-            calendar_start_date: new Date('2026-09-01T00:00:00.000Z'),
-            calendar_end_date: new Date('2026-09-30T00:00:00.000Z'),
+            calendar_start_time: new Date('2026-09-01T00:00:00.000Z'),
+            calendar_end_time: new Date('2026-09-30T00:00:00.000Z'),
         })
         expect(does_kyou_match_query(kyou, september)).toBe(false)
         // start射影(9/15)も含めれば通る

@@ -1263,7 +1263,7 @@ func TestPluginRepository_FindKyousFiltersTimeIsEndByIncludeEndTimeIs(t *testing
 	}
 	// 期間が終了時刻だけに掛かるなら、終了の Kyou だけが返る。
 	start, end := closedEnd.Add(-time.Minute), closedEnd.Add(time.Minute)
-	if counts := countDataTypes(&find.FindQuery{IncludeEndTimeIs: true, CalendarStartDate: &start, CalendarEndDate: &end}); counts["timeis_start"] != 0 || counts["timeis_end"] != 1 {
+	if counts := countDataTypes(&find.FindQuery{IncludeEndTimeIs: true, CalendarStartTime: &start, CalendarEndTime: &end}); counts["timeis_start"] != 0 || counts["timeis_end"] != 1 {
 		t.Errorf("期間が終了時刻だけ: %v, want timeis_end だけ", counts)
 	}
 }

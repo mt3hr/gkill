@@ -89,8 +89,8 @@ func TestHandleGetKyous_RepFilter_CacheInMemory(t *testing.T) {
 
 			contains := func(t *testing.T, query *find.FindQuery) bool {
 				t.Helper()
-				query.CalendarStartDate = &startDate
-				query.CalendarEndDate = &endDate
+				query.CalendarStartTime = &startDate
+				query.CalendarEndTime = &endDate
 				getReq := &req_res.GetKyousRequest{SessionID: sessionID, LocaleName: "en", Query: query}
 				resp := postJSON(t, tsURL+"/api/get_kyous", getReq)
 				defer resp.Body.Close()
@@ -112,7 +112,7 @@ func TestHandleGetKyous_RepFilter_CacheInMemory(t *testing.T) {
 			repNameOfAddedKyou := func(t *testing.T) string {
 				t.Helper()
 				getReq := &req_res.GetKyousRequest{SessionID: sessionID, LocaleName: "en",
-					Query: &find.FindQuery{CalendarStartDate: &startDate, CalendarEndDate: &endDate}}
+					Query: &find.FindQuery{CalendarStartTime: &startDate, CalendarEndTime: &endDate}}
 				resp := postJSON(t, tsURL+"/api/get_kyous", getReq)
 				defer resp.Body.Close()
 				var getResp req_res.GetKyousResponse

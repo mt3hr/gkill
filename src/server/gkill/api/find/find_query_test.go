@@ -18,7 +18,7 @@ func TestFindQueryJSONRoundTrip(t *testing.T) {
 		WordsAnd:          true,
 		Tags:              tags,
 		Reps:              reps,
-		CalendarStartDate: &now,
+		CalendarStartTime: &now,
 		UpdateCache:       true,
 		ForMi:             true,
 		MiCheckState:      All,
@@ -51,8 +51,8 @@ func TestFindQueryJSONRoundTrip(t *testing.T) {
 	if len(restored.Reps) != len(original.Reps) {
 		t.Errorf("Reps length: got %d, want %d", len(restored.Reps), len(original.Reps))
 	}
-	if restored.CalendarStartDate == nil || !restored.CalendarStartDate.Equal(now) {
-		t.Errorf("CalendarStartDate: got %v, want %v", restored.CalendarStartDate, now)
+	if restored.CalendarStartTime == nil || !restored.CalendarStartTime.Equal(now) {
+		t.Errorf("CalendarStartTime: got %v, want %v", restored.CalendarStartTime, now)
 	}
 	if restored.UpdateCache != original.UpdateCache {
 		t.Errorf("UpdateCache: got %v, want %v", restored.UpdateCache, original.UpdateCache)
@@ -81,11 +81,11 @@ func TestFindQueryDefaultValues(t *testing.T) {
 	if q.Reps != nil {
 		t.Error("Reps should be nil by default")
 	}
-	if q.CalendarStartDate != nil {
-		t.Error("CalendarStartDate should be nil by default")
+	if q.CalendarStartTime != nil {
+		t.Error("CalendarStartTime should be nil by default")
 	}
-	if q.CalendarEndDate != nil {
-		t.Error("CalendarEndDate should be nil by default")
+	if q.CalendarEndTime != nil {
+		t.Error("CalendarEndTime should be nil by default")
 	}
 	if q.MapRadius != nil {
 		t.Error("MapRadius should be nil by default")
@@ -142,11 +142,11 @@ func TestFindQueryGateHelpers(t *testing.T) {
 		t.Error("HasTimeIsFilter should be true when only TimeIsNotWords is set")
 	}
 
-	startOnly := FindQuery{CalendarStartDate: &now}
+	startOnly := FindQuery{CalendarStartTime: &now}
 	if !startOnly.HasCalendarFilter() {
 		t.Error("HasCalendarFilter should be true when only start date is set")
 	}
-	endOnly := FindQuery{CalendarEndDate: &now}
+	endOnly := FindQuery{CalendarEndTime: &now}
 	if !endOnly.HasCalendarFilter() {
 		t.Error("HasCalendarFilter should be true when only end date is set")
 	}
@@ -388,8 +388,8 @@ func TestFindQueryWithCalendarDates(t *testing.T) {
 	endDate := time.Date(2025, 12, 31, 23, 59, 59, 0, time.UTC)
 
 	original := FindQuery{
-		CalendarStartDate: &startDate,
-		CalendarEndDate:   &endDate,
+		CalendarStartTime: &startDate,
+		CalendarEndTime:   &endDate,
 	}
 
 	data, err := json.Marshal(original)
@@ -406,17 +406,17 @@ func TestFindQueryWithCalendarDates(t *testing.T) {
 	if !restored.HasCalendarFilter() {
 		t.Error("HasCalendarFilter should be true")
 	}
-	if restored.CalendarStartDate == nil {
-		t.Fatal("CalendarStartDate should not be nil")
+	if restored.CalendarStartTime == nil {
+		t.Fatal("CalendarStartTime should not be nil")
 	}
-	if !restored.CalendarStartDate.Equal(startDate) {
-		t.Errorf("CalendarStartDate: got %v, want %v", restored.CalendarStartDate, startDate)
+	if !restored.CalendarStartTime.Equal(startDate) {
+		t.Errorf("CalendarStartTime: got %v, want %v", restored.CalendarStartTime, startDate)
 	}
-	if restored.CalendarEndDate == nil {
-		t.Fatal("CalendarEndDate should not be nil")
+	if restored.CalendarEndTime == nil {
+		t.Fatal("CalendarEndTime should not be nil")
 	}
-	if !restored.CalendarEndDate.Equal(endDate) {
-		t.Errorf("CalendarEndDate: got %v, want %v", restored.CalendarEndDate, endDate)
+	if !restored.CalendarEndTime.Equal(endDate) {
+		t.Errorf("CalendarEndTime: got %v, want %v", restored.CalendarEndTime, endDate)
 	}
 }
 
@@ -493,8 +493,8 @@ func TestFindQuery_AllFiltersEnabled(t *testing.T) {
 		TimeIsWordsAnd:              true,
 		TimeIsTags:                  []string{"tit1"},
 		TimeIsTagsAnd:               true,
-		CalendarStartDate:           &now,
-		CalendarEndDate:             &now,
+		CalendarStartTime:           &now,
+		CalendarEndTime:             &now,
 		MapRadius:                   &radius,
 		MapLatitude:                 &latitude,
 		MapLongitude:                &longitude,
@@ -610,8 +610,8 @@ func TestFindQuery_AllFiltersEnabled(t *testing.T) {
 
 func TestFindQuery_NilDateHandling(t *testing.T) {
 	original := FindQuery{
-		CalendarStartDate: nil,
-		CalendarEndDate:   nil,
+		CalendarStartTime: nil,
+		CalendarEndTime:   nil,
 		UpdateTime:        nil,
 	}
 
@@ -625,11 +625,11 @@ func TestFindQuery_NilDateHandling(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	if restored.CalendarStartDate != nil {
-		t.Error("CalendarStartDate should be nil after round-trip")
+	if restored.CalendarStartTime != nil {
+		t.Error("CalendarStartTime should be nil after round-trip")
 	}
-	if restored.CalendarEndDate != nil {
-		t.Error("CalendarEndDate should be nil after round-trip")
+	if restored.CalendarEndTime != nil {
+		t.Error("CalendarEndTime should be nil after round-trip")
 	}
 	if restored.UpdateTime != nil {
 		t.Error("UpdateTime should be nil after round-trip")

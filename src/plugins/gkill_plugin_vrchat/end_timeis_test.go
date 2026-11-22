@@ -66,7 +66,7 @@ func TestKyousOfRows_EndTimeIsOnlyWhenAsked(t *testing.T) {
 // 終了時刻だけが期間に入る TimeIs は、終了の Kyou だけが返る。
 func TestKyousOfRows_EndTimeIsUsesEndTimeForCalendar(t *testing.T) {
 	start, end := time.Unix(1900, 0).UTC(), time.Unix(2100, 0).UTC()
-	got := dataTypesByID(kyousOfRows(endTimeIsRows(), sdk.Query{IncludeEndTimeIs: true, CalendarStartDate: &start, CalendarEndDate: &end}))
+	got := dataTypesByID(kyousOfRows(endTimeIsRows(), sdk.Query{IncludeEndTimeIs: true, CalendarStartTime: &start, CalendarEndTime: &end}))
 	if len(got) != 1 || len(got["timeis-1"]) != 1 || got["timeis-1"][0] != dataTypeTimeIsEnd {
 		t.Errorf("期間 1900〜2100: %v, want timeis-1 の終了の Kyou だけ", got)
 	}

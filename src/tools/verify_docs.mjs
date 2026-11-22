@@ -1952,6 +1952,28 @@ const RETIRED_SPELLINGS = [
     //                          用語集の「凍結された綴り」表のように、記録することが目的の行に付ける
     exemptLine: /0802-freeze-plaing-spelling|retired-spelling-ok/,
   },
+  {
+    label: 'calendar_start_date / calendar_end_date',
+    correct: 'calendar_start_time / calendar_end_time',
+    adr: 'ADR-0413',
+    re: /calendar_(start|end)_date|Calendar(Start|End)Date/,
+    exemptFiles: new Set([
+      // 改名を決めた ADR。旧キー名を名指しできないと、何を直したのか書けない
+      'documents/adr/0413-rename-calendar-date-to-time.md',
+      // この検査自身。旧キー名は検出パターンとして書く必要がある
+      'src/tools/verify_docs.mjs',
+      // 一度きりの変換の実装。旧キー名を知っていないと改名できない
+      'src/server/gkill/api/find/find_query_legacy_json.go',
+      'src/client/classes/api/find_query/normalize-legacy-find-kyou-query-json.ts',
+      // 変換の試験。旧キー入りの JSON を食わせるのが目的
+      'src/server/gkill/api/find/find_query_legacy_json_test.go',
+      'src/server/gkill/dao/share_kyou_info/share_kyou_info_schema_migration_test.go',
+      'src/client/__tests__/unit/api/normalize-legacy-find-kyou-query-json.test.ts',
+    ]),
+    // 公開済みの歴史記録。書き換えると「そのとき何を配ったか」が消える
+    exemptPrefixes: ['documents/releasenote/'],
+    exemptLine: /0413-rename-calendar-date-to-time|retired-spelling-ok/,
+  },
 ]
 
 // 中身の綴りを直せない・直す意味がないもの。バイナリは NUL 判定でも落とすが、

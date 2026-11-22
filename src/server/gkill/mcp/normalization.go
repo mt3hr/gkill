@@ -124,7 +124,7 @@ var legacyUseFlagValueKeys = map[string][]string{
 	"use_words":          {"words", "not_words"},
 	"use_timeis":         {"timeis_words", "timeis_not_words", "timeis_tags"},
 	"use_timeis_tags":    {"timeis_tags"},
-	"use_calendar":       {"calendar_start_date", "calendar_end_date"},
+	"use_calendar":       {"calendar_start_time", "calendar_end_time"},
 	"use_map":            {"map_latitude", "map_longitude", "map_radius"},
 	"use_playing":        {"playing_time"},
 	"use_update_time":    {"update_time"},
@@ -267,14 +267,14 @@ func NormalizeKyouQuery(query any) (*jsonobj.Object, error) {
 	}
 
 	// 逆さまの期間は gkill 側で0件になるだけで警告も出ないので、入口で弾く。
-	if normalized.Has("calendar_start_date") && normalized.Has("calendar_end_date") {
-		start, _ := jsDateParseMillis(jsString(normalized.Value("calendar_start_date")))
-		end, _ := jsDateParseMillis(jsString(normalized.Value("calendar_end_date")))
+	if normalized.Has("calendar_start_time") && normalized.Has("calendar_end_time") {
+		start, _ := jsDateParseMillis(jsString(normalized.Value("calendar_start_time")))
+		end, _ := jsDateParseMillis(jsString(normalized.Value("calendar_end_time")))
 		if start > end {
 			return nil, InvalidArgument(
-				"query.calendar_start_date",
-				"must not be after query.calendar_end_date ("+jsString(normalized.Value("calendar_end_date"))+"); an inverted range silently matches nothing",
-				normalized.Value("calendar_start_date"),
+				"query.calendar_start_time",
+				"must not be after query.calendar_end_time ("+jsString(normalized.Value("calendar_end_time"))+"); an inverted range silently matches nothing",
+				normalized.Value("calendar_start_time"),
 			)
 		}
 	}

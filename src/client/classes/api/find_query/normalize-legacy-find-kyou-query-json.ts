@@ -82,9 +82,40 @@ function apply_nullable_group(json: Record<string, unknown>, flag_key: string, v
     }
 }
 
+// 旧キー名から新キー名への対応。
+// calendar_start_date / calendar_end_date は実体が時刻（Date）で、
+// 日単位に丸めていたのは UI だけだったため calendar_start_time / calendar_end_time へ改名した。
+// 互換は残さない方針なので、localStorage と SW キャッシュに残った旧キーを parse 境界で書き換える。
+const legacy_renamed_keys: Array<{ old_key: string, new_key: string }> = [
+    { old_key: 'calendar_start_date', new_key: 'calendar_start_time' },
+    { old_key: 'calendar_end_date', new_key: 'calendar_end_time' },
+]
+
+// オブジェクト1つぶんの旧キーを新キーへ移す。
+// 新キーが既にあれば旧キーを捨てる（冪等。両方並ぶのは二重移行の途中だけ）。
+function rename_legacy_keys(json: Record<string, unknown>): void {
+    for (const { old_key, new_key } of legacy_renamed_keys) {
+        if (!Object.prototype.hasOwnProperty.call(json, old_key)) {
+            continue
+        }
+        const value = json[old_key]
+        delete json[old_key]
+        if (!Object.prototype.hasOwnProperty.call(json, new_key)) {
+            json[new_key] = value
+        }
+    }
+}
+
 export function is_legacy_find_kyou_query_json(json: Record<string, unknown>): boolean {
     for (const key of legacy_use_flag_keys) {
         if (Object.prototype.hasOwnProperty.call(json, key)) {
+            return true
+        }
+    }
+    // use_* 移行を済ませたあとに保存された JSON は use_* を1つも持たないので、
+    // 改名だけが必要な JSON もここで旧形式として拾う。
+    for (const { old_key } of legacy_renamed_keys) {
+        if (Object.prototype.hasOwnProperty.call(json, old_key)) {
             return true
         }
     }
@@ -99,6 +130,11 @@ export function normalize_legacy_find_kyou_query_json(json: Record<string, unkno
     }
 
     const normalized: Record<string, unknown> = { ...json }
+
+    // 改名が先。use_* 変換は新キー名で値を探すため、順序を入れ替えると
+    // use_calendar=false が旧キー名の値を見つけられず、
+    // 「フィルタ未使用だったはずの期間が有効なまま復活する」形で静かに壊れる。
+    rename_legacy_keys(normalized)
 
     apply_array_group(normalized, 'use_words', ['words', 'not_words'])
     apply_array_group(normalized, 'use_tags', ['tags'])
@@ -126,7 +162,7 @@ export function normalize_legacy_find_kyou_query_json(json: Record<string, unkno
         }
     }
 
-    apply_nullable_group(normalized, 'use_calendar', ['calendar_start_date', 'calendar_end_date'])
+    apply_nullable_group(normalized, 'use_calendar', ['calendar_start_time', 'calendar_end_time'])
     apply_nullable_group(normalized, 'use_map', ['map_latitude', 'map_longitude', 'map_radius'])
     apply_nullable_group(normalized, 'use_playing', ['playing_time'])
 

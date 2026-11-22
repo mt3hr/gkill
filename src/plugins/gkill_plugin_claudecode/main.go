@@ -105,10 +105,10 @@ func kyousOfMessages(messages []messageSummary, q sdk.Query) []sdk.Kyou {
 		relatedTime := unixToTime(t.RelatedTimeUnix)
 
 		// カレンダーフィルタ
-		if q.CalendarStartDate != nil && relatedTime.Before(*q.CalendarStartDate) {
+		if q.CalendarStartTime != nil && relatedTime.Before(*q.CalendarStartTime) {
 			continue
 		}
-		if q.CalendarEndDate != nil && relatedTime.After(*q.CalendarEndDate) {
+		if q.CalendarEndTime != nil && relatedTime.After(*q.CalendarEndTime) {
 			continue
 		}
 

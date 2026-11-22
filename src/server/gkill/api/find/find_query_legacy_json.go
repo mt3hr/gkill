@@ -33,8 +33,9 @@ var legacyUseFlagKeys = []string{
 	"use_mi_check_state",
 }
 
-// MigrateLegacyFindQueryJSON は use_* フラグ入りの旧形式 FindQuery JSON を
-// null 判定の新形式へ書き換える。
+// MigrateLegacyFindQueryJSON は旧形式の FindQuery JSON を現行形式へ書き換える。
+// 旧キー名の改名（calendar_start_date → calendar_start_time ほか）と、
+// use_* フラグから null 判定への変換の2つを、この順で行う。
 //
 // JSON 全体を再帰走査し、use_* キーを1つ以上持つオブジェクトだけを変換するため、
 // RYUU 設定のようにネストの奥へ FindQuery を抱える JSON にもそのまま使える。冪等。
@@ -47,6 +48,13 @@ var legacyUseFlagKeys = []string{
 //     （旧ゲートは UseTimeIs && UseTimeIsTags の複合だったため）
 //   - use_include_id / use_mi_sort_type / use_mi_check_state はキー削除のみ
 //   - 最後に use_* キー自体を削除する
+//
+// 改名規則:
+//   - calendar_start_date → calendar_start_time
+//   - calendar_end_date   → calendar_end_time
+//
+// 改名は use_* 変換より先に走る（use_* 変換が新キー名で値を探すため)。
+// use_* を持たないオブジェクトにも効く（use_* 移行済みの JSON には use_* が残っていないため）。
 //
 // 数値は json.Number のまま保持するため精度は落ちない。
 // 旧形式が見つからなければ raw をそのまま返す（changed=false）。
@@ -83,6 +91,11 @@ func migrateLegacyFindQueryValue(value any) bool {
 	changed := false
 	switch typedValue := value.(type) {
 	case map[string]any:
+		// 先に旧キーを改名する。use_* の変換は新キー名で値を探すため、
+		// 順序を入れ替えると use_calendar=false が旧キーを捕まえられない。
+		if renameLegacyCalendarKeys(typedValue) {
+			changed = true
+		}
 		if hasLegacyUseFlagKey(typedValue) {
 			migrateLegacyFindQueryObject(typedValue)
 			changed = true
@@ -98,6 +111,35 @@ func migrateLegacyFindQueryValue(value any) bool {
 				changed = true
 			}
 		}
+	}
+	return changed
+}
+
+// legacyCalendarKeyRenames は旧キー名から新キー名への対応。
+// calendar_start_date / calendar_end_date は実体が時刻（*time.Time）で、
+// 日単位に丸めているのは UI だけだったため calendar_start_time / calendar_end_time へ改名した。
+// 互換は残さない方針（ADR-0806）なので、永続化済みの JSON
+// （保存済み検索条件・共有情報）を起動時に一度だけ書き換える。
+var legacyCalendarKeyRenames = map[string]string{
+	"calendar_start_date": "calendar_start_time",
+	"calendar_end_date":   "calendar_end_time",
+}
+
+// renameLegacyCalendarKeys はオブジェクト1つぶんの旧キーを新キーへ移す。
+// 新キーが既にあれば旧キーを捨てる（冪等。両方並ぶのは二重移行の途中だけ）。
+// 改名が起きたら true を返す。
+func renameLegacyCalendarKeys(obj map[string]any) bool {
+	changed := false
+	for oldKey, newKey := range legacyCalendarKeyRenames {
+		value, exist := obj[oldKey]
+		if !exist {
+			continue
+		}
+		delete(obj, oldKey)
+		if _, newExist := obj[newKey]; !newExist {
+			obj[newKey] = value
+		}
+		changed = true
 	}
 	return changed
 }
@@ -164,7 +206,7 @@ func migrateLegacyFindQueryObject(obj map[string]any) {
 	}
 
 	// use=false で値を null にするだけのグループ（値の物質化は不要）
-	applyLegacyNullableGroup(obj, "use_calendar", "calendar_start_date", "calendar_end_date")
+	applyLegacyNullableGroup(obj, "use_calendar", "calendar_start_time", "calendar_end_time")
 	applyLegacyNullableGroup(obj, "use_map", "map_radius", "map_latitude", "map_longitude")
 	applyLegacyNullableGroup(obj, "use_update_time", "update_time")
 

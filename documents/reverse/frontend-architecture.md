@@ -624,7 +624,7 @@ playing検索（Kyou付随の実行中表示 `info-base.ts` の `load_attached_t
 
 **サイドバーからの呼び出し:** `use-rykv-query-editor-side-bar.ts` / `use-mi-query-editor-sidebar.ts` の computed `saved_find_querys`（0件なら FAB ごと v-if 非表示）と `apply_saved_query(item)`。適用は `emits_default_query()` と同経路で、`item.find_kyou_query.clone()` に**列側の `query_id` を差し込んで** `query.value` を差し替え、`updated_query` を emit する（＝手編集と同じ扱い。ホットリロードONなら親が自動検索、OFFなら検索ボタンで実行）。保存条件由来の query_id を列へ持ち込むと「列×検索」不変条件が崩れるため、必ず列側を維持する。mi 側は全クリアと違い**板名も保存された条件が勝つ**。FAB はサイドバー下端の sticky 検索バー（`.sidebar_header_wrap`、`overflow: visible` 化）に絶対配置で載せている（position:fixed ではないのでドロワー閉時に一緒に隠れる）。
 
-**制約:** ライフログ用エディタ（`find-query-editor-view.vue`）にはカレンダー節が無いため、保存条件はカレンダー未使用（`calendar_start_date`/`calendar_end_date`=null）で保存される（期間指定はエディタにあるので保存可能）。サイドバーへ反映されるのは「サイドバーに表示される条件」がすべてで、保存された条件がそのまま勝つ。タスク用は打刻期間・GPS位置・時間帯の3節がエディタにもサイドバーにも無いので、それらの絞り込みは保存も復元もされない（過去の保存条件に残っていても、サイドバーを次に触った時点の `generate_query()` で既定値へ落ちる）。
+**制約:** ライフログ用エディタ（`find-query-editor-view.vue`）にはカレンダー節が無いため、保存条件はカレンダー未使用（`calendar_start_time`/`calendar_end_time`=null）で保存される（期間指定はエディタにあるので保存可能）。サイドバーへ反映されるのは「サイドバーに表示される条件」がすべてで、保存された条件がそのまま勝つ。タスク用は打刻期間・GPS位置・時間帯の3節がエディタにもサイドバーにも無いので、それらの絞り込みは保存も復元もされない（過去の保存条件に残っていても、サイドバーを次に触った時点の `generate_query()` で既定値へ落ちる）。
 
 ---
 

@@ -206,7 +206,7 @@ export interface RepeatCountOrUntil {
  * 2行目を読む。整数だけなら回数、日時として読めれば終了日。整数が先。
  *
  * 終了日が日付のみ（時刻を含まない）なら、その日の 23:59:59 まで伸ばす
- * （FindQuery の calendar_end_date と同じ流儀。伸ばさないと当日の 18:00 が範囲外になる）。
+ * （FindQuery の calendar_end_time と同じ流儀。伸ばさないと当日の 18:00 が範囲外になる）。
  */
 export function parse_repeat_count_or_until(line_text: string): RepeatCountOrUntil {
     const text = line_text.trim()

@@ -13,13 +13,13 @@ export default class AggregateSumTimeIsTime implements DnoteAggregateTarget {
         let duration_milli_second = 0
         if (kyou.typed_timeis) {
             let start_time_trimed = kyou.typed_timeis.start_time
-            if (find_kyou_query.calendar_start_date) {
-                start_time_trimed = start_time_trimed.getTime() <= find_kyou_query.calendar_start_date.getTime() ? find_kyou_query.calendar_start_date : start_time_trimed
+            if (find_kyou_query.calendar_start_time) {
+                start_time_trimed = start_time_trimed.getTime() <= find_kyou_query.calendar_start_time.getTime() ? find_kyou_query.calendar_start_time : start_time_trimed
             }
 
             let end_time_trimed = kyou.typed_timeis.end_time ? kyou.typed_timeis.end_time : new Date(Date.now())
-            if (find_kyou_query.calendar_end_date) {
-                end_time_trimed = end_time_trimed.getTime() >= find_kyou_query.calendar_end_date.getTime() ? find_kyou_query.calendar_end_date : end_time_trimed
+            if (find_kyou_query.calendar_end_time) {
+                end_time_trimed = end_time_trimed.getTime() >= find_kyou_query.calendar_end_time.getTime() ? find_kyou_query.calendar_end_time : end_time_trimed
             }
 
             if ((start_time_trimed.getTime() < end_time_trimed.getTime())) {

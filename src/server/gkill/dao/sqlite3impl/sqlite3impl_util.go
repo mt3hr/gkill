@@ -376,8 +376,8 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 
 	// 日付範囲指定ありの場合
 	useCalendar := query.HasCalendarFilter()
-	calendarStartDate := query.CalendarStartDate
-	calendarEndDate := query.CalendarEndDate
+	calendarStartTime := query.CalendarStartTime
+	calendarEndTime := query.CalendarEndTime
 
 	// UPDATE_TIMEか、Calendarの条件をSQLに追記
 	// UpdateTime指定(非nil)が優先で、未指定ならCalendar側へ倒す
@@ -399,39 +399,39 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 		}
 	} else if useCalendar {
 		// 開始日時を指定するSQLを追記
-		if calendarStartDate != nil {
+		if calendarStartTime != nil {
 			if strings.HasSuffix(relatedTimeColumnName, "_UNIX") {
 				if *whereCounter != 0 {
 					sqlBuilder.WriteString(" AND ")
 				}
 				fmt.Fprintf(sqlBuilder, "%s >= ?", relatedTimeColumnName)
-				*queryArgs = append(*queryArgs, calendarStartDate.Unix())
+				*queryArgs = append(*queryArgs, calendarStartTime.Unix())
 				*whereCounter++
 			} else {
 				if *whereCounter != 0 {
 					sqlBuilder.WriteString(" AND ")
 				}
 				fmt.Fprintf(sqlBuilder, "unixepoch(%s) >= unixepoch(?)", relatedTimeColumnName)
-				*queryArgs = append(*queryArgs, calendarStartDate.Format(TimeLayout))
+				*queryArgs = append(*queryArgs, calendarStartTime.Format(TimeLayout))
 				*whereCounter++
 			}
 		}
 
 		// 終了日時を指定するSQLを追記
-		if calendarEndDate != nil {
+		if calendarEndTime != nil {
 			if strings.HasSuffix(relatedTimeColumnName, "_UNIX") {
 				if *whereCounter != 0 {
 					sqlBuilder.WriteString(" AND ")
 				}
 				fmt.Fprintf(sqlBuilder, "%s <= ?", relatedTimeColumnName)
-				*queryArgs = append(*queryArgs, calendarEndDate.Unix())
+				*queryArgs = append(*queryArgs, calendarEndTime.Unix())
 				*whereCounter++
 			} else {
 				if *whereCounter != 0 {
 					sqlBuilder.WriteString(" AND ")
 				}
 				fmt.Fprintf(sqlBuilder, "unixepoch(%s) <= unixepoch(?)", relatedTimeColumnName)
-				*queryArgs = append(*queryArgs, calendarEndDate.Format(TimeLayout))
+				*queryArgs = append(*queryArgs, calendarEndTime.Format(TimeLayout))
 				*whereCounter++
 			}
 		}

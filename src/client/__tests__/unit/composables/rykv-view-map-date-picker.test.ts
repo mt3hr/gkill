@@ -72,8 +72,8 @@ function createView() {
 async function createViewWithColumn() {
   const { pending_get_kyous, view } = createView()
   const query_a = makeColumnQuery('col-a')
-  query_a.calendar_start_date = new Date(2026, 8, 1)
-  query_a.calendar_end_date = new Date(2026, 8, 30)
+  query_a.calendar_start_time = new Date(2026, 8, 1)
+  query_a.calendar_end_time = new Date(2026, 8, 30)
   const fakes = setupColumns(view, [query_a], [[]])
 
   const initial_map_time = new Date(2026, 8, 20, 12, 0, 0)
@@ -113,14 +113,14 @@ describe('useRykvView 地図の日付ピッカー（onGpsLogMapRequestedChangeDa
 
   test('検索条件と一覧は動かさない（検索を飛ばさない）', async () => {
     const { pending_get_kyous, view, query_a, searches_before } = await createViewWithColumn()
-    const start_before = query_a.calendar_start_date!.getTime()
-    const end_before = query_a.calendar_end_date!.getTime()
+    const start_before = query_a.calendar_start_time!.getTime()
+    const end_before = query_a.calendar_end_time!.getTime()
 
     view.onGpsLogMapRequestedChangeDate(new Date(2016, 4, 15))
     await flushAsync()
 
-    expect(view.querys.value[0].calendar_start_date!.getTime(), '列の検索期間（開始）が動いた').toBe(start_before)
-    expect(view.querys.value[0].calendar_end_date!.getTime(), '列の検索期間（終了）が動いた').toBe(end_before)
+    expect(view.querys.value[0].calendar_start_time!.getTime(), '列の検索期間（開始）が動いた').toBe(start_before)
+    expect(view.querys.value[0].calendar_end_time!.getTime(), '列の検索期間（終了）が動いた').toBe(end_before)
     expect(pending_get_kyous.length, '地図の日を変えただけで検索が飛んだ').toBe(searches_before)
   })
 

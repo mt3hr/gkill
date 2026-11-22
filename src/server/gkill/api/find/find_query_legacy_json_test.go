@@ -114,7 +114,7 @@ func TestMigrateLegacyFindQueryJSONDisabledGroups(t *testing.T) {
 	for _, key := range []string{
 		"words", "not_words", "tags", "reps", "rep_types", "ids",
 		"timeis_words", "timeis_not_words", "timeis_tags",
-		"calendar_start_date", "calendar_end_date",
+		"calendar_start_time", "calendar_end_time",
 		"map_radius", "map_latitude", "map_longitude",
 		"playing_time", "update_time", "mi_board_name",
 		"period_of_time_start_time_second", "period_of_time_end_time_second", "period_of_time_week_of_days",
@@ -173,10 +173,10 @@ func TestMigrateLegacyFindQueryJSONEnabledGroups(t *testing.T) {
 	assertEmptyArray(t, obj, "timeis_words")
 	assertStringArray(t, obj, "timeis_not_words", []string{"tnw"})
 	assertEmptyArray(t, obj, "timeis_tags")
-	if obj["calendar_start_date"] != "2020-01-01T00:00:00+09:00" {
-		t.Errorf("calendar_start_date should be preserved: %v", obj["calendar_start_date"])
+	if obj["calendar_start_time"] != "2020-01-01T00:00:00+09:00" {
+		t.Errorf("calendar_start_time should be preserved: %v", obj["calendar_start_time"])
 	}
-	assertNull(t, obj, "calendar_end_date")
+	assertNull(t, obj, "calendar_end_time")
 	if obj["map_radius"] != json.Number("0") {
 		t.Errorf("map_radius should be preserved as 0: %v", obj["map_radius"])
 	}
@@ -284,7 +284,7 @@ func TestMigrateLegacyFindQueryJSONNested(t *testing.T) {
 
 	item3Query := items[2].(map[string]any)["nested"].(map[string]any)["deep"].([]any)[0].(map[string]any)["find_kyou_query"].(map[string]any)
 	assertKeyAbsent(t, item3Query, "use_calendar")
-	assertNull(t, item3Query, "calendar_start_date")
+	assertNull(t, item3Query, "calendar_start_time")
 }
 
 // 冪等性: 1回目の出力にもう一度かけると changed=false かつバイト同一であること
@@ -375,5 +375,105 @@ func TestMigrateLegacyFindQueryJSONBrokenJSON(t *testing.T) {
 	_, _, err := MigrateLegacyFindQueryJSON([]byte(`{"use_tags": tru`))
 	if err == nil {
 		t.Fatal("broken JSON should return error")
+	}
+}
+
+// calendar_start_date / calendar_end_date は calendar_start_time / calendar_end_time へ改名した。
+// use_* 移行を済ませたあとに保存された JSON は use_* を1つも持たないので、
+// 改名は use_* の有無と無関係に効かなければならない。
+func TestMigrateLegacyFindQueryJSONRenamesCalendarKeysWithoutUseFlags(t *testing.T) {
+	legacy := `{"calendar_start_date": "2020-01-01T00:00:00+09:00", "calendar_end_date": "2020-01-02T00:00:00+09:00", "tags": ["t1"]}`
+
+	migrated, changed, err := MigrateLegacyFindQueryJSON([]byte(legacy))
+	if err != nil {
+		t.Fatalf("MigrateLegacyFindQueryJSON failed: %v", err)
+	}
+	if !changed {
+		t.Fatal("changed should be true")
+	}
+
+	obj := decodeMigratedObject(t, migrated)
+	assertKeyAbsent(t, obj, "calendar_start_date")
+	assertKeyAbsent(t, obj, "calendar_end_date")
+	if obj["calendar_start_time"] != "2020-01-01T00:00:00+09:00" {
+		t.Errorf("calendar_start_time should carry the old value: %v", obj["calendar_start_time"])
+	}
+	if obj["calendar_end_time"] != "2020-01-02T00:00:00+09:00" {
+		t.Errorf("calendar_end_time should carry the old value: %v", obj["calendar_end_time"])
+	}
+	assertStringArray(t, obj, "tags", []string{"t1"})
+}
+
+// 改名は use_* 変換より先に走らなければならない。
+// 逆にすると use_calendar=false が旧キー名の値を見つけられず、
+// 「フィルタ未使用だったはずの期間が有効なまま復活する」形で静かに壊れる。
+func TestMigrateLegacyFindQueryJSONCalendarRenameRunsBeforeUseFlags(t *testing.T) {
+	legacy := `{"use_calendar": false, "calendar_start_date": "2020-01-01T00:00:00+09:00", "calendar_end_date": "2020-01-02T00:00:00+09:00"}`
+
+	migrated, changed, err := MigrateLegacyFindQueryJSON([]byte(legacy))
+	if err != nil {
+		t.Fatalf("MigrateLegacyFindQueryJSON failed: %v", err)
+	}
+	if !changed {
+		t.Fatal("changed should be true")
+	}
+
+	obj := decodeMigratedObject(t, migrated)
+	assertKeyAbsent(t, obj, "use_calendar")
+	assertKeyAbsent(t, obj, "calendar_start_date")
+	assertKeyAbsent(t, obj, "calendar_end_date")
+	assertNull(t, obj, "calendar_start_time")
+	assertNull(t, obj, "calendar_end_time")
+}
+
+// ネストの奥（RYUU 設定のような形）でも改名が効くこと。
+func TestMigrateLegacyFindQueryJSONRenamesCalendarKeysNested(t *testing.T) {
+	legacy := `[{"title": "item1", "find_kyou_query": {"calendar_start_date": "2020-01-01T00:00:00+09:00"}}]`
+
+	migrated, changed, err := MigrateLegacyFindQueryJSON([]byte(legacy))
+	if err != nil {
+		t.Fatalf("MigrateLegacyFindQueryJSON failed: %v", err)
+	}
+	if !changed {
+		t.Fatal("changed should be true")
+	}
+
+	var items []map[string]any
+	if err := json.Unmarshal(migrated, &items); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	query, ok := items[0]["find_kyou_query"].(map[string]any)
+	if !ok {
+		t.Fatalf("find_kyou_query should be an object: %v", items[0]["find_kyou_query"])
+	}
+	assertKeyAbsent(t, query, "calendar_start_date")
+	if query["calendar_start_time"] != "2020-01-01T00:00:00+09:00" {
+		t.Errorf("nested calendar_start_time should carry the old value: %v", query["calendar_start_time"])
+	}
+}
+
+// 改名は冪等。既に新キーがあれば旧キーは捨てる（二重移行の途中で両方並んだ場合）。
+func TestMigrateLegacyFindQueryJSONCalendarRenameIdempotent(t *testing.T) {
+	already := `{"calendar_start_time":"2020-01-01T00:00:00+09:00","calendar_end_time":null}`
+	migrated, changed, err := MigrateLegacyFindQueryJSON([]byte(already))
+	if err != nil {
+		t.Fatalf("MigrateLegacyFindQueryJSON failed: %v", err)
+	}
+	if changed {
+		t.Errorf("changed should be false for already migrated JSON: %s", migrated)
+	}
+
+	both := `{"calendar_start_date":"2020-01-01T00:00:00+09:00","calendar_start_time":"2021-01-01T00:00:00+09:00"}`
+	migrated, changed, err = MigrateLegacyFindQueryJSON([]byte(both))
+	if err != nil {
+		t.Fatalf("MigrateLegacyFindQueryJSON failed: %v", err)
+	}
+	if !changed {
+		t.Fatal("changed should be true when the old key is still present")
+	}
+	obj := decodeMigratedObject(t, migrated)
+	assertKeyAbsent(t, obj, "calendar_start_date")
+	if obj["calendar_start_time"] != "2021-01-01T00:00:00+09:00" {
+		t.Errorf("existing calendar_start_time should win: %v", obj["calendar_start_time"])
 	}
 }

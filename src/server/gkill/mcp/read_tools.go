@@ -82,7 +82,7 @@ var ReadTools = []*jsonobj.Object{
 		// 本文は help_topics.go（gkill_get_mcp_help）へ移した（ADR-0622）。
 		// tool_handlers_test.go が固定する3句（partial と独立に warnings を見る）はここに残す。
 		"Search life-log entries (kyou) and return them newest first with tags, texts, notifications and the type-specific payload inline. "+
-			"Start with query.calendar_start_date / calendar_end_date, query.words, query.tags, limit and data_types; tasks need query.for_mi plus include_create_mi (see gkill_get_mcp_help topic:mi). "+
+			"Start with query.calendar_start_time / calendar_end_time, query.words, query.tags, limit and data_types; tasks need query.for_mi plus include_create_mi (see gkill_get_mcp_help topic:mi). "+
 			"ALWAYS inspect warnings[] even when partial is false: a repository may have failed to load, so its records are absent — do not put a repository named by that warning back into query.reps. Unknown filter values and ids that match nothing are reported there too. "+
 			"limit / max_size_mb cap what is RETURNED, not what is SEARCHED — narrow the calendar range, data_types or reps to make a query faster. "+
 			"Page by passing next_cursor back as cursor; cursor pages omit total_count, so read remaining_count. count_only / group_by give counts and histograms without payloads. "+

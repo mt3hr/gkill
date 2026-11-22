@@ -172,7 +172,7 @@ func TestPluginGitCommitLogAdapter_FindGitCommitLog(t *testing.T) {
 
 	start := gitTestTimeJST.Add(30 * time.Minute)
 	end := gitTestTimeJST.Add(2 * time.Hour)
-	byCalendar, _ := rep.FindGitCommitLog(ctx, &find.FindQuery{CalendarStartDate: &start, CalendarEndDate: &end})
+	byCalendar, _ := rep.FindGitCommitLog(ctx, &find.FindQuery{CalendarStartTime: &start, CalendarEndTime: &end})
 	if got := hashes(byCalendar); len(got) != 1 || !got["c1d2e3f4a5b6c7d8e9f0c1d2e3f4a5b6c7d8e9f0"] {
 		t.Errorf("FindGitCommitLog(期間) = %v, want repo-alpha の1件", got)
 	}

@@ -155,7 +155,7 @@ func BenchmarkCachedKmemoFindKyousCalendar(b *testing.B) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local)
 	start := base.Add(time.Duration(benchRowCount-1000) * time.Minute)
 	end := base.Add(time.Duration(benchRowCount) * time.Minute)
-	query := &find.FindQuery{OnlyLatestData: true, CalendarStartDate: &start, CalendarEndDate: &end}
+	query := &find.FindQuery{OnlyLatestData: true, CalendarStartTime: &start, CalendarEndTime: &end}
 	ctx := context.Background()
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -172,7 +172,7 @@ func BenchmarkCachedTimeIsFindKyous(b *testing.B) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local)
 	start := base.Add(time.Duration(benchRowCount-1000) * time.Minute)
 	end := base.Add(time.Duration(benchRowCount) * time.Minute)
-	query := &find.FindQuery{OnlyLatestData: true, CalendarStartDate: &start, CalendarEndDate: &end, IncludeEndTimeIs: true}
+	query := &find.FindQuery{OnlyLatestData: true, CalendarStartTime: &start, CalendarEndTime: &end, IncludeEndTimeIs: true}
 	ctx := context.Background()
 	b.ReportAllocs()
 	b.ResetTimer()

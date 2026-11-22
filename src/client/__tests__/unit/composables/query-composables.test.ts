@@ -219,8 +219,8 @@ describe('useCalendarQuery: calendar日付の null 判定とローカル保持',
   function make_dated_query(query_id: string): FindKyouQuery {
     const query = new FindKyouQuery()
     query.query_id = query_id
-    query.calendar_start_date = new Date(2026, 6, 1)
-    query.calendar_end_date = new Date(2026, 6, 3, 23, 59, 59, 999)
+    query.calendar_start_time = new Date(2026, 6, 1)
+    query.calendar_end_time = new Date(2026, 6, 3, 23, 59, 59, 999)
     return query
   }
 
@@ -264,8 +264,8 @@ describe('useCalendarQuery: calendar日付の null 判定とローカル保持',
     // 単一日選択の状態。同日なので dates は1要素で保持される
     const single_day = new FindKyouQuery()
     single_day.query_id = 'q1'
-    single_day.calendar_start_date = new Date(2026, 7, 1)
-    single_day.calendar_end_date = new Date(2026, 7, 1, 23, 59, 59, 999)
+    single_day.calendar_start_time = new Date(2026, 7, 1)
+    single_day.calendar_end_time = new Date(2026, 7, 1, 23, 59, 59, 999)
     props.find_kyou_query = single_day
     await flush_watchers()
     expect(view.dates.value).toHaveLength(1)
@@ -464,8 +464,8 @@ describe('FindKyouQuery null判定の意味論', () => {
     expect(query.map_latitude).toBeNull()
     expect(query.map_longitude).toBeNull()
     expect(query.map_radius).toBeNull()
-    expect(query.calendar_start_date).toBeNull()
-    expect(query.calendar_end_date).toBeNull()
+    expect(query.calendar_start_time).toBeNull()
+    expect(query.calendar_end_time).toBeNull()
     expect(query.playing_time).toBeNull()
     expect(query.period_of_time_start_time_second).toBeNull()
     expect(query.period_of_time_end_time_second).toBeNull()
@@ -497,7 +497,7 @@ describe('FindKyouQuery null判定の意味論', () => {
       use_words: true, keywords: '写真 -除外', words: null, not_words: null,
       use_tags: false, tags: ['旅行'],
       use_reps: true, reps: null,
-      use_calendar: false, calendar_start_date: '2026-07-01T00:00:00.000Z',
+      use_calendar: false, calendar_start_time: '2026-07-01T00:00:00.000Z',
       use_map: false, map_latitude: 35, map_longitude: 139, map_radius: 500,
       use_timeis: false, timeis_words: ['作業'],
       use_mi_board_name: false, mi_board_name: '板',
@@ -508,7 +508,7 @@ describe('FindKyouQuery null判定の意味論', () => {
     expect(parsed.not_words).toEqual([])
     expect(parsed.reps).toEqual([])
     expect(parsed.tags, 'use=falseならnull(未使用)').toBeNull()
-    expect(parsed.calendar_start_date).toBeNull()
+    expect(parsed.calendar_start_time).toBeNull()
     expect(parsed.map_latitude).toBeNull()
     expect(parsed.timeis_words).toBeNull()
     expect(parsed.mi_board_name).toBeNull()
@@ -527,8 +527,8 @@ describe('FindKyouQuery null判定の意味論', () => {
     query.reps = null
     query.rep_types = ['mi']
     query.timeis_tags = []
-    query.calendar_start_date = new Date(2026, 6, 1)
-    query.calendar_end_date = new Date(2026, 6, 3, 23, 59, 59, 999)
+    query.calendar_start_time = new Date(2026, 6, 1)
+    query.calendar_end_time = new Date(2026, 6, 3, 23, 59, 59, 999)
     query.map_latitude = 35.65
     query.map_longitude = 139.74
     query.map_radius = 500

@@ -37,7 +37,7 @@ Kyou 検索に使用するクエリ構造体と列挙型を定義する。
 | リポジトリフィルタ | `Reps != nil` | `Reps` | 0件 |
 | リポジトリ種別フィルタ | `RepTypes != nil` | `RepTypes` | タイプ候補0件 |
 | ID フィルタ | `IDs != nil` | `IDs` | 0件（SQL `0 = 1`） |
-| カレンダー | `HasCalendarFilter()` = start≠nil ∨ end≠nil | `CalendarStartDate`, `CalendarEndDate`（`*time.Time`） | — |
+| カレンダー | `HasCalendarFilter()` = start≠nil ∨ end≠nil | `CalendarStartTime`, `CalendarEndTime`（`*time.Time`） | — |
 | 地図 | `HasMapFilter()` = 3値すべて非nil | `MapLatitude`, `MapLongitude`, `MapRadius`（`*float64`） | — |
 | TimeIs 検索 | `HasTimeIsFilter()` = `TimeIsWords`≠nil ∨ `TimeIsNotWords`≠nil | `TimeIsWords`, `TimeIsNotWords`, `TimeIsWordsAnd` | `TimeIsWords=[]`→「任意のTimeIsに覆われたKyou」 |
 | TimeIs タグ | `HasTimeIsFilter() && TimeIsTags != nil` | `TimeIsTags`, `TimeIsTagsAnd` | 0件 |

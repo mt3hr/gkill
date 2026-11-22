@@ -120,8 +120,8 @@ describe('generate_playing_timeis_query', () => {
     test('保存クエリの対象外フィールドは既定値のまま', () => {
         const config = make_application_config({
             playing_timeis_json_data: make_saved_query_json(saved => {
-                saved.calendar_start_date = new Date('2026-01-01T00:00:00Z')
-                saved.calendar_end_date = new Date('2026-01-31T00:00:00Z')
+                saved.calendar_start_time = new Date('2026-01-01T00:00:00Z')
+                saved.calendar_end_time = new Date('2026-01-31T00:00:00Z')
                 saved.map_latitude = 35.1
                 saved.map_longitude = 139.2
                 saved.map_radius = 300
@@ -132,8 +132,8 @@ describe('generate_playing_timeis_query', () => {
         })
         const query = generate_playing_timeis_query(config, playing_time)
         const defaults = new FindKyouQuery()
-        expect(query.calendar_start_date).toBeNull()
-        expect(query.calendar_end_date).toBeNull()
+        expect(query.calendar_start_time).toBeNull()
+        expect(query.calendar_end_time).toBeNull()
         expect(query.map_latitude).toBeNull()
         expect(query.timeis_words).toBeNull()
         expect(query.for_mi).toBe(defaults.for_mi)

@@ -84,8 +84,8 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 | `reps` | []string \| null | リポジトリ名一覧（非nullでリポジトリフィルタ有効。下記の注を参照） |
 | `timeis_words` | []string \| null | TimeIs検索キーワード（`timeis_words`/`timeis_not_words` のどちらかが非nullでTimeIsフィルタ有効） |
 | `include_end_timeis` | bool | 終了済みTimeIsを含めるか |
-| `calendar_start_date` | string \| null | 検索開始日時（RFC3339。開始/終了のどちらかが非nullで日付範囲フィルタ有効） |
-| `calendar_end_date` | string \| null | 検索終了日時（RFC3339） |
+| `calendar_start_time` | string \| null | 検索開始日時（RFC3339。開始/終了のどちらかが非nullで日付範囲フィルタ有効） |
+| `calendar_end_time` | string \| null | 検索終了日時（RFC3339） |
 | `playing_time` | string \| null | 非nullならその時刻に実行中のTimeIsを検索 |
 | `mi_board_name` | string \| null | 非nullならそのMi板だけに絞る（null=すべて） |
 | `only_latest_data` | bool | 最新データのみ取得するか |
@@ -140,8 +140,8 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
   "query": {
     "words": ["今日", "作業"],
     "words_and": true,
-    "calendar_start_date": "2026-06-01T00:00:00+09:00",
-    "calendar_end_date":   "2026-06-30T23:59:59+09:00"
+    "calendar_start_time": "2026-06-01T00:00:00+09:00",
+    "calendar_end_time":   "2026-06-30T23:59:59+09:00"
   },
   "locale_name": "ja"
 }

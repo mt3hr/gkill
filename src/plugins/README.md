@@ -425,8 +425,8 @@ SDK 自身は `plugin start` / `plugin stop` / `build cache` を Info で、1コ
     "tags": [],
     "not_tags": [],
     "tags_and": false,
-    "calendar_start_date": "2026-01-01T00:00:00Z",
-    "calendar_end_date": "2026-06-01T00:00:00Z",
+    "calendar_start_time": "2026-01-01T00:00:00Z",
+    "calendar_end_time": "2026-06-01T00:00:00Z",
     "is_deleted": false,
     "only_latest_data": false,
     "limit": 100,
@@ -503,8 +503,8 @@ func main() {
 | `Tags` | `[]string` | 含むタグ |
 | `NotTags` | `[]string` | 除外タグ |
 | `TagsAnd` | `bool` | `true` = AND 検索 |
-| `CalendarStartDate` | `*time.Time` | 期間開始（nil = 無制限） |
-| `CalendarEndDate` | `*time.Time` | 期間終了（nil = 無制限） |
+| `CalendarStartTime` | `*time.Time` | 期間開始（nil = 無制限） |
+| `CalendarEndTime` | `*time.Time` | 期間終了（nil = 無制限） |
 | `IsDeleted` | `bool` | 削除済みのみ取得。**gkill 本体からは常に `false` が渡る**（`FindQuery` 側に対応するフィールドが無いため） |
 | `OnlyLatestData` | `bool` | 最新データのみ |
 | `Limit` | `int` | 最大件数（0 = 無制限） |

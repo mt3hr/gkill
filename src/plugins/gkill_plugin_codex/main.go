@@ -91,7 +91,7 @@ func main() {
 			// 単語で絞るなら LIMIT を SQL へ押し込まない。
 			// 絞る前に切ると、後段のフィルタで落ちたぶん取りこぼす。
 			matcher := q.Matcher()
-			rows, err := globalCache.QueryKyous(pluginDir, q.CalendarStartDate, q.CalendarEndDate, q.Limit, matcher.HasWords(), q.IDs)
+			rows, err := globalCache.QueryKyous(pluginDir, q.CalendarStartTime, q.CalendarEndTime, q.Limit, matcher.HasWords(), q.IDs)
 			if err != nil {
 				sdk.LogError("%s: find kyous: %v", appName, err)
 				return []sdk.Kyou{}, nil

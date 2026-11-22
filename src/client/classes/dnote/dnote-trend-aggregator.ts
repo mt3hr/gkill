@@ -67,9 +67,9 @@ export class DnoteTrendAggregator {
         // バケット期間の決定
         let window_start: Date
         let window_end: Date
-        if (find_kyou_query.calendar_start_date || find_kyou_query.calendar_end_date) {
-            window_start = find_kyou_query.calendar_start_date ?? find_kyou_query.calendar_end_date!
-            window_end = find_kyou_query.calendar_end_date ?? new Date(Date.now())
+        if (find_kyou_query.calendar_start_time || find_kyou_query.calendar_end_time) {
+            window_start = find_kyou_query.calendar_start_time ?? find_kyou_query.calendar_end_time!
+            window_end = find_kyou_query.calendar_end_time ?? new Date(Date.now())
         } else if (cloned_kyous.length > 0) {
             // 全期間検索などcalendar範囲がない場合はkyousのrelated_timeから導出
             let min_time = cloned_kyous[0].related_time.getTime()
@@ -112,8 +112,8 @@ export class DnoteTrendAggregator {
             }
             const bucket_query = typeof find_kyou_query.clone === 'function' ? find_kyou_query.clone() : find_kyou_query
             if (bucket_query !== find_kyou_query) {
-                bucket_query.calendar_start_date = bucket_start.toDate()
-                bucket_query.calendar_end_date = bucket_end_exclusive.toDate()
+                bucket_query.calendar_start_time = bucket_start.toDate()
+                bucket_query.calendar_end_time = bucket_end_exclusive.toDate()
             }
             points.push(point)
             buckets.set(point.bucket_key, { point, aggregated_value: null, bucket_query, bucket_start_ms: bucket_start.valueOf(), bucket_end_exclusive_ms: bucket_end_exclusive.valueOf() })
@@ -125,8 +125,8 @@ export class DnoteTrendAggregator {
         // AggregateSumTimeIsTime 等は bucket_query の calendar 範囲で切り詰めるので、範囲を外した複製を渡す
         const untrimmed_query = typeof find_kyou_query.clone === 'function' ? find_kyou_query.clone() : find_kyou_query
         if (untrimmed_query !== find_kyou_query) {
-            untrimmed_query.calendar_start_date = null
-            untrimmed_query.calendar_end_date = null
+            untrimmed_query.calendar_start_time = null
+            untrimmed_query.calendar_end_time = null
         }
 
         // predicateにマッチしたKyouをバケットへ振り分けて集計
