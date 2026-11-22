@@ -14,6 +14,8 @@ import { GkillAPIForExportedKyou } from '@/classes/api/gkill-api'
 import { hydrate, hydrate_all } from '@/classes/api/hydrate'
 import { base64_to_bytes } from '@/classes/file-base64'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import { does_kyou_match_query } from '@/classes/kyou-local-insert'
+import { deep_equals } from '@/classes/deep-equals'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { Kyou } from '@/classes/datas/kyou'
 import { Kmemo } from '@/classes/datas/kmemo'
@@ -162,6 +164,43 @@ export function build_exported_api(raw: unknown): GkillAPIForExportedKyou {
         } catch {
             // 壊れた base64 は飛ばす。その記録の本文が出ないだけで、画面は出す
         }
+    }
+
+    // タグは焼き込みから**先に埋める**。遅延ロード（load_attached_tags）待ちのまま
+    // 絞り込むと、「まだ読んでいないので持っていない」と判定してタグ条件が全部落ちる
+    const tags_by_target = new Map<string, Array<Tag>>()
+    for (const tag of api.attached_tags) {
+        const list = tags_by_target.get(tag.target_id)
+        if (list) {
+            list.push(tag)
+        } else {
+            tags_by_target.set(tag.target_id, [tag])
+        }
+    }
+    for (const kyou of api.kyous) {
+        kyou.attached_tags = tags_by_target.get(kyou.id) ?? []
+        kyou.is_attached_tags_loaded = true
+    }
+
+    // 出力先サイドバーの絞り込み。
+    //
+    // **焼いた配列を起点に減らすことしかしない。** どんな条件を入れても、
+    // 焼かれていない記録が現れることはない（これが共有の境界線）。
+    //
+    // 判定は kyou-local-insert.ts の does_kyou_match_query をそのまま使う。
+    // これは find_filter.go の意味論の写しとして既にあるもので、
+    // 出力のためにもう1つ書くと3実装目になってドリフトする。
+    // ワード・TimeIs・地図・playing は見ない（Kyou 単体では判定できない条件。
+    // can_decide_query_locally が同じ線引きを持っている）ので、
+    // それらを理由に記録が落ちることはない。
+    api.narrow_column_kyous = (kyous, query, baked_query) => {
+        // 出力した時点の条件そのままなら、焼いた配列をそのまま返す。
+        // 絞り込まないと、サーバが本文一致で入れた記録を
+        // 「この条件では一致しない」と判定して**出力直後の画面が欠ける**
+        if (deep_equals(query, baked_query)) {
+            return kyous
+        }
+        return kyous.filter(kyou => does_kyou_match_query(kyou, query))
     }
 
     // 列。kyou_ids から本体へ解決する

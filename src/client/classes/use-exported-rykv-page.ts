@@ -55,7 +55,10 @@ export function useExportedRykvPage() {
 
     const raw_payload = read_json_element(export_data_element_id)
     const payload: Ref<ExportedKyouPayload | null> = ref(parse_exported_payload(raw_payload))
-    const is_ready: Ref<boolean> = ref(payload.value !== null)
+    // 焼き込みを流し込み、サイドバーのチェックツリーを組み終えてから立てる。
+    // 木が空のまま画面を描くと、サイドバーの各節が「チェック0個」を生成して emit し、
+    // tags = [] / reps = []（非 null の空配列 = 0件指定）の条件で**列が全部空になる**
+    const is_ready: Ref<boolean> = ref(false)
     const share_title: Ref<string> = ref(payload.value ? payload.value.title : '')
     const is_exported_with_dnote: Ref<boolean> = ref(payload.value ? payload.value.with_dnote : false)
     const is_exported_with_map: Ref<boolean> = ref(payload.value ? payload.value.with_map : false)
@@ -102,7 +105,7 @@ export function useExportedRykvPage() {
      * `load_*` は `GkillAPI.get_gkill_api()` を自分で引くので、差し替えないと
      * 本体の fetch に落ちる＝通信する）。
      */
-    function apply_payload(): void {
+    async function apply_payload(): Promise<void> {
         if (!payload.value) {
             return
         }
@@ -111,6 +114,41 @@ export function useExportedRykvPage() {
         gkill_api.value = exported_api
         application_config.value = exported_api.exported_application_config
         application_config.value.for_export_kyou = true
+        await build_sidebar_structs(application_config.value)
+        is_ready.value = true
+    }
+
+    /**
+     * サイドバーのチェックツリー（タグ・記録先・端末・記録種別）を組む。
+     *
+     * 木は本来、利用者が設定画面で並べたもので `application_config` に入っている。
+     * **それをそのまま焼いてはいけない。** 出力に含めなかった記録のタグ名・rep 名まで
+     * 木に残り、共有先に「ほかにこういうタグがある」と伝わってしまう。
+     *
+     * ここでは `append_not_found_*` に組ませる。これらが引く `get_all_tag_names` /
+     * `get_all_rep_names` は出力用 API が**焼いたデータから**返すので、
+     * 木に出るのは焼いたものだけになる（階層は落ちてフラットになる）。
+     *
+     * 板（mi_board）は呼ばない —— `get_mi_board_list` は throw する（rykv では使わない）。
+     */
+    async function build_sidebar_structs(config: ApplicationConfig): Promise<void> {
+        // ルートは「入れ物」にしておく。`new ApplicationConfig()` の既定は
+        // is_dir = false で、そのままだと append_* が子を足しても
+        // 木が**葉として描かれて子が出ない**（名前の無いチェックボックスが1つ出るだけ）
+        for (const root of [config.tag_struct, config.rep_struct, config.device_struct, config.rep_type_struct]) {
+            root.is_dir = true
+            if (!root.children) {
+                root.children = []
+            }
+        }
+        await config.append_not_found_reps()
+        await config.append_not_found_devices()
+        await config.append_not_found_rep_types()
+        await config.append_not_found_tags()
+        await config.append_no_devices()
+        // 「タグ無し」の仮想タグ。これが木に無いと、タグの付いていない記録が
+        // 「チェックされていないタグ」扱いで**一覧から消える**
+        await config.append_no_tags()
     }
 
     // ── Lifecycle ──
@@ -127,7 +165,7 @@ export function useExportedRykvPage() {
 
     // ── Init ──
     apply_locale()
-    apply_payload()
+    void apply_payload()
     resize_content()
 
     return {

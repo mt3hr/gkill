@@ -10,6 +10,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import '@/classes/api/gkill-api'
 import { useExportedRykvPage } from '@/classes/use-exported-rykv-page'
+import type { Ref } from 'vue'
 
 function put_json_element(element_id: string, text: string): void {
     const element = document.createElement('script')
@@ -17,6 +18,18 @@ function put_json_element(element_id: string, text: string): void {
     element.id = element_id
     element.textContent = text
     document.body.appendChild(element)
+}
+
+/**
+ * `is_ready` が立つまで待つ。
+ *
+ * 焼き込みを流し込んだあとサイドバーのチェックツリーを組み終えてから立つので、
+ * 読み取りだけなら同期でも、`is_ready` は数マイクロタスク後になる
+ */
+async function wait_ready(is_ready: Ref<boolean>): Promise<void> {
+    for (let i = 0; i < 50 && !is_ready.value; i++) {
+        await Promise.resolve()
+    }
 }
 
 afterEach(() => {
@@ -42,20 +55,22 @@ describe('useExportedRykvPage の焼き込み読み取り', () => {
         expect(is_ready.value).toBe(false)
     })
 
-    it('schema_version のある差し込みを読み、タイトルを取り出す', () => {
+    it('schema_version のある差し込みを読み、タイトルを取り出す', async () => {
         put_json_element('gkill-export-data', JSON.stringify({
             schema_version: 1,
             title: '出力したタイトル',
             locale_name: 'ja',
         }))
         const { is_ready, share_title } = useExportedRykvPage()
+        await wait_ready(is_ready)
         expect(is_ready.value).toBe(true)
         expect(share_title.value).toBe('出力したタイトル')
     })
 
-    it('タイトルが欠けていても読める（空文字になる）', () => {
+    it('タイトルが欠けていても読める（空文字になる）', async () => {
         put_json_element('gkill-export-data', JSON.stringify({ schema_version: 1 }))
         const { is_ready, share_title } = useExportedRykvPage()
+        await wait_ready(is_ready)
         expect(is_ready.value).toBe(true)
         expect(share_title.value).toBe('')
     })
@@ -79,5 +94,73 @@ describe('useExportedRykvPage の焼き込み読み取り', () => {
         }))
         put_json_element('gkill-export-i18n', '{ こわれている')
         expect(() => useExportedRykvPage()).not.toThrow()
+    })
+})
+
+// サイドバーのチェックツリーは application_config の木から描かれる。
+// 利用者の設定した木をそのまま焼くと、**出力に含めなかったタグ名・rep 名まで共有先に見える**。
+// ここでは焼いたデータから組み直すので、木に出るのは焼いたものだけになる。
+describe('サイドバーのチェックツリーは焼いたデータから組む', () => {
+    function put_payload(): void {
+        put_json_element('gkill-export-data', JSON.stringify({
+            schema_version: 1,
+            title: 'サンプル',
+            locale_name: 'ja',
+            with_sidebar: true,
+            kyous: [
+                { id: 'a', rep_name: 'RepA', data_type: 'kmemo', related_time: '2026-07-01T09:00:00.000+09:00' },
+            ],
+            attached_tags: [
+                { id: 't1', target_id: 'a', tag: 'タグA', related_time: '2026-07-01T09:00:00.000+09:00' },
+            ],
+            columns: [{ query: { query_id: 'q1' }, kyou_ids: ['a'] }],
+        }))
+    }
+
+    function tag_names(config: { tag_struct: { children: Array<{ tag_name: string }> | null } }): Array<string> {
+        return (config.tag_struct.children ?? []).map(child => child.tag_name)
+    }
+
+    it('木が組み終わるまで is_ready は立たない', async () => {
+        put_payload()
+        const { is_ready, application_config } = useExportedRykvPage()
+        // 立った瞬間には木がもう組まれていること。
+        // 先に画面を描くと、サイドバーの各節が「チェック0個」を生成して emit し、
+        // tags = [] / reps = []（非 null の空配列 = 0件指定）で**列が全部空になる**
+        expect(is_ready.value, '木を組む前に画面を描こうとしている').toBe(false)
+        await wait_ready(is_ready)
+        expect(tag_names(application_config.value).length, '立ったのに木が空').not.toBe(0)
+    })
+
+    it('焼いたタグと「タグ無し」が木に出る', async () => {
+        put_payload()
+        const { is_ready, application_config } = useExportedRykvPage()
+        await wait_ready(is_ready)
+        const names = tag_names(application_config.value)
+        expect(names).toContain('タグA')
+        expect(names, '「タグ無し」が無いと、タグの付いていない記録が一覧から消える').toContain('no tags')
+        expect(names, '焼いていないタグが木に出ている').not.toContain('タグB')
+    })
+
+    it('木のルートは入れ物にする（葉のままだと子が描かれない）', async () => {
+        put_payload()
+        const { is_ready, application_config } = useExportedRykvPage()
+        await wait_ready(is_ready)
+        for (const root of [
+            application_config.value.tag_struct,
+            application_config.value.rep_struct,
+            application_config.value.device_struct,
+            application_config.value.rep_type_struct,
+        ]) {
+            expect(root.is_dir, 'ルートが葉のまま').toBe(true)
+        }
+    })
+
+    it('記録保管場所の木は、焼いた記録に現れる rep だけになる', async () => {
+        put_payload()
+        const { is_ready, application_config } = useExportedRykvPage()
+        await wait_ready(is_ready)
+        const rep_names = (application_config.value.rep_struct.children ?? []).map(child => child.rep_name)
+        expect(rep_names).toEqual(['RepA'])
     })
 })

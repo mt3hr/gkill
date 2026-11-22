@@ -85,6 +85,58 @@ describe('GkillAPIForExportedKyou', () => {
             expect(res.kyous).toEqual([])
         })
 
+        // 絞り込みは注入されるが、起点は必ずその列の焼いた配列。
+        // 「注入が何を返すか」ではなく「注入に渡るのが焼いた配列か」を見る
+        it('絞り込みの注入には、その列の焼いた配列が渡る', async () => {
+            api.kyous = [make_kyou('a'), make_kyou('b')]
+            const query1 = make_query('q1')
+            api.columns = [
+                { query: query1, kyous: [api.kyous[0]] },
+                { query: make_query('q2'), kyous: [api.kyous[1]] },
+            ]
+            const seen: Array<Array<string>> = []
+            api.narrow_column_kyous = (kyous, _query, _baked) => {
+                seen.push(kyous.map(k => k.id))
+                return kyous
+            }
+
+            const req = new GetKyousRequest()
+            req.query = query1
+            await api.get_kyous(req)
+            expect(seen, '別の列の記録まで渡している').toEqual([['a']])
+        })
+
+        it('絞り込みに渡るのは、画面の今の条件と焼いた条件の2つ', async () => {
+            const baked = make_query('q1')
+            baked.tags = ['タグA']
+            api.kyous = [make_kyou('a')]
+            api.columns = [{ query: baked, kyous: api.kyous }]
+            let passed: { now: string[] | null, baked: string[] | null } | null = null
+            api.narrow_column_kyous = (kyous, query, baked_query) => {
+                passed = { now: query.tags, baked: baked_query.tags }
+                return kyous
+            }
+
+            const req = new GetKyousRequest()
+            req.query = make_query('q1')
+            req.query.tags = ['タグB']
+            await api.get_kyous(req)
+            expect(passed).toEqual({ now: ['タグB'], baked: ['タグA'] })
+        })
+
+        it('注入が無ければ焼いたまま返す（サイドバーを含めずに出力したとき）', async () => {
+            api.kyous = [make_kyou('a'), make_kyou('b')]
+            const query = make_query('q1')
+            api.columns = [{ query, kyous: api.kyous }]
+            api.narrow_column_kyous = null
+
+            const req = new GetKyousRequest()
+            req.query = make_query('q1')
+            req.query.tags = ['どこにも無いタグ']
+            const res = await api.get_kyous(req)
+            expect(res.kyous.map(k => k.id)).toEqual(['a', 'b'])
+        })
+
         it('playing 検索は共有版の実装へ委譲する', async () => {
             api.attached_timeis_kyous = []
             const req = new GetKyousRequest()

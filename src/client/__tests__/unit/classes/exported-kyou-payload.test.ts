@@ -9,6 +9,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { GkillAPIForExportedKyou } from '@/classes/api/gkill-api'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import {
     build_exported_api, parse_exported_payload, exported_payload_schema_version,
 } from '@/classes/exported-kyou-payload'
@@ -21,6 +22,7 @@ function reset(): GkillAPIForExportedKyou {
     api.plugin_html = new Map()
     api.media = new Map()
     api.idf_text_bytes = new Map()
+    api.narrow_column_kyous = null
     api.exported_application_config = new ApplicationConfig()
     return api
 }
@@ -195,5 +197,99 @@ describe('build_exported_api', () => {
         expect(api.plugin_html.size).toBe(0)
         expect(api.media.size).toBe(0)
         expect(api.idf_text_bytes.size).toBe(0)
+    })
+})
+
+// 出力先のサイドバーは「焼いた記録を絞ることしかできない」。
+// どんな条件を入れても、焼かれていない記録が現れることは無い（これが共有の境界線）。
+describe('build_exported_api が注入する絞り込み', () => {
+    // tags / reps の既定は [] = 0件指定（null = 絞り込み未使用ではない）。
+    // サイドバーは全チェック状態を配列で載せてくるので、素の {query_id} ではなく
+    // 「全部チェック済み」をこのテストの起点にする。ここを {query_id} だけにすると
+    // 本体と同じ理由で全件落ちる
+    const all_checked = { query_id: 'q1', tags: ['タグA', 'no tags'], reps: ['RepA', 'RepB'] }
+
+    function make_api() {
+        return build_exported_api({
+            schema_version: 1,
+            kyous: [
+                { id: 'a', rep_name: 'RepA', data_type: 'kmemo', related_time: '2026-07-01T09:00:00.000+09:00' },
+                { id: 'b', rep_name: 'RepB', data_type: 'kmemo', related_time: '2026-07-01T20:00:00.000+09:00' },
+            ],
+            attached_tags: [
+                { id: 't1', target_id: 'a', tag: 'タグA', related_time: '2026-07-01T09:00:00.000+09:00' },
+            ],
+            columns: [{ query: all_checked, kyou_ids: ['a', 'b'] }],
+        })
+    }
+
+    function narrow(api: ReturnType<typeof build_exported_api>, raw: object): Array<string> {
+        const baked = api.columns[0]
+        const query = FindKyouQuery.parse_find_kyou_query(raw)
+        return (api.narrow_column_kyous?.(baked.kyous, query, baked.query) ?? []).map(k => k.id)
+    }
+
+    it('タグは焼き込みから先に埋める（遅延ロード待ちだとタグ条件が全部落ちる）', () => {
+        const api = make_api()
+        const a = api.kyous.find(k => k.id === 'a')
+        expect(a?.is_attached_tags_loaded, 'タグが未ロード扱いのまま').toBe(true)
+        expect(a?.attached_tags.map(t => t.tag)).toEqual(['タグA'])
+        expect(api.kyous.find(k => k.id === 'b')?.attached_tags).toEqual([])
+    })
+
+    it('出力した時点の条件そのままなら、焼いた配列をそのまま返す', () => {
+        const api = make_api()
+        const baked = api.columns[0]
+        const same = FindKyouQuery.parse_find_kyou_query(all_checked)
+        // サーバが本文一致で入れた記録を「この条件では一致しない」と落とさないための経路
+        expect(api.narrow_column_kyous?.(baked.kyous, same, baked.query)).toBe(baked.kyous)
+    })
+
+    it('タグで絞ると減る', () => {
+        expect(narrow(make_api(), { ...all_checked, tags: ['タグA'] })).toEqual(['a'])
+    })
+
+    it('記録保管場所で絞ると減る', () => {
+        expect(narrow(make_api(), { ...all_checked, reps: ['RepB'] })).toEqual(['b'])
+    })
+
+    it('期間で絞ると減る', () => {
+        expect(narrow(make_api(), {
+            ...all_checked,
+            calendar_start_time: '2026-07-01T00:00:00.000+09:00',
+            calendar_end_time: '2026-07-01T12:00:00.000+09:00',
+        })).toEqual(['a'])
+    })
+
+    // ワードは Kyou 単体では判定できない。見ないので、ワードを理由に記録が落ちることは無い
+    it('ワード条件は見ない（ワードを理由に記録を落とさない）', () => {
+        expect(narrow(make_api(), {
+            ...all_checked, words: ['どこにも無い語'], not_words: ['タグA'],
+        }), 'ワードで絞ってしまっている').toEqual(['a', 'b'])
+    })
+
+    // ここが共有の境界線。どんな条件でも焼いた配列の部分集合しか返さない
+    it('どんな条件でも焼いた配列の部分集合しか返さない', () => {
+        const api = make_api()
+        const baked = api.columns[0]
+        const queries: Array<object> = [
+            all_checked,
+            { ...all_checked, tags: [] },
+            { ...all_checked, tags: ['どこにも無いタグ'] },
+            { ...all_checked, reps: [] },
+            { ...all_checked, hide_tags: ['タグA'] },
+            { ...all_checked, words: ['x'] },
+            { ...all_checked, period_of_time_start_time_second: 0, period_of_time_end_time_second: 3600 },
+            { ...all_checked, calendar_start_time: '2000-01-01T00:00:00.000+09:00' },
+            { query_id: 'q1' },
+            {},
+        ]
+        for (const raw of queries) {
+            const query = FindKyouQuery.parse_find_kyou_query(raw)
+            const result = api.narrow_column_kyous?.(baked.kyous, query, baked.query) ?? []
+            for (const kyou of result) {
+                expect(baked.kyous, `焼いた配列に無い記録が出た: ${JSON.stringify(raw)}`).toContain(kyou)
+            }
+        }
     })
 })

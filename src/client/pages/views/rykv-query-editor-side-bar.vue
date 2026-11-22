@@ -12,7 +12,8 @@
                 :inited="inited_sidebar_header_for_query_sidebar"
                 @requested_search_with_update_cache="onSidebarHeaderRequestedSearchWithUpdateCache"
                 @requested_clear_find_query="emits_default_query()" ref="sidebar_header" />
-            <v-avatar v-if="saved_find_querys.length > 0" color="primary" class="saved_find_query_fab">
+            <v-avatar v-if="saved_find_querys.length > 0 && !application_config.for_export_kyou" color="primary"
+                class="saved_find_query_fab">
                 <v-menu transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
                         <v-btn color="white" icon="mdi-bookmark-multiple" variant="text" v-bind="props"
@@ -27,13 +28,21 @@
             </v-avatar>
         </v-card>
         <div class="rykv_sidebar">
-            <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
-                @request_update_and_search="emits_current_query()" @request_update_keywords="emits_current_query()"
-                @request_update_use_keyword_query="emits_current_query()"
-                @request_clear_keyword_query="emits_cleard_keyword_query()"
-                :inited="inited_keyword_query_for_query_sidebar" @inited="onKeywordQueryInited"
-                ref="keyword_query" />
-            <div> <v-divider /> </div>
+            <!--
+                出力先では隠す節（Kyou 単体では判定できない条件）。
+                **v-if ではなく v-show で隠すこと。** generate_query() が各節の
+                template ref から値を集めるので、v-if で落とすと null 参照になる。
+                線引きは kyou-local-insert.ts の can_decide_query_locally と同じ
+            -->
+            <div v-show="!application_config.for_export_kyou">
+                <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                    @request_update_and_search="emits_current_query()" @request_update_keywords="emits_current_query()"
+                    @request_update_use_keyword_query="emits_current_query()"
+                    @request_clear_keyword_query="emits_cleard_keyword_query()"
+                    :inited="inited_keyword_query_for_query_sidebar" @inited="onKeywordQueryInited"
+                    ref="keyword_query" />
+                <v-divider />
+            </div>
             <RepQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_checked_reps="onRepQueryRequestUpdateCheckedReps"
                 @request_clear_rep_query="emits_cleard_rep_query()" ref="rep_query"
@@ -45,15 +54,17 @@
                 @request_clear_tag_query="emits_cleard_tag_query()" ref="tag_query"
                 :inited="inited_tag_query_for_query_sidebar" @inited="onTagQueryInited" />
             <div> <v-divider /> </div>
-            <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
-                @request_update_and_search_timeis_tags="emits_current_query()"
-                @request_update_and_search_timeis_word="emits_current_query()"
-                @request_update_checked_timeis_tags="(tags: string[], is_by_user: boolean) => onTimeIsQueryRequestUpdateCheckedTimeisTags(tags, is_by_user)"
-                :inited="inited_timeis_query_for_query_sidebar" @inited="onTimeIsQueryInited"
-                @request_update_timeis_keywords="emits_current_query()"
-                @request_update_use_timeis_query="emits_current_query()"
-                @request_clear_timeis_query="emits_cleard_timeis_query()" ref="timeis_query" />
-            <div> <v-divider /> </div>
+            <div v-show="!application_config.for_export_kyou">
+                <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                    @request_update_and_search_timeis_tags="emits_current_query()"
+                    @request_update_and_search_timeis_word="emits_current_query()"
+                    @request_update_checked_timeis_tags="(tags: string[], is_by_user: boolean) => onTimeIsQueryRequestUpdateCheckedTimeisTags(tags, is_by_user)"
+                    :inited="inited_timeis_query_for_query_sidebar" @inited="onTimeIsQueryInited"
+                    @request_update_timeis_keywords="emits_current_query()"
+                    @request_update_use_timeis_query="emits_current_query()"
+                    @request_clear_timeis_query="emits_cleard_timeis_query()" ref="timeis_query" />
+                <v-divider />
+            </div>
             <PeriodOfTimeQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 :inited="inited_period_of_time_query_for_query_sidebar"
                 @request_update_use_period_of_time="emits_current_query()"
@@ -69,11 +80,13 @@
                     :inited="inited_calendar_query_for_query_sidebar"
                     @inited="onCalendarQueryInited" ref="calendar_query" />
             </div>
-            <div> <v-divider /> </div>
-            <MapQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
-                @request_update_area="emits_current_query()" @request_update_use_map_query="emits_current_query()"
-                @request_clear_map_query="emits_cleard_map_query()" :inited="inited_map_query_for_query_sidebar"
-                @inited="onMapQueryInited" ref="map_query" />
+            <div v-show="!application_config.for_export_kyou">
+                <v-divider />
+                <MapQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                    @request_update_area="emits_current_query()" @request_update_use_map_query="emits_current_query()"
+                    @request_clear_map_query="emits_cleard_map_query()" :inited="inited_map_query_for_query_sidebar"
+                    @inited="onMapQueryInited" ref="map_query" />
+            </div>
         </div>
     </div>
 </template>

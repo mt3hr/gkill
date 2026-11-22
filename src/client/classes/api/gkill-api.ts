@@ -3663,8 +3663,20 @@ export class GkillAPIForSharedKyou extends GkillAPI {
  * あわせて get_saved_rykv_find_kyou_querys が焼き込んだ列を返す（列の復元経路）。
  */
 export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
-        private static gkill_api_for_exported_kyou: GkillAPIForExportedKyou = new GkillAPIForExportedKyou()
+        /**
+         * **モジュールの評価時に new しないこと**（ここで初期値に `new` を書かない）。
+         *
+         * このクラスのフィールド初期化子は `new ApplicationConfig()` を呼ぶ。
+         * application-config.ts はこのファイルを import しており、そちらから先に
+         * 評価が始まる経路では ApplicationConfig がまだ未定義で、
+         * `ApplicationConfig is not a constructor` になる（共有版は設定を持たないので
+         * 同じ形でも露見しない）。初回の取得まで遅らせる
+         */
+        private static gkill_api_for_exported_kyou: GkillAPIForExportedKyou | null = null
         static get_instance_for_exported_kyou(): GkillAPIForExportedKyou {
+                if (!GkillAPIForExportedKyou.gkill_api_for_exported_kyou) {
+                        GkillAPIForExportedKyou.gkill_api_for_exported_kyou = new GkillAPIForExportedKyou()
+                }
                 return GkillAPIForExportedKyou.gkill_api_for_exported_kyou
         }
 
@@ -3691,6 +3703,16 @@ export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
         public media: Map<string, string> = new Map()
         /** IDF の ID → 焼き込んだテキスト / Markdown 本文のバイト列 */
         public idf_text_bytes: Map<string, Uint8Array> = new Map()
+        /**
+         * 出力先サイドバーの絞り込み。build_exported_api が注入する。
+         *
+         * **ここから kyou-local-insert.ts を import しない。** データクラスと
+         * req_res がこのファイルと循環 import になっており、単一チャンクへ畳む
+         * 出力ビルドでは import を1本足すだけで評価順が変わって
+         * `class extends value undefined` になる（ADR-0903）。口だけ持つ。
+         */
+        public narrow_column_kyous:
+                ((kyous: Array<Kyou>, query: FindKyouQuery, baked_query: FindKyouQuery) => Array<Kyou>) | null = null
 
         // localStorage が使えないときの退避先。/files/ 経由で開かれると
         // allow-same-origin の無い sandbox（opaque origin）になり、localStorage は例外を投げる。
@@ -3724,7 +3746,11 @@ export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
                         // 焼き込まれていない列の問い合わせ。空で返す（サーバへは取りに行かない）
                         return res
                 }
-                res.kyous = column.kyous
+                // 絞り込みは「焼いた配列を起点に減らす」だけ。
+                // 注入が無ければ焼いたまま返す（= 出力した時点の内容）
+                res.kyous = this.narrow_column_kyous
+                        ? this.narrow_column_kyous(column.kyous, req.query, column.query)
+                        : column.kyous
                 return res
         }
 
