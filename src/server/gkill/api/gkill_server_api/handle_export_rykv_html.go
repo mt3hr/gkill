@@ -2,6 +2,7 @@ package gkill_server_api
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -105,7 +106,13 @@ func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Req
 	// **焼き込む前に必ず空へ潰す。** 落とすと利用者のキーが共有先へ漏れる
 	applicationConfig.GoogleMapAPIKey = ""
 
-	payload, gkillErr := g.buildExportPayload(r.Context(), request, userID, device, applicationConfig)
+	fileNameBase := exportFileNameBase(request.Title)
+	var sidecar *exportSidecar
+	if request.OutputFormat == req_res.ExportOutputFormatSidecar {
+		sidecar = newExportSidecar(fileNameBase)
+	}
+
+	payload, gkillErr := g.buildExportPayload(r.Context(), request, userID, device, applicationConfig, sidecar)
 	if gkillErr != nil {
 		response.Errors = append(response.Errors, gkillErr)
 		return
@@ -123,9 +130,25 @@ func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	response.OutputFormat = req_res.ExportOutputFormatSingle
-	response.FileName = exportFileNameBase(request.Title) + ".html"
-	response.HTML = rendered
+	response.OutputFormat = request.OutputFormat
+	if sidecar != nil {
+		zipBytes, err := buildExportZip(fileNameBase, rendered, sidecar)
+		if err != nil {
+			slog.Log(r.Context(), gkill_log.Debug, "error at build export zip", "error", fmt.Sprintf("%q", err))
+			gkillError := &message.GkillError{
+				ErrorCode:    message.ExportRykvHTMLRenderError,
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_RYKV_HTML_MESSAGE"}),
+				Cause:        err,
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		response.FileName = fileNameBase + ".zip"
+		response.ZipBase64 = base64.StdEncoding.EncodeToString(zipBytes)
+	} else {
+		response.FileName = fileNameBase + ".html"
+		response.HTML = rendered
+	}
 	response.Warnings = payload.Warnings
 	// 予算や読み込みの失敗で落としたものがあれば、そのぶん欠けている
 	response.Partial = len(payload.Warnings) != 0
@@ -161,8 +184,10 @@ func validateExportRykvHTMLRequest(ctx context.Context, request *req_res.ExportR
 	switch request.OutputFormat {
 	case req_res.ExportOutputFormatSingle:
 	case req_res.ExportOutputFormatSidecar:
-		// 同名フォルダはメディアの焼き込みと対。まだ実装していない
-		return invalid("output_format " + request.OutputFormat + " is not implemented yet")
+		// 同名フォルダはメディアの入れ物。メディアを埋め込まないなら空になるので意味が無い
+		if request.MediaMode == req_res.ExportMediaModeNone {
+			return invalid("output_format sidecar with media_mode none")
+		}
 	default:
 		return invalid("unknown output_format " + request.OutputFormat)
 	}
@@ -173,7 +198,7 @@ func validateExportRykvHTMLRequest(ctx context.Context, request *req_res.ExportR
 // buildExportPayload は列ごとに収集して、焼き込む JSON を組み立てる。
 //
 // 記録と付随データは和集合で1回だけ持ち、列は ID の参照で持つ。
-func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_res.ExportRykvHTMLRequest, userID string, device string, applicationConfig *user_config.ApplicationConfig) (*exportedKyouPayload, *message.GkillError) {
+func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_res.ExportRykvHTMLRequest, userID string, device string, applicationConfig *user_config.ApplicationConfig, sidecar *exportSidecar) (*exportedKyouPayload, *message.GkillError) {
 	payload := &exportedKyouPayload{
 		SchemaVersion:         exportedPayloadSchemaVersion,
 		Title:                 request.Title,
@@ -241,7 +266,7 @@ func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_re
 		return nil, bundleError(ctx, request.LocaleName, message.RepositoriesGetError,
 			"FAILED_EXPORT_RYKV_HTML_MESSAGE", "error at get repositories user id", err)
 	}
-	mediaWarnings, err := g.collectExportMedia(ctx, request, repositories, payload)
+	mediaWarnings, err := g.collectExportMedia(ctx, request, repositories, payload, sidecar)
 	if err != nil {
 		err = fmt.Errorf("error at collect export media: %w", err)
 		return nil, bundleError(ctx, request.LocaleName, message.ExportRykvHTMLRenderError,

@@ -122,7 +122,8 @@ func isExportTextFile(idf reps.IDFKyou) bool {
 //
 // 予算に収まらなかったものは焼かずに警告へ回す（画面は出る。その記録のメディアが出ないだけ）。
 // 関連時刻の新しい順に詰めるので、payload.IDFKyous は検索の並び（新しい順）のままで渡すこと。
-func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_res.ExportRykvHTMLRequest, repositories *reps.GkillRepositories, payload *exportedKyouPayload) ([]string, error) {
+// sidecar が nil でなければ、メディアは data: URI ではなく同名フォルダの相対パスで参照する。
+func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_res.ExportRykvHTMLRequest, repositories *reps.GkillRepositories, payload *exportedKyouPayload, sidecar *exportSidecar) ([]string, error) {
 	warnings := []string{}
 	if len(payload.IDFKyous) == 0 {
 		return warnings, nil
@@ -197,7 +198,7 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 			} else {
 				mediaUsed += len(body)
 				payload.Media[thumbKey] = exportedMediaEntry{
-					Src:  "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(body),
+					Src:  exportMediaSrc(sidecar, body, ".jpg", "image/jpeg"),
 					Kind: "thumb",
 				}
 			}
@@ -222,7 +223,7 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 		}
 		mediaUsed += len(body)
 		payload.Media[idf.FileURL] = exportedMediaEntry{
-			Src:  "data:" + exportMediaContentType(idf) + ";base64," + base64.StdEncoding.EncodeToString(body),
+			Src:  exportMediaSrc(sidecar, body, sidecarExtension(idf.TargetFile), exportMediaContentType(idf)),
 			Kind: "full",
 		}
 	}
@@ -237,6 +238,17 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 		warnings = append(warnings, fmt.Sprintf("%d 件のファイルを読み込めませんでした", failedMedia))
 	}
 	return warnings, nil
+}
+
+// exportMediaSrc は HTML から参照する src を作る。
+//
+// 単一 HTML なら data: URI、同名フォルダなら相対パス。
+// **スキーマはどちらも同じ**（クライアントは src をそのまま使うだけ）。
+func exportMediaSrc(sidecar *exportSidecar, body []byte, ext string, contentType string) string {
+	if sidecar != nil {
+		return sidecar.add(body, ext)
+	}
+	return "data:" + contentType + ";base64," + base64.StdEncoding.EncodeToString(body)
 }
 
 // exportMediaContentType は data: URI に書く種別を返す。

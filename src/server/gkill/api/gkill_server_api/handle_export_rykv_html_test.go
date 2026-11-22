@@ -1,7 +1,10 @@
 package gkill_server_api
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -127,8 +130,9 @@ func TestHandleExportRykvHTML_RejectsUnsupportedOptions(t *testing.T) {
 		{"列が1本も無い", func(req *req_res.ExportRykvHTMLRequest) { req.Columns = nil }},
 		{"未知のメディアの指定", func(req *req_res.ExportRykvHTMLRequest) { req.MediaMode = "whatever" }},
 		{"未知の出力の形", func(req *req_res.ExportRykvHTMLRequest) { req.OutputFormat = "whatever" }},
-		{"同名フォルダはまだ無い", func(req *req_res.ExportRykvHTMLRequest) {
+		{"同名フォルダはメディアを埋め込まないと空になる", func(req *req_res.ExportRykvHTMLRequest) {
 			req.OutputFormat = req_res.ExportOutputFormatSidecar
+			req.MediaMode = req_res.ExportMediaModeNone
 		}},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -155,5 +159,54 @@ func TestHandleExportRykvHTML_RequiresSession(t *testing.T) {
 	}
 	if exportResp.HTML != "" {
 		t.Error("セッション無しなのに HTML を返している")
+	}
+}
+
+// TestHandleExportRykvHTML_SidecarReturnsZip は、同名フォルダの出力が ZIP の base64 で
+// 返ることを確認する。ファイルそのものを body で返す形にはできない（ADR-0712）。
+func TestHandleExportRykvHTML_SidecarReturnsZip(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+	addTestKmemo(t, tsURL, sessionID, "出力に含まれる記録")
+
+	exportResp := exportRykvHTML(t, tsURL, sessionID, func(req *req_res.ExportRykvHTMLRequest) {
+		req.OutputFormat = req_res.ExportOutputFormatSidecar
+	})
+
+	if _, err := readExportTemplate(); err != nil {
+		t.Skip("出力用のガワが embed に無い（npm run prepare_install を通していないビルド）")
+	}
+	if len(exportResp.Errors) > 0 {
+		t.Fatalf("export rykv html errors: %+v", exportResp.Errors)
+	}
+	if exportResp.HTML != "" {
+		t.Error("同名フォルダなのに html が入っている")
+	}
+	if exportResp.ZipBase64 == "" {
+		t.Fatal("zip_base64 が空")
+	}
+	if !strings.HasSuffix(exportResp.FileName, ".zip") {
+		t.Errorf("FileName = %q（.zip で終わっていない）", exportResp.FileName)
+	}
+
+	zipBytes, err := base64.StdEncoding.DecodeString(exportResp.ZipBase64)
+	if err != nil {
+		t.Fatalf("zip_base64 が base64 として読めない: %v", err)
+	}
+	reader, err := zip.NewReader(bytes.NewReader(zipBytes), int64(len(zipBytes)))
+	if err != nil {
+		t.Fatalf("ZIP として開けない: %v", err)
+	}
+	foundHTML := false
+	for _, entry := range reader.File {
+		if strings.HasSuffix(entry.Name, ".html") {
+			foundHTML = true
+		}
+	}
+	if !foundHTML {
+		t.Error("ZIP に HTML が入っていない")
 	}
 }
