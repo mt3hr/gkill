@@ -396,13 +396,16 @@ func (g *GkillServerAPI) collectAttachedTimeIss(ctx context.Context, opts *kyouB
 				}
 			}
 		}
+	}
 
-		for _, kyou := range attachedTimeIsKyousMap {
-			bundle.AttachedTimeIsKyous = append(bundle.AttachedTimeIsKyous, kyou)
-		}
-		for _, timeis := range attachedTimeIssMap {
-			bundle.AttachedTimeIss = append(bundle.AttachedTimeIss, timeis)
-		}
+	// **積むのはクエリのループを抜けてから。** 中で積むと、期間の両端ぶんも合わせて
+	// クエリが3本走るので、同じ打刻が最大3回返る（map には1件しか入っていないのに、
+	// ループを回るたび map 全体を積み直していた）
+	for _, kyou := range attachedTimeIsKyousMap {
+		bundle.AttachedTimeIsKyous = append(bundle.AttachedTimeIsKyous, kyou)
+	}
+	for _, timeis := range attachedTimeIssMap {
+		bundle.AttachedTimeIss = append(bundle.AttachedTimeIss, timeis)
 	}
 
 	return nil

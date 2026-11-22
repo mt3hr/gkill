@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/account"
@@ -591,5 +592,61 @@ func TestHandleGetSharedKyous_MiViewDoesNotReturnOtherTypedDatas(t *testing.T) {
 	}
 	if len(getResp.Kmemos) != 0 {
 		t.Errorf("mi の共有で Kmemo が %d 件返っている", len(getResp.Kmemos))
+	}
+}
+
+// TestHandleGetSharedKyous_AttachedTimeIssAreNotDuplicated は、実行中だった打刻が
+// 重複して返らないことを確認する。
+//
+// 期間を指定した共有では収集クエリが3本走る（期間そのもの・開始時刻に実行中・
+// 終了時刻に実行中）。積む場所がそのループの内側にあると、同じ打刻が最大3回返る。
+func TestHandleGetSharedKyous_AttachedTimeIssAreNotDuplicated(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	device, err := gkillAPI.GetDevice()
+	if err != nil {
+		t.Fatalf("GetDevice failed: %v", err)
+	}
+
+	start := time.Date(2024, 1, 15, 10, 0, 0, 0, time.Local)
+	end := time.Date(2024, 1, 15, 11, 0, 0, 0, time.Local)
+	addTestTimeIsWithPeriod(t, tsURL, sessionID, "uchiawase", start, &end)
+	addTestKmemoWithRelatedTime(t, tsURL, sessionID, "kyoyusuruwadai の記録",
+		time.Date(2024, 1, 15, 10, 30, 0, 0, time.Local))
+
+	findQueryJSON := `{"calendar_start_time":"` + start.Format(time.RFC3339Nano) +
+		`","calendar_end_time":"` + end.Format(time.RFC3339Nano) + `"}`
+	shareInfo := addSharedKyouListWith(t, tsURL, sessionID, device, findQueryJSON,
+		func(info *req_res.ShareKyouListInfo) {
+			info.IsShareWithTimeIss = true
+		})
+
+	getResp := getSharedKyous(t, tsURL, shareInfo.ShareID)
+	if len(getResp.Errors) > 0 {
+		t.Fatalf("get shared kyous errors: %+v", getResp.Errors)
+	}
+
+	seenKyou := map[string]int{}
+	for _, kyou := range getResp.AttachedTimeIsKyous {
+		seenKyou[kyou.ID]++
+	}
+	for id, count := range seenKyou {
+		if count != 1 {
+			t.Errorf("実行中の打刻の記録が %d 回返っている（id = %s）", count, id)
+		}
+	}
+
+	seenTimeIs := map[string]int{}
+	for _, timeis := range getResp.AttachedTimeIss {
+		seenTimeIs[timeis.ID]++
+	}
+	for id, count := range seenTimeIs {
+		if count != 1 {
+			t.Errorf("実行中の打刻が %d 回返っている（id = %s）", count, id)
+		}
 	}
 }
