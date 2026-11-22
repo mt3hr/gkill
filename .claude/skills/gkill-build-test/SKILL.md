@@ -11,7 +11,7 @@ description: "gkill のビルド・テスト・E2E 実行・リリースゲー�
 **このファイルは全文が、実際に起きた事故の再発防止である。該当作業では飛ばさずに読むこと。**
 多くは「例外もエラーも出さずに静かに壊れる」種類で、破っても目の前ではエラーにならない。
 
-**Build pipeline** (`install_server` → `prepare_install`): `clean_dist` → clean embed dir → write `version.json` (commit hash + build time + version + tree hash; `src/tools/put_version_info.mjs`) → `vue-tsc` type-check → `vite build` → copy `dist/` to `src/server/gkill/api/embed/html/` → copy `src/locales/` to `src/server/gkill/api/embed/i18n/locales/` → `build_manuals` (`src/tools/build_manuals.mjs`: `resources/manual_src/` → `resources/manual/`) → copy `resources/manual/` to `src/server/gkill/api/embed/manual/` (3 copies: html + i18n + manual) → `go install`
+**Build pipeline** (`install_server` → `prepare_install`): `clean_dist` → clean embed dir → write `version.json` (commit hash + build time + version + tree hash; `src/tools/put_version_info.mjs`) → `vue-tsc` type-check → `vite build` → copy `dist/` to `src/server/gkill/api/embed/html/` → copy `src/locales/` to `src/server/gkill/api/embed/i18n/locales/` → `build_manuals` (`src/tools/build_manuals.mjs`: `resources/manual_src/` → `resources/manual/`) → copy `resources/manual/` to `src/server/gkill/api/embed/manual/` → **「HTML で出力」のガワの第2ビルド**（`clean_dist_export` → `build_export_shell`（`vite.export.config.ts` → `dist_export/`）→ `build_export_template`（`src/tools/build_export_template.mjs` が1枚へ畳んで `resources/export/template.html`）→ `copy_export_template_to_app_embed`）→ `go install`（**4コピー**: html + i18n + manual + export)
 
 **Bare `go build` caveat:** any gkill binary panics at startup if `embed/i18n/locales` is empty (`gkill/api`'s `init()` reads it), so a `go build` without a preceding `npm run copy_i18n_to_app_embed` produces a binary that compiles but dies immediately.
 
@@ -30,6 +30,10 @@ description: "gkill のビルド・テスト・E2E 実行・リリースゲー�
 **E2E の保存待ちは commit_tx まで**（2026-09-15）。追加/編集画面は本体とタグを `tx_id` で束ねて `commit_tx` で確定する（ADR-0410）ので、`crud-helpers.ts` の `clickDialogButton` は最初の書き込み応答（`add_*` / `update_*`＝一時リポジトリに積んだだけ）を見たあと、そのリクエストに `tx_id` が付いていれば `commit_tx` の応答まで待つ。ここを待たずに `page.goto` で遷移すると commit が中断されて**記録は1件も書かれない**（Mi 画面系の spec がそれで落ちた）。commit_tx の `waitForResponse` は**クリックの前に張る**（応答が先に返ってから張ると永久に待つ）。tx を使わない保存では commit_tx は飛ばないので、その promise は使わずに捨てる。
 
 **Test details:** See `documents/reverse/testing-guide.md`, `src/ABOUT_TEST.md` for per-directory test specs.
+
+**出力ガワは第2の Vite ビルド**（`vite.export.config.ts`）。本体の config と**分けてある**のは、`VitePWA` が `injectRegister: 'auto'` で全エントリの HTML に Service Worker 登録を注ぎ、出力 HTML が開いた瞬間に `serviceWorker.js` を取りに行ってしまうため（`command` で分岐していないのでプラグイン配列を共有している限り避けられない）。`codeSplitting: false` と `cssCodeSplit: false` で1チャンク・CSS1枚に畳み、`mdiWoff2Only()` は `vite.config.ts` から export して共有する（写すと `@mdi/font` の CSS の形が変わったときに片方だけ直してドリフトする）。i18n は alias で `src/client/export-i18n.ts`（ja だけ内蔵）へ差し替える。
+**`src/client/export-main.ts` は `gkill-api` を画面より先に import すること。** データクラスと `req_res` が `gkill-api` と循環 import になっており、単一チャンクではエントリの import 順がそのまま評価順になるので、逆だと `class extends value undefined` で mount の前に落ちる（本体ビルドではコード分割の順序で偶然成立している）。本体の `main.ts` から `router` / `registerSW` / `GkillAPI.apply_locale()` を写してはいけない（順にルート無し・通信・ロケールの動的 import）。
+**自己完結はビルドが落とす。** `build_export_template.mjs` が外部参照を1つでも見つけたら exit 1 する。検査は**HTML の骨格と畳んだ JS / CSS の中身で規則を分けてある** —— 畳んだ JS には ``href="`+e+`"`` のような文字列テンプレートが普通に入っており、HTML 用の正規表現を当てると必ず誤検知する。JS 側で見るのは別チャンクを読みに行く形と Service Worker の**登録**だけ（`navigator.serviceWorker.ready` は Web Push の購読コードが持っていて出力 HTML では呼ばれない）。`dist_export/` と `resources/export/` は `.gitignore` と **ESLint の無視リスト**の両方に入れる。確認は `resources/export` を静的に配って `template.html` を開く（`file://` は Chrome 拡張も内蔵ブラウザも開けないので HTTP で配る。`.claude/launch.json` は追跡されないので各自で設定を置く）。経緯と却下案は [ADR-0903](../../../documents/adr/0903-export-shell-is-a-second-vite-build.md)。
 
 ## 関連スキル
 

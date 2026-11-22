@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{GKILL_EXPORT_TITLE}}</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <!--
+    出力データの差し込み先。サーバ（export_html_render.go）がこの1行を丸ごと置き換える。
+    JSON は <script type="application/json"> に入れて JSON.parse で読む。
+    <script> の中に JS リテラルとして書くと、記録の本文に </script> が1つあるだけで
+    出力 HTML が静かに壊れる（ブラウザはエラーを出さず、そこから先を HTML として解釈する）。
+  -->
+  <script type="application/json" id="gkill-export-data">{}</script>
+  <script type="module" src="/src/client/export-main.ts"></script>
+</body>
+
+</html>

@@ -65,7 +65,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 | [activity-diagrams.md](activity-diagrams.md) | 処理ロジックのフローチャート | 詳細な処理手順の確認 |
 | [state-machines.md](state-machines.md) | エンティティ状態遷移図 | 状態管理ロジックの理解 |
 | [screen-transition.md](screen-transition.md) | ページ・ダイアログ遷移図 | UI実装・改修時の参照 |
-| [screen-specs.md](screen-specs.md) | 画面仕様・項目定義（341コンポーネント） | UI実装・改修時の参照 |
+| [screen-specs.md](screen-specs.md) | 画面仕様・項目定義（342コンポーネント） | UI実装・改修時の参照 |
 | [frontend-architecture.md](frontend-architecture.md) | Vue 3フロントエンド設計ガイド | フロントエンド開発者向け |
 | [api-endpoints.md](api-endpoints.md) | 全APIエンドポイントのリファレンス（98件） | API利用・実装時の参照 |
 | [cross-boundary-map.md](cross-boundary-map.md) | 言語・プロセス境界の対応表（TS ↔ /api ↔ Go ハンドラ ↔ usecase、MCP・モバイル・CLI・プラグイン・iframe） | 言語をまたいで呼び出しを追うとき、境界を足すとき |

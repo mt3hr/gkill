@@ -830,6 +830,7 @@
     "COPIED_LOCAL_SHARE_KYOU_LINK_MESSAGE": "Copié",
     "START_EXPORT_KYOUS_MESSAGE": "Téléchargement en cours. Veuillez patienter.",
     "FINISH_EXPORT_KYOUS_MESSAGE": "Téléchargement terminé",
+    "EXPORTED_RYKV_PAGE_NO_DATA_MESSAGE": "Ce fichier HTML ne contient aucun enregistrement.",
     "DNOTE_EQUAL_TITLE_TARGET_KYOU_PREDICATE": "Le titre est égal à la cible",
     "DNOTE_EQUAL_TAGS_AND_TARGET_KYOU_PREDICATE": "Toutes les étiquettes sont égales à la cible",
     "DNOTE_EQUAL_TAGS_OR_TARGET_KYOU_PREDICATE": "Certaines étiquettes sont égales à la cible",

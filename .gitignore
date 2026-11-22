@@ -87,3 +87,8 @@ resources/manual/*
 
 # 手元検証で作られる SQLite の残骸
 user_config_test.db
+
+# 「HTML で出力」のガワ（第2 Vite ビルドの生成物と、畳んだテンプレート）。
+# resources/manual と同じく生成物なので追跡しない。embed へは prepare_install が写す
+/dist_export
+resources/export/

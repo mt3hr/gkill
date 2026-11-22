@@ -141,7 +141,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/skills.spec.ts` | スキル（ADR-0634）の画面の一巡: 設定 → スキル → zip をアップロード（確認 → 適用）→ 一覧 → 表示 → ダウンロード → 同じ名前で上げ直すと「変わる・消える」が確認に出る → 削除。zip はテストの中で組み立てる（バイナリのフィクスチャをコミットしない） |
 | `src/client/__tests__/e2e/user-content-sandbox.spec.ts` | 取り込んだ HTML ファイルを `/files/` で開くと、中のスクリプトは動くが `document.cookie` と `localStorage` は例外になること（ADR-0711。CSP は `sandbox allow-scripts allow-downloads allow-modals` で `allow-same-origin` 無し）。合成の HTML を `/api/upload_files` で `Files` rep へ上げて開く。拡張子ごとのヘッダの値は Go の `handle_file_serve_test.go` / `handle_zip_cache_file_serve_test.go` が固定する |
 
-### Composable ユニットテスト（67ファイル）
+### Composable ユニットテスト（68ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -159,6 +159,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/re-kyou-view.test.ts` | ReKyou ビュー Composable（元の記録の解決、リポスト自身のメニュー表示） |
 | `src/client/__tests__/unit/composables/mi-re-kyou-view.test.ts` | MiReKyou ビュー Composable（既存記録のタスク化。タイトルを持たず target_id 先の内容を表示する） |
 | `src/client/__tests__/unit/composables/gps-log-map.test.ts` | GPSログ地図ビュー Composable |
+| `src/client/__tests__/unit/composables/exported-rykv-page.test.ts` | 「HTML で出力」した画面の入口。HTML 自身へ焼き込まれた JSON（`<script type="application/json">`）から読むこと、差し込みが無い・`{}` だけ・壊れた JSON のいずれでも例外を投げず「記録が含まれていません」側へ落ちること、ロケールの差し込みが無い／壊れていても落ちないこと |
 | `src/client/__tests__/unit/composables/kyou-count-calendar.test.ts` | Kyou件数カレンダー Composable |
 | `src/client/__tests__/unit/composables/overlay-and-ur-log-view.test.ts` | オーバーレイ表示と URLog ビュー Composable |
 | `src/client/__tests__/unit/composables/kyou-view.test.ts` | Kyou ビュー Composable（ReKyou / MiReKyou の参照先を読み込み中はゼロ値の日時を出さず、読み込み中として扱う） |

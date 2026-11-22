@@ -13,13 +13,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
 | Go バックエンド | 1507 | 227 | Go `testing` |
-| フロントエンド ユニット | 2141 | 188 | Vitest |
+| フロントエンド ユニット | 2148 | 189 | Vitest |
 | フロントエンド E2E | 259 | 49（+auth.setup.ts） | Playwright |
 | MCP サーバ | 1187 | 44 | Go `testing` |
 | ツール | 115 | 4 | Vitest |
 | Android | 31 | 2 | JUnit 4 |
 | Wear OS | 244 | 20 | JUnit 4 + MockK |
-| **合計** | **5,484** | **534** | |
+| **合計** | **5,491** | **535** | |
 
 数え直すコマンド:
 
@@ -338,7 +338,7 @@ src/client/__tests__/
 │   ├── datas/                         ← データモデル（35ファイル）
 │   ├── dnote/                         ← D-note モジュール（10ファイル、trend-aggregator / correlation-graph-editor-view / dnote-item-table-columns（列の追加・削除、ダブルクリックの閲覧 / 編集の分岐、並べ替えの挿入位置）含む）
 │   ├── kftl/                          ← KFTL 行分類器（8ファイル。kftl-line-labels 含む）
-│   ├── composables/                   ← Vue Composable（67ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（68ファイル。add-views / edit-views /
 │   │                                     tx-bundle-views / shared-mi-view-dialog / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /

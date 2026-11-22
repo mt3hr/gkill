@@ -16,7 +16,7 @@ import package_json from './package.json'
  * gkill の対象は PWA / WebView (Android minSdk 26) なので woff2 非対応環境は無い。
  * url() の参照を消せば Vite はそのアセットを出力しない。
  */
-function mdiWoff2Only(): Plugin {
+export function mdiWoff2Only(): Plugin {
   return {
     name: 'gkill-mdi-woff2-only',
     enforce: 'pre',

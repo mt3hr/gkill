@@ -95,7 +95,7 @@ src/client/
 │   ├── kftl/               # KFTLパーサー（53ステートメント型）。行ラベル専用の分類器、解釈と書き込みはサーバ（ADR-0507）
 │   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
-│   └── use-*.ts            # Composition関数群（335ファイル）
+│   └── use-*.ts            # Composition関数群（336ファイル）
 ├── __tests__/              # テスト
 │   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
 │   ├── helpers/            # テストヘルパー
@@ -336,7 +336,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-1029キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+1030キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 

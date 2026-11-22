@@ -830,6 +830,7 @@
     "COPIED_LOCAL_SHARE_KYOU_LINK_MESSAGE": "Copiado",
     "START_EXPORT_KYOUS_MESSAGE": "Descarga iniciada. Por favor espere.",
     "FINISH_EXPORT_KYOUS_MESSAGE": "Descarga completada",
+    "EXPORTED_RYKV_PAGE_NO_DATA_MESSAGE": "Este archivo HTML no contiene registros.",
     "DNOTE_EQUAL_TITLE_TARGET_KYOU_PREDICATE": "El título es igual al objetivo",
     "DNOTE_EQUAL_TAGS_AND_TARGET_KYOU_PREDICATE": "Todas las etiquetas son iguales al objetivo",
     "DNOTE_EQUAL_TAGS_OR_TARGET_KYOU_PREDICATE": "Algunas etiquetas son iguales al objetivo",
