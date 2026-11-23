@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1528 | 231 | Go `testing` |
-| フロントエンド ユニット | 2217 | 192 | Vitest |
+| Go バックエンド | 1535 | 232 | Go `testing` |
+| フロントエンド ユニット | 2225 | 192 | Vitest |
 | フロントエンド E2E | 262 | 50（+auth.setup.ts） | Playwright |
 | MCP サーバ | 1187 | 44 | Go `testing` |
 | ツール | 115 | 4 | Vitest |
 | Android | 31 | 2 | JUnit 4 |
 | Wear OS | 244 | 20 | JUnit 4 + MockK |
-| **合計** | **5,584** | **543** | |
+| **合計** | **5,599** | **544** | |
 
 数え直すコマンド:
 
@@ -218,7 +218,7 @@ src/server/gkill/
 │   ├── req_res/                       ← ワイヤ契約（JSONタグ名 / omitempty）と応答型の Errors / Messages の型（ソース走査）
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（53ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（54ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── response_status_guard_test.go         ← 全ハンドラが writeErrorStatus を呼ぶこと（ソース走査）

@@ -113,7 +113,10 @@ describe('サイドバーのチェックツリーは焼いたデータから組�
             attached_tags: [
                 { id: 't1', target_id: 'a', tag: 'タグA', related_time: '2026-07-01T09:00:00.000+09:00' },
             ],
-            columns: [{ query: { query_id: 'q1' }, kyou_ids: ['a'] }],
+            columns: [{
+                query: { query_id: 'q1', tags: ['タグA', 'no tags'], reps: ['RepA'] },
+                kyou_ids: ['a'],
+            }],
         }))
     }
 
@@ -178,13 +181,48 @@ describe('サイドバーのチェックツリーは焼いたデータから組�
             attached_tags: [
                 { id: 't1', target_id: 'a', tag: 'タグA', related_time: '2026-07-01T09:00:00.000+09:00' },
             ],
-            columns: [{ query: { query_id: 'q1' }, kyou_ids: ['a'] }],
+            columns: [{
+                query: { query_id: 'q1', tags: ['タグA', 'no tags'], reps: ['RepA'] },
+                kyou_ids: ['a'],
+            }],
         }))
         const { is_ready, application_config } = useExportedRykvPage()
         await wait_ready(is_ready)
         expect(is_ready.value, '木を組む途中で例外になっている').toBe(true)
         expect(tag_names(application_config.value)).toContain('タグA')
         expect((application_config.value.rep_struct.children ?? []).map(child => child.rep_name)).toEqual(['RepA'])
+    })
+
+    // 焼いた記録には、チェックしていないタグも付いている（タグAで引っかかった記録が
+    // タグBも持っている、など）。そのまま選択肢に出すと、**出力に含めていないタグ名が
+    // 渡した相手に見える**
+    it('チェックされていなかったタグ・記録保管場所は選択肢に出さない', async () => {
+        put_json_element('gkill-export-data', JSON.stringify({
+            schema_version: 1,
+            title: 'サンプル',
+            locale_name: 'ja',
+            with_sidebar: true,
+            kyous: [
+                { id: 'a', rep_name: 'RepA', data_type: 'kmemo', related_time: '2026-07-01T09:00:00.000+09:00' },
+                { id: 'b', rep_name: 'RepB', data_type: 'kmemo', related_time: '2026-07-01T10:00:00.000+09:00' },
+            ],
+            attached_tags: [
+                { id: 't1', target_id: 'a', tag: 'タグA', related_time: '2026-07-01T09:00:00.000+09:00' },
+                { id: 't2', target_id: 'a', tag: 'タグB', related_time: '2026-07-01T09:00:00.000+09:00' },
+            ],
+            // チェックされていたのは タグA と RepA だけ
+            columns: [{ query: { query_id: 'q1', tags: ['タグA'], reps: ['RepA'] }, kyou_ids: ['a', 'b'] }],
+        }))
+        const { is_ready, application_config } = useExportedRykvPage()
+        await wait_ready(is_ready)
+
+        const names = tag_names(application_config.value)
+        expect(names).toContain('タグA')
+        expect(names, 'チェックされていないタグが選択肢に出ている').not.toContain('タグB')
+        expect(names, '「タグ無し」も外されていたのに出ている').not.toContain('no tags')
+
+        const rep_names = (application_config.value.rep_struct.children ?? []).map(child => child.rep_name)
+        expect(rep_names, 'チェックされていない記録保管場所が選択肢に出ている').toEqual(['RepA'])
     })
 
     it('ルートの id は木ごとに別（空のままだと4本が同じ id になる）', async () => {

@@ -178,8 +178,11 @@ export function useExportedRykvPage() {
         await config.append_not_found_tags()
         await config.append_no_devices()
         // 「タグ無し」の仮想タグ。これが木に無いと、タグの付いていない記録が
-        // 「チェックされていないタグ」扱いで**一覧から消える**
-        await config.append_no_tags()
+        // 「チェックされていないタグ」扱いで**一覧から消える**。
+        // ただし出力した本人が外していたなら出さない（焼いていないものは選べない）
+        if (gkill_api.value.is_exported_no_tags_allowed()) {
+            await config.append_no_tags()
+        }
     }
 
     // ── Lifecycle ──

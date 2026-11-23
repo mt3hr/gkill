@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
@@ -105,6 +106,25 @@ func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Req
 	}
 	// **焼き込む前に必ず空へ潰す。** 落とすと利用者のキーが共有先へ漏れる
 	applicationConfig.GoogleMapAPIKey = ""
+
+	// サイドバーの木から、チェックされていなかったノードを取り除く。
+	// **表示を止めるだけでは足りない** —— 木には出力に含めなかったタグ名・rep 名まで
+	// 入っていて、ファイルの中に残っていれば読まれる
+	columnQueries := make([]find.FindQuery, 0, len(request.Columns))
+	for i := range request.Columns {
+		columnQueries = append(columnQueries, request.Columns[i].Query)
+	}
+	if err := pruneExportApplicationConfigStructs(applicationConfig, collectExportAllowedNames(columnQueries)); err != nil {
+		err = fmt.Errorf("error at prune export application config structs: %w", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error at prune export application config structs", "error", fmt.Sprintf("%q", err))
+		gkillError := &message.GkillError{
+			ErrorCode:    message.ExportRykvHTMLRenderError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_RYKV_HTML_MESSAGE"}),
+			Cause:        err,
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
 
 	fileNameBase := exportFileNameBase(request.Title)
 	var sidecar *exportSidecar
