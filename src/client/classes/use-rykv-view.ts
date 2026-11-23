@@ -26,6 +26,7 @@ import { tag_exists_in_tag_struct } from '@/classes/tag-struct'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ComponentRef } from '@/classes/component-ref'
 import { remove_kyou_from_list_by_id } from '@/classes/kyou-local-insert'
+import { useRykvDetailPaneMetrics } from '@/classes/use-rykv-detail-pane-metrics'
 
 export function useRykvView(options: {
     props: RykvViewProps,
@@ -50,7 +51,6 @@ export function useRykvView(options: {
     const dnote_view = ref<ComponentRef | null>(null)
     // 列ごとに1つ。v-for の ref なので配列で来る
     const kyou_list_views = ref<Array<ComponentRef> | null>(null)
-    const kyou_detail_view_element = ref<HTMLElement | null>(null)
 
     // ── State refs ──
     const enable_context_menu = ref(true)
@@ -87,36 +87,25 @@ export function useRykvView(options: {
     const received_init_request = ref(false)
 
     // ── 区画の可否 ──
-    // 編集系の導線とヘルプを落とすか。共有ページと HTML 出力で共通
-    const is_readonly = computed(() => props.is_shared_rykv_view || props.is_exported_rykv_view)
-    // 集計（Dnote）。共有ページは出さない。出力は選ばれたときだけ
+    // **共有ページはこのビューを使わない**（shared-rykv-view.vue / use-shared-rykv-view.ts）。
+    // ここで分けるのは「通常」と「HTML 出力」の2つだけ
+    //
+    // 編集系の導線とヘルプを落とすか
+    const is_readonly = computed(() => props.is_exported_rykv_view)
+    // 集計（Dnote）。出力は選ばれたときだけ
     const is_dnote_available = computed(() =>
-        !props.is_shared_rykv_view && (!props.is_exported_rykv_view || props.is_exported_with_dnote))
-    // マップ。共有ページは出す（GPSLog を共有できる）。出力は選ばれたときだけ
+        !props.is_exported_rykv_view || props.is_exported_with_dnote)
+    // マップ。出力は選ばれたときだけ
     const is_map_available = computed(() =>
         !props.is_exported_rykv_view || props.is_exported_with_map)
-    // 検索条件サイドバー。共有ページは出さない。出力は選ばれたときだけ
+    // 検索条件サイドバー。出力は選ばれたときだけ
     const is_sidebar_available = computed(() =>
-        !props.is_shared_rykv_view && (!props.is_exported_rykv_view || props.is_exported_with_sidebar))
-    /**
-     * Kyou の詳細ダイアログ（ダブルクリックで開くもの）を使えるか。**出力では使える。**
-     *
-     * `is_readonly` で閉じてはいけない —— 出力 HTML は「読むために渡すファイル」なので、
-     * 記録を開けないと用途を果たさない。`RykvDialogHost` がホストする27種のうち
-     * 詳細（`kyou`）以外の26種は**全部コンテキストメニュー由来**で、それは
-     * `enable_context_menu`（= `!is_readonly`）で閉じたままになる。
-     * ZIP 閲覧ダイアログの生 `fetch`（`gkill_fetch` の1点止めをすり抜ける唯一の経路）も
-     * 出どころはコンテキストメニューだけなので、ここを開けても通信しない。
-     *
-     * 共有ページは従来どおり開かない（挙動を変えない）。
-     */
-    const is_kyou_dialog_available = computed(() => !props.is_shared_rykv_view)
+        !props.is_exported_rykv_view || props.is_exported_with_sidebar)
 
     const skip_search_this_tick = ref(false)
     const abort_controllers = new Map<string, AbortController>() // 列ごとの検索中断用。キーは列のquery_id
     const search_seqs = new Map<string, number>() // 列ごとの検索の世代番号。キーは列のquery_id。最後の検索だけが結果を書き戻せるようにする
     const dnote_reload_seq = ref(0) // Dnote再集計の世代番号。列を連打したとき古い再集計が後勝ちしないようにする
-    const kyou_detail_view_width: Ref<number> = ref(400) // KyouDetailViewの初期幅とあわせる。ryuuの最大幅に使う
 
     // ── Computed ──
     const kyou_list_view_height = computed(() => props.app_content_height)
@@ -129,28 +118,24 @@ export function useRykvView(options: {
     // 画面切替メニューの一覧は classes/gkill-page-list.ts に1つだけ置いてある
     const page_list = gkill_page_list
 
+    // ── 詳細ペインの寸法 ──
+    // 共有された rykv（shared-rykv-view）と同じ計算を使う。計算の正本は composable 側
+    const {
+        kyou_detail_view_element,
+        kyou_detail_view_width,
+        ryuu_pane_height_px,
+        ryuu_pane_width_px,
+        kyou_detail_view_height_px,
+        kyou_detail_view_base_width_px,
+        app_content_width_px,
+    } = useRykvDetailPaneMetrics({
+        application_config: () => props.application_config,
+        app_content_height: () => props.app_content_height.valueOf(),
+        app_content_width: () => props.app_content_width.valueOf(),
+    })
+
     // ── Watchers ──
-    // KyouDetailViewはCSSのresizeでユーザが幅を変えるため、実寸をResizeObserverで追う。
-    // 表示切り替えでelementごと作り直されるので、refをwatchして付け替える。
-    let kyou_detail_view_resize_observer: ResizeObserver | null = null
-    watch(kyou_detail_view_element, (element, old_element) => {
-        if (kyou_detail_view_resize_observer && old_element) {
-            try { kyou_detail_view_resize_observer.unobserve(old_element) } catch { /* noop */ }
-        }
-        if (element) {
-            if (!kyou_detail_view_resize_observer) {
-                kyou_detail_view_resize_observer = new ResizeObserver((entries) => {
-                    for (const entry of entries) {
-                        kyou_detail_view_width.value = entry.borderBoxSize?.[0]?.inlineSize ?? entry.contentRect.width
-                    }
-                })
-            }
-            kyou_detail_view_resize_observer.observe(element)
-        }
-    }, { flush: 'post' })
     onBeforeUnmount(() => {
-        kyou_detail_view_resize_observer?.disconnect()
-        kyou_detail_view_resize_observer = null
         // 飛行中の検索を止める。ポート(rudbeckia)ではこのビューごと閉じられるので、
         // 放っておくと閉じたウィンドウぶんの数十万件の取得が最後まで走る
         for (const abort_controller of abort_controllers.values()) {
@@ -176,18 +161,12 @@ export function useRykvView(options: {
     })
 
     watch(() => is_show_kyou_count_calendar.value, () => {
-        if (props.is_shared_rykv_view) {
-            return
-        }
         if (is_show_kyou_count_calendar.value) {
             update_focused_kyous_list(focused_column_index.value)
         }
     })
 
     watch(() => is_show_dnote.value, async () => {
-        if (props.is_shared_rykv_view) {
-            return
-        }
         if (is_show_dnote.value) {
             await reload_dnote_for_column(focused_column_index.value)
         } else {
@@ -209,34 +188,12 @@ export function useRykvView(options: {
         if (!is_loaded) {
             return
         }
-        if (props.is_shared_rykv_view) {
-            // 共有画面は下の Shared view init が別途初期化する
-            return
-        }
         if (received_init_request.value) {
             return
         }
         received_init_request.value = true
         init()
     }, { immediate: true })
-
-    // ── Shared view init ──
-    if (props.is_shared_rykv_view) {
-        nextTick(async () => {
-            is_loading.value = false
-            inited.value = true
-            await props.gkill_api.delete_updated_gkill_caches()
-            const kyous = (await props.gkill_api.get_kyous(new GetKyousRequest())).kyous
-            const wait_promises = new Array<Promise<unknown>>()
-            for (let i = 0; i < kyous.length; i++) {
-                wait_promises.push(kyous[i].load_all())
-            }
-            await Promise.all(wait_promises)
-            match_kyous_list.value = [kyous]
-            focused_kyous_list.value = kyous
-            focused_column_index.value = 0
-        })
-    }
 
     // ── Internal helpers ──
     const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
@@ -261,9 +218,6 @@ export function useRykvView(options: {
     }
 
     function update_focused_kyous_list(column_index: number): void {
-        if (props.is_shared_rykv_view) {
-            return
-        }
         if (!match_kyous_list.value || match_kyous_list.value.length === 0) {
             return
         }
@@ -271,11 +225,8 @@ export function useRykvView(options: {
     }
 
     // 指定列の内容でDnoteを再集計する。
-    // Dnote非表示・共有画面・列が存在しない場合は何もしない
+    // Dnote非表示・列が存在しない場合は何もしない
     async function reload_dnote_for_column(column_index: number): Promise<void> {
-        if (props.is_shared_rykv_view) {
-            return
-        }
         if (!is_show_dnote.value) {
             return
         }
@@ -738,12 +689,10 @@ export function useRykvView(options: {
 
             match_kyous_list.value[column_index] = res.kyous
 
-            if (!props.is_shared_rykv_view) {
-                // フォーカス列以外の検索完了でfocused_kyous_listを汚染しない
-                if (column_index !== -1 && column_index === focused_column_index.value
-                    && (is_show_kyou_count_calendar.value || is_show_dnote.value)) {
-                    update_focused_kyous_list(column_index)
-                }
+            // フォーカス列以外の検索完了でfocused_kyous_listを汚染しない
+            if (column_index !== -1 && column_index === focused_column_index.value
+                && (is_show_kyou_count_calendar.value || is_show_dnote.value)) {
+                update_focused_kyous_list(column_index)
             }
             await nextTick(() => {
                 if (!is_current()) {
@@ -972,9 +921,6 @@ export function useRykvView(options: {
     }
 
     function onColumnClickedListView(index: number): void {
-        if (props.is_shared_rykv_view) {
-            return
-        }
         run_with_sidebar_search_suppressed(() => {
             focus_column(index)
         })
@@ -1274,13 +1220,17 @@ export function useRykvView(options: {
         inited,
         is_restoring_columns,
         kyou_detail_view_width,
+        ryuu_pane_height_px,
+        ryuu_pane_width_px,
+        kyou_detail_view_height_px,
+        kyou_detail_view_base_width_px,
+        app_content_width_px,
 
         // Computed
         kyou_list_view_height,
         page_list,
         is_view_ready,
         is_readonly,
-        is_kyou_dialog_available,
         is_dnote_available,
         is_map_available,
         is_sidebar_available,

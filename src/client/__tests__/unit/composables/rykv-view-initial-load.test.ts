@@ -68,7 +68,6 @@ function createView(saved_query_ids: string[], config_overrides: Record<string, 
   const saved_querys = saved_query_ids.map((query_id) => makeColumnQuery(query_id))
   api.get_saved_rykv_find_kyou_querys.mockReturnValue(saved_querys)
   const raw_props = makeColumnViewProps(api, config_overrides, {
-    is_shared_rykv_view: false,
     share_title: '',
   })
   const props = raw_props as unknown as RykvViewProps
@@ -267,7 +266,7 @@ describe('useRykvView 初期化', () => {
    */
   describe('ライフログビューを2枚開く', () => {
     function createViewWithInstanceKey(instance_key: string, api: ReturnType<typeof createColumnViewMockApi>['api']) {
-      const raw_props = makeColumnViewProps(api, {}, Object.assign({}, { is_shared_rykv_view: false, share_title: '' }, { column_state_instance_key: instance_key }))
+      const raw_props = makeColumnViewProps(api, {}, Object.assign({}, { share_title: '' }, { column_state_instance_key: instance_key }))
       const props = raw_props as unknown as RykvViewProps
       const view = useRykvView({ props, emits: noop_emits })
   view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }

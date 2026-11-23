@@ -137,6 +137,7 @@ describe('Kyou詳細ペインの付随データ表示の走査', () => {
             'src/client/pages/views/mi-view.vue',
             'src/client/pages/views/rykv-view.vue',
             'src/client/pages/views/shared-mi-view.vue',
+            'src/client/pages/views/shared-rykv-view.vue',
         ])
     })
 

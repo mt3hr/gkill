@@ -7,10 +7,10 @@ export interface RykvViewProps extends GkillPropsBase {
     app_title_bar_height: number
     app_content_height: number
     app_content_width: number
-    is_shared_rykv_view: boolean
-    // HTML へ出力したファイルの中で描かれている。共有ページ（is_shared_rykv_view）と
-    // 同じく読み取り専用だが、**共有が落としている集計（Dnote）は残す**ので別フラグにする。
-    // 出力時に選ばれなかった区画は下の is_exported_with_* で落とす
+    // HTML へ出力したファイルの中で描かれている。読み取り専用で、
+    // 出力時に選ばれなかった区画は下の is_exported_with_* で落とす。
+    // **共有ページはこのビューを使わない** —— 共有は列の機構を一切使わないので
+    // 別のビュー（shared-rykv-view.vue）になっている
     is_exported_rykv_view: boolean
     // 出力時に「含めるもの」で選ばれたか。is_exported_rykv_view が false のときは見ない
     is_exported_with_dnote: boolean

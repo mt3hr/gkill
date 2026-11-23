@@ -124,7 +124,6 @@ const view_cases: ViewCase[] = [
         app_title_bar_height: 50,
         app_content_height: 600,
         app_content_width: 800,
-        is_shared_rykv_view: false,
         share_title: '',
       } as unknown as Parameters<typeof useRykvView>[0]['props']
       const emits = (() => { }) as unknown as Parameters<typeof useRykvView>[0]['emits']

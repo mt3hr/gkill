@@ -10,7 +10,7 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 15 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（208 .vue）
+├── views/                          # View コンポーネント（209 .vue）
 └── dialogs/                        # Dialog コンポーネント（120 .vue）
 ```
 
@@ -69,7 +69,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（208 .vue）
+## views/ — 全 View コンポーネント一覧（209 .vue）
 
 ### データ追加系（23コンポーネント）
 

@@ -37,7 +37,6 @@
                         :app_content_height="view_height" :app_content_width="view_width"
                         :app_title_bar_height="HOSTED_APP_BAR_HEIGHT"
                         :application_config="application_config" :gkill_api="gkill_api"
-                        :is_shared_rykv_view="false"
             :is_exported_rykv_view="false /* HTML 出力したファイルの中だけ true */"
             :is_exported_with_dnote="false" :is_exported_with_map="false"
             :is_exported_with_sidebar="false" :share_title="''"

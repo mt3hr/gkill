@@ -21,7 +21,7 @@
                                     :app_content_width="app_content_width"
                                     :app_title_bar_height="app_title_bar_height"
                                     :application_config="application_config" :gkill_api="gkill_api"
-                                    :is_shared_rykv_view="false" :is_exported_rykv_view="true"
+                                    :is_exported_rykv_view="true"
                                     :is_exported_with_dnote="is_exported_with_dnote"
                                     :is_exported_with_map="is_exported_with_map"
                                     :is_exported_with_sidebar="is_exported_with_sidebar"

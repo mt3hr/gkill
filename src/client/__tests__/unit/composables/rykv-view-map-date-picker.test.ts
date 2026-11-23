@@ -59,7 +59,6 @@ const noop_emits = (() => { }) as unknown as RykvViewEmits
 function createView() {
   const { api, pending_get_kyous } = createColumnViewMockApi()
   const raw_props = makeColumnViewProps(api, {}, {
-    is_shared_rykv_view: false,
     share_title: '',
   })
   const props = raw_props as unknown as RykvViewProps

@@ -69,7 +69,11 @@
                 </template>
             </v-tooltip>
         </v-app-bar>
-        <v-navigation-drawer v-if="!is_shared_rykv_view" v-model="drawer" app :height="app_content_height"
+        <!-- サイドバーを含めない出力でも **mount したままにする**。
+             init() はサイドバーの template ref が埋まっていないと列を作らずに戻るので、
+             v-if で消すと列が1本も作られず読み込み中オーバーレイが消えない（ADR-0415）。
+             落とすのは開く導線（アプリバーのアイコン）だけ -->
+        <v-navigation-drawer v-model="drawer" app :height="app_content_height"
             :touchless="!inited" :mobile="drawer_mode_is_mobile" :width="318">
             <RykvQueryEditorSideBar v-show="inited" class="rykv_query_editor_sidebar"
                 :application_config="application_config" :gkill_api="gkill_api"
@@ -106,7 +110,7 @@
                                 :application_config="application_config" :gkill_api="gkill_api"
                                 :matched_kyous="match_kyous_list[index]" :query="query"
                                 :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
-                                :enable_context_menu="!is_readonly" :enable_dialog="is_kyou_dialog_available"
+                                :enable_context_menu="!is_readonly" :enable_dialog="true"
                                 :is_readonly_mi_check="is_readonly" :show_checkbox="true" :show_footer="!is_readonly"
                                 :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true"
                                 :show_rep_name="!is_readonly" :force_show_latest_kyou_info="true"
@@ -143,7 +147,7 @@
                                     :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
                                     :show_timeis_elapsed_time="true" :show_timeis_playing_end_button="!is_readonly"
                                     :height="'auto'" :is_readonly_mi_check="is_readonly" :width="'auto'"
-                                    :enable_context_menu="!is_readonly" :enable_dialog="is_kyou_dialog_available"
+                                    :enable_context_menu="!is_readonly" :enable_dialog="true"
                                     :show_attached_timeis="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
                                     class="kyou_detail_view" :show_update_time="false" :show_related_time="true"
                                     :show_attached_tags="true" :show_attached_texts="true"
@@ -248,14 +252,15 @@
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                 ref="export_rykv_html_dialog" />
-            <!-- enable_dialog はダイアログの中の KyouView へ渡る。ここを false にすると
-                 開いた詳細の中からさらに詳細を開けない（関連する記録を辿れない）ので、
-                 詳細が使えるモードでは true のままにする。
-                 開いてよいのは kyou だけで、残り26種はコンテキストメニュー由来 ——
-                 そちらは enable_context_menu=false で閉じたままになる -->
-            <RykvDialogHost v-if="is_kyou_dialog_available" :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
+            <!-- 詳細（ダブルクリックで開く KyouDialog）は**出力 HTML でも使える**。
+                 出力は「読むために渡すファイル」なので、記録を開けないと用途を果たさない。
+                 ホストする27種のうち詳細以外の26種は全部コンテキストメニュー由来で、
+                 そちらは enable_context_menu=false で閉じたままになる。
+                 enable_dialog はダイアログの中の KyouView へも渡る。false にすると
+                 開いた詳細の中からさらに詳細を開けない（関連する記録を辿れない） -->
+            <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="!is_readonly"
-                :enable_dialog="is_kyou_dialog_available" @closed="(id: string) => close_rykv_dialog(id)"
+                :enable_dialog="true" @closed="(id: string) => close_rykv_dialog(id)"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogRelayHandlers }" />
             <!-- ポート(rudbeckia)の中ではFABを出さない。.position-fixed は position: fixed なので
                  ダイアログを抜けて画面右下に居座り、ポート自身のFABと重なる。
@@ -383,14 +388,17 @@ const {
     is_loading,
     inited,
     kyou_detail_view_element,
-    kyou_detail_view_width,
+    ryuu_pane_height_px,
+    ryuu_pane_width_px,
+    kyou_detail_view_height_px,
+    kyou_detail_view_base_width_px,
+    app_content_width_px,
 
     // Computed
     kyou_list_view_height,
     page_list,
     is_view_ready,
     is_readonly,
-    is_kyou_dialog_available,
     is_dnote_available,
     is_map_available,
     is_sidebar_available,
@@ -438,31 +446,9 @@ const {
     rykvDialogRelayHandlers,
 } = useRykvView({ props, emits })
 
+// 寸法（ビューポート単位を使わない計算）は use-rykv-detail-pane-metrics.ts が正本。
+// 読み込み中オーバーレイの幅だけはこのビューの is_loading を見るのでここに置く
 import { computed } from 'vue'
-const is_ryuu_empty = computed(() => {
-    const data = props.application_config.ryuu_json_data
-    if (!data || !Array.isArray(data) || data.length === 0) return true
-    return data.every((item: unknown) => {
-        if (Array.isArray(item)) return item.length === 0
-        if (item && typeof item === 'object' && 'queries' in item) {
-            return !item.queries || !Array.isArray(item.queries) || item.queries.length === 0
-        }
-        return false
-    })
-})
-
-// ── ビューポート単位を使わない寸法 ──
-// このビューはポート(rudbeckia)のフローティングダイアログの中でも描かれる。
-// そこでは基準が画面ではなくダイアログの箱なので、100vh / 100vw と
-// メディアクエリ(ダイアログの幅を見られない)は使えない。すべて props から作る。
-const ryuu_pane_height_px = computed(() => is_ryuu_empty.value ? '0px' : `${props.app_content_height.valueOf() * 0.2}px`)
-const kyou_detail_view_height_px = computed(() => {
-    const ryuu_height = is_ryuu_empty.value ? 0 : props.app_content_height.valueOf() * 0.2
-    return `${props.app_content_height.valueOf() - ryuu_height}px`
-})
-const app_content_width_px = computed(() => `${props.app_content_width.valueOf()}px`)
-// 旧 `@media (max-width: 600px) { width: 100vw }` の置き換え。min-width は旧実装どおり触らない
-const kyou_detail_view_base_width_px = computed(() => props.app_content_width.valueOf() <= 600 ? app_content_width_px.value : '400px')
 const overlay_target_min_width_px = computed(() => is_loading.value ? app_content_width_px.value : '0px')
 </script>
 <style lang="css" scoped>
@@ -481,8 +467,8 @@ const overlay_target_min_width_px = computed(() => is_loading.value ? app_conten
     overflow-x: hidden;
     overflow-y: auto;
     height: v-bind(ryuu_pane_height_px);
-    width: v-bind('kyou_detail_view_width.toString().concat("px")');
-    max-width: v-bind('kyou_detail_view_width.toString().concat("px")');
+    width: v-bind(ryuu_pane_width_px);
+    max-width: v-bind(ryuu_pane_width_px);
 }
 
 .ryuu_view.dummy :deep(.ryuu_views) {

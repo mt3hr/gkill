@@ -61,7 +61,6 @@ function kyouIds(list: unknown): string[] {
 function createView(config_overrides: Record<string, unknown> = {}) {
   const { api, pending_get_kyous } = createColumnViewMockApi()
   const raw_props = makeColumnViewProps(api, config_overrides, {
-    is_shared_rykv_view: false,
     share_title: '',
   })
   const props = raw_props as unknown as RykvViewProps

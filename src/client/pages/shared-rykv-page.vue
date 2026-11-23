@@ -1,14 +1,8 @@
 <template>
     <div>
-        <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
-            :is_shared_rykv_view="true"
-            :is_exported_rykv_view="false /* HTML 出力したファイルの中だけ true */"
-            :is_exported_with_dnote="false" :is_exported_with_map="false"
-            :is_exported_with_sidebar="false" :share_title="share_title"
-            :application_config_load_failed="false /* 共有画面は設定を待たずに初期化する */"
-            :is_hosted_in_dialog="false"
-            :kyou_change_channel="null /* 単独ページ。画面間の伝播はポートの中だけ */" :column_state_instance_key="''"
+        <SharedRykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :app_title_bar_height="app_title_bar_height" :application_config="application_config"
+            :gkill_api="gkill_api" :share_title="share_title"
             @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
             @received_messages="(...messages: unknown[]) => write_messages(messages[0] as Array<GkillMessage>)" />
         <GkillMessageFeedView />
@@ -18,7 +12,7 @@
 <script lang="ts" setup>
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import rykvView from './views/rykv-view.vue'
+import SharedRykvView from './views/shared-rykv-view.vue'
 import type { KyouViewEmits } from './views/kyou-view-emits'
 import type { SharedRYKVPageProps } from './shared-rykv-page-props'
 import { useSharedRykvPage } from '@/classes/use-shared-rykv-page'

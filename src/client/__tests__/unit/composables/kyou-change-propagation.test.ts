@@ -61,7 +61,6 @@ function kyous(ids: string[]): Kyou[] {
 function createHostedView(origin_id: string, bus: ReturnType<typeof create_kyou_change_bus>) {
   const { api, pending_get_kyous } = createColumnViewMockApi()
   const raw_props = makeColumnViewProps(api, {}, {
-    is_shared_rykv_view: false,
     share_title: '',
     is_hosted_in_dialog: true,
     column_state_instance_key: origin_id === 'window-a' ? '' : '2',
@@ -157,7 +156,6 @@ describe('画面間の変更伝播', () => {
     const bus = create_kyou_change_bus()
     const { api } = createColumnViewMockApi()
     const raw_props = makeColumnViewProps(api, {}, {
-      is_shared_rykv_view: false,
       share_title: '',
       kyou_change_channel: null,
     })

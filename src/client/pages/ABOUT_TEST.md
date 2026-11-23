@@ -142,7 +142,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/skills.spec.ts` | スキル（ADR-0634）の画面の一巡: 設定 → スキル → zip をアップロード（確認 → 適用）→ 一覧 → 表示 → ダウンロード → 同じ名前で上げ直すと「変わる・消える」が確認に出る → 削除。zip はテストの中で組み立てる（バイナリのフィクスチャをコミットしない） |
 | `src/client/__tests__/e2e/user-content-sandbox.spec.ts` | 取り込んだ HTML ファイルを `/files/` で開くと、中のスクリプトは動くが `document.cookie` と `localStorage` は例外になること（ADR-0711。CSP は `sandbox allow-scripts allow-downloads allow-modals` で `allow-same-origin` 無し）。合成の HTML を `/api/upload_files` で `Files` rep へ上げて開く。拡張子ごとのヘッダの値は Go の `handle_file_serve_test.go` / `handle_zip_cache_file_serve_test.go` が固定する |
 
-### Composable ユニットテスト（69ファイル）
+### Composable ユニットテスト（70ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -150,6 +150,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/edit-views.test.ts` | Kmemo, Mi, Nlog, URLog, TimeIs, Lantana, KC の編集ビュー Composable |
 | `src/client/__tests__/unit/composables/tx-bundle-views.test.ts` | tx で束ねる保存経路のうち直接テストが無かった5画面（リポスト作成・リポストタスク追加/編集・リポスト編集・ファイル記録の編集）。書き込み（tx_id 付き）→ commit_tx → registered_kyou / updated_kyou の順、失敗時は discard_tx して何も emit しないこと、変更なしは何も書かないこと |
 | `src/client/__tests__/unit/composables/shared-mi-view-dialog.test.ts` | 共有ページのダイアログホスト。開いた直後に引き直さないこと（rykv / mi / dashboard と同じ約束）、closed で該当ダイアログだけ閉じること |
+| `src/client/__tests__/unit/composables/shared-rykv-view.test.ts` | 共有された rykv 画面の Composable（通常の rykv とは別実装）。取得は1回だけで検索条件を足さないこと、取得中はスピナーを立て失敗しても倒すこと（握りつぶさず console へ出す）、地図の時間窓を幅0にしないこと、件数カレンダーは一覧と地図の両方を動かし地図の軌跡クリックは窓を動かさないこと |
 | `src/client/__tests__/unit/composables/context-menus.test.ts` | 10エンティティ型のコンテキストメニュー Composable（ZIPブラウズ項目含む） |
 | `src/client/__tests__/unit/composables/page-composables.test.ts` | ページレベル Composable |
 | `src/client/__tests__/unit/composables/query-composables.test.ts` | クエリ操作 Composable パターン |
