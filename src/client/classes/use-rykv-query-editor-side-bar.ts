@@ -32,8 +32,16 @@ export function useRykvQueryEditorSideBar(options: {
     const period_of_time_query = ref<InstanceType<typeof PeriodOfTimeQuery> | null>(null)
 
     // ── Computed ──
-    const header_margin = computed(() => props.application_config.is_show_share_footer ? 12 : 6)
-    const header_height: Ref<number> = computed(() => 36 * (props.application_config.is_show_share_footer ? 2 : 1) + header_margin.value.valueOf())
+    // 共有フッタ（共有・共有管理）を実際に描くか。
+    // **出力 HTML では出さない。** 渡した相手のサーバではないので共有リンクは作れず、
+    // 共有管理の一覧も引けない（API は焼き込みを読む実装で上書きされている）。
+    // 設定の is_show_share_footer は焼き込んだ設定から来るので、出力した本人が
+    // 「共有フッターを表示」を有効にしていると出力 HTML にも出てしまう。
+    // **ヘッダ帯の高さもこの条件で決めること。** 描画だけ止めると1段ぶんの空白が残る
+    const is_show_share_footer = computed(() =>
+        props.application_config.is_show_share_footer && !props.application_config.for_export_kyou)
+    const header_margin = computed(() => is_show_share_footer.value ? 12 : 6)
+    const header_height: Ref<number> = computed(() => 36 * (is_show_share_footer.value ? 2 : 1) + header_margin.value.valueOf())
     const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
     const header_top_px = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
     const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))
@@ -377,6 +385,7 @@ export function useRykvQueryEditorSideBar(options: {
         inited_period_of_time_query_for_query_sidebar,
 
         // Computed
+        is_show_share_footer,
         header_margin,
         header_height,
         sidebar_height,

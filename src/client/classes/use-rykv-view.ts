@@ -98,6 +98,19 @@ export function useRykvView(options: {
     // 検索条件サイドバー。共有ページは出さない。出力は選ばれたときだけ
     const is_sidebar_available = computed(() =>
         !props.is_shared_rykv_view && (!props.is_exported_rykv_view || props.is_exported_with_sidebar))
+    /**
+     * Kyou の詳細ダイアログ（ダブルクリックで開くもの）を使えるか。**出力では使える。**
+     *
+     * `is_readonly` で閉じてはいけない —— 出力 HTML は「読むために渡すファイル」なので、
+     * 記録を開けないと用途を果たさない。`RykvDialogHost` がホストする27種のうち
+     * 詳細（`kyou`）以外の26種は**全部コンテキストメニュー由来**で、それは
+     * `enable_context_menu`（= `!is_readonly`）で閉じたままになる。
+     * ZIP 閲覧ダイアログの生 `fetch`（`gkill_fetch` の1点止めをすり抜ける唯一の経路）も
+     * 出どころはコンテキストメニューだけなので、ここを開けても通信しない。
+     *
+     * 共有ページは従来どおり開かない（挙動を変えない）。
+     */
+    const is_kyou_dialog_available = computed(() => !props.is_shared_rykv_view)
 
     const skip_search_this_tick = ref(false)
     const abort_controllers = new Map<string, AbortController>() // 列ごとの検索中断用。キーは列のquery_id
@@ -1267,6 +1280,7 @@ export function useRykvView(options: {
         page_list,
         is_view_ready,
         is_readonly,
+        is_kyou_dialog_available,
         is_dnote_available,
         is_map_available,
         is_sidebar_available,

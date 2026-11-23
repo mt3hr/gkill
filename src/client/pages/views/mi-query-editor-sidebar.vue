@@ -1,7 +1,7 @@
 <template>
     <div>
         <v-card class="sidebar_header_wrap background-white pa-0 ma-0" :height="header_height">
-            <ShareKyouFooter v-if="application_config.is_show_share_footer" class="sidebar_footer"
+            <ShareKyouFooter v-if="is_show_share_footer" class="sidebar_footer"
                 :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_open_manage_share_kyou_dialog="show_manage_share_kyou_dialog()"
                 @request_open_share_kyou_dialog="show_share_kyou_dialog()"
@@ -104,6 +104,7 @@ const {
     inited_board_query_for_query_sidebar,
 
     // Computed
+    is_show_share_footer,
     header_margin,
     header_height,
     sidebar_height,

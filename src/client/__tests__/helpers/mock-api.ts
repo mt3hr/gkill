@@ -16,6 +16,14 @@ export function createMockGkillAPI() {
     reset_password: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
     set_new_password: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
 
+    // 「HTML で出力」用のフック。**基底クラス（GkillAPI）と同じ既定を返す。**
+    // 画面側（use-rykv-view.ts / use-idf-kyou-view.ts など）はモードを見ずに素で呼ぶので、
+    // ここに無いと「not a function」でテストだけが落ちる。
+    // 出力の振る舞いを試すテストは、各ファイルで上書きする（この後に spread される）
+    resolve_media_url: vi.fn((url: string) => url),
+    get_exported_idf_text_bytes: vi.fn(() => null),
+    get_exported_gps_log_window: vi.fn(() => null),
+
     // Session
     get_session_id: vi.fn(() => _session_id),
     set_session_id: vi.fn((id: string) => { _session_id = id }),

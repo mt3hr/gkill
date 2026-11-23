@@ -106,8 +106,8 @@
                                 :application_config="application_config" :gkill_api="gkill_api"
                                 :matched_kyous="match_kyous_list[index]" :query="query"
                                 :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
-                                :enable_context_menu="!is_readonly" :enable_dialog="!is_readonly"
-                                :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="!is_readonly"
+                                :enable_context_menu="!is_readonly" :enable_dialog="is_kyou_dialog_available"
+                                :is_readonly_mi_check="is_readonly" :show_checkbox="true" :show_footer="!is_readonly"
                                 :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true"
                                 :show_rep_name="!is_readonly" :force_show_latest_kyou_info="true"
                                 :show_content_only="false" :show_timeis_playing_end_button="false"
@@ -143,7 +143,7 @@
                                     :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
                                     :show_timeis_elapsed_time="true" :show_timeis_playing_end_button="!is_readonly"
                                     :height="'auto'" :is_readonly_mi_check="is_readonly" :width="'auto'"
-                                    :enable_context_menu="!is_readonly" :enable_dialog="!is_readonly"
+                                    :enable_context_menu="!is_readonly" :enable_dialog="is_kyou_dialog_available"
                                     :show_attached_timeis="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
                                     class="kyou_detail_view" :show_update_time="false" :show_related_time="true"
                                     :show_attached_tags="true" :show_attached_texts="true"
@@ -248,9 +248,14 @@
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                 ref="export_rykv_html_dialog" />
-            <RykvDialogHost v-if="!is_readonly" :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
-                :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @closed="(id: string) => close_rykv_dialog(id)"
+            <!-- enable_dialog はダイアログの中の KyouView へ渡る。ここを false にすると
+                 開いた詳細の中からさらに詳細を開けない（関連する記録を辿れない）ので、
+                 詳細が使えるモードでは true のままにする。
+                 開いてよいのは kyou だけで、残り26種はコンテキストメニュー由来 ——
+                 そちらは enable_context_menu=false で閉じたままになる -->
+            <RykvDialogHost v-if="is_kyou_dialog_available" :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
+                :enable_context_menu="!is_readonly"
+                :enable_dialog="is_kyou_dialog_available" @closed="(id: string) => close_rykv_dialog(id)"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogRelayHandlers }" />
             <!-- ポート(rudbeckia)の中ではFABを出さない。.position-fixed は position: fixed なので
                  ダイアログを抜けて画面右下に居座り、ポート自身のFABと重なる。
@@ -385,6 +390,7 @@ const {
     page_list,
     is_view_ready,
     is_readonly,
+    is_kyou_dialog_available,
     is_dnote_available,
     is_map_available,
     is_sidebar_available,
