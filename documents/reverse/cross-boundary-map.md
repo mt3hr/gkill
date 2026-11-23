@@ -170,7 +170,21 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 - 上書きしていないもの（通知の購読、ファイル・フォルダを開く、`reload_repositories`、`commit_tx` / `discard_tx`、KFTL、ZIP、IDF の相対パス、
   プラグイン、スキル）は親のまま、表のとおりサーバへ行く。
 
-### 2.3 名前がずれる種類
+### 2.3 出力した HTML（GkillAPIForExportedKyou）の振る舞い
+
+出力したファイルの中で動く画面は、`GkillAPIForSharedKyou` を継承した `GkillAPIForExportedKyou` を使う。
+共有との違いは次のとおり。
+
+- **通信は `gkill_fetch` の1点で止める。** `GkillAPI` の `gkill_fetch` を `protected` にして、出力用の派生が例外にする。
+  メソッドを1本ずつ塞ぐ形に戻してはいけない —— 本体に API が増えたときに黙って漏れ、
+  **オフラインの相手の手元でだけ壊れる**（[ADR-0415](../adr/0415-exported-view-is-a-separate-flag.md)）。
+- **読み取りは焼き込んだ JSON から返す。** 列は `query_id` で引く（サーバを1往復しないので、
+  列の条件は焼いたときの字面のまま持ち回る）。
+- **メディアは `resolve_media_url` が焼き込みの `data:` URI か同名フォルダの相対パスへ差し替える。**
+  原寸の鍵が焼かれていなければサムネイルの鍵へ落ちる（詳細とダイアログが原寸を引くため）。
+- 唯一外へ出るのは地図で、地図そのものは Google から読み込む（閲覧者が自分の API キーを入れる導線がある）。
+
+### 2.4 名前がずれる種類
 
 表の ※ が正本。ここでは種類ごとに例を1つ2つだけ挙げる（全件の一覧は作らない。表とずれるので）。
 
@@ -468,6 +482,7 @@ KFTL 送信にはメッセージ1件ごとに冪等キー（UUID）が付く。
 | `idempotency_key` `create_app` | KFTL 送信の任意項目（冪等キーと記録元アプリ） | `req_res/submit_kftl_text_request.go` `companion/GkillApiClient.kt` | handle_submit_kftl_text_test.go |
 | `/mood` | 気分記録の ASCII 接頭辞（時計が組む KFTL テキスト） | `kftl/kftl_factory.go` `kftl/kftl-prefixes.ts` `data/LantanaKftl.kt` | kftl_statement_test.go（Go が同じ文字列を読めること） |
 | `/share-target` | Web Share Target の受け口 | `vite.config.ts` `classes/share-target-dedup.ts` | — |
+| `thumb=400x400` | HTML 出力が焼き込むメディアの鍵（画面がサムネイルを引くときの問い合わせと同じ形）。外れると鍵が食い違い、**出力したファイルがその画像を取りに通信する** | `gkill_server_api/export_media.go` `classes/use-idf-kyou-view.ts` | export_media_test.go |
 | `/gkill/` | スマホ側が受ける Data Layer の接頭辞 | `phone_companion/src/main/AndroidManifest.xml` `companion/WearRequestHandler.kt` | — |
 | `built` `no_cache` | generate_plugin_cache の結果行 | `plugin/sdk/sdk.go` `common/generate_plugin_cache.go` | — |
 | — | i18n の文言。`src/locales/*.json` を TS は import し、Go は `copy_i18n_to_app_embed` で埋め込みへ複写して読む（embed.go） | i18n.ts / embed.go | i18n-completeness.test.ts（ロケール間のキーの一致だけ。Go が使う ID の実在は未検査） |

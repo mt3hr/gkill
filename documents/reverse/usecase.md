@@ -75,6 +75,7 @@ graph LR
         UC_MI_MANAGE[タスクを管理する]
         UC_MI_SHARE[タスクを他人に共有する]
         UC_KYOU_SHARE[記録を他人に共有する]
+        UC_KYOU_EXPORT[記録を HTML ファイルにして渡す]
     end
 
     subgraph "認証・設定機能"
@@ -110,6 +111,7 @@ graph LR
     User --> UC_MI_MANAGE
     User --> UC_MI_SHARE
     User --> UC_KYOU_SHARE
+    User --> UC_KYOU_EXPORT
     User --> UC_LOGIN
     User --> UC_LOGOUT
     User --> UC_APP_CONFIG
@@ -120,7 +122,7 @@ graph LR
 
 ## 2. 機能カテゴリ別ユースケース一覧
 
-> **件数について:** ユースケースは **94件（ユニークな UC-ID 数）**。以下のカテゴリ別表の行数は 99 行で、ダッシュボードの UC-09xxd 系がユニーク数では設定管理の UC-09xx と同一視されるため行数のほうが多くなる。件数を引用する際はユニーク ID 数（94）を使うこと。
+> **件数について:** ユースケースは **95件（ユニークな UC-ID 数）**。以下のカテゴリ別表の行数は 99 行で、ダッシュボードの UC-09xxd 系がユニーク数では設定管理の UC-09xx と同一視されるため行数のほうが多くなる。件数を引用する際はユニーク ID 数（94）を使うこと。
 >
 > 数え直すときは **4桁に限定**すること。`UC-[0-9]+` だと本文中の「UC-04xx」「UC-05xx」という
 > 記述（後述の欠番の説明）まで拾ってしまい、2件多く数えられる。
@@ -264,6 +266,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-1003 | 共有リスト情報を削除する | `DeleteShareKyouListInfos` |
 | UC-1004 | 共有リスト情報を取得する | `GetShareKyouListInfos` |
 | UC-1005 | 共有 Kyou を取得する | `GetSharedKyous` |
+| UC-1006 | 検索結果を HTML ファイルに出力する | `ExportRykvHTML` |
 
 ### 2.12 その他
 

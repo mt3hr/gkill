@@ -459,6 +459,23 @@ multipart POST がもう一度届く。届く内容が同一なので、再配�
 | Vue devtools | プロダクションでも有効（`__VUE_PROD_DEVTOOLS__: true`） |
 | propsDestructure | 有効 |
 
+### 出力シェルのビルド設定 (`vite.export.config.ts`)
+
+「HTML で出力」の受け皿（ガワ）を作る**第2のビルド**。本体と同じ設定では作れないので分けてある。
+
+| 項目 | 値 | 理由 |
+|---|---|---|
+| エントリ | `src/client/export-main.ts` | ルータを持たない別のエントリ。本体の `@/router` は module 評価時に `history.replaceState` を URL 付きで呼び、`file://` で開くと `file:///C:/C:/…` に化けて画面が出る前に開けなくなる |
+| `@/i18n` の alias | `src/client/export-i18n.ts` | 本体は ja を静的・他6言語を動的 import する。畳むと7言語ぶんがガワに常駐する |
+| `@/router` の alias | `src/client/export-router-stub.ts` | 上記の理由で「何もしない版」へ差し替える |
+| `assetsInlineLimit` | 上限なし | 画像・フォントを data URI へ畳む。別ファイルのまま残ると `file://` ではドライブ直下を指して読めず、**`<img>` の失敗は例外にならないので気づけない** |
+| PWA プラグイン | 入れない | Service Worker の登録が入ると、出力したファイルが通信しようとする |
+
+成果物は `dist_export/` に出て、`build_export_template.mjs` が1枚の `resources/export/template.html` へ畳む。
+その際に**外部参照がゼロであることを機械検査する**（`<script src>` / `<link href>` / JS の中の `/assets/` の文字列）。
+検査を外すと「開いた本人の手元では動くが、渡した相手の手元でだけ白紙になる」ファイルが出る。
+決定と却下案は [ADR-0903](../adr/0903-export-shell-is-a-second-vite-build.md)。
+
 ### TypeScript設定
 
 - `tsconfig.json`: ソリューション構成。**`"files": []` なので `compilerOptions` を書いても何にも適用されない**。

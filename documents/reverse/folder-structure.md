@@ -11,11 +11,13 @@ gkill/
 ├── src/                    # ソースコード（詳細は後述）
 ├── documents/              # ドキュメント類（詳細は後述）
 ├── dist/                   # フロントエンドビルド成果物（vite build出力先）
+├── dist_export/            # HTML 出力のガワのビルド成果物（第2の vite build 出力先。gitignore済み）
 ├── public/                 # 静的アセット（favicon.ico等）
 ├── release/                # リリースビルド成果物（クロスコンパイル時に生成）
 ├── resources/              # リソースファイル
 │   ├── manual/             # 生成済みHTMLマニュアル（7言語×24ページ、go:embed対象。gitignore済みで build_manuals が生成する）
 │   ├── manual_src/         # マニュアルの原本（7言語 + _layout.html）。build_manuals.mjs の入力
+│   ├── export/             # HTML 出力のガワ（template.html。build_export_template.mjs が生成し go:embed に載る。gitignore済み）
 │   └── gkill_sample_data/  # サンプルデータ
 ├── .github/                # GitHub Actions ワークフロー
 ├── node_modules/           # npm依存パッケージ（git管理外）
@@ -25,6 +27,7 @@ gkill/
 ├── package.json            # npm設定・ビルドスクリプト定義
 ├── tsconfig*.json          # TypeScript設定
 ├── vite.config.ts          # Viteビルド設定
+├── vite.export.config.ts   # HTML 出力のガワのビルド設定（自己完結の単一HTMLを作る第2のビルド）
 ├── vitest.config.ts        # Vitest（クライアント）設定
 ├── playwright.config.ts    # Playwright E2E設定
 ├── eslint.config.js        # ESLint flat config
@@ -60,6 +63,9 @@ Vue 3 + Vuetify 4 + TypeScript 6 で構成されたPWAフロントエンドで�
 src/client/
 ├── App.vue                 # ルートコンポーネント
 ├── main.ts                 # エントリーポイント（Vuetify, Router, i18n登録）
+├── export-main.ts          # HTML 出力の中で動く第2のエントリ（ルータ無し・1言語のみ）
+├── export-i18n.ts          # 出力用の i18n（焼き込んだ1言語だけを持つ）
+├── export-router-stub.ts   # 出力用の router の代わり（本体の router は file:// で開けなくする）
 ├── serviceWorker.ts        # PWAサービスワーカー（Workbox, Push通知, Web Share Target）
 ├── router/
 │   └── index.ts            # ルーター定義（13ルート）
@@ -78,6 +84,7 @@ src/client/
 │   ├── shared-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
+│   ├── exported-rykv-page.vue   # HTML 出力したファイルの中で開く画面
 │   ├── views/              # ビューコンポーネント（211ファイル）
 │   └── dialogs/            # ダイアログコンポーネント（120ファイル、browse-zip-contents-dialog.vue 含む）
 ├── i18n.ts                 # i18n設定（ja のみ静的、他6言語は動的import）
@@ -345,6 +352,7 @@ src/tools/
 ├── dev.mjs                      # npm run dev のラッパー（--api / --api-target を GKILL_API_PROXY_TARGET に変換）
 ├── verify_docs.mjs              # docs CI。件数・リンク・参照パス・Mermaid・マニュアルを検証（npm run verify_docs）
 ├── build_manuals.mjs            # resources/manual_src/ → resources/manual/ を生成（npm run build_manuals）
+├── build_export_template.mjs    # dist_export → resources/export/template.html。外部参照ゼロを機械検査する
 ├── manual_build.mjs             # マニュアル生成の実体（verify_docs からも import される）
 ├── manual_a11y.mjs              # マニュアルのアクセシビリティ検査
 ├── manual_ascii_fix.mjs         # マニュアルのASCII正規化
@@ -372,9 +380,9 @@ src/tools/
 documents/
 ├── reverse/                          # リバースエンジニアリング設計資料集
 │   ├── README.md                     # 資料集の目次・推奨読み順
-│   ├── glossary.md                   # 用語集（98項目）
+│   ├── glossary.md                   # 用語集（100項目）
 │   ├── design-philosophy.md          # 設計思想
-│   ├── usecase.md                    # ユースケース一覧（94件）
+│   ├── usecase.md                    # ユースケース一覧（95件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
 │   ├── sequence-diagrams.md          # シーケンス図（29本: 正常系24 + 異常系5）

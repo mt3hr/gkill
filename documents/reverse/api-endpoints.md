@@ -390,6 +390,15 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/update_text` | Text | テキスト注釈更新 |
 | `/api/update_gkill_notification` | Notification | 通知更新 |
 
+## Kyouデータ削除（1件）
+
+Append-Only DAO なので「削除」も INSERT で、`is_deleted` を立てた新しいレコードを積む。
+本体だけを消すと、付いていたタグ・テキスト・通知が対象の無い付随データとして残る。
+
+| パス | 説明 |
+|---|---|
+| `/api/delete_kyou_cascade` | 記録とその付随データ（タグ・テキスト・通知・リポスト）をまとめて消す。クライアントは個別の削除 API を持たず、この1本を通る |
+
 ## Kyouデータ取得（16件）
 
 | パス | 説明 |
@@ -476,6 +485,12 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/update_share_kyou_list_info` | 共有設定更新 |
 | `/api/delete_share_kyou_list_infos` | 共有設定削除 |
 | `/api/get_shared_kyous` | 共有レコード取得（認証不要） |
+
+## 出力（1件）
+
+| パス | 説明 |
+|---|---|
+| `/api/export_rykv_html` | いまの検索結果を単一 HTML（または HTML ＋ 同名フォルダ）へ焼き込んで返す。記録の収集は共有（`get_shared_kyous`）と同じ1実装を通り、焼き込む設定は API キーを空へ潰し、チェックされていないタグ名・記録保管場所名を刈り取ってから載せる。ファイルそのものは body で返さず JSON に載せる（[ADR-0712](../adr/0712-export-delivery-is-base64-json.md)）。ガワ（出力テンプレート）が埋め込まれていないときだけ `ERR000455` で落ちる。エラーは `ERR000452`〜`ERR000456` |
 
 ## 通知・プッシュ（2件）
 

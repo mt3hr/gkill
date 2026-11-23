@@ -36,7 +36,6 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 | **PluginKyou** | 外部プラグインバイナリが提供する Kyou。`DataType` はプラグイン定義による（例: `chatgpt_conversation`, `claude_conversation`, `claude_code_turn`, `codex_turn`）。コンテンツ表示は `GetContentHTML` が返す HTML を iframe (srcdoc) で描画する |
 | **PluginRepository** | プラグインバイナリをサブプロセスとして起動し stdio 改行区切り JSON で通信するリポジトリ実装（`src/server/gkill/dao/reps/plugin_repository_impl.go`）。`RepType` を持たず4層パターンにも属さない |
 | **PluginManager** | ユーザごとにプラグインディレクトリを走査し、`manifest.json` を持つものを `PluginRepository` として登録する（`src/server/gkill/dao/plugin_manager.go`） |
-| **PluginManifest** | プラグインのメタデータ（`protocol_version`, `name`, `version`, `description`, `data_type`, `rep_name`, `executable`, `min_gkill_version` の8フィールド）。`name` はディレクトリ名と一致させる。同梱プラグイン8本（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / google_locationhistory / vrchat）はバイナリに `//go:embed` しており `--gkill-print-manifest` で出力できる（`--gkill-print-config` で既定の `config.json` も出せる）。`gkill_example` は埋め込みもフラグも持たない |
 | **プラグインディレクトリ** | `$GKILL_HOME/plugins/{userID}/{pluginName}/` — manifest.json・実行ファイル・`config.json` を格納するディレクトリ |
 | **plugin_cache** | プラグインの SQLite3 キャッシュ置き場。`$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db`。プラグインディレクトリではなく gkill のキャッシュディレクトリ配下にあるため `clear_cache plugin` で削除でき、`generate_plugin_cache` で稼働中サーバ無しに同期構築できる（プラグインを `--gkill-build-cache` で単独起動） |
 | **source_dirs** | プラグインの `config.json` で取り込み元フォルダを指定するキー。グロブ・`~`・環境変数を展開し、検索のたびに読み直される |
@@ -69,6 +68,7 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 |------|---------|------|------|
 | **Dnote** | 集計ビュー | データ集計・分析機能。Predicate（条件）でフィルタし、KeyGetter（集計キー）でグルーピングし、AggregateTarget（集計対象）で集計する | Daily Record summary Notebook |
 | **Ryuu** | 関連情報 | 表示中の Kyou と時刻が近い関連 Kyou を表示する機能。検索範囲（n時間）と抽出条件を指定可能 | 流、龍 |
+| **HTML 出力** | HTML エクスポート | いまの列の検索結果・メディア・設定を焼き込んだ単一 HTML を作る機能。共有リンクと違い gkill が動いていなくても開け、通信もしない（地図だけ例外）。入口は共有ダイアログ | — |
 
 ### 認証不要ページ
 
@@ -209,6 +209,8 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **板（Board）** | Mi（タスク）のグルーピング単位。UI 上では `板名` と表記される |
 | **ブックマークレット** | ブラウザから URLog を直接追加するための JavaScript。ログイン時に専用セッションが自動作成される |
 | **共有ページ** | 認証不要で Kyou やタスクを閲覧できる公開リンク。`ShareKyouListInfo` で検索条件を含む共有リンクを生成する |
+| **同名フォルダ（sidecar）** | HTML 出力の2つめの形式。`foo.html` の隣に `foo/` を作り、メディアをそこへ置く。単一 HTML より軽いが、渡すときは2つを一緒に渡す。中のファイル名は内容ハッシュで、元のファイル名は使わない（[ADR-0713](../adr/0713-sidecar-file-names-are-content-hashes.md)） |
+| **ガワ（出力テンプレート）** | HTML 出力の受け皿になる、第2の Vite ビルドで作る自己完結 HTML。`resources/export/template.html` に置き、Go の embed に載る。焼き込みはこの中の JSON を差し替えて行う（[ADR-0903](../adr/0903-export-shell-is-a-second-vite-build.md)） |
 | **オレオレTLS** | 自己署名 TLS 証明書の生成機能。サーバ設定画面から生成できる |
 | **ホットリロード** | データの自動再読み込み機能 |
 | **FindQuery** | 検索クエリ。キーワード・日時範囲・タグ・データ型・デバイス等の複合条件で Kyou を検索する |
@@ -274,6 +276,8 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | エントリポイント | `src/client/main.ts` | アプリ初期化（Vuetify, Router, i18n, v-long-press） |
 | ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
 | ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
+| HTML 出力のエントリポイント | `src/client/export-main.ts` | 出力したファイルの中で動く第2のエントリ。ルータは持たない（`export-router-stub.ts`）。i18n も1言語だけの版（`export-i18n.ts`）へ差し替わる |
+| HTML 出力の画面 | `src/client/pages/exported-rykv-page.vue` | 焼き込んだ JSON を読んで rykv を描く。列の中身は通常と同じ `rykv-columns-view.vue` |
 | GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約4,100行） |
 | リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（187ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |

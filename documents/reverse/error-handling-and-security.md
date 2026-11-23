@@ -104,6 +104,8 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 | `ERR000438` | SkillManifestDeleteError | `SKILL.md` だけを消そうとした（400）。消すならスキルごと消す |
 | `ERR000439`〜`ERR000444` | GetSkillListError / GetSkillError / DownloadSkillError / UploadSkillError / WriteSkillFileError / DeleteSkillError | スキル API がサーバ側の理由（ディスクの失敗、利用者IDがパス要素に使えない等）で失敗した（500）。補足は添えない。`UploadSkillError` でも既存のスキルは元のまま残る（一時ディレクトリへ展開してから入れ替えるため） |
 
+| `ERR000452`〜`ERR000456` | InvalidExportRykvHTMLRequestData / InvalidExportRykvHTMLResponseData / InvalidExportRykvHTMLOption / ExportRykvHTMLTemplateNotFound / ExportRykvHTMLRender | HTML 出力の失敗。`InvalidExportRykvHTMLOption` は収集を始める前に弾く（列が0本、メディアを埋め込まないのに同名フォルダ、知らない指定値）。`ExportRykvHTMLTemplateNotFound` はガワが埋め込まれていないビルドでだけ出る（500） |
+
 スキル系（`ERR000430`〜`ERR000438`）への写像は `gkill_server_api/skill_errors.go` の `skillStoreGkillError` 1つで、`dao/skills/errors.go` の番兵を `errors.Is` で見分ける（`DetailError` が番兵に「どこが悪いか」を添え、4xx のときだけ文言へ写す）。番兵に当たらない失敗は操作ごとの 500（`ERR000439`〜`ERR000444`）に落ちる。
 
 ### 1.3 HTTPステータスコードの使い分け
@@ -475,7 +477,19 @@ JSON API 側がボディで `session_id` を運ぶ設計になっているため
 
 Wear OS companion アプリの gkill サーバー接続は、デフォルトで標準の証明書検証を行う。自己署名証明書の信頼は opt-in 設定でのみ有効化できる。
 
-### 2.13 スキル（SKILL.md）の表示とアップロード経路
+### 2.13 HTML 出力に含めないもの
+
+出力したファイルは**そのまま他人へ渡るもの**なので、画面に出ていない情報まで一緒に渡らないようにする。
+いずれも漏れても画面は普通に出るので、テストだけが見張りになる。
+
+| 含めないもの | 理由 |
+|---|---|
+| Google Maps の API キー | 焼き込む `ApplicationConfig` から空へ潰す。渡した相手が自分のキーを入れる導線を別に持たせてある |
+| チェックしていないタグ名・記録保管場所名 | 設定ツリーは利用者が並べたもので、出力に含めなかった名前まで入っている。**表示を止めるだけでは足りない**（ファイルの中に残っていれば読まれる）ので、焼き込む前に木を刈る。子が全部外れた親も消す |
+| 元のファイル名 | 同名フォルダの中のファイル名は内容ハッシュにする（[ADR-0713](../adr/0713-sidecar-file-names-are-content-hashes.md)） |
+| セッション・認証情報 | 出力用の API は通信そのものを `gkill_fetch` の1点で塞いでいる（[ADR-0415](../adr/0415-exported-view-is-a-separate-flag.md)） |
+
+### 2.14 スキル（SKILL.md）の表示とアップロード経路
 
 スキルは利用者だけでなく AI（MCP の `gkill_add_skill` / `gkill_update_skill`）も書くので、中身は信用できない入力として扱う（脅威モデルは [ADR-0634](../adr/0634-per-user-skills-for-mcp.md)）。
 
