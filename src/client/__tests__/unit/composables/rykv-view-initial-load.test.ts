@@ -1,5 +1,5 @@
 /**
- * useRykvView の初期化（画面を見せるまで）の検証。
+ * useRykvColumns の初期化（画面を見せるまで）の検証。
  *
  * 以前は「保存済み列の初期検索が全部終わるまで画面全体を隠す」実装で、
  * サイドバーもテーブルも v-show で消え、全画面オーバーレイが被さっていた。
@@ -39,7 +39,7 @@ vi.mock('@/classes/kyou-reload', () => ({
 // 本番同様に gkill-api を先に評価させる
 import '@/classes/api/gkill-api'
 import { refresh_kyou } from '@/classes/kyou-reload'
-import { useRykvView } from '@/classes/use-rykv-view'
+import { useRykvColumns } from '@/classes/use-rykv-columns'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { RykvViewProps } from '@/pages/views/rykv-view-props'
 import type { RykvViewEmits } from '@/pages/views/rykv-view-emits'
@@ -71,14 +71,14 @@ function createView(saved_query_ids: string[], config_overrides: Record<string, 
     share_title: '',
   })
   const props = raw_props as unknown as RykvViewProps
-  const view = useRykvView({ props, emits: noop_emits })
+  const view = useRykvColumns({ props, emits: noop_emits })
   view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
   // init() は application_config.is_loaded の watch で起動する
   const start_init = () => finish_application_config_load(raw_props)
   return { api, pending_get_kyous, view, saved_querys, start_init }
 }
 
-describe('useRykvView 初期化', () => {
+describe('useRykvColumns 初期化', () => {
   test('初期検索の完了を待たずに画面が見える', async () => {
     // 本件の本体。旧実装は Promise.all(初期検索) の then で inited を立てていた
     const { pending_get_kyous, view, start_init } = createView(['col-a', 'col-b'])
@@ -268,7 +268,7 @@ describe('useRykvView 初期化', () => {
     function createViewWithInstanceKey(instance_key: string, api: ReturnType<typeof createColumnViewMockApi>['api']) {
       const raw_props = makeColumnViewProps(api, {}, Object.assign({}, { share_title: '' }, { column_state_instance_key: instance_key }))
       const props = raw_props as unknown as RykvViewProps
-      const view = useRykvView({ props, emits: noop_emits })
+      const view = useRykvColumns({ props, emits: noop_emits })
   view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
       return { view, start_init: () => finish_application_config_load(raw_props) }
     }
@@ -320,7 +320,7 @@ describe('useRykvView 初期化', () => {
 // 引き直しは id キーの「引き直し中」表示を同じ Kyou を出している一覧の行にも点けるので、
 // ダイアログを開くたびに引いていたころは親の一覧が読み込み中に見えていた（2026-09-14 修正）。
 // use-kyou-list-view-dialog.test.ts と同じ約束を列画面側でも固定する（rykv / mi は対称実装）
-describe('useRykvView ダイアログ', () => {
+describe('useRykvColumns ダイアログ', () => {
   test('開いた直後には引き直さない', async () => {
     const { view, start_init } = createView(['col-a'])
     start_init()

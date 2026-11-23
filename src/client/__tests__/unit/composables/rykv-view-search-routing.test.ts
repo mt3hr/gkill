@@ -1,5 +1,5 @@
 /**
- * useRykvView の「列×検索」ルーティングのテスト。
+ * useRykvColumns の「列×検索」ルーティングのテスト。
  * 期待仕様「検索時の列に検索時の結果が表示される」
  * 「同じ列で検索途中に条件が変更されたら、最後の検索条件の結果を表示する」を固定する。
  * get_kyous を deferred 化し、解決順を制御してレースを決定論的に再現する。
@@ -33,7 +33,7 @@ vi.mock('@/classes/kyou-reload', () => ({
 // GkillAPIRequest→GkillAPI→ApplicationConfig→req_res の循環importがあるため、
 // 本番同様に gkill-api を先に評価させる(mi-re-kyou-view.test.ts と同じ事情)
 import '@/classes/api/gkill-api'
-import { useRykvView } from '@/classes/use-rykv-view'
+import { useRykvColumns } from '@/classes/use-rykv-columns'
 import { refresh_kyou_in_list } from '@/classes/kyou-reload'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { RykvViewProps } from '@/pages/views/rykv-view-props'
@@ -64,13 +64,13 @@ function createView(config_overrides: Record<string, unknown> = {}) {
     share_title: '',
   })
   const props = raw_props as unknown as RykvViewProps
-  const view = useRykvView({ props, emits: noop_emits })
+  const view = useRykvColumns({ props, emits: noop_emits })
   // init() は application_config.is_loaded の watch で起動する
   const start_init = () => finish_application_config_load(raw_props)
   return { api, pending_get_kyous, view, start_init }
 }
 
-describe('useRykvView 列×検索ルーティング', () => {
+describe('useRykvColumns 列×検索ルーティング', () => {
   test('別列の検索は自列にだけ書き、focused_queryを乗っ取らない', async () => {
     const { pending_get_kyous, view } = createView()
     const query_a = makeColumnQuery('col-a')

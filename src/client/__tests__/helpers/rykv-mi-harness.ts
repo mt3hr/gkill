@@ -1,5 +1,5 @@
 /**
- * useRykvView / useMiView の「列×検索」テスト用ハーネス。
+ * useRykvColumns / useMiView の「列×検索」テスト用ハーネス。
  *
  * - get_kyous を deferred 化し、解決順を試験側が制御してレースを決定論的に再現する
  * - v-for テンプレートref (kyou_list_views) には query_id を返す fake を手動注入する
@@ -135,6 +135,20 @@ export function makeColumnViewProps(
     is_hosted_in_dialog: false,
     // 空文字＝従来キー（単独ページと1枚目）。2枚目以降のケースは extra で '2' などを渡す
     column_state_instance_key: '',
+    // rykv の列（use-rykv-columns）は「何ができるか」を props で受け取る。
+    // 普段使う rykv と同じ値を既定にする（HTML 出力のケースは extra で上書きする）。
+    // mi は受け取らないので、余っても害は無い
+    application_config_load_failed: false,
+    enable_context_menu: true,
+    enable_add_column: true,
+    enable_keyboard_shortcuts: true,
+    is_readonly_mi_check: false,
+    show_column_footer: true,
+    show_rep_name: true,
+    show_timeis_playing_end_button: true,
+    is_dnote_available: true,
+    is_map_available: true,
+    is_sidebar_available: true,
     ...extra,
   })
 }

@@ -1,5 +1,5 @@
 /**
- * useRykvView の地図の日付ピッカー（requested_change_map_date の受け口）の検証。
+ * useRykvColumns の地図の日付ピッカー（requested_change_map_date の受け口）の検証。
  *
  * 地図の日付表示をクリックして開くピッカーで選んだ日は、ライフログビューでは
  * 「地図に映す日」だけを切り替える。検索条件と一覧は動かさない
@@ -43,7 +43,7 @@ vi.mock('@/classes/kyou-reload', () => ({
 // GkillAPIRequest→GkillAPI→ApplicationConfig→req_res の循環importがあるため、
 // 本番同様に gkill-api を先に評価させる
 import '@/classes/api/gkill-api'
-import { useRykvView } from '@/classes/use-rykv-view'
+import { useRykvColumns } from '@/classes/use-rykv-columns'
 import type { RykvViewProps } from '@/pages/views/rykv-view-props'
 import type { RykvViewEmits } from '@/pages/views/rykv-view-emits'
 import {
@@ -62,7 +62,7 @@ function createView() {
     share_title: '',
   })
   const props = raw_props as unknown as RykvViewProps
-  const view = useRykvView({ props, emits: noop_emits })
+  const view = useRykvColumns({ props, emits: noop_emits })
   return { api, pending_get_kyous, view }
 }
 
@@ -86,7 +86,7 @@ async function createViewWithColumn() {
   return { pending_get_kyous, view, fakes, query_a, initial_map_time, searches_before }
 }
 
-describe('useRykvView 地図の日付ピッカー（onGpsLogMapRequestedChangeDate）', () => {
+describe('useRykvColumns 地図の日付ピッカー（onGpsLogMapRequestedChangeDate）', () => {
   // **窓はその日の丸ごとにする。開始と終了を同じ時刻にしてはいけない。**
   // GPSLog の取得は両端を含む厳密な範囲比較なので（GPX 実装も、出力 HTML の
   // 焼き込みを読む側も）、幅0の窓ではその瞬間ちょうどの点しか当たらず軌跡が出ない。
@@ -183,11 +183,11 @@ function find_repo_root(): string {
   throw new Error(`リポジトリルートが見つからない: cwd=${process.cwd()}`)
 }
 
-describe('rykv-view.vue の地図の配線', () => {
+describe('rykv-columns-view.vue の地図の配線', () => {
   // テンプレートの配線を取り違えても型検査は通る（どちらの受け口も Date を1つ取る）。
   // 2つのイベントがそれぞれ自分の受け口へ届いていることをソースで固定する
   function read_gps_log_map_tag(): string {
-    const source = readFileSync(join(find_repo_root(), 'src/client/pages/views/rykv-view.vue'), 'utf8')
+    const source = readFileSync(join(find_repo_root(), 'src/client/pages/views/rykv-columns-view.vue'), 'utf8')
     const start = source.indexOf('<GPSLogMap')
     expect(start, 'GPSLogMap が見つからない').toBeGreaterThan(-1)
     const end = source.indexOf('/>', start)

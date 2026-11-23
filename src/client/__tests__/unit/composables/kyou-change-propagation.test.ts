@@ -36,7 +36,7 @@ vi.mock('@/classes/kyou-reload', () => ({
 
 import '@/classes/api/gkill-api'
 import { nextTick } from 'vue'
-import { useRykvView } from '@/classes/use-rykv-view'
+import { useRykvColumns } from '@/classes/use-rykv-columns'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { create_kyou_change_bus } from '@/classes/kyou-change-bus'
 import type { RykvViewProps } from '@/pages/views/rykv-view-props'
@@ -67,7 +67,7 @@ function createHostedView(origin_id: string, bus: ReturnType<typeof create_kyou_
     kyou_change_channel: { bus: bus, origin_id: origin_id },
   })
   const props = raw_props as unknown as RykvViewProps
-  const view = useRykvView({ props, emits: noop_emits })
+  const view = useRykvColumns({ props, emits: noop_emits })
   view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
   return {
     api,
@@ -82,7 +82,7 @@ async function setup_two_windows() {
   const bus = create_kyou_change_bus()
   const a = createHostedView('window-a', bus)
   const b = createHostedView('window-b', bus)
-  // init() は通さない。購読は useRykvView() の中で張られるので、列だけ用意すれば足りる
+  // init() は通さない。購読は useRykvColumns() の中で張られるので、列だけ用意すれば足りる
   setupColumns(a.view, [makeColumnQuery('col-a')], [kyous(['k1', 'k2'])])
   setupColumns(b.view, [makeColumnQuery('col-b')], [kyous(['k1', 'k2'])])
   await nextTick()
@@ -160,7 +160,7 @@ describe('画面間の変更伝播', () => {
       kyou_change_channel: null,
     })
     const props = raw_props as unknown as RykvViewProps
-    const view = useRykvView({ props, emits: noop_emits })
+    const view = useRykvColumns({ props, emits: noop_emits })
     view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
     setupColumns(view, [makeColumnQuery('col-solo')], [kyous(['k1'])])
     await nextTick()

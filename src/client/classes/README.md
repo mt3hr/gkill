@@ -9,7 +9,7 @@ Vue コンポーネント（`pages/`）から使用されるロジック層。
 
 ```
 classes/
-├── (ルートファイル 381個)        # use-*.ts Composable + ユーティリティ
+├── (ルートファイル 382個)        # use-*.ts Composable + ユーティリティ
 ├── api/                        # GkillAPI クライアント → api/README.md
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md
@@ -94,7 +94,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-kftl-tabs.ts` | KFTL のタブを持つ**共有シングルトン**ストア。`/mkfl` ではインラインの KFTLView と playing 側のメモ帳ダイアログが同時にマウントされるので、インスタンスごとに配列を持つと片方の古い配列でもう片方のタブが消える。独立した `effectScope(true)` で作る（setup 直下に watch を張ると最初のコンポーネントの unmount で永続化が止まる）。送信中のタブ id の排他（`try_begin_submit` / `end_submit`）もここが持つ ―― 送信中フラグはビューごとなので、ウィンドウをまたいだ二重送信を止められるのはここだけ |
 | `use-mi-page.ts` | Mi ページ |
 | `use-kyou-page.ts` | Kyou ページ |
-| `use-rykv-page.ts` / `use-rykv-view.ts` | Rykv ページ |
+| `use-rykv-page.ts` / `use-rykv-view.ts` / `use-rykv-columns.ts` | Rykv ページ（ビューはラッパと列の子に分かれている） |
 | `use-mkfl-page.ts` / `use-mkfl-view.ts` | Mkfl ページ |
 | `use-playing-time-is-page.ts` / `use-playing-time-is-view.ts` | 稼働中 TimeIs |
 | `use-saihate-page.ts` | Saihate ページ |

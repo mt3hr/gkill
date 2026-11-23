@@ -33,7 +33,7 @@ vi.mock('@/classes/kyou-reload', () => ({
 // GkillAPIRequest→GkillAPI→ApplicationConfig→req_res の循環importがあるため、
 // 本番同様に gkill-api を先に評価させる
 import '@/classes/api/gkill-api'
-import { useRykvView } from '@/classes/use-rykv-view'
+import { useRykvColumns } from '@/classes/use-rykv-columns'
 import { useMiView } from '@/classes/use-mi-view'
 import { refresh_kyou } from '@/classes/kyou-reload'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
@@ -115,7 +115,7 @@ interface ViewCase {
 
 const view_cases: ViewCase[] = [
   {
-    name: 'useRykvView',
+    name: 'useRykvColumns',
     create: () => {
       const { api, pending_get_kyous } = createColumnViewMockApi()
       const props = {
@@ -125,9 +125,9 @@ const view_cases: ViewCase[] = [
         app_content_height: 600,
         app_content_width: 800,
         share_title: '',
-      } as unknown as Parameters<typeof useRykvView>[0]['props']
-      const emits = (() => { }) as unknown as Parameters<typeof useRykvView>[0]['emits']
-      return { api, pending_get_kyous, view: useRykvView({ props, emits }) as unknown as ColumnViewUnderTest }
+      } as unknown as Parameters<typeof useRykvColumns>[0]['props']
+      const emits = (() => { }) as unknown as Parameters<typeof useRykvColumns>[0]['emits']
+      return { api, pending_get_kyous, view: useRykvColumns({ props, emits }) as unknown as ColumnViewUnderTest }
     },
   },
   {

@@ -96,7 +96,7 @@
                                     :application_config="application_config" :gkill_api="gkill_api"
                                     :matched_kyous="match_kyous_list[index]" :query="query"
                                     :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
-                                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                                    :enable_context_menu="true" :enable_dialog="true"
                                     :is_readonly_mi_check="false" :show_checkbox="false" :show_footer="true"
                                     :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
                                     :show_rep_name="false" :force_show_latest_kyou_info="true" :show_content_only="false"
@@ -128,9 +128,9 @@
                                     :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
                                     :show_timeis_elapsed_time="true" :show_timeis_playing_end_button="true" :height="'unset'"
                                     :is_readonly_mi_check="false" :width="'unset'"
-                                    :enable_context_menu="enable_context_menu" :show_update_time="false"
+                                    :enable_context_menu="true" :show_update_time="false"
                                     :show_related_time="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
-                                    :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
+                                    :enable_dialog="true" :show_attached_timeis="true" class="kyou_detail_view"
                                     :show_attached_tags="true" :show_attached_texts="true"
                                     :show_attached_notifications="true"
                                     v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogRelayHandlers }" />
@@ -146,45 +146,45 @@
                 </tbody>
             </table>
             <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog"
+                :kyou="new Kyou()" :enable_context_menu="true"
+                :enable_dialog="true"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_kc_dialog" />
             <AddTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog"
+                :kyou="new Kyou()" :enable_context_menu="true"
+                :enable_dialog="true"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers }"
                 ref="add_timeis_dialog" />
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog"
+                :kyou="new Kyou()" :enable_context_menu="true"
+                :enable_dialog="true"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_lantana_dialog" />
             <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog"
+                :kyou="new Kyou()" :enable_context_menu="true"
+                :enable_dialog="true"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_urlog_dialog" />
             <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog"
+                :kyou="new Kyou()" :enable_context_menu="true"
+                :enable_dialog="true"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_mi_dialog" />
             <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog"
+                :kyou="new Kyou()" :enable_context_menu="true"
+                :enable_dialog="true"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_nlog_dialog" />
             <KFTLDialogHost :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :app_content_height="app_content_height"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                :enable_context_menu="true" :enable_dialog="true"
                 :app_content_width="app_content_width"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
                 ref="kftl_dialog" />
             <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :app_content_height="app_content_height"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                :enable_context_menu="true" :enable_dialog="true"
                 :app_content_width="app_content_width"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
@@ -198,7 +198,7 @@
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="save_clipboard_to_file_dialog" />
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                :enable_context_menu="true" :enable_dialog="true"
                 @closed="(id: string) => close_rykv_dialog(id)"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogRelayHandlers }" />
             <!-- ポート(rudbeckia)の中ではFABを出さない。理由は rykv-view.vue の同じ箇所参照 -->
@@ -296,8 +296,6 @@ const {
     kyou_list_views,
 
     // State
-    enable_context_menu,
-    enable_dialog,
     opened_dialogs,
     querys,
     match_kyous_list,

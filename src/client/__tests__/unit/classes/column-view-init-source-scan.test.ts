@@ -53,15 +53,20 @@ function read(relative_path: string): string {
     return readFileSync(join(repo_root, relative_path), 'utf8')
 }
 
-/** 列ビュー(コピー由来の対称実装。修正は必ず両方へ入れる) */
+/**
+ * 列ビュー(コピー由来の対称実装。修正は必ず両方へ入れる)。
+ *
+ * rykv は列の機構だけを use-rykv-columns.ts へ分けてある（通常と HTML 出力の
+ * 2つのラッパがホストする）。mi は共有も出力も無いので分けていない。
+ */
 const COLUMN_VIEW_COMPOSABLES = [
-    'src/client/classes/use-rykv-view.ts',
+    'src/client/classes/use-rykv-columns.ts',
     'src/client/classes/use-mi-view.ts',
 ]
 
 /** ルートに準備完了信号を出すビュー */
 const VIEW_READY_TEMPLATES = [
-    'src/client/pages/views/rykv-view.vue',
+    'src/client/pages/views/rykv-columns-view.vue',
     'src/client/pages/views/mi-view.vue',
     'src/client/pages/views/dashboard-view.vue',
 ]

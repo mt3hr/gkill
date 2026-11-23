@@ -101,8 +101,6 @@ export function useMiView(options: {
     const kyou_list_views = ref<Array<ComponentRef> | null>(null)
 
     // ── State refs ──
-    const enable_context_menu = ref(true)
-    const enable_dialog = ref(true)
     const opened_dialogs: Ref<Array<OpenedRykvDialog>> = ref([])
     // 板のドラッグ&ドロップ移動が進行中か
     const is_moving_board_task = ref(false)
@@ -1279,8 +1277,6 @@ export function useMiView(options: {
         kyou_list_views,
 
         // State
-        enable_context_menu,
-        enable_dialog,
         opened_dialogs,
         querys,
         match_kyous_list,

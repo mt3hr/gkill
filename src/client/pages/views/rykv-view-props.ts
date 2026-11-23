@@ -3,21 +3,18 @@
 import type { KyouChangeChannel } from "@/classes/kyou-change-bus"
 import type { GkillPropsBase } from "./gkill-props-base"
 
+/**
+ * 普段使う rykv 画面。
+ *
+ * **モードのフラグを持たない。** このビューは「編集できる rykv」専用で、
+ * 列の中身は `rykv-columns-view.vue` に、HTML 出力は `exported-rykv-view.vue` に、
+ * 共有ページは `shared-rykv-view.vue` に分かれている。
+ * 読み取り専用かどうかは、子へ渡す値をリテラルで書くことで表す。
+ */
 export interface RykvViewProps extends GkillPropsBase {
     app_title_bar_height: number
     app_content_height: number
     app_content_width: number
-    // HTML へ出力したファイルの中で描かれている。読み取り専用で、
-    // 出力時に選ばれなかった区画は下の is_exported_with_* で落とす。
-    // **共有ページはこのビューを使わない** —— 共有は列の機構を一切使わないので
-    // 別のビュー（shared-rykv-view.vue）になっている
-    is_exported_rykv_view: boolean
-    // 出力時に「含めるもの」で選ばれたか。is_exported_rykv_view が false のときは見ない
-    is_exported_with_dnote: boolean
-    is_exported_with_map: boolean
-    // 検索条件サイドバー。出力先では絞り込み専用（焼いた記録の外は出ない）
-    is_exported_with_sidebar: boolean
-    share_title: string
     // ポート(rudbeckia)のフローティングダイアログの中で描かれている。
     // このビューは単独ページとしても使われるので、既定は false。
     // true のとき: 自前のFABを出さない(ポートのFABが唯一)、Enter/Ctrl+Vの

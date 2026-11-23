@@ -10,7 +10,7 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 15 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（209 .vue）
+├── views/                          # View コンポーネント（211 .vue）
 └── dialogs/                        # Dialog コンポーネント（120 .vue）
 ```
 
@@ -69,7 +69,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（209 .vue）
+## views/ — 全 View コンポーネント一覧（211 .vue）
 
 ### データ追加系（23コンポーネント）
 
@@ -245,7 +245,9 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `share-kyou-view.vue` / `share-kyou-link-view.vue` / `share-kyou-footer.vue` | 共有 |
 | `shared-mi-view.vue` / `manage-share-task-list-view.vue` | 共有 Mi 管理 |
 | `manage-share-button.vue` / `share-button.vue` | 共有ボタン |
-| `rykv-view.vue` / `rykv-dialog-host.vue` / `rykv-dialog-host-item.vue` | Rykv |
+| `rykv-view.vue` / `exported-rykv-view.vue` / `shared-rykv-view.vue` | Rykv の3つの顔（普段使う / HTML 出力 / 共有）。どれもモードのフラグを持たない |
+| `rykv-columns-view.vue` | Rykv の列。普段使う版と HTML 出力版が共有する子（共有ページは使わない） |
+| `rykv-dialog-host.vue` / `rykv-dialog-host-item.vue` | Rykv のダイアログホスト |
 | `ryuu-view.vue` / `ryuu-item-view.vue` | Ryuu |
 | `sidebar-header.vue` | サイドバーヘッダー |
 | `gkill-message-feed-view.vue` | 画面右上のエラー / メッセージ表示（全ページ共通。本文・ヒント・`コード · reason`・詳細をコピー） |
