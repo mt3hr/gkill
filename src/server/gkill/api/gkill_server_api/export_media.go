@@ -27,13 +27,13 @@ const (
 	exportThumbQuery      = "thumb=400x400"
 	exportVideoThumbQuery = "is_video=true&thumb=400x400"
 
-	// exportMediaBudgetBytes はメディアに使える生バイトの上限。
-	// base64 は素のバイト数の 4/3 になるので、応答はこれより大きくなる。
-	exportMediaBudgetBytes = 48 * 1024 * 1024
-
 	// exportTextBudgetBytes は IDF のテキスト / Markdown 本文に使える生バイトの上限。
 	// テキストは軽いので、メディアとは別枠にする（埋め込まないを選んでも本文は焼く）。
 	exportTextBudgetBytes = 8 * 1024 * 1024
+
+	// exportMediaKindDropped は予算に収まらず中身を入れなかった印。
+	// 出力先はこれを見て「含まれていません」の代わりを出す。
+	exportMediaKindDropped = "dropped"
 )
 
 // bufferResponseWriter は配信ハンドラの出力をメモリへ受ける。
@@ -129,6 +129,25 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 		return warnings, nil
 	}
 
+	// 予算は利用者がダイアログで決める。0 や負なら既定にする
+	mediaBudget := int(request.MediaBudgetBytes)
+	if request.MediaBudgetBytes <= 0 {
+		mediaBudget = int(req_res.ExportDefaultMediaBudgetBytes)
+	}
+	itemLimit := int(request.MediaItemLimitBytes)
+	if request.MediaItemLimitBytes <= 0 {
+		itemLimit = int(req_res.ExportDefaultMediaItemLimitBytes)
+	}
+
+	// 予算に収まらなかった鍵を「落とした」として焼き込む。
+	// 鍵ごと落とすと出力先で「焼き込まれていない」と区別がつかない
+	markDropped := func(key string) {
+		if _, already := payload.Media[key]; already {
+			return
+		}
+		payload.Media[key] = exportedMediaEntry{Src: "", Kind: exportMediaKindDropped}
+	}
+
 	byName, err := idfRepsByName(ctx, repositories)
 	if err != nil {
 		return warnings, err
@@ -177,7 +196,31 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 		if request.MediaMode == req_res.ExportMediaModeNone {
 			continue
 		}
+
+		// 添付ファイル（画像でも動画でもないもの。音声・PDF・ZIP など）。
+		// **本体を焼かないと、出力先でリンクを踏んでもブラウザの
+		// 「ファイルが見つかりません」になる**（/files/ は渡した相手には存在しない）。
+		// サムネイルという概念が無いので、MediaMode がサムネイルのみでも本体を焼く。
+		// 1件が予算を食い潰さないよう、上限を超えるものは丸ごと落として警告へ回す。
 		if !idf.IsImage && !idf.IsVideo {
+			if _, already := payload.Media[idf.FileURL]; already {
+				continue
+			}
+			body, err := readRepFileBytes(ctx, idfRep, escapedRel, "")
+			if err != nil {
+				failedMedia++
+				continue
+			}
+			if len(body) > itemLimit || mediaUsed+len(body) > mediaBudget {
+				droppedMedia++
+				markDropped(idf.FileURL)
+				continue
+			}
+			mediaUsed += len(body)
+			payload.Media[idf.FileURL] = exportedMediaEntry{
+				Src:  exportMediaSrc(sidecar, body, sidecarExtension(idf.TargetFile), exportMediaContentType(idf)),
+				Kind: "attachment",
+			}
 			continue
 		}
 
@@ -193,8 +236,9 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 				// サムネイルは作れないことがある（ffmpeg が無い・デコードできない）。
 				// 画面は出るので、落として警告に回す
 				failedMedia++
-			} else if mediaUsed+len(body) > exportMediaBudgetBytes {
+			} else if len(body) > itemLimit || mediaUsed+len(body) > mediaBudget {
 				droppedMedia++
+				markDropped(thumbKey)
 			} else {
 				mediaUsed += len(body)
 				payload.Media[thumbKey] = exportedMediaEntry{
@@ -217,8 +261,9 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 			failedMedia++
 			continue
 		}
-		if mediaUsed+len(body) > exportMediaBudgetBytes {
+		if len(body) > itemLimit || mediaUsed+len(body) > mediaBudget {
 			droppedMedia++
+			markDropped(idf.FileURL)
 			continue
 		}
 		mediaUsed += len(body)
@@ -229,7 +274,9 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 	}
 
 	if droppedMedia != 0 {
-		warnings = append(warnings, fmt.Sprintf("メディアが大きすぎるため %d 件を含めませんでした", droppedMedia))
+		warnings = append(warnings, fmt.Sprintf(
+			"予算に収まらないため %d 件のメディア・添付ファイルを含めませんでした（1件あたり %d MB / 合計 %d MB）。出力画面では「含まれていません」と出ます",
+			droppedMedia, itemLimit/1024/1024, mediaBudget/1024/1024))
 	}
 	if droppedText != 0 {
 		warnings = append(warnings, fmt.Sprintf("本文が大きすぎるため %d 件を含めませんでした", droppedText))

@@ -2,7 +2,13 @@
     <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <!-- Markdownファイル: HTMLに変換してリッチテキスト表示 -->
         <div v-if="kyou.typed_idf_kyou && is_markdown" class="idf_text_wrap">
-            <a :href="kyou.typed_idf_kyou.file_url" @click="open_link" class="idf_text_filename">
+            <!-- 焼き込みに本体が入っていないと about:blank になる。リンクのまま出すと
+                 押しても何も起きないので、そのときはただの文字にする（本文は下に出ている） -->
+            <span v-if="!is_file_available(kyou.typed_idf_kyou.file_url)" class="idf_text_filename">
+                {{ kyou.typed_idf_kyou.file_name }}
+            </span>
+            <a v-else :href="build_file_url(kyou.typed_idf_kyou.file_url)" @click="open_link" class="idf_text_filename"
+                :download="download_file_name(kyou.typed_idf_kyou.file_url, kyou.typed_idf_kyou.file_name)">
                 {{ kyou.typed_idf_kyou.file_name }}
             </a>
             <v-progress-linear v-if="text_loading" indeterminate color="primary" height="2" />
@@ -13,7 +19,13 @@
         </div>
         <!-- テキストファイル: 内容をインライン表示 -->
         <div v-else-if="kyou.typed_idf_kyou && is_text" class="idf_text_wrap">
-            <a :href="kyou.typed_idf_kyou.file_url" @click="open_link" class="idf_text_filename">
+            <!-- 焼き込みに本体が入っていないと about:blank になる。リンクのまま出すと
+                 押しても何も起きないので、そのときはただの文字にする（本文は下に出ている） -->
+            <span v-if="!is_file_available(kyou.typed_idf_kyou.file_url)" class="idf_text_filename">
+                {{ kyou.typed_idf_kyou.file_name }}
+            </span>
+            <a v-else :href="build_file_url(kyou.typed_idf_kyou.file_url)" @click="open_link" class="idf_text_filename"
+                :download="download_file_name(kyou.typed_idf_kyou.file_url, kyou.typed_idf_kyou.file_name)">
                 {{ kyou.typed_idf_kyou.file_name }}
             </a>
             <v-progress-linear v-if="text_loading" indeterminate color="primary" height="2" />
@@ -21,17 +33,27 @@
                 :class="['idf_text_content', is_image_request_to_thumb_size ? 'idf_text_content--noscroll' : '']"><LinkifiedText :text="text_content" /></pre>
         </div>
         <!-- その他のファイル: リンクのみ -->
-        <a v-if="kyou.typed_idf_kyou && !is_text && !is_markdown && !kyou.typed_idf_kyou.is_image && !kyou.typed_idf_kyou.is_video && !kyou.typed_idf_kyou.is_audio"
-            :href="kyou.typed_idf_kyou.file_url" @click="open_link">
-            {{ kyou.typed_idf_kyou.file_name }}
-        </a>
+        <template
+            v-if="kyou.typed_idf_kyou && !is_text && !is_markdown && !kyou.typed_idf_kyou.is_image && !kyou.typed_idf_kyou.is_video && !kyou.typed_idf_kyou.is_audio">
+            <!-- 予算に収まらず中身が入らなかったものは、行き先の無いリンクにしない
+                 （踏んでも「ファイルが見つかりません」になるだけで、理由が分からない） -->
+            <span v-if="is_media_dropped(kyou.typed_idf_kyou.file_url)" class="idf_dropped_file">
+                {{ kyou.typed_idf_kyou.file_name }}（{{ i18n.global.t('EXPORT_MEDIA_NOT_INCLUDED_TITLE') }}）
+            </span>
+            <a v-else :href="build_file_url(kyou.typed_idf_kyou.file_url)" @click="open_link"
+                :download="download_file_name(kyou.typed_idf_kyou.file_url, kyou.typed_idf_kyou.file_name)">
+                {{ kyou.typed_idf_kyou.file_name }}
+            </a>
+        </template>
         <img v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_image"
             :src="build_media_url(kyou.typed_idf_kyou.file_url, false)" loading="lazy" decoding="async"
             fetchpriority="low" class="kyou_image" />
-        <video v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_video" :src="kyou.typed_idf_kyou.file_url"
+        <video v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_video"
+            :src="build_file_url(kyou.typed_idf_kyou.file_url)"
             :preload="video_preload" :poster="build_media_url(kyou.typed_idf_kyou.file_url, true)" class="kyou_video"
             controls></video>
-        <audio v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_audio" :src="kyou.typed_idf_kyou.file_url"
+        <audio v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_audio"
+            :src="build_file_url(kyou.typed_idf_kyou.file_url)"
             class="kyou_audio" controls></audio>
         <IDFKyouContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou"
@@ -41,6 +63,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import IDFKyouContextMenu from './idf-kyou-context-menu.vue'
 import LinkifiedText from './linkified-text.vue'
 import type { IDFKyouProps } from './idf-kyou-props'
@@ -63,6 +86,10 @@ const {
     onMarkdownContentClick,
     onMarkdownContentDblclick,
     build_media_url,
+    build_file_url,
+    download_file_name,
+    is_media_dropped,
+    is_file_available,
     video_preload,
     crudRelayHandlers,
 } = useIDFKyouView({ props, emits })

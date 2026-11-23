@@ -3,8 +3,15 @@
 import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
 import type { ExportRykvHTMLViewEmits } from '@/pages/views/export-rykv-html-view-emits'
 import type { ExportRykvHTMLViewProps } from '@/pages/views/export-rykv-html-view-props'
-import { ExportRykvHTMLRequest, type ExportMediaMode, type ExportOutputFormat } from '@/classes/api/req_res/export-rykv-html-request'
+import {
+    ExportRykvHTMLRequest,
+    EXPORT_DEFAULT_MEDIA_BUDGET_BYTES,
+    EXPORT_DEFAULT_MEDIA_ITEM_LIMIT_BYTES,
+    type ExportMediaMode,
+    type ExportOutputFormat,
+} from '@/classes/api/req_res/export-rykv-html-request'
 import { base64_to_blob } from '@/classes/file-base64'
+import { GkillMessage } from '@/classes/api/gkill-message'
 import { save_as } from '@/classes/save-as'
 
 /**
@@ -36,9 +43,14 @@ export function useExportRykvHTMLView(options: {
     const include_sidebar: Ref<boolean> = ref(false)
 
     const media_mode: Ref<ExportMediaMode> = ref('thumbnail')
+    // 予算は MB で持つ（入力欄がそのまま使う）。送るときにバイトへ直す
+    const media_budget_mb: Ref<number> = ref(EXPORT_DEFAULT_MEDIA_BUDGET_BYTES / 1024 / 1024)
+    const media_item_limit_mb: Ref<number> = ref(EXPORT_DEFAULT_MEDIA_ITEM_LIMIT_BYTES / 1024 / 1024)
     const output_format: Ref<ExportOutputFormat> = ref('single')
 
     const is_exporting: Ref<boolean> = ref(false)
+    // 出力中の要求。キャンセルで中断するために握っておく
+    let abort_controller: AbortController | null = null
 
     // ── Computed ──
     const has_focused_column: ComputedRef<boolean> = computed(() =>
@@ -64,7 +76,18 @@ export function useExportRykvHTMLView(options: {
         }
     })
 
+    // 出力中かをダイアログへ伝える。ダイアログはこれが立っている間、閉じない
+    watch(is_exporting, () => emits('changed_is_exporting', is_exporting.value))
+
     // ── Methods ──
+    /** MB の入力をバイトへ。空・NaN・0 以下は既定へ倒す */
+    function to_budget_bytes(mb: number, fallback_bytes: number): number {
+        if (!Number.isFinite(mb) || mb <= 0) {
+            return fallback_bytes
+        }
+        return Math.floor(mb * 1024 * 1024)
+    }
+
     function build_request(): ExportRykvHTMLRequest {
         const req = new ExportRykvHTMLRequest()
         req.title = title.value
@@ -80,6 +103,9 @@ export function useExportRykvHTMLView(options: {
         req.include_map = include_map.value
         req.include_sidebar = include_sidebar.value
         req.media_mode = media_mode.value
+        // 入力が空や 0 以下なら既定に任せる（サーバ側も 0 以下を既定へ倒す）
+        req.media_budget_bytes = to_budget_bytes(media_budget_mb.value, EXPORT_DEFAULT_MEDIA_BUDGET_BYTES)
+        req.media_item_limit_bytes = to_budget_bytes(media_item_limit_mb.value, EXPORT_DEFAULT_MEDIA_ITEM_LIMIT_BYTES)
         req.output_format = output_format.value
         return req
     }
@@ -89,14 +115,32 @@ export function useExportRykvHTMLView(options: {
             return
         }
         is_exporting.value = true
+        const req = build_request()
+        abort_controller = req.abort_controller
         try {
-            const res = await props.gkill_api.export_rykv_html(build_request())
+            const res = await props.gkill_api.export_rykv_html(req)
+            // 中断されていたら、返ってきたものは捨てる（保存もしないし閉じもしない）
+            if (!is_exporting.value) {
+                return
+            }
             if (res.errors && res.errors.length !== 0) {
                 emits('received_errors', res.errors)
                 return
             }
-            if (res.messages && res.messages.length !== 0) {
-                emits('received_messages', res.messages)
+            const messages = (res.messages ?? []).concat()
+            // **警告は必ず出す。** 予算に収まらなかったメディアや読めなかったファイルは
+            // ここでしか伝わらず、黙っていると「画像が出ない」としか見えない。
+            // 成功しているので errors ではなく warning のメッセージにする（閉じるまで残る）
+            for (const warning of res.warnings ?? []) {
+                const message = new GkillMessage()
+                message.message_code = 'MSG_EXPORT_RYKV_HTML_WARNING'
+                message.message = warning
+                message.level = 'warning'
+                message.show_keep = true
+                messages.push(message)
+            }
+            if (messages.length !== 0) {
+                emits('received_messages', messages)
             }
             // 応答は JSON。ファイルそのものは body に載せられない（ADR-0712）ので、
             // ここで Blob へ戻して保存する
@@ -107,11 +151,25 @@ export function useExportRykvHTMLView(options: {
             }
             emits('requested_close_dialog')
         } finally {
+            abort_controller = null
             is_exporting.value = false
         }
     }
 
+    /**
+     * キャンセル。**出力中は閉じずに中断だけする。**
+     *
+     * 出力の最中にダイアログを閉じられると、応答が返ってきたときに保存の相手が居ない。
+     * 中断してから、もう一度押せば閉じる（閉じてよいかは is_exporting が決める。
+     * ダイアログ側の × と Esc も同じ条件で止めてある）。
+     */
     function cancel(): void {
+        if (is_exporting.value) {
+            abort_controller?.abort()
+            abort_controller = null
+            is_exporting.value = false
+            return
+        }
         emits('requested_close_dialog')
     }
 
@@ -130,6 +188,8 @@ export function useExportRykvHTMLView(options: {
         include_map,
         include_sidebar,
         media_mode,
+        media_budget_mb,
+        media_item_limit_mb,
         output_format,
         is_exporting,
 

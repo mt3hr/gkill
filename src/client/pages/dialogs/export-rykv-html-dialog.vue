@@ -10,8 +10,9 @@
         <div class="gkill-floating-dialog__spacer"></div>
         <v-checkbox v-model="ui.isTransparent.value" color="white" size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
+        <!-- 出力中は閉じさせない。中断したいときはダイアログの中のキャンセルを押す -->
         <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'"
-          variant="flat">
+          variant="flat" :disabled="is_exporting">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
@@ -21,6 +22,7 @@
           :focused_column_index="focused_column_index"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
+          @changed_is_exporting="(value: boolean) => set_is_exporting(value)"
           @requested_close_dialog="hide()" />
       </div>
     </div>
@@ -38,6 +40,6 @@ import { useExportRykvHTMLDialog } from '@/classes/use-export-rykv-html-dialog'
 
 const props = defineProps<ExportRykvHTMLDialogProps>()
 const emits = defineEmits<ExportRykvHTMLDialogEmits>()
-const { is_show_dialog, ui, show, hide } = useExportRykvHTMLDialog({ props, emits })
+const { is_show_dialog, is_exporting, ui, show, hide, set_is_exporting } = useExportRykvHTMLDialog({ props, emits })
 defineExpose({ show, hide })
 </script>

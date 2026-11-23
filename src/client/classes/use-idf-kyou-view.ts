@@ -126,9 +126,20 @@ export function useIDFKyouView(options: {
 
     function open_link(): void {
         const url = props.kyou.typed_idf_kyou?.file_url
-        if (url) {
-            window.open(url, "_blank")
+        if (!url) {
+            return
         }
+        // 焼き込みを通す。出力 HTML では /files/ が存在しないローカルパスになる
+        const resolved = props.gkill_api.resolve_media_url(url)
+        // **data: URI は window.open してはいけない。**
+        // ブラウザはトップレベルの data: への遷移を禁じているので、黙って弾かれる
+        // （利用者からは「押しても開かない」「重い」としか見えない）。
+        // 単一 HTML へ焼き込んだファイルは、<a download> で保存させる。
+        // 同名フォルダ方式では相対パスなので、ここは通って普通に開く
+        if (resolved.startsWith('data:')) {
+            return
+        }
+        window.open(resolved, "_blank")
     }
 
     // ── Markdown内の相対MDリンク → KyouDialog ──
@@ -212,6 +223,46 @@ export function useIDFKyouView(options: {
         return props.gkill_api.resolve_media_url(file_url)
     }
 
+    /**
+     * ファイル本体の URL。リンク・動画・音声が使う。
+     *
+     * **生の file_url を使ってはいけない。** 基底は恒等関数なので本体の挙動は変わらないが、
+     * 「HTML で出力」したファイルでは `/files/...` は存在しないローカルパスを指すので、
+     * リンクを踏むとブラウザの「ファイルが見つかりません」になり、
+     * 動画と音声は黙って再生できなくなる。
+     */
+    function build_file_url(file_url: string): string {
+        return props.gkill_api.resolve_media_url(file_url)
+    }
+
+    /**
+     * ダウンロードさせるときのファイル名。焼き込み（data: URI）のときだけ付ける。
+     *
+     * data: URI は download 属性が無いとブラウザが中身をそのまま開こうとするので、
+     * 添付ファイルを持ち帰れない。本体（/files/ のまま）では付けない —— 付けると
+     * 「新しいタブで開く」が「ダウンロード」に変わって従来の操作感が壊れる。
+     * モードのフラグではなく**解決後の URL の形**で決めているので、分岐が増えない。
+     */
+    /** 予算に収まらず中身が入らなかったか。基底は常に false なので本体の挙動は変わらない */
+    function is_media_dropped(file_url: string): boolean {
+        return props.gkill_api.is_exported_media_dropped(file_url)
+    }
+
+    /**
+     * ファイルを開く・保存する先があるか。
+     *
+     * 出力 HTML で焼き込みに本体が入っていないと `about:blank` になり、
+     * リンクのまま出すと**押しても何も起きない**（理由も出ない）。
+     * 本体では resolve_media_url が恒等関数なので常に true になる。
+     */
+    function is_file_available(file_url: string): boolean {
+        return props.gkill_api.resolve_media_url(file_url) !== 'about:blank'
+    }
+
+    function download_file_name(file_url: string, file_name: string): string | undefined {
+        return build_file_url(file_url).startsWith('data:') ? file_name : undefined
+    }
+
     // 動画の preload。詳細ペイン・ダイアログでは metadata にして、再生前から全体の長さを出す。
     // none のままだと再生するまで duration が NaN で、コントロールに「0:00」しか出ない。
     // 一覧では none のまま: 行は 200px 幅で Chromium のコントロールが時間表示ごと隠すので
@@ -241,6 +292,10 @@ export function useIDFKyouView(options: {
         onMarkdownContentClick,
         onMarkdownContentDblclick,
         build_media_url,
+        build_file_url,
+        download_file_name,
+        is_media_dropped,
+        is_file_available,
         video_preload,
 
         // Event relay objects

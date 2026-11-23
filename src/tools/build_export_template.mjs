@@ -180,6 +180,14 @@ function main() {
     // （全通信を abort して開く）が見張る
     check(body, /\bfrom\s*["']\/assets\//g, 'JS に /assets/ への import が残っている')
     check(body, /\bimport\s*\(\s*["']\/[^"']*["']\s*\)/g, 'JS に絶対パスの動的 import が残っている')
+    // **ビルド時アセットの URL が文字列リテラルのまま残っていないこと。**
+    // `import icon from '@/assets/x.webp'` は import 文ではなく
+    // `` `/assets/x-hash.webp` `` という**裸の文字列**に畳まれるので、上の import 系の
+    // 検査には一切当たらない。file:// で開くとドライブ直下を指して読めず、
+    // <img> の読み込み失敗は例外も警告も出さないので**画像が出ないだけ**になる
+    // （実例: lantana_icon.webp が落ちて気分記録の花が全滅した）。
+    // 畳ませるのは vite.export.config.ts の build.assetsInlineLimit
+    check(body, /["'`]\/assets\/[^"'`]*["'`]/g, 'JS にビルド時アセットの URL が残っている')
     check(body, /__VITE_PRELOAD__|__vitePreload/g, 'JS にチャンクのプリロードが残っている')
     // Service Worker の**登録**だけを見る。navigator.serviceWorker.ready は
     // Web Push の購読コード（設定画面の経路）が持っており、出力 HTML では呼ばれない

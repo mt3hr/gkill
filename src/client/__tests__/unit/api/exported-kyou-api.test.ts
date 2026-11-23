@@ -247,6 +247,33 @@ describe('GkillAPIForExportedKyou', () => {
             expect(api.resolve_media_url(absolute)).toBe('data:image/jpeg;base64,AAAA')
         })
 
+        // 一覧は is_image_request_to_thumb_size=true でサムネの鍵を引くが、
+        // 詳細ペインとダイアログは原寸の鍵を引く（rykv-view.vue / kyou-dialog.vue が false を渡す）。
+        // サーバは「サムネイルのみ」で出力したとき原寸を焼かないので、落とさないと
+        // 一覧には出るのに詳細とダイアログだけ画像が消える
+        it('原寸が焼かれていなければサムネの鍵へ落とす', () => {
+            api.media.set('/files/rep/a.jpg?thumb=400x400', 'data:image/jpeg;base64,AAAA')
+            expect(api.resolve_media_url('/files/rep/a.jpg')).toBe('data:image/jpeg;base64,AAAA')
+        })
+
+        it('動画のポスターも同じように落とす', () => {
+            api.media.set('/files/rep/a.mp4?is_video=true&thumb=400x400', 'data:image/jpeg;base64,BBBB')
+            expect(api.resolve_media_url('/files/rep/a.mp4')).toBe('data:image/jpeg;base64,BBBB')
+        })
+
+        it('オリジン付きの絶対 URL でもサムネへ落とす', () => {
+            api.media.set('/files/rep/a.jpg?thumb=400x400', 'data:image/jpeg;base64,AAAA')
+            const absolute = new URL('/files/rep/a.jpg', document.baseURI).toString()
+            expect(api.resolve_media_url(absolute)).toBe('data:image/jpeg;base64,AAAA')
+        })
+
+        // 原寸が焼かれているならそれを使う（サムネへ落とさない）
+        it('原寸が焼かれていればサムネへ落とさない', () => {
+            api.media.set('/files/rep/a.jpg', 'data:image/jpeg;base64,FULL')
+            api.media.set('/files/rep/a.jpg?thumb=400x400', 'data:image/jpeg;base64,THUMB')
+            expect(api.resolve_media_url('/files/rep/a.jpg')).toBe('data:image/jpeg;base64,FULL')
+        })
+
         it('焼き込まれていない gkill の経路は about:blank にする', () => {
             expect(api.resolve_media_url('/files/rep/missing.jpg')).toBe('about:blank')
             expect(api.resolve_media_url('/zip_cache/rep/h/x.jpg')).toBe('about:blank')

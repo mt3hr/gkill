@@ -55,8 +55,28 @@ export type UseDialogHistoryStackOptions = {
   // 閉じたとき(バック/×/Escape/リセットを問わず)にちょうど1回呼ばれる。
   // 'closed' emit の一本化用。unmount による強制クローズでは呼ばれない。
   onClosed?: () => void
+  /**
+   * いま閉じてよいか。false を返す間は**ブラウザバックでも Escape でも閉じない**。
+   *
+   * 「HTML で出力」のように、閉じられると返ってきた応答の行き先が無くなるものに使う。
+   * × ボタンは各ダイアログの hide() が自分で見るが、バックと Escape は
+   * この仕組みが閉じるので、ここで止めないとすり抜ける。
+   */
+  canClose?: () => boolean
 }
 const onClosedMap = new WeakMap<object, () => void>()
+const can_close_map = new WeakMap<object, () => boolean>()
+
+/** 積まれているダイアログに「閉じてはいけない」ものがあるか */
+function has_blocked_dialog(): boolean {
+  for (let i = 0; i < stack.length; i++) {
+    const can_close = can_close_map.get(stack[i].dialog as unknown as object)
+    if (can_close && !can_close()) {
+      return true
+    }
+  }
+  return false
+}
 
 // --- Pending open tracking (setTimeout-based push delay) ---
 // By deferring history.pushState to a macro-task (setTimeout 0), any iframe
@@ -393,6 +413,14 @@ function ensure_pop_listener_installed() {
         // 追従する)。close_dialog_via_history のターゲットがあれば最優先で閉じる。
         try { (e as PopStateEvent).stopImmediatePropagation?.() } catch { /* ignore */ }
 
+        // 閉じてはいけないダイアログが積まれているなら、1つも閉じずに戻るを取り消す。
+        // 途中まで閉じてから止めると、履歴の深さと stack がずれる
+        if (has_blocked_dialog()) {
+          back_only_bounce_pending = 1
+          history.go(1)
+          return
+        }
+
         let count = stack.length - new_depth
         while (count > 0 && stack.length > 0) {
           let idx = -1
@@ -456,6 +484,9 @@ function ensure_esc_listener_installed() {
       // popstate の処理中にさらに閉じるとややこしいので避ける
       if (pending_nav > 0) return
 
+      // 閉じてはいけないダイアログが積まれている間は Escape も効かせない
+      if (has_blocked_dialog()) return
+
       e.preventDefault()
       e.stopPropagation()
 
@@ -480,6 +511,7 @@ export function useDialogHistoryStack(
   if (owner !== null) ref_owner_map.set(ref_obj, owner)
 
   if (options?.onClosed) onClosedMap.set(ref_obj, options.onClosed)
+  if (options?.canClose) can_close_map.set(ref_obj, options.canClose)
 
   if (watched_refs.has(ref_obj)) {
     ensure_pop_listener_installed()

@@ -67,6 +67,14 @@ const (
 	ExportMediaModeNone = "none"
 )
 
+// メディアの予算の既定。利用者がダイアログで変えられる。
+const (
+	// ExportDefaultMediaBudgetBytes はメディアと添付ファイルの合計の既定。
+	ExportDefaultMediaBudgetBytes int64 = 500 * 1024 * 1024
+	// ExportDefaultMediaItemLimitBytes は1件あたりの上限の既定。
+	ExportDefaultMediaItemLimitBytes int64 = 100 * 1024 * 1024
+)
+
 // 出力の形。
 const (
 	// ExportOutputFormatSingle は HTML ファイル1枚。メディアは data: URI で中に入る。
@@ -100,6 +108,15 @@ type ExportRykvHTMLRequest struct {
 	IncludeAttachedTexts         bool `json:"include_attached_texts"`
 	IncludeAttachedNotifications bool `json:"include_attached_notifications"`
 	IncludeAttachedTimeIss       bool `json:"include_attached_timeiss"`
+
+	// MediaBudgetBytes はメディアと添付ファイルに使える生バイトの合計。
+	// 0 のときは ExportDefaultMediaBudgetBytes。base64 は素のバイト数の 4/3 になるので、
+	// 出来上がる HTML はこれより大きくなる。
+	MediaBudgetBytes int64 `json:"media_budget_bytes"`
+
+	// MediaItemLimitBytes はメディア・添付ファイル1件あたりの上限。
+	// 0 のときは ExportDefaultMediaItemLimitBytes。1件で合計を食い潰すのを防ぐ。
+	MediaItemLimitBytes int64 `json:"media_item_limit_bytes"`
 
 	// IncludeGPSLog は位置情報を含めるか。
 	IncludeGPSLog bool `json:"include_gps_log"`

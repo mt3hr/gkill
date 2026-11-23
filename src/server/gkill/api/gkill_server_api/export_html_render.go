@@ -44,6 +44,10 @@ type exportedColumn struct {
 	KyouIDs []string        `json:"kyou_ids"`
 }
 
+// exportedMediaEntry の Kind が "dropped" のとき、Src は空で中身は入っていない。
+// **落としたことを焼き込むのが大事。** 鍵ごと落とすと、出力先では
+// 「焼き込まれていない」と区別がつかず、壊れた画像として出るだけになる。
+//
 // exportedMediaEntry は焼き込んだメディア1件。
 // Src は単一 HTML なら data: URI、同名フォルダなら相対パス。
 type exportedMediaEntry struct {

@@ -52,6 +52,21 @@
                 class="export_rykv_html_media_none" />
         </v-radio-group>
 
+        <v-row class="pa-0 ma-0 mb-2" dense>
+            <v-col cols="6">
+                <v-text-field v-model.number="media_item_limit_mb" type="number" min="1" density="compact"
+                    hide-details suffix="MB" :disabled="media_mode === 'none'"
+                    :label="i18n.global.t('EXPORT_MEDIA_ITEM_LIMIT_TITLE')"
+                    class="export_rykv_html_media_item_limit_field" />
+            </v-col>
+            <v-col cols="6">
+                <v-text-field v-model.number="media_budget_mb" type="number" min="1" density="compact"
+                    hide-details suffix="MB" :disabled="media_mode === 'none'"
+                    :label="i18n.global.t('EXPORT_MEDIA_BUDGET_TITLE')"
+                    class="export_rykv_html_media_budget_field" />
+            </v-col>
+        </v-row>
+
         <div class="text-subtitle-2">{{ i18n.global.t('EXPORT_FORMAT_TITLE') }}</div>
         <v-radio-group v-model="output_format" density="compact" hide-details class="mb-2">
             <v-radio :label="i18n.global.t('EXPORT_FORMAT_SINGLE')" value="single" />
@@ -61,7 +76,8 @@
 
         <v-card-actions class="pa-0">
             <v-spacer />
-            <v-btn color="secondary" variant="flat" :disabled="is_exporting" @click="cancel()">
+            <!-- 出力中はキャンセルが中断になる（押せないままだと止める手段が無い） -->
+            <v-btn color="secondary" variant="flat" @click="cancel()">
                 {{ i18n.global.t('CANCEL_TITLE') }}
             </v-btn>
             <v-btn color="primary" variant="flat" :loading="is_exporting" class="export_rykv_html_execute_button"
@@ -93,6 +109,8 @@ const {
     include_map,
     include_sidebar,
     media_mode,
+    media_budget_mb,
+    media_item_limit_mb,
     output_format,
     is_exporting,
     has_focused_column,

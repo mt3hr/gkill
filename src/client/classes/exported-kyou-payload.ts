@@ -142,10 +142,16 @@ export function build_exported_api(raw: unknown): GkillAPIForExportedKyou {
 
     // メディア。鍵は build_media_url が組み立てた URL（クエリ込み）
     api.media = new Map()
+    api.dropped_media = new Set()
     const media = as_record(source.media)
     for (const key in media) {
         const entry = as_record(media[key])
-        if (typeof entry.src === 'string') {
+        // 予算に収まらなかったもの。中身は無いが、鍵は残っている
+        if (entry.kind === 'dropped') {
+            api.dropped_media.add(key)
+            continue
+        }
+        if (typeof entry.src === 'string' && entry.src !== '') {
             api.media.set(key, entry.src)
         }
     }

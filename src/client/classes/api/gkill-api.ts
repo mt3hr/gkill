@@ -2698,6 +2698,43 @@ export class GkillAPI {
                 return null
         }
 
+        /**
+         * そのメディアが「予算に収まらず含められなかった」ものかを返す。
+         *
+         * 基底は常に false。「HTML で出力」したファイルだけが true を返しうる。
+         * 画面はこれを見て「含まれていません」の代わりを出す ——
+         * 出さないと、壊れた画像や行き先の無いリンクとしか見えない。
+         */
+        is_exported_media_dropped(_url: string): boolean {
+                return false
+        }
+
+        /**
+         * 「タグ無し」の仮想タグを選択肢に出してよいか。
+         *
+         * 基底は常に true（本体では必ず出す）。「HTML で出力」したファイルだけが、
+         * 出力した本人がチェックを外していたときに false を返す。
+         */
+        is_exported_no_tags_allowed(): boolean {
+                return true
+        }
+
+        /**
+         * 焼き込んだ GPSLog が収まる時刻の範囲を返す。
+         *
+         * 基底は null（地図の時間窓は従来どおり画面の操作で決める）。
+         * 「HTML で出力」したファイルだけが、焼き込んだ GPSLog の端から端を返す。
+         *
+         * **これが無いと出力 HTML の軌跡が出ない。** 地図の時間窓は rykv の別状態で
+         * 初期値が「今」（use-rykv-view.ts の gps_log_map_start_time）で、
+         * 列の期間へ揃えるのは期間フィルタが両端とも非 null のときだけ。
+         * 期間を指定していない列を出力すると、サーバは GPSLog を全部焼くのに
+         * 画面側の窓は「今〜今」のままで 0 件になる（例外もエラーも出ない）。
+         */
+        get_exported_gps_log_window(): { start_time: Date, end_time: Date } | null {
+                return null
+        }
+
         // 認証が通っていなかったらログイン画面に遷移する
         check_auth(res: GkillAPIResponse): void {
                 if (!res.errors || res.errors.length == 0) {
@@ -3729,6 +3766,12 @@ export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
          * 単一 HTML なら data: URI、サイドカーなら `foo/<hash>.jpg` のような相対パス。
          */
         public media: Map<string, string> = new Map()
+        /**
+         * 予算に収まらず中身を入れなかったメディアの鍵。
+         * **鍵ごと落とさずここへ入れる。** 落とすと「焼き込まれていない」と区別がつかず、
+         * 出力先では壊れた画像としか見えない
+         */
+        public dropped_media: Set<string> = new Set()
         /** IDF の ID → 焼き込んだテキスト / Markdown 本文のバイト列 */
         public idf_text_bytes: Map<string, Uint8Array> = new Map()
         /**
@@ -3832,6 +3875,13 @@ export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
                 if (baked !== undefined) {
                         return baked
                 }
+                const baked_thumb = this.resolve_baked_thumb(url)
+                if (baked_thumb !== undefined) {
+                        return baked_thumb
+                }
+                if (this.is_exported_media_dropped(url)) {
+                        return GkillAPIForExportedKyou.dropped_media_placeholder()
+                }
 
                 let parsed: URL | null = null
                 try {
@@ -3860,13 +3910,155 @@ export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
                 if (by_path !== undefined) {
                         return by_path
                 }
+                const by_path_thumb = this.resolve_baked_thumb(parsed.pathname + parsed.search)
+                if (by_path_thumb !== undefined) {
+                        return by_path_thumb
+                }
+                if (this.is_exported_media_dropped(parsed.pathname + parsed.search)) {
+                        return GkillAPIForExportedKyou.dropped_media_placeholder()
+                }
                 // 焼き込まれていない。そのまま残すと通信するか、無関係なローカルパスを読む
                 return 'about:blank'
+        }
+
+        /**
+         * 予算に収まらなかったメディアかを返す。原寸の鍵で聞かれてもサムネの鍵を見る
+         * （詳細ペインとダイアログは原寸の鍵を引くため）。
+         */
+        is_exported_media_dropped(url: string): boolean {
+                if (this.dropped_media.has(url)) {
+                        return true
+                }
+                if (url.includes('?')) {
+                        return false
+                }
+                return this.dropped_media.has(url + '?thumb=400x400')
+                        || this.dropped_media.has(url + '?is_video=true&thumb=400x400')
+        }
+
+        /**
+         * 「含まれていません」の代わりに出す絵。通信しないよう data: URI で作る。
+         *
+         * 画像と動画のポスターはここへ差し替わる。リンク（添付ファイル）は
+         * idf-kyou-view.vue が is_exported_media_dropped を見て文言へ差し替える。
+         */
+        private static dropped_media_placeholder(): string {
+                const text = i18n.global.t('EXPORT_MEDIA_NOT_INCLUDED_TITLE')
+                const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">'
+                        + '<rect width="200" height="200" fill="#eceff1"/>'
+                        + '<text x="100" y="92" font-size="40" text-anchor="middle" fill="#90a4ae">!</text>'
+                        + '<text x="100" y="130" font-size="12" text-anchor="middle" fill="#607d8b">'
+                        + escaped + '</text></svg>'
+                return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
+        }
+
+        /**
+         * 原寸の鍵が焼かれていないとき、サムネの鍵へ落とす。
+         *
+         * 一覧は `is_image_request_to_thumb_size = true` でサムネの鍵を引くが、
+         * **詳細ペインとダイアログは原寸の鍵を引く**（`rykv-view.vue` / `kyou-dialog.vue` が
+         * false を渡している）。サーバは「メディア = サムネイルのみ」で出力したとき原寸を
+         * 焼かないので（`export_media.go` の `MediaMode != full`）、ここで落とさないと
+         * **一覧には出るのに詳細とダイアログだけ画像が消える**（about:blank になる）。
+         *
+         * クエリの字面は `use-idf-kyou-view.ts` の `build_media_url` と
+         * `export_media.go` の `exportThumbQuery` / `exportVideoThumbQuery` と**同じ形**にすること。
+         * ずれても例外は出ず、画像が出ないだけになる。
+         */
+        private resolve_baked_thumb(path_with_query: string): string | undefined {
+                if (path_with_query.includes('?')) {
+                        // すでにクエリ付き（= サムネの鍵そのもの）。落とす先は無い
+                        return undefined
+                }
+                return this.media.get(path_with_query + '?thumb=400x400')
+                        ?? this.media.get(path_with_query + '?is_video=true&thumb=400x400')
+        }
+
+        /**
+         * サイドバーの選択肢に出してよい名前。**チェックされていたものだけ。**
+         *
+         * 焼いた記録には、チェックしていないタグ・記録保管場所も付いている
+         * （タグAで引っかかった記録がタグBも持っている、など）。そのまま選択肢に出すと、
+         * **出力に含めていないタグ名・rep 名が渡した相手に見える。**
+         *
+         * `null`（絞っていない）の列が1つでもあれば絞らない —— その列は全部を出すと
+         * 決めた列なので、ここで削ると出力した本人の意図より狭くなる。
+         */
+        private allowed_names(pick: (query: FindKyouQuery) => Array<string> | null): Set<string> | null {
+                const allowed = new Set<string>()
+                for (let i = 0; i < this.columns.length; i++) {
+                        const names = pick(this.columns[i].query)
+                        if (!names) {
+                                return null
+                        }
+                        for (let j = 0; j < names.length; j++) {
+                                allowed.add(names[j])
+                        }
+                }
+                return allowed
+        }
+
+        /** タグの選択肢。チェックされていたものだけ（上の allowed_names を参照） */
+        async get_all_tag_names(req: GetAllTagNamesRequest): Promise<GetAllTagNamesResponse> {
+                const res = await super.get_all_tag_names(req)
+                const allowed = this.allowed_names((query) => query.tags)
+                if (allowed) {
+                        res.tag_names = res.tag_names.filter((tag_name) => allowed.has(tag_name))
+                }
+                return res
+        }
+
+        /**
+         * 記録保管場所の選択肢。チェックされていたものだけ。
+         * 端末・記録種別の木もこの名前から組まれるので、ここで絞れば3つとも揃う。
+         */
+        async get_all_rep_names(req: GetAllRepNamesRequest): Promise<GetAllRepNamesResponse> {
+                const res = await super.get_all_rep_names(req)
+                const allowed = this.allowed_names((query) => query.reps)
+                if (allowed) {
+                        res.rep_names = res.rep_names.filter((rep_name) => allowed.has(rep_name))
+                }
+                return res
+        }
+
+        /** 「タグ無し」の仮想タグを選択肢に出してよいか（チェックされていたか） */
+        is_exported_no_tags_allowed(): boolean {
+                const allowed = this.allowed_names((query) => query.tags)
+                return allowed === null || allowed.has('no tags')
         }
 
         /** IDF の本文は焼き込みから返す。文字コードの判定は呼び出し側（detect_and_decode_text）のまま */
         get_exported_idf_text_bytes(kyou_id: string): Uint8Array | null {
                 return this.idf_text_bytes.get(kyou_id) ?? null
+        }
+
+        /**
+         * 焼き込んだ GPSLog の端から端。地図の時間窓の初期値になる。
+         *
+         * 焼いたものは必ず見えるようにする。窓を狭める操作は部分集合なのでそのまま効く。
+         * 0件のときは null を返して窓を触らせない（従来どおり）。
+         */
+        get_exported_gps_log_window(): { start_time: Date, end_time: Date } | null {
+                let start: number | null = null
+                let end: number | null = null
+                for (let i = 0; i < this.gps_logs.length; i++) {
+                        const related_time = this.gps_logs[i].related_time
+                        if (!related_time) {
+                                continue
+                        }
+                        const at = related_time.getTime()
+                        if (start === null || at < start) {
+                                start = at
+                        }
+                        if (end === null || at > end) {
+                                end = at
+                        }
+                }
+                if (start === null || end === null) {
+                        return null
+                }
+                return { start_time: new Date(start), end_time: new Date(end) }
         }
 
         /**

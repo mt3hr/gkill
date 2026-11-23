@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { checkGkillServer } from './check-server'
 import { loginAsAdmin } from './helpers'
@@ -58,8 +60,11 @@ async function post_export(page: Page, body: Record<string, unknown>): Promise<R
   const [session] = (await page.context().cookies()).filter((cookie) => cookie.name === 'gkill_session_id')
   expect(session, 'gkill_session_id クッキーが無い（ログインできていない）').toBeDefined()
 
+  // 出力はもともと重い（記録を集め、メディアと添付ファイルの本体を読んで base64 にする）。
+  // Playwright の既定は 10 秒で、添付ファイルを焼くようになってから超えるようになった
   const response = await page.context().request.post('/api/export_rykv_html', {
     data: { ...body, session_id: session.value },
+    timeout: 120000,
   })
   const text = await response.text()
   test.skip(!text.trimStart().startsWith('{'), '出力の API を持たないビルド（PATH 上の gkill_server が古い）')
@@ -72,6 +77,9 @@ async function post_export(page: Page, body: Record<string, unknown>): Promise<R
 }
 
 test.describe('rykv HTML export', () => {
+  // 出力 1 回で数十秒かかることがある（上記 post_export のコメント）
+  test.setTimeout(180000)
+
   test('出力した HTML は gkill を参照しない', async ({ page }) => {
     await loginAsAdmin(page)
 
@@ -94,7 +102,7 @@ test.describe('rykv HTML export', () => {
     }
   })
 
-  test('file:// で開いて、通信を1本もせずに画面が出る', async ({ page }, testInfo) => {
+  test('file:// で開いて、通信を1本もせずに画面が出る', async ({ page }) => {
     await loginAsAdmin(page)
 
     const body = await post_export(page, export_request())
@@ -105,7 +113,12 @@ test.describe('rykv HTML export', () => {
     // ブラウザの『ファイルにアクセスできませんでした』になる」形を取りこぼす
     // （vue-router を持ち込むとこれが起きる。vite.export.config.ts の alias が唯一の防御）。
     // 利用者の手元に落ちるのと同じファイルを、同じ開き方で開く
-    const saved = testInfo.outputPath('gkill_export.html')
+    // **リポジトリの中へ書かないこと。** Playwright の出力先（test-results/）へ置くと、
+    // Vite の依存スキャナが *.html をエントリとして拾い、次回以降の E2E で
+    // 「Cannot resolve entry module test-results/…」とビルドが落ちる。
+    // OS の一時領域へ出して、終わったら消す
+    const saved_dir = mkdtempSync(join(tmpdir(), 'gkill-export-e2e-'))
+    const saved = join(saved_dir, 'gkill_export.html')
     writeFileSync(saved, body.html as string, 'utf-8')
     const saved_url = pathToFileURL(saved).href
 
@@ -131,6 +144,20 @@ test.describe('rykv HTML export', () => {
     expect(page.url(), '出力 HTML が自分以外の URL へ移っている').toBe(saved_url)
     expect(page_errors, `出力 HTML で例外が出ている: ${page_errors.join(' / ')}`).toEqual([])
     expect(network_attempts, `出力 HTML が通信している: ${network_attempts.join(' / ')}`).toEqual([])
+
+    // **読み込めなかった <img> が1つも無いこと。**
+    // ビルド時アセット（lantana_icon.webp など）が /assets/… の文字列のまま残ると、
+    // file:// ではドライブ直下を指して読めない。焼き込みの鍵が食い違ったときも同じ形になる。
+    // どちらも**例外も警告も出さず、画像が出ないだけ**なので、ここでしか気づけない
+    const broken_images = await page.evaluate(() => Array.from(document.images)
+      .filter((image) => image.currentSrc !== '' && image.naturalWidth === 0)
+      .map((image) => image.currentSrc.slice(0, 120)))
+
+    // 開いたままだとファイルを掴んだままになるので、先に離してから消す
+    await page.goto('about:blank')
+    rmSync(saved_dir, { recursive: true, force: true })
+
+    expect(broken_images, `読み込めなかった画像がある: ${broken_images.join(' / ')}`).toEqual([])
   })
 
   test('メディアを埋め込まない指定で同名フォルダは選べない', async ({ page }) => {

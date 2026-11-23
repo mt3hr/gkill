@@ -25,6 +25,14 @@ export default defineConfig(() => {
       minify: minify,
       outDir: 'dist_export',
       emptyOutDir: true,
+      // **ビルド時アセット（webp 等）を全部 data URI へ畳む。**
+      // 既定は 4096 バイトで、それを超えるものは別ファイルとして吐かれ、
+      // JS には `/assets/x-hash.webp` という**裸の文字列**が残る。import 文ではないので
+      // build_export_template.mjs の import 系の検査には当たらず、file:// で開くと
+      // ドライブ直下を指して読めない。<img> の読み込み失敗は例外も警告も出さないので
+      // 「画像が出ないだけ」になる（lantana_icon.webp が落ちて気分記録の花が全滅した）。
+      // 単一 HTML が目的なので、畳めるものは全部畳む
+      assetsInlineLimit: Number.MAX_SAFE_INTEGER,
       // CSS を1枚に寄せる。コンポーネントごとに割れると、畳む側が
       // 「どの <link> を拾えばよいか」をチャンクグラフから読まないといけなくなる
       cssCodeSplit: false,
