@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 )
@@ -22,11 +21,10 @@ import (
 func exportRykvHTML(t *testing.T, tsURL string, sessionID string, customize func(*req_res.ExportRykvHTMLRequest)) req_res.ExportRykvHTMLResponse {
 	t.Helper()
 
-	query := &find.FindQuery{}
 	req := &req_res.ExportRykvHTMLRequest{
 		LocaleName:   "en",
 		Title:        "出力テスト",
-		Columns:      []*find.FindQuery{query},
+		Columns:      []req_res.ExportRykvHTMLColumn{exportColumn(t, "q1")},
 		MediaMode:    req_res.ExportMediaModeThumbnail,
 		OutputFormat: req_res.ExportOutputFormatSingle,
 	}
@@ -43,6 +41,87 @@ func exportRykvHTML(t *testing.T, tsURL string, sessionID string, customize func
 		t.Fatalf("decode export rykv html response: %v", err)
 	}
 	return exportResp
+}
+
+// exportColumn は列1本を、クライアントが送るのと同じ形（query_id 付きの平らな JSON）で組む。
+//
+// **query_id は find.FindQuery に無い。** クライアントは列をこれで引くので、
+// 焼き込みで落ちると2列以上の出力で全列が先頭列に一致する。
+func exportColumn(t *testing.T, queryID string) req_res.ExportRykvHTMLColumn {
+	t.Helper()
+	raw, err := json.Marshal(map[string]any{"query_id": queryID})
+	if err != nil {
+		t.Fatalf("marshal export column: %v", err)
+	}
+	column := req_res.ExportRykvHTMLColumn{}
+	if err := json.Unmarshal(raw, &column); err != nil {
+		t.Fatalf("unmarshal export column: %v", err)
+	}
+	return column
+}
+
+// extractExportPayload は出力 HTML へ差し込まれた焼き込みの JSON を読み出す。
+func extractExportPayload(t *testing.T, rendered string) map[string]any {
+	t.Helper()
+	const marker = `id="gkill-export-data">`
+	start := strings.Index(rendered, marker)
+	if start < 0 {
+		t.Fatal("焼き込みの差し込み先が見つからない")
+	}
+	start += len(marker)
+	end := strings.Index(rendered[start:], "</script>")
+	if end < 0 {
+		t.Fatal("焼き込みの終わりが見つからない")
+	}
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(rendered[start:start+end]), &payload); err != nil {
+		t.Fatalf("焼き込みが JSON として読めない: %v", err)
+	}
+	return payload
+}
+
+// TestHandleExportRykvHTML_KeepsColumnQueryID は、焼き込んだ列の条件に query_id が残ることを
+// 確認する。find.FindQuery に query_id が無いので、型に落として再 marshal すると消える。
+// 消えるとクライアントは列を引けず、**2列以上の出力で全列が先頭列に一致する**
+// （例外もエラーも出ないので、1列で試しているうちは露見しない）。
+func TestHandleExportRykvHTML_KeepsColumnQueryID(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	exportResp := exportRykvHTML(t, tsURL, sessionID, func(req *req_res.ExportRykvHTMLRequest) {
+		req.Columns = []req_res.ExportRykvHTMLColumn{
+			exportColumn(t, "column-1"),
+			exportColumn(t, "column-2"),
+		}
+	})
+	if len(exportResp.Errors) != 0 {
+		t.Fatalf("出力に失敗した: %+v", exportResp.Errors)
+	}
+
+	payload := extractExportPayload(t, exportResp.HTML)
+	columns, ok := payload["columns"].([]any)
+	if !ok {
+		t.Fatalf("columns が配列ではない: %T", payload["columns"])
+	}
+	if len(columns) != 2 {
+		t.Fatalf("列の本数が違う: %d", len(columns))
+	}
+	for i, want := range []string{"column-1", "column-2"} {
+		column, ok := columns[i].(map[string]any)
+		if !ok {
+			t.Fatalf("列 %d が object ではない: %T", i, columns[i])
+		}
+		query, ok := column["query"].(map[string]any)
+		if !ok {
+			t.Fatalf("列 %d の query が object ではない: %T", i, column["query"])
+		}
+		if got := query["query_id"]; got != want {
+			t.Errorf("列 %d の query_id が落ちている: want %q, got %v", i, want, got)
+		}
+	}
 }
 
 // hasErrorCode は応答に指定のエラーコードが入っているかを返す。

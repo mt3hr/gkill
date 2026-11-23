@@ -170,7 +170,7 @@ func validateExportRykvHTMLRequest(ctx context.Context, request *req_res.ExportR
 		return invalid("no columns")
 	}
 	for _, column := range request.Columns {
-		if column == nil {
+		if column.IsNull() {
 			return invalid("nil column")
 		}
 	}
@@ -233,12 +233,13 @@ func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_re
 	}
 
 	merged := newExportMerger()
-	for _, query := range request.Columns {
+	for i := range request.Columns {
+		column := &request.Columns[i]
 		bundle, gkillErr := g.collectKyouBundle(ctx, &kyouBundleOptions{
 			UserID:               userID,
 			Device:               device,
 			LocaleName:           request.LocaleName,
-			FindQuery:            query,
+			FindQuery:            &column.Query,
 			ViewType:             "kyou",
 			IncludeLocations:     request.IncludeGPSLog,
 			IncludeTags:          request.IncludeAttachedTags,
@@ -254,10 +255,34 @@ func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_re
 		for _, kyou := range bundle.Kyous {
 			kyouIDs = append(kyouIDs, kyou.ID)
 		}
-		payload.Columns = append(payload.Columns, exportedColumn{Query: query, KyouIDs: kyouIDs})
+		// 焼き込むのは**送られてきた JSON そのまま**。型に落とすと query_id が消える
+		bakedQuery, err := column.BakedQueryJSON()
+		if err != nil {
+			return nil, bundleError(ctx, request.LocaleName, message.ExportRykvHTMLRenderError,
+				"FAILED_EXPORT_RYKV_HTML_MESSAGE", "error at bake export column query", err)
+		}
+		payload.Columns = append(payload.Columns, exportedColumn{Query: bakedQuery, KyouIDs: kyouIDs})
 		merged.add(bundle)
 	}
 	merged.writeTo(payload)
+
+	// リポスト（ReKyou / MiReKyou）が指している記録そのものを足す。
+	// **これが無いと出力先でリポストの行が空で出る**（画面は参照先を get_kyou で引くが、
+	// 出力 HTML の API は焼き込んだ配列しか見ない）。列の検索条件には引っかからないので、
+	// 検索とは別に ID で引く
+	if gkillErr := g.collectExportReKyouTargets(ctx, &kyouBundleOptions{
+		UserID:               userID,
+		Device:               device,
+		LocaleName:           request.LocaleName,
+		ViewType:             "kyou",
+		IncludeLocations:     false,
+		IncludeTags:          request.IncludeAttachedTags,
+		IncludeTexts:         request.IncludeAttachedTexts,
+		IncludeTimeIss:       request.IncludeAttachedTimeIss,
+		IncludeNotifications: request.IncludeAttachedNotifications,
+	}, merged, payload); gkillErr != nil {
+		return nil, gkillErr
+	}
 
 	// メディアと IDF の本文。記録を集め終えてから、焼いた記録のぶんだけ読む
 	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)

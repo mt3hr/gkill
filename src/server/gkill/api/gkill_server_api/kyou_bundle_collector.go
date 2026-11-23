@@ -57,6 +57,7 @@ type kyouBundle struct {
 	URLogs        []reps.URLog
 	IDFKyous      []reps.IDFKyou
 	ReKyous       []reps.ReKyou
+	MiReKyous     []reps.MiReKyou
 	GitCommitLogs []reps.GitCommitLog
 
 	GPSLogs []reps.GPSLog
@@ -118,6 +119,7 @@ func (g *GkillServerAPI) collectKyouBundle(ctx context.Context, opts *kyouBundle
 		URLogs:                []reps.URLog{},
 		IDFKyous:              []reps.IDFKyou{},
 		ReKyous:               []reps.ReKyou{},
+		MiReKyous:             []reps.MiReKyou{},
 		GitCommitLogs:         []reps.GitCommitLog{},
 		GPSLogs:               []reps.GPSLog{},
 		AttachedTags:          []reps.Tag{},
@@ -259,6 +261,15 @@ func (g *GkillServerAPI) collectTypedDatas(ctx context.Context, opts *kyouBundle
 		return fail(err)
 	}
 	bundle.ReKyous = rekyous
+
+	// MiReKyou（既存の記録を課題にしたもの）。
+	// **ReKyou と対で集めること。** 片方だけだと、焼き込みの欄は在るのに中身が空のまま出て、
+	// 出力先ではリポストの行が何も描かれない（例外もエラーも出ない）
+	mirekyous, err := repositories.MiReKyouReps.FindMiReKyou(ctx, findQueryForKyouInstances)
+	if err != nil {
+		return fail(err)
+	}
+	bundle.MiReKyous = mirekyous
 
 	// GitCommitLog
 	gitCommitLogs, err := repositories.GitCommitLogReps.FindGitCommitLog(ctx, findQueryForKyouInstances)

@@ -29,6 +29,7 @@ type exportMerger struct {
 	urlogs        []reps.URLog
 	idfKyous      []reps.IDFKyou
 	reKyous       []reps.ReKyou
+	miReKyous     []reps.MiReKyou
 	gitCommitLogs []reps.GitCommitLog
 	gpsLogs       []reps.GPSLog
 
@@ -99,6 +100,8 @@ func (m *exportMerger) add(bundle *kyouBundle) {
 		func(v reps.IDFKyou) string { return versionKey(v.ID, v.UpdateTime) })
 	m.reKyous = mergeInto(m, "rekyou", m.reKyous, bundle.ReKyous,
 		func(v reps.ReKyou) string { return versionKey(v.ID, v.UpdateTime) })
+	m.miReKyous = mergeInto(m, "mirekyou", m.miReKyous, bundle.MiReKyous,
+		func(v reps.MiReKyou) string { return versionKey(v.ID, v.UpdateTime) })
 	m.gitCommitLogs = mergeInto(m, "git_commit_log", m.gitCommitLogs, bundle.GitCommitLogs,
 		func(v reps.GitCommitLog) string { return versionKey(v.ID, v.UpdateTime) })
 
@@ -151,6 +154,9 @@ func (m *exportMerger) writeTo(payload *exportedKyouPayload) {
 	}
 	if len(m.reKyous) != 0 {
 		payload.ReKyous = m.reKyous
+	}
+	if len(m.miReKyous) != 0 {
+		payload.MiReKyous = m.miReKyous
 	}
 	if len(m.gitCommitLogs) != 0 {
 		payload.GitCommitLogs = m.gitCommitLogs

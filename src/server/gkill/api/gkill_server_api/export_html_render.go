@@ -14,7 +14,6 @@ import (
 	"unicode"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
-	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 )
@@ -37,8 +36,11 @@ const (
 //
 // 記録の本体は kyou_ids の参照で持つ（列をまたいで同じ記録が出るのは普通で、
 // 列ごとに本体を持つと素直に膨らむ）。
+// Query は**クライアントが送ってきた JSON そのまま**（req_res.ExportRykvHTMLColumn.Raw）。
+// find.FindQuery へ型に落として再 marshal すると query_id などが消え、
+// 出力先が列を引けなくなる（2列以上で全列が先頭列に一致する）。
 type exportedColumn struct {
-	Query   *find.FindQuery `json:"query"`
+	Query   json.RawMessage `json:"query"`
 	KyouIDs []string        `json:"kyou_ids"`
 }
 
