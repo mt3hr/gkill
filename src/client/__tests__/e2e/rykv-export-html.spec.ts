@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
 import type { Page } from '@playwright/test'
+import { writeFileSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
 import { checkGkillServer } from './check-server'
 import { loginAsAdmin } from './helpers'
 
@@ -92,33 +94,43 @@ test.describe('rykv HTML export', () => {
     }
   })
 
-  test('通信を全部止めても画面が出る', async ({ page }) => {
+  test('file:// で開いて、通信を1本もせずに画面が出る', async ({ page }, testInfo) => {
     await loginAsAdmin(page)
 
     const body = await post_export(page, export_request())
     expect((body.errors ?? []) as Array<unknown>).toEqual([])
 
-    // 地図（Google Maps）以外の通信を落とす。data: と about: は通す
-    await page.route('**', (route) => {
-      const url = route.request().url()
-      if (url.startsWith('data:') || url.startsWith('about:') || url.startsWith('file:')) {
-        route.continue()
-        return
-      }
+    // **setContent では駄目。** about:blank へ流し込むと file:// の URL 解決を通らないので、
+    // 「読み込み直後に history を触って file:///C:/C:/… へ化け、画面が出る前に
+    // ブラウザの『ファイルにアクセスできませんでした』になる」形を取りこぼす
+    // （vue-router を持ち込むとこれが起きる。vite.export.config.ts の alias が唯一の防御）。
+    // 利用者の手元に落ちるのと同じファイルを、同じ開き方で開く
+    const saved = testInfo.outputPath('gkill_export.html')
+    writeFileSync(saved, body.html as string, 'utf-8')
+    const saved_url = pathToFileURL(saved).href
+
+    // ネットワークへ出たら記録して落とす。約束は「通信をしない」で、
+    // 例外は地図だけ。この要求は include_map: false なので出てよい先は**1つも無い**
+    const network_attempts: Array<string> = []
+    await page.route(/^https?:\/\//, (route) => {
+      network_attempts.push(route.request().url())
       route.abort()
     })
 
-    const console_errors: Array<string> = []
-    page.on('pageerror', (error) => console_errors.push(error.message))
+    const page_errors: Array<string> = []
+    page.on('pageerror', (error) => page_errors.push(error.message))
 
-    await page.setContent(body.html as string, { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 30000 })
+    await page.goto(saved_url, { waitUntil: 'domcontentloaded' })
+    // #app は静的な HTML にも在るので、中身が描かれたことを待つ
+    await page.waitForSelector('#app > *', { timeout: 30000 })
 
     // 読み込み中のまま止まらないこと（焼き込みの is_loaded / rykv_hot_reload の取り違えで固まる）
     const spinner = page.locator('.v-overlay .v-progress-circular').first()
     await expect(spinner, '読み込み中のまま止まっている').toBeHidden({ timeout: 30000 })
 
-    expect(console_errors, `出力 HTML で例外が出ている: ${console_errors.join(' / ')}`).toEqual([])
+    expect(page.url(), '出力 HTML が自分以外の URL へ移っている').toBe(saved_url)
+    expect(page_errors, `出力 HTML で例外が出ている: ${page_errors.join(' / ')}`).toEqual([])
+    expect(network_attempts, `出力 HTML が通信している: ${network_attempts.join(' / ')}`).toEqual([])
   })
 
   test('メディアを埋め込まない指定で同名フォルダは選べない', async ({ page }) => {

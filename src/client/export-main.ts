@@ -2,7 +2,13 @@
 // vite.export.config.ts だけがこれをビルドする。
 //
 // **本体の main.ts から写すときに持ち込んではいけないもの:**
-//   - router（単独ファイルなのでルートが無い。vue-router を入れると @vue/devtools-api も付いてくる）
+//   - router（単独ファイルなのでルートが無い）。**import しただけで壊れる。**
+//     `@/router` は module 評価時に createRouter(createWebHistory(BASE_URL)) を走らせ、
+//     createWebHistory がその場で history.replaceState を URL 付きで呼ぶ。
+//     file:// で開くとそれが file:///C:/C:/… に化け、画面が出る前にブラウザの
+//     「ファイルにアクセスできませんでした」になる（export-router-stub.ts に詳しい）。
+//     ここから import していなくても、画面側（use-rykv-view.ts など）が import しているので、
+//     **vite.export.config.ts の alias で差し替えるのが唯一の防御**
 //   - registerSW / virtual:pwa-register（Service Worker を取りに行く = 通信する）
 //   - GkillAPI.apply_locale()（Cookie を読んでロケールのメッセージを動的 import する。
 //     出力 HTML は焼き込まれた1言語だけを持つので、use-exported-rykv-page.ts が

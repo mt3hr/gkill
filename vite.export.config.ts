@@ -59,6 +59,16 @@ export default defineConfig(() => {
           find: /^@\/i18n$/,
           replacement: fileURLToPath(new URL('./src/client/export-i18n.ts', import.meta.url)),
         },
+        // ルータは「何もしない版」へ差し替える。本体の @/router は **module 評価時に**
+        // createRouter(createWebHistory(BASE_URL)) を走らせ、createWebHistory が
+        // その場で history.replaceState を URL 付きで呼ぶ。
+        // file:// で開いた出力 HTML ではそれが file:///C:/C:/... に化けて、
+        // 画面が出る前にブラウザの「ファイルにアクセスできませんでした」になる。
+        // あわせて、@/router 経由で全ページのコンポーネントがガワに載るのも止まる
+        {
+          find: /^@\/router$/,
+          replacement: fileURLToPath(new URL('./src/client/export-router-stub.ts', import.meta.url)),
+        },
         { find: '@', replacement: fileURLToPath(new URL('./src/client', import.meta.url)) },
       ],
     },
