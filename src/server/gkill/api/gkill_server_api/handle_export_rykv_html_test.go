@@ -97,6 +97,12 @@ func TestHandleExportRykvHTML_KeepsColumnQueryID(t *testing.T) {
 			exportColumn(t, "column-2"),
 		}
 	})
+	// 出力用のガワ（embed/export/template.html）は npm run prepare_install が作る。
+	// 裸の go build / go test のビルドではこの API だけが 500 を返すので、そのときは飛ばす
+	// （CI の Go ジョブはフロントをビルドしないので、ここが無いとこのテストだけ落ちる）
+	if _, err := readExportTemplate(); err != nil {
+		t.Skip("出力用のガワが embed に無い（npm run prepare_install を通していないビルド）")
+	}
 	if len(exportResp.Errors) != 0 {
 		t.Fatalf("出力に失敗した: %+v", exportResp.Errors)
 	}
