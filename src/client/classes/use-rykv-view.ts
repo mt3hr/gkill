@@ -544,6 +544,17 @@ export function useRykvView(options: {
                     gps_log_map_start_time.value = querys.value[0].calendar_start_time!
                     gps_log_map_end_time.value = querys.value[0].calendar_end_time!
                 }
+                // 焼き込みがある（HTML 出力したファイル）なら、焼いた GPSLog の端から端を窓にする。
+                // 基底の API は null を返すので本体の挙動は変わらない。
+                // **これが無いと出力 HTML の軌跡が出ない** —— 窓の初期値は「今」で、
+                // 列の期間へ揃えるのは上の if（期間フィルタが両端とも非 null）のときだけなので、
+                // 期間を指定していない列を出力すると「今〜今」のまま 0 件になる
+                const exported_gps_log_window = props.gkill_api.get_exported_gps_log_window()
+                if (exported_gps_log_window) {
+                    gps_log_map_start_time.value = exported_gps_log_window.start_time
+                    gps_log_map_end_time.value = exported_gps_log_window.end_time
+                    gps_log_map_marker_time.value = exported_gps_log_window.start_time
+                }
 
                 // ここで画面を見せる。初期検索の完了は待たない。
                 // 待つと検索が1本でも解決しないだけで画面全体が固まる。
@@ -842,11 +853,23 @@ export function useRykvView(options: {
         }
     }
 
+    /**
+     * 地図の時間窓を「その時刻の属する日」にし、マーカーをその時刻へ立てる。
+     *
+     * **開始と終了を同じ時刻にしてはいけない。** GPSLog の取得は両端を含む
+     * 厳密な範囲比較で（GPX 実装の `!Before(start) && !After(end)`、
+     * 出力 HTML の焼き込みを読む側も同じ）、幅0の窓ではその瞬間ちょうどの点しか
+     * 当たらず、**軌跡が1本も出ない**。例外もエラーも出ないので気づけない。
+     */
+    function focus_gps_log_map_on(time: Date): void {
+        gps_log_map_start_time.value = moment(time).startOf('day').toDate()
+        gps_log_map_end_time.value = moment(time).endOf('day').toDate()
+        gps_log_map_marker_time.value = time
+    }
+
     function onFocusedKyouFromSubView(kyou: Kyou): void {
         focused_kyou.value = kyou
-        gps_log_map_start_time.value = kyou.related_time
-        gps_log_map_end_time.value = kyou.related_time
-        gps_log_map_marker_time.value = kyou.related_time
+        focus_gps_log_map_on(kyou.related_time)
         if (inited.value && kyou_list_views.value) {
             for (let i = 0; i < querys.value.length; i++) {
                 if (querys.value[i].is_focus_kyou_in_list_view) {
@@ -949,9 +972,7 @@ export function useRykvView(options: {
             focus_column(index)
         })
         clicked_kyou_in_list_view(index, kyou)
-        gps_log_map_start_time.value = kyou.related_time
-        gps_log_map_end_time.value = kyou.related_time
-        gps_log_map_marker_time.value = kyou.related_time
+        focus_gps_log_map_on(kyou.related_time)
     }
 
     function onColumnRequestedChangeFocusKyou(index: number, is_focus: boolean): void {
@@ -995,20 +1016,17 @@ export function useRykvView(options: {
 
     function onRequestedFocusTime(time: Date): void {
         focused_time.value = time
-        gps_log_map_start_time.value = time
-        gps_log_map_end_time.value = time
-        gps_log_map_marker_time.value = time
+        focus_gps_log_map_on(time)
     }
 
     function onGpsLogMapRequestedFocusTime(time: Date): void {
         focused_time.value = time
     }
 
-    // 地図の日付ピッカーで選んだ日を地図に映す。検索条件と一覧は動かさない（地図だけ別の日を見たいときのため）
+    // 地図の日付ピッカーで選んだ日を地図に映す。検索条件と一覧は動かさない（地図だけ別の日を見たいときのため）。
+    // 窓はその日の丸ごと（幅0にすると軌跡が1本も出ない。focus_gps_log_map_on を参照）
     function onGpsLogMapRequestedChangeDate(date: Date): void {
-        gps_log_map_start_time.value = date
-        gps_log_map_end_time.value = date
-        gps_log_map_marker_time.value = date
+        focus_gps_log_map_on(date)
     }
 
     function onAddColumnClick(): void {

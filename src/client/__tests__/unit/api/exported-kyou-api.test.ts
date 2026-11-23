@@ -14,6 +14,7 @@ import { GkillAPIForExportedKyou } from '@/classes/api/gkill-api'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { Kyou } from '@/classes/datas/kyou'
+import { GPSLog } from '@/classes/datas/gps-log'
 import { Notification } from '@/classes/datas/notification'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
@@ -288,6 +289,31 @@ describe('GkillAPIForExportedKyou', () => {
         it('data: や mailto: はそのまま', () => {
             expect(api.resolve_media_url('data:image/png;base64,AAAA')).toBe('data:image/png;base64,AAAA')
             expect(api.resolve_media_url('mailto:someone@example.com')).toBe('mailto:someone@example.com')
+        })
+    })
+
+    // 地図の時間窓は rykv の別状態で初期値が「今」。列の期間へ揃えるのは
+    // 期間フィルタが両端とも非 null のときだけなので、期間を指定していない列を出力すると
+    // 「今〜今」のまま 0 件になる。焼いたものが必ず見えるように、端から端を返す
+    describe('焼き込んだ GPSLog の範囲を返す（地図の時間窓の初期値）', () => {
+        it('端から端を返す', () => {
+            const a = new GPSLog()
+            a.related_time = new Date('2026-07-01T09:00:00.000+09:00')
+            const b = new GPSLog()
+            b.related_time = new Date('2026-07-01T18:00:00.000+09:00')
+            const c = new GPSLog()
+            c.related_time = new Date('2026-07-01T12:00:00.000+09:00')
+            api.gps_logs = [b, a, c]
+
+            const window = api.get_exported_gps_log_window()
+            expect(window).not.toBeNull()
+            expect(window?.start_time.getTime()).toBe(a.related_time.getTime())
+            expect(window?.end_time.getTime()).toBe(b.related_time.getTime())
+        })
+
+        it('0件なら null（窓を触らせない）', () => {
+            api.gps_logs = []
+            expect(api.get_exported_gps_log_window()).toBeNull()
         })
     })
 

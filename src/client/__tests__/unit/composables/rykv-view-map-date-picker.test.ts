@@ -88,16 +88,43 @@ async function createViewWithColumn() {
 }
 
 describe('useRykvView 地図の日付ピッカー（onGpsLogMapRequestedChangeDate）', () => {
-  test('地図に映す日（開始・終了・マーカー）をその日へ移す', async () => {
+  // **窓はその日の丸ごとにする。開始と終了を同じ時刻にしてはいけない。**
+  // GPSLog の取得は両端を含む厳密な範囲比較なので（GPX 実装も、出力 HTML の
+  // 焼き込みを読む側も）、幅0の窓ではその瞬間ちょうどの点しか当たらず軌跡が出ない。
+  // 例外もエラーも出ないので、ここでしか気づけない
+  test('地図に映す日をその日の丸ごとにし、マーカーを選んだ時刻へ立てる', async () => {
     const { view } = await createViewWithColumn()
-    const picked = new Date(2016, 4, 15)
+    const picked = new Date(2016, 4, 15, 13, 45, 30)
+    const day_start = new Date(2016, 4, 15, 0, 0, 0, 0)
+    const day_end = new Date(2016, 4, 15, 23, 59, 59, 999)
 
     view.onGpsLogMapRequestedChangeDate(picked)
     await flushAsync()
 
-    expect(view.gps_log_map_start_time.value.getTime(), '地図の開始日が移っていない').toBe(picked.getTime())
-    expect(view.gps_log_map_end_time.value.getTime(), '地図の終了日が移っていない').toBe(picked.getTime())
-    expect(view.gps_log_map_marker_time.value.getTime(), '地図のマーカー時刻が移っていない').toBe(picked.getTime())
+    expect(view.gps_log_map_start_time.value.getTime(), '地図の開始がその日の頭になっていない')
+      .toBe(day_start.getTime())
+    expect(view.gps_log_map_end_time.value.getTime(), '地図の終了がその日の末尾になっていない')
+      .toBe(day_end.getTime())
+    expect(view.gps_log_map_marker_time.value.getTime(), '地図のマーカー時刻が移っていない')
+      .toBe(picked.getTime())
+    expect(view.gps_log_map_end_time.value.getTime(), '窓の幅が0のままでは軌跡が1本も出ない')
+      .toBeGreaterThan(view.gps_log_map_start_time.value.getTime())
+  })
+
+  // 記録をクリックしたときも同じ。その日の軌跡が出て、クリックした記録の時刻にマーカーが立つ
+  test('記録をクリックしたら、その日の窓とその時刻のマーカーになる', async () => {
+    const { view } = await createViewWithColumn()
+    const related_time = new Date(2016, 4, 15, 13, 45, 30)
+
+    view.onColumnClickedKyou(0, { id: 'k1', related_time } as unknown as never)
+    await flushAsync()
+
+    expect(view.gps_log_map_start_time.value.getTime(), '窓がその日の頭になっていない')
+      .toBe(new Date(2016, 4, 15, 0, 0, 0, 0).getTime())
+    expect(view.gps_log_map_end_time.value.getTime(), '窓がその日の末尾になっていない')
+      .toBe(new Date(2016, 4, 15, 23, 59, 59, 999).getTime())
+    expect(view.gps_log_map_marker_time.value.getTime(), 'マーカーがクリックした記録の時刻にない')
+      .toBe(related_time.getTime())
   })
 
   test('focused_time は触らず、フォーカス列をスクロールさせない', async () => {
