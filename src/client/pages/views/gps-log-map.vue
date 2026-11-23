@@ -17,6 +17,7 @@
                 class="googlemap"
                 :key="google_map_api_key + (application_config.use_dark_theme ? '_dark' : '_light')"
                 :colorScheme="application_config.use_dark_theme ? 'DARK' : 'LIGHT'"
+                :language="google_map_language" :region="google_map_region"
                 gestureHandling="cooperative">
                 <Polyline :options="polyline_options" :key="polyline_options.timestamp" />
                 <Marker v-if="marker_options" :options="marker_options" :key="marker_options.timestamp" />
@@ -66,6 +67,12 @@ import { i18n } from '@/i18n'
 import type { GPSLogMapEmits } from './gps-log-map-emits'
 import type { GPSLogMapProps } from './gps-log-map-props'
 import { useGpsLogMap } from '@/classes/use-gps-log-map'
+import { get_google_map_language, get_google_map_region } from '@/classes/google-map-locale'
+
+// 地図のローダへ渡す表示言語と地域。**2つの地図で同じ値を渡すこと**
+// （ローダは最初の1回だけを採る）。渡さないと URL へ undefined が乗る
+const google_map_language = get_google_map_language()
+const google_map_region = get_google_map_region()
 
 const props = defineProps<GPSLogMapProps>()
 const emits = defineEmits<GPSLogMapEmits>()

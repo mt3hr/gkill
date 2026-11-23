@@ -18,7 +18,8 @@
         <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key" @click="handle_map_click"
             style="width: 100%; height: 400px" class="googlemap search_google_map"
             :key="application_config.google_map_api_key + (application_config.use_dark_theme ? '_dark' : '_light')"
-            :colorScheme="application_config.use_dark_theme ? 'DARK' : 'LIGHT'">
+            :colorScheme="application_config.use_dark_theme ? 'DARK' : 'LIGHT'"
+            :language="google_map_language" :region="google_map_region">
             <Circle :options="circle"
                 :key="(circle.center?.lat.toString().concat(circle.center?.lng.toString()).concat(radius.toString()))" />
         </GoogleMap>
@@ -34,6 +35,12 @@ import { Circle, GoogleMap } from 'vue3-google-map'
 import type { MapQueryEmits } from './map-query-emits'
 import type { MapQueryProps } from './map-query-props'
 import { useMapQuery } from '@/classes/use-map-query'
+import { get_google_map_language, get_google_map_region } from '@/classes/google-map-locale'
+
+// 地図のローダへ渡す表示言語と地域。**2つの地図で同じ値を渡すこと**
+// （ローダは最初の1回だけを採る）。渡さないと URL へ undefined が乗る
+const google_map_language = get_google_map_language()
+const google_map_region = get_google_map_region()
 
 const props = defineProps<MapQueryProps>()
 const emits = defineEmits<MapQueryEmits>()

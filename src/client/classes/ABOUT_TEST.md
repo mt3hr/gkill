@@ -96,6 +96,8 @@ Vitest
 | `src/client/__tests__/unit/classes/dnote-correlation-matrix-layout.test.ts` | 相関マトリクスのレイアウト計算 |
 | `src/client/__tests__/unit/classes/kyou-attached-tags-nowrap-source-scan.test.ts` | 付随タグの折り返し指定をソース走査で固定 |
 | `src/client/__tests__/unit/classes/kyou-detail-pane-attached-source-scan.test.ts` | 詳細ペインが付随データを出す配線をソース走査で固定 |
+| `src/client/__tests__/unit/classes/google-map-locale.test.ts` | 地図へ渡す表示言語と地域。言語タグから地域を取ること（`ja-JP` → `JP`、数値の地域は採らない）、ロケールが `Ref` でも素の文字列でも読めること、取れないときに `undefined` ではなく空文字・`ja` へ落ちること |
+| `src/client/__tests__/unit/classes/google-map-options-source-scan.test.ts` | 地図を描くビューが表示言語と地域をローダへ渡していることをソース走査で固定する。渡さないと読み込み URL に `undefined` が乗り、ラベルが表示言語に従わない。ローダは最初の1回だけを採るので、2つの地図が同じ1実装から値を取っていることも見る |
 | `src/client/__tests__/unit/classes/service-worker-webmanifest-route-source-scan.test.ts` | PWA の manifest 専用ルートが `precacheAndRoute` より先に登録され、ネットワークを先に見る戦略になっていること。後ろにあると precache の古い manifest が返り続け、theme_color やアイコンを変えても端末へ永久に届かない |
 | `src/client/__tests__/unit/classes/tx-bundle-source-scan.test.ts` | 複数書き込みの保存経路（`use-add-*-view` / `use-edit-*-view` / リポスト作成 / 連鎖削除）が `run_in_tx` を通し、Kyou の add_*/update_* ごとに `tx_id` を積んでいること（ADR-0410）。tx を通さず Kyou を書くのはチェック切り替え・打刻終了の単発書き込み4本の許可リストに限る。外れても型検査も既存テストも通ったまま「本体だけ書けてタグが無い記録」が静かに残るので走査で見張る |
 | `src/client/__tests__/unit/classes/drag-drop-source-scan.test.ts` | 並べ替えの D&D（`drag-drop-indicator.ts`）が前提にするテンプレートの形をソース走査で固定。`dnote-item-table-view.vue` の列を並べる2つの v-for が `:key="listIndex"`（添字）のままであること（安定 id にすると、列を消したあとに落とした項目が隣の列へ入る）、`foldable-struct.vue` のドラッグを受ける2つの tr が見出しの `foldable_struct_header` を持ち `@dragleave` / `@dragend` を配線していること（無いと tr 全体で測って3分割の境界が黙ってずれる）。検出ロジックの自己検査を含む |
