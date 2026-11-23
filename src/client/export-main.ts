@@ -25,6 +25,10 @@ import { createApp } from "vue"
 import "./classes/api/gkill-api"
 import ExportedRykvPage from "./pages/exported-rykv-page.vue"
 import vuetify from "./plugins/vuetify"
+// gkill のグローバル CSS。本体は App.vue が持ち込むが、出力 HTML は App.vue を
+// 使わないので**ここで明示的に import する**。これが無いと画面の高さ・
+// Kyou の画像サイズ・Lantana のサイズ・ダイアログの見た目が全部効かない
+import '@/styles/gkill-global.css'
 import '@mdi/font/css/materialdesignicons.css'
 import { i18n } from "./export-i18n"
 import { v_long_press } from "./classes/long-press"
