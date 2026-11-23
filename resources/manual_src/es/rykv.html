@@ -190,7 +190,53 @@
   <p>Las condiciones de búsqueda guardadas con un nombre en «Condiciones de búsqueda» de la pantalla de ajustes pueden recuperarse desde el botón redondo de la esquina inferior derecha de la barra lateral. Al elegir un nombre, esa condición se refleja tal cual en la barra lateral. Si no hay ninguna guardada, el botón no se muestra.</p>
 
   <h2>Compartir los criterios de búsqueda actuales</h2>
-  <p>Active «Mostrar pie de página de compartición» en la pantalla de configuración y aparecerá un pie de página de compartición al final de la barra lateral. Al pulsar el botón «Compartir» de su extremo izquierdo, los criterios de búsqueda que está usando se convierten en un enlace de compartir. Lo que se comparte no es un único registro, sino todos los registros que cumplen esos criterios. Los enlaces ya creados se pueden listar, editar y eliminar desde «Gestión de compartición», en el extremo derecho.</p>
+  <p>Active «Mostrar pie de página de compartición» en la pantalla de configuración y aparecerá un pie de página de compartición al final de la barra lateral. Al pulsar el botón «Compartir» de su extremo izquierdo se le preguntará cómo quiere entregar los registros. Si elige «Compartir esta vista», los criterios de búsqueda que está usando se convierten en un enlace de compartir. Lo que se comparte no es un único registro, sino todos los registros que cumplen esos criterios. Los enlaces ya creados se pueden listar, editar y eliminar desde «Gestión de compartición», en el extremo derecho.</p>
+
+  <h2>Entregar los resultados actuales como un archivo HTML</h2>
+  <p>Un enlace de compartir solo se puede ver mientras esta aplicación está en marcha. Cuando quiera entregar los registros sin que la otra persona tenga que preparar nada, puede escribir los resultados que está viendo en un archivo HTML. Quien lo recibe solo tiene que abrirlo en un navegador y, como todo lo necesario está dentro del archivo, nunca se comunica con esta aplicación.</p>
+
+  <h3>Cómo generar el archivo</h3>
+  <ol>
+    <li>En el pie de página de compartición, al final de la barra lateral, pulse el botón «Compartir» de su extremo izquierdo.</li>
+    <li>Elija «Exportar HTML».</li>
+    <li>Elija qué incluir y en qué forma escribirlo (véase la tabla siguiente).</li>
+    <li>Pulse «Exportar» y se descargará el archivo generado. Tarda un rato cuando hay muchos registros o imágenes.</li>
+  </ol>
+
+  <h3>Qué se puede elegir</h3>
+  <table>
+    <tr>
+      <th>Elemento</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Objetivo</td>
+      <td>Elija entre «Todas las columnas en pantalla» y «La columna enfocada».</td>
+    </tr>
+    <tr>
+      <td>Qué incluir</td>
+      <td>Elija si incluir los registros de tiempo, los datos de ubicación y el contenido de los complementos.</td>
+    </tr>
+    <tr>
+      <td>Pantallas</td>
+      <td>Elija si el archivo generado conserva la vista de resumen, el mapa y la barra lateral de búsqueda. La barra lateral que se conserva solo filtra dentro de los registros del archivo.</td>
+    </tr>
+    <tr>
+      <td>Multimedia</td>
+      <td>Elija «Solo miniaturas», «También a tamaño original» o «No incrustar» para imágenes y vídeos. También puede fijar el límite por elemento y el límite total.</td>
+    </tr>
+    <tr>
+      <td>Formato de salida</td>
+      <td>«Un solo archivo HTML» se basta por sí mismo. «HTML y una carpeta del mismo nombre» deja las imágenes en una carpeta al lado, lo que aligera el archivo, pero hay que entregar ambos juntos.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Cuando se supera un límite:</strong> Todo lo que no cupo dentro de los límites de multimedia aparece como «No incluido» dentro del archivo generado. Como la ausencia se ve, puede subir el límite y volver a generarlo si lo necesita.
+  </div>
+
+  <h3>Qué ve quien lo recibe</h3>
+  <p>El archivo generado es de solo lectura. No se pueden añadir ni editar registros, ni ponerles etiquetas. Al hacer doble clic en un registro se abre su detalle, y desde ahí se pueden seguir los registros relacionados. El mapa es la única excepción: el mapa en sí se carga desde fuera, así que el recorrido aparece cuando quien lo recibe introduce su propia clave de mapa.</p>
 
   <h2>Cuando no se puede cargar una ubicación de almacenamiento de registros</h2>
   <p>Los registros de otras ubicaciones pueden seguir apareciendo. Este aviso por sí solo no significa que se hayan perdido sus registros.</p>

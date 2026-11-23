@@ -190,7 +190,53 @@
   <p>Les conditions de recherche enregistrées sous un nom dans « Conditions de recherche » de l'écran des paramètres peuvent être rappelées depuis le bouton rond en bas à droite de la barre latérale. En choisissant un nom, la condition est appliquée telle quelle à la barre latérale. Si aucune condition n'est enregistrée, le bouton n'apparaît pas.</p>
 
   <h2>Partager les critères de recherche actuels</h2>
-  <p>Activez « Afficher le pied de page de partage » dans l’écran des paramètres et un pied de page de partage apparaît en bas de la barre latérale. En appuyant sur le bouton « Partager » à son extrémité gauche, les critères de recherche que vous utilisez deviennent un lien de partage. Ce qui est partagé n’est pas un seul enregistrement, mais tous les enregistrements correspondant à ces critères. Les liens déjà créés peuvent être listés, modifiés et supprimés depuis « Gestion des partages », à l’extrémité droite.</p>
+  <p>Activez « Afficher le pied de page de partage » dans l’écran des paramètres et un pied de page de partage apparaît en bas de la barre latérale. En appuyant sur le bouton « Partager » à son extrémité gauche, on vous demande comment vous souhaitez transmettre les enregistrements. En choisissant « Partager cette vue », les critères de recherche que vous utilisez deviennent un lien de partage. Ce qui est partagé n’est pas un seul enregistrement, mais tous les enregistrements correspondant à ces critères. Les liens déjà créés peuvent être listés, modifiés et supprimés depuis « Gestion des partages », à l’extrémité droite.</p>
+
+  <h2>Transmettre les résultats actuels sous forme de fichier HTML</h2>
+  <p>Un lien de partage ne se consulte que tant que cette application tourne. Lorsque vous voulez transmettre des enregistrements sans que votre interlocuteur ait quoi que ce soit à installer, vous pouvez écrire les résultats que vous consultez dans un fichier HTML. La personne qui le reçoit n’a qu’à l’ouvrir dans un navigateur et, comme tout le nécessaire se trouve dans le fichier, celui-ci ne communique jamais avec cette application.</p>
+
+  <h3>Comment produire le fichier</h3>
+  <ol>
+    <li>Dans le pied de page de partage, en bas de la barre latérale, appuyez sur le bouton « Partager » à son extrémité gauche.</li>
+    <li>Choisissez « Exporter en HTML ».</li>
+    <li>Choisissez ce qu’il faut inclure et sous quelle forme écrire le fichier (voir le tableau ci-dessous).</li>
+    <li>Appuyez sur « Exporter » et le fichier produit est téléchargé. Cela prend du temps lorsqu’il y a beaucoup d’enregistrements ou d’images.</li>
+  </ol>
+
+  <h3>Ce que vous pouvez choisir</h3>
+  <table>
+    <tr>
+      <th>Élément</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Cible</td>
+      <td>Choisissez entre « Toutes les colonnes affichées » et « La colonne active ».</td>
+    </tr>
+    <tr>
+      <td>Éléments à inclure</td>
+      <td>Choisissez d’inclure ou non les relevés d’heure, les données de localisation et le contenu des extensions.</td>
+    </tr>
+    <tr>
+      <td>Écrans</td>
+      <td>Choisissez si le fichier produit conserve la vue de synthèse, la carte et la barre latérale de recherche. La barre latérale conservée ne filtre que parmi les enregistrements du fichier.</td>
+    </tr>
+    <tr>
+      <td>Médias</td>
+      <td>Choisissez « Miniatures uniquement », « Taille réelle comprise » ou « Ne pas intégrer » pour les images et les vidéos. Vous pouvez aussi fixer la limite par élément et la limite totale.</td>
+    </tr>
+    <tr>
+      <td>Format de sortie</td>
+      <td>« Un seul fichier HTML » se suffit à lui-même. « HTML et un dossier du même nom » place les images dans un dossier voisin, ce qui allège le fichier, mais il faut transmettre les deux ensemble.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Lorsqu’une limite est dépassée :</strong> Tout ce qui n’est pas entré dans les limites de médias apparaît comme « Non inclus » dans le fichier produit. L’absence étant visible, vous pouvez relever la limite et refaire le fichier si nécessaire.
+  </div>
+
+  <h3>Ce que voit le destinataire</h3>
+  <p>Le fichier produit est en lecture seule. On ne peut ni ajouter ni modifier d’enregistrement, ni poser d’étiquette. Un double-clic sur un enregistrement ouvre son détail, d’où l’on peut suivre les enregistrements liés. La carte est la seule exception : la carte elle-même est chargée depuis l’extérieur, donc le tracé apparaît lorsque le destinataire saisit sa propre clé de carte.</p>
 
   <h2>Lorsqu'un emplacement de stockage des enregistrements ne peut pas être chargé</h2>
   <p>Les enregistrements des autres emplacements peuvent continuer à s'afficher. Ce message seul ne signifie pas que vos enregistrements ont été perdus.</p>
