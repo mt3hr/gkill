@@ -77,15 +77,15 @@
     "@googlemaps/js-api-loader": "^2.1.3",
     "@mdi/font": "^7.4.47",
     "dompurify": "^3.4.18",
-    "marked": "^18.2.0",
+    "marked": "^18.2.1",
     "mermaid": "^12.3.0",
     "mkdirp": "^3.0.1",
     "moment": "^2.31.0",
-    "vue": "^3.5.45",
-    "vue-i18n": "^11.4.20",
+    "vue": "^3.5.46",
+    "vue-i18n": "^11.4.23",
     "vue-router": "^5.5.1",
     "vue3-google-map": "^0.27.2",
-    "vuetify": "^4.3.3"
+    "vuetify": "^4.3.4"
   },
   "overrides": {
     "serialize-javascript": ">=7.1.3",
@@ -104,7 +104,7 @@
   "devDependencies": {
     "@playwright/test": "^1.65.1",
     "@tsconfig/node20": "^20.1.11",
-    "@types/google.maps": "^3.66.10",
+    "@types/google.maps": "^3.67.0",
     "@types/node": "^26.6.6",
     "@vitejs/plugin-vue": "^6.0.11",
     "@vue/eslint-config-typescript": "^14.9.0",
@@ -115,7 +115,7 @@
     "eslint-plugin-playwright": "^2.12.2",
     "eslint-plugin-vue": "^10.12.1",
     "jsdom": "^31.0.1",
-    "npm-run-all2": "^9.0.4",
+    "npm-run-all2": "^9.1.0",
     "rimraf": "^6.1.4",
     "shx": "^0.4.0",
     "typescript": "~6.0.0",
@@ -123,7 +123,7 @@
     "vite-plugin-pwa": "^2.0.0",
     "vite-plugin-vue-devtools": "^8.2.1",
     "vite-plugin-vuetify": "^2.1.3",
-    "vitest": "^5.1.0",
+    "vitest": "^5.1.1",
     "vue-tsc": "^3.3.14"
   }
 }

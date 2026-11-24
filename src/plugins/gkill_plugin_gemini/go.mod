@@ -4,7 +4,7 @@ go 1.26.11
 
 require (
 	github.com/mt3hr/gkill/src/server v0.0.0
-	golang.org/x/net v0.62.0
+	golang.org/x/net v0.63.0
 	modernc.org/sqlite v1.62.0
 )
 
