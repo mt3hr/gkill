@@ -17,7 +17,7 @@ api/
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
 ├── *_test.go                    # 検索フィルタ・rep名絞り込みなどのテスト（15ファイル）
-├── gkill_server_api/            # HTTP ハンドラ（182ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（184ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・ルート表 apiRoutes() の全97ルートを登録
@@ -30,7 +30,7 @@ api/
 │   ├── web_push.go              # Web Push 通知
 │   ├── gkill_server_api_access_log.go # アクセスログ
 │   ├── gkill_server_api_rate_limit.go # レートリミット
-│   └── handle_*.go              # 各エンドポイントのハンドラ（123ファイル。うちテスト23）
+│   └── handle_*.go              # 各エンドポイントのハンドラ（124ファイル。うちテスト24）
 ├── find/                        # 検索クエリ型定義
 ├── find_word/                   # ワード検索の Go 側判定（本体とプラグイン SDK が共用。標準ライブラリのみ）
 ├── gkill_plugin/                # プラグイン通信プロトコル型
@@ -56,12 +56,12 @@ api/
 
 ## サブディレクトリ
 
-### `gkill_server_api/`（182ファイル）— HTTP ハンドラ
+### `gkill_server_api/`（184ファイル）— HTTP ハンドラ
 
 詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
 
 `GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全99エンドポイントを登録する。
-handle_*.go は123ファイル（実装100 + テスト23）で、1ハンドラ1ファイルとして分割されている。
+handle_*.go は124ファイル（実装100 + テスト24）で、1ハンドラ1ファイルとして分割されている。
 ビジネスロジックは `usecase/` 層に委譲し、ハンドラは HTTP リクエスト/レスポンスの変換に専念する。
 
 ### `find/`（10ファイル）— 検索クエリ型定義

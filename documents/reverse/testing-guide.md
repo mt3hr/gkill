@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1535 | 232 | Go `testing` |
-| フロントエンド ユニット | 2245 | 195 | Vitest |
-| フロントエンド E2E | 264 | 50（+auth.setup.ts） | Playwright |
+| Go バックエンド | 1540 | 233 | Go `testing` |
+| フロントエンド ユニット | 2250 | 196 | Vitest |
+| フロントエンド E2E | 265 | 51（+auth.setup.ts） | Playwright |
 | MCP サーバ | 1187 | 44 | Go `testing` |
 | ツール | 115 | 4 | Vitest |
 | Android | 31 | 2 | JUnit 4 |
 | Wear OS | 244 | 20 | JUnit 4 + MockK |
-| **合計** | **5,621** | **547** | |
+| **合計** | **5,632** | **550** | |
 
 数え直すコマンド:
 
@@ -218,7 +218,7 @@ src/server/gkill/
 │   ├── req_res/                       ← ワイヤ契約（JSONタグ名 / omitempty）と応答型の Errors / Messages の型（ソース走査）
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（54ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（55ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── response_status_guard_test.go         ← 全ハンドラが writeErrorStatus を呼ぶこと（ソース走査）
@@ -338,7 +338,7 @@ src/client/__tests__/
 │   ├── datas/                         ← データモデル（35ファイル）
 │   ├── dnote/                         ← D-note モジュール（10ファイル、trend-aggregator / correlation-graph-editor-view / dnote-item-table-columns（列の追加・削除、ダブルクリックの閲覧 / 編集の分岐、並べ替えの挿入位置）含む）
 │   ├── kftl/                          ← KFTL 行分類器（8ファイル。kftl-line-labels 含む）
-│   ├── composables/                   ← Vue Composable（70ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（71ファイル。add-views / edit-views /
 │   │                                     tx-bundle-views / shared-mi-view-dialog / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /
@@ -374,7 +374,7 @@ src/client/__tests__/
 ### 3.3 フロントエンド E2E（`src/client/__tests__/e2e/`）
 
 コンポーネントを持つ13ルートすべてを Playwright で検証し、CRUD 操作フローもカバーします
-（50 specファイル + auth.setup.ts、264テスト宣言）。各テストでは以下を共通チェックします：
+（51 specファイル + auth.setup.ts、265テスト宣言）。各テストでは以下を共通チェックします：
 
 - **JS エラー検出**: ページ遷移時にコンソールエラーがないことを検証
 - **インタラクティブ操作**: ボタンクリック、フォーム入力、ダイアログ開閉

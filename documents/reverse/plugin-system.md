@@ -206,9 +206,20 @@ SDK 側はリクエストの上限で、`find_query` の `ids`（本体が4000�
 `config.json` が無ければ既定値で生成する。**既存ファイルは決して上書きしない**。
 `DefaultConfig` が nil（`gkill_example` など）なら何も生成しない。
 
-**設定はプラグイン Kyou のコンテキストメニュー「プラグイン設定」から編集できる。**
-`plugin-html-view.vue` が `plugin-config-dialog.vue` を持ち、メニューから `rep_name` を受けて開く。
+**設定は アカウント管理画面の利用者の行「プラグイン設定」から編集できる（管理者だけ。ADR-0714）。**
+`manage-account-view.vue` の行のボタンが `manage-plugin-list-dialog.vue` を開き、
+`get_plugin_list`（`target_user_id` にその利用者）でその利用者のプラグインを並べる。
+行の「設定」が `plugin-config-dialog.vue` を `show(target_user_id, rep_name)` で開き、
 ダイアログは `get_plugin_config_html` で設定 HTML を取得して iframe に表示する。
+
+設定の中身は `source_dirs`＝gkill のプロセスが読めるフォルダの指定なので、
+`get_plugin_config_html` と `post_plugin_config` は**サーバ側でも管理者でなければ弾く**
+（`resolvePluginTargetUser`。画面を隠すだけでは API を直接叩けば通る）。
+`get_plugin_list` は一般利用者も呼ぶ（プラグイン記録の編集・削除メニューの抑止）ので、
+`target_user_id` が空なら通し、他人を指したときだけ弾く。
+2026-11-24 まではプラグイン Kyou のコンテキストメニュー「プラグイン設定」が唯一の入口で、
+**そのプラグインの記録が1件も検索に出ていないと開けなかった**（取り込み元の指定を間違えて
+0件になったときこそ直したいのに、そのときだけ入口が消える）。
 
 iframe は `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）なので、
 **iframe 自身は gkill の API を叩けない**。保存は親（ダイアログ）が postMessage で肩代わりする。
@@ -668,7 +679,8 @@ function onWindowMessage(e: MessageEvent): void {
 
 ## 10. PluginKyou コンテキストメニュー
 
-GitCommitLogContextMenu と同じ項目に加えて、プラグイン固有の「プラグイン設定」を持つ。
+GitCommitLogContextMenu と同じ項目を持つ。**「プラグイン設定」は 2026-11-24 に撤去した**
+（入口はアカウント管理画面へ移った。ADR-0714）。
 
 | メニュー項目 | 表示条件 |
 |---|---|
@@ -680,7 +692,6 @@ GitCommitLogContextMenu と同じ項目に加えて、プラグイン固有の�
 | 通知を追加 | 常時 |
 | 内容コピー | 常時 |
 | IDをコピー | 常時 |
-| プラグイン設定 | 常時（`plugin-config-dialog.vue` を開く） |
 | フォルダを開く | `session_is_local` 時のみ |
 | ファイルを開く | `session_is_local` 時のみ |
 
@@ -693,7 +704,13 @@ GitCommitLogContextMenu と同じ項目に加えて、プラグイン固有の�
 | `src/client/classes/use-plugin-html-view.ts` | Viewレベル Composable（コンテキストメニュー表示・crudRelayHandlers） |
 | `src/client/pages/views/plugin-html-context-menu.vue` | コンテキストメニューコンポーネント |
 | `src/client/pages/views/plugin-html-context-menu-props.ts` | `PluginHtmlContextMenuProps`（`= KyouViewPropsBase`） |
+| `src/client/pages/views/plugin-html-context-menu-emits.ts` | `PluginHtmlContextMenuEmits`（`= KyouViewEmits`。固有イベントは撤去済み） |
 | `src/client/classes/use-plugin-html-context-menu.ts` | コンテキストメニュー Composable |
+| `src/client/pages/dialogs/manage-plugin-list-dialog.vue` | 対象アカウントのプラグイン一覧（アカウント管理の行から開く） |
+| `src/client/pages/views/manage-plugin-list-view.vue` | 一覧の表（名前・版・説明・状態と行ごとの「設定」） |
+| `src/client/classes/use-manage-plugin-list-dialog.ts` | 一覧ダイアログ Composable（`target_user_id` を載せて `get_plugin_list`） |
+| `src/client/pages/dialogs/plugin-config-dialog.vue` | プラグイン1件の設定（`show(target_user_id, rep_name)`） |
+| `src/client/classes/use-plugin-config-dialog.ts` | 設定ダイアログ Composable（iframe への注入と保存の肩代わり） |
 
 ---
 

@@ -17,6 +17,9 @@ import (
 // POST /api/post_plugin_config（wrapAuth）
 // req_res.PostPluginConfigRequest / req_res.PostPluginConfigResponse
 //
+// 管理者でなければ弾きます（自分自身を対象にする場合も同じ）。取り込み元のフォルダ指定を
+// 書き換えられるので、一般利用者には触らせません。
+// target_user_idが空なら自分自身を対象にします。
 // 保存処理の実体はプラグイン側にあり、gkillはFormDataを解釈せずそのまま中継します。
 // RepNameに一致するプラグインが無い場合はエラーを返します。
 // 成功時はメッセージを何も詰めず、errorsが空の応答を返すだけです。
@@ -52,8 +55,11 @@ func (g *GkillServerAPI) HandlePostPluginConfig(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	auth := AuthFromContext(r.Context())
-	userID := auth.UserID
+	userID, targetUserErrors := g.resolvePluginTargetUser(r.Context(), request.TargetUserID, request.LocaleName, true)
+	if len(targetUserErrors) != 0 {
+		response.Errors = append(response.Errors, targetUserErrors...)
+		return
+	}
 
 	pm := g.GkillDAOManager.GetPluginManager(userID)
 	pluginRepo := pm.GetPluginByRepName(r.Context(), request.RepName)

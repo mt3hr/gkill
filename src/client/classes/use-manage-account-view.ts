@@ -18,6 +18,7 @@ export function useManageAccountView(options: {
     const allocate_rep_dialog = ref<ComponentRef | null>(null)
     const confirm_reset_password_dialog = ref<ComponentRef | null>(null)
     const create_account_dialog = ref<ComponentRef | null>(null)
+    const manage_plugin_list_dialog = ref<ComponentRef | null>(null)
     const show_password_reset_link_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
@@ -61,6 +62,11 @@ export function useManageAccountView(options: {
         allocate_rep_dialog.value?.show(account)
     }
 
+    // プラグインは利用者ごとの実体なので、どのアカウントのプラグインを見るかは行で決まる（ADR-0714）
+    function show_manage_plugin_list_dialog(account: Account): void {
+        manage_plugin_list_dialog.value?.show(account)
+    }
+
     function show_confirm_reset_password_dialog(account: Account): void {
         confirm_reset_password_dialog.value?.show(account)
     }
@@ -83,6 +89,11 @@ export function useManageAccountView(options: {
     // ── Event relay objects ──
     const allocateRepDialogHandlers = {
         'requested_reload_server_config': () => emits('requested_reload_server_config'),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+    }
+
+    const managePluginListDialogHandlers = {
         'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
         'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
@@ -114,6 +125,7 @@ export function useManageAccountView(options: {
         allocate_rep_dialog,
         confirm_reset_password_dialog,
         create_account_dialog,
+        manage_plugin_list_dialog,
         show_password_reset_link_dialog,
 
         // State
@@ -124,11 +136,13 @@ export function useManageAccountView(options: {
         show_create_account_dialog,
         update_is_enable_account,
         show_allocate_rep_dialog,
+        show_manage_plugin_list_dialog,
         show_confirm_reset_password_dialog,
         show_show_password_reset_link_dialog,
 
         // Event relay objects
         allocateRepDialogHandlers,
+        managePluginListDialogHandlers,
         confirmResetPasswordDialogHandlers,
         createAccountDialogHandlers,
         showPasswordResetLinkDialogHandlers,

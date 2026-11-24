@@ -85,8 +85,8 @@ src/client/
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
 │   ├── exported-rykv-page.vue   # HTML 出力したファイルの中で開く画面
-│   ├── views/              # ビューコンポーネント（211ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（120ファイル、browse-zip-contents-dialog.vue 含む）
+│   ├── views/              # ビューコンポーネント（212ファイル）
+│   └── dialogs/            # ダイアログコンポーネント（121ファイル、browse-zip-contents-dialog.vue 含む）
 ├── i18n.ts                 # i18n設定（ja のみ静的、他6言語は動的import）
 ├── assets/                 # 画像等の静的アセット
 ├── classes/
@@ -102,7 +102,7 @@ src/client/
 │   ├── kftl/               # KFTLパーサー（53ステートメント型）。行ラベル専用の分類器、解釈と書き込みはサーバ（ADR-0507）
 │   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
-│   └── use-*.ts            # Composition関数群（341ファイル）
+│   └── use-*.ts            # Composition関数群（342ファイル）
 ├── __tests__/              # テスト
 │   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
 │   ├── helpers/            # テストヘルパー
@@ -140,7 +140,7 @@ src/server/
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（182ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（184ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
     │       ├── gkill_server_api_address.go  # ルート表（99エンドポイント: 98 POST + 1 GET。パス・メソッド・認証区分・ハンドラの正本）
@@ -151,7 +151,7 @@ src/server/
     │       ├── utils.go            # ユーティリティ関数
     │       ├── web_push.go         # WebPush通知
     │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
-    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、123ファイル）
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、124ファイル）
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     │       ├── chatview/           # AI チャット系プラグインの本文 HTML（chatview.Message → HTML。head・チップ・折りたたみを1か所に。ADR-0315）
@@ -345,7 +345,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-1058キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+1065キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 

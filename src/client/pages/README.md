@@ -10,8 +10,8 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 15 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（211 .vue）
-└── dialogs/                        # Dialog コンポーネント（120 .vue）
+├── views/                          # View コンポーネント（212 .vue）
+└── dialogs/                        # Dialog コンポーネント（121 .vue）
 ```
 
 ## 設計パターン
@@ -69,7 +69,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（211 .vue）
+## views/ — 全 View コンポーネント一覧（212 .vue）
 
 ### データ追加系（23コンポーネント）
 
@@ -180,6 +180,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `application-config-view.vue` | アプリケーション設定 |
 | `server-config-view.vue` | サーバ設定 |
 | `manage-skill-list-view.vue` | スキル一覧（表示・ダウンロード・削除・zip アップロード。ロジックは親ダイアログ） |
+| `manage-plugin-list-view.vue` | プラグイン一覧（名前・版・説明・状態と、行ごとの「設定」。ロジックは親ダイアログ。ADR-0714） |
 | `allocate-rep-view.vue` | リポジトリ割り当て |
 | `login-view.vue` / `create-account-view.vue` / `manage-account-view.vue` | 認証・アカウント管理 |
 | `set-new-password-view.vue` / `show-password-reset-link-view.vue` | パスワード管理 |
@@ -256,7 +257,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
 | `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（120 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（121 .vue）
 
 ### データ追加ダイアログ（22コンポーネント）
 
@@ -302,8 +303,9 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `upload-file-dialog.vue` | ファイルアップロード |
 | `browse-zip-contents-dialog.vue` | ZIP コンテンツブラウザ |
 | `manage-skill-list-dialog.vue` / `browse-skill-files-dialog.vue` | スキルの管理（設定画面の「スキル」）/ スキルの中身の表示（素のテキスト。ADR-0634） |
+| `manage-plugin-list-dialog.vue` | 対象アカウントのプラグイン一覧（アカウント管理の行の「プラグイン設定」。管理者だけ。ADR-0714） |
 | `help-dialog.vue` | ヘルプダイアログ |
-| `plugin-config-dialog.vue` | プラグイン設定 |
+| `plugin-config-dialog.vue` | プラグイン1件の設定（プラグインが組み立てた HTML を iframe で出す。開く対象は `show(target_user_id, rep_name)` の引数） |
 | `save-clipboard-to-file-dialog.vue` | クリップボード内容ファイル保存 |
 | `tutorial-dialog.vue` | チュートリアル |
 

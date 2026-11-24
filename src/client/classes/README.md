@@ -9,7 +9,7 @@ Vue コンポーネント（`pages/`）から使用されるロジック層。
 
 ```
 classes/
-├── (ルートファイル 383個)        # use-*.ts Composable + ユーティリティ
+├── (ルートファイル 384個)        # use-*.ts Composable + ユーティリティ
 ├── api/                        # GkillAPI クライアント → api/README.md
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md
@@ -136,6 +136,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | ファイル | 説明 |
 |---------|------|
 | `use-manage-skill-list-dialog.ts` | 一覧・ダウンロード・アップロード・削除の API 呼び出しを1箇所で持つ親。アップロードは2段階 ―― zip を `file-base64.ts` で data URI にして `dry_run` で送り、返った計画を確認ダイアログに出してから、「適用」で同じ zip を本番で送る。削除は `path` を空にしてスキル丸ごと |
+| `use-manage-plugin-list-dialog.ts` | 対象アカウントのプラグイン一覧。`target_user_id` に開いた行の利用者を入れて `get_plugin_list` を呼び、行の「設定」では `target_user_id` と rep 名の両方を設定ダイアログへ渡す。閉じたら一覧と対象アカウントを空に戻す（ADR-0714） |
 | `use-browse-skill-files-dialog.ts` | スキルの中身の表示（編集はしない。直すなら zip を下ろして上げ直す）。テキストは素の文字として `<pre>` に出し、Markdown / HTML として描かない（AI が書いた HTML の中のスクリプトがログイン中のセッションで動く穴になる）。ファイルを続けて押したときの応答の追い越しは連番で捨てる |
 | `use-confirm-upload-skill-dialog.ts` | アップロードの2段目の確認。1段目の `dry_run` が返した計画（新規か置き換えか、追加・削除・変更・無視されるファイル）を見せ、「適用」を親へ返す。API 呼び出しも zip の中身も親が持つ |
 | `use-confirm-delete-skill-dialog.ts` | スキルを丸ごと消す確認。削除の API は親が呼ぶ。スキルは履歴を持たないので消したら戻せない |

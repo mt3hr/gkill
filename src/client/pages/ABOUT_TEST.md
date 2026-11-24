@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、50 specファイル264テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、51 specファイル265テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## E2E の書き方の規約
 
@@ -75,7 +75,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 
 ## テストファイル一覧
 
-### E2E テスト（50 specファイル, 264テスト宣言）
+### E2E テスト（51 specファイル, 265テスト宣言）
 
 #### ページ表示・ナビゲーション系（14ファイル）
 
@@ -140,9 +140,10 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/dialog-autofocus.spec.ts` | ダイアログを開いたら最初のテキスト入力欄にカーソルが載ること（選び方の判定そのものは `unit/classes/dialog-autofocus.test.ts`） |
 | `src/client/__tests__/e2e/sample-data-smoke.spec.ts` | 配布サンプルデータの起動スモーク。run-e2e.mjs がサンプルデータのコピーを home にした gkill_server を別ポートで起動し（URL は `GKILL_E2E_SAMPLE_URL`）、embed 配信のフロントエンドへ README 記載の資格情報でログインして rykv に記録が出ること。ログインはレート制限を消費するので1回だけ |
 | `src/client/__tests__/e2e/skills.spec.ts` | スキル（ADR-0634）の画面の一巡: 設定 → スキル → zip をアップロード（確認 → 適用）→ 一覧 → 表示 → ダウンロード → 同じ名前で上げ直すと「変わる・消える」が確認に出る → 削除。zip はテストの中で組み立てる（バイナリのフィクスチャをコミットしない） |
+| `src/client/__tests__/e2e/plugin-config.spec.ts` | プラグイン設定の導線（ADR-0714）: 設定 → サーバ設定 → アカウント管理 → 行の「プラグイン設定」。記録のコンテキストメニューからは撤去したのでここが唯一の入口。E2E のホームにプラグインは置かないので、5枚目のダイアログまで開いて「プラグインはまだありません」が出るところまでを見る |
 | `src/client/__tests__/e2e/user-content-sandbox.spec.ts` | 取り込んだ HTML ファイルを `/files/` で開くと、中のスクリプトは動くが `document.cookie` と `localStorage` は例外になること（ADR-0711。CSP は `sandbox allow-scripts allow-downloads allow-modals` で `allow-same-origin` 無し）。合成の HTML を `/api/upload_files` で `Files` rep へ上げて開く。拡張子ごとのヘッダの値は Go の `handle_file_serve_test.go` / `handle_zip_cache_file_serve_test.go` が固定する |
 
-### Composable ユニットテスト（70ファイル）
+### Composable ユニットテスト（71ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -177,7 +178,8 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/registered-tag-column-filter.test.ts` | 利用者がその場で作ったタグを列の検索条件へ足す判定（`tags_and` の列は積が必ず空になるので触らないこと・既知タグでは列も引き直しも動かないこと・既知判定は emit 前のその場で行うこと） |
 | `src/client/__tests__/unit/composables/new-tag-column-search.test.ts` | 同じ表を useRykvView / useMiView の**両方**へ流す配線テスト（引き直しは列あたり1本・`query_id` 不変・条件が `set_saved_*` に落ちること・親への `registered_tag` 中継を止めないこと） |
 | `src/client/__tests__/unit/composables/browse-zip-contents-dialog.test.ts` | ZIPの中を辿るダイアログの純ロジック（フォルダのエントリを持たないZIPでも階層を導出する・画像/テキスト/メディアの巡回が両端で止まる・サイズ表示・テキストビューワーを 512KiB で切ったとき、切れ目が UTF-8 / Shift_JIS の文字の途中でも切れ端だけ捨てて元の文字コードで読むこと）。**E2Eには zip の spec が無いのでここが唯一のカバレッジ** |
-| `src/client/__tests__/unit/composables/plugin-config-dialog.test.ts` | プラグイン設定ダイアログ。iframe は `allow-same-origin` を持たないので保存を親が肩代わりする経路（`e.source` を緩めると無関係なウィンドウから設定を書き換えられる・保存成功後は設定HTMLを取り直す） |
+| `src/client/__tests__/unit/composables/plugin-config-dialog.test.ts` | プラグイン設定ダイアログ。iframe は `allow-same-origin` を持たないので保存を親が肩代わりする経路（`e.source` を緩めると無関係なウィンドウから設定を書き換えられる・保存成功後は設定HTMLを取り直す）。開く対象は `show(target_user_id, rep_name)` の引数で決まり、`target_user_id` は読み込みと保存の両方のリクエストに載る（載せ忘れると管理者自身の設定を読み書きする。ADR-0714） |
+| `src/client/__tests__/unit/composables/manage-plugin-list-dialog.test.ts` | プラグイン一覧ダイアログ（`use-manage-plugin-list-dialog`。ADR-0714）。アカウント管理の行から開くので、一覧も設定画面も開いた行の `target_user_id` を対象にする。エラーはフィードへ流して一覧を埋めず、読み込み表示は必ず倒れ、閉じたら一覧と対象アカウントを空に戻す（残すと次に別の行から開いた瞬間、前のアカウントのプラグインが並ぶ） |
 | `src/client/__tests__/unit/composables/config-struct-sync.test.ts` | 板ツリー・タグツリーのセッション中追随。どちらもサーバに実体が無く、一覧APIから起動時に組み立てられる |
 | `src/client/__tests__/unit/composables/confirm-unknown-mi-board.test.ts` | 「新しい板です」確認ゲート。板はサーバ側に実体が無いので、打ち間違いが無言で新しい板を生やす |
 | `src/client/__tests__/unit/composables/dashboard-page-reload.test.ts` | useDashboardPage（設定の取得・テーマ・メッセージ・ツリー追随・ログアウトだけの薄いページ）。設定取得の失敗が永久スピナーにならないこと |

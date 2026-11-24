@@ -1,8 +1,5 @@
 'use strict'
 
-import type { ApplicationConfig } from "@/classes/datas/config/application-config"
+import type { GkillPropsBase } from "../views/gkill-props-base"
 
-export interface PluginConfigDialogProps {
-    rep_name: string
-    application_config?: ApplicationConfig
-}
+export type PluginConfigDialogProps = GkillPropsBase

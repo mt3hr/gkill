@@ -218,7 +218,7 @@ graph LR
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api/`パッケージ（handle_*.go 123ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約3,500行）から分割・移動されました。
+`gkill/api/gkill_server_api/`パッケージ（handle_*.go 124ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約3,500行）から分割・移動されました。
 
 #### 主な責務
 
@@ -619,8 +619,8 @@ Kyou の削除は Kyou 単体の論理削除ではなく連鎖削除です。処
 | 種別 | 数 | 配置 |
 |---|---|---|
 | ページ | 15 | `pages/*.vue` |
-| ビュー | 211 | `pages/views/*.vue` |
-| ダイアログ | 120 | `pages/dialogs/*.vue` |
+| ビュー | 212 | `pages/views/*.vue` |
+| ダイアログ | 121 | `pages/dialogs/*.vue` |
 
 ### テーマ
 

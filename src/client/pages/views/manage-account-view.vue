@@ -29,6 +29,10 @@
                                 i18n.global.t("ALLOCATE_REP_TITLE") }}</v-btn>
                         </td>
                         <td>
+                            <v-btn dark color="primary" @click="show_manage_plugin_list_dialog(account)">{{
+                                i18n.global.t("PLUGIN_CONFIG_TITLE") }}</v-btn>
+                        </td>
+                        <td>
                             <v-btn dark color="primary" v-if="!account.password_reset_token"
                                 @click="show_confirm_reset_password_dialog(account)">{{
                                     i18n.global.t("RESETED_PASSWORD_TITLE")
@@ -60,6 +64,9 @@
             :server_configs="server_configs"
             v-on="confirmResetPasswordDialogHandlers"
             ref="confirm_reset_password_dialog" />
+        <ManagePluginListDialog :application_config="application_config" :gkill_api="gkill_api"
+            v-on="managePluginListDialogHandlers"
+            ref="manage_plugin_list_dialog" />
         <CreateAccountDialog :application_config="application_config" :gkill_api="gkill_api"
             :server_configs="server_configs"
             v-on="createAccountDialogHandlers"
@@ -77,6 +84,7 @@ import type { ManageAccountViewProps } from './manage-account-view-props'
 import AllocateRepDialog from '../dialogs/allocate-rep-dialog.vue'
 import ConfirmResetPasswordDialog from '../dialogs/confirm-reset-password-dialog.vue'
 import CreateAccountDialog from '../dialogs/create-account-dialog.vue'
+import ManagePluginListDialog from '../dialogs/manage-plugin-list-dialog.vue'
 import ShowPasswordResetLinkDialog from '../dialogs/show-password-reset-link-dialog.vue'
 import { useManageAccountView } from '@/classes/use-manage-account-view'
 
@@ -88,6 +96,7 @@ const {
     allocate_rep_dialog,
     confirm_reset_password_dialog,
     create_account_dialog,
+    manage_plugin_list_dialog,
     show_password_reset_link_dialog,
 
     // State
@@ -98,11 +107,13 @@ const {
     show_create_account_dialog,
     update_is_enable_account,
     show_allocate_rep_dialog,
+    show_manage_plugin_list_dialog,
     show_confirm_reset_password_dialog,
     show_show_password_reset_link_dialog,
 
     // Event relay objects
     allocateRepDialogHandlers,
+    managePluginListDialogHandlers,
     confirmResetPasswordDialogHandlers,
     createAccountDialogHandlers,
     showPasswordResetLinkDialogHandlers,

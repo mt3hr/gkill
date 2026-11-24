@@ -21,6 +21,8 @@ import (
 // req_res.GetPluginListRequest / req_res.GetPluginListResponse
 //
 // 各要素はプラグインのmanifestの内容に、プロセスが生きているか（IsAlive）を添えたものです。
+// target_user_idが空なら自分自身を対象にします（従来どおり誰でも呼べます）。
+// 空でない指定は他人のプラグインを覗くことになるので管理者でなければ弾きます。
 // プラグインが1つも無い場合はPluginsをnilのまま正常応答します。
 func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -54,8 +56,11 @@ func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	auth := AuthFromContext(r.Context())
-	userID := auth.UserID
+	userID, targetUserErrors := g.resolvePluginTargetUser(r.Context(), request.TargetUserID, request.LocaleName, false)
+	if len(targetUserErrors) != 0 {
+		response.Errors = append(response.Errors, targetUserErrors...)
+		return
+	}
 
 	pm := g.GkillDAOManager.GetPluginManager(userID)
 	for _, pluginRepo := range pm.GetPluginRepositories() {

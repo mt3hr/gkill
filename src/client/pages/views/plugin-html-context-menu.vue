@@ -33,9 +33,6 @@
             <v-list-item @click="copy_id()">
                 <v-list-item-title>{{ i18n.global.t("COPY_ID_TITLE") }}</v-list-item-title>
             </v-list-item>
-            <v-list-item @click="show_plugin_config_dialog()">
-                <v-list-item-title>{{ i18n.global.t("PLUGIN_CONFIG_TITLE") }}</v-list-item-title>
-            </v-list-item>
             <v-list-item v-if="application_config.session_is_local" @click="open_folder()">
                 <v-list-item-title>{{ i18n.global.t("OPEN_FOLDER_TITLE") }}</v-list-item-title>
             </v-list-item>
@@ -70,7 +67,6 @@ const {
     show_add_notification_dialog,
     show_confirm_rekyou_dialog,
     show_add_mi_re_kyou_dialog,
-    show_plugin_config_dialog,
     open_folder,
     open_file,
     add_tag_from_history,

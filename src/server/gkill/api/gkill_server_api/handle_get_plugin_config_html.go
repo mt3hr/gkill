@@ -17,6 +17,9 @@ import (
 // POST /api/get_plugin_config_html（wrapAuth）
 // req_res.GetPluginConfigHTMLRequest / req_res.GetPluginConfigHTMLResponse
 //
+// 管理者でなければ弾きます（自分自身を対象にする場合も同じ）。設定画面には取り込み元の
+// フォルダ指定が出るので、一般利用者には開かせません。
+// target_user_idが空なら自分自身を対象にします。
 // 設定画面の中身はプラグインが自分で組み立てます。gkill側は内容を解釈せずそのまま返します。
 // RepNameに一致するプラグインが無い場合はエラーを返します。
 func (g *GkillServerAPI) HandleGetPluginConfigHTML(w http.ResponseWriter, r *http.Request) {
@@ -51,8 +54,11 @@ func (g *GkillServerAPI) HandleGetPluginConfigHTML(w http.ResponseWriter, r *htt
 		return
 	}
 
-	auth := AuthFromContext(r.Context())
-	userID := auth.UserID
+	userID, targetUserErrors := g.resolvePluginTargetUser(r.Context(), request.TargetUserID, request.LocaleName, true)
+	if len(targetUserErrors) != 0 {
+		response.Errors = append(response.Errors, targetUserErrors...)
+		return
+	}
 
 	pm := g.GkillDAOManager.GetPluginManager(userID)
 	pluginRepo := pm.GetPluginByRepName(r.Context(), request.RepName)

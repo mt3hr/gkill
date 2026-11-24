@@ -68,16 +68,6 @@ export function usePluginHtmlContextMenu(options: {
         emits('requested_open_rykv_dialog', 'add_mi_re_kyou', props.kyou)
     }
 
-    // プラグインの設定ダイアログは rykv のダイアログホストではなく
-    // PluginHtmlView が直接持つ（プラグイン固有で他の Kyou 型と共有しないため）。
-    async function show_plugin_config_dialog(): Promise<void> {
-        const rep_name = props.kyou.typed_plugin?.rep_name
-        if (!rep_name) {
-            return
-        }
-        emits('requested_show_plugin_config', rep_name)
-    }
-
     async function open_folder(): Promise<void> {
         const req = new OpenDirectoryRequest()
         req.target_id = props.kyou.id
@@ -146,7 +136,6 @@ export function usePluginHtmlContextMenu(options: {
         show_add_notification_dialog,
         show_confirm_rekyou_dialog,
         show_add_mi_re_kyou_dialog,
-        show_plugin_config_dialog,
         open_folder,
         open_file,
         add_tag_from_history,

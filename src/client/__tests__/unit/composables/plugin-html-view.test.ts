@@ -26,9 +26,6 @@ vi.mock('@/i18n', () => ({
 vi.mock('@/pages/views/plugin-html-context-menu.vue', () => ({
     default: { name: 'plugin-html-context-menu', template: '<div />' },
 }))
-vi.mock('@/pages/dialogs/plugin-config-dialog.vue', () => ({
-    default: { name: 'plugin-config-dialog', template: '<div />' },
-}))
 
 import PluginHtmlView from '@/pages/views/plugin-html-view.vue'
 import { GkillAPI } from '@/classes/api/gkill-api'

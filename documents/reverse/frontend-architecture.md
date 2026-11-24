@@ -52,7 +52,7 @@ src/client/
 │   ├── tag-struct.ts                # タグ階層構造ユーティリティ
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
-│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、341ファイル）
+│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、342ファイル）
 ├── assets/                          # 画像等の静的アセット
 ├── __tests__/                       # Vitest ユニットテスト + Playwright E2E
 │   ├── e2e/                        # E2E spec（run-e2e.mjs / free-port.mjs / auth.setup.ts 等を含む）
@@ -197,7 +197,7 @@ MCP 向けの利用者ごとのスキル（`SKILL.md` と付属ファイル。[A
 
 ### ダイアログ アクセシビリティ
 
-120ダイアログ中119件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。唯一の例外は `plugin-config-dialog.vue` で、Vuetify の `v-dialog`（`defineModel` の `show`）に `useDialogHistoryStack(show)` を登録するだけにしてある。iframe の中でプラグイン製のフォームがナビゲーションして履歴エントリを作りうるので、`close_dialog_via_history` は使わずプログラム的に閉じる（unmount で iframe の履歴ごと消えてから巻き戻される。`use-plugin-config-dialog.ts`）:
+121ダイアログ中121件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。唯一の例外は `plugin-config-dialog.vue` で、Vuetify の `v-dialog`（`defineModel` の `show`）に `useDialogHistoryStack(show)` を登録するだけにしてある。iframe の中でプラグイン製のフォームがナビゲーションして履歴エントリを作りうるので、`close_dialog_via_history` は使わずプログラム的に閉じる（unmount で iframe の履歴ごと消えてから巻き戻される。`use-plugin-config-dialog.ts`）:
 
 | 機能 | 説明 |
 |------|------|
@@ -271,7 +271,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 | `GkillAPI` シングルトン | バックエンド通信（`GkillAPI.get_instance()`） |
 | Vuetify `useTheme()` | テーマ状態（ライト/ダーク切替） |
 | vue-i18n | ロケール状態 |
-| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（341ファイル） |
+| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（342ファイル） |
 
 ### ComponentRef 型
 
