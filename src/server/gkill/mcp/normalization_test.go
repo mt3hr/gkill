@@ -1280,6 +1280,13 @@ func TestNormalizeKyouQueryInvertedCalendarRange(t *testing.T) {
 		mustFail(t)(NormalizeKyouQuery(obj("calendar_start_time", "2026-08-17", "calendar_end_time", "2026-08-11")))
 	})
 
+	t.Run("rejects inverted time within the same day", func(t *testing.T) {
+		mustFail(t)(NormalizeKyouQuery(obj(
+			"calendar_start_time", "2026-08-11T15:00:00+09:00",
+			"calendar_end_time", "2026-08-11T10:00:00+09:00",
+		)))
+	})
+
 	t.Run("accepts the same day on both ends", func(t *testing.T) {
 		// 日付のみは start=00:00:00 / end=23:59:59 へ展開されるので、同日は逆さまではない
 		result := mustNormalize(t)(NormalizeKyouQuery(obj("calendar_start_time", "2026-08-11", "calendar_end_time", "2026-08-11")))

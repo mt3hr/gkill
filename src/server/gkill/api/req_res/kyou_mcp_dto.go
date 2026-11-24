@@ -199,7 +199,7 @@ type PluginPayloadMCPDTO struct {
 }
 
 // PluginDescriptionMCPDTO は応答に出てきたプラグインの説明を1回だけ載せる枠。
-// payload.rep_name から引く。plugin_content ブロックと同じ「まとめて末尾」の形。
+// 各記録の rep_name（Kyou 側の欄）から引く。plugin_content ブロックと同じ「まとめて末尾」の形。
 type PluginDescriptionMCPDTO struct {
 	RepName     string `json:"rep_name"`
 	PluginName  string `json:"plugin_name,omitempty"`

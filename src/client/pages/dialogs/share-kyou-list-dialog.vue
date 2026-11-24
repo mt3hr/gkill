@@ -25,10 +25,7 @@
         -->
         <template v-if="mode === 'menu'">
           <v-btn block color="primary" variant="flat" class="mb-2 export_kyou_html_button"
-            prepend-icon="mdi-file-export-outline" @click="() => {
-              hide()
-              emits('requested_export_kyou_html')
-            }">
+            prepend-icon="mdi-file-export-outline" @click="request_export_kyou_html()">
             {{ i18n.global.t('EXPORT_KYOU_HTML_TITLE') }}
           </v-btn>
           <v-btn block color="primary" variant="flat" class="share_screen_button"
@@ -62,6 +59,6 @@ import { useShareKyouListDialog } from '@/classes/use-share-kyou-list-dialog'
 
 const props = defineProps<ShareKyousListDialogProps>()
 const emits = defineEmits<ShareKyousListDialogEmits>()
-const { is_show_dialog, mode, ui, show, show_share_form, hide } = useShareKyouListDialog({ props, emits })
+const { is_show_dialog, mode, ui, show, show_share_form, request_export_kyou_html, hide } = useShareKyouListDialog({ props, emits })
 defineExpose({ show, hide })
 </script>

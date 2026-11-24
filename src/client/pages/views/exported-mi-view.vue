@@ -31,10 +31,8 @@ import MiColumnsView from './mi-columns-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ExportedMiViewProps } from './exported-mi-view-props'
+import type { ExportedMiViewEmits } from './exported-mi-view-emits'
 
 defineProps<ExportedMiViewProps>()
-const emits = defineEmits<{
-    (e: 'received_errors', errors: Array<GkillError>): void
-    (e: 'received_messages', messages: Array<GkillMessage>): void
-}>()
+const emits = defineEmits<ExportedMiViewEmits>()
 </script>

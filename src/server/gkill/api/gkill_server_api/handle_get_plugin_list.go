@@ -8,11 +8,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 // HandleGetPluginList はログイン中の利用者が使えるプラグインの一覧を返します。
@@ -50,7 +52,7 @@ func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Requ
 		slog.Log(r.Context(), gkill_log.Debug, "error at decode get plugin list request", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.InvalidGetPluginListRequestDataError,
-			ErrorMessage: "プラグイン一覧取得リクエストのパースに失敗しました",
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_PLUGIN_LIST_MESSAGE"}),
 			Cause:        err,
 		})
 		return

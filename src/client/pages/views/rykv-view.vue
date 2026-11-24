@@ -16,8 +16,7 @@
         @requested_reload_application_config="emits('requested_reload_application_config')"
         @requested_export_kyou_html="show_export_kyou_html_dialog()"
         @requested_show_kftl_dialog="show_kftl_dialog()"
-        @requested_show_save_clipboard_to_file_dialog="show_save_clipboard_to_file_dialog()"
-        ref="columns_view">
+        @requested_show_save_clipboard_to_file_dialog="show_save_clipboard_to_file_dialog()">
         <template v-slot:app_bar_title>
             <div>
                 <span>{{ i18n.global.t("RYKV_APP_TITLE") }}</span>
@@ -107,7 +106,7 @@
             -->
             <ExportKyouHTMLDialog :application_config="application_config"
                 :gkill_api="gkill_api" :columns="querys" :focused_column_index="focused_column_index"
-                :screen="'rykv'" :can_choose_dnote="true" :can_choose_map="true"
+                :screen="'rykv'"
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                 ref="export_kyou_html_dialog" />
@@ -188,7 +187,6 @@ const emits = defineEmits<RykvViewEmits>()
 
 const {
     // Template refs
-    columns_view,
     add_mi_dialog,
     add_nlog_dialog,
     add_lantana_dialog,

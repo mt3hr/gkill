@@ -14,10 +14,11 @@ export class ExportKyouHTMLResponse extends GkillAPIResponse {
     /** sidecar のときだけ入る。HTML と同名フォルダをまとめた ZIP の base64 */
     zip_base64: string
 
-    /** 予算に収まらず一部を落としたとき真 */
+    /**
+     * 予算に収まらない・読めないなどで一部を落としたとき真。
+     * 何を落としたかは messages に warning（MSG000096）として入る
+     */
     partial: boolean
-
-    warnings: Array<string>
 
     constructor() {
         super()
@@ -26,7 +27,6 @@ export class ExportKyouHTMLResponse extends GkillAPIResponse {
         this.html = ""
         this.zip_base64 = ""
         this.partial = false
-        this.warnings = []
     }
 
 }

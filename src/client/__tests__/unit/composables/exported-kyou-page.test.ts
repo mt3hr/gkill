@@ -7,11 +7,16 @@
  *
  * ガワだけの template.html を直接開いた場合もここに来る（差し込み前は中身が {}）。
  */
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import '@/classes/api/gkill-api'
 import { useExportedKyouPage } from '@/classes/use-exported-kyou-page'
 import { MI_ALL_BOARD_KEY } from '@/classes/mi-board-names'
 import type { Ref } from 'vue'
+
+// テーマの切り替えはコンポーネントの外では呼べない（inject）。値だけ受ける器にする
+vi.mock('vuetify', () => ({
+    useTheme: () => ({ global: { name: { value: 'gkill_theme' } } }),
+}))
 
 function put_json_element(element_id: string, text: string): void {
     const element = document.createElement('script')

@@ -28,7 +28,6 @@ export function useRykvView(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const columns_view = ref<ComponentRef | null>(null)
     const export_kyou_html_dialog = ref<ComponentRef | null>(null)
     const add_mi_dialog = ref<ComponentRef | null>(null)
     const add_nlog_dialog = ref<ComponentRef | null>(null)
@@ -125,7 +124,6 @@ export function useRykvView(options: {
     // ── Return ──
     return {
         // Template refs
-        columns_view,
         add_mi_dialog,
         add_nlog_dialog,
         add_lantana_dialog,

@@ -60,7 +60,6 @@ export interface ExportedKyouPayload {
     with_dnote: boolean
     with_map: boolean
     with_sidebar: boolean
-    warnings: Array<string>
 }
 
 /** いま読める焼き込みの世代。サーバ側（export_html_render.go）と対 */
@@ -103,7 +102,6 @@ export function parse_exported_payload(raw: unknown): ExportedKyouPayload | null
         with_dnote: source.with_dnote === true,
         with_map: source.with_map === true,
         with_sidebar: source.with_sidebar === true,
-        warnings: as_array(source.warnings).filter((w): w is string => typeof w === 'string'),
     }
 }
 

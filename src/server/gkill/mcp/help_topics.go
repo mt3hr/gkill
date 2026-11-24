@@ -20,7 +20,7 @@ import (
 )
 
 const searchTopic = "gkill_get_kyous searches life-log entries (kyou) and returns enriched results: each entry carries id, rep_name, " +
-	"data_type, related_time, create_app / update_app (the app that wrote / last updated it), tags[], texts[], " +
+	"data_type, related_time, update_time, create_app / update_app (the app that wrote / last updated it), tags[], texts[], " +
 	"notifications[], timeis[] (attached TimeIs when is_include_timeis is set), is_deleted (present ONLY on " +
 	"soft-deleted entries, i.e. with query.include_deleted_data; absent means the entry is live) and payload " +
 	"(type-specific fields). Pass include_attached_ids:true to also get tag_entities[] / text_entities[] " +
@@ -73,7 +73,7 @@ const searchTopic = "gkill_get_kyous searches life-log entries (kyou) and return
 	"target_id to query.ids to read the entry it points at); rekyou -> 'rekyou' (a repost: target_id only). " +
 	"Plugin-provided entries have payload.kind='plugin' (see topic plugin).\n\n" +
 	"plugins[] at the top level lists {rep_name, plugin_name, description} once per plugin that appears in the " +
-	"response (the per-entry payload carries only rep_name / plugin_name). Note gkill_get_rep_infos also returns a " +
+	"response (the per-entry payload carries only plugin_name). Note gkill_get_rep_infos also returns a " +
 	"field called plugins[] with a different shape."
 
 const paginationTopic = "Pagination: pass next_cursor from the previous response verbatim as cursor — do not construct or edit it " +
@@ -136,7 +136,7 @@ const dataTypesTopic = "data_type has TWO vocabularies. Search results and add_*
 	"mi_limit / mi_start / mi_end, mirekyou_create / mirekyou_check / mirekyou_limit / mirekyou_start / " +
 	"mirekyou_end, plus whatever data_type each plugin defines (e.g. claude_conversation — list them with " +
 	"gkill_get_plugin_list). gkill_delete_kyou / gkill_restore_kyou / gkill_get_kyou_history take ENTITY names " +
-	"(kmemo, kc, nlog, lantana, urlog, timeis, mi, mirekyou, rekyou, tag, text, notification); they also accept " +
+	"(kmemo, kc, nlog, lantana, urlog, idf, timeis, mi, mirekyou, rekyou, tag, text, notification); they also accept " +
 	"projection names and fold them, so a data_type copied out of a response works there. The responses of " +
 	"gkill_get_kyou_history, gkill_delete_kyou, gkill_restore_kyou and the update tools (gkill_update_mi and the " +
 	"rest) carry the ENTITY name (a task is \"mi\" there, whichever projection a search showed it under).\n\n" +
@@ -144,7 +144,8 @@ const dataTypesTopic = "data_type has TWO vocabularies. Search results and add_*
 	"Entity names timeis / mi / mirekyou are accepted too and expand to all their projections (timeis → " +
 	"timeis_start + timeis_end; mi → the five mi_*), so [\"timeis\",\"mi\",\"idf\"] counts all three kinds. " +
 	"Unknown values produce warnings, not errors. This filter is how you separate Mi from MiReKyou projections and " +
-	"how you filter plugin records (rep_types cannot). Plugins may reuse a built-in data_type: [\"kc\"] can return " +
+	"how you filter plain plugin records (plain plugins do not respond to rep_types, though plugins whose provides " +
+	"declares a built-in kind such as kc, git_commit_log or timeis also match that rep_types value). Plugins may reuse a built-in data_type: [\"kc\"] can return " +
 	"step counts, account balances and hand-entered measurements at once, because they are different repositories " +
 	"wearing the same type — add query.reps to separate them.\n\n" +
 	"Numeric bounds: num_min / num_max (inclusive) apply to the numeric payload value — nlog amount, kc num_value, " +
@@ -159,8 +160,8 @@ const dataTypesTopic = "data_type has TWO vocabularies. Search results and add_*
 	"\"gkill_wear\", \"gkill_mcp_readwrite\" / \"gkill_mcp_write\" (the MCP servers, gkill_upload_files included), \"urlog_bookmarklet\", " +
 	"\"git\", \"idf\" (files indexed from the filesystem), \"gkill_autolog\" (the automatic activity logger) and " +
 	"whatever a plugin sets; the values actually present in your data are listed by group_by:\"create_app\". " +
-	"Records written through gkill_submit_kftl carry \"gkill_kftl\" and are " +
-	"indistinguishable from hand-typed notepad entries, so create_apps:[\"gkill_mcp_readwrite\"] does NOT find them."
+	"Records written through gkill_submit_kftl carry create_app \"gkill_kftl\" (not \"gkill_mcp_readwrite\" / \"gkill_mcp_write\"), " +
+	"so create_apps:[\"gkill_mcp_readwrite\"] does NOT find them (they are distinguished by create_device:\"mcp\" in history; see topic kftl)."
 
 const pluginTopic = "Plugin-provided entries (any data_type that is not one of the built-ins) have payload.kind='plugin' carrying " +
 	"plugin_name only — the entry's own id / rep_name / data_type identify it. Their body is NOT stored in gkill, so set " +
@@ -178,13 +179,20 @@ const pluginTopic = "Plugin-provided entries (any data_type that is not one of t
 	"requests to the same plugin are serialized, so more entries mean a longer wait, not more parallelism.\n\n" +
 	"Which plugins exist, whether each one is alive and whether its index has ever been built: gkill_get_plugin_list " +
 	"(emits_kyou / provides / typed_index). A plugin that emits no kyou (a GPS-only plugin, say) never matches " +
-	"query.reps or data_types — read its data with gkill_get_gps_log instead. Plugins are matched via query.reps or " +
-	"data_types, never rep_types; the rep names that query.reps accepts are gkill_get_plugin_list rep_names[] " +
+	"query.reps or data_types — read its data with gkill_get_gps_log instead. Plain plugins (without typed provides) " +
+	"are matched via query.reps or data_types, never rep_types. Plugins whose provides declares built-in kinds " +
+	"(e.g. kc, git_commit_log, or multiple kinds like timeis + urlog + kmemo) emit native data_types and native payloads " +
+	"(not payload.kind='plugin', so include_plugin_content does not apply) and also respond to those rep_types; " +
+	"when a plugin emits multiple kinds its manifest data_type is only one representative, so filter all of its records " +
+	"via query.reps (rep_names[]). Plugin TimeIs entries also honor playing_time and include_end_timeis. " +
+	"The rep names that query.reps accepts are gkill_get_plugin_list rep_names[] " +
 	"(always present; [] until the plugin's index is built) or gkill_get_rep_infos plugins[] — NOT the plugin's " +
 	"rep_name, which is its manifest label (a plugin wrapping several archived Git repositories names each repository " +
 	"in rep_names while its rep_name matches nothing; the response warns when you pass it). gkill_get_plugin_list " +
 	"does not count entries per plugin (that would round-trip to every plugin in " +
-	"series); count with count_only:true plus data_types:[<plugin data_type>] instead. The write-only server has no " +
+	"series); count with count_only:true plus query.reps or data_types instead. Plugin configuration (such as import " +
+	"folders) is admin-only in the web UI (Server Config -> Manage Accounts -> Plugin Config), and full plugin logs " +
+	"are written under $GKILL_HOME/logs/. The write-only server has no " +
 	"gkill_get_kyous, so plugin bodies can only be read from the read or readwrite server."
 
 const idfTopic = "IDF entries (data_type 'idf') are files: images, videos, audio, zip/cbz and others. The payload carries " +

@@ -5,6 +5,7 @@ import type { GkillMessage } from "@/classes/api/gkill-message"
 import type { Kmemo } from "@/classes/datas/kmemo"
 import type { Lantana } from "@/classes/datas/lantana"
 import type { Tag } from "@/classes/datas/tag"
+import type { Text } from "@/classes/datas/text"
 
 export interface LantanaDialogEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void

@@ -7,9 +7,11 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 // HandleGetPluginContentHTML はプラグインが持つデータの表示用HTMLを取得します。
@@ -46,7 +48,7 @@ func (g *GkillServerAPI) HandleGetPluginContentHTML(w http.ResponseWriter, r *ht
 		slog.Log(r.Context(), gkill_log.Debug, "error at decode get plugin content html request", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.InvalidGetPluginContentHTMLRequestDataError,
-			ErrorMessage: "プラグインコンテンツHTML取得リクエストのパースに失敗しました",
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "PLUGIN_CONTENT_FETCH_FAILED_MESSAGE"}),
 			Cause:        err,
 		})
 		return
@@ -60,7 +62,7 @@ func (g *GkillServerAPI) HandleGetPluginContentHTML(w http.ResponseWriter, r *ht
 	if pluginRepo == nil {
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.GetPluginContentHTMLError,
-			ErrorMessage: fmt.Sprintf("プラグインが見つかりません: %s", request.RepName),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "PLUGIN_NOT_FOUND_MESSAGE"}),
 		})
 		return
 	}
@@ -75,7 +77,7 @@ func (g *GkillServerAPI) HandleGetPluginContentHTML(w http.ResponseWriter, r *ht
 		slog.Log(r.Context(), gkill_log.Debug, "error at get plugin content html", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.GetPluginContentHTMLError,
-			ErrorMessage: fmt.Sprintf("プラグインコンテンツHTMLの取得に失敗しました: %s", err.Error()),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "PLUGIN_CONTENT_FETCH_FAILED_MESSAGE"}),
 			Cause:        err,
 		})
 		return

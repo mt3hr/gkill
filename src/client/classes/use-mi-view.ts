@@ -27,7 +27,6 @@ export function useMiView(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const columns_view = ref<ComponentRef | null>(null)
     const add_mi_dialog = ref<ComponentRef | null>(null)
     const add_nlog_dialog = ref<ComponentRef | null>(null)
     const add_lantana_dialog = ref<ComponentRef | null>(null)
@@ -124,7 +123,6 @@ export function useMiView(options: {
     // ── Return ──
     return {
         // Template refs
-        columns_view,
         add_mi_dialog,
         add_nlog_dialog,
         add_lantana_dialog,

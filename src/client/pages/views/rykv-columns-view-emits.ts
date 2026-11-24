@@ -4,6 +4,8 @@ import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"
 import type { Kyou } from "@/classes/datas/kyou"
 import type { Tag } from "@/classes/datas/tag"
+import type { Text } from "@/classes/datas/text"
+import type { Notification } from "@/classes/datas/notification"
 
 /**
  * rykv の列（`rykv-columns-view.vue`）がラッパへ上げるもの。

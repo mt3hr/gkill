@@ -210,7 +210,6 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { RykvColumnsViewEmits } from './rykv-columns-view-emits'
 import type { RykvColumnsViewProps } from './rykv-columns-view-props'
 import { useRykvColumns } from '@/classes/use-rykv-columns'
-import { computed } from 'vue'
 
 const props = defineProps<RykvColumnsViewProps>()
 const emits = defineEmits<RykvColumnsViewEmits>()
@@ -249,6 +248,7 @@ const {
     kyou_detail_view_height_px,
     kyou_detail_view_base_width_px,
     app_content_width_px,
+    overlay_target_min_width_px,
 
     // Computed
     kyou_list_view_height,
@@ -282,9 +282,6 @@ const {
     rykvDialogRelayHandlers,
 } = useRykvColumns({ props, emits })
 
-// 寸法（ビューポート単位を使わない計算）は use-rykv-detail-pane-metrics.ts が正本。
-// 読み込み中オーバーレイの幅だけはこのビューの is_loading を見るのでここに置く
-const overlay_target_min_width_px = computed(() => is_loading.value ? app_content_width_px.value : '0px')
 </script>
 <style lang="css" scoped>
 .kyou_detail_view.dummy {

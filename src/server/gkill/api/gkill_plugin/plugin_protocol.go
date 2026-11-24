@@ -53,6 +53,9 @@ type PluginGPSLogQuery struct {
 // PluginQuery はプラグインへの検索条件。
 //
 // Words〜Limit の欄は FindQuery のサブセットで、古い SDK で作ったプラグインのために残してある。
+// ただし期間の欄は 1.1.12 で calendar_start_time / calendar_end_time へ改名し（それまでは「時刻」ではなく
+// 「日付」を名乗るキーだった）、旧キーは送らない（互換を残さない。ADR-0413）。古い SDK のバイナリは
+// 期間で絞れず全件を返すが、本体が返ってきた Kyou を期間で絞り直すので結果は変わらない（読む量が増えるだけ）。
 // gkill が受けた検索条件の全体は FindQuery で渡す（ADR-0318）。プラグインはそれを見て
 // IncludeEndTimeIs（TimeIs の終了の Kyou）や IDs・Reps（読む量を減らす）を判断してよい。
 //

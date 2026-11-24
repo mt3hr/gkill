@@ -32,17 +32,18 @@ var PluginTools = []*jsonobj.Object{
 	tool(
 		"gkill_get_plugin_list",
 		"List the gkill plugins installed for the current user. Plugins are external programs that feed their own "+
-			"data into gkill — for example Claude Code / Claude.ai / ChatGPT conversation logs, Fitbit daily metrics, "+
-			"Google location history. "+
+			"data into gkill — for example AI chat logs (Claude Code / Claude.ai / ChatGPT / Codex / Antigravity / Gemini), "+
+			"Fitbit daily metrics, VRChat logs, archived Git commits, or Google location history. "+
 			"IMPORTANT — plugins do not all play the same role, and emits_kyou tells you which one you are looking at. "+
 			"When emits_kyou is true the plugin supplies kyou: filter gkill_get_kyous with query.reps using an entry of "+
 			"rep_names[] (ALWAYS present: the rep names its kyou actually carry — a plugin that wraps several repositories, "+
 			"such as Git repositories archived as zip, lists each repository there, and rep_names is [] until its index is "+
 			"built) — rep_name itself is the plugin's manifest label and is NOT a query.reps value unless it also appears "+
 			"in rep_names — or "+
-			"the top-level data_types (its data_type), and pass include_plugin_content:true to get their bodies in the "+
-			"same call. query.rep_types does NOT work for plugins — they are not in the canonical rep-type vocabulary "+
-			"(a plugin whose provides names a typed kind such as kc or git_commit_log is the exception: its records also "+
+			"the top-level data_types (its data_type; if provides lists multiple built-in kinds such as timeis + urlog + kmemo, "+
+			"data_type is only one representative so use rep_names[] to cover all of them), and pass include_plugin_content:true "+
+			"for payload.kind='plugin' entries (native-kind plugins carry their payload inline). query.rep_types does NOT work for plugins "+
+			"(plugins whose provides names a typed kind such as kc, git_commit_log or timeis are the exception: their records also "+
 			"answer to that rep_types value). "+
 			"When emits_kyou is false the plugin supplies no kyou at all, and its data_type / rep_name are NOT query "+
 			"values: passing them matches nothing. Read that plugin's data through the route matching provides — today "+
@@ -56,7 +57,7 @@ var PluginTools = []*jsonobj.Object{
 			"has_last_error is true when the plugin process wrote something to stderr — that is the signal to look at "+
 			"when is_alive is true but no records come back. The text itself is deliberately NOT returned: it is the "+
 			"plugin's raw stderr and carries the directory layout of the user's own machine. When it is true and the "+
-			"text is needed, ask the person running gkill to read it from the server console, and never copy it into "+
+			"text is needed, ask the person running gkill to read it from the server console or plugin logs, and never copy it into "+
 			"documents or commit messages. "+
 			"typed_index is the KYOU index and is present only for plugins that declare a non-gpslog provides; it carries "+
 			"state (\"ok\" / \"failed\" / \"never_built\"), record_count (unique kyou ids), oldest / newest (how far the "+
@@ -70,7 +71,8 @@ var PluginTools = []*jsonobj.Object{
 			"before deduplication — gkill_get_gps_log spans every GPS repository (including native ones) and dedupes, "+
 			"so the two numbers are expected to differ, sometimes by an order of magnitude. Do not read a stale newest "+
 			"here as proof that GPS recording stopped. Its absence means nothing has requested GPS logs yet, not "+
-			"that the plugin is broken — call gkill_get_gps_log with count_only:true to size the real total.",
+			"that the plugin is broken — call gkill_get_gps_log with count_only:true to size the real total. "+
+			"Details: gkill_get_mcp_help topic:plugin.",
 		schema(jsonobj.Obj(
 			"locale_name", jsonobj.Obj("type", "string", "description", "Locale, e.g. ja/en."),
 		), nil),

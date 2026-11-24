@@ -35,12 +35,6 @@ import { Circle, GoogleMap } from 'vue3-google-map'
 import type { MapQueryEmits } from './map-query-emits'
 import type { MapQueryProps } from './map-query-props'
 import { useMapQuery } from '@/classes/use-map-query'
-import { get_google_map_language, get_google_map_region } from '@/classes/google-map-locale'
-
-// 地図のローダへ渡す表示言語と地域。**2つの地図で同じ値を渡すこと**
-// （ローダは最初の1回だけを採る）。渡さないと URL へ undefined が乗る
-const google_map_language = get_google_map_language()
-const google_map_region = get_google_map_region()
 
 const props = defineProps<MapQueryProps>()
 const emits = defineEmits<MapQueryEmits>()
@@ -49,6 +43,8 @@ const gmap = ref<InstanceType<typeof GoogleMap> | null>(null)
 
 const {
     google_map_api_key,
+    google_map_language,
+    google_map_region,
     use_map,
     radius,
     zoom,

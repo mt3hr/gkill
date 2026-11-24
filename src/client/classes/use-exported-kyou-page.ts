@@ -1,4 +1,6 @@
 import { onMounted, onUnmounted, ref, shallowRef, type Ref, type ShallowRef } from 'vue'
+import { useTheme } from 'vuetify'
+import { i18n } from '@/i18n'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillAPI } from '@/classes/api/gkill-api'
@@ -122,8 +124,8 @@ export function useExportedKyouPage() {
         const exported_api = build_exported_api(raw_payload)
         GkillAPI.set_gkill_api(exported_api)
         gkill_api.value = exported_api
+        // for_export_kyou は build_exported_api が立て済み（出力用の印はそこ1か所）
         application_config.value = exported_api.exported_application_config
-        application_config.value.for_export_kyou = true
         await build_sidebar_structs(application_config.value)
         is_ready.value = true
     }
@@ -221,6 +223,13 @@ export function useExportedKyouPage() {
     void apply_payload()
     resize_content()
 
+    // テーマは焼き込んだ設定から決める（App.vue は Cookie から取るが、出力 HTML に Cookie は無い）。
+    // apply_payload は最初の await より前に application_config を差し替えるので、ここで読める
+    const theme = useTheme()
+    theme.global.name.value = application_config.value.use_dark_theme ? 'gkill_dark_theme' : 'gkill_theme'
+    // VLocaleProvider へ渡すロケール。apply_locale が焼き込んだロケールへ切り替えたあとの値
+    const locale: Ref<string> = ref(i18n.global.locale)
+
     return {
         // State
         actual_height,
@@ -235,6 +244,7 @@ export function useExportedKyouPage() {
         exported_screen,
         application_config,
         gkill_api,
+        locale,
 
         // Event handlers
         write_errors,

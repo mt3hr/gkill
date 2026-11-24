@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 )
@@ -28,7 +29,7 @@ func minimalExportPayload(title string) *exportedKyouPayload {
 		SchemaVersion:     exportedPayloadSchemaVersion,
 		Title:             title,
 		LocaleName:        "ja",
-		Warnings:          []string{},
+		Warnings:          []*message.GkillMessage{},
 		ApplicationConfig: &user_config.ApplicationConfig{},
 		Columns:           []exportedColumn{},
 		Kyous:             []reps.Kyou{},
@@ -60,7 +61,7 @@ func TestRenderExportHTML_ScriptTagInContentDoesNotBreakDocument(t *testing.T) {
 	if strings.Contains(rendered, "<script>alert(1)</script>") {
 		t.Error("本文の script タグがそのまま HTML に出ている")
 	}
-	if !strings.Contains(rendered, `</script>`) {
+	if !strings.Contains(rendered, `\u003c/script\u003e`) {
 		t.Error("encoding/json の HTML エスケープが効いていない（SetEscapeHTML(false) にされていないか）")
 	}
 

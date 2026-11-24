@@ -18,6 +18,8 @@ import type { KyouChange } from '@/classes/kyou-change-bus'
 import { useKyouChangeSubscriber } from '@/classes/use-kyou-change-subscriber'
 import type { ComponentRef } from '@/classes/component-ref'
 import { remove_kyou_from_list_by_id } from '@/classes/kyou-local-insert'
+import type { Text } from '@/classes/datas/text'
+import type { Notification } from '@/classes/datas/notification'
 
 export function usePlayingTimeIsView(options: {
     props: PlayingTimeIsViewProps,

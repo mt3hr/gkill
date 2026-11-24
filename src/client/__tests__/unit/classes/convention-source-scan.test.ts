@@ -504,4 +504,37 @@ describe('クライアントの規約のソース走査', () => {
         expect(/@click:clear="([^"]*)"/.exec('@click:clear="mi_limit_time_string = null"')?.[1]?.includes("= ''")).toBe(false)
         expect(/@click:clear="([^"]*)"/.exec('@click:clear="mi_limit_time_string = \'\'"')?.[1]?.includes("= ''")).toBe(true)
     })
+
+    it('rykv-view / mi-view のラッパ配線（ホスト時のショートカット抑止と mi の打刻フォーカス中継）が欠けていない', () => {
+        const client_root = join(find_repo_root(), 'src', 'client')
+        const rykv_view = readFileSync(join(client_root, 'pages', 'views', 'rykv-view.vue'), 'utf8')
+        const mi_view = readFileSync(join(client_root, 'pages', 'views', 'mi-view.vue'), 'utf8')
+        expect(rykv_view).toContain(':enable_keyboard_shortcuts="!is_hosted_in_dialog')
+        expect(mi_view).toContain(':enable_keyboard_shortcuts="!is_hosted_in_dialog')
+        const add_timeis_tag = mi_view.match(/<AddTimeIsDialog\b[^>]*>/)?.[0]
+        expect(add_timeis_tag, '打刻追加ダイアログ自体が存在すること').toBeDefined()
+        expect(add_timeis_tag).toMatch(/v-on="[^"]*\bsub_view_focus_relay\b[^"]*"/)
+    })
+    // Text と Notification は DOM にも同じ名前の型がある（テキストノードと Web Notification）。
+    // import を書き忘れると型検査は通ったまま DOM の型に解決され、中継の引数が別物の型になる
+    // （rykv / mi の列の emits と composable、打刻・気分の emits の9本が実際にそうなっていた）。
+    it('gkill の Text / Notification を型に使うファイルは、データクラスから import している', () => {
+        const pages_ts = list_files_recursive(join(client_root, 'pages'), path => path.endsWith('.ts'))
+        const offenders = new Array<string>()
+        for (const path of [...vue_files, ...ts_files, ...pages_ts]) {
+            const source = strip_comments(readFileSync(path, 'utf8'))
+            for (const [type_name, module_name] of [['Text', 'text'], ['Notification', 'notification']] as const) {
+                const used_as_type = new RegExp(`(:\\s*|<|\\[|\\|\\s*)${type_name}\\b(?![\\w.(])`).test(source)
+                // 定義しているファイル自身（datas/text.ts・notification.ts）は import しない
+                if (!used_as_type || new RegExp(`export class ${type_name}\\b`).test(source)) {
+                    continue
+                }
+                const imported = new RegExp(`import (type )?\\{[^}]*\\b${type_name}\\b[^}]*\\} from ['"][^'"]*/${module_name}['"]`).test(source)
+                if (!imported) {
+                    offenders.push(`${to_repo_path(path)}: ${type_name}`)
+                }
+            }
+        }
+        expect(offenders, 'DOM の同名の型に解決されている（@/classes/datas/text・notification から import すること）').toEqual([])
+    })
 })

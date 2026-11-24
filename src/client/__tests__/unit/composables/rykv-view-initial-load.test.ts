@@ -41,8 +41,8 @@ import '@/classes/api/gkill-api'
 import { refresh_kyou } from '@/classes/kyou-reload'
 import { useRykvColumns } from '@/classes/use-rykv-columns'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import type { RykvViewProps } from '@/pages/views/rykv-view-props'
-import type { RykvViewEmits } from '@/pages/views/rykv-view-emits'
+import type { RykvColumnsViewProps } from '@/pages/views/rykv-columns-view-props'
+import type { RykvColumnsViewEmits } from '@/pages/views/rykv-columns-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
 import {
   createColumnViewMockApi,
@@ -53,7 +53,7 @@ import {
   flushAsync,
 } from '../../helpers/rykv-mi-harness'
 
-const noop_emits = (() => { }) as unknown as RykvViewEmits
+const noop_emits = (() => { }) as unknown as RykvColumnsViewEmits
 
 function kyous(ids: string[]): Kyou[] {
   return ids.map((id) => ({ id })) as unknown as Kyou[]
@@ -67,10 +67,8 @@ function createView(saved_query_ids: string[], config_overrides: Record<string, 
   const { api, pending_get_kyous } = createColumnViewMockApi()
   const saved_querys = saved_query_ids.map((query_id) => makeColumnQuery(query_id))
   api.get_saved_rykv_find_kyou_querys.mockReturnValue(saved_querys)
-  const raw_props = makeColumnViewProps(api, config_overrides, {
-    share_title: '',
-  })
-  const props = raw_props as unknown as RykvViewProps
+  const raw_props = makeColumnViewProps(api, config_overrides)
+  const props = raw_props as unknown as RykvColumnsViewProps
   const view = useRykvColumns({ props, emits: noop_emits })
   view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
   // init() は application_config.is_loaded の watch で起動する
@@ -266,8 +264,8 @@ describe('useRykvColumns 初期化', () => {
    */
   describe('ライフログビューを2枚開く', () => {
     function createViewWithInstanceKey(instance_key: string, api: ReturnType<typeof createColumnViewMockApi>['api']) {
-      const raw_props = makeColumnViewProps(api, {}, Object.assign({}, { share_title: '' }, { column_state_instance_key: instance_key }))
-      const props = raw_props as unknown as RykvViewProps
+      const raw_props = makeColumnViewProps(api, {}, { column_state_instance_key: instance_key })
+      const props = raw_props as unknown as RykvColumnsViewProps
       const view = useRykvColumns({ props, emits: noop_emits })
   view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
       return { view, start_init: () => finish_application_config_load(raw_props) }

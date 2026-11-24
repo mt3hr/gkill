@@ -24,14 +24,4 @@ export interface ExportKyouHTMLViewProps extends GkillPropsBase {
      * マウント先を選ぶ）。「対象」の文言（列 / 板）もこれで選ぶ。
      */
     screen: ExportedScreen
-
-    /**
-     * 「画面」の節に集計（Dnote）の選択肢を出すか。
-     * **false のときは `include_dnote` を false 固定で送る** —— 選べないものを
-     * 要求に載せると、焼き込みの印と中身が食い違う。mi には集計が無いので false。
-     */
-    can_choose_dnote: boolean
-
-    /** 同じくマップ。mi には無いので false */
-    can_choose_map: boolean
 }

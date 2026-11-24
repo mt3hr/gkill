@@ -2,6 +2,7 @@ import { computed, ref, watch, type Ref } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { MapQueryProps } from '@/pages/views/map-query-props'
 import type { MapQueryEmits } from '@/pages/views/map-query-emits'
+import { get_google_map_language, get_google_map_region } from '@/classes/google-map-locale'
 
 export function useMapQuery(options: {
     props: MapQueryProps,
@@ -114,10 +115,17 @@ export function useMapQuery(options: {
     }
 
     // ── Return ──
+    // 地図のローダへ渡す表示言語と地域。**2つの地図（map-query / gps-log-map）で同じ値を渡すこと**
+    // （ローダは最初の1回だけを採る）。渡さないと URL へ undefined が乗る（google-map-locale.ts）
+    const google_map_language = get_google_map_language()
+    const google_map_region = get_google_map_region()
+
     return {
         // State
         query,
         google_map_api_key,
+        google_map_language,
+        google_map_region,
         use_map,
         latitude,
         longitude,

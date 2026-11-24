@@ -70,7 +70,7 @@ func printDefaultConfig() error {
 //go:embed manifest.json
 var manifestJSON []byte
 
-func extractpluginDir(args []string) string {
+func extractPluginDir(args []string) string {
 	for i, a := range args {
 		if a == "--gkill-plugin-dir" && i+1 < len(args) {
 			return args[i+1]
@@ -137,7 +137,7 @@ func main() {
 		return
 	}
 
-	pluginDir := extractpluginDir(os.Args)
+	pluginDir := extractPluginDir(os.Args)
 	provider := sourceProviderOf(pluginDir)
 
 	sdk.Run(sdk.Handler{
@@ -157,6 +157,7 @@ func main() {
 
 			msgs, err := globalCache.GetMessages(pluginDir)
 			if err != nil {
+				sdk.LogError("%s: find kyous: %v", repName, err)
 				return []sdk.Kyou{}, nil
 			}
 			return kyousOfMessages(msgs, q), nil

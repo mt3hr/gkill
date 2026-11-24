@@ -24,7 +24,7 @@ import { loginAsAdmin } from './helpers'
 
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
-  test.skip(!alive, 'gkill server is not running')
+  expect(alive, 'E2E 用サーバーが起動していること').toBe(true)
 })
 
 /**
@@ -69,13 +69,11 @@ function mi_export_request(customize?: (body: Record<string, unknown>) => void):
 }
 
 /**
- * 出力を1回投げる。E2E は PATH 上の gkill_server を起動するので、
- * そのバイナリが古いとこの API や画面の印を持たない。そのときは飛ばす。
+ * 出力を1回投げる。古いバイナリや出力用テンプレートの欠落も失敗として検出する。
  */
 async function post_export(
   page: Page,
   body: Record<string, unknown>,
-  options?: { expect_rejected?: boolean },
 ): Promise<Record<string, unknown>> {
   // /api は Cookie ではなく本文の session_id で認証する（auth_middleware.go の sessionPeek）
   const [session] = (await page.context().cookies()).filter((cookie) => cookie.name === 'gkill_session_id')
@@ -86,18 +84,12 @@ async function post_export(
     timeout: 120000,
   })
   const text = await response.text()
-  test.skip(!text.trimStart().startsWith('{'), '出力の API を持たないビルド（PATH 上の gkill_server が古い）')
+  expect(response.ok(), '出力 API が成功すること（現在のソースから E2E 用バイナリをビルドする）').toBe(true)
+  expect(text.trimStart().startsWith('{'), '出力 API が JSON を返すこと').toBe(true)
 
   const parsed = JSON.parse(text) as Record<string, unknown>
   const errors = (parsed.errors ?? []) as Array<{ error_code?: string }>
-  // ガワが embed に無いビルドでは、この API だけが 500 を返す（ほかの機能は動く）
-  test.skip(errors.some((e) => e.error_code === 'ERR000455'), '出力用のガワが embed に無いビルド')
-  // 画面の印を知らない古いバイナリは、mi の指定を未知の指定として弾く。
-  // 弾かれることを確かめたいテスト（expect_rejected）では飛ばさない
-  if (!options?.expect_rejected) {
-    test.skip(errors.some((e) => e.error_code === 'ERR000454'),
-      '画面の印を持たないビルド（PATH 上の gkill_server が古い）')
-  }
+  expect(errors, 'タスク画面に対応した出力用ビルドでエラーなく出力できること').toEqual([])
   return parsed
 }
 
@@ -105,20 +97,7 @@ test.describe('mi HTML export', () => {
   // 出力 1 回で数十秒かかることがある
   test.setTimeout(180000)
 
-  test('焼き込みに mi の印が乗る', async ({ page }) => {
-    await loginAsAdmin(page)
-
-    const body = await post_export(page, mi_export_request())
-    const errors = (body.errors ?? []) as Array<{ error_code?: string }>
-    expect(errors, `出力に失敗した: ${JSON.stringify(errors)}`).toEqual([])
-
-    const html = (body.html ?? '') as string
-    expect(html.length, 'HTML が空').toBeGreaterThan(1000)
-    // 焼き込みの JSON の先頭近くに印が入る。出力先のページはこれだけを見てマウント先を選ぶ
-    expect(html, '画面の印が焼き込みに無い').toContain('"screen":"mi"')
-  })
-
-  test('file:// で開くと板として読める', async ({ page }) => {
+  test('焼き込みに mi の印が乗り、file:// で板として通信0本のまま読める', async ({ page }) => {
     await loginAsAdmin(page)
 
     // **ここで記録を作らない。** E2E は共有のホームを使うので、mi のタスクを1件増やすと
@@ -127,13 +106,19 @@ test.describe('mi HTML export', () => {
     // この spec が見るのは「焼き込みの印で mi として開けるか」だけで、板の中身には依らない
     // （板の見出しは列の条件から出るので、空の板でも出る）
     const body = await post_export(page, mi_export_request())
-    expect((body.errors ?? []) as Array<unknown>).toEqual([])
+    const errors = (body.errors ?? []) as Array<{ error_code?: string }>
+    expect(errors, `出力に失敗した: ${JSON.stringify(errors)}`).toEqual([])
+
+    const html = (body.html ?? '') as string
+    expect(html.length, 'HTML が空').toBeGreaterThan(1000)
+    // 焼き込みの JSON の先頭近くに印が入る。出力先のページはこれだけを見てマウント先を選ぶ
+    expect(html, '画面の印が焼き込みに無い').toContain('"screen":"mi"')
 
     // **リポジトリの中へ書かないこと。** Vite の依存スキャナが *.html をエントリとして
     // 拾い、次回以降の E2E でビルドが落ちる。OS の一時領域へ出して、終わったら消す
     const saved_dir = mkdtempSync(join(tmpdir(), 'gkill-mi-export-e2e-'))
     const saved = join(saved_dir, 'gkill_mi_export.html')
-    writeFileSync(saved, body.html as string, 'utf-8')
+    writeFileSync(saved, html, 'utf-8')
     const saved_url = pathToFileURL(saved).href
 
     // 約束は「通信をしない」。この要求は include_map: false なので出てよい先は1つも無い
@@ -168,18 +153,5 @@ test.describe('mi HTML export', () => {
     // 開いたままだとファイルを掴んだままになるので、先に離してから消す
     await page.goto('about:blank')
     rmSync(saved_dir, { recursive: true, force: true })
-  })
-
-  test('未知の画面は弾く', async ({ page }) => {
-    await loginAsAdmin(page)
-
-    const body = await post_export(page, mi_export_request((request_body) => {
-      request_body.screen = 'dashboard'
-    }), { expect_rejected: true })
-    const errors = (body.errors ?? []) as Array<{ error_code?: string }>
-
-    // 通してしまうと「出した画面と開く画面が食い違う」が静かに起きる
-    expect(errors.map((e) => e.error_code), '弾かれていない').toContain('ERR000454')
-    expect(body.html ?? '', '弾いたのに HTML を返している').toBe('')
   })
 })

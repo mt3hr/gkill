@@ -10,7 +10,7 @@ export function useShareKyouListDialog(options: {
     props: ShareKyousListDialogProps
     emits: ShareKyousListDialogEmits
 }) {
-    const { props: _props, emits: _emits } = options
+    const { props: _props, emits } = options
 
     const is_show_dialog: Ref<boolean> = ref(false)
     /**
@@ -33,6 +33,14 @@ export function useShareKyouListDialog(options: {
     function show_share_form(): void {
         mode.value = 'share'
     }
+    /**
+     * 「HTML エクスポート」を選んだ。このダイアログを閉じ、出力ダイアログを開くよう上げる
+     * （出力ダイアログはラッパが持っているので、ここからは開けない）
+     */
+    function request_export_kyou_html(): void {
+        void hide()
+        emits('requested_export_kyou_html')
+    }
     async function hide(): Promise<void> {
         close_dialog_via_history(is_show_dialog)
     }
@@ -43,6 +51,7 @@ export function useShareKyouListDialog(options: {
         ui,
         show,
         show_share_form,
+        request_export_kyou_html,
         hide,
     }
 }

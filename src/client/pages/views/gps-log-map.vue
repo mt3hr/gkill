@@ -67,12 +67,6 @@ import { i18n } from '@/i18n'
 import type { GPSLogMapEmits } from './gps-log-map-emits'
 import type { GPSLogMapProps } from './gps-log-map-props'
 import { useGpsLogMap } from '@/classes/use-gps-log-map'
-import { get_google_map_language, get_google_map_region } from '@/classes/google-map-locale'
-
-// 地図のローダへ渡す表示言語と地域。**2つの地図で同じ値を渡すこと**
-// （ローダは最初の1回だけを採る）。渡さないと URL へ undefined が乗る
-const google_map_language = get_google_map_language()
-const google_map_region = get_google_map_region()
 
 const props = defineProps<GPSLogMapProps>()
 const emits = defineEmits<GPSLogMapEmits>()
@@ -82,6 +76,8 @@ const {
     gmap,
 
     // State
+    google_map_language,
+    google_map_region,
     center,
     zoom,
     time_slider_max,

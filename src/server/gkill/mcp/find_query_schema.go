@@ -98,11 +98,11 @@ func buildFindQuerySchema() *jsonobj.Object {
 	props.Set("timeis_tags_and", jsonobj.Obj("type", "boolean", "description", "AND logic for timeis_tags."))
 	props.Set("calendar_start_time", jsonobj.Obj(
 		"type", "string",
-		"description", "Start of the date-range filter (INCLUSIVE); set to activate. Date-only values expand to 00:00:00 local. "+ISODateTimeDesc+" or "+DateOnlyDesc,
+		"description", "Start of the date/time-range filter (INCLUSIVE); set to activate. Date-only values expand to 00:00:00 local. "+ISODateTimeDesc+" or "+DateOnlyDesc,
 	))
 	props.Set("calendar_end_time", jsonobj.Obj(
 		"type", "string",
-		"description", "End of the date-range filter (INCLUSIVE - adjacent hand-made windows double-count the boundary day; prefer top-level group_by for histograms). Date-only values expand to 23:59:59 local. "+ISODateTimeDesc+" or "+DateOnlyDesc,
+		"description", "End of the date/time-range filter (INCLUSIVE - adjacent hand-made windows double-count the boundary day; prefer top-level group_by for histograms). Date-only values expand to 23:59:59 local. "+ISODateTimeDesc+" or "+DateOnlyDesc,
 	))
 	props.Set("map_radius", jsonobj.Obj(
 		"type", "number",

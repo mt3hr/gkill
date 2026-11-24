@@ -15,7 +15,7 @@ import (
 // archived_git_commit_log と共通）に任せ、ここに残るのは「どのエントリを読むか」
 // 「差分の署名」「設定画面に出す問題の選別」だけ。
 // ZIP だけを読む理由と却下案: documents/adr/0310-chat-export-plugins-read-zip.md
-// Gemini のエントリの選び方: documents/adr/0320-gemini-activity-from-my-activity.md
+// Gemini のエントリの選び方: documents/adr/0321-gemini-activity-from-my-activity.md
 
 // parseSourcePatterns は設定値をパターンのリストにする。
 // 空なら従来どおりプラグインフォルダ自身を見る。

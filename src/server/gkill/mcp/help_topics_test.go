@@ -83,7 +83,7 @@ func TestHelpTopics(t *testing.T) {
 			mustContain(t, mi, phrase)
 		}
 		search := mustHelpTopic(t, "search").Text
-		for _, phrase := range []string{"even when partial is false", "do not put a repository named by that warning back into query.reps", "is_include_timeis", "payload.kind"} {
+		for _, phrase := range []string{"even when partial is false", "do not put a repository named by that warning back into query.reps", "is_include_timeis", "payload.kind", "update_time"} {
 			mustContain(t, search, phrase)
 		}
 		pagination := mustHelpTopic(t, "pagination").Text
@@ -91,7 +91,8 @@ func TestHelpTopics(t *testing.T) {
 			mustContain(t, pagination, phrase)
 		}
 		dataTypes := mustHelpTopic(t, "data_types").Text
-		for _, phrase := range []string{"timeis_start", "expand", "num_min", "create_apps", "gkill_kftl"} {
+		// idf はエンティティ名として削除・復元・履歴が受ける（ADR-0636）。メモ帳経由の記録は create_device で見分ける
+		for _, phrase := range []string{"timeis_start", "expand", "num_min", "create_apps", "gkill_kftl", "urlog, idf, timeis", "create_device:\"mcp\""} {
 			mustContain(t, dataTypes, phrase)
 		}
 		idf := mustHelpTopic(t, "idf").Text
@@ -107,13 +108,24 @@ func TestHelpTopics(t *testing.T) {
 			mustContain(t, rep, phrase)
 		}
 		plugin := mustHelpTopic(t, "plugin").Text
-		for _, phrase := range []string{"include_plugin_content", "content_status", "plugin_content_max_text_length", "gkill_get_plugin_list"} {
+		// 型別の種類を宣言したプラグインは rep_types にも応じ、打刻は playing_time に従う（ADR-0317）。
+		// 設定は管理者だけがアカウント管理から開け、ログは $GKILL_HOME/logs/ に出る
+		for _, phrase := range []string{"include_plugin_content", "content_status", "plugin_content_max_text_length", "gkill_get_plugin_list",
+			"also respond to those rep_types", "playing_time", "admin-only", "$GKILL_HOME/logs/"} {
 			mustContain(t, plugin, phrase)
 		}
 		// 設定ツリーの description（利用者の運用メモ）と一覧射影、識別欄の実データ語彙（ADR-0632）
 		config := mustHelpTopic(t, "config").Text
 		for _, phrase := range []string{"description", "fields:[\"descriptions\"]", "tag_name", "rep_type_name", "device_name", "board_name", "check_when_inited=true", "do not infer"} {
 			mustContain(t, config, phrase)
+		}
+		referenceTypes := mustHelpTopic(t, "reference_types").Text
+		for _, phrase := range []string{"rekyou", "mirekyou", "target_id", "notification", "idf"} {
+			mustContain(t, referenceTypes, phrase)
+		}
+		skills := mustHelpTopic(t, "skills").Text
+		for _, phrase := range []string{"gkill_get_skill_list", "gkill_get_skill", "SKILL.md", "revision"} {
+			mustContain(t, skills, phrase)
 		}
 	})
 

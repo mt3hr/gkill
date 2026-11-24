@@ -453,7 +453,7 @@ var ProjectionToEntityDataType = []struct{ Projection, Entity string }{
 	{"mirekyou_end", "mirekyou"},
 	{"timeis_start", "timeis"},
 	{"timeis_end", "timeis"},
-	// idf は Kyou 側の data_type。エンティティとしての削除/履歴は未対応なので写さない。
+	// idf は射影を持たず、Kyou 側の data_type とエンティティ名が同じ（"idf"）なので写す必要が無い。
 }
 
 // ProjectionDataTypeNames は ProjectionToEntityDataType のキー一覧。

@@ -524,6 +524,25 @@ func TestPluginTimeIsAdapter_FindKyousFiltersByPlayingTime(t *testing.T) {
 				t.Errorf("%s: FindKyous(playing %v) = %v, want %v", c.name, at, ids, c.want)
 			}
 		}
+		// FindTimeIs（メモ帳の打刻終了・共有・HTML 出力が直に呼ぶ経路）も同じ条件で絞る。
+		// 絞らないと終了済みのプラグインの打刻が終了の対象に選ばれ、プラグインの ID へ native の版が書かれる。
+		timeiss, err := adapters.TimeIs.FindTimeIs(context.Background(), &find.FindQuery{PlayingTime: &at})
+		if err != nil {
+			t.Fatalf("%s: FindTimeIs: %v", c.name, err)
+		}
+		timeisIDs := map[string]bool{}
+		for _, timeis := range timeiss {
+			timeisIDs[timeis.ID] = true
+		}
+		if len(timeisIDs) != len(c.want) {
+			t.Errorf("%s: FindTimeIs(playing %v) = %v, want %v", c.name, at, timeisIDs, c.want)
+			continue
+		}
+		for _, id := range c.want {
+			if !timeisIDs[id] {
+				t.Errorf("%s: FindTimeIs(playing %v) = %v, want %v", c.name, at, timeisIDs, c.want)
+			}
+		}
 	}
 }
 

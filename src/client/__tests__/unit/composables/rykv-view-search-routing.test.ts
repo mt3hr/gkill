@@ -36,8 +36,8 @@ import '@/classes/api/gkill-api'
 import { useRykvColumns } from '@/classes/use-rykv-columns'
 import { refresh_kyou_in_list } from '@/classes/kyou-reload'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import type { RykvViewProps } from '@/pages/views/rykv-view-props'
-import type { RykvViewEmits } from '@/pages/views/rykv-view-emits'
+import type { RykvColumnsViewProps } from '@/pages/views/rykv-columns-view-props'
+import type { RykvColumnsViewEmits } from '@/pages/views/rykv-columns-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
 import {
   createColumnViewMockApi,
@@ -48,7 +48,7 @@ import {
   flushAsync,
 } from '../../helpers/rykv-mi-harness'
 
-const noop_emits = (() => { }) as unknown as RykvViewEmits
+const noop_emits = (() => { }) as unknown as RykvColumnsViewEmits
 
 function kyous(ids: string[]): Kyou[] {
   return ids.map((id) => ({ id })) as unknown as Kyou[]
@@ -60,10 +60,8 @@ function kyouIds(list: unknown): string[] {
 
 function createView(config_overrides: Record<string, unknown> = {}) {
   const { api, pending_get_kyous } = createColumnViewMockApi()
-  const raw_props = makeColumnViewProps(api, config_overrides, {
-    share_title: '',
-  })
-  const props = raw_props as unknown as RykvViewProps
+  const raw_props = makeColumnViewProps(api, config_overrides)
+  const props = raw_props as unknown as RykvColumnsViewProps
   const view = useRykvColumns({ props, emits: noop_emits })
   // init() は application_config.is_loaded の watch で起動する
   const start_init = () => finish_application_config_load(raw_props)

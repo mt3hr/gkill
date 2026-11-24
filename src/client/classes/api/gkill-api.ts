@@ -3746,14 +3746,6 @@ export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
                 return GkillAPIForExportedKyou.gkill_api_for_exported_kyou
         }
 
-        /**
-         * 閲覧者が入れた Google Maps の API キーの保存先。
-         *
-         * **Cookie ではなく localStorage を使う。** 出力 HTML は file:// で開かれることが
-         * 想定され、file:// では document.cookie への書き込みが黙って捨てられる。
-         */
-        static readonly google_map_api_key_storage_key = 'gkill_exported_google_map_api_key'
-
         /** 列ごとの検索条件と、その列に焼き込まれた記録 */
         public columns: Array<{ query: FindKyouQuery, kyous: Array<Kyou> }> = []
         /** 焼き込んだ設定。集計（Dnote）の定義 dnote_json_data もここに入っている */
@@ -3786,9 +3778,10 @@ export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
         public narrow_column_kyous:
                 ((kyous: Array<Kyou>, query: FindKyouQuery, baked_query: FindKyouQuery) => Array<Kyou>) | null = null
 
-        // localStorage が使えないときの退避先。/files/ 経由で開かれると
-        // allow-same-origin の無い sandbox（opaque origin）になり、localStorage は例外を投げる。
-        // その場合キーはこのページを閉じるまでしか残らない
+        // 閲覧者が入れた Google Maps の API キー。**このページのメモリにだけ持ち、どこにも保存しない。**
+        // 出力 HTML は file:// で開かれ、file:// の localStorage は同じブラウザで開いた
+        // 別のローカル HTML とも共有されうる（Cookie は file:// では書けない）。
+        // キーを平文で残さないため、ページを閉じたら消える（開くたびに入れ直す）。ADR-0422
         private google_map_api_key_in_memory = ''
 
         protected constructor() {
@@ -3830,12 +3823,12 @@ export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
          * 焼き込んだ設定を返す。
          *
          * google_map_api_key は**焼き込まない**（出力時にサーバが空へ潰す）。閲覧者が
-         * 入れたキーは get_google_map_api_key が localStorage から読む。
+         * 入れたキーは get_google_map_api_key がこのページのメモリから読む。
+         * for_export_kyou などの出力用の印は build_exported_api が1か所で立てる。
          */
         async get_application_config(_req: GetApplicationConfigRequest): Promise<GetApplicationConfigResponse> {
                 const res = new GetApplicationConfigResponse()
                 res.application_config = this.exported_application_config
-                res.application_config.for_export_kyou = true
                 return res
         }
 
@@ -4077,24 +4070,15 @@ export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
         /**
          * 閲覧者が入れた Google Maps の API キー。
          *
-         * localStorage は private window・site data のブロック・opaque origin で例外を投げるので、
-         * 読み書きの両方を try/catch で囲む（ここが投げると地図ごと画面が落ちる）。
+         * 保存しない（google_map_api_key_in_memory のコメント参照）。
+         * 本体の GkillAPI は Cookie に保存するが、出力 HTML では上書きしてメモリだけにする。
          */
         get_google_map_api_key(): string {
-                try {
-                        return window.localStorage.getItem(GkillAPIForExportedKyou.google_map_api_key_storage_key) ?? this.google_map_api_key_in_memory
-                } catch {
-                        return this.google_map_api_key_in_memory
-                }
+                return this.google_map_api_key_in_memory
         }
 
         set_google_map_api_key(google_map_api_key: string): void {
                 this.google_map_api_key_in_memory = google_map_api_key
-                try {
-                        window.localStorage.setItem(GkillAPIForExportedKyou.google_map_api_key_storage_key, google_map_api_key)
-                } catch {
-                        // 保存できない環境ではこのページを閉じるまでの一時値になる
-                }
         }
 
         /**

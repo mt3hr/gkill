@@ -12,6 +12,12 @@ import { nextTick } from 'vue'
 import { useExportKyouHTMLView } from '@/classes/use-export-kyou-html-view'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { ExportKyouHTMLResponse } from '@/classes/api/req_res/export-kyou-html-response'
+import { GkillMessage } from '@/classes/api/gkill-message'
+import {
+    EXPORT_DEFAULT_MEDIA_BUDGET_BYTES,
+    EXPORT_DEFAULT_MEDIA_ITEM_LIMIT_BYTES,
+    type ExportKyouHTMLRequest,
+} from '@/classes/api/req_res/export-kyou-html-request'
 import type { GkillAPI } from '@/classes/api/gkill-api'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { ExportKyouHTMLViewProps } from '@/pages/views/export-kyou-html-view-props'
@@ -52,8 +58,6 @@ function make_props(customize?: (props: ExportKyouHTMLViewProps) => void): {
         focused_column_index: 1,
         // rykv の既定（集計とマップを選べる）。mi のケースは customize で上書きする
         screen: 'rykv',
-        can_choose_dnote: true,
-        can_choose_map: true,
     } as ExportKyouHTMLViewProps
     if (customize) {
         customize(props)
@@ -62,9 +66,9 @@ function make_props(customize?: (props: ExportKyouHTMLViewProps) => void): {
 }
 
 function make_emits() {
-    const calls: Array<{ event: string }> = []
-    const emits = ((event: string) => {
-        calls.push({ event })
+    const calls: Array<{ event: string, args: unknown[] }> = []
+    const emits = ((event: string, ...args: unknown[]) => {
+        calls.push({ event, args })
     }) as unknown as Parameters<typeof useExportKyouHTMLView>[0]['emits']
     return { emits, calls }
 }
@@ -238,11 +242,9 @@ describe('出力する画面', () => {
         expect(req.include_map).toBe(true)
     })
 
-    it('mi は screen を mi として送り、集計とマップを選べない', async () => {
+    it('mi は screen を mi として送り、集計とマップを選べない（選べるかは screen だけで決まる）', async () => {
         const { props, export_kyou_html } = make_props(p => {
             p.screen = 'mi'
-            p.can_choose_dnote = false
-            p.can_choose_map = false
         })
         const view = useExportKyouHTMLView({ props, emits: make_emits().emits })
         expect(view.include_dnote.value, 'mi に集計は無いので最初から false').toBe(false)
@@ -258,8 +260,6 @@ describe('出力する画面', () => {
     it('選べない画面を後から true にしても要求には載らない', async () => {
         const { props, export_kyou_html } = make_props(p => {
             p.screen = 'mi'
-            p.can_choose_dnote = false
-            p.can_choose_map = false
         })
         const view = useExportKyouHTMLView({ props, emits: make_emits().emits })
         // 欄が出ていないのに ref を触れても、送る値は false のまま
@@ -283,5 +283,64 @@ describe('出力する画面', () => {
         })
         expect(mi.target_all_label_key.value).toBe('EXPORT_TARGET_ALL_BOARDS')
         expect(mi.target_focused_label_key.value).toBe('EXPORT_TARGET_FOCUSED_BOARD')
+    })
+
+    it('サーバが返した warning のメッセージ（MSG000096）は詰め替えずにそのまま通知する', async () => {
+        const { props, export_kyou_html } = make_props()
+        export_kyou_html.mockResolvedValueOnce(make_response(r => {
+            const warning = new GkillMessage()
+            warning.message_code = 'MSG000096'
+            warning.message = '予算に収まらないため 1 件のメディア・添付ファイルを含めませんでした'
+            warning.level = 'warning'
+            r.partial = true
+            r.messages = [warning]
+        }))
+        const { emits, calls } = make_emits()
+        const view = useExportKyouHTMLView({ props, emits })
+
+        await view.export_html()
+        const messages = calls
+            .filter(c => c.event === 'received_messages')
+            .flatMap(c => c.args[0] as Array<{ level?: string, message: string }>)
+        const warnings = messages.filter(m => m.level === 'warning')
+        expect(warnings).toHaveLength(1)
+        expect(warnings[0].message).toContain('予算に収まらないため')
+        expect((warnings[0] as { message_code?: string }).message_code).toBe('MSG000096')
+    })
+
+    it('待機中の cancel() はダイアログを閉じる要求を出し、出力中の cancel() は中断してダイアログを閉じない', async () => {
+        let resolve_response: (() => void) | null = null
+        const { props, export_kyou_html } = make_props()
+        export_kyou_html.mockImplementationOnce(() => new Promise(resolve => {
+            resolve_response = () => resolve(make_response())
+        }))
+        const { emits, calls } = make_emits()
+        const view = useExportKyouHTMLView({ props, emits })
+
+        // 待機中: 閉じる要求が出る
+        view.cancel()
+        expect(calls.filter(c => c.event === 'requested_close_dialog')).toHaveLength(1)
+
+        // 出力中: 中断のみ行い、まだ閉じない
+        const running = view.export_html()
+        expect(view.is_exporting.value).toBe(true)
+        view.cancel()
+        expect(view.is_exporting.value).toBe(false)
+        expect(calls.filter(c => c.event === 'requested_close_dialog')).toHaveLength(1)
+
+        resolve_response!()
+        await running
+    })
+
+    it('予算に 0 や NaN が入ったときはクライアント既定値へフォールバックして送る', async () => {
+        const { props, export_kyou_html } = make_props()
+        const view = useExportKyouHTMLView({ props, emits: make_emits().emits })
+        view.media_budget_mb.value = Number.NaN
+        view.media_item_limit_mb.value = 0
+
+        await view.export_html()
+        const req = export_kyou_html.mock.calls[0][0] as ExportKyouHTMLRequest
+        expect(req.media_budget_bytes).toBe(EXPORT_DEFAULT_MEDIA_BUDGET_BYTES)
+        expect(req.media_item_limit_bytes).toBe(EXPORT_DEFAULT_MEDIA_ITEM_LIMIT_BYTES)
     })
 })

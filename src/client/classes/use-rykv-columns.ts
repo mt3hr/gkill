@@ -24,6 +24,8 @@ import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/page
 import type { ComponentRef } from '@/classes/component-ref'
 import { remove_kyou_from_list_by_id } from '@/classes/kyou-local-insert'
 import { useRykvDetailPaneMetrics } from '@/classes/use-rykv-detail-pane-metrics'
+import type { Text } from '@/classes/datas/text'
+import type { Notification } from '@/classes/datas/notification'
 
 /**
  * rykv の「列」の機構。検索・列の復元・サイドバー連携・詳細ペイン・集計・マップ・
@@ -114,6 +116,9 @@ export function useRykvColumns(options: {
         app_content_height: () => props.app_content_height.valueOf(),
         app_content_width: () => props.app_content_width.valueOf(),
     })
+    // 読み込み中オーバーレイの幅。寸法の正本は use-rykv-detail-pane-metrics.ts で、
+    // これだけは is_loading を見るのでここに置く（mi の use-mi-columns.ts と対）
+    const overlay_target_min_width_px = computed(() => is_loading.value ? app_content_width_px.value : '0px')
 
     // ── Watchers ──
     onBeforeUnmount(() => {
@@ -294,9 +299,9 @@ export function useRykvColumns(options: {
         emits('deleted_kyou', deleted_kyou)
     }
 
-    // 対象のKyouが載っている列のクエリを探す。focused_kyou と opened_dialogs は
-    // 自分がどの列由来か知らないので、列を総当たりして最初に見つかったものを使う
-    // その Kyou が乗っている列の検索条件を、Mi の引き直し用に整えて返す。
+    // 対象の Kyou が載っている列の検索条件を、Mi の引き直し用に整えて返す。
+    // focused_kyou と opened_dialogs は自分がどの列由来か知らないので、
+    // 列を総当たりして最初に見つかったものを使う。
     //
     // mi の対になる関数は `find_column_query_for(kyou_id)`（use-mi-columns.ts）。
     // あちらは列のクエリが最初から Mi 用なので、そのまま返して data_type も取らない。
@@ -1137,6 +1142,7 @@ export function useRykvColumns(options: {
         kyou_detail_view_height_px,
         kyou_detail_view_base_width_px,
         app_content_width_px,
+        overlay_target_min_width_px,
 
         // Computed
         kyou_list_view_height,

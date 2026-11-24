@@ -60,3 +60,15 @@ test.describe('Plugin config (manage account)', () => {
       'プラグインが無いことを伝えていない').toBeVisible({ timeout: 30000 })
   })
 })
+
+test.describe('Plugin config (non-admin guard)', () => {
+  test('non-admin user does not see Server Config entry in settings', async ({ page }) => {
+    test.skip(!apiReachable, 'gkill API not reachable via Vite dev server')
+    const settings = await openApplicationConfigDialog(page)
+    // 0件の確認は、描かれる前でも通ってしまう。同じ行に必ず出る「ログアウト」が見えてから数える
+    await expect(settings.getByRole('button', { name: 'ログアウト', exact: true }),
+      '設定画面の上部のボタンが描かれない').toBeVisible({ timeout: 30000 })
+    await expect(settings.getByRole('button', { name: 'サーバ設定', exact: true }),
+      '一般利用者にサーバ設定（プラグイン設定の入口）が出ている').toHaveCount(0)
+  })
+})

@@ -11,7 +11,6 @@ import {
     type ExportOutputFormat,
 } from '@/classes/api/req_res/export-kyou-html-request'
 import { base64_to_blob } from '@/classes/file-base64'
-import { GkillMessage } from '@/classes/api/gkill-message'
 import { save_as } from '@/classes/save-as'
 
 /**
@@ -38,10 +37,16 @@ export function useExportKyouHTMLView(options: {
     const include_gps_log: Ref<boolean> = ref(true)
     const include_plugin_content: Ref<boolean> = ref(false)
 
+    // 「画面」の節の集計（Dnote）とマップは rykv にしか無い。選べるかは screen から決め、
+    // 別のフラグで渡さない（screen と食い違う組み合わせを作れてしまう。ADR-0418）。
+    // **選べないときは false 固定で送る** —— 選べないものを要求に載せると、焼き込みの印と中身が食い違う
+    const can_choose_dnote: ComputedRef<boolean> = computed(() => props.screen === 'rykv')
+    const can_choose_map: ComputedRef<boolean> = computed(() => props.screen === 'rykv')
+
     // 選べない画面（mi の集計・マップ）は最初から false。
     // チェック欄を disabled にするだけだと、選択済みの値が送信まで残る
-    const include_dnote: Ref<boolean> = ref(props.can_choose_dnote)
-    const include_map: Ref<boolean> = ref(props.can_choose_map)
+    const include_dnote: Ref<boolean> = ref(can_choose_dnote.value)
+    const include_map: Ref<boolean> = ref(can_choose_map.value)
     const include_sidebar: Ref<boolean> = ref(false)
 
     const media_mode: Ref<ExportMediaMode> = ref('thumbnail')
@@ -112,8 +117,8 @@ export function useExportKyouHTMLView(options: {
         req.screen = props.screen
         // 選べない画面は false 固定で送る。ref をそのまま送ると、
         // props が後から変わったときに「選べないのに true」が漏れる
-        req.include_dnote = props.can_choose_dnote && include_dnote.value
-        req.include_map = props.can_choose_map && include_map.value
+        req.include_dnote = can_choose_dnote.value && include_dnote.value
+        req.include_map = can_choose_map.value && include_map.value
         req.include_sidebar = include_sidebar.value
         req.media_mode = media_mode.value
         // 入力が空や 0 以下なら既定に任せる（サーバ側も 0 以下を既定へ倒す）
@@ -140,18 +145,11 @@ export function useExportKyouHTMLView(options: {
                 emits('received_errors', res.errors)
                 return
             }
-            const messages = (res.messages ?? []).concat()
             // **警告は必ず出す。** 予算に収まらなかったメディアや読めなかったファイルは
             // ここでしか伝わらず、黙っていると「画像が出ない」としか見えない。
-            // 成功しているので errors ではなく warning のメッセージにする（閉じるまで残る）
-            for (const warning of res.warnings ?? []) {
-                const message = new GkillMessage()
-                message.message_code = 'MSG_EXPORT_KYOU_HTML_WARNING'
-                message.message = warning
-                message.level = 'warning'
-                message.show_keep = true
-                messages.push(message)
-            }
+            // サーバが成功の知らせと並べて warning のメッセージ（MSG000096）で返すので、
+            // そのまま流せばフィードが閉じるまで残す
+            const messages = res.messages ?? []
             if (messages.length !== 0) {
                 emits('received_messages', messages)
             }
@@ -207,6 +205,8 @@ export function useExportKyouHTMLView(options: {
         is_exporting,
 
         // Computed
+        can_choose_dnote,
+        can_choose_map,
         has_focused_column,
         target_all_label_key,
         target_focused_label_key,

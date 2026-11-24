@@ -19,8 +19,7 @@
 
       <div class="gkill-floating-dialog__body">
         <ExportKyouHTMLView :application_config="application_config" :gkill_api="gkill_api" :columns="columns"
-          :focused_column_index="focused_column_index" :screen="screen" :can_choose_dnote="can_choose_dnote"
-          :can_choose_map="can_choose_map"
+          :focused_column_index="focused_column_index" :screen="screen"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
           @changed_is_exporting="(value: boolean) => set_is_exporting(value)"

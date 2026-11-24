@@ -159,7 +159,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { RykvDialogKind, RykvDialogPayload } from "./rykv-dialog-kind"
 import { i18n } from '@/i18n'
 import MiQueryEditorSidebar from './mi-query-editor-sidebar.vue'
@@ -197,6 +196,7 @@ const {
     drawer,
     drawer_mode_is_mobile,
     is_loading,
+    overlay_target_min_width_px,
     inited,
 
     // Computed
@@ -230,11 +230,6 @@ const {
     subViewFocusHandlers,
     onColumnRequestedReloadList,
 } = useMiColumns({ props, emits })
-
-// ── ビューポート単位を使わない寸法 ──
-// このビューはポート(rudbeckia)のフローティングダイアログの中でも描かれる。
-// そこでは基準が画面ではなくダイアログの箱なので 100vw は使えない。props から作る。
-const overlay_target_min_width_px = computed(() => is_loading.value ? `${props.app_content_width.valueOf()}px` : '0px')
 </script>
 <style lang="css" scoped>
 /* 列の高さ計算 (list_height = app_content_height - MI_BOARD_TITLE_HEIGHT) が

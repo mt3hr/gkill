@@ -90,9 +90,19 @@ describe('地図のローダへ渡す表示言語と地域の走査', () => {
         },
     )
 
-    it('値は共有の1実装から取っている', () => {
+    // 値はビューの composable（`.vue` の script には計算を置かない）が共有の1実装から取る
+    it('値は共有の1実装（google-map-locale.ts）から、ビューの composable 経由で取っている', () => {
         const missing = map_views
-            .filter(view => !view.source.includes("from '@/classes/google-map-locale'"))
+            .filter(view => {
+                const composable = /from '@\/classes\/(use-[a-z0-9-]+)'/.exec(view.source)
+                if (!composable) {
+                    return true
+                }
+                const composable_source = readFileSync(join(repo_root, 'src', 'client', 'classes', `${composable[1]}.ts`), 'utf8')
+                return !composable_source.includes("from '@/classes/google-map-locale'")
+                    || !composable_source.includes('google_map_language,')
+                    || !composable_source.includes('google_map_region,')
+            })
             .map(view => view.repo_path)
         expect(
             missing,

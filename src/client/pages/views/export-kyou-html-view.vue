@@ -113,6 +113,8 @@ const {
     media_item_limit_mb,
     output_format,
     is_exporting,
+    can_choose_dnote,
+    can_choose_map,
     has_focused_column,
     target_all_label_key,
     target_focused_label_key,

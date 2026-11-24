@@ -5,6 +5,7 @@ import type { GPSLogMapEmits } from '@/pages/views/gps-log-map-emits'
 import type { GPSLogMapProps } from '@/pages/views/gps-log-map-props'
 import { GetGPSLogRequest } from '@/classes/api/req_res/get-gps-log-request'
 import type { GPSLog } from '@/classes/datas/gps-log'
+import { get_google_map_language, get_google_map_region } from '@/classes/google-map-locale'
 
 export function useGpsLogMap(options: {
     props: GPSLogMapProps,
@@ -172,7 +173,7 @@ export function useGpsLogMap(options: {
     /**
      * 閲覧者が入れた Google Maps の API キーを当てる。
      *
-     * 出力 HTML だけの経路。保存先は GkillAPIForExportedKyou（localStorage）で、
+     * 出力 HTML だけの経路。持ち先は GkillAPIForExportedKyou のメモリ（保存しない）で、
      * ここを変えると GoogleMap の :key が変わって地図が作り直される
      * （apiKey は作り直さないと効かない）。
      */
@@ -216,12 +217,19 @@ export function useGpsLogMap(options: {
     }
 
     // ── Return ──
+    // 地図のローダへ渡す表示言語と地域。**2つの地図（map-query / gps-log-map）で同じ値を渡すこと**
+    // （ローダは最初の1回だけを採る）。渡さないと URL へ undefined が乗る（google-map-locale.ts）
+    const google_map_language = get_google_map_language()
+    const google_map_region = get_google_map_region()
+
     return {
         // Template refs
         gmap,
 
         // State
         center,
+        google_map_language,
+        google_map_region,
         zoom,
         time_slider_max,
         polyline_options,

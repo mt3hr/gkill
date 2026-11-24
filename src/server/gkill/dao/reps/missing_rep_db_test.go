@@ -90,25 +90,75 @@ func TestIDFDirRep_ReadOnlyDoesNotCreateMissingIDDB(t *testing.T) {
 	assertNotCreated(t, idDB)
 }
 
-// 読み込んだあとに読むだけの rep のファイルが消えたら、検索はエラーを返し、ファイルは作り直さない。
+// 読み込んだあとに読むだけの rep のファイルが消えたら、読み取りはエラーを返し、ファイルは作り直さない。
 // 以前はここで空のDBができ、利用者が消したファイルが「新しいファイル」として同期に乗った。
+//
+// 読み取りの関数は種類ごとに違う（Kyou を返す rep は FindKyous、付随データと参照の rep は
+// 一覧の取得）ので、表の read で包む。
 func TestReadOnlyRep_DeletedAfterLoadIsNotRecreated(t *testing.T) {
 	ctx := context.Background()
-	type finder interface {
+	type opened struct {
+		read  func() error
+		close func()
+	}
+	kyouRep := func(rep interface {
 		FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 		Close(ctx context.Context) error
+	}, err error) (opened, error) {
+		if err != nil {
+			return opened{}, err
+		}
+		return opened{
+			read:  func() error { _, err := rep.FindKyous(ctx, &find.FindQuery{}); return err },
+			close: func() { _ = rep.Close(ctx) },
+		}, nil
 	}
 	cases := []struct {
 		name string
-		open func(filename string, fullConnect bool) (finder, error)
+		open func(filename string, fullConnect bool) (opened, error)
 	}{
-		{"kmemo", func(f string, c bool) (finder, error) { return NewKmemoRepositorySQLite3Impl(ctx, f, c) }},
-		{"kc", func(f string, c bool) (finder, error) { return NewKCRepositorySQLite3Impl(ctx, f, c) }},
-		{"urlog", func(f string, c bool) (finder, error) { return NewURLogRepositorySQLite3Impl(ctx, f, c) }},
-		{"timeis", func(f string, c bool) (finder, error) { return NewTimeIsRepositorySQLite3Impl(ctx, f, c) }},
-		{"mi", func(f string, c bool) (finder, error) { return NewMiRepositorySQLite3Impl(ctx, f, c) }},
-		{"nlog", func(f string, c bool) (finder, error) { return NewNlogRepositorySQLite3Impl(ctx, f, c) }},
-		{"lantana", func(f string, c bool) (finder, error) { return NewLantanaRepositorySQLite3Impl(ctx, f, c) }},
+		{"kmemo", func(f string, c bool) (opened, error) { return kyouRep(NewKmemoRepositorySQLite3Impl(ctx, f, c)) }},
+		{"kc", func(f string, c bool) (opened, error) { return kyouRep(NewKCRepositorySQLite3Impl(ctx, f, c)) }},
+		{"urlog", func(f string, c bool) (opened, error) { return kyouRep(NewURLogRepositorySQLite3Impl(ctx, f, c)) }},
+		{"timeis", func(f string, c bool) (opened, error) { return kyouRep(NewTimeIsRepositorySQLite3Impl(ctx, f, c)) }},
+		{"mi", func(f string, c bool) (opened, error) { return kyouRep(NewMiRepositorySQLite3Impl(ctx, f, c)) }},
+		{"nlog", func(f string, c bool) (opened, error) { return kyouRep(NewNlogRepositorySQLite3Impl(ctx, f, c)) }},
+		{"lantana", func(f string, c bool) (opened, error) { return kyouRep(NewLantanaRepositorySQLite3Impl(ctx, f, c)) }},
+		{"tag", func(f string, c bool) (opened, error) {
+			rep, err := NewTagRepositorySQLite3Impl(ctx, f, c)
+			if err != nil {
+				return opened{}, err
+			}
+			return opened{read: func() error { _, err := rep.GetAllTags(ctx); return err }, close: func() { _ = rep.Close(ctx) }}, nil
+		}},
+		{"text", func(f string, c bool) (opened, error) {
+			rep, err := NewTextRepositorySQLite3Impl(ctx, f, c)
+			if err != nil {
+				return opened{}, err
+			}
+			return opened{read: func() error { _, err := rep.FindTexts(ctx, &find.FindQuery{}); return err }, close: func() { _ = rep.Close(ctx) }}, nil
+		}},
+		{"notification", func(f string, c bool) (opened, error) {
+			rep, err := NewNotificationRepositorySQLite3Impl(ctx, f, c)
+			if err != nil {
+				return opened{}, err
+			}
+			return opened{read: func() error { _, err := rep.FindNotifications(ctx, &find.FindQuery{}); return err }, close: func() { _ = rep.Close(ctx) }}, nil
+		}},
+		{"rekyou", func(f string, c bool) (opened, error) {
+			rep, err := NewReKyouRepositorySQLite3Impl(ctx, f, c, nil)
+			if err != nil {
+				return opened{}, err
+			}
+			return opened{read: func() error { _, err := rep.GetReKyousAllLatest(ctx); return err }, close: func() { _ = rep.Close(ctx) }}, nil
+		}},
+		{"mirekyou", func(f string, c bool) (opened, error) {
+			rep, err := NewMiReKyouRepositorySQLite3Impl(ctx, f, c, nil)
+			if err != nil {
+				return opened{}, err
+			}
+			return opened{read: func() error { _, err := rep.GetMiReKyousAllLatest(ctx); return err }, close: func() { _ = rep.Close(ctx) }}, nil
+		}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -117,23 +167,49 @@ func TestReadOnlyRep_DeletedAfterLoadIsNotRecreated(t *testing.T) {
 			if err != nil {
 				t.Fatalf("元のファイルを作れない: %v", err)
 			}
-			_ = writer.Close(ctx)
+			writer.close()
 
 			reader, err := c.open(filename, false)
 			if err != nil {
 				t.Fatalf("読むだけの rep を開けない: %v", err)
 			}
-			defer func() { _ = reader.Close(ctx) }()
+			defer reader.close()
 
 			if err := os.Remove(filename); err != nil {
 				t.Fatalf("元のファイルを消せない: %v", err)
 			}
-			if _, err := reader.FindKyous(ctx, &find.FindQuery{}); err == nil {
-				t.Errorf("消えたファイルの検索がエラーにならない")
+			if err := reader.read(); err == nil {
+				t.Errorf("消えたファイルの読み取りがエラーにならない")
 			}
 			assertNotCreated(t, filename)
 		})
 	}
+	// ディレクトリ rep はファイル1つではなく ID 表（.gkill/gkill_id.db）を持つので、表の外で見る
+	t.Run("idf", func(t *testing.T) {
+		dir := t.TempDir()
+		idDB := filepath.Join(dir, ".gkill", "gkill_id.db")
+		if err := os.MkdirAll(filepath.Dir(idDB), os.ModePerm); err != nil {
+			t.Fatal(err)
+		}
+		ignore := []string{}
+		writer, err := NewIDFDirRep(ctx, "testuser", dir, idDB, true, mux.NewRouter(), false, &ignore, nil)
+		if err != nil {
+			t.Fatalf("元の ID 表を作れない: %v", err)
+		}
+		_ = writer.Close(ctx)
+		reader, err := NewIDFDirRep(ctx, "testuser", dir, idDB, false, mux.NewRouter(), false, &ignore, nil)
+		if err != nil {
+			t.Fatalf("読むだけのディレクトリ rep を開けない: %v", err)
+		}
+		defer func() { _ = reader.Close(ctx) }()
+		if err := os.Remove(idDB); err != nil {
+			t.Fatalf("ID 表を消せない: %v", err)
+		}
+		if _, err := reader.FindKyous(ctx, &find.FindQuery{}); err == nil {
+			t.Errorf("消えた ID 表の検索がエラーにならない")
+		}
+		assertNotCreated(t, idDB)
+	})
 }
 
 // ローカルキャッシュ版（--cache_reps_local=true）は、元のファイルが消えていたら UpdateCache をエラーにし、

@@ -43,12 +43,15 @@ function reset(api: GkillAPIForExportedKyou): void {
     api.kyous = []
     api.mis = []
     api.mirekyous = []
+    api.gps_logs = []
     api.attached_notifications = []
     api.attached_timeis_kyous = []
     api.plugin_html = new Map()
     api.media = new Map()
+    api.dropped_media = new Set()
     api.idf_text_bytes = new Map()
     api.exported_application_config = new ApplicationConfig()
+    api.set_google_map_api_key('')
 }
 
 describe('GkillAPIForExportedKyou', () => {
@@ -159,7 +162,7 @@ describe('GkillAPIForExportedKyou', () => {
         const res = await api.get_application_config(new GetApplicationConfigRequest())
         expect(res.application_config.dnote_json_data, '共有版の空の設定を返している（集計が空になる）')
             .toBe('[{"title":"定義A"}]')
-        expect(res.application_config.for_export_kyou).toBe(true)
+        expect(res.application_config, '焼き込んだ設定そのものを返していない').toBe(api.exported_application_config)
     })
 
     it('get_notifications_by_target_id は焼き込んだ通知から絞る（共有版は空のスタブ）', async () => {
@@ -212,32 +215,24 @@ describe('GkillAPIForExportedKyou', () => {
     })
 
     describe('Google Maps の API キーは閲覧者が入れる', () => {
-        it('localStorage へ保存し、読み戻せる（Cookie は file:// で書けない）', () => {
+        it('入れたキーはこのページのメモリから読み戻せる', () => {
             expect(api.get_google_map_api_key(), '既定で空でない').toBe('')
             api.set_google_map_api_key('viewer-key')
             expect(api.get_google_map_api_key()).toBe('viewer-key')
-            expect(window.localStorage.getItem(GkillAPIForExportedKyou.google_map_api_key_storage_key))
-                .toBe('viewer-key')
         })
 
-        // /files/ 経由で開かれると allow-same-origin の無い sandbox（opaque origin）になり、
-        // localStorage は例外を投げる。ここで投げると地図ごと画面が落ちる
-        it('localStorage が例外を投げてもメモリへ退避して落ちない', () => {
-            const set_spy = vi.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
-                throw new Error('opaque origin')
-            })
-            const get_spy = vi.spyOn(window.localStorage, 'getItem').mockImplementation(() => {
-                throw new Error('opaque origin')
-            })
-
-            expect(() => api.set_google_map_api_key('viewer-key')).not.toThrow()
-            expect(api.get_google_map_api_key(), '退避先から読めていない').toBe('viewer-key')
-
+        // file:// の localStorage は同じブラウザで開いた別のローカル HTML とも共有されうるので、
+        // キーを平文で残さない（CodeQL js/clear-text-storage-of-sensitive-data。ADR-0422）。
+        // Cookie も同じく書かない（本体の GkillAPI は Cookie に保存する）
+        it('キーを localStorage にも Cookie にも書かない', () => {
+            const set_spy = vi.spyOn(window.localStorage, 'setItem')
+            api.set_google_map_api_key('viewer-key')
+            expect(set_spy, 'localStorage へ書いている').not.toHaveBeenCalled()
+            expect(JSON.stringify({ ...window.localStorage }), 'localStorage にキーが残っている').not.toContain('viewer-key')
+            expect(document.cookie).not.toContain('viewer-key')
             set_spy.mockRestore()
-            get_spy.mockRestore()
         })
     })
-
 
     describe('メディアの URL は焼き込みへ差し替える', () => {
         it('焼き込んだ URL をそのまま引く（build_media_url が渡す形）', () => {
@@ -285,6 +280,15 @@ describe('GkillAPIForExportedKyou', () => {
             expect(api.resolve_media_url('/zip_cache/rep/h/x.jpg')).toBe('about:blank')
             expect(api.resolve_media_url(new URL('/files/rep/missing.jpg', document.baseURI).toString()))
                 .toBe('about:blank')
+        })
+
+        it('予算超過で落とされたメディアはプレースホルダを返し is_exported_media_dropped が真になる', () => {
+            api.dropped_media.add('/files/rep/big.jpg?thumb=400x400')
+            expect(api.is_exported_media_dropped('/files/rep/big.jpg?thumb=400x400')).toBe(true)
+            expect(api.is_exported_media_dropped('/files/rep/big.jpg')).toBe(true)
+            expect(api.is_exported_media_dropped('/files/rep/other.jpg')).toBe(false)
+            expect(api.resolve_media_url('/files/rep/big.jpg?thumb=400x400')).toMatch(/^data:image\/svg\+xml/)
+            expect(api.resolve_media_url('/files/rep/big.jpg')).toMatch(/^data:image\/svg\+xml/)
         })
 
         it('外部サイトの URL は残す（記録の中身を失わない）', () => {

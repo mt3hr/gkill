@@ -7,9 +7,11 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 // HandlePostPluginConfig は設定画面から送られたフォーム値をプラグインに渡し、保存させます。
@@ -49,7 +51,7 @@ func (g *GkillServerAPI) HandlePostPluginConfig(w http.ResponseWriter, r *http.R
 		slog.Log(r.Context(), gkill_log.Debug, "error at decode post plugin config request", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.InvalidPostPluginConfigRequestDataError,
-			ErrorMessage: "プラグイン設定保存リクエストのパースに失敗しました",
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_POST_PLUGIN_CONFIG_MESSAGE"}),
 			Cause:        err,
 		})
 		return
@@ -66,7 +68,7 @@ func (g *GkillServerAPI) HandlePostPluginConfig(w http.ResponseWriter, r *http.R
 	if pluginRepo == nil {
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.PostPluginConfigError,
-			ErrorMessage: fmt.Sprintf("プラグインが見つかりません: %s", request.RepName),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "PLUGIN_NOT_FOUND_MESSAGE"}),
 		})
 		return
 	}
@@ -76,7 +78,7 @@ func (g *GkillServerAPI) HandlePostPluginConfig(w http.ResponseWriter, r *http.R
 		slog.Log(r.Context(), gkill_log.Debug, "error at post plugin config", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.PostPluginConfigError,
-			ErrorMessage: fmt.Sprintf("プラグイン設定の保存に失敗しました: %s", err.Error()),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_POST_PLUGIN_CONFIG_MESSAGE"}),
 			Cause:        err,
 		})
 		return

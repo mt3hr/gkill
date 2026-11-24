@@ -29,7 +29,7 @@ type ExportKyouHTMLColumn struct {
 func (c *ExportKyouHTMLColumn) UnmarshalJSON(data []byte) error {
 	c.Raw = append(json.RawMessage(nil), data...)
 	if err := json.Unmarshal(data, &c.Query); err != nil {
-		return fmt.Errorf("error at parse export rykv html column: %w", err)
+		return fmt.Errorf("error at parse export kyou html column: %w", err)
 	}
 	return nil
 }

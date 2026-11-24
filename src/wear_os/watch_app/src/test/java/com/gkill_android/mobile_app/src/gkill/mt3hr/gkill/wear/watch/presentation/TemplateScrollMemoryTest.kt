@@ -73,4 +73,22 @@ class TemplateScrollMemoryTest {
         memory.backToParent()
         assertEquals(TemplateScrollPosition.TOP, memory.takeInitialPosition())
     }
+
+    @Test
+    fun `reset also clears a pending restored position`() {
+        val memory = TemplateScrollMemory()
+        memory.enterFolder(middle)
+        memory.backToParent()
+        memory.reset()
+        assertEquals(TemplateScrollPosition.TOP, memory.takeInitialPosition())
+    }
+
+    @Test
+    fun `entering a folder clears an unconsumed pending position`() {
+        val memory = TemplateScrollMemory()
+        memory.enterFolder(middle)
+        memory.backToParent()
+        memory.enterFolder(deeper)
+        assertEquals(TemplateScrollPosition.TOP, memory.takeInitialPosition())
+    }
 }

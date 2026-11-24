@@ -21,14 +21,14 @@ import (
 // 作ってキャッシュに載せるので、存在しない利用者名を通すとマネージャが居座ります。
 //
 // 戻り値の2つめが空でなければ、呼び出し元はそれを response.Errors に足して戻ること。
-func (g *GkillServerAPI) resolvePluginTargetUser(ctx context.Context, targetUserID string, localeName string, requireAdmin bool) (string, []*message.GkillError) {
+func (g *GkillServerAPI) resolvePluginTargetUser(ctx context.Context, targetUserID string, localeName string, requireAdmin bool) (string, message.GkillErrors) {
 	auth := AuthFromContext(ctx)
 
 	if requireAdmin || targetUserID != "" {
 		if !auth.Account.IsAdmin {
 			err := fmt.Errorf("account not has admin user id = %s", auth.Account.UserID)
 			slog.Log(ctx, gkill_log.Debug, "account not has admin user id", "error", fmt.Sprintf("%q", err))
-			return "", []*message.GkillError{{
+			return "", message.GkillErrors{{
 				ErrorCode:    message.AccountNotHasAdminError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "NO_ADMIN_PRIVILEGE_MESSAGE"}),
 			}}
@@ -43,14 +43,14 @@ func (g *GkillServerAPI) resolvePluginTargetUser(ctx context.Context, targetUser
 	if err != nil {
 		err = fmt.Errorf("error at get account user id = %s: %w", targetUserID, err)
 		slog.Log(ctx, gkill_log.Debug, "error at get account user id", "error", fmt.Sprintf("%q", err))
-		return "", []*message.GkillError{{
+		return "", message.GkillErrors{{
 			ErrorCode:    message.GetAccountError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "TARGET_ACCOUNT_NOT_FOUND_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ACCOUNT_MESSAGE"}),
 			Cause:        err,
 		}}
 	}
 	if targetAccount == nil {
-		return "", []*message.GkillError{{
+		return "", message.GkillErrors{{
 			ErrorCode:    message.TargetAccountNotFoundError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "TARGET_ACCOUNT_NOT_FOUND_MESSAGE"}),
 		}}

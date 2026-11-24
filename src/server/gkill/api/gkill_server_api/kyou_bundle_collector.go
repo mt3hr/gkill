@@ -255,12 +255,16 @@ func (g *GkillServerAPI) collectTypedDatas(ctx context.Context, opts *kyouBundle
 	}
 	bundle.IDFKyous = idfKyous
 
-	// ReKyou
+	// ReKyou。
+	// **FindReKyou は検索条件を見ずに、利用者のリポストを全件返す**（rep の実装がそうなっている）。
+	// そのまま積むと、列に出ていないリポストまで焼き込まれ、HTML 出力ではその参照先の記録
+	// （collectExportReKyouTargets が辿る）の中身まで、選んでいないのにファイルへ入る。
+	// 型別データは列に出た記録の ID だけに絞る（ADR-0422）
 	rekyous, err := repositories.ReKyouReps.FindReKyou(ctx, findQueryForKyouInstances)
 	if err != nil {
 		return fail(err)
 	}
-	bundle.ReKyous = rekyous
+	bundle.ReKyous = keepByIDs(rekyous, findQueryForKyouInstances.IDs, func(rekyou reps.ReKyou) string { return rekyou.ID })
 
 	// MiReKyou（既存の記録を課題にしたもの）。
 	// **ReKyou と対で集めること。** 片方だけだと、焼き込みの欄は在るのに中身が空のまま出て、
@@ -269,7 +273,8 @@ func (g *GkillServerAPI) collectTypedDatas(ctx context.Context, opts *kyouBundle
 	if err != nil {
 		return fail(err)
 	}
-	bundle.MiReKyous = mirekyous
+	// ReKyou と同じく、列に出た記録の ID だけに絞る（参照先を辿る起点になるので、外のものを残さない）
+	bundle.MiReKyous = keepByIDs(mirekyous, findQueryForKyouInstances.IDs, func(mirekyou reps.MiReKyou) string { return mirekyou.ID })
 
 	// GitCommitLog
 	gitCommitLogs, err := repositories.GitCommitLogReps.FindGitCommitLog(ctx, findQueryForKyouInstances)
@@ -312,9 +317,9 @@ func (g *GkillServerAPI) collectAttachedDatas(ctx context.Context, opts *kyouBun
 		for _, kyou := range bundle.Kyous {
 			textsRelatedID, err := repositories.GetTextsByTargetID(ctx, kyou.ID)
 			if err != nil {
-				err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
+				err = fmt.Errorf("error at find texts user id = %s device = %s: %w", userID, device, err)
 				return bundleError(ctx, localeName, message.FindTextsShareKyouError,
-					"FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE", "error at find tags user id", err)
+					"FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE", "error at find texts user id", err)
 			}
 			for _, text := range textsRelatedID {
 				textSet[text.ID] = text
@@ -392,9 +397,9 @@ func (g *GkillServerAPI) collectAttachedTimeIss(ctx context.Context, opts *kyouB
 		findFilter := &api.FindFilter{}
 		matchPlayingKyous, _, err := findFilter.FindKyous(ctx, userID, device, g.GkillDAOManager, &query)
 		if err != nil {
-			err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
-			return bundleError(ctx, localeName, message.FindTextsShareKyouError,
-				"FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE", "error at find tags user id", err)
+			err = fmt.Errorf("error at find timeis kyous user id = %s device = %s: %w", userID, device, err)
+			return bundleError(ctx, localeName, message.FindKyousShareKyouError,
+				"FAILED_GET_TIMEIS_MESSAGE", "error at find timeis kyous user id", err)
 		}
 		for _, timeisKyou := range matchPlayingKyous {
 			if existKyou, exist := attachedTimeIsKyousMap[timeisKyou.ID]; exist {
@@ -406,15 +411,11 @@ func (g *GkillServerAPI) collectAttachedTimeIss(ctx context.Context, opts *kyouB
 			}
 		}
 
-		ids := []string{}
-		for id := range attachedTimeIsKyousMap {
-			ids = append(ids, id)
-		}
-		if len(ids) != 0 {
+		if len(attachedTimeIsKyousMap) != 0 {
 			playingTimeIss, err := repositories.TimeIsReps.FindTimeIs(ctx, &query)
 			if err != nil {
 				err = fmt.Errorf("error at find playing timeis user id = %s device = %s: %w", userID, device, err)
-				return bundleError(ctx, localeName, message.FindTextsShareKyouError,
+				return bundleError(ctx, localeName, message.FindKyousShareKyouError,
 					"FAILED_GET_TIMEIS_MESSAGE", "error at find playing timeis user id", err)
 			}
 			// 削除済みは Kyou 検索と同じ規則で落とす(ADR-0612)。ここは FindFilter を
@@ -443,4 +444,22 @@ func (g *GkillServerAPI) collectAttachedTimeIss(ctx context.Context, opts *kyouB
 	}
 
 	return nil
+}
+
+// keepByIDs は ids に含まれる ID のものだけを残す。ids が nil なら絞らない（FindQuery.IDs の null 意味論）。
+func keepByIDs[T any](items []T, ids []string, idOf func(T) string) []T {
+	if ids == nil {
+		return items
+	}
+	wanted := make(map[string]struct{}, len(ids))
+	for _, id := range ids {
+		wanted[id] = struct{}{}
+	}
+	kept := make([]T, 0, len(items))
+	for _, item := range items {
+		if _, ok := wanted[idOf(item)]; ok {
+			kept = append(kept, item)
+		}
+	}
+	return kept
 }

@@ -63,7 +63,8 @@ var ReadTools = []*jsonobj.Object{
 		"gkill_get_mcp_help",
 		"Return the detailed guide for one topic of this MCP server. The tool descriptions in this list are summaries; "+
 			"read the relevant topic before a first search (search / pagination / mi / data_types), before reading files (idf) "+
-			"or plugin bodies (plugin), before writing KFTL text (kftl), when looking for deleted entries (deleted) or repository "+
+			"or plugin bodies (plugin), before writing KFTL text (kftl), when working with reposts / task-converted entries / notifications (reference_types), "+
+			"when looking for deleted entries (deleted) or repository "+
 			"names (rep), before interpreting the settings trees and the user's description notes on them (config), "+
 			"before reading or writing the user's skills (skills), and whenever a response carries warnings you do not understand. "+
 			"Omit topic (or pass \"index\") for "+

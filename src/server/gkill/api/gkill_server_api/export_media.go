@@ -13,12 +13,15 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"path"
 	"strings"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
 const (
@@ -123,8 +126,8 @@ func isExportTextFile(idf reps.IDFKyou) bool {
 // 予算に収まらなかったものは焼かずに警告へ回す（画面は出る。その記録のメディアが出ないだけ）。
 // 関連時刻の新しい順に詰めるので、payload.IDFKyous は検索の並び（新しい順）のままで渡すこと。
 // sidecar が nil でなければ、メディアは data: URI ではなく同名フォルダの相対パスで参照する。
-func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_res.ExportKyouHTMLRequest, repositories *reps.GkillRepositories, payload *exportedKyouPayload, sidecar *exportSidecar) ([]string, error) {
-	warnings := []string{}
+func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_res.ExportKyouHTMLRequest, repositories *reps.GkillRepositories, payload *exportedKyouPayload, sidecar *exportSidecar) ([]*message.GkillMessage, error) {
+	warnings := []*message.GkillMessage{}
 	if len(payload.IDFKyous) == 0 {
 		return warnings, nil
 	}
@@ -178,6 +181,7 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 			}
 			body, err := readRepFileBytes(ctx, idfRep, escapedRel, "")
 			if err != nil {
+				logExportMediaReadFailure(ctx, idf, err)
 				failedMedia++
 				continue
 			}
@@ -208,6 +212,7 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 			}
 			body, err := readRepFileBytes(ctx, idfRep, escapedRel, "")
 			if err != nil {
+				logExportMediaReadFailure(ctx, idf, err)
 				failedMedia++
 				continue
 			}
@@ -235,6 +240,7 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 			if err != nil {
 				// サムネイルは作れないことがある（ffmpeg が無い・デコードできない）。
 				// 画面は出るので、落として警告に回す
+				logExportMediaReadFailure(ctx, idf, err)
 				failedMedia++
 			} else if len(body) > itemLimit || mediaUsed+len(body) > mediaBudget {
 				droppedMedia++
@@ -258,6 +264,7 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 		}
 		body, err := readRepFileBytes(ctx, idfRep, escapedRel, "")
 		if err != nil {
+			logExportMediaReadFailure(ctx, idf, err)
 			failedMedia++
 			continue
 		}
@@ -274,17 +281,25 @@ func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_re
 	}
 
 	if droppedMedia != 0 {
-		warnings = append(warnings, fmt.Sprintf(
-			"予算に収まらないため %d 件のメディア・添付ファイルを含めませんでした（1件あたり %d MB / 合計 %d MB）。出力画面では「含まれていません」と出ます",
-			droppedMedia, itemLimit/1024/1024, mediaBudget/1024/1024))
+		warnings = append(warnings, exportWarningMessage(request.LocaleName, "EXPORT_KYOU_HTML_MEDIA_DROPPED_WARNING_MESSAGE", map[string]int{
+			"count":         droppedMedia,
+			"item_limit_mb": itemLimit / 1024 / 1024,
+			"budget_mb":     mediaBudget / 1024 / 1024,
+		}))
 	}
 	if droppedText != 0 {
-		warnings = append(warnings, fmt.Sprintf("本文が大きすぎるため %d 件を含めませんでした", droppedText))
+		warnings = append(warnings, exportWarningMessage(request.LocaleName, "EXPORT_KYOU_HTML_TEXT_DROPPED_WARNING_MESSAGE", map[string]int{"count": droppedText}))
 	}
 	if failedMedia != 0 {
-		warnings = append(warnings, fmt.Sprintf("%d 件のファイルを読み込めませんでした", failedMedia))
+		warnings = append(warnings, exportWarningMessage(request.LocaleName, "EXPORT_KYOU_HTML_MEDIA_FAILED_WARNING_MESSAGE", map[string]int{"count": failedMedia}))
 	}
 	return warnings, nil
+}
+
+// logExportMediaReadFailure は読めなかったファイルを Warn で残す。
+// 応答へは件数の警告しか返らないので、どのファイルがなぜ読めなかったかはここが唯一の記録になる。
+func logExportMediaReadFailure(ctx context.Context, idf reps.IDFKyou, err error) {
+	slog.Log(ctx, gkill_log.Warn, "error at read export media", "id", idf.ID, "file_url", idf.FileURL, "error", fmt.Sprintf("%q", err))
 }
 
 // exportMediaSrc は HTML から参照する src を作る。

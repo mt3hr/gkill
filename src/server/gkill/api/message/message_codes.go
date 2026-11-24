@@ -94,6 +94,9 @@ const (
 	DeleteSkillSuccessMessage = "MSG000093"
 	// DeleteKyouCascadeSuccessMessage は記録を連鎖して削除した（付随データと参照元を含めて全部消えた）ときのものです。
 	DeleteKyouCascadeSuccessMessage = "MSG000094"
-	// ExportKyouHTMLSuccessMessage は rykv の画面を HTML へ出力できたときのものです。
+	// ExportKyouHTMLSuccessMessage は画面（rykv・タスク）を HTML へ出力できたときのものです。
 	ExportKyouHTMLSuccessMessage = "MSG000095"
+	// ExportKyouHTMLPartialWarningMessage は出力できたが一部（予算に収まらないメディア・読めなかったファイル・
+	// プラグインの本文）を含められなかったときの警告です。Level は warning。
+	ExportKyouHTMLPartialWarningMessage = "MSG000096"
 )

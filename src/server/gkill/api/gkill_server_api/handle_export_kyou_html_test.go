@@ -8,9 +8,11 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 )
 
 // 出力 HTML は gkill を持っていない相手へ渡すもの。
@@ -85,6 +87,13 @@ func extractExportPayload(t *testing.T, rendered string) map[string]any {
 // 消えるとクライアントは列を引けず、**2列以上の出力で全列が先頭列に一致する**
 // （例外もエラーも出ないので、1列で試しているうちは露見しない）。
 func TestHandleExportKyouHTML_KeepsColumnQueryID(t *testing.T) {
+	// 出力用のガワ（embed/export/template.html）は npm run prepare_install が作る。
+	// 裸の go build / go test のビルドではこの API だけが 500 を返すので、そのときは飛ばす
+	// （CI の Go ジョブはフロントをビルドしないので、ここが無いとこのテストだけ落ちる）
+	if _, err := readExportTemplate(); err != nil {
+		t.Skip("出力用のガワが embed に無い（npm run prepare_install を通していないビルド）")
+	}
+
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -97,12 +106,6 @@ func TestHandleExportKyouHTML_KeepsColumnQueryID(t *testing.T) {
 			exportColumn(t, "column-2"),
 		}
 	})
-	// 出力用のガワ（embed/export/template.html）は npm run prepare_install が作る。
-	// 裸の go build / go test のビルドではこの API だけが 500 を返すので、そのときは飛ばす
-	// （CI の Go ジョブはフロントをビルドしないので、ここが無いとこのテストだけ落ちる）
-	if _, err := readExportTemplate(); err != nil {
-		t.Skip("出力用のガワが embed に無い（npm run prepare_install を通していないビルド）")
-	}
 	if len(exportResp.Errors) != 0 {
 		t.Fatalf("出力に失敗した: %+v", exportResp.Errors)
 	}
@@ -213,6 +216,9 @@ func TestHandleExportKyouHTML_RejectsUnsupportedOptions(t *testing.T) {
 		customize func(*req_res.ExportKyouHTMLRequest)
 	}{
 		{"列が1本も無い", func(req *req_res.ExportKyouHTMLRequest) { req.Columns = nil }},
+		{"列に null がある", func(req *req_res.ExportKyouHTMLRequest) {
+			req.Columns = []req_res.ExportKyouHTMLColumn{{Raw: json.RawMessage("null")}}
+		}},
 		{"未知の画面", func(req *req_res.ExportKyouHTMLRequest) { req.Screen = "dashboard" }},
 		{"未知のメディアの指定", func(req *req_res.ExportKyouHTMLRequest) { req.MediaMode = "whatever" }},
 		{"未知の出力の形", func(req *req_res.ExportKyouHTMLRequest) { req.OutputFormat = "whatever" }},
@@ -226,8 +232,8 @@ func TestHandleExportKyouHTML_RejectsUnsupportedOptions(t *testing.T) {
 			if !hasErrorCode(exportResp.Errors, message.InvalidExportKyouHTMLOptionError) {
 				t.Errorf("弾かれていない: %+v", exportResp.Errors)
 			}
-			if exportResp.HTML != "" {
-				t.Error("弾いたのに HTML を返している")
+			if exportResp.HTML != "" || exportResp.ZipBase64 != "" {
+				t.Error("弾いたのに HTML / ZIP を返している")
 			}
 		})
 	}
@@ -251,6 +257,10 @@ func TestHandleExportKyouHTML_RequiresSession(t *testing.T) {
 // TestHandleExportKyouHTML_SidecarReturnsZip は、同名フォルダの出力が ZIP の base64 で
 // 返ることを確認する。ファイルそのものを body で返す形にはできない（ADR-0712）。
 func TestHandleExportKyouHTML_SidecarReturnsZip(t *testing.T) {
+	if _, err := readExportTemplate(); err != nil {
+		t.Skip("出力用のガワが embed に無い（npm run prepare_install を通していないビルド）")
+	}
+
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -261,10 +271,6 @@ func TestHandleExportKyouHTML_SidecarReturnsZip(t *testing.T) {
 	exportResp := exportKyouHTML(t, tsURL, sessionID, func(req *req_res.ExportKyouHTMLRequest) {
 		req.OutputFormat = req_res.ExportOutputFormatSidecar
 	})
-
-	if _, err := readExportTemplate(); err != nil {
-		t.Skip("出力用のガワが embed に無い（npm run prepare_install を通していないビルド）")
-	}
 	if len(exportResp.Errors) > 0 {
 		t.Fatalf("export rykv html errors: %+v", exportResp.Errors)
 	}
@@ -303,6 +309,11 @@ func TestHandleExportKyouHTML_SidecarReturnsZip(t *testing.T) {
 // 落ちると mi を出力したのに rykv として開く（例外もエラーも出ない）。
 // 空文字を rykv として扱うのは、印を足す前のクライアントが送ってこないため。
 func TestHandleExportKyouHTML_BakesScreen(t *testing.T) {
+	// 出力用のガワが embed に無いビルド（CI の Go ジョブ）では飛ばす
+	if _, err := readExportTemplate(); err != nil {
+		t.Skip("出力用のガワが embed に無い（npm run prepare_install を通していないビルド）")
+	}
+
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -322,16 +333,159 @@ func TestHandleExportKyouHTML_BakesScreen(t *testing.T) {
 			exportResp := exportKyouHTML(t, tsURL, sessionID, func(req *req_res.ExportKyouHTMLRequest) {
 				req.Screen = testCase.send
 			})
-			// 出力用のガワが embed に無いビルド（CI の Go ジョブ）では飛ばす
-			if _, err := readExportTemplate(); err != nil {
-				t.Skip("出力用のガワが embed に無い（npm run prepare_install を通していないビルド）")
-			}
 			if len(exportResp.Errors) != 0 {
 				t.Fatalf("出力に失敗した: %+v", exportResp.Errors)
 			}
 			payload := extractExportPayload(t, exportResp.HTML)
 			if got, _ := payload["screen"].(string); got != testCase.want {
 				t.Errorf("焼き込みの screen = %q, want %q", got, testCase.want)
+			}
+		})
+	}
+}
+
+// TestHandleExportKyouHTML_MiPrunesMiBoardStruct は、Mi 画面の HTML 出力で
+// 出力列に含まれない板名が application_config.mi_board_struct から刈られることを確認する。
+func TestHandleExportKyouHTML_MiPrunesMiBoardStruct(t *testing.T) {
+	if _, err := readExportTemplate(); err != nil {
+		t.Skip("出力用のガワが embed に無い（npm run prepare_install を通していないビルド）")
+	}
+
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	device, err := gkillAPI.GetDevice()
+	if err != nil {
+		t.Fatalf("GetDevice failed: %v", err)
+	}
+	appConfig, err := gkillAPI.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.GetApplicationConfig(context.Background(), "admin", device)
+	if err != nil || appConfig == nil {
+		t.Fatalf("GetApplicationConfig failed: %v", err)
+	}
+	boardStructBytes, err := json.Marshal(map[string]any{
+		"key":    "__root__",
+		"is_dir": true,
+		"children": []any{
+			map[string]any{"key": "BoardPublic", "board_name": "BoardPublic", "is_dir": false},
+			map[string]any{"key": "BoardSecret", "board_name": "BoardSecret", "is_dir": false},
+		},
+	})
+	if err != nil {
+		t.Fatalf("marshal MiBoardStruct failed: %v", err)
+	}
+	rawBoardStruct := json.RawMessage(boardStructBytes)
+	appConfig.MiBoardStruct = &rawBoardStruct
+	if _, err := gkillAPI.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.UpdateApplicationConfig(context.Background(), appConfig); err != nil {
+		t.Fatalf("UpdateApplicationConfig failed: %v", err)
+	}
+
+	rawCol, err := json.Marshal(map[string]any{
+		"query_id":      "mi-col-1",
+		"for_mi":        true,
+		"mi_board_name": "BoardPublic",
+	})
+	if err != nil {
+		t.Fatalf("marshal column failed: %v", err)
+	}
+	var miCol req_res.ExportKyouHTMLColumn
+	if err := json.Unmarshal(rawCol, &miCol); err != nil {
+		t.Fatalf("unmarshal column failed: %v", err)
+	}
+
+	exportResp := exportKyouHTML(t, tsURL, sessionID, func(req *req_res.ExportKyouHTMLRequest) {
+		req.Screen = req_res.ExportScreenMi
+		req.Columns = []req_res.ExportKyouHTMLColumn{miCol}
+	})
+	if len(exportResp.Errors) != 0 {
+		t.Fatalf("出力に失敗した: %+v", exportResp.Errors)
+	}
+	if !strings.Contains(exportResp.HTML, "BoardPublic") {
+		t.Error("出力対象の板 BoardPublic が HTML に含まれていない")
+	}
+	if strings.Contains(exportResp.HTML, "BoardSecret") {
+		t.Error("出力対象外の板 BoardSecret が mi_board_struct から刈られずに露出している")
+	}
+}
+
+// TestHandleExportKyouHTML_IncludeFlagsControlAttachedData は、付随データを含めるフラグ
+// （IncludeAttachedTags / Texts / Notifications）の ON/OFF に応じて焼き込み結果が変わることを確認する。
+func TestHandleExportKyouHTML_IncludeFlagsControlAttachedData(t *testing.T) {
+	if _, err := readExportTemplate(); err != nil {
+		t.Skip("出力用のガワが embed に無い（npm run prepare_install を通していないビルド）")
+	}
+
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	kmemoID := addTestKmemo(t, tsURL, sessionID, "タグ付きメモ")
+	device, err := gkillAPI.GetDevice()
+	if err != nil {
+		t.Fatalf("GetDevice failed: %v", err)
+	}
+	repositories, err := gkillAPI.GkillDAOManager.GetRepositories("admin", device)
+	if err != nil {
+		t.Fatalf("GetRepositories failed: %v", err)
+	}
+	now := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
+	if err := repositories.WriteTagRep.AddTagInfo(context.Background(), reps.Tag{
+		ID: "tag-export-check", TargetID: kmemoID, Tag: "ExportTagCheck", RelatedTime: now,
+		CreateTime: now, CreateApp: "test", CreateDevice: device, CreateUser: "admin",
+		UpdateTime: now, UpdateApp: "test", UpdateDevice: device, UpdateUser: "admin",
+	}); err != nil {
+		t.Fatalf("AddTagInfo failed: %v", err)
+	}
+	if err := repositories.WriteTextRep.AddTextInfo(context.Background(), reps.Text{
+		ID: "text-export-check", TargetID: kmemoID, Text: "ExportTextCheck", RelatedTime: now,
+		CreateTime: now, CreateApp: "test", CreateDevice: device, CreateUser: "admin",
+		UpdateTime: now, UpdateApp: "test", UpdateDevice: device, UpdateUser: "admin",
+	}); err != nil {
+		t.Fatalf("AddTextInfo failed: %v", err)
+	}
+	if err := repositories.WriteNotificationRep.AddNotificationInfo(context.Background(), reps.Notification{
+		ID: "notification-export-check", TargetID: kmemoID, Content: "ExportNotificationCheck", NotificationTime: now,
+		CreateTime: now, CreateApp: "test", CreateDevice: device, CreateUser: "admin",
+		UpdateTime: now, UpdateApp: "test", UpdateDevice: device, UpdateUser: "admin",
+	}); err != nil {
+		t.Fatalf("AddNotificationInfo failed: %v", err)
+	}
+	if err := repositories.UpdateCache(context.Background()); err != nil {
+		t.Fatalf("UpdateCache failed: %v", err)
+	}
+
+	// 「含めるもの」の付随データは、選んだものだけが焼かれる（選ばなかったものはファイルの中に残らない）
+	cases := []struct {
+		name string
+		key  string
+		set  func(req *req_res.ExportKyouHTMLRequest, include bool)
+	}{
+		{"タグ", "attached_tags", func(req *req_res.ExportKyouHTMLRequest, include bool) { req.IncludeAttachedTags = include }},
+		{"テキスト", "attached_texts", func(req *req_res.ExportKyouHTMLRequest, include bool) { req.IncludeAttachedTexts = include }},
+		{"通知", "attached_notifications", func(req *req_res.ExportKyouHTMLRequest, include bool) {
+			req.IncludeAttachedNotifications = include
+		}},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			for _, include := range []bool{true, false} {
+				resp := exportKyouHTML(t, tsURL, sessionID, func(req *req_res.ExportKyouHTMLRequest) {
+					testCase.set(req, include)
+				})
+				if len(resp.Errors) != 0 {
+					t.Fatalf("include=%v failed: %+v", include, resp.Errors)
+				}
+				entries, _ := extractExportPayload(t, resp.HTML)[testCase.key].([]any)
+				if include && len(entries) == 0 {
+					t.Errorf("含めるを選んだのに %s が空", testCase.key)
+				}
+				if !include && len(entries) != 0 {
+					t.Errorf("含めないを選んだのに %s が %d 件入っている", testCase.key, len(entries))
+				}
 			}
 		})
 	}

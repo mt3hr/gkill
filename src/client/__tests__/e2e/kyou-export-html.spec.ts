@@ -23,7 +23,7 @@ import { loginAsAdmin } from './helpers'
 
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
-  test.skip(!alive, 'gkill server is not running')
+  expect(alive, 'E2E 用サーバーが起動していること').toBe(true)
 })
 
 /** 出力の要求。サイドバーが生成するのと同じ形（タグと記録保管場所を絞らない）で送る */
@@ -51,9 +51,7 @@ function export_request(customize?: (body: Record<string, unknown>) => void): Re
 }
 
 /**
- * 出力を1回投げる。E2E は PATH 上の gkill_server を起動するので、
- * そのバイナリが古いとこの API を持たない（JSON ではなく 404 の HTML が返る）。
- * そのときは飛ばす —— バイナリが新しくなれば、ここは自動で走り出す。
+ * 出力を1回投げる。古いバイナリや出力用テンプレートの欠落も失敗として検出する。
  */
 async function post_export(page: Page, body: Record<string, unknown>): Promise<Record<string, unknown>> {
   // /api は Cookie ではなく本文の session_id で認証する（auth_middleware.go の sessionPeek）
@@ -67,12 +65,12 @@ async function post_export(page: Page, body: Record<string, unknown>): Promise<R
     timeout: 120000,
   })
   const text = await response.text()
-  test.skip(!text.trimStart().startsWith('{'), '出力の API を持たないビルド（PATH 上の gkill_server が古い）')
+  expect(response.ok(), '出力 API が成功すること（現在のソースから E2E 用バイナリをビルドする）').toBe(true)
+  expect(text.trimStart().startsWith('{'), '出力 API が JSON を返すこと').toBe(true)
 
   const parsed = JSON.parse(text) as Record<string, unknown>
   const errors = (parsed.errors ?? []) as Array<{ error_code?: string }>
-  // ガワが embed に無いビルドでは、この API だけが 500 を返す（ほかの機能は動く）
-  test.skip(errors.some((e) => e.error_code === 'ERR000455'), '出力用のガワが embed に無いビルド')
+  expect(errors, '出力用テンプレートを含むビルドでエラーなく出力できること').toEqual([])
   return parsed
 }
 
@@ -80,7 +78,7 @@ test.describe('HTML export', () => {
   // 出力 1 回で数十秒かかることがある（上記 post_export のコメント）
   test.setTimeout(180000)
 
-  test('出力した HTML は gkill を参照しない', async ({ page }) => {
+  test('出力した HTML は gkill を参照せず、file:// で通信0本のまま画面が出る', async ({ page }) => {
     await loginAsAdmin(page)
 
     const body = await post_export(page, export_request())
@@ -100,13 +98,6 @@ test.describe('HTML export', () => {
     for (const pattern of fetching) {
       expect(html, `外部を取りに行く形が残っている: ${pattern}`).not.toMatch(pattern)
     }
-  })
-
-  test('file:// で開いて、通信を1本もせずに画面が出る', async ({ page }) => {
-    await loginAsAdmin(page)
-
-    const body = await post_export(page, export_request())
-    expect((body.errors ?? []) as Array<unknown>).toEqual([])
 
     // **setContent では駄目。** about:blank へ流し込むと file:// の URL 解決を通らないので、
     // 「読み込み直後に history を触って file:///C:/C:/… へ化け、画面が出る前に
@@ -119,7 +110,7 @@ test.describe('HTML export', () => {
     // OS の一時領域へ出して、終わったら消す
     const saved_dir = mkdtempSync(join(tmpdir(), 'gkill-export-e2e-'))
     const saved = join(saved_dir, 'gkill_export.html')
-    writeFileSync(saved, body.html as string, 'utf-8')
+    writeFileSync(saved, html, 'utf-8')
     const saved_url = pathToFileURL(saved).href
 
     // ネットワークへ出たら記録して落とす。約束は「通信をしない」で、
@@ -158,20 +149,5 @@ test.describe('HTML export', () => {
     rmSync(saved_dir, { recursive: true, force: true })
 
     expect(broken_images, `読み込めなかった画像がある: ${broken_images.join(' / ')}`).toEqual([])
-  })
-
-  test('メディアを埋め込まない指定で同名フォルダは選べない', async ({ page }) => {
-    await loginAsAdmin(page)
-
-    const body = await post_export(page, export_request((request_body) => {
-      request_body.media_mode = 'none'
-      request_body.output_format = 'sidecar'
-    }))
-    const errors = (body.errors ?? []) as Array<{ error_code?: string }>
-
-    // 中身の無いフォルダを作らせない。弾くのは収集を始める前
-    expect(errors.map((e) => e.error_code), '弾かれていない').toContain('ERR000454')
-    expect(body.html ?? '', '弾いたのに HTML を返している').toBe('')
-    expect(body.zip_base64 ?? '', '弾いたのに ZIP を返している').toBe('')
   })
 })

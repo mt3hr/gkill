@@ -575,3 +575,43 @@ func TestGeminiPluginDirDefaultDoesNotWarn(t *testing.T) {
 		t.Errorf("自分のフォルダで警告が出ている: %v", got)
 	}
 }
+
+// GetMsgByID は存在する ID を返し、存在しない ID にはエラーを返す。
+func TestGeminiGetMsgByIDHitAndMiss(t *testing.T) {
+	c, pluginDir := newTestCache(t)
+	dataDir := t.TempDir()
+	writeActivityZip(t, dataDir, []testRecord{{
+		conv: testConvA, at: testTimeA, title: jaPromptPrefix + "単体取得テスト",
+		replies: []string{"<p>返答です</p>"},
+	}})
+	if err := c.build(pluginDir, []string{dataDir}); err != nil {
+		t.Fatalf("build: %v", err)
+	}
+	msgs, err := c.GetMessages(pluginDir)
+	if err != nil || len(msgs) != 2 {
+		t.Fatalf("GetMessages = %d件, err=%v", len(msgs), err)
+	}
+	_, got, err := c.GetMsgByID(pluginDir, msgs[0].MsgID)
+	if err != nil || got.MsgID != msgs[0].MsgID {
+		t.Fatalf("GetMsgByID(hit) = %+v, err=%v", got, err)
+	}
+	if _, _, err := c.GetMsgByID(pluginDir, "00000000-0000-0000-0000-000000000000"); err == nil {
+		t.Errorf("GetMsgByID(miss) expected error, got nil")
+	}
+}
+
+// 1回の書き出し内で同じ (convID, 時刻) が複数並んでも、ordinal 採番により ID が衝突せず全件残る。
+func TestGeminiSameTimestampRecordsGetDistinctIDs(t *testing.T) {
+	c, pluginDir := newTestCache(t)
+	dataDir := t.TempDir()
+	writeActivityZip(t, dataDir, []testRecord{
+		{conv: testConvA, at: testTimeA, title: jaPromptPrefix + "1件目", replies: []string{"<p>返答1</p>"}},
+		{conv: testConvA, at: testTimeA, title: jaPromptPrefix + "2件目", replies: []string{"<p>返答2</p>"}},
+	})
+	if err := c.build(pluginDir, []string{dataDir}); err != nil {
+		t.Fatalf("build: %v", err)
+	}
+	if got := countMessages(t, c); got != 4 {
+		t.Errorf("同一時刻2往復の発言数 = %d, want 4", got)
+	}
+}

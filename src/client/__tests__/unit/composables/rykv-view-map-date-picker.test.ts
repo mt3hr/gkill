@@ -44,8 +44,8 @@ vi.mock('@/classes/kyou-reload', () => ({
 // 本番同様に gkill-api を先に評価させる
 import '@/classes/api/gkill-api'
 import { useRykvColumns } from '@/classes/use-rykv-columns'
-import type { RykvViewProps } from '@/pages/views/rykv-view-props'
-import type { RykvViewEmits } from '@/pages/views/rykv-view-emits'
+import type { RykvColumnsViewProps } from '@/pages/views/rykv-columns-view-props'
+import type { RykvColumnsViewEmits } from '@/pages/views/rykv-columns-view-emits'
 import {
   createColumnViewMockApi,
   makeColumnQuery,
@@ -54,14 +54,12 @@ import {
   flushAsync,
 } from '../../helpers/rykv-mi-harness'
 
-const noop_emits = (() => { }) as unknown as RykvViewEmits
+const noop_emits = (() => { }) as unknown as RykvColumnsViewEmits
 
 function createView() {
   const { api, pending_get_kyous } = createColumnViewMockApi()
-  const raw_props = makeColumnViewProps(api, {}, {
-    share_title: '',
-  })
-  const props = raw_props as unknown as RykvViewProps
+  const raw_props = makeColumnViewProps(api, {})
+  const props = raw_props as unknown as RykvColumnsViewProps
   const view = useRykvColumns({ props, emits: noop_emits })
   return { api, pending_get_kyous, view }
 }

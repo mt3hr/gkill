@@ -60,7 +60,6 @@ describe('parse_exported_payload', () => {
         expect(payload?.with_dnote).toBe(false)
         expect(payload?.with_map).toBe(false)
         expect(payload?.with_sidebar).toBe(false)
-        expect(payload?.warnings).toEqual([])
     })
 
     it('画面のオプションは true のときだけ true（文字列の "true" で通さない）', () => {
@@ -135,6 +134,17 @@ describe('build_exported_api', () => {
         })
         expect(api.exported_application_config.dnote_json_data).toBe('[{"title":"定義A"}]')
         expect(api.exported_application_config.rykv_image_list_column_number).toBe(4)
+    })
+
+    // 出力用の印はここ1か所で立てる（API の get_application_config と出力ページは立て直さない）
+    it('出力用の印を立てる（焼き込み側の値には頼らない）', () => {
+        const api = build_exported_api({
+            schema_version: 1,
+            application_config: { is_loaded: false, for_export_kyou: false, rykv_hot_reload: false },
+        })
+        expect(api.exported_application_config.for_export_kyou, '出力の印が立っていない').toBe(true)
+        expect(api.exported_application_config.is_loaded, '読み込み済みでないと列が作られない').toBe(true)
+        expect(api.exported_application_config.rykv_hot_reload, '初期検索が走らず列が空のまま').toBe(true)
     })
 
     it('プラグインの本文を辞書へ入れる（文字列以外は捨てる）', () => {

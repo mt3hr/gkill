@@ -677,6 +677,12 @@ func (p *pluginTimeIsRepositoryImpl) FindTimeIs(ctx context.Context, query *find
 		if !pluginMatchCalendar(record.TimeIs.StartTime, query) {
 			continue
 		}
+		// playing_time は findKyous と同じ条件で絞る。ここで絞らないと、メモ帳の打刻終了
+		// （kftl_timeis.go の findPlayingTimeIsEntries）・共有・HTML 出力が終了済みの
+		// プラグインの打刻を「実行中」として拾い、終了ではプラグインの ID へ native の版を書いてしまう。
+		if query != nil && query.PlayingTime != nil && !pluginTimeIsPlayingAt(record.TimeIs, *query.PlayingTime) {
+			continue
+		}
 		timeiss = append(timeiss, *record.TimeIs)
 	}
 	return timeiss, nil

@@ -26,9 +26,7 @@ type ExportKyouHTMLResponse struct {
 	// HTML と同名フォルダをまとめた ZIP を base64 にしたもの。
 	ZipBase64 string `json:"zip_base64"`
 
-	// Partial は予算に収まらず一部を落としたとき真。落としたものは Warnings に入る。
+	// Partial は予算に収まらない・読めないなどで一部を落としたとき真。
+	// 何を落としたかは Messages に warning（MSG000096）として入る。
 	Partial bool `json:"partial"`
-
-	// Warnings は落としたものや、生成が間に合わなかったサムネイルの知らせ。
-	Warnings []string `json:"warnings"`
 }

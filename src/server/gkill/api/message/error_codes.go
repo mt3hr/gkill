@@ -501,7 +501,7 @@ const (
 	// サーバの逆引きが壊れていない限り届かない保険です。500 です。
 	DeleteKyouCascadeDepthExceededError = "ERR000451"
 
-	// rykv の HTML 出力（/api/export_kyou_html）。
+	// 画面（rykv・タスク）の HTML 出力（/api/export_kyou_html）。
 	// InvalidExportKyouHTMLRequestDataError は要求の JSON が読めないときのものです。400 です。
 	InvalidExportKyouHTMLRequestDataError = "ERR000452"
 	// InvalidExportKyouHTMLResponseDataError は応答の JSON 化に失敗したときのものです。500 です。

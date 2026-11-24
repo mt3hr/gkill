@@ -31,6 +31,8 @@ import { remove_kyou_from_list_by_id, apply_mi_projection, insert_kyou_sorted } 
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ComponentRef } from '@/classes/component-ref'
 import { MI_ALL_BOARD_KEY } from '@/classes/mi-board-names'
+import type { Text } from '@/classes/datas/text'
+import type { Notification } from '@/classes/datas/notification'
 
 // ドラッグ&ドロップで受け取ったJSONからMiに写してよいフィールド。
 // 内容は Mi.clone() が複製しているフィールドと同じ
@@ -125,6 +127,9 @@ export function useMiColumns(options: {
     // リサイズできるダイアログの中でも描かれるので、幅はあとから変わる
     const drawer_mode_is_mobile = computed<boolean>(() => !(props.app_content_width.valueOf() >= 760))
     const is_loading: Ref<boolean> = ref(true)
+    // 読み込み中オーバーレイの幅。このビューはポート(rudbeckia)のフローティングダイアログの中でも描かれ、
+    // そこでは基準が画面ではなくダイアログの箱なので 100vw は使えない。props から作る（rykv の use-rykv-columns.ts と対）
+    const overlay_target_min_width_px = computed(() => is_loading.value ? `${props.app_content_width.valueOf()}px` : '0px')
     const inited = ref(false)
     const is_restoring_columns = ref(false) // 保存済み列の初期検索がまだ走っている。表示制御には使わない
     const running_search_count = ref(0) // 飛行中の検索の本数。準備完了信号にだけ使う
@@ -340,9 +345,9 @@ export function useMiColumns(options: {
         emits('deleted_kyou', deleted_kyou)
     }
 
-    // 対象のKyouが載っている列のクエリを探す。focused_kyou と opened_dialogs は
-    // 自分がどの列由来か知らないので、列を総当たりして最初に見つかったものを使う
-    // その Kyou が乗っている列の検索条件を返す。
+    // 対象の Kyou が載っている列の検索条件を返す。
+    // focused_kyou と opened_dialogs は自分がどの列由来か知らないので、
+    // 列を総当たりして最初に見つかったものを使う。
     //
     // rykv の対になる関数は `find_reload_query_for(kyou_id, data_type)` で、
     // あちらは列のクエリが Mi 用ではない（for_mi=false）ため
@@ -1245,6 +1250,7 @@ export function useMiColumns(options: {
         drawer,
         drawer_mode_is_mobile,
         is_loading,
+        overlay_target_min_width_px,
         inited,
         is_restoring_columns,
 

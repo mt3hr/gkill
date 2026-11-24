@@ -14,6 +14,7 @@ import (
 	"unicode"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
+	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 )
@@ -76,12 +77,15 @@ type exportedKyouPayload struct {
 	// 知らない値と欠損を rykv へ寄せるので、印を足す前の出力も読める。
 	Screen string `json:"screen"`
 
-	Title       string   `json:"title"`
-	LocaleName  string   `json:"locale_name"`
-	WithDnote   bool     `json:"with_dnote"`
-	WithMap     bool     `json:"with_map"`
-	WithSidebar bool     `json:"with_sidebar"`
-	Warnings    []string `json:"warnings"`
+	Title       string `json:"title"`
+	LocaleName  string `json:"locale_name"`
+	WithDnote   bool   `json:"with_dnote"`
+	WithMap     bool   `json:"with_map"`
+	WithSidebar bool   `json:"with_sidebar"`
+
+	// Warnings は出力しきれなかったものの警告。**焼き込まない**（出力した本人への知らせで、
+	// 渡した相手に見せるものではない）。応答の messages へ warning として載せる。
+	Warnings []*message.GkillMessage `json:"-"`
 
 	// ApplicationConfig は焼き込む設定。**google_map_api_key は必ず空にする**
 	// （落とすと利用者のキーが共有先へ漏れる）

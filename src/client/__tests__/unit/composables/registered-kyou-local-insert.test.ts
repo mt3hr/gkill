@@ -124,7 +124,6 @@ const view_cases: ViewCase[] = [
         app_title_bar_height: 50,
         app_content_height: 600,
         app_content_width: 800,
-        share_title: '',
       } as unknown as Parameters<typeof useRykvColumns>[0]['props']
       const emits = (() => { }) as unknown as Parameters<typeof useRykvColumns>[0]['emits']
       return { api, pending_get_kyous, view: useRykvColumns({ props, emits }) as unknown as ColumnViewUnderTest }

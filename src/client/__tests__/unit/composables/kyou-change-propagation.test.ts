@@ -39,8 +39,8 @@ import { nextTick } from 'vue'
 import { useRykvColumns } from '@/classes/use-rykv-columns'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { create_kyou_change_bus } from '@/classes/kyou-change-bus'
-import type { RykvViewProps } from '@/pages/views/rykv-view-props'
-import type { RykvViewEmits } from '@/pages/views/rykv-view-emits'
+import type { RykvColumnsViewProps } from '@/pages/views/rykv-columns-view-props'
+import type { RykvColumnsViewEmits } from '@/pages/views/rykv-columns-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
 import {
   createColumnViewMockApi,
@@ -51,7 +51,7 @@ import {
   flushAsync,
 } from '../../helpers/rykv-mi-harness'
 
-const noop_emits = (() => { }) as unknown as RykvViewEmits
+const noop_emits = (() => { }) as unknown as RykvColumnsViewEmits
 
 function kyous(ids: string[]): Kyou[] {
   return ids.map((id) => ({ id: id })) as unknown as Kyou[]
@@ -61,12 +61,11 @@ function kyous(ids: string[]): Kyou[] {
 function createHostedView(origin_id: string, bus: ReturnType<typeof create_kyou_change_bus>) {
   const { api, pending_get_kyous } = createColumnViewMockApi()
   const raw_props = makeColumnViewProps(api, {}, {
-    share_title: '',
     is_hosted_in_dialog: true,
     column_state_instance_key: origin_id === 'window-a' ? '' : '2',
     kyou_change_channel: { bus: bus, origin_id: origin_id },
   })
-  const props = raw_props as unknown as RykvViewProps
+  const props = raw_props as unknown as RykvColumnsViewProps
   const view = useRykvColumns({ props, emits: noop_emits })
   view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
   return {
@@ -156,10 +155,9 @@ describe('画面間の変更伝播', () => {
     const bus = create_kyou_change_bus()
     const { api } = createColumnViewMockApi()
     const raw_props = makeColumnViewProps(api, {}, {
-      share_title: '',
       kyou_change_channel: null,
     })
-    const props = raw_props as unknown as RykvViewProps
+    const props = raw_props as unknown as RykvColumnsViewProps
     const view = useRykvColumns({ props, emits: noop_emits })
     view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
     setupColumns(view, [makeColumnQuery('col-solo')], [kyous(['k1'])])

@@ -18,7 +18,7 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
-// HandleExportKyouHTML は rykv の画面を1枚の HTML として組み立てて返します。
+// HandleExportKyouHTML は画面（rykv・タスク）を1枚の HTML として組み立てて返します。
 //
 // POST /api/export_kyou_html（wrapAuthRepos）
 // req_res.ExportKyouHTMLRequest / req_res.ExportKyouHTMLResponse
@@ -45,8 +45,8 @@ func (g *GkillServerAPI) HandleExportKyouHTML(w http.ResponseWriter, r *http.Req
 		writeErrorStatus(r.Context(), w, response.Errors)
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
-			err = fmt.Errorf("error at parse export rykv html response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error at parse export rykv html response to json", "error", fmt.Sprintf("%q", err))
+			err = fmt.Errorf("error at parse export kyou html response to json: %w", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error at parse export kyou html response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidExportKyouHTMLResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_KYOU_HTML_MESSAGE"}),
@@ -59,8 +59,8 @@ func (g *GkillServerAPI) HandleExportKyouHTML(w http.ResponseWriter, r *http.Req
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err = fmt.Errorf("error at parse export rykv html request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error at parse export rykv html request to json", "error", fmt.Sprintf("%q", err))
+		err = fmt.Errorf("error at parse export kyou html request to json: %w", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error at parse export kyou html request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidExportKyouHTMLRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_KYOU_HTML_MESSAGE"}),
@@ -175,9 +175,10 @@ func (g *GkillServerAPI) HandleExportKyouHTML(w http.ResponseWriter, r *http.Req
 		response.FileName = fileNameBase + ".html"
 		response.HTML = rendered
 	}
-	response.Warnings = payload.Warnings
-	// 予算や読み込みの失敗で落としたものがあれば、そのぶん欠けている
+	// 予算や読み込みの失敗で落としたものがあれば、そのぶん欠けている。
+	// 警告は成功の知らせと並べて messages へ（errors に載せると保存されない）
 	response.Partial = len(payload.Warnings) != 0
+	response.Messages = append(response.Messages, payload.Warnings...)
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.ExportKyouHTMLSuccessMessage,
 		Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_EXPORT_KYOU_HTML_MESSAGE"}),
@@ -244,7 +245,7 @@ func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_re
 		WithDnote:             request.IncludeDnote,
 		WithMap:               request.IncludeMap,
 		WithSidebar:           request.IncludeSidebar,
-		Warnings:              []string{},
+		Warnings:              []*message.GkillMessage{},
 		ApplicationConfig:     applicationConfig,
 		Columns:               []exportedColumn{},
 		Kyous:                 []reps.Kyou{},
