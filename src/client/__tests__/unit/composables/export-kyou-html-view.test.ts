@@ -9,12 +9,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // 先に読んで評価順を決めないと `class extends value undefined` になる（ADR-0903）
 import '@/classes/api/gkill-api'
 import { nextTick } from 'vue'
-import { useExportRykvHTMLView } from '@/classes/use-export-rykv-html-view'
+import { useExportKyouHTMLView } from '@/classes/use-export-kyou-html-view'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { ExportRykvHTMLResponse } from '@/classes/api/req_res/export-rykv-html-response'
+import { ExportKyouHTMLResponse } from '@/classes/api/req_res/export-kyou-html-response'
 import type { GkillAPI } from '@/classes/api/gkill-api'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
-import type { ExportRykvHTMLViewProps } from '@/pages/views/export-rykv-html-view-props'
+import type { ExportKyouHTMLViewProps } from '@/pages/views/export-kyou-html-view-props'
 
 const saved_files: Array<{ file_name: string }> = []
 vi.mock('@/classes/save-as', () => ({
@@ -29,8 +29,8 @@ function make_query(query_id: string): FindKyouQuery {
     return query
 }
 
-function make_response(customize?: (res: ExportRykvHTMLResponse) => void): ExportRykvHTMLResponse {
-    const res = new ExportRykvHTMLResponse()
+function make_response(customize?: (res: ExportKyouHTMLResponse) => void): ExportKyouHTMLResponse {
+    const res = new ExportKyouHTMLResponse()
     res.output_format = 'single'
     res.file_name = '出力.html'
     res.html = '<!doctype html><html></html>'
@@ -40,28 +40,28 @@ function make_response(customize?: (res: ExportRykvHTMLResponse) => void): Expor
     return res
 }
 
-function make_props(customize?: (props: ExportRykvHTMLViewProps) => void): {
-    props: ExportRykvHTMLViewProps,
-    export_rykv_html: ReturnType<typeof vi.fn>,
+function make_props(customize?: (props: ExportKyouHTMLViewProps) => void): {
+    props: ExportKyouHTMLViewProps,
+    export_kyou_html: ReturnType<typeof vi.fn>,
 } {
-    const export_rykv_html = vi.fn(async () => make_response())
+    const export_kyou_html = vi.fn(async () => make_response())
     const props = {
         application_config: {} as ApplicationConfig,
-        gkill_api: { export_rykv_html } as unknown as GkillAPI,
+        gkill_api: { export_kyou_html } as unknown as GkillAPI,
         columns: [make_query('q1'), make_query('q2'), make_query('q3')],
         focused_column_index: 1,
-    } as ExportRykvHTMLViewProps
+    } as ExportKyouHTMLViewProps
     if (customize) {
         customize(props)
     }
-    return { props, export_rykv_html }
+    return { props, export_kyou_html }
 }
 
 function make_emits() {
     const calls: Array<{ event: string }> = []
     const emits = ((event: string) => {
         calls.push({ event })
-    }) as unknown as Parameters<typeof useExportRykvHTMLView>[0]['emits']
+    }) as unknown as Parameters<typeof useExportKyouHTMLView>[0]['emits']
     return { emits, calls }
 }
 
@@ -69,11 +69,11 @@ beforeEach(() => {
     saved_files.length = 0
 })
 
-describe('useExportRykvHTMLView の既定値', () => {
+describe('useExportKyouHTMLView の既定値', () => {
     it('計画どおりの既定で開く', () => {
         const { props } = make_props()
         const { emits } = make_emits()
-        const view = useExportRykvHTMLView({ props, emits })
+        const view = useExportKyouHTMLView({ props, emits })
 
         expect(view.include_tags.value).toBe(true)
         expect(view.include_texts.value).toBe(true)
@@ -93,7 +93,7 @@ describe('メディアを埋め込まないと同名フォルダは選べない'
     it('「埋め込まない」へ変えると、選択済みの同名フォルダが単一 HTML へ戻る', async () => {
         const { props } = make_props()
         const { emits } = make_emits()
-        const view = useExportRykvHTMLView({ props, emits })
+        const view = useExportKyouHTMLView({ props, emits })
 
         view.output_format.value = 'sidecar'
         view.media_mode.value = 'none'
@@ -108,7 +108,7 @@ describe('メディアを埋め込まないと同名フォルダは選べない'
     it('メディアを入れるなら同名フォルダを選べる', () => {
         const { props } = make_props()
         const { emits } = make_emits()
-        const view = useExportRykvHTMLView({ props, emits })
+        const view = useExportKyouHTMLView({ props, emits })
 
         view.media_mode.value = 'full'
         expect(view.is_sidecar_selectable.value).toBe(true)
@@ -119,7 +119,7 @@ describe('出力する列', () => {
     it('既定では表示中のすべての列', () => {
         const { props } = make_props()
         const { emits } = make_emits()
-        const view = useExportRykvHTMLView({ props, emits })
+        const view = useExportKyouHTMLView({ props, emits })
 
         expect(view.build_request().columns.map(q => q.query_id)).toEqual(['q1', 'q2', 'q3'])
     })
@@ -127,7 +127,7 @@ describe('出力する列', () => {
     it('フォーカス列を選ぶと、その1本だけ', () => {
         const { props } = make_props()
         const { emits } = make_emits()
-        const view = useExportRykvHTMLView({ props, emits })
+        const view = useExportKyouHTMLView({ props, emits })
 
         view.target.value = 'focused'
         expect(view.build_request().columns.map(q => q.query_id)).toEqual(['q2'])
@@ -136,7 +136,7 @@ describe('出力する列', () => {
     it('フォーカスされている列が無ければ、全列のまま', () => {
         const { props } = make_props(p => { p.focused_column_index = -1 })
         const { emits } = make_emits()
-        const view = useExportRykvHTMLView({ props, emits })
+        const view = useExportKyouHTMLView({ props, emits })
 
         view.target.value = 'focused'
         expect(view.has_focused_column.value).toBe(false)
@@ -147,7 +147,7 @@ describe('出力する列', () => {
     it('列の条件はそのまま渡す（作り直さない）', () => {
         const { props } = make_props()
         const { emits } = make_emits()
-        const view = useExportRykvHTMLView({ props, emits })
+        const view = useExportKyouHTMLView({ props, emits })
 
         expect(view.build_request().columns[0]).toBe(props.columns[0])
     })
@@ -157,7 +157,7 @@ describe('出力の受け取り', () => {
     it('単一 HTML を保存して閉じる', async () => {
         const { props } = make_props()
         const { emits, calls } = make_emits()
-        const view = useExportRykvHTMLView({ props, emits })
+        const view = useExportKyouHTMLView({ props, emits })
 
         await view.export_html()
 
@@ -167,28 +167,28 @@ describe('出力の受け取り', () => {
     })
 
     it('同名フォルダは ZIP として保存する', async () => {
-        const { props, export_rykv_html } = make_props()
-        export_rykv_html.mockImplementation(async () => make_response(res => {
+        const { props, export_kyou_html } = make_props()
+        export_kyou_html.mockImplementation(async () => make_response(res => {
             res.output_format = 'sidecar'
             res.file_name = '出力.zip'
             res.html = ''
             res.zip_base64 = 'UEsDBA=='
         }))
         const { emits } = make_emits()
-        const view = useExportRykvHTMLView({ props, emits })
+        const view = useExportKyouHTMLView({ props, emits })
 
         await view.export_html()
         expect(saved_files.map(f => f.file_name)).toEqual(['出力.zip'])
     })
 
     it('エラーのときは保存もせず閉じもしない', async () => {
-        const { props, export_rykv_html } = make_props()
-        export_rykv_html.mockImplementation(async () => make_response(res => {
-            res.errors = [{ error_code: 'ERR000454', error_message: 'だめ' }] as ExportRykvHTMLResponse['errors']
+        const { props, export_kyou_html } = make_props()
+        export_kyou_html.mockImplementation(async () => make_response(res => {
+            res.errors = [{ error_code: 'ERR000454', error_message: 'だめ' }] as ExportKyouHTMLResponse['errors']
             res.html = ''
         }))
         const { emits, calls } = make_emits()
-        const view = useExportRykvHTMLView({ props, emits })
+        const view = useExportKyouHTMLView({ props, emits })
 
         await view.export_html()
 
@@ -199,17 +199,17 @@ describe('出力の受け取り', () => {
     })
 
     it('出力中は二重に投げない', async () => {
-        const { props, export_rykv_html } = make_props()
+        const { props, export_kyou_html } = make_props()
         let resolve_response: (() => void) | null = null
-        export_rykv_html.mockImplementation(() => new Promise(resolve => {
+        export_kyou_html.mockImplementation(() => new Promise(resolve => {
             resolve_response = () => resolve(make_response())
         }))
         const { emits } = make_emits()
-        const view = useExportRykvHTMLView({ props, emits })
+        const view = useExportKyouHTMLView({ props, emits })
 
         const first = view.export_html()
         await view.export_html()
-        expect(export_rykv_html, '出力中にもう1本投げている').toHaveBeenCalledTimes(1)
+        expect(export_kyou_html, '出力中にもう1本投げている').toHaveBeenCalledTimes(1)
 
         resolve_response!()
         await first

@@ -9,7 +9,7 @@
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                 @requested_show_share_kyou_link_dialog="(share_kyou_list_info: ShareKyousInfo) => show_share_kyou_list_link_dialog(share_kyou_list_info)"
-                @requested_export_rykv_html="emits('requested_export_rykv_html')"
+                @requested_export_kyou_html="emits('requested_export_kyou_html')"
                 ref="share_kyou_list_dialog" />
             <ShareKyousListLinkDialog :application_config="application_config" :gkill_api="gkill_api"
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"

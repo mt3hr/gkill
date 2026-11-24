@@ -2,13 +2,13 @@ package req_res
 
 import "github.com/mt3hr/gkill/src/server/gkill/api/message"
 
-// ExportRykvHTMLResponse は出力した HTML（または ZIP）を返す応答。
+// ExportKyouHTMLResponse は出力した HTML（または ZIP）を返す応答。
 //
 // **ファイルそのものを body で返さない。** Content-Disposition は src/server に1件も無く、
 // クライアントの共通層（gkill_fetch）が JSON 以外の応答を bad_response の合成応答に
 // 変えてしまうため、受け取った側がエラーとして扱う。スキルの ZIP 配布が同じ理由で
 // base64 を選んでいるので、それに倣う（ADR-0712）。
-type ExportRykvHTMLResponse struct {
+type ExportKyouHTMLResponse struct {
 	Messages message.GkillMessages `json:"messages"`
 
 	Errors message.GkillErrors `json:"errors"`

@@ -1,5 +1,5 @@
 /**
- * useExportedRykvPage の焼き込み読み取り。
+ * useExportedKyouPage の焼き込み読み取り。
  *
  * 「HTML で出力」したファイルは通信をしないので、データは HTML 自身へ焼き込まれた
  * <script type="application/json"> から読む。読めなければ「記録が含まれていません」を
@@ -9,7 +9,7 @@
  */
 import { describe, it, expect, afterEach } from 'vitest'
 import '@/classes/api/gkill-api'
-import { useExportedRykvPage } from '@/classes/use-exported-rykv-page'
+import { useExportedKyouPage } from '@/classes/use-exported-kyou-page'
 import type { Ref } from 'vue'
 
 function put_json_element(element_id: string, text: string): void {
@@ -36,22 +36,22 @@ afterEach(() => {
     document.body.innerHTML = ''
 })
 
-describe('useExportedRykvPage の焼き込み読み取り', () => {
+describe('useExportedKyouPage の焼き込み読み取り', () => {
     it('差し込みが無ければ is_ready は false', () => {
-        const { is_ready, share_title } = useExportedRykvPage()
+        const { is_ready, share_title } = useExportedKyouPage()
         expect(is_ready.value).toBe(false)
         expect(share_title.value).toBe('')
     })
 
     it('ガワだけの {} でも is_ready は false（template.html を直接開いた場合）', () => {
         put_json_element('gkill-export-data', '{}')
-        const { is_ready } = useExportedRykvPage()
+        const { is_ready } = useExportedKyouPage()
         expect(is_ready.value, 'schema_version が無い差し込みを受け入れている').toBe(false)
     })
 
     it('壊れた JSON でも例外を投げず is_ready は false', () => {
         put_json_element('gkill-export-data', '{ こわれている')
-        const { is_ready } = useExportedRykvPage()
+        const { is_ready } = useExportedKyouPage()
         expect(is_ready.value).toBe(false)
     })
 
@@ -61,7 +61,7 @@ describe('useExportedRykvPage の焼き込み読み取り', () => {
             title: '出力したタイトル',
             locale_name: 'ja',
         }))
-        const { is_ready, share_title } = useExportedRykvPage()
+        const { is_ready, share_title } = useExportedKyouPage()
         await wait_ready(is_ready)
         expect(is_ready.value).toBe(true)
         expect(share_title.value).toBe('出力したタイトル')
@@ -69,7 +69,7 @@ describe('useExportedRykvPage の焼き込み読み取り', () => {
 
     it('タイトルが欠けていても読める（空文字になる）', async () => {
         put_json_element('gkill-export-data', JSON.stringify({ schema_version: 1 }))
-        const { is_ready, share_title } = useExportedRykvPage()
+        const { is_ready, share_title } = useExportedKyouPage()
         await wait_ready(is_ready)
         expect(is_ready.value).toBe(true)
         expect(share_title.value).toBe('')
@@ -83,7 +83,7 @@ describe('useExportedRykvPage の焼き込み読み取り', () => {
             title: 't',
             locale_name: 'en',
         }))
-        expect(() => useExportedRykvPage()).not.toThrow()
+        expect(() => useExportedKyouPage()).not.toThrow()
     })
 
     it('ロケールの差し込みが壊れていても落ちない', () => {
@@ -93,7 +93,7 @@ describe('useExportedRykvPage の焼き込み読み取り', () => {
             locale_name: 'en',
         }))
         put_json_element('gkill-export-i18n', '{ こわれている')
-        expect(() => useExportedRykvPage()).not.toThrow()
+        expect(() => useExportedKyouPage()).not.toThrow()
     })
 })
 
@@ -126,7 +126,7 @@ describe('サイドバーのチェックツリーは焼いたデータから組�
 
     it('木が組み終わるまで is_ready は立たない', async () => {
         put_payload()
-        const { is_ready, application_config } = useExportedRykvPage()
+        const { is_ready, application_config } = useExportedKyouPage()
         // 立った瞬間には木がもう組まれていること。
         // 先に画面を描くと、サイドバーの各節が「チェック0個」を生成して emit し、
         // tags = [] / reps = []（非 null の空配列 = 0件指定）で**列が全部空になる**
@@ -137,7 +137,7 @@ describe('サイドバーのチェックツリーは焼いたデータから組�
 
     it('焼いたタグと「タグ無し」が木に出る', async () => {
         put_payload()
-        const { is_ready, application_config } = useExportedRykvPage()
+        const { is_ready, application_config } = useExportedKyouPage()
         await wait_ready(is_ready)
         const names = tag_names(application_config.value)
         expect(names).toContain('タグA')
@@ -147,7 +147,7 @@ describe('サイドバーのチェックツリーは焼いたデータから組�
 
     it('木のルートは入れ物にする（葉のままだと子が描かれない）', async () => {
         put_payload()
-        const { is_ready, application_config } = useExportedRykvPage()
+        const { is_ready, application_config } = useExportedKyouPage()
         await wait_ready(is_ready)
         for (const root of [
             application_config.value.tag_struct,
@@ -186,7 +186,7 @@ describe('サイドバーのチェックツリーは焼いたデータから組�
                 kyou_ids: ['a'],
             }],
         }))
-        const { is_ready, application_config } = useExportedRykvPage()
+        const { is_ready, application_config } = useExportedKyouPage()
         await wait_ready(is_ready)
         expect(is_ready.value, '木を組む途中で例外になっている').toBe(true)
         expect(tag_names(application_config.value)).toContain('タグA')
@@ -213,7 +213,7 @@ describe('サイドバーのチェックツリーは焼いたデータから組�
             // チェックされていたのは タグA と RepA だけ
             columns: [{ query: { query_id: 'q1', tags: ['タグA'], reps: ['RepA'] }, kyou_ids: ['a', 'b'] }],
         }))
-        const { is_ready, application_config } = useExportedRykvPage()
+        const { is_ready, application_config } = useExportedKyouPage()
         await wait_ready(is_ready)
 
         const names = tag_names(application_config.value)
@@ -227,7 +227,7 @@ describe('サイドバーのチェックツリーは焼いたデータから組�
 
     it('ルートの id は木ごとに別（空のままだと4本が同じ id になる）', async () => {
         put_payload()
-        const { is_ready, application_config } = useExportedRykvPage()
+        const { is_ready, application_config } = useExportedKyouPage()
         await wait_ready(is_ready)
         const ids = [
             application_config.value.tag_struct,
@@ -240,7 +240,7 @@ describe('サイドバーのチェックツリーは焼いたデータから組�
 
     it('記録保管場所の木は、焼いた記録に現れる rep だけになる', async () => {
         put_payload()
-        const { is_ready, application_config } = useExportedRykvPage()
+        const { is_ready, application_config } = useExportedKyouPage()
         await wait_ready(is_ready)
         const rep_names = (application_config.value.rep_struct.children ?? []).map(child => child.rep_name)
         expect(rep_names).toEqual(['RepA'])

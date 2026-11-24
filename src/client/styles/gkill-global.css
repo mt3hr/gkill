@@ -2,7 +2,7 @@
  * gkill のグローバル CSS。**scoped ではない**。
  *
  * ここは元々 App.vue の <style lang="css"> にあった。出力 HTML（「HTML で出力」した
- * 1枚のファイル）は App.vue を使わず exported-rykv-page.vue を直接 mount するので、
+ * 1枚のファイル）は App.vue を使わず exported-kyou-page.vue を直接 mount するので、
  * App.vue に置いたままでは**出力ビルドのチャンクグラフに入らず丸ごと欠ける**。
  * 画面の高さ・スクロール・Kyou の画像サイズ・Lantana のサイズ・
  * フローティングダイアログの見た目が全部ここにあるので、欠けると

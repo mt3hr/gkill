@@ -18,7 +18,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <ExportRykvHTMLView :application_config="application_config" :gkill_api="gkill_api" :columns="columns"
+        <ExportKyouHTMLView :application_config="application_config" :gkill_api="gkill_api" :columns="columns"
           :focused_column_index="focused_column_index"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
@@ -30,16 +30,16 @@
 </template>
 
 <script lang="ts" setup>
-import type { ExportRykvHTMLDialogEmits } from './export-rykv-html-dialog-emits'
-import type { ExportRykvHTMLDialogProps } from './export-rykv-html-dialog-props'
-import ExportRykvHTMLView from '../views/export-rykv-html-view.vue'
+import type { ExportKyouHTMLDialogEmits } from './export-kyou-html-dialog-emits'
+import type { ExportKyouHTMLDialogProps } from './export-kyou-html-dialog-props'
+import ExportKyouHTMLView from '../views/export-kyou-html-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { i18n } from '@/i18n'
-import { useExportRykvHTMLDialog } from '@/classes/use-export-rykv-html-dialog'
+import { useExportKyouHTMLDialog } from '@/classes/use-export-kyou-html-dialog'
 
-const props = defineProps<ExportRykvHTMLDialogProps>()
-const emits = defineEmits<ExportRykvHTMLDialogEmits>()
-const { is_show_dialog, is_exporting, ui, show, hide, set_is_exporting } = useExportRykvHTMLDialog({ props, emits })
+const props = defineProps<ExportKyouHTMLDialogProps>()
+const emits = defineEmits<ExportKyouHTMLDialogEmits>()
+const { is_show_dialog, is_exporting, ui, show, hide, set_is_exporting } = useExportKyouHTMLDialog({ props, emits })
 defineExpose({ show, hide })
 </script>

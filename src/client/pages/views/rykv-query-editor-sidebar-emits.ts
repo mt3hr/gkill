@@ -8,7 +8,7 @@ export interface RykvQueryEditorSidebarEmits {
     (e: 'updated_query_clear', query: FindKyouQuery): void
     (e: 'updated_query', query: FindKyouQuery): void
     (e: 'requested_search', update_cache: boolean): void
-    (e: 'requested_export_rykv_html'): void
+    (e: 'requested_export_kyou_html'): void
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
 }

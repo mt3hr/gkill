@@ -266,7 +266,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-1003 | 共有リスト情報を削除する | `DeleteShareKyouListInfos` |
 | UC-1004 | 共有リスト情報を取得する | `GetShareKyouListInfos` |
 | UC-1005 | 共有 Kyou を取得する | `GetSharedKyous` |
-| UC-1006 | 検索結果を HTML ファイルに出力する | `ExportRykvHTML` |
+| UC-1006 | 検索結果を HTML ファイルに出力する | `ExportKyouHTML` |
 
 ### 2.12 その他
 

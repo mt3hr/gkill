@@ -188,9 +188,9 @@ var errorCodeHTTPStatus = map[string]int{
 	InvalidDeleteKyouCascadeRequestDataError:                        http.StatusBadRequest, // ERR000445
 	// 連鎖削除の起点にできない data_type（git_commit_log・プラグイン・付随データ）。
 	DeleteKyouCascadeUnsupportedDataTypeError: http.StatusBadRequest, // ERR000450
-	InvalidExportRykvHTMLRequestDataError:     http.StatusBadRequest, // ERR000452
+	InvalidExportKyouHTMLRequestDataError:     http.StatusBadRequest, // ERR000452
 	// 列が1本も無い・メディアを埋め込まないのに同名フォルダを選んだ・未知の指定。
-	InvalidExportRykvHTMLOptionError: http.StatusBadRequest, // ERR000454
+	InvalidExportKyouHTMLOptionError: http.StatusBadRequest, // ERR000454
 
 	// ---- 401 Unauthorized — 誰なのか確認できない ----
 	// クライアントの check_auth と MCP の再ログインがこの4つを契機にしている。
@@ -515,7 +515,7 @@ var errorCodeHTTPStatus = map[string]int{
 	InvalidDeleteKyouCascadeResponseDataError:                        http.StatusInternalServerError, // ERR000446
 	DeleteKyouCascadeError:                                           http.StatusInternalServerError, // ERR000447
 	DeleteKyouCascadeDepthExceededError:                              http.StatusInternalServerError, // ERR000451
-	InvalidExportRykvHTMLResponseDataError:                           http.StatusInternalServerError, // ERR000453
-	ExportRykvHTMLTemplateNotFoundError:                              http.StatusInternalServerError, // ERR000455
-	ExportRykvHTMLRenderError:                                        http.StatusInternalServerError, // ERR000456
+	InvalidExportKyouHTMLResponseDataError:                           http.StatusInternalServerError, // ERR000453
+	ExportKyouHTMLTemplateNotFoundError:                              http.StatusInternalServerError, // ERR000455
+	ExportKyouHTMLRenderError:                                        http.StatusInternalServerError, // ERR000456
 }

@@ -31,7 +31,7 @@ export interface RykvColumnsViewEmits {
     // スピナーのままにせず再試行の導線を出している
     (e: 'requested_reload_application_config'): void
     // サイドバーの「HTML で出力」。ダイアログはラッパが持つ
-    (e: 'requested_export_rykv_html'): void
+    (e: 'requested_export_kyou_html'): void
     // Enter / Ctrl+V のショートカット。ダイアログはラッパが持つ
     (e: 'requested_show_kftl_dialog'): void
     (e: 'requested_show_save_clipboard_to_file_dialog'): void

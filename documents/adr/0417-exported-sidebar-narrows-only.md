@@ -40,7 +40,7 @@
 **出力した時点の条件そのままなら、絞り込みを通さず焼いた配列をそのまま返す。**
 サーバが本文一致で入れた記録を「この条件では一致しない」と判定して、出力直後の画面が欠けるのを防ぐ。
 
-**サイドバーのチェックツリーは焼いたデータから組み直す**（`use-exported-rykv-page.ts` の
+**サイドバーのチェックツリーは焼いたデータから組み直す**（`use-exported-kyou-page.ts` の
 `build_sidebar_structs`）。利用者の設定した木をそのまま焼くと、出力に含めなかった
 タグ名・rep 名まで共有先に見える。
 
@@ -72,4 +72,4 @@
 
 - `src/client/__tests__/unit/classes/exported-kyou-payload.test.ts` — 「`build_exported_api` が注入する絞り込み」（タグ・記録保管場所・期間で絞れる／ワード条件は見ない／**どんな条件でも焼いた配列の部分集合しか返さない**／出力時の条件そのままなら焼いた配列をそのまま返す／タグを先に埋める）
 - `src/client/__tests__/unit/api/exported-kyou-api.test.ts` — 「絞り込みの注入には、その列の焼いた配列が渡る」「渡るのは画面の今の条件と焼いた条件の2つ」「注入が無ければ焼いたまま返す」
-- `src/client/__tests__/unit/composables/exported-rykv-page.test.ts` — 「サイドバーのチェックツリーは焼いたデータから組む」（木が組み終わるまで `is_ready` が立たない／焼いたタグと「タグ無し」が出る／焼いていないタグは出ない／ルートが入れ物になっている）
+- `src/client/__tests__/unit/composables/exported-kyou-page.test.ts` — 「サイドバーのチェックツリーは焼いたデータから組む」（木が組み終わるまで `is_ready` が立たない／焼いたタグと「タグ無し」が出る／焼いていないタグは出ない／ルートが入れ物になっている）

@@ -1,28 +1,28 @@
 'use strict'
 
 import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
-import type { ExportRykvHTMLViewEmits } from '@/pages/views/export-rykv-html-view-emits'
-import type { ExportRykvHTMLViewProps } from '@/pages/views/export-rykv-html-view-props'
+import type { ExportKyouHTMLViewEmits } from '@/pages/views/export-kyou-html-view-emits'
+import type { ExportKyouHTMLViewProps } from '@/pages/views/export-kyou-html-view-props'
 import {
-    ExportRykvHTMLRequest,
+    ExportKyouHTMLRequest,
     EXPORT_DEFAULT_MEDIA_BUDGET_BYTES,
     EXPORT_DEFAULT_MEDIA_ITEM_LIMIT_BYTES,
     type ExportMediaMode,
     type ExportOutputFormat,
-} from '@/classes/api/req_res/export-rykv-html-request'
+} from '@/classes/api/req_res/export-kyou-html-request'
 import { base64_to_blob } from '@/classes/file-base64'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { save_as } from '@/classes/save-as'
 
 /**
- * rykv の画面を HTML へ出力するダイアログの中身。
+ * 画面を HTML へ出力するダイアログの中身。
  *
  * 出力した HTML は通信をしない（地図だけ例外）。
- * 何を焼き込むかはここで選び、組み立てはサーバ（/api/export_rykv_html）が行う。
+ * 何を焼き込むかはここで選び、組み立てはサーバ（/api/export_kyou_html）が行う。
  */
-export function useExportRykvHTMLView(options: {
-    props: ExportRykvHTMLViewProps,
-    emits: ExportRykvHTMLViewEmits,
+export function useExportKyouHTMLView(options: {
+    props: ExportKyouHTMLViewProps,
+    emits: ExportKyouHTMLViewEmits,
 }) {
     const { props, emits } = options
 
@@ -88,8 +88,8 @@ export function useExportRykvHTMLView(options: {
         return Math.floor(mb * 1024 * 1024)
     }
 
-    function build_request(): ExportRykvHTMLRequest {
-        const req = new ExportRykvHTMLRequest()
+    function build_request(): ExportKyouHTMLRequest {
+        const req = new ExportKyouHTMLRequest()
         req.title = title.value
         // 列の条件はサイドバーが生成したまま渡す（削ると出力先で列が空になる）
         req.columns = target_columns.value
@@ -118,7 +118,7 @@ export function useExportRykvHTMLView(options: {
         const req = build_request()
         abort_controller = req.abort_controller
         try {
-            const res = await props.gkill_api.export_rykv_html(req)
+            const res = await props.gkill_api.export_kyou_html(req)
             // 中断されていたら、返ってきたものは捨てる（保存もしないし閉じもしない）
             if (!is_exporting.value) {
                 return
@@ -133,7 +133,7 @@ export function useExportRykvHTMLView(options: {
             // 成功しているので errors ではなく warning のメッセージにする（閉じるまで残る）
             for (const warning of res.warnings ?? []) {
                 const message = new GkillMessage()
-                message.message_code = 'MSG_EXPORT_RYKV_HTML_WARNING'
+                message.message_code = 'MSG_EXPORT_KYOU_HTML_WARNING'
                 message.message = warning
                 message.level = 'warning'
                 message.show_keep = true

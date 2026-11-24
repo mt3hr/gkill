@@ -14,7 +14,7 @@
         :enable_keyboard_shortcuts="!is_hosted_in_dialog /* ポートでは枚数ぶん多重登録される */"
         v-on="columnsForwardHandlers"
         @requested_reload_application_config="emits('requested_reload_application_config')"
-        @requested_export_rykv_html="show_export_rykv_html_dialog()"
+        @requested_export_kyou_html="show_export_kyou_html_dialog()"
         @requested_show_kftl_dialog="show_kftl_dialog()"
         @requested_show_save_clipboard_to_file_dialog="show_save_clipboard_to_file_dialog()"
         ref="columns_view">
@@ -105,11 +105,11 @@
                 「HTML で出力」。列の条件はサイドバーが生成したまま渡す —— 削ると
                 出力先のサイドバーが初めに生成した条件と食い違い、その列が空になる
             -->
-            <ExportRykvHTMLDialog :application_config="application_config"
+            <ExportKyouHTMLDialog :application_config="application_config"
                 :gkill_api="gkill_api" :columns="querys" :focused_column_index="focused_column_index"
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
-                ref="export_rykv_html_dialog" />
+                ref="export_kyou_html_dialog" />
             <HelpDialog screen_name="rykv" ref="help_dialog" />
         </template>
         <!-- ポート(rudbeckia)の中ではFABを出さない。.position-fixed は position: fixed なので
@@ -173,7 +173,7 @@ import AddTimeIsDialog from '../dialogs/add-time-is-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-ur-log-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import SaveClipboardToFileDialog from '../dialogs/save-clipboard-to-file-dialog.vue'
-import ExportRykvHTMLDialog from '../dialogs/export-rykv-html-dialog.vue'
+import ExportKyouHTMLDialog from '../dialogs/export-kyou-html-dialog.vue'
 import HelpDialog from '../dialogs/help-dialog.vue'
 import RykvColumnsView from './rykv-columns-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
@@ -198,7 +198,7 @@ const {
     mkfl_dialog,
     upload_file_dialog,
     save_clipboard_to_file_dialog,
-    export_rykv_html_dialog,
+    export_kyou_html_dialog,
     help_dialog,
 
     // Computed
@@ -218,7 +218,7 @@ const {
     show_lantana_dialog,
     show_upload_file_dialog,
     show_save_clipboard_to_file_dialog,
-    show_export_rykv_html_dialog,
+    show_export_kyou_html_dialog,
     show_help_dialog,
     floating_action_button_style,
 

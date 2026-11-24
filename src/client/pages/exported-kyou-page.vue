@@ -4,9 +4,9 @@
             骨格は App.vue と同じにしておくこと。
             - #control-height … 画面の高さの基準（resize_content が querySelector で引く）
             - v-app … v-app-bar / v-navigation-drawer / v-main はレイアウトの中でしか描けない。
-              包まないと「[Vuetify] Could not find injected layout」で rykv ごと落ちる
+              包まないと「[Vuetify] Could not find injected layout」で画面ごと落ちる
             - VLocaleProvider … Vuetify 自身の文言のロケール
-            出力 HTML は router を持たないので、RouterView の代わりに rykv を直接置く。
+            出力 HTML は router を持たないので、RouterView の代わりにビューを直接置く。
         -->
         <table>
             <tbody>
@@ -31,9 +31,9 @@
                                     焼き込みが読めないとき。ガワだけの template.html を直接開いた場合もここ。
                                     出力 HTML は通信をしないので、サーバへ取りに行くフォールバックは置かない
                                 -->
-                                <v-container v-else class="exported_rykv_page_empty">
+                                <v-container v-else class="exported_kyou_page_empty">
                                     <v-alert type="info" variant="tonal"
-                                        :text="i18n.global.t('EXPORTED_RYKV_PAGE_NO_DATA_MESSAGE')" />
+                                        :text="i18n.global.t('EXPORTED_KYOU_PAGE_NO_DATA_MESSAGE')" />
                                 </v-container>
                             </VLocaleProvider>
                         </v-app>
@@ -53,7 +53,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { i18n } from '@/i18n'
 import ExportedRykvView from './views/exported-rykv-view.vue'
-import { useExportedRykvPage } from '@/classes/use-exported-rykv-page'
+import { useExportedKyouPage } from '@/classes/use-exported-kyou-page'
 import GkillMessageFeedView from './views/gkill-message-feed-view.vue'
 
 const {
@@ -73,7 +73,7 @@ const {
     // Event handlers
     write_errors,
     write_messages,
-} = useExportedRykvPage()
+} = useExportedKyouPage()
 
 // テーマは焼き込んだ設定から決める（App.vue は Cookie から取るが、出力 HTML に Cookie は無い）
 const theme = useTheme()

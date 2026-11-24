@@ -63,8 +63,8 @@ import type { GetMiReKyouRequest } from "./req_res/get-mi-re-kyou-request"
 import { GetMiReKyouResponse } from "./req_res/get-mi-re-kyou-response"
 import type { GetShareKyouListInfosRequest } from "./req_res/get-share-kyou-list-infos-request"
 import type { GetSharedKyousRequest } from "./req_res/get-shared-kyous-request"
-import type { ExportRykvHTMLRequest } from "./req_res/export-rykv-html-request"
-import { ExportRykvHTMLResponse } from "./req_res/export-rykv-html-response"
+import type { ExportKyouHTMLRequest } from "./req_res/export-kyou-html-request"
+import { ExportKyouHTMLResponse } from "./req_res/export-kyou-html-response"
 import { GetSharedKyousResponse } from "./req_res/get-shared-kyous-response"
 import type { GetTagHistoryByTagIDRequest } from "./req_res/get-tag-history-by-tag-id-request"
 import { GetTagHistoryByTagIDResponse } from "./req_res/get-tag-history-by-tag-id-response"
@@ -320,7 +320,7 @@ export class GkillAPI {
         update_share_kyou_list_info_address: string
         delete_share_kyou_list_infos_address: string
         get_shared_kyous_address: string
-        export_rykv_html_address: string
+        export_kyou_html_address: string
         get_repositories_address: string
         get_gkill_notification_public_key_address: string
         register_gkill_notification_address: string
@@ -418,7 +418,7 @@ export class GkillAPI {
         update_share_kyou_list_info_method: string
         delete_share_kyou_list_infos_method: string
         get_shared_kyous_method: string
-        export_rykv_html_method: string
+        export_kyou_html_method: string
         get_repositories_method: string
         get_gkill_notification_public_key_method: string
         register_gkill_notification_method: string
@@ -517,7 +517,7 @@ export class GkillAPI {
                 this.update_share_kyou_list_info_address = "/api/update_share_kyou_list_info"
                 this.delete_share_kyou_list_infos_address = "/api/delete_share_kyou_list_infos"
                 this.get_shared_kyous_address = "/api/get_shared_kyous"
-                this.export_rykv_html_address = "/api/export_rykv_html"
+                this.export_kyou_html_address = "/api/export_kyou_html"
                 this.get_repositories_address = "/api/get_repositories"
                 this.get_gkill_notification_public_key_address = "/api/get_gkill_notification_public_key"
                 this.register_gkill_notification_address = "/api/register_gkill_notification"
@@ -613,7 +613,7 @@ export class GkillAPI {
                 this.update_share_kyou_list_info_method = "POST"
                 this.delete_share_kyou_list_infos_method = "POST"
                 this.get_shared_kyous_method = "POST"
-                this.export_rykv_html_method = "POST"
+                this.export_kyou_html_method = "POST"
                 this.get_repositories_method = "POST"
                 this.get_gkill_notification_public_key_method = "POST"
                 this.register_gkill_notification_method = "POST"
@@ -2114,9 +2114,9 @@ export class GkillAPI {
          * **ファイルそのものを body で受け取る形にはできない** —— gkill_fetch が
          * JSON 以外の応答を bad_response の合成応答に変えるため（ADR-0712）。
          */
-        async export_rykv_html(req: ExportRykvHTMLRequest): Promise<ExportRykvHTMLResponse> {
-                const res = await this.gkill_fetch(this.export_rykv_html_address, {
-                        'method': this.export_rykv_html_method,
+        async export_kyou_html(req: ExportKyouHTMLRequest): Promise<ExportKyouHTMLResponse> {
+                const res = await this.gkill_fetch(this.export_kyou_html_address, {
+                        'method': this.export_kyou_html_method,
                         headers: {
                                 'Content-Type': 'application/json'
                         },
@@ -2124,7 +2124,7 @@ export class GkillAPI {
                         signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
-                const response: ExportRykvHTMLResponse = new ExportRykvHTMLResponse()
+                const response: ExportKyouHTMLResponse = new ExportKyouHTMLResponse()
                 hydrate(response, json, { date_suffixes: [] })
                 return response
         }

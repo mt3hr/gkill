@@ -123,7 +123,7 @@ func isExportTextFile(idf reps.IDFKyou) bool {
 // 予算に収まらなかったものは焼かずに警告へ回す（画面は出る。その記録のメディアが出ないだけ）。
 // 関連時刻の新しい順に詰めるので、payload.IDFKyous は検索の並び（新しい順）のままで渡すこと。
 // sidecar が nil でなければ、メディアは data: URI ではなく同名フォルダの相対パスで参照する。
-func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_res.ExportRykvHTMLRequest, repositories *reps.GkillRepositories, payload *exportedKyouPayload, sidecar *exportSidecar) ([]string, error) {
+func (g *GkillServerAPI) collectExportMedia(ctx context.Context, request *req_res.ExportKyouHTMLRequest, repositories *reps.GkillRepositories, payload *exportedKyouPayload, sidecar *exportSidecar) ([]string, error) {
 	warnings := []string{}
 	if len(payload.IDFKyous) == 0 {
 		return warnings, nil

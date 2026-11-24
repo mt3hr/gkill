@@ -84,7 +84,7 @@ src/client/
 │   ├── shared-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── exported-rykv-page.vue   # HTML 出力したファイルの中で開く画面
+│   ├── exported-kyou-page.vue   # HTML 出力したファイルの中で開く画面
 │   ├── views/              # ビューコンポーネント（214ファイル）
 │   └── dialogs/            # ダイアログコンポーネント（121ファイル、browse-zip-contents-dialog.vue 含む）
 ├── i18n.ts                 # i18n設定（ja のみ静的、他6言語は動的import）

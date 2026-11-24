@@ -8,5 +8,5 @@ export interface ShareKyouFooterEmits {
     (e: 'request_open_manage_share_kyou_dialog'): void
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
-    (e: 'requested_export_rykv_html'): void
+    (e: 'requested_export_kyou_html'): void
 }

@@ -157,7 +157,7 @@ TS 側はすべて `src/client/classes/api/gkill-api.ts` の `GkillAPI`、Go 側
 | `/api/discard_tx` | POST | authSessionRepos | `discard_tx()` | — | `HandleDiscardTX` | handle_discard_tx.go | 直接: `repositories.DiscardTx` | DiscardTxRequest / DiscardTxResponse ※ | DiscardTXRequest / DiscardTXResponse |
 | `/api/delete_kyou_cascade` | POST | authSessionRepos | `delete_kyou_cascade()` | MCP | `HandleDeleteKyouCascade` | handle_delete_kyou_cascade.go | `UsecaseCtx.DeleteKyouCascade` | DeleteKyouCascadeRequest / DeleteKyouCascadeResponse | = |
 | `/api/submit_kftl_text` | POST | authSessionRepos | `submit_kftl_text()` | MCP Wear | `HandleSubmitKFTLText` | handle_submit_kftl_text.go | 直接: `kftl.KFTLStatement` / `kftlIdempotencyStore`（冪等キー） | SubmitKFTLTextRequest / SubmitKFTLTextResponse | = |
-| `/api/export_rykv_html` | POST | authSessionRepos | `export_rykv_html()` | — | `HandleExportRykvHTML` | handle_export_rykv_html.go | 直接: `buildExportPayload`（列ごとに共有ページと同じ収集を通る） / `ConfigDAOs.ApplicationConfigDAO`（焼き込む設定。API キーは空へ潰す） | ExportRykvHTMLRequest / ExportRykvHTMLResponse | = |
+| `/api/export_kyou_html` | POST | authSessionRepos | `export_kyou_html()` | — | `HandleExportKyouHTML` | handle_export_kyou_html.go | 直接: `buildExportPayload`（列ごとに共有ページと同じ収集を通る） / `ConfigDAOs.ApplicationConfigDAO`（焼き込む設定。API キーは空へ潰す） | ExportKyouHTMLRequest / ExportKyouHTMLResponse | = |
 <!-- BOUNDARY-TABLE:web-routes:END -->
 
 ### 2.2 共有ページ（GkillAPIForSharedKyou）の振る舞い

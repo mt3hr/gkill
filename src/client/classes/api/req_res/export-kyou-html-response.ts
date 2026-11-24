@@ -2,7 +2,7 @@
 
 import { GkillAPIResponse } from "../gkill-api-response"
 
-export class ExportRykvHTMLResponse extends GkillAPIResponse {
+export class ExportKyouHTMLResponse extends GkillAPIResponse {
 
     output_format: string
 

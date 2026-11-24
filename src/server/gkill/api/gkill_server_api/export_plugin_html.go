@@ -26,7 +26,7 @@ func exportPluginHTMLKey(repName string, kyouID string) string {
 }
 
 // collectExportPluginHTML はプラグインの本文を焼き込む。
-func (g *GkillServerAPI) collectExportPluginHTML(ctx context.Context, request *req_res.ExportRykvHTMLRequest, userID string, payload *exportedKyouPayload) []string {
+func (g *GkillServerAPI) collectExportPluginHTML(ctx context.Context, request *req_res.ExportKyouHTMLRequest, userID string, payload *exportedKyouPayload) []string {
 	warnings := []string{}
 	if !request.IncludePluginContent {
 		return warnings

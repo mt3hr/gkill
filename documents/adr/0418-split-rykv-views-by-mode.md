@@ -72,7 +72,7 @@ ADR-0415 の決定のうち、置き換わるのは**テンプレートが見て
 
 - **列の機構の正本は `use-rykv-columns.ts` になった。** `mi` の対になる実装は引き続き `use-mi-view.ts`（mi は共有も出力も無いので分割していない）。**対称実装の修正は必ず両方へ**という約束は変わらないが、見比べる相手のファイル名が変わった。ADR-0401 / ADR-0405 / ADR-0407 / ADR-0415 が `use-rykv-view.ts` を Anchors / Sources に挙げているのは、現在はこのファイルを指す。
 - **E2E が見るセレクタは変えていない**（`.rykv_view_wrap` / `[data-gkill-view-ready]` / `.kyou_detail_view` / `.gkill-floating-dialog*`）。準備完了信号を出す要素は列の子へ移ったので、ソース走査テストの対象ファイル一覧も合わせた。
-- **出力のバンドルから編集系のビューが落ちる。** 出力のラッパは編集系のダイアログを1つも import しないので、`exported-rykv-page` 側のチャンクグラフに入らない（`RykvDialogHost` 経由で入るものは残る）。
+- **出力のバンドルから編集系のビューが落ちる。** 出力のラッパは編集系のダイアログを1つも import しないので、`exported-kyou-page` 側のチャンクグラフに入らない（`RykvDialogHost` 経由で入るものは残る）。
 - サイドバーの入れ物は**出力でも mount したままにする**という ADR-0415 の帰結はそのまま残る。列の子の中で `v-if` を付けないこと（付けると列が1本も作られず読み込み中オーバーレイが消えない）。
 - 常に `true` だった見せかけのフラグ（`enable_context_menu` / `enable_dialog` の `ref(true)`）を rykv と mi の両方から外し、リテラルで書くようにした。読む人が「どこで false になるのか」を探さなくて済む。
 
@@ -86,4 +86,4 @@ ADR-0415 の決定のうち、置き換わるのは**テンプレートが見て
 - `src/client/__tests__/unit/classes/column-view-init-source-scan.test.ts` — 列の初期化の不変条件。対象は `use-rykv-columns.ts` と `use-mi-view.ts`（対称実装）、準備完了信号は `rykv-columns-view.vue`
 - `src/client/__tests__/unit/composables/shared-rykv-view.test.ts` — 共有の独立実装（取得は1回だけ・スピナー・地図の時間窓）
 - `src/client/__tests__/unit/composables/rykv-view-initial-load.test.ts` / `rykv-view-search-routing.test.ts` / `rykv-view-map-date-picker.test.ts` — 列の機構（`useRykvColumns` を直接呼ぶ）
-- `src/client/__tests__/e2e/rykv-export-html.spec.ts` — 出力したファイルを `file://` で開く通し
+- `src/client/__tests__/e2e/kyou-export-html.spec.ts` — 出力したファイルを `file://` で開く通し

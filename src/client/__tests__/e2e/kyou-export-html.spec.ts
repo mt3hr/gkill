@@ -8,17 +8,17 @@ import { checkGkillServer } from './check-server'
 import { loginAsAdmin } from './helpers'
 
 /**
- * rykv の「HTML で出力」。
+ * 「HTML で出力」したファイル。焼き込む側の画面に依らない。
  *
  * 出力した HTML の約束は1つだけ: **通信をしない**（地図だけ例外）。
  * これが破れても画面は普通に出るので、気づけるのはここだけになる。
  *
  * 組み立ての中身（API キーを焼き込まないこと・`</script>` で割れないこと等）は
- * Go 側の handle_export_rykv_html_test.go / export_html_render_test.go が見ている。
+ * Go 側の handle_export_kyou_html_test.go / export_html_render_test.go が見ている。
  * ここでは**出来上がった HTML そのもの**を検査する。
  *
  * ダイアログの操作は通らない。共有フッタの表示は利用者の設定で、E2E から
- * 設定を変えると他の spec に影響する。導線はユニット（export-rykv-html-view.test.ts）が見ている。
+ * 設定を変えると他の spec に影響する。導線はユニット（export-kyou-html-view.test.ts）が見ている。
  */
 
 test.beforeAll(async () => {
@@ -62,7 +62,7 @@ async function post_export(page: Page, body: Record<string, unknown>): Promise<R
 
   // 出力はもともと重い（記録を集め、メディアと添付ファイルの本体を読んで base64 にする）。
   // Playwright の既定は 10 秒で、添付ファイルを焼くようになってから超えるようになった
-  const response = await page.context().request.post('/api/export_rykv_html', {
+  const response = await page.context().request.post('/api/export_kyou_html', {
     data: { ...body, session_id: session.value },
     timeout: 120000,
   })
@@ -76,7 +76,7 @@ async function post_export(page: Page, body: Record<string, unknown>): Promise<R
   return parsed
 }
 
-test.describe('rykv HTML export', () => {
+test.describe('HTML export', () => {
   // 出力 1 回で数十秒かかることがある（上記 post_export のコメント）
   test.setTimeout(180000)
 

@@ -297,7 +297,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 | データ追加 | 12 | add_kmemo, add_kc, add_urlog, add_nlog, add_timeis, add_mi, add_lantana, add_tag, add_text, add_gkill_notification, add_rekyou, add_mirekyou |
 | データ更新 | 13 | update_kmemo, update_kc, update_urlog, update_nlog, update_timeis, update_mi, update_lantana, update_tag, update_text, update_gkill_notification, update_rekyou, update_mirekyou, update_idf_kyou |
 | 共有 | 5 | get_share_kyou_list_infos, add_share_kyou_list_info, update_share_kyou_list_info, delete_share_kyou_list_infos, get_shared_kyous |
-| 出力 | 1 | export_rykv_html（いまの検索結果を単一 HTML へ焼き込んで返す。収集は共有と同じ1実装） |
+| 出力 | 1 | export_kyou_html（いまの検索結果を単一 HTML へ焼き込んで返す。収集は共有と同じ1実装） |
 | データ削除 | 1 | delete_kyou_cascade（本体と付随データをまとめて消す） |
 | 通知 | 2 | get_gkill_notification_public_key, register_gkill_notification |
 | 設定 | 7 | get_application_config, update_application_config, get_server_configs, update_server_configs, get_repositories, update_user_reps, reload_repositories |

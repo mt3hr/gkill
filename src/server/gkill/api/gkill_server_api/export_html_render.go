@@ -36,7 +36,7 @@ const (
 //
 // 記録の本体は kyou_ids の参照で持つ（列をまたいで同じ記録が出るのは普通で、
 // 列ごとに本体を持つと素直に膨らむ）。
-// Query は**クライアントが送ってきた JSON そのまま**（req_res.ExportRykvHTMLColumn.Raw）。
+// Query は**クライアントが送ってきた JSON そのまま**（req_res.ExportKyouHTMLColumn.Raw）。
 // find.FindQuery へ型に落として再 marshal すると query_id などが消え、
 // 出力先が列を引けなくなる（2列以上で全列が先頭列に一致する）。
 type exportedColumn struct {

@@ -18,10 +18,10 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
-// HandleExportRykvHTML は rykv の画面を1枚の HTML として組み立てて返します。
+// HandleExportKyouHTML は rykv の画面を1枚の HTML として組み立てて返します。
 //
-// POST /api/export_rykv_html（wrapAuthRepos）
-// req_res.ExportRykvHTMLRequest / req_res.ExportRykvHTMLResponse
+// POST /api/export_kyou_html（wrapAuthRepos）
+// req_res.ExportKyouHTMLRequest / req_res.ExportKyouHTMLResponse
 //
 // 列ごとに検索を実行し、記録と型別データ・付随データを和集合で1回だけ持ちます
 // （列をまたいで同じ記録が出るのは普通なので、列ごとに本体を持つと素直に膨らむ）。
@@ -29,11 +29,11 @@ import (
 //
 // 出力 HTML は通信をしません（地図だけ例外）。
 // **google_map_api_key は焼き込みません。** 落とすと利用者のキーが共有先へ漏れます。
-func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Request) {
+func (g *GkillServerAPI) HandleExportKyouHTML(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.ExportRykvHTMLRequest{}
-	response := &req_res.ExportRykvHTMLResponse{}
+	request := &req_res.ExportKyouHTMLRequest{}
+	response := &req_res.ExportKyouHTMLResponse{}
 
 	defer func() {
 		err := r.Body.Close()
@@ -48,8 +48,8 @@ func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Req
 			err = fmt.Errorf("error at parse export rykv html response to json: %w", err)
 			slog.Log(r.Context(), gkill_log.Debug, "error at parse export rykv html response to json", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidExportRykvHTMLResponseDataError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_RYKV_HTML_MESSAGE"}),
+				ErrorCode:    message.InvalidExportKyouHTMLResponseDataError,
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_KYOU_HTML_MESSAGE"}),
 				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -62,15 +62,15 @@ func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Req
 		err = fmt.Errorf("error at parse export rykv html request to json: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error at parse export rykv html request to json", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidExportRykvHTMLRequestDataError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_RYKV_HTML_MESSAGE"}),
+			ErrorCode:    message.InvalidExportKyouHTMLRequestDataError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_KYOU_HTML_MESSAGE"}),
 			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
-	if gkillErr := validateExportRykvHTMLRequest(r.Context(), request); gkillErr != nil {
+	if gkillErr := validateExportKyouHTMLRequest(r.Context(), request); gkillErr != nil {
 		response.Errors = append(response.Errors, gkillErr)
 		return
 	}
@@ -80,8 +80,8 @@ func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		slog.Log(r.Context(), gkill_log.Debug, "error at read export template", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
-			ErrorCode:    message.ExportRykvHTMLTemplateNotFoundError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_RYKV_HTML_MESSAGE"}),
+			ErrorCode:    message.ExportKyouHTMLTemplateNotFoundError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_KYOU_HTML_MESSAGE"}),
 			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -98,7 +98,7 @@ func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Req
 		slog.Log(r.Context(), gkill_log.Debug, "error at get applicationConfig user id", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_RYKV_HTML_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_KYOU_HTML_MESSAGE"}),
 			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -118,8 +118,8 @@ func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Req
 		err = fmt.Errorf("error at prune export application config structs: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error at prune export application config structs", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
-			ErrorCode:    message.ExportRykvHTMLRenderError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_RYKV_HTML_MESSAGE"}),
+			ErrorCode:    message.ExportKyouHTMLRenderError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_KYOU_HTML_MESSAGE"}),
 			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -142,8 +142,8 @@ func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		slog.Log(r.Context(), gkill_log.Debug, "error at render export html", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
-			ErrorCode:    message.ExportRykvHTMLRenderError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_RYKV_HTML_MESSAGE"}),
+			ErrorCode:    message.ExportKyouHTMLRenderError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_KYOU_HTML_MESSAGE"}),
 			Cause:        err,
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -156,8 +156,8 @@ func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Req
 		if err != nil {
 			slog.Log(r.Context(), gkill_log.Debug, "error at build export zip", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
-				ErrorCode:    message.ExportRykvHTMLRenderError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_RYKV_HTML_MESSAGE"}),
+				ErrorCode:    message.ExportKyouHTMLRenderError,
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_EXPORT_KYOU_HTML_MESSAGE"}),
 				Cause:        err,
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -173,17 +173,17 @@ func (g *GkillServerAPI) HandleExportRykvHTML(w http.ResponseWriter, r *http.Req
 	// 予算や読み込みの失敗で落としたものがあれば、そのぶん欠けている
 	response.Partial = len(payload.Warnings) != 0
 	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.ExportRykvHTMLSuccessMessage,
-		Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_EXPORT_RYKV_HTML_MESSAGE"}),
+		MessageCode: message.ExportKyouHTMLSuccessMessage,
+		Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_EXPORT_KYOU_HTML_MESSAGE"}),
 	})
 }
 
-// validateExportRykvHTMLRequest は選べない組み合わせを弾く。
-func validateExportRykvHTMLRequest(ctx context.Context, request *req_res.ExportRykvHTMLRequest) *message.GkillError {
+// validateExportKyouHTMLRequest は選べない組み合わせを弾く。
+func validateExportKyouHTMLRequest(ctx context.Context, request *req_res.ExportKyouHTMLRequest) *message.GkillError {
 	invalid := func(reason string) *message.GkillError {
 		err := fmt.Errorf("error at validate export rykv html request: %s", reason)
-		return bundleError(ctx, request.LocaleName, message.InvalidExportRykvHTMLOptionError,
-			"FAILED_EXPORT_RYKV_HTML_MESSAGE", "error at validate export rykv html request", err)
+		return bundleError(ctx, request.LocaleName, message.InvalidExportKyouHTMLOptionError,
+			"FAILED_EXPORT_KYOU_HTML_MESSAGE", "error at validate export rykv html request", err)
 	}
 
 	if len(request.Columns) == 0 {
@@ -218,7 +218,7 @@ func validateExportRykvHTMLRequest(ctx context.Context, request *req_res.ExportR
 // buildExportPayload は列ごとに収集して、焼き込む JSON を組み立てる。
 //
 // 記録と付随データは和集合で1回だけ持ち、列は ID の参照で持つ。
-func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_res.ExportRykvHTMLRequest, userID string, device string, applicationConfig *user_config.ApplicationConfig, sidecar *exportSidecar) (*exportedKyouPayload, *message.GkillError) {
+func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_res.ExportKyouHTMLRequest, userID string, device string, applicationConfig *user_config.ApplicationConfig, sidecar *exportSidecar) (*exportedKyouPayload, *message.GkillError) {
 	payload := &exportedKyouPayload{
 		SchemaVersion:         exportedPayloadSchemaVersion,
 		Title:                 request.Title,
@@ -278,8 +278,8 @@ func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_re
 		// 焼き込むのは**送られてきた JSON そのまま**。型に落とすと query_id が消える
 		bakedQuery, err := column.BakedQueryJSON()
 		if err != nil {
-			return nil, bundleError(ctx, request.LocaleName, message.ExportRykvHTMLRenderError,
-				"FAILED_EXPORT_RYKV_HTML_MESSAGE", "error at bake export column query", err)
+			return nil, bundleError(ctx, request.LocaleName, message.ExportKyouHTMLRenderError,
+				"FAILED_EXPORT_KYOU_HTML_MESSAGE", "error at bake export column query", err)
 		}
 		payload.Columns = append(payload.Columns, exportedColumn{Query: bakedQuery, KyouIDs: kyouIDs})
 		merged.add(bundle)
@@ -309,13 +309,13 @@ func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_re
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		return nil, bundleError(ctx, request.LocaleName, message.RepositoriesGetError,
-			"FAILED_EXPORT_RYKV_HTML_MESSAGE", "error at get repositories user id", err)
+			"FAILED_EXPORT_KYOU_HTML_MESSAGE", "error at get repositories user id", err)
 	}
 	mediaWarnings, err := g.collectExportMedia(ctx, request, repositories, payload, sidecar)
 	if err != nil {
 		err = fmt.Errorf("error at collect export media: %w", err)
-		return nil, bundleError(ctx, request.LocaleName, message.ExportRykvHTMLRenderError,
-			"FAILED_EXPORT_RYKV_HTML_MESSAGE", "error at collect export media", err)
+		return nil, bundleError(ctx, request.LocaleName, message.ExportKyouHTMLRenderError,
+			"FAILED_EXPORT_KYOU_HTML_MESSAGE", "error at collect export media", err)
 	}
 	payload.Warnings = append(payload.Warnings, mediaWarnings...)
 

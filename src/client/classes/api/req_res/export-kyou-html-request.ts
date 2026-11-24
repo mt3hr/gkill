@@ -17,7 +17,7 @@ export const EXPORT_DEFAULT_MEDIA_ITEM_LIMIT_BYTES = 100 * 1024 * 1024
 /** 出力の形。sidecar は HTML と同名フォルダの組（ZIP で受け取る） */
 export type ExportOutputFormat = 'single' | 'sidecar'
 
-export class ExportRykvHTMLRequest extends GkillAPIRequest {
+export class ExportKyouHTMLRequest extends GkillAPIRequest {
 
     title: string
 

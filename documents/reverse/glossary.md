@@ -278,7 +278,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
 | ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
 | HTML 出力のエントリポイント | `src/client/export-main.ts` | 出力したファイルの中で動く第2のエントリ。ルータは持たない（`export-router-stub.ts`）。i18n も1言語だけの版（`export-i18n.ts`）へ差し替わる |
-| HTML 出力の画面 | `src/client/pages/exported-rykv-page.vue` | 焼き込んだ JSON を読んで rykv を描く。列の中身は通常と同じ `rykv-columns-view.vue` |
+| HTML 出力の画面 | `src/client/pages/exported-kyou-page.vue` | 焼き込んだ JSON を読んで rykv を描く。列の中身は通常と同じ `rykv-columns-view.vue` |
 | GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約4,100行） |
 | リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（187ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |

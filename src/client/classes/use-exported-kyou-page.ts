@@ -49,7 +49,7 @@ function read_json_element(element_id: string): unknown {
  * **出力 HTML は通信をしない。** 焼き込みが読めなければ、その旨を出して終わる
  * （サーバへ取りに行くフォールバックを足してはいけない）。
  */
-export function useExportedRykvPage() {
+export function useExportedKyouPage() {
     // ── State refs ──
     const actual_height: Ref<number> = ref(0)
     const element_height: Ref<number> = ref(0)

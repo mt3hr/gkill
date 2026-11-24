@@ -5,7 +5,7 @@
                 :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_open_manage_share_kyou_dialog="show_manage_share_kyou_dialog()"
                 @request_open_share_kyou_dialog="show_share_kyou_dialog()"
-                @requested_export_rykv_html="emits('requested_export_rykv_html')"
+                @requested_export_kyou_html="emits('requested_export_kyou_html')"
                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)" />
             <SidebarHeader class="sidebar_header" :application_config="application_config" :gkill_api="gkill_api"

@@ -24,12 +24,12 @@
             「画面を共有」はこのサーバが生きている前提のリンクを作る渡し方
         -->
         <template v-if="mode === 'menu'">
-          <v-btn block color="primary" variant="flat" class="mb-2 export_rykv_html_button"
+          <v-btn block color="primary" variant="flat" class="mb-2 export_kyou_html_button"
             prepend-icon="mdi-file-export-outline" @click="() => {
               hide()
-              emits('requested_export_rykv_html')
+              emits('requested_export_kyou_html')
             }">
-            {{ i18n.global.t('EXPORT_RYKV_HTML_TITLE') }}
+            {{ i18n.global.t('EXPORT_KYOU_HTML_TITLE') }}
           </v-btn>
           <v-btn block color="primary" variant="flat" class="share_screen_button"
             prepend-icon="mdi-share-variant" @click="show_share_form()">

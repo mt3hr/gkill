@@ -90,7 +90,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/settings.spec.ts` | `/saihate` — 設定画面コンテンツ、JS エラーチェック、インタラクティブ操作 |
 | `src/client/__tests__/e2e/kyou-list.spec.ts` | `/kyou` — レコード一覧 |
 | `src/client/__tests__/e2e/share-page.spec.ts` | `/shared_page` — 不正な共有IDでエラーが表示され、読み込み中のまま止まらないこと（返る内容の網羅はGo側 handle_get_shared_kyous_test.go） |
-| `src/client/__tests__/e2e/rykv-export-html.spec.ts` | rykv の「HTML で出力」。出来上がった HTML そのものを見る（**読み込み時に gkill を取りに行く形が残っていないこと**・通信を全部止めても画面が出て読み込み中のまま固まらないこと・メディアを埋め込まない指定と同名フォルダの組み合わせが弾かれること）。組み立ての中身は Go 側 handle_export_rykv_html_test.go / export_html_render_test.go が見る。PATH 上の gkill_server が出力の API を持たないビルドでは飛ばす |
+| `src/client/__tests__/e2e/kyou-export-html.spec.ts` | 「HTML で出力」。出来上がった HTML そのものを見る（**読み込み時に gkill を取りに行く形が残っていないこと**・通信を全部止めても画面が出て読み込み中のまま固まらないこと・メディアを埋め込まない指定と同名フォルダの組み合わせが弾かれること）。組み立ての中身は Go 側 handle_export_kyou_html_test.go / export_html_render_test.go が見る。PATH 上の gkill_server が出力の API を持たないビルドでは飛ばす |
 | `src/client/__tests__/e2e/shared-mi.spec.ts` | `/shared_mi` — 旧URL。ルータの redirect で `/shared_page` へ引き継がれること（コンポーネントは無い。setup から `router.replace` すると初回ナビゲーションが完了しなくなる） |
 | `src/client/__tests__/e2e/register-first-account.spec.ts` | `/register_first_account` — 初回アカウント登録 |
 | `src/client/__tests__/e2e/set-new-password.spec.ts` | `/set_new_password` — パスワード再設定 |
@@ -159,11 +159,11 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/struct-element-description.test.ts` | 設定ツリー6本（タグ / 記録保管場所 / 記録種別 / プロファイル / 板 / メモ帳テンプレート）の要素追加・編集 Composable。表駆動で `apply()` が「説明」を詰め直すこと、板の要素編集が説明以外の欄（key / name / children / is_dir / check_when_inited）を保つこと、板の編集ダイアログはルート行では開かないこと |
 | `src/client/__tests__/unit/composables/edit-mi-board-struct-element-dialog.test.ts` | 板の要素編集ダイアログ Composable。`show(struct)` が編集対象を載せて開き、`hide()` と Escape が history 駆動の閉じ方（`close_dialog_via_history`）に流れること |
 | `src/client/__tests__/unit/composables/idf-kyou-view.test.ts` | IDFKyou ビュー Composable（Markdown リッチ表示、拡張子判定、相対リンクの対象記録解決、動画の preload: 詳細ペイン・ダイアログは `metadata` で再生前から全体の長さを出し、一覧は `none` のまま。描画した `<video>` の属性まで見る） |
-| `src/client/__tests__/unit/composables/export-rykv-html-view.test.ts` | 「HTML で出力」ダイアログの中身（既定値、**「埋め込まない」へ変えると選択済みの同名フォルダが単一 HTML へ戻ること**（disabled だけだと選択済みの値が送信まで残る）、フォーカス列だけの出力、列の条件を作り直さずそのまま渡すこと、単一 HTML と ZIP の保存、エラーのときは保存も close もしないこと、出力中に二重に投げないこと） |
+| `src/client/__tests__/unit/composables/export-kyou-html-view.test.ts` | 「HTML で出力」ダイアログの中身（既定値、**「埋め込まない」へ変えると選択済みの同名フォルダが単一 HTML へ戻ること**（disabled だけだと選択済みの値が送信まで残る）、フォーカス列だけの出力、列の条件を作り直さずそのまま渡すこと、単一 HTML と ZIP の保存、エラーのときは保存も close もしないこと、出力中に二重に投げないこと） |
 | `src/client/__tests__/unit/composables/re-kyou-view.test.ts` | ReKyou ビュー Composable（元の記録の解決、リポスト自身のメニュー表示） |
 | `src/client/__tests__/unit/composables/mi-re-kyou-view.test.ts` | MiReKyou ビュー Composable（既存記録のタスク化。タイトルを持たず target_id 先の内容を表示する） |
 | `src/client/__tests__/unit/composables/gps-log-map.test.ts` | GPSログ地図ビュー Composable |
-| `src/client/__tests__/unit/composables/exported-rykv-page.test.ts` | 「HTML で出力」した画面の入口。HTML 自身へ焼き込まれた JSON（`<script type="application/json">`）から読むこと、差し込みが無い・`{}` だけ・壊れた JSON のいずれでも例外を投げず「記録が含まれていません」側へ落ちること、ロケールの差し込みが無い／壊れていても落ちないこと |
+| `src/client/__tests__/unit/composables/exported-kyou-page.test.ts` | 「HTML で出力」した画面の入口。HTML 自身へ焼き込まれた JSON（`<script type="application/json">`）から読むこと、差し込みが無い・`{}` だけ・壊れた JSON のいずれでも例外を投げず「記録が含まれていません」側へ落ちること、ロケールの差し込みが無い／壊れていても落ちないこと |
 | `src/client/__tests__/unit/composables/kyou-count-calendar.test.ts` | Kyou件数カレンダー Composable |
 | `src/client/__tests__/unit/composables/overlay-and-ur-log-view.test.ts` | オーバーレイ表示と URLog ビュー Composable |
 | `src/client/__tests__/unit/composables/kyou-view.test.ts` | Kyou ビュー Composable（ReKyou / MiReKyou の参照先を読み込み中はゼロ値の日時を出さず、読み込み中として扱う） |

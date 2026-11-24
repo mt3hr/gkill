@@ -61,4 +61,4 @@ ZIP のエントリは名前順に並べる。同じ入力なら同じバイト�
 ## Related tests
 
 - `src/server/gkill/api/gkill_server_api/export_sidecar_test.go` — 拡張子の決め方、同じ内容が1エントリになること、ZIP を開き直してエントリ名が安全な字だけであること、並びが安定していること
-- `src/server/gkill/api/gkill_server_api/handle_export_rykv_html_test.go` — 同名フォルダの出力が ZIP の base64 で返ること、メディアを埋め込まない指定との組み合わせが弾かれること
+- `src/server/gkill/api/gkill_server_api/handle_export_kyou_html_test.go` — 同名フォルダの出力が ZIP の base64 で返ること、メディアを埋め込まない指定との組み合わせが弾かれること

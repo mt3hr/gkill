@@ -11,7 +11,7 @@
 //     **vite.export.config.ts の alias で差し替えるのが唯一の防御**
 //   - registerSW / virtual:pwa-register（Service Worker を取りに行く = 通信する）
 //   - GkillAPI.apply_locale()（Cookie を読んでロケールのメッセージを動的 import する。
-//     出力 HTML は焼き込まれた1言語だけを持つので、use-exported-rykv-page.ts が
+//     出力 HTML は焼き込まれた1言語だけを持つので、use-exported-kyou-page.ts が
 //     焼き込みから当てる）
 //
 // 握られなかった例外のフィードは本体と同じものを使う（通信はしない）。
@@ -23,7 +23,7 @@ import { createApp } from "vue"
 // 単一チャンクへ畳む出力ビルドでは、エントリの import 順がそのまま評価順になる
 // （__tests__/unit/classes/mermaid-render.test.ts も同じ理由で先に import している）
 import "./classes/api/gkill-api"
-import ExportedRykvPage from "./pages/exported-rykv-page.vue"
+import ExportedKyouPage from "./pages/exported-kyou-page.vue"
 import vuetify from "./plugins/vuetify"
 // gkill のグローバル CSS。本体は App.vue が持ち込むが、出力 HTML は App.vue を
 // 使わないので**ここで明示的に import する**。これが無いと画面の高さ・
@@ -37,7 +37,7 @@ import { onUnhandledRejection, onVueError, onWindowError } from "./classes/globa
 window.addEventListener("unhandledrejection", onUnhandledRejection)
 window.addEventListener("error", onWindowError)
 
-const app = createApp(ExportedRykvPage)
+const app = createApp(ExportedKyouPage)
 app.config.errorHandler = (err, _instance, info) => onVueError(err, info)
 app.directive('long-press', v_long_press)
 app.use(i18n)

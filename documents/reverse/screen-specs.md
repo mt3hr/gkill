@@ -154,7 +154,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 | ファイルアップロード | 操作 | ファイル追加ダイアログ |
 | クリップボードを保存 | 操作 | クリップボード内容をファイルとして保存するダイアログ（`save-clipboard-to-file-dialog.vue`） |
 | クエリエディタサイドバー | 操作 | 高度な検索条件設定 |
-| HTML で出力 | 操作 | サイドバーの共有フッター →「共有」→「HTML エクスポート」で開くダイアログ（`export-rykv-html-dialog.vue`）。いまの列の検索結果を単一 HTML（または HTML ＋ 同名フォルダ）へ焼き込む。**列の条件はサイドバーが生成したまま渡す** —— 作り直すと出力先のサイドバーが初めに生成する条件と食い違い、その列が空になる |
+| HTML で出力 | 操作 | サイドバーの共有フッター →「共有」→「HTML エクスポート」で開くダイアログ（`export-kyou-html-dialog.vue`）。いまの列の検索結果を単一 HTML（または HTML ＋ 同名フォルダ）へ焼き込む。**列の条件はサイドバーが生成したまま渡す** —— 作り直すと出力先のサイドバーが初めに生成する条件と食い違い、その列が空になる |
 | 保存済み検索条件FAB | 操作 | サイドバー右下の呼び出しボタン。設定画面で登録したライフログ検索条件を選択してサイドバーへ適用（0件時は非表示） |
 | 記録件数カレンダー | 表示/操作 | 表示中の列の記録を日ごとの件数で見るカレンダー（`kyou-count-calendar.vue`）。日付セルのクリックで一覧をその日へ寄せる（`requested_focus_time`）。年月表示のクリックで日付ピッカーが開き、選んだ日は日付セルをクリックしたのと同じ扱い（‹ › は1回で1か月しか動かず、遠い年月へ行くのに何十回も押していたため） |
 | GPS地図 | 表示/操作 | 表示日のGPS移動軌跡（`gps-log-map.vue`）。日付表示のクリックで日付ピッカーが開き、選んだ日は**地図だけ**に映す（`onGpsLogMapRequestedChangeDate`。検索条件と一覧は動かさない。地図だけ別の日を見たいときのため） |
@@ -372,7 +372,7 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
   回帰は E2E（`rudbeckia.spec.ts`）が `getComputedStyle` と `getBoundingClientRect` で見る
 ### 2.14 HTML 出力画面（出力したファイルの中）
 
-**コンポーネント:** `exported-rykv-page.vue` → `exported-rykv-view.vue` → `rykv-columns-view.vue`
+**コンポーネント:** `exported-kyou-page.vue` → `exported-rykv-view.vue` → `rykv-columns-view.vue`
 
 「HTML で出力」で書き出したファイルを開いたときに動く画面です。ルータを持たず
 （`export-router-stub.ts`。本体の `@/router` は module 評価時に `history.replaceState` を URL 付きで呼び、
@@ -958,7 +958,7 @@ Rykv 配下のダイアログは個別に配置されるのではなく、`rykv-
 | `share-kyou-list-link-dialog.vue` | 共有リンク表示 |
 | `confirm-delete-share-kyou-list-dialog.vue` | 共有削除確認 |
 | `manage-share-task-list-dialog.vue` | 共有リンク管理 |
-| `export-rykv-html-dialog.vue` | HTML で出力（対象・含めるもの・画面・メディア・出力形式を選ぶ）。出力中は閉じられない（ブラウザバックも含む。キャンセル後は閉じられる） |
+| `export-kyou-html-dialog.vue` | HTML で出力（対象・含めるもの・画面・メディア・出力形式を選ぶ）。出力中は閉じられない（ブラウザバックも含む。キャンセル後は閉じられる） |
 
 #### ファイル操作ダイアログ
 

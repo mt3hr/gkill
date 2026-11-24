@@ -501,19 +501,19 @@ const (
 	// サーバの逆引きが壊れていない限り届かない保険です。500 です。
 	DeleteKyouCascadeDepthExceededError = "ERR000451"
 
-	// rykv の HTML 出力（/api/export_rykv_html）。
-	// InvalidExportRykvHTMLRequestDataError は要求の JSON が読めないときのものです。400 です。
-	InvalidExportRykvHTMLRequestDataError = "ERR000452"
-	// InvalidExportRykvHTMLResponseDataError は応答の JSON 化に失敗したときのものです。500 です。
-	InvalidExportRykvHTMLResponseDataError = "ERR000453"
-	// InvalidExportRykvHTMLOptionError は選べない組み合わせを指定したときのものです
+	// rykv の HTML 出力（/api/export_kyou_html）。
+	// InvalidExportKyouHTMLRequestDataError は要求の JSON が読めないときのものです。400 です。
+	InvalidExportKyouHTMLRequestDataError = "ERR000452"
+	// InvalidExportKyouHTMLResponseDataError は応答の JSON 化に失敗したときのものです。500 です。
+	InvalidExportKyouHTMLResponseDataError = "ERR000453"
+	// InvalidExportKyouHTMLOptionError は選べない組み合わせを指定したときのものです
 	// （列が1本も無い・メディアを埋め込まないのに同名フォルダを選んだ・未知の media_mode や
 	// output_format）。400 です。
-	InvalidExportRykvHTMLOptionError = "ERR000454"
-	// ExportRykvHTMLTemplateNotFoundError は出力用のガワが embed に無いときのものです。
+	InvalidExportKyouHTMLOptionError = "ERR000454"
+	// ExportKyouHTMLTemplateNotFoundError は出力用のガワが embed に無いときのものです。
 	// npm run prepare_install を通さない裸の go build で起きます。この API だけが落ち、
 	// ほかの機能は動きます。500 です。
-	ExportRykvHTMLTemplateNotFoundError = "ERR000455"
-	// ExportRykvHTMLRenderError は焼き込みの組み立て（JSON 化・ZIP 化）に失敗したときのものです。500 です。
-	ExportRykvHTMLRenderError = "ERR000456"
+	ExportKyouHTMLTemplateNotFoundError = "ERR000455"
+	// ExportKyouHTMLRenderError は焼き込みの組み立て（JSON 化・ZIP 化）に失敗したときのものです。500 です。
+	ExportKyouHTMLRenderError = "ERR000456"
 )

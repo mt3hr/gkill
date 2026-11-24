@@ -17,14 +17,14 @@ import (
 // **google_map_api_key を焼き込むと、利用者のキーがそのまま共有先の手に渡る。**
 // 落ちても画面は普通に出るので、テストだけが見張りになる。
 
-// exportRykvHTML は出力エンドポイントを叩く。
-func exportRykvHTML(t *testing.T, tsURL string, sessionID string, customize func(*req_res.ExportRykvHTMLRequest)) req_res.ExportRykvHTMLResponse {
+// exportKyouHTML は出力エンドポイントを叩く。
+func exportKyouHTML(t *testing.T, tsURL string, sessionID string, customize func(*req_res.ExportKyouHTMLRequest)) req_res.ExportKyouHTMLResponse {
 	t.Helper()
 
-	req := &req_res.ExportRykvHTMLRequest{
+	req := &req_res.ExportKyouHTMLRequest{
 		LocaleName:   "en",
 		Title:        "出力テスト",
-		Columns:      []req_res.ExportRykvHTMLColumn{exportColumn(t, "q1")},
+		Columns:      []req_res.ExportKyouHTMLColumn{exportColumn(t, "q1")},
 		MediaMode:    req_res.ExportMediaModeThumbnail,
 		OutputFormat: req_res.ExportOutputFormatSingle,
 	}
@@ -33,10 +33,10 @@ func exportRykvHTML(t *testing.T, tsURL string, sessionID string, customize func
 		customize(req)
 	}
 
-	resp := postJSON(t, tsURL+"/api/export_rykv_html", req)
+	resp := postJSON(t, tsURL+"/api/export_kyou_html", req)
 	defer resp.Body.Close()
 
-	var exportResp req_res.ExportRykvHTMLResponse
+	var exportResp req_res.ExportKyouHTMLResponse
 	if err := json.NewDecoder(resp.Body).Decode(&exportResp); err != nil {
 		t.Fatalf("decode export rykv html response: %v", err)
 	}
@@ -47,13 +47,13 @@ func exportRykvHTML(t *testing.T, tsURL string, sessionID string, customize func
 //
 // **query_id は find.FindQuery に無い。** クライアントは列をこれで引くので、
 // 焼き込みで落ちると2列以上の出力で全列が先頭列に一致する。
-func exportColumn(t *testing.T, queryID string) req_res.ExportRykvHTMLColumn {
+func exportColumn(t *testing.T, queryID string) req_res.ExportKyouHTMLColumn {
 	t.Helper()
 	raw, err := json.Marshal(map[string]any{"query_id": queryID})
 	if err != nil {
 		t.Fatalf("marshal export column: %v", err)
 	}
-	column := req_res.ExportRykvHTMLColumn{}
+	column := req_res.ExportKyouHTMLColumn{}
 	if err := json.Unmarshal(raw, &column); err != nil {
 		t.Fatalf("unmarshal export column: %v", err)
 	}
@@ -80,19 +80,19 @@ func extractExportPayload(t *testing.T, rendered string) map[string]any {
 	return payload
 }
 
-// TestHandleExportRykvHTML_KeepsColumnQueryID は、焼き込んだ列の条件に query_id が残ることを
+// TestHandleExportKyouHTML_KeepsColumnQueryID は、焼き込んだ列の条件に query_id が残ることを
 // 確認する。find.FindQuery に query_id が無いので、型に落として再 marshal すると消える。
 // 消えるとクライアントは列を引けず、**2列以上の出力で全列が先頭列に一致する**
 // （例外もエラーも出ないので、1列で試しているうちは露見しない）。
-func TestHandleExportRykvHTML_KeepsColumnQueryID(t *testing.T) {
+func TestHandleExportKyouHTML_KeepsColumnQueryID(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
-	exportResp := exportRykvHTML(t, tsURL, sessionID, func(req *req_res.ExportRykvHTMLRequest) {
-		req.Columns = []req_res.ExportRykvHTMLColumn{
+	exportResp := exportKyouHTML(t, tsURL, sessionID, func(req *req_res.ExportKyouHTMLRequest) {
+		req.Columns = []req_res.ExportKyouHTMLColumn{
 			exportColumn(t, "column-1"),
 			exportColumn(t, "column-2"),
 		}
@@ -140,13 +140,13 @@ func hasErrorCode(errors message.GkillErrors, code string) bool {
 	return false
 }
 
-// TestHandleExportRykvHTML_DoesNotLeakGoogleMapAPIKey は、利用者の Google Maps の
+// TestHandleExportKyouHTML_DoesNotLeakGoogleMapAPIKey は、利用者の Google Maps の
 // API キーが出力 HTML に一度も現れないことを確認する。
 //
 // 出力用のガワ（embed/export/template.html）は npm run prepare_install が作る。
 // 裸の go build のビルドではこの API だけが 500 を返す（ほかの機能は動く）ので、
 // そのときは 500 とエラーコードを確認する。
-func TestHandleExportRykvHTML_DoesNotLeakGoogleMapAPIKey(t *testing.T) {
+func TestHandleExportKyouHTML_DoesNotLeakGoogleMapAPIKey(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -170,10 +170,10 @@ func TestHandleExportRykvHTML_DoesNotLeakGoogleMapAPIKey(t *testing.T) {
 
 	addTestKmemo(t, tsURL, sessionID, "出力に含まれる記録")
 
-	exportResp := exportRykvHTML(t, tsURL, sessionID, nil)
+	exportResp := exportKyouHTML(t, tsURL, sessionID, nil)
 
 	if _, err := readExportTemplate(); err != nil {
-		if !hasErrorCode(exportResp.Errors, message.ExportRykvHTMLTemplateNotFoundError) {
+		if !hasErrorCode(exportResp.Errors, message.ExportKyouHTMLTemplateNotFoundError) {
 			t.Errorf("ガワが無いのにガワ不在のエラーを返していない: %+v", exportResp.Errors)
 		}
 		if exportResp.HTML != "" {
@@ -199,9 +199,9 @@ func TestHandleExportRykvHTML_DoesNotLeakGoogleMapAPIKey(t *testing.T) {
 	}
 }
 
-// TestHandleExportRykvHTML_RejectsUnsupportedOptions は、選べない組み合わせを
+// TestHandleExportKyouHTML_RejectsUnsupportedOptions は、選べない組み合わせを
 // 収集を始める前に弾くことを確認する。
-func TestHandleExportRykvHTML_RejectsUnsupportedOptions(t *testing.T) {
+func TestHandleExportKyouHTML_RejectsUnsupportedOptions(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -210,19 +210,19 @@ func TestHandleExportRykvHTML_RejectsUnsupportedOptions(t *testing.T) {
 
 	for _, testCase := range []struct {
 		name      string
-		customize func(*req_res.ExportRykvHTMLRequest)
+		customize func(*req_res.ExportKyouHTMLRequest)
 	}{
-		{"列が1本も無い", func(req *req_res.ExportRykvHTMLRequest) { req.Columns = nil }},
-		{"未知のメディアの指定", func(req *req_res.ExportRykvHTMLRequest) { req.MediaMode = "whatever" }},
-		{"未知の出力の形", func(req *req_res.ExportRykvHTMLRequest) { req.OutputFormat = "whatever" }},
-		{"同名フォルダはメディアを埋め込まないと空になる", func(req *req_res.ExportRykvHTMLRequest) {
+		{"列が1本も無い", func(req *req_res.ExportKyouHTMLRequest) { req.Columns = nil }},
+		{"未知のメディアの指定", func(req *req_res.ExportKyouHTMLRequest) { req.MediaMode = "whatever" }},
+		{"未知の出力の形", func(req *req_res.ExportKyouHTMLRequest) { req.OutputFormat = "whatever" }},
+		{"同名フォルダはメディアを埋め込まないと空になる", func(req *req_res.ExportKyouHTMLRequest) {
 			req.OutputFormat = req_res.ExportOutputFormatSidecar
 			req.MediaMode = req_res.ExportMediaModeNone
 		}},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
-			exportResp := exportRykvHTML(t, tsURL, sessionID, testCase.customize)
-			if !hasErrorCode(exportResp.Errors, message.InvalidExportRykvHTMLOptionError) {
+			exportResp := exportKyouHTML(t, tsURL, sessionID, testCase.customize)
+			if !hasErrorCode(exportResp.Errors, message.InvalidExportKyouHTMLOptionError) {
 				t.Errorf("弾かれていない: %+v", exportResp.Errors)
 			}
 			if exportResp.HTML != "" {
@@ -232,13 +232,13 @@ func TestHandleExportRykvHTML_RejectsUnsupportedOptions(t *testing.T) {
 	}
 }
 
-// TestHandleExportRykvHTML_RequiresSession は、セッション無しでは出力できないことを確認する。
+// TestHandleExportKyouHTML_RequiresSession は、セッション無しでは出力できないことを確認する。
 // 出力は利用者の記録を丸ごと1枚に焼くので、ここが抜けると誰でも持ち出せる。
-func TestHandleExportRykvHTML_RequiresSession(t *testing.T) {
+func TestHandleExportKyouHTML_RequiresSession(t *testing.T) {
 	tsURL, _, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
-	exportResp := exportRykvHTML(t, tsURL, "not-a-real-session", nil)
+	exportResp := exportKyouHTML(t, tsURL, "not-a-real-session", nil)
 	if len(exportResp.Errors) == 0 {
 		t.Error("セッション無しで出力できてしまっている")
 	}
@@ -247,9 +247,9 @@ func TestHandleExportRykvHTML_RequiresSession(t *testing.T) {
 	}
 }
 
-// TestHandleExportRykvHTML_SidecarReturnsZip は、同名フォルダの出力が ZIP の base64 で
+// TestHandleExportKyouHTML_SidecarReturnsZip は、同名フォルダの出力が ZIP の base64 で
 // 返ることを確認する。ファイルそのものを body で返す形にはできない（ADR-0712）。
-func TestHandleExportRykvHTML_SidecarReturnsZip(t *testing.T) {
+func TestHandleExportKyouHTML_SidecarReturnsZip(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -257,7 +257,7 @@ func TestHandleExportRykvHTML_SidecarReturnsZip(t *testing.T) {
 	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 	addTestKmemo(t, tsURL, sessionID, "出力に含まれる記録")
 
-	exportResp := exportRykvHTML(t, tsURL, sessionID, func(req *req_res.ExportRykvHTMLRequest) {
+	exportResp := exportKyouHTML(t, tsURL, sessionID, func(req *req_res.ExportKyouHTMLRequest) {
 		req.OutputFormat = req_res.ExportOutputFormatSidecar
 	})
 

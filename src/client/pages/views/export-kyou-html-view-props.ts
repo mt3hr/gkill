@@ -3,7 +3,7 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query"
 import type { GkillPropsBase } from "./gkill-props-base"
 
-export interface ExportRykvHTMLViewProps extends GkillPropsBase {
+export interface ExportKyouHTMLViewProps extends GkillPropsBase {
     /**
      * 表示中のすべての列の検索条件。画面に出ている順。
      *

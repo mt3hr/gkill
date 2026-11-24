@@ -104,7 +104,7 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 | `ERR000438` | SkillManifestDeleteError | `SKILL.md` だけを消そうとした（400）。消すならスキルごと消す |
 | `ERR000439`〜`ERR000444` | GetSkillListError / GetSkillError / DownloadSkillError / UploadSkillError / WriteSkillFileError / DeleteSkillError | スキル API がサーバ側の理由（ディスクの失敗、利用者IDがパス要素に使えない等）で失敗した（500）。補足は添えない。`UploadSkillError` でも既存のスキルは元のまま残る（一時ディレクトリへ展開してから入れ替えるため） |
 
-| `ERR000452`〜`ERR000456` | InvalidExportRykvHTMLRequestData / InvalidExportRykvHTMLResponseData / InvalidExportRykvHTMLOption / ExportRykvHTMLTemplateNotFound / ExportRykvHTMLRender | HTML 出力の失敗。`InvalidExportRykvHTMLOption` は収集を始める前に弾く（列が0本、メディアを埋め込まないのに同名フォルダ、知らない指定値）。`ExportRykvHTMLTemplateNotFound` はガワが埋め込まれていないビルドでだけ出る（500） |
+| `ERR000452`〜`ERR000456` | InvalidExportKyouHTMLRequestData / InvalidExportKyouHTMLResponseData / InvalidExportKyouHTMLOption / ExportKyouHTMLTemplateNotFound / ExportKyouHTMLRender | HTML 出力の失敗。`InvalidExportKyouHTMLOption` は収集を始める前に弾く（列が0本、メディアを埋め込まないのに同名フォルダ、知らない指定値）。`ExportKyouHTMLTemplateNotFound` はガワが埋め込まれていないビルドでだけ出る（500） |
 
 スキル系（`ERR000430`〜`ERR000438`）への写像は `gkill_server_api/skill_errors.go` の `skillStoreGkillError` 1つで、`dao/skills/errors.go` の番兵を `errors.Is` で見分ける（`DetailError` が番兵に「どこが悪いか」を添え、4xx のときだけ文言へ写す）。番兵に当たらない失敗は操作ごとの 500（`ERR000439`〜`ERR000444`）に落ちる。
 

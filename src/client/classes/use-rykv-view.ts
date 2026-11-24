@@ -29,7 +29,7 @@ export function useRykvView(options: {
 
     // ── Template refs ──
     const columns_view = ref<ComponentRef | null>(null)
-    const export_rykv_html_dialog = ref<ComponentRef | null>(null)
+    const export_kyou_html_dialog = ref<ComponentRef | null>(null)
     const add_mi_dialog = ref<ComponentRef | null>(null)
     const add_nlog_dialog = ref<ComponentRef | null>(null)
     const add_lantana_dialog = ref<ComponentRef | null>(null)
@@ -99,8 +99,8 @@ export function useRykvView(options: {
         save_clipboard_to_file_dialog.value?.show()
     }
 
-    function show_export_rykv_html_dialog(): void {
-        export_rykv_html_dialog.value?.show()
+    function show_export_kyou_html_dialog(): void {
+        export_kyou_html_dialog.value?.show()
     }
 
     function show_help_dialog(): void {
@@ -136,7 +136,7 @@ export function useRykvView(options: {
         mkfl_dialog,
         upload_file_dialog,
         save_clipboard_to_file_dialog,
-        export_rykv_html_dialog,
+        export_kyou_html_dialog,
         help_dialog,
 
         // Computed
@@ -156,7 +156,7 @@ export function useRykvView(options: {
         show_lantana_dialog,
         show_upload_file_dialog,
         show_save_clipboard_to_file_dialog,
-        show_export_rykv_html_dialog,
+        show_export_kyou_html_dialog,
         show_help_dialog,
         floating_action_button_style,
 

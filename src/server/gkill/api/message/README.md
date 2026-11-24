@@ -99,7 +99,7 @@ type GkillMessage struct {
 | `ERR000422` | 書き込み先 rep 未設定（500 だが kind `config` / reason `write_rep_missing`。以前は nil ポインタ panic） |
 | `ERR000423` | メモ帳（KFTL）の再送キー `idempotency_key` を別の本文で使い回した（409）。同じ本文なら元の `created[]` を `replayed:true` で返す |
 | `ERR000424` 〜 `ERR000451` | スキル（`$GKILL_HOME/skills/<user_id>/<name>/`。ADR-0634）の API。リクエスト不正（400）・スキルやファイルが無い（404）・名前 / パス / SKILL.md / zip の不正（400）・既にある / revision の食い違い（409）・SKILL.md 単独の削除（400）・操作ごとのサーバ側失敗（500） |
-| `ERR000452` 〜 `ERR000456` | rykv の HTML 出力（`/api/export_rykv_html`）。リクエスト不正（400）・選べない組み合わせ（400）・応答の JSON 化の失敗（500）・出力用のガワが embed に無い（500）・組み立ての失敗（500） |
+| `ERR000452` 〜 `ERR000456` | rykv の HTML 出力（`/api/export_kyou_html`）。リクエスト不正（400）・選べない組み合わせ（400）・応答の JSON 化の失敗（500）・出力用のガワが embed に無い（500）・組み立ての失敗（500） |
 
 `ERR9000xx` 帯はフロントエンドだけで採番するコードで、Go 側の `error_codes.go` には存在しない（定義元は `src/client/classes/api/message/gkill_error.ts`、現在101定数）。番号が衝突しないよう帯を分けてあるので、Go 側でこの帯を使ってはならない。
 

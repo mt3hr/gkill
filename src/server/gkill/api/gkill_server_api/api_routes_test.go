@@ -313,7 +313,7 @@ func TestAPIRoutes_AuthKindGolden(t *testing.T) {
 		"/api/discard_tx":                   {authSessionRepos, bodyNone},
 		"/api/delete_kyou_cascade":          {authSessionRepos, bodyNone},
 		"/api/submit_kftl_text":             {authSessionRepos, bodyNone},
-		"/api/export_rykv_html":             {authSessionRepos, bodyNone}}
+		"/api/export_kyou_html":             {authSessionRepos, bodyNone}}
 
 	g := &GkillServerAPI{}
 	seen := map[string]bool{}

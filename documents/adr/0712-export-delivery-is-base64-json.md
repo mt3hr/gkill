@@ -7,7 +7,7 @@
 | Sources | `src/client/classes/api/gkill-api.ts` の `gkill_fetch` / `src/server/gkill/api/req_res/download_skill_response.go` / `src/client/classes/file-base64.ts` / [ADR-0415](0415-exported-view-is-a-separate-flag.md)（出力モードと通信の1点止め） |
 | Supersedes | なし |
 | Superseded-by | なし |
-| Anchors | `src/server/gkill/api/req_res/export_rykv_html_response.go` の doc コメント、`src/client/classes/api/gkill-api.ts` の `export_rykv_html` の doc コメント |
+| Anchors | `src/server/gkill/api/req_res/export_kyou_html_response.go` の doc コメント、`src/client/classes/api/gkill-api.ts` の `export_kyou_html` の doc コメント |
 
 ## Context
 
@@ -54,4 +54,4 @@ JSON 以外を `bad_response` に変えること（`gkill-api-bad-response.test.
 ## Related tests
 
 - `src/client/__tests__/unit/api/gkill-api-bad-response.test.ts` — JSON 以外の応答が `bad_response` の合成応答になること（この ADR の前提）
-- `src/server/gkill/api/gkill_server_api/handle_export_rykv_html_test.go` — 出力が JSON の `html` に入って返ること、弾いたときは `html` が空のままであること
+- `src/server/gkill/api/gkill_server_api/handle_export_kyou_html_test.go` — 出力が JSON の `html` に入って返ること、弾いたときは `html` が空のままであること

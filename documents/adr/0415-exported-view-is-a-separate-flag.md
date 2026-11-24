@@ -80,4 +80,4 @@ template が見るのは次の4つの computed だけにし、組み合わせの
 
 - `src/client/__tests__/unit/api/exported-kyou-api.test.ts` — 上書き1点ずつ（query_id で列を引く・焼き込んだ設定を返す・通知を焼き込みから引く・プラグイン本文が fetch へ落ちない・API キーが localStorage と退避先）
 - `src/client/__tests__/unit/classes/exported-kyou-payload.test.ts` — 焼き込みの実体化と、列の `kyou_ids` からの解決
-- `src/client/__tests__/unit/composables/exported-rykv-page.test.ts` — 焼き込みが読めないときに「記録が含まれていません」側へ落ちること
+- `src/client/__tests__/unit/composables/exported-kyou-page.test.ts` — 焼き込みが読めないときに「記録が含まれていません」側へ落ちること

@@ -1,14 +1,14 @@
 'use strict'
 
-import type { ExportRykvHTMLDialogEmits } from '@/pages/dialogs/export-rykv-html-dialog-emits'
-import type { ExportRykvHTMLDialogProps } from '@/pages/dialogs/export-rykv-html-dialog-props'
+import type { ExportKyouHTMLDialogEmits } from '@/pages/dialogs/export-kyou-html-dialog-emits'
+import type { ExportKyouHTMLDialogProps } from '@/pages/dialogs/export-kyou-html-dialog-props'
 import { ref, type Ref } from 'vue'
 import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
-export function useExportRykvHTMLDialog(options: {
-    props: ExportRykvHTMLDialogProps
-    emits: ExportRykvHTMLDialogEmits
+export function useExportKyouHTMLDialog(options: {
+    props: ExportKyouHTMLDialogProps
+    emits: ExportKyouHTMLDialogEmits
 }) {
     const { props: _props, emits: _emits } = options
 
@@ -17,7 +17,7 @@ export function useExportRykvHTMLDialog(options: {
      * 出力中か。**立っている間は閉じられない。**
      *
      * 出力の最中に閉じられると、応答が返ってきたときに保存の相手が居ない。
-     * 中の画面（export-rykv-html-view）が出力の開始と終了で書き、
+     * 中の画面（export-kyou-html-view）が出力の開始と終了で書き、
      * × ・ Esc ・ キャンセルはこれを見る。キャンセルを押すと中断されて false に戻るので、
      * そのあとなら閉じられる。
      */
@@ -25,7 +25,7 @@ export function useExportRykvHTMLDialog(options: {
 
     // 出力中はブラウザバックでも Escape でも閉じない（× は hide() が見る）
     useDialogHistoryStack(is_show_dialog, { canClose: () => !is_exporting.value })
-    const ui = useFloatingDialog("export-rykv-html-dialog", {
+    const ui = useFloatingDialog("export-kyou-html-dialog", {
         centerMode: "always",
         onEscape: () => hide(),
     })

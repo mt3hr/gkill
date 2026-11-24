@@ -287,6 +287,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0805](0805-adr-numbering-by-subsystem-hundreds.md) | ADR の採番はサブシステム別100番幅にし、帯の空きを機械検査する | Accepted |
 | [0806](0806-fix-spellings-instead-of-freezing.md) | 綴りは凍結せず直す — 互換を残さず、旧綴りのデータは一度きりで復旧する | Accepted |
 | [0807](0807-stop-real-data-values-at-write-and-commit.md) | 実データ由来の値は、書く瞬間とコミットの瞬間に「形」で止める | Accepted |
+| [0808](0808-export-names-drop-rykv.md) | 「HTML で出力」の名前から rykv を外す —— 互換は残さない | Accepted |
 
 ### 0900番台 ビルド・テスト・CI
 

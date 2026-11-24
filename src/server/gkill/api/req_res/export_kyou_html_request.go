@@ -7,7 +7,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 )
 
-// ExportRykvHTMLColumn は出力する列1本。
+// ExportKyouHTMLColumn は出力する列1本。
 //
 // **クライアントが送ってきた JSON を手放さないこと。** find.FindQuery には
 // query_id / keywords / *_in_sidebar / is_focus_kyou_in_list_view が無く、
@@ -18,7 +18,7 @@ import (
 // 収集には型に落とした Query を使い、焼き込みには Raw をそのまま使う。
 // こうすると、収集の途中で Query を触っても焼き込みには影響しない
 // （焼いた条件がサイドバーの生成する条件と食い違うと、その列が空になる）。
-type ExportRykvHTMLColumn struct {
+type ExportKyouHTMLColumn struct {
 	// Query は収集に使う検索条件。
 	Query find.FindQuery
 	// Raw はクライアントが送ってきた JSON そのまま。焼き込むのはこちら。
@@ -26,7 +26,7 @@ type ExportRykvHTMLColumn struct {
 }
 
 // UnmarshalJSON は生の JSON を控えてから型へ落とす。
-func (c *ExportRykvHTMLColumn) UnmarshalJSON(data []byte) error {
+func (c *ExportKyouHTMLColumn) UnmarshalJSON(data []byte) error {
 	c.Raw = append(json.RawMessage(nil), data...)
 	if err := json.Unmarshal(data, &c.Query); err != nil {
 		return fmt.Errorf("error at parse export rykv html column: %w", err)
@@ -35,7 +35,7 @@ func (c *ExportRykvHTMLColumn) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON は控えた生の JSON をそのまま返す（無ければ型から組む）。
-func (c ExportRykvHTMLColumn) MarshalJSON() ([]byte, error) {
+func (c ExportKyouHTMLColumn) MarshalJSON() ([]byte, error) {
 	if len(c.Raw) != 0 {
 		return c.Raw, nil
 	}
@@ -43,7 +43,7 @@ func (c ExportRykvHTMLColumn) MarshalJSON() ([]byte, error) {
 }
 
 // BakedQueryJSON は出力 HTML へ焼き込む列の条件を返す。
-func (c ExportRykvHTMLColumn) BakedQueryJSON() (json.RawMessage, error) {
+func (c ExportKyouHTMLColumn) BakedQueryJSON() (json.RawMessage, error) {
 	baked, err := c.MarshalJSON()
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (c ExportRykvHTMLColumn) BakedQueryJSON() (json.RawMessage, error) {
 }
 
 // IsNull は JSON の null が来たかを返す。
-func (c ExportRykvHTMLColumn) IsNull() bool {
+func (c ExportKyouHTMLColumn) IsNull() bool {
 	return len(c.Raw) == 0 || string(c.Raw) == "null"
 }
 
@@ -83,10 +83,10 @@ const (
 	ExportOutputFormatSidecar = "sidecar"
 )
 
-// ExportRykvHTMLRequest は rykv の画面を HTML へ出力する要求。
+// ExportKyouHTMLRequest は rykv の画面を HTML へ出力する要求。
 //
-// POST /api/export_rykv_html（wrapAuthRepos）
-type ExportRykvHTMLRequest struct {
+// POST /api/export_kyou_html（wrapAuthRepos）
+type ExportKyouHTMLRequest struct {
 	SessionID string `json:"session_id"`
 
 	// LocaleName はエラーメッセージの言語であり、出力 HTML へ焼き込む言語でもある。
@@ -101,7 +101,7 @@ type ExportRykvHTMLRequest struct {
 	// 全 rep）。tags / reps の既定は非 nil の空配列 = 0件指定であって「絞らない」ではないので、
 	// 欠けた条件を焼くと、出力先のサイドバーが初めに生成した条件と食い違った瞬間に
 	// その列が空になる。
-	Columns []ExportRykvHTMLColumn `json:"columns"`
+	Columns []ExportKyouHTMLColumn `json:"columns"`
 
 	// 付随データを含めるか。偽の項目は焼き込まれない。
 	IncludeAttachedTags          bool `json:"include_attached_tags"`
