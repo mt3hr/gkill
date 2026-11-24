@@ -498,6 +498,7 @@ gkill独自のテキスト書式で記録を一括入力する画面です。
 
 | プラグイン | 取り込む内容 |
 |---|---|
+| Antigravity | Antigravity のチャットログ |
 | ChatGPT | ChatGPT からエクスポートした会話履歴 |
 | Claude.ai | Claude.ai からエクスポートした会話履歴 |
 | Claude Code | Claude Code のチャットログ |

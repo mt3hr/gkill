@@ -51,7 +51,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 
 | ファイル | 内容 | 主な読者・用途 |
 |---|---|---|
-| [glossary.md](glossary.md) | ドメイン用語の定義（100項目） | 全員。用語確認時に随時参照 |
+| [glossary.md](glossary.md) | ドメイン用語の定義（101項目） | 全員。用語確認時に随時参照 |
 | [design-philosophy.md](design-philosophy.md) | アーキテクチャ決定と設計思想 | 設計判断の背景を知りたいとき |
 | [folder-structure.md](folder-structure.md) | プロジェクトのフォルダ構成 | 初回参照、ファイル探索時 |
 | [usecase.md](usecase.md) | ユースケース一覧（95件） | 機能仕様の把握、テスト設計 |

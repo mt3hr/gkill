@@ -105,6 +105,24 @@ plugins/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
 │   └── README.md
+├── gkill_plugin_antigravity/    # Antigravity のチャットログ
+│   ├── main.go
+│   ├── types.go
+│   ├── config.go
+│   ├── scan.go                 # 読むファイルの判定・会話IDを祖先フォルダ名から採る
+│   ├── loader.go               # transcript_full.jsonl → 発言の列
+│   ├── summaries.go            # conversation_summaries.db から会話タイトルとプロジェクト名
+│   ├── cache.go
+│   ├── query.go                # 読み取り(ロックを取らない)
+│   ├── builder.go              # 常駐バックグラウンドビルダ
+│   ├── render.go               # 本文 HTML（SDK の chatview へ写す）
+│   ├── html.go                 # 設定画面（SDK の configview へ写す）
+│   ├── uuid.go
+│   ├── *_test.go
+│   ├── testdata/               # 合成の会話2件
+│   ├── go.mod / go.sum
+│   ├── manifest.json
+│   └── README.md
 ├── gkill_plugin_archived_git_commit_log/  # zip に固めた Git リポジトリのコミットログ
 │   ├── main.go
 │   ├── types.go
@@ -144,6 +162,7 @@ plugins/
 | プラグイン | data_type | 概要 |
 |---|---|---|
 | [`gkill_example`](examples/gkill_example/README.md) | `example_kyou` | サンプル実装。固定Kyouを2件返す |
+| [`gkill_plugin_antigravity`](gkill_plugin_antigravity/README.md) | `antigravity_turn` | Google Antigravity のチャットログを、自分の発言と一連の応答に分けてタイムライン表示 |
 | [`gkill_plugin_claudeai`](gkill_plugin_claudeai/README.md) | `claude_conversation` | Claude.ai のチャット履歴をタイムライン表示 |
 | [`gkill_plugin_chatgpt`](gkill_plugin_chatgpt/README.md) | `chatgpt_conversation` | ChatGPT のチャット履歴をタイムライン表示 |
 | [`gkill_plugin_claudecode`](gkill_plugin_claudecode/README.md) | `claude_code_turn` | Claude Code のチャットログを、自分の発言と一連の応答に分けてタイムライン表示 |
@@ -207,6 +226,20 @@ $GKILL_HOME/plugins/{userID}/{プラグイン名}/
 
 `session_index.jsonl` はセッションuuid → スレッド名の対応表で、指定すると詳細画面に
 スレッド名が出る。無くても取り込みはできる。
+
+### gkill_plugin_antigravity
+
+データファイルの配置は不要。読み込むフォルダは `config.json` で指定する。
+
+1. 配置先ディレクトリに `manifest.json`・実行ファイルを置き、gkill_server を再起動する
+2. 自動生成される `config.json` の `source_dirs` は既定で `~/.gemini/antigravity/brain` と
+   `~/.gemini/antigravity/conversation_summaries.db`。他の場所を読ませたい場合は書き換える
+3. 取り込みはバックグラウンドで進むので、**置いた直後の1回目の検索は空が返る**。進捗は設定画面に出る
+
+読むのは `transcript_full.jsonl` だけで、**会話IDはファイル名ではなくフォルダ名に入っている**。
+別の場所へ写して読ませるときは `<会話ID>/transcript_full.jsonl` の形を保つこと
+（保っていないファイルは読まず、設定画面に警告が出る）。
+`conversation_summaries.db` は会話タイトルとプロジェクト名の対応表で、指定すると一覧と詳細に出る。無くても取り込みはできる。
 
 ### gkill_plugin_fitbit / gkill_plugin_google_locationhistory
 
@@ -294,9 +327,9 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
   いる場合は**実行アカウントのホーム**になるため、絶対パスのほうが確実
 - 空にすると各プラグインの既定（claudeai / chatgpt はプラグインフォルダ自身、
   claudecode は `~/.claude/projects`、codex は `~/.codex/sessions` と
-  `~/.codex/session_index.jsonl`、fitbit / 位置情報は `~/Kyou/GoogleTakeout_*`、vrchat は `~/AppData/LocalLow/VRChat/VRChat`）を使う
+  `~/.codex/session_index.jsonl`、antigravity は `~/.gemini/antigravity`、fitbit / 位置情報は `~/Kyou/GoogleTakeout_*`、vrchat は `~/AppData/LocalLow/VRChat/VRChat`）を使う
 - 編集は**次の検索から反映される**（gkill_server の再起動は不要）
-- **claudecode / codex / vrchat 以外の5本（chatgpt / claudeai / fitbit / 位置情報 / archived_git_commit_log）は ZIP しか読まない。** フォルダを指定するとその下の `*.zip` を
+- **antigravity / claudecode / codex / vrchat 以外の5本（chatgpt / claudeai / fitbit / 位置情報 / archived_git_commit_log）は ZIP しか読まない。** フォルダを指定するとその下の `*.zip` を
   再帰的に探し、ZIP の中を走査する。ZIP を直接指定してもよい
 
 ---
@@ -557,7 +590,7 @@ sdk.Run(sdk.Handler{
 
 会話形式の記録（AI チャットのログなど）の `GetContentHTML` は、HTML を自分で組まずに `chatview` へ写す。
 head（CSS 変数・テーマ追従・iframe のサイズ通知）・吹き出し・チップ・折りたたみ・「見つかりません」ページ・
-コードフェンスの描画・4MiB の打ち切りが1か所に揃う。同梱の chatgpt / claudeai / claudecode / codex が使う
+コードフェンスの描画・4MiB の打ち切りが1か所に揃う。同梱の antigravity / chatgpt / claudeai / claudecode / codex が使う
 （[ADR-0315](../../documents/adr/0315-chat-plugins-render-through-sdk-chatview.md)）。
 
 ```go
@@ -597,6 +630,10 @@ dblclick の転送はクライアントが本文の末尾に足すので書か�
 # gkill_example
 cd src/plugins/examples/gkill_example
 go build -o gkill_example .
+
+# gkill_plugin_antigravity
+cd src/plugins/gkill_plugin_antigravity
+go build -o gkill_plugin_antigravity .
 
 # gkill_plugin_claudeai
 cd src/plugins/gkill_plugin_claudeai

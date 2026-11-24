@@ -1,0 +1,10 @@
+{
+  "protocol_version": "1",
+  "name": "gkill_plugin_antigravity",
+  "version": "1.1.12",
+  "description": "Google Antigravity のチャットログ(brain の transcript_full.jsonl)をgkillタイムラインに表示する。人間の発言1つと、それに続く一連の応答をそれぞれ1Kyouとして扱う。ツールの実行結果は保持しない。会話タイトルとワークスペースは conversation_summaries.db があれば使う。設定画面でデータソースのフォルダを指定して使用。",
+  "data_type": "antigravity_turn",
+  "rep_name": "Antigravity",
+  "executable": "gkill_plugin_antigravity",
+  "min_gkill_version": "1.1.12"
+}

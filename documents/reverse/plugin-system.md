@@ -75,7 +75,7 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 
 ### manifest.json / config.json の自動生成
 
-同梱プラグイン8本（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / google_locationhistory / vrchat）は manifest.json を `//go:embed` でバイナリに埋め込んでおり、
+同梱プラグイン9本（antigravity / archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / google_locationhistory / vrchat）は manifest.json を `//go:embed` でバイナリに埋め込んでおり、
 次のフラグで標準出力に書き出せる。サンプルの `gkill_example` は埋め込みもフラグも持たない。
 
 | フラグ | 出力 |
@@ -114,7 +114,7 @@ cmd := exec.CommandContext(context.Background(),
 稼働中サーバに頼らず、上と同じ引数に `--gkill-build-cache` を足してプラグインを直接起動し、終わるまで待つ。
 `sdk.Run` はこのフラグを見ると stdio ループに入らず `Handler.BuildCache(ctx, cfg)` を同期で1回呼び、
 stdout に結果行（`built`、`BuildCache` が nil なら `no_cache`）を1行だけ書いて exit 0、エラーなら stderr（と `logs/gkill_plugin_<name>_error.log`）に出して exit 1 で終わる。
-同梱8本は既存の同期構築関数（`build` / `refresh`）を `BuildCache` から呼ぶだけで、常駐ビルダは起こさない
+同梱9本は既存の同期構築関数（`build` / `refresh`）を `BuildCache` から呼ぶだけで、常駐ビルダは起こさない
 （`plugin/sdk/build_cache_test.go` の `TestBundledPluginsWireBuildCache` が配線をソース走査で固定する）。
 
 gkill 側は子プロセスの stdin を繋がず（フラグを知らない旧バイナリが stdio ループへ入っても EOF で終わる）、
@@ -222,7 +222,7 @@ iframe は `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）
 親は受け取ったフォームを `post_plugin_config` に送り、成功したら設定 HTML を取り直して
 読み込み件数などの表示を更新する。生成された `config.json` を手で編集する経路も従来どおり使える。
 
-**同梱プラグイン8本の設定画面 HTML は SDK の `plugin/sdk/configview` が1か所で描く**（[ADR-0316](../adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
+**同梱プラグイン9本の設定画面 HTML は SDK の `plugin/sdk/configview` が1か所で描く**（[ADR-0316](../adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
 各プラグインの `html.go` は自分の文言と統計を `configview.Page` へ写すだけで、次の体裁は SDK 側にある。
 
 | 欄 | 描くもの |
@@ -431,6 +431,10 @@ Claude Code と似ているが**2段構成**になっている点が違う。
   セッション単位にしないのは、サブエージェントを含むグループでは1行の追記のために
   十数ファイル・百MB超を読み直すことになるため。子が新しく現れたときも親が消えたときも
   **両方のルート**を畳み直し対象にする。スレッド名の更新はロールアウトを1バイトも読み直さない。
+- **Antigravity（会話単位の取り込み）** — 1ファイル=1会話なので、変わった `transcript_full.jsonl` の
+  会話だけ `kyou_cache` を全部消して入れ直す。`conversation_summaries.db`（会話タイトルとプロジェクト名）は
+  差分を見ずに毎回読み、値が変わった会話だけ `kyou_cache` の別カラムを1文で更新する（SQLite はページ単位で
+  書くので、タイトルが変わってもサイズは動かず秒精度の mtime も同じ秒なら動かない）。
 - **VRChat（ファイル単位の取り込み + 起動単位の作り直し）** — 変わったファイルとそれが属する起動キーだけ
   `record` を作り直す。一番大きいファイルが消えたら、残ったファイルから作り直す。
 
@@ -462,7 +466,7 @@ Claude Code のメソッドは第2引数に展開済みソース（`expandedSour
 
 ### 処理フロー
 
-AI チャット系の4本（ChatGPT / Claude.ai / Claude Code / Codex）は同じ形。描画は SDK の `plugin/sdk/chatview` が1か所で行い、
+AI チャット系の5本（ChatGPT / Claude.ai / Claude Code / Codex / Antigravity）は同じ形。描画は SDK の `plugin/sdk/chatview` が1か所で行い、
 各プラグインの `render.go` は自分のログの形を `chatview.Message` へ写すだけ
 （[ADR-0315](../adr/0315-chat-plugins-render-through-sdk-chatview.md)）。
 
@@ -480,13 +484,13 @@ GetContentHTML(kyouID)
 - `.conv-title` — 会話 / セッション名（無ければ出さない）
 - `.chips` — project・branch・model・所要時間のうち持っているもの。空白1つで区切る（MCP の HTML→テキスト変換は `<span>` を改行にしないので、詰めると1語に連結される）
   - ChatGPT: model（`message.metadata.model_slug`、無ければ会話の `default_model_slug`）。Claude.ai: 無し。
-    Claude Code: project・branch・model（`message.model`）・所要時間（返事の最初から最後のレコードまで）。Codex: project・branch・model・所要時間（`task_complete`）
-- `.msg.human` / `.msg.assistant` — 吹き出し。`.sender` のラベルは人間側が4本とも「あなた」、応答側は製品名 ChatGPT / Claude / Claude Code / Codex
+    Claude Code: project・branch・model（`message.model`）・所要時間（返事の最初から最後のレコードまで）。Antigravity: project（`workspace_uris`）・model・所要時間（応答の最初から最後のステップまで）。Codex: project・branch・model・所要時間（`task_complete`）
+- `.msg.human` / `.msg.assistant` — 吹き出し。`.sender` のラベルは人間側が5本とも「あなた」、応答側は製品名 ChatGPT / Claude / Claude Code / Codex / Antigravity
   （Codex の質問への回答は「あなた（質問への回答）」）
   - 本文は `chatview.RenderText`: コードフェンス（三連のバッククォートか `~~~`）を `<pre><code>`、インラインの `` `code` `` を `<code>` にし、
     それ以外はエスケープしたプレーンテキスト（`white-space: pre-wrap`）
   - 前置き（Codex の IDE / ブラウザのコンテキスト）は本文の直後に折りたたみで置く
-  - 返事は最終回答（Codex は `phase=final_answer`、Claude Code は最後のテキスト）と質問を本文に、途中報告・thinking・ツール・変更ファイル・計画・通知・
+  - 返事は最終回答（Codex は `phase=final_answer`、Claude Code と Antigravity は最後のテキスト）と質問を本文に、途中報告・thinking・ツール・変更ファイル・計画・通知・
     サブエージェントは `<details class="process">`「🛠 作業の経過 — 途中報告 ×n · ツール名 ×n · thinking ×n · 変更 nファイル」1つに時系列で畳む
     （[ADR-0314](../adr/0314-codex-conversation-from-item-completed.md)）
   - `.ts` — 関連時刻（`2006-01-02 15:04`、ローカル時刻）
@@ -715,6 +719,7 @@ GitCommitLogContextMenu と同じ項目に加えて、プラグイン固有の�
 
 | プラグイン名 | Rep名 | DataType | ソースディレクトリ |
 |---|---|---|---|
+| gkill_plugin_antigravity | Antigravity | `antigravity_turn` | `src/plugins/gkill_plugin_antigravity/` |
 | gkill_plugin_chatgpt | ChatGPT | `chatgpt_conversation` | `src/plugins/gkill_plugin_chatgpt/` |
 | gkill_plugin_claudeai | Claude.ai | `claude_conversation` | `src/plugins/gkill_plugin_claudeai/` |
 | gkill_plugin_claudecode | ClaudeCode | `claude_code_turn` | `src/plugins/gkill_plugin_claudecode/` |
@@ -726,7 +731,7 @@ GitCommitLogContextMenu と同じ項目に加えて、プラグイン固有の�
 | gkill_example | （サンプル） | `example_kyou` | `src/plugins/examples/gkill_example/` |
 
 `gkill_example` は固定の Kyou を返すだけのサンプル実装で、`DefaultConfig` を持たない
-（＝ `config.json` を生成しない）。それ以外の8つは `source_dirs` 設定と SQLite3 キャッシュを持つ。
+（＝ `config.json` を生成しない）。それ以外の9つは `source_dirs` 設定と SQLite3 キャッシュを持つ。
 
 ### ビルド手順
 
@@ -843,7 +848,7 @@ gkill_get_kyous              … include_plugin_content:true を付けて検索�
 | `gpslog` | GPS ログ（Kyou ではない） | `GPSLogReps` |
 
 **未指定（省略・空配列）が既定で、このとき gkill はアダプタを一切登録しない。**
-既存プラグイン（chatgpt / claudeai / claudecode / example）は manifest.json を書き換えなくても従来どおり動く。
+既存プラグイン（antigravity / chatgpt / claudeai / claudecode / codex / example）は manifest.json を書き換えなくても従来どおり動く。
 
 未知の値は警告して読み飛ばす（`dao/plugin_manager.go` の `loadManifest`）。
 タイプミスでプラグインごと無効化すると、それまで出ていた記録まで丸ごと消えてしまうため、エラーにはしない。

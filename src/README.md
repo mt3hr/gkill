@@ -94,6 +94,7 @@ src/
 │       └── main/    #   CLI エントリポイント
 ├── plugins/         # スタンドアロンプラグイン（各々が独立した go.mod）
 │   ├── examples/gkill_example/   # サンプル実装
+│   ├── gkill_plugin_antigravity/ # Antigravity チャットログ
 │   ├── gkill_plugin_chatgpt/     # ChatGPT 会話履歴
 │   ├── gkill_plugin_claudeai/    # Claude.ai 会話履歴
 │   ├── gkill_plugin_claudecode/  # Claude Code チャットログ
@@ -233,7 +234,7 @@ npm run go_install
 | `wear_os/` | [wear_os/README.md](wear_os/README.md) |
 | `locales/` | [locales/README.md](locales/README.md) |
 | `server/gkill/mcp/` | [server/gkill/mcp/README.md](server/gkill/mcp/README.md)（MCP Server。`gkill_server mcp` サブコマンド） |
-| `plugins/` | [plugins/README.md](plugins/README.md)（各プラグインにも個別の README がある: [gkill_example](plugins/examples/gkill_example/README.md) / [chatgpt](plugins/gkill_plugin_chatgpt/README.md) / [claudeai](plugins/gkill_plugin_claudeai/README.md) / [claudecode](plugins/gkill_plugin_claudecode/README.md) / [codex](plugins/gkill_plugin_codex/README.md) / [fitbit](plugins/gkill_plugin_fitbit/README.md) / [google_locationhistory](plugins/gkill_plugin_google_locationhistory/README.md) / [archived_git_commit_log](plugins/gkill_plugin_archived_git_commit_log/README.md) / [vrchat](plugins/gkill_plugin_vrchat/README.md)） |
+| `plugins/` | [plugins/README.md](plugins/README.md)（各プラグインにも個別の README がある: [gkill_example](plugins/examples/gkill_example/README.md) / [antigravity](plugins/gkill_plugin_antigravity/README.md) / [chatgpt](plugins/gkill_plugin_chatgpt/README.md) / [claudeai](plugins/gkill_plugin_claudeai/README.md) / [claudecode](plugins/gkill_plugin_claudecode/README.md) / [codex](plugins/gkill_plugin_codex/README.md) / [fitbit](plugins/gkill_plugin_fitbit/README.md) / [google_locationhistory](plugins/gkill_plugin_google_locationhistory/README.md) / [archived_git_commit_log](plugins/gkill_plugin_archived_git_commit_log/README.md) / [vrchat](plugins/gkill_plugin_vrchat/README.md)） |
 | `tools/` | [tools/README.md](tools/README.md) |
 
 ## 各サブディレクトリの ABOUT_TEST.md

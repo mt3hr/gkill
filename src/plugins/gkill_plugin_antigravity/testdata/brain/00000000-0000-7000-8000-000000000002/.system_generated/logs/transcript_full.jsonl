@@ -1,0 +1,3 @@
+{"step_index":0,"type":"SYSTEM_MESSAGE","source":"SYSTEM","status":"STEP_STATUS_DONE","created_at":"2024-01-02T00:00:00Z","content":"自動で始まった作業"}
+{"step_index":1,"type":"PLANNER_RESPONSE","source":"MODEL","status":"STEP_STATUS_DONE","created_at":"2024-01-02T00:01:00Z","content":"自動の報告","model":"gemini-test-model"}
+{"step_index":2,"type":"ERROR_MESSAGE","source":"SYSTEM","status":"STEP_STATUS_ERROR","created_at":"2024-01-02T00:02:00Z","content":"失敗しました","error":"エラーの詳細","error_code":42}

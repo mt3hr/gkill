@@ -101,7 +101,7 @@ type pluginRepositoryImpl struct {
 	proc *pluginProcess // nil = 未起動
 
 	// typedIndex は型別/付随データを提供するプラグインだけが持つ索引。
-	// providesを宣言していないプラグイン（chatgpt/claudeai/claudecode/example）と、
+	// providesを宣言していないプラグイン（antigravity/chatgpt/claudeai/claudecode/codex/example）と、
 	// providesがgpslogだけのプラグインではnilのままで、UpdateCacheも何もしない。
 	typedIndex *PluginTypedIndex
 

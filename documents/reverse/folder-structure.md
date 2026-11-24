@@ -155,7 +155,7 @@ src/server/
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     │       ├── chatview/           # AI チャット系プラグインの本文 HTML（chatview.Message → HTML。head・チップ・折りたたみを1か所に。ADR-0315）
-    │       └── configview/         # 同梱プラグイン8本の設定画面 HTML（configview.Page → HTML。head・保存スクリプト・進捗・フォームを1か所に。ADR-0316）
+    │       └── configview/         # 同梱プラグイン9本の設定画面 HTML（configview.Page → HTML。head・保存スクリプト・進捗・フォームを1か所に。ADR-0316）
     ├── dao/                        # データアクセス層
     │   ├── gkill_dao_manager.go    # DAOマネージャ（ConfigDAOs + GkillRepositories管理）
     │   ├── plugin_manager.go       # プラグインディレクトリを走査してPluginRepositoryを登録
@@ -306,6 +306,7 @@ gkill本体とは独立してビルドされるプラグインバイナリです
 src/plugins/
 ├── examples/
 │   └── gkill_example/                  # サンプルプラグイン（固定のKyouレスポンスを返す）
+├── gkill_plugin_antigravity/           # Antigravity チャットログプラグイン
 ├── gkill_plugin_archived_git_commit_log/ # zip に固めた Git リポジトリのコミットログ（展開せず .git を go-git で読む）
 ├── gkill_plugin_chatgpt/               # ChatGPT会話履歴プラグイン
 ├── gkill_plugin_claudeai/              # Claude.ai会話履歴プラグイン
@@ -318,11 +319,11 @@ src/plugins/
 └── README.md
 ```
 
-各プラグインは独立した `go.mod` を持つ別モジュール。同梱プラグイン8本（archived_git_commit_log / chatgpt / claudeai /
+各プラグインは独立した `go.mod` を持つ別モジュール。同梱プラグイン9本（antigravity / archived_git_commit_log / chatgpt / claudeai /
 claudecode / codex / fitbit / google_locationhistory / vrchat）は
 `manifest.json` をバイナリに `//go:embed` しており、`--gkill-print-manifest` / `--gkill-print-config` で
 内容を標準出力に書き出せる（`gkill_example` は埋め込みもフラグも `DefaultConfig` も持たない）。
-この8本は `config.json` の `source_dirs` で取り込み元（フォルダ・glob・zip の実パス）を指定し、
+この9本は `config.json` の `source_dirs` で取り込み元（フォルダ・glob・zip の実パス）を指定し、
 SQLite3 キャッシュを `$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db` に置く
 （解決は SDK の `sdk.CacheDBPath`。先行の6本が同じ実装を持っていたので集約した）。
 
@@ -380,7 +381,7 @@ src/tools/
 documents/
 ├── reverse/                          # リバースエンジニアリング設計資料集
 │   ├── README.md                     # 資料集の目次・推奨読み順
-│   ├── glossary.md                   # 用語集（100項目）
+│   ├── glossary.md                   # 用語集（101項目）
 │   ├── design-philosophy.md          # 設計思想
 │   ├── usecase.md                    # ユースケース一覧（95件）
 │   ├── er-diagram.md                 # ER図（Mermaid）

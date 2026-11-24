@@ -1,0 +1,2 @@
+{"step_index":0,"type":"CONVERSATION_HISTORY","source":"SYSTEM","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:00:00Z","content":"前の会話からの引き継ぎ"}
+{"step_index":1,"type":"USER_INPUT","source":"USER_EXPLICIT","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:01:00Z","content":"テストの記録を作ってください"}
