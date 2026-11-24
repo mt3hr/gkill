@@ -1,11 +1,11 @@
 ---
 name: gkill-client-rudbeckia
-description: "ポート（開発コード rudbeckia）とフローティングウィンドウの約束。ビューを v-layout で包む理由、scoped CSS に 100vh を書かない、ホストされたビューの FAB と Enter/Ctrl+V 登録の禁止、ポートの FAB の z-index、複数枚の保存キー instance_key と slot 採番・cascade 段差の区別を扱う。rudbeckia-page.vue・use-rudbeckia-page.ts・rykv-view.vue・mi-view.vue・dashboard-view.vue・playing-time-is-view.vue を編集するとき、ビューをウィンドウとしてホストするとき必読。「バーが画面最上部へ飛ぶ」「ウィンドウが重なって1枚に見える」「2枚目が1枚目の条件を上書きする」「集計リストだけ消える」の調査でも必読。"
+description: "ポート（開発コード rudbeckia）とフローティングウィンドウの約束。ビューを v-layout で包む理由、scoped CSS に 100vh を書かない、ホストされたビューの FAB と Enter/Ctrl+V 登録の禁止、ポートの FAB の z-index、複数枚の保存キー instance_key と slot 採番・cascade 段差の区別を扱う。rudbeckia-page.vue・use-rudbeckia-page.ts・rykv-view.vue・mi-view.vue・rykv-columns-view.vue・mi-columns-view.vue・dashboard-view.vue・playing-time-is-view.vue を編集するとき、ビューをウィンドウとしてホストするとき必読。「バーが画面最上部へ飛ぶ」「ウィンドウが重なって1枚に見える」「2枚目が1枚目の条件を上書きする」「集計リストだけ消える」の調査でも必読。"
 ---
 
 # ポート（rudbeckia）とフローティングウィンドウの不変条件
 
-対象: `src/client/pages/rudbeckia-page.vue` / `use-rudbeckia-page.ts` / ホストされる `rykv-view.vue` / `mi-view.vue` / `dashboard-view.vue` / `playing-time-is-view.vue`
+対象: `src/client/pages/rudbeckia-page.vue` / `use-rudbeckia-page.ts` / ホストされる `rykv-view.vue` / `mi-view.vue` / `dashboard-view.vue` / `playing-time-is-view.vue` / 列の子 `rykv-columns-view.vue` / `mi-columns-view.vue`
 
 **このファイルは全文が、実際に起きた事故の再発防止である。該当作業では飛ばさずに読むこと。**
 多くは「例外もエラーも出さずに静かに壊れる」種類で、破っても目の前ではエラーにならない。
@@ -18,7 +18,7 @@ description: "ポート（開発コード rudbeckia）とフローティング�
 - **`drawer_mode_is_mobile` は `props.app_content_width` の computed。** 初期化時の1回代入だとダイアログをリサイズしてもドロワーの一時表示モードが切り替わらない。rykv と mi は対称なので必ず両方へ
 - **ホストしたビューは自前の FAB を出さない**（`is_hosted_in_dialog`）。`.position-fixed` は `position: fixed` なのでダイアログを抜けて画面右下へ居座り、ポートの FAB と重なる。ついでに打刻メモ帳ダイアログの二重 FAB もこれで消えた
 - **ポートの FAB は `.position-fixed-rudbeckia`（`z-index: 2000`）。** 素の `.position-fixed` だとウィンドウ（`z-index: 1100 + 並び順`）に覆われ、**唯一の操作導線が押せなくなる**。Vuetify の overlay(2400) は追い越さないこと（追い越すと FAB 自身のメニューが下へ潜る）
-- **ホストしたビューで Enter / Ctrl+V を登録しない。** `useScopedEnterForKFTL` / `useScopedCtrlVForClipboard` は `window` にキャプチャで張るので、4画面ぶん登録すると1回の Enter でメモ帳が4枚開く
+- **ホストしたビューで Enter / Ctrl+V を登録しない。** `useScopedEnterForKFTL` / `useScopedCtrlVForClipboard` は `window` にキャプチャで張るので、4画面ぶん登録すると1回の Enter でメモ帳が4枚開く。**rykv と mi では FAB の門とキーボードの門が別のファイルにある** ―― FAB はラッパ（`rykv-view.vue` / `mi-view.vue` の `v-if="!is_hosted_in_dialog"`）、キーボードは列の子が props で受け取る `enable_keyboard_shortcuts`。ラッパが `:enable_keyboard_shortcuts="!is_hosted_in_dialog"` を書き忘れても**真偽値であれば型では落ちない**ので、ホストするビューを増やすときは両方を確かめる
 - **ホストしたビューの画面切替メニューは `router.replace` しない。** `navigate_to_page` は `reset_dialog_history()`（モジュール共有）を呼ぶので、ポートで開いている他のウィンドウまで一斉に閉じる。`requested_navigate_page` を上げてホストに決めさせる
 - **位置とサイズの保存キー（`slot_index`）と、中央からずらす段数（`cascade_index`）は別物。** 前者は種類ごと、後者は種類をまたいだ採番。ずらす量を `slot_index` で決めると4種類とも 0 になり、**4枚が完全に重なって1枚にしか見えない**
 - **ウィンドウの未リサイズ時サイズは非スコープ CSS で確定させる**（Teleport 先には `data-v-` が付かない）。確定させたぶん ResizeObserver の実測をそのまま子へ渡す。`kftl-dialog.vue:72-82` の「`userSize` が無いときは既定値」ガードと**併用しない**（併用すると固定した高さが無視される）

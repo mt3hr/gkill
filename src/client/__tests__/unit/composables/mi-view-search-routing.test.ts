@@ -1,5 +1,5 @@
 /**
- * useMiView の「列(板)×検索」ルーティングのテスト。
+ * useMiColumns の「列(板)×検索」ルーティングのテスト。
  * rykv-view-search-routing.test.ts と対になる(実装がコピー由来の対称実装のため、
  * 修正が片側にしか入っていないとここで落ちる)。
  * mi固有: カレンダー(focused_kyous_list)の汚染防止と open_or_focus_board の一致判定。
@@ -33,10 +33,10 @@ vi.mock('@/classes/kyou-reload', () => ({
 // GkillAPIRequest→GkillAPI→ApplicationConfig→req_res の循環importがあるため、
 // 本番同様に gkill-api を先に評価させる(mi-re-kyou-view.test.ts と同じ事情)
 import '@/classes/api/gkill-api'
-import { useMiView } from '@/classes/use-mi-view'
+import { useMiColumns } from '@/classes/use-mi-columns'
 import { refresh_kyou_in_list } from '@/classes/kyou-reload'
-import type { MiViewProps } from '@/pages/views/mi-view-props'
-import type { MiViewEmits } from '@/pages/views/mi-view-emits'
+import type { MiColumnsViewProps } from '@/pages/views/mi-columns-view-props'
+import type { MiColumnsViewEmits } from '@/pages/views/mi-columns-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import {
@@ -48,7 +48,7 @@ import {
   flushAsync,
 } from '../../helpers/rykv-mi-harness'
 
-const noop_emits = (() => { }) as unknown as MiViewEmits
+const noop_emits = (() => { }) as unknown as MiColumnsViewEmits
 
 function kyous(ids: string[]): Kyou[] {
   return ids.map((id) => ({ id })) as unknown as Kyou[]
@@ -68,14 +68,14 @@ function makeBoardColumnQuery(query_id: string, board_name: string): FindKyouQue
 function createView(config_overrides: Record<string, unknown> = {}) {
   const { api, pending_get_kyous } = createColumnViewMockApi()
   const raw_props = makeColumnViewProps(api, config_overrides)
-  const props = raw_props as unknown as MiViewProps
-  const view = useMiView({ props, emits: noop_emits })
+  const props = raw_props as unknown as MiColumnsViewProps
+  const view = useMiColumns({ props, emits: noop_emits })
   // init() は application_config.is_loaded の watch で起動する
   const start_init = () => finish_application_config_load(raw_props)
   return { api, pending_get_kyous, view, start_init }
 }
 
-describe('useMiView 列(板)×検索ルーティング', () => {
+describe('useMiColumns 列(板)×検索ルーティング', () => {
   test('別列の検索は自列にだけ書き、focused_queryを乗っ取らない', async () => {
     const { pending_get_kyous, view } = createView()
     const query_a = makeColumnQuery('col-a')

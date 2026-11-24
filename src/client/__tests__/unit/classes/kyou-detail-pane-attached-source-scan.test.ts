@@ -134,7 +134,7 @@ describe('Kyou詳細ペインの付随データ表示の走査', () => {
     // 走査が「何も見つけられないだけ」で緑になっていないことを確かめる
     it('詳細ペインを見つけられている', () => {
         expect(detail_panes.map(block => block.repo_path).sort()).toEqual([
-            'src/client/pages/views/mi-view.vue',
+            'src/client/pages/views/mi-columns-view.vue',
             'src/client/pages/views/rykv-columns-view.vue',
             'src/client/pages/views/shared-mi-view.vue',
             'src/client/pages/views/shared-rykv-view.vue',

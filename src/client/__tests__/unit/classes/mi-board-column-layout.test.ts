@@ -34,7 +34,7 @@ const repo_root = find_repo_root()
 
 /** 板名の見出しを持つ画面 */
 const COLUMN_VIEWS = [
-    'src/client/pages/views/mi-view.vue',
+    'src/client/pages/views/mi-columns-view.vue',
     'src/client/pages/views/shared-mi-view.vue',
 ]
 

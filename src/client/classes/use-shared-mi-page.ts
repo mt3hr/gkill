@@ -1,7 +1,6 @@
-import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue'
+import { onMounted, onUnmounted, ref, type Ref } from 'vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import { useRoute } from 'vue-router'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { SharedMiPageProps } from '@/pages/shared-mi-page-props'
 import { useGkillMessageFeed } from '@/classes/use-gkill-message-feed'
@@ -21,7 +20,6 @@ export function useSharedMiPage(options: {
     // share_id が無くても throw しないこと（`!` を付けると undefined.toString() で
     // setup ごと失敗し、エラーも出ない真っ白な画面になる）。
     // use-shared-page.ts と同じ受け方に揃えてある
-    const share_kyou_id = computed(() => useRoute().query.share_id?.toString() ?? '')
 
     const { push_errors, push_messages } = useGkillMessageFeed()
 
@@ -65,7 +63,6 @@ export function useSharedMiPage(options: {
         app_title_bar_height,
         app_content_height,
         app_content_width,
-        share_kyou_id,
 
         // Event handlers
         write_errors,

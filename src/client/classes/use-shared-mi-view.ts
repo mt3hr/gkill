@@ -22,10 +22,7 @@ export function useSharedMiView(options: {
     // ── State refs ──
     const match_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
     const focused_time: Ref<Date> = ref(new Date())
-    const share_title: Ref<string> = ref(props.share_title)
     const is_loading: Ref<boolean> = ref(true)
-    const is_show_kyou_detail_view: Ref<boolean> = ref(true)
-    const is_show_kyou_count_calendar: Ref<boolean> = ref(true)
     const focused_kyou: Ref<Kyou | null> = ref(null)
     const opened_dialogs: Ref<Array<OpenedRykvDialog>> = ref([])
 
@@ -149,10 +146,7 @@ export function useSharedMiView(options: {
         // State
         match_kyous,
         focused_time,
-        share_title,
         is_loading,
-        is_show_kyou_detail_view,
-        is_show_kyou_count_calendar,
         focused_kyou,
         opened_dialogs,
 

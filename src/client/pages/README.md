@@ -10,7 +10,7 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 15 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（212 .vue）
+├── views/                          # View コンポーネント（214 .vue）
 └── dialogs/                        # Dialog コンポーネント（121 .vue）
 ```
 
@@ -69,7 +69,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（212 .vue）
+## views/ — 全 View コンポーネント一覧（214 .vue）
 
 ### データ追加系（23コンポーネント）
 
@@ -132,7 +132,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 |--------------|------|
 | `kyou-view.vue` / `kyou-list-view.vue` | Kyou 表示 / 一覧 |
 | `kc-view.vue` / `kmemo-view.vue` | KC / Kmemo 表示 |
-| `lantana-view.vue` / `mi-view.vue` | Lantana / Mi 表示 |
+| `lantana-view.vue` / `mi-kyou-view.vue` | Lantana / Mi の記録表示 |
 | `nlog-view.vue` / `ur-log-view.vue` | Nlog / URLog 表示 |
 | `time-is-view.vue` / `idf-kyou-view.vue` | TimeIs / IDFKyou 表示 |
 | `re-kyou-view.vue` / `mi-re-kyou-view.vue` / `git-commit-log-view.vue` | ReKyou / MiReKyou / GitCommitLog 表示 |
@@ -248,6 +248,8 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `manage-share-button.vue` / `share-button.vue` | 共有ボタン |
 | `rykv-view.vue` / `exported-rykv-view.vue` / `shared-rykv-view.vue` | Rykv の3つの顔（普段使う / HTML 出力 / 共有）。どれもモードのフラグを持たない |
 | `rykv-columns-view.vue` | Rykv の列。普段使う版と HTML 出力版が共有する子（共有ページは使わない） |
+| `mi-view.vue` / `exported-mi-view.vue` / `shared-mi-view.vue` | Mi の3つの顔（普段使う / HTML 出力 / 共有）。どれもモードのフラグを持たない |
+| `mi-columns-view.vue` | Mi の板の列。普段使う版と HTML 出力版が共有する子（共有ページは使わない） |
 | `rykv-dialog-host.vue` / `rykv-dialog-host-item.vue` | Rykv のダイアログホスト |
 | `ryuu-view.vue` / `ryuu-item-view.vue` | Ryuu |
 | `sidebar-header.vue` | サイドバーヘッダー |

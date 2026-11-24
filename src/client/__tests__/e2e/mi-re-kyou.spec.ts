@@ -71,7 +71,7 @@ test.describe('MiReKyou (既存Kyouのタスク化)', () => {
   })
 
   /**
-   * Mi画面の行は高さ固定 (mi-view.vue の kyou_height = 56 + 35) で
+   * Mi画面の行は高さ固定 (mi-columns-view.vue の kyou_height = 56 + 35) で
    * overflow:hidden なので、はみ出した分は切り落とされて見えなくなる。
    * MiReKyouは参照先Kyouを丸ごと埋め込んでいたため日時が枠外に出ていた。
    */
@@ -112,7 +112,7 @@ test.describe('MiReKyou (既存Kyouのタスク化)', () => {
       // clientHeight は border-top:1px を含まないので、行高の確認には offsetHeight を使う
       offset: (el as HTMLElement).offsetHeight,
     }))
-    expect(size.offset, '行の高さが mi-view.vue の指定 (56 + 35) と違う').toBe(91)
+    expect(size.offset, '行の高さが mi-columns-view.vue の指定 (56 + 35) と違う').toBe(91)
     expect(size.scroll, `行からはみ出している (scrollHeight=${size.scroll}, clientHeight=${size.client})`)
       .toBeLessThanOrEqual(size.client + 1)
 

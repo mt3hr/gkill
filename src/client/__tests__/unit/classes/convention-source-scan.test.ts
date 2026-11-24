@@ -100,7 +100,7 @@ describe('クライアントの規約のソース走査', () => {
     // 見張るのは **DOM要素**（小文字タグ）に付いた `:draggable` だけ。
     // 子コンポーネント（大文字タグ）へ渡すのは「この一覧では D&D を使う」という機能スイッチで、
     // 実際のゲートは受け取った側の `effective_draggable` が掛ける
-    // （例: `mi-view.vue` の `<KyouListView :draggable="true">` → `use-mi-kyou-view.ts`）。
+    // （例: `mi-columns-view.vue` の `<KyouListView :draggable="…">` → `use-mi-kyou-view.ts`）。
     const allowed_draggable_expressions = new Set(['effective_draggable', 'draggable', 'props.draggable'])
     /** テンプレートを要素ごとに切る。属性は1行1つで書くので行頭の `<Tag` を境目にすれば足りる */
     function split_elements(source: string): Array<{ tag: string, text: string }> {

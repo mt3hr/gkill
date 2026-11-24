@@ -1,5 +1,5 @@
 /**
- * useMiView の初期化（画面を見せるまで）の検証。
+ * useMiColumns の初期化（画面を見せるまで）の検証。
  * rykv-view-initial-load.test.ts と対になる（実装がコピー由来の対称実装のため、
  * 修正が片側にしか入っていないとここで落ちる）。
  *
@@ -37,10 +37,10 @@ vi.mock('@/classes/kyou-reload', () => ({
 // 本番同様に gkill-api を先に評価させる
 import '@/classes/api/gkill-api'
 import { refresh_kyou } from '@/classes/kyou-reload'
-import { useMiView } from '@/classes/use-mi-view'
+import { useMiColumns } from '@/classes/use-mi-columns'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import type { MiViewProps } from '@/pages/views/mi-view-props'
-import type { MiViewEmits } from '@/pages/views/mi-view-emits'
+import type { MiColumnsViewProps } from '@/pages/views/mi-columns-view-props'
+import type { MiColumnsViewEmits } from '@/pages/views/mi-columns-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
 import {
   createColumnViewMockApi,
@@ -51,7 +51,7 @@ import {
   flushAsync,
 } from '../../helpers/rykv-mi-harness'
 
-const noop_emits = (() => { }) as unknown as MiViewEmits
+const noop_emits = (() => { }) as unknown as MiColumnsViewEmits
 
 function kyous(ids: string[]): Kyou[] {
   return ids.map((id) => ({ id })) as unknown as Kyou[]
@@ -66,15 +66,15 @@ function createView(saved_query_ids: string[], config_overrides: Record<string, 
   const saved_querys = saved_query_ids.map((query_id) => makeColumnQuery(query_id))
   api.get_saved_mi_find_kyou_querys.mockReturnValue(saved_querys)
   const raw_props = makeColumnViewProps(api, config_overrides)
-  const props = raw_props as unknown as MiViewProps
-  const view = useMiView({ props, emits: noop_emits })
+  const props = raw_props as unknown as MiColumnsViewProps
+  const view = useMiColumns({ props, emits: noop_emits })
   view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
   // init() は application_config.is_loaded の watch で起動する
   const start_init = () => finish_application_config_load(raw_props)
   return { api, pending_get_kyous, view, saved_querys, start_init }
 }
 
-describe('useMiView 初期化', () => {
+describe('useMiColumns 初期化', () => {
   test('初期検索の完了を待たずに画面が見える', async () => {
     const { pending_get_kyous, view, start_init } = createView(['col-a', 'col-b'])
 
@@ -252,8 +252,8 @@ describe('useMiView 初期化', () => {
   describe('タスクを2枚開く', () => {
     function createViewWithInstanceKey(instance_key: string, api: ReturnType<typeof createColumnViewMockApi>['api']) {
       const raw_props = makeColumnViewProps(api, {}, Object.assign({}, {}, { column_state_instance_key: instance_key }))
-      const props = raw_props as unknown as MiViewProps
-      const view = useMiView({ props, emits: noop_emits })
+      const props = raw_props as unknown as MiColumnsViewProps
+      const view = useMiColumns({ props, emits: noop_emits })
   view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
       return { view, start_init: () => finish_application_config_load(raw_props) }
     }
@@ -305,7 +305,7 @@ describe('useMiView 初期化', () => {
 // 引き直しは id キーの「引き直し中」表示を同じ Kyou を出している一覧の行にも点けるので、
 // ダイアログを開くたびに引いていたころは親の一覧が読み込み中に見えていた（2026-09-14 修正）。
 // use-kyou-list-view-dialog.test.ts と同じ約束を列画面側でも固定する（rykv / mi は対称実装）
-describe('useMiView ダイアログ', () => {
+describe('useMiColumns ダイアログ', () => {
   test('開いた直後には引き直さない', async () => {
     const { view, start_init } = createView(['col-a'])
     start_init()

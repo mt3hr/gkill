@@ -29,7 +29,7 @@ const tx_id_assign = /[.]tx_id = tx_id\b/g
 
 // tx を通さず Kyou を直接書いてよいファイル（1 レコードの更新で完結し、束ねる相手が無い）
 const SINGLE_WRITE_ALLOWLIST: Record<string, string> = {
-    'use-mi-view.ts': 'Mi / リポストタスクのチェック切り替え（1 レコードの update）',
+    'use-mi-columns.ts': 'Mi / リポストタスクのチェック切り替え（1 レコードの update）',
     'use-mi-kyou-view.ts': 'Mi のチェック切り替え（1 レコードの update）',
     'use-mi-re-kyou-view.ts': 'リポストタスクのチェック切り替え（1 レコードの update）',
     'use-end-time-is-playing-view.ts': '実行中の打刻の終了（1 レコードの update）',

@@ -38,7 +38,7 @@ import { useRykvDetailPaneMetrics } from '@/classes/use-rykv-detail-pane-metrics
  * 共有ページはこれも使わない —— 共有は列の機構を一切使わないので
  * use-shared-rykv-view が別実装になっている。
  *
- * **mi の対になる実装は use-mi-view.ts（コピー由来の対称実装。修正は必ず両方へ）。**
+ * **mi の対になる実装は use-mi-columns.ts（コピー由来の対称実装。修正は必ず両方へ）。**
  * あちらは共有も出力も無いので分割していない。
  */
 export function useRykvColumns(options: {
@@ -298,7 +298,7 @@ export function useRykvColumns(options: {
     // 自分がどの列由来か知らないので、列を総当たりして最初に見つかったものを使う
     // その Kyou が乗っている列の検索条件を、Mi の引き直し用に整えて返す。
     //
-    // mi の対になる関数は `find_column_query_for(kyou_id)`（use-mi-view.ts）。
+    // mi の対になる関数は `find_column_query_for(kyou_id)`（use-mi-columns.ts）。
     // あちらは列のクエリが最初から Mi 用なので、そのまま返して data_type も取らない。
     // rykv の列のクエリは for_mi=false なので、ここで build_mi_reload_query を通す。
     function find_reload_query_for(kyou_id: string, data_type: string): FindKyouQuery | undefined {
@@ -574,7 +574,7 @@ export function useRykvColumns(options: {
                 // await(Dnote abort)の間に close_list_view の splice が走ると位置インデックスが
                 // 古くなるので query_id から取り直す。放置すると下の 591/593/604/612 の書き戻しが
                 // 別の列を潰し、query_id 重複による誤配送になる（finally が running_search_count を戻す）。
-                // use-mi-view.ts は Dnote が無く await しないので非該当＝rykv 固有の対処。
+                // use-mi-columns.ts は Dnote が無く await しないので非該当＝rykv 固有の対処。
                 column_index = querys.value.findIndex(q => q.query_id === query_id)
                 if (column_index === -1) {
                     return

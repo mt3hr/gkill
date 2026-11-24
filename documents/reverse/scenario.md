@@ -379,7 +379,7 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     actor User as ユーザ
-    participant View as mi-view / mi-page<br>(use-mi-view.ts)
+    participant View as mi-columns-view / mi-page<br>(use-mi-columns.ts)
     participant GkillAPI as GkillAPI (TS)
     participant API as GkillServerAPI (Go)
     participant UC as UsecaseContext

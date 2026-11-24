@@ -584,7 +584,7 @@ export async function createAndSelectMiBoard(page: Page, dialog: Locator, boardN
  * kyou-list-view.vue が `:show_attached_texts="false"`
  * `:show_attached_notifications="false"` を渡しているため。
  * 出るのは詳細ペイン（`class="kyou_detail_view"` を付けた KyouView。
- * rykv-view.vue / mi-view.vue / shared-mi-view.vue の3箇所が
+ * rykv-columns-view.vue / mi-columns-view.vue / shared-mi-view.vue の3箇所が
  * `:show_attached_texts="true"` を渡している）だけなので、
  * テキスト・通知を確認したいテストはここを経由する。
  * （タグは一覧にも出る。`application_config.show_tags_in_list` 次第）

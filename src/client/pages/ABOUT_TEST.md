@@ -167,8 +167,8 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/kyou-count-calendar.test.ts` | Kyou件数カレンダー Composable |
 | `src/client/__tests__/unit/composables/overlay-and-ur-log-view.test.ts` | オーバーレイ表示と URLog ビュー Composable |
 | `src/client/__tests__/unit/composables/kyou-view.test.ts` | Kyou ビュー Composable（ReKyou / MiReKyou の参照先を読み込み中はゼロ値の日時を出さず、読み込み中として扱う） |
-| `src/client/__tests__/unit/composables/rykv-view-search-routing.test.ts` | useRykvView の列×検索ルーティング（get_kyous を deferred 化し、検索結果が検索した列に届くこと・同一列は最後の検索条件が勝つこと・列削除中の応答が破棄されること・reload_kyou が別列を潰さないことをレース再現で固定） |
-| `src/client/__tests__/unit/composables/mi-view-search-routing.test.ts` | useMiView の列(板)×検索ルーティング（rykv 版と対。mi 固有のカレンダー汚染防止と open_or_focus_board の板一致判定を含む） |
+| `src/client/__tests__/unit/composables/rykv-view-search-routing.test.ts` | useRykvColumns の列×検索ルーティング（get_kyous を deferred 化し、検索結果が検索した列に届くこと・同一列は最後の検索条件が勝つこと・列削除中の応答が破棄されること・reload_kyou が別列を潰さないことをレース再現で固定） |
+| `src/client/__tests__/unit/composables/mi-view-search-routing.test.ts` | useMiColumns の列(板)×検索ルーティング（rykv 版と対。mi 固有のカレンダー汚染防止と open_or_focus_board の板一致判定を含む） |
 | `src/client/__tests__/unit/composables/mi-board-query.test.ts` | mi サイドバーの板選択がフォーカス列の検索条件に追随すること（追随しないと最後にクリックした板名が別列の条件に混入する） |
 | `src/client/__tests__/unit/composables/rykv-sidebar-saved-query-apply.test.ts` | rykv サイドバーの保存済み検索条件適用（query_id は列側維持・updated_query は1回・emit は保存側の clone・0件時は FAB 非表示条件の computed が空） |
 | `src/client/__tests__/unit/composables/mi-sidebar-saved-query-apply.test.ts` | mi サイドバーの保存済み検索条件適用（rykv 側と対称＋板名は全クリアと違い保存された条件が勝つこと） |
@@ -176,7 +176,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/plugin-html-view.test.ts` | プラグイン本文の iframe 受け渡し（ローダーが `gkill_plugin_loader_ready` を名乗ってから注入すること・ready のたびに送り直すこと・`@load` では送り直さない＝注入ループにしないこと・`gkill_iframe_dblclick` を本物の bubbling する dblclick として撃ち直すこと・一覧は srcdoc 直書きのまま） |
 | `src/client/__tests__/unit/composables/ryuu-relay-chain.test.ts` | Ryuu の中継チェーン（`kyou_view_relay_event_names` の18件が RyuuItemView から親まで届くこと・`requested_open_rykv_dialog` は kind と payload ごと通ること・フォーカス2件は通さないこと・二重発火しないこと） |
 | `src/client/__tests__/unit/composables/registered-tag-column-filter.test.ts` | 利用者がその場で作ったタグを列の検索条件へ足す判定（`tags_and` の列は積が必ず空になるので触らないこと・既知タグでは列も引き直しも動かないこと・既知判定は emit 前のその場で行うこと） |
-| `src/client/__tests__/unit/composables/new-tag-column-search.test.ts` | 同じ表を useRykvView / useMiView の**両方**へ流す配線テスト（引き直しは列あたり1本・`query_id` 不変・条件が `set_saved_*` に落ちること・親への `registered_tag` 中継を止めないこと） |
+| `src/client/__tests__/unit/composables/new-tag-column-search.test.ts` | 同じ表を useRykvColumns / useMiColumns の**両方**へ流す配線テスト（引き直しは列あたり1本・`query_id` 不変・条件が `set_saved_*` に落ちること・親への `registered_tag` 中継を止めないこと） |
 | `src/client/__tests__/unit/composables/browse-zip-contents-dialog.test.ts` | ZIPの中を辿るダイアログの純ロジック（フォルダのエントリを持たないZIPでも階層を導出する・画像/テキスト/メディアの巡回が両端で止まる・サイズ表示・テキストビューワーを 512KiB で切ったとき、切れ目が UTF-8 / Shift_JIS の文字の途中でも切れ端だけ捨てて元の文字コードで読むこと）。**E2Eには zip の spec が無いのでここが唯一のカバレッジ** |
 | `src/client/__tests__/unit/composables/plugin-config-dialog.test.ts` | プラグイン設定ダイアログ。iframe は `allow-same-origin` を持たないので保存を親が肩代わりする経路（`e.source` を緩めると無関係なウィンドウから設定を書き換えられる・保存成功後は設定HTMLを取り直す）。開く対象は `show(target_user_id, rep_name)` の引数で決まり、`target_user_id` は読み込みと保存の両方のリクエストに載る（載せ忘れると管理者自身の設定を読み書きする。ADR-0714） |
 | `src/client/__tests__/unit/composables/manage-plugin-list-dialog.test.ts` | プラグイン一覧ダイアログ（`use-manage-plugin-list-dialog`。ADR-0714）。アカウント管理の行から開くので、一覧も設定画面も開いた行の `target_user_id` を対象にする。エラーはフィードへ流して一覧を埋めず、読み込み表示は必ず倒れ、閉じたら一覧と対象アカウントを空に戻す（残すと次に別の行から開いた瞬間、前のアカウントのプラグインが並ぶ） |
@@ -204,8 +204,8 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/kyou-list-view-scroll-to.test.ts` | `scroll_to` の永久リトライ打ち切り（世代カウンタと2秒上限。0件の列で50ms周期の強制レイアウトが増殖していた） |
 | `src/client/__tests__/unit/composables/mi-kyou-count-calendar.test.ts` | mi版の件数カレンダー（`is_active` ゲートと日付キー。rykv版と対称） |
 | `src/client/__tests__/unit/composables/mi-sidebar-inited.test.ts` | mi サイドバーの節ごとの `inited` フラグ（子が「初回同期か再同期か」を判定する。消すと props 同期のたびにチェックが列をまたいで累積する） |
-| `src/client/__tests__/unit/composables/mi-view-initial-load.test.ts` | useMiView の初期化（画面を見せるまで）。`rykv-view-initial-load` と対で、修正が片側にしか入っていないと落ちる |
-| `src/client/__tests__/unit/composables/rykv-view-initial-load.test.ts` | useRykvView の初期化（列の骨組みを確定 → 可視化 → 検索の順。`inited` は初期検索の完了に依存しない） |
+| `src/client/__tests__/unit/composables/mi-view-initial-load.test.ts` | useMiColumns の初期化（画面を見せるまで）。`rykv-view-initial-load` と対で、修正が片側にしか入っていないと落ちる |
+| `src/client/__tests__/unit/composables/rykv-view-initial-load.test.ts` | useRykvColumns の初期化（列の骨組みを確定 → 可視化 → 検索の順。`inited` は初期検索の完了に依存しない） |
 | `src/client/__tests__/unit/composables/password-reset-link-view.test.ts` | パスワードリセットリンク表示（72時間の期限表示と期限切れ判定・リンク再発行） |
 | `src/client/__tests__/unit/composables/registered-kyou-local-insert.test.ts` | 追加された記録を再検索せず列へ差し込む経路（rykv / mi の両方へ同じ表を流す） |
 | `src/client/__tests__/unit/composables/rep-query-summary-detail.test.ts` | 「プロファイル×記録分類→記録先詳細」の算出（例外のあとも loading が復帰して算出が生き残ること） |

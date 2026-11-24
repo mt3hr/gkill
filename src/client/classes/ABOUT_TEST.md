@@ -20,7 +20,7 @@ Vitest
   `web-push-key.ts` は6箇所）。壊れると全箇所へ同時に波及するのに、
   規約のソース走査は「手書きが残っていないこと」しか見ていない
 - 順序・タイミングが本質のもの（`use-registered-tag-column-filter.ts`、
-  `use-rykv-view.ts` / `use-mi-view.ts` の列×検索）
+  `use-rykv-columns.ts` / `use-mi-columns.ts` の列×検索）
 - 相手が居るやりとり（`use-plugin-config-dialog.ts` の iframe との postMessage、
   `use-browse-zip-contents-dialog.ts` の階層導出）
 

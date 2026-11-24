@@ -11,7 +11,7 @@
  * という偶然に乗っていただけだった（miでは実質 CalendarQuery 1つが律速し、
  * しかもその節は application_config のフィールドを1つも読まない）。
  * そのため節を1つ画面から外すだけで画面ごとスピナーで固まっていた。
- * いまは use-mi-view.ts が application_config.is_loaded を直接 watch して
+ * いまは use-mi-columns.ts が application_config.is_loaded を直接 watch して
  * 初期化するので、集約が復活していないこともここで固定する。
  *
  * 状況(TimeIs)・時間帯・場所の3節は mi から外した。
@@ -89,7 +89,7 @@ describe('miサイドバーの節ごとの inited フラグ', () => {
     })
 
     test('サイドバーは画面の初期化トリガを持たない', async () => {
-        // 画面の初期化は use-mi-view.ts が application_config.is_loaded を直接
+        // 画面の初期化は use-mi-columns.ts が application_config.is_loaded を直接
         // watch して起こす。以前はこのサイドバーの集約 inited を @inited として
         // 上げて起動していたが、「設定が来た」を表していたのは
         // 「immediateの付いていない application_config watch から emit する子がいる」

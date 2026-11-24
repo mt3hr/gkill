@@ -45,7 +45,7 @@ export function useMiQueryEditorSidebar(options: {
     // application_config watch から emit する子がいるという偶然で、
     // mi では実質 CalendarQuery 1つが律速していた(しかもその節は
     // application_config のフィールドを1つも読まない)。
-    // 画面の初期化は use-mi-view.ts が application_config.is_loaded を
+    // 画面の初期化は use-mi-columns.ts が application_config.is_loaded を
     // 直接 watch して起こすので、集約もイベントも不要になった。
     const inited_sidebar_header_for_query_sidebar = ref(true)
     const inited_keyword_query_for_query_sidebar = ref(true)

@@ -30,22 +30,22 @@
                                     ref="kyou_list_view" />
                             </v-card>
                         </td>
-                        <td valign="top" v-if="is_show_kyou_detail_view">
+                        <td valign="top">
                             <table>
                                 <tbody>
                                     <tr>
                                         <td valign="top">
-                                            <KyouCountCalendar v-show="is_show_kyou_count_calendar"
+                                            <KyouCountCalendar
                                                 :application_config="application_config" :gkill_api="gkill_api"
                                                 :kyous="match_kyous" :for_mi="true" class="kyou_list_calendar_in_share_mi_view"
-                                                :is_active="is_show_kyou_count_calendar"
+                                                :is_active="true"
                                                 @requested_focus_time="(time: Date) => { focused_time = time }" />
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td valign="top" v-if="is_show_kyou_detail_view">
+                                        <td valign="top">
                                             <div class="kyou_detail_view dummy">
-                                                <KyouView v-if="focused_kyou && is_show_kyou_detail_view" :is_image_request_to_thumb_size="false"
+                                                <KyouView v-if="focused_kyou" :is_image_request_to_thumb_size="false"
                                                     :application_config="application_config" :gkill_api="gkill_api"
                                                     :highlight_targets="[]" :is_image_view="false" :kyou="focused_kyou"
                                                     :show_checkbox="false" :show_content_only="false"
@@ -97,10 +97,7 @@ const {
     // State
     match_kyous,
     focused_time,
-    share_title,
     is_loading,
-    is_show_kyou_detail_view,
-    is_show_kyou_count_calendar,
     focused_kyou,
     opened_dialogs,
 

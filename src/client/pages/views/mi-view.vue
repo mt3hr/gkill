@@ -1,47 +1,42 @@
 <template>
-    <div class="mi_view_wrap" ref="mi_root" :data-gkill-view-ready="is_view_ready ? 'true' : 'false'">
-        <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
-            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_SIDEBAR')">
-                <template v-slot:activator="{ props }">
-                    <v-app-bar-nav-icon v-bind="props" @click.stop="toggle_drawer" :disabled="!inited" />
-                </template>
-            </v-tooltip>
-            <v-toolbar-title>
-                <div>
-                    <span>
-                        {{ i18n.global.t("MI_APP_TITLE") }}
-                    </span>
-                    <v-menu activator="parent">
-                        <v-list>
-                            <v-list-item :key="index" :value="index" v-for="page, index in page_list"
-                                @click="navigate_to_page(page.page_name)">
-                                <v-list-item-title>
-                                    {{ page.app_name }}</v-list-item-title>
-                            </v-list-item>
-                        </v-list>
-                    </v-menu>
-                </div>
-            </v-toolbar-title>
-            <v-spacer />
-            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_DETAIL_VIEW')">
-                <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
-                        <v-icon>mdi-file-document</v-icon>
-                    </v-btn>
-                </template>
-            </v-tooltip>
-            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_CALENDAR')">
-                <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
-                        <v-icon>mdi-calendar</v-icon>
-                    </v-btn>
-                </template>
-            </v-tooltip>
-
-            <v-divider vertical />
+    <!-- 普段使う mi（タスク画面）。**列の中身は持たない**（mi-columns-view）。
+         ここが持つのは「編集できる mi にだけあるもの」—— 画面切替メニュー、
+         編集系のダイアログ群、FAB、ヘルプ。HTML 出力のラッパ（exported-mi-view）は
+         これらを1つも持たないので、同じ列の子を別のラッパがホストする形にしてある。
+         **モードのフラグは渡さない。** 何ができるかはリテラルで書く -->
+    <MiColumnsView :application_config="application_config" :gkill_api="gkill_api"
+        :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
+        :app_content_width="app_content_width" :application_config_load_failed="application_config_load_failed"
+        :column_state_instance_key="column_state_instance_key" :kyou_change_channel="kyou_change_channel"
+        :enable_context_menu="true" :enable_open_board_column="true" :enable_board_drag_drop="true"
+        :is_readonly_mi_check="false" :show_column_footer="true" :show_timeis_playing_end_button="true"
+        :is_sidebar_available="true"
+        :enable_keyboard_shortcuts="!is_hosted_in_dialog /* ポートでは枚数ぶん多重登録される */"
+        v-on="columnsForwardHandlers"
+        @requested_reload_application_config="emits('requested_reload_application_config')"
+        @requested_show_kftl_dialog="show_kftl_dialog()"
+        @requested_show_save_clipboard_to_file_dialog="show_save_clipboard_to_file_dialog()"
+        ref="columns_view">
+        <template v-slot:app_bar_title>
+            <div>
+                <span>
+                    {{ i18n.global.t("MI_APP_TITLE") }}
+                </span>
+                <v-menu activator="parent">
+                    <v-list>
+                        <v-list-item :key="index" :value="index" v-for="page, index in page_list"
+                            @click="navigate_to_page(page.page_name)">
+                            <v-list-item-title>
+                                {{ page.app_name }}</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+            </div>
+        </template>
+        <template v-slot:app_bar_actions>
             <v-tooltip :text="i18n.global.t('TOOLTIP_HELP')">
                 <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" icon="mdi-help-circle-outline" @click="help_dialog?.show()" />
+                    <v-btn v-bind="props" icon="mdi-help-circle-outline" @click="show_help_dialog()" />
                 </template>
             </v-tooltip>
             <v-tooltip :text="i18n.global.t('TOOLTIP_SETTINGS')">
@@ -50,159 +45,73 @@
                         @click="emits('requested_show_application_config_dialog')" />
                 </template>
             </v-tooltip>
-        </v-app-bar>
-        <v-navigation-drawer v-model="drawer" app :height="app_content_height" :mobile="drawer_mode_is_mobile"
-            :touchless="!inited" :width="318">
-            <MiQueryEditorSidebar v-show="inited" class="mi_query_editor_sidebar"
-                :application_config="application_config" :gkill_api="gkill_api"
-                :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
-                :app_content_width="app_content_width" :find_kyou_query="focused_query"
-                :inited="false /* これは見られないのでfalseのままでOK */"
-                @requested_search="onSidebarRequestedSearch"
-                @updated_query="onSidebarUpdatedQuery"
-                @request_open_focus_board="(board_name: string) => open_or_focus_board(board_name)"
-                @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
-                @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
-                ref="query_editor_sidebar" />
-        </v-navigation-drawer>
-        <v-main class="main" :class="(drawer_mode_is_mobile) ? 'scroll_snap_container' : ''">
-            <div class="overlay_target">
-                <v-overlay v-model="is_loading" class="align-center justify-center" persistent contained>
-                    <!-- 設定が取れないと is_loaded が立たず初期化が一度も走らない。
-                         スピナーのままにすると永久に固まるので、再試行の導線を出す -->
-                    <div v-if="application_config_load_failed" class="text-center">
-                        <div class="mb-2">{{ i18n.global.t('FAILED_GET_APPLICATION_CONFIG_MESSAGE') }}</div>
-                        <v-btn color="primary" @click="emits('requested_reload_application_config')">
-                            {{ i18n.global.t('RELOAD_TITLE') }}
-                        </v-btn>
-                    </div>
-                    <v-progress-circular v-else indeterminate color="primary" />
-                </v-overlay>
-            </div>
-            <table class="mi_view_table" v-show="inited">
-                <tbody>
-                    <tr>
-                        <td valign="top" v-for="query, index in querys" :key="query.query_id"
-                            :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                            <v-card dropzone="true" @dragenter.prevent.stop="() => { }"
-                                @drop.prevent.stop="(e: DragEvent) => onDropBoardTask(e, query)"
-                                @dragover.prevent.stop="(e: DragEvent) => onDragoverBoardTask(e, query)">
-                                <v-card-title class="mi_board_column_title" v-if="query.mi_board_name !== null">{{
-                                    query.mi_board_name }}</v-card-title>
-                                <v-card-title class="mi_board_column_title" v-if="query.mi_board_name === null">{{
-                                    i18n.global.t("MI_ALL_TITLE") }}</v-card-title>
-                                <KyouListView :kyou_height="56 + 35" :width="400" :draggable="true"
-                                    :list_height="kyou_list_view_height.valueOf() - MI_BOARD_TITLE_HEIGHT"
-                                    :application_config="application_config" :gkill_api="gkill_api"
-                                    :matched_kyous="match_kyous_list[index]" :query="query"
-                                    :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
-                                    :enable_context_menu="true" :enable_dialog="true"
-                                    :is_readonly_mi_check="false" :show_checkbox="false" :show_footer="true"
-                                    :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
-                                    :show_rep_name="false" :force_show_latest_kyou_info="true" :show_content_only="false"
-                                    :show_timeis_playing_end_button="false"
-                                    v-on="crudRelayHandlers"
-                                    @scroll_list="(position: number) => onColumnScrollList(index, position)"
-                                    @clicked_list_view="() => onColumnClickedListView(index)"
-                                    @clicked_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
-                                    @focused_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
-                                    @requested_change_focus_kyou="(is_focus: boolean) => onColumnRequestedChangeFocusKyou(index, is_focus)"
-                                    @requested_search="() => onColumnRequestedSearch(index)"
-                                    @requested_change_is_image_only_view="(is_image_only: boolean) => onColumnRequestedChangeImageOnlyView(index, is_image_only)"
-                                    @requested_close_column="close_list_view(index)"
-                                    @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
-                                    @requested_reload_list="() => onColumnRequestedReloadList(index)"
-                                    @requested_update_check_kyous="(kyous: Kyou[], checked: boolean) => update_check_kyous(kyous, checked)"
-                                    @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
-                                    ref="kyou_list_views" />
-                            </v-card>
-                        </td>
-                        <td valign="top" v-if="is_show_kyou_detail_view"
-                            :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                            <div class="kyou_detail_view dummy">
-                                <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
-                                    :is_image_request_to_thumb_size="false" :application_config="application_config"
-                                    :gkill_api="gkill_api" :highlight_targets="[]" :is_image_view="false"
-                                    :kyou="focused_kyou" :show_checkbox="false"
-                                    :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
-                                    :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                                    :show_timeis_elapsed_time="true" :show_timeis_playing_end_button="true" :height="'unset'"
-                                    :is_readonly_mi_check="false" :width="'unset'"
-                                    :enable_context_menu="true" :show_update_time="false"
-                                    :show_related_time="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
-                                    :enable_dialog="true" :show_attached_timeis="true" class="kyou_detail_view"
-                                    :show_attached_tags="true" :show_attached_texts="true"
-                                    :show_attached_notifications="true"
-                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogRelayHandlers }" />
-                            </div>
-                        </td>
-                        <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                            <MiKyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
-                                :gkill_api="gkill_api" :kyous="focused_kyous_list" :mi_sort_type="focused_query.mi_sort_type"
-                                :is_active="is_show_kyou_count_calendar"
-                                @requested_focus_time="(date: Date) => onRequestedFocusTime(date)" />
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        </template>
+        <!-- 編集系のダイアログ群。**中継束は列から受け取る** ――
+             保存した記録は再検索せず列へ差し込むので、ここの emit が
+             列の中継束へ流れていなければ「追加した記録が一覧に出ない」になる。
+             打刻追加だけは sub_view_focus_relay も受ける（ダイアログの中で
+             フォーカスが動いたときに列を追随させる。rykv には無い mi 側だけの配線） -->
+        <template v-slot:dialogs="{ crud_relay, all_columns_request_relay, sub_view_focus_relay }">
             <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true"
                 :enable_dialog="true"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                v-on="{ ...crud_relay, ...all_columns_request_relay }"
                 ref="add_kc_dialog" />
             <AddTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true"
                 :enable_dialog="true"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers }"
+                v-on="{ ...crud_relay, ...all_columns_request_relay, ...sub_view_focus_relay }"
                 ref="add_timeis_dialog" />
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true"
                 :enable_dialog="true"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                v-on="{ ...crud_relay, ...all_columns_request_relay }"
                 ref="add_lantana_dialog" />
             <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true"
                 :enable_dialog="true"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                v-on="{ ...crud_relay, ...all_columns_request_relay }"
                 ref="add_urlog_dialog" />
             <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true"
                 :enable_dialog="true"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                v-on="{ ...crud_relay, ...all_columns_request_relay }"
                 ref="add_mi_dialog" />
             <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true"
                 :enable_dialog="true"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                v-on="{ ...crud_relay, ...all_columns_request_relay }"
                 ref="add_nlog_dialog" />
             <KFTLDialogHost :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :app_content_height="app_content_height"
                 :enable_context_menu="true" :enable_dialog="true"
                 :app_content_width="app_content_width"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                v-on="{ ...crud_relay, ...all_columns_request_relay }"
                 @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
                 ref="kftl_dialog" />
             <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :app_content_height="app_content_height"
                 :enable_context_menu="true" :enable_dialog="true"
                 :app_content_width="app_content_width"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                v-on="{ ...crud_relay, ...all_columns_request_relay }"
                 @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
                 ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                v-on="{ ...crud_relay, ...all_columns_request_relay }"
                 ref="upload_file_dialog" />
             <SaveClipboardToFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                v-on="{ ...crud_relay, ...all_columns_request_relay }"
                 ref="save_clipboard_to_file_dialog" />
-            <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
-                :enable_context_menu="true" :enable_dialog="true"
-                @closed="(id: string) => close_rykv_dialog(id)"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogRelayHandlers }" />
-            <!-- ポート(rudbeckia)の中ではFABを出さない。理由は rykv-view.vue の同じ箇所参照 -->
-            <v-avatar v-if="!is_hosted_in_dialog" :style="floating_action_button_style()" color="primary" class="position-fixed">
+            <HelpDialog screen_name="mi" ref="help_dialog" />
+        </template>
+        <!-- ポート(rudbeckia)の中ではFABを出さない。.position-fixed は position: fixed なので
+             ダイアログを抜けて画面右下に居座り、ポート自身のFABと重なる。
+             記録の追加はポートのFABから行う（同じダイアログを開く） -->
+        <template v-slot:fab>
+            <v-avatar v-if="!is_hosted_in_dialog" :style="floating_action_button_style()" color="primary"
+                class="position-fixed">
                 <v-menu transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
                         <v-btn color="white" v-long-press="() => show_kftl_dialog()" icon="mdi-plus" variant="text"
@@ -242,47 +151,34 @@
                     </v-list>
                 </v-menu>
             </v-avatar>
-            <HelpDialog screen_name="mi" ref="help_dialog" />
-        </v-main>
-    </div>
+        </template>
+    </MiColumnsView>
 </template>
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { RykvDialogKind, RykvDialogPayload } from "./rykv-dialog-kind"
 import { i18n } from '@/i18n'
-import MiQueryEditorSidebar from './mi-query-editor-sidebar.vue'
 import { Kyou } from '@/classes/datas/kyou'
 import AddKCDialog from '../dialogs/add-kc-dialog.vue'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
 import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
-import MiKyouCountCalendar from './mi-kyou-count-calendar.vue'
-import KyouListView from './kyou-list-view.vue'
-import KyouView from './kyou-view.vue'
 import KFTLDialogHost from './kftl-dialog-host.vue'
 import mkflDialog from '../dialogs/mkfl-dialog.vue'
-import type { MiViewEmits } from './mi-view-emits'
-import type { MiViewProps } from './mi-view-props'
 import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
 import AddTimeIsDialog from '../dialogs/add-time-is-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-ur-log-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import SaveClipboardToFileDialog from '../dialogs/save-clipboard-to-file-dialog.vue'
-import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
-import RykvDialogHost from './rykv-dialog-host.vue'
 import HelpDialog from '../dialogs/help-dialog.vue'
+import MiColumnsView from './mi-columns-view.vue'
+import type { MiViewEmits } from './mi-view-emits'
+import type { MiViewProps } from './mi-view-props'
 import { useMiView } from '@/classes/use-mi-view'
-import { MI_BOARD_TITLE_HEIGHT } from '@/classes/mi-board-column-layout'
-
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 const props = defineProps<MiViewProps>()
 const emits = defineEmits<MiViewEmits>()
 
 const {
     // Template refs
-    mi_root,
-    query_editor_sidebar,
+    columns_view,
     add_mi_dialog,
     add_nlog_dialog,
     add_lantana_dialog,
@@ -293,48 +189,13 @@ const {
     mkfl_dialog,
     upload_file_dialog,
     save_clipboard_to_file_dialog,
-    kyou_list_views,
-
-    // State
-    opened_dialogs,
-    querys,
-    match_kyous_list,
-    focused_query,
-    focused_column_index,
-    focused_kyous_list,
-    focused_kyou,
-    is_show_kyou_detail_view,
-    is_show_kyou_count_calendar,
-    drawer,
-    drawer_mode_is_mobile,
-    is_loading,
-    inited,
+    help_dialog,
 
     // Computed
-    kyou_list_view_height,
     page_list,
-    is_view_ready,
 
     // Template event handlers
-    toggle_drawer,
     navigate_to_page,
-    onSidebarRequestedSearch,
-    onSidebarUpdatedQuery,
-    onColumnScrollList,
-    onColumnClickedListView,
-    onColumnClickedKyou,
-    onColumnRequestedChangeFocusKyou,
-    onColumnRequestedSearch,
-    onColumnRequestedChangeImageOnlyView,
-    onRequestedFocusTime,
-    onDropBoardTask,
-    onDragoverBoardTask,
-    close_list_view,
-    open_or_focus_board,
-    open_rykv_dialog,
-    close_rykv_dialog,
-    reload_kyou,
-    update_check_kyous,
 
     // Dialog show methods
     show_kftl_dialog,
@@ -347,52 +208,10 @@ const {
     show_lantana_dialog,
     show_upload_file_dialog,
     show_save_clipboard_to_file_dialog,
+    show_help_dialog,
     floating_action_button_style,
 
     // Event relay objects
-    crudRelayHandlers,
-    allColumnsRequestHandlers,
-    rykvDialogRelayHandlers,
-    subViewFocusHandlers,
-    onColumnRequestedReloadList,
+    columnsForwardHandlers,
 } = useMiView({ props, emits })
-
-// ── ビューポート単位を使わない寸法 ──
-// このビューはポート(rudbeckia)のフローティングダイアログの中でも描かれる。
-// そこでは基準が画面ではなくダイアログの箱なので 100vw は使えない。props から作る。
-const overlay_target_min_width_px = computed(() => is_loading.value ? `${props.app_content_width.valueOf()}px` : '0px')
 </script>
-<style lang="css" scoped>
-/* 列の高さ計算 (list_height = app_content_height - MI_BOARD_TITLE_HEIGHT) が
-   Vuetify の既定サイズに依存しないよう、見出しの高さをここで固定する。
-   mi-board-column-layout.ts の MI_BOARD_TITLE_HEIGHT と必ず同じ値にすること */
-.mi_board_column_title {
-    height: 44px;
-}
-
-.kyou_detail_view.dummy {
-    resize: horizontal;
-    overflow-x: hidden;
-    overflow-y: scroll;
-    height: calc(v-bind('app_content_height.toString().concat("px")'));
-    width: 408px;
-}
-
-.scroll_snap_container {
-    scroll-snap-type: x proximity;
-    width: 100%;
-}
-
-.scroll_snap_area {
-    scroll-snap-align: start;
-    width: 100%;
-}
-</style>
-<style lang="css" scoped>
-.overlay_target {
-    z-index: -10000;
-    position: absolute;
-    min-height: calc(v-bind('app_content_height.toString().concat("px")'));
-    min-width: v-bind(overlay_target_min_width_px);
-}
-</style>

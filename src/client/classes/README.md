@@ -9,7 +9,7 @@ Vue コンポーネント（`pages/`）から使用されるロジック層。
 
 ```
 classes/
-├── (ルートファイル 384個)        # use-*.ts Composable + ユーティリティ
+├── (ルートファイル 385個)        # use-*.ts Composable + ユーティリティ
 ├── api/                        # GkillAPI クライアント → api/README.md
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md
@@ -77,7 +77,8 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-kyou-view.ts` / `use-kyou-list-view.ts` | Kyou 表示 / 一覧 |
 | `use-kyou-list-view-dialog.ts` | Kyou 一覧ダイアログ（DNote から開く）。抱えているリストを自分で引き直し、rykv ダイアログも自分でホストする |
 | `use-kc-view.ts` / `use-kmemo-view.ts` | KC / Kmemo 表示 |
-| `use-lantana-view.ts` / `use-mi-view.ts` | Lantana / Mi 表示 |
+| `use-lantana-view.ts` / `use-mi-kyou-view.ts` | Lantana / Mi の記録表示 |
+| `use-mi-view.ts` / `use-mi-columns.ts` | 普段使う mi のラッパ（アプリバー・編集ダイアログ群・FAB・ヘルプ）／ mi の板の列の機構。`use-rykv-view.ts` / `use-rykv-columns.ts` と対称 |
 | `use-nlog-view.ts` / `use-ur-log-view.ts` | Nlog / URLog 表示 |
 | `use-time-is-view.ts` / `use-idf-kyou-view.ts` | TimeIs / IDFKyou 表示 |
 | `use-re-kyou-view.ts` / `use-git-commit-log-view.ts` | ReKyou / GitCommitLog 表示 |

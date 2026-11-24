@@ -39,7 +39,7 @@ vi.mock('@/classes/kyou-reload', () => ({
 // 本番同様に gkill-api を先に評価させる
 import '@/classes/api/gkill-api'
 import { useRykvColumns } from '@/classes/use-rykv-columns'
-import { useMiView } from '@/classes/use-mi-view'
+import { useMiColumns } from '@/classes/use-mi-columns'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { Tag } from '@/classes/datas/tag'
 import {
@@ -113,7 +113,7 @@ const view_cases: ViewCase[] = [
     },
   },
   {
-    name: 'useMiView',
+    name: 'useMiColumns',
     saved_querys_key: 'set_saved_mi_find_kyou_querys',
     create: (emits_spy) => {
       const { api, pending_get_kyous } = createColumnViewMockApi()
@@ -123,9 +123,9 @@ const view_cases: ViewCase[] = [
         app_title_bar_height: 50,
         app_content_height: 600,
         app_content_width: 800,
-      } as unknown as Parameters<typeof useMiView>[0]['props']
-      const emits = emits_spy as unknown as Parameters<typeof useMiView>[0]['emits']
-      return { api, pending_get_kyous, view: useMiView({ props, emits }) as unknown as ColumnViewUnderTest }
+      } as unknown as Parameters<typeof useMiColumns>[0]['props']
+      const emits = emits_spy as unknown as Parameters<typeof useMiColumns>[0]['emits']
+      return { api, pending_get_kyous, view: useMiColumns({ props, emits }) as unknown as ColumnViewUnderTest }
     },
   },
 ]

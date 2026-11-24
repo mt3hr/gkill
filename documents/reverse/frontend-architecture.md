@@ -52,7 +52,7 @@ src/client/
 │   ├── tag-struct.ts                # タグ階層構造ユーティリティ
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
-│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、342ファイル）
+│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、343ファイル）
 ├── assets/                          # 画像等の静的アセット
 ├── __tests__/                       # Vitest ユニットテスト + Playwright E2E
 │   ├── e2e/                        # E2E spec（run-e2e.mjs / free-port.mjs / auth.setup.ts 等を含む）
@@ -271,7 +271,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 | `GkillAPI` シングルトン | バックエンド通信（`GkillAPI.get_instance()`） |
 | Vuetify `useTheme()` | テーマ状態（ライト/ダーク切替） |
 | vue-i18n | ロケール状態 |
-| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（342ファイル） |
+| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（343ファイル） |
 
 ### ComponentRef 型
 
@@ -683,7 +683,7 @@ playing検索（Kyou付随の実行中表示 `info-base.ts` の `load_attached_t
 
 ### レスポンシブデザイン
 
-- `rykv-view.vue` / `mi-view.vue`: ナビゲーションドロワーの幅を `$vuetify.display.smAndDown` で画面幅に応じて切替（スマートフォンでは `100vw`）
+- `rykv-columns-view.vue` / `mi-columns-view.vue`: ナビゲーションドロワーの幅を `$vuetify.display.smAndDown` で画面幅に応じて切替（スマートフォンでは `100vw`）
 - `rykv-view.vue`: 詳細ビュー（`.kyou_detail_view`）の `min-width` を `0` に変更し `max-width: 100vw` を追加。600px以下でフルワイド表示
 - `kyou-list-view.vue`: `v-virtual-scroll` に `max-width: 100vw` を追加し、画像リスト幅が画面を超えないように制限
 
@@ -696,7 +696,7 @@ playing検索（Kyou付随の実行中表示 `info-base.ts` の `load_attached_t
 | `useScopedEnterForKFTL` | `use-scoped-enter-for-kftl.ts` | 対象 View にフォーカスがある状態で Enter キーを押すとメモ帳ダイアログを開く |
 | `useScopedCtrlVForClipboard` | `use-scoped-ctrl-v-for-clipboard.ts` | 対象 View 内が最後にクリックされた状態で Ctrl+V を押すとクリップボード保存ダイアログを開く |
 
-これらは `onMounted` / `onBeforeUnmount` でドキュメントレベルのイベントリスナーを管理し、`rykv-view.vue`・`mi-view.vue`・`playing-time-is-view.vue` の各 composable から呼び出される。
+これらは `onMounted` / `onBeforeUnmount` でドキュメントレベルのイベントリスナーを管理し、`rykv-columns-view.vue`・`mi-columns-view.vue`・`playing-time-is-view.vue` の各 composable から呼び出される。
 
 ### クリップボード保存ダイアログ（`save-clipboard-to-file-dialog.vue`）
 

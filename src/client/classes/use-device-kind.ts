@@ -111,7 +111,7 @@ export function classify_device_kind(env: DeviceKindEnv): DeviceKind {
     }
 
     // Step 4: 未知のタッチ専用端末。
-    // 閾値は端末クラスの境界であって、use-rykv-view.ts / use-mi-view.ts の 760px
+    // 閾値は端末クラスの境界であって、use-rykv-columns.ts / use-mi-columns.ts の 760px
     // （ナビゲーションドロワー開閉のレイアウト分岐点）とは別物。流用しないこと。
     return env.screen_short_side >= tablet_short_side_threshold ? 'tablet' : 'smart_phone'
 }
