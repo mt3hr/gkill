@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk/chatview"
 )
 
@@ -29,17 +31,31 @@ func toChatView(t message) chatview.Message {
 	if t.Role == roleHuman {
 		out.Role = chatview.RoleHuman
 		out.Sender = "あなた"
-		return out
+	} else {
+		// 所要時間は応答のまとまりの最初のステップから最後のステップまで。
+		if d := t.UpdateTime.Sub(t.RelatedTime); d > 0 {
+			out.Chips = append(out.Chips, chatview.FormatDuration(d))
+		}
+		body, process := splitReply(t.Items)
+		out.Body = toBlocks(body)
+		out.Process = toBlocks(process)
 	}
 
-	// 所要時間は応答のまとまりの最初のステップから最後のステップまで。
-	if d := t.UpdateTime.Sub(t.RelatedTime); d > 0 {
-		out.Chips = append(out.Chips, chatview.FormatDuration(d))
+	// 前置きは本文の「後ろ」に畳んで置く（chatview が Context をそう描く）。
+	// 前に出すと、一覧の行がどれも自動で付く定型文で埋まって会話が読めなくなる。
+	if fold, ok := preambleFold(t.Preamble); ok {
+		out.Context = append(out.Context, fold)
 	}
-	body, process := splitReply(t.Items)
-	out.Body = toBlocks(body)
-	out.Process = toBlocks(process)
 	return out
+}
+
+// preambleFold は人間の発言から剥がした前置きを折りたたみ1つにする。無ければ偽。
+func preambleFold(preamble []string) (chatview.Block, bool) {
+	text := strings.TrimSpace(strings.Join(preamble, "\n\n"))
+	if text == "" {
+		return chatview.Block{}, false
+	}
+	return chatview.Block{Kind: chatview.KindFold, Summary: "⚙ 設定の変更", Text: text}, true
 }
 
 // splitReply は応答の要素を「本文」と「作業の経過」に分ける。

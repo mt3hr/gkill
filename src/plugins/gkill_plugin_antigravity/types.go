@@ -34,6 +34,13 @@ const (
 	stepPlannerResponse = "PLANNER_RESPONSE" // モデルの発言。content / thinking / tool_calls
 )
 
+// Antigravity が人間の入力を包むブロックの名前（splitUserRequest が剥がす）。
+const (
+	tagUserRequest        = "USER_REQUEST"
+	tagAdditionalMetadata = "ADDITIONAL_METADATA"
+	tagUserSettingsChange = "USER_SETTINGS_CHANGE"
+)
+
 // toolResultStepTypes はツールの実行結果が入るレコード種別。
 //
 // PLANNER_RESPONSE の tool_calls の件数とほぼ1対1で続くことを実測で確かめた。
@@ -115,6 +122,10 @@ type message struct {
 	// StepIndex はこの単位の先頭レコードの step_index。Kyou ID の材料。
 	StepIndex int    `json:"step_index"`
 	Text      string `json:"text"`
+	// Preamble は人間の発言から剥がした前置き（設定の変更の通知）。
+	// 詳細画面では本文の後ろの折りたたみに出し、検索テキストには入れない
+	// （自動で付く定型文なので、入れると定型文の語で全発言に当たる）。
+	Preamble []string `json:"preamble,omitempty"`
 	// Model は返事を書いたモデル名(最後の PLANNER_RESPONSE の model)。人間の発言では空。
 	Model       string     `json:"model,omitempty"`
 	RelatedTime time.Time  `json:"related_time"`

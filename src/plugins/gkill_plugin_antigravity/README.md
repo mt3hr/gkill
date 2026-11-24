@@ -83,7 +83,7 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_antigravity/cache.db
 
 | レコードの `type` | Kyou での扱い |
 |---|---|
-| `USER_INPUT` | 人間の発言 = 1 Kyou（`source` は `USER_EXPLICIT`） |
+| `USER_INPUT` | 人間の発言 = 1 Kyou（`source` は `USER_EXPLICIT`）。本文は `<USER_REQUEST>` の中身だけにする（下記） |
 | `PLANNER_RESPONSE` | 応答。`content` が空でない最後のものが本文、それより前は作業の経過。`thinking` は思考、`tool_calls` はツール呼び出し（`toolSummary` があればそれを、無ければパスやコマンドを200文字に要約）、`model` はチップ |
 | `SYSTEM_MESSAGE` / `CHECKPOINT` / `CONVERSATION_HISTORY` / `EPHEMERAL_MESSAGE` / `ERROR_MESSAGE` | 1行の注記（200文字で切る）。同じ本文の注記は1件に畳む |
 | 上記以外（知らない種別） | 種別の名前を見出しにした注記。**捨てない**（捨てるとログの形が変わった日に会話が静かに消える） |
@@ -96,6 +96,32 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_antigravity/cache.db
 
 **読まないもの**: 省略版の `transcript.jsonl` と `logs/chunks/` 配下の写し。
 どちらも同じ会話の別の形なので、読むと会話が二重になる。種別はファイル名だけで決めているので自動的に外れる。
+
+### 人間の発言は `<USER_REQUEST>` の中身だけを本文にする
+
+Antigravity は利用者の入力をブロックで包んで記録する。実データでは例外が無く、並びも固定だった。
+
+```
+<USER_REQUEST>…実際の依頼…</USER_REQUEST>
+<ADDITIONAL_METADATA>The current local time is: …</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>…自動で付く定型文…</USER_SETTINGS_CHANGE>   ← 付かない発言もある
+```
+
+包みごと本文にすると、一覧のどの行も `<USER_REQUEST>` の行から始まり、
+`conversation_summaries.db` にタイトルが無い会話の代用タイトルもその文字列になり、
+検索も定型文の語でほぼ全発言に当たる。そこで依頼だけを本文にする
+（Codex プラグインが IDE の前置きを剥がすのと同じ型）。
+
+| ブロック | どうするか |
+|---|---|
+| `<USER_REQUEST>` の中身 | 本文にする |
+| `<ADDITIONAL_METADATA>` | **捨てる**。中身は現在時刻の1行で、同じ時刻は `created_at` に入っている |
+| `<USER_SETTINGS_CHANGE>` | 本文の後ろの折りたたみ「⚙ 設定の変更」へ。自動の定型文なので**検索テキストには入れない** |
+
+**知らない形は何も剥がさずそのまま本文にする。** `<USER_REQUEST>` が無い・閉じていない・
+ブロックの外に文字がある・中身が空、のどれか。形が変わった日に発言が空になるのを防ぐ。
+
+応答側（`PLANNER_RESPONSE`）にはこの包みが無いので、何も剥がさない。
 
 ### 会話IDは「直近の UUID フォルダ名」から採る
 

@@ -47,6 +47,12 @@ Antigravity は `~/.gemini/antigravity` に会話を置く。同じ会話が4つ
   レコードに id が無いので合成する。`step_index` は追記のみの通番なので会話が伸びても動かない。
 - **ツールの実行結果の `content` は保持しない**（`GENERIC` / `VIEW_FILE` / `LIST_DIRECTORY` / `GREP_SEARCH` /
   `RUN_COMMAND` / `SEARCH_WEB` / `CODE_ACTION` / `GENERATE_IMAGE`）。`error` だけ1行の注記にする。
+- **人間の発言の本文は `<USER_REQUEST>` の中身だけ**（`splitUserRequest`）。Antigravity は入力を必ず包むので、
+  包みごと本文にすると一覧のどの行も `<USER_REQUEST>` の行から始まり、代用タイトルもその文字列になり、
+  定型文の語がほぼ全記録に当たる。`<ADDITIONAL_METADATA>` は**捨てる**（中身は現在時刻の1行で、同じ時刻は
+  `created_at` にある）。`<USER_SETTINGS_CHANGE>` は折りたたみの前置きへ回し、**検索テキストには入れない**
+  （自動で付く定型文）。**知らない形は何も剥がさずそのまま本文にする** —— `<USER_REQUEST>` が無い・閉じていない・
+  ブロックの外に文字がある・中身が空のどれか。Codex の IDE の前置きと同じ安全弁。応答側には包みが無いので触らない。
 - **会話タイトルとプロジェクト名は `conversation_summaries.db` から読む任意の索引**扱い
   （Codex の `session_index.jsonl` と同じ）。読めない・載っていない会話は最初の人間の発言の冒頭で代用する。
   `kyou_cache` の別カラムで持ち `search_text` に焼かないので、あとからタイトルが付いても会話を読み直さない。
@@ -68,6 +74,12 @@ Antigravity は `~/.gemini/antigravity` に会話を置く。同じ会話が4つ
   毎回コピーされ、同期ハブへも毎回上がる。フォルダで分ければ `-f` が不要で差分コピーが効く。
 - **パスから代用の会話IDを作る（パスのハッシュなど）** — 同期先のフォルダ名は端末名と日付を含むので、
   生の置き場と同期先で別の会話になり、同じ会話が二重に出る。フォルダを掘り直しただけでも ID が全部変わる。
+- **包みごと人間の発言の本文にする（最初の実装）** — 発言の大半が包みと定型文で、一覧の行が読めない。
+  `conversation_summaries.db` にタイトルが無い会話（実データでは多数）の代用タイトルが文字列 `<USER_REQUEST>` になる。
+- **`<ADDITIONAL_METADATA>` も折りたたみに残す** — 中身は現在時刻の1行だけで、同じ時刻は `created_at` にある。
+  折りたたみを1つ増やすぶんだけ損で、情報は増えない。
+- **知らない形でも機械的に剥がす（最初のブロックだけ取る等）** — 形が変わった日に発言が黙って空になる。
+  そのまま本文にすれば、読みにくくはなるが失われない。
 - **`step_index` ではなく発言の連番で ID を作る（Codex と同じ材料）** — Codex のレコードには通番が無いので
   連番を振るしかないが、Antigravity は `step_index` を自分で持っている。途中に行が挿し込まれても
   後続の ID が動かないほうを採る。
@@ -93,6 +105,11 @@ Antigravity は `~/.gemini/antigravity` に会話を置く。同じ会話が4つ
   だから「空でない最後の `content` を本文にする」が要る。
 - `model` を持つレコードは一部の会話に偏っていた。生ログからの独立な数え直しと、
   作ったキャッシュの「モデル名が入った応答の件数・会話数」が一致することを確認した。
+- 人間の発言は**全件が `<USER_REQUEST>` で包まれ、全件閉じていた**。常に1行目で、ブロックの外に文字は1件も無く、
+  並びは `USER_REQUEST` → `ADDITIONAL_METADATA` →（3分の1ほどに）`USER_SETTINGS_CHANGE` で固定。
+  依頼そのものは中央値で数十文字、`content` 全体は中央値で3桁文字 —— 大半が包みと定型文だった。
+  `ADDITIONAL_METADATA` は現在時刻の1行（キー1つ）だけ。剥がす前と後で Kyou の件数は変わらず、
+  代用タイトルが `<USER_REQUEST>` の記録は多数から0件になった。
 - 単独モード（`--gkill-build-cache`）で1周させると、会話の数ぶんの transcript と索引1つを読み、
   人間の発言と応答がそれぞれ `USER_INPUT` の件数と応答のまとまりの件数に一致した。読めなかった行は0。
 
@@ -101,6 +118,9 @@ Antigravity は `~/.gemini/antigravity` に会話を置く。同じ会話が4つ
 - `src/plugins/gkill_plugin_antigravity/scan_test.go`（`TestScanSourcesPicksOnlyTranscriptFull` /
   `TestConversationIDOfBothLayouts` / `TestScanSourcesReportsMissingConversationID` /
   `TestScanSourcesPicksLargestPerConversation`）
+- `src/plugins/gkill_plugin_antigravity/loader_test.go`（`TestSplitUserRequest` /
+  `TestBuildMessagesStripsUserRequestWrapper` / `TestSearchTextOfExcludesPreamble`）
+- `src/plugins/gkill_plugin_antigravity/render_test.go`（`TestRenderMessageHTMLHumanShowsRequestOnly`）
 - `src/plugins/gkill_plugin_antigravity/loader_test.go`（`TestBuildMessagesSplitsPerUserInput` /
   `TestBuildMessagesKeepsRecordsBeforeFirstUserInput` / `TestBuildMessagesWithoutUserInput` /
   `TestBuildMessagesDropsToolResultContent` / `TestKyouIDIsStableAcrossAppend`）

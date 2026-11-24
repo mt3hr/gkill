@@ -84,3 +84,44 @@ func TestRenderMessageHTMLEscapesAndFolds(t *testing.T) {
 		t.Error("経過の折りたたみが無い")
 	}
 }
+
+// 人間の吹き出しには依頼だけが出る。剥がした前置きは本文の後ろの折りたたみへ。
+func TestRenderMessageHTMLHumanShowsRequestOnly(t *testing.T) {
+	related := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	html := renderMessageHTML(message{
+		Role:        roleHuman,
+		Title:       "会話のタイトル",
+		Text:        "依頼の本文",
+		Preamble:    []string{"自動で付く定型文。設定が変わったことの通知"},
+		RelatedTime: related,
+		UpdateTime:  related,
+	})
+
+	if !strings.Contains(html, "依頼の本文") {
+		t.Error("依頼が出ていない")
+	}
+	for _, unwanted := range []string{tagUserRequest, tagAdditionalMetadata, "current local time"} {
+		if strings.Contains(html, unwanted) {
+			t.Errorf("包みの跡が出ている: %q", unwanted)
+		}
+	}
+	if !strings.Contains(html, "設定の変更") {
+		t.Errorf("前置きの折りたたみの見出しが無い: %s", html)
+	}
+	if !strings.Contains(html, "自動で付く定型文") {
+		t.Error("前置きの中身が落ちている")
+	}
+	// 折りたたみ（details）の中に入っていること。本文より後ろに出る
+	if strings.Index(html, "依頼の本文") > strings.Index(html, "自動で付く定型文") {
+		t.Error("前置きが本文より前に出ている（一覧の行が定型文で埋まる）")
+	}
+	if !strings.Contains(html, "<details") {
+		t.Error("前置きが折りたたみになっていない")
+	}
+
+	// 前置きが無ければ折りたたみを出さない
+	plain := renderMessageHTML(message{Role: roleHuman, Text: "依頼だけ", RelatedTime: related})
+	if strings.Contains(plain, "設定の変更") {
+		t.Error("前置きが無いのに折りたたみが出ている")
+	}
+}

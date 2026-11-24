@@ -278,3 +278,113 @@ func TestTruncateRunes(t *testing.T) {
 		t.Errorf("ちょうどのとき印が付いている: %q", got)
 	}
 }
+
+// 人間の発言は <USER_REQUEST> の中身だけを本文にする。
+// ADDITIONAL_METADATA（現在時刻の1行）は捨て、USER_SETTINGS_CHANGE は前置きへ回す。
+// 知らない形は何も剥がさずそのまま本文にする —— 形が変わった日に発言が空になるのを防ぐ。
+func TestSplitUserRequest(t *testing.T) {
+	cases := []struct {
+		name         string
+		content      string
+		wantText     string
+		wantPreamble []string
+	}{
+		{
+			name:     "包みと現在時刻",
+			content:  "<USER_REQUEST>\n依頼の本文\n</USER_REQUEST>\n<ADDITIONAL_METADATA>\nThe current local time is: 2024-01-01 00:00:00\n</ADDITIONAL_METADATA>",
+			wantText: "依頼の本文",
+		},
+		{
+			name:         "設定の変更が付く",
+			content:      "<USER_REQUEST>\n依頼の本文\n</USER_REQUEST>\n<ADDITIONAL_METADATA>\nThe current local time is: 2024-01-01 00:00:00\n</ADDITIONAL_METADATA>\n<USER_SETTINGS_CHANGE>\n設定が変わった\n</USER_SETTINGS_CHANGE>",
+			wantText:     "依頼の本文",
+			wantPreamble: []string{"設定が変わった"},
+		},
+		{
+			name:     "包みが無い（古い形・手で入れたデータ）",
+			content:  "そのままの発言",
+			wantText: "そのままの発言",
+		},
+		{
+			name:     "閉じていない",
+			content:  "<USER_REQUEST>\n依頼の本文",
+			wantText: "<USER_REQUEST>\n依頼の本文",
+		},
+		{
+			name:     "ブロックの外に文字がある",
+			content:  "前に付いた文字\n<USER_REQUEST>\n依頼の本文\n</USER_REQUEST>",
+			wantText: "前に付いた文字\n<USER_REQUEST>\n依頼の本文\n</USER_REQUEST>",
+		},
+		{
+			name:     "知らないブロックが混ざる",
+			content:  "<USER_REQUEST>\n依頼の本文\n</USER_REQUEST>\n<UNKNOWN_BLOCK>\n何か\n</UNKNOWN_BLOCK>",
+			wantText: "<USER_REQUEST>\n依頼の本文\n</USER_REQUEST>\n<UNKNOWN_BLOCK>\n何か\n</UNKNOWN_BLOCK>",
+		},
+		{
+			name:     "中身が空",
+			content:  "<USER_REQUEST>\n</USER_REQUEST>\n<ADDITIONAL_METADATA>\nThe current local time is: 2024-01-01 00:00:00\n</ADDITIONAL_METADATA>",
+			wantText: "<USER_REQUEST>\n</USER_REQUEST>\n<ADDITIONAL_METADATA>\nThe current local time is: 2024-01-01 00:00:00\n</ADDITIONAL_METADATA>",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			text, preamble := splitUserRequest(c.content)
+			if text != c.wantText {
+				t.Errorf("本文 = %q, want %q", text, c.wantText)
+			}
+			if strings.Join(preamble, "|") != strings.Join(c.wantPreamble, "|") {
+				t.Errorf("前置き = %q, want %q", preamble, c.wantPreamble)
+			}
+		})
+	}
+}
+
+// フィクスチャ（実データと同じ包みの形）から、包みが剥がれていること。
+func TestBuildMessagesStripsUserRequestWrapper(t *testing.T) {
+	parsed := mustParseFixture(t, conversationA)
+
+	first, second := parsed.Messages[0], parsed.Messages[2]
+	if first.Role != roleHuman || second.Role != roleHuman {
+		t.Fatalf("人間の発言の位置が変わった: %q / %q", first.Role, second.Role)
+	}
+	if first.Text != "テストの記録を作ってください" {
+		t.Errorf("1件目の本文 = %q", first.Text)
+	}
+	if len(first.Preamble) != 0 {
+		t.Errorf("設定の変更が無いのに前置きが付いている: %q", first.Preamble)
+	}
+	if second.Text != "ありがとう" {
+		t.Errorf("2件目の本文 = %q", second.Text)
+	}
+	if len(second.Preamble) != 1 || !strings.Contains(second.Preamble[0], "設定が変わった") {
+		t.Errorf("設定の変更が前置きへ入っていない: %q", second.Preamble)
+	}
+
+	// 包みの跡がどこにも残っていないこと（タイトルの代用もここから作られる）
+	for _, built := range parsed.Messages {
+		for _, unwanted := range []string{tagUserRequest, tagAdditionalMetadata, "current local time"} {
+			if strings.Contains(built.Text, unwanted) {
+				t.Errorf("本文に包みが残っている: %q に %q", built.Text, unwanted)
+			}
+			if strings.Contains(searchTextOf(built), unwanted) {
+				t.Errorf("検索テキストに包みが残っている: %q", unwanted)
+			}
+		}
+	}
+}
+
+// 前置き（自動で付く定型文）は検索テキストに入れない。本文の依頼は入る。
+func TestSearchTextOfExcludesPreamble(t *testing.T) {
+	built := message{
+		Role:     roleHuman,
+		Text:     "依頼の本文",
+		Preamble: []string{"自動で付く定型文"},
+	}
+	text := searchTextOf(built)
+	if !strings.Contains(text, "依頼の本文") {
+		t.Error("本文が検索テキストに入っていない")
+	}
+	if strings.Contains(text, "自動で付く定型文") {
+		t.Error("前置きが検索テキストに入っている（定型文の語で全発言に当たる）")
+	}
+}

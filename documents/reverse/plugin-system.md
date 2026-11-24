@@ -489,7 +489,10 @@ GetContentHTML(kyouID)
   （Codex の質問への回答は「あなた（質問への回答）」）
   - 本文は `chatview.RenderText`: コードフェンス（三連のバッククォートか `~~~`）を `<pre><code>`、インラインの `` `code` `` を `<code>` にし、
     それ以外はエスケープしたプレーンテキスト（`white-space: pre-wrap`）
-  - 前置き（Codex の IDE / ブラウザのコンテキスト）は本文の直後に折りたたみで置く
+  - 前置き（Codex の IDE / ブラウザのコンテキスト、Antigravity の設定の変更）は本文の直後に折りたたみで置く。
+    Antigravity は人間の入力を `<USER_REQUEST>` などのブロックで必ず包むので、依頼だけを本文にし、
+    現在時刻だけの `<ADDITIONAL_METADATA>` は捨て、`<USER_SETTINGS_CHANGE>` をこの折りたたみへ回す
+    （知らない形はそのまま本文にする。[ADR-0320](../adr/0320-antigravity-read-brain-transcript-and-id-from-uuid-dir.md)）
   - 返事は最終回答（Codex は `phase=final_answer`、Claude Code と Antigravity は最後のテキスト）と質問を本文に、途中報告・thinking・ツール・変更ファイル・計画・通知・
     サブエージェントは `<details class="process">`「🛠 作業の経過 — 途中報告 ×n · ツール名 ×n · thinking ×n · 変更 nファイル」1つに時系列で畳む
     （[ADR-0314](../adr/0314-codex-conversation-from-item-completed.md)）

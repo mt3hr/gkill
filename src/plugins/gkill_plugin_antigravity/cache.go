@@ -17,7 +17,8 @@ import (
 // cacheSchemaVersion はDDLとパーサの世代。上げると次回の起動で作り直す。
 //
 // 差分更新は変わっていないファイルを二度と読まないので、パーサを直したときも上げること。
-const cacheSchemaVersion = "1"
+// 2: 人間の発言から <USER_REQUEST> の中身だけを本文にするようにした（splitUserRequest）。
+const cacheSchemaVersion = "2"
 
 // buildBatchFiles は1トランザクションで取り込むファイル数。
 // 途中で殺されても、このぶんだけやり直せばよい。

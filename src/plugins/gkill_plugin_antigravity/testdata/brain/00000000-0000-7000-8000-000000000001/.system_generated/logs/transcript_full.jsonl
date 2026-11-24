@@ -1,11 +1,11 @@
 {"step_index":0,"type":"CONVERSATION_HISTORY","source":"SYSTEM","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:00:00Z","content":"前の会話からの引き継ぎ"}
-{"step_index":1,"type":"USER_INPUT","source":"USER_EXPLICIT","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:01:00Z","content":"テストの記録を作ってください"}
+{"step_index":1,"type":"USER_INPUT","source":"USER_EXPLICIT","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:01:00Z","content":"<USER_REQUEST>\nテストの記録を作ってください\n</USER_REQUEST>\n<ADDITIONAL_METADATA>\nThe current local time is: 2024-01-01 00:01:00\n</ADDITIONAL_METADATA>"}
 {"step_index":2,"type":"PLANNER_RESPONSE","source":"MODEL","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:02:00Z","content":"","thinking":"どこを直すか考える","tool_calls":[{"name":"read_file","args":{"Path":"/example/sample.txt","StartLine":1,"EndLine":20}}],"model":"gemini-test-model","input_tokens":100,"output_tokens":10}
 {"step_index":3,"type":"VIEW_FILE","source":"MODEL","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:03:00Z","content":"ツールが読んだファイルの中身。これは保持しない"}
 {"step_index":4,"type":"PLANNER_RESPONSE","source":"MODEL","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:04:00Z","content":"途中の報告です","model":"gemini-test-model"}
 {"step_index":5,"type":"EPHEMERAL_MESSAGE","source":"SYSTEM","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:05:00Z","content":"毎回同じ定型の案内"}
 {"step_index":6,"type":"EPHEMERAL_MESSAGE","source":"SYSTEM","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:06:00Z","content":"毎回同じ定型の案内"}
 {"step_index":7,"type":"PLANNER_RESPONSE","source":"MODEL","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:07:00Z","content":"できました","model":"gemini-test-model","tool_calls":[{"name":"call_mcp_tool","args":{"ServerName":"ExampleServer","ToolName":"example_tool","Arguments":"{}"}}]}
-{"step_index":8,"type":"USER_INPUT","source":"USER_EXPLICIT","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:08:00Z","content":"ありがとう"}
+{"step_index":8,"type":"USER_INPUT","source":"USER_EXPLICIT","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:08:00Z","content":"<USER_REQUEST>\nありがとう\n</USER_REQUEST>\n<ADDITIONAL_METADATA>\nThe current local time is: 2024-01-01 00:08:00\n</ADDITIONAL_METADATA>\n<USER_SETTINGS_CHANGE>\n合成の定型文。設定が変わったことの通知\n</USER_SETTINGS_CHANGE>"}
 {"step_index":9,"type":"GENERIC","source":"MODEL","status":"STEP_STATUS_ERROR","created_at":"2024-01-01T00:09:00Z","content":"ツールの出力。これは保持しない","error":"ツールが失敗しました"}
 {"step_index":10,"type":"PLANNER_RESPONSE","source":"MODEL","status":"STEP_STATUS_DONE","created_at":"2024-01-01T00:10:00Z","content":"どういたしまして","model":"gemini-test-model"}

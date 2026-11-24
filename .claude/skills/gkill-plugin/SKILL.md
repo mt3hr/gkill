@@ -38,7 +38,20 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              a kyou_cache column, not baked into search_text.
               #                              Body HTML comes from sdk/chatview (ADR-0315); sender
               #                              label 「Antigravity」; chips project / model / duration.
-              #                              Same background builder + WAL as codex (ADR-0320)
+              #                              Same background builder + WAL as codex (ADR-0320).
+              #                              A HUMAN utterance's body is the inside of
+              #                              <USER_REQUEST> ONLY (splitUserRequest): Antigravity
+              #                              wraps every input, so taking the wrapper as the body
+              #                              starts every list row with `<USER_REQUEST>`, makes the
+              #                              fallback title that literal string, and makes the
+              #                              boilerplate's words match nearly every record.
+              #                              <ADDITIONAL_METADATA> is DROPPED (it holds only the
+              #                              local time, which created_at already has);
+              #                              <USER_SETTINGS_CHANGE> goes to the folded preamble and
+              #                              NOT into search_text (auto boilerplate). An unknown
+              #                              shape (no / unclosed <USER_REQUEST>, text outside the
+              #                              blocks, empty body) is kept VERBATIM — same safety
+              #                              valve as codex's IDE preamble. cacheSchemaVersion 2
               #   gkill_plugin_archived_git_commit_log/ — Git repositories archived as zip
               #                              (`name/.git/…`, root `.git/…`, several per zip, nested).
               #                              Reads the zip's central directory only (sdk.OpenSources),

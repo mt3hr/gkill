@@ -155,14 +155,87 @@ func buildMessages(conversationID string, records []stepRecord) []message {
 
 // humanMessage は USER_INPUT 1件を人間の Kyou にする。
 func humanMessage(conversationID string, record stepRecord) message {
+	text, preamble := splitUserRequest(record.Content)
 	return message{
 		ID:             kyouIDOf(conversationID, roleHuman, record.StepIndex),
 		Role:           roleHuman,
 		ConversationID: conversationID,
 		StepIndex:      record.StepIndex,
-		Text:           strings.TrimSpace(record.Content),
+		Text:           text,
+		Preamble:       preamble,
 		RelatedTime:    record.CreatedAt,
 		UpdateTime:     record.CreatedAt,
+	}
+}
+
+// splitUserRequest は人間の発言から、利用者が書いた依頼と前置きを取り出す。
+//
+// Antigravity は利用者の入力をブロックで包んで記録する。実データでは例外が無く、
+// 並びも固定だった。
+//
+//	<USER_REQUEST>…実際の依頼…</USER_REQUEST>
+//	<ADDITIONAL_METADATA>The current local time is: …</ADDITIONAL_METADATA>
+//	<USER_SETTINGS_CHANGE>…自動で付く定型文…</USER_SETTINGS_CHANGE>   ← 付かない発言もある
+//
+// 包みごと本文にすると、一覧のどの行も `<USER_REQUEST>` の行から始まり、
+// タイトルの代用（titleOrFallback）もその文字列になり、検索も定型文の語で全発言に当たる。
+// そこで依頼だけを本文にする（gkill_plugin_codex が IDE の前置きを剥がすのと同じ型）。
+//
+//   - ADDITIONAL_METADATA は捨てる。中身は現在時刻の1行で、同じ時刻は created_at にある
+//   - USER_SETTINGS_CHANGE は前置き（詳細画面の折りたたみ）へ。自動の定型文だが出来事ではある
+//   - **知らない形は何も剥がさずそのまま本文にする**。USER_REQUEST が無い・閉じていない・
+//     ブロックの外に文字がある・中身が空、のどれか。形が変わった日に発言が空になるのを防ぐ
+func splitUserRequest(content string) (text string, preamble []string) {
+	trimmed := strings.TrimSpace(content)
+	request, ok := blockContent(trimmed, tagUserRequest)
+	if !ok || request == "" {
+		return trimmed, nil
+	}
+
+	// 知っているブロックを取り除いて何か残るなら、知らない形。剥がさない
+	rest := trimmed
+	for _, tag := range []string{tagUserRequest, tagAdditionalMetadata, tagUserSettingsChange} {
+		rest = removeBlocks(rest, tag)
+	}
+	if strings.TrimSpace(rest) != "" {
+		return trimmed, nil
+	}
+
+	if settings, ok := blockContent(trimmed, tagUserSettingsChange); ok && settings != "" {
+		preamble = append(preamble, settings)
+	}
+	return request, preamble
+}
+
+// blockContent は <tag>…</tag> の中身を返す。開きと閉じが揃っていなければ偽。
+func blockContent(s, tag string) (string, bool) {
+	open, closing := "<"+tag+">", "</"+tag+">"
+	start := strings.Index(s, open)
+	if start < 0 {
+		return "", false
+	}
+	start += len(open)
+	end := strings.Index(s[start:], closing)
+	if end < 0 {
+		return "", false
+	}
+	return strings.TrimSpace(s[start : start+end]), true
+}
+
+// removeBlocks は <tag>…</tag> を全部取り除く。
+// 閉じが無いものは取り除かない（残った開きタグが「知らない形」の判定に効く）。
+func removeBlocks(s, tag string) string {
+	open, closing := "<"+tag+">", "</"+tag+">"
+	for {
+		start := strings.Index(s, open)
+		if start < 0 {
+			return s
+		}
+		end := strings.Index(s[start+len(open):], closing)
+		if end < 0 {
+			return s
+		}
+		s = s[:start] + s[start+len(open)+end+len(closing):]
 	}
 }
 
