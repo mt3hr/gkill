@@ -551,6 +551,19 @@ div.v-sheet.v-picker.v-date-picker > .v-picker__header-wrapper {
   padding-top: 10px;
 }
 
+/* 日付・時刻欄を空に戻す × を欄の中へ入れた（ADR-0419）ぶん、日付欄と時刻欄を広げてある。
+   既定の v-btn の左右16pxのままだと、500px のダイアログで入力欄とボタンが1行に収まらず
+   （実測: 行の内幅468px に対し 入力欄300px + ボタン193px）、ボタンだけ次の行へ落ちる */
+.gkill-field-side-buttons .v-btn {
+  padding-inline: 8px;
+}
+
+/* × のぶん欄の内側が狭くなり、「現在日時」が入れる HH:mm:ss が入り切らなくなる。
+   既定の24pxから少し小さくして、入力欄の幅を増やさずに内側を稼ぐ（ADR-0419） */
+.v-field__clearable .v-icon {
+  font-size: 18px;
+}
+
 /* ダイアログ下部のアクション行(保存/適用/キャンセル等)をスクロールしても見えるよう下部に固定する */
 .gkill-dialog-actions {
   position: sticky;

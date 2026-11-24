@@ -66,11 +66,6 @@ export function useEndTimeIsPlayingView(options: {
         timeis_end_time_string.value = cloned_kyou.value.typed_timeis?.end_time ? moment(cloned_kyou.value.typed_timeis.end_time).format("HH:mm:ss") : ""
     }
 
-    function clear_end_date_time(): void {
-        timeis_end_date_typed.value = null
-        timeis_end_time_string.value = ""
-    }
-
     function now_to_end_date_time(): void {
         timeis_end_date_typed.value = moment().toDate()
         timeis_end_time_string.value = moment().format("HH:mm:ss")
@@ -205,7 +200,6 @@ export function useEndTimeIsPlayingView(options: {
         // Business logic
         reset,
         reset_end_date_time,
-        clear_end_date_time,
         now_to_end_date_time,
         save,
 

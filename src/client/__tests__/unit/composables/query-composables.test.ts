@@ -528,6 +528,28 @@ describe('usePeriodOfTimeQuery: week_of_days の null 判定', () => {
     expect(emits).toHaveBeenLastCalledWith('request_update_period_of_time', null, null, [0, 1, 2, 3, 4, 5, 6])
   })
 
+  // 時刻欄を空に戻す手段は欄の中の ×（clearable）だけ（ADR-0419）。
+  // × が入れるのは "" で、null ではない ―― null を入れると
+  // get_period_of_time_*_time_second の === "" 判定をすり抜け、NaN の秒が条件に乗る
+  test('時刻の × で未指定（null）へ戻る', async () => {
+    const emits = vi.fn()
+    const props = reactive({ application_config: make_fake_application_config(), find_kyou_query: new FindKyouQuery() })
+    const view = usePeriodOfTimeQuery({ props: props as never, emits: emits as never })
+
+    view.period_of_time_start_time_string.value = '09:00'
+    view.period_of_time_end_time_string.value = '18:00'
+    await flush_watchers()
+    expect(view.get_period_of_time_start_time_second()).not.toBeNull()
+    expect(view.get_period_of_time_end_time_second()).not.toBeNull()
+
+    view.period_of_time_start_time_string.value = ''
+    view.period_of_time_end_time_string.value = ''
+    await flush_watchers()
+    expect(view.get_period_of_time_start_time_second(), '× で開始時刻が未指定へ戻らない').toBeNull()
+    expect(view.get_period_of_time_end_time_second(), '× で終了時刻が未指定へ戻らない').toBeNull()
+    expect(emits).toHaveBeenLastCalledWith('request_update_period_of_time', null, null, [0, 1, 2, 3, 4, 5, 6])
+  })
+
   test('全7曜日が戻ってきてもローカルの未選択は保つ（次の1押しが「その曜日だけ」になる）', async () => {
     const props = reactive({ application_config: make_fake_application_config(), find_kyou_query: new FindKyouQuery() })
     const view = usePeriodOfTimeQuery({ props: props as never, emits: vi.fn() as never })

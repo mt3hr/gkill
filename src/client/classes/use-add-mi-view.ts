@@ -122,21 +122,6 @@ export function useAddMiView(options: {
         new_board_name_dialog.value?.show()
     }
 
-    function clear_estimate_start_date_time(): void {
-        mi_estimate_start_date_typed.value = null
-        mi_estimate_start_time_string.value = ""
-    }
-
-    function clear_estimate_end_date_time(): void {
-        mi_estimate_end_date_typed.value = null
-        mi_estimate_end_time_string.value = ""
-    }
-
-    function clear_limit_date_time(): void {
-        mi_limit_date_typed.value = null
-        mi_limit_time_string.value = ""
-    }
-
     function now_to_estimate_start_date_time(): void {
         mi_estimate_start_date_typed.value = moment().toDate()
         mi_estimate_start_time_string.value = moment().format("HH:mm:ss")
@@ -497,9 +482,6 @@ export function useAddMiView(options: {
         load_mi_board_names,
         update_board_name,
         show_new_board_name_dialog,
-        clear_estimate_start_date_time,
-        clear_estimate_end_date_time,
-        clear_limit_date_time,
         now_to_estimate_start_date_time,
         now_to_estimate_end_date_time,
         now_to_limit_date_time,

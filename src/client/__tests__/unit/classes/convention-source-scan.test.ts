@@ -16,7 +16,7 @@
  *     （一覧の行の中なのに、参照先の画像を原寸で読み、動画のメタデータも読みに行っていた）
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { dirname, join, relative, sep } from 'node:path'
+import { basename, dirname, join, relative, sep } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 function find_repo_root(): string {
@@ -329,6 +329,141 @@ describe('クライアントの規約のソース走査', () => {
         }
     })
 
+    // 日付・時刻入力を空に戻す手段は、欄の中の ×（Vuetify の clearable）1つに統一してある（ADR-0419）。
+    // × を付けてはいけないのは必須の日時欄（related_* / notification_* / timeis_start_*）。
+    // 裏の ref が Ref<Date>（null 不可）で表示 computed に null ガードが無く、
+    // 空にすると保存時に *_time_is_blank になる。
+    // 表で持つのは、同じ ref 名が「× を付ける画面」と「付けない画面」の両方にありうるため
+    // （timeis_start_* は必須、timeis_end_* は任意で、どちらも同じ3ダイアログに並ぶ）
+    const clearable_date_time_fields = [
+        'add-mi-re-kyou-view.vue mi_estimate_start_date_string',
+        'add-mi-re-kyou-view.vue mi_estimate_start_time_string',
+        'add-mi-re-kyou-view.vue mi_estimate_end_date_string',
+        'add-mi-re-kyou-view.vue mi_estimate_end_time_string',
+        'add-mi-re-kyou-view.vue mi_limit_date_string',
+        'add-mi-re-kyou-view.vue mi_limit_time_string',
+        'add-mi-view.vue mi_estimate_start_date_string',
+        'add-mi-view.vue mi_estimate_start_time_string',
+        'add-mi-view.vue mi_estimate_end_date_string',
+        'add-mi-view.vue mi_estimate_end_time_string',
+        'add-mi-view.vue mi_limit_date_string',
+        'add-mi-view.vue mi_limit_time_string',
+        'add-time-is-view.vue timeis_end_date_string',
+        'add-time-is-view.vue timeis_end_time_string',
+        'calendar-query.vue start_time_string',
+        'calendar-query.vue end_time_string',
+        'edit-mi-re-kyou-view.vue mi_estimate_start_date_string',
+        'edit-mi-re-kyou-view.vue mi_estimate_start_time_string',
+        'edit-mi-re-kyou-view.vue mi_estimate_end_date_string',
+        'edit-mi-re-kyou-view.vue mi_estimate_end_time_string',
+        'edit-mi-re-kyou-view.vue mi_limit_date_string',
+        'edit-mi-re-kyou-view.vue mi_limit_time_string',
+        'edit-mi-view.vue mi_estimate_start_date_string',
+        'edit-mi-view.vue mi_estimate_start_time_string',
+        'edit-mi-view.vue mi_estimate_end_date_string',
+        'edit-mi-view.vue mi_estimate_end_time_string',
+        'edit-mi-view.vue mi_limit_date_string',
+        'edit-mi-view.vue mi_limit_time_string',
+        'edit-time-is-view.vue timeis_end_date_string',
+        'edit-time-is-view.vue timeis_end_time_string',
+        'end-time-is-playing-view.vue timeis_end_date_string',
+        'end-time-is-playing-view.vue timeis_end_time_string',
+        'period-of-time-query.vue period_of_time_start_time_string',
+        'period-of-time-query.vue period_of_time_end_time_string',
+    ]
+
+    // calendar-query.vue だけは v-model のままでよい。時刻 ref が Ref<string | null> で、
+    // Vuetify が書く null をそのまま「未指定」として読む（use-calendar-query.ts の
+    // parse_time_string が null を受ける）。ほかは Ref<string> のまま保存側が === "" を
+    // 見ているので、Vuetify に null を書かせず @click:clear で "" を入れる
+    const clearable_with_v_model = new Set([
+        'calendar-query.vue start_time_string',
+        'calendar-query.vue end_time_string',
+    ])
+
+    const date_time_field_element = /<v-text-field\b[\s\S]*?>/g
+    const date_time_bound_ref = /(?::model-value|v-model)="(\w*_(?:date|time)_string)"/
+    const has_clearable = /(?::clearable=|\sclearable[\s>/])/
+
+    /** テンプレートの <v-text-field> のうち、日付・時刻の文字列を結んでいるものを集める */
+    function collect_date_time_fields(): Array<{ key: string, element: string }> {
+        const found = new Array<{ key: string, element: string }>()
+        for (const path of vue_files) {
+            const source = strip_comments(readFileSync(path, 'utf8'))
+            for (const match of source.matchAll(date_time_field_element)) {
+                const element = match[0]
+                const bound = date_time_bound_ref.exec(element)
+                if (!bound) {
+                    continue
+                }
+                found.push({ key: `${basename(path)} ${bound[1]}`, element })
+            }
+        }
+        return found
+    }
+
+    it('日付・時刻欄の × は表のとおりに付いている', () => {
+        const fields = collect_date_time_fields()
+        // 必須の日時欄のほうが多いので、表の2倍近くある（パスがずれたら気づけるように）
+        expect(fields.length).toBeGreaterThan(clearable_date_time_fields.length)
+        const actual = fields.filter(field => has_clearable.test(field.element)).map(field => field.key).sort()
+        expect(actual).toEqual([...clearable_date_time_fields].sort())
+    })
+
+    it('× を付けた日付・時刻欄は :model-value と @click:clear で結んでいる', () => {
+        const violations = new Array<string>()
+        for (const field of collect_date_time_fields()) {
+            if (!has_clearable.test(field.element) || clearable_with_v_model.has(field.key)) {
+                continue
+            }
+            if (/\sv-model=/.test(field.element)) {
+                violations.push(`${field.key}: v-model で結んでいる（日付欄は読み取り専用 computed なので × が黙って効かず、時刻欄には null が入って保存側の === "" 判定をすり抜ける）`)
+            }
+            const clear = /@click:clear="([^"]*)"/.exec(field.element)
+            if (!clear) {
+                violations.push(`${field.key}: @click:clear が無い（× を押しても本物の状態が落ちない）`)
+                continue
+            }
+            const expected = field.key.endsWith('_time_string') ? "= ''" : '= null'
+            if (!clear[1].includes(expected)) {
+                violations.push(`${field.key}: @click:clear が ${expected} を入れていない（${clear[1]}）`)
+            }
+        }
+        expect(violations).toEqual([])
+    })
+
+    // 日付欄は × の有無によらず min-width="160"、追加/編集ダイアログの時刻欄は 140。
+    // 120 のままだと末尾が切れる（× を付けた欄は × のぶん、付けない欄も既定の左右余白のぶん
+    // 内側が足りない）。とくに「現在日時」が入れるのは HH:mm:ss で、ピッカーの HH:mm より長い。
+    // サイドバーの検索条件（*-query.vue）の時刻欄は HH:mm しか入らず、横幅も無いので 120 のまま
+    it('日付欄は min-width="160"、ダイアログの時刻欄は 140 で揃っている', () => {
+        const violations = new Array<string>()
+        for (const field of collect_date_time_fields()) {
+            const is_date = field.key.endsWith('_date_string')
+            const is_query_sidebar = /-query\.vue /.test(field.key)
+            const expected = is_date ? '160' : (is_query_sidebar ? '120' : '140')
+            if (!field.element.includes(`min-width="${expected}"`)) {
+                violations.push(`${field.key}: min-width が ${expected} でない（値の末尾が切れる）`)
+            }
+        }
+        expect(violations).toEqual([])
+    })
+
+    // 入力欄の横のボタン群は「リセット」「現在日時」だけ。空に戻すのは欄の中の × へ移した
+    it('日付・時刻欄の横に「クリア」ボタンを残していない', () => {
+        const violations = new Array<string>()
+        for (const path of vue_files) {
+            const source = strip_comments(readFileSync(path, 'utf8'))
+            if (!source.includes('gkill-field-side-buttons')) {
+                continue
+            }
+            if (source.includes('CLEAR_TITLE')) {
+                violations.push(`${to_repo_path(path)}: 入力欄の横のボタン群に CLEAR_TITLE が残っている（空に戻すのは欄の中の ×）`)
+            }
+        }
+        expect(violations).toEqual([])
+    })
+
     // 走査が「何も見つけられないだけ」で緑になっていないことを確かめる
     it('検出ロジックが違反を見つけられる（自己検査）', () => {
         expect(html_tag_literal.test('diff_str += "<br>（"')).toBe(true)
@@ -355,5 +490,18 @@ describe('クライアントの規約のソース走査', () => {
 
         expect(/\.reload\(\s*true/.test('await kyou.reload(true)')).toBe(true)
         expect([...'@received_errors="fooHandlers[\'received_errors\']"'.matchAll(/@([\w.]+)="(\w*Handlers)\['/g)].length).toBe(1)
+
+        // 日付・時刻欄の × の走査
+        expect(has_clearable.test('<v-text-field :clearable="!is_busy" />')).toBe(true)
+        expect(has_clearable.test('<v-text-field clearable />')).toBe(true)
+        expect(has_clearable.test('<v-text-field hide-details />')).toBe(false)
+        // clearable を含む別の属性名を拾わない
+        expect(has_clearable.test('<v-text-field :not-clearable="true" />')).toBe(false)
+        expect(date_time_bound_ref.exec('<v-text-field :model-value="mi_limit_time_string"')?.[1]).toBe('mi_limit_time_string')
+        expect(date_time_bound_ref.exec('<v-text-field v-model="related_date_string"')?.[1]).toBe('related_date_string')
+        expect(date_time_bound_ref.exec('<v-text-field v-model="mi_title"')).toBe(null)
+        // 時刻へ null を入れる形（保存側の === "" をすり抜ける）を見つけられる
+        expect(/@click:clear="([^"]*)"/.exec('@click:clear="mi_limit_time_string = null"')?.[1]?.includes("= ''")).toBe(false)
+        expect(/@click:clear="([^"]*)"/.exec('@click:clear="mi_limit_time_string = \'\'"')?.[1]?.includes("= ''")).toBe(true)
     })
 })

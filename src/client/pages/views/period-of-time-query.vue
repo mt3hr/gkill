@@ -13,10 +13,14 @@
         </v-row>
         <v-row class="pa-0 ma-0" v-if="use_period_of_time">
             <v-col cols="auto" class="pa-0 ma-0">
+                <!-- 空に戻すのは欄の中の ×（clearable）。時刻は null ではなく "" に落とす
+                     ―― get_period_of_time_*_time_second が === "" で未指定を判定する（ADR-0419） -->
                 <v-menu v-model="show_period_of_time_start_time_menu" :close-on-content-click="false"
                     transition="scale-transition" offset-y min-width="auto">
                     <template #activator="{ props }">
-                        <v-text-field v-model="period_of_time_start_time_string" hide-details
+                        <v-text-field :model-value="period_of_time_start_time_string" clearable
+                            @click:clear="period_of_time_start_time_string = ''" hide-details
+                            class="period_of_time_query_start_time_field"
                             :label="i18n.global.t('PERIOD_OF_TIME_QUERY_START_TIME_TITLE')" readonly min-width="120"
                             v-bind="props" />
                     </template>
@@ -28,7 +32,9 @@
                 <v-menu v-model="show_period_of_time_end_time_menu" :close-on-content-click="false"
                     transition="scale-transition" offset-y min-width="auto">
                     <template #activator="{ props }">
-                        <v-text-field v-model="period_of_time_end_time_string" hide-details
+                        <v-text-field :model-value="period_of_time_end_time_string" clearable
+                            @click:clear="period_of_time_end_time_string = ''" hide-details
+                            class="period_of_time_query_end_time_field"
                             :label="i18n.global.t('PERIOD_OF_TIME_QUERY_END_TIME_TITLE')" readonly min-width="120"
                             v-bind="props" />
                     </template>

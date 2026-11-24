@@ -85,6 +85,8 @@ export function useMiReKyouScheduleFields(options: {
         new_board_name_dialog.value?.show()
     }
 
+    // 以下3つは追加ダイアログの reset() 専用（保存後にフォームを初期状態へ戻す）。
+    // 画面上で欄を空にするのは欄の中の ×（clearable）で、日付と時刻を別々に落とす（ADR-0419）
     function clear_estimate_start_date_time(): void {
         mi_estimate_start_date_typed.value = null
         mi_estimate_start_time_string.value = ""

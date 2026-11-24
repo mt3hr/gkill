@@ -22,7 +22,7 @@
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="related_date_string" :label="i18n.global.t('KC_DATE_TITLE')"
-                                            readonly v-bind="props" min-width="120" />
+                                            readonly v-bind="props" min-width="160" />
                                     </template>
                                     <v-date-picker v-model="related_date_typed"
                                         @update:model-value="show_related_date_menu = false" locale="ja-JP" />
@@ -33,7 +33,7 @@
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="related_time_string" :label="i18n.global.t('KC_TIME_TITLE')"
-                                            readonly min-width="120" v-bind="props" />
+                                            readonly min-width="140" v-bind="props" />
                                     </template>
                                     <v-time-picker v-model="related_time_string" format="24hr"
                                         @update:minute="show_related_time_menu = false" />

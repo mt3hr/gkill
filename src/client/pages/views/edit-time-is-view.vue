@@ -29,7 +29,7 @@
                                     <template #activator="{ props }">
                                         <v-text-field v-model="timeis_start_date_string"
                                             :label="i18n.global.t('TIMEIS_START_DATE_TITLE')" readonly v-bind="props"
-                                            min-width="120" />
+                                            min-width="160" />
                                     </template>
                                     <v-date-picker v-model="timeis_start_date_typed"
                                         @update:model-value="show_start_date_menu = false" locale="ja-JP" />
@@ -40,7 +40,7 @@
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="timeis_start_time_string"
-                                            :label="i18n.global.t('TIMEIS_START_TIME_TITLE')" min-width="120" readonly
+                                            :label="i18n.global.t('TIMEIS_START_TIME_TITLE')" min-width="140" readonly
                                             v-bind="props" />
                                     </template>
                                     <v-time-picker v-model="timeis_start_time_string" format="24hr"
@@ -76,12 +76,15 @@
                     <tbody>
                         <tr>
                             <td>
+                                <!-- 空に戻すのは欄の中の ×（clearable）。日付は null、時刻は "" に落とす
+                                     ―― 保存側が === "" で未指定を判定するので、時刻へ null を入れてはいけない（ADR-0419） -->
                                 <v-menu :disabled="is_busy" v-model="show_end_date_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
-                                        <v-text-field v-model="timeis_end_date_string"
+                                        <v-text-field :model-value="timeis_end_date_string" :clearable="!is_busy"
+                                            @click:clear="timeis_end_date_typed = null"
                                             :label="i18n.global.t('TIMEIS_END_DATE_TITLE')" readonly v-bind="props"
-                                            min-width="120" />
+                                            min-width="160" />
                                     </template>
                                     <v-date-picker v-model="timeis_end_date_typed"
                                         @update:model-value="show_end_date_menu = false" locale="ja-JP" />
@@ -91,8 +94,9 @@
                                 <v-menu :disabled="is_busy" v-model="show_end_time_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
-                                        <v-text-field v-model="timeis_end_time_string"
-                                            :label="i18n.global.t('TIMEIS_END_TIME_TITLE')" min-width="120" readonly
+                                        <v-text-field :model-value="timeis_end_time_string" :clearable="!is_busy"
+                                            @click:clear="timeis_end_time_string = ''"
+                                            :label="i18n.global.t('TIMEIS_END_TIME_TITLE')" min-width="140" readonly
                                             v-bind="props" />
                                     </template>
                                     <v-time-picker v-model="timeis_end_time_string" format="24hr"
@@ -111,11 +115,6 @@
                                 <v-btn dark color="secondary" @click="reset_end_date_time()"
                                     :disabled="is_busy">{{
                                         i18n.global.t("RESET_TITLE") }}</v-btn>
-                            </td>
-                            <td>
-                                <v-btn dark color="secondary" @click="clear_end_date_time()"
-                                    :disabled="is_busy">{{
-                                        i18n.global.t("CLEAR_TITLE") }}</v-btn>
                             </td>
                             <td>
                                 <v-btn dark color="primary" @click="now_to_end_date_time()"
@@ -208,7 +207,6 @@ const {
     reset_end_date_time,
     now_to_start_date_time,
     now_to_end_date_time,
-    clear_end_date_time,
     save,
 
     // Event relay objects

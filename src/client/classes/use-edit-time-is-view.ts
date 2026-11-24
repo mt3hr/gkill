@@ -91,11 +91,6 @@ export function useEditTimeIsView(options: {
         timeis_end_time_string.value = moment().format("HH:mm:ss")
     }
 
-    function clear_end_date_time(): void {
-        timeis_end_date_typed.value = null
-        timeis_end_time_string.value = ""
-    }
-
     /**
      * TimeIsの中身が変わっているか。
      *
@@ -336,7 +331,6 @@ export function useEditTimeIsView(options: {
         reset_end_date_time,
         now_to_start_date_time,
         now_to_end_date_time,
-        clear_end_date_time,
         save,
 
         // Event relay objects

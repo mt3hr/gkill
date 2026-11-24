@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、50 specファイル262テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、50 specファイル264テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## E2E の書き方の規約
 
@@ -75,7 +75,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 
 ## テストファイル一覧
 
-### E2E テスト（50 specファイル, 262テスト宣言）
+### E2E テスト（50 specファイル, 264テスト宣言）
 
 #### ページ表示・ナビゲーション系（14ファイル）
 
@@ -117,7 +117,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 |---------|-----------|
 | `src/client/__tests__/e2e/auth-flow.spec.ts` | ログアウト、パスワード未設定ログイン不可、Rep全チェック確認 |
 | `src/client/__tests__/e2e/search-and-summary.spec.ts` | RYKV/Mi キーワード検索、D-note サマリトグル |
-| `src/client/__tests__/e2e/mi-operations.spec.ts` | タスク板間移動、完了状態切替、サイドバーからの共有管理ダイアログ |
+| `src/client/__tests__/e2e/mi-operations.spec.ts` | タスク板間移動、完了状態切替、サイドバーからの共有管理ダイアログ、期限の日付・時刻欄の × が押した欄だけを空にすること（横に「クリア」ボタンが無いこと・空の欄には × が出ないこと・時刻の × で日付が消えないこと・× ではピッカーが開かないこと。ADR-0419） |
 | `src/client/__tests__/e2e/settings-crud.spec.ts` | 設定ページ各セクション表示確認 |
 | `src/client/__tests__/e2e/server-config-crud.spec.ts` | サーバ設定機能テスト（プロファイル/TLS/アカウント/Rep管理） |
 | `src/client/__tests__/e2e/user-config-crud.spec.ts` | ユーザ設定機能テスト（API/画像/板名/構造CRUD） |
@@ -132,7 +132,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/mi-board-columns.spec.ts` | mi の板列×検索: 各板の列に自板のタスクだけが出る、板クリック後に別列で検索しても板名表示と検索条件が汚染されない |
 | `src/client/__tests__/e2e/saved-find-query.spec.ts` | 保存済み検索条件: 設定画面で登録→設定適用→ライフログビューのサイドバーFABから呼び出してサイドバーへ反映、タスク側は未登録なのでFAB非表示 |
 | `src/client/__tests__/e2e/rykv-sidebar-defaults.spec.ts` | rykv の既定検索条件と「プロファイル×記録分類→記録先詳細」の算出。列を足すと設定由来の既定条件で検索が飛ぶこと、記録分類のチェック変更が記録先詳細と検索条件へ反映されること |
-| `src/client/__tests__/e2e/rykv-period-of-time.spec.ts` | rykv サイドバーの「時間帯」の曜日ボタン。チェック直後は全曜日（`[]` の0件指定ではない）で検索して記録が消えないこと、1つ押せばその曜日だけになり今日以外の曜日では今日の記録が消えること、全曜日の往復でローカルの未選択が全点灯に化けないこと、選択が塗り潰し（`v-btn--variant-flat`）・未選択が枠線で `aria-pressed` が付くこと |
+| `src/client/__tests__/e2e/rykv-period-of-time.spec.ts` | rykv サイドバーの「時間帯」の曜日ボタン。チェック直後は全曜日（`[]` の0件指定ではない）で検索して記録が消えないこと、1つ押せばその曜日だけになり今日以外の曜日では今日の記録が消えること、全曜日の往復でローカルの未選択が全点灯に化けないこと、選択が塗り潰し（`v-btn--variant-flat`）・未選択が枠線で `aria-pressed` が付くこと。あわせて時刻欄の × （`clearable`）で開始時刻だけが未指定へ戻ること、空の欄には × が出ないこと、× ではピッカーが開かないこと（ADR-0419） |
 | `src/client/__tests__/e2e/rykv-calendar-period.spec.ts` | サイドバーの「期間」（旧「日付」）。メニュー名が「期間」で旧名が残っていないこと、時刻を入れなければ条件が日の境界ちょうど（00:00:00.000 / 23:59:59.999。ここが変わると保存済みの全列の結果が黙ってずれる）になること、時刻ピッカーで入れた時刻が秒まで条件に乗り触っていない側は動かないこと、クリアで未指定へ戻ること、mi 側にも同じ欄が出ること（`calendar-query.vue` は rykv と共有） |
 | `src/client/__tests__/e2e/column-view-initial-load.spec.ts` | 初期検索の完了を待たずに画面を見せること。準備完了の合図はルート要素の `data-gkill-view-ready`（全画面オーバーレイを待つセレクタでは、出る前に `toBeHidden` が通る窓ができる） |
 | `src/client/__tests__/e2e/kftl-tabs.spec.ts` | メモ帳のタブ（追加・切替・閉じる・localStorage への永続化）と、IMEで確定してから改行したときの保存マーカー。**IME は CDP の `Input.imeSetComposition` でしか再現できない**（`pressSequentially` は中間の本文を必ず観測してしまい常に緑になる） |
@@ -153,7 +153,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/shared-rykv-view.test.ts` | 共有された rykv 画面の Composable（通常の rykv とは別実装）。取得は1回だけで検索条件を足さないこと、取得中はスピナーを立て失敗しても倒すこと（握りつぶさず console へ出す）、地図の時間窓を幅0にしないこと、件数カレンダーは一覧と地図の両方を動かし地図の軌跡クリックは窓を動かさないこと |
 | `src/client/__tests__/unit/composables/context-menus.test.ts` | 10エンティティ型のコンテキストメニュー Composable（ZIPブラウズ項目含む） |
 | `src/client/__tests__/unit/composables/page-composables.test.ts` | ページレベル Composable |
-| `src/client/__tests__/unit/composables/query-composables.test.ts` | クエリ操作 Composable パターン |
+| `src/client/__tests__/unit/composables/query-composables.test.ts` | クエリ操作 Composable パターン。「時間帯」の時刻欄は × が `""` を入れることで未指定（`null`）へ戻る（`null` を入れると `=== ""` 判定をすり抜ける。ADR-0419） |
 | `src/client/__tests__/unit/composables/save-clipboard-to-file-dialog.test.ts` | クリップボード保存ダイアログ Composable（初期状態、MIME判定、ファイルサイズ表示、load_clipboard エラーパス、save_or_confirm、useScopedCtrlVForClipboard キー処理） |
 | `src/client/__tests__/unit/composables/struct-element-description.test.ts` | 設定ツリー6本（タグ / 記録保管場所 / 記録種別 / プロファイル / 板 / メモ帳テンプレート）の要素追加・編集 Composable。表駆動で `apply()` が「説明」を詰め直すこと、板の要素編集が説明以外の欄（key / name / children / is_dir / check_when_inited）を保つこと、板の編集ダイアログはルート行では開かないこと |
 | `src/client/__tests__/unit/composables/edit-mi-board-struct-element-dialog.test.ts` | 板の要素編集ダイアログ Composable。`show(struct)` が編集対象を載せて開き、`hide()` と Escape が history 駆動の閉じ方（`close_dialog_via_history`）に流れること |

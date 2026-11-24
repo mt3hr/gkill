@@ -104,6 +104,28 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 
 **ダイアログの自動フォーカス:** ダイアログを開いたら本文の最初のテキスト入力欄にカーソルが載る。実装は `useFloatingDialog` の `autofocus` オプション（既定 true）1箇所で、候補選びは `classes/dialog-autofocus.ts` の純関数 `find_autofocus_target()`。**view 側に `autofocus` を撒いてはいけない** ―― 入力欄を持つ view はサイドバーやページ直下でも使われるので、ページ読込時にフォーカスを奪う。探索は `.gkill-floating-dialog__body` の中だけ（ヘッダには透過トグルの `v-checkbox` と×が必ず先頭にあり、ルートから探すと必ずそれを掴む）。既に `autofocus` を書いた要素があるダイアログでは何もせず Vuetify に任せる。`readonly`（日付ピッカーの見せかけ入力）・`disabled`・非表示・`.v-selection-control` 配下・`inputmode="none"` の `v-select` は候補から外す（`v-autocomplete` / `v-combobox` は打ち込めるので対象）。入力欄が内側の `v-if` で遅れて生えるダイアログのために `MutationObserver` で2秒だけ見張り、一度当てたら切る。自前でフォーカス先を決めているダイアログ（`save-clipboard-to-file-dialog` は保存ボタン）は `autofocus: false` で切る。
 
+**日付・時刻欄を空に戻すのは欄の中の ×（`clearable`）だけ**（[ADR-0419](../../../documents/adr/0419-clear-date-time-fields-with-in-field-x.md)）。
+欄の横に「クリア」ボタンを足さない（「リセット」「現在日時」は横のまま）。守るべき約束:
+- **× は押した欄だけを空にする。** 日付の × は日付だけ、時刻の × は時刻だけ。日付と時刻は「両方空 or 両方入力」でないと
+  保存時にエラーになるが、その半端な状態は日付だけ選んでも作れるので、検証がそれを拾う
+- **`v-model` ではなく `:model-value` + `@click:clear` で結ぶ。** `v-model` のままだと**どちらも静かに壊れる** ――
+  日付欄の `v-model` 先は読み取り専用の computed（`*_date_string`）なので `clearable` の `model.value = null` が効かず、
+  時刻欄の `v-model` 先は `Ref<string>` なので `null` が入り、保存側の `=== ""`（未指定）判定を全部すり抜ける。
+  **時刻の `@click:clear` は `''` を入れる**（`null` ではない）
+- **必須の日時欄には付けない**（関連日時・通知日時・TimeIs の開始日時）。裏が `Ref<Date>` で表示 computed に
+  null ガードが無く、空にすると保存時に `*_time_is_blank` になるだけ
+- 例外は `calendar-query.vue`（「期間」）だけで、時刻 ref が最初から `Ref<string | null>` なので `v-model` のままでよい
+- `:clearable` には隣の `v-menu` の `:disabled` と同じ式の否定を渡す（送信中に × だけ押せる穴を作らない）
+- **欄の幅は、日付が `min-width="160"`、追加/編集ダイアログの時刻が `140`**（× の有無によらず揃える）。
+  120 だと末尾が切れる ―― 日付は `YYYY-MM-DD`、時刻は「現在日時」が入れる `HH:mm:ss`（ピッカーの `HH:mm` では
+  起きないので気づきにくい）。サイドバーの検索条件の時刻欄だけ 120 のまま（`HH:mm` しか入らない）。
+  あわせて `.v-field__clearable .v-icon` を 18px に、`.gkill-field-side-buttons .v-btn` の左右余白を詰めてある
+  ―― 戻すと欄の値が切れるか、ボタン行が折り返す（ダイアログ本体は `width: min(500px, 85vw)` 固定）
+- 付ける欄・付けない欄は `convention-source-scan.test.ts` の表（`clearable_date_time_fields`）が正本。
+  同じ ref 名が「付ける画面」と「付けない画面」の両方にある（`timeis_end_*`）ので名前では決まらない
+- 守るテスト: `convention-source-scan.test.ts` / `query-composables.test.ts` /
+  `e2e/rykv-period-of-time.spec.ts` / `e2e/mi-operations.spec.ts`
+
 **行判定の高さにパーセントを渡さない:** `classes/kyou-row-height.ts` の `is_row_height()` は高さを `Number.parseFloat` して 120 未満なら一覧の行とみなす。`parseFloat('80%')` は **80** なので、詳細ペインやダイアログでパーセントを渡すと行扱いになり、`mi-re-kyou-view.vue` の参照先ブロック（`v-if="!is_compact"`）が丸ごと消える。行ではない場所は `'unset'` か `'auto'` を渡すこと。例外は画像一覧（`kyou-list-view.vue` の `is_image_only`）だけで、200pxのセルに詰めるため意図的に `'100%'` を渡している。`__tests__/unit/classes/kyou-view-height-source-scan.test.ts` がソース走査で守る。
 
 **表示用の文字列に HTML タグのリテラルを埋めない**（2026-08-21）。表示側は `{{ }}` 補間で Vue がエスケープするので、剥がし忘れた画面では**タグが文字としてそのまま見える**。実例: `classes/format-date-time.ts` の `format_duration()` が `"23時間 6分 <br>（23.1時間）"` を返し、3つの描画点が銘々 `.replace("<br>", …)` で剥がす一方、**Dnote の集計リスト（`aggregated-list-item.vue`）と相関グラフ（`dnote-correlation-graph-view.vue` の `point_description`）は剥がしておらず `<br>` が見えていた**。

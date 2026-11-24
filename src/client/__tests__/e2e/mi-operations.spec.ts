@@ -220,4 +220,58 @@ test.describe('Mi (Task) Operations', () => {
     expect(viewport, 'ビューポートサイズが取れない').not.toBeNull()
     expect(dialogBox!.height).toBeLessThan(viewport!.height * 1.5)
   })
+
+  // 日付・時刻欄を空に戻す手段は欄の中の ×（Vuetify の clearable）だけで、
+  // 横の「クリア」ボタンは撤去した（ADR-0419）。× は押した欄だけを空にするので、
+  // 日付の × で時刻が消えたり、その逆が起きてはいけない
+  test('期限の × は押した欄だけを空にし、横に「クリア」ボタンが無い', async ({ page }) => {
+    const label = makeUniqueLabel('mi_clear_x')
+
+    await submitKftlText(page, `ーみ\n${label}`)
+    await navigateToMi(page)
+
+    const record = await waitForKyouByText(page, label)
+    await record.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, MENU.edit)
+
+    const dialog = page.locator(DIALOG).first()
+    await expect(dialog, '編集ダイアログが開かない').toBeVisible({ timeout: 15000 })
+
+    // 空に戻すのは欄の中の × なので、横のボタン群に「クリア」は無い
+    await expect(dialog.locator('button').filter({ hasText: /^\s*クリア\s*$/ }),
+      '入力欄の横に「クリア」ボタンが残っている').toHaveCount(0)
+
+    const limit_date = dialog.locator('.v-text-field').filter({ hasText: '期限日付' }).first()
+    const limit_time = dialog.locator('.v-text-field').filter({ hasText: '期限時刻' }).first()
+    await limit_date.scrollIntoViewIfNeeded()
+    await expect(limit_date.locator('input'), '期限日付の欄が見つからない').toHaveValue('')
+    // 空の欄には × が出ない（clearable の × は v-show="dirty"）
+    await expect(limit_date.locator('.v-field__clearable'), '空の欄に × が出ている').toBeHidden()
+
+    // 期限に日付と時刻を入れる
+    await limit_date.locator('input').click()
+    const day_buttons = page.locator('.v-overlay--active .v-date-picker-month__day button:not([disabled])')
+    await day_buttons.nth(15).click()
+    await expect(limit_date.locator('input'), '日付ピッカーで選んだ日が欄に入らない').toHaveValue(/^\d{4}-\d{2}-\d{2}$/)
+
+    await limit_time.locator('input').click()
+    const clock_items = page.locator('.v-overlay--active .v-time-picker .v-time-picker-clock__item')
+    await clock_items.filter({ hasText: /^9$/ }).first().click()
+    await clock_items.filter({ hasText: /^00$/ }).first().click()
+    await expect(limit_time.locator('input'), '時刻ピッカーで選んだ時刻が欄に入らない').toHaveValue('09:00')
+
+    // 時刻の × は時刻だけを空にする（日付は残る）
+    await limit_time.locator('.v-field__clearable .v-icon').click()
+    await expect(limit_time.locator('input'), '時刻の × で空に戻らない').toHaveValue('')
+    await expect(limit_date.locator('input'), '時刻の × で日付まで消えた').toHaveValue(/^\d{4}-\d{2}-\d{2}$/)
+    // onClear が stopPropagation するので、× では activator のピッカーが開かない
+    await expect(page.locator('.v-overlay--active .v-time-picker'), '× でピッカーが開いた').toHaveCount(0)
+
+    // 日付の × で日付も空になる
+    await limit_date.locator('.v-field__clearable .v-icon').click()
+    await expect(limit_date.locator('input'), '日付の × で空に戻らない').toHaveValue('')
+    await expect(page.locator('.v-overlay--active .v-date-picker'), '× でピッカーが開いた').toHaveCount(0)
+    // ここで「保存」は押さない。× で開いたときと同じ（期限なし）へ戻っているので
+    // is_body_changed が偽になり、update_mi が1本も飛ばない
+  })
 })

@@ -121,21 +121,6 @@ export function useEditMiView(options: {
         new_board_name_dialog.value?.show()
     }
 
-    function clear_estimate_start_date_time(): void {
-        mi_estimate_start_date_typed.value = null
-        mi_estimate_start_time_string.value = ""
-    }
-
-    function clear_estimate_end_date_time(): void {
-        mi_estimate_end_date_typed.value = null
-        mi_estimate_end_time_string.value = ""
-    }
-
-    function clear_limit_date_time(): void {
-        mi_limit_date_typed.value = null
-        mi_limit_time_string.value = ""
-    }
-
     function reset_estimate_start_date_time(): void {
         mi_estimate_start_date_typed.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).toDate() : null
         mi_estimate_start_time_string.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).format("HH:mm:ss") : ""
@@ -492,9 +477,6 @@ export function useEditMiView(options: {
 
         // Business logic
         show_new_board_name_dialog,
-        clear_estimate_start_date_time,
-        clear_estimate_end_date_time,
-        clear_limit_date_time,
         reset_estimate_start_date_time,
         reset_estimate_end_date_time,
         reset_limit_date_time,

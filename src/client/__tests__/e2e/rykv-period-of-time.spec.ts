@@ -16,6 +16,9 @@ import {
  *   選んだ曜日のほうが薄く見えて反転して読めた
  *
  * 「時間帯と曜日を指定して検索しても出ない」の調査で見つけた（主因は別で ADR-0220）。
+ *
+ * 開始・終了の時刻欄を空に戻す手段は、欄の中の ×（Vuetify の clearable）だけ（ADR-0419）。
+ * 節の「クリア」は曜日も落とすので、「開始だけ未指定に戻す」が表せなかった。
  */
 
 let apiReachable = false
@@ -45,6 +48,46 @@ test.describe('rykv 時間帯の曜日', () => {
     test.skip(!apiReachable, 'gkill API not reachable via Vite dev server')
     test.setTimeout(180000)
     await loginAsAdmin(page)
+  })
+
+  test('時刻の × で開始時刻だけが未指定へ戻る', async ({ page }) => {
+    await navigateToRykv(page)
+
+    const sidebar = page.locator('.rykv_query_editor_sidebar')
+    const checkbox = sidebar.locator('.v-checkbox').filter({ hasText: '時間帯' }).first().locator('input')
+    await checkbox.scrollIntoViewIfNeeded()
+    const checked_query = await nextGetKyousQuery(page, () => checkbox.check())
+    expect(checked_query.period_of_time_start_time_second, 'チェック直後は時刻未指定のはず').toBeNull()
+
+    const start_field = sidebar.locator('.period_of_time_query_start_time_field input[readonly]')
+    const end_field = sidebar.locator('.period_of_time_query_end_time_field input[readonly]')
+    await expect(start_field, '開始時刻の欄が出ていない').toBeVisible({ timeout: 30000 })
+    await expect(start_field, '時刻は未指定（空）が既定').toHaveValue('')
+
+    // 空の欄には × が出ない（clearable の × は v-show="dirty"）
+    await expect(sidebar.locator('.period_of_time_query_start_time_field .v-field__clearable'),
+      '空の欄に × が出ている').toBeHidden()
+
+    // 開始時刻に 9:00 を入れる
+    await start_field.click()
+    const clock_items = page.locator('.v-time-picker .v-time-picker-clock__item')
+    await clock_items.filter({ hasText: /^9$/ }).first().click()
+    const timed_query = await nextGetKyousQuery(page, async () => {
+      await clock_items.filter({ hasText: /^00$/ }).first().click()
+    })
+    await expect(start_field).toHaveValue('09:00')
+    expect(timed_query.period_of_time_start_time_second, '入れた時刻が条件に乗っていない').not.toBeNull()
+
+    // × を押すと、その欄だけが未指定へ戻って検索がやり直される。
+    // 飛行中の応答を取り違えないよう、条件の中身で待つ
+    const cleared = page.waitForResponse((res) => res.url().includes('/api/get_kyous')
+      && parseGetKyousQuery(res.request().postData()).period_of_time_start_time_second === null, { timeout: 30000 })
+    await sidebar.locator('.period_of_time_query_start_time_field .v-field__clearable .v-icon').click()
+    await cleared
+    await expect(start_field, '× で空に戻らない（未指定を表せなくなる）').toHaveValue('')
+    await expect(end_field, '触っていない終了時刻が動いている').toHaveValue('')
+    // onClear が stopPropagation するので、× では activator のメニューが開かない
+    await expect(page.locator('.v-time-picker'), '× でピッカーのメニューが開いた').toHaveCount(0)
   })
 
   test('チェック直後は全曜日で検索し、1つ押すとその曜日だけになる', async ({ page }) => {
