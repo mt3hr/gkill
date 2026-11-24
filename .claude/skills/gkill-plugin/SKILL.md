@@ -124,6 +124,30 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              source when one exists, else the first listed
               #                              `secondary_data_sources` (ADR-0312); summing them
               #                              doubled hundreds of days of steps
+              #   gkill_plugin_gemini/     — Gemini conversation history from Google Takeout's
+              #                              **My Activity** export (Takeout's top-level "Gemini"
+              #                              holds only Gems / scheduled actions — measured empty).
+              #                              **Entries are picked by POSITION, not by name**: Takeout
+              #                              translates the folder AND the file name (`マイ アクティビティ/
+              #                              Gemini アプリ/マイアクティビティ.json` vs `My Activity/Gemini
+              #                              Apps/MyActivity.json`), so looking for `MyActivity.json`
+              #                              silently yields 0 on a Japanese account. Accepts
+              #                              `.json`/`.html` whose PARENT folder name starts with
+              #                              `Gemini`, then confirms by content (`Gemini` substring in
+              #                              header/products/activityControls, or a conversation URL);
+              #                              another product's activity is skipped silently. JSON only —
+              #                              an HTML activity file becomes a `source_problems` notice,
+              #                              never a silent 0. One record = one exchange → up to 2 Kyou
+              #                              (prompt from `title` minus a localized prefix, reply from
+              #                              `safeHtmlItem[].html`); a record with neither makes none.
+              #                              **The export has no message id**, so Kyou IDs are UUIDv5 of
+              #                              (conversation id from `details[].url` — there is no
+              #                              `titleUrl` —, time, role, ordinal counted PER EXPORT).
+              #                              Reply HTML becomes markdown-ish text at ingest (chatview
+              #                              escapes raw HTML), so changing the converter means bumping
+              #                              cacheSchemaVersion. `nested_zip` is dropped from the
+              #                              problems (Gemini attachments are zips inside the Takeout
+              #                              zip, many per folder) but `mixed_exports` is kept (ADR-0321)
               #   gkill_plugin_google_locationhistory/ — Google Takeout location history as
               #                              GPSLog (no Kyou, `emits_kyou: false` so it stays out
               #                              of the rep list). Format detected by content, not path
@@ -142,9 +166,9 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              line, else the last timestamped line) — an open plugin TimeIs
               #                              would get a native version written by the 終了 button.
               #                              Same background builder + WAL + `(mtime, size)` diff as codex
-              # The two Takeout plugins, archived_git_commit_log, chatgpt and claudeai read their
+              # The three Takeout plugins (fitbit / locationhistory / gemini), archived_git_commit_log, chatgpt and claudeai read their
               # zips **as a zip, never extracted** — scan lives in `plugin/sdk/source.go`
-              # (`sdk.OpenSources`), shared by all five. Differential test is
+              # (`sdk.OpenSources`), shared by all six. Differential test is
               # `(CRC32, Size)`, NOT mtime: Takeout stamps every entry with the same export time, so
               # mtime never moves when content changes. One export = "dir + the takeout timestamp in
               # the zip name", so split `-1-001`/`-1-002` parts merge but a second export dropped in
@@ -152,8 +176,8 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               # keeps an `export` table and folds only the lowest-rank export per (metric, day);
               # locationhistory needs no ranking because its read-time `SELECT DISTINCT (time, lat,
               # lng)` already collapses points across exports.
-              # The nine shippable plugins (antigravity / archived_git_commit_log / chatgpt /
-              # claudeai / claudecode / codex / fitbit / locationhistory / vrchat —
+              # The ten shippable plugins (antigravity / archived_git_commit_log / chatgpt /
+              # claudeai / claudecode / codex / fitbit / gemini / locationhistory / vrchat —
               # gkill_example is excluded) take `source_dirs` in config.json (folders/globs), auto-create
               # that config.json next to manifest.json on first start (existing files are never
               # overwritten, via sdk.EnsureConfig + Handler.DefaultConfig), and can print their
@@ -169,8 +193,8 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 
 - `gkill/api/gkill_plugin/` — Plugin protocol types: `PluginManifest`, `PluginRequest`, `PluginResponse`, `PluginKyou`, `PluginTypedData`, `PluginGPSLog` (stdio newline-delimited JSON)
 - `gkill/plugin/sdk/` — Plugin author SDK. `sdk.Run(sdk.Handler{...})` starts the stdio JSON message loop. Logging goes through `sdk.LogWarn` / `LogError`（stderr + file）and `sdk.LogInfo` / `LogDebug`（file only）— never `os.Stdout`. `Handler` has 10 fields: `FindKyous` (required), `GetKyou`, `GetContentHTML`, `GetConfigHTML`, `PostConfig`, `GetGPSLogs`, `RepName`, `RepNames`, `DefaultConfig`, `BuildCache` (called once, synchronously, outside the stdio loop when the binary is started with `--gkill-build-cache`; nil = "no cache", reported as `no_cache`). Plugins are standalone binaries in `src/plugins/`
-- `gkill/plugin/sdk/chatview/` — Kyou body HTML for conversation-shaped plugins (the four AI-chat plugins use it): `chatview.Message` → `chatview.Render` / `RenderNotFound`; head, chips, folds, size cap and code fences live here once (ADR-0315)
-- `gkill/plugin/sdk/configview/` — Config-screen HTML for all eight bundled plugins: `configview.Page` → `configview.Render`; head (OS colour scheme + `gkill_theme`), save script (`gkill_plugin_config` / `gkill_plugin_config_result`), progress bar, stats table, notices, pattern / expansion lists, form fields and the config.json notes live here once (ADR-0316)
+- `gkill/plugin/sdk/chatview/` — Kyou body HTML for conversation-shaped plugins (the six AI-chat plugins use it): `chatview.Message` → `chatview.Render` / `RenderNotFound`; head, chips, folds, size cap and code fences live here once (ADR-0315)
+- `gkill/plugin/sdk/configview/` — Config-screen HTML for all ten bundled plugins: `configview.Page` → `configview.Render`; head (OS colour scheme + `gkill_theme`), save script (`gkill_plugin_config` / `gkill_plugin_config_result`), progress bar, stats table, notices, pattern / expansion lists, form fields and the config.json notes live here once (ADR-0316)
 
 **1本のプラグインが複数の rep 名を名乗れる（`rep_names`）。** `get_rep_name` の応答に `rep_names[]` を載せると（SDK は `Handler.RepNames`）、gkill はその名前を `get_all_rep_names`・rep 名の絞り込み（`find_filter.go` Step4）・本文取得の引き当て（`PluginManager.GetPluginByRepName`）・MCP の `get_rep_infos.plugins[]` / `get_plugin_list.rep_names` に使う。**null（欄なし）と `[]` は別**: null は「未対応」で manifest の `rep_name` 1つ、`[]` は「いまは0個」。名前を列挙する側は `GetRepName` を直接見ず **`reps.RepNamesOf`** を通すこと（`GetRepName` は代表名で、MatchReps のキーとログ用）。本体側は `pluginRepositoryImpl.GetRepNames` が **TTL 60秒**でキャッシュし、失敗しても前回値か manifest 名にフォールバックしてエラーにしない（Step4 は fan-out の外で逐次に走るので、失敗を返すと全検索が落ち、毎回取りに行くと全検索が期限ぶん止まる）。申告済みの名前は `warnPluginRepNameMismatchOnce` の対象外。zip の Git リポジトリを束ねる `gkill_plugin_archived_git_commit_log` が最初の利用者（[ADR-0308](../../../documents/adr/0308-plugin-multiple-rep-names.md)）。
 
@@ -184,7 +208,7 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 
 `plugin_repository_impl.go` manages plugin subprocess lifecycle (start, slot-guarded stdio, one persistent reader goroutine per process, response-ID matching, auto-restart on crash). **呼び出し元のキャンセル（HTTPクライアントの切断）ではプロセスを回収しない**（フロントは全リクエストに `AbortController` を張っているため）。回収するのは gkill 自身のデッドライン超過時だけ。直列化は mutex ではなく容量1のチャネル（`callSlot`）で行い、**期限はスロットを取ってから張る**。順番待ちの上限は別枠（`maxPluginQueueWait` 既定10秒）で、待ちきれなければ `ErrPluginBusy` を返すだけでプロセスには手を出さない。プラグイン rep は `Repositories` の fan-out でスレッドプールのスロットを取らない（`goForRep`）ので、プラグインのロック待ちで検索全体が止まることはない
 
-**プラグインの重い構築は常駐ビルダ + WAL + バッチcommit**（指摘 M-6）。claudecode も codex/fitbit と同じく `builder.go`（`EnsureStarted`/`Kick`/`loop`、mu(DB初期化)/buildMu(構築)分離で読み取り無待機、WAL 自前DSN、`cache_meta` に進捗）へ移行済み。`GetMessages`/`GetMessage`/`GetStats` は refresh を呼ばず現キャッシュ即答+Kick。同期・単一tx構築（デッドラインkill→進捗ゼロループ）を新規に書かないこと。 却下案（同期構築／ロック共有／デッドライン延長）と実測は [ADR-0305](../../../documents/adr/0305-plugin-background-builder-wal.md)。**同期構築を書いてよい唯一の場所は `Handler.BuildCache`**（`--gkill-build-cache` の単独モードで、stdio ループの外。ハンドラ期限が無い）。同梱9本は常駐ビルダが呼ぶのと同じ構築関数（`buildOnce` / `build` / `refresh`）をそこから呼ぶだけで、`EnsureStarted` / `Kick` は起こさない。配線の欠落は `plugin/sdk/build_cache_test.go` のソース走査が落とす（欠けると `generate_plugin_cache all` でそのプラグインだけ `no_cache` になり、エラーも出ない）。
+**プラグインの重い構築は常駐ビルダ + WAL + バッチcommit**（指摘 M-6）。claudecode も codex/fitbit と同じく `builder.go`（`EnsureStarted`/`Kick`/`loop`、mu(DB初期化)/buildMu(構築)分離で読み取り無待機、WAL 自前DSN、`cache_meta` に進捗）へ移行済み。`GetMessages`/`GetMessage`/`GetStats` は refresh を呼ばず現キャッシュ即答+Kick。同期・単一tx構築（デッドラインkill→進捗ゼロループ）を新規に書かないこと。 却下案（同期構築／ロック共有／デッドライン延長）と実測は [ADR-0305](../../../documents/adr/0305-plugin-background-builder-wal.md)。**同期構築を書いてよい唯一の場所は `Handler.BuildCache`**（`--gkill-build-cache` の単独モードで、stdio ループの外。ハンドラ期限が無い）。同梱10本は常駐ビルダが呼ぶのと同じ構築関数（`buildOnce` / `build` / `refresh`）をそこから呼ぶだけで、`EnsureStarted` / `Kick` は起こさない。配線の欠落は `plugin/sdk/build_cache_test.go` のソース走査が落とす（欠けると `generate_plugin_cache all` でそのプラグインだけ `no_cache` になり、エラーも出ない）。
 
 **プラグインのログは `sdk.LogXxx` を通す。** `sdk.Run` が起動時（flag 解析の直後）に `$GKILL_HOME/logs/gkill_plugin_<name>.log`（統合）と `gkill_plugin_<name>_{error,warn,info,access,debug,trace,trace_sql}.log` を開く（`<name>` は `--gkill-plugin-dir` の末尾＝manifest の `name`。既に `gkill_plugin_` で始まる名前は二重にしない。静的フィールドは `app=gkill_plugin` / `plugin` / `user_id` / `pid`。`plugin/sdk/plugin_log.go`）。レベルと回転は本体の `--log` / `--log_rotate_*` を **環境変数 `GKILL_LOG_LEVEL` / `GKILL_LOG_ROTATE_MAX_BYTES` / `GKILL_LOG_ROTATE_KEEP`** で継ぐ（`gkill_log.Init()` が書き出し、子は環境継承で受ける。`GKILL_HOME` と同じ経路なので起動側の `cmd.Env` は nil のまま。フラグにしないのは、SDK を使わない第三者バイナリが未知フラグで exit 2 になるため）。`LogWarn` / `LogError` は **stderr の `WARN: ` / `ERROR: ` 行をこれまでどおり出した上で**ファイルにも書き、`LogInfo` / `LogDebug` はファイルにだけ書く（stderr のリングは 4KB しか無いので節目で肝心のエラーを押し出さない）。SDK 自身は `plugin start` / `plugin stop` / `build cache` を Info、**1コマンド1行**（command / id / duration_ms / count / error）を Access で残す——「プロセスが殺され続ける」の調査で、どのコマンドが何ミリ秒かかったかはここにしか出ない。壊れた環境変数は既定（error / 32MiB / 5）へ倒して stderr に1行、ログ dir が作れない・home が分からない手起動は stderr だけで続行し、**ログの都合でプラグインを止めない**（panic も exit もしない）。同じプラグインを2プロセス（別利用者、常駐 + `generate_plugin_cache`）が同じファイルへ書きうるので、32MiB の回転は Windows では他方が閉じるまで失敗してファイルが育つ（承知の上。`pid` で出所は分かる）。`LogDebug` の定義は1行関数のままにする（`log_level_source_scan_test` の握り潰し検査が複数行の定義を誤検知する）。設計と却下案は [ADR-0313](../../../documents/adr/0313-plugin-logs-through-gkill-log.md)。
 
@@ -202,9 +226,9 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 
 **stdio のコマンド・起動フラグ・postMessage のキーを足したら境界対応表にも載せる。** SDK は本体の型を import しないので、両側は JSON のキーと文字列だけでつながる。[cross-boundary-map.md](../../../documents/reverse/cross-boundary-map.md) の §8・§9 を `npm run verify_docs` が本体・SDK・画面のコードと3者で突き合わせる。
 
-**AI チャット系プラグイン5本（antigravity / chatgpt / claudeai / claudecode / codex）の本文 HTML は SDK の `plugin/sdk/chatview` が描く。** プラグイン側の `render.go` は自分のログの形を `chatview.Message` へ写すだけで、head（CSS 変数・テーマ追従・`gkill_iframe_size` のサイズ通知）・吹き出し・チップ・折りたたみ・「見つかりません」ページ・4MiB の打ち切りをプラグインごとに複製しない。返事は最終回答（Codex は `phase=final_answer`、Claude Code は印が無いので最後のテキスト）と質問を `Body`、残りを `Process` に入れて「🛠 作業の経過」1つに時系列で畳む（ADR-0314 の組み方を5本に広げた。一覧の行で会話が途中報告に埋もれないため）。応答側のラベルは製品名（ChatGPT / Claude / Claude Code / Codex / Antigravity）、人間側は「あなた」。Markdown はコードフェンスとインラインコードだけ（`chatview.RenderText`）。チップは空白1つで区切る（MCP の HTML→テキスト変換は `<span>` を改行にしないので、詰めると project 名と branch 名が1語に連結される。直す前は codex だけが詰めていた）。postMessage のキーは `gkill_iframe_size` / `gkill_theme` の2つだけで、`chatview_test.go` が出力中のキー集合を固定している —— 足すならクライアント（`plugin-html-view.vue`）と cross-boundary-map §9 も同時に。dblclick の転送はクライアントが本文の末尾に足すので書かない。解析を変えてモデル名などを拾い始めたら `cacheSchemaVersion` を上げる（差分更新は変わっていないファイルを二度と読まない。claudecode は 5、chatgpt は 3、antigravity は 1）。SDK の変更は5本のバイナリを作り直して配り直すまで効かない（[ADR-0315](../../../documents/adr/0315-chat-plugins-render-through-sdk-chatview.md)）。
+**AI チャット系プラグイン6本（antigravity / chatgpt / claudeai / claudecode / codex / gemini）の本文 HTML は SDK の `plugin/sdk/chatview` が描く。** プラグイン側の `render.go` は自分のログの形を `chatview.Message` へ写すだけで、head（CSS 変数・テーマ追従・`gkill_iframe_size` のサイズ通知）・吹き出し・チップ・折りたたみ・「見つかりません」ページ・4MiB の打ち切りをプラグインごとに複製しない。返事は最終回答（Codex は `phase=final_answer`、Claude Code は印が無いので最後のテキスト）と質問を `Body`、残りを `Process` に入れて「🛠 作業の経過」1つに時系列で畳む（ADR-0314 の組み方を6本に広げた。一覧の行で会話が途中報告に埋もれないため）。応答側のラベルは製品名（ChatGPT / Claude / Claude Code / Codex / Antigravity / Gemini）、人間側は「あなた」。Markdown はコードフェンスとインラインコードだけ（`chatview.RenderText`）。チップは空白1つで区切る（MCP の HTML→テキスト変換は `<span>` を改行にしないので、詰めると project 名と branch 名が1語に連結される。直す前は codex だけが詰めていた）。postMessage のキーは `gkill_iframe_size` / `gkill_theme` の2つだけで、`chatview_test.go` が出力中のキー集合を固定している —— 足すならクライアント（`plugin-html-view.vue`）と cross-boundary-map §9 も同時に。dblclick の転送はクライアントが本文の末尾に足すので書かない。解析を変えてモデル名などを拾い始めたら `cacheSchemaVersion` を上げる（差分更新は変わっていないファイルを二度と読まない。claudecode は 5、chatgpt は 3、antigravity と gemini は 1）。SDK の変更は6本のバイナリを作り直して配り直すまで効かない（[ADR-0315](../../../documents/adr/0315-chat-plugins-render-through-sdk-chatview.md)）。
 
-**同梱プラグイン9本の設定画面 HTML（`GetConfigHTML`）は SDK の `plugin/sdk/configview` が描く。** プラグイン側の `html.go` は自分の文言と統計を `configview.Page` へ写すだけで、head・保存スクリプト・進捗・統計表・警告・指定一覧・展開結果・編集フォーム・config.json の案内をプラグインごとに複製しない（直す前は Claude.ai 版が未定義の CSS 変数 `--field-bg` / `--btn-bg` を参照して入力欄が透明になり、ChatGPT 版は textarea / button の規則を持たなかった）。文言の欄は全部 `configview.Prose` を通し、描くのは `` `code` `` と `**強調**` だけ（HTML を直接受け取る欄は無い。データが同じ欄に流れたときにエスケープされないため）。編集フォームは `configview.Field{Key, Kind, Label, Value}` で宣言し、要素 id `gkill_<Key>`・postMessage のキー・保存スクリプトの var 名を同じ Key から生成する（チェックボックスは `'1'` / `''` で送る。PostConfig が `value == "1"` で読む）。明暗は OS の配色に追従し、親（use-plugin-config-dialog.ts が iframe の load で送る）の `gkill_theme` が届けばそちらが勝つ。postMessage のキーは `gkill_theme` / `gkill_plugin_config` / `gkill_plugin_config_result` の3つだけで、`configview_test.go` が出力中のキー集合と「参照している CSS 変数が明暗の両方で定義されていること」を固定している。GetConfigHTML は IsAlive（5秒）と同じスロットに並ぶので、Page に渡す統計はキャッシュから即答した値だけ（ここでファイルを走査しない）。SDK の変更は9本のバイナリを作り直して配り直すまで効かない（[ADR-0316](../../../documents/adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
+**同梱プラグイン10本の設定画面 HTML（`GetConfigHTML`）は SDK の `plugin/sdk/configview` が描く。** プラグイン側の `html.go` は自分の文言と統計を `configview.Page` へ写すだけで、head・保存スクリプト・進捗・統計表・警告・指定一覧・展開結果・編集フォーム・config.json の案内をプラグインごとに複製しない（直す前は Claude.ai 版が未定義の CSS 変数 `--field-bg` / `--btn-bg` を参照して入力欄が透明になり、ChatGPT 版は textarea / button の規則を持たなかった）。文言の欄は全部 `configview.Prose` を通し、描くのは `` `code` `` と `**強調**` だけ（HTML を直接受け取る欄は無い。データが同じ欄に流れたときにエスケープされないため）。編集フォームは `configview.Field{Key, Kind, Label, Value}` で宣言し、要素 id `gkill_<Key>`・postMessage のキー・保存スクリプトの var 名を同じ Key から生成する（チェックボックスは `'1'` / `''` で送る。PostConfig が `value == "1"` で読む）。明暗は OS の配色に追従し、親（use-plugin-config-dialog.ts が iframe の load で送る）の `gkill_theme` が届けばそちらが勝つ。postMessage のキーは `gkill_theme` / `gkill_plugin_config` / `gkill_plugin_config_result` の3つだけで、`configview_test.go` が出力中のキー集合と「参照している CSS 変数が明暗の両方で定義されていること」を固定している。GetConfigHTML は IsAlive（5秒）と同じスロットに並ぶので、Page に渡す統計はキャッシュから即答した値だけ（ここでファイルを走査しない）。SDK の変更は10本のバイナリを作り直して配り直すまで効かない（[ADR-0316](../../../documents/adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
 
 **testdata・テストの固定値は合成値で書く。** 座標は `351234000`（E7）や `35.1234`、端末 ID は `1000000001`、歩数は `10000`、書き出し名は `takeout-20240101T000000Z`、時刻は秒 00。実データの書き出しから切り出した値を置かない（書く瞬間とコミットの検査が座標・端末 ID・時刻付きの名前を止める。線引きは gkill-docs「実データ由来の値の線引き」）。
 
@@ -231,6 +255,7 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
 - [ADR-0308 プラグインが複数の rep 名を名乗る](../../../documents/adr/0308-plugin-multiple-rep-names.md)
 - [ADR-0309 provides に git_commit_log](../../../documents/adr/0309-plugin-provides-git-commit-log.md)
 - [ADR-0310 ChatGPT / Claude.ai はエクスポート ZIP のまま読み、展開済み JSON は読まない](../../../documents/adr/0310-chat-export-plugins-read-zip.md)
+- [ADR-0321 Gemini の会話は Takeout のマイ アクティビティから JSON だけを読み、エントリはロケール非依存に選ぶ](../../../documents/adr/0321-gemini-activity-from-my-activity.md)
 - [ADR-0312 fitbit は同じ日に並ぶデータソースを合算せず、時計を優先して1系統だけ採る](../../../documents/adr/0312-fitbit-one-data-source-per-day.md)
 - [ADR-0313 プラグインのログは gkill_log の別名ファイルへ出し、stderr には WARN / ERROR の接頭辞行だけを残す](../../../documents/adr/0313-plugin-logs-through-gkill-log.md)
 - [ADR-0113 ワード検索の型別の対象列と ID の前方一致（プラグインは SDK の判定を使う）](../../../documents/adr/0113-word-filter-columns-and-id-prefix.md)

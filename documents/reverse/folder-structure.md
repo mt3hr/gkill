@@ -155,7 +155,7 @@ src/server/
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     │       ├── chatview/           # AI チャット系プラグインの本文 HTML（chatview.Message → HTML。head・チップ・折りたたみを1か所に。ADR-0315）
-    │       └── configview/         # 同梱プラグイン9本の設定画面 HTML（configview.Page → HTML。head・保存スクリプト・進捗・フォームを1か所に。ADR-0316）
+    │       └── configview/         # 同梱プラグイン10本の設定画面 HTML（configview.Page → HTML。head・保存スクリプト・進捗・フォームを1か所に。ADR-0316）
     ├── dao/                        # データアクセス層
     │   ├── gkill_dao_manager.go    # DAOマネージャ（ConfigDAOs + GkillRepositories管理）
     │   ├── plugin_manager.go       # プラグインディレクトリを走査してPluginRepositoryを登録
@@ -313,14 +313,15 @@ src/plugins/
 ├── gkill_plugin_claudecode/            # Claude Code チャットログプラグイン
 ├── gkill_plugin_codex/                 # Codex CLI セッションログプラグイン
 ├── gkill_plugin_fitbit/                # Google Takeout の Fitbit / Google Health を KC 化
+├── gkill_plugin_gemini/                # Google Takeout の「マイ アクティビティ」から Gemini の会話履歴を取り込む（ADR-0321）
 ├── gkill_plugin_google_locationhistory/ # Google Takeout のロケーション履歴を GPSLog 化（Kyouは出さない）
 ├── gkill_plugin_vrchat/                # VRChat の出力ログを TimeIs・URLog・Kmemo 化（1本で複数の型別の種類を返す。ADR-0317）
 ├── ABOUT_TEST.md
 └── README.md
 ```
 
-各プラグインは独立した `go.mod` を持つ別モジュール。同梱プラグイン9本（antigravity / archived_git_commit_log / chatgpt / claudeai /
-claudecode / codex / fitbit / google_locationhistory / vrchat）は
+各プラグインは独立した `go.mod` を持つ別モジュール。同梱プラグイン10本（antigravity / archived_git_commit_log / chatgpt / claudeai /
+claudecode / codex / fitbit / gemini / google_locationhistory / vrchat）は
 `manifest.json` をバイナリに `//go:embed` しており、`--gkill-print-manifest` / `--gkill-print-config` で
 内容を標準出力に書き出せる（`gkill_example` は埋め込みもフラグも `DefaultConfig` も持たない）。
 この9本は `config.json` の `source_dirs` で取り込み元（フォルダ・glob・zip の実パス）を指定し、

@@ -60,6 +60,21 @@ plugins/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
 │   └── README.md
+├── gkill_plugin_gemini/         # Gemini 会話履歴プラグイン（Google Takeout のマイ アクティビティ）
+│   ├── main.go
+│   ├── source.go               # 読むエントリの判定（名前ではなく位置で選ぶ）・差分の署名
+│   ├── loader.go               # 要素ごとの流し読み・1往復への変換・世代をまたぐ畳み込み
+│   ├── htmltext.go             # 返答の HTML を markdown 風の平文へ写す
+│   ├── cache.go
+│   ├── builder.go              # 常駐バックグラウンドビルダ
+│   ├── uuid.go                 # Kyou ID の導出（書き出しにメッセージ ID が無い）
+│   ├── types.go
+│   ├── render.go               # 本文 HTML（SDK の chatview へ写す）
+│   ├── html.go                 # 設定画面（SDK の configview へ写す）
+│   ├── *_test.go               # テストのたびに archive/zip で ZIP を組む
+│   ├── go.mod / go.sum
+│   ├── manifest.json
+│   └── README.md
 ├── gkill_plugin_google_locationhistory/  # Google ロケーション履歴プラグイン
 │   ├── main.go
 │   ├── formats.go
@@ -168,6 +183,7 @@ plugins/
 | [`gkill_plugin_claudecode`](gkill_plugin_claudecode/README.md) | `claude_code_turn` | Claude Code のチャットログを、自分の発言と一連の応答に分けてタイムライン表示 |
 | [`gkill_plugin_codex`](gkill_plugin_codex/README.md) | `codex_turn` | Codex CLI のセッションログを、自分の発言と一連の応答に分けてタイムライン表示（サブエージェントは親に畳み込む） |
 | [`gkill_plugin_fitbit`](gkill_plugin_fitbit/README.md) | `kc` | Google Takeout の Fitbit / Google Health を日別集計し、数値記録として返す（推移グラフで集計できる） |
+| [`gkill_plugin_gemini`](gkill_plugin_gemini/README.md) | `gemini_conversation` | Gemini の会話履歴（Google Takeout の「マイ アクティビティ」→「Gemini アプリ」）をタイムライン表示。1往復が自分のプロンプトと返答の2件になる |
 | [`gkill_plugin_google_locationhistory`](gkill_plugin_google_locationhistory/README.md) | `google_location_visit` | Google Takeout のロケーション履歴を位置情報ログとして読み込む（記録は作らない） |
 | [`gkill_plugin_archived_git_commit_log`](gkill_plugin_archived_git_commit_log/README.md) | `git_commit_log` | zip に固めて保管した Git リポジトリのコミットログを、稼働中の Git リポジトリと同じ形（rep 名はリポジトリ名・ID はコミットハッシュ）で返す。zip は展開しない |
 | [`gkill_plugin_vrchat`](gkill_plugin_vrchat/README.md) | `timeis_start`（代表。各記録は `timeis_start` / `urlog` / `kmemo`） | VRChat の出力ログから、ワールドの滞在（TimeIs と URLog）・同じ部屋にいた人（TimeIs）・自分のアバターの切り替え（Kmemo）・動画の URL（URLog）を返す。1本で複数の型別の種類を返す最初のプラグイン（gkill 1.1.12 以降） |
@@ -241,9 +257,9 @@ $GKILL_HOME/plugins/{userID}/{プラグイン名}/
 （保っていないファイルは読まず、設定画面に警告が出る）。
 `conversation_summaries.db` は会話タイトルとプロジェクト名の対応表で、指定すると一覧と詳細に出る。無くても取り込みはできる。
 
-### gkill_plugin_fitbit / gkill_plugin_google_locationhistory
+### gkill_plugin_fitbit / gkill_plugin_google_locationhistory / gkill_plugin_gemini
 
-Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダに置く。**
+Google Takeout を読む3つ。**ZIP を解凍せず、そのままフォルダに置く。**
 
 ```
 ~/Kyou/GoogleTakeout_<端末>_<日付>/
@@ -251,13 +267,13 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
   takeout-20240310T000000Z-1-002.zip   ← 分割されていればそのまま並べる
 ```
 
-1. Google Takeout から Fitbit / Google Health / タイムライン を書き出す
+1. Google Takeout から Fitbit / Google Health / タイムライン を書き出す。**Gemini の会話も要るなら、同じ書き出しで「マイ アクティビティ」にもチェックを入れ、その中で「Gemini アプリ」だけに絞り、「複数の形式」で「アクティビティの記録」を JSON にする**（トップレベルの「Gemini」には会話が入らない。Gem と予定アクションの設定だけ）
 2. ダウンロードした ZIP を上のようなフォルダに置く（解凍しない）
 3. 配置先ディレクトリに `manifest.json`・実行ファイルを置き、gkill_server を再起動する
 4. 自動生成される `config.json` の `source_dirs` は既定で `~/Kyou/GoogleTakeout_*`
 
 **展開済みのフォルダは読まない**（どの書き出しのものか判別できないため）。
-走査は `plugin/sdk/source.go` の `sdk.OpenSources` で、2つのプラグインで共通。
+走査は `plugin/sdk/source.go` の `sdk.OpenSources` で、3つのプラグインで共通。3つとも別のキャッシュ DB・`config.json`・ログを持つので、同じ ZIP を別々に走査しても干渉しない。
 
 新しい書き出しは**別のフォルダ**に置く。fitbit は日が重なったところで新しい書き出しだけを
 採用するので、古い書き出しを消さなくても歩数などが二重にならない。
@@ -265,6 +281,11 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
 （時計の行があればそれだけ。無い日だけ `secondary_data_sources` の順で1つ）。
 位置情報のほうは読み出し時に同じ点を1つに畳むので、そもそも重ならない
 （むしろ Google は古いデータを間引くので、古い書き出しを残すと消えた期間が保たれる）。
+
+Gemini は会話の取り込みなので世代の順位付けは要らない（同じ往復は新しい書き出しのほうを1件だけ採る）。
+HTML 形式で書き出していると読まないが、設定画面の「走査で見つかった問題」に理由が出る。
+詳しくは [gkill_plugin_gemini/README.md](gkill_plugin_gemini/README.md) と
+[ADR-0321](../../documents/adr/0321-gemini-activity-from-my-activity.md)。
 
 ### gkill_plugin_archived_git_commit_log
 
@@ -327,9 +348,9 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
   いる場合は**実行アカウントのホーム**になるため、絶対パスのほうが確実
 - 空にすると各プラグインの既定（claudeai / chatgpt はプラグインフォルダ自身、
   claudecode は `~/.claude/projects`、codex は `~/.codex/sessions` と
-  `~/.codex/session_index.jsonl`、antigravity は `~/.gemini/antigravity`、fitbit / 位置情報は `~/Kyou/GoogleTakeout_*`、vrchat は `~/AppData/LocalLow/VRChat/VRChat`）を使う
+  `~/.codex/session_index.jsonl`、antigravity は `~/.gemini/antigravity`、fitbit / 位置情報 / Gemini は `~/Kyou/GoogleTakeout_*`、vrchat は `~/AppData/LocalLow/VRChat/VRChat`）を使う
 - 編集は**次の検索から反映される**（gkill_server の再起動は不要）
-- **antigravity / claudecode / codex / vrchat 以外の5本（chatgpt / claudeai / fitbit / 位置情報 / archived_git_commit_log）は ZIP しか読まない。** フォルダを指定するとその下の `*.zip` を
+- **antigravity / claudecode / codex / vrchat 以外の6本（chatgpt / claudeai / fitbit / 位置情報 / gemini / archived_git_commit_log）は ZIP しか読まない。** フォルダを指定するとその下の `*.zip` を
   再帰的に探し、ZIP の中を走査する。ZIP を直接指定してもよい
 
 ---
@@ -656,6 +677,9 @@ cd src/plugins/gkill_plugin_fitbit
 go build -o gkill_plugin_fitbit .
 
 # gkill_plugin_google_locationhistory
+cd src/plugins/gkill_plugin_gemini
+go build -o gkill_plugin_gemini .
+
 cd src/plugins/gkill_plugin_google_locationhistory
 go build -o gkill_plugin_google_locationhistory .
 

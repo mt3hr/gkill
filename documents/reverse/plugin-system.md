@@ -75,7 +75,7 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 
 ### manifest.json / config.json の自動生成
 
-同梱プラグイン9本（antigravity / archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / google_locationhistory / vrchat）は manifest.json を `//go:embed` でバイナリに埋め込んでおり、
+同梱プラグイン10本（antigravity / archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / gemini / google_locationhistory / vrchat）は manifest.json を `//go:embed` でバイナリに埋め込んでおり、
 次のフラグで標準出力に書き出せる。サンプルの `gkill_example` は埋め込みもフラグも持たない。
 
 | フラグ | 出力 |
@@ -114,7 +114,7 @@ cmd := exec.CommandContext(context.Background(),
 稼働中サーバに頼らず、上と同じ引数に `--gkill-build-cache` を足してプラグインを直接起動し、終わるまで待つ。
 `sdk.Run` はこのフラグを見ると stdio ループに入らず `Handler.BuildCache(ctx, cfg)` を同期で1回呼び、
 stdout に結果行（`built`、`BuildCache` が nil なら `no_cache`）を1行だけ書いて exit 0、エラーなら stderr（と `logs/gkill_plugin_<name>_error.log`）に出して exit 1 で終わる。
-同梱9本は既存の同期構築関数（`build` / `refresh`）を `BuildCache` から呼ぶだけで、常駐ビルダは起こさない
+同梱10本は既存の同期構築関数（`build` / `refresh`）を `BuildCache` から呼ぶだけで、常駐ビルダは起こさない
 （`plugin/sdk/build_cache_test.go` の `TestBundledPluginsWireBuildCache` が配線をソース走査で固定する）。
 
 gkill 側は子プロセスの stdin を繋がず（フラグを知らない旧バイナリが stdio ループへ入っても EOF で終わる）、
@@ -222,7 +222,7 @@ iframe は `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）
 親は受け取ったフォームを `post_plugin_config` に送り、成功したら設定 HTML を取り直して
 読み込み件数などの表示を更新する。生成された `config.json` を手で編集する経路も従来どおり使える。
 
-**同梱プラグイン9本の設定画面 HTML は SDK の `plugin/sdk/configview` が1か所で描く**（[ADR-0316](../adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
+**同梱プラグイン10本の設定画面 HTML は SDK の `plugin/sdk/configview` が1か所で描く**（[ADR-0316](../adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
 各プラグインの `html.go` は自分の文言と統計を `configview.Page` へ写すだけで、次の体裁は SDK 側にある。
 
 | 欄 | 描くもの |
@@ -466,7 +466,7 @@ Claude Code のメソッドは第2引数に展開済みソース（`expandedSour
 
 ### 処理フロー
 
-AI チャット系の5本（ChatGPT / Claude.ai / Claude Code / Codex / Antigravity）は同じ形。描画は SDK の `plugin/sdk/chatview` が1か所で行い、
+AI チャット系の6本（ChatGPT / Claude.ai / Claude Code / Codex / Antigravity / Gemini）は同じ形。描画は SDK の `plugin/sdk/chatview` が1か所で行い、
 各プラグインの `render.go` は自分のログの形を `chatview.Message` へ写すだけ
 （[ADR-0315](../adr/0315-chat-plugins-render-through-sdk-chatview.md)）。
 
@@ -485,7 +485,7 @@ GetContentHTML(kyouID)
 - `.chips` — project・branch・model・所要時間のうち持っているもの。空白1つで区切る（MCP の HTML→テキスト変換は `<span>` を改行にしないので、詰めると1語に連結される）
   - ChatGPT: model（`message.metadata.model_slug`、無ければ会話の `default_model_slug`）。Claude.ai: 無し。
     Claude Code: project・branch・model（`message.model`）・所要時間（返事の最初から最後のレコードまで）。Antigravity: project（`workspace_uris`）・model・所要時間（応答の最初から最後のステップまで）。Codex: project・branch・model・所要時間（`task_complete`）
-- `.msg.human` / `.msg.assistant` — 吹き出し。`.sender` のラベルは人間側が5本とも「あなた」、応答側は製品名 ChatGPT / Claude / Claude Code / Codex / Antigravity
+- `.msg.human` / `.msg.assistant` — 吹き出し。`.sender` のラベルは人間側が6本とも「あなた」、応答側は製品名 ChatGPT / Claude / Claude Code / Codex / Antigravity / Gemini
   （Codex の質問への回答は「あなた（質問への回答）」）
   - 本文は `chatview.RenderText`: コードフェンス（三連のバッククォートか `~~~`）を `<pre><code>`、インラインの `` `code` `` を `<code>` にし、
     それ以外はエスケープしたプレーンテキスト（`white-space: pre-wrap`）
@@ -725,13 +725,14 @@ GitCommitLogContextMenu と同じ項目に加えて、プラグイン固有の�
 | gkill_plugin_claudecode | ClaudeCode | `claude_code_turn` | `src/plugins/gkill_plugin_claudecode/` |
 | gkill_plugin_codex | Codex | `codex_turn` | `src/plugins/gkill_plugin_codex/` |
 | gkill_plugin_fitbit | Fitbit | `kc` | `src/plugins/gkill_plugin_fitbit/` |
+| gkill_plugin_gemini | Gemini | `gemini_conversation` | `src/plugins/gkill_plugin_gemini/` |
 | gkill_plugin_google_locationhistory | GoogleLocation | `google_location_visit` | `src/plugins/gkill_plugin_google_locationhistory/` |
 | gkill_plugin_vrchat | VRChat | `timeis_start`（代表。各 Kyou は `timeis_start` / `urlog` / `kmemo`。`provides: ["timeis","urlog","kmemo","tag"]`） | `src/plugins/gkill_plugin_vrchat/` |
 | gkill_plugin_archived_git_commit_log | ArchivedGit（manifest）。記録はリポジトリ名を名乗る（`rep_names`） | `git_commit_log`（`provides: ["git_commit_log"]`） | `src/plugins/gkill_plugin_archived_git_commit_log/` |
 | gkill_example | （サンプル） | `example_kyou` | `src/plugins/examples/gkill_example/` |
 
 `gkill_example` は固定の Kyou を返すだけのサンプル実装で、`DefaultConfig` を持たない
-（＝ `config.json` を生成しない）。それ以外の9つは `source_dirs` 設定と SQLite3 キャッシュを持つ。
+（＝ `config.json` を生成しない）。それ以外の10個は `source_dirs` 設定と SQLite3 キャッシュを持つ。
 
 ### ビルド手順
 
@@ -750,6 +751,9 @@ GOOS=windows GOARCH=amd64 go build -o gkill_plugin_codex.exe .
 
 cd src/plugins/gkill_plugin_fitbit
 GOOS=windows GOARCH=amd64 go build -o gkill_plugin_fitbit.exe .
+
+cd src/plugins/gkill_plugin_gemini
+GOOS=windows GOARCH=amd64 go build -o gkill_plugin_gemini.exe .
 
 cd src/plugins/gkill_plugin_google_locationhistory
 GOOS=windows GOARCH=amd64 go build -o gkill_plugin_google_locationhistory.exe .

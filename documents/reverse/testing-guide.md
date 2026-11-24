@@ -67,7 +67,7 @@ npm test
 | `npm run test_e2e_server` | E2E 用 gkill_server 単体起動 (`$HOME/gkill_test`) | — |
 | `npm run test_mcp` | MCP サーバ（`src/server` で `go test ./gkill/mcp/...`） | 数秒 |
 | `npm run test_tools` | `src/tools/` のリリースゲート・attestation ランナーとリリース工程の書く側（記録条件・`version.json`・成果物検証。`vitest.config.tools.ts`。使い捨て git リポジトリを作るので git が要る） | 30秒前後 |
-| `npm run test_plugins` | 同梱プラグイン（独立 Go モジュール9つ。サンプルの gkill_example を含む） | 数秒 |
+| `npm run test_plugins` | 同梱プラグイン（独立 Go モジュール11個。サンプルの gkill_example を含む） | 数秒 |
 | `npm run vet_plugins` | 同梱プラグインへ `go vet`（CI の `plugins` ジョブが `test_plugins` の前に回す。`npm test` には入っていない） | 数秒 |
 | `npm run test_android` | Android | Gradle 依存 |
 | `npm run test_wear_os` | Wear OS | Gradle 依存 |

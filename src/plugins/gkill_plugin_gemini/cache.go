@@ -1,0 +1,591 @@
+package main
+
+import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
+	_ "modernc.org/sqlite"
+)
+
+// pluginCache は Takeout の ZIP の中のマイアクティビティから組み立てた発言を SQLite3 にキャッシュする。
+// gkillのキャッシュディレクトリ配下(sdk.CacheDBPath 参照)に保存する。
+//
+// ロックを2つに分けているのが要点。
+//   - mu は db の遅延初期化だけを守る
+//   - buildMu は構築どうしだけを直列化する
+//   - 読み取り(GetMessages/GetMsgByID/GetStats)はどちらも取らない
+//
+// 同期構築（デッドラインで kill → ロールバック → 進捗ゼロ → またはじめから）に戻さないこと。
+// 設計と却下案: documents/adr/0305-plugin-background-builder-wal.md
+type pluginCache struct {
+	mu      sync.Mutex
+	buildMu sync.Mutex
+	db      *sql.DB
+}
+
+var globalCache = &pluginCache{}
+
+// senderUser / senderModel は msg_cache.sender の値。
+const (
+	senderUser  = "user"
+	senderModel = "model"
+)
+
+// cachedMessage はmsg_cacheテーブルの1行。
+type cachedMessage struct {
+	MsgID           string
+	ConvID          string
+	Sender          string
+	Text            string
+	RelatedTimeUnix int64
+	CreateTimeUnix  int64
+	// Attachments は添付ファイル名と注記（改行区切り）。本文の折りたたみに並べる。
+	Attachments string
+	// ConvTitle は会話タイトル。GetMessages が conv_cache から JOIN で載せる（ワード検索の対象にするため）。
+	ConvTitle string
+}
+
+// cacheStats は設定画面に出す統計。ファイルは1バイトも開かずに作る。
+type cacheStats struct {
+	FileCount     int
+	ConvCount     int
+	MessageCount  int
+	LastScanUnix  int64
+	LastScanError string
+	BuildState    string
+	BuildError    string
+	BuildTotal    int
+	BuildDone     int
+	// SourceProblems は前回の走査で見つかった問題（ZIP ではないものの指定・HTML 形式など）。
+	SourceProblems []sourceProblemRow
+}
+
+// cacheSchemaVersion はキャッシュのスキーマ版。
+// 構造を変えたときだけでなく、**取り込み時の写し方（HTML → 平文、接頭辞の落とし方、
+// Kyou ID の作り方）を変えたときも上げること。** 取り込み時に確定させているので、
+// 上げないと古いキャッシュが古い写し方のまま残る。
+// 古いDBは作り直される(キャッシュなので捨ててよい)。
+const cacheSchemaVersion = "1"
+
+// openDB はキャッシュDBを開く。何度呼んでも1回しか開かない。
+func (c *pluginCache) openDB(pluginDir string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.db != nil {
+		return nil
+	}
+
+	dbPath := sdk.CacheDBPath(pluginDir)
+
+	// sqlite3impl.GetSQLiteDBConnection は使わない。
+	// あれは journal_mode を DELETE に固定するので、バックグラウンドで書いている間
+	// 読み手が busy_timeout まで待たされる。派生キャッシュは自前でWALを開く。
+	db, err := sql.Open("sqlite", "file:"+dbPath+
+		"?_txlock=immediate"+
+		"&_pragma=busy_timeout(6000)"+
+		"&_pragma=journal_mode(WAL)"+
+		"&_pragma=synchronous(NORMAL)"+
+		"&_pragma=cache_size(-16000)"+
+		"&_pragma=temp_store(MEMORY)")
+	if err != nil {
+		return fmt.Errorf("error at open cache db %s: %w", dbPath, err)
+	}
+	if err := initSchema(db); err != nil {
+		_ = db.Close()
+		return err
+	}
+	c.db = db
+	return nil
+}
+
+// conn は開いてあるDBを返す。openDB を通っていれば非nil。
+func (c *pluginCache) conn() *sql.DB {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.db
+}
+
+// initSchema はテーブルを作成する。
+// 記録している版が違えば、作り直しのため既存のテーブルを落とす。
+func initSchema(db *sql.DB) error {
+	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS cache_meta (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+)`); err != nil {
+		return fmt.Errorf("error at init cache_meta: %w", err)
+	}
+
+	version := ""
+	_ = db.QueryRow(`SELECT value FROM cache_meta WHERE key = 'schema_version'`).Scan(&version)
+	if version != cacheSchemaVersion {
+		for _, statement := range []string{
+			`DROP TABLE IF EXISTS conv_cache`,
+			`DROP TABLE IF EXISTS msg_cache`,
+			`DELETE FROM cache_meta`,
+		} {
+			if _, err := db.Exec(statement); err != nil {
+				return fmt.Errorf("error at drop old schema: %w", err)
+			}
+		}
+	}
+
+	for _, statement := range []string{
+		`CREATE TABLE IF NOT EXISTS conv_cache (
+  conv_id          TEXT PRIMARY KEY,
+  title            TEXT NOT NULL,
+  create_time_unix INTEGER NOT NULL,
+  gen              INTEGER NOT NULL DEFAULT 0
+)`,
+		`CREATE TABLE IF NOT EXISTS msg_cache (
+  msg_id            TEXT PRIMARY KEY,
+  conv_id           TEXT NOT NULL,
+  sender            TEXT NOT NULL,
+  text              TEXT NOT NULL,
+  attachments       TEXT NOT NULL DEFAULT '',
+  related_time_unix INTEGER NOT NULL,
+  create_time_unix  INTEGER NOT NULL,
+  gen               INTEGER NOT NULL DEFAULT 0
+)`,
+		`CREATE INDEX IF NOT EXISTS idx_msg_conv ON msg_cache(conv_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_msg_time ON msg_cache(related_time_unix)`,
+	} {
+		if _, err := db.Exec(statement); err != nil {
+			return fmt.Errorf("error at init schema: %w", err)
+		}
+	}
+
+	if _, err := db.Exec(
+		`INSERT OR REPLACE INTO cache_meta(key, value) VALUES('schema_version', ?)`,
+		cacheSchemaVersion,
+	); err != nil {
+		return fmt.Errorf("error at record schema version: %w", err)
+	}
+	return nil
+}
+
+func (c *pluginCache) setMeta(key, value string) {
+	db := c.conn()
+	if db == nil {
+		return
+	}
+	_, _ = db.Exec(`INSERT OR REPLACE INTO cache_meta(key, value) VALUES(?, ?)`, key, value)
+}
+
+func (c *pluginCache) getMeta(key string) string {
+	db := c.conn()
+	if db == nil {
+		return ""
+	}
+	value := ""
+	_ = db.QueryRow(`SELECT value FROM cache_meta WHERE key = ?`, key).Scan(&value)
+	return value
+}
+
+// sourceProblemRow は設定画面に出す走査の問題。cache_meta に JSON で置く。
+// 「展開済みのフォルダを指している」「HTML 形式で書き出している」のような指定の誤りは
+// ここに出るのが唯一の手がかり（黙って0件にはしない）。
+type sourceProblemRow struct {
+	Kind    string `json:"kind"`
+	Path    string `json:"path"`
+	Message string `json:"message"`
+}
+
+// storeSourceProblems は走査の問題を保存する。0件でも書いて前回の問題を消す。
+func (c *pluginCache) storeSourceProblems(problems []sdk.SourceProblem) {
+	rows := make([]sourceProblemRow, 0, len(problems))
+	for _, problem := range problems {
+		rows = append(rows, sourceProblemRow{Kind: string(problem.Kind), Path: problem.Path, Message: problem.Message})
+	}
+	encoded, err := json.Marshal(rows)
+	if err != nil {
+		return
+	}
+	c.setMeta("source_problems", string(encoded))
+}
+
+func (c *pluginCache) loadSourceProblems() []sourceProblemRow {
+	rows := []sourceProblemRow{}
+	value := c.getMeta("source_problems")
+	if value == "" {
+		return rows
+	}
+	if err := json.Unmarshal([]byte(value), &rows); err != nil {
+		return []sourceProblemRow{}
+	}
+	return rows
+}
+
+// GetMessages はFindKyous用に全発言を返す。
+//
+// 読み取りは buildMu を取らない。構築中でも「そこまで取り込めたぶん」を返す。
+// これが仕様どおりの挙動で、初回呼び出しが空になるのもそのため。
+func (c *pluginCache) GetMessages(pluginDir string) ([]cachedMessage, error) {
+	if err := c.openDB(pluginDir); err != nil {
+		return nil, err
+	}
+	db := c.conn()
+	if db == nil {
+		return nil, fmt.Errorf("cache db is not opened")
+	}
+	// 会話タイトルはワード検索の対象にするので LEFT JOIN で一緒に取る。
+	rows, err := db.Query(`SELECT m.msg_id, m.conv_id, m.sender, m.text, m.attachments,
+		       m.related_time_unix, m.create_time_unix,
+		       COALESCE(c.title, '')
+		FROM msg_cache m
+		LEFT JOIN conv_cache c ON m.conv_id = c.conv_id
+		ORDER BY m.related_time_unix DESC`)
+	if err != nil {
+		return nil, fmt.Errorf("error at query messages: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var msgs []cachedMessage
+	for rows.Next() {
+		var m cachedMessage
+		if err := rows.Scan(&m.MsgID, &m.ConvID, &m.Sender, &m.Text, &m.Attachments,
+			&m.RelatedTimeUnix, &m.CreateTimeUnix, &m.ConvTitle); err != nil {
+			continue
+		}
+		msgs = append(msgs, m)
+	}
+	return msgs, rows.Err()
+}
+
+// GetMsgByID はGetContentHTML用に、msgIDに対応する発言1件と会話タイトルを返す。
+func (c *pluginCache) GetMsgByID(pluginDir string, msgID string) (convTitle string, msg cachedMessage, err error) {
+	if err = c.openDB(pluginDir); err != nil {
+		return
+	}
+	db := c.conn()
+	if db == nil {
+		err = fmt.Errorf("cache db is not opened")
+		return
+	}
+	row := db.QueryRow(`
+		SELECT m.msg_id, m.conv_id, m.sender, m.text, m.attachments,
+		       m.related_time_unix, m.create_time_unix,
+		       COALESCE(c.title, '')
+		FROM msg_cache m
+		LEFT JOIN conv_cache c ON m.conv_id = c.conv_id
+		WHERE m.msg_id = ?`, msgID)
+	if e := row.Scan(&msg.MsgID, &msg.ConvID, &msg.Sender, &msg.Text, &msg.Attachments,
+		&msg.RelatedTimeUnix, &msg.CreateTimeUnix, &convTitle); e != nil {
+		err = fmt.Errorf("msg not found: %s", msgID)
+	}
+	return
+}
+
+// GetStats は設定画面用の統計を返す。
+//
+// GetConfigHTML から呼ぶので、ここで走査してはいけない。
+// 5秒の IsAlive を超えるとプロセスが殺される。
+func (c *pluginCache) GetStats(pluginDir string) cacheStats {
+	stats := cacheStats{}
+	if err := c.openDB(pluginDir); err != nil {
+		stats.LastScanError = err.Error()
+		return stats
+	}
+	db := c.conn()
+	if db == nil {
+		stats.LastScanError = "cache db is not opened"
+		return stats
+	}
+
+	_ = db.QueryRow(`SELECT COUNT(*) FROM conv_cache`).Scan(&stats.ConvCount)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM msg_cache`).Scan(&stats.MessageCount)
+
+	stats.FileCount = atoiOrZero(c.getMeta("file_count"))
+	stats.BuildState = c.getMeta("build_state")
+	stats.BuildError = c.getMeta("build_error")
+	stats.BuildTotal = atoiOrZero(c.getMeta("build_total_exchanges"))
+	stats.BuildDone = atoiOrZero(c.getMeta("build_done_exchanges"))
+	if unix := atoiOrZero(c.getMeta("last_scan_unix")); unix > 0 {
+		stats.LastScanUnix = int64(unix)
+	}
+	if stats.BuildError != "" {
+		stats.LastScanError = stats.BuildError
+	}
+	stats.SourceProblems = c.loadSourceProblems()
+	return stats
+}
+
+// buildBatchExchanges は1トランザクションで取り込む往復数。
+// 途中で殺されても、このぶんだけやり直せばよい。テストが小さくできるよう var。
+var buildBatchExchanges = 256
+
+// ingestExchangeHook はテストが取り込みに割り込むためのフック。本番では nil。
+// エラーを返すとそのバッチが失敗し、先行してコミット済みのバッチはそのまま残る。
+var ingestExchangeHook func(timeKey string) error
+
+// build はソースを走査し、変化があれば全部を作り直す。
+// ビルダ以外から呼ばないこと。
+//
+// Takeout のマイアクティビティは「その時点までの全履歴」が毎回まるごと入る形なので、
+// 差分は「署名(Path:CRC32:Size)が変わったら全部読み直す」。ただし取り込みは
+// 往復をバッチに分けて1バッチ=1トランザクションでコミットするので、途中で殺されても
+// 先行バッチの行は残り、進捗ゼロには戻らない。世代(gen)で古い版を印し、最後にまとめて掃除する。
+//
+// ZIP を展開はしない。中央ディレクトリを読んでアクティビティのエントリだけを伸長ストリームで読む。
+func (c *pluginCache) build(pluginDir string, patterns []string) error {
+	c.buildMu.Lock()
+	defer c.buildMu.Unlock()
+
+	if err := c.openDB(pluginDir); err != nil {
+		return err
+	}
+
+	c.setMeta("build_state", "scanning")
+	c.setMeta("build_error", "")
+
+	sources, scanErr := openSources(patterns)
+	defer func() { _ = sources.Close() }()
+	if scanErr != nil {
+		// 読めないフォルダがあっても走査は続いている。可観測性のため stderr に残す（stdout はプロトコルチャネル）。
+		sdk.LogWarn("%s: source scan: %v", appName, scanErr)
+	}
+
+	entries, htmlProblems := classifyEntries(sources)
+	problems := relevantProblems(sources.Problems(), pluginDir)
+	problems = append(problems, htmlProblems...)
+	// 0件でも書く。前回の問題を消すため。
+	c.storeSourceProblems(problems)
+
+	if len(entries) == 0 {
+		// ソースが見つからない。既存キャッシュは残したままエラーを返す(取得は非致命)。
+		c.setMeta("build_state", "idle")
+		return fmt.Errorf("Gemini アプリのマイアクティビティ（JSON）を含む ZIP が見つかりません。" +
+			"Google Takeout で「マイ アクティビティ」の「Gemini アプリ」を JSON 形式で書き出し、" +
+			"ZIP を解凍せずにデータソースのフォルダへ置いてください")
+	}
+	c.setMeta("file_count", strconv.Itoa(len(entries)))
+	signature := sourceSignature(entries)
+
+	stored := c.getMeta("source_signature")
+	msgCount := 0
+	_ = c.conn().QueryRow(`SELECT COUNT(*) FROM msg_cache`).Scan(&msgCount)
+	if signature == stored && msgCount > 0 {
+		c.setMeta("build_state", "idle")
+		c.setMeta("last_scan_unix", strconv.FormatInt(time.Now().Unix(), 10))
+		return nil
+	}
+
+	exchanges, err := loadExchanges(entries, exportRankOf(sources))
+	if err != nil {
+		return err
+	}
+	// 読み終えたので ZIP はここで閉じる（取り込み中に利用者が ZIP を差し替えられるように）。
+	_ = sources.Close()
+
+	if len(exchanges) == 0 {
+		c.setMeta("build_state", "idle")
+		return fmt.Errorf("Gemini アプリのアクティビティが1件も読めませんでした。" +
+			"Takeout の「Gemini」ではなく「マイ アクティビティ」→「Gemini アプリ」を選んで書き出してください")
+	}
+
+	// 新しい世代番号。finalize が成功するまで build_gen メタは書かないので、
+	// 途中で殺されても次回は同じ gen を再利用する(再 upsert は冪等)。
+	gen := atoiOrZero(c.getMeta("build_gen")) + 1
+
+	c.setMeta("build_total_exchanges", strconv.Itoa(len(exchanges)))
+	c.setMeta("build_done_exchanges", "0")
+	c.setMeta("build_state", "ingesting")
+
+	conversations := conversationsOf(exchanges)
+
+	batchSize := buildBatchExchanges
+	if batchSize <= 0 {
+		batchSize = 1
+	}
+	done := 0
+	for start := 0; start < len(exchanges); start += batchSize {
+		end := min(start+batchSize, len(exchanges))
+		if err := c.ingestExchanges(exchanges[start:end], conversations, gen); err != nil {
+			return err
+		}
+		done += end - start
+		c.setMeta("build_done_exchanges", strconv.Itoa(done))
+	}
+
+	if err := c.finalizeBuild(gen, signature); err != nil {
+		return err
+	}
+
+	c.setMeta("build_state", "idle")
+	return nil
+}
+
+// conversationRow は conv_cache の1行ぶん。
+type conversationRow struct {
+	Title          string
+	CreateTimeUnix int64
+}
+
+// maxConvTitleRunes は会話タイトルの長さ。
+const maxConvTitleRunes = 60
+
+// conversationsOf は会話ごとの見出しを作る。
+//
+// マイアクティビティには**会話の名前が無い**ので、その会話で最初に送ったプロンプトの
+// 先頭を見出しにする。exchanges は時刻の昇順なので、最初に出てきたものが最も古い。
+func conversationsOf(exchanges []geminiExchange) map[string]conversationRow {
+	rows := map[string]conversationRow{}
+	for i := range exchanges {
+		exchange := &exchanges[i]
+		if exchange.ConvID == "" {
+			continue
+		}
+		if _, exist := rows[exchange.ConvID]; exist {
+			continue
+		}
+		rows[exchange.ConvID] = conversationRow{
+			Title:          titleOf(exchange),
+			CreateTimeUnix: exchange.TimeUnix,
+		}
+	}
+	return rows
+}
+
+// titleOf は往復から会話の見出しを作る。プロンプトの1行目を切り詰める。
+func titleOf(exchange *geminiExchange) string {
+	source := exchange.Prompt
+	if source == "" {
+		source = exchange.Reply
+	}
+	line := source
+	if index := strings.IndexByte(line, '\n'); index >= 0 {
+		line = line[:index]
+	}
+	line = strings.TrimSpace(line)
+	runes := []rune(line)
+	if len(runes) > maxConvTitleRunes {
+		return string(runes[:maxConvTitleRunes]) + "…"
+	}
+	return line
+}
+
+// ingestExchanges は指定した往復を1トランザクションで upsert する。gen で今回の版を印す。
+//
+// 1往復から Kyou は最大2件（人間のプロンプトと Gemini の返答）。
+// 片方しか無い往復（返答が記録されていない・操作の記録）はそのぶんだけ入れる。
+func (c *pluginCache) ingestExchanges(exchanges []geminiExchange, conversations map[string]conversationRow, gen int) error {
+	db := c.conn()
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("error at begin ingest tx: %w", err)
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+
+	for i := range exchanges {
+		exchange := &exchanges[i]
+		if ingestExchangeHook != nil {
+			if err := ingestExchangeHook(exchange.TimeKey); err != nil {
+				return err
+			}
+		}
+		if exchange.ConvID != "" {
+			row := conversations[exchange.ConvID]
+			if _, err := tx.Exec(
+				`INSERT OR REPLACE INTO conv_cache(conv_id, title, create_time_unix, gen) VALUES(?,?,?,?)`,
+				exchange.ConvID, row.Title, row.CreateTimeUnix, gen); err != nil {
+				return fmt.Errorf("error at insert conv %s: %w", exchange.ConvID, err)
+			}
+		}
+
+		attachments := strings.Join(exchange.Attachments, "\n")
+		if exchange.Prompt != "" {
+			// 添付は人間が付けたものなので、人間の発言の側に出す。
+			if err := insertMessage(tx, exchange, senderUser, exchange.Prompt, attachments, gen); err != nil {
+				return err
+			}
+		}
+		if exchange.Reply != "" {
+			if err := insertMessage(tx, exchange, senderModel, exchange.Reply, "", gen); err != nil {
+				return err
+			}
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("error at commit ingest tx: %w", err)
+	}
+	committed = true
+	return nil
+}
+
+// insertMessage は1発言を upsert する。
+func insertMessage(tx *sql.Tx, exchange *geminiExchange, sender string, text string, attachments string, gen int) error {
+	msgID := kyouIDOf(exchange.ConvID, exchange.TimeKey, sender, exchange.Ordinal)
+	if _, err := tx.Exec(
+		`INSERT OR REPLACE INTO msg_cache(msg_id, conv_id, sender, text, attachments, related_time_unix, create_time_unix, gen)
+		 VALUES(?,?,?,?,?,?,?,?)`,
+		msgID, exchange.ConvID, sender, text, attachments,
+		exchange.TimeUnix, exchange.TimeUnix, gen); err != nil {
+		return fmt.Errorf("error at insert msg %s: %w", msgID, err)
+	}
+	return nil
+}
+
+// finalizeBuild は今回の gen で更新されなかった古い行を落とし、署名と gen を確定する。
+// この最終トランザクションが成功して初めて「作り直し完了」になる。
+func (c *pluginCache) finalizeBuild(gen int, signature string) error {
+	db := c.conn()
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("error at begin finalize tx: %w", err)
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+
+	if _, err := tx.Exec(`DELETE FROM conv_cache WHERE gen != ?`, gen); err != nil {
+		return fmt.Errorf("error at delete stale convs: %w", err)
+	}
+	if _, err := tx.Exec(`DELETE FROM msg_cache WHERE gen != ?`, gen); err != nil {
+		return fmt.Errorf("error at delete stale msgs: %w", err)
+	}
+	for key, value := range map[string]string{
+		"build_gen":        strconv.Itoa(gen),
+		"source_signature": signature,
+		"last_scan_unix":   strconv.FormatInt(time.Now().Unix(), 10),
+	} {
+		if _, err := tx.Exec(`INSERT OR REPLACE INTO cache_meta(key, value) VALUES(?, ?)`, key, value); err != nil {
+			return fmt.Errorf("error at write meta %s: %w", key, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("error at commit finalize tx: %w", err)
+	}
+	committed = true
+	return nil
+}
+
+// atoiOrZero は数値でない/空の meta 値を0にする。
+func atoiOrZero(s string) int {
+	value, err := strconv.Atoi(strings.TrimSpace(s))
+	if err != nil {
+		return 0
+	}
+	return value
+}
+
+// unixToTimeFromCache はUnixタイムスタンプをtime.Timeに変換する。
+func unixToTimeFromCache(unix int64) time.Time {
+	if unix == 0 {
+		return time.Time{}
+	}
+	return time.Unix(unix, 0)
+}

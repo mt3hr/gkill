@@ -1,0 +1,10 @@
+{
+  "protocol_version": "1",
+  "name": "gkill_plugin_gemini",
+  "version": "1.0.0",
+  "description": "Gemini の会話履歴（Google Takeout の「マイ アクティビティ」→「Gemini アプリ」）をgkillタイムラインに表示する。書き出した ZIP を解凍せずにデータソースのフォルダへ置いて使用。",
+  "data_type": "gemini_conversation",
+  "rep_name": "Gemini",
+  "executable": "gkill_plugin_gemini",
+  "min_gkill_version": "1.1.11"
+}

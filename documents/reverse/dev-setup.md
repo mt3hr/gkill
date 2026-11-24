@@ -119,7 +119,7 @@ gkill_server version
 | `src/tools/run_test_suite.mjs` | `npm run test_*` / `verify_docs` の実体。スイートを 1 本走らせ、成功したら `test_attestation.local.json` に作業ツリーの tree hash を記録する（`-- --workers=2` のような余剰引数は素通し。絞り込み引数のときは記録しない） |
 | `src/tools/attestation.mjs` | attestation の共有ライブラリ（git ヘルパ・記録の読み書き・ゲートの評価関数・GitHub API）。`run_test_suite.mjs` / `verify_release_gate.mjs` / `put_version_info.mjs` / `verify_release_artifacts.mjs` から import される |
 | `src/tools/put_version_info.mjs` | `npm run put_version_info_embed` の実体（`version.json` に `tree_hash` を含めて書く） |
-| `src/tools/license_getter.mjs` | 依存パッケージのライセンス情報収集（`npm run license_getter` で `LICENSES_DEPENDENCE` を生成。Go 10モジュール（`src/server` + `src/plugins` の各プラグイン。自動発見）+ npm 本番依存 + Android / Wear OS の Gradle 依存。Gradle 環境が無ければ `--skip-gradle`） |
+| `src/tools/license_getter.mjs` | 依存パッケージのライセンス情報収集（`npm run license_getter` で `LICENSES_DEPENDENCE` を生成。Go 12モジュール（`src/server` + `src/plugins` の各プラグイン。自動発見）+ npm 本番依存 + Android / Wear OS の Gradle 依存。Gradle 環境が無ければ `--skip-gradle`） |
 
 **マニュアル編集の流儀:** マニュアルは手書きHTMLではなく `resources/manual_src/` の原稿（HTMLフラグメント）を編集し、`npm run build_manuals` で `resources/manual/` を再生成する。`resources/manual/` を直接編集しても `verify_docs` の生成鮮度チェックで検出される。共通の head/style/テーマスクリプトは `_layout.html` に集約されている。
 

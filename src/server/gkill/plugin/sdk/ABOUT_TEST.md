@@ -6,7 +6,7 @@
 
 `sdk.Run()` の stdin/stdout ループ、`--gkill-build-cache` の単独モード、`sdk.EnsureConfig()` の `config.json` 自動生成、
 `sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置、`sdk.Query.MatchText()` のワード判定、
-`chatview` の本文 HTML（AI チャット系5本が共有する描画）、`configview` の設定画面 HTML（同梱9本が共有する描画）を検証する。
+`chatview` の本文 HTML（AI チャット系6本が共有する描画）、`configview` の設定画面 HTML（同梱10本が共有する描画）を検証する。
 SDK は gkill 本体と別プロセスで動くプラグイン側のライブラリなので、ここでの回帰は
 全プラグイン（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / locationhistory / vrchat / example）に同時に波及する。
 
@@ -23,9 +23,9 @@ SDK は gkill 本体と別プロセスで動くプラグイン側のライブラ
 | `match_words_test.go` | 3 | `Query.MatchText()` / `Query.Matcher()`（`TestQueryMatchText` / `TestQueryMatchTextIDPrefixLengthBoundary` / `TestQueryMatcherDoesNotMutateQuery`）。gkill 本体と同じ規則（大小無視の部分一致、ID は 7 文字以上の語だけ前方一致（`find_word.MinIDPrefixMatchLength`。長さは rune 数で数え、かな 6 文字は 18 バイトでも対象外。[ADR-0114](../../../../../documents/adr/0114-word-filter-id-prefix-needs-seven-chars.md)）、除外語は ID を見ない、空語は無視）で、元の Query を書き換えないこと。プラグインが返す Kyou はこの判定だけで絞られる（本体は再判定しない）ので、境界を SDK 側でも固定する |
 | `timezone_test.go` | 2 | Android のときだけ端末のゾーン名（getprop。末尾の改行は落とす）を読んで `time.Local` を差し替え、差し替えたあとはゾーンの無い時刻がそのゾーンの壁時計で読めること、読めない・空・知らないゾーン名なら UTC のまま続けること（[ADR-0319](../../../../../documents/adr/0319-plugin-sdk-fixes-android-local-timezone.md)） |
 | `find_query_test.go` | 5 | gkill の検索条件の全体（`find_query`）と `words_skip_id_match` が `Query.FindQuery` と写しの欄（`IDs` / `Reps` / `IncludeEndTimeIs` / `WordsSkipIDMatch`）に入ること（本体側の型 `gkill_plugin.PluginQuery` から JSON を作るので、欄の名前が両側でずれたら落ちる）、古い gkill（`find_query` なし）ではゼロ値になること、`MatchID` / `IDMatcher` / `MatchRep` の nil（指定なし）と `[]`（0件）、`Matcher` が WordsSkipIDMatch で ID の前方一致を見ないこと、GetKyou の既定実装が IDs で1件を頼むこと（[ADR-0318](../../../../../documents/adr/0318-pass-find-query-to-plugins.md)） |
-| `chatview/chatview_test.go` | 12 | AI チャット系5本が共有する本文 HTML `chatview.Render`（下の「chatview/」節） |
+| `chatview/chatview_test.go` | 12 | AI チャット系6本が共有する本文 HTML `chatview.Render`（下の「chatview/」節） |
 | `chatview/text_test.go` | 3 | `chatview.RenderText` — コードフェンスとインラインコードだけを描き、それ以外は `html.EscapeString` と一致 |
-| `configview/configview_test.go` | 13 | 同梱プラグイン9本が共有する設定画面 HTML `configview.Render`（下の「configview/」節） |
+| `configview/configview_test.go` | 13 | 同梱プラグイン10本が共有する設定画面 HTML `configview.Render`（下の「configview/」節） |
 | `configview/form_test.go` | 5 | 編集フォームと保存スクリプト（欄の id・postMessage のキー・var 名を同じ Key から生成する） |
 | `configview/text_test.go` | 6 | `configview.Prose`（`code` と **強調** だけ描く）/ `Count` / `FormatUnix` / `FormatTime` / `SampleJSON` / `SourceDirsNote` |
 
@@ -103,7 +103,7 @@ gkill 側（`gkill_server generate_plugin_cache`）は stdout の結果行だけ
 
 ## source_test.go — ZIP 走査
 
-Google Takeout の ZIP を展開せずに読むための走査。fitbit / 位置情報 / archived_git_commit_log / chatgpt / claudeai の5本が使う。
+Google Takeout の ZIP を展開せずに読むための走査。fitbit / 位置情報 / gemini / archived_git_commit_log / chatgpt / claudeai の6本が使う。
 テスト用の ZIP は `archive/zip` で実行時に組み立てる（バイナリをコミットしない）。
 
 | テスト | 検証内容 |
@@ -131,7 +131,7 @@ Google Takeout の ZIP を展開せずに読むための走査。fitbit / 位置
 
 chatgpt / claudeai / claudecode / codex の `GetContentHTML` は、自分のログの形を `chatview.Message` へ写し、
 描画はここが1か所で行う（[ADR-0315](../../../../../documents/adr/0315-chat-plugins-render-through-sdk-chatview.md)）。
-ここでの回帰は4本の表示に同時に出る。plugin-html-view.vue との契約（テーマ追従・サイズ通知・dblclick はクライアントが足す）も固定している。
+ここでの回帰は6本の表示に同時に出る。plugin-html-view.vue との契約（テーマ追従・サイズ通知・dblclick はクライアントが足す）も固定している。
 
 | テスト | 検証内容 |
 |-------|---------|
@@ -153,8 +153,8 @@ chatgpt / claudeai / claudecode / codex の `GetContentHTML` は、自分のロ�
 
 ## configview/ — 同梱プラグインの設定画面 HTML
 
-8本の `GetConfigHTML` は、自分の文言と統計を `configview.Page` へ写し、描画はここが1か所で行う（[ADR-0316](../../../../../documents/adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
-ここでの回帰は8本の設定画面に同時に出る。use-plugin-config-dialog.ts との契約（`gkill_theme` の受信・`gkill_plugin_config` の送信・`gkill_plugin_config_result` の受信）も固定している。
+10本の `GetConfigHTML` は、自分の文言と統計を `configview.Page` へ写し、描画はここが1か所で行う（[ADR-0316](../../../../../documents/adr/0316-plugin-config-screens-render-through-sdk-configview.md)）。
+ここでの回帰は10本の設定画面に同時に出る。use-plugin-config-dialog.ts との契約（`gkill_theme` の受信・`gkill_plugin_config` の送信・`gkill_plugin_config_result` の受信）も固定している。
 
 | テスト | 検証内容 |
 |-------|---------|

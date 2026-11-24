@@ -198,6 +198,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0318](0318-pass-find-query-to-plugins.md) | プラグインへ検索条件の全体（FindQuery）を find_query で渡し、旧来の欄も残す | Accepted |
 | [0319](0319-plugin-sdk-fixes-android-local-timezone.md) | プラグイン SDK が Android で time.Local を端末のゾーンへ直す | Accepted |
 | [0320](0320-antigravity-read-brain-transcript-and-id-from-uuid-dir.md) | Antigravity の会話は brain の transcript_full.jsonl から読み、会話IDは直近の UUID フォルダ名から採る | Accepted |
+| [0321](0321-gemini-activity-from-my-activity.md) | Gemini の会話は Takeout の「マイ アクティビティ」から JSON だけを読み、エントリはロケール非依存に選ぶ | Accepted |
 | [0401](0401-do-not-split-search-window-in-client.md) | クライアント側で検索を期間の窓へ刻んで複数回 get_kyous を投げない | Accepted |
 | [0402](0402-insert-registered-kyou-locally.md) | 記録の追加は列を再検索せず、その1件をクライアントで判定して差し込む | Accepted |
 | [0403](0403-add-tag-before-registered-kyou.md) | タグ欄付きの追加/編集画面は add_tag が完了してから registered_kyou を emit する | Accepted |
