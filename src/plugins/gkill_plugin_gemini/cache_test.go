@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"cmp"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	sdk "github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
 )
 
 // errTestIngest はバッチ取り込みを故意に失敗させるためのエラー。
@@ -613,5 +616,77 @@ func TestGeminiSameTimestampRecordsGetDistinctIDs(t *testing.T) {
 	}
 	if got := countMessages(t, c); got != 4 {
 		t.Errorf("同一時刻2往復の発言数 = %d, want 4", got)
+	}
+}
+
+// マイアクティビティは1往復に時刻が1つしかない。返答をプロンプトの1秒後に置くので、
+// gkill 本体と同じ規則（関連時刻の秒の降順 → ID）で並べると、往復ごとに必ず「返答 → プロンプト」の順になる。
+// 同じ秒のままだと上下が UUIDv5 のハッシュ次第で、往復ごとにばらばらに入れ替わる。
+// ずらすのは時刻だけで、Kyou ID は元の時刻から作る（利用者のタグが外れない）。
+func TestGeminiReplyIsOrderedAfterPrompt(t *testing.T) {
+	c, pluginDir := newTestCache(t)
+	dataDir := t.TempDir()
+	const testTimeA2 = "2024-01-01T00:01:00.000Z" // 合成値（テスト由来）
+	writeActivityZip(t, dataDir, []testRecord{
+		{conv: testConvA, at: testTimeA, title: jaPromptPrefix + "質問1", replies: []string{"<p>返答1</p>"}},
+		{conv: testConvA, at: testTimeA2, title: jaPromptPrefix + "質問2", replies: []string{"<p>返答2</p>"}},
+	})
+	if err := c.build(pluginDir, []string{dataDir}); err != nil {
+		t.Fatalf("build: %v", err)
+	}
+	msgs, err := c.GetMessages(pluginDir)
+	if err != nil {
+		t.Fatalf("GetMessages: %v", err)
+	}
+
+	textByID := map[string]string{}
+	for _, m := range msgs {
+		textByID[m.MsgID] = m.Text
+	}
+
+	// 時刻と ID。ID は元の時刻（ずらす前）から作ったものと一致する。
+	for _, at := range []string{testTimeA, testTimeA2} {
+		parsed, err := time.Parse(time.RFC3339Nano, at)
+		if err != nil {
+			t.Fatalf("parse %s: %v", at, err)
+		}
+		timeKey := parsed.UTC().Format(time.RFC3339Nano)
+		userID := kyouIDOf(testConvA, timeKey, senderUser, 0)
+		modelID := kyouIDOf(testConvA, timeKey, senderModel, 0)
+		var user, model *cachedMessage
+		for i := range msgs {
+			switch msgs[i].MsgID {
+			case userID:
+				user = &msgs[i]
+			case modelID:
+				model = &msgs[i]
+			}
+		}
+		if user == nil || model == nil {
+			t.Fatalf("%s: 元の時刻から作った ID の発言が見つからない (user=%v model=%v)", at, user != nil, model != nil)
+		}
+		if user.RelatedTimeUnix != parsed.Unix() {
+			t.Errorf("%s: プロンプトの時刻 = %d, want %d", at, user.RelatedTimeUnix, parsed.Unix())
+		}
+		if model.RelatedTimeUnix != parsed.Unix()+replyTimeOffsetSeconds || model.CreateTimeUnix != model.RelatedTimeUnix {
+			t.Errorf("%s: 返答の時刻 = %d/%d, want %d", at, model.RelatedTimeUnix, model.CreateTimeUnix, parsed.Unix()+replyTimeOffsetSeconds)
+		}
+	}
+
+	// gkill 本体の一覧と同じ規則で並べる（find_filter.go の sortResultKyousByKey）。
+	kyous := kyousOfMessages(msgs, sdk.Query{})
+	slices.SortFunc(kyous, func(a, b sdk.Kyou) int {
+		if c := cmp.Compare(b.RelatedTime.Unix(), a.RelatedTime.Unix()); c != 0 {
+			return c
+		}
+		return strings.Compare(a.ID, b.ID)
+	})
+	var got []string
+	for _, k := range kyous {
+		got = append(got, textByID[k.ID])
+	}
+	want := []string{"返答2", "質問2", "返答1", "質問1"}
+	if !slices.Equal(got, want) {
+		t.Errorf("一覧の並び = %v, want %v", got, want)
 	}
 }

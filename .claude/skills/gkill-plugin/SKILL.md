@@ -156,6 +156,10 @@ description: "gkill プラグイン（src/plugins/ の独立バイナリ・plugi
               #                              **The export has no message id**, so Kyou IDs are UUIDv5 of
               #                              (conversation id from `details[].url` — there is no
               #                              `titleUrl` —, time, role, ordinal counted PER EXPORT).
+              #                              One time per exchange, so the reply's related time is the
+              #                              prompt's **+1 s** (gkill sorts by related-time SECONDS then
+              #                              ID; same second = random up/down per pair). IDs keep the
+              #                              original time key, so tags survive.
               #                              Reply HTML becomes markdown-ish text at ingest (chatview
               #                              escapes raw HTML), so changing the converter means bumping
               #                              cacheSchemaVersion. `nested_zip` is dropped from the

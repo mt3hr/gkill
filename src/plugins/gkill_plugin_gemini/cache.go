@@ -71,7 +71,9 @@ type cacheStats struct {
 // Kyou ID の作り方）を変えたときも上げること。** 取り込み時に確定させているので、
 // 上げないと古いキャッシュが古い写し方のまま残る。
 // 古いDBは作り直される(キャッシュなので捨ててよい)。
-const cacheSchemaVersion = "1"
+//
+// 版2: 返答の関連時刻をプロンプトの1秒後にした（replyTimeOffsetSeconds）。
+const cacheSchemaVersion = "2"
 
 // openDB はキャッシュDBを開く。何度呼んでも1回しか開かない。
 func (c *pluginCache) openDB(pluginDir string) error {
@@ -522,14 +524,28 @@ func (c *pluginCache) ingestExchanges(exchanges []geminiExchange, conversations 
 	return nil
 }
 
+// replyTimeOffsetSeconds は Gemini の返答の時刻をプロンプトからずらす秒数。
+//
+// マイアクティビティは1レコード=1往復で、時刻が1つしかない。そのままプロンプトと返答に
+// 同じ時刻を付けると、gkill 本体は一覧を「関連時刻の秒（降順）→ ID」で並べるので
+// （find_filter.go の sortResultKyousByKey）、2件の上下が UUIDv5 のハッシュ次第になり、
+// 往復ごとにばらばらに入れ替わる。返答はプロンプトより後に来るので、返答を1秒後に置いて順序を確定させる。
+// 本体の並べ替えは秒単位なので、1秒未満のずらしでは効かない。
+// **Kyou ID は TimeKey（元の時刻）から作るので、この値を変えても ID は動かない。**
+const replyTimeOffsetSeconds = 1
+
 // insertMessage は1発言を upsert する。
 func insertMessage(tx *sql.Tx, exchange *geminiExchange, sender string, text string, attachments string, gen int) error {
 	msgID := kyouIDOf(exchange.ConvID, exchange.TimeKey, sender, exchange.Ordinal)
+	timeUnix := exchange.TimeUnix
+	if sender == senderModel {
+		timeUnix += replyTimeOffsetSeconds
+	}
 	if _, err := tx.Exec(
 		`INSERT OR REPLACE INTO msg_cache(msg_id, conv_id, sender, text, attachments, related_time_unix, create_time_unix, gen)
 		 VALUES(?,?,?,?,?,?,?,?)`,
 		msgID, exchange.ConvID, sender, text, attachments,
-		exchange.TimeUnix, exchange.TimeUnix, gen); err != nil {
+		timeUnix, timeUnix, gen); err != nil {
 		return fmt.Errorf("error at insert msg %s: %w", msgID, err)
 	}
 	return nil
