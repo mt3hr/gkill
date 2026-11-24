@@ -56,7 +56,7 @@ Go 本体・TypeScript の `FindKyouQuery`・MCP のツールスキーマ・プ�
 
 ## Consequences
 
-- **プラグインのバイナリを再ビルドして配り直す必要がある。** `plugin_protocol.go` は別プロセスのプラグインとの契約で、フィールドは `omitempty` 付きなので、**旧バイナリは新しいキーを読めず、キーが欠けてもエラーを立てない**。期間フィルタだけが黙って効かなくなり、プラグイン由来の記録が期間外まで出る。`src/plugins/` の各モジュールは `src/server` を `replace` で参照しているので、本体と一緒にビルドし直すこと。
+- **プラグインのバイナリを再ビルドして配り直す必要がある。** `plugin_protocol.go` は別プロセスのプラグインとの契約で、フィールドは `omitempty` 付きなので、**旧バイナリは新しいキーを読めず、キーが欠けてもエラーを立てない**。旧バイナリのプラグインは期間で絞れずに全件を返す。本体は返ってきた Kyou を期間で絞り直す（`plugin_repository_impl.go` の `pluginKyouMatchesQuery`）ので検索結果は変わらないが、プラグインが読む量と応答の大きさは全件ぶんに膨らむ。`src/plugins/` の各モジュールは `src/server` を `replace` で参照しているので、本体と一緒にビルドし直すこと。
 - **MCP のツール定義を古いまま持っているクライアントは、旧キーを未知キーとして弾かれる**（ADR-0111）。`schema_revision` が変わるので、`gkill_status` の応答と `tools/list` の採り直しがその合図になる。
 - **`add_tag` のルール JSON は変換しない。** CLI の引数として利用者が書いたファイルで、gkill は保存場所を知らない。旧キーのまま渡すと未知キーとして弾かれるので、利用者が書き直す。
 - サンプル設定 DB（`resources/gkill_sample_data/configs/user_config.db`）には旧キーが入ったままだが、ほかの永続データと同じく起動時の移行で変換される。バイナリなので `RETIRED_SPELLINGS` 検査の対象外（拡張子で除外済み）。

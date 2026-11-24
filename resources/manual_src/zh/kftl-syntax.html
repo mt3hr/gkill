@@ -5,19 +5,19 @@
 
 <h1>记事本语法参考</h1>
 
-<p>记事本语法是gkill中使用的文本记录格式。通过行首前缀，可以一次性输入各种类型的数据。以下介绍全部19种语句类型。</p>
+<p>记事本语法是gkill中使用的文本记录格式。通过行首前缀，可以一次性输入各种类型的数据。以下介绍全部20种语句类型。</p>
 
 <h2>语句一览</h2>
 
 <table>
-  <tr><th>前缀</th><th>ASCII</th><th>类型</th><th>说明</th></tr>
+  <tr><th>前缀</th><th>ASCII替代</th><th>类型</th><th>说明</th></tr>
   <tr><td>（无）</td><td>（无）</td><td>备忘录</td><td>记录文本备忘</td></tr>
   <tr><td><code>。</code></td><td><code>#</code></td><td>标签</td><td>添加标签</td></tr>
   <tr><td><code>ーー</code></td><td><code>--</code></td><td>文本块</td><td>原样保留多行文本</td></tr>
   <tr><td><code>、</code></td><td><code>,</code></td><td>分隔符</td><td>分割为新记录</td></tr>
   <tr><td><code>、、</code></td><td><code>,,</code></td><td>分隔符（+1秒）</td><td>分割并将时间戳增加1秒</td></tr>
   <tr><td><code>？</code></td><td><code>?</code></td><td>关联时间</td><td>设置关联日期/时间</td></tr>
-  <tr><td><code>？？</code></td><td><code>??</code></td><td>重复</td><td>按其他日期重复创建上方的记录</td></tr>
+  <tr><td><code>？？</code></td><td><code>??</code></td><td>重复</td><td>将紧邻上方的记录改变日期后多次创建</td></tr>
   <tr><td><code>ーか</code></td><td><code>/num</code></td><td>数值记录</td><td>记录数值数据</td></tr>
   <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>任务</td><td>创建任务</td></tr>
   <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>心情</td><td>记录心情值（0-10）</td></tr>
@@ -26,8 +26,8 @@
   <tr><td><code>ーた</code></td><td><code>/start</code></td><td>打卡开始</td><td>开始打卡</td></tr>
   <tr><td><code>ーえ</code></td><td><code>/end</code></td><td>打卡结束</td><td>结束匹配的打卡</td></tr>
   <tr><td><code>ーいえ</code></td><td><code>/end?</code></td><td>打卡结束（如果存在）</td><td>如果匹配的打卡存在则结束（无错误）</td></tr>
-  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>按标签结束打卡</td><td>通过标签名结束打卡</td></tr>
-  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>按标签结束打卡（如果存在）</td><td>通过标签名结束打卡（如果存在）</td></tr>
+  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>按标签结束打卡</td><td>结束与标签名匹配的打卡</td></tr>
+  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>按标签结束打卡（如果存在）</td><td>如果有与标签名匹配的打卡则结束</td></tr>
   <tr><td><code>ーう</code></td><td><code>/url</code></td><td>书签</td><td>记录URL书签</td></tr>
   <tr><td><code>～～</code></td><td><code>~~</code></td><td>转发任务</td><td>将已有记录直接变为任务</td></tr>
   <tr><td><code>！</code></td><td><code>!</code></td><td>保存</td><td>终止文档并执行保存</td></tr>
@@ -41,8 +41,9 @@
 去散步了</pre>
 
 <h3>2. 标签: <code>#</code></h3>
-<p>在行首加<code>#</code>来指定标签。多个标签用<code>,</code>分隔。</p>
-<pre>#日记,天气</pre>
+<p>在行首加<code>#</code>来指定标签。多个标签用<code>,</code>或<code>、</code>分隔。也可以使用全角的<code>。</code>代替<code>#</code>。</p>
+<pre>#日记,天气
+。日记、天气</pre>
 <p>写下还从未用过的标签名并尝试保存时，会确认「这是一个新标签。要添加吗？」。这是为了防止因打字错误而增加许多相似标签的确认。</p>
 
 <h3>3. 文本块: <code>--</code></h3>
@@ -170,7 +171,7 @@ https://example.com
 ~~</pre>
 
 <h3>19. 重复: <code>??</code></h3>
-<p>以<code>??</code>开始，以<code>??</code>结束。将紧邻上方的记录按其他日期重复创建。块内依次填写以下四行。第3行和第4行可以省略（提前用<code>??</code>闭合即可）。</p>
+<p>以<code>??</code>开始，以<code>??</code>结束。将紧邻上方的记录改变日期后多次创建。块内依次填写以下四行。第3行和第4行可以省略（提前用<code>??</code>闭合即可）。</p>
 <table>
   <tr><th>行</th><th>含义</th><th>写法</th></tr>
   <tr><td>1</td><td>重复的日期（必填）</td><td><code>daily</code> / <code>fri</code> / <code>mon,wed,fri</code> / <code>6w fri</code> / <code>monthly 15</code> / <code>2nd fri</code> / <code>last fri</code></td></tr>
@@ -186,7 +187,7 @@ https://example.com
 fri
 3
 ??</pre>
-<p>此例会在接下来的三个周五18:00各创建一个「周报」任务。记录所持有的所有日期时间会平移相同的天数，因此开始、结束和截止之间的间隔保持不变。完全没有填写日期时间的任务无法使用（因为没有地方放置重复的日期）。</p>
+<p>此例会从下一个周五开始，每周创建一个18:00的「周报」任务，共3个。记录所持有的所有日期时间会平移相同的天数，因此开始、结束和截止之间的间隔保持不变。完全没有填写日期时间的任务无法使用（因为没有地方放置重复的日期）。</p>
 <p>由于第3行默认为<code>no</code>，<strong>再次保存相同内容也不会重复创建。</strong>保存失败时不会创建任何内容，原样再保存一次即可。</p>
 <div class="tip">
   <strong>注意:</strong> 不存在的日期会被跳过（<code>monthly 31</code>跳过2月，<code>5th fri</code>跳过没有第5个周五的月份）。不能用于打卡开始（<code>/start</code>）和打卡结束（<code>/end</code>、<code>/end?</code>、<code>/endt</code>、<code>/endt?</code>）。一次保存最多创建1000条。

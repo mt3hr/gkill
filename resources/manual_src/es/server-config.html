@@ -1,5 +1,5 @@
 <!-- title: Configuraci&oacute;n del servidor - Ayuda -->
-  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Configuración del Servidor</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Configuración del servidor</span></nav>
   <h1>Configuraci&oacute;n del servidor</h1>
   <p>Esta pantalla configura el comportamiento del servidor. Solo los administradores pueden acceder.</p>
 
@@ -10,10 +10,10 @@
   <table>
     <tr><th>Configuraci&oacute;n</th><th>Tipo</th><th>Descripci&oacute;n</th></tr>
     <tr><td>Perfil</td><td>Desplegable + A&ntilde;adir/Eliminar</td><td>Seleccionar el perfil activo, crear uno nuevo o eliminar uno existente</td></tr>
-    <tr><td>Solo acceso local</td><td>Casilla</td><td>Restringir las conexiones solo a acceso local (activado por defecto)</td></tr>
-    <tr><td>Servicio de notificaciones</td><td>Casilla</td><td>Activar el servicio de notificaciones push</td></tr>
-    <tr><td>Activar TLS</td><td>Casilla</td><td>Activar HTTPS</td></tr>
-    <tr><td>Generar TLS autofirmado</td><td>Bot&oacute;n</td><td>Crear archivos de certificado TLS autofirmados</td></tr>
+    <tr><td>Permitir solo acceso local</td><td>Casilla</td><td>Restringir las conexiones solo a acceso local (activado por defecto)</td></tr>
+    <tr><td>Habilitar servicio de notificación</td><td>Casilla</td><td>Activar el servicio de notificaciones push</td></tr>
+    <tr><td>Habilitar TLS</td><td>Casilla</td><td>Activar HTTPS</td></tr>
+    <tr><td>Generar archivos TLS autofirmados</td><td>Bot&oacute;n</td><td>Crear archivos de certificado TLS autofirmados</td></tr>
     <tr><td>Direcci&oacute;n</td><td>Texto</td><td>Direcci&oacute;n de escucha del servidor. El valor por defecto es <code>127.0.0.1:9999</code> (solo este dispositivo). Deje vac&iacute;a la parte del host, como <code>:9999</code>, para escuchar en todas las interfaces de red</td></tr>
     <tr><td>Archivo TLS CERT</td><td>Texto</td><td>Ruta al archivo de certificado TLS</td></tr>
     <tr><td>Archivo TLS KEY</td><td>Texto</td><td>Ruta al archivo de clave privada TLS</td></tr>
@@ -22,7 +22,8 @@
     <tr><td>Tiempo l&iacute;mite de marcadores</td><td>N&uacute;mero (m&iacute;n: 5)</td><td>Tiempo l&iacute;mite en segundos para la obtenci&oacute;n de marcadores</td></tr>
     <tr><td>Agente de usuario de marcadores</td><td>Texto</td><td>Cadena User-Agent para la obtenci&oacute;n de marcadores</td></tr>
     <tr><td>Directorio de datos de usuario</td><td>Texto</td><td>Ruta al directorio de almacenamiento de datos de usuario</td></tr>
-    <tr><td>Límite mensual de subida</td><td>Número</td><td>Límite mensual de tamaño de subida (-1 para ilimitado)</td></tr>
+    <tr><td>Nombre de host LAN</td><td>Texto</td><td>Nombre de host usado para la URL «LAN» de los enlaces compartidos</td></tr>
+    <tr><td>Nombre de host global</td><td>Texto</td><td>Nombre de host usado para la URL «Global» de los enlaces compartidos</td></tr>
   </table>
 
   <h2>Botones inferiores</h2>
@@ -31,27 +32,37 @@
   <div class="tip">Los cambios requieren reiniciar el servidor para que surtan efecto.</div>
 
   <h2>Usar gkill desde otros dispositivos</h2>
-  <p>Por defecto, solo el dispositivo que ejecuta el servidor puede conectarse (la direcci&oacute;n de escucha es <code>127.0.0.1:9999</code> y "Solo acceso local" est&aacute; activado). Para usar gkill desde un tel&eacute;fono u otro PC, un administrador cambia estos dos ajustes.</p>
+  <p>Por defecto, solo el dispositivo que ejecuta el servidor puede conectarse (la direcci&oacute;n de escucha es <code>127.0.0.1:9999</code> y "Permitir solo acceso local" est&aacute; activado). Para usar gkill desde un tel&eacute;fono u otro PC, un administrador cambia estos dos ajustes.</p>
   <ol>
     <li>Establezca <strong>Direcci&oacute;n</strong> en <code>:9999</code> (todas las interfaces) o en la direcci&oacute;n IP de este dispositivo en la red local (ej.: <code>192.168.0.10:9999</code>).</li>
-    <li>Desactive <strong>Solo acceso local</strong>.</li>
+    <li>Desactive <strong>Permitir solo acceso local</strong>.</li>
     <li>Pulse <strong>Aplicar</strong>. El servidor se reinicia y los dem&aacute;s dispositivos pueden abrir <code>http://(direcci&oacute;n IP de este dispositivo):9999</code>.</li>
   </ol>
   <div class="tip"><strong>Aplicaci&oacute;n para tel&eacute;fono (Android):</strong> El servidor que se ejecuta dentro de la aplicaci&oacute;n tambi&eacute;n sigue los ajustes de esta pantalla. Si en Direcci&oacute;n escribe solo la direcci&oacute;n IP de este dispositivo en la red local (ej.: <code>192.168.0.10:9999</code>), la propia pantalla de la aplicaci&oacute;n dejar&aacute; de poder conectarse al servidor. Para dar servicio tambi&eacute;n a otros dispositivos, use <code>0.0.0.0:9999</code> o deje vac&iacute;a la parte del host, como en <code>:9999</code> (si escribe solo <code>9999</code>, sin los dos puntos, la pantalla de la aplicaci&oacute;n tampoco podr&aacute; abrirse). Adem&aacute;s, si cambia el puerto de escucha o Habilitar TLS y aplica, la aplicaci&oacute;n vuelve a abrir su pantalla en la nueva direcci&oacute;n y tendr&aacute; que iniciar sesi&oacute;n de nuevo.</div>
   <div class="tip"><strong>Consejo:</strong> Al dar servicio a otros dispositivos, se recomienda activar <strong>Habilitar TLS</strong> (puede crear un certificado con "Generar archivos TLS autofirmados"). Con TLS desactivado, las contrase&ntilde;as viajan por la red sin cifrar.</div>
 
 
-  <h2>Gestión del almacenamiento</h2>
-  <p>Los repositorios de datos son los lugares donde se guardan los registros. Se pueden configurar múltiples repositorios según el proposito o dispositivo.</p>
-  <p>La asignacion por usuario se gestiona mediante el botón "Asignacion de almacenamiento" en Gestión de cuentas.</p>
-  <h3>Como agregar un repositorio</h3>
+  <h2>Gestión de repositorios</h2>
+  <p>Un repositorio es la carpeta o el archivo donde gkill guarda los datos de los registros. Puede configurar varios repositorios según el uso (notas, archivos, registros GPS, etc.) o según el dispositivo.</p>
+  <p>Los repositorios se configuran para cada usuario desde el botón de asignación de almacenamiento de la pantalla de gestión de cuentas.</p>
+
+  <h3>Cómo agregar un repositorio</h3>
   <ol>
-    <li>Abra Gestión de cuentas &gt; Asignacion de almacenamiento del usuario deseado.</li>
-    <li>Pulse el botón "Agregar".</li>
-    <li>Configure los siguientes elementos: nombre para mostrar, tipo, ruta, usar como destino de escritura, habilitado. El desplegable de tipo muestra nombres alfanuméricos como <code>kmemo</code> o <code>timeis</code>; consulte la tabla siguiente para saber qué significa cada uno.</li>
-    <li>Pulse "Guardar".</li>
+    <li>Abra la pantalla de gestión de cuentas y pulse el botón de asignación de almacenamiento del usuario correspondiente.</li>
+    <li>Pulse el botón "Agregar" para añadir un nuevo repositorio.</li>
+    <li>Configure los siguientes elementos:
+      <ul>
+        <li><strong>Nombre para mostrar</strong>: Nombre que aparece en la Vista de registro de vida y en los filtros</li>
+        <li><strong>Tipo</strong>: Tipo de datos que se guardarán. El desplegable muestra nombres alfanuméricos como <code>kmemo</code> o <code>timeis</code>; consulte la tabla de «Elección del tipo», a continuación, para saber qué significa cada uno</li>
+        <li><strong>Ruta</strong>: Ruta del directorio donde se guardan los datos (para la gestión de archivos también se pueden usar comodines como <code>*</code> o <code>**</code>)</li>
+        <li><strong>Usar como destino de escritura</strong>: Indica si los nuevos registros se guardarán en este repositorio</li>
+        <li><strong>Habilitado</strong>: Indica si este repositorio se incluirá en las búsquedas y vistas</li>
+      </ul>
+    </li>
+    <li>Pulse "Guardar" para aplicar la configuración.</li>
   </ol>
-  <h3>Tipos de repositorio</h3>
+
+  <h3>Elección del tipo</h3>
   <p>El desplegable de tipo muestra nombres alfanuméricos. Esto es lo que almacena cada uno.</p>
   <table>
     <tr><th>Lo que muestra el desplegable</th><th>Lo que se almacena</th></tr>
@@ -74,15 +85,16 @@
   <div class="tip">
     <strong>Consejo:</strong> <code>tag</code> / <code>text</code> / <code>notification</code> / <code>rekyou</code> / <code>mirekyou</code> guardan información añadida a los registros, no los registros en sí. Normalmente se crean durante la configuración inicial, así que no hace falta añadirlos después.
   </div>
+
   <div class="tip">
-    <strong>Consejo:</strong> Puede agregar múltiples repositorios del mismo tipo (por ejemplo, separados por dispositivo).
+    <strong>Consejo:</strong> Puede agregar varios repositorios del mismo tipo. Por ejemplo, si separa por dispositivo los repositorios de notas de texto, podrá organizar los datos de cada dispositivo.
   </div>
   <div class="tip">
-    <strong>Consejo:</strong> La opción "Usar como destino de escritura" solo debe estar activada para un repositorio por tipo.
+    <strong>Consejo:</strong> Los registros nuevos se guardan en el repositorio que tenga activado "Usar como destino de escritura". Si tiene varios repositorios del mismo tipo, active esta opción solo en el que vaya a usar como destino de escritura.
   </div>
 
   <h2>Documentos Relacionados</h2>
   <ul>
     <li><a href="application-config.html">Configuración</a></li>
-    <li><a href="manage-account.html">Gestión de Cuentas</a></li>
+    <li><a href="manage-account.html">Gestión de cuentas</a></li>
   </ul>

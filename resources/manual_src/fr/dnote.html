@@ -1,9 +1,9 @@
 <!-- title: Vue d'agrégation - Aide -->
   <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Vue d'agrégation</span></nav>
   <h1>Vue d'agrégation</h1>
-  <p>Écran d'agrégation et de visualisation des données du journal de vie. Vous pouvez définir quatre types : des Éléments, des Listes, des Graphiques de tendance et des Graphiques de corrélation pour comparer plusieurs indicateurs.</p>
+  <p>Écran qui agrège et visualise les données du journal de vie selon des conditions. Vous pouvez définir quatre types : des Éléments, des Listes, des Graphiques de tendance et des Graphiques de corrélation pour comparer plusieurs indicateurs.</p>
   <div class="tip">
-    <strong>Astuce :</strong> La vue d'agrégation est une fonctionnalité à bascule intégrée à la vue journal de vie. Cliquez sur l'icône d'agrégation dans la barre d'outils de la vue journal de vie pour l'afficher.
+    <strong>Astuce :</strong> La vue d'agrégation est une fonctionnalité à bascule intégrée à la Vue du journal de vie. Cliquez sur l'icône d'agrégation dans la barre d'outils de la Vue du journal de vie pour l'afficher.
   </div>
 
   <h2>Gestion des définitions</h2>
@@ -110,7 +110,7 @@
     <tr>
       <td>Clé de groupement</td>
       <td>Liste déroulante</td>
-      <td>Choisissez le critère de regroupement (titre, type de données, tag, magasin, humeur, mois, semaine, jour de la semaine, date, etc.). Avec « Titre », le corps des notes, les titres des enregistrements numériques, horodatages et tâches, les postes de dépense, les titres des favoris et les messages de commit Git servent d'intitulé de groupe.</td>
+      <td>Choisissez le critère de regroupement (titre, type de données, tag, magasin, humeur, mois, semaine, jour de la semaine, date, etc.). Avec « Titre », le corps des notes, les titres des enregistrements numériques, des entrées de temps et des tâches, les postes de dépense, les titres des signets et les messages de commit Git servent ensemble d'intitulé de groupe.</td>
     </tr>
     <tr>
       <td>Groupe de conditions</td>
@@ -158,8 +158,8 @@
   <p>Agrège de 2 à 10 métriques par même jour, semaine ou mois et affiche leurs relations sous forme de carte thermique et de nuage de points. Chaque métrique possède un nom, une cible d'agrégation et des conditions.</p>
   <p>Sélectionnez une cellule pour afficher le coefficient, le nombre de périodes appariées, la valeur p, l'intervalle de confiance à 95 % et le nuage de points. Pearson et Spearman sont disponibles.</p>
   <p>Avec un décalage positif, la métrique de ligne d'une période antérieure est comparée à la métrique de colonne d'une période ultérieure. Les périodes où une observation manque sont exclues.</p>
-  <p>En cochant « Considérer les périodes sans enregistrement comme 0 » sur une métrique, les périodes sans enregistrement de cette métrique sont incluses comme observations à 0. Utile pour comparer les jours où quelque chose s'est produit avec ceux où rien ne s'est produit, pour des événements qui n'arrivent pas tous les jours comme les achats ou les pointages. Disponible uniquement pour les métriques de comptage et de somme ; les périodes antérieures au début des enregistrements deviennent aussi 0, restreignez donc la plage de dates.</p>
-  <p>« Où compter les pointages à cheval sur plusieurs périodes » permet de choisir, par métrique, si une entrée de temps à cheval sur plusieurs périodes est répartie entre elles ou comptée entièrement dans la période de début ou de fin. Pour un pointage comme le sommeil, à comparer aux métriques du matin où il s'est terminé, choisissez « Tout dans la période de fin ».</p>
+  <p>En cochant « Considérer les périodes sans enregistrement comme 0 » sur une métrique, les périodes sans enregistrement de cette métrique sont incluses comme observations à 0. Utile pour comparer les jours où quelque chose s'est produit avec ceux où rien ne s'est produit, pour des événements qui n'arrivent pas tous les jours comme les achats ou les entrées de temps. Disponible uniquement pour les métriques de comptage et de somme ; les périodes antérieures au début des enregistrements deviennent aussi 0, restreignez donc la plage de dates.</p>
+  <p>« Où compter les pointages à cheval sur plusieurs périodes » permet de choisir, par métrique, si une entrée de temps à cheval sur plusieurs jours est répartie entre les périodes ou comptée entièrement dans la période de début ou de fin. Pour une entrée de temps comme le sommeil, à comparer aux métriques du matin où il s'est terminé, choisissez « Tout dans la période de fin ».</p>
 
   <h2>Édition du groupe de conditions</h2>
   <table>
@@ -185,9 +185,10 @@
     </tr>
     <tr>
       <td>Chaque condition</td>
-      <td>Définit le type et la valeur de la condition (filtrer par type de données, étiquette, titre, montant, valeur d'humeur, etc.).</td>
+      <td>Définit le type et la valeur de la condition (filtrer par type de données, étiquette, titre, montant, magasin, valeur d'humeur, nombre de lignes de code, etc.).</td>
     </tr>
   </table>
+  <p>Vous pouvez en outre choisir des conditions qui filtrent en comparant avec l'enregistrement actuellement sélectionné. Il y en a cinq : « Le titre est égal à la cible », « Toutes les étiquettes sont égales à la cible », « Certaines étiquettes sont égales à la cible », « Le type de données est égal à la cible » et « L'ID est égal à la cible ». Pour plus de détails, voir « Conditions qui comparent avec l'enregistrement sélectionné » dans <a href="ryuu.html">Informations associées</a>.</p>
 
   <h2>Opérations</h2>
   <table>
@@ -208,7 +209,6 @@
       <td>Modifie l'ordre d'affichage des éléments, des listes et des graphiques de tendance.</td>
     </tr>
   </table>
-  <p>Vous pouvez en outre choisir des conditions qui comparent avec l'enregistrement sélectionné : « Le titre est égal à la cible », « Tous les tags sont égaux à la cible », « Une partie des tags est égale à la cible », « Le type de données est égal à la cible » et « L'ID est égal à la cible ». Voir « Conditions qui comparent avec l'enregistrement sélectionné » dans <a href="ryuu.html">Informations connexes</a>.</p>
 
   <h2>Boutons d'action inférieurs</h2>
   <table>
@@ -222,7 +222,7 @@
     </tr>
     <tr>
       <td>Annuler</td>
-      <td>Annule les modifications et ferme le dialogue.</td>
+      <td>Annule les modifications et ferme la boîte de dialogue.</td>
     </tr>
   </table>
 
@@ -244,7 +244,7 @@
 
   <h2>Documents associés</h2>
   <ul>
-    <li><a href="application-config.html">Écran de configuration</a></li>
-    <li><a href="rykv.html">Vue journal de vie</a></li>
+    <li><a href="application-config.html">Paramètres</a></li>
+    <li><a href="rykv.html">Vue du journal de vie</a></li>
     <li><a href="getting-started.html">Premiers pas</a></li>
   </ul>

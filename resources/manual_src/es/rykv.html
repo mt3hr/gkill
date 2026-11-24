@@ -1,7 +1,7 @@
 <!-- title: Vista de registro de vida - Ayuda -->
   <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Vista de Registro de Vida</span></nav>
   <h1>Vista de registro de vida</h1>
-  <p>Pantalla para explorar los registros vitales con miniaturas. Admite múltiples modos de visualización y funciones de filtrado.</p>
+  <p>Pantalla que muestra en una lista todo su registro de vida, con miniaturas de las imágenes. Con varias columnas de filtro puede ver a la vez datos que cumplen condiciones distintas.</p>
 
   <h2>Botones de la barra de herramientas</h2>
   <table>
@@ -11,23 +11,23 @@
     </tr>
     <tr>
       <td><span class="icon">&#9776;</span> Barra lateral</td>
-      <td>Abre/cierra la barra lateral para filtrado y navegación.</td>
+      <td>Muestra u oculta la barra lateral de búsqueda y filtrado.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128196;</span> Detalles</td>
-      <td>Muestra/oculta el panel de detalles del registro.</td>
+      <td>Muestra u oculta el panel de detalles del registro seleccionado.</td>
     </tr>
     <tr>
-      <td><span class="icon">&#128202;</span> Vista de resumen</td>
-      <td>Muestra la pantalla de análisis estadístico.</td>
+      <td><span class="icon">&#128202;</span> Vista de agregación</td>
+      <td>Muestra u oculta la vista de estadísticas y análisis.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128197;</span> Calendario</td>
-      <td>Muestra la vista de calendario. Haga clic en el año y el mes de la parte superior del calendario para elegir una fecha. Elegir una fecha equivale a hacer clic en la celda de ese día: la lista se desplaza a ese día.</td>
+      <td>Muestra u oculta el calendario. Haga clic en el año y el mes de la parte superior del calendario para elegir una fecha. Elegir una fecha equivale a hacer clic en la celda de ese día: la lista se desplaza a ese día.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128506;</span> Mapa</td>
-      <td>Muestra registros con información GPS en el mapa. Haga clic en la fecha de la parte superior del mapa para elegir el día que se muestra en el mapa (las condiciones de búsqueda y la lista no cambian).</td>
+      <td>Muestra u oculta el mapa del registro GPS. Haga clic en la fecha de la parte superior del mapa para elegir el día que se muestra en el mapa (las condiciones de búsqueda y la lista no cambian).</td>
     </tr>
     <tr>
       <td><span class="icon">&#9881;</span> Ajustes</td>
@@ -46,10 +46,12 @@
   <ul>
     <li>Búsqueda de texto (palabra clave)</li>
     <li>Filtro por etiquetas</li>
-    <li>Especificación de un período (además de las fechas, puede indicar una hora de inicio y una hora de fin. Si deja una hora en blanco, se abarca desde el inicio del primer día hasta el final del último)</li>
+    <li>Especificación de un período (elija el rango de fechas en el calendario y, si lo necesita, indique también una hora de inicio y una hora de fin. Puede vaciar cada casilla de hora con la «×» que tiene dentro. Si deja la hora en blanco, se abarca desde las 0:00 del primer día hasta el final del último. Para quitar por completo la especificación del período, pulse «Limpiar»)</li>
     <li>Franja horaria y día de la semana (acota a un rango de horas dentro del día. Los días: solo los que tengan el botón pulsado; sin ninguno pulsado, se incluyen todos)</li>
+    <li>Filtro por registro de tiempo (acota a los registros del período en que estuvo activo un registro de tiempo concreto)</li>
+    <li>Filtro por ubicación (acota por información de ubicación definiendo un área en el mapa)</li>
     <li>Selección del tipo de registro</li>
-    <li>Selección del lugar de almacenamiento de registros</li>
+    <li>Selección del repositorio y del perfil</li>
   </ul>
 
   <h3>Añadir una columna de filtro</h3>
@@ -77,24 +79,57 @@
     <strong>Consejo:</strong> El valor predeterminado del período de visualización se puede cambiar en la configuración con la opción «Días de visualización del registro de vida».
   </div>
 
-  <h2>FAB (Botón de acción flotante) "+"</h2>
-  <p>Al hacer clic en el botón "+", se despliega un menú para crear rápidamente registros:</p>
+  <h2>Botón de acción flotante (+)</h2>
+  <p>Al tocar el botón «+» de la esquina inferior derecha, aparece el menú para añadir los distintos tipos de registro.</p>
   <table>
-    <tr><th>Tipo</th><th>Descripción</th></tr>
-    <tr><td>Memo</td><td>Crea una nota de texto.</td></tr>
-    <tr><td>Tiempo+Memo</td><td>Crea una nota con marca de tiempo.</td></tr>
-    <tr><td>Numérico</td><td>Registra datos numéricos.</td></tr>
-    <tr><td>Marcador</td><td>Guarda un marcador de URL.</td></tr>
-    <tr><td>Registro de tiempo</td><td>Inicia una sesión de seguimiento de tiempo.</td></tr>
-    <tr><td>Tarea</td><td>Crea una nueva tarea.</td></tr>
-    <tr><td>Gasto</td><td>Registra información de gastos. Introduzca un "Nombre de la tienda" y, en la fila de abajo, el "Título" (nombre del artículo) y el "Monto". El botón "Agregar" añade más filas, de modo que las compras en la misma tienda se guardan de una vez; cada fila se convierte en un registro de gasto.</td></tr>
-    <tr><td>Ánimo</td><td>Registra un valor de ánimo (0-10).</td></tr>
-    <tr><td>Subir archivo</td><td>Sube un archivo.</td></tr>
-    <tr><td>Guardar portapapeles</td><td>Guarda el contenido del portapapeles (captura de pantalla, imagen, texto, PDF, etc.) directamente como archivo.</td></tr>
+    <tr>
+      <th>Elemento del menú</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Bloc de notas</td>
+      <td>Introduce notas de texto con el formato del bloc de notas.</td>
+    </tr>
+    <tr>
+      <td>Bloc de notas de tiempo</td>
+      <td>Abre la pantalla que combina la entrada de notas y la lista de entradas de tiempo.</td>
+    </tr>
+    <tr>
+      <td>Registros numéricos</td>
+      <td>Registra datos numéricos.</td>
+    </tr>
+    <tr>
+      <td>Marcadores</td>
+      <td>Guarda una URL.</td>
+    </tr>
+    <tr>
+      <td>Registro de tiempo</td>
+      <td>Inicia una nueva sesión de registro de tiempo.</td>
+    </tr>
+    <tr>
+      <td>Tareas</td>
+      <td>Añade una nueva tarea.</td>
+    </tr>
+    <tr>
+      <td>Gastos</td>
+      <td>Registra un importe. Introduzca un «Nombre de la tienda» y, en las filas de debajo, el «Título» (nombre del artículo) y el «Monto». Si añade filas con el botón «Agregar», puede registrar de una sola vez varias compras en la misma tienda; cada fila se convierte en un registro de gasto.</td>
+    </tr>
+    <tr>
+      <td>Estado de ánimo</td>
+      <td>Registra un valor de ánimo (0-10).</td>
+    </tr>
+    <tr>
+      <td>Subir</td>
+      <td>Sube un archivo y lo registra.</td>
+    </tr>
+    <tr>
+      <td>Guardar portapapeles</td>
+      <td>Guarda directamente como archivo el contenido del portapapeles (imágenes, texto, PDF, etc.). Permite registrar rápidamente capturas de pantalla o imágenes copiadas.</td>
+    </tr>
   </table>
 
   <div class="tip">
-    <strong>Consejo:</strong> Mantenga pulsado el botón "+" para abrir directamente la pantalla de entrada del bloc de notas, lo que permite una entrada masiva rápida.
+    <strong>Mantener pulsado:</strong> Si mantiene pulsado el botón «+», se abre directamente el bloc de notas. Es útil cuando quiere tomar una nota rápidamente.
   </div>
 
   <div class="tip">
@@ -104,46 +139,44 @@
   <div class="tip">
     <strong>Atajo:</strong> Presione Ctrl+V para guardar el contenido del portapapeles directamente como archivo. Útil para guardar rápidamente capturas de pantalla o imágenes copiadas.
   </div>
+
   <h2>Uso de etiquetas</h2>
+  <p>Las etiquetas son rótulos para clasificar y organizar los registros. Puede poner varias etiquetas a un mismo registro.</p>
   <h3>Agregar una etiqueta</h3>
   <ol>
-    <li>Mantenga pulsado o haga clic derecho en un registro para abrir el menú contextual.</li>
-    <li>Seleccione "Agregar etiqueta".</li>
-    <li>Escriba el nombre de la etiqueta (se mostrarán etiquetas existentes como sugerencias).</li>
+    <li>Mantenga pulsado (móvil) o haga clic derecho (escritorio) sobre un registro de la línea de tiempo.</li>
+    <li>Elija «Agregar etiqueta» en el menú contextual.</li>
+    <li>Escriba el nombre de la etiqueta y añádala. Las etiquetas existentes aparecen como sugerencias.</li>
   </ol>
   <p>Si quiere poner una etiqueta usada hace poco, utilice «Agregar etiqueta del historial» del menú contextual: basta con elegirla de la lista.</p>
   <p>Si escribe el nombre de una etiqueta que nunca ha usado, antes de guardar se le pregunta «Es una etiqueta nueva. ¿Desea agregarla?». Es una confirmación para evitar que se acumulen etiquetas parecidas por errores de escritura.</p>
   <p>Una etiqueta creada así se añade también a las condiciones de filtro de las columnas que tenga abiertas. Así el registro no desaparece de la lista cuando lo agrega con una etiqueta recién creada en una columna filtrada por etiquetas.</p>
   <h3>Editar o eliminar una etiqueta</h3>
   <ol>
-    <li>Mantenga pulsado o haga clic derecho en la etiqueta que desea modificar.</li>
-    <li>Seleccione "Editar" o "Eliminar" del menú.</li>
+    <li>Mantenga pulsado (móvil) o haga clic derecho (escritorio) sobre una etiqueta de la línea de tiempo.</li>
+    <li>Elija «Editar etiqueta» o «Eliminar etiqueta» en el menú contextual.</li>
   </ol>
-  <h3>Gestión de la estructura de etiquetas</h3>
-  <p>Puede gestionar los nombres de visualización y el orden de las etiquetas en Configuración &gt; Estructura de etiquetas.</p>
+  <h3>Jerarquía de etiquetas</h3>
+  <p>En «Estructura de etiquetas» de la pantalla de configuración puede gestionar los nombres que se muestran y el orden de las etiquetas. Si coloca arriba las etiquetas que usa a menudo, le resultará más fácil encontrarlas en la lista de sugerencias.</p>
   <div class="tip">
-    <strong>Consejo:</strong> Si escribe <code>#nombre_etiqueta</code> en la sintaxis del bloc de notas, el registro se etiquetará automáticamente. Consulta la <a href="kftl-syntax.html">Referencia de sintaxis del bloc de notas</a> para más detalles.
+    <strong>Consejo:</strong> Si escribe <code>#nombre_etiqueta</code> en la sintaxis del bloc de notas, la etiqueta se añade automáticamente al enviar el texto. Consulte la <a href="kftl-syntax.html">Referencia de sintaxis del bloc de notas</a> para más detalles.
   </div>
 
   <h2>Detalles de carga de archivos</h2>
-
+  <p>Desde «Subir» en el menú del botón «+» puede guardar en gkill archivos como imágenes, vídeos o documentos.</p>
   <h3>Pasos de operación</h3>
   <ol>
-    <li>Pulse el botón «+» y seleccione «Subir archivo».</li>
-    <li>Seleccione el lugar de almacenamiento de destino (repositorio para gestión de archivos).</li>
-    <li>Confirme y ajuste la fecha y hora relacionadas.</li>
-    <li>Seleccione el archivo o archivos a subir (se admiten múltiples archivos). Haga clic en la zona del diálogo que indica «Haga clic aquí o suelte los archivos» para elegirlos, o arrastre y suelte los archivos en ella.</li>
+    <li>Pulse el botón «+» y elija «Subir».</li>
+    <li>Elija el repositorio de destino (uno destinado a archivos).</li>
+    <li>Compruebe y ajuste la fecha y hora relacionada (la fecha y hora de registro del archivo).</li>
+    <li>Elija los archivos y súbalos. Puede elegir varios archivos a la vez. Haga clic en la zona del diálogo que indica «Haga clic aquí o suelte los archivos» para elegirlos, o arrástrelos y suéltelos en ella.</li>
   </ol>
-
   <h3>Formatos de archivo admitidos</h3>
-  <p>Imágenes (JPEG/PNG/GIF/WEBP), vídeos (MP4, etc.), PDF, ZIP y otros.</p>
-  <p>Los archivos Markdown (.md / .markdown) se muestran con formato enriquecido (encabezados, tablas) en las vistas de lista y detalle, y los bloques de código mermaid se representan como diagramas.</p>
-
+  <p>Se admiten imágenes (JPEG/PNG/GIF/WEBP), vídeos (MP4, etc.), PDF, ZIP y otros formatos de archivo habituales. Los archivos Markdown (.md / .markdown) se muestran con formato enriquecido (encabezados, tablas, etc.) en las vistas de lista y detalle, y los diagramas (notación Mermaid) también se dibujan como gráficos.</p>
   <h3>Límite de tamaño de carga</h3>
-  <p>El límite mensual de tamaño de carga lo establece el administrador en «Límite mensual de tamaño de carga» de la configuración del servidor. El valor inicial es <code>-1</code> (ilimitado).</p>
-
+  <p>Se puede enviar hasta aproximadamente 1 GB por cada subida. Si necesita subir varios archivos grandes, divídalos en varias subidas.</p>
   <div class="tip">
-    <strong>Consejo:</strong> Presione Ctrl+V para guardar el contenido del portapapeles directamente como archivo.
+    <strong>Atajo:</strong> Pulse Ctrl+V para guardar como archivo, tal cual, la imagen o el texto que haya en el portapapeles. Es útil para registrar rápidamente capturas de pantalla.
   </div>
 
   <h2>Ver el contenido de un archivo ZIP</h2>
@@ -173,17 +206,18 @@
   <p>Si elige «Copiar contenido» en el menú contextual, copiará el cuerpo del registro al portapapeles. Con «Copiar ID» copiará el ID del registro.</p>
 
   <h2>Uso del mapa GPS</h2>
+  <p>Si activa el botón de mapa de la barra de herramientas, el recorrido GPS correspondiente al período de los registros se muestra en el mapa.</p>
   <h3>Subir un registro GPS</h3>
   <ol>
-    <li>Toque el botón "+" y seleccione "Subir archivo".</li>
-    <li>Seleccione el repositorio destinado al registro GPS.</li>
-    <li>Seleccione el archivo GPX. Haga clic en la zona que indica «Haga clic aquí o suelte los archivos .gpx» para elegirlo, o arrástrelo y suéltelo en ella.</li>
-    <li>Active el botón de mapa para confirmar la visualización.</li>
+    <li>Pulse el botón «+» y elija «Subir».</li>
+    <li>Como destino, elija el repositorio destinado al registro GPS.</li>
+    <li>Elija el archivo GPX y súbalo. Haga clic en la zona que indica «Haga clic aquí o suelte los archivos .gpx» para elegirlo, o arrástrelo y suéltelo en ella.</li>
+    <li>Después de subirlo, active el botón de mapa para ver el recorrido.</li>
   </ol>
   <h3>Configurar la clave de Google Maps API</h3>
-  <p>El mapa requiere una clave de API de Google Maps. Introduzca su clave en "Clave API de Google Map" de la pantalla de configuración (botón "Configuración" de la barra de herramientas de la vista de registro de vida) y guarde con "Aplicar". El ajuste se describe en "Integración externa" de la página <a href="application-config.html">Pantalla de configuración</a>.</p>
+  <p>El mapa requiere una clave de API de Google Maps. Introduzca su clave en «Clave API de Google Map» de la pantalla de configuración (botón «Configuración» de la barra de herramientas de la Vista de registro de vida) y guárdela con «Aplicar». El ajuste se describe en «Integración externa» de la página <a href="application-config.html">Pantalla de configuración</a>.</p>
   <div class="tip">
-    <strong>Consejo:</strong> Obtenga su clave de API en Google Cloud Console activando la API de Maps JavaScript.
+    <strong>Consejo:</strong> Puede obtener la clave de API de Google Maps en <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>. Necesita una clave con la API de Maps JavaScript activada.
   </div>
 
   <h2>Recuperar condiciones de búsqueda guardadas</h2>
@@ -197,7 +231,7 @@
 
   <h3>Cómo generar el archivo</h3>
   <ol>
-    <li>En el pie de página de compartición, al final de la barra lateral, pulse el botón «Compartir» de su extremo izquierdo.</li>
+    <li>En el pie de página de compartición, al final de la barra lateral, pulse el botón «Compartir» de su extremo izquierdo (si no ve el pie de página de compartición, active «Mostrar pie de página de compartición» en la pantalla de configuración).</li>
     <li>Elija «Exportar HTML».</li>
     <li>Elija qué incluir y en qué forma escribirlo (véase la tabla siguiente).</li>
     <li>Pulse «Exportar» y se descargará el archivo generado. Tarda un rato cuando hay muchos registros o imágenes.</li>
@@ -210,24 +244,28 @@
       <th>Descripción</th>
     </tr>
     <tr>
+      <td>Título</td>
+      <td>Introduzca un encabezado (opcional) que aparecerá en la esquina superior izquierda de la pantalla exportada.</td>
+    </tr>
+    <tr>
       <td>Objetivo</td>
-      <td>Elija entre «Todas las columnas en pantalla» y «La columna enfocada».</td>
+      <td>Elija entre «Todas las columnas visibles» y «Columna enfocada».</td>
     </tr>
     <tr>
       <td>Qué incluir</td>
-      <td>Elija si incluir los registros de tiempo, los datos de ubicación y el contenido de los complementos.</td>
+      <td>Elija si incluir las etiquetas, los textos, las notificaciones, los registros de tiempo, los datos de ubicación y el contenido de los complementos.</td>
     </tr>
     <tr>
       <td>Pantallas</td>
-      <td>Elija si el archivo generado conserva la vista de resumen, el mapa y la barra lateral de búsqueda. La barra lateral que se conserva solo filtra dentro de los registros del archivo.</td>
+      <td>Elija si el archivo generado conserva la agregación, el mapa y la barra lateral de búsqueda. La barra lateral de búsqueda que se conserva solo filtra dentro de los registros del archivo (las condiciones de palabra clave, registro de tiempo y ubicación no tienen efecto aunque se introduzcan).</td>
     </tr>
     <tr>
       <td>Multimedia</td>
-      <td>Elija «Solo miniaturas», «También a tamaño original» o «No incrustar» para imágenes y vídeos. También puede fijar el límite por elemento y el límite total.</td>
+      <td>Elija «Solo miniaturas», «Incluir originales» o «No incrustar» para imágenes y vídeos. También puede fijar el límite por archivo y el límite total.</td>
     </tr>
     <tr>
       <td>Formato de salida</td>
-      <td>«Un solo archivo HTML» se basta por sí mismo. «HTML y una carpeta del mismo nombre» deja las imágenes en una carpeta al lado, lo que aligera el archivo, pero hay que entregar ambos juntos.</td>
+      <td>«Un solo archivo HTML» se basta por sí mismo. «HTML y una carpeta del mismo nombre» deja las imágenes en una carpeta al lado, lo que aligera el archivo, pero hay que entregar ambos juntos (cuando se elige «No incrustar», solo está disponible «Un solo archivo HTML»).</td>
     </tr>
   </table>
 
@@ -236,16 +274,16 @@
   </div>
 
   <h3>Qué ve quien lo recibe</h3>
-  <p>El archivo generado es de solo lectura. No se pueden añadir ni editar registros, ni ponerles etiquetas. Al hacer doble clic en un registro se abre su detalle, y desde ahí se pueden seguir los registros relacionados. El mapa es la única excepción: el mapa en sí se carga desde fuera, así que el recorrido aparece cuando quien lo recibe introduce su propia clave de mapa.</p>
+  <p>El archivo generado es de solo lectura. No se pueden añadir ni editar registros, ni ponerles etiquetas. Al hacer doble clic en un registro se abre su detalle, y desde ahí se pueden seguir los registros relacionados. El mapa es la única excepción: el mapa en sí se carga desde fuera, así que el recorrido aparece cuando quien lo recibe introduce su propia clave de mapa. La clave introducida no se guarda en ningún sitio y desaparece al cerrar la página, así que hay que volver a introducirla cada vez que se abre.</p>
 
-  <h2>Cuando no se puede cargar una ubicación de almacenamiento de registros</h2>
-  <p>Los registros de otras ubicaciones pueden seguir apareciendo. Este aviso por sí solo no significa que se hayan perdido sus registros.</p>
+  <h2>Cuando aparece que no se puede cargar un repositorio</h2>
+  <p>Los registros de los demás repositorios pueden seguir apareciendo. Este aviso por sí solo no significa que se hayan perdido sus registros.</p>
   <ol>
     <li>Compruebe que el disco externo o la memoria USB estén conectados correctamente.</li>
-    <li>Si es una ubicación de red, compruebe la conexión, el recurso compartido y el permiso de lectura de la carpeta.</li>
-    <li>Después de restablecer la conexión, vuelva a cargar la pantalla. Si puede abrir Configuración, pruebe también a recargar las ubicaciones de almacenamiento de registros.</li>
-    <li>Hasta que se recupere la ubicación, quite las condiciones de búsqueda que seleccionen solo el lugar indicado en el aviso.</li>
-    <li>Si el aviso continúa, comunique al administrador el nombre de la ubicación y la hora en que apareció.</li>
+    <li>Si el repositorio está en la red, compruebe la conexión de red, el recurso compartido y el permiso de lectura de la carpeta.</li>
+    <li>Después de restablecer la conexión, vuelva a cargar la pantalla. Si puede abrir la pantalla de configuración, pruebe también a recargar los repositorios.</li>
+    <li>Hasta que se recupere, quite las condiciones de búsqueda que acoten solo al repositorio indicado en el aviso.</li>
+    <li>Si el aviso continúa, consulte al administrador indicando el nombre del repositorio y la hora en que apareció.</li>
   </ol>
 
   <h2>Documentos Relacionados</h2>
@@ -254,6 +292,6 @@
     <li><a href="dnote.html">Vista de Agregación</a></li>
     <li><a href="ryuu.html">Información Relacionada</a></li>
     <li><a href="kftl-syntax.html">Referencia de sintaxis del bloc de notas</a></li>
-    <li><a href="application-config.html">Configuración</a></li>
     <li><a href="plugin.html">Complementos</a></li>
+    <li><a href="application-config.html">Configuración</a></li>
   </ul>

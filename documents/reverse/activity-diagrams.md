@@ -157,12 +157,11 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    Start([ファイルアップロード要求]) --> Auth[セッション認証]
-    Auth --> GetRepos[リポジトリ取得]
-    GetRepos --> CheckQuota{月間アップロード<br>容量チェック}
-
-    CheckQuota -->|超過| QuotaError([容量超過エラー])
-    CheckQuota -->|OK| LoopFiles{次のファイルがある?}
+    Start([ファイルアップロード要求]) --> BodyLimit{本文が 1GB 以下?<br>（1回の送信の上限）}
+    BodyLimit -->|超過| SizeError([413 で拒否])
+    BodyLimit -->|OK| Auth[セッション認証]
+    Auth --> GetRepos[リポジトリ取得・保存先の IDF rep を名前で引く]
+    GetRepos --> LoopFiles{次のファイルがある?}
 
     LoopFiles -->|Yes| CheckConflict{同名ファイル<br>が存在する?}
     CheckConflict -->|No| SaveFile[ファイルをディスクに保存]
@@ -174,8 +173,7 @@ flowchart TD
     Rename --> SaveFile
 
     SaveFile --> AddIDF[IDFKyouリポジトリに<br>ファイル情報をINSERT]
-    AddIDF --> AddHistory[FileUploadHistoryに<br>履歴を記録]
-    AddHistory --> LoopFiles
+    AddIDF --> LoopFiles
 
     LoopFiles -->|No| Success([アップロード完了])
 ```
@@ -356,7 +354,7 @@ flowchart TD
     SW -->|No| Server[GkillServerAPI]
 
     Server --> FindRep[rep_name で PluginRepository を検索]
-    FindRep --> Lock[callCommand: mu.Lock で直列化<br>期限が無ければ既定30秒を注入]
+    FindRep --> Lock[callCommand: acquireCallSlot で直列化<br>期限が無ければ既定30秒を注入]
     Lock --> Ensure[ensureStarted: 未起動なら subprocess 起動]
     Ensure --> Send[stdin に get_content_html を書き込み]
     Send --> Recv{応答あり?}
@@ -365,7 +363,7 @@ flowchart TD
     Kill --> ErrOut([エラー返却])
     Recv -->|クラッシュ| Retry[started=false → 1回だけ再起動して再送]
     Retry --> Recv
-    Recv -->|Yes| Unlock[mu.Unlock]
+    Recv -->|Yes| Unlock[スロット解放]
 
     Unlock --> Html[html を返却]
     FromCache --> Render
@@ -393,15 +391,15 @@ postMessage を使うのはこのため。
 flowchart TD
     Start([設定を変更したい]) --> Which{変更手段}
 
-    Which -->|現状の唯一の手段| EditFile[config.json を手で編集]
+    Which -->|直接編集| EditFile[config.json を手で編集]
     EditFile --> Reload([次回の検索時に読み直される])
 
-    Which --> Api[POST /api/post_plugin_config]
+    Which -->|管理者画面| Api["POST /api/post_plugin_config (管理者専用)"]
     Api --> Sdk[プラグイン SDK の PostConfig ハンドラ]
     Sdk --> Save["SaveConfig が config.json (0600) に書き込み"]
 ```
 
-保存はプラグイン Kyou のコンテキストメニュー「プラグイン設定」→ `plugin-config-dialog.vue` から行う。
+Web UI からの保存は管理者が「サーバ設定」→「アカウント管理」→「プラグイン設定」→ プラグイン一覧ダイアログ → `plugin-config-dialog.vue` から行う（[ADR-0714](../adr/0714-plugin-config-is-admin-only.md)）。
 iframe には `allow-same-origin` を与えていないため、iframe 内のフォームは
 `postMessage({ gkill_plugin_config: {...} })` で親に保存を依頼し、親が `post_plugin_config` を呼ぶ。
 MCP のプラグインツールは読み取り専用で `post_plugin_config` を公開していない。

@@ -82,8 +82,9 @@ mi のサイドバーには rykv に無い節が2つある ——「並び順」
 
 ## Consequences
 
-- **出力ダイアログは画面を props で受け取る**（`screen` / `can_choose_dnote` / `can_choose_map`）。
-  ホストするラッパがリテラルで渡す。選べない区画は**要求の時点で false 固定**にする ——
+- **出力ダイアログは画面を props で受け取る**（`screen` だけ）。ホストするラッパがリテラルで渡す。
+  集計とマップを選べるかは `use-export-kyou-html-view.ts` が `screen` から導く（`can_choose_dnote` / `can_choose_map`）。
+  以前は別の props で渡していたが、`screen` と食い違う組み合わせを作れるので畳んだ（ADR-0418 の「見せかけのフラグを作らない」）。選べない区画は**要求の時点で false 固定**にする ——
   欄を `disabled` にするだけだと、選択済みの値が送信まで残って印と中身が食い違う。
 - i18n に「表示中のすべての板」「フォーカスされている板」の2キーが増えた（7言語）。
   `src/server/gkill/api/embed/i18n/locales/` は生成物なので

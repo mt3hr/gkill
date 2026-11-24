@@ -55,7 +55,7 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_codex/
 ### 3. データソースのフォルダを指定する
 
 `config.json` の `source_dirs` に、ロールアウトJSONL が入ったフォルダかファイルを書く。
-設定画面（Kyou の右クリック →「プラグイン設定」）からも編集できる。
+管理者アカウントの「アカウント管理」→「プラグイン設定」からも編集できる（一般ユーザは利用不可）。
 
 ```json
 {

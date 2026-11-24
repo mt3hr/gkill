@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。1187テスト（44ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 13 + プラグイン1 = 14ツール、Write サーバ 40（書き込み31 + Read便利9）+ プラグイン1 = 41ツール、統合サーバ 44 + プラグイン1 = 45ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、ログ、設定ファイル、旧 Node 実装とのゴールデン一致をカバーする（テスト数は `t.Run` のサブテスト宣言の静的計数）。
+MCP (Model Context Protocol) サーバのテスト。1188テスト（44ファイル）で3種のMCPサーバ（Read専用・Write専用・Read/Write統合）の入力バリデーション、データ正規化、定数定義、ツールハンドラ（Read サーバ 13 + プラグイン1 = 14ツール、Write サーバ 40（書き込み31 + Read便利9）+ プラグイン1 = 41ツール、統合サーバ 44 + プラグイン1 = 45ツール。プラグインツールは3サーバ共通）、APIクライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、ファイルリンク配信、プラグイン本文の get_kyous へのインライン埋め込みとHTML→テキスト変換、ログ、設定ファイル、旧 Node 実装とのゴールデン一致をカバーする（テスト数は `t.Run` のサブテスト宣言の静的計数）。
 
 2026-09-20 に Node.js 実装（旧 `src/mcp`、vitest 28 ファイル）を Go へ移した。旧テストの `describe` → `TestXxx`、`test` → `t.Run("<原文のタイトル>")` で 1:1 に対応し、タイトル集合の照合で未移植 0 を確認してある（意図した例外は [ADR-0631](../../../../documents/adr/0631-mcp-lives-in-gkill-server.md)）。
 
@@ -44,9 +44,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 | `find_query_schema_test.go` | `query` スキーマの全プロパティに type（か enum）と description があり配列は items を持つこと、廃止済みキーを載せないこと（キー集合そのものは `schema_contract_test.go`） |
 | `oauth_html_test.go` | 認可成功ページの redirect_uri が script 文脈でエスケープされること（`</script>` / U+2028 で script 要素から抜け出せない）、ログインページの利用者由来の値の HTML エスケープ |
 | `jsonobj/jsonobj_test.go` | 順序つき JSON（`JSON.stringify` 互換の直列化・undefined の番兵・キー順・`\b` `\f` の短形式）。`func Test` 10本で `t.Run` を使わないので、上の件数には入らない |
-| `stdio_transport_test.go` | stdio の枠組みの取り出し方を、届き方を固定して確かめる。NDJSON の行のうしろに Content-Length 枠が続き**同じチャンクで届いた**ときに両方処理されること（先に `
-
-` を探す実装だと行ごと1つのヘッダと見なして両方落とす）、枠の混在、JSON でもヘッダでもない行を捨てて警告すること、壊れた Content-Length の警告 |
+| `stdio_transport_test.go` | stdio の枠組みの取り出し方を、届き方を固定して確かめる。NDJSON の行のうしろに Content-Length 枠が続き**同じチャンクで届いた**ときに両方処理されること（先に `\r\n\r\n` を探す実装だと行ごと1つのヘッダと見なして両方落とす）、枠の混在、JSON でもヘッダでもない行を捨てて警告すること、壊れた Content-Length の警告 |
 | `stdio_e2e_test.go` | stdio の端から端まで。テストバイナリ自身を子プロセスにして NDJSON と Content-Length の両枠組みで initialize → tools/call → ping を通し、stdout に JSON-RPC 以外の行が無いこと・壊れた行が stderr に警告されることを固定する |
 | `golden_test.go` | 旧 Node 実装から採ったゴールデン（`testdata/golden/`。要求コーパス 373 件）との**バイト一致**: tools/list（3サーバ）と `schema_revision`、tools/call の応答（stdio / http × 3サーバ）、gkill へ送った要求（パス・クエリ・Cookie・本文）。時刻・UUID・トークンは採取時と同じ固定列。ゴールデン自身が `jsonobj` で往復してもバイト単位で変わらないことも固定。ツールを意図して変えたときは `GKILL_MCP_UPDATE_GOLDEN=1 go test ./gkill/mcp/ -run Golden` で Go の出力へ書き直し、`git diff testdata/golden` を読んでからコミットする（Node 実装はもう無いので、以後は前回コミットした Go の出力との回帰検査になる） |
 
@@ -61,7 +59,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `write_normalization_test.go` | Write入力の正規化（11 normalizer関数、mood範囲検証、data_type検証等）。追加と更新が同じ `entityFieldSpecs` から作られること、`idempotency_key` の受理、後付けフラグの既定値・addOnly・古スキーマ文字列の復元、delete / restore の対象無指定を verb 入り文言で拒否すること |
+| `write_normalization_test.go` | Write入力の正規化（追加・更新・削除・復元・KFTL・アップロード・スキルを含む全28 normalizer関数、mood範囲検証、data_type検証等）。追加と更新が同じ `entityFieldSpecs` から作られること、`idempotency_key` の受理、後付けフラグの既定値・addOnly・古スキーマ文字列の復元、delete / restore の対象無指定を verb 入り文言で拒否すること |
 | `write_client_test.go` | GkillClient の書き込み側（環境変数、login、callApi、認証リトライ） |
 | `write_server_test.go` | Write サーバ（JSON-RPC、41ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造、warnings の1行要約昇格） |
 | `write_tool_handlers_test.go` | Write 31ツール定義（実物 import）・削除の語彙が enum / `DeleteDataTypes` / 対応表2つで一致すること・`SummarizeWriteToolPayload`・後付け boolean 引数が検出表と型復元の両方に載ることの表駆動メタ検査 |
@@ -87,7 +85,7 @@ Go `testing` パッケージ（gkill 本体への往復は `mockClient`（`mock_
 ## テスト内容
 
 - **Validation / Normalization / Write Normalization / Constants**: 各ツールの入力パラメータ検証、日付フォーマット、デフォルト値補完、data_type 列挙値、unknown keys 拒否
-- **Tool Handlers**: Read 13ツール + Write 31ツール（add系9 + update系9 + submit_kftl + delete_kyou + restore_kyou + スキル 2）+ Read便利9ツール + プラグイン1ツール（3サーバ共通）
+- **Tool Handlers**: Read 13ツール + Write 31ツール（add系12 + update系13 + submit_kftl + delete_kyou + restore_kyou + upload_files + スキル 2）+ Read便利9ツール + プラグイン1ツール（3サーバ共通）
 - **Plugin Tools**: `gkill_get_plugin_list` と `include_plugin_content` によるプラグイン本文のインライン埋め込み（並列度・予算・デッドライン・失敗隔離）、コンテンツHTMLのテキスト変換
 - **Client / Server / Transport**: gkill への往復（認証、エラーハンドリング、レスポンスパース）、3サーバのディスパッチ、JSON-RPC、stdio の枠組み、HTTP の OAuth 2.1 と file-link 配信
 - **Config / Log**: 設定ファイルの生成と優先順位、gkill_log 上のロガーのレベル

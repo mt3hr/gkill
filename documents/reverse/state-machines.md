@@ -372,9 +372,7 @@ stateDiagram-v2
     end note
 ```
 
-**画面から対象 Kyou を削除したときは「対象Kyou欠損」にはならない。** その MiReKyou も連鎖して
-論理削除される（MiReKyou を先に、対象 Kyou 自身を最後に消す）。「対象Kyou欠損」に落ちるのは、
-連鎖削除が途中で失敗して部分確定した場合や、MCP・他クライアントから対象 Kyou だけを消した場合。
+**画面・MCP から対象 Kyou を削除したときは「対象Kyou欠損」にはならない。** サーバの連鎖削除（`/api/delete_kyou_cascade`）が1つの SQLite トランザクション（`CommitTx`、ADR-0219 / ADR-0636）で MiReKyou と対象 Kyou をまとめて論理削除するため、途中で失敗しても何も消えない。「対象Kyou欠損」に落ちるのは、MCP の単体削除（`cascade:false`）や他クライアントから対象 Kyou だけを直接消した場合。
 
 ### DATA_TYPE の射影
 

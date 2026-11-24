@@ -122,14 +122,14 @@ graph LR
 
 ## 2. 機能カテゴリ別ユースケース一覧
 
-> **件数について:** ユースケースは **95件（ユニークな UC-ID 数）**。以下のカテゴリ別表の行数は 99 行で、ダッシュボードの UC-09xxd 系がユニーク数では設定管理の UC-09xx と同一視されるため行数のほうが多くなる。件数を引用する際はユニーク ID 数（94）を使うこと。
+> **件数について:** ユースケースは **95件（ユニークな UC-ID 数）**。以下のカテゴリ別表の行数は 100 行で、ダッシュボードの UC-09xxd 系がユニーク数では設定管理の UC-09xx と同一視されるため行数のほうが多くなる。件数を引用する際はユニーク ID 数（95）を使うこと。
 >
 > 数え直すときは **4桁に限定**すること。`UC-[0-9]+` だと本文中の「UC-04xx」「UC-05xx」という
 > 記述（後述の欠番の説明）まで拾ってしまい、2件多く数えられる。
 >
 > ```bash
-> grep -oE 'UC-[0-9]{4}' documents/reverse/usecase.md | sort -u | wc -l   # 94
-> grep -cE '^\|\s*UC-[0-9]{4}' documents/reverse/usecase.md               # 99
+> grep -oE 'UC-[0-9]{4}' documents/reverse/usecase.md | sort -u | wc -l   # 95
+> grep -cE '^\|\s*UC-[0-9]{4}' documents/reverse/usecase.md               # 100
 > ```
 
 ### 2.1 認証
@@ -283,10 +283,10 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-1109 | ディレクトリを開く | `OpenDirectory` |
 | UC-1110 | ファイルを開く | `OpenFile` |
 | UC-1111 | MCP 経由で IDF ファイルの実データを取得する | `GetIDFFile` |
-| UC-1113 | プラグイン一覧を取得する | `GetPluginList`（呼び出し元は MCP の `gkill_get_plugin_list` のみ） |
+| UC-1113 | プラグイン一覧を取得する | `GetPluginList`（MCP の `gkill_get_plugin_list`、Web UI の「アカウント管理」→「プラグイン設定」および読み取り専用ガードが使用） |
 | UC-1114 | プラグイン Kyou のコンテンツ HTML を取得する（画面表示と、MCP の `include_plugin_content` によるインライン埋め込みの両方から使う） | `GetPluginContentHTML` |
-| UC-1115 | プラグイン設定画面の HTML を取得する | `GetPluginConfigHTML`（プラグイン Kyou のコンテキストメニュー「プラグイン設定」から開く） |
-| UC-1116 | プラグイン設定を保存する | `PostPluginConfig`（設定ダイアログの iframe から postMessage で親に依頼して保存。`config.json` を直接編集する経路も残っている） |
+| UC-1115 | プラグイン設定画面の HTML を取得する | `GetPluginConfigHTML`（**管理者専用**。アカウント管理の「プラグイン設定」→ プラグイン一覧ダイアログから開く。ADR-0714） |
+| UC-1116 | プラグイン設定を保存する | `PostPluginConfig`（**管理者専用**。設定ダイアログの iframe から postMessage で親に依頼して保存。`config.json` を直接編集する経路も残っている） |
 | UC-1117 | Kyou の内容 / ID をクリップボードにコピーする | なし（クライアント完結。`classes/kyou-content-text.ts`） |
 | UC-1118 | ディスク上の派生キャッシュを削除する | なし（CLI `clear_cache <thumb\|video\|zip\|plugin\|all> <all\|user_id...>`） |
 | UC-1119 | 起動時に指定ユーザのリポジトリを先読みする | なし（CLI フラグ `--pre_load_users`） |

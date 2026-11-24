@@ -2,7 +2,7 @@
 
 ## 概要
 
-Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（10ファイル、147テスト）とウォッチ側アプリ（10ファイル、97テスト）の合計244テスト（20ファイル）で構成される。
+Wear OS (Pixel Watch) 記録アプリのテスト。スマホ側コンパニオンアプリ（10ファイル、147テスト）とウォッチ側アプリ（10ファイル、99テスト）の合計246テスト（20ファイル）で構成される。
 
 ## テストフレームワーク
 
@@ -10,7 +10,7 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 
 ## テストファイル一覧
 
-### phone_companion（スマホ側コンパニオン）— 144テスト
+### phone_companion（スマホ側コンパニオン）— 147テスト
 
 | ファイル | テスト数 | テスト内容 |
 |---------|---------|-----------|
@@ -25,7 +25,7 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 | `phone_companion/src/test/java/.../GkillErrorTextTest.kt` | 12 | エラーコード→文言の照合。`WIRE_ERROR_CODES` 全件に訳があること（コードを足して訳を忘れると落ちる）、未知文字列・`HTTP 500` の素通し、`ERROR:` 付き応答だけ訳して `OK`/`DUPLICATE`/JSON はバイト列のまま |
 | `phone_companion/src/test/java/.../StringsParityTest.kt` | 7 | `res/values` と `values-{en,zh,ko,es,fr,de}` の `strings.xml` の整合（ロケール集合・キー集合の一致・`translatable="false"` の非重複・空値なし・`%1$s` プレースホルダの一致・未エスケープの `'` `"` と孤立 `%` の検出・`server_locale_name` がディレクトリ名と一致） |
 
-### watch_app（ウォッチ側アプリ）— 97テスト
+### watch_app（ウォッチ側アプリ）— 99テスト
 
 | ファイル | テスト数 | テスト内容 |
 |---------|---------|-----------|
@@ -35,9 +35,9 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 | `watch_app/src/test/java/.../tile/LocaleChangedReceiverTest.kt` | 2 | 端末の言語変更でタイルの再描画を要求すること（`TileService.getUpdater` を MockK で差し替え）と、`LOCALE_CHANGED` 以外のブロードキャストを無視すること。タイルのレイアウトは `onTileRequest` 時の文言で固定されるので、ここが無いと言語を切り替えてもタイルだけ古い言語のまま残る |
 | `watch_app/src/test/java/.../GkillWearClientTest.kt` | 11 | Wearable Data Layer クライアント |
 | `watch_app/src/test/java/.../data/model/TemplateNodeTest.kt` | 10 | テンプレートツリー構造のデータモデル |
-| `watch_app/src/test/java/.../data/model/PlayingTimeIsNodeTest.kt` | 13 | Playing（計画）UIノードモデル |
+| `watch_app/src/test/java/.../data/model/PlayingTimeIsNodeTest.kt` | 13 | Playing（実行中打刻）UIノードモデル |
 | `watch_app/src/test/java/.../StringsParityTest.kt` | 6 | `res/values` と `values-{en,zh,ko,es,fr,de}` の `strings.xml` の整合（companion 側と同型。`server_locale_name` の検査だけ無い） |
-| `watch_app/src/test/java/.../presentation/TemplateScrollMemoryTest.kt` | 7 | テンプレート一覧の階層ごとのスクロール位置の記憶。親→子は先頭から、子→親は親で見ていた位置へ戻る、復元は1回きり、読み込み直し（reset）で全部忘れる |
+| `watch_app/src/test/java/.../presentation/TemplateScrollMemoryTest.kt` | 9 | テンプレート一覧の階層ごとのスクロール位置の記憶。親→子は先頭から、子→親は親で見ていた位置へ戻る、復元は1回きり、読み込み直し（reset）や再入で未消費の復元位置も忘れる |
 | `watch_app/src/test/java/.../presentation/screens/TemplateListScreenTest.kt` | 2 | その記憶が画面につながっていること（ソース走査）。`TemplateListScreen` が `state` を呼び出し側から受け取り自分で作らないこと、`MainActivity` が階層ごとに state を作り直し、掘るときに積み・戻るときに取り出し・読み込み直しで捨てること。配線が外れると、エラーも警告も出ないまま前の階層の位置が残る。watch_app には Compose UI テストの依存が無いので、ここは書かれている字面でしか守れない |
 
 ## テスト内容

@@ -1,7 +1,7 @@
 <!-- title: Configuration du serveur - Aide -->
-  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Configuration serveur</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Configuration du serveur</span></nav>
   <h1>Configuration du serveur</h1>
-  <p>Cet &eacute;cran configuré le comportement du serveur. Seuls les administrateurs peuvent y acc&eacute;der.</p>
+  <p>Cet &eacute;cran configure le comportement du serveur. Seuls les administrateurs peuvent y acc&eacute;der.</p>
 
   <h2>Bouton sup&eacute;rieur</h2>
   <p>Appuyez sur le bouton <strong>Gestion des comptes</strong> pour ouvrir l'&eacute;cran de gestion des comptes.</p>
@@ -10,10 +10,10 @@
   <table>
     <tr><th>Param&egrave;tre</th><th>Type</th><th>Description</th></tr>
     <tr><td>Profil</td><td>Liste d&eacute;roulante + Ajouter/Supprimer</td><td>S&eacute;lectionner le profil actif, en cr&eacute;er un nouveau ou en supprimer un existant</td></tr>
-    <tr><td>Acc&egrave;s local uniquement</td><td>Case &agrave; cocher</td><td>Restreindre les connexions &agrave; l'acc&egrave;s local uniquement (activ&eacute; par d&eacute;faut)</td></tr>
+    <tr><td>Autoriser l'acc&egrave;s local uniquement</td><td>Case &agrave; cocher</td><td>Restreindre les connexions &agrave; l'acc&egrave;s local uniquement (activ&eacute; par d&eacute;faut)</td></tr>
     <tr><td>Service de notifications</td><td>Case &agrave; cocher</td><td>Activer le service de notifications push</td></tr>
     <tr><td>Activer TLS</td><td>Case &agrave; cocher</td><td>Activer HTTPS</td></tr>
-    <tr><td>G&eacute;n&eacute;rer TLS auto-sign&eacute;</td><td>Bouton</td><td>Cr&eacute;er des fichiers de certificat TLS auto-sign&eacute;s</td></tr>
+    <tr><td>G&eacute;n&eacute;rer des fichiers TLS auto-sign&eacute;s</td><td>Bouton</td><td>Cr&eacute;er des fichiers de certificat TLS auto-sign&eacute;s</td></tr>
     <tr><td>Adresse</td><td>Texte</td><td>Adresse d'&eacute;coute du serveur. La valeur par d&eacute;faut est <code>127.0.0.1:9999</code> (cet appareil uniquement). Laissez la partie h&ocirc;te vide, comme <code>:9999</code>, pour &eacute;couter sur toutes les interfaces r&eacute;seau</td></tr>
     <tr><td>Fichier TLS CERT</td><td>Texte</td><td>Chemin vers le fichier de certificat TLS</td></tr>
     <tr><td>Fichier TLS KEY</td><td>Texte</td><td>Chemin vers le fichier de cl&eacute; priv&eacute;e TLS</td></tr>
@@ -22,7 +22,8 @@
     <tr><td>D&eacute;lai d'attente des favoris</td><td>Nombre (min : 5)</td><td>D&eacute;lai d'attente en secondes pour la r&eacute;cup&eacute;ration des favoris</td></tr>
     <tr><td>Agent utilisateur des favoris</td><td>Texte</td><td>Cha&icirc;ne User-Agent pour la r&eacute;cup&eacute;ration des favoris</td></tr>
     <tr><td>R&eacute;pertoire de donn&eacute;es utilisateur</td><td>Texte</td><td>Chemin vers le r&eacute;pertoire de stockage des donn&eacute;es utilisateur</td></tr>
-    <tr><td>Limite mensuelle de téléversement</td><td>Nombre</td><td>Limite mensuelle de taille de téléversement (-1 pour illimité)</td></tr>
+    <tr><td>Nom d'h&ocirc;te LAN</td><td>Texte</td><td>Nom d'h&ocirc;te utilis&eacute; pour l'URL &laquo; LAN &raquo; des liens de partage</td></tr>
+    <tr><td>Nom d'h&ocirc;te global</td><td>Texte</td><td>Nom d'h&ocirc;te utilis&eacute; pour l'URL &laquo; Global &raquo; des liens de partage</td></tr>
   </table>
 
   <h2>Boutons inf&eacute;rieurs</h2>
@@ -31,10 +32,10 @@
   <div class="tip">Les modifications n&eacute;cessitent un red&eacute;marrage du serveur pour prendre effet.</div>
 
   <h2>Utiliser gkill depuis d'autres appareils</h2>
-  <p>Par d&eacute;faut, seul l'appareil qui ex&eacute;cute le serveur peut se connecter (l'adresse d'&eacute;coute est <code>127.0.0.1:9999</code> et &laquo; Acc&egrave;s local uniquement &raquo; est activ&eacute;). Pour utiliser gkill depuis un smartphone ou un autre PC, un administrateur modifie ces deux param&egrave;tres.</p>
+  <p>Par d&eacute;faut, seul l'appareil qui ex&eacute;cute le serveur peut se connecter (l'adresse d'&eacute;coute est <code>127.0.0.1:9999</code> et &laquo; Autoriser l'acc&egrave;s local uniquement &raquo; est activ&eacute;). Pour utiliser gkill depuis un smartphone ou un autre PC, un administrateur modifie ces deux param&egrave;tres.</p>
   <ol>
     <li>D&eacute;finissez <strong>Adresse</strong> sur <code>:9999</code> (toutes les interfaces) ou sur l'adresse IP de cet appareil sur le r&eacute;seau local (ex. : <code>192.168.0.10:9999</code>).</li>
-    <li>D&eacute;sactivez <strong>Acc&egrave;s local uniquement</strong>.</li>
+    <li>D&eacute;sactivez <strong>Autoriser l'acc&egrave;s local uniquement</strong>.</li>
     <li>Appuyez sur <strong>Appliquer</strong>. Le serveur red&eacute;marre et les autres appareils peuvent ouvrir <code>http://(adresse IP de cet appareil):9999</code>.</li>
   </ol>
   <div class="tip"><strong>Application smartphone (Android) :</strong> Le serveur qui s'ex&eacute;cute dans l'application suit lui aussi les param&egrave;tres de cet &eacute;cran. Si vous indiquez dans Adresse uniquement l'adresse IP de cet appareil sur le r&eacute;seau local (ex. : <code>192.168.0.10:9999</code>), l'&eacute;cran de l'application elle-m&ecirc;me ne pourra plus joindre le serveur. Pour servir aussi d'autres appareils, indiquez <code>0.0.0.0:9999</code> ou laissez la partie h&ocirc;te vide, comme dans <code>:9999</code> (si vous &eacute;crivez seulement <code>9999</code>, sans les deux-points, l'&eacute;cran de l'application ne pourra pas non plus s'ouvrir). De plus, si vous modifiez le port d'&eacute;coute ou Activer TLS puis appliquez, l'application rouvre son &eacute;cran &agrave; la nouvelle adresse et vous devrez vous reconnecter.</div>
@@ -42,24 +43,32 @@
 
 
   <h2>Gestion du stockage</h2>
-  <p>Les dépôts de données sont les emplacements ou les enregistrements sont sauvegardes. Plusieurs dépôts peuvent etre configurés selon l'usage ou l'appareil.</p>
-  <p>L'attribution par utilisateur est geree via le bouton "Attribution du stockage" dans Gestion des comptes.</p>
+  <p>Les dépôts sont les dossiers et fichiers dans lesquels gkill enregistre vos données. Vous pouvez configurer plusieurs dépôts selon l'usage (mémos, fichiers, journaux GPS, etc.) ou selon l'appareil.</p>
+  <p>Les dépôts se configurent pour chaque utilisateur à partir du bouton d'attribution de stockage de l'écran de gestion des comptes.</p>
   <h3>Comment ajouter un dépôt</h3>
   <ol>
-    <li>Ouvrez Gestion des comptes &gt; Attribution du stockage de l'utilisateur souhaite.</li>
-    <li>Appuyez sur le bouton "Ajouter".</li>
-    <li>Configurez les éléments suivants : nom d'affichage, type, chemin, utiliser comme destination d'ecriture, active. La liste déroulante des types affiche des noms alphanumériques comme <code>kmemo</code> ou <code>timeis</code> ; voir le tableau ci-dessous pour leur signification.</li>
-    <li>Appuyez sur "Enregistrer".</li>
+    <li>Ouvrez l'écran de gestion des comptes et appuyez sur le bouton d'attribution de stockage de l'utilisateur concerné.</li>
+    <li>Appuyez sur le bouton « Ajouter » pour ajouter un nouveau dépôt.</li>
+    <li>Configurez les éléments suivants :
+      <ul>
+        <li><strong>Nom d'affichage</strong> : nom affiché dans la vue du journal de vie et dans les filtres</li>
+        <li><strong>Type</strong> : type de données à stocker. La liste déroulante affiche des noms alphanumériques comme <code>kmemo</code> ou <code>timeis</code> ; voir le tableau « Choix du type » ci-dessous pour leur signification</li>
+        <li><strong>Chemin</strong> : chemin du répertoire où les données sont stockées (pour la gestion de fichiers, des caractères génériques comme <code>*</code> ou <code>**</code> peuvent aussi être utilisés)</li>
+        <li><strong>Utiliser comme destination d'écriture</strong> : indique si les nouveaux enregistrements doivent être enregistrés dans ce dépôt</li>
+        <li><strong>Activé</strong> : indique si ce dépôt est inclus dans la recherche et l'affichage</li>
+      </ul>
+    </li>
+    <li>Appuyez sur le bouton « Enregistrer » pour appliquer les réglages.</li>
   </ol>
-  <h3>Types de dépôt</h3>
+  <h3>Choix du type</h3>
   <p>La liste déroulante des types affiche des noms alphanumériques. Voici ce que chacun stocke.</p>
   <table>
     <tr><th>Ce qu'affiche la liste déroulante</th><th>Ce qui est stocké</th></tr>
-    <tr><td><code>kmemo</code></td><td>Notes</td></tr>
-    <tr><td><code>timeis</code></td><td>Horodatages (enregistrements de temps)</td></tr>
+    <tr><td><code>kmemo</code></td><td>Mémos</td></tr>
+    <tr><td><code>timeis</code></td><td>Entrées de temps (enregistrements du temps)</td></tr>
     <tr><td><code>mi</code></td><td>Tâches</td></tr>
     <tr><td><code>nlog</code></td><td>Dépenses</td></tr>
-    <tr><td><code>urlog</code></td><td>Favoris</td></tr>
+    <tr><td><code>urlog</code></td><td>Signets</td></tr>
     <tr><td><code>lantana</code></td><td>Humeur</td></tr>
     <tr><td><code>kc</code></td><td>Enregistrements numériques</td></tr>
     <tr><td><code>directory</code></td><td>Fichiers téléversés (images, vidéos, documents, etc.)</td></tr>
@@ -75,10 +84,10 @@
     <strong>Astuce :</strong> <code>tag</code> / <code>text</code> / <code>notification</code> / <code>rekyou</code> / <code>mirekyou</code> stockent des informations rattachées aux enregistrements, et non les enregistrements eux-mêmes. Ils sont normalement créés lors de la configuration initiale ; vous n'avez donc pas à les ajouter ensuite.
   </div>
   <div class="tip">
-    <strong>Astuce :</strong> Vous pouvez ajouter plusieurs dépôts du meme type (par exemple, separes par appareil).
+    <strong>Astuce :</strong> Vous pouvez ajouter plusieurs dépôts du même type. Par exemple, en séparant le dépôt des mémos textuels par appareil, vous pouvez organiser les données de chaque appareil.
   </div>
   <div class="tip">
-    <strong>Astuce :</strong> L'option "Utiliser comme destination d'ecriture" ne doit etre activee que pour un seul dépôt par type.
+    <strong>Astuce :</strong> Le dépôt pour lequel « Utiliser comme destination d'écriture » est activé devient la destination des nouveaux enregistrements. S'il existe plusieurs dépôts du même type, n'activez cette option que pour celui que vous utilisez comme destination d'écriture.
   </div>
 
   <h2>Documents associés</h2>

@@ -22,6 +22,9 @@ client/
 ├── App.vue                  # ルートコンポーネント
 ├── main.ts                  # アプリケーションエントリポイント
 ├── i18n.ts                  # vue-i18n 初期化
+├── export-main.ts           # HTML 出力用単一ファイルアプリのエントリポイント
+├── export-i18n.ts           # HTML 出力用の埋め込みロケール最小 i18n
+├── export-router-stub.ts    # HTML 出力用のスタブルーター
 ├── serviceWorker.ts         # Service Worker 登録
 ├── global.d.ts              # グローバル型定義
 ├── classes/                 # TS ユーティリティ → classes/README.md

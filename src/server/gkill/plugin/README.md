@@ -6,18 +6,22 @@ gkill プラグインシステムのサーバー側実装。プラグインプ�
 
 ```
 plugin/
-└── sdk/                # プラグイン作者向け Go SDK（19ファイル。うちテスト9）
+└── sdk/                # プラグイン作者向け Go SDK（19ファイルが直下、サブパッケージ含め31ファイル。うちテスト14）
     ├── types.go        # 公開型定義（Query, Kyou, Config）。Query は gkill の検索条件の全体（FindQuery）と写し（IDs / Reps / IncludeEndTimeIs）も持つ。MatchID / IDMatcher / MatchRep
     ├── match_words.go  # Query.MatchText / Matcher — ワード判定（gkill 本体と同じ規則。本体は再判定しないので FindKyous で必ず通す）
     ├── handler.go      # Handler struct（プラグイン作者が実装するインターフェース）
     ├── sdk.go          # Run() — メインループ（stdin/stdout 改行区切りJSONループ）と --gkill-build-cache の単独モード
     ├── config.go       # LoadConfig / SaveConfig / EnsureConfig（config.json 読み書き）
+    ├── source.go       # ParseSourceDirs / ExpandSourceDirs（source_dirs のグロブ・`~`・環境変数展開の共通実装）
+    ├── cache_path.go   # CacheDBPath（$GKILL_HOME/caches/plugin_cache/<user>/<plugin>/cache.db の解決）
     ├── log.go          # LogWarn / LogError（stderr の接頭辞行 + gkill_log）と LogInfo / LogDebug（gkill_log だけ）
     ├── plugin_log.go   # Run() が開く $GKILL_HOME/logs/gkill_plugin_<name>*.log（レベル・回転は本体から環境変数で継ぐ。ADR-0313）
     ├── sdk_test.go     # Run() ループのテスト（TestRunLoop_* 21本 + 型別データの往復）
     ├── build_cache_test.go # 単独モード（runBuildCache）と同梱プラグインの BuildCache 配線の走査
     ├── match_words_test.go # Query.MatchText のテスト
     ├── find_query_test.go # find_query・words_skip_id_match の受け取りと MatchID / IDMatcher / MatchRep（ADR-0318）
+    ├── source_test.go  # ParseSourceDirs / ExpandSourceDirs のテスト
+    ├── cache_path_test.go # CacheDBPath のテスト
     ├── timezone.go     # Android で time.Local を端末のゾーンへ直す（Run の最初。ADR-0319）
     ├── timezone_test.go # その差し替えと、直せないときに UTC のまま続けること
     ├── plugin_log_test.go # gkill_log へのログ（置き場・静的フィールド・stderr だけへの退避・stdout の清浄）

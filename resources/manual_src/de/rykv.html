@@ -1,7 +1,7 @@
 <!-- title: Lebensprotokoll-Ansicht - Hilfe -->
-  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Lebenslogansicht</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Lebensprotokoll-Ansicht</span></nav>
   <h1>Lebensprotokoll-Ansicht</h1>
-  <p>Bildschirm zum Durchsuchen von Lebensprotokollen mit Miniaturansichten. Unterstützt mehrere Anzeigemodi und Filterfunktionen.</p>
+  <p>Bildschirm, der Ihr gesamtes Lebensprotokoll mit Bild-Miniaturansichten als Liste anzeigt. Mit mehreren Filterspalten können Sie Daten nach unterschiedlichen Bedingungen gleichzeitig ansehen.</p>
 
   <h2>Symbolleistenschaltflächen</h2>
   <table>
@@ -11,23 +11,23 @@
     </tr>
     <tr>
       <td><span class="icon">&#9776;</span> Seitenleiste</td>
-      <td>Öffnet/schließt die Seitenleiste zum Filtern und Navigieren.</td>
+      <td>Blendet die Seitenleiste zum Suchen und Filtern ein oder aus.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128196;</span> Details</td>
-      <td>Zeigt/verbirgt das Detailpanel des Datensatzes.</td>
+      <td>Blendet das Detailpanel des ausgewählten Eintrags ein oder aus.</td>
     </tr>
     <tr>
-      <td><span class="icon">&#128202;</span> Zusammenfassungsansicht</td>
-      <td>Zeigt den Bildschirm für statistische Analyse an.</td>
+      <td><span class="icon">&#128202;</span> Aggregationsansicht</td>
+      <td>Blendet die Ansicht für Statistik und Analyse ein oder aus.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128197;</span> Kalender</td>
-      <td>Zeigt die Kalenderansicht an. Klicken Sie oben im Kalender auf Jahr und Monat, um ein Datum auszuwählen. Das wirkt wie ein Klick auf die Zelle dieses Tages: Die Liste springt zu diesem Tag.</td>
+      <td>Blendet die Kalenderansicht ein oder aus. Klicken Sie oben im Kalender auf Jahr und Monat, um ein Datum auszuwählen. Das wirkt wie ein Klick auf die Zelle dieses Tages: Die Liste springt zu diesem Tag.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128506;</span> Karte</td>
-      <td>Zeigt Datensätze mit GPS-Informationen auf der Karte an. Klicken Sie oben auf der Karte auf das Datum, um den auf der Karte angezeigten Tag auszuwählen (Suchbedingungen und Liste bleiben unverändert).</td>
+      <td>Blendet die Kartenanzeige der GPS-Protokolle ein oder aus. Klicken Sie oben auf der Karte auf das Datum, um den auf der Karte angezeigten Tag auszuwählen (Suchbedingungen und Liste bleiben unverändert).</td>
     </tr>
     <tr>
       <td><span class="icon">&#9881;</span> Einstellungen</td>
@@ -46,10 +46,12 @@
   <ul>
     <li>Textsuche (Stichwort)</li>
     <li>Filtern nach Tags</li>
-    <li>Angabe eines Zeitraums (neben den Daten können Sie auch eine Start- und eine Endzeit angeben. Bleibt eine Zeit leer, reicht der Bereich vom Beginn des ersten Tages bis zum Ende des letzten)</li>
+    <li>Angabe eines Zeitraums (wählen Sie den Datumsbereich im Kalender; bei Bedarf können Sie auch eine Start- und eine Endzeit angeben. Ein Zeitfeld leeren Sie über das „×“ darin. Bleibt eine Zeit leer, reicht der Bereich von 0 Uhr des ersten Tages bis zum Ende des letzten. Um die Zeitraumangabe ganz aufzuheben, drücken Sie „Leeren“)</li>
     <li>Tageszeit und Wochentag (auf einen Stundenbereich innerhalb des Tages eingrenzen. Wochentage: nur die gedrückten Tage; ist keiner gedrückt, zählen alle Wochentage)</li>
+    <li>Filtern nach Zeiterfassung (grenzt auf Einträge aus der Zeit ein, in der eine bestimmte Zeiterfassung lief)</li>
+    <li>Filtern nach Standort (grenzt über einen auf der Karte festgelegten Bereich nach Standortdaten ein)</li>
     <li>Auswahl des Eintragstyps</li>
-    <li>Auswahl der Ablage</li>
+    <li>Auswahl der Ablage und des Profils</li>
   </ul>
 
   <h3>Filterspalte hinzufügen</h3>
@@ -74,27 +76,27 @@
   </div>
 
   <div class="tip">
-    <strong>Tipp:</strong> Der Standardwert des Anzeigezeitraums kann in den Einstellungen unter „Lebenslog-Ansicht Anzeigetage“ geändert werden.
+    <strong>Tipp:</strong> Der Standardwert des Anzeigezeitraums kann im Einstellungsbildschirm unter „Lebenslog-Ansicht Anzeigetage“ geändert werden.
   </div>
 
-  <h2>FAB (Floating-Action-Schaltfläche) "+"</h2>
-  <p>Durch Klicken auf die "+"-Schaltfläche öffnet sich ein Menü zum schnellen Erstellen von Datensätzen:</p>
+  <h2>Schwebende Aktionsschaltfläche (+)</h2>
+  <p>Tippen Sie auf die „+“-Schaltfläche unten rechts, um das Menü zum Hinzufügen verschiedener Einträge zu öffnen.</p>
   <table>
-    <tr><th>Typ</th><th>Beschreibung</th></tr>
-    <tr><td>Memo</td><td>Erstellt eine Textnotiz.</td></tr>
-    <tr><td>Zeit+Memo</td><td>Erstellt eine Notiz mit Zeitstempel.</td></tr>
-    <tr><td>Numerisch</td><td>Zeichnet numerische Daten auf.</td></tr>
-    <tr><td>Lesezeichen</td><td>Speichert ein URL-Lesezeichen.</td></tr>
-    <tr><td>Zeitprotokoll</td><td>Startet eine Zeiterfassungssitzung.</td></tr>
-    <tr><td>Aufgabe</td><td>Erstellt eine neue Aufgabe.</td></tr>
-    <tr><td>Ausgabe</td><td>Zeichnet Ausgabeninformationen auf. Geben Sie einen „Geschäftsname" ein und darunter in einer Zeile „Titel" (Artikelname) und „Betrag". Mit der Schaltfläche „Hinzufügen" fügen Sie weitere Zeilen hinzu, sodass Einkäufe im selben Geschäft in einem Schritt gespeichert werden; jede Zeile wird zu einem Ausgabendatensatz.</td></tr>
-    <tr><td>Stimmung</td><td>Zeichnet einen Stimmungswert (0-10) auf.</td></tr>
-    <tr><td>Hochladen</td><td>Lädt eine Datei hoch.</td></tr>
-    <tr><td>Zwischenablage speichern</td><td>Speichert den Inhalt der Zwischenablage (Screenshot, Bild, Text, PDF usw.) direkt als Datei.</td></tr>
+    <tr><th>Menüpunkt</th><th>Beschreibung</th></tr>
+    <tr><td>Notizblock</td><td>Gibt eine Textnotiz im Notizblockformat ein.</td></tr>
+    <tr><td>Zeiteintrag-Notizblock</td><td>Öffnet den kombinierten Bildschirm aus Notizeingabe und Liste der Zeiteinträge.</td></tr>
+    <tr><td>Numerischer Datensatz</td><td>Zeichnet numerische Daten auf.</td></tr>
+    <tr><td>Lesezeichen</td><td>Speichert eine URL.</td></tr>
+    <tr><td>Zeiterfassung</td><td>Startet eine neue Zeiterfassungssitzung.</td></tr>
+    <tr><td>Aufgabe</td><td>Fügt eine neue Aufgabe hinzu.</td></tr>
+    <tr><td>Ausgabe</td><td>Zeichnet einen Betrag auf. Geben Sie einen „Geschäftsname“ ein und darunter in einer Zeile „Titel“ (Artikelname) und „Betrag“. Mit der Schaltfläche „Hinzufügen“ fügen Sie weitere Zeilen hinzu, sodass Einkäufe im selben Geschäft in einem Schritt gespeichert werden; jede Zeile wird zu einem Ausgabendatensatz.</td></tr>
+    <tr><td>Stimmung</td><td>Zeichnet einen Stimmungswert (0–10) auf.</td></tr>
+    <tr><td>Hochladen</td><td>Lädt eine Datei hoch und zeichnet sie auf.</td></tr>
+    <tr><td>Zwischenablage speichern</td><td>Speichert den Inhalt der Zwischenablage (Bild, Text, PDF usw.) direkt als Datei. Screenshots oder kopierte Bilder lassen sich so schnell erfassen.</td></tr>
   </table>
 
   <div class="tip">
-    <strong>Tipp:</strong> Langes Drücken der "+"-Schaltfläche öffnet direkt den Notizblock-Eingabebildschirm für eine schnelle Stapeleingabe.
+    <strong>Langes Drücken:</strong> Langes Drücken der „+“-Schaltfläche öffnet direkt den Notizblock. Praktisch, wenn Sie schnell eine Notiz erfassen möchten.
   </div>
 
   <div class="tip">
@@ -102,48 +104,46 @@
   </div>
 
   <div class="tip">
-    <strong>Tastenkürzel:</strong> Drücken Sie Ctrl+V, um den Inhalt der Zwischenablage direkt als Datei zu speichern. Nützlich zum schnellen Speichern von Screenshots oder kopierten Bildern.
+    <strong>Tastenkürzel:</strong> Drücken Sie Strg+V, um den Inhalt der Zwischenablage direkt als Datei zu speichern. Nützlich zum schnellen Speichern von Screenshots oder kopierten Bildern.
   </div>
+
   <h2>Tags verwenden</h2>
+  <p>Tags sind Etiketten, mit denen Sie Einträge einordnen und ordnen. Einem Eintrag können mehrere Tags zugewiesen werden.</p>
   <h3>Ein Tag hinzufügen</h3>
   <ol>
-    <li>Halten Sie einen Datensatz gedrückt oder klicken Sie mit der rechten Maustaste, um das Kontextmenü zu öffnen.</li>
-    <li>Wählen Sie "Tag hinzufügen".</li>
-    <li>Geben Sie den Tag-Namen ein (vorhandene Tags werden als Vorschläge angezeigt).</li>
+    <li>Tippen und halten Sie (mobil) bzw. klicken Sie mit der rechten Maustaste (Desktop) auf einen Eintrag in der Zeitachse.</li>
+    <li>Wählen Sie im Kontextmenü „Tag hinzufügen“.</li>
+    <li>Geben Sie den Tag-Namen ein und fügen Sie ihn hinzu. Vorhandene Tags werden als Vorschläge angezeigt.</li>
   </ol>
-  <p>Wenn Sie ein kürzlich verwendetes Tag anhängen möchten, nutzen Sie „Tag aus Verlauf hinzufügen" im Kontextmenü: Sie wählen es einfach aus der Liste.</p>
-  <p>Geben Sie einen bisher nie verwendeten Tag-Namen ein, wird vor dem Speichern nachgefragt: „Dies ist ein neues Tag. Möchten Sie es hinzufügen?" Das verhindert, dass sich durch Tippfehler sehr ähnliche Tags ansammeln.</p>
-  <p>Ein so neu angelegtes Tag wird auch den Filterbedingungen der gerade geöffneten Spalten hinzugefügt. Damit verschwindet ein Datensatz nicht aus der Liste, wenn Sie ihn mit einem brandneuen Tag in einer nach Tags gefilterten Spalte anlegen.</p>
+  <p>Wenn Sie ein kürzlich verwendetes Tag anhängen möchten, nutzen Sie „Tag aus Verlauf hinzufügen“ im Kontextmenü: Sie wählen es einfach aus der Liste.</p>
+  <p>Geben Sie einen bisher nie verwendeten Tag-Namen ein, wird vor dem Speichern nachgefragt: „Dies ist ein neues Tag. Möchten Sie es hinzufügen?“ Das verhindert, dass sich durch Tippfehler sehr ähnliche Tags ansammeln.</p>
+  <p>Ein so neu angelegtes Tag wird automatisch auch den Filterbedingungen der gerade geöffneten Spalten hinzugefügt. Damit verschwindet ein Eintrag nicht aus der Liste, wenn Sie ihn mit einem neuen Tag in einer nach Tags gefilterten Spalte anlegen.</p>
   <h3>Ein Tag bearbeiten oder löschen</h3>
   <ol>
-    <li>Halten Sie das zu ändernde Tag gedrückt oder klicken Sie mit der rechten Maustaste darauf.</li>
-    <li>Wählen Sie "Bearbeiten" oder "Löschen" aus dem Menü.</li>
+    <li>Tippen und halten Sie (mobil) bzw. klicken Sie mit der rechten Maustaste (Desktop) auf ein Tag in der Zeitachse.</li>
+    <li>Wählen Sie im Kontextmenü „Tag bearbeiten“ oder „Tag löschen“.</li>
   </ol>
-  <h3>Tag-Strukturverwaltung</h3>
-  <p>Sie können Anzeigenamen und Reihenfolge der Tags unter Einstellungen &gt; Tag-Struktur verwalten.</p>
+  <h3>Tag-Hierarchie</h3>
+  <p>Unter „Tag-Struktur“ im Einstellungsbildschirm können Sie Anzeigenamen und Reihenfolge der Tags verwalten. Wenn Sie häufig verwendete Tags weiter oben anordnen, finden Sie sie in der Vorschlagsliste bei der Tag-Eingabe leichter.</p>
   <div class="tip">
-    <strong>Tipp:</strong> Wenn Sie <code>#Tag-Name</code> in der Notizblock-Syntax schreiben, wird der Datensatz automatisch mit einem Tag versehen. Weitere Details finden Sie in der <a href="kftl-syntax.html">Notizblock-Syntaxreferenz</a>.
+    <strong>Tipp:</strong> Wenn Sie in der Notizblock-Syntax <code>#Tag-Name</code> eingeben, wird beim Absenden des Textes automatisch ein Tag vergeben. Weitere Details finden Sie in der <a href="kftl-syntax.html">Notizblock-Syntaxreferenz</a>.
   </div>
 
-  <h2>Datei-Upload-Details</h2>
-
+  <h2>Details zum Datei-Upload</h2>
+  <p>Über „Hochladen“ im Menü der „+“-Schaltfläche können Sie Dateien wie Bilder, Videos und Dokumente in gkill speichern.</p>
   <h3>Bedienschritte</h3>
   <ol>
-    <li>Tippen Sie auf die „+“-Schaltfläche und wählen Sie „Datei hochladen“.</li>
-    <li>Wählen Sie die Ziel-Ablage (Ablage für die Dateiverwaltung).</li>
-    <li>Bestätigen und passen Sie das zugehörige Datum und die Uhrzeit an.</li>
-    <li>Wählen Sie die hochzuladende(n) Datei(en) aus (mehrere Dateien möglich). Klicken Sie im Dialog auf den Bereich „Hier klicken oder Dateien ablegen“, um sie auszuwählen, oder ziehen Sie die Dateien per Drag &amp; Drop hinein.</li>
+    <li>Wählen Sie über die „+“-Schaltfläche „Hochladen“.</li>
+    <li>Wählen Sie die Ziel-Ablage für den Upload (eine Ablage für Dateien).</li>
+    <li>Prüfen und passen Sie die zugehörige Zeit (den Aufzeichnungszeitpunkt der Datei) an.</li>
+    <li>Wählen Sie die Datei(en) aus und laden Sie sie hoch. Sie können mehrere Dateien auf einmal auswählen. Klicken Sie im Dialog auf den Bereich „Hier klicken oder Dateien ablegen“, um sie auszuwählen, oder ziehen Sie die Dateien per Drag &amp; Drop hinein.</li>
   </ol>
-
   <h3>Unterstützte Dateiformate</h3>
-  <p>Bilder (JPEG/PNG/GIF/WEBP), Videos (MP4 usw.), PDF, ZIP und andere.</p>
-  <p>Markdown-Dateien (.md / .markdown) werden in Listen- und Detailansicht formatiert dargestellt (Überschriften, Tabellen), und mermaid-Codeblöcke werden als Diagramme gerendert.</p>
-
+  <p>Bilder (JPEG, PNG, GIF, WEBP), Videos (MP4 usw.), PDF, ZIP und andere gängige Dateiformate werden unterstützt. Markdown-Dateien (.md / .markdown) werden in Listen- und Detailansicht formatiert dargestellt (Überschriften, Tabellen usw.), und auch Diagramme in Mermaid-Schreibweise werden als Grafik dargestellt.</p>
   <h3>Beschränkung der Upload-Größe</h3>
-  <p>Die monatliche Obergrenze für Uploads legt der Administrator unter „Monatliche Upload-Größenbeschränkung" in der Serverkonfiguration fest. Der Anfangswert ist <code>-1</code> (unbegrenzt).</p>
-
+  <p>Pro Upload können Sie bis zu etwa 1 GB senden. Wenn Sie mehrere große Dateien hochladen möchten, teilen Sie den Vorgang bitte auf mehrere Uploads auf.</p>
   <div class="tip">
-    <strong>Tipp:</strong> Drücken Sie Strg+V, um den Inhalt der Zwischenablage direkt als Datei zu speichern.
+    <strong>Tastenkürzel:</strong> Drücken Sie Strg+V, um Bilder oder Text aus der Zwischenablage direkt als Datei zu speichern. Praktisch, um Screenshots schnell festzuhalten.
   </div>
 
   <h2>Den Inhalt einer ZIP-Datei ansehen</h2>
@@ -151,12 +151,12 @@
   <h3>So öffnen Sie ihn</h3>
   <ol>
     <li>Tippen und halten Sie (mobil) bzw. klicken Sie mit der rechten Maustaste (Desktop) auf den Eintrag der ZIP-Datei.</li>
-    <li>Wählen Sie im Kontextmenü „ZIP-Inhalt durchsuchen".</li>
+    <li>Wählen Sie im Kontextmenü „ZIP-Inhalt durchsuchen“.</li>
     <li>Die Ordner und Dateien in der ZIP-Datei werden als Liste angezeigt.</li>
   </ol>
   <h3>Darin navigieren</h3>
   <ul>
-    <li>Ein Klick auf einen Ordner führt hinein. Zum Zurückgehen nutzen Sie den Navigationspfad oben oder „..".</li>
+    <li>Ein Klick auf einen Ordner führt hinein. Zum Zurückgehen nutzen Sie den Navigationspfad oben oder „..“.</li>
     <li>Ein Klick auf eine Bilddatei öffnet die Vorschau; von dort blättern Sie direkt zum nächsten Bild.</li>
     <li>Ein Klick auf eine Textdatei zeigt deren Inhalt direkt an.</li>
     <li>Ein Klick auf eine Video- oder Audiodatei spielt sie direkt ab. Sie können zur vorherigen oder nächsten Datei wechseln oder sie in einem neuen Tab öffnen. Kann der Browser das Format nicht wiedergeben, weist eine Meldung darauf hin und Sie können die Datei zum Abspielen herunterladen.</li>
@@ -165,95 +165,100 @@
     <li>Zu große Dateien lassen sich nicht in der Vorschau anzeigen; darauf weist eine Meldung hin.</li>
   </ul>
   <div class="tip">
-    <strong>Tipp:</strong> „ZIP-Inhalt durchsuchen" erscheint nur im Menü, wenn Sie den Eintrag einer ZIP-Datei auswählen. Bei anderen Einträgen wird es nicht angezeigt.
+    <strong>Tipp:</strong> „ZIP-Inhalt durchsuchen“ erscheint nur im Menü, wenn Sie den Eintrag einer ZIP-Datei auswählen. Bei anderen Einträgen wird es nicht angezeigt.
   </div>
 
   <h2>Einen Eintrag zur Aufgabe machen und den Inhalt kopieren</h2>
-  <p>Einen Eintrag, um den Sie sich später kümmern möchten, können Sie zur Aufgabe machen, ohne seinen Inhalt umzuschreiben. Wählen Sie im Kontextmenü des Eintrags „Als Aufgabe anlegen", legen Sie Boardname, Fälligkeit sowie geplanten Beginn und geplantes Ende fest und speichern Sie. Die erstellte Aufgabe erscheint auch in der <a href="mi.html">Aufgabenansicht</a> und lässt sich als erledigt abhaken.</p>
-  <p>Mit „Inhalt kopieren" im Kontextmenü kopieren Sie den Text des Eintrags in die Zwischenablage. Mit „ID kopieren" kopieren Sie die ID des Eintrags.</p>
+  <p>Einen Eintrag, um den Sie sich später kümmern möchten, können Sie zur Aufgabe machen, ohne seinen Inhalt umzuschreiben. Wählen Sie im Kontextmenü des Eintrags „Als Aufgabe anlegen“, legen Sie Boardname, Fälligkeit sowie geplanten Beginn und geplantes Ende fest und speichern Sie. Die erstellte Aufgabe erscheint auch im <a href="mi.html">Aufgabenbildschirm</a> und lässt sich als erledigt abhaken.</p>
+  <p>Mit „Inhalt kopieren“ im Kontextmenü kopieren Sie den Text des Eintrags in die Zwischenablage. Mit „ID kopieren“ kopieren Sie die ID des Eintrags.</p>
 
   <h2>GPS-Karte verwenden</h2>
-  <h3>Eine GPS-Aufzeichnung hochladen</h3>
+  <p>Wenn Sie die Kartenschaltfläche in der Symbolleiste einschalten, werden die GPS-Bewegungsrouten für den Zeitraum der Einträge auf der Karte angezeigt.</p>
+  <h3>GPS-Protokoll hochladen</h3>
   <ol>
-    <li>Tippen Sie auf die "+"-Schaltfläche und wählen Sie "Datei hochladen".</li>
-    <li>Wählen Sie das für GPS-Aufzeichnungen vorgesehene Repository.</li>
-    <li>Wählen Sie die GPX-Datei aus. Klicken Sie auf den Bereich „Hier klicken oder .gpx-Dateien ablegen“, um sie auszuwählen, oder ziehen Sie sie per Drag &amp; Drop hinein.</li>
-    <li>Aktivieren Sie die Kartenschaltfläche, um die Anzeige zu bestätigen.</li>
+    <li>Wählen Sie über die „+“-Schaltfläche „Hochladen“.</li>
+    <li>Wählen Sie als Ziel die Ablage für GPS-Protokolle.</li>
+    <li>Wählen Sie die GPX-Datei aus und laden Sie sie hoch. Klicken Sie auf den Bereich „Hier klicken oder .gpx-Dateien ablegen“, um sie auszuwählen, oder ziehen Sie sie per Drag &amp; Drop hinein.</li>
+    <li>Schalten Sie nach dem Hochladen die Kartenschaltfläche ein, um die Bewegungsroute anzuzeigen.</li>
   </ol>
   <h3>Google Maps API-Schlüssel konfigurieren</h3>
-  <p>Für die Karte ist ein Google Maps API-Schlüssel erforderlich. Geben Sie Ihren Schlüssel unter „Google Map API-Schlüssel" im Einstellungsbildschirm (Schaltfläche „Einstellungen" in der Symbolleiste der Lebensprotokoll-Ansicht) ein und speichern Sie mit „Anwenden". Die Einstellung ist unter „Externe Integration" auf der Seite <a href="application-config.html">Einstellungsbildschirm</a> beschrieben.</p>
+  <p>Für die Karte ist ein Google Maps API-Schlüssel erforderlich. Geben Sie Ihren Schlüssel unter „Google Map API-Schlüssel“ im Einstellungsbildschirm (Schaltfläche „Einstellungen“ in der Symbolleiste der Lebensprotokoll-Ansicht) ein und speichern Sie mit „Anwenden“. Die Einstellung ist unter „Externe Integration“ auf der Seite <a href="application-config.html">Einstellungsbildschirm</a> beschrieben.</p>
   <div class="tip">
-    <strong>Tipp:</strong> Holen Sie sich Ihren API-Schlüssel in der Google Cloud Console, indem Sie die Maps JavaScript API aktivieren.
+    <strong>Tipp:</strong> Einen Google Maps API-Schlüssel erhalten Sie in der <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>. Sie benötigen einen Schlüssel, für den die Maps JavaScript API aktiviert ist.
   </div>
 
   <h2>Gespeicherte Suchbedingungen abrufen</h2>
-  <p>Suchbedingungen, die Sie unter „Suchbedingungen" im Einstellungsbildschirm unter einem Namen gespeichert haben, lassen sich über die runde Schaltfläche unten rechts in der Seitenleiste abrufen. Wählen Sie einen Namen, wird diese Bedingung unverändert in die Seitenleiste übernommen. Wurde nichts gespeichert, wird die Schaltfläche nicht angezeigt.</p>
+  <p>Suchbedingungen, die Sie unter „Suchbedingungen“ im Einstellungsbildschirm unter einem Namen gespeichert haben, lassen sich über die runde Schaltfläche unten rechts in der Seitenleiste abrufen. Wählen Sie einen Namen, wird diese Bedingung unverändert in die Seitenleiste übernommen. Wurde nichts gespeichert, wird die Schaltfläche nicht angezeigt.</p>
 
   <h2>Die aktuellen Suchkriterien teilen</h2>
-  <p>Aktivieren Sie &bdquo;Freigabe-Fu&szlig;zeile anzeigen&ldquo; im Einstellungsbildschirm, und am unteren Rand der Seitenleiste erscheint eine Freigabe-Fu&szlig;zeile. Ein Druck auf die Schaltfl&auml;che &bdquo;Teilen&ldquo; an ihrem linken Rand fragt zuerst, wie Sie die Aufzeichnungen weitergeben m&ouml;chten. Mit &bdquo;Diese Ansicht teilen&ldquo; werden die aktuell verwendeten Suchkriterien in einen Freigabelink verwandelt. Geteilt wird nicht eine einzelne Aufzeichnung, sondern alle Aufzeichnungen, die diesen Kriterien entsprechen. Bereits erstellte Links k&ouml;nnen &uuml;ber &bdquo;Freigabeverwaltung&ldquo; am rechten Rand aufgelistet, bearbeitet und gel&ouml;scht werden.</p>
+  <p>Aktivieren Sie &bdquo;Freigabe-Fu&szlig;zeile anzeigen&ldquo; im Einstellungsbildschirm, und am unteren Rand der Seitenleiste erscheint eine Freigabe-Fu&szlig;zeile. Ein Druck auf die Schaltfl&auml;che &bdquo;Teilen&ldquo; an ihrem linken Rand fragt zuerst, wie Sie die Eintr&auml;ge weitergeben m&ouml;chten. Mit &bdquo;Diese Ansicht teilen&ldquo; werden die aktuell verwendeten Suchkriterien in einen Freigabelink verwandelt. Geteilt wird nicht ein einzelner Eintrag, sondern alle Eintr&auml;ge, die diesen Kriterien entsprechen. Bereits erstellte Links k&ouml;nnen &uuml;ber &bdquo;Freigabeverwaltung&ldquo; am rechten Rand aufgelistet, bearbeitet und gel&ouml;scht werden.</p>
 
-  <h2>Die aktuellen Ergebnisse als HTML-Datei weitergeben</h2>
-  <p>Ein Freigabelink l&auml;sst sich nur ansehen, solange diese Anwendung l&auml;uft. Wenn Sie Aufzeichnungen weitergeben m&ouml;chten, ohne dass das Gegen&uuml;ber etwas einrichten muss, k&ouml;nnen Sie die gerade angezeigten Ergebnisse in eine HTML-Datei schreiben. Wer sie erh&auml;lt, &ouml;ffnet sie einfach im Browser, und da alles N&ouml;tige in der Datei steckt, nimmt sie nie Verbindung zu dieser Anwendung auf.</p>
+  <h2>Die aktuellen Suchergebnisse als HTML-Datei weitergeben</h2>
+  <p>Ein Freigabelink l&auml;sst sich nur ansehen, solange diese Anwendung l&auml;uft. Wenn Sie etwas weitergeben m&ouml;chten, ohne dass das Gegen&uuml;ber etwas vorbereiten muss, k&ouml;nnen Sie die gerade gefilterten Suchergebnisse in eine HTML-Datei schreiben. Wer sie erh&auml;lt, &ouml;ffnet sie einfach im Browser, und da alles in der Datei steckt, nimmt sie auch keine Verbindung zu dieser Anwendung auf.</p>
 
   <h3>So erzeugen Sie die Datei</h3>
   <ol>
-    <li>Dr&uuml;cken Sie in der Freigabe-Fu&szlig;zeile am unteren Rand der Seitenleiste die Schaltfl&auml;che &bdquo;Teilen&ldquo; an ihrem linken Rand.</li>
+    <li>Dr&uuml;cken Sie in der Freigabe-Fu&szlig;zeile am unteren Rand der Seitenleiste die Schaltfl&auml;che &bdquo;Teilen&ldquo; an ihrem linken Rand (ist die Freigabe-Fu&szlig;zeile nicht zu sehen, aktivieren Sie im Einstellungsbildschirm &bdquo;Freigabe-Fu&szlig;zeile anzeigen&ldquo;).</li>
     <li>W&auml;hlen Sie &bdquo;HTML exportieren&ldquo;.</li>
-    <li>W&auml;hlen Sie, was einbezogen wird und in welcher Form geschrieben wird (siehe Tabelle unten).</li>
-    <li>Mit &bdquo;Exportieren&ldquo; wird die fertige Datei heruntergeladen. Bei vielen Aufzeichnungen oder Bildern dauert das eine Weile.</li>
+    <li>W&auml;hlen Sie, was einbezogen wird und in welcher Form exportiert wird (siehe Tabelle unten).</li>
+    <li>Mit &bdquo;Exportieren&ldquo; wird die fertige Datei heruntergeladen. Bei vielen Eintr&auml;gen oder Bildern dauert das eine Weile.</li>
   </ol>
 
   <h3>Was Sie w&auml;hlen k&ouml;nnen</h3>
   <table>
     <tr>
-      <th>Punkt</th>
+      <th>Element</th>
       <th>Beschreibung</th>
     </tr>
     <tr>
+      <td>Titel</td>
+      <td>Geben Sie eine Überschrift (optional) ein, die oben links in der exportierten Ansicht angezeigt wird.</td>
+    </tr>
+    <tr>
       <td>Ziel</td>
-      <td>W&auml;hlen Sie zwischen &bdquo;Alle angezeigten Spalten&ldquo; und &bdquo;Die fokussierte Spalte&ldquo;.</td>
+      <td>W&auml;hlen Sie zwischen &bdquo;Alle sichtbaren Spalten&ldquo; und &bdquo;Fokussierte Spalte&ldquo;.</td>
     </tr>
     <tr>
       <td>Was einbezogen wird</td>
-      <td>W&auml;hlen Sie, ob Zeiterfassungen, Standortdaten und Inhalte von Erweiterungen einbezogen werden.</td>
+      <td>W&auml;hlen Sie, ob Tags, Texte, Benachrichtigungen, Zeiterfassungen, Standortdaten und Plugin-Inhalte einbezogen werden.</td>
     </tr>
     <tr>
       <td>Ansichten</td>
-      <td>W&auml;hlen Sie, ob die geschriebene Datei die Auswertung, die Karte und die Suchleiste beh&auml;lt. Eine beibehaltene Suchleiste grenzt nur innerhalb der Aufzeichnungen in der Datei ein.</td>
+      <td>W&auml;hlen Sie, ob die exportierte Datei die Auswertung, die Karte und die Suchleiste beh&auml;lt. Eine beibehaltene Suchleiste grenzt nur innerhalb der exportierten Eintr&auml;ge ein (Bedingungen f&uuml;r Stichwort, Zeiterfassung und Standort wirken sich dort nicht aus, auch wenn Sie sie eingeben).</td>
     </tr>
     <tr>
       <td>Medien</td>
-      <td>W&auml;hlen Sie f&uuml;r Bilder und Videos &bdquo;Nur Miniaturansichten&ldquo;, &bdquo;Auch in Originalgr&ouml;&szlig;e&ldquo; oder &bdquo;Nicht einbetten&ldquo;. Auch die Grenze je Eintrag und die Grenze insgesamt lassen sich festlegen.</td>
+      <td>W&auml;hlen Sie f&uuml;r Bilder und Videos &bdquo;Nur Miniaturansichten&ldquo;, &bdquo;Originale einbeziehen&ldquo; oder &bdquo;Nicht einbetten&ldquo;. Auch das Limit pro Datei und das Gesamtlimit lassen sich festlegen.</td>
     </tr>
     <tr>
       <td>Ausgabeformat</td>
-      <td>&bdquo;Eine einzelne HTML-Datei&ldquo; kommt allein aus. &bdquo;HTML und gleichnamiger Ordner&ldquo; legt Bilder in einen Ordner daneben, was die Datei kleiner h&auml;lt, aber beide m&uuml;ssen zusammen weitergegeben werden.</td>
+      <td>&bdquo;Eine einzelne HTML-Datei&ldquo; ist in sich geschlossen. &bdquo;HTML und gleichnamiger Ordner&ldquo; legt Bilder in einen Ordner daneben und ist dadurch leichter als eine einzelne Datei, aber beide m&uuml;ssen zusammen weitergegeben werden (bei &bdquo;Nicht einbetten&ldquo; steht nur &bdquo;Eine einzelne HTML-Datei&ldquo; zur Auswahl).</td>
     </tr>
   </table>
 
   <div class="tip">
-    <strong>Wenn eine Grenze &uuml;berschritten wird:</strong> Alles, was nicht in die Mediengrenzen passte, wird in der geschriebenen Datei als &bdquo;Nicht enthalten&ldquo; angezeigt. Da die L&uuml;cke sichtbar ist, k&ouml;nnen Sie die Grenze anheben und die Datei erneut erzeugen.
+    <strong>Wenn eine Grenze &uuml;berschritten wird:</strong> Alles, was nicht in die Mediengrenzen passte, wird in der exportierten Datei als &bdquo;Nicht enthalten&ldquo; angezeigt. Da die L&uuml;cke sichtbar ist, k&ouml;nnen Sie bei Bedarf die Grenze anheben und erneut exportieren.
   </div>
 
   <h3>Was die empfangende Person sieht</h3>
-  <p>Die geschriebene Datei ist nur zum Lesen. Aufzeichnungen lassen sich weder hinzuf&uuml;gen noch bearbeiten oder mit Etiketten versehen. Ein Doppelklick auf eine Aufzeichnung &ouml;ffnet die Einzelheiten, von dort aus lassen sich verwandte Aufzeichnungen verfolgen. Die Karte ist die einzige Ausnahme: die Karte selbst wird von au&szlig;en geladen, der Verlauf erscheint also, sobald die empfangende Person ihren eigenen Kartenschl&uuml;ssel eintr&auml;gt.</p>
+  <p>Die exportierte Datei ist nur zum Lesen. Eintr&auml;ge lassen sich weder hinzuf&uuml;gen noch bearbeiten oder mit Tags versehen. Ein Doppelklick auf einen Eintrag &ouml;ffnet die Details, von dort aus lassen sich auch verwandte Eintr&auml;ge verfolgen. Die Karte ist die einzige Ausnahme: Die Karte selbst wird von au&szlig;en geladen, der Verlauf erscheint also erst, wenn die empfangende Person ihren eigenen Kartenschl&uuml;ssel eintr&auml;gt. Der eingegebene Schl&uuml;ssel wird nirgends gespeichert und verschwindet beim Schlie&szlig;en der Seite; er muss daher bei jedem &Ouml;ffnen neu eingegeben werden.</p>
 
-  <h2>Wenn ein Speicherort für Einträge nicht geladen werden kann</h2>
-  <p>Einträge aus anderen Speicherorten können weiterhin angezeigt werden. Diese Meldung allein bedeutet nicht, dass Ihre Einträge verloren sind.</p>
+  <h2>Wenn gemeldet wird, dass eine Ablage nicht geladen werden kann</h2>
+  <p>Einträge aus den anderen Ablagen können weiterhin angezeigt werden. Diese Meldung allein bedeutet nicht, dass Ihre Einträge verloren sind.</p>
   <ol>
     <li>Prüfen Sie, ob die externe Festplatte oder der USB-Speicher richtig angeschlossen ist.</li>
-    <li>Prüfen Sie bei einem Netzwerkspeicher die Verbindung, die Freigabe und die Leseberechtigung für den Ordner.</li>
-    <li>Laden Sie nach Wiederherstellung der Verbindung die Ansicht neu. Wenn Sie die Einstellungen öffnen können, laden Sie auch die Speicherorte für Einträge neu.</li>
-    <li>Entfernen Sie bis zur Wiederherstellung Suchbedingungen, die nur den in der Warnung genannten Speicherort auswählen.</li>
-    <li>Wenn die Meldung bleibt, teilen Sie der Administration den Namen des Speicherorts und den Zeitpunkt mit.</li>
+    <li>Prüfen Sie bei einem Ort im Netzwerk die Netzwerkverbindung, die Freigabe und die Leseberechtigung für den Ordner.</li>
+    <li>Laden Sie nach Wiederherstellung der Verbindung die Ansicht neu. Wenn Sie den Einstellungsbildschirm öffnen können, laden Sie auch die Ablagen neu.</li>
+    <li>Entfernen Sie bis zur Wiederherstellung Suchbedingungen, die nur auf die in der Warnung genannte Ablage eingrenzen.</li>
+    <li>Wenn die Meldung bleibt, wenden Sie sich mit dem Namen der Ablage und dem Zeitpunkt an den Administrator.</li>
   </ol>
 
   <h2>Verwandte Dokumente</h2>
   <ul>
-    <li><a href="kyou.html">Datensatzdetails</a></li>
+    <li><a href="kyou.html">Datensatzansicht</a></li>
     <li><a href="dnote.html">Aggregationsansicht</a></li>
     <li><a href="ryuu.html">Verwandte Informationen</a></li>
     <li><a href="kftl-syntax.html">Notizblock-Syntaxreferenz</a></li>
-    <li><a href="application-config.html">Einstellungen</a></li>
     <li><a href="plugin.html">Plugins</a></li>
+    <li><a href="application-config.html">Einstellungen</a></li>
   </ul>

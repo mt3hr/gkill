@@ -5,7 +5,7 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、124ファイル。テスト21ファイルを含み、実装は98ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、124ファイル。テスト24ファイルを含み、実装は100ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（206ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、19ファイル）
@@ -20,7 +20,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 |---|---|---|---|
 | `wrapNoAuth` | 14 | `filterLocalOnly` のみ | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet`, `urlog_bookmarklet_page`, `get_kyous_mcp`, `get_rep_infos_mcp`, `upload_files`, `upload_gpslog_files`, `upload_skill`, `browse_zip_contents`, `get_idf_kyou_by_relative_path` |
 | `wrapAuth` | 25 | セッション検証 → Account / UserID / Device を `AuthContext` に設定 | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, `parse_kftl_text`, プラグイン4本, スキル5本（`upload_skill` 以外） 等 |
-| `wrapAuthRepos` | 60 | 上記に加えて `GkillRepositories` を解決 | データCRUD系（追加12 + 更新13 + 取得25 + 共有4 + リポジトリ/TX 4） |
+| `wrapAuthRepos` | 60 | 上記に加えて `GkillRepositories` を解決 | データCRUD系（追加12 + 更新13 + 取得24 + 共有4 + 削除1 + 出力1 + リポジトリ/TX 5） |
 
 > **`wrapNoAuth` = 認証なし、ではない。** 上表の `wrapNoAuth` のうち
 > `upload_files` / `upload_gpslog_files` / `upload_skill` / `browse_zip_contents` /
@@ -490,7 +490,7 @@ Append-Only DAO なので「削除」も INSERT で、`is_deleted` を立てた�
 
 | パス | 説明 |
 |---|---|
-| `/api/export_kyou_html` | いまの検索結果を単一 HTML（または HTML ＋ 同名フォルダ）へ焼き込んで返す。記録の収集は共有（`get_shared_kyous`）と同じ1実装を通り、焼き込む設定は API キーを空へ潰し、チェックされていないタグ名・記録保管場所名を刈り取ってから載せる。ファイルそのものは body で返さず JSON に載せる（[ADR-0712](../adr/0712-export-delivery-is-base64-json.md)）。ガワ（出力テンプレート）が埋め込まれていないときだけ `ERR000455` で落ちる。エラーは `ERR000452`〜`ERR000456` |
+| `/api/export_kyou_html` | いまの検索結果（`screen: "rykv"` または `"mi"`）を単一 HTML（または HTML ＋ 同名フォルダ）へ焼き込んで返す。記録の収集は共有（`get_shared_kyous`）と同じ1実装を通り、焼き込む設定は API キーを空へ潰し、チェックされていないタグ名・記録保管場所名（`mi` のときは出力対象外の板名 `mi_board_struct` も）を刈り取ってから載せる。ファイルそのものは body で返さず JSON に載せる（[ADR-0712](../adr/0712-export-delivery-is-base64-json.md)）。列に出ていないリポストは焼き込まない（型別データを列の記録の ID で絞る。[ADR-0422](../adr/0422-exported-html-keeps-only-what-was-chosen.md)）。予算に収まらないメディア・読めなかったファイル・プラグインの本文を落としたときは `partial: true` にし、何を落としたかを `messages` に warning の `MSG000096` で成功の `MSG000095` と並べて返す（焼き込みには入れない）。ガワ（出力テンプレート）が埋め込まれていないときだけ `ERR000455` で落ちる。エラーは `ERR000452`〜`ERR000456` |
 
 ## 通知・プッシュ（2件）
 
@@ -532,24 +532,24 @@ MCPサーバは14個のReadツールを提供する。内訳は固有の13（`gk
 
 | パス | 説明 |
 |---|---|
-| `/api/get_plugin_list` | インストール済みプラグイン一覧取得（manifest 情報に加え、稼働状態 `is_alive` / `process_running`、直近エラー `last_error`、型別索引の統計 `typed_index`） |
+| `/api/get_plugin_list` | インストール済みプラグイン一覧取得（manifest 情報に加え、稼働状態 `is_alive` / `process_running`、直近エラー `last_error`、型別索引の統計 `typed_index`、GPS 索引 `gps_index`）。管理者は `target_user_id` で他アカウントの一覧も取得可（ADR-0714） |
 | `/api/get_plugin_content_html` | プラグイン Kyou のコンテンツ HTML 取得 |
-| `/api/get_plugin_config_html` | プラグイン設定画面 HTML 取得 |
-| `/api/post_plugin_config` | プラグイン設定フォームのデータ保存 |
+| `/api/get_plugin_config_html` | プラグイン設定画面 HTML 取得（**管理者専用**。`target_user_id` を指定して対象アカウントのプラグイン設定画面を取得。ADR-0714） |
+| `/api/post_plugin_config` | プラグイン設定フォームのデータ保存（**管理者専用**。`target_user_id` を指定して対象アカウントの設定を保存。ADR-0714） |
 
 ### get_plugin_list 詳細
 
 | 項目 | 内容 |
 |---|---|
 | リクエスト型 | `GetPluginListRequest` |
-| 主要フィールド | `session_id`, `locale_name` |
+| 主要フィールド | `session_id`, `locale_name`, `target_user_id`（任意。管理者のみ他アカウント指定可、一般ユーザが指定すると管理者権限不足で拒否） |
 | レスポンス型 | `GetPluginListResponse` |
-| レスポンスフィールド | `plugins: Array<PluginInfo>`（`name`, `version`, `description`, `data_type`, `rep_name`, `is_alive`, `process_running`, `last_error`, `typed_index`） |
-| 備考 | MCPの `gkill_get_plugin_list` もこのエンドポイントをそのまま使う |
+| レスポンスフィールド | `plugins: Array<PluginInfo>`（`name`, `version`, `description`, `data_type`, `rep_name`, `rep_names`, `emits_kyou`, `provides`, `is_alive`, `process_running`, `last_error`, `typed_index`, `gps_index`） |
+| 備考 | MCP の `gkill_get_plugin_list` に加え、Web UI のプラグイン一覧管理（`manage-plugin-list-dialog.vue`）および読み取り専用ガード（`use-plugin-rep-names.ts`）がこのエンドポイントを使う |
 | 備考 | `is_alive` は「プロセスが起動できて ping に応答したか」。**判定は必要ならプロセスを起動する**。データが取り込めているかは表さない。現に起動済みかを副作用なしで見るのは `process_running` |
 | 備考 | `last_error` はプラグイン stderr の末尾（直近約4KB。何も出ていなければ省略）。**索引構築の失敗はここには出ない**（タイムアウトやJSON不正は gkill 側で起きるため）—— そちらは `typed_index.last_build_error` を見る |
 | 備考 | `last_error` と `typed_index.last_build_error` は、返す直前に `message.RedactEnvironmentSpecific` を通してホームのユーザー名・メールアドレスをプレースホルダへ置き換える（プラグインは診断のために実パスを書いてよい前提で、伏せるのは gkill 側の責務。パスの形は残るので LocalSystem 起動でホームが化ける事故は診断できる）。MCP はこの2つを**中身ごと返さず** `has_last_error` / `has_last_build_error` だけを返す（[ADR-0707](../adr/0707-redact-environment-specific-strings.md)） |
-| 備考 | `typed_index` は provides を宣言したプラグインの索引統計（宣言が無ければ省略）。`ok` / `state`（`never_built` / `failed` / `ok`。未構築と構築失敗を区別する）/ `last_build_error` / `last_attempt_at`（直近に構築を試みた時刻。バックオフ中はエラーすら出ないため要る）/ `record_count` / `oldest` / `newest`（related_time の範囲。0件なら省略）/ `truncated`（true なら `record_count` は実数より小さい）/ `built_at`（この統計の鮮度） |
+| 備考 | `typed_index` は provides を宣言した Kyou 提供プラグインの索引統計（宣言が無い・または `gpslog` のみなら省略）。`ok` / `state`（`never_built` / `failed` / `ok`。未構築と構築失敗を区別する）/ `last_build_error` / `last_attempt_at`（直近に構築を試みた時刻。バックオフ中はエラーすら出ないため要る）/ `record_count` / `oldest` / `newest`（related_time の範囲。0件なら省略）/ `truncated`（true なら `record_count` は実数より小さい）/ `built_at`（この統計の鮮度）。GPS の取り込み統計は別枠の `gps_index` |
 
 ### get_plugin_content_html 詳細
 
@@ -562,13 +562,14 @@ MCPサーバは14個のReadツールを提供する。内訳は固有の13（`gk
 | PWAキャッシュキー | `/cache/api/plugin_content_html/{kyou_id}` |
 | 備考 | キャッシュ識別子に `kyou_id` を使用（他エンドポイントの `id` / `target_id` とは命名が異なる）。MCPも `gkill_get_kyous` に `include_plugin_content:true` が渡されたときにこのエンドポイントを叩き、既定でHTMLをプレーンテキストに変換して各プラグインペイロードの `content_text` に埋め込む |
 
-### post_plugin_config 詳細
+### get_plugin_config_html / post_plugin_config 詳細
 
 | 項目 | 内容 |
 |---|---|
-| リクエスト型 | `PostPluginConfigRequest` |
-| 主要フィールド | `session_id`, `rep_name`, `form_data: Record<string, string>` |
-| レスポンス型 | `PostPluginConfigResponse` |
+| リクエスト型 | `GetPluginConfigHTMLRequest` / `PostPluginConfigRequest` |
+| 主要フィールド | `session_id`, `locale_name`, `target_user_id`（対象アカウントID、省略時は自分）, `rep_name`（+ `post_plugin_config` は `form_data: Record<string, string>`） |
+| レスポンス型 | `GetPluginConfigHTMLResponse` / `PostPluginConfigResponse` |
+| 権限 | **管理者専用**（`IsAdmin` チェック。一般ユーザは 403 `AccountNotHasAdminError`）。Web UI では「アカウント管理」→「プラグイン設定」（`manage-plugin-list-dialog.vue` → `plugin-config-dialog.vue`）から呼び出す（ADR-0714） |
 | 備考 | `plugin-config-dialog.vue` の iframe srcdoc 内フォームの送信データを受け取り、プラグインプロセスの `post_config` コマンドへ転送する |
 
 ## スキル（6件）

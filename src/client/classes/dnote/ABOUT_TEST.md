@@ -12,7 +12,7 @@ Vitest
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `src/client/__tests__/unit/dnote/predicates.test.ts` | フィルタ述語関数（実装は38種。うち27種をテスト） |
+| `src/client/__tests__/unit/dnote/predicates.test.ts` | フィルタ述語関数（実装は36種。うち27種をテスト） |
 | `src/client/__tests__/unit/dnote/key-getters.test.ts` | 9種のキー取得関数 |
 | `src/client/__tests__/unit/dnote/aggregate-targets.test.ts` | 集計ターゲット（実装は19種） |
 | `src/client/__tests__/unit/dnote/aggregators.test.ts` | DnoteAgregator / DnoteListAggregator |
@@ -25,7 +25,7 @@ Vitest
 
 ## テスト内容
 
-- **Predicates**: データ型判定、日付範囲フィルタ、タグマッチ、テキスト検索など。`dnote-predicate/` に33種 + `target-kyou-predicate/` に5種＝38種あり、そのうち27種を `predicates.test.ts` がカバーする。未カバーは `git-commit-log-code-*` 系6種、`related-time-week`、`text-content-contains` / `text-content-equal`、`equal-rep-data-type-target-kyou` / `equal-title-target-kyou` の計11種
+- **Predicates**: データ型判定、日付範囲フィルタ、タグマッチ、テキスト検索など。`dnote-predicate/` に31種 + `target-kyou-predicate/` に5種＝36種あり、そのうち27種を `predicates.test.ts` がカバーする。未カバーは `git-commit-log-code-*` 系、`related-time-week`、`text-content-contains` / `text-content-equal`、`equal-rep-data-type-target-kyou` / `equal-title-target-kyou` 等の9種
 - **Key Getters**: 日付、タグ名、リポジトリ名など9種のグルーピングキー取得
 - **Aggregate Targets**: カウント、合計、平均、最小、最大など。`dnote-aggregate-target/` の22ファイルのうち19種が集計対象（残り3つは `average-info.ts` / `time-of-day-average-info.ts` / `format-aggregated-number.ts` のヘルパ）。表示用の丸め（`format-aggregated-number.ts`）もここでテストする。丸めを通すのは平均系と浮動小数の合計系のみで、整数しか出ない集計と時刻整形の集計は対象外
 - **Aggregators**: `DnoteAgregator`（単一集計）と `DnoteListAggregator`（リスト集計）の動作検証
@@ -39,7 +39,7 @@ Vitest
 | ディレクトリ | ファイル数 | 検証しているテスト |
 |-------------|-----------|------------------|
 | （ルート） | 21 | `aggregators.test.ts` / `trend-aggregator.test.ts` / `correlation-aggregator.test.ts` |
-| `dnote-predicate/` | 33 | `predicates.test.ts` |
+| `dnote-predicate/` | 31 | `predicates.test.ts` |
 | `dnote-predicate/target-kyou-predicate/` | 5 | `predicates.test.ts` |
 | `dnote-aggregate-target/` | 22 | `aggregate-targets.test.ts` |
 | `dnote-key-getter/` | 9 | `key-getters.test.ts` |

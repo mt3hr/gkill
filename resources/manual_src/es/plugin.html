@@ -44,11 +44,11 @@
     </tr>
     <tr>
       <td>ArchivedGit</td>
-      <td>Historial de commits de repositorios Git archivados como zip. El zip se lee sin descomprimirlo y los registros tienen la misma forma que los de un repositorio Git en uso (el nombre del lugar de almacenamiento es el del repositorio dentro del zip)</td>
+      <td>Historial de commits de repositorios Git archivados como zip. El zip se lee sin descomprimirlo y los registros tienen la misma forma que los de un repositorio Git en uso (el nombre del repositorio es el del repositorio Git que hay dentro del zip)</td>
     </tr>
     <tr>
       <td>VRChat</td>
-      <td>Registros de VRChat. Se convierten en los mundos en los que estuviste y durante cuánto tiempo (registros de tiempo y marcadores), las personas que estaban en la misma sala y durante cuánto tiempo (registros de tiempo), y tus cambios de avatar y las URL de los vídeos reproducidos (notas). VRChat borra los registros antiguos a los pocos días, así que cópialos a otro lugar antes de que desaparezcan y añade también ese lugar a los orígenes</td>
+      <td>Registros de VRChat. Se convierten en los mundos en los que estuviste y durante cuánto tiempo (registros de tiempo y marcadores), las personas que estaban en la misma sala y durante cuánto tiempo (registros de tiempo), las URL de los vídeos reproducidos (marcadores) y tus cambios de avatar (notas). VRChat borra los registros antiguos a los pocos días, así que cópialos a otro lugar antes de que desaparezcan y añade también ese lugar a los orígenes</td>
     </tr>
   </table>
   <div class="tip">
@@ -58,7 +58,7 @@
   <h2>Cómo instalarlos</h2>
   <p>Instalar un complemento consiste en colocar archivos. Siga los pasos en orden.</p>
   <ol>
-    <li>Coloque el ejecutable del complemento en la carpeta <code>plugins</code> que hay dentro de la carpeta de inicio de gkill. El sitio exacto es dentro de una carpeta con su ID de usuario y, dentro de esta, otra con el nombre del complemento, ambas creadas bajo <code>plugins</code>.</li>
+    <li>Coloque el ejecutable del complemento y <code>manifest.json</code> en la carpeta <code>plugins</code> que hay dentro de la carpeta de inicio de gkill. El sitio exacto es dentro de una carpeta con su ID de usuario y, dentro de esta, otra con el nombre del complemento, ambas creadas bajo <code>plugins</code> (las carpetas sin <code>manifest.json</code> no se cargan; los complementos incluidos pueden generarlo con <code>ejecutable --gkill-print-manifest &gt; manifest.json</code>).</li>
     <li>Inicie gkill. La primera vez que se carga el complemento, se crea automáticamente el archivo de configuración <code>config.json</code> en esa misma carpeta.</li>
     <li>Abra <code>config.json</code> con un editor de texto y escriba en <code>source_dirs</code> la carpeta donde están los datos que quiere importar.</li>
     <li>Al buscar en la <a href="rykv.html">Vista de registro de vida</a>, aparecerán en la lista igual que cualquier otro registro.</li>
@@ -92,14 +92,14 @@
     </tr>
     <tr>
       <td>Si lo deja vacío</td>
-      <td>ChatGPT y Claude.ai miran la carpeta del complemento; ClaudeCode, Codex y Antigravity miran donde su propia herramienta guarda los registros por omisión; VRChat mira donde VRChat escribe sus registros por omisión</td>
+      <td>ChatGPT y Claude.ai miran la carpeta del complemento; ClaudeCode, Codex, Antigravity y VRChat miran donde cada herramienta guarda sus registros por omisión; Fitbit, GoogleLocation y Gemini miran la carpeta estándar bajo su carpeta personal (ArchivedGit no lee nada si se deja vacío)</td>
     </tr>
   </table>
   <h3>Al importar datos de ChatGPT o Claude.ai</h3>
   <p>Para el historial de conversaciones de ChatGPT y Claude.ai, <strong>deje el archivo ZIP descargado de cada servicio tal cual y colóquelo en una carpeta</strong>. Los archivos JSON que usted mismo haya extraído no se leen.</p>
   <p>En <code>source_dirs</code>, escriba la carpeta que contiene el archivo ZIP. También puede escribir la ruta del propio archivo ZIP. Si añade un ZIP recién descargado a la misma carpeta, de cada conversación solo se usa la copia más reciente, y las conversaciones que solo existen en el ZIP antiguo se conservan.</p>
   <h3>Al importar datos de Google Takeout</h3>
-  <p>Para los datos de salud y el historial de ubicaciones, <strong>deje el archivo ZIP descargado de Google Takeout tal cual y colóquelo en una carpeta</strong>. Las carpetas que usted mismo haya descomprimido no se leen.</p>
+  <p>Para los tres —datos de salud (Fitbit), historial de ubicaciones (GoogleLocation) y conversaciones de Gemini—, <strong>deje el archivo ZIP descargado de Google Takeout tal cual y colóquelo en una carpeta</strong>. Las carpetas que usted mismo haya descomprimido no se leen.</p>
   <p>En <code>source_dirs</code>, escriba la carpeta que contiene el archivo ZIP. También puede escribir la ruta del propio archivo ZIP.</p>
   <table>
     <tr>

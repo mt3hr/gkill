@@ -44,11 +44,11 @@
     </tr>
     <tr>
       <td>ArchivedGit</td>
-      <td>Historique des commits de dépôts Git archivés en zip. Le zip est lu sans être extrait et les enregistrements ont la même forme que ceux d'un dépôt Git en cours d'utilisation (le nom du lieu de stockage est celui du dépôt contenu dans le zip)</td>
+      <td>Historique des commits de dépôts Git archivés en zip. Le zip est lu sans être extrait et les enregistrements ont la même forme que ceux d'un dépôt Git en cours d'utilisation (le nom du dépôt est celui du dépôt Git contenu dans le zip)</td>
     </tr>
     <tr>
       <td>VRChat</td>
-      <td>Journaux de VRChat. Ils deviennent les mondes où vous étiez et pendant combien de temps (journaux de temps et signets), les personnes présentes dans la même salle et pendant combien de temps (journaux de temps), ainsi que vos changements d'avatar et les URL des vidéos lues (mémos). VRChat supprime les anciens journaux au bout de quelques jours : copiez-les ailleurs avant qu'ils ne disparaissent et ajoutez aussi cet emplacement aux sources</td>
+      <td>Journaux de VRChat. Ils deviennent les mondes où vous étiez et pendant combien de temps (entrées de temps et signets), les personnes présentes dans la même salle et pendant combien de temps (entrées de temps), les URL des vidéos lues (signets) et vos changements d'avatar (mémos). VRChat supprime les anciens journaux au bout de quelques jours : copiez-les ailleurs avant qu'ils ne disparaissent et ajoutez aussi cet emplacement aux sources</td>
     </tr>
   </table>
   <div class="tip">
@@ -58,7 +58,7 @@
   <h2>Comment les installer</h2>
   <p>Installer une extension consiste à placer des fichiers. Suivez les étapes dans l'ordre.</p>
   <ol>
-    <li>Placez l'exécutable de l'extension dans le dossier <code>plugins</code> situé dans le dossier personnel de gkill. L'emplacement exact se trouve dans un dossier portant votre identifiant, puis un dossier portant le nom de l'extension, tous deux créés sous <code>plugins</code>.</li>
+    <li>Placez l'exécutable de l'extension et <code>manifest.json</code> dans le dossier <code>plugins</code> situé dans le dossier personnel de gkill. L'emplacement exact se trouve dans un dossier portant votre identifiant, puis un dossier portant le nom de l'extension, tous deux créés sous <code>plugins</code> (les dossiers sans <code>manifest.json</code> sont ignorés ; pour les extensions fournies, vous pouvez le générer avec <code>exécutable --gkill-print-manifest &gt; manifest.json</code>).</li>
     <li>Démarrez gkill. Au premier chargement de l'extension, le fichier de configuration <code>config.json</code> est créé automatiquement dans ce même dossier.</li>
     <li>Ouvrez <code>config.json</code> dans un éditeur de texte et indiquez dans <code>source_dirs</code> le dossier contenant les données à importer.</li>
     <li>En effectuant une recherche dans la <a href="rykv.html">Vue du journal de vie</a>, ils s'affichent dans la liste comme n'importe quel autre enregistrement.</li>
@@ -92,14 +92,14 @@
     </tr>
     <tr>
       <td>Si vous le laissez vide</td>
-      <td>ChatGPT et Claude.ai regardent le dossier de l'extension ; ClaudeCode, Codex et Antigravity regardent chacun l'emplacement par défaut des journaux de leur propre outil ; VRChat regarde l'emplacement où VRChat écrit ses journaux par défaut</td>
+      <td>ChatGPT et Claude.ai regardent le dossier de l'extension ; ClaudeCode, Codex, Antigravity et VRChat regardent chacun l'emplacement par défaut où leur outil enregistre ses journaux ; Fitbit, GoogleLocation et Gemini regardent le dossier par défaut sous votre dossier personnel (ArchivedGit ne lit rien s'il est laissé vide)</td>
     </tr>
   </table>
   <h3>Lors de l&rsquo;importation de données ChatGPT ou Claude.ai</h3>
   <p>Pour l&rsquo;historique des conversations ChatGPT et Claude.ai, <strong>laissez le fichier ZIP téléchargé depuis chaque service tel quel et placez-le simplement dans un dossier</strong>. Les fichiers JSON que vous en avez extraits ne sont pas lus.</p>
   <p>Dans <code>source_dirs</code>, indiquez le dossier qui contient le fichier ZIP. Vous pouvez aussi indiquer le chemin du fichier ZIP lui-même. Si vous ajoutez un ZIP fraîchement téléchargé dans le même dossier, seule la copie la plus récente de chaque conversation est utilisée, et les conversations qui n&rsquo;existent que dans l&rsquo;ancien ZIP sont conservées.</p>
   <h3>Lors de l&rsquo;importation de données Google Takeout</h3>
-  <p>Pour les données de santé et l&rsquo;historique des positions, <strong>laissez le fichier ZIP téléchargé depuis Google Takeout tel quel et placez-le simplement dans un dossier</strong>. Les dossiers que vous avez décompressés vous-même ne sont pas lus.</p>
+  <p>Pour les trois extensions de données de santé (Fitbit), d&rsquo;historique des positions (GoogleLocation) et de conversations Gemini, <strong>laissez le fichier ZIP téléchargé depuis Google Takeout tel quel et placez-le simplement dans un dossier</strong>. Les dossiers que vous avez décompressés vous-même ne sont pas lus.</p>
   <p>Dans <code>source_dirs</code>, indiquez le dossier qui contient le fichier ZIP. Vous pouvez aussi indiquer le chemin du fichier ZIP lui-même.</p>
   <table>
     <tr>
@@ -119,10 +119,10 @@
     <strong>Astuce :</strong> Il n&rsquo;est pas nécessaire de supprimer les anciens téléchargements. Même si les dates se recouvrent, les valeurs comme le nombre de pas ne sont jamais comptées deux fois.
   </div>
   <div class="tip">
-    <strong>Astuce :</strong> Les entrées de <code>config.json</code> commençant par <code>_</code> (tiret bas) ne sont là que pour expliquer le format. Vous pouvez les supprimer.
+    <strong>Comment les pas sont comptés :</strong> Lorsqu'une journée contient des pas provenant à la fois de la montre et du téléphone, seules les valeurs de la montre sont utilisées. Celles du téléphone ne servent que les jours sans enregistrement de la montre. Les sources considérées comme secours pour les jours sans montre se modifient dans l'écran de configuration de l'extension, sous « Sources de données utilisées uniquement les jours sans enregistrement de la montre » (laissez vide pour tout additionner).
   </div>
   <div class="tip">
-    <strong>Comment les pas sont comptés :</strong> Lorsqu'une journée contient des pas provenant à la fois de la montre et du téléphone, seules les valeurs de la montre sont utilisées. Celles du téléphone ne servent que les jours sans enregistrement de la montre. Les sources considérées comme secours pour les jours sans montre se modifient dans l'écran de configuration de l'extension, sous « Sources de données utilisées uniquement les jours sans enregistrement de la montre » (laissez vide pour tout additionner).
+    <strong>Astuce :</strong> Les entrées de <code>config.json</code> commençant par <code>_</code> (tiret bas) ne sont là que pour expliquer le format. Vous pouvez les supprimer.
   </div>
   <div class="tip">
     <strong>Astuce :</strong> Il n'est pas nécessaire de redémarrer gkill après avoir modifié <code>config.json</code>. Les nouveaux réglages s'appliquent dès la recherche suivante.

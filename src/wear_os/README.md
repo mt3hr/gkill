@@ -57,7 +57,7 @@ wear_os/
 | `GkillSecretCipher.kt` | 認証情報の暗号化・復号ユーティリティ |
 | `MainActivity.kt` | コンパニオンアプリのメインアクティビティ（認証情報設定画面・証明書ピンの承認） |
 
-### `watch_app/` — ウォッチ側アプリ（17ファイル）
+### `watch_app/` — ウォッチ側アプリ（18ファイル）
 
 Compose for Wear OS で構築されたウォッチアプリ。KFTL テンプレートの選択・送信と、
 星5個による気分（Lantana）の記録を行う。
@@ -77,13 +77,14 @@ Compose for Wear OS で構築されたウォッチアプリ。KFTL テンプレ�
 | `model/PlayingTimeIsNode.kt` | 稼働中 TimeIs のデータモデル |
 | `model/TemplateNode.kt` | KFTL テンプレートのデータモデル |
 
-#### `presentation/` — UI 層（9ファイル）
+#### `presentation/` — UI 層（10ファイル）
 
 Compose for Wear OS による画面構成。チップの見た目はタイル（`tile/GkillTileService.kt`）が基準で、
 アプリ側は `components/MenuChip.kt` を使って揃える。
 
 | ファイル | 画面 | 説明 |
 |---------|------|------|
+| `TemplateScrollMemory.kt` | テンプレート一覧補助 | フォルダ階層ごとのスクロール位置を保持・復元する純粋状態クラス |
 | `components/MenuChip.kt` | 共通部品 | タイルのチップと同じ見た目のチップ（140dp 固定幅・primary 色・文字中央揃え・末尾省略）。幅の定数 `MENU_CHIP_WIDTH_DP` をタイルと共有する |
 | `screens/TemplateListScreen.kt` | テンプレート一覧 | KFTL テンプレートの選択画面 |
 | `screens/ConfirmScreen.kt` | 送信確認 | 選択したテンプレートの送信確認 |

@@ -1,10 +1,10 @@
 <!-- title: Gesti&oacute;n de cuentas - Ayuda -->
-  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Gestión de Cuentas</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Gestión de cuentas</span></nav>
   <h1>Gesti&oacute;n de cuentas</h1>
   <p>Esta pantalla gestiona las cuentas de usuario. Solo los administradores pueden acceder.</p>
 
   <h2>Bot&oacute;n superior</h2>
-  <p>Pulse el bot&oacute;n <strong>A&ntilde;adir cuenta</strong> para crear una nueva cuenta.</p>
+  <p>Pulse el bot&oacute;n <strong>Agregar cuenta</strong> para crear una nueva cuenta.</p>
 
   <h2>Lista de cuentas</h2>
   <p>Las cuentas registradas se muestran en una lista. Cada fila de cuenta contiene los siguientes elementos:</p>
@@ -12,7 +12,7 @@
     <tr><th>Elemento</th><th>Descripci&oacute;n</th></tr>
     <tr><td>Casilla de activar/desactivar</td><td>Alterna el estado de la cuenta entre activada y desactivada (no se puede alternar la cuenta con la que ha iniciado sesi&oacute;n)</td></tr>
     <tr><td>ID de usuario</td><td>Muestra el ID de usuario de la cuenta</td></tr>
-    <tr><td>Bot&oacute;n de asignaci&oacute;n de almacenamiento</td><td>Asigna repositorios de datos al usuario</td></tr>
+    <tr><td>Bot&oacute;n de asignaci&oacute;n de almacenamiento</td><td>Asigna repositorios al usuario</td></tr>
     <tr><td>Bot&oacute;n de configuraci&oacute;n del complemento</td><td>Abre la lista de complementos de ese usuario</td></tr>
     <tr><td>Bot&oacute;n de restablecimiento de contrase&ntilde;a</td><td>Genera un enlace de restablecimiento de contrase&ntilde;a</td></tr>
   </table>
@@ -21,30 +21,32 @@
   <p><strong>Cerrar</strong>: Cierra la pantalla de gesti&oacute;n de cuentas.</p>
 
   <div class="tip">
-    <strong>Consejo:</strong> La cuenta <code>admin</code> se crea automáticamente cuando el servidor se inicia por primera vez. Las cuentas agregadas desde la pantalla de gestión de cuentas son usuarios normales (sin privilegios de administrador). Las cuentas se gestionan habilitandolas/deshabilitandolas en lugar de eliminarlas.
+    <strong>Consejo:</strong> La cuenta <code>admin</code> se crea automáticamente cuando el servidor se inicia por primera vez. Las cuentas agregadas desde la pantalla de gestión de cuentas son usuarios normales (sin privilegios de administrador). Las cuentas no se eliminan: se gestionan habilitándolas o deshabilitándolas.
   </div>
 
   <h2>Procedimiento de restablecimiento de contraseña</h2>
+  <p>Si un usuario olvida su contraseña, el administrador emite un enlace de restablecimiento siguiendo estos pasos.</p>
   <h3>Procedimiento del administrador</h3>
   <ol>
-    <li>Abra Configuración del servidor &gt; Gestión de cuentas.</li>
-    <li>Pulse el botón "Restablecer contraseña" del usuario correspondiente.</li>
-    <li>Pulse Aceptar en el dialogo de confirmacion para generar el enlace de restablecimiento.</li>
-    <li>Copie el enlace y compartalo con el usuario.</li>
+    <li>Abra «Gestión de cuentas» desde la pantalla de configuración del servidor.</li>
+    <li>Pulse el botón «Restablecer contraseña» de la fila del usuario correspondiente.</li>
+    <li>Pulse «OK» en el diálogo de confirmación para generar el enlace de restablecimiento.</li>
+    <li>Copie el enlace que aparece y compártalo con el usuario (por mensaje, correo electrónico, etc.).</li>
   </ol>
   <h3>Procedimiento del usuario</h3>
   <ol>
-    <li>Abra el enlace en el navegador.</li>
-    <li>Introduzca la nueva contraseña dos veces.</li>
-    <li>Pulse el botón "Establecer".</li>
-    <li>Será redirigido a la pantalla de inicio de sesión; inicie sesión con la nueva contraseña.</li>
+    <li>Abra en el navegador el enlace de restablecimiento que recibió del administrador.</li>
+    <li>Introduzca la nueva contraseña y vuelva a introducirla para confirmarla.</li>
+    <li>Pulse el botón «Configuración de contraseña» para establecer la nueva contraseña.</li>
+    <li>Pasará a la pantalla de inicio de sesión; inicie sesión con la nueva contraseña.</li>
   </ol>
   <div class="tip">
-    <strong>Consejo:</strong> El enlace de restablecimiento es de un solo uso. Es v&aacute;lido durante 72 horas desde su emisi&oacute;n y la fecha de caducidad se muestra en el di&aacute;logo del enlace. Una vez caducado, use el bot&oacute;n "Volver a emitir el enlace" del mismo di&aacute;logo para generar uno nuevo.
+    <strong>Consejo:</strong> El enlace de restablecimiento es de un solo uso: deja de ser válido en cuanto se usa. Es v&aacute;lido durante 72 horas desde su emisi&oacute;n y la fecha de caducidad se muestra en el di&aacute;logo del enlace. Una vez caducado, use el bot&oacute;n "Volver a emitir el enlace" del mismo di&aacute;logo para generar uno nuevo.
   </div>
 
-  <h2>Asignacion de almacenamiento</h2>
-  <p>El botón "Asignacion de almacenamiento" le permite asignar repositorios de datos a cada usuario. Consulte <a href="server-config.html">Gestión del almacenamiento</a> en la configuración del servidor para obtener detalles sobre como agregar y administrar repositorios.</p>
+  <h2>Asignación de repositorios</h2>
+  <p>A cada usuario se le asignan los «repositorios» donde se guardan sus datos. Al pulsar el botón de asignación de almacenamiento se abre el diálogo para configurar los repositorios de ese usuario. Para más detalles, consulte «Gestión de repositorios» en <a href="server-config.html">Configuración del servidor</a>.</p>
+
   <h2>Configuraci&oacute;n de los complementos</h2>
   <p>Pulse el bot&oacute;n &laquo;Configuraci&oacute;n del complemento&raquo; en la fila de un usuario para abrir la lista de sus complementos.
   Se muestran el nombre, la versi&oacute;n y la descripci&oacute;n de cada uno, y si est&aacute; en ejecuci&oacute;n. El bot&oacute;n
@@ -57,6 +59,6 @@
 
   <h2>Documentos Relacionados</h2>
   <ul>
-    <li><a href="server-config.html">Configuración del Servidor</a></li>
+    <li><a href="server-config.html">Configuración del servidor</a></li>
     <li><a href="application-config.html">Configuración</a></li>
   </ul>

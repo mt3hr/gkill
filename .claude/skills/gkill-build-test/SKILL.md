@@ -1,11 +1,11 @@
 ---
 name: gkill-build-test
-description: "gkill のビルド・テスト・E2E 実行・リリースゲートの約束。ビルドパイプライン（dist と i18n とマニュアルの embed への3コピー）、embed 無しの裸 go build が起動即死バイナリを作る罠、dev サーバの --api プロキシ指定、E2E の専用ホームと空きポート自動採番（ポートを固定しない）、テスト済み attestation（tree hash 束縛・run_test_suite.mjs だけが書く・verify_release_gate.mjs が release の先頭で CI/Nightly と併せて検査する）を扱う。package.json・src/tools/・vite.config.ts・playwright.config.ts・src/client/__tests__/e2e/・.github/workflows/ を編集するとき、ビルドやテストの実行・リリースを頼まれたとき必読。「ビルドは通るのに起動即死する」「E2E が本番サーバと衝突する」「release がゲートで止まる」の調査でも必読。"
+description: "gkill のビルド・テスト・E2E 実行・リリースゲートの約束。ビルドパイプライン（dist・i18n・マニュアル・HTML出力ガワの embed への4コピー）、embed 無しの裸 go build が起動即死バイナリを作る罠、dev サーバの --api プロキシ指定、E2E の専用ホームと空きポート自動採番（ポートを固定しない）、テスト済み attestation（tree hash 束縛・run_test_suite.mjs だけが書く・verify_release_gate.mjs が release の先頭で CI/Nightly と併せて検査する）を扱う。package.json・src/tools/・vite.config.ts・vite.export.config.ts・playwright.config.ts・src/client/__tests__/e2e/・.github/workflows/ を編集するとき、ビルドやテストの実行・リリースを頼まれたとき必読。「ビルドは通るのに起動即死する」「E2E が本番サーバと衝突する」「release がゲートで止まる」の調査でも必読。"
 ---
 
 # ビルド・テスト・E2E の約束
 
-対象: `package.json` / `src/tools/**` / `vite.config.ts` / `playwright.config.ts` / `src/client/__tests__/e2e/**` / `.github/workflows/**`
+対象: `package.json` / `src/tools/**` / `vite.config.ts` / `vite.export.config.ts` / `playwright.config.ts` / `src/client/__tests__/e2e/**` / `.github/workflows/**`
 （npm スクリプトの一覧表は `AGENTS.md` にある）
 
 **このファイルは全文が、実際に起きた事故の再発防止である。該当作業では飛ばさずに読むこと。**

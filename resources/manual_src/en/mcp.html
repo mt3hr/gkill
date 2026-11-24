@@ -21,12 +21,12 @@
   <h2>Integration Types</h2>
   <table>
     <tr><th>Type</th><th>What it can do</th><th>Command</th><th>Tools</th><th>Port (HTTP)</th></tr>
-    <tr><td>Read-only</td><td>View and search records only. Adding or modifying is not allowed. Skills can be read</td><td>gkill_server mcp --kind read</td><td>14</td><td>8808</td></tr>
-    <tr><td>Write-only</td><td>Add, update and delete records. It can also read storage names, tag names and board names. Skills can be read, and also created and rewritten</td><td>gkill_server mcp --kind write</td><td>41</td><td>8809</td></tr>
-    <tr><td>Read &amp; Write</td><td>View, add, update and delete records. Skills can be read, created and rewritten</td><td>gkill_server mcp --kind readwrite</td><td>45</td><td>8810</td></tr>
+    <tr><td>Read-only</td><td>View and search records only. Adding or modifying is not allowed. Skills can be read</td><td><code>gkill_server mcp --kind read</code></td><td>14</td><td>8808</td></tr>
+    <tr><td>Write-only</td><td>Add, update and delete records. It can also read storage names, tag names and board names. Skills can be read, and also created and rewritten</td><td><code>gkill_server mcp --kind write</code></td><td>41</td><td>8809</td></tr>
+    <tr><td>Read &amp; Write</td><td>View, add, update and delete records. Skills can be read, created and rewritten</td><td><code>gkill_server mcp --kind readwrite</code></td><td>45</td><td>8810</td></tr>
   </table>
   <p>The MCP server is part of gkill_server and starts with <code>gkill_server mcp --kind &lt;type&gt;</code> (gkill_server itself must be running). The connection and credentials come from environment variables or from the config file <code>configs/gkill_mcp.json</code>, which is generated on first start. Logs go to <code>logs/gkill_mcp_&lt;type&gt;.log</code> (per-level files share the prefix).</p>
-  <p>Every type includes one tool for listing the plugins in use. The contents of records imported by plugins can be received inline with the search results.</p>
+  <p>Every type includes one tool for getting the list of plugins. The contents of records imported by plugins can be received inline with the search results.</p>
 
   <h2>Skills</h2>
   <p>A skill is a procedure you leave for AI assistants (for example, how to build the weekly summary, or which tags to put on a kind of record). Skills are stored per user, and every AI assistant you connect uses the same skills. Before working, the AI checks the list of skills and reads the one that matches the task.</p>
@@ -86,12 +86,12 @@ description: Steps for building the weekly summary
 }</code></pre>
 
   <div class="tip">
-    <strong>Tip:</strong> <code>GKILL_PASSWORD_SHA256</code> is the SHA256 hash of your password. You can generate it using tools available on your operating system or online SHA256 calculators.
+    <strong>Tip:</strong> <code>GKILL_PASSWORD_SHA256</code> is the SHA256 hash of your password. You can generate it with a tool such as <code>certutil -hashfile - SHA256</code> in the Command Prompt (Windows).
   </div>
 
   <h2>Setup (Claude Code)</h2>
   <p>Run the following command in your terminal.</p>
-  <pre><code># Add read-only integration
+  <pre><code># Add as read-only (environment variables go before --, the command to run goes after --)
 claude mcp add gkill \
   --env GKILL_BASE_URL=http://localhost:9999 \
   --env GKILL_USER=your-user-id \

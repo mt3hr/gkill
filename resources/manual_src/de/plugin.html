@@ -44,11 +44,11 @@
     </tr>
     <tr>
       <td>ArchivedGit</td>
-      <td>Commit-Verlauf von Git-Repositories, die als Zip archiviert wurden. Das Zip wird ohne Entpacken gelesen, und die Einträge haben dieselbe Form wie die eines aktiven Git-Repositories (der Name des Speicherorts ist der Name des Repositories im Zip)</td>
+      <td>Commit-Verlauf von Git-Repositories, die als Zip archiviert wurden. Das Zip wird ohne Entpacken gelesen, und die Einträge haben dieselbe Form wie die eines aktiven Git-Repositories (der Name der Ablage ist der Name des Repositorys im Zip)</td>
     </tr>
     <tr>
       <td>VRChat</td>
-      <td>VRChat-Protokolle. Daraus werden die besuchten Welten und die Aufenthaltsdauer (Zeitprotokolle und Lesezeichen), die Personen im selben Raum und deren Dauer (Zeitprotokolle) sowie die eigenen Avatarwechsel und die URLs abgespielter Videos (Notizen). VRChat löscht alte Protokolle nach einigen Tagen; kopieren Sie sie daher vorher an einen anderen Ort und tragen Sie diesen ebenfalls als Quelle ein</td>
+      <td>VRChat-Protokolle. Daraus werden die besuchten Welten und die Aufenthaltsdauer (Zeitprotokolle und Lesezeichen), die Personen im selben Raum und deren Dauer (Zeitprotokolle), die URLs abgespielter Videos (Lesezeichen) sowie Ihre eigenen Avatarwechsel (Notizen). VRChat löscht alte Protokolle nach einigen Tagen; kopieren Sie sie daher vorher an einen anderen Ort und tragen Sie diesen ebenfalls als Quelle ein</td>
     </tr>
   </table>
   <div class="tip">
@@ -58,7 +58,7 @@
   <h2>So richten Sie ein Plugin ein</h2>
   <p>Ein Plugin einzurichten bedeutet, Dateien abzulegen. Gehen Sie die Schritte der Reihe nach durch.</p>
   <ol>
-    <li>Legen Sie die ausführbare Datei des Plugins in den Ordner <code>plugins</code> innerhalb des gkill-Basisordners. Der genaue Ort ist ein Ordner mit Ihrer Benutzer-ID und darin ein Ordner mit dem Plugin-Namen, beide unter <code>plugins</code> angelegt.</li>
+    <li>Legen Sie die ausführbare Datei des Plugins und <code>manifest.json</code> in den Ordner <code>plugins</code> innerhalb des gkill-Basisordners. Der genaue Ort ist ein Ordner mit Ihrer Benutzer-ID und darin ein Ordner mit dem Plugin-Namen, beide unter <code>plugins</code> angelegt (Ordner ohne <code>manifest.json</code> werden nicht geladen; bei mitgelieferten Plugins können Sie sie mit <code>AusführbareDatei --gkill-print-manifest &gt; manifest.json</code> erzeugen).</li>
     <li>Starten Sie gkill. Wenn das Plugin zum ersten Mal geladen wird, entsteht im selben Ordner automatisch die Konfigurationsdatei <code>config.json</code>.</li>
     <li>Öffnen Sie <code>config.json</code> in einem Texteditor und tragen Sie unter <code>source_dirs</code> den Ordner ein, in dem die zu importierenden Daten liegen.</li>
     <li>Wenn Sie in der <a href="rykv.html">Lebensprotokoll-Ansicht</a> suchen, erscheinen sie wie jeder andere Eintrag in der Liste.</li>
@@ -92,14 +92,14 @@
     </tr>
     <tr>
       <td>Wenn Sie es leer lassen</td>
-      <td>ChatGPT und Claude.ai sehen im Plugin-Ordner nach; ClaudeCode, Codex und Antigravity jeweils am Standardspeicherort der Protokolle ihres eigenen Werkzeugs; VRChat am Ort, an den VRChat seine Protokolle standardmäßig schreibt</td>
+      <td>ChatGPT und Claude.ai sehen im Plugin-Ordner nach; ClaudeCode, Codex, Antigravity und VRChat jeweils am Standardspeicherort, an dem das jeweilige Werkzeug seine Protokolle ablegt; Fitbit, GoogleLocation und Gemini im Standardordner unter Ihrem Basisordner (ArchivedGit liest nichts ein, wenn das Feld leer bleibt)</td>
     </tr>
   </table>
   <h3>Beim Importieren von ChatGPT- oder Claude.ai-Daten</h3>
   <p>Legen Sie für den Gesprächsverlauf von ChatGPT und Claude.ai die vom jeweiligen Dienst heruntergeladene <strong>ZIP-Datei unentpackt in einen Ordner</strong>. Selbst daraus entpackte JSON-Dateien werden nicht gelesen.</p>
   <p>Tragen Sie in <code>source_dirs</code> den Ordner ein, der die ZIP-Datei enthält. Sie können auch den Pfad der ZIP-Datei selbst angeben. Wenn Sie eine neu heruntergeladene ZIP-Datei in denselben Ordner legen, wird von jedem Gespräch nur die neuere Kopie verwendet; Gespräche, die nur in der alten ZIP-Datei vorkommen, bleiben erhalten.</p>
   <h3>Beim Importieren von Google-Takeout-Daten</h3>
-  <p>Legen Sie für Gesundheitsdaten und Standortverlauf die von Google Takeout heruntergeladene <strong>ZIP-Datei unentpackt in einen Ordner</strong>. Selbst entpackte Ordner werden nicht gelesen.</p>
+  <p>Legen Sie für die drei Bereiche Gesundheitsdaten (Fitbit), Standortverlauf (GoogleLocation) und Gemini-Unterhaltungen die von Google Takeout heruntergeladene <strong>ZIP-Datei unentpackt in einen Ordner</strong>. Selbst entpackte Ordner werden nicht gelesen.</p>
   <p>Tragen Sie in <code>source_dirs</code> den Ordner ein, der die ZIP-Datei enthält. Sie können auch den Pfad der ZIP-Datei selbst angeben.</p>
   <table>
     <tr>
@@ -198,11 +198,11 @@
       <td>Importieren Sie alles mit dem oben beschriebenen Verfahren neu.</td>
     </tr>
     <tr>
-      <td>„Abrufen des Plugin-Inhalts fehlgeschlagen" wird angezeigt</td>
+      <td>„Plugin-Inhalt konnte nicht abgerufen werden“ wird angezeigt</td>
       <td>Möglicherweise startet die ausführbare Datei des Plugins nicht. Prüfen Sie, ob sie unbeschädigt ist und ob Sie die Berechtigung zum Ausführen haben.</td>
     </tr>
     <tr>
-      <td>„Das Plugin hat nicht geantwortet" wird angezeigt oder der Status bleibt auf „Fehler"</td>
+      <td>„Die Erweiterung hat nicht geantwortet“ wird angezeigt oder der Status bleibt auf „Fehler"</td>
       <td>Der Grund steht in <code>gkill_plugin_&lt;Name&gt;_error.log</code> im Ordner <code>logs</code> des gkill-Hauptordners. Prüfen Sie die Quelleneinstellung und ob die ausführbare Datei startet.</td>
     </tr>
   </table>

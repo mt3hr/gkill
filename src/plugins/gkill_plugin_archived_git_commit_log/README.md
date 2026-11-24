@@ -58,7 +58,7 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_archived_git_commit_log/
 ### 3. 対象の zip を指定する
 
 `config.json` の `source_dirs` に、zip の実パスか、zip を置いたフォルダを書く。
-設定画面（Kyou の右クリック →「プラグイン設定」）からも編集できる。
+管理者アカウントの「アカウント管理」→「プラグイン設定」からも編集できる（一般ユーザは利用不可）。
 
 ```json
 {

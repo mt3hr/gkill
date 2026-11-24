@@ -49,10 +49,12 @@
   <ul>
     <li>Text search (keyword)</li>
     <li>Filter by tag</li>
-    <li>Period (besides the dates, you can set a start time and an end time. Leave a time blank to cover from the start of the first day to the end of the last day)</li>
+    <li>Period (choose the date range in the calendar and, if needed, also set a start time and an end time. Press the "×" inside a time field to empty it. Leave a time blank to cover from 0:00 on the start date to the end of the end date. To remove the period itself, press "Clear")</li>
     <li>Time of day and weekday (narrow to a range of hours within a day. Weekdays: only the days whose buttons you press; with none pressed, every weekday is included)</li>
+    <li>Filter by time tracking (narrow down to records from when a specific time entry was running)</li>
+    <li>Filter by location (narrow down by GPS position using an area on the map)</li>
     <li>Record type selection</li>
-    <li>Storage selection</li>
+    <li>Storage and profile selection</li>
   </ul>
 
   <h3>Adding filter columns</h3>
@@ -173,9 +175,9 @@
     <li>Select the files and upload them. Several files can be selected at once. Click the "Click here or drop files" area in the dialog to choose them, or drag and drop files onto it.</li>
   </ol>
   <h3>Supported file types</h3>
-  <p>Images (JPEG, PNG, GIF, WEBP), videos (MP4 and so on), PDF, ZIP and most other common file formats are supported. Markdown files (.md / .markdown) are shown as rich text with headings and tables in the list and detail views, and mermaid code blocks are rendered as diagrams.</p>
+  <p>Images (JPEG, PNG, GIF, WEBP), videos (MP4 and so on), PDF, ZIP and most other common file formats are supported. Markdown files (.md / .markdown) are shown as rich text with headings and tables in the list and detail views, and diagrams written in Mermaid notation are also rendered as graphics.</p>
   <h3>Upload size limit</h3>
-  <p>The monthly upload size limit is set by the administrator under "Monthly Upload Size Limit" in the server settings. The initial value is <code>-1</code> (unlimited).</p>
+  <p>You can send up to about 1 GB per upload request. When uploading multiple large files, split them into several uploads.</p>
   <div class="tip">
     <strong>Shortcut:</strong> Press Ctrl+V to save an image or text from the clipboard directly as a file. Ideal for quickly recording screenshots.
   </div>
@@ -232,7 +234,7 @@
 
   <h3>How to write the file</h3>
   <ol>
-    <li>In the share footer at the bottom of the sidebar, press the "Share" button at its left end.</li>
+    <li>In the share footer at the bottom of the sidebar, press the "Share" button at its left end (if you cannot see the share footer, turn on "Show Share Footer" in the settings screen).</li>
     <li>Choose "Export HTML".</li>
     <li>Choose what to include and which form to write out (see the table below).</li>
     <li>Press "Export" and the finished file is downloaded. It takes a while when there are many records or images.</li>
@@ -245,24 +247,28 @@
       <th>Description</th>
     </tr>
     <tr>
+      <td>Title</td>
+      <td>Enter an optional heading to display at the top left of the exported screen.</td>
+    </tr>
+    <tr>
       <td>Target</td>
-      <td>Choose between "All columns on screen" and "The focused column".</td>
+      <td>Choose between "All visible columns" and "Focused column".</td>
     </tr>
     <tr>
       <td>What to include</td>
-      <td>Choose whether to include time records, location data and plugin content.</td>
+      <td>Choose whether to include tags, texts, notifications, time records, location history, and plugin contents.</td>
     </tr>
     <tr>
       <td>Screens</td>
-      <td>Choose whether the written file keeps the summary view, the map and the search sidebar. A sidebar that is kept narrows down only the records inside the file.</td>
+      <td>Choose whether the exported file keeps Aggregation, Map, and the Search sidebar. A kept search sidebar narrows down only the records inside the exported file (keyword, time entry, and location conditions have no effect even if you enter them).</td>
     </tr>
     <tr>
       <td>Media</td>
-      <td>Choose "Thumbnails only", "Full size as well" or "Do not embed" for images and videos. You can also set the limit per item and the limit in total.</td>
+      <td>Choose "Thumbnails only", "Include originals", or "Do not embed" for images and videos. You can also set the limit per file and the total limit.</td>
     </tr>
     <tr>
       <td>Output format</td>
-      <td>"A single HTML file" is complete on its own. "HTML and a folder of the same name" puts images beside the file in a folder, which keeps the file smaller, but you have to hand both of them over together.</td>
+      <td>"A single HTML file" is complete on its own. "HTML and a folder of the same name" puts images and other media beside the file in a folder, which keeps the file smaller, but you have to hand both of them over together (when "Do not embed" is selected, only "A single HTML file" can be chosen).</td>
     </tr>
   </table>
 
@@ -271,7 +277,7 @@
   </div>
 
   <h3>What the recipient sees</h3>
-  <p>The written file is read-only. Records cannot be added, edited or tagged. Double-clicking a record opens its details, and related records can be followed from there. The map is the one exception: the map itself is loaded from outside, so the track appears once the recipient enters their own map key.</p>
+  <p>The written file is read-only. Records cannot be added, edited or tagged. Double-clicking a record opens its details, and related records can be followed from there. The map is the one exception: the map itself is loaded from outside, so the track appears once the recipient enters their own map key. The key they enter is not saved anywhere and disappears when the page is closed, so it has to be entered again each time the file is opened.</p>
 
   <h2>When a Record Storage Location Cannot Be Loaded</h2>
   <p>Records from other locations may still be shown. This message alone does not mean that your records have been lost.</p>

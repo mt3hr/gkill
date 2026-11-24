@@ -38,8 +38,10 @@
   <p>In der Seitenleiste lassen sich die folgenden Filterbedingungen einstellen, um Aufgaben einzugrenzen.</p>
   <ul>
     <li>Textsuche</li>
+    <li>Erledigungsstatus (unerledigt, erledigt, alle)</li>
+    <li>Sortierreihenfolge (Erstellungsdatum, Frist, geplanter Start, geplantes Ende usw.)</li>
     <li>Filtern nach Tags</li>
-    <li>Angabe eines Zeitraums</li>
+    <li>Angabe eines Zeitraums (wählen Sie den Datumsbereich im Kalender; bei Bedarf können Sie auch eine Start- und eine Endzeit angeben. Ein Zeitfeld leeren Sie über das „×“ darin. Um die Zeitraumangabe ganz aufzuheben, drücken Sie „Leeren“)</li>
     <li>Auswahl des Boards</li>
   </ul>
 
@@ -53,10 +55,6 @@
     <li>Zugehörige Einträge</li>
   </ul>
 
-  <div class="tip">
-    <strong>Tipp:</strong> Das standardmäßig angezeigte Board lässt sich in den Einstellungen unter „Standard-Boardname für Aufgaben“ ändern.
-  </div>
-
   <h3>Einen vorhandenen Eintrag zur Aufgabe machen</h3>
   <p>Einen Eintrag, um den Sie sich später kümmern möchten, können Sie zur Aufgabe machen, ohne ihn neu zu schreiben. Tippen und halten Sie in der <a href="rykv.html">Lebensprotokoll-Ansicht</a> oder anderswo den Eintrag (mobil) bzw. klicken Sie ihn mit der rechten Maustaste an (Desktop) und wählen Sie „Als Aufgabe anlegen". Legen Sie Boardname, Fälligkeit sowie geplanten Beginn und geplantes Ende fest und speichern Sie: Die Aufgabe erscheint dann auch auf dem Board dieses Bildschirms und lässt sich wie jede andere abhaken.</p>
   <p>So erstellte Aufgaben haben kein Titelfeld, weil der Inhalt des ursprünglichen Eintrags unverändert angezeigt wird.</p>
@@ -64,6 +62,9 @@
     <strong>Achtung:</strong> Wenn Sie den ursprünglichen Eintrag löschen, wird die daraus erstellte Aufgabe ebenfalls gelöscht. Es ist nicht möglich, nur die Aufgabe zu behalten.
   </div>
 
+  <div class="tip">
+    <strong>Tipp:</strong> Das standardmäßig angezeigte Board lässt sich im Einstellungsbildschirm unter „Standard-Boardname für Aufgaben“ ändern.
+  </div>
 
   <div class="tip">
     <strong>Tipp:</strong> Durch Kombinieren der Filterbedingungen in der Seitenleiste finden Sie die benötigten Aufgaben schnell.
@@ -74,8 +75,8 @@
   <table>
     <tr><th>Menüpunkt</th><th>Beschreibung</th></tr>
     <tr><td>Notizblock</td><td>Gibt eine Textnotiz im Notizblockformat ein.</td></tr>
-    <tr><td>Zeit-Notizblock</td><td>Öffnet den Hybridbildschirm aus Notizeingabe und Liste der laufenden Zeiterfassungen.</td></tr>
-    <tr><td>Numerisch</td><td>Zeichnet numerische Daten auf.</td></tr>
+    <tr><td>Zeiteintrag-Notizblock</td><td>Öffnet den kombinierten Bildschirm aus Notizeingabe und Liste der Zeiteinträge.</td></tr>
+    <tr><td>Numerischer Datensatz</td><td>Zeichnet numerische Daten auf.</td></tr>
     <tr><td>Lesezeichen</td><td>Speichert eine URL.</td></tr>
     <tr><td>Zeitprotokoll</td><td>Startet eine neue Zeiterfassungssitzung.</td></tr>
     <tr><td>Aufgabe</td><td>Fügt eine neue Aufgabe hinzu.</td></tr>
@@ -108,8 +109,8 @@
 
   <h3>Schritte zum Export</h3>
   <ol>
-    <li>Drücken Sie in der Freigabe-Fußzeile am unteren Rand der Seitenleiste die Schaltfläche „Teilen“ ganz links.</li>
-    <li>Wählen Sie „HTML-Export“.</li>
+    <li>Drücken Sie in der Freigabe-Fußzeile am unteren Rand der Seitenleiste die Schaltfläche „Teilen“ ganz links (ist die Freigabe-Fußzeile nicht zu sehen, aktivieren Sie im Einstellungsbildschirm „Freigabe-Fußzeile anzeigen“).</li>
+    <li>Wählen Sie „HTML exportieren“.</li>
     <li>Wählen Sie, was enthalten sein soll und in welchem Format exportiert wird (siehe Tabelle unten).</li>
     <li>Mit „Exportieren“ wird die erzeugte Datei heruntergeladen. Bei vielen Aufgaben oder Bildern dauert es eine Weile.</li>
   </ol>
@@ -121,24 +122,28 @@
       <th>Beschreibung</th>
     </tr>
     <tr>
+      <td>Titel</td>
+      <td>Geben Sie eine Überschrift (optional) ein, die oben links in der exportierten Ansicht angezeigt wird.</td>
+    </tr>
+    <tr>
       <td>Ziel</td>
       <td>Wählen Sie zwischen „Alle angezeigten Boards“ und „Fokussiertes Board“.</td>
     </tr>
     <tr>
-      <td>Einbeziehen</td>
-      <td>Wählen Sie, ob Tags, Texte, Benachrichtigungen, Zeiterfassungen und Standortdaten einbezogen werden.</td>
+      <td>Was einbezogen wird</td>
+      <td>Wählen Sie, ob Tags, Texte, Benachrichtigungen, Zeiterfassungen, Standortdaten und Plugin-Inhalte einbezogen werden.</td>
     </tr>
     <tr>
-      <td>Bildschirme</td>
-      <td>Wählen Sie, ob die Seitenleiste mit den Suchbedingungen in der exportierten Datei erhalten bleibt. Eine erhaltene Seitenleiste filtert nur innerhalb der exportierten Aufgaben.</td>
+      <td>Ansichten</td>
+      <td>Wählen Sie, ob die Suchleiste in der exportierten Datei erhalten bleibt. Eine erhaltene Suchleiste filtert nur innerhalb der exportierten Aufgaben.</td>
     </tr>
     <tr>
       <td>Medien</td>
-      <td>Wählen Sie für Bilder und Videos zwischen „Nur Miniaturansichten“, „Originalgröße einschließen“ oder „Nicht einbetten“. Sie können auch Grenzen pro Element und insgesamt angeben.</td>
+      <td>Wählen Sie für Bilder und Videos zwischen „Nur Miniaturansichten“, „Originale einbeziehen“ oder „Nicht einbetten“. Sie können auch das Limit pro Datei und das Gesamtlimit angeben.</td>
     </tr>
     <tr>
       <td>Ausgabeformat</td>
-      <td>„Eine einzelne HTML-Datei“ ist in sich geschlossen. „HTML + Ordner mit gleichem Namen“ legt Bilder in einen benachbarten Ordner und ist dadurch leichter als eine einzelne Datei, aber Sie müssen beide zusammen weitergeben.</td>
+      <td>„Eine einzelne HTML-Datei“ ist in sich geschlossen. „HTML und gleichnamiger Ordner“ legt Bilder in einen benachbarten Ordner und ist dadurch leichter als eine einzelne Datei, aber Sie müssen beide zusammen weitergeben (bei „Nicht einbetten“ steht nur „Eine einzelne HTML-Datei“ zur Auswahl).</td>
     </tr>
   </table>
 
@@ -151,5 +156,5 @@
   <h2>Verwandte Dokumente</h2>
   <ul>
     <li><a href="kftl-syntax.html">Notizblock-Syntaxreferenz</a></li>
-    <li><a href="rykv.html">Lebenslogansicht</a></li>
+    <li><a href="rykv.html">Lebensprotokoll-Ansicht</a></li>
   </ul>

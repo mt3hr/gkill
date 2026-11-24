@@ -57,7 +57,7 @@ SQLite3 をバックエンドとし、4層のアーキテクチャで構成さ�
 
 ### doc コメントの方針
 
-`*_repository.go` のインターフェースメソッド（454件）と `gkill_server_api` の `HandleXxx`（92件）は
+`*_repository.go` のインターフェースメソッド（461件）と `gkill_server_api` の `HandleXxx`（101件）は
 **doc コメント 100% を維持**する（`verify_docs` が網羅率を機械検査する）。
 共通契約の完全文は基底 `repository.go` に1回だけ書き、型別ファイルは
 「契約は `Repository.Xxx` を参照。」の1行参照＋型固有の差分のみにする。

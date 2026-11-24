@@ -38,8 +38,10 @@
   <p>En la barra lateral puede establecer las siguientes condiciones de filtrado para acotar las tareas.</p>
   <ul>
     <li>Búsqueda de texto</li>
+    <li>Estado de finalización (Sin verificar, Verificado, Todo)</li>
+    <li>Orden de clasificación (fecha de creación, límite, inicio previsto, fin previsto, etc.)</li>
     <li>Filtrado por etiquetas</li>
-    <li>Especificación de un período</li>
+    <li>Especificación de un período (elija el rango de fechas en el calendario y, si lo necesita, indique también una hora de inicio y una hora de fin. Puede vaciar cada casilla de hora con la «×» que tiene dentro. Para quitar por completo la especificación del período, pulse «Limpiar»)</li>
     <li>Selección del tablero</li>
   </ul>
 
@@ -53,10 +55,6 @@
     <li>Registros relacionados</li>
   </ul>
 
-  <div class="tip">
-    <strong>Consejo:</strong> Puede cambiar el tablero que se muestra por defecto en los ajustes, con la opción «Nombre de tablero de tareas por defecto».
-  </div>
-
   <h3>Convertir en tarea un registro existente</h3>
   <p>Los registros que quiera atender más adelante pueden convertirse en tarea sin reescribir su contenido. En la <a href="rykv.html">Vista de registro de vida</a> u otras pantallas, mantenga pulsado (móvil) o haga clic derecho (escritorio) sobre el registro y elija «Convertir en tarea». Si indica el nombre del tablero, la fecha límite y las fechas previstas de inicio y fin y guarda, aparecerá también en el tablero de esta pantalla y podrá marcarse como completada igual que cualquier tarea.</p>
   <p>Las tareas creadas así no tienen campo de título, porque se muestra tal cual el contenido del registro original.</p>
@@ -64,29 +62,65 @@
     <strong>Atención:</strong> Si elimina el registro original, la tarea creada a partir de él se elimina junto con él. No es posible conservar solo la tarea.
   </div>
 
+  <div class="tip">
+    <strong>Consejo:</strong> Puede cambiar el tablero que se muestra por defecto en los ajustes, con la opción «Nombre de tablero de tareas por defecto».
+  </div>
 
   <div class="tip">
     <strong>Consejo:</strong> Combinando las condiciones de filtrado de la barra lateral podrá encontrar rápidamente las tareas que necesita.
   </div>
 
-  <h2>FAB (Botón de acción flotante) «+»</h2>
-  <p>Al pulsar el botón «+» de la esquina inferior derecha se despliega un menú para añadir distintos registros:</p>
+  <h2>Botón de acción flotante (+)</h2>
+  <p>Al tocar el botón «+» de la esquina inferior derecha, aparece el menú para añadir los distintos tipos de registro.</p>
   <table>
-    <tr><th>Elemento del menú</th><th>Descripción</th></tr>
-    <tr><td>Bloc de notas</td><td>Introduce una nota de texto en formato de bloc de notas.</td></tr>
-    <tr><td>Bloc de notas con marca de tiempo</td><td>Abre la pantalla híbrida de entrada de notas y lista de marcas de tiempo.</td></tr>
-    <tr><td>Numérico</td><td>Registra datos numéricos.</td></tr>
-    <tr><td>Marcador</td><td>Guarda una URL.</td></tr>
-    <tr><td>Registro de tiempo</td><td>Inicia una nueva sesión de seguimiento de tiempo.</td></tr>
-    <tr><td>Tarea</td><td>Añade una nueva tarea.</td></tr>
-    <tr><td>Gasto</td><td>Registra un importe.</td></tr>
-    <tr><td>Ánimo</td><td>Registra un valor de ánimo (0-10).</td></tr>
-    <tr><td>Subir archivo</td><td>Sube un archivo y lo registra.</td></tr>
-    <tr><td>Guardar portapapeles</td><td>Guarda el contenido del portapapeles (imagen, texto, PDF, etc.) directamente como archivo. Permite registrar rápidamente capturas de pantalla o imágenes copiadas.</td></tr>
+    <tr>
+      <th>Elemento del menú</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Bloc de notas</td>
+      <td>Introduce notas de texto con el formato del bloc de notas.</td>
+    </tr>
+    <tr>
+      <td>Bloc de notas de tiempo</td>
+      <td>Abre la pantalla que combina la entrada de notas y la lista de entradas de tiempo.</td>
+    </tr>
+    <tr>
+      <td>Registros numéricos</td>
+      <td>Registra datos numéricos.</td>
+    </tr>
+    <tr>
+      <td>Marcadores</td>
+      <td>Guarda una URL.</td>
+    </tr>
+    <tr>
+      <td>Registro de tiempo</td>
+      <td>Inicia una nueva sesión de registro de tiempo.</td>
+    </tr>
+    <tr>
+      <td>Tareas</td>
+      <td>Añade una nueva tarea.</td>
+    </tr>
+    <tr>
+      <td>Gastos</td>
+      <td>Registra un importe.</td>
+    </tr>
+    <tr>
+      <td>Estado de ánimo</td>
+      <td>Registra un valor de ánimo (0-10).</td>
+    </tr>
+    <tr>
+      <td>Subir</td>
+      <td>Sube un archivo y lo registra.</td>
+    </tr>
+    <tr>
+      <td>Guardar portapapeles</td>
+      <td>Guarda directamente como archivo el contenido del portapapeles (imágenes, texto, PDF, etc.). Permite registrar rápidamente capturas de pantalla o imágenes copiadas.</td>
+    </tr>
   </table>
 
   <div class="tip">
-    <strong>Pulsación larga:</strong> Mantenga pulsado el botón «+» para abrir directamente el bloc de notas. Resulta práctico cuando desea tomar una nota rápidamente.
+    <strong>Mantener pulsado:</strong> Si mantiene pulsado el botón «+», se abre directamente el bloc de notas. Es útil cuando quiere tomar una nota rápidamente.
   </div>
 
   <div class="tip">
@@ -108,7 +142,7 @@
 
   <h3>Pasos para exportar</h3>
   <ol>
-    <li>En el pie de compartir, en la parte inferior de la barra lateral, pulse el botón «Compartir» del extremo izquierdo.</li>
+    <li>En el pie de página de compartición, al final de la barra lateral, pulse el botón «Compartir» de su extremo izquierdo (si no ve el pie de página de compartición, active «Mostrar pie de página de compartición» en la pantalla de configuración).</li>
     <li>Elija «Exportar HTML».</li>
     <li>Elija qué incluir y en qué formato exportar (consulte la tabla siguiente).</li>
     <li>Al pulsar «Exportar» se descarga el archivo resultante. Tarda un rato si hay muchas tareas o imágenes.</li>
@@ -121,33 +155,38 @@
       <th>Descripción</th>
     </tr>
     <tr>
+      <td>Título</td>
+      <td>Introduzca un encabezado (opcional) que aparecerá en la esquina superior izquierda de la pantalla exportada.</td>
+    </tr>
+    <tr>
       <td>Objetivo</td>
       <td>Elija entre «Todos los tableros mostrados» y «Tablero enfocado».</td>
     </tr>
     <tr>
-      <td>Incluir</td>
-      <td>Elija si incluir etiquetas, textos, notificaciones, registros de tiempo e información de ubicación.</td>
+      <td>Qué incluir</td>
+      <td>Elija si incluir las etiquetas, los textos, las notificaciones, los registros de tiempo, los datos de ubicación y el contenido de los complementos.</td>
     </tr>
     <tr>
       <td>Pantallas</td>
-      <td>Elija si conservar la barra lateral de condiciones de búsqueda dentro del archivo exportado. Una barra lateral conservada solo filtra entre las tareas exportadas.</td>
+      <td>Elija si conservar la barra lateral de búsqueda dentro del archivo exportado. Una barra lateral conservada solo filtra entre las tareas exportadas.</td>
     </tr>
     <tr>
-      <td>Medios</td>
-      <td>Elija imágenes y vídeos entre «Solo miniaturas», «Incluir tamaño original» o «No incrustar». También puede indicar límites por elemento y totales.</td>
+      <td>Multimedia</td>
+      <td>Elija imágenes y vídeos entre «Solo miniaturas», «Incluir originales» o «No incrustar». También puede indicar límites por archivo y totales.</td>
     </tr>
     <tr>
       <td>Formato de salida</td>
-      <td>«Un solo archivo HTML» es autónomo. «HTML + carpeta con el mismo nombre» coloca las imágenes en una carpeta contigua, por lo que es más ligero que un solo archivo, pero debe entregar ambos juntos.</td>
+      <td>«Un solo archivo HTML» es autónomo. «HTML y una carpeta del mismo nombre» coloca las imágenes en una carpeta contigua, por lo que es más ligero que un solo archivo, pero debe entregar ambos juntos (cuando se elige «No incrustar», solo está disponible «Un solo archivo HTML»).</td>
     </tr>
   </table>
 
   <div class="tip">
-    <strong>Cuando se supera un límite:</strong> Lo que no quepa dentro del límite de medios se muestra como «No incluido» dentro del archivo exportado. Como la omisión es visible, puede aumentar el límite y exportar de nuevo si lo necesita.
+    <strong>Cuando se supera un límite:</strong> Lo que no quepa dentro de los límites de multimedia se muestra como «No incluido» dentro del archivo exportado. Como la omisión es visible, puede aumentar el límite y exportar de nuevo si lo necesita.
   </div>
 
   <h3>Cómo lo ve el destinatario</h3>
   <p>El archivo exportado es de solo lectura. No se pueden añadir ni editar tareas, marcarlas como completadas ni moverlas entre tableros. Al hacer doble clic en una tarea se abren sus detalles, desde donde también se pueden seguir los registros relacionados. Si conservó la barra lateral de condiciones de búsqueda, puede filtrar por etiqueta, estado de finalización, tablero y periodo, pero no están disponibles la búsqueda por texto ni el cambio de orden (el orden queda fijado tal como estaba al exportar).</p>
+
   <h2>Documentos Relacionados</h2>
   <ul>
     <li><a href="kftl-syntax.html">Referencia de sintaxis del bloc de notas</a></li>

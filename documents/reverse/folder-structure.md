@@ -49,7 +49,7 @@ src/
 ├── server/       # バックエンド（Go）
 ├── android/      # Android APKラッパー
 ├── wear_os/      # Wear OSアプリ（phone_companion + watch_app）
-├── plugins/      # スタンドアロンプラグインバイナリ（examples/gkill_example, gkill_plugin_archived_git_commit_log, gkill_plugin_chatgpt, gkill_plugin_claudeai, gkill_plugin_claudecode, gkill_plugin_codex, gkill_plugin_fitbit, gkill_plugin_google_locationhistory, gkill_plugin_vrchat）
+├── plugins/      # スタンドアロンプラグインバイナリ（examples/gkill_example, gkill_plugin_antigravity, gkill_plugin_archived_git_commit_log, gkill_plugin_chatgpt, gkill_plugin_claudeai, gkill_plugin_claudecode, gkill_plugin_codex, gkill_plugin_fitbit, gkill_plugin_gemini, gkill_plugin_google_locationhistory, gkill_plugin_vrchat）
 ├── locales/      # i18nリソース（7言語対応）
 ├── tools/        # ユーティリティスクリプト
 └── README.md     # 実装資料への導線
@@ -78,6 +78,7 @@ src/client/
 │   ├── mkfl-page.vue
 │   ├── playing-time-is-page.vue
 │   ├── dashboard-page.vue
+│   ├── rudbeckia-page.vue
 │   ├── saihate-page.vue
 │   ├── set-new-password-page.vue
 │   ├── register-first-account-page.vue
@@ -106,7 +107,7 @@ src/client/
 ├── __tests__/              # テスト
 │   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
 │   ├── helpers/            # テストヘルパー
-│   └── unit/               # Vitest ユニットテスト（api / classes / composables / datas / dnote）
+│   └── unit/               # Vitest ユニットテスト（api / classes / composables / datas / dnote / kftl）
 └── plugins/
     └── vuetify.ts          # Vuetify設定（ライト/ダークテーマ）
 ```
@@ -125,6 +126,8 @@ src/server/
     │   ├── embed/                  # 埋め込みリソース（ビルド時生成）
     │   │   ├── html/              # フロントエンドビルド成果物
     │   │   ├── i18n/locales/      # i18nリソース
+    │   │   ├── manual/            # マニュアルHTML（7言語×24ページ）
+    │   │   ├── export/            # HTML 出力用テンプレート（template.html）
     │   │   └── version.json       # バージョン情報
     │   ├── version.go              # バージョン情報取得
     │   ├── gkill_version_data.go   # バージョンデータ構造体
@@ -138,9 +141,9 @@ src/server/
     │   │   ├── kftl_factory.go     # ファクトリ（ステートメント生成、日本語/ASCII両プレフィックス）
     │   │   └── *.go                # 各ステートメント型実装
     │   ├── gkill_plugin/           # プラグインプロトコル型
-    │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
+    │   │   ├── plugin_manifest.go  # PluginManifest（10フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（184ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（187ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
     │       ├── gkill_server_api_address.go  # ルート表（99エンドポイント: 98 POST + 1 GET。パス・メソッド・認証区分・ハンドラの正本）
@@ -324,7 +327,7 @@ src/plugins/
 claudecode / codex / fitbit / gemini / google_locationhistory / vrchat）は
 `manifest.json` をバイナリに `//go:embed` しており、`--gkill-print-manifest` / `--gkill-print-config` で
 内容を標準出力に書き出せる（`gkill_example` は埋め込みもフラグも `DefaultConfig` も持たない）。
-この9本は `config.json` の `source_dirs` で取り込み元（フォルダ・glob・zip の実パス）を指定し、
+この10本は `config.json` の `source_dirs` で取り込み元（フォルダ・glob・zip の実パス）を指定し、
 SQLite3 キャッシュを `$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db` に置く
 （解決は SDK の `sdk.CacheDBPath`。先行の6本が同じ実装を持っていたので集約した）。
 
@@ -345,7 +348,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-1067キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+1077キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 
@@ -382,12 +385,12 @@ src/tools/
 documents/
 ├── reverse/                          # リバースエンジニアリング設計資料集
 │   ├── README.md                     # 資料集の目次・推奨読み順
-│   ├── glossary.md                   # 用語集（101項目）
+│   ├── glossary.md                   # 用語集（102項目）
 │   ├── design-philosophy.md          # 設計思想
 │   ├── usecase.md                    # ユースケース一覧（95件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
-│   ├── sequence-diagrams.md          # シーケンス図（29本: 正常系24 + 異常系5）
+│   ├── sequence-diagrams.md          # シーケンス図（30本: 正常系25 + 異常系5）
 │   ├── activity-diagrams.md          # アクティビティ図
 │   ├── state-machines.md             # ステートマシン図
 │   ├── screen-transition.md          # 画面遷移図

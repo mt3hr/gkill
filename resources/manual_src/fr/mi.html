@@ -1,5 +1,5 @@
 <!-- title: Tableau de tâches - Aide -->
-  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Tâches</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Tableau de tâches</span></nav>
   <h1>Tableau de tâches</h1>
   <p>Écran de gestion des tâches de style Kanban. Les tâches sont classées par tableau, ce qui permet de saisir visuellement leur progression.</p>
 
@@ -38,8 +38,10 @@
   <p>La barre latérale permet de définir les conditions de filtrage suivantes pour affiner les tâches.</p>
   <ul>
     <li>Recherche de texte</li>
+    <li>État d'achèvement (non terminé, terminé, tout)</li>
+    <li>Ordre de tri (date de création, échéance, début prévu, fin prévue, etc.)</li>
     <li>Filtrage par étiquettes</li>
-    <li>Spécification d'une période</li>
+    <li>Spécification d'une période (choisissez la plage de dates dans le calendrier et, si nécessaire, indiquez aussi une heure de début et une heure de fin. Le « × » à l'intérieur d'un champ d'heure permet de le vider. Pour retirer complètement la période, appuyez sur « Effacer »)</li>
     <li>Sélection du tableau</li>
   </ul>
 
@@ -53,10 +55,6 @@
     <li>Enregistrements associés</li>
   </ul>
 
-  <div class="tip">
-    <strong>Astuce :</strong> Le tableau affiché par défaut peut être modifié dans les paramètres, via l'option « Nom du tableau de tâches par défaut ».
-  </div>
-
   <h3>Transformer en tâche un enregistrement existant</h3>
   <p>Un enregistrement dont vous voulez vous occuper plus tard peut devenir une tâche sans être réécrit. Dans la <a href="rykv.html">Vue du journal de vie</a> ou ailleurs, appuyez longuement (mobile) ou faites un clic droit (bureau) sur l'enregistrement puis choisissez « Transformer en tâche ». Renseignez le nom du tableau, l'échéance et les dates de début et de fin prévues, puis enregistrez : la tâche apparaît aussi sur le tableau de cet écran et se coche comme n'importe quelle autre.</p>
   <p>Les tâches créées ainsi n'ont pas de champ de titre, car le contenu de l'enregistrement d'origine est affiché tel quel.</p>
@@ -64,23 +62,26 @@
     <strong>Attention :</strong> Si vous supprimez l'enregistrement d'origine, la tâche qui en est issue est supprimée en même temps. Il n'est pas possible de conserver uniquement la tâche.
   </div>
 
+  <div class="tip">
+    <strong>Astuce :</strong> Le tableau affiché par défaut peut être modifié dans les paramètres, via l'option « Nom du tableau de tâches par défaut ».
+  </div>
 
   <div class="tip">
     <strong>Astuce :</strong> En combinant les conditions de filtrage de la barre latérale, vous trouverez rapidement les tâches dont vous avez besoin.
   </div>
 
-  <h2>FAB (Bouton d'action flottant) « + »</h2>
-  <p>En appuyant sur le bouton « + » en bas à droite, un menu d'ajout des différents enregistrements se déploie :</p>
+  <h2>Bouton d'action flottant (+)</h2>
+  <p>Touchez le bouton « + » en bas à droite de l'écran pour afficher le menu d'ajout des différents enregistrements.</p>
   <table>
     <tr><th>Élément de menu</th><th>Description</th></tr>
     <tr><td>Bloc-notes</td><td>Saisit une note textuelle au format bloc-notes.</td></tr>
-    <tr><td>Bloc-notes horodaté</td><td>Ouvre l'écran hybride combinant la saisie de notes et la liste des horodatages en cours.</td></tr>
-    <tr><td>Numérique</td><td>Enregistre des données numériques.</td></tr>
-    <tr><td>Signet</td><td>Enregistre une URL.</td></tr>
-    <tr><td>Journal de temps</td><td>Démarre une nouvelle session de suivi du temps.</td></tr>
-    <tr><td>Tâche</td><td>Ajoute une nouvelle tâche.</td></tr>
-    <tr><td>Dépense</td><td>Enregistre un montant.</td></tr>
-    <tr><td>Humeur</td><td>Enregistre une valeur d'humeur (0-10).</td></tr>
+    <tr><td>Bloc-notes d'entrées de temps</td><td>Ouvre l'écran hybride combinant la saisie de notes et la liste des entrées de temps.</td></tr>
+    <tr><td>Enregistrements numériques</td><td>Enregistre des données numériques.</td></tr>
+    <tr><td>Signets</td><td>Enregistre une URL.</td></tr>
+    <tr><td>Suivi du temps</td><td>Démarre une nouvelle session d'entrée de temps.</td></tr>
+    <tr><td>Tâches</td><td>Ajoute une nouvelle tâche.</td></tr>
+    <tr><td>Dépenses</td><td>Enregistre un montant.</td></tr>
+    <tr><td>Humeur</td><td>Enregistre une valeur d'humeur (0 à 10).</td></tr>
     <tr><td>Téléverser</td><td>Téléverse un fichier et l'enregistre.</td></tr>
     <tr><td>Enregistrer le presse-papiers</td><td>Enregistre le contenu du presse-papiers (image, texte, PDF, etc.) directement comme fichier. Pratique pour capturer rapidement des captures d'écran ou des images copiées.</td></tr>
   </table>
@@ -90,7 +91,7 @@
   </div>
 
   <div class="tip">
-    <strong>Raccourci :</strong> Appuyez sur Entrée sur cet écran pour ouvrir le bloc-notes. C'est pratique pour ajouter rapidement des enregistrements.
+    <strong>Raccourci :</strong> Appuyez sur Entrée sur cet écran pour ouvrir la boîte de dialogue du bloc-notes. C'est pratique pour ajouter rapidement des enregistrements.
   </div>
 
   <div class="tip">
@@ -101,14 +102,14 @@
   <p>Les conditions de recherche de tâches enregistrées sous un nom dans « Conditions de recherche » de l'écran des paramètres peuvent être rappelées depuis le bouton rond en bas à droite de la barre latérale. En choisissant un nom, la condition est appliquée telle quelle à la barre latérale. Si aucune condition n'est enregistrée, le bouton n'apparaît pas.</p>
 
   <h2>Partager les critères de recherche actuels</h2>
-  <p>Activez « Afficher le pied de page de partage » dans l’écran des paramètres et un pied de page de partage apparaît en bas de la barre latérale. En appuyant sur le bouton « Partager » à son extrémité gauche, on vous demande comment vous souhaitez transmettre les enregistrements. En choisissant « Partager cette vue », les critères de recherche que vous utilisez deviennent un lien de partage. Ce qui est partagé n’est pas un seul enregistrement, mais tous les enregistrements correspondant à ces critères. Les liens déjà créés peuvent être listés, modifiés et supprimés depuis « Gestion des partages », à l’extrémité droite.</p>
+  <p>Activez « Afficher le pied de page de partage » dans l’écran des paramètres et un pied de page de partage apparaît en bas de la barre latérale. En appuyant sur le bouton « Partager » à son extrémité gauche, on vous demande comment vous souhaitez transmettre les enregistrements. En choisissant « Partager cette vue », les critères de recherche que vous utilisez deviennent un lien de partage. Ce qui est partagé n’est pas un seul enregistrement, mais tous les enregistrements correspondant à ces critères. Les liens déjà créés peuvent être listés, modifiés et supprimés depuis « Gérer les liens partagés », à l’extrémité droite.</p>
 
   <h2>Transmettre le contenu des tableaux actuels sous forme de fichier HTML</h2>
   <p>Un lien de partage n'est consultable que pendant que cette application fonctionne. Si vous souhaitez transmettre quelque chose sans que le destinataire ait quoi que ce soit à préparer, vous pouvez exporter le contenu des tableaux que vous avez ouverts dans un fichier HTML. Le destinataire n'a qu'à l'ouvrir dans un navigateur et, comme tout est contenu dans le fichier, il ne communique pas avec cette application.</p>
 
   <h3>Étapes d'exportation</h3>
   <ol>
-    <li>Dans le pied de partage, en bas de la barre latérale, appuyez sur le bouton « Partager » à l'extrême gauche.</li>
+    <li>Dans le pied de page de partage, en bas de la barre latérale, appuyez sur le bouton « Partager » à l'extrême gauche (si le pied de page de partage n'est pas visible, activez « Afficher le pied de page de partage » dans l'écran des paramètres).</li>
     <li>Choisissez « Exporter en HTML ».</li>
     <li>Choisissez ce qu'il faut inclure et dans quel format exporter (voir le tableau ci-dessous).</li>
     <li>En appuyant sur « Exporter », le fichier obtenu est téléchargé. Cela prend du temps s'il y a beaucoup de tâches ou d'images.</li>
@@ -121,24 +122,28 @@
       <th>Description</th>
     </tr>
     <tr>
+      <td>Titre</td>
+      <td>Saisissez un intitulé (facultatif) à afficher en haut à gauche de l'écran exporté.</td>
+    </tr>
+    <tr>
       <td>Cible</td>
       <td>Choisissez entre « Tous les tableaux affichés » et « Tableau sélectionné ».</td>
     </tr>
     <tr>
-      <td>Inclure</td>
-      <td>Choisissez d'inclure ou non les étiquettes, les textes, les notifications, les pointages et les informations de localisation.</td>
+      <td>Éléments à inclure</td>
+      <td>Choisissez d'inclure ou non les étiquettes, les textes, les notifications, les pointages, les données de localisation et le contenu des extensions.</td>
     </tr>
     <tr>
       <td>Écrans</td>
-      <td>Choisissez de conserver ou non la barre latérale des critères de recherche dans le fichier exporté. Une barre latérale conservée ne filtre que parmi les tâches exportées.</td>
+      <td>Choisissez de conserver ou non la barre latérale de recherche dans le fichier exporté. Une barre latérale conservée ne filtre que parmi les tâches exportées.</td>
     </tr>
     <tr>
       <td>Médias</td>
-      <td>Choisissez pour les images et les vidéos entre « Vignettes uniquement », « Inclure la taille réelle » ou « Ne pas intégrer ». Vous pouvez aussi indiquer des limites par élément et au total.</td>
+      <td>Choisissez pour les images et les vidéos entre « Miniatures seulement », « Inclure les originaux » ou « Ne pas intégrer ». Vous pouvez aussi indiquer la limite par fichier et la limite totale.</td>
     </tr>
     <tr>
       <td>Format de sortie</td>
-      <td>« Un seul fichier HTML » est autonome. « HTML + dossier du même nom » place les images dans un dossier voisin, ce qui est plus léger qu'un fichier unique, mais vous devez transmettre les deux ensemble.</td>
+      <td>« Un seul fichier HTML » est autonome. « HTML et un dossier du même nom » place les images dans un dossier voisin, ce qui est plus léger qu'un fichier unique, mais vous devez transmettre les deux ensemble (lorsque « Ne pas intégrer » est choisi, seul « Un seul fichier HTML » est disponible).</td>
     </tr>
   </table>
 
@@ -147,9 +152,9 @@
   </div>
 
   <h3>Ce que voit le destinataire</h3>
-  <p>Le fichier exporté est en lecture seule. Il est impossible d'ajouter ou de modifier des tâches, de les cocher ou de les déplacer entre tableaux. Un double-clic sur une tâche ouvre ses détails, d'où les enregistrements liés peuvent aussi être suivis. Si vous avez conservé la barre latérale des critères de recherche, vous pouvez filtrer par étiquette, état d'achèvement, tableau et période, mais la recherche textuelle et la modification du tri ne sont pas disponibles (l'ordre est figé tel qu'il était au moment de l'exportation).</p>
+  <p>Le fichier exporté est en lecture seule. Il est impossible d'ajouter ou de modifier des tâches, de les cocher ou de les déplacer entre tableaux. Un double-clic sur une tâche ouvre ses détails, d'où les enregistrements liés peuvent aussi être suivis. Si vous avez conservé la barre latérale de recherche, vous pouvez filtrer par étiquette, état d'achèvement, tableau et période, mais la recherche textuelle et la modification du tri ne sont pas disponibles (l'ordre est figé tel qu'il était au moment de l'exportation).</p>
   <h2>Documents associés</h2>
   <ul>
-    <li><a href="kftl-syntax.html">Référence syntaxe du bloc-notes</a></li>
-    <li><a href="rykv.html">Vue journal de vie</a></li>
+    <li><a href="kftl-syntax.html">Référence de syntaxe du bloc-notes</a></li>
+    <li><a href="rykv.html">Vue du journal de vie</a></li>
   </ul>

@@ -30,12 +30,21 @@ gkill_server_api/
 ├── gkill_server_api_access_log.go   # アクセスログ
 ├── gkill_server_api_rate_limit.go   # ログインレートリミット
 ├── plugin_content_html_cache.go     # プラグイン本文HTMLのキャッシュ（TTL・件数上限・singleflight）
+├── plugin_target_user.go            # プラグイン設定・一覧の対象利用者の決定（他人の指定と設定画面は管理者だけ。実在確認）
+├── kyou_bundle_collector.go         # 共有ページと「HTML で出力」の共通の収集（記録・型別データ・付随データ。リポストは列の記録の ID で絞る）
+├── export_bundle_merge.go           # 出力: 列ごとの収集を種別ごとに和集合へまとめる（同じ記録を1回だけ持つ）
+├── export_rekyou_targets.go         # 出力: リポストの参照先を最大3段まで辿って焼き込みへ足す
+├── export_config_struct.go          # 出力: 焼き込む設定ツリーから、チェックされていなかった名前を刈る
+├── export_media.go                  # 出力: メディアと IDF の本文を焼き込む（配信ハンドラの1実装を通す。予算・警告）
+├── export_plugin_html.go            # 出力: プラグイン固有の記録の本文を焼き込む（上限・警告 MSG000096）
+├── export_sidecar.go                # 出力: 同名フォルダの中身（名前は内容ハッシュ）と ZIP
+├── export_html_render.go            # 出力: 焼き込みの JSON の型とガワへの差し込み
 ├── handle_*.go                      # 各エンドポイントのハンドラ（実装100ファイル + テスト24ファイル）
-└── *_test.go                        # テスト全55ファイル（handle_*_test.go 24本を含む。一覧は ABOUT_TEST.md）
+└── *_test.go                        # テスト全58ファイル（handle_*_test.go 24本を含む。一覧は ABOUT_TEST.md）
 ```
 
-**合計: 186ファイル**（基盤29 + ハンドラ実装100 + テスト55 + README.md 1 + ABOUT_TEST.md 1）
-`.go` だけなら184ファイル。`handle_*.go` という名前のファイルは124あるが、うち24はテスト。
+**合計: 189ファイル**（基盤29 + ハンドラ実装100 + テスト58 + README.md 1 + ABOUT_TEST.md 1）
+`.go` だけなら187ファイル。`handle_*.go` という名前のファイルは124あるが、うち24はテスト。
 
 ## GkillServerAPI 構造体
 

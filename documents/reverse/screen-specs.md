@@ -9,7 +9,7 @@
 | カテゴリ | 数 |
 |---|---|
 | ルート | 13 |
-| ページコンポーネント | 15 |
+| ページコンポーネント | 16 |
 | ビューコンポーネント | 214 |
 | ダイアログコンポーネント | 121 |
 | **コンポーネント合計** | **351**（ルートを除く。ビュー214 + ダイアログ121 + ページ16） |
@@ -119,6 +119,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 ### 2.3 タスクボード画面（`/mi`）
 
 **コンポーネント:** `mi-page.vue` → `mi-view.vue` → `mi-columns-view.vue`
+（`mi-view.vue` はアプリバーの中身・編集系ダイアログ群・FAB・ヘルプだけを持つラッパ。板の列・検索は `mi-columns-view.vue` にあり、HTML 出力は同じ子を `exported-mi-view.vue` がホストする。共有ページは `shared-mi-view.vue` が別実装。経緯は [ADR-0420](../adr/0420-split-mi-views-by-mode.md)）
 
 タスク（Mi）をカンバンボード形式で管理する画面です。
 
@@ -130,6 +131,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 | タスクリスト | 表示 | タスク一覧（mi-kyou-view） |
 | タスク追加ボタン | 操作 | 新規タスク作成ダイアログ表示 |
 | クエリエディタサイドバー | 操作 | 高度な検索条件設定 |
+| HTML で出力 | 操作 | サイドバーの共有フッター →「共有」→「HTML エクスポート」で開くダイアログ（`export-kyou-html-dialog.vue`、`screen="mi"`）。現在開いている板の検索結果を単一 HTML（または HTML ＋ 同名フォルダ）へ焼き込む（[ADR-0421](../adr/0421-exported-page-picks-view-by-screen-mark.md)） |
 | 保存済み検索条件FAB | 操作 | サイドバー右下の呼び出しボタン。設定画面で登録したタスク検索条件を選択してサイドバーへ適用（0件時は非表示） |
 | アラート通知 | 表示 | 期限アラート等の通知表示 |
 | クリップボードを保存 | 操作 | クリップボード内容をファイルとして保存するダイアログ（`save-clipboard-to-file-dialog.vue`） |
@@ -145,7 +147,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 | 項目 | 種別 | 説明 |
 |---|---|---|
 | キーワード検索 | 入力 | 全文検索（keyword-query） |
-| 期間指定 | 入力 | 日付範囲（calendar-query） |
+| 期間指定 | 入力 | 日付の範囲をカレンダーで選び、開始時刻・終了時刻を足せる（calendar-query）。時刻は欄内の `×` で個別に空にでき、空なら日の境界。期間ごと外すのは節の「クリア」（ADR-0414） |
 | タグフィルタ | 入力 | タグでの絞り込み（tag-query） |
 | 打刻フィルタ | 入力 | 打刻期間での絞り込み（time-is-query） |
 | リポジトリフィルタ | 入力 | リポジトリでの絞り込み（rep-query） |
@@ -372,14 +374,14 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
   回帰は E2E（`rudbeckia.spec.ts`）が `getComputedStyle` と `getBoundingClientRect` で見る
 ### 2.14 HTML 出力画面（出力したファイルの中）
 
-**コンポーネント:** `exported-kyou-page.vue` → `exported-rykv-view.vue` → `rykv-columns-view.vue`
+**コンポーネント:** `exported-kyou-page.vue` → `exported-rykv-view.vue` → `rykv-columns-view.vue`（`screen: "rykv"`）または `exported-mi-view.vue` → `mi-columns-view.vue`（`screen: "mi"`）
 
 「HTML で出力」で書き出したファイルを開いたときに動く画面です。ルータを持たず
 （`export-router-stub.ts`。本体の `@/router` は module 評価時に `history.replaceState` を URL 付きで呼び、
-`file://` では `file:///C:/C:/…` に化けて開けなくなる）、`v-app` で包んだ骨格の中へ直接 rykv を置きます。
+`file://` では `file:///C:/C:/…` に化けて開けなくなる）、`v-app` で包んだ骨格の中へ焼き込みの `screen` 印に応じたビュー（`exported-rykv-view` または `exported-mi-view`）を置きます（[ADR-0421](../adr/0421-exported-page-picks-view-by-screen-mark.md)）。
 
-列の中身は通常の rykv と**同じ子**（`rykv-columns-view.vue`）で、編集系の持ち物を1つも置かないラッパが
-ホストします（[ADR-0418](../adr/0418-split-rykv-views-by-mode.md)）。
+列の中身は通常の rykv / mi と**同じ子**（`rykv-columns-view.vue` / `mi-columns-view.vue`）で、編集系の持ち物を1つも置かないラッパが
+ホストします（[ADR-0418](../adr/0418-split-rykv-views-by-mode.md) / [ADR-0420](../adr/0420-split-mi-views-by-mode.md)）。
 
 | 項目 | 種別 | 説明 |
 |---|---|---|
@@ -706,7 +708,7 @@ gkillの検索機能は複数のクエリコンポーネントを組み合わせ
 | コンポーネント | 説明 |
 |---|---|
 | `keyword-query.vue` | キーワード全文検索 |
-| `calendar-query.vue` | 日付範囲指定 |
+| `calendar-query.vue` | 日付の範囲（カレンダー）と開始時刻・終了時刻の指定。時刻の欄は欄内の `×` で個別に空にでき、期間ごと外すのは節の「クリア」（ADR-0414） |
 | `period-of-time-query.vue` | 時間帯（1日のうちの時刻範囲）と曜日の指定。曜日はチェック直後は未選択＝全曜日（制限なし）で、1つ押すとその曜日だけになる。選択は塗り潰し、未選択は枠線 |
 | `tag-query.vue` | タグフィルタ |
 | `time-is-query.vue` | 打刻期間フィルタ |
@@ -730,8 +732,9 @@ gkillの検索機能は複数のクエリコンポーネントを組み合わせ
 | コンポーネント | 説明 |
 |---|---|
 | `create-account-view.vue` | アカウント作成 |
-| `manage-account-view.vue` | アカウント管理 |
+| `manage-account-view.vue` | アカウント管理（アカウント追加・有効/無効切替・パスワードリセット・対象アカウントごとの「プラグイン設定」起動。ADR-0714） |
 | `show-password-reset-link-view.vue` | パスワードリセットリンク表示 |
+| `manage-plugin-list-view.vue` / `manage-plugin-list-dialog.vue` | 対象アカウントのプラグイン一覧と稼働状態確認・設定起動（管理者専用） |
 
 ### サーバー設定
 
@@ -809,8 +812,7 @@ Teleport to body
 └── 透明モードチェックボックス
 ```
 
-**v1.1.0 変更点:**
-- ダイアログ表示時の自動フォーカスを削除（ページスクロール位置に影響しないように）
+**v1.1.0 変更点（その後、本文の先頭入力欄への自動フォーカスのみ復活済み）:**
 - フォーカストラップ（Tab/Shift+Tab循環）を削除
 - フォーカス復帰（ダイアログ閉じ時に元要素へ戻す）を削除
 - 透過モード切替時にダイアログの高さが縮小するバグを修正（ResizeObserver更新を300ms抑制）
@@ -891,7 +893,8 @@ Teleport to body
 | `add-rep-dialog.vue` / `allocate-rep-dialog.vue` | リポジトリ追加・割当 |
 | `confirm-generate-tls-files-dialog.vue` | TLS証明書生成確認 |
 | `confirm-reset-password-dialog.vue` / `show-password-reset-link-dialog.vue` | パスワードリセット |
-| `plugin-config-dialog.vue` | プラグイン設定（プラグイン Kyou のコンテキストメニュー「プラグイン設定」から開く） |
+| `manage-plugin-list-dialog.vue` | 対象アカウントのプラグイン一覧（管理者専用。「アカウント管理」→「プラグイン設定」から開く。ADR-0714） |
+| `plugin-config-dialog.vue` | プラグイン設定（管理者専用。`manage-plugin-list-dialog.vue` から `show(target_user_id, rep_name)` で開く。ADR-0714） |
 | `manage-skill-list-dialog.vue` | スキル管理（一覧・zip のアップロード。設定画面の「スキル」ボタンから開く。§5「スキル管理」） |
 | `browse-skill-files-dialog.vue` | スキルの中身の閲覧（素のテキスト表示） |
 | `confirm-upload-skill-dialog.vue` | スキルの zip アップロードの確認（dry_run の結果を見せて「適用」で置き換える） |
@@ -907,7 +910,8 @@ Teleport to body
 |---|---|---|
 | `plugin-html-view.vue` | ビュー | プラグインが返す HTML を iframe で描画。`sandbox="allow-scripts allow-forms"`、`scrolling="no"`、高さは postMessage（`gkill_iframe_size`）で親が調整し、未確定時は 80px |
 | `plugin-html-context-menu.vue` | ビュー | プラグインKyou用コンテキストメニュー |
-| `plugin-config-dialog.vue` | ダイアログ | プラグイン設定フォーム（`plugin-html-view.vue` が保持） |
+| `manage-plugin-list-view.vue` / `manage-plugin-list-dialog.vue` | ビュー / ダイアログ | 対象アカウントのプラグイン一覧と設定起動（管理者専用。`manage-account-view.vue` から開く） |
+| `plugin-config-dialog.vue` | ダイアログ | プラグイン設定フォーム（管理者専用。`manage-plugin-list-dialog.vue` が保持） |
 
 テーマは親から `gkill_theme` を postMessage して CSS 変数を切り替える。
 
@@ -958,7 +962,7 @@ Rykv 配下のダイアログは個別に配置されるのではなく、`rykv-
 | `share-kyou-list-link-dialog.vue` | 共有リンク表示 |
 | `confirm-delete-share-kyou-list-dialog.vue` | 共有削除確認 |
 | `manage-share-task-list-dialog.vue` | 共有リンク管理 |
-| `export-kyou-html-dialog.vue` | HTML で出力（対象・含めるもの・画面・メディア・出力形式を選ぶ）。出力中は閉じられない（ブラウザバックも含む。キャンセル後は閉じられる） |
+| `export-kyou-html-dialog.vue` | HTML で出力（`screen="rykv"` または `"mi"`。対象・含めるもの・画面・メディア・出力形式を選ぶ。`mi` では画面選択はサイドバーのみ・対象は開いている板）。出力中は閉じられない（ブラウザバックも含む。キャンセル後は閉じられる） |
 
 #### ファイル操作ダイアログ
 
@@ -1061,6 +1065,7 @@ CRUDリレーイベント（ビュー層 18件）:
 | `git-commit-log-context-menu.vue` | Gitコミット |
 | `plugin-html-context-menu.vue` | プラグインKyou（編集・削除なし） |
 | `dnote-trend-graph-context-menu.vue` | Dnoteトレンドグラフ |
+| `dnote-correlation-graph-context-menu.vue` | Dnote相関グラフ |
 | `attached-tag-context-menu.vue` | 付帯タグ |
 | `attached-text-context-menu.vue` | 付帯テキスト |
 | `attached-notification-context-menu.vue` | 付帯通知 |

@@ -12,7 +12,7 @@
     <tr><th>Element</th><th>Beschreibung</th></tr>
     <tr><td>Kontrollk&auml;stchen Aktivieren/Deaktivieren</td><td>Schaltet den Kontostatus zwischen aktiviert und deaktiviert um (das Konto, mit dem Sie angemeldet sind, kann nicht umgeschaltet werden)</td></tr>
     <tr><td>Benutzer-ID</td><td>Zeigt die Benutzer-ID des Kontos an</td></tr>
-    <tr><td>Schaltfl&auml;che Speicherzuweisung</td><td>Weist dem Benutzer Daten-Repositories zu</td></tr>
+    <tr><td>Schaltfl&auml;che Speicherort zuweisen</td><td>Weist dem Benutzer Ablagen zu</td></tr>
     <tr><td>Schaltfl&auml;che Erweiterungseinstellungen</td><td>&Ouml;ffnet die Liste der Erweiterungen dieses Benutzers</td></tr>
     <tr><td>Schaltfl&auml;che Passwort zur&uuml;cksetzen</td><td>Generiert einen Link zum Zur&uuml;cksetzen des Passworts</td></tr>
   </table>
@@ -21,30 +21,31 @@
   <p><strong>Schlie&szlig;en</strong>: Schlie&szlig;t den Bildschirm zur Kontoverwaltung.</p>
 
   <div class="tip">
-    <strong>Hinweis:</strong> Das <code>admin</code>-Konto wird beim ersten Serverstart automatisch erstellt. Über die Kontoverwaltung hinzugefugte Konten sind normale Benutzer (ohne Administratorrechte). Konten werden durch Aktivieren/Deaktivieren verwaltet, nicht durch Löschen.
+    <strong>Tipp:</strong> Das <code>admin</code>-Konto wird beim ersten Serverstart automatisch erstellt. Über die Kontoverwaltung hinzugefügte Konten sind normale Benutzer (ohne Administratorrechte). Konten werden durch Aktivieren/Deaktivieren verwaltet, nicht durch Löschen.
   </div>
 
-  <h2>Passwort-Reset-Verfahren</h2>
-  <h3>Administrator-Verfahren</h3>
+  <h2>Passwort zurücksetzen</h2>
+  <p>Hat ein Benutzer sein Passwort vergessen, stellt ein Administrator mit den folgenden Schritten einen Link zum Zurücksetzen des Passworts aus.</p>
+  <h3>Schritte für Administratoren</h3>
   <ol>
-    <li>Öffnen Sie Servereinstellungen &gt; Kontoverwaltung.</li>
-    <li>Drücken Sie die Schaltfläche "Passwort zurucksetzen" des betreffenden Benutzers.</li>
-    <li>Drücken Sie OK im Bestätigungsdialog, um den Reset-Link zu generieren.</li>
-    <li>Kopieren Sie den Link und teilen Sie ihn mit dem Benutzer.</li>
+    <li>Öffnen Sie im Bildschirm Servereinstellungen die „Kontoverwaltung“.</li>
+    <li>Drücken Sie in der Zeile des betreffenden Benutzers die Schaltfläche „Passwort zurücksetzen“.</li>
+    <li>Drücken Sie im Bestätigungsdialog auf „OK“; daraufhin wird ein Link zum Zurücksetzen des Passworts erzeugt.</li>
+    <li>Kopieren Sie den angezeigten Link und geben Sie ihn an den Benutzer weiter (per Nachricht, E-Mail usw.).</li>
   </ol>
-  <h3>Benutzer-Verfahren</h3>
+  <h3>Schritte für Benutzer</h3>
   <ol>
-    <li>Öffnen Sie den Link im Browser.</li>
-    <li>Geben Sie das neue Passwort zweimal ein.</li>
-    <li>Drücken Sie die Schaltfläche "Festlegen".</li>
+    <li>Öffnen Sie den Link, den Sie vom Administrator erhalten haben, im Browser.</li>
+    <li>Geben Sie das neue Passwort ein und zur Bestätigung ein zweites Mal.</li>
+    <li>Drücken Sie die Schaltfläche „Festlegen“, um das neue Passwort zu setzen.</li>
     <li>Sie werden zum Anmeldebildschirm weitergeleitet; melden Sie sich mit dem neuen Passwort an.</li>
   </ol>
   <div class="tip">
-    <strong>Hinweis:</strong> Der Reset-Link ist nur einmal verwendbar. Er ist 72 Stunden ab Ausstellung g&uuml;ltig, das Ablaufdatum wird im Link-Dialog angezeigt. Nach Ablauf k&ouml;nnen Sie im selben Dialog &uuml;ber die Schaltfl&auml;che "Link neu ausstellen" einen neuen Link erzeugen.
+    <strong>Tipp:</strong> Der Link zum Zurücksetzen ist nur einmal verwendbar; nach der Verwendung wird er ungültig. Er ist 72 Stunden ab Ausstellung g&uuml;ltig, und das Ablaufdatum wird im Dialog mit dem Link angezeigt. Nach Ablauf k&ouml;nnen Sie im selben Dialog &uuml;ber die Schaltfl&auml;che „Link neu ausstellen“ einen neuen Link ausstellen.
   </div>
 
-  <h2>Speicher-Zuweisung</h2>
-  <p>Die Schaltfläche "Speicherzuweisung" ermoglicht es Ihnen, jedem Benutzer Daten-Repositories zuzuweisen. Weitere Informationen zum Hinzufügen und Verwalten von Repositories finden Sie unter <a href="server-config.html">Speicherverwaltung</a> in den Servereinstellungen.</p>
+  <h2>Ablagen zuweisen</h2>
+  <p>Jedem Benutzer werden „Ablagen“ zugewiesen, in denen seine Daten gespeichert werden. Mit der Schaltfläche „Speicherort zuweisen“ öffnen Sie einen Dialog, in dem Sie die Ablagen dieses Benutzers festlegen. Einzelheiten finden Sie unter „Ablagen verwalten“ in den <a href="server-config.html">Servereinstellungen</a>.</p>
   <h2>Einstellungen der Erweiterungen</h2>
   <p>Dr&uuml;cken Sie in der Zeile eines Benutzers auf die Schaltfl&auml;che &bdquo;Erweiterungseinstellungen&ldquo;, um die Liste seiner Erweiterungen zu &ouml;ffnen.
   Dort stehen Name, Version und Beschreibung jeder Erweiterung sowie, ob sie l&auml;uft. &bdquo;Einstellungen&ldquo; in einer Zeile &ouml;ffnet den
@@ -56,6 +57,6 @@
 
   <h2>Verwandte Dokumente</h2>
   <ul>
-    <li><a href="server-config.html">Server-Konfiguration</a></li>
+    <li><a href="server-config.html">Servereinstellungen</a></li>
     <li><a href="application-config.html">Einstellungen</a></li>
   </ul>

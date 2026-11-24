@@ -188,3 +188,4 @@ ADR-0503 の「`/mood` 単独で気分0を書かない」は Go だけに入り�
 - [ADR-0507 メモ帳の解釈と書き込みはサーバの1実装に寄せる](../../../documents/adr/0507-kftl-single-implementation-on-server.md)
 - [ADR-0508 保存マーカー行は値の行に数えず、内容の無い記録・付け先の無いメタ情報・読めない予定日時は書く前に行別エラーにする](../../../documents/adr/0508-kftl-blank-records-are-input-errors.md)
 - [ADR-0509 メモ帳の打刻終了は「開始時刻が最新の実行中1件」を終え、削除済みは候補にしない](../../../documents/adr/0509-kftl-timeis-end-targets-the-latest-running-record.md)
+- [ADR-0510 メモ帳の再送キーは本文の指紋と結果を控え、同じ本文は再生し、別の本文は 409 で断る](../../../documents/adr/0510-kftl-idempotency-key-carries-fingerprint-and-result.md)

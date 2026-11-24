@@ -88,6 +88,8 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 - 守るテスト: `check-auth-login-page.test.ts` / `e2e/login.spec.ts` の
   「login with invalid credentials shows error」
 
+**`Text` / `Notification` は必ず `@/classes/datas/text` / `notification` から import する。** DOM にも同じ名前の型（テキストノードと Web Notification）があるので、import を忘れても型検査は通り、中継の引数が黙って DOM の型になる（1.1.12 の見直しで emits と composable の9本がそうなっていた）。`convention-source-scan.test.ts` が走査で守る。
+
 ### UI 実装の共通規約
 
 **Context menus:** never compute the popup position by hand. Call `useContextMenuPosition()` (`classes/use-context-menu-position.ts`) for `is_show` / `menu_target` / `open_at(e)`, and bind the template as `<v-menu v-model="is_show" :target="menu_target" location="bottom start">`. Vuetify's connected location strategy measures the rendered menu and flips/shifts it to stay inside the viewport. The previous approach copy-pasted `left: min(innerWidth - 130, x); top: min(max(50, innerHeight - (8 + 48 * N)), y)` into all 25 context-menu composables — the 130px width was unrelated to the real list width, and `N` had to be hand-synced with the template's item count (the struct-family menus sat at `N=2` while actually having 5 items). `.gkill_context_menu_list { max-height: 70vh; overflow-y: scroll }` in `App.vue` still caps very long menus. 手計算をやめた経緯（実測しない限り正しい定数は書けない）は [ADR-0409](../../../documents/adr/0409-context-menu-position-by-vuetify.md)。

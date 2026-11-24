@@ -36,7 +36,7 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 | **PluginKyou** | 外部プラグインバイナリが提供する Kyou。`DataType` はプラグイン定義による（例: `chatgpt_conversation`, `claude_conversation`, `claude_code_turn`, `codex_turn`）。コンテンツ表示は `GetContentHTML` が返す HTML を iframe (srcdoc) で描画する |
 | **PluginRepository** | プラグインバイナリをサブプロセスとして起動し stdio 改行区切り JSON で通信するリポジトリ実装（`src/server/gkill/dao/reps/plugin_repository_impl.go`）。`RepType` を持たず4層パターンにも属さない |
 | **PluginManager** | ユーザごとにプラグインディレクトリを走査し、`manifest.json` を持つものを `PluginRepository` として登録する（`src/server/gkill/dao/plugin_manager.go`） |
-| **PluginManifest** | プラグインのメタデータ（`protocol_version`, `name`, `version`, `description`, `data_type`, `rep_name`, `executable`, `min_gkill_version` の8フィールド）。`name` はディレクトリ名と一致させる。同梱プラグイン10本（antigravity / archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / gemini / google_locationhistory / vrchat）はバイナリに `//go:embed` しており `--gkill-print-manifest` で出力できる（`--gkill-print-config` で既定の `config.json` も出せる）。`gkill_example` は埋め込みもフラグも持たない |
+| **PluginManifest** | プラグインのメタデータ（`protocol_version`, `name`, `version`, `description`, `data_type`, `rep_name`, `executable`, `min_gkill_version`, `provides`, `emits_kyou` の10フィールド）。`name` はディレクトリ名と一致させる。同梱プラグイン10本（antigravity / archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / gemini / google_locationhistory / vrchat）はバイナリに `//go:embed` しており `--gkill-print-manifest` で出力できる（`--gkill-print-config` で既定の `config.json` も出せる）。`gkill_example` は埋め込みもフラグも持たない |
 | **プラグインディレクトリ** | `$GKILL_HOME/plugins/{userID}/{pluginName}/` — manifest.json・実行ファイル・`config.json` を格納するディレクトリ |
 | **plugin_cache** | プラグインの SQLite3 キャッシュ置き場。`$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db`。プラグインディレクトリではなく gkill のキャッシュディレクトリ配下にあるため `clear_cache plugin` で削除でき、`generate_plugin_cache` で稼働中サーバ無しに同期構築できる（プラグインを `--gkill-build-cache` で単独起動） |
 | **source_dirs** | プラグインの `config.json` で取り込み元フォルダを指定するキー。グロブ・`~`・環境変数を展開し、検索のたびに読み直される |
@@ -61,6 +61,7 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 | **Mkfl** | 打刻メモ帳 | `/mkfl` | 打刻（TimeIs）とメモ（Kmemo）を組み合わせた複合入力ビュー | Master Key Fairy Lifelogger。記録導線を「あける」鍵開けの妖精 |
 | **Playing** | 実行中 | `/playing` | 稼働中の TimeIs（`EndTime` が null）を一覧表示する画面。状況キーワードやタグで絞り込み可能。**かつて `plaing` と綴っていたが 2026-09-08 に `playing` へ改名した**（下記参照） | 旧綴り `plaing` は Playing と Plain のミックス造語だった <!-- retired-spelling-ok --> |
 | **Dashboard** | ダッシュボード | `/dashboard` | 特定日の記録を俯瞰する日次サマリー画面。DnoteView・GPSLogMap・KyouListView（MI一覧）を1画面に集約し、日付ナビゲーションで過去日のデータも確認できる | — |
+| **Rudbeckia** | ポート | `/rudbeckia` | 4画面（ライフログ・タスク・ダッシュボード・実行中）をフローティングウィンドウとして並べて開ける単一画面 | 植物ルドベキア |
 | **Saihate** | さいはて | `/saihate` | 記録だけに特化した画面。他画面への遷移ができない。「さいはてでも記録ができる」がコンセプト | 「最果て」。主にスマホのロック画面からアクセスする用途 |
 
 ### Rykv 内の機能ビュー
@@ -69,7 +70,7 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 |------|---------|------|------|
 | **Dnote** | 集計ビュー | データ集計・分析機能。Predicate（条件）でフィルタし、KeyGetter（集計キー）でグルーピングし、AggregateTarget（集計対象）で集計する | Daily Record summary Notebook |
 | **Ryuu** | 関連情報 | 表示中の Kyou と時刻が近い関連 Kyou を表示する機能。検索範囲（n時間）と抽出条件を指定可能 | 流、龍 |
-| **HTML 出力** | HTML エクスポート | いまの列の検索結果・メディア・設定を焼き込んだ単一 HTML を作る機能。共有リンクと違い gkill が動いていなくても開け、通信もしない（地図だけ例外）。入口は共有ダイアログ | — |
+| **HTML 出力** | HTML エクスポート | いまの列（Rykv / Mi）の検索結果・メディア・設定を焼き込んだ単一 HTML（または HTML ＋ 同名フォルダ）を作る機能。共有リンクと違い gkill が動いていなくても開け、通信もしない（地図だけ例外）。入口は共有ダイアログ | — |
 
 ### 認証不要ページ
 
@@ -250,7 +251,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
 | APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全99エンドポイントのパス・メソッド・認証区分・ハンドラを1行1ルートで持つルート表（98 POST + 1 GET）。`serve.go` とテストハーネスがそのまま登録する正本 |
-| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 119ファイル、1ハンドラ1ファイル） |
+| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 124ファイル、実装100 + テスト24） |
 | アクセスログミドルウェア | `src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go` | gorilla/mux ミドルウェア。全HTTPリクエストのアクセスログを `ACCESS` レベルで記録 |
 | リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（206ファイル） |
 | エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000456 の定数定義（計415件。欠番41、うち37は存在しないエンドポイントのコードを削除した跡） |
@@ -278,7 +279,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
 | ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
 | HTML 出力のエントリポイント | `src/client/export-main.ts` | 出力したファイルの中で動く第2のエントリ。ルータは持たない（`export-router-stub.ts`）。i18n も1言語だけの版（`export-i18n.ts`）へ差し替わる |
-| HTML 出力の画面 | `src/client/pages/exported-kyou-page.vue` | 焼き込んだ JSON を読んで rykv を描く。列の中身は通常と同じ `rykv-columns-view.vue` |
+| HTML 出力の画面 | `src/client/pages/exported-kyou-page.vue` | 焼き込んだ JSON の `screen` 印に応じて `exported-rykv-view` / `exported-mi-view` を描く。列の中身は通常と同じ `rykv-columns-view.vue` / `mi-columns-view.vue` |
 | GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約4,200行） |
 | リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（187ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
@@ -296,7 +297,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（1067キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（1077キー/言語） |
 
 ### その他
 
@@ -307,7 +308,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | MCP サーバー（ReadWrite） | `src/server/gkill/mcp/server_readwrite.go` | 読み書き統合MCPサーバー（45ツール = 固有44 + プラグイン1、stdio/HTTP） |
 | MCP プラグインツール | `src/server/gkill/mcp/plugin_tools.go` | 3サーバ共通の `gkill_get_plugin_list` と、`gkill_get_kyous` へプラグイン本文を埋める `inlinePluginContents`（読み取りのみ。`post_plugin_config` は公開しない） |
 | MCP ログ | `src/server/gkill/mcp/access_log.go` | gkill_log 上の MCP のロガー。`logs/gkill_mcp_<kind>*.log` へ出し、レベルは `MCP_LOG` / 設定 / `--log` で制御 |
-| MCP ヘルプ | `src/server/gkill/mcp/help_topics.go` | `gkill_get_mcp_help` の topic 本文（10件）。ツール説明は要約にとどめ、詳細はここから取り出す（ADR-0622 / 0632） |
+| MCP ヘルプ | `src/server/gkill/mcp/help_topics.go` | `gkill_get_mcp_help` の topic 本文（12件）。ツール説明は要約にとどめ、詳細はここから取り出す（ADR-0622 / 0632） |
 | MCP 設定 | `src/server/gkill/mcp/config.go` | `$HOME/gkill/configs/gkill_mcp.json` の生成・読み込みと、フラグ > 環境変数 > ファイル > 既定値の優先順位 |
 | Android APK | `src/android/` | WebView ラッパー + gkill_server バイナリ同梱 |
 | Wear OS | `src/wear_os/` | phone_companion + watch_app（Gradle マルチモジュール） |

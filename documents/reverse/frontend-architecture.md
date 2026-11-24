@@ -4,22 +4,22 @@
 
 | カテゴリ | 技術 | バージョン |
 |---|---|---|
-| フレームワーク | Vue 3 (Composition API) | ^3.5.40 |
-| UIライブラリ | Vuetify 4 (Material Design) | ^4.1.7 |
-| ルーティング | Vue Router 5 | ^5.2.0 |
-| 国際化 | vue-i18n 11 | ^11.4.8 |
-| ビルドツール | Vite 8 | ^8.2.0 |
-| PWA | vite-plugin-pwa + Workbox | ^1.2.0 |
+| フレームワーク | Vue 3 (Composition API) | ^3.5.45 |
+| UIライブラリ | Vuetify 4 (Material Design) | ^4.3.3 |
+| ルーティング | Vue Router 5 | ^5.5.1 |
+| 国際化 | vue-i18n 11 | ^11.4.20 |
+| ビルドツール | Vite 8 | ^8.3.8 |
+| PWA | vite-plugin-pwa + Workbox | ^2.0.0 |
 | TypeScript | TypeScript 6 | ~6.0.0 |
 | アイコン | @mdi/font (Material Design Icons) | ^7.4.47 |
-| 地図 | vue3-google-map + @googlemaps/js-api-loader | — |
-| 日時 | moment | ^2.30.1 |
-| Markdown描画 | marked + dompurify | ^18.0.7 / ^3.4.12 |
-| 図表描画 | mermaid | ^11.16.0 |
-| 型チェック | vue-tsc 3 | ^3.3.9 |
-| リンター | ESLint 10 + eslint-plugin-vue 10 (flat config) | ^10.8.0 / ^10.10.0 |
-| ユニットテスト | Vitest + jsdom | ^4.1.11 / ^30.0.1 |
-| E2Eテスト | @playwright/test | ^1.62.1 |
+| 地図 | vue3-google-map + @googlemaps/js-api-loader | ^0.27.2 / ^2.1.3 |
+| 日時 | moment | ^2.31.0 |
+| Markdown描画 | marked + dompurify | ^18.2.0 / ^3.4.18 |
+| 図表描画 | mermaid | ^12.3.0 |
+| 型チェック | vue-tsc 3 | ^3.3.14 |
+| リンター | ESLint 10 + eslint-plugin-vue 10 (flat config) | ^10.15.0 / ^10.12.1 |
+| ユニットテスト | Vitest + jsdom | ^5.1.0 / ^31.0.1 |
+| E2Eテスト | @playwright/test | ^1.65.1 |
 
 > バージョンは `package.json` の値。表を更新するときは `package.json` を正とすること。
 
@@ -58,7 +58,7 @@ src/client/
 │   ├── e2e/                        # E2E spec（run-e2e.mjs / free-port.mjs / auth.setup.ts 等を含む）
 │   ├── helpers/                    # テストヘルパー
 │   └── unit/                       # ユニットテスト（api / classes / composables / datas / dnote / kftl。直下に i18n-completeness / router / service-worker）
-├── pages/                           # ルートページコンポーネント (15ファイル)
+├── pages/                           # ルートページコンポーネント (16ファイル)
 │   ├── login-page.vue
 │   ├── kftl-page.vue
 │   ├── kyou-page.vue
@@ -68,13 +68,15 @@ src/client/
 │   ├── mkfl-page.vue
 │   ├── playing-time-is-page.vue
 │   ├── dashboard-page.vue
+│   ├── rudbeckia-page.vue
 │   ├── set-new-password-page.vue
 │   ├── register-first-account-page.vue
 │   ├── shared-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── views/                       # Viewコンポーネント (207)
-│   └── dialogs/                     # ダイアログコンポーネント (119, Esc閉じ対応)
+│   ├── exported-kyou-page.vue       # HTML出力専用ページ（screen印でrykv/mi切替）
+│   ├── views/                       # Viewコンポーネント (214)
+│   └── dialogs/                     # ダイアログコンポーネント (121, Esc閉じ対応)
 ├── plugins/
 │   └── vuetify.ts                   # Vuetify設定・テーマ定義
 └── router/
@@ -93,9 +95,9 @@ Page（ルートページ）
 
 | 層 | 配置 | 件数 | 責務 |
 |---|---|---|---|
-| **Page** | `pages/*.vue` | 15 | ルーティング先。ページ全体のレイアウト（13ルート＋共有用2ページ） |
-| **View** | `pages/views/*.vue` | 207 | データ型ごとの追加/編集/一覧表示 |
-| **Dialog** | `pages/dialogs/*.vue` | 119 | モーダル操作（確認、詳細編集等） |
+| **Page** | `pages/*.vue` | 16 | ルーティング先。ページ全体のレイアウト（13ルート＋共有用2ページ＋HTML出力用1ページ） |
+| **View** | `pages/views/*.vue` | 214 | データ型ごとの追加/編集/一覧表示（Rykv / Mi は通常・HTML出力・共有のモード別にビューを分割。ADR-0418 / ADR-0420） |
+| **Dialog** | `pages/dialogs/*.vue` | 121 | モーダル操作（確認、詳細編集等） |
 
 ### 命名規則
 
@@ -110,8 +112,9 @@ Page（ルートページ）
 | コンポーネント | 説明 |
 |---|---|
 | `plugin-html-view.vue` | `GetPluginContentHTMLResponse.html` を iframe srcdoc に展開して表示。postMessage でダークテーマ通知・高さ動的調整を行う |
-| `plugin-html-context-menu.vue` | プラグインKyou用コンテキストメニュー（タグ追加・テキスト追加・リポスト等）|
-| `plugin-config-dialog.vue` | `GetPluginConfigHTMLResponse.html` を iframe srcdoc に展開してプラグイン設定フォームを表示。`plugin-html-view.vue` が保持し、コンテキストメニューの「プラグイン設定」から開く。保存は iframe からの postMessage を受けて親が `post_plugin_config` を呼ぶ |
+| `plugin-html-context-menu.vue` | プラグインKyou用コンテキストメニュー（タグ追加・テキスト追加・リポスト等） |
+| `manage-plugin-list-view.vue` / `manage-plugin-list-dialog.vue` | 対象アカウントのプラグイン一覧と稼働状態・設定ボタン（管理者専用の「アカウント管理」→「プラグイン設定」から開く。ADR-0714） |
+| `plugin-config-dialog.vue` | `GetPluginConfigHTMLResponse.html` を iframe srcdoc に展開してプラグイン設定フォームを表示。`manage-plugin-list-dialog.vue` から `show(target_user_id, rep_name)` で開く（管理者専用）。保存は iframe からの postMessage を受けて親が `post_plugin_config` を呼ぶ |
 
 **postMessage 通信パターン:**
 - 親 → iframe: `{ gkill_theme: 'dark' | 'light' }` — テーマ変更通知（CSS変数切替用）
@@ -197,7 +200,7 @@ MCP 向けの利用者ごとのスキル（`SKILL.md` と付属ファイル。[A
 
 ### ダイアログ アクセシビリティ
 
-121ダイアログ中121件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。唯一の例外は `plugin-config-dialog.vue` で、Vuetify の `v-dialog`（`defineModel` の `show`）に `useDialogHistoryStack(show)` を登録するだけにしてある。iframe の中でプラグイン製のフォームがナビゲーションして履歴エントリを作りうるので、`close_dialog_via_history` は使わずプログラム的に閉じる（unmount で iframe の履歴ごと消えてから巻き戻される。`use-plugin-config-dialog.ts`）:
+121ダイアログ中121件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する（`plugin-config-dialog.vue` も `useFloatingDialog()` へ統一済み）:
 
 | 機能 | 説明 |
 |------|------|
@@ -252,6 +255,7 @@ MCP 向けの利用者ごとのスキル（`SKILL.md` と付属ファイル。[A
 | `/mkfl` | `mkfl` | mkfl-page.vue | 打刻メモ帳（KFTL入力+TimeIs表示） |
 | `/playing` | `playing` | playing-time-is-page.vue | アクティブ打刻一覧 |
 | `/dashboard` | `dashboard` | dashboard-page.vue | 日次サマリー（Dnote・GPS・MI一覧） |
+| `/rudbeckia` | `rudbeckia` | rudbeckia-page.vue | ポート（4画面をウィンドウとして並べる単一画面） |
 | `/saihate` | `saihate` | saihate-page.vue | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | `set_new_password` | set-new-password-page.vue | パスワード設定 |
 | `/register_first_account` | `register_first_account` | register-first-account-page.vue | 初回アカウント登録（旧 `/regist_first_account` からリダイレクト） |
@@ -419,13 +423,13 @@ multipart POST がもう一度届く。届く内容が同一なので、再配�
 
 | コード | 言語 | キー数 |
 |---|---|---|
-| `ja` | 日本語 | 858 |
-| `en` | 英語 | 858 |
-| `zh` | 中国語 | 858 |
-| `ko` | 韓国語 | 858 |
-| `es` | スペイン語 | 858 |
-| `fr` | フランス語 | 858 |
-| `de` | ドイツ語 | 858 |
+| `ja` | 日本語 | 1067 |
+| `en` | 英語 | 1067 |
+| `zh` | 中国語 | 1067 |
+| `ko` | 韓国語 | 1067 |
+| `es` | スペイン語 | 1067 |
+| `fr` | フランス語 | 1067 |
+| `de` | ドイツ語 | 1067 |
 
 > キー数は全ロケールで一致している必要がある（`npm run verify_docs` が検査する）。
 
@@ -728,7 +732,7 @@ KFTL テキストエリアに内容がある状態でページ離脱しようと
 
 ### コンテキストメニューの位置決め（`use-context-menu-position.ts`）
 
-25個の `*-context-menu.vue` は位置を自前で計算しない。共通 composable が返す `menu_target`（`[clientX, clientY]`）を `<v-menu v-model="is_show" :target="menu_target" location="bottom start">` に渡し、Vuetify の connected location strategy に任せる。メニューの実寸を測ったうえで、はみ出す方向へ flip / shift される。
+27個の `*-context-menu.vue` は位置を自前で計算しない。共通 composable が返す `menu_target`（`[clientX, clientY]`）を `<v-menu v-model="is_show" :target="menu_target" location="bottom start">` に渡し、Vuetify の connected location strategy に任せる。メニューの実寸を測ったうえで、はみ出す方向へ flip / shift される。
 
 以前は各 composable が `left: min(innerWidth - 130, x)` / `top: min(max(50, innerHeight - (8 + 48 * 項目数)), y)` を25箇所にコピペしていた。幅130px は実際のリスト幅（実測79px）と無関係で、高さの項目数はテンプレートと手で同期する不文律だったため、構成ツリー系（`*-struct-context-menu`）は実項目5個に対して `48 * 2` のまま下端ではみ出していた。またこのスタイル文字列は `{ }` で囲まれていたため Vue の `parseStringStyle` が `position: absolute` を捨てており、`.v-overlay`（`position: fixed`）の `left` / `top` だけが効いている状態だった。
 

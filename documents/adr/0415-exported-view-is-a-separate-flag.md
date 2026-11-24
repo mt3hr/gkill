@@ -2,14 +2,16 @@
 
 | | |
 |---|---|
-| Status | Accepted |
+| Status | Superseded |
 | Date | 2026-11-22 |
-| Sources | `src/client/classes/api/gkill-api.ts` の `GkillAPIForExportedKyou` の doc コメント / `src/client/classes/use-rykv-view.ts` の区画の可否 computed / [ADR-0903](0903-export-shell-is-a-second-vite-build.md)（出力のガワ） / [ADR-0407](0407-init-on-application-config-loaded.md)（列の初期化トリガ） |
+| Sources | `src/client/classes/api/gkill-api.ts` の `GkillAPIForExportedKyou` の doc コメント / [ADR-0903](0903-export-shell-is-a-second-vite-build.md)（出力のガワ） / [ADR-0407](0407-init-on-application-config-loaded.md)（列の初期化トリガ） / [ADR-0418](0418-split-rykv-views-by-mode.md) / [ADR-0420](0420-split-mi-views-by-mode.md) |
 | Supersedes | なし |
-| Superseded-by | なし |
-| Anchors | `src/client/pages/views/rykv-view-props.ts` の `is_exported_rykv_view` の doc コメント、`src/client/classes/exported-kyou-payload.ts` の `build_exported_api` |
+| Superseded-by | ビュー分岐部分のみ [ADR-0418](0418-split-rykv-views-by-mode.md) / [ADR-0420](0420-split-mi-views-by-mode.md) |
+| Anchors | `src/client/classes/exported-kyou-payload.ts` の `build_exported_api`、`src/client/classes/api/gkill-api.ts` の `GkillAPIForExportedKyou` |
 
 ## Context
+
+ビュー側のフラグと computed による分岐は ADR-0418 / ADR-0420 のモード別ビュー分割で置き換え済み。`GkillAPIForExportedKyou` と `gkill_fetch` の1点遮断・`ApplicationConfig.for_export_kyou` は現行も有効。本書の後続の記述は決定当時の設計を示す。
 
 「HTML で出力」した画面は共有ページ（`/shared_page`）とよく似ている。どちらも読み取り専用で、
 データをサーバの検索ではなく手元の配列から返す。実際、共有ページには

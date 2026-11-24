@@ -5,7 +5,7 @@
 
 <h1>메모장 구문 레퍼런스</h1>
 
-<p>메모장 구문은 gkill에서 사용하는 텍스트 기반 기록 형식입니다. 줄 앞에 접두사를 붙여 다양한 유형의 데이터를 한 번에 입력할 수 있습니다. 아래에 전체 19가지 문 유형을 소개합니다.</p>
+<p>메모장 구문은 gkill에서 사용하는 텍스트 기반 기록 형식입니다. 줄 앞에 접두사를 붙여 다양한 유형의 데이터를 한 번에 입력할 수 있습니다. 아래에 전체 20가지 문 유형을 소개합니다.</p>
 
 <h2>문 유형 목록</h2>
 
@@ -16,18 +16,18 @@
   <tr><td><code>ーー</code></td><td><code>--</code></td><td>텍스트 블록</td><td>여러 줄 텍스트를 그대로 유지</td></tr>
   <tr><td><code>、</code></td><td><code>,</code></td><td>구분자</td><td>새로운 레코드로 분할</td></tr>
   <tr><td><code>、、</code></td><td><code>,,</code></td><td>구분자(+1초)</td><td>타임스탬프를 1초 증가시키고 분할</td></tr>
-  <tr><td><code>？</code></td><td><code>?</code></td><td>관련 시각</td><td>관련 날짜/시간 설정</td></tr>
+  <tr><td><code>？</code></td><td><code>?</code></td><td>관련 시각</td><td>관련 일시 설정</td></tr>
   <tr><td><code>？？</code></td><td><code>??</code></td><td>반복</td><td>바로 위의 기록을 날짜를 바꿔 여러 번 만듦</td></tr>
   <tr><td><code>ーか</code></td><td><code>/num</code></td><td>수치 기록</td><td>수치 데이터 기록</td></tr>
   <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>작업</td><td>작업 생성</td></tr>
-  <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>기분</td><td>기분 값(0-10) 기록</td></tr>
+  <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>기분</td><td>기분값(0~10) 기록</td></tr>
   <tr><td><code>ーん</code></td><td><code>/expense</code></td><td>지출</td><td>지출 정보 기록</td></tr>
-  <tr><td><code>ーち</code></td><td><code>/timeis</code></td><td>타임로그(전체)</td><td>시작/종료 시각을 지정하여 기록</td></tr>
-  <tr><td><code>ーた</code></td><td><code>/start</code></td><td>타임로그 시작</td><td>타임로그 시작</td></tr>
-  <tr><td><code>ーえ</code></td><td><code>/end</code></td><td>타임로그 종료</td><td>일치하는 타임로그 종료</td></tr>
-  <tr><td><code>ーいえ</code></td><td><code>/end?</code></td><td>타임로그 종료(존재 시)</td><td>일치하는 타임로그가 있으면 종료(오류 없음)</td></tr>
-  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>태그로 타임로그 종료</td><td>태그 이름으로 타임로그 종료</td></tr>
-  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>태그로 타임로그 종료(존재 시)</td><td>태그 이름으로 타임로그 종료(존재 시)</td></tr>
+  <tr><td><code>ーち</code></td><td><code>/timeis</code></td><td>타임 기록(전체)</td><td>시작/종료 시각을 지정하여 기록</td></tr>
+  <tr><td><code>ーた</code></td><td><code>/start</code></td><td>타임 기록 시작</td><td>타임 기록 시작</td></tr>
+  <tr><td><code>ーえ</code></td><td><code>/end</code></td><td>타임 기록 종료</td><td>일치하는 타임 기록 종료</td></tr>
+  <tr><td><code>ーいえ</code></td><td><code>/end?</code></td><td>타임 기록 종료(존재 시)</td><td>일치하는 타임 기록이 있으면 종료(오류 없음)</td></tr>
+  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>태그로 타임 기록 종료</td><td>태그 이름으로 타임 기록 종료</td></tr>
+  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>태그로 타임 기록 종료(존재 시)</td><td>태그 이름으로 타임 기록 종료(존재 시)</td></tr>
   <tr><td><code>ーう</code></td><td><code>/url</code></td><td>북마크</td><td>URL 북마크 기록</td></tr>
   <tr><td><code>～～</code></td><td><code>~~</code></td><td>리포스트 작업</td><td>이미 있는 기록을 그대로 작업으로 만들기</td></tr>
   <tr><td><code>！</code></td><td><code>!</code></td><td>저장</td><td>문서를 종료하고 저장 실행</td></tr>
@@ -41,8 +41,9 @@
 산책을 갔다</pre>
 
 <h3>2. 태그: <code>#</code></h3>
-<p>줄 앞에 <code>#</code>를 붙여 태그를 지정합니다. 여러 태그는 <code>,</code>로 구분합니다.</p>
-<pre>#일기,날씨</pre>
+<p>줄 앞에 <code>。</code>를 붙여 태그를 지정합니다. 여러 태그는 <code>、</code> 또는 <code>,</code>로 구분합니다. ASCII 대체 문자인 <code>#</code>도 사용할 수 있습니다.</p>
+<pre>。일기、날씨
+#일기,날씨</pre>
 <p>아직 한 번도 사용한 적이 없는 태그 이름을 적고 저장하려고 하면 「새로운 태그입니다. 추가하시겠습니까?」라고 확인합니다. 오타로 비슷한 태그가 늘어나는 것을 막기 위한 확인입니다.</p>
 
 <h3>3. 텍스트 블록: <code>--</code></h3>
@@ -66,11 +67,11 @@
 1초 후 메모</pre>
 
 <h3>6. 관련 시각: <code>?</code></h3>
-<p>관련 날짜/시간을 설정합니다. 형식: <code>?YYYY-MM-DD</code>, <code>?YYYY-MM-DD HH:MM</code>, <code>?YYYY-MM-DD HH:MM:SS</code></p>
+<p>관련 일시를 설정합니다. 형식: <code>?YYYY-MM-DD</code>, <code>?YYYY-MM-DD HH:MM</code>, <code>?YYYY-MM-DD HH:MM:SS</code></p>
 <pre>?2025-03-15 14:30</pre>
 
 <div class="tip">
-  <strong>주의:</strong> 줄 시작 부분의 <code>#</code>은 태그, <code>?</code>는 날짜/시간으로 해석됩니다. 일반 텍스트로 사용하려면 텍스트 블록 (<code>--</code>)으로 감싸주세요.
+  <strong>주의:</strong> 줄 시작 부분의 <code>#</code>은 태그, <code>?</code>는 일시로 해석됩니다. 일반 텍스트로 사용하려면 텍스트 블록 (<code>--</code>)으로 감싸주세요.
 </div>
 
 <h3>7. 수치 기록: <code>/num</code></h3>
@@ -88,7 +89,7 @@
 2025-03-20</pre>
 
 <h3>9. 기분: <code>/mood</code></h3>
-<p>다음 줄에 기분 값(정수 0-10)을 입력합니다.</p>
+<p>다음 줄에 기분값(정수 0~10)을 입력합니다.</p>
 <pre>/mood
 7</pre>
 
@@ -100,7 +101,7 @@
 150
 차
 120</pre>
-<p>금액 행 뒤에 <code>。</code> 태그 행이나 <code>--</code> 텍스트 블록을 쓰면 <strong>그 지출에만</strong> 붙습니다. 지출마다 따로 설정할 수 있습니다.</p>
+<p>금액 행 뒤에 <code>#</code> 태그 행이나 <code>--</code> 텍스트 블록을 쓰면 <strong>그 지출에만</strong> 붙습니다. 지출마다 따로 설정할 수 있습니다.</p>
 <pre>/expense
 편의점
 삼각김밥
@@ -117,14 +118,14 @@
   <strong>주의:</strong> 태그와 텍스트는 금액 행 뒤에 작성해 주세요. <code>/expense</code>보다 앞이나 가게 이름 바로 뒤에 쓰면 어느 지출에 붙일지 정해지지 않아 잘못된 행으로 처리됩니다.
 </div>
 
-<h3>11. 타임로그(전체): <code>/timeis</code></h3>
+<h3>11. 타임 기록(전체): <code>/timeis</code></h3>
 <p>이후 줄에 제목, 시작 시각, 종료 시각을 입력합니다.</p>
 <pre>/timeis
 회의
 2025-03-15 10:00
 2025-03-15 11:30</pre>
 
-<h3>12. 타임로그 시작: <code>/start</code></h3>
+<h3>12. 타임 기록 시작: <code>/start</code></h3>
 <p>다음 줄에 제목을 입력합니다. 시작 시각은 현재 시각(또는 이전에 <code>?</code> 관련 시각으로 지정한 시각)이 사용됩니다.</p>
 <pre>/start
 작업 시작</pre>
@@ -133,23 +134,23 @@
 /start
 작업 시작</pre>
 
-<h3>13. 타임로그 종료: <code>/end</code></h3>
-<p>다음 줄에 제목을 입력합니다. 일치하는 시작된 타임로그를 찾아 종료합니다. 같은 제목의 타임로그가 여러 개 진행 중이면, 시작이 가장 최근인 1건만 종료합니다(삭제된 타임로그는 대상이 아닙니다).</p>
+<h3>13. 타임 기록 종료: <code>/end</code></h3>
+<p>다음 줄에 제목을 입력합니다. 일치하는 시작된 타임 기록을 찾아 종료합니다. 같은 제목의 타임 기록이 여러 개 진행 중이면, 시작이 가장 최근인 1건만 종료합니다(삭제된 타임 기록은 대상이 아닙니다).</p>
 <pre>/end
 작업 시작</pre>
 
-<h3>14. 타임로그 종료(존재 시): <code>/end?</code></h3>
-<p>타임로그 종료와 동일하지만 일치하는 타임로그가 없어도 오류가 발생하지 않습니다.</p>
+<h3>14. 타임 기록 종료(존재 시): <code>/end?</code></h3>
+<p>타임 기록 종료와 동일하지만 일치하는 타임 기록이 없어도 오류가 발생하지 않습니다.</p>
 <pre>/end?
 작업 시작</pre>
 
-<h3>15. 태그로 타임로그 종료: <code>/endt</code></h3>
-<p>다음 줄에 태그 이름을 입력합니다. 해당 태그가 있는 타임로그를 찾아 종료합니다. 해당 태그가 있는 타임로그가 여러 개 진행 중이면, 시작이 가장 최근인 1건만 종료합니다(삭제된 타임로그는 대상이 아닙니다).</p>
+<h3>15. 태그로 타임 기록 종료: <code>/endt</code></h3>
+<p>다음 줄에 태그 이름을 입력합니다. 해당 태그가 있는 타임 기록을 찾아 종료합니다. 해당 태그가 있는 타임 기록이 여러 개 진행 중이면, 시작이 가장 최근인 1건만 종료합니다(삭제된 타임 기록은 대상이 아닙니다).</p>
 <pre>/endt
 업무</pre>
 
-<h3>16. 태그로 타임로그 종료(존재 시): <code>/endt?</code></h3>
-<p>태그로 타임로그 종료와 동일하지만 일치하는 타임로그가 없어도 오류가 발생하지 않습니다.</p>
+<h3>16. 태그로 타임 기록 종료(존재 시): <code>/endt?</code></h3>
+<p>태그로 타임 기록 종료와 동일하지만 일치하는 타임 기록이 없어도 오류가 발생하지 않습니다.</p>
 <pre>/endt?
 업무</pre>
 
@@ -190,13 +191,13 @@ fri
 <p>이 예는 다음 금요일부터 매주 18:00의 「주간 보고」 작업을 3건 만듭니다. 기록이 가진 일시는 모두 같은 일수만큼 이동하므로 시작·종료·마감 사이의 간격은 그대로 유지됩니다. 일시를 하나도 적지 않은 작업에는 사용할 수 없습니다(반복된 날짜를 넣을 곳이 없기 때문입니다).</p>
 <p>3번째 줄의 기본값이 <code>no</code>이므로 <strong>같은 내용을 다시 저장해도 늘어나지 않습니다.</strong> 저장에 실패하면 아무것도 만들어지지 않으므로, 같은 내용을 그대로 다시 저장하세요.</p>
 <div class="tip">
-  <strong>주의:</strong> 존재하지 않는 날짜는 건너뜁니다(<code>monthly 31</code>은 2월을, <code>5th fri</code>는 다섯째 금요일이 없는 달을 건너뜁니다). 기록 시작(<code>/start</code>)과 기록 종료(<code>/end</code>, <code>/end?</code>, <code>/endt</code>, <code>/endt?</code>)에는 사용할 수 없습니다. 한 번의 저장으로 만들 수 있는 것은 1000건까지입니다.
+  <strong>주의:</strong> 존재하지 않는 날짜는 건너뜁니다(<code>monthly 31</code>은 2월을, <code>5th fri</code>는 다섯째 금요일이 없는 달을 건너뜁니다). 타임 기록 시작(<code>/start</code>)과 타임 기록 종료(<code>/end</code>, <code>/end?</code>, <code>/endt</code>, <code>/endt?</code>)에는 사용할 수 없습니다. 한 번의 저장으로 만들 수 있는 것은 1000건까지입니다.
 </div>
 
 <h3>20. 저장: <code>!</code></h3>
 <p>문서를 종료하고 저장 처리를 실행합니다.</p>
-<p>「!」 줄 자체는 값의 줄로 세지 않습니다. 예를 들어 <code>/timeis</code> 다음 줄에 「!」만 쓰면 제목이 없으므로 「내용이 없습니다」 오류가 되어 아무것도 저장되지 않습니다. 종류 줄의 다음 줄에 본문·숫자·제목을 쓴 뒤 「!」를 붙이세요.</p>
-<p>내용이 없는 기록(본문 없는 메모, 제목 없는 작업, 가게 이름만 있는 지출, 값이 없는 숫자 기록), 붙일 대상이 없는 태그나 관련 시각, 읽을 수 없는 예정 일시는 저장하기 전에 줄별 오류로 표시됩니다(그 줄이 분홍색이 됩니다). 한 줄이라도 오류가 있으면 그 저장에서는 아무것도 기록되지 않습니다.</p>
+<p>「!」 줄 자체는 값의 줄로 세지 않습니다. 예를 들어 <code>/timeis</code> 다음 줄에 「!」만 쓰면 제목이 없으므로 「내용이 없습니다」 오류가 되어 아무것도 저장되지 않습니다. 종류 줄의 다음 줄에 본문·수치·제목을 쓴 뒤 「!」를 붙이세요.</p>
+<p>내용이 없는 기록(본문 없는 메모, 제목 없는 작업, 가게 이름만 있는 지출, 값이 없는 수치 기록), 붙일 대상이 없는 태그나 관련 시각, 읽을 수 없는 예정 일시는 저장하기 전에 줄별 오류로 표시됩니다(그 줄이 분홍색이 됩니다). 한 줄이라도 오류가 있으면 그 저장에서는 아무것도 기록되지 않습니다.</p>
 <pre>!</pre>
 
 <h2>종합 예제</h2>
@@ -232,6 +233,6 @@ fri
   <h2>관련 문서</h2>
   <ul>
     <li><a href="kftl.html">메모장 화면</a></li>
-    <li><a href="mkfl.html">타임스탬프 메모장 화면</a></li>
+    <li><a href="mkfl.html">타임 기록 메모장 화면</a></li>
     <li><a href="kftl-template-struct.html">템플릿 구조</a></li>
   </ul>

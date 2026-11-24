@@ -192,8 +192,8 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0312](0312-fitbit-one-data-source-per-day.md) | fitbit は同じ日に並ぶデータソースを合算せず、時計を優先して1系統だけ採る | Accepted |
 | [0313](0313-plugin-logs-through-gkill-log.md) | プラグインのログは gkill_log の別名ファイル（logs/gkill_plugin_<name>*.log）へ出し、stderr には WARN / ERROR の接頭辞行だけを残す | Accepted |
 | [0314](0314-codex-conversation-from-item-completed.md) | Codex 0.151 以降の会話は item_completed から読み、返事は最終回答を本文にして経過を畳む | Accepted |
-| [0315](0315-chat-plugins-render-through-sdk-chatview.md) | AI チャット系プラグイン4本の本文 HTML は SDK の chatview が1か所で描き、プラグインは共通モデルへ写すだけにする | Accepted |
-| [0316](0316-plugin-config-screens-render-through-sdk-configview.md) | 同梱プラグイン7本の設定画面 HTML は SDK の configview が1か所で描き、プラグインは文言と統計を渡すだけにする | Accepted |
+| [0315](0315-chat-plugins-render-through-sdk-chatview.md) | AI チャット系プラグインの本文 HTML は SDK の chatview が1か所で描き、プラグインは共通モデルへ写すだけにする | Accepted |
+| [0316](0316-plugin-config-screens-render-through-sdk-configview.md) | 同梱プラグインの設定画面 HTML は SDK の configview が1か所で描き、プラグインは文言と統計を渡すだけにする | Accepted |
 | [0317](0317-plugin-mixed-typed-kinds-and-playing-time.md) | 1本のプラグインが複数の型別の種類を返してよく、プラグインの TimeIs も playing_time で絞る | Accepted |
 | [0318](0318-pass-find-query-to-plugins.md) | プラグインへ検索条件の全体（FindQuery）を find_query で渡し、旧来の欄も残す | Accepted |
 | [0319](0319-plugin-sdk-fixes-android-local-timezone.md) | プラグイン SDK が Android で time.Local を端末のゾーンへ直す | Accepted |
@@ -213,13 +213,14 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0412](0412-apply-only-touched-sections-in-find-query-settings-dialog.md) | 設定の「検索条件」ダイアログは、適用で触ったセクションだけを渡す（旧ダッシュボードダイアログが未設定を空の条件で書き潰していた） | Accepted |
 | [0413](0413-rename-calendar-date-to-time.md) | 期間フィルタのフィールドは CalendarStartTime / CalendarEndTime へ改名する（`Date` と名乗っていたが実体は時刻） | Accepted |
 | [0414](0414-period-filter-time-of-day-in-sidebar.md) | サイドバーの「期間」で開始時刻・終了時刻を指定する（ワイヤ形式は変えず、丸めを UI の中だけで解く） | Accepted |
-| [0415](0415-exported-view-is-a-separate-flag.md) | 出力モードは共有モードと別のフラグにし、通信は `gkill_fetch` の1点で止める | Accepted |
+| [0415](0415-exported-view-is-a-separate-flag.md) | 出力モードは共有モードと別のフラグにし、通信は `gkill_fetch` の1点で止める（ビュー分岐は0418・0420で置換） | Superseded |
 | [0416](0416-idf-text-body-is-baked-as-bytes.md) | 出力 HTML の IDF 本文はバイト列のまま焼き込み、文字コードの判定はクライアントの1実装に残す | Accepted |
 | [0417](0417-exported-sidebar-narrows-only.md) | 出力 HTML のサイドバーは絞り込み専用にし、ワード照合の4実装目を作らない | Accepted |
 | [0418](0418-split-rykv-views-by-mode.md) | rykv はモードごとにビューを分け、列の機構を共有の子へ置く（モードのフラグを0にする） | Accepted |
 | [0419](0419-clear-date-time-fields-with-in-field-x.md) | 日付・時刻欄を空に戻す手段は欄の中の × ひとつにし、欄ごとに空にする | Accepted |
 | [0420](0420-split-mi-views-by-mode.md) | mi もモードごとにビューを分け、列の機構を共有の子へ置く（モードのフラグを0にする） | Accepted |
 | [0421](0421-exported-page-picks-view-by-screen-mark.md) | 出力 HTML は焼き込みの印でマウント先を選び、mi のサイドバーは絞れる節だけ残す | Accepted |
+| [0422](0422-exported-html-keeps-only-what-was-chosen.md) | 出力 HTML の中にも閲覧者の手元にも、選んだもの以外を残さない — 地図のキーは保存せず、リポストは列の記録のぶんだけ、警告は焼かない | Accepted |
 | [0501](0501-save-marker-beforeinput-input-pair.md) | KFTL保存マーカーの判定は beforeinput→input の対で行う | Accepted |
 | [0502](0502-kftl-errors-are-per-line.md) | メモ帳（KFTL）の失敗は行ごとに返し、入力ミスとサーバ障害を分ける | Accepted |
 | [0503](0503-kftl-prefix-misuse-is-an-input-error.md) | 引数の無い／引数を同じ行に書いたメモ帳のプレフィックスは、ゼロ値を書かずに行別エラーにする | Accepted |

@@ -1,10 +1,10 @@
-<!-- title: Accueil - Aide -->
-  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Accueil</span></nav>
-  <h1>Accueil</h1>
-  <p>Écran permettant d'enregistrer en toute sécurité même depuis l'écran de verrouillage. Il sert de hub pour ajouter rapidement tout type d'enregistrement.</p>
-  <p>Saihate est un hub léger spécialisé dans l'ajout de nouveaux enregistrements. Il ne propose pas de fonctions de navigation ni d'édition, ce qui élimine tout risque de modifier accidentellement des enregistrements existants. Il fonctionne au sein d'une session authentifiée et n'est accessible qu'après connexion.</p>
+<!-- title: Saihate - Aide -->
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Saihate</span></nav>
+  <h1>Saihate</h1>
+  <p>Écran qui permet d'ajouter des enregistrements en toute sécurité, même depuis l'écran de verrouillage. Il sert de point d'entrée pour ajouter rapidement tout type d'enregistrement.</p>
+  <p>Saihate ne propose ni consultation ni modification des enregistrements : il est spécialisé dans l'ajout. Vous ne risquez donc pas de modifier par erreur un enregistrement existant. Comme il fonctionne dans une session authentifiée, il n'est utilisable que lorsque vous êtes connecté.</p>
   <div class="tip">
-    <strong>Quel écran utiliser :</strong> Utilisez Saihate pour noter rapidement un mémo ou un horodatage, la Vue journal de vie pour parcourir et rechercher vos enregistrements, et le Bloc-notes pour saisir des enregistrements en lot via le texte.
+    <strong>Quel écran utiliser :</strong> Utilisez Saihate pour noter rapidement un mémo ou une entrée de temps, la Vue du journal de vie pour revoir et rechercher vos enregistrements, et le Bloc-notes pour saisir plusieurs enregistrements d'un coup sous forme de texte.
   </div>
 
   <h2>Boutons de la barre d'outils</h2>
@@ -15,51 +15,93 @@
     </tr>
     <tr>
       <td><span class="icon">&#128260;</span> Recharger</td>
-      <td>Recharge l'écran. Appui long pour forcer le rechargement.</td>
+      <td>Recharge les données. <strong>Appui long :</strong> force le rechargement.</td>
     </tr>
     <tr>
-      <td>Deconnexion</td>
-      <td>Se deconnecte du compte actuel et retourne a l'écran de connexion.</td>
+      <td>Déconnexion</td>
+      <td>Vous déconnecte.</td>
     </tr>
-    <tr><td>&#10068; Aide</td><td>Affiche l'aide de l'écran actuel.</td></tr>
+    <tr>
+      <td>&#10068; Aide</td>
+      <td>Affiche l'aide de l'écran actuel.</td>
+    </tr>
   </table>
 
-  <h2>FAB (Bouton d'action flottant) "+"</h2>
-  <p>En cliquant sur le bouton "+", un menu se déploie pour créer rapidement des enregistrements des 9 types suivants :</p>
+  <h2>Bouton d'action flottant (+)</h2>
+  <p>Touchez le bouton « + » en bas à droite de l'écran pour afficher le menu d'ajout des différents enregistrements.</p>
+
   <table>
     <tr>
-      <th>Type</th>
+      <th>Élément du menu</th>
+      <th>Contenu</th>
       <th>Description</th>
     </tr>
-    <tr><td>Mémo</td><td>Crée une note textuelle.</td></tr>
-    <tr><td>Temps+Mémo</td><td>Crée une note avec horodatage.</td></tr>
-    <tr><td>Numérique</td><td>Enregistre des données numériques.</td></tr>
-    <tr><td>Signet</td><td>Enregistre un signet URL.</td></tr>
-    <tr><td>Journal de temps</td><td>Démarre une session de suivi du temps.</td></tr>
-    <tr><td>Tâche</td><td>Crée une nouvelle tâche.</td></tr>
-    <tr><td>Dépense</td><td>Enregistre des informations de dépense.</td></tr>
-    <tr><td>Humeur</td><td>Enregistre une valeur d'humeur (0-10).</td></tr>
-    <tr><td>Téléversement</td><td>Téléverse un fichier.</td></tr>
+    <tr>
+      <td>Bloc-notes</td>
+      <td>Saisie de texte</td>
+      <td>Ouvre l'écran de saisie des mémos et des différents enregistrements avec la syntaxe du bloc-notes.</td>
+    </tr>
+    <tr>
+      <td>Bloc-notes d'entrées de temps</td>
+      <td>Texte + entrées de temps</td>
+      <td>Ouvre l'écran qui gère en même temps la saisie de notes et les entrées de temps en cours.</td>
+    </tr>
+    <tr>
+      <td>Enregistrements numériques</td>
+      <td>Enregistrer un nombre</td>
+      <td>Enregistre une donnée numérique quelconque.</td>
+    </tr>
+    <tr>
+      <td>Signets</td>
+      <td>Enregistrer une URL</td>
+      <td>Enregistre l'URL d'une page web comme signet.</td>
+    </tr>
+    <tr>
+      <td>Suivi du temps</td>
+      <td>Démarrer une mesure du temps</td>
+      <td>Démarre une nouvelle session d'entrée de temps.</td>
+    </tr>
+    <tr>
+      <td>Tâches</td>
+      <td>Ajouter une tâche</td>
+      <td>Crée une nouvelle tâche.</td>
+    </tr>
+    <tr>
+      <td>Dépenses</td>
+      <td>Enregistrer un montant</td>
+      <td>Enregistre le montant et l'objet d'une dépense.</td>
+    </tr>
+    <tr>
+      <td>Humeur</td>
+      <td>Enregistrer une valeur d'humeur (0 à 10)</td>
+      <td>Enregistre votre humeur du moment sous forme de nombre de 0 à 10.</td>
+    </tr>
+    <tr>
+      <td>Téléverser</td>
+      <td>Téléverser un fichier</td>
+      <td>Téléverse et enregistre un fichier, par exemple une image ou un document.</td>
+    </tr>
   </table>
 
   <div class="tip">
-    <strong>Astuce :</strong> Un appui long sur le bouton "+" ouvre directement l'écran de saisie du bloc-notes, permettant une saisie par lots rapide.
+    <strong>Appui long :</strong> Un appui long sur le bouton « + » ouvre directement le bloc-notes. Pratique pour prendre une note rapidement.
   </div>
 
   <div class="tip">
-    <strong>Astuce :</strong> L'écran affiché après la connexion peut être modifié dans le paramètre « Vue par défaut au démarrage » de l'écran de configuration.
+    <strong>Astuce :</strong> L'écran affiché en premier après la connexion peut être modifié avec « Vue par défaut au démarrage » dans l'écran des paramètres.
   </div>
 
   <div class="tip">
-    <strong>Raccourci :</strong> Appuyez sur Entrée sur cet écran pour ouvrir le bloc-notes. C'est pratique pour ajouter rapidement des enregistrements.
+    <strong>Raccourci :</strong> Appuyez sur Entrée sur cet écran pour ouvrir la boîte de dialogue du bloc-notes. Pratique pour ajouter rapidement un enregistrement.
   </div>
+
   <h2>Documents associés</h2>
   <ul>
     <li><a href="getting-started.html">Premiers pas</a></li>
     <li><a href="kftl.html">Bloc-notes</a></li>
-    <li><a href="mkfl.html">Mémo pointage</a></li>
+    <li><a href="mkfl.html">Bloc-notes d'entrées de temps</a></li>
     <li><a href="mi.html">Tâches</a></li>
-    <li><a href="rykv.html">Vue journal de vie</a></li>
-    <li><a href="playing.html">Sessions actives</a></li>
+    <li><a href="rykv.html">Vue du journal de vie</a></li>
+    <li><a href="playing.html">En cours</a></li>
     <li><a href="application-config.html">Paramètres</a></li>
   </ul>

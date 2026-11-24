@@ -848,7 +848,7 @@ classDiagram
     DnoteAggregator --> DnoteKeyGetter : グルーピング
     DnoteAggregator --> DnoteAggregateTarget : 集計
 
-    note for DnotePredicate "AND/OR/NOT の論理演算で\n組み合わせ可能な述語パターン\n38種類の具象クラス"
+    note for DnotePredicate "AND/OR/NOT の論理演算で\n組み合わせ可能な述語パターン\n36種類の具象クラス（31+TargetKyou 5）"
     note for DnoteAggregateTarget "平均/合計/最大/最小/カウント\n19種類の集計対象"
     note for DnoteKeyGetter "日付/曜日/週/月/タグ/データ型等\n9種類のグルーピングキー"
 ```

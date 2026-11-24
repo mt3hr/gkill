@@ -1,7 +1,7 @@
 <!-- title: Vue d'enregistrement - Aide -->
   <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Enregistrements</span></nav>
   <h1>Enregistrements</h1>
-  <p>Écran affichant les détails d'un enregistrement individuel. Vous pouvez consulter les informations détaillées de differents types d'enregistrements.</p>
+  <p>Écran affichant les détails d'un enregistrement individuel. Vous pouvez consulter les informations détaillées de chaque type d'enregistrement.</p>
 
   <h2>Boutons de la barre d'outils</h2>
   <table>
@@ -16,7 +16,7 @@
     <tr><td>&#10068; Aide</td><td>Affiche l'aide de l'écran actuel.</td></tr>
   </table>
 
-  <h2>Types d'enregistrements affiches</h2>
+  <h2>Types d'enregistrements affichés</h2>
   <table>
     <tr>
       <th>Type d'enregistrement</th>
@@ -28,7 +28,7 @@
     </tr>
     <tr>
       <td>Signets</td>
-      <td>Affiche les URLs et titres enregistres.</td>
+      <td>Affiche l'URL et le titre enregistrés.</td>
     </tr>
     <tr>
       <td>Tâches</td>
@@ -36,19 +36,19 @@
     </tr>
     <tr>
       <td>Humeur</td>
-      <td>Affiche la valeur d'humeur de 0 a 10.</td>
+      <td>Affiche la valeur d'humeur de 0 à 10.</td>
     </tr>
     <tr>
-      <td>Depenses</td>
+      <td>Dépenses</td>
       <td>Affiche le montant et le contenu de la dépense.</td>
     </tr>
     <tr>
-      <td>Journal de temps</td>
-      <td>Affiche l'heure de debut/fin et le temps écoulé.</td>
+      <td>Entrée de temps</td>
+      <td>Affiche l'heure de début et de fin ainsi que le temps écoulé.</td>
     </tr>
     <tr>
       <td>Fichier</td>
-      <td>Affiche un aperçu du fichier téléchargé. Les fichiers texte (.txt) affichent leur contenu directement dans la vue. Les fichiers Markdown (.md / .markdown) sont affichés en texte enrichi (titres, tableaux, blocs de code, images) et les blocs de code mermaid sont rendus sous forme de diagrammes. Si un lien du contenu est un chemin relatif vers un fichier du même dépôt, un double-clic ouvre la boîte de dialogue de cet enregistrement.</td>
+      <td>Affiche un aperçu du fichier téléchargé. Les fichiers texte (.txt) affichent leur contenu directement dans la vue. Les fichiers Markdown (.md / .markdown) sont affichés en texte enrichi (titres, tableaux, blocs de code, images) et les schémas écrits en syntaxe Mermaid sont affichés sous forme de diagrammes. Si un lien du contenu est un chemin relatif vers un fichier du même dépôt, un double-clic ouvre la boîte de dialogue de cet enregistrement.</td>
     </tr>
     <tr>
       <td>Enregistrements numériques</td>
@@ -56,7 +56,7 @@
     </tr>
     <tr>
       <td>Repost</td>
-      <td>Affiche les enregistrements republiés à une autre date/heure.</td>
+      <td>Affiche un enregistrement qui republie un autre enregistrement à une autre date et heure.</td>
     </tr>
     <tr>
       <td>Tâche de repost</td>
@@ -64,7 +64,7 @@
     </tr>
     <tr>
       <td>Enregistrement d'extension</td>
-      <td>Un enregistrement importé par une extension depuis un service autre que gkill. Voir <a href="plugin.html">Extensions</a> pour les détails.</td>
+      <td>Affiche les enregistrements de services autres que gkill importés par une extension. Voir <a href="plugin.html">Extensions</a> pour les détails.</td>
     </tr>
     <tr>
       <td>Journal GPS</td>
@@ -72,42 +72,42 @@
     </tr>
     <tr>
       <td>Journal de commit Git</td>
-      <td>Affiche les informations de commits du dépôt Git.</td>
+      <td>Affiche les informations de commit d'un dépôt Git.</td>
     </tr>
     <tr>
       <td>Notification</td>
-      <td>Affiche les notifications et rappels.</td>
+      <td>Un enregistrement qui vous envoie un rappel à la date et à l'heure indiquées.</td>
     </tr>
   </table>
 
   <h2>Informations communes affichées</h2>
   <p>Les informations suivantes sont affichées pour tous les types d'enregistrements :</p>
   <ul>
-    <li><strong>Etiquettes :</strong> Liste des étiquettes attribuees a l'enregistrement</li>
-    <li><strong>Temps associé :</strong> Informations de date et heure liées a l'enregistrement</li>
-    <li><strong>Dépôt :</strong> Nom du dépôt ou les données sont stockees</li>
+    <li><strong>Tags :</strong> liste des tags attribués à l'enregistrement</li>
+    <li><strong>Heure associée :</strong> date et heure liées à l'enregistrement</li>
+    <li><strong>Nom du dépôt :</strong> nom du dépôt où les données sont stockées</li>
   </ul>
 
   <h2>Menu contextuel</h2>
-  <p>Faites un clic droit (ou un appui long sur mobile) sur un enregistrement pour ouvrir le menu contextuel. Les éléments affichés varient légèrement selon le type d'enregistrement.</p>
+  <p>Faites un clic droit (ou un appui long) sur un enregistrement pour ouvrir le menu contextuel et effectuer les opérations suivantes. Les éléments affichés varient légèrement selon le type d'enregistrement.</p>
   <ul>
-    <li><strong>Ajouter un tag depuis l'historique:</strong> Choisissez parmi les tags récemment utilisés et ajoutez-le aussitôt.</li>
-    <li><strong>Ajouter un tag / Modifier un tag:</strong> Ajoute ou modifie des tags.</li>
-    <li><strong>Ajouter du texte / Modifier le texte:</strong> Ajoute ou modifie un texte complémentaire.</li>
-    <li><strong>Repost:</strong> Remet cet enregistrement dans la liste à l'heure actuelle.</li>
-    <li><strong>Transformer en tâche:</strong> Transforme cet enregistrement en tâche sans réécrire son contenu.</li>
-    <li><strong>Ajouter une notification / Modifier la notification:</strong> Ajoute ou modifie un rappel.</li>
-    <li><strong>Modifier:</strong> Modifie le contenu de l'enregistrement.</li>
-    <li><strong>Historique:</strong> Consulte l'historique des modifications des tags, textes et notifications.</li>
-    <li><strong>Copier le contenu:</strong> Copie le corps de l'enregistrement dans le presse-papiers.</li>
-    <li><strong>Copier l'ID:</strong> Copie l'identifiant de l'enregistrement dans le presse-papiers.</li>
-    <li><strong>Parcourir le contenu ZIP:</strong> Affiché uniquement pour les enregistrements de fichiers ZIP ; ouvre leur contenu à l'écran.</li>
-    <li><strong>Ouvrir le dossier / Ouvrir le fichier:</strong> Affiché uniquement lorsque gkill s'exécute sur le même appareil ; ouvre le fichier avec l'application par défaut du système.</li>
-    <li><strong>Supprimer:</strong> Supprime l'enregistrement. Les tags, textes et notifications qui lui sont attachés, ainsi que les reposts et les tâches de repost qui y font référence, sont supprimés en même temps. Si la suppression échoue en cours de route, rien n'est supprimé.</li>
+    <li><strong>Ajouter un tag depuis l'historique :</strong> Choisissez parmi les tags récemment utilisés et ajoutez-le aussitôt.</li>
+    <li><strong>Ajouter un tag / Modifier un tag :</strong> Ajoute ou modifie des tags.</li>
+    <li><strong>Ajouter du texte / Modifier le texte :</strong> Ajoute ou modifie un texte complémentaire.</li>
+    <li><strong>Repost :</strong> Fait réapparaître cet enregistrement dans la liste, à l'heure actuelle.</li>
+    <li><strong>Transformer en tâche :</strong> Permet de traiter cet enregistrement comme une tâche, tel quel, sans réécrire son contenu.</li>
+    <li><strong>Ajouter une notification / Modifier la notification :</strong> Ajoute ou modifie un rappel.</li>
+    <li><strong>Modifier :</strong> Modifie le contenu de l'enregistrement.</li>
+    <li><strong>Historique :</strong> Consulte l'historique des modifications des tags, textes et notifications.</li>
+    <li><strong>Copier le contenu :</strong> Copie le corps de l'enregistrement dans le presse-papiers.</li>
+    <li><strong>Copier l'ID :</strong> Copie l'identifiant de l'enregistrement dans le presse-papiers.</li>
+    <li><strong>Parcourir le contenu ZIP :</strong> Affiché uniquement pour les enregistrements de fichiers ZIP ; ouvre leur contenu à l'écran.</li>
+    <li><strong>Ouvrir le dossier / Ouvrir le fichier :</strong> Affiché uniquement lorsque vous ouvrez gkill sur le même appareil ; ouvre le fichier de l'enregistrement avec l'application par défaut du système.</li>
+    <li><strong>Supprimer :</strong> Supprime l'enregistrement. Les tags, textes et notifications qui lui sont attachés, ainsi que les reposts et les tâches de repost qui y font référence, sont supprimés en même temps. Si la suppression échoue en cours de route, rien n'est supprimé.</li>
   </ul>
 
   <div class="tip">
-    <strong>Astuce :</strong> Vous pouvez ajouter ou modifier des étiquettes directement depuis l'écran de détails de l'enregistrement.
+    <strong>Astuce :</strong> Vous pouvez ajouter ou modifier des tags directement depuis l'écran de détails de l'enregistrement.
   </div>
 
   <div class="tip">
@@ -115,7 +115,7 @@
   </div>
   <h2>Documents associés</h2>
   <ul>
-    <li><a href="rykv.html">Vue journal de vie</a></li>
+    <li><a href="rykv.html">Vue du journal de vie</a></li>
     <li><a href="mi.html">Tâches</a></li>
     <li><a href="plugin.html">Extensions</a></li>
   </ul>

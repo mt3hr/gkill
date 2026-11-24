@@ -10,6 +10,7 @@ gkill プロジェクト用のユーティリティスクリプト。
 | `license_getter.mjs` | `npm run license_getter` の実体。依存ライブラリのライセンス一覧を `LICENSES_DEPENDENCE` に出力する |
 | `verify_docs.mjs` | `npm run verify_docs` の実体。資料の件数・リンク・Mermaid・マニュアル鮮度・境界対応表（`documents/reverse/cross-boundary-map.md` の表とコードの突き合わせ）・ADR の番号帯・reverse 資料の索引網羅・個人情報パターン・ユーザー向け資料の用語（開発コード名の大文字形・小文字形と内部識別子。`<code>` / `<pre>` の中は除く）・テストファイルの索引網羅（`src/plugins/` の独立モジュールを除く全テストファイルについて、それを指す記述がいずれかの `ABOUT_TEST.md` にあること。名前は前後の区切り付きで照合し、同名のテストが複数あるときはパス付きの記述か、そのファイルだけを配下に持つ `ABOUT_TEST.md` の記述だけを数える）・`src/server/ABOUT_TEST.md` の分類表の和と合計行の一致 等の機械検査 |
 | `build_manuals.mjs` | `resources/manual_src/` から `resources/manual/` を生成する |
+| `build_export_template.mjs` | HTML 出力用の単一ファイルガワ（`vite.export.config.ts` 経由）をビルドし `embed/export/` へ配置する |
 | `manual_build.mjs` | マニュアル生成の共通ロジック（`build_manuals.mjs` / `verify_docs.mjs` から利用） |
 | `manual_a11y.mjs` | マニュアルのアクセシビリティ検査ヘルパー |
 | `manual_ascii_fix.mjs` | マニュアル内の文字化け・ASCII 修正ユーティリティ |
@@ -24,6 +25,7 @@ gkill プロジェクト用のユーティリティスクリプト。
 | `npm_audit_gate.mjs` | Nightly の npm audit の判定。high 以上を落とし、`npm_audit_allowlist.json` に名指しした開発用依存の advisory だけ条件付きで通す |
 | `npm_audit_allowlist.json` | 上の例外リスト（修正版の無い開発用依存の advisory だけ。GHSA ID・パッケージ名・対象範囲・理由・見直し期限） |
 | `__tests__/npm_audit_gate.test.mjs` | npm_audit_gate の出力の読み方・例外リストの検証・判定条件のテスト |
+| `__tests__/verify_docs.test.mjs` | `verify_docs.mjs` のルール判定・件数照合・用語検査のテスト |
 | `test_plugins.mjs` | `npm run test_plugins` / `npm run vet_plugins` の実体。`src/plugins/` 配下の各 Go モジュールに `go test` / `go vet` を回す |
 | `gradle_test.mjs` | `npm run test_android` / `npm run test_wear_os` の実体。Windows では `cmd /c <絶対パス>gradlew.bat`、それ以外は `./gradlew`（絶対パス）を使う |
 | `codeql.mjs` | `npm run codeql` の実体。CI と同じ設定で CodeQL をローカル実行し、ベースラインに無い指摘が出たら失敗する。CodeQL CLI が無ければスキップして正常終了する |

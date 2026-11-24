@@ -1,166 +1,166 @@
 <!-- title: Référence de syntaxe du bloc-notes -->
-  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <a href="kftl.html">Bloc-notes</a> &gt; <span>Référence syntaxe du bloc-notes</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <a href="kftl.html">Bloc-notes</a> &gt; <span>Référence de syntaxe du bloc-notes</span></nav>
 
-<div class="back-link"><a href="kftl.html">&larr; Retour a l'aide du bloc-notes</a></div>
+<div class="back-link"><a href="kftl.html">&larr; Retour à l'aide du bloc-notes</a></div>
 
 <h1>Référence de syntaxe du bloc-notes</h1>
 
-<p>La syntaxe du bloc-notes est un format d'enregistrement textuel utilise dans gkill. Grace aux prefixes en debut de ligne, vous pouvez saisir differents types de données en une seule fois. Voici les 19 types d'instructions.</p>
+<p>La syntaxe du bloc-notes est un format d'enregistrement textuel utilisé dans gkill. Grâce aux préfixes en début de ligne, vous pouvez saisir différents types de données en une seule fois. Voici les 20 types d'instructions.</p>
 
-<h2>Apercu des instructions</h2>
+<h2>Aperçu des instructions</h2>
 
 <table>
-  <tr><th>Prefixe</th><th>ASCII</th><th>Type</th><th>Description</th></tr>
+  <tr><th>Préfixe</th><th>Équivalent ASCII</th><th>Type</th><th>Description</th></tr>
   <tr><td>(aucun)</td><td>(aucun)</td><td>Mémo</td><td>Enregistrer une note textuelle</td></tr>
-  <tr><td><code>。</code></td><td><code>#</code></td><td>Etiquette</td><td>Attribuer des étiquettes</td></tr>
-  <tr><td><code>ーー</code></td><td><code>--</code></td><td>Bloc de texte</td><td>Conserver le texte multiligne tel quel</td></tr>
+  <tr><td><code>。</code></td><td><code>#</code></td><td>Étiquette</td><td>Attribuer des étiquettes</td></tr>
+  <tr><td><code>ーー</code></td><td><code>--</code></td><td>Bloc de texte</td><td>Conserver tel quel un texte sur plusieurs lignes</td></tr>
   <tr><td><code>、</code></td><td><code>,</code></td><td>Séparateur</td><td>Diviser en un nouvel enregistrement</td></tr>
-  <tr><td><code>、、</code></td><td><code>,,</code></td><td>Séparateur (+1 sec)</td><td>Diviser et incrementer l'horodatage d'1 seconde</td></tr>
-  <tr><td><code>？</code></td><td><code>?</code></td><td>Heure associée</td><td>Definir une date/heure associée</td></tr>
-  <tr><td><code>？？</code></td><td><code>??</code></td><td>Répétition</td><td>Créer l enregistrement ci-dessus à d autres dates</td></tr>
+  <tr><td><code>、、</code></td><td><code>,,</code></td><td>Séparateur (+1 s)</td><td>Diviser en avançant l'horodatage d'une seconde</td></tr>
+  <tr><td><code>？</code></td><td><code>?</code></td><td>Heure associée</td><td>Définir une date et une heure associées</td></tr>
+  <tr><td><code>？？</code></td><td><code>??</code></td><td>Répétition</td><td>Créer plusieurs fois l'enregistrement précédent à d'autres dates</td></tr>
   <tr><td><code>ーか</code></td><td><code>/num</code></td><td>Enregistrement numérique</td><td>Enregistrer une valeur numérique</td></tr>
   <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>Tâche</td><td>Créer une tâche</td></tr>
-  <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>Humeur</td><td>Enregistrer une valeur d'humeur (0-10)</td></tr>
+  <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>Humeur</td><td>Enregistrer une valeur d'humeur (0 à 10)</td></tr>
   <tr><td><code>ーん</code></td><td><code>/expense</code></td><td>Dépense</td><td>Enregistrer des informations de dépense</td></tr>
-  <tr><td><code>ーち</code></td><td><code>/timeis</code></td><td>Journal de temps (complet)</td><td>Enregistrer le temps avec debut et fin</td></tr>
-  <tr><td><code>ーた</code></td><td><code>/start</code></td><td>Debut du journal de temps</td><td>Démarrer un journal de temps</td></tr>
-  <tr><td><code>ーえ</code></td><td><code>/end</code></td><td>Fin du journal de temps</td><td>Terminer un journal de temps correspondant</td></tr>
-  <tr><td><code>ーいえ</code></td><td><code>/end?</code></td><td>Fin du journal de temps (si existant)</td><td>Terminer si existant (sans erreur)</td></tr>
-  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>Terminer journal par étiquette</td><td>Terminer un journal de temps par nom d'étiquette</td></tr>
-  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>Terminer journal par étiquette (si existant)</td><td>Terminer par étiquette si existant</td></tr>
+  <tr><td><code>ーち</code></td><td><code>/timeis</code></td><td>Entrée de temps (complète)</td><td>Enregistrer une entrée de temps avec heures de début et de fin</td></tr>
+  <tr><td><code>ーた</code></td><td><code>/start</code></td><td>Début d'entrée de temps</td><td>Démarrer une entrée de temps</td></tr>
+  <tr><td><code>ーえ</code></td><td><code>/end</code></td><td>Fin d'entrée de temps</td><td>Terminer l'entrée de temps correspondante</td></tr>
+  <tr><td><code>ーいえ</code></td><td><code>/end?</code></td><td>Fin d'entrée de temps (si elle existe)</td><td>Terminer l'entrée de temps correspondante si elle existe (sans erreur)</td></tr>
+  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>Fin d'entrée de temps par étiquette</td><td>Terminer l'entrée de temps correspondant au nom d'étiquette</td></tr>
+  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>Fin d'entrée de temps par étiquette (si elle existe)</td><td>Terminer l'entrée de temps correspondant au nom d'étiquette si elle existe</td></tr>
   <tr><td><code>ーう</code></td><td><code>/url</code></td><td>Signet</td><td>Enregistrer un signet URL</td></tr>
-  <tr><td><code>～～</code></td><td><code>~~</code></td><td>Tâche de repost</td><td>Transformer un enregistrement existant en tâche</td></tr>
-  <tr><td><code>！</code></td><td><code>!</code></td><td>Sauvegarder</td><td>Terminer le document et sauvegarder</td></tr>
+  <tr><td><code>～～</code></td><td><code>~~</code></td><td>Tâche de repost</td><td>Transformer tel quel un enregistrement existant en tâche</td></tr>
+  <tr><td><code>！</code></td><td><code>!</code></td><td>Enregistrer</td><td>Terminer le document et lancer l'enregistrement</td></tr>
 </table>
 
 <h2>Détail de chaque instruction</h2>
 
-<h3>1. Mémo (sans prefixe)</h3>
-<p>Les lignes sans prefixe deviennent du texte de mémo. Plusieurs lignes consecutives sont combinees en un seul mémo.</p>
+<h3>1. Mémo (sans préfixe)</h3>
+<p>Les lignes sans préfixe deviennent le texte d'un mémo. Plusieurs lignes consécutives sont regroupées en un seul mémo.</p>
 <pre>Il a fait beau aujourd'hui
-Je suis alle me promener</pre>
+Je suis allé me promener</pre>
 
-<h3>2. Etiquette : <code>#</code></h3>
-<p>Prefixez avec <code>#</code> pour specifier des étiquettes. Separez plusieurs étiquettes avec <code>,</code>.</p>
+<h3>2. Étiquette : <code>#</code></h3>
+<p>Placez <code>#</code> (ou <code>。</code>) en début de ligne pour indiquer des étiquettes. Séparez plusieurs étiquettes avec <code>,</code> (ou <code>、</code>).</p>
 <pre>#journal,meteo</pre>
-<p>Si vous écrivez un nom de tag encore jamais utilisé et tentez d'enregistrer, une confirmation « C'est un nouveau tag. Voulez-vous l'ajouter ? » apparaît. Elle évite que des tags très proches se multiplient à cause de fautes de frappe.</p>
+<p>Si vous écrivez un nom d'étiquette encore jamais utilisé et tentez d'enregistrer, une confirmation « C'est un nouveau tag. Voulez-vous l'ajouter ? » apparaît. Elle évite que des étiquettes très proches se multiplient à cause de fautes de frappe.</p>
 
 <h3>3. Bloc de texte : <code>--</code></h3>
-<p>Commencez et terminez avec <code>--</code>. Tout le contenu entre les deux est preserve tel quel.</p>
+<p>Commencez par <code>--</code> et terminez par <code>--</code>. Tout le contenu entre les deux est conservé tel quel.</p>
 <pre>--
 Ceci est un
 bloc de texte
-multiligne
+sur plusieurs lignes
 --</pre>
 
 <h3>4. Séparateur : <code>,</code></h3>
-<p>Divise en un nouvel enregistrement. Tout ce qui suit appartient a un nouvel enregistrement.</p>
+<p>Divise en un nouvel enregistrement. Tout ce qui suit cette ligne appartient au nouvel enregistrement.</p>
 <pre>Premier mémo
 ,
-Deuxieme mémo</pre>
+Mémo suivant</pre>
 
 <h3>5. Séparateur (+1 seconde) : <code>,,</code></h3>
-<p>Identique au separateur mais incremente l'horodatage d'1 seconde.</p>
+<p>Identique au séparateur, mais l'horodatage avance d'une seconde.</p>
 <pre>Premier mémo
 ,,
 Mémo une seconde plus tard</pre>
 
 <h3>6. Heure associée : <code>?</code></h3>
-<p>Definit une heure associée. Format : <code>?YYYY-MM-DD</code>, <code>?YYYY-MM-DD HH:MM</code> ou <code>?YYYY-MM-DD HH:MM:SS</code></p>
+<p>Définit une date et une heure associées. Format : <code>?YYYY-MM-DD</code>, <code>?YYYY-MM-DD HH:MM</code> ou <code>?YYYY-MM-DD HH:MM:SS</code></p>
 <pre>?2025-03-15 14:30</pre>
 
 <div class="tip">
-  <strong>Note :</strong> <code>#</code> en début de ligne est interprété comme préfixe de tag, et <code>?</code> comme date/heure. Pour inclure ces caractères comme texte littéral, encadrez-les dans un bloc de texte (<code>--</code>).
+  <strong>Note :</strong> En début de ligne, <code>#</code> est interprété comme une étiquette et <code>?</code> comme une date et une heure. Pour inclure ces caractères dans du texte libre, utilisez un bloc de texte (<code>--</code>).
 </div>
 
 <h3>7. Enregistrement numérique : <code>/num</code></h3>
-<p>Ligne suivante : titre, puis ligne suivante : valeur numérique.</p>
+<p>Écrivez le titre sur la ligne suivante, puis la valeur numérique sur la ligne d'après.</p>
 <pre>/num
 Poids
 65.5</pre>
 
 <h3>8. Tâche : <code>/mi</code></h3>
-<p>Lignes suivantes : titre, nom du tableau, heure de debut estimee, heure de fin estimee, date limite (tout est optionnel sauf le titre).</p>
-<p>Comme pour les dépenses, les lignes de tag commençant par <code>#</code> et les blocs de texte <code>--</code> peuvent être écrits au milieu. Ces lignes ne consomment pas la position d'un champ.</p>
+<p>Sur les lignes suivantes, écrivez le titre, le nom du tableau, l'heure de début estimée, l'heure de fin estimée et l'échéance (tout est facultatif sauf le titre).</p>
+<p>Comme pour les dépenses, les lignes d'étiquette commençant par <code>#</code> et les blocs de texte <code>--</code> peuvent être écrits au milieu. Ces lignes n'occupent pas la place d'un champ.</p>
 <pre>/mi
-Rediger le rapport
+Rédiger le rapport
 Travail
 2025-03-20</pre>
 
 <h3>9. Humeur : <code>/mood</code></h3>
-<p>Ligne suivante : valeur d'humeur (entier 0-10).</p>
+<p>Écrivez la valeur d'humeur (entier de 0 à 10) sur la ligne suivante.</p>
 <pre>/mood
 7</pre>
 
 <h3>10. Dépense : <code>/expense</code></h3>
-<p>Ligne suivante : nom du magasin, puis paires de (nom de l'article, montant) repetees.</p>
+<p>Écrivez le nom du magasin sur la ligne suivante, puis répétez les paires nom de l'article / montant.</p>
 <pre>/expense
-Superette
+Supérette
 Sandwich
 150
 Boisson
 120</pre>
-<p>Une ligne d'étiquette <code>。</code> ou un bloc de texte <code>--</code> écrit après une ligne de montant s'applique <strong>uniquement à ce paiement</strong> ; chaque paiement peut donc avoir les siens.</p>
+<p>Une ligne d'étiquette <code>#</code> ou un bloc de texte <code>--</code> écrit après une ligne de montant s'applique <strong>uniquement à ce paiement</strong>. Vous pouvez donc en attribuer séparément à chaque paiement.</p>
 <pre>/expense
-Superette
+Supérette
 Sandwich
 150
 #nourriture
 --
-Pour le petit-dejeuner
+Pour le petit-déjeuner
 --
 Boisson
 120
 #boisson</pre>
-<p>La date et l'heure de <code>?</code> s'appliquent à l'ensemble des achats, pas à un paiement particulier.</p>
+<p>La date et l'heure de <code>?</code> s'appliquent non pas à chaque paiement, mais à l'ensemble de cet achat.</p>
 <div class="tip">
-  <strong>Remarque :</strong> Écrivez les étiquettes et les textes après la ligne de montant. Écrits avant <code>/expense</code> ou juste après le nom du magasin, aucun paiement ne peut les recevoir et la ligne est considérée comme incorrecte.
+  <strong>Remarque :</strong> Écrivez les étiquettes et les textes après la ligne de montant. Écrits avant <code>/expense</code> ou juste après le nom du magasin, ils ne peuvent être rattachés à aucun paiement et la ligne est considérée comme incorrecte.
 </div>
 
-<h3>11. Journal de temps (complet) : <code>/timeis</code></h3>
-<p>Lignes suivantes : titre, heure de debut, heure de fin.</p>
+<h3>11. Entrée de temps (complète) : <code>/timeis</code></h3>
+<p>Sur les lignes suivantes, écrivez le titre, l'heure de début et l'heure de fin.</p>
 <pre>/timeis
-Reunion
+Réunion
 2025-03-15 10:00
 2025-03-15 11:30</pre>
 
-<h3>12. D&eacute;but du journal de temps : <code>/start</code></h3>
-<p>Ligne suivante : titre. L'heure de d&eacute;but est l'heure actuelle (ou l'heure sp&eacute;cifi&eacute;e pr&eacute;c&eacute;demment avec le pr&eacute;fixe <code>?</code> d'heure associ&eacute;e).</p>
+<h3>12. Début d'entrée de temps : <code>/start</code></h3>
+<p>Écrivez le titre sur la ligne suivante. L'heure de début est l'heure actuelle (ou l'heure indiquée juste avant avec l'heure associée <code>?</code>).</p>
 <pre>/start
-Debut du travail</pre>
-<p>Pour d&eacute;marrer &agrave; une heure pr&eacute;cise, sp&eacute;cifiez l'heure associ&eacute;e au pr&eacute;alable.</p>
+Début du travail</pre>
+<p>Pour démarrer à une heure précise, indiquez d'abord l'heure associée.</p>
 <pre>?2025-03-15 09:00
 /start
-Debut du travail</pre>
+Début du travail</pre>
 
-<h3>13. Fin du journal de temps : <code>/end</code></h3>
-<p>Ligne suivante : titre. Trouve un journal de temps démarre correspondant et le termine. Si plusieurs journaux de temps portant le même titre sont en cours, seul celui qui a démarré le plus récemment est terminé (les journaux supprimés ne sont pas pris en compte).</p>
+<h3>13. Fin d'entrée de temps : <code>/end</code></h3>
+<p>Écrivez le titre sur la ligne suivante. L'entrée de temps démarrée correspondante est recherchée puis terminée. Si plusieurs entrées de temps portant le même titre sont en cours, seule celle qui a démarré le plus récemment est terminée (les entrées de temps supprimées ne sont pas prises en compte).</p>
 <pre>/end
-Debut du travail</pre>
+Début du travail</pre>
 
-<h3>14. Fin du journal de temps (si existant) : <code>/end?</code></h3>
-<p>Identique a Fin du journal de temps mais ne produit pas d'erreur si aucun journal correspondant n'existe.</p>
+<h3>14. Fin d'entrée de temps (si elle existe) : <code>/end?</code></h3>
+<p>Identique à la fin d'entrée de temps, mais ne produit pas d'erreur si aucune entrée de temps correspondante n'existe.</p>
 <pre>/end?
-Debut du travail</pre>
+Début du travail</pre>
 
-<h3>15. Terminer journal par étiquette : <code>/endt</code></h3>
-<p>Ligne suivante : nom de l'étiquette. Trouve et termine un journal de temps par son étiquette. Si plusieurs journaux de temps portant cette étiquette sont en cours, seul celui qui a démarré le plus récemment est terminé (les journaux supprimés ne sont pas pris en compte).</p>
+<h3>15. Fin d'entrée de temps par étiquette : <code>/endt</code></h3>
+<p>Écrivez le nom de l'étiquette sur la ligne suivante. L'entrée de temps portant cette étiquette est recherchée puis terminée. Si plusieurs entrées de temps portant la même étiquette sont en cours, seule celle qui a démarré le plus récemment est terminée (les entrées de temps supprimées ne sont pas prises en compte).</p>
 <pre>/endt
 travail</pre>
 
-<h3>16. Terminer journal par étiquette (si existant) : <code>/endt?</code></h3>
-<p>Identique a Terminer journal par étiquette mais ne produit pas d'erreur si aucun journal correspondant n'existe.</p>
+<h3>16. Fin d'entrée de temps par étiquette (si elle existe) : <code>/endt?</code></h3>
+<p>Identique à la fin d'entrée de temps par étiquette, mais ne produit pas d'erreur si aucune entrée de temps correspondante n'existe.</p>
 <pre>/endt?
 travail</pre>
 
 <h3>17. Signet : <code>/url</code></h3>
-<p>Ligne suivante : URL, puis ligne suivante : titre.</p>
+<p>Écrivez l'URL sur la ligne suivante, puis le titre sur la ligne d'après.</p>
 <pre>/url
 https://example.com
 Site favori</pre>
 
 <h3>18. Tâche de repost : <code>~~</code></h3>
-<p>Commence par <code>~~</code> et se termine par <code>~~</code>. Transforme l'enregistrement écrit juste au-dessus en tâche sans réécrire son contenu. Il n'y a pas de ligne de titre : l'enregistrement d'origine est affiché tel quel. Dans le bloc, indiquez le nom du tableau, la date de début prévue, la date de fin prévue et la date limite, dans cet ordre (tous facultatifs). Écrire <code>?</code> devant une date provoque une erreur. Une ligne commençant par <code>#</code> devient une étiquette de la tâche elle-même, et peut être écrite avant ou après le nom du tableau.</p>
+<p>Commence par <code>~~</code> et se termine par <code>~~</code>. Transforme en tâche l'enregistrement écrit juste avant, sans réécrire son contenu. Il n'y a pas de ligne de titre (l'enregistrement d'origine est affiché tel quel). Dans le bloc, indiquez dans l'ordre le nom du tableau, la date de début prévue, la date de fin prévue et l'échéance (tous facultatifs). Mettre <code>?</code> devant une date provoque une erreur. Une ligne commençant par <code>#</code> devient une étiquette de la tâche elle-même, et peut être écrite avant ou après le nom du tableau.</p>
 <pre>Note sur un article à lire plus tard
 ~~
 #travail
@@ -171,11 +171,11 @@ Courses
 ~~</pre>
 
 <h3>19. Répétition : <code>??</code></h3>
-<p>Commence par <code>??</code> et se termine par <code>??</code>. Recrée à d autres dates l enregistrement écrit juste au-dessus. Dans le bloc, indiquez ces quatre lignes dans l ordre. Les lignes 3 et 4 peuvent être omises en fermant plus tôt avec <code>??</code>.</p>
+<p>Commence par <code>??</code> et se termine par <code>??</code>. Crée plusieurs fois l'enregistrement écrit juste avant, en changeant la date. Dans le bloc, indiquez les quatre lignes suivantes dans l'ordre. Les lignes 3 et 4 peuvent être omises (fermez plus tôt avec <code>??</code>).</p>
 <table>
-  <tr><th>Ligne</th><th>Signification</th><th>Comment l écrire</th></tr>
-  <tr><td>1</td><td>Quels jours (obligatoire)</td><td><code>daily</code> / <code>fri</code> / <code>mon,wed,fri</code> / <code>6w fri</code> / <code>monthly 15</code> / <code>2nd fri</code> / <code>last fri</code></td></tr>
-  <tr><td>2</td><td>Combien de fois, ou la date de fin (obligatoire)</td><td><code>3</code> / <code>2026-12-31</code></td></tr>
+  <tr><th>Ligne</th><th>Contenu</th><th>Comment l'écrire</th></tr>
+  <tr><td>1</td><td>Jours de répétition (obligatoire)</td><td><code>daily</code> / <code>fri</code> / <code>mon,wed,fri</code> / <code>6w fri</code> / <code>monthly 15</code> / <code>2nd fri</code> / <code>last fri</code></td></tr>
+  <tr><td>2</td><td>Nombre de fois, ou date de fin (obligatoire)</td><td><code>3</code> / <code>2026-12-31</code></td></tr>
   <tr><td>3</td><td>Ajouter même si le même enregistrement existe déjà (facultatif, <code>no</code> par défaut)</td><td><code>no</code> / <code>yes</code></td></tr>
   <tr><td>4</td><td>À partir de quand (facultatif, maintenant par défaut)</td><td><code>2026-09-12</code> / <code>9/12 18:00</code></td></tr>
 </table>
@@ -187,21 +187,21 @@ Travail
 fri
 3
 ??</pre>
-<p>Cet exemple crée trois tâches « Rapport hebdomadaire » à 18:00 les trois vendredis suivants. Toutes les dates et heures de l enregistrement sont décalées du même nombre de jours, les écarts entre début, fin et échéance sont donc conservés. Cela ne fonctionne pas sur une tâche sans aucune date, car il n y aurait nulle part où mettre les dates répétées.</p>
-<p>La ligne 3 valant <code>no</code> par défaut, <strong>enregistrer deux fois le même texte ne crée pas de doublons.</strong> Si l'enregistrement échoue, rien n'est créé : réenregistrez simplement le même texte.</p>
+<p>Cet exemple crée trois tâches « Rapport hebdomadaire » à 18:00, chaque semaine à partir du vendredi suivant. Toutes les dates et heures de l'enregistrement sont décalées du même nombre de jours : les écarts entre le début, la fin et l'échéance sont donc conservés. Cela ne fonctionne pas sur une tâche sans aucune date (il n'y aurait nulle part où placer les dates répétées).</p>
+<p>La ligne 3 valant <code>no</code> par défaut, <strong>enregistrer de nouveau le même contenu ne crée pas de doublons.</strong> Si l'enregistrement échoue, rien n'est créé : enregistrez simplement le même contenu à nouveau.</p>
 <div class="tip">
-  <strong>Remarque :</strong> Les dates qui n existent pas sont ignorées (<code>monthly 31</code> ignore février, <code>5th fri</code> ignore les mois sans cinquième vendredi). Impossible à utiliser avec le début de pointage (<code>/start</code>) ni avec la fin (<code>/end</code>, <code>/end?</code>, <code>/endt</code>, <code>/endt?</code>). Au maximum 1000 enregistrements par sauvegarde.
+  <strong>Remarque :</strong> Les dates qui n'existent pas sont ignorées (<code>monthly 31</code> ignore février, <code>5th fri</code> ignore les mois sans cinquième vendredi). La répétition ne peut pas être utilisée avec le début d'entrée de temps (<code>/start</code>) ni avec la fin d'entrée de temps (<code>/end</code>, <code>/end?</code>, <code>/endt</code>, <code>/endt?</code>). Une seule sauvegarde peut créer au maximum 1000 enregistrements.
 </div>
 
-<h3>20. Sauvegarder : <code>!</code></h3>
-<p>Termine le document et exécuté le processus de sauvegarde.</p>
-<p>La ligne <code>!</code> elle-même ne compte pas comme ligne de valeur. Par exemple, si vous n'écrivez que <code>!</code> sur la ligne qui suit <code>/timeis</code>, l'erreur « aucun contenu » apparaît car le titre manque et rien n'est enregistré. Écrivez le texte, le nombre ou le titre sur la ligne qui suit la ligne de type, puis ajoutez <code>!</code>.</p>
-<p>Un enregistrement sans contenu (une note sans texte, une tâche sans titre, une dépense avec seulement le nom du magasin, un enregistrement numérique sans valeur), une étiquette ou une heure associée sans rien à rattacher et une date prévue illisible sont signalés comme des erreurs par ligne avant tout enregistrement (la ligne devient rose). Si une seule ligne est en erreur, cette sauvegarde n'écrit rien.</p>
+<h3>20. Enregistrer : <code>!</code></h3>
+<p>Termine le document et lance l'enregistrement.</p>
+<p>La ligne <code>!</code> elle-même ne compte pas comme ligne de valeur. Par exemple, si vous n'écrivez que <code>!</code> sur la ligne qui suit <code>/timeis</code> (entrée de temps), l'erreur « aucun contenu » apparaît car le titre manque, et rien n'est enregistré. Écrivez le texte, le nombre ou le titre sur la ligne qui suit la ligne de type, puis ajoutez <code>!</code>.</p>
+<p>Un enregistrement sans contenu (un mémo sans texte, une tâche sans titre, une dépense avec seulement le nom du magasin, un enregistrement numérique sans valeur), une étiquette ou une heure associée sans rien à quoi se rattacher, et une date prévue illisible sont signalés comme des erreurs ligne par ligne avant l'enregistrement (la ligne devient rose). S'il y a ne serait-ce qu'une ligne en erreur, cet enregistrement n'écrit rien.</p>
 <pre>!</pre>
 
 <h2>Exemple complet</h2>
 
-<p>Voici un document complet de syntaxe du bloc-notes combinant plusieurs types d'instructions.</p>
+<p>Voici un exemple complet de document en syntaxe du bloc-notes combinant plusieurs instructions.</p>
 
 <pre>Journal d'aujourd'hui
 #journal,meteo
@@ -212,7 +212,7 @@ Faire les courses
 Personnel
 ,
 /expense
-Supermarche
+Supermarché
 Pommes
 200
 Lait
@@ -226,12 +226,12 @@ Lecture
 !</pre>
 
 <div class="tip">
-  <strong>Astuce :</strong> Utilisez <code>,</code> pour separer plusieurs enregistrements dans un meme document. Ajouter <code>!</code> a la fin declenche la sauvegarde automatique.
+  <strong>Astuce :</strong> En séparant avec <code>,</code>, vous pouvez saisir efficacement plusieurs enregistrements dans un même document. Ajoutez <code>!</code> à la fin pour enregistrer automatiquement.
 </div>
 
   <h2>Documents associés</h2>
   <ul>
     <li><a href="kftl.html">Bloc-notes</a></li>
-    <li><a href="mkfl.html">Bloc-notes tampon</a></li>
-    <li><a href="kftl-template-struct.html">Structure de modèle</a></li>
+    <li><a href="mkfl.html">Bloc-notes d'entrées de temps</a></li>
+    <li><a href="kftl-template-struct.html">Structure des modèles</a></li>
   </ul>

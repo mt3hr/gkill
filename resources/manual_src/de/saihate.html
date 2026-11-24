@@ -1,10 +1,10 @@
-<!-- title: Startseite - Hilfe -->
-  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Startseite</span></nav>
-  <h1>Startseite</h1>
-  <p>Bildschirm zum sicheren Aufzeichnen auch vom Sperrbildschirm aus. Er dient als Hub zum schnellen Hinzufügen aller Arten von Aufzeichnungen.</p>
-  <p>Saihate ist ein kompakter Hub, der auf das Hinzufügen neuer Einträge spezialisiert ist. Durchsuchen- und Bearbeitungsfunktionen sind nicht vorhanden, sodass keine Gefahr besteht, bestehende Einträge versehentlich zu ändern. Der Bildschirm funktioniert innerhalb einer authentifizierten Sitzung und ist nur nach der Anmeldung zugänglich.</p>
+<!-- title: Saihate - Hilfe -->
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Saihate</span></nav>
+  <h1>Saihate</h1>
+  <p>Bildschirm, in dem Sie auch vom Sperrbildschirm aus sicher Einträge hinzufügen können. Er dient als zentrale Stelle, um alle Arten von Einträgen schnell hinzuzufügen.</p>
+  <p>Saihate hat keine Funktionen zum Ansehen oder Bearbeiten von Einträgen und ist ganz auf das Hinzufügen ausgerichtet. Daher besteht keine Gefahr, bestehende Einträge versehentlich zu ändern. Der Bildschirm läuft innerhalb einer angemeldeten Sitzung und ist nur nutzbar, solange Sie angemeldet sind.</p>
   <div class="tip">
-    <strong>Welchen Bildschirm verwenden:</strong> Verwenden Sie Saihate, um schnell Notizen oder Zeitstempel zu erfassen, die Lebenslog-Ansicht zum Durchsuchen und Suchen von Einträgen und den Notizblock für die Stapeleingabe per Text.
+    <strong>Welchen Bildschirm verwenden:</strong> Verwenden Sie Saihate, um schnell Notizen oder Zeiteinträge festzuhalten, die Lebenslog-Ansicht, um Einträge nachzulesen oder zu suchen, und den Notizblock, um mehrere Einträge auf einmal per Text zu erfassen.
   </div>
 
   <h2>Symbolleistenschaltflächen</h2>
@@ -15,51 +15,90 @@
     </tr>
     <tr>
       <td><span class="icon">&#128260;</span> Neu laden</td>
-      <td>Lädt den Bildschirm neu. Langes Drücken erzwingt das Neuladen.</td>
+      <td>Lädt die Daten neu. <strong>Langes Drücken:</strong> erzwingt ein vollständiges Neuladen.</td>
     </tr>
     <tr>
       <td>Abmelden</td>
-      <td>Meldet sich vom aktuellen Konto ab und kehrt zum Anmeldebildschirm zurück.</td>
+      <td>Meldet Sie ab.</td>
     </tr>
     <tr><td>&#10068; Hilfe</td><td>Zeigt die Hilfe für den aktuellen Bildschirm an.</td></tr>
   </table>
 
-  <h2>FAB (Floating-Action-Schaltfläche) "+"</h2>
-  <p>Durch Klicken auf die "+"-Schaltfläche öffnet sich ein Menü zum schnellen Erstellen von Datensätzen der folgenden 9 Typen:</p>
+  <h2>Schwebende Aktionsschaltfläche (+)</h2>
+  <p>Tippen Sie auf die „+“-Schaltfläche unten rechts, um das Menü zum Hinzufügen verschiedener Einträge zu öffnen.</p>
+
   <table>
     <tr>
-      <th>Typ</th>
+      <th>Menüpunkt</th>
+      <th>Inhalt</th>
       <th>Beschreibung</th>
     </tr>
-    <tr><td>Memo</td><td>Erstellt eine Textnotiz.</td></tr>
-    <tr><td>Zeit+Memo</td><td>Erstellt eine Notiz mit Zeitstempel.</td></tr>
-    <tr><td>Numerisch</td><td>Zeichnet numerische Daten auf.</td></tr>
-    <tr><td>Lesezeichen</td><td>Speichert ein URL-Lesezeichen.</td></tr>
-    <tr><td>Zeitprotokoll</td><td>Startet eine Zeiterfassungssitzung.</td></tr>
-    <tr><td>Aufgabe</td><td>Erstellt eine neue Aufgabe.</td></tr>
-    <tr><td>Ausgabe</td><td>Zeichnet Ausgabeninformationen auf.</td></tr>
-    <tr><td>Stimmung</td><td>Zeichnet einen Stimmungswert (0-10) auf.</td></tr>
-    <tr><td>Hochladen</td><td>Lädt eine Datei hoch.</td></tr>
+    <tr>
+      <td>Notizblock</td>
+      <td>Texteingabe</td>
+      <td>Öffnet den Bildschirm zur Eingabe von Notizen und verschiedenen Einträgen mit der Notizblock-Syntax.</td>
+    </tr>
+    <tr>
+      <td>Zeiteintrag-Notizblock</td>
+      <td>Text + Zeiterfassung</td>
+      <td>Öffnet den Bildschirm, in dem Sie Notizen eingeben und gleichzeitig laufende Zeiteinträge verwalten.</td>
+    </tr>
+    <tr>
+      <td>Numerischer Datensatz</td>
+      <td>Zahl erfassen</td>
+      <td>Erfasst beliebige numerische Daten.</td>
+    </tr>
+    <tr>
+      <td>Lesezeichen</td>
+      <td>URL erfassen</td>
+      <td>Speichert eine Webseiten-URL als Lesezeichen.</td>
+    </tr>
+    <tr>
+      <td>Zeiterfassung</td>
+      <td>Zeitmessung starten</td>
+      <td>Startet eine neue Zeiterfassungssitzung.</td>
+    </tr>
+    <tr>
+      <td>Aufgabe</td>
+      <td>Aufgabe hinzufügen</td>
+      <td>Erstellt eine neue Aufgabe.</td>
+    </tr>
+    <tr>
+      <td>Ausgabe</td>
+      <td>Betrag erfassen</td>
+      <td>Erfasst den Ausgabebetrag und die Beschreibung.</td>
+    </tr>
+    <tr>
+      <td>Stimmung</td>
+      <td>Stimmung erfassen (0–10)</td>
+      <td>Erfasst Ihre aktuelle Stimmung als Wert von 0 bis 10.</td>
+    </tr>
+    <tr>
+      <td>Hochladen</td>
+      <td>Datei hochladen</td>
+      <td>Lädt Dateien wie Bilder oder Dokumente hoch und erfasst sie.</td>
+    </tr>
   </table>
 
   <div class="tip">
-    <strong>Tipp:</strong> Langes Drücken der "+"-Schaltfläche öffnet direkt den Notizblock-Eingabebildschirm für eine schnelle Stapeleingabe.
+    <strong>Langes Drücken:</strong> Langes Drücken der „+“-Schaltfläche öffnet direkt den Notizblock. Praktisch, wenn Sie schnell eine Notiz erfassen möchten.
   </div>
 
   <div class="tip">
-    <strong>Tipp:</strong> Der nach der Anmeldung zuerst angezeigte Bildschirm kann in den Einstellungen unter „Standardansicht beim Start" geändert werden.
+    <strong>Tipp:</strong> Der nach der Anmeldung zuerst angezeigte Bildschirm kann im Einstellungsbildschirm unter „Standardansicht beim Start“ geändert werden.
   </div>
 
   <div class="tip">
     <strong>Tastenkürzel:</strong> Drücken Sie auf diesem Bildschirm die Eingabetaste, um den Notizblock-Dialog zu öffnen. Dies ist praktisch, um schnell Einträge hinzuzufügen.
   </div>
+
   <h2>Verwandte Dokumente</h2>
   <ul>
     <li><a href="getting-started.html">Erste Schritte</a></li>
     <li><a href="kftl.html">Notizblock</a></li>
-    <li><a href="mkfl.html">Stempel-Memo</a></li>
+    <li><a href="mkfl.html">Zeiteintrag-Notizblock</a></li>
     <li><a href="mi.html">Aufgaben</a></li>
-    <li><a href="rykv.html">Lebenslogansicht</a></li>
+    <li><a href="rykv.html">Lebenslog-Ansicht</a></li>
     <li><a href="playing.html">Laufend</a></li>
     <li><a href="application-config.html">Einstellungen</a></li>
   </ul>

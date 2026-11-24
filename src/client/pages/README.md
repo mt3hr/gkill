@@ -9,7 +9,7 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 
 ```
 pages/
-├── (ルートページ 15 .vue + 2 .ts)  # Vue Router ルートページ
+├── (ルートページ 16 .vue + 2 .ts)  # Vue Router ルートページ
 ├── views/                          # View コンポーネント（214 .vue）
 └── dialogs/                        # Dialog コンポーネント（121 .vue）
 ```
@@ -47,7 +47,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 
 の1行で張る。挙動を変えたいイベントだけ第2引数の `overrides` で差し替える。ビュー層は18件、ダイアログ層はそれにフォーカス系2件（`focused_kyou` / `clicked_kyou`）を足した20件を中継する。
 
-## ルートページ（15 .vue + 2 .ts）
+## ルートページ（16 .vue + 2 .ts）
 
 | ファイル | ルートパス | 説明 |
 |---------|----------|------|
@@ -66,6 +66,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-page.vue` | `/shared_page` | 共有ページ |
 | `shared-mi-page.vue` | — | 共有 Mi ページ（`shared-page.vue` が `view_type` で内部振り分けする。旧URL `/shared_mi` はルータの redirect で `/shared_page` へ吸収する） |
 | `shared-rykv-page.vue` | — | 共有 Rykv ページ |
+| `exported-kyou-page.vue` | — | HTML 出力ページ（単一ファイルビルド専用。焼き込みの `screen` 印で `exported-rykv-view` / `exported-mi-view` を振り分ける。ADR-0421） |
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
@@ -137,7 +138,6 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `time-is-view.vue` / `idf-kyou-view.vue` | TimeIs / IDFKyou 表示 |
 | `re-kyou-view.vue` / `mi-re-kyou-view.vue` / `git-commit-log-view.vue` | ReKyou / MiReKyou / GitCommitLog 表示 |
 | `tag-view.vue` / `text-view.vue` / `notification-view.vue` | Tag / Text / Notification 表示 |
-| `mi-kyou-view.vue` | Mi の Kyou 表示 |
 | `lantana-flower.vue` / `lantana-flowers-view.vue` | Lantana 花表示 |
 | `kyou-histories-view.vue` | Kyou 変更履歴 |
 | `tag-histories-view.vue` / `text-histories-view.vue` / `notification-histories-view.vue` | 履歴表示 |
@@ -244,6 +244,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `attached-time-is-playing.vue` | 添付稼働 TimeIs |
 | `upload-file-view.vue` / `decide-related-time-uploaded-file-view.vue` | ファイルアップロード |
 | `share-kyou-view.vue` / `share-kyou-link-view.vue` / `share-kyou-footer.vue` | 共有 |
+| `export-kyou-html-view.vue` | HTML 出力の設定フォーム（対象・含める情報・メディア・形式・容量上限） |
 | `shared-mi-view.vue` / `manage-share-task-list-view.vue` | 共有 Mi 管理 |
 | `manage-share-button.vue` / `share-button.vue` | 共有ボタン |
 | `rykv-view.vue` / `exported-rykv-view.vue` / `shared-rykv-view.vue` | Rykv の3つの顔（普段使う / HTML 出力 / 共有）。どれもモードのフラグを持たない |
@@ -302,6 +303,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `decide-related-time-uploaded-file-dialog.vue` | アップロードファイル時刻設定 |
 | `show-password-reset-link-dialog.vue` | パスワードリセットリンク |
 | `share-kyou-list-dialog.vue` / `share-kyou-list-link-dialog.vue` | 共有リスト |
+| `export-kyou-html-dialog.vue` | HTML 出力ダイアログ（rykv / mi の現在表示を単一 HTML または HTML＋同名フォルダとして出力） |
 | `upload-file-dialog.vue` | ファイルアップロード |
 | `browse-zip-contents-dialog.vue` | ZIP コンテンツブラウザ |
 | `manage-skill-list-dialog.vue` / `browse-skill-files-dialog.vue` | スキルの管理（設定画面の「スキル」）/ スキルの中身の表示（素のテキスト。ADR-0634） |

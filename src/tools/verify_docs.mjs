@@ -612,7 +612,7 @@ function buildCountAssertions(m) {
   add('documents/reverse/screen-specs.md', `**${m.componentTotal}**（ルートを除く`)
 
   // ── src/**/README.md（ディレクトリ別ファイル数）
-  add('src/README.md', `${m.endpoints} POST API エンドポイント`)
+  add('src/README.md', `${m.endpointsPost} POST + ${m.endpointsGet} GET API エンドポイント`)
   add('src/README.md', `HTTP API (${m.endpoints}エンドポイント)`)
   add('src/README.md', `View コンポーネント (${m.views}個)`)
   add('src/README.md', `Dialog コンポーネント (${m.dialogs}個)`)
@@ -680,9 +680,9 @@ function buildCountAssertions(m) {
   add('.claude/skills/gkill-mcp/SKILL.md', `| Read | ${mcpRead} (`)
   add('.claude/skills/gkill-mcp/SKILL.md', `| Write | ${mcpWrite} (`)
   add('.claude/skills/gkill-mcp/SKILL.md', `| ReadWrite | ${mcpRW} (`)
-  add('resources/manual_src/ja/mcp.html', `<td>gkill_server mcp --kind read</td><td>${mcpRead}</td>`)
-  add('resources/manual_src/ja/mcp.html', `<td>gkill_server mcp --kind write</td><td>${mcpWrite}</td>`)
-  add('resources/manual_src/ja/mcp.html', `<td>gkill_server mcp --kind readwrite</td><td>${mcpRW}</td>`)
+  add('resources/manual_src/ja/mcp.html', `<td><code>gkill_server mcp --kind read</code></td><td>${mcpRead}</td>`)
+  add('resources/manual_src/ja/mcp.html', `<td><code>gkill_server mcp --kind write</code></td><td>${mcpWrite}</td>`)
+  add('resources/manual_src/ja/mcp.html', `<td><code>gkill_server mcp --kind readwrite</code></td><td>${mcpRW}</td>`)
 
   // README / ABOUT_TEST は本数を「プラグイン1本を除いた内訳」でも書いている。
   // そこが検査から漏れていたため 11/26/32・10/24/30・Read 9/Write 24/ReadWrite 29 と

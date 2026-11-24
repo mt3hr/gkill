@@ -1,7 +1,7 @@
 <!-- title: Vue du journal de vie - Aide -->
-  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Vue journal de vie</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Vue du journal de vie</span></nav>
   <h1>Vue du journal de vie</h1>
-  <p>Écran pour parcourir les journaux de vie avec des miniatures. Prend en charge plusieurs modes d'affichage et fonctions de filtrage.</p>
+  <p>Écran qui affiche l'ensemble de votre journal de vie sous forme de liste avec des miniatures d'images. Plusieurs colonnes de filtre permettent de consulter en même temps les données selon des conditions différentes.</p>
 
   <h2>Boutons de la barre d'outils</h2>
   <table>
@@ -11,29 +11,32 @@
     </tr>
     <tr>
       <td><span class="icon">&#9776;</span> Barre latérale</td>
-      <td>Ouvre/ferme la barre latérale pour le filtrage et la navigation.</td>
+      <td>Affiche/masque la barre latérale de recherche et de filtrage.</td>
     </tr>
     <tr>
-      <td><span class="icon">&#128196;</span> Détails</td>
-      <td>Affiche/masque le panneau de détails de l'enregistrement.</td>
+      <td><span class="icon">&#128196;</span> Vue détaillée</td>
+      <td>Affiche/masque le panneau de détails de l'enregistrement sélectionné.</td>
     </tr>
     <tr>
-      <td><span class="icon">&#128202;</span> Vue récapitulative</td>
-      <td>Affiche l'écran d'analyse statistique.</td>
+      <td><span class="icon">&#128202;</span> Vue d'agrégation</td>
+      <td>Affiche/masque la vue de statistiques et d'analyse.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128197;</span> Calendrier</td>
-      <td>Affiche la vue calendrier. Cliquez sur l'année et le mois en haut du calendrier pour choisir une date. Choisir une date revient à cliquer sur la case de ce jour : la liste se déplace à ce jour.</td>
+      <td>Affiche/masque la vue calendrier. Cliquez sur l'année et le mois en haut du calendrier pour choisir une date. Choisir une date revient à cliquer sur la case de ce jour : la liste se déplace à ce jour.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128506;</span> Carte</td>
-      <td>Affiche les enregistrements avec des informations GPS sur la carte. Cliquez sur la date en haut de la carte pour choisir le jour affiché sur la carte (les conditions de recherche et la liste ne changent pas).</td>
+      <td>Affiche/masque la carte des journaux GPS. Cliquez sur la date en haut de la carte pour choisir le jour affiché sur la carte (les conditions de recherche et la liste ne changent pas).</td>
     </tr>
     <tr>
       <td><span class="icon">&#9881;</span> Paramètres</td>
       <td>Ouvre l'écran des paramètres de l'application.</td>
     </tr>
-    <tr><td>&#10068; Aide</td><td>Affiche l'aide de l'écran actuel.</td></tr>
+    <tr>
+      <td>&#10068; Aide</td>
+      <td>Affiche l'aide de l'écran actuel.</td>
+    </tr>
   </table>
 
   <h2>Fonctions principales</h2>
@@ -46,10 +49,12 @@
   <ul>
     <li>Recherche textuelle (mot-clé)</li>
     <li>Filtrage par étiquettes</li>
-    <li>Spécification d'une période (en plus des dates, vous pouvez indiquer une heure de début et une heure de fin. Si vous laissez une heure vide, la plage va du début du premier jour à la fin du dernier)</li>
+    <li>Spécification d'une période (choisissez la plage de dates dans le calendrier et, si nécessaire, indiquez aussi une heure de début et une heure de fin. Le « × » à l'intérieur d'un champ d'heure permet de le vider. Si vous laissez les heures vides, la plage va de 0 h le premier jour jusqu'à la fin du dernier jour. Pour retirer complètement la période, appuyez sur « Effacer »)</li>
     <li>Plage horaire et jour de la semaine (restreint à une plage d'heures dans la journée. Jours : uniquement ceux dont le bouton est enfoncé ; si aucun n'est enfoncé, tous les jours sont inclus)</li>
+    <li>Filtrage par entrée de temps (restreint aux enregistrements faits pendant qu'une entrée de temps précise était en cours)</li>
+    <li>Filtrage par lieu (restreint par localisation en définissant une zone sur la carte)</li>
     <li>Sélection du type d'enregistrement</li>
-    <li>Sélection de l'emplacement de stockage des enregistrements</li>
+    <li>Sélection du dépôt et du profil</li>
   </ul>
 
   <h3>Ajouter une colonne de filtre</h3>
@@ -74,76 +79,107 @@
   </div>
 
   <div class="tip">
-    <strong>Astuce :</strong> La valeur par défaut de la période d'affichage peut être modifiée dans le paramètre « Jours d'affichage du journal de vie » de l'écran de configuration.
+    <strong>Astuce :</strong> La valeur par défaut de la période d'affichage peut être modifiée avec « Jours d'affichage du journal de vie » dans l'écran des paramètres.
   </div>
 
-  <h2>FAB (Bouton d'action flottant) "+"</h2>
-  <p>En cliquant sur le bouton "+", un menu se déploie pour créer rapidement des enregistrements :</p>
+  <h2>Bouton d'action flottant (+)</h2>
+  <p>Touchez le bouton « + » en bas à droite de l'écran pour afficher le menu d'ajout des différents enregistrements.</p>
   <table>
-    <tr><th>Type</th><th>Description</th></tr>
-    <tr><td>Mémo</td><td>Crée une note textuelle.</td></tr>
-    <tr><td>Temps+Mémo</td><td>Crée une note avec horodatage.</td></tr>
-    <tr><td>Numérique</td><td>Enregistre des données numériques.</td></tr>
-    <tr><td>Signet</td><td>Enregistre un signet URL.</td></tr>
-    <tr><td>Journal de temps</td><td>Démarre une session de suivi du temps.</td></tr>
-    <tr><td>Tâche</td><td>Crée une nouvelle tâche.</td></tr>
-    <tr><td>Dépense</td><td>Enregistre des informations de dépense. Saisissez un « Nom du magasin », puis, sur la ligne en dessous, le « Titre » (nom de l'article) et le « Montant ». Le bouton « Ajouter » ajoute des lignes : les achats faits dans le même magasin sont enregistrés en une fois, et chaque ligne devient un enregistrement de dépense.</td></tr>
-    <tr><td>Humeur</td><td>Enregistre une valeur d'humeur (0-10).</td></tr>
-    <tr><td>Téléversement</td><td>Téléverse un fichier.</td></tr>
-    <tr><td>Enregistrer le presse-papiers</td><td>Enregistre le contenu du presse-papiers (capture d'écran, image, texte, PDF, etc.) directement comme fichier.</td></tr>
+    <tr>
+      <th>Élément du menu</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Bloc-notes</td>
+      <td>Saisit une note textuelle au format bloc-notes.</td>
+    </tr>
+    <tr>
+      <td>Bloc-notes d'entrées de temps</td>
+      <td>Ouvre l'écran hybride combinant la saisie de notes et la liste des entrées de temps.</td>
+    </tr>
+    <tr>
+      <td>Enregistrements numériques</td>
+      <td>Enregistre des données numériques.</td>
+    </tr>
+    <tr>
+      <td>Signets</td>
+      <td>Enregistre une URL.</td>
+    </tr>
+    <tr>
+      <td>Suivi du temps</td>
+      <td>Démarre une nouvelle session d'entrée de temps.</td>
+    </tr>
+    <tr>
+      <td>Tâches</td>
+      <td>Ajoute une nouvelle tâche.</td>
+    </tr>
+    <tr>
+      <td>Dépenses</td>
+      <td>Enregistre un montant. Saisissez un « Nom du magasin », puis, sur la ligne en dessous, le « Titre » (nom de l'article) et le « Montant ». Le bouton « Ajouter » ajoute des lignes : les achats faits dans le même magasin sont enregistrés en une seule fois, et chaque ligne devient un enregistrement de dépense.</td>
+    </tr>
+    <tr>
+      <td>Humeur</td>
+      <td>Enregistre une valeur d'humeur (0 à 10).</td>
+    </tr>
+    <tr>
+      <td>Téléverser</td>
+      <td>Téléverse un fichier et l'enregistre.</td>
+    </tr>
+    <tr>
+      <td>Enregistrer le presse-papiers</td>
+      <td>Enregistre le contenu du presse-papiers (image, texte, PDF, etc.) directement comme fichier. Pratique pour enregistrer rapidement des captures d'écran ou des images copiées.</td>
+    </tr>
   </table>
 
   <div class="tip">
-    <strong>Astuce :</strong> Un appui long sur le bouton "+" ouvre directement l'écran de saisie du bloc-notes, permettant une saisie par lots rapide.
+    <strong>Appui long :</strong> Un appui long sur le bouton « + » ouvre directement le bloc-notes. Pratique lorsque vous souhaitez prendre une note rapidement.
   </div>
 
   <div class="tip">
-    <strong>Raccourci :</strong> Appuyez sur Entrée sur cet écran pour ouvrir le bloc-notes. C'est pratique pour ajouter rapidement des enregistrements.
+    <strong>Raccourci :</strong> Appuyez sur Entrée sur cet écran pour ouvrir la boîte de dialogue du bloc-notes. C'est pratique pour ajouter rapidement des enregistrements.
   </div>
 
   <div class="tip">
-    <strong>Raccourci :</strong> Appuyez sur Ctrl+V pour enregistrer le contenu du presse-papiers directement en tant que fichier. Utile pour sauvegarder rapidement des captures d'écran ou des images copiées.
+    <strong>Raccourci :</strong> Appuyez sur Ctrl+V pour enregistrer le contenu du presse-papiers directement en tant que fichier. Utile pour sauvegarder rapidement des captures d'écran ou des images.
   </div>
+
   <h2>Utilisation des étiquettes</h2>
+  <p>Les étiquettes sont des libellés qui servent à classer et organiser vos enregistrements. Vous pouvez attribuer plusieurs étiquettes à un même enregistrement.</p>
   <h3>Ajouter une étiquette</h3>
   <ol>
-    <li>Maintenez appuyé ou faites un clic droit sur un enregistrement pour ouvrir le menu contextuel.</li>
-    <li>Sélectionnez "Ajouter une étiquette".</li>
-    <li>Tapez le nom de l'étiquette (les étiquettes existantes s'affichent comme suggestions).</li>
+    <li>Appuyez longuement (mobile) ou faites un clic droit (bureau) sur un enregistrement de la chronologie.</li>
+    <li>Choisissez « Ajouter un tag » dans le menu contextuel.</li>
+    <li>Saisissez le nom de l'étiquette et ajoutez-la. Les étiquettes existantes s'affichent comme suggestions.</li>
   </ol>
-  <p>Pour appliquer un tag récemment utilisé, servez-vous de « Ajouter un tag depuis l'historique » dans le menu contextuel : il suffit de le choisir dans la liste.</p>
-  <p>Si vous saisissez un nom de tag encore jamais utilisé, une confirmation « C'est un nouveau tag. Voulez-vous l'ajouter ? » apparaît avant l'enregistrement. Elle évite que des tags très proches se multiplient à cause de fautes de frappe.</p>
-  <p>Un tag créé ainsi est également ajouté aux conditions de filtre des colonnes actuellement ouvertes. L'enregistrement ne disparaît donc pas de la liste lorsque vous l'ajoutez avec un tag tout neuf dans une colonne filtrée par tags.</p>
+  <p>Pour appliquer une étiquette récemment utilisée, servez-vous de « Ajouter un tag depuis l'historique » dans le menu contextuel : il suffit de la choisir dans la liste.</p>
+  <p>Si vous saisissez un nom d'étiquette encore jamais utilisé, une confirmation « C'est un nouveau tag. Voulez-vous l'ajouter ? » apparaît avant l'enregistrement. Elle évite que des étiquettes très proches se multiplient à cause de fautes de frappe.</p>
+  <p>Une étiquette créée ainsi est également ajoutée automatiquement aux conditions de la colonne de filtre actuellement ouverte. L'enregistrement ne disparaît donc pas de la liste lorsque vous l'ajoutez avec une nouvelle étiquette dans une colonne filtrée par étiquettes.</p>
   <h3>Modifier ou supprimer une étiquette</h3>
   <ol>
-    <li>Maintenez appuyé ou faites un clic droit sur l'étiquette à modifier.</li>
-    <li>Sélectionnez "Modifier" ou "Supprimer" dans le menu.</li>
+    <li>Appuyez longuement (mobile) ou faites un clic droit (bureau) sur une étiquette de la chronologie.</li>
+    <li>Choisissez « Modifier le tag » ou « Supprimer le tag » dans le menu contextuel.</li>
   </ol>
-  <h3>Gestion de la structure des étiquettes</h3>
-  <p>Vous pouvez gérer les noms d'affichage et l'ordre des étiquettes dans Paramètres &gt; Structure des étiquettes.</p>
+  <h3>Structure hiérarchique des étiquettes</h3>
+  <p>Vous pouvez gérer les noms d'affichage et l'ordre des étiquettes dans « Structure des tags » de l'écran des paramètres. Placer en haut les étiquettes que vous utilisez souvent permet de les retrouver plus facilement dans la liste des suggestions.</p>
   <div class="tip">
-    <strong>Astuce :</strong> En écrivant <code>#nom_etiquette</code> dans la syntaxe du bloc-notes, l'enregistrement sera automatiquement étiqueté. Consultez la <a href="kftl-syntax.html">Référence de syntaxe du bloc-notes</a> pour plus de détails.
+    <strong>Astuce :</strong> En écrivant <code>#nom_etiquette</code> dans la syntaxe du bloc-notes, l'étiquette est ajoutée automatiquement lors de l'envoi du texte. Consultez la <a href="kftl-syntax.html">Référence de syntaxe du bloc-notes</a> pour plus de détails.
   </div>
 
   <h2>Détails du téléversement de fichiers</h2>
-
+  <p>Depuis « Téléverser » dans le menu du bouton « + », vous pouvez enregistrer dans gkill des fichiers tels que des images, des vidéos ou des documents.</p>
   <h3>Procédure d'utilisation</h3>
   <ol>
-    <li>Appuyez sur le bouton « + » et sélectionnez « Téléverser un fichier ».</li>
-    <li>Sélectionnez l'emplacement de stockage de destination (dépôt pour la gestion de fichiers).</li>
-    <li>Confirmez et ajustez la date et l'heure associées.</li>
-    <li>Sélectionnez le ou les fichiers à téléverser (plusieurs fichiers possibles). Cliquez sur la zone « Cliquez ici ou déposez les fichiers » de la boîte de dialogue pour les choisir, ou glissez-déposez les fichiers dans cette zone.</li>
+    <li>Appuyez sur le bouton « + » et sélectionnez « Téléverser ».</li>
+    <li>Sélectionnez le dépôt de destination du téléversement (un dépôt destiné aux fichiers).</li>
+    <li>Vérifiez et ajustez la date et l'heure associées (la date d'enregistrement du fichier).</li>
+    <li>Sélectionnez le ou les fichiers à téléverser (plusieurs fichiers possibles à la fois). Cliquez sur la zone « Cliquez ici ou déposez les fichiers » de la boîte de dialogue pour les choisir, ou glissez-déposez les fichiers dans cette zone.</li>
   </ol>
-
   <h3>Formats de fichiers pris en charge</h3>
-  <p>Images (JPEG/PNG/GIF/WEBP), vidéos (MP4, etc.), PDF, ZIP et autres.</p>
-  <p>Les fichiers Markdown (.md / .markdown) sont affichés en texte enrichi (titres, tableaux) dans les vues liste et détail, et les blocs de code mermaid sont rendus sous forme de diagrammes.</p>
-
+  <p>Images (JPEG, PNG, GIF, WEBP), vidéos (MP4, etc.), PDF, ZIP et autres formats de fichiers courants. Les fichiers Markdown (.md / .markdown) sont affichés en texte enrichi (titres, tableaux, etc.) dans les vues liste et détail, et les schémas écrits en syntaxe Mermaid sont affichés sous forme de diagrammes.</p>
   <h3>Limite de taille de téléversement</h3>
-  <p>La limite mensuelle de taille de téléversement est définie par l'administrateur dans « Limite mensuelle de taille de téléversement » de la configuration du serveur. La valeur initiale est <code>-1</code> (illimité).</p>
-
+  <p>Vous pouvez envoyer jusqu'à environ 1 Go par téléversement. Si vous souhaitez téléverser plusieurs fichiers volumineux, envoyez-les en plusieurs fois.</p>
   <div class="tip">
-    <strong>Astuce :</strong> Appuyez sur Ctrl+V pour enregistrer le contenu du presse-papiers directement en tant que fichier.
+    <strong>Raccourci :</strong> Appuyez sur Ctrl+V pour enregistrer directement comme fichier l'image ou le texte présent dans le presse-papiers. Pratique pour enregistrer rapidement des captures d'écran.
   </div>
 
   <h2>Voir le contenu d'un fichier ZIP</h2>
@@ -169,35 +205,36 @@
   </div>
 
   <h2>Transformer un enregistrement en tâche et copier son contenu</h2>
-  <p>Un enregistrement que vous souhaitez traiter plus tard peut devenir une tâche sans en réécrire le contenu. Choisissez « Transformer en tâche » dans le menu contextuel de l'enregistrement, renseignez le nom du tableau, l'échéance et les dates de début et de fin prévues, puis enregistrez. La tâche créée apparaît aussi dans la <a href="mi.html">Vue des tâches</a> et peut être cochée comme terminée.</p>
+  <p>Un enregistrement que vous souhaitez traiter plus tard peut devenir une tâche sans en réécrire le contenu. Choisissez « Transformer en tâche » dans le menu contextuel de l'enregistrement, renseignez le nom du tableau, l'échéance et les dates de début et de fin prévues, puis enregistrez. La tâche créée apparaît aussi dans l'écran <a href="mi.html">Tableau de tâches</a> et peut être cochée comme terminée.</p>
   <p>En choisissant « Copier le contenu » dans le menu contextuel, vous copiez le corps de l'enregistrement dans le presse-papiers. « Copier l'ID » copie l'identifiant de l'enregistrement.</p>
 
   <h2>Utilisation de la carte GPS</h2>
-  <h3>Téléverser un enregistrement GPS</h3>
+  <p>Lorsque vous activez le bouton de carte de la barre d'outils, les itinéraires GPS correspondant à la période des enregistrements s'affichent sur la carte.</p>
+  <h3>Téléverser un journal GPS</h3>
   <ol>
-    <li>Appuyez sur le bouton "+" et sélectionnez "Téléverser un fichier".</li>
-    <li>Sélectionnez le dépôt destine aux enregistrements GPS.</li>
-    <li>Sélectionnez le fichier GPX. Cliquez sur la zone « Cliquez ici ou déposez les fichiers .gpx » pour le choisir, ou glissez-déposez-le dans cette zone.</li>
-    <li>Activez le bouton de carte pour confirmer l'affichage.</li>
+    <li>Appuyez sur le bouton « + » et sélectionnez « Téléverser ».</li>
+    <li>Comme destination du téléversement, sélectionnez le dépôt destiné aux journaux GPS.</li>
+    <li>Sélectionnez le fichier GPX et téléversez-le. Cliquez sur la zone « Cliquez ici ou déposez les fichiers .gpx » pour le choisir, ou glissez-déposez-le dans cette zone.</li>
+    <li>Après le téléversement, activez le bouton de carte pour afficher l'itinéraire.</li>
   </ol>
   <h3>Configurer la clé API Google Maps</h3>
-  <p>La carte nécessite une clé API Google Maps. Saisissez votre clé dans « Clé API Google Map » de l'écran des paramètres (bouton « Paramètres » de la barre d'outils de la vue journal de vie), puis enregistrez avec « Appliquer ». Ce paramètre est décrit dans « Integration externe » de la page <a href="application-config.html">Écran des paramètres</a>.</p>
+  <p>La carte nécessite une clé API Google Maps. Saisissez votre clé dans « Clé API Google Map » de l'écran des paramètres (bouton « Paramètres » de la barre d'outils de la Vue du journal de vie), puis enregistrez avec « Appliquer ». Ce paramètre est décrit dans « Intégrations externes » de la page <a href="application-config.html">Paramètres</a>.</p>
   <div class="tip">
-    <strong>Astuce :</strong> Obtenez votre clé API dans Google Cloud Console en activant l'API Maps JavaScript.
+    <strong>Astuce :</strong> Vous pouvez obtenir une clé API Google Maps dans <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>. Il faut une clé pour laquelle l'API Maps JavaScript est activée.
   </div>
 
   <h2>Rappeler des conditions de recherche enregistrées</h2>
   <p>Les conditions de recherche enregistrées sous un nom dans « Conditions de recherche » de l'écran des paramètres peuvent être rappelées depuis le bouton rond en bas à droite de la barre latérale. En choisissant un nom, la condition est appliquée telle quelle à la barre latérale. Si aucune condition n'est enregistrée, le bouton n'apparaît pas.</p>
 
   <h2>Partager les critères de recherche actuels</h2>
-  <p>Activez « Afficher le pied de page de partage » dans l’écran des paramètres et un pied de page de partage apparaît en bas de la barre latérale. En appuyant sur le bouton « Partager » à son extrémité gauche, on vous demande comment vous souhaitez transmettre les enregistrements. En choisissant « Partager cette vue », les critères de recherche que vous utilisez deviennent un lien de partage. Ce qui est partagé n’est pas un seul enregistrement, mais tous les enregistrements correspondant à ces critères. Les liens déjà créés peuvent être listés, modifiés et supprimés depuis « Gestion des partages », à l’extrémité droite.</p>
+  <p>Activez « Afficher le pied de page de partage » dans l’écran des paramètres et un pied de page de partage apparaît en bas de la barre latérale. En appuyant sur le bouton « Partager » à son extrémité gauche, on vous demande comment vous souhaitez transmettre les enregistrements. En choisissant « Partager cette vue », les critères de recherche que vous utilisez deviennent un lien de partage. Ce qui est partagé n’est pas un seul enregistrement, mais tous les enregistrements correspondant à ces critères. Les liens déjà créés peuvent être listés, modifiés et supprimés depuis « Gérer les liens partagés », à l’extrémité droite.</p>
 
   <h2>Transmettre les résultats actuels sous forme de fichier HTML</h2>
-  <p>Un lien de partage ne se consulte que tant que cette application tourne. Lorsque vous voulez transmettre des enregistrements sans que votre interlocuteur ait quoi que ce soit à installer, vous pouvez écrire les résultats que vous consultez dans un fichier HTML. La personne qui le reçoit n’a qu’à l’ouvrir dans un navigateur et, comme tout le nécessaire se trouve dans le fichier, celui-ci ne communique jamais avec cette application.</p>
+  <p>Un lien de partage ne se consulte que tant que cette application tourne. Lorsque vous voulez transmettre des enregistrements sans que votre interlocuteur ait quoi que ce soit à préparer, vous pouvez écrire les résultats de recherche que vous consultez dans un fichier HTML. La personne qui le reçoit n’a qu’à l’ouvrir dans un navigateur et, comme tout le nécessaire se trouve dans le fichier, celui-ci ne communique jamais avec cette application.</p>
 
   <h3>Comment produire le fichier</h3>
   <ol>
-    <li>Dans le pied de page de partage, en bas de la barre latérale, appuyez sur le bouton « Partager » à son extrémité gauche.</li>
+    <li>Dans le pied de page de partage, en bas de la barre latérale, appuyez sur le bouton « Partager » à son extrémité gauche (si le pied de page de partage n'est pas visible, activez « Afficher le pied de page de partage » dans l'écran des paramètres).</li>
     <li>Choisissez « Exporter en HTML ».</li>
     <li>Choisissez ce qu’il faut inclure et sous quelle forme écrire le fichier (voir le tableau ci-dessous).</li>
     <li>Appuyez sur « Exporter » et le fichier produit est téléchargé. Cela prend du temps lorsqu’il y a beaucoup d’enregistrements ou d’images.</li>
@@ -210,24 +247,28 @@
       <th>Description</th>
     </tr>
     <tr>
+      <td>Titre</td>
+      <td>Saisissez un intitulé (facultatif) à afficher en haut à gauche de l'écran exporté.</td>
+    </tr>
+    <tr>
       <td>Cible</td>
-      <td>Choisissez entre « Toutes les colonnes affichées » et « La colonne active ».</td>
+      <td>Choisissez entre « Toutes les colonnes affichées » et « Colonne sélectionnée ».</td>
     </tr>
     <tr>
       <td>Éléments à inclure</td>
-      <td>Choisissez d’inclure ou non les relevés d’heure, les données de localisation et le contenu des extensions.</td>
+      <td>Choisissez d'inclure ou non les étiquettes, les textes, les notifications, les pointages, les données de localisation et le contenu des extensions.</td>
     </tr>
     <tr>
       <td>Écrans</td>
-      <td>Choisissez si le fichier produit conserve la vue de synthèse, la carte et la barre latérale de recherche. La barre latérale conservée ne filtre que parmi les enregistrements du fichier.</td>
+      <td>Choisissez si le fichier produit conserve l'agrégation, la carte et la barre latérale de recherche. La barre latérale conservée ne filtre que parmi les enregistrements du fichier (les conditions de mot-clé, d'entrée de temps et de lieu n'ont aucun effet sur le filtrage, même si vous les saisissez).</td>
     </tr>
     <tr>
       <td>Médias</td>
-      <td>Choisissez « Miniatures uniquement », « Taille réelle comprise » ou « Ne pas intégrer » pour les images et les vidéos. Vous pouvez aussi fixer la limite par élément et la limite totale.</td>
+      <td>Choisissez « Miniatures seulement », « Inclure les originaux » ou « Ne pas intégrer » pour les images et les vidéos. Vous pouvez aussi fixer la limite par fichier et la limite totale.</td>
     </tr>
     <tr>
       <td>Format de sortie</td>
-      <td>« Un seul fichier HTML » se suffit à lui-même. « HTML et un dossier du même nom » place les images dans un dossier voisin, ce qui allège le fichier, mais il faut transmettre les deux ensemble.</td>
+      <td>« Un seul fichier HTML » se suffit à lui-même. « HTML et un dossier du même nom » place les images dans un dossier voisin, ce qui allège le fichier, mais il faut transmettre les deux ensemble (lorsque « Ne pas intégrer » est choisi, seul « Un seul fichier HTML » est disponible).</td>
     </tr>
   </table>
 
@@ -236,16 +277,16 @@
   </div>
 
   <h3>Ce que voit le destinataire</h3>
-  <p>Le fichier produit est en lecture seule. On ne peut ni ajouter ni modifier d’enregistrement, ni poser d’étiquette. Un double-clic sur un enregistrement ouvre son détail, d’où l’on peut suivre les enregistrements liés. La carte est la seule exception : la carte elle-même est chargée depuis l’extérieur, donc le tracé apparaît lorsque le destinataire saisit sa propre clé de carte.</p>
+  <p>Le fichier produit est en lecture seule. On ne peut ni ajouter ni modifier d’enregistrement, ni poser d’étiquette. Un double-clic sur un enregistrement ouvre son détail, d’où l’on peut suivre les enregistrements liés. La carte est la seule exception : la carte elle-même est chargée depuis l’extérieur, donc le tracé apparaît lorsque le destinataire saisit sa propre clé de carte. Cette clé n’est enregistrée nulle part et disparaît à la fermeture de la page : il faut donc la saisir à nouveau à chaque ouverture.</p>
 
-  <h2>Lorsqu'un emplacement de stockage des enregistrements ne peut pas être chargé</h2>
-  <p>Les enregistrements des autres emplacements peuvent continuer à s'afficher. Ce message seul ne signifie pas que vos enregistrements ont été perdus.</p>
+  <h2>Lorsqu'un dépôt ne peut pas être chargé</h2>
+  <p>Les enregistrements des autres dépôts peuvent continuer à s'afficher. Ce message seul ne signifie pas que vos enregistrements ont été perdus.</p>
   <ol>
     <li>Vérifiez que le disque externe ou la clé USB est correctement connecté.</li>
     <li>Pour un emplacement réseau, vérifiez la connexion, le partage et le droit de lecture du dossier.</li>
-    <li>Après avoir rétabli la connexion, rechargez l'écran. Si vous pouvez ouvrir les paramètres, essayez aussi de recharger les emplacements de stockage des enregistrements.</li>
-    <li>Jusqu'au rétablissement, retirez les conditions de recherche qui sélectionnent uniquement l'emplacement indiqué dans l'avertissement.</li>
-    <li>Si le message persiste, indiquez à l'administrateur le nom de l'emplacement et l'heure du problème.</li>
+    <li>Après avoir rétabli la connexion, rechargez l'écran. Si vous pouvez ouvrir les paramètres, essayez aussi de recharger les dépôts.</li>
+    <li>Jusqu'au rétablissement, retirez les conditions de recherche qui sélectionnent uniquement le dépôt indiqué dans l'avertissement.</li>
+    <li>Si le message persiste, indiquez à l'administrateur le nom du dépôt et l'heure du problème.</li>
   </ol>
 
   <h2>Documents associés</h2>
@@ -254,6 +295,6 @@
     <li><a href="dnote.html">Vue d'agrégation</a></li>
     <li><a href="ryuu.html">Informations associées</a></li>
     <li><a href="kftl-syntax.html">Référence de syntaxe du bloc-notes</a></li>
-    <li><a href="application-config.html">Paramètres</a></li>
     <li><a href="plugin.html">Extensions</a></li>
+    <li><a href="application-config.html">Paramètres</a></li>
   </ul>

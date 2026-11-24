@@ -15,7 +15,7 @@
     </tr>
     <tr>
       <td>Recargar</td>
-      <td>Actualiza los datos desde el servidor. Mantenga pulsado para forzar una recarga completa.</td>
+      <td>Vuelve a cargar los datos desde el servidor. <strong>Mantener pulsado:</strong> fuerza la recarga.</td>
     </tr>
     <tr>
       <td>Cerrar sesión</td>
@@ -51,7 +51,7 @@
       <td>Controla si se muestran las etiquetas en las tarjetas de registros en las vistas de lista.</td>
     </tr>
     <tr>
-      <td>Mostrar pie de página de comparticion</td>
+      <td>Mostrar pie de página de compartición</td>
       <td>Casilla de verificacion</td>
       <td>Controla si se muestran las opciones de compartir en el área del pie de página.</td>
     </tr>
@@ -65,22 +65,22 @@
       <th>Descripción</th>
     </tr>
     <tr>
-      <td>Período de visualización del registro de vida</td>
+      <td>Días de visualización del registro de vida</td>
       <td>Casilla + Número</td>
       <td>Establece el número de días de registros a mostrar en la vista del registro de vida. -1 para ilimitado. Un período más corto carga más rápido.</td>
     </tr>
     <tr>
-      <td>Página predeterminada</td>
+      <td>Vista por defecto al iniciar</td>
       <td>Desplegable</td>
       <td>Elige la página que se muestra después de iniciar sesión.</td>
     </tr>
     <tr>
-      <td>Columnas de imágenes del registro de vida</td>
+      <td>Columnas de imagen del registro de vida</td>
       <td>Número (1-10)</td>
       <td>Establece el número de columnas de la cuadricula de miniaturas en la vista del registro de vida. Ajuste según el tamaño de su pantalla.</td>
     </tr>
     <tr>
-      <td>Tablero de tareas predeterminado</td>
+      <td>Nombre de tablero de tareas por defecto</td>
       <td>Desplegable + Botón agregar</td>
       <td>Establece el tablero predeterminado en la pantalla de tareas. Use el botón de agregar para crear nuevos tableros.</td>
     </tr>
@@ -106,7 +106,7 @@
   </table>
 
   <h2>Gestión de estructura de datos</h2>
-  <p>Estos botones abren editores dedicados para gestionar como se organizan sus datos.Estas estructuras se comparten entre todos los dispositivos, mientras que el tablero de tareas predeterminado es una opción por dispositivo. Cada elemento y carpeta de estas estructuras puede llevar una descripción: escriba para qué sirve y cómo lo usa, y la integración con IA (MCP) la leerá como pista al buscar registros.</p>
+  <p>Estos botones abren editores dedicados para gestionar cómo se organizan sus datos. Estas estructuras se comparten entre todos los dispositivos, mientras que «Nombre de tablero de tareas por defecto» es un ajuste de cada dispositivo. Cada elemento y carpeta de estas estructuras puede llevar una descripción: escriba para qué sirve y cómo lo usa, y la integración con IA la leerá como pista al buscar registros.</p>
   <table>
     <tr>
       <th>Botón</th>
@@ -117,8 +117,8 @@
       <td>Gestiona la jerarquia de etiquetas y sus agrupaciones. Puede crear, renombrar, reordenar y organizar etiquetas en relaciones padre-hijo.</td>
     </tr>
     <tr>
-      <td>Estructura de Repositorio</td>
-      <td>Gestiona las ubicaciones de almacenamiento de datos (Repositorio). Puede agregar, eliminar o configurar donde se almacenan los registros.</td>
+      <td>Estructura del repositorio</td>
+      <td>Gestiona la agrupación, el orden y el estado de selección inicial de los repositorios que aparecen en la barra lateral de búsqueda (para añadir o eliminar repositorios reales, hágalo desde Gestión de cuentas en Configuración del servidor).</td>
     </tr>
     <tr>
       <td>Estructura de perfiles</td>
@@ -126,7 +126,7 @@
     </tr>
     <tr>
       <td>Estructura de tipos de registro</td>
-      <td>Gestiona que tipos de registro se almacenan en que repositorios.</td>
+      <td>Gestiona la agrupación, el orden y el estado de selección inicial de los tipos de registro que aparecen en la barra lateral de búsqueda.</td>
     </tr>
     <tr>
       <td>Estructura de tableros</td>
@@ -137,8 +137,8 @@
       <td>Gestiona las plantillas de texto del bloc de notas para entrada rápida. Puede crear y editar textos predefinidos.</td>
     </tr>
     <tr>
-      <td>Vista de resumen</td>
-      <td>Gestiona la agregación de datos y las configuraciones de vistas de resumen.</td>
+      <td>Vista de agregación</td>
+      <td>Gestiona los métodos de agregación de datos y la configuración de la vista de agregación.</td>
     </tr>
     <tr>
       <td>Información relacionada</td>
@@ -150,7 +150,7 @@
         <ul>
           <li><strong>Accesos directos de búsqueda</strong>: Guarde con un nombre las condiciones de búsqueda que use con frecuencia. Las condiciones para la Vista de registro de vida y el Tablero de tareas se registran, editan, reordenan y eliminan por separado, y pueden aplicarse desde el botón de la esquina inferior derecha de la barra lateral de cada pantalla.</li>
           <li><strong>En curso</strong>: Configure las condiciones de búsqueda utilizadas para encontrar sesiones de registro de tiempo en curso. Se aplican a la lista de la pantalla de sesiones activas, a las sesiones en curso que se muestran junto a los detalles del registro y a los objetivos de los comandos de finalización de la sintaxis del bloc de notas. Al activar «Personalizar criterios de búsqueda» aparece un botón para editar las condiciones, y puede filtrar por etiquetas y palabras clave. Al desactivarlo se restaura el comportamiento estándar que abarca todos los registros de tiempo.</li>
-          <li><strong>Panel</strong>: Configure las condiciones de búsqueda para la Vista de agregación y las tareas que se muestran en el Panel.</li>
+          <li><strong>Panel</strong>: Configure las condiciones de búsqueda de las notas de agregación y de las tareas que se muestran en la pantalla Panel.</li>
         </ul>
       </td>
     </tr>
@@ -189,12 +189,13 @@
   </div>
 
   <div class="tip">
-    <strong>Consejo:</strong> Para telefonos moviles, establezca las columnas de imágenes en 1-2. Para pantallas de escritorio, 3-5 columnas funciona bien.
+    <strong>Consejo:</strong> Para que se vea bien, ajuste «Columnas de imagen del registro de vida» a 1-2 columnas en el smartphone y a 3-5 columnas en el PC.
   </div>
 
   <div class="tip">
-    <strong>Consejo:</strong> Para usar las funciones de mapa GPS, habilite la API Maps JavaScript en Google Cloud Console e introduzca la clave API en Integración externa.
+    <strong>Consejo:</strong> Para usar las funciones de mapa GPS, habilite la API Maps JavaScript en Google Cloud Console, obtenga una clave API de Google Map e introdúzcala.
   </div>
+
   <h2>Documentos Relacionados</h2>
   <ul>
     <li><a href="server-config.html">Configuración del Servidor (Solo Admin)</a></li>

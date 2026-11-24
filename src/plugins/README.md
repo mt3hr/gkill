@@ -314,7 +314,7 @@ HTML 形式で書き出していると読まないが、設定画面の「走査
 
 **VRChat は古いログを数日で消す。** 消える前に同期スクリプトなどで別の場所へ運び、その場所も `source_dirs` に書いておく。
 同じ起動のログが複数の場所にあっても1回の起動として数える（起動キーはファイルの最初の時刻付きの行の時刻）。
-返す記録は TimeIs（ワールドの滞在・同じ部屋にいた人）・URLog（滞在ごとのワールドの起動用ページ）・Kmemo（アバターの切り替え・動画の URL）で、
+返す記録は TimeIs（ワールドの滞在・同じ部屋にいた人）・URLog（滞在ごとのワールドの起動用ページ・動画の URL）・Kmemo（アバターの切り替え）で、
 本文 HTML は持たず native と同じ型別ビューで描かれる。gkill 1.1.12 より前ではプラグインの TimeIs が「その時刻に実行中か」で絞られず、
 全件が実行中に見える（[ADR-0317](../../documents/adr/0317-plugin-mixed-typed-kinds-and-playing-time.md)）。
 
@@ -463,6 +463,7 @@ SDK 自身は `plugin start` / `plugin stop` / `build cache` を Info で、1コ
 | `find_kyous` | gkill → plugin | 検索条件付きで Kyou 一覧を返す |
 | `get_kyou` | gkill → plugin | ID 指定で 1 件返す |
 | `get_content_html` | gkill → plugin | Kyou 詳細表示用 HTML を返す |
+| `get_gps_logs` | gkill → plugin | 指定期間の位置情報（GPSLog）を返す（`provides` に `gpslog` を持つプラグイン向け） |
 | `get_config_html` | gkill → plugin | 設定フォーム HTML を返す |
 | `post_config` | gkill → plugin | フォームデータを受けて設定を保存する |
 
@@ -611,7 +612,7 @@ sdk.Run(sdk.Handler{
 
 会話形式の記録（AI チャットのログなど）の `GetContentHTML` は、HTML を自分で組まずに `chatview` へ写す。
 head（CSS 変数・テーマ追従・iframe のサイズ通知）・吹き出し・チップ・折りたたみ・「見つかりません」ページ・
-コードフェンスの描画・4MiB の打ち切りが1か所に揃う。同梱の antigravity / chatgpt / claudeai / claudecode / codex が使う
+コードフェンスの描画・4MiB の打ち切りが1か所に揃う。同梱の antigravity / chatgpt / claudeai / claudecode / codex / gemini の6本が使う
 （[ADR-0315](../../documents/adr/0315-chat-plugins-render-through-sdk-chatview.md)）。
 
 ```go
@@ -676,10 +677,11 @@ go build -o gkill_plugin_codex .
 cd src/plugins/gkill_plugin_fitbit
 go build -o gkill_plugin_fitbit .
 
-# gkill_plugin_google_locationhistory
+# gkill_plugin_gemini
 cd src/plugins/gkill_plugin_gemini
 go build -o gkill_plugin_gemini .
 
+# gkill_plugin_google_locationhistory
 cd src/plugins/gkill_plugin_google_locationhistory
 go build -o gkill_plugin_google_locationhistory .
 

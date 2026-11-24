@@ -22,7 +22,8 @@
     <tr><td>Bookmark Timeout</td><td>Number (min: 5)</td><td>Timeout in seconds for bookmark fetching</td></tr>
     <tr><td>Bookmark User Agent</td><td>Text</td><td>User-Agent string for bookmark fetching</td></tr>
     <tr><td>User Data Directory</td><td>Text</td><td>Path to the user data storage directory</td></tr>
-    <tr><td>Monthly Upload Size Limit</td><td>Number</td><td>Monthly upload size limit (-1 for unlimited)</td></tr>
+    <tr><td>LAN Hostname</td><td>Text</td><td>Hostname used for the "LAN" URL of share links</td></tr>
+    <tr><td>Global Hostname</td><td>Text</td><td>Hostname used for the "Global" URL of share links</td></tr>
   </table>
 
   <h2>Bottom Buttons</h2>
@@ -53,7 +54,7 @@
       <ul>
         <li><strong>Display Name</strong>: The name shown in the Life Log View and filter panels</li>
         <li><strong>Type</strong>: The kind of data to store. The dropdown lists alphanumeric names such as <code>kmemo</code> or <code>timeis</code>. See the table below for what each one means</li>
-        <li><strong>Path</strong>: The directory path where data is saved (glob patterns supported for file management type)</li>
+        <li><strong>Path</strong>: The directory path where data is saved (wildcards such as <code>*</code> and <code>**</code> are also supported for file management)</li>
         <li><strong>Use as Write Target</strong>: Whether new records of this type should be saved here</li>
         <li><strong>Enabled</strong>: Whether this storage is included in search and display</li>
       </ul>

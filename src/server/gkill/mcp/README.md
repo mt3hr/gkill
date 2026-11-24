@@ -172,7 +172,7 @@ HTTPモードではOAuth 2.1が常に有効です。MCP仕様に準拠し、Chat
 #### トークン仕様
 - アクセストークン有効期間: 1時間（インメモリ、再起動で消失→リフレッシュトークンで再発行）
 - リフレッシュトークン有効期間: 30日（ローテーション方式）
-- リフレッシュトークンとDCRクライアント登録は `$GKILL_HOME/configs/mcp_oauth_read_state.json` に自動永続化（書式は旧 Node 実装と互換。移行時に再認証は不要）。サーバー再起動後も再認証不要
+- リフレッシュトークンとDCRクライアント登録は `$GKILL_HOME/configs/mcp_oauth_<kind>_state.json`（read / write / readwrite ごと）に自動永続化（書式は旧 Node 実装と互換。移行時に再認証は不要）。サーバー再起動後も再認証不要
 
 #### 動作確認（curl）
 ```bash
@@ -226,10 +226,10 @@ gkill_log を使い、`$GKILL_HOME/logs/` に `gkill_mcp_<kind>.log`（全レベ
 | ツール名 | 説明 |
 |---|---|
 | `gkill_status` | このサーバが何者かを返す（引数なし。3サーバ共通）: `server_kind`（read / write / readwrite）、接続先の `account.user_id` / `account.device`、gkill のビルド（`gkill.version` / `commit_hash` / `build_time`）、`transport`、`started_at` / `uptime_seconds`、`tool_count`、`schema_revision`。**`schema_revision` はツール一覧の世代**で、同じ値が `gkill_status` の説明文末尾にも焼き込まれている。応答と説明文の値が違えば、クライアントが握っている一覧が古い（一覧は接続時に1回しか取られない。サーバを再起動しても直らず、接続し直しが要る）。gkill へ届かないときも失敗にせず `gkill_reachable:false` + `gkill_error`（HTTP ステータスのみ）で返す。利用者が AI 向けに書いたスキルの `skills[]`（`name` / `description` だけ）も載せ、一覧が取れなかったときは status を失敗にせず `skills[]` の代わりに `skills_error` を載せる。`gkill_reachable:false` のときは一覧を取りに行かないので `skills[]` も `skills_error` も無い（スキルが無いのではなく不明。ADR-0634） |
-| `gkill_get_mcp_help` | ツール説明の本文を topic ごとに返す（引数 `topic`: `search` / `pagination` / `mi` / `data_types` / `plugin` / `idf` / `deleted` / `rep` / `kftl` / `config` / `skills`。省略で index。3サーバ共通、gkill へは往復しない）。**ツール一覧の説明文は要約**で、応答フィールドの一覧・Mi の射影・KFTL の文法全文などはここにある（正本は `help_topics.go`。ADR-0622） |
+| `gkill_get_mcp_help` | ツール説明の本文を topic ごとに返す（引数 `topic`: `search` / `pagination` / `mi` / `data_types` / `plugin` / `idf` / `deleted` / `reference_types` / `rep` / `kftl` / `config` / `skills`。省略で index。3サーバ共通、gkill へは往復しない）。**ツール一覧の説明文は要約**で、応答フィールドの一覧・Mi の射影・KFTL の文法全文などはここにある（正本は `help_topics.go`。ADR-0622） |
 | `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却）。`data_types` はエンティティ名 `timeis` / `mi` / `mirekyou` も受理して全射影へ展開する（ADR-0623）。`count_only` と `group_by` は cursor と同じく併用不可（エラー）。`query.ids` の不一致・`num_min` / `num_max` の種別混在は `warnings[]` に出る |
 | `gkill_get_mi_board_list` | Miボード名一覧を取得 |
-| `gkill_get_all_tag_names` | 全タグ名を取得 |
+| `gkill_get_all_tag_names` | 全タグ名を取得。`contains`（大小無視の部分一致）と `limit`（既定200）で絞れ、`total_count` / `truncated` が付く |
 | `gkill_get_all_rep_names` | Kyouを供給するリポジトリ名を取得。`contains`（大小無視の部分一致）と `limit`（既定200）で絞れ、`total_count` / `truncated` が付く。rep が数百ある環境で「その名前があるか」を確かめるために全件を読まずに済む |
 | `gkill_get_gps_log` | 期間指定でGPSログを取得。`limit` / `cursor`（不透明トークン。`next_cursor` をそのまま返す）でページングし、`count_only` / `group_by:"day"` で件数・日別カバレッジだけ取れる。**カーソルは `gkill_get_kyous` のものと別方式**（MCP 製 base64url。コーデックの正本は `gps_cursor.go` 1本で、発行側と受理側の両方がそこを使う） |
 | `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等）。`fields` で列を、`contains` で葉を絞り、`compact`（既定 true）が既定値の欄（`children` の null / 空・`is_dir:false`・`ignore_check_rep_rykv:false`・識別欄と同じ `name`）を落とす。`max_size_mb`（既定 0.25）を超える struct は `{omitted_bytes}` に置き換えて必ず収める（ADR-0629） |
@@ -277,7 +277,7 @@ MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のloc
 | stdio（Claude Code等） | `file_path` を直接読む | `file_path` |
 | HTTP（ChatGPT / Claude.ai Connectors） | **`gkill_get_idf_file` だけ** | `file_url` / `file_url_full` |
 
-`type: "image"` のMCP contentブロックを組み立てるのは `server_base.go` の `BuildToolResult` 1箇所だけで、その入力は `gkill_get_idf_file` が返す `file_content_base64` に限られる。したがって**HTTP接続のAIが画像を見る手段は `gkill_get_idf_file` が唯一**で、画像生成ツールへ参照画像として渡す場合もこれを使う。
+`type: "image"` のMCP contentブロックを組み立てるのは `server_base.go` の `BuildToolResult` 1箇所だけで、その入力は `gkill_get_idf_file` や `gkill_get_skill`（画像ファイル指定時）が返す `file_content_base64` に限られる。したがって**HTTP接続のAIがIDFの画像を見る手段は `gkill_get_idf_file` が唯一**で、画像生成ツールへ参照画像として渡す場合もこれを使う。
 
 大きすぎて上限に当たる画像・動画は、`thumb`（`"1024x1024"` 等、一辺最大1024。動画は `is_video: true` を併用してフレームを抜く）を渡せば縮小JPEGで収まる。クエリの形は `file_url` の `?thumb=` と同一で、非対象のファイルは原本がそのまま返る。
 
@@ -321,7 +321,7 @@ Write専用サーバにはRead便利ツール9つ（`gkill_status`, `gkill_get_m
 
 `gkill_update_*` は **patch セマンティクス**で、`id` 以外はすべて省略可能です。送らなかった項目は現在値のまま残ります。スキーマの `required` も `["id"]` だけです（以前は `title` などを要求しており、スキーマに従って推測値を送ると既存の値を静かに上書きしていました）。
 
-`gkill_update_timeis` の `end_time` だけは3値です — 省略で現状維持、日時指定で終了、**`null` で終了時刻を消して進行中へ差し戻す**。省略が現状維持である以上、終了済み TimeIs を再開する手段は `end_time: null` だけです。
+`gkill_update_timeis` の `end_time` および `gkill_update_mi` / `gkill_update_mirekyou` の `limit_time` / `estimate_start_time` / `estimate_end_time` は3値です — 省略で現状維持、日時指定で設定、**`null` でその日時をクリア**（TimeIs なら進行中へ差し戻し、タスクなら締切・見積を解除）。省略が現状維持である以上、日時を消す手段は `null` だけです。
 
 ##### 削除と復活
 
@@ -335,18 +335,18 @@ Write専用サーバにはRead便利ツール9つ（`gkill_status`, `gkill_get_m
 #### プラグインツール（1つ — Read/Write/ReadWrite すべてのサーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
-| `gkill_get_plugin_list` | インストール済みプラグイン一覧を取得（name/version/description/data_type/rep_name/**emits_kyou**/**provides**/is_alive/process_running/**has_last_error**/typed_index/gps_index。診断文の中身（last_error / typed_index.last_build_error）は端末のディレクトリ構成を含むため返さない。[ADR-0707](../../../../documents/adr/0707-redact-environment-specific-strings.md)）。`emits_kyou:false` のプラグインは Kyou を1件も出さないので、その `data_type` / `rep_name` は**検索値ではない** —— `provides` に対応する経路（`gpslog` なら `gkill_get_gps_log`）から読む |
+| `gkill_get_plugin_list` | インストール済みプラグイン一覧を取得（name/version/description/data_type/rep_name/**rep_names**/**emits_kyou**/**provides**/is_alive/process_running/**has_last_error**/typed_index/gps_index。診断文の中身（last_error / typed_index.last_build_error）は端末のディレクトリ構成を含むため返さない。[ADR-0707](../../../../documents/adr/0707-redact-environment-specific-strings.md)）。`emits_kyou:false` のプラグインは Kyou を1件も出さないので、その `data_type` / `rep_name` は**検索値ではない** —— `provides` に対応する経路（`gpslog` なら `gkill_get_gps_log`）から読む |
 
 ##### プラグイン内容取得の導線
 
-プラグインKyou（Claude Code / Claude.ai / ChatGPT の会話ログ等）の**本文はgkillのDBに保存されていない**。プラグインプロセスが持っていて、コンテンツHTMLとして取り出すしかない。
+プラグインKyou（Claude Code / Claude.ai / ChatGPT / Codex / Antigravity / Gemini の会話ログ等、`payload.kind: "plugin"` の記録）の**本文はgkillのDBに保存されていない**。プラグインプロセスが持っていて、コンテンツHTMLとして取り出すしかない（一方 `provides` で組み込み型を返す Fitbit / ArchivedGit / VRChat 等は組み込みの `payload.kind` に中身が直接入るため `include_plugin_content` は不要）。
 
 かつては1件ずつ取る `gkill_get_plugin_content` ツールを用意していたが、N件読むのにツール呼び出しがN+1回必要になり、そのたびにLLMのターンを消費して非効率だったため廃止した。いまは `gkill_get_kyous` に **`include_plugin_content: true`** を渡すと、検索結果のプラグインペイロードに本文が直接入る。
 
 導線は次の2ステップ:
 
-1. `gkill_get_plugin_list` でプラグインの `data_type` / `rep_name` と役割（`emits_kyou` / `provides`）を把握する。`emits_kyou:false` ならこの導線には乗らない（Kyou が存在しないので `query.reps` に渡しても0件）。
-2. `gkill_get_kyous` に `include_plugin_content: true` を付けて検索する（`query.reps` でそのプラグインに絞れる）。プラグインKyouの `payload` は `kind: "plugin"` で、`plugin_name` に加えて本文フィールドを持つ（`rep_name` / `id` は Kyou 側）。
+1. `gkill_get_plugin_list` でプラグインの `data_type` / `rep_names[]`（検索に使える rep 名一覧。`rep_name` はマニフェスト名札）と役割（`emits_kyou` / `provides`）を把握する。`emits_kyou:false` ならこの導線には乗らない（Kyou が存在しないので `query.reps` に渡しても0件）。
+2. `gkill_get_kyous` に `include_plugin_content: true` を付けて検索する（`query.reps` に `rep_names[]` の値を渡して絞れる）。プラグインKyouの `payload` は `kind: "plugin"` で、`plugin_name` に加えて本文フィールドを持つ（`rep_name` / `id` は Kyou 側）。
 
 各プラグインペイロードに付くフィールド:
 
@@ -385,6 +385,9 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 - `nlog`: 支出/収入記録
 - `timeis`: 打刻（開始/終了）
 - `mi`: タスク記録
+- `mirekyou`: 既存記録をタスク化した記録
+- `rekyou`: 既存記録のリポスト
+- `notification`: 記録に付随する通知
 - `lantana`: 気分値記録
 - `idf`: ファイル関連記録
 - `git_commit_log`: Gitコミット記録
@@ -419,7 +422,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 | `plugin_content_format` | string | 埋め込む形式。`text`（既定）/ `html` / `both` |
 
 レスポンスフィールド:
-- `kyous[]`: Kyou DTOの配列（各要素に `id`, `rep_name`, `data_type`, `related_time`, `create_app` / `update_app`（作成/最終更新アプリ名）, `tags[]`, `texts[]`, `notifications[]`, `timeis[]`（`is_include_timeis: true` のときの付随TimeIs）, `is_deleted`（削除済みのときだけ。無ければ生きている）, `payload` を含む。`tag_entities[]` / `text_entities[]` は `include_attached_ids: true` のときだけ）
+- `kyous[]`: Kyou DTOの配列（各要素に `id`, `rep_name`, `data_type`, `related_time`, `update_time`, `create_app` / `update_app`（作成/最終更新アプリ名）, `tags[]`, `texts[]`, `notifications[]`, `timeis[]`（`is_include_timeis: true` のときの付随TimeIs）, `is_deleted`（削除済みのときだけ。無ければ生きている）, `payload` を含む。`tag_entities[]` / `text_entities[]` は `include_attached_ids: true` のときだけ）
 - `total_count`: クエリ全体の件数（**cursor 無し応答のみ**。count_only/group_by を含む）
 - `returned_count`: 今回返却した件数
 - `remaining_count`: この続きに残っている件数（全応答）
@@ -441,23 +444,25 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 | `timeis` | title, start_time, end_time |
 | `nlog` | title, shop, amount |
 | `lantana` | mood |
-| `urlog` | title, url |
-| `idf` | file_name, is_image, is_video, is_audio, rep_name, mime_type |
+| `urlog` | title, url, description |
+| `idf` | file_name, is_image, is_video, is_audio, is_zip, rep_name, mime_type（+ 条件により file_size / file_path / file_url 等） |
 | `git_commit_log` | commit_message, addition, deletion |
-| `mi` | title, is_checked, board_name, limit_time, estimate_start_time, estimate_end_time |
+| `mi` | title, is_checked, board_name, create_time, limit_time, estimate_start_time, estimate_end_time |
+| `mirekyou` | target_id, is_checked, board_name, create_time, limit_time, estimate_start_time, estimate_end_time |
+| `rekyou` | target_id |
 | `plugin` | plugin_name（+ `include_plugin_content: true` のとき content_status / content_text / content_html / content_skipped_reason / content_error）。**プラグインの説明文は各ペイロードには載らない** —— 応答トップレベルの `plugins[]` に rep_name ごと1回だけ入る（同じ説明を件数ぶん繰り返さないため） |
 
 `kind: "plugin"` は上記の組み込み型に該当しないプラグイン由来のKyou。本文はgkillに入っていないので、`include_plugin_content: true` を渡して同じレスポンスに埋め込ませる。
 
 #### 5) 日時フォーマット
-- 日時は ISO-8601 を推奨
+- 日時は**タイムゾーンオフセット必須の RFC 3339**（オフセット無し・秒無しは拒否される）
 - 例: `2026-02-25T10:30:00+09:00`
-- 一部パラメータは `YYYY-MM-DD` も受け付け、自動で RFC3339 に補正されます
+- 一部パラメータは `YYYY-MM-DD` も受け付け、自動で RFC 3339 に補正されます
 - `gkill_get_gps_log` の `start_date` / `end_date` は必須
 
 #### 6) `gkill_get_kyous` の実用クエリ例
 
-フィルタは**値フィールドが非nullで存在すれば有効**になる（旧 `use_X` フラグは廃止済みで、公開スキーマには載らない。古い一覧を握ったクライアントからの送信だけ後方互換で受理し、届いたら古さの警告が付く。ADR-0620）。使わないフィルタはキーごと省略するか `null` を渡す。空配列 `[]` は「フィルタ有効だが0件指定」（例外: `timeis_words: []` は「任意のTimeIsに覆われたKyou」）。
+フィルタは**値フィールドが非nullで存在すれば有効**になる（旧 `use_X` フラグは廃止済みで、公開スキーマには載らない。古い一覧を握ったクライアントからの送信だけ後方互換で受理し、届いたら古さの警告が付く。ADR-0620）。使わないフィルタはキーごと省略するか `null` を渡す。空配列 `[]` は「フィルタ有効だが0件指定」（例外: `words: []` / `not_words: []` はキーワード条件なし＝全件通過、`timeis_words: []` は「任意のTimeIsに覆われたKyou」）。
 
 最小（デフォルト条件）:
 ```json
@@ -486,7 +491,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 }
 ```
 
-Mi抽出（**`for_mi` は `include_*_mi` を最低1つ要求する**。全て無指定だと0件+warningになる。`mi_sort_type: "limit_time"` は対応する射影 `include_limit_mi` が必要）:
+Mi抽出（`for_mi` は `include_*_mi` で射影を選ぶ。すべて無指定のときは MCP 入口で `include_create_mi: true` が自動補完され `warnings[]` で通知される（ADR-0627）。`mi_sort_type: "limit_time"` は対応する射影 `include_limit_mi` が必要）:
 ```json
 {
   "query": {

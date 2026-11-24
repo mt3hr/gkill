@@ -41,8 +41,10 @@
   <p>The sidebar lets you narrow down the tasks with the following conditions.</p>
   <ul>
     <li>Text search</li>
+    <li>Completion state (Unchecked, Checked, All)</li>
+    <li>Sort order (Created At, Due Date/Time, Start Date/Time, End Date/Time, and so on)</li>
     <li>Filter by tag</li>
-    <li>Date range</li>
+    <li>Period (choose the date range in the calendar and, if needed, also set a start time and an end time. Press the "×" inside a time field to empty it. To remove the period itself, press "Clear")</li>
     <li>Board selection</li>
   </ul>
 
@@ -56,15 +58,15 @@
     <li>Related records</li>
   </ul>
 
-  <div class="tip">
-    <strong>Tip:</strong> The board shown by default can be changed with "Default Task Board Name" in the settings screen.
-  </div>
-
   <h3>Turning an existing record into a task</h3>
   <p>A record you want to deal with later can become a task without rewriting its content. In the <a href="rykv.html">Life Log View</a> or elsewhere, long-press (mobile) or right-click (desktop) the record and choose "Make Task". Set the board name, due date and the planned start and end, then save: it appears on the board of this screen and can be checked off just like any other task.</p>
   <p>Tasks made this way have no title field, because the original record's content is shown as-is.</p>
   <div class="tip">
     <strong>Note:</strong> If you delete the original record, the task made from it is deleted along with it. There is no way to keep only the task.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> The board shown by default can be changed with "Default Task Board Name" in the settings screen.
   </div>
 
   <div class="tip">
@@ -143,8 +145,8 @@
 
   <h3>How to Export</h3>
   <ol>
-    <li>In the share footer at the bottom of the sidebar, press the "Share" button on the left.</li>
-    <li>Choose "HTML Export".</li>
+    <li>In the share footer at the bottom of the sidebar, press the "Share" button on the left (if you cannot see the share footer, turn on "Show Share Footer" in the settings screen).</li>
+    <li>Choose "Export HTML".</li>
     <li>Choose what to include and which format to write out (see the table below).</li>
     <li>Press "Export" and the resulting file is downloaded. It takes a while when there are many tasks or images.</li>
   </ol>
@@ -156,24 +158,28 @@
       <th>Description</th>
     </tr>
     <tr>
+      <td>Title</td>
+      <td>Enter an optional heading to display at the top left of the exported screen.</td>
+    </tr>
+    <tr>
       <td>Target</td>
       <td>Choose between "All boards shown" and "Focused board".</td>
     </tr>
     <tr>
-      <td>Include</td>
-      <td>Choose whether to include tags, texts, notifications, time records and location data.</td>
+      <td>What to include</td>
+      <td>Choose whether to include tags, texts, notifications, time records, location history, and plugin contents.</td>
     </tr>
     <tr>
       <td>Screens</td>
-      <td>Choose whether to keep the search condition sidebar inside the exported file. A kept sidebar only narrows down the tasks that were exported.</td>
+      <td>Choose whether to keep the Search sidebar inside the exported file. A kept sidebar only narrows down the tasks that were exported.</td>
     </tr>
     <tr>
       <td>Media</td>
-      <td>Choose images and videos from "Thumbnails only", "Include full size" or "Do not embed". You can also set per-item and total limits.</td>
+      <td>Choose images and videos from "Thumbnails only", "Include originals", or "Do not embed". You can also set the limit per file and the total limit.</td>
     </tr>
     <tr>
       <td>Output format</td>
-      <td>"A single HTML file" is self-contained. "HTML + folder of the same name" puts images in a folder next to it, so it is lighter than a single file, but you must hand over both together.</td>
+      <td>"A single HTML file" is self-contained. "HTML and a folder of the same name" puts images and other media in a folder next to it, so it is lighter than a single file, but you must hand over both together (when "Do not embed" is selected, only "A single HTML file" can be chosen).</td>
     </tr>
   </table>
 

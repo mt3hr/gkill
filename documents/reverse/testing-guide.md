@@ -12,14 +12,14 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 1544 | 233 | Go `testing` |
-| フロントエンド ユニット | 2262 | 196 | Vitest |
-| フロントエンド E2E | 268 | 52（+auth.setup.ts） | Playwright |
-| MCP サーバ | 1187 | 44 | Go `testing` |
+| Go バックエンド | 1559 | 238 | Go `testing` |
+| フロントエンド ユニット | 2277 | 201 | Vitest |
+| フロントエンド E2E | 265 | 52（+auth.setup.ts） | Playwright |
+| MCP サーバ | 1188 | 44 | Go `testing` |
 | ツール | 115 | 4 | Vitest |
 | Android | 31 | 2 | JUnit 4 |
-| Wear OS | 244 | 20 | JUnit 4 + MockK |
-| **合計** | **5,651** | **551** | |
+| Wear OS | 246 | 20 | JUnit 4 + MockK |
+| **合計** | **5,681** | **561** | |
 
 数え直すコマンド:
 
@@ -218,7 +218,7 @@ src/server/gkill/
 │   ├── req_res/                       ← ワイヤ契約（JSONタグ名 / omitempty）と応答型の Errors / Messages の型（ソース走査）
 │   ├── find_kyou_rep_name_filter_test.go ← rep名での結果側の絞り込み
 │   ├── select_match_reps_cache_test.go   ← 検索対象repの選定（キャッシュを剥がさないこと）
-│   └── gkill_server_api/              ← ハンドラ層（55ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（58ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── response_status_guard_test.go         ← 全ハンドラが writeErrorStatus を呼ぶこと（ソース走査）
@@ -243,7 +243,7 @@ src/server/gkill/
 │       ├── skill_errors_test.go                  ← dao/skills の番兵 → 4xx の専用コードへの写し（素・DetailError・fmt.Errorf の3形。case を1行消しても静かに 500 へ落ちる）
 │       └── security_headers_middleware_test.go   ← セキュリティヘッダ3つと経路側の Set が勝つこと
 ├── plugin/
-│   └── sdk/                           ← プラグインSDK（7ファイル: sdk / config / source / cache_path / build_cache / match_words / plugin_log）
+│   └── sdk/                           ← プラグインSDK（14ファイル: sdk / config / source / cache_path / build_cache / match_words / find_query / timezone / plugin_log / chatview(2) / configview(3)）
 ├── dao/
 │   ├── gkill_dao_manager_test.go      ← DAO マネージャ
 │   ├── account/                       ← アカウント CRUD、Argon2id、スキーマ移行（3ファイル）
@@ -304,11 +304,11 @@ src/server/gkill/
 ```
 src/client/__tests__/
 ├── unit/
-│   ├── api/                           ← API クライアント（9ファイル）
+│   ├── api/                           ← API クライアント（10ファイル）
 │   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
 │   │   ├── find-kyou-query.test.ts   ← 検索クエリビルダー
 │   │   └── hydrate.test.ts           ← hydrate() / hydrate_all()（JSON→クラス詰め替え）
-│   ├── classes/                       ← ユーティリティ（59ファイル）
+│   ├── classes/                       ← ユーティリティ（60ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
@@ -338,7 +338,7 @@ src/client/__tests__/
 │   ├── datas/                         ← データモデル（35ファイル）
 │   ├── dnote/                         ← D-note モジュール（10ファイル、trend-aggregator / correlation-graph-editor-view / dnote-item-table-columns（列の追加・削除、ダブルクリックの閲覧 / 編集の分岐、並べ替えの挿入位置）含む）
 │   ├── kftl/                          ← KFTL 行分類器（8ファイル。kftl-line-labels 含む）
-│   ├── composables/                   ← Vue Composable（71ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（75ファイル。add-views / edit-views /
 │   │                                     tx-bundle-views / shared-mi-view-dialog / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /
@@ -374,7 +374,7 @@ src/client/__tests__/
 ### 3.3 フロントエンド E2E（`src/client/__tests__/e2e/`）
 
 コンポーネントを持つ13ルートすべてを Playwright で検証し、CRUD 操作フローもカバーします
-（52 specファイル + auth.setup.ts、268テスト宣言）。各テストでは以下を共通チェックします：
+（52 specファイル + auth.setup.ts、265テスト宣言）。各テストでは以下を共通チェックします：
 
 - **JS エラー検出**: ページ遷移時にコンソールエラーがないことを検証
 - **インタラクティブ操作**: ボタンクリック、フォーム入力、ダイアログ開閉
@@ -384,7 +384,7 @@ src/client/__tests__/
 
 > **spec ファイルごとの内容は [`src/client/pages/ABOUT_TEST.md`](../../src/client/pages/ABOUT_TEST.md) が持ちます。**
 > 以前はここにも同じ一覧を置いていましたが、spec が増えるたびに二重管理になり、
-> 実際に「40ファイル/215宣言」で取り残されていました。件数（47 / 255）は `verify_docs` が
+> 実際に「40ファイル/215宣言」で取り残されていました。件数（52 / 265）は `verify_docs` が
 > 実測と突き合わせますが、ファイル名の一覧までは検査できないため、置き場所を1つに寄せています。
 >
 > 同じ資料には **E2E の書き方の規約**（条件で本体を包まない / 固定 sleep を使わない）と、
@@ -470,8 +470,8 @@ MCP テストは全てモック/スタブベース（`mock_client_test.go` と�
 - インストルメンテーションテスト（`MainActivityInstrumentedTest.kt`）: パッケージ名と、Context・ファイル置き場・assets・キャッシュ置き場が取れること
 
 **Wear OS** (`src/wear_os/`): JUnit 4 + MockK
-- phone_companion（10ファイル / 144テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer、playing検索クエリの形状検証・全 API への `locale_name` 送信含む）、メッセージハンドリング、サーバ証明書の信頼（フィンガープリント計算とピン照合）、二重送信防止台帳、エラーコード→文言の照合（`GkillErrorText`）、`strings.xml` の7言語セットの整合
-- watch_app（8ファイル / 88テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル、気分記録の KFTL 組み立て、`strings.xml` の7言語セットの整合
+- phone_companion（10ファイル / 147テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer、playing検索クエリの形状検証・全 API への `locale_name` 送信含む）、メッセージハンドリング、サーバ証明書の信頼（フィンガープリント計算とピン照合）、二重送信防止台帳、エラーコード→文言の照合（`GkillErrorText`）、`strings.xml` の7言語セットの整合
+- watch_app（10ファイル / 99テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル、気分記録の KFTL 組み立て、テンプレート一覧のスクロール位置記憶、`strings.xml` の7言語セットの整合
 
 ## 4. テスト設定ファイル
 
@@ -708,7 +708,7 @@ rm -rf ~/gkill_test && mkdir -p ~/gkill_test
 npx playwright test --debug --trace on
 ```
 
-> **Note:** E2E テストの大部分は gkill_server への API 通信を必要とします。`npm run test_client_e2e` で自動起動するか、手動で `npm run test_e2e_server` を実行してください。サーバ未起動時はテストがスキップされます。
+> **Note:** E2E テストの大部分は gkill_server への API 通信を必要とします。`npm run test_client_e2e` で自動起動するか、手動で `npm run test_e2e_server` を実行してください。多くのテストはサーバ未起動時にスキップしますが、HTML出力のE2Eは失敗させます。APIエラーや出力用テンプレート欠落もスキップしません。現在のソースと出力用テンプレートを含むビルドを使ってください。
 
 ### Android / Wear OS テストが失敗する
 

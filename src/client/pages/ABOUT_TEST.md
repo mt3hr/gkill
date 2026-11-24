@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、52 specファイル268テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、52 specファイル265テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## E2E の書き方の規約
 
@@ -52,7 +52,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | 新しいタグを含む保存は確認ダイアログを挟む（KFTL送信・タグ追加ダイアログの両方） | `confirmUnknownTagIfShown` が `submitKftlText` と `clickDialogButton` から呼ばれる |
 | 通知の時刻欄は readonly で、v-time-picker から選ばないと保存が通らない | `pickNotificationTime` |
 | リポストはコンテキストメニューを押しただけでは作られず、確認ダイアログで確定が要る | `clickDialogButton(page, MENU.rekyou)` |
-| TimeIs の終了ボタンは Playing 画面にしか出ない（rykv は `show_timeis_playing_end_button="false"`）。終了ダイアログの確定ボタンも「保存」ではなく「終了」 | Playing へ遷移してから操作する |
+| TimeIs の終了ボタンは通常のライフログ・タスク・実行中画面で利用できるが、共有・HTML出力では表示しない。終了ダイアログの確定ボタンは「保存」ではなく「終了」 | 終了操作のE2Eは Playing へ遷移して対象を絞ってから操作する |
 | KFTL の `、、` は以降の行をすべてテキスト本文として取り込む | 記録＋テキストを作りたい場合はコンテキストメニューでテキストを付ける |
 | Mi のコンテキストメニューに「共有」は無い。共有はサイドバーのフッタから。しかもフッタは `application_config.is_show_share_footer` が既定 false で出ない | 設定画面の「共有フッターを表示」を有効にしてから操作する |
 | ダイアログは保存しても閉じるとは限らない（タグ追加など） | 完了の合図は「書き込みAPIの応答」。`clickDialogButton` が待ち、errors が空かも見る |
@@ -61,7 +61,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | リポストは元の記録と同じ本文で表示されるので、本文だけで掴むと元記録のほうを消してしまう | `searchByKeyword` で本文を絞ってから `waitForKyouRowByRepName(page, 'ReKyou')` でリポジトリ名で特定する |
 | `.v-card` の `.first()` は外側のコンテナに当たる | 最も内側を取る `.last()` を使う |
 | 一覧は仮想スクロールで数件しか描画しない。並列に走る他テストの記録に押し出されて、作ったはずの記録が見つからなくなる | `searchByKeyword` で本文を絞ってから件数や有無を見る。キーワード入力欄は「キーワード」チェックボックスがONのときだけ `v-show` される |
-| E2E は **PATH 上の `gkill_server`** を起動する。サーバ側（Go）を直しても、ビルドし直さないと古いバイナリで走る | ビルド先を PATH の先頭に置いて実行する。`npm run install_server` は本番サービスの実体（`go/bin/gkill_server.exe`）を上書きするので、検証だけなら別ディレクトリへ `go build -o` する |
+| E2E は **PATH 上の `gkill_server`** を起動する。サーバ側（Go）を直しても、ビルドし直さないと古いバイナリで走る | ビルド先を PATH の先頭に置いて実行する。`npm run install_server` は本番サービスの実体（`go/bin/gkill_server.exe`）を上書きするので、検証だけなら別ディレクトリへ `go build -o` する。HTML出力のE2Eは、サーバ未起動・APIエラー・出力用テンプレート欠落をスキップせず失敗させる |
 | リポストは元の記録を**入れ子で**描画する（`re-kyou-view.vue` が `<KyouView :show_rep_name="true">` で元Kyouを中に出す）。`.kyou_rep_name` の総数は 元1 + リポスト1 + リポスト内の元1 = 3 になる | 総数で数えずリポジトリ名で絞って数える |
 | 一覧の行はリポジトリ名などの見出しを種類別のデータの読み込み前から出すが、右クリックでメニューを開く子ビュー（`re-kyou-view.vue` など）は読み込み後に描画される。読み込み中の右クリックはエラーも出さずに捨てられ、メニューが開かない | `clickContextMenuItemOn` がメニューの項目が出るまで右クリックをやり直す。読み込み中の表示（`.kyou_loading`）は遅れて出るので、消えるのを待っても目印にならない |
 | タグ名を変更すると、rykv のタグ絞り込みに**未チェック**で入り、その記録が一覧から消える（チェック状態は `application_config.tag_struct` に保存される。新規追加したタグは自動でチェックされるので非対称） | 絞り込みの影響を受けない Kyou詳細ペインで確認する |
@@ -75,9 +75,9 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 
 ## テストファイル一覧
 
-### E2E テスト（52 specファイル, 268テスト宣言）
+### E2E テスト（52 specファイル, 265テスト宣言）
 
-#### ページ表示・ナビゲーション系（14ファイル）
+#### ページ表示・ナビゲーション系（16ファイル）
 
 | ファイル | テスト対象ルート |
 |---------|----------------|
@@ -86,12 +86,12 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/mi-board.spec.ts` | `/mi` — タスクボード、JS エラーチェック、レスポンシブ、FAB |
 | `src/client/__tests__/e2e/rykv.spec.ts` | `/rykv` — JS エラーチェック、モバイルビューポート、URL永続化 |
 | `src/client/__tests__/e2e/mkfl.spec.ts` | `/mkfl` — ファイル管理 |
-| `src/client/__tests__/e2e/playing.spec.ts` | `/playing` — 計画ビュー |
+| `src/client/__tests__/e2e/playing.spec.ts` | `/playing` — 実行中（アクティブ打刻一覧） |
 | `src/client/__tests__/e2e/settings.spec.ts` | `/saihate` — 設定画面コンテンツ、JS エラーチェック、インタラクティブ操作 |
 | `src/client/__tests__/e2e/kyou-list.spec.ts` | `/kyou` — レコード一覧 |
 | `src/client/__tests__/e2e/share-page.spec.ts` | `/shared_page` — 不正な共有IDでエラーが表示され、読み込み中のまま止まらないこと（返る内容の網羅はGo側 handle_get_shared_kyous_test.go） |
-| `src/client/__tests__/e2e/kyou-export-html.spec.ts` | 「HTML で出力」。出来上がった HTML そのものを見る（**読み込み時に gkill を取りに行く形が残っていないこと**・通信を全部止めても画面が出て読み込み中のまま固まらないこと・メディアを埋め込まない指定と同名フォルダの組み合わせが弾かれること）。組み立ての中身は Go 側 handle_export_kyou_html_test.go / export_html_render_test.go が見る。PATH 上の gkill_server が出力の API を持たないビルドでは飛ばす |
-| `src/client/__tests__/e2e/mi-export-html.spec.ts` | タスク画面（mi）の「HTML で出力」。**焼き込みの印で mi として開けること**（`"screen":"mi"` が乗る・`file://` で開いて `.mi_view_wrap` と板の見出しが出る・読み込み中のまま止まらない・通信を一本もしない・未知の画面を弾く）。印が落ちると rykv として開き、例外もエラーも出ない。画面に依らない約束は kyou-export-html.spec.ts が見る |
+| `src/client/__tests__/e2e/kyou-export-html.spec.ts` | 「HTML で出力」。出来上がった HTML そのものを見る（**読み込み時に gkill を取りに行く形が残っていないこと**・通信を全部止めても `file://` で画面が出て読み込み中のまま固まらないこと・読み込めない画像が無いこと）。組み立ての中身と不正オプションの拒否は Go 側 handle_export_kyou_html_test.go / export_html_render_test.go が見る。PATH 上の gkill_server が出力の API を持たないビルドでは飛ばす |
+| `src/client/__tests__/e2e/mi-export-html.spec.ts` | タスク画面（mi）の「HTML で出力」。**焼き込みの印で mi として開けること**（`"screen":"mi"` が乗る・`file://` で開いて `.mi_view_wrap` と板の見出しが出る・読み込み中のまま止まらない・通信を一本もしない）。印が落ちると rykv として開き、例外もエラーも出ない。画面に依らない約束は kyou-export-html.spec.ts が見る |
 | `src/client/__tests__/e2e/shared-mi.spec.ts` | `/shared_mi` — 旧URL。ルータの redirect で `/shared_page` へ引き継がれること（コンポーネントは無い。setup から `router.replace` すると初回ナビゲーションが完了しなくなる） |
 | `src/client/__tests__/e2e/register-first-account.spec.ts` | `/register_first_account` — 初回アカウント登録 |
 | `src/client/__tests__/e2e/set-new-password.spec.ts` | `/set_new_password` — パスワード再設定 |
@@ -112,7 +112,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴 |
 | `src/client/__tests__/e2e/mi-re-kyou.spec.ts` | MiReKyou（既存Kyouのタスク化）: rykvのコンテキストメニュー「タスクにする」→Mi画面に出る。API面はGo側の TestHandleAddMiReKyou_* 系へ移管 |
 
-#### 認証・ユースケース・設定系（25ファイル）
+#### 認証・ユースケース・設定系（27ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -141,10 +141,10 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/dialog-autofocus.spec.ts` | ダイアログを開いたら最初のテキスト入力欄にカーソルが載ること（選び方の判定そのものは `unit/classes/dialog-autofocus.test.ts`） |
 | `src/client/__tests__/e2e/sample-data-smoke.spec.ts` | 配布サンプルデータの起動スモーク。run-e2e.mjs がサンプルデータのコピーを home にした gkill_server を別ポートで起動し（URL は `GKILL_E2E_SAMPLE_URL`）、embed 配信のフロントエンドへ README 記載の資格情報でログインして rykv に記録が出ること。ログインはレート制限を消費するので1回だけ |
 | `src/client/__tests__/e2e/skills.spec.ts` | スキル（ADR-0634）の画面の一巡: 設定 → スキル → zip をアップロード（確認 → 適用）→ 一覧 → 表示 → ダウンロード → 同じ名前で上げ直すと「変わる・消える」が確認に出る → 削除。zip はテストの中で組み立てる（バイナリのフィクスチャをコミットしない） |
-| `src/client/__tests__/e2e/plugin-config.spec.ts` | プラグイン設定の導線（ADR-0714）: 設定 → サーバ設定 → アカウント管理 → 行の「プラグイン設定」。記録のコンテキストメニューからは撤去したのでここが唯一の入口。E2E のホームにプラグインは置かないので、5枚目のダイアログまで開いて「プラグインはまだありません」が出るところまでを見る |
+| `src/client/__tests__/e2e/plugin-config.spec.ts` | プラグイン設定の導線（ADR-0714）: 管理者は設定 → サーバ設定 → アカウント管理 → 行の「プラグイン設定」で5枚目のダイアログまで開いて「プラグインはまだありません」が出ること、一般利用者には設定画面に「サーバ設定」ボタンが出ないこと |
 | `src/client/__tests__/e2e/user-content-sandbox.spec.ts` | 取り込んだ HTML ファイルを `/files/` で開くと、中のスクリプトは動くが `document.cookie` と `localStorage` は例外になること（ADR-0711。CSP は `sandbox allow-scripts allow-downloads allow-modals` で `allow-same-origin` 無し）。合成の HTML を `/api/upload_files` で `Files` rep へ上げて開く。拡張子ごとのヘッダの値は Go の `handle_file_serve_test.go` / `handle_zip_cache_file_serve_test.go` が固定する |
 
-### Composable ユニットテスト（71ファイル）
+### Composable ユニットテスト（75ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -160,11 +160,15 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/struct-element-description.test.ts` | 設定ツリー6本（タグ / 記録保管場所 / 記録種別 / プロファイル / 板 / メモ帳テンプレート）の要素追加・編集 Composable。表駆動で `apply()` が「説明」を詰め直すこと、板の要素編集が説明以外の欄（key / name / children / is_dir / check_when_inited）を保つこと、板の編集ダイアログはルート行では開かないこと |
 | `src/client/__tests__/unit/composables/edit-mi-board-struct-element-dialog.test.ts` | 板の要素編集ダイアログ Composable。`show(struct)` が編集対象を載せて開き、`hide()` と Escape が history 駆動の閉じ方（`close_dialog_via_history`）に流れること |
 | `src/client/__tests__/unit/composables/idf-kyou-view.test.ts` | IDFKyou ビュー Composable（Markdown リッチ表示、拡張子判定、相対リンクの対象記録解決、動画の preload: 詳細ペイン・ダイアログは `metadata` で再生前から全体の長さを出し、一覧は `none` のまま。描画した `<video>` の属性まで見る） |
-| `src/client/__tests__/unit/composables/export-kyou-html-view.test.ts` | 「HTML で出力」ダイアログの中身（既定値、**「埋め込まない」へ変えると選択済みの同名フォルダが単一 HTML へ戻ること**（disabled だけだと選択済みの値が送信まで残る）、フォーカス列だけの出力、列の条件を作り直さずそのまま渡すこと、単一 HTML と ZIP の保存、エラーのときは保存も close もしないこと、出力中に二重に投げないこと） |
+| `src/client/__tests__/unit/composables/export-kyou-html-view.test.ts` | 「HTML で出力」ダイアログの中身（既定値、**「埋め込まない」へ変えると選択済みの同名フォルダが単一 HTML へ戻ること**、フォーカス列だけの出力、列の条件を作り直さずそのまま渡すこと、rykv / mi による `screen`・`include_dnote`/`include_map`・対象文言の切り替え、単一 HTML と ZIP の保存、警告の `level=warning` 通知、待機中・出力中の `cancel()`、予算 0/NaN の既定値フォールバック、エラーのときは保存も close もしないこと、出力中に二重に投げないこと） |
+| `src/client/__tests__/unit/composables/export-kyou-html-dialog.test.ts` | 「HTML で出力」ダイアログ（`useExportKyouHTMLDialog`）。出力中は `hide()` も履歴の `canClose` も閉じるのを止め、終われば閉じられる |
+| `src/client/__tests__/unit/composables/share-kyou-list-dialog.test.ts` | 共有ダイアログ（`useShareKyouListDialog`）。`show()` のたびに入口（`menu`）へ戻ること、「HTML エクスポート」が自分を閉じて `requested_export_kyou_html` を上げること（出力ダイアログはラッパが持つ） |
+| `src/client/__tests__/unit/composables/rykv-detail-pane-metrics.test.ts` | rykv の詳細ペインと Ryuu の寸法（`useRykvDetailPaneMetrics`）。Ryuu の定義が空なら高さを全部詳細ペインへ、あれば 20% を Ryuu へ配り、幅 600px 以下では箱の幅いっぱいを使う（100vw を使わない） |
+| `src/client/__tests__/unit/composables/mi-columns-export-guards.test.ts` | 出力 Mi（`useMiColumns`）の書き込み・空列防止ガード（`enable_open_board_column: false` で既開の板へフォーカス移動でき未開の板は増やさないこと、`enable_board_drag_drop: false` で `onDropBoardTask` が書き込み API を呼ばずドロップの中身も読まないこと） |
 | `src/client/__tests__/unit/composables/re-kyou-view.test.ts` | ReKyou ビュー Composable（元の記録の解決、リポスト自身のメニュー表示） |
 | `src/client/__tests__/unit/composables/mi-re-kyou-view.test.ts` | MiReKyou ビュー Composable（既存記録のタスク化。タイトルを持たず target_id 先の内容を表示する） |
 | `src/client/__tests__/unit/composables/gps-log-map.test.ts` | GPSログ地図ビュー Composable |
-| `src/client/__tests__/unit/composables/exported-kyou-page.test.ts` | 「HTML で出力」した画面の入口。HTML 自身へ焼き込まれた JSON（`<script type="application/json">`）から読むこと、差し込みが無い・`{}` だけ・壊れた JSON のいずれでも例外を投げず「記録が含まれていません」側へ落ちること、ロケールの差し込みが無い／壊れていても落ちないこと |
+| `src/client/__tests__/unit/composables/exported-kyou-page.test.ts` | 「HTML で出力」した画面の入口。HTML 自身へ焼き込まれた JSON（`<script type="application/json">`）から読むこと、`screen` 印（rykv / mi）の読み分け（印が mi なら板ツリーも組む・印が無ければ rykv）、サイドバーの木を焼いた記録とチェック済みの項目だけで組み直すこと、差し込みが無い・`{}` だけ・壊れた JSON のいずれでも例外を投げず「記録が含まれていません」側へ落ちること、ロケールの差し込みが無い／壊れていても落ちないこと |
 | `src/client/__tests__/unit/composables/kyou-count-calendar.test.ts` | Kyou件数カレンダー Composable |
 | `src/client/__tests__/unit/composables/overlay-and-ur-log-view.test.ts` | オーバーレイ表示と URLog ビュー Composable |
 | `src/client/__tests__/unit/composables/kyou-view.test.ts` | Kyou ビュー Composable（ReKyou / MiReKyou の参照先を読み込み中はゼロ値の日時を出さず、読み込み中として扱う） |
@@ -218,7 +222,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/unit/composables/tutorial-on-startup.test.ts` | 起動時チュートリアルは起動時に1回だけ（`application_config` の ref 差し替えで再発火しないこと） |
 | `src/client/__tests__/unit/composables/manage-skill-list-dialog.test.ts` | スキル管理ダイアログ（`use-manage-skill-list-dialog` / `use-browse-skill-files-dialog`。ADR-0634）。アップロードは1段目が `dry_run` だけを送って計画を確認ダイアログへ出し、2段目の「適用」は**同じ zip** を `dry_run=false` で送って一覧を読み直す（二度目は何もしない）。サーバが断った zip は確認に進まない、削除はスキル丸ごと（path を空）、ダウンロードは base64 の zip を Blob にして保存、ファイル閲覧は SKILL.md から始めバイナリは読みに行かず、応答が追い越しても最後に選んだファイルを出す |
 | `src/client/__tests__/unit/composables/dashboard-view-date-navigation.test.ts` | useDashboardView の表示日の移動。地図の日付ピッカー（`requested_change_map_date`）で選んだ日を `go_date` が表示日ごとその日の 0 時へ移し、Dnote・Mi リスト・地図が従う両端と日付表示がそろうこと、`go_today` で今日へ戻れること、`dashboard-view.vue` の配線（ソース走査）。`go_date` の中身を消しても型検査は通り「ピッカーで日を選んでも何も起きない」がエラー無しで起きる |
-| `src/client/__tests__/unit/composables/rykv-view-map-date-picker.test.ts` | useRykvView の地図の日付ピッカーの受け口（`onGpsLogMapRequestedChangeDate`）。地図に映す日（開始・終了・マーカー）だけを切り替え、`focused_time` も検索条件も一覧も動かさないこと。対照として `requested_focus_time` の受け口はフォーカス列をスクロールし地図の日を動かさないこと、`rykv-view.vue` で2つの受け口を取り違えていないこと（ソース走査） |
+| `src/client/__tests__/unit/composables/rykv-view-map-date-picker.test.ts` | useRykvColumns の地図の日付ピッカーの受け口（`onGpsLogMapRequestedChangeDate`）。地図に映す日（開始・終了・マーカー）だけを切り替え、`focused_time` も検索条件も一覧も動かさないこと。対照として `requested_focus_time` の受け口はフォーカス列をスクロールし地図の日を動かさないこと、`rykv-columns-view.vue` で2つの受け口を取り違えていないこと（ソース走査） |
 
 ### ルーターテスト
 

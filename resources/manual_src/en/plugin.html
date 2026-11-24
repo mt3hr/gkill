@@ -48,7 +48,7 @@
     </tr>
     <tr>
       <td>VRChat</td>
-      <td>VRChat logs. They become the worlds you were in and for how long (timestamps and bookmarks), the people in the same room and for how long (timestamps), and your own avatar changes and the URLs of videos played (memos). VRChat deletes old logs after a few days, so copy them somewhere else before they disappear and add that location to the sources as well</td>
+      <td>VRChat logs. They become the worlds you were in and for how long (timestamps and bookmarks), the people in the same room and for how long (timestamps), the URLs of videos played (bookmarks), and your own avatar changes (memos). VRChat deletes old logs after a few days, so copy them somewhere else before they disappear and add that location to the sources as well</td>
     </tr>
   </table>
   <div class="tip">
@@ -58,7 +58,7 @@
   <h2>How to install</h2>
   <p>Installing a plugin means putting files in place. Follow the steps in order.</p>
   <ol>
-    <li>Put the plugin executable in the <code>plugins</code> folder inside the gkill home folder. The exact place is a folder named after your user ID, then a folder named after the plugin, both created under <code>plugins</code>.</li>
+    <li>Put both the plugin executable and <code>manifest.json</code> in the <code>plugins</code> folder inside the gkill home folder. The exact place is a folder named after your user ID, then a folder named after the plugin, both created under <code>plugins</code> (folders without <code>manifest.json</code> are skipped; for bundled plugins, you can generate it with <code>&lt;executable&gt; --gkill-print-manifest &gt; manifest.json</code>).</li>
     <li>Start gkill. The first time the plugin is loaded, a settings file named <code>config.json</code> is created automatically in the same folder.</li>
     <li>Open <code>config.json</code> in a text editor and write the folder that holds the data you want to import into <code>source_dirs</code>.</li>
     <li>Search in the <a href="rykv.html">Life Log View</a> and the records appear in the list just like any other record.</li>
@@ -92,14 +92,14 @@
     </tr>
     <tr>
       <td>When you leave it empty</td>
-      <td>ChatGPT and Claude.ai look in the plugin folder; ClaudeCode, Codex and Antigravity each look where their own tool stores its logs by default; VRChat looks where VRChat writes its logs by default</td>
+      <td>ChatGPT and Claude.ai look in the plugin folder; ClaudeCode, Codex, Antigravity, and VRChat each look where their own tool stores its logs by default; Fitbit, GoogleLocation, and Gemini look in their default folders under your home folder (ArchivedGit does not read anything when left empty)</td>
     </tr>
   </table>
   <h3>When you import data from ChatGPT or Claude.ai</h3>
   <p>For ChatGPT and Claude.ai conversation history, <strong>leave the ZIP file you downloaded from each service as it is and just put it in a folder</strong>. JSON files you have extracted from it are not read.</p>
   <p>In <code>source_dirs</code>, write the folder that holds the ZIP file. You may also write the path of the ZIP file itself. If you add a newly downloaded ZIP to the same folder, only the newer copy of each conversation is used, and conversations that exist only in the older ZIP stay as they are.</p>
   <h3>When you import data from Google Takeout</h3>
-  <p>For health data and location history, <strong>leave the ZIP file you downloaded from Google Takeout as it is and just put it in a folder</strong>. Folders you have unzipped yourself are not read.</p>
+  <p>For the three Google Takeout plugins — health data (Fitbit), location history (GoogleLocation), and Gemini conversations — <strong>leave the ZIP file you downloaded from Google Takeout as it is and just put it in a folder</strong>. Folders you have unzipped yourself are not read.</p>
   <p>In <code>source_dirs</code>, write the folder that holds the ZIP file. You may also write the path of the ZIP file itself.</p>
   <table>
     <tr>
@@ -206,7 +206,7 @@
       <td>The reason is kept in <code>gkill_plugin_&lt;plugin name&gt;_error.log</code> in the <code>logs</code> folder of the gkill home folder. Check the source setting and that the executable can start.</td>
     </tr>
   </table>
-  <p>A plugin's activity log is written to <code>gkill_plugin_&lt;plugin name&gt;.log</code> in the <code>logs</code> folder of the gkill home folder (there are also per-level files such as <code>_error.log</code>). How detailed it is follows the log setting of gkill itself.</p>
+  <p>A plugin's activity log is written to <code>gkill_plugin_&lt;plugin name&gt;.log</code> in the <code>logs</code> folder of the gkill home folder (there are also files such as <code>_error.log</code>, which collects only the errors). How detailed it is follows the log setting of gkill itself.</p>
   <div class="tip">
     <strong>Tip:</strong> Open "Server Settings" from Settings, then "Account Management", and press "Plugin Settings" on a user&#39;s row to list that user&#39;s plugins. "Settings" on a row opens the plugin&#39;s settings screen, where you can change and save the source folders. Because the source folders decide which folders gkill may read, only an administrator can open this screen. Editing <code>config.json</code> in the plugin folder directly still works too.
   </div>

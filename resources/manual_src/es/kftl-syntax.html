@@ -1,11 +1,11 @@
 <!-- title: Referencia de sintaxis del bloc de notas -->
-  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <a href="kftl.html">Bloc de Notas</a> &gt; <span>Referencia de sintaxis del bloc de notas</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <a href="kftl.html">Bloc de notas</a> &gt; <span>Referencia de sintaxis del bloc de notas</span></nav>
 
 <div class="back-link"><a href="kftl.html">&larr; Volver a la ayuda del bloc de notas</a></div>
 
 <h1>Referencia de sintaxis del bloc de notas</h1>
 
-<p>La sintaxis del bloc de notas es un formato de registro basado en texto utilizado en gkill. Mediante prefijos al inicio de cada línea, puede introducir varios tipos de datos a la vez. A continuacion se presentan los 19 tipos de sentencias.</p>
+<p>La sintaxis del bloc de notas es un formato de registro basado en texto utilizado en gkill. Mediante prefijos al inicio de cada línea, puede introducir varios tipos de datos a la vez. A continuacion se presentan los 20 tipos de sentencias.</p>
 
 <h2>Resumen de sentencias</h2>
 
@@ -41,7 +41,7 @@
 Fui a pasear</pre>
 
 <h3>2. Etiqueta: <code>#</code></h3>
-<p>Prefije con <code>#</code> para especificar etiquetas. Separe varias etiquetas con <code>,</code>.</p>
+<p>Prefije la línea con <code>#</code> para especificar etiquetas. Separe varias etiquetas con <code>,</code> o <code>、</code>. También puede usar el prefijo japonés <code>。</code>.</p>
 <pre>#diario,clima</pre>
 <p>Si escribe el nombre de una etiqueta que nunca ha usado e intenta guardar, se le pregunta «Es una etiqueta nueva. ¿Desea agregarla?». Es una confirmación para evitar que se acumulen etiquetas parecidas por errores de escritura.</p>
 
@@ -100,7 +100,7 @@ Sandwich
 150
 Bebida
 120</pre>
-<p>Una línea de etiqueta <code>。</code> o un bloque de texto <code>--</code> escrito después de una línea de importe se aplica <strong>solo a ese pago</strong>, de modo que cada pago puede tener los suyos.</p>
+<p>Una línea de etiqueta <code>#</code> o un bloque de texto <code>--</code> escrito después de una línea de importe se aplica <strong>solo a ese pago</strong>, de modo que cada pago puede tener los suyos.</p>
 <pre>/expense
 Tienda de conveniencia
 Sandwich
@@ -232,6 +232,6 @@ Lectura
   <h2>Documentacion relacionada</h2>
   <ul>
     <li><a href="kftl.html">Pantalla de bloc de notas</a></li>
-    <li><a href="mkfl.html">Bloc de notas con sello</a></li>
+    <li><a href="mkfl.html">Bloc de notas de tiempo</a></li>
     <li><a href="kftl-template-struct.html">Estructura de plantilla</a></li>
   </ul>

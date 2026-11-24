@@ -5,7 +5,7 @@
 | Status | Accepted |
 | Date | 2026-11-24 |
 | Sources | [ADR-0418](0418-split-rykv-views-by-mode.md)（rykv を顔ごとに分けた決定） / `.claude/skills/gkill-client-columns/SKILL.md`「rykv/mi の「列×検索」不変条件」節 / `src/client/pages/views/mi-columns-view-props.ts` の doc コメント / [ADR-0415](0415-exported-view-is-a-separate-flag.md)（出力モードのフラグ） / [ADR-0407](0407-init-on-application-config-loaded.md)（列の初期化トリガ） |
-| Supersedes | なし |
+| Supersedes | [ADR-0415](0415-exported-view-is-a-separate-flag.md) のビュー分岐部分 |
 | Superseded-by | なし |
 | Anchors | `src/client/pages/views/mi-columns-view-props.ts`、`src/client/classes/use-mi-columns.ts` の doc コメント |
 

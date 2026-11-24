@@ -42,7 +42,7 @@ Both use cobra for CLI with shared subcommands: `version`, `dvnf`, `generate_thu
 | `--cache_clear_count_limit` | `3000` | Cache item limit before clearing |
 | `--cache_update_duration` | `1m` | Cache refresh interval |
 | `--pre_load_users` | (none) | Pre-load specified users' repositories on startup |
-| `--log` | (none) | Log level: `none`, `error`, `warn`, `info`, `access`, `debug`, `trace`, `trace_sql`。プラグインの子プロセスへも環境変数 `GKILL_LOG_LEVEL` で継がれる |
+| `--log` | `error` | Log level: `none`, `error`, `warn`, `info`, `access`, `debug`, `trace`, `trace_sql`。プラグインの子プロセスへも環境変数 `GKILL_LOG_LEVEL` で継がれる |
 | `--log_rotate_max_bytes` | `33554432` (32 MiB) | 1ログファイルの上限。0以下は回転を無効化する |
 | `--log_rotate_keep` | `5` | 保持する旧世代数。0以下は旧ファイルを退避せず破棄する |
 

@@ -51,7 +51,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 
 | ファイル | 内容 | 主な読者・用途 |
 |---|---|---|
-| [glossary.md](glossary.md) | ドメイン用語の定義（101項目） | 全員。用語確認時に随時参照 |
+| [glossary.md](glossary.md) | ドメイン用語の定義（102項目） | 全員。用語確認時に随時参照 |
 | [design-philosophy.md](design-philosophy.md) | アーキテクチャ決定と設計思想 | 設計判断の背景を知りたいとき |
 | [folder-structure.md](folder-structure.md) | プロジェクトのフォルダ構成 | 初回参照、ファイル探索時 |
 | [usecase.md](usecase.md) | ユースケース一覧（95件） | 機能仕様の把握、テスト設計 |
@@ -60,7 +60,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 | [dvnf-rep-type-spec.md](dvnf-rep-type-spec.md) | DVNF命名規則・RepType仕様 | リポジトリ管理、データ型の理解 |
 | [program-spec.md](program-spec.md) | 主要プログラム仕様（初期化、DAO、API、キャッシュ） | アーキテクチャの深い理解 |
 | [plugin-system.md](plugin-system.md) | プラグインシステム仕様（stdio通信、SQLiteキャッシュ、テーマ連携、PWAキャッシュ） | プラグイン開発・カスタマイズ時 |
-| [sequence-diagrams.md](sequence-diagrams.md) | 主要処理のシーケンス図（29本: 正常系24 + 異常系5） | 処理フローの理解、デバッグ |
+| [sequence-diagrams.md](sequence-diagrams.md) | 主要処理のシーケンス図（30本: 正常系25 + 異常系5） | 処理フローの理解、デバッグ |
 | [scenario.md](scenario.md) | 利用シナリオ集（チャネル横断 end-to-end フロー・UML多数） | 実利用フローの全体理解、オンボーディング |
 | [activity-diagrams.md](activity-diagrams.md) | 処理ロジックのフローチャート | 詳細な処理手順の確認 |
 | [state-machines.md](state-machines.md) | エンティティ状態遷移図 | 状態管理ロジックの理解 |

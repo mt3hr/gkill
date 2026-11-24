@@ -96,7 +96,7 @@ KFTL構文によるテキストベースの記録入力画面。テンプレー�
 
 #### MiPage（タスク画面）`/mi`
 
-カンバンボード形式のタスク管理画面。複数のボード（`board_name`で分類）をタブ切り替えで管理する。タスクの追加・編集・完了チェック・ボード間移動・共有リンク発行が可能。フィルター（未完了/完了/全て）とソートで表示制御できる。
+カンバンボード形式のタスク管理画面。複数のボード（`board_name`で分類）をタブ切り替えで管理する。タスクの追加・編集・完了チェック・ボード間移動・共有リンク発行・HTML エクスポートが可能。フィルター（未完了/完了/全て）とソートで表示制御できる。
 
 #### RykvPage（ライフログビュー）`/rykv`
 
@@ -312,6 +312,7 @@ stateDiagram-v2
     MiReKyouContextMenu --> EditMiReKyouDialog: 編集選択
 
     BoardView --> ShareTaskListDialog: 共有ボタン
+    ShareTaskListDialog --> ExportKyouHTMLDialog: HTML エクスポート
     ShareTaskListDialog --> ShareTaskListLinkDialog: リンク表示
     ShareTaskListDialog --> DeleteShareTaskList: 削除選択
 ```
@@ -320,7 +321,7 @@ stateDiagram-v2
 
 **MiReKyou:** AddMiReKyouDialog, EditMiReKyouDialog, MiReKyouContextMenu
 
-**共有機能:** ShareTaskListDialog → ShareTaskListLinkDialog, DeleteShareTaskList
+**共有・出力機能:** ShareTaskListDialog → ExportKyouHTMLDialog / ShareTaskListLinkDialog, DeleteShareTaskList
 
 **その他:** `mi-kyou-count-calendar.vue`（記録件数カレンダー）、
 `save-clipboard-to-file-dialog.vue`（Ctrl+V でクリップボード内容をファイル保存。
@@ -367,9 +368,12 @@ stateDiagram-v2
 
 ```mermaid
 stateDiagram-v2
-    ServerConfig --> CreateAccount: アカウント作成
-    ServerConfig --> ConfirmResetPassword: パスワードリセット確認
-    ServerConfig --> ShowPasswordResetLink: リセットリンク表示
+    ServerConfig --> ManageAccount: アカウント管理
+    ManageAccount --> CreateAccount: アカウント作成
+    ManageAccount --> ConfirmResetPassword: パスワードリセット確認
+    ManageAccount --> ShowPasswordResetLink: リセットリンク表示
+    ManageAccount --> ManagePluginList: プラグイン設定（管理者専用）
+    ManagePluginList --> PluginConfig: 対象プラグインの設定
     ServerConfig --> ConfirmGenerateTLS: TLSファイル生成確認
     ServerConfig --> AddRep: Rep追加
     ServerConfig --> DeleteRep: Rep削除確認
@@ -377,7 +381,7 @@ stateDiagram-v2
     ServerConfig --> NewDeviceName: デバイス名新規作成
 ```
 
-**サーバ設定（ServerConfig）:** アカウント管理、パスワードリセット、TLS生成、Rep管理、デバイス名作成（`new-device-name-dialog.vue`）
+**サーバ設定（ServerConfig）:** アカウント管理（プラグイン設定を含む）、パスワードリセット、TLS生成、Rep管理、デバイス名作成（`new-device-name-dialog.vue`）
 
 ## 6. ファイルアップロードのダイアログ遷移
 
@@ -398,7 +402,8 @@ stateDiagram-v2
 | `help-dialog.vue` | 各ページのツールバー | ヘルプ表示 |
 | `tutorial-dialog.vue` | 各ページのツールバー | チュートリアル表示 |
 | `save-clipboard-to-file-dialog.vue` | Ctrl+V（rykv / mi / playing / dashboard） | クリップボードの内容をファイルとして保存 |
-| `plugin-config-dialog.vue` | `plugin-html-view.vue` | プラグイン設定。プラグイン Kyou のコンテキストメニュー「プラグイン設定」から開く |
+| `manage-plugin-list-dialog.vue` | `manage-account-view.vue`（管理者専用） | 対象アカウントのプラグイン一覧と設定入口（ADR-0714） |
+| `plugin-config-dialog.vue` | `manage-plugin-list-dialog.vue`（管理者専用） | プラグイン設定。管理者がアカウント管理→プラグイン設定から開く |
 
 ### KFTL の未知タグ確認
 

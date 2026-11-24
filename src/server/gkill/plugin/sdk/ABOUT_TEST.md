@@ -8,7 +8,7 @@
 `sdk.OpenSources()` の ZIP 走査、`sdk.CacheDBPath()` のキャッシュDB配置、`sdk.Query.MatchText()` のワード判定、
 `chatview` の本文 HTML（AI チャット系6本が共有する描画）、`configview` の設定画面 HTML（同梱10本が共有する描画）を検証する。
 SDK は gkill 本体と別プロセスで動くプラグイン側のライブラリなので、ここでの回帰は
-全プラグイン（archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / locationhistory / vrchat / example）に同時に波及する。
+全プラグイン（antigravity / archived_git_commit_log / chatgpt / claudeai / claudecode / codex / fitbit / gemini / locationhistory / vrchat / example）に同時に波及する。
 
 ## テストファイル
 
@@ -129,7 +129,7 @@ Google Takeout の ZIP を展開せずに読むための走査。fitbit / 位置
 
 ## chatview/ — AI チャット系プラグインの本文 HTML
 
-chatgpt / claudeai / claudecode / codex の `GetContentHTML` は、自分のログの形を `chatview.Message` へ写し、
+antigravity / chatgpt / claudeai / claudecode / codex / gemini の `GetContentHTML` は、自分のログの形を `chatview.Message` へ写し、
 描画はここが1か所で行う（[ADR-0315](../../../../../documents/adr/0315-chat-plugins-render-through-sdk-chatview.md)）。
 ここでの回帰は6本の表示に同時に出る。plugin-html-view.vue との契約（テーマ追従・サイズ通知・dblclick はクライアントが足す）も固定している。
 
@@ -194,5 +194,5 @@ cd src/server && go test ./gkill/plugin/sdk/...
 ## 関連ドキュメント
 
 - [../README.md](../README.md) — SDK の使い方
-- [../../../../plugins/ABOUT_TEST.md](../../../../plugins/ABOUT_TEST.md) — SDK を使う各プラグインのテスト（独立モジュールのため `npm test` の対象外）
+- [../../../../plugins/ABOUT_TEST.md](../../../../plugins/ABOUT_TEST.md) — SDK を使う各プラグインのテスト（独立モジュールのため `npm run test_plugins` で実行。`npm test` にも含まれる）
 - [../../../../../documents/reverse/plugin-system.md](../../../../../documents/reverse/plugin-system.md) — プラグインシステム仕様

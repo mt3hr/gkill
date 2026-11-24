@@ -24,6 +24,7 @@
     <tr><td>In Progress</td><td>Active timestamp session management</td></tr>
     <tr><td>Time Entry Notepad</td><td>Screen for memo input and active timestamp management</td></tr>
     <tr><td>Dashboard</td><td>See the selected day's aggregation, GPS map and tasks on one screen</td></tr>
+    <tr><td>Port</td><td>Arrange Life Log View, Tasks, In Progress and Dashboard in separate windows.</td></tr>
     <tr><td>Saihate</td><td>Dedicated screen for adding records without navigation (for direct launch from lock screen or home screen)</td></tr>
   </table>
 
@@ -49,6 +50,8 @@
     <tr><td>Home Hub</td><td>Quick recording from lock screen</td><td>When you want to record instantly from the lock screen or widget</td></tr>
     <tr><td>Task</td><td>Kanban board task management</td><td>When you want to organize and manage things to do</td></tr>
     <tr><td>Running</td><td>Active timestamp management</td><td>When you want to check or end active timestamps</td></tr>
+    <tr><td>Dashboard</td><td>Review a day</td><td>View totals, maps and tasks for a selected day together.</td></tr>
+    <tr><td>Port</td><td>Work with several screens</td><td>Compare screens side by side on a large computer display.</td></tr>
   </table>
   <div class="tip">
     <strong>Tip for beginners:</strong> Start by adding records with the "+" button in "Life Log View." Records you add can be reviewed right away in the Life Log View timeline.
@@ -139,7 +142,7 @@
   <h3>Search and Filtering</h3>
   <ul>
     <li><strong>Filter by tag:</strong> Display only records with a specific tag.</li>
-    <li><strong>Date range:</strong> Narrow down the period by specifying a start and end date.</li>
+    <li><strong>Date range:</strong> Choose the start and end dates in the calendar (and, if needed, a start time and an end time) to narrow down the period. Press the "×" inside a time field to empty it. To remove the period itself, press "Clear".</li>
     <li><strong>Text search:</strong> Search for records containing specific keywords.</li>
   </ul>
   <div class="tip">
@@ -209,31 +212,31 @@
   <table>
     <tr><th>Prefix</th><th>Type</th><th>Example</th></tr>
     <tr><td>(none)</td><td>Memo</td><td><code>The weather was nice today</code></td></tr>
-    <tr><td><code>.</code></td><td>Tag</td><td><code>.diary, weather</code></td></tr>
-    <tr><td><code>-mi</code></td><td>Task</td><td><code>-mi</code> followed by the title on the next line</td></tr>
-    <tr><td><code>-ta</code></td><td>Time Stamp Start</td><td><code>-ta</code> followed by the title on the next line</td></tr>
-    <tr><td><code>-e</code></td><td>Time Stamp End</td><td><code>-e</code> followed by the title on the next line</td></tr>
-    <tr><td><code>-n</code></td><td>Expense</td><td><code>-n</code> followed by store name, item, amount on subsequent lines</td></tr>
-    <tr><td><code>-ra</code></td><td>Mood</td><td><code>-ra</code> followed by a value (0-10) on the next line</td></tr>
+    <tr><td><code>#</code></td><td>Tag</td><td><code>#diary,weather</code></td></tr>
+    <tr><td><code>/mi</code></td><td>Task</td><td><code>/mi</code> followed by the title on the next line</td></tr>
+    <tr><td><code>/start</code></td><td>Time Stamp Start</td><td><code>/start</code> followed by the title on the next line</td></tr>
+    <tr><td><code>/end</code></td><td>Time Stamp End</td><td><code>/end</code> followed by the title on the next line</td></tr>
+    <tr><td><code>/expense</code></td><td>Expense</td><td><code>/expense</code> followed by store name, item, amount on subsequent lines</td></tr>
+    <tr><td><code>/mood</code></td><td>Mood</td><td><code>/mood</code> followed by a value (0-10) on the next line</td></tr>
     <tr><td><code>,</code></td><td>Separator</td><td>Splits into the next record</td></tr>
     <tr><td><code>!</code></td><td>Save</td><td>Finishes input and saves</td></tr>
   </table>
 
   <h3>Example of Batch Input for Multiple Records</h3>
   <pre>Today's diary
-.diary
+#diary
 ,
--mi
+/mi
 Go shopping
 ,
--n
+/expense
 Supermarket
 Apples
 200
 Milk
 180
 ,
--ra
+/mood
 8
 !</pre>
   <p>In this example, four records are created at once: a memo, a task, an expense, and a mood entry.</p>
@@ -253,9 +256,9 @@ Milk
 
   <h3>Example of Creating a Template</h3>
   <p>For example, to create a daily diary template:</p>
-  <pre>.diary
+  <pre>#diary
 ,
--ra
+/mood
 </pre>
   <p>Using this template, a diary framework is inserted with a single tap on the Memo Pad screen, and you only need to add the memo content and mood value to complete the record.</p>
   <div class="tip">
@@ -270,7 +273,7 @@ Milk
     </tr>
     <tr>
       <td>Time Tracking + Memo</td>
-      <td>Enter memos with timestamps. File uploads are also possible.</td>
+      <td>Use the notepad and the list of ongoing time entries together on one screen.</td>
     </tr>
     <tr>
       <td>Active Sessions</td>
@@ -281,12 +284,12 @@ Milk
       <td>Start and end time tracking via text using notepad syntax. Can be combined with other records in bulk.</td>
     </tr>
   </table>
-  <p>Using the time stamp feature, you can accurately record work time and activity durations. "Time Tracking + Memo" is a dedicated screen for memo input combined with active session management, while "Memo Pad" lets you start/end time tracking via prefixes alongside other records in bulk.</p>
+  <p>Using the time stamp feature, you can accurately record work time and activity durations. "Time Tracking + Memo" is a dedicated screen for memo input combined with active session management, while "Memo Pad" lets you start/end time tracking via the time entry prefixes (<code>/start</code>/<code>/end</code>) alongside other records in bulk.</p>
 
   <h3>Basic Time Stamp Operations</h3>
   <ol>
-    <li><strong>Start:</strong> Use the <code>-ta</code> prefix in Memo Pad, or add a time stamp from the "+" menu. Specify a title and start time.</li>
-    <li><strong>End:</strong> Use the <code>-e</code> prefix in Memo Pad, or enter the end time in the time stamp edit screen. The time stamp with the matching title will be ended.</li>
+    <li><strong>Start:</strong> Use the <code>/start</code> prefix in Memo Pad, or add a time stamp from the "+" menu. Specify a title and start time.</li>
+    <li><strong>End:</strong> Use the <code>/end</code> prefix in Memo Pad, or enter the end time in the time stamp edit screen. The time stamp with the matching title will be ended.</li>
   </ol>
 
   <h3>Managing Active Time Stamps</h3>
@@ -296,7 +299,7 @@ Milk
     <li>Tap to set the end time.</li>
   </ul>
   <div class="tip">
-    <strong>Tip:</strong> Using the memo pad syntax <code>-ie</code>, no error will occur even if there is no matching time stamp. You can safely end without existence checking.
+    <strong>Tip:</strong> Using the memo pad syntax <code>/end?</code>, no error will occur even if there is no matching time stamp. You can safely end without existence checking.
   </div>
 
   <h2>10. Analyzing Data with the Aggregation View</h2>
@@ -390,6 +393,10 @@ Milk
     <li>If the link is no longer valid, please contact the sender.</li>
   </ul>
 
+  <div class="tip">
+    <strong>You can also hand it over as an HTML file:</strong> When you want someone to see your records even where gkill is not running, choose "Export HTML" from "Share" in the share footer. This writes an HTML file that can be opened with just a browser. For details, see the help for the <a href="rykv.html">Life Log View</a> and <a href="mi.html">Tasks</a> screens.
+  </div>
+
   <h2>13. Data Backup and Management</h2>
 
   <h3>Server Settings (For Administrators)</h3>
@@ -409,7 +416,7 @@ Milk
     <strong>Tip:</strong> It is recommended to back up regularly. The <code>datas/</code> and <code>configs/</code> directories are particularly important. The <code>caches/</code> and <code>logs/</code> directories are rebuilt on startup, so you do not need to include them.
   </div>
   <div class="tip">
-    <strong>Note:</strong> Repository locations can also be set outside the home directory. If you use files placed in external folders (files placed in external folders, Git commit histories, databases located outside, etc.), copying only the home directory will miss them. Be sure to include the location of every configured repository in your backup as well, captured at the same point in time as the rest.
+    <strong>Note:</strong> Storage locations can also be set outside the home directory. If you import files placed in external folders, Git commit histories and the like, copying only the home directory will miss them. Be sure to include the location of every storage you have configured in your backup as well, at the same time as the rest.
   </div>
   <div class="tip">
     <strong>Verify restoration:</strong> A backup only counts once it can be restored. From time to time, actually restore it to a location separate from your live setup, start gkill, and confirm that it launches and your records are searchable. This lets you catch missing files or inconsistencies before you ever need the backup.

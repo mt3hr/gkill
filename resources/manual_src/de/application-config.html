@@ -15,7 +15,7 @@
     </tr>
     <tr>
       <td>Neu laden</td>
-      <td>Aktualisiert die Daten vom Server. Langes Drücken erzwingt ein vollständiges Neuladen.</td>
+      <td>Lädt die Daten erneut vom Server. <strong>Langes Drücken:</strong> erzwingt ein vollständiges Neuladen.</td>
     </tr>
     <tr>
       <td>Abmelden</td>
@@ -70,7 +70,7 @@
       <td>Legt die Anzahl der Tage fest, die in der Lebensprotokoll-Ansicht angezeigt werden. -1 für unbegrenzt. Ein kürzerer Zeitraum lädt schneller.</td>
     </tr>
     <tr>
-      <td>Standardseite</td>
+      <td>Standardansicht beim Start</td>
       <td>Dropdown</td>
       <td>Wählen Sie die Seite, die nach der Anmeldung angezeigt wird.</td>
     </tr>
@@ -80,9 +80,9 @@
       <td>Legt die Anzahl der Spalten für das Miniaturbildraster in der Lebensprotokoll-Ansicht fest. Passen Sie es an Ihre Bildschirmgröße an.</td>
     </tr>
     <tr>
-      <td>Standard-Aufgabentafel</td>
-      <td>Dropdown + Hinzufuegen-Schaltfläche</td>
-      <td>Legt die Standardtafel im Aufgabenbildschirm fest. Verwenden Sie die Hinzufuegen-Schaltfläche, um neue Tafeln zu erstellen.</td>
+      <td>Standard-Boardname für Aufgaben</td>
+      <td>Dropdown + Hinzufügen-Schaltfläche</td>
+      <td>Wählt das Board, das im Aufgabenbildschirm zuerst angezeigt wird. Mit der Hinzufügen-Schaltfläche können Sie ein neues Board anlegen.</td>
     </tr>
   </table>
 
@@ -106,7 +106,7 @@
   </table>
 
   <h2>Datenstrukturverwaltung</h2>
-  <p>Diese Schaltflächen öffnen spezielle Editoren zur Verwaltung der Organisation Ihrer Daten.Diese Strukturen werden auf allen Geräten gemeinsam genutzt, während das Standard-Aufgabenboard eine geräteabhängige Einstellung ist. Jeder Eintrag und Ordner dieser Strukturen kann eine Beschreibung tragen: Schreiben Sie auf, wofür er ist und wie Sie ihn nutzen, und die KI-Anbindung (MCP) liest sie als Hinweis beim Suchen von Einträgen.</p>
+  <p>Diese Schaltflächen öffnen spezielle Editoren zur Verwaltung der Organisation Ihrer Daten. Diese Strukturen werden auf allen Geräten gemeinsam genutzt, während „Standard-Boardname für Aufgaben“ eine Einstellung pro Gerät ist. Jeder Eintrag und Ordner dieser Strukturen kann eine Beschreibung tragen: Schreiben Sie auf, wofür er ist und wie Sie ihn nutzen, und die KI-Integration liest sie als Hinweis beim Suchen von Einträgen.</p>
   <table>
     <tr>
       <th>Schaltfläche</th>
@@ -114,19 +114,19 @@
     </tr>
     <tr>
       <td>Tag-Struktur</td>
-      <td>Verwaltet die Tag-Hierarchie und Tag-Gruppierungen. Sie können Tags erstellen, umbenennen, neu anordnen und in Eltern-Kind-Beziehungen organisieren.</td>
+      <td>Verwaltet die Hierarchie und Gruppierung der Tags. Sie können die Eltern-Kind-Beziehungen und die Reihenfolge der Tags bearbeiten.</td>
     </tr>
     <tr>
       <td>Ablagestruktur</td>
-      <td>Verwaltet Datenspeicherorte und Ablagen. Sie können hinzufuegen, entfernen oder konfigurieren, wo Datensätze gespeichert werden.</td>
+      <td>Verwaltet Gruppierung, Reihenfolge und anfänglichen Auswahlzustand der in der Suchseitenleiste angezeigten Ablagen (das Hinzufügen oder Löschen eigentlicher Ablagen erfolgt unter Servereinstellungen → Kontoverwaltung).</td>
     </tr>
     <tr>
       <td>Profilstruktur</td>
       <td>Verwaltet die Einstellungen für jedes genutzte Gerät (Profile). Reihenfolge und Gruppierung lassen sich bearbeiten.</td>
     </tr>
     <tr>
-      <td>Datensatztyp-Struktur</td>
-      <td>Verwaltet, welche Datensatztypen in welchen Repositories gespeichert werden.</td>
+      <td>Datensatztypstruktur</td>
+      <td>Verwaltet Gruppierung, Reihenfolge und anfänglichen Auswahlzustand der in der Suchseitenleiste angezeigten Datensatztypen.</td>
     </tr>
     <tr>
       <td>Board-Struktur</td>
@@ -141,7 +141,7 @@
       <td>Verwaltet Datenaggregation und Konfigurationen der Zusammenfassungsansichten.</td>
     </tr>
     <tr>
-      <td>Zugehörige Informationen</td>
+      <td>Verwandte Informationen</td>
       <td>Verwaltet die Strukturen zugehöriger Informationen.</td>
     </tr>
     <tr>
@@ -168,11 +168,11 @@
     </tr>
     <tr>
       <td>Anwenden</td>
-      <td>Speichert alle Aenderungen.</td>
+      <td>Speichert alle Änderungen.</td>
     </tr>
     <tr>
       <td>Abbrechen</td>
-      <td>Verwirft Aenderungen und schließt den Bildschirm.</td>
+      <td>Verwirft die Änderungen und schließt den Bildschirm.</td>
     </tr>
   </table>
 
@@ -185,15 +185,15 @@
   </ul>
 
   <div class="tip">
-    <strong>Tipp:</strong> Drücken Sie nach dem Aendern der Einstellungen auf "Anwenden", um zu speichern. Drücken Sie "Abbrechen", um alle Aenderungen zu verwerfen.
+    <strong>Tipp:</strong> Drücken Sie nach dem Ändern der Einstellungen auf „Anwenden“, um zu speichern. Mit „Abbrechen“ werden die Änderungen verworfen.
   </div>
 
   <div class="tip">
-    <strong>Tipp:</strong> Für Smartphones stellen Sie die Bildspalten auf 1-2 ein. Für Desktop-Bildschirme eignen sich 3-5 Spalten gut.
+    <strong>Tipp:</strong> Auf Smartphones lässt sich die Ansicht mit 1–2 Bildspalten der Lebensprotokoll-Ansicht gut lesen, am PC mit 3–5 Spalten.
   </div>
 
   <div class="tip">
-    <strong>Tipp:</strong> Um GPS-Kartenfunktionen zu nutzen, aktivieren Sie die Maps JavaScript API in der Google Cloud Console und geben Sie den API-Schlüssel unter Externe Integration ein.
+    <strong>Tipp:</strong> Um GPS-Kartenfunktionen zu nutzen, aktivieren Sie die Maps JavaScript API in der Google Cloud Console, besorgen Sie sich einen Google Map API-Schlüssel und tragen Sie ihn ein.
   </div>
   <h2>Verwandte Dokumente</h2>
   <ul>

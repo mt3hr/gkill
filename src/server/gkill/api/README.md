@@ -17,10 +17,10 @@ api/
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
 ├── *_test.go                    # 検索フィルタ・rep名絞り込みなどのテスト（15ファイル）
-├── gkill_server_api/            # HTTP ハンドラ（184ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（187ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
-│   ├── serve.go                 # gorilla/mux ルーター設定・ルート表 apiRoutes() の全97ルートを登録
+│   ├── serve.go                 # gorilla/mux ルーター設定・ルート表 apiRoutes() の全99ルートを登録
 │   ├── close.go                 # サーバ終了処理
 │   ├── auth.go                  # 認証処理
 │   ├── auth_context.go          # 認証コンテキスト
@@ -56,7 +56,7 @@ api/
 
 ## サブディレクトリ
 
-### `gkill_server_api/`（184ファイル）— HTTP ハンドラ
+### `gkill_server_api/`（187ファイル）— HTTP ハンドラ
 
 詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
 
@@ -113,7 +113,7 @@ handle_*.go は124ファイル（実装100 + テスト24）で、1ハンドラ1�
 | `gkill_error_test.go` | `EnsureNotEmpty` のテスト |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
 | `error_codes.go` | エラーコード定数（415定数、ERR000001〜ERR000456・欠番41。うち37は存在しないエンドポイントのコードを 2026-09-14 に削除したもの。ADR-0709） |
-| `message_codes.go` | メッセージコード定数（88定数、MSG000001〜MSG000093・欠番7） |
+| `message_codes.go` | メッセージコード定数（89定数、MSG000001〜MSG000093・欠番7） |
 | `http_status.go` | エラーコード → HTTP ステータス対応表（`HTTPStatusOf` / `HTTPStatusForErrors`） |
 | `http_status_test.go` | 全エラーコードが対応表に載っていることのソース走査テスト |
 | `message_test.go` | コード形式テスト |

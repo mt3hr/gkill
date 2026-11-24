@@ -127,7 +127,7 @@ JVM テストが実行機の OS 言語で変わる）で、`LoginRequest` を含
 ## 関連スキル
 
 - [gkill-go-backend](../gkill-go-backend/SKILL.md) — サーバ側の冪等ストアと HTTP セキュリティ、SQLite の 'localtime' と Go の time.Local の関係
-- [gkill-build-test](../gkill-build-test/SKILL.md) — ビルドパイプライン（embed 3コピー）
+- [gkill-build-test](../gkill-build-test/SKILL.md) — ビルドパイプライン（embed 4コピー）
 - [gkill-client-kftl](../gkill-client-kftl/SKILL.md) — KFTL の接頭辞と行の解釈（ウォッチが組み立てるテキストの受け手）
 
 ## 詳しい設計と却下案（ADR）

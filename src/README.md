@@ -26,7 +26,7 @@ gkill はライフログアプリケーション。テキストメモ、ブッ�
 │  //go:embed  (1バイナリに埋め込み)         │
 ├─────────────────────────────────────────┤
 │  バックエンド (Go + gorilla/mux)         │  ← src/server/
-│  ・99 POST API エンドポイント             │
+│  ・98 POST + 1 GET API エンドポイント    │
 │  ・SQLite3 (pure Go)                      │
 │  ・cobra CLI                             │
 ├─────────────────────────────────────────┤
@@ -137,7 +137,8 @@ npm run go_install
 5. `locales/` → `server/gkill/api/embed/i18n/locales/` にコピー
 6. `build_manuals`（`resources/manual_src/` → `resources/manual/`）
 7. `resources/manual/` → `server/gkill/api/embed/manual/` にコピー
-8. `go install`
+8. `build_export_template`（`vite.export.config.ts` で単一ファイル HTML ガワを生成 → `server/gkill/api/embed/export/` にコピー）
+9. `go install`
 
 **前提条件:**
 - Go 1.26.11+（`src/server/go.mod` が `go 1.26.11`）、Node.js 20.19+（24.x推奨）
@@ -150,6 +151,7 @@ npm run go_install
 | `dev.mjs` | `npm run dev` のラッパー。`--api` を `GKILL_API_PROXY_TARGET` に変換して Vite に渡す |
 | `manual_build.mjs` | マニュアル生成の共有ロジック（`manual_src` のフラグメント + `_layout.html`） |
 | `build_manuals.mjs` | `resources/manual_src/` → `resources/manual/` の書き出し |
+| `build_export_template.mjs` | HTML 出力用の単一ファイルガワをビルドし `embed/export/` へ配置する |
 | `manual_a11y.mjs` | マニュアル HTML のアクセシビリティ補正（`<caption>` 付与・`th` の `scope` 等） |
 | `manual_ascii_fix.mjs` | マニュアル原稿の記号正規化 |
 | `extract_manual_src.mjs` | 生成済みマニュアルから `manual_src` フラグメントを抽出（移行用） |
@@ -160,6 +162,9 @@ npm run go_install
 | `attestation.mjs` | attestation の共有ライブラリ（git ヘルパ・記録・評価関数・GitHub API） |
 | `put_version_info.mjs` | `npm run put_version_info_embed` の実体（`version.json`。`tree_hash` を含む） |
 | `test_plugins.mjs` | `npm run test_plugins` / `npm run vet_plugins` の実体。`src/plugins/` 配下の各 Go モジュール（独立プラグイン）へ `go test` / `go vet` を回す |
+| `gradle_test.mjs` | `npm run test_android` / `npm run test_wear_os` の実体（Gradle ラッパーの OS 吸収） |
+| `npm_audit_gate.mjs` | Nightly の npm audit 判定ゲート（`npm_audit_allowlist.json` の例外適用） |
+| `codeql.mjs` | `npm run codeql` の実体（CI 相当設定でのローカル CodeQL 実行） |
 | `license_getter.mjs` | 依存ライブラリのライセンス一覧を生成する（`npm run license_getter`） |
 
 ## 開発ガイドライン
@@ -200,7 +205,7 @@ npm run go_install
 新しいデータ型を追加する場合、以下の全箇所に実装が必要:
 
 1. **サーバ DAO**: `dao/reps/` に8ファイル（エンティティ + 4層リポジトリ）
-2. **サーバ API**: `api/req_res/` にリクエスト/レスポンス、`gkill_server_api.go` にハンドラ
+2. **サーバ API**: `api/req_res/` にリクエスト/レスポンス、`api/gkill_server_api/handle_*.go` にハンドラ（`gkill_server_api_address.go` のルート表 `apiRoutes()` に登録）
 3. **クライアント データモデル**: `classes/datas/` にモデル
 4. **クライアント API**: `classes/api/req_res/` に型、`gkill-api.ts` にメソッド
 5. **クライアント UI**: `pages/views/` と `pages/dialogs/` にコンポーネント
@@ -262,6 +267,7 @@ npm run go_install
 | `server/gkill/dvnf/` | [server/gkill/dvnf/ABOUT_TEST.md](server/gkill/dvnf/ABOUT_TEST.md) |
 | `server/gkill/main/` | [server/gkill/main/ABOUT_TEST.md](server/gkill/main/ABOUT_TEST.md) |
 | `server/gkill/usecase/` | [server/gkill/usecase/ABOUT_TEST.md](server/gkill/usecase/ABOUT_TEST.md) |
+| `server/gkill/plugin/sdk/` | [server/gkill/plugin/sdk/ABOUT_TEST.md](server/gkill/plugin/sdk/ABOUT_TEST.md) |
 | `plugins/` | [plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) |
 | `tools/` | [tools/ABOUT_TEST.md](tools/ABOUT_TEST.md) |
 | `server/gkill/mcp/` | [server/gkill/mcp/ABOUT_TEST.md](server/gkill/mcp/ABOUT_TEST.md) |

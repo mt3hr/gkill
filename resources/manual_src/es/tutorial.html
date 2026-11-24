@@ -12,7 +12,7 @@
   </div>
 
   <h2>Terminologia</h2>
-  <p>En gkill, los tipos de datos se llaman "tipos de registro" (Memo, Marca de tiempo, Tarea, etc.) y las pantallas de operación se llaman "nombres de pantalla" (Bloc de notas, Bloc de notas de marcas de tiempo, Tareas, etc.). Por ejemplo, "Memo" se refiere al tipo de datos de nota de texto, mientras que "Bloc de notas" se refiere a la pantalla utilizada para ingresar esos datos. Los elementos mostrados en el menú del botón "+" son nombres de pantalla para agregar cada tipo de registro.</p>
+  <p>En gkill, los tipos de datos se llaman "tipos de registro" (Memo, Marca de tiempo, Tarea, etc.) y las pantallas de operación se llaman "nombres de pantalla" (Bloc de notas, Bloc de notas de tiempo, Tareas, etc.). Por ejemplo, "Memo" se refiere al tipo de datos de nota de texto, mientras que "Bloc de notas" se refiere a la pantalla utilizada para ingresar esos datos. Los elementos mostrados en el menú del botón "+", como "Bloc de notas" o "Registro de tiempo", son nombres de pantalla para agregar cada tipo de registro.</p>
 
   <h2>Cambiar entre pantallas</h2>
   <p>Toque el <strong>titulo de la página</strong> mostrado en la barra de herramientas en la parte superior de la pantalla para abrir un menú desplegable y navegar a cada pantalla.</p>
@@ -24,6 +24,7 @@
     <tr><td>En curso</td><td>Gestión de sesiones de marcas de tiempo activas</td></tr>
     <tr><td>Bloc de notas de tiempo</td><td>Gestión simultanea de memos y marcas de tiempo activas</td></tr>
     <tr><td>Panel</td><td>Ver en una sola pantalla la agregación, el mapa GPS y las tareas del día seleccionado</td></tr>
+    <tr><td>Puerto</td><td>Pantalla para usar la Vista del registro de vida, Tareas, En curso y el Panel en varias ventanas, una al lado de otra</td></tr>
     <tr><td>Saihate</td><td>Pantalla dedicada a agregar registros sin navegación (para inicio directo desde la pantalla de bloqueo o pantalla de inicio)</td></tr>
   </table>
 
@@ -45,10 +46,12 @@
     <tr><th>Pantalla</th><th>Uso principal</th><th>Cuando usar</th></tr>
     <tr><td>Vista de registro de vida</td><td>Agregar, explorar y buscar registros</td><td>Cuando quieras agregar, revisar o buscar registros (pantalla principal de uso diario)</td></tr>
     <tr><td>Bloc de notas</td><td>Entrada de texto por lotes</td><td>Cuando quieras ingresar múltiples registros a la vez</td></tr>
-    <tr><td>Bloc de notas con marca de tiempo</td><td>Notas + gestión de marcas de tiempo</td><td>Cuando quieras registrar notas y tiempo simultaneamente</td></tr>
+    <tr><td>Bloc de notas de tiempo</td><td>Notas + gestión de marcas de tiempo</td><td>Cuando quieras registrar notas y tiempo simultaneamente</td></tr>
     <tr><td>Saihate</td><td>Registro rápido desde la pantalla de bloqueo</td><td>Cuando quieras registrar instantaneamente desde la pantalla de bloqueo o widget</td></tr>
     <tr><td>Tareas</td><td>Gestión de tareas con tablero Kanban</td><td>Cuando quieras organizar y gestionar cosas por hacer</td></tr>
     <tr><td>En curso</td><td>Gestión de marcas de tiempo activas</td><td>Cuando quieras verificar o finalizar marcas de tiempo activas</td></tr>
+    <tr><td>Panel</td><td>Revisar un día</td><td>Cuando quieras ver juntos la agregación, el mapa y las tareas de un día concreto</td></tr>
+    <tr><td>Puerto</td><td>Trabajar con varias pantallas a la vez</td><td>Cuando quieras trabajar comparando varias pantallas en el monitor amplio de un ordenador</td></tr>
   </table>
   <div class="tip">
     <strong>Consejo para principiantes:</strong> Empiece agregando registros con el botón "+" en "Vista de registro de vida." Los registros que agrege se pueden revisar directamente en la línea de tiempo de la Vista de registro de vida.
@@ -64,7 +67,7 @@
     <li>Ingrese un ID de usuario (este será su nombre de cuenta).</li>
     <li>Ingrese una contraseña y vuelva a ingresarla para confirmar.</li>
     <li>Ingrese una contraseña de administrador y confirmela (establece la contraseña de la cuenta <code>admin</code> creada automáticamente, utilizada para la administracion del servidor).</li>
-    <li>Pulse el botón "Registrar" para crear la cuenta.</li>
+    <li>Pulse el botón "Registrarse" para crear la cuenta.</li>
     <li>Será redirigido a la pantalla de inicio de sesión; inicie sesión con la cuenta que acaba de crear.</li>
   </ol>
 
@@ -139,11 +142,11 @@
   <h3>Búsqueda y filtrado</h3>
   <ul>
     <li><strong>Filtrar por etiqueta:</strong> Puede mostrar solo los registros con una etiqueta especifica.</li>
-    <li><strong>Rango de fechas:</strong> Puede especificar una fecha de inicio y una fecha de fin para acotar el período.</li>
+    <li><strong>Rango de fechas:</strong> Elija en el calendario la fecha de inicio y la de fin (y, si lo necesita, también la hora de inicio y la de fin) para acotar el período. Puede vaciar cada casilla de hora con la «×» que tiene dentro. Para quitar por completo la especificación del período, pulse «Limpiar».</li>
     <li><strong>Búsqueda de texto:</strong> Puede buscar registros que contengan una palabra clave.</li>
   </ul>
   <div class="tip">
-    <strong>Consejo:</strong> Si reduce el "Número de días de la vista de registros de vida" en la pantalla de configuración, la carga será más rápida.
+    <strong>Consejo:</strong> Si reduce los "Días de visualización del registro de vida" en la pantalla de configuración, la carga será más rápida.
   </div>
 
   <h2>5. Gestionar tareas</h2>
@@ -192,8 +195,8 @@
     <tr><th>Elemento de configuración</th><th>Descripción</th></tr>
     <tr><td>Idioma</td><td>Cambia el idioma de visualización de la interfaz.</td></tr>
     <tr><td>Tema oscuro</td><td>Cambia a una combinacion de colores oscuros.</td></tr>
-    <tr><td>Pantalla al iniciar</td><td>Selecciona la página que se muestra primero después de iniciar sesión.</td></tr>
-    <tr><td>Columnas de imágenes de la vista de registros de vida</td><td>Ajusta el número de columnas de las miniaturas de imágenes.</td></tr>
+    <tr><td>Vista por defecto al iniciar</td><td>Selecciona la página que se muestra primero después de iniciar sesión.</td></tr>
+    <tr><td>Columnas de imagen del registro de vida</td><td>Ajusta el número de columnas de las miniaturas de imágenes.</td></tr>
   </table>
   <div class="tip">
     <strong>Consejo:</strong> Después de cambiar la configuración, pulse el botón "Aplicar". Si pulsa "Cancelar", los cambios se descartaran.
@@ -209,31 +212,31 @@
   <table>
     <tr><th>Prefijo</th><th>Tipo</th><th>Ejemplo</th></tr>
     <tr><td>(ninguno)</td><td>Memo</td><td><code>Hoy hizo buen tiempo</code></td></tr>
-    <tr><td><code>.</code></td><td>Etiqueta</td><td><code>.diario, clima</code></td></tr>
-    <tr><td><code>-mi</code></td><td>Tarea</td><td><code>-mi</code> → titulo en la siguiente línea</td></tr>
-    <tr><td><code>-ta</code></td><td>Inicio de registro de tiempo</td><td><code>-ta</code> → titulo en la siguiente línea</td></tr>
-    <tr><td><code>-e</code></td><td>Fin de registro de tiempo</td><td><code>-e</code> → titulo en la siguiente línea</td></tr>
-    <tr><td><code>-n</code></td><td>Gasto</td><td><code>-n</code> → nombre de tienda, articulo, monto en las siguientes líneas</td></tr>
-    <tr><td><code>-ra</code></td><td>Estado de ánimo</td><td><code>-ra</code> → valor numérico (0-10) en la siguiente línea</td></tr>
+    <tr><td><code>#</code></td><td>Etiqueta</td><td><code>#diario,clima</code></td></tr>
+    <tr><td><code>/mi</code></td><td>Tarea</td><td><code>/mi</code> → título en la siguiente línea</td></tr>
+    <tr><td><code>/start</code></td><td>Inicio de registro de tiempo</td><td><code>/start</code> → título en la siguiente línea</td></tr>
+    <tr><td><code>/end</code></td><td>Fin de registro de tiempo</td><td><code>/end</code> → título en la siguiente línea</td></tr>
+    <tr><td><code>/expense</code></td><td>Gasto</td><td><code>/expense</code> → nombre de tienda, artículo, monto en las siguientes líneas</td></tr>
+    <tr><td><code>/mood</code></td><td>Estado de ánimo</td><td><code>/mood</code> → valor numérico (0-10) en la siguiente línea</td></tr>
     <tr><td><code>,</code></td><td>Separador</td><td>Divide en el siguiente registro</td></tr>
     <tr><td><code>!</code></td><td>Guardar</td><td>Termina la entrada y guarda</td></tr>
   </table>
 
   <h3>Ejemplo de entrada masiva de múltiples registros</h3>
   <pre>Diario de hoy
-.diario
+#diario
 ,
--mi
+/mi
 Ir de compras
 ,
--n
+/expense
 Supermercado
 manzanas
 200
 leche
 180
 ,
--ra
+/mood
 8
 !</pre>
   <p>En este ejemplo, se crean cuatro registros a la vez: un memo, una tarea, un gasto y un estado de ánimo.</p>
@@ -253,9 +256,9 @@ leche
 
   <h3>Ejemplo de creación de plantilla</h3>
   <p>Por ejemplo, para crear una plantilla de diario diario:</p>
-  <pre>.diario
+  <pre>#diario
 ,
--ra
+/mood
 </pre>
   <p>Usando esta plantilla, la estructura del diario se introduce con un solo toque en la pantalla del bloc de notas, y solo necesita agregar el contenido del memo y el valor de estado de ánimo para registrarlo.</p>
   <div class="tip">
@@ -269,11 +272,11 @@ leche
       <th>Uso</th>
     </tr>
     <tr>
-      <td>Bloc de marcas</td>
-      <td>Introducir notas con marcas de tiempo. También permite subir archivos.</td>
+      <td>Bloc de notas de tiempo</td>
+      <td>Pantalla que permite usar a la vez, en una misma pantalla, la entrada del bloc de notas y la lista de entradas de tiempo en curso.</td>
     </tr>
     <tr>
-      <td>En progreso</td>
+      <td>En curso</td>
       <td>Lista de sesiones de seguimiento de tiempo activas. Puede finalizar sesiones aquí.</td>
     </tr>
     <tr>
@@ -281,12 +284,12 @@ leche
       <td>Iniciar y finalizar seguimiento de tiempo mediante texto con sintaxis del bloc de notas. Se puede combinar con otros registros en lote.</td>
     </tr>
   </table>
-  <p>Con la función de registro de tiempo, puede registrar con precision el tiempo de trabajo y actividades. "Bloc de marcas" es una pantalla dedicada para entrada de notas con gestión simultanea de sesiones activas, mientras que "Bloc de notas" permite iniciar/finalizar seguimiento de tiempo mediante prefijos junto con otros registros en lote.</p>
+  <p>Con la función de registro de tiempo, puede registrar con precision el tiempo de trabajo y actividades. "Bloc de notas de tiempo" es una pantalla dedicada a introducir notas y gestionar a la vez las sesiones en curso, mientras que en la pantalla "Bloc de notas" puede iniciar/finalizar registros de tiempo con los prefijos (<code>/start</code>/<code>/end</code>) junto con otros registros en lote.</p>
 
   <h3>Operación básica de registros de tiempo</h3>
   <ol>
-    <li><strong>Inicio:</strong> Use el prefijo <code>-ta</code> en el bloc de notas, o agregue un registro de tiempo desde el menú "+". Especifique el titulo y la hora de inicio.</li>
-    <li><strong>Fin:</strong> Use el prefijo <code>-e</code> en el bloc de notas, o introduzca la hora de fin en la pantalla de edición del registro de tiempo. Se finalizara el registro de tiempo con el titulo coincidente.</li>
+    <li><strong>Inicio:</strong> Use el prefijo <code>/start</code> en el bloc de notas, o agregue un registro de tiempo desde el menú "+". Especifique el titulo y la hora de inicio.</li>
+    <li><strong>Fin:</strong> Use el prefijo <code>/end</code> en el bloc de notas, o introduzca la hora de fin en la pantalla de edición del registro de tiempo. Se finalizara el registro de tiempo con el titulo coincidente.</li>
   </ol>
 
   <h3>Gestionar registros de tiempo en curso</h3>
@@ -296,7 +299,7 @@ leche
     <li>Puede tocarlos para establecer la hora de fin.</li>
   </ul>
   <div class="tip">
-    <strong>Consejo:</strong> Si usa <code>-ie</code> en la sintaxis del bloc de notas, no se producira un error aunque no exista un registro de tiempo coincidente. Puede finalizarlo de forma segura sin verificacion de existencia.
+    <strong>Consejo:</strong> Si usa <code>/end?</code> en la sintaxis del bloc de notas, no se producira un error aunque no exista un registro de tiempo coincidente. Puede finalizarlo de forma segura sin verificacion de existencia.
   </div>
 
   <h2>10. Analizar datos con la vista de agregación</h2>
@@ -390,6 +393,10 @@ leche
     <li>Si el enlace ya no es valido, pongase en contacto con el remitente.</li>
   </ul>
 
+  <div class="tip">
+    <strong>También puede entregarlo como archivo HTML:</strong> Si quiere que lo vea alguien sin gkill en funcionamiento, elija «Exportar HTML» desde «Compartir» en el pie de página de compartición y obtendrá un archivo HTML que se abre solo con el navegador. Para más detalles, consulte la ayuda de la <a href="rykv.html">Vista del registro de vida</a> o de la <a href="mi.html">pantalla de tareas</a>.
+  </div>
+
   <h2>13. Copia de seguridad y gestión de datos</h2>
 
   <h3>Configuración del servidor (para administradores)</h3>
@@ -409,7 +416,7 @@ leche
     <strong>Consejo:</strong> Se recomienda hacer copias de seguridad periódicamente. Los directorios <code>datas/</code> y <code>configs/</code> son especialmente importantes. Los directorios <code>caches/</code> y <code>logs/</code> se regeneran al iniciar, por lo que no es necesario incluirlos.
   </div>
   <div class="tip">
-    <strong>Nota:</strong> La ubicación de los repositorios también puede configurarse fuera del directorio de inicio. Si utiliza archivos ubicados en carpetas externas (archivos colocados en carpetas externas, historiales de commits de Git, bases de datos ubicadas fuera, etc.), copiar solo el directorio de inicio los omitirá. Asegúrese de incluir también en la copia de seguridad la ubicación de todos los repositorios configurados, capturada en el mismo momento que el resto.
+    <strong>Nota:</strong> La ubicación de los repositorios también puede configurarse fuera del directorio de inicio. Si importa archivos colocados en carpetas externas, historiales de commits de Git, etc., copiar solo el directorio de inicio los omitirá. Incluya también en la copia de seguridad el destino de todos los repositorios configurados, en el mismo momento que el resto.
   </div>
   <div class="tip">
     <strong>Verifique la restauración:</strong> Una copia de seguridad solo cuenta cuando se puede restaurar. De vez en cuando, restáurela realmente en una ubicación distinta de su entorno de producción, inicie gkill y confirme que arranca y que sus registros se pueden buscar. Así detectará archivos omitidos o inconsistencias antes de necesitar la copia.

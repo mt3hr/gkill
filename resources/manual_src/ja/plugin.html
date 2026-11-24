@@ -48,7 +48,7 @@
     </tr>
     <tr>
       <td>VRChat</td>
-      <td>VRChatのログ。いたワールドとその時間（打刻とブックマーク）、同じ部屋にいた人とその時間（打刻）、自分のアバターの切り替えと再生した動画のURL（メモ）になります。VRChatは古いログを数日で消すので、消える前に別の場所へ写しておき、その場所も取り込み元に書いてください</td>
+      <td>VRChatのログ。いたワールドとその時間（打刻とブックマーク）、同じ部屋にいた人とその時間（打刻）、再生した動画のURL（ブックマーク）、自分のアバターの切り替え（メモ）になります。VRChatは古いログを数日で消すので、消える前に別の場所へ写しておき、その場所も取り込み元に書いてください</td>
     </tr>
   </table>
   <div class="tip">
@@ -58,7 +58,7 @@
   <h2>導入のしかた</h2>
   <p>プラグインの導入はファイルを置く作業になります。順番に進めてください。</p>
   <ol>
-    <li>プラグインの実行ファイルを、gkillのホームフォルダの中の <code>plugins</code> フォルダに置きます。置き場所は <code>plugins</code> の下に「ユーザーID」「プラグイン名」の順でフォルダを作った中です。</li>
+    <li>プラグインの実行ファイルと <code>manifest.json</code> を、gkillのホームフォルダの中の <code>plugins</code> フォルダに置きます。置き場所は <code>plugins</code> の下に「ユーザーID」「プラグイン名」の順でフォルダを作った中です（<code>manifest.json</code> が無いフォルダは読み込まれません。同梱プラグインは <code>実行ファイル --gkill-print-manifest &gt; manifest.json</code> で作成できます）。</li>
     <li>gkillを起動します。プラグインが初めて読み込まれたとき、同じフォルダに設定ファイル <code>config.json</code> が自動で作られます。</li>
     <li><code>config.json</code> をテキストエディタで開き、<code>source_dirs</code> に、取り込みたいデータが置いてあるフォルダを書きます。</li>
     <li><a href="rykv.html">ライフログビュー画面</a>で検索すると、ほかの記録と同じように一覧に表示されます。</li>
@@ -92,14 +92,14 @@
     </tr>
     <tr>
       <td>空のままにした場合</td>
-      <td>ChatGPT・Claude.aiはプラグインのフォルダを、ClaudeCode・Codex・Antigravityはそれぞれのツールがログを保存している標準の場所を、VRChatはVRChatがログを書き出す標準の場所を見ます</td>
+      <td>ChatGPT・Claude.aiはプラグインのフォルダ、ClaudeCode・Codex・Antigravity・VRChatはそれぞれのツールがログを保存している標準の場所、Fitbit・GoogleLocation・Geminiはホーム配下の標準フォルダを見ます（ArchivedGitは空のままでは読み込みません）</td>
     </tr>
   </table>
   <h3>ChatGPT・Claude.aiのデータを取り込むとき</h3>
   <p>ChatGPT・Claude.aiの会話履歴は、それぞれのサービスからダウンロードした<strong>ZIPファイルを解凍せず、そのままフォルダに置いて</strong>ください。解凍して取り出したJSONファイルは読み込みません。</p>
   <p><code>source_dirs</code> には、そのZIPファイルを置いたフォルダを書きます。ZIPファイルそのものを書いてもかまいません。新しくダウンロードしたZIPを同じフォルダに足しても、同じ会話は新しいほうだけが使われ、古いZIPにしかない会話はそのまま残ります。</p>
   <h3>Google Takeoutのデータを取り込むとき</h3>
-  <p>健康データと位置情報の履歴の2つは、Google Takeoutからダウンロードした<strong>ZIPファイルを解凍せず、そのままフォルダに置いて</strong>ください。解凍したフォルダは読み込みません。</p>
+  <p>健康データ（Fitbit）・位置情報の履歴（GoogleLocation）・Geminiの会話の3つは、Google Takeoutからダウンロードした<strong>ZIPファイルを解凍せず、そのままフォルダに置いて</strong>ください。解凍したフォルダは読み込みません。</p>
   <p><code>source_dirs</code> には、そのZIPファイルを置いたフォルダを書きます。ZIPファイルそのものを書いてもかまいません。</p>
   <table>
     <tr>

@@ -377,23 +377,17 @@ sequenceDiagram
     participant API as GkillServerAPI
     participant DAOMgr as GkillDAOManager
     participant IDFRep as IDFKyouRepository
-    participant FUH as FileUploadHistoryDAO
 
     User->>UI: ファイル選択・アップロード先指定
     UI->>API: POST /api/upload_files<br>{session_id, files[], target_rep, conflict_behavior}
     API->>API: getAccountFromSessionID
+    Note over API: 本文は 1GB まで（auth_middleware.go の maxUploadBodyBytes。超えると 413）。<br>月間の容量制限（UploadSizeLimitMonth）とアップロード履歴は判定にも記録にも使っていない
     API->>DAOMgr: GetRepositories
-    API->>API: 月間アップロード容量チェック
-    API->>FUH: GetFileUploadHistories
-    FUH-->>API: 履歴一覧
-    API->>API: 容量計算・制限チェック
     loop 各ファイル
         API->>API: ファイル保存先決定<br>(競合時の動作: 上書き/スキップ/リネーム)
         API->>API: ファイルをディスクに保存
         API->>IDFRep: AddIDFKyouInfo<br>(ファイルパス, 関連日時)
         IDFRep-->>API: OK
-        API->>FUH: AddFileUploadHistory
-        FUH-->>API: OK
     end
     API-->>UI: {messages, uploaded_files}
     UI-->>User: アップロード完了
@@ -740,34 +734,32 @@ sequenceDiagram
 
 ## 20. プラグイン一覧取得（get_plugin_list）
 
-> **呼び出し元は MCP のみ。** gkill のフロントエンドにこのエンドポイントを叩く導線は無い
-> （`gkill-api.ts` に `get_plugin_list()` の定義はあるが呼び出し元が存在しない）。
-> 設定ダイアログは `rep_name` をコンテキストメニューから直接受け取るため、一覧を引く必要がない。
+> MCP の `gkill_get_plugin_list`、Web UI の「アカウント管理」→「プラグイン設定」（`manage-plugin-list-dialog.vue`、管理者は `target_user_id` で他アカウント指定可）、および読み取り専用ガード（`use-plugin-rep-names.ts`）がこのエンドポイントを呼ぶ。
 
 ```mermaid
 sequenceDiagram
-    actor Client as MCPクライアント（Claude等）
-    participant MCP as MCPサーバ<br>gkill_get_plugin_list
+    actor Client as MCPクライアント / Web UI
+    participant Caller as gkill_get_plugin_list / manage-plugin-list-dialog
     participant API as GkillServerAPI
     participant PluginMgr as PluginManager
 
-    Client->>MCP: gkill_get_plugin_list
-    MCP->>API: POST /api/get_plugin_list<br>{session_id, locale_name}
-    API->>API: wrapAuth（session_id → account）
-    API->>PluginMgr: GetPluginManager(userID).GetPluginRepositories()
+    Client->>Caller: プラグイン一覧取得
+    Caller->>API: POST /api/get_plugin_list<br>{session_id, locale_name, target_user_id?}
+    API->>API: wrapAuth（session_id → account。target_user_id 指定時は管理者チェック）
+    API->>PluginMgr: GetPluginManager(targetUserID).GetPluginRepositories()
     loop 各プラグイン
-        PluginMgr->>PluginMgr: manifest情報取得（name, version, description, data_type, rep_name）
+        PluginMgr->>PluginMgr: manifest情報取得（name, version, description, data_type, rep_name, rep_names, emits_kyou, provides）
         PluginMgr->>PluginMgr: is_alive 確認（ping。必要ならプロセス起動）
-        PluginMgr->>PluginMgr: process_running / last_error（stderr末尾）/<br>typed_index（索引統計）を受動読み
+        PluginMgr->>PluginMgr: process_running / last_error（stderr末尾）/<br>typed_index / gps_index を受動読み
     end
     PluginMgr-->>API: []PluginRepository
     API->>API: last_error / last_build_error を<br>RedactEnvironmentSpecific で伏せる
-    API-->>MCP: {plugins: [{name, version, description, data_type, rep_name,<br>is_alive, process_running, last_error,<br>typed_index: {ok, state, last_build_error, last_attempt_at,<br>record_count, oldest, newest, truncated, built_at}}, ...]}
-    MCP->>MCP: last_error / last_build_error を落とし<br>has_last_error / has_last_build_error にする
-    MCP-->>Client: プラグイン一覧（診断文の中身は含まない）
+    API-->>Caller: {plugins: [{name, version, description, data_type, rep_name, rep_names,<br>emits_kyou, provides, is_alive, process_running, last_error,<br>typed_index, gps_index}, ...]}
+    Note right of Caller: MCP のみ last_error / last_build_error を落とし<br>has_last_error / has_last_build_error にする
+    Caller-->>Client: プラグイン一覧
 ```
 
-`typed_index` は `provides` を宣言したプラグインだけに載る（`req_res/get_plugin_list_response.go`）。
+`typed_index` は `provides` を宣言した Kyou 提供プラグインだけに載る（`req_res/get_plugin_list_response.go`）。
 `last_error` はプラグインプロセスの stderr 末尾で、索引構築の失敗理由はそこには出ない
 （そちらは `typed_index.last_build_error`。詳細は [plugin-system.md](plugin-system.md) の
 「インメモリ索引」節）。どちらも端末のディレクトリ構成を含むため、Go 側は返す直前に伏せ、
@@ -777,37 +769,39 @@ MCP はさらに中身ごと落として有無だけを返す（[ADR-0707](../ad
 
 ## 21. プラグイン設定 HTML 取得（get_plugin_config_html）
 
-> プラグイン Kyou を右クリック →「プラグイン設定」で `plugin-config-dialog.vue` が開き、
-> このエンドポイントを呼ぶ。保存後にも呼び直して表示を更新する。
+> **管理者専用**（[ADR-0714](../adr/0714-plugin-config-is-admin-only.md)）。
+> 管理者が「サーバ設定」→「アカウント管理」→ 対象ユーザ行の「プラグイン設定」→ プラグイン一覧の「設定」を押すと `plugin-config-dialog.vue` が開き、
+> `target_user_id` と `rep_name` を指定してこのエンドポイントを呼ぶ。保存後にも呼び直して表示を更新する。
 
 ```mermaid
 sequenceDiagram
-    actor User as ユーザ
+    actor Admin as 管理者
     participant UI as plugin-config-dialog.vue
     participant API as GkillServerAPI
     participant PluginRepo as pluginRepositoryImpl
     participant Plugin as プラグインバイナリ
 
-    User->>UI: プラグイン設定ボタンを押す
-    UI->>API: POST /api/get_plugin_config_html<br>{session_id, rep_name}
-    API->>API: wrapAuth（session_id → account）
-    API->>PluginRepo: rep_name でプラグインを検索
+    Admin->>UI: プラグイン一覧から「設定」を押す
+    UI->>API: POST /api/get_plugin_config_html<br>{session_id, target_user_id, rep_name}
+    API->>API: wrapAuth（session_id → account）+ IsAdmin チェック（非管理者は 403）
+    API->>PluginRepo: target_user_id の PluginManager から rep_name でプラグインを検索
+    PluginRepo->>PluginRepo: callCommand() — acquireCallSlot()（容量1チャネル）
     PluginRepo->>PluginRepo: ensureStarted() — プロセス未起動なら起動
-    PluginRepo->>PluginRepo: callCommand() — mu.Lock()
     PluginRepo->>Plugin: {"command":"get_config_html"} (stdin)
     Plugin->>Plugin: GetConfigHTML ハンドラ呼び出し<br>（設定フォームHTML生成）
     Plugin-->>PluginRepo: {"html":"<form>...</form>"} (stdout)
-    PluginRepo->>PluginRepo: mu.Unlock()
+    PluginRepo->>PluginRepo: release()
     PluginRepo-->>API: html string
     API-->>UI: {html, messages, errors}
     UI->>UI: iframe srcdoc = html（設定フォーム表示）
-    UI-->>User: 設定フォームを表示
+    UI-->>Admin: 設定フォームを表示
 ```
 
 ---
 
 ## 22. プラグイン設定保存（post_plugin_config）
 
+> **管理者専用**（[ADR-0714](../adr/0714-plugin-config-is-admin-only.md)）。
 > iframe には `allow-same-origin` を与えていないので、設定フォームは自力で API を叩けない。
 > iframe が `postMessage({ gkill_plugin_config: {...} })` で親に依頼し、親（ダイアログ）が
 > このエンドポイントを呼ぶ。結果は `{ gkill_plugin_config_result: { ok, error } }` で iframe へ返す。
@@ -815,25 +809,26 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    actor User as ユーザ
+    actor Admin as 管理者
     participant UI as plugin-config-dialog.vue
     participant API as GkillServerAPI
     participant PluginRepo as pluginRepositoryImpl
     participant Plugin as プラグインバイナリ
 
-    User->>UI: 設定フォーム送信
+    Admin->>UI: 設定フォーム送信
     Note right of UI: iframe内フォームの送信データを<br>form_data: Record<string,string> として収集
-    UI->>API: POST /api/post_plugin_config<br>{session_id, rep_name, form_data}
-    API->>API: wrapAuth（session_id → account）
-    API->>PluginRepo: rep_name でプラグインを検索
-    PluginRepo->>PluginRepo: callCommand() — mu.Lock()
+    UI->>API: POST /api/post_plugin_config<br>{session_id, target_user_id, rep_name, form_data}
+    API->>API: wrapAuth（session_id → account）+ IsAdmin チェック（非管理者は 403）
+    API->>PluginRepo: target_user_id の PluginManager から rep_name でプラグインを検索
+    PluginRepo->>PluginRepo: callCommand() — acquireCallSlot()（容量1チャネル）
     PluginRepo->>Plugin: {"command":"post_config","form_data":{...}} (stdin)
     Plugin->>Plugin: PostConfig ハンドラ呼び出し<br>SaveConfig() が config.json (0600) に書き込む
     Plugin-->>PluginRepo: {"id":"uuid"} (stdout)
-    PluginRepo->>PluginRepo: mu.Unlock()
+    PluginRepo->>PluginRepo: release()
+    PluginRepo->>PluginRepo: 関連キャッシュ・索引を無効化
     PluginRepo-->>API: OK
     API-->>UI: {messages, errors}
-    UI-->>User: 設定保存完了
+    UI-->>Admin: 設定保存完了
 ```
 
 `SaveConfig`（`plugin/sdk/config.go:57-70`）の書き込み先は
@@ -860,11 +855,11 @@ sequenceDiagram
     else キャッシュミス
         SW->>API: POST /api/get_plugin_content_html
         API->>PluginRepo: GetContentHTML(ctx, kyouID)
-        PluginRepo->>PluginRepo: callCommand() — mu.Lock()
+        PluginRepo->>PluginRepo: callCommand() — acquireCallSlot()
         PluginRepo->>Plugin: {"command":"get_content_html","kyou_id":"..."} (stdin)
         Plugin->>Plugin: globalCache.GetMsgByID(pluginDir, src, kyouID)<br>（Claude Code は GetMessage(pluginDir, src, messageID)）
         Plugin-->>PluginRepo: {"html":"<!DOCTYPE html>..."} (stdout)
-        PluginRepo->>PluginRepo: mu.Unlock()
+        PluginRepo->>PluginRepo: release()
         PluginRepo-->>API: html string
         API-->>SW: {html, messages, errors}
         SW->>SW: gkill-post-kyou-cache に保存
@@ -886,7 +881,7 @@ sequenceDiagram
     UI->>UI: 本物の dblclick を撃ち直す → KyouDialog を開く
 ```
 
-### 23. MCP からのプラグイン本文取得（include_plugin_content）
+### 23.1 MCP からのプラグイン本文取得（include_plugin_content）
 
 プラグインKyouの本文は gkill 本体に保存されていない。`get_kyous` が返すのはメタデータと
 `payload.kind="plugin"`（`rep_name` / `kyou_id`）だけなので、AI に本文を届けるには画面と同じく
@@ -932,6 +927,48 @@ sequenceDiagram
     end
     IN-->>MCP: {requested, inlined, truncated, skipped, errors}
     MCP-->>Client: kyous[]（本文入り） + plugin_content 集計
+```
+
+---
+
+## 24. 「HTML で出力」（export_kyou_html）
+
+共有ページと同じ収集（`kyou_bundle_collector.go`）を列ごとに通し、記録と付随データを和集合で1回だけ持って
+1枚の HTML（またはそれと同名フォルダを入れた ZIP）に焼き込む。出力したファイルは通信をしない（地図だけ例外）。
+決定と却下案は ADR-0415 / ADR-0421 / ADR-0422 / ADR-0712 / ADR-0713 / ADR-0903。
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザ
+    participant Share as 共有ダイアログ
+    participant Dialog as 「HTML で出力」ダイアログ
+    participant API as GkillServerAPI<br>HandleExportKyouHTML
+    participant Collector as collectKyouBundle
+    participant Media as collectExportMedia<br>（rep の配信ハンドラ）
+    participant Plugin as collectExportPluginHTML
+
+    User->>Share: サイドバーの共有フッター →「HTML エクスポート」
+    Share-->>Dialog: requested_export_kyou_html（ラッパが開く）
+    User->>Dialog: 対象（全部の列 / フォーカス中の列）・含めるもの・メディア・出力の形を選ぶ
+    Dialog->>API: POST /api/export_kyou_html<br>{screen, columns[], include_*, media_mode, output_format, 予算}
+    API->>API: 選べない組み合わせを収集の前に弾く（ERR000454）
+    API->>API: ガワ（embed の template.html）を読む（無ければ ERR000455）
+    API->>API: 設定を焼く前に地図のキーを空へ潰し、<br>チェックされていない名前を木から刈る
+    loop 列ごと
+        API->>Collector: 列の検索条件で記録・型別データ・付随データ
+        Note right of Collector: リポストの型別データは<br>列に出た記録の ID で絞る（ADR-0422）
+        Collector-->>API: bundle（和集合へ足す）
+    end
+    API->>Collector: リポストの参照先を ID で引く（最大3段）
+    API->>Media: 画像・動画・添付・IDF の本文（予算の範囲で）
+    Media-->>API: 焼いたもの + 落とした件数の警告
+    opt プラグインの本文を含める
+        API->>Plugin: プラグイン固有の記録だけ本文を問い合わせる（最大200件・直列）
+        Plugin-->>API: 本文 + 失敗・上限の警告
+    end
+    API->>API: JSON を焼き込み、単一 HTML か HTML ＋同名フォルダの ZIP にする
+    API-->>Dialog: {file_name, html | zip_base64, partial,<br>messages: [警告 MSG000096..., 成功 MSG000095]}
+    Dialog-->>User: ファイルを保存し、警告はフィードに残す
 ```
 
 ---
@@ -1072,11 +1109,11 @@ sequenceDiagram
     else 入力ミス（利用者が直せる）
         API->>KFTL: GenerateAndExecuteRequests(kftl_text)
         KFTL-->>API: KFTLInputError（行番号・行テキスト付き）
-        API-->>UI: HTTP 400<br>{errors: [ERR000416 を不正行ごとに1件],<br>created: [書けたぶん]}
+        API-->>UI: HTTP 400<br>{errors: [ERR000416 を不正行ごとに1件],<br>created: []}
     else サーバ障害
         API->>KFTL: GenerateAndExecuteRequests(kftl_text)
         KFTL-->>API: error
-        API-->>UI: HTTP 500<br>{errors: [{error_code: "ERR000351",<br>error_message: "KFTLテキスト処理エラー"}],<br>created: [書けたぶん]}
+        API-->>UI: HTTP 500<br>{errors: [{error_code: "ERR000351",<br>error_message: "KFTLテキスト処理エラー"}],<br>created: []}
     end
 ```
 

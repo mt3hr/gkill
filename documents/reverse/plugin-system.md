@@ -59,7 +59,7 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 }
 ```
 
-定義は `src/server/gkill/api/gkill_plugin/plugin_manifest.go` の `PluginManifest` 構造体（9フィールド）。
+定義は `src/server/gkill/api/gkill_plugin/plugin_manifest.go` の `PluginManifest` 構造体（10フィールド）。
 
 | フィールド | 説明 |
 |---|---|
@@ -72,6 +72,7 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 | `executable` | 実行ファイル名（拡張子なし、OS に応じて `.exe` 等を自動付与） |
 | `min_gkill_version` | このプラグインが動作する最低 gkill バージョン |
 | `provides` | このプラグインが Kyou のメタ情報以外に提供するデータ種別（省略可）。詳細は「14. 型別データ・付随データの提供」参照 |
+| `emits_kyou` | このプラグインが Kyou を返すか（省略時は `true`）。`false` にすると `Repositories.Reps` に入らず `GetAllRepNames` に載らない（GPS 専用プラグイン等。[ADR-0304](../adr/0304-plugin-emits-kyou-false.md)） |
 
 ### manifest.json / config.json の自動生成
 
@@ -250,11 +251,7 @@ iframe は `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）
 
 文言の欄は全部 `configview.Prose` を通し、描くのは `` `code` `` と `**強調**` だけ（他はエスケープ）。HTML を直接受け取る欄は無い。
 
-`gkill-api.ts` の `get_plugin_list()` は今も MCP 専用で、フロントエンドに呼び出し元が無い。
-
-`/api/get_plugin_list` の唯一の実利用者は MCP サーバの `gkill_get_plugin_list` ツール
-（`src/server/gkill/mcp/plugin_tools.go`）。`/api/get_plugin_content_html` は画面（`plugin-html-view.vue`）と
-MCP の本文インライン埋め込み（`inlinePluginContents`）の両方が使う。
+`/api/get_plugin_list` は MCP サーバの `gkill_get_plugin_list` ツール（`src/server/gkill/mcp/plugin_tools.go`）と、Web UI（管理者向け「アカウント管理」→「プラグイン設定」の `manage-plugin-list-dialog.vue` および読み取り専用ガードの `use-plugin-rep-names.ts`）が使う。`/api/get_plugin_content_html` は画面（`plugin-html-view.vue`）と MCP の本文インライン埋め込み（`inlinePluginContents`）の両方が使う。
 
 ---
 
@@ -266,7 +263,7 @@ MCP の本文インライン埋め込み（`inlinePluginContents`）の両方が
 
 ### 解決策
 
-`pluginRepositoryImpl` が `sync.Mutex` を保持し、`callCommand()` 全体をロックする。
+`pluginRepositoryImpl` が容量1のチャネル `callSlot chan struct{}` を保持し、`callCommand()` 全体を直列化する（`sync.Mutex` と違い、コンテキストや待ち時間上限で待つのをやめられる）。
 
 ```go
 type pluginRepositoryImpl struct {
@@ -287,7 +284,7 @@ func (p *pluginRepositoryImpl) callCommand(ctx context.Context, req gkill_plugin
 }
 ```
 
-`pluginProcess` 構造体（プロセスハンドル側）には mutex を置かない。
+`pluginProcess` 構造体（プロセスハンドル側）には排他スロットを置かない。
 
 stdout の読み取りは**プロセスごとに常駐する1本の goroutine**（リーダー）が担当し、
 `bufio.Scanner` に触れるのはリーダーだけにしている（`bufio.Scanner` は並行安全ではない）。
@@ -298,7 +295,7 @@ stdout の読み取りは**プロセスごとに常駐する1本の goroutine**�
 
 | 設計判断 | 内容 | 理由 |
 |---|---|---|
-| Mutex の位置 | `pluginRepositoryImpl` struct | プロセス再起動後も同じ mutex を使い続けられる |
+| 排他スロットの位置 | `pluginRepositoryImpl` struct（`callSlot chan struct{}`） | プロセス再起動後も同じスロットを使い続けられ、待ち時間上限やキャンセルで待つのをやめられる |
 | プロセス起動 | `context.Background()` を使用 | HTTP リクエストキャンセルでプロセスが終了するのを防ぐ |
 | 呼び出し元のキャンセル | 待つのをやめるだけで、プロセスには触らない | フロントは全リクエストに `AbortController` を張っている。切断でプロセスを落とすと、画面を操作しただけでプラグインが死ぬ |
 | 呼び出しタイムアウト | 期限が無ければ既定 30 秒を注入し、超過時は `Process.Kill()` | 応答しないプラグインが gkill 全体を止めるのを防ぐ。回収しないと以降の呼び出しも詰まったままになる |
@@ -311,9 +308,9 @@ stdout の読み取りは**プロセスごとに常駐する1本の goroutine**�
 
 ---
 
-## 6. SQLite3 キャッシュ（ChatGPT / Claude.ai / Claude Code プラグイン）
+## 6. SQLite3 キャッシュ（同梱プラグイン10本）
 
-ChatGPT・Claude.ai・Claude Code プラグインはデータファイルをパースしてメッセージを SQLite3 にキャッシュする。
+同梱プラグイン10本（AI チャット系6本・Google Takeout 系2本・アーカイブ Git・VRChat）はデータファイルをパースして SQLite3 にキャッシュする。
 
 ### キャッシュ位置
 
@@ -430,10 +427,10 @@ Claude Code と似ているが**2段構成**になっている点が違う。
 
 ### キャッシュ無効化
 
-プラグインによって4方式ある。
+プラグインによって以下の方式がある。
 
-- **ChatGPT / Claude.ai（全体再構築）** — `build(pluginDir, patterns)` が `sdk.OpenSources` でエクスポート ZIP を開き、会話エントリの `Path:CRC32:Size` を並べた**署名**を `cache_meta` の前回値と
-  突き合わせ、変化していれば全会話を読み直して gen 付きでバッチ upsert し、`finalizeBuild` が古い gen を掃除する（**キャッシュ全体を作り直す**）。同じ会話 ID が複数の ZIP にあれば update_time が新しい版だけを採る（ADR-0310）。
+- **ChatGPT / Claude.ai / Gemini（全体再構築）** — `build(pluginDir, patterns)` が `sdk.OpenSources` でエクスポート ZIP を開き、対象エントリの `Path:CRC32:Size` を並べた**署名**を `cache_meta` の前回値と
+  突き合わせ、変化していれば全件を読み直して gen 付きでバッチ upsert し、`finalizeBuild` が古い gen を掃除する（**キャッシュ全体を作り直す**）。同じ会話 ID が複数の ZIP にあれば update_time が新しい版だけを採る（ADR-0310 / ADR-0321）。
 - **Claude Code（セッション単位の差分更新）** — `refresh`（`cache.go:209`）が `file_cache` の
   `MtimeUnix` / `Size` を突き合わせて（`:236-243`）変化のあったファイルだけを `dirtySessions` として拾い、
   そのセッションだけ作り直す。変化が無ければ早期リターンする（`:255-257`）。
@@ -453,17 +450,16 @@ Claude Code と似ているが**2段構成**になっている点が違う。
 
 | プラグイン | メソッド | 説明 |
 |---|---|---|
-| ChatGPT / Claude.ai | `GetMessages(pluginDir)` | 全メッセージ一覧取得（`FindKyous` で使用） |
-| ChatGPT / Claude.ai | `GetMsgByID(pluginDir, msgID)` | `msg_cache LEFT JOIN conv_cache WHERE msg_id = ?` で1件取得 |
+| ChatGPT / Claude.ai / Gemini | `GetMessages(pluginDir)` | 全メッセージ一覧取得（`FindKyous` で使用） |
+| ChatGPT / Claude.ai / Gemini | `GetMsgByID(pluginDir, msgID)` | `msg_cache LEFT JOIN conv_cache WHERE msg_id = ?` で1件取得 |
 | ChatGPT / Claude.ai | `GetConvForMsg(...)` | メッセージが属する会話を取得 |
 | Claude Code | `GetMessages(pluginDir, src)` / `GetMessage(pluginDir, src, messageID)` / `GetStats(...)` | Claude Code は `GetMsgByID` ではなく `GetMessage` |
 
-Claude Code のメソッドは第2引数に展開済みソース（`expandedSource`）を取る。ChatGPT / Claude.ai の読み取りはキャッシュだけを見る（ZIP を開くのはビルダの `build(pluginDir, patterns)` だけ）。
+Claude Code のメソッドは第2引数に展開済みソース（`expandedSource`）を取る。ChatGPT / Claude.ai / Gemini の読み取りはキャッシュだけを見る（ZIP を開くのはビルダの `build(pluginDir, patterns)` だけ）。
 
 ### source_dirs 設定
 
-3プラグインとも `config.json` の `source_dirs` キーで取り込み元を指定する（ChatGPT / Claude.ai はエクスポート ZIP を置いたフォルダか ZIP そのもの。展開済み JSON は読まない）
-（Claude Code の既定は `["~/.claude/projects"]`）。
+同梱プラグイン10本すべてが `config.json` の `source_dirs` キーで取り込み元を指定する（ZIP を読む6本: ChatGPT / Claude.ai / Fitbit / 位置情報 / Gemini / ArchivedGit はエクスポート ZIP を置いたフォルダか ZIP そのもの。展開済み JSON は読まない。Claude Code の既定は `["~/.claude/projects"]`）。
 
 - `*` `**` `?` `[]` のグロブ、`~`、環境変数を展開する
 - **検索のたびに読み直される**（起動時に一度読むだけではないので、gkill の再起動なしに反映される）
@@ -494,7 +490,7 @@ GetContentHTML(kyouID)
 
 - `.conv-title` — 会話 / セッション名（無ければ出さない）
 - `.chips` — project・branch・model・所要時間のうち持っているもの。空白1つで区切る（MCP の HTML→テキスト変換は `<span>` を改行にしないので、詰めると1語に連結される）
-  - ChatGPT: model（`message.metadata.model_slug`、無ければ会話の `default_model_slug`）。Claude.ai: 無し。
+  - ChatGPT: model（`message.metadata.model_slug`、無ければ会話の `default_model_slug`）。Claude.ai / Gemini: 無し。
     Claude Code: project・branch・model（`message.model`）・所要時間（返事の最初から最後のレコードまで）。Antigravity: project（`workspace_uris`）・model・所要時間（応答の最初から最後のステップまで）。Codex: project・branch・model・所要時間（`task_complete`）
 - `.msg.human` / `.msg.assistant` — 吹き出し。`.sender` のラベルは人間側が6本とも「あなた」、応答側は製品名 ChatGPT / Claude / Claude Code / Codex / Antigravity / Gemini
   （Codex の質問への回答は「あなた（質問への回答）」）
@@ -507,7 +503,7 @@ GetContentHTML(kyouID)
   - 返事は最終回答（Codex は `phase=final_answer`、Claude Code と Antigravity は最後のテキスト）と質問を本文に、途中報告・thinking・ツール・変更ファイル・計画・通知・
     サブエージェントは `<details class="process">`「🛠 作業の経過 — 途中報告 ×n · ツール名 ×n · thinking ×n · 変更 nファイル」1つに時系列で畳む
     （[ADR-0314](../adr/0314-codex-conversation-from-item-completed.md)）
-  - `.ts` — 関連時刻（`2006-01-02 15:04`、ローカル時刻）
+  - `.ts` — 関連時刻（`2006-01-02 15:04`、ローカル時刻。Android では SDK の `timezone.go` が `time.Local` を端末のゾーンへ補正する。[ADR-0319](../adr/0319-plugin-sdk-fixes-android-local-timezone.md)）
 - 1件の HTML は 4MiB（`chatview.MaxHTMLBytes`）で打ち切り、「(以降は長いため省略しました)」を出す
 
 ### CSS 変数（Light / Dark）
@@ -516,7 +512,7 @@ GetContentHTML(kyouID)
 |---|---|---|---|
 | `--bg` | `#ffffff` | `#212121` | 背景色 |
 | `--text` | `#333333` | `#e0e0e0` | テキスト色 |
-| `--msg-human-bg` | `#dbeafe` | `#1a3557` | 人間の発言の背景（4本とも同じ変数名。ChatGPT の `user` も `human` クラスへ写す） |
+| `--msg-human-bg` | `#dbeafe` | `#1a3557` | 人間の発言の背景（AI チャット系6本とも同じ変数名。ChatGPT の `user` も `human` クラスへ写す） |
 | `--msg-assistant-bg` | `#f3f4f6` | `#2d2d2d` | 応答の背景 |
 | `--chip-bg` / `--chip-color` | `#e5e7eb` / `#4b5563` | `#3a3a3a` / `#cccccc` | チップ |
 | `--details-bg` / `--details-color` | `#e9eaec` / `#4b5563` | `#383838` / `#cccccc` | 折りたたみ |
@@ -757,6 +753,9 @@ GitCommitLogContextMenu と同じ項目を持つ。**「プラグイン設定」
 ### ビルド手順
 
 ```bash
+cd src/plugins/gkill_plugin_antigravity
+GOOS=windows GOARCH=amd64 go build -o gkill_plugin_antigravity.exe .
+
 cd src/plugins/gkill_plugin_chatgpt
 GOOS=windows GOARCH=amd64 go build -o gkill_plugin_chatgpt.exe .
 
@@ -872,7 +871,7 @@ gkill_get_kyous              … include_plugin_content:true を付けて検索�
 | `gpslog` | GPS ログ（Kyou ではない） | `GPSLogReps` |
 
 **未指定（省略・空配列）が既定で、このとき gkill はアダプタを一切登録しない。**
-既存プラグイン（antigravity / chatgpt / claudeai / claudecode / codex / example）は manifest.json を書き換えなくても従来どおり動く。
+既存プラグイン（antigravity / chatgpt / claudeai / claudecode / codex / gemini / example）は manifest.json を書き換えなくても従来どおり動く。
 
 未知の値は警告して読み飛ばす（`dao/plugin_manager.go` の `loadManifest`）。
 タイプミスでプラグインごと無効化すると、それまで出ていた記録まで丸ごと消えてしまうため、エラーにはしない。
@@ -949,7 +948,7 @@ GPSが一度も要求されていなければキーごと省略される —— 
 
 ### アダプタ
 
-実装: `plugin_typed_adapters.go`（型別7種 + 共通ベース）、`plugin_attached_adapters.go`（付随3種）、
+実装: `plugin_typed_adapters.go`（型別8種 + 共通ベース）、`plugin_attached_adapters.go`（付随3種）、
 `gps_log_repository_plugin_impl.go`（GPS ログ）。
 
 | メソッド群 | 挙動 |
@@ -1073,8 +1072,8 @@ GPS ログは Kyou ではない（ID も更新時刻も持たない）ので、K
 
 ### 取り込み元の ZIP — `sdk.OpenSources`
 
-Google Takeout を取り込む2つのプラグイン（fitbit / 位置情報）、zip の Git リポジトリ（archived_git_commit_log）、ChatGPT / Claude.ai の会話履歴（ADR-0310）は、**ZIP を展開せずそのまま読む**。
-走査は `plugin/sdk/source.go` に置いてあり、5本で共通。
+Google Takeout を取り込む3つのプラグイン（fitbit / 位置情報 / Gemini）、zip の Git リポジトリ（archived_git_commit_log）、ChatGPT / Claude.ai の会話履歴（ADR-0310 / ADR-0321）は、**ZIP を展開せずそのまま読む**。
+走査は `plugin/sdk/source.go` に置いてあり、6本で共通。
 
 - **展開しない。** 中央ディレクトリを読んでエントリを列挙し、読むときにその場で伸長する。
   本体の `handle_browse_zip_contents.go` は `caches/zip_cache/` へ展開するが、実データは

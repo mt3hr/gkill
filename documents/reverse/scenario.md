@@ -321,7 +321,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor User as ユーザ
-    participant View as rykv-view<br>(use-rykv-view.ts)
+    participant View as rykv-columns-view<br>(use-rykv-columns.ts)
     participant GkillAPI as GkillAPI (TS)
     participant API as GkillServerAPI (Go)
     participant UC as UsecaseContext
@@ -660,6 +660,19 @@ sequenceDiagram
 
 **補足：** SPA ルート `/shared_page` `/shared_mi` `/shared_rykv` は `filterLocalOnly` を通りますが、データ取得 `HandleGetSharedKyous` は通らないため、`SharedID` さえあれば公開データに到達できます。ファイルバイトは Cookie `gkill_shared_id` 経由で `/files/` から配信されます（シナリオ6 の認証 2 系統を参照）。
 
+## シナリオ10b. 記録を HTML ファイルにして渡す
+
+**物語：** ユーザが旅行の記録を、サーバを立てていない相手にも見せたい。共有リンクは gkill が動いている間しか開けないので、
+ライフログビュー（またはタスク画面）で条件を整え、サイドバーの共有フッターから「HTML エクスポート」を選ぶ。
+含めるもの（タグ・テキスト・通知・打刻・位置・プラグインの本文）とメディアの扱いを選ぶと、1枚の HTML が保存される。
+相手はファイルをブラウザで開くだけで、同じ列・同じ見た目で記録を読める（編集はできない）。
+
+**守っていること：** ファイルの中には選んだ列の記録と、選んだ付随データだけが入る（チェックしていないタグ名・保管場所名も設定の木から刈る）。
+地図の API キーは焼き込まず、開いた人が入れたキーもそのページのメモリにだけ持つ。予算に収まらなかったメディアは
+「含まれていません」と出て、何を落としたかは出力した本人の画面にだけ警告で出る（ADR-0422）。
+
+流れは [sequence-diagrams.md](sequence-diagrams.md) の「24. 「HTML で出力」」。
+
 ## シナリオ11. AI 連携（MCP）
 
 **物語：** ユーザが Claude / ChatGPT に「先月の外食の傾向を教えて」と尋ねる。AI は MCP ツール経由で gkill のライフログを読み、添付画像も参照して回答する。
@@ -729,7 +742,7 @@ sequenceDiagram
     Note over FF,Proc: ② 検索時に子プロセスへ問い合わせ
     FF->>PRep: FindKyous(query)
     PRep->>PRep: ensureStarted（初回のみ子プロセス起動）
-    PRep->>Proc: {command:"find_kyous", query}\n（mutex 直列化, 30s timeout）
+    PRep->>Proc: {command:"find_kyous", query}\n（callSlot 直列化, 30s timeout）
     alt プロセスクラッシュ
         PRep->>Proc: 1回だけ自動再起動して再送
     end
@@ -751,7 +764,7 @@ stateDiagram-v2
     起動中 --> 終了: Close（close コマンド→Wait→kill）
     終了 --> [*]
     note right of 応答待ち
-        全コマンドは mutex で直列化
+        全コマンドは callSlot（容量1チャネル）で直列化
         既定 30s タイムアウト
         buffer 上限 32MB
     end note

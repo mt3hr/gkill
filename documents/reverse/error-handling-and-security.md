@@ -103,8 +103,8 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 | `ERR000436`〜`ERR000437` | SkillFileAlreadyExistsError / SkillRevisionConflictError | `revision` を渡さず（新規作成のつもりで）既にあるファイルへ書いた / 渡した `revision` が今の中身と食い違う（読んだ後に他で書き換えられた）。どちらも 409（楽観ロック）。後者は文言に今の revision と「読み直してから書く」旨を添える |
 | `ERR000438` | SkillManifestDeleteError | `SKILL.md` だけを消そうとした（400）。消すならスキルごと消す |
 | `ERR000439`〜`ERR000444` | GetSkillListError / GetSkillError / DownloadSkillError / UploadSkillError / WriteSkillFileError / DeleteSkillError | スキル API がサーバ側の理由（ディスクの失敗、利用者IDがパス要素に使えない等）で失敗した（500）。補足は添えない。`UploadSkillError` でも既存のスキルは元のまま残る（一時ディレクトリへ展開してから入れ替えるため） |
-
-| `ERR000452`〜`ERR000456` | InvalidExportKyouHTMLRequestData / InvalidExportKyouHTMLResponseData / InvalidExportKyouHTMLOption / ExportKyouHTMLTemplateNotFound / ExportKyouHTMLRender | HTML 出力の失敗。`InvalidExportKyouHTMLOption` は収集を始める前に弾く（列が0本、メディアを埋め込まないのに同名フォルダ、知らない指定値）。`ExportKyouHTMLTemplateNotFound` はガワが埋め込まれていないビルドでだけ出る（500） |
+| `ERR000445`〜`ERR000451` | InvalidDeleteKyouCascadeRequestData 〜 DeleteKyouCascadeDepthExceeded | 連鎖削除（`/api/delete_kyou_cascade`）の失敗。リクエスト不正（400）・起点不在（404）・削除済み（409）・起点不可種別（400）・深さ上限32超過（400）・探索/積み込み/確定失敗（500） |
+| `ERR000452`〜`ERR000456` | InvalidExportKyouHTMLRequestData / InvalidExportKyouHTMLResponseData / InvalidExportKyouHTMLOption / ExportKyouHTMLTemplateNotFound / ExportKyouHTMLRender | HTML 出力の失敗。`InvalidExportKyouHTMLOption` は収集を始める前に弾く（列が0本、列に null、メディアを埋め込まないのに同名フォルダ、知らない `screen` / `media_mode` / `output_format`）。`ExportKyouHTMLTemplateNotFound` はガワが埋め込まれていないビルドでだけ出る（500） |
 
 スキル系（`ERR000430`〜`ERR000438`）への写像は `gkill_server_api/skill_errors.go` の `skillStoreGkillError` 1つで、`dao/skills/errors.go` の番兵を `errors.Is` で見分ける（`DetailError` が番兵に「どこが悪いか」を添え、4xx のときだけ文言へ写す）。番兵に当たらない失敗は操作ごとの 500（`ERR000439`〜`ERR000444`）に落ちる。
 
@@ -335,9 +335,10 @@ LAN の他端末から使うのはサーバ設定画面で両方を開く明示�
 | `/api/get_shared_kyous` | 不要（共有リンク） | ServerConfig依存 |
 | `/api/urlog_bookmarklet` | 独自セッション | ServerConfig依存 |
 | `/api/logout` | ルーティング上は不要だがハンドラ内でセッションを解決し、解決できなければ何も削除しない | ServerConfig依存 |
-| `/api/upload_files`, `/api/upload_gpslog_files`, `/api/upload_skill` | ルーティング上は `wrapNoAuth`（`Body: bodyUpload`。本文の上限を認証付き経路の 32MB ではなくアップロード用の 1GB 枠に載せるため）だが、ハンドラ内で `getAccountFromSessionID` によりセッションを解決し、解決できなければ何も書かない（2.13） | ServerConfig依存 |
+| `/api/upload_files`, `/api/upload_gpslog_files`, `/api/upload_skill` | ルーティング上は `wrapNoAuth`（`Body: bodyUpload`。本文の上限を認証付き経路の 32MB ではなくアップロード用の 1GB 枠に載せるため）だが、ハンドラ内で `getAccountFromSessionID` によりセッションを解決し、解決できなければ何も書かない（2.14） | ServerConfig依存 |
 | `/api/set_new_password` | 不要（リセットトークンで認可）。IP単位のレート制限あり | ServerConfig依存 |
-| その他全エンドポイント | `session_id` 必須 | ServerConfig依存 |
+| `/api/get_plugin_config_html`, `/api/post_plugin_config` | `session_id` 必須 + **管理者権限（`IsAdmin`）必須**（非管理者は 403。`target_user_id` で対象アカウントを指定可能。ADR-0714） | ServerConfig依存 |
+| その他全エンドポイント | `session_id` 必須（`/api/get_plugin_list` の `target_user_id` 指定時も管理者権限必須） | ServerConfig依存 |
 | `/api/open_directory`, `/api/open_file` | `session_id` 必須。加えてセッションがループバックから発行されたもの（`IsLocalAppUser`）でなければ拒否 | ServerConfig依存 |
 
 「ServerConfig依存」は `IsLocalOnlyAccess` が有効なときだけ `filterLocalOnly` が効くという意味で、`wrapNoAuth` / `wrapNoAuthCapped` / `wrapAuth` / `wrapAuthRepos` の全ラッパと `/files/` 等の静的配信が同じ検査を通る（`auth_middleware.go` / `serve.go`）。認証の有無とは独立。
@@ -485,7 +486,7 @@ Wear OS companion アプリの gkill サーバー接続は、デフォルトで�
 | 含めないもの | 理由 |
 |---|---|
 | Google Maps の API キー | 焼き込む `ApplicationConfig` から空へ潰す。渡した相手が自分のキーを入れる導線を別に持たせてある |
-| チェックしていないタグ名・記録保管場所名 | 設定ツリーは利用者が並べたもので、出力に含めなかった名前まで入っている。**表示を止めるだけでは足りない**（ファイルの中に残っていれば読まれる）ので、焼き込む前に木を刈る。子が全部外れた親も消す |
+| チェックしていないタグ名・記録保管場所名（Mi の出力では出力対象外の板名も） | 設定ツリーは利用者が並べたもので、出力に含めなかった名前まで入っている。**表示を止めるだけでは足りない**（ファイルの中に残っていれば読まれる）ので、焼き込む前に木を刈る（`mi_board_struct` も出力対象板だけ残す）。子が全部外れた親も消す |
 | 元のファイル名 | 同名フォルダの中のファイル名は内容ハッシュにする（[ADR-0713](../adr/0713-sidecar-file-names-are-content-hashes.md)） |
 | セッション・認証情報 | 出力用の API は通信そのものを `gkill_fetch` の1点で塞いでいる（[ADR-0415](../adr/0415-exported-view-is-a-separate-flag.md)） |
 
@@ -497,7 +498,7 @@ Wear OS companion アプリの gkill サーバー接続は、デフォルトで�
 - **`/api/upload_skill` はルーティング上 `wrapNoAuth` + `bodyUpload`。** 保存量に上限を設けない方針なので、認証付き経路の 32MB 枠（`maxAuthBodyBytes`）ではなく `/api/upload_files` と同じ 1GB 枠（`maxUploadBodyBytes`、読み取り期限 30 分）に載せている。認証ミドルウェアを通らないぶん、ハンドラ（`handle_upload_skill.go`）が `getAccountFromSessionID` で `session_id` からアカウントを解決し、解決できなければそのエラー（`ERR000013` 等）で返して何も書かない。利用者IDはリクエストではなくセッションから決まるので、他人のスキルは指名できない。無認証で POST を受ける経路に `bodyAuth` / `bodyUpload` の上限が付いていることは `validateAPIRoutes` が起動時に検査する。
 - **AI にスキルの削除を公開しない。** スキルは履歴を持たないので、AI が消したファイルは戻せない —— AI の誤操作だけでなく、読み込んだ記録や Web ページに紛れ込んだ指示（プロンプトインジェクション）に従った削除を、利用者が後から戻す手段が無い。`/api/delete_skill` は `path` を省くとスキル丸ごと（画面だけが使う）、指定するとそのファイルだけを消す（`SKILL.md` 単独は `ERR000438`）。MCP 側の `gkill_delete_skill`（`skill_delete_tool.go`。`path` と `revision` を必須にして丸ごと削除を送れない形）は実装だけで、ツール一覧にも `dispatchWriteToolCall` にも載せていない（`readwrite_server_test.go` が「公開ツールに無い」ことを固定）。公開するなら履歴か削除前の利用者確認とセットにし、ADR-0634 を見直す。
 
-### 2.14 Android 版のデータ置き場（共有ストレージ）
+### 2.15 Android 版のデータ置き場（共有ストレージ）
 
 Android APK 同梱の gkill_server はデータ置き場（`--gkill_home_dir`）を共有ストレージの `/sdcard/gkill` に置く（`MainActivity.kt` の `GKILL_HOME`。2026-08-03 にアプリ専用領域 `filesDir/gkill` へ移したが、2026-09-24 に戻した）。ここには全記録のデータベースに加えて、パスワードハッシュとリセットトークンを持つアカウント DB、ログ、TLS の証明書と秘密鍵（`/sdcard/gkill/tls/`）が入る。**共有ストレージなので、全ファイルアクセス権を持つ他のアプリ・USB/MTP 接続・ファイラーアプリのいずれからも中身が読める。** マニフェスト（`AndroidManifest.xml`）の `allowBackup="false"` はこの置き場には効かない。
 

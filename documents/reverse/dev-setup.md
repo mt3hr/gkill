@@ -85,8 +85,10 @@ gkill_server version
 | `npm run copy_i18n_to_app_embed` | `src/locales/`をembedディレクトリにコピー |
 | `npm run build_manuals` | `resources/manual_src/` の原稿から `resources/manual/`（7言語HTMLマニュアル）を生成 |
 | `npm run copy_manual_to_app_embed` | `resources/manual/`（7言語HTMLマニュアル）をembedディレクトリにコピー |
+| `npm run build_export_shell` / `npm run build_export_template` | `vite.export.config.ts` で HTML 出力用ガワをビルドし単一テンプレート（`resources/export/template.html`）へ畳む |
+| `npm run copy_export_template_to_app_embed` | `resources/export/template.html` を embed ディレクトリ（`embed/export/`）にコピー |
 | `npm run clean_dist` | `dist/`をクリーン |
-| `npm run prepare_install` | 上記を順次実行（clean_dist → clean_app_embed → version生成 → build → copy html / i18n → build_manuals → copy manual） |
+| `npm run prepare_install` | 上記を順次実行（clean_dist → clean_app_embed → version生成 → build → copy html / i18n → build_manuals → copy manual → export template ビルド・copy の4系統コピー） |
 
 ### リリース
 
@@ -111,7 +113,7 @@ gkill_server version
 | `npm run verify_docs` | ドキュメント検証（`src/tools/verify_docs.mjs`）。件数（handler/req_res/view/dialog/endpoint/i18nキー）をコードから突合、reverse資料の相互リンク・参照パス・Mermaid、マニュアルの生成鮮度・アクセシビリティ（`<main>`/`<caption>`/`th scope`）・言語構成一致・リンクを検査。**`npm test` に組み込まれている**（`install_server` の直後） |
 | `node src/tools/verify_docs.mjs --list` | 実測メトリクスを表示して終了（件数を更新するときの参照元） |
 | `node src/tools/verify_docs.mjs --parity` | 構造パリティ・レポート（日本語=正本に対する各言語マニュアルの見出し/表構造のズレを表示） |
-| `npm run build_manuals` | `resources/manual_src/{lang}/{page}.html`（原稿フラグメント）＋ `_layout.html`（共有レイアウト）から 154 マニュアル（7言語 × 22ページ）を生成。`<main>`/表 `<caption>`/`th scope` を自動付与 |
+| `npm run build_manuals` | `resources/manual_src/{lang}/{page}.html`（原稿フラグメント）＋ `_layout.html`（共有レイアウト）から 168 マニュアル（7言語 × 24ページ）を生成。`<main>`/表 `<caption>`/`th scope` を自動付与 |
 | `src/tools/manual_build.mjs` | マニュアル生成の実体。`build_manuals.mjs` と `verify_docs.mjs` の両方から import される |
 | `node src/tools/manual_a11y.mjs` | マニュアルのアクセシビリティ検査 |
 | `node src/tools/manual_ascii_fix.mjs` | fr/es マニュアルの ASCII 代替表記（アクセント欠落）を辞書ベースで是正（コード/pre/href は保護。要ネイティブレビューの初回パス） |
@@ -205,7 +207,7 @@ export MCP_OAUTH_ISSUER=http://localhost:8808  # リモート時は公開URL
 
 ## 4. ビルドパイプライン詳細
 
-`npm run install_server`（内部で `prepare_install`）は以下のステップを順次実行します。埋め込みコピーは html / i18n / manual の3系統です。
+`npm run install_server`（内部で `prepare_install`）は以下のステップを順次実行します。埋め込みコピーは html / i18n / manual / export の4系統です。
 
 ```mermaid
 graph TD
@@ -218,7 +220,9 @@ graph TD
     E --> F["6. copy_i18n_to_app_embed<br/>locales/をembed/i18n/にコピー"]
     F --> M["7. build_manuals<br/>manual_src/からmanual/を生成"]
     M --> H["8. copy_manual_to_app_embed<br/>manual/をembed/manual/にコピー"]
-    H --> G["9. go install<br/>Goバイナリをビルド・インストール"]
+    H --> X["9. build_export_shell + build_export_template<br/>HTML出力用ガワを単一HTMLへ畳む"]
+    X --> Y["10. copy_export_template_to_app_embed<br/>template.htmlをembed/export/にコピー"]
+    Y --> G["11. go install<br/>Goバイナリをビルド・インストール"]
 
     style Z fill:#fdd,stroke:#333
     style A fill:#fdd,stroke:#333
@@ -229,6 +233,8 @@ graph TD
     style F fill:#dfd,stroke:#333
     style M fill:#dfd,stroke:#333
     style H fill:#dfd,stroke:#333
+    style X fill:#ddf,stroke:#333
+    style Y fill:#dfd,stroke:#333
     style G fill:#fdf,stroke:#333
 ```
 
@@ -317,7 +323,7 @@ go run .
 | `--cache_clear_count_limit` | `3000` | キャッシュクリアまでのアイテム数上限 |
 | `--cache_update_duration` | `1m` | キャッシュ更新間隔 |
 | `--pre_load_users` | （なし） | 起動時にリポジトリを先読みするユーザ（複数指定可） |
-| `--log` | `none` | ログレベル: none/error/warn/info/access/debug/trace/trace_sql |
+| `--log` | `error` | ログレベル: none/error/warn/info/access/debug/trace/trace_sql |
 
 ### フロント＋バック同時開発
 

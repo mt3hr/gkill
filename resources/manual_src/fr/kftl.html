@@ -1,7 +1,7 @@
 <!-- title: Bloc-notes - Aide -->
   <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Bloc-notes</span></nav>
   <h1>Bloc-notes</h1>
-  <p>Écran de bloc-notes pour enregistrer des événements de la vie via la syntaxe du bloc-notes. Le bloc-notes utilise un format de texte structuré par lignes permettant la saisie par lots de divers enregistrements.</p>
+  <p>Écran pour enregistrer votre journal de vie avec la syntaxe du bloc-notes. Vous pouvez saisir d'un coup plusieurs types d'enregistrements sous forme de texte.</p>
 
   <h2>Boutons de la barre d'outils</h2>
   <table>
@@ -24,19 +24,19 @@
     </tr>
     <tr>
       <td>Zone de texte</td>
-      <td>Zone de saisie du contenu des enregistrements en syntaxe du bloc-notes.</td>
+      <td>Zone de texte principale où vous saisissez les données avec la syntaxe du bloc-notes. Vous pouvez y écrire librement des enregistrements sur plusieurs lignes.</td>
     </tr>
     <tr>
       <td>Bouton de modèle</td>
-      <td>Insere un texte de modèle de bloc-notes predefini.</td>
+      <td>Insère dans la zone de texte un modèle de syntaxe du bloc-notes que vous utilisez souvent. Vous choisissez parmi les modèles définis dans les paramètres.</td>
     </tr>
     <tr>
       <td>Bouton d'enregistrement</td>
-      <td>Cliquez sur le bouton d'enregistrement pour analyser et enregistrer le texte du bloc-notes saisi.</td>
+      <td>Envoie le contenu saisi au serveur et crée les enregistrements.</td>
     </tr>
     <tr>
       <td>Onglets</td>
-      <td>Permettent de conserver plusieurs brouillons à la fois. Chaque onglet contient son propre texte.</td>
+      <td>Permettent de conserver plusieurs brouillons à la fois. Vous pouvez saisir un contenu différent dans chaque onglet.</td>
     </tr>
     <tr>
       <td>Bouton d'ajout d'onglet</td>
@@ -87,12 +87,18 @@
     <strong>Astuce :</strong> Le texte en cours est conservé même après la fermeture de l'écran. À la prochaine ouverture, les onglets que vous aviez reviennent tels quels.
   </div>
 
-  <h2>À propos du bloc-notes</h2>
-  <p>Le bloc-notes utilise un format de texte propre à gkill qui permet de créer en masse plusieurs enregistrements dans un seul texte. Chaque ligne représente une commande ou une entrée de données.</p>
-
-  <div class="tip">
-    <strong>Astuce :</strong> En utilisant le bouton de modèle, vous pouvez insérer rapidement des formats de saisie couramment utilisés sans avoir à mémoriser la syntaxe du bloc-notes.
-  </div>
+  <h2>Aperçu de la syntaxe du bloc-notes</h2>
+  <p>La syntaxe du bloc-notes est un format de texte structuré par lignes. Une seule saisie permet de créer d'un coup les enregistrements suivants :</p>
+  <ul>
+    <li><strong>Mémo :</strong> enregistrement de notes textuelles</li>
+    <li><strong>Entrées de temps :</strong> démarrage et arrêt de la mesure du temps</li>
+    <li><strong>Tâches :</strong> ajout et mise à jour de tâches</li>
+    <li><strong>Signets :</strong> enregistrement d'URL</li>
+    <li><strong>Enregistrements numériques :</strong> enregistrement de données numériques</li>
+    <li><strong>Dépenses :</strong> enregistrement de montants</li>
+    <li><strong>Humeur :</strong> enregistrement d'une valeur d'humeur (0 à 10)</li>
+    <li><strong>Étiquetage :</strong> ajout d'étiquettes aux enregistrements</li>
+  </ul>
 
   <h2>Procédure d'utilisation</h2>
   <ol>
@@ -117,12 +123,16 @@
   </div>
 
   <div class="tip">
+    <strong>Astuce :</strong> Même sans connaître la syntaxe du bloc-notes, vous pouvez commencer à enregistrer tout de suite grâce aux modèles.
+  </div>
+
+  <div class="tip">
     <strong>Astuce :</strong> Sur les autres écrans, chaque choix de « Bloc-notes » dans le menu + ouvre une fenêtre supplémentaire. Chaque fenêtre peut afficher un onglet différent, et si deux fenêtres affichent le même onglet, ce que vous saisissez dans l'une apparaît dans l'autre.
   </div>
 
   <h2>Documents associés</h2>
   <ul>
     <li><a href="kftl-syntax.html">Référence de syntaxe du bloc-notes</a></li>
-    <li><a href="mkfl.html">Bloc-notes d'horodatage</a></li>
-    <li><a href="rykv.html">Vue journal de vie</a></li>
+    <li><a href="kftl-template-struct.html">Structure des modèles</a></li>
+    <li><a href="mkfl.html">Bloc-notes d'entrées de temps</a></li>
   </ul>

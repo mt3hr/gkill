@@ -72,7 +72,7 @@ $HOME/gkill/
 | IsLocalOnlyAccess | `true` | ローカルアクセスのみ許可（ループバック以外からのリクエストを 403 にする） |
 | URLogTimeout | 1分 | URLog取得時のタイムアウト |
 | URLogUserAgent | Chromeユーザーエージェント | URLog取得時のUA |
-| UploadSizeLimitMonth | `-1` | 月間アップロード制限（-1=無制限） |
+| UploadSizeLimitMonth | `-1` | 月間アップロード制限の予約欄。**現在はどこからも判定に使われていない**（アップロード履歴も記録していない）。1回の送信の上限は 1GB（`auth_middleware.go` の `maxUploadBodyBytes`）で、それより大きいファイルは rep のディレクトリへ直接置いてキャッシュ更新で取り込む |
 | OpenDirectoryCommand | `explorer /select,$filename` | ディレクトリを開くコマンド（Windows） |
 | OpenFileCommand | `rundll32 url.dll,FileProtocolHandler $filename` | ファイルを開くコマンド（Windows） |
 

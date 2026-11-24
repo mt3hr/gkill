@@ -297,7 +297,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 | データ追加 | 12 | add_kmemo, add_kc, add_urlog, add_nlog, add_timeis, add_mi, add_lantana, add_tag, add_text, add_gkill_notification, add_rekyou, add_mirekyou |
 | データ更新 | 13 | update_kmemo, update_kc, update_urlog, update_nlog, update_timeis, update_mi, update_lantana, update_tag, update_text, update_gkill_notification, update_rekyou, update_mirekyou, update_idf_kyou |
 | 共有 | 5 | get_share_kyou_list_infos, add_share_kyou_list_info, update_share_kyou_list_info, delete_share_kyou_list_infos, get_shared_kyous |
-| 出力 | 1 | export_kyou_html（いまの検索結果を単一 HTML へ焼き込んで返す。収集は共有と同じ1実装） |
+| 出力 | 1 | export_kyou_html（rykv / mi の検索結果を単一 HTML または HTML＋同名フォルダへ焼き込んで返す。収集は共有と同じ1実装） |
 | データ削除 | 1 | delete_kyou_cascade（本体と付随データをまとめて消す） |
 | 通知 | 2 | get_gkill_notification_public_key, register_gkill_notification |
 | 設定 | 7 | get_application_config, update_application_config, get_server_configs, update_server_configs, get_repositories, update_user_reps, reload_repositories |
@@ -313,7 +313,7 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 
 `gkill/api/gkill_server_api/gkill_server_api_address.go` の `apiRoutes()` が返すルート表で定義されます（99件。パス・HTTPメソッド・認証区分・無認証ボディ上限・ハンドラを1行1ルート）。大半は`POST /api/{endpoint}`形式ですが、`urlog_bookmarklet_page` のみ `GET` です。`serve.go` の `registerAPIRoutes` が表の認証区分（`authNone` / `authSession` / `authSessionRepos`）から `wrapNoAuth`（capped 含む）/ `wrapAuth` / `wrapAuthRepos` を選んで登録し、テストハーネス（`gkill_server_api_test.go` の `setupTestRouter`）も同じ関数を呼びます。表・ハンドラ・doc コメント・認証区分の整合は `api_routes_test.go` が、Web クライアント（`gkill-api.ts`）との整合は `gkill-api.test.ts` が機械検査します（[ADR-0709](../adr/0709-api-route-table-single-source.md)）。
 
-API 以外のルートは19件（`PathPrefix` 18 + `Path` 1）で、SPA 配信・`/files/`・`/zip_cache/`・
+API 以外のルートは21件（`PathPrefix` 20 + `Path` 1）で、SPA 配信・`/files/`・`/zip_cache/`・
 `/resources/manual/` 等がここに含まれます。
 
 ### レスポンス構造
@@ -554,13 +554,13 @@ sequenceDiagram
 
 | 技術 | バージョン | 用途 |
 |---|---|---|
-| Vue 3 | ^3.5.40 | UIフレームワーク |
-| Vuetify 4 | ^4.1.7 | UIコンポーネントライブラリ |
-| Vue Router 5 | ^5.2.0 | ルーティング |
-| vue-i18n 11 | ^11.4.8 | 国際化（7言語） |
-| Vite 8 | ^8.2.0 | ビルドツール |
+| Vue 3 | ^3.5.45 | UIフレームワーク |
+| Vuetify 4 | ^4.3.3 | UIコンポーネントライブラリ |
+| Vue Router 5 | ^5.5.1 | ルーティング |
+| vue-i18n 11 | ^11.4.20 | 国際化（7言語） |
+| Vite 8 | ^8.3.8 | ビルドツール |
 | TypeScript 6 | ~6.0.0 | 型安全性 |
-| vite-plugin-pwa | ^1.2.0 | PWA対応 |
+| vite-plugin-pwa | ^2.0.0 | PWA対応 |
 
 バージョンは `package.json` を正とする。詳細な依存一覧は [frontend-architecture.md](frontend-architecture.md) を参照。
 
@@ -590,7 +590,7 @@ sequenceDiagram
 
 #### 主な責務
 
-- 全90登録エンドポイントへのHTTPリクエスト送信
+- 95アドレス / 93メソッドによる HTTP リクエスト送信
 - セッションIDの管理
 - リクエスト/レスポンスの型変換
 - エラーハンドリング
@@ -618,7 +618,7 @@ Kyou の削除は Kyou 単体の論理削除ではなく連鎖削除です。処
 
 | 種別 | 数 | 配置 |
 |---|---|---|
-| ページ | 15 | `pages/*.vue` |
+| ページ | 16 | `pages/*.vue` |
 | ビュー | 214 | `pages/views/*.vue` |
 | ダイアログ | 121 | `pages/dialogs/*.vue` |
 
@@ -673,7 +673,7 @@ Vuetifyで2つのテーマを定義しています。
 | `--cache_clear_count_limit` | `3000` | キャッシュクリアまでのアイテム数上限 |
 | `--cache_update_duration` | `1m` | キャッシュ更新間隔 |
 | `--pre_load_users` | （なし） | 起動時にリポジトリを先読みするユーザ（複数指定可）。`PreLoadRepositories` が処理する |
-| `--log` | `none` | ログレベル: `none`, `error`, `warn`, `info`, `access`, `debug`, `trace`, `trace_sql` |
+| `--log` | `error` | ログレベル: `none`, `error`, `warn`, `info`, `access`, `debug`, `trace`, `trace_sql` |
 | `--log_rotate_max_bytes` | `33554432`（32 MiB） | ログファイル1本の上限。超える直前に回転する。0以下で回転を無効化 |
 | `--log_rotate_keep` | `5` | 回転した旧ファイルの保持世代数（`.1`〜`.5`）。0以下で旧ファイルを保持しない |
 
@@ -685,8 +685,8 @@ Vuetifyで2つのテーマを定義しています。
 
 | 設計判断 | 内容 |
 |---|---|
-| Mutex の位置 | `pluginRepositoryImpl` struct に `sync.Mutex` を保持。`pluginProcess` struct には置かない |
-| ロック範囲 | `callCommand()` が `mu.Lock()` → `ensureStarted()` → `sendRequest()` → `mu.Unlock()` を直列化 |
+| 排他スロットの位置 | `pluginRepositoryImpl` struct に容量1チャネル `callSlot chan struct{}` を保持（待つのをやめられる排他制御）。`pluginProcess` struct には置かない |
+| 直列化範囲 | `callCommand()` が `acquireCallSlot()` → `ensureStarted()` → `sendRequest()` → `release()` を直列化 |
 | プロセス起動 | `exec.CommandContext(context.Background(), ...)` — HTTP リクエストキャンセルによる強制終了を防ぐ |
 | 呼び出しタイムアウト | `callCommand()` は呼び出し側 ctx からキャンセルを切り離し（`context.WithoutCancel`）、Deadline だけを引き継ぐ。期限が無ければ**既定 30 秒**を注入する。超過時は `Process.Kill()` でサブプロセスを回収し `started=false` にする |
 | 呼び出し元のキャンセル | HTTP クライアントの切断などでは待つのをやめるだけで、**プロセスには触らない**。遅れて届く応答は `resp.ID` の不一致で読み捨てる |
