@@ -23,7 +23,14 @@ const (
 	exportStructRepNameKey     = "rep_name"
 	exportStructDeviceNameKey  = "device_name"
 	exportStructRepTypeNameKey = "rep_type_name"
+	exportStructMiBoardNameKey = "board_name"
 )
+
+// exportMiAllBoardKey は板ツリーの「すべて」の番兵。
+// クライアントの MI_ALL_BOARD_KEY（mi-board-names.ts）と同じ値であること ——
+// ずれると、出力した mi のサイドバーから「すべて」の列を選べなくなる。
+// ロケール非依存の固定値で、表示名（name）だけが訳語になる。
+const exportMiAllBoardKey = "すべて"
 
 // exportAllowedNames は焼き込んでよい名前の集合。
 // nil は「絞らない」（その列は全部を出すと決めた列なので、ここで削ると本人の意図より狭くなる）。
@@ -32,6 +39,11 @@ type exportAllowedNames struct {
 	Reps     map[string]bool
 	RepTypes map[string]bool
 	Devices  map[string]bool
+	// MiBoards は mi の板名。列の MiBoardName から集める（1列1板）。
+	// **nil のときは絞らない** —— mi_board_name が nil の列（「すべて」）が
+	// 1本でもあれば、その列は板をまたいで全部を出すと決めた列なので、
+	// 木を刈ると本人の意図より狭くなる。rykv の出力では常に nil（板ツリーを使わない）。
+	MiBoards map[string]bool
 }
 
 // collectExportAllowedNames は列の検索条件から、チェックされていた名前を集める。
@@ -108,6 +120,26 @@ func collectExportAllowedNames(columns []find.FindQuery) *exportAllowedNames {
 	return allowed
 }
 
+// collectExportAllowedMiBoards は列の検索条件から、焼き込んでよい板名を集める。
+//
+// mi の列は1本につき板1つ（`mi_board_name`）で、nil が「すべて」を意味する。
+// nil の列が1本でもあれば絞らない（nil を返す）。
+// 「すべて」の番兵ノードは実在の板ではないので、常に残す。
+//
+// rykv の出力ではこの関数を呼ばない（板ツリーは使わないので刈る必要が無い）。
+func collectExportAllowedMiBoards(columns []find.FindQuery) map[string]bool {
+	boards := map[string]bool{}
+	for i := range columns {
+		if columns[i].MiBoardName == nil {
+			return nil
+		}
+		boards[*columns[i].MiBoardName] = true
+	}
+	// 番兵は実在の板ではないので、刈られないように入れておく
+	boards[exportMiAllBoardKey] = true
+	return boards
+}
+
 // exportDeviceFromRepName は rep 名から端末名を導く。
 // クライアントの get_device_from_rep_name と同じ規則にすること。
 func exportDeviceFromRepName(repName string) string {
@@ -144,6 +176,9 @@ func pruneExportApplicationConfigStructs(config *user_config.ApplicationConfig, 
 		{&config.RepStruct, exportStructRepNameKey, allowed.Reps},
 		{&config.DeviceStruct, exportStructDeviceNameKey, allowed.Devices},
 		{&config.RepTypeStruct, exportStructRepTypeNameKey, allowed.RepTypes},
+		// 板ツリー。mi の出力だけ非 nil になる（rykv は板ツリーを使わない）。
+		// 刈らないと、出力に含めなかった板名が渡した相手に読まれる
+		{&config.MiBoardStruct, exportStructMiBoardNameKey, allowed.MiBoards},
 	}
 	for _, target := range targets {
 		if target.names == nil || *target.raw == nil {

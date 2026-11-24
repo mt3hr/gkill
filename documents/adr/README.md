@@ -219,6 +219,7 @@ git に食わせる経路への逆戻りになる。同種の罠が gkill には
 | [0418](0418-split-rykv-views-by-mode.md) | rykv はモードごとにビューを分け、列の機構を共有の子へ置く（モードのフラグを0にする） | Accepted |
 | [0419](0419-clear-date-time-fields-with-in-field-x.md) | 日付・時刻欄を空に戻す手段は欄の中の × ひとつにし、欄ごとに空にする | Accepted |
 | [0420](0420-split-mi-views-by-mode.md) | mi もモードごとにビューを分け、列の機構を共有の子へ置く（モードのフラグを0にする） | Accepted |
+| [0421](0421-exported-page-picks-view-by-screen-mark.md) | 出力 HTML は焼き込みの印でマウント先を選び、mi のサイドバーは絞れる節だけ残す | Accepted |
 | [0501](0501-save-marker-beforeinput-input-pair.md) | KFTL保存マーカーの判定は beforeinput→input の対で行う | Accepted |
 | [0502](0502-kftl-errors-are-per-line.md) | メモ帳（KFTL）の失敗は行ごとに返し、入力ミスとサーバ障害を分ける | Accepted |
 | [0503](0503-kftl-prefix-misuse-is-an-input-error.md) | 引数の無い／引数を同じ行に書いたメモ帳のプレフィックスは、ゼロ値を書かずに行別エラーにする | Accepted |

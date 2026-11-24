@@ -242,3 +242,100 @@ func TestCollectExportAllowedNames_EmptyIsZeroHit(t *testing.T) {
 		t.Errorf("空であるべき: %v", allowed.Tags)
 	}
 }
+
+// TestCollectExportAllowedMiBoards は、mi の出力で焼き込んでよい板名の集め方を確かめる。
+//
+// mi の列は1本につき板1つ（MiBoardName）で、nil が「すべて」を意味する。
+// nil の列が1本でもあれば、その列は板をまたいで全部を出すと決めた列なので、
+// 木を刃ると本人の意図より狭くなる。
+func TestCollectExportAllowedMiBoards(t *testing.T) {
+	boardA := "BoardA"
+	boardB := "BoardB"
+
+	t.Run("列の板名を集める（「すべて」の番兵は常に残す）", func(t *testing.T) {
+		boards := collectExportAllowedMiBoards([]find.FindQuery{
+			{MiBoardName: &boardA},
+			{MiBoardName: &boardB},
+		})
+		if boards == nil {
+			t.Fatal("綞らないになっている")
+		}
+		for _, want := range []string{boardA, boardB, exportMiAllBoardKey} {
+			if !boards[want] {
+				t.Errorf("%q が許可集合に無い: %v", want, boards)
+			}
+		}
+	})
+
+	t.Run("nil の列（すべて）が1本でもあれば綞らない", func(t *testing.T) {
+		boards := collectExportAllowedMiBoards([]find.FindQuery{
+			{MiBoardName: &boardA},
+			{MiBoardName: nil},
+		})
+		if boards != nil {
+			t.Errorf("「すべて」の列があるのに刃ろうとしている: %v", boards)
+		}
+	})
+}
+
+// TestPruneExportApplicationConfigStructs_PrunesMiBoardStruct は、出力に含めなかった
+// 板名が木から消えることを確かめる。
+//
+// 板名は利用者が付けた名前で、それ自身が知られたくない情報になりうる。
+// 表示を止めるだけでは足らない —— ファイルの中に残っていれば読まれる。
+func TestPruneExportApplicationConfigStructs_PrunesMiBoardStruct(t *testing.T) {
+	config := &user_config.ApplicationConfig{
+		MiBoardStruct: rawJSON(t, map[string]any{
+			"key": "__root__", "is_dir": true, "children": []any{
+				map[string]any{"key": exportMiAllBoardKey, "board_name": exportMiAllBoardKey, "children": nil},
+				map[string]any{"key": "BoardA", "board_name": "BoardA", "children": nil},
+				map[string]any{"key": "BoardSecret", "board_name": "BoardSecret", "children": nil},
+			},
+		}),
+	}
+
+	allowed := &exportAllowedNames{MiBoards: map[string]bool{
+		"BoardA": true, exportMiAllBoardKey: true,
+	}}
+	if err := pruneExportApplicationConfigStructs(config, allowed); err != nil {
+		t.Fatalf("prune: %v", err)
+	}
+
+	names := structNames(t, config.MiBoardStruct, exportStructMiBoardNameKey)
+	for _, want := range []string{"BoardA", exportMiAllBoardKey} {
+		found := false
+		for _, name := range names {
+			if name == want {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("出力した板 %q が木から消えている: %v", want, names)
+		}
+	}
+	for _, name := range names {
+		if name == "BoardSecret" {
+			t.Errorf("出力に含めなかった板名が木に残っている: %v", names)
+		}
+	}
+}
+
+// TestPruneExportApplicationConfigStructs_KeepsMiBoardStructWhenNotFiltered は、
+// rykv の出力（MiBoards が nil）では板ツリーを触らないことを確かめる。
+func TestPruneExportApplicationConfigStructs_KeepsMiBoardStructWhenNotFiltered(t *testing.T) {
+	config := &user_config.ApplicationConfig{
+		MiBoardStruct: rawJSON(t, map[string]any{
+			"key": "__root__", "is_dir": true, "children": []any{
+				map[string]any{"key": "BoardA", "board_name": "BoardA", "children": nil},
+			},
+		}),
+	}
+
+	if err := pruneExportApplicationConfigStructs(config, &exportAllowedNames{}); err != nil {
+		t.Fatalf("prune: %v", err)
+	}
+	names := structNames(t, config.MiBoardStruct, exportStructMiBoardNameKey)
+	if len(names) != 1 || names[0] != "BoardA" {
+		t.Errorf("綞らないはずの板ツリーを刃っている: %v", names)
+	}
+}

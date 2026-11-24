@@ -114,7 +114,13 @@ func (g *GkillServerAPI) HandleExportKyouHTML(w http.ResponseWriter, r *http.Req
 	for i := range request.Columns {
 		columnQueries = append(columnQueries, request.Columns[i].Query)
 	}
-	if err := pruneExportApplicationConfigStructs(applicationConfig, collectExportAllowedNames(columnQueries)); err != nil {
+	allowedNames := collectExportAllowedNames(columnQueries)
+	if request.Screen == req_res.ExportScreenMi {
+		// 板ツリーは mi の出力だけ刈る。rykv は板ツリーを使わないので、
+		// 刈る根拠（どの板を出したか）が無い
+		allowedNames.MiBoards = collectExportAllowedMiBoards(columnQueries)
+	}
+	if err := pruneExportApplicationConfigStructs(applicationConfig, allowedNames); err != nil {
 		err = fmt.Errorf("error at prune export application config structs: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error at prune export application config structs", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
@@ -181,9 +187,20 @@ func (g *GkillServerAPI) HandleExportKyouHTML(w http.ResponseWriter, r *http.Req
 // validateExportKyouHTMLRequest は選べない組み合わせを弾く。
 func validateExportKyouHTMLRequest(ctx context.Context, request *req_res.ExportKyouHTMLRequest) *message.GkillError {
 	invalid := func(reason string) *message.GkillError {
-		err := fmt.Errorf("error at validate export rykv html request: %s", reason)
+		err := fmt.Errorf("error at validate export kyou html request: %s", reason)
 		return bundleError(ctx, request.LocaleName, message.InvalidExportKyouHTMLOptionError,
-			"FAILED_EXPORT_KYOU_HTML_MESSAGE", "error at validate export rykv html request", err)
+			"FAILED_EXPORT_KYOU_HTML_MESSAGE", "error at validate export kyou html request", err)
+	}
+
+	// 空文字は rykv として扱う（印を足す前のクライアントが送ってこない）。
+	// 知らない値は弾く —— 出力先のページは知らない印を rykv へ寄せるので、
+	// 通してしまうと「mi を出したのに rykv として開く」が静かに起きる
+	switch request.Screen {
+	case "", req_res.ExportScreenRykv:
+		request.Screen = req_res.ExportScreenRykv
+	case req_res.ExportScreenMi:
+	default:
+		return invalid("unknown screen " + request.Screen)
 	}
 
 	if len(request.Columns) == 0 {
@@ -221,6 +238,7 @@ func validateExportKyouHTMLRequest(ctx context.Context, request *req_res.ExportK
 func (g *GkillServerAPI) buildExportPayload(ctx context.Context, request *req_res.ExportKyouHTMLRequest, userID string, device string, applicationConfig *user_config.ApplicationConfig, sidecar *exportSidecar) (*exportedKyouPayload, *message.GkillError) {
 	payload := &exportedKyouPayload{
 		SchemaVersion:         exportedPayloadSchemaVersion,
+		Screen:                request.Screen,
 		Title:                 request.Title,
 		LocaleName:            request.LocaleName,
 		WithDnote:             request.IncludeDnote,

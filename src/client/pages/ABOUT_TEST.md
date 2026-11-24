@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、51 specファイル265テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、52 specファイル268テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## E2E の書き方の規約
 
@@ -75,7 +75,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 
 ## テストファイル一覧
 
-### E2E テスト（51 specファイル, 265テスト宣言）
+### E2E テスト（52 specファイル, 268テスト宣言）
 
 #### ページ表示・ナビゲーション系（14ファイル）
 
@@ -91,6 +91,7 @@ CI も `npx eslint --max-warnings 0` で回すので、警告のまま溜める�
 | `src/client/__tests__/e2e/kyou-list.spec.ts` | `/kyou` — レコード一覧 |
 | `src/client/__tests__/e2e/share-page.spec.ts` | `/shared_page` — 不正な共有IDでエラーが表示され、読み込み中のまま止まらないこと（返る内容の網羅はGo側 handle_get_shared_kyous_test.go） |
 | `src/client/__tests__/e2e/kyou-export-html.spec.ts` | 「HTML で出力」。出来上がった HTML そのものを見る（**読み込み時に gkill を取りに行く形が残っていないこと**・通信を全部止めても画面が出て読み込み中のまま固まらないこと・メディアを埋め込まない指定と同名フォルダの組み合わせが弾かれること）。組み立ての中身は Go 側 handle_export_kyou_html_test.go / export_html_render_test.go が見る。PATH 上の gkill_server が出力の API を持たないビルドでは飛ばす |
+| `src/client/__tests__/e2e/mi-export-html.spec.ts` | タスク画面（mi）の「HTML で出力」。**焼き込みの印で mi として開けること**（`"screen":"mi"` が乗る・`file://` で開いて `.mi_view_wrap` と板の見出しが出る・読み込み中のまま止まらない・通信を一本もしない・未知の画面を弾く）。印が落ちると rykv として開き、例外もエラーも出ない。画面に依らない約束は kyou-export-html.spec.ts が見る |
 | `src/client/__tests__/e2e/shared-mi.spec.ts` | `/shared_mi` — 旧URL。ルータの redirect で `/shared_page` へ引き継がれること（コンポーネントは無い。setup から `router.replace` すると初回ナビゲーションが完了しなくなる） |
 | `src/client/__tests__/e2e/register-first-account.spec.ts` | `/register_first_account` — 初回アカウント登録 |
 | `src/client/__tests__/e2e/set-new-password.spec.ts` | `/set_new_password` — パスワード再設定 |

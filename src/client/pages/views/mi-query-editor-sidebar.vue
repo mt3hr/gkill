@@ -5,6 +5,7 @@
                 :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_open_manage_share_kyou_dialog="show_manage_share_kyou_dialog()"
                 @request_open_share_kyou_dialog="show_share_kyou_dialog()"
+                @requested_export_kyou_html="emits('requested_export_kyou_html')"
                 @received_messages="(messages: GkillMessage[]) => onReceivedMessages(messages)"
                 @received_errors="(errors: GkillError[]) => onReceivedErrors(errors)" />
             <SidebarHeader class="sidebar_header" :application_config="application_config" :gkill_api="gkill_api"
@@ -12,7 +13,8 @@
                 :inited="inited_sidebar_header_for_query_sidebar"
                 @requested_search_with_update_cache="onRequestSearchTrue"
                 @requested_clear_find_query="emits_default_query()" ref="sidebar_header" />
-            <v-avatar v-if="saved_find_querys.length > 0" color="primary" class="saved_find_query_fab">
+            <v-avatar v-if="saved_find_querys.length > 0 && !application_config.for_export_kyou" color="primary"
+                class="saved_find_query_fab">
                 <v-menu transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
                         <v-btn color="white" icon="mdi-bookmark-multiple" variant="text" v-bind="props"
@@ -27,23 +29,39 @@
             </v-avatar>
         </v-card>
         <div class="mi_sidebar">
-            <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
-                @request_update_and_search="emits_current_query()" @request_update_keywords="emits_current_query()"
-                @request_update_use_keyword_query="emits_current_query()"
-                @request_clear_keyword_query="emits_cleard_keyword_query()"
-                :inited="inited_keyword_query_for_query_sidebar" @inited="onInitedKeyword"
-                ref="keyword_query" />
-            <div> <v-divider /> </div>
+            <!--
+                出力先では隠す節。
+                **v-if ではなく v-show で隠すこと。** generate_query() が各節の
+                template ref から値を集めるので、v-if で落とすと null 参照になる。
+                ワードは Kyou 単体では判定できない（can_decide_query_locally と同じ線引き。
+                TS でワード照合の4実装目を書かない。ADR-0417）
+            -->
+            <div v-show="!application_config.for_export_kyou">
+                <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                    @request_update_and_search="emits_current_query()" @request_update_keywords="emits_current_query()"
+                    @request_update_use_keyword_query="emits_current_query()"
+                    @request_clear_keyword_query="emits_cleard_keyword_query()"
+                    :inited="inited_keyword_query_for_query_sidebar" @inited="onInitedKeyword"
+                    ref="keyword_query" />
+                <div> <v-divider /> </div>
+            </div>
             <miExtractCheckStateQuery :application_config="application_config" :gkill_api="gkill_api"
                 :find_kyou_query="query" @request_clear_check_state="emits_cleard_check_state()"
                 @request_update_extract_check_state="emits_current_query()"
                 @inited="onInitedCheckState" ref="check_state_query" />
             <div> <v-divider /> </div>
-            <miSortTypeQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
-                @request_update_sort_type="emits_current_query()"
-                @request_clear_sort_type="emits_cleard_sort_type_query()" ref="sort_type_query"
-                @inited="onInitedSort" />
-            <div> <v-divider /> </div>
+            <!--
+                並べ替えはサーバ側の処理（apply_mi_projection）なので、出力先には無い。
+                出したままにすると「選べるのに何も起きない」になるので節ごと隠す。
+                焼いた時点の並びで固定される（ADR-0421）
+            -->
+            <div v-show="!application_config.for_export_kyou">
+                <miSortTypeQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                    @request_update_sort_type="emits_current_query()"
+                    @request_clear_sort_type="emits_cleard_sort_type_query()" ref="sort_type_query"
+                    @inited="onInitedSort" />
+                <div> <v-divider /> </div>
+            </div>
             <miBoardQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 :inited="inited_board_query_for_query_sidebar" @inited="onInitedBoard"
                 @request_open_focus_board="(board_name: string) => onRequestOpenFocusBoard(board_name)"

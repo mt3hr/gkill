@@ -39,6 +39,19 @@ describe('parse_exported_payload', () => {
         expect(parse_exported_payload({ schema_version: '1' })).toBeNull()
     })
 
+    // 出力ページがマウント先を選ぶのはこの印だけ。
+    // 知らない値と欠損を rykv へ寄せるので、**印を足す前の出力も読める**。
+    // これのために schema_version を上げないという判断がここに依存する
+    it('画面の印は mi だけを読み、欠損と未知の値は rykv へ寄せる', () => {
+        const base = { schema_version: exported_payload_schema_version }
+        expect(parse_exported_payload(base)?.screen, '印が無い出力が rykv にならない').toBe('rykv')
+        expect(parse_exported_payload({ ...base, screen: 'rykv' })?.screen).toBe('rykv')
+        expect(parse_exported_payload({ ...base, screen: 'mi' })?.screen).toBe('mi')
+        expect(parse_exported_payload({ ...base, screen: 'dashboard' })?.screen,
+            '知らない画面をそのまま返している').toBe('rykv')
+        expect(parse_exported_payload({ ...base, screen: 42 })?.screen).toBe('rykv')
+    })
+
     it('説明の欄が欠けていても既定で埋める', () => {
         const payload = parse_exported_payload({ schema_version: exported_payload_schema_version })
         expect(payload).not.toBeNull()

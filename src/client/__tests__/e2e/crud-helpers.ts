@@ -664,11 +664,34 @@ export function findKyouByText(page: Page, text: string) {
  * リストの描画が終わるまで待ってから locator を返す。
  * 並列実行時は描画が間に合わずに count 0 になることがあるため、
  * 「対象が見つかっていること」を前提にするテストはこちらを使う。
+ *
+ * **一覧は `v-virtual-scroll` なので、窓の外の行は DOM に無い。**
+ * 検索に当たっていても描かれていなければ `visible` にならないので、
+ * 待っても出てこないときは一覧を終端まで送ってから探し直す。
+ * mi は「ソート基準の時刻が未設定のものを末尾へ」並べるので、作ったばかりの
+ * タスクは末尾に来る —— 共有ホームに他の spec のタスクが溜まるほど窓から出る。
  */
 export async function waitForKyouByText(page: Page, text: string, timeout = 30000) {
   const record = findKyouByText(page, text)
-  await record.waitFor({ state: 'visible', timeout })
-  return record
+  try {
+    await record.waitFor({ state: 'visible', timeout })
+    return record
+  } catch (first_error) {
+    // 一覧がそもそも無い画面（最果て等）では送る先が無いので、元のエラーを返す
+    const list = page.locator('.kyou_list_view').first()
+    if (await list.count() === 0) {
+      throw first_error
+    }
+    // 終端まで何回か送る。1回では足りないことがある（窓の高さぶんずつ動く）
+    for (let i = 0; i < 20; i++) {
+      await list.evaluate((element) => { element.scrollTop = element.scrollHeight })
+      if (await record.isVisible()) {
+        return record
+      }
+    }
+    await record.waitFor({ state: 'visible', timeout: 5000 })
+    return record
+  }
 }
 
 /**

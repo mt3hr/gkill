@@ -213,6 +213,7 @@ func TestHandleExportKyouHTML_RejectsUnsupportedOptions(t *testing.T) {
 		customize func(*req_res.ExportKyouHTMLRequest)
 	}{
 		{"列が1本も無い", func(req *req_res.ExportKyouHTMLRequest) { req.Columns = nil }},
+		{"未知の画面", func(req *req_res.ExportKyouHTMLRequest) { req.Screen = "dashboard" }},
 		{"未知のメディアの指定", func(req *req_res.ExportKyouHTMLRequest) { req.MediaMode = "whatever" }},
 		{"未知の出力の形", func(req *req_res.ExportKyouHTMLRequest) { req.OutputFormat = "whatever" }},
 		{"同名フォルダはメディアを埋め込まないと空になる", func(req *req_res.ExportKyouHTMLRequest) {
@@ -293,5 +294,45 @@ func TestHandleExportKyouHTML_SidecarReturnsZip(t *testing.T) {
 	}
 	if !foundHTML {
 		t.Error("ZIP に HTML が入っていない")
+	}
+}
+
+// TestHandleExportKyouHTML_BakesScreen は、画面種別の印が焼き込みに乗ることを確かめる。
+//
+// 出力先のページはこの印だけを見てマウント先を選ぶ（ADR-0420）ので、
+// 落ちると mi を出力したのに rykv として開く（例外もエラーも出ない）。
+// 空文字を rykv として扱うのは、印を足す前のクライアントが送ってこないため。
+func TestHandleExportKyouHTML_BakesScreen(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	for _, testCase := range []struct {
+		name string
+		send string
+		want string
+	}{
+		{"指定なしは rykv", "", req_res.ExportScreenRykv},
+		{"rykv", req_res.ExportScreenRykv, req_res.ExportScreenRykv},
+		{"mi", req_res.ExportScreenMi, req_res.ExportScreenMi},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			exportResp := exportKyouHTML(t, tsURL, sessionID, func(req *req_res.ExportKyouHTMLRequest) {
+				req.Screen = testCase.send
+			})
+			// 出力用のガワが embed に無いビルド（CI の Go ジョブ）では飛ばす
+			if _, err := readExportTemplate(); err != nil {
+				t.Skip("出力用のガワが embed に無い（npm run prepare_install を通していないビルド）")
+			}
+			if len(exportResp.Errors) != 0 {
+				t.Fatalf("出力に失敗した: %+v", exportResp.Errors)
+			}
+			payload := extractExportPayload(t, exportResp.HTML)
+			if got, _ := payload["screen"].(string); got != testCase.want {
+				t.Errorf("焼き込みの screen = %q, want %q", got, testCase.want)
+			}
+		})
 	}
 }

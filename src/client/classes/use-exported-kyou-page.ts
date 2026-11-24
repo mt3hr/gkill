@@ -12,8 +12,10 @@ import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import { useGkillMessageFeed } from '@/classes/use-gkill-message-feed'
 import { apply_baked_locale } from '@/export-i18n'
 import {
-    build_exported_api, parse_exported_payload, type ExportedKyouPayload,
+    build_exported_api, exported_screen_default, parse_exported_payload,
+    type ExportedKyouPayload, type ExportedScreen,
 } from '@/classes/exported-kyou-payload'
+import { MiBoardStructElementData } from '@/classes/datas/config/mi-board-struct-element-data'
 
 /** HTML へ焼き込まれたデータの差し込み先の id（export.html と export_html_render.go で対） */
 const export_data_element_id = 'gkill-export-data'
@@ -64,6 +66,9 @@ export function useExportedKyouPage() {
     // 木が空のまま画面を描くと、サイドバーの各節が「チェック0個」を生成して emit し、
     // tags = [] / reps = []（非 null の空配列 = 0件指定）の条件で**列が全部空になる**
     const is_ready: Ref<boolean> = ref(false)
+    // どの画面として出力したか。**マウント先を選ぶのはページのここ1回だけ** ――
+    // ビューの中へモードのフラグを戻さない（ADR-0418 / ADR-0420）
+    const exported_screen: Ref<ExportedScreen> = ref(payload.value ? payload.value.screen : exported_screen_default)
     const share_title: Ref<string> = ref(payload.value ? payload.value.title : '')
     const is_exported_with_dnote: Ref<boolean> = ref(payload.value ? payload.value.with_dnote : false)
     const is_exported_with_map: Ref<boolean> = ref(payload.value ? payload.value.with_map : false)
@@ -155,7 +160,9 @@ export function useExportedKyouPage() {
      * `get_all_rep_names` は出力用 API が**焼いたデータから**返すので、
      * 木に出るのは焼いたものだけになる（階層は落ちてフラットになる）。
      *
-     * 板（mi_board）は呼ばない —— `get_mi_board_list` は throw する（rykv では使わない）。
+     * **組む木は画面によって違う。** rykv のサイドバーはタグ・記録先・端末・記録種別を
+     * 持ち、mi のサイドバーはタグと板だけを持つ。mi で板ツリー（`mi_board_struct`）を
+     * 組み忘れると、板ツリーが空のまま描かれて板を1つも選べなくなる。
      */
     async function build_sidebar_structs(config: ApplicationConfig): Promise<void> {
         // ルートが無いことがある。木は利用者が設定画面で並べて初めて作られるもので、
@@ -164,25 +171,37 @@ export function useExportedKyouPage() {
         // `new ApplicationConfig()` の既定ごと null で潰れる。本体の
         // `get_application_config` が同じ修復をしているのと同じ理由で、ここでも組み直す。
         if (!config.tag_struct) config.tag_struct = new TagStructElementData()
-        if (!config.rep_struct) config.rep_struct = new RepStructElementData()
-        if (!config.rep_type_struct) config.rep_type_struct = new RepTypeStructElementData()
-        if (!config.device_struct) config.device_struct = new DeviceStructElementData()
-
         prepare_struct_root(config.tag_struct, 'tag')
-        prepare_struct_root(config.rep_struct, 'rep')
-        prepare_struct_root(config.device_struct, 'device')
-        prepare_struct_root(config.rep_type_struct, 'rep_type')
-        await config.append_not_found_reps()
-        await config.append_not_found_devices()
-        await config.append_not_found_rep_types()
         await config.append_not_found_tags()
-        await config.append_no_devices()
         // 「タグ無し」の仮想タグ。これが木に無いと、タグの付いていない記録が
         // 「チェックされていないタグ」扱いで**一覧から消える**。
         // ただし出力した本人が外していたなら出さない（焼いていないものは選べない）
         if (gkill_api.value.is_exported_no_tags_allowed()) {
             await config.append_no_tags()
         }
+
+        if (exported_screen.value === 'mi') {
+            if (!config.mi_board_struct) config.mi_board_struct = new MiBoardStructElementData()
+            prepare_struct_root(config.mi_board_struct, 'mi_board')
+            await config.append_not_found_mi_boards()
+            // 「すべて」の仮想ノード。無いと mi_board_name が null の列
+            // （板をまたいで全部を出す列）をツリーから選べない。
+            // key/board_name はロケール非依存の番兵で、表示名だけが訳語
+            await config.append_all_mi_board()
+            return
+        }
+
+        if (!config.rep_struct) config.rep_struct = new RepStructElementData()
+        if (!config.rep_type_struct) config.rep_type_struct = new RepTypeStructElementData()
+        if (!config.device_struct) config.device_struct = new DeviceStructElementData()
+
+        prepare_struct_root(config.rep_struct, 'rep')
+        prepare_struct_root(config.device_struct, 'device')
+        prepare_struct_root(config.rep_type_struct, 'rep_type')
+        await config.append_not_found_reps()
+        await config.append_not_found_devices()
+        await config.append_not_found_rep_types()
+        await config.append_no_devices()
     }
 
     // ── Lifecycle ──
@@ -213,6 +232,7 @@ export function useExportedKyouPage() {
         is_exported_with_dnote,
         is_exported_with_map,
         is_exported_with_sidebar,
+        exported_screen,
         application_config,
         gkill_api,
 

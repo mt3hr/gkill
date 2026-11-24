@@ -279,7 +279,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
 | HTML 出力のエントリポイント | `src/client/export-main.ts` | 出力したファイルの中で動く第2のエントリ。ルータは持たない（`export-router-stub.ts`）。i18n も1言語だけの版（`export-i18n.ts`）へ差し替わる |
 | HTML 出力の画面 | `src/client/pages/exported-kyou-page.vue` | 焼き込んだ JSON を読んで rykv を描く。列の中身は通常と同じ `rykv-columns-view.vue` |
-| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約4,100行） |
+| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約4,200行） |
 | リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（187ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
 | DashboardConfig | `src/client/classes/datas/config/dashboard-config.ts` | ダッシュボード設定クラス（MI検索条件・Dnote検索条件） |
@@ -296,7 +296,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（1065キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（1067キー/言語） |
 
 ### その他
 

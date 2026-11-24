@@ -47,6 +47,7 @@
                 :app_content_width="app_content_width" :find_kyou_query="focused_query"
                 :inited="false /* これは見られないのでfalseのままでOK */"
                 @requested_search="onSidebarRequestedSearch"
+                @requested_export_kyou_html="emits('requested_export_kyou_html')"
                 @updated_query="onSidebarUpdatedQuery"
                 @request_open_focus_board="(board_name: string) => open_or_focus_board(board_name)"
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"

@@ -2,6 +2,7 @@
 
 import { GkillAPIRequest } from "../gkill-api-request"
 import type { FindKyouQuery } from "../find_query/find-kyou-query"
+import type { ExportedScreen } from "@/classes/exported-kyou-payload"
 
 /** メディア（画像・動画・添付ファイル）の埋め込み方 */
 export type ExportMediaMode = 'thumbnail' | 'full' | 'none'
@@ -18,6 +19,15 @@ export const EXPORT_DEFAULT_MEDIA_ITEM_LIMIT_BYTES = 100 * 1024 * 1024
 export type ExportOutputFormat = 'single' | 'sidecar'
 
 export class ExportKyouHTMLRequest extends GkillAPIRequest {
+
+    /**
+     * どの画面を出力するか。焼き込みの印になり、出力先のページが
+     * これを見てマウント先を選ぶ（ADR-0420）。
+     *
+     * **Go 側（req_res.ExportScreen*）と同じ字面にすること。**
+     * サーバは知らない値を 400 で弾く。
+     */
+    screen: ExportedScreen
 
     title: string
 
@@ -65,6 +75,7 @@ export class ExportKyouHTMLRequest extends GkillAPIRequest {
 
     constructor() {
         super()
+        this.screen = "rykv"
         this.title = ""
         this.columns = []
         this.include_attached_tags = true

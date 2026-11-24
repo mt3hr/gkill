@@ -586,7 +586,7 @@ sequenceDiagram
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts`（約4,100行）は、バックエンドAPIとの通信を一元管理するシングルトンクラスです。
+`src/client/classes/api/gkill-api.ts`（約4,200行）は、バックエンドAPIとの通信を一元管理するシングルトンクラスです。
 
 #### 主な責務
 

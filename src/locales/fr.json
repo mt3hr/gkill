@@ -837,6 +837,8 @@
     "EXPORT_TARGET_TITLE": "Cible",
     "EXPORT_TARGET_ALL_COLUMNS": "Toutes les colonnes affichées",
     "EXPORT_TARGET_FOCUSED_COLUMN": "Colonne sélectionnée",
+    "EXPORT_TARGET_ALL_BOARDS": "Tous les tableaux affichés",
+    "EXPORT_TARGET_FOCUSED_BOARD": "Tableau sélectionné",
     "EXPORT_INCLUDE_TITLE": "Éléments à inclure",
     "EXPORT_INCLUDE_TIMEISS": "Pointages",
     "EXPORT_INCLUDE_GPS_LOG": "Données de localisation",

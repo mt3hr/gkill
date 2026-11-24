@@ -21,6 +21,9 @@ import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-applicati
 import { GetNotificationsByTargetIDRequest } from '@/classes/api/req_res/get-notifications-by-target-id-request'
 import { GetNotificationHistoryByNotificationIDRequest } from '@/classes/api/req_res/get-notification-history-by-notification-id-request'
 import { GetPluginContentHTMLRequest } from '@/classes/api/req_res/get-plugin-content-html-request'
+import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
+import { Mi } from '@/classes/datas/mi'
+import { MiReKyou } from '@/classes/datas/mi-re-kyou'
 
 function make_kyou(id: string): Kyou {
     const kyou = new Kyou()
@@ -38,6 +41,8 @@ function make_query(query_id: string): FindKyouQuery {
 function reset(api: GkillAPIForExportedKyou): void {
     api.columns = []
     api.kyous = []
+    api.mis = []
+    api.mirekyous = []
     api.attached_notifications = []
     api.attached_timeis_kyous = []
     api.plugin_html = new Map()
@@ -339,6 +344,48 @@ describe('GkillAPIForExportedKyou', () => {
 
         it('列が無ければ共有版の既定（1本）に委譲する', () => {
             expect(api.get_saved_rykv_find_kyou_querys()).toHaveLength(1)
+        })
+    })
+
+    // mi の出力で要る2本。どちらも共有版のままでは使えない ——
+    // get_saved_mi_find_kyou_querys は既定クエリ1本を返して板構成が復元されず、
+    // get_mi_board_list は throw する（rykv では使わないので共有版に実装が無い）。
+    describe('mi の列と板一覧', () => {
+        it('get_saved_mi_find_kyou_querys は焼き込んだ板の条件を返す', () => {
+            api.columns = [
+                { query: make_query('b1'), kyous: [] },
+                { query: make_query('b2'), kyous: [] },
+            ]
+            expect(api.get_saved_mi_find_kyou_querys().map(q => q.query_id)).toEqual(['b1', 'b2'])
+        })
+
+        it('列が無ければ共有版の既定（1本）に委譲する', () => {
+            expect(api.get_saved_mi_find_kyou_querys()).toHaveLength(1)
+        })
+
+        it('get_mi_board_list は焼いた Mi / MiReKyou の板名を返す（throw しない）', async () => {
+            const mi = new Mi()
+            mi.board_name = 'BoardA'
+            const mi2 = new Mi()
+            mi2.board_name = 'BoardA'
+            const mirekyou = new MiReKyou()
+            mirekyou.board_name = 'BoardB'
+            api.mis = [mi, mi2]
+            api.mirekyous = [mirekyou]
+
+            const res = await api.get_mi_board_list(new GetMiBoardRequest())
+            expect([...res.boards].sort(), '重複をそのまま返しているか、板名を拾えていない')
+                .toEqual(['BoardA', 'BoardB'])
+        })
+
+        it('板名が空の記録は一覧に入れない', async () => {
+            const mi = new Mi()
+            mi.board_name = ''
+            api.mis = [mi]
+            api.mirekyous = []
+
+            const res = await api.get_mi_board_list(new GetMiBoardRequest())
+            expect(res.boards).toEqual([])
         })
     })
 })

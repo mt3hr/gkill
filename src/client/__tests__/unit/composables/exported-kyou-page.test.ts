@@ -10,6 +10,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import '@/classes/api/gkill-api'
 import { useExportedKyouPage } from '@/classes/use-exported-kyou-page'
+import { MI_ALL_BOARD_KEY } from '@/classes/mi-board-names'
 import type { Ref } from 'vue'
 
 function put_json_element(element_id: string, text: string): void {
@@ -244,5 +245,71 @@ describe('サイドバーのチェックツリーは焼いたデータから組�
         await wait_ready(is_ready)
         const rep_names = (application_config.value.rep_struct.children ?? []).map(child => child.rep_name)
         expect(rep_names).toEqual(['RepA'])
+    })
+})
+
+// 焼き込みの印で組む木が変わる。mi のサイドバーはタグと板だけを持ち、
+// 板ツリーを組み忘れると空のまま描かれて板を1つも選べなくなる。
+// マウント先を選ぶのはページのこの印だけ（ADR-0420）
+describe('画面の印で組む木を選ぶ', () => {
+    function put_mi_payload(screen?: string): void {
+        put_json_element('gkill-export-data', JSON.stringify({
+            schema_version: 1,
+            screen: screen,
+            title: 'タスク',
+            locale_name: 'ja',
+            with_sidebar: true,
+            kyous: [
+                { id: 'a', rep_name: 'RepA', data_type: 'mi', related_time: '2026-07-01T09:00:00.000+09:00' },
+            ],
+            mis: [
+                {
+                    id: 'a', rep_name: 'RepA', data_type: 'mi', title: 'やること',
+                    board_name: 'BoardA', is_checked: false,
+                    related_time: '2026-07-01T09:00:00.000+09:00',
+                },
+            ],
+            attached_tags: [
+                { id: 't1', target_id: 'a', tag: 'タグA', related_time: '2026-07-01T09:00:00.000+09:00' },
+            ],
+            columns: [{
+                query: { query_id: 'q1', tags: ['タグA', 'no tags'], mi_board_name: 'BoardA' },
+                kyou_ids: ['a'],
+            }],
+        }))
+    }
+
+    function board_names(config: { mi_board_struct: { children: Array<{ board_name: string }> | null } }): Array<string> {
+        return (config.mi_board_struct.children ?? []).map(child => child.board_name)
+    }
+
+    it('印が mi なら板ツリーを組む（「すべて」の番兵ごと）', async () => {
+        put_mi_payload('mi')
+        const { is_ready, exported_screen, application_config } = useExportedKyouPage()
+        await wait_ready(is_ready)
+        expect(exported_screen.value).toBe('mi')
+        const names = board_names(application_config.value)
+        expect(names, '焼いた板が木に出ていない').toContain('BoardA')
+        // 「すべて」はロケール非依存の番兵。無いと mi_board_name が null の列を選べない
+        expect(names, '「すべて」の番兵が木に無い').toContain(MI_ALL_BOARD_KEY)
+    })
+
+    it('印が mi でもタグの木は組む（mi のサイドバーはタグを持つ）', async () => {
+        put_mi_payload('mi')
+        const { is_ready, application_config } = useExportedKyouPage()
+        await wait_ready(is_ready)
+        const names = (application_config.value.tag_struct.children ?? []).map(child => child.tag_name)
+        expect(names, '焼いたタグが木に出ていない').toContain('タグA')
+    })
+
+    // 印を足す前の出力を開いたときの経路。rykv として読み、
+    // mi の分岐（板ツリー）を通らないことを見る
+    it('印が無ければ rykv として読み、板ツリーを組まない', async () => {
+        put_mi_payload(undefined)
+        const { is_ready, exported_screen, application_config } = useExportedKyouPage()
+        await wait_ready(is_ready)
+        expect(exported_screen.value, '印が無い出力が rykv にならない').toBe('rykv')
+        expect(board_names(application_config.value),
+            'rykv として読んだのに板ツリーを組んでいる').toEqual([])
     })
 })

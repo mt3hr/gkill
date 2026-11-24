@@ -837,6 +837,8 @@
     "EXPORT_TARGET_TITLE": "対象",
     "EXPORT_TARGET_ALL_COLUMNS": "表示中のすべての列",
     "EXPORT_TARGET_FOCUSED_COLUMN": "フォーカスされている列",
+    "EXPORT_TARGET_ALL_BOARDS": "表示中のすべての板",
+    "EXPORT_TARGET_FOCUSED_BOARD": "フォーカスされている板",
     "EXPORT_INCLUDE_TITLE": "含めるもの",
     "EXPORT_INCLUDE_TIMEISS": "打刻",
     "EXPORT_INCLUDE_GPS_LOG": "位置情報",

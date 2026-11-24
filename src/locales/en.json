@@ -837,6 +837,8 @@
     "EXPORT_TARGET_TITLE": "Target",
     "EXPORT_TARGET_ALL_COLUMNS": "All visible columns",
     "EXPORT_TARGET_FOCUSED_COLUMN": "Focused column",
+    "EXPORT_TARGET_ALL_BOARDS": "All boards shown",
+    "EXPORT_TARGET_FOCUSED_BOARD": "Focused board",
     "EXPORT_INCLUDE_TITLE": "What to include",
     "EXPORT_INCLUDE_TIMEISS": "Time records",
     "EXPORT_INCLUDE_GPS_LOG": "Location history",

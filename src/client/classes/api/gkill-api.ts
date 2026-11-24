@@ -52,7 +52,8 @@ import { GetKyousResponse } from "./req_res/get-kyous-response"
 import type { GetLantanaRequest } from "./req_res/get-lantana-request"
 import { GetLantanaResponse } from "./req_res/get-lantana-response"
 import type { GetMiBoardRequest } from "./req_res/get-mi-board-request"
-import type { GetMiBoardResponse } from "./req_res/get-mi-board-response"
+// 出力用 API（GkillAPIForExportedKyou）が焼いた板名から組み立てるので値として要る
+import { GetMiBoardResponse } from "./req_res/get-mi-board-response"
 import type { GetMiRequest } from "./req_res/get-mi-request"
 import { GetMiResponse } from "./req_res/get-mi-response"
 import type { GetNlogRequest } from "./req_res/get-nlog-request"
@@ -4131,5 +4132,48 @@ export class GkillAPIForExportedKyou extends GkillAPIForSharedKyou {
                         return super.get_saved_rykv_find_kyou_querys()
                 }
                 return this.columns.map(column => column.query)
+        }
+
+        /**
+         * 焼き込んだ板の列の検索条件を返す。mi の列の復元経路。
+         *
+         * 共有版は `[new FindKyouQuery()]`（1列の既定クエリ）を返すので、
+         * そのまま使うと出力した板構成が復元されない。
+         */
+        get_saved_mi_find_kyou_querys(): Array<FindKyouQuery> {
+                if (this.columns.length === 0) {
+                        return super.get_saved_mi_find_kyou_querys()
+                }
+                return this.columns.map(column => column.query)
+        }
+
+        /**
+         * 焼き込んだ記録から板名を集めて返す。
+         *
+         * **共有版は throw する**（rykv では使わないので実装が無い）。mi の
+         * サイドバーは板ツリーを `append_not_found_mi_boards()` で組むので、
+         * ここが throw すると出力した mi のサイドバーが組み上がらない。
+         *
+         * 並び順は保証しない（本体の `/api/get_mi_board_list` も Go の map を
+         * 回しているので順不同）。並べ替えは呼ぶ側が
+         * `sort_mi_board_names_by_config_order()` で行う。
+         */
+        async get_mi_board_list(_req: GetMiBoardRequest): Promise<GetMiBoardResponse> {
+                const res = new GetMiBoardResponse()
+                const board_names = new Set<string>()
+                for (let i = 0; i < this.mis.length; i++) {
+                        const board_name = this.mis[i].board_name
+                        if (board_name) {
+                                board_names.add(board_name)
+                        }
+                }
+                for (let i = 0; i < this.mirekyous.length; i++) {
+                        const board_name = this.mirekyous[i].board_name
+                        if (board_name) {
+                                board_names.add(board_name)
+                        }
+                }
+                board_names.forEach((board_name) => res.boards.push(board_name))
+                return res
         }
 }

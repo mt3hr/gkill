@@ -837,6 +837,8 @@
     "EXPORT_TARGET_TITLE": "Objetivo",
     "EXPORT_TARGET_ALL_COLUMNS": "Todas las columnas visibles",
     "EXPORT_TARGET_FOCUSED_COLUMN": "Columna enfocada",
+    "EXPORT_TARGET_ALL_BOARDS": "Todos los tableros mostrados",
+    "EXPORT_TARGET_FOCUSED_BOARD": "Tablero enfocado",
     "EXPORT_INCLUDE_TITLE": "Qué incluir",
     "EXPORT_INCLUDE_TIMEISS": "Registros de tiempo",
     "EXPORT_INCLUDE_GPS_LOG": "Ubicaciones",

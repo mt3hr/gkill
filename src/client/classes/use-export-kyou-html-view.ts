@@ -38,8 +38,10 @@ export function useExportKyouHTMLView(options: {
     const include_gps_log: Ref<boolean> = ref(true)
     const include_plugin_content: Ref<boolean> = ref(false)
 
-    const include_dnote: Ref<boolean> = ref(true)
-    const include_map: Ref<boolean> = ref(true)
+    // 選べない画面（mi の集計・マップ）は最初から false。
+    // チェック欄を disabled にするだけだと、選択済みの値が送信まで残る
+    const include_dnote: Ref<boolean> = ref(props.can_choose_dnote)
+    const include_map: Ref<boolean> = ref(props.can_choose_map)
     const include_sidebar: Ref<boolean> = ref(false)
 
     const media_mode: Ref<ExportMediaMode> = ref('thumbnail')
@@ -55,6 +57,13 @@ export function useExportKyouHTMLView(options: {
     // ── Computed ──
     const has_focused_column: ComputedRef<boolean> = computed(() =>
         props.focused_column_index >= 0 && props.focused_column_index < props.columns.length)
+
+    // 「対象」の文言は画面で変わる（rykv は列、mi は板）。
+    // i18n キーを返すだけにして、テンプレート側で t() を通す
+    const target_all_label_key: ComputedRef<string> = computed(() =>
+        props.screen === 'mi' ? 'EXPORT_TARGET_ALL_BOARDS' : 'EXPORT_TARGET_ALL_COLUMNS')
+    const target_focused_label_key: ComputedRef<string> = computed(() =>
+        props.screen === 'mi' ? 'EXPORT_TARGET_FOCUSED_BOARD' : 'EXPORT_TARGET_FOCUSED_COLUMN')
 
     /** メディアを埋め込まないと同名フォルダは空になるので選べない */
     const is_sidecar_selectable: ComputedRef<boolean> = computed(() => media_mode.value !== 'none')
@@ -99,8 +108,12 @@ export function useExportKyouHTMLView(options: {
         req.include_attached_timeiss = include_timeiss.value
         req.include_gps_log = include_gps_log.value
         req.include_plugin_content = include_plugin_content.value
-        req.include_dnote = include_dnote.value
-        req.include_map = include_map.value
+        // 焼き込みの印。出力先のページがこれを見てマウント先を選ぶ
+        req.screen = props.screen
+        // 選べない画面は false 固定で送る。ref をそのまま送ると、
+        // props が後から変わったときに「選べないのに true」が漏れる
+        req.include_dnote = props.can_choose_dnote && include_dnote.value
+        req.include_map = props.can_choose_map && include_map.value
         req.include_sidebar = include_sidebar.value
         req.media_mode = media_mode.value
         // 入力が空や 0 以下なら既定に任せる（サーバ側も 0 以下を既定へ倒す）
@@ -195,6 +208,8 @@ export function useExportKyouHTMLView(options: {
 
         // Computed
         has_focused_column,
+        target_all_label_key,
+        target_focused_label_key,
         is_sidecar_selectable,
         target_columns,
 

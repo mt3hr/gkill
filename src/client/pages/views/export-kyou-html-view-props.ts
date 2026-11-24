@@ -1,6 +1,7 @@
 'use strict'
 
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query"
+import type { ExportedScreen } from "@/classes/exported-kyou-payload"
 import type { GkillPropsBase } from "./gkill-props-base"
 
 export interface ExportKyouHTMLViewProps extends GkillPropsBase {
@@ -15,4 +16,22 @@ export interface ExportKyouHTMLViewProps extends GkillPropsBase {
 
     /** フォーカスされている列の位置。無ければ -1 */
     focused_column_index: number
+
+    /**
+     * どの画面を出力するか。ホストするラッパがリテラルで渡す。
+     *
+     * 要求の `screen` に載り、焼き込みの印になる（出力先のページがこれを見て
+     * マウント先を選ぶ）。「対象」の文言（列 / 板）もこれで選ぶ。
+     */
+    screen: ExportedScreen
+
+    /**
+     * 「画面」の節に集計（Dnote）の選択肢を出すか。
+     * **false のときは `include_dnote` を false 固定で送る** —— 選べないものを
+     * 要求に載せると、焼き込みの印と中身が食い違う。mi には集計が無いので false。
+     */
+    can_choose_dnote: boolean
+
+    /** 同じくマップ。mi には無いので false */
+    can_choose_map: boolean
 }

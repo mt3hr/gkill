@@ -67,13 +67,21 @@ type exportedIDFTextContent struct {
 // exportedKyouPayload は HTML へ焼き込む JSON。
 // クライアント側の読み手は exported-kyou-payload.ts の build_exported_api。
 type exportedKyouPayload struct {
-	SchemaVersion int      `json:"schema_version"`
-	Title         string   `json:"title"`
-	LocaleName    string   `json:"locale_name"`
-	WithDnote     bool     `json:"with_dnote"`
-	WithMap       bool     `json:"with_map"`
-	WithSidebar   bool     `json:"with_sidebar"`
-	Warnings      []string `json:"warnings"`
+	SchemaVersion int `json:"schema_version"`
+
+	// Screen はどの画面として出力したか（req_res.ExportScreen* のいずれか）。
+	// 出力ページがマウント先を選ぶのはこれ1つだけで、ビューの中へ
+	// モードのフラグを戻さない（ADR-0420）。
+	// **これだけのために SchemaVersion は上げない** —— クライアントは
+	// 知らない値と欠損を rykv へ寄せるので、印を足す前の出力も読める。
+	Screen string `json:"screen"`
+
+	Title       string   `json:"title"`
+	LocaleName  string   `json:"locale_name"`
+	WithDnote   bool     `json:"with_dnote"`
+	WithMap     bool     `json:"with_map"`
+	WithSidebar bool     `json:"with_sidebar"`
+	Warnings    []string `json:"warnings"`
 
 	// ApplicationConfig は焼き込む設定。**google_map_api_key は必ず空にする**
 	// （落とすと利用者のキーが共有先へ漏れる）

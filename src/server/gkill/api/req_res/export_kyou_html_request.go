@@ -83,7 +83,18 @@ const (
 	ExportOutputFormatSidecar = "sidecar"
 )
 
-// ExportKyouHTMLRequest は rykv の画面を HTML へ出力する要求。
+// 出力する画面。
+//
+// 収集はどちらも列の検索条件で動くので共通で、違うのは
+// 「出力先でどのビューとしてマウントするか」と「板ツリーを刈るか」だけ。
+const (
+	// ExportScreenRykv はライフログビュー（rykv）。空文字もこれとして扱う。
+	ExportScreenRykv = "rykv"
+	// ExportScreenMi はタスク画面（mi）。列は板で、集計とマップは無い。
+	ExportScreenMi = "mi"
+)
+
+// ExportKyouHTMLRequest は画面を HTML へ出力する要求。
 //
 // POST /api/export_kyou_html（wrapAuthRepos）
 type ExportKyouHTMLRequest struct {
@@ -91,6 +102,11 @@ type ExportKyouHTMLRequest struct {
 
 	// LocaleName はエラーメッセージの言語であり、出力 HTML へ焼き込む言語でもある。
 	LocaleName string `json:"locale_name"`
+
+	// Screen は ExportScreen* のいずれか。空文字は ExportScreenRykv として扱う
+	// （印を足す前のクライアントが送ってこないため）。
+	// 焼き込みの印になり、出力先のページがマウント先を選ぶのに使う。
+	Screen string `json:"screen"`
 
 	// Title は出力 HTML の表題。
 	Title string `json:"title"`

@@ -34,9 +34,27 @@ import { Tag } from '@/classes/datas/tag'
 import { Text } from '@/classes/datas/text'
 import { Notification } from '@/classes/datas/notification'
 
+/** 出力できる画面。焼き込みの印と、出力の要求に載せる値 */
+export type ExportedScreen = 'rykv' | 'mi'
+
+/** 既定の画面。印が無い古い出力はこれとして読む */
+export const exported_screen_default: ExportedScreen = 'rykv'
+
+function as_screen(value: unknown): ExportedScreen {
+    return value === 'mi' ? 'mi' : exported_screen_default
+}
+
 /** 焼き込み JSON の形。欠けているキーは空として扱う（古い出力でも落ちない） */
 export interface ExportedKyouPayload {
     schema_version: number
+    /**
+     * どの画面として出力したか。**出力ページがマウント先を選ぶのはこれ1つだけ**で、
+     * ビューの中へモードのフラグを戻さない（ADR-0418 / ADR-0420）。
+     *
+     * 知らない値と欠損は `rykv` へ寄せる。印を足す前の出力はこのキーを持たないので、
+     * **これだけのために schema_version を上げる必要は無い**。
+     */
+    screen: ExportedScreen
     title: string
     locale_name: string
     with_dnote: boolean
@@ -79,6 +97,7 @@ export function parse_exported_payload(raw: unknown): ExportedKyouPayload | null
     }
     return {
         schema_version: source.schema_version,
+        screen: as_screen(source.screen),
         title: as_string(source.title, ''),
         locale_name: as_string(source.locale_name, 'ja'),
         with_dnote: source.with_dnote === true,

@@ -38,6 +38,7 @@ export function useMiView(options: {
     const mkfl_dialog = ref<ComponentRef | null>(null)
     const upload_file_dialog = ref<ComponentRef | null>(null)
     const save_clipboard_to_file_dialog = ref<ComponentRef | null>(null)
+    const export_kyou_html_dialog = ref<ComponentRef | null>(null)
     const help_dialog = ref<ComponentRef | null>(null)
 
     // 画面切替メニューの一覧は classes/gkill-page-list.ts に1つだけ置いてある
@@ -97,6 +98,10 @@ export function useMiView(options: {
         save_clipboard_to_file_dialog.value?.show()
     }
 
+    function show_export_kyou_html_dialog(): void {
+        export_kyou_html_dialog.value?.show()
+    }
+
     function show_help_dialog(): void {
         help_dialog.value?.show()
     }
@@ -130,6 +135,7 @@ export function useMiView(options: {
         mkfl_dialog,
         upload_file_dialog,
         save_clipboard_to_file_dialog,
+        export_kyou_html_dialog,
         help_dialog,
 
         // Computed
@@ -149,6 +155,7 @@ export function useMiView(options: {
         show_lantana_dialog,
         show_upload_file_dialog,
         show_save_clipboard_to_file_dialog,
+        show_export_kyou_html_dialog,
         show_help_dialog,
         floating_action_button_style,
 

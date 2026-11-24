@@ -138,6 +138,51 @@
   <h2>Sharing the Current Search Criteria</h2>
   <p>Turn on "Show Share Footer" in the settings screen and a share footer appears at the bottom of the sidebar. Pressing the "Share" button at its left end asks how you want to hand the records over. Choosing "Share this view" turns the search criteria you are currently using into a share link. What gets shared is not a single record, but every record matching those criteria. Links you have already created can be listed, edited and deleted from "Share Management" at the right end.</p>
 
+  <h2>Handing Over the Current Boards as an HTML File</h2>
+  <p>A share link only works while this app is running. When you want to hand something over without the recipient setting anything up, you can write the boards you are currently viewing out to an HTML file. The recipient just opens it in a browser, and because everything is contained in the file, it never communicates with this app.</p>
+
+  <h3>How to Export</h3>
+  <ol>
+    <li>In the share footer at the bottom of the sidebar, press the "Share" button on the left.</li>
+    <li>Choose "HTML Export".</li>
+    <li>Choose what to include and which format to write out (see the table below).</li>
+    <li>Press "Export" and the resulting file is downloaded. It takes a while when there are many tasks or images.</li>
+  </ol>
+
+  <h3>Available Options</h3>
+  <table>
+    <tr>
+      <th>Item</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Target</td>
+      <td>Choose between "All boards shown" and "Focused board".</td>
+    </tr>
+    <tr>
+      <td>Include</td>
+      <td>Choose whether to include tags, texts, notifications, time records and location data.</td>
+    </tr>
+    <tr>
+      <td>Screens</td>
+      <td>Choose whether to keep the search condition sidebar inside the exported file. A kept sidebar only narrows down the tasks that were exported.</td>
+    </tr>
+    <tr>
+      <td>Media</td>
+      <td>Choose images and videos from "Thumbnails only", "Include full size" or "Do not embed". You can also set per-item and total limits.</td>
+    </tr>
+    <tr>
+      <td>Output format</td>
+      <td>"A single HTML file" is self-contained. "HTML + folder of the same name" puts images in a folder next to it, so it is lighter than a single file, but you must hand over both together.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>When a limit is exceeded:</strong> Anything that did not fit within the media limit is shown as "Not included" inside the exported file. Since the omission is visible, you can raise the limit and export again if needed.
+  </div>
+
+  <h3>What the Recipient Sees</h3>
+  <p>The exported file is read-only. Tasks cannot be added, edited, checked off, or moved between boards. Double-clicking a task opens its details, from which related records can also be followed. If you kept the search condition sidebar, you can narrow by tag, check state, board and period, but text search and changing the sort order are not available (the order is fixed as it was at export time).</p>
   <h2>Related Documents</h2>
   <ul>
     <li><a href="kftl-syntax.html">Memo Pad Syntax Reference</a></li>

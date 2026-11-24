@@ -837,6 +837,8 @@
     "EXPORT_TARGET_TITLE": "대상",
     "EXPORT_TARGET_ALL_COLUMNS": "표시 중인 모든 열",
     "EXPORT_TARGET_FOCUSED_COLUMN": "포커스된 열",
+    "EXPORT_TARGET_ALL_BOARDS": "표시된 모든 보드",
+    "EXPORT_TARGET_FOCUSED_BOARD": "포켜스된 보드",
     "EXPORT_INCLUDE_TITLE": "포함할 항목",
     "EXPORT_INCLUDE_TIMEISS": "타임 기록",
     "EXPORT_INCLUDE_GPS_LOG": "위치 정보",

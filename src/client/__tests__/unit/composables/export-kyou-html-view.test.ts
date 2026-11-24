@@ -50,6 +50,10 @@ function make_props(customize?: (props: ExportKyouHTMLViewProps) => void): {
         gkill_api: { export_kyou_html } as unknown as GkillAPI,
         columns: [make_query('q1'), make_query('q2'), make_query('q3')],
         focused_column_index: 1,
+        // rykv の既定（集計とマップを選べる）。mi のケースは customize で上書きする
+        screen: 'rykv',
+        can_choose_dnote: true,
+        can_choose_map: true,
     } as ExportKyouHTMLViewProps
     if (customize) {
         customize(props)
@@ -213,5 +217,71 @@ describe('出力の受け取り', () => {
 
         resolve_response!()
         await first
+    })
+})
+
+// 画面ごとに選べるものが違う。**ビューの中で画面を判定せず、
+// ホストするラッパがリテラルで渡す**（ADR-0420）ので、ここでは props を直接組んで検す。
+// 選べない区画を「欄を disabled にする」だけで済ませると、選択済みの値が
+// 送信まで残って「焼き込みの印と中身が食い違う」になるので、要求の値まで見る。
+describe('出力する画面', () => {
+    it('rykv は screen を rykv として送り、集計とマップを選べる', async () => {
+        const { props, export_kyou_html } = make_props()
+        const view = useExportKyouHTMLView({ props, emits: make_emits().emits })
+        expect(view.include_dnote.value, 'rykv は集計を既定で入れる').toBe(true)
+        expect(view.include_map.value, 'rykv はマップを既定で入れる').toBe(true)
+
+        await view.export_html()
+        const req = export_kyou_html.mock.calls[0][0] as ExportKyouHTMLRequest
+        expect(req.screen).toBe('rykv')
+        expect(req.include_dnote).toBe(true)
+        expect(req.include_map).toBe(true)
+    })
+
+    it('mi は screen を mi として送り、集計とマップを選べない', async () => {
+        const { props, export_kyou_html } = make_props(p => {
+            p.screen = 'mi'
+            p.can_choose_dnote = false
+            p.can_choose_map = false
+        })
+        const view = useExportKyouHTMLView({ props, emits: make_emits().emits })
+        expect(view.include_dnote.value, 'mi に集計は無いので最初から false').toBe(false)
+        expect(view.include_map.value, 'mi にマップは無いので最初から false').toBe(false)
+
+        await view.export_html()
+        const req = export_kyou_html.mock.calls[0][0] as ExportKyouHTMLRequest
+        expect(req.screen).toBe('mi')
+        expect(req.include_dnote).toBe(false)
+        expect(req.include_map).toBe(false)
+    })
+
+    it('選べない画面を後から true にしても要求には載らない', async () => {
+        const { props, export_kyou_html } = make_props(p => {
+            p.screen = 'mi'
+            p.can_choose_dnote = false
+            p.can_choose_map = false
+        })
+        const view = useExportKyouHTMLView({ props, emits: make_emits().emits })
+        // 欄が出ていないのに ref を触れても、送る値は false のまま
+        view.include_dnote.value = true
+        view.include_map.value = true
+
+        await view.export_html()
+        const req = export_kyou_html.mock.calls[0][0] as ExportKyouHTMLRequest
+        expect(req.include_dnote, '選べない集計が要求に漏れている').toBe(false)
+        expect(req.include_map, '選べないマップが要求に漏れている').toBe(false)
+    })
+
+    it('「対象」の文言は画面で変わる（rykv は列、mi は板）', () => {
+        const rykv = useExportKyouHTMLView({ props: make_props().props, emits: make_emits().emits })
+        expect(rykv.target_all_label_key.value).toBe('EXPORT_TARGET_ALL_COLUMNS')
+        expect(rykv.target_focused_label_key.value).toBe('EXPORT_TARGET_FOCUSED_COLUMN')
+
+        const mi = useExportKyouHTMLView({
+            props: make_props(p => { p.screen = 'mi' }).props,
+            emits: make_emits().emits,
+        })
+        expect(mi.target_all_label_key.value).toBe('EXPORT_TARGET_ALL_BOARDS')
+        expect(mi.target_focused_label_key.value).toBe('EXPORT_TARGET_FOCUSED_BOARD')
     })
 })

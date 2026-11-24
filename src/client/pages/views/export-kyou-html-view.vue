@@ -5,9 +5,9 @@
 
         <div class="text-subtitle-2">{{ i18n.global.t('EXPORT_TARGET_TITLE') }}</div>
         <v-radio-group v-model="target" density="compact" hide-details class="mb-2">
-            <v-radio :label="i18n.global.t('EXPORT_TARGET_ALL_COLUMNS')" value="all"
+            <v-radio :label="i18n.global.t(target_all_label_key)" value="all"
                 class="export_kyou_html_target_all" />
-            <v-radio :label="i18n.global.t('EXPORT_TARGET_FOCUSED_COLUMN')" value="focused"
+            <v-radio :label="i18n.global.t(target_focused_label_key)" value="focused"
                 :disabled="!has_focused_column" class="export_kyou_html_target_focused" />
         </v-radio-group>
 
@@ -33,14 +33,14 @@
         <div class="text-subtitle-2">{{ i18n.global.t('EXPORT_SCREEN_TITLE') }}</div>
         <v-row no-gutters class="mb-2">
             <v-col cols="6">
-                <v-checkbox v-model="include_dnote" :label="i18n.global.t('EXPORT_SCREEN_DNOTE')" density="compact"
-                    hide-details />
+                <v-checkbox v-if="can_choose_dnote" v-model="include_dnote"
+                    :label="i18n.global.t('EXPORT_SCREEN_DNOTE')" density="compact" hide-details />
                 <v-checkbox v-model="include_sidebar" :label="i18n.global.t('EXPORT_SCREEN_SIDEBAR')" density="compact"
                     hide-details />
             </v-col>
             <v-col cols="6">
-                <v-checkbox v-model="include_map" :label="i18n.global.t('EXPORT_SCREEN_MAP')" density="compact"
-                    hide-details />
+                <v-checkbox v-if="can_choose_map" v-model="include_map" :label="i18n.global.t('EXPORT_SCREEN_MAP')"
+                    density="compact" hide-details />
             </v-col>
         </v-row>
 
@@ -114,6 +114,8 @@ const {
     output_format,
     is_exporting,
     has_focused_column,
+    target_all_label_key,
+    target_focused_label_key,
     is_sidecar_selectable,
     export_html,
     cancel,

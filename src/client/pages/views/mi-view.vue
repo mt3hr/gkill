@@ -14,6 +14,7 @@
         :enable_keyboard_shortcuts="!is_hosted_in_dialog /* ポートでは枚数ぶん多重登録される */"
         v-on="columnsForwardHandlers"
         @requested_reload_application_config="emits('requested_reload_application_config')"
+        @requested_export_kyou_html="show_export_kyou_html_dialog()"
         @requested_show_kftl_dialog="show_kftl_dialog()"
         @requested_show_save_clipboard_to_file_dialog="show_save_clipboard_to_file_dialog()"
         ref="columns_view">
@@ -51,7 +52,8 @@
              列の中継束へ流れていなければ「追加した記録が一覧に出ない」になる。
              打刻追加だけは sub_view_focus_relay も受ける（ダイアログの中で
              フォーカスが動いたときに列を追随させる。rykv には無い mi 側だけの配線） -->
-        <template v-slot:dialogs="{ crud_relay, all_columns_request_relay, sub_view_focus_relay }">
+        <template
+            v-slot:dialogs="{ crud_relay, all_columns_request_relay, sub_view_focus_relay, querys, focused_column_index }">
             <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true"
                 :enable_dialog="true"
@@ -104,6 +106,17 @@
                 :application_config="application_config" :gkill_api="gkill_api"
                 v-on="{ ...crud_relay, ...all_columns_request_relay }"
                 ref="save_clipboard_to_file_dialog" />
+            <!--
+                「HTML で出力」。列（板）の条件はサイドバーが生成したまま渡す —— 削ると
+                出力先のサイドバーが初めに生成した条件と食い違い、その板が空になる。
+                mi には集計とマップが無いので、その選択肢を出さない
+            -->
+            <ExportKyouHTMLDialog :application_config="application_config" :gkill_api="gkill_api"
+                :columns="querys" :focused_column_index="focused_column_index"
+                :screen="'mi'" :can_choose_dnote="false" :can_choose_map="false"
+                @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
+                ref="export_kyou_html_dialog" />
             <HelpDialog screen_name="mi" ref="help_dialog" />
         </template>
         <!-- ポート(rudbeckia)の中ではFABを出さない。.position-fixed は position: fixed なので
@@ -157,6 +170,8 @@
 <script setup lang="ts">
 import { i18n } from '@/i18n'
 import { Kyou } from '@/classes/datas/kyou'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 import AddKCDialog from '../dialogs/add-kc-dialog.vue'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
 import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
@@ -167,6 +182,7 @@ import AddTimeIsDialog from '../dialogs/add-time-is-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-ur-log-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import SaveClipboardToFileDialog from '../dialogs/save-clipboard-to-file-dialog.vue'
+import ExportKyouHTMLDialog from '../dialogs/export-kyou-html-dialog.vue'
 import HelpDialog from '../dialogs/help-dialog.vue'
 import MiColumnsView from './mi-columns-view.vue'
 import type { MiViewEmits } from './mi-view-emits'
@@ -189,6 +205,7 @@ const {
     mkfl_dialog,
     upload_file_dialog,
     save_clipboard_to_file_dialog,
+    export_kyou_html_dialog,
     help_dialog,
 
     // Computed
@@ -208,6 +225,7 @@ const {
     show_lantana_dialog,
     show_upload_file_dialog,
     show_save_clipboard_to_file_dialog,
+    show_export_kyou_html_dialog,
     show_help_dialog,
     floating_action_button_style,
 

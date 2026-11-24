@@ -837,6 +837,8 @@
     "EXPORT_TARGET_TITLE": "对象",
     "EXPORT_TARGET_ALL_COLUMNS": "所有显示的列",
     "EXPORT_TARGET_FOCUSED_COLUMN": "当前聚焦的列",
+    "EXPORT_TARGET_ALL_BOARDS": "显示中的所有看板",
+    "EXPORT_TARGET_FOCUSED_BOARD": "当前聚焦的看板",
     "EXPORT_INCLUDE_TITLE": "包含的内容",
     "EXPORT_INCLUDE_TIMEISS": "打卡记录",
     "EXPORT_INCLUDE_GPS_LOG": "位置信息",

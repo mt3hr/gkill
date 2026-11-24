@@ -107,6 +107,7 @@
             -->
             <ExportKyouHTMLDialog :application_config="application_config"
                 :gkill_api="gkill_api" :columns="querys" :focused_column_index="focused_column_index"
+                :screen="'rykv'" :can_choose_dnote="true" :can_choose_map="true"
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                 ref="export_kyou_html_dialog" />
