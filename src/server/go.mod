@@ -58,7 +58,7 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/twpayne/go-geom v1.6.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/net v0.62.0 // indirect
+	golang.org/x/net v0.63.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	modernc.org/libc v1.80.1 // indirect
