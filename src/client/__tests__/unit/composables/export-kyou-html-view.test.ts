@@ -174,6 +174,26 @@ describe('出力の受け取り', () => {
         expect(view.is_exporting.value, '出力中のままになっている').toBe(false)
     })
 
+    it('出力中を倒してから閉じるよう頼む', async () => {
+        // ダイアログは「出力中は閉じない」ガードを持っている（× も Escape も戻るも止める）。
+        // 倒す前に閉じるよう頼むと自分のガードに弾かれ、保存は済んでいるのに
+        // ダイアログだけ開いたまま残る。順序は型でもレンダリングでも落ちないので、ここで固定する
+        const { props } = make_props()
+        const { emits, calls } = make_emits()
+        const view = useExportKyouHTMLView({ props, emits })
+
+        await view.export_html()
+
+        const exporting_false_at = calls.findIndex(c => c.event === 'changed_is_exporting' && c.args[0] === false)
+        const close_at = calls.findIndex(c => c.event === 'requested_close_dialog')
+        expect(exporting_false_at, '出力が終わったことをダイアログへ伝えていない').toBeGreaterThanOrEqual(0)
+        expect(close_at, '閉じるよう頼んでいない').toBeGreaterThanOrEqual(0)
+        expect(
+            exporting_false_at,
+            '出力中を倒す前に閉じるよう頼んでいる（ダイアログ自身のガードに弾かれて開いたまま残る）',
+        ).toBeLessThan(close_at)
+    })
+
     it('同名フォルダは ZIP として保存する', async () => {
         const { props, export_kyou_html } = make_props()
         export_kyou_html.mockImplementation(async () => make_response(res => {

@@ -90,8 +90,11 @@ export function useExportKyouHTMLView(options: {
         }
     })
 
-    // 出力中かをダイアログへ伝える。ダイアログはこれが立っている間、閉じない
-    watch(is_exporting, () => emits('changed_is_exporting', is_exporting.value))
+    // 出力中かをダイアログへ伝える。ダイアログはこれが立っている間、閉じない。
+    // **同期で伝えること。** 既定の遅延 flush だと、倒してから実際に伝わるまでの
+    // 1tick のあいだダイアログ側が「まだ出力中」のままで、その隙に来た
+    // × ・ Esc ・ ブラウザバックが弾かれる（出力はもう終わっているのに閉じられない）
+    watch(is_exporting, () => emits('changed_is_exporting', is_exporting.value), { flush: 'sync' })
 
     // ── Methods ──
     /** MB の入力をバイトへ。空・NaN・0 以下は既定へ倒す */
@@ -135,6 +138,8 @@ export function useExportKyouHTMLView(options: {
         is_exporting.value = true
         const req = build_request()
         abort_controller = req.abort_controller
+        // 保存まで済んだか。**閉じるよう頼むのは出力中を倒したあと**にするために持つ
+        let exported = false
         try {
             const res = await props.gkill_api.export_kyou_html(req)
             // 中断されていたら、返ってきたものは捨てる（保存もしないし閉じもしない）
@@ -160,10 +165,16 @@ export function useExportKyouHTMLView(options: {
             } else {
                 save_as(new Blob([res.html], { type: 'text/html' }), res.file_name)
             }
-            emits('requested_close_dialog')
+            exported = true
         } finally {
             abort_controller = null
             is_exporting.value = false
+        }
+        // **閉じるよう頼むのは出力中を倒してから。** 倒す前に頼むと、
+        // ダイアログ自身の「出力中は閉じない」ガードに弾かれて、
+        // 保存は済んでいるのにダイアログだけ開いたまま残る
+        if (exported) {
+            emits('requested_close_dialog')
         }
     }
 
