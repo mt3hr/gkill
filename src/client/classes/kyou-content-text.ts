@@ -28,6 +28,15 @@ export interface KyouContentTextOptions {
      * 既定はMAX_REKYOU_DEPTH。
      */
     max_lazy_depth?: number
+
+    /**
+     * ブックマークをタイトルで表すか。**既定は false（URL のまま）。**
+     *
+     * 本文のコピーは URL でなければ使えないので既定を変えない。
+     * 行の見出しに使う側（リポストタスクの参照先の要約）だけが true にする。
+     * タイトルが空なら URL へ落ちる（設定ツリーの TitleGetter と同じ規則）。
+     */
+    prefer_title?: boolean
 }
 
 /**
@@ -108,7 +117,8 @@ export async function get_kyou_content_text(kyou: Kyou, gkill_api: GkillAPI, dep
         return { text: join_content_parts([kyou.typed_kc.title, kyou.typed_kc.num_value]), errors: no_errors }
     }
     if (kyou.typed_urlog) {
-        return { text: kyou.typed_urlog.url, errors: no_errors }
+        const prefers_title = options.prefer_title === true && kyou.typed_urlog.title.length !== 0
+        return { text: prefers_title ? kyou.typed_urlog.title : kyou.typed_urlog.url, errors: no_errors }
     }
     if (kyou.typed_nlog) {
         return { text: join_content_parts([kyou.typed_nlog.shop, kyou.typed_nlog.title, kyou.typed_nlog.amount]), errors: no_errors }

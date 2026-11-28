@@ -143,6 +143,9 @@ export function useMiReKyouView(options: {
         const { text } = await get_kyou_content_text(target_kyou.value, props.gkill_api, 0, {
             allow_remote: !is_compact.value,
             max_lazy_depth: is_compact.value ? 1 : undefined,
+            // 見出しなので、ブックマークは URL ではなくタイトルで出す（タイトルが空なら URL）。
+            // 本文のコピーは URL でなければ使えないので、そちらは既定のまま
+            prefer_title: true,
         })
         if (loaded_target_id !== requested_target_id) {
             return

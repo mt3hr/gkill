@@ -70,6 +70,18 @@ describe('get_kyou_content_text 種別ごとの本文', () => {
         expect(text).toBe(expected)
     })
 
+    test('prefer_title なら urlog はタイトル。空なら URL へ落ちる', async () => {
+        // 本文のコピーは URL でなければ使えないので既定は URL のまま。
+        // 行の見出し（リポストタスクの参照先の要約）だけがタイトルを優先する
+        const titled = makeKyouWithURLog('記事のタイトル', 'https://example.com')
+        const titled_result = await get_kyou_content_text(asKyou(titled), makeApi(), 0, { prefer_title: true })
+        expect(titled_result.text).toBe('記事のタイトル')
+
+        const untitled = makeKyouWithURLog('', 'https://example.com')
+        const untitled_result = await get_kyou_content_text(asKyou(untitled), makeApi(), 0, { prefer_title: true })
+        expect(untitled_result.text, 'タイトルが空なのに URL へ落ちていない').toBe('https://example.com')
+    })
+
     test('kmemo の前後の空白と余分な改行は落とす', async () => {
         const kyou = makeKyouWithKmemo('  1行目  \r\n\n\n\n  2行目  \n')
         const { text } = await get_kyou_content_text(asKyou(kyou), makeApi())
