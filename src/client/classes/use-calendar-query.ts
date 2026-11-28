@@ -32,6 +32,12 @@ export function useCalendarQuery(options: {
     const end_time_string: Ref<string | null> = ref(null)
     const show_start_time_menu: Ref<boolean> = ref(false)
     const show_end_time_menu: Ref<boolean> = ref(false)
+    // 開始日・終了日の入力欄。"YYYY-MM-DD" か null（= 未選択）。
+    // **正本は dates（カレンダーの選択）で、ここはその写し。**
+    // 欄を正本にすると、props 着信・カレンダークリック・クリアの3経路それぞれで
+    // 欄と選択がずれる。欄を直したときは dates へ書き戻してから写し直す
+    const start_date_string: Ref<string | null> = ref(null)
+    const end_date_string: Ref<string | null> = ref(null)
     // 時刻欄の watch から出る emit を、props 着信の逆同期中だけ止める。
     // 止めないと「着信 → 時刻欄を書き換え → emit → 再検索」で往復が終わらない
     const is_syncing_from_props: Ref<boolean> = ref(false)
@@ -102,6 +108,64 @@ export function useCalendarQuery(options: {
         }
         return value.format('HH:mm')
     }
+
+    // "YYYY-MM-DD" を日へ。読めない値は未選択として扱う
+    function parse_date_string(value: string | null): Date | null {
+        if (!value) {
+            return null
+        }
+        const parsed = moment(value, 'YYYY-MM-DD', true)
+        if (!parsed.isValid()) {
+            return null
+        }
+        return parsed.toDate()
+    }
+
+    function date_string_from(date: Date | null): string | null {
+        if (!date) {
+            return null
+        }
+        return moment(date).format('YYYY-MM-DD')
+    }
+
+    /**
+     * まだ打ち終わっていない日付か。
+     *
+     * `type="date"` の入力欄は年を4桁0埋めで返すので、年を打っている途中は
+     * "0002-07-01" のような完成した日付が1文字ごとに流れてくる。そのまま受けると
+     * 打っている間に検索が何度もやり直される。**西暦1000年より前は打ちかけとして捨てる**
+     * （ライフログに西暦3桁の記録は無い）
+     */
+    function is_editing_date_string(value: string | null): boolean {
+        const parsed = moment(value ?? '', 'YYYY-MM-DD', true)
+        return parsed.isValid() && parsed.year() < 1000
+    }
+
+    /**
+     * 開始日・終了日から VDatePicker へ渡す配列を作る。
+     *
+     * **同じ日なら1要素にすること。** 2要素にすると VDatePicker が「レンジ完了」と判断し、
+     * 次のクリックで新しいレンジが始まってしまう（props 着信側と同じ規則。
+     * 片方だけ直すと、欄から選んだ範囲とカレンダーから選んだ範囲でその後の挙動が食い違う）
+     */
+    function to_range_dates(start: Date, end: Date): Array<Date> {
+        if (moment(start).isSame(moment(end), 'day')) {
+            return [start]
+        }
+        return [start, end]
+    }
+
+    // カレンダーの選択を日付欄へ写す。props 着信・カレンダークリック・クリアの
+    // 3経路すべてが dates を差し替えるので、写すのはここ1箇所で足りる。
+    // **ここから emit しないこと。** 欄 → dates は updated_start_date / updated_end_date
+    // だけが通る経路で、そこでも dates を差し替えるため、ここで emit すると往復が終わらない。
+    // **同期で写すこと。** 遅延 flush だと、欄を直した直後に「もう片方の欄」を読む
+    // updated_*_date が1tick 前の値を見て、直していない側の日付を巻き戻す
+    watch(dates, () => {
+        const has_dates = dates.value.length >= 1
+        start_date_string.value = has_dates ? date_string_from(dates.value[0]) : null
+        end_date_string.value = has_dates ? date_string_from(dates.value[dates.value.length - 1]) : null
+    }, { flush: 'sync' })
 
     watch(() => props.application_config, async () => {
         emits('inited')
@@ -194,6 +258,53 @@ export function useCalendarQuery(options: {
         emits('request_update_dates', to_start_moment(first).toDate(), to_end_moment(last).toDate())
     }
 
+    /**
+     * 日付欄が直されたときに、カレンダーの選択へ書き戻す。
+     *
+     * 選択の差し替えと emit は clicked_date に任せる（同値エコーの抑制と
+     * 空選択の扱いが1箇所に揃う。ここで emit を書くとカレンダーと規則が二重になる）。
+     */
+    function apply_date_field(edited: 'start' | 'end'): void {
+        const edited_string = edited === 'start' ? start_date_string.value : end_date_string.value
+        if (is_editing_date_string(edited_string)) {
+            return
+        }
+        const edited_date = parse_date_string(edited_string)
+        if (!edited_date) {
+            // 欄を空にしたら範囲ごと落とす。dates は [開始] か [開始, 終了] の形しか持てず
+            // 「終了だけ」を表せないので、片方が無くなったら範囲も無いものとして扱う
+            clicked_date([])
+            return
+        }
+        const other_date = edited === 'start'
+            ? parse_date_string(end_date_string.value)
+            : parse_date_string(start_date_string.value)
+        let start = edited === 'start' ? edited_date : (other_date ?? edited_date)
+        let end = edited === 'end' ? edited_date : (other_date ?? edited_date)
+        if (moment(end).isBefore(moment(start), 'day')) {
+            // 逆向きになったら直した側の1日へ畳む。黙って入れ替えると、
+            // 直していない側の日付が動いて驚く
+            start = edited_date
+            end = edited_date
+        }
+        // 打った日の月をカレンダーへ出す。出さないと欄とカレンダーが連動して見えない
+        calendar_year.value = edited_date.getFullYear()
+        calendar_month.value = edited_date.getMonth()
+        clicked_date(to_range_dates(start, end))
+    }
+
+    // 入力欄は :model-value の片方向で結ぶ（v-model にすると、欄の値を書く順が
+    // v-model とこの関数のどちらが先か保証されない）。欄の値を入れるのもここ
+    function updated_start_date(value: string | null): void {
+        start_date_string.value = value
+        apply_date_field('start')
+    }
+
+    function updated_end_date(value: string | null): void {
+        end_date_string.value = value
+        apply_date_field('end')
+    }
+
     function onWheel(e: WheelEvent) {
         if (0 < e.deltaY) {
             document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(3) > span.v-btn__content > i").forEach((el) => { (el as HTMLElement).click() })
@@ -261,6 +372,10 @@ export function useCalendarQuery(options: {
         end_time_string,
         show_start_time_menu,
         show_end_time_menu,
+        start_date_string,
+        end_date_string,
+        updated_start_date,
+        updated_end_date,
         get_use_calendar,
         get_start_time,
         get_end_time,

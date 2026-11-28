@@ -42,8 +42,9 @@ function periodCheckbox(sidebar: Locator): Locator {
 /**
  * 期間の時刻欄。
  *
- * ラベル（「開始」「終了」）は時間帯フィルタと共有で、DOM 順では時間帯が先に来る。
- * ラベルで引くと時間帯側を拾うので、期間節だけに付けたクラスで引く。
+ * ラベルは「開始時刻」「終了時刻」だが、ラベルでは引かない。
+ * 時間帯フィルタにも似たラベルの時刻欄があり、DOM 順ではそちらが先に来るので、
+ * 期間節だけに付けたクラスで引く。
  */
 function startTimeField(sidebar: Locator): Locator {
   return sidebar.locator('.calendar_query_start_time_field input[readonly]')

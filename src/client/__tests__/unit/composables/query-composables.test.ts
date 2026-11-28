@@ -418,6 +418,163 @@ describe('useCalendarQuery: 期間の開始時刻・終了時刻', () => {
   })
 })
 
+describe('useCalendarQuery: 期間の開始日・終了日の欄', () => {
+  function create_view(initial: FindKyouQuery) {
+    const emits = vi.fn()
+    const props = reactive({
+      application_config: make_fake_application_config(),
+      find_kyou_query: initial,
+      inited: true,
+    })
+    const view = useCalendarQuery({ props: props as never, emits: emits as never })
+    return { props, view, emits }
+  }
+
+  function make_dated_query(query_id: string): FindKyouQuery {
+    const query = new FindKyouQuery()
+    query.query_id = query_id
+    query.calendar_start_time = new Date(2026, 6, 1)
+    query.calendar_end_time = new Date(2026, 6, 3, 23, 59, 59, 999)
+    return query
+  }
+
+  async function create_dated_view() {
+    const created = create_view(new FindKyouQuery())
+    created.props.find_kyou_query = make_dated_query('q1')
+    await flush_watchers()
+    created.emits.mockClear()
+    return created
+  }
+
+  function find_update_dates(emits: ReturnType<typeof vi.fn>) {
+    return emits.mock.calls.filter((args) => args[0] === 'request_update_dates')
+  }
+
+  test('カレンダーの選択が日付欄へ写る', async () => {
+    const { view } = await create_dated_view()
+    expect(view.start_date_string.value).toBe('2026-07-01')
+    expect(view.end_date_string.value).toBe('2026-07-03')
+
+    view.clicked_date([new Date(2026, 7, 10), new Date(2026, 7, 20)])
+    expect(view.start_date_string.value, 'カレンダーをクリックしても欄が追従する').toBe('2026-08-10')
+    expect(view.end_date_string.value).toBe('2026-08-20')
+  })
+
+  test('開始日を打ち直すと選択も検索も動く', async () => {
+    const { view, emits } = await create_dated_view()
+
+    view.updated_start_date('2026-06-20')
+
+    expect(view.dates.value).toHaveLength(2)
+    expect(view.start_date_string.value).toBe('2026-06-20')
+    expect(view.end_date_string.value, '直していない側は動かない').toBe('2026-07-03')
+    const calls = find_update_dates(emits)
+    expect(calls).toHaveLength(1)
+    expect(moment(calls[0][1]).format('YYYY-MM-DD HH:mm:ss.SSS')).toBe('2026-06-20 00:00:00.000')
+    expect(moment(calls[0][2]).format('YYYY-MM-DD HH:mm:ss.SSS')).toBe('2026-07-03 23:59:59.999')
+  })
+
+  test('終了日を打ち直すと選択も検索も動く', async () => {
+    const { view, emits } = await create_dated_view()
+
+    view.updated_end_date('2026-07-31')
+
+    expect(view.start_date_string.value, '直していない側は動かない').toBe('2026-07-01')
+    expect(view.end_date_string.value).toBe('2026-07-31')
+    const calls = find_update_dates(emits)
+    expect(calls).toHaveLength(1)
+    expect(moment(calls[0][2]).format('YYYY-MM-DD HH:mm:ss.SSS')).toBe('2026-07-31 23:59:59.999')
+  })
+
+  test('打った日の月がカレンダーに出る', async () => {
+    const { view } = await create_dated_view()
+
+    view.updated_start_date('2024-03-05')
+
+    expect(view.calendar_year.value, '月が動かないと欄とカレンダーが連動して見えない').toBe(2024)
+    expect(view.calendar_month.value, 'VDatePicker の month は0始まり').toBe(2)
+  })
+
+  test('時刻を入れてあれば日付欄からの指定にも効く', async () => {
+    const { view, emits } = await create_dated_view()
+    view.start_time_string.value = '09:00'
+    await flush_watchers()
+    emits.mockClear()
+
+    view.updated_start_date('2026-06-20')
+
+    const calls = find_update_dates(emits)
+    expect(moment(calls[0][1]).format('YYYY-MM-DD HH:mm:ss.SSS')).toBe('2026-06-20 09:00:00.000')
+  })
+
+  test('開始日が終了日より後なら、打った側の1日へ畳む', async () => {
+    const { view } = await create_dated_view()
+
+    view.updated_start_date('2026-07-10')
+
+    expect(view.dates.value, '同じ日は1要素。2要素だとVDatePickerがレンジ完了と判断する').toHaveLength(1)
+    expect(view.start_date_string.value).toBe('2026-07-10')
+    expect(view.end_date_string.value, '畳んだことが欄にも出る').toBe('2026-07-10')
+  })
+
+  test('日付欄を空にすると範囲ごと落ちる', async () => {
+    const { view, emits } = await create_dated_view()
+
+    view.updated_start_date(null)
+
+    expect(view.dates.value).toHaveLength(0)
+    expect(view.get_start_time()).toBeNull()
+    expect(view.get_end_time()).toBeNull()
+    const calls = find_update_dates(emits)
+    expect(calls).toHaveLength(1)
+    expect(calls[0][1]).toBeNull()
+    expect(calls[0][2]).toBeNull()
+  })
+
+  // type="date" は年を4桁0埋めで返すので、年を打っている途中は "0002-07-01" が流れてくる
+  test('打ちかけの年では検索をやり直さない', async () => {
+    const { view, emits } = await create_dated_view()
+
+    view.updated_start_date('0002-07-01')
+
+    expect(view.dates.value[0], '打ちかけで選択を動かすと、打ち終わる前に検索が何度も走る')
+      .toStrictEqual(new Date(2026, 6, 1))
+    expect(find_update_dates(emits)).toHaveLength(0)
+  })
+
+  test('同じ日を打ち直しても検索をやり直さない', async () => {
+    const { view, emits } = await create_dated_view()
+
+    view.updated_start_date('2026-07-01')
+
+    expect(find_update_dates(emits)).toHaveLength(0)
+  })
+
+  test('props からの逆同期では emit しない（往復が終わらなくなる）', async () => {
+    const { props, view, emits } = await create_dated_view()
+
+    const query = new FindKyouQuery()
+    query.query_id = 'q2'
+    query.calendar_start_time = new Date(2026, 8, 1)
+    query.calendar_end_time = new Date(2026, 8, 5, 23, 59, 59, 999)
+    props.find_kyou_query = query
+    await flush_watchers()
+
+    expect(view.start_date_string.value).toBe('2026-09-01')
+    expect(view.end_date_string.value).toBe('2026-09-05')
+    expect(find_update_dates(emits)).toHaveLength(0)
+  })
+
+  test('クリアは日付欄も落とす', async () => {
+    const { view } = await create_dated_view()
+
+    view.clicked_clear_calendar_button()
+
+    expect(view.start_date_string.value).toBeNull()
+    expect(view.end_date_string.value).toBeNull()
+  })
+})
+
 describe('useMapQuery: 地図3値の null 判定とローカル保持', () => {
   function create_view(initial: FindKyouQuery) {
     const props = reactive({
